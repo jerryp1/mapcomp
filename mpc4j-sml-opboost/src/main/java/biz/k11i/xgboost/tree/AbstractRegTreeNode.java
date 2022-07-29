@@ -1,7 +1,7 @@
 package biz.k11i.xgboost.tree;
 
 import ai.h2o.algos.tree.INode;
-import biz.k11i.xgboost.fvec.FVec;
+import biz.k11i.xgboost.fvec.Fvec;
 
 import java.io.Serializable;
 
@@ -11,7 +11,7 @@ import java.io.Serializable;
  * @author Honza Sterba, Weiran Liu
  * @date 2021/10/08
  */
-public abstract class AbstractRegTreeNode implements INode<FVec>, Serializable {
+public abstract class AbstractRegTreeNode implements INode<Fvec>, Serializable {
     private static final long serialVersionUID = 7314487558338026230L;
 
     /**
@@ -26,6 +26,7 @@ public abstract class AbstractRegTreeNode implements INode<FVec>, Serializable {
      *
      * @return Index of node's left child node.
      */
+    @Override
     public abstract int getLeftChildIndex();
 
     /**
@@ -33,6 +34,7 @@ public abstract class AbstractRegTreeNode implements INode<FVec>, Serializable {
      *
      * @return Index of node's right child node.
      */
+    @Override
     public abstract int getRightChildIndex();
 
     /**
@@ -44,6 +46,8 @@ public abstract class AbstractRegTreeNode implements INode<FVec>, Serializable {
 
     /**
      * Replaces split condition on the node.
+     *
+     * @param splitCondition split condition.
      */
     public abstract void replaceSplitCondition(float splitCondition);
 
@@ -52,6 +56,7 @@ public abstract class AbstractRegTreeNode implements INode<FVec>, Serializable {
      *
      * @return Predicted value on the leaf node, if the node is leaf. Otherwise NaN.
      */
+    @Override
     public abstract float getLeafValue();
 
     /**
@@ -66,5 +71,6 @@ public abstract class AbstractRegTreeNode implements INode<FVec>, Serializable {
      *
      * @return Index of domain category used to split on the node.
      */
+    @Override
     public abstract int getSplitIndex();
 }

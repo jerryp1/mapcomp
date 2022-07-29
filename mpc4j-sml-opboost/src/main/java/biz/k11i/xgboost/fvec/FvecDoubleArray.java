@@ -16,13 +16,16 @@
  */
 package biz.k11i.xgboost.fvec;
 
+import edu.alibaba.mpc4j.common.tool.utils.DoubleUtils;
+import org.apache.commons.math3.util.Precision;
+
 /**
  * Feature Vector Double Array.
  *
  * @author KOMIYA Atsushi, Michal Kurka, Weiran Liu
  * @date 2021/10/08
  */
-class FVecDoubleArray implements FVec {
+class FvecDoubleArray implements Fvec {
     private static final long serialVersionUID = 5004062882376155663L;
     /**
      * double value array
@@ -31,11 +34,11 @@ class FVecDoubleArray implements FVec {
     /**
      * whether treat 0 as N/A
      */
-    private final boolean treatsZeroAsNA;
+    private final boolean treatsZeroAsNa;
 
-    FVecDoubleArray(double[] values, boolean treatsZeroAsNA) {
+    FvecDoubleArray(double[] values, boolean treatsZeroAsNa) {
         this.values = values;
-        this.treatsZeroAsNA = treatsZeroAsNA;
+        this.treatsZeroAsNa = treatsZeroAsNa;
     }
 
     @Override
@@ -45,7 +48,7 @@ class FVecDoubleArray implements FVec {
         }
 
         final double result = values[index];
-        if (treatsZeroAsNA && result == 0) {
+        if (treatsZeroAsNa && Precision.equals(result, 0, DoubleUtils.PRECISION)) {
             return Float.NaN;
         }
 

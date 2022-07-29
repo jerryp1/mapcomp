@@ -1,6 +1,6 @@
 package edu.alibaba.mpc4j.sml.opboost.xgboost;
 
-import biz.k11i.xgboost.fvec.FVec;
+import biz.k11i.xgboost.fvec.Fvec;
 import ml.dmlc.xgboost4j.java.DMatrix;
 import ml.dmlc.xgboost4j.java.XGBoostError;
 import smile.data.DataFrame;
@@ -84,10 +84,10 @@ public class OpXgBoostUtils {
      * @param dataFrame 数据帧。
      * @return 特征向量。
      */
-    public static FVec[] dataFrameToFeatureVector(DataFrame dataFrame) {
+    public static Fvec[] dataFrameToFeatureVector(DataFrame dataFrame) {
         double[][] dataFrameArray = dataFrame.toArray();
         return Arrays.stream(dataFrameArray)
-            .map(doubles -> FVec.Transformer.fromArray(doubles, false))
-            .toArray(FVec[]::new);
+            .map(doubles -> Fvec.Transformer.fromArray(doubles, false))
+            .toArray(Fvec[]::new);
     }
 }

@@ -17,7 +17,7 @@
 package biz.k11i.xgboost;
 
 import biz.k11i.xgboost.config.PredictorConfiguration;
-import biz.k11i.xgboost.fvec.FVec;
+import biz.k11i.xgboost.fvec.Fvec;
 import biz.k11i.xgboost.gbm.GradBoostModel;
 import biz.k11i.xgboost.learner.ObjFunction;
 import biz.k11i.xgboost.learner.ObjFunctionManager;
@@ -135,7 +135,7 @@ public class Predictor implements Serializable {
 
             if (modelType != null) {
                 int len = (next4Bytes[3] << 8) + (reader.readByteAsInt());
-                String featuresCol = reader.readUTF(len);
+                String featuresCol = reader.readUtf(len);
 
                 this.sparkModelParam = new SparkModelParam(modelType, featuresCol, reader);
 
@@ -179,7 +179,7 @@ public class Predictor implements Serializable {
      * @param feat feature vector
      * @return prediction values
      */
-    public float[] predict(FVec feat) {
+    public float[] predict(Fvec feat) {
         return predict(feat, false);
     }
 
@@ -190,7 +190,7 @@ public class Predictor implements Serializable {
      * @param output_margin whether to only predict margin value instead of transformed prediction
      * @return prediction values
      */
-    public float[] predict(FVec feat, boolean output_margin) {
+    public float[] predict(Fvec feat, boolean output_margin) {
         return predict(feat, output_margin, 0);
     }
 
@@ -201,7 +201,7 @@ public class Predictor implements Serializable {
      * @param base_margin predict with base margin for each prediction
      * @return prediction values
      */
-    public float[] predict(FVec feat, float base_margin) {
+    public float[] predict(Fvec feat, float base_margin) {
         return predict(feat, base_margin, 0);
     }
 
@@ -213,7 +213,7 @@ public class Predictor implements Serializable {
      * @param ntree_limit limit the number of trees used in prediction
      * @return prediction values
      */
-    public float[] predict(FVec feat, float base_margin, int ntree_limit) {
+    public float[] predict(Fvec feat, float base_margin, int ntree_limit) {
         float[] preds = predictRaw(feat, base_margin, ntree_limit);
         preds = objFunction.predTransform(preds);
         return preds;
@@ -227,7 +227,7 @@ public class Predictor implements Serializable {
      * @param ntree_limit   limit the number of trees used in prediction
      * @return prediction values
      */
-    public float[] predict(FVec feat, boolean output_margin, int ntree_limit) {
+    public float[] predict(Fvec feat, boolean output_margin, int ntree_limit) {
         float[] preds = predictRaw(feat, baseScore, ntree_limit);
         if (!output_margin) {
             preds = objFunction.predTransform(preds);
@@ -235,7 +235,7 @@ public class Predictor implements Serializable {
         return preds;
     }
 
-    float[] predictRaw(FVec feat, float base_score, int ntree_limit) {
+    float[] predictRaw(Fvec feat, float base_score, int ntree_limit) {
         float[] preds = gradBoostModel.predict(feat, ntree_limit);
         for (int i = 0; i < preds.length; i++) {
             preds[i] += base_score;
@@ -252,7 +252,7 @@ public class Predictor implements Serializable {
      * @param featureVector feature vector.
      * @return prediction value.
      */
-    public float predictSingle(FVec featureVector) {
+    public float predictSingle(Fvec featureVector) {
         return predictSingle(featureVector, false);
     }
 
@@ -266,7 +266,7 @@ public class Predictor implements Serializable {
      * @param outputMargin  whether to only predict margin value instead of transformed prediction
      * @return prediction value
      */
-    public float predictSingle(FVec featureVector, boolean outputMargin) {
+    public float predictSingle(Fvec featureVector, boolean outputMargin) {
         return predictSingle(featureVector, outputMargin, 0);
     }
 
@@ -281,7 +281,7 @@ public class Predictor implements Serializable {
      * @param numTreeLimit  limit the number of trees used in prediction.
      * @return prediction value.
      */
-    public float predictSingle(FVec featureVector, boolean outputMargin, int numTreeLimit) {
+    public float predictSingle(Fvec featureVector, boolean outputMargin, int numTreeLimit) {
         float pred = predictSingleRaw(featureVector, numTreeLimit);
         if (!outputMargin) {
             pred = objFunction.predTransform(pred);
@@ -289,7 +289,7 @@ public class Predictor implements Serializable {
         return pred;
     }
 
-    float predictSingleRaw(FVec featureVector, int numTreeLimit) {
+    float predictSingleRaw(Fvec featureVector, int numTreeLimit) {
         return gradBoostModel.predictSingle(featureVector, numTreeLimit) + baseScore;
     }
 
@@ -299,7 +299,7 @@ public class Predictor implements Serializable {
      * @param featureVector feature vector.
      * @return leaf indexes.
      */
-    public int[] predictLeaf(FVec featureVector) {
+    public int[] predictLeaf(Fvec featureVector) {
         return predictLeaf(featureVector, 0);
     }
 
@@ -310,7 +310,7 @@ public class Predictor implements Serializable {
      * @param numTreeLimit limit, 0 for all.
      * @return leaf indexes.
      */
-    public int[] predictLeaf(FVec featureVector, int numTreeLimit) {
+    public int[] predictLeaf(Fvec featureVector, int numTreeLimit) {
         return gradBoostModel.predictLeaf(featureVector, numTreeLimit);
     }
 
@@ -320,7 +320,7 @@ public class Predictor implements Serializable {
      * @param featureVector feature vector.
      * @return leaf paths.
      */
-    public String[] predictLeafPath(FVec featureVector) {
+    public String[] predictLeafPath(Fvec featureVector) {
         return predictLeafPath(featureVector, 0);
     }
 
@@ -331,7 +331,7 @@ public class Predictor implements Serializable {
      * @param ntree_limit limit, 0 for all.
      * @return leaf paths.
      */
-    public String[] predictLeafPath(FVec feat, int ntree_limit) {
+    public String[] predictLeafPath(Fvec feat, int ntree_limit) {
         return gradBoostModel.predictLeafPath(feat, ntree_limit);
     }
 

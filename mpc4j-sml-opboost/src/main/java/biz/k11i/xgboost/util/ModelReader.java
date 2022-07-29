@@ -1,6 +1,6 @@
 /*
  * Original Work Copyright 2018 H2O.ai.
- * Modified Work Copyright 2021 Weiran Liu.
+ * Modified Work Copyright 2021 Weiran Liu. Modify source code based on Alibaba Java Code Guidelines.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -85,13 +85,13 @@ public class ModelReader implements Closeable {
         return readInt(ByteOrder.LITTLE_ENDIAN);
     }
 
-    public int readIntBE() throws IOException {
+    public int readIntBigEndian() throws IOException {
         return readInt(ByteOrder.BIG_ENDIAN);
     }
 
     private int readInt(ByteOrder byteOrder) throws IOException {
-        int numBytesRead = fillBuffer(4);
-        if (numBytesRead < 4) {
+        int numBytesRead = fillBuffer(Integer.BYTES);
+        if (numBytesRead < Integer.BYTES) {
             throw new EOFException("Cannot read int value (shortage): " + numBytesRead);
         }
 
@@ -99,11 +99,11 @@ public class ModelReader implements Closeable {
     }
 
     public int[] readIntArray(int numValues) throws IOException {
-        int numBytesRead = fillBuffer(numValues * 4);
-        if (numBytesRead < numValues * 4) {
+        int numBytesRead = fillBuffer(numValues * Integer.BYTES);
+        if (numBytesRead < numValues * Integer.BYTES) {
             throw new EOFException(
                 String.format("Cannot read int array (shortage): expected = %d, actual = %d",
-                    numValues * 4, numBytesRead));
+                    numValues * Integer.BYTES, numBytesRead));
         }
 
         ByteBuffer byteBuffer = ByteBuffer.wrap(buffer).order(ByteOrder.LITTLE_ENDIAN);
@@ -126,8 +126,8 @@ public class ModelReader implements Closeable {
     }
 
     public long readLong() throws IOException {
-        int numBytesRead = fillBuffer(8);
-        if (numBytesRead < 8) {
+        int numBytesRead = fillBuffer(Long.BYTES);
+        if (numBytesRead < Long.BYTES) {
             throw new IOException("Cannot read long value (shortage): " + numBytesRead);
         }
 
@@ -148,8 +148,8 @@ public class ModelReader implements Closeable {
     }
 
     public float readFloat() throws IOException {
-        int numBytesRead = fillBuffer(4);
-        if (numBytesRead < 4) {
+        int numBytesRead = fillBuffer(Float.BYTES);
+        if (numBytesRead < Float.BYTES) {
             throw new IOException("Cannot read float value (shortage): " + numBytesRead);
         }
 
@@ -157,8 +157,8 @@ public class ModelReader implements Closeable {
     }
 
     public float[] readFloatArray(int numValues) throws IOException {
-        int numBytesRead = fillBuffer(numValues * 4);
-        if (numBytesRead < numValues * 4) {
+        int numBytesRead = fillBuffer(numValues * Float.BYTES);
+        if (numBytesRead < numValues * Float.BYTES) {
             throw new EOFException(
                 String.format("Cannot read float array (shortage): expected = %d, actual = %d",
                     numValues * 4, numBytesRead));
@@ -174,12 +174,12 @@ public class ModelReader implements Closeable {
         return result;
     }
 
-    public double[] readDoubleArrayBE(int numValues) throws IOException {
-        int numBytesRead = fillBuffer(numValues * 8);
-        if (numBytesRead < numValues * 8) {
+    public double[] readDoubleArrayBigEndian(int numValues) throws IOException {
+        int numBytesRead = fillBuffer(numValues * Double.BYTES);
+        if (numBytesRead < numValues * Double.BYTES) {
             throw new EOFException(
                 String.format("Cannot read double array (shortage): expected = %d, actual = %d",
-                    numValues * 8, numBytesRead));
+                    numValues * Double.BYTES, numBytesRead));
         }
 
         ByteBuffer byteBuffer = ByteBuffer.wrap(buffer).order(ByteOrder.BIG_ENDIAN);
@@ -205,7 +205,7 @@ public class ModelReader implements Closeable {
             throw new IOException("Too long string: " + length);
         }
 
-        return readString((int)length);
+        return readString((int) length);
     }
 
     public String readString(int numBytes) throws IOException {
@@ -217,13 +217,13 @@ public class ModelReader implements Closeable {
         return new String(buffer, 0, numBytes, StandardCharsets.UTF_8);
     }
 
-    public String readUTF() throws IOException {
+    public String readUtf() throws IOException {
         int utflen = readByteAsInt();
-        utflen = (short)((utflen << 8) | readByteAsInt());
-        return readUTF(utflen);
+        utflen = (short) ((utflen << 8) | readByteAsInt());
+        return readUtf(utflen);
     }
 
-    public String readUTF(int utflen) throws IOException {
+    public String readUtf(int utflen) throws IOException {
         int numBytesRead = fillBuffer(utflen);
         if (numBytesRead < utflen) {
             throw new EOFException(
@@ -231,21 +231,23 @@ public class ModelReader implements Closeable {
                     utflen, numBytesRead));
         }
 
-        char[] chararr = new char[utflen];
+        char[] charArray = new char[utflen];
 
         int c, char2, char3;
         int count = 0;
-        int chararr_count = 0;
+        int charArrayCount = 0;
 
         while (count < utflen) {
-            c = (int)buffer[count] & 0xff;
-            if (c > 127) { break; }
+            c = (int) buffer[count] & 0xff;
+            if (c > 127) {
+                break;
+            }
             count++;
-            chararr[chararr_count++] = (char)c;
+            charArray[charArrayCount++] = (char) c;
         }
 
         while (count < utflen) {
-            c = (int)buffer[count] & 0xff;
+            c = (int) buffer[count] & 0xff;
             switch (c >> 4) {
                 case 0:
                 case 1:
@@ -257,7 +259,7 @@ public class ModelReader implements Closeable {
                 case 7:
                     // 0xxxxxxx
                     count++;
-                    chararr[chararr_count++] = (char)c;
+                    charArray[charArrayCount++] = (char) c;
                     break;
                 case 12:
                 case 13:
@@ -272,7 +274,7 @@ public class ModelReader implements Closeable {
                         throw new UTFDataFormatException(
                             "malformed input around byte " + count);
                     }
-                    chararr[chararr_count++] = (char)(((c & 0x1F) << 6) |
+                    charArray[charArrayCount++] = (char) (((c & 0x1F) << 6) |
                         (char2 & 0x3F));
                     break;
                 case 14:
@@ -288,7 +290,7 @@ public class ModelReader implements Closeable {
                         throw new UTFDataFormatException(
                             "malformed input around byte " + (count - 1));
                     }
-                    chararr[chararr_count++] = (char)(((c & 0x0F) << 12) |
+                    charArray[charArrayCount++] = (char) (((c & 0x0F) << 12) |
                         ((char2 & 0x3F) << 6) |
                         ((char3 & 0x3F)));
                     break;
@@ -299,7 +301,7 @@ public class ModelReader implements Closeable {
             }
         }
         // The number of chars produced may be less than utflen
-        return new String(chararr, 0, chararr_count);
+        return new String(charArray, 0, charArrayCount);
     }
 
     @Override

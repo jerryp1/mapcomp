@@ -98,9 +98,9 @@ class MegaBinOkvs implements Okvs<ByteBuffer> {
             .mapToObj(binIndex -> new HashMap<ByteBuffer, byte[]>(binSize))
             .collect(Collectors.toCollection(ArrayList::new));
         // 将各个元素放置在桶中
-        for (ByteBuffer key : keyValueMap.keySet()) {
-            int binIndex = binHash.getInteger(key.array(), binNum);
-            bins.get(binIndex).put(key, keyValueMap.get(key));
+        for (Map.Entry<ByteBuffer, byte[]> entrySet : keyValueMap.entrySet()) {
+            int binIndex = binHash.getInteger(entrySet.getKey().array(), binNum);
+            bins.get(binIndex).put(entrySet.getKey(), entrySet.getValue());
         }
         // 验证各个桶的大小
         for (int binIndex = 0; binIndex < binNum; binIndex++) {

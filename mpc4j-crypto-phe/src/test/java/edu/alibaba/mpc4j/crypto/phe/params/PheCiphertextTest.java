@@ -15,8 +15,10 @@ package edu.alibaba.mpc4j.crypto.phe.params;
 
 import com.google.common.base.Preconditions;
 import edu.alibaba.mpc4j.common.tool.utils.BigIntegerUtils;
+import edu.alibaba.mpc4j.common.tool.utils.DoubleUtils;
 import edu.alibaba.mpc4j.crypto.phe.*;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.math3.util.Precision;
 import org.junit.Assert;
 import org.junit.Test;
 import org.junit.experimental.runners.Enclosed;
@@ -171,7 +173,7 @@ public class PheCiphertextTest {
                 double result1 = pheEngine.decrypt(sk, ciphertext1).decodeDouble();
                 double result2 = pheEngine.decrypt(sk, ciphertext2).decodeDouble();
                 double absValue = Math.abs(value);
-                if (absValue == 0.0 || absValue > 1.0) {
+                if (Precision.equals(absValue, 0, DoubleUtils.PRECISION) || absValue > 1.0) {
                     tolerance = PheTestUtils.EPSILON * Math.pow(2.0, Math.getExponent(value));
                 }
                 Assert.assertEquals(value, result1, tolerance);

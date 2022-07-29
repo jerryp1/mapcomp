@@ -1,6 +1,6 @@
 /*
  * Original Work Copyright 2018 H2O.ai.
- * Modified Work Copyright 2021 Weiran Liu.
+ * Modified Work Copyright 2021 Weiran Liu. Modify source code based on Alibaba Java Code Guidelines.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -25,7 +25,7 @@ import java.util.Map;
  * @author KOMIYA Atsushi, Michal Kurka, Weiran Liu
  * @date 2021/10/08
  */
-public interface FVec extends Serializable {
+public interface Fvec extends Serializable {
     /**
      * Gets index-th value.
      *
@@ -44,22 +44,22 @@ public interface FVec extends Serializable {
          * Builds FVec from dense vector.
          *
          * @param values         float values.
-         * @param treatsZeroAsNA treat zero as N/A if true.
+         * @param treatsZeroAsNa treat zero as N/A if true.
          * @return FVec.
          */
-        public static FVec fromArray(float[] values, boolean treatsZeroAsNA) {
-            return new FVecFloatArray(values, treatsZeroAsNA);
+        public static Fvec fromArray(float[] values, boolean treatsZeroAsNa) {
+            return new FvecFloatArray(values, treatsZeroAsNa);
         }
 
         /**
          * Builds FVec from dense vector.
          *
          * @param values         double values.
-         * @param treatsZeroAsNA treat zero as N/A if true.
+         * @param treatsZeroAsNa treat zero as N/A if true.
          * @return FVec.
          */
-        public static FVec fromArray(double[] values, boolean treatsZeroAsNA) {
-            return new FVecDoubleArray(values, treatsZeroAsNA);
+        public static Fvec fromArray(double[] values, boolean treatsZeroAsNa) {
+            return new FvecDoubleArray(values, treatsZeroAsNa);
         }
 
         /**
@@ -68,8 +68,8 @@ public interface FVec extends Serializable {
          * @param map map containing non-zero values.
          * @return FVec.
          */
-        public static FVec fromMap(Map<Integer, ? extends Number> map) {
-            return new FVecMap(map);
+        public static Fvec fromMap(Map<Integer, ? extends Number> map) {
+            return new FvecMap(map);
         }
     }
 }

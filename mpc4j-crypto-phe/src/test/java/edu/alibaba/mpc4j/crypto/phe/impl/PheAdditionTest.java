@@ -23,6 +23,7 @@ import edu.alibaba.mpc4j.crypto.phe.params.PhePlaintext;
 import edu.alibaba.mpc4j.crypto.phe.params.PhePrivateKey;
 import edu.alibaba.mpc4j.crypto.phe.params.PhePublicKey;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.math3.util.Precision;
 import org.junit.Assert;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -109,7 +110,7 @@ public class PheAdditionTest {
             ciphertextB = pheEngine.encrypt(pk, b);
             // 误差容忍度
             double absValue = Math.abs(plainResult);
-            if (absValue == 0.0 || absValue > 1.0) {
+            if (Precision.equals(absValue, 0.0, DoubleUtils.PRECISION) || absValue > 1.0) {
                 tolerance = PheTestUtils.EPSILON * Math.pow(2.0, Math.getExponent(plainResult));
             } else {
                 tolerance = PheTestUtils.EPSILON;

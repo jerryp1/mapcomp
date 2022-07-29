@@ -14,6 +14,7 @@
 package edu.alibaba.mpc4j.crypto.phe.impl;
 
 import com.google.common.base.Preconditions;
+import edu.alibaba.mpc4j.common.tool.utils.DoubleUtils;
 import edu.alibaba.mpc4j.crypto.phe.PheEngine;
 import edu.alibaba.mpc4j.crypto.phe.PheEngineTestConfiguration;
 import edu.alibaba.mpc4j.crypto.phe.PheTestUtils;
@@ -21,6 +22,7 @@ import edu.alibaba.mpc4j.crypto.phe.params.PheCiphertext;
 import edu.alibaba.mpc4j.crypto.phe.params.PhePrivateKey;
 import edu.alibaba.mpc4j.crypto.phe.params.PhePublicKey;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.math3.util.Precision;
 import org.junit.Assert;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -139,7 +141,7 @@ public class PheDivisionTest {
             encryptedResult = pheEngine.divide(pk, ciphertextA, b);
             decodedResult = pheEngine.decrypt(sk, encryptedResult).decodeDouble();
             double absValue = Math.abs(plainResult);
-            if (absValue == 0.0 || absValue > 1.0) {
+            if (Precision.equals(absValue, 0, DoubleUtils.PRECISION) || absValue > 1.0) {
                 tolerance = PheTestUtils.EPSILON * Math.pow(2.0, Math.getExponent(plainResult));
             } else {
                 tolerance = PheTestUtils.EPSILON;

@@ -242,7 +242,7 @@ public class PhePlaintextEncoder implements Packable {
         if (value < 0 && !isSigned()) {
             throw new CryptoEncodeException("Input value cannot be encoded using this PheEncoding.");
         }
-        int exponent = value == 0 ? 0 : getDoublePrecExponent(value);
+        int exponent = value > 0 ? getDoublePrecExponent(value) : 0;
         return PhePlaintext.fromParams(this, innerEncode(new BigDecimal(value), exponent), exponent);
     }
 

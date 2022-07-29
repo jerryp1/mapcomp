@@ -16,6 +16,7 @@ import java.io.IOException;
 import java.io.PrintWriter;
 import java.net.URISyntaxException;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Properties;
 
 /**
@@ -185,15 +186,15 @@ abstract class AbstractOverfitOpXgBoost implements OpBoost {
                              Double ldpTrainMeasure, double trainMeasure, double testMeasure) {
         String information = name
             // ε
-            + "\t" + (epsilon == null ? "N/A" : epsilon)
+            + "\t" + (Objects.isNull(epsilon) ? "N/A" : epsilon)
             // θ
-            + "\t" + (theta == null ? "N/A" : theta)
+            + "\t" + (Objects.isNull(theta) ? "N/A" : theta)
             // α
-            + "\t" + (alpha == null ? "N/A" : alpha)
+            + "\t" + (Objects.isNull(alpha) ? "N/A" : alpha)
             // 树数量
             + "\t" + treeNum
             // LDP训练数据集度量值
-            + "\t" + (ldpTrainMeasure == null ? "N/A" : ldpTrainMeasure)
+            + "\t" + (Objects.isNull(ldpTrainMeasure) ? "N/A" : ldpTrainMeasure)
             // 训练数据集度量值
             + "\t" + trainMeasure
             // 测试数据集度量值

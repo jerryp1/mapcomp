@@ -16,13 +16,16 @@
  */
 package biz.k11i.xgboost.fvec;
 
+import edu.alibaba.mpc4j.common.tool.utils.DoubleUtils;
+import org.apache.commons.math3.util.Precision;
+
 /**
  * Feature Vector Float Array.
  *
  * @author KOMIYA Atsushi, Michal Kurka, Weiran Liu
  * @date 2021/10/08
  */
-class FVecFloatArray implements FVec {
+class FvecFloatArray implements Fvec {
     private static final long serialVersionUID = -6252541085408935802L;
     /**
      * float value array
@@ -33,9 +36,9 @@ class FVecFloatArray implements FVec {
      */
     private final boolean treatsZeroAsNA;
 
-    FVecFloatArray(float[] values, boolean treatsZeroAsNA) {
+    FvecFloatArray(float[] values, boolean treatsZeroAsNa) {
         this.values = values;
-        this.treatsZeroAsNA = treatsZeroAsNA;
+        this.treatsZeroAsNA = treatsZeroAsNa;
     }
 
     @Override
@@ -45,7 +48,7 @@ class FVecFloatArray implements FVec {
         }
 
         float result = values[index];
-        if (treatsZeroAsNA && result == 0) {
+        if (treatsZeroAsNA && Precision.equals(result, 0, DoubleUtils.PRECISION)) {
             return Float.NaN;
         }
 

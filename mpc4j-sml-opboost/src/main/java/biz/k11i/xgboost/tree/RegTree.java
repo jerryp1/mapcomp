@@ -16,7 +16,7 @@
  */
 package biz.k11i.xgboost.tree;
 
-import biz.k11i.xgboost.fvec.FVec;
+import biz.k11i.xgboost.fvec.Fvec;
 
 import java.io.Serializable;
 
@@ -34,7 +34,7 @@ public interface RegTree extends Serializable {
      * @param featureVector feature vector.
      * @return leaf index.
      */
-    int getLeafIndex(FVec featureVector);
+    int getLeafIndex(Fvec featureVector);
 
     /**
      * Retrieves nodes from root to leaf and returns path to leaf.
@@ -42,7 +42,7 @@ public interface RegTree extends Serializable {
      * @param featureVector feature vector.
      * @param stringBuilder output param, will write path path to leaf into this buffer.
      */
-    void getLeafPath(FVec featureVector, StringBuilder stringBuilder);
+    void getLeafPath(Fvec featureVector, StringBuilder stringBuilder);
 
     /**
      * Retrieves nodes from root to leaf and returns leaf value.
@@ -51,7 +51,7 @@ public interface RegTree extends Serializable {
      * @param rootId        starting root index.
      * @return leaf value.
      */
-    float getLeafValue(FVec featureVector, int rootId);
+    float getLeafValue(Fvec featureVector, int rootId);
 
     /**
      * Gets tree's nodes.

@@ -16,8 +16,10 @@
  */
 package biz.k11i.xgboost.tree;
 
-import biz.k11i.xgboost.fvec.FVec;
+import biz.k11i.xgboost.fvec.Fvec;
 import biz.k11i.xgboost.util.ModelReader;
+import edu.alibaba.mpc4j.common.tool.utils.DoubleUtils;
+import org.apache.commons.math3.util.Precision;
 
 import java.io.IOException;
 import java.io.Serializable;
@@ -85,6 +87,7 @@ public class RegTreeNode extends AbstractRegTreeNode implements Serializable {
         leaf = isLeaf();
     }
 
+    @Override
     public boolean isLeaf() {
         return leftChild == -1;
     }
@@ -104,9 +107,9 @@ public class RegTreeNode extends AbstractRegTreeNode implements Serializable {
     }
 
     @Override
-    public int next(FVec featureVector) {
+    public int next(Fvec featureVector) {
         float value = featureVector.featureValue(splitIndex);
-        if (value != value) {
+        if (!Precision.equals(value, value, DoubleUtils.PRECISION)) {
             // is NaN?
             return defaultChild;
         }

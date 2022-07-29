@@ -1,6 +1,6 @@
 /*
  * Original Work Copyright 2018 H2O.ai.
- * Modified Work Copyright 2021 Weiran Liu.
+ * Modified Work Copyright 2021 Weiran Liu. Modify source code based on Alibaba Java Code Guidelines.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -24,14 +24,14 @@ import java.util.Map;
  * @author KOMIYA Atsushi, Michal Kurka, Weiran Liu
  * @date 2021/10/08
  */
-class FVecMap implements FVec {
+class FvecMap implements Fvec {
     private static final long serialVersionUID = 4538474534313444423L;
     /**
      * feature (index, value)-map
      */
     private final Map<Integer, ? extends Number> values;
 
-    FVecMap(Map<Integer, ? extends Number> values) {
+    FvecMap(Map<Integer, ? extends Number> values) {
         this.values = values;
     }
 

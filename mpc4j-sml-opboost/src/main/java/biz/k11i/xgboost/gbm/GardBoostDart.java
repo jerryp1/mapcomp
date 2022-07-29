@@ -17,7 +17,7 @@
 package biz.k11i.xgboost.gbm;
 
 import biz.k11i.xgboost.config.PredictorConfiguration;
-import biz.k11i.xgboost.fvec.FVec;
+import biz.k11i.xgboost.fvec.Fvec;
 import biz.k11i.xgboost.tree.RegTree;
 import biz.k11i.xgboost.util.ModelReader;
 
@@ -50,7 +50,7 @@ public class GardBoostDart extends GradBoostTree {
     }
 
     @Override
-    protected float predictGroup(FVec feat, int groupId, int numTreeLimit) {
+    protected float predictGroup(Fvec feat, int groupId, int numTreeLimit) {
         RegTree[] trees = groupTrees[groupId];
         int treeLeft = numTreeLimit == 0 ? trees.length : numTreeLimit;
 

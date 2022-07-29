@@ -1,6 +1,6 @@
 /*
  * Original Work Copyright 2013 Square Inc.
- * Modified Work Copyright 2022 Weiran Liu.
+ * Modified Work Copyright 2022 Weiran Liu. Modify source code based on Alibaba Java Code Guidelines.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,7 +16,6 @@
  */
 package edu.alibaba.mpc4j.common.jnagmp;
 
-import org.junit.AfterClass;
 import org.junit.Test;
 
 import java.math.BigInteger;
@@ -28,25 +27,7 @@ import static org.junit.Assert.assertEquals;
 /**
  * Tests for {@link GmpBigInteger}.
  */
-public class GmpBigIntegerTest {
-
-    @AfterClass
-    public static void forceGc() throws InterruptedException {
-        // Force GC to verify {@code GmpInteger.mpzMemory} cleans up properly without crashing.
-        final AtomicBoolean gcHappened = new AtomicBoolean(false);
-        new Object() {
-            @Override
-            protected void finalize() throws Throwable {
-                super.finalize();
-                gcHappened.set(true);
-            }
-        };
-        while (!gcHappened.get()) {
-            System.gc();
-            //noinspection BusyWait
-            Thread.sleep(100);
-        }
-    }
+public class GmpBigIntegerTest implements AutoCloseable {
 
     @Test
     public void testNegatives() {
@@ -80,5 +61,17 @@ public class GmpBigIntegerTest {
                 }
             }
         }));
+    }
+
+    @Override
+    public void close() throws Exception {
+        // Force GC to verify {@code GmpInteger.mpzMemory} cleans up properly without crashing.
+        final AtomicBoolean gcHappened = new AtomicBoolean(false);
+        gcHappened.set(true);
+        while (!gcHappened.get()) {
+            System.gc();
+            //noinspection BusyWait
+            Thread.sleep(100);
+        }
     }
 }

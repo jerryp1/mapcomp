@@ -95,7 +95,7 @@ public abstract class AbstractOpBoostHost extends AbstractMultiPartyPto {
 
     protected final void slaveSchemaStep() throws MpcAbortException {
         slaveSchemaMap = new HashMap<>(otherParties().length);
-        columnSlaveMap = new HashMap<>();
+        columnSlaveMap = new HashMap<>(otherParties().length);
         for (Party slaveParty : otherParties()) {
             DataPacketHeader slaveSchemaHeader = new DataPacketHeader(
                 taskId, ptoDesc.getPtoId(), OpBoostPtoDesc.PtoStep.SLAVE_SEND_SCHEMA.ordinal(), extraInfo,
@@ -232,7 +232,7 @@ public abstract class AbstractOpBoostHost extends AbstractMultiPartyPto {
             StructField structField = slaveSchema.field(columnIndex);
             String columnName = structField.name;
             Set<Integer> slaveColumnOrderSplitSet = slaveSplitSetMap.get(columnName);
-            if (slaveColumnOrderSplitSet.size() == 0) {
+            if (slaveColumnOrderSplitSet.isEmpty()) {
                 // 如果此列不需要请求切分点，则增加一行空列
                 slaveOrderSplitsPayload.add(new byte[0]);
             } else {
@@ -257,7 +257,7 @@ public abstract class AbstractOpBoostHost extends AbstractMultiPartyPto {
             String columnName = structField.name;
             Set<Integer> slaveColumnOrderSplitSet = slaveSplitSetMap.get(columnName);
             byte[] slaveColumnSplitsByteArray = slaveSplitsPayload.remove(0);
-            if (slaveColumnOrderSplitSet.size() == 0) {
+            if (slaveColumnOrderSplitSet.isEmpty()) {
                 MpcAbortPreconditions.checkArgument(slaveColumnSplitsByteArray.length == 0);
                 // 放置空映射
                 slaveSplitValueMap.put(columnName, new HashMap<>(0));

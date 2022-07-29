@@ -17,7 +17,7 @@
 package biz.k11i.xgboost.tree;
 
 import biz.k11i.xgboost.Predictor;
-import biz.k11i.xgboost.fvec.FVec;
+import biz.k11i.xgboost.fvec.Fvec;
 import org.junit.Test;
 
 import java.io.IOException;
@@ -36,7 +36,7 @@ public class PredictorPredictLeafTest {
     public void shouldPredictLeafIds() throws IOException {
         Predictor p = new Predictor(getClass().getResourceAsStream("/boosterBytes.bin"));
         float[] input = new float[] { 10, 20, 30, 5, 7, 10 };
-        FVec vec = FVec.Transformer.fromArray(input, false);
+        Fvec vec = Fvec.Transformer.fromArray(input, false);
         // 预测值
         int[] predicts = p.predictLeaf(vec);
         // 期望值
@@ -48,7 +48,7 @@ public class PredictorPredictLeafTest {
     public void shouldPredictLeafPaths() throws IOException {
         Predictor p = new Predictor(getClass().getResourceAsStream("/boosterBytes.bin"));
         float[] input = new float[] { 10, 20, 30, 5, 7, 10 };
-        FVec vec = FVec.Transformer.fromArray(input, false);
+        Fvec vec = Fvec.Transformer.fromArray(input, false);
         // 实际预测路径
         String[] predicts = p.predictLeafPath(vec);
         // 期望预测路径

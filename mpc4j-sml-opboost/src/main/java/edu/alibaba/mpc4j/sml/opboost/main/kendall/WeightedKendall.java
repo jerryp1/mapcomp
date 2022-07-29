@@ -19,6 +19,7 @@ import java.io.IOException;
 import java.io.PrintWriter;
 import java.net.URISyntaxException;
 import java.util.Arrays;
+import java.util.Objects;
 import java.util.Properties;
 
 /**
@@ -160,6 +161,7 @@ public class WeightedKendall implements OpBoost {
         LOGGER.info("α = {}", alphas);
     }
 
+    @Override
     public void run() throws IOException {
         String filePath = TASK_TYPE.name()
             // 数据集
@@ -295,11 +297,11 @@ public class WeightedKendall implements OpBoost {
                            Double epsilon, Integer theta, Double alpha, double measure) {
         String information = name
             // ε
-            + "\t" + (epsilon == null ? "N/A" : epsilon)
+            + "\t" + (Objects.isNull(epsilon) ? "N/A" : epsilon)
             // θ
-            + "\t" + (theta == null ? "N/A" : theta)
+            + "\t" + (Objects.isNull(theta) ? "N/A" : theta)
             // α
-            + "\t" + (alpha == null ? "N/A" : alpha)
+            + "\t" + (Objects.isNull(alpha) ? "N/A" : alpha)
             // measure
             + "\t" + measure;
         printWriter.println(information);

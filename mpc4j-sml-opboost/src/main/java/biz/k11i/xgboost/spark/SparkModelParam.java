@@ -38,20 +38,22 @@ public class SparkModelParam implements Serializable {
     final String labelCol;
     final String predictionCol;
 
-    // classification model only
+    /**
+     * classification model only.
+     */
     final String rawPredictionCol;
     final double[] thresholds;
 
     public SparkModelParam(String modelType, String featureCol, ModelReader reader) throws IOException {
         this.modelType = modelType;
         this.featureCol = featureCol;
-        this.labelCol = reader.readUTF();
-        this.predictionCol = reader.readUTF();
+        this.labelCol = reader.readUtf();
+        this.predictionCol = reader.readUtf();
 
         if (MODEL_TYPE_CLS.equals(modelType)) {
-            this.rawPredictionCol = reader.readUTF();
-            int thresholdLength = reader.readIntBE();
-            this.thresholds = thresholdLength > 0 ? reader.readDoubleArrayBE(thresholdLength) : null;
+            this.rawPredictionCol = reader.readUtf();
+            int thresholdLength = reader.readIntBigEndian();
+            this.thresholds = thresholdLength > 0 ? reader.readDoubleArrayBigEndian(thresholdLength) : null;
 
         } else if (MODEL_TYPE_REG.equals(modelType)) {
             this.rawPredictionCol = null;
