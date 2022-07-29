@@ -36,8 +36,8 @@ public abstract class AbstractClsOpBoost extends AbstractOpBoost {
     public void init() throws IOException, URISyntaxException {
         super.init();
         numClass = OpBoostUtils.getNumClass(formula, trainDataFrame);
+        Preconditions.checkArgument(numClass > 1, "Num of Class must be greater than 1: %s", numClass);
         trainTruths = formula.y(trainDataFrame).toIntArray();
         testTruths = formula.y(testDataFrame).toIntArray();
-        Preconditions.checkArgument(numClass > 1, "Num of Class must be greater than 1: %s", numClass);
     }
 }

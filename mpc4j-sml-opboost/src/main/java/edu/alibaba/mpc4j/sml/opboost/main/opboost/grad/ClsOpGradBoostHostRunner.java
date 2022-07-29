@@ -9,12 +9,9 @@ import edu.alibaba.mpc4j.sml.smile.classification.GradientTreeBoost;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import smile.data.DataFrame;
-import smile.data.Tuple;
 import smile.data.formula.Formula;
-import smile.validation.metric.AUC;
 import smile.validation.metric.Accuracy;
 
-import java.util.Arrays;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -38,10 +35,6 @@ class ClsOpGradBoostHostRunner extends AbstractOpBoostHostRunner {
      */
     private final ClsOpGradBoostHostConfig hostConfig;
     /**
-     * 分类数量
-     */
-    private final int numClass;
-    /**
      * 训练真实值
      */
     private final int[] trainTruths;
@@ -51,14 +44,13 @@ class ClsOpGradBoostHostRunner extends AbstractOpBoostHostRunner {
     private final int[] testTruths;
 
     ClsOpGradBoostHostRunner(ClsOpGradBoostHost host, ClsOpGradBoostHostConfig hostConfig, int totalRound,
-                             Formula formula, int numClass, DataFrame ownDataFrame,
+                             Formula formula, DataFrame ownDataFrame,
                              DataFrame trainFeatureDataFrame, int[] trainTruth,
                              DataFrame testFeatureDataFrame, int[] testTruth) {
         super(totalRound, formula, ownDataFrame, trainFeatureDataFrame, testFeatureDataFrame);
         this.host = host;
         hostRpc = host.getRpc();
         this.hostConfig = hostConfig;
-        this.numClass = numClass;
         this.trainTruths = trainTruth;
         this.testTruths = testTruth;
     }
@@ -76,38 +68,13 @@ class ClsOpGradBoostHostRunner extends AbstractOpBoostHostRunner {
             // 记录时间
             long time = stopWatch.getTime(TimeUnit.MILLISECONDS);
             stopWatch.reset();
-            double trainMeasure;
-            double testMeasure;
-            if (numClass == 2) {
-                // 如果是二分类问题，则计算AUC
-                double[][] trainProbabilities = new double[trainFeatureDataFrame.nrows()][numClass];
-                Tuple[] trainTuples = trainFeatureDataFrame.stream().toArray(Tuple[]::new);
-                model.predict(trainTuples, trainProbabilities);
-                double[] trainAucProbabilities = Arrays.stream(trainProbabilities)
-                    .mapToDouble(probability -> probability[1])
-                    .toArray();
-                trainMeasure = AUC.of(trainTruths, trainAucProbabilities);
-
-                double[][] testProbabilities = new double[testFeatureDataFrame.nrows()][numClass];
-                Tuple[] testTuples = testFeatureDataFrame.stream().toArray(Tuple[]::new);
-                model.predict(testTuples, testProbabilities);
-                double[] testAucProbabilities = Arrays.stream(testProbabilities)
-                    .mapToDouble(probability -> probability[1])
-                    .toArray();
-                testMeasure = AUC.of(testTruths, testAucProbabilities);
-                LOGGER.info("Round {}: Time = {}ms, Train AUC = {}, Test AUC = {}",
-                    round, time, trainMeasure, testMeasure
-                );
-            } else {
-                // 如果是多分类问题，则计算准确率
-                int[] trainPredicts = model.predict(trainFeatureDataFrame);
-                trainMeasure = Accuracy.of(trainTruths, trainPredicts);
-                int[] testPredicts = model.predict(testFeatureDataFrame);
-                testMeasure = Accuracy.of(testTruths, testPredicts);
-                LOGGER.info("Round {}: Time = {}ms, Train Acc. = {}, Test Acc. = {}",
-                    round, time, trainMeasure, testMeasure
-                );
-            }
+            int[] trainPredicts = model.predict(trainFeatureDataFrame);
+            double trainMeasure = Accuracy.of(trainTruths, trainPredicts);
+            int[] testPredicts = model.predict(testFeatureDataFrame);
+            double testMeasure = Accuracy.of(testTruths, testPredicts);
+            LOGGER.info("Round {}: Time = {}ms, Train Acc. = {}, Test Acc. = {}",
+                round, time, trainMeasure, testMeasure
+            );
             totalTrainMeasure += trainMeasure;
             totalTestMeasure += testMeasure;
             totalTime += time;
