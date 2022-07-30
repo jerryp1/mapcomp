@@ -1,6 +1,6 @@
 /*
  * Original Work Copyright 2013 Square Inc.
- * Modified Work Copyright 2022 Weiran Liu. Modify source code based on Alibaba Java Code Guidelines.
+ * Modified by Weiran Liu. Adjust the code based on Alibaba Java Code Guidelines.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -26,6 +26,8 @@ import static org.junit.Assert.assertEquals;
 
 /**
  * Tests for {@link GmpBigInteger}.
+ *
+ * @author Square Inc.
  */
 public class GmpBigIntegerTest implements AutoCloseable {
 

@@ -1,6 +1,6 @@
 /*
  * Original Work Copyright 2013 Square Inc.
- * Modified Work Copyright 2022 Weiran Liu. Modify source code based on Alibaba Java Code Guideline.
+ * Modified by Weiran Liu. Adjust the code based on Alibaba Java Code Guidelines.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -29,8 +29,7 @@ import static java.lang.Math.min;
 /**
  * High level Java API for accessing {@link LibGmp} safely.
  *
- * @author Weiran Liu.
- * @date 2022/07/29
+ * @author Square Inc.
  */
 public final class Gmp implements AutoCloseable {
     /**

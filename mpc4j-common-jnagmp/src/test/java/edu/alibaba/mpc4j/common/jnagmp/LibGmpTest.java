@@ -1,6 +1,6 @@
 /*
  * Original Work Copyright 2013 Square Inc.
- * Modified Work Copyright 2022 Weiran Liu.
+ * Modified by Weiran Liu. Adjust the code based on Alibaba Java Code Guidelines.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -29,6 +29,8 @@ import static org.junit.Assert.assertEquals;
 
 /**
  * Tests for {@link LibGmp}. Minor format modification.
+ *
+ * @author Square Inc.
  */
 public class LibGmpTest {
     /**
@@ -59,7 +61,7 @@ public class LibGmpTest {
 
     @Test
     public void testVersion() {
-        String libGmpVersion = LibGmp.__gmp_version;
+        String libGmpVersion = LibGmp.GMP_VERSION;
         // All GMP version is 6.1.1 except for darwin-arrch64 (6.2.1)
         Assert.assertTrue(libGmpVersion.equals("6.1.1") || libGmpVersion.equals("6.2.1"));
     }

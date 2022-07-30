@@ -1,6 +1,6 @@
 /*
  * Original Work Copyright 2013 Square Inc.
- * Modified Work Copyright 2022 Weiran Liu.
+ * Modified by Weiran Liu. Adjust the code based on Alibaba Java Code Guidelines.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -32,6 +32,8 @@ import java.io.File;
 
 /**
  * Direct JNA mappings to select libgmp functions. Minor format modification.
+ *
+ * @author Square Inc.
  */
 public final class LibGmp {
     /**
@@ -43,9 +45,9 @@ public final class LibGmp {
     private static final Class SIZE_T_CLASS;
 
     static {
-        if (Native.SIZE_T_SIZE == 4) {
+        if (Native.SIZE_T_SIZE == Integer.BYTES) {
             SIZE_T_CLASS = SizeT4.class;
-        } else if (Native.SIZE_T_SIZE == 8) {
+        } else if (Native.SIZE_T_SIZE == Long.BYTES) {
             SIZE_T_CLASS = SizeT8.class;
         } else {
             throw new AssertionError("Unexpected Native.SIZE_T_SIZE: " + Native.SIZE_T_SIZE);
@@ -79,10 +81,10 @@ public final class LibGmp {
      * The embedded release is "6.1.1", except for darwin-aarch64 with "6.2.1".
      * Note that the format “i.j” was used, before version 4.3.0, when k was zero.
      */
-    public static final String __gmp_version;
+    public static final String GMP_VERSION;
 
     static {
-        __gmp_version = NativeLibrary.getProcess()
+        GMP_VERSION = NativeLibrary.getProcess()
             // library is already loaded and linked.
             // &(const char* __gmp_version)
             .getGlobalVariableAddress("__gmp_version")
