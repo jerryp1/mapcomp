@@ -119,7 +119,7 @@ public class BigDecimalMathTest {
      */
     private static BigDecimal toCheck(double value) {
         long longValue = (long) value;
-        if (Precision.equals(value, longValue, DoubleUtils.PRECISION)) {
+        if (Precision.equals(value, longValue, Double.MIN_VALUE)) {
             return BigDecimal.valueOf(longValue);
         }
         return BigDecimal.valueOf(value);
