@@ -1,5 +1,6 @@
 /*
  * Copyright 2015 NICTA.
+ * Modified by Weiran Liu. Adjust the code based on Alibaba Java Code Guidelines.
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this
  * file except in compliance with the License. You may obtain a copy of the License at

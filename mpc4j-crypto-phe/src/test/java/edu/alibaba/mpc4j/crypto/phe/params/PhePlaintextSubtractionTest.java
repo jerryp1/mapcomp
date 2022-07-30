@@ -104,7 +104,7 @@ public class PhePlaintextSubtractionTest {
             plainResult = a - b;
             // 允许误差量
             double absValue = Math.abs(plainResult);
-            if (Precision.equals(absValue, 0, DoubleUtils.PRECISION) || absValue > 1.0) {
+            if (Precision.equals(absValue, 0, Double.MIN_VALUE) || absValue > 1.0) {
                 tolerance = PheTestUtils.EPSILON * Math.pow(2.0, Math.getExponent(plainResult));
             } else {
                 tolerance = PheTestUtils.EPSILON;

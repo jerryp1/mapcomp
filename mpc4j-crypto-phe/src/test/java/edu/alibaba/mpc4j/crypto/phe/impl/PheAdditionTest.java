@@ -1,6 +1,6 @@
 /*
- * Modified by Weiran Liu based on Alibaba Java Code Guidelines (double comparison using Precision instead of ==).
  * Copyright 2015 NICTA.
+ * Modified by Weiran Liu. Adjust the code based on Alibaba Java Code Guidelines.
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this
  * file except in compliance with the License. You may obtain a copy of the License at
@@ -113,7 +113,7 @@ public class PheAdditionTest {
             ciphertextB = pheEngine.encrypt(pk, b);
             // 误差容忍度
             double absValue = Math.abs(plainResult);
-            if (Precision.equals(absValue, 0, DoubleUtils.PRECISION) || absValue > 1.0) {
+            if (Precision.equals(absValue, 0.0, Double.MIN_VALUE) || absValue > 1.0) {
                 tolerance = PheTestUtils.EPSILON * Math.pow(2.0, Math.getExponent(plainResult));
             } else {
                 tolerance = PheTestUtils.EPSILON;

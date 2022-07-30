@@ -1,5 +1,6 @@
 /*
- * Copyright 2015 NICTA
+ * Copyright 2015 NICTA.
+ * Modified by Weiran Liu. Adjust the code based on Alibaba Java Code Guidelines.
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this
  * file except in compliance with the License. You may obtain a copy of the License at
@@ -30,7 +31,9 @@ import java.util.List;
 
 /**
  * Pai99半同态加密私钥。部分代码来自：
+ * <p>
  * https://github.com/n1analytics/javallier/blob/master/src/main/java/com/n1analytics/paillier/PaillierPrivateKey.java
+ * </p>
  *
  * @author Brian Thorne, Wilko Henecka, Dongyao Wu, mpnd, Max Ott, Weiran Liu
  * @date 2017/09/19
@@ -86,7 +89,7 @@ public class Pai99PhePrivateKey implements PhePrivateKey {
     BigInteger pSquaredInverse;
 
     static Pai99PhePrivateKey fromParams(int modulusBitLength, boolean signed, int precision, int base,
-        SecureRandom secureRandom) {
+                                         SecureRandom secureRandom) {
         // 因为明文比特长度一定是Byte.SIZE的整数倍，因此modulusBitLength / 2一定可以被整除
         int primeLength = modulusBitLength / 2;
         // Find two primes p and q whose multiple has the same number of bits as primeBitLength
@@ -164,7 +167,7 @@ public class Pai99PhePrivateKey implements PhePrivateKey {
         if (o == null || o.getClass() != Pai99PhePrivateKey.class) {
             return false;
         }
-        Pai99PhePrivateKey that = (Pai99PhePrivateKey)o;
+        Pai99PhePrivateKey that = (Pai99PhePrivateKey) o;
         // We don't need to compare any other variables since they are uniquely determined by publicKey
         return new EqualsBuilder()
             .append(this.p, that.p)

@@ -1,5 +1,6 @@
 /*
- * Copyright 2015 NICTA
+ * Copyright 2015 NICTA.
+ * Modified by Weiran Liu. Introduce other optimization and adjust the code based on Alibaba Java Code Guidelines.
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this
  * file except in compliance with the License. You may obtain a copy of the License at
@@ -28,11 +29,14 @@ import java.util.List;
 
 /**
  * Pai99半同态加密公钥。部分代码来自：
+ * <p>
  * https://github.com/n1analytics/javallier/blob/master/src/main/java/com/n1analytics/paillier/PaillierPublicKey.java
- *
+ * </p>
  * 公钥计算时应用了DJN10论文的优化方法：加密时，可以把原始Pai99中r^n运算替换为h_s^r运算。原始论文来自：
- * A generalization of Paillier’s public-key system with applications to electronic voting.
- * International Journal of Information Security, 2010, 9(6): 371-385.
+ * <p>
+ * A generalization of Paillier’s public-key system with applications to electronic voting. International Journal of
+ * Information Security, 2010, 9(6): 371-385.
+ * </p>
  *
  * @author Brian Thorne, Wilko Henecka, Dongyao Wu, Max Ott, Weiran Liu
  * @date 2017/09/19
@@ -132,7 +136,7 @@ public class Pai99PhePublicKey implements PhePublicKey {
         if (o == null || o.getClass() != Pai99PhePublicKey.class) {
             return false;
         }
-        Pai99PhePublicKey that = (Pai99PhePublicKey)o;
+        Pai99PhePublicKey that = (Pai99PhePublicKey) o;
         // We don't need to compare modulusSquared or generator since they are uniquely determined by modulus.
         return new EqualsBuilder()
             .append(this.plaintextEncoder, that.plaintextEncoder)

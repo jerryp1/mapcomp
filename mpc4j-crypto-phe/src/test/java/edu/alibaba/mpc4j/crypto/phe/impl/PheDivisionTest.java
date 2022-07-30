@@ -1,6 +1,6 @@
 /*
- * Modified by Weiran Liu based on Alibaba Java Code Guidelines (double comparison using Precision instead of ==).
  * Copyright 2015 NICTA.
+ * Modified by Weiran Liu. Adjust the code based on Alibaba Java Code Guidelines.
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this
  * file except in compliance with the License. You may obtain a copy of the License at
@@ -15,7 +15,6 @@
 package edu.alibaba.mpc4j.crypto.phe.impl;
 
 import com.google.common.base.Preconditions;
-import edu.alibaba.mpc4j.common.tool.utils.DoubleUtils;
 import edu.alibaba.mpc4j.crypto.phe.PheEngine;
 import edu.alibaba.mpc4j.crypto.phe.PheEngineTestConfiguration;
 import edu.alibaba.mpc4j.crypto.phe.PheTestUtils;
@@ -105,7 +104,7 @@ public class PheDivisionTest {
             encryptedResult = pheEngine.divide(pk, ciphertextA, b);
             decodedResult = pheEngine.decrypt(sk, encryptedResult).decodeDouble();
             double absValue = Math.abs(plainResult);
-            if (Precision.equals(absValue, 0, DoubleUtils.PRECISION) || absValue > 1.0) {
+            if (absValue == 0 || absValue > 1.0) {
                 tolerance = PheTestUtils.EPSILON * Math.pow(2.0, Math.getExponent(plainResult));
             } else {
                 tolerance = PheTestUtils.EPSILON;
@@ -144,7 +143,7 @@ public class PheDivisionTest {
             encryptedResult = pheEngine.divide(pk, ciphertextA, b);
             decodedResult = pheEngine.decrypt(sk, encryptedResult).decodeDouble();
             double absValue = Math.abs(plainResult);
-            if (Precision.equals(absValue, 0, DoubleUtils.PRECISION) || absValue > 1.0) {
+            if (Precision.equals(absValue, 0.0, Double.MIN_VALUE) || absValue > 1.0) {
                 tolerance = PheTestUtils.EPSILON * Math.pow(2.0, Math.getExponent(plainResult));
             } else {
                 tolerance = PheTestUtils.EPSILON;

@@ -2,10 +2,11 @@ package edu.alibaba.mpc4j.crypto.phe;
 
 /**
  * 半同态加密安全等级。定义来自于：NIST: Recommendation for key management, Special Publication 800-57
- * - λ =  80，p =  512比特。
- * - λ = 112，p = 1024比特。
- * - λ = 128，p = 1536比特。
- * - λ = 192，p = 3840比特。
+ * <p>λ =  80，log_2(p) = 512.</p>
+ * <p>λ = 112，log_2(p) = 1024. </p>
+ * <p>λ = 128，log_2(p) = 1536. </p>
+ * <p>λ = 192，log_2(p) = 3840. </p>
+ *
  * @author Weiran Liu
  * @date 2021/12/27
  */

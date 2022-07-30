@@ -1,5 +1,5 @@
 /*
- * Copyright 2015 NICTA
+ * Copyright 2015 NICTA.
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this
  * file except in compliance with the License. You may obtain a copy of the License at
@@ -11,12 +11,13 @@
  * KIND, either express or implied. See the License for the specific language governing
  * permissions and limitations under the License.
  */
-
 package edu.alibaba.mpc4j.crypto.phe;
+
 /**
  * {@code CryptoRuntimeException}是crypto-core中{@code RuntimeException}的超类（super class）。源码来自：
- * https://github.com/n1analytics/javallier/blob/master/src/main/java/com/n1analytics/paillier
- * /PaillierRuntimeException.java
+ * <p>
+ * https://github.com/n1analytics/javallier/blob/master/src/main/java/com/n1analytics/paillier/PaillierRuntimeException.java
+ * </p>
  *
  * @author Mentari Djatmiko, Weiran Liu
  * @date 2016/01/08
@@ -68,8 +69,8 @@ public class CryptoRuntimeException extends RuntimeException {
      * @param writableStackTrace whether the stack trace should be writable.
      */
     protected CryptoRuntimeException(String message, Throwable cause,
-        boolean enableSuppression,
-        boolean writableStackTrace) {
+                                     boolean enableSuppression,
+                                     boolean writableStackTrace) {
         super(message, cause, enableSuppression, writableStackTrace);
     }
 }
