@@ -1,5 +1,6 @@
 /*
- * Copyright 2015 NICTA
+ * Modified by Weiran Liu based on Alibaba Java Code Guidelines (double comparison using Precision instead of ==).
+ * Copyright 2015 NICTA.
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this
  * file except in compliance with the License. You may obtain a copy of the License at
@@ -35,7 +36,9 @@ import java.util.Collection;
 
 /**
  * 半同态加密减法测试。部分源码来自：
+ * <p>
  * https://github.com/n1analytics/javallier/blob/master/src/test/java/com/n1analytics/paillier/SubtractionTest.java
+ * </p>
  *
  * @author Wilko, Weiran Liu
  * @date 2017/02/16

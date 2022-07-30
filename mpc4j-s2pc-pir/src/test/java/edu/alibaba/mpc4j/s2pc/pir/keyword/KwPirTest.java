@@ -117,7 +117,7 @@ public class KwPirTest {
         // 验证结果
         Map<ByteBuffer, ByteBuffer> pirResultMap = clientThread.getPirResult();
         LOGGER.info("Main: The size of matched IDs is {}", pirResultMap.size());
-        if (pirResultMap.size() == 0) {
+        if (pirResultMap.isEmpty()) {
             LOGGER.info("Main: Keyword PIR result wrong!");
             assert false;
         }

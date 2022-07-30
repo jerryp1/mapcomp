@@ -1,3 +1,16 @@
+/**
+ * Copyright 2015 NICTA.
+ * <p>
+ * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this
+ * file except in compliance with the License. You may obtain a copy of the License at
+ * <p>
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * <p>
+ * Unless required by applicable law or agreed to in writing, software distributed under
+ * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied. See the License for the specific language governing
+ * permissions and limitations under the License.
+ */
 package edu.alibaba.mpc4j.crypto.phe.params;
 
 import com.google.common.base.Preconditions;
@@ -22,10 +35,17 @@ import java.util.LinkedList;
 import java.util.List;
 
 /**
- * 明文空间为[1, modulus)的编码方案。编码标准参见：http://docs.oracle.com/javase/specs/jls/se7/html/jls-4.html#jls-4.2.3
- * 编码结果表示为value * base^{exponent}，但与科学计数法不同，这里0 <= value < module
+ * 明文空间为[1, modulus)的编码方案。原始实现参考：
+ * <p>
+ * https://github.com/n1analytics/javallier/blob/master/src/main/java/com/n1analytics/paillier/StandardEncodingScheme.java
+ * </p>
+ * 编码标准参见：
+ * <p>
+ * http://docs.oracle.com/javase/specs/jls/se7/html/jls-4.html#jls-4.2.3
+ * </p>
+ * 编码结果表示为value * base^{exponent}，但与科学计数法不同，这里0 <= value < module。
  *
- * @author Dongyao Wu, Dongyao Wu, Weiran Liu
+ * @author Dongyao Wu, mpnd, Weiran Liu
  * @date 2017/09/21
  */
 public class PhePlaintextEncoder implements Packable {
@@ -91,7 +111,7 @@ public class PhePlaintextEncoder implements Packable {
         byte[] signedBytes = byteArrayList.remove(0);
         Preconditions.checkArgument(signedBytes.length == 1);
         byte signedByte = signedBytes[0];
-        Preconditions.checkArgument(signedByte == (byte)0 || signedByte == (byte)1);
+        Preconditions.checkArgument(signedByte == (byte) 0 || signedByte == (byte) 1);
         boolean signed = (signedByte == 1);
         // 解析准确度
         int precision = IntUtils.byteArrayToInt(byteArrayList.remove(0));
@@ -148,8 +168,8 @@ public class PhePlaintextEncoder implements Packable {
     public List<byte[]> toByteArrayList() {
         List<byte[]> byteArrayList = new LinkedList<>();
         byteArrayList.add(ObjectUtils.objectToByteArray(modulus));
-        byte signedByte = signed ? (byte)1 : (byte)0;
-        byteArrayList.add(new byte[] {signedByte});
+        byte signedByte = signed ? (byte) 1 : (byte) 0;
+        byteArrayList.add(new byte[]{signedByte});
         byteArrayList.add(IntUtils.intToByteArray(precision));
         byteArrayList.add(IntUtils.intToByteArray(base));
 
@@ -275,7 +295,7 @@ public class PhePlaintextEncoder implements Packable {
     private int getDoublePrecExponent(double value) {
         int binFltExponent = Math.getExponent(value) + 1;
         int binLsbExponent = binFltExponent - DOUBLE_MANTISSA_BITS;
-        return (int)Math.floor((double)binLsbExponent / log2Base);
+        return (int) Math.floor((double) binLsbExponent / log2Base);
     }
 
     /**
@@ -347,7 +367,7 @@ public class PhePlaintextEncoder implements Packable {
                 // we've got a fractional part, epsilon is the max relative error we are willing to accept
                 BigDecimal epsilon = new BigDecimal(BigInteger.ONE, precision);
                 MathContext mc = new MathContext(precision + 1, RoundingMode.HALF_EVEN);
-                int newExponent = (int)Math.floor(
+                int newExponent = (int) Math.floor(
                     BigDecimalUtils.log(value.multiply(epsilon, mc), base)
                 );
                 BigDecimal newValue = newExponent < 0 ?
@@ -437,7 +457,7 @@ public class PhePlaintextEncoder implements Packable {
      * @return exponent for this {@code precision}.
      */
     private int getPrecExponent(double precision) {
-        return (int)Math.floor(Math.log(precision) / Math.log(base));
+        return (int) Math.floor(Math.log(precision) / Math.log(base));
     }
 
     /**
@@ -502,7 +522,7 @@ public class PhePlaintextEncoder implements Packable {
      * 即：编码得到的{@code PhePlaintextEncoder}中，{@code value}必须小于等于{@code maxEncoded}。
      * - 对于有符号{@code PhePlaintextEncoder}，最大值为明文空间首位为0时所能表示的最大BigInteger。
      * - 对于无符号{@code PhePlaintextEncoder}，最大值为明文空间的最大值。
-     *
+     * <p>
      * {@code modulus}下，{@code PhePlaintext}中{@code value}的最大值。
      */
     public BigInteger getMaxEncoded() {
@@ -594,7 +614,7 @@ public class PhePlaintextEncoder implements Packable {
      * 把编码结果按照m = m_0 || m_1 ||...|| m_t拆分为多个短的原始值。
      *
      * @param encoded      待解码的{@code PhePlaintext}。
-     * @param num 解码数量。
+     * @param num          解码数量。
      * @param maxBitLength 明文最大比特长度。
      * @return 解码结果。
      */
@@ -621,7 +641,7 @@ public class PhePlaintextEncoder implements Packable {
      * @param encoded 待解码的{@code PhePlaintext}。
      * @return 解码结果。
      * @throws CryptoDecodeException 如果{@code encoded}无效（为{@link Double#POSITIVE_INFINITY}、
-     * {@link Double#NEGATIVE_INFINITY}或{@link Double#NaN}。
+     *                               {@link Double#NEGATIVE_INFINITY}或{@link Double#NaN}。
      */
     public double decodeDouble(PhePlaintext encoded) throws CryptoDecodeException {
         checkInputs(encoded);
@@ -646,7 +666,7 @@ public class PhePlaintextEncoder implements Packable {
      * @param encoded 待解码的{@code PhePlaintext}。
      * @return 解码结果。
      * @throws CryptoDecodeException 如果{@code encoded}无效（大于{@link Long#MAX_VALUE}或小于
-     * {@link Long#MIN_VALUE}）。
+     *                               {@link Long#MIN_VALUE}）。
      */
     public long decodeLong(PhePlaintext encoded) throws CryptoDecodeException {
         checkInputs(encoded);
@@ -964,7 +984,7 @@ public class PhePlaintextEncoder implements Packable {
         if (o == null || o.getClass() != PhePlaintextEncoder.class) {
             return false;
         }
-        PhePlaintextEncoder encoding = (PhePlaintextEncoder)o;
+        PhePlaintextEncoder encoding = (PhePlaintextEncoder) o;
         return new EqualsBuilder()
             .append(this.signed, encoding.signed)
             .append(this.precision, encoding.precision)

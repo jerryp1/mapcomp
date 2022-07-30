@@ -311,7 +311,7 @@ public class PhePlaintext implements Packable {
         if (o == null || o.getClass() != PhePlaintext.class) {
             return false;
         }
-        PhePlaintext that = (PhePlaintext)o;
+        PhePlaintext that = (PhePlaintext) o;
         return new EqualsBuilder()
             .append(this.plaintextEncoder, that.plaintextEncoder)
             .append(this.value, that.value)

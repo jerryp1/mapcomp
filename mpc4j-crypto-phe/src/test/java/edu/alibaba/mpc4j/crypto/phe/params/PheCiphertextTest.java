@@ -33,8 +33,9 @@ import java.util.List;
 
 /**
  * 半同态加密数测试。部分源码来自：
- * https://github.com/n1analytics/javallier/blob/master/src/test/java/com/n1analytics/paillier
- * /PaillierEncryptedNumberTest.java
+ * <p>
+ * https://github.com/n1analytics/javallier/blob/master/src/test/java/com/n1analytics/paillier/PaillierEncryptedNumberTest.java
+ * </p>
  *
  * @author Brian Thorne, mpnd, Weiran Liu
  * @date 2017/09/21

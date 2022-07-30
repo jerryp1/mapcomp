@@ -1,7 +1,9 @@
 package edu.alibaba.mpc4j.dp.ldp.numeric.real;
 
 import edu.alibaba.mpc4j.common.sampler.real.laplace.ApacheLaplaceSampler;
+import edu.alibaba.mpc4j.common.tool.utils.DoubleUtils;
 import edu.alibaba.mpc4j.dp.ldp.LdpConfig;
+import org.apache.commons.math3.util.Precision;
 
 /**
  * 本地映射实数LDP机制。
@@ -101,6 +103,7 @@ class LocalMapRealLdp implements RealLdp {
 
     private int getPartitionIndex(double value) {
         // 计算分区索引值：如果真实值大于0，正常处理；如果真实值小于0，则除法后也小于0，需要再往左移动一个索引值
-        return (value >= 0 || value % theta == 0) ? (int) (value / theta) : (int) (value / theta - 1);
+        return (value >= 0 || Precision.equals(value % theta, 0, DoubleUtils.PRECISION)) ?
+            (int) (value / theta) : (int) (value / theta - 1);
     }
 }

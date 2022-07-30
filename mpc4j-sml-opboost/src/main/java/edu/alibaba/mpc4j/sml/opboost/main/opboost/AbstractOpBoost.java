@@ -292,17 +292,17 @@ public abstract class AbstractOpBoost implements OpBoost {
                              long packetNum, long payloadByteLength, long sendByteLength) {
         String information = name
             // ε
-            + "\t" + (epsilon == null ? "N/A" : epsilon)
+            + "\t" + (Objects.isNull(epsilon) ? "N/A" : epsilon)
             // θ
-            + "\t" + (theta == null ? "N/A" : theta)
+            + "\t" + (Objects.isNull(theta) ? "N/A" : theta)
             // α
-            + "\t" + (alpha == null ? "N/A" : alpha)
+            + "\t" + (Objects.isNull(alpha) ? "N/A" : alpha)
             // 时间
-            + "\t" + (time == null ? "N/A" : time)
+            + "\t" + (Objects.isNull(time) ? "N/A" : time)
             // 训练数据集度量值
-            + "\t" + (trainMeasure == null ? "N/A" : trainMeasure)
+            + "\t" + (Objects.isNull(trainMeasure) ? "N/A" : trainMeasure)
             // 测试数据集度量值
-            + "\t" + (testMeasure == null ? "N/A" : testMeasure)
+            + "\t" + (Objects.isNull(testMeasure) ? "N/A" : testMeasure)
             // 数据包发送次数
             + "\t" + packetNum
             // 负载量

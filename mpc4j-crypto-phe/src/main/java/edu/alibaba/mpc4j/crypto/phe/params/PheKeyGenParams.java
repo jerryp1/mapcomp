@@ -34,8 +34,8 @@ public class PheKeyGenParams {
      * 以默认底数{@code DEFAULT_BASE}构造半同态加密密钥生成参数。
      *
      * @param pheSecLevel 半同态加密安全级别。
-     * @param signed           是否支持有符号明文。
-     * @param precision        精度。
+     * @param signed      是否支持有符号明文。
+     * @param precision   精度。
      */
     public PheKeyGenParams(PheSecLevel pheSecLevel, boolean signed, int precision) {
         this(pheSecLevel, signed, precision, DEFAULT_BASE);
@@ -45,9 +45,9 @@ public class PheKeyGenParams {
      * 构造半同态加密密钥生成参数。
      *
      * @param pheSecLevel 半同态加密安全级别。
-     * @param signed           是否支持有符号明文。
-     * @param precision        精度。
-     * @param base             底数。
+     * @param signed      是否支持有符号明文。
+     * @param precision   精度。
+     * @param base        底数。
      */
     public PheKeyGenParams(PheSecLevel pheSecLevel, boolean signed, int precision, int base) {
         this.pheSecLevel = pheSecLevel;
