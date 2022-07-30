@@ -104,7 +104,7 @@ public class PheDivisionTest {
             encryptedResult = pheEngine.divide(pk, ciphertextA, b);
             decodedResult = pheEngine.decrypt(sk, encryptedResult).decodeDouble();
             double absValue = Math.abs(plainResult);
-            if (absValue == 0 || absValue > 1.0) {
+            if (Precision.equals(absValue, 0.0, Double.MIN_VALUE) || absValue > 1.0) {
                 tolerance = PheTestUtils.EPSILON * Math.pow(2.0, Math.getExponent(plainResult));
             } else {
                 tolerance = PheTestUtils.EPSILON;
