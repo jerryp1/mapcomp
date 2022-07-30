@@ -17,7 +17,7 @@
 
 package edu.alibaba.mpc4j.sml.smile.feature;
 
-import edu.alibaba.mpc4j.sml.smile.base.cart.CART;
+import edu.alibaba.mpc4j.sml.smile.base.cart.Cart;
 import smile.data.DataFrame;
 import smile.data.Tuple;
 import smile.data.formula.Formula;
@@ -31,27 +31,39 @@ import java.util.Objects;
  *
  * @author Haifeng Li
  */
-public interface TreeSHAP extends SHAP<Tuple> {
+public interface TreeShap extends Shap<Tuple> {
 
     /**
      * Returns the classification/regression trees.
+     *
+     * @return the classification/regression trees.
      */
-    CART[] trees();
+    Cart[] trees();
 
-    /** Returns the formula associated with the model. */
+    /**
+     * Returns the formula associated with the model.
+     *
+     * @return the formula associated with the model.
+     */
     Formula formula();
 
+    /**
+     * Returns the SHAP value.
+     *
+     * @param x features.
+     * @return the SHAP value.
+     */
     @Override
     default double[] shap(Tuple x) {
-        CART[] forest = trees();
+        Cart[] forest = trees();
         Tuple xt = formula().x(x);
 
         double[] phi = null;
-        for (CART tree : forest) {
+        for (Cart tree : forest) {
             double[] phii = tree.shap(xt);
 
             if (phi == null) {
-              phi = phii;
+                phi = phii;
             } else {
                 for (int i = 0; i < phi.length; i++) {
                     phi[i] += phii[i];
@@ -68,6 +80,9 @@ public interface TreeSHAP extends SHAP<Tuple> {
 
     /**
      * Returns the average of absolute SHAP values over a data frame.
+     *
+     * @param data data.
+     * @return he average of absolute SHAP values over a data frame.
      */
     default double[] shap(DataFrame data) {
         // Binds the formula to the data frame's schema in case that

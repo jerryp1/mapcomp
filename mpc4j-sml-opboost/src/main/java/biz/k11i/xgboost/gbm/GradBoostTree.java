@@ -1,6 +1,6 @@
 /*
  * Original Work Copyright 2018 H2O.ai.
- * Modified Work Copyright 2021 Weiran Liu.
+ * Modified by Weiran Liu. Adjust the code based on Alibaba Java Code Guidelines.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -95,7 +95,7 @@ public class GradBoostTree extends AbstractGradBoostModel {
     public float predictSingle(Fvec featureVector, int numTreeLimit) {
         if (numOutputGroup != 1) {
             throw new IllegalStateException(
-                    "Can't invoke predictSingle() because this model outputs multiple values: "
+                "Can't invoke predictSingle() because this model outputs multiple values: "
                     + numOutputGroup);
         }
         return predictGroup(featureVector, 0, numTreeLimit);
@@ -185,7 +185,7 @@ public class GradBoostTree extends AbstractGradBoostModel {
      *
      * @return A two-dim array, with trees grouped into classes.
      */
-    public RegTree[][] getGroupedTrees(){
+    public RegTree[][] getGroupedTrees() {
         return groupTrees;
     }
 }

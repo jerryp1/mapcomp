@@ -18,9 +18,9 @@
 
 package edu.alibaba.mpc4j.sml.smile.regression;
 
-import edu.alibaba.mpc4j.sml.smile.base.cart.CART;
+import edu.alibaba.mpc4j.sml.smile.base.cart.Cart;
 import edu.alibaba.mpc4j.sml.smile.base.cart.Loss;
-import edu.alibaba.mpc4j.sml.smile.feature.TreeSHAP;
+import edu.alibaba.mpc4j.sml.smile.feature.TreeShap;
 import smile.data.DataFrame;
 import smile.data.Tuple;
 import smile.data.formula.Formula;
@@ -108,9 +108,9 @@ import java.util.stream.IntStream;
  *
  * @author Haifeng Li
  */
-public class GradientTreeBoost implements Regression<Tuple>, DataFrameRegression, TreeSHAP {
+public class GradientTreeBoost implements Regression<Tuple>, DataFrameRegression, TreeShap {
     private static final long serialVersionUID = 5207179858356250784L;
-    private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(GradientTreeBoost.class);
+    private static final org.slf4j.Logger LOGGER = org.slf4j.LoggerFactory.getLogger(GradientTreeBoost.class);
 
     /**
      * The model formula.
@@ -217,7 +217,7 @@ public class GradientTreeBoost implements Regression<Tuple>, DataFrameRegression
 
         final int n = x.nrows();
         final int N = (int) Math.round(n * subsample);
-        final int[][] order = CART.order(x);
+        final int[][] order = Cart.order(x);
 
         int[] permutation = IntStream.range(0, n).toArray();
         int[] samples = new int[n];
@@ -235,7 +235,7 @@ public class GradientTreeBoost implements Regression<Tuple>, DataFrameRegression
                 samples[permutation[i]]++;
             }
 
-            logger.debug("Training {} tree", Strings.ordinal(t + 1));
+            LOGGER.debug("Training {} tree", Strings.ordinal(t + 1));
             trees[t] = new RegressionTree(x, loss, field, maxDepth, maxNodes, nodeSize, x.ncols(), samples, order);
 
             for (int i = 0; i < n; i++) {

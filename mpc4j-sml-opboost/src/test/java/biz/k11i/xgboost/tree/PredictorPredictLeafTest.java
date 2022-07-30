@@ -1,6 +1,6 @@
 /*
  * Original Work Copyright 2018 H2O.ai.
- * Modified Work Copyright 2021 Weiran Liu.
+ * Modified by Weiran Liu. Adjust the code based on Alibaba Java Code Guidelines.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -35,24 +35,24 @@ public class PredictorPredictLeafTest {
     @Test
     public void shouldPredictLeafIds() throws IOException {
         Predictor p = new Predictor(getClass().getResourceAsStream("/boosterBytes.bin"));
-        float[] input = new float[] { 10, 20, 30, 5, 7, 10 };
+        float[] input = new float[]{10, 20, 30, 5, 7, 10};
         Fvec vec = Fvec.Transformer.fromArray(input, false);
         // 预测值
         int[] predicts = p.predictLeaf(vec);
         // 期望值
-        int[] expects = new int[] { 33, 47, 41, 41, 49 };
+        int[] expects = new int[]{33, 47, 41, 41, 49};
         assertArrayEquals(expects, predicts);
     }
 
     @Test
     public void shouldPredictLeafPaths() throws IOException {
         Predictor p = new Predictor(getClass().getResourceAsStream("/boosterBytes.bin"));
-        float[] input = new float[] { 10, 20, 30, 5, 7, 10 };
+        float[] input = new float[]{10, 20, 30, 5, 7, 10};
         Fvec vec = Fvec.Transformer.fromArray(input, false);
         // 实际预测路径
         String[] predicts = p.predictLeafPath(vec);
         // 期望预测路径
-        String[] expects = new String[] { "LRRLL", "LLRRLL", "LLRRLL", "LLRRLL", "LLRRLL" };
+        String[] expects = new String[]{"LRRLL", "LLRRLL", "LLRRLL", "LLRRLL", "LLRRLL"};
         assertArrayEquals(expects, predicts);
     }
 

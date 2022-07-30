@@ -1,6 +1,6 @@
 /*
  * Original Work Copyright 2018 H2O.ai.
- * Modified Work Copyright 2021 Weiran Liu.
+ * Modified by Weiran Liu. Adjust the code based on Alibaba Java Code Guidelines.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -21,8 +21,10 @@ import biz.k11i.xgboost.tree.DefaultRegTreeFactory;
 import biz.k11i.xgboost.tree.RegTreeFactory;
 
 /**
- * 预测器配置参数。
- * 原始代码来自于：https://github.com/h2oai/xgboost-predictor。
+ * 预测器配置参数。原始代码来自于：
+ * <p>
+ * https://github.com/h2oai/xgboost-predictor
+ * </p>
  *
  * @author Michal Kurka, KOMIYA Atsushi, Weiran Liu
  * @date 2021/10/08
@@ -76,6 +78,7 @@ public class PredictorConfiguration {
             return this;
         }
 
+        @Override
         public PredictorConfiguration build() {
             PredictorConfiguration result = predictorConfiguration;
             predictorConfiguration = null;

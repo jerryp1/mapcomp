@@ -49,7 +49,7 @@ import java.util.stream.Stream;
  *
  * @author Haifeng Li
  */
-public interface SHAP<T> {
+public interface Shap<T> {
     /**
      * Returns the SHAP values. For regression, the length of SHAP values
      * is same as the number of features. For classification, SHAP values
@@ -65,13 +65,17 @@ public interface SHAP<T> {
 
     /**
      * Returns the average of absolute SHAP values over a data set.
+     *
+     * @param data data stream.
+     * @return the SHAP values.
      */
     default double[] shap(Stream<T> data) {
         return smile.math.MathEx.colMeans(
                 data.map(x -> {
                     double[] values = shap(x);
-                    for (int i = 0; i < values.length; i++)
+                    for (int i = 0; i < values.length; i++) {
                         values[i] = Math.abs(values[i]);
+                    }
                     return values;
                 }).
                 toArray(double[][]::new));

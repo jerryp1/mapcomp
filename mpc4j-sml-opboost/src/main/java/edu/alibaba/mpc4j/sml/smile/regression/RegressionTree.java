@@ -80,7 +80,7 @@ import java.util.stream.IntStream;
  * @author Haifeng Li
  * @see GradientTreeBoost
  */
-public class RegressionTree extends CART implements Regression<Tuple>, DataFrameRegression {
+public class RegressionTree extends Cart implements Regression<Tuple>, DataFrameRegression {
     private static final long serialVersionUID = -3078722359914609522L;
     /**
      * The dependent variable.
@@ -106,7 +106,7 @@ public class RegressionTree extends CART implements Regression<Tuple>, DataFrame
 
         // RSS computation should always based on the sample mean in the node.
         double mean = out;
-        if (!loss.toString().equals("LeastSquares")) {
+        if (!loss.toString().equals(Loss.ls().toString())) {
             int n = 0;
             mean = 0.0;
             for (int i : nodeSamples) {
@@ -132,15 +132,12 @@ public class RegressionTree extends CART implements Regression<Tuple>, DataFrame
         RegressionNode node = (RegressionNode) leaf;
         //noinspection rawtypes
         BaseVector xj = x.column(j);
-
         double sum = java.util.Arrays.stream(index, lo, hi).mapToDouble(i -> y[i] * samples[i]).sum();
         double nodeMeanSquared = node.size() * node.mean() * node.mean();
-
         Split split = null;
         double splitScore = 0.0;
         int splitTrueCount = 0;
         int splitFalseCount = 0;
-
         Measure measure = schema.field(j).measure;
         if (measure instanceof NominalScale) {
             int splitValue = -1;
@@ -148,29 +145,23 @@ public class RegressionTree extends CART implements Regression<Tuple>, DataFrame
             int m = scale.size();
             int[] trueCount = new int[m];
             double[] trueSum = new double[m];
-
             for (int i = lo; i < hi; i++) {
                 int o = index[i];
                 int idx = xj.getInt(o);
                 trueCount[idx] += samples[o];
                 trueSum[idx] += y[o] * samples[o];
             }
-
             for (int l : scale.values()) {
                 int tc = trueCount[l];
                 int fc = node.size() - tc;
-
                 // If either side is too small, skip this value.
                 if (tc < nodeSize || fc < nodeSize) {
                     continue;
                 }
-
                 // compute penalized means
                 double trueMean = trueSum[l] / tc;
                 double falseMean = (sum - trueSum[l]) / fc;
-
                 double gain = (tc * trueMean * trueMean + fc * falseMean * falseMean) - nodeMeanSquared;
-
                 // new best split
                 if (gain > splitScore) {
                     splitValue = l;
@@ -179,10 +170,10 @@ public class RegressionTree extends CART implements Regression<Tuple>, DataFrame
                     splitScore = gain;
                 }
             }
-
             if (splitScore > 0.0) {
                 final int value = splitValue;
-                split = new NominalSplit(leaf, j, splitValue, splitScore, lo, hi, splitTrueCount, splitFalseCount, (int o) -> xj.getInt(o) == value);
+                split = new NominalSplit(leaf, j, splitValue, splitScore, lo, hi, splitTrueCount, splitFalseCount,
+                    (int o) -> xj.getInt(o) == value);
             }
         } else {
             double splitValue = 0.0;
@@ -192,27 +183,20 @@ public class RegressionTree extends CART implements Regression<Tuple>, DataFrame
             int tc = 0;
             double trueSum = 0.0;
             int[] orderj = order[j];
-
             int first = orderj[lo];
             double prevx = xj.getDouble(first);
-
             for (int i = lo; i < hi; i++) {
                 int fc = 0;
-
                 int o = orderj[i];
                 double xij = xj.getDouble(o);
-
                 if (!MathEx.isZero(xij - prevx, 1E-7)) {
                     fc = node.size() - tc;
                 }
-
                 // If either side is empty, skip this value.
                 if (tc >= nodeSize && fc >= nodeSize) {
                     double trueMean = trueSum / tc;
                     double falseMean = (sum - trueSum) / fc;
-
                     double gain = (tc * trueMean * trueMean + fc * falseMean * falseMean) - nodeMeanSquared;
-
                     // new best split
                     if (gain > splitScore) {
                         splitValue = (xij + prevx) / 2;
@@ -223,18 +207,16 @@ public class RegressionTree extends CART implements Regression<Tuple>, DataFrame
                         splitScore = gain;
                     }
                 }
-
                 prevx = xij;
                 trueSum += y[o] * samples[o];
                 tc += samples[o];
             }
-
             if (splitScore > 0.0) {
                 final double value = splitValue;
-                split = new OrdinalSplit(leaf, j, splitValue, leftValue, rightValue, splitScore, lo, hi, splitTrueCount, splitFalseCount, (int o) -> xj.getDouble(o) <= value);
+                split = new OrdinalSplit(leaf, j, splitValue, leftValue, rightValue, splitScore, lo, hi, splitTrueCount,
+                    splitFalseCount, (int o) -> xj.getDouble(o) <= value);
             }
         }
-
         return Optional.ofNullable(split);
     }
 
@@ -274,7 +256,9 @@ public class RegressionTree extends CART implements Regression<Tuple>, DataFrame
             split.ifPresent(queue::add);
 
             for (int leaves = 1; leaves < this.maxNodes && !queue.isEmpty(); ) {
-                if (split(queue.poll(), queue)) leaves++;
+                if (split(queue.poll(), queue)) {
+                    leaves++;
+                }
             }
         }
 

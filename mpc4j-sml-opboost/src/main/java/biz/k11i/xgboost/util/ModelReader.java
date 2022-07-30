@@ -1,6 +1,6 @@
 /*
  * Original Work Copyright 2018 H2O.ai.
- * Modified Work Copyright 2021 Weiran Liu. Modify source code based on Alibaba Java Code Guidelines.
+ * Modified Work Copyright 2021 Weiran Liu.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -218,26 +218,26 @@ public class ModelReader implements Closeable {
     }
 
     public String readUtf() throws IOException {
-        int utflen = readByteAsInt();
-        utflen = (short) ((utflen << 8) | readByteAsInt());
-        return readUtf(utflen);
+        int utfLength = readByteAsInt();
+        utfLength = (short) ((utfLength << 8) | readByteAsInt());
+        return readUtf(utfLength);
     }
 
-    public String readUtf(int utflen) throws IOException {
-        int numBytesRead = fillBuffer(utflen);
-        if (numBytesRead < utflen) {
+    public String readUtf(int utfLength) throws IOException {
+        int numBytesRead = fillBuffer(utfLength);
+        if (numBytesRead < utfLength) {
             throw new EOFException(
                 String.format("Cannot read UTF string bytes: expected = %d, actual = %d",
-                    utflen, numBytesRead));
+                    utfLength, numBytesRead));
         }
 
-        char[] charArray = new char[utflen];
+        char[] charArray = new char[utfLength];
 
         int c, char2, char3;
         int count = 0;
         int charArrayCount = 0;
 
-        while (count < utflen) {
+        while (count < utfLength) {
             c = (int) buffer[count] & 0xff;
             if (c > 127) {
                 break;
@@ -246,7 +246,7 @@ public class ModelReader implements Closeable {
             charArray[charArrayCount++] = (char) c;
         }
 
-        while (count < utflen) {
+        while (count < utfLength) {
             c = (int) buffer[count] & 0xff;
             switch (c >> 4) {
                 case 0:
@@ -265,7 +265,7 @@ public class ModelReader implements Closeable {
                 case 13:
                     // 110x xxxx   10xx xxxx
                     count += 2;
-                    if (count > utflen) {
+                    if (count > utfLength) {
                         throw new UTFDataFormatException(
                             "malformed input: partial character at end");
                     }
@@ -280,7 +280,7 @@ public class ModelReader implements Closeable {
                 case 14:
                     // 1110 xxxx  10xx xxxx  10xx xxxx
                     count += 3;
-                    if (count > utflen) {
+                    if (count > utfLength) {
                         throw new UTFDataFormatException(
                             "malformed input: partial character at end");
                     }
@@ -296,8 +296,7 @@ public class ModelReader implements Closeable {
                     break;
                 default:
                     // 10xx xxxx,  1111 xxxx
-                    throw new UTFDataFormatException(
-                        "malformed input around byte " + count);
+                    throw new UTFDataFormatException("malformed input around byte " + count);
             }
         }
         // The number of chars produced may be less than utflen

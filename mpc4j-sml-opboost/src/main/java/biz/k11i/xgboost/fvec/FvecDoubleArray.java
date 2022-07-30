@@ -1,6 +1,6 @@
 /*
  * Original Work Copyright 2018 H2O.ai.
- * Modified Work Copyright 2021 Weiran Liu.
+ * Modified by Weiran Liu. Adjust the code based on Alibaba Java Code Guidelines.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,7 +16,6 @@
  */
 package biz.k11i.xgboost.fvec;
 
-import edu.alibaba.mpc4j.common.tool.utils.DoubleUtils;
 import org.apache.commons.math3.util.Precision;
 
 /**
@@ -48,7 +47,7 @@ class FvecDoubleArray implements Fvec {
         }
 
         final double result = values[index];
-        if (treatsZeroAsNa && Precision.equals(result, 0, DoubleUtils.PRECISION)) {
+        if (treatsZeroAsNa && Precision.equals(result, 0, Double.MIN_VALUE)) {
             return Float.NaN;
         }
 

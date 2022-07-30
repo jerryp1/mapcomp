@@ -1,6 +1,6 @@
 /*
  * Original Work Copyright 2018 H2O.ai.
- * Modified Work Copyright 2021 Weiran Liu.
+ * Modified by Weiran Liu. Adjust the code based on Alibaba Java Code Guidelines.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -39,7 +39,7 @@ public class SparkModelParam implements Serializable {
     final String predictionCol;
 
     /**
-     * classification model only.
+     * classification model only
      */
     final String rawPredictionCol;
     final double[] thresholds;

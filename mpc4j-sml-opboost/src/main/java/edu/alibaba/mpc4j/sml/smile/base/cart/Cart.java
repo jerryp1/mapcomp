@@ -46,12 +46,12 @@ import java.util.stream.IntStream;
  *
  * @author Haifeng Li
  */
-public abstract class CART implements SHAP<Tuple>, Serializable {
+public abstract class Cart implements SHAP<Tuple>, Serializable {
     /**
      * 序列化UID
      */
     private static final long serialVersionUID = 8146929007156655559L;
-    private static final Logger LOGGER = LoggerFactory.getLogger(CART.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(Cart.class);
 
     /**
      * The model formula.
@@ -135,14 +135,14 @@ public abstract class CART implements SHAP<Tuple>, Serializable {
     /**
      * Private constructor for deserialization.
      */
-    private CART() {
+    private Cart() {
 
     }
 
     /**
      * Constructor.
      */
-    public CART(Formula formula, StructType schema, StructField response, Node root, double[] importance) {
+    public Cart(Formula formula, StructType schema, StructField response, Node root, double[] importance) {
         this.formula = formula;
         this.schema = schema;
         this.response = response;
@@ -166,7 +166,7 @@ public abstract class CART implements SHAP<Tuple>, Serializable {
      * @param order    the index of training values in ascending order. Note
      *                 that only numeric attributes need be sorted.
      */
-    public CART(DataFrame x, StructField y, int maxDepth, int maxNodes, int nodeSize, int mtry, int[] samples, int[][] order) {
+    public Cart(DataFrame x, StructField y, int maxDepth, int maxNodes, int nodeSize, int mtry, int[] samples, int[][] order) {
         this.x = x;
         this.response = y;
         this.schema = x.schema();
@@ -324,7 +324,8 @@ public abstract class CART implements SHAP<Tuple>, Serializable {
         shuffle(split.lo, mid, split.hi, trues);
 
         Optional<Split> trueSplit = findBestSplit(trueChild, split.lo, mid, split.unsplittable.clone());
-        Optional<Split> falseSplit = findBestSplit(falseChild, mid, split.hi, split.unsplittable); // reuse parent's array
+        // reuse parent's array
+        Optional<Split> falseSplit = findBestSplit(falseChild, mid, split.hi, split.unsplittable);
 
         // Prune the branch if both children are leaf nodes and of same output value.
         if (trueChild.equals(falseChild) && !trueSplit.isPresent() && !falseSplit.isPresent()) {
@@ -375,7 +376,8 @@ public abstract class CART implements SHAP<Tuple>, Serializable {
      */
     protected Optional<Split> findBestSplit(LeafNode node, int lo, int hi, boolean[] unsplittable) {
         if (node.size() < 2 * nodeSize) {
-            return Optional.empty(); // one child will has less than nodeSize samples.
+            // one child will has less than nodeSize samples.
+            return Optional.empty();
         }
 
         final double impurity = impurity(node);

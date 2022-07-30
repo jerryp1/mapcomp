@@ -131,7 +131,13 @@ public interface Regression<T> extends ToDoubleFunction<T>, Serializable {
         }
     }
 
-    /** Returns the regression metrics. */
+    /**
+     * Returns the regression metrics.
+     *
+     * @param x feature array.
+     * @param y label values.
+     * @return the regression metrics.
+     */
     default Metric metric(T[] x, double[] y) {
         int n = x.length;
         double[] fittedValues = new double[n];
@@ -141,7 +147,13 @@ public interface Regression<T> extends ToDoubleFunction<T>, Serializable {
         return new Metric(y, fittedValues);
     }
 
-    /** Returns the regression metrics. */
+    /**
+     * Returns the regression metrics.
+     *
+     * @param y label values.
+     * @param fittedValues fitted values.
+     * @return the regression metrics.
+     */
     default Metric metric(double[] y, double[] fittedValues) {
         return new Metric(y, fittedValues);
     }

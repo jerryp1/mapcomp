@@ -102,7 +102,7 @@ import java.util.stream.Collectors;
  * @author Haifeng Li
  * @see GradientTreeBoost
  */
-public class DecisionTree extends CART implements SoftClassifier<Tuple>, DataFrameClassifier {
+public class DecisionTree extends Cart implements SoftClassifier<Tuple>, DataFrameClassifier {
     private static final long serialVersionUID = -8350336507997828890L;
     /**
      * The splitting rule.
@@ -164,18 +164,15 @@ public class DecisionTree extends CART implements SoftClassifier<Tuple>, DataFra
             for (int l : scale.values()) {
                 int tc = (int) MathEx.sum(trueCount[l]);
                 int fc = node.size() - tc;
-
                 // If either side is too small, skip this value.
                 if (tc < nodeSize || fc < nodeSize) {
                     continue;
                 }
-
                 for (int q = 0; q < k; q++) {
                     falseCount[q] = node.count()[q] - trueCount[l][q];
                 }
-
-                double gain = impurity - (double) tc / node.size() * DecisionNode.impurity(rule, tc, trueCount[l]) - (double) fc / node.size() * DecisionNode.impurity(rule, fc, falseCount);
-
+                double gain = impurity - (double) tc / node.size() * DecisionNode.impurity(rule, tc, trueCount[l])
+                    - (double) fc / node.size() * DecisionNode.impurity(rule, fc, falseCount);
                 // new best split
                 if (gain > splitScore) {
                     splitValue = l;
@@ -187,7 +184,9 @@ public class DecisionTree extends CART implements SoftClassifier<Tuple>, DataFra
 
             if (splitScore > 0.0) {
                 final int value = splitValue;
-                split = new NominalSplit(leaf, j, splitValue, splitScore, lo, hi, splitTrueCount, splitFalseCount, (int o) -> xj.getInt(o) == value);
+                split = new NominalSplit(leaf, j, splitValue, splitScore, lo, hi, splitTrueCount, splitFalseCount,
+                    (int o) -> xj.getInt(o) == value
+                );
             }
         } else {
             double splitValue = 0.0;
@@ -196,32 +195,26 @@ public class DecisionTree extends CART implements SoftClassifier<Tuple>, DataFra
             double rightValue = 0.0;
             int[] trueCount = new int[k];
             int[] orderj = order[j];
-
             int first = orderj[lo];
             double prevx = xj.getDouble(first);
             int prevy = y[first];
-
             for (int i = lo; i < hi; i++) {
                 int tc = 0;
                 int fc = 0;
-
                 int o = orderj[i];
                 int yi = y[o];
                 double xij = xj.getDouble(o);
-
                 if (yi != prevy && !MathEx.isZero(xij - prevx, 1E-7)) {
                     tc = (int) MathEx.sum(trueCount);
                     fc = node.size() - tc;
                 }
-
                 // If either side is empty, skip this value.
                 if (tc >= nodeSize && fc >= nodeSize) {
                     for (int l = 0; l < k; l++) {
                         falseCount[l] = node.count()[l] - trueCount[l];
                     }
-
-                    double gain = impurity - (double) tc / node.size() * DecisionNode.impurity(rule, tc, trueCount) - (double) fc / node.size() * DecisionNode.impurity(rule, fc, falseCount);
-
+                    double gain = impurity - (double) tc / node.size() * DecisionNode.impurity(rule, tc, trueCount)
+                        - (double) fc / node.size() * DecisionNode.impurity(rule, fc, falseCount);
                     // new best split
                     if (gain > splitScore) {
                         splitValue = (xij + prevx) / 2;
@@ -232,18 +225,16 @@ public class DecisionTree extends CART implements SoftClassifier<Tuple>, DataFra
                         splitScore = gain;
                     }
                 }
-
                 prevx = xij;
                 prevy = yi;
                 trueCount[prevy] += samples[o];
             }
-
             if (splitScore > 0.0) {
                 final double value = splitValue;
-                split = new OrdinalSplit(leaf, j, splitValue, leftValue, rightValue, splitScore, lo, hi, splitTrueCount, splitFalseCount, (int o) -> xj.getDouble(o) <= value);
+                split = new OrdinalSplit(leaf, j, splitValue, leftValue, rightValue, splitScore, lo, hi, splitTrueCount,
+                    splitFalseCount, (int o) -> xj.getDouble(o) <= value);
             }
         }
-
         return Optional.ofNullable(split);
     }
 
@@ -292,7 +283,9 @@ public class DecisionTree extends CART implements SoftClassifier<Tuple>, DataFra
             split.ifPresent(queue::add);
 
             for (int leaves = 1; leaves < this.maxNodes && !queue.isEmpty(); ) {
-                if (split(queue.poll(), queue)) leaves++;
+                if (split(queue.poll(), queue)) {
+                    leaves++;
+                }
             }
         }
 
@@ -459,7 +452,9 @@ public class DecisionTree extends CART implements SoftClassifier<Tuple>, DataFra
 
             int error = 0;
             for (Tuple t : test) {
-                if (y != labels.indexOf(formula.yint(t))) error++;
+                if (y != labels.indexOf(formula.yint(t))) {
+                    error++;
+                }
             }
 
             return new Prune(node, error, leaf.count());
@@ -469,10 +464,11 @@ public class DecisionTree extends CART implements SoftClassifier<Tuple>, DataFra
         List<Tuple> trueBranch = new ArrayList<>();
         List<Tuple> falseBranch = new ArrayList<>();
         for (Tuple t : test) {
-            if (parent.branch(formula.x(t)))
+            if (parent.branch(formula.x(t))) {
                 trueBranch.add(t);
-            else
+            } else {
                 falseBranch.add(t);
+            }
         }
 
         Prune trueChild = prune(parent.trueChild(), trueBranch, importance, formula, labels);
@@ -486,7 +482,9 @@ public class DecisionTree extends CART implements SoftClassifier<Tuple>, DataFra
         int y = MathEx.whichMax(count);
         int error = 0;
         for (Tuple t : test) {
-            if (y != labels.indexOf(formula.yint(t))) error++;
+            if (y != labels.indexOf(formula.yint(t))) {
+                error++;
+            }
         }
 
         if (error < trueChild.error + falseChild.error) {
