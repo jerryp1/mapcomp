@@ -9,9 +9,10 @@ import edu.alibaba.mpc4j.common.tool.crypto.prf.PrfFactory;
 import edu.alibaba.mpc4j.common.tool.utils.BinaryUtils;
 import edu.alibaba.mpc4j.common.tool.utils.BytesUtils;
 import edu.alibaba.mpc4j.common.tool.utils.CommonUtils;
-import edu.alibaba.mpc4j.common.tool.utils.IntUtils;
 import edu.alibaba.mpc4j.s2pc.pso.oprf.MpOprfSenderOutput;
+import sun.misc.Unsafe;
 
+import java.lang.reflect.Field;
 import java.util.Arrays;
 import java.util.stream.IntStream;
 
@@ -22,6 +23,22 @@ import java.util.stream.IntStream;
  * @date 2022/03/03
  */
 public class Cm20MpOprfSenderOutput implements MpOprfSenderOutput {
+    /**
+     * 不安全转换函数，参见https://stackoverflow.com/questions/43079234/convert-a-byte-array-into-an-int-array-in-java
+     */
+    private static final Unsafe UNSAFE;
+
+    static {
+        try {
+            Field theUnsafe = Unsafe.class.getDeclaredField("theUnsafe");
+            theUnsafe.setAccessible(true);
+            UNSAFE = (Unsafe) theUnsafe.get(null);
+        } catch (NoSuchFieldException | IllegalAccessException e) {
+            e.printStackTrace();
+            throw new IllegalStateException(e);
+        }
+    }
+
     /**
      * 批处理数量
      */
@@ -92,8 +109,12 @@ public class Cm20MpOprfSenderOutput implements MpOprfSenderOutput {
     public byte[] getPrf(byte[] input) {
         // 计算哈希值
         byte[] extendPrf = f.getBytes(h1.digestToBytes(input));
-        // F: {0, 1}^λ × {0, 1}^{2λ} → [m]^w.
-        int[] encode = IntUtils.byteArrayToIntArray(extendPrf);
+        // F: {0, 1}^λ × {0, 1}^{2λ} → [m]^w ，这里使用不安全转换函数来提高效率。
+        // 不安全转换函数的转换结果与IntUtils.byteArrayToIntArray不一致，使用时一定要保证两边使用相同的转换方法
+        int[] encode = new int[w];
+        UNSAFE.copyMemory(
+            extendPrf, Unsafe.ARRAY_BYTE_BASE_OFFSET, encode, Unsafe.ARRAY_INT_BASE_OFFSET, extendPrf.length
+        );
         for (int index = 0; index < w; index++) {
             encode[index] = Math.abs(encode[index] % n) + nOffset;
         }
