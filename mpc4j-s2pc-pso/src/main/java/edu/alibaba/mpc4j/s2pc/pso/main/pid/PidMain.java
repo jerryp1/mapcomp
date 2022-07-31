@@ -1,6 +1,5 @@
 package edu.alibaba.mpc4j.s2pc.pso.main.pid;
 
-import edu.alibaba.mpc4j.common.rpc.MpcAbortException;
 import edu.alibaba.mpc4j.common.rpc.Party;
 import edu.alibaba.mpc4j.common.rpc.Rpc;
 import edu.alibaba.mpc4j.common.tool.CommonConstants;
@@ -43,10 +42,6 @@ public class PidMain {
      * 预热
      */
     private static final int WARMUP_SET_SIZE = 1 << 10;
-    /**
-     * 同步等待时间
-     */
-    private static final int WAIT_TIME_MILLI_SECOND = 5000;
     /**
      * 配置参数
      */
@@ -140,8 +135,7 @@ public class PidMain {
         fileWriter.close();
     }
 
-    private void warmupServer(Rpc serverRpc, Party clientParty, PidConfig config, int taskId) throws
-        InterruptedException, MpcAbortException, IOException {
+    private void warmupServer(Rpc serverRpc, Party clientParty, PidConfig config, int taskId) throws Exception {
         LOGGER.info("(warmup) {} read element set", serverRpc.ownParty().getPartyName());
         InputStreamReader warmupInputStreamReader = new InputStreamReader(
             new FileInputStream(PsoUtils.getBytesFileName(PsoUtils.BYTES_SERVER_PREFIX,
@@ -157,39 +151,27 @@ public class PidMain {
         PidParty<ByteBuffer> pidServer = PidFactory.createServer(serverRpc, clientParty, config);
         pidServer.setTaskId(taskId);
         pidServer.setParallel(false);
-        // 同步并等待5秒钟，保证对方启动
         pidServer.getRpc().synchronize();
-        LOGGER.info("(warmup) {} wait for {} start", pidServer.ownParty().getPartyName(), pidServer.otherParty().getPartyName());
-        Thread.sleep(WAIT_TIME_MILLI_SECOND);
         // 初始化协议
         LOGGER.info("(warmup) {} init", pidServer.ownParty().getPartyName());
         pidServer.init(WARMUP_SET_SIZE, WARMUP_SET_SIZE);
-        // 同步并等待5秒钟，保证对方初始化完毕
         pidServer.getRpc().synchronize();
-        LOGGER.info("(warmup) {} wait for {} init", pidServer.ownParty().getPartyName(), pidServer.otherParty().getPartyName());
-        Thread.sleep(WAIT_TIME_MILLI_SECOND);
         // 执行协议
         LOGGER.info("(warmup) {} execute", pidServer.ownParty().getPartyName());
         pidServer.pid(serverElementSet, WARMUP_SET_SIZE);
-        // 同步并等待5秒钟，保证对方执行完毕
         pidServer.getRpc().synchronize();
-        LOGGER.info("(warmup) {} wait for {} stop", pidServer.ownParty().getPartyName(), pidServer.otherParty().getPartyName());
-        Thread.sleep(WAIT_TIME_MILLI_SECOND);
-        LOGGER.info("(warmup) {} finish", pidServer.ownParty().getPartyName());
         pidServer.getRpc().reset();
+        LOGGER.info("(warmup) {} finish", pidServer.ownParty().getPartyName());
     }
 
     private void runServer(PidParty<ByteBuffer> pidServer, Set<ByteBuffer> serverElementSet, int clientElementSize,
-                           PrintWriter printWriter) throws InterruptedException, MpcAbortException {
+                           PrintWriter printWriter) throws Exception {
         int serverElementSize = serverElementSet.size();
         // 启动测试
         StopWatch stopWatch = new StopWatch();
-        // 同步并等待5秒钟，保证对方启动
         pidServer.getRpc().synchronize();
-        LOGGER.info("{} wait for {} start", pidServer.ownParty().getPartyName(), pidServer.otherParty().getPartyName());
-        Thread.sleep(WAIT_TIME_MILLI_SECOND);
-        // 初始化协议
         pidServer.getRpc().reset();
+        // 初始化协议
         LOGGER.info("{} init", pidServer.ownParty().getPartyName());
         stopWatch.start();
         pidServer.init(serverElementSize, clientElementSize);
@@ -199,12 +181,9 @@ public class PidMain {
         long initDataPacketNum = pidServer.getRpc().getSendDataPacketNum();
         long initPayloadByteLength = pidServer.getRpc().getPayloadByteLength();
         long initSendByteLength = pidServer.getRpc().getSendByteLength();
-        // 同步并等待5秒钟，保证对方初始化完毕
         pidServer.getRpc().synchronize();
-        LOGGER.info("{} wait for {} init", pidServer.ownParty().getPartyName(), pidServer.otherParty().getPartyName());
-        Thread.sleep(WAIT_TIME_MILLI_SECOND);
-        // 执行协议
         pidServer.getRpc().reset();
+        // 执行协议
         LOGGER.info("{} execute", pidServer.ownParty().getPartyName());
         stopWatch.start();
         pidServer.pid(serverElementSet, clientElementSize);
@@ -223,12 +202,9 @@ public class PidMain {
             + "\t" + initTime + "\t" + initDataPacketNum + "\t" + initPayloadByteLength + "\t" + initSendByteLength
             + "\t" + ptoTime + "\t" + ptoDataPacketNum + "\t" + ptoPayloadByteLength + "\t" + ptoSendByteLength;
         printWriter.println(info);
-        // 同步并等待5秒钟，保证对方执行完毕
         pidServer.getRpc().synchronize();
-        LOGGER.info("{} wait for {} stop", pidServer.ownParty().getPartyName(), pidServer.otherParty().getPartyName());
-        Thread.sleep(WAIT_TIME_MILLI_SECOND);
-        LOGGER.info("{} finish", pidServer.ownParty().getPartyName());
         pidServer.getRpc().reset();
+        LOGGER.info("{} finish", pidServer.ownParty().getPartyName());
     }
 
     private void runClient(Rpc clientRpc, Party serverParty) throws Exception {
@@ -303,8 +279,7 @@ public class PidMain {
         fileWriter.close();
     }
 
-    private void warmupClient(Rpc clientRpc, Party serverParty, PidConfig config, int taskId) throws
-        InterruptedException, MpcAbortException, IOException {
+    private void warmupClient(Rpc clientRpc, Party serverParty, PidConfig config, int taskId) throws Exception {
         // 读取输入文件
         LOGGER.info("(warmup) {} read element set", clientRpc.ownParty().getPartyName());
         InputStreamReader inputStreamReader = new InputStreamReader(
@@ -321,45 +296,27 @@ public class PidMain {
         PidParty<ByteBuffer> pidClient = PidFactory.createClient(clientRpc, serverParty, config);
         pidClient.setTaskId(taskId);
         pidClient.setParallel(false);
-        // 同步并等待5秒钟，保证对方启动
         pidClient.getRpc().synchronize();
-        LOGGER.info("(warmup) {} wait for {} start", pidClient.ownParty().getPartyName(), pidClient.otherParty().getPartyName());
-        Thread.sleep(WAIT_TIME_MILLI_SECOND);
         // 初始化协议
         LOGGER.info("(warmup) {} init", pidClient.ownParty().getPartyName());
         pidClient.init(WARMUP_SET_SIZE, WARMUP_SET_SIZE);
-        pidClient.getRpc().getSendDataPacketNum();
-        pidClient.getRpc().getPayloadByteLength();
-        pidClient.getRpc().getSendByteLength();
-        // 同步并等待5秒钟，保证对方初始化完毕
         pidClient.getRpc().synchronize();
-        LOGGER.info("(warmup) {} wait for {} init", pidClient.ownParty().getPartyName(), pidClient.otherParty().getPartyName());
-        Thread.sleep(WAIT_TIME_MILLI_SECOND);
         // 执行协议
         LOGGER.info("(warmup) {} execute", pidClient.ownParty().getPartyName());
         pidClient.pid(clientElementSet, WARMUP_SET_SIZE);
-        pidClient.getRpc().getSendDataPacketNum();
-        pidClient.getRpc().getPayloadByteLength();
-        pidClient.getRpc().getSendByteLength();
-        // 同步并等待5秒钟，保证对方执行完毕
         pidClient.getRpc().synchronize();
-        LOGGER.info("(warmup) {} wait for {} stop", pidClient.ownParty().getPartyName(), pidClient.otherParty().getPartyName());
-        Thread.sleep(WAIT_TIME_MILLI_SECOND);
-        LOGGER.info("(warmup) {} finish", pidClient.ownParty().getPartyName());
         pidClient.getRpc().reset();
+        LOGGER.info("(warmup) {} finish", pidClient.ownParty().getPartyName());
     }
 
     private void runClient(PidParty<ByteBuffer> pidClient, Set<ByteBuffer> clientElementSet, int serverElementSize,
-                           PrintWriter printWriter) throws InterruptedException, MpcAbortException {
+                           PrintWriter printWriter) throws Exception {
         int clientElementSize = clientElementSet.size();
         // 启动测试
         StopWatch stopWatch = new StopWatch();
-        // 同步并等待5秒钟，保证对方启动
         pidClient.getRpc().synchronize();
-        LOGGER.info("{} wait for {} start", pidClient.ownParty().getPartyName(), pidClient.otherParty().getPartyName());
-        Thread.sleep(WAIT_TIME_MILLI_SECOND);
-        // 初始化协议
         pidClient.getRpc().reset();
+        // 初始化协议
         LOGGER.info("{} init", pidClient.ownParty().getPartyName());
         stopWatch.start();
         pidClient.init(clientElementSize, serverElementSize);
@@ -369,12 +326,9 @@ public class PidMain {
         long initDataPacketNum = pidClient.getRpc().getSendDataPacketNum();
         long initPayloadByteLength = pidClient.getRpc().getPayloadByteLength();
         long initSendByteLength = pidClient.getRpc().getSendByteLength();
-        // 同步并等待5秒钟，保证对方初始化完毕
         pidClient.getRpc().synchronize();
-        LOGGER.info("{} wait for {} init", pidClient.ownParty().getPartyName(), pidClient.otherParty().getPartyName());
-        Thread.sleep(WAIT_TIME_MILLI_SECOND);
-        // 执行协议
         pidClient.getRpc().reset();
+        // 执行协议
         LOGGER.info("{} execute", pidClient.ownParty().getPartyName());
         stopWatch.start();
         pidClient.pid(clientElementSet, serverElementSize);
@@ -395,9 +349,7 @@ public class PidMain {
         printWriter.println(info);
         // 同步并等待5秒钟，保证对方执行完毕
         pidClient.getRpc().synchronize();
-        LOGGER.info("{} wait for {} stop", pidClient.ownParty().getPartyName(), pidClient.otherParty().getPartyName());
-        Thread.sleep(WAIT_TIME_MILLI_SECOND);
-        LOGGER.info("{} finish", pidClient.ownParty().getPartyName());
         pidClient.getRpc().reset();
+        LOGGER.info("{} finish", pidClient.ownParty().getPartyName());
     }
 }
