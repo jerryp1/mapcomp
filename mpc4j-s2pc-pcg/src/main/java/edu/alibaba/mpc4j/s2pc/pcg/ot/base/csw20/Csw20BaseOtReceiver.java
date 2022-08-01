@@ -159,8 +159,8 @@ public class Csw20BaseOtReceiver extends AbstractBaseOtReceiver {
             // 计算密钥 k = H(index, a * S)
             byte[] kInputByteArray = ecc.encode(ecc.multiply(capitalS, aArray[index]), false);
             rbArray[index] = kdf.deriveKey(ByteBuffer
-                    .allocate(Long.BYTES + Integer.BYTES + kInputByteArray.length)
-                    .putLong(extraInfo).putInt(index).put(kInputByteArray)
+                    .allocate(Integer.BYTES + kInputByteArray.length)
+                    .putInt(index).put(kInputByteArray)
                     .array());
             // 计算resp = H(k) \xor b* chall
             respByteArray[index] = choices[index] ?

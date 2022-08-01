@@ -120,12 +120,12 @@ public class Mr19BaseOtSender extends AbstractBaseOtSender {
             byte[] k0InputByteArray = ecc.encode(ecc.multiply(upperA0, bInteger), false);
             byte[] k1InputByteArray = ecc.encode(ecc.multiply(upperA1, bInteger), false);
             r0Array[index] = kdf.deriveKey(ByteBuffer
-                    .allocate(Long.BYTES + Integer.BYTES + k0InputByteArray.length)
-                    .putLong(extraInfo).putInt(index).put(k0InputByteArray)
+                    .allocate(Integer.BYTES + k0InputByteArray.length)
+                    .putInt(index).put(k0InputByteArray)
                     .array());
             r1Array[index] = kdf.deriveKey(ByteBuffer
-                    .allocate(Long.BYTES + Integer.BYTES + k1InputByteArray.length)
-                    .putLong(extraInfo).putInt(index).put(k1InputByteArray)
+                    .allocate(Integer.BYTES + k1InputByteArray.length)
+                    .putInt(index).put(k1InputByteArray)
                     .array());
         });
         bInteger = null;

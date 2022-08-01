@@ -133,13 +133,13 @@ public class Np01BaseOtSender extends AbstractBaseOtSender {
             // The sender computes H(index, PK_0^r) and H(index, PK_1^r)
             byte[] k0InputByteArray = ecc.encode(pk0[index], false);
             r0Array[index] = kdf.deriveKey(ByteBuffer
-                    .allocate(Long.BYTES + Integer.BYTES + k0InputByteArray.length)
-                    .putLong(extraInfo).putInt(index).put(k0InputByteArray)
+                    .allocate(Integer.BYTES + k0InputByteArray.length)
+                    .putInt(index).put(k0InputByteArray)
                     .array());
             byte[] k1InputByteArray = ecc.encode(pk1, false);
             r1Array[index] = kdf.deriveKey(ByteBuffer
-                    .allocate(Long.BYTES + Integer.BYTES + k1InputByteArray.length)
-                    .putLong(extraInfo).putInt(index).put(k1InputByteArray)
+                    .allocate(Integer.BYTES + k1InputByteArray.length)
+                    .putInt(index).put(k1InputByteArray)
                     .array());
         });
         upperC2r = null;
