@@ -1,3 +1,16 @@
+/*
+ * Copyright 2015 NICTA.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this
+ * file except in compliance with the License. You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software distributed under
+ * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied. See the License for the specific language governing
+ * permissions and limitations under the License.
+ */
 package edu.alibaba.mpc4j.crypto.phe;
 
 import com.google.common.base.Preconditions;
@@ -8,7 +21,9 @@ import java.math.BigInteger;
 
 /**
  * 半同态加密（Partially Homomorphic Encryption，PHE）引擎抽象类。部分代码参考：
+ * <p>
  * https://github.com/n1analytics/javallier/blob/master/src/main/java/com/n1analytics/paillier/PaillierContext.java
+ * </p>
  *
  * @author Weiran Liu
  * @date 2021/12/24
@@ -48,10 +63,10 @@ public abstract class AbstractPheEngine implements PheEngine {
     /**
      * The Chinese Remainder Theorem as needed for decryption / modPow.
      *
-     * @param mod1 the solution modulo n1.
-     * @param mod2 the solution modulo n2.
-     * @param n1 the modulus n1.
-     * @param n2 the modulus n2.
+     * @param mod1      the solution modulo n1.
+     * @param mod2      the solution modulo n2.
+     * @param n1        the modulus n1.
+     * @param n2        the modulus n2.
      * @param n1Inverse (n1^(-1) mod n2).
      * @return the solution modulo n = n1 * n2.
      */

@@ -1,6 +1,6 @@
 /*
  * Original Work Copyright 2018 H2O.ai.
- * Modified Work Copyright 2021 Weiran Liu.
+ * Modified by Weiran Liu. Adjust the code based on Alibaba Java Code Guidelines.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,7 +16,7 @@
  */
 package biz.k11i.xgboost.tree;
 
-import biz.k11i.xgboost.fvec.FVec;
+import biz.k11i.xgboost.fvec.Fvec;
 import biz.k11i.xgboost.util.ModelReader;
 
 import java.io.IOException;
@@ -66,7 +66,7 @@ public class RegTreeImpl implements RegTree {
      * @return leaf index
      */
     @Override
-    public int getLeafIndex(FVec featureVector) {
+    public int getLeafIndex(Fvec featureVector) {
         int id = 0;
         RegTreeNode n;
         while (!(n = regTreeNodes[id]).leaf) {
@@ -82,7 +82,7 @@ public class RegTreeImpl implements RegTree {
      * @param stringBuilder output param, will write path path to leaf into this buffer
      */
     @Override
-    public void getLeafPath(FVec featureVector, StringBuilder stringBuilder) {
+    public void getLeafPath(Fvec featureVector, StringBuilder stringBuilder) {
         int id = 0;
         RegTreeNode n;
         while (!(n = regTreeNodes[id]).leaf) {
@@ -99,7 +99,7 @@ public class RegTreeImpl implements RegTree {
      * @return leaf value
      */
     @Override
-    public float getLeafValue(FVec featureVector, int rootId) {
+    public float getLeafValue(Fvec featureVector, int rootId) {
         RegTreeNode n = regTreeNodes[rootId];
         while (!n.leaf) {
             n = regTreeNodes[n.next(featureVector)];

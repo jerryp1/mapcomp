@@ -1,6 +1,5 @@
 package edu.alibaba.mpc4j.s2pc.pso.main.psu;
 
-import edu.alibaba.mpc4j.common.rpc.MpcAbortException;
 import edu.alibaba.mpc4j.common.rpc.Party;
 import edu.alibaba.mpc4j.common.rpc.Rpc;
 import edu.alibaba.mpc4j.common.tool.CommonConstants;
@@ -44,10 +43,6 @@ public class PsuMain {
      * 预热
      */
     private static final int WARMUP_SET_SIZE = 1 << 10;
-    /**
-     * 同步等待时间
-     */
-    private static final int WAIT_TIME_MILLI_SECOND = 5000;
     /**
      * 配置参数
      */
@@ -143,8 +138,7 @@ public class PsuMain {
         fileWriter.close();
     }
 
-    private void warmupServer(Rpc serverRpc, Party clientParty, PsuConfig config, int taskId) throws
-        InterruptedException, MpcAbortException, IOException {
+    private void warmupServer(Rpc serverRpc, Party clientParty, PsuConfig config, int taskId) throws Exception {
         LOGGER.info("(warmup) {} read element set", serverRpc.ownParty().getPartyName());
         InputStreamReader warmupInputStreamReader = new InputStreamReader(
             new FileInputStream(PsoUtils.getBytesFileName(PsoUtils.BYTES_SERVER_PREFIX,
@@ -160,43 +154,31 @@ public class PsuMain {
         PsuServer psuServer = PsuFactory.createServer(serverRpc, clientParty, config);
         psuServer.setTaskId(taskId);
         psuServer.setParallel(false);
-        // 同步并等待5秒钟，保证对方启动
         psuServer.getRpc().synchronize();
-        LOGGER.info("(warmup) {} wait for {} start", psuServer.ownParty().getPartyName(), psuServer.otherParty().getPartyName());
-        Thread.sleep(WAIT_TIME_MILLI_SECOND);
         // 初始化协议
         LOGGER.info("(warmup) {} init", psuServer.ownParty().getPartyName());
         psuServer.init(WARMUP_SET_SIZE, WARMUP_SET_SIZE);
-        // 同步并等待5秒钟，保证对方初始化完毕
         psuServer.getRpc().synchronize();
-        LOGGER.info("(warmup) {} wait for {} init", psuServer.ownParty().getPartyName(), psuServer.otherParty().getPartyName());
-        Thread.sleep(WAIT_TIME_MILLI_SECOND);
         // 执行协议
         LOGGER.info("(warmup) {} execute", psuServer.ownParty().getPartyName());
         psuServer.psu(serverElementSet, WARMUP_SET_SIZE, WARMUP_ELEMENT_BYTE_LENGTH);
-        // 同步并等待5秒钟，保证对方执行完毕
         psuServer.getRpc().synchronize();
-        LOGGER.info("(warmup) {} wait for {} stop", psuServer.ownParty().getPartyName(), psuServer.otherParty().getPartyName());
-        Thread.sleep(WAIT_TIME_MILLI_SECOND);
-        LOGGER.info("(warmup) {} finish", psuServer.ownParty().getPartyName());
         psuServer.getRpc().reset();
+        LOGGER.info("(warmup) {} finish", psuServer.ownParty().getPartyName());
     }
 
     private void runServer(PsuServer psuServer,
                            Set<ByteBuffer> serverElementSet, int clientElementSize, int elementByteLength,
-                           PrintWriter printWriter) throws InterruptedException, MpcAbortException {
+                           PrintWriter printWriter) throws Exception {
         int serverElementSize = serverElementSet.size();
         LOGGER.info("----- {} start, ServerSetSize = {}, ClientSetSize = {}, parallel = {}",
             psuServer.getPtoDesc().getPtoName(), serverElementSize, clientElementSize, psuServer.getParallel()
         );
         // 启动测试
         StopWatch stopWatch = new StopWatch();
-        // 同步并等待5秒钟，保证对方启动
         psuServer.getRpc().synchronize();
-        LOGGER.info("{} wait for {} start", psuServer.ownParty().getPartyName(), psuServer.otherParty().getPartyName());
-        Thread.sleep(WAIT_TIME_MILLI_SECOND);
-        // 初始化协议
         psuServer.getRpc().reset();
+        // 初始化协议
         LOGGER.info("{} init", psuServer.ownParty().getPartyName());
         stopWatch.start();
         psuServer.init(serverElementSize, clientElementSize);
@@ -206,12 +188,9 @@ public class PsuMain {
         long initDataPacketNum = psuServer.getRpc().getSendDataPacketNum();
         long initPayloadByteLength = psuServer.getRpc().getPayloadByteLength();
         long initSendByteLength = psuServer.getRpc().getSendByteLength();
-        // 同步并等待5秒钟，保证对方初始化完毕
         psuServer.getRpc().synchronize();
-        LOGGER.info("{} wait for {} init", psuServer.ownParty().getPartyName(), psuServer.otherParty().getPartyName());
-        Thread.sleep(WAIT_TIME_MILLI_SECOND);
-        // 执行协议
         psuServer.getRpc().reset();
+        // 执行协议
         LOGGER.info("{} execute", psuServer.ownParty().getPartyName());
         stopWatch.start();
         psuServer.psu(serverElementSet, clientElementSize, elementByteLength);
@@ -230,13 +209,9 @@ public class PsuMain {
             + "\t" + initTime + "\t" + initDataPacketNum + "\t" + initPayloadByteLength + "\t" + initSendByteLength
             + "\t" + ptoTime + "\t" + ptoDataPacketNum + "\t" + ptoPayloadByteLength + "\t" + ptoSendByteLength;
         printWriter.println(info);
-        // 同步并等待5秒钟，保证对方执行完毕
         psuServer.getRpc().synchronize();
-        LOGGER.info("{} wait for {} stop", psuServer.ownParty().getPartyName(), psuServer.otherParty().getPartyName());
-        Thread.sleep(WAIT_TIME_MILLI_SECOND);
-        LOGGER.info("{} finish", psuServer.ownParty().getPartyName());
         psuServer.getRpc().reset();
-        LOGGER.info("----- {} finish-----", psuServer.getPtoDesc().getPtoName());
+        LOGGER.info("{} finish", psuServer.ownParty().getPartyName());
     }
 
     private void runClient(Rpc clientRpc, Party serverParty) throws Exception {
@@ -313,8 +288,7 @@ public class PsuMain {
         fileWriter.close();
     }
 
-    private void warmupClient(Rpc clientRpc, Party serverParty, PsuConfig config, int taskId) throws
-        InterruptedException, MpcAbortException, IOException {
+    private void warmupClient(Rpc clientRpc, Party serverParty, PsuConfig config, int taskId) throws Exception {
         // 读取输入文件
         LOGGER.info("(warmup) {} read element set", clientRpc.ownParty().getPartyName());
         InputStreamReader inputStreamReader = new InputStreamReader(
@@ -331,49 +305,32 @@ public class PsuMain {
         PsuClient psuClient = PsuFactory.createClient(clientRpc, serverParty, config);
         psuClient.setTaskId(taskId);
         psuClient.setParallel(false);
-        // 同步并等待5秒钟，保证对方启动
         psuClient.getRpc().synchronize();
-        LOGGER.info("(warmup) {} wait for {} start", psuClient.ownParty().getPartyName(), psuClient.otherParty().getPartyName());
-        Thread.sleep(WAIT_TIME_MILLI_SECOND);
         // 初始化协议
         LOGGER.info("(warmup) {} init", psuClient.ownParty().getPartyName());
         psuClient.init(WARMUP_SET_SIZE, WARMUP_SET_SIZE);
-        psuClient.getRpc().getSendDataPacketNum();
-        psuClient.getRpc().getPayloadByteLength();
-        psuClient.getRpc().getSendByteLength();
-        // 同步并等待5秒钟，保证对方初始化完毕
         psuClient.getRpc().synchronize();
-        LOGGER.info("(warmup) {} wait for {} init", psuClient.ownParty().getPartyName(), psuClient.otherParty().getPartyName());
-        Thread.sleep(WAIT_TIME_MILLI_SECOND);
         // 执行协议
         LOGGER.info("(warmup) {} execute", psuClient.ownParty().getPartyName());
         psuClient.psu(clientElementSet, WARMUP_SET_SIZE, WARMUP_ELEMENT_BYTE_LENGTH);
-        psuClient.getRpc().getSendDataPacketNum();
-        psuClient.getRpc().getPayloadByteLength();
-        psuClient.getRpc().getSendByteLength();
         // 同步并等待5秒钟，保证对方执行完毕
         psuClient.getRpc().synchronize();
-        LOGGER.info("(warmup) {} wait for {} stop", psuClient.ownParty().getPartyName(), psuClient.otherParty().getPartyName());
-        Thread.sleep(WAIT_TIME_MILLI_SECOND);
-        LOGGER.info("(warmup) {} finish", psuClient.ownParty().getPartyName());
         psuClient.getRpc().reset();
+        LOGGER.info("(warmup) {} finish", psuClient.ownParty().getPartyName());
     }
 
     private void runClient(PsuClient psuClient,
                            Set<ByteBuffer> clientElementSet, int serverElementSize, int elementByteLength,
-                           PrintWriter printWriter) throws InterruptedException, MpcAbortException {
+                           PrintWriter printWriter) throws Exception {
         int clientElementSize = clientElementSet.size();
         LOGGER.info("----- {} start, ClientSetSize = {}, ServerSetSize = {}, parallel = {}",
             psuClient.getPtoDesc().getPtoName(), clientElementSize, serverElementSize, psuClient.getParallel()
         );
         // 启动测试
         StopWatch stopWatch = new StopWatch();
-        // 同步并等待5秒钟，保证对方启动
         psuClient.getRpc().synchronize();
-        LOGGER.info("{} wait for {} start", psuClient.ownParty().getPartyName(), psuClient.otherParty().getPartyName());
-        Thread.sleep(WAIT_TIME_MILLI_SECOND);
-        // 初始化协议
         psuClient.getRpc().reset();
+        // 初始化协议
         LOGGER.info("{} init", psuClient.ownParty().getPartyName());
         stopWatch.start();
         psuClient.init(clientElementSize, serverElementSize);
@@ -383,12 +340,9 @@ public class PsuMain {
         long initDataPacketNum = psuClient.getRpc().getSendDataPacketNum();
         long initPayloadByteLength = psuClient.getRpc().getPayloadByteLength();
         long initSendByteLength = psuClient.getRpc().getSendByteLength();
-        // 同步并等待5秒钟，保证对方初始化完毕
         psuClient.getRpc().synchronize();
-        LOGGER.info("{} wait for {} init", psuClient.ownParty().getPartyName(), psuClient.otherParty().getPartyName());
-        Thread.sleep(WAIT_TIME_MILLI_SECOND);
-        // 执行协议
         psuClient.getRpc().reset();
+        // 执行协议
         LOGGER.info("{} execute", psuClient.ownParty().getPartyName());
         stopWatch.start();
         psuClient.psu(clientElementSet, serverElementSize, elementByteLength);
@@ -407,12 +361,8 @@ public class PsuMain {
             + "\t" + initTime + "\t" + initDataPacketNum + "\t" + initPayloadByteLength + "\t" + initSendByteLength
             + "\t" + ptoTime + "\t" + ptoDataPacketNum + "\t" + ptoPayloadByteLength + "\t" + ptoSendByteLength;
         printWriter.println(info);
-        // 同步并等待5秒钟，保证对方执行完毕
         psuClient.getRpc().synchronize();
-        LOGGER.info("{} wait for {} stop", psuClient.ownParty().getPartyName(), psuClient.otherParty().getPartyName());
-        Thread.sleep(WAIT_TIME_MILLI_SECOND);
-        LOGGER.info("{} finish", psuClient.ownParty().getPartyName());
         psuClient.getRpc().reset();
-        LOGGER.info("----- {} finish-----", psuClient.getPtoDesc().getPtoName());
+        LOGGER.info("{} finish", psuClient.ownParty().getPartyName());
     }
 }

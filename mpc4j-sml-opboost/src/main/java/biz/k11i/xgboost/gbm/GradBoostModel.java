@@ -1,6 +1,6 @@
 /*
  * Original Work Copyright 2018 H2O.ai.
- * Modified Work Copyright 2021 Weiran Liu.
+ * Modified by Weiran Liu. Adjust the code based on Alibaba Java Code Guidelines.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,7 +17,7 @@
 package biz.k11i.xgboost.gbm;
 
 import biz.k11i.xgboost.config.PredictorConfiguration;
-import biz.k11i.xgboost.fvec.FVec;
+import biz.k11i.xgboost.fvec.Fvec;
 import biz.k11i.xgboost.util.ModelReader;
 
 import java.io.IOException;
@@ -33,17 +33,30 @@ public interface GradBoostModel extends Serializable {
 
     class Factory {
         /**
+         * GBDT模型名称
+         */
+        private static final String NAME_GB_TREE = "gbtree";
+        /**
+         * 线性模型名称
+         */
+        private static final String NAME_GB_LINEAR = "gblinear";
+        /**
+         * 决策树模型名称
+         */
+        private static final String NAME_DART = "dart";
+
+        /**
          * Creates a gradient booster from given name.
          *
          * @param name name of gradient booster
          * @return created gradient booster
          */
         public static GradBoostModel createGradBooster(String name) {
-            if ("gbtree".equals(name)) {
+            if (NAME_GB_TREE.equals(name)) {
                 return new GradBoostTree();
-            } else if ("gblinear".equals(name)) {
+            } else if (NAME_GB_LINEAR.equals(name)) {
                 return new GardBoostLinear();
-            } else if ("dart".equals(name)) {
+            } else if (NAME_DART.equals(name)) {
                 return new GardBoostDart();
             }
 
@@ -82,7 +95,7 @@ public interface GradBoostModel extends Serializable {
      * @param numTreeLimit  limit the number of trees used in prediction.
      * @return prediction result.
      */
-    float[] predict(FVec featureVector, int numTreeLimit);
+    float[] predict(Fvec featureVector, int numTreeLimit);
 
     /**
      * Generates a prediction for given feature vector.
@@ -94,7 +107,7 @@ public interface GradBoostModel extends Serializable {
      * @param numTreeLimit  limit the number of trees used in prediction.
      * @return prediction result.
      */
-    float predictSingle(FVec featureVector, int numTreeLimit);
+    float predictSingle(Fvec featureVector, int numTreeLimit);
 
     /**
      * Predicts the leaf index of each tree. This is only valid in gbtree predictor.
@@ -103,7 +116,7 @@ public interface GradBoostModel extends Serializable {
      * @param numTreeLimit  limit the number of trees used in prediction.
      * @return predicted leaf indexes.
      */
-    int[] predictLeaf(FVec featureVector, int numTreeLimit);
+    int[] predictLeaf(Fvec featureVector, int numTreeLimit);
 
     /**
      * Predicts the path to leaf of each tree. This is only valid in gbtree predictor.
@@ -112,7 +125,7 @@ public interface GradBoostModel extends Serializable {
      * @param numTreeLimit  limit the number of trees used in prediction.
      * @return predicted path to leaves.
      */
-    String[] predictLeafPath(FVec featureVector, int numTreeLimit);
+    String[] predictLeafPath(Fvec featureVector, int numTreeLimit);
 
     /**
      * Gets the number of features.

@@ -1,6 +1,6 @@
 /*
  * Original Work Copyright 2018 H2O.ai.
- * Modified Work Copyright 2021 Weiran Liu.
+ * Modified by Weiran Liu. Adjust the code based on Alibaba Java Code Guidelines.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -38,20 +38,22 @@ public class SparkModelParam implements Serializable {
     final String labelCol;
     final String predictionCol;
 
-    // classification model only
+    /**
+     * classification model only
+     */
     final String rawPredictionCol;
     final double[] thresholds;
 
     public SparkModelParam(String modelType, String featureCol, ModelReader reader) throws IOException {
         this.modelType = modelType;
         this.featureCol = featureCol;
-        this.labelCol = reader.readUTF();
-        this.predictionCol = reader.readUTF();
+        this.labelCol = reader.readUtf();
+        this.predictionCol = reader.readUtf();
 
         if (MODEL_TYPE_CLS.equals(modelType)) {
-            this.rawPredictionCol = reader.readUTF();
-            int thresholdLength = reader.readIntBE();
-            this.thresholds = thresholdLength > 0 ? reader.readDoubleArrayBE(thresholdLength) : null;
+            this.rawPredictionCol = reader.readUtf();
+            int thresholdLength = reader.readIntBigEndian();
+            this.thresholds = thresholdLength > 0 ? reader.readDoubleArrayBigEndian(thresholdLength) : null;
 
         } else if (MODEL_TYPE_REG.equals(modelType)) {
             this.rawPredictionCol = null;

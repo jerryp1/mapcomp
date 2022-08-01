@@ -1,6 +1,6 @@
 /*
  * Original Work Copyright 2013 Square Inc.
- * Modified Work Copyright 2022 Weiran Liu.
+ * Modified by Weiran Liu. Adjust the code based on Alibaba Java Code Guidelines.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -28,11 +28,13 @@ import java.util.Random;
  * example, when doing repeated RSA operations, you would want to construct {@code GmpIntegers} for
  * the modulus and exponent (which are the same each time) but not for the message, which will
  * generally differ.
+ *
+ * @author Square Inc.
  */
 public class GmpBigInteger extends BigInteger {
     private static final long serialVersionUID = 6700370024390774100L;
 
-    private static class MpzMemory extends Memory {
+    private static class MpzMemory extends Memory implements AutoCloseable {
         public final LibGmp.mpz_t peer;
 
         MpzMemory() {
@@ -42,9 +44,8 @@ public class GmpBigInteger extends BigInteger {
         }
 
         @Override
-        protected void finalize() {
+        public void close() throws Exception {
             LibGmp.__gmpz_clear(peer);
-            super.finalize();
         }
     }
 

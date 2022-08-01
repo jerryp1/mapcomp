@@ -91,7 +91,7 @@ public class CuckooTableSingletonTcFinder<T> implements CuckooTableTcFinder<T> {
                         vertexDataSet.remove(data);
                         if (vertexDataSet.size() == 1) {
                             singletonQueue.add(vertex);
-                        } else if (vertexDataSet.size() == 0) {
+                        } else if (vertexDataSet.isEmpty()) {
                             twoCoreVertexSet.remove(vertex);
                         }
                     }

@@ -1,6 +1,6 @@
 /*
  * Original Work Copyright 2018 H2O.ai.
- * Modified Work Copyright 2021 Weiran Liu.
+ * Modified by Weiran Liu. Adjust the code based on Alibaba Java Code Guidelines.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,26 +16,28 @@
  */
 package biz.k11i.xgboost.fvec;
 
+import org.apache.commons.math3.util.Precision;
+
 /**
- * Feature Vector Double Array.
+ * Feature Vector Float Array.
  *
  * @author KOMIYA Atsushi, Michal Kurka, Weiran Liu
  * @date 2021/10/08
  */
-class FVecDoubleArray implements FVec {
-    private static final long serialVersionUID = 5004062882376155663L;
+class FvecFloatArray implements Fvec {
+    private static final long serialVersionUID = -6252541085408935802L;
     /**
-     * double value array
+     * float value array
      */
-    private final double[] values;
+    private final float[] values;
     /**
      * whether treat 0 as N/A
      */
-    private final boolean treatsZeroAsNA;
+    private final boolean treatsZeroAsNa;
 
-    FVecDoubleArray(double[] values, boolean treatsZeroAsNA) {
+    FvecFloatArray(float[] values, boolean treatsZeroAsNa) {
         this.values = values;
-        this.treatsZeroAsNA = treatsZeroAsNA;
+        this.treatsZeroAsNa = treatsZeroAsNa;
     }
 
     @Override
@@ -44,11 +46,11 @@ class FVecDoubleArray implements FVec {
             return Float.NaN;
         }
 
-        final double result = values[index];
-        if (treatsZeroAsNA && result == 0) {
+        float result = values[index];
+        if (treatsZeroAsNa && Precision.equals(result, 0, Double.MIN_VALUE)) {
             return Float.NaN;
         }
 
-        return (float) result;
+        return result;
     }
 }

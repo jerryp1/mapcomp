@@ -1,5 +1,6 @@
 /*
- * Copyright 2015 NICTA
+ * Copyright 2015 NICTA.
+ * Modified by Weiran Liu. Adjust the code based on Alibaba Java Code Guidelines.
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this
  * file except in compliance with the License. You may obtain a copy of the License at
@@ -35,9 +36,9 @@ public class PheEngineTestConfiguration {
         = generateConfigurations(PheFactory.PheType.PAI99, PheSecLevel.LAMBDA_40);
     public static final List<Object[]> PAI99_NAME_CONFIGURATIONS_40
         = Arrays.stream(PAI99_CONFIGURATIONS_40)
-        .map(configuration -> new Object[] {PheEngineTestConfiguration.getName(configuration), configuration})
+        .map(configuration -> new Object[]{PheEngineTestConfiguration.getName(configuration), configuration})
         .collect(Collectors.toList());
-    public static final Object[] PAI99_NAME_CONFIGURATION_SIGNED_FULL_PRECISION_40 = new Object[] {
+    public static final Object[] PAI99_NAME_CONFIGURATION_SIGNED_FULL_PRECISION_40 = new Object[]{
         PheEngineTestConfiguration.getName(PAI99_CONFIGURATIONS_40[2]), PAI99_CONFIGURATIONS_40[2]
     };
     /**
@@ -47,9 +48,9 @@ public class PheEngineTestConfiguration {
         = generateConfigurations(PheFactory.PheType.PAI99, PheSecLevel.LAMBDA_80);
     public static final List<Object[]> PAI99_NAME_CONFIGURATIONS_80
         = Arrays.stream(PAI99_CONFIGURATIONS_80)
-        .map(configuration -> new Object[] {PheEngineTestConfiguration.getName(configuration), configuration})
+        .map(configuration -> new Object[]{PheEngineTestConfiguration.getName(configuration), configuration})
         .collect(Collectors.toList());
-    public static final Object[] PAI99_NAME_CONFIGURATION_SIGNED_FULL_PRECISION_80 = new Object[] {
+    public static final Object[] PAI99_NAME_CONFIGURATION_SIGNED_FULL_PRECISION_80 = new Object[]{
         PheEngineTestConfiguration.getName(PAI99_CONFIGURATIONS_80[2]), PAI99_CONFIGURATIONS_80[2]
     };
 
@@ -60,9 +61,9 @@ public class PheEngineTestConfiguration {
         = generateConfigurations(PheFactory.PheType.OU98, PheSecLevel.LAMBDA_40);
     public static final List<Object[]> OU98_NAME_CONFIGURATIONS_40
         = Arrays.stream(OU98_CONFIGURATIONS_40)
-        .map(configuration -> new Object[] {PheEngineTestConfiguration.getName(configuration), configuration})
+        .map(configuration -> new Object[]{PheEngineTestConfiguration.getName(configuration), configuration})
         .collect(Collectors.toList());
-    public static final Object[] OU98_NAME_CONFIGURATION_SIGNED_FULL_PRECISION_40 = new Object[] {
+    public static final Object[] OU98_NAME_CONFIGURATION_SIGNED_FULL_PRECISION_40 = new Object[]{
         PheEngineTestConfiguration.getName(OU98_CONFIGURATIONS_40[2]), OU98_CONFIGURATIONS_40[2]
     };
     /**
@@ -72,21 +73,21 @@ public class PheEngineTestConfiguration {
         = generateConfigurations(PheFactory.PheType.OU98, PheSecLevel.LAMBDA_80);
     public static final List<Object[]> OU98_NAME_CONFIGURATIONS_80
         = Arrays.stream(OU98_CONFIGURATIONS_80)
-        .map(configuration -> new Object[] {PheEngineTestConfiguration.getName(configuration), configuration})
+        .map(configuration -> new Object[]{PheEngineTestConfiguration.getName(configuration), configuration})
         .collect(Collectors.toList());
-    public static final Object[] OU98_NAME_CONFIGURATION_SIGNED_FULL_PRECISION_80 = new Object[] {
+    public static final Object[] OU98_NAME_CONFIGURATION_SIGNED_FULL_PRECISION_80 = new Object[]{
         PheEngineTestConfiguration.getName(OU98_CONFIGURATIONS_80[2]), OU98_CONFIGURATIONS_80[2]
     };
 
     /**
      * 根据半同态类型和模数比特长度构造测试配置项。
      *
-     * @param pheType          半同态类型。
+     * @param pheType     半同态类型。
      * @param pheSecLevel 半同态加密安全级别。
      * @return 测试配置项。
      */
     private static PheEngineTestConfiguration[] generateConfigurations(PheFactory.PheType pheType, PheSecLevel pheSecLevel) {
-        return new PheEngineTestConfiguration[] {
+        return new PheEngineTestConfiguration[]{
             createUnsignedFullPrecision(pheType, pheSecLevel),
             createUnsignedPartialPrecision(pheType, pheSecLevel),
             createSignedFullPrecision(pheType, pheSecLevel),

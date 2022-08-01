@@ -1,3 +1,17 @@
+/*
+ * Copyright 2015 NICTA.
+ * Modified by Weiran Liu. Move operations into PheEngine implementations.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this
+ * file except in compliance with the License. You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * <p>
+ * Unless required by applicable law or agreed to in writing, software distributed under
+ * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied. See the License for the specific language governing
+ * permissions and limitations under the License.
+ */
 package edu.alibaba.mpc4j.crypto.phe.params;
 
 import com.google.common.base.Preconditions;
@@ -311,7 +325,7 @@ public class PhePlaintext implements Packable {
         if (o == null || o.getClass() != PhePlaintext.class) {
             return false;
         }
-        PhePlaintext that = (PhePlaintext)o;
+        PhePlaintext that = (PhePlaintext) o;
         return new EqualsBuilder()
             .append(this.plaintextEncoder, that.plaintextEncoder)
             .append(this.value, that.value)

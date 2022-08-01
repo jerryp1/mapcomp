@@ -1,6 +1,6 @@
 /*
  * Original Work Copyright 2018 H2O.ai.
- * Modified Work Copyright 2021 Weiran Liu.
+ * Modified by Weiran Liu. Adjust the code based on Alibaba Java Code Guidelines.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,32 +16,41 @@
  */
 package biz.k11i.xgboost.fvec;
 
-import java.util.Map;
+import org.apache.commons.math3.util.Precision;
 
 /**
- * Feature Vector Map.
+ * Feature Vector Double Array.
  *
  * @author KOMIYA Atsushi, Michal Kurka, Weiran Liu
  * @date 2021/10/08
  */
-class FVecMap implements FVec {
-    private static final long serialVersionUID = 4538474534313444423L;
+class FvecDoubleArray implements Fvec {
+    private static final long serialVersionUID = 5004062882376155663L;
     /**
-     * feature (index, value)-map
+     * double value array
      */
-    private final Map<Integer, ? extends Number> values;
+    private final double[] values;
+    /**
+     * whether treat 0 as N/A
+     */
+    private final boolean treatsZeroAsNa;
 
-    FVecMap(Map<Integer, ? extends Number> values) {
+    FvecDoubleArray(double[] values, boolean treatsZeroAsNa) {
         this.values = values;
+        this.treatsZeroAsNa = treatsZeroAsNa;
     }
 
     @Override
     public float featureValue(int index) {
-        Number number = values.get(index);
-        if (number == null) {
+        if (values.length <= index) {
             return Float.NaN;
         }
 
-        return number.floatValue();
+        final double result = values[index];
+        if (treatsZeroAsNa && Precision.equals(result, 0, Double.MIN_VALUE)) {
+            return Float.NaN;
+        }
+
+        return (float) result;
     }
 }

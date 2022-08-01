@@ -1,5 +1,6 @@
 /*
- * Copyright 2015 NICTA
+ * Copyright 2015 NICTA.
+ * Modified by Weiran Liu. Adjust the code based on Alibaba Java Code Guidelines.
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this
  * file except in compliance with the License. You may obtain a copy of the License at
@@ -30,7 +31,9 @@ import java.util.Collection;
 
 /**
  * 半同态加密行运算测试。部分代码来自：
+ * <p>
  * https://github.com/n1analytics/javallier/blob/master/src/test/java/com/n1analytics/paillier/RawPaillierTest.java
+ * </p>
  *
  * @author Mentari Djatmiko, Weiran Liu
  * @date 2016/02/05

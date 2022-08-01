@@ -1,6 +1,5 @@
 package edu.alibaba.mpc4j.s2pc.pso.main.pmid;
 
-import edu.alibaba.mpc4j.common.rpc.MpcAbortException;
 import edu.alibaba.mpc4j.common.rpc.Party;
 import edu.alibaba.mpc4j.common.rpc.Rpc;
 import edu.alibaba.mpc4j.common.tool.CommonConstants;
@@ -49,10 +48,6 @@ public class PmidMain {
      * 预热
      */
     private static final int WARMUP_SET_SIZE = 1 << 10;
-    /**
-     * 同步等待时间
-     */
-    private static final int WAIT_TIME_MILLI_SECOND = 5000;
     /**
      * 配置参数
      */
@@ -150,8 +145,7 @@ public class PmidMain {
         fileWriter.close();
     }
 
-    private void warmupServer(Rpc serverRpc, Party clientParty, PmidConfig config, int taskId) throws
-        InterruptedException, MpcAbortException, IOException {
+    private void warmupServer(Rpc serverRpc, Party clientParty, PmidConfig config, int taskId) throws Exception {
         LOGGER.info("(warmup) {} read element set", serverRpc.ownParty().getPartyName());
         InputStreamReader warmupInputStreamReader = new InputStreamReader(
             new FileInputStream(PsoUtils.getBytesFileName(PsoUtils.BYTES_SERVER_PREFIX,
@@ -167,40 +161,29 @@ public class PmidMain {
         PmidServer<ByteBuffer> pmidServer = PmidFactory.createServer(serverRpc, clientParty, config);
         pmidServer.setTaskId(taskId);
         pmidServer.setParallel(false);
-        // 同步并等待5秒钟，保证对方启动
         pmidServer.getRpc().synchronize();
-        LOGGER.info("(warmup) {} wait for {} start", pmidServer.ownParty().getPartyName(), pmidServer.otherParty().getPartyName());
-        Thread.sleep(WAIT_TIME_MILLI_SECOND);
         // 初始化协议
         LOGGER.info("(warmup) {} init", pmidServer.ownParty().getPartyName());
         pmidServer.init(WARMUP_SET_SIZE, WARMUP_SET_SIZE, DEFAULT_MAX_K);
-        // 同步并等待5秒钟，保证对方初始化完毕
         pmidServer.getRpc().synchronize();
-        LOGGER.info("(warmup) {} wait for {} init", pmidServer.ownParty().getPartyName(), pmidServer.otherParty().getPartyName());
-        Thread.sleep(WAIT_TIME_MILLI_SECOND);
         // 执行协议
         LOGGER.info("(warmup) {} execute", pmidServer.ownParty().getPartyName());
         pmidServer.pmid(serverElementSet, WARMUP_SET_SIZE, DEFAULT_MAX_K);
-        // 同步并等待5秒钟，保证对方执行完毕
         pmidServer.getRpc().synchronize();
-        LOGGER.info("(warmup) {} wait for {} stop", pmidServer.ownParty().getPartyName(), pmidServer.otherParty().getPartyName());
-        Thread.sleep(WAIT_TIME_MILLI_SECOND);
-        LOGGER.info("(warmup) {} finish", pmidServer.ownParty().getPartyName());
         pmidServer.getRpc().reset();
+        LOGGER.info("(warmup) {} finish", pmidServer.ownParty().getPartyName());
     }
 
     private void runServer(PmidServer<ByteBuffer> pmidServer, Set<ByteBuffer> serverElementSet,
                            int clientElementSize, int maxK,
-                           PrintWriter printWriter) throws InterruptedException, MpcAbortException {
+                           PrintWriter printWriter) throws Exception {
         int serverElementSize = serverElementSet.size();
         // 启动测试
         StopWatch stopWatch = new StopWatch();
         // 同步并等待5秒钟，保证对方启动
         pmidServer.getRpc().synchronize();
-        LOGGER.info("{} wait for {} start", pmidServer.ownParty().getPartyName(), pmidServer.otherParty().getPartyName());
-        Thread.sleep(WAIT_TIME_MILLI_SECOND);
-        // 初始化协议
         pmidServer.getRpc().reset();
+        // 初始化协议
         LOGGER.info("{} init", pmidServer.ownParty().getPartyName());
         stopWatch.start();
         pmidServer.init(serverElementSize, clientElementSize, maxK);
@@ -210,12 +193,9 @@ public class PmidMain {
         long initDataPacketNum = pmidServer.getRpc().getSendDataPacketNum();
         long initPayloadByteLength = pmidServer.getRpc().getPayloadByteLength();
         long initSendByteLength = pmidServer.getRpc().getSendByteLength();
-        // 同步并等待5秒钟，保证对方初始化完毕
         pmidServer.getRpc().synchronize();
-        LOGGER.info("{} wait for {} init", pmidServer.ownParty().getPartyName(), pmidServer.otherParty().getPartyName());
-        Thread.sleep(WAIT_TIME_MILLI_SECOND);
-        // 执行协议
         pmidServer.getRpc().reset();
+        // 执行协议
         LOGGER.info("{} execute", pmidServer.ownParty().getPartyName());
         stopWatch.start();
         pmidServer.pmid(serverElementSet, clientElementSize, maxK);
@@ -237,10 +217,8 @@ public class PmidMain {
         printWriter.println(info);
         // 同步并等待5秒钟，保证对方执行完毕
         pmidServer.getRpc().synchronize();
-        LOGGER.info("{} wait for {} stop", pmidServer.ownParty().getPartyName(), pmidServer.otherParty().getPartyName());
-        Thread.sleep(WAIT_TIME_MILLI_SECOND);
-        LOGGER.info("{} finish", pmidServer.ownParty().getPartyName());
         pmidServer.getRpc().reset();
+        LOGGER.info("{} finish", pmidServer.ownParty().getPartyName());
     }
 
     private void runClient(Rpc clientRpc, Party serverParty) throws Exception {
@@ -322,8 +300,7 @@ public class PmidMain {
         fileWriter.close();
     }
 
-    private void warmupClient(Rpc clientRpc, Party serverParty, PmidConfig config, int taskId) throws
-        InterruptedException, MpcAbortException, IOException {
+    private void warmupClient(Rpc clientRpc, Party serverParty, PmidConfig config, int taskId) throws Exception {
         // 读取输入文件
         LOGGER.info("(warmup) {} read element set", clientRpc.ownParty().getPartyName());
         InputStreamReader inputStreamReader = new InputStreamReader(
@@ -343,20 +320,11 @@ public class PmidMain {
         PmidClient<ByteBuffer> pmidClient = PmidFactory.createClient(clientRpc, serverParty, config);
         pmidClient.setTaskId(taskId);
         pmidClient.setParallel(false);
-        // 同步并等待5秒钟，保证对方启动
         pmidClient.getRpc().synchronize();
-        LOGGER.info("(warmup) {} wait for {} start", pmidClient.ownParty().getPartyName(), pmidClient.otherParty().getPartyName());
-        Thread.sleep(WAIT_TIME_MILLI_SECOND);
         // 初始化协议
         LOGGER.info("(warmup) {} init", pmidClient.ownParty().getPartyName());
         pmidClient.init(WARMUP_SET_SIZE, WARMUP_SET_SIZE, DEFAULT_MAX_K);
-        pmidClient.getRpc().getSendDataPacketNum();
-        pmidClient.getRpc().getPayloadByteLength();
-        pmidClient.getRpc().getSendByteLength();
-        // 同步并等待5秒钟，保证对方初始化完毕
         pmidClient.getRpc().synchronize();
-        LOGGER.info("(warmup) {} wait for {} init", pmidClient.ownParty().getPartyName(), pmidClient.otherParty().getPartyName());
-        Thread.sleep(WAIT_TIME_MILLI_SECOND);
         // 执行协议
         LOGGER.info("(warmup) {} execute", pmidClient.ownParty().getPartyName());
         pmidClient.pmid(clientElementMap, WARMUP_SET_SIZE);
@@ -365,24 +333,19 @@ public class PmidMain {
         pmidClient.getRpc().getSendByteLength();
         // 同步并等待5秒钟，保证对方执行完毕
         pmidClient.getRpc().synchronize();
-        LOGGER.info("(warmup) {} wait for {} stop", pmidClient.ownParty().getPartyName(), pmidClient.otherParty().getPartyName());
-        Thread.sleep(WAIT_TIME_MILLI_SECOND);
-        LOGGER.info("(warmup) {} finish", pmidClient.ownParty().getPartyName());
         pmidClient.getRpc().reset();
+        LOGGER.info("(warmup) {} finish", pmidClient.ownParty().getPartyName());
     }
 
     private void runClient(PmidClient<ByteBuffer> pmidClient, Map<ByteBuffer, Integer> clientElementMap,
                            int serverElementSize, int maxK,
-                           PrintWriter printWriter) throws InterruptedException, MpcAbortException {
+                           PrintWriter printWriter) throws Exception {
         int clientElementSize = clientElementMap.keySet().size();
         // 启动测试
         StopWatch stopWatch = new StopWatch();
-        // 同步并等待5秒钟，保证对方启动
         pmidClient.getRpc().synchronize();
-        LOGGER.info("{} wait for {} start", pmidClient.ownParty().getPartyName(), pmidClient.otherParty().getPartyName());
-        Thread.sleep(WAIT_TIME_MILLI_SECOND);
-        // 初始化协议
         pmidClient.getRpc().reset();
+        // 初始化协议
         LOGGER.info("{} init", pmidClient.ownParty().getPartyName());
         stopWatch.start();
         pmidClient.init(clientElementSize, serverElementSize, maxK);
@@ -394,10 +357,8 @@ public class PmidMain {
         long initSendByteLength = pmidClient.getRpc().getSendByteLength();
         // 同步并等待5秒钟，保证对方初始化完毕
         pmidClient.getRpc().synchronize();
-        LOGGER.info("{} wait for {} init", pmidClient.ownParty().getPartyName(), pmidClient.otherParty().getPartyName());
-        Thread.sleep(WAIT_TIME_MILLI_SECOND);
-        // 执行协议
         pmidClient.getRpc().reset();
+        // 执行协议
         LOGGER.info("{} execute", pmidClient.ownParty().getPartyName());
         stopWatch.start();
         pmidClient.pmid(clientElementMap, serverElementSize);
@@ -419,9 +380,7 @@ public class PmidMain {
         printWriter.println(info);
         // 同步并等待5秒钟，保证对方执行完毕
         pmidClient.getRpc().synchronize();
-        LOGGER.info("{} wait for {} stop", pmidClient.ownParty().getPartyName(), pmidClient.otherParty().getPartyName());
-        Thread.sleep(WAIT_TIME_MILLI_SECOND);
-        LOGGER.info("{} finish", pmidClient.ownParty().getPartyName());
         pmidClient.getRpc().reset();
+        LOGGER.info("{} finish", pmidClient.ownParty().getPartyName());
     }
 }

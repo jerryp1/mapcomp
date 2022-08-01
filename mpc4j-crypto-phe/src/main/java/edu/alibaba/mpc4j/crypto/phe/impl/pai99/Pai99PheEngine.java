@@ -1,3 +1,17 @@
+/*
+ * Copyright 2015 NICTA.
+ * Modified by Weiran Liu. Add some comments and adjust the code based on Alibaba Java Code Guidelines.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this
+ * file except in compliance with the License. You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software distributed under
+ * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied. See the License for the specific language governing
+ * permissions and limitations under the License.
+ */
 package edu.alibaba.mpc4j.crypto.phe.impl.pai99;
 
 import com.google.common.base.Preconditions;
@@ -33,12 +47,12 @@ public class Pai99PheEngine extends AbstractPheEngine {
      * Computes the h-function as defined in Paillier's paper page 12, 'Decryption using Chinese-remaindering'.
      *
      * @param generator the generator g = modulus + 1.
-     * @param x the input x.
-     * @param xSquared the input xSquared.
-     * @return h(x, x^2) = ((g^(x - 1) mod x^2 - 1) / x)^-1 mod x.
+     * @param x         the input x.
+     * @param xSquared  the input xSquared.
+     * @return h(x, x ^ 2) = ((g^(x - 1) mod x^2 - 1) / x)^-1 mod x.
      */
     static BigInteger hFunction(BigInteger generator, BigInteger x, BigInteger xSquared) {
-        return lFunction(BigIntegerUtils.modPow(generator, x.subtract(BigInteger.ONE), xSquared),x).modInverse(x);
+        return lFunction(BigIntegerUtils.modPow(generator, x.subtract(BigInteger.ONE), xSquared), x).modInverse(x);
     }
 
     /**
@@ -73,7 +87,7 @@ public class Pai99PheEngine extends AbstractPheEngine {
     @Override
     public BigInteger rawEncrypt(PhePublicKey pk, BigInteger m) {
         Preconditions.checkArgument(pk instanceof Pai99PhePublicKey);
-        Pai99PhePublicKey pai99PhePublicKey = (Pai99PhePublicKey)pk;
+        Pai99PhePublicKey pai99PhePublicKey = (Pai99PhePublicKey) pk;
         BigInteger modulus = pai99PhePublicKey.modulus;
         BigInteger modulusSquared = pai99PhePublicKey.modulusSquared;
         // ct = g^pt * r^n mod n^2 = (modulus + 1)^pt * r^n mod n^2 (modulus * pt + 1) * r^n mod n^2
@@ -85,8 +99,8 @@ public class Pai99PheEngine extends AbstractPheEngine {
     @Override
     public BigInteger rawEncrypt(PhePrivateKey sk, BigInteger m) {
         Preconditions.checkArgument(sk instanceof Pai99PhePrivateKey);
-        Pai99PhePrivateKey pai99PhePrivateKey = (Pai99PhePrivateKey)sk;
-        Pai99PhePublicKey pai99PhePublicKey = (Pai99PhePublicKey)sk.getPublicKey();
+        Pai99PhePrivateKey pai99PhePrivateKey = (Pai99PhePrivateKey) sk;
+        Pai99PhePublicKey pai99PhePublicKey = (Pai99PhePublicKey) sk.getPublicKey();
         // 获得参数
         BigInteger modulus = pai99PhePrivateKey.modulus;
         BigInteger modulusSquared = pai99PhePublicKey.modulusSquared;
@@ -132,7 +146,7 @@ public class Pai99PheEngine extends AbstractPheEngine {
     @Override
     public BigInteger rawDecrypt(PhePrivateKey sk, BigInteger ct) {
         Preconditions.checkArgument(sk instanceof Pai99PhePrivateKey);
-        Pai99PhePrivateKey privateKey = (Pai99PhePrivateKey)sk;
+        Pai99PhePrivateKey privateKey = (Pai99PhePrivateKey) sk;
         // mod1 = L_p(c^(p - 1) mod p^2) h_p mod p
         BigInteger p = privateKey.p;
         BigInteger pSquared = privateKey.pSquared;

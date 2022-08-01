@@ -1,4 +1,7 @@
 /*******************************************************************************
+ * Modified by Weiran Liu.
+ * Adjust the source code based on Alibaba Java Coding Guidelines.
+ *
  * Copyright (c) 2010-2020 Haifeng Li. All rights reserved.
  *
  * Smile is free software: you can redistribute it and/or modify
@@ -17,6 +20,10 @@
 
 package edu.alibaba.mpc4j.sml.smile.base.cart;
 
+import edu.alibaba.mpc4j.common.tool.utils.DoubleUtils;
+import org.apache.commons.math3.util.Precision;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import smile.data.DataFrame;
 import smile.data.Tuple;
 import smile.data.formula.Formula;
@@ -39,20 +46,31 @@ import java.util.stream.IntStream;
  *
  * @author Haifeng Li
  */
-public abstract class CART implements SHAP<Tuple>, Serializable {
+public abstract class Cart implements SHAP<Tuple>, Serializable {
+    /**
+     * 序列化UID
+     */
     private static final long serialVersionUID = 8146929007156655559L;
-    private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(CART.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(Cart.class);
 
-    /** The model formula. */
+    /**
+     * The model formula.
+     */
     protected Formula formula;
 
-    /** The schema of predictors. */
+    /**
+     * The schema of predictors.
+     */
     protected StructType schema;
 
-    /** The schema of response variable. */
+    /**
+     * The schema of response variable.
+     */
     protected StructField response;
 
-    /** The root of decision tree. */
+    /**
+     * The root of decision tree.
+     */
     protected Node root;
     /**
      * The maximum depth of the tree.
@@ -82,7 +100,9 @@ public abstract class CART implements SHAP<Tuple>, Serializable {
      */
     protected double[] importance;
 
-    /** The training data. */
+    /**
+     * The training data.
+     */
     protected transient DataFrame x;
 
     /**
@@ -112,13 +132,17 @@ public abstract class CART implements SHAP<Tuple>, Serializable {
      */
     private transient int[] buffer;
 
-    /** Private constructor for deserialization. */
-    private CART() {
+    /**
+     * Private constructor for deserialization.
+     */
+    private Cart() {
 
     }
 
-    /** Constructor. */
-    public CART(Formula formula, StructType schema, StructField response, Node root, double[] importance) {
+    /**
+     * Constructor.
+     */
+    public Cart(Formula formula, StructType schema, StructField response, Node root, double[] importance) {
         this.formula = formula;
         this.schema = schema;
         this.response = response;
@@ -128,20 +152,21 @@ public abstract class CART implements SHAP<Tuple>, Serializable {
 
     /**
      * Constructor.
-     * @param x the data frame of the explanatory variable.
-     * @param y the response variables.
+     *
+     * @param x        the data frame of the explanatory variable.
+     * @param y        the response variables.
      * @param maxDepth the maximum depth of the tree.
      * @param maxNodes the maximum number of leaf nodes in the tree.
      * @param nodeSize the minimum size of leaf nodes.
-     * @param mtry the number of input variables to pick to split on at each
-     *             node. It seems that sqrt(p) give generally good performance,
-     *             where p is the number of variables.
-     * @param samples the sample set of instances for stochastic learning.
-     *               samples[i] is the number of sampling for instance i.
-     * @param order the index of training values in ascending order. Note
-     *              that only numeric attributes need be sorted.
+     * @param mtry     the number of input variables to pick to split on at each
+     *                 node. It seems that sqrt(p) give generally good performance,
+     *                 where p is the number of variables.
+     * @param samples  the sample set of instances for stochastic learning.
+     *                 samples[i] is the number of sampling for instance i.
+     * @param order    the index of training values in ascending order. Note
+     *                 that only numeric attributes need be sorted.
      */
-    public CART(DataFrame x, StructField y, int maxDepth, int maxNodes, int nodeSize, int mtry, int[] samples, int[][] order) {
+    public Cart(DataFrame x, StructField y, int maxDepth, int maxNodes, int nodeSize, int mtry, int[] samples, int[][] order) {
         this.x = x;
         this.response = y;
         this.schema = x.schema();
@@ -155,7 +180,7 @@ public abstract class CART implements SHAP<Tuple>, Serializable {
         int p = x.ncols();
 
         if (mtry < 1 || mtry > p) {
-            logger.debug("Invalid mtry. Use all features.");
+            LOGGER.debug("Invalid mtry. Use all features.");
             this.mtry = p;
         }
 
@@ -181,7 +206,7 @@ public abstract class CART implements SHAP<Tuple>, Serializable {
         }
         this.index = idx.toArray();
 
-        buffer  = new int[index.length];
+        buffer = new int[index.length];
 
         if (order == null) {
             this.order = order(x);
@@ -195,20 +220,28 @@ public abstract class CART implements SHAP<Tuple>, Serializable {
         }
     }
 
-    /** Returns the number of nodes in the tree. */
+    /**
+     * Returns the number of nodes in the tree.
+     */
     public int size() {
         return size(root);
     }
 
-    /** Returns the number of nodes of the subtree. */
+    /**
+     * Returns the number of nodes of the subtree.
+     */
     private int size(Node node) {
-        if (node instanceof LeafNode) return 1;
+        if (node instanceof LeafNode) {
+            return 1;
+        }
 
         InternalNode parent = (InternalNode) node;
         return size(parent.trueChild) + size(parent.falseChild) + 1;
     }
 
-    /** Returns the index of ordered samples for each ordinal column. */
+    /**
+     * Returns the index of ordered samples for each ordinal column.
+     */
     public static int[][] order(DataFrame x) {
         int n = x.size();
         int p = x.ncols();
@@ -236,7 +269,9 @@ public abstract class CART implements SHAP<Tuple>, Serializable {
         return formula == null ? x : formula.x(x);
     }
 
-    /** Clear the workspace of building tree. */
+    /**
+     * Clear the workspace of building tree.
+     */
     protected void clear() {
         this.x = null;
         this.order = null;
@@ -256,13 +291,13 @@ public abstract class CART implements SHAP<Tuple>, Serializable {
         }
 
         if (split.depth >= maxDepth) {
-            logger.debug("Reach maximum depth");
+            LOGGER.debug("Reach maximum depth");
             return false;
         }
 
         if (split.trueCount < nodeSize || split.falseCount < nodeSize) {
             // We should not reach here as findBestSplit filters this situation out.
-            logger.debug("Node size is too small after splitting");
+            LOGGER.debug("Node size is too small after splitting");
             return false;
         }
 
@@ -270,7 +305,9 @@ public abstract class CART implements SHAP<Tuple>, Serializable {
 
         // cache the results of predicate.test()
         boolean[] trues = new boolean[samples.length];
-        for (int i : trueSamples) trues[i] = true;
+        for (int i : trueSamples) {
+            trues[i] = true;
+        }
 
         int[] falseSamples = Arrays.stream(index, split.lo, split.hi).filter(i -> !trues[i]).toArray();
         int mid = split.lo + trueSamples.length;
@@ -287,7 +324,8 @@ public abstract class CART implements SHAP<Tuple>, Serializable {
         shuffle(split.lo, mid, split.hi, trues);
 
         Optional<Split> trueSplit = findBestSplit(trueChild, split.lo, mid, split.unsplittable.clone());
-        Optional<Split> falseSplit = findBestSplit(falseChild, mid, split.hi, split.unsplittable); // reuse parent's array
+        // reuse parent's array
+        Optional<Split> falseSplit = findBestSplit(falseChild, mid, split.hi, split.unsplittable);
 
         // Prune the branch if both children are leaf nodes and of same output value.
         if (trueChild.equals(falseChild) && !trueSplit.isPresent() && !falseSplit.isPresent()) {
@@ -305,8 +343,14 @@ public abstract class CART implements SHAP<Tuple>, Serializable {
         }
 
         importance[node.feature] += node.score;
-        trueSplit.ifPresent(s -> {s.parent = node; s.depth = split.depth + 1;});
-        falseSplit.ifPresent(s -> {s.parent = node; s.depth = split.depth + 1;});
+        trueSplit.ifPresent(s -> {
+            s.parent = node;
+            s.depth = split.depth + 1;
+        });
+        falseSplit.ifPresent(s -> {
+            s.parent = node;
+            s.depth = split.depth + 1;
+        });
 
         if (queue == null) {
             // deep first split
@@ -324,18 +368,20 @@ public abstract class CART implements SHAP<Tuple>, Serializable {
     /**
      * Finds the best attribute to split on a set of samples. at the current node. Returns
      * null if a split doesn't exists to reduce the impurity.
-     * @param node the leaf node to split.
-     * @param lo the inclusive lower bound of the data partition in the reordered sample index array.
-     * @param hi the exclusive upper bound of the data partition in the reordered sample index array.
+     *
+     * @param node         the leaf node to split.
+     * @param lo           the inclusive lower bound of the data partition in the reordered sample index array.
+     * @param hi           the exclusive upper bound of the data partition in the reordered sample index array.
      * @param unsplittable unsplittable[j] is true if the column j cannot be split further in the node.
      */
     protected Optional<Split> findBestSplit(LeafNode node, int lo, int hi, boolean[] unsplittable) {
         if (node.size() < 2 * nodeSize) {
-            return Optional.empty(); // one child will has less than nodeSize samples.
+            // one child will has less than nodeSize samples.
+            return Optional.empty();
         }
 
         final double impurity = impurity(node);
-        if (impurity == 0.0) {
+        if (Precision.equals(impurity, 0.0, DoubleUtils.PRECISION)) {
             return Optional.empty(); // all the samples in the node have the same response
         }
 
@@ -349,27 +395,49 @@ public abstract class CART implements SHAP<Tuple>, Serializable {
         }
 
         IntStream stream = Arrays.stream(columns).limit(mtry);
-        Optional<Split> split = (mtry < p ? stream : stream.parallel()) // random forest is in parallel already
-                .mapToObj(j -> {
-                    Optional<Split> s = findBestSplit(node, j, impurity, lo, hi);
-                    if (!s.isPresent()) unsplittable[j] = true;
-                    return s;
-                })
-                .filter(Optional::isPresent)
-                .map(Optional::get)
-                .max(Split.comparator);
+        // random forest is in parallel already
+        Optional<Split> split = (mtry < p ? stream : stream.parallel())
+            .mapToObj(j -> {
+                Optional<Split> s = findBestSplit(node, j, impurity, lo, hi);
+                if (!s.isPresent()) {
+                    unsplittable[j] = true;
+                }
+                return s;
+            })
+            .filter(Optional::isPresent)
+            .map(Optional::get)
+            .max(Split.comparator);
 
         split.ifPresent(s -> s.unsplittable = unsplittable);
         return split;
     }
 
-    /** Returns the impurity of node. */
+    /**
+     * Returns the impurity of node.
+     *
+     * @param node node.
+     * @return The impurity of node.
+     */
     protected abstract double impurity(LeafNode node);
 
-    /** Creates a new leaf node. */
+    /**
+     * Creates a new leaf node.
+     *
+     * @param nodeSamples node samples.
+     * @return A new leaf node.
+     */
     protected abstract LeafNode newNode(int[] nodeSamples);
 
-    /** Finds the best split for given column. */
+    /**
+     * Finds the best split for given column.
+     *
+     * @param node     node.
+     * @param column   column index.
+     * @param impurity impurity.
+     * @param lo       lower bound.
+     * @param hi       higher bound.
+     * @return the best split for given column.
+     */
     protected abstract Optional<Split> findBestSplit(LeafNode node, int column, double impurity, int lo, int hi);
 
     /**
@@ -387,6 +455,7 @@ public abstract class CART implements SHAP<Tuple>, Serializable {
 
     /**
      * Returs the root node.
+     *
      * @return root node.
      */
     public Node root() {
@@ -396,12 +465,14 @@ public abstract class CART implements SHAP<Tuple>, Serializable {
     /**
      * Returns the graphic representation in Graphviz dot format.
      * Try http://viz-js.com/ to visualize the returned string.
+     *
+     * @return The graphic representation in Graphviz dot format.
      */
     public String dot() {
         StringBuilder builder = new StringBuilder();
         builder.append("digraph CART {\n node [shape=box, style=\"filled, rounded\", color=\"black\", fontname=helvetica];\n edge [fontname=helvetica];\n");
 
-        String trueLabel  = " [labeldistance=2.5, labelangle=45, headlabel=\"True\"];\n";
+        String trueLabel = " [labeldistance=2.5, labelangle=45, headlabel=\"True\"];\n";
         String falseLabel = " [labeldistance=2.5, labelangle=-45, headlabel=\"False\"];\n";
 
         Queue<SimpleEntry<Integer, Node>> queue = new LinkedList<>();
@@ -444,11 +515,12 @@ public abstract class CART implements SHAP<Tuple>, Serializable {
      * (inclusive) to high (exclusive) so that all elements i for which predicate(i) is true come
      * before all elements for which it is false, but element ordering is otherwise preserved. The
      * number of true values returned by predicate must equal split-low.
-     * @param low the low bound of the segment of the order arrays which will be partitioned.
-     * @param split where the partition's split point will end up.
-     * @param high the high bound of the segment of the order arrays which will be partitioned.
+     *
+     * @param low       the low bound of the segment of the order arrays which will be partitioned.
+     * @param split     where the partition's split point will end up.
+     * @param high      the high bound of the segment of the order arrays which will be partitioned.
      * @param predicate whether an element goes to the left side or the right side of the
-     *        partition.
+     *                  partition.
      */
     private void shuffle(int low, int split, int high, boolean[] predicate) {
         Arrays.stream(order).filter(Objects::nonNull).forEach(o -> shuffle(o, low, split, high, predicate));
@@ -472,7 +544,7 @@ public abstract class CART implements SHAP<Tuple>, Serializable {
             }
         }
 
-        assert(split + k == high);
+        assert (split + k == high);
         System.arraycopy(buffer, 0, a, split, k);
     }
 
@@ -499,6 +571,9 @@ public abstract class CART implements SHAP<Tuple>, Serializable {
 
     /**
      * Returns the average of absolute SHAP values over a data frame.
+     *
+     * @param data data.
+     * @return The average of absolute SHAP values over a data frame.
      */
     public double[] shap(DataFrame data) {
         // Binds the formula to the data frame's schema in case that
@@ -551,7 +626,9 @@ public abstract class CART implements SHAP<Tuple>, Serializable {
 
             int k = 0;
             for (; k <= l; k++) {
-                if (m.d[k] == dj) break;
+                if (m.d[k] == dj) {
+                    break;
+                }
             }
 
             double iz = 1.0;
@@ -563,7 +640,7 @@ public abstract class CART implements SHAP<Tuple>, Serializable {
             }
 
             recurse(phi, x, h, m, iz * rh / rj, io, dj);
-            recurse(phi, x, c, m, iz * rc /rj, 0, dj);
+            recurse(phi, x, c, m, iz * rc / rj, 0, dj);
         } else {
             if (node instanceof DecisionNode) {
                 DecisionNode leaf = ((DecisionNode) node);
@@ -571,7 +648,7 @@ public abstract class CART implements SHAP<Tuple>, Serializable {
                 double[] prob = new double[k];
                 leaf.posteriori(prob);
                 for (int i = 1; i <= l; i++) {
-                    double w = m.unwoundSum(i)* (m.o[i] - m.z[i]);
+                    double w = m.unwoundSum(i) * (m.o[i] - m.z[i]);
                     int di = m.d[i] * k;
                     for (int j = 0; j < k; j++) {
                         phi[di + j] += w * prob[j];
@@ -592,9 +669,13 @@ public abstract class CART implements SHAP<Tuple>, Serializable {
      * on so far during SHAP recursive traverse.
      */
     private static class Path {
-        /** The length of path. */
+        /**
+         * The length of path.
+         */
         int length;
-        /** The unique feature index. */
+        /**
+         * The unique feature index.
+         */
         int[] d;
         /**
          * The fraction of zero paths (where this feature is not
@@ -642,9 +723,9 @@ public abstract class CART implements SHAP<Tuple>, Serializable {
             m.o[l] = po;
             m.w[l] = l == 0 ? 1 : 0;
 
-            for (int i = l-1; i >= 0; i--) {
-                m.w[i+1] += po * m.w[i] * (i+1) / (l+1);
-                m.w[i] = pz * m.w[i] * (l - i) / (l+1);
+            for (int i = l - 1; i >= 0; i--) {
+                m.w[i + 1] += po * m.w[i] * (i + 1) / (l + 1);
+                m.w[i] = pz * m.w[i] * (l - i) / (l + 1);
             }
 
             return m;
@@ -669,14 +750,14 @@ public abstract class CART implements SHAP<Tuple>, Serializable {
                 }
             } else {
                 for (int j = l - 1; j >= 0; j--) {
-                    w[j] = (w[j] * (l+1)) / (pz * (l - j));
+                    w[j] = (w[j] * (l + 1)) / (pz * (l - j));
                 }
             }
 
             for (int j = i; j < l; j++) {
-                d[j] = d[j+1];
-                z[j] = z[j+1];
-                o[j] = o[j+1];
+                d[j] = d[j + 1];
+                z[j] = z[j + 1];
+                o[j] = o[j + 1];
             }
         }
 
@@ -693,7 +774,7 @@ public abstract class CART implements SHAP<Tuple>, Serializable {
             double n = w[l];
             if (po != 0) {
                 for (int j = l - 1; j >= 0; j--) {
-                    double t = n / ((j+1) * po);
+                    double t = n / ((j + 1) * po);
                     sum += t;
                     n = w[j] - t * pz * (l - j);
                 }

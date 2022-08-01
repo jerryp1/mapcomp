@@ -1,6 +1,6 @@
 /*
  * Original Work Copyright 2018 H2O.ai.
- * Modified Work Copyright 2021 Weiran Liu.
+ * Modified by Weiran Liu. Adjust the code based on Alibaba Java Code Guidelines.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,7 +17,7 @@
 package biz.k11i.xgboost;
 
 import biz.k11i.xgboost.config.PredictorConfiguration;
-import biz.k11i.xgboost.fvec.FVec;
+import biz.k11i.xgboost.fvec.Fvec;
 import biz.k11i.xgboost.gbm.GradBoostModel;
 import biz.k11i.xgboost.learner.ObjFunction;
 import biz.k11i.xgboost.learner.ObjFunctionManager;
@@ -100,17 +100,14 @@ public class Predictor implements Serializable {
         byte[] first4Bytes = reader.readByteArray(4);
         byte[] next4Bytes = reader.readByteArray(4);
 
-        float base_score;
-        int num_feature;
+        float baseScore;
+        int numFeature;
 
-        if (first4Bytes[0] == 0x62 &&
-            first4Bytes[1] == 0x69 &&
-            first4Bytes[2] == 0x6e &&
-            first4Bytes[3] == 0x66) {
+        if (first4Bytes[0] == 0x62 && first4Bytes[1] == 0x69 && first4Bytes[2] == 0x6e && first4Bytes[3] == 0x66) {
 
             // Old model file format has a signature "binf" (62 69 6e 66)
-            base_score = reader.asFloat(next4Bytes);
-            num_feature = reader.readUnsignedInt();
+            baseScore = reader.asFloat(next4Bytes);
+            numFeature = reader.readUnsignedInt();
 
         } else if (first4Bytes[0] == 0x00 &&
             first4Bytes[1] == 0x05 &&
@@ -135,24 +132,24 @@ public class Predictor implements Serializable {
 
             if (modelType != null) {
                 int len = (next4Bytes[3] << 8) + (reader.readByteAsInt());
-                String featuresCol = reader.readUTF(len);
+                String featuresCol = reader.readUtf(len);
 
                 this.sparkModelParam = new SparkModelParam(modelType, featuresCol, reader);
 
-                base_score = reader.readFloat();
-                num_feature = reader.readUnsignedInt();
+                baseScore = reader.readFloat();
+                numFeature = reader.readUnsignedInt();
 
             } else {
-                base_score = reader.asFloat(first4Bytes);
-                num_feature = reader.asUnsignedInt(next4Bytes);
+                baseScore = reader.asFloat(first4Bytes);
+                numFeature = reader.asUnsignedInt(next4Bytes);
             }
 
         } else {
-            base_score = reader.asFloat(first4Bytes);
-            num_feature = reader.asUnsignedInt(next4Bytes);
+            baseScore = reader.asFloat(first4Bytes);
+            numFeature = reader.asUnsignedInt(next4Bytes);
         }
 
-        modelParam = new ModelParam(base_score, num_feature, reader);
+        modelParam = new ModelParam(baseScore, numFeature, reader);
 
         objName = reader.readString();
         gbmName = reader.readString();
@@ -179,42 +176,42 @@ public class Predictor implements Serializable {
      * @param feat feature vector
      * @return prediction values
      */
-    public float[] predict(FVec feat) {
+    public float[] predict(Fvec feat) {
         return predict(feat, false);
     }
 
     /**
      * Generates predictions for given feature vector.
      *
-     * @param feat          feature vector
-     * @param output_margin whether to only predict margin value instead of transformed prediction
-     * @return prediction values
+     * @param feat         feature vector.
+     * @param outputMargin whether to only predict margin value instead of transformed prediction.
+     * @return prediction values.
      */
-    public float[] predict(FVec feat, boolean output_margin) {
-        return predict(feat, output_margin, 0);
+    public float[] predict(Fvec feat, boolean outputMargin) {
+        return predict(feat, outputMargin, 0);
     }
 
     /**
      * Generates predictions for given feature vector.
      *
-     * @param feat        feature vector
-     * @param base_margin predict with base margin for each prediction
-     * @return prediction values
+     * @param feat       feature vector.
+     * @param baseMargin predict with base margin for each prediction.
+     * @return prediction values.
      */
-    public float[] predict(FVec feat, float base_margin) {
-        return predict(feat, base_margin, 0);
+    public float[] predict(Fvec feat, float baseMargin) {
+        return predict(feat, baseMargin, 0);
     }
 
     /**
      * Generates predictions for given feature vector.
      *
-     * @param feat        feature vector
-     * @param base_margin predict with base margin for each prediction
-     * @param ntree_limit limit the number of trees used in prediction
-     * @return prediction values
+     * @param feat         feature vector.
+     * @param baseMargin   predict with base margin for each prediction.
+     * @param limitTreeNum limit the number of trees used in prediction.
+     * @return prediction values.
      */
-    public float[] predict(FVec feat, float base_margin, int ntree_limit) {
-        float[] preds = predictRaw(feat, base_margin, ntree_limit);
+    public float[] predict(Fvec feat, float baseMargin, int limitTreeNum) {
+        float[] preds = predictRaw(feat, baseMargin, limitTreeNum);
         preds = objFunction.predTransform(preds);
         return preds;
     }
@@ -222,23 +219,23 @@ public class Predictor implements Serializable {
     /**
      * Generates predictions for given feature vector.
      *
-     * @param feat          feature vector
-     * @param output_margin whether to only predict margin value instead of transformed prediction
-     * @param ntree_limit   limit the number of trees used in prediction
+     * @param feat         feature vector
+     * @param outputMargin whether to only predict margin value instead of transformed prediction
+     * @param limitTreeNum limit the number of trees used in prediction
      * @return prediction values
      */
-    public float[] predict(FVec feat, boolean output_margin, int ntree_limit) {
-        float[] preds = predictRaw(feat, baseScore, ntree_limit);
-        if (!output_margin) {
+    public float[] predict(Fvec feat, boolean outputMargin, int limitTreeNum) {
+        float[] preds = predictRaw(feat, baseScore, limitTreeNum);
+        if (!outputMargin) {
             preds = objFunction.predTransform(preds);
         }
         return preds;
     }
 
-    float[] predictRaw(FVec feat, float base_score, int ntree_limit) {
-        float[] preds = gradBoostModel.predict(feat, ntree_limit);
+    float[] predictRaw(Fvec feat, float baseScore, int limitTreeNum) {
+        float[] preds = gradBoostModel.predict(feat, limitTreeNum);
         for (int i = 0; i < preds.length; i++) {
-            preds[i] += base_score;
+            preds[i] += baseScore;
         }
         return preds;
     }
@@ -252,7 +249,7 @@ public class Predictor implements Serializable {
      * @param featureVector feature vector.
      * @return prediction value.
      */
-    public float predictSingle(FVec featureVector) {
+    public float predictSingle(Fvec featureVector) {
         return predictSingle(featureVector, false);
     }
 
@@ -266,7 +263,7 @@ public class Predictor implements Serializable {
      * @param outputMargin  whether to only predict margin value instead of transformed prediction
      * @return prediction value
      */
-    public float predictSingle(FVec featureVector, boolean outputMargin) {
+    public float predictSingle(Fvec featureVector, boolean outputMargin) {
         return predictSingle(featureVector, outputMargin, 0);
     }
 
@@ -281,7 +278,7 @@ public class Predictor implements Serializable {
      * @param numTreeLimit  limit the number of trees used in prediction.
      * @return prediction value.
      */
-    public float predictSingle(FVec featureVector, boolean outputMargin, int numTreeLimit) {
+    public float predictSingle(Fvec featureVector, boolean outputMargin, int numTreeLimit) {
         float pred = predictSingleRaw(featureVector, numTreeLimit);
         if (!outputMargin) {
             pred = objFunction.predTransform(pred);
@@ -289,7 +286,7 @@ public class Predictor implements Serializable {
         return pred;
     }
 
-    float predictSingleRaw(FVec featureVector, int numTreeLimit) {
+    float predictSingleRaw(Fvec featureVector, int numTreeLimit) {
         return gradBoostModel.predictSingle(featureVector, numTreeLimit) + baseScore;
     }
 
@@ -299,18 +296,18 @@ public class Predictor implements Serializable {
      * @param featureVector feature vector.
      * @return leaf indexes.
      */
-    public int[] predictLeaf(FVec featureVector) {
+    public int[] predictLeaf(Fvec featureVector) {
         return predictLeaf(featureVector, 0);
     }
 
     /**
      * Predicts leaf index of each tree.
      *
-     * @param featureVector        feature vector.
-     * @param numTreeLimit limit, 0 for all.
+     * @param featureVector feature vector.
+     * @param numTreeLimit  limit, 0 for all.
      * @return leaf indexes.
      */
-    public int[] predictLeaf(FVec featureVector, int numTreeLimit) {
+    public int[] predictLeaf(Fvec featureVector, int numTreeLimit) {
         return gradBoostModel.predictLeaf(featureVector, numTreeLimit);
     }
 
@@ -320,19 +317,19 @@ public class Predictor implements Serializable {
      * @param featureVector feature vector.
      * @return leaf paths.
      */
-    public String[] predictLeafPath(FVec featureVector) {
+    public String[] predictLeafPath(Fvec featureVector) {
         return predictLeafPath(featureVector, 0);
     }
 
     /**
      * Predicts path to leaf of each tree.
      *
-     * @param feat        feature vector.
-     * @param ntree_limit limit, 0 for all.
+     * @param feat         feature vector.
+     * @param limitTreeNum limit, 0 for all.
      * @return leaf paths.
      */
-    public String[] predictLeafPath(FVec feat, int ntree_limit) {
-        return gradBoostModel.predictLeafPath(feat, ntree_limit);
+    public String[] predictLeafPath(Fvec feat, int limitTreeNum) {
+        return gradBoostModel.predictLeafPath(feat, limitTreeNum);
     }
 
     public SparkModelParam getSparkModelParam() {

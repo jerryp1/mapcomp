@@ -1,6 +1,7 @@
 package edu.alibaba.mpc4j.common.tool.utils;
 
 import ch.obermuhlner.math.big.BigDecimalMath;
+import org.apache.commons.math3.util.Precision;
 import org.junit.Test;
 
 import java.math.BigDecimal;
@@ -118,7 +119,7 @@ public class BigDecimalMathTest {
      */
     private static BigDecimal toCheck(double value) {
         long longValue = (long) value;
-        if (value == (double)longValue) {
+        if (Precision.equals(value, longValue, Double.MIN_VALUE)) {
             return BigDecimal.valueOf(longValue);
         }
         return BigDecimal.valueOf(value);

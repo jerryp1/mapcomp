@@ -85,13 +85,13 @@ public class ModelReader implements Closeable {
         return readInt(ByteOrder.LITTLE_ENDIAN);
     }
 
-    public int readIntBE() throws IOException {
+    public int readIntBigEndian() throws IOException {
         return readInt(ByteOrder.BIG_ENDIAN);
     }
 
     private int readInt(ByteOrder byteOrder) throws IOException {
-        int numBytesRead = fillBuffer(4);
-        if (numBytesRead < 4) {
+        int numBytesRead = fillBuffer(Integer.BYTES);
+        if (numBytesRead < Integer.BYTES) {
             throw new EOFException("Cannot read int value (shortage): " + numBytesRead);
         }
 
@@ -99,11 +99,11 @@ public class ModelReader implements Closeable {
     }
 
     public int[] readIntArray(int numValues) throws IOException {
-        int numBytesRead = fillBuffer(numValues * 4);
-        if (numBytesRead < numValues * 4) {
+        int numBytesRead = fillBuffer(numValues * Integer.BYTES);
+        if (numBytesRead < numValues * Integer.BYTES) {
             throw new EOFException(
                 String.format("Cannot read int array (shortage): expected = %d, actual = %d",
-                    numValues * 4, numBytesRead));
+                    numValues * Integer.BYTES, numBytesRead));
         }
 
         ByteBuffer byteBuffer = ByteBuffer.wrap(buffer).order(ByteOrder.LITTLE_ENDIAN);
@@ -126,8 +126,8 @@ public class ModelReader implements Closeable {
     }
 
     public long readLong() throws IOException {
-        int numBytesRead = fillBuffer(8);
-        if (numBytesRead < 8) {
+        int numBytesRead = fillBuffer(Long.BYTES);
+        if (numBytesRead < Long.BYTES) {
             throw new IOException("Cannot read long value (shortage): " + numBytesRead);
         }
 
@@ -148,8 +148,8 @@ public class ModelReader implements Closeable {
     }
 
     public float readFloat() throws IOException {
-        int numBytesRead = fillBuffer(4);
-        if (numBytesRead < 4) {
+        int numBytesRead = fillBuffer(Float.BYTES);
+        if (numBytesRead < Float.BYTES) {
             throw new IOException("Cannot read float value (shortage): " + numBytesRead);
         }
 
@@ -157,8 +157,8 @@ public class ModelReader implements Closeable {
     }
 
     public float[] readFloatArray(int numValues) throws IOException {
-        int numBytesRead = fillBuffer(numValues * 4);
-        if (numBytesRead < numValues * 4) {
+        int numBytesRead = fillBuffer(numValues * Float.BYTES);
+        if (numBytesRead < numValues * Float.BYTES) {
             throw new EOFException(
                 String.format("Cannot read float array (shortage): expected = %d, actual = %d",
                     numValues * 4, numBytesRead));
@@ -174,12 +174,12 @@ public class ModelReader implements Closeable {
         return result;
     }
 
-    public double[] readDoubleArrayBE(int numValues) throws IOException {
-        int numBytesRead = fillBuffer(numValues * 8);
-        if (numBytesRead < numValues * 8) {
+    public double[] readDoubleArrayBigEndian(int numValues) throws IOException {
+        int numBytesRead = fillBuffer(numValues * Double.BYTES);
+        if (numBytesRead < numValues * Double.BYTES) {
             throw new EOFException(
                 String.format("Cannot read double array (shortage): expected = %d, actual = %d",
-                    numValues * 8, numBytesRead));
+                    numValues * Double.BYTES, numBytesRead));
         }
 
         ByteBuffer byteBuffer = ByteBuffer.wrap(buffer).order(ByteOrder.BIG_ENDIAN);
@@ -205,7 +205,7 @@ public class ModelReader implements Closeable {
             throw new IOException("Too long string: " + length);
         }
 
-        return readString((int)length);
+        return readString((int) length);
     }
 
     public String readString(int numBytes) throws IOException {
@@ -217,35 +217,37 @@ public class ModelReader implements Closeable {
         return new String(buffer, 0, numBytes, StandardCharsets.UTF_8);
     }
 
-    public String readUTF() throws IOException {
-        int utflen = readByteAsInt();
-        utflen = (short)((utflen << 8) | readByteAsInt());
-        return readUTF(utflen);
+    public String readUtf() throws IOException {
+        int utfLength = readByteAsInt();
+        utfLength = (short) ((utfLength << 8) | readByteAsInt());
+        return readUtf(utfLength);
     }
 
-    public String readUTF(int utflen) throws IOException {
-        int numBytesRead = fillBuffer(utflen);
-        if (numBytesRead < utflen) {
+    public String readUtf(int utfLength) throws IOException {
+        int numBytesRead = fillBuffer(utfLength);
+        if (numBytesRead < utfLength) {
             throw new EOFException(
                 String.format("Cannot read UTF string bytes: expected = %d, actual = %d",
-                    utflen, numBytesRead));
+                    utfLength, numBytesRead));
         }
 
-        char[] chararr = new char[utflen];
+        char[] charArray = new char[utfLength];
 
         int c, char2, char3;
         int count = 0;
-        int chararr_count = 0;
+        int charArrayCount = 0;
 
-        while (count < utflen) {
-            c = (int)buffer[count] & 0xff;
-            if (c > 127) { break; }
+        while (count < utfLength) {
+            c = (int) buffer[count] & 0xff;
+            if (c > 127) {
+                break;
+            }
             count++;
-            chararr[chararr_count++] = (char)c;
+            charArray[charArrayCount++] = (char) c;
         }
 
-        while (count < utflen) {
-            c = (int)buffer[count] & 0xff;
+        while (count < utfLength) {
+            c = (int) buffer[count] & 0xff;
             switch (c >> 4) {
                 case 0:
                 case 1:
@@ -257,13 +259,13 @@ public class ModelReader implements Closeable {
                 case 7:
                     // 0xxxxxxx
                     count++;
-                    chararr[chararr_count++] = (char)c;
+                    charArray[charArrayCount++] = (char) c;
                     break;
                 case 12:
                 case 13:
                     // 110x xxxx   10xx xxxx
                     count += 2;
-                    if (count > utflen) {
+                    if (count > utfLength) {
                         throw new UTFDataFormatException(
                             "malformed input: partial character at end");
                     }
@@ -272,13 +274,13 @@ public class ModelReader implements Closeable {
                         throw new UTFDataFormatException(
                             "malformed input around byte " + count);
                     }
-                    chararr[chararr_count++] = (char)(((c & 0x1F) << 6) |
+                    charArray[charArrayCount++] = (char) (((c & 0x1F) << 6) |
                         (char2 & 0x3F));
                     break;
                 case 14:
                     // 1110 xxxx  10xx xxxx  10xx xxxx
                     count += 3;
-                    if (count > utflen) {
+                    if (count > utfLength) {
                         throw new UTFDataFormatException(
                             "malformed input: partial character at end");
                     }
@@ -288,18 +290,17 @@ public class ModelReader implements Closeable {
                         throw new UTFDataFormatException(
                             "malformed input around byte " + (count - 1));
                     }
-                    chararr[chararr_count++] = (char)(((c & 0x0F) << 12) |
+                    charArray[charArrayCount++] = (char) (((c & 0x0F) << 12) |
                         ((char2 & 0x3F) << 6) |
                         ((char3 & 0x3F)));
                     break;
                 default:
                     // 10xx xxxx,  1111 xxxx
-                    throw new UTFDataFormatException(
-                        "malformed input around byte " + count);
+                    throw new UTFDataFormatException("malformed input around byte " + count);
             }
         }
         // The number of chars produced may be less than utflen
-        return new String(chararr, 0, chararr_count);
+        return new String(charArray, 0, charArrayCount);
     }
 
     @Override

@@ -13,9 +13,10 @@ import java.security.SecureRandom;
 
 /**
  * OU98半同态加密引擎。论文来源：
+ * <p>
  * Coron J S, Naccache D, Paillier P. Accelerating Okamoto-Uchiyama public-key cryptosystem[J]. Electronics Letters,
  * 1999, 35(4): 291-292.
- *
+ * </p>
  * 注意：虽然论文中提出了加速方案，但要求私钥生成的质数p满足p = 2 * t + 1，但这个生成过程太慢。因此本实现仍然使用最原始的OU方案。
  *
  * @author Weiran Liu
@@ -65,7 +66,7 @@ public class Ou98PheEngine extends AbstractPheEngine {
     @Override
     public BigInteger rawEncrypt(PhePublicKey pk, BigInteger m) {
         Preconditions.checkArgument(pk instanceof Ou98PhePublicKey);
-        Ou98PhePublicKey publicKey = (Ou98PhePublicKey)pk;
+        Ou98PhePublicKey publicKey = (Ou98PhePublicKey) pk;
         BigInteger n = publicKey.n;
         BigInteger g = publicKey.g;
         BigInteger h = publicKey.h;
@@ -77,8 +78,8 @@ public class Ou98PheEngine extends AbstractPheEngine {
     @Override
     public BigInteger rawEncrypt(PhePrivateKey sk, BigInteger m) {
         Preconditions.checkArgument(sk instanceof Ou98PhePrivateKey);
-        Ou98PhePrivateKey privateKey = (Ou98PhePrivateKey)sk;
-        Ou98PhePublicKey publicKey = (Ou98PhePublicKey)privateKey.getPublicKey();
+        Ou98PhePrivateKey privateKey = (Ou98PhePrivateKey) sk;
+        Ou98PhePublicKey publicKey = (Ou98PhePublicKey) privateKey.getPublicKey();
         BigInteger n = publicKey.n;
         BigInteger g = publicKey.g;
         BigInteger h = publicKey.h;
@@ -103,7 +104,7 @@ public class Ou98PheEngine extends AbstractPheEngine {
     @Override
     public BigInteger rawObfuscate(PhePublicKey pk, BigInteger ct) {
         Preconditions.checkArgument(pk instanceof Ou98PhePublicKey);
-        Ou98PhePublicKey publicKey = (Ou98PhePublicKey)pk;
+        Ou98PhePublicKey publicKey = (Ou98PhePublicKey) pk;
         BigInteger n = publicKey.n;
         BigInteger h = publicKey.h;
         // pick r < n uniformly at random and encrypt the (k − 1)-bit message m by c = G^m * H^r mod n
@@ -126,7 +127,7 @@ public class Ou98PheEngine extends AbstractPheEngine {
     @Override
     public BigInteger rawDecrypt(PhePrivateKey sk, BigInteger ct) {
         Preconditions.checkArgument(sk instanceof Ou98PhePrivateKey);
-        Ou98PhePrivateKey privateKey = (Ou98PhePrivateKey)sk;
+        Ou98PhePrivateKey privateKey = (Ou98PhePrivateKey) sk;
         BigInteger pSquared = privateKey.pSquared;
         BigInteger p = privateKey.p;
         // c′ = c^(p - 1) mod p^2, m = log(c′) log(g_p)^(−1) mod p

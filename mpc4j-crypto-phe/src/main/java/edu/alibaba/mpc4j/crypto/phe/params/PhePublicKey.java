@@ -65,8 +65,10 @@ public interface PhePublicKey extends PheKeyParams {
      * 即：编码得到的半同态加密明文中，{@code value}必须小于等于{@code maxEncoded}。
      * - 对于有符号半同态加密明文，最大值为明文空间首位为0时所能表示的最大BigInteger。
      * - 对于无符号半同态加密明文，最大值为明文空间的最大值。
-     *
+     * <p>
      * {@code modulus}下，编码结果{@code EncodedNumber}中{@code value}的最大值。
+     *
+     * @return 半同态加密明文中{@code value}的最大值{@code maxEncoded}.
      */
     default BigInteger getMaxEncoded() {
         return getPlaintextEncoder().getMaxEncoded();
@@ -75,6 +77,7 @@ public interface PhePublicKey extends PheKeyParams {
     /**
      * 返回半同态加密明文中{@code value}的最小值{@code minEncoded}。
      * 即：编码得到的半同态加密明文中，{@code value}必须大于等于{@code minEncoded}。
+     * <p>
      * - 对于有符号半同态加密明文，最小值为{@code modulus} - {@code maxEncoded}。
      * - 对于无符号半同态加密明文，最小值为0。
      *
@@ -86,7 +89,7 @@ public interface PhePublicKey extends PheKeyParams {
 
     /**
      * 返回公钥支持的最大明文值。
-     *
+     * <p>
      * - 对于有符号半同态加密明文，最大值为最大编码值。
      * - 对于无符号半同态加密明文，最大值为最大编码值。
      *
@@ -98,6 +101,7 @@ public interface PhePublicKey extends PheKeyParams {
 
     /**
      * 返回公钥支持编码的最小明文值。
+     * <p>
      * - 对于有符号半同态加密明文，最小值为负最大编码值。
      * - 对于无符号半同态加密明文，最小值为0。
      *
@@ -184,6 +188,7 @@ public interface PhePublicKey extends PheKeyParams {
      *
      * @param value 待编码的{@code BigDecimal}。
      * @return 编码结果。
+     * @throws CryptoEncodeException 如果编码出现异常。
      */
     default PhePlaintext encode(BigDecimal value) throws CryptoEncodeException {
         return getPlaintextEncoder().encode(value);

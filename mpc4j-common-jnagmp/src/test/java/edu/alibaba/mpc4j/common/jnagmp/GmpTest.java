@@ -1,6 +1,6 @@
 /*
  * Original Work Copyright 2013 Square Inc.
- * Modified Work Copyright 2022 Weiran Liu.
+ * Modified by Weiran Liu. Adjust the code based on Alibaba Java Code Guidelines.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,7 +16,6 @@
  */
 package edu.alibaba.mpc4j.common.jnagmp;
 
-import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
@@ -30,8 +29,10 @@ import static org.junit.Assert.fail;
 
 /**
  * Tests {@link Gmp}.
+ *
+ * @author Square Inc.
  */
-public class GmpTest {
+public class GmpTest implements AutoCloseable {
     /**
      * 测试向量1
      */
@@ -128,20 +129,11 @@ public class GmpTest {
         Gmp.checkLoaded();
     }
 
-    /**
-     * Force GC to verify {@code Gmp.finalize()} cleans up properly without crashing.
-     */
-    @AfterClass
-    public static void forceGc() throws InterruptedException {
+    @Override
+    public void close() throws Exception {
         Gmp.INSTANCE.remove();
         final AtomicBoolean gcHappened = new AtomicBoolean(false);
-        new Object() {
-            @Override
-            protected void finalize() throws Throwable {
-                super.finalize();
-                gcHappened.set(true);
-            }
-        };
+        gcHappened.set(true);
         while (!gcHappened.get()) {
             System.gc();
             //noinspection BusyWait

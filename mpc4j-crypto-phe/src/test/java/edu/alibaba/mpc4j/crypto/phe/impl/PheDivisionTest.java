@@ -1,5 +1,6 @@
 /*
- * Copyright 2015 NICTA
+ * Copyright 2015 NICTA.
+ * Modified by Weiran Liu. Adjust the code based on Alibaba Java Code Guidelines.
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this
  * file except in compliance with the License. You may obtain a copy of the License at
@@ -21,6 +22,7 @@ import edu.alibaba.mpc4j.crypto.phe.params.PheCiphertext;
 import edu.alibaba.mpc4j.crypto.phe.params.PhePrivateKey;
 import edu.alibaba.mpc4j.crypto.phe.params.PhePublicKey;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.math3.util.Precision;
 import org.junit.Assert;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -31,7 +33,9 @@ import java.util.Collection;
 
 /**
  * 半同态加密除法测试。部分源码来自：
+ * <p>
  * https://github.com/n1analytics/javallier/blob/master/src/test/java/com/n1analytics/paillier/DivisionTest.java
+ * </p>
  *
  * @author Brian Thorne, Weiran Liu
  * @date 2017/02/15
@@ -100,7 +104,7 @@ public class PheDivisionTest {
             encryptedResult = pheEngine.divide(pk, ciphertextA, b);
             decodedResult = pheEngine.decrypt(sk, encryptedResult).decodeDouble();
             double absValue = Math.abs(plainResult);
-            if (absValue == 0.0 || absValue > 1.0) {
+            if (Precision.equals(absValue, 0.0, Double.MIN_VALUE) || absValue > 1.0) {
                 tolerance = PheTestUtils.EPSILON * Math.pow(2.0, Math.getExponent(plainResult));
             } else {
                 tolerance = PheTestUtils.EPSILON;
@@ -139,7 +143,7 @@ public class PheDivisionTest {
             encryptedResult = pheEngine.divide(pk, ciphertextA, b);
             decodedResult = pheEngine.decrypt(sk, encryptedResult).decodeDouble();
             double absValue = Math.abs(plainResult);
-            if (absValue == 0.0 || absValue > 1.0) {
+            if (Precision.equals(absValue, 0.0, Double.MIN_VALUE) || absValue > 1.0) {
                 tolerance = PheTestUtils.EPSILON * Math.pow(2.0, Math.getExponent(plainResult));
             } else {
                 tolerance = PheTestUtils.EPSILON;

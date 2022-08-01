@@ -1,3 +1,17 @@
+/*
+ * Copyright 2015 NICTA.
+ * Modified by Weiran Liu. Move operations into PheEngine implementations.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this
+ * file except in compliance with the License. You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * <p>
+ * Unless required by applicable law or agreed to in writing, software distributed under
+ * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied. See the License for the specific language governing
+ * permissions and limitations under the License.
+ */
 package edu.alibaba.mpc4j.crypto.phe.params;
 
 import com.google.common.base.Preconditions;
@@ -12,7 +26,9 @@ import java.util.List;
 
 /**
  * 半同态加密密文。源码来自：
+ * <p>
  * https://github.com/n1analytics/javallier/blob/master/src/main/java/com/n1analytics/paillier/EncryptedNumber.java
+ * </p>
  *
  * @author Brian Thorne, Dongyao Wu, mpnd, Max Ott, Weiran Liu
  * @date 2017/09/21
@@ -107,7 +123,7 @@ public class PheCiphertext implements PheParams {
         if (o == null || o.getClass() != PheCiphertext.class) {
             return false;
         }
-        PheCiphertext that = (PheCiphertext)o;
+        PheCiphertext that = (PheCiphertext) o;
         return new EqualsBuilder()
             .append(this.phePublicKey, that.phePublicKey)
             .append(this.ciphertext, that.ciphertext)

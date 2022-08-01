@@ -111,11 +111,11 @@ public class ClsOpXgBoost extends AbstractClsOpBoost {
         Map<String, Object> params = xgBoostParams.getParams();
         DMatrix trainDataMatrix = OpXgBoostUtils.dataFrameToDataMatrix(formula, trainDataFrame);
         // 预热
-        XGBoost.train(trainDataMatrix, params, treeNum, new HashMap<>(), null, null);
+        XGBoost.train(trainDataMatrix, params, treeNum, new HashMap<>(0), null, null);
         // 重复实验，记录数据
         for (int round = 1; round <= totalRound; round++) {
             stopWatch.start();
-            Booster booster = XGBoost.train(trainDataMatrix, params, treeNum, new HashMap<>(), null, null);
+            Booster booster = XGBoost.train(trainDataMatrix, params, treeNum, new HashMap<>(0), null, null);
             String modelName = taskType + "_" + round + ".deprecated";
             booster.saveModel(modelName);
             File modelFile = new File(modelName);

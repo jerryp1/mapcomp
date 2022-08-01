@@ -1,5 +1,6 @@
 /*
- * Copyright 2015 NICTA
+ * Copyright 2015 NICTA.
+ * Modified by Weiran Liu. Adjust the code based on Alibaba Java Code Guidelines.
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this
  * file except in compliance with the License. You may obtain a copy of the License at
@@ -31,10 +32,13 @@ import java.util.*;
 
 /**
  * 半同态加密密钥生成测试。部分源码来自：
- * https://github.com/n1analytics/javallier/blob/master/src/test/java/com/n1analytics/paillier
- * /PaillierPublicKeyTest.java
- * https://github.com/n1analytics/javallier/blob/master/src/test/java/com/n1analytics/paillier
- * /PaillierPrivateKeyTest.java
+ * <p>
+ * https://github.com/n1analytics/javallier/blob/master/src/test/java/com/n1analytics/paillier/PaillierPublicKeyTest.java
+ * </p>
+ * 以及
+ * <p>
+ * https://github.com/n1analytics/javallier/blob/master/src/test/java/com/n1analytics/paillier/PaillierPrivateKeyTest.java
+ * </p>
  *
  * @author Brian Thorne, mpnd, Weiran Liu
  * @date 2017/09/21
@@ -50,8 +54,8 @@ public class PheKeyGenTest {
     public static Collection<Object[]> configurations() {
         Collection<Object[]> configurationParams = new ArrayList<>();
         // 添加配置项
-        configurationParams.add(new Object[] {PheFactory.PheType.OU98.name(), PheFactory.PheType.OU98, });
-        configurationParams.add(new Object[] {PheFactory.PheType.PAI99.name(), PheFactory.PheType.PAI99, });
+        configurationParams.add(new Object[]{PheFactory.PheType.OU98.name(), PheFactory.PheType.OU98,});
+        configurationParams.add(new Object[]{PheFactory.PheType.PAI99.name(), PheFactory.PheType.PAI99,});
 
         return configurationParams;
     }

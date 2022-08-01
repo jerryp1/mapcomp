@@ -12,8 +12,8 @@ We thank the sufficient unit tests for Gradient descent Boosting Decision Tree (
 
 We preprocess all datasets for correctness verifications with the following principles:
 
-- All nominal features are one-hot encoded. The column name for each of the nominal values is under the format `ColumnName_NominalName`. The nominal value for the one-hot encoded column is 0 and 1.
-- All nominal labels (for classification tasks) remain unchanged.
+- All nominal **features** are one-hot encoded. The column name for each of the nominal values is under the format `ColumnName_NominalName`. The nominal value for the one-hot encoded column is 0 and 1.
+- All nominal **labels** (when data is for classification tasks) remain unchanged.
 - The dataset is in `csv` format. The first row describes the column name. The row data is separated by comma (`,`). The `NULL` data is left blank.
 
 Take the dataset [abalone-train](https://github.com/haifengl/smile/blob/master/shell/src/universal/data/regression/abalone-train.data) as an example. We can find the dataset schema in [Abalone.java](https://github.com/haifengl/smile/blob/eb5f14eed4c0aa1474abdb1ef78f662f6dd87fea/base/src/test/java/smile/test/data/Abalone.java). The schema is printed as follows.
@@ -353,21 +353,21 @@ The schema is as follows, in which the label is `diagnosis`.
 
 # Datasets for Effectiveness
 
-We introduce 4 datasets from [UCI Machine Learning Repository](https://archive.ics.uci.edu/ml/datasets.php) for the effectiveness tests. We further introduce a dataset from a real scenario for large-scale experiements.
+We introduce 4 datasets from [UCI Machine Learning Repository](https://archive.ics.uci.edu/ml/datasets.php) for the effectiveness tests. We further introduce a dataset from a real scenario for the large-scale experiment.
 
 ## Preprocess
 
 We also follow the principles shown below to preprocess all datasets for effectiveness:
 
-- All nominal features are one-hot encoded. The column name for each of the nominal values is under the format `ColumnName_NominalName`. The nominal value for the one-hot encoded column is 0 and 1.
-- All nominal labels (for classification tasks) remain unchanged.
+- All nominal **features** are one-hot encoded. The column name for each of the nominal values is under the format `ColumnName_NominalName`. The nominal value for the one-hot encoded column is 0 and 1.
+- All nominal **labels** (for classification tasks) remain unchanged.
 - The dataset is in `csv` format. The first row describes the column name. The row data is separated by comma (`,`). The `NULL` data is left blank.
 
-In addition, we preprocess all numerical features with different ranges into discrete values in the same range to facilitate setting privacy parameters. The preprocessed values in the Adult dataset and the Real dataset are in the range of [1, 100], and the values in other datasets are in the range of [1, 10].
+In addition, we preprocess all numerical features with different ranges into discrete values in the range of \[0, 10\] to facilitate setting privacy parameters.
 
 ## Datasets from UCL Machine Learning Repository
 
-- CSAP (regression): [Physicochemical Properties of Protein Tertiary Structure Dataset](https://archive.ics.uci.edu/ml/datasets/Physicochemical+Properties+of+Protein+Tertiary+Structure).
+- CASP (regression): [Physicochemical Properties of Protein Tertiary Structure Dataset](https://archive.ics.uci.edu/ml/datasets/Physicochemical+Properties+of+Protein+Tertiary+Structure).
 - PowerPlant (regression): [Combined Cycle Power Plant Data Set](https://archive.ics.uci.edu/ml/datasets/combined+cycle+power+plant).
 - Adult (binary classification): [Adult Data Set](https://archive.ics.uci.edu/ml/datasets/Adult).
 - PenDigits (Multi-class classification): [Pen-Based Recognition of Handwritten Digits Data Set](https://archive.ics.uci.edu/ml/datasets/Pen-Based+Recognition+of+Handwritten+Digits).

@@ -1,6 +1,6 @@
 /*
  * Original Work Copyright 2013 Square Inc.
- * Modified Work Copyright 2022 Weiran Liu.
+ * Modified by Weiran Liu. Adjust the code based on Alibaba Java Code Guidelines.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -28,9 +28,13 @@ import static java.lang.Math.min;
 
 /**
  * High level Java API for accessing {@link LibGmp} safely.
+ *
+ * @author Square Inc.
  */
-public final class Gmp {
-
+public final class Gmp implements AutoCloseable {
+    /**
+     * GMP底层库读取错误异常
+     */
     private static final UnsatisfiedLinkError LOAD_ERROR;
 
     static {
@@ -203,18 +207,7 @@ public final class Gmp {
     /**
      * A fixed, shared, reusable memory buffer.
      */
-    private final Memory sharedMem = new Memory(SHARED_MEM_SIZE) {
-        /** Must explicitly destroy the gmp_t structs before freeing the underlying memory. */
-        @Override
-        protected void finalize() {
-            for (LibGmp.mpz_t sharedOperand : sharedOperands) {
-                if (sharedOperand != null) {
-                    LibGmp.__gmpz_clear(sharedOperand);
-                }
-            }
-            super.finalize();
-        }
-    };
+    private final Memory sharedMem = new Memory(SHARED_MEM_SIZE);
 
     /**
      * Reusable scratch buffer for moving data between byte[] and mpz_t.
@@ -376,6 +369,16 @@ public final class Gmp {
                 newSize <<= 1;
             }
             scratchBuf = new Memory(newSize);
+        }
+    }
+
+    @Override
+    public void close() throws Exception {
+        // 用AutoCloseable代替finalize()函数
+        for (LibGmp.mpz_t sharedOperand : sharedOperands) {
+            if (sharedOperand != null) {
+                LibGmp.__gmpz_clear(sharedOperand);
+            }
         }
     }
 }

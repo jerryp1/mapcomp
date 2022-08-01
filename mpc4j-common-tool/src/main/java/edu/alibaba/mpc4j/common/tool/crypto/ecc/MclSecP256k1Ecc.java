@@ -13,7 +13,6 @@ import org.bouncycastle.jce.spec.ECParameterSpec;
 import org.bouncycastle.math.ec.ECFieldElement;
 import org.bouncycastle.math.ec.ECPoint;
 
-import java.io.Closeable;
 import java.math.BigInteger;
 import java.nio.ByteBuffer;
 import java.security.SecureRandom;
@@ -27,12 +26,16 @@ import java.util.Map;
  * @author Weiran Liu
  * @date 2021/12/13
  */
-public class MclSecP256k1Ecc implements Ecc, Closeable {
+public class MclSecP256k1Ecc implements Ecc, AutoCloseable {
 
     static {
         System.loadLibrary(CommonConstants.MPC4J_NATIVE_TOOL_NAME);
     }
 
+    /**
+     * MCL表示无穷远点的字符串
+     */
+    private static final String MCL_INFINITY_STRING = "0";
     /**
      * MCL序列化为16进制
      */
@@ -194,7 +197,7 @@ public class MclSecP256k1Ecc implements Ecc, Closeable {
      */
     private ECPoint mclStringToEcPoint(String mclString) {
         // 如果返回结果是0元，需要单独处理
-        if (mclString.equals("0")) {
+        if (MCL_INFINITY_STRING.equals(mclString)) {
             return getInfinity();
         }
         // Bouncy Castle中的ECPoint不支持设置点的参数Z，因此C++层所有计算结果都需要normalize

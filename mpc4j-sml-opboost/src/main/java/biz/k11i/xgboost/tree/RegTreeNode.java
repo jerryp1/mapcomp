@@ -1,6 +1,6 @@
 /*
  * Original Work Copyright 2018 H2O.ai.
- * Modified Work Copyright 2021 Weiran Liu.
+ * Modified by Weiran Liu. Adjust the code based on Alibaba Java Code Guidelines.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,8 +16,9 @@
  */
 package biz.k11i.xgboost.tree;
 
-import biz.k11i.xgboost.fvec.FVec;
+import biz.k11i.xgboost.fvec.Fvec;
 import biz.k11i.xgboost.util.ModelReader;
+import org.apache.commons.math3.util.Precision;
 
 import java.io.IOException;
 import java.io.Serializable;
@@ -85,6 +86,7 @@ public class RegTreeNode extends AbstractRegTreeNode implements Serializable {
         leaf = isLeaf();
     }
 
+    @Override
     public boolean isLeaf() {
         return leftChild == -1;
     }
@@ -104,9 +106,9 @@ public class RegTreeNode extends AbstractRegTreeNode implements Serializable {
     }
 
     @Override
-    public int next(FVec featureVector) {
+    public int next(Fvec featureVector) {
         float value = featureVector.featureValue(splitIndex);
-        if (value != value) {
+        if (!Precision.equals(value, value, Double.MIN_VALUE)) {
             // is NaN?
             return defaultChild;
         }

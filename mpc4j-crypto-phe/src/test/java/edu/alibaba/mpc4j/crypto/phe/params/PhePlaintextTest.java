@@ -1,5 +1,6 @@
 /*
- * Copyright 2015 NICTA
+ * Copyright 2015 NICTA.
+ * Modified by Weiran Liu. Adjust the code based on Alibaba Java Code Guidelines.
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this
  * file except in compliance with the License. You may obtain a copy of the License at
@@ -15,10 +16,12 @@ package edu.alibaba.mpc4j.crypto.phe.params;
 
 import com.google.common.base.Preconditions;
 import edu.alibaba.mpc4j.common.tool.utils.BigIntegerUtils;
+import edu.alibaba.mpc4j.common.tool.utils.DoubleUtils;
 import edu.alibaba.mpc4j.crypto.phe.CryptoEncodeException;
 import edu.alibaba.mpc4j.crypto.phe.PheParamsTestConfiguration;
 import edu.alibaba.mpc4j.crypto.phe.PheTestUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.math3.util.Precision;
 import org.junit.Assert;
 import org.junit.Test;
 import org.junit.experimental.runners.Enclosed;
@@ -35,8 +38,9 @@ import java.util.stream.IntStream;
 
 /**
  * 半同态编码数测试。源码来自：
- * https://github.com/n1analytics/javallier/blob/master/src/test/java/com/n1analytics/paillier
- * /PaillierEncodedNumberTest.java
+ * <p>
+ * https://github.com/n1analytics/javallier/blob/master/src/test/java/com/n1analytics/paillier/PaillierEncodedNumberTest.java
+ * </p>
  *
  * @author Wilko Henecka, Brian Thorne, mpnd, Weiran Liu
  * @date 2017/09/21
@@ -187,7 +191,7 @@ public class PhePlaintextTest {
                 double tolerance = PheTestUtils.EPSILON;
                 double decodedResult = encoded.decodeDouble();
                 double absValue = Math.abs(value);
-                if (absValue == 0.0 || absValue > 1.0) {
+                if (Precision.equals(absValue, 0, DoubleUtils.PRECISION) || absValue > 1.0) {
                     tolerance = PheTestUtils.EPSILON * Math.pow(2.0, Math.getExponent(value));
                 }
                 Assert.assertEquals(value, decodedResult, tolerance);
@@ -557,7 +561,8 @@ public class PhePlaintextTest {
                 decodedNumber + 0.500001 * precision, precision
             );
             double decodedNumber2 = number2.decodeDouble();
-            if (decodedNumber == decodedNumber2) {
+            // 对比精度要小于precision * 0.5，这里取precision / 10
+            if (Precision.equals(decodedNumber, decodedNumber2, precision / 10)) {
                 Assert.fail(
                     "decodedNumber: " + decodedNumber + " should not be the same as decodedNumber2: " + decodedNumber2
                 );
@@ -589,7 +594,8 @@ public class PhePlaintextTest {
                     decodedNumber + 0.500001 * precision, precision
                 );
                 double decodedNumber2 = number2.decodeDouble();
-                if (decodedNumber == decodedNumber2) {
+                // 对比精度要小于precision * 0.5，这里取precision / 10
+                if (Precision.equals(decodedNumber, decodedNumber2, precision / 10)) {
                     Assert.fail("decodedNumber: " + decodedNumber + " should not be the same as decodedNumber2: "
                         + decodedNumber2);
                 }

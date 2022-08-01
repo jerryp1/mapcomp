@@ -1,6 +1,6 @@
 /*
  * Original Work Copyright 2018 H2O.ai.
- * Modified Work Copyright 2021 Weiran Liu.
+ * Modified by Weiran Liu. Adjust the code based on Alibaba Java Code Guidelines.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,7 +17,7 @@
 package biz.k11i.xgboost.gbm;
 
 import biz.k11i.xgboost.config.PredictorConfiguration;
-import biz.k11i.xgboost.fvec.FVec;
+import biz.k11i.xgboost.fvec.Fvec;
 import biz.k11i.xgboost.util.ModelReader;
 
 import java.io.IOException;
@@ -49,7 +49,7 @@ public class GardBoostLinear extends AbstractGradBoostModel {
     }
 
     @Override
-    public float[] predict(FVec featureVector, int numTreeLimit) {
+    public float[] predict(Fvec featureVector, int numTreeLimit) {
         float[] preds = new float[numOutputGroup];
         for (int gid = 0; gid < numOutputGroup; ++gid) {
             preds[gid] = predictGroup(featureVector, gid);
@@ -58,7 +58,7 @@ public class GardBoostLinear extends AbstractGradBoostModel {
     }
 
     @Override
-    public float predictSingle(FVec featureVector, int numTreeLimit) {
+    public float predictSingle(Fvec featureVector, int numTreeLimit) {
         if (numOutputGroup != 1) {
             throw new IllegalStateException(
                 "Can't invoke predictSingle() because this model outputs multiple values: "
@@ -74,7 +74,7 @@ public class GardBoostLinear extends AbstractGradBoostModel {
      * @param groupId       group ID.
      * @return predict result.
      */
-    private float predictGroup(FVec featureVector, int groupId) {
+    private float predictGroup(Fvec featureVector, int groupId) {
         float psum = bias(groupId);
         float featValue;
         for (int fid = 0; fid < numFeature; ++fid) {
@@ -87,12 +87,12 @@ public class GardBoostLinear extends AbstractGradBoostModel {
     }
 
     @Override
-    public int[] predictLeaf(FVec featureVector, int numTreeLimit) {
+    public int[] predictLeaf(Fvec featureVector, int numTreeLimit) {
         throw new UnsupportedOperationException("gblinear does not support predict leaf index");
     }
 
     @Override
-    public String[] predictLeafPath(FVec featureVector, int numTreeLimit) {
+    public String[] predictLeafPath(Fvec featureVector, int numTreeLimit) {
         throw new UnsupportedOperationException("gblinear does not support predict leaf path");
     }
 
