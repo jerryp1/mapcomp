@@ -1,17 +1,17 @@
-package edu.alibaba.mpc4j.common.tool.bitmatrix;
+package edu.alibaba.mpc4j.common.tool.bitmatrix.trans;
 
-import edu.alibaba.mpc4j.common.tool.bitmatrix.BitMatrixFactory.BitMatrixType;
+import edu.alibaba.mpc4j.common.tool.bitmatrix.trans.TransBitMatrixFactory.TransBitMatrixType;
 import edu.alibaba.mpc4j.common.tool.utils.BinaryUtils;
 import edu.alibaba.mpc4j.common.tool.utils.BytesUtils;
 import edu.alibaba.mpc4j.common.tool.utils.CommonUtils;
 
 /**
- * 朴素布尔矩阵。
+ * 朴素转置布尔矩阵。
  *
  * @author Weiran Liu
  * @date 2020/09/08
  */
-class NaiveBitMatrix extends AbstractBitMatrix {
+class NaiveTransBitMatrix extends AbstractTransBitMatrix {
     /**
      * 用二维字节数组表示的矩阵
      */
@@ -25,7 +25,7 @@ class NaiveBitMatrix extends AbstractBitMatrix {
      */
     private final int rowOffset;
 
-    NaiveBitMatrix(final int rows, final int columns) {
+    NaiveTransBitMatrix(final int rows, final int columns) {
         super(rows, columns);
         rowBytes = CommonUtils.getByteLength(rows);
         int roundByteRows = rowBytes * Byte.SIZE;
@@ -65,9 +65,9 @@ class NaiveBitMatrix extends AbstractBitMatrix {
     }
 
     @Override
-    public BitMatrix transpose() {
+    public TransBitMatrix transpose() {
         // 创建一个新的转置矩阵，新矩阵的行数为原始矩阵的列数，新矩阵的列数为原始矩阵的行数
-        NaiveBitMatrix b = new NaiveBitMatrix(columns, rows);
+        NaiveTransBitMatrix b = new NaiveTransBitMatrix(columns, rows);
         // 朴素转置方法
         for (int bColumnIndex = 0; bColumnIndex < b.columns; bColumnIndex++) {
             for (int bRowIndex = 0; bRowIndex < b.rows; bRowIndex++) {
@@ -80,7 +80,7 @@ class NaiveBitMatrix extends AbstractBitMatrix {
     }
 
     @Override
-    public BitMatrixType getBitMatrixType() {
-        return BitMatrixType.NAIVE;
+    public TransBitMatrixType getTransBitMatrixType() {
+        return TransBitMatrixType.NAIVE;
     }
 }

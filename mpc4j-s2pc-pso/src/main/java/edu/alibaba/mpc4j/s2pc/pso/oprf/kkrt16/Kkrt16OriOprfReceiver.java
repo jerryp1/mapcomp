@@ -6,8 +6,8 @@ import edu.alibaba.mpc4j.common.rpc.Rpc;
 import edu.alibaba.mpc4j.common.rpc.utils.DataPacket;
 import edu.alibaba.mpc4j.common.rpc.utils.DataPacketHeader;
 import edu.alibaba.mpc4j.common.tool.CommonConstants;
-import edu.alibaba.mpc4j.common.tool.bitmatrix.BitMatrix;
-import edu.alibaba.mpc4j.common.tool.bitmatrix.BitMatrixFactory;
+import edu.alibaba.mpc4j.common.tool.bitmatrix.trans.TransBitMatrix;
+import edu.alibaba.mpc4j.common.tool.bitmatrix.trans.TransBitMatrixFactory;
 import edu.alibaba.mpc4j.common.tool.coder.random.RandomCoder;
 import edu.alibaba.mpc4j.common.tool.coder.random.RandomCoderUtils;
 import edu.alibaba.mpc4j.common.tool.crypto.crhf.Crhf;
@@ -68,7 +68,7 @@ public class Kkrt16OriOprfReceiver extends AbstractOprfReceiver {
     /**
      * 布尔矩阵
      */
-    private BitMatrix tMatrix;
+    private TransBitMatrix tMatrix;
 
     public Kkrt16OriOprfReceiver(Rpc receiverRpc, Party senderParty, Kkrt16OriOprfConfig config) {
         super(Kkrt16OriOprfPtoDesc.getInstance(), receiverRpc, senderParty, config);
@@ -188,7 +188,7 @@ public class Kkrt16OriOprfReceiver extends AbstractOprfReceiver {
         // 设置随机编码矩阵
         RandomCoder randomCoder = new RandomCoder(envType, codewordByteLength);
         randomCoder.setKey(randomCoderKey);
-        BitMatrix prcMatrix = BitMatrixFactory.createInstance(envType, codewordBitLength, batchSize, parallel);
+        TransBitMatrix prcMatrix = TransBitMatrixFactory.createInstance(envType, codewordBitLength, batchSize, parallel);
         IntStream choicesIntStream = IntStream.range(0, batchSize);
         choicesIntStream = parallel ? choicesIntStream.parallel() : choicesIntStream;
         choicesIntStream.forEach(index -> {
@@ -197,9 +197,9 @@ public class Kkrt16OriOprfReceiver extends AbstractOprfReceiver {
         });
         randomCoderKey = null;
         // 转置随机编码矩阵
-        BitMatrix prcTransposeMatrix = prcMatrix.transpose();
+        TransBitMatrix prcTransposeMatrix = prcMatrix.transpose();
         // 创建矩阵T0
-        tMatrix = BitMatrixFactory.createInstance(envType, batchSize, codewordBitLength, parallel);
+        tMatrix = TransBitMatrixFactory.createInstance(envType, batchSize, codewordBitLength, parallel);
         // 矩阵列加密流
         IntStream columnIndexIntStream = IntStream.range(0, codewordBitLength);
         columnIndexIntStream = parallel ? columnIndexIntStream.parallel() : columnIndexIntStream;
@@ -226,7 +226,7 @@ public class Kkrt16OriOprfReceiver extends AbstractOprfReceiver {
 
     private OprfReceiverOutput generateReceiverOutput() {
         // 生成密钥数组，将矩阵T转置，按行获取
-        BitMatrix tMatrixTranspose = tMatrix.transpose();
+        TransBitMatrix tMatrixTranspose = tMatrix.transpose();
         tMatrix = null;
         byte[][] ts = IntStream.range(0, batchSize)
             .mapToObj(tMatrixTranspose::getColumn)

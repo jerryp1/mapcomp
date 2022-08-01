@@ -1,7 +1,7 @@
 package edu.alibaba.mpc4j.s2pc.pso.oprp.lowmc;
 
 import edu.alibaba.mpc4j.common.tool.CommonConstants;
-import edu.alibaba.mpc4j.common.tool.bitmatrix.SquareLongBitMatrix;
+import edu.alibaba.mpc4j.common.tool.bitmatrix.dense.LongSquareDenseBitMatrix;
 import edu.alibaba.mpc4j.common.tool.crypto.prp.JdkLongsLowMcPrp;
 import edu.alibaba.mpc4j.common.tool.utils.LongUtils;
 import org.bouncycastle.util.encoders.Hex;
@@ -53,11 +53,11 @@ class LowMcUtils {
     /**
      * 轮密钥矩阵，一共有r + 1组，每组128个128比特的布尔元素
      */
-    static final SquareLongBitMatrix[] KEY_MATRICES;
+    static final LongSquareDenseBitMatrix[] KEY_MATRICES;
     /**
      * 轮线性矩阵，一共有r组，每组为128个128比特的布尔元素
      */
-    static final SquareLongBitMatrix[] LINEAR_MATRICES;
+    static final LongSquareDenseBitMatrix[] LINEAR_MATRICES;
     /**
      * 轮常数加值，一共有r个，每组为128比特的布尔元素
      */
@@ -72,7 +72,7 @@ class LowMcUtils {
             InputStreamReader lowMcInputStreamReader = new InputStreamReader(lowMcInputStream);
             BufferedReader lowMcBufferedReader = new BufferedReader(lowMcInputStreamReader);
             // 读取线性变换矩阵，共有r组
-            LINEAR_MATRICES = new SquareLongBitMatrix[ROUND];
+            LINEAR_MATRICES = new LongSquareDenseBitMatrix[ROUND];
             for (int roundIndex = 0; roundIndex < ROUND; roundIndex++) {
                 // 第一行是标识位
                 String label = lowMcBufferedReader.readLine();
@@ -84,10 +84,10 @@ class LowMcUtils {
                     squareMatrix[bitIndex] = Hex.decode(line);
                     assert squareMatrix[bitIndex].length == CommonConstants.BLOCK_BYTE_LENGTH;
                 }
-                LINEAR_MATRICES[roundIndex] = new SquareLongBitMatrix(squareMatrix);
+                LINEAR_MATRICES[roundIndex] = new LongSquareDenseBitMatrix(squareMatrix);
             }
             // 读取密钥扩展矩阵，共有r + 1组
-            KEY_MATRICES = new SquareLongBitMatrix[ROUND + 1];
+            KEY_MATRICES = new LongSquareDenseBitMatrix[ROUND + 1];
             for (int roundIndex = 0; roundIndex < ROUND + 1; roundIndex++) {
                 // 第一行是标识位
                 String label = lowMcBufferedReader.readLine();
@@ -99,7 +99,7 @@ class LowMcUtils {
                     squareMatrix[bitIndex] = Hex.decode(line);
                     assert squareMatrix[bitIndex].length == CommonConstants.BLOCK_BYTE_LENGTH;
                 }
-                KEY_MATRICES[roundIndex] = new SquareLongBitMatrix(squareMatrix);
+                KEY_MATRICES[roundIndex] = new LongSquareDenseBitMatrix(squareMatrix);
             }
             // 读取常数，共有r组
             CONSTANTS = new long[ROUND][];

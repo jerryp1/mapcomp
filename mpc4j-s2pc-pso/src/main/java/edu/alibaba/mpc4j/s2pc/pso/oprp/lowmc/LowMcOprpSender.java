@@ -7,8 +7,8 @@ import edu.alibaba.mpc4j.common.rpc.Rpc;
 import edu.alibaba.mpc4j.common.rpc.utils.DataPacket;
 import edu.alibaba.mpc4j.common.rpc.utils.DataPacketHeader;
 import edu.alibaba.mpc4j.common.tool.CommonConstants;
-import edu.alibaba.mpc4j.common.tool.bitmatrix.BitMatrix;
-import edu.alibaba.mpc4j.common.tool.bitmatrix.BitMatrixFactory;
+import edu.alibaba.mpc4j.common.tool.bitmatrix.trans.TransBitMatrix;
+import edu.alibaba.mpc4j.common.tool.bitmatrix.trans.TransBitMatrixFactory;
 import edu.alibaba.mpc4j.common.tool.crypto.prp.PrpFactory.PrpType;
 import edu.alibaba.mpc4j.common.tool.utils.BytesUtils;
 import edu.alibaba.mpc4j.common.tool.utils.LongUtils;
@@ -187,20 +187,20 @@ public class LowMcOprpSender extends AbstractOprpSender {
         byte[][] stateBytes = Arrays.stream(stateLongs)
             .map(LongUtils::longArrayToByteArray)
             .toArray(byte[][]::new);
-        BitMatrix stateBytesBitMatrix = BitMatrixFactory.createInstance(
+        TransBitMatrix stateBytesTransBitMatrix = TransBitMatrixFactory.createInstance(
             envType, CommonConstants.BLOCK_BIT_LENGTH, batchSize, parallel
         );
         for (int i = 0; i < batchSize; i++) {
-            stateBytesBitMatrix.setColumn(i, stateBytes[i]);
+            stateBytesTransBitMatrix.setColumn(i, stateBytes[i]);
         }
-        BitMatrix stateBytesTransposeMatrix = stateBytesBitMatrix.transpose();
+        TransBitMatrix stateBytesTransposeMatrix = stateBytesTransBitMatrix.transpose();
         // 创建sbox后的转置矩阵
-        BitMatrix sboxStateBytesTransposeMatrix = BitMatrixFactory.createInstance(
+        TransBitMatrix sboxStateBytesTransMatrix = TransBitMatrixFactory.createInstance(
             envType, batchSize, CommonConstants.BLOCK_BIT_LENGTH, parallel
         );
         // 复制sbox后的列
         for (int columnIndex = LowMcUtils.SBOX_NUM * 3; columnIndex < CommonConstants.BLOCK_BIT_LENGTH; columnIndex++) {
-            sboxStateBytesTransposeMatrix.setColumn(columnIndex, stateBytesTransposeMatrix.getColumn(columnIndex));
+            sboxStateBytesTransMatrix.setColumn(columnIndex, stateBytesTransposeMatrix.getColumn(columnIndex));
         }
         // sbox处理
         byte[] baa0 = new byte[LowMcUtils.SBOX_NUM * 3 * batchByteSize];
@@ -258,13 +258,13 @@ public class LowMcOprpSender extends AbstractOprpSender {
             c0Sbox = bcSender.xor(c0Sbox, BcBitVector.create(c0, batchSize, false));
             c0Sbox = bcSender.xor(c0Sbox, BcBitVector.create(ab0, batchSize, false));
             byte[] c0SboxBytes = c0Sbox.getBytes();
-            sboxStateBytesTransposeMatrix.setColumn(sboxIndex * 3, a0SboxBytes);
-            sboxStateBytesTransposeMatrix.setColumn(sboxIndex * 3 + 1, b0SboxBytes);
-            sboxStateBytesTransposeMatrix.setColumn(sboxIndex * 3 + 2, c0SboxBytes);
+            sboxStateBytesTransMatrix.setColumn(sboxIndex * 3, a0SboxBytes);
+            sboxStateBytesTransMatrix.setColumn(sboxIndex * 3 + 1, b0SboxBytes);
+            sboxStateBytesTransMatrix.setColumn(sboxIndex * 3 + 2, c0SboxBytes);
         }
-        BitMatrix sboxStateBytesBitMatrix = sboxStateBytesTransposeMatrix.transpose();
+        TransBitMatrix sboxStateBytesTransBitMatrix = sboxStateBytesTransMatrix.transpose();
         for (int batchIndex = 0; batchIndex < batchSize; batchIndex++) {
-            stateLongs[batchIndex] = LongUtils.byteArrayToLongArray(sboxStateBytesBitMatrix.getColumn(batchIndex));
+            stateLongs[batchIndex] = LongUtils.byteArrayToLongArray(sboxStateBytesTransBitMatrix.getColumn(batchIndex));
         }
     }
 

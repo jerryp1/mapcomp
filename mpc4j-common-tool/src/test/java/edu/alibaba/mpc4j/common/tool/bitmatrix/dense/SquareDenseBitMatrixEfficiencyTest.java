@@ -1,7 +1,7 @@
-package edu.alibaba.mpc4j.common.tool.bitmatrix;
+package edu.alibaba.mpc4j.common.tool.bitmatrix.dense;
 
 import edu.alibaba.mpc4j.common.tool.CommonConstants;
-import edu.alibaba.mpc4j.common.tool.bitmatrix.SquareBitMatrixFactory.SquareBitMatrixType;
+import edu.alibaba.mpc4j.common.tool.bitmatrix.dense.SquareDenseBitMatrixFactory.SquareDenseBitMatrixType;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.time.StopWatch;
 import org.bouncycastle.util.encoders.Hex;
@@ -20,8 +20,8 @@ import java.util.stream.IntStream;
  * @date 2022/5/19
  */
 @Ignore
-public class SquareBitMatrixEfficiencyTest {
-    private static final Logger LOGGER = LoggerFactory.getLogger(SquareBitMatrixEfficiencyTest.class);
+public class SquareDenseBitMatrixEfficiencyTest {
+    private static final Logger LOGGER = LoggerFactory.getLogger(SquareDenseBitMatrixEfficiencyTest.class);
     /**
      * 可逆分组方阵，来自于LowMc的参数
      */
@@ -106,16 +106,16 @@ public class SquareBitMatrixEfficiencyTest {
     /**
      * 测试类型
      */
-    private static final SquareBitMatrixType[] TYPES = new SquareBitMatrixType[] {
-        SquareBitMatrixType.BYTE_MATRIX,
-        SquareBitMatrixType.LONG_MATRIX,
+    private static final SquareDenseBitMatrixType[] TYPES = new SquareDenseBitMatrixType[] {
+        SquareDenseBitMatrixType.BYTE_MATRIX,
+        SquareDenseBitMatrixType.LONG_MATRIX,
     };
 
     @Test
     public void testEfficiency() {
         LOGGER.info("{}\t{}", "                name", "   mul(us)");
-        for (SquareBitMatrixType type : TYPES) {
-            SquareBitMatrix bitMatrix = SquareBitMatrixFactory.createInstance(type, INVERTIBLE_SQUARE_BLOCK_MATRIX);
+        for (SquareDenseBitMatrixType type : TYPES) {
+            SquareDenseBitMatrix bitMatrix = SquareDenseBitMatrixFactory.createInstance(type, INVERTIBLE_SQUARE_BLOCK_MATRIX);
             byte[] randomInput = new byte[CommonConstants.BLOCK_BYTE_LENGTH];
             SECURE_RANDOM.nextBytes(randomInput);
             StopWatch stopWatch = new StopWatch();

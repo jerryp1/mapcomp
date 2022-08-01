@@ -1,9 +1,8 @@
-package edu.alibaba.mpc4j.common.tool.bitmatrix;
+package edu.alibaba.mpc4j.common.tool.bitmatrix.dense;
 
 import edu.alibaba.mpc4j.common.tool.utils.BinaryUtils;
 import edu.alibaba.mpc4j.common.tool.utils.BytesUtils;
 import edu.alibaba.mpc4j.common.tool.utils.CommonUtils;
-import edu.alibaba.mpc4j.common.tool.utils.LongUtils;
 import org.apache.commons.lang3.builder.EqualsBuilder;
 import org.apache.commons.lang3.builder.HashCodeBuilder;
 
@@ -13,12 +12,12 @@ import java.util.Arrays;
 import java.util.stream.IntStream;
 
 /**
- * 用long[]维护的布尔方阵。
+ * 用byte[]表示的布尔方阵。
  *
  * @author Weiran Liu
- * @date 2022/01/16
+ * @date 2021/12/20
  */
-public class SquareLongBitMatrix implements SquareBitMatrix {
+public class ByteSquareDenseBitMatrix implements SquareDenseBitMatrix {
     /**
      * 布尔方阵的大小
      */
@@ -28,38 +27,33 @@ public class SquareLongBitMatrix implements SquareBitMatrix {
      */
     private final int byteSize;
     /**
-     * 布尔方阵的长整数大小
-     */
-    private final int longSize;
-    /**
      * 偏移量
      */
     private final int offset;
     /**
      * 布尔方阵
      */
-    private final long[][] longBitMatrix;
+    private final byte[][] byteBitMatrix;
 
     /**
      * 构建布尔方阵。
      *
-     * @param size      布尔方阵的大小。
+     * @param size 布尔方阵的大小。
      * @param positions 布尔方阵中取值为1的位置。
      */
-    public SquareLongBitMatrix(int size, int[][] positions) throws ArithmeticException {
+    public ByteSquareDenseBitMatrix(int size, int[][] positions) throws ArithmeticException {
         assert size > 0 : "Size of SquareBitMatrix must be greater than 0";
         this.size = size;
         byteSize = CommonUtils.getByteLength(size);
-        longSize = CommonUtils.getLongLength(size);
-        offset = longSize * Long.SIZE - size;
-        longBitMatrix = new long[size][longSize];
+        offset = byteSize * Byte.SIZE - size;
+        byteBitMatrix = new byte[size][byteSize];
         assert positions.length == size;
-        for (int row = 0; row < size; row++) {
-            int[] rows = positions[row];
+        for (int rowIndex = 0; rowIndex < size; rowIndex++) {
+            int[] rows = positions[rowIndex];
             for (int position : rows) {
                 assert position >= 0 && position < size;
                 // 将每个所需的位置设置为1
-                BinaryUtils.setBoolean(longBitMatrix[row], position + offset, true);
+                BinaryUtils.setBoolean(byteBitMatrix[rowIndex], position + offset, true);
             }
         }
     }
@@ -69,69 +63,44 @@ public class SquareLongBitMatrix implements SquareBitMatrix {
      *
      * @param bitMatrix 布尔方阵描述。
      */
-    public SquareLongBitMatrix(byte[][] bitMatrix) {
+    public ByteSquareDenseBitMatrix(byte[][] bitMatrix) {
         assert bitMatrix.length > 0 : "Size of SquareBitMatrix must be greater than 0";
         size = bitMatrix.length;
         byteSize = CommonUtils.getByteLength(size);
-        longSize = CommonUtils.getLongLength(size);
-        offset = longSize * Long.SIZE - size;
-        int byteSize = CommonUtils.getByteLength(size);
-        longBitMatrix = Arrays.stream(bitMatrix)
-            .map(rowByteArray -> {
-                assert rowByteArray.length == byteSize;
-                assert BytesUtils.isReduceByteArray(rowByteArray, size);
-                return LongUtils.byteArrayToRoundLongArray(rowByteArray);
-            })
-            .toArray(long[][]::new);
-    }
-
-    /**
-     * 构建布尔方阵。
-     *
-     * @param bitMatrix 布尔方阵描述。
-     */
-    private SquareLongBitMatrix(long[][] bitMatrix) {
-        assert bitMatrix.length > 0 : "Size of SquareBitMatrix must be greater than 0";
-        size = bitMatrix.length;
-        byteSize = CommonUtils.getByteLength(size);
-        longSize = CommonUtils.getLongLength(size);
-        offset = longSize * Long.SIZE - size;
-        for (long[] row : bitMatrix) {
-            assert row.length == longSize;
-            assert LongUtils.isReduceLongArray(row, size);
+        offset = byteSize * Byte.SIZE - size;
+        for (byte[] row : bitMatrix) {
+            assert row.length == byteSize;
+            assert BytesUtils.isReduceByteArray(row, size);
         }
-        longBitMatrix = bitMatrix;
+        byteBitMatrix = bitMatrix;
     }
 
     /**
      * 构建随机布尔方阵，得到的随机布尔方阵不一定可逆。
      *
-     * @param size         布尔方阵的大小。
+     * @param size 布尔方阵的大小。
      * @param secureRandom 随机状态。
      */
-    public SquareLongBitMatrix(int size, SecureRandom secureRandom) {
+    public ByteSquareDenseBitMatrix(int size, SecureRandom secureRandom) {
         assert size > 0 : "Size of SquareBitMatrix must be greater than 0";
         this.size = size;
         byteSize = CommonUtils.getByteLength(size);
-        longSize = CommonUtils.getLongLength(size);
-        offset = longSize * Long.SIZE - size;
-        longBitMatrix = IntStream.range(0, size)
+        offset = byteSize * Byte.SIZE - size;
+        byteBitMatrix = IntStream.range(0, size)
             .mapToObj(rowIndex -> {
-                long[] row = new long[longSize];
-                for (int columnIndex = 0; columnIndex < longSize; columnIndex++) {
-                    row[columnIndex] = secureRandom.nextLong();
-                }
-                LongUtils.reduceLongArray(row, size);
+                byte[] row = new byte[byteSize];
+                secureRandom.nextBytes(row);
+                BytesUtils.reduceByteArray(row, size);
                 return row;
             })
-            .toArray(long[][]::new);
+            .toArray(byte[][]::new);
     }
 
     @Override
-    public SquareBitMatrix inverse() {
+    public SquareDenseBitMatrix inverse() {
         // 构造布尔矩阵
-        boolean[][] matrix = Arrays.stream(longBitMatrix)
-            .map(row -> BinaryUtils.longArrayToBinary(row, size))
+        boolean[][] matrix = Arrays.stream(byteBitMatrix)
+            .map(row -> BinaryUtils.byteArrayToBinary(row, size))
             .toArray(boolean[][]::new);
         // 构造逆矩阵，先将逆矩阵初始化为单位阵
         boolean[][] inverseMatrix = new boolean[size][size];
@@ -180,10 +149,10 @@ public class SquareLongBitMatrix implements SquareBitMatrix {
             }
         }
         // 返回逆矩阵
-        long[][] invertLongBitMatrix = Arrays.stream(inverseMatrix)
-            .map(BinaryUtils::binaryToRoundLongArray)
-            .toArray(long[][]::new);
-        return new SquareLongBitMatrix(invertLongBitMatrix);
+        byte[][] invertByteBitMatrix = Arrays.stream(inverseMatrix)
+            .map(BinaryUtils::binaryToRoundByteArray)
+            .toArray(byte[][]::new);
+        return new ByteSquareDenseBitMatrix(invertByteBitMatrix);
     }
 
     @Override
@@ -196,65 +165,37 @@ public class SquareLongBitMatrix implements SquareBitMatrix {
         return byteSize;
     }
 
-    /**
-     * 返回布尔方阵的长整数大小。
-     *
-     * @return 布尔方阵的长整数大小。
-     */
-    public int getLongSize() {
-        return longSize;
-    }
-
     @Override
     public byte[] multiply(final byte[] input) {
-        assert input.length == byteSize : "input.length must be equal to " + byteSize + ": " + input.length;
+        assert input.length == byteSize;
         assert BytesUtils.isReduceByteArray(input, size);
-        int byteArrayOffset = input.length * Byte.SIZE - size;
-        long[] longOutput = new long[longSize];
-        for (int binaryIndex = 0; binaryIndex < size; binaryIndex++) {
-            if (BinaryUtils.getBoolean(input, binaryIndex + byteArrayOffset)) {
-                LongUtils.xori(longOutput, longBitMatrix[binaryIndex]);
+        byte[] output = new byte[byteSize];
+        for (int columnIndex = 0; columnIndex < size; columnIndex++) {
+            if (BinaryUtils.getBoolean(input, columnIndex + offset)) {
+                BytesUtils.xori(output, byteBitMatrix[columnIndex]);
             }
         }
-        return LongUtils.longArrayToByteArray(longOutput, byteSize);
-    }
-
-    /**
-     * 计算输入向量乘以布尔方阵。
-     *
-     * @param input 输入向量。
-     * @return 相乘结果。
-     */
-    public long[] multiply(final long[] input) {
-        assert input.length == longSize;
-        assert LongUtils.isReduceLongArray(input, size);
-        long[] longOutput = new long[longSize];
-        for (int binaryIndex = offset; binaryIndex < size + offset; binaryIndex++) {
-            if (BinaryUtils.getBoolean(input, binaryIndex)) {
-                LongUtils.xori(longOutput, longBitMatrix[binaryIndex]);
-            }
-        }
-        return longOutput;
+        return output;
     }
 
     @Override
-    public SquareBitMatrix transpose() {
-        long[][] transBitMatrix = new long[size][longSize];
+    public SquareDenseBitMatrix transpose() {
+        byte[][] transBitMatrix = new byte[size][byteSize];
         for (int row = 0; row < size; row++) {
             for (int column = 0; column < size; column++) {
-                if (BinaryUtils.getBoolean(longBitMatrix[row], column + offset)) {
+                if (BinaryUtils.getBoolean(byteBitMatrix[row], column + offset)) {
                     BinaryUtils.setBoolean(transBitMatrix[column], row + offset, true);
                 }
             }
         }
-        return new SquareLongBitMatrix(transBitMatrix);
+        return new ByteSquareDenseBitMatrix(transBitMatrix);
     }
 
     @Override
     public String toString() {
         StringBuilder stringBuilder = new StringBuilder();
-        Arrays.stream(longBitMatrix).forEach(longRow -> {
-            BigInteger rowBigInteger = new BigInteger(1, LongUtils.longArrayToByteArray(longRow));
+        Arrays.stream(byteBitMatrix).forEach(row -> {
+            BigInteger rowBigInteger = new BigInteger(1, row);
             StringBuilder rowStringBuilder = new StringBuilder(rowBigInteger.toString(2));
             while (rowStringBuilder.length() < size) {
                 rowStringBuilder.insert(0, "0");
@@ -266,18 +207,18 @@ public class SquareLongBitMatrix implements SquareBitMatrix {
 
     @Override
     public boolean equals(Object obj) {
-        if (!(obj instanceof SquareLongBitMatrix)) {
+        if (!(obj instanceof ByteSquareDenseBitMatrix)) {
             return false;
         }
         if (this == obj) {
             return true;
         }
-        SquareLongBitMatrix that = (SquareLongBitMatrix) obj;
-        return new EqualsBuilder().append(this.longBitMatrix, that.longBitMatrix).isEquals();
+        ByteSquareDenseBitMatrix that = (ByteSquareDenseBitMatrix)obj;
+        return new EqualsBuilder().append(this.byteBitMatrix, that.byteBitMatrix).isEquals();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(longBitMatrix).toHashCode();
+        return new HashCodeBuilder().append(byteBitMatrix).toHashCode();
     }
 }

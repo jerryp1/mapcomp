@@ -1,6 +1,6 @@
-package edu.alibaba.mpc4j.common.tool.bitmatrix;
+package edu.alibaba.mpc4j.common.tool.bitmatrix.trans;
 
-import edu.alibaba.mpc4j.common.tool.bitmatrix.BitMatrixFactory.BitMatrixType;
+import edu.alibaba.mpc4j.common.tool.bitmatrix.trans.TransBitMatrixFactory.TransBitMatrixType;
 import edu.alibaba.mpc4j.common.tool.utils.BytesUtils;
 import edu.alibaba.mpc4j.common.tool.utils.CommonUtils;
 
@@ -9,12 +9,12 @@ import java.util.Arrays;
 import java.util.stream.IntStream;
 
 /**
- * 将矩阵按列分块，每块为2^10列、row行，转置时按照分块转置，适用于行比较少、列比较多的并行化布尔矩阵转置。
+ * 将矩阵按列分块，每块为2^10列、row行，转置时按照分块转置，适用于行比较少、列比较多的并行转置布尔矩阵。
  *
  * @author Weiran Liu
  * @date 2021/11/30
  */
-abstract class AbstractSplitColBitMatrix extends AbstractBitMatrix {
+abstract class AbstractSplitColTransBitMatrix extends AbstractTransBitMatrix {
     /**
      * 每个分块所包含的行数量，根据libOTe的参数设置，以2^10 = 1024为一个单位。
      */
@@ -46,23 +46,23 @@ abstract class AbstractSplitColBitMatrix extends AbstractBitMatrix {
     /**
      * 分块矩阵
      */
-    private final BitMatrix[] blockData;
+    private final TransBitMatrix[] blockData;
     /**
      * 是否为转置表示
      */
     private boolean isTransposed;
 
-    AbstractSplitColBitMatrix(BitMatrixType bitMatrixType, int rows, int columns) {
+    AbstractSplitColTransBitMatrix(TransBitMatrixType transBitMatrixType, int rows, int columns) {
         super(rows, columns);
         rowBytes = CommonUtils.getByteLength(rows);
         columnBytes = CommonUtils.getByteLength(columns);
         blockNum = (COLUMNS_PER_BLOCK + columns - 1) / COLUMNS_PER_BLOCK;
         columnBlockBytes = blockNum * COLUMNS_BYTES_PER_BLOCK;
         offset = blockNum * COLUMNS_PER_BLOCK - columns;
-        blockData = new BitMatrix[blockNum];
+        blockData = new TransBitMatrix[blockNum];
         // 分别构建布尔矩阵
         IntStream.range(0, blockNum).forEach(blockIndex ->
-            blockData[blockIndex] = BitMatrixFactory.createInstance(bitMatrixType, rows, COLUMNS_PER_BLOCK)
+            blockData[blockIndex] = TransBitMatrixFactory.createInstance(transBitMatrixType, rows, COLUMNS_PER_BLOCK)
         );
         this.isTransposed = false;
     }
@@ -148,9 +148,9 @@ abstract class AbstractSplitColBitMatrix extends AbstractBitMatrix {
     }
 
     @Override
-    public BitMatrix transpose() {
-        AbstractSplitColBitMatrix b = (AbstractSplitColBitMatrix)BitMatrixFactory.createInstance(
-            getBitMatrixType(), rows, columns
+    public TransBitMatrix transpose() {
+        AbstractSplitColTransBitMatrix b = (AbstractSplitColTransBitMatrix) TransBitMatrixFactory.createInstance(
+            getTransBitMatrixType(), rows, columns
         );
         b.isTransposed = !this.isTransposed;
         // 并行处理转置

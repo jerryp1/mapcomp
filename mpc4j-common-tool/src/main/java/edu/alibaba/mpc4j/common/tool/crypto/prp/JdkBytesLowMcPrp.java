@@ -1,7 +1,7 @@
 package edu.alibaba.mpc4j.common.tool.crypto.prp;
 
 import edu.alibaba.mpc4j.common.tool.CommonConstants;
-import edu.alibaba.mpc4j.common.tool.bitmatrix.SquareByteBitMatrix;
+import edu.alibaba.mpc4j.common.tool.bitmatrix.dense.ByteSquareDenseBitMatrix;
 import edu.alibaba.mpc4j.common.tool.utils.BytesUtils;
 import org.bouncycastle.util.encoders.Hex;
 
@@ -100,15 +100,15 @@ public class JdkBytesLowMcPrp implements Prp {
     /**
      * 轮密钥矩阵，一共有r + 1组，每组128个128比特的布尔元素
      */
-    private final SquareByteBitMatrix[] keyMatrices;
+    private final ByteSquareDenseBitMatrix[] keyMatrices;
     /**
      * 轮线性矩阵，一共有r组，每组为128个128比特的布尔元素
      */
-    private final SquareByteBitMatrix[] linearMatrices;
+    private final ByteSquareDenseBitMatrix[] linearMatrices;
     /**
      * 轮线性逆矩阵，一共有r组，每组为128个128比特的布尔元素
      */
-    private final SquareByteBitMatrix[] invertLinearMatrices;
+    private final ByteSquareDenseBitMatrix[] invertLinearMatrices;
     /**
      * 轮常数加值，一共有r个，每组为128比特的布尔元素
      */
@@ -139,8 +139,8 @@ public class JdkBytesLowMcPrp implements Prp {
             InputStreamReader lowMcInputStreamReader = new InputStreamReader(lowMcInputStream);
             BufferedReader lowMcBufferedReader = new BufferedReader(lowMcInputStreamReader);
             // 读取线性变换矩阵，共有r组
-            linearMatrices = new SquareByteBitMatrix[round];
-            invertLinearMatrices = new SquareByteBitMatrix[round];
+            linearMatrices = new ByteSquareDenseBitMatrix[round];
+            invertLinearMatrices = new ByteSquareDenseBitMatrix[round];
             for (int roundIndex = 0; roundIndex < round; roundIndex++) {
                 // 第一行是标识位
                 String label = lowMcBufferedReader.readLine();
@@ -152,11 +152,11 @@ public class JdkBytesLowMcPrp implements Prp {
                     squareMatrix[bitIndex] = Hex.decode(line);
                     assert squareMatrix[bitIndex].length == CommonConstants.BLOCK_BYTE_LENGTH;
                 }
-                linearMatrices[roundIndex] = new SquareByteBitMatrix(squareMatrix);
-                invertLinearMatrices[roundIndex] = (SquareByteBitMatrix) linearMatrices[roundIndex].inverse();
+                linearMatrices[roundIndex] = new ByteSquareDenseBitMatrix(squareMatrix);
+                invertLinearMatrices[roundIndex] = (ByteSquareDenseBitMatrix) linearMatrices[roundIndex].inverse();
             }
             // 读取密钥扩展矩阵，共有r + 1组
-            keyMatrices = new SquareByteBitMatrix[round + 1];
+            keyMatrices = new ByteSquareDenseBitMatrix[round + 1];
             for (int roundIndex = 0; roundIndex < round + 1; roundIndex++) {
                 // 第一行是标识位
                 String label = lowMcBufferedReader.readLine();
@@ -168,7 +168,7 @@ public class JdkBytesLowMcPrp implements Prp {
                     squareMatrix[bitIndex] = Hex.decode(line);
                     assert squareMatrix[bitIndex].length == CommonConstants.BLOCK_BYTE_LENGTH;
                 }
-                keyMatrices[roundIndex] = new SquareByteBitMatrix(squareMatrix);
+                keyMatrices[roundIndex] = new ByteSquareDenseBitMatrix(squareMatrix);
             }
             // 读取常数，共有r组
             constants = new byte[round][];
@@ -202,6 +202,7 @@ public class JdkBytesLowMcPrp implements Prp {
             .toArray(byte[][]::new);
     }
 
+    @Override
     public byte[] prp(byte[] plaintext) {
         assert (initKey != null && roundKeys != null);
         assert plaintext.length == CommonConstants.BLOCK_BYTE_LENGTH;
@@ -223,6 +224,7 @@ public class JdkBytesLowMcPrp implements Prp {
         return state;
     }
 
+    @Override
     public byte[] invPrp(byte[] ciphertext) {
         assert (initKey != null && roundKeys != null);
         assert ciphertext.length == CommonConstants.BLOCK_BYTE_LENGTH;

@@ -16,5 +16,6 @@ public interface MpOprfSender extends OprfSender {
      * @return 发送方输出。
      * @throws MpcAbortException 如果协议异常中止。
      */
+    @Override
     MpOprfSenderOutput oprf(int batchSize) throws MpcAbortException;
 }

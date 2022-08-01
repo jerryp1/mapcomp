@@ -1,6 +1,6 @@
-package edu.alibaba.mpc4j.common.tool.bitmatrix;
+package edu.alibaba.mpc4j.common.tool.bitmatrix.trans;
 
-import edu.alibaba.mpc4j.common.tool.bitmatrix.BitMatrixFactory.BitMatrixType;
+import edu.alibaba.mpc4j.common.tool.bitmatrix.trans.TransBitMatrixFactory.TransBitMatrixType;
 import edu.alibaba.mpc4j.common.tool.utils.BytesUtils;
 import edu.alibaba.mpc4j.common.tool.utils.CommonUtils;
 
@@ -14,7 +14,7 @@ import java.util.stream.IntStream;
  * @author Weiran Liu
  * @date 2021/01/25
  */
-abstract class AbstractSplitRowBitMatrix extends AbstractBitMatrix {
+abstract class AbstractSplitRowTransBitMatrix extends AbstractTransBitMatrix {
     /**
      * 每个分块所包含的行数量，根据libOTe的参数设置，以2^10 = 1024为一个单位。
      */
@@ -46,23 +46,23 @@ abstract class AbstractSplitRowBitMatrix extends AbstractBitMatrix {
     /**
      * 分块矩阵
      */
-    private final BitMatrix[] blockData;
+    private final TransBitMatrix[] blockData;
     /**
      * 是否为转置表示
      */
     private boolean isTransposed;
 
-    AbstractSplitRowBitMatrix(BitMatrixType bitMatrixType, int rows, int columns) {
+    AbstractSplitRowTransBitMatrix(TransBitMatrixType transBitMatrixType, int rows, int columns) {
         super(rows, columns);
         rowBytes = CommonUtils.getByteLength(rows);
         blockNum = (ROWS_PER_BLOCK + rows - 1) / ROWS_PER_BLOCK;
         rowBlockBytes = blockNum * ROW_BYTES_PER_BLOCK;
         offset = blockNum * ROWS_PER_BLOCK - rows;
         columnBytes = CommonUtils.getByteLength(columns);
-        blockData = new BitMatrix[blockNum];
+        blockData = new TransBitMatrix[blockNum];
         // 分别构建布尔矩阵
         IntStream.range(0, blockNum).forEach(blockIndex ->
-            blockData[blockIndex] = BitMatrixFactory.createInstance(bitMatrixType, ROWS_PER_BLOCK, columns)
+            blockData[blockIndex] = TransBitMatrixFactory.createInstance(transBitMatrixType, ROWS_PER_BLOCK, columns)
         );
         this.isTransposed = false;
     }
@@ -147,9 +147,9 @@ abstract class AbstractSplitRowBitMatrix extends AbstractBitMatrix {
     }
 
     @Override
-    public BitMatrix transpose() {
-        AbstractSplitRowBitMatrix b = (AbstractSplitRowBitMatrix)BitMatrixFactory.createInstance(
-            getBitMatrixType(), rows, columns
+    public TransBitMatrix transpose() {
+        AbstractSplitRowTransBitMatrix b = (AbstractSplitRowTransBitMatrix) TransBitMatrixFactory.createInstance(
+            getTransBitMatrixType(), rows, columns
         );
         b.isTransposed = !this.isTransposed;
         // 并行处理转置

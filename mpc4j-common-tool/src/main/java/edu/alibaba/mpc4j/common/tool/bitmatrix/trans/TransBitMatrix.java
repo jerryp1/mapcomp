@@ -1,14 +1,14 @@
-package edu.alibaba.mpc4j.common.tool.bitmatrix;
+package edu.alibaba.mpc4j.common.tool.bitmatrix.trans;
 
-import edu.alibaba.mpc4j.common.tool.bitmatrix.BitMatrixFactory.BitMatrixType;
+import edu.alibaba.mpc4j.common.tool.bitmatrix.trans.TransBitMatrixFactory.TransBitMatrixType;
 
 /**
- * 比特矩阵抽象接口。比特矩阵可以读取指定行和列的布尔值，也可以读取整列布尔值。
+ * 转置布尔矩阵接口。
  *
  * @author Weiran Liu
  * @date 2019/10/17
  */
-public interface BitMatrix {
+public interface TransBitMatrix {
     /**
      * 得到(x, y)坐标对应的布尔值。
      *
@@ -35,30 +35,30 @@ public interface BitMatrix {
     void setColumn(int y, byte[] byteArray);
 
     /**
-     * 返回布尔矩阵行数量。
+     * 返回行数量。
      *
-     * @return 布尔矩阵行数量。
+     * @return 行数量。
      */
     int getRows();
 
     /**
-     * 返回布尔矩阵列数量。
+     * 返回列数量。
      *
-     * @return 布尔矩阵列数量。
+     * @return 列数量。
      */
     int getColumns();
 
     /**
-     * 对布尔矩阵转置。
+     * 矩阵转置。
      *
      * @return 转置结果。
      */
-    BitMatrix transpose();
+    TransBitMatrix transpose();
 
     /**
-     * 返回布尔矩阵类型。
+     * 返回类型。
      *
-     * @return 布尔矩阵类型。
+     * @return 类型。
      */
-    BitMatrixType getBitMatrixType();
+    TransBitMatrixType getTransBitMatrixType();
 }

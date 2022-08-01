@@ -1,4 +1,4 @@
-package edu.alibaba.mpc4j.common.tool.bitmatrix;
+package edu.alibaba.mpc4j.common.tool.bitmatrix.dense;
 
 /**
  * 布尔方阵接口。
@@ -6,7 +6,7 @@ package edu.alibaba.mpc4j.common.tool.bitmatrix;
  * @author Weiran Liu
  * @date 2022/01/16
  */
-public interface SquareBitMatrix {
+public interface SquareDenseBitMatrix {
 
     /**
      * 返回布尔方阵的大小。
@@ -35,7 +35,7 @@ public interface SquareBitMatrix {
      *
      * @return 转置布尔方阵。
      */
-    SquareBitMatrix transpose();
+    SquareDenseBitMatrix transpose();
 
     /**
      * 计算布尔方阵的逆方阵。
@@ -43,5 +43,5 @@ public interface SquareBitMatrix {
      * @return 布尔方阵的逆方阵。
      * @throws ArithmeticException 如果布尔方阵不可逆。
      */
-    SquareBitMatrix inverse() throws ArithmeticException;
+    SquareDenseBitMatrix inverse() throws ArithmeticException;
 }

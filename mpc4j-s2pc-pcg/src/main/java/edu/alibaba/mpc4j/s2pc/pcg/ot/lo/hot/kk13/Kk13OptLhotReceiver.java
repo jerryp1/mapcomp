@@ -6,8 +6,8 @@ import edu.alibaba.mpc4j.common.rpc.Rpc;
 import edu.alibaba.mpc4j.common.rpc.utils.DataPacket;
 import edu.alibaba.mpc4j.common.rpc.utils.DataPacketHeader;
 import edu.alibaba.mpc4j.common.tool.CommonConstants;
-import edu.alibaba.mpc4j.common.tool.bitmatrix.BitMatrix;
-import edu.alibaba.mpc4j.common.tool.bitmatrix.BitMatrixFactory;
+import edu.alibaba.mpc4j.common.tool.bitmatrix.trans.TransBitMatrix;
+import edu.alibaba.mpc4j.common.tool.bitmatrix.trans.TransBitMatrixFactory;
 import edu.alibaba.mpc4j.common.tool.crypto.crhf.Crhf;
 import edu.alibaba.mpc4j.common.tool.crypto.crhf.CrhfFactory;
 import edu.alibaba.mpc4j.common.tool.crypto.prg.Prg;
@@ -47,7 +47,7 @@ public class Kk13OptLhotReceiver extends AbstractLhotReceiver {
     /**
      * 布尔矩阵
      */
-    private BitMatrix tMatrix;
+    private TransBitMatrix tMatrix;
 
     public Kk13OptLhotReceiver(Rpc receiverRpc, Party senderParty, Kk13OptLhotConfig config) {
         super(Kk13OptLhotPtoDesc.getInstance(), receiverRpc, senderParty, config);
@@ -118,8 +118,8 @@ public class Kk13OptLhotReceiver extends AbstractLhotReceiver {
     private List<byte[]> generateMatrixPayload() {
         // 初始化密码学原语
         Prg prg = PrgFactory.createInstance(envType, byteNum);
-        tMatrix = BitMatrixFactory.createInstance(envType, num, outputBitLength, parallel);
-        BitMatrix codeMatrix = BitMatrixFactory.createInstance(envType, outputBitLength, num, parallel);
+        tMatrix = TransBitMatrixFactory.createInstance(envType, num, outputBitLength, parallel);
+        TransBitMatrix codeMatrix = TransBitMatrixFactory.createInstance(envType, outputBitLength, num, parallel);
         // 生成编码，不需要并发操作
         IntStream.range(0, num).forEach(index ->
             codeMatrix.setColumn(index, linearCoder.encode(
@@ -127,7 +127,7 @@ public class Kk13OptLhotReceiver extends AbstractLhotReceiver {
             ))
         );
         // 将此编码转置
-        BitMatrix codeTransposeMatrix = codeMatrix.transpose();
+        TransBitMatrix codeTransposeMatrix = codeMatrix.transpose();
         // 用密钥扩展得到矩阵T
         IntStream columnIndexIntStream = IntStream.range(0, outputBitLength);
         columnIndexIntStream = parallel ? columnIndexIntStream.parallel() : columnIndexIntStream;
@@ -150,7 +150,7 @@ public class Kk13OptLhotReceiver extends AbstractLhotReceiver {
 
     private LotReceiverOutput generateReceiverOutput() {
         // 生成密钥数组，将矩阵T转置，按行获取
-        BitMatrix tMatrixTranspose = tMatrix.transpose();
+        TransBitMatrix tMatrixTranspose = tMatrix.transpose();
         tMatrix = null;
         byte[][] qsArray = IntStream.range(0, num)
             .mapToObj(tMatrixTranspose::getColumn)

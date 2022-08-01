@@ -7,8 +7,8 @@ import edu.alibaba.mpc4j.common.rpc.Rpc;
 import edu.alibaba.mpc4j.common.rpc.utils.DataPacket;
 import edu.alibaba.mpc4j.common.rpc.utils.DataPacketHeader;
 import edu.alibaba.mpc4j.common.tool.CommonConstants;
-import edu.alibaba.mpc4j.common.tool.bitmatrix.BitMatrix;
-import edu.alibaba.mpc4j.common.tool.bitmatrix.BitMatrixFactory;
+import edu.alibaba.mpc4j.common.tool.bitmatrix.trans.TransBitMatrix;
+import edu.alibaba.mpc4j.common.tool.bitmatrix.trans.TransBitMatrixFactory;
 import edu.alibaba.mpc4j.common.tool.crypto.crhf.Crhf;
 import edu.alibaba.mpc4j.common.tool.crypto.crhf.CrhfFactory;
 import edu.alibaba.mpc4j.common.tool.crypto.prf.Prf;
@@ -65,11 +65,11 @@ public class Oos17LhotReceiver extends AbstractLhotReceiver {
     /**
      * 矩阵T
      */
-    private BitMatrix tMatrix;
+    private TransBitMatrix tMatrix;
     /**
      * 转置矩阵T
      */
-    private BitMatrix tTransposeMatrix;
+    private TransBitMatrix tTransposeMatrix;
 
     public Oos17LhotReceiver(Rpc receiverRpc, Party senderParty, Oos17LhotConfig config) {
         super(Oos17LhotPtoDesc.getInstance(), receiverRpc, senderParty, config);
@@ -178,8 +178,8 @@ public class Oos17LhotReceiver extends AbstractLhotReceiver {
         }
         // 初始化密码学原语
         Prg prg = PrgFactory.createInstance(envType, extendByteNum);
-        tMatrix = BitMatrixFactory.createInstance(envType, extendNum, outputBitLength, parallel);
-        BitMatrix codeMatrix = BitMatrixFactory.createInstance(envType, outputBitLength, extendNum, parallel);
+        tMatrix = TransBitMatrixFactory.createInstance(envType, extendNum, outputBitLength, parallel);
+        TransBitMatrix codeMatrix = TransBitMatrixFactory.createInstance(envType, outputBitLength, extendNum, parallel);
         // 生成编码，不需要并发操作
         IntStream.range(0, extendNum).forEach(l ->
             codeMatrix.setColumn(l, linearCoder.encode(
@@ -187,7 +187,7 @@ public class Oos17LhotReceiver extends AbstractLhotReceiver {
             ))
         );
         // 将此编码转置
-        BitMatrix codeTransposeMatrix = codeMatrix.transpose();
+        TransBitMatrix codeTransposeMatrix = codeMatrix.transpose();
         // 用密钥扩展得到矩阵T
         IntStream columnIndexIntStream = IntStream.range(0, outputBitLength);
         columnIndexIntStream = parallel ? columnIndexIntStream.parallel() : columnIndexIntStream;

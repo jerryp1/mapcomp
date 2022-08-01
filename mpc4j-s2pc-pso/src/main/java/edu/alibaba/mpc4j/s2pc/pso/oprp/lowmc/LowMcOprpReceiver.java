@@ -7,8 +7,8 @@ import edu.alibaba.mpc4j.common.rpc.Rpc;
 import edu.alibaba.mpc4j.common.rpc.utils.DataPacket;
 import edu.alibaba.mpc4j.common.rpc.utils.DataPacketHeader;
 import edu.alibaba.mpc4j.common.tool.CommonConstants;
-import edu.alibaba.mpc4j.common.tool.bitmatrix.BitMatrix;
-import edu.alibaba.mpc4j.common.tool.bitmatrix.BitMatrixFactory;
+import edu.alibaba.mpc4j.common.tool.bitmatrix.trans.TransBitMatrix;
+import edu.alibaba.mpc4j.common.tool.bitmatrix.trans.TransBitMatrixFactory;
 import edu.alibaba.mpc4j.common.tool.crypto.prp.PrpFactory.PrpType;
 import edu.alibaba.mpc4j.common.tool.utils.BytesUtils;
 import edu.alibaba.mpc4j.common.tool.utils.LongUtils;
@@ -190,29 +190,29 @@ public class LowMcOprpReceiver extends AbstractOprpReceiver {
         byte[][] stateBytes = Arrays.stream(stateLongs)
             .map(LongUtils::longArrayToByteArray)
             .toArray(byte[][]::new);
-        BitMatrix stateBytesBitMatrix = BitMatrixFactory.createInstance(
+        TransBitMatrix stateBytesTransBitMatrix = TransBitMatrixFactory.createInstance(
             envType, CommonConstants.BLOCK_BIT_LENGTH, batchSize, parallel
         );
         for (int i = 0; i < batchSize; i++) {
-            stateBytesBitMatrix.setColumn(i, stateBytes[i]);
+            stateBytesTransBitMatrix.setColumn(i, stateBytes[i]);
         }
-        BitMatrix stateBytesTransposeMatrix = stateBytesBitMatrix.transpose();
+        TransBitMatrix stateBytesTransMatrix = stateBytesTransBitMatrix.transpose();
         // 创建sbox后的转置矩阵
-        BitMatrix sboxStateBytesTransposeMatrix = BitMatrixFactory.createInstance(
+        TransBitMatrix sboxStateBytesTransMatrix = TransBitMatrixFactory.createInstance(
             envType, batchSize, CommonConstants.BLOCK_BIT_LENGTH, parallel
         );
         // 复制sbox后的列
         for (int columnIndex = LowMcUtils.SBOX_NUM * 3; columnIndex < CommonConstants.BLOCK_BIT_LENGTH; columnIndex++) {
-            sboxStateBytesTransposeMatrix.setColumn(columnIndex, stateBytesTransposeMatrix.getColumn(columnIndex));
+            sboxStateBytesTransMatrix.setColumn(columnIndex, stateBytesTransMatrix.getColumn(columnIndex));
         }
         // sbox处理
         byte[] baa1 = new byte[LowMcUtils.SBOX_NUM * 3 * batchByteSize];
         byte[] ccb1 = new byte[LowMcUtils.SBOX_NUM * 3 * batchByteSize];
         for (int sboxIndex = 0; sboxIndex < LowMcUtils.SBOX_NUM; sboxIndex++) {
             int offset = 3 * batchByteSize * sboxIndex;
-            byte[] a1 = stateBytesTransposeMatrix.getColumn(sboxIndex * 3);
-            byte[] b1 = stateBytesTransposeMatrix.getColumn(sboxIndex * 3 + 1);
-            byte[] c1 = stateBytesTransposeMatrix.getColumn(sboxIndex * 3 + 2);
+            byte[] a1 = stateBytesTransMatrix.getColumn(sboxIndex * 3);
+            byte[] b1 = stateBytesTransMatrix.getColumn(sboxIndex * 3 + 1);
+            byte[] c1 = stateBytesTransMatrix.getColumn(sboxIndex * 3 + 2);
             System.arraycopy(b1, 0, baa1, offset, batchByteSize);
             System.arraycopy(a1, 0, baa1, offset + batchByteSize, batchByteSize);
             System.arraycopy(a1, 0, baa1, offset + 2 * batchByteSize, batchByteSize);
@@ -227,9 +227,9 @@ public class LowMcOprpReceiver extends AbstractOprpReceiver {
         ).getBytes();
         for (int sboxIndex = 0; sboxIndex < LowMcUtils.SBOX_NUM; sboxIndex++) {
             int offset = 3 * batchByteSize * sboxIndex;
-            byte[] a1 = stateBytesTransposeMatrix.getColumn(sboxIndex * 3);
-            byte[] b1 = stateBytesTransposeMatrix.getColumn(sboxIndex * 3 + 1);
-            byte[] c1 = stateBytesTransposeMatrix.getColumn(sboxIndex * 3 + 2);
+            byte[] a1 = stateBytesTransMatrix.getColumn(sboxIndex * 3);
+            byte[] b1 = stateBytesTransMatrix.getColumn(sboxIndex * 3 + 1);
+            byte[] c1 = stateBytesTransMatrix.getColumn(sboxIndex * 3 + 2);
             // a = a ⊕ (b ☉ c)
             byte[] bc1 = new byte[batchByteSize];
             System.arraycopy(sbox1, offset, bc1, 0, batchByteSize);
@@ -260,13 +260,13 @@ public class LowMcOprpReceiver extends AbstractOprpReceiver {
             c1Sbox = bcReceiver.xor(c1Sbox, BcBitVector.create(c1, batchSize, false));
             c1Sbox = bcReceiver.xor(c1Sbox, BcBitVector.create(ab1, batchSize, false));
             byte[] c1SboxBytes = c1Sbox.getBytes();
-            stateBytesTransposeMatrix.setColumn(sboxIndex * 3, a1SboxBytes);
-            stateBytesTransposeMatrix.setColumn(sboxIndex * 3 + 1, b1SboxBytes);
-            stateBytesTransposeMatrix.setColumn(sboxIndex * 3 + 2, c1SboxBytes);
+            stateBytesTransMatrix.setColumn(sboxIndex * 3, a1SboxBytes);
+            stateBytesTransMatrix.setColumn(sboxIndex * 3 + 1, b1SboxBytes);
+            stateBytesTransMatrix.setColumn(sboxIndex * 3 + 2, c1SboxBytes);
         }
-        BitMatrix sboxStateBytesBitMatrix = stateBytesTransposeMatrix.transpose();
+        TransBitMatrix sboxStateBytesTransBitMatrix = stateBytesTransMatrix.transpose();
         for (int batchIndex = 0; batchIndex < batchSize; batchIndex++) {
-            stateLongs[batchIndex] = LongUtils.byteArrayToLongArray(sboxStateBytesBitMatrix.getColumn(batchIndex));
+            stateLongs[batchIndex] = LongUtils.byteArrayToLongArray(sboxStateBytesTransBitMatrix.getColumn(batchIndex));
         }
     }
 

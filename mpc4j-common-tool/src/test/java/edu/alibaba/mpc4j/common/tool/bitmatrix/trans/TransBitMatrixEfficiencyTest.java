@@ -1,4 +1,4 @@
-package edu.alibaba.mpc4j.common.tool.bitmatrix;
+package edu.alibaba.mpc4j.common.tool.bitmatrix.trans;
 
 import edu.alibaba.mpc4j.common.tool.utils.BytesUtils;
 import edu.alibaba.mpc4j.common.tool.utils.CommonUtils;
@@ -22,8 +22,8 @@ import java.util.stream.IntStream;
  * @date 2022/7/26
  */
 @Ignore
-public class BitMatrixEfficiencyTest {
-    private static final Logger LOGGER = LoggerFactory.getLogger(BitMatrixEfficiencyTest.class);
+public class TransBitMatrixEfficiencyTest {
+    private static final Logger LOGGER = LoggerFactory.getLogger(TransBitMatrixEfficiencyTest.class);
     /**
      * 随机状态
      */
@@ -47,14 +47,14 @@ public class BitMatrixEfficiencyTest {
     /**
      * 测试类型
      */
-    private static final BitMatrixFactory.BitMatrixType[] TYPES = new BitMatrixFactory.BitMatrixType[] {
-        BitMatrixFactory.BitMatrixType.NAIVE,
-        BitMatrixFactory.BitMatrixType.EKLUNDH,
-        BitMatrixFactory.BitMatrixType.NATIVE,
-        BitMatrixFactory.BitMatrixType.NATIVE_SPLIT_ROW,
-        BitMatrixFactory.BitMatrixType.JDK_SPLIT_ROW,
-        BitMatrixFactory.BitMatrixType.NATIVE_SPLIT_COL,
-        BitMatrixFactory.BitMatrixType.JDK_SPLIT_COL,
+    private static final TransBitMatrixFactory.TransBitMatrixType[] TYPES = new TransBitMatrixFactory.TransBitMatrixType[] {
+        TransBitMatrixFactory.TransBitMatrixType.NAIVE,
+        TransBitMatrixFactory.TransBitMatrixType.EKLUNDH,
+        TransBitMatrixFactory.TransBitMatrixType.NATIVE,
+        TransBitMatrixFactory.TransBitMatrixType.NATIVE_SPLIT_ROW,
+        TransBitMatrixFactory.TransBitMatrixType.JDK_SPLIT_ROW,
+        TransBitMatrixFactory.TransBitMatrixType.NATIVE_SPLIT_COL,
+        TransBitMatrixFactory.TransBitMatrixType.JDK_SPLIT_COL,
     };
 
     @Test
@@ -62,8 +62,8 @@ public class BitMatrixEfficiencyTest {
         LOGGER.info("{}\t{}\t{}\t{}", "                name", "  log(row)", "  log(col)", " trans(ms)");
         int rows = 1 << LOG_LARGE_N;
         int columns = 1 << LOG_SMALL_N;
-        for (BitMatrixFactory.BitMatrixType type : TYPES) {
-            BitMatrix a = BitMatrixFactory.createInstance(type, rows, columns);
+        for (TransBitMatrixFactory.TransBitMatrixType type : TYPES) {
+            TransBitMatrix a = TransBitMatrixFactory.createInstance(type, rows, columns);
             int rowBytes = CommonUtils.getByteLength(rows);
             IntStream.range(0, columns).forEach(columnIndex -> {
                 byte[] column = new byte[rowBytes];
@@ -91,8 +91,8 @@ public class BitMatrixEfficiencyTest {
         LOGGER.info("{}\t{}\t{}\t{}", "                name", "  log(row)", "  log(col)", " trans(ms)");
         int rows = 1 << LOG_SMALL_N;
         int columns = 1 << LOG_LARGE_N;
-        for (BitMatrixFactory.BitMatrixType type : TYPES) {
-            BitMatrix a = BitMatrixFactory.createInstance(type, rows, columns);
+        for (TransBitMatrixFactory.TransBitMatrixType type : TYPES) {
+            TransBitMatrix a = TransBitMatrixFactory.createInstance(type, rows, columns);
             int rowBytes = CommonUtils.getByteLength(rows);
             IntStream.range(0, columns).forEach(columnIndex -> {
                 byte[] column = new byte[rowBytes];

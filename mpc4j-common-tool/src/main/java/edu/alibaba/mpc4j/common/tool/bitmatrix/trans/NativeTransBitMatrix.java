@@ -1,7 +1,7 @@
-package edu.alibaba.mpc4j.common.tool.bitmatrix;
+package edu.alibaba.mpc4j.common.tool.bitmatrix.trans;
 
 import edu.alibaba.mpc4j.common.tool.CommonConstants;
-import edu.alibaba.mpc4j.common.tool.bitmatrix.BitMatrixFactory.BitMatrixType;
+import edu.alibaba.mpc4j.common.tool.bitmatrix.trans.TransBitMatrixFactory.TransBitMatrixType;
 import edu.alibaba.mpc4j.common.tool.utils.BinaryUtils;
 import edu.alibaba.mpc4j.common.tool.utils.BytesUtils;
 import edu.alibaba.mpc4j.common.tool.utils.CommonUtils;
@@ -9,12 +9,12 @@ import edu.alibaba.mpc4j.common.tool.utils.CommonUtils;
 import java.util.stream.IntStream;
 
 /**
- * 本地布尔矩阵实现。
+ * 本地转置布尔矩阵。
  *
  * @author Weiran Liu
  * @date 2021/06/22
  */
-class NativeBitMatrix extends AbstractBitMatrix {
+class NativeTransBitMatrix extends AbstractTransBitMatrix {
 
     static {
         System.loadLibrary(CommonConstants.MPC4J_NATIVE_TOOL_NAME);
@@ -49,7 +49,7 @@ class NativeBitMatrix extends AbstractBitMatrix {
      */
     private final int columnOffset;
 
-    NativeBitMatrix(int rows, int columns) {
+    NativeTransBitMatrix(int rows, int columns) {
         super(rows, columns);
         rowBytes = CommonUtils.getByteLength(rows);
         roundByteRow = rowBytes * Byte.SIZE;
@@ -82,7 +82,7 @@ class NativeBitMatrix extends AbstractBitMatrix {
     }
 
     @Override
-    public BitMatrix transpose() {
+    public TransBitMatrix transpose() {
         // 将矩阵数据打平
         byte[] flattenMatrix = new byte[this.roundByteColumn * this.rowBytes];
         IntStream.range(0, this.roundByteColumn).forEach(column ->
@@ -95,15 +95,15 @@ class NativeBitMatrix extends AbstractBitMatrix {
         IntStream.range(0, this.roundByteRow).forEach(row ->
             System.arraycopy(transposeFlattenMatrix, row * this.columnBytes, bMatrix[row], 0, this.columnBytes)
         );
-        NativeBitMatrix b = new NativeBitMatrix(this.columns, this.rows);
+        NativeTransBitMatrix b = new NativeTransBitMatrix(this.columns, this.rows);
         IntStream.range(0, this.roundByteRow).forEach(row -> b.data[row] = bMatrix[row]);
 
         return b;
     }
 
     @Override
-    public BitMatrixType getBitMatrixType() {
-        return BitMatrixType.NATIVE;
+    public TransBitMatrixType getTransBitMatrixType() {
+        return TransBitMatrixType.NATIVE;
     }
 
     private native byte[] nativeTranspose(byte[] byteArrayMatrix, int rows, int columns);

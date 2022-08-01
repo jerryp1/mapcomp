@@ -115,7 +115,7 @@ add_library(
         crypto/edu_alibaba_mpc4j_common_tool_crypto_prp_NativeAesPrp.cpp
         benes_network/edu_alibaba_mpc4j_common_tool_benes_NativeBenesNetwork.cpp
         benes_network/benes_network.cpp
-        bit_matrix_trans/edu_alibaba_mpc4j_common_tool_bitmatrix_NativeBitMatrix.cpp
+        bit_matrix_trans/edu_alibaba_mpc4j_common_tool_bitmatrix_trans_NativeTransBitMatrix.cpp
         ntl_poly/edu_alibaba_mpc4j_common_tool_polynomial_gf2x_NtlNativeGf2xPoly.cpp
         ntl_poly/ntl_gf2x.cpp
         ntl_poly/edu_alibaba_mpc4j_common_tool_polynomial_zp_NtlZpPoly.cpp

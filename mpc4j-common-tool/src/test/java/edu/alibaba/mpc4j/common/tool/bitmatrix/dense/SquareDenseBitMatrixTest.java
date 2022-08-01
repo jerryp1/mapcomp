@@ -1,7 +1,7 @@
-package edu.alibaba.mpc4j.common.tool.bitmatrix;
+package edu.alibaba.mpc4j.common.tool.bitmatrix.dense;
 
 import com.google.common.base.Preconditions;
-import edu.alibaba.mpc4j.common.tool.bitmatrix.SquareBitMatrixFactory.SquareBitMatrixType;
+import edu.alibaba.mpc4j.common.tool.bitmatrix.dense.SquareDenseBitMatrixFactory.SquareDenseBitMatrixType;
 import edu.alibaba.mpc4j.common.tool.utils.BytesUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.bouncycastle.util.encoders.Hex;
@@ -22,7 +22,7 @@ import java.util.stream.IntStream;
  * @date 2021/11/30
  */
 @RunWith(Parameterized.class)
-public class SquareBitMatrixTest {
+public class SquareDenseBitMatrixTest {
     /**
      * 可逆分组方阵，来自于LowMc的参数
      */
@@ -175,16 +175,16 @@ public class SquareBitMatrixTest {
     public static Collection<Object[]> configurations() {
         Collection<Object[]> params = new ArrayList<>();
         // LONG_MATRIX
-        params.add(new Object[]{SquareBitMatrixType.LONG_MATRIX.name(), SquareBitMatrixType.LONG_MATRIX});
+        params.add(new Object[]{SquareDenseBitMatrixType.LONG_MATRIX.name(), SquareDenseBitMatrixType.LONG_MATRIX});
         // BYTE_MATRIX
-        params.add(new Object[]{SquareBitMatrixType.BYTE_MATRIX.name(), SquareBitMatrixType.BYTE_MATRIX});
+        params.add(new Object[]{SquareDenseBitMatrixType.BYTE_MATRIX.name(), SquareDenseBitMatrixType.BYTE_MATRIX});
 
         return params;
     }
 
-    private final SquareBitMatrixType type;
+    private final SquareDenseBitMatrixType type;
 
-    public SquareBitMatrixTest(String name, SquareBitMatrixType type) {
+    public SquareDenseBitMatrixTest(String name, SquareDenseBitMatrixType type) {
         Preconditions.checkArgument(StringUtils.isNotBlank(name));
         this.type = type;
     }
@@ -192,8 +192,8 @@ public class SquareBitMatrixTest {
     @Test
     public void testIrreversibleSquareBlockBitMatrix() {
         try {
-            SquareBitMatrix squareBitMatrix = SquareBitMatrixFactory.createInstance(type, IRREVERSIBLE_SQUARE_BLOCK_MATRIX);
-            squareBitMatrix.inverse();
+            SquareDenseBitMatrix squareDenseBitMatrix = SquareDenseBitMatrixFactory.createInstance(type, IRREVERSIBLE_SQUARE_BLOCK_MATRIX);
+            squareDenseBitMatrix.inverse();
             Assert.fail("ERROR: successfully invert an irreversible 128*128 SquareBitMatrix");
         } catch (ArithmeticException ignored) {
 
@@ -202,8 +202,8 @@ public class SquareBitMatrixTest {
 
     @Test
     public void testSquareBlockBitMatrix() {
-        SquareBitMatrix squareBitMatrix = SquareBitMatrixFactory.createInstance(type, INVERTIBLE_SQUARE_BLOCK_MATRIX);
-        testSquareBitMatrix(squareBitMatrix);
+        SquareDenseBitMatrix squareDenseBitMatrix = SquareDenseBitMatrixFactory.createInstance(type, INVERTIBLE_SQUARE_BLOCK_MATRIX);
+        testSquareBitMatrix(squareDenseBitMatrix);
     }
 
     /**
@@ -226,8 +226,8 @@ public class SquareBitMatrixTest {
     @Test
     public void testIrreversibleSquare3BitMatrix() {
         try {
-            SquareBitMatrix squareBitMatrix = SquareBitMatrixFactory.createInstance(type, IRREVERSIBLE_SQUARE_3_MATRIX);
-            squareBitMatrix.inverse();
+            SquareDenseBitMatrix squareDenseBitMatrix = SquareDenseBitMatrixFactory.createInstance(type, IRREVERSIBLE_SQUARE_3_MATRIX);
+            squareDenseBitMatrix.inverse();
             Assert.fail("ERROR: successfully invert an irreversible 3*3 SquareBitMatrix");
         } catch (ArithmeticException ignored) {
 
@@ -236,8 +236,8 @@ public class SquareBitMatrixTest {
 
     @Test
     public void testSquare3BitMatrix() {
-        SquareBitMatrix squareBitMatrix = SquareBitMatrixFactory.createInstance(type, INVERTIBLE_SQUARE_3_MATRIX);
-        testSquareBitMatrix(squareBitMatrix);
+        SquareDenseBitMatrix squareDenseBitMatrix = SquareDenseBitMatrixFactory.createInstance(type, INVERTIBLE_SQUARE_3_MATRIX);
+        testSquareBitMatrix(squareDenseBitMatrix);
     }
 
     /**
@@ -272,8 +272,8 @@ public class SquareBitMatrixTest {
     @Test
     public void testIrreversibleSquare9BitMatrix() {
         try {
-            SquareBitMatrix squareBitMatrix = SquareBitMatrixFactory.createInstance(type, IRREVERSIBLE_SQUARE_9_MATRIX);
-            squareBitMatrix.inverse();
+            SquareDenseBitMatrix squareDenseBitMatrix = SquareDenseBitMatrixFactory.createInstance(type, IRREVERSIBLE_SQUARE_9_MATRIX);
+            squareDenseBitMatrix.inverse();
             Assert.fail("ERROR: successfully invert an irreversible 3*3 SquareBitMatrix");
         } catch (ArithmeticException ignored) {
 
@@ -282,8 +282,8 @@ public class SquareBitMatrixTest {
 
     @Test
     public void testSquare9BitMatrix() {
-        SquareBitMatrix squareBitMatrix = SquareBitMatrixFactory.createInstance(type, INVERTIBLE_SQUARE_9_MATRIX);
-        testSquareBitMatrix(squareBitMatrix);
+        SquareDenseBitMatrix squareDenseBitMatrix = SquareDenseBitMatrixFactory.createInstance(type, INVERTIBLE_SQUARE_9_MATRIX);
+        testSquareBitMatrix(squareDenseBitMatrix);
     }
 
     private static final int[][] SPARSE_SQUARE_BIT_MATRIX = new int[][]{
@@ -310,26 +310,26 @@ public class SquareBitMatrixTest {
 
     @Test
     public void testSparseSquareBlockBitMatrix() {
-        SquareBitMatrix squareBitMatrix = SquareBitMatrixFactory.createInstance(type, 64, SPARSE_SQUARE_BIT_MATRIX);
-        testSquareBitMatrix(squareBitMatrix);
+        SquareDenseBitMatrix squareDenseBitMatrix = SquareDenseBitMatrixFactory.createInstance(type, 64, SPARSE_SQUARE_BIT_MATRIX);
+        testSquareBitMatrix(squareDenseBitMatrix);
     }
 
-    private void testSquareBitMatrix(SquareBitMatrix squareBitMatrix) {
+    private void testSquareBitMatrix(SquareDenseBitMatrix squareDenseBitMatrix) {
         // 验证求逆
-        SquareBitMatrix invertBitMatrix = squareBitMatrix.inverse();
-        int size = squareBitMatrix.getSize();
-        int byteSize = squareBitMatrix.getByteSize();
+        SquareDenseBitMatrix invertBitMatrix = squareDenseBitMatrix.inverse();
+        int size = squareDenseBitMatrix.getSize();
+        int byteSize = squareDenseBitMatrix.getByteSize();
         IntStream.range(0, ROUND).forEach(round -> {
             byte[] input = new byte[byteSize];
             SECURE_RANDOM.nextBytes(input);
             BytesUtils.reduceByteArray(input, size);
-            byte[] output = squareBitMatrix.multiply(input);
+            byte[] output = squareDenseBitMatrix.multiply(input);
             byte[] recoveredInput = invertBitMatrix.multiply(output);
             Assert.assertArrayEquals(input, recoveredInput);
         });
         // 验证转置
-        SquareBitMatrix transSquareBitMatrix = squareBitMatrix.transpose();
-        SquareBitMatrix recoveredSquareBitMatrix = transSquareBitMatrix.transpose();
-        Assert.assertEquals(squareBitMatrix, recoveredSquareBitMatrix);
+        SquareDenseBitMatrix transSquareDenseBitMatrix = squareDenseBitMatrix.transpose();
+        SquareDenseBitMatrix recoveredSquareDenseBitMatrix = transSquareDenseBitMatrix.transpose();
+        Assert.assertEquals(squareDenseBitMatrix, recoveredSquareDenseBitMatrix);
     }
 }

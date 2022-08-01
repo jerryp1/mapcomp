@@ -1,12 +1,12 @@
-package edu.alibaba.mpc4j.common.tool.bitmatrix;
+package edu.alibaba.mpc4j.common.tool.bitmatrix.trans;
 
 /**
- * 布尔矩阵抽象类。
+ * 转置布尔矩阵抽象类。
  *
  * @author Weiran Liu
  * @date 2021/11/30
  */
-abstract class AbstractBitMatrix implements BitMatrix {
+abstract class AbstractTransBitMatrix implements TransBitMatrix {
     /**
      * 行数
      */
@@ -16,7 +16,7 @@ abstract class AbstractBitMatrix implements BitMatrix {
      */
     protected final int columns;
 
-    AbstractBitMatrix(int rows, int columns) {
+    AbstractTransBitMatrix(int rows, int columns) {
         assert rows > 0;
         assert columns > 0;
         this.rows = rows;

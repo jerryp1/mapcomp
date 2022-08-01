@@ -1,4 +1,4 @@
-package edu.alibaba.mpc4j.common.tool.bitmatrix;
+package edu.alibaba.mpc4j.common.tool.bitmatrix.dense;
 
 /**
  * 布尔方阵工厂。
@@ -6,12 +6,12 @@ package edu.alibaba.mpc4j.common.tool.bitmatrix;
  * @author Weiran Liu
  * @date 2022/01/16
  */
-public class SquareBitMatrixFactory {
+public class SquareDenseBitMatrixFactory {
 
     /**
      * 布尔方阵类型
      */
-    public enum SquareBitMatrixType {
+    public enum SquareDenseBitMatrixType {
         /**
          * 用长整数数组描述的布尔矩阵
          */
@@ -25,7 +25,7 @@ public class SquareBitMatrixFactory {
     /**
      * 私有构造函数
      */
-    private SquareBitMatrixFactory() {
+    private SquareDenseBitMatrixFactory() {
         // empty
     }
 
@@ -36,12 +36,12 @@ public class SquareBitMatrixFactory {
      * @param bitMatrix 布尔方阵。
      * @return 布尔方阵实例。
      */
-    public static SquareBitMatrix createInstance(SquareBitMatrixType type, byte[][] bitMatrix) {
+    public static SquareDenseBitMatrix createInstance(SquareDenseBitMatrixType type, byte[][] bitMatrix) {
         switch (type) {
             case BYTE_MATRIX:
-                return new SquareByteBitMatrix(bitMatrix);
+                return new ByteSquareDenseBitMatrix(bitMatrix);
             case LONG_MATRIX:
-                return new SquareLongBitMatrix(bitMatrix);
+                return new LongSquareDenseBitMatrix(bitMatrix);
             default:
                 throw new IllegalArgumentException("Invalid SquareBitMatrixType: " + type);
         }
@@ -55,13 +55,13 @@ public class SquareBitMatrixFactory {
      * @param positions 布尔方阵中取值为1的位置。
      * @throws ArithmeticException 如果布尔方阵不可逆。
      */
-    public static SquareBitMatrix createInstance(SquareBitMatrixType type, int size, int[][] positions)
+    public static SquareDenseBitMatrix createInstance(SquareDenseBitMatrixType type, int size, int[][] positions)
         throws ArithmeticException {
         switch (type) {
             case BYTE_MATRIX:
-                return new SquareByteBitMatrix(size, positions);
+                return new ByteSquareDenseBitMatrix(size, positions);
             case LONG_MATRIX:
-                return new SquareLongBitMatrix(size, positions);
+                return new LongSquareDenseBitMatrix(size, positions);
             default:
                 throw new IllegalArgumentException("Invalid SquareBitMatrixType: " + type);
         }
