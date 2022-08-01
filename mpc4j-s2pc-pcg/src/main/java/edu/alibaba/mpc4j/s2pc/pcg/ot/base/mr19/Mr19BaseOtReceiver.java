@@ -102,7 +102,7 @@ public class Mr19BaseOtReceiver extends AbstractBaseOtReceiver {
                     // 设置两个参数R的乘积A
                     ECPoint upperA = ecc.multiply(ecc.getG(), aArray[index]);
                     // 生成一个随机的参数R_1-sigma
-                    ECPoint pkOneMinusSigma = ecc.multiply(ecc.getG(), ecc.randomZn(secureRandom));
+                    ECPoint pkOneMinusSigma = ecc.randomPoint(secureRandom);
                     // 计算另一个参数R_sigma
                     ECPoint pkSigma = upperA.add(ecc.hashToCurve(ecc.encode(pkOneMinusSigma, false)).negate());
                     // 根据选择值将两个参数R分别放入对应位置
