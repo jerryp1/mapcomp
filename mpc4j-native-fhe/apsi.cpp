@@ -4,6 +4,7 @@
 
 #include "apsi.h"
 #include "serialize.h"
+#include <cassert>
 
 void try_clear_irrelevant_bits(const EncryptionParameters &parms, Ciphertext &ciphertext) {
     // If the parameter set has only one prime, we can compress the ciphertext by
