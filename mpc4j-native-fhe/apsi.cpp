@@ -4,7 +4,7 @@
 
 #include "apsi.h"
 #include "serialize.h"
-#include <cassert>
+
 
 void try_clear_irrelevant_bits(const EncryptionParameters &parms, Ciphertext &ciphertext) {
     // If the parameter set has only one prime, we can compress the ciphertext by
@@ -115,7 +115,6 @@ jobject JNICALL generateQuery(JNIEnv *env, jobjectArray jenc_arrays, jbyteArray 
     }
     for (int i = 0; i < size; i++) {
         auto rows = (jlongArray) env->GetObjectArrayElement(jenc_arrays, i);
-        assert(env->GetArrayLength(rows) == encoder.slot_count());
         jlong *cols = env->GetLongArrayElements(rows, JNI_FALSE);
         vector<uint64_t> enc(cols, cols + encoder.slot_count());
         Plaintext plaintext;
