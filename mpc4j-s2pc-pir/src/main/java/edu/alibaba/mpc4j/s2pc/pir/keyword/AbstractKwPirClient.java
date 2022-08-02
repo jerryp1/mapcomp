@@ -24,21 +24,17 @@ public abstract class AbstractKwPirClient extends AbstractSecureTwoPartyPto impl
      */
     private final KwPirConfig config;
     /**
-     * 服务端元素集合
+     * 客户端关键词数组
      */
-    protected ArrayList<ByteBuffer> serverElementArrayList;
+    protected ArrayList<ByteBuffer> clientKeywordArrayList;
     /**
-     * 客户端元素数量
+     * 客户端关键词数量
      */
-    protected int clientElementSize;
+    protected int clientKeywordSize;
     /**
-     * 客户端单次查询最大查询元素数目
+     * 客户端单次查询最大查询关键词数目
      */
-    protected int maxClientRetrievalElementSize;
-    /**
-     * 元素字节长度
-     */
-    protected int elementByteLength;
+    protected int maxClientRetrievalKeywordSize;
     /**
      * 标签字节长度
      */
@@ -47,10 +43,6 @@ public abstract class AbstractKwPirClient extends AbstractSecureTwoPartyPto impl
      * 特殊空元素字节缓存区
      */
     protected ByteBuffer botElementByteBuffer;
-    /**
-     * 查询次数
-     */
-    protected int retrievalNumber;
 
     protected AbstractKwPirClient(PtoDesc ptoDesc, Rpc clientRpc, Party serverParty, KwPirConfig config) {
         super(ptoDesc, clientRpc, serverParty, config);
@@ -62,37 +54,30 @@ public abstract class AbstractKwPirClient extends AbstractSecureTwoPartyPto impl
         return config.getProType();
     }
 
-    protected void setInitInput(Set<ByteBuffer> serverElementSet, int elementByteLength, int labelByteLength,
-                                int maxClientRetrievalElementSize) {
-        assert elementByteLength >= CommonConstants.STATS_BYTE_LENGTH;
-        this.elementByteLength = elementByteLength;
+    protected void setInitInput(int labelByteLength, int maxClientRetrievalKeywordSize) {
         assert labelByteLength >= 1;
         this.labelByteLength = labelByteLength;
+        assert maxClientRetrievalKeywordSize >= 1;
+        this.maxClientRetrievalKeywordSize = maxClientRetrievalKeywordSize;
         // 设置特殊空元素
-        byte[] botElementByteArray = new byte[elementByteLength];
+        byte[] botElementByteArray = new byte[CommonConstants.STATS_BYTE_LENGTH];
         Arrays.fill(botElementByteArray, (byte)0xFF);
         botElementByteBuffer = ByteBuffer.wrap(botElementByteArray);
-        assert serverElementSet.size() >= 1;
-        this.serverElementArrayList = serverElementSet.stream()
-            .peek(serverElement -> {
-                assert serverElement.array().length == elementByteLength;
-                assert !serverElement.equals(botElementByteBuffer) : "input equals ⊥";
-            })
-            .collect(Collectors.toCollection(ArrayList::new));
-        assert maxClientRetrievalElementSize > 0;
-        this.maxClientRetrievalElementSize = maxClientRetrievalElementSize;
         extraInfo++;
         initialized = false;
     }
 
-    protected void setPtoInput(int retrievalNumber, int retrievalElementSize) {
+    protected void setPtoInput(Set<ByteBuffer> clientKeywordSet) {
         if (!initialized) {
             throw new IllegalStateException("Need init...");
         }
-        assert retrievalElementSize <= maxClientRetrievalElementSize && retrievalElementSize > 0;
-        this.clientElementSize = retrievalElementSize;
-        assert retrievalNumber > 0;
-        this.retrievalNumber = retrievalNumber;
+        assert clientKeywordSet.size() <= maxClientRetrievalKeywordSize;
+        this.clientKeywordSize = clientKeywordSet.size();
+        this.clientKeywordArrayList = clientKeywordSet.stream()
+            .peek(clientElement -> {
+                assert !clientElement.equals(botElementByteBuffer) : "input equals ⊥";
+            })
+            .collect(Collectors.toCollection(ArrayList::new));
         extraInfo++;
     }
 }

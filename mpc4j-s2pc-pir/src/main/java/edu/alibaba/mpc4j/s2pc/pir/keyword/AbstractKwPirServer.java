@@ -23,17 +23,13 @@ public abstract class AbstractKwPirServer extends AbstractSecureTwoPartyPto impl
      */
     private final KwPirConfig config;
     /**
-     * 服务端元素数组
+     * 服务端关键词数组
      */
-    protected ArrayList<ByteBuffer> serverElementArrayList;
+    protected ArrayList<ByteBuffer> serverKeywordArrayList;
     /**
-     * 服务端元素数量
+     * 服务端关键词数量
      */
-    protected int serverElementSize;
-    /**
-     * 元素字节长度
-     */
-    protected int elementByteLength;
+    protected int serverKeywordSize;
     /**
      * 标签字节长度
      */
@@ -43,13 +39,9 @@ public abstract class AbstractKwPirServer extends AbstractSecureTwoPartyPto impl
      */
     protected ByteBuffer botElementByteBuffer;
     /**
-     * 服务端元素和标签映射
+     * 关键词和标签映射
      */
-    protected Map<ByteBuffer, ByteBuffer> serverElementMap;
-    /**
-     * 查询次数
-     */
-    protected int retrievalNum;
+    protected Map<ByteBuffer, ByteBuffer> keywordLabelMap;
 
     protected AbstractKwPirServer(PtoDesc ptoDesc, Rpc serverRpc, Party clientParty, KwPirConfig config) {
         super(ptoDesc, serverRpc, clientParty, config);
@@ -61,41 +53,36 @@ public abstract class AbstractKwPirServer extends AbstractSecureTwoPartyPto impl
         return config.getProType();
     }
 
-    protected void setInitInput(Map<ByteBuffer, ByteBuffer> serverElementMap, int elementByteLength, int labelByteLength) {
-        assert elementByteLength >= CommonConstants.STATS_BYTE_LENGTH;
-        this.elementByteLength = elementByteLength;
+    protected void setInitInput(Map<ByteBuffer, ByteBuffer> keywordLabelMap, int labelByteLength) {
         assert labelByteLength >= 1;
         this.labelByteLength = labelByteLength;
         // 设置特殊空元素
-        byte[] botElementByteArray = new byte[elementByteLength];
+        byte[] botElementByteArray = new byte[CommonConstants.STATS_BYTE_LENGTH];
         Arrays.fill(botElementByteArray, (byte) 0xFF);
         botElementByteBuffer = ByteBuffer.wrap(botElementByteArray);
-        assert serverElementMap.size() >= 1;
-        this.serverElementMap = serverElementMap;
-        this.serverElementSize = serverElementMap.size();
-        Iterator<Entry<ByteBuffer, ByteBuffer>> iter = serverElementMap.entrySet().iterator();
+        assert keywordLabelMap.size() >= 1;
+        this.keywordLabelMap = keywordLabelMap;
+        this.serverKeywordSize = keywordLabelMap.size();
+        Iterator<Entry<ByteBuffer, ByteBuffer>> iter = keywordLabelMap.entrySet().iterator();
         Set<ByteBuffer> serverElementSet = new HashSet<>();
         while (iter.hasNext()) {
             Entry<ByteBuffer, ByteBuffer> entry = iter.next();
             ByteBuffer item = entry.getKey();
             serverElementSet.add(item);
         }
-        this.serverElementArrayList = serverElementSet.stream()
-            .peek(senderElement -> {
-                assert senderElement.array().length == elementByteLength;
-                assert !senderElement.equals(botElementByteBuffer) : "input equals ⊥";
+        this.serverKeywordArrayList = serverElementSet.stream()
+            .peek(serverElement -> {
+                assert !serverElement.equals(botElementByteBuffer) : "input equals ⊥";
             })
             .collect(Collectors.toCollection(ArrayList::new));
         extraInfo++;
         initialized = false;
     }
 
-    protected void setPtoInput(int retrievalNumber) {
+    protected void setPtoInput() {
         if (!initialized) {
             throw new IllegalStateException("Need init...");
         }
-        assert retrievalNumber > 0;
-        this.retrievalNum = retrievalNumber;
         extraInfo++;
     }
 }

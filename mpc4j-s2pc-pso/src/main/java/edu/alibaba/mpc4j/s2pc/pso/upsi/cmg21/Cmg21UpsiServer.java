@@ -61,10 +61,16 @@ public class Cmg21UpsiServer extends AbstractUpsiServer {
     }
 
     @Override
+    public void setTaskId(long taskId) {
+        super.setTaskId(taskId);
+        byte[] taskIdBytes = ByteBuffer.allocate(Long.BYTES).putLong(taskId).array();
+        mpOprfSender.setTaskId(taskIdPrf.getLong(0, taskIdBytes, Long.MAX_VALUE));
+    }
+
+    @Override
     public void setParallel(boolean parallel) {
         super.setParallel(parallel);
         mpOprfSender.setParallel(parallel);
-
     }
 
     @Override
@@ -84,9 +90,8 @@ public class Cmg21UpsiServer extends AbstractUpsiServer {
     }
 
     @Override
-    public void psi(Set<ByteBuffer> serverElementSet, int clientElementSize, int elementByteLength)
-        throws MpcAbortException {
-        setPtoInput(serverElementSet, clientElementSize, elementByteLength);
+    public void psi(Set<ByteBuffer> serverElementSet, int clientElementSize) throws MpcAbortException {
+        setPtoInput(serverElementSet, clientElementSize);
         info("{}{} Server begin", ptoBeginLogPrefix, getPtoDesc().getPtoName());
 
         // 服务端执行OPRF协议
@@ -212,7 +217,7 @@ public class Cmg21UpsiServer extends AbstractUpsiServer {
             IntStream intStream = parallel ? IntStream.range(0, binSize).parallel() : IntStream.range(0, binSize);
             int finalI = i;
             intStream.forEach(j -> {
-                long[] item = params.getHashBinEntryEncodedArray(hashBins.get(finalI).get(j), false);
+                long[] item = params.getHashBinEntryEncodedArray(hashBins.get(finalI).get(j), false, secureRandom);
                 for (int l = 0; l < params.getItemEncodedSlotSize(); l++) {
                     encodedItemArray[finalI * params.getItemEncodedSlotSize() + l][j] = item[l];
                 }

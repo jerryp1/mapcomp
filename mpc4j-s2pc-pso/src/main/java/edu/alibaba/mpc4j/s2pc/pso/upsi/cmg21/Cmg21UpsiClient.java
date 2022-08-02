@@ -65,6 +65,13 @@ public class Cmg21UpsiClient extends AbstractUpsiClient {
     }
 
     @Override
+    public void setTaskId(long taskId) {
+        super.setTaskId(taskId);
+        byte[] taskIdBytes = ByteBuffer.allocate(Long.BYTES).putLong(taskId).array();
+        oprfReceiver.setTaskId(taskIdPrf.getLong(0, taskIdBytes, Long.MAX_VALUE));
+    }
+
+    @Override
     public void setParallel(boolean parallel) {
         super.setParallel(parallel);
         oprfReceiver.setParallel(parallel);
@@ -92,8 +99,8 @@ public class Cmg21UpsiClient extends AbstractUpsiClient {
     }
 
     @Override
-    public Set<ByteBuffer> psi(Set<ByteBuffer> clientElementSet, int elementByteLength) throws MpcAbortException {
-        setPtoInput(clientElementSet, elementByteLength);
+    public Set<ByteBuffer> psi(Set<ByteBuffer> clientElementSet) throws MpcAbortException {
+        setPtoInput(clientElementSet);
         info("{}{} Client begin", ptoBeginLogPrefix, getPtoDesc().getPtoName());
 
         // 客户端执行MP-OPRF协议
@@ -286,7 +293,7 @@ public class Cmg21UpsiClient extends AbstractUpsiClient {
         for (int i = 0; i < ciphertextNum; i++) {
             for (int j = 0; j < itemPerCiphertext; j++) {
                 long[] item = params.getHashBinEntryEncodedArray(
-                    cuckooHashBin.getHashBinEntry(i * itemPerCiphertext + j), true
+                    cuckooHashBin.getHashBinEntry(i * itemPerCiphertext + j), true, secureRandom
                 );
                 System.arraycopy(item, 0, items[i], j * params.getItemEncodedSlotSize(), params.getItemEncodedSlotSize());
             }
@@ -299,5 +306,4 @@ public class Cmg21UpsiClient extends AbstractUpsiClient {
             .mapToObj(i -> PolynomialUtils.computePowers(items[i], params.getPlainModulus(), params.getQueryPowers()))
             .collect(Collectors.toCollection(ArrayList::new));
     }
-
 }

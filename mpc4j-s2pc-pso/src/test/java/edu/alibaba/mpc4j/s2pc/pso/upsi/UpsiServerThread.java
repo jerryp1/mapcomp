@@ -6,35 +6,29 @@ import java.nio.ByteBuffer;
 import java.util.Set;
 
 /**
- * 非平衡PSI协议发送方线程。
+ * 非平衡PSI协议服务端（发送方）线程。
  *
  * @author Liqiang Peng
  * @date 2022/5/26
  */
 public class UpsiServerThread extends Thread {
     /**
-     * 非平衡PSI协议发送方
+     * 非平衡PSI协议服务端
      */
     private final UpsiServer upsiServer;
     /**
-     * 发送方集合
+     * 服务端集合
      */
     private final Set<ByteBuffer> serverElementSet;
     /**
-     * 接收方元素数量
+     * 客户端（接收方）元素数量
      */
     private final int clientElementSize;
-    /**
-     * 元素字节长度
-     */
-    private final int elementByteLength;
 
-    UpsiServerThread(UpsiServer upsiServer, Set<ByteBuffer> serverElementSet, int clientElementSize,
-                    int elementByteLength) {
+    UpsiServerThread(UpsiServer upsiServer, Set<ByteBuffer> serverElementSet, int clientElementSize) {
         this.upsiServer = upsiServer;
         this.serverElementSet = serverElementSet;
         this.clientElementSize = clientElementSize;
-        this.elementByteLength = elementByteLength;
     }
 
     @Override
@@ -42,7 +36,7 @@ public class UpsiServerThread extends Thread {
         try {
             upsiServer.getRpc().connect();
             upsiServer.init();
-            upsiServer.psi(serverElementSet, clientElementSize, elementByteLength);
+            upsiServer.psi(serverElementSet, clientElementSize);
             upsiServer.getRpc().disconnect();
         } catch (MpcAbortException e) {
             e.printStackTrace();

@@ -28,17 +28,13 @@ public abstract class AbstractUpsiClient extends AbstractSecureTwoPartyPto imple
      */
     private int maxClientElementSize;
     /**
-     * 客户端元素集合
+     * 客户端元素数组
      */
     protected ArrayList<ByteBuffer> clientElementArrayList;
     /**
      * 客户端元素数量
      */
     protected int clientElementSize;
-    /**
-     * 元素比特长度
-     */
-    protected int elementByteLength;
     /**
      * 特殊空元素字节缓存区
      */
@@ -61,20 +57,17 @@ public abstract class AbstractUpsiClient extends AbstractSecureTwoPartyPto imple
         initialized = false;
     }
 
-    protected void setPtoInput(Set<ByteBuffer> clientElementSet, int elementByteLength) {
+    protected void setPtoInput(Set<ByteBuffer> clientElementSet) {
         if (!initialized) {
             throw new IllegalStateException("Need init...");
         }
-        assert elementByteLength >= CommonConstants.STATS_BYTE_LENGTH;
-        this.elementByteLength = elementByteLength;
         // 设置特殊空元素
-        byte[] botElementByteArray = new byte[elementByteLength];
+        byte[] botElementByteArray = new byte[CommonConstants.STATS_BYTE_LENGTH];
         Arrays.fill(botElementByteArray, (byte)0xFF);
         botElementByteBuffer = ByteBuffer.wrap(botElementByteArray);
         assert clientElementSet.size() >= 1 && clientElementSet.size() <= maxClientElementSize;
         this.clientElementArrayList = clientElementSet.stream()
             .peek(clientElement -> {
-                assert clientElement.array().length == elementByteLength;
                 assert !clientElement.equals(botElementByteBuffer) : "input equals ⊥";
             })
             .collect(Collectors.toCollection(ArrayList::new));

@@ -30,9 +30,8 @@ public interface UpsiClient extends TwoPartyPto, SecurePto {
      * 执行协议。
      *
      * @param clientElementSet    客户端元素集合。
-     * @param elementByteLength   元素字节长度。
      * @throws MpcAbortException  如果协议异常中止。
      * @return 交集结果。
      */
-    Set<ByteBuffer> psi(Set<ByteBuffer> clientElementSet, int elementByteLength) throws MpcAbortException;
+    Set<ByteBuffer> psi(Set<ByteBuffer> clientElementSet) throws MpcAbortException;
 }

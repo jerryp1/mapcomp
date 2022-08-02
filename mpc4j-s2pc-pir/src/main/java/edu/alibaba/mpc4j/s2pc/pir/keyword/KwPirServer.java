@@ -23,20 +23,16 @@ public interface KwPirServer extends TwoPartyPto, SecurePto {
     /**
      * 初始化协议。
      *
-     * @param serverElementMap  服务端关键字和标签映射。
-     * @param keywordByteLength 关键字字节长度。
-     * @param labelByteLength   标签字节长度。
-     * @throws MpcAbortException 如果协议异常中止。
+     * @param serverKeywordLabelMap 服务端关键字和标签映射。
+     * @param labelByteLength       标签字节长度。
+     * @throws MpcAbortException    如果协议异常中止。
      */
-    void init(Map<ByteBuffer, ByteBuffer> serverElementMap, int keywordByteLength, int labelByteLength)
-        throws MpcAbortException;
+    void init(Map<ByteBuffer, ByteBuffer> serverKeywordLabelMap, int labelByteLength) throws MpcAbortException;
 
     /**
      * 执行协议。
      *
-     * @param retrievalNum 查询次数。
      * @throws MpcAbortException 如果协议异常中止。
      */
-    void pir(int retrievalNum) throws MpcAbortException;
-
+    void pir() throws MpcAbortException;
 }
