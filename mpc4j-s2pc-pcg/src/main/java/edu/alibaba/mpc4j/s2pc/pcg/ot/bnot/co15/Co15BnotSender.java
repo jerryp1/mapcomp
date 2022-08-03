@@ -129,6 +129,6 @@ public class Co15BnotSender extends AbstractBnotSender {
         y = null;
         capitalS = null;
         capitalT = null;
-        return new Co15BnotSenderOutput(n, num, capitalRs, pointT, kdf, extraInfo, ecc);
+        return new Co15BnotSenderOutput(n, num, capitalRs, pointT, envType);
     }
 }
