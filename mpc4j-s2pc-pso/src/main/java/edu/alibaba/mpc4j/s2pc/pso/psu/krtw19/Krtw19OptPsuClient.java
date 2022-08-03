@@ -15,8 +15,8 @@ import edu.alibaba.mpc4j.common.tool.crypto.prg.Prg;
 import edu.alibaba.mpc4j.common.tool.crypto.prg.PrgFactory;
 import edu.alibaba.mpc4j.common.tool.hashbin.object.EmptyPadHashBin;
 import edu.alibaba.mpc4j.common.tool.hashbin.object.HashBinEntry;
-import edu.alibaba.mpc4j.common.tool.polynomial.gf2x.Gf2xPoly;
-import edu.alibaba.mpc4j.common.tool.polynomial.gf2x.Gf2xPolyFactory;
+import edu.alibaba.mpc4j.common.tool.polynomial.gf2e.Gf2ePoly;
+import edu.alibaba.mpc4j.common.tool.polynomial.gf2e.Gf2ePolyFactory;
 import edu.alibaba.mpc4j.common.tool.utils.BytesUtils;
 import edu.alibaba.mpc4j.s2pc.pcg.ot.cot.CotReceiverOutput;
 import edu.alibaba.mpc4j.s2pc.pcg.ot.cot.rcot.RcotFactory;
@@ -82,9 +82,9 @@ public class Krtw19OptPsuClient extends AbstractPsuClient {
      */
     private EmptyPadHashBin<ByteBuffer> hashBin;
     /**
-     * 多项式服务
+     * 多项式插值服务
      */
-    private Gf2xPoly gf2xPoly;
+    private Gf2ePoly gf2ePoly;
     /**
      * 有限域字节长度
      */
@@ -225,7 +225,7 @@ public class Krtw19OptPsuClient extends AbstractPsuClient {
         finiteFieldHash = PrfFactory.createInstance(envType, fieldByteLength);
         finiteFieldHash.setKey(finiteFieldHashKey);
         // 设置多项式运算服务
-        gf2xPoly = Gf2xPolyFactory.createInstance(envType, fieldBitLength);
+        gf2ePoly = Gf2ePolyFactory.createInstance(envType, fieldBitLength);
         // 初始化PEQT哈希
         int peqtLength = Krtw19PsuUtils.getPeqtByteLength(binNum, maxBinSize);
         peqtHash = PrfFactory.createInstance(getEnvType(), peqtLength);
@@ -368,7 +368,7 @@ public class Krtw19OptPsuClient extends AbstractPsuClient {
                 .map(q -> finiteFieldHash.getBytes(q))
                 .toArray(byte[][]::new);
             // 构造多项式
-            polys[binIndex - start] = gf2xPoly.rootInterpolate(hashBin.maxBinSize() - 1, qs, ss[binIndex]);
+            polys[binIndex - start] = gf2ePoly.rootInterpolate(maxBinSize - 1, qs, ss[binIndex]);
         });
 
         return polys;

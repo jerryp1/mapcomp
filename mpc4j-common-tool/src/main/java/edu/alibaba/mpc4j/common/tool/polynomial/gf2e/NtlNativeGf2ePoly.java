@@ -1,14 +1,14 @@
-package edu.alibaba.mpc4j.common.tool.polynomial.gf2x;
+package edu.alibaba.mpc4j.common.tool.polynomial.gf2e;
 
 /**
- * NTL的GF(2^l)有限域多项式插值本地函数。
+ * NTL的GF2E有限域多项式插值本地函数。
  *
  * @author Weiran Liu
  * @date 2021/12/11
  */
-class NtlNativeGf2xPoly {
+class NtlNativeGf2ePoly {
 
-    private NtlNativeGf2xPoly() {
+    private NtlNativeGf2ePoly() {
         // empty
     }
 

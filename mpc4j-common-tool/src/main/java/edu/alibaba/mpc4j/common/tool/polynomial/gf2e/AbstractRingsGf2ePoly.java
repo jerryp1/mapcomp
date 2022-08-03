@@ -1,4 +1,4 @@
-package edu.alibaba.mpc4j.common.tool.polynomial.gf2x;
+package edu.alibaba.mpc4j.common.tool.polynomial.gf2e;
 
 import cc.redberry.rings.poly.FiniteField;
 import cc.redberry.rings.poly.univar.UnivariatePolynomial;
@@ -11,12 +11,12 @@ import java.util.Arrays;
 import java.util.stream.IntStream;
 
 /**
- * Rings的GF(2^l)多项式插值抽象类。
+ * Rings的GF2X多项式插值抽象类。
  *
  * @author Weiran Liu
  * @date 2021/12/26
  */
-abstract class AbstractRingsGf2xPoly implements Gf2xPoly {
+abstract class AbstractRingsGf2ePoly implements Gf2ePoly {
     /**
      * 随机状态
      */
@@ -26,12 +26,17 @@ abstract class AbstractRingsGf2xPoly implements Gf2xPoly {
      */
     protected final FiniteField<UnivariatePolynomialZp64> finiteField;
     /**
+     * 有限域比特长度
+     */
+    private final int l;
+    /**
      * 有限域字节长度
      */
-    protected int byteL;
+    protected final int byteL;
 
-    public AbstractRingsGf2xPoly(int l) {
+    AbstractRingsGf2ePoly(int l) {
         assert l > 0 && l % Byte.SIZE == 0;
+        this.l = l;
         byteL = l / Byte.SIZE;
         finiteField = Gf2eManager.getFiniteField(l);
         secureRandom = new SecureRandom();
@@ -40,6 +45,17 @@ abstract class AbstractRingsGf2xPoly implements Gf2xPoly {
     @Override
     public int getByteL() {
         return byteL;
+    }
+
+    @Override
+    public int getL() {
+        return l;
+    }
+
+    @Override
+    public int coefficientNum(int num) {
+        assert num > 1 : "# of points must be greater than 1: " + num;
+        return num;
     }
 
     @Override
@@ -52,30 +68,29 @@ abstract class AbstractRingsGf2xPoly implements Gf2xPoly {
             assert yArray[i].length == byteL;
         }
         // 转换成多项式点
-        UnivariatePolynomialZp64[] univPolyXs = Arrays.stream(xArray)
+        UnivariatePolynomialZp64[] pointXs = Arrays.stream(xArray)
             .map(RingsUtils::byteArrayToGf2e)
             .toArray(UnivariatePolynomialZp64[]::new);
-        UnivariatePolynomialZp64[] univPolyYs = Arrays.stream(yArray)
+        UnivariatePolynomialZp64[] pointYs = Arrays.stream(yArray)
             .map(RingsUtils::byteArrayToGf2e)
             .toArray(UnivariatePolynomialZp64[]::new);
         // 得到插值多项式
-        UnivariatePolynomial<UnivariatePolynomialZp64> polynomial = polynomialInterpolate(num, univPolyXs, univPolyYs);
+        UnivariatePolynomial<UnivariatePolynomialZp64> polynomial = polynomialInterpolate(num, pointXs, pointYs);
         // 如果插值点数量小于最大点数量，则补充虚拟点
-        if (univPolyXs.length < num) {
+        if (pointXs.length < num) {
             // 计算(x - x_1) * ... * (x - x_m')
             UnivariatePolynomial<UnivariatePolynomialZp64> p1 = UnivariatePolynomial.one(finiteField);
-            for (UnivariatePolynomialZp64 point : univPolyXs) {
+            for (UnivariatePolynomialZp64 point : pointXs) {
                 p1 = p1.multiply(p1.createLinear(finiteField.negate(point), finiteField.getOne()));
             }
             // 构造随机多项式
-            UnivariatePolynomialZp64[] prCoefficients = new UnivariatePolynomialZp64[num - univPolyXs.length];
+            UnivariatePolynomialZp64[] prCoefficients = new UnivariatePolynomialZp64[num - pointXs.length];
             for (int index = 0; index < prCoefficients.length; index++) {
                 byte[] coefficient = new byte[byteL];
                 secureRandom.nextBytes(coefficient);
                 prCoefficients[index] = RingsUtils.byteArrayToGf2e(coefficient);
             }
-            UnivariatePolynomial<UnivariatePolynomialZp64> pr
-                = UnivariatePolynomial.create(finiteField, prCoefficients);
+            UnivariatePolynomial<UnivariatePolynomialZp64> pr = UnivariatePolynomial.create(finiteField, prCoefficients);
             // 计算P_0(x) + P_1(x) * P_r(x)
             polynomial = polynomial.add(p1.multiply(pr));
         }
@@ -83,18 +98,23 @@ abstract class AbstractRingsGf2xPoly implements Gf2xPoly {
     }
 
     /**
-     * 多项式插值，得到多项式f(x)，使得y_i = f(x_i)，返回多项式本身。
+     * 多项式插值，得到多项式f(x)，使得y = f(x)，返回多项式本身。
      *
      * @param num    插入点的最大数量。
-     * @param xArray x_i数组。
-     * @param yArray y_i数组。
+     * @param xArray x数组。
+     * @param yArray y数组。
      * @return 多项式。
      */
     protected abstract UnivariatePolynomial<UnivariatePolynomialZp64> polynomialInterpolate(
         int num, UnivariatePolynomialZp64[] xArray, UnivariatePolynomialZp64[] yArray);
 
     @Override
-    public byte[][] rootInterpolate(int num, byte[][] xArray, byte[] yBytes) {
+    public int rootCoefficientNum(int num) {
+        return num + 1;
+    }
+
+    @Override
+    public byte[][] rootInterpolate(int num, byte[][] xArray, byte[] y) {
         // 不要求至少有1个插值点，只要求总数量大于1
         assert num > 1 && xArray.length <= num;
         if (xArray.length == 0) {
@@ -104,19 +124,19 @@ abstract class AbstractRingsGf2xPoly implements Gf2xPoly {
                 secureRandom.nextBytes(coefficients[index]);
             }
             // 将最高位设置为1
-            coefficients[num][byteL - 1] = (byte)0x01;
+            coefficients[num][byteL - 1] = (byte) 0x01;
             return coefficients;
         }
         // 如果有插值数据，则继续插值
-        for (byte[] xBytes : xArray) {
-            assert xBytes.length == byteL;
+        for (byte[] x : xArray) {
+            assert x.length == byteL;
         }
-        assert yBytes.length == byteL;
+        assert y.length == byteL;
         // 插值
         UnivariatePolynomial<UnivariatePolynomialZp64> polynomial = UnivariatePolynomial.one(finiteField);
         // f(x) = (x - x_0) * (x - x_1) * ... * (x - x_m)
-        for (byte[] xBytes : xArray) {
-            UnivariatePolynomialZp64 pointX = RingsUtils.byteArrayToGf2e(xBytes);
+        for (byte[] x : xArray) {
+            UnivariatePolynomialZp64 pointX = RingsUtils.byteArrayToGf2e(x);
             UnivariatePolynomial<UnivariatePolynomialZp64> linear = polynomial.createLinear(
                 finiteField.negate(pointX), finiteField.getOne()
             );
@@ -138,15 +158,15 @@ abstract class AbstractRingsGf2xPoly implements Gf2xPoly {
             // 计算P_0(x) * P_r(x)
             polynomial = polynomial.multiply(dummyPolynomial);
         }
-        UnivariatePolynomialZp64 pointY = RingsUtils.byteArrayToGf2e(yBytes);
+        UnivariatePolynomialZp64 pointY = RingsUtils.byteArrayToGf2e(y);
         polynomial = polynomial.add(UnivariatePolynomial.constant(finiteField, pointY));
 
         return rootPolynomialToBytes(num, polynomial);
     }
 
     @Override
-    public byte[] evaluate(byte[][] coefficients, byte[] xBytes) {
-        assert xBytes.length == byteL;
+    public byte[] evaluate(byte[][] coefficients, byte[] x) {
+        assert x.length == byteL;
         assert coefficients.length > 1;
         for (byte[] coefficient : coefficients) {
             assert coefficient.length == byteL;
@@ -154,15 +174,15 @@ abstract class AbstractRingsGf2xPoly implements Gf2xPoly {
         // 恢复多项式
         UnivariatePolynomial<UnivariatePolynomialZp64> polynomial = bytesToPolynomial(coefficients);
         // 求值
-        UnivariatePolynomialZp64 x = RingsUtils.byteArrayToGf2e(xBytes);
-        UnivariatePolynomialZp64 y = polynomial.evaluate(x);
-        return RingsUtils.gf2eToByteArray(y, byteL);
+        UnivariatePolynomialZp64 pointX = RingsUtils.byteArrayToGf2e(x);
+        UnivariatePolynomialZp64 pointY = polynomial.evaluate(pointX);
+        return RingsUtils.gf2eToByteArray(pointY, byteL);
     }
 
     @Override
     public byte[][] evaluate(byte[][] coefficients, byte[][] xArray) {
-        for (byte[] xBytes : xArray) {
-            assert xBytes.length == byteL;
+        for (byte[] x : xArray) {
+            assert x.length == byteL;
         }
         assert coefficients.length > 1;
         for (byte[] coefficient : coefficients) {
@@ -173,8 +193,8 @@ abstract class AbstractRingsGf2xPoly implements Gf2xPoly {
         // 求值
         return Arrays.stream(xArray)
             .map(RingsUtils::byteArrayToGf2e)
-            .map(x -> polynomialEvaluate(polynomial, x))
-            .map(y -> RingsUtils.gf2eToByteArray(y, byteL))
+            .map(pointX -> polynomialEvaluate(polynomial, pointX))
+            .map(pointY -> RingsUtils.gf2eToByteArray(pointY, byteL))
             .toArray(byte[][]::new);
     }
 

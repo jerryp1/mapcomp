@@ -1,4 +1,4 @@
-package edu.alibaba.mpc4j.common.tool.polynomial.gf2x;
+package edu.alibaba.mpc4j.common.tool.polynomial.gf2e;
 
 import edu.alibaba.mpc4j.common.tool.CommonConstants;
 import org.apache.commons.lang3.StringUtils;
@@ -21,12 +21,12 @@ import java.util.stream.IntStream;
  * @date 2022/7/27
  */
 @Ignore
-public class Gf2xPolyEfficiencyTest {
-    private static final Logger LOGGER = LoggerFactory.getLogger(Gf2xPolyEfficiencyTest.class);
+public class Gf2ePolyEfficiencyTest {
+    private static final Logger LOGGER = LoggerFactory.getLogger(Gf2ePolyEfficiencyTest.class);
     /**
      * log(n)
      */
-    private static final int logN = 4;
+    private static final int LOG_N = 4;
     /**
      * 点数量输出格式
      */
@@ -46,10 +46,10 @@ public class Gf2xPolyEfficiencyTest {
     /**
      * 测试类型
      */
-    private static final Gf2xPolyFactory.Gf2xPolyType[] TYPES = new Gf2xPolyFactory.Gf2xPolyType[] {
-        Gf2xPolyFactory.Gf2xPolyType.NTL,
-        Gf2xPolyFactory.Gf2xPolyType.RINGS_NEWTON,
-        Gf2xPolyFactory.Gf2xPolyType.RINGS_LAGRANGE,
+    private static final Gf2ePolyFactory.Gf2ePolyType[] TYPES = new Gf2ePolyFactory.Gf2ePolyType[] {
+        Gf2ePolyFactory.Gf2ePolyType.NTL,
+        Gf2ePolyFactory.Gf2ePolyType.RINGS_NEWTON,
+        Gf2ePolyFactory.Gf2ePolyType.RINGS_LAGRANGE,
     };
 
     @Test
@@ -67,86 +67,86 @@ public class Gf2xPolyEfficiencyTest {
     }
 
     private void testEfficiency(int pointNum) {
-        int n = 1 << logN;
-        for (Gf2xPolyFactory.Gf2xPolyType type : TYPES) {
-            Gf2xPoly gf2xPoly = Gf2xPolyFactory.createInstance(type, CommonConstants.STATS_BIT_LENGTH);
+        int n = 1 << LOG_N;
+        for (Gf2ePolyFactory.Gf2ePolyType type : TYPES) {
+            Gf2ePoly gf2ePoly = Gf2ePolyFactory.createInstance(type, CommonConstants.STATS_BIT_LENGTH);
             // 创建全量插值点
             byte[][] xFullArray = IntStream.range(0, pointNum)
                 .mapToObj(index -> {
-                    byte[] xBytes = new byte[gf2xPoly.getByteL()];
+                    byte[] xBytes = new byte[gf2ePoly.getByteL()];
                     SECURE_RANDOM.nextBytes(xBytes);
                     return xBytes;
                 })
                 .toArray(byte[][]::new);
             byte[][] yFullArray = IntStream.range(0, pointNum)
                 .mapToObj(index -> {
-                    byte[] xBytes = new byte[gf2xPoly.getByteL()];
+                    byte[] xBytes = new byte[gf2ePoly.getByteL()];
                     SECURE_RANDOM.nextBytes(xBytes);
                     return xBytes;
                 })
                 .toArray(byte[][]::new);
-            byte[] yFullBytes = new byte[gf2xPoly.getByteL()];
+            byte[] yFullBytes = new byte[gf2ePoly.getByteL()];
             SECURE_RANDOM.nextBytes(yFullBytes);
             // 创建半数插值点
             byte[][] xHalfArray = IntStream.range(0, pointNum / 2)
                 .mapToObj(index -> {
-                    byte[] xBytes = new byte[gf2xPoly.getByteL()];
+                    byte[] xBytes = new byte[gf2ePoly.getByteL()];
                     SECURE_RANDOM.nextBytes(xBytes);
                     return xBytes;
                 })
                 .toArray(byte[][]::new);
             byte[][] yHalfArray = IntStream.range(0, pointNum / 2)
                 .mapToObj(index -> {
-                    byte[] xBytes = new byte[gf2xPoly.getByteL()];
+                    byte[] xBytes = new byte[gf2ePoly.getByteL()];
                     SECURE_RANDOM.nextBytes(xBytes);
                     return xBytes;
                 })
                 .toArray(byte[][]::new);
-            byte[] yHalfBytes = new byte[gf2xPoly.getByteL()];
+            byte[] yHalfBytes = new byte[gf2ePoly.getByteL()];
             SECURE_RANDOM.nextBytes(yHalfBytes);
             // 全量插值时间
             STOP_WATCH.start();
-            IntStream.range(0, n).forEach(index -> gf2xPoly.interpolate(pointNum, xFullArray, yFullArray));
+            IntStream.range(0, n).forEach(index -> gf2ePoly.interpolate(pointNum, xFullArray, yFullArray));
             STOP_WATCH.stop();
             double fullInterpolateTime = (double) STOP_WATCH.getTime(TimeUnit.MICROSECONDS) / n / 1000;
             STOP_WATCH.reset();
             // 全量根差值时间
             STOP_WATCH.start();
-            IntStream.range(0, n).forEach(index -> gf2xPoly.rootInterpolate(pointNum, xFullArray, yFullBytes));
+            IntStream.range(0, n).forEach(index -> gf2ePoly.rootInterpolate(pointNum, xFullArray, yFullBytes));
             STOP_WATCH.stop();
             double fullRootInterpolateTime = (double) STOP_WATCH.getTime(TimeUnit.MICROSECONDS) / n / 1000;
             STOP_WATCH.reset();
             // 半量插值时间
             STOP_WATCH.start();
-            IntStream.range(0, n).forEach(index -> gf2xPoly.interpolate(pointNum, xHalfArray, yHalfArray));
+            IntStream.range(0, n).forEach(index -> gf2ePoly.interpolate(pointNum, xHalfArray, yHalfArray));
             STOP_WATCH.stop();
             double halfInterpolateTime = (double) STOP_WATCH.getTime(TimeUnit.MICROSECONDS) / n / 1000;
             STOP_WATCH.reset();
             // 半量根差值时间
             STOP_WATCH.start();
-            IntStream.range(0, n).forEach(index -> gf2xPoly.rootInterpolate(pointNum, xHalfArray, yHalfBytes));
+            IntStream.range(0, n).forEach(index -> gf2ePoly.rootInterpolate(pointNum, xHalfArray, yHalfBytes));
             STOP_WATCH.stop();
             double halfRootInterpolateTime = (double) STOP_WATCH.getTime(TimeUnit.MICROSECONDS) / n / 1000;
             STOP_WATCH.reset();
             // 单一求值时间
-            byte[][] coefficients = gf2xPoly.rootInterpolate(pointNum, xFullArray, yFullBytes);
+            byte[][] coefficients = gf2ePoly.rootInterpolate(pointNum, xFullArray, yFullBytes);
             STOP_WATCH.start();
             IntStream.range(0, n).forEach(index ->
-                Arrays.stream(xFullArray).forEach(x -> gf2xPoly.evaluate(coefficients, x))
+                Arrays.stream(xFullArray).forEach(x -> gf2ePoly.evaluate(coefficients, x))
             );
             STOP_WATCH.stop();
             double singleEvaluateTime = (double) STOP_WATCH.getTime(TimeUnit.MICROSECONDS) / n / 1000;
             STOP_WATCH.reset();
             // 批量求值时间
             STOP_WATCH.start();
-            IntStream.range(0, n).forEach(index -> gf2xPoly.evaluate(coefficients, xFullArray));
+            IntStream.range(0, n).forEach(index -> gf2ePoly.evaluate(coefficients, xFullArray));
             double multiEvaluateTime = (double) STOP_WATCH.getTime(TimeUnit.MICROSECONDS) / n / 1000;
             STOP_WATCH.reset();
 
             LOGGER.info("{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}",
                 StringUtils.leftPad(type.name(), 20),
                 StringUtils.leftPad(POINT_NUM_DECIMAL_FORMAT.format(pointNum), 10),
-                StringUtils.leftPad(String.valueOf(logN), 10),
+                StringUtils.leftPad(String.valueOf(LOG_N), 10),
                 StringUtils.leftPad(TIME_DECIMAL_FORMAT.format(fullInterpolateTime), 10),
                 StringUtils.leftPad(TIME_DECIMAL_FORMAT.format(fullRootInterpolateTime), 10),
                 StringUtils.leftPad(TIME_DECIMAL_FORMAT.format(halfInterpolateTime), 10),

@@ -1,4 +1,4 @@
-package edu.alibaba.mpc4j.common.tool.polynomial.gf2x;
+package edu.alibaba.mpc4j.common.tool.polynomial.gf2e;
 
 import edu.alibaba.mpc4j.common.tool.EnvType;
 
@@ -8,18 +8,18 @@ import edu.alibaba.mpc4j.common.tool.EnvType;
  * @author Weiran Liu
  * @date 2021/12/11
  */
-public class Gf2xPolyFactory {
+public class Gf2ePolyFactory {
     /**
      * 私有构造函数。
      */
-    private Gf2xPolyFactory() {
+    private Gf2ePolyFactory() {
         // empty
     }
 
     /**
-     * GF(2^l)多项式插值类型。
+     * GF2E多项式插值类型。
      */
-    public enum Gf2xPolyType {
+    public enum Gf2ePolyType {
         /**
          * NTL库插值
          */
@@ -41,14 +41,14 @@ public class Gf2xPolyFactory {
      * @param l GF(2^l)有限域比特长度。
      * @return 多项式插值实例。
      */
-    public static Gf2xPoly createInstance(Gf2xPolyType type, int l) {
+    public static Gf2ePoly createInstance(Gf2ePolyType type, int l) {
         switch (type) {
             case NTL:
-                return new NtlGf2xPoly(l);
+                return new NtlGf2ePoly(l);
             case RINGS_NEWTON:
-                return new RingsNewtonGf2xPoly(l);
+                return new RingsNewtonGf2ePoly(l);
             case RINGS_LAGRANGE:
-                return new RingsLagrangeGf2xPoly(l);
+                return new RingsLagrangeGf2ePoly(l);
             default:
                 throw new IllegalArgumentException("Invalid Gf2xPolyType: " + type.name());
         }
@@ -61,14 +61,14 @@ public class Gf2xPolyFactory {
      * @param l GF(2^l)有限域比特长度。
      * @return 多项式插值实例。
      */
-    public static Gf2xPoly createInstance(EnvType envType, int l) {
+    public static Gf2ePoly createInstance(EnvType envType, int l) {
         switch (envType) {
             case STANDARD:
             case INLAND:
-                return createInstance(Gf2xPolyType.NTL, l);
+                return createInstance(Gf2ePolyType.NTL, l);
             case STANDARD_JDK:
             case INLAND_JDK:
-                return createInstance(Gf2xPolyType.RINGS_NEWTON, l);
+                return createInstance(Gf2ePolyType.RINGS_NEWTON, l);
             default:
                 throw new IllegalArgumentException("Invalid EnvType" + envType.name());
         }

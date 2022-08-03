@@ -15,8 +15,8 @@ import edu.alibaba.mpc4j.common.tool.crypto.prf.PrfFactory;
 import edu.alibaba.mpc4j.common.tool.crypto.prg.Prg;
 import edu.alibaba.mpc4j.common.tool.crypto.prg.PrgFactory;
 import edu.alibaba.mpc4j.common.tool.hashbin.object.EmptyPadHashBin;
-import edu.alibaba.mpc4j.common.tool.polynomial.gf2x.Gf2xPoly;
-import edu.alibaba.mpc4j.common.tool.polynomial.gf2x.Gf2xPolyFactory;
+import edu.alibaba.mpc4j.common.tool.polynomial.gf2e.Gf2ePoly;
+import edu.alibaba.mpc4j.common.tool.polynomial.gf2e.Gf2ePolyFactory;
 import edu.alibaba.mpc4j.common.tool.utils.BytesUtils;
 import edu.alibaba.mpc4j.s2pc.pcg.ot.cot.CotSenderOutput;
 import edu.alibaba.mpc4j.s2pc.pcg.ot.cot.rcot.RcotFactory;
@@ -92,7 +92,7 @@ public class Krtw19OptPsuServer extends AbstractPsuServer {
     /**
      * 多项式服务
      */
-    private Gf2xPoly gf2xPoly;
+    private Gf2ePoly gf2ePoly;
     /**
      * 有限域哈希函数
      */
@@ -225,8 +225,6 @@ public class Krtw19OptPsuServer extends AbstractPsuServer {
         hashBin.insertItems(serverElementArrayList);
         // 放置特殊的元素\bot，并进行随机置乱
         hashBin.insertPaddingItems(botElementByteBuffer);
-        // 设置多项式系数数量，客户端会用根插值算法插值maxBinSize - 1个元素，因此多项式系数数量为maxBinSize
-        coefficientNum = maxBinSize;
         // 设置有限域比特长度σ = λ + log(β * (m + 1)^2)
         int fieldBitLength = Krtw19PsuUtils.getFiniteFieldBitLength(binNum, maxBinSize);
         int fieldByteLength = fieldBitLength / Byte.SIZE;
@@ -234,7 +232,9 @@ public class Krtw19OptPsuServer extends AbstractPsuServer {
         finiteFieldHash = PrfFactory.createInstance(envType, fieldByteLength);
         finiteFieldHash.setKey(finiteFieldHashKey);
         // 设置多项式运算服务
-        gf2xPoly = Gf2xPolyFactory.createInstance(envType, fieldBitLength);
+        gf2ePoly = Gf2ePolyFactory.createInstance(envType, fieldBitLength);
+        // 设置多项式系数数量，客户端会用根插值算法插值maxBinSize - 1个元素，因此多项式系数数量为maxBinSize
+        coefficientNum = gf2ePoly.rootCoefficientNum(maxBinSize - 1);
         // 设置PEQT哈希
         int peqtLength = Krtw19PsuUtils.getPeqtByteLength(binNum, maxBinSize);
         peqtHash = PrfFactory.createInstance(getEnvType(), peqtLength);
@@ -352,7 +352,7 @@ public class Krtw19OptPsuServer extends AbstractPsuServer {
                 flatPolyArray, polyStart * coefficientNum, polyEnd * coefficientNum
             );
             byte[] qStar = finiteFieldHash.getBytes(qs[index]);
-            ss[index] = gf2xPoly.evaluate(coefficients, qStar);
+            ss[index] = gf2ePoly.evaluate(coefficients, qStar);
         });
     }
 }

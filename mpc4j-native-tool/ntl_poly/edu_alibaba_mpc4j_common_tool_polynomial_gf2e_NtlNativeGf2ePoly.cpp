@@ -2,11 +2,11 @@
 // Created by Weiran Liu on 2021/12/11.
 //
 #include <vector>
-#include "edu_alibaba_mpc4j_common_tool_polynomial_gf2x_NtlNativeGf2xPoly.h"
+#include "edu_alibaba_mpc4j_common_tool_polynomial_gf2e_NtlNativeGf2ePoly.h"
 #include "../common/defines.h"
 #include "ntl_gf2x.h"
 
-JNIEXPORT jobjectArray JNICALL Java_edu_alibaba_mpc4j_common_tool_polynomial_gf2x_NtlNativeGf2xPoly_interpolate
+JNIEXPORT jobjectArray JNICALL Java_edu_alibaba_mpc4j_common_tool_polynomial_gf2e_NtlNativeGf2ePoly_interpolate
     (JNIEnv *env, jclass context, jbyteArray jMinBytes, jint jByteL, jint jNum, jobjectArray jxArray, jobjectArray jyArray) {
     // 初始化有限域
     initGF2E(env, jMinBytes);
@@ -28,7 +28,7 @@ JNIEXPORT jobjectArray JNICALL Java_edu_alibaba_mpc4j_common_tool_polynomial_gf2
     return jPolynomial;
 }
 
-JNIEXPORT jobjectArray JNICALL Java_edu_alibaba_mpc4j_common_tool_polynomial_gf2x_NtlNativeGf2xPoly_rootInterpolate
+JNIEXPORT jobjectArray JNICALL Java_edu_alibaba_mpc4j_common_tool_polynomial_gf2e_NtlNativeGf2ePoly_rootInterpolate
     (JNIEnv *env, jclass context, jbyteArray jMinBytes, jint jByteL, jint jNum, jobjectArray jxArray, jbyteArray jy) {
     // 初始化有限域
     initGF2E(env, jMinBytes);
@@ -54,7 +54,7 @@ JNIEXPORT jobjectArray JNICALL Java_edu_alibaba_mpc4j_common_tool_polynomial_gf2
     return jPolynomial;
 }
 
-JNIEXPORT jbyteArray JNICALL Java_edu_alibaba_mpc4j_common_tool_polynomial_gf2x_NtlNativeGf2xPoly_singleEvaluate
+JNIEXPORT jbyteArray JNICALL Java_edu_alibaba_mpc4j_common_tool_polynomial_gf2e_NtlNativeGf2ePoly_singleEvaluate
     (JNIEnv *env, jclass context, jbyteArray jMinBytes, jint jByteL, jobjectArray jPolynomial, jbyteArray jx) {
     // 初始化有限域
     initGF2E(env, jMinBytes);
@@ -81,7 +81,7 @@ JNIEXPORT jbyteArray JNICALL Java_edu_alibaba_mpc4j_common_tool_polynomial_gf2x_
     return jy;
 }
 
-JNIEXPORT jobjectArray JNICALL Java_edu_alibaba_mpc4j_common_tool_polynomial_gf2x_NtlNativeGf2xPoly_evaluate
+JNIEXPORT jobjectArray JNICALL Java_edu_alibaba_mpc4j_common_tool_polynomial_gf2e_NtlNativeGf2ePoly_evaluate
     (JNIEnv *env, jclass context, jbyteArray jMinBytes, jint jByteL, jobjectArray jPolynomial, jobjectArray jxArray) {
     // 初始化有限域
     initGF2E(env, jMinBytes);

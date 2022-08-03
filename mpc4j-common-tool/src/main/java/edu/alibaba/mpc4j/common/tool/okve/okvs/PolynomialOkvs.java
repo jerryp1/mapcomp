@@ -3,8 +3,8 @@ package edu.alibaba.mpc4j.common.tool.okve.okvs;
 import edu.alibaba.mpc4j.common.tool.CommonConstants;
 import edu.alibaba.mpc4j.common.tool.EnvType;
 import edu.alibaba.mpc4j.common.tool.okve.okvs.OkvsFactory.OkvsType;
-import edu.alibaba.mpc4j.common.tool.polynomial.gf2x.Gf2xPoly;
-import edu.alibaba.mpc4j.common.tool.polynomial.gf2x.Gf2xPolyFactory;
+import edu.alibaba.mpc4j.common.tool.polynomial.gf2e.Gf2ePoly;
+import edu.alibaba.mpc4j.common.tool.polynomial.gf2e.Gf2ePolyFactory;
 
 import java.nio.ByteBuffer;
 import java.util.Map;
@@ -20,7 +20,7 @@ class PolynomialOkvs implements Okvs<ByteBuffer> {
     /**
      * 多项式插值服务
      */
-    private final Gf2xPoly gf2xPoly;
+    private final Gf2ePoly gf2ePoly;
     /**
      * 插值数量
      */
@@ -37,7 +37,7 @@ class PolynomialOkvs implements Okvs<ByteBuffer> {
         // 要求l > 统计安全常数，且l可以被Byte.SIZE整除
         assert l >= CommonConstants.STATS_BIT_LENGTH && l % Byte.SIZE == 0;
         this.l = l;
-        gf2xPoly = Gf2xPolyFactory.createInstance(envType, l);
+        gf2ePoly = Gf2ePolyFactory.createInstance(envType, l);
     }
 
     @Override
@@ -51,14 +51,14 @@ class PolynomialOkvs implements Okvs<ByteBuffer> {
         byte[][] xArray = keyValueMap.keySet().stream().map(ByteBuffer::array).toArray(byte[][]::new);
         byte[][] yArray = keyValueMap.keySet().stream().map(keyValueMap::get).toArray(byte[][]::new);
         // 给定的键值对数量可能小于n，此时要用dummy interpolate将插入的点数量补充到n
-        return gf2xPoly.interpolate(n, xArray, yArray);
+        return gf2ePoly.interpolate(n, xArray, yArray);
     }
 
     @Override
     public byte[] decode(byte[][] storage, ByteBuffer key) {
         // 这里不能验证storage每一行的长度，否则整体算法复杂度会变为O(n^2)
         assert storage.length == getM();
-        return gf2xPoly.evaluate(storage, key.array());
+        return gf2ePoly.evaluate(storage, key.array());
     }
 
     @Override
@@ -73,8 +73,8 @@ class PolynomialOkvs implements Okvs<ByteBuffer> {
 
     @Override
     public int getM() {
-        // 多项式插值的系数数量等于插值的元素数量
-        return n;
+        // 等于多项式插值的系数数量
+        return gf2ePoly.coefficientNum(n);
     }
 
     @Override

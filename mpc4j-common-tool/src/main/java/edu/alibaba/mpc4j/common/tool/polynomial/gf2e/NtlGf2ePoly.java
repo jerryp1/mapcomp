@@ -1,22 +1,22 @@
-package edu.alibaba.mpc4j.common.tool.polynomial.gf2x;
+package edu.alibaba.mpc4j.common.tool.polynomial.gf2e;
 
 import cc.redberry.rings.poly.FiniteField;
 import cc.redberry.rings.poly.univar.UnivariatePolynomialZp64;
 import edu.alibaba.mpc4j.common.tool.CommonConstants;
 import edu.alibaba.mpc4j.common.tool.galoisfield.gf2e.Gf2eManager;
-import edu.alibaba.mpc4j.common.tool.polynomial.gf2x.Gf2xPolyFactory.Gf2xPolyType;
+import edu.alibaba.mpc4j.common.tool.polynomial.gf2e.Gf2ePolyFactory.Gf2ePolyType;
 import edu.alibaba.mpc4j.common.tool.utils.BinaryUtils;
 import edu.alibaba.mpc4j.common.tool.utils.CommonUtils;
 
 import java.security.SecureRandom;
 
 /**
- * NTL实现的GF(2^l)多项式运算。
+ * NTL实现的GF2X多项式插值抽象类。
  *
  * @author Weiran Liu
  * @date 2021/12/11
  */
-public class NtlGf2xPoly implements Gf2xPoly {
+public class NtlGf2ePoly implements Gf2ePoly {
 
     static {
         System.loadLibrary(CommonConstants.MPC4J_NATIVE_TOOL_NAME);
@@ -31,17 +31,17 @@ public class NtlGf2xPoly implements Gf2xPoly {
      */
     private final byte[] minBytes;
     /**
-     * l的字节长度
+     * 有限域比特长度
      */
-    private final int byteL;
-
+    private final int l;
     /**
-     * 初始化NTL实现的GF(2^l)多项式运算。
-     *
-     * @param l GF(2^l)有限域比特长度。
+     * 有限域字节长度
      */
-    public NtlGf2xPoly(int l) {
+    protected final int byteL;
+
+    NtlGf2ePoly(int l) {
         assert l > 0 && l % Byte.SIZE == 0;
+        this.l = l;
         byteL = l / Byte.SIZE;
         FiniteField<UnivariatePolynomialZp64> finiteField = Gf2eManager.getFiniteField(l);
         // 设置不可约多项式，系数个数为l + 1
@@ -58,13 +58,24 @@ public class NtlGf2xPoly implements Gf2xPoly {
     }
 
     @Override
-    public Gf2xPolyType getGf2xPolyType() {
-        return Gf2xPolyType.NTL;
+    public Gf2ePolyType getType() {
+        return Gf2ePolyType.NTL;
     }
 
     @Override
     public int getByteL() {
         return byteL;
+    }
+
+    @Override
+    public int getL() {
+        return l;
+    }
+
+    @Override
+    public int coefficientNum(int num) {
+        assert num > 1 : "# of points must be greater than 1: " + num;
+        return num;
     }
 
     @Override
@@ -77,11 +88,17 @@ public class NtlGf2xPoly implements Gf2xPoly {
             assert yArray[i].length == byteL;
         }
         // 调用本地函数完成插值
-        return NtlNativeGf2xPoly.interpolate(minBytes, byteL, num, xArray, yArray);
+        return NtlNativeGf2ePoly.interpolate(minBytes, byteL, num, xArray, yArray);
     }
 
     @Override
-    public byte[][] rootInterpolate(int num, byte[][] xArray, byte[] yBytes) {
+    public int rootCoefficientNum(int num) {
+        assert num > 1 : "# of points must be greater than 1: " + num;
+        return num + 1;
+    }
+
+    @Override
+    public byte[][] rootInterpolate(int num, byte[][] xArray, byte[] y) {
         // 不要求至少有1个插值点，只要求总数量大于1
         assert num > 1 && xArray.length <= num;
         if (xArray.length == 0) {
@@ -95,20 +112,20 @@ public class NtlGf2xPoly implements Gf2xPoly {
             return coefficients;
         }
         // 如果有插值数据，则调用本地函数完成插值
-        for (byte[] xBytes : xArray) {
-            assert xBytes.length == byteL;
+        for (byte[] x : xArray) {
+            assert x.length == byteL;
         }
-        return NtlNativeGf2xPoly.rootInterpolate(minBytes, byteL, num, xArray, yBytes);
+        return NtlNativeGf2ePoly.rootInterpolate(minBytes, byteL, num, xArray, y);
     }
 
     @Override
-    public byte[] evaluate(byte[][] coefficients, byte[] xBytes) {
+    public byte[] evaluate(byte[][] coefficients, byte[] x) {
         assert coefficients.length > 1;
         for (byte[] coefficient : coefficients) {
             assert coefficient.length == byteL;
         }
-        assert xBytes.length == byteL;
-        return NtlNativeGf2xPoly.singleEvaluate(minBytes, byteL, coefficients, xBytes);
+        assert x.length == byteL;
+        return NtlNativeGf2ePoly.singleEvaluate(minBytes, byteL, coefficients, x);
     }
 
     @Override
@@ -120,6 +137,6 @@ public class NtlGf2xPoly implements Gf2xPoly {
         for (byte[] coefficient : coefficients) {
             assert coefficient.length == byteL;
         }
-        return NtlNativeGf2xPoly.evaluate(minBytes, byteL, coefficients, xArray);
+        return NtlNativeGf2ePoly.evaluate(minBytes, byteL, coefficients, xArray);
     }
 }
