@@ -144,15 +144,15 @@ public class DenseBitMatrixTest {
     }
 
     @Test
-    public void testLmulAdd() {
+    public void testLmulAddi() {
         for (int rows : SIZES) {
             for (int columns : SIZES) {
-                testLmulAdd(rows, columns);
+                testLmulAddi(rows, columns);
             }
         }
     }
 
-    private void testLmulAdd(int rows, int columns) {
+    private void testLmulAddi(int rows, int columns) {
         for (int round = 0; round < ROUND; round++) {
             DenseBitMatrix a = DenseBitMatrixTestUtils.createRandom(rows, rows, SECURE_RANDOM);
             DenseBitMatrix b = DenseBitMatrixTestUtils.createRandom(rows, columns, SECURE_RANDOM);

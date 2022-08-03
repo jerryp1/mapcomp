@@ -405,13 +405,13 @@ public class SquareDenseBitMatrixTest {
     }
 
     @Test
-    public void testLmulAdd() {
+    public void testLmulAddi() {
         for (int size : SIZES) {
-            testLmulAdd(size);
+            testLmulAddi(size);
         }
     }
 
-    private void testLmulAdd(int size) {
+    private void testLmulAddi(int size) {
         for (int round = 0; round < ROUND; round++) {
             DenseBitMatrix a = DenseBitMatrixTestUtils.createRandom(type, size, SECURE_RANDOM);
             DenseBitMatrix b = DenseBitMatrixTestUtils.createRandom(type, size, SECURE_RANDOM);
