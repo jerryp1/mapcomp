@@ -155,9 +155,9 @@ public class ByteDenseBitMatrix implements DenseBitMatrix {
         assert BytesUtils.isReduceByteArray(v, rows)
             : "v must contain " + rows + " valid bits, current v: " + Hex.toHexString(v);
         byte[] output = new byte[byteColumns];
-        for (int x = 0; x < rows; x++) {
-            if (BinaryUtils.getBoolean(v, x + rowOffset)) {
-                BytesUtils.xori(output, byteBitMatrix[x]);
+        for (int rowIndex = 0; rowIndex < rows; rowIndex++) {
+            if (BinaryUtils.getBoolean(v, rowIndex + rowOffset)) {
+                BytesUtils.xori(output, byteBitMatrix[rowIndex]);
             }
         }
         return output;
@@ -167,12 +167,40 @@ public class ByteDenseBitMatrix implements DenseBitMatrix {
     public boolean[] lmul(boolean[] v) {
         assert v.length == rows : "length of v must be " + rows + ": " + v.length;
         byte[] output = new byte[byteColumns];
-        for (int x = 0; x < rows; x++) {
-            if (v[x]) {
-                BytesUtils.xori(output, byteBitMatrix[x]);
+        for (int rowIndex = 0; rowIndex < rows; rowIndex++) {
+            if (v[rowIndex]) {
+                BytesUtils.xori(output, byteBitMatrix[rowIndex]);
             }
         }
         return BinaryUtils.byteArrayToBinary(output, columns);
+    }
+
+    @Override
+    public void lmulAddi(byte[] v, byte[] t) {
+        assert v.length == byteRows : "byte length of v must be " + byteRows + ": " + v.length;
+        assert BytesUtils.isReduceByteArray(v, rows)
+            : "v must contain " + rows + " valid bits, current v: " + Hex.toHexString(v);
+        assert t.length == byteColumns : "byte length of t must be " + byteColumns + ": " + t.length;
+        assert BytesUtils.isReduceByteArray(t, columns)
+            : "t must contain " + columns + " valid bits, current t: " + Hex.toHexString(v);
+        for (int rowIndex = 0; rowIndex < rows; rowIndex++) {
+            if (BinaryUtils.getBoolean(v, rowIndex + rowOffset)) {
+                BytesUtils.xori(t, byteBitMatrix[rowIndex]);
+            }
+        }
+    }
+
+    @Override
+    public void lmulAddi(boolean[] v, boolean[] t) {
+        assert v.length == rows : "length of v must be " + rows + ": " + v.length;
+        assert t.length == columns :  "length of t must be " + columns + ": " + t.length;
+        for (int rowIndex = 0; rowIndex < rows; rowIndex++) {
+            if (v[rowIndex]) {
+                for (int columnIndex = 0; columnIndex < columns; columnIndex++) {
+                    t[columnIndex] ^= BinaryUtils.getBoolean(byteBitMatrix[rowIndex], columnIndex + columnOffset);
+                }
+            }
+        }
     }
 
     @Override

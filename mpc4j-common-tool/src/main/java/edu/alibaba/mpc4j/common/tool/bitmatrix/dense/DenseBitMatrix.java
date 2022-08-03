@@ -33,20 +33,36 @@ public interface DenseBitMatrix {
     DenseBitMatrix multiply(DenseBitMatrix that);
 
     /**
-     * 当前布尔矩阵左乘向量，即计算v·M。
+     * 当前布尔矩阵左乘v，即计算v·M。
      *
-     * @param v 向量。
-     * @return 左乘结果。
+     * @param v 向量v。
+     * @return v·M。
      */
     byte[] lmul(final byte[] v);
 
     /**
-     * 当前布尔矩阵左乘向量，即计算v·M。
+     * 当前布尔矩阵左乘v，即计算v·M。
      *
-     * @param v 向量。
-     * @return 左乘结果。
+     * @param v 向量v。
+     * @return v·M。
      */
     boolean[] lmul(final boolean[] v);
+
+    /**
+     * 计算v·M + t，结果更新至t中。
+     *
+     * @param v 向量v。
+     * @param t 向量t。
+     */
+    void lmulAddi(final byte[] v, byte[] t);
+
+    /**
+     * 计算v·M + t，结果更新至t中。
+     *
+     * @param v 向量v。
+     * @param t 向量t。
+     */
+    void lmulAddi(final boolean[] v, boolean[] t);
 
     /**
      * 布尔矩阵转置。

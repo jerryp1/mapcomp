@@ -159,6 +159,34 @@ public class ByteSquareDenseBitMatrix implements SquareDenseBitMatrix {
     }
 
     @Override
+    public void lmulAddi(byte[] v, byte[] t) {
+        assert v.length == byteSize : "byte length of v must be " + byteSize + ": " + v.length;
+        assert BytesUtils.isReduceByteArray(v, size)
+            : "v must contain " + size + " valid bits, current v: " + Hex.toHexString(v);
+        assert t.length == byteSize : "byte length of t must be " + byteSize + ": " + t.length;
+        assert BytesUtils.isReduceByteArray(t, size)
+            : "t must contain " + size + " valid bits, current t: " + Hex.toHexString(v);
+        for (int rowIndex = 0; rowIndex < size; rowIndex++) {
+            if (BinaryUtils.getBoolean(v, rowIndex + offset)) {
+                BytesUtils.xori(t, byteBitMatrix[rowIndex]);
+            }
+        }
+    }
+
+    @Override
+    public void lmulAddi(boolean[] v, boolean[] t) {
+        assert v.length == size : "length of v must be " + size + ": " + v.length;
+        assert t.length == size :  "length of t must be " + size + ": " + t.length;
+        for (int rowIndex = 0; rowIndex < size; rowIndex++) {
+            if (v[rowIndex]) {
+                for (int columnIndex = 0; columnIndex < size; columnIndex++) {
+                    t[columnIndex] ^= BinaryUtils.getBoolean(byteBitMatrix[rowIndex], columnIndex + offset);
+                }
+            }
+        }
+    }
+
+    @Override
     public SquareDenseBitMatrix transpose(EnvType envType, boolean parallel) {
         // 调用TransBitMatrix实现转置，TransBitMatrix是按列表示的，所以设置时候要反过来
         TransBitMatrix originTransBitMatrix = TransBitMatrixFactory.createInstance(envType, size, size, parallel);

@@ -13,7 +13,6 @@ import org.junit.runners.Parameterized;
 
 import java.security.SecureRandom;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.stream.IntStream;
 
@@ -390,18 +389,59 @@ public class SquareDenseBitMatrixTest {
             SquareDenseBitMatrix b = DenseBitMatrixTestUtils.createRandom(type, size, SECURE_RANDOM);
             byte[][] expectArray = a.multiply(b).toByteArrays();
             // 将a矩阵分别转换成byte[]分别与b矩阵左乘
-            byte[][] aByteArrays = a.toByteArrays();
-            byte[][] byteVectorActualArray = Arrays.stream(aByteArrays)
+            byte[][] byteVectorActualArray = IntStream.range(0, size)
+                .mapToObj(a::getRow)
                 .map(b::lmul)
                 .toArray(byte[][]::new);
             Assert.assertArrayEquals(expectArray, byteVectorActualArray);
             // 将a矩阵转换为布尔矩阵，分别与b矩阵相乘
-            byte[][] binaryVectorActualArray = Arrays.stream(aByteArrays)
-                .map(vector -> BinaryUtils.byteArrayToBinary(vector, size))
+            byte[][] binaryVectorActualArray = IntStream.range(0, size)
+                .mapToObj(rowIndex -> BinaryUtils.byteArrayToBinary(a.getRow(rowIndex), size))
                 .map(b::lmul)
                 .map(BinaryUtils::binaryToRoundByteArray)
                 .toArray(byte[][]::new);
             Assert.assertArrayEquals(expectArray, binaryVectorActualArray);
+        }
+    }
+
+    @Test
+    public void testLmulAdd() {
+        for (int size : SIZES) {
+            testLmulAdd(size);
+        }
+    }
+
+    private void testLmulAdd(int size) {
+        for (int round = 0; round < ROUND; round++) {
+            DenseBitMatrix a = DenseBitMatrixTestUtils.createRandom(type, size, SECURE_RANDOM);
+            DenseBitMatrix b = DenseBitMatrixTestUtils.createRandom(type, size, SECURE_RANDOM);
+            DenseBitMatrix c = DenseBitMatrixTestUtils.createRandom(type, size, SECURE_RANDOM);
+            byte[][] expectArray = a.multiply(b).add(c).toByteArrays();
+            // 将a矩阵分别转换成byte[]分别与b矩阵左乘
+            byte[][] byteVectorActualArray = IntStream.range(0, size)
+                .mapToObj(rowIndex -> {
+                    byte[] t = BytesUtils.clone(c.getRow(rowIndex));
+                    b.lmulAddi(a.getRow(rowIndex), t);
+                    return t;
+                })
+                .toArray(byte[][]::new);
+            Assert.assertArrayEquals(expectArray, byteVectorActualArray);
+        }
+        for (int round = 0; round < ROUND; round++) {
+            DenseBitMatrix a = DenseBitMatrixTestUtils.createRandom(type, size, SECURE_RANDOM);
+            DenseBitMatrix b = DenseBitMatrixTestUtils.createRandom(type, size, SECURE_RANDOM);
+            DenseBitMatrix c = DenseBitMatrixTestUtils.createRandom(type, size, SECURE_RANDOM);
+            byte[][] expectArray = a.multiply(b).add(c).toByteArrays();
+            // 将a矩阵分别转换成boolean[]分别与b矩阵左乘
+            byte[][] byteVectorActualArray = IntStream.range(0, size)
+                .mapToObj(rowIndex -> {
+                    boolean[] v = BinaryUtils.byteArrayToBinary(a.getRow(rowIndex), size);
+                    boolean[] t = BinaryUtils.byteArrayToBinary(c.getRow(rowIndex), size);
+                    b.lmulAddi(v, t);
+                    return BinaryUtils.binaryToRoundByteArray(t);
+                })
+                .toArray(byte[][]::new);
+            Assert.assertArrayEquals(expectArray, byteVectorActualArray);
         }
     }
 
