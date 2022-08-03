@@ -11,7 +11,7 @@ IF(${CMAKE_SYSTEM_PROCESSOR} MATCHES "(aarch64)|(arm64)")
     set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -march=armv8-a+simd+crypto+crc")
 ELSE()
     set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -march=native -maes -mrdseed")
-ENDIF(${CMAKE_SYSTEM_PROCESSOR} MATCHES "(aarch64)|(arm64)" )
+ENDIF()
 # 打印C编译指令
 message(STATUS "C Flags (CMAKE_C_FLAGS): ${CMAKE_C_FLAGS}")
 # 设置C++编译指令
@@ -76,7 +76,7 @@ if (${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
             # Intel Apple
             set(OPENSSL_ROOT_DIR "/usr/local/opt/openssl")
             message(STATUS "OPENSSL_ROOT_DIR set to default: ${OPENSSL_ROOT_DIR}")
-        ENDIF(${CMAKE_SYSTEM_PROCESSOR} MATCHES "(aarch64)|(arm64)" )
+        ENDIF()
     endif()
 endif()
 find_package(OpenSSL REQUIRED)
