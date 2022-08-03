@@ -152,7 +152,7 @@ public class JdkBytesLowMcPrp implements Prp {
                     squareMatrix[bitIndex] = Hex.decode(line);
                     assert squareMatrix[bitIndex].length == CommonConstants.BLOCK_BYTE_LENGTH;
                 }
-                linearMatrices[roundIndex] = new ByteSquareDenseBitMatrix(squareMatrix);
+                linearMatrices[roundIndex] = ByteSquareDenseBitMatrix.fromDense(squareMatrix);
                 invertLinearMatrices[roundIndex] = (ByteSquareDenseBitMatrix) linearMatrices[roundIndex].inverse();
             }
             // 读取密钥扩展矩阵，共有r + 1组
@@ -168,7 +168,7 @@ public class JdkBytesLowMcPrp implements Prp {
                     squareMatrix[bitIndex] = Hex.decode(line);
                     assert squareMatrix[bitIndex].length == CommonConstants.BLOCK_BYTE_LENGTH;
                 }
-                keyMatrices[roundIndex] = new ByteSquareDenseBitMatrix(squareMatrix);
+                keyMatrices[roundIndex] = ByteSquareDenseBitMatrix.fromDense(squareMatrix);
             }
             // 读取常数，共有r组
             constants = new byte[round][];
@@ -195,10 +195,10 @@ public class JdkBytesLowMcPrp implements Prp {
         assert key.length == CommonConstants.BLOCK_BYTE_LENGTH;
         // LowMC内部不存储密钥，只存储扩展密钥，因此密钥得到了拷贝
         // 初始扩展密钥
-        initKey = keyMatrices[0].multiply(key);
+        initKey = keyMatrices[0].lmul(key);
         // 根据轮数扩展密钥
         roundKeys = IntStream.range(0, round)
-            .mapToObj(roundIndex -> keyMatrices[roundIndex + 1].multiply(key))
+            .mapToObj(roundIndex -> keyMatrices[roundIndex + 1].lmul(key))
             .toArray(byte[][]::new);
     }
 
@@ -214,7 +214,7 @@ public class JdkBytesLowMcPrp implements Prp {
             // m computations of 3-bit sbox, remaining n-3m bits remain the same
             sboxLayer(state);
             // affine layer, state = MultiplyWithGF2Matrix(LMatrix(i),state)
-            state = linearMatrices[roundIndex].multiply(state);
+            state = linearMatrices[roundIndex].lmul(state);
             // state = state + Constants(i)
             BytesUtils.xori(state, constants[roundIndex]);
             // generate round key and add to the state
@@ -235,7 +235,7 @@ public class JdkBytesLowMcPrp implements Prp {
             // state = state + Constants(i)
             BytesUtils.xori(state, constants[roundIndex]);
             // affine layer, state = MultiplyWithGF2Matrix(LMatrix(i),state)
-            state = invertLinearMatrices[roundIndex].multiply(state);
+            state = invertLinearMatrices[roundIndex].lmul(state);
             // m computations of 3-bit sbox, remaining n-3m bits remain the same
             sboxInvLayer(state);
         }

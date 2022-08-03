@@ -1,13 +1,16 @@
 package edu.alibaba.mpc4j.common.tool.bitmatrix.dense;
 
+import edu.alibaba.mpc4j.common.tool.EnvType;
+import edu.alibaba.mpc4j.common.tool.bitmatrix.trans.TransBitMatrix;
+import edu.alibaba.mpc4j.common.tool.bitmatrix.trans.TransBitMatrixFactory;
 import edu.alibaba.mpc4j.common.tool.utils.BinaryUtils;
 import edu.alibaba.mpc4j.common.tool.utils.BytesUtils;
 import edu.alibaba.mpc4j.common.tool.utils.CommonUtils;
 import org.apache.commons.lang3.builder.EqualsBuilder;
 import org.apache.commons.lang3.builder.HashCodeBuilder;
+import org.bouncycastle.util.encoders.Hex;
 
 import java.math.BigInteger;
-import java.security.SecureRandom;
 import java.util.Arrays;
 import java.util.stream.IntStream;
 
@@ -21,41 +24,44 @@ public class ByteSquareDenseBitMatrix implements SquareDenseBitMatrix {
     /**
      * 布尔方阵的大小
      */
-    private final int size;
+    private int size;
     /**
      * 布尔方阵的字节大小
      */
-    private final int byteSize;
+    private int byteSize;
     /**
      * 偏移量
      */
-    private final int offset;
+    private int offset;
     /**
      * 布尔方阵
      */
-    private final byte[][] byteBitMatrix;
+    private byte[][] byteBitMatrix;
 
     /**
      * 构建布尔方阵。
      *
-     * @param size 布尔方阵的大小。
      * @param positions 布尔方阵中取值为1的位置。
      */
-    public ByteSquareDenseBitMatrix(int size, int[][] positions) throws ArithmeticException {
-        assert size > 0 : "Size of SquareBitMatrix must be greater than 0";
-        this.size = size;
-        byteSize = CommonUtils.getByteLength(size);
-        offset = byteSize * Byte.SIZE - size;
-        byteBitMatrix = new byte[size][byteSize];
-        assert positions.length == size;
-        for (int rowIndex = 0; rowIndex < size; rowIndex++) {
-            int[] rows = positions[rowIndex];
-            for (int position : rows) {
-                assert position >= 0 && position < size;
-                // 将每个所需的位置设置为1
-                BinaryUtils.setBoolean(byteBitMatrix[rowIndex], position + offset, true);
-            }
-        }
+    public static ByteSquareDenseBitMatrix fromSparse(int[][] positions) {
+        ByteSquareDenseBitMatrix squareDenseBitMatrix = new ByteSquareDenseBitMatrix();
+        assert positions.length > 0 : "size must be greater than 0";
+        squareDenseBitMatrix.size = positions.length;
+        squareDenseBitMatrix.byteSize = CommonUtils.getByteLength(squareDenseBitMatrix.size);
+        squareDenseBitMatrix.offset = squareDenseBitMatrix.byteSize * Byte.SIZE - squareDenseBitMatrix.size;
+        squareDenseBitMatrix.byteBitMatrix = Arrays.stream(positions)
+            .map(rowPositions -> {
+                byte[] row = new byte[squareDenseBitMatrix.byteSize];
+                for (int position : rowPositions) {
+                    assert position >= 0 && position < squareDenseBitMatrix.size
+                        : "position must be in range [0, " + squareDenseBitMatrix.size + "): " + position;
+                    // 将每个所需的位置设置为1
+                    BinaryUtils.setBoolean(row, position + squareDenseBitMatrix.offset, true);
+                }
+                return row;
+            })
+            .toArray(byte[][]::new);
+        return squareDenseBitMatrix;
     }
 
     /**
@@ -63,37 +69,108 @@ public class ByteSquareDenseBitMatrix implements SquareDenseBitMatrix {
      *
      * @param bitMatrix 布尔方阵描述。
      */
-    public ByteSquareDenseBitMatrix(byte[][] bitMatrix) {
-        assert bitMatrix.length > 0 : "Size of SquareBitMatrix must be greater than 0";
-        size = bitMatrix.length;
-        byteSize = CommonUtils.getByteLength(size);
-        offset = byteSize * Byte.SIZE - size;
-        for (byte[] row : bitMatrix) {
-            assert row.length == byteSize;
-            assert BytesUtils.isReduceByteArray(row, size);
-        }
-        byteBitMatrix = bitMatrix;
+    public static ByteSquareDenseBitMatrix fromDense(byte[][] bitMatrix) {
+        ByteSquareDenseBitMatrix squareDenseBitMatrix = new ByteSquareDenseBitMatrix();
+        assert bitMatrix.length > 0 : "size must be greater than 0";
+        squareDenseBitMatrix.size = bitMatrix.length;
+        squareDenseBitMatrix.byteSize = CommonUtils.getByteLength(squareDenseBitMatrix.size);
+        squareDenseBitMatrix.offset = squareDenseBitMatrix.byteSize * Byte.SIZE - squareDenseBitMatrix.size;
+        squareDenseBitMatrix.byteBitMatrix = Arrays.stream(bitMatrix)
+            .peek(row -> {
+                assert row.length == squareDenseBitMatrix.byteSize
+                    : "row byte length must be " + squareDenseBitMatrix.byteSize + ": " + row.length;
+                assert BytesUtils.isReduceByteArray(row, squareDenseBitMatrix.size)
+                    : "row must contain " + squareDenseBitMatrix.size + "valid bits, current row: " + Hex.toHexString(row);
+            })
+            .toArray(byte[][]::new);
+        return squareDenseBitMatrix;
     }
 
     /**
-     * 构建随机布尔方阵，得到的随机布尔方阵不一定可逆。
-     *
-     * @param size 布尔方阵的大小。
-     * @param secureRandom 随机状态。
+     * 私有构造函数。
      */
-    public ByteSquareDenseBitMatrix(int size, SecureRandom secureRandom) {
-        assert size > 0 : "Size of SquareBitMatrix must be greater than 0";
-        this.size = size;
-        byteSize = CommonUtils.getByteLength(size);
-        offset = byteSize * Byte.SIZE - size;
-        byteBitMatrix = IntStream.range(0, size)
-            .mapToObj(rowIndex -> {
-                byte[] row = new byte[byteSize];
-                secureRandom.nextBytes(row);
-                BytesUtils.reduceByteArray(row, size);
-                return row;
-            })
+    private ByteSquareDenseBitMatrix() {
+        // empty
+    }
+
+    @Override
+    public SquareDenseBitMatrix add(DenseBitMatrix that) {
+        assert size == that.getRows() : "input matrix must have " + this.size + " rows: " + that.getRows();
+        assert size == that.getColumns() : "input matrix must have " + this.size + " columns: " + that.getColumns();
+        byte[][] addByteBitMatrix = IntStream.range(0, size)
+            .mapToObj(x -> BytesUtils.xor(byteBitMatrix[x], that.getRow(x)))
             .toArray(byte[][]::new);
+        return ByteSquareDenseBitMatrix.fromDense(addByteBitMatrix);
+    }
+
+    @Override
+    public void addi(DenseBitMatrix that) {
+        assert size == that.getRows() : "input matrix must have " + size + " rows: " + that.getRows();
+        assert size == that.getColumns() : "input matrix must have " + size + " columns: " + that.getColumns();
+        IntStream.range(0, size).forEach(x -> BytesUtils.xori(byteBitMatrix[x], that.getRow(x)));
+    }
+
+
+    @Override
+    public DenseBitMatrix multiply(DenseBitMatrix that) {
+        assert size == that.getRows() : "input matrix must have " + size + " rows: " + that.getRows();
+        int mulColumns = that.getColumns();
+        int mulByteColumns = CommonUtils.getByteLength(mulColumns);
+        byte[][] mulByteBitMatrix = new byte[size][mulByteColumns];
+        for (int rowIndex = 0; rowIndex < size; rowIndex++) {
+            byte[] input = byteBitMatrix[rowIndex];
+            for (int columnIndex = 0; columnIndex < size; columnIndex++) {
+                if (BinaryUtils.getBoolean(input, columnIndex + offset)) {
+                    BytesUtils.xori(mulByteBitMatrix[rowIndex], that.getRow(columnIndex));
+                }
+            }
+        }
+        if (size == mulColumns) {
+            return ByteSquareDenseBitMatrix.fromDense(mulByteBitMatrix);
+        } else {
+            return ByteDenseBitMatrix.fromDense(mulColumns, mulByteBitMatrix);
+        }
+    }
+
+    @Override
+    public byte[] lmul(final byte[] v) {
+        assert v.length == byteSize : "byte length of v must be " + byteSize + ": " + v.length;
+        assert BytesUtils.isReduceByteArray(v, size)
+            : "v must contain " + size + " valid bits, current v: " + Hex.toHexString(v);
+        byte[] output = new byte[byteSize];
+        for (int y = 0; y < size; y++) {
+            if (BinaryUtils.getBoolean(v, y + offset)) {
+                BytesUtils.xori(output, byteBitMatrix[y]);
+            }
+        }
+        return output;
+    }
+
+    @Override
+    public boolean[] lmul(boolean[] v) {
+        assert v.length == size : "length of v must be " + size + ": " + v.length;
+        byte[] output = new byte[byteSize];
+        for (int y = 0; y < size; y++) {
+            if (v[y]) {
+                BytesUtils.xori(output, byteBitMatrix[y]);
+            }
+        }
+        return BinaryUtils.byteArrayToBinary(output, size);
+    }
+
+    @Override
+    public SquareDenseBitMatrix transpose(EnvType envType, boolean parallel) {
+        // 调用TransBitMatrix实现转置，TransBitMatrix是按列表示的，所以设置时候要反过来
+        TransBitMatrix originTransBitMatrix = TransBitMatrixFactory.createInstance(envType, size, size, parallel);
+        for (int sizeIndex = 0; sizeIndex < size; sizeIndex++) {
+            originTransBitMatrix.setColumn(sizeIndex, byteBitMatrix[sizeIndex]);
+        }
+        TransBitMatrix transposedTransBitMatrix = originTransBitMatrix.transpose();
+        byte[][] transByteBitMatrix = new byte[size][byteSize];
+        for (int transSizeIndex = 0; transSizeIndex < size; transSizeIndex++) {
+            transByteBitMatrix[transSizeIndex] = transposedTransBitMatrix.getColumn(transSizeIndex);
+        }
+        return ByteSquareDenseBitMatrix.fromDense(transByteBitMatrix);
     }
 
     @Override
@@ -152,7 +229,28 @@ public class ByteSquareDenseBitMatrix implements SquareDenseBitMatrix {
         byte[][] invertByteBitMatrix = Arrays.stream(inverseMatrix)
             .map(BinaryUtils::binaryToRoundByteArray)
             .toArray(byte[][]::new);
-        return new ByteSquareDenseBitMatrix(invertByteBitMatrix);
+        return ByteSquareDenseBitMatrix.fromDense(invertByteBitMatrix);
+    }
+
+    @Override
+    public int getRows() {
+        return size;
+    }
+
+    @Override
+    public byte[] getRow(int x) {
+        return byteBitMatrix[x];
+    }
+
+    @Override
+    public int getColumns() {
+        return size;
+    }
+
+    @Override
+    public boolean get(int x, int y) {
+        assert y >= 0 && y < size : "y must be in range [0, " + size + "): " + y;
+        return BinaryUtils.getBoolean(byteBitMatrix[x], y + offset);
     }
 
     @Override
@@ -166,29 +264,8 @@ public class ByteSquareDenseBitMatrix implements SquareDenseBitMatrix {
     }
 
     @Override
-    public byte[] multiply(final byte[] input) {
-        assert input.length == byteSize;
-        assert BytesUtils.isReduceByteArray(input, size);
-        byte[] output = new byte[byteSize];
-        for (int columnIndex = 0; columnIndex < size; columnIndex++) {
-            if (BinaryUtils.getBoolean(input, columnIndex + offset)) {
-                BytesUtils.xori(output, byteBitMatrix[columnIndex]);
-            }
-        }
-        return output;
-    }
-
-    @Override
-    public SquareDenseBitMatrix transpose() {
-        byte[][] transBitMatrix = new byte[size][byteSize];
-        for (int row = 0; row < size; row++) {
-            for (int column = 0; column < size; column++) {
-                if (BinaryUtils.getBoolean(byteBitMatrix[row], column + offset)) {
-                    BinaryUtils.setBoolean(transBitMatrix[column], row + offset, true);
-                }
-            }
-        }
-        return new ByteSquareDenseBitMatrix(transBitMatrix);
+    public byte[][] toByteArrays() {
+        return byteBitMatrix;
     }
 
     @Override
@@ -213,7 +290,7 @@ public class ByteSquareDenseBitMatrix implements SquareDenseBitMatrix {
         if (this == obj) {
             return true;
         }
-        ByteSquareDenseBitMatrix that = (ByteSquareDenseBitMatrix)obj;
+        ByteSquareDenseBitMatrix that = (ByteSquareDenseBitMatrix) obj;
         return new EqualsBuilder().append(this.byteBitMatrix, that.byteBitMatrix).isEquals();
     }
 

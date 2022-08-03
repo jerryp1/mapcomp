@@ -84,7 +84,7 @@ class LowMcUtils {
                     squareMatrix[bitIndex] = Hex.decode(line);
                     assert squareMatrix[bitIndex].length == CommonConstants.BLOCK_BYTE_LENGTH;
                 }
-                LINEAR_MATRICES[roundIndex] = new LongSquareDenseBitMatrix(squareMatrix);
+                LINEAR_MATRICES[roundIndex] = LongSquareDenseBitMatrix.fromDense(squareMatrix);
             }
             // 读取密钥扩展矩阵，共有r + 1组
             KEY_MATRICES = new LongSquareDenseBitMatrix[ROUND + 1];
@@ -99,7 +99,7 @@ class LowMcUtils {
                     squareMatrix[bitIndex] = Hex.decode(line);
                     assert squareMatrix[bitIndex].length == CommonConstants.BLOCK_BYTE_LENGTH;
                 }
-                KEY_MATRICES[roundIndex] = new LongSquareDenseBitMatrix(squareMatrix);
+                KEY_MATRICES[roundIndex] = LongSquareDenseBitMatrix.fromDense(squareMatrix);
             }
             // 读取常数，共有r组
             CONSTANTS = new long[ROUND][];

@@ -1,14 +1,17 @@
 package edu.alibaba.mpc4j.common.tool.bitmatrix.dense;
 
+import edu.alibaba.mpc4j.common.tool.EnvType;
+import edu.alibaba.mpc4j.common.tool.bitmatrix.trans.TransBitMatrix;
+import edu.alibaba.mpc4j.common.tool.bitmatrix.trans.TransBitMatrixFactory;
 import edu.alibaba.mpc4j.common.tool.utils.BinaryUtils;
 import edu.alibaba.mpc4j.common.tool.utils.BytesUtils;
 import edu.alibaba.mpc4j.common.tool.utils.CommonUtils;
 import edu.alibaba.mpc4j.common.tool.utils.LongUtils;
 import org.apache.commons.lang3.builder.EqualsBuilder;
 import org.apache.commons.lang3.builder.HashCodeBuilder;
+import org.bouncycastle.util.encoders.Hex;
 
 import java.math.BigInteger;
-import java.security.SecureRandom;
 import java.util.Arrays;
 import java.util.stream.IntStream;
 
@@ -22,116 +25,239 @@ public class LongSquareDenseBitMatrix implements SquareDenseBitMatrix {
     /**
      * 布尔方阵的大小
      */
-    private final int size;
+    private int size;
     /**
      * 布尔方阵的字节大小
      */
-    private final int byteSize;
+    private int byteSize;
     /**
      * 布尔方阵的长整数大小
      */
-    private final int longSize;
+    private int longSize;
     /**
-     * 偏移量
+     * 长整数偏移量
      */
-    private final int offset;
+    private int longOffset;
     /**
      * 布尔方阵
      */
-    private final long[][] longBitMatrix;
+    private long[][] longBitMatrix;
 
     /**
      * 构建布尔方阵。
      *
-     * @param size      布尔方阵的大小。
      * @param positions 布尔方阵中取值为1的位置。
      */
-    public LongSquareDenseBitMatrix(int size, int[][] positions) throws ArithmeticException {
-        assert size > 0 : "Size of SquareBitMatrix must be greater than 0";
-        this.size = size;
-        byteSize = CommonUtils.getByteLength(size);
-        longSize = CommonUtils.getLongLength(size);
-        offset = longSize * Long.SIZE - size;
-        longBitMatrix = new long[size][longSize];
-        assert positions.length == size;
-        for (int row = 0; row < size; row++) {
-            int[] rows = positions[row];
-            for (int position : rows) {
-                assert position >= 0 && position < size;
-                // 将每个所需的位置设置为1
-                BinaryUtils.setBoolean(longBitMatrix[row], position + offset, true);
-            }
-        }
-    }
-
-    /**
-     * 构建布尔方阵。
-     *
-     * @param bitMatrix 布尔方阵描述。
-     */
-    public LongSquareDenseBitMatrix(byte[][] bitMatrix) {
-        assert bitMatrix.length > 0 : "Size of SquareBitMatrix must be greater than 0";
-        size = bitMatrix.length;
-        byteSize = CommonUtils.getByteLength(size);
-        longSize = CommonUtils.getLongLength(size);
-        offset = longSize * Long.SIZE - size;
-        int byteSize = CommonUtils.getByteLength(size);
-        longBitMatrix = Arrays.stream(bitMatrix)
-            .map(rowByteArray -> {
-                assert rowByteArray.length == byteSize;
-                assert BytesUtils.isReduceByteArray(rowByteArray, size);
-                return LongUtils.byteArrayToRoundLongArray(rowByteArray);
-            })
-            .toArray(long[][]::new);
-    }
-
-    /**
-     * 构建布尔方阵。
-     *
-     * @param bitMatrix 布尔方阵描述。
-     */
-    private LongSquareDenseBitMatrix(long[][] bitMatrix) {
-        assert bitMatrix.length > 0 : "Size of SquareBitMatrix must be greater than 0";
-        size = bitMatrix.length;
-        byteSize = CommonUtils.getByteLength(size);
-        longSize = CommonUtils.getLongLength(size);
-        offset = longSize * Long.SIZE - size;
-        for (long[] row : bitMatrix) {
-            assert row.length == longSize;
-            assert LongUtils.isReduceLongArray(row, size);
-        }
-        longBitMatrix = bitMatrix;
-    }
-
-    /**
-     * 构建随机布尔方阵，得到的随机布尔方阵不一定可逆。
-     *
-     * @param size         布尔方阵的大小。
-     * @param secureRandom 随机状态。
-     */
-    public LongSquareDenseBitMatrix(int size, SecureRandom secureRandom) {
-        assert size > 0 : "Size of SquareBitMatrix must be greater than 0";
-        this.size = size;
-        byteSize = CommonUtils.getByteLength(size);
-        longSize = CommonUtils.getLongLength(size);
-        offset = longSize * Long.SIZE - size;
-        longBitMatrix = IntStream.range(0, size)
-            .mapToObj(rowIndex -> {
-                long[] row = new long[longSize];
-                for (int columnIndex = 0; columnIndex < longSize; columnIndex++) {
-                    row[columnIndex] = secureRandom.nextLong();
+    public static LongSquareDenseBitMatrix fromSparse(int[][] positions) {
+        LongSquareDenseBitMatrix squareDenseBitMatrix = new LongSquareDenseBitMatrix();
+        assert positions.length > 0 : "size must be greater than 0";
+        squareDenseBitMatrix.size = positions.length;
+        squareDenseBitMatrix.byteSize = CommonUtils.getByteLength(squareDenseBitMatrix.size);
+        squareDenseBitMatrix.longSize = CommonUtils.getLongLength(squareDenseBitMatrix.size);
+        squareDenseBitMatrix.longOffset = squareDenseBitMatrix.longSize * Long.SIZE - squareDenseBitMatrix.size;
+        squareDenseBitMatrix.longBitMatrix = Arrays.stream(positions)
+            .map(rowPositions -> {
+                long[] row = new long[squareDenseBitMatrix.longSize];
+                for (int position : rowPositions) {
+                    assert position >= 0 && position < squareDenseBitMatrix.size
+                        : "position must be in range [0, " + squareDenseBitMatrix.size + "): " + position;
+                    // 将每个所需的位置设置为1
+                    BinaryUtils.setBoolean(row, position + squareDenseBitMatrix.longOffset, true);
                 }
-                LongUtils.reduceLongArray(row, size);
                 return row;
             })
             .toArray(long[][]::new);
+        return squareDenseBitMatrix;
+    }
+
+    /**
+     * 构建布尔方阵。
+     *
+     * @param bitMatrix 布尔方阵描述。
+     */
+    public static LongSquareDenseBitMatrix fromDense(byte[][] bitMatrix) {
+        LongSquareDenseBitMatrix squareDenseBitMatrix = new LongSquareDenseBitMatrix();
+        assert bitMatrix.length > 0 : "size must be greater than 0";
+        squareDenseBitMatrix.size = bitMatrix.length;
+        squareDenseBitMatrix.byteSize = CommonUtils.getByteLength(squareDenseBitMatrix.size);
+        squareDenseBitMatrix.longSize = CommonUtils.getLongLength(squareDenseBitMatrix.size);
+        squareDenseBitMatrix.longOffset = squareDenseBitMatrix.longSize * Long.SIZE - squareDenseBitMatrix.size;
+        int byteSize = CommonUtils.getByteLength(squareDenseBitMatrix.size);
+        squareDenseBitMatrix.longBitMatrix = Arrays.stream(bitMatrix)
+            .map(row -> {
+                assert row.length == byteSize : "row byte length must be " + byteSize + ": " + row.length;
+                assert BytesUtils.isReduceByteArray(row, squareDenseBitMatrix.size)
+                    : "row must contain " + squareDenseBitMatrix.size + "valid bits, current row: " + Hex.toHexString(row);
+                return LongUtils.byteArrayToRoundLongArray(row);
+            })
+            .toArray(long[][]::new);
+        return squareDenseBitMatrix;
+    }
+
+    /**
+     * 私有构造函数。
+     */
+    private LongSquareDenseBitMatrix() {
+        // empty
+    }
+
+    /**
+     * 构建布尔方阵。
+     *
+     * @param bitMatrix 布尔方阵描述。
+     */
+    private static LongSquareDenseBitMatrix fromDense(long[][] bitMatrix) {
+        LongSquareDenseBitMatrix squareDenseBitMatrix = new LongSquareDenseBitMatrix();
+        assert bitMatrix.length > 0 : "size must be greater than 0";
+        squareDenseBitMatrix.size = bitMatrix.length;
+        squareDenseBitMatrix.byteSize = CommonUtils.getByteLength(squareDenseBitMatrix.size);
+        squareDenseBitMatrix.longSize = CommonUtils.getLongLength(squareDenseBitMatrix.size);
+        squareDenseBitMatrix.longOffset = squareDenseBitMatrix.longSize * Long.SIZE - squareDenseBitMatrix.size;
+        squareDenseBitMatrix.longBitMatrix = Arrays.stream(bitMatrix)
+            .peek(row -> {
+                assert row.length == squareDenseBitMatrix.longSize
+                    : "row byte length must be " + squareDenseBitMatrix.longSize + ": " + row.length;
+                assert LongUtils.isReduceLongArray(row, squareDenseBitMatrix.size)
+                    : "row must contain " + squareDenseBitMatrix.size + "valid bits";
+            })
+            .toArray(long[][]::new);
+        return squareDenseBitMatrix;
+    }
+
+    @Override
+    public SquareDenseBitMatrix add(DenseBitMatrix that) {
+        assert size == that.getRows() : "input matrix must have " + this.size + " rows: " + that.getRows();
+        assert size == that.getColumns() : "input matrix must have " + this.size + " columns: " + that.getColumns();
+        long[][] addLongBitMatrix = IntStream.range(0, size)
+            .mapToObj(x -> LongUtils.xor(longBitMatrix[x], LongUtils.byteArrayToRoundLongArray(that.getRow(x))))
+            .toArray(long[][]::new);
+        return LongSquareDenseBitMatrix.fromDense(addLongBitMatrix);
+    }
+
+    @Override
+    public void addi(DenseBitMatrix that) {
+        assert size == that.getRows() : "input matrix must have " + this.size + " rows: " + that.getRows();
+        assert size == that.getColumns() : "input matrix must have " + this.size + " columns: " + that.getColumns();
+        IntStream.range(0, size).forEach(x ->
+            LongUtils.xori(longBitMatrix[x], LongUtils.byteArrayToRoundLongArray(that.getRow(x)))
+        );
+    }
+
+    @Override
+    public DenseBitMatrix multiply(DenseBitMatrix that) {
+        assert size == that.getRows() : "input matrix must have " + size + " rows: " + that.getRows();
+        if (that instanceof LongSquareDenseBitMatrix) {
+            // LongSquareDenseBitMatrix，特殊处理
+            LongSquareDenseBitMatrix thatLong = (LongSquareDenseBitMatrix) that;
+            long[][] mulLongBitMatrix = new long[size][longSize];
+            for (int rowIndex = 0; rowIndex < size; rowIndex++) {
+                long[] input = longBitMatrix[rowIndex];
+                for (int columnIndex = 0; columnIndex < size; columnIndex++) {
+                    if (BinaryUtils.getBoolean(input, columnIndex + longOffset)) {
+                        LongUtils.xori(mulLongBitMatrix[rowIndex], thatLong.longBitMatrix[columnIndex]);
+                    }
+                }
+            }
+            return LongSquareDenseBitMatrix.fromDense(mulLongBitMatrix);
+        }
+        int mulColumns = that.getColumns();
+        if (size == mulColumns) {
+            // 方阵乘以方阵，特殊处理
+            int mulLongColumns = CommonUtils.getLongLength(mulColumns);
+            long[][] mulLongBitMatrix = new long[size][mulLongColumns];
+            for (int rowIndex = 0; rowIndex < size; rowIndex++) {
+                long[] input = longBitMatrix[rowIndex];
+                for (int columnIndex = 0; columnIndex < size; columnIndex++) {
+                    if (BinaryUtils.getBoolean(input, columnIndex + longOffset)) {
+                        long[] row = LongUtils.byteArrayToRoundLongArray(that.getRow(columnIndex));
+                        LongUtils.xori(mulLongBitMatrix[rowIndex], row);
+                    }
+                }
+            }
+            return LongSquareDenseBitMatrix.fromDense(mulLongBitMatrix);
+        } else {
+            // 正常处理
+            int mulByteColumns = CommonUtils.getByteLength(mulColumns);
+            byte[][] mulByteBitMatrix = new byte[size][mulByteColumns];
+            for (int rowIndex = 0; rowIndex < size; rowIndex++) {
+                long[] input = longBitMatrix[rowIndex];
+                for (int columnIndex = 0; columnIndex < size; columnIndex++) {
+                    if (BinaryUtils.getBoolean(input, columnIndex + longOffset)) {
+                        BytesUtils.xori(mulByteBitMatrix[rowIndex], that.getRow(columnIndex));
+                    }
+                }
+            }
+            return ByteDenseBitMatrix.fromDense(mulColumns, mulByteBitMatrix);
+        }
+    }
+
+    @Override
+    public byte[] lmul(final byte[] v) {
+        assert v.length == byteSize : "input.length must be equal to " + byteSize + ": " + v.length;
+        assert BytesUtils.isReduceByteArray(v, size);
+        int byteArrayOffset = v.length * Byte.SIZE - size;
+        long[] longOutput = new long[longSize];
+        for (int y = 0; y < size; y++) {
+            if (BinaryUtils.getBoolean(v, y + byteArrayOffset)) {
+                LongUtils.xori(longOutput, longBitMatrix[y]);
+            }
+        }
+        return LongUtils.longArrayToByteArray(longOutput, byteSize);
+    }
+
+    @Override
+    public boolean[] lmul(boolean[] v) {
+        assert v.length == size : "length of v must be " + size + ": " + v.length;
+        long[] output = new long[longSize];
+        for (int y = 0; y < size; y++) {
+            if (v[y]) {
+                LongUtils.xori(output, longBitMatrix[y]);
+            }
+        }
+        return BinaryUtils.longArrayToBinary(output, size);
+    }
+
+    /**
+     * 当前布尔矩阵左乘向量，即计算v·M。
+     *
+     * @param v 向量。
+     * @return 左乘结果。
+     */
+    public long[] lmul(final long[] v) {
+        assert v.length == longSize;
+        assert LongUtils.isReduceLongArray(v, size);
+        long[] longOutput = new long[longSize];
+        for (int y = 0; y < size; y++) {
+            if (BinaryUtils.getBoolean(v, y + longOffset)) {
+                LongUtils.xori(longOutput, longBitMatrix[y]);
+            }
+        }
+        return longOutput;
+    }
+
+    @Override
+    public SquareDenseBitMatrix transpose(EnvType envType, boolean parallel) {
+        byte[][] byteBitMatrix = Arrays.stream(longBitMatrix)
+            .map(longRow -> LongUtils.longArrayToByteArray(longRow, byteSize))
+            .toArray(byte[][]::new);
+        // 调用TransBitMatrix实现转置，TransBitMatrix是按列表示的，所以设置时候要反过来
+        TransBitMatrix originTransBitMatrix = TransBitMatrixFactory.createInstance(envType, size, size, parallel);
+        for (int sizeIndex = 0; sizeIndex < size; sizeIndex++) {
+            originTransBitMatrix.setColumn(sizeIndex, byteBitMatrix[sizeIndex]);
+        }
+        TransBitMatrix transposedTransBitMatrix = originTransBitMatrix.transpose();
+        byte[][] transByteBitMatrix = new byte[size][byteSize];
+        for (int transSizeIndex = 0; transSizeIndex < size; transSizeIndex++) {
+            transByteBitMatrix[transSizeIndex] = transposedTransBitMatrix.getColumn(transSizeIndex);
+        }
+        return LongSquareDenseBitMatrix.fromDense(transByteBitMatrix);
     }
 
     @Override
     public SquareDenseBitMatrix inverse() {
         // 构造布尔矩阵
         boolean[][] matrix = Arrays.stream(longBitMatrix)
-            .map(row -> BinaryUtils.longArrayToBinary(row, size))
+            .map(x -> BinaryUtils.longArrayToBinary(x, size))
             .toArray(boolean[][]::new);
         // 构造逆矩阵，先将逆矩阵初始化为单位阵
         boolean[][] inverseMatrix = new boolean[size][size];
@@ -183,7 +309,22 @@ public class LongSquareDenseBitMatrix implements SquareDenseBitMatrix {
         long[][] invertLongBitMatrix = Arrays.stream(inverseMatrix)
             .map(BinaryUtils::binaryToRoundLongArray)
             .toArray(long[][]::new);
-        return new LongSquareDenseBitMatrix(invertLongBitMatrix);
+        return LongSquareDenseBitMatrix.fromDense(invertLongBitMatrix);
+    }
+
+    @Override
+    public int getRows() {
+        return size;
+    }
+
+    @Override
+    public byte[] getRow(int x) {
+        return LongUtils.longArrayToByteArray(longBitMatrix[x], byteSize);
+    }
+
+    @Override
+    public int getColumns() {
+        return size;
     }
 
     @Override
@@ -206,48 +347,25 @@ public class LongSquareDenseBitMatrix implements SquareDenseBitMatrix {
     }
 
     @Override
-    public byte[] multiply(final byte[] input) {
-        assert input.length == byteSize : "input.length must be equal to " + byteSize + ": " + input.length;
-        assert BytesUtils.isReduceByteArray(input, size);
-        int byteArrayOffset = input.length * Byte.SIZE - size;
-        long[] longOutput = new long[longSize];
-        for (int binaryIndex = 0; binaryIndex < size; binaryIndex++) {
-            if (BinaryUtils.getBoolean(input, binaryIndex + byteArrayOffset)) {
-                LongUtils.xori(longOutput, longBitMatrix[binaryIndex]);
-            }
-        }
-        return LongUtils.longArrayToByteArray(longOutput, byteSize);
-    }
-
-    /**
-     * 计算输入向量乘以布尔方阵。
-     *
-     * @param input 输入向量。
-     * @return 相乘结果。
-     */
-    public long[] multiply(final long[] input) {
-        assert input.length == longSize;
-        assert LongUtils.isReduceLongArray(input, size);
-        long[] longOutput = new long[longSize];
-        for (int binaryIndex = offset; binaryIndex < size + offset; binaryIndex++) {
-            if (BinaryUtils.getBoolean(input, binaryIndex)) {
-                LongUtils.xori(longOutput, longBitMatrix[binaryIndex]);
-            }
-        }
-        return longOutput;
+    public boolean get(int x, int y) {
+        assert y >= 0 && y < size : "y must be in range [0, " + size + "): " + y;
+        return BinaryUtils.getBoolean(longBitMatrix[x], y + longOffset);
     }
 
     @Override
-    public SquareDenseBitMatrix transpose() {
-        long[][] transBitMatrix = new long[size][longSize];
-        for (int row = 0; row < size; row++) {
-            for (int column = 0; column < size; column++) {
-                if (BinaryUtils.getBoolean(longBitMatrix[row], column + offset)) {
-                    BinaryUtils.setBoolean(transBitMatrix[column], row + offset, true);
-                }
-            }
-        }
-        return new LongSquareDenseBitMatrix(transBitMatrix);
+    public byte[][] toByteArrays() {
+        return Arrays.stream(longBitMatrix)
+            .map(longRow -> LongUtils.longArrayToByteArray(longRow, byteSize))
+            .toArray(byte[][]::new);
+    }
+
+    /**
+     * 返回表示矩阵的长整数数组。
+     *
+     * @return 表示矩阵的长整数数组。
+     */
+    public long[][] toLongArrays() {
+        return longBitMatrix;
     }
 
     @Override

@@ -1,7 +1,6 @@
 package edu.alibaba.mpc4j.common.tool.bitmatrix.dense;
 
 import edu.alibaba.mpc4j.common.tool.CommonConstants;
-import edu.alibaba.mpc4j.common.tool.bitmatrix.dense.SquareDenseBitMatrixFactory.SquareDenseBitMatrixType;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.time.StopWatch;
 import org.bouncycastle.util.encoders.Hex;
@@ -14,6 +13,7 @@ import java.security.SecureRandom;
 import java.text.DecimalFormat;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.IntStream;
+import edu.alibaba.mpc4j.common.tool.bitmatrix.dense.SquareDenseBitMatrixFactory.SquareDenseBitMatrixType;
 
 /**
  * @author Weiran Liu
@@ -115,14 +115,14 @@ public class SquareDenseBitMatrixEfficiencyTest {
     public void testEfficiency() {
         LOGGER.info("{}\t{}", "                name", "   mul(us)");
         for (SquareDenseBitMatrixType type : TYPES) {
-            SquareDenseBitMatrix bitMatrix = SquareDenseBitMatrixFactory.createInstance(type, INVERTIBLE_SQUARE_BLOCK_MATRIX);
+            SquareDenseBitMatrix bitMatrix = SquareDenseBitMatrixFactory.fromDense(type, INVERTIBLE_SQUARE_BLOCK_MATRIX);
             byte[] randomInput = new byte[CommonConstants.BLOCK_BYTE_LENGTH];
             SECURE_RANDOM.nextBytes(randomInput);
             StopWatch stopWatch = new StopWatch();
             // 预热
-            IntStream.range(0, EFFICIENCY_ROUND).forEach(index -> bitMatrix.multiply(randomInput));
+            IntStream.range(0, EFFICIENCY_ROUND).forEach(index -> bitMatrix.lmul(randomInput));
             stopWatch.start();
-            IntStream.range(0, EFFICIENCY_ROUND).forEach(index -> bitMatrix.multiply(randomInput));
+            IntStream.range(0, EFFICIENCY_ROUND).forEach(index -> bitMatrix.lmul(randomInput));
             stopWatch.stop();
             double mulTime = (double)stopWatch.getTime(TimeUnit.MICROSECONDS) / EFFICIENCY_ROUND;
             stopWatch.reset();

@@ -175,10 +175,10 @@ public class LowMcOprpReceiver extends AbstractOprpReceiver {
     private void extendKey(byte[] receiverShareKeyBytes) {
         long[] receiverShareKeyLongs = LongUtils.byteArrayToLongArray(receiverShareKeyBytes);
         // 初始扩展密钥
-        initKeyShare = LowMcUtils.KEY_MATRICES[0].multiply(receiverShareKeyLongs);
+        initKeyShare = LowMcUtils.KEY_MATRICES[0].lmul(receiverShareKeyLongs);
         // 根据轮数扩展密钥
         roundKeyShares = IntStream.range(0, LowMcUtils.ROUND)
-            .mapToObj(roundIndex -> LowMcUtils.KEY_MATRICES[roundIndex + 1].multiply(receiverShareKeyLongs))
+            .mapToObj(roundIndex -> LowMcUtils.KEY_MATRICES[roundIndex + 1].lmul(receiverShareKeyLongs))
             .toArray(long[][]::new);
     }
 
@@ -274,7 +274,7 @@ public class LowMcOprpReceiver extends AbstractOprpReceiver {
         IntStream rowIndexIntStream = IntStream.range(0, batchSize);
         rowIndexIntStream = parallel ? rowIndexIntStream.parallel() : rowIndexIntStream;
         return rowIndexIntStream
-            .mapToObj(row -> LowMcUtils.LINEAR_MATRICES[roundIndex].multiply(stateLongs[row]))
+            .mapToObj(row -> LowMcUtils.LINEAR_MATRICES[roundIndex].lmul(stateLongs[row]))
             .toArray(long[][]::new);
     }
 

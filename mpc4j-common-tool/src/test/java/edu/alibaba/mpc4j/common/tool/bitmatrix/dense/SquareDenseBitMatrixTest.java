@@ -1,7 +1,8 @@
 package edu.alibaba.mpc4j.common.tool.bitmatrix.dense;
 
 import com.google.common.base.Preconditions;
-import edu.alibaba.mpc4j.common.tool.bitmatrix.dense.SquareDenseBitMatrixFactory.SquareDenseBitMatrixType;
+import edu.alibaba.mpc4j.common.tool.EnvType;
+import edu.alibaba.mpc4j.common.tool.utils.BinaryUtils;
 import edu.alibaba.mpc4j.common.tool.utils.BytesUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.bouncycastle.util.encoders.Hex;
@@ -12,11 +13,14 @@ import org.junit.runners.Parameterized;
 
 import java.security.SecureRandom;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.stream.IntStream;
 
+import edu.alibaba.mpc4j.common.tool.bitmatrix.dense.SquareDenseBitMatrixFactory.SquareDenseBitMatrixType;
+
 /**
- * 分组布尔方阵测试类。
+ * 可逆稠密布尔方阵测试。
  *
  * @author Weiran Liu
  * @date 2021/11/30
@@ -24,9 +28,53 @@ import java.util.stream.IntStream;
 @RunWith(Parameterized.class)
 public class SquareDenseBitMatrixTest {
     /**
-     * 可逆分组方阵，来自于LowMc的参数
+     * 可逆3 * 3方阵
      */
-    private static final byte[][] INVERTIBLE_SQUARE_BLOCK_MATRIX = new byte[][]{
+    private static final byte[][] INVERTIBLE_SQUARE_3_MATRIX = new byte[][]{
+        new byte[]{(byte) 0x04},
+        new byte[]{(byte) 0x05},
+        new byte[]{(byte) 0x07},
+    };
+    /**
+     * 不可逆3 * 3方阵
+     */
+    private static final byte[][] IRREVERSIBLE_SQUARE_3_MATRIX = new byte[][]{
+        new byte[]{(byte) 0x01},
+        new byte[]{(byte) 0x05},
+        new byte[]{(byte) 0x04},
+    };
+    /**
+     * 可逆9 * 9方阵
+     */
+    private static final byte[][] INVERTIBLE_SQUARE_9_MATRIX = new byte[][]{
+        new byte[]{(byte) 0x01, (byte) 0xe9},
+        new byte[]{(byte) 0x01, (byte) 0xC0},
+        new byte[]{(byte) 0x00, (byte) 0x70},
+        new byte[]{(byte) 0x01, (byte) 0x04},
+        new byte[]{(byte) 0x01, (byte) 0x96},
+        new byte[]{(byte) 0x01, (byte) 0xF1},
+        new byte[]{(byte) 0x00, (byte) 0x73},
+        new byte[]{(byte) 0x01, (byte) 0x94},
+        new byte[]{(byte) 0x00, (byte) 0x4B},
+    };
+    /**
+     * 不可逆9 * 9方阵
+     */
+    private static final byte[][] IRREVERSIBLE_SQUARE_9_MATRIX = new byte[][]{
+        new byte[]{(byte) 0x01, (byte) 0xe9},
+        new byte[]{(byte) 0x01, (byte) 0xC0},
+        new byte[]{(byte) 0x00, (byte) 0x70},
+        new byte[]{(byte) 0x01, (byte) 0x04},
+        new byte[]{(byte) 0x01, (byte) 0x96},
+        new byte[]{(byte) 0x01, (byte) 0xF1},
+        new byte[]{(byte) 0x00, (byte) 0x73},
+        new byte[]{(byte) 0x01, (byte) 0x94},
+        new byte[]{(byte) 0x00, (byte) 0x4C},
+    };
+    /**
+     * 可逆128方阵
+     */
+    private static final byte[][] INVERTIBLE_SQUARE_128_MATRIX = new byte[][]{
         Hex.decode("de3547d35d7763737b6ec5825f32786d"), Hex.decode("a1bf2597d8732f367e52b8560916d23a"),
         Hex.decode("f72e3cc9bdb8a5c0e4aaae0160b2b5e0"), Hex.decode("bd611bd92408e58abd56402baabd035d"),
         Hex.decode("d94fedafaaae5344aa35b034c6861e86"), Hex.decode("130bb264fd142470c1f146023cfd60d2"),
@@ -92,11 +140,10 @@ public class SquareDenseBitMatrixTest {
         Hex.decode("a106ec01e3bd4522f22b340ecfd57fc7"), Hex.decode("f137bacfcc2a859943d0019b6bbb655c"),
         Hex.decode("7677e3f99bd8b7eabc873bc23c662509"), Hex.decode("f43a4253f3c3fd597cdacbe067e296da"),
     };
-
     /**
-     * 不可逆分组方阵，来自于LowMc参数的修改
+     * 不可逆128 * 128方阵
      */
-    private static final byte[][] IRREVERSIBLE_SQUARE_BLOCK_MATRIX = new byte[][]{
+    private static final byte[][] IRREVERSIBLE_SQUARE_128_MATRIX = new byte[][]{
         Hex.decode("de3547d35d7763737b6ec5825f32786d"), Hex.decode("a1bf2597d8732f367e52b8560916d23a"),
         Hex.decode("f72e3cc9bdb8a5c0e4aaae0160b2b5e0"), Hex.decode("bd611bd92408e58abd56402baabd035d"),
         Hex.decode("d94fedafaaae5344aa35b034c6861e86"), Hex.decode("130bb264fd142470c1f146023cfd60d2"),
@@ -163,6 +210,34 @@ public class SquareDenseBitMatrixTest {
         Hex.decode("7677e3f99bd8b7eabc873bc23c662509"), Hex.decode("f43a4253f3c3fd597cdacbe067e296d1"),
     };
     /**
+     * 可逆稀疏方阵
+     */
+    private static final int[][] SPARSE_SQUARE_BIT_MATRIX = new int[][]{
+        new int[]{0,}, new int[]{0, 1,}, new int[]{2,}, new int[]{2, 3,},
+        new int[]{1, 3, 4,}, new int[]{2, 4, 5,}, new int[]{3, 5, 6,}, new int[]{4, 6, 7,},
+        new int[]{5, 7, 8,}, new int[]{6, 8, 9,}, new int[]{7, 9, 10,}, new int[]{8, 10, 11,},
+        new int[]{9, 11, 12,}, new int[]{10, 12, 13,}, new int[]{11, 13, 14,}, new int[]{12, 14, 15,},
+
+        new int[]{13, 15, 16,}, new int[]{14, 16, 17,}, new int[]{15, 17, 18,}, new int[]{16, 18, 19,},
+        new int[]{17, 19, 20,}, new int[]{18, 20, 21,}, new int[]{19, 21, 22,}, new int[]{20, 22, 23,},
+        new int[]{21, 23, 24,}, new int[]{22, 24, 25,}, new int[]{23, 25, 26,}, new int[]{24, 26, 27,},
+        new int[]{25, 27, 28,}, new int[]{26, 28, 29,}, new int[]{27, 29, 30,}, new int[]{28, 30, 31,},
+
+        new int[]{29, 31, 32,}, new int[]{30, 32, 33,}, new int[]{31, 33, 34,}, new int[]{32, 34, 35,},
+        new int[]{33, 35, 36,}, new int[]{34, 36, 37,}, new int[]{35, 37, 38,}, new int[]{36, 38, 39,},
+        new int[]{37, 39, 40,}, new int[]{38, 40, 41,}, new int[]{39, 41, 42,}, new int[]{40, 42, 43,},
+        new int[]{41, 43, 44,}, new int[]{42, 44, 45,}, new int[]{43, 45, 46,}, new int[]{44, 46, 47,},
+
+        new int[]{45, 47, 48,}, new int[]{46, 48, 49,}, new int[]{47, 49, 50,}, new int[]{48, 50, 51,},
+        new int[]{49, 51, 52,}, new int[]{50, 52, 53,}, new int[]{51, 53, 54,}, new int[]{52, 54, 55,},
+        new int[]{53, 55, 56,}, new int[]{54, 56, 57,}, new int[]{55, 57, 58,}, new int[]{56, 58, 59,},
+        new int[]{57, 59, 60,}, new int[]{58, 60, 61,}, new int[]{59, 61, 62,}, new int[]{60, 62, 63,},
+    };
+    /**
+     * 测试维度
+     */
+    private static final int[] SIZES = new int[]{1, 7, 8, 9, 127, 128, 129};
+    /**
      * 随机状态
      */
     private static final SecureRandom SECURE_RANDOM = new SecureRandom();
@@ -190,146 +265,211 @@ public class SquareDenseBitMatrixTest {
     }
 
     @Test
-    public void testIrreversibleSquareBlockBitMatrix() {
+    public void testConstantAdd() {
+        for (int size : SIZES) {
+            testConstantAdd(size);
+        }
+    }
+
+    private void testConstantAdd(int size) {
+        // 0 + 0 = 0
+        DenseBitMatrix zero = DenseBitMatrixTestUtils.createAllZero(type, size);
+        Assert.assertEquals(zero, zero.add(zero));
+        DenseBitMatrix inner = DenseBitMatrixTestUtils.createAllZero(type, size);
+        inner.addi(zero);
+        Assert.assertEquals(zero, inner);
+        // 0 + 1 = 1
+        DenseBitMatrix one = DenseBitMatrixTestUtils.createAllOne(type, size);
+        Assert.assertEquals(one, one.add(zero));
+        Assert.assertEquals(one, zero.add(one));
+        inner = DenseBitMatrixTestUtils.createAllZero(type, size);
+        inner.addi(one);
+        Assert.assertEquals(one, inner);
+        inner = DenseBitMatrixTestUtils.createAllOne(type, size);
+        inner.addi(zero);
+        Assert.assertEquals(one, inner);
+        // 1 + 1 = 0
+        Assert.assertEquals(zero, one.add(one));
+        inner = DenseBitMatrixTestUtils.createAllOne(type, size);
+        inner.addi(one);
+        Assert.assertEquals(zero, inner);
+    }
+
+    @Test
+    public void testRandomAdd() {
+        for (int size : SIZES) {
+            testRandomAdd(size);
+        }
+    }
+
+    private void testRandomAdd(int size) {
+        DenseBitMatrix zero = DenseBitMatrixTestUtils.createAllZero(type, size);
+        DenseBitMatrix inner;
+        // random + random = 0
+        for (int round = 0; round < ROUND; round++) {
+            DenseBitMatrix random = DenseBitMatrixTestUtils.createRandom(type, size, SECURE_RANDOM);
+            Assert.assertEquals(zero, random.add(random));
+            inner = DenseBitMatrixTestUtils.createRandom(type, size, SECURE_RANDOM);
+            inner.addi(inner);
+            Assert.assertEquals(zero, inner);
+        }
+        // random + 0 = random
+        for (int round = 0; round < ROUND; round++) {
+            DenseBitMatrix random = DenseBitMatrixTestUtils.createRandom(type, size, SECURE_RANDOM);
+            Assert.assertEquals(random, random.add(zero));
+        }
+    }
+
+    @Test
+    public void testRandomSquareMultiply() {
+        for (int size : SIZES) {
+            testRandomSquareMultiply(size);
+        }
+    }
+
+    private void testRandomSquareMultiply(int size) {
+        // 相同类型相乘
+        for (int round = 0; round < ROUND; round++) {
+            SquareDenseBitMatrix a = DenseBitMatrixTestUtils.createRandom(type, size, SECURE_RANDOM);
+            SquareDenseBitMatrix b = DenseBitMatrixTestUtils.createRandom(type, size, SECURE_RANDOM);
+            // 测试方法：(A * B)^T = B^T * A^T
+            byte[][] mulTrans = a.multiply(b).transpose(EnvType.STANDARD, false).toByteArrays();
+            byte[][] transMul = b.transpose(EnvType.STANDARD, false)
+                .multiply(a.transpose(EnvType.STANDARD, false))
+                .toByteArrays();
+            Assert.assertArrayEquals(mulTrans, transMul);
+        }
+        // 乘以字节矩阵
+        for (int round = 0; round < ROUND; round++) {
+            SquareDenseBitMatrix a = DenseBitMatrixTestUtils.createRandom(type, size, SECURE_RANDOM);
+            SquareDenseBitMatrix b = DenseBitMatrixTestUtils.createRandom(
+                SquareDenseBitMatrixType.BYTE_MATRIX, size, SECURE_RANDOM
+            );
+            // 测试方法：(A * B)^T = B^T * A^T，注意要把(A * B)^T转换为字节矩阵
+            byte[][] mulTrans = a.multiply(b).transpose(EnvType.STANDARD, false).toByteArrays();
+            byte[][] transMul = b.transpose(EnvType.STANDARD, false)
+                .multiply(a.transpose(EnvType.STANDARD, false))
+                .toByteArrays();
+            Assert.assertArrayEquals(mulTrans, transMul);
+        }
+    }
+
+    @Test
+    public void testRandomMultiply() {
+        for (int size : SIZES) {
+            testRandomMultiply(size);
+        }
+    }
+
+    private void testRandomMultiply(int size) {
+        for (int rightColumns : SIZES) {
+            for (int round = 0; round < ROUND; round++) {
+                SquareDenseBitMatrix a = DenseBitMatrixTestUtils.createRandom(type, size, SECURE_RANDOM);
+                // 右侧矩阵的行数必须等于左侧矩阵的列数
+                DenseBitMatrix b = DenseBitMatrixTestUtils.createRandom(size, rightColumns, SECURE_RANDOM);
+                // 测试方法：(A * B)^T = B^T * A^T
+                byte[][] mulTrans = a.multiply(b).transpose(EnvType.STANDARD, false).toByteArrays();
+                byte[][] transMul = b.transpose(EnvType.STANDARD, false)
+                    .multiply(a.transpose(EnvType.STANDARD, false))
+                    .toByteArrays();
+                Assert.assertArrayEquals(mulTrans, transMul);
+            }
+        }
+    }
+
+    @Test
+    public void testLmul() {
+        for (int size : SIZES) {
+            testLmul(size);
+        }
+    }
+
+    private void testLmul(int size) {
+        for (int round = 0; round < ROUND; round++) {
+            SquareDenseBitMatrix a = DenseBitMatrixTestUtils.createRandom(type, size, SECURE_RANDOM);
+            SquareDenseBitMatrix b = DenseBitMatrixTestUtils.createRandom(type, size, SECURE_RANDOM);
+            byte[][] expectArray = a.multiply(b).toByteArrays();
+            // 将a矩阵分别转换成byte[]分别与b矩阵左乘
+            byte[][] aByteArrays = a.toByteArrays();
+            byte[][] byteVectorActualArray = Arrays.stream(aByteArrays)
+                .map(b::lmul)
+                .toArray(byte[][]::new);
+            Assert.assertArrayEquals(expectArray, byteVectorActualArray);
+            // 将a矩阵转换为布尔矩阵，分别与b矩阵相乘
+            byte[][] binaryVectorActualArray = Arrays.stream(aByteArrays)
+                .map(vector -> BinaryUtils.byteArrayToBinary(vector, size))
+                .map(b::lmul)
+                .map(BinaryUtils::binaryToRoundByteArray)
+                .toArray(byte[][]::new);
+            Assert.assertArrayEquals(expectArray, binaryVectorActualArray);
+        }
+    }
+
+    @Test
+    public void testTranspose() {
+        for (int size : SIZES) {
+            testTranspose(size);
+        }
+    }
+
+    private void testTranspose(int size) {
+        for (int round = 0; round < ROUND; round++) {
+            SquareDenseBitMatrix origin = DenseBitMatrixTestUtils.createRandom(type, size, SECURE_RANDOM);
+            SquareDenseBitMatrix transpose = origin.transpose(EnvType.STANDARD, false);
+            SquareDenseBitMatrix recover = transpose.transpose(EnvType.STANDARD, false);
+            Assert.assertEquals(origin, recover);
+        }
+    }
+
+    @Test
+    public void testIrreversible() {
         try {
-            SquareDenseBitMatrix squareDenseBitMatrix = SquareDenseBitMatrixFactory.createInstance(type, IRREVERSIBLE_SQUARE_BLOCK_MATRIX);
+            SquareDenseBitMatrix squareDenseBitMatrix = SquareDenseBitMatrixFactory.fromDense(type, IRREVERSIBLE_SQUARE_3_MATRIX);
             squareDenseBitMatrix.inverse();
-            Assert.fail("ERROR: successfully invert an irreversible 128*128 SquareBitMatrix");
+            Assert.fail("ERROR: successfully invert an irreversible 3 * 3 SquareBitMatrix");
+        } catch (ArithmeticException ignored) {
+
+        }
+        try {
+            SquareDenseBitMatrix squareDenseBitMatrix = SquareDenseBitMatrixFactory.fromDense(type, IRREVERSIBLE_SQUARE_9_MATRIX);
+            squareDenseBitMatrix.inverse();
+            Assert.fail("ERROR: successfully invert an irreversible 9 * 9 SquareBitMatrix");
+        } catch (ArithmeticException ignored) {
+
+        }
+        try {
+            SquareDenseBitMatrix squareDenseBitMatrix = SquareDenseBitMatrixFactory.fromDense(type, IRREVERSIBLE_SQUARE_128_MATRIX);
+            squareDenseBitMatrix.inverse();
+            Assert.fail("ERROR: successfully invert an irreversible 128 * 128 SquareBitMatrix");
         } catch (ArithmeticException ignored) {
 
         }
     }
 
     @Test
-    public void testSquareBlockBitMatrix() {
-        SquareDenseBitMatrix squareDenseBitMatrix = SquareDenseBitMatrixFactory.createInstance(type, INVERTIBLE_SQUARE_BLOCK_MATRIX);
-        testSquareBitMatrix(squareDenseBitMatrix);
+    public void testInverse() {
+        SquareDenseBitMatrix square3BitMatrix = SquareDenseBitMatrixFactory.fromDense(type, INVERTIBLE_SQUARE_3_MATRIX);
+        testInverse(square3BitMatrix);
+        SquareDenseBitMatrix square9BitMatrix = SquareDenseBitMatrixFactory.fromDense(type, INVERTIBLE_SQUARE_9_MATRIX);
+        testInverse(square9BitMatrix);
+        SquareDenseBitMatrix square128BitMatrix = SquareDenseBitMatrixFactory.fromDense(type, INVERTIBLE_SQUARE_128_MATRIX);
+        testInverse(square128BitMatrix);
+        SquareDenseBitMatrix squareSparseBitMatrix = SquareDenseBitMatrixFactory.fromSparse(type, SPARSE_SQUARE_BIT_MATRIX);
+        testInverse(squareSparseBitMatrix);
     }
 
-    /**
-     * 可逆3 * 3方阵
-     */
-    private static final byte[][] INVERTIBLE_SQUARE_3_MATRIX = new byte[][]{
-        new byte[]{(byte)0x04},
-        new byte[]{(byte)0x05},
-        new byte[]{(byte)0x07},
-    };
-    /**
-     * 不可逆3 * 3方阵
-     */
-    private static final byte[][] IRREVERSIBLE_SQUARE_3_MATRIX = new byte[][]{
-        new byte[]{(byte)0x01},
-        new byte[]{(byte)0x05},
-        new byte[]{(byte)0x04},
-    };
-
-    @Test
-    public void testIrreversibleSquare3BitMatrix() {
-        try {
-            SquareDenseBitMatrix squareDenseBitMatrix = SquareDenseBitMatrixFactory.createInstance(type, IRREVERSIBLE_SQUARE_3_MATRIX);
-            squareDenseBitMatrix.inverse();
-            Assert.fail("ERROR: successfully invert an irreversible 3*3 SquareBitMatrix");
-        } catch (ArithmeticException ignored) {
-
-        }
-    }
-
-    @Test
-    public void testSquare3BitMatrix() {
-        SquareDenseBitMatrix squareDenseBitMatrix = SquareDenseBitMatrixFactory.createInstance(type, INVERTIBLE_SQUARE_3_MATRIX);
-        testSquareBitMatrix(squareDenseBitMatrix);
-    }
-
-    /**
-     * 可逆9 * 9方阵
-     */
-    private static final byte[][] INVERTIBLE_SQUARE_9_MATRIX = new byte[][]{
-        new byte[]{(byte)0x01, (byte)0xe9},
-        new byte[]{(byte)0x01, (byte)0xC0},
-        new byte[]{(byte)0x00, (byte)0x70},
-        new byte[]{(byte)0x01, (byte)0x04},
-        new byte[]{(byte)0x01, (byte)0x96},
-        new byte[]{(byte)0x01, (byte)0xF1},
-        new byte[]{(byte)0x00, (byte)0x73},
-        new byte[]{(byte)0x01, (byte)0x94},
-        new byte[]{(byte)0x00, (byte)0x4B},
-    };
-    /**
-     * 不可逆9 * 9方阵
-     */
-    private static final byte[][] IRREVERSIBLE_SQUARE_9_MATRIX = new byte[][]{
-        new byte[]{(byte)0x01, (byte)0xe9},
-        new byte[]{(byte)0x01, (byte)0xC0},
-        new byte[]{(byte)0x00, (byte)0x70},
-        new byte[]{(byte)0x01, (byte)0x04},
-        new byte[]{(byte)0x01, (byte)0x96},
-        new byte[]{(byte)0x01, (byte)0xF1},
-        new byte[]{(byte)0x00, (byte)0x73},
-        new byte[]{(byte)0x01, (byte)0x94},
-        new byte[]{(byte)0x00, (byte)0x4C},
-    };
-
-    @Test
-    public void testIrreversibleSquare9BitMatrix() {
-        try {
-            SquareDenseBitMatrix squareDenseBitMatrix = SquareDenseBitMatrixFactory.createInstance(type, IRREVERSIBLE_SQUARE_9_MATRIX);
-            squareDenseBitMatrix.inverse();
-            Assert.fail("ERROR: successfully invert an irreversible 3*3 SquareBitMatrix");
-        } catch (ArithmeticException ignored) {
-
-        }
-    }
-
-    @Test
-    public void testSquare9BitMatrix() {
-        SquareDenseBitMatrix squareDenseBitMatrix = SquareDenseBitMatrixFactory.createInstance(type, INVERTIBLE_SQUARE_9_MATRIX);
-        testSquareBitMatrix(squareDenseBitMatrix);
-    }
-
-    private static final int[][] SPARSE_SQUARE_BIT_MATRIX = new int[][]{
-        new int[]{0,}, new int[]{0, 1,}, new int[]{2,}, new int[]{2, 3,},
-        new int[]{1, 3, 4,}, new int[]{2, 4, 5,}, new int[]{3, 5, 6,}, new int[]{4, 6, 7,},
-        new int[]{5, 7, 8,}, new int[]{6, 8, 9,}, new int[]{7, 9, 10,}, new int[]{8, 10, 11,},
-        new int[]{9, 11, 12,}, new int[]{10, 12, 13,}, new int[]{11, 13, 14,}, new int[]{12, 14, 15,},
-
-        new int[]{13, 15, 16,}, new int[]{14, 16, 17,}, new int[]{15, 17, 18,}, new int[]{16, 18, 19,},
-        new int[]{17, 19, 20,}, new int[]{18, 20, 21,}, new int[]{19, 21, 22,}, new int[]{20, 22, 23,},
-        new int[]{21, 23, 24,}, new int[]{22, 24, 25,}, new int[]{23, 25, 26,}, new int[]{24, 26, 27,},
-        new int[]{25, 27, 28,}, new int[]{26, 28, 29,}, new int[]{27, 29, 30,}, new int[]{28, 30, 31,},
-
-        new int[]{29, 31, 32,}, new int[]{30, 32, 33,}, new int[]{31, 33, 34,}, new int[]{32, 34, 35,},
-        new int[]{33, 35, 36,}, new int[]{34, 36, 37,}, new int[]{35, 37, 38,}, new int[]{36, 38, 39,},
-        new int[]{37, 39, 40,}, new int[]{38, 40, 41,}, new int[]{39, 41, 42,}, new int[]{40, 42, 43,},
-        new int[]{41, 43, 44,}, new int[]{42, 44, 45,}, new int[]{43, 45, 46,}, new int[]{44, 46, 47,},
-
-        new int[]{45, 47, 48,}, new int[]{46, 48, 49,}, new int[]{47, 49, 50,}, new int[]{48, 50, 51,},
-        new int[]{49, 51, 52,}, new int[]{50, 52, 53,}, new int[]{51, 53, 54,}, new int[]{52, 54, 55,},
-        new int[]{53, 55, 56,}, new int[]{54, 56, 57,}, new int[]{55, 57, 58,}, new int[]{56, 58, 59,},
-        new int[]{57, 59, 60,}, new int[]{58, 60, 61,}, new int[]{59, 61, 62,}, new int[]{60, 62, 63,},
-    };
-
-    @Test
-    public void testSparseSquareBlockBitMatrix() {
-        SquareDenseBitMatrix squareDenseBitMatrix = SquareDenseBitMatrixFactory.createInstance(type, 64, SPARSE_SQUARE_BIT_MATRIX);
-        testSquareBitMatrix(squareDenseBitMatrix);
-    }
-
-    private void testSquareBitMatrix(SquareDenseBitMatrix squareDenseBitMatrix) {
+    private void testInverse(SquareDenseBitMatrix squareDenseBitMatrix) {
         // 验证求逆
-        SquareDenseBitMatrix invertBitMatrix = squareDenseBitMatrix.inverse();
+        SquareDenseBitMatrix invertSquareDenseBitMatrix = squareDenseBitMatrix.inverse();
         int size = squareDenseBitMatrix.getSize();
         int byteSize = squareDenseBitMatrix.getByteSize();
         IntStream.range(0, ROUND).forEach(round -> {
             byte[] input = new byte[byteSize];
             SECURE_RANDOM.nextBytes(input);
             BytesUtils.reduceByteArray(input, size);
-            byte[] output = squareDenseBitMatrix.multiply(input);
-            byte[] recoveredInput = invertBitMatrix.multiply(output);
+            byte[] output = squareDenseBitMatrix.lmul(input);
+            byte[] recoveredInput = invertSquareDenseBitMatrix.lmul(output);
             Assert.assertArrayEquals(input, recoveredInput);
         });
-        // 验证转置
-        SquareDenseBitMatrix transSquareDenseBitMatrix = squareDenseBitMatrix.transpose();
-        SquareDenseBitMatrix recoveredSquareDenseBitMatrix = transSquareDenseBitMatrix.transpose();
-        Assert.assertEquals(squareDenseBitMatrix, recoveredSquareDenseBitMatrix);
     }
 }
