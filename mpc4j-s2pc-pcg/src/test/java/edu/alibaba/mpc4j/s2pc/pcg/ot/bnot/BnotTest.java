@@ -40,9 +40,13 @@ public class BnotTest {
      * 默认数量
      */
     private static final int DEFAULT_NUM = 256;
-
+    /**
+     * 默认选择范围n
+     */
     private static final int DEFAULT_N = 512;
-
+    /**
+     * 较小选择范围n
+     */
     private static final int SMALL_N = 8;
 
     @Parameterized.Parameters(name = "{0}")
@@ -159,9 +163,9 @@ public class BnotTest {
         receiver.setTaskId(randomTaskId);
         try {
             LOGGER.info("-----test {} start-----", sender.getPtoDesc().getPtoName());
-            BnotSenderThread senderThread = new BnotSenderThread(sender, num, n);
             int[] choices = new int[num];
-            IntStream.range(0, num).forEach(index -> choices[index] = Math.floorMod(SECURE_RANDOM.nextInt(), n));
+            IntStream.range(0, num).forEach(index -> choices[index] = SECURE_RANDOM.nextInt(n));
+            BnotSenderThread senderThread = new BnotSenderThread(sender, num, n);
             BnotReceiverThread receiverThread = new BnotReceiverThread(receiver, choices, n);
             StopWatch stopWatch = new StopWatch();
             // 开始执行协议
