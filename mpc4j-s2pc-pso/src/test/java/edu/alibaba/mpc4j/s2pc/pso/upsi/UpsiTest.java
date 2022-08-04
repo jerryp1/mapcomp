@@ -265,17 +265,16 @@ public class UpsiTest {
         Set<ByteBuffer> serverElementSet = sets.get(0);
         Set<ByteBuffer> clientElementSet = sets.get(1);
         // 创建参与方实例
-        UpsiServer server = UpsiFactory.createServer(serverRpc, clientRpc.ownParty(), config);
-        UpsiClient client = UpsiFactory.createClient(clientRpc, serverRpc.ownParty(), config);
+        UpsiServer<ByteBuffer> server = UpsiFactory.createServer(serverRpc, clientRpc.ownParty(), config);
+        UpsiClient<ByteBuffer> client = UpsiFactory.createClient(clientRpc, serverRpc.ownParty(), config);
         long randomTaskId = Math.abs(new SecureRandom().nextLong());
         server.setTaskId(randomTaskId);
         client.setTaskId(randomTaskId);
         // 设置并发
         server.setParallel(parallel);
         client.setParallel(parallel);
-
-        UpsiServerThread serverThread = new UpsiServerThread(server, serverElementSet, clientElementSet.size());
-        UpsiClientThread clientThread = new UpsiClientThread(client, clientElementSet);
+        UpsiServerThread<ByteBuffer> serverThread = new UpsiServerThread<>(server, serverElementSet, clientElementSet.size());
+        UpsiClientThread<ByteBuffer> clientThread = new UpsiClientThread<>(client, clientElementSet);
         try {
             // 开始执行协议
             serverThread.start();

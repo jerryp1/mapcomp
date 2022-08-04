@@ -5,6 +5,7 @@ import edu.alibaba.mpc4j.common.rpc.Rpc;
 import edu.alibaba.mpc4j.common.rpc.desc.PtoDesc;
 import edu.alibaba.mpc4j.common.rpc.pto.AbstractSecureTwoPartyPto;
 import edu.alibaba.mpc4j.common.tool.CommonConstants;
+import edu.alibaba.mpc4j.common.tool.utils.ObjectUtils;
 
 import java.nio.ByteBuffer;
 import java.util.*;
@@ -17,7 +18,7 @@ import java.util.stream.Collectors;
  * @author Liqiang Peng
  * @date 2022/6/20
  */
-public abstract class AbstractKwPirServer extends AbstractSecureTwoPartyPto implements KwPirServer {
+public abstract class AbstractKwPirServer<T> extends AbstractSecureTwoPartyPto implements KwPirServer<T> {
     /**
      * 配置项
      */
@@ -25,7 +26,11 @@ public abstract class AbstractKwPirServer extends AbstractSecureTwoPartyPto impl
     /**
      * 服务端关键词数组
      */
-    protected ArrayList<ByteBuffer> serverKeywordArrayList;
+    protected ArrayList<byte[]> serverKeywordArrayList;
+    /**
+     * 关键词字节数组和关键词对象映射
+     */
+    protected Map<ByteBuffer, T> byteArrayObjectMap;
     /**
      * 服务端关键词数量
      */
@@ -41,7 +46,7 @@ public abstract class AbstractKwPirServer extends AbstractSecureTwoPartyPto impl
     /**
      * 关键词和标签映射
      */
-    protected Map<ByteBuffer, ByteBuffer> keywordLabelMap;
+    protected Map<T, ByteBuffer> keywordLabelMap;
 
     protected AbstractKwPirServer(PtoDesc ptoDesc, Rpc serverRpc, Party clientParty, KwPirConfig config) {
         super(ptoDesc, serverRpc, clientParty, config);
@@ -53,7 +58,7 @@ public abstract class AbstractKwPirServer extends AbstractSecureTwoPartyPto impl
         return config.getProType();
     }
 
-    protected void setInitInput(Map<ByteBuffer, ByteBuffer> keywordLabelMap, int labelByteLength) {
+    protected void setInitInput(Map<T, ByteBuffer> keywordLabelMap, int labelByteLength) {
         assert labelByteLength >= 1;
         this.labelByteLength = labelByteLength;
         // 设置特殊空元素
@@ -63,18 +68,23 @@ public abstract class AbstractKwPirServer extends AbstractSecureTwoPartyPto impl
         assert keywordLabelMap.size() >= 1;
         this.keywordLabelMap = keywordLabelMap;
         this.serverKeywordSize = keywordLabelMap.size();
-        Iterator<Entry<ByteBuffer, ByteBuffer>> iter = keywordLabelMap.entrySet().iterator();
-        Set<ByteBuffer> serverElementSet = new HashSet<>();
+        Iterator<Entry<T, ByteBuffer>> iter = keywordLabelMap.entrySet().iterator();
+        Set<T> serverElementSet = new HashSet<>();
         while (iter.hasNext()) {
-            Entry<ByteBuffer, ByteBuffer> entry = iter.next();
-            ByteBuffer item = entry.getKey();
+            Entry<T, ByteBuffer> entry = iter.next();
+            T item = entry.getKey();
             serverElementSet.add(item);
         }
         this.serverKeywordArrayList = serverElementSet.stream()
+            .map(ObjectUtils::objectToByteArray)
             .peek(serverElement -> {
-                assert !serverElement.equals(botElementByteBuffer) : "input equals ⊥";
+                assert !ByteBuffer.wrap(serverElement).equals(botElementByteBuffer) : "input equals ⊥";
             })
             .collect(Collectors.toCollection(ArrayList::new));
+        this.byteArrayObjectMap = new HashMap<>(this.serverKeywordSize);
+        keywordLabelMap.forEach((key, value) -> this.byteArrayObjectMap.put(
+            ByteBuffer.wrap(ObjectUtils.objectToByteArray(key)), key)
+        );
         extraInfo++;
         initialized = false;
     }

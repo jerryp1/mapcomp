@@ -5,11 +5,10 @@ import edu.alibaba.mpc4j.common.rpc.Rpc;
 import edu.alibaba.mpc4j.common.rpc.desc.PtoDesc;
 import edu.alibaba.mpc4j.common.rpc.pto.AbstractSecureTwoPartyPto;
 import edu.alibaba.mpc4j.common.tool.CommonConstants;
+import edu.alibaba.mpc4j.common.tool.utils.ObjectUtils;
 
 import java.nio.ByteBuffer;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Collectors;
 
 /**
@@ -18,7 +17,7 @@ import java.util.stream.Collectors;
  * @author Liqiang Peng
  * @date 2022/6/13
  */
-public abstract class AbstractUpsiClient extends AbstractSecureTwoPartyPto implements UpsiClient {
+public abstract class AbstractUpsiClient<T> extends AbstractSecureTwoPartyPto implements UpsiClient<T> {
     /**
      * 配置项
      */
@@ -31,6 +30,10 @@ public abstract class AbstractUpsiClient extends AbstractSecureTwoPartyPto imple
      * 客户端元素数组
      */
     protected ArrayList<ByteBuffer> clientElementArrayList;
+    /**
+     * 字节数组和对象映射
+     */
+    protected Map<ByteBuffer, T> byteArrayObjectMap;
     /**
      * 客户端元素数量
      */
@@ -57,7 +60,7 @@ public abstract class AbstractUpsiClient extends AbstractSecureTwoPartyPto imple
         initialized = false;
     }
 
-    protected void setPtoInput(Set<ByteBuffer> clientElementSet) {
+    protected void setPtoInput(Set<T> clientElementSet) {
         if (!initialized) {
             throw new IllegalStateException("Need init...");
         }
@@ -67,11 +70,17 @@ public abstract class AbstractUpsiClient extends AbstractSecureTwoPartyPto imple
         botElementByteBuffer = ByteBuffer.wrap(botElementByteArray);
         assert clientElementSet.size() >= 1 && clientElementSet.size() <= maxClientElementSize;
         this.clientElementArrayList = clientElementSet.stream()
+            .map(ObjectUtils::objectToByteArray)
+            .map(ByteBuffer::wrap)
             .peek(clientElement -> {
                 assert !clientElement.equals(botElementByteBuffer) : "input equals ⊥";
             })
             .collect(Collectors.toCollection(ArrayList::new));
         clientElementSize = clientElementSet.size();
+        this.byteArrayObjectMap = new HashMap<>(clientElementSize);
+        clientElementSet.forEach(clientElement ->
+            this.byteArrayObjectMap.put(ByteBuffer.wrap(ObjectUtils.objectToByteArray(clientElement)), clientElement)
+        );
         extraInfo++;
     }
 }

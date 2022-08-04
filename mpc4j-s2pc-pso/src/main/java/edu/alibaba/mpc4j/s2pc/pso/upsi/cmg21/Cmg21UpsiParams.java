@@ -318,7 +318,6 @@ public class Cmg21UpsiParams {
         // 判断是否为空桶
         if (hashBinEntry.getHashIndex() != -1) {
             assert hashBinEntry.getHashIndex() < 3 : "hash index should be [0, 1, 2]";
-            // encode the first (plain_modulus_bits-1) * felts_per_item bits of the input
             BigInteger input = BigIntegerUtils.byteArrayToNonNegBigInteger(hashBinEntry.getItem().array());
             input = input.shiftRight(input.bitLength() - bitLength);
             for (int i = 0; i < itemEncodedSlotSize; i++) {
@@ -326,7 +325,6 @@ public class Cmg21UpsiParams {
                 input = input.shiftRight(shiftBits);
             }
         } else {
-            // 0 or 1 for the input depending on whether it's the sender or the receiver who needs a dummy.
             IntStream.range(0, itemEncodedSlotSize).forEach(i -> {
                 long random = Math.abs(secureRandom.nextLong()) % plainModulus / 8;
                 encodedArray[i] = random << 1 | (isReceiver ? 1L : 0L);

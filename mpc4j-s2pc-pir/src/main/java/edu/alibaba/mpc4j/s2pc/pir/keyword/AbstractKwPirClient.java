@@ -5,11 +5,10 @@ import edu.alibaba.mpc4j.common.rpc.Rpc;
 import edu.alibaba.mpc4j.common.rpc.desc.PtoDesc;
 import edu.alibaba.mpc4j.common.rpc.pto.AbstractSecureTwoPartyPto;
 import edu.alibaba.mpc4j.common.tool.CommonConstants;
+import edu.alibaba.mpc4j.common.tool.utils.ObjectUtils;
 
 import java.nio.ByteBuffer;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Collectors;
 
 /**
@@ -18,7 +17,7 @@ import java.util.stream.Collectors;
  * @author Liqiang Peng
  * @date 2022/6/20
  */
-public abstract class AbstractKwPirClient extends AbstractSecureTwoPartyPto implements KwPirClient {
+public abstract class AbstractKwPirClient<T> extends AbstractSecureTwoPartyPto implements KwPirClient<T> {
     /**
      * 配置项
      */
@@ -26,7 +25,11 @@ public abstract class AbstractKwPirClient extends AbstractSecureTwoPartyPto impl
     /**
      * 客户端关键词数组
      */
-    protected ArrayList<ByteBuffer> clientKeywordArrayList;
+    protected ArrayList<byte[]> clientKeywordArrayList;
+    /**
+     * 关键词字节数组和关键词对象映射
+     */
+    protected Map<ByteBuffer, T> byteArrayObjectMap;
     /**
      * 客户端关键词数量
      */
@@ -67,17 +70,22 @@ public abstract class AbstractKwPirClient extends AbstractSecureTwoPartyPto impl
         initialized = false;
     }
 
-    protected void setPtoInput(Set<ByteBuffer> clientKeywordSet) {
+    protected void setPtoInput(Set<T> clientKeywordSet) {
         if (!initialized) {
             throw new IllegalStateException("Need init...");
         }
         assert clientKeywordSet.size() <= maxClientRetrievalKeywordSize;
         this.clientKeywordSize = clientKeywordSet.size();
         this.clientKeywordArrayList = clientKeywordSet.stream()
+            .map(ObjectUtils::objectToByteArray)
             .peek(clientElement -> {
-                assert !clientElement.equals(botElementByteBuffer) : "input equals ⊥";
+                assert !ByteBuffer.wrap(clientElement).equals(botElementByteBuffer) : "input equals ⊥";
             })
             .collect(Collectors.toCollection(ArrayList::new));
+        this.byteArrayObjectMap = new HashMap<>(this.clientKeywordSize);
+        clientKeywordSet.forEach(clientElementObject -> this.byteArrayObjectMap.put(
+            ByteBuffer.wrap(ObjectUtils.objectToByteArray(clientElementObject)), clientElementObject)
+        );
         extraInfo++;
     }
 }

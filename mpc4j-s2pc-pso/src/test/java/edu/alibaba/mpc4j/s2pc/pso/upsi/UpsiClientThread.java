@@ -12,26 +12,26 @@ import java.util.Set;
  * @author Liqiang Peng
  * @date 2022/5/26
  */
-public class UpsiClientThread extends Thread {
+public class UpsiClientThread<T> extends Thread {
     /**
      * 非平衡PSI协议客户端
      */
-    private final UpsiClient upsiClient;
+    private final UpsiClient<T> upsiClient;
     /**
      * 客户端集合
      */
-    private final Set<ByteBuffer> clientElementSet;
+    private final Set<T> clientElementSet;
     /**
      * 交集
      */
-    private Set<ByteBuffer> intersectionSet;
+    private Set<T> intersectionSet;
 
-    UpsiClientThread(UpsiClient upsiClient, Set<ByteBuffer> clientElementSet) {
+    UpsiClientThread(UpsiClient<T> upsiClient, Set<T> clientElementSet) {
         this.upsiClient = upsiClient;
         this.clientElementSet = clientElementSet;
     }
 
-    Set<ByteBuffer> getIntersectionSet() {
+    Set<T> getIntersectionSet() {
         return intersectionSet;
     }
 

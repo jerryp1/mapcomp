@@ -228,7 +228,7 @@ public class Cmg21KwPirParams {
      * @param secureRandom 随机状态。
      * @return 哈希桶条目中元素对应的编码数组。
      */
-    public long[] getHashBinEntryEncodedArray(HashBinEntry<ByteBuffer> hashBinEntry, boolean isReceiver,
+    public long[] getHashBinEntryEncodedArray(HashBinEntry<byte[]> hashBinEntry, boolean isReceiver,
                                               SecureRandom secureRandom) {
         long[] encodedArray = new long[itemEncodedSlotSize];
         int bitLength = (BigInteger.valueOf(plainModulus).bitLength()-1) * itemEncodedSlotSize;
@@ -236,16 +236,14 @@ public class Cmg21KwPirParams {
         int shiftBits = BigInteger.valueOf(plainModulus).bitLength() - 1;
         // 判断是否为空桶
         if (hashBinEntry.getHashIndex() != -1) {
-            // the index of the hash function should be [0, 1, 2], index -1 is used for dummy elements
             assert(hashBinEntry.getHashIndex() < 3) : "hash index should be [0, 1, 2]";
-            BigInteger input = BigIntegerUtils.byteArrayToNonNegBigInteger(hashBinEntry.getItem().array());
+            BigInteger input = BigIntegerUtils.byteArrayToNonNegBigInteger(hashBinEntry.getItem());
             input = input.shiftRight(input.bitLength() - bitLength);
             for (int i = 0; i < itemEncodedSlotSize; i++) {
                 encodedArray[i] = input.mod(BigInteger.ONE.shiftLeft(shiftBits)).longValueExact();
                 input = input.shiftRight(shiftBits);
             }
         } else {
-            // 0 or 1 for the input depending on whether it's the sender or the receiver who needs a dummy.
             IntStream.range(0, itemEncodedSlotSize).forEach(i -> {
                 long random = Math.abs(secureRandom.nextLong()) % plainModulus / 8;
                 encodedArray[i] = random << 1 | (isReceiver ? 1L : 0L);
@@ -264,10 +262,10 @@ public class Cmg21KwPirParams {
      * @param partitionNum 分块数目。
      * @return 标签编码数组。
      */
-    public long[][] encodeLabel(ByteBuffer labelBytes, int partitionNum) {
+    public long[][] encodeLabel(byte[] labelBytes, int partitionNum) {
         long[][] encodedArray = new long[partitionNum][itemEncodedSlotSize];
-        int shiftBits = (int) Math.ceil(labelBytes.array().length*8.0 / (itemEncodedSlotSize*partitionNum));
-        BigInteger bigIntLabel = BigIntegerUtils.byteArrayToNonNegBigInteger(labelBytes.array());
+        int shiftBits = (int) Math.ceil(labelBytes.length*8.0 / (itemEncodedSlotSize*partitionNum));
+        BigInteger bigIntLabel = BigIntegerUtils.byteArrayToNonNegBigInteger(labelBytes);
         for (int i = 0; i < partitionNum; i++) {
             for (int j = 0; j < itemEncodedSlotSize; j++) {
                 encodedArray[i][j] = bigIntLabel.mod(BigInteger.ONE.shiftLeft(shiftBits)).longValueExact();

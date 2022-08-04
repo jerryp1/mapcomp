@@ -30,7 +30,7 @@ import java.util.stream.Stream;
  * @author Liqiang Peng
  * @date 2022/5/25
  */
-public class Cmg21UpsiClient extends AbstractUpsiClient {
+public class Cmg21UpsiClient<T> extends AbstractUpsiClient<T> {
     static {
         System.loadLibrary(CommonConstants.MPC4J_NATIVE_FHE_NAME);
     }
@@ -99,7 +99,7 @@ public class Cmg21UpsiClient extends AbstractUpsiClient {
     }
 
     @Override
-    public Set<ByteBuffer> psi(Set<ByteBuffer> clientElementSet) throws MpcAbortException {
+    public Set<T> psi(Set<T> clientElementSet) throws MpcAbortException {
         setPtoInput(clientElementSet);
         info("{}{} Client begin", ptoBeginLogPrefix, getPtoDesc().getPtoName());
 
@@ -181,7 +181,7 @@ public class Cmg21UpsiClient extends AbstractUpsiClient {
         List<long[]> decodedResponse = responseStream
             .map(i -> Cmg21UpsiNativeClient.decodeReply(i, encryptionParams.get(0), encryptionParams.get(3)))
             .collect(Collectors.toList());
-        Set<ByteBuffer> intersectionSet = recoverPsiResult(decodedResponse, oprfMap);
+        Set<T> intersectionSet = recoverPsiResult(decodedResponse, oprfMap);
         stopWatch.stop();
         long decodeResponseTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
         stopWatch.reset();
@@ -230,8 +230,8 @@ public class Cmg21UpsiClient extends AbstractUpsiClient {
      * @param oprfMap           OPRF映射。
      * @return 隐私集合交集。
      */
-    private Set<ByteBuffer> recoverPsiResult(List<long[]> decryptedResponse, Map<ByteBuffer, ByteBuffer> oprfMap) {
-        Set<ByteBuffer> intersectionSet = new HashSet<>();
+    private Set<T> recoverPsiResult(List<long[]> decryptedResponse, Map<ByteBuffer, ByteBuffer> oprfMap) {
+        Set<T> intersectionSet = new HashSet<>();
         int ciphertextNum = params.getBinNum() / (params.getPolyModulusDegree() / params.getItemEncodedSlotSize());
         int itemPerCiphertext = params.getPolyModulusDegree() / params.getItemEncodedSlotSize();
         int partitionCount = decryptedResponse.size() / ciphertextNum;
@@ -248,7 +248,8 @@ public class Cmg21UpsiClient extends AbstractUpsiClient {
                     if (matchedItem.get(j + params.getItemEncodedSlotSize() - 1) - matchedItem.get(j)
                         == params.getItemEncodedSlotSize() - 1) {
                         int hashBinIndex = (matchedItem.get(j) / params.getItemEncodedSlotSize()) + (i / partitionCount) * itemPerCiphertext;
-                        intersectionSet.add(oprfMap.get(cuckooHashBin.getHashBinEntry(hashBinIndex).getItem()));
+                        intersectionSet.add(byteArrayObjectMap.get(
+                            oprfMap.get(cuckooHashBin.getHashBinEntry(hashBinIndex).getItem())));
                         j = j + params.getItemEncodedSlotSize() - 1;
                     }
                 }

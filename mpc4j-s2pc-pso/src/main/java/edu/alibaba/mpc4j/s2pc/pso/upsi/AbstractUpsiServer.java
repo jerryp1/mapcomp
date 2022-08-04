@@ -5,11 +5,10 @@ import edu.alibaba.mpc4j.common.rpc.Rpc;
 import edu.alibaba.mpc4j.common.rpc.desc.PtoDesc;
 import edu.alibaba.mpc4j.common.rpc.pto.AbstractSecureTwoPartyPto;
 import edu.alibaba.mpc4j.common.tool.CommonConstants;
+import edu.alibaba.mpc4j.common.tool.utils.ObjectUtils;
 
 import java.nio.ByteBuffer;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Collectors;
 
 /**
@@ -18,7 +17,7 @@ import java.util.stream.Collectors;
  * @author Liqiang Peng
  * @date 2022/6/14
  */
-public abstract class AbstractUpsiServer extends AbstractSecureTwoPartyPto implements UpsiServer {
+public abstract class AbstractUpsiServer<T> extends AbstractSecureTwoPartyPto implements UpsiServer<T> {
     /**
      * 配置项
      */
@@ -31,6 +30,10 @@ public abstract class AbstractUpsiServer extends AbstractSecureTwoPartyPto imple
      * 服务端元素数组
      */
     protected ArrayList<ByteBuffer> serverElementArrayList;
+    /**
+     * 字节数组和对象映射
+     */
+    protected Map<ByteBuffer, T> byteArrayObjectMap;
     /**
      * 服务端元素数量
      */
@@ -61,7 +64,7 @@ public abstract class AbstractUpsiServer extends AbstractSecureTwoPartyPto imple
         initialized = false;
     }
 
-    protected void setPtoInput(Set<ByteBuffer> serverElementSet, int clientElementSize) {
+    protected void setPtoInput(Set<T> serverElementSet, int clientElementSize) {
         if (!initialized) {
             throw new IllegalStateException("Need init...");
         }
@@ -71,6 +74,8 @@ public abstract class AbstractUpsiServer extends AbstractSecureTwoPartyPto imple
         botElementByteBuffer = ByteBuffer.wrap(botElementByteArray);
         assert serverElementSet.size() >= 1;
         this.serverElementArrayList = serverElementSet.stream()
+            .map(ObjectUtils::objectToByteArray)
+            .map(ByteBuffer::wrap)
             .peek(senderElement -> {
                 assert !senderElement.equals(botElementByteBuffer) : "input equals ⊥";
             })
@@ -78,6 +83,10 @@ public abstract class AbstractUpsiServer extends AbstractSecureTwoPartyPto imple
         serverElementSize = serverElementSet.size();
         assert clientElementSize >= 1 && clientElementSize <= maxClientElementSize;
         this.clientElementSize = clientElementSize;
+        this.byteArrayObjectMap = new HashMap<>(clientElementSize);
+        serverElementSet.forEach(serverElement ->
+            this.byteArrayObjectMap.put(ByteBuffer.wrap(ObjectUtils.objectToByteArray(serverElement)), serverElement)
+        );
         extraInfo++;
     }
 }

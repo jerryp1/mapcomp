@@ -16,7 +16,7 @@ import static edu.alibaba.mpc4j.s2pc.pir.keyword.KwPirFactory.PirType;
  * @author Liqiang Peng
  * @date 2022/6/20
  */
-public interface KwPirClient extends TwoPartyPto, SecurePto {
+public interface KwPirClient<T> extends TwoPartyPto, SecurePto {
 
     @Override
     PirType getPtoType();
@@ -36,5 +36,5 @@ public interface KwPirClient extends TwoPartyPto, SecurePto {
      * @return 查询元素和标签映射。
      * @throws MpcAbortException 如果协议异常中止。
      */
-    Map<ByteBuffer, ByteBuffer> pir(Set<ByteBuffer> clientKeywordSet) throws MpcAbortException;
+    Map<T, ByteBuffer> pir(Set<T> clientKeywordSet) throws MpcAbortException;
 }

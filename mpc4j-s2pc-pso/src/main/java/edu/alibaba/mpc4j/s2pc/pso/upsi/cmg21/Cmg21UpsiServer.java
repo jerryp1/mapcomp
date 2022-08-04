@@ -11,12 +11,13 @@ import edu.alibaba.mpc4j.common.tool.EnvType;
 import edu.alibaba.mpc4j.common.tool.hashbin.object.HashBinEntry;
 import edu.alibaba.mpc4j.common.tool.hashbin.object.RandomPadHashBin;
 import edu.alibaba.mpc4j.common.tool.hashbin.object.cuckoo.CuckooHashBinFactory;
+import edu.alibaba.mpc4j.common.tool.polynomial.power.PowerNode;
+import edu.alibaba.mpc4j.common.tool.polynomial.power.PowerUtils;
 import edu.alibaba.mpc4j.s2pc.pso.oprf.MpOprfSender;
 import edu.alibaba.mpc4j.s2pc.pso.oprf.MpOprfSenderOutput;
 import edu.alibaba.mpc4j.s2pc.pso.oprf.OprfFactory;
 import edu.alibaba.mpc4j.s2pc.pso.upsi.AbstractUpsiServer;
 import edu.alibaba.mpc4j.s2pc.pso.upsi.PolynomialUtils;
-import edu.alibaba.mpc4j.s2pc.pso.upsi.PowersNode;
 
 import java.nio.ByteBuffer;
 import java.util.*;
@@ -30,7 +31,7 @@ import java.util.stream.IntStream;
  * @author Liqiang Peng
  * @date 2022/5/25
  */
-public class Cmg21UpsiServer extends AbstractUpsiServer {
+public class Cmg21UpsiServer<T> extends AbstractUpsiServer<T> {
     static {
         System.loadLibrary(CommonConstants.MPC4J_NATIVE_FHE_NAME);
     }
@@ -90,7 +91,7 @@ public class Cmg21UpsiServer extends AbstractUpsiServer {
     }
 
     @Override
-    public void psi(Set<ByteBuffer> serverElementSet, int clientElementSize) throws MpcAbortException {
+    public void psi(Set<T> serverElementSet, int clientElementSize) throws MpcAbortException {
         setPtoInput(serverElementSet, clientElementSize);
         info("{}{} Server begin", ptoBeginLogPrefix, getPtoDesc().getPtoName());
 
@@ -258,60 +259,6 @@ public class Cmg21UpsiServer extends AbstractUpsiServer {
     }
 
     /**
-     * 计算给定范围内的幂次方。
-     *
-     * @param sourcePowers 源幂次方。
-     * @param upperBound   上界。
-     * @return 给定范围内的幂次方。
-     */
-    private int[][] computePowers(Set<Integer> sourcePowers, int upperBound) throws MpcAbortException {
-        MpcAbortPreconditions.checkArgument(upperBound > 1, "upperBound must be greater than 1 : " + upperBound);
-        Set<Integer> targetPowers = IntStream.rangeClosed(1, upperBound)
-            .boxed()
-            .collect(Collectors.toCollection(HashSet::new));
-        Integer[] sortSourcePowers = Arrays.stream(sourcePowers.toArray(new Integer[0]))
-            .sorted()
-            .toArray(Integer[]::new);
-        MpcAbortPreconditions.checkArgument(sortSourcePowers[sortSourcePowers.length - 1] <= upperBound, "Source powers "
-            + "must be a subset of target powers");
-        PowersNode[] powersNodes = new PowersNode[upperBound];
-        IntStream.range(0, sortSourcePowers.length)
-            .forEach(i -> powersNodes[sortSourcePowers[i] - 1] = new PowersNode(sortSourcePowers[i], 0));
-        int currDepth = 0;
-        for (int currPower = 1; currPower <= upperBound; currPower++) {
-            if (powersNodes[currPower - 1] != null) {
-                continue;
-            }
-            int optimalDepth = currPower - 1;
-            int optimalS1 = currPower - 1;
-            int optimalS2 = 1;
-            for (int s1 = 1; s1 <= targetPowers.size(); s1++) {
-                if (s1 >= currPower) {
-                    break;
-                }
-                int s2 = currPower - s1;
-                if (!targetPowers.contains(s2)) {
-                    continue;
-                }
-                int depth = Math.max(powersNodes[s1 - 1].depth, powersNodes[s2 - 1].depth) + 1;
-                if (depth < optimalDepth) {
-                    optimalDepth = depth;
-                    optimalS1 = s1;
-                    optimalS2 = s2;
-                }
-            }
-            powersNodes[currPower - 1] = new PowersNode(currPower, optimalDepth, optimalS1, optimalS2);
-            currDepth = Math.max(currDepth, optimalDepth);
-        }
-        return IntStream.range(0, upperBound).mapToObj(i -> {
-            int[] parentPowers = new int[2];
-            parentPowers[0] = powersNodes[i].leftParentPower;
-            parentPowers[1] = powersNodes[i].rightParentPower;
-            return parentPowers;
-        }).toArray(int[][]::new);
-    }
-
-    /**
      * 服务端（发送方）执行MP-OPRF协议。
      *
      * @return 服务端元素的伪随机函数输出。
@@ -341,7 +288,7 @@ public class Cmg21UpsiServer extends AbstractUpsiServer {
         int partitionCount = (binSize + params.getMaxPartitionSizePerBin() - 1) / params.getMaxPartitionSizePerBin();
         int ciphertextNum = params.getBinNum() / (params.getPolyModulusDegree() / params.getItemEncodedSlotSize());
         // 计算所有的密文次方
-        int[][] powers;
+        int[][] powerDegree;
         if (params.getPsLowDegree() > 0) {
             Set<Integer> innerPowersSet = new HashSet<>();
             Set<Integer> outerPowersSet = new HashSet<>();
@@ -352,16 +299,20 @@ public class Cmg21UpsiServer extends AbstractUpsiServer {
                     outerPowersSet.add(params.getQueryPowers()[i] / (params.getPsLowDegree() + 1));
                 }
             });
-            int[][] innerPowers = computePowers(innerPowersSet, params.getPsLowDegree());
-            int[][] outerPowers = computePowers(outerPowersSet, params.getMaxPartitionSizePerBin() / (params.getPsLowDegree() + 1));
-            powers = new int[innerPowers.length + outerPowers.length][2];
-            System.arraycopy(innerPowers, 0, powers, 0, innerPowers.length);
-            System.arraycopy(outerPowers, 0, powers, innerPowers.length, outerPowers.length);
+            PowerNode[] innerPowerNodes = PowerUtils.computePowers(innerPowersSet, params.getPsLowDegree());
+            PowerNode[] outerPowerNodes = PowerUtils.computePowers(
+                outerPowersSet, params.getMaxPartitionSizePerBin() / (params.getPsLowDegree() + 1));
+            powerDegree = new int[innerPowerNodes.length + outerPowerNodes.length][2];
+            int[][] innerPowerNodesDegree = Arrays.stream(innerPowerNodes).map(PowerNode::toIntArray).toArray(int[][]::new);
+            int[][] outerPowerNodesDegree = Arrays.stream(outerPowerNodes).map(PowerNode::toIntArray).toArray(int[][]::new);
+            System.arraycopy(innerPowerNodesDegree, 0, powerDegree, 0, innerPowerNodesDegree.length);
+            System.arraycopy(outerPowerNodesDegree, 0, powerDegree, innerPowerNodesDegree.length, outerPowerNodesDegree.length);
         } else {
             Set<Integer> sourcePowersSet = Arrays.stream(params.getQueryPowers())
                 .boxed()
                 .collect(Collectors.toCollection(HashSet::new));
-            powers = computePowers(sourcePowersSet, params.getMaxPartitionSizePerBin());
+            PowerNode[] powerNodes = PowerUtils.computePowers(sourcePowersSet, params.getMaxPartitionSizePerBin());
+            powerDegree = Arrays.stream(powerNodes).map(PowerNode::toIntArray).toArray(int[][]::new);
         }
         IntStream queryIntStream = parallel ?
             IntStream.range(0, ciphertextNum).parallel() : IntStream.range(0, ciphertextNum);
@@ -370,7 +321,7 @@ public class Cmg21UpsiServer extends AbstractUpsiServer {
                 ciphertextPoly.subList(i * params.getQueryPowers().length, (i + 1) * params.getQueryPowers().length),
                 encryptionParams.get(1),
                 encryptionParams.get(0),
-                powers,
+                powerDegree,
                 params.getQueryPowers(),
                 params.getPsLowDegree())
             )
@@ -382,7 +333,7 @@ public class Cmg21UpsiServer extends AbstractUpsiServer {
                     (parallel ? IntStream.range(0, partitionCount).parallel() : IntStream.range(0, partitionCount))
                         .mapToObj(j -> Cmg21UpsiNativeServer.computeMatches(
                             plaintextPoly.get(i * partitionCount + j),
-                            queryPowers.subList(i * powers.length, (i + 1) * powers.length),
+                            queryPowers.subList(i * powerDegree.length, (i + 1) * powerDegree.length),
                             encryptionParams.get(1),
                             encryptionParams.get(0),
                             params.getPsLowDegree())
@@ -396,7 +347,7 @@ public class Cmg21UpsiServer extends AbstractUpsiServer {
                     (parallel ? IntStream.range(0, partitionCount).parallel() : IntStream.range(0, partitionCount))
                         .mapToObj(j -> Cmg21UpsiNativeServer.computeMatchesNaiveMethod(
                             plaintextPoly.get(i * partitionCount + j),
-                            queryPowers.subList(i * powers.length, (i + 1) * powers.length),
+                            queryPowers.subList(i * powerDegree.length, (i + 1) * powerDegree.length),
                             encryptionParams.get(1),
                             encryptionParams.get(0))
                         )

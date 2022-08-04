@@ -11,15 +11,15 @@ import java.util.Map;
  * @author Liqiang Peng
  * @date 2022/6/22
  */
-public class KwPirServerThread extends Thread {
+public class KwPirServerThread<T> extends Thread {
     /**
      * 关键词PIR协议服务端
      */
-    private final KwPirServer pirServer;
+    private final KwPirServer<T> pirServer;
     /**
      * 服务端关键词和标签映射
      */
-    private final Map<ByteBuffer, ByteBuffer> serverKeywordLabelMap;
+    private final Map<T, ByteBuffer> serverKeywordLabelMap;
     /**
      * 标签字节长度
      */
@@ -29,7 +29,7 @@ public class KwPirServerThread extends Thread {
      */
     private final int retrievalNumber;
 
-    KwPirServerThread(KwPirServer pirServer, Map<ByteBuffer, ByteBuffer> serverKeywordLabelMap, int labelByteLength,
+    KwPirServerThread(KwPirServer<T> pirServer, Map<T, ByteBuffer> serverKeywordLabelMap, int labelByteLength,
                       int retrievalNumber) {
         this.pirServer = pirServer;
         this.serverKeywordLabelMap = serverKeywordLabelMap;

@@ -1,5 +1,6 @@
 //
 // Created by Liqiang Peng on 2022/7/14.
+// 参考开源代码(https://github.com/microsoft/APSI)实现
 //
 
 #include "apsi.h"

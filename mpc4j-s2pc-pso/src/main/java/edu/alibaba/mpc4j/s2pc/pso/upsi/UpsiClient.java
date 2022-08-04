@@ -14,7 +14,7 @@ import java.util.Set;
  * @author Liqiang Peng
  * @date 2022/6/13
  */
-public interface UpsiClient extends TwoPartyPto, SecurePto {
+public interface UpsiClient<T> extends TwoPartyPto, SecurePto {
 
     @Override
     UpsiType getPtoType();
@@ -33,5 +33,5 @@ public interface UpsiClient extends TwoPartyPto, SecurePto {
      * @throws MpcAbortException  如果协议异常中止。
      * @return 交集结果。
      */
-    Set<ByteBuffer> psi(Set<ByteBuffer> clientElementSet) throws MpcAbortException;
+    Set<T> psi(Set<T> clientElementSet) throws MpcAbortException;
 }

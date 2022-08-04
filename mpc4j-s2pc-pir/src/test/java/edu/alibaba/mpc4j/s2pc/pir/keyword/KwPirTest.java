@@ -66,7 +66,7 @@ public class KwPirTest {
         // 数据字节长度
         int elementByteLength = 20;
         // 检索次数
-        int retrievalNumber = 20;
+        int retrievalNumber = 10;
         // 随机生成服务端数据库关键词
         int serverElementSize = 1 << 20;
         ArrayList<Set<ByteBuffer>> randomSets = PirUtils.generateBytesSets(serverElementSize, retrievalElementSize,
@@ -74,14 +74,14 @@ public class KwPirTest {
         // 随机构建服务端关键词和标签映射
         Map<ByteBuffer, ByteBuffer> serverKwLabelMap = PirUtils.generateKwLabelMap(randomSets.get(0), labelByteLength);
         // 创建参与方实例
-        KwPirServer server = KwPirFactory.createServer(serverRpc, clientRpc.ownParty(), config);
-        KwPirClient client = KwPirFactory.createClient(clientRpc, serverRpc.ownParty(), config);
+        KwPirServer<ByteBuffer> server = KwPirFactory.createServer(serverRpc, clientRpc.ownParty(), config);
+        KwPirClient<ByteBuffer> client = KwPirFactory.createClient(clientRpc, serverRpc.ownParty(), config);
         // 设置并发
         server.setParallel(parallel);
         client.setParallel(parallel);
-        KwPirServerThread serverThread = new KwPirServerThread(server, serverKwLabelMap, labelByteLength,
+        KwPirServerThread<ByteBuffer> serverThread = new KwPirServerThread<>(server, serverKwLabelMap, labelByteLength,
             retrievalNumber);
-        KwPirClientThread clientThread = new KwPirClientThread(client,
+        KwPirClientThread<ByteBuffer> clientThread = new KwPirClientThread<>(client,
             Lists.newArrayList(randomSets.subList(1, retrievalNumber + 1)), labelByteLength);
         try {
             // 开始执行协议

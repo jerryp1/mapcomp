@@ -14,15 +14,15 @@ import java.util.Set;
  * @author Liqiang Peng
  * @date 2022/6/22
  */
-public class KwPirClientThread extends Thread {
+public class KwPirClientThread<T> extends Thread {
     /**
      * 关键词PIR协议客户端
      */
-    private final KwPirClient pirClient;
+    private final KwPirClient<T> pirClient;
     /**
      * 客户端关键词集合
      */
-    private final ArrayList<Set<ByteBuffer>> clientKeywordSets;
+    private final ArrayList<Set<T>> clientKeywordSets;
     /**
      * 标签字节长度
      */
@@ -30,20 +30,20 @@ public class KwPirClientThread extends Thread {
     /**
      * PIR结果
      */
-    private final Map<ByteBuffer, ByteBuffer> pirResult = new HashMap<>();
+    private final Map<T, ByteBuffer> pirResult = new HashMap<>();
     /**
      * 检索次数
      */
     private final int retrievalNumber;
 
-    KwPirClientThread(KwPirClient pirClient, ArrayList<Set<ByteBuffer>> clientKeywordSets, int labelByteLength) {
+    KwPirClientThread(KwPirClient<T> pirClient, ArrayList<Set<T>> clientKeywordSets, int labelByteLength) {
         this.pirClient = pirClient;
         this.clientKeywordSets = clientKeywordSets;
         this.labelByteLength = labelByteLength;
         this.retrievalNumber = clientKeywordSets.size();
     }
 
-    public Map<ByteBuffer, ByteBuffer> getPirResult() {
+    public Map<T, ByteBuffer> getPirResult() {
         return pirResult;
     }
 

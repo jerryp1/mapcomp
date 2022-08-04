@@ -11,21 +11,21 @@ import java.util.Set;
  * @author Liqiang Peng
  * @date 2022/5/26
  */
-public class UpsiServerThread extends Thread {
+public class UpsiServerThread<T> extends Thread {
     /**
      * 非平衡PSI协议服务端
      */
-    private final UpsiServer upsiServer;
+    private final UpsiServer<T> upsiServer;
     /**
      * 服务端集合
      */
-    private final Set<ByteBuffer> serverElementSet;
+    private final Set<T> serverElementSet;
     /**
      * 客户端（接收方）元素数量
      */
     private final int clientElementSize;
 
-    UpsiServerThread(UpsiServer upsiServer, Set<ByteBuffer> serverElementSet, int clientElementSize) {
+    UpsiServerThread(UpsiServer<T> upsiServer, Set<T> serverElementSet, int clientElementSize) {
         this.upsiServer = upsiServer;
         this.serverElementSet = serverElementSet;
         this.clientElementSize = clientElementSize;
