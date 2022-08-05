@@ -7,8 +7,8 @@ import edu.alibaba.mpc4j.common.rpc.Rpc;
 import edu.alibaba.mpc4j.common.rpc.utils.DataPacket;
 import edu.alibaba.mpc4j.common.rpc.utils.DataPacketHeader;
 import edu.alibaba.mpc4j.common.tool.CommonConstants;
-import edu.alibaba.mpc4j.common.tool.bitmatrix.BitMatrix;
-import edu.alibaba.mpc4j.common.tool.bitmatrix.BitMatrixFactory;
+import edu.alibaba.mpc4j.common.tool.bitmatrix.trans.TransBitMatrix;
+import edu.alibaba.mpc4j.common.tool.bitmatrix.trans.TransBitMatrixFactory;
 import edu.alibaba.mpc4j.common.tool.crypto.kdf.Kdf;
 import edu.alibaba.mpc4j.common.tool.crypto.kdf.KdfFactory;
 import edu.alibaba.mpc4j.common.tool.crypto.prf.Prf;
@@ -71,7 +71,7 @@ public class Kos15RcotSender extends AbstractRcotSender {
     /**
      * Q的转置矩阵
      */
-    private BitMatrix qTransposeMatrix;
+    private TransBitMatrix qTransposeMatrix;
 
     public Kos15RcotSender(Rpc senderRpc, Party receiverParty, Kos15RcotConfig config) {
         super(Kos15RcotPtoDesc.getInstance(), senderRpc, receiverParty, config);
@@ -174,7 +174,7 @@ public class Kos15RcotSender extends AbstractRcotSender {
         MpcAbortPreconditions.checkArgument(matrixPayload.size() == CommonConstants.BLOCK_BIT_LENGTH);
         Prg prg = PrgFactory.createInstance(envType, extendByteNum);
         // 定义并设置矩阵Q
-        BitMatrix qMatrix = BitMatrixFactory.createInstance(
+        TransBitMatrix qMatrix = TransBitMatrixFactory.createInstance(
             envType, extendNum, CommonConstants.BLOCK_BIT_LENGTH, parallel
         );
         // 设置矩阵Q的每一列

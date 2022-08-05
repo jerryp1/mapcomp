@@ -9,9 +9,9 @@ set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -pthread -Wall -funroll-loops")
 message("Platform: ${CMAKE_SYSTEM_PROCESSOR}")
 IF(${CMAKE_SYSTEM_PROCESSOR} MATCHES "(aarch64)|(arm64)")
     set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -march=armv8-a+simd+crypto+crc")
-ELSE(${CMAKE_SYSTEM_PROCESSOR} MATCHES "(aarch64)|(arm64)")
+ELSE()
     set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -march=native -maes -mrdseed")
-ENDIF(${CMAKE_SYSTEM_PROCESSOR} MATCHES "(aarch64)|(arm64)" )
+ENDIF()
 # 打印C编译指令
 message(STATUS "C Flags (CMAKE_C_FLAGS): ${CMAKE_C_FLAGS}")
 # 设置C++编译指令
@@ -72,11 +72,11 @@ if (${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
             # M1 Apple
             set(OPENSSL_ROOT_DIR "/opt/homebrew/opt/openssl")
             message(STATUS "OPENSSL_ROOT_DIR set to default: ${OPENSSL_ROOT_DIR}")
-        ELSE(${CMAKE_SYSTEM_PROCESSOR} MATCHES "(aarch64)|(arm64)")
+        ELSE()
             # Intel Apple
             set(OPENSSL_ROOT_DIR "/usr/local/opt/openssl")
             message(STATUS "OPENSSL_ROOT_DIR set to default: ${OPENSSL_ROOT_DIR}")
-        ENDIF(${CMAKE_SYSTEM_PROCESSOR} MATCHES "(aarch64)|(arm64)" )
+        ENDIF()
     endif()
 endif()
 find_package(OpenSSL REQUIRED)
@@ -115,8 +115,8 @@ add_library(
         crypto/edu_alibaba_mpc4j_common_tool_crypto_prp_NativeAesPrp.cpp
         benes_network/edu_alibaba_mpc4j_common_tool_benes_NativeBenesNetwork.cpp
         benes_network/benes_network.cpp
-        bit_matrix_trans/edu_alibaba_mpc4j_common_tool_bitmatrix_NativeBitMatrix.cpp
-        ntl_poly/edu_alibaba_mpc4j_common_tool_polynomial_gf2x_NtlNativeGf2xPoly.cpp
+        bit_matrix_trans/edu_alibaba_mpc4j_common_tool_bitmatrix_trans_NativeTransBitMatrix.cpp
+        ntl_poly/edu_alibaba_mpc4j_common_tool_polynomial_gf2e_NtlNativeGf2ePoly.cpp
         ntl_poly/ntl_gf2x.cpp
         ntl_poly/edu_alibaba_mpc4j_common_tool_polynomial_zp_NtlZpPoly.cpp
         ntl_poly/ntl_zp.cpp
@@ -125,7 +125,7 @@ add_library(
         gf2k/edu_alibaba_mpc4j_common_tool_galoisfield_gf2k_SseGf2k.cpp
         gf2k/edu_alibaba_mpc4j_common_tool_galoisfield_gf2k_NtlGf2k.cpp
         gf2e/edu_alibaba_mpc4j_common_tool_galoisfield_gf2e_NtlNativeGf2e.cpp
-        mcl_ecc/mcl_ecc.cpp)
+        mcl_ecc/mcl_ecc.cpp ntl_poly/ntl_zp64.h ntl_poly/ntl_zp64.cpp ntl_poly/edu_alibaba_mpc4j_common_tool_polynomial_zp64_NtlZp64Poly.cpp)
 
 target_include_directories(
         mpc4j-native-tool

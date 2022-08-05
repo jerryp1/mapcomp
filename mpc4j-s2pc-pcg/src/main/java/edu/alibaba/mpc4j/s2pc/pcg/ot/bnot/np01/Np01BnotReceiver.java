@@ -40,7 +40,7 @@ public class Np01BnotReceiver extends AbstractBnotReceiver {
     /**
      * C
      */
-    private ECPoint[] upperCArray;
+    private ECPoint[] upperCs;
     /**
      * g^r
      */
@@ -107,7 +107,7 @@ public class Np01BnotReceiver extends AbstractBnotReceiver {
         g2r = ecc.decode(senderPayload.remove(0));
         Stream<byte[]> cStream = senderPayload.stream();
         cStream = parallel ? cStream.parallel() : cStream;
-        upperCArray = cStream
+        upperCs = cStream
             .map(ecc::decode)
             .toArray(ECPoint[]::new);
     }
@@ -125,7 +125,7 @@ public class Np01BnotReceiver extends AbstractBnotReceiver {
                 // The receiver sets public keys PK_{\sigma} = g^k
                 ECPoint pkSigma = ecc.multiply(ecc.getG(), k);
                 // and PK_{1 - \sigma} = C / PK_{\sigma}
-                ECPoint pk0 = (choices[index] == 0) ? pkSigma : (upperCArray[choices[index] - 1].subtract(pkSigma));
+                ECPoint pk0 = (choices[index] == 0) ? pkSigma : (upperCs[choices[index] - 1].subtract(pkSigma));
                 // 存储OT的密钥key=H(index,g^rk)
                 byte[] kInputByteArray = ecc.encode(ecc.multiply(g2r, k), false);
                 rbArray[index] = kdf.deriveKey(ByteBuffer
@@ -138,7 +138,7 @@ public class Np01BnotReceiver extends AbstractBnotReceiver {
             })
             .map(pk -> ecc.encode(pk, compressEncode))
             .collect(Collectors.toList());
-        upperCArray = null;
+        upperCs = null;
         g2r = null;
 
         return receiverPayload;

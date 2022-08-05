@@ -91,7 +91,7 @@ void zp_evaluate(uint64_t primeByteLength, std::vector<uint8_t *> &coeffs, uint8
     for (uint64_t i = 0; i < coeffs.size(); ++i) {
         NTL::ZZFromBytes(e_ZZ, coeffs[i], static_cast<long>(primeByteLength));
         e_ZZ_p = NTL::to_ZZ_p(e_ZZ);
-        //build res_polynomial
+        // build res_polynomial
         NTL::SetCoeff(res_polynomial, static_cast<long>(i), e_ZZ_p);
     }
     // get y = f(x) in ZZ_p

@@ -5,8 +5,8 @@ import edu.alibaba.mpc4j.common.rpc.MpcAbortPreconditions;
 import edu.alibaba.mpc4j.common.rpc.Party;
 import edu.alibaba.mpc4j.common.rpc.Rpc;
 import edu.alibaba.mpc4j.common.rpc.utils.DataPacketHeader;
-import edu.alibaba.mpc4j.common.tool.bitmatrix.BitMatrix;
-import edu.alibaba.mpc4j.common.tool.bitmatrix.BitMatrixFactory;
+import edu.alibaba.mpc4j.common.tool.bitmatrix.trans.TransBitMatrix;
+import edu.alibaba.mpc4j.common.tool.bitmatrix.trans.TransBitMatrixFactory;
 import edu.alibaba.mpc4j.common.tool.crypto.crhf.Crhf;
 import edu.alibaba.mpc4j.common.tool.crypto.crhf.CrhfFactory;
 import edu.alibaba.mpc4j.common.tool.crypto.prg.Prg;
@@ -126,7 +126,7 @@ public class Kk13OriLhotSender extends AbstractLhotSender {
         MpcAbortPreconditions.checkArgument(matrixPayload.size() == 2 * outputBitLength);
         Prg prg = PrgFactory.createInstance(envType, byteNum);
         // 定义并设置矩阵Q
-        BitMatrix qMatrix = BitMatrixFactory.createInstance(envType, num, outputBitLength, parallel);
+        TransBitMatrix qMatrix = TransBitMatrixFactory.createInstance(envType, num, outputBitLength, parallel);
         byte[][] tMatrixFlattenedCiphertext = matrixPayload.toArray(new byte[0][]);
         // 矩阵生成流
         IntStream matrixColumnIntStream = IntStream.range(0, outputBitLength);
@@ -140,7 +140,7 @@ public class Kk13OriLhotSender extends AbstractLhotSender {
             qMatrix.setColumn(columnIndex, columnBytes);
         });
         // 矩阵转置，方便按行获取Q
-        BitMatrix qMatrixTranspose = qMatrix.transpose();
+        TransBitMatrix qMatrixTranspose = qMatrix.transpose();
         byte[][] qsArray = IntStream.range(0, num)
             .mapToObj(qMatrixTranspose::getColumn)
             .toArray(byte[][]::new);

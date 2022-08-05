@@ -103,6 +103,7 @@ public interface Gf2k {
      * 计算两个GF(2^128)元素的乘法，将结果置于a中。
      *
      * @param a 输入a，小端表示。
+     * @param b 输入b，小端表示。
      */
     void muli(byte[] a, byte[] b);
 
@@ -134,27 +135,26 @@ public interface Gf2k {
      * @return GF(2 ^ 128)中的随机元素。
      */
     default byte[] createRandom(SecureRandom secureRandom) {
-        byte[] random = new byte[CommonConstants.BLOCK_BYTE_LENGTH];
-        secureRandom.nextBytes(random);
-
-        return random;
+        return BytesUtils.randomByteArray(
+            CommonConstants.BLOCK_BIT_LENGTH, CommonConstants.BLOCK_BYTE_LENGTH, secureRandom
+        );
     }
 
     /**
-     * 返回元素的字节数组长度。
+     * 返回有限域字节长度。
      *
-     * @return 元素的字节数组长度。
+     * @return 有限域字节长度。
      */
-    default int fieldByteLength() {
+    default int getByteL() {
         return CommonConstants.BLOCK_BYTE_LENGTH;
     }
 
     /**
-     * 返回元素的布尔数组长度。
+     * 返回有限域比特长度。
      *
-     * @return 元素的布尔数组长度。
+     * @return 有限域比特长度。
      */
-    default int fieldBitLength() {
+    default int getL() {
         return CommonConstants.BLOCK_BIT_LENGTH;
     }
 }

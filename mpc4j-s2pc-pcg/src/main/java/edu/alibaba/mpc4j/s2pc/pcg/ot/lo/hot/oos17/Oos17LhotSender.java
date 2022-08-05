@@ -7,8 +7,8 @@ import edu.alibaba.mpc4j.common.rpc.Rpc;
 import edu.alibaba.mpc4j.common.rpc.utils.DataPacket;
 import edu.alibaba.mpc4j.common.rpc.utils.DataPacketHeader;
 import edu.alibaba.mpc4j.common.tool.CommonConstants;
-import edu.alibaba.mpc4j.common.tool.bitmatrix.BitMatrix;
-import edu.alibaba.mpc4j.common.tool.bitmatrix.BitMatrixFactory;
+import edu.alibaba.mpc4j.common.tool.bitmatrix.trans.TransBitMatrix;
+import edu.alibaba.mpc4j.common.tool.bitmatrix.trans.TransBitMatrixFactory;
 import edu.alibaba.mpc4j.common.tool.crypto.crhf.Crhf;
 import edu.alibaba.mpc4j.common.tool.crypto.crhf.CrhfFactory;
 import edu.alibaba.mpc4j.common.tool.crypto.prf.Prf;
@@ -65,7 +65,7 @@ public class Oos17LhotSender extends AbstractLhotSender {
     /**
      * Q的转置矩阵
      */
-    private BitMatrix qTransposeMatrix;
+    private TransBitMatrix qTransposeMatrix;
 
     public Oos17LhotSender(Rpc senderRpc, Party receiverParty, Oos17LhotConfig config) {
         super(Oos17LhotPtoDesc.getInstance(), senderRpc, receiverParty, config);
@@ -174,7 +174,7 @@ public class Oos17LhotSender extends AbstractLhotSender {
         MpcAbortPreconditions.checkArgument(matrixPayload.size() == outputBitLength);
         Prg prg = PrgFactory.createInstance(envType, extendByteNum);
         // 定义并设置矩阵Q
-        BitMatrix qMatrix = BitMatrixFactory.createInstance(envType, extendNum, outputBitLength, parallel);
+        TransBitMatrix qMatrix = TransBitMatrixFactory.createInstance(envType, extendNum, outputBitLength, parallel);
         byte[][] uArray = matrixPayload.toArray(new byte[0][]);
         // 矩阵生成流
         IntStream qMatrixIntStream = IntStream.range(0, outputBitLength);

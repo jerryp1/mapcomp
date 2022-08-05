@@ -7,8 +7,8 @@ import edu.alibaba.mpc4j.common.rpc.Rpc;
 import edu.alibaba.mpc4j.common.rpc.utils.DataPacket;
 import edu.alibaba.mpc4j.common.rpc.utils.DataPacketHeader;
 import edu.alibaba.mpc4j.common.tool.CommonConstants;
-import edu.alibaba.mpc4j.common.tool.bitmatrix.BitMatrix;
-import edu.alibaba.mpc4j.common.tool.bitmatrix.BitMatrixFactory;
+import edu.alibaba.mpc4j.common.tool.bitmatrix.trans.TransBitMatrix;
+import edu.alibaba.mpc4j.common.tool.bitmatrix.trans.TransBitMatrixFactory;
 import edu.alibaba.mpc4j.common.tool.crypto.kdf.Kdf;
 import edu.alibaba.mpc4j.common.tool.crypto.kdf.KdfFactory;
 import edu.alibaba.mpc4j.common.tool.crypto.prf.Prf;
@@ -72,11 +72,11 @@ public class Kos15RcotReceiver extends AbstractRcotReceiver {
     /**
      * 矩阵T
      */
-    private BitMatrix tMatrix;
+    private TransBitMatrix tMatrix;
     /**
      * 转置矩阵T
      */
-    private BitMatrix tTransposeMatrix;
+    private TransBitMatrix tTransposeMatrix;
 
     public Kos15RcotReceiver(Rpc receiverRpc, Party senderParty, Kos15RcotConfig config) {
         super(Kos15RcotPtoDesc.getInstance(), receiverRpc, senderParty, config);
@@ -187,7 +187,7 @@ public class Kos15RcotReceiver extends AbstractRcotReceiver {
         // 初始化伪随机数生成器
         Prg prg = PrgFactory.createInstance(envType, extendByteNum);
         // 构建矩阵tMatrix，共有l'行，λ列
-        tMatrix = BitMatrixFactory.createInstance(envType, extendNum, CommonConstants.BLOCK_BIT_LENGTH, parallel);
+        tMatrix = TransBitMatrixFactory.createInstance(envType, extendNum, CommonConstants.BLOCK_BIT_LENGTH, parallel);
         // 用密钥扩展得到矩阵T
         IntStream columnIndexIntStream = IntStream.range(0, CommonConstants.BLOCK_BIT_LENGTH);
         columnIndexIntStream = parallel ? columnIndexIntStream.parallel() : columnIndexIntStream;

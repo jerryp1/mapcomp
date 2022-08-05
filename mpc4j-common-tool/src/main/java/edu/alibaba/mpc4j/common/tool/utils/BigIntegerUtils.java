@@ -134,26 +134,6 @@ public class BigIntegerUtils {
     }
 
     /**
-     * 模幂运算。如果系统支持调用GMP库，则会调用GMP库的'mpz_powm_sec'完成运算，且可以抵抗侧信道攻击。
-     *
-     * @param base     底数。
-     * @param exponent 幂。
-     * @param modulus  模数。
-     * @return (base ^ exponent) mod modulus。
-     */
-    public static BigInteger secureModPow(BigInteger base, BigInteger exponent, BigInteger modulus) {
-        if (USE_GMP) {
-            // Gmp library can't handle negative exponents
-            return exponent.signum() < 0
-                ? BigIntegerUtils.modInverse(Gmp.modPowSecure(base, exponent.negate(), modulus), modulus)
-                : Gmp.modPowSecure(base, exponent, modulus);
-        } else {
-            LOGGER.warn("无法使用GMP库，将使用Java原生modPow函数实现模幂运算，运算过程无法抵御侧信道攻击！");
-            return base.modPow(exponent, modulus);
-        }
-    }
-
-    /**
      * 模幂预算。如果系统支持调用GMP库，则会调用GMP库完成运算。此函数无法抵抗侧信道攻击。
      *
      * @param base     底数。
@@ -393,7 +373,7 @@ public class BigIntegerUtils {
          * '1' bit. (Get the most significant 53 bits and divide by 2^53).
          * Note that mantissa is 53 bits (including hidden bit).
          */
-        long mask = 1L << 52; //
+        long mask = 1L << 52;
         long mantissa = 0;
         int j = 0;
         for (int i = 1; i < 54; i++) {

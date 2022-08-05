@@ -75,8 +75,8 @@ public class Gf2eEfficiencyTest {
             byte[][] arrayA = new byte[n][];
             byte[][] arrayB = new byte[n][];
             IntStream.range(0, n).forEach(index -> {
-                arrayA[index] = gf2e.randomNonZeroElement(SECURE_RANDOM);
-                arrayB[index] = gf2e.randomNonZeroElement(SECURE_RANDOM);
+                arrayA[index] = gf2e.createNonZeroRandom(SECURE_RANDOM);
+                arrayB[index] = gf2e.createNonZeroRandom(SECURE_RANDOM);
             });
             // 预热
             IntStream.range(0, n).forEach(index -> {

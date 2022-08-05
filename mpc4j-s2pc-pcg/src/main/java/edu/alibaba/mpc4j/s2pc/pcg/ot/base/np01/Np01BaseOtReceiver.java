@@ -125,8 +125,8 @@ public class Np01BaseOtReceiver extends AbstractBaseOtReceiver {
                     // 存储OT的密钥key=H(index,g^rk)
                     byte[] kInputByteArray = ecc.encode(ecc.multiply(g2r, k), false);
                     rbArray[index] = kdf.deriveKey(ByteBuffer
-                            .allocate(Long.BYTES + Integer.BYTES + kInputByteArray.length)
-                            .putLong(extraInfo).putInt(index).put(kInputByteArray)
+                            .allocate(Integer.BYTES + kInputByteArray.length)
+                            .putInt(index).put(kInputByteArray)
                             .array());
                     // 返回密钥
                     return choices[index] ? pkOneMinusSigma : pkSigma;

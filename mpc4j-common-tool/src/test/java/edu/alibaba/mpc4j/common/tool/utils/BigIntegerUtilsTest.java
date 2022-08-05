@@ -1,15 +1,10 @@
 package edu.alibaba.mpc4j.common.tool.utils;
 
-import org.apache.commons.lang3.time.StopWatch;
 import org.junit.Assert;
 import org.junit.Test;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.math.BigInteger;
 import java.security.SecureRandom;
-import java.util.concurrent.TimeUnit;
-import java.util.stream.IntStream;
 
 /**
  * 大整数工具类测试。
@@ -18,7 +13,6 @@ import java.util.stream.IntStream;
  * @date 2021/11/29
  */
 public class BigIntegerUtilsTest {
-    private static final Logger LOGGER = LoggerFactory.getLogger(BigIntegerUtils.class);
     /**
      * 随机测试轮数
      */
@@ -183,89 +177,6 @@ public class BigIntegerUtilsTest {
             BigInteger nSquared = n.multiply(n);
             Assert.assertEquals(n, BigIntegerUtils.sqrt(nSquared));
         }
-    }
-
-    @Test
-    public void testModPow() {
-        LOGGER.info("-----测试modPow性能差距，模数比特长度 = {}比特-----", 1 << 10);
-        StopWatch stopWatch = new StopWatch();
-        // 随机取一个1024比特长的质数
-        BigInteger modulus = BigInteger.probablePrime(1 << 10, SECURE_RANDOM);
-        // 随机选择MAX_ITERATION个底数
-        BigInteger[] bases = IntStream.range(0, RANDOM_ROUND)
-            .mapToObj(index -> BigIntegerUtils.randomPositive(modulus, SECURE_RANDOM))
-            .toArray(BigInteger[]::new);
-        // 随机选择MAX_ITERATION个幂，有正有负
-        BigInteger[] exponents = IntStream.range(0, RANDOM_ROUND)
-            .mapToObj(index -> {
-                BigInteger exponent = new BigInteger(10, SECURE_RANDOM);
-                return SECURE_RANDOM.nextBoolean() ? exponent.negate() : exponent;
-            })
-            .toArray(BigInteger[]::new);
-
-        // 用BigInteger.modPow计算
-        stopWatch.start();
-        BigInteger[] javaModPows = IntStream.range(0, RANDOM_ROUND)
-            .mapToObj(index -> bases[index].modPow(exponents[index], modulus))
-            .toArray(BigInteger[]::new);
-        stopWatch.stop();
-        long javaModPowTime = stopWatch.getTime(TimeUnit.MICROSECONDS);
-        LOGGER.info("BigInteger.modPow平均计算时间 = {}us", javaModPowTime / RANDOM_ROUND);
-        stopWatch.reset();
-
-        // 用BigIntegerUtils.secureModPow计算
-        stopWatch.start();
-        BigInteger[] utilSecureModPows = IntStream.range(0, RANDOM_ROUND)
-            .mapToObj(index -> BigIntegerUtils.secureModPow(bases[index], exponents[index], modulus))
-            .toArray(BigInteger[]::new);
-        stopWatch.stop();
-        Assert.assertArrayEquals(javaModPows, utilSecureModPows);
-        long utilSecureModPowTime = stopWatch.getTime(TimeUnit.MICROSECONDS);
-        LOGGER.info("BigIntegerUtils.secureModPow平均计算时间 = {}us", utilSecureModPowTime / RANDOM_ROUND);
-        stopWatch.reset();
-
-        // 用BigIntegerUtils.modPow计算
-        stopWatch.start();
-        BigInteger[] utilModPows = IntStream.range(0, RANDOM_ROUND)
-            .mapToObj(index -> BigIntegerUtils.modPow(bases[index], exponents[index], modulus))
-            .toArray(BigInteger[]::new);
-        stopWatch.stop();
-        Assert.assertArrayEquals(javaModPows, utilModPows);
-        long utilModPowTime = stopWatch.getTime(TimeUnit.MICROSECONDS);
-        LOGGER.info("BigIntegerUtils.modPow平均计算时间 = {}us", utilModPowTime / RANDOM_ROUND);
-        stopWatch.reset();
-    }
-
-    @Test
-    public void testModInverse() {
-        LOGGER.info("-----测试modInverse性能差距，模数比特长度 = {}比特-----", 1 << 10);
-        StopWatch stopWatch = new StopWatch();
-        BigInteger modulus = BigInteger.probablePrime(1 << 10, SECURE_RANDOM);
-        // 随机选择MAX_ITERATION个底数
-        BigInteger[] bases = IntStream.range(0, RANDOM_ROUND)
-            .mapToObj(index -> BigIntegerUtils.randomPositive(modulus, SECURE_RANDOM))
-            .toArray(BigInteger[]::new);
-
-        // 用Java的modInverse计算
-        stopWatch.start();
-        BigInteger[] javaModInverses = IntStream.range(0, RANDOM_ROUND)
-            .mapToObj(index -> bases[index].modInverse(modulus))
-            .toArray(BigInteger[]::new);
-        stopWatch.stop();
-        long javaModInverseTime = stopWatch.getTime(TimeUnit.MICROSECONDS);
-        LOGGER.info("BigInteger.modInverse平均计算时间 = {}us", javaModInverseTime / RANDOM_ROUND);
-        stopWatch.reset();
-
-        // 用Util的modInverse计算
-        stopWatch.start();
-        BigInteger[] utilModInverses = IntStream.range(0, RANDOM_ROUND)
-            .mapToObj(index -> BigIntegerUtils.modInverse(bases[index], modulus))
-            .toArray(BigInteger[]::new);
-        stopWatch.stop();
-        Assert.assertArrayEquals(javaModInverses, utilModInverses);
-        long utilModInverseTime = stopWatch.getTime(TimeUnit.MICROSECONDS);
-        LOGGER.info("BigIntegerUtils.modInverse平均计算时间 = {}us", utilModInverseTime / RANDOM_ROUND);
-        stopWatch.reset();
     }
 
     @Test

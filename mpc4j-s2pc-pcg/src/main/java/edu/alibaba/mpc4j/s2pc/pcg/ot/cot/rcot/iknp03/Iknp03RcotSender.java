@@ -11,8 +11,8 @@ import edu.alibaba.mpc4j.common.rpc.Party;
 import edu.alibaba.mpc4j.common.rpc.Rpc;
 import edu.alibaba.mpc4j.common.rpc.utils.DataPacketHeader;
 import edu.alibaba.mpc4j.common.tool.CommonConstants;
-import edu.alibaba.mpc4j.common.tool.bitmatrix.BitMatrix;
-import edu.alibaba.mpc4j.common.tool.bitmatrix.BitMatrixFactory;
+import edu.alibaba.mpc4j.common.tool.bitmatrix.trans.TransBitMatrix;
+import edu.alibaba.mpc4j.common.tool.bitmatrix.trans.TransBitMatrixFactory;
 import edu.alibaba.mpc4j.common.tool.crypto.kdf.Kdf;
 import edu.alibaba.mpc4j.common.tool.crypto.kdf.KdfFactory;
 import edu.alibaba.mpc4j.common.tool.crypto.prg.Prg;
@@ -113,7 +113,7 @@ public class Iknp03RcotSender extends AbstractRcotSender {
         MpcAbortPreconditions.checkArgument(matrixPayload.size() == CommonConstants.BLOCK_BIT_LENGTH * 2);
         Prg prg = PrgFactory.createInstance(envType, CommonUtils.getByteLength(num));
         // 定义并设置矩阵Q
-        BitMatrix qMatrix = BitMatrixFactory.createInstance(envType, num, CommonConstants.BLOCK_BIT_LENGTH, parallel);
+        TransBitMatrix qMatrix = TransBitMatrixFactory.createInstance(envType, num, CommonConstants.BLOCK_BIT_LENGTH, parallel);
         byte[][] tMatrixFlattenedCiphertext = matrixPayload.toArray(new byte[0][]);
         // 矩阵生成流
         IntStream matrixColumnIntStream = IntStream.range(0, CommonConstants.BLOCK_BIT_LENGTH);
@@ -131,7 +131,7 @@ public class Iknp03RcotSender extends AbstractRcotSender {
             qMatrix.setColumn(columnIndex, columnBytes);
         });
         // 矩阵转置，方便按行获取Q
-        BitMatrix qMatrixTranspose = qMatrix.transpose();
+        TransBitMatrix qMatrixTranspose = qMatrix.transpose();
         byte[][] r0Array = IntStream.range(0, num)
             .mapToObj(qMatrixTranspose::getColumn)
             .toArray(byte[][]::new);

@@ -7,7 +7,7 @@ import cc.redberry.rings.poly.univar.UnivariatePolynomial;
 import java.util.Arrays;
 
 /**
- * 应用Rings Library实现的Zp牛顿多项式插值算法。
+ * 应用Rings实现的Zp牛顿多项式插值。
  *
  * @author Weiran Liu
  * @date 2021/05/31
@@ -19,7 +19,7 @@ class RingsNewtonZpPoly extends AbstractRingsZpPoly {
     }
 
     @Override
-    public ZpPolyFactory.ZpPolyType getZpPolyType() {
+    public ZpPolyFactory.ZpPolyType getType() {
         return ZpPolyFactory.ZpPolyType.RINGS_NEWTON;
     }
 

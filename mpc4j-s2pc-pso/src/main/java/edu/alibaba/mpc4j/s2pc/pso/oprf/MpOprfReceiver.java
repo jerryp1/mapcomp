@@ -17,5 +17,6 @@ public interface MpOprfReceiver extends OprfReceiver {
      * @return 接收方输出。
      * @throws MpcAbortException 如果协议异常中止。
      */
+    @Override
     MpOprfReceiverOutput oprf(byte[][] inputs) throws MpcAbortException;
 }

@@ -6,8 +6,8 @@ import edu.alibaba.mpc4j.common.tool.crypto.prf.Prf;
 import edu.alibaba.mpc4j.common.tool.crypto.prf.PrfFactory;
 import edu.alibaba.mpc4j.common.tool.hashbin.MaxBinSizeUtils;
 import edu.alibaba.mpc4j.common.tool.okve.okvs.OkvsFactory.OkvsType;
-import edu.alibaba.mpc4j.common.tool.polynomial.gf2x.Gf2xPoly;
-import edu.alibaba.mpc4j.common.tool.polynomial.gf2x.Gf2xPolyFactory;
+import edu.alibaba.mpc4j.common.tool.polynomial.gf2e.Gf2ePoly;
+import edu.alibaba.mpc4j.common.tool.polynomial.gf2e.Gf2ePolyFactory;
 
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
@@ -42,7 +42,7 @@ class MegaBinOkvs implements Okvs<ByteBuffer> {
     /**
      * 多项式插值服务
      */
-    private final Gf2xPoly gf2xPoly;
+    private final Gf2ePoly gf2ePoly;
     /**
      * 插值数量
      */
@@ -81,7 +81,7 @@ class MegaBinOkvs implements Okvs<ByteBuffer> {
         // 设置桶数量和桶深度
         binNum = getBinNum(n);
         binSize = getBinSize(n);
-        gf2xPoly = Gf2xPolyFactory.createInstance(envType, l);
+        gf2ePoly = Gf2ePolyFactory.createInstance(envType, l);
         parallelEncode = false;
     }
 
@@ -116,7 +116,7 @@ class MegaBinOkvs implements Okvs<ByteBuffer> {
                 Map<ByteBuffer, byte[]> bin = bins.get(binIndex);
                 byte[][] xArray = bin.keySet().stream().map(ByteBuffer::array).toArray(byte[][]::new);
                 byte[][] yArray = bin.keySet().stream().map(bin::get).toArray(byte[][]::new);
-                return gf2xPoly.interpolate(binSize, xArray, yArray);
+                return gf2ePoly.interpolate(binSize, xArray, yArray);
             })
             .flatMap(Arrays::stream)
             .toArray(byte[][]::new);
@@ -131,12 +131,12 @@ class MegaBinOkvs implements Okvs<ByteBuffer> {
         byte[][] coefficients = new byte[binSize][];
         System.arraycopy(storage, binIndex * binSize, coefficients, 0, binSize);
 
-        return gf2xPoly.evaluate(coefficients, key.array());
+        return gf2ePoly.evaluate(coefficients, key.array());
     }
 
     @Override
     public int getN() {
-        return n;
+        return gf2ePoly.coefficientNum(n);
     }
 
     @Override

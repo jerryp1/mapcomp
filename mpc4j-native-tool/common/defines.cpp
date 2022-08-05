@@ -36,10 +36,10 @@ void jByteArrayToSet(JNIEnv *env, jobjectArray jBytesArray, uint64_t byteLength,
     }
 }
 
-void setTojByteArray(JNIEnv *env, std::vector<uint8_t*> &set, uint64_t byteLength, jint jnum, jobjectArray &jArray) {
+void setTojByteArray(JNIEnv *env, std::vector<uint8_t*> &set, uint64_t byteLength, jint jNum, jobjectArray &jArray) {
     jclass jByteArrayType = (*env).FindClass("[B");
     // 为转换结果分配内存
-    jArray = (*env).NewObjectArray(jnum, jByteArrayType, nullptr);
+    jArray = (*env).NewObjectArray(jNum, jByteArrayType, nullptr);
     // 复制结果
     for (uint64_t i = 0; i < set.size(); i++) {
         jbyteArray jElement = (*env).NewByteArray((jsize)byteLength);
@@ -53,11 +53,40 @@ void setTojByteArray(JNIEnv *env, std::vector<uint8_t*> &set, uint64_t byteLengt
         (*env).ReleaseByteArrayElements(jElement, jElementBuffer, 0);
     }
     // 补足剩余的系数
-    for (uint64_t i = set.size(); i < jnum; i++) {
+    for (uint64_t i = set.size(); i < jNum; i++) {
         jbyteArray jZeroElement = (*env).NewByteArray((jsize)byteLength);
         jbyte* jZeroElementBuffer = (*env).GetByteArrayElements(jZeroElement, nullptr);
         (*env).SetObjectArrayElement(jArray, (jsize)i, jZeroElement);
         // 释放jCoeff，jCoeffBuffer
         (*env).ReleaseByteArrayElements(jZeroElement, jZeroElementBuffer, 0);
     }
+}
+
+void jLongArrayToSet(JNIEnv *env, jlongArray jLongArray, std::vector<long> &set) {
+    uint64_t length = (*env).GetArrayLength(jLongArray);
+    set.resize(length);
+    jlong* jLongPtr = (*env).GetLongArrayElements(jLongArray, JNI_FALSE);
+    auto* data = new long[length];
+    memcpy(data, jLongPtr, length * sizeof(long));
+    for (uint64_t i = 0; i < length; i++) {
+        // 读取第i个数据
+        set[i] = data[i];
+    }
+    // 释放资源
+    (*env).ReleaseLongArrayElements(jLongArray, jLongPtr, 0);
+}
+
+void setTojLongArray(JNIEnv *env, std::vector<long> &set, jint jNum, jlongArray &jLongArray) {
+    auto * data = new long[jNum];
+    // 复制结果
+    for (uint64_t i = 0; i < set.size(); i++) {
+        data[i] = set[i];
+    }
+    // 补足剩余的系数
+    for (uint64_t i = set.size(); i < jNum; i++) {
+        data[i] = 0L;
+    }
+    // 为转换结果分配内存
+    jLongArray = (*env).NewLongArray(jNum);
+    (*env).SetLongArrayRegion(jLongArray, 0, jNum, data);
 }

@@ -36,7 +36,7 @@ public class Gf2kVoleOutputTest {
     /**
      * GF(2^128)元素字节长度
      */
-    private static final int GF2K_BYTE_LENGTH = GF2K.fieldByteLength();
+    private static final int GF2K_BYTE_LENGTH = GF2K.getByteL();
     /**
      * 默认0关联值Δ
      */

@@ -109,8 +109,8 @@ public class Co15BnotReceiver extends AbstractBnotReceiver {
                     // 计算密钥 k = H(index, xS)。
                     byte[] kInputByteArray = ecc.encode(ecc.multiply(capitalS, x), false);
                     rbArray[index] = kdf.deriveKey(ByteBuffer
-                            .allocate(Long.BYTES + Integer.BYTES + kInputByteArray.length)
-                            .putLong(extraInfo).putInt(index).put(kInputByteArray)
+                            .allocate(Integer.BYTES + kInputByteArray.length)
+                            .putInt(index).put(kInputByteArray)
                             .array());
                     return capitalR;
                 })

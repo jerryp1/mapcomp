@@ -12,8 +12,8 @@ import edu.alibaba.mpc4j.common.rpc.Rpc;
 import edu.alibaba.mpc4j.common.rpc.utils.DataPacket;
 import edu.alibaba.mpc4j.common.rpc.utils.DataPacketHeader;
 import edu.alibaba.mpc4j.common.tool.CommonConstants;
-import edu.alibaba.mpc4j.common.tool.bitmatrix.BitMatrix;
-import edu.alibaba.mpc4j.common.tool.bitmatrix.BitMatrixFactory;
+import edu.alibaba.mpc4j.common.tool.bitmatrix.trans.TransBitMatrix;
+import edu.alibaba.mpc4j.common.tool.bitmatrix.trans.TransBitMatrixFactory;
 import edu.alibaba.mpc4j.common.tool.crypto.kdf.Kdf;
 import edu.alibaba.mpc4j.common.tool.crypto.kdf.KdfFactory;
 import edu.alibaba.mpc4j.common.tool.crypto.prg.Prg;
@@ -49,7 +49,7 @@ public class Alsz13RcotReceiver extends AbstractRcotReceiver {
     /**
      * 布尔矩阵
      */
-    private BitMatrix tMatrix;
+    private TransBitMatrix tMatrix;
 
     public Alsz13RcotReceiver(Rpc receiverRpc, Party senderParty, Alsz13RcotConfig config) {
         super(Alsz13RcotPtoDesc.getInstance(), receiverRpc, senderParty, config);
@@ -121,7 +121,7 @@ public class Alsz13RcotReceiver extends AbstractRcotReceiver {
         // 初始化伪随机数生成器
         Prg prg = PrgFactory.createInstance(envType, rBytes.length);
         // 构建矩阵tMatrix
-        tMatrix = BitMatrixFactory.createInstance(envType, num, CommonConstants.BLOCK_BIT_LENGTH, parallel);
+        tMatrix = TransBitMatrixFactory.createInstance(envType, num, CommonConstants.BLOCK_BIT_LENGTH, parallel);
         // 用密钥扩展得到矩阵T
         IntStream columnIndexIntStream = IntStream.range(0, CommonConstants.BLOCK_BIT_LENGTH);
         columnIndexIntStream = parallel ? columnIndexIntStream.parallel() : columnIndexIntStream;
@@ -152,7 +152,7 @@ public class Alsz13RcotReceiver extends AbstractRcotReceiver {
 
     private CotReceiverOutput generateReceiverOutput() {
         // 将矩阵T转置，按行获取
-        BitMatrix tMatrixTranspose = tMatrix.transpose();
+        TransBitMatrix tMatrixTranspose = tMatrix.transpose();
         tMatrix = null;
         byte[][] rbArray = IntStream.range(0, num)
             .mapToObj(tMatrixTranspose::getColumn)

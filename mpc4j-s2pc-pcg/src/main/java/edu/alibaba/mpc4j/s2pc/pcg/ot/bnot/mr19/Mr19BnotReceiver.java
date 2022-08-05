@@ -105,7 +105,7 @@ public class Mr19BnotReceiver extends AbstractBnotReceiver {
             .mapToObj(index -> {
                 // 生成一个随机的元素a
                 aArray[index] = ecc.randomZn(secureRandom);
-                // 设置两个参数R的乘积A
+                // 设置乘积A
                 ECPoint upperA = ecc.multiply(ecc.getG(), aArray[index]);
                 // 生成n个参数r
                 ECPoint[] rPoints = new ECPoint[n];
@@ -113,7 +113,7 @@ public class Mr19BnotReceiver extends AbstractBnotReceiver {
                 hashBuffer.putInt(choices[index]);
                 for (int i = 0; i < n; i++) {
                     if (i != choices[index]) {
-                        rPoints[i] = ecc.multiply(ecc.getG(), ecc.randomZn(secureRandom));
+                        rPoints[i] = ecc.randomPoint(secureRandom);
                         hashBuffer.put(rPoints[i].getEncoded(false));
                     }
                 }
