@@ -1,16 +1,16 @@
-package edu.alibaba.mpc4j.s2pc.aby.base.bc.or;
+package edu.alibaba.mpc4j.s2pc.aby.bc.xor;
 
 import edu.alibaba.mpc4j.common.rpc.MpcAbortException;
-import edu.alibaba.mpc4j.s2pc.aby.base.bc.BcBitVector;
-import edu.alibaba.mpc4j.s2pc.aby.base.bc.BcParty;
+import edu.alibaba.mpc4j.s2pc.aby.bc.BcBitVector;
+import edu.alibaba.mpc4j.s2pc.aby.bc.BcParty;
 
 /**
- * OR-BC协议参与方线程。
+ * XOR-BC协议参与方线程。
  *
  * @author Weiran Liu
  * @date 2022/02/14
  */
-class OrBcPartyThread extends Thread {
+class XorBcPartyThread extends Thread {
     /**
      * BC协议参与方
      */
@@ -32,7 +32,7 @@ class OrBcPartyThread extends Thread {
      */
     private BcBitVector zi;
 
-    OrBcPartyThread(BcParty bcParty, BcBitVector xi, BcBitVector yi) {
+    XorBcPartyThread(BcParty bcParty, BcBitVector xi, BcBitVector yi) {
         this.bcParty = bcParty;
         assert xi.bitLength() == yi.bitLength();
         this.xi = xi;
@@ -49,7 +49,7 @@ class OrBcPartyThread extends Thread {
         try {
             bcParty.getRpc().connect();
             bcParty.init(num, num);
-            zi = bcParty.or(xi, yi);
+            zi = bcParty.xor(xi, yi);
             bcParty.getRpc().disconnect();
         } catch (MpcAbortException e) {
             e.printStackTrace();

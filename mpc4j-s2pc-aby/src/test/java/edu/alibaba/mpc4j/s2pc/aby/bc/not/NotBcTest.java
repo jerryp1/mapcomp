@@ -1,4 +1,4 @@
-package edu.alibaba.mpc4j.s2pc.aby.base.bc.xor;
+package edu.alibaba.mpc4j.s2pc.aby.bc.not;
 
 import com.google.common.base.Preconditions;
 import edu.alibaba.mpc4j.common.rpc.Rpc;
@@ -6,11 +6,11 @@ import edu.alibaba.mpc4j.common.rpc.RpcManager;
 import edu.alibaba.mpc4j.common.rpc.impl.memory.MemoryRpcManager;
 import edu.alibaba.mpc4j.common.tool.utils.BytesUtils;
 import edu.alibaba.mpc4j.common.tool.utils.CommonUtils;
-import edu.alibaba.mpc4j.s2pc.aby.base.bc.BcBitVector;
-import edu.alibaba.mpc4j.s2pc.aby.base.bc.BcConfig;
-import edu.alibaba.mpc4j.s2pc.aby.base.bc.BcFactory;
-import edu.alibaba.mpc4j.s2pc.aby.base.bc.BcParty;
-import edu.alibaba.mpc4j.s2pc.aby.base.bc.bea91.Bea91BcConfig;
+import edu.alibaba.mpc4j.s2pc.aby.bc.BcBitVector;
+import edu.alibaba.mpc4j.s2pc.aby.bc.BcConfig;
+import edu.alibaba.mpc4j.s2pc.aby.bc.BcFactory;
+import edu.alibaba.mpc4j.s2pc.aby.bc.BcParty;
+import edu.alibaba.mpc4j.s2pc.aby.bc.bea91.Bea91BcConfig;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.time.StopWatch;
 import org.junit.Assert;
@@ -26,14 +26,14 @@ import java.util.Collection;
 import java.util.concurrent.TimeUnit;
 
 /**
- * XOR-BC协议测试。
+ * NOT-BC协议测试。
  *
  * @author Weiran Liu
  * @date 2022/02/14
  */
 @RunWith(Parameterized.class)
-public class XorBcTest {
-    private static final Logger LOGGER = LoggerFactory.getLogger(XorBcTest.class);
+public class NotBcTest {
+    private static final Logger LOGGER = LoggerFactory.getLogger(NotBcTest.class);
     /**
      * 随机状态
      */
@@ -50,21 +50,13 @@ public class XorBcTest {
     @Parameterized.Parameters(name = "{0}")
     public static Collection<Object[]> configurations() {
         Collection<Object[]> configurations = new ArrayList<>();
-        // Beaver91 (public, public)
+        // Beaver91 (x public)
         configurations.add(new Object[] {
-            BcFactory.BcType.BEA91.name() + " (x public, y public)", new Bea91BcConfig.Builder().build(), true, true
+            BcFactory.BcType.BEA91.name() + " (x public)", new Bea91BcConfig.Builder().build(), true
         });
-        // Beaver91 (public, secret)
+        // Beaver91 (x secret)
         configurations.add(new Object[] {
-            BcFactory.BcType.BEA91.name() + " (x public, y secret)", new Bea91BcConfig.Builder().build(), true, false
-        });
-        // Beaver91 (secret, public)
-        configurations.add(new Object[] {
-            BcFactory.BcType.BEA91.name() + " (x secret, y public)", new Bea91BcConfig.Builder().build(), false, true
-        });
-        // Beaver91 (secret, secret)
-        configurations.add(new Object[] {
-            BcFactory.BcType.BEA91.name() + " (x secret, y secret)", new Bea91BcConfig.Builder().build(), false, false
+            BcFactory.BcType.BEA91.name() + " (x secret)", new Bea91BcConfig.Builder().build(), false
         });
 
         return configurations;
@@ -86,19 +78,14 @@ public class XorBcTest {
      * x是否为公开导线
      */
     private final boolean xPublic;
-    /**
-     * y是否为公开导线
-     */
-    private final boolean yPublic;
 
-    public XorBcTest(String name, BcConfig config, boolean xPublic, boolean yPublic) {
+    public NotBcTest(String name, BcConfig config, boolean xPublic) {
         Preconditions.checkArgument(StringUtils.isNotBlank(name));
         RpcManager rpcManager = new MemoryRpcManager(2);
         senderRpc = rpcManager.getRpc(0);
         receiverRpc = rpcManager.getRpc(1);
         this.config = config;
         this.xPublic = xPublic;
-        this.yPublic = yPublic;
     }
 
     @Test
@@ -183,25 +170,10 @@ public class XorBcTest {
             BytesUtils.reduceByteArray(x1Bytes, num);
         }
         BcBitVector x1 = BcBitVector.create(x1Bytes, num, xPublic);
-        // 生成y0
-        byte[] y0Bytes = new byte[byteLength];
-        SECURE_RANDOM.nextBytes(y0Bytes);
-        BytesUtils.reduceByteArray(y0Bytes, num);
-        BcBitVector y0 = BcBitVector.create(y0Bytes, num, yPublic);
-        // 生成y1
-        byte[] y1Bytes;
-        if (yPublic) {
-            y1Bytes = BytesUtils.clone(y0Bytes);
-        } else {
-            y1Bytes = new byte[byteLength];
-            SECURE_RANDOM.nextBytes(y1Bytes);
-            BytesUtils.reduceByteArray(y1Bytes, num);
-        }
-        BcBitVector y1 = BcBitVector.create(y1Bytes, num, yPublic);
         try {
             LOGGER.info("-----test {} start-----", sender.getPtoDesc().getPtoName());
-            XorBcPartyThread senderThread = new XorBcPartyThread(sender, x0, y0);
-            XorBcPartyThread receiverThread = new XorBcPartyThread(receiver, x1, y1);
+            NotBcPartyThread senderThread = new NotBcPartyThread(sender, x0);
+            NotBcPartyThread receiverThread = new NotBcPartyThread(receiver, x1);
             StopWatch stopWatch = new StopWatch();
             // 开始执行协议
             stopWatch.start();
@@ -219,7 +191,7 @@ public class XorBcTest {
             BcBitVector z0 = senderThread.getPartyOutput();
             BcBitVector z1 = receiverThread.getPartyOutput();
             // 验证结果
-            assertOutput(x0, x1, y0, y1, z0, z1);
+            assertOutput(x0, x1, z0, z1);
             LOGGER.info("Sender sends {}B, Receiver sends {}B, time = {}ms",
                 senderByteLength, receiverByteLength, time
             );
@@ -229,13 +201,10 @@ public class XorBcTest {
         }
     }
 
-    private void assertOutput(BcBitVector x0, BcBitVector x1, BcBitVector y0, BcBitVector y1,
-                              BcBitVector z0, BcBitVector z1) {
+    private void assertOutput(BcBitVector x0, BcBitVector x1, BcBitVector z0, BcBitVector z1) {
         byte[] x = xPublic ? x0.getBytes() : BytesUtils.xor(x0.getBytes(), x1.getBytes());
-        byte[] y = yPublic ? y0.getBytes() : BytesUtils.xor(y0.getBytes(), y1.getBytes());
-        //noinspection SuspiciousNameCombination
-        byte[] expectZ = BytesUtils.xor(x, y);
-        byte[] actualZ = (xPublic && yPublic) ? z0.getBytes() : BytesUtils.xor(z0.getBytes(), z1.getBytes());
+        byte[] expectZ = BytesUtils.not(x, x0.bitLength());
+        byte[] actualZ = (xPublic) ? z0.getBytes() : BytesUtils.xor(z0.getBytes(), z1.getBytes());
         Assert.assertArrayEquals(expectZ, actualZ);
     }
 }

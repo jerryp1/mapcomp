@@ -1,4 +1,4 @@
-package edu.alibaba.mpc4j.s2pc.aby.base.bc;
+package edu.alibaba.mpc4j.s2pc.aby.bc;
 
 import edu.alibaba.mpc4j.common.rpc.MpcAbortException;
 import edu.alibaba.mpc4j.common.rpc.pto.SecurePto;
@@ -15,6 +15,11 @@ import java.util.Arrays;
  */
 public interface BcParty extends TwoPartyPto, SecurePto {
 
+    /**
+     * 返回协议类型。
+     *
+     * @return 协议类型。
+     */
     @Override
     BcFactory.BcType getPtoType();
 
@@ -43,6 +48,7 @@ public interface BcParty extends TwoPartyPto, SecurePto {
      * @param xi xi。
      * @param yi yi。
      * @return zi。
+     * @throws MpcAbortException 如果协议异常中止。
      */
     BcBitVector xor(BcBitVector xi, BcBitVector yi) throws MpcAbortException;
 

@@ -1,4 +1,4 @@
-package edu.alibaba.mpc4j.s2pc.aby.base.bc.bea91;
+package edu.alibaba.mpc4j.s2pc.aby.bc.bea91;
 
 import edu.alibaba.mpc4j.common.rpc.MpcAbortException;
 import edu.alibaba.mpc4j.common.rpc.MpcAbortPreconditions;
@@ -7,8 +7,8 @@ import edu.alibaba.mpc4j.common.rpc.Rpc;
 import edu.alibaba.mpc4j.common.rpc.utils.DataPacket;
 import edu.alibaba.mpc4j.common.rpc.utils.DataPacketHeader;
 import edu.alibaba.mpc4j.common.tool.utils.BytesUtils;
-import edu.alibaba.mpc4j.s2pc.aby.base.bc.AbstractBcParty;
-import edu.alibaba.mpc4j.s2pc.aby.base.bc.BcBitVector;
+import edu.alibaba.mpc4j.s2pc.aby.bc.AbstractBcParty;
+import edu.alibaba.mpc4j.s2pc.aby.bc.BcBitVector;
 import edu.alibaba.mpc4j.s2pc.pcg.btg.BooleanTriple;
 import edu.alibaba.mpc4j.s2pc.pcg.btg.BtgFactory;
 import edu.alibaba.mpc4j.s2pc.pcg.btg.BtgParty;

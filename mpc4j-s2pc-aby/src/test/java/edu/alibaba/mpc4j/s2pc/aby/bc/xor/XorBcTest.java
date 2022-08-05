@@ -1,4 +1,4 @@
-package edu.alibaba.mpc4j.s2pc.aby.base.bc.and;
+package edu.alibaba.mpc4j.s2pc.aby.bc.xor;
 
 import com.google.common.base.Preconditions;
 import edu.alibaba.mpc4j.common.rpc.Rpc;
@@ -6,12 +6,11 @@ import edu.alibaba.mpc4j.common.rpc.RpcManager;
 import edu.alibaba.mpc4j.common.rpc.impl.memory.MemoryRpcManager;
 import edu.alibaba.mpc4j.common.tool.utils.BytesUtils;
 import edu.alibaba.mpc4j.common.tool.utils.CommonUtils;
-import edu.alibaba.mpc4j.s2pc.aby.base.bc.BcBitVector;
-import edu.alibaba.mpc4j.s2pc.aby.base.bc.BcConfig;
-import edu.alibaba.mpc4j.s2pc.aby.base.bc.BcFactory;
-import edu.alibaba.mpc4j.s2pc.aby.base.bc.BcFactory.BcType;
-import edu.alibaba.mpc4j.s2pc.aby.base.bc.BcParty;
-import edu.alibaba.mpc4j.s2pc.aby.base.bc.bea91.Bea91BcConfig;
+import edu.alibaba.mpc4j.s2pc.aby.bc.BcBitVector;
+import edu.alibaba.mpc4j.s2pc.aby.bc.BcConfig;
+import edu.alibaba.mpc4j.s2pc.aby.bc.BcFactory;
+import edu.alibaba.mpc4j.s2pc.aby.bc.BcParty;
+import edu.alibaba.mpc4j.s2pc.aby.bc.bea91.Bea91BcConfig;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.time.StopWatch;
 import org.junit.Assert;
@@ -27,14 +26,14 @@ import java.util.Collection;
 import java.util.concurrent.TimeUnit;
 
 /**
- * AND-BC协议测试。
+ * XOR-BC协议测试。
  *
  * @author Weiran Liu
  * @date 2022/02/14
  */
 @RunWith(Parameterized.class)
-public class AndBcTest {
-    private static final Logger LOGGER = LoggerFactory.getLogger(AndBcTest.class);
+public class XorBcTest {
+    private static final Logger LOGGER = LoggerFactory.getLogger(XorBcTest.class);
     /**
      * 随机状态
      */
@@ -51,21 +50,21 @@ public class AndBcTest {
     @Parameterized.Parameters(name = "{0}")
     public static Collection<Object[]> configurations() {
         Collection<Object[]> configurations = new ArrayList<>();
-        // Beaver91 (x public, y public)
+        // Beaver91 (public, public)
         configurations.add(new Object[] {
-            BcType.BEA91.name() + " (x public, y public)", new Bea91BcConfig.Builder().build(), true, true
+            BcFactory.BcType.BEA91.name() + " (x public, y public)", new Bea91BcConfig.Builder().build(), true, true
         });
-        // Beaver91 (x public, y secret)
+        // Beaver91 (public, secret)
         configurations.add(new Object[] {
-            BcType.BEA91.name() + " (x public, y secret)", new Bea91BcConfig.Builder().build(), true, false
+            BcFactory.BcType.BEA91.name() + " (x public, y secret)", new Bea91BcConfig.Builder().build(), true, false
         });
-        // Beaver91 (x secret, y public)
+        // Beaver91 (secret, public)
         configurations.add(new Object[] {
-            BcType.BEA91.name() + " (x secret, y public)", new Bea91BcConfig.Builder().build(), false, true
+            BcFactory.BcType.BEA91.name() + " (x secret, y public)", new Bea91BcConfig.Builder().build(), false, true
         });
-        // Beaver91 (x secret, y secret)
+        // Beaver91 (secret, secret)
         configurations.add(new Object[] {
-            BcType.BEA91.name() + " (x secret, y secret)", new Bea91BcConfig.Builder().build(), false, false
+            BcFactory.BcType.BEA91.name() + " (x secret, y secret)", new Bea91BcConfig.Builder().build(), false, false
         });
 
         return configurations;
@@ -92,7 +91,7 @@ public class AndBcTest {
      */
     private final boolean yPublic;
 
-    public AndBcTest(String name, BcConfig config, boolean xPublic, boolean yPublic) {
+    public XorBcTest(String name, BcConfig config, boolean xPublic, boolean yPublic) {
         Preconditions.checkArgument(StringUtils.isNotBlank(name));
         RpcManager rpcManager = new MemoryRpcManager(2);
         senderRpc = rpcManager.getRpc(0);
@@ -201,8 +200,8 @@ public class AndBcTest {
         BcBitVector y1 = BcBitVector.create(y1Bytes, num, yPublic);
         try {
             LOGGER.info("-----test {} start-----", sender.getPtoDesc().getPtoName());
-            AndBcPartyThread senderThread = new AndBcPartyThread(sender, x0, y0);
-            AndBcPartyThread receiverThread = new AndBcPartyThread(receiver, x1, y1);
+            XorBcPartyThread senderThread = new XorBcPartyThread(sender, x0, y0);
+            XorBcPartyThread receiverThread = new XorBcPartyThread(receiver, x1, y1);
             StopWatch stopWatch = new StopWatch();
             // 开始执行协议
             stopWatch.start();
@@ -235,7 +234,7 @@ public class AndBcTest {
         byte[] x = xPublic ? x0.getBytes() : BytesUtils.xor(x0.getBytes(), x1.getBytes());
         byte[] y = yPublic ? y0.getBytes() : BytesUtils.xor(y0.getBytes(), y1.getBytes());
         //noinspection SuspiciousNameCombination
-        byte[] expectZ = BytesUtils.and(x, y);
+        byte[] expectZ = BytesUtils.xor(x, y);
         byte[] actualZ = (xPublic && yPublic) ? z0.getBytes() : BytesUtils.xor(z0.getBytes(), z1.getBytes());
         Assert.assertArrayEquals(expectZ, actualZ);
     }

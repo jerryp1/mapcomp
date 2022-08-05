@@ -1,4 +1,4 @@
-package edu.alibaba.mpc4j.s2pc.aby.base;
+package edu.alibaba.mpc4j.s2pc.aby;
 
 /**
  * 不经意比特向量（Oblivious Bit Vector）。

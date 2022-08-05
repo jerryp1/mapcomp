@@ -12,9 +12,9 @@ import edu.alibaba.mpc4j.common.tool.bitmatrix.trans.TransBitMatrixFactory;
 import edu.alibaba.mpc4j.common.tool.crypto.prp.PrpFactory.PrpType;
 import edu.alibaba.mpc4j.common.tool.utils.BytesUtils;
 import edu.alibaba.mpc4j.common.tool.utils.LongUtils;
-import edu.alibaba.mpc4j.s2pc.aby.base.bc.BcBitVector;
-import edu.alibaba.mpc4j.s2pc.aby.base.bc.BcFactory;
-import edu.alibaba.mpc4j.s2pc.aby.base.bc.BcParty;
+import edu.alibaba.mpc4j.s2pc.aby.bc.BcBitVector;
+import edu.alibaba.mpc4j.s2pc.aby.bc.BcFactory;
+import edu.alibaba.mpc4j.s2pc.aby.bc.BcParty;
 import edu.alibaba.mpc4j.s2pc.pso.oprp.AbstractOprpSender;
 import edu.alibaba.mpc4j.s2pc.pso.oprp.OprpSenderOutput;
 

@@ -10,8 +10,8 @@ import edu.alibaba.mpc4j.common.tool.hashbin.object.cuckoo.CuckooHashBinFactory.
 import edu.alibaba.mpc4j.common.tool.okve.okvs.OkvsFactory.OkvsType;
 import edu.alibaba.mpc4j.common.tool.okve.ovdm.ecc.EccOvdmFactory.EccOvdmType;
 import edu.alibaba.mpc4j.common.tool.okve.ovdm.gf2e.Gf2eOvdmFactory.Gf2eOvdmType;
-import edu.alibaba.mpc4j.s2pc.aby.base.bc.BcConfig;
-import edu.alibaba.mpc4j.s2pc.aby.base.bc.bea91.Bea91BcConfig;
+import edu.alibaba.mpc4j.s2pc.aby.bc.BcConfig;
+import edu.alibaba.mpc4j.s2pc.aby.bc.bea91.Bea91BcConfig;
 import edu.alibaba.mpc4j.s2pc.pcg.btg.BtgConfig;
 import edu.alibaba.mpc4j.s2pc.pcg.btg.impl.file.FileBtgConfig;
 import edu.alibaba.mpc4j.s2pc.pcg.ot.cot.impl.rto.RtoCotConfig;

@@ -1,4 +1,4 @@
-package edu.alibaba.mpc4j.s2pc.aby.base.bc.or;
+package edu.alibaba.mpc4j.s2pc.aby.bc.or;
 
 import com.google.common.base.Preconditions;
 import edu.alibaba.mpc4j.common.rpc.Rpc;
@@ -6,12 +6,11 @@ import edu.alibaba.mpc4j.common.rpc.RpcManager;
 import edu.alibaba.mpc4j.common.rpc.impl.memory.MemoryRpcManager;
 import edu.alibaba.mpc4j.common.tool.utils.BytesUtils;
 import edu.alibaba.mpc4j.common.tool.utils.CommonUtils;
-import edu.alibaba.mpc4j.s2pc.aby.base.bc.BcBitVector;
-import edu.alibaba.mpc4j.s2pc.aby.base.bc.BcConfig;
-import edu.alibaba.mpc4j.s2pc.aby.base.bc.BcFactory;
-import edu.alibaba.mpc4j.s2pc.aby.base.bc.BcFactory.BcType;
-import edu.alibaba.mpc4j.s2pc.aby.base.bc.BcParty;
-import edu.alibaba.mpc4j.s2pc.aby.base.bc.bea91.Bea91BcConfig;
+import edu.alibaba.mpc4j.s2pc.aby.bc.BcBitVector;
+import edu.alibaba.mpc4j.s2pc.aby.bc.BcConfig;
+import edu.alibaba.mpc4j.s2pc.aby.bc.BcFactory;
+import edu.alibaba.mpc4j.s2pc.aby.bc.BcParty;
+import edu.alibaba.mpc4j.s2pc.aby.bc.bea91.Bea91BcConfig;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.time.StopWatch;
 import org.junit.Assert;
@@ -53,19 +52,19 @@ public class OrBcTest {
         Collection<Object[]> configurations = new ArrayList<>();
         // Beaver91 (x public, y public)
         configurations.add(new Object[] {
-            BcType.BEA91.name() + " (x public, y public)", new Bea91BcConfig.Builder().build(), true, true
+            BcFactory.BcType.BEA91.name() + " (x public, y public)", new Bea91BcConfig.Builder().build(), true, true
         });
         // Beaver91 (x public, y secret)
         configurations.add(new Object[] {
-            BcType.BEA91.name() + " (x public, y secret)", new Bea91BcConfig.Builder().build(), true, false
+            BcFactory.BcType.BEA91.name() + " (x public, y secret)", new Bea91BcConfig.Builder().build(), true, false
         });
         // Beaver91 (x secret, y public)
         configurations.add(new Object[] {
-            BcType.BEA91.name() + " (x secret, y public)", new Bea91BcConfig.Builder().build(), false, true
+            BcFactory.BcType.BEA91.name() + " (x secret, y public)", new Bea91BcConfig.Builder().build(), false, true
         });
         // Beaver91 (x secret, y secret)
         configurations.add(new Object[] {
-            BcType.BEA91.name() + " (x secret, y secret)", new Bea91BcConfig.Builder().build(), false, false
+            BcFactory.BcType.BEA91.name() + " (x secret, y secret)", new Bea91BcConfig.Builder().build(), false, false
         });
 
         return configurations;

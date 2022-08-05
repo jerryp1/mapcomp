@@ -1,4 +1,4 @@
-package edu.alibaba.mpc4j.s2pc.aby.base.bc;
+package edu.alibaba.mpc4j.s2pc.aby.bc;
 
 import edu.alibaba.mpc4j.common.rpc.pto.SecurePtoConfig;
 

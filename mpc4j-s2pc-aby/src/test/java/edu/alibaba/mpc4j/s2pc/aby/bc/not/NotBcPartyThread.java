@@ -1,8 +1,8 @@
-package edu.alibaba.mpc4j.s2pc.aby.base.bc.not;
+package edu.alibaba.mpc4j.s2pc.aby.bc.not;
 
 import edu.alibaba.mpc4j.common.rpc.MpcAbortException;
-import edu.alibaba.mpc4j.s2pc.aby.base.bc.BcBitVector;
-import edu.alibaba.mpc4j.s2pc.aby.base.bc.BcParty;
+import edu.alibaba.mpc4j.s2pc.aby.bc.BcBitVector;
+import edu.alibaba.mpc4j.s2pc.aby.bc.BcParty;
 
 /**
  * NOT-BC协议参与方线程。
