@@ -1,27 +1,25 @@
-package edu.alibaba.mpc4j.common.tool.polynomial.zp;
+package edu.alibaba.mpc4j.common.tool.polynomial.zp64;
+
+import edu.alibaba.mpc4j.common.tool.polynomial.zp.*;
 
 /**
- * Zp多项式插值工厂类。
+ * Zp64多项式插值工厂类。
  *
  * @author Weiran Liu
- * @date 2021/06/05
+ * @date 2022/8/3
  */
-public class ZpPolyFactory {
+public class Zp64PolyFactory {
     /**
      * 私有构造函数。
      */
-    private ZpPolyFactory() {
+    private Zp64PolyFactory() {
         // empty
     }
 
     /**
-     * Zp多项式插值类型。
+     * Zp64多项式插值类型。
      */
-    public enum ZpPolyType {
-        /**
-         * NTL库插值
-         */
-        NTL,
+    public enum Zp64PolyType {
         /**
          * Rings实现的拉格朗日插值
          */
@@ -39,16 +37,14 @@ public class ZpPolyFactory {
      * @param l    有限域比特长度。
      * @return 多项式插值实例。
      */
-    public static ZpPoly createInstance(ZpPolyType type, int l) {
+    public static Zp64Poly createInstance(Zp64PolyType type, int l) {
         switch (type) {
-            case NTL:
-                return new NtlZpPoly(l);
             case RINGS_NEWTON:
-                return new RingsNewtonZpPoly(l);
+                return new RingsNewtonZp64Poly(l);
             case RINGS_LAGRANGE:
-                return new RingsLagrangeZpPoly(l);
+                return new RingsLagrangeZp64Poly(l);
             default:
-                throw new IllegalArgumentException("Invalid ZpPolyType: " + type.name());
+                throw new IllegalArgumentException("Invalid Zp64PolyType: " + type.name());
         }
     }
 }

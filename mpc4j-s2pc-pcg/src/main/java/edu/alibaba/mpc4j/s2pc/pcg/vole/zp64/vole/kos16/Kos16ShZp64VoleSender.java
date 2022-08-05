@@ -133,8 +133,8 @@ public class Kos16ShZp64VoleSender extends AbstractZp64VoleSender {
                             .allocate(Long.BYTES + Integer.BYTES + CommonConstants.BLOCK_BYTE_LENGTH)
                             .putLong(extraInfo).putInt(rowIndex).put(baseOtSenderOutput.getR1(columnIndex))
                             .array();
-                    t0[rowIndex][columnIndex] = zp64.randomElement(t0Seed);
-                    long t1 = zp64.randomElement(t1Seed);
+                    t0[rowIndex][columnIndex] = zp64.createRandom(t0Seed);
+                    long t1 = zp64.createRandom(t1Seed);
                     // 计算u = t0[i,j] - t1[i,j] + x[i] mod p
                     long u = zp64.add(zp64.sub(t0[rowIndex][columnIndex], t1), x[rowIndex]);
                     return LongUtils.longToByteArray(u);

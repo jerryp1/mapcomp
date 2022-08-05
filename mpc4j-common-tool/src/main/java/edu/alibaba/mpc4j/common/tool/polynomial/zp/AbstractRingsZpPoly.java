@@ -11,7 +11,7 @@ import java.util.Arrays;
 import java.util.stream.IntStream;
 
 /**
- * 基于Rings的抽象插值算法。
+ * 应用Rings的Zp多项式差值抽象类。
  *
  * @author Weiran Liu
  * @date 2021/05/31
@@ -22,7 +22,7 @@ abstract class AbstractRingsZpPoly implements ZpPoly {
      */
     private final SecureRandom secureRandom;
     /**
-     * Z_p有限域
+     * Zp64有限域
      */
     protected final IntegersZp finiteField;
     /**
@@ -35,7 +35,6 @@ abstract class AbstractRingsZpPoly implements ZpPoly {
     private final int l;
 
     AbstractRingsZpPoly(int l) {
-        assert l > 0 && l % Byte.SIZE == 0;
         p = ZpManager.getPrime(l);
         finiteField = ZpManager.getFiniteField(l);
         this.l = l;
@@ -53,33 +52,41 @@ abstract class AbstractRingsZpPoly implements ZpPoly {
     }
 
     @Override
+    public int coefficientNum(int num) {
+        assert num > 1 : "# of points must be greater than 1: " + num;
+        return num;
+    }
+
+    @Override
     public BigInteger[] interpolate(int num, BigInteger[] xArray, BigInteger[] yArray) {
         assert xArray.length == yArray.length;
         // 不要求至少有1个插值点，只要求总数量大于1
         assert num > 1 && xArray.length <= num;
-        for (int i = 0; i < xArray.length; i++) {
-            assert BigIntegerUtils.greaterOrEqual(xArray[i], BigInteger.ZERO) && xArray[i].bitLength() <= l;
-            assert BigIntegerUtils.greaterOrEqual(yArray[i], BigInteger.ZERO) && yArray[i].bitLength() <= l;
+        for (BigInteger x : xArray) {
+            assert validPoint(x);
+        }
+        for (BigInteger y : yArray) {
+            assert validPoint(y);
         }
         // 插值
         UnivariatePolynomial<cc.redberry.rings.bigint.BigInteger> interpolatePolynomial
             = polynomialInterpolate(num, xArray, yArray);
-        // 转换成多项式点
-        cc.redberry.rings.bigint.BigInteger[] points = Arrays.stream(xArray)
-            .map(cc.redberry.rings.bigint.BigInteger::new)
-            .toArray(cc.redberry.rings.bigint.BigInteger[]::new);
         // 如果插值点数量小于最大点数量，则补充虚拟点
-        if (points.length < num) {
+        if (xArray.length < num) {
+            // 转换成多项式点
+            cc.redberry.rings.bigint.BigInteger[] pointXs = Arrays.stream(xArray)
+                .map(cc.redberry.rings.bigint.BigInteger::new)
+                .toArray(cc.redberry.rings.bigint.BigInteger[]::new);
             // 计算(x - x_1) * ... * (x - x_m')
             UnivariatePolynomial<cc.redberry.rings.bigint.BigInteger> p1 = UnivariatePolynomial.one(finiteField);
-            for (cc.redberry.rings.bigint.BigInteger point : points) {
+            for (cc.redberry.rings.bigint.BigInteger pointX : pointXs) {
                 p1 = p1.multiply(
-                    UnivariatePolynomial.zero(finiteField).createLinear(finiteField.negate(point), finiteField.getOne())
+                    UnivariatePolynomial.zero(finiteField).createLinear(finiteField.negate(pointX), finiteField.getOne())
                 );
             }
             // 构造随机多项式
             cc.redberry.rings.bigint.BigInteger[] prCoefficients
-                = new cc.redberry.rings.bigint.BigInteger[num - points.length];
+                = new cc.redberry.rings.bigint.BigInteger[num - pointXs.length];
             for (int index = 0; index < prCoefficients.length; index++) {
                 prCoefficients[index] = new cc.redberry.rings.bigint.BigInteger(l, secureRandom);
             }
@@ -89,6 +96,12 @@ abstract class AbstractRingsZpPoly implements ZpPoly {
             interpolatePolynomial = interpolatePolynomial.add(p1.multiply(pr));
         }
         return polynomialToBigIntegers(num, interpolatePolynomial);
+    }
+
+    @Override
+    public int rootCoefficientNum(int num) {
+        assert num > 1 : "# of points must be greater than 1: " + num;
+        return num + 1;
     }
 
     @Override
@@ -107,19 +120,19 @@ abstract class AbstractRingsZpPoly implements ZpPoly {
         }
         // 如果有插值数据，则继续插值
         for (BigInteger x : xArray) {
-            assert BigIntegerUtils.greaterOrEqual(x, BigInteger.ZERO) && x.bitLength() <= l;
+            assert validPoint(x);
         }
-        assert BigIntegerUtils.greaterOrEqual(y, BigInteger.ZERO) && y.bitLength() <= l;
+        assert validPoint(y);
         // 转换成多项式点
-        cc.redberry.rings.bigint.BigInteger[] points = Arrays.stream(xArray)
+        cc.redberry.rings.bigint.BigInteger[] pointXs = Arrays.stream(xArray)
             .map(cc.redberry.rings.bigint.BigInteger::new)
             .toArray(cc.redberry.rings.bigint.BigInteger[]::new);
         // 插值
         UnivariatePolynomial<cc.redberry.rings.bigint.BigInteger> polynomial = UnivariatePolynomial.one(finiteField);
         // f(x) = (x - x_0) * (x - x_1) * ... * (x - x_m)
-        for (cc.redberry.rings.bigint.BigInteger point : points) {
+        for (cc.redberry.rings.bigint.BigInteger pointX : pointXs) {
             UnivariatePolynomial<cc.redberry.rings.bigint.BigInteger> linear = polynomial.createLinear(
-                finiteField.negate(point), finiteField.getOne()
+                finiteField.negate(pointX), finiteField.getOne()
             );
             polynomial = polynomial.multiply(linear);
         }
@@ -142,11 +155,11 @@ abstract class AbstractRingsZpPoly implements ZpPoly {
     }
 
     /**
-     * 多项式插值，得到多项式f(x)，使得y_i = f(x_i)，返回多项式本身。
+     * 多项式插值，得到多项式f(x)，使得y = f(x)，返回多项式本身。
      *
      * @param num    插值点数量。
-     * @param xArray x_i数组。
-     * @param yArray y_i数组。
+     * @param xArray x数组。
+     * @param yArray y数组。
      * @return 多项式。
      */
     protected abstract UnivariatePolynomial<cc.redberry.rings.bigint.BigInteger> polynomialInterpolate(
@@ -157,13 +170,10 @@ abstract class AbstractRingsZpPoly implements ZpPoly {
         // 至少包含2个系数，每个系数都属于Zp
         assert coefficients.length > 1;
         for (BigInteger coefficient : coefficients) {
-            assert BigIntegerUtils.greaterOrEqual(coefficient, BigInteger.ZERO);
-            assert BigIntegerUtils.less(coefficient, p);
+            assert validPoint(coefficient);
         }
         // 验证x的有效性
-        assert BigIntegerUtils.greaterOrEqual(x, BigInteger.ZERO);
-        assert x.bitLength() <= l;
-
+        assert validPoint(x);
         // 恢复多项式
         UnivariatePolynomial<cc.redberry.rings.bigint.BigInteger> polynomial = bigIntegersToPolynomial(coefficients);
         // 求值
@@ -189,8 +199,7 @@ abstract class AbstractRingsZpPoly implements ZpPoly {
             .toArray(BigInteger[]::new);
     }
 
-    BigInteger[] polynomialToBigIntegers(int num,
-        UnivariatePolynomial<cc.redberry.rings.bigint.BigInteger> polynomial) {
+    private BigInteger[] polynomialToBigIntegers(int num, UnivariatePolynomial<cc.redberry.rings.bigint.BigInteger> polynomial) {
         BigInteger[] coefficients = new BigInteger[num];
         // 低阶系数正常拷贝
         IntStream.range(0, polynomial.degree() + 1).forEach(degreeIndex -> coefficients[degreeIndex]
@@ -204,8 +213,7 @@ abstract class AbstractRingsZpPoly implements ZpPoly {
         return coefficients;
     }
 
-    BigInteger[] rootPolynomialToBigIntegers(int num,
-        UnivariatePolynomial<cc.redberry.rings.bigint.BigInteger> polynomial) {
+    private BigInteger[] rootPolynomialToBigIntegers(int num, UnivariatePolynomial<cc.redberry.rings.bigint.BigInteger> polynomial) {
         BigInteger[] coefficients = new BigInteger[num + 1];
         // 低阶系数正常拷贝
         IntStream.range(0, polynomial.degree() + 1).forEach(degreeIndex -> coefficients[degreeIndex]
@@ -226,5 +234,9 @@ abstract class AbstractRingsZpPoly implements ZpPoly {
             .toArray(cc.redberry.rings.bigint.BigInteger[]::new);
 
         return UnivariatePolynomial.create(finiteField, polyCoefficients);
+    }
+
+    private boolean validPoint(BigInteger point) {
+        return BigIntegerUtils.greaterOrEqual(point, BigInteger.ZERO) && BigIntegerUtils.less(point, p);
     }
 }

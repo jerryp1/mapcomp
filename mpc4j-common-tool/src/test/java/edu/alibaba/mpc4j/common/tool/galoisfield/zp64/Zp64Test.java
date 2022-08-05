@@ -105,7 +105,7 @@ public class Zp64Test {
         Assert.assertEquals(zero, zp64.add(zero, zp64.neg(zero)));
 
         for (int round = 0; round < MAX_RANDOM_NUM; round++) {
-            long a = zp64.randomNonZeroElement(SECURE_RANDOM);
+            long a = zp64.createNonZeroRandom(SECURE_RANDOM);
             // a + (-a) = 0
             Assert.assertEquals(zero, zp64.add(a, zp64.neg(a)));
             // a - a = 0
@@ -119,7 +119,7 @@ public class Zp64Test {
         long zero = zp64.createZero();
         Assert.assertEquals(zero, zp64.mul(zero, zero));
         for (int round = 0; round < MAX_RANDOM_NUM; round++) {
-            long a = zp64.randomNonZeroElement(SECURE_RANDOM);
+            long a = zp64.createNonZeroRandom(SECURE_RANDOM);
             // 0 * a = 0
             Assert.assertEquals(zero, zp64.mul(zero, a));
             // a * 0 = 0
@@ -129,7 +129,7 @@ public class Zp64Test {
         long one = zp64.createOne();
         Assert.assertEquals(one, zp64.mul(one, one));
         for (int round = 0; round < MAX_RANDOM_NUM; round++) {
-            long a = zp64.randomNonZeroElement(SECURE_RANDOM);
+            long a = zp64.createNonZeroRandom(SECURE_RANDOM);
             // 1 * a = a
             Assert.assertEquals(a, zp64.mul(one, a));
             // a * 1 = a
@@ -149,18 +149,18 @@ public class Zp64Test {
         Assert.assertEquals(one, zp64.mulPow(zero, zero));
         for (int round = 0; round < MAX_RANDOM_NUM; round++) {
             // 0^a = 0
-            long a = zp64.randomNonZeroElement(SECURE_RANDOM);
+            long a = zp64.createNonZeroRandom(SECURE_RANDOM);
             Assert.assertEquals(zero, zp64.mulPow(zero, a));
         }
         for (int round = 0; round < MAX_RANDOM_NUM; round++) {
             // a^0 = 1
-            long a = zp64.randomNonZeroElement(SECURE_RANDOM);
+            long a = zp64.createNonZeroRandom(SECURE_RANDOM);
             Assert.assertEquals(one, zp64.mulPow(a, zero));
         }
         for (int round = 0; round < MAX_RANDOM_NUM; round++) {
             // (a^b)^(-1) = (a^(-1))^b
-            long a = zp64.randomNonZeroElement(SECURE_RANDOM);
-            long b = zp64.randomNonZeroElement(SECURE_RANDOM);
+            long a = zp64.createNonZeroRandom(SECURE_RANDOM);
+            long b = zp64.createNonZeroRandom(SECURE_RANDOM);
             Assert.assertEquals(zp64.inv(zp64.mulPow(a, b)), zp64.mulPow(zp64.inv(a), b));
         }
     }

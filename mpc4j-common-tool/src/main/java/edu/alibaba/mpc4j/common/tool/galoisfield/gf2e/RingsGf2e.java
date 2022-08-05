@@ -129,19 +129,15 @@ public class RingsGf2e implements Gf2e {
     }
 
     @Override
-    public byte[] randomElement(SecureRandom secureRandom) {
-        byte[] random = new byte[byteL];
-        secureRandom.nextBytes(random);
-        BytesUtils.reduceByteArray(random, l);
-        return random;
+    public byte[] createRandom(SecureRandom secureRandom) {
+        return BytesUtils.randomByteArray(l, byteL, secureRandom);
     }
 
     @Override
-    public byte[] randomNonZeroElement(SecureRandom secureRandom) {
+    public byte[] createNonZeroRandom(SecureRandom secureRandom) {
         byte[] random = new byte[byteL];
         while (Arrays.equals(zero, random)) {
-            secureRandom.nextBytes(random);
-            BytesUtils.reduceByteArray(random, l);
+            random = BytesUtils.randomByteArray(l, byteL, secureRandom);
         }
         return random;
     }

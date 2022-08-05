@@ -1,5 +1,6 @@
 package edu.alibaba.mpc4j.common.tool.utils;
 
+import java.security.SecureRandom;
 import java.util.Arrays;
 import java.util.stream.IntStream;
 
@@ -111,26 +112,47 @@ public class BytesUtils {
      * @param bitLength 有效比特位数。
      */
     public static void reduceByteArray(byte[] byteArray, final int bitLength) {
-        assert bitLength >= 0 && bitLength <= byteArray.length * Byte.SIZE;
+        // 这里的bitLength指的是要保留多少个比特位，因此可以取到[0, byteArray.length * Byte.SIZE]
+        assert bitLength >= 0 && bitLength <= byteArray.length * Byte.SIZE
+            : "bitLength must be in range [0, " + byteArray.length * Byte.SIZE + "]: " + bitLength;
         for (int binaryIndex = 0; binaryIndex < byteArray.length * Byte.SIZE - bitLength; binaryIndex++) {
             BinaryUtils.setBoolean(byteArray, binaryIndex, false);
         }
     }
 
     /**
-     * 验证给定{@code byte[]}的有效位数是否为{@code bitLength}，大端表示。要求{@code bitLength >= 0}但不会验证。
+     * 验证给定{@code byte[]}的有效位数是否为{@code bitLength}，大端表示。
      *
      * @param byteArray 给定的{@code byte[]}。
      * @param bitLength 期望的比特长度。
      */
     public static boolean isReduceByteArray(byte[] byteArray, final int bitLength) {
-        assert bitLength >= 0 && bitLength <= byteArray.length * Byte.SIZE;
+        // 这里的bitLength指的是要保留多少个比特位，因此可以取到[0, byteArray.length * Byte.SIZE]
+        assert bitLength >= 0 && bitLength <= byteArray.length * Byte.SIZE
+            : "bitLength must be in range [0, " + byteArray.length * Byte.SIZE + "]: " + bitLength;
         for (int binaryIndex = 0; binaryIndex < byteArray.length * Byte.SIZE - bitLength; binaryIndex++) {
             if (BinaryUtils.getBoolean(byteArray, binaryIndex)) {
                 return false;
             }
         }
         return true;
+    }
+
+    /**
+     * 生成指定比特长度的字节数组。
+     *
+     * @param bitLength 比特长度。
+     * @param byteLength 字节长度。
+     * @param secureRandom 随机状态。
+     * @return 指定比特长度的字节数组。
+     */
+    public static byte[] randomByteArray(final int bitLength, final int byteLength, SecureRandom secureRandom) {
+        assert byteLength * Byte.SIZE >= bitLength
+            : "bitLength = " + bitLength + ", byteLength does not have enough room: " + byteLength;
+        byte[] byteArray = new byte[byteLength];
+        secureRandom.nextBytes(byteArray);
+        reduceByteArray(byteArray, bitLength);
+        return byteArray;
     }
 
     /**

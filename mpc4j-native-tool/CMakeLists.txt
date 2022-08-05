@@ -125,7 +125,7 @@ add_library(
         gf2k/edu_alibaba_mpc4j_common_tool_galoisfield_gf2k_SseGf2k.cpp
         gf2k/edu_alibaba_mpc4j_common_tool_galoisfield_gf2k_NtlGf2k.cpp
         gf2e/edu_alibaba_mpc4j_common_tool_galoisfield_gf2e_NtlNativeGf2e.cpp
-        mcl_ecc/mcl_ecc.cpp)
+        mcl_ecc/mcl_ecc.cpp ntl_poly/ntl_zp64.h ntl_poly/ntl_zp64.cpp)
 
 target_include_directories(
         mpc4j-native-tool

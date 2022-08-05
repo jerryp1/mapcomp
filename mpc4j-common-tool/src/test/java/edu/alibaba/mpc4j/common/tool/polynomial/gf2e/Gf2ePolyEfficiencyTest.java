@@ -1,6 +1,6 @@
 package edu.alibaba.mpc4j.common.tool.polynomial.gf2e;
 
-import edu.alibaba.mpc4j.common.tool.CommonConstants;
+import edu.alibaba.mpc4j.common.tool.utils.BytesUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.time.StopWatch;
 import org.junit.Ignore;
@@ -24,13 +24,17 @@ import java.util.stream.IntStream;
 public class Gf2ePolyEfficiencyTest {
     private static final Logger LOGGER = LoggerFactory.getLogger(Gf2ePolyEfficiencyTest.class);
     /**
+     * l取值
+     */
+    private static final int[] L_ARRAY = new int[] {40, 50, 60, 70, 80};
+    /**
+     * 点数量取值
+     */
+    private static final int[] POINT_NUM_ARRAY = new int[] {10, 20, 30, 40, 50};
+    /**
      * log(n)
      */
     private static final int LOG_N = 4;
-    /**
-     * 点数量输出格式
-     */
-    private static final DecimalFormat POINT_NUM_DECIMAL_FORMAT = new DecimalFormat("00");
     /**
      * 时间输出格式
      */
@@ -54,56 +58,39 @@ public class Gf2ePolyEfficiencyTest {
 
     @Test
     public void testEfficiency() {
-        LOGGER.info("{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}",
-            "                type", "  # points", "    log(n)",
-            "  Full(ms)", " rFull(ms)", "  Half(ms)", "  rHalf(ms)",
-            " Eval.(ms)", "bEval.(ms)"
+        LOGGER.info("{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}",
+            "                type",
+            "         l", "  # points", "    log(n)",
+            "  Full(ms)", " rFull(ms)", "  Half(ms)", "  rHalf(ms)", " Eval.(ms)", "bEval.(ms)"
         );
-        testEfficiency(10);
-        testEfficiency(20);
-        testEfficiency(30);
-        testEfficiency(40);
-        testEfficiency(50);
+        for (int l : L_ARRAY) {
+            for (int pointNum : POINT_NUM_ARRAY) {
+                testEfficiency(l, pointNum);
+            }
+        }
     }
 
-    private void testEfficiency(int pointNum) {
+    private void testEfficiency(int l, int pointNum) {
         int n = 1 << LOG_N;
         for (Gf2ePolyFactory.Gf2ePolyType type : TYPES) {
-            Gf2ePoly gf2ePoly = Gf2ePolyFactory.createInstance(type, CommonConstants.STATS_BIT_LENGTH);
+            Gf2ePoly gf2ePoly = Gf2ePolyFactory.createInstance(type, l);
+            int byteL = gf2ePoly.getByteL();
             // 创建全量插值点
             byte[][] xFullArray = IntStream.range(0, pointNum)
-                .mapToObj(index -> {
-                    byte[] xBytes = new byte[gf2ePoly.getByteL()];
-                    SECURE_RANDOM.nextBytes(xBytes);
-                    return xBytes;
-                })
+                .mapToObj(index -> BytesUtils.randomByteArray(l, byteL, SECURE_RANDOM))
                 .toArray(byte[][]::new);
             byte[][] yFullArray = IntStream.range(0, pointNum)
-                .mapToObj(index -> {
-                    byte[] xBytes = new byte[gf2ePoly.getByteL()];
-                    SECURE_RANDOM.nextBytes(xBytes);
-                    return xBytes;
-                })
+                .mapToObj(index -> BytesUtils.randomByteArray(l, byteL, SECURE_RANDOM))
                 .toArray(byte[][]::new);
-            byte[] yFullBytes = new byte[gf2ePoly.getByteL()];
-            SECURE_RANDOM.nextBytes(yFullBytes);
+            byte[] yFull = BytesUtils.randomByteArray(l, byteL, SECURE_RANDOM);
             // 创建半数插值点
             byte[][] xHalfArray = IntStream.range(0, pointNum / 2)
-                .mapToObj(index -> {
-                    byte[] xBytes = new byte[gf2ePoly.getByteL()];
-                    SECURE_RANDOM.nextBytes(xBytes);
-                    return xBytes;
-                })
+                .mapToObj(index -> BytesUtils.randomByteArray(l, byteL, SECURE_RANDOM))
                 .toArray(byte[][]::new);
             byte[][] yHalfArray = IntStream.range(0, pointNum / 2)
-                .mapToObj(index -> {
-                    byte[] xBytes = new byte[gf2ePoly.getByteL()];
-                    SECURE_RANDOM.nextBytes(xBytes);
-                    return xBytes;
-                })
+                .mapToObj(index -> BytesUtils.randomByteArray(l, byteL, SECURE_RANDOM))
                 .toArray(byte[][]::new);
-            byte[] yHalfBytes = new byte[gf2ePoly.getByteL()];
-            SECURE_RANDOM.nextBytes(yHalfBytes);
+            byte[] yHalf = BytesUtils.randomByteArray(l, byteL, SECURE_RANDOM);
             // 全量插值时间
             STOP_WATCH.start();
             IntStream.range(0, n).forEach(index -> gf2ePoly.interpolate(pointNum, xFullArray, yFullArray));
@@ -112,7 +99,7 @@ public class Gf2ePolyEfficiencyTest {
             STOP_WATCH.reset();
             // 全量根差值时间
             STOP_WATCH.start();
-            IntStream.range(0, n).forEach(index -> gf2ePoly.rootInterpolate(pointNum, xFullArray, yFullBytes));
+            IntStream.range(0, n).forEach(index -> gf2ePoly.rootInterpolate(pointNum, xFullArray, yFull));
             STOP_WATCH.stop();
             double fullRootInterpolateTime = (double) STOP_WATCH.getTime(TimeUnit.MICROSECONDS) / n / 1000;
             STOP_WATCH.reset();
@@ -124,12 +111,12 @@ public class Gf2ePolyEfficiencyTest {
             STOP_WATCH.reset();
             // 半量根差值时间
             STOP_WATCH.start();
-            IntStream.range(0, n).forEach(index -> gf2ePoly.rootInterpolate(pointNum, xHalfArray, yHalfBytes));
+            IntStream.range(0, n).forEach(index -> gf2ePoly.rootInterpolate(pointNum, xHalfArray, yHalf));
             STOP_WATCH.stop();
             double halfRootInterpolateTime = (double) STOP_WATCH.getTime(TimeUnit.MICROSECONDS) / n / 1000;
             STOP_WATCH.reset();
             // 单一求值时间
-            byte[][] coefficients = gf2ePoly.rootInterpolate(pointNum, xFullArray, yFullBytes);
+            byte[][] coefficients = gf2ePoly.rootInterpolate(pointNum, xFullArray, yFull);
             STOP_WATCH.start();
             IntStream.range(0, n).forEach(index ->
                 Arrays.stream(xFullArray).forEach(x -> gf2ePoly.evaluate(coefficients, x))
@@ -143,9 +130,10 @@ public class Gf2ePolyEfficiencyTest {
             double multiEvaluateTime = (double) STOP_WATCH.getTime(TimeUnit.MICROSECONDS) / n / 1000;
             STOP_WATCH.reset();
 
-            LOGGER.info("{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}",
+            LOGGER.info("{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}",
                 StringUtils.leftPad(type.name(), 20),
-                StringUtils.leftPad(POINT_NUM_DECIMAL_FORMAT.format(pointNum), 10),
+                StringUtils.leftPad(String.valueOf(l), 10),
+                StringUtils.leftPad(String.valueOf(pointNum), 10),
                 StringUtils.leftPad(String.valueOf(LOG_N), 10),
                 StringUtils.leftPad(TIME_DECIMAL_FORMAT.format(fullInterpolateTime), 10),
                 StringUtils.leftPad(TIME_DECIMAL_FORMAT.format(fullRootInterpolateTime), 10),

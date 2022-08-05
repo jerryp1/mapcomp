@@ -1,6 +1,5 @@
 package edu.alibaba.mpc4j.common.tool.polynomial.zp;
 
-import edu.alibaba.mpc4j.common.tool.CommonConstants;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.time.StopWatch;
 import org.junit.Ignore;
@@ -25,13 +24,17 @@ import java.util.stream.IntStream;
 public class ZpPolyEfficiencyTest {
     private static final Logger LOGGER = LoggerFactory.getLogger(ZpPolyEfficiencyTest.class);
     /**
+     * l取值
+     */
+    private static final int[] L_ARRAY = new int[] {40, 50, 60, 70, 80};
+    /**
+     * 点数量取值
+     */
+    private static final int[] POINT_NUM_ARRAY = new int[] {10, 20, 30, 40, 50};
+    /**
      * log(n)
      */
-    private static final int logN = 6;
-    /**
-     * 点数量输出格式
-     */
-    private static final DecimalFormat POINT_NUM_DECIMAL_FORMAT = new DecimalFormat("00");
+    private static final int LOG_N = 6;
     /**
      * 时间输出格式
      */
@@ -55,22 +58,22 @@ public class ZpPolyEfficiencyTest {
 
     @Test
     public void testEfficiency() {
-        LOGGER.info("{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}",
-            "                type", "  # points", "    log(n)",
-            "  Full(ms)", " rFull(ms)", "  Half(ms)", "  rHalf(ms)",
-            " Eval.(ms)", "bEval.(ms)"
+        LOGGER.info("{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}",
+            "                type",
+            "         l", "  # points", "    log(n)",
+            "  Full(ms)", " rFull(ms)", "  Half(ms)", "  rHalf(ms)", " Eval.(ms)", "bEval.(ms)"
         );
-        testEfficiency(10);
-        testEfficiency(20);
-        testEfficiency(30);
-        testEfficiency(40);
-        testEfficiency(50);
+        for (int l : L_ARRAY) {
+            for (int pointNum : POINT_NUM_ARRAY) {
+                testEfficiency(l, pointNum);
+            }
+        }
     }
 
-    private void testEfficiency(int pointNum) {
-        int n = 1 << logN;
+    private void testEfficiency(int l, int pointNum) {
+        int n = 1 << LOG_N;
         for (ZpPolyFactory.ZpPolyType type : TYPES) {
-            ZpPoly zpPoly = ZpPolyFactory.createInstance(type, CommonConstants.STATS_BIT_LENGTH);
+            ZpPoly zpPoly = ZpPolyFactory.createInstance(type, l);
             // 创建插值点
             BigInteger[] xFullArray = IntStream.range(0, pointNum)
                 .mapToObj(index -> new BigInteger(zpPoly.getL(), SECURE_RANDOM))
@@ -126,10 +129,11 @@ public class ZpPolyEfficiencyTest {
             double multiEvaluateTime = (double) STOP_WATCH.getTime(TimeUnit.MICROSECONDS) / n / 1000;
             STOP_WATCH.reset();
 
-            LOGGER.info("{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}",
+            LOGGER.info("{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}",
                 StringUtils.leftPad(type.name(), 20),
-                StringUtils.leftPad(POINT_NUM_DECIMAL_FORMAT.format(pointNum), 10),
-                StringUtils.leftPad(String.valueOf(logN), 10),
+                StringUtils.leftPad(String.valueOf(l), 10),
+                StringUtils.leftPad(String.valueOf(pointNum), 10),
+                StringUtils.leftPad(String.valueOf(LOG_N), 10),
                 StringUtils.leftPad(TIME_DECIMAL_FORMAT.format(fullInterpolateTime), 10),
                 StringUtils.leftPad(TIME_DECIMAL_FORMAT.format(fullRootInterpolateTime), 10),
                 StringUtils.leftPad(TIME_DECIMAL_FORMAT.format(halfInterpolateTime), 10),

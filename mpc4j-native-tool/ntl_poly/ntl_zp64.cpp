@@ -1,10 +1,10 @@
 //
-// Created by Weiran Liu on 2022/1/5.
+// Created by Weiran Liu on 2022/8/4.
 //
 
-#include "ntl_zp.h"
+#include "ntl_zp64.h"
 
-void zp_interpolate(uint64_t primeByteLength, uint64_t num, std::vector<uint8_t *> &setX, std::vector<uint8_t *> &setY, std::vector<uint8_t *> &coeffs) {
+void zp64_interpolate(uint64_t num, std::vector<long> &setX, std::vector<long> &setY, std::vector<long> &coeffs) {
     NTL::vec_ZZ_p x;
     NTL::vec_ZZ_p y;
     NTL::ZZ e_ZZ;
@@ -12,12 +12,10 @@ void zp_interpolate(uint64_t primeByteLength, uint64_t num, std::vector<uint8_t 
 
     for (uint64_t i = 0; i < setX.size(); ++i) {
         // 转换x
-        NTL::ZZFromBytes(e_ZZ, setX[i], static_cast<long>(primeByteLength));
-        e_ZZ_p = NTL::to_ZZ_p(e_ZZ);
+        e_ZZ_p = NTL::to_ZZ_p(setX[i]);
         x.append(e_ZZ_p);
         // 转换y
-        NTL::ZZFromBytes(e_ZZ, setY[i], static_cast<long>(primeByteLength));
-        e_ZZ_p = NTL::to_ZZ_p(e_ZZ);
+        e_ZZ_p = NTL::to_ZZ_p(setY[i]);
         y.append(e_ZZ_p);
     }
 
@@ -47,23 +45,20 @@ void zp_interpolate(uint64_t primeByteLength, uint64_t num, std::vector<uint8_t 
     for (int i = 0; i < coeffs.size(); i++) {
         // get the coefficient polynomial
         e_ZZ = rep(NTL::coeff(polynomial, i));
-        coeffs[i] = new uint8_t[primeByteLength];
-        NTL::BytesFromZZ(coeffs[i], e_ZZ, (long) (primeByteLength));
+        coeffs[i] = NTL::to_long(e_ZZ);
     }
 }
 
-void zp_root_interpolate(uint64_t primeByteLength, uint64_t num, std::vector<uint8_t*> &setX, uint8_t* y, std::vector<uint8_t*> &coeffs) {
+void zp64_root_interpolate(uint64_t num, std::vector<long> &setX, long y, std::vector<long> &coeffs) {
     NTL::vec_ZZ_p x;
     NTL::ZZ e_ZZ;
     NTL::ZZ_p e_ZZ_p;
     // 将插值点导入到GF2E向量中
-    for (auto & xBytes : setX) {
-        NTL::ZZFromBytes(e_ZZ, xBytes, static_cast<long>(primeByteLength));
-        e_ZZ_p = NTL::to_ZZ_p(e_ZZ);
+    for (long longX : setX) {
+        e_ZZ_p = NTL::to_ZZ_p(longX);
         x.append(e_ZZ_p);
     }
-    NTL::ZZFromBytes(e_ZZ, y, static_cast<long>(primeByteLength));
-    e_ZZ_p = NTL::to_ZZ_p(e_ZZ);
+    e_ZZ_p = NTL::to_ZZ_p(y);
     NTL::ZZ_pX root_polynomial;
     // 构建根多项式
     NTL::BuildFromRoots(root_polynomial, x);
@@ -79,26 +74,23 @@ void zp_root_interpolate(uint64_t primeByteLength, uint64_t num, std::vector<uin
     for (int i = 0; i < coeffs.size(); i++) {
         // get the coefficient polynomial
         e_ZZ = rep(NTL::coeff(polynomial, i));
-        coeffs[i] = new uint8_t [primeByteLength];
-        NTL::BytesFromZZ(coeffs[i], e_ZZ, (long) (primeByteLength));
+        coeffs[i] = NTL::to_long(e_ZZ);
     }
 }
 
-void zp_evaluate(uint64_t primeByteLength, std::vector<uint8_t *> &coeffs, uint8_t *x, uint8_t *y) {
+long zp64_evaluate(std::vector<long> &coeffs, long x) {
     NTL::ZZ_pX res_polynomial;
     NTL::ZZ e_ZZ;
     NTL::ZZ_p e_ZZ_p;
     for (uint64_t i = 0; i < coeffs.size(); ++i) {
-        NTL::ZZFromBytes(e_ZZ, coeffs[i], static_cast<long>(primeByteLength));
-        e_ZZ_p = NTL::to_ZZ_p(e_ZZ);
+        e_ZZ_p = NTL::to_ZZ_p(coeffs[i]);
         // build res_polynomial
         NTL::SetCoeff(res_polynomial, static_cast<long>(i), e_ZZ_p);
     }
     // get y = f(x) in ZZ_p
-    NTL::ZZFromBytes(e_ZZ, x, static_cast<long>(primeByteLength));
-    e_ZZ_p = NTL::to_ZZ_p(e_ZZ);
+    e_ZZ_p = NTL::to_ZZ_p(x);
     e_ZZ_p = NTL::eval(res_polynomial, e_ZZ_p);
     // convert to byte[]
     e_ZZ = NTL::rep(e_ZZ_p);
-    NTL::BytesFromZZ(y, e_ZZ, static_cast<long>(primeByteLength));
+    return NTL::to_long(e_ZZ);
 }

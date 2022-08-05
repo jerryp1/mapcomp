@@ -6,7 +6,7 @@ import cc.redberry.rings.poly.univar.UnivariatePolynomialZp64;
 import edu.alibaba.mpc4j.common.tool.polynomial.gf2e.Gf2ePolyFactory.Gf2ePolyType;
 
 /**
- * 应用Rings实现的GF2X牛顿多项式插值算法。
+ * 应用Rings实现的GF2E牛顿多项式插值算法。
  *
  * @author Weiran Liu
  * @date 2021/12/26

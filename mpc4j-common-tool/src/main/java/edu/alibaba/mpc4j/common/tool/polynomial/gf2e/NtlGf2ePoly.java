@@ -5,13 +5,16 @@ import cc.redberry.rings.poly.univar.UnivariatePolynomialZp64;
 import edu.alibaba.mpc4j.common.tool.CommonConstants;
 import edu.alibaba.mpc4j.common.tool.galoisfield.gf2e.Gf2eManager;
 import edu.alibaba.mpc4j.common.tool.polynomial.gf2e.Gf2ePolyFactory.Gf2ePolyType;
+import edu.alibaba.mpc4j.common.tool.utils.BigIntegerUtils;
 import edu.alibaba.mpc4j.common.tool.utils.BinaryUtils;
+import edu.alibaba.mpc4j.common.tool.utils.BytesUtils;
 import edu.alibaba.mpc4j.common.tool.utils.CommonUtils;
 
+import java.math.BigInteger;
 import java.security.SecureRandom;
 
 /**
- * NTL实现的GF2X多项式插值抽象类。
+ * NTL实现的GF2E多项式插值抽象类。
  *
  * @author Weiran Liu
  * @date 2021/12/11
@@ -27,7 +30,7 @@ public class NtlGf2ePoly implements Gf2ePoly {
      */
     private final SecureRandom secureRandom;
     /**
-     * GF(2^l)不可约多项式
+     * 不可约多项式
      */
     private final byte[] minBytes;
     /**
@@ -40,10 +43,10 @@ public class NtlGf2ePoly implements Gf2ePoly {
     protected final int byteL;
 
     NtlGf2ePoly(int l) {
-        assert l > 0 && l % Byte.SIZE == 0;
-        this.l = l;
-        byteL = l / Byte.SIZE;
         FiniteField<UnivariatePolynomialZp64> finiteField = Gf2eManager.getFiniteField(l);
+        assert l > 0;
+        this.l = l;
+        byteL = CommonUtils.getByteLength(l);
         // 设置不可约多项式，系数个数为l + 1
         int minNum = l + 1;
         int minByteNum = CommonUtils.getByteLength(minNum);
@@ -83,9 +86,11 @@ public class NtlGf2ePoly implements Gf2ePoly {
         assert xArray.length == yArray.length;
         // 不要求至少有1个插值点，只要求总数量大于1
         assert num > 1 && xArray.length <= num;
-        for (int i = 0; i < xArray.length; i++) {
-            assert xArray[i].length == byteL;
-            assert yArray[i].length == byteL;
+        for (byte[] x : xArray) {
+            assert validPoint(x);
+        }
+        for (byte[] y : yArray) {
+            assert validPoint(y);
         }
         // 调用本地函数完成插值
         return NtlNativeGf2ePoly.interpolate(minBytes, byteL, num, xArray, yArray);
@@ -113,7 +118,7 @@ public class NtlGf2ePoly implements Gf2ePoly {
         }
         // 如果有插值数据，则调用本地函数完成插值
         for (byte[] x : xArray) {
-            assert x.length == byteL;
+            assert validPoint(x);
         }
         return NtlNativeGf2ePoly.rootInterpolate(minBytes, byteL, num, xArray, y);
     }
@@ -122,21 +127,25 @@ public class NtlGf2ePoly implements Gf2ePoly {
     public byte[] evaluate(byte[][] coefficients, byte[] x) {
         assert coefficients.length > 1;
         for (byte[] coefficient : coefficients) {
-            assert coefficient.length == byteL;
+            assert validPoint(coefficient);
         }
-        assert x.length == byteL;
+        assert validPoint(x);
         return NtlNativeGf2ePoly.singleEvaluate(minBytes, byteL, coefficients, x);
     }
 
     @Override
     public byte[][] evaluate(byte[][] coefficients, byte[][] xArray) {
-        for (byte[] x : xArray) {
-            assert x.length == byteL;
-        }
         assert coefficients.length > 1;
         for (byte[] coefficient : coefficients) {
-            assert coefficient.length == byteL;
+            assert validPoint(coefficient);
+        }
+        for (byte[] x : xArray) {
+            assert validPoint(x);
         }
         return NtlNativeGf2ePoly.evaluate(minBytes, byteL, coefficients, xArray);
+    }
+
+    private boolean validPoint(byte[] point) {
+        return point.length == byteL && BytesUtils.isReduceByteArray(point, l);
     }
 }

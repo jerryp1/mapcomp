@@ -61,7 +61,7 @@ public class Zp64GadgetTest {
     public void testZp64Gadget() {
         for (int i = 0; i < RANDOM_ROUND; i++) {
             // 随机生成[0, 2^k)范围内的元素
-            long rangeElement = zp64.randomRangeElement(SECURE_RANDOM);
+            long rangeElement = zp64.createRangeRandom(SECURE_RANDOM);
             boolean[] decomposition = gadget.decomposition(rangeElement);
             long compositeRangeElement = gadget.composition(decomposition);
             Assert.assertEquals(rangeElement, compositeRangeElement);

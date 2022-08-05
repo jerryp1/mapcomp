@@ -133,7 +133,7 @@ public class Kos16ShZp64VoleReceiver extends AbstractZp64VoleReceiver {
                     .allocate(Long.BYTES + Integer.BYTES + CommonConstants.BLOCK_BYTE_LENGTH)
                     .putLong(extraInfo).putInt(rowIndex).put(baseOtReceiverOutput.getRb(columnIndex))
                     .array();
-            long tb = zp64.randomElement(tbSeed);
+            long tb = zp64.createRandom(tbSeed);
             qMatrix[rowIndex][columnIndex] = deltaBinary[columnIndex] ? zp64.add(u, tb) : tb;
         });
         // 将矩阵q的每一行按照gadget组合为一个Zp元素，得到Zp数组q。

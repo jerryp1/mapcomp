@@ -1,20 +1,18 @@
-package edu.alibaba.mpc4j.common.tool.polynomial.zp;
-
-import java.math.BigInteger;
+package edu.alibaba.mpc4j.common.tool.polynomial.zp64;
 
 /**
- * Zp多项式插值接口。
+ * Zp64多项式插值接口。
  *
  * @author Weiran Liu
- * @date 2022/01/05
+ * @date 2022/8/3
  */
-public interface ZpPoly {
+public interface Zp64Poly {
     /**
      * 返回多项式插值类型。
      *
      * @return 多项式插值类型。
      */
-    ZpPolyFactory.ZpPolyType getType();
+    Zp64PolyFactory.Zp64PolyType getType();
 
     /**
      * 返回l的比特长度。
@@ -28,7 +26,7 @@ public interface ZpPoly {
      *
      * @return 质数p。
      */
-    BigInteger getPrime();
+    long getPrime();
 
     /**
      * 插值多项式系数数量。
@@ -46,7 +44,7 @@ public interface ZpPoly {
      * @param yArray y数组。
      * @return 插值多项式的系数。
      */
-    BigInteger[] interpolate(int num, BigInteger[] xArray, BigInteger[] yArray);
+    long[] interpolate(int num, long[] xArray, long[] yArray);
 
     /**
      * 根插值多项式系数数量。
@@ -64,7 +62,7 @@ public interface ZpPoly {
      * @param y      y的值。
      * @return 插值多项式的系数。
      */
-    BigInteger[] rootInterpolate(int num, BigInteger[] xArray, BigInteger y);
+    long[] rootInterpolate(int num, long[] xArray, long y);
 
     /**
      * 计算y = f(x)。
@@ -73,7 +71,7 @@ public interface ZpPoly {
      * @param x            输入x。
      * @return f(x)。
      */
-    BigInteger evaluate(BigInteger[] coefficients, BigInteger x);
+    long evaluate(long[] coefficients, long x);
 
     /**
      * 计算y = f(x)。
@@ -82,5 +80,5 @@ public interface ZpPoly {
      * @param xArray       x数组。
      * @return f(x)数组。
      */
-    BigInteger[] evaluate(BigInteger[] coefficients, BigInteger[] xArray);
+    long[] evaluate(long[] coefficients, long[] xArray);
 }

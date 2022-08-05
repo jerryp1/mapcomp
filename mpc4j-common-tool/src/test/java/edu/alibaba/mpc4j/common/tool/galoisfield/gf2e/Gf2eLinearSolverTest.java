@@ -49,12 +49,12 @@ public class Gf2eLinearSolverTest {
             byte[][][] matrixA = new byte[DIMENSION][DIMENSION][];
             for (int row = 0; row < DIMENSION; row++) {
                 for (int column = 0; column < DIMENSION; column++) {
-                    matrixA[row][column] = gf2e.randomElement(SECURE_RANDOM);
+                    matrixA[row][column] = gf2e.createRandom(SECURE_RANDOM);
                 }
             }
             byte[][] b = new byte[DIMENSION][];
             for (int row = 0; row < DIMENSION; row++) {
-                b[row] = gf2e.randomElement(SECURE_RANDOM);
+                b[row] = gf2e.createRandom(SECURE_RANDOM);
             }
             testGaussianElimination(matrixA, b);
         }
@@ -71,14 +71,14 @@ public class Gf2eLinearSolverTest {
             // 剩余行随机选择
             for (int row = 1; row < DIMENSION; row++) {
                 for (int column = 0; column < DIMENSION; column++) {
-                    matrixA[row][column] = gf2e.randomElement(SECURE_RANDOM);
+                    matrixA[row][column] = gf2e.createRandom(SECURE_RANDOM);
                 }
             }
             byte[][] b = new byte[DIMENSION][];
             // y_0设置为0
             b[0] = gf2e.createZero();
             for (int row = 1; row < DIMENSION; row++) {
-                b[row] = gf2e.randomElement(SECURE_RANDOM);
+                b[row] = gf2e.createRandom(SECURE_RANDOM);
             }
             testGaussianElimination(matrixA, b);
         }
@@ -90,12 +90,12 @@ public class Gf2eLinearSolverTest {
             byte[][][] matrixA = new byte[DIMENSION][DIMENSION * 2][];
             for (int row = 0; row < DIMENSION; row++) {
                 for (int column = 0; column < DIMENSION * 2; column++) {
-                    matrixA[row][column] = gf2e.randomElement(SECURE_RANDOM);
+                    matrixA[row][column] = gf2e.createRandom(SECURE_RANDOM);
                 }
             }
             byte[][] b = new byte[DIMENSION][];
             for (int row = 0; row < DIMENSION; row++) {
-                b[row] = gf2e.randomElement(SECURE_RANDOM);
+                b[row] = gf2e.createRandom(SECURE_RANDOM);
             }
             testGaussianElimination(matrixA, b);
         }

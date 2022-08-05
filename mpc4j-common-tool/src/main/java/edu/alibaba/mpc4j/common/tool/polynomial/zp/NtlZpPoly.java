@@ -43,7 +43,6 @@ public class NtlZpPoly implements ZpPoly {
     private final int pByteLength;
 
     public NtlZpPoly(int l) {
-        assert l > 0 && l % Byte.SIZE == 0;
         p = ZpManager.getPrime(l);
         this.l = l;
         pByteArray = BigIntegerUtils.bigIntegerToByteArray(p);
@@ -52,7 +51,7 @@ public class NtlZpPoly implements ZpPoly {
     }
 
     @Override
-    public ZpPolyType getZpPolyType() {
+    public ZpPolyType getType() {
         return ZpPolyType.NTL;
     }
 
@@ -67,13 +66,21 @@ public class NtlZpPoly implements ZpPoly {
     }
 
     @Override
+    public int coefficientNum(int num) {
+        assert num > 1 : "# of points must be greater than 1: " + num;
+        return num;
+    }
+
+    @Override
     public BigInteger[] interpolate(int num, BigInteger[] xArray, BigInteger[] yArray) {
         assert xArray.length == yArray.length;
         // 不要求至少有1个插值点，只要求总数量大于1
         assert num > 1 && xArray.length <= num;
-        for (int i = 0; i < xArray.length; i++) {
-            assert BigIntegerUtils.greaterOrEqual(xArray[i], BigInteger.ZERO) && xArray[i].bitLength() <= l;
-            assert BigIntegerUtils.greaterOrEqual(yArray[i], BigInteger.ZERO) && yArray[i].bitLength() <= l;
+        for (BigInteger x : xArray) {
+            assert validPoint(x);
+        }
+        for (BigInteger y : yArray) {
+            assert validPoint(y);
         }
         byte[][] xByteArray = bigIntegersToByteArrays(xArray);
         byte[][] yByteArray = bigIntegersToByteArrays(yArray);
@@ -81,6 +88,12 @@ public class NtlZpPoly implements ZpPoly {
         byte[][] polynomial = nativeInterpolate(pByteArray, num, xByteArray, yByteArray);
         // 转换为大整数
         return byteArraysToBigIntegers(polynomial);
+    }
+
+    @Override
+    public int rootCoefficientNum(int num) {
+        assert num > 1 : "# of points must be greater than 1: " + num;
+        return num + 1;
     }
 
     @Override
@@ -99,9 +112,9 @@ public class NtlZpPoly implements ZpPoly {
         }
         // 如果有插值数据，则继续插值
         for (BigInteger x : xArray) {
-            assert BigIntegerUtils.greaterOrEqual(x, BigInteger.ZERO) && x.bitLength() <= l;
+            assert validPoint(x);
         }
-        assert BigIntegerUtils.greaterOrEqual(y, BigInteger.ZERO) && y.bitLength() <= l;
+        assert validPoint(y);
         byte[][] xByteArray = bigIntegersToByteArrays(xArray);
         byte[] yBytes = BigIntegerUtils.nonNegBigIntegerToByteArray(y, pByteLength);
         // 调用本地函数完成插值
@@ -137,12 +150,10 @@ public class NtlZpPoly implements ZpPoly {
         // 至少包含2个系数，每个系数都属于Zp
         assert coefficients.length > 1;
         for (BigInteger coefficient : coefficients) {
-            assert BigIntegerUtils.greaterOrEqual(coefficient, BigInteger.ZERO);
-            assert BigIntegerUtils.less(coefficient, p);
+            validPoint(coefficient);
         }
         // 验证x的有效性
-        assert BigIntegerUtils.greaterOrEqual(x, BigInteger.ZERO);
-        assert x.bitLength() <= l;
+        assert validPoint(x);
 
         byte[][] coefficientByteArrays = bigIntegersToByteArrays(coefficients);
         byte[] xByteArray = BigIntegerUtils.nonNegBigIntegerToByteArray(x, pByteLength);
@@ -167,13 +178,11 @@ public class NtlZpPoly implements ZpPoly {
         // 至少包含2个系数，每个系数都属于Zp
         assert coefficients.length > 1;
         for (BigInteger coefficient : coefficients) {
-            assert BigIntegerUtils.greaterOrEqual(coefficient, BigInteger.ZERO);
-            assert BigIntegerUtils.less(coefficient, p);
+            assert validPoint(coefficient);
         }
         // 验证xArray的有效性
         for (BigInteger x : xArray) {
-            assert BigIntegerUtils.greaterOrEqual(x, BigInteger.ZERO);
-            assert x.bitLength() <= l;
+            assert validPoint(x);
         }
 
         byte[][] coefficientByteArrays = bigIntegersToByteArrays(coefficients);
@@ -216,5 +225,9 @@ public class NtlZpPoly implements ZpPoly {
         return Arrays.stream(byteArrays)
             .map(BigIntegerUtils::byteArrayToNonNegBigInteger)
             .toArray(BigInteger[]::new);
+    }
+
+    private boolean validPoint(BigInteger point) {
+        return BigIntegerUtils.greaterOrEqual(point, BigInteger.ZERO) && BigIntegerUtils.less(point, p);
     }
 }

@@ -3,7 +3,7 @@ package edu.alibaba.mpc4j.common.tool.polynomial.gf2e;
 import edu.alibaba.mpc4j.common.tool.polynomial.gf2e.Gf2ePolyFactory.Gf2ePolyType;
 
 /**
- * GF2X多项式插值接口。
+ * GF2E多项式插值接口。
  *
  * @author Weiran Liu
  * @date 2021/12/11
@@ -31,7 +31,7 @@ public interface Gf2ePoly {
     int getL();
 
     /**
-     * num个点插值对应的多项式系数数量。
+     * 插值多项式系数数量。
      *
      * @param num 插值点数量。
      * @return 多项式系数数量
@@ -49,7 +49,7 @@ public interface Gf2ePoly {
     byte[][] interpolate(int num, byte[][] xArray, byte[][] yArray);
 
     /**
-     * num个根插值点插值对应的多项式系数数量。
+     * 根插值多项式系数数量。
      *
      * @param num 插值点数量。
      * @return 多项式系数数量

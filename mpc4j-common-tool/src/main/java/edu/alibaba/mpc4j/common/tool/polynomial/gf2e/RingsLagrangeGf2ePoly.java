@@ -5,7 +5,7 @@ import cc.redberry.rings.poly.univar.UnivariatePolynomial;
 import cc.redberry.rings.poly.univar.UnivariatePolynomialZp64;
 
 /**
- * 应用Rings实现的GF2X拉格朗日多项式插值算法。
+ * 应用Rings实现的GF2E拉格朗日多项式插值算法。
  *
  * @author Weiran Liu
  * @date 2021/12/26

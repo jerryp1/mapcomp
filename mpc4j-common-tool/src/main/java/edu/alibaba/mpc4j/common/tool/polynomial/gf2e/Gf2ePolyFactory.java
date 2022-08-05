@@ -3,7 +3,7 @@ package edu.alibaba.mpc4j.common.tool.polynomial.gf2e;
 import edu.alibaba.mpc4j.common.tool.EnvType;
 
 /**
- * GF(2^l)多项式插值工厂类。
+ * GF2E多项式插值工厂类。
  *
  * @author Weiran Liu
  * @date 2021/12/11
@@ -35,10 +35,10 @@ public class Gf2ePolyFactory {
     }
 
     /**
-     * 创建GF(2^l)多项式插值实例。
+     * 创建GF2E多项式插值实例。
      *
      * @param type 多项式插值类型。
-     * @param l GF(2^l)有限域比特长度。
+     * @param l    有限域比特长度。
      * @return 多项式插值实例。
      */
     public static Gf2ePoly createInstance(Gf2ePolyType type, int l) {
@@ -55,10 +55,10 @@ public class Gf2ePolyFactory {
     }
 
     /**
-     * 创建GF(2^l)多项式插值实例。
+     * 创建GF2E多项式插值实例。
      *
      * @param envType 环境类型。
-     * @param l GF(2^l)有限域比特长度。
+     * @param l       GF2E有限域比特长度。
      * @return 多项式插值实例。
      */
     public static Gf2ePoly createInstance(EnvType envType, int l) {
