@@ -1,4 +1,4 @@
-package edu.alibaba.mpc4j.s2pc.pcg.vole.z2.vole;
+package edu.alibaba.mpc4j.s2pc.pcg.vole.z2.rvole;
 
 import edu.alibaba.mpc4j.common.rpc.Party;
 import edu.alibaba.mpc4j.common.rpc.Rpc;
@@ -7,16 +7,16 @@ import edu.alibaba.mpc4j.common.rpc.pto.AbstractSecureTwoPartyPto;
 import edu.alibaba.mpc4j.common.tool.utils.CommonUtils;
 
 /**
- * Z2-VOLE协议接收方抽象类。
+ * Z2-RVOLE协议接收方抽象类。
  *
  * @author Weiran Liu
  * @date 2022/6/12
  */
-public abstract class AbstractZ2VoleReceiver extends AbstractSecureTwoPartyPto implements Z2VoleReceiver {
+public abstract class AbstractZ2RvoleReceiver extends AbstractSecureTwoPartyPto implements Z2RvoleReceiver {
     /**
      * 配置项
      */
-    private final Z2VoleConfig config;
+    private final Z2RvoleConfig config;
     /**
      * 关联值Δ
      */
@@ -34,13 +34,13 @@ public abstract class AbstractZ2VoleReceiver extends AbstractSecureTwoPartyPto i
      */
     protected int byteNum;
 
-    protected AbstractZ2VoleReceiver(PtoDesc ptoDesc, Rpc senderRpc, Party receiverParty, Z2VoleConfig config) {
+    protected AbstractZ2RvoleReceiver(PtoDesc ptoDesc, Rpc senderRpc, Party receiverParty, Z2RvoleConfig config) {
         super(ptoDesc, senderRpc, receiverParty, config);
         this.config = config;
     }
 
     @Override
-    public Z2VoleFactory.Z2VoleType getPtoType() {
+    public Z2RvoleFactory.Z2RvoleType getPtoType() {
         return config.getPtoType();
     }
 

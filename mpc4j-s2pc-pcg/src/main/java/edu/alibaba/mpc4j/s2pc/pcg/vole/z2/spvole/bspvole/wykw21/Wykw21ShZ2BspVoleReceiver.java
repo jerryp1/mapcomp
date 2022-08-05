@@ -18,7 +18,7 @@ import edu.alibaba.mpc4j.s2pc.pcg.ot.cot.CotSenderOutput;
 import edu.alibaba.mpc4j.s2pc.pcg.vole.z2.spvole.bspvole.AbstractZ2BspVoleReceiver;
 import edu.alibaba.mpc4j.s2pc.pcg.vole.z2.spvole.bspvole.Z2BspVoleReceiverOutput;
 import edu.alibaba.mpc4j.s2pc.pcg.vole.z2.spvole.sspvole.Z2SspVoleReceiverOutput;
-import edu.alibaba.mpc4j.s2pc.pcg.vole.z2.vole.Z2VoleReceiverOutput;
+import edu.alibaba.mpc4j.s2pc.pcg.vole.z2.Z2VoleReceiverOutput;
 
 import java.util.*;
 import java.util.concurrent.TimeUnit;

@@ -18,7 +18,7 @@ import edu.alibaba.mpc4j.s2pc.pcg.ot.cot.CotReceiverOutput;
 import edu.alibaba.mpc4j.s2pc.pcg.vole.z2.spvole.bspvole.AbstractZ2BspVoleSender;
 import edu.alibaba.mpc4j.s2pc.pcg.vole.z2.spvole.bspvole.Z2BspVoleSenderOutput;
 import edu.alibaba.mpc4j.s2pc.pcg.vole.z2.spvole.sspvole.Z2SspVoleSenderOutput;
-import edu.alibaba.mpc4j.s2pc.pcg.vole.z2.vole.Z2VoleSenderOutput;
+import edu.alibaba.mpc4j.s2pc.pcg.vole.z2.Z2VoleSenderOutput;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -92,6 +92,7 @@ public class Wykw21ShZ2BspVoleSender extends AbstractZ2BspVoleSender {
         return send();
     }
 
+    @Override
     public Z2BspVoleSenderOutput send(int[] alphaArray, int num, Z2VoleSenderOutput preSenderOutput) throws MpcAbortException {
         setPtoInput(alphaArray, num, preSenderOutput);
         return send();

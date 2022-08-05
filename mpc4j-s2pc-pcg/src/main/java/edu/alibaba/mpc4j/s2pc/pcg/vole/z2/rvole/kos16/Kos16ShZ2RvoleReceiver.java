@@ -1,4 +1,4 @@
-package edu.alibaba.mpc4j.s2pc.pcg.vole.z2.vole.kos16;
+package edu.alibaba.mpc4j.s2pc.pcg.vole.z2.rvole.kos16;
 
 import edu.alibaba.mpc4j.common.rpc.MpcAbortException;
 import edu.alibaba.mpc4j.common.rpc.MpcAbortPreconditions;
@@ -11,8 +11,8 @@ import edu.alibaba.mpc4j.common.tool.crypto.kdf.KdfFactory;
 import edu.alibaba.mpc4j.common.tool.crypto.prg.Prg;
 import edu.alibaba.mpc4j.common.tool.crypto.prg.PrgFactory;
 import edu.alibaba.mpc4j.common.tool.utils.BytesUtils;
-import edu.alibaba.mpc4j.s2pc.pcg.vole.z2.vole.AbstractZ2VoleReceiver;
-import edu.alibaba.mpc4j.s2pc.pcg.vole.z2.vole.Z2VoleReceiverOutput;
+import edu.alibaba.mpc4j.s2pc.pcg.vole.z2.rvole.AbstractZ2RvoleReceiver;
+import edu.alibaba.mpc4j.s2pc.pcg.vole.z2.Z2VoleReceiverOutput;
 import edu.alibaba.mpc4j.s2pc.pcg.ot.base.BaseOtFactory;
 import edu.alibaba.mpc4j.s2pc.pcg.ot.base.BaseOtReceiver;
 import edu.alibaba.mpc4j.s2pc.pcg.ot.base.BaseOtReceiverOutput;
@@ -22,12 +22,12 @@ import java.util.List;
 import java.util.concurrent.TimeUnit;
 
 /**
- * KOS16-Z2-半诚实安全VOLE协议接收方。
+ * KOS16-Z2-半诚实安全RVOLE协议接收方。
  *
  * @author Weiran Liu
  * @date 2022/6/12
  */
-public class Kos16ShZ2VoleReceiver extends AbstractZ2VoleReceiver {
+public class Kos16ShZ2RvoleReceiver extends AbstractZ2RvoleReceiver {
     /**
      * 基础OT协议接收方
      */
@@ -41,8 +41,8 @@ public class Kos16ShZ2VoleReceiver extends AbstractZ2VoleReceiver {
      */
     private BaseOtReceiverOutput baseOtReceiverOutput;
 
-    public Kos16ShZ2VoleReceiver(Rpc senderRpc, Party receiverParty, Kos16ShZ2VoleConfig config) {
-        super(Kos16ShZ2VolePtoDesc.getInstance(), senderRpc, receiverParty, config);
+    public Kos16ShZ2RvoleReceiver(Rpc senderRpc, Party receiverParty, Kos16ShZ2RvoleConfig config) {
+        super(Kos16ShZ2RvolePtoDesc.getInstance(), senderRpc, receiverParty, config);
         baseOtReceiver = BaseOtFactory.createReceiver(senderRpc, receiverParty, config.getBaseOtConfig());
         baseOtReceiver.addLogLevel();
         kdf = KdfFactory.createInstance(envType);
@@ -90,7 +90,7 @@ public class Kos16ShZ2VoleReceiver extends AbstractZ2VoleReceiver {
 
         stopWatch.start();
         DataPacketHeader matrixHeader = new DataPacketHeader(
-            taskId, getPtoDesc().getPtoId(), Kos16ShZ2VolePtoDesc.PtoStep.SENDER_SEND_MATRIX.ordinal(), extraInfo,
+            taskId, getPtoDesc().getPtoId(), Kos16ShZ2RvolePtoDesc.PtoStep.SENDER_SEND_MATRIX.ordinal(), extraInfo,
             otherParty().getPartyId(), ownParty().getPartyId()
         );
         List<byte[]> matrixPayload = rpc.receive(matrixHeader).getPayload();

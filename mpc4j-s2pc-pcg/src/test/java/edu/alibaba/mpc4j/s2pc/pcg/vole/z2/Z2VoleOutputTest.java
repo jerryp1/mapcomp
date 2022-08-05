@@ -1,8 +1,7 @@
-package edu.alibaba.mpc4j.s2pc.pcg.vole.z2.vole;
+package edu.alibaba.mpc4j.s2pc.pcg.vole.z2;
 
 import edu.alibaba.mpc4j.common.tool.utils.BytesUtils;
 import edu.alibaba.mpc4j.common.tool.utils.CommonUtils;
-import edu.alibaba.mpc4j.s2pc.pcg.vole.z2.Z2VoleTestUtils;
 import org.junit.Test;
 
 import java.security.SecureRandom;

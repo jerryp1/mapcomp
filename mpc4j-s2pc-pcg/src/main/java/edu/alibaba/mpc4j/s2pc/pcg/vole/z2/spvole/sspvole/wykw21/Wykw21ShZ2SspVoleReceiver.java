@@ -18,7 +18,7 @@ import edu.alibaba.mpc4j.s2pc.pcg.ot.cot.CotSenderOutput;
 import edu.alibaba.mpc4j.s2pc.pcg.vole.z2.spvole.sspvole.AbstractZ2SspVoleReceiver;
 import edu.alibaba.mpc4j.s2pc.pcg.vole.z2.spvole.sspvole.Z2SspVoleReceiverOutput;
 import edu.alibaba.mpc4j.s2pc.pcg.vole.z2.spvole.sspvole.wykw21.Wykw21ShZ2SspVolePtoDesc.PtoStep;
-import edu.alibaba.mpc4j.s2pc.pcg.vole.z2.vole.Z2VoleReceiverOutput;
+import edu.alibaba.mpc4j.s2pc.pcg.vole.z2.Z2VoleReceiverOutput;
 
 import java.util.ArrayList;
 import java.util.Arrays;

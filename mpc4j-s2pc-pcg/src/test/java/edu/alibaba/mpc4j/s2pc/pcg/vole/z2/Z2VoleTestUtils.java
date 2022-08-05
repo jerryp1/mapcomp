@@ -2,8 +2,6 @@ package edu.alibaba.mpc4j.s2pc.pcg.vole.z2;
 
 import edu.alibaba.mpc4j.common.tool.utils.BytesUtils;
 import edu.alibaba.mpc4j.common.tool.utils.CommonUtils;
-import edu.alibaba.mpc4j.s2pc.pcg.vole.z2.vole.Z2VoleReceiverOutput;
-import edu.alibaba.mpc4j.s2pc.pcg.vole.z2.vole.Z2VoleSenderOutput;
 import org.junit.Assert;
 
 import java.security.SecureRandom;

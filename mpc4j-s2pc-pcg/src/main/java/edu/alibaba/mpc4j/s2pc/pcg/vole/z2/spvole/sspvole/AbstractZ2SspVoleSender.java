@@ -8,7 +8,7 @@ import edu.alibaba.mpc4j.common.tool.utils.BinaryUtils;
 import edu.alibaba.mpc4j.common.tool.utils.CommonUtils;
 import edu.alibaba.mpc4j.common.tool.utils.IntUtils;
 import edu.alibaba.mpc4j.common.tool.utils.LongUtils;
-import edu.alibaba.mpc4j.s2pc.pcg.vole.z2.vole.Z2VoleSenderOutput;
+import edu.alibaba.mpc4j.s2pc.pcg.vole.z2.Z2VoleSenderOutput;
 
 import java.util.stream.IntStream;
 

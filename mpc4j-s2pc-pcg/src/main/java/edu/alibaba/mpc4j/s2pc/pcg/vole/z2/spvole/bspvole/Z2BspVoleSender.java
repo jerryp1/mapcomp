@@ -3,7 +3,7 @@ package edu.alibaba.mpc4j.s2pc.pcg.vole.z2.spvole.bspvole;
 import edu.alibaba.mpc4j.common.rpc.MpcAbortException;
 import edu.alibaba.mpc4j.common.rpc.pto.SecurePto;
 import edu.alibaba.mpc4j.common.rpc.pto.TwoPartyPto;
-import edu.alibaba.mpc4j.s2pc.pcg.vole.z2.vole.Z2VoleSenderOutput;
+import edu.alibaba.mpc4j.s2pc.pcg.vole.z2.Z2VoleSenderOutput;
 
 /**
  * Z2-BSP-VOLE发送方接口。
@@ -12,7 +12,11 @@ import edu.alibaba.mpc4j.s2pc.pcg.vole.z2.vole.Z2VoleSenderOutput;
  * @date 2022/6/22
  */
 public interface Z2BspVoleSender extends TwoPartyPto, SecurePto {
-
+    /**
+     * 返回协议类型。
+     *
+     * @return 协议类型。
+     */
     @Override
     Z2BspVoleFactory.Z2BspVoleType getPtoType();
 

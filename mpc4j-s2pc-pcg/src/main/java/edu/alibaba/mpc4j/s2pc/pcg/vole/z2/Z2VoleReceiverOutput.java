@@ -1,4 +1,4 @@
-package edu.alibaba.mpc4j.s2pc.pcg.vole.z2.vole;
+package edu.alibaba.mpc4j.s2pc.pcg.vole.z2;
 
 import edu.alibaba.mpc4j.common.tool.utils.BigIntegerUtils;
 import edu.alibaba.mpc4j.common.tool.utils.BytesUtils;

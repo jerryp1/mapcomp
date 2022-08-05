@@ -1,18 +1,19 @@
-package edu.alibaba.mpc4j.s2pc.pcg.vole.z2.vole;
+package edu.alibaba.mpc4j.s2pc.pcg.vole.z2.rvole;
 
 import edu.alibaba.mpc4j.common.rpc.MpcAbortException;
+import edu.alibaba.mpc4j.s2pc.pcg.vole.z2.Z2VoleReceiverOutput;
 
 /**
- * Z2-VOLE协议接收方线程。
+ * Z2-RVOLE协议接收方线程。
  *
  * @author Weiran Liu
  * @date 2022/6/12
  */
-class Z2VoleReceiverThread extends Thread {
+class Z2RvoleReceiverThread extends Thread {
     /**
      * 接收方
      */
-    private final Z2VoleReceiver receiver;
+    private final Z2RvoleReceiver receiver;
     /**
      * 关联值Δ
      */
@@ -26,7 +27,7 @@ class Z2VoleReceiverThread extends Thread {
      */
     private Z2VoleReceiverOutput receiverOutput;
 
-    Z2VoleReceiverThread(Z2VoleReceiver receiver, boolean delta, int num) {
+    Z2RvoleReceiverThread(Z2RvoleReceiver receiver, boolean delta, int num) {
         this.receiver = receiver;
         this.delta = delta;
         this.num = num;

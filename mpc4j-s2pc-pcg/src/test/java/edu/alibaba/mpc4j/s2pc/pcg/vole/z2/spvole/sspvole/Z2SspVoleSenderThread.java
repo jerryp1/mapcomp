@@ -1,7 +1,7 @@
 package edu.alibaba.mpc4j.s2pc.pcg.vole.z2.spvole.sspvole;
 
 import edu.alibaba.mpc4j.common.rpc.MpcAbortException;
-import edu.alibaba.mpc4j.s2pc.pcg.vole.z2.vole.Z2VoleSenderOutput;
+import edu.alibaba.mpc4j.s2pc.pcg.vole.z2.Z2VoleSenderOutput;
 
 /**
  * Z2-SSP-VOLE发送方线程。

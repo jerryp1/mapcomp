@@ -1,10 +1,10 @@
-package edu.alibaba.mpc4j.s2pc.pcg.vole.z2.vole.kos16;
+package edu.alibaba.mpc4j.s2pc.pcg.vole.z2.rvole.kos16;
 
 import edu.alibaba.mpc4j.common.rpc.desc.PtoDesc;
 import edu.alibaba.mpc4j.common.rpc.desc.PtoDescManager;
 
 /**
- * KOS16-Z2-半诚实安全VOLE协议信息。论文来源：
+ * KOS16-Z2-半诚实安全RVOLE协议信息。论文来源：
  * <p>
  * Keller, Marcel, Emmanuela Orsini, and Peter Scholl. MASCOT: faster malicious arithmetic secure computation with
  * oblivious transfer. CCS 2016, pp. 830-842. 2016.
@@ -13,7 +13,7 @@ import edu.alibaba.mpc4j.common.rpc.desc.PtoDescManager;
  * @author Weiran Liu
  * @date 2022/6/12
  */
-class Kos16ShZ2VolePtoDesc implements PtoDesc {
+class Kos16ShZ2RvolePtoDesc implements PtoDesc {
     /**
      * 协议ID
      */
@@ -21,7 +21,7 @@ class Kos16ShZ2VolePtoDesc implements PtoDesc {
     /**
      * 协议名称
      */
-    private static final String PTO_NAME = "KO16_Z2_VOLE_SEMI_HONEST";
+    private static final String PTO_NAME = "KO16_Z2_RVOLE_SEMI_HONEST";
 
     /**
      * 协议步骤
@@ -36,12 +36,12 @@ class Kos16ShZ2VolePtoDesc implements PtoDesc {
     /**
      * 单例模式
      */
-    private static final Kos16ShZ2VolePtoDesc INSTANCE = new Kos16ShZ2VolePtoDesc();
+    private static final Kos16ShZ2RvolePtoDesc INSTANCE = new Kos16ShZ2RvolePtoDesc();
 
     /**
      * 私有构造函数
      */
-    private Kos16ShZ2VolePtoDesc() {
+    private Kos16ShZ2RvolePtoDesc() {
         // empty
     }
 

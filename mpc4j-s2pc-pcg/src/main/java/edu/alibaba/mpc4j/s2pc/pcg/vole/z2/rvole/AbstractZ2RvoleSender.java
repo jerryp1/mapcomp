@@ -1,4 +1,4 @@
-package edu.alibaba.mpc4j.s2pc.pcg.vole.z2.vole;
+package edu.alibaba.mpc4j.s2pc.pcg.vole.z2.rvole;
 
 import edu.alibaba.mpc4j.common.rpc.Party;
 import edu.alibaba.mpc4j.common.rpc.Rpc;
@@ -8,16 +8,16 @@ import edu.alibaba.mpc4j.common.tool.utils.BytesUtils;
 import edu.alibaba.mpc4j.common.tool.utils.CommonUtils;
 
 /**
- * Z2-VOLE发送方抽象类。
+ * Z2-RVOLE发送方抽象类。
  *
  * @author Weiran Liu
  * @date 2022/6/12
  */
-public abstract class AbstractZ2VoleSender extends AbstractSecureTwoPartyPto implements Z2VoleSender {
+public abstract class AbstractZ2RvoleSender extends AbstractSecureTwoPartyPto implements Z2RvoleSender {
     /**
      * 配置项
      */
-    private final Z2VoleConfig config;
+    private final Z2RvoleConfig config;
     /**
      * 最大数量
      */
@@ -35,13 +35,13 @@ public abstract class AbstractZ2VoleSender extends AbstractSecureTwoPartyPto imp
      */
     protected byte[] x;
 
-    protected AbstractZ2VoleSender(PtoDesc ptoDesc, Rpc senderRpc, Party receiverParty, Z2VoleConfig config) {
+    protected AbstractZ2RvoleSender(PtoDesc ptoDesc, Rpc senderRpc, Party receiverParty, Z2RvoleConfig config) {
         super(ptoDesc, senderRpc, receiverParty, config);
         this.config = config;
     }
 
     @Override
-    public Z2VoleFactory.Z2VoleType getPtoType() {
+    public Z2RvoleFactory.Z2RvoleType getPtoType() {
         return config.getPtoType();
     }
 

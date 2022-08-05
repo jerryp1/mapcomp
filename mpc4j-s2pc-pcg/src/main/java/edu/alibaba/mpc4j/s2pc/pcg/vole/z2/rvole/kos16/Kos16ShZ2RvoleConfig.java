@@ -1,25 +1,25 @@
-package edu.alibaba.mpc4j.s2pc.pcg.vole.z2.vole.kos16;
+package edu.alibaba.mpc4j.s2pc.pcg.vole.z2.rvole.kos16;
 
 import edu.alibaba.mpc4j.common.rpc.desc.SecurityModel;
 import edu.alibaba.mpc4j.common.tool.EnvType;
-import edu.alibaba.mpc4j.s2pc.pcg.vole.z2.vole.Z2VoleConfig;
-import edu.alibaba.mpc4j.s2pc.pcg.vole.z2.vole.Z2VoleFactory;
+import edu.alibaba.mpc4j.s2pc.pcg.vole.z2.rvole.Z2RvoleConfig;
+import edu.alibaba.mpc4j.s2pc.pcg.vole.z2.rvole.Z2RvoleFactory;
 import edu.alibaba.mpc4j.s2pc.pcg.ot.base.BaseOtConfig;
 import edu.alibaba.mpc4j.s2pc.pcg.ot.base.BaseOtFactory;
 
 /**
- * KOS16-Z2-半诚实安全VOLE协议配置项。
+ * KOS16-Z2-半诚实安全RVOLE协议配置项。
  *
  * @author Weiran Liu
  * @date 2022/6/12
  */
-public class Kos16ShZ2VoleConfig implements Z2VoleConfig {
+public class Kos16ShZ2RvoleConfig implements Z2RvoleConfig {
     /**
      * 基础OT协议
      */
     private final BaseOtConfig baseOtConfig;
 
-    private Kos16ShZ2VoleConfig(Builder builder) {
+    private Kos16ShZ2RvoleConfig(Builder builder) {
         baseOtConfig = builder.baseOtConfig;
     }
 
@@ -28,13 +28,8 @@ public class Kos16ShZ2VoleConfig implements Z2VoleConfig {
     }
 
     @Override
-    public Z2VoleFactory.Z2VoleType getPtoType() {
-        return Z2VoleFactory.Z2VoleType.KOS16_SEMI_HONEST;
-    }
-
-    @Override
-    public boolean isRoot() {
-        return true;
+    public Z2RvoleFactory.Z2RvoleType getPtoType() {
+        return Z2RvoleFactory.Z2RvoleType.KOS16_SEMI_HONEST;
     }
 
     @Override
@@ -51,7 +46,7 @@ public class Kos16ShZ2VoleConfig implements Z2VoleConfig {
         return securityModel;
     }
 
-    public static class Builder implements org.apache.commons.lang3.builder.Builder<Kos16ShZ2VoleConfig> {
+    public static class Builder implements org.apache.commons.lang3.builder.Builder<Kos16ShZ2RvoleConfig> {
         /**
          * 基础OT协议配置项
          */
@@ -67,8 +62,8 @@ public class Kos16ShZ2VoleConfig implements Z2VoleConfig {
         }
 
         @Override
-        public Kos16ShZ2VoleConfig build() {
-            return new Kos16ShZ2VoleConfig(this);
+        public Kos16ShZ2RvoleConfig build() {
+            return new Kos16ShZ2RvoleConfig(this);
         }
     }
 }

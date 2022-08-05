@@ -1,4 +1,4 @@
-package edu.alibaba.mpc4j.s2pc.pcg.vole.z2.vole.kos16;
+package edu.alibaba.mpc4j.s2pc.pcg.vole.z2.rvole.kos16;
 
 import edu.alibaba.mpc4j.common.rpc.MpcAbortException;
 import edu.alibaba.mpc4j.common.rpc.Party;
@@ -11,8 +11,8 @@ import edu.alibaba.mpc4j.common.tool.crypto.kdf.KdfFactory;
 import edu.alibaba.mpc4j.common.tool.crypto.prg.Prg;
 import edu.alibaba.mpc4j.common.tool.crypto.prg.PrgFactory;
 import edu.alibaba.mpc4j.common.tool.utils.BytesUtils;
-import edu.alibaba.mpc4j.s2pc.pcg.vole.z2.vole.AbstractZ2VoleSender;
-import edu.alibaba.mpc4j.s2pc.pcg.vole.z2.vole.Z2VoleSenderOutput;
+import edu.alibaba.mpc4j.s2pc.pcg.vole.z2.rvole.AbstractZ2RvoleSender;
+import edu.alibaba.mpc4j.s2pc.pcg.vole.z2.Z2VoleSenderOutput;
 import edu.alibaba.mpc4j.s2pc.pcg.ot.base.BaseOtFactory;
 import edu.alibaba.mpc4j.s2pc.pcg.ot.base.BaseOtSender;
 import edu.alibaba.mpc4j.s2pc.pcg.ot.base.BaseOtSenderOutput;
@@ -23,12 +23,12 @@ import java.util.List;
 import java.util.concurrent.TimeUnit;
 
 /**
- * KOS16-Z2-半诚实安全VOLE协议发送方。
+ * KOS16-Z2-半诚实安全RVOLE协议发送方。
  *
  * @author Weiran Liu
  * @date 2022/6/12
  */
-public class Kos16ShZ2VoleSender extends AbstractZ2VoleSender {
+public class Kos16ShZ2RvoleSender extends AbstractZ2RvoleSender {
     /**
      * 基础OT协议接收方
      */
@@ -46,8 +46,8 @@ public class Kos16ShZ2VoleSender extends AbstractZ2VoleSender {
      */
     private byte[] t;
 
-    public Kos16ShZ2VoleSender(Rpc senderRpc, Party receiverParty, Kos16ShZ2VoleConfig config) {
-        super(Kos16ShZ2VolePtoDesc.getInstance(), senderRpc, receiverParty, config);
+    public Kos16ShZ2RvoleSender(Rpc senderRpc, Party receiverParty, Kos16ShZ2RvoleConfig config) {
+        super(Kos16ShZ2RvolePtoDesc.getInstance(), senderRpc, receiverParty, config);
         baseOtSender = BaseOtFactory.createSender(senderRpc, receiverParty, config.getBaseOtConfig());
         baseOtSender.addLogLevel();
         kdf = KdfFactory.createInstance(envType);
@@ -97,7 +97,7 @@ public class Kos16ShZ2VoleSender extends AbstractZ2VoleSender {
         stopWatch.start();
         List<byte[]> matrixPayload = generateMatrixPayload();
         DataPacketHeader matrixHeader = new DataPacketHeader(
-            taskId, getPtoDesc().getPtoId(), Kos16ShZ2VolePtoDesc.PtoStep.SENDER_SEND_MATRIX.ordinal(), extraInfo,
+            taskId, getPtoDesc().getPtoId(), Kos16ShZ2RvolePtoDesc.PtoStep.SENDER_SEND_MATRIX.ordinal(), extraInfo,
             ownParty().getPartyId(), otherParty().getPartyId()
         );
         rpc.send(DataPacket.fromByteArrayList(matrixHeader, matrixPayload));

@@ -1,4 +1,4 @@
-package edu.alibaba.mpc4j.s2pc.pcg.vole.z2.vole;
+package edu.alibaba.mpc4j.s2pc.pcg.vole.z2.rvole;
 
 import com.google.common.base.Preconditions;
 import edu.alibaba.mpc4j.common.rpc.Rpc;
@@ -6,8 +6,10 @@ import edu.alibaba.mpc4j.common.rpc.RpcManager;
 import edu.alibaba.mpc4j.common.rpc.impl.memory.MemoryRpcManager;
 import edu.alibaba.mpc4j.common.tool.utils.BytesUtils;
 import edu.alibaba.mpc4j.common.tool.utils.CommonUtils;
+import edu.alibaba.mpc4j.s2pc.pcg.vole.z2.Z2VoleReceiverOutput;
+import edu.alibaba.mpc4j.s2pc.pcg.vole.z2.Z2VoleSenderOutput;
 import edu.alibaba.mpc4j.s2pc.pcg.vole.z2.Z2VoleTestUtils;
-import edu.alibaba.mpc4j.s2pc.pcg.vole.z2.vole.kos16.Kos16ShZ2VoleConfig;
+import edu.alibaba.mpc4j.s2pc.pcg.vole.z2.rvole.kos16.Kos16ShZ2RvoleConfig;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.time.StopWatch;
 import org.junit.Assert;
@@ -23,14 +25,14 @@ import java.util.Collection;
 import java.util.concurrent.TimeUnit;
 
 /**
- * Z2-VOLE协议测试。
+ * Z2-RVOLE协议测试。
  *
  * @author Weiran Liu
  * @date 2022/6/12
  */
 @RunWith(Parameterized.class)
-public class Z2VoleTest {
-    private static final Logger LOGGER = LoggerFactory.getLogger(Z2VoleTest.class);
+public class Z2RvoleTest {
+    private static final Logger LOGGER = LoggerFactory.getLogger(Z2RvoleTest.class);
     /**
      * 随机状态
      */
@@ -49,7 +51,7 @@ public class Z2VoleTest {
         Collection<Object[]> configurations = new ArrayList<>();
         // KO16
         configurations.add(new Object[] {
-            Z2VoleFactory.Z2VoleType.KOS16_SEMI_HONEST.name(), new Kos16ShZ2VoleConfig.Builder().build(),
+            Z2RvoleFactory.Z2RvoleType.KOS16_SEMI_HONEST.name(), new Kos16ShZ2RvoleConfig.Builder().build(),
         });
 
         return configurations;
@@ -66,9 +68,9 @@ public class Z2VoleTest {
     /**
      * 协议类型
      */
-    private final Z2VoleConfig config;
+    private final Z2RvoleConfig config;
 
-    public Z2VoleTest(String name, Z2VoleConfig config) {
+    public Z2RvoleTest(String name, Z2RvoleConfig config) {
         Preconditions.checkArgument(StringUtils.isNotBlank(name));
         RpcManager rpcManager = new MemoryRpcManager(2);
         senderRpc = rpcManager.getRpc(0);
@@ -78,37 +80,37 @@ public class Z2VoleTest {
 
     @Test
     public void testPtoType() {
-        Z2VoleSender sender = Z2VoleFactory.createSender(senderRpc, receiverRpc.ownParty(), config);
-        Z2VoleReceiver receiver = Z2VoleFactory.createReceiver(receiverRpc, senderRpc.ownParty(), config);
+        Z2RvoleSender sender = Z2RvoleFactory.createSender(senderRpc, receiverRpc.ownParty(), config);
+        Z2RvoleReceiver receiver = Z2RvoleFactory.createReceiver(receiverRpc, senderRpc.ownParty(), config);
         Assert.assertEquals(config.getPtoType(), sender.getPtoType());
         Assert.assertEquals(config.getPtoType(), receiver.getPtoType());
     }
 
     @Test
     public void test1Num() {
-        Z2VoleSender sender = Z2VoleFactory.createSender(senderRpc, receiverRpc.ownParty(), config);
-        Z2VoleReceiver receiver = Z2VoleFactory.createReceiver(receiverRpc, senderRpc.ownParty(), config);
+        Z2RvoleSender sender = Z2RvoleFactory.createSender(senderRpc, receiverRpc.ownParty(), config);
+        Z2RvoleReceiver receiver = Z2RvoleFactory.createReceiver(receiverRpc, senderRpc.ownParty(), config);
         testPto(sender, receiver, 1);
     }
 
     @Test
     public void test2Num() {
-        Z2VoleSender sender = Z2VoleFactory.createSender(senderRpc, receiverRpc.ownParty(), config);
-        Z2VoleReceiver receiver = Z2VoleFactory.createReceiver(receiverRpc, senderRpc.ownParty(), config);
+        Z2RvoleSender sender = Z2RvoleFactory.createSender(senderRpc, receiverRpc.ownParty(), config);
+        Z2RvoleReceiver receiver = Z2RvoleFactory.createReceiver(receiverRpc, senderRpc.ownParty(), config);
         testPto(sender, receiver, 2);
     }
 
     @Test
     public void testDefaultNum() {
-        Z2VoleSender sender = Z2VoleFactory.createSender(senderRpc, receiverRpc.ownParty(), config);
-        Z2VoleReceiver receiver = Z2VoleFactory.createReceiver(receiverRpc, senderRpc.ownParty(), config);
+        Z2RvoleSender sender = Z2RvoleFactory.createSender(senderRpc, receiverRpc.ownParty(), config);
+        Z2RvoleReceiver receiver = Z2RvoleFactory.createReceiver(receiverRpc, senderRpc.ownParty(), config);
         testPto(sender, receiver, DEFAULT_NUM);
     }
 
     @Test
     public void testParallelDefaultNum() {
-        Z2VoleSender sender = Z2VoleFactory.createSender(senderRpc, receiverRpc.ownParty(), config);
-        Z2VoleReceiver receiver = Z2VoleFactory.createReceiver(receiverRpc, senderRpc.ownParty(), config);
+        Z2RvoleSender sender = Z2RvoleFactory.createSender(senderRpc, receiverRpc.ownParty(), config);
+        Z2RvoleReceiver receiver = Z2RvoleFactory.createReceiver(receiverRpc, senderRpc.ownParty(), config);
         sender.setParallel(true);
         receiver.setParallel(true);
         testPto(sender, receiver, DEFAULT_NUM);
@@ -116,21 +118,21 @@ public class Z2VoleTest {
 
     @Test
     public void testLargeNum() {
-        Z2VoleSender sender = Z2VoleFactory.createSender(senderRpc, receiverRpc.ownParty(), config);
-        Z2VoleReceiver receiver = Z2VoleFactory.createReceiver(receiverRpc, senderRpc.ownParty(), config);
+        Z2RvoleSender sender = Z2RvoleFactory.createSender(senderRpc, receiverRpc.ownParty(), config);
+        Z2RvoleReceiver receiver = Z2RvoleFactory.createReceiver(receiverRpc, senderRpc.ownParty(), config);
         testPto(sender, receiver, LARGE_NUM);
     }
 
     @Test
     public void testParallelLargeNum() {
-        Z2VoleSender sender = Z2VoleFactory.createSender(senderRpc, receiverRpc.ownParty(), config);
-        Z2VoleReceiver receiver = Z2VoleFactory.createReceiver(receiverRpc, senderRpc.ownParty(), config);
+        Z2RvoleSender sender = Z2RvoleFactory.createSender(senderRpc, receiverRpc.ownParty(), config);
+        Z2RvoleReceiver receiver = Z2RvoleFactory.createReceiver(receiverRpc, senderRpc.ownParty(), config);
         sender.setParallel(true);
         receiver.setParallel(true);
         testPto(sender, receiver, LARGE_NUM);
     }
 
-    private void testPto(Z2VoleSender sender, Z2VoleReceiver receiver, int num) {
+    private void testPto(Z2RvoleSender sender, Z2RvoleReceiver receiver, int num) {
         long randomTaskId = Math.abs(SECURE_RANDOM.nextLong());
         sender.setTaskId(randomTaskId);
         receiver.setTaskId(randomTaskId);
@@ -141,8 +143,8 @@ public class Z2VoleTest {
             byte[] x = new byte[byteNum];
             SECURE_RANDOM.nextBytes(x);
             BytesUtils.reduceByteArray(x, num);
-            Z2VoleSenderThread senderThread = new Z2VoleSenderThread(sender, x, num);
-            Z2VoleReceiverThread receiverThread = new Z2VoleReceiverThread(receiver, delta, num);
+            Z2RvoleSenderThread senderThread = new Z2RvoleSenderThread(sender, x, num);
+            Z2RvoleReceiverThread receiverThread = new Z2RvoleReceiverThread(receiver, delta, num);
             StopWatch stopWatch = new StopWatch();
             // 开始执行协议
             stopWatch.start();
@@ -172,8 +174,8 @@ public class Z2VoleTest {
 
     @Test
     public void testResetDelta() {
-        Z2VoleSender sender = Z2VoleFactory.createSender(senderRpc, receiverRpc.ownParty(), config);
-        Z2VoleReceiver receiver = Z2VoleFactory.createReceiver(receiverRpc, senderRpc.ownParty(), config);
+        Z2RvoleSender sender = Z2RvoleFactory.createSender(senderRpc, receiverRpc.ownParty(), config);
+        Z2RvoleReceiver receiver = Z2RvoleFactory.createReceiver(receiverRpc, senderRpc.ownParty(), config);
         long randomTaskId = Math.abs(SECURE_RANDOM.nextLong());
         sender.setTaskId(randomTaskId);
         receiver.setTaskId(randomTaskId);
@@ -185,8 +187,8 @@ public class Z2VoleTest {
             SECURE_RANDOM.nextBytes(x);
             BytesUtils.reduceByteArray(x, DEFAULT_NUM);
             // 第一次执行
-            Z2VoleSenderThread senderThread = new Z2VoleSenderThread(sender, x, DEFAULT_NUM);
-            Z2VoleReceiverThread receiverThread = new Z2VoleReceiverThread(receiver, delta, DEFAULT_NUM);
+            Z2RvoleSenderThread senderThread = new Z2RvoleSenderThread(sender, x, DEFAULT_NUM);
+            Z2RvoleReceiverThread receiverThread = new Z2RvoleReceiverThread(receiver, delta, DEFAULT_NUM);
             StopWatch stopWatch = new StopWatch();
             stopWatch.start();
             senderThread.start();
@@ -207,8 +209,8 @@ public class Z2VoleTest {
             delta = !delta;
             SECURE_RANDOM.nextBytes(x);
             BytesUtils.reduceByteArray(x, DEFAULT_NUM);
-            senderThread = new Z2VoleSenderThread(sender, x, DEFAULT_NUM);
-            receiverThread = new Z2VoleReceiverThread(receiver, delta, DEFAULT_NUM);
+            senderThread = new Z2RvoleSenderThread(sender, x, DEFAULT_NUM);
+            receiverThread = new Z2RvoleReceiverThread(receiver, delta, DEFAULT_NUM);
             stopWatch.start();
             senderThread.start();
             receiverThread.start();
