@@ -55,15 +55,14 @@ abstract class AbstractRingsZp64Poly implements Zp64Poly {
 
     @Override
     public int coefficientNum(int num) {
-        assert num > 1 : "# of points must be greater than 1: " + num;
+        assert num >= 1 : "# of points must be greater than or equal to 1: " + num;
         return num;
     }
 
     @Override
     public long[] interpolate(int num, long[] xArray, long[] yArray) {
         assert xArray.length == yArray.length;
-        // 不要求至少有1个插值点，只要求总数量大于1
-        assert num > 1 && xArray.length <= num;
+        assert num >= 1 && xArray.length <= num;
         for (long x : xArray) {
             assert validPoint(x);
         }
@@ -93,14 +92,13 @@ abstract class AbstractRingsZp64Poly implements Zp64Poly {
 
     @Override
     public int rootCoefficientNum(int num) {
-        assert num > 1 : "# of points must be greater than 1: " + num;
+        assert num >= 1 : "# of points must be greater than or equal to 1: " + num;
         return num + 1;
     }
 
     @Override
     public long[] rootInterpolate(int num, long[] xArray, long y) {
-        // 不要求至少有1个插值点，只要求总数量大于1
-        assert num > 1 && xArray.length <= num;
+        assert num >= 1 && xArray.length <= num;
         if (xArray.length == 0) {
             // 返回随机多项式
             long[] coefficients = new long[num + 1];
@@ -151,8 +149,7 @@ abstract class AbstractRingsZp64Poly implements Zp64Poly {
 
     @Override
     public long evaluate(long[] coefficients, long x) {
-        // 至少包含2个系数，每个系数都属于Zp
-        assert coefficients.length > 1;
+        assert coefficients.length >= 1;
         for (long coefficient : coefficients) {
             assert validPoint(coefficient);
         }

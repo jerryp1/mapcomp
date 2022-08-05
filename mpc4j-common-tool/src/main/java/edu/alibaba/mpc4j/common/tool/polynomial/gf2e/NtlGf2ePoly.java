@@ -75,15 +75,14 @@ public class NtlGf2ePoly implements Gf2ePoly {
 
     @Override
     public int coefficientNum(int num) {
-        assert num > 1 : "# of points must be greater than 1: " + num;
+        assert num >= 1 : "# of points must be greater than or equal to 1: " + num;
         return num;
     }
 
     @Override
     public byte[][] interpolate(int num, byte[][] xArray, byte[][] yArray) {
         assert xArray.length == yArray.length;
-        // 不要求至少有1个插值点，只要求总数量大于1
-        assert num > 1 && xArray.length <= num;
+        assert num >= 1 && xArray.length <= num;
         for (byte[] x : xArray) {
             assert validPoint(x);
         }
@@ -96,14 +95,13 @@ public class NtlGf2ePoly implements Gf2ePoly {
 
     @Override
     public int rootCoefficientNum(int num) {
-        assert num > 1 : "# of points must be greater than 1: " + num;
+        assert num >= 1 : "# of points must be greater than or equal to 1: " + num;
         return num + 1;
     }
 
     @Override
     public byte[][] rootInterpolate(int num, byte[][] xArray, byte[] y) {
-        // 不要求至少有1个插值点，只要求总数量大于1
-        assert num > 1 && xArray.length <= num;
+        assert num >= 1 && xArray.length <= num;
         if (xArray.length == 0) {
             // 返回随机多项式
             byte[][] coefficients = new byte[num + 1][byteL];
@@ -123,7 +121,7 @@ public class NtlGf2ePoly implements Gf2ePoly {
 
     @Override
     public byte[] evaluate(byte[][] coefficients, byte[] x) {
-        assert coefficients.length > 1;
+        assert coefficients.length >= 1;
         for (byte[] coefficient : coefficients) {
             assert validPoint(coefficient);
         }
@@ -133,7 +131,7 @@ public class NtlGf2ePoly implements Gf2ePoly {
 
     @Override
     public byte[][] evaluate(byte[][] coefficients, byte[][] xArray) {
-        assert coefficients.length > 1;
+        assert coefficients.length >= 1;
         for (byte[] coefficient : coefficients) {
             assert validPoint(coefficient);
         }
