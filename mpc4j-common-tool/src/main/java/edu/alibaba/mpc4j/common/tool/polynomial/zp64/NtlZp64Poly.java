@@ -5,6 +5,7 @@ import edu.alibaba.mpc4j.common.tool.galoisfield.Zp64.Zp64Manager;
 import edu.alibaba.mpc4j.common.tool.polynomial.zp64.Zp64PolyFactory.Zp64PolyType;
 import edu.alibaba.mpc4j.common.tool.utils.LongUtils;
 
+import java.math.BigInteger;
 import java.security.SecureRandom;
 
 /**
@@ -35,6 +36,13 @@ class NtlZp64Poly implements Zp64Poly {
     public NtlZp64Poly(int l) {
         p = Zp64Manager.getPrime(l);
         this.l = l;
+        secureRandom = new SecureRandom();
+    }
+
+    public NtlZp64Poly(long p) {
+        assert BigInteger.valueOf(p).isProbablePrime(CommonConstants.STATS_BIT_LENGTH) : "p is probably not prime: " + p;
+        this.p = p;
+        this.l = LongUtils.ceilLog2(p) - 1;
         secureRandom = new SecureRandom();
     }
 

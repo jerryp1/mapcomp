@@ -4,13 +4,10 @@ import com.google.common.base.Preconditions;
 import edu.alibaba.mpc4j.common.tool.CommonConstants;
 import edu.alibaba.mpc4j.common.tool.crypto.prp.PrpFactory.PrpType;
 import org.apache.commons.lang3.StringUtils;
-import org.bouncycastle.util.encoders.Hex;
 import org.junit.Assert;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.nio.ByteBuffer;
 import java.security.SecureRandom;
@@ -29,7 +26,6 @@ import java.util.stream.IntStream;
  */
 @RunWith(Parameterized.class)
 public class PrpTest {
-    private static final Logger LOGGER = LoggerFactory.getLogger(PrpTest.class);
     /**
      * 最大随机轮数
      */
@@ -181,7 +177,6 @@ public class PrpTest {
         prp.setKey(ZERO_KEY);
         // 先Prp再InvPrp，结果相同
         byte[] ciphertext = prp.prp(ZERO_PLAINTEXT);
-        LOGGER.info("   Prp: {} -> {}", Hex.toHexString(ZERO_PLAINTEXT), Hex.toHexString(ciphertext));
         byte[] decryptPlaintext = prp.invPrp(ciphertext);
         Assert.assertEquals(ByteBuffer.wrap(ZERO_PLAINTEXT), ByteBuffer.wrap(decryptPlaintext));
         // 两次调用Prp，结果相同
@@ -189,7 +184,6 @@ public class PrpTest {
         Assert.assertEquals(ByteBuffer.wrap(ciphertext), ByteBuffer.wrap(anCiphertext));
         // 先InvPrp再Prp，结果相同
         byte[] plaintext = prp.invPrp(ZERO_CIPHERTEXT);
-        LOGGER.info("InvPrp: {} -> {}", Hex.toHexString(ZERO_CIPHERTEXT), Hex.toHexString(plaintext));
         byte[] encryptCiphertext = prp.prp(plaintext);
         Assert.assertEquals(ByteBuffer.wrap(ZERO_CIPHERTEXT), ByteBuffer.wrap(encryptCiphertext));
         // 两次调用Prp，结果相同

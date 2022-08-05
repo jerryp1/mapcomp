@@ -1,6 +1,7 @@
 package edu.alibaba.mpc4j.common.tool.coder;
 
 import edu.alibaba.mpc4j.common.tool.coder.random.RandomCoderUtils;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -11,6 +12,7 @@ import org.slf4j.LoggerFactory;
  * @author Weiran Liu
  * @date 2022/02/23
  */
+@Ignore
 public class RandomCoderUtilsTest {
     private static final Logger LOGGER = LoggerFactory.getLogger(RandomCoderUtilsTest.class);
 

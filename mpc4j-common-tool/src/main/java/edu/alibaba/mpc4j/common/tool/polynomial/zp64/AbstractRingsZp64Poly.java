@@ -2,8 +2,11 @@ package edu.alibaba.mpc4j.common.tool.polynomial.zp64;
 
 import cc.redberry.rings.IntegersZp64;
 import cc.redberry.rings.poly.univar.UnivariatePolynomialZp64;
+import edu.alibaba.mpc4j.common.tool.CommonConstants;
 import edu.alibaba.mpc4j.common.tool.galoisfield.Zp64.Zp64Manager;
+import edu.alibaba.mpc4j.common.tool.utils.LongUtils;
 
+import java.math.BigInteger;
 import java.util.Arrays;
 import java.util.stream.IntStream;
 
@@ -31,6 +34,13 @@ abstract class AbstractRingsZp64Poly implements Zp64Poly {
         p = Zp64Manager.getPrime(l);
         finiteField = Zp64Manager.getFiniteField(l);
         this.l = l;
+    }
+
+    AbstractRingsZp64Poly(long p) {
+        assert BigInteger.valueOf(p).isProbablePrime(CommonConstants.STATS_BIT_LENGTH) : "p is probably not prime: " + p;
+        this.p = p;
+        finiteField = new IntegersZp64(p);
+        this.l = LongUtils.ceilLog2(p) - 1;
     }
 
     @Override
