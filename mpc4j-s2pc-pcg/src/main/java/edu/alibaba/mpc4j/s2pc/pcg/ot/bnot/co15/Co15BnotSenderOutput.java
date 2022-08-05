@@ -1,7 +1,10 @@
 package edu.alibaba.mpc4j.s2pc.pcg.ot.bnot.co15;
 
+import edu.alibaba.mpc4j.common.tool.EnvType;
 import edu.alibaba.mpc4j.common.tool.crypto.ecc.Ecc;
+import edu.alibaba.mpc4j.common.tool.crypto.ecc.EccFactory;
 import edu.alibaba.mpc4j.common.tool.crypto.kdf.Kdf;
+import edu.alibaba.mpc4j.common.tool.crypto.kdf.KdfFactory;
 import edu.alibaba.mpc4j.s2pc.pcg.ot.bnot.AbstractBnotSenderOutput;
 import org.bouncycastle.math.ec.ECPoint;
 
@@ -33,22 +36,17 @@ public class Co15BnotSenderOutput extends AbstractBnotSenderOutput {
      */
     private final ECPoint[] capitalTArray;
     /**
-     * 当前协议执行次数计数
-     */
-    private final long extraInfo;
-    /**
      * 椭圆曲线
      */
     private final Ecc ecc;
 
-    public Co15BnotSenderOutput(int n, int num, ECPoint[] capitalRArray, ECPoint capitalT, Kdf kdf, long extraInfo, Ecc ecc) {
+    public Co15BnotSenderOutput(int n, int num, ECPoint[] capitalRs, ECPoint capitalT, EnvType envType) {
         init(n, num);
-        assert num == capitalRArray.length;
-        this.capitalRArray = capitalRArray;
+        assert num == capitalRs.length;
+        this.capitalRArray = capitalRs;
         this.capitalT = capitalT;
-        this.kdf = kdf;
-        this.extraInfo = extraInfo;
-        this.ecc = ecc;
+        this.kdf = KdfFactory.createInstance(envType);
+        this.ecc = EccFactory.createInstance(envType);
         capitalTArray = new ECPoint[n];
     }
 
@@ -60,8 +58,9 @@ public class Co15BnotSenderOutput extends AbstractBnotSenderOutput {
         }
         byte[] kInputArray = ecc.encode(capitalRArray[index].subtract(capitalTArray[choice]), false);
         return kdf.deriveKey(ByteBuffer
-                .allocate(Long.BYTES + Integer.BYTES + kInputArray.length)
-                .putLong(extraInfo).putInt(index).put(kInputArray)
+                .allocate( Integer.BYTES + kInputArray.length)
+                .putInt(index)
+                .put(kInputArray)
                 .array()
         );
     }

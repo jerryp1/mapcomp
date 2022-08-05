@@ -25,7 +25,7 @@ public class Gf2kEfficiencyTest {
     /**
      * 乘法性能测试轮数
      */
-    private static final int MULTIPLY_LOG_N = 16;
+    private static final int LOG_N = 16;
     /**
      * 点数量输出格式
      */
@@ -55,34 +55,34 @@ public class Gf2kEfficiencyTest {
     @Test
     public void testEfficiency() {
         LOGGER.info("{}\t{}\t{}\t{}", "      type", "    log(n)", "   mul(us)", "  muli(us)");
-        int multiplyN = 1 << MULTIPLY_LOG_N;
+        int n = 1 << LOG_N;
         for (Gf2kType type : TYPES) {
             Gf2k gf2k = Gf2kFactory.createInstance(type);
             // 创建数据
-            byte[][] multiplyArrayA = new byte[multiplyN][];
-            byte[][] multiplyArrayB = new byte[multiplyN][];
-            IntStream.range(0, multiplyN).forEach(index -> {
-                multiplyArrayA[index] = gf2k.createRandom(SECURE_RANDOM);
-                multiplyArrayB[index] = gf2k.createRandom(SECURE_RANDOM);
+            byte[][] aArray = new byte[n][];
+            byte[][] bArray = new byte[n][];
+            IntStream.range(0, n).forEach(index -> {
+                aArray[index] = gf2k.createRandom(SECURE_RANDOM);
+                bArray[index] = gf2k.createRandom(SECURE_RANDOM);
             });
             // 预热
-            IntStream.range(0, multiplyN).forEach(index -> gf2k.mul(multiplyArrayA[index], multiplyArrayB[index]));
+            IntStream.range(0, n).forEach(index -> gf2k.mul(aArray[index], bArray[index]));
             // mul性能
             STOP_WATCH.start();
-            IntStream.range(0, multiplyN).forEach(index -> gf2k.mul(multiplyArrayA[index], multiplyArrayB[index]));
+            IntStream.range(0, n).forEach(index -> gf2k.mul(aArray[index], bArray[index]));
             STOP_WATCH.stop();
-            double mulTime = (double)STOP_WATCH.getTime(TimeUnit.MICROSECONDS) / multiplyN;
+            double mulTime = (double)STOP_WATCH.getTime(TimeUnit.MICROSECONDS) / n;
             STOP_WATCH.reset();
             // muli性能
             STOP_WATCH.start();
-            IntStream.range(0, multiplyN).forEach(index -> gf2k.muli(multiplyArrayA[index], multiplyArrayB[index]));
+            IntStream.range(0, n).forEach(index -> gf2k.muli(aArray[index], bArray[index]));
             STOP_WATCH.stop();
-            double muliTime = (double)STOP_WATCH.getTime(TimeUnit.MICROSECONDS) / multiplyN;
+            double muliTime = (double)STOP_WATCH.getTime(TimeUnit.MICROSECONDS) / n;
             STOP_WATCH.reset();
             LOGGER.info(
                 "{}\t{}\t{}\t{}",
                 StringUtils.leftPad(type.name(), 10),
-                StringUtils.leftPad(LOG_N_DECIMAL_FORMAT.format(MULTIPLY_LOG_N), 10),
+                StringUtils.leftPad(LOG_N_DECIMAL_FORMAT.format(LOG_N), 10),
                 StringUtils.leftPad(TIME_DECIMAL_FORMAT.format(mulTime), 10),
                 StringUtils.leftPad(TIME_DECIMAL_FORMAT.format(muliTime), 10)
             );

@@ -177,7 +177,7 @@ public class Gf2eTest {
         Assert.assertArrayEquals(zero, gf2e.add(zero, gf2e.neg(zero)));
 
         for (int round = 0; round < MAX_RANDOM_NUM; round++) {
-            byte[] a = gf2e.randomNonZeroElement(SECURE_RANDOM);
+            byte[] a = gf2e.createNonZeroRandom(SECURE_RANDOM);
             // a + (-a) = 0
             Assert.assertArrayEquals(zero, gf2e.add(a, gf2e.neg(a)));
             // a - a = 0
@@ -202,12 +202,12 @@ public class Gf2eTest {
         Assert.assertArrayEquals(zero, a);
 
         for (int round = 0; round < MAX_RANDOM_NUM; round++) {
-            a = gf2e.randomNonZeroElement(SECURE_RANDOM);
+            a = gf2e.createNonZeroRandom(SECURE_RANDOM);
             // a + (-a) = 0
             gf2e.addi(a, gf2e.neg(a));
             Assert.assertArrayEquals(zero, a);
             // a - a = 0
-            a = gf2e.randomNonZeroElement(SECURE_RANDOM);
+            a = gf2e.createNonZeroRandom(SECURE_RANDOM);
             gf2e.subi(a, a);
             Assert.assertArrayEquals(zero, a);
         }
@@ -222,10 +222,10 @@ public class Gf2eTest {
         Assert.assertArrayEquals(zero, gf2e.mul(a, b));
         for (int round = 0; round < MAX_RANDOM_NUM; round++) {
             // 0 * a = 0
-            a = gf2e.randomNonZeroElement(SECURE_RANDOM);
+            a = gf2e.createNonZeroRandom(SECURE_RANDOM);
             Assert.assertArrayEquals(zero, gf2e.mul(zero, a));
             // a * 0 = 0
-            a = gf2e.randomNonZeroElement(SECURE_RANDOM);
+            a = gf2e.createNonZeroRandom(SECURE_RANDOM);
             Assert.assertArrayEquals(zero, gf2e.mul(a, zero));
         }
         byte[] one = gf2e.createOne();
@@ -235,16 +235,16 @@ public class Gf2eTest {
         Assert.assertArrayEquals(one, gf2e.mul(a, b));
         for (int round = 0; round < MAX_RANDOM_NUM; round++) {
             // 1 * a = a
-            a = gf2e.randomNonZeroElement(SECURE_RANDOM);
+            a = gf2e.createNonZeroRandom(SECURE_RANDOM);
             Assert.assertArrayEquals(a, gf2e.mul(one, a));
             // a * 1 = a
-            a = gf2e.randomNonZeroElement(SECURE_RANDOM);
+            a = gf2e.createNonZeroRandom(SECURE_RANDOM);
             Assert.assertArrayEquals(a, gf2e.mul(a, one));
             // a * (1 / a) = 1
-            a = gf2e.randomNonZeroElement(SECURE_RANDOM);
+            a = gf2e.createNonZeroRandom(SECURE_RANDOM);
             Assert.assertArrayEquals(one, gf2e.mul(a, gf2e.inv(a)));
             // a / a = 1
-            a = gf2e.randomNonZeroElement(SECURE_RANDOM);
+            a = gf2e.createNonZeroRandom(SECURE_RANDOM);
             Assert.assertArrayEquals(one, gf2e.div(a, a));
         }
         if (gf2e.getL() > 2) {
@@ -278,7 +278,7 @@ public class Gf2eTest {
         Assert.assertArrayEquals(zero, a);
         for (int round = 0; round < MAX_RANDOM_NUM; round++) {
             // 0 * a = 0
-            a = gf2e.randomNonZeroElement(SECURE_RANDOM);
+            a = gf2e.createNonZeroRandom(SECURE_RANDOM);
             gf2e.muli(a, zero);
             Assert.assertArrayEquals(zero, a);
         }
@@ -289,18 +289,18 @@ public class Gf2eTest {
         Assert.assertArrayEquals(one, a);
         for (int round = 0; round < MAX_RANDOM_NUM; round++) {
             // 1 * a = a
-            a = gf2e.randomNonZeroElement(SECURE_RANDOM);
+            a = gf2e.createNonZeroRandom(SECURE_RANDOM);
             byte[] truth = BytesUtils.clone(a);
             gf2e.muli(a, one);
             Assert.assertArrayEquals(truth, a);
             // a * (1 / a) = 1
-            a = gf2e.randomNonZeroElement(SECURE_RANDOM);
+            a = gf2e.createNonZeroRandom(SECURE_RANDOM);
             byte[] copyA = BytesUtils.clone(a);
             gf2e.invi(a);
             gf2e.muli(a, copyA);
             Assert.assertArrayEquals(one, a);
             // a / a = 1
-            a = gf2e.randomNonZeroElement(SECURE_RANDOM);
+            a = gf2e.createNonZeroRandom(SECURE_RANDOM);
             gf2e.divi(a, a);
             Assert.assertArrayEquals(one, a);
         }

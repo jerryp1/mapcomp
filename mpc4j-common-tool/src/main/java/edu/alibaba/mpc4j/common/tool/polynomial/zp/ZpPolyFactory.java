@@ -1,7 +1,7 @@
 package edu.alibaba.mpc4j.common.tool.polynomial.zp;
 
 /**
- * Z_p多项式插值工厂类。
+ * Zp多项式插值工厂类。
  *
  * @author Weiran Liu
  * @date 2021/06/05
@@ -33,14 +33,14 @@ public class ZpPolyFactory {
     }
 
     /**
-     * 创建Zp多项式插值实例。
+     * 创建多项式插值实例。
      *
-     * @param zpPolyType Zp多项式插值类型。
-     * @param l Zp有限域比特长度。
-     * @return Zp多项式插值实例。
+     * @param type 多项式插值类型。
+     * @param l    有限域比特长度。
+     * @return 多项式插值实例。
      */
-    public static ZpPoly createInstance(ZpPolyType zpPolyType, int l) {
-        switch (zpPolyType) {
+    public static ZpPoly createInstance(ZpPolyType type, int l) {
+        switch (type) {
             case NTL:
                 return new NtlZpPoly(l);
             case RINGS_NEWTON:
@@ -48,7 +48,7 @@ public class ZpPolyFactory {
             case RINGS_LAGRANGE:
                 return new RingsLagrangeZpPoly(l);
             default:
-                throw new IllegalArgumentException("Invalid ZpPolyType: " + zpPolyType.name());
+                throw new IllegalArgumentException("Invalid ZpPolyType: " + type.name());
         }
     }
 }

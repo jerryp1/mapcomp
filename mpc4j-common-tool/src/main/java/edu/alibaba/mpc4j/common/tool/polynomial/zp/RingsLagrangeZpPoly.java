@@ -8,7 +8,7 @@ import java.math.BigInteger;
 import java.util.Arrays;
 
 /**
- * 应用Rings实现的Z_p拉格朗日多项式插值算法。
+ * 应用Rings实现的Zp拉格朗日多项式插值。
  *
  * @author Weiran Liu
  * @date 2021/05/31
@@ -20,7 +20,7 @@ class RingsLagrangeZpPoly extends AbstractRingsZpPoly {
     }
 
     @Override
-    public ZpPolyType getZpPolyType() {
+    public ZpPolyType getType() {
         return ZpPolyType.RINGS_LAGRANGE;
     }
 

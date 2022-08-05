@@ -126,14 +126,14 @@ public class Co15BaseOtSender extends AbstractBaseOtSender {
             // 计算k0 = H(index,K)
             byte[] k0InputByteArray = ecc.encode(capitalK, false);
             r0Array[index] = kdf.deriveKey(ByteBuffer
-                    .allocate(Long.BYTES + Integer.BYTES + k0InputByteArray.length)
-                    .putLong(extraInfo).putInt(index).put(k0InputByteArray)
+                    .allocate(Integer.BYTES + k0InputByteArray.length)
+                    .putInt(index).put(k0InputByteArray)
                     .array());
             // 计算k1 = H(index, K - T)
             byte[] k1InputByteArray = ecc.encode(capitalK.subtract(capitalT), false);
             r1Array[index] = kdf.deriveKey(ByteBuffer
-                    .allocate(Long.BYTES + Integer.BYTES + k1InputByteArray.length)
-                    .putLong(extraInfo).putInt(index).put(k1InputByteArray)
+                    .allocate(Integer.BYTES + k1InputByteArray.length)
+                    .putInt(index).put(k1InputByteArray)
                     .array());
         });
         y = null;

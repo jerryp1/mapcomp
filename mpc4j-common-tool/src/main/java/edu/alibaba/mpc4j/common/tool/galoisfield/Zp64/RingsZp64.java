@@ -156,28 +156,28 @@ public class RingsZp64 implements Zp64 {
     }
 
     @Override
-    public long randomElement(SecureRandom secureRandom) {
-        return Math.abs(secureRandom.nextLong() % prime);
+    public long createRandom(SecureRandom secureRandom) {
+        return LongUtils.randomNonNegative(prime, secureRandom);
     }
 
     @Override
-    public long randomElement(byte[] seed) {
+    public long createRandom(byte[] seed) {
         byte[] key = kdf.deriveKey(seed);
         byte[] elementByteArray = prg.extendToBytes(key);
         return Math.abs(LongUtils.byteArrayToLong(elementByteArray) % prime);
     }
 
     @Override
-    public long randomNonZeroElement(SecureRandom secureRandom) {
+    public long createNonZeroRandom(SecureRandom secureRandom) {
         long random = 0L;
         while (random == 0L) {
-            random = Math.abs(secureRandom.nextLong() % prime);
+            random = LongUtils.randomPositive(prime, secureRandom);
         }
         return random;
     }
 
     @Override
-    public long randomNonZeroElement(byte[] seed) {
+    public long createNonZeroRandom(byte[] seed) {
         byte[] key = kdf.deriveKey(seed);
         byte[] elementByteArray = prg.extendToBytes(key);
         long random = Math.abs(LongUtils.byteArrayToLong(elementByteArray) % prime);
@@ -191,12 +191,12 @@ public class RingsZp64 implements Zp64 {
     }
 
     @Override
-    public long randomRangeElement(SecureRandom secureRandom) {
-        return Math.abs(secureRandom.nextLong() % rangeBound);
+    public long createRangeRandom(SecureRandom secureRandom) {
+        return LongUtils.randomNonNegative(rangeBound, secureRandom);
     }
 
     @Override
-    public long randomRangeElement(byte[] seed) {
+    public long createRangeRandom(byte[] seed) {
         byte[] key = kdf.deriveKey(seed);
         byte[] elementByteArray = prg.extendToBytes(key);
         return Math.abs(LongUtils.byteArrayToLong(elementByteArray) % rangeBound);

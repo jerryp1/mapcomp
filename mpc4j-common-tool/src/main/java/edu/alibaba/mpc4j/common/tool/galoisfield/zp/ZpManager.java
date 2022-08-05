@@ -41,6 +41,7 @@ public class ZpManager {
      * @return 有限域Zp。
      */
     public static IntegersZp getFiniteField(int l) {
+        assert l > 0 : "l must be greater than 0: " + l;
         if (ZP_MAP.containsKey(l)) {
             return ZP_MAP.get(l);
         } else {
@@ -59,6 +60,7 @@ public class ZpManager {
      * @return 有限域质数p。
      */
     public static BigInteger getPrime(int l) {
+        assert l > 0 : "l must be greater than 0: " + l;
         if (ZP_PRIME_MAP.containsKey(l)) {
             return ZP_PRIME_MAP.get(l);
         } else {

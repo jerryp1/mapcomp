@@ -7,8 +7,8 @@ import edu.alibaba.mpc4j.common.rpc.Rpc;
 import edu.alibaba.mpc4j.common.rpc.utils.DataPacket;
 import edu.alibaba.mpc4j.common.rpc.utils.DataPacketHeader;
 import edu.alibaba.mpc4j.common.tool.CommonConstants;
-import edu.alibaba.mpc4j.common.tool.bitmatrix.BitMatrix;
-import edu.alibaba.mpc4j.common.tool.bitmatrix.BitMatrixFactory;
+import edu.alibaba.mpc4j.common.tool.bitmatrix.trans.TransBitMatrix;
+import edu.alibaba.mpc4j.common.tool.bitmatrix.trans.TransBitMatrixFactory;
 import edu.alibaba.mpc4j.common.tool.crypto.crhf.Crhf;
 import edu.alibaba.mpc4j.common.tool.crypto.crhf.CrhfFactory;
 import edu.alibaba.mpc4j.common.tool.crypto.crhf.CrhfFactory.CrhfType;
@@ -238,18 +238,18 @@ public class Zcl22SkePsuServer extends AbstractPsuServer {
     }
 
     private byte[] generatePeqtShares(OprpReceiverOutput oprpReceiverOutput) throws MpcAbortException {
-        BitMatrix bitMatrix = BitMatrixFactory.createInstance(
+        TransBitMatrix transBitMatrix = TransBitMatrixFactory.createInstance(
             envType, CommonConstants.BLOCK_BIT_LENGTH, serverElementSize, parallel
         );
         for (int i = 0; i < serverElementSize; i++) {
-            bitMatrix.setColumn(i, oprpReceiverOutput.getShare(i));
+            transBitMatrix.setColumn(i, oprpReceiverOutput.getShare(i));
         }
-        BitMatrix transposeBitMatrix = bitMatrix.transpose();
+        TransBitMatrix transposeTransBitMatrix = transBitMatrix.transpose();
         int logSize = LongUtils.ceilLog2(serverElementSize);
         // 服务端结构初始化全为1
         BcBitVector serverPeqtShares = BcBitVector.createOnes(serverElementSize);
         for (int index = 0; index < CommonConstants.BLOCK_BIT_LENGTH - logSize; index++) {
-            byte[] bits = transposeBitMatrix.getColumn(index);
+            byte[] bits = transposeTransBitMatrix.getColumn(index);
             BcBitVector notBits = bcSender.not(BcBitVector.create(bits, serverElementSize, false));
             serverPeqtShares = bcSender.and(serverPeqtShares, notBits);
         }

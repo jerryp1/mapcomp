@@ -7,8 +7,8 @@ import edu.alibaba.mpc4j.common.rpc.Rpc;
 import edu.alibaba.mpc4j.common.rpc.utils.DataPacket;
 import edu.alibaba.mpc4j.common.rpc.utils.DataPacketHeader;
 import edu.alibaba.mpc4j.common.tool.CommonConstants;
-import edu.alibaba.mpc4j.common.tool.bitmatrix.BitMatrix;
-import edu.alibaba.mpc4j.common.tool.bitmatrix.BitMatrixFactory;
+import edu.alibaba.mpc4j.common.tool.bitmatrix.trans.TransBitMatrix;
+import edu.alibaba.mpc4j.common.tool.bitmatrix.trans.TransBitMatrixFactory;
 import edu.alibaba.mpc4j.common.tool.crypto.crhf.Crhf;
 import edu.alibaba.mpc4j.common.tool.crypto.crhf.CrhfFactory;
 import edu.alibaba.mpc4j.common.tool.crypto.crhf.CrhfFactory.CrhfType;
@@ -257,18 +257,18 @@ public class Zcl22SkePsuClient extends AbstractPsuClient {
     }
 
     private byte[] generatePeqtShares(OprpSenderOutput oprpSenderOutput) throws MpcAbortException {
-        BitMatrix bitMatrix = BitMatrixFactory.createInstance(
+        TransBitMatrix transBitMatrix = TransBitMatrixFactory.createInstance(
             envType, CommonConstants.BLOCK_BIT_LENGTH, serverElementSize, parallel
         );
         for (int i = 0; i < serverElementSize; i++) {
-            bitMatrix.setColumn(i, oprpSenderOutput.getShare(i));
+            transBitMatrix.setColumn(i, oprpSenderOutput.getShare(i));
         }
-        BitMatrix transposeBitMatrix = bitMatrix.transpose();
+        TransBitMatrix transposeTransBitMatrix = transBitMatrix.transpose();
         int logSize = LongUtils.ceilLog2(serverElementSize);
         // 客户端初始化全为0
         BcBitVector clientPeqtShares = BcBitVector.createZeros(serverElementSize);
         for (int index = 0; index < CommonConstants.BLOCK_BIT_LENGTH - logSize; index++) {
-            byte[] bits = transposeBitMatrix.getColumn(index);
+            byte[] bits = transposeTransBitMatrix.getColumn(index);
             BcBitVector notBits = bcReceiver.not(BcBitVector.create(bits, serverElementSize, false));
             clientPeqtShares = bcReceiver.and(clientPeqtShares, notBits);
         }

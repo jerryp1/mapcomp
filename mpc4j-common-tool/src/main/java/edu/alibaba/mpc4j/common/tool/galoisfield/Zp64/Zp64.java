@@ -137,7 +137,7 @@ public interface Zp64 {
      * @param secureRandom 随机状态。
      * @return 随机元素。
      */
-    long randomElement(SecureRandom secureRandom);
+    long createRandom(SecureRandom secureRandom);
 
     /**
      * 创建随机元素。
@@ -145,7 +145,7 @@ public interface Zp64 {
      * @param seed 种子。
      * @return 随机元素。
      */
-    long randomElement(byte[] seed);
+    long createRandom(byte[] seed);
 
     /**
      * 创建非0随机元素。
@@ -153,7 +153,7 @@ public interface Zp64 {
      * @param secureRandom 随机状态。
      * @return 非0随机元素。
      */
-    long randomNonZeroElement(SecureRandom secureRandom);
+    long createNonZeroRandom(SecureRandom secureRandom);
 
     /**
      * 创建非0随机元素。
@@ -161,7 +161,7 @@ public interface Zp64 {
      * @param seed 种子。
      * @return 非0随机元素。
      */
-    long randomNonZeroElement(byte[] seed);
+    long createNonZeroRandom(byte[] seed);
 
     /**
      * 创建[0, 2^l)范围内的随机元素。
@@ -169,7 +169,7 @@ public interface Zp64 {
      * @param secureRandom 随机状态。
      * @return [0, 2^l)范围内的随机元素。
      */
-    long randomRangeElement(SecureRandom secureRandom);
+    long createRangeRandom(SecureRandom secureRandom);
 
     /**
      * 创建[0, 2^l)范围内的随机元素。
@@ -177,7 +177,7 @@ public interface Zp64 {
      * @param seed 种子。
      * @return [0, 2^l)范围内的随机元素。
      */
-    long randomRangeElement(byte[] seed);
+    long createRangeRandom(byte[] seed);
 
     /**
      * 判断a是否为0元。

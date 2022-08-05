@@ -34,13 +34,13 @@ public class Gf2kTest {
     public static Collection<Object[]> configurations() {
         Collection<Object[]> configurationParams = new ArrayList<>();
         // SSE
-        configurationParams.add(new Object[] {Gf2kType.SSE.name(), Gf2kType.SSE,});
+        configurationParams.add(new Object[]{Gf2kType.SSE.name(), Gf2kType.SSE,});
         // NTL
-        configurationParams.add(new Object[] {Gf2kType.NTL.name(), Gf2kType.NTL,});
+        configurationParams.add(new Object[]{Gf2kType.NTL.name(), Gf2kType.NTL,});
         // BC
-        configurationParams.add(new Object[] {Gf2kType.BC.name(), Gf2kType.BC,});
+        configurationParams.add(new Object[]{Gf2kType.BC.name(), Gf2kType.BC,});
         // RINGS
-        configurationParams.add(new Object[] {Gf2kType.RINGS.name(), Gf2kType.RINGS,});
+        configurationParams.add(new Object[]{Gf2kType.RINGS.name(), Gf2kType.RINGS,});
 
         return configurationParams;
     }
@@ -53,11 +53,16 @@ public class Gf2kTest {
      * GF(2^128)运算
      */
     private final Gf2k gf2k;
+    /**
+     * 有限域字节长度
+     */
+    private final int byteL;
 
     public Gf2kTest(String name, Gf2kType type) {
         Preconditions.checkArgument(StringUtils.isNotBlank(name));
         this.type = type;
         gf2k = Gf2kFactory.createInstance(type);
+        byteL = gf2k.getByteL();
     }
 
     @Test
@@ -69,32 +74,32 @@ public class Gf2kTest {
     public void testIllegalInputs() {
         // 尝试对错误长度的a做运算
         try {
-            byte[] a = new byte[CommonConstants.BLOCK_BYTE_LENGTH - 1];
-            byte[] b = new byte[CommonConstants.BLOCK_BYTE_LENGTH];
+            byte[] a = new byte[byteL - 1];
+            byte[] b = new byte[byteL];
             gf2k.add(a, b);
             throw new IllegalStateException("ERROR: successfully compute a + b for wrong-length a");
         } catch (AssertionError ignored) {
 
         }
         try {
-            byte[] a = new byte[CommonConstants.BLOCK_BYTE_LENGTH - 1];
-            byte[] b = new byte[CommonConstants.BLOCK_BYTE_LENGTH];
+            byte[] a = new byte[byteL - 1];
+            byte[] b = new byte[byteL];
             gf2k.addi(a, b);
             throw new IllegalStateException("ERROR: successfully compute a + b for wrong-length a");
         } catch (AssertionError ignored) {
 
         }
         try {
-            byte[] a = new byte[CommonConstants.BLOCK_BYTE_LENGTH - 1];
-            byte[] b = new byte[CommonConstants.BLOCK_BYTE_LENGTH];
+            byte[] a = new byte[byteL - 1];
+            byte[] b = new byte[byteL];
             gf2k.mul(a, b);
             throw new IllegalStateException("ERROR: successfully compute a + b for wrong-length a");
         } catch (AssertionError ignored) {
 
         }
         try {
-            byte[] a = new byte[CommonConstants.BLOCK_BYTE_LENGTH - 1];
-            byte[] b = new byte[CommonConstants.BLOCK_BYTE_LENGTH];
+            byte[] a = new byte[byteL - 1];
+            byte[] b = new byte[byteL];
             gf2k.muli(a, b);
             throw new IllegalStateException("ERROR: successfully compute a * b for wrong-length a");
         } catch (AssertionError ignored) {
@@ -102,32 +107,32 @@ public class Gf2kTest {
         }
         // 尝试对错误长度的b做运算
         try {
-            byte[] a = new byte[CommonConstants.BLOCK_BYTE_LENGTH];
-            byte[] b = new byte[CommonConstants.BLOCK_BYTE_LENGTH - 1];
+            byte[] a = new byte[byteL];
+            byte[] b = new byte[byteL - 1];
             gf2k.add(a, b);
             throw new IllegalStateException("ERROR: successfully compute a + b for wrong-length b");
         } catch (AssertionError ignored) {
 
         }
         try {
-            byte[] a = new byte[CommonConstants.BLOCK_BYTE_LENGTH];
-            byte[] b = new byte[CommonConstants.BLOCK_BYTE_LENGTH - 1];
+            byte[] a = new byte[byteL];
+            byte[] b = new byte[byteL - 1];
             gf2k.addi(a, b);
             throw new IllegalStateException("ERROR: successfully compute a + b for wrong-length b");
         } catch (AssertionError ignored) {
 
         }
         try {
-            byte[] a = new byte[CommonConstants.BLOCK_BYTE_LENGTH];
-            byte[] b = new byte[CommonConstants.BLOCK_BYTE_LENGTH - 1];
+            byte[] a = new byte[byteL];
+            byte[] b = new byte[byteL - 1];
             gf2k.mul(a, b);
             throw new IllegalStateException("ERROR: successfully compute a * b for wrong-length b");
         } catch (AssertionError ignored) {
 
         }
         try {
-            byte[] a = new byte[CommonConstants.BLOCK_BYTE_LENGTH];
-            byte[] b = new byte[CommonConstants.BLOCK_BYTE_LENGTH - 1];
+            byte[] a = new byte[byteL];
+            byte[] b = new byte[byteL - 1];
             gf2k.muli(a, b);
             throw new IllegalStateException("ERROR: successfully compute a * b for wrong-length b");
         } catch (AssertionError ignored) {
@@ -139,8 +144,8 @@ public class Gf2kTest {
     public void testMultiply() {
         // 0 * 0 = 0
         byte[] a = gf2k.createZero();
-        byte[] b =  gf2k.createZero();
-        byte[] truth =  gf2k.createZero();
+        byte[] b = gf2k.createZero();
+        byte[] truth = gf2k.createZero();
         testMultiply(a, b, truth);
         // 1 * 1 = 1
         a = gf2k.createOne();
@@ -148,25 +153,25 @@ public class Gf2kTest {
         truth = gf2k.createOne();
         testMultiply(a, b, truth);
         // x * x = x^2
-        a = new byte[] {
-            (byte)0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02
+        a = new byte[]{
+            (byte) 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02
         };
-        b = new byte[] {
-            (byte)0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02
+        b = new byte[]{
+            (byte) 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02
         };
-        truth = new byte[] {
-            (byte)0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x04
+        truth = new byte[]{
+            (byte) 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x04
         };
         testMultiply(a, b, truth);
         // x^2 * x^2 = x^4
-        a = new byte[] {
-            (byte)0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x04
+        a = new byte[]{
+            (byte) 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x04
         };
-        b = new byte[] {
-            (byte)0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x04
+        b = new byte[]{
+            (byte) 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x04
         };
-        truth = new byte[] {
-            (byte)0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x10
+        truth = new byte[]{
+            (byte) 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x10
         };
         testMultiply(a, b, truth);
     }
@@ -184,9 +189,9 @@ public class Gf2kTest {
         Set<ByteBuffer> cArray = IntStream.range(0, MAX_PARALLEL)
             .mapToObj(index -> {
                 byte[] a = new byte[CommonConstants.BLOCK_BYTE_LENGTH];
-                Arrays.fill(a, (byte)0xFF);
+                Arrays.fill(a, (byte) 0xFF);
                 byte[] b = new byte[CommonConstants.BLOCK_BYTE_LENGTH];
-                Arrays.fill(b, (byte)0xFF);
+                Arrays.fill(b, (byte) 0xFF);
                 return gf2k.mul(a, b);
             }).map(ByteBuffer::wrap)
             .collect(Collectors.toSet());
@@ -195,9 +200,9 @@ public class Gf2kTest {
         Set<ByteBuffer> aArray = IntStream.range(0, MAX_PARALLEL)
             .mapToObj(index -> {
                 byte[] a = new byte[CommonConstants.BLOCK_BYTE_LENGTH];
-                Arrays.fill(a, (byte)0xFF);
+                Arrays.fill(a, (byte) 0xFF);
                 byte[] b = new byte[CommonConstants.BLOCK_BYTE_LENGTH];
-                Arrays.fill(b, (byte)0xFF);
+                Arrays.fill(b, (byte) 0xFF);
                 gf2k.muli(a, b);
                 return a;
             }).map(ByteBuffer::wrap)

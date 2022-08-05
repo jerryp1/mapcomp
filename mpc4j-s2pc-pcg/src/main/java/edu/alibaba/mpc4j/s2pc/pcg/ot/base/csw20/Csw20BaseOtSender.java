@@ -158,12 +158,12 @@ public class Csw20BaseOtSender extends AbstractBaseOtSender {
                     byte[] k0InputArray = ecc.encode(capitalBy, false);
                     byte[] k1InputArray = ecc.encode(capitalBy.subtract(capitalTy), false);
                     r0Array[index] = kdf.deriveKey(ByteBuffer
-                            .allocate(Long.BYTES + Integer.BYTES + k0InputArray.length)
-                            .putLong(extraInfo).putInt(index).put(k0InputArray)
+                            .allocate(Integer.BYTES + k0InputArray.length)
+                            .putInt(index).put(k0InputArray)
                             .array());
                     r1Array[index] = kdf.deriveKey(ByteBuffer
-                            .allocate(Long.BYTES + Integer.BYTES + k1InputArray.length)
-                            .putLong(extraInfo).putInt(index).put(k1InputArray)
+                            .allocate(Integer.BYTES + k1InputArray.length)
+                            .putInt(index).put(k1InputArray)
                             .array());
                     // 计算挑战消息chall = H(k0) \xor H(k1)，并添加到paylaod
                     answerInputArray[index] = kdf.deriveKey(r0Array[index]);

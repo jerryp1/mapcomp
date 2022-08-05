@@ -58,6 +58,7 @@ public class Gf2eManager {
      * @return 有限域GF(2^l)。
      */
     public static FiniteField<UnivariatePolynomialZp64> getFiniteField(int l) {
+        assert l > 0 : "l must be greater than 0: " + l;
         if (GF2X_MAP.containsKey(l)) {
             return GF2X_MAP.get(l);
         } else {

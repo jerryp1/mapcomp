@@ -169,7 +169,7 @@ public interface Gf2e {
      * @param secureRandom 随机状态。
      * @return 随机群元素。
      */
-    byte[] randomElement(SecureRandom secureRandom);
+    byte[] createRandom(SecureRandom secureRandom);
 
     /**
      * 创建随机域元素（非0随机群元素）。
@@ -177,7 +177,7 @@ public interface Gf2e {
      * @param secureRandom 随机状态。
      * @return 随机域元素。
      */
-    byte[] randomNonZeroElement(SecureRandom secureRandom);
+    byte[] createNonZeroRandom(SecureRandom secureRandom);
 
     /**
      * 判断a是否为0元。

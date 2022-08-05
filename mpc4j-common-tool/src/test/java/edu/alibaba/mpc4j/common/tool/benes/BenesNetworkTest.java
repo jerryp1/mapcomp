@@ -5,44 +5,32 @@ import edu.alibaba.mpc4j.common.tool.CommonConstants;
 import edu.alibaba.mpc4j.common.tool.benes.BenesNetworkFactory.BenesNetworkType;
 import edu.alibaba.mpc4j.common.tool.utils.IntUtils;
 import org.apache.commons.lang3.StringUtils;
-import org.apache.commons.lang3.time.StopWatch;
 import org.junit.Assert;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.nio.ByteBuffer;
 import java.security.SecureRandom;
-import java.text.DecimalFormat;
 import java.util.*;
-import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
 /**
- * 贝奈斯网络测试类。测试实例来自：
+ * 贝奈斯网络测试。测试实例来自：
+ * <p>
  * Chang C, Melhem R. Arbitrary size benes networks[J]. Parallel Processing Letters, 1997, 7(03): 279-284.
+ * </p>
  *
  * @author Weiran Liu
  * @date 2021/12/25
  */
 @RunWith(Parameterized.class)
 public class BenesNetworkTest {
-    private static final Logger LOGGER = LoggerFactory.getLogger(BenesNetworkTest.class);
     /**
      * 随机测试次数
      */
     private static final int MAX_RANDOM_ROUND = 40;
-    /**
-     * 性能测试置换表大小
-     */
-    private static final int EFFICIENCY_PERMUTATION_NUM = 50000;
-    /**
-     * 时间输出格式
-     */
-    private static final DecimalFormat TIME_DECIMAL_FORMAT = new DecimalFormat("0000.00");
     /**
      * 随机状态
      */
@@ -186,33 +174,5 @@ public class BenesNetworkTest {
         Vector<ByteBuffer> expectRandomOutputVector = BenesNetworkUtils.permutation(permutationMap, randomInputVector);
         Vector<ByteBuffer> actualRandomOutputVector = benesNetwork.permutation(randomInputVector);
         Assert.assertEquals(expectRandomOutputVector, actualRandomOutputVector);
-    }
-
-    @Test
-    public void testEfficiency() {
-        LOGGER.info("-----测试{}性能，元素数量 = {}-----", benesNetworkType.name(), EFFICIENCY_PERMUTATION_NUM);
-        List<Integer> shufflePermutationMap = IntStream.range(0, EFFICIENCY_PERMUTATION_NUM)
-            .boxed()
-            .collect(Collectors.toList());
-        Collections.shuffle(shufflePermutationMap, SECURE_RANDOM);
-        int[] permutationMap = shufflePermutationMap.stream()
-            .mapToInt(permutation -> permutation)
-            .toArray();
-        StopWatch stopWatch = new StopWatch();
-        stopWatch.start();
-        BenesNetwork<Integer> benesNetwork = BenesNetworkFactory.createInstance(benesNetworkType, permutationMap);
-        stopWatch.stop();
-        double createTime = (double)stopWatch.getTime(TimeUnit.MILLISECONDS);
-        stopWatch.reset();
-
-        Vector<Integer> inputVector = IntStream.range(0, EFFICIENCY_PERMUTATION_NUM)
-            .boxed().
-            collect(Collectors.toCollection(Vector::new));
-        stopWatch.start();
-        benesNetwork.permutation(inputVector);
-        stopWatch.stop();
-        double permuteTime = (double)stopWatch.getTime(TimeUnit.MILLISECONDS);
-        LOGGER.info("{}\t{}", "create(ms)", "permute(ms)");
-        LOGGER.info("{}\t{}", TIME_DECIMAL_FORMAT.format(createTime), TIME_DECIMAL_FORMAT.format(permuteTime));
     }
 }

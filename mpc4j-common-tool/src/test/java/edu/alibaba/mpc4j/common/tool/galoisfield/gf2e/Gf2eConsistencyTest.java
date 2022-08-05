@@ -69,8 +69,8 @@ public class Gf2eConsistencyTest {
     @Test
     public void testMulConsistency() {
         for (int i = 0; i < MAX_RANDOM_ROUND; i++) {
-            byte[] a = thisGf2e.randomElement(SECURE_RANDOM);
-            byte[] b = thisGf2e.randomElement(SECURE_RANDOM);
+            byte[] a = thisGf2e.createRandom(SECURE_RANDOM);
+            byte[] b = thisGf2e.createRandom(SECURE_RANDOM);
             byte[] thisResult = thisGf2e.mul(a, b);
             byte[] thatResult = thatGf2e.mul(a, b);
             Assert.assertArrayEquals(thisResult, thatResult);
@@ -80,9 +80,9 @@ public class Gf2eConsistencyTest {
     @Test
     public void testMuliConsistency() {
         for (int i = 0; i < MAX_RANDOM_ROUND; i++) {
-            byte[] thisA = thisGf2e.randomElement(SECURE_RANDOM);
+            byte[] thisA = thisGf2e.createRandom(SECURE_RANDOM);
             byte[] thatA = BytesUtils.clone(thisA);
-            byte[] b = thisGf2e.randomElement(SECURE_RANDOM);
+            byte[] b = thisGf2e.createRandom(SECURE_RANDOM);
             thisGf2e.muli(thisA, b);
             thatGf2e.muli(thatA, b);
             Assert.assertArrayEquals(thisA, thatA);
