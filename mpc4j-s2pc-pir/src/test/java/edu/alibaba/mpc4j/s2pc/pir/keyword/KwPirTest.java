@@ -66,9 +66,9 @@ public class KwPirTest {
         // 数据字节长度
         int elementByteLength = 20;
         // 检索次数
-        int retrievalNumber = 10;
+        int retrievalNumber = 1;
         // 随机生成服务端数据库关键词
-        int serverElementSize = 1 << 20;
+        int serverElementSize = 1 << 4;
         ArrayList<Set<ByteBuffer>> randomSets = PirUtils.generateBytesSets(serverElementSize, retrievalElementSize,
             retrievalNumber, elementByteLength);
         // 随机构建服务端关键词和标签映射

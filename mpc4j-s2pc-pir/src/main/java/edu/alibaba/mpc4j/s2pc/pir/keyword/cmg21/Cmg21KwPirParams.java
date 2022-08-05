@@ -1,5 +1,6 @@
 package edu.alibaba.mpc4j.s2pc.pir.keyword.cmg21;
 
+import edu.alibaba.mpc4j.common.tool.CommonConstants;
 import edu.alibaba.mpc4j.common.tool.hashbin.object.HashBinEntry;
 import edu.alibaba.mpc4j.common.tool.utils.BigIntegerUtils;
 
@@ -238,7 +239,7 @@ public class Cmg21KwPirParams {
         if (hashBinEntry.getHashIndex() != -1) {
             assert(hashBinEntry.getHashIndex() < 3) : "hash index should be [0, 1, 2]";
             BigInteger input = BigIntegerUtils.byteArrayToNonNegBigInteger(hashBinEntry.getItem());
-            input = input.shiftRight(input.bitLength() - bitLength);
+            input = input.mod(BigInteger.ONE.shiftLeft(CommonConstants.BLOCK_BIT_LENGTH));
             for (int i = 0; i < itemEncodedSlotSize; i++) {
                 encodedArray[i] = input.mod(BigInteger.ONE.shiftLeft(shiftBits)).longValueExact();
                 input = input.shiftRight(shiftBits);

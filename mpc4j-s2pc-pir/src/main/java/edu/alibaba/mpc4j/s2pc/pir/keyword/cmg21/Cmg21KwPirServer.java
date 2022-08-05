@@ -438,7 +438,8 @@ public class Cmg21KwPirServer<T> extends AbstractKwPirServer<T> {
                 });
                 long[][] encodeElementVector = new long[partitionSize + 1][params.getPolyModulusDegree()];
                 int labelSize = IntStream.range(1, gCoeffs[0].length)
-                    .map(j -> gCoeffs[0][j].length).filter(j -> j >= 1).max()
+                    .map(j -> gCoeffs[0][j].length).filter(j -> j >= 1)
+                    .max()
                     .orElse(1);
                 long[][][] encodeLabelVector = new long[labelPartitionCount][labelSize][params.getPolyModulusDegree()];
                 for (int j = 0; j < partitionSize + 1; j++) {
