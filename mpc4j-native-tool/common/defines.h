@@ -45,9 +45,28 @@ void jByteArrayToSet(JNIEnv *env, jobjectArray jBytesArray, uint64_t byteLength,
  * @param env JNI环境。
  * @param set set<byte[]>表示的数据。
  * @param byteLength 二维字节数组每个维度的长度。
- * @param jnum 转换后的byte[][]数组长度。
+ * @param jNum 转换后的byte[][]数组长度。
  * @param jArray 转换结果存储地址。
  */
-void setTojByteArray(JNIEnv *env, std::vector<uint8_t*> &set, uint64_t byteLength, jint jnum, jobjectArray &jArray);
+void setTojByteArray(JNIEnv *env, std::vector<uint8_t*> &set, uint64_t byteLength, jint jNum, jobjectArray &jArray);
+
+/**
+ * 将jlongArray表示的二维长整数数组解析为set<long>。
+ *
+ * @param env JNI环境。
+ * @param jLongArray 用jlongArray表示的二维长整型数组。
+ * @param set 转换结果存储地址。
+ */
+void jLongArrayToSet(JNIEnv *env, jlongArray jLongArray, std::vector<long> &set);
+
+/**
+ * 将用set<long>表示的数据转换为jlongArray表示的二维长整型数组。
+ *
+ * @param env JNI环境。
+ * @param set set<long>表示的数据。
+ * @param jNum 转换后的long[]数组长度。
+ * @param jLongArray 转换结果存储地址。
+ */
+void setTojLongArray(JNIEnv *env, std::vector<long> &set, jint jNum, jlongArray &jLongArray);
 
 #endif //MPC4J_NATIVE_TOOL_DEFINES_H

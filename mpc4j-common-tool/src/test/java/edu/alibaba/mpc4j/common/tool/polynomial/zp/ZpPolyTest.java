@@ -164,7 +164,7 @@ public class ZpPolyTest {
         BigInteger[] coefficients = zpPoly.interpolate(DEFAULT_NUM, xArray, yArray);
         Assert.assertEquals(zpPoly.coefficientNum(DEFAULT_NUM), coefficients.length);
         // 验证结果
-        testEvaluate(zpPoly, coefficients, xArray, yArray);
+        assertEvaluate(zpPoly, coefficients, xArray, yArray);
     }
 
     @Test
@@ -183,13 +183,13 @@ public class ZpPolyTest {
             .mapToObj(BigInteger::valueOf)
             .toArray(BigInteger[]::new);
         BigInteger[] coefficients = zpPoly.interpolate(DEFAULT_NUM, xArray, yArray);
-        // 验证多项式结果长度
-        Assert.assertEquals(zpPoly.coefficientNum(DEFAULT_NUM), coefficients.length);
+        // 验证多项式
+        assertCoefficient(zpPoly, DEFAULT_NUM, coefficients);
         // 多项式仍然过(0,0)点，因此常数项仍然为0，但其他位应该均不为0
         Assert.assertEquals(BigInteger.ZERO, coefficients[0]);
         IntStream.range(1, coefficients.length).forEach(i -> Assert.assertNotEquals(BigInteger.ZERO, coefficients[i]));
         // 验证求值
-        testEvaluate(zpPoly, coefficients, xArray, yArray);
+        assertEvaluate(zpPoly, coefficients, xArray, yArray);
     }
 
     @Test
@@ -211,10 +211,10 @@ public class ZpPolyTest {
             .mapToObj(index -> BigIntegerUtils.randomNonNegative(p, SECURE_RANDOM))
             .toArray(BigInteger[]::new);
         BigInteger[] coefficients = zpPoly.interpolate(DEFAULT_NUM, xArray, yArray);
-        // 验证多项式结果长度
-        Assert.assertEquals(zpPoly.coefficientNum(DEFAULT_NUM), coefficients.length);
+        // 验证多项式
+        assertCoefficient(zpPoly, DEFAULT_NUM, coefficients);
         // 验证求值
-        testEvaluate(zpPoly, coefficients, xArray, yArray);
+        assertEvaluate(zpPoly, coefficients, xArray, yArray);
     }
 
     @Test
@@ -236,10 +236,10 @@ public class ZpPolyTest {
             .mapToObj(index -> BigIntegerUtils.randomNonNegative(p, SECURE_RANDOM))
             .toArray(BigInteger[]::new);
         BigInteger[] coefficients = zpPoly.interpolate(DEFAULT_NUM, xArray, yArray);
-        // 验证多项式结果长度
-        Assert.assertEquals(zpPoly.coefficientNum(DEFAULT_NUM), coefficients.length);
+        // 验证多项式
+        assertCoefficient(zpPoly, DEFAULT_NUM, coefficients);
         // 验证求值
-        testEvaluate(zpPoly, coefficients, xArray, yArray);
+        assertEvaluate(zpPoly, coefficients, xArray, yArray);
     }
 
     @Test
@@ -262,11 +262,21 @@ public class ZpPolyTest {
             BigInteger[] xArray = xArrayList.get(parallelIndex);
             BigInteger[] yArray = yArrayList.get(parallelIndex);
             BigInteger[] coefficients = zpPoly.interpolate(DEFAULT_NUM, xArray, yArray);
-            testEvaluate(zpPoly, coefficients, xArray, yArray);
+            assertEvaluate(zpPoly, coefficients, xArray, yArray);
         });
     }
 
-    private void testEvaluate(ZpPoly zpPoly, BigInteger[] coefficients, BigInteger[] xArray, BigInteger[] yArray) {
+    @SuppressWarnings("SameParameterValue")
+    private void assertCoefficient(ZpPoly zpPoly, int num, BigInteger[] coefficients) {
+        BigInteger p = zpPoly.getPrime();
+        Assert.assertEquals(zpPoly.coefficientNum(num), coefficients.length);
+        Arrays.stream(coefficients).forEach(coefficient -> {
+            Assert.assertTrue(BigIntegerUtils.greaterOrEqual(coefficient, BigInteger.ZERO));
+            Assert.assertTrue(BigIntegerUtils.less(coefficient, p));
+        });
+    }
+
+    private void assertEvaluate(ZpPoly zpPoly, BigInteger[] coefficients, BigInteger[] xArray, BigInteger[] yArray) {
         // 逐一求值
         IntStream.range(0, xArray.length).forEach(index -> {
             BigInteger evaluation = zpPoly.evaluate(coefficients, xArray[index]);
@@ -284,8 +294,9 @@ public class ZpPolyTest {
         // 不存在真实插值点，也应该可以构建多项式
         BigInteger[] xArray = new BigInteger[0];
         BigInteger y = BigIntegerUtils.randomNonNegative(p, SECURE_RANDOM);
-        BigInteger[] polynomial = zpPoly.rootInterpolate(DEFAULT_NUM, xArray, y);
-        Assert.assertEquals(zpPoly.rootCoefficientNum(DEFAULT_NUM), polynomial.length);
+        BigInteger[] coefficients = zpPoly.rootInterpolate(DEFAULT_NUM, xArray, y);
+        // 验证多项式
+        assertRootCoefficient(zpPoly, DEFAULT_NUM, coefficients);
     }
 
     @Test
@@ -297,10 +308,11 @@ public class ZpPolyTest {
             .mapToObj(index -> BigIntegerUtils.randomNonNegative(p, SECURE_RANDOM))
             .toArray(BigInteger[]::new);
         BigInteger y = BigIntegerUtils.randomNonNegative(p, SECURE_RANDOM);
-        BigInteger[] polynomial = zpPoly.rootInterpolate(DEFAULT_NUM, xArray, y);
-        Assert.assertEquals(zpPoly.rootCoefficientNum(DEFAULT_NUM), polynomial.length);
+        BigInteger[] coefficients = zpPoly.rootInterpolate(DEFAULT_NUM, xArray, y);
+        // 验证多项式
+        assertRootCoefficient(zpPoly, DEFAULT_NUM, coefficients);
         // 验证结果
-        testRootEvaluate(zpPoly, polynomial, xArray, y);
+        assertRootEvaluate(zpPoly, coefficients, xArray, y);
     }
 
     @Test
@@ -320,10 +332,10 @@ public class ZpPolyTest {
             .toArray(BigInteger[]::new);
         BigInteger y = BigIntegerUtils.randomNonNegative(p, SECURE_RANDOM);
         BigInteger[] coefficients = zpPoly.rootInterpolate(DEFAULT_NUM, xArray, y);
-        // 验证多项式结果长度
-        Assert.assertEquals(zpPoly.rootCoefficientNum(DEFAULT_NUM), coefficients.length);
+        // 验证多项式
+        assertRootCoefficient(zpPoly, DEFAULT_NUM, coefficients);
         // 验证求值
-        testRootEvaluate(zpPoly, coefficients, xArray, y);
+        assertRootEvaluate(zpPoly, coefficients, xArray, y);
     }
 
     @Test
@@ -343,10 +355,10 @@ public class ZpPolyTest {
             .toArray(BigInteger[]::new);
         BigInteger y = BigIntegerUtils.randomNonNegative(p, SECURE_RANDOM);
         BigInteger[] coefficients = zpPoly.rootInterpolate(DEFAULT_NUM, xArray, y);
-        // 验证多项式结果长度
-        Assert.assertEquals(zpPoly.rootCoefficientNum(DEFAULT_NUM), coefficients.length);
+        // 验证多项式
+        assertRootCoefficient(zpPoly, DEFAULT_NUM, coefficients);
         // 验证求值
-        testRootEvaluate(zpPoly, coefficients, xArray, y);
+        assertRootEvaluate(zpPoly, coefficients, xArray, y);
     }
 
     @Test
@@ -367,11 +379,21 @@ public class ZpPolyTest {
             BigInteger[] xArray = xArrayList.get(parallelIndex);
             BigInteger y = yList.get(parallelIndex);
             BigInteger[] coefficients = zpPoly.rootInterpolate(DEFAULT_NUM, xArray, y);
-            testRootEvaluate(zpPoly, coefficients, xArray, y);
+            assertRootEvaluate(zpPoly, coefficients, xArray, y);
         });
     }
 
-    private void testRootEvaluate(ZpPoly zpPoly, BigInteger[] coefficients, BigInteger[] xArray, BigInteger y) {
+    @SuppressWarnings("SameParameterValue")
+    private void assertRootCoefficient(ZpPoly zpPoly, int num, BigInteger[] coefficients) {
+        BigInteger p = zpPoly.getPrime();
+        Assert.assertEquals(zpPoly.rootCoefficientNum(num), coefficients.length);
+        Arrays.stream(coefficients).forEach(coefficient -> {
+            Assert.assertTrue(BigIntegerUtils.greaterOrEqual(coefficient, BigInteger.ZERO));
+            Assert.assertTrue(BigIntegerUtils.less(coefficient, p));
+        });
+    }
+
+    private void assertRootEvaluate(ZpPoly zpPoly, BigInteger[] coefficients, BigInteger[] xArray, BigInteger y) {
         // 逐一求值
         Arrays.stream(xArray)
             .map(x -> zpPoly.evaluate(coefficients, x))

@@ -153,7 +153,8 @@ public class Gf2ePolyTest {
         byte[][] xArray = new byte[0][];
         byte[][] yArray = new byte[0][];
         byte[][] coefficients = gf2ePoly.interpolate(DEFAULT_NUM, xArray, yArray);
-        Assert.assertEquals(gf2ePoly.coefficientNum(DEFAULT_NUM), coefficients.length);
+        // 验证多项式
+        assertCoefficients(gf2ePoly, DEFAULT_NUM, coefficients);
     }
 
     @Test
@@ -169,9 +170,10 @@ public class Gf2ePolyTest {
             .mapToObj(index -> BytesUtils.randomByteArray(l, byteL, SECURE_RANDOM))
             .toArray(byte[][]::new);
         byte[][] coefficients = gf2ePoly.interpolate(DEFAULT_NUM, xArray, yArray);
-        Assert.assertEquals(gf2ePoly.coefficientNum(DEFAULT_NUM), coefficients.length);
-        // 验证结果
-        testEvaluate(gf2ePoly, coefficients, xArray, yArray);
+        // 验证多项式
+        assertCoefficients(gf2ePoly, DEFAULT_NUM, coefficients);
+        // 验证求值
+        assertEvaluate(gf2ePoly, coefficients, xArray, yArray);
     }
 
     @Test
@@ -192,8 +194,8 @@ public class Gf2ePolyTest {
             .map(x -> BigIntegerUtils.nonNegBigIntegerToByteArray(x, gf2ePoly.getByteL()))
             .toArray(byte[][]::new);
         byte[][] coefficients = gf2ePoly.interpolate(DEFAULT_NUM, xArray, yArray);
-        // 验证多项式结果长度
-        Assert.assertEquals(gf2ePoly.coefficientNum(DEFAULT_NUM), coefficients.length);
+        // 验证多项式
+        assertCoefficients(gf2ePoly, DEFAULT_NUM, coefficients);
         byte[] zero = new byte[gf2ePoly.getByteL()];
         // 多项式仍然过(0,0)点，因此常数项仍然为0，但其他位应该均不为0
         Assert.assertArrayEquals(zero, coefficients[0]);
@@ -201,7 +203,7 @@ public class Gf2ePolyTest {
             Assert.assertNotEquals(ByteBuffer.wrap(zero), ByteBuffer.wrap(coefficients[i]))
         );
         // 验证求值
-        testEvaluate(gf2ePoly, coefficients, xArray, yArray);
+        assertEvaluate(gf2ePoly, coefficients, xArray, yArray);
     }
 
     @Test
@@ -223,10 +225,10 @@ public class Gf2ePolyTest {
             .mapToObj(index -> BytesUtils.randomByteArray(l, byteL, SECURE_RANDOM))
             .toArray(byte[][]::new);
         byte[][] coefficients = gf2ePoly.interpolate(DEFAULT_NUM, xArray, yArray);
-        // 验证多项式结果长度
-        Assert.assertEquals(gf2ePoly.coefficientNum(DEFAULT_NUM), coefficients.length);
+        // 验证多项式
+        assertCoefficients(gf2ePoly, DEFAULT_NUM, coefficients);
         // 验证求值
-        testEvaluate(gf2ePoly, coefficients, xArray, yArray);
+        assertEvaluate(gf2ePoly, coefficients, xArray, yArray);
     }
 
     @Test
@@ -248,10 +250,10 @@ public class Gf2ePolyTest {
             .mapToObj(index -> BytesUtils.randomByteArray(l, byteL, SECURE_RANDOM))
             .toArray(byte[][]::new);
         byte[][] coefficients = gf2ePoly.interpolate(DEFAULT_NUM, xArray, yArray);
-        // 验证多项式结果长度
-        Assert.assertEquals(gf2ePoly.coefficientNum(DEFAULT_NUM), coefficients.length);
+        // 验证多项式
+        assertCoefficients(gf2ePoly, DEFAULT_NUM, coefficients);
         // 验证求值
-        testEvaluate(gf2ePoly, coefficients, xArray, yArray);
+        assertEvaluate(gf2ePoly, coefficients, xArray, yArray);
     }
 
     @Test
@@ -275,11 +277,22 @@ public class Gf2ePolyTest {
             byte[][] xArray = xArrayList.get(parallelIndex);
             byte[][] yArray = yArrayList.get(parallelIndex);
             byte[][] coefficients = gf2ePoly.interpolate(DEFAULT_NUM, xArray, yArray);
-            testEvaluate(gf2ePoly, coefficients, xArray, yArray);
+            assertEvaluate(gf2ePoly, coefficients, xArray, yArray);
         });
     }
 
-    private void testEvaluate(Gf2ePoly gf2ePoly, byte[][] coefficients, byte[][] xArray, byte[][] yArray) {
+    @SuppressWarnings("SameParameterValue")
+    private void assertCoefficients(Gf2ePoly gf2ePoly, int num, byte[][] coefficients) {
+        Assert.assertEquals(gf2ePoly.coefficientNum(num), coefficients.length);
+        int l = gf2ePoly.getL();
+        int byteL = gf2ePoly.getByteL();
+        Arrays.stream(coefficients).forEach(coefficient -> {
+            Assert.assertEquals(byteL, coefficient.length);
+            Assert.assertTrue(BytesUtils.isReduceByteArray(coefficient, l));
+        });
+    }
+
+    private void assertEvaluate(Gf2ePoly gf2ePoly, byte[][] coefficients, byte[][] xArray, byte[][] yArray) {
         // 逐一求值
         IntStream.range(0, xArray.length).forEach(index -> {
             byte[] evaluation = gf2ePoly.evaluate(coefficients, xArray[index]);
@@ -299,7 +312,8 @@ public class Gf2ePolyTest {
         byte[][] xArray = new byte[0][];
         byte[] y = BytesUtils.randomByteArray(l, byteL, SECURE_RANDOM);
         byte[][] coefficients = gf2ePoly.rootInterpolate(DEFAULT_NUM, xArray, y);
-        Assert.assertEquals(gf2ePoly.rootCoefficientNum(DEFAULT_NUM), coefficients.length);
+        // 验证多项式
+        assertRootCoefficients(gf2ePoly, DEFAULT_NUM, coefficients);
     }
 
     @Test
@@ -313,9 +327,10 @@ public class Gf2ePolyTest {
             .toArray(byte[][]::new);
         byte[] y = BytesUtils.randomByteArray(l, byteL, SECURE_RANDOM);
         byte[][] coefficients = gf2ePoly.rootInterpolate(DEFAULT_NUM, xArray, y);
-        Assert.assertEquals(gf2ePoly.rootCoefficientNum(DEFAULT_NUM), coefficients.length);
+        // 验证多项式
+        assertRootCoefficients(gf2ePoly, DEFAULT_NUM, coefficients);
         // 验证求值
-        testRootEvaluate(gf2ePoly, coefficients, xArray, y);
+        assertRootEvaluate(gf2ePoly, coefficients, xArray, y);
     }
 
     @Test
@@ -335,10 +350,10 @@ public class Gf2ePolyTest {
             .toArray(byte[][]::new);
         byte[] y = BytesUtils.randomByteArray(l, byteL, SECURE_RANDOM);
         byte[][] coefficients = gf2ePoly.rootInterpolate(DEFAULT_NUM, xArray, y);
-        // 验证多项式结果长度
-        Assert.assertEquals(gf2ePoly.rootCoefficientNum(DEFAULT_NUM), coefficients.length);
+        // 验证多项式
+        assertRootCoefficients(gf2ePoly, DEFAULT_NUM, coefficients);
         // 验证求值
-        testRootEvaluate(gf2ePoly, coefficients, xArray, y);
+        assertRootEvaluate(gf2ePoly, coefficients, xArray, y);
     }
 
     @Test
@@ -358,10 +373,10 @@ public class Gf2ePolyTest {
             .toArray(byte[][]::new);
         byte[] y = BytesUtils.randomByteArray(l, byteL, SECURE_RANDOM);
         byte[][] coefficients = gf2ePoly.rootInterpolate(DEFAULT_NUM, xArray, y);
-        // 验证多项式结果长度
-        Assert.assertEquals(gf2ePoly.rootCoefficientNum(DEFAULT_NUM), coefficients.length);
+        // 验证多项式
+        assertRootCoefficients(gf2ePoly, DEFAULT_NUM, coefficients);
         // 验证求值
-        testRootEvaluate(gf2ePoly, coefficients, xArray, y);
+        assertRootEvaluate(gf2ePoly, coefficients, xArray, y);
     }
 
     @Test
@@ -383,11 +398,22 @@ public class Gf2ePolyTest {
             byte[][] xArray = xArrayList.get(parallelIndex);
             byte[] y = yList.get(parallelIndex);
             byte[][] coefficients = gf2ePoly.rootInterpolate(DEFAULT_NUM, xArray, y);
-            testRootEvaluate(gf2ePoly, coefficients, xArray, y);
+            assertRootEvaluate(gf2ePoly, coefficients, xArray, y);
         });
     }
 
-    private void testRootEvaluate(Gf2ePoly gf2ePoly, byte[][] coefficients, byte[][] xArray, byte[] y) {
+    @SuppressWarnings("SameParameterValue")
+    private void assertRootCoefficients(Gf2ePoly gf2ePoly, int num, byte[][] coefficients) {
+        Assert.assertEquals(gf2ePoly.rootCoefficientNum(num), coefficients.length);
+        int l = gf2ePoly.getL();
+        int byteL = gf2ePoly.getByteL();
+        Arrays.stream(coefficients).forEach(coefficient -> {
+            Assert.assertEquals(byteL, coefficient.length);
+            Assert.assertTrue(BytesUtils.isReduceByteArray(coefficient, l));
+        });
+    }
+
+    private void assertRootEvaluate(Gf2ePoly gf2ePoly, byte[][] coefficients, byte[][] xArray, byte[] y) {
         // 逐一求值
         Arrays.stream(xArray)
             .map(x -> gf2ePoly.evaluate(coefficients, x))

@@ -88,7 +88,7 @@ abstract class AbstractRingsZpPoly implements ZpPoly {
             cc.redberry.rings.bigint.BigInteger[] prCoefficients
                 = new cc.redberry.rings.bigint.BigInteger[num - pointXs.length];
             for (int index = 0; index < prCoefficients.length; index++) {
-                prCoefficients[index] = new cc.redberry.rings.bigint.BigInteger(l, secureRandom);
+                prCoefficients[index] = new cc.redberry.rings.bigint.BigInteger(BigIntegerUtils.randomNonNegative(p, secureRandom));
             }
             UnivariatePolynomial<cc.redberry.rings.bigint.BigInteger> pr
                 = UnivariatePolynomial.create(finiteField, prCoefficients);
@@ -112,7 +112,7 @@ abstract class AbstractRingsZpPoly implements ZpPoly {
             // 返回随机多项式
             BigInteger[] coefficients = new BigInteger[num + 1];
             for (int index = 0; index < num; index++) {
-                coefficients[index] = BigIntegerUtils.randomPositive(p, secureRandom);
+                coefficients[index] = BigIntegerUtils.randomNonNegative(p, secureRandom);
             }
             // 将最高位设置为1
             coefficients[num] = BigInteger.ONE;
@@ -139,7 +139,7 @@ abstract class AbstractRingsZpPoly implements ZpPoly {
         if (xArray.length < num) {
             // 构造随机多项式
             cc.redberry.rings.bigint.BigInteger[] prCoefficients = IntStream.range(0, num - xArray.length)
-                .mapToObj(index -> new cc.redberry.rings.bigint.BigInteger(l, secureRandom))
+                .mapToObj(index -> new cc.redberry.rings.bigint.BigInteger(BigIntegerUtils.randomNonNegative(p, secureRandom)))
                 .toArray(cc.redberry.rings.bigint.BigInteger[]::new);
             UnivariatePolynomial<cc.redberry.rings.bigint.BigInteger> dummyPolynomial
                 = UnivariatePolynomial.create(finiteField, prCoefficients);

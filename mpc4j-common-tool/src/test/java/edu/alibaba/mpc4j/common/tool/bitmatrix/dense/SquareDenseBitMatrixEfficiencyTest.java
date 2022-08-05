@@ -13,6 +13,7 @@ import java.security.SecureRandom;
 import java.text.DecimalFormat;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.IntStream;
+
 import edu.alibaba.mpc4j.common.tool.bitmatrix.dense.SquareDenseBitMatrixFactory.SquareDenseBitMatrixType;
 
 /**
@@ -25,7 +26,7 @@ public class SquareDenseBitMatrixEfficiencyTest {
     /**
      * 可逆分组方阵，来自于LowMc的参数
      */
-    private static final byte[][] INVERTIBLE_SQUARE_BLOCK_MATRIX = new byte[][] {
+    private static final byte[][] INVERTIBLE_SQUARE_BLOCK_MATRIX = new byte[][]{
         Hex.decode("de3547d35d7763737b6ec5825f32786d"), Hex.decode("a1bf2597d8732f367e52b8560916d23a"),
         Hex.decode("f72e3cc9bdb8a5c0e4aaae0160b2b5e0"), Hex.decode("bd611bd92408e58abd56402baabd035d"),
         Hex.decode("d94fedafaaae5344aa35b034c6861e86"), Hex.decode("130bb264fd142470c1f146023cfd60d2"),
@@ -104,9 +105,13 @@ public class SquareDenseBitMatrixEfficiencyTest {
      */
     private static final DecimalFormat TIME_DECIMAL_FORMAT = new DecimalFormat("0.0000");
     /**
+     * 秒表
+     */
+    private static final StopWatch STOP_WATCH = new StopWatch();
+    /**
      * 测试类型
      */
-    private static final SquareDenseBitMatrixType[] TYPES = new SquareDenseBitMatrixType[] {
+    private static final SquareDenseBitMatrixType[] TYPES = new SquareDenseBitMatrixType[]{
         SquareDenseBitMatrixType.BYTE_MATRIX,
         SquareDenseBitMatrixType.LONG_MATRIX,
     };
@@ -118,14 +123,13 @@ public class SquareDenseBitMatrixEfficiencyTest {
             SquareDenseBitMatrix bitMatrix = SquareDenseBitMatrixFactory.fromDense(type, INVERTIBLE_SQUARE_BLOCK_MATRIX);
             byte[] randomInput = new byte[CommonConstants.BLOCK_BYTE_LENGTH];
             SECURE_RANDOM.nextBytes(randomInput);
-            StopWatch stopWatch = new StopWatch();
             // 预热
             IntStream.range(0, EFFICIENCY_ROUND).forEach(index -> bitMatrix.lmul(randomInput));
-            stopWatch.start();
+            STOP_WATCH.start();
             IntStream.range(0, EFFICIENCY_ROUND).forEach(index -> bitMatrix.lmul(randomInput));
-            stopWatch.stop();
-            double mulTime = (double)stopWatch.getTime(TimeUnit.MICROSECONDS) / EFFICIENCY_ROUND;
-            stopWatch.reset();
+            STOP_WATCH.stop();
+            double mulTime = (double) STOP_WATCH.getTime(TimeUnit.MICROSECONDS) / EFFICIENCY_ROUND;
+            STOP_WATCH.reset();
             LOGGER.info("{}\t{}",
                 StringUtils.leftPad(type.name(), 20),
                 StringUtils.leftPad(TIME_DECIMAL_FORMAT.format(mulTime), 10)

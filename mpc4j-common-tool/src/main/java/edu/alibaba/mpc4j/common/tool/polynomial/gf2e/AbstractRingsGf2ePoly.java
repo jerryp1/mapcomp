@@ -89,8 +89,7 @@ abstract class AbstractRingsGf2ePoly implements Gf2ePoly {
             // 构造随机多项式
             UnivariatePolynomialZp64[] prCoefficients = new UnivariatePolynomialZp64[num - pointXs.length];
             for (int index = 0; index < prCoefficients.length; index++) {
-                byte[] coefficient = new byte[byteL];
-                secureRandom.nextBytes(coefficient);
+                byte[] coefficient = BytesUtils.randomByteArray(l, byteL, secureRandom);
                 prCoefficients[index] = RingsUtils.byteArrayToGf2e(coefficient);
             }
             UnivariatePolynomial<UnivariatePolynomialZp64> pr = UnivariatePolynomial.create(finiteField, prCoefficients);
@@ -124,7 +123,7 @@ abstract class AbstractRingsGf2ePoly implements Gf2ePoly {
             // 返回随机多项式
             byte[][] coefficients = new byte[num + 1][byteL];
             for (int index = 0; index < num; index++) {
-                secureRandom.nextBytes(coefficients[index]);
+                coefficients[index] = BytesUtils.randomByteArray(l, byteL, secureRandom);
             }
             // 将最高位设置为1
             coefficients[num][byteL - 1] = (byte) 0x01;
@@ -148,11 +147,8 @@ abstract class AbstractRingsGf2ePoly implements Gf2ePoly {
         if (xArray.length < num) {
             // 构造随机多项式
             UnivariatePolynomialZp64[] prCoefficients = IntStream.range(0, num - xArray.length)
-                .mapToObj(index -> {
-                    byte[] coefficient = new byte[byteL];
-                    secureRandom.nextBytes(coefficient);
-                    return RingsUtils.byteArrayToGf2e(coefficient);
-                })
+                .mapToObj(index -> BytesUtils.randomByteArray(l, byteL, secureRandom))
+                .map(RingsUtils::byteArrayToGf2e)
                 .toArray(UnivariatePolynomialZp64[]::new);
             UnivariatePolynomial<UnivariatePolynomialZp64> dummyPolynomial
                 = UnivariatePolynomial.create(finiteField, prCoefficients);

@@ -104,7 +104,7 @@ public class NtlZpPoly implements ZpPoly {
             // 返回随机多项式
             BigInteger[] coefficients = new BigInteger[num + 1];
             for (int index = 0; index < num; index++) {
-                coefficients[index] = BigIntegerUtils.randomPositive(p, secureRandom);
+                coefficients[index] = BigIntegerUtils.randomNonNegative(p, secureRandom);
             }
             // 将最高位设置为1
             coefficients[num] = BigInteger.ONE;

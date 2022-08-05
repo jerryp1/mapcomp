@@ -1,11 +1,7 @@
 package edu.alibaba.mpc4j.common.tool.polynomial.zp64;
 
 import com.google.common.base.Preconditions;
-import edu.alibaba.mpc4j.common.tool.CommonConstants;
-import edu.alibaba.mpc4j.common.tool.polynomial.zp64.Zp64Poly;
-import edu.alibaba.mpc4j.common.tool.polynomial.zp64.Zp64PolyFactory;
 import edu.alibaba.mpc4j.common.tool.polynomial.zp64.Zp64PolyFactory.Zp64PolyType;
-import edu.alibaba.mpc4j.common.tool.utils.BigIntegerUtils;
 import edu.alibaba.mpc4j.common.tool.utils.LongUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.junit.Assert;
@@ -13,7 +9,6 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 
-import java.math.BigInteger;
 import java.security.SecureRandom;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -34,6 +29,10 @@ public class Zp64PolyTest {
      */
     private static final int DEFAULT_L = 40;
     /**
+     * 测试l
+     */
+    private static final int[] L_ARRAY = new int[] {20, 39, 40, 41, 61, 62};
+    /**
      * 最大随机轮数
      */
     private static final int MAX_RANDOM_ROUND = 5;
@@ -53,6 +52,8 @@ public class Zp64PolyTest {
     @Parameterized.Parameters(name = "{0}")
     public static Collection<Object[]> configurations() {
         Collection<Object[]> configurationParams = new ArrayList<>();
+        // NTL
+        configurationParams.add(new Object[] {Zp64PolyType.NTL.name(), Zp64PolyType.NTL,});
         // RINGS_NEWTON
         configurationParams.add(new Object[] {Zp64PolyType.RINGS_NEWTON.name(), Zp64PolyType.RINGS_NEWTON,});
         // RINGS_LAGRANGE
@@ -146,18 +147,14 @@ public class Zp64PolyTest {
         long[] coefficients = zp64Poly.interpolate(DEFAULT_NUM, xArray, yArray);
         Assert.assertEquals(zp64Poly.coefficientNum(DEFAULT_NUM), coefficients.length);
         // 验证结果
-        testEvaluate(zp64Poly, coefficients, xArray, yArray);
+        assertEvaluate(zp64Poly, coefficients, xArray, yArray);
     }
 
     @Test
     public void testInterpolation() {
-        testInterpolation(20);
-        testInterpolation(30);
-        testInterpolation(39);
-        testInterpolation(40);
-        testInterpolation(41);
-        testInterpolation(61);
-        testInterpolation(62);
+        for (int l : L_ARRAY) {
+            testInterpolation(l);
+        }
     }
 
     private void testInterpolation(int l) {
@@ -165,25 +162,21 @@ public class Zp64PolyTest {
         long[] xArray = LongStream.range(0, DEFAULT_NUM / 2).toArray();
         long[] yArray =LongStream.range(0, DEFAULT_NUM / 2).toArray();
         long[] coefficients = zp64Poly.interpolate(DEFAULT_NUM, xArray, yArray);
-        // 验证多项式结果长度
-        Assert.assertEquals(zp64Poly.coefficientNum(DEFAULT_NUM), coefficients.length);
+        // 验证多项式
+        assertCoefficient(zp64Poly, DEFAULT_NUM, coefficients);
         // 多项式仍然过(0,0)点，因此常数项仍然为0，但其他位应该均不为0
         Assert.assertEquals(0L, coefficients[0]);
         IntStream.range(1, coefficients.length).forEach(i -> Assert.assertNotEquals(0L, coefficients[i]));
         // 验证求值
-        testEvaluate(zp64Poly, coefficients, xArray, yArray);
+        assertEvaluate(zp64Poly, coefficients, xArray, yArray);
     }
 
     @Test
     public void testRandomFullInterpolation() {
         for (int round = 0; round < MAX_RANDOM_ROUND; round++) {
-            testRandomFullInterpolation(20);
-            testRandomFullInterpolation(30);
-            testRandomFullInterpolation(39);
-            testRandomFullInterpolation(40);
-            testRandomFullInterpolation(41);
-            testRandomFullInterpolation(61);
-            testRandomFullInterpolation(62);
+            for (int l : L_ARRAY) {
+                testRandomFullInterpolation(l);
+            }
         }
     }
 
@@ -197,22 +190,18 @@ public class Zp64PolyTest {
             .mapToLong(index -> LongUtils.randomNonNegative(p, SECURE_RANDOM))
             .toArray();
         long[] coefficients = zp64Poly.interpolate(DEFAULT_NUM, xArray, yArray);
-        // 验证多项式结果长度
-        Assert.assertEquals(zp64Poly.coefficientNum(DEFAULT_NUM), coefficients.length);
+        // 验证多项式
+        assertCoefficient(zp64Poly, DEFAULT_NUM, coefficients);
         // 验证求值
-        testEvaluate(zp64Poly, coefficients, xArray, yArray);
+        assertEvaluate(zp64Poly, coefficients, xArray, yArray);
     }
 
     @Test
     public void testRandomHalfInterpolation() {
         for (int round = 0; round < MAX_RANDOM_ROUND; round++) {
-            testRandomHalfInterpolation(20);
-            testRandomHalfInterpolation(30);
-            testRandomHalfInterpolation(39);
-            testRandomHalfInterpolation(40);
-            testRandomHalfInterpolation(41);
-            testRandomHalfInterpolation(61);
-            testRandomHalfInterpolation(62);
+            for (int l : L_ARRAY) {
+                testRandomHalfInterpolation(l);
+            }
         }
     }
 
@@ -226,10 +215,10 @@ public class Zp64PolyTest {
             .mapToLong(index -> LongUtils.randomNonNegative(p, SECURE_RANDOM))
             .toArray();
         long[] coefficients = zp64Poly.interpolate(DEFAULT_NUM, xArray, yArray);
-        // 验证多项式结果长度
-        Assert.assertEquals(zp64Poly.coefficientNum(DEFAULT_NUM), coefficients.length);
+        // 验证多项式
+        assertCoefficient(zp64Poly, DEFAULT_NUM, coefficients);
         // 验证求值
-        testEvaluate(zp64Poly, coefficients, xArray, yArray);
+        assertEvaluate(zp64Poly, coefficients, xArray, yArray);
     }
 
     @Test
@@ -252,11 +241,21 @@ public class Zp64PolyTest {
             long[] xArray = xArrayList.get(parallelIndex);
             long[] yArray = yArrayList.get(parallelIndex);
             long[] coefficients = zp64Poly.interpolate(DEFAULT_NUM, xArray, yArray);
-            testEvaluate(zp64Poly, coefficients, xArray, yArray);
+            assertEvaluate(zp64Poly, coefficients, xArray, yArray);
         });
     }
 
-    private void testEvaluate(Zp64Poly zp64Poly, long[] coefficients, long[] xArray, long[] yArray) {
+    @SuppressWarnings("SameParameterValue")
+    private void assertCoefficient(Zp64Poly zp64Poly, int num, long[] coefficients) {
+        long p = zp64Poly.getPrime();
+        Assert.assertEquals(zp64Poly.coefficientNum(num), coefficients.length);
+        Arrays.stream(coefficients).forEach(coefficient -> {
+            Assert.assertTrue(coefficient >= 0);
+            Assert.assertTrue(coefficient < p);
+        });
+    }
+
+    private void assertEvaluate(Zp64Poly zp64Poly, long[] coefficients, long[] xArray, long[] yArray) {
         // 逐一求值
         IntStream.range(0, xArray.length).forEach(index -> {
             long evaluation = zp64Poly.evaluate(coefficients, xArray[index]);
@@ -275,7 +274,8 @@ public class Zp64PolyTest {
         long[] xArray = new long[0];
         long y = LongUtils.randomNonNegative(p, SECURE_RANDOM);
         long[] coefficients = zp64Poly.rootInterpolate(DEFAULT_NUM, xArray, y);
-        Assert.assertEquals(zp64Poly.rootCoefficientNum(DEFAULT_NUM), coefficients.length);
+        // 验证多项式
+        assertRootCoefficient(zp64Poly, DEFAULT_NUM, coefficients);
     }
 
     @Test
@@ -288,96 +288,88 @@ public class Zp64PolyTest {
             .toArray();
         long y = LongUtils.randomNonNegative(p, SECURE_RANDOM);
         long[] coefficients = zp64Poly.rootInterpolate(DEFAULT_NUM, xArray, y);
-        Assert.assertEquals(zp64Poly.rootCoefficientNum(DEFAULT_NUM), coefficients.length);
+        // 验证多项式
+        assertRootCoefficient(zp64Poly, DEFAULT_NUM, coefficients);
         // 验证结果
         testRootEvaluate(zp64Poly, coefficients, xArray, y);
     }
-//
-//    @Test
-//    public void testRandomFullRootInterpolation() {
-//        for (int round = 0; round < MAX_RANDOM_ROUND; round++) {
-//            // 40比特
-//            testRandomFulRootlInterpolation(CommonConstants.STATS_BIT_LENGTH);
-//            // 39比特
-//            testRandomFulRootlInterpolation(CommonConstants.STATS_BIT_LENGTH - 1);
-//            // 41比特
-//            testRandomFulRootlInterpolation(CommonConstants.STATS_BIT_LENGTH + 1);
-//            // 128比特
-//            testRandomFulRootlInterpolation(CommonConstants.BLOCK_BIT_LENGTH);
-//            // 127比特
-//            testRandomFulRootlInterpolation(CommonConstants.BLOCK_BIT_LENGTH - 1);
-//            // 129比特
-//            testRandomFulRootlInterpolation(CommonConstants.BLOCK_BIT_LENGTH + 1);
-//        }
-//    }
-//
-//    private void testRandomFulRootlInterpolation(int l) {
-//        ZpPoly zpPoly = ZpPolyFactory.createInstance(type, l);
-//        BigInteger p = zpPoly.getPrime();
-//        BigInteger[] xArray = IntStream.range(0, DEFAULT_NUM)
-//            .mapToObj(index -> BigIntegerUtils.randomNonNegative(p, SECURE_RANDOM))
-//            .toArray(BigInteger[]::new);
-//        BigInteger y = BigIntegerUtils.randomNonNegative(p, SECURE_RANDOM);
-//        BigInteger[] coefficients = zpPoly.rootInterpolate(DEFAULT_NUM, xArray, y);
-//        // 验证多项式结果长度
-//        Assert.assertEquals(zpPoly.rootCoefficientNum(DEFAULT_NUM), coefficients.length);
-//        // 验证求值
-//        testRootEvaluate(zpPoly, coefficients, xArray, y);
-//    }
-//
-//    @Test
-//    public void testRandomHalfRootInterpolation() {
-//        for (int round = 0; round < MAX_RANDOM_ROUND; round++) {
-//            // 40比特
-//            testRandomHalfRootInterpolation(CommonConstants.STATS_BIT_LENGTH);
-//            // 39比特
-//            testRandomHalfRootInterpolation(CommonConstants.STATS_BIT_LENGTH - 1);
-//            // 41比特
-//            testRandomHalfRootInterpolation(CommonConstants.STATS_BIT_LENGTH + 1);
-//            // 128比特
-//            testRandomHalfRootInterpolation(CommonConstants.BLOCK_BIT_LENGTH);
-//            // 127比特
-//            testRandomHalfRootInterpolation(CommonConstants.BLOCK_BIT_LENGTH - 1);
-//            // 129比特
-//            testRandomHalfRootInterpolation(CommonConstants.BLOCK_BIT_LENGTH + 1);
-//        }
-//    }
-//
-//    private void testRandomHalfRootInterpolation(int l) {
-//        ZpPoly zpPoly = ZpPolyFactory.createInstance(type, l);
-//        BigInteger p = zpPoly.getPrime();
-//        BigInteger[] xArray = IntStream.range(0, DEFAULT_NUM / 2)
-//            .mapToObj(index -> BigIntegerUtils.randomNonNegative(p, SECURE_RANDOM))
-//            .toArray(BigInteger[]::new);
-//        BigInteger y = BigIntegerUtils.randomNonNegative(p, SECURE_RANDOM);
-//        BigInteger[] coefficients = zpPoly.rootInterpolate(DEFAULT_NUM, xArray, y);
-//        // 验证多项式结果长度
-//        Assert.assertEquals(zpPoly.rootCoefficientNum(DEFAULT_NUM), coefficients.length);
-//        // 验证求值
-//        testRootEvaluate(zpPoly, coefficients, xArray, y);
-//    }
-//
-//    @Test
-//    public void testRootParallel() {
-//        ZpPoly zpPoly = ZpPolyFactory.createInstance(type, CommonConstants.STATS_BIT_LENGTH);
-//        BigInteger p = zpPoly.getPrime();
-//        ArrayList<BigInteger[]> xArrayList = new ArrayList<>();
-//        ArrayList<BigInteger> yList = new ArrayList<>();
-//        IntStream.range(0, MAX_PARALLEL).forEach(parallel -> {
-//            BigInteger[] xArray = IntStream.range(0, DEFAULT_NUM / 2)
-//                .mapToObj(index -> BigIntegerUtils.randomNonNegative(p, SECURE_RANDOM))
-//                .toArray(BigInteger[]::new);
-//            BigInteger y = BigIntegerUtils.randomNonNegative(p, SECURE_RANDOM);
-//            xArrayList.add(xArray);
-//            yList.add(y);
-//        });
-//        IntStream.range(0, MAX_PARALLEL).parallel().forEach(parallel -> {
-//            BigInteger[] xArray = xArrayList.get(parallel);
-//            BigInteger y = yList.get(parallel);
-//            BigInteger[] coefficients = zpPoly.rootInterpolate(DEFAULT_NUM, xArray, y);
-//            testRootEvaluate(zpPoly, coefficients, xArray, y);
-//        });
-//    }
+
+    @Test
+    public void testRandomFullRootInterpolation() {
+        for (int round = 0; round < MAX_RANDOM_ROUND; round++) {
+            for (int l : L_ARRAY) {
+                testRandomFullRootInterpolation(l);
+            }
+        }
+    }
+
+    private void testRandomFullRootInterpolation(int l) {
+        Zp64Poly zp64Poly = Zp64PolyFactory.createInstance(type, l);
+        long p = zp64Poly.getPrime();
+        long[] xArray = IntStream.range(0, DEFAULT_NUM)
+            .mapToLong(index -> LongUtils.randomNonNegative(p, SECURE_RANDOM))
+            .toArray();
+        long y = LongUtils.randomNonNegative(p, SECURE_RANDOM);
+        long[] coefficients = zp64Poly.rootInterpolate(DEFAULT_NUM, xArray, y);
+        // 验证多项式
+        assertRootCoefficient(zp64Poly, DEFAULT_NUM, coefficients);
+        // 验证求值
+        testRootEvaluate(zp64Poly, coefficients, xArray, y);
+    }
+
+    @Test
+    public void testRandomHalfRootInterpolation() {
+        for (int round = 0; round < MAX_RANDOM_ROUND; round++) {
+            for (int l : L_ARRAY) {
+                testRandomHalfRootInterpolation(l);
+            }
+        }
+    }
+
+    private void testRandomHalfRootInterpolation(int l) {
+        Zp64Poly zp64Poly = Zp64PolyFactory.createInstance(type, l);
+        long p = zp64Poly.getPrime();
+        long[] xArray = IntStream.range(0, DEFAULT_NUM / 2)
+            .mapToLong(index -> LongUtils.randomNonNegative(p, SECURE_RANDOM))
+            .toArray();
+        long y = LongUtils.randomNonNegative(p, SECURE_RANDOM);
+        long[] coefficients = zp64Poly.rootInterpolate(DEFAULT_NUM, xArray, y);
+        // 验证多项式
+        assertRootCoefficient(zp64Poly, DEFAULT_NUM, coefficients);
+        // 验证求值
+        testRootEvaluate(zp64Poly, coefficients, xArray, y);
+    }
+
+    @Test
+    public void testRootParallel() {
+        Zp64Poly zp64Poly = Zp64PolyFactory.createInstance(type, DEFAULT_L);
+        long p = zp64Poly.getPrime();
+        ArrayList<long[]> xArrayList = new ArrayList<>();
+        long[] yArray = new long[MAX_PARALLEL];
+        IntStream.range(0, MAX_PARALLEL).forEach(parallelIndex -> {
+            long[] xArray = IntStream.range(0, DEFAULT_NUM / 2)
+                .mapToLong(index -> LongUtils.randomNonNegative(p, SECURE_RANDOM))
+                .toArray();
+            xArrayList.add(xArray);
+            yArray[parallelIndex] = LongUtils.randomNonNegative(p, SECURE_RANDOM);
+        });
+        IntStream.range(0, MAX_PARALLEL).parallel().forEach(parallelIndex -> {
+            long[] xArray = xArrayList.get(parallelIndex);
+            long y = yArray[parallelIndex];
+            long[] coefficients = zp64Poly.rootInterpolate(DEFAULT_NUM, xArray, y);
+            testRootEvaluate(zp64Poly, coefficients, xArray, y);
+        });
+    }
+
+    @SuppressWarnings("SameParameterValue")
+    private void assertRootCoefficient(Zp64Poly zp64Poly, int num, long[] coefficients) {
+        long p = zp64Poly.getPrime();
+        Assert.assertEquals(zp64Poly.rootCoefficientNum(num), coefficients.length);
+        Arrays.stream(coefficients).forEach(coefficient -> {
+            Assert.assertTrue(coefficient >= 0);
+            Assert.assertTrue(coefficient < p);
+        });
+    }
 
     private void testRootEvaluate(Zp64Poly zp64Poly, long[] coefficients, long[] xArray, long y) {
         // 逐一求值
