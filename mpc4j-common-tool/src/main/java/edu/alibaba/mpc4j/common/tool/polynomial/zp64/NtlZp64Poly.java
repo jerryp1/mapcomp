@@ -5,6 +5,7 @@ import edu.alibaba.mpc4j.common.tool.galoisfield.Zp64.Zp64Manager;
 import edu.alibaba.mpc4j.common.tool.polynomial.zp64.Zp64PolyFactory.Zp64PolyType;
 import edu.alibaba.mpc4j.common.tool.utils.LongUtils;
 
+import java.math.BigInteger;
 import java.security.SecureRandom;
 
 /**
@@ -38,6 +39,13 @@ class NtlZp64Poly implements Zp64Poly {
         secureRandom = new SecureRandom();
     }
 
+    public NtlZp64Poly(long p) {
+        assert BigInteger.valueOf(p).isProbablePrime(CommonConstants.STATS_BIT_LENGTH) : "p is probably not prime: " + p;
+        this.p = p;
+        this.l = LongUtils.ceilLog2(p) - 1;
+        secureRandom = new SecureRandom();
+    }
+
     @Override
     public Zp64PolyType getType() {
         return Zp64PolyType.NTL;
@@ -55,7 +63,7 @@ class NtlZp64Poly implements Zp64Poly {
 
     @Override
     public int coefficientNum(int num) {
-        assert num > 1 : "# of points must be greater than 1: " + num;
+        assert num >= 1 : "# of points must be greater than or equal to 1: " + num;
         return num;
     }
 
@@ -63,7 +71,7 @@ class NtlZp64Poly implements Zp64Poly {
     public long[] interpolate(int num, long[] xArray, long[] yArray) {
         assert xArray.length == yArray.length;
         // 不要求至少有1个插值点，只要求总数量大于1
-        assert num > 1 && xArray.length <= num;
+        assert num >= 1 && xArray.length <= num;
         for (long x : xArray) {
             assert validPoint(x);
         }
@@ -76,14 +84,14 @@ class NtlZp64Poly implements Zp64Poly {
 
     @Override
     public int rootCoefficientNum(int num) {
-        assert num > 1 : "# of points must be greater than 1: " + num;
+        assert num >= 1 : "# of points must be greater than or equal to 1: " + num;
         return num + 1;
     }
 
     @Override
     public long[] rootInterpolate(int num, long[] xArray, long y) {
         // 不要求至少有1个插值点，只要求总数量大于1
-        assert num > 1 && xArray.length <= num;
+        assert num >= 1 && xArray.length <= num;
         if (xArray.length == 0) {
             // 返回随机多项式
             long[] coefficients = new long[num + 1];
@@ -127,8 +135,8 @@ class NtlZp64Poly implements Zp64Poly {
 
     @Override
     public long evaluate(long[] coefficients, long x) {
-        // 至少包含2个系数，每个系数都属于Zp
-        assert coefficients.length > 1;
+        // 至少包含1个系数，每个系数都属于Zp
+        assert coefficients.length >= 1;
         for (long coefficient : coefficients) {
             assert validPoint(coefficient);
         }
@@ -150,8 +158,7 @@ class NtlZp64Poly implements Zp64Poly {
 
     @Override
     public long[] evaluate(long[] coefficients, long[] xArray) {
-        // 至少包含2个系数，每个系数都属于Zp
-        assert coefficients.length > 1;
+        assert coefficients.length >= 1;
         for (long coefficient : coefficients) {
             assert validPoint(coefficient);
         }

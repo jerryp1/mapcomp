@@ -73,4 +73,44 @@ public class Zp64PolyFactory {
                 throw new IllegalArgumentException("Invalid EnvType" + envType.name());
         }
     }
+
+    /**
+     * 创建多项式插值实例。
+     *
+     * @param type 多项式插值类型。
+     * @param p    质数p。
+     * @return 多项式插值实例。
+     */
+    public static Zp64Poly createInstance(Zp64PolyType type, long p) {
+        switch (type) {
+            case NTL:
+                return new NtlZp64Poly(p);
+            case RINGS_NEWTON:
+                return new RingsNewtonZp64Poly(p);
+            case RINGS_LAGRANGE:
+                return new RingsLagrangeZp64Poly(p);
+            default:
+                throw new IllegalArgumentException("Invalid Zp64PolyType: " + type.name());
+        }
+    }
+
+    /**
+     * 创建GF2E多项式插值实例。
+     *
+     * @param envType 环境类型。
+     * @param p       质数p。
+     * @return 多项式插值实例。
+     */
+    public static Zp64Poly createInstance(EnvType envType, long p) {
+        // 所有情况下，牛顿迭代法效率均为最优
+        switch (envType) {
+            case STANDARD:
+            case INLAND:
+            case STANDARD_JDK:
+            case INLAND_JDK:
+                return createInstance(Zp64PolyType.RINGS_NEWTON, p);
+            default:
+                throw new IllegalArgumentException("Invalid EnvType" + envType.name());
+        }
+    }
 }

@@ -90,19 +90,6 @@ public class Gf2ePolyTest {
         Gf2ePoly gf2ePoly = Gf2ePolyFactory.createInstance(type, DEFAULT_L - 1);
         int l = gf2ePoly.getL();
         int byteL = gf2ePoly.getByteL();
-        // 尝试插值1组元素
-        try {
-            byte[][] xArray = IntStream.range(0, 1)
-                .mapToObj(index -> BytesUtils.randomByteArray(l, byteL, SECURE_RANDOM))
-                .toArray(byte[][]::new);
-            byte[][] yArray = IntStream.range(0, 1)
-                .mapToObj(index -> BytesUtils.randomByteArray(l, byteL, SECURE_RANDOM))
-                .toArray(byte[][]::new);
-            gf2ePoly.interpolate(1, xArray, yArray);
-            throw new IllegalStateException("ERROR: successfully dummy interpolate 1 pair");
-        } catch (AssertionError ignored) {
-
-        }
         // 尝试对给定的元素数量少于实际元素数量插值
         try {
             byte[][] xArray = IntStream.range(0, DEFAULT_NUM)
@@ -149,11 +136,10 @@ public class Gf2ePolyTest {
     @Test
     public void testEmptyInterpolation() {
         Gf2ePoly gf2ePoly = Gf2ePolyFactory.createInstance(type, DEFAULT_L);
-        // 不存在真实插值点，也应该可以构建多项式
         byte[][] xArray = new byte[0][];
         byte[][] yArray = new byte[0][];
+        // 没有插值点，但要补充随机点
         byte[][] coefficients = gf2ePoly.interpolate(DEFAULT_NUM, xArray, yArray);
-        // 验证多项式
         assertCoefficients(gf2ePoly, DEFAULT_NUM, coefficients);
     }
 
@@ -162,85 +148,61 @@ public class Gf2ePolyTest {
         Gf2ePoly gf2ePoly = Gf2ePolyFactory.createInstance(type, DEFAULT_L);
         int l = gf2ePoly.getL();
         int byteL = gf2ePoly.getByteL();
-        // 只存在一组插值点，也应该可以构建多项式
         byte[][] xArray = IntStream.range(0, 1)
             .mapToObj(index -> BytesUtils.randomByteArray(l, byteL, SECURE_RANDOM))
             .toArray(byte[][]::new);
         byte[][] yArray = IntStream.range(0, 1)
             .mapToObj(index -> BytesUtils.randomByteArray(l, byteL, SECURE_RANDOM))
             .toArray(byte[][]::new);
-        byte[][] coefficients = gf2ePoly.interpolate(DEFAULT_NUM, xArray, yArray);
-        // 验证多项式
+        // 只有1组插值点
+        byte[][] coefficients = gf2ePoly.interpolate(1, xArray, yArray);
+        assertCoefficients(gf2ePoly, 1, coefficients);
+        assertEvaluate(gf2ePoly, coefficients, xArray, yArray);
+        // 只有1组插值点，但要补充随机点
+        coefficients = gf2ePoly.interpolate(DEFAULT_NUM, xArray, yArray);
         assertCoefficients(gf2ePoly, DEFAULT_NUM, coefficients);
-        // 验证求值
         assertEvaluate(gf2ePoly, coefficients, xArray, yArray);
     }
 
     @Test
-    public void testInterpolation() {
+    public void testConstantInterpolation() {
         for (int l : L_ARRAY) {
-            testInterpolation(l);
+            testConstantInterpolation(l);
         }
     }
 
-    private void testInterpolation(int l) {
+    private void testConstantInterpolation(int l) {
         Gf2ePoly gf2ePoly = Gf2ePolyFactory.createInstance(type, l);
+        int byteL = gf2ePoly.getByteL();
         byte[][] xArray = IntStream.range(0, DEFAULT_NUM / 2)
             .mapToObj(BigInteger::valueOf)
-            .map(x -> BigIntegerUtils.nonNegBigIntegerToByteArray(x, gf2ePoly.getByteL()))
+            .map(x -> BigIntegerUtils.nonNegBigIntegerToByteArray(x, byteL))
             .toArray(byte[][]::new);
         byte[][] yArray = IntStream.range(0, DEFAULT_NUM / 2)
             .mapToObj(BigInteger::valueOf)
-            .map(x -> BigIntegerUtils.nonNegBigIntegerToByteArray(x, gf2ePoly.getByteL()))
+            .map(x -> BigIntegerUtils.nonNegBigIntegerToByteArray(x, byteL))
             .toArray(byte[][]::new);
         byte[][] coefficients = gf2ePoly.interpolate(DEFAULT_NUM, xArray, yArray);
-        // 验证多项式
         assertCoefficients(gf2ePoly, DEFAULT_NUM, coefficients);
-        byte[] zero = new byte[gf2ePoly.getByteL()];
+        assertEvaluate(gf2ePoly, coefficients, xArray, yArray);
+        byte[] zero = new byte[byteL];
         // 多项式仍然过(0,0)点，因此常数项仍然为0，但其他位应该均不为0
         Assert.assertArrayEquals(zero, coefficients[0]);
         IntStream.range(1, coefficients.length).forEach(i ->
             Assert.assertNotEquals(ByteBuffer.wrap(zero), ByteBuffer.wrap(coefficients[i]))
         );
-        // 验证求值
-        assertEvaluate(gf2ePoly, coefficients, xArray, yArray);
     }
 
     @Test
-    public void testRandomFullInterpolation() {
+    public void testRandomInterpolation() {
         for (int round = 0; round < MAX_RANDOM_ROUND; round++) {
             for (int l : L_ARRAY) {
-                testRandomFullInterpolation(l);
+                testRandomInterpolation(l);
             }
         }
     }
 
-    private void testRandomFullInterpolation(int l) {
-        Gf2ePoly gf2ePoly = Gf2ePolyFactory.createInstance(type, l);
-        int byteL = gf2ePoly.getByteL();
-        byte[][] xArray = IntStream.range(0, DEFAULT_NUM)
-            .mapToObj(index -> BytesUtils.randomByteArray(l, byteL, SECURE_RANDOM))
-            .toArray(byte[][]::new);
-        byte[][] yArray = IntStream.range(0, DEFAULT_NUM)
-            .mapToObj(index -> BytesUtils.randomByteArray(l, byteL, SECURE_RANDOM))
-            .toArray(byte[][]::new);
-        byte[][] coefficients = gf2ePoly.interpolate(DEFAULT_NUM, xArray, yArray);
-        // 验证多项式
-        assertCoefficients(gf2ePoly, DEFAULT_NUM, coefficients);
-        // 验证求值
-        assertEvaluate(gf2ePoly, coefficients, xArray, yArray);
-    }
-
-    @Test
-    public void testRandomHalfInterpolation() {
-        for (int round = 0; round < MAX_RANDOM_ROUND; round++) {
-            for (int l : L_ARRAY) {
-                testRandomHalfInterpolation(l);
-            }
-        }
-    }
-
-    private void testRandomHalfInterpolation(int l) {
+    private void testRandomInterpolation(int l) {
         Gf2ePoly gf2ePoly = Gf2ePolyFactory.createInstance(type, l);
         int byteL = gf2ePoly.getByteL();
         byte[][] xArray = IntStream.range(0, DEFAULT_NUM / 2)
@@ -249,10 +211,13 @@ public class Gf2ePolyTest {
         byte[][] yArray = IntStream.range(0, DEFAULT_NUM / 2)
             .mapToObj(index -> BytesUtils.randomByteArray(l, byteL, SECURE_RANDOM))
             .toArray(byte[][]::new);
-        byte[][] coefficients = gf2ePoly.interpolate(DEFAULT_NUM, xArray, yArray);
-        // 验证多项式
+        // 插值一半的点
+        byte[][] coefficients = gf2ePoly.interpolate(DEFAULT_NUM / 2, xArray, yArray);
+        assertCoefficients(gf2ePoly, DEFAULT_NUM / 2, coefficients);
+        assertEvaluate(gf2ePoly, coefficients, xArray, yArray);
+        // 插值一半的点，补充随机点
+        coefficients = gf2ePoly.interpolate(DEFAULT_NUM, xArray, yArray);
         assertCoefficients(gf2ePoly, DEFAULT_NUM, coefficients);
-        // 验证求值
         assertEvaluate(gf2ePoly, coefficients, xArray, yArray);
     }
 
@@ -281,7 +246,6 @@ public class Gf2ePolyTest {
         });
     }
 
-    @SuppressWarnings("SameParameterValue")
     private void assertCoefficients(Gf2ePoly gf2ePoly, int num, byte[][] coefficients) {
         Assert.assertEquals(gf2ePoly.coefficientNum(num), coefficients.length);
         int l = gf2ePoly.getL();
@@ -308,11 +272,10 @@ public class Gf2ePolyTest {
         Gf2ePoly gf2ePoly = Gf2ePolyFactory.createInstance(type, DEFAULT_L);
         int l = gf2ePoly.getL();
         int byteL = gf2ePoly.getByteL();
-        // 不存在真实插值点，也应该可以构建多项式
         byte[][] xArray = new byte[0][];
         byte[] y = BytesUtils.randomByteArray(l, byteL, SECURE_RANDOM);
+        // 没有插值点，但要补充随机点
         byte[][] coefficients = gf2ePoly.rootInterpolate(DEFAULT_NUM, xArray, y);
-        // 验证多项式
         assertRootCoefficients(gf2ePoly, DEFAULT_NUM, coefficients);
     }
 
@@ -326,56 +289,39 @@ public class Gf2ePolyTest {
             .mapToObj(index -> BytesUtils.randomByteArray(l, byteL, SECURE_RANDOM))
             .toArray(byte[][]::new);
         byte[] y = BytesUtils.randomByteArray(l, byteL, SECURE_RANDOM);
-        byte[][] coefficients = gf2ePoly.rootInterpolate(DEFAULT_NUM, xArray, y);
-        // 验证多项式
+        // 只有1组插值点
+        byte[][] coefficients = gf2ePoly.rootInterpolate(1, xArray, y);
+        assertRootCoefficients(gf2ePoly, 1, coefficients);
+        assertRootEvaluate(gf2ePoly, coefficients, xArray, y);
+        // 只有1组插值点，但要补充随机点
+        coefficients = gf2ePoly.rootInterpolate(DEFAULT_NUM, xArray, y);
         assertRootCoefficients(gf2ePoly, DEFAULT_NUM, coefficients);
-        // 验证求值
         assertRootEvaluate(gf2ePoly, coefficients, xArray, y);
     }
 
     @Test
-    public void testRandomFullRootInterpolation() {
+    public void testRandomRootInterpolation() {
         for (int i = 0; i < MAX_RANDOM_ROUND; i++) {
             for (int l : L_ARRAY) {
-                testRandomFullRootInterpolation(l);
+                testRandomRootInterpolation(l);
             }
         }
     }
 
-    private void testRandomFullRootInterpolation(int l) {
-        Gf2ePoly gf2ePoly = Gf2ePolyFactory.createInstance(type, l);
-        int byteL = gf2ePoly.getByteL();
-        byte[][] xArray = IntStream.range(0, DEFAULT_NUM)
-            .mapToObj(index -> BytesUtils.randomByteArray(l, byteL, SECURE_RANDOM))
-            .toArray(byte[][]::new);
-        byte[] y = BytesUtils.randomByteArray(l, byteL, SECURE_RANDOM);
-        byte[][] coefficients = gf2ePoly.rootInterpolate(DEFAULT_NUM, xArray, y);
-        // 验证多项式
-        assertRootCoefficients(gf2ePoly, DEFAULT_NUM, coefficients);
-        // 验证求值
-        assertRootEvaluate(gf2ePoly, coefficients, xArray, y);
-    }
-
-    @Test
-    public void testRandomHalfRootInterpolation() {
-        for (int i = 0; i < MAX_RANDOM_ROUND; i++) {
-            for (int l : L_ARRAY) {
-                testRandomHalfRootInterpolation(l);
-            }
-        }
-    }
-
-    private void testRandomHalfRootInterpolation(int l) {
+    private void testRandomRootInterpolation(int l) {
         Gf2ePoly gf2ePoly = Gf2ePolyFactory.createInstance(type, l);
         int byteL = gf2ePoly.getByteL();
         byte[][] xArray = IntStream.range(0, DEFAULT_NUM / 2)
             .mapToObj(index -> BytesUtils.randomByteArray(l, byteL, SECURE_RANDOM))
             .toArray(byte[][]::new);
         byte[] y = BytesUtils.randomByteArray(l, byteL, SECURE_RANDOM);
-        byte[][] coefficients = gf2ePoly.rootInterpolate(DEFAULT_NUM, xArray, y);
-        // 验证多项式
+        // 插值一半的点
+        byte[][] coefficients = gf2ePoly.rootInterpolate(DEFAULT_NUM / 2, xArray, y);
+        assertRootCoefficients(gf2ePoly, DEFAULT_NUM / 2, coefficients);
+        assertRootEvaluate(gf2ePoly, coefficients, xArray, y);
+        // 插值一半的点，补充随机点
+        coefficients = gf2ePoly.rootInterpolate(DEFAULT_NUM, xArray, y);
         assertRootCoefficients(gf2ePoly, DEFAULT_NUM, coefficients);
-        // 验证求值
         assertRootEvaluate(gf2ePoly, coefficients, xArray, y);
     }
 
@@ -402,7 +348,6 @@ public class Gf2ePolyTest {
         });
     }
 
-    @SuppressWarnings("SameParameterValue")
     private void assertRootCoefficients(Gf2ePoly gf2ePoly, int num, byte[][] coefficients) {
         Assert.assertEquals(gf2ePoly.rootCoefficientNum(num), coefficients.length);
         int l = gf2ePoly.getL();

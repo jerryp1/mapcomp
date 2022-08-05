@@ -15,6 +15,10 @@ class RingsLagrangeZp64Poly extends AbstractRingsZp64Poly {
         super(l);
     }
 
+    RingsLagrangeZp64Poly(long p) {
+        super(p);
+    }
+
     @Override
     public Zp64PolyFactory.Zp64PolyType getType() {
         return Zp64PolyFactory.Zp64PolyType.RINGS_LAGRANGE;

@@ -67,15 +67,14 @@ public class NtlZpPoly implements ZpPoly {
 
     @Override
     public int coefficientNum(int num) {
-        assert num > 1 : "# of points must be greater than 1: " + num;
+        assert num >= 1 : "# of points must be greater than or equal to 1: " + num;
         return num;
     }
 
     @Override
     public BigInteger[] interpolate(int num, BigInteger[] xArray, BigInteger[] yArray) {
         assert xArray.length == yArray.length;
-        // 不要求至少有1个插值点，只要求总数量大于1
-        assert num > 1 && xArray.length <= num;
+        assert num >= 1 && xArray.length <= num;
         for (BigInteger x : xArray) {
             assert validPoint(x);
         }
@@ -92,14 +91,13 @@ public class NtlZpPoly implements ZpPoly {
 
     @Override
     public int rootCoefficientNum(int num) {
-        assert num > 1 : "# of points must be greater than 1: " + num;
+        assert num >= 1 : "# of points must be greater than or equal to 1: " + num;
         return num + 1;
     }
 
     @Override
     public BigInteger[] rootInterpolate(int num, BigInteger[] xArray, BigInteger y) {
-        // 不要求至少有1个插值点，只要求总数量大于1
-        assert num > 1 && xArray.length <= num;
+        assert num >= 1 && xArray.length <= num;
         if (xArray.length == 0) {
             // 返回随机多项式
             BigInteger[] coefficients = new BigInteger[num + 1];
@@ -147,8 +145,7 @@ public class NtlZpPoly implements ZpPoly {
 
     @Override
     public BigInteger evaluate(BigInteger[] coefficients, BigInteger x) {
-        // 至少包含2个系数，每个系数都属于Zp
-        assert coefficients.length > 1;
+        assert coefficients.length >= 1;
         for (BigInteger coefficient : coefficients) {
             validPoint(coefficient);
         }
@@ -175,8 +172,7 @@ public class NtlZpPoly implements ZpPoly {
 
     @Override
     public BigInteger[] evaluate(BigInteger[] coefficients, BigInteger[] xArray) {
-        // 至少包含2个系数，每个系数都属于Zp
-        assert coefficients.length > 1;
+        assert coefficients.length >= 1;
         for (BigInteger coefficient : coefficients) {
             assert validPoint(coefficient);
         }

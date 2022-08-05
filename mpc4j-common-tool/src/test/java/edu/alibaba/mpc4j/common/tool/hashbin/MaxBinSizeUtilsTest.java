@@ -6,8 +6,6 @@ import org.junit.Assert;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -20,7 +18,6 @@ import java.util.Collection;
  */
 @RunWith(Parameterized.class)
 public class MaxBinSizeUtilsTest {
-    private static final Logger LOGGER = LoggerFactory.getLogger(MaxBinSizeUtilsTest.class);
 
     @Parameterized.Parameters(name="{0}")
     public static Collection<Object[]> configurations() {
@@ -58,7 +55,6 @@ public class MaxBinSizeUtilsTest {
     public void testMaxBinSize() {
         int expectK = MaxBinSizeUtils.expectMaxBinSize(n, b);
         int exactK = MaxBinSizeUtils.exactMaxBinSize(n, b);
-        LOGGER.info("n = {}，b = {}，估计值k = {}，准确值k = {}", n, b, expectK, exactK);
         Assert.assertTrue(exactK >= ((double)n / b) && expectK >= exactK);
     }
 }
