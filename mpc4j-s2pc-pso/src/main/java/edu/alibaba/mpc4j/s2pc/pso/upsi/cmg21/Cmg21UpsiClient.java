@@ -8,13 +8,14 @@ import edu.alibaba.mpc4j.common.rpc.utils.DataPacket;
 import edu.alibaba.mpc4j.common.rpc.utils.DataPacketHeader;
 import edu.alibaba.mpc4j.common.tool.CommonConstants;
 import edu.alibaba.mpc4j.common.tool.EnvType;
+import edu.alibaba.mpc4j.common.tool.galoisfield.Zp64.Zp64;
+import edu.alibaba.mpc4j.common.tool.galoisfield.Zp64.Zp64Factory;
 import edu.alibaba.mpc4j.common.tool.hashbin.object.cuckoo.CuckooHashBin;
 import edu.alibaba.mpc4j.common.tool.hashbin.object.cuckoo.CuckooHashBinFactory;
 import edu.alibaba.mpc4j.s2pc.pso.oprf.MpOprfReceiver;
 import edu.alibaba.mpc4j.s2pc.pso.oprf.OprfFactory;
 import edu.alibaba.mpc4j.s2pc.pso.oprf.OprfReceiverOutput;
 import edu.alibaba.mpc4j.s2pc.pso.upsi.AbstractUpsiClient;
-import edu.alibaba.mpc4j.s2pc.pso.upsi.PolynomialUtils;
 
 import java.nio.ByteBuffer;
 import java.security.SecureRandom;
@@ -154,7 +155,7 @@ public class Cmg21UpsiClient<T> extends AbstractUpsiClient<T> {
         Stream<long[][]> stream = parallel ? encodedQuery.stream().parallel() : encodedQuery.stream();
         List<byte[]> queryCiphertextList = stream
             .map(i -> Cmg21UpsiNativeClient.generateQuery(
-                i, encryptionParams.get(0), encryptionParams.get(2), encryptionParams.get(3)))
+                encryptionParams.get(0), encryptionParams.get(2), encryptionParams.get(3), i))
             .flatMap(Collection::stream)
             .collect(Collectors.toList());
         DataPacketHeader clientQueryDataPacketHeader = new DataPacketHeader(
@@ -179,7 +180,7 @@ public class Cmg21UpsiClient<T> extends AbstractUpsiClient<T> {
         stopWatch.start();
         Stream<byte[]> responseStream = parallel ? serverResponse.stream().parallel() : serverResponse.stream();
         List<long[]> decodedResponse = responseStream
-            .map(i -> Cmg21UpsiNativeClient.decodeReply(i, encryptionParams.get(0), encryptionParams.get(3)))
+            .map(i -> Cmg21UpsiNativeClient.decodeReply(encryptionParams.get(0), encryptionParams.get(3), i))
             .collect(Collectors.toList());
         Set<T> intersectionSet = recoverPsiResult(decodedResponse, oprfMap);
         stopWatch.stop();
@@ -304,7 +305,30 @@ public class Cmg21UpsiClient<T> extends AbstractUpsiClient<T> {
         }
         IntStream intStream = parallel ? IntStream.range(0, ciphertextNum).parallel() : IntStream.range(0, ciphertextNum);
         return intStream
-            .mapToObj(i -> PolynomialUtils.computePowers(items[i], params.getPlainModulus(), params.getQueryPowers()))
+            .mapToObj(i -> computePowers(items[i], params.getPlainModulus(), params.getQueryPowers()))
             .collect(Collectors.toCollection(ArrayList::new));
+    }
+
+    /**
+     * 计算幂次方。
+     *
+     * @param base      底数。
+     * @param modulus   模数。
+     * @param exponents 指数。
+     * @return 幂次方。
+     */
+    private long[][] computePowers(long[] base, long modulus, int[] exponents) {
+        Zp64 zp64 = Zp64Factory.createInstance(envType, modulus);
+        long[][] result = new long[exponents.length][];
+        assert exponents[0] == 1;
+        result[0] = base;
+        for (int i = 1; i < exponents.length; i++) {
+            long[] temp = new long[base.length];
+            for (int j = 0; j < base.length; j++) {
+                temp[j] = zp64.mulPow(base[j], exponents[i]);
+            }
+            result[i] = temp;
+        }
+        return result;
     }
 }

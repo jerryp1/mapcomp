@@ -10,26 +10,26 @@ extern "C" {
 /*
  * Class:     edu_alibaba_mpc4j_s2pc_pso_upsi_cmg21_Cmg21UpsiNativeServer
  * Method:    computeEncryptedPowers
- * Signature: (Ljava/util/List;[B[B[[I[II)Ljava/util/List;
+ * Signature: ([B[BLjava/util/List;[[I[II)Ljava/util/List;
  */
 JNIEXPORT jobject JNICALL Java_edu_alibaba_mpc4j_s2pc_pso_upsi_cmg21_Cmg21UpsiNativeServer_computeEncryptedPowers
-  (JNIEnv *, jclass, jobject, jbyteArray, jbyteArray, jobjectArray, jintArray, jint);
+  (JNIEnv *, jclass, jbyteArray, jbyteArray, jobject, jobjectArray, jintArray, jint);
 
 /*
  * Class:     edu_alibaba_mpc4j_s2pc_pso_upsi_cmg21_Cmg21UpsiNativeServer
  * Method:    computeMatches
- * Signature: ([[JLjava/util/List;[B[BI)[B
+ * Signature: ([B[B[[JLjava/util/List;I)[B
  */
 JNIEXPORT jbyteArray JNICALL Java_edu_alibaba_mpc4j_s2pc_pso_upsi_cmg21_Cmg21UpsiNativeServer_computeMatches
-  (JNIEnv *, jclass, jobjectArray, jobject, jbyteArray, jbyteArray, jint);
+  (JNIEnv *, jclass, jbyteArray, jbyteArray, jobjectArray, jobject, jint);
 
 /*
  * Class:     edu_alibaba_mpc4j_s2pc_pso_upsi_cmg21_Cmg21UpsiNativeServer
  * Method:    computeMatchesNaiveMethod
- * Signature: ([[JLjava/util/List;[B[B)[B
+ * Signature: ([B[B[[JLjava/util/List;)[B
  */
 JNIEXPORT jbyteArray JNICALL Java_edu_alibaba_mpc4j_s2pc_pso_upsi_cmg21_Cmg21UpsiNativeServer_computeMatchesNaiveMethod
-  (JNIEnv *, jclass, jobjectArray, jobject, jbyteArray, jbyteArray);
+  (JNIEnv *, jclass, jbyteArray, jbyteArray, jobjectArray, jobject);
 
 #ifdef __cplusplus
 }

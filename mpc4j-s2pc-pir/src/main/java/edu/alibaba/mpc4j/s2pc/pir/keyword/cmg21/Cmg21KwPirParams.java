@@ -229,7 +229,7 @@ public class Cmg21KwPirParams {
      * @param secureRandom 随机状态。
      * @return 哈希桶条目中元素对应的编码数组。
      */
-    public long[] getHashBinEntryEncodedArray(HashBinEntry<byte[]> hashBinEntry, boolean isReceiver,
+    public long[] getHashBinEntryEncodedArray(HashBinEntry<ByteBuffer> hashBinEntry, boolean isReceiver,
                                               SecureRandom secureRandom) {
         long[] encodedArray = new long[itemEncodedSlotSize];
         int bitLength = (BigInteger.valueOf(plainModulus).bitLength()-1) * itemEncodedSlotSize;
@@ -238,7 +238,7 @@ public class Cmg21KwPirParams {
         // 判断是否为空桶
         if (hashBinEntry.getHashIndex() != -1) {
             assert(hashBinEntry.getHashIndex() < 3) : "hash index should be [0, 1, 2]";
-            BigInteger input = BigIntegerUtils.byteArrayToNonNegBigInteger(hashBinEntry.getItem());
+            BigInteger input = BigIntegerUtils.byteArrayToNonNegBigInteger(hashBinEntry.getItem().array());
             input = input.mod(BigInteger.ONE.shiftLeft(CommonConstants.BLOCK_BIT_LENGTH));
             for (int i = 0; i < itemEncodedSlotSize; i++) {
                 encodedArray[i] = input.mod(BigInteger.ONE.shiftLeft(shiftBits)).longValueExact();

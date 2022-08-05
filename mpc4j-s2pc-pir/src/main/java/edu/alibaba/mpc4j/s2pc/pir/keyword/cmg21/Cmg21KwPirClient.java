@@ -10,12 +10,13 @@ import edu.alibaba.mpc4j.common.tool.CommonConstants;
 import edu.alibaba.mpc4j.common.tool.EnvType;
 import edu.alibaba.mpc4j.common.tool.crypto.ecc.Ecc;
 import edu.alibaba.mpc4j.common.tool.crypto.ecc.EccFactory;
+import edu.alibaba.mpc4j.common.tool.galoisfield.Zp64.Zp64;
+import edu.alibaba.mpc4j.common.tool.galoisfield.Zp64.Zp64Factory;
 import edu.alibaba.mpc4j.common.tool.hashbin.object.cuckoo.CuckooHashBin;
 import edu.alibaba.mpc4j.common.tool.hashbin.object.cuckoo.CuckooHashBinFactory;
 import edu.alibaba.mpc4j.common.tool.hashbin.object.cuckoo.CuckooHashBinFactory.CuckooHashBinType;
 import edu.alibaba.mpc4j.common.tool.utils.BigIntegerUtils;
 import edu.alibaba.mpc4j.s2pc.pir.keyword.AbstractKwPirClient;
-import edu.alibaba.mpc4j.s2pc.pir.keyword.PolynomialUtils;
 import org.bouncycastle.crypto.BlockCipher;
 import org.bouncycastle.crypto.CipherParameters;
 import org.bouncycastle.crypto.StreamCipher;
@@ -57,7 +58,7 @@ public class Cmg21KwPirClient<T> extends AbstractKwPirClient<T> {
     /**
      * 无贮存区布谷鸟哈希分桶
      */
-    private CuckooHashBin<byte[]> cuckooHashBin;
+    private CuckooHashBin<ByteBuffer> cuckooHashBin;
     /**
      * 环境类型
      */
@@ -120,14 +121,10 @@ public class Cmg21KwPirClient<T> extends AbstractKwPirClient<T> {
             otherParty().getPartyId(), ownParty().getPartyId()
         );
         List<byte[]> blindPrfPayload = rpc.receive(blindPrfHeader).getPayload();
-        ArrayList<byte[]> keywordPrfOutputArrayList = handleBlindPrf(blindPrfPayload);
-        Map<ByteBuffer, byte[]> prfKeywordMap = IntStream.range(0, clientKeywordSize)
+        ArrayList<ByteBuffer> keywordPrfOutputArrayList = handleBlindPrf(blindPrfPayload);
+        Map<ByteBuffer, ByteBuffer> prfKeywordMap = IntStream.range(0, clientKeywordSize)
             .boxed()
-            .collect(Collectors.toMap(
-                i -> ByteBuffer.wrap(keywordPrfOutputArrayList.get(i)),
-                i -> clientKeywordArrayList.get(i),
-                (a, b) -> b)
-            );
+            .collect(Collectors.toMap(keywordPrfOutputArrayList::get, i -> clientKeywordArrayList.get(i), (a, b) -> b));
         stopWatch.stop();
         long oprfTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
         stopWatch.reset();
@@ -172,7 +169,7 @@ public class Cmg21KwPirClient<T> extends AbstractKwPirClient<T> {
         Stream<long[][]> stream = parallel ? encodedQueryList.stream().parallel() : encodedQueryList.stream();
         List<byte[]> encryptedQueryList = stream
             .map(i -> Cmg21KwPirNativeClient.generateQuery(
-                i, encryptionParamsList.get(0), encryptionParamsList.get(2), encryptionParamsList.get(3)))
+                encryptionParamsList.get(0), encryptionParamsList.get(2), encryptionParamsList.get(3), i))
             .flatMap(Collection::stream)
             .collect(Collectors.toList());
         DataPacketHeader clientQueryDataPacketHeader = new DataPacketHeader(
@@ -204,11 +201,11 @@ public class Cmg21KwPirClient<T> extends AbstractKwPirClient<T> {
         stopWatch.start();
         Stream<byte[]> keywordReplyStream = parallel ? keywordReply.stream().parallel() : keywordReply.stream();
         List<long[]> decryptedKeywordReply = keywordReplyStream
-            .map(i -> Cmg21KwPirNativeClient.decodeReply(i, encryptionParamsList.get(0), encryptionParamsList.get(3)))
+            .map(i -> Cmg21KwPirNativeClient.decodeReply(encryptionParamsList.get(0), encryptionParamsList.get(3), i))
             .collect(Collectors.toList());
         Stream<byte[]> labelReplyStream = parallel ? labelReply.stream().parallel() : labelReply.stream();
         List<long[]> decryptedLabelReply = labelReplyStream
-            .map(i -> Cmg21KwPirNativeClient.decodeReply(i, encryptionParamsList.get(0), encryptionParamsList.get(3)))
+            .map(i -> Cmg21KwPirNativeClient.decodeReply(encryptionParamsList.get(0), encryptionParamsList.get(3), i))
             .collect(Collectors.toList());
         stopWatch.stop();
         long decodeResponseTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
@@ -229,7 +226,7 @@ public class Cmg21KwPirClient<T> extends AbstractKwPirClient<T> {
      * @return 关键词索引PIR结果
      */
     private Map<T, ByteBuffer> recoverPirResult(List<long[]> decryptedKeywordReply, List<long[]> decryptedLabelReply,
-                                                Map<ByteBuffer, byte[]> oprfMap) {
+                                                Map<ByteBuffer, ByteBuffer> oprfMap) {
         Map<T, ByteBuffer> resultMap = new HashMap<>();
         int ciphertextNum = params.getBinNum() / (params.getPolyModulusDegree() / params.getItemEncodedSlotSize());
         int itemPerCiphertext = params.getPolyModulusDegree() / params.getItemEncodedSlotSize();
@@ -265,11 +262,9 @@ public class Cmg21KwPirClient<T> extends AbstractKwPirClient<T> {
                         }
                         byte[] keyBytes = new byte[CommonConstants.BLOCK_BYTE_LENGTH];
                         IntStream.range(0, CommonConstants.BLOCK_BYTE_LENGTH)
-                            .forEach(k -> keyBytes[k] = cuckooHashBin.getHashBinEntry(hashBinIndex).getItem()[k]);
+                            .forEach(k -> keyBytes[k] = cuckooHashBin.getHashBinEntry(hashBinIndex).getItem().array()[k]);
                         resultMap.put(
-                            byteArrayObjectMap.get(
-                                ByteBuffer.wrap(oprfMap.get(
-                                    ByteBuffer.wrap(cuckooHashBin.getHashBinEntry(hashBinIndex).getItem())))),
+                            byteArrayObjectMap.get(oprfMap.get(cuckooHashBin.getHashBinEntry(hashBinIndex).getItem())),
                             ByteBuffer.wrap(labelDecryption(keyBytes, BigIntegerUtils.nonNegBigIntegerToByteArray(label,
                                 labelByteLength + CommonConstants.BLOCK_BYTE_LENGTH)))
                         );
@@ -312,7 +307,7 @@ public class Cmg21KwPirClient<T> extends AbstractKwPirClient<T> {
      * @param hashKeys 哈希算法密钥。
      * @return 布谷鸟哈希分桶是否成功。
      */
-    private boolean generateCuckooHashBin(ArrayList<byte[]> itemList, int binNum, byte[][] hashKeys) {
+    private boolean generateCuckooHashBin(ArrayList<ByteBuffer> itemList, int binNum, byte[][] hashKeys) {
         // 初始化布谷鸟哈希
         cuckooHashBin = createCuckooHashBin(envType, cuckooHashBinType, clientKeywordSize, binNum, hashKeys);
         boolean success = false;
@@ -322,7 +317,7 @@ public class Cmg21KwPirClient<T> extends AbstractKwPirClient<T> {
             success = true;
         }
         // 如果成功，则向布谷鸟哈希的空余位置插入空元素
-        cuckooHashBin.insertPaddingItems(botElementByteBuffer.array());
+        cuckooHashBin.insertPaddingItems(botElementByteBuffer);
         return success;
     }
 
@@ -346,11 +341,9 @@ public class Cmg21KwPirClient<T> extends AbstractKwPirClient<T> {
                 items[i][j] = 0;
             }
         }
-        IntStream intStream = parallel ?
-            IntStream.range(0, ciphertextNum).parallel() : IntStream.range(0, ciphertextNum);
+        IntStream intStream = parallel ? IntStream.range(0, ciphertextNum).parallel() : IntStream.range(0, ciphertextNum);
         return intStream
-            .mapToObj(i ->
-                PolynomialUtils.computePowers(items[i], params.getPlainModulus(), params.getQueryPowers()))
+            .mapToObj(i -> computePowers(items[i], params.getPlainModulus(), params.getQueryPowers()))
             .collect(Collectors.toCollection(ArrayList::new));
     }
 
@@ -360,7 +353,7 @@ public class Cmg21KwPirClient<T> extends AbstractKwPirClient<T> {
      * @param retrievalKeywordArrayList 客户端查询关键词列表。
      * @return 盲化元素。
      */
-    private List<byte[]> generateBlindElements(List<byte[]> retrievalKeywordArrayList) {
+    private List<byte[]> generateBlindElements(List<ByteBuffer> retrievalKeywordArrayList) {
         Ecc ecc = EccFactory.createInstance(envType);
         BigInteger n = ecc.getN();
         inverseBetas = new BigInteger[retrievalKeywordArrayList.size()];
@@ -372,7 +365,7 @@ public class Cmg21KwPirClient<T> extends AbstractKwPirClient<T> {
                 BigInteger beta = BigIntegerUtils.randomPositive(n, secureRandom);
                 inverseBetas[index] = beta.modInverse(n);
                 // hash to point
-                ECPoint element = ecc.hashToCurve(retrievalKeywordArrayList.get(index));
+                ECPoint element = ecc.hashToCurve(retrievalKeywordArrayList.get(index).array());
                 // 盲化
                 return ecc.multiply(element, beta);
             })
@@ -387,13 +380,13 @@ public class Cmg21KwPirClient<T> extends AbstractKwPirClient<T> {
      * @return 元素PRF。
      * @throws MpcAbortException 如果协议异常中止。
      */
-    private ArrayList<byte[]> handleBlindPrf(List<byte[]> blindPrf) throws MpcAbortException {
+    private ArrayList<ByteBuffer> handleBlindPrf(List<byte[]> blindPrf) throws MpcAbortException {
         MpcAbortPreconditions.checkArgument(blindPrf.size() == clientKeywordArrayList.size());
         byte[][] blindPrfArray = blindPrf.toArray(new byte[0][]);
         Ecc ecc = EccFactory.createInstance(envType);
         IntStream batchIntStream = IntStream.range(0, clientKeywordSize);
         batchIntStream = parallel ? batchIntStream.parallel() : batchIntStream;
-        byte[][] bytes = batchIntStream
+        ByteBuffer[] byteBuffers = batchIntStream
             .mapToObj(index -> {
                 // 解码
                 ECPoint element = ecc.decode(blindPrfArray[index]);
@@ -401,11 +394,32 @@ public class Cmg21KwPirClient<T> extends AbstractKwPirClient<T> {
                 return ecc.multiply(element, inverseBetas[index]);
             })
             .map(element -> ecc.encode(element, true))
-            .toArray(byte[][]::new);
-        IntStream intStream = parallel ?
-            IntStream.range(0, clientKeywordSize).parallel() : IntStream.range(0, clientKeywordSize);
-        return intStream
-            .mapToObj(i -> bytes[i])
+            .map(ByteBuffer::wrap)
+            .toArray(ByteBuffer[]::new);
+        return Arrays.stream(byteBuffers, 0, clientKeywordSize)
             .collect(Collectors.toCollection(ArrayList::new));
+    }
+
+    /**
+     * 计算幂次方。
+     *
+     * @param base      底数。
+     * @param modulus   模数。
+     * @param exponents 指数。
+     * @return 幂次方。
+     */
+    private long[][] computePowers(long[] base, long modulus, int[] exponents) {
+        Zp64 zp64 = Zp64Factory.createInstance(envType, modulus);
+        long[][] result = new long[exponents.length][];
+        assert exponents[0] == 1;
+        result[0] = base;
+        for (int i = 1; i < exponents.length; i++) {
+            long[] temp = new long[base.length];
+            for (int j = 0; j < base.length; j++) {
+                temp[j] = zp64.mulPow(base[j], exponents[i]);
+            }
+            result[i] = temp;
+        }
+        return result;
     }
 }

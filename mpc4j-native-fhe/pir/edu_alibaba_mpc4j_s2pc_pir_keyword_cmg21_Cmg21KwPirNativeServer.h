@@ -10,26 +10,26 @@ extern "C" {
 /*
  * Class:     edu_alibaba_mpc4j_s2pc_pir_keyword_cmg21_Cmg21KwPirNativeServer
  * Method:    computeEncryptedPowers
- * Signature: (Ljava/util/List;[B[B[[I[II)Ljava/util/List;
+ * Signature: ([B[BLjava/util/List;[[I[II)Ljava/util/List;
  */
 JNIEXPORT jobject JNICALL Java_edu_alibaba_mpc4j_s2pc_pir_keyword_cmg21_Cmg21KwPirNativeServer_computeEncryptedPowers
-  (JNIEnv *, jclass, jobject, jbyteArray, jbyteArray, jobjectArray, jintArray, jint);
+  (JNIEnv *, jclass, jbyteArray, jbyteArray, jobject, jobjectArray, jintArray, jint);
 
 /*
  * Class:     edu_alibaba_mpc4j_s2pc_pir_keyword_cmg21_Cmg21KwPirNativeServer
  * Method:    computeMatches
- * Signature: ([[JLjava/util/List;[B[B[BI)[B
+ * Signature: ([B[B[B[[JLjava/util/List;I)[B
  */
 JNIEXPORT jbyteArray JNICALL Java_edu_alibaba_mpc4j_s2pc_pir_keyword_cmg21_Cmg21KwPirNativeServer_computeMatches
-  (JNIEnv *, jclass, jobjectArray, jobject, jbyteArray, jbyteArray, jbyteArray, jint);
+  (JNIEnv *, jclass, jbyteArray, jbyteArray, jbyteArray, jobjectArray, jobject, jint);
 
 /*
  * Class:     edu_alibaba_mpc4j_s2pc_pir_keyword_cmg21_Cmg21KwPirNativeServer
  * Method:    computeMatchesNaiveMethod
- * Signature: ([[JLjava/util/List;[B[B[B)[B
+ * Signature: ([B[B[B[[JLjava/util/List;)[B
  */
 JNIEXPORT jbyteArray JNICALL Java_edu_alibaba_mpc4j_s2pc_pir_keyword_cmg21_Cmg21KwPirNativeServer_computeMatchesNaiveMethod
-  (JNIEnv *, jclass, jobjectArray, jobject, jbyteArray, jbyteArray, jbyteArray);
+  (JNIEnv *, jclass, jbyteArray, jbyteArray, jbyteArray, jobjectArray, jobject);
 
 #ifdef __cplusplus
 }

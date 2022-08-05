@@ -13,11 +13,12 @@ import edu.alibaba.mpc4j.common.tool.hashbin.object.RandomPadHashBin;
 import edu.alibaba.mpc4j.common.tool.hashbin.object.cuckoo.CuckooHashBinFactory;
 import edu.alibaba.mpc4j.common.tool.polynomial.power.PowerNode;
 import edu.alibaba.mpc4j.common.tool.polynomial.power.PowerUtils;
+import edu.alibaba.mpc4j.common.tool.polynomial.zp64.Zp64Poly;
+import edu.alibaba.mpc4j.common.tool.polynomial.zp64.Zp64PolyFactory;
 import edu.alibaba.mpc4j.s2pc.pso.oprf.MpOprfSender;
 import edu.alibaba.mpc4j.s2pc.pso.oprf.MpOprfSenderOutput;
 import edu.alibaba.mpc4j.s2pc.pso.oprf.OprfFactory;
 import edu.alibaba.mpc4j.s2pc.pso.upsi.AbstractUpsiServer;
-import edu.alibaba.mpc4j.s2pc.pso.upsi.PolynomialUtils;
 
 import java.nio.ByteBuffer;
 import java.util.*;
@@ -206,6 +207,7 @@ public class Cmg21UpsiServer<T> extends AbstractUpsiServer<T> {
      * @return 编码后的数据库（明文多项式的系数）。
      */
     private List<long[][]> encodeDatabase(List<ArrayList<HashBinEntry<ByteBuffer>>> hashBins, int binSize) {
+        Zp64Poly zp64Poly = Zp64PolyFactory.createInstance(envType, (long) params.getPlainModulus());
         int itemPerCiphertext = params.getPolyModulusDegree() / params.getItemEncodedSlotSize();
         int ciphertextNum = params.getBinNum() / (params.getPolyModulusDegree() / params.getItemEncodedSlotSize());
         // we will split the hash table into partitions
@@ -239,7 +241,7 @@ public class Cmg21UpsiServer<T> extends AbstractUpsiServer<T> {
                     long[] tempVector = new long[partitionSize];
                     System.arraycopy(encodedItemArray[finalI * itemPerCiphertext * params.getItemEncodedSlotSize() + j],
                         partitionStart, tempVector, 0, partitionSize);
-                    coeffs[j] = PolynomialUtils.polynomialFromRoots(tempVector, params.getPlainModulus());
+                    coeffs[j] = zp64Poly.rootInterpolate(partitionSize, tempVector, 0L);
                 });
                 // 转换为列编码
                 long[][] temp = new long[partitionSize + 1][params.getPolyModulusDegree()];
@@ -318,9 +320,9 @@ public class Cmg21UpsiServer<T> extends AbstractUpsiServer<T> {
             IntStream.range(0, ciphertextNum).parallel() : IntStream.range(0, ciphertextNum);
         List<byte[]> queryPowers = queryIntStream
             .mapToObj(i -> Cmg21UpsiNativeServer.computeEncryptedPowers(
-                ciphertextPoly.subList(i * params.getQueryPowers().length, (i + 1) * params.getQueryPowers().length),
-                encryptionParams.get(1),
                 encryptionParams.get(0),
+                encryptionParams.get(1),
+                ciphertextPoly.subList(i * params.getQueryPowers().length, (i + 1) * params.getQueryPowers().length),
                 powerDegree,
                 params.getQueryPowers(),
                 params.getPsLowDegree())
@@ -332,10 +334,10 @@ public class Cmg21UpsiServer<T> extends AbstractUpsiServer<T> {
                 .mapToObj(i ->
                     (parallel ? IntStream.range(0, partitionCount).parallel() : IntStream.range(0, partitionCount))
                         .mapToObj(j -> Cmg21UpsiNativeServer.computeMatches(
+                            encryptionParams.get(0),
+                            encryptionParams.get(1),
                             plaintextPoly.get(i * partitionCount + j),
                             queryPowers.subList(i * powerDegree.length, (i + 1) * powerDegree.length),
-                            encryptionParams.get(1),
-                            encryptionParams.get(0),
                             params.getPsLowDegree())
                         )
                         .toArray(byte[][]::new))
@@ -346,10 +348,11 @@ public class Cmg21UpsiServer<T> extends AbstractUpsiServer<T> {
                 .mapToObj(i ->
                     (parallel ? IntStream.range(0, partitionCount).parallel() : IntStream.range(0, partitionCount))
                         .mapToObj(j -> Cmg21UpsiNativeServer.computeMatchesNaiveMethod(
-                            plaintextPoly.get(i * partitionCount + j),
-                            queryPowers.subList(i * powerDegree.length, (i + 1) * powerDegree.length),
+                            encryptionParams.get(0),
                             encryptionParams.get(1),
-                            encryptionParams.get(0))
+                            plaintextPoly.get(i * partitionCount + j),
+                            queryPowers.subList(i * powerDegree.length, (i + 1) * powerDegree.length)
+                            )
                         )
                         .toArray(byte[][]::new))
                 .flatMap(Arrays::stream)

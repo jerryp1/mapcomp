@@ -26,7 +26,7 @@ public abstract class AbstractKwPirServer<T> extends AbstractSecureTwoPartyPto i
     /**
      * 服务端关键词数组
      */
-    protected ArrayList<byte[]> serverKeywordArrayList;
+    protected ArrayList<ByteBuffer> serverKeywordArrayList;
     /**
      * 关键词字节数组和关键词对象映射
      */
@@ -77,8 +77,9 @@ public abstract class AbstractKwPirServer<T> extends AbstractSecureTwoPartyPto i
         }
         this.serverKeywordArrayList = serverElementSet.stream()
             .map(ObjectUtils::objectToByteArray)
+            .map(ByteBuffer::wrap)
             .peek(serverElement -> {
-                assert !ByteBuffer.wrap(serverElement).equals(botElementByteBuffer) : "input equals ⊥";
+                assert !serverElement.equals(botElementByteBuffer) : "input equals ⊥";
             })
             .collect(Collectors.toCollection(ArrayList::new));
         this.byteArrayObjectMap = new HashMap<>(this.serverKeywordSize);
