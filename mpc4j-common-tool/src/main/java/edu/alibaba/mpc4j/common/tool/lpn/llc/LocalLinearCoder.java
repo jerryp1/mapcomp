@@ -7,7 +7,9 @@ import edu.alibaba.mpc4j.common.tool.crypto.prp.PrpFactory;
 import edu.alibaba.mpc4j.common.tool.utils.BinaryUtils;
 import edu.alibaba.mpc4j.common.tool.utils.BytesUtils;
 import edu.alibaba.mpc4j.common.tool.utils.CommonUtils;
+import sun.misc.Unsafe;
 
+import java.lang.reflect.Field;
 import java.nio.ByteBuffer;
 import java.util.Arrays;
 import java.util.stream.IntStream;
@@ -23,6 +25,22 @@ import java.util.stream.IntStream;
  * @date 2022/01/31
  */
 public class LocalLinearCoder {
+    /**
+     * 不安全转换函数，参见https://stackoverflow.com/questions/43079234/convert-a-byte-array-into-an-int-array-in-java
+     */
+    private static final Unsafe UNSAFE;
+
+    static {
+        try {
+            Field theUnsafe = Unsafe.class.getDeclaredField("theUnsafe");
+            theUnsafe.setAccessible(true);
+            UNSAFE = (Unsafe) theUnsafe.get(null);
+        } catch (NoSuchFieldException | IllegalAccessException e) {
+            e.printStackTrace();
+            throw new IllegalStateException(e);
+        }
+    }
+
     /**
      * 编码输出行数
      */
@@ -99,18 +117,25 @@ public class LocalLinearCoder {
             ByteBuffer indexByteBuffer = ByteBuffer.allocate(
                 CommonConstants.BLOCK_BYTE_LENGTH * LocalLinearCoderUtils.RANDOM_BLOCK_NUM
             );
+            // 不重复分配内存
+            ByteBuffer blockByteBuffer = ByteBuffer.allocate(CommonConstants.BLOCK_BYTE_LENGTH);
             for (int blockIndex = 0; blockIndex < LocalLinearCoderUtils.RANDOM_BLOCK_NUM; blockIndex++) {
-                byte[] block = ByteBuffer.allocate(CommonConstants.BLOCK_BYTE_LENGTH)
-                    // tmp[m] = makeBlock(i, m)
+                // tmp[m] = makeBlock(i, m)
+                byte[] block = blockByteBuffer
                     .putInt(0, index)
                     .putInt(CommonConstants.BLOCK_BYTE_LENGTH / 2, blockIndex)
                     .array();
                 // prp->permute_block(tmp, 3)
                 indexByteBuffer.put(prp.prp(block));
             }
+            byte[] indexBytes = indexByteBuffer.array();
+            int[] encode = new int[LocalLinearCoderUtils.RANDOM_INT_NUM];
+            UNSAFE.copyMemory(
+                indexBytes, Unsafe.ARRAY_BYTE_BASE_OFFSET, encode, Unsafe.ARRAY_INT_BASE_OFFSET, indexBytes.length
+            );
             // uint32_t* r = (uint32_t*)(tmp)
             for (int j = 0; j < LocalLinearCoderUtils.D; j++) {
-                int position = Math.abs(indexByteBuffer.getInt(j * Integer.BYTES) % k);
+                int position = Math.abs(encode[j] % k);
                 outputs[index] ^= inputs[position];
             }
         });
@@ -136,19 +161,26 @@ public class LocalLinearCoder {
                 ByteBuffer indexByteBuffer = ByteBuffer.allocate(
                     CommonConstants.BLOCK_BYTE_LENGTH * LocalLinearCoderUtils.RANDOM_BLOCK_NUM
                 );
+                // 不重复分配内存
+                ByteBuffer blockByteBuffer = ByteBuffer.allocate(CommonConstants.BLOCK_BYTE_LENGTH);
                 for (int blockIndex = 0; blockIndex < LocalLinearCoderUtils.RANDOM_BLOCK_NUM; blockIndex++) {
-                    byte[] block = ByteBuffer.allocate(CommonConstants.BLOCK_BYTE_LENGTH)
-                        // tmp[m] = makeBlock(i, m)
+                    // tmp[m] = makeBlock(i, m)
+                    byte[] block = blockByteBuffer
                         .putInt(0, index)
                         .putInt(CommonConstants.BLOCK_BYTE_LENGTH / 2, blockIndex)
                         .array();
                     // prp->permute_block(tmp, 3)
                     indexByteBuffer.put(prp.prp(block));
                 }
+                byte[] indexBytes = indexByteBuffer.array();
+                int[] encode = new int[LocalLinearCoderUtils.RANDOM_INT_NUM];
+                UNSAFE.copyMemory(
+                    indexBytes, Unsafe.ARRAY_BYTE_BASE_OFFSET, encode, Unsafe.ARRAY_INT_BASE_OFFSET, indexBytes.length
+                );
                 // uint32_t* r = (uint32_t*)(tmp)
                 byte[] output = new byte[CommonConstants.BLOCK_BYTE_LENGTH];
                 for (int j = 0; j < LocalLinearCoderUtils.D; j++) {
-                    int position = Math.abs(indexByteBuffer.getInt(j * Integer.BYTES) % k);
+                    int position = Math.abs(encode[j] % k);
                     BytesUtils.xori(output, inputs[position]);
                 }
                 return output;
@@ -173,18 +205,25 @@ public class LocalLinearCoder {
             ByteBuffer indexByteBuffer = ByteBuffer.allocate(
                 CommonConstants.BLOCK_BYTE_LENGTH * LocalLinearCoderUtils.RANDOM_BLOCK_NUM
             );
+            // 不重复分配内存
+            ByteBuffer blockByteBuffer = ByteBuffer.allocate(CommonConstants.BLOCK_BYTE_LENGTH);
             for (int blockIndex = 0; blockIndex < LocalLinearCoderUtils.RANDOM_BLOCK_NUM; blockIndex++) {
-                byte[] block = ByteBuffer.allocate(CommonConstants.BLOCK_BYTE_LENGTH)
-                    // tmp[m] = makeBlock(i, m)
+                // tmp[m] = makeBlock(i, m)
+                byte[] block = blockByteBuffer
                     .putInt(0, index)
                     .putInt(CommonConstants.BLOCK_BYTE_LENGTH / 2, blockIndex)
                     .array();
                 // prp->permute_block(tmp, 3)
                 indexByteBuffer.put(prp.prp(block));
             }
+            byte[] indexBytes = indexByteBuffer.array();
+            int[] encode = new int[LocalLinearCoderUtils.RANDOM_INT_NUM];
+            UNSAFE.copyMemory(
+                indexBytes, Unsafe.ARRAY_BYTE_BASE_OFFSET, encode, Unsafe.ARRAY_INT_BASE_OFFSET, indexBytes.length
+            );
             // uint32_t* r = (uint32_t*)(tmp)
             for (int j = 0; j < LocalLinearCoderUtils.D; j++) {
-                int position = Math.abs(indexByteBuffer.getInt(j * Integer.BYTES) % k);
+                int position = Math.abs(encode[j] % k);
                 outputs[index] ^= BinaryUtils.getBoolean(inputs, offsetK + position);
             }
         });

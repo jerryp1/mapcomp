@@ -24,4 +24,8 @@ class LocalLinearCoderUtils {
      * 生成d个随机整数所需要的分组数量
      */
     static final int RANDOM_BLOCK_NUM = (int)Math.ceil((double)D * Integer.BYTES / CommonConstants.BLOCK_BYTE_LENGTH);
+    /**
+     * 随机分组对应的整数数量
+     */
+    static final int RANDOM_INT_NUM = RANDOM_BLOCK_NUM * CommonConstants.BLOCK_BYTE_LENGTH / Integer.BYTES;
 }
