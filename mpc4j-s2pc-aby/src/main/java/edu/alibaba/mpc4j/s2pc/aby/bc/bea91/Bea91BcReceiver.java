@@ -9,9 +9,9 @@ import edu.alibaba.mpc4j.common.rpc.utils.DataPacketHeader;
 import edu.alibaba.mpc4j.common.tool.utils.BytesUtils;
 import edu.alibaba.mpc4j.s2pc.aby.bc.AbstractBcParty;
 import edu.alibaba.mpc4j.s2pc.aby.bc.BcBitVector;
-import edu.alibaba.mpc4j.s2pc.pcg.btg.BooleanTriple;
-import edu.alibaba.mpc4j.s2pc.pcg.btg.BtgFactory;
-import edu.alibaba.mpc4j.s2pc.pcg.btg.BtgParty;
+import edu.alibaba.mpc4j.s2pc.pcg.mtg.z2.Z2Triple;
+import edu.alibaba.mpc4j.s2pc.pcg.mtg.z2.Z2MtgFactory;
+import edu.alibaba.mpc4j.s2pc.pcg.mtg.z2.Z2MtgParty;
 
 import java.util.LinkedList;
 import java.util.List;
@@ -27,11 +27,11 @@ public class Bea91BcReceiver extends AbstractBcParty {
     /**
      * BTG协议服务端
      */
-    private final BtgParty btgReceiver;
+    private final Z2MtgParty btgReceiver;
 
     public Bea91BcReceiver(Rpc receiverRpc, Party senderParty, Bea91BcConfig config) {
         super(Bea91BcPtoDesc.getInstance(), receiverRpc, senderParty, config);
-        btgReceiver = BtgFactory.createReceiver(receiverRpc, senderParty, config.getBtgConfig());
+        btgReceiver = Z2MtgFactory.createReceiver(receiverRpc, senderParty, config.getBtgConfig());
         btgReceiver.addLogLevel();
     }
 
@@ -85,7 +85,7 @@ public class Bea91BcReceiver extends AbstractBcParty {
             info("{}{} Recv. begin", ptoBeginLogPrefix, getPtoDesc().getPtoName());
 
             stopWatch.start();
-            BooleanTriple booleanTriple = btgReceiver.generate(num);
+            Z2Triple booleanTriple = btgReceiver.generate(num);
             stopWatch.stop();
             long btgTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
             stopWatch.reset();

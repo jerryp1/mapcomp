@@ -9,8 +9,8 @@ import edu.alibaba.mpc4j.common.tool.okve.ovdm.gf2e.Gf2eOvdmFactory.Gf2eOvdmType
 import edu.alibaba.mpc4j.s2pc.aby.bc.BcConfig;
 import edu.alibaba.mpc4j.s2pc.aby.bc.BcFactory;
 import edu.alibaba.mpc4j.s2pc.aby.bc.bea91.Bea91BcConfig;
-import edu.alibaba.mpc4j.s2pc.pcg.btg.BtgConfig;
-import edu.alibaba.mpc4j.s2pc.pcg.btg.impl.file.FileBtgConfig;
+import edu.alibaba.mpc4j.s2pc.pcg.mtg.z2.Z2MtgConfig;
+import edu.alibaba.mpc4j.s2pc.pcg.mtg.z2.impl.file.FileZ2MtgConfig;
 import edu.alibaba.mpc4j.s2pc.pcg.ot.cot.impl.cache.CacheCotConfig;
 import edu.alibaba.mpc4j.s2pc.pcg.ot.cot.impl.rto.RtoCotConfig;
 import edu.alibaba.mpc4j.s2pc.pcg.ot.cot.rcot.RcotConfig;
@@ -135,9 +135,9 @@ public class PsuConfigUtils {
             properties.getProperty("ignore_btg"), "Please set ignore_btg"
         ));
         if (ignoreBtg) {
-            BtgConfig fileBtgConfig = new FileBtgConfig.Builder(SecurityModel.SEMI_HONEST).build();
+            Z2MtgConfig fileZ2MtgConfig = new FileZ2MtgConfig.Builder(SecurityModel.SEMI_HONEST).build();
             BcConfig fileBcConfig = new Bea91BcConfig.Builder()
-                .setBtgConfig(fileBtgConfig)
+                .setBtgConfig(fileZ2MtgConfig)
                 .build();
             OprpConfig fileOprpConfig = new LowMcOprpConfig.Builder()
                 .setBcConfig(fileBcConfig)

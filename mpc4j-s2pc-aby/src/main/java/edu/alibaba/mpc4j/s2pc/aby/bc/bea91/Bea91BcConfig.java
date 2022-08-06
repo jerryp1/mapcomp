@@ -4,8 +4,8 @@ import edu.alibaba.mpc4j.common.rpc.desc.SecurityModel;
 import edu.alibaba.mpc4j.common.tool.EnvType;
 import edu.alibaba.mpc4j.s2pc.aby.bc.BcConfig;
 import edu.alibaba.mpc4j.s2pc.aby.bc.BcFactory;
-import edu.alibaba.mpc4j.s2pc.pcg.btg.BtgConfig;
-import edu.alibaba.mpc4j.s2pc.pcg.btg.BtgFactory;
+import edu.alibaba.mpc4j.s2pc.pcg.mtg.z2.Z2MtgConfig;
+import edu.alibaba.mpc4j.s2pc.pcg.mtg.z2.Z2MtgFactory;
 
 /**
  * Beaver91-BC协议配置项。
@@ -17,14 +17,14 @@ public class Bea91BcConfig implements BcConfig {
     /**
      * BTG协议
      */
-    private final BtgConfig btgConfig;
+    private final Z2MtgConfig z2MtgConfig;
 
     private Bea91BcConfig(Builder builder) {
-        btgConfig = builder.btgConfig;
+        z2MtgConfig = builder.z2MtgConfig;
     }
 
-    public BtgConfig getBtgConfig() {
-        return btgConfig;
+    public Z2MtgConfig getBtgConfig() {
+        return z2MtgConfig;
     }
 
     @Override
@@ -34,19 +34,19 @@ public class Bea91BcConfig implements BcConfig {
 
     @Override
     public int maxBaseNum() {
-        return btgConfig.maxBaseNum();
+        return z2MtgConfig.maxBaseNum();
     }
 
     @Override
     public EnvType getEnvType() {
-        return btgConfig.getEnvType();
+        return z2MtgConfig.getEnvType();
     }
 
     @Override
     public SecurityModel getSecurityModel() {
         SecurityModel securityModel = SecurityModel.SEMI_HONEST;
-        if (btgConfig.getSecurityModel().compareTo(securityModel) < 0) {
-            securityModel = btgConfig.getSecurityModel();
+        if (z2MtgConfig.getSecurityModel().compareTo(securityModel) < 0) {
+            securityModel = z2MtgConfig.getSecurityModel();
         }
         return securityModel;
     }
@@ -55,14 +55,14 @@ public class Bea91BcConfig implements BcConfig {
         /**
          * BTG协议配置项
          */
-        private BtgConfig btgConfig;
+        private Z2MtgConfig z2MtgConfig;
 
         public Builder() {
-            btgConfig = BtgFactory.createDefaultConfig(SecurityModel.SEMI_HONEST);
+            z2MtgConfig = Z2MtgFactory.createDefaultConfig(SecurityModel.SEMI_HONEST);
         }
 
-        public Builder setBtgConfig(BtgConfig btgConfig) {
-            this.btgConfig = btgConfig;
+        public Builder setBtgConfig(Z2MtgConfig z2MtgConfig) {
+            this.z2MtgConfig = z2MtgConfig;
             return this;
         }
 

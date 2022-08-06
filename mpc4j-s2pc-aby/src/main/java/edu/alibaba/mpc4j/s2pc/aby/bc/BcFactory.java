@@ -6,7 +6,7 @@ import edu.alibaba.mpc4j.common.rpc.desc.SecurityModel;
 import edu.alibaba.mpc4j.s2pc.aby.bc.bea91.Bea91BcConfig;
 import edu.alibaba.mpc4j.s2pc.aby.bc.bea91.Bea91BcReceiver;
 import edu.alibaba.mpc4j.s2pc.aby.bc.bea91.Bea91BcSender;
-import edu.alibaba.mpc4j.s2pc.pcg.btg.BtgFactory;
+import edu.alibaba.mpc4j.s2pc.pcg.mtg.z2.Z2MtgFactory;
 
 /**
  * 布尔电路工厂。
@@ -84,11 +84,11 @@ public class BcFactory {
         switch (securityModel) {
             case IDEAL:
                 return new Bea91BcConfig.Builder()
-                    .setBtgConfig(BtgFactory.createDefaultConfig(SecurityModel.IDEAL))
+                    .setBtgConfig(Z2MtgFactory.createDefaultConfig(SecurityModel.IDEAL))
                     .build();
             case SEMI_HONEST:
                 return new Bea91BcConfig.Builder()
-                    .setBtgConfig(BtgFactory.createDefaultConfig(SecurityModel.SEMI_HONEST))
+                    .setBtgConfig(Z2MtgFactory.createDefaultConfig(SecurityModel.SEMI_HONEST))
                     .build();
             case COVERT:
             case MALICIOUS:

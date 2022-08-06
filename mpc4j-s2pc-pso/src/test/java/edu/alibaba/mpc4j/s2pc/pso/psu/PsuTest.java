@@ -12,8 +12,8 @@ import edu.alibaba.mpc4j.common.tool.okve.ovdm.ecc.EccOvdmFactory.EccOvdmType;
 import edu.alibaba.mpc4j.common.tool.okve.ovdm.gf2e.Gf2eOvdmFactory.Gf2eOvdmType;
 import edu.alibaba.mpc4j.s2pc.aby.bc.BcConfig;
 import edu.alibaba.mpc4j.s2pc.aby.bc.bea91.Bea91BcConfig;
-import edu.alibaba.mpc4j.s2pc.pcg.btg.BtgConfig;
-import edu.alibaba.mpc4j.s2pc.pcg.btg.impl.file.FileBtgConfig;
+import edu.alibaba.mpc4j.s2pc.pcg.mtg.z2.Z2MtgConfig;
+import edu.alibaba.mpc4j.s2pc.pcg.mtg.z2.impl.file.FileZ2MtgConfig;
 import edu.alibaba.mpc4j.s2pc.pcg.ot.cot.impl.rto.RtoCotConfig;
 import edu.alibaba.mpc4j.s2pc.pso.PsoUtils;
 import edu.alibaba.mpc4j.s2pc.pso.oprp.OprpConfig;
@@ -162,8 +162,8 @@ public class PsuTest {
             new Zcl22SkePsuConfig.Builder().setGf2eOvdmType(Gf2eOvdmType.H2_SINGLETON_GCT).build(),
         });
         // ZCL22_SKE (file BTG)
-        BtgConfig fileBtgConfig = new FileBtgConfig.Builder(SecurityModel.SEMI_HONEST).build();
-        BcConfig fileBcConfig = new Bea91BcConfig.Builder().setBtgConfig(fileBtgConfig).build();
+        Z2MtgConfig fileZ2MtgConfig = new FileZ2MtgConfig.Builder(SecurityModel.SEMI_HONEST).build();
+        BcConfig fileBcConfig = new Bea91BcConfig.Builder().setBtgConfig(fileZ2MtgConfig).build();
         OprpConfig fileOprpConfig = new LowMcOprpConfig.Builder().setBcConfig(fileBcConfig).build();
         configurationParams.add(new Object[] {
             PsuFactory.PsuType.ZCL22_SKE.name() + " (File BTG)",
