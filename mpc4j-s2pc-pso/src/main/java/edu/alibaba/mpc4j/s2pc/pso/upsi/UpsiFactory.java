@@ -5,7 +5,6 @@ import edu.alibaba.mpc4j.common.rpc.Rpc;
 import edu.alibaba.mpc4j.common.rpc.desc.SecurityModel;
 import edu.alibaba.mpc4j.s2pc.pso.upsi.cmg21.Cmg21UpsiClient;
 import edu.alibaba.mpc4j.s2pc.pso.upsi.cmg21.Cmg21UpsiConfig;
-import edu.alibaba.mpc4j.s2pc.pso.upsi.cmg21.Cmg21UpsiParams;
 import edu.alibaba.mpc4j.s2pc.pso.upsi.cmg21.Cmg21UpsiServer;
 
 /**
@@ -42,10 +41,13 @@ public class UpsiFactory {
      */
     public static <T> UpsiServer<T> createServer(Rpc serverRpc, Party clientParty, UpsiConfig config) {
         UpsiType type = config.getPtoType();
-        if (type == UpsiType.CMG21) {
-            return new Cmg21UpsiServer<>(serverRpc, clientParty, (Cmg21UpsiConfig) config);
+        //noinspection SwitchStatementWithTooFewBranches
+        switch (type) {
+            case CMG21:
+                return new Cmg21UpsiServer<>(serverRpc, clientParty, (Cmg21UpsiConfig) config);
+            default:
+                throw new IllegalArgumentException("Invalid " + UpsiType.class.getSimpleName() + ": " + type.name());
         }
-        throw new IllegalArgumentException("Invalid UpsiType: " + type.name());
     }
 
     /**
@@ -58,10 +60,13 @@ public class UpsiFactory {
      */
     public static <T> UpsiClient<T> createClient(Rpc clientRpc, Party serverParty, UpsiConfig config) {
         UpsiType type = config.getPtoType();
-        if (type == UpsiType.CMG21) {
-            return new Cmg21UpsiClient<>(clientRpc, serverParty, (Cmg21UpsiConfig) config);
+        //noinspection SwitchStatementWithTooFewBranches
+        switch (type) {
+            case CMG21:
+                return new Cmg21UpsiClient<>(clientRpc, serverParty, (Cmg21UpsiConfig) config);
+            default:
+                throw new IllegalArgumentException("Invalid " + UpsiType.class.getSimpleName() + ": " + type.name());
         }
-        throw new IllegalArgumentException("Invalid UpsiType: " + type.name());
     }
 
     /**
@@ -76,9 +81,9 @@ public class UpsiFactory {
             case SEMI_HONEST:
             case COVERT:
             case MALICIOUS:
-                return new Cmg21UpsiConfig.Builder().setUpsiParams(Cmg21UpsiParams.ONE_MILLION_5535).build();
+                return new Cmg21UpsiConfig.Builder().build();
             default:
-                throw new IllegalArgumentException("Invalid SecurityModel: " + securityModel.name());
+                throw new IllegalArgumentException("Invalid " + SecurityModel.class.getSimpleName() + ": " + securityModel.name());
         }
     }
 }

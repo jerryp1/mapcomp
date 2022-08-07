@@ -7,10 +7,8 @@ import edu.alibaba.mpc4j.common.rpc.Rpc;
 import edu.alibaba.mpc4j.common.rpc.utils.DataPacket;
 import edu.alibaba.mpc4j.common.rpc.utils.DataPacketHeader;
 import edu.alibaba.mpc4j.common.tool.CommonConstants;
-import edu.alibaba.mpc4j.common.tool.EnvType;
 import edu.alibaba.mpc4j.common.tool.hashbin.object.HashBinEntry;
 import edu.alibaba.mpc4j.common.tool.hashbin.object.RandomPadHashBin;
-import edu.alibaba.mpc4j.common.tool.hashbin.object.cuckoo.CuckooHashBinFactory;
 import edu.alibaba.mpc4j.common.tool.polynomial.power.PowerNode;
 import edu.alibaba.mpc4j.common.tool.polynomial.power.PowerUtils;
 import edu.alibaba.mpc4j.common.tool.polynomial.zp64.Zp64Poly;
@@ -19,6 +17,8 @@ import edu.alibaba.mpc4j.s2pc.pso.oprf.MpOprfSender;
 import edu.alibaba.mpc4j.s2pc.pso.oprf.MpOprfSenderOutput;
 import edu.alibaba.mpc4j.s2pc.pso.oprf.OprfFactory;
 import edu.alibaba.mpc4j.s2pc.pso.upsi.AbstractUpsiServer;
+import edu.alibaba.mpc4j.s2pc.pso.upsi.UpsiParams;
+import edu.alibaba.mpc4j.s2pc.pso.upsi.cmg21.Cmg21UpsiPtoDesc.PtoStep;
 
 import java.nio.ByteBuffer;
 import java.util.*;
@@ -33,40 +33,30 @@ import java.util.stream.IntStream;
  * @date 2022/5/25
  */
 public class Cmg21UpsiServer<T> extends AbstractUpsiServer<T> {
+
     static {
         System.loadLibrary(CommonConstants.MPC4J_NATIVE_FHE_NAME);
     }
 
     /**
-     * 非平衡PSI方案参数
-     */
-    private final Cmg21UpsiParams params;
-    /**
-     * 环境类型
-     */
-    private final EnvType envType;
-    /**
-     * 无贮存区布谷鸟哈希类型
-     */
-    private final CuckooHashBinFactory.CuckooHashBinType cuckooHashBinType;
-    /**
      * MP-OPRF协议发送方
      */
     private final MpOprfSender mpOprfSender;
+    /**
+     * 非平衡PSI方案参数
+     */
+    private Cmg21UpsiParams params;
 
     public Cmg21UpsiServer(Rpc serverRpc, Party clientParty, Cmg21UpsiConfig config) {
         super(Cmg21UpsiPtoDesc.getInstance(), serverRpc, clientParty, config);
-        this.envType = config.getEnvType();
-        this.params = config.getParams();
-        this.cuckooHashBinType = config.getCuckooHashBinType();
-        this.mpOprfSender = OprfFactory.createMpOprfSender(serverRpc, clientParty, config.getMpOprfConfig());
+        mpOprfSender = OprfFactory.createMpOprfSender(serverRpc, clientParty, config.getMpOprfConfig());
+        mpOprfSender.addLogLevel();
     }
 
     @Override
     public void setTaskId(long taskId) {
         super.setTaskId(taskId);
-        byte[] taskIdBytes = ByteBuffer.allocate(Long.BYTES).putLong(taskId).array();
-        mpOprfSender.setTaskId(taskIdPrf.getLong(0, taskIdBytes, Long.MAX_VALUE));
+        mpOprfSender.setTaskId(taskId);
     }
 
     @Override
@@ -76,16 +66,24 @@ public class Cmg21UpsiServer<T> extends AbstractUpsiServer<T> {
     }
 
     @Override
-    public void init() throws MpcAbortException {
-        stopWatch.start();
+    public void addLogLevel() {
+        super.addLogLevel();
+        mpOprfSender.addLogLevel();
+    }
+
+    @Override
+    public void init(UpsiParams upsiParams) throws MpcAbortException {
+        setInitInput(upsiParams);
         info("{}{} Server Init begin", ptoBeginLogPrefix, getPtoDesc().getPtoName());
-        int maxClientElementSize = CuckooHashBinFactory.getMaxItemSize(cuckooHashBinType, params.getBinNum());
-        setInitInput(maxClientElementSize);
-        mpOprfSender.init(maxClientElementSize);
+
+        stopWatch.start();
+        assert (upsiParams instanceof Cmg21UpsiParams);
+        params = (Cmg21UpsiParams) upsiParams;
+        mpOprfSender.init(params.maxClientElementSize());
         stopWatch.stop();
         long initTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
         stopWatch.reset();
-        info("{}{} Server Init ({}ms)", ptoStepLogPrefix, getPtoDesc().getPtoName(), initTime);
+        info("{}{} Server Init Step 1/1 ({}ms)", ptoStepLogPrefix, getPtoDesc().getPtoName(), initTime);
 
         initialized = true;
         info("{}{} Server Init end", ptoEndLogPrefix, getPtoDesc().getPtoName());
@@ -96,76 +94,72 @@ public class Cmg21UpsiServer<T> extends AbstractUpsiServer<T> {
         setPtoInput(serverElementSet, clientElementSize);
         info("{}{} Server begin", ptoBeginLogPrefix, getPtoDesc().getPtoName());
 
-        // 服务端执行OPRF协议
         stopWatch.start();
+        // 服务端执行OPRF协议
         ArrayList<ByteBuffer> prfOutputList = oprf();
         stopWatch.stop();
         long oprfTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
         stopWatch.reset();
-        info("{}{} Server Step OPRF 1/4 ({}ms)", ptoStepLogPrefix, getPtoDesc().getPtoName(), oprfTime);
+        info("{}{} Server Step 1/5 ({}ms)", ptoStepLogPrefix, getPtoDesc().getPtoName(), oprfTime);
 
+        stopWatch.start();
         // 接收客户端发送的Cuckoo hash key
-        info("{}{} Server receive cuckoo hash keys", ptoStepLogPrefix, getPtoDesc().getPtoName());
         DataPacketHeader cuckooHashKeyHeader = new DataPacketHeader(
-            taskId, getPtoDesc().getPtoId(), Cmg21UpsiPtoDesc.PtoStep.CLIENT_SEND_CUCKOO_HASH_KEYS.ordinal(),
+            taskId, getPtoDesc().getPtoId(), PtoStep.CLIENT_SEND_CUCKOO_HASH_KEYS.ordinal(), extraInfo,
             otherParty().getPartyId(), rpc.ownParty().getPartyId()
         );
         List<byte[]> hashKeyPayload = rpc.receive(cuckooHashKeyHeader).getPayload();
-        MpcAbortPreconditions.checkArgument(hashKeyPayload.size() == params.getHashNum(), "the size of hash keys " +
-            "should be {}", params.getHashNum());
-        byte[][] hashKeys = hashKeyPayload.toArray(new byte[hashKeyPayload.size()][]);
+        MpcAbortPreconditions.checkArgument(
+            hashKeyPayload.size() == params.getCuckooHashKeyNum(),
+            "the size of hash keys " + "should be {}", params.getCuckooHashKeyNum()
+        );
+        byte[][] hashKeys = hashKeyPayload.toArray(new byte[0][]);
+        stopWatch.stop();
+        long cuckooHashKeyTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
+        stopWatch.reset();
+        info("{}{} Server Step 2/5 ({}ms)", ptoStepLogPrefix, getPtoDesc().getPtoName(), cuckooHashKeyTime);
 
-        // 服务端哈希分桶
         stopWatch.start();
+        // 服务端哈希分桶
         List<ArrayList<HashBinEntry<ByteBuffer>>> hashBins = generateCompleteHashBin(prfOutputList, hashKeys);
         int binSize = hashBins.get(0).size();
-        stopWatch.stop();
-        long hashTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
-        stopWatch.reset();
-        info("{}{} Server Step complete hash 2/4 ({}ms)", ptoStepLogPrefix, getPtoDesc().getPtoName(), hashTime);
-
         // 服务端将元素编码成多项式系数
-        stopWatch.start();
         List<long[][]> encodeDatabase = encodeDatabase(hashBins, binSize);
         stopWatch.stop();
         long encodedTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
         stopWatch.reset();
-        info("{}{} Server Step encode database 3/4 ({}ms)", ptoStepLogPrefix, getPtoDesc().getPtoName(), encodedTime);
+        info("{}{} Server Step 3/5 ({}ms)", ptoStepLogPrefix, getPtoDesc().getPtoName(), encodedTime);
 
+        stopWatch.start();
         // 接收客户端的加密密钥
-        info("{}{} Server receive encryption parameter and relinearization keys", ptoStepLogPrefix,
-            getPtoDesc().getPtoName());
         DataPacketHeader encryptionParamsDataPacketHeader = new DataPacketHeader(
-            taskId, getPtoDesc().getPtoId(), Cmg21UpsiPtoDesc.PtoStep.CLIENT_SEND_ENCRYPTION_PARAMS.ordinal(),
+            taskId, getPtoDesc().getPtoId(), PtoStep.CLIENT_SEND_ENCRYPTION_PARAMS.ordinal(), extraInfo,
             otherParty().getPartyId(), rpc.ownParty().getPartyId()
         );
         List<byte[]> encryptionParams = rpc.receive(encryptionParamsDataPacketHeader).getPayload();
-        MpcAbortPreconditions.checkArgument(encryptionParams.size() == 2, "the size of encryption parameters " +
-            "should be 2");
-
         // 接收客户端的加密查询信息
-        info("{}{} Server receive Client's query", ptoStepLogPrefix, getPtoDesc().getPtoName());
         DataPacketHeader receiverQueryDataPacketHeader = new DataPacketHeader(
-            taskId, getPtoDesc().getPtoId(), Cmg21UpsiPtoDesc.PtoStep.CLIENT_SEND_QUERY.ordinal(),
+            taskId, getPtoDesc().getPtoId(), PtoStep.CLIENT_SEND_QUERY.ordinal(), extraInfo,
             otherParty().getPartyId(), rpc.ownParty().getPartyId()
         );
         List<byte[]> queryList = rpc.receive(receiverQueryDataPacketHeader).getPayload();
-        int ciphertextNum = params.getBinNum() / (params.getPolyModulusDegree() / params.getItemEncodedSlotSize());
-        MpcAbortPreconditions.checkArgument(queryList.size() == ciphertextNum * params.getQueryPowers().length,
-            "The size of query is incorrect");
+        stopWatch.stop();
+        long queryTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
+        stopWatch.reset();
+        info("{}{} Server Step 4/5 ({}ms)", ptoStepLogPrefix, getPtoDesc().getPtoName(), queryTime);
 
-        // 服务端计算密文匹配结果
         stopWatch.start();
+        // 服务端计算密文匹配结果
         List<byte[]> response = computeResponse(encodeDatabase, queryList, encryptionParams, binSize);
         stopWatch.stop();
         long replyTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
         stopWatch.reset();
         DataPacketHeader serverResponseDataPacketSpec = new DataPacketHeader(
-            taskId, getPtoDesc().getPtoId(), Cmg21UpsiPtoDesc.PtoStep.SERVER_SEND_RESPONSE.ordinal(),
+            taskId, getPtoDesc().getPtoId(), PtoStep.SERVER_SEND_RESPONSE.ordinal(), extraInfo,
             rpc.ownParty().getPartyId(), otherParty().getPartyId()
         );
         rpc.send(DataPacket.fromByteArrayList(serverResponseDataPacketSpec, response));
-        info("{}{} Server Step 4/4 (reply generation) ({}ms)", ptoStepLogPrefix, getPtoDesc().getPtoName(), replyTime);
+        info("{}{} Server Step 5/5 ({}ms)", ptoStepLogPrefix, getPtoDesc().getPtoName(), replyTime);
 
         info("{}{} Server end", ptoEndLogPrefix, getPtoDesc().getPtoName());
     }
@@ -287,8 +281,16 @@ public class Cmg21UpsiServer<T> extends AbstractUpsiServer<T> {
      */
     private List<byte[]> computeResponse(List<long[][]> plaintextPoly, List<byte[]> ciphertextPoly,
                                          List<byte[]> encryptionParams, int binSize) throws MpcAbortException {
-        int partitionCount = (binSize + params.getMaxPartitionSizePerBin() - 1) / params.getMaxPartitionSizePerBin();
         int ciphertextNum = params.getBinNum() / (params.getPolyModulusDegree() / params.getItemEncodedSlotSize());
+        int partitionCount = (binSize + params.getMaxPartitionSizePerBin() - 1) / params.getMaxPartitionSizePerBin();
+        MpcAbortPreconditions.checkArgument(
+            ciphertextPoly.size() == ciphertextNum * params.getQueryPowers().length,
+            "The size of query is incorrect"
+        );
+        MpcAbortPreconditions.checkArgument(
+            encryptionParams.size() == 2,
+            "the size of encryption parameters should be 2"
+        );
         // 计算所有的密文次方
         int[][] powerDegree;
         if (params.getPsLowDegree() > 0) {
@@ -348,10 +350,10 @@ public class Cmg21UpsiServer<T> extends AbstractUpsiServer<T> {
                 .mapToObj(i ->
                     (parallel ? IntStream.range(0, partitionCount).parallel() : IntStream.range(0, partitionCount))
                         .mapToObj(j -> Cmg21UpsiNativeServer.computeMatchesNaiveMethod(
-                            encryptionParams.get(0),
-                            encryptionParams.get(1),
-                            plaintextPoly.get(i * partitionCount + j),
-                            queryPowers.subList(i * powerDegree.length, (i + 1) * powerDegree.length)
+                                encryptionParams.get(0),
+                                encryptionParams.get(1),
+                                plaintextPoly.get(i * partitionCount + j),
+                                queryPowers.subList(i * powerDegree.length, (i + 1) * powerDegree.length)
                             )
                         )
                         .toArray(byte[][]::new))

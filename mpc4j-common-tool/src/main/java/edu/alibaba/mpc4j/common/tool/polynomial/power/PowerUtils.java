@@ -7,8 +7,10 @@ import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
 /**
- * 幂次方工具类。
- * 存储计算高幂次方的路径，参考开源代码(https://github.com/microsoft/APSI/blob/main/common/apsi/powers.cpp)实现。
+ * 幂次方工具类。存储计算高幂次方的路径，参考下述开源代码完成实现：
+ * <p>
+ * https://github.com/microsoft/APSI/blob/main/common/apsi/powers.cpp
+ * </p>
  *
  * @author Liqiang Peng
  * @date 2022/8/3
@@ -29,7 +31,7 @@ public class PowerUtils {
         Integer[] sortSourcePowers = Arrays.stream(sourcePowers.toArray(new Integer[0]))
             .sorted()
             .toArray(Integer[]::new);
-        assert sortSourcePowers[0] == 1: "Source powers must contain 1";
+        assert sortSourcePowers[0] == 1 : "Source powers must contain 1";
         assert sortSourcePowers[sortSourcePowers.length - 1] <= upperBound : "Source powers "
             + "must be a subset of target powers";
         PowerNode[] powerNodes = new PowerNode[upperBound];

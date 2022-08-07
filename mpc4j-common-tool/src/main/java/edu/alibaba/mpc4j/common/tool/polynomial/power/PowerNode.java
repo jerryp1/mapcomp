@@ -1,8 +1,10 @@
 package edu.alibaba.mpc4j.common.tool.polynomial.power;
 
 /**
- * 幂次方节点。
- * 存储计算高幂次方的路径，参考开源代码(https://github.com/microsoft/APSI/blob/main/common/apsi/powers.h)实现。
+ * 幂次方节点。存储计算高幂次方的路径，参考下述开源代码完成的实现。
+ * <p>
+ * https://github.com/microsoft/APSI/blob/main/common/apsi/powers.h
+ * </p>
  *
  * @author Liqiang Peng
  * @date 2022/8/3

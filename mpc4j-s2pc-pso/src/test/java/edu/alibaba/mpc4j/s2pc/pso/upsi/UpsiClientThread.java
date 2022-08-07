@@ -2,21 +2,24 @@ package edu.alibaba.mpc4j.s2pc.pso.upsi;
 
 import edu.alibaba.mpc4j.common.rpc.MpcAbortException;
 
-import java.nio.ByteBuffer;
 import java.util.Set;
 
 
 /**
- * 非平衡PSI协议客户端（接收方）线程。
+ * 非平衡PSI协议客户端线程。
  *
  * @author Liqiang Peng
  * @date 2022/5/26
  */
 public class UpsiClientThread<T> extends Thread {
     /**
-     * 非平衡PSI协议客户端
+     * 客户端
      */
-    private final UpsiClient<T> upsiClient;
+    private final UpsiClient<T> client;
+    /**
+     * UPSI协议配置项
+     */
+    private final UpsiParams upsiParams;
     /**
      * 客户端集合
      */
@@ -26,8 +29,9 @@ public class UpsiClientThread<T> extends Thread {
      */
     private Set<T> intersectionSet;
 
-    UpsiClientThread(UpsiClient<T> upsiClient, Set<T> clientElementSet) {
-        this.upsiClient = upsiClient;
+    UpsiClientThread(UpsiClient<T> client, UpsiParams upsiParams, Set<T> clientElementSet) {
+        this.client = client;
+        this.upsiParams = upsiParams;
         this.clientElementSet = clientElementSet;
     }
 
@@ -38,10 +42,10 @@ public class UpsiClientThread<T> extends Thread {
     @Override
     public void run() {
         try {
-            upsiClient.getRpc().connect();
-            upsiClient.init();
-            intersectionSet = upsiClient.psi(clientElementSet);
-            upsiClient.getRpc().disconnect();
+            client.getRpc().connect();
+            client.init(upsiParams);
+            intersectionSet = client.psi(clientElementSet);
+            client.getRpc().disconnect();
         } catch (MpcAbortException e) {
             e.printStackTrace();
         }
