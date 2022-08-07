@@ -48,7 +48,7 @@ public class ZpPolyFactory {
             case RINGS_LAGRANGE:
                 return new RingsLagrangeZpPoly(l);
             default:
-                throw new IllegalArgumentException("Invalid ZpPolyType: " + type.name());
+                throw new IllegalArgumentException("Invalid " + ZpPolyType.class.getSimpleName() + ": " + type.name());
         }
     }
 }

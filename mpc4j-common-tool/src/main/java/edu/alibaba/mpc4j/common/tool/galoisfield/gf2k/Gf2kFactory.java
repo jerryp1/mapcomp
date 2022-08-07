@@ -56,7 +56,7 @@ public class Gf2kFactory {
             case RINGS:
                 return new RingsGf2k();
             default:
-                throw new IllegalArgumentException("Invalid GF2kType: " + type.name());
+                throw new IllegalArgumentException("Invalid " + Gf2kType.class.getSimpleName() + ": " + type.name());
         }
     }
 
@@ -75,7 +75,7 @@ public class Gf2kFactory {
             case INLAND_JDK:
                 return new BcGf2k();
             default:
-                throw new IllegalArgumentException("Invalid EnvType: " + envType.name());
+                throw new IllegalArgumentException("Invalid " + EnvType.class.getSimpleName() + ": " + envType.name());
         }
     }
 }

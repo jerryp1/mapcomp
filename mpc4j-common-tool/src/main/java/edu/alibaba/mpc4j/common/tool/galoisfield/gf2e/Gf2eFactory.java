@@ -45,7 +45,7 @@ public class Gf2eFactory {
             case NTL:
                 return new NtlGf2e(l);
             default:
-                throw new IllegalArgumentException("Invalid Gf2eType: " + type.name());
+                throw new IllegalArgumentException("Invalid " + Gf2eType.class.getSimpleName() + ": " + type.name());
         }
     }
 
@@ -65,7 +65,7 @@ public class Gf2eFactory {
             case INLAND_JDK:
                 return new RingsGf2e(l);
             default:
-                throw new IllegalArgumentException("Invalid EnvType: " + envType.name());
+                throw new IllegalArgumentException("Invalid " + EnvType.class.getSimpleName() + ": " + envType.name());
         }
     }
 }

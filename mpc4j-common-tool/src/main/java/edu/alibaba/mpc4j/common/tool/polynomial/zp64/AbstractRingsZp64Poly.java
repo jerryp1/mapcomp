@@ -2,11 +2,8 @@ package edu.alibaba.mpc4j.common.tool.polynomial.zp64;
 
 import cc.redberry.rings.IntegersZp64;
 import cc.redberry.rings.poly.univar.UnivariatePolynomialZp64;
-import edu.alibaba.mpc4j.common.tool.CommonConstants;
 import edu.alibaba.mpc4j.common.tool.galoisfield.Zp64.Zp64Manager;
-import edu.alibaba.mpc4j.common.tool.utils.LongUtils;
 
-import java.math.BigInteger;
 import java.util.Arrays;
 import java.util.stream.IntStream;
 
@@ -16,41 +13,20 @@ import java.util.stream.IntStream;
  * @author Weiran Liu
  * @date 2022/8/3
  */
-abstract class AbstractRingsZp64Poly implements Zp64Poly {
+abstract class AbstractRingsZp64Poly extends AbstractZp64Poly {
     /**
      * Zp64有限域
      */
     private final IntegersZp64 finiteField;
-    /**
-     * 有限域模数p
-     */
-    protected final long p;
-    /**
-     * 有限域比特长度
-     */
-    private final int l;
 
     AbstractRingsZp64Poly(int l) {
-        p = Zp64Manager.getPrime(l);
+        super(l);
         finiteField = Zp64Manager.getFiniteField(l);
-        this.l = l;
     }
 
     AbstractRingsZp64Poly(long p) {
-        assert BigInteger.valueOf(p).isProbablePrime(CommonConstants.STATS_BIT_LENGTH) : "p is probably not prime: " + p;
-        this.p = p;
+        super(p);
         finiteField = new IntegersZp64(p);
-        this.l = LongUtils.ceilLog2(p) - 1;
-    }
-
-    @Override
-    public int getL() {
-        return l;
-    }
-
-    @Override
-    public long getPrime() {
-        return p;
     }
 
     @Override
@@ -187,9 +163,5 @@ abstract class AbstractRingsZp64Poly implements Zp64Poly {
         );
 
         return coefficients;
-    }
-
-    private boolean validPoint(long point) {
-        return point >= 0 && point < p;
     }
 }

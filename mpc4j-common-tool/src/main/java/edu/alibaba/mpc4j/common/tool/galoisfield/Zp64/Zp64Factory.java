@@ -49,7 +49,7 @@ public class Zp64Factory {
             case RINGS:
                 return new RingsZp64(envType, prime);
             default:
-                throw new IllegalArgumentException("Invalid Zp64Type: " + type.name());
+                throw new IllegalArgumentException("Invalid " + Zp64Type.class.getSimpleName() + ": " + type.name());
         }
     }
 
@@ -68,7 +68,7 @@ public class Zp64Factory {
             case INLAND_JDK:
                 return new RingsZp64(envType, l);
             default:
-                throw new IllegalArgumentException("Invalid EnvType: " + envType.name());
+                throw new IllegalArgumentException("Invalid " + EnvType.class.getSimpleName() + ": " + envType.name());
         }
     }
 
@@ -87,7 +87,7 @@ public class Zp64Factory {
             case INLAND_JDK:
                 return new RingsZp64(envType, prime);
             default:
-                throw new IllegalArgumentException("Invalid EnvType: " + envType.name());
+                throw new IllegalArgumentException("Invalid " + EnvType.class.getSimpleName() + ": " + envType.name());
         }
     }
 }

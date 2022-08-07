@@ -1,12 +1,10 @@
 package edu.alibaba.mpc4j.common.tool.polynomial.zp;
 
 import edu.alibaba.mpc4j.common.tool.CommonConstants;
-import edu.alibaba.mpc4j.common.tool.galoisfield.zp.ZpManager;
 import edu.alibaba.mpc4j.common.tool.polynomial.zp.ZpPolyFactory.ZpPolyType;
 import edu.alibaba.mpc4j.common.tool.utils.BigIntegerUtils;
 
 import java.math.BigInteger;
-import java.security.SecureRandom;
 import java.util.Arrays;
 
 /**
@@ -15,54 +13,30 @@ import java.util.Arrays;
  * @author Weiran Liu
  * @date 2022/01/04
  */
-public class NtlZpPoly implements ZpPoly {
+public class NtlZpPoly extends AbstractZpPoly {
 
     static {
         System.loadLibrary(CommonConstants.MPC4J_NATIVE_TOOL_NAME);
     }
 
     /**
-     * 随机状态
-     */
-    private final SecureRandom secureRandom;
-    /**
-     * 质数p
-     */
-    private final BigInteger p;
-    /**
      * 有限域质数p的字节数组
      */
     private final byte[] pByteArray;
-    /**
-     * 有限域比特长度
-     */
-    private final int l;
     /**
      * 有限域质数p的字节长度，可能会大于byteL
      */
     private final int pByteLength;
 
     public NtlZpPoly(int l) {
-        p = ZpManager.getPrime(l);
-        this.l = l;
+        super(l);
         pByteArray = BigIntegerUtils.bigIntegerToByteArray(p);
         pByteLength = pByteArray.length;
-        secureRandom = new SecureRandom();
     }
 
     @Override
     public ZpPolyType getType() {
         return ZpPolyType.NTL;
-    }
-
-    @Override
-    public int getL() {
-        return l;
-    }
-
-    @Override
-    public BigInteger getPrime() {
-        return p;
     }
 
     @Override
@@ -221,9 +195,5 @@ public class NtlZpPoly implements ZpPoly {
         return Arrays.stream(byteArrays)
             .map(BigIntegerUtils::byteArrayToNonNegBigInteger)
             .toArray(BigInteger[]::new);
-    }
-
-    private boolean validPoint(BigInteger point) {
-        return BigIntegerUtils.greaterOrEqual(point, BigInteger.ZERO) && BigIntegerUtils.less(point, p);
     }
 }
