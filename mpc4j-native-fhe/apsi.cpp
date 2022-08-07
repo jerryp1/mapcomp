@@ -1,5 +1,6 @@
 //
 // Created by Liqiang Peng on 2022/7/14.
+// 参考开源代码(https://github.com/microsoft/APSI)实现
 //
 
 #include "apsi.h"
@@ -114,7 +115,6 @@ jobject JNICALL generateQuery(JNIEnv *env, jobjectArray jenc_arrays, jbyteArray 
     }
     for (int i = 0; i < size; i++) {
         auto rows = (jlongArray) env->GetObjectArrayElement(jenc_arrays, i);
-        assert(env->GetArrayLength(rows) == encoder.slot_count());
         jlong *cols = env->GetLongArrayElements(rows, JNI_FALSE);
         vector<uint64_t> enc(cols, cols + encoder.slot_count());
         Plaintext plaintext;

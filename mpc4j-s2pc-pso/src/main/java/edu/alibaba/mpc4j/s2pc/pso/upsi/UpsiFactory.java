@@ -40,10 +40,10 @@ public class UpsiFactory {
      * @param config      配置项。
      * @return 服务端。
      */
-    public static UpsiServer createServer(Rpc serverRpc, Party clientParty, UpsiConfig config) {
+    public static <T> UpsiServer<T> createServer(Rpc serverRpc, Party clientParty, UpsiConfig config) {
         UpsiType type = config.getPtoType();
         if (type == UpsiType.CMG21) {
-            return new Cmg21UpsiServer(serverRpc, clientParty, (Cmg21UpsiConfig) config);
+            return new Cmg21UpsiServer<>(serverRpc, clientParty, (Cmg21UpsiConfig) config);
         }
         throw new IllegalArgumentException("Invalid UpsiType: " + type.name());
     }
@@ -56,10 +56,10 @@ public class UpsiFactory {
      * @param config      配置项。
      * @return 客户端。
      */
-    public static UpsiClient createClient(Rpc clientRpc, Party serverParty, UpsiConfig config) {
+    public static <T> UpsiClient<T> createClient(Rpc clientRpc, Party serverParty, UpsiConfig config) {
         UpsiType type = config.getPtoType();
         if (type == UpsiType.CMG21) {
-            return new Cmg21UpsiClient(clientRpc, serverParty, (Cmg21UpsiConfig) config);
+            return new Cmg21UpsiClient<>(clientRpc, serverParty, (Cmg21UpsiConfig) config);
         }
         throw new IllegalArgumentException("Invalid UpsiType: " + type.name());
     }

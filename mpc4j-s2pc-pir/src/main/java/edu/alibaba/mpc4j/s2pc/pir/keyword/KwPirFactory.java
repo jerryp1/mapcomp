@@ -40,10 +40,10 @@ public class KwPirFactory {
      * @param config      配置项。
      * @return 服务端。
      */
-    public static KwPirServer createServer(Rpc serverRpc, Party clientParty, KwPirConfig config) {
+    public static <T> KwPirServer<T> createServer(Rpc serverRpc, Party clientParty, KwPirConfig config) {
         PirType type = config.getProType();
         if (type == PirType.CMG21) {
-            return new Cmg21KwPirServer(serverRpc, clientParty, (Cmg21KwPirConfig) config);
+            return new Cmg21KwPirServer<>(serverRpc, clientParty, (Cmg21KwPirConfig) config);
         }
         throw new IllegalArgumentException("Invalid PirType: " + type.name());
     }
@@ -56,10 +56,10 @@ public class KwPirFactory {
      * @param config      配置项。
      * @return 客户端。
      */
-    public static KwPirClient createClient(Rpc clientRpc, Party serverParty, KwPirConfig config) {
+    public static <T> KwPirClient<T> createClient(Rpc clientRpc, Party serverParty, KwPirConfig config) {
         PirType type = config.getProType();
         if (type == PirType.CMG21) {
-            return new Cmg21KwPirClient(clientRpc, serverParty, (Cmg21KwPirConfig) config);
+            return new Cmg21KwPirClient<>(clientRpc, serverParty, (Cmg21KwPirConfig) config);
         }
         throw new IllegalArgumentException("Invalid UpsiType: " + type.name());
     }

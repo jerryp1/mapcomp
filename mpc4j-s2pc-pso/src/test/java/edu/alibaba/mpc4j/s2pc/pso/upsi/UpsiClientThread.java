@@ -7,36 +7,31 @@ import java.util.Set;
 
 
 /**
- * 非平衡PSI协议接收方线程。
+ * 非平衡PSI协议客户端（接收方）线程。
  *
  * @author Liqiang Peng
  * @date 2022/5/26
  */
-public class UpsiClientThread extends Thread {
+public class UpsiClientThread<T> extends Thread {
     /**
-     * 非平衡PSI协议接收方
+     * 非平衡PSI协议客户端
      */
-    private final UpsiClient upsiClient;
+    private final UpsiClient<T> upsiClient;
     /**
-     * 接收方集合
+     * 客户端集合
      */
-    private final Set<ByteBuffer> clientElementSet;
+    private final Set<T> clientElementSet;
     /**
-     * 元素字节长度
+     * 交集
      */
-    private final int elementByteLength;
-    /**
-     * 客户端交集
-     */
-    private Set<ByteBuffer> intersectionSet;
+    private Set<T> intersectionSet;
 
-    UpsiClientThread(UpsiClient upsiClient, Set<ByteBuffer> clientElementSet, int elementByteLength) {
+    UpsiClientThread(UpsiClient<T> upsiClient, Set<T> clientElementSet) {
         this.upsiClient = upsiClient;
         this.clientElementSet = clientElementSet;
-        this.elementByteLength = elementByteLength;
     }
 
-    Set<ByteBuffer> getIntersectionSet() {
+    Set<T> getIntersectionSet() {
         return intersectionSet;
     }
 
@@ -45,7 +40,7 @@ public class UpsiClientThread extends Thread {
         try {
             upsiClient.getRpc().connect();
             upsiClient.init();
-            intersectionSet = upsiClient.psi(clientElementSet, elementByteLength);
+            intersectionSet = upsiClient.psi(clientElementSet);
             upsiClient.getRpc().disconnect();
         } catch (MpcAbortException e) {
             e.printStackTrace();

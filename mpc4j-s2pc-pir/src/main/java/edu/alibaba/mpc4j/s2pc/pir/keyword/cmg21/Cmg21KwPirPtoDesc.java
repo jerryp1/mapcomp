@@ -13,7 +13,7 @@ public class Cmg21KwPirPtoDesc implements PtoDesc {
     /**
      * 协议ID
      */
-    private static final int PTO_ID = Math.abs((int) 6323461583044909223L);
+    private static final int PTO_ID = Math.abs((int) 7261080771728862744L);
     /**
      * 协议名称
      */

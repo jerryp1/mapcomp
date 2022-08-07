@@ -11,31 +11,28 @@ import java.util.Map;
  * @author Liqiang Peng
  * @date 2022/6/22
  */
-public class KwPirServerThread extends Thread {
+public class KwPirServerThread<T> extends Thread {
     /**
-     * Keyword PIR协议服务端
+     * 关键词PIR协议服务端
      */
-    private final KwPirServer pirServer;
+    private final KwPirServer<T> pirServer;
     /**
-     * 服务端元素和标签集合
+     * 服务端关键词和标签映射
      */
-    private final Map<ByteBuffer, ByteBuffer> serverElementMap;
-    /**
-     * 元素字节长度
-     */
-    private final int elementByteLength;
+    private final Map<T, ByteBuffer> serverKeywordLabelMap;
     /**
      * 标签字节长度
      */
     private final int labelByteLength;
-
+    /**
+     * 检索次数
+     */
     private final int retrievalNumber;
 
-    KwPirServerThread(KwPirServer pirServer, Map<ByteBuffer, ByteBuffer> serverElementMap, int elementByteLength,
-                      int labelByteLength, int retrievalNumber) {
+    KwPirServerThread(KwPirServer<T> pirServer, Map<T, ByteBuffer> serverKeywordLabelMap, int labelByteLength,
+                      int retrievalNumber) {
         this.pirServer = pirServer;
-        this.serverElementMap = serverElementMap;
-        this.elementByteLength = elementByteLength;
+        this.serverKeywordLabelMap = serverKeywordLabelMap;
         this.labelByteLength = labelByteLength;
         this.retrievalNumber = retrievalNumber;
     }
@@ -44,8 +41,10 @@ public class KwPirServerThread extends Thread {
     public void run() {
         try {
             pirServer.getRpc().connect();
-            pirServer.init(serverElementMap, elementByteLength, labelByteLength);
-            pirServer.pir(retrievalNumber);
+            pirServer.init(serverKeywordLabelMap, labelByteLength);
+            for (int i = 0; i < retrievalNumber; i++) {
+                pirServer.pir();
+            }
             pirServer.getRpc().disconnect();
         } catch (MpcAbortException e) {
             e.printStackTrace();

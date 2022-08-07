@@ -35,8 +35,7 @@ class Cmg21KwPirNativeClient {
      * @param secretKey        私钥。
      * @return 索引信息密文。
      */
-    static native List<byte[]> generateQuery(long[][] plainQuery, byte[] encryptionParams, byte[] publicKey,
-                                             byte[] secretKey);
+    static native List<byte[]> generateQuery(byte[] encryptionParams, byte[] publicKey, byte[] secretKey, long[][] plainQuery);
 
     /**
      * 解码查询结果。
@@ -46,5 +45,5 @@ class Cmg21KwPirNativeClient {
      * @param secretKey         私钥。
      * @return 查询结果。
      */
-    static native long[] decodeReply(byte[] encryptedResponse, byte[] encryptionParams, byte[] secretKey);
+    static native long[] decodeReply(byte[] encryptionParams, byte[] secretKey, byte[] encryptedResponse);
 }

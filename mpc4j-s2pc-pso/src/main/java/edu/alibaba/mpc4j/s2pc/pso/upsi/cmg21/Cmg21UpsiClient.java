@@ -8,13 +8,14 @@ import edu.alibaba.mpc4j.common.rpc.utils.DataPacket;
 import edu.alibaba.mpc4j.common.rpc.utils.DataPacketHeader;
 import edu.alibaba.mpc4j.common.tool.CommonConstants;
 import edu.alibaba.mpc4j.common.tool.EnvType;
+import edu.alibaba.mpc4j.common.tool.galoisfield.Zp64.Zp64;
+import edu.alibaba.mpc4j.common.tool.galoisfield.Zp64.Zp64Factory;
 import edu.alibaba.mpc4j.common.tool.hashbin.object.cuckoo.CuckooHashBin;
 import edu.alibaba.mpc4j.common.tool.hashbin.object.cuckoo.CuckooHashBinFactory;
 import edu.alibaba.mpc4j.s2pc.pso.oprf.MpOprfReceiver;
 import edu.alibaba.mpc4j.s2pc.pso.oprf.OprfFactory;
 import edu.alibaba.mpc4j.s2pc.pso.oprf.OprfReceiverOutput;
 import edu.alibaba.mpc4j.s2pc.pso.upsi.AbstractUpsiClient;
-import edu.alibaba.mpc4j.s2pc.pso.upsi.PolynomialUtils;
 
 import java.nio.ByteBuffer;
 import java.security.SecureRandom;
@@ -30,7 +31,7 @@ import java.util.stream.Stream;
  * @author Liqiang Peng
  * @date 2022/5/25
  */
-public class Cmg21UpsiClient extends AbstractUpsiClient {
+public class Cmg21UpsiClient<T> extends AbstractUpsiClient<T> {
     static {
         System.loadLibrary(CommonConstants.MPC4J_NATIVE_FHE_NAME);
     }
@@ -65,6 +66,13 @@ public class Cmg21UpsiClient extends AbstractUpsiClient {
     }
 
     @Override
+    public void setTaskId(long taskId) {
+        super.setTaskId(taskId);
+        byte[] taskIdBytes = ByteBuffer.allocate(Long.BYTES).putLong(taskId).array();
+        oprfReceiver.setTaskId(taskIdPrf.getLong(0, taskIdBytes, Long.MAX_VALUE));
+    }
+
+    @Override
     public void setParallel(boolean parallel) {
         super.setParallel(parallel);
         oprfReceiver.setParallel(parallel);
@@ -92,8 +100,8 @@ public class Cmg21UpsiClient extends AbstractUpsiClient {
     }
 
     @Override
-    public Set<ByteBuffer> psi(Set<ByteBuffer> clientElementSet, int elementByteLength) throws MpcAbortException {
-        setPtoInput(clientElementSet, elementByteLength);
+    public Set<T> psi(Set<T> clientElementSet) throws MpcAbortException {
+        setPtoInput(clientElementSet);
         info("{}{} Client begin", ptoBeginLogPrefix, getPtoDesc().getPtoName());
 
         // 客户端执行MP-OPRF协议
@@ -147,7 +155,7 @@ public class Cmg21UpsiClient extends AbstractUpsiClient {
         Stream<long[][]> stream = parallel ? encodedQuery.stream().parallel() : encodedQuery.stream();
         List<byte[]> queryCiphertextList = stream
             .map(i -> Cmg21UpsiNativeClient.generateQuery(
-                i, encryptionParams.get(0), encryptionParams.get(2), encryptionParams.get(3)))
+                encryptionParams.get(0), encryptionParams.get(2), encryptionParams.get(3), i))
             .flatMap(Collection::stream)
             .collect(Collectors.toList());
         DataPacketHeader clientQueryDataPacketHeader = new DataPacketHeader(
@@ -172,9 +180,9 @@ public class Cmg21UpsiClient extends AbstractUpsiClient {
         stopWatch.start();
         Stream<byte[]> responseStream = parallel ? serverResponse.stream().parallel() : serverResponse.stream();
         List<long[]> decodedResponse = responseStream
-            .map(i -> Cmg21UpsiNativeClient.decodeReply(i, encryptionParams.get(0), encryptionParams.get(3)))
+            .map(i -> Cmg21UpsiNativeClient.decodeReply(encryptionParams.get(0), encryptionParams.get(3), i))
             .collect(Collectors.toList());
-        Set<ByteBuffer> intersectionSet = recoverPsiResult(decodedResponse, oprfMap);
+        Set<T> intersectionSet = recoverPsiResult(decodedResponse, oprfMap);
         stopWatch.stop();
         long decodeResponseTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
         stopWatch.reset();
@@ -223,8 +231,8 @@ public class Cmg21UpsiClient extends AbstractUpsiClient {
      * @param oprfMap           OPRF映射。
      * @return 隐私集合交集。
      */
-    private Set<ByteBuffer> recoverPsiResult(List<long[]> decryptedResponse, Map<ByteBuffer, ByteBuffer> oprfMap) {
-        Set<ByteBuffer> intersectionSet = new HashSet<>();
+    private Set<T> recoverPsiResult(List<long[]> decryptedResponse, Map<ByteBuffer, ByteBuffer> oprfMap) {
+        Set<T> intersectionSet = new HashSet<>();
         int ciphertextNum = params.getBinNum() / (params.getPolyModulusDegree() / params.getItemEncodedSlotSize());
         int itemPerCiphertext = params.getPolyModulusDegree() / params.getItemEncodedSlotSize();
         int partitionCount = decryptedResponse.size() / ciphertextNum;
@@ -241,7 +249,8 @@ public class Cmg21UpsiClient extends AbstractUpsiClient {
                     if (matchedItem.get(j + params.getItemEncodedSlotSize() - 1) - matchedItem.get(j)
                         == params.getItemEncodedSlotSize() - 1) {
                         int hashBinIndex = (matchedItem.get(j) / params.getItemEncodedSlotSize()) + (i / partitionCount) * itemPerCiphertext;
-                        intersectionSet.add(oprfMap.get(cuckooHashBin.getHashBinEntry(hashBinIndex).getItem()));
+                        intersectionSet.add(byteArrayObjectMap.get(
+                            oprfMap.get(cuckooHashBin.getHashBinEntry(hashBinIndex).getItem())));
                         j = j + params.getItemEncodedSlotSize() - 1;
                     }
                 }
@@ -286,7 +295,7 @@ public class Cmg21UpsiClient extends AbstractUpsiClient {
         for (int i = 0; i < ciphertextNum; i++) {
             for (int j = 0; j < itemPerCiphertext; j++) {
                 long[] item = params.getHashBinEntryEncodedArray(
-                    cuckooHashBin.getHashBinEntry(i * itemPerCiphertext + j), true
+                    cuckooHashBin.getHashBinEntry(i * itemPerCiphertext + j), true, secureRandom
                 );
                 System.arraycopy(item, 0, items[i], j * params.getItemEncodedSlotSize(), params.getItemEncodedSlotSize());
             }
@@ -296,8 +305,30 @@ public class Cmg21UpsiClient extends AbstractUpsiClient {
         }
         IntStream intStream = parallel ? IntStream.range(0, ciphertextNum).parallel() : IntStream.range(0, ciphertextNum);
         return intStream
-            .mapToObj(i -> PolynomialUtils.computePowers(items[i], params.getPlainModulus(), params.getQueryPowers()))
+            .mapToObj(i -> computePowers(items[i], params.getPlainModulus(), params.getQueryPowers()))
             .collect(Collectors.toCollection(ArrayList::new));
     }
 
+    /**
+     * 计算幂次方。
+     *
+     * @param base      底数。
+     * @param modulus   模数。
+     * @param exponents 指数。
+     * @return 幂次方。
+     */
+    private long[][] computePowers(long[] base, long modulus, int[] exponents) {
+        Zp64 zp64 = Zp64Factory.createInstance(envType, modulus);
+        long[][] result = new long[exponents.length][];
+        assert exponents[0] == 1;
+        result[0] = base;
+        for (int i = 1; i < exponents.length; i++) {
+            long[] temp = new long[base.length];
+            for (int j = 0; j < base.length; j++) {
+                temp[j] = zp64.mulPow(base[j], exponents[i]);
+            }
+            result[i] = temp;
+        }
+        return result;
+    }
 }

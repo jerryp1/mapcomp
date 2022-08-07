@@ -5,6 +5,7 @@ import edu.alibaba.mpc4j.common.tool.utils.BigIntegerUtils;
 
 import java.math.BigInteger;
 import java.nio.ByteBuffer;
+import java.security.SecureRandom;
 import java.util.Arrays;
 import java.util.stream.IntStream;
 
@@ -16,39 +17,39 @@ import java.util.stream.IntStream;
  */
 public class Cmg21UpsiParams {
     /**
-     * table params : 哈希算法数目
+     * 哈希算法数目
      */
     private final int hashNum;
     /**
-     * table params : 哈希桶数目
+     * 哈希桶数目
      */
     private final int binNum;
     /**
-     * table params : 每个哈希桶内分块的最大元素个数
+     * 每个哈希桶内分块的最大元素个数
      */
     private final int maxPartitionSizePerBin;
     /**
-     * item params : 元素编码后占的卡槽个数
+     * 元素编码后占的卡槽个数
      */
     private final int itemEncodedSlotSize;
     /**
-     * query params : Paterson-Stockmeyer方法的低阶值
+     * Paterson-Stockmeyer方法的低阶值
      */
     private final int psLowDegree;
     /**
-     * table params : 查询幂次方
+     * 查询幂次方
      */
     private final int[] queryPowers;
     /**
-     * SEAL params : 明文模数
+     * 明文模数
      */
     private final int plainModulus;
     /**
-     * SEAL params : 多项式阶
+     * 多项式阶
      */
     private final int polyModulusDegree;
     /**
-     * SEAL params : 系数模数的比特值
+     * 系数模数的比特值
      */
     private final int[] coeffModulusBits;
 
@@ -82,7 +83,7 @@ public class Cmg21UpsiParams {
     }
 
     /**
-     * 服务端集合元素最大个数为100000，客户端集合元素最大个数为1
+     * 服务端集合元素个数为100000，客户端集合元素最大个数为1
      */
     public static final Cmg21UpsiParams TWO_THOUSAND_1 = new Cmg21UpsiParams(1, 512, 15,
         8,
@@ -91,7 +92,7 @@ public class Cmg21UpsiParams {
     );
 
     /**
-     * 服务端集合元素最大个数为100000，客户端集合元素最大个数为1
+     * 服务端集合元素个数为100000，客户端集合元素最大个数为1
      */
     public static final Cmg21UpsiParams ONE_HUNDRED_THOUSAND_1 = new Cmg21UpsiParams(1, 512, 20,
         8,
@@ -100,7 +101,7 @@ public class Cmg21UpsiParams {
     );
 
     /**
-     * 服务端集合元素最大个数为1000000，客户端集合元素最大个数为1024，计算量最优
+     * 服务端集合元素个数为1000000，客户端集合元素最大个数为1024，计算量最优
      */
     public static final Cmg21UpsiParams ONE_MILLION_1024_CMP = new Cmg21UpsiParams(3, 2046, 101,
         6,
@@ -109,7 +110,7 @@ public class Cmg21UpsiParams {
     );
 
     /**
-     * 服务端集合元素最大个数为1000000，客户端集合元素最大个数为1024，通信量最优
+     * 服务端集合元素个数为1000000，客户端集合元素最大个数为1024，通信量最优
      */
     public static final Cmg21UpsiParams ONE_MILLION_1024_COM = new Cmg21UpsiParams(3, 1638, 125,
         5,
@@ -118,7 +119,7 @@ public class Cmg21UpsiParams {
     );
 
     /**
-     * 服务端集合元素最大个数为1000000，客户端集合元素最大个数为11041
+     * 服务端集合元素个数为1000000，客户端集合元素最大个数为11041
      */
     public static final Cmg21UpsiParams ONE_MILLION_11041 = new Cmg21UpsiParams(3, 16384, 98,
         4,
@@ -127,7 +128,7 @@ public class Cmg21UpsiParams {
     );
 
     /**
-     * 服务端集合元素最大个数为1000000，客户端集合元素最大个数为2048，计算量最优
+     * 服务端集合元素个数为1000000，客户端集合元素最大个数为2048，计算量最优
      */
     public static final Cmg21UpsiParams ONE_MILLION_2048_CMP = new Cmg21UpsiParams(3, 3410, 72,
         6,
@@ -136,7 +137,7 @@ public class Cmg21UpsiParams {
     );
 
     /**
-     * 服务端集合元素最大个数为1000000，客户端集合元素最大个数为2048，通信量最优
+     * 服务端集合元素个数为1000000，客户端集合元素最大个数为2048，通信量最优
      */
     public static final Cmg21UpsiParams ONE_MILLION_2048_COM = new Cmg21UpsiParams(3, 3410, 125,
         6,
@@ -145,7 +146,7 @@ public class Cmg21UpsiParams {
     );
 
     /**
-     * 服务端集合元素最大个数为1000000，客户端集合元素最大个数为256
+     * 服务端集合元素个数为1000000，客户端集合元素最大个数为256
      */
     public static final Cmg21UpsiParams ONE_MILLION_256 = new Cmg21UpsiParams(3, 585, 180,
         7,
@@ -154,7 +155,7 @@ public class Cmg21UpsiParams {
     );
 
     /**
-     * 服务端集合元素最大个数为1000000，客户端集合元素最大个数为4096，计算量最优
+     * 服务端集合元素个数为1000000，客户端集合元素最大个数为4096，计算量最优
      */
     public static final Cmg21UpsiParams ONE_MILLION_4096_CMP = new Cmg21UpsiParams(3, 6552, 40,
         5,
@@ -163,7 +164,7 @@ public class Cmg21UpsiParams {
     );
 
     /**
-     * 服务端集合元素最大个数为1000000，客户端集合元素最大个数为4096，通信量最优
+     * 服务端集合元素个数为1000000，客户端集合元素最大个数为4096，通信量最优
      */
     public static final Cmg21UpsiParams ONE_MILLION_4096_COM = new Cmg21UpsiParams(3, 6825, 98,
         6,
@@ -172,7 +173,7 @@ public class Cmg21UpsiParams {
     );
 
     /**
-     * 服务端集合元素最大个数为1000000，客户端集合元素最大个数为512，计算量最优
+     * 服务端集合元素个数为1000000，客户端集合元素最大个数为512，计算量最优
      */
     public static final Cmg21UpsiParams ONE_MILLION_512_CMP = new Cmg21UpsiParams(3, 1364, 128,
         6,
@@ -181,7 +182,7 @@ public class Cmg21UpsiParams {
     );
 
     /**
-     * 服务端集合元素最大个数为1000000，客户端集合元素最大个数为512，通信量最优
+     * 服务端集合元素个数为1000000，客户端集合元素最大个数为512，通信量最优
      */
     public static final Cmg21UpsiParams ONE_MILLION_512_COM = new Cmg21UpsiParams(3, 1364, 228,
         6,
@@ -190,7 +191,7 @@ public class Cmg21UpsiParams {
     );
 
     /**
-     * 服务端集合元素最大个数为1000000，客户端集合元素最大个数为5535
+     * 服务端集合元素个数为1000000，客户端集合元素最大个数为5535
      */
     public static final Cmg21UpsiParams ONE_MILLION_5535 = new Cmg21UpsiParams(3, 8192, 98,
         4,
@@ -308,29 +309,31 @@ public class Cmg21UpsiParams {
      * @param isReceiver   是否为接收方。
      * @return 哈希桶条目中元素对应的编码数组。
      */
-    public long[] getHashBinEntryEncodedArray(HashBinEntry<ByteBuffer> hashBinEntry, boolean isReceiver) {
-        long[] encodedResult = new long[itemEncodedSlotSize];
-        int encodedItemBitLength = (BigInteger.valueOf(plainModulus).bitLength() - 1) * itemEncodedSlotSize;
-        assert encodedItemBitLength >= 80;
+    public long[] getHashBinEntryEncodedArray(HashBinEntry<ByteBuffer> hashBinEntry, boolean isReceiver,
+                                              SecureRandom secureRandom) {
+        long[] encodedArray = new long[itemEncodedSlotSize];
+        int bitLength = (BigInteger.valueOf(plainModulus).bitLength() - 1) * itemEncodedSlotSize;
+        assert bitLength >= 80;
         int shiftBits = BigInteger.valueOf(plainModulus).bitLength() - 1;
         // 判断是否为空桶
         if (hashBinEntry.getHashIndex() != -1) {
             assert hashBinEntry.getHashIndex() < 3 : "hash index should be [0, 1, 2]";
-            // encode the first (plain_modulus_bits-1) * felts_per_item bits of the input
             BigInteger input = BigIntegerUtils.byteArrayToNonNegBigInteger(hashBinEntry.getItem().array());
-            input = input.shiftRight(input.bitLength() - encodedItemBitLength);
+            input = input.shiftRight(input.bitLength() - bitLength);
             for (int i = 0; i < itemEncodedSlotSize; i++) {
-                encodedResult[i] = input.mod(BigInteger.ONE.shiftLeft(shiftBits)).longValueExact();
+                encodedArray[i] = input.mod(BigInteger.ONE.shiftLeft(shiftBits)).longValueExact();
                 input = input.shiftRight(shiftBits);
             }
         } else {
-            // dummy element
-            encodedResult = IntStream.range(0, itemEncodedSlotSize).mapToLong(i-> 3L | ((isReceiver ? 1L : 0L)<<2)).toArray();
+            IntStream.range(0, itemEncodedSlotSize).forEach(i -> {
+                long random = Math.abs(secureRandom.nextLong()) % plainModulus / 8;
+                encodedArray[i] = random << 1 | (isReceiver ? 1L : 0L);
+            });
         }
         for (int i = 0; i < itemEncodedSlotSize; i++) {
-            assert encodedResult[i] < plainModulus : "encoded value must be smaller than plain modulus";
+            assert encodedArray[i] < plainModulus : "encoded value must be smaller than plain modulus";
         }
-        return encodedResult;
+        return encodedArray;
     }
 
     /**

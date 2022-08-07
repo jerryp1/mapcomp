@@ -7,11 +7,13 @@ import edu.alibaba.mpc4j.common.tool.hashbin.object.cuckoo.CuckooHashBinFactory;
 import edu.alibaba.mpc4j.s2pc.pso.PsoUtils;
 import edu.alibaba.mpc4j.s2pc.pso.upsi.cmg21.Cmg21UpsiConfig;
 import edu.alibaba.mpc4j.s2pc.pso.upsi.cmg21.Cmg21UpsiParams;
+import org.junit.Assert;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.nio.ByteBuffer;
+import java.security.SecureRandom;
 import java.util.List;
 import java.util.Set;
 
@@ -263,15 +265,16 @@ public class UpsiTest {
         Set<ByteBuffer> serverElementSet = sets.get(0);
         Set<ByteBuffer> clientElementSet = sets.get(1);
         // 创建参与方实例
-        UpsiServer server = UpsiFactory.createServer(serverRpc, clientRpc.ownParty(), config);
-        UpsiClient client = UpsiFactory.createClient(clientRpc, serverRpc.ownParty(), config);
+        UpsiServer<ByteBuffer> server = UpsiFactory.createServer(serverRpc, clientRpc.ownParty(), config);
+        UpsiClient<ByteBuffer> client = UpsiFactory.createClient(clientRpc, serverRpc.ownParty(), config);
+        long randomTaskId = Math.abs(new SecureRandom().nextLong());
+        server.setTaskId(randomTaskId);
+        client.setTaskId(randomTaskId);
         // 设置并发
         server.setParallel(parallel);
         client.setParallel(parallel);
-
-        UpsiServerThread serverThread = new UpsiServerThread(server, serverElementSet, clientElementSet.size(),
-            elementByteLength);
-        UpsiClientThread clientThread = new UpsiClientThread(client, clientElementSet, elementByteLength);
+        UpsiServerThread<ByteBuffer> serverThread = new UpsiServerThread<>(server, serverElementSet, clientElementSet.size());
+        UpsiClientThread<ByteBuffer> clientThread = new UpsiClientThread<>(client, clientElementSet);
         try {
             // 开始执行协议
             serverThread.start();
@@ -284,15 +287,13 @@ public class UpsiTest {
         }
         // 验证结果
         Set<ByteBuffer> psiResult = clientThread.getIntersectionSet();
-        LOGGER.info("Main: The size of matched IDs is {}", psiResult.size());
         LOGGER.info("Server: The Communication costs {}MB", serverRpc.getSendByteLength()*1.0/(1024*1024));
         LOGGER.info("Client: The Communication costs {}MB", clientRpc.getSendByteLength()*1.0/(1024*1024));
         sets.get(0).retainAll(sets.get(1));
-        if (!sets.get(0).containsAll(psiResult) | !psiResult.containsAll(sets.get(0))) {
-            LOGGER.info("Main: unbalance PSI result wrong!");
-            assert false;
-        }
+        Assert.assertTrue(sets.get(0).containsAll(psiResult));
+        Assert.assertTrue(psiResult.containsAll(sets.get(0)));
         LOGGER.info("Main: unbalance PSI result correct!");
+        LOGGER.info("Main: The size of matched IDs is {}", psiResult.size());
         // 打印参数
         LOGGER.info(config.getParams().toString());
     }

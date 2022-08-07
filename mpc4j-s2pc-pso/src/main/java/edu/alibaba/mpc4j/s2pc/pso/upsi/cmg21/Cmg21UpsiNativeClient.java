@@ -27,22 +27,21 @@ class Cmg21UpsiNativeClient {
     /**
      * 生成索引信息。
      *
-     * @param plainQuery       明文索引信息。
      * @param encryptionParams 加密方案参数。
      * @param publicKey        公钥。
      * @param secretKey        私钥。
+     * @param plainQuery       明文索引信息。
      * @return 索引信息。
      */
-    static native List<byte[]> generateQuery(long[][] plainQuery, byte[] encryptionParams, byte[] publicKey,
-                                             byte[] secretKey);
+    static native List<byte[]> generateQuery(byte[] encryptionParams, byte[] publicKey, byte[] secretKey, long[][] plainQuery);
 
     /**
      * 解码查询结果。
      *
-     * @param encryptedResponse 密文查询结果。
      * @param encryptionParams  加密方案参数。
      * @param secretKey         私钥。
+     * @param encryptedResponse 密文查询结果。
      * @return 查询结果。
      */
-    static native long[] decodeReply(byte[] encryptedResponse, byte[] encryptionParams, byte[] secretKey);
+    static native long[] decodeReply(byte[] encryptionParams, byte[] secretKey, byte[] encryptedResponse);
 }

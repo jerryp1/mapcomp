@@ -1,10 +1,12 @@
 package edu.alibaba.mpc4j.s2pc.pir.keyword.cmg21;
 
+import edu.alibaba.mpc4j.common.tool.CommonConstants;
 import edu.alibaba.mpc4j.common.tool.hashbin.object.HashBinEntry;
 import edu.alibaba.mpc4j.common.tool.utils.BigIntegerUtils;
 
 import java.math.BigInteger;
 import java.nio.ByteBuffer;
+import java.security.SecureRandom;
 import java.util.Arrays;
 import java.util.stream.IntStream;
 
@@ -16,49 +18,49 @@ import java.util.stream.IntStream;
  */
 public class Cmg21KwPirParams {
     /**
-     * table params : 哈希算法数目
+     * 哈希算法数目
      */
     private final int hashNum;
     /**
-     * table params : 哈希桶数目
+     * 哈希桶数目
      */
     private final int binNum;
     /**
-     * table params : 每个哈希桶内分块的最大元素个数
+     * 每个哈希桶内分块的最大元素个数
      */
     private final int maxPartitionSizePerBin;
     /**
-     * item params : 元素编码后占的卡槽个数
+     * 元素编码后占的卡槽个数
      */
     private final int itemEncodedSlotSize;
     /**
-     * query params : Paterson-Stockmeyer方法的低阶值
+     * Paterson-Stockmeyer方法的低阶值
      */
     private final int psLowDegree;
     /**
-     * table params : 查询幂次方
+     * 查询幂次方
      */
     private final int[] queryPowers;
     /**
-     * SEAL params : 明文模数
+     * 明文模数
      */
     private final int plainModulus;
     /**
-     * SEAL params : 多项式阶
+     * 多项式阶
      */
     private final int polyModulusDegree;
     /**
-     * SEAL params : 系数模数的比特值
+     * 系数模数的比特值
      */
     private final int[] coeffModulusBits;
     /**
-     * 单次查询的最大查询元素数量
+     * 支持查询的关键词数量
      */
-    private final int maxItemPerQuery;
+    private final int maxQueryKeywordSize;
 
     public Cmg21KwPirParams(int hashNum, int binNum, int maxPartitionSizePerBin, int itemEncodedSlotSize, int psLowDegree,
                             int[] queryPowers, int plainModulus, int polyModulusDegree, int[] coeffModulusBits,
-                            int maxItemPerQuery) {
+                            int maxQueryKeywordSize) {
         assert hashNum >= 1 && hashNum <= 3 : "hash num must be in {1, 2, 3}";
         assert binNum > 0 : "bin num should be greater than 0";
         assert itemEncodedSlotSize >= 2 && itemEncodedSlotSize <= 32 : "the size of slots for encoded item should "
@@ -76,7 +78,7 @@ public class Cmg21KwPirParams {
             "and smaller than or equal 128";
         assert binNum % (polyModulusDegree / itemEncodedSlotSize) == 0 : "binNum should be a multiple of " +
             "polyModulusDegree / itemEncodedSlotSize";
-        assert maxItemPerQuery > 0;
+        assert maxQueryKeywordSize > 0;
         this.hashNum = hashNum;
         this.binNum = binNum;
         this.maxPartitionSizePerBin = maxPartitionSizePerBin;
@@ -86,9 +88,12 @@ public class Cmg21KwPirParams {
         this.plainModulus = plainModulus;
         this.polyModulusDegree = polyModulusDegree;
         this.coeffModulusBits = coeffModulusBits;
-        this.maxItemPerQuery = maxItemPerQuery;
+        this.maxQueryKeywordSize = maxQueryKeywordSize;
     }
 
+    /**
+     * 服务端集合元素个数为1000000，客户端集合元素最大个数为4096
+     */
     public static final Cmg21KwPirParams ONE_MILLION_4096_32 = new Cmg21KwPirParams(3, 6552, 770,
         5,
         26, new int[]{1, 5, 8, 27, 135},
@@ -96,6 +101,9 @@ public class Cmg21KwPirParams {
         4096
     );
 
+    /**
+     * 服务端集合元素个数为1000000，客户端集合元素最大个数为1
+     */
     public static final Cmg21KwPirParams ONE_MILLION_1_32 = new Cmg21KwPirParams(1, 1638, 228,
         5,
         0, new int[]{1, 3, 8, 19, 33, 39, 92, 102},
@@ -189,7 +197,7 @@ public class Cmg21KwPirParams {
      *
      * @return 单次查询的最大查询元素数量。
      */
-    public int getMaxItemPerQuery() { return maxItemPerQuery; }
+    public int getMaxQueryKeywordSize() { return maxQueryKeywordSize; }
 
     @Override
     public String toString() {
@@ -218,33 +226,34 @@ public class Cmg21KwPirParams {
      *
      * @param hashBinEntry 哈希桶条目。
      * @param isReceiver   是否为接收方。
+     * @param secureRandom 随机状态。
      * @return 哈希桶条目中元素对应的编码数组。
      */
-    public long[] getHashBinEntryEncodedArray(HashBinEntry<ByteBuffer> hashBinEntry, boolean isReceiver) {
-        long[] encodedResult = new long[itemEncodedSlotSize];
-        int encodedItemBitLength = (BigInteger.valueOf(plainModulus).bitLength()-1) * itemEncodedSlotSize;
-        assert encodedItemBitLength >= 80;
+    public long[] getHashBinEntryEncodedArray(HashBinEntry<ByteBuffer> hashBinEntry, boolean isReceiver,
+                                              SecureRandom secureRandom) {
+        long[] encodedArray = new long[itemEncodedSlotSize];
+        int bitLength = (BigInteger.valueOf(plainModulus).bitLength()-1) * itemEncodedSlotSize;
+        assert bitLength >= 80;
         int shiftBits = BigInteger.valueOf(plainModulus).bitLength() - 1;
         // 判断是否为空桶
         if (hashBinEntry.getHashIndex() != -1) {
-            // the index of the hash function should be [0, 1, 2], index 3 is used for dummy elements
-            assert(hashBinEntry.getHashIndex() < 3);
+            assert(hashBinEntry.getHashIndex() < 3) : "hash index should be [0, 1, 2]";
             BigInteger input = BigIntegerUtils.byteArrayToNonNegBigInteger(hashBinEntry.getItem().array());
-            input = input.shiftRight(input.bitLength() - encodedItemBitLength);
-            // encode the input itself, except for the last bucket_count_log() bits
+            input = input.mod(BigInteger.ONE.shiftLeft(CommonConstants.BLOCK_BIT_LENGTH));
             for (int i = 0; i < itemEncodedSlotSize; i++) {
-                encodedResult[i] = input.mod(BigInteger.ONE.shiftLeft(shiftBits)).longValueExact();
+                encodedArray[i] = input.mod(BigInteger.ONE.shiftLeft(shiftBits)).longValueExact();
                 input = input.shiftRight(shiftBits);
             }
         } else {
-            // for the dummy element, we use a non-existent hash function index (3)
-            // and 0 or 1 for the input depending on whether it's the sender or the receiver who needs a dummy.
-            encodedResult = IntStream.range(0, itemEncodedSlotSize).mapToLong(i -> 3L | ((isReceiver ? 1L : 0L) << 2)).toArray();
+            IntStream.range(0, itemEncodedSlotSize).forEach(i -> {
+                long random = Math.abs(secureRandom.nextLong()) % plainModulus / 8;
+                encodedArray[i] = random << 1 | (isReceiver ? 1L : 0L);
+            });
         }
         for (int i = 0; i < itemEncodedSlotSize; i++) {
-            assert (encodedResult[i] < plainModulus);
+            assert (encodedArray[i] < plainModulus);
         }
-        return encodedResult;
+        return encodedArray;
     }
 
     /**
@@ -254,22 +263,22 @@ public class Cmg21KwPirParams {
      * @param partitionNum 分块数目。
      * @return 标签编码数组。
      */
-    public long[][] encodeLabel(ByteBuffer labelBytes, int partitionNum) {
-        long[][] encodedResult = new long[partitionNum][itemEncodedSlotSize];
-        int shiftBits = (int) Math.ceil(labelBytes.array().length*8.0 / (itemEncodedSlotSize*partitionNum));
-        BigInteger input = BigIntegerUtils.byteArrayToNonNegBigInteger(labelBytes.array());
+    public long[][] encodeLabel(byte[] labelBytes, int partitionNum) {
+        long[][] encodedArray = new long[partitionNum][itemEncodedSlotSize];
+        int shiftBits = (int) Math.ceil(labelBytes.length*8.0 / (itemEncodedSlotSize*partitionNum));
+        BigInteger bigIntLabel = BigIntegerUtils.byteArrayToNonNegBigInteger(labelBytes);
         for (int i = 0; i < partitionNum; i++) {
             for (int j = 0; j < itemEncodedSlotSize; j++) {
-                encodedResult[i][j] = input.mod(BigInteger.ONE.shiftLeft(shiftBits)).longValueExact();
-                input = input.shiftRight(shiftBits);
+                encodedArray[i][j] = bigIntLabel.mod(BigInteger.ONE.shiftLeft(shiftBits)).longValueExact();
+                bigIntLabel = bigIntLabel.shiftRight(shiftBits);
             }
         }
         for (int i = 0; i < partitionNum; i++) {
             for (int j = 0; j < itemEncodedSlotSize; j++) {
-                assert (encodedResult[i][j] < plainModulus);
+                assert (encodedArray[i][j] < plainModulus);
             }
         }
-        return encodedResult;
+        return encodedArray;
     }
 
     /**
