@@ -2,8 +2,6 @@ package edu.alibaba.mpc4j.s2pc.pcg.vole.zp;
 
 import edu.alibaba.mpc4j.common.tool.CommonConstants;
 import edu.alibaba.mpc4j.common.tool.utils.BigIntegerUtils;
-import edu.alibaba.mpc4j.s2pc.pcg.vole.zp.vole.ZpVoleReceiverOutput;
-import edu.alibaba.mpc4j.s2pc.pcg.vole.zp.vole.ZpVoleSenderOutput;
 import org.junit.Assert;
 
 import java.math.BigInteger;
