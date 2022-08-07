@@ -18,8 +18,8 @@ import edu.alibaba.mpc4j.common.tool.okve.ovdm.zp.ZpOvdmFactory;
 import edu.alibaba.mpc4j.common.tool.okve.ovdm.zp.ZpOvdmFactory.ZpOvdmType;
 import edu.alibaba.mpc4j.common.tool.utils.BytesUtils;
 import edu.alibaba.mpc4j.s2pc.pcg.ot.cot.CotReceiverOutput;
-import edu.alibaba.mpc4j.s2pc.pcg.ot.cot.rcot.RcotFactory;
-import edu.alibaba.mpc4j.s2pc.pcg.ot.cot.rcot.RcotReceiver;
+import edu.alibaba.mpc4j.s2pc.pcg.ot.cot.core.CoreCotFactory;
+import edu.alibaba.mpc4j.s2pc.pcg.ot.cot.core.CoreCotReceiver;
 import edu.alibaba.mpc4j.s2pc.pso.psu.AbstractPsuClient;
 import org.bouncycastle.math.ec.ECPoint;
 
@@ -39,9 +39,9 @@ import java.util.stream.Stream;
  */
 public class Zcl22PkePsuClient extends AbstractPsuClient {
     /**
-     * RCOT协议接收方
+     * 核COT协议接收方
      */
-    private final RcotReceiver rcotReceiver;
+    private final CoreCotReceiver coreCotReceiver;
     /**
      * Zp-OVDM类型
      */
@@ -93,8 +93,8 @@ public class Zcl22PkePsuClient extends AbstractPsuClient {
 
     public Zcl22PkePsuClient(Rpc clientRpc, Party serverParty, Zcl22PkePsuConfig config) {
         super(Zcl22PkePsuPtoDesc.getInstance(), clientRpc, serverParty, config);
-        rcotReceiver = RcotFactory.createReceiver(clientRpc, serverParty, config.getRcotConfig());
-        rcotReceiver.addLogLevel();
+        coreCotReceiver = CoreCotFactory.createReceiver(clientRpc, serverParty, config.getCoreCotConfig());
+        coreCotReceiver.addLogLevel();
         zpOvdmType = config.getZpOvdmType();
         compressEncode = config.getCompressEncode();
         pipeSize = config.getPipeSize();
@@ -105,19 +105,19 @@ public class Zcl22PkePsuClient extends AbstractPsuClient {
     @Override
     public void setTaskId(long taskId) {
         super.setTaskId(taskId);
-        rcotReceiver.setTaskId(taskId);
+        coreCotReceiver.setTaskId(taskId);
     }
 
     @Override
     public void setParallel(boolean parallel) {
         super.setParallel(parallel);
-        rcotReceiver.setParallel(parallel);
+        coreCotReceiver.setParallel(parallel);
     }
 
     @Override
     public void addLogLevel() {
         super.addLogLevel();
-        rcotReceiver.addLogLevel();
+        coreCotReceiver.addLogLevel();
     }
 
     @Override
@@ -127,7 +127,7 @@ public class Zcl22PkePsuClient extends AbstractPsuClient {
 
         stopWatch.start();
         // 初始化各个子协议
-        rcotReceiver.init(maxServerElementSize);
+        coreCotReceiver.init(maxServerElementSize);
         stopWatch.stop();
         long initTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
         stopWatch.reset();
@@ -203,7 +203,7 @@ public class Zcl22PkePsuClient extends AbstractPsuClient {
         info("{}{} Client Step 2/3 ({}ms)", ptoStepLogPrefix, getPtoDesc().getPtoName(), peqtTime);
 
         stopWatch.start();
-        CotReceiverOutput cotReceiverOutput = rcotReceiver.receive(peqtArray);
+        CotReceiverOutput cotReceiverOutput = coreCotReceiver.receive(peqtArray);
         DataPacketHeader encHeader = new DataPacketHeader(
             taskId, getPtoDesc().getPtoId(), Zcl22PkePsuPtoDesc.PtoStep.SERVER_SEND_ENC_ELEMENTS.ordinal(), extraInfo,
             otherParty().getPartyId(), ownParty().getPartyId()

@@ -5,8 +5,8 @@ import edu.alibaba.mpc4j.common.tool.EnvType;
 import edu.alibaba.mpc4j.common.tool.okve.ovdm.gf2e.Gf2eOvdmFactory.Gf2eOvdmType;
 import edu.alibaba.mpc4j.s2pc.aby.bc.BcConfig;
 import edu.alibaba.mpc4j.s2pc.aby.bc.BcFactory;
-import edu.alibaba.mpc4j.s2pc.pcg.ot.cot.rcot.RcotConfig;
-import edu.alibaba.mpc4j.s2pc.pcg.ot.cot.rcot.RcotFactory;
+import edu.alibaba.mpc4j.s2pc.pcg.ot.cot.core.CoreCotConfig;
+import edu.alibaba.mpc4j.s2pc.pcg.ot.cot.core.CoreCotFactory;
 import edu.alibaba.mpc4j.s2pc.pso.oprp.OprpConfig;
 import edu.alibaba.mpc4j.s2pc.pso.oprp.OprpFactory;
 import edu.alibaba.mpc4j.s2pc.pso.psu.PsuConfig;
@@ -28,9 +28,9 @@ public class Zcl22SkePsuConfig implements PsuConfig {
      */
     private final OprpConfig oprpConfig;
     /**
-     * RCOT协议配置项
+     * 核COT协议配置项
      */
-    private final RcotConfig rcotConfig;
+    private final CoreCotConfig coreCotConfig;
     /**
      * GF2E-OVDM类型
      */
@@ -39,10 +39,10 @@ public class Zcl22SkePsuConfig implements PsuConfig {
     private Zcl22SkePsuConfig(Builder builder) {
         // 协议的环境类型必须相同
         assert builder.bcConfig.getEnvType().equals(builder.oprpConfig.getEnvType());
-        assert builder.bcConfig.getEnvType().equals(builder.rcotConfig.getEnvType());
+        assert builder.bcConfig.getEnvType().equals(builder.coreCotConfig.getEnvType());
         bcConfig = builder.bcConfig;
         oprpConfig = builder.oprpConfig;
-        rcotConfig = builder.rcotConfig;
+        coreCotConfig = builder.coreCotConfig;
         gf2eOvdmType = builder.gf2eOvdmType;
     }
 
@@ -59,8 +59,8 @@ public class Zcl22SkePsuConfig implements PsuConfig {
         return oprpConfig;
     }
 
-    public RcotConfig getRcotConfig() {
-        return rcotConfig;
+    public CoreCotConfig getCoreCotConfig() {
+        return coreCotConfig;
     }
 
     public Gf2eOvdmType getGf2eOvdmType() {
@@ -81,8 +81,8 @@ public class Zcl22SkePsuConfig implements PsuConfig {
         if (oprpConfig.getSecurityModel().compareTo(securityModel) < 0) {
             securityModel = oprpConfig.getSecurityModel();
         }
-        if (rcotConfig.getSecurityModel().compareTo(securityModel) < 0) {
-            securityModel = rcotConfig.getSecurityModel();
+        if (coreCotConfig.getSecurityModel().compareTo(securityModel) < 0) {
+            securityModel = coreCotConfig.getSecurityModel();
         }
         return securityModel;
     }
@@ -97,9 +97,9 @@ public class Zcl22SkePsuConfig implements PsuConfig {
          */
         private OprpConfig oprpConfig;
         /**
-         * RCOT协议配置项
+         * 核COT协议配置项
          */
-        private RcotConfig rcotConfig;
+        private CoreCotConfig coreCotConfig;
         /**
          * GF2x-OVDM类型
          */
@@ -108,7 +108,7 @@ public class Zcl22SkePsuConfig implements PsuConfig {
         public Builder() {
             bcConfig = BcFactory.createDefaultConfig(SecurityModel.SEMI_HONEST);
             oprpConfig = OprpFactory.createDefaultConfig(SecurityModel.SEMI_HONEST);
-            rcotConfig = RcotFactory.createDefaultConfig(SecurityModel.SEMI_HONEST);
+            coreCotConfig = CoreCotFactory.createDefaultConfig(SecurityModel.SEMI_HONEST);
             gf2eOvdmType = Gf2eOvdmType.H3_SINGLETON_GCT;
         }
 
@@ -122,8 +122,8 @@ public class Zcl22SkePsuConfig implements PsuConfig {
             return this;
         }
 
-        public Builder setRcotConfig(RcotConfig rcotConfig) {
-            this.rcotConfig = rcotConfig;
+        public Builder setCoreCotConfig(CoreCotConfig coreCotConfig) {
+            this.coreCotConfig = coreCotConfig;
             return this;
         }
 

@@ -3,8 +3,8 @@ package edu.alibaba.mpc4j.s2pc.pso.psu.jsz22;
 import edu.alibaba.mpc4j.common.rpc.desc.SecurityModel;
 import edu.alibaba.mpc4j.common.tool.EnvType;
 import edu.alibaba.mpc4j.common.tool.hashbin.object.cuckoo.CuckooHashBinFactory.CuckooHashBinType;
-import edu.alibaba.mpc4j.s2pc.pcg.ot.cot.rcot.RcotConfig;
-import edu.alibaba.mpc4j.s2pc.pcg.ot.cot.rcot.RcotFactory;
+import edu.alibaba.mpc4j.s2pc.pcg.ot.cot.core.CoreCotConfig;
+import edu.alibaba.mpc4j.s2pc.pcg.ot.cot.core.CoreCotFactory;
 import edu.alibaba.mpc4j.s2pc.pso.oprf.OprfConfig;
 import edu.alibaba.mpc4j.s2pc.pso.oprf.OprfFactory;
 import edu.alibaba.mpc4j.s2pc.pso.osn.OsnConfig;
@@ -28,9 +28,9 @@ public class Jsz22SfcPsuConfig implements PsuConfig {
      */
     private final OsnConfig osnConfig;
     /**
-     * RCOT协议配置项
+     * 核COT协议配置项
      */
-    private final RcotConfig rcotConfig;
+    private final CoreCotConfig coreCotConfig;
     /**
      * 布谷鸟哈希类型
      */
@@ -39,10 +39,10 @@ public class Jsz22SfcPsuConfig implements PsuConfig {
     private Jsz22SfcPsuConfig(Builder builder) {
         // 协议的环境类型必须相同
         assert builder.oprfConfig.getEnvType().equals(builder.osnConfig.getEnvType());
-        assert builder.oprfConfig.getEnvType().equals(builder.rcotConfig.getEnvType());
+        assert builder.oprfConfig.getEnvType().equals(builder.coreCotConfig.getEnvType());
         oprfConfig = builder.oprfConfig;
         osnConfig = builder.osnConfig;
-        rcotConfig = builder.rcotConfig;
+        coreCotConfig = builder.coreCotConfig;
         cuckooHashBinType = builder.cuckooHashBinType;
     }
 
@@ -59,8 +59,8 @@ public class Jsz22SfcPsuConfig implements PsuConfig {
         return osnConfig;
     }
 
-    public RcotConfig getRcotConfig() {
-        return rcotConfig;
+    public CoreCotConfig getCoreCotConfig() {
+        return coreCotConfig;
     }
 
     public CuckooHashBinType getCuckooHashBinType() {
@@ -81,8 +81,8 @@ public class Jsz22SfcPsuConfig implements PsuConfig {
         if (osnConfig.getSecurityModel().compareTo(securityModel) < 0) {
             securityModel = osnConfig.getSecurityModel();
         }
-        if (rcotConfig.getSecurityModel().compareTo(securityModel) < 0) {
-            securityModel = rcotConfig.getSecurityModel();
+        if (coreCotConfig.getSecurityModel().compareTo(securityModel) < 0) {
+            securityModel = coreCotConfig.getSecurityModel();
         }
         return securityModel;
     }
@@ -97,9 +97,9 @@ public class Jsz22SfcPsuConfig implements PsuConfig {
          */
         private OsnConfig osnConfig;
         /**
-         * RCOT协议配置项
+         * 核COT协议配置项
          */
-        private RcotConfig rcotConfig;
+        private CoreCotConfig coreCotConfig;
         /**
          * 布谷鸟哈希类型
          */
@@ -108,7 +108,7 @@ public class Jsz22SfcPsuConfig implements PsuConfig {
         public Builder() {
             oprfConfig = OprfFactory.createOprfDefaultConfig(SecurityModel.SEMI_HONEST);
             osnConfig = OsnFactory.createDefaultConfig(SecurityModel.SEMI_HONEST);
-            rcotConfig = RcotFactory.createDefaultConfig(SecurityModel.SEMI_HONEST);
+            coreCotConfig = CoreCotFactory.createDefaultConfig(SecurityModel.SEMI_HONEST);
             // 论文建议平衡场景下使用PSZ18的3哈希协议，非平衡场景下使用PSZ18的4哈希协议
             cuckooHashBinType = CuckooHashBinType.NAIVE_3_HASH;
         }
@@ -123,8 +123,8 @@ public class Jsz22SfcPsuConfig implements PsuConfig {
             return this;
         }
 
-        public Builder setRcotConfig(RcotConfig rcotConfig) {
-            this.rcotConfig = rcotConfig;
+        public Builder setCoreCotConfig(CoreCotConfig coreCotConfig) {
+            this.coreCotConfig = coreCotConfig;
             return this;
         }
 

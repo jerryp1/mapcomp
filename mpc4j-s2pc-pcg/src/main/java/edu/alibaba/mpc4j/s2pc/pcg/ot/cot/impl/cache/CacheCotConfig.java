@@ -4,10 +4,10 @@ import edu.alibaba.mpc4j.common.rpc.desc.SecurityModel;
 import edu.alibaba.mpc4j.common.tool.EnvType;
 import edu.alibaba.mpc4j.s2pc.pcg.ot.cot.CotConfig;
 import edu.alibaba.mpc4j.s2pc.pcg.ot.cot.CotFactory;
-import edu.alibaba.mpc4j.s2pc.pcg.ot.cot.nccot.NcCotConfig;
-import edu.alibaba.mpc4j.s2pc.pcg.ot.cot.nccot.NcCotFactory;
-import edu.alibaba.mpc4j.s2pc.pcg.ot.cot.pcot.PcotConfig;
-import edu.alibaba.mpc4j.s2pc.pcg.ot.cot.pcot.PcotFactory;
+import edu.alibaba.mpc4j.s2pc.pcg.ot.cot.nc.NcCotConfig;
+import edu.alibaba.mpc4j.s2pc.pcg.ot.cot.nc.NcCotFactory;
+import edu.alibaba.mpc4j.s2pc.pcg.ot.cot.pre.PreCotConfig;
+import edu.alibaba.mpc4j.s2pc.pcg.ot.cot.pre.PreCotFactory;
 
 /**
  * 缓存COT协议配置项。
@@ -17,27 +17,27 @@ import edu.alibaba.mpc4j.s2pc.pcg.ot.cot.pcot.PcotFactory;
  */
 public class CacheCotConfig implements CotConfig {
     /**
-     * NCCOT协议配置项
+     * NC-COT协议配置项
      */
-    private final NcCotConfig nccotConfig;
+    private final NcCotConfig ncCotConfig;
     /**
-     * PCOT协议配置项
+     * 预计算COT协议配置项
      */
-    private final PcotConfig pcotConfig;
+    private final PreCotConfig preCotConfig;
 
     private CacheCotConfig(Builder builder) {
         // 两个协议的环境类型必须相同
-        assert builder.nccotConfig.getEnvType().equals(builder.pcotConfig.getEnvType());
-        nccotConfig = builder.nccotConfig;
-        pcotConfig = builder.pcotConfig;
+        assert builder.ncCotConfig.getEnvType().equals(builder.preCotConfig.getEnvType());
+        ncCotConfig = builder.ncCotConfig;
+        preCotConfig = builder.preCotConfig;
     }
 
-    public NcCotConfig getNccotConfig() {
-        return nccotConfig;
+    public NcCotConfig getNcCotConfig() {
+        return ncCotConfig;
     }
 
-    public PcotConfig getPcotConfig() {
-        return pcotConfig;
+    public PreCotConfig getPreCotConfig() {
+        return preCotConfig;
     }
 
     @Override
@@ -47,48 +47,48 @@ public class CacheCotConfig implements CotConfig {
 
     @Override
     public int maxBaseNum() {
-        return nccotConfig.maxAllowNum();
+        return ncCotConfig.maxAllowNum();
     }
 
     @Override
     public EnvType getEnvType() {
-        return nccotConfig.getEnvType();
+        return ncCotConfig.getEnvType();
     }
 
     @Override
     public SecurityModel getSecurityModel() {
         SecurityModel securityModel = SecurityModel.MALICIOUS;
-        if (nccotConfig.getSecurityModel().compareTo(securityModel) < 0) {
-            securityModel = nccotConfig.getSecurityModel();
+        if (ncCotConfig.getSecurityModel().compareTo(securityModel) < 0) {
+            securityModel = ncCotConfig.getSecurityModel();
         }
-        if (pcotConfig.getSecurityModel().compareTo(securityModel) < 0) {
-            securityModel = pcotConfig.getSecurityModel();
+        if (preCotConfig.getSecurityModel().compareTo(securityModel) < 0) {
+            securityModel = preCotConfig.getSecurityModel();
         }
         return securityModel;
     }
 
     public static class Builder implements org.apache.commons.lang3.builder.Builder<CacheCotConfig> {
         /**
-         * NCCOT协议配置项
+         * NC-COT协议配置项
          */
-        private NcCotConfig nccotConfig;
+        private NcCotConfig ncCotConfig;
         /**
-         * POT协议配置项
+         * 预计算COT协议配置项
          */
-        private PcotConfig pcotConfig;
+        private PreCotConfig preCotConfig;
 
         public Builder(SecurityModel securityModel) {
-            nccotConfig = NcCotFactory.createDefaultConfig(securityModel);
-            pcotConfig = PcotFactory.createDefaultConfig(securityModel);
+            ncCotConfig = NcCotFactory.createDefaultConfig(securityModel);
+            preCotConfig = PreCotFactory.createDefaultConfig(securityModel);
         }
 
         public Builder setNcCotConfig(NcCotConfig ncCotConfig) {
-            this.nccotConfig = ncCotConfig;
+            this.ncCotConfig = ncCotConfig;
             return this;
         }
 
-        public Builder setPcotConfig(PcotConfig pcotConfig) {
-            this.pcotConfig = pcotConfig;
+        public Builder setPreCotConfig(PreCotConfig preCotConfig) {
+            this.preCotConfig = preCotConfig;
             return this;
         }
 

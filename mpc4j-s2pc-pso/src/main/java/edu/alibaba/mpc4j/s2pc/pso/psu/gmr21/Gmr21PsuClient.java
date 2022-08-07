@@ -20,8 +20,8 @@ import edu.alibaba.mpc4j.common.tool.okve.okvs.OkvsFactory;
 import edu.alibaba.mpc4j.common.tool.okve.okvs.OkvsFactory.OkvsType;
 import edu.alibaba.mpc4j.common.tool.utils.BytesUtils;
 import edu.alibaba.mpc4j.s2pc.pcg.ot.cot.CotReceiverOutput;
-import edu.alibaba.mpc4j.s2pc.pcg.ot.cot.rcot.RcotFactory;
-import edu.alibaba.mpc4j.s2pc.pcg.ot.cot.rcot.RcotReceiver;
+import edu.alibaba.mpc4j.s2pc.pcg.ot.cot.core.CoreCotFactory;
+import edu.alibaba.mpc4j.s2pc.pcg.ot.cot.core.CoreCotReceiver;
 import edu.alibaba.mpc4j.s2pc.pso.osn.OsnFactory;
 import edu.alibaba.mpc4j.s2pc.pso.osn.OsnPartyOutput;
 import edu.alibaba.mpc4j.s2pc.pso.osn.OsnSender;
@@ -54,9 +54,9 @@ public class Gmr21PsuClient extends AbstractPsuClient {
      */
     private final OprfReceiver peqtOprfReceiver;
     /**
-     * RCOT协议接收方
+     * 核COT协议接收方
      */
-    private final RcotReceiver rcotReceiver;
+    private final CoreCotReceiver coreCotReceiver;
     /**
      * OKVS类型
      */
@@ -106,8 +106,8 @@ public class Gmr21PsuClient extends AbstractPsuClient {
         osnSender.addLogLevel();
         peqtOprfReceiver = OprfFactory.createOprfReceiver(clientRpc, serverParty, config.getPeqtOprfConfig());
         peqtOprfReceiver.addLogLevel();
-        rcotReceiver = RcotFactory.createReceiver(clientRpc, serverParty, config.getRcotConfig());
-        rcotReceiver.addLogLevel();
+        coreCotReceiver = CoreCotFactory.createReceiver(clientRpc, serverParty, config.getCoreCotConfig());
+        coreCotReceiver.addLogLevel();
         okvsType = config.getOkvsType();
         cuckooHashBinType = config.getCuckooHashBinType();
         cuckooHashNum = CuckooHashBinFactory.getHashNum(cuckooHashBinType);
@@ -121,7 +121,7 @@ public class Gmr21PsuClient extends AbstractPsuClient {
         cuckooHashOprfSender.setTaskId(taskIdPrf.getLong(0, taskIdBytes, Long.MAX_VALUE));
         osnSender.setTaskId(taskIdPrf.getLong(1, taskIdBytes, Long.MAX_VALUE));
         peqtOprfReceiver.setTaskId(taskIdPrf.getLong(2, taskIdBytes, Long.MAX_VALUE));
-        rcotReceiver.setTaskId(taskIdPrf.getLong(3, taskIdBytes, Long.MAX_VALUE));
+        coreCotReceiver.setTaskId(taskIdPrf.getLong(3, taskIdBytes, Long.MAX_VALUE));
     }
 
     @Override
@@ -130,7 +130,7 @@ public class Gmr21PsuClient extends AbstractPsuClient {
         cuckooHashOprfSender.setParallel(parallel);
         osnSender.setParallel(parallel);
         peqtOprfReceiver.setParallel(parallel);
-        rcotReceiver.setParallel(parallel);
+        coreCotReceiver.setParallel(parallel);
     }
 
     @Override
@@ -139,7 +139,7 @@ public class Gmr21PsuClient extends AbstractPsuClient {
         cuckooHashOprfSender.addLogLevel();
         osnSender.addLogLevel();
         peqtOprfReceiver.addLogLevel();
-        rcotReceiver.addLogLevel();
+        coreCotReceiver.addLogLevel();
     }
 
     @Override
@@ -153,7 +153,7 @@ public class Gmr21PsuClient extends AbstractPsuClient {
         cuckooHashOprfSender.init(maxBinNum);
         osnSender.init(maxBinNum);
         peqtOprfReceiver.init(maxBinNum);
-        rcotReceiver.init(maxBinNum);
+        coreCotReceiver.init(maxBinNum);
         stopWatch.stop();
         long initTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
         stopWatch.reset();
@@ -268,7 +268,7 @@ public class Gmr21PsuClient extends AbstractPsuClient {
         info("{}{} Client Step 5/6 ({}ms)", ptoStepLogPrefix, getPtoDesc().getPtoName(), peqtTime);
 
         stopWatch.start();
-        CotReceiverOutput cotReceiverOutput = rcotReceiver.receive(choiceArray);
+        CotReceiverOutput cotReceiverOutput = coreCotReceiver.receive(choiceArray);
         DataPacketHeader encHeader = new DataPacketHeader(
             taskId, getPtoDesc().getPtoId(), Gmr21PsuPtoDesc.PtoStep.SERVER_SEND_ENC_ELEMENTS.ordinal(), extraInfo,
             otherParty().getPartyId(), ownParty().getPartyId()

@@ -19,8 +19,8 @@ import edu.alibaba.mpc4j.common.tool.polynomial.gf2e.Gf2ePoly;
 import edu.alibaba.mpc4j.common.tool.polynomial.gf2e.Gf2ePolyFactory;
 import edu.alibaba.mpc4j.common.tool.utils.BytesUtils;
 import edu.alibaba.mpc4j.s2pc.pcg.ot.cot.CotReceiverOutput;
-import edu.alibaba.mpc4j.s2pc.pcg.ot.cot.rcot.RcotFactory;
-import edu.alibaba.mpc4j.s2pc.pcg.ot.cot.rcot.RcotReceiver;
+import edu.alibaba.mpc4j.s2pc.pcg.ot.cot.core.CoreCotFactory;
+import edu.alibaba.mpc4j.s2pc.pcg.ot.cot.core.CoreCotReceiver;
 import edu.alibaba.mpc4j.s2pc.pso.psu.AbstractPsuClient;
 import edu.alibaba.mpc4j.s2pc.pso.oprf.*;
 
@@ -46,9 +46,9 @@ public class Krtw19OptPsuClient extends AbstractPsuClient {
      */
     private final OprfReceiver peqtOprfReceiver;
     /**
-     * RCOT协议接收方
+     * 核COT协议接收方
      */
-    private final RcotReceiver rcotReceiver;
+    private final CoreCotReceiver coreCotReceiver;
     /**
      * 流水线执行数量
      */
@@ -108,8 +108,8 @@ public class Krtw19OptPsuClient extends AbstractPsuClient {
         rpmtOprfSender.addLogLevel();
         peqtOprfReceiver = OprfFactory.createOprfReceiver(clientRpc, serverParty, config.getPeqtOprfConfig());
         peqtOprfReceiver.addLogLevel();
-        rcotReceiver = RcotFactory.createReceiver(clientRpc, serverParty, config.getRcotConfig());
-        rcotReceiver.addLogLevel();
+        coreCotReceiver = CoreCotFactory.createReceiver(clientRpc, serverParty, config.getCoreCotConfig());
+        coreCotReceiver.addLogLevel();
         pipeSize = config.getPipeSize();
         crhf = CrhfFactory.createInstance(getEnvType(), CrhfType.MMO);
     }
@@ -120,7 +120,7 @@ public class Krtw19OptPsuClient extends AbstractPsuClient {
         byte[] taskIdBytes = ByteBuffer.allocate(Long.BYTES).putLong(taskId).array();
         rpmtOprfSender.setTaskId(taskIdPrf.getLong(0, taskIdBytes, Long.MAX_VALUE));
         peqtOprfReceiver.setTaskId(taskIdPrf.getLong(1, taskIdBytes, Long.MAX_VALUE));
-        rcotReceiver.setTaskId(taskIdPrf.getLong(2, taskIdBytes, Long.MAX_VALUE));
+        coreCotReceiver.setTaskId(taskIdPrf.getLong(2, taskIdBytes, Long.MAX_VALUE));
     }
 
     @Override
@@ -128,7 +128,7 @@ public class Krtw19OptPsuClient extends AbstractPsuClient {
         super.setParallel(parallel);
         rpmtOprfSender.setParallel(parallel);
         peqtOprfReceiver.setParallel(parallel);
-        rcotReceiver.setParallel(parallel);
+        coreCotReceiver.setParallel(parallel);
     }
 
     @Override
@@ -136,7 +136,7 @@ public class Krtw19OptPsuClient extends AbstractPsuClient {
         super.addLogLevel();
         rpmtOprfSender.addLogLevel();
         peqtOprfReceiver.addLogLevel();
-        rcotReceiver.addLogLevel();
+        coreCotReceiver.addLogLevel();
     }
 
     @Override
@@ -148,7 +148,7 @@ public class Krtw19OptPsuClient extends AbstractPsuClient {
         // 初始化各个子协议
         rpmtOprfSender.init(Krtw19PsuUtils.MAX_BIN_NUM);
         peqtOprfReceiver.init(Krtw19PsuUtils.MAX_BIN_NUM);
-        rcotReceiver.init(Krtw19PsuUtils.MAX_BIN_NUM);
+        coreCotReceiver.init(Krtw19PsuUtils.MAX_BIN_NUM);
         stopWatch.stop();
         long initTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
         stopWatch.reset();
@@ -320,7 +320,7 @@ public class Krtw19OptPsuClient extends AbstractPsuClient {
         info("{}{} Client Step 2.3/2.4 ({}ms)", ptoStepLogPrefix, getPtoDesc().getPtoName(), peqtTime);
 
         stopWatch.start();
-        CotReceiverOutput cotReceiverOutput = rcotReceiver.receive(choiceArray);
+        CotReceiverOutput cotReceiverOutput = coreCotReceiver.receive(choiceArray);
         DataPacketHeader encHeader = new DataPacketHeader(
             taskId, getPtoDesc().getPtoId(), Krtw19OptPsuPtoDesc.PtoStep.SERVER_SEND_ENC_ELEMENTS.ordinal(), extraInfo,
             otherParty().getPartyId(), ownParty().getPartyId()

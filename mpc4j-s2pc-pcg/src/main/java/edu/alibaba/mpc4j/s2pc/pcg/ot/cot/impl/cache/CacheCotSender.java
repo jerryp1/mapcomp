@@ -5,10 +5,10 @@ import edu.alibaba.mpc4j.common.rpc.Party;
 import edu.alibaba.mpc4j.common.rpc.Rpc;
 import edu.alibaba.mpc4j.s2pc.pcg.ot.cot.AbstractCotSender;
 import edu.alibaba.mpc4j.s2pc.pcg.ot.cot.CotSenderOutput;
-import edu.alibaba.mpc4j.s2pc.pcg.ot.cot.nccot.NcCotFactory;
-import edu.alibaba.mpc4j.s2pc.pcg.ot.cot.nccot.NcCotSender;
-import edu.alibaba.mpc4j.s2pc.pcg.ot.cot.pcot.PcotFactory;
-import edu.alibaba.mpc4j.s2pc.pcg.ot.cot.pcot.PcotSender;
+import edu.alibaba.mpc4j.s2pc.pcg.ot.cot.nc.NcCotFactory;
+import edu.alibaba.mpc4j.s2pc.pcg.ot.cot.nc.NcCotSender;
+import edu.alibaba.mpc4j.s2pc.pcg.ot.cot.pre.PreCotFactory;
+import edu.alibaba.mpc4j.s2pc.pcg.ot.cot.pre.PreCotSender;
 
 import java.nio.ByteBuffer;
 import java.util.concurrent.TimeUnit;
@@ -21,13 +21,13 @@ import java.util.concurrent.TimeUnit;
  */
 public class CacheCotSender extends AbstractCotSender {
     /**
-     * NCCOT发送方
+     * NC-COT发送方
      */
     private final NcCotSender nccotSender;
     /**
-     * PCOT协议发送方
+     * 预计算COT协议发送方
      */
-    private final PcotSender pcotSender;
+    private final PreCotSender preCotSender;
     /**
      * 更新时的执行轮数
      */
@@ -39,10 +39,10 @@ public class CacheCotSender extends AbstractCotSender {
 
     public CacheCotSender(Rpc senderRpc, Party receiverParty, CacheCotConfig config) {
         super(CacheCotPtoDesc.getInstance(), senderRpc, receiverParty, config);
-        nccotSender = NcCotFactory.createSender(senderRpc, receiverParty, config.getNccotConfig());
+        nccotSender = NcCotFactory.createSender(senderRpc, receiverParty, config.getNcCotConfig());
         nccotSender.addLogLevel();
-        pcotSender = PcotFactory.createSender(senderRpc, receiverParty, config.getPcotConfig());
-        pcotSender.addLogLevel();
+        preCotSender = PreCotFactory.createSender(senderRpc, receiverParty, config.getPreCotConfig());
+        preCotSender.addLogLevel();
     }
 
     @Override
@@ -51,21 +51,21 @@ public class CacheCotSender extends AbstractCotSender {
         // NCCOT协议和PCOT协议需要使用不同的taskID
         byte[] taskIdBytes = ByteBuffer.allocate(Long.BYTES).putLong(taskId).array();
         nccotSender.setTaskId(taskIdPrf.getLong(0, taskIdBytes, Long.MAX_VALUE));
-        pcotSender.setTaskId(taskIdPrf.getLong(1, taskIdBytes, Long.MAX_VALUE));
+        preCotSender.setTaskId(taskIdPrf.getLong(1, taskIdBytes, Long.MAX_VALUE));
     }
 
     @Override
     public void setParallel(boolean parallel) {
         super.setParallel(parallel);
         nccotSender.setParallel(parallel);
-        pcotSender.setParallel(parallel);
+        preCotSender.setParallel(parallel);
     }
 
     @Override
     public void addLogLevel() {
         super.addLogLevel();
         nccotSender.addLogLevel();
-        pcotSender.addLogLevel();
+        preCotSender.addLogLevel();
     }
 
     @Override
@@ -85,7 +85,7 @@ public class CacheCotSender extends AbstractCotSender {
             updateRound = (int) Math.ceil((double) updateNum / config.maxBaseNum());
         }
         nccotSender.init(delta, updateRoundNum);
-        pcotSender.init();
+        preCotSender.init();
         buffer = CotSenderOutput.createEmpty(delta);
         stopWatch.stop();
         long initTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
@@ -122,12 +122,12 @@ public class CacheCotSender extends AbstractCotSender {
         info("{}{} Send. Step 1/2 ({}ms)", ptoStepLogPrefix, getPtoDesc().getPtoName(), splitTripleTime);
 
         stopWatch.start();
-        // 应用PCOT协议纠正选择比特
-        senderOutput = pcotSender.send(senderOutput);
+        // 应用预计算COT协议纠正选择比特
+        senderOutput = preCotSender.send(senderOutput);
         stopWatch.stop();
-        long pcotTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
+        long preCotTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
         stopWatch.reset();
-        info("{}{} Send. Step 2/2 ({}ms)", ptoStepLogPrefix, getPtoDesc().getPtoName(), pcotTime);
+        info("{}{} Send. Step 2/2 ({}ms)", ptoStepLogPrefix, getPtoDesc().getPtoName(), preCotTime);
 
         info("{}{} Send. end", ptoEndLogPrefix, getPtoDesc().getPtoName());
         return senderOutput;

@@ -84,11 +84,11 @@ public class BcFactory {
         switch (securityModel) {
             case IDEAL:
                 return new Bea91BcConfig.Builder()
-                    .setBtgConfig(Z2MtgFactory.createDefaultConfig(SecurityModel.IDEAL))
+                    .setZ2MtgConfig(Z2MtgFactory.createDefaultConfig(SecurityModel.IDEAL))
                     .build();
             case SEMI_HONEST:
                 return new Bea91BcConfig.Builder()
-                    .setBtgConfig(Z2MtgFactory.createDefaultConfig(SecurityModel.SEMI_HONEST))
+                    .setZ2MtgConfig(Z2MtgFactory.createDefaultConfig(SecurityModel.SEMI_HONEST))
                     .build();
             case COVERT:
             case MALICIOUS:

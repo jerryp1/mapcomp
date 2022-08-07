@@ -18,8 +18,8 @@ import edu.alibaba.mpc4j.common.tool.crypto.prg.PrgFactory;
 import edu.alibaba.mpc4j.common.tool.utils.BytesUtils;
 import edu.alibaba.mpc4j.common.tool.utils.CommonUtils;
 import edu.alibaba.mpc4j.s2pc.pcg.ot.cot.CotSenderOutput;
-import edu.alibaba.mpc4j.s2pc.pcg.ot.cot.rcot.RcotFactory;
-import edu.alibaba.mpc4j.s2pc.pcg.ot.cot.rcot.RcotSender;
+import edu.alibaba.mpc4j.s2pc.pcg.ot.cot.core.CoreCotFactory;
+import edu.alibaba.mpc4j.s2pc.pcg.ot.cot.core.CoreCotSender;
 import edu.alibaba.mpc4j.s2pc.pso.oprf.AbstractOprfReceiver;
 import edu.alibaba.mpc4j.s2pc.pso.oprf.OprfReceiverOutput;
 
@@ -37,9 +37,9 @@ import java.util.stream.IntStream;
  */
 public class Kkrt16OptOprfReceiver extends AbstractOprfReceiver {
     /**
-     * RCOT协议发送方
+     * 核COT协议发送方
      */
-    private final RcotSender rcotSender;
+    private final CoreCotSender coreCotSender;
     /**
      * 抗关联哈希函数
      */
@@ -71,27 +71,27 @@ public class Kkrt16OptOprfReceiver extends AbstractOprfReceiver {
 
     public Kkrt16OptOprfReceiver(Rpc receiverRpc, Party senderParty, Kkrt16OptOprfConfig config) {
         super(Kkrt16OptOprfPtoDesc.getInstance(), receiverRpc, senderParty, config);
-        rcotSender = RcotFactory.createSender(receiverRpc, senderParty, config.getRcotConfig());
-        rcotSender.addLogLevel();
+        coreCotSender = CoreCotFactory.createSender(receiverRpc, senderParty, config.getCoreCotConfig());
+        coreCotSender.addLogLevel();
         crhf = CrhfFactory.createInstance(envType, CrhfType.MMO);
     }
 
     @Override
     public void setTaskId(long taskId) {
         super.setTaskId(taskId);
-        rcotSender.setTaskId(taskId);
+        coreCotSender.setTaskId(taskId);
     }
 
     @Override
     public void setParallel(boolean parallel) {
         super.setParallel(parallel);
-        rcotSender.setParallel(parallel);
+        coreCotSender.setParallel(parallel);
     }
 
     @Override
     public void addLogLevel() {
         super.addLogLevel();
-        rcotSender.addLogLevel();
+        coreCotSender.addLogLevel();
     }
 
     @Override
@@ -106,14 +106,14 @@ public class Kkrt16OptOprfReceiver extends AbstractOprfReceiver {
         byte[] cotDelta = new byte[CommonConstants.BLOCK_BYTE_LENGTH];
         secureRandom.nextBytes(cotDelta);
         // 初始化COT协议
-        rcotSender.init(cotDelta, codewordBitLength);
+        coreCotSender.init(cotDelta, codewordBitLength);
         stopWatch.stop();
         long initCotTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
         stopWatch.reset();
         info("{}{} Recv. Init Step 1/2 ({}ms)", ptoStepLogPrefix, getPtoDesc().getPtoName(), initCotTime);
 
         stopWatch.start();
-        CotSenderOutput cotSenderOutput = rcotSender.send(codewordBitLength);
+        CotSenderOutput cotSenderOutput = coreCotSender.send(codewordBitLength);
         // 将COT转换为密钥
         t0MatrixKey = new byte[cotSenderOutput.getNum()][];
         t1MatrixKey = new byte[cotSenderOutput.getNum()][];

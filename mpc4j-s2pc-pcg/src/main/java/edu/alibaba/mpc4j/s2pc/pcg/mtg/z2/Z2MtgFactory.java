@@ -4,14 +4,14 @@ import edu.alibaba.mpc4j.common.rpc.Party;
 import edu.alibaba.mpc4j.common.rpc.Rpc;
 import edu.alibaba.mpc4j.common.rpc.desc.SecurityModel;
 import edu.alibaba.mpc4j.s2pc.pcg.mtg.z2.impl.cache.CacheZ2MtgConfig;
-import edu.alibaba.mpc4j.s2pc.pcg.mtg.z2.impl.cache.CacheBtgReceiver;
-import edu.alibaba.mpc4j.s2pc.pcg.mtg.z2.impl.cache.CacheBtgSender;
+import edu.alibaba.mpc4j.s2pc.pcg.mtg.z2.impl.cache.CacheZ2MtgReceiver;
+import edu.alibaba.mpc4j.s2pc.pcg.mtg.z2.impl.cache.CacheZ2MtgSender;
 import edu.alibaba.mpc4j.s2pc.pcg.mtg.z2.impl.file.FileZ2MtgConfig;
-import edu.alibaba.mpc4j.s2pc.pcg.mtg.z2.impl.file.FileBtgReceiver;
-import edu.alibaba.mpc4j.s2pc.pcg.mtg.z2.impl.file.FileBtgSender;
+import edu.alibaba.mpc4j.s2pc.pcg.mtg.z2.impl.file.FileZ2MtgReceiver;
+import edu.alibaba.mpc4j.s2pc.pcg.mtg.z2.impl.file.FileZ2MtgSender;
 import edu.alibaba.mpc4j.s2pc.pcg.mtg.z2.impl.offline.OfflineZ2MtgConfig;
-import edu.alibaba.mpc4j.s2pc.pcg.mtg.z2.impl.offline.OfflineBtgReceiver;
-import edu.alibaba.mpc4j.s2pc.pcg.mtg.z2.impl.offline.OfflineBtgSender;
+import edu.alibaba.mpc4j.s2pc.pcg.mtg.z2.impl.offline.OfflineZ2MtgReceiver;
+import edu.alibaba.mpc4j.s2pc.pcg.mtg.z2.impl.offline.OfflineZ2MtgSender;
 
 /**
  * 布尔三元组生成协议工厂。
@@ -57,13 +57,13 @@ public class Z2MtgFactory {
         Z2MtgType type = config.getPtoType();
         switch (type) {
             case FILE:
-                return new FileBtgSender(senderRpc, receiverParty, (FileZ2MtgConfig) config);
+                return new FileZ2MtgSender(senderRpc, receiverParty, (FileZ2MtgConfig) config);
             case OFFLINE:
-                return new OfflineBtgSender(senderRpc, receiverParty, (OfflineZ2MtgConfig) config);
+                return new OfflineZ2MtgSender(senderRpc, receiverParty, (OfflineZ2MtgConfig) config);
             case CACHE:
-                return new CacheBtgSender(senderRpc, receiverParty, (CacheZ2MtgConfig) config);
+                return new CacheZ2MtgSender(senderRpc, receiverParty, (CacheZ2MtgConfig) config);
             default:
-                throw new IllegalArgumentException("Invalid BtgType: " + type.name());
+                throw new IllegalArgumentException("Invalid " + Z2MtgType.class.getSimpleName() + ": " + type.name());
         }
     }
 
@@ -79,13 +79,13 @@ public class Z2MtgFactory {
         Z2MtgType type = config.getPtoType();
         switch (type) {
             case FILE:
-                return new FileBtgReceiver(receiverRpc, senderParty, (FileZ2MtgConfig) config);
+                return new FileZ2MtgReceiver(receiverRpc, senderParty, (FileZ2MtgConfig) config);
             case OFFLINE:
-                return new OfflineBtgReceiver(receiverRpc, senderParty, (OfflineZ2MtgConfig) config);
+                return new OfflineZ2MtgReceiver(receiverRpc, senderParty, (OfflineZ2MtgConfig) config);
             case CACHE:
-                return new CacheBtgReceiver(receiverRpc, senderParty, (CacheZ2MtgConfig) config);
+                return new CacheZ2MtgReceiver(receiverRpc, senderParty, (CacheZ2MtgConfig) config);
             default:
-                throw new IllegalArgumentException("Invalid BtgType: " + type.name());
+                throw new IllegalArgumentException("Invalid " + Z2MtgType.class.getSimpleName() + ": " + type.name());
         }
     }
 

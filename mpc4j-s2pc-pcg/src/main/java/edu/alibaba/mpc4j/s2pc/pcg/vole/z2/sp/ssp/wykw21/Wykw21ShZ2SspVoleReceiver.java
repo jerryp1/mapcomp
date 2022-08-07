@@ -12,8 +12,8 @@ import edu.alibaba.mpc4j.common.tool.crypto.prg.Prg;
 import edu.alibaba.mpc4j.common.tool.crypto.prg.PrgFactory;
 import edu.alibaba.mpc4j.common.tool.utils.BinaryUtils;
 import edu.alibaba.mpc4j.common.tool.utils.BytesUtils;
-import edu.alibaba.mpc4j.s2pc.pcg.ot.cot.rcot.RcotFactory;
-import edu.alibaba.mpc4j.s2pc.pcg.ot.cot.rcot.RcotSender;
+import edu.alibaba.mpc4j.s2pc.pcg.ot.cot.core.CoreCotFactory;
+import edu.alibaba.mpc4j.s2pc.pcg.ot.cot.core.CoreCotSender;
 import edu.alibaba.mpc4j.s2pc.pcg.ot.cot.CotSenderOutput;
 import edu.alibaba.mpc4j.s2pc.pcg.vole.z2.sp.ssp.AbstractZ2SspVoleReceiver;
 import edu.alibaba.mpc4j.s2pc.pcg.vole.z2.sp.ssp.Z2SspVoleReceiverOutput;
@@ -38,7 +38,7 @@ public class Wykw21ShZ2SspVoleReceiver extends AbstractZ2SspVoleReceiver {
     /**
      * COT协议发送方
      */
-    private final RcotSender rcotSender;
+    private final CoreCotSender coreCotSender;
     /**
      * COT协议发送方输出
      */
@@ -62,26 +62,26 @@ public class Wykw21ShZ2SspVoleReceiver extends AbstractZ2SspVoleReceiver {
 
     public Wykw21ShZ2SspVoleReceiver(Rpc receiverRpc, Party senderParty, Wykw21ShZ2SspVoleConfig config) {
         super(Wykw21ShZ2SspVolePtoDesc.getInstance(), receiverRpc, senderParty, config);
-        rcotSender = RcotFactory.createSender(receiverRpc, senderParty, config.getRcotConfig());
-        rcotSender.addLogLevel();
+        coreCotSender = CoreCotFactory.createSender(receiverRpc, senderParty, config.getCoreCotConfig());
+        coreCotSender.addLogLevel();
     }
 
     @Override
     public void setTaskId(long taskId) {
         super.setTaskId(taskId);
-        rcotSender.setTaskId(taskId);
+        coreCotSender.setTaskId(taskId);
     }
 
     @Override
     public void setParallel(boolean parallel) {
         super.setParallel(parallel);
-        rcotSender.setParallel(parallel);
+        coreCotSender.setParallel(parallel);
     }
 
     @Override
     public void addLogLevel() {
         super.addLogLevel();
-        rcotSender.addLogLevel();
+        coreCotSender.addLogLevel();
     }
 
     @Override
@@ -92,7 +92,7 @@ public class Wykw21ShZ2SspVoleReceiver extends AbstractZ2SspVoleReceiver {
         stopWatch.start();
         byte[] cotDelta = new byte[CommonConstants.BLOCK_BYTE_LENGTH];
         secureRandom.nextBytes(cotDelta);
-        rcotSender.init(cotDelta, maxH);
+        coreCotSender.init(cotDelta, maxH);
         stopWatch.stop();
         long initTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
         stopWatch.reset();
@@ -119,7 +119,7 @@ public class Wykw21ShZ2SspVoleReceiver extends AbstractZ2SspVoleReceiver {
 
         stopWatch.start();
         // P_A and P_B calls F_OT
-        cotSenderOutput = rcotSender.send(h);
+        cotSenderOutput = coreCotSender.send(h);
         stopWatch.stop();
         long cotTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
         stopWatch.reset();

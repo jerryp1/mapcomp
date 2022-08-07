@@ -19,8 +19,8 @@ import edu.alibaba.mpc4j.common.tool.utils.BinaryUtils;
 import edu.alibaba.mpc4j.common.tool.utils.BytesUtils;
 import edu.alibaba.mpc4j.common.tool.utils.CommonUtils;
 import edu.alibaba.mpc4j.s2pc.pcg.ot.cot.CotSenderOutput;
-import edu.alibaba.mpc4j.s2pc.pcg.ot.cot.rcot.RcotFactory;
-import edu.alibaba.mpc4j.s2pc.pcg.ot.cot.rcot.RcotSender;
+import edu.alibaba.mpc4j.s2pc.pcg.ot.cot.core.CoreCotFactory;
+import edu.alibaba.mpc4j.s2pc.pcg.ot.cot.core.CoreCotSender;
 import edu.alibaba.mpc4j.s2pc.pso.oprf.AbstractMpOprfReceiver;
 import edu.alibaba.mpc4j.s2pc.pso.oprf.MpOprfReceiverOutput;
 import sun.misc.Unsafe;
@@ -58,9 +58,9 @@ public class Cm20MpOprfReceiver extends AbstractMpOprfReceiver {
     }
 
     /**
-     * RCOT协议发送方
+     * 核COT协议发送方
      */
-    private final RcotSender rcotSender;
+    private final CoreCotSender coreCotSender;
     /**
      * 抗关联哈希函数
      */
@@ -112,8 +112,8 @@ public class Cm20MpOprfReceiver extends AbstractMpOprfReceiver {
 
     public Cm20MpOprfReceiver(Rpc receiverRpc, Party senderParty, Cm20MpOprfConfig config) {
         super(Cm20MpOprfPtoDesc.getInstance(), receiverRpc, senderParty, config);
-        rcotSender = RcotFactory.createSender(receiverRpc, senderParty, config.getRcotConfig());
-        rcotSender.addLogLevel();
+        coreCotSender = CoreCotFactory.createSender(receiverRpc, senderParty, config.getCoreCotConfig());
+        coreCotSender.addLogLevel();
         crhf = CrhfFactory.createInstance(envType, CrhfType.MMO);
         h1 = HashFactory.createInstance(envType, CommonConstants.BLOCK_BYTE_LENGTH * 2);
     }
@@ -121,19 +121,19 @@ public class Cm20MpOprfReceiver extends AbstractMpOprfReceiver {
     @Override
     public void setTaskId(long taskId) {
         super.setTaskId(taskId);
-        rcotSender.setTaskId(taskId);
+        coreCotSender.setTaskId(taskId);
     }
 
     @Override
     public void setParallel(boolean parallel) {
         super.setParallel(parallel);
-        rcotSender.setParallel(parallel);
+        coreCotSender.setParallel(parallel);
     }
 
     @Override
     public void addLogLevel() {
         super.addLogLevel();
-        rcotSender.addLogLevel();
+        coreCotSender.addLogLevel();
     }
 
     @Override
@@ -146,7 +146,7 @@ public class Cm20MpOprfReceiver extends AbstractMpOprfReceiver {
         int maxW = Cm20MpOprfUtils.getW(maxBatchSize);
         byte[] delta = new byte[CommonConstants.BLOCK_BYTE_LENGTH];
         secureRandom.nextBytes(delta);
-        rcotSender.init(delta, maxW);
+        coreCotSender.init(delta, maxW);
         stopWatch.stop();
         long initCotTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
         stopWatch.reset();
@@ -169,7 +169,7 @@ public class Cm20MpOprfReceiver extends AbstractMpOprfReceiver {
         wByteLength = CommonUtils.getByteLength(w);
         wOffset = wByteLength * Byte.SIZE - w;
         // 执行COT协议
-        cotSenderOutput = rcotSender.send(w);
+        cotSenderOutput = coreCotSender.send(w);
         stopWatch.stop();
         long cotTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
         stopWatch.reset();

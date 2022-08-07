@@ -25,32 +25,32 @@ import java.util.concurrent.TimeUnit;
  */
 public class Bea91BcReceiver extends AbstractBcParty {
     /**
-     * BTG协议服务端
+     * 布尔三元组生成协议服务端
      */
-    private final Z2MtgParty btgReceiver;
+    private final Z2MtgParty z2MtgReceiver;
 
     public Bea91BcReceiver(Rpc receiverRpc, Party senderParty, Bea91BcConfig config) {
         super(Bea91BcPtoDesc.getInstance(), receiverRpc, senderParty, config);
-        btgReceiver = Z2MtgFactory.createReceiver(receiverRpc, senderParty, config.getBtgConfig());
-        btgReceiver.addLogLevel();
+        z2MtgReceiver = Z2MtgFactory.createReceiver(receiverRpc, senderParty, config.getZ2MtgConfig());
+        z2MtgReceiver.addLogLevel();
     }
 
     @Override
     public void setTaskId(long taskId) {
         super.setTaskId(taskId);
-        btgReceiver.setTaskId(taskId);
+        z2MtgReceiver.setTaskId(taskId);
     }
 
     @Override
     public void setParallel(boolean parallel) {
         super.setParallel(parallel);
-        btgReceiver.setParallel(parallel);
+        z2MtgReceiver.setParallel(parallel);
     }
 
     @Override
     public void addLogLevel() {
         super.addLogLevel();
-        btgReceiver.addLogLevel();
+        z2MtgReceiver.addLogLevel();
     }
 
     @Override
@@ -59,7 +59,7 @@ public class Bea91BcReceiver extends AbstractBcParty {
         info("{}{} Recv. Init begin", ptoBeginLogPrefix, getPtoDesc().getPtoName());
 
         stopWatch.start();
-        btgReceiver.init(maxRoundNum, updateNum);
+        z2MtgReceiver.init(maxRoundNum, updateNum);
         stopWatch.stop();
         long initTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
         stopWatch.reset();
@@ -85,16 +85,16 @@ public class Bea91BcReceiver extends AbstractBcParty {
             info("{}{} Recv. begin", ptoBeginLogPrefix, getPtoDesc().getPtoName());
 
             stopWatch.start();
-            Z2Triple booleanTriple = btgReceiver.generate(num);
+            Z2Triple z2Triple = z2MtgReceiver.generate(num);
             stopWatch.stop();
-            long btgTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
+            long z2MtgTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
             stopWatch.reset();
-            info("{}{} Recv. AND Step 1/3 ({}ms)", ptoStepLogPrefix, getPtoDesc().getPtoName(), btgTime);
+            info("{}{} Recv. AND Step 1/3 ({}ms)", ptoStepLogPrefix, getPtoDesc().getPtoName(), z2MtgTime);
             
             stopWatch.start();
-            byte[] a1 = booleanTriple.getA();
-            byte[] b1 = booleanTriple.getB();
-            byte[] c1 = booleanTriple.getC();
+            byte[] a1 = z2Triple.getA();
+            byte[] b1 = z2Triple.getB();
+            byte[] c1 = z2Triple.getC();
             // e1 = x1 ⊕ a1
             byte[] e1 = BytesUtils.xor(x1.getBytes(), a1);
             // f1 = y1 ⊕ b1

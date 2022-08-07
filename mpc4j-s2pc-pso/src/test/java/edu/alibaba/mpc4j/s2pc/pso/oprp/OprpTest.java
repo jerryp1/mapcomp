@@ -58,21 +58,21 @@ public class OprpTest {
         Collection<Object[]> configurationParams = new ArrayList<>();
         // LowMc (file)
         Z2MtgConfig fileZ2MtgConfig = new FileZ2MtgConfig.Builder(SecurityModel.SEMI_HONEST).build();
-        BcConfig fileBcConfig = new Bea91BcConfig.Builder().setBtgConfig(fileZ2MtgConfig).build();
+        BcConfig fileBcConfig = new Bea91BcConfig.Builder().setZ2MtgConfig(fileZ2MtgConfig).build();
         configurationParams.add(new Object[] {
             OprpFactory.OprpType.LOW_MC.name() + " (file)",
             new LowMcOprpConfig.Builder().setBcConfig(fileBcConfig).build(),
         });
         // LowMc (ideal)
         Z2MtgConfig idealZ2MtgConfig = new CacheZ2MtgConfig.Builder(SecurityModel.IDEAL).build();
-        BcConfig idealBcConfig = new Bea91BcConfig.Builder().setBtgConfig(idealZ2MtgConfig).build();
+        BcConfig idealBcConfig = new Bea91BcConfig.Builder().setZ2MtgConfig(idealZ2MtgConfig).build();
         configurationParams.add(new Object[] {
             OprpFactory.OprpType.LOW_MC.name() + " (ideal)",
             new LowMcOprpConfig.Builder().setBcConfig(idealBcConfig).build(),
         });
         // LowMc (default)
         Z2MtgConfig defaultZ2MtgConfig = new CacheZ2MtgConfig.Builder(SecurityModel.SEMI_HONEST).build();
-        BcConfig defaultBcConfig = new Bea91BcConfig.Builder().setBtgConfig(defaultZ2MtgConfig).build();
+        BcConfig defaultBcConfig = new Bea91BcConfig.Builder().setZ2MtgConfig(defaultZ2MtgConfig).build();
         configurationParams.add(new Object[] {
             OprpFactory.OprpType.LOW_MC.name() + " (default)",
             new LowMcOprpConfig.Builder().setBcConfig(defaultBcConfig).build(),

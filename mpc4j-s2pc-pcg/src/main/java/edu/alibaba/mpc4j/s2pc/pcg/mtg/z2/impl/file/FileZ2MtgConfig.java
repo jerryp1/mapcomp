@@ -6,7 +6,7 @@ import edu.alibaba.mpc4j.s2pc.pcg.mtg.z2.Z2MtgConfig;
 import edu.alibaba.mpc4j.s2pc.pcg.mtg.z2.Z2MtgFactory;
 
 /**
- * 文件BTG配置项。
+ * 文件布尔三元组生成配置项。
  *
  * @author Weiran Liu
  * @date 2022/5/22

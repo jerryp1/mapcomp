@@ -15,7 +15,7 @@ import edu.alibaba.mpc4j.s2pc.pcg.mtg.z2.Z2MtgFactory;
  */
 public class Bea91BcConfig implements BcConfig {
     /**
-     * BTG协议
+     * 布尔三元组生成协议
      */
     private final Z2MtgConfig z2MtgConfig;
 
@@ -23,7 +23,7 @@ public class Bea91BcConfig implements BcConfig {
         z2MtgConfig = builder.z2MtgConfig;
     }
 
-    public Z2MtgConfig getBtgConfig() {
+    public Z2MtgConfig getZ2MtgConfig() {
         return z2MtgConfig;
     }
 
@@ -53,7 +53,7 @@ public class Bea91BcConfig implements BcConfig {
 
     public static class Builder implements org.apache.commons.lang3.builder.Builder<Bea91BcConfig> {
         /**
-         * BTG协议配置项
+         * 布尔三元组生成协议配置项
          */
         private Z2MtgConfig z2MtgConfig;
 
@@ -61,7 +61,7 @@ public class Bea91BcConfig implements BcConfig {
             z2MtgConfig = Z2MtgFactory.createDefaultConfig(SecurityModel.SEMI_HONEST);
         }
 
-        public Builder setBtgConfig(Z2MtgConfig z2MtgConfig) {
+        public Builder setZ2MtgConfig(Z2MtgConfig z2MtgConfig) {
             this.z2MtgConfig = z2MtgConfig;
             return this;
         }
