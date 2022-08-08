@@ -54,8 +54,8 @@ public abstract class AbstractUpsiClient<T> extends AbstractSecureTwoPartyPto im
     }
 
     protected void setInitInput(UpsiParams upsiParams) {
-        assert upsiParams.maxClientElementSize() >= 1;
-        maxClientElementSize = upsiParams.maxClientElementSize();
+        assert upsiParams.maxClientSize() >= 1;
+        maxClientElementSize = upsiParams.maxClientSize();
         extraInfo++;
         initialized = false;
     }

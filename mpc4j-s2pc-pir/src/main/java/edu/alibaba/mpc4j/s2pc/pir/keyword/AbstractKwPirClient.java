@@ -23,21 +23,9 @@ public abstract class AbstractKwPirClient<T> extends AbstractSecureTwoPartyPto i
      */
     private final KwPirConfig config;
     /**
-     * 客户端关键词数组
-     */
-    protected ArrayList<ByteBuffer> clientKeywordArrayList;
-    /**
-     * 关键词字节数组和关键词对象映射
-     */
-    protected Map<ByteBuffer, T> byteArrayObjectMap;
-    /**
-     * 客户端关键词数量
-     */
-    protected int clientKeywordSize;
-    /**
      * 客户端单次查询最大查询关键词数目
      */
-    protected int maxClientRetrievalKeywordSize;
+    protected int maxRetrievalSize;
     /**
      * 标签字节长度
      */
@@ -46,6 +34,18 @@ public abstract class AbstractKwPirClient<T> extends AbstractSecureTwoPartyPto i
      * 特殊空元素字节缓存区
      */
     protected ByteBuffer botElementByteBuffer;
+    /**
+     * 客户端关键词数组
+     */
+    protected ArrayList<ByteBuffer> retrievalArrayList;
+    /**
+     * 关键词字节数组和关键词对象映射
+     */
+    protected Map<ByteBuffer, T> byteArrayObjectMap;
+    /**
+     * 客户端关键词数量
+     */
+    protected int retrievalSize;
 
     protected AbstractKwPirClient(PtoDesc ptoDesc, Rpc clientRpc, Party serverParty, KwPirConfig config) {
         super(ptoDesc, clientRpc, serverParty, config);
@@ -53,15 +53,14 @@ public abstract class AbstractKwPirClient<T> extends AbstractSecureTwoPartyPto i
     }
 
     @Override
-    public KwPirFactory.PirType getPtoType() {
+    public KwPirFactory.KwPirType getPtoType() {
         return config.getProType();
     }
 
-    protected void setInitInput(int labelByteLength, int maxClientRetrievalKeywordSize) {
+    protected void setInitInput(KwPirParams kwPirParams, int labelByteLength) {
         assert labelByteLength >= 1;
         this.labelByteLength = labelByteLength;
-        assert maxClientRetrievalKeywordSize >= 1;
-        this.maxClientRetrievalKeywordSize = maxClientRetrievalKeywordSize;
+        maxRetrievalSize = kwPirParams.maxRetrievalSize();
         // 设置特殊空元素
         byte[] botElementByteArray = new byte[CommonConstants.STATS_BYTE_LENGTH];
         Arrays.fill(botElementByteArray, (byte)0xFF);
@@ -74,18 +73,21 @@ public abstract class AbstractKwPirClient<T> extends AbstractSecureTwoPartyPto i
         if (!initialized) {
             throw new IllegalStateException("Need init...");
         }
-        assert clientKeywordSet.size() <= maxClientRetrievalKeywordSize;
-        this.clientKeywordSize = clientKeywordSet.size();
-        this.clientKeywordArrayList = clientKeywordSet.stream()
+        retrievalSize = clientKeywordSet.size();
+        assert retrievalSize > 0 && retrievalSize <= maxRetrievalSize
+            : "ClientKeywordSize must be in range (0, " + maxRetrievalSize + "]: " + retrievalSize;
+        retrievalArrayList = clientKeywordSet.stream()
             .map(ObjectUtils::objectToByteArray)
             .map(ByteBuffer::wrap)
             .peek(clientElement -> {
                 assert !clientElement.equals(botElementByteBuffer) : "input equals ⊥";
             })
             .collect(Collectors.toCollection(ArrayList::new));
-        this.byteArrayObjectMap = new HashMap<>(this.clientKeywordSize);
-        clientKeywordSet.forEach(clientElementObject -> this.byteArrayObjectMap.put(
-            ByteBuffer.wrap(ObjectUtils.objectToByteArray(clientElementObject)), clientElementObject)
+        byteArrayObjectMap = new HashMap<>(retrievalSize);
+        clientKeywordSet.forEach(clientElementObject ->
+            byteArrayObjectMap.put(
+                ByteBuffer.wrap(ObjectUtils.objectToByteArray(clientElementObject)), clientElementObject
+            )
         );
         extraInfo++;
     }

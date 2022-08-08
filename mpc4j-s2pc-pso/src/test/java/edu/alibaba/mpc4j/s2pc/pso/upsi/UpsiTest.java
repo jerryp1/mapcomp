@@ -39,220 +39,98 @@ public class UpsiTest {
     }
 
     @Test
-    public void testTwoThousand1() {
+    public void test2K1() {
         Cmg21UpsiConfig config = new Cmg21UpsiConfig.Builder().build();
-        int serverSize = 2000;
-        int clientSize = 1;
-        testUpsi(config, Cmg21UpsiParams.TWO_THOUSAND_1, serverSize, clientSize, true);
+        testUpsi(config, Cmg21UpsiParams.SERVER_2K_CLIENT_1, false);
     }
 
     @Test
-    public void testOneHundredThousand1() {
+    public void test100K1() {
         Cmg21UpsiConfig config = new Cmg21UpsiConfig.Builder().build();
-        int serverSize = 100000;
-        int clientSize = 1;
-        testUpsi(config, Cmg21UpsiParams.ONE_HUNDRED_THOUSAND_1, serverSize, clientSize, true);
+        testUpsi(config, Cmg21UpsiParams.SERVER_100K_CLIENT_1, false);
     }
 
     @Test
-    public void testOneMillion1024CmpParallel() {
+    public void test1M1024Cmp() {
         Cmg21UpsiConfig config = new Cmg21UpsiConfig.Builder().build();
-        int serverSize = 1000000;
-        int clientSize = 1024;
-        boolean parallel = true;
-        testUpsi(config, Cmg21UpsiParams.ONE_MILLION_1024_CMP, serverSize, clientSize, parallel);
+        testUpsi(config, Cmg21UpsiParams.SERVER_1M_CLIENT_1K_CMP, false);
     }
 
     @Test
-    public void testOneMillion1024Cmp() {
+    public void test1M1024CmpParallel() {
         Cmg21UpsiConfig config = new Cmg21UpsiConfig.Builder().build();
-        int serverSize = 1000000;
-        int clientSize = 1024;
-        boolean parallel = false;
-        testUpsi(config, Cmg21UpsiParams.ONE_MILLION_1024_CMP, serverSize, clientSize, parallel);
+        testUpsi(config, Cmg21UpsiParams.SERVER_1M_CLIENT_1K_CMP, true);
     }
 
     @Test
-    public void testOneMillion1024ComParallel() {
+    public void test1M1024Com() {
         Cmg21UpsiConfig config = new Cmg21UpsiConfig.Builder().build();
-        int serverSize = 1000000;
-        int clientSize = 1024;
-        boolean parallel = true;
-        testUpsi(config, Cmg21UpsiParams.ONE_MILLION_1024_COM, serverSize, clientSize, parallel);
+        testUpsi(config, Cmg21UpsiParams.SERVER_1M_CLIENT_1K_COM, false);
     }
 
     @Test
-    public void testOneMillion1024Com() {
+    public void test1M1024ComParallel() {
         Cmg21UpsiConfig config = new Cmg21UpsiConfig.Builder().build();
-        int serverSize = 1000000;
-        int clientSize = 1024;
-        boolean parallel = false;
-        testUpsi(config, Cmg21UpsiParams.ONE_MILLION_1024_COM, serverSize, clientSize, parallel);
+        testUpsi(config, Cmg21UpsiParams.SERVER_1M_CLIENT_1K_COM, true);
     }
 
     @Test
-    public void testOneMillion11041Parallel() {
+    public void test1M11041Parallel() {
         Cmg21UpsiConfig config = new Cmg21UpsiConfig.Builder().build();
-        int serverSize = 1000000;
-        int clientSize = 11041;
-        boolean parallel = true;
-        testUpsi(config, Cmg21UpsiParams.ONE_MILLION_11041, serverSize, clientSize, parallel);
+        testUpsi(config, Cmg21UpsiParams.SERVER_1M_CLIENT_11041, true);
     }
 
     @Test
-    public void testOneMillion11041() {
+    public void test1M2048CmpParallel() {
         Cmg21UpsiConfig config = new Cmg21UpsiConfig.Builder().build();
-        int serverSize = 1000000;
-        int clientSize = 11041;
-        boolean parallel = false;
-        testUpsi(config, Cmg21UpsiParams.ONE_MILLION_11041, serverSize, clientSize, parallel);
+        testUpsi(config, Cmg21UpsiParams.SERVER_1M_CLIENT_2K_CMP, true);
     }
 
     @Test
-    public void testOneMillion2048CmpParallel() {
+    public void test1M2048ComParallel() {
         Cmg21UpsiConfig config = new Cmg21UpsiConfig.Builder().build();
-        int serverSize = 1000000;
-        int clientSize = 2048;
-        boolean parallel = true;
-        testUpsi(config, Cmg21UpsiParams.ONE_MILLION_2048_CMP, serverSize, clientSize, parallel);
+        testUpsi(config, Cmg21UpsiParams.SERVER_1M_CLIENT_2K_COM, true);
     }
 
     @Test
-    public void testOneMillion2048Cmp() {
+    public void test1M256Parallel() {
         Cmg21UpsiConfig config = new Cmg21UpsiConfig.Builder().build();
-        int serverSize = 1000000;
-        int clientSize = 2048;
-        boolean parallel = false;
-        testUpsi(config, Cmg21UpsiParams.ONE_MILLION_2048_CMP, serverSize, clientSize, parallel);
+        testUpsi(config, Cmg21UpsiParams.SERVER_1M_CLIENT_256, true);
     }
 
     @Test
-    public void testOneMillion2048ComParallel() {
+    public void test1M4096CmpParallel() {
         Cmg21UpsiConfig config = new Cmg21UpsiConfig.Builder().build();
-        int serverSize = 1000000;
-        int clientSize = 2048;
-        boolean parallel = true;
-        testUpsi(config, Cmg21UpsiParams.ONE_MILLION_2048_COM, serverSize, clientSize, parallel);
+        testUpsi(config, Cmg21UpsiParams.SERVER_1M_CLIENT_4K_CMP, true);
     }
 
     @Test
-    public void testOneMillion2048Com() {
+    public void test1M4096ComParallel() {
         Cmg21UpsiConfig config = new Cmg21UpsiConfig.Builder().build();
-        int serverSize = 1000000;
-        int clientSize = 2048;
-        boolean parallel = false;
-        testUpsi(config, Cmg21UpsiParams.ONE_MILLION_2048_COM, serverSize, clientSize, parallel);
+        testUpsi(config, Cmg21UpsiParams.SERVER_1M_CLIENT_4K_COM, true);
     }
 
     @Test
-    public void testOneMillion256Parallel() {
+    public void test1M512CmpParallel() {
         Cmg21UpsiConfig config = new Cmg21UpsiConfig.Builder().build();
-        int serverSize = 1000000;
-        int clientSize = 256;
-        boolean parallel = true;
-        testUpsi(config, Cmg21UpsiParams.ONE_MILLION_256, serverSize, clientSize, parallel);
+        testUpsi(config, Cmg21UpsiParams.SERVER_1M_CLIENT_512_CMP, true);
     }
 
     @Test
-    public void testOneMillion256() {
+    public void test1M512ComParallel() {
         Cmg21UpsiConfig config = new Cmg21UpsiConfig.Builder().build();
-        int serverSize = 1000000;
-        int clientSize = 256;
-        boolean parallel = false;
-        testUpsi(config, Cmg21UpsiParams.ONE_MILLION_256, serverSize, clientSize, parallel);
+        testUpsi(config, Cmg21UpsiParams.SERVER_1M_CLIENT_512_COM, true);
     }
 
     @Test
-    public void testOneMillion4096CmpParallel() {
+    public void test1M5535Parallel() {
         Cmg21UpsiConfig config = new Cmg21UpsiConfig.Builder().build();
-        int serverSize = 1000000;
-        int clientSize = 4096;
-        boolean parallel = true;
-        testUpsi(config, Cmg21UpsiParams.ONE_MILLION_4096_CMP, serverSize, clientSize, parallel);
+        testUpsi(config, Cmg21UpsiParams.SERVER_1M_CLIENT_5535, true);
     }
 
-    @Test
-    public void testOneMillion4096Cmp() {
-        Cmg21UpsiConfig config = new Cmg21UpsiConfig.Builder().build();
-        int serverSize = 1000000;
-        int clientSize = 4096;
-        boolean parallel = false;
-        testUpsi(config, Cmg21UpsiParams.ONE_MILLION_4096_CMP, serverSize, clientSize, parallel);
-    }
-
-    @Test
-    public void testOneMillion4096ComParallel() {
-        Cmg21UpsiConfig config = new Cmg21UpsiConfig.Builder().build();
-        int serverSize = 1000000;
-        int clientSize = 4096;
-        boolean parallel = true;
-        testUpsi(config, Cmg21UpsiParams.ONE_MILLION_4096_COM, serverSize, clientSize, parallel);
-    }
-
-    @Test
-    public void testOneMillion4096Com() {
-        Cmg21UpsiConfig config = new Cmg21UpsiConfig.Builder().build();
-        int serverSize = 1000000;
-        int clientSize = 4096;
-        boolean parallel = false;
-        testUpsi(config, Cmg21UpsiParams.ONE_MILLION_4096_COM, serverSize, clientSize, parallel);
-    }
-
-    @Test
-    public void testOneMillion512CmpParallel() {
-        Cmg21UpsiConfig config = new Cmg21UpsiConfig.Builder().build();
-        int serverSize = 1000000;
-        int clientSize = 512;
-        boolean parallel = true;
-        testUpsi(config, Cmg21UpsiParams.ONE_MILLION_512_CMP, serverSize, clientSize, parallel);
-    }
-
-    @Test
-    public void testOneMillion512Cmp() {
-        Cmg21UpsiConfig config = new Cmg21UpsiConfig.Builder().build();
-        int serverSize = 1000000;
-        int clientSize = 512;
-        boolean parallel = false;
-        testUpsi(config, Cmg21UpsiParams.ONE_MILLION_512_CMP, serverSize, clientSize, parallel);
-    }
-
-    @Test
-    public void testOneMillion512ComParallel() {
-        Cmg21UpsiConfig config = new Cmg21UpsiConfig.Builder().build();
-        int serverSize = 1000000;
-        int clientSize = 512;
-        boolean parallel = true;
-        testUpsi(config, Cmg21UpsiParams.ONE_MILLION_512_COM, serverSize, clientSize, parallel);
-    }
-
-    @Test
-    public void testOneMillion512Com() {
-        Cmg21UpsiConfig config = new Cmg21UpsiConfig.Builder().build();
-        int serverSize = 1000000;
-        int clientSize = 512;
-        boolean parallel = false;
-        testUpsi(config, Cmg21UpsiParams.ONE_MILLION_512_COM, serverSize, clientSize, parallel);
-    }
-
-    @Test
-    public void testOneMillion5535Parallel() {
-        Cmg21UpsiConfig config = new Cmg21UpsiConfig.Builder().build();
-        int serverSize = 1000000;
-        int clientSize = 5535;
-        boolean parallel = true;
-        testUpsi(config, Cmg21UpsiParams.ONE_MILLION_5535, serverSize, clientSize, parallel);
-    }
-
-    @Test
-    public void testOneMillion5535() {
-        Cmg21UpsiConfig config = new Cmg21UpsiConfig.Builder().build();
-        int serverSize = 1000000;
-        int clientSize = 5535;
-        boolean parallel = false;
-        testUpsi(config, Cmg21UpsiParams.ONE_MILLION_5535, serverSize, clientSize, parallel);
-    }
-
-    public void testUpsi(Cmg21UpsiConfig config, UpsiParams upsiParams, int serverSize, int clientSize, boolean parallel) {
+    public void testUpsi(Cmg21UpsiConfig config, UpsiParams upsiParams, boolean parallel) {
+        int serverSize = upsiParams.expectServerSize();
+        int clientSize = upsiParams.maxClientSize();
         List<Set<String>> sets = PsoUtils.generateStringSets("ID", serverSize, clientSize);
         Set<String> serverElementSet = sets.get(0);
         Set<String> clientElementSet = sets.get(1);
@@ -286,6 +164,5 @@ public class UpsiTest {
         sets.get(0).retainAll(sets.get(1));
         Assert.assertTrue(sets.get(0).containsAll(psiResult));
         Assert.assertTrue(psiResult.containsAll(sets.get(0)));
-        LOGGER.info("Main: unbalance PSI result correct!");
     }
 }

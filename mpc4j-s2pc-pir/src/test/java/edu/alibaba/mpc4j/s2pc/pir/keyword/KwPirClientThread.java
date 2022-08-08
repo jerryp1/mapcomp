@@ -4,7 +4,6 @@ import edu.alibaba.mpc4j.common.rpc.MpcAbortException;
 
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
 
@@ -20,31 +19,37 @@ public class KwPirClientThread<T> extends Thread {
      */
     private final KwPirClient<T> pirClient;
     /**
-     * 客户端关键词集合
+     * 关键字PIR参数
      */
-    private final ArrayList<Set<T>> clientKeywordSets;
+    private final KwPirParams kwPirParams;
     /**
      * 标签字节长度
      */
     private final int labelByteLength;
     /**
-     * PIR结果
+     * 检索集合
      */
-    private final Map<T, ByteBuffer> pirResult = new HashMap<>();
+    private final ArrayList<Set<T>> retrievalSets;
     /**
      * 检索次数
      */
-    private final int retrievalNumber;
+    private final int repeatTime;
+    /**
+     * PIR结果
+     */
+    private final ArrayList<Map<T, ByteBuffer>> retrievalResults;
 
-    KwPirClientThread(KwPirClient<T> pirClient, ArrayList<Set<T>> clientKeywordSets, int labelByteLength) {
+    KwPirClientThread(KwPirClient<T> pirClient, KwPirParams kwPirParams, ArrayList<Set<T>> retrievalSets, int labelByteLength) {
         this.pirClient = pirClient;
-        this.clientKeywordSets = clientKeywordSets;
+        this.kwPirParams = kwPirParams;
+        this.retrievalSets = retrievalSets;
         this.labelByteLength = labelByteLength;
-        this.retrievalNumber = clientKeywordSets.size();
+        repeatTime = retrievalSets.size();
+        retrievalResults = new ArrayList<>(repeatTime);
     }
 
-    public Map<T, ByteBuffer> getPirResult() {
-        return pirResult;
+    public Map<T, ByteBuffer> getRetrievalResult(int index) {
+        return retrievalResults.get(index);
     }
 
     @Override
@@ -52,9 +57,9 @@ public class KwPirClientThread<T> extends Thread {
         try {
             // 随机选取
             pirClient.getRpc().connect();
-            pirClient.init(labelByteLength);
-            for (int i = 0; i < retrievalNumber; i++) {
-                pirResult.putAll(pirClient.pir(clientKeywordSets.get(i)));
+            pirClient.init(kwPirParams, labelByteLength);
+            for (int i = 0; i < repeatTime; i++) {
+                retrievalResults.add(pirClient.pir(retrievalSets.get(i)));
             }
             pirClient.getRpc().disconnect();
         } catch (MpcAbortException e) {

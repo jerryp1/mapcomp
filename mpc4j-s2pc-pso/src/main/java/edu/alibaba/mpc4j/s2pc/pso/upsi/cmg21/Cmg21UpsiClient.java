@@ -81,7 +81,7 @@ public class Cmg21UpsiClient<T> extends AbstractUpsiClient<T> {
         stopWatch.start();
         assert (upsiParams instanceof Cmg21UpsiParams);
         params = (Cmg21UpsiParams) upsiParams;
-        mpOprfReceiver.init(params.maxClientElementSize());
+        mpOprfReceiver.init(params.maxClientSize());
         stopWatch.stop();
         long initTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
         stopWatch.reset();

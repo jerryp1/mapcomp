@@ -4,7 +4,6 @@ import com.google.common.collect.Lists;
 import edu.alibaba.mpc4j.common.rpc.Rpc;
 import edu.alibaba.mpc4j.common.rpc.RpcManager;
 import edu.alibaba.mpc4j.common.rpc.impl.memory.MemoryRpcManager;
-import edu.alibaba.mpc4j.common.tool.hashbin.object.cuckoo.CuckooHashBinFactory;
 import edu.alibaba.mpc4j.s2pc.pir.keyword.cmg21.Cmg21KwPirConfig;
 import edu.alibaba.mpc4j.s2pc.pir.keyword.cmg21.Cmg21KwPirParams;
 import org.junit.Assert;
@@ -24,6 +23,26 @@ import java.util.*;
 public class KwPirTest {
     private static final Logger LOGGER = LoggerFactory.getLogger(KwPirTest.class);
     /**
+     * 重复检索次数
+     */
+    private static final int REPEAT_TIME = 2;
+    /**
+     * 短标签字节长度
+     */
+    private static final int SHORT_LABEL_BYTE_LENGTH = 1;
+    /**
+     * 默认标签字节长度
+     */
+    private static final int DEFAULT_LABEL_BYTE_LENGTH = 32;
+    /**
+     * 长标签字节长度
+     */
+    private static final int LONG_LABEL_BYTE_LENGTH = 65;
+    /**
+     * 服务端元素数量
+     */
+    private static final int SERVER_MAP_SIZE = 1 << 16;
+    /**
      * 服务端
      */
     private final Rpc serverRpc;
@@ -39,50 +58,70 @@ public class KwPirTest {
     }
 
     @Test
-    public void testOneMillion4096_32() {
-        Cmg21KwPirConfig config = new Cmg21KwPirConfig.Builder()
-            .setPirParams(Cmg21KwPirParams.ONE_MILLION_4096_32)
-            .setCuckooHashBinType(CuckooHashBinFactory.CuckooHashBinType.NAIVE_3_HASH)
-            .build();
-        boolean parallel = true;
-        int labelByteLength = 32;
-        int retrievalElementSize = 4000;
-        testPir(config, parallel, labelByteLength, retrievalElementSize);
+    public void test1M1() {
+        Cmg21KwPirConfig config = new Cmg21KwPirConfig.Builder().build();
+        testPir(config, Cmg21KwPirParams.SERVER_1M_CLIENT_MAX_1, DEFAULT_LABEL_BYTE_LENGTH, false);
     }
 
     @Test
-    public void testOneMillion1_32() {
-        Cmg21KwPirConfig config = new Cmg21KwPirConfig.Builder()
-            .setPirParams(Cmg21KwPirParams.ONE_MILLION_1_32)
-            .setCuckooHashBinType(CuckooHashBinFactory.CuckooHashBinType.NO_STASH_ONE_HASH)
-            .build();
-        boolean parallel = true;
-        int labelByteLength = 32;
-        int retrievalElementSize = 1;
-        testPir(config, parallel, labelByteLength, retrievalElementSize);
+    public void test1M1Parallel() {
+        Cmg21KwPirConfig config = new Cmg21KwPirConfig.Builder().build();
+        testPir(config, Cmg21KwPirParams.SERVER_1M_CLIENT_MAX_1, DEFAULT_LABEL_BYTE_LENGTH, true);
     }
 
-    public void testPir(Cmg21KwPirConfig config, boolean parallel, int labelByteLength, int retrievalElementSize) {
-        // 数据字节长度
-        int elementByteLength = 20;
-        // 检索次数
-        int retrievalNumber = 5;
-        // 随机生成服务端数据库关键词
-        int serverElementSize = 1 << 20;
-        ArrayList<Set<ByteBuffer>> randomSets = PirUtils.generateBytesSets(serverElementSize, retrievalElementSize,
-            retrievalNumber, elementByteLength);
+    @Test
+    public void test1M1ShortLabelParallel() {
+        Cmg21KwPirConfig config = new Cmg21KwPirConfig.Builder().build();
+        testPir(config, Cmg21KwPirParams.SERVER_1M_CLIENT_MAX_1, SHORT_LABEL_BYTE_LENGTH, true);
+    }
+
+    @Test
+    public void test1M1LongLabelParallel() {
+        Cmg21KwPirConfig config = new Cmg21KwPirConfig.Builder().build();
+        testPir(config, Cmg21KwPirParams.SERVER_1M_CLIENT_MAX_1, LONG_LABEL_BYTE_LENGTH, true);
+    }
+
+    @Test
+    public void test1M4096() {
+        Cmg21KwPirConfig config = new Cmg21KwPirConfig.Builder().build();
+        testPir(config, Cmg21KwPirParams.SERVER_1M_CLIENT_MAX_4096, DEFAULT_LABEL_BYTE_LENGTH, false);
+    }
+
+    @Test
+    public void test1M4096Parallel() {
+        Cmg21KwPirConfig config = new Cmg21KwPirConfig.Builder().build();
+        testPir(config, Cmg21KwPirParams.SERVER_1M_CLIENT_MAX_4096, DEFAULT_LABEL_BYTE_LENGTH, true);
+    }
+
+    @Test
+    public void test1M4096ShortLabelParallel() {
+        Cmg21KwPirConfig config = new Cmg21KwPirConfig.Builder().build();
+        testPir(config, Cmg21KwPirParams.SERVER_1M_CLIENT_MAX_4096, SHORT_LABEL_BYTE_LENGTH, true);
+    }
+
+    @Test
+    public void test1M4096LongLabelParallel() {
+        Cmg21KwPirConfig config = new Cmg21KwPirConfig.Builder().build();
+        testPir(config, Cmg21KwPirParams.SERVER_1M_CLIENT_MAX_4096, LONG_LABEL_BYTE_LENGTH, true);
+    }
+
+    public void testPir(Cmg21KwPirConfig config, KwPirParams kwPirParams, int labelByteLength, boolean parallel) {
+        int retrievalSize = kwPirParams.maxRetrievalSize();
+        ArrayList<Set<String>> randomSets = PirUtils.generateStringSets(SERVER_MAP_SIZE, retrievalSize, REPEAT_TIME);
         // 随机构建服务端关键词和标签映射
-        Map<ByteBuffer, ByteBuffer> serverKwLabelMap = PirUtils.generateKwLabelMap(randomSets.get(0), labelByteLength);
+        Map<String, ByteBuffer> keywordLabelMap = PirUtils.generateKeywordLabelMap(randomSets.get(0), labelByteLength);
         // 创建参与方实例
-        KwPirServer<ByteBuffer> server = KwPirFactory.createServer(serverRpc, clientRpc.ownParty(), config);
-        KwPirClient<ByteBuffer> client = KwPirFactory.createClient(clientRpc, serverRpc.ownParty(), config);
+        KwPirServer<String> server = KwPirFactory.createServer(serverRpc, clientRpc.ownParty(), config);
+        KwPirClient<String> client = KwPirFactory.createClient(clientRpc, serverRpc.ownParty(), config);
         // 设置并发
         server.setParallel(parallel);
         client.setParallel(parallel);
-        KwPirServerThread<ByteBuffer> serverThread = new KwPirServerThread<>(server, serverKwLabelMap, labelByteLength,
-            retrievalNumber);
-        KwPirClientThread<ByteBuffer> clientThread = new KwPirClientThread<>(client,
-            Lists.newArrayList(randomSets.subList(1, retrievalNumber + 1)), labelByteLength);
+        KwPirServerThread<String> serverThread = new KwPirServerThread<>(
+            server, kwPirParams, keywordLabelMap, labelByteLength, REPEAT_TIME
+        );
+        KwPirClientThread<String> clientThread = new KwPirClientThread<>(
+            client, kwPirParams, Lists.newArrayList(randomSets.subList(1, REPEAT_TIME + 1)), labelByteLength
+        );
         try {
             // 开始执行协议
             serverThread.start();
@@ -97,21 +136,14 @@ public class KwPirTest {
         serverRpc.reset();
         LOGGER.info("Client: The Communication costs {}MB", clientRpc.getSendByteLength() * 1.0 / (1024 * 1024));
         clientRpc.reset();
-        // 真实结果
-        Set<ByteBuffer> intersectionSet = new HashSet<>();
-        for (int i = 0; i < retrievalNumber; i++) {
-            randomSets.get(i + 1).retainAll(randomSets.get(0));
-            intersectionSet.addAll(randomSets.get(i + 1));
-        }
         // 验证结果
-        Map<ByteBuffer, ByteBuffer> resultMap = clientThread.getPirResult();
-        Assert.assertEquals(resultMap.size(), intersectionSet.size());
-        LOGGER.info("Main: The size of matched IDs is {}", resultMap.size());
-        LOGGER.info("Main: Check that we retrieved the correct element");
-        resultMap.forEach((key, value) -> Assert.assertEquals(value, serverKwLabelMap.get(key)));
-        LOGGER.info("Main: Keyword PIR result correct!");
-        // 打印参数
-        LOGGER.info(config.getParams().toString());
+        for (int index = 0; index < REPEAT_TIME; index++) {
+            Set<String> intersectionSet = new HashSet<>(randomSets.get(index + 1));
+            intersectionSet.retainAll(randomSets.get(0));
+            Map<String, ByteBuffer> pirResult = clientThread.getRetrievalResult(index);
+            Assert.assertEquals(intersectionSet.size(), pirResult.size());
+            pirResult.forEach((key, value) -> Assert.assertEquals(value, keywordLabelMap.get(key)));
+        }
     }
 }
 

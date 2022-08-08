@@ -12,5 +12,12 @@ public interface UpsiParams {
      *
      * @return 最大客户端元素数量。
      */
-    int maxClientElementSize();
+    int maxClientSize();
+
+    /**
+     * 返回预估服务端元素数量。实际使用时可以超过预估数量。
+     *
+     * @return 预估服务端元素数量。
+     */
+    int expectServerSize();
 }

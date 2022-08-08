@@ -2,7 +2,6 @@ package edu.alibaba.mpc4j.s2pc.pir.keyword.cmg21;
 
 import edu.alibaba.mpc4j.common.rpc.desc.SecurityModel;
 import edu.alibaba.mpc4j.common.tool.EnvType;
-import edu.alibaba.mpc4j.common.tool.hashbin.object.cuckoo.CuckooHashBinFactory;
 import edu.alibaba.mpc4j.s2pc.pir.keyword.KwPirConfig;
 import edu.alibaba.mpc4j.s2pc.pir.keyword.KwPirFactory;
 
@@ -18,36 +17,14 @@ public class Cmg21KwPirConfig implements KwPirConfig {
      */
     private final EnvType envType;
     /**
-     * 布谷鸟哈希类型
+     * 是否使用压缩椭圆曲线编码
      */
-    private final CuckooHashBinFactory.CuckooHashBinType cuckooHashBinType;
-    /**
-     * 方案参数
-     */
-    private final Cmg21KwPirParams params;
+    private final boolean compressEncode;
+
 
     public Cmg21KwPirConfig(Builder builder) {
         this.envType = builder.envType;
-        this.cuckooHashBinType = builder.cuckooHashBinType;
-        this.params = builder.params;
-    }
-
-    /**
-     * 返回布谷鸟哈希类型。
-     *
-     * @return 布谷鸟哈希类型。
-     */
-    public CuckooHashBinFactory.CuckooHashBinType getCuckooHashBinType() {
-        return cuckooHashBinType;
-    }
-
-    /**
-     * 返回关键字索引PIR方案参数。
-     *
-     * @return 关键字索引PIR方案参数。
-     */
-    public Cmg21KwPirParams getParams() {
-        return params;
+        compressEncode = builder.compressEncode;
     }
 
     @Override
@@ -60,9 +37,13 @@ public class Cmg21KwPirConfig implements KwPirConfig {
         return envType;
     }
 
+    public boolean getCompressEncode() {
+        return compressEncode;
+    }
+
     @Override
-    public KwPirFactory.PirType getProType() {
-        return KwPirFactory.PirType.CMG21;
+    public KwPirFactory.KwPirType getProType() {
+        return KwPirFactory.KwPirType.CMG21;
     }
 
     public static class Builder implements org.apache.commons.lang3.builder.Builder<Cmg21KwPirConfig> {
@@ -71,16 +52,13 @@ public class Cmg21KwPirConfig implements KwPirConfig {
          */
         private EnvType envType;
         /**
-         * 布谷鸟哈希类型
+         * 是否使用压缩椭圆曲线编码
          */
-        private CuckooHashBinFactory.CuckooHashBinType cuckooHashBinType;
-        /**
-         * 方案参数
-         */
-        private Cmg21KwPirParams params;
+        private boolean compressEncode;
 
         public Builder() {
-            envType = EnvType.INLAND_JDK;
+            envType = EnvType.STANDARD;
+            compressEncode = true;
         }
 
         public Builder setEnvType(EnvType envType) {
@@ -88,13 +66,8 @@ public class Cmg21KwPirConfig implements KwPirConfig {
             return this;
         }
 
-        public Builder setCuckooHashBinType(CuckooHashBinFactory.CuckooHashBinType cuckooHashBinType) {
-            this.cuckooHashBinType = cuckooHashBinType;
-            return this;
-        }
-
-        public Builder setPirParams(Cmg21KwPirParams params) {
-            this.params = params;
+        public Builder setCompressEncode(boolean compressEncode) {
+            this.compressEncode = compressEncode;
             return this;
         }
 

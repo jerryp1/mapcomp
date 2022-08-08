@@ -34,7 +34,7 @@ public class Cmg21KwPirPtoDesc implements PtoDesc {
         /**
          * 客户端发送加密方案密钥
          */
-        CLIENT_SEND_ENCRYPTION_PARAMS,
+        CLIENT_SEND_FHE_PARAMS,
         /**
          * 客户端发送加密查询
          */

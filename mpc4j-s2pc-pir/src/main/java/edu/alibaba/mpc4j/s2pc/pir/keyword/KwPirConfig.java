@@ -14,5 +14,5 @@ public interface KwPirConfig extends SecurePtoConfig {
      *
      * @return 协议类型。
      */
-    KwPirFactory.PirType getProType();
+    KwPirFactory.KwPirType getProType();
 }

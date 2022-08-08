@@ -26,7 +26,7 @@ public abstract class AbstractKwPirServer<T> extends AbstractSecureTwoPartyPto i
     /**
      * 服务端关键词数组
      */
-    protected ArrayList<ByteBuffer> serverKeywordArrayList;
+    protected ArrayList<ByteBuffer> keywordArrayList;
     /**
      * 关键词字节数组和关键词对象映射
      */
@@ -34,7 +34,7 @@ public abstract class AbstractKwPirServer<T> extends AbstractSecureTwoPartyPto i
     /**
      * 服务端关键词数量
      */
-    protected int serverKeywordSize;
+    protected int keywordSize;
     /**
      * 标签字节长度
      */
@@ -54,7 +54,7 @@ public abstract class AbstractKwPirServer<T> extends AbstractSecureTwoPartyPto i
     }
 
     @Override
-    public KwPirFactory.PirType getPtoType() {
+    public KwPirFactory.KwPirType getPtoType() {
         return config.getProType();
     }
 
@@ -67,24 +67,24 @@ public abstract class AbstractKwPirServer<T> extends AbstractSecureTwoPartyPto i
         botElementByteBuffer = ByteBuffer.wrap(botElementByteArray);
         assert keywordLabelMap.size() >= 1;
         this.keywordLabelMap = keywordLabelMap;
-        this.serverKeywordSize = keywordLabelMap.size();
-        Iterator<Entry<T, ByteBuffer>> iter = keywordLabelMap.entrySet().iterator();
+        keywordSize = keywordLabelMap.size();
+        Iterator<Entry<T, ByteBuffer>> iterator = keywordLabelMap.entrySet().iterator();
         Set<T> serverElementSet = new HashSet<>();
-        while (iter.hasNext()) {
-            Entry<T, ByteBuffer> entry = iter.next();
+        while (iterator.hasNext()) {
+            Entry<T, ByteBuffer> entry = iterator.next();
             T item = entry.getKey();
             serverElementSet.add(item);
         }
-        this.serverKeywordArrayList = serverElementSet.stream()
+        keywordArrayList = serverElementSet.stream()
             .map(ObjectUtils::objectToByteArray)
             .map(ByteBuffer::wrap)
             .peek(serverElement -> {
                 assert !serverElement.equals(botElementByteBuffer) : "input equals ⊥";
             })
             .collect(Collectors.toCollection(ArrayList::new));
-        this.byteArrayObjectMap = new HashMap<>(this.serverKeywordSize);
-        keywordLabelMap.forEach((key, value) -> this.byteArrayObjectMap.put(
-            ByteBuffer.wrap(ObjectUtils.objectToByteArray(key)), key)
+        byteArrayObjectMap = new HashMap<>(keywordSize);
+        keywordLabelMap.forEach((key, value) ->
+            byteArrayObjectMap.put(ByteBuffer.wrap(ObjectUtils.objectToByteArray(key)), key)
         );
         extraInfo++;
         initialized = false;

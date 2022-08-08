@@ -2,7 +2,10 @@ package edu.alibaba.mpc4j.s2pc.pir.keyword.cmg21;
 
 import edu.alibaba.mpc4j.common.tool.CommonConstants;
 import edu.alibaba.mpc4j.common.tool.hashbin.object.HashBinEntry;
+import edu.alibaba.mpc4j.common.tool.hashbin.object.cuckoo.CuckooHashBinFactory;
+import edu.alibaba.mpc4j.common.tool.hashbin.object.cuckoo.CuckooHashBinFactory.CuckooHashBinType;
 import edu.alibaba.mpc4j.common.tool.utils.BigIntegerUtils;
+import edu.alibaba.mpc4j.s2pc.pir.keyword.KwPirParams;
 
 import java.math.BigInteger;
 import java.nio.ByteBuffer;
@@ -16,11 +19,11 @@ import java.util.stream.IntStream;
  * @author Liqiang Peng
  * @date 2022/6/20
  */
-public class Cmg21KwPirParams {
+public class Cmg21KwPirParams implements KwPirParams {
     /**
-     * 哈希算法数目
+     * 布谷鸟哈希类型
      */
-    private final int hashNum;
+    private final CuckooHashBinType cuckooHashBinType;
     /**
      * 哈希桶数目
      */
@@ -54,22 +57,30 @@ public class Cmg21KwPirParams {
      */
     private final int[] coeffModulusBits;
     /**
+     * 预估服务端数据量
+     */
+    private final int expectServerSize;
+    /**
      * 支持查询的关键词数量
      */
-    private final int maxQueryKeywordSize;
+    private final int maxRetrievalSize;
 
-    public Cmg21KwPirParams(int hashNum, int binNum, int maxPartitionSizePerBin, int itemEncodedSlotSize, int psLowDegree,
+    public Cmg21KwPirParams(CuckooHashBinType cuckooHashBinType, int binNum, int maxPartitionSizePerBin,
+                            int itemEncodedSlotSize, int psLowDegree,
                             int[] queryPowers, int plainModulus, int polyModulusDegree, int[] coeffModulusBits,
-                            int maxQueryKeywordSize) {
-        assert hashNum >= 1 && hashNum <= 3 : "hash num must be in {1, 2, 3}";
-        assert binNum > 0 : "bin num should be greater than 0";
-        assert itemEncodedSlotSize >= 2 && itemEncodedSlotSize <= 32 : "the size of slots for encoded item should "
-            + "smaller than or equal 32 and greater than or equal 2";
-        assert psLowDegree <= maxPartitionSizePerBin : "psLowDegree should be smaller or equal than " +
-            "maxPartitionSizePerBin";
+                            int expectServerSize, int maxRetrievalSize) {
+        assert cuckooHashBinType.equals(CuckooHashBinType.NAIVE_3_HASH)
+            || cuckooHashBinType.equals(CuckooHashBinType.NO_STASH_ONE_HASH)
+            : CuckooHashBinType.class.getSimpleName() + "only support "
+            + CuckooHashBinType.NO_STASH_ONE_HASH + " or " + CuckooHashBinType.NAIVE_3_HASH;
+        assert binNum > 0 : "bin num must be greater than 0: " + binNum;
+        assert itemEncodedSlotSize >= 2 && itemEncodedSlotSize <= 32
+            : "ItemEncodedSlotSize must be in range [2, 32]: " + itemEncodedSlotSize;
+        assert psLowDegree <= maxPartitionSizePerBin
+            : "psLowDegree should be smaller or equal than maxPartitionSizePerBin";
         // 检查query powers是否合理
         checkQueryPowers(queryPowers, psLowDegree);
-        assert (polyModulusDegree & (polyModulusDegree-1)) == 0 : "polyModulusDegree is not a power of two";
+        assert (polyModulusDegree & (polyModulusDegree - 1)) == 0 : "polyModulusDegree is not a power of two";
         assert plainModulus % (2 * polyModulusDegree) == 1 : "plainModulus should be a specific prime number to " +
             "supports batching ";
         // 元素的比特长度为 itemEncodedSlotSize*floor(log_2(plain_modulus))
@@ -78,8 +89,11 @@ public class Cmg21KwPirParams {
             "and smaller than or equal 128";
         assert binNum % (polyModulusDegree / itemEncodedSlotSize) == 0 : "binNum should be a multiple of " +
             "polyModulusDegree / itemEncodedSlotSize";
-        assert maxQueryKeywordSize > 0;
-        this.hashNum = hashNum;
+        assert expectServerSize > 0 : "ExpectServerSize must be greater than 0: " + expectServerSize;
+        int maxItemSize = CuckooHashBinFactory.getMaxItemSize(cuckooHashBinType, binNum);
+        assert maxRetrievalSize > 0 && maxRetrievalSize <= maxItemSize
+            : "MaxRetrievalSize must be in range (0, " + maxItemSize + "]: " + maxRetrievalSize;
+        this.cuckooHashBinType = cuckooHashBinType;
         this.binNum = binNum;
         this.maxPartitionSizePerBin = maxPartitionSizePerBin;
         this.itemEncodedSlotSize = itemEncodedSlotSize;
@@ -88,36 +102,48 @@ public class Cmg21KwPirParams {
         this.plainModulus = plainModulus;
         this.polyModulusDegree = polyModulusDegree;
         this.coeffModulusBits = coeffModulusBits;
-        this.maxQueryKeywordSize = maxQueryKeywordSize;
+        this.expectServerSize = expectServerSize;
+        this.maxRetrievalSize = maxRetrievalSize;
     }
 
     /**
-     * 服务端集合元素个数为1000000，客户端集合元素最大个数为4096
+     * 服务端100W，客户端最大检索数量4096
      */
-    public static final Cmg21KwPirParams ONE_MILLION_4096_32 = new Cmg21KwPirParams(3, 6552, 770,
+    public static final Cmg21KwPirParams SERVER_1M_CLIENT_MAX_4096 = new Cmg21KwPirParams(
+        CuckooHashBinType.NAIVE_3_HASH, 6552, 770,
         5,
         26, new int[]{1, 5, 8, 27, 135},
         1785857, 8192, new int[]{50, 56, 56, 50},
-        4096
+        1000000, 4096
     );
 
     /**
-     * 服务端集合元素个数为1000000，客户端集合元素最大个数为1
+     * 服务端100W，客户端最大检索数量1
      */
-    public static final Cmg21KwPirParams ONE_MILLION_1_32 = new Cmg21KwPirParams(1, 1638, 228,
+    public static final Cmg21KwPirParams SERVER_1M_CLIENT_MAX_1 = new Cmg21KwPirParams(
+        CuckooHashBinType.NO_STASH_ONE_HASH, 1638, 228,
         5,
         0, new int[]{1, 3, 8, 19, 33, 39, 92, 102},
         65537, 8192, new int[]{56, 48, 48},
-        1
+        1000000, 1
     );
 
     /**
-     * 返回哈希算法数目。
+     * 返回布谷鸟哈希类型。
      *
-     * @return 哈希算法数目。
+     * @return 布谷鸟哈希类型。
      */
-    public int getHashNum() {
-        return hashNum;
+    public CuckooHashBinType getCuckooHashBinType() {
+        return cuckooHashBinType;
+    }
+
+    /**
+     * 返回布谷鸟哈希桶的哈希数量。
+     *
+     * @return 布谷鸟哈希桶的哈希数量。
+     */
+    public int getCuckooHashKeyNum() {
+        return CuckooHashBinFactory.getHashNum(cuckooHashBinType);
     }
 
     /**
@@ -192,18 +218,21 @@ public class Cmg21KwPirParams {
         return coeffModulusBits;
     }
 
-    /**
-     * 返回单次查询的最大查询元素数量。
-     *
-     * @return 单次查询的最大查询元素数量。
-     */
-    public int getMaxQueryKeywordSize() { return maxQueryKeywordSize; }
+    @Override
+    public int maxRetrievalSize() {
+        return maxRetrievalSize;
+    }
+
+    @Override
+    public int expectServerSize() {
+        return expectServerSize;
+    }
 
     @Override
     public String toString() {
         return "Parameters chosen:" + "\n" +
             "  - hash_bin_params: {" + "\n" +
-            "     - hash_num : " + hashNum + "\n" +
+            "     - cuckoo_hash_bin_type : " + cuckooHashBinType + "\n" +
             "     - bin_num : " + binNum + "\n" +
             "     - max_items_per_bin : " + maxPartitionSizePerBin + "\n" +
             "  }" + "\n" +
@@ -232,12 +261,12 @@ public class Cmg21KwPirParams {
     public long[] getHashBinEntryEncodedArray(HashBinEntry<ByteBuffer> hashBinEntry, boolean isReceiver,
                                               SecureRandom secureRandom) {
         long[] encodedArray = new long[itemEncodedSlotSize];
-        int bitLength = (BigInteger.valueOf(plainModulus).bitLength()-1) * itemEncodedSlotSize;
+        int bitLength = (BigInteger.valueOf(plainModulus).bitLength() - 1) * itemEncodedSlotSize;
         assert bitLength >= 80;
         int shiftBits = BigInteger.valueOf(plainModulus).bitLength() - 1;
         // 判断是否为空桶
         if (hashBinEntry.getHashIndex() != -1) {
-            assert(hashBinEntry.getHashIndex() < 3) : "hash index should be [0, 1, 2]";
+            assert (hashBinEntry.getHashIndex() < 3) : "hash index should be [0, 1, 2]";
             BigInteger input = BigIntegerUtils.byteArrayToNonNegBigInteger(hashBinEntry.getItem().array());
             input = input.mod(BigInteger.ONE.shiftLeft(CommonConstants.BLOCK_BIT_LENGTH));
             for (int i = 0; i < itemEncodedSlotSize; i++) {
@@ -265,7 +294,7 @@ public class Cmg21KwPirParams {
      */
     public long[][] encodeLabel(byte[] labelBytes, int partitionNum) {
         long[][] encodedArray = new long[partitionNum][itemEncodedSlotSize];
-        int shiftBits = (int) Math.ceil(labelBytes.length*8.0 / (itemEncodedSlotSize*partitionNum));
+        int shiftBits = (int) Math.ceil(labelBytes.length * 8.0 / (itemEncodedSlotSize * partitionNum));
         BigInteger bigIntLabel = BigIntegerUtils.byteArrayToNonNegBigInteger(labelBytes);
         for (int i = 0; i < partitionNum; i++) {
             for (int j = 0; j < itemEncodedSlotSize; j++) {
