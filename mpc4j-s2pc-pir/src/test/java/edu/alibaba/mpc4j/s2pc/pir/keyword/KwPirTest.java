@@ -25,7 +25,7 @@ public class KwPirTest {
     /**
      * 重复检索次数
      */
-    private static final int REPEAT_TIME = 2;
+    private static final int REPEAT_TIME = 1;
     /**
      * 短标签字节长度
      */
@@ -41,7 +41,7 @@ public class KwPirTest {
     /**
      * 服务端元素数量
      */
-    private static final int SERVER_MAP_SIZE = 1 << 16;
+    private static final int SERVER_MAP_SIZE = 1 << 20;
     /**
      * 服务端
      */

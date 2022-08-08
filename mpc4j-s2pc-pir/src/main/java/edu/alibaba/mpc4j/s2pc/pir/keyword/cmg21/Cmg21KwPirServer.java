@@ -22,6 +22,7 @@ import edu.alibaba.mpc4j.common.tool.polynomial.zp64.Zp64Poly;
 import edu.alibaba.mpc4j.common.tool.polynomial.zp64.Zp64PolyFactory;
 import edu.alibaba.mpc4j.common.tool.utils.BigIntegerUtils;
 import edu.alibaba.mpc4j.common.tool.utils.CommonUtils;
+import edu.alibaba.mpc4j.common.tool.utils.LongUtils;
 import edu.alibaba.mpc4j.s2pc.pir.keyword.AbstractKwPirServer;
 import edu.alibaba.mpc4j.s2pc.pir.keyword.KwPirParams;
 import edu.alibaba.mpc4j.s2pc.pir.keyword.cmg21.Cmg21KwPirPtoDesc.PtoStep;
@@ -64,7 +65,7 @@ public class Cmg21KwPirServer<T> extends AbstractKwPirServer<T> {
     /**
      * 哈希分桶
      */
-    private List<ArrayList<HashBinEntry<ByteBuffer>>> hashBins;
+    private ArrayList<ArrayList<HashBinEntry<ByteBuffer>>> hashBins;
     /**
      * 服务端元素编码
      */
@@ -114,7 +115,7 @@ public class Cmg21KwPirServer<T> extends AbstractKwPirServer<T> {
         stopWatch.stop();
         long cuckooHashKeyTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
         stopWatch.reset();
-        info("{}{} Server Init Step 1/2 ({}ms)", ptoStepLogPrefix, getPtoDesc().getPtoName(), cuckooHashKeyTime);
+        info("{}{} Server Init Step 1/4 ({}ms)", ptoStepLogPrefix, getPtoDesc().getPtoName(), cuckooHashKeyTime);
 
         stopWatch.start();
         // 计算PRF
@@ -126,14 +127,26 @@ public class Cmg21KwPirServer<T> extends AbstractKwPirServer<T> {
                 i -> serverKeywordLabelMap.get(byteArrayObjectMap.get(keywordArrayList.get(i))),
                 (a, b) -> b)
             );
+        stopWatch.stop();
+        long oprfTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
+        stopWatch.reset();
+        info("{}{} Server Init Step 2/4 ({}ms)", ptoStepLogPrefix, getPtoDesc().getPtoName(), oprfTime);
+
+        stopWatch.start();
         // 计算完全哈希分桶
         hashBins = generateCompleteHashBin(keywordPrfs, params.getBinNum());
+        stopWatch.stop();
+        long hashTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
+        stopWatch.reset();
+        info("{}{} Server Init Step 3/4 ({}ms)", ptoStepLogPrefix, getPtoDesc().getPtoName(), hashTime);
+
+        stopWatch.start();
         // 计算多项式系数
         encodeDatabase(prfLabelMap);
         stopWatch.stop();
         long encodeTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
         stopWatch.reset();
-        info("{}{} Server Init Step 2/2 ({}ms)", ptoStepLogPrefix, getPtoDesc().getPtoName(), encodeTime);
+        info("{}{} Server Init Step 4/4 ({}ms)", ptoStepLogPrefix, getPtoDesc().getPtoName(), encodeTime);
 
         initialized = true;
         info("{}{} Server Init end", ptoEndLogPrefix, getPtoDesc().getPtoName());
@@ -233,28 +246,28 @@ public class Cmg21KwPirServer<T> extends AbstractKwPirServer<T> {
      *
      * @param binItems 哈希桶内的元素。
      * @return 排序后的哈希桶。
-     * @throws MpcAbortException 如果协议异常中止。
      */
-    private ArrayList<HashBinEntry<ByteBuffer>> sortedHashBinEntries(ArrayList<HashBinEntry<ByteBuffer>> binItems)
-        throws MpcAbortException {
+    private ArrayList<HashBinEntry<ByteBuffer>> sortedHashBinEntries(ArrayList<HashBinEntry<ByteBuffer>> binItems) {
         ArrayList<ArrayList<HashBinEntry<ByteBuffer>>> partitions = new ArrayList<>(binItems.size());
-        List<List<Set<Long>>> partElementSet = new ArrayList<>();
+        ArrayList<ArrayList<Set<Long>>> partElementSets = new ArrayList<>();
         for (int i = 0; i < binItems.size(); i++) {
-            partElementSet.add(i, new ArrayList<>());
+            partElementSets.add(i, new ArrayList<>());
             for (int j = 0; j < params.getItemEncodedSlotSize(); j++) {
-                partElementSet.get(i).add(j, new HashSet<>());
+                partElementSets.get(i).add(j, new HashSet<>());
             }
         }
         for (int i = 0; i < binItems.size(); i++) {
             partitions.add(new ArrayList<>());
         }
+        BigInteger blockMask = BigInteger.ONE.shiftLeft(CommonConstants.BLOCK_BIT_LENGTH).subtract(BigInteger.ONE);
         int shiftBits = BigInteger.valueOf(params.getPlainModulus()).bitLength() - 1;
+        BigInteger shiftMask = BigInteger.ONE.shiftLeft(shiftBits).subtract(BigInteger.ONE);
         for (HashBinEntry<ByteBuffer> binItem : binItems) {
             long[] itemParts = new long[params.getItemEncodedSlotSize()];
             BigInteger item = BigIntegerUtils.byteArrayToBigInteger(binItem.getItem().array());
-            item = item.mod(BigInteger.ONE.shiftLeft(CommonConstants.BLOCK_BIT_LENGTH));
+            item = item.and(blockMask);
             for (int i = 0; i < params.getItemEncodedSlotSize(); i++) {
-                itemParts[i] = item.mod(BigInteger.ONE.shiftLeft(shiftBits)).longValueExact();
+                itemParts[i] = item.and(shiftMask).longValueExact();
                 item = item.shiftRight(shiftBits);
             }
             for (int i = 0; i < partitions.size(); i++) {
@@ -262,21 +275,21 @@ public class Cmg21KwPirServer<T> extends AbstractKwPirServer<T> {
                 if (partition.size() == 0) {
                     partition.add(binItem);
                     for (int j = 0; j < params.getItemEncodedSlotSize(); j++) {
-                        partElementSet.get(i).get(j).add(itemParts[j]);
+                        partElementSets.get(i).get(j).add(itemParts[j]);
                     }
                     break;
                 } else {
                     if (partition.size() != params.getMaxPartitionSizePerBin()) {
                         int l;
                         for (l = 0; l < partition.size(); l++) {
-                            if (checkRepeatedItemPart(partElementSet.get(i), itemParts)) {
+                            if (checkRepeatedItemPart(partElementSets.get(i), itemParts)) {
                                 break;
                             }
                         }
                         if (l == partition.size()) {
                             partition.add(binItem);
                             for (int j = 0; j < params.getItemEncodedSlotSize(); j++) {
-                                partElementSet.get(i).get(j).add(itemParts[j]);
+                                partElementSets.get(i).get(j).add(itemParts[j]);
                             }
                             break;
                         }
@@ -284,51 +297,46 @@ public class Cmg21KwPirServer<T> extends AbstractKwPirServer<T> {
                 }
             }
         }
-        ArrayList<HashBinEntry<ByteBuffer>> sortedHashBin = new ArrayList<>();
-        partitions.stream()
+        Stream<ArrayList<HashBinEntry<ByteBuffer>>> partitionStream = partitions.stream();
+        partitionStream = parallel ? partitionStream.parallel() : partitionStream;
+        return partitionStream
             .filter(partition -> partition.size() != 0)
-            .forEach(partition -> {
-                sortedHashBin.addAll(partition);
-                IntStream.range(partition.size(), params.getMaxPartitionSizePerBin())
-                    .mapToObj(j -> HashBinEntry.fromEmptyItem(botElementByteBuffer))
-                    .forEach(sortedHashBin::add);
-            });
-        return sortedHashBin;
+            .peek(partition -> {
+                for (int index = partition.size(); index < params.getMaxPartitionSizePerBin(); index++) {
+                    partition.add(HashBinEntry.fromEmptyItem(botElementByteBuffer));
+                }
+            })
+            .flatMap(Collection::stream)
+            .collect(Collectors.toCollection(ArrayList::new));
     }
 
     /**
      * 生成完全哈希分桶。
      *
      * @param itemList 元素集合。
-     * @param binNum      哈希桶数量。
+     * @param binNum   哈希桶数量。
      * @return 完全哈希分桶。
      */
-    private List<ArrayList<HashBinEntry<ByteBuffer>>> generateCompleteHashBin(ArrayList<ByteBuffer> itemList,
-                                                                          int binNum) {
+    private ArrayList<ArrayList<HashBinEntry<ByteBuffer>>> generateCompleteHashBin(ArrayList<ByteBuffer> itemList,
+                                                                                   int binNum) {
         RandomPadHashBin<ByteBuffer> completeHash = new RandomPadHashBin<>(envType, binNum, keywordSize, hashKeys);
         completeHash.insertItems(itemList);
-        List<ArrayList<HashBinEntry<ByteBuffer>>> hashBinList = new ArrayList<>();
-        // 对哈希桶内的元素排序，保证同一个分块内不存在部分比特位相同的两个元素
-        IntStream.range(0, completeHash.binNum())
-            .mapToObj(i -> new ArrayList<>(completeHash.getBin(i)))
-            .forEach(binItems -> {
-                try {
-                    hashBinList.add(sortedHashBinEntries(binItems));
-                } catch (MpcAbortException e) {
-                    e.printStackTrace();
-                }
-            });
-        int maxBinSize = hashBinList.get(0).size();
-        for (int i = 1; i < hashBinList.size(); i++) {
-            if (hashBinList.get(i).size() > maxBinSize) {
-                maxBinSize = hashBinList.get(i).size();
-            }
-        }
+        IntStream binIndexIntStream = IntStream.range(0, completeHash.binNum());
+        binIndexIntStream = parallel ? binIndexIntStream.parallel() : binIndexIntStream;
+        ArrayList<ArrayList<HashBinEntry<ByteBuffer>>> hashBinList = binIndexIntStream
+            .mapToObj(binIndex -> {
+                ArrayList<HashBinEntry<ByteBuffer>> binArrayList = new ArrayList<>(completeHash.getBin(binIndex));
+                return sortedHashBinEntries(binArrayList);
+            })
+            .collect(Collectors.toCollection(ArrayList::new));
+        int maxBinSize = hashBinList.stream().mapToInt(ArrayList::size).max().orElse(0);
         HashBinEntry<ByteBuffer> paddingEntry = HashBinEntry.fromEmptyItem(botElementByteBuffer);
-        for (ArrayList<HashBinEntry<ByteBuffer>> hashBin : hashBinList) {
-            int paddingNum = maxBinSize - hashBin.size();
-            IntStream.range(0, paddingNum).mapToObj(j -> paddingEntry).forEach(hashBin::add);
-        }
+        hashBinList.forEach(bin -> {
+            int paddingNum = maxBinSize - bin.size();
+            for (int index = 0; index < paddingNum; index++) {
+                bin.add(paddingEntry);
+            }
+        });
         return hashBinList;
     }
 
@@ -338,11 +346,9 @@ public class Cmg21KwPirServer<T> extends AbstractKwPirServer<T> {
      * @param existingItemParts 已有的元素分块。
      * @param itemParts         元素分块。
      * @return 是否与已有的分块重复。
-     * @throws MpcAbortException 如果协议异常中止。
      */
-    private boolean checkRepeatedItemPart(List<Set<Long>> existingItemParts, long[] itemParts)
-        throws MpcAbortException {
-        MpcAbortPreconditions.checkArgument(existingItemParts.size() == itemParts.length);
+    private boolean checkRepeatedItemPart(List<Set<Long>> existingItemParts, long[] itemParts) {
+        assert existingItemParts.size() == itemParts.length;
         return IntStream.range(0, itemParts.length).anyMatch(i -> existingItemParts.get(i).contains(itemParts[i]));
     }
 
@@ -352,104 +358,83 @@ public class Cmg21KwPirServer<T> extends AbstractKwPirServer<T> {
      * @param prfMap prf映射。
      */
     private void encodeDatabase(Map<ByteBuffer, ByteBuffer> prfMap) {
-        Zp64Poly zp64Poly = Zp64PolyFactory.createInstance(envType, (long) params.getPlainModulus());
-        int ciphertextNum = params.getBinNum() / (params.getPolyModulusDegree() / params.getItemEncodedSlotSize());
-        int itemPerCiphertext = params.getPolyModulusDegree() / params.getItemEncodedSlotSize();
+        long plainModulus = params.getPlainModulus();
+        Zp64Poly zp64Poly = Zp64PolyFactory.createInstance(envType, plainModulus);
+        int itemEncodedSlotSize = params.getItemEncodedSlotSize();
+        int ciphertextNum = params.getBinNum() / (params.getPolyModulusDegree() / itemEncodedSlotSize);
+        int itemPerCiphertext = params.getPolyModulusDegree() / itemEncodedSlotSize;
         int binSize = hashBins.get(0).size();
         int partitionCount = (binSize + params.getMaxPartitionSizePerBin() - 1) / params.getMaxPartitionSizePerBin();
         int bigPartitionCount = binSize / params.getMaxPartitionSizePerBin();
         int labelPartitionCount = (int) Math.ceil((labelByteLength + CommonConstants.BLOCK_BYTE_LENGTH) * 8.0 /
-            ((BigInteger.valueOf(params.getPlainModulus()).bitLength() - 1) * params.getItemEncodedSlotSize()));
+            ((LongUtils.ceilLog2(plainModulus) - 1) * itemEncodedSlotSize));
         serverKeywordEncode = new long[partitionCount * ciphertextNum][][];
         serverLabelEncode = new long[partitionCount * ciphertextNum * labelPartitionCount][][];
         // for each bucket, compute the coefficients of the polynomial f(x) = \prod_{y in bucket} (x - y)
         // and coeffs of g(x), which has the property g(y) = label(y) for each y in bucket.
-        for (int i = 0; i < ciphertextNum; i++) {
+        IntStream ciphertextIndexStream = IntStream.range(0, ciphertextNum);
+        ciphertextIndexStream = parallel ? ciphertextIndexStream.parallel() : ciphertextIndexStream;
+        ciphertextIndexStream.forEach(i -> {
             for (int partition = 0; partition < partitionCount; partition++) {
                 // 元素的多项式系数
-                long[][] fCoeffs = new long[itemPerCiphertext * params.getItemEncodedSlotSize()][];
+                long[][] fCoeffs = new long[itemPerCiphertext * itemEncodedSlotSize][];
                 // 标签的多项式系数
-                long[][][] gCoeffs = new long[labelPartitionCount][itemPerCiphertext * params.getItemEncodedSlotSize()][];
+                long[][][] gCoeffs = new long[labelPartitionCount][itemPerCiphertext * itemEncodedSlotSize][];
                 // 对分块内的元素和标签编码
                 int partitionSize, partitionStart;
                 partitionSize = partition < bigPartitionCount ? params.getMaxPartitionSizePerBin() : binSize % params.getMaxPartitionSizePerBin();
                 partitionStart = params.getMaxPartitionSizePerBin() * partition;
-                IntStream intStream = getParallel() ? IntStream.range(0, itemPerCiphertext).parallel() :
-                    IntStream.range(0, itemPerCiphertext);
-                int finalI = i;
-                intStream.forEach(j -> {
+                IntStream.range(0, itemPerCiphertext).forEach(j -> {
                     // 存储每块的元素编码
-                    Vector<Vector<Long>> currentBucketElement = new Vector<>();
-                    currentBucketElement.setSize(params.getItemEncodedSlotSize());
-                    IntStream.range(0, params.getItemEncodedSlotSize()).forEach(l -> currentBucketElement.set(l, new Vector<>()));
+                    long[][] currentBucketElement = new long[itemEncodedSlotSize][partitionSize];
                     // 存储每块的标签编码
-                    Vector<Vector<Vector<Long>>> currentBucketLabels = new Vector<>();
-                    currentBucketLabels.setSize(labelPartitionCount);
-                    for (int l = 0; l < labelPartitionCount; l++) {
-                        currentBucketLabels.set(l, new Vector<>());
-                        currentBucketLabels.get(l).setSize(params.getItemEncodedSlotSize());
-                        for (int k = 0; k < params.getItemEncodedSlotSize(); k++) {
-                            currentBucketLabels.get(l).set(k, new Vector<>());
-                        }
-                    }
-                    IntStream.range(0, params.getItemEncodedSlotSize()).forEach(l -> currentBucketElement.get(l).setSize(partitionSize));
-                    for (int l = 0; l < labelPartitionCount; l++) {
-                        for (int k = 0; k < params.getItemEncodedSlotSize(); k++) {
-                            currentBucketLabels.get(l).get(k).setSize(partitionSize);
-                        }
-                    }
+                    long[][][] currentBucketLabels = new long[labelPartitionCount][itemEncodedSlotSize][partitionSize];
                     for (int l = 0; l < partitionSize; l++) {
-                        HashBinEntry<ByteBuffer> entry = hashBins.get(finalI*itemPerCiphertext + j).get(partitionStart + l);
+                        HashBinEntry<ByteBuffer> entry = hashBins.get(i * itemPerCiphertext + j).get(partitionStart + l);
                         long[] temp = params.getHashBinEntryEncodedArray(entry, false, secureRandom);
-                        for (int k = 0; k < params.getItemEncodedSlotSize(); k++) {
-                            currentBucketElement.get(k).set(l, temp[k]);
+                        for (int k = 0; k < itemEncodedSlotSize; k++) {
+                            currentBucketElement[k][l] = temp[k];
                         }
                     }
-                    for (int l = 0; l < params.getItemEncodedSlotSize(); l++) {
-                        long[] temp = new long[partitionSize];
-                        for (int index = 0; index < partitionSize; index++) {
-                            temp[index] = currentBucketElement.get(l).get(index);
-                        }
-                        fCoeffs[j * params.getItemEncodedSlotSize() + l] = zp64Poly.rootInterpolate(partitionSize, temp, 0L);
-                        assert fCoeffs[j * params.getItemEncodedSlotSize() + l].length == partitionSize + 1;
+                    for (int l = 0; l < itemEncodedSlotSize; l++) {
+                        fCoeffs[j * itemEncodedSlotSize + l] = zp64Poly.rootInterpolate(partitionSize, currentBucketElement[l], 0L);
+                        assert fCoeffs[j * itemEncodedSlotSize + l].length == partitionSize + 1;
                     }
                     int nonEmptyBuckets = 0;
                     for (int l = 0; l < partitionSize; l++) {
-                        HashBinEntry<ByteBuffer> entry = hashBins.get(finalI*itemPerCiphertext + j).get(partitionStart + l);
-                        if (entry.getHashIndex() != -1) {
-                            for (int k = 0; k < params.getItemEncodedSlotSize(); k++) {
-                                currentBucketElement.get(k).set(nonEmptyBuckets, currentBucketElement.get(k).get(l));
+                        HashBinEntry<ByteBuffer> entry = hashBins.get(i * itemPerCiphertext + j).get(partitionStart + l);
+                        if (entry.getHashIndex() != HashBinEntry.DUMMY_ITEM_HASH_INDEX) {
+                            for (int k = 0; k < itemEncodedSlotSize; k++) {
+                                currentBucketElement[k][nonEmptyBuckets] = currentBucketElement[k][l];
                             }
+                            byte[] oprf = entry.getItem().array();
+                            // 取oprf的前128比特
                             byte[] keyBytes = new byte[CommonConstants.BLOCK_BYTE_LENGTH];
-                            IntStream.range(0, CommonConstants.BLOCK_BYTE_LENGTH)
-                                .forEach(k -> keyBytes[k] = entry.getItem().array()[k]);
-                            byte[] encryptedLabel = labelEncryption(keyBytes,
-                                prfMap.get(entry.getItem()).array());
+                            System.arraycopy(oprf, 0, keyBytes, 0, CommonConstants.BLOCK_BYTE_LENGTH);
+                            byte[] encryptedLabel = labelEncryption(keyBytes, prfMap.get(entry.getItem()).array());
                             long[][] temp = params.encodeLabel(encryptedLabel, labelPartitionCount);
                             for (int k = 0; k < labelPartitionCount; k++) {
-                                for (int h = 0; h < params.getItemEncodedSlotSize(); h++) {
-                                    currentBucketLabels.get(k).get(h).set(nonEmptyBuckets, temp[k][h]);
+                                for (int h = 0; h < itemEncodedSlotSize; h++) {
+                                    currentBucketLabels[k][h][nonEmptyBuckets] = temp[k][h];
                                 }
                             }
                             nonEmptyBuckets++;
                         }
                     }
-                    for (int l = 0; l < params.getItemEncodedSlotSize(); l++) {
-                        currentBucketElement.get(l).setSize(nonEmptyBuckets);
+                    for (int l = 0; l < itemEncodedSlotSize; l++) {
                         for (int k = 0; k < labelPartitionCount; k++) {
-                            currentBucketLabels.get(k).get(l).setSize(nonEmptyBuckets);
                             long[] xArray = new long[nonEmptyBuckets];
                             long[] yArray = new long[nonEmptyBuckets];
                             for (int index = 0; index < nonEmptyBuckets; index++) {
-                                xArray[index] = currentBucketElement.get(l).get(index);
-                                yArray[index] = currentBucketLabels.get(k).get(l).get(index);
+                                xArray[index] = currentBucketElement[l][index];
+                                yArray[index] = currentBucketLabels[k][l][index];
                             }
                             if (nonEmptyBuckets > 0) {
-                                gCoeffs[k][j * params.getItemEncodedSlotSize() + l] = zp64Poly.interpolate(
+                                gCoeffs[k][j * itemEncodedSlotSize + l] = zp64Poly.interpolate(
                                     nonEmptyBuckets, xArray, yArray
                                 );
                             } else {
-                                gCoeffs[k][j * params.getItemEncodedSlotSize() + l] = new long[0];
+                                gCoeffs[k][j * itemEncodedSlotSize + l] = new long[0];
                             }
                         }
                     }
@@ -462,25 +447,23 @@ public class Cmg21KwPirServer<T> extends AbstractKwPirServer<T> {
                 long[][][] encodeLabelVector = new long[labelPartitionCount][labelSize][params.getPolyModulusDegree()];
                 for (int j = 0; j < partitionSize + 1; j++) {
                     // encode the jth coefficients of all polynomials into a vector
-                    for (int l = 0; l < params.getItemEncodedSlotSize() * itemPerCiphertext; l++) {
+                    for (int l = 0; l < itemEncodedSlotSize * itemPerCiphertext; l++) {
                         encodeElementVector[j][l] = fCoeffs[l][j];
                     }
-                    for (int l = params.getItemEncodedSlotSize() * itemPerCiphertext; l < params.getPolyModulusDegree();
-                         l++) {
+                    for (int l = itemEncodedSlotSize * itemPerCiphertext; l < params.getPolyModulusDegree(); l++) {
                         encodeElementVector[j][l] = 0;
                     }
                 }
                 for (int j = 0; j < labelSize; j++) {
                     for (int k = 0; k < labelPartitionCount; k++) {
-                        for (int l = 0; l < params.getItemEncodedSlotSize() * itemPerCiphertext; l++) {
+                        for (int l = 0; l < itemEncodedSlotSize * itemPerCiphertext; l++) {
                             if (gCoeffs[k][l].length == 0) {
-                                encodeLabelVector[k][j][l] = Math.abs(secureRandom.nextLong()) % params.getPlainModulus();
+                                encodeLabelVector[k][j][l] = Math.abs(secureRandom.nextLong()) % plainModulus;
                             } else {
                                 encodeLabelVector[k][j][l] = (j < gCoeffs[k][l].length) ? gCoeffs[k][l][j] : 0;
                             }
                         }
-                        for (int l = params.getItemEncodedSlotSize() * itemPerCiphertext; l < params.getPolyModulusDegree();
-                             l++) {
+                        for (int l = itemEncodedSlotSize * itemPerCiphertext; l < params.getPolyModulusDegree(); l++) {
                             encodeLabelVector[k][j][l] = 0;
                         }
                     }
@@ -491,7 +474,7 @@ public class Cmg21KwPirServer<T> extends AbstractKwPirServer<T> {
                         encodeLabelVector[j];
                 }
             }
-        }
+        });
     }
 
     /**

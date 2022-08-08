@@ -17,6 +17,7 @@ import edu.alibaba.mpc4j.common.tool.galoisfield.Zp64.Zp64;
 import edu.alibaba.mpc4j.common.tool.galoisfield.Zp64.Zp64Factory;
 import edu.alibaba.mpc4j.common.tool.hashbin.object.cuckoo.CuckooHashBin;
 import edu.alibaba.mpc4j.common.tool.utils.BigIntegerUtils;
+import edu.alibaba.mpc4j.common.tool.utils.LongUtils;
 import edu.alibaba.mpc4j.s2pc.pir.keyword.AbstractKwPirClient;
 import edu.alibaba.mpc4j.s2pc.pir.keyword.KwPirParams;
 import edu.alibaba.mpc4j.s2pc.pir.keyword.cmg21.Cmg21KwPirPtoDesc.PtoStep;
@@ -227,31 +228,31 @@ public class Cmg21KwPirClient<T> extends AbstractKwPirClient<T> {
                                                 ArrayList<long[]> decryptedLabelReply,
                                                 Map<ByteBuffer, ByteBuffer> oprfMap) {
         Map<T, ByteBuffer> resultMap = new HashMap<>(retrievalSize);
-        int ciphertextNum = params.getBinNum() / (params.getPolyModulusDegree() / params.getItemEncodedSlotSize());
-        int itemPerCiphertext = params.getPolyModulusDegree() / params.getItemEncodedSlotSize();
+        int itemEncodedSlotSize = params.getItemEncodedSlotSize();
+        int ciphertextNum = params.getBinNum() / (params.getPolyModulusDegree() / itemEncodedSlotSize);
+        int itemPerCiphertext = params.getPolyModulusDegree() / itemEncodedSlotSize;
         int itemPartitionNum = decryptedKeywordReply.size() / ciphertextNum;
         int labelPartitionNum = (int) Math.ceil((labelByteLength + CommonConstants.BLOCK_BYTE_LENGTH) * 8.0 /
-            ((BigInteger.valueOf(params.getPlainModulus()).bitLength() - 1) * params.getItemEncodedSlotSize()));
+            ((LongUtils.ceilLog2(params.getPlainModulus()) - 1) * itemEncodedSlotSize));
         int shiftBits = (int) Math.ceil((labelByteLength + CommonConstants.BLOCK_BYTE_LENGTH) * 8.0 /
-            (params.getItemEncodedSlotSize() * labelPartitionNum));
+            (itemEncodedSlotSize * labelPartitionNum));
         for (int i = 0; i < decryptedKeywordReply.size(); i++) {
             // 找到匹配元素的所在行
             List<Integer> matchedItem = new ArrayList<>();
-            for (int j = 0; j < params.getItemEncodedSlotSize() * itemPerCiphertext; j++) {
+            for (int j = 0; j < itemEncodedSlotSize * itemPerCiphertext; j++) {
                 if (decryptedKeywordReply.get(i)[j] == 0) {
                     matchedItem.add(j);
                 }
             }
-            for (int j = 0; j < matchedItem.size() - params.getItemEncodedSlotSize() + 1; j++) {
-                if (matchedItem.get(j) % params.getItemEncodedSlotSize() == 0) {
-                    if (matchedItem.get(j + params.getItemEncodedSlotSize() - 1) - matchedItem.get(j)
-                        == params.getItemEncodedSlotSize() - 1) {
-                        int hashBinIndex = matchedItem.get(j) / params.getItemEncodedSlotSize() + (i / itemPartitionNum)
+            for (int j = 0; j < matchedItem.size() - itemEncodedSlotSize + 1; j++) {
+                if (matchedItem.get(j) % itemEncodedSlotSize == 0) {
+                    if (matchedItem.get(j + itemEncodedSlotSize - 1) - matchedItem.get(j) == itemEncodedSlotSize - 1) {
+                        int hashBinIndex = matchedItem.get(j) / itemEncodedSlotSize + (i / itemPartitionNum)
                             * itemPerCiphertext;
                         BigInteger label = BigInteger.ZERO;
                         int index = 0;
                         for (int l = 0; l < labelPartitionNum; l++) {
-                            for (int k = 0; k < params.getItemEncodedSlotSize(); k++) {
+                            for (int k = 0; k < itemEncodedSlotSize; k++) {
                                 BigInteger temp = BigInteger.valueOf(
                                         decryptedLabelReply.get(i * labelPartitionNum + l)[matchedItem.get(j + k)])
                                     .shiftLeft(shiftBits * index);
@@ -259,15 +260,15 @@ public class Cmg21KwPirClient<T> extends AbstractKwPirClient<T> {
                                 index++;
                             }
                         }
+                        byte[] oprf = cuckooHashBin.getHashBinEntry(hashBinIndex).getItem().array();
                         byte[] keyBytes = new byte[CommonConstants.BLOCK_BYTE_LENGTH];
-                        IntStream.range(0, CommonConstants.BLOCK_BYTE_LENGTH)
-                            .forEach(k -> keyBytes[k] = cuckooHashBin.getHashBinEntry(hashBinIndex).getItem().array()[k]);
+                        System.arraycopy(oprf, 0, keyBytes, 0, CommonConstants.BLOCK_BYTE_LENGTH);
                         resultMap.put(
                             byteArrayObjectMap.get(oprfMap.get(cuckooHashBin.getHashBinEntry(hashBinIndex).getItem())),
                             ByteBuffer.wrap(labelDecryption(keyBytes, BigIntegerUtils.nonNegBigIntegerToByteArray(label,
                                 labelByteLength + CommonConstants.BLOCK_BYTE_LENGTH)))
                         );
-                        j = j + params.getItemEncodedSlotSize() - 1;
+                        j = j + itemEncodedSlotSize - 1;
                     }
                 }
             }
@@ -326,17 +327,18 @@ public class Cmg21KwPirClient<T> extends AbstractKwPirClient<T> {
      * @return 查询关键词的编码。
      */
     public List<long[][]> encodeQuery() {
-        int ciphertextNum = params.getBinNum() / (params.getPolyModulusDegree() / params.getItemEncodedSlotSize());
-        int itemPerCiphertext = params.getPolyModulusDegree() / params.getItemEncodedSlotSize();
+        int itemEncodedSlotSize = params.getItemEncodedSlotSize();
+        int ciphertextNum = params.getBinNum() / (params.getPolyModulusDegree() / itemEncodedSlotSize);
+        int itemPerCiphertext = params.getPolyModulusDegree() / itemEncodedSlotSize;
         long[][] items = new long[ciphertextNum][params.getPolyModulusDegree()];
         for (int i = 0; i < ciphertextNum; i++) {
             for (int j = 0; j < itemPerCiphertext; j++) {
                 long[] item = params.getHashBinEntryEncodedArray(
                     cuckooHashBin.getHashBinEntry(i * itemPerCiphertext + j), true, secureRandom
                 );
-                System.arraycopy(item, 0, items[i], j * params.getItemEncodedSlotSize(), params.getItemEncodedSlotSize());
+                System.arraycopy(item, 0, items[i], j * itemEncodedSlotSize, itemEncodedSlotSize);
             }
-            for (int j = itemPerCiphertext * params.getItemEncodedSlotSize(); j < params.getPolyModulusDegree(); j++) {
+            for (int j = itemPerCiphertext * itemEncodedSlotSize; j < params.getPolyModulusDegree(); j++) {
                 items[i][j] = 0;
             }
         }

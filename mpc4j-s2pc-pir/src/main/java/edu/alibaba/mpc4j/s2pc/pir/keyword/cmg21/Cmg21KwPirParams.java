@@ -47,7 +47,7 @@ public class Cmg21KwPirParams implements KwPirParams {
     /**
      * 明文模数
      */
-    private final int plainModulus;
+    private final long plainModulus;
     /**
      * 多项式阶
      */
@@ -67,7 +67,7 @@ public class Cmg21KwPirParams implements KwPirParams {
 
     public Cmg21KwPirParams(CuckooHashBinType cuckooHashBinType, int binNum, int maxPartitionSizePerBin,
                             int itemEncodedSlotSize, int psLowDegree,
-                            int[] queryPowers, int plainModulus, int polyModulusDegree, int[] coeffModulusBits,
+                            int[] queryPowers, long plainModulus, int polyModulusDegree, int[] coeffModulusBits,
                             int expectServerSize, int maxRetrievalSize) {
         assert cuckooHashBinType.equals(CuckooHashBinType.NAIVE_3_HASH)
             || cuckooHashBinType.equals(CuckooHashBinType.NO_STASH_ONE_HASH)
@@ -81,7 +81,7 @@ public class Cmg21KwPirParams implements KwPirParams {
         // 检查query powers是否合理
         checkQueryPowers(queryPowers, psLowDegree);
         assert (polyModulusDegree & (polyModulusDegree - 1)) == 0 : "polyModulusDegree is not a power of two";
-        assert plainModulus % (2 * polyModulusDegree) == 1 : "plainModulus should be a specific prime number to " +
+        assert plainModulus % (2L * polyModulusDegree) == 1 : "plainModulus should be a specific prime number to " +
             "supports batching ";
         // 元素的比特长度为 itemEncodedSlotSize*floor(log_2(plain_modulus))
         int encodedBitLength = itemEncodedSlotSize * (int) Math.floor(Math.log(plainModulus) / Math.log(2));
@@ -113,7 +113,7 @@ public class Cmg21KwPirParams implements KwPirParams {
         CuckooHashBinType.NAIVE_3_HASH, 6552, 770,
         5,
         26, new int[]{1, 5, 8, 27, 135},
-        1785857, 8192, new int[]{50, 56, 56, 50},
+        1785857L, 8192, new int[]{50, 56, 56, 50},
         1000000, 4096
     );
 
@@ -124,7 +124,7 @@ public class Cmg21KwPirParams implements KwPirParams {
         CuckooHashBinType.NO_STASH_ONE_HASH, 1638, 228,
         5,
         0, new int[]{1, 3, 8, 19, 33, 39, 92, 102},
-        65537, 8192, new int[]{56, 48, 48},
+        65537L, 8192, new int[]{56, 48, 48},
         1000000, 1
     );
 
@@ -196,7 +196,7 @@ public class Cmg21KwPirParams implements KwPirParams {
      *
      * @return 明文模数。
      */
-    public int getPlainModulus() {
+    public long getPlainModulus() {
         return plainModulus;
     }
 
