@@ -107,7 +107,7 @@ public class Cmg21UpsiParams implements UpsiParams {
     /**
      * 服务端2K，客户端最大元素数量1
      */
-    public static final Cmg21UpsiParams SERVER_2K_CLIENT_1 = new Cmg21UpsiParams(
+    public static final Cmg21UpsiParams SERVER_2K_CLIENT_MAX_1 = new Cmg21UpsiParams(
         CuckooHashBinType.NO_STASH_ONE_HASH, 512, 15,
         8,
         0, new int[]{1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15},
@@ -118,7 +118,7 @@ public class Cmg21UpsiParams implements UpsiParams {
     /**
      * 服务端100K，客户端最大元素数量1
      */
-    public static final Cmg21UpsiParams SERVER_100K_CLIENT_1 = new Cmg21UpsiParams(
+    public static final Cmg21UpsiParams SERVER_100K_CLIENT_MAX_1 = new Cmg21UpsiParams(
         CuckooHashBinType.NO_STASH_ONE_HASH, 512, 20,
         8,
         0, new int[]{1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20},
@@ -129,7 +129,7 @@ public class Cmg21UpsiParams implements UpsiParams {
     /**
      * 服务端1M，客户端最大元素数量1K，计算量最优
      */
-    public static final Cmg21UpsiParams SERVER_1M_CLIENT_1K_CMP = new Cmg21UpsiParams(
+    public static final Cmg21UpsiParams SERVER_1M_CLIENT_MAX_1K_CMP = new Cmg21UpsiParams(
         CuckooHashBinType.NAIVE_3_HASH, 2046, 101,
         6,
         0, new int[]{1, 3, 4, 5, 8, 14, 20, 26, 32, 38, 44, 47, 48, 49, 51, 52},
@@ -140,7 +140,7 @@ public class Cmg21UpsiParams implements UpsiParams {
     /**
      * 服务端1M，客户端最大元素数量1K，通信量最优
      */
-    public static final Cmg21UpsiParams SERVER_1M_CLIENT_1K_COM = new Cmg21UpsiParams(
+    public static final Cmg21UpsiParams SERVER_1M_CLIENT_MAX_1K_COM = new Cmg21UpsiParams(
         CuckooHashBinType.NAIVE_3_HASH, 1638, 125,
         5,
         5, new int[]{1, 2, 3, 4, 5, 6, 18, 30, 42, 54, 60},
@@ -151,7 +151,7 @@ public class Cmg21UpsiParams implements UpsiParams {
     /**
      * 服务端1M，客户端最大元素数量11041
      */
-    public static final Cmg21UpsiParams SERVER_1M_CLIENT_11041 = new Cmg21UpsiParams(
+    public static final Cmg21UpsiParams SERVER_1M_CLIENT_MAX_11041 = new Cmg21UpsiParams(
         CuckooHashBinType.NAIVE_3_HASH, 16384, 98,
         4,
         8, new int[]{1, 3, 4, 9, 27},
@@ -162,7 +162,7 @@ public class Cmg21UpsiParams implements UpsiParams {
     /**
      * 服务端1M，客户端最大元素数量2K，计算量最优
      */
-    public static final Cmg21UpsiParams SERVER_1M_CLIENT_2K_CMP = new Cmg21UpsiParams(
+    public static final Cmg21UpsiParams SERVER_1M_CLIENT_MAX_2K_CMP = new Cmg21UpsiParams(
         CuckooHashBinType.NAIVE_3_HASH, 3410, 72,
         6,
         0, new int[]{1, 3, 4, 9, 11, 16, 20, 25, 27, 32, 33, 35, 36},
@@ -173,7 +173,7 @@ public class Cmg21UpsiParams implements UpsiParams {
     /**
      * 服务端1M，客户端最大元素数量2K，通信量最优
      */
-    public static final Cmg21UpsiParams SERVER_1M_CLIENT_2K_COM = new Cmg21UpsiParams(
+    public static final Cmg21UpsiParams SERVER_1M_CLIENT_MAX_2K_COM = new Cmg21UpsiParams(
         CuckooHashBinType.NAIVE_3_HASH, 3410, 125,
         6,
         5, new int[]{1, 2, 3, 4, 5, 6, 18, 30, 42, 54, 60},
@@ -184,7 +184,7 @@ public class Cmg21UpsiParams implements UpsiParams {
     /**
      * 服务端1M，客户端最大元素数量256
      */
-    public static final Cmg21UpsiParams SERVER_1M_CLIENT_256 = new Cmg21UpsiParams(
+    public static final Cmg21UpsiParams SERVER_1M_CLIENT_MAX_256 = new Cmg21UpsiParams(
         CuckooHashBinType.NAIVE_3_HASH, 585, 180,
         7,
         0, new int[]{1, 3, 4, 6, 10, 13, 15, 21, 29, 37, 45, 53, 61, 69, 77, 81, 83, 86, 87, 90, 92, 96},
@@ -195,7 +195,7 @@ public class Cmg21UpsiParams implements UpsiParams {
     /**
      * 服务端1M，客户端最大元素数量4K，计算量最优
      */
-    public static final Cmg21UpsiParams SERVER_1M_CLIENT_4K_CMP = new Cmg21UpsiParams(
+    public static final Cmg21UpsiParams SERVER_1M_CLIENT_MAX_4K_CMP = new Cmg21UpsiParams(
         CuckooHashBinType.NAIVE_3_HASH, 6552, 40,
         5,
         0, new int[]{1, 3, 4, 9, 11, 16, 17, 19, 20},
@@ -206,7 +206,7 @@ public class Cmg21UpsiParams implements UpsiParams {
     /**
      * 服务端1M，客户端最大元素数量4K，通信量最优
      */
-    public static final Cmg21UpsiParams SERVER_1M_CLIENT_4K_COM = new Cmg21UpsiParams(
+    public static final Cmg21UpsiParams SERVER_1M_CLIENT_MAX_4K_COM = new Cmg21UpsiParams(
         CuckooHashBinType.NAIVE_3_HASH, 6825, 98,
         6,
         8, new int[]{1, 3, 4, 9, 27},
@@ -217,7 +217,7 @@ public class Cmg21UpsiParams implements UpsiParams {
     /**
      * 服务端1M，客户端最大元素数量512，计算量最优
      */
-    public static final Cmg21UpsiParams SERVER_1M_CLIENT_512_CMP = new Cmg21UpsiParams(
+    public static final Cmg21UpsiParams SERVER_1M_CLIENT_MAX_512_CMP = new Cmg21UpsiParams(
         CuckooHashBinType.NAIVE_3_HASH, 1364, 128,
         6,
         0, new int[]{1, 3, 4, 5, 8, 14, 20, 26, 32, 38, 44, 50, 56, 59, 60, 61, 63, 64},
@@ -228,7 +228,7 @@ public class Cmg21UpsiParams implements UpsiParams {
     /**
      * 服务端1M，客户端最大元素数量512，通信量最优
      */
-    public static final Cmg21UpsiParams SERVER_1M_CLIENT_512_COM = new Cmg21UpsiParams(
+    public static final Cmg21UpsiParams SERVER_1M_CLIENT_MAX_512_COM = new Cmg21UpsiParams(
         CuckooHashBinType.NAIVE_3_HASH, 1364, 228,
         6,
         4, new int[]{1, 2, 3, 4, 5, 10, 15, 35, 55, 75, 95, 115, 125, 130, 140},
@@ -239,7 +239,7 @@ public class Cmg21UpsiParams implements UpsiParams {
     /**
      * 服务端1M，客户端最大元素数量5535
      */
-    public static final Cmg21UpsiParams SERVER_1M_CLIENT_5535 = new Cmg21UpsiParams(
+    public static final Cmg21UpsiParams SERVER_1M_CLIENT_MAX_5535 = new Cmg21UpsiParams(
         CuckooHashBinType.NAIVE_3_HASH, 8192, 98,
         4,
         8, new int[]{1, 3, 4, 9, 27},

@@ -41,91 +41,91 @@ public class UpsiTest {
     @Test
     public void test2K1() {
         Cmg21UpsiConfig config = new Cmg21UpsiConfig.Builder().build();
-        testUpsi(config, Cmg21UpsiParams.SERVER_2K_CLIENT_1, false);
+        testUpsi(config, Cmg21UpsiParams.SERVER_2K_CLIENT_MAX_1, false);
     }
 
     @Test
     public void test100K1() {
         Cmg21UpsiConfig config = new Cmg21UpsiConfig.Builder().build();
-        testUpsi(config, Cmg21UpsiParams.SERVER_100K_CLIENT_1, false);
+        testUpsi(config, Cmg21UpsiParams.SERVER_100K_CLIENT_MAX_1, false);
     }
 
     @Test
     public void test1M1024Cmp() {
         Cmg21UpsiConfig config = new Cmg21UpsiConfig.Builder().build();
-        testUpsi(config, Cmg21UpsiParams.SERVER_1M_CLIENT_1K_CMP, false);
+        testUpsi(config, Cmg21UpsiParams.SERVER_1M_CLIENT_MAX_1K_CMP, false);
     }
 
     @Test
     public void test1M1024CmpParallel() {
         Cmg21UpsiConfig config = new Cmg21UpsiConfig.Builder().build();
-        testUpsi(config, Cmg21UpsiParams.SERVER_1M_CLIENT_1K_CMP, true);
+        testUpsi(config, Cmg21UpsiParams.SERVER_1M_CLIENT_MAX_1K_CMP, true);
     }
 
     @Test
     public void test1M1024Com() {
         Cmg21UpsiConfig config = new Cmg21UpsiConfig.Builder().build();
-        testUpsi(config, Cmg21UpsiParams.SERVER_1M_CLIENT_1K_COM, false);
+        testUpsi(config, Cmg21UpsiParams.SERVER_1M_CLIENT_MAX_1K_COM, false);
     }
 
     @Test
     public void test1M1024ComParallel() {
         Cmg21UpsiConfig config = new Cmg21UpsiConfig.Builder().build();
-        testUpsi(config, Cmg21UpsiParams.SERVER_1M_CLIENT_1K_COM, true);
+        testUpsi(config, Cmg21UpsiParams.SERVER_1M_CLIENT_MAX_1K_COM, true);
     }
 
     @Test
     public void test1M11041Parallel() {
         Cmg21UpsiConfig config = new Cmg21UpsiConfig.Builder().build();
-        testUpsi(config, Cmg21UpsiParams.SERVER_1M_CLIENT_11041, true);
+        testUpsi(config, Cmg21UpsiParams.SERVER_1M_CLIENT_MAX_11041, true);
     }
 
     @Test
     public void test1M2048CmpParallel() {
         Cmg21UpsiConfig config = new Cmg21UpsiConfig.Builder().build();
-        testUpsi(config, Cmg21UpsiParams.SERVER_1M_CLIENT_2K_CMP, true);
+        testUpsi(config, Cmg21UpsiParams.SERVER_1M_CLIENT_MAX_2K_CMP, true);
     }
 
     @Test
     public void test1M2048ComParallel() {
         Cmg21UpsiConfig config = new Cmg21UpsiConfig.Builder().build();
-        testUpsi(config, Cmg21UpsiParams.SERVER_1M_CLIENT_2K_COM, true);
+        testUpsi(config, Cmg21UpsiParams.SERVER_1M_CLIENT_MAX_2K_COM, true);
     }
 
     @Test
     public void test1M256Parallel() {
         Cmg21UpsiConfig config = new Cmg21UpsiConfig.Builder().build();
-        testUpsi(config, Cmg21UpsiParams.SERVER_1M_CLIENT_256, true);
+        testUpsi(config, Cmg21UpsiParams.SERVER_1M_CLIENT_MAX_256, true);
     }
 
     @Test
     public void test1M4096CmpParallel() {
         Cmg21UpsiConfig config = new Cmg21UpsiConfig.Builder().build();
-        testUpsi(config, Cmg21UpsiParams.SERVER_1M_CLIENT_4K_CMP, true);
+        testUpsi(config, Cmg21UpsiParams.SERVER_1M_CLIENT_MAX_4K_CMP, true);
     }
 
     @Test
     public void test1M4096ComParallel() {
         Cmg21UpsiConfig config = new Cmg21UpsiConfig.Builder().build();
-        testUpsi(config, Cmg21UpsiParams.SERVER_1M_CLIENT_4K_COM, true);
+        testUpsi(config, Cmg21UpsiParams.SERVER_1M_CLIENT_MAX_4K_COM, true);
     }
 
     @Test
     public void test1M512CmpParallel() {
         Cmg21UpsiConfig config = new Cmg21UpsiConfig.Builder().build();
-        testUpsi(config, Cmg21UpsiParams.SERVER_1M_CLIENT_512_CMP, true);
+        testUpsi(config, Cmg21UpsiParams.SERVER_1M_CLIENT_MAX_512_CMP, true);
     }
 
     @Test
     public void test1M512ComParallel() {
         Cmg21UpsiConfig config = new Cmg21UpsiConfig.Builder().build();
-        testUpsi(config, Cmg21UpsiParams.SERVER_1M_CLIENT_512_COM, true);
+        testUpsi(config, Cmg21UpsiParams.SERVER_1M_CLIENT_MAX_512_COM, true);
     }
 
     @Test
     public void test1M5535Parallel() {
         Cmg21UpsiConfig config = new Cmg21UpsiConfig.Builder().build();
-        testUpsi(config, Cmg21UpsiParams.SERVER_1M_CLIENT_5535, true);
+        testUpsi(config, Cmg21UpsiParams.SERVER_1M_CLIENT_MAX_5535, true);
     }
 
     public void testUpsi(Cmg21UpsiConfig config, UpsiParams upsiParams, boolean parallel) {
