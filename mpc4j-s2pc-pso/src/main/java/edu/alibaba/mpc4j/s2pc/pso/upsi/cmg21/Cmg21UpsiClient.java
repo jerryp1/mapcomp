@@ -99,7 +99,7 @@ public class Cmg21UpsiClient<T> extends AbstractUpsiClient<T> {
         stopWatch.start();
         // 客户端执行MP-OPRF协议
         ArrayList<ByteBuffer> oprfOutputs = oprf();
-        Map<ByteBuffer, ByteBuffer> oprfMap = IntStream.range(0, oprfOutputs.size())
+        Map<ByteBuffer, ByteBuffer> oprfMap = IntStream.range(0, clientElementSize)
             .boxed()
             .collect(Collectors.toMap(oprfOutputs::get, i -> clientElementArrayList.get(i), (a, b) -> b));
         stopWatch.stop();
@@ -139,11 +139,12 @@ public class Cmg21UpsiClient<T> extends AbstractUpsiClient<T> {
         List<byte[]> encryptionParams = Cmg21UpsiNativeClient.genEncryptionParameters(
             params.getPolyModulusDegree(), params.getPlainModulus(), params.getCoeffModulusBits()
         );
+        List<byte[]> fheParams = encryptionParams.subList(0, 2);
         DataPacketHeader fheParamsHeader = new DataPacketHeader(
             taskId, getPtoDesc().getPtoId(), PtoStep.CLIENT_SEND_ENCRYPTION_PARAMS.ordinal(), extraInfo,
             rpc.ownParty().getPartyId(), otherParty().getPartyId()
         );
-        rpc.send(DataPacket.fromByteArrayList(fheParamsHeader, encryptionParams.subList(0, 2)));
+        rpc.send(DataPacket.fromByteArrayList(fheParamsHeader, fheParams));
         stopWatch.stop();
         long keyGenTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
         stopWatch.reset();
@@ -152,17 +153,17 @@ public class Cmg21UpsiClient<T> extends AbstractUpsiClient<T> {
         stopWatch.start();
         // 客户端加密查询信息
         List<long[][]> encodedQuery = encodeQuery();
-        Stream<long[][]> stream = parallel ? encodedQuery.stream().parallel() : encodedQuery.stream();
-        List<byte[]> queryCiphertextList = stream
+        Stream<long[][]> encodeStream = parallel ? encodedQuery.stream().parallel() : encodedQuery.stream();
+        List<byte[]> queryPayload = encodeStream
             .map(i -> Cmg21UpsiNativeClient.generateQuery(
                 encryptionParams.get(0), encryptionParams.get(2), encryptionParams.get(3), i))
             .flatMap(Collection::stream)
             .collect(Collectors.toList());
-        DataPacketHeader clientQueryHeader = new DataPacketHeader(
+        DataPacketHeader queryHeader = new DataPacketHeader(
             taskId, getPtoDesc().getPtoId(), PtoStep.CLIENT_SEND_QUERY.ordinal(), extraInfo,
             rpc.ownParty().getPartyId(), otherParty().getPartyId()
         );
-        rpc.send(DataPacket.fromByteArrayList(clientQueryHeader, queryCiphertextList));
+        rpc.send(DataPacket.fromByteArrayList(queryHeader, queryPayload));
         stopWatch.stop();
         long genQueryTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
         stopWatch.reset();
@@ -170,16 +171,16 @@ public class Cmg21UpsiClient<T> extends AbstractUpsiClient<T> {
 
         stopWatch.start();
         // 客户端接收服务端的计算结果
-        DataPacketHeader serverResponseHeader = new DataPacketHeader(
+        DataPacketHeader responseHeader = new DataPacketHeader(
             taskId, getPtoDesc().getPtoId(), PtoStep.SERVER_SEND_RESPONSE.ordinal(), extraInfo,
             otherParty().getPartyId(), rpc.ownParty().getPartyId()
         );
-        List<byte[]> serverResponse = rpc.receive(serverResponseHeader).getPayload();
+        List<byte[]> responsePayload = rpc.receive(responseHeader).getPayload();
         // 客户端解密密文匹配结果
-        Stream<byte[]> responseStream = parallel ? serverResponse.stream().parallel() : serverResponse.stream();
-        List<long[]> decodedResponse = responseStream
+        Stream<byte[]> responseStream = parallel ? responsePayload.stream().parallel() : responsePayload.stream();
+        ArrayList<long[]> decodedResponse = responseStream
             .map(i -> Cmg21UpsiNativeClient.decodeReply(encryptionParams.get(0), encryptionParams.get(3), i))
-            .collect(Collectors.toList());
+            .collect(Collectors.toCollection(ArrayList::new));
         Set<T> intersectionSet = recoverPsiResult(decodedResponse, oprfMap);
         stopWatch.stop();
         long decodeTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
@@ -216,7 +217,7 @@ public class Cmg21UpsiClient<T> extends AbstractUpsiClient<T> {
      * @param oprfMap           OPRF映射。
      * @return 隐私集合交集。
      */
-    private Set<T> recoverPsiResult(List<long[]> decryptedResponse, Map<ByteBuffer, ByteBuffer> oprfMap) {
+    private Set<T> recoverPsiResult(ArrayList<long[]> decryptedResponse, Map<ByteBuffer, ByteBuffer> oprfMap) {
         Set<T> intersectionSet = new HashSet<>();
         int ciphertextNum = params.getBinNum() / (params.getPolyModulusDegree() / params.getItemEncodedSlotSize());
         int itemPerCiphertext = params.getPolyModulusDegree() / params.getItemEncodedSlotSize();

@@ -121,10 +121,10 @@ public class Cmg21UpsiServer<T> extends AbstractUpsiServer<T> {
 
         stopWatch.start();
         // 服务端哈希分桶
-        List<ArrayList<HashBinEntry<ByteBuffer>>> hashBins = generateCompleteHashBin(prfOutputList, hashKeys);
+        ArrayList<ArrayList<HashBinEntry<ByteBuffer>>> hashBins = generateCompleteHashBin(prfOutputList, hashKeys);
         int binSize = hashBins.get(0).size();
         // 服务端将元素编码成多项式系数
-        List<long[][]> encodeDatabase = encodeDatabase(hashBins, binSize);
+        ArrayList<long[][]> encodeDatabase = encodeDatabase(hashBins, binSize);
         stopWatch.stop();
         long encodedTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
         stopWatch.reset();
@@ -132,17 +132,17 @@ public class Cmg21UpsiServer<T> extends AbstractUpsiServer<T> {
 
         stopWatch.start();
         // 接收客户端的加密密钥
-        DataPacketHeader encryptionParamsDataPacketHeader = new DataPacketHeader(
+        DataPacketHeader fheParamsHeader = new DataPacketHeader(
             taskId, getPtoDesc().getPtoId(), PtoStep.CLIENT_SEND_ENCRYPTION_PARAMS.ordinal(), extraInfo,
             otherParty().getPartyId(), rpc.ownParty().getPartyId()
         );
-        List<byte[]> encryptionParams = rpc.receive(encryptionParamsDataPacketHeader).getPayload();
+        List<byte[]> fheParams = rpc.receive(fheParamsHeader).getPayload();
         // 接收客户端的加密查询信息
-        DataPacketHeader receiverQueryDataPacketHeader = new DataPacketHeader(
+        DataPacketHeader queryHeader = new DataPacketHeader(
             taskId, getPtoDesc().getPtoId(), PtoStep.CLIENT_SEND_QUERY.ordinal(), extraInfo,
             otherParty().getPartyId(), rpc.ownParty().getPartyId()
         );
-        List<byte[]> queryList = rpc.receive(receiverQueryDataPacketHeader).getPayload();
+        ArrayList<byte[]> queryPayload = new ArrayList<>(rpc.receive(queryHeader).getPayload());
         stopWatch.stop();
         long queryTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
         stopWatch.reset();
@@ -150,15 +150,15 @@ public class Cmg21UpsiServer<T> extends AbstractUpsiServer<T> {
 
         stopWatch.start();
         // 服务端计算密文匹配结果
-        List<byte[]> response = computeResponse(encodeDatabase, queryList, encryptionParams, binSize);
+        List<byte[]> responsePayload = computeResponse(encodeDatabase, queryPayload, fheParams, binSize);
         stopWatch.stop();
         long replyTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
         stopWatch.reset();
-        DataPacketHeader serverResponseDataPacketSpec = new DataPacketHeader(
+        DataPacketHeader responseHeader = new DataPacketHeader(
             taskId, getPtoDesc().getPtoId(), PtoStep.SERVER_SEND_RESPONSE.ordinal(), extraInfo,
             rpc.ownParty().getPartyId(), otherParty().getPartyId()
         );
-        rpc.send(DataPacket.fromByteArrayList(serverResponseDataPacketSpec, response));
+        rpc.send(DataPacket.fromByteArrayList(responseHeader, responsePayload));
         info("{}{} Server Step 5/5 ({}ms)", ptoStepLogPrefix, getPtoDesc().getPtoName(), replyTime);
 
         info("{}{} Server end", ptoEndLogPrefix, getPtoDesc().getPtoName());
@@ -171,7 +171,7 @@ public class Cmg21UpsiServer<T> extends AbstractUpsiServer<T> {
      * @param hashKeys    哈希算法密钥。
      * @return 完全哈希分桶。
      */
-    private List<ArrayList<HashBinEntry<ByteBuffer>>> generateCompleteHashBin(ArrayList<ByteBuffer> elementList,
+    private ArrayList<ArrayList<HashBinEntry<ByteBuffer>>> generateCompleteHashBin(ArrayList<ByteBuffer> elementList,
                                                                               byte[][] hashKeys) {
         RandomPadHashBin<ByteBuffer> completeHash = new RandomPadHashBin<>(envType, params.getBinNum(),
             serverElementSize, hashKeys);
@@ -182,7 +182,7 @@ public class Cmg21UpsiServer<T> extends AbstractUpsiServer<T> {
                 maxBinSize = completeHash.binSize(i);
             }
         }
-        List<ArrayList<HashBinEntry<ByteBuffer>>> completeHashBins = new ArrayList<>();
+        ArrayList<ArrayList<HashBinEntry<ByteBuffer>>> completeHashBins = new ArrayList<>();
         HashBinEntry<ByteBuffer> paddingEntry = HashBinEntry.fromEmptyItem(botElementByteBuffer);
         for (int i = 0; i < completeHash.binNum(); i++) {
             ArrayList<HashBinEntry<ByteBuffer>> binItems = new ArrayList<>(completeHash.getBin(i));
@@ -200,7 +200,7 @@ public class Cmg21UpsiServer<T> extends AbstractUpsiServer<T> {
      * @param binSize  分桶的元素数量。
      * @return 编码后的数据库（明文多项式的系数）。
      */
-    private List<long[][]> encodeDatabase(List<ArrayList<HashBinEntry<ByteBuffer>>> hashBins, int binSize) {
+    private ArrayList<long[][]> encodeDatabase(ArrayList<ArrayList<HashBinEntry<ByteBuffer>>> hashBins, int binSize) {
         Zp64Poly zp64Poly = Zp64PolyFactory.createInstance(envType, (long) params.getPlainModulus());
         int itemPerCiphertext = params.getPolyModulusDegree() / params.getItemEncodedSlotSize();
         int ciphertextNum = params.getBinNum() / (params.getPolyModulusDegree() / params.getItemEncodedSlotSize());
@@ -279,7 +279,7 @@ public class Cmg21UpsiServer<T> extends AbstractUpsiServer<T> {
      * @return 密文匹配结果。
      * @throws MpcAbortException 如果协议异常中止。
      */
-    private List<byte[]> computeResponse(List<long[][]> plaintextPoly, List<byte[]> ciphertextPoly,
+    private List<byte[]> computeResponse(ArrayList<long[][]> plaintextPoly, ArrayList<byte[]> ciphertextPoly,
                                          List<byte[]> encryptionParams, int binSize) throws MpcAbortException {
         int ciphertextNum = params.getBinNum() / (params.getPolyModulusDegree() / params.getItemEncodedSlotSize());
         int partitionCount = (binSize + params.getMaxPartitionSizePerBin() - 1) / params.getMaxPartitionSizePerBin();

@@ -196,7 +196,7 @@ public class Cmg21KwPirServer<T> extends AbstractKwPirServer<T> {
             taskId, getPtoDesc().getPtoId(), PtoStep.CLIENT_SEND_QUERY.ordinal(), extraInfo,
             otherParty().getPartyId(), rpc.ownParty().getPartyId()
         );
-        List<byte[]> queryPayload = rpc.receive(queryHeader).getPayload();
+        ArrayList<byte[]> queryPayload = new ArrayList<>(rpc.receive(queryHeader).getPayload());
         int ciphertextNumber = params.getBinNum() / (params.getPolyModulusDegree() / params.getItemEncodedSlotSize());
         MpcAbortPreconditions.checkArgument(
             queryPayload.size() == ciphertextNumber * params.getQueryPowers().length,
@@ -549,7 +549,7 @@ public class Cmg21KwPirServer<T> extends AbstractKwPirServer<T> {
      * @param encryptionParamsList 加密方案参数列表。
      * @throws MpcAbortException 如果协议异常中止。
      */
-    private void computeResponse(List<byte[]> encryptedQueryList, List<byte[]> encryptionParamsList)
+    private void computeResponse(ArrayList<byte[]> encryptedQueryList, List<byte[]> encryptionParamsList)
         throws MpcAbortException {
         int binSize = hashBins.get(0).size();
         int partitionCount = (binSize + params.getMaxPartitionSizePerBin() - 1) / params.getMaxPartitionSizePerBin();
