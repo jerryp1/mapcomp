@@ -6,6 +6,8 @@ This is the implementation of our paper "OpBoost: A Vertical Federated Tree Boos
 
 ## How to Run
 
+### Configuration File
+
 Before running the performance tests, you need to first create two configuration files, one for the host party and the other for the slave party. The following properties should be included in the configuration files:
 
 - `task_type`: candidates are `REG_OP_GRAD_BOOST`, `REG_OP_XG_BOOST`, `CLS_OP_GRAD_BOOST`, `CLS_OP_XG_BOOST`.
@@ -14,8 +16,8 @@ Before running the performance tests, you need to first create two configuration
 - `own_name`: must be the assigned value of `host_name` or `slave_name`.
 - `dataset_name`, `train_dataset_path`, `test_dataset_path`: dataset information. Train/test datasets must be in `csv` format with a header in the first row and the delimiter `,`.
 - `tree_num`, `max_depth`, `shrinkage`: training parameters.
-- `column_names`: column names, splitted by `,`. The number of names must match the number of columns in datasets.
-- `column_types`: `N` for a nominal column, `I` for an integer column, `D` for a floating column, and `C` for a classification column (only in classification).
+- `column_names`: column names, split by `,`. The number of names must match the number of columns in datasets.
+- `column_types`: `N` for a nominal column, `I` for an integer column, `D` for a float/double column, and `C` for a classification column (only in classification).
 - `formula`: label column name.
 - `class_types`: (only in classification) class types.
 - `total_round`: test round.
@@ -25,16 +27,149 @@ Before running the performance tests, you need to first create two configuration
 - `theta`: $\theta$ values in the test,  split by `,`.
 - `alpha`: $alpha$ values in the test, split by`,`.
 
-See files in `conf` for performance test configurations used in the paper. See README.md in `mpc4j/data` for detailed information on where our test data come from.
+### Example: PowerPlant (Regression)
+
+See `conf_opboost_reg_powerplant_host.txt` and `conf_opboost_reg_powerplant_slave.txt` in `conf` as examples. Here we attach the configuration files and translate comments into English. The configuration file for the host party is as follows:
+
+```text
+# Task Type, REG_OP_GRAD_BOOST / REG_OP_XG_BOOST
+task_type = REG_OP_GRAD_BOOST
+# task_type = REG_OP_XG_BOOST
+
+# Host party information, here we use local network
+host_name = host
+host_ip = 127.0.0.1
+host_port = 9000
+# Slave party information, here we use local network
+slave_name = slave
+slave_ip = 127.0.0.1
+slave_port = 9001
+# Own party
+own_name = host
+
+# dataset information
+dataset_name = powerplant
+train_dataset_path = data/regression/powerplant/powerplant10_train.csv
+test_dataset_path = data/regression/powerplant/powerplant10_test.csv
+# column name
+column_names = AT,V,AP,RH,PE
+# column types, I for integer column, D for float/double column
+column_types = I,I,I,I,D
+# label column name
+formula = PE
+
+# test round
+total_round = 10
+
+# the number of iterations (trees)
+tree_num = 80
+# the maximum depth of the tree
+max_depth = 3
+# the shrinkage parameter in (0, 1] controls the learning rate of procedure.
+shrinkage = 0.1
+
+# columns belong to which parties, 0 for the host party, 1 for the slave party.
+party_columns = 1,1,1,1,0
+# whether add LDP noice, 1 for yes, 0 for no.
+ldp_columns = 1,1,1,1,0
+
+# ε, float number
+epsilon = 0.01,0.02,0.04,0.08,0.16,0.32,0.64,1.28,2.56,5.12
+# θ (only for LocalMap and AdjMap), int number
+theta = 2,4
+# α (only for AdjMap), float number
+alpha = 0.4,0.6,0.8,1,2,5,10
+```
+
+The configuration file for the slave party is almost identical, except `own_name = slave`.
+
+### Example: PenDigits (Classification)
+
+See `conf_opboost_cls_digits_host.txt` and `conf_opboost_cls_digits_slave.txt` in `conf` as examples. Here we attach the configuration files and translate comments into English. The configuration file for the host party is as follows:
+
+```text
+# Task Type, CLS_OP_GRAD_BOOST / CLS_OP_XG_BOOST
+task_type = CLS_OP_GRAD_BOOST
+# task_type = CLS_OP_XG_BOOST
+
+# Host party information, here we use local network
+host_name = host
+host_ip = 127.0.0.1
+host_port = 9000
+# Slave party information, here we use local network
+slave_name = slave
+slave_ip = 127.0.0.1
+slave_port = 9001
+# Own party
+own_name = host
+
+# dataset information
+dataset_name = pen_digits
+train_dataset_path = data/classification/pen_digits/pen_digits10_train.csv
+test_dataset_path = data/classification/pen_digits/pen_digits10_test.csv
+# column name
+column_names = F1,F2,F3,F4,F5,F6,F7,F8,F9,F10,F11,F12,F13,F14,F15,F16,class
+# column types, I for integer column, C for label column.
+column_types = I,I,I,I,I,I,I,I,I,I,I,I,I,I,I,I,C
+# label column name
+formula = class
+# label class type, support String class type
+class_types = 0,1,2,3,4,5,6,7,8,9
+
+# test round
+total_round = 10
+
+# the number of iterations (trees)
+tree_num = 80
+# the maximum depth of the tree
+max_depth = 3
+# the shrinkage parameter in (0, 1] controls the learning rate of procedure.
+shrinkage = 0.1
+
+# columns belong to which parties, 0 for the host party, 1 for the slave party.
+party_columns = 1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0
+# whether add LDP noice, 1 for yes, 0 for no.
+ldp_columns = 1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0
+
+# ε, float number
+epsilon = 0.01,0.02,0.04,0.08,0.16,0.32,0.64,1.28,2.56,5.12
+# θ (only for LocalMap and AdjMap), int number
+theta = 2,4
+# α (only for AdjMap), float number
+alpha = 0.4,0.6,0.8,1,2,5,10
+```
+
+The configuration file for the slave party is almost identical, except `own_name = slave`.
+
+### Other Examples
+
+See other files in `conf` for performance test configurations used in the paper. See README.md in `mpc4j/data` for detailed information on where our test data come from.
+
+### Run
 
 After having configuration files, you can start to do the test by just running `jar` with configuration files on two platforms or on two terminals from one platform. 
+
+Assume
+
+1. You compile and get the `jar` file with the name `mpc4j-sml-opboost-X.X.X-jar-with-dependencies.jar`. 
+2. You write two valid configuration files `conf_XXX_host.txt` for the host party and `conf_XXX_slave.txt` for the slave party. 
+3. You have the train dataset `train.csv` and the test dataset `test.csv` with proper `csv` format.
+
+Then:
+
+1. Put all these files into the same location.
+2. In  `conf_XXX_host.txt` and `conf_XXX_slave.txt`, set `train_dataset_path = train.csv` and `test_dataset_path = test.csv`.
+3. Separately run the following commands on distinct terminals:
 
 ```shell
 java -jar mpc4j-sml-opboost-X.X.X-jar-with-dependencies.jar conf_XXX_host.txt
 java -jar mpc4j-sml-opboost-X.X.X-jar-with-dependencies.jar conf_XXX_slave.txt
 ```
 
-The performance result files will be generated after running all cases.
+Finally:
+
+1. The terminals would show log information.
+2. You would get two additional files. One (name ends with 0) is the result in the host party. The other (name ends with 1) is the result for the slave party.
 
 ## XGBoost4j on Apple Silicon M1
 
