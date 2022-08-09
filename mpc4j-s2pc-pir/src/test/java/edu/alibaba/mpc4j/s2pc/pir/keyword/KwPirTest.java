@@ -41,7 +41,7 @@ public class KwPirTest {
     /**
      * 服务端元素数量
      */
-    private static final int SERVER_MAP_SIZE = 1 << 20;
+    private static final int SERVER_MAP_SIZE = 1 << 16;
     /**
      * 服务端
      */

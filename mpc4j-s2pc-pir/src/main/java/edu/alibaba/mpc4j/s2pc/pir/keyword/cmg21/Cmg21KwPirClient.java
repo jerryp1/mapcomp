@@ -13,6 +13,8 @@ import edu.alibaba.mpc4j.common.tool.crypto.kdf.Kdf;
 import edu.alibaba.mpc4j.common.tool.crypto.kdf.KdfFactory;
 import edu.alibaba.mpc4j.common.tool.crypto.prg.Prg;
 import edu.alibaba.mpc4j.common.tool.crypto.prg.PrgFactory;
+import edu.alibaba.mpc4j.common.tool.crypto.stream.StreamCipher;
+import edu.alibaba.mpc4j.common.tool.crypto.stream.StreamCipherFactory;
 import edu.alibaba.mpc4j.common.tool.galoisfield.Zp64.Zp64;
 import edu.alibaba.mpc4j.common.tool.galoisfield.Zp64.Zp64Factory;
 import edu.alibaba.mpc4j.common.tool.hashbin.object.cuckoo.CuckooHashBin;
@@ -21,13 +23,6 @@ import edu.alibaba.mpc4j.common.tool.utils.LongUtils;
 import edu.alibaba.mpc4j.s2pc.pir.keyword.AbstractKwPirClient;
 import edu.alibaba.mpc4j.s2pc.pir.keyword.KwPirParams;
 import edu.alibaba.mpc4j.s2pc.pir.keyword.cmg21.Cmg21KwPirPtoDesc.PtoStep;
-import org.bouncycastle.crypto.BlockCipher;
-import org.bouncycastle.crypto.CipherParameters;
-import org.bouncycastle.crypto.StreamCipher;
-import org.bouncycastle.crypto.engines.AESEngine;
-import org.bouncycastle.crypto.modes.OFBBlockCipher;
-import org.bouncycastle.crypto.params.KeyParameter;
-import org.bouncycastle.crypto.params.ParametersWithIV;
 import org.bouncycastle.math.ec.ECPoint;
 
 import java.math.BigInteger;
@@ -53,6 +48,10 @@ public class Cmg21KwPirClient<T> extends AbstractKwPirClient<T> {
     }
 
     /**
+     * 流密码
+     */
+    private final StreamCipher streamCipher;
+    /**
      * 是否使用压缩编码
      */
     private final boolean compressEncode;
@@ -76,6 +75,7 @@ public class Cmg21KwPirClient<T> extends AbstractKwPirClient<T> {
     public Cmg21KwPirClient(Rpc clientRpc, Party serverParty, Cmg21KwPirConfig config) {
         super(Cmg21KwPirPtoDesc.getInstance(), clientRpc, serverParty, config);
         compressEncode = config.getCompressEncode();
+        streamCipher = StreamCipherFactory.createInstance(envType);
     }
 
     @Override
@@ -263,10 +263,13 @@ public class Cmg21KwPirClient<T> extends AbstractKwPirClient<T> {
                         byte[] oprf = cuckooHashBin.getHashBinEntry(hashBinIndex).getItem().array();
                         byte[] keyBytes = new byte[CommonConstants.BLOCK_BYTE_LENGTH];
                         System.arraycopy(oprf, 0, keyBytes, 0, CommonConstants.BLOCK_BYTE_LENGTH);
+                        byte[] ciphertextLabel = BigIntegerUtils.nonNegBigIntegerToByteArray(
+                            label, labelByteLength + CommonConstants.BLOCK_BYTE_LENGTH
+                        );
+                        byte[] plaintextLabel = streamCipher.ivDecrypt(keyBytes, ciphertextLabel);
                         resultMap.put(
                             byteArrayObjectMap.get(oprfMap.get(cuckooHashBin.getHashBinEntry(hashBinIndex).getItem())),
-                            ByteBuffer.wrap(labelDecryption(keyBytes, BigIntegerUtils.nonNegBigIntegerToByteArray(label,
-                                labelByteLength + CommonConstants.BLOCK_BYTE_LENGTH)))
+                            ByteBuffer.wrap(plaintextLabel)
                         );
                         j = j + itemEncodedSlotSize - 1;
                     }
@@ -274,29 +277,6 @@ public class Cmg21KwPirClient<T> extends AbstractKwPirClient<T> {
             }
         }
         return resultMap;
-    }
-
-    /**
-     * 返回标签明文。
-     *
-     * @param keyBytes       密钥字节。
-     * @param encryptedLabel 标签密文。
-     * @return 标签明文。
-     */
-    private byte[] labelDecryption(byte[] keyBytes, byte[] encryptedLabel) {
-        assert encryptedLabel.length > CommonConstants.BLOCK_BYTE_LENGTH;
-        BlockCipher blockCipher = new AESEngine();
-        StreamCipher streamCipher = new OFBBlockCipher(blockCipher, 8 * CommonConstants.BLOCK_BYTE_LENGTH);
-        byte[] ivBytes = new byte[CommonConstants.BLOCK_BYTE_LENGTH];
-        System.arraycopy(encryptedLabel, 0, ivBytes, 0, CommonConstants.BLOCK_BYTE_LENGTH);
-        byte[] inputs = new byte[encryptedLabel.length - CommonConstants.BLOCK_BYTE_LENGTH];
-        System.arraycopy(encryptedLabel, CommonConstants.BLOCK_BYTE_LENGTH, inputs, 0, labelByteLength);
-        KeyParameter key = new KeyParameter(keyBytes);
-        CipherParameters withIv = new ParametersWithIV(key, ivBytes);
-        streamCipher.init(false, withIv);
-        byte[] outputs = new byte[labelByteLength];
-        streamCipher.processBytes(inputs, 0, labelByteLength, outputs, 0);
-        return outputs;
     }
 
     /**

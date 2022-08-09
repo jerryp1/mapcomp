@@ -1,6 +1,5 @@
 package edu.alibaba.mpc4j.s2pc.pir.keyword.cmg21;
 
-import com.google.common.primitives.Bytes;
 import edu.alibaba.mpc4j.common.rpc.MpcAbortException;
 import edu.alibaba.mpc4j.common.rpc.MpcAbortPreconditions;
 import edu.alibaba.mpc4j.common.rpc.Party;
@@ -14,6 +13,8 @@ import edu.alibaba.mpc4j.common.tool.crypto.kdf.Kdf;
 import edu.alibaba.mpc4j.common.tool.crypto.kdf.KdfFactory;
 import edu.alibaba.mpc4j.common.tool.crypto.prg.Prg;
 import edu.alibaba.mpc4j.common.tool.crypto.prg.PrgFactory;
+import edu.alibaba.mpc4j.common.tool.crypto.stream.StreamCipher;
+import edu.alibaba.mpc4j.common.tool.crypto.stream.StreamCipherFactory;
 import edu.alibaba.mpc4j.common.tool.hashbin.object.HashBinEntry;
 import edu.alibaba.mpc4j.common.tool.hashbin.object.RandomPadHashBin;
 import edu.alibaba.mpc4j.common.tool.polynomial.power.PowerNode;
@@ -26,13 +27,6 @@ import edu.alibaba.mpc4j.common.tool.utils.LongUtils;
 import edu.alibaba.mpc4j.s2pc.pir.keyword.AbstractKwPirServer;
 import edu.alibaba.mpc4j.s2pc.pir.keyword.KwPirParams;
 import edu.alibaba.mpc4j.s2pc.pir.keyword.cmg21.Cmg21KwPirPtoDesc.PtoStep;
-import org.bouncycastle.crypto.BlockCipher;
-import org.bouncycastle.crypto.CipherParameters;
-import org.bouncycastle.crypto.StreamCipher;
-import org.bouncycastle.crypto.engines.AESEngine;
-import org.bouncycastle.crypto.modes.OFBBlockCipher;
-import org.bouncycastle.crypto.params.KeyParameter;
-import org.bouncycastle.crypto.params.ParametersWithIV;
 
 import java.math.BigInteger;
 import java.nio.ByteBuffer;
@@ -54,6 +48,10 @@ public class Cmg21KwPirServer<T> extends AbstractKwPirServer<T> {
         System.loadLibrary(CommonConstants.MPC4J_NATIVE_FHE_NAME);
     }
 
+    /**
+     * 流密码
+     */
+    private final StreamCipher streamCipher;
     /**
      * 是否使用压缩编码
      */
@@ -94,6 +92,7 @@ public class Cmg21KwPirServer<T> extends AbstractKwPirServer<T> {
     public Cmg21KwPirServer(Rpc serverRpc, Party clientParty, Cmg21KwPirConfig config) {
         super(Cmg21KwPirPtoDesc.getInstance(), serverRpc, clientParty, config);
         compressEncode = config.getCompressEncode();
+        streamCipher = StreamCipherFactory.createInstance(envType);
     }
 
     @Override
@@ -372,9 +371,10 @@ public class Cmg21KwPirServer<T> extends AbstractKwPirServer<T> {
         serverLabelEncode = new long[partitionCount * ciphertextNum * labelPartitionCount][][];
         // for each bucket, compute the coefficients of the polynomial f(x) = \prod_{y in bucket} (x - y)
         // and coeffs of g(x), which has the property g(y) = label(y) for each y in bucket.
-        IntStream ciphertextIndexStream = IntStream.range(0, ciphertextNum);
-        ciphertextIndexStream = parallel ? ciphertextIndexStream.parallel() : ciphertextIndexStream;
-        ciphertextIndexStream.forEach(i -> {
+        // ciphertext num is small, therefore we need to do parallel computation inside the loop
+        for (int i = 0; i < ciphertextNum; i++) {
+            // 在循环内部构建final的index，否则无法并发
+            int finalIndex = i;
             for (int partition = 0; partition < partitionCount; partition++) {
                 // 元素的多项式系数
                 long[][] fCoeffs = new long[itemPerCiphertext * itemEncodedSlotSize][];
@@ -382,15 +382,18 @@ public class Cmg21KwPirServer<T> extends AbstractKwPirServer<T> {
                 long[][][] gCoeffs = new long[labelPartitionCount][itemPerCiphertext * itemEncodedSlotSize][];
                 // 对分块内的元素和标签编码
                 int partitionSize, partitionStart;
-                partitionSize = partition < bigPartitionCount ? params.getMaxPartitionSizePerBin() : binSize % params.getMaxPartitionSizePerBin();
+                partitionSize = partition < bigPartitionCount ?
+                    params.getMaxPartitionSizePerBin() : binSize % params.getMaxPartitionSizePerBin();
                 partitionStart = params.getMaxPartitionSizePerBin() * partition;
-                IntStream.range(0, itemPerCiphertext).forEach(j -> {
+                IntStream itemIndexStream = IntStream.range(0, itemPerCiphertext);
+                itemIndexStream = parallel ? itemIndexStream.parallel() : itemIndexStream;
+                itemIndexStream.forEach(j -> {
                     // 存储每块的元素编码
                     long[][] currentBucketElement = new long[itemEncodedSlotSize][partitionSize];
                     // 存储每块的标签编码
                     long[][][] currentBucketLabels = new long[labelPartitionCount][itemEncodedSlotSize][partitionSize];
                     for (int l = 0; l < partitionSize; l++) {
-                        HashBinEntry<ByteBuffer> entry = hashBins.get(i * itemPerCiphertext + j).get(partitionStart + l);
+                        HashBinEntry<ByteBuffer> entry = hashBins.get(finalIndex * itemPerCiphertext + j).get(partitionStart + l);
                         long[] temp = params.getHashBinEntryEncodedArray(entry, false, secureRandom);
                         for (int k = 0; k < itemEncodedSlotSize; k++) {
                             currentBucketElement[k][l] = temp[k];
@@ -398,11 +401,10 @@ public class Cmg21KwPirServer<T> extends AbstractKwPirServer<T> {
                     }
                     for (int l = 0; l < itemEncodedSlotSize; l++) {
                         fCoeffs[j * itemEncodedSlotSize + l] = zp64Poly.rootInterpolate(partitionSize, currentBucketElement[l], 0L);
-                        assert fCoeffs[j * itemEncodedSlotSize + l].length == partitionSize + 1;
                     }
                     int nonEmptyBuckets = 0;
                     for (int l = 0; l < partitionSize; l++) {
-                        HashBinEntry<ByteBuffer> entry = hashBins.get(i * itemPerCiphertext + j).get(partitionStart + l);
+                        HashBinEntry<ByteBuffer> entry = hashBins.get(finalIndex * itemPerCiphertext + j).get(partitionStart + l);
                         if (entry.getHashIndex() != HashBinEntry.DUMMY_ITEM_HASH_INDEX) {
                             for (int k = 0; k < itemEncodedSlotSize; k++) {
                                 currentBucketElement[k][nonEmptyBuckets] = currentBucketElement[k][l];
@@ -411,8 +413,11 @@ public class Cmg21KwPirServer<T> extends AbstractKwPirServer<T> {
                             // 取oprf的前128比特
                             byte[] keyBytes = new byte[CommonConstants.BLOCK_BYTE_LENGTH];
                             System.arraycopy(oprf, 0, keyBytes, 0, CommonConstants.BLOCK_BYTE_LENGTH);
-                            byte[] encryptedLabel = labelEncryption(keyBytes, prfMap.get(entry.getItem()).array());
-                            long[][] temp = params.encodeLabel(encryptedLabel, labelPartitionCount);
+                            byte[] iv = new byte[CommonConstants.BLOCK_BYTE_LENGTH];
+                            secureRandom.nextBytes(iv);
+                            byte[] plaintextLabel = prfMap.get(entry.getItem()).array();
+                            byte[] ciphertextLabel = streamCipher.ivEncrypt(keyBytes, iv, plaintextLabel);
+                            long[][] temp = params.encodeLabel(ciphertextLabel, labelPartitionCount);
                             for (int k = 0; k < labelPartitionCount; k++) {
                                 for (int h = 0; h < itemEncodedSlotSize; h++) {
                                     currentBucketLabels[k][h][nonEmptyBuckets] = temp[k][h];
@@ -474,27 +479,7 @@ public class Cmg21KwPirServer<T> extends AbstractKwPirServer<T> {
                         encodeLabelVector[j];
                 }
             }
-        });
-    }
-
-    /**
-     * 计算标签密文。
-     *
-     * @param keyBytes   密钥字节。
-     * @param labelBytes 标签字节。
-     * @return 标签密文。
-     */
-    private byte[] labelEncryption(byte[] keyBytes, byte[] labelBytes) {
-        BlockCipher blockCipher = new AESEngine();
-        StreamCipher streamCipher = new OFBBlockCipher(blockCipher, 8 * CommonConstants.BLOCK_BYTE_LENGTH);
-        byte[] ivBytes = new byte[CommonConstants.BLOCK_BYTE_LENGTH];
-        secureRandom.nextBytes(ivBytes);
-        KeyParameter key = new KeyParameter(keyBytes);
-        CipherParameters withIv = new ParametersWithIV(key, ivBytes);
-        streamCipher.init(true, withIv);
-        byte[] outputs = new byte[labelByteLength];
-        streamCipher.processBytes(labelBytes, 0, labelByteLength, outputs, 0);
-        return Bytes.concat(ivBytes, outputs);
+        }
     }
 
     /**
