@@ -1,10 +1,46 @@
-# 在Apple Silicon M1下编译并使用XGBoost4j
+# OpBoost
 
-## 引言
+## Introduction
+
+This is the implementation of our paper "OpBoost: A Vertical Federated Tree Boosting Framework Based on Order-Preserving Desensitization" (manuscript).
+
+## How to Run
+
+Before running the performance tests, you need to first create two configuration files, one for the host party and the other for the slave party. The following properties should be included in the configuration files:
+
+- `task_type`: candidates are `REG_OP_GRAD_BOOST`, `REG_OP_XG_BOOST`, `CLS_OP_GRAD_BOOST`, `CLS_OP_XG_BOOST`.
+- `host_name`, `host_ip`, `host_port`: Host party information.
+- `slave_name`, `slave_ip`, `slave_port`: Slave party information.
+- `own_name`: must be the assigned value of `host_name` or `slave_name`.
+- `dataset_name`, `train_dataset_path`, `test_dataset_path`: dataset information. Train/test datasets must be in `csv` format with a header in the first row and the delimiter `,`.
+- `tree_num`, `max_depth`, `shrinkage`: training parameters.
+- `column_names`: column names, splitted by `,`. The number of names must match the number of columns in datasets.
+- `column_types`: `N` for a nominal column, `I` for an integer column, `D` for a floating column, and `C` for a classification column (only in classification).
+- `formula`: label column name.
+- `class_types`: (only in classification) class types.
+- `total_round`: test round.
+- `party_columns`: 1 for the slave party, 0 for the host party. Label column must belong to the host. 
+- `ldp_columns`: 1 for LDP, 0 for nothing.
+- `epsilon`: $\epsilon$ values in the test, split by `,`.
+- `theta`: $\theta$ values in the test,  split by `,`.
+- `alpha`: $alpha$ values in the test, split by`,`.
+
+See files in `conf` for performance test configurations used in the paper. See README.md in `mpc4j/data` for detailed information on where our test data come from.
+
+After having configuration files, you can start to do the test by just running `jar` with configuration files on two platforms or on two terminals from one platform. 
+
+```shell
+java -jar mpc4j-sml-opboost-X.X.X-jar-with-dependencies.jar conf_XXX_host.txt
+java -jar mpc4j-sml-opboost-X.X.X-jar-with-dependencies.jar conf_XXX_slave.txt
+```
+
+The performance result files will be generated after running all cases.
+
+## XGBoost4j on Apple Silicon M1
 
 [XGBoost4j](https://xgboost.readthedocs.io/en/stable/jvm/index.html)是著名决策树机器学习库[XGBoost](https://xgboost.readthedocs.io/en/stable/index.html)的Java/Scala封装版本，允许开发人员应用Java语言调用XGBoost机器学习算法，实现模型的训练和预测。XGBoost4j包含Linux、MacOS、Windows的x86_64环境支持。经过实验，XGBoost4j不支持arrch64环境，这意味着XGBoost4j无法在MacBook Pro M1等环境下应用。
 
-本问题最初由Martin Treurnicht于0221年12月9日在XGBoost4j的[GitHub网站](https://github.com/dmlc/xgboost)中通过提交Issue的方式指出。在问题[XGBoost4j missing dylib for apple sillicon m1 \#7501](https://github.com/dmlc/xgboost/issues/7501)下，Martin Treurnicht指出：
+本问题最初由Martin Treurnicht于2021年12月9日在XGBoost4j的[GitHub网站](https://github.com/dmlc/xgboost)中通过提交Issue的方式指出。在问题[XGBoost4j missing dylib for apple sillicon m1 \#7501](https://github.com/dmlc/xgboost/issues/7501)下，Martin Treurnicht指出：
 
 > Getting the following error when trying to run our model tests.
 > ```text
@@ -30,15 +66,13 @@ Adam Pocock在回复中指出：
 
 这意味着可以在M1下通过源代码编译XGBoost4j，从而在aarch64下成功安装XGBoost4j。本文总结了M1下XGBoost4j的安装过程，供参考。
 
-## 本机环境
+### 本机环境
 
-MacOS Monterey (12.1)
+macOS Monterey (12.1)
 
 - MacBook Pro (16英寸，2021年)
 - 芯片：Apple M1 Pro
 - 内存：16GB
-
-## 安装过程
 
 ### 安装`homebrew`
 
@@ -139,8 +173,6 @@ OpenJDK 64-Bit Server VM Zulu11.54+25-CA (build 11.0.14.1+1-LTS, mixed mode)
 ```shell
 mvn -DskipTests=true install
 ```
-
-## 注意事项
 
 ### 同时支持x86_64和aarch64的动态库
 
