@@ -15,8 +15,9 @@ The target of `mpc4j` is to provide an academic library for researchers to learn
 
 ## Some Implementations of our Work
 
-- Package `psu` in `mpc4j-s2pc-pso` contains the implementation of our paper ["Optimal Private Set Union from Multi-Query Reverse Private Membership Test"](https://eprint.iacr.org/2022/358.pdf). The configuration files are under `conf` in `mpc4j-s2pc-pso`. Just run `java -jar mpc4j-s2pc-pso-X.X.X-jar-with-dependencies.jar conf_file_name.txt` separately on two platforms with direct network connections (using the network channel assigned in config files) or on two terminals in one platforms (using local network 127.0.0.1).
-- Module `mpc4j-sml-opboost` contains the implementation of our paper "OpBoost: A Vertical Federated Tree Boosting Framework Based on Order-Preserving Desensitization" (manuscript). The configuration files are under `conf` in `mpc4j-s2pc-pso`. Just run `java -jar mpc4j-sml-opboost-X.X.X-jar-with-dependencies.jar conf_file_name.txt` separately on two platforms with direct network connections (using the network channel assigned in config files) or on two terminals in one platforms (using local network 127.0.0.1).
+- Package `psu` in `mpc4j-s2pc-pso` contains the implementation of our paper ["Optimal Private Set Union from Multi-Query Reverse Private Membership Test"](https://eprint.iacr.org/2022/358.pdf). The configuration files are under `conf/psu` in `mpc4j-s2pc-pso`. Just run `java -jar mpc4j-s2pc-pso-X.X.X-jar-with-dependencies.jar conf_file_name.txt` separately on two platforms with direct network connections (using the network channel assigned in config files) or on two terminals in one platform (using local network 127.0.0.1).
+- Module `mpc4j-sml-opboost` contains the implementation of our paper "OpBoost: A Vertical Federated Tree Boosting Framework Based on Order-Preserving Desensitization" (manuscript). The configuration files are under `conf` in `mpc4j-s2pc-pso`.
+- Package `pmid` in `mpc4j-s2pc-pso` contains the implementation of our paper "Efficient Private Multiset ID Protocols and Applications to Private Multiset Operations" (manuscript). The configuration files are under `conf/pmid` in `mpc4j-s2pc-pso`.
 
 ## References
 
