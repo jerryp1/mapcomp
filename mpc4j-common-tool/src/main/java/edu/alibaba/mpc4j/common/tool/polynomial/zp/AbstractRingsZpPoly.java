@@ -1,8 +1,7 @@
 package edu.alibaba.mpc4j.common.tool.polynomial.zp;
 
-import cc.redberry.rings.IntegersZp;
+import cc.redberry.rings.Ring;
 import cc.redberry.rings.poly.univar.UnivariatePolynomial;
-import edu.alibaba.mpc4j.common.tool.galoisfield.zp.ZpManager;
 import edu.alibaba.mpc4j.common.tool.utils.BigIntegerUtils;
 
 import java.math.BigInteger;
@@ -19,11 +18,11 @@ abstract class AbstractRingsZpPoly extends AbstractZpPoly {
     /**
      * Zp有限域
      */
-    protected final IntegersZp finiteField;
+    protected final Ring<cc.redberry.rings.bigint.BigInteger> finiteField;
 
-    AbstractRingsZpPoly(int l) {
+    AbstractRingsZpPoly(int l, Ring<cc.redberry.rings.bigint.BigInteger> finiteField) {
         super(l);
-        finiteField = ZpManager.getFiniteField(l);
+        this.finiteField = finiteField;
     }
 
     @Override

@@ -1,5 +1,6 @@
 package edu.alibaba.mpc4j.common.tool.polynomial.zp;
 
+import cc.redberry.rings.JdkIntegersZp;
 import cc.redberry.rings.bigint.BigInteger;
 import cc.redberry.rings.poly.univar.UnivariateInterpolation;
 import cc.redberry.rings.poly.univar.UnivariatePolynomial;
@@ -8,20 +9,20 @@ import edu.alibaba.mpc4j.common.tool.galoisfield.zp.ZpManager;
 import java.util.Arrays;
 
 /**
- * 应用Rings实现的Zp牛顿多项式插值。
+ * 用JDK实现的Zp拉格朗日多项式插值。
  *
  * @author Weiran Liu
- * @date 2021/05/31
+ * @date 2022/8/9
  */
-class RingsNewtonZpPoly extends AbstractRingsZpPoly {
+public class JdkLagrangeZpPoly extends AbstractRingsZpPoly {
 
-    RingsNewtonZpPoly(int l) {
-        super(l, ZpManager.getFiniteField(l));
+    JdkLagrangeZpPoly(int l) {
+        super(l, new JdkIntegersZp(new cc.redberry.rings.bigint.BigInteger(ZpManager.getPrime(l))));
     }
 
     @Override
     public ZpPolyFactory.ZpPolyType getType() {
-        return ZpPolyFactory.ZpPolyType.RINGS_NEWTON;
+        return ZpPolyFactory.ZpPolyType.JDK_LAGRANGE;
     }
 
     @Override
@@ -36,6 +37,6 @@ class RingsNewtonZpPoly extends AbstractRingsZpPoly {
             .map(BigInteger::new)
             .toArray(BigInteger[]::new);
         // 插值
-        return UnivariateInterpolation.interpolateNewton(finiteField, points, values);
+        return UnivariateInterpolation.interpolateLagrange(finiteField, points, values);
     }
 }

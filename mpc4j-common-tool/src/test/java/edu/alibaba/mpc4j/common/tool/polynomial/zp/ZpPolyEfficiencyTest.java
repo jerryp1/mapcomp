@@ -52,9 +52,16 @@ public class ZpPolyEfficiencyTest {
      * 测试类型
      */
     private static final ZpPolyFactory.ZpPolyType[] TYPES = new ZpPolyFactory.ZpPolyType[]{
+        // NTL
         ZpPolyFactory.ZpPolyType.NTL,
+        // RINGS_NEWTON
         ZpPolyFactory.ZpPolyType.RINGS_NEWTON,
+        // JDK_NEWTON
+        ZpPolyFactory.ZpPolyType.JDK_NEWTON,
+        // RINGS_LAGRANGE
         ZpPolyFactory.ZpPolyType.RINGS_LAGRANGE,
+        // JDK_LAGRANGE
+        ZpPolyFactory.ZpPolyType.JDK_LAGRANGE
     };
 
     @Test

@@ -23,13 +23,21 @@ public class ZpPolyFactory {
          */
         NTL,
         /**
+         * Rings实现的牛顿插值
+         */
+        RINGS_NEWTON,
+        /**
+         * JDK实现的牛顿插值
+         */
+        JDK_NEWTON,
+        /**
          * Rings实现的拉格朗日插值
          */
         RINGS_LAGRANGE,
         /**
-         * Rings实现的牛顿插值
+         * JDK实现的拉格朗日插值
          */
-        RINGS_NEWTON,
+        JDK_LAGRANGE,
     }
 
     /**
@@ -45,8 +53,12 @@ public class ZpPolyFactory {
                 return new NtlZpPoly(l);
             case RINGS_NEWTON:
                 return new RingsNewtonZpPoly(l);
+            case JDK_NEWTON:
+                return new JdkNewtonZpPoly(l);
             case RINGS_LAGRANGE:
                 return new RingsLagrangeZpPoly(l);
+            case JDK_LAGRANGE:
+                return new JdkLagrangeZpPoly(l);
             default:
                 throw new IllegalArgumentException("Invalid " + ZpPolyType.class.getSimpleName() + ": " + type.name());
         }
