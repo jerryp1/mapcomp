@@ -6,7 +6,7 @@ find_package(SEAL 4.0.0 EXACT REQUIRED)
 if(NOT SEAL_FOUND)
     message(FATAL_ERROR "Microsoft SEAL: not found")
 else()
-    message(STATUS "Microsoft SEAL: found")
+    message(STATUS "Microsoft SEAL: ${SEAL_DIR}")
 endif()
 
 # 默认为Release编译
