@@ -252,7 +252,7 @@ public class Cmg21UpsiClient<T> extends AbstractUpsiClient<T> {
      */
     public List<long[][]> encodeQuery() {
         int itemPerCiphertext = params.getPolyModulusDegree() / params.getItemEncodedSlotSize();
-        int ciphertextNum = params.getBinNum() / (params.getPolyModulusDegree() / params.getItemEncodedSlotSize());
+        int ciphertextNum = params.getBinNum() / itemPerCiphertext;
         long[][] items = new long[ciphertextNum][params.getPolyModulusDegree()];
         for (int i = 0; i < ciphertextNum; i++) {
             for (int j = 0; j < itemPerCiphertext; j++) {

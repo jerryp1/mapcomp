@@ -5,6 +5,8 @@
 
 #include "apsi.h"
 #include "serialize.h"
+#include <cstdint>
+#include "polynomials.h"
 
 void try_clear_irrelevant_bits(const EncryptionParameters &parms, Ciphertext &ciphertext) {
     // If the parameter set has only one prime, we can compress the ciphertext by
@@ -546,4 +548,260 @@ jbyteArray JNICALL computeMatchesNaiveMethod(JNIEnv *env, jobjectArray database_
     }
     try_clear_irrelevant_bits(context.last_context_data()->parms(), f_evaluated);
     return serialize_ciphertext(env, f_evaluated);
+}
+
+jint JNICALL checkSealParams(JNIEnv *env, jint poly_modulus_degree, jlong plain_modulus, jintArray coeff_modulus_bits,
+                                  jobjectArray jparent_powers, jintArray jsource_power_index, jint ps_low_power,
+                                  jint max_bin_size) {
+    // 生成方案参数和密钥
+    EncryptionParameters parms(scheme_type::bfv);
+    parms.set_poly_modulus_degree(poly_modulus_degree);
+    uint32_t coeff_size = env->GetArrayLength(coeff_modulus_bits);
+    jint* coeff_ptr = env->GetIntArrayElements(coeff_modulus_bits, JNI_FALSE);
+    vector<int> coeff_vec(coeff_ptr, coeff_ptr + coeff_size);
+    parms.set_coeff_modulus(CoeffModulus::Create(poly_modulus_degree, coeff_vec));
+    //parms.set_coeff_modulus(CoeffModulus::BFVDefault(poly_modulus_degree, sec_level_type::tc128));
+    parms.set_plain_modulus(plain_modulus);
+    SEALContext context = SEALContext(parms);
+    KeyGenerator key_gen = KeyGenerator(context);
+    const SecretKey &secret_key = key_gen.secret_key();
+    RelinKeys relin_keys;
+    key_gen.create_relin_keys(relin_keys);
+    PublicKey public_key;
+    key_gen.create_public_key(public_key);
+    Encryptor encryptor(context, public_key);
+    Evaluator evaluator(context);
+    BatchEncoder encoder(context);
+    encryptor.set_secret_key(secret_key);
+    Decryptor decryptor(context, secret_key);
+    auto random_factory = UniformRandomGeneratorFactory::DefaultFactory();
+    auto random = random_factory->create();
+    size_t slot_count = encoder.slot_count();
+    // 随机生成系数明文多项式
+    vector<Plaintext> database(max_bin_size+1);
+    for (int i = 0 ; i <= max_bin_size; i++) {
+        vector<uint64_t> database_coeffs(slot_count);
+        for (size_t j = 0; j < slot_count; j++) {
+            database_coeffs[j] = random->generate() % plain_modulus;
+        }
+        encoder.encode(database_coeffs, database[i]);
+    }
+    // 随机生成明文
+    vector<uint64_t> plaintext_coeffs(slot_count);
+    jint* index_ptr = env->GetIntArrayElements(jsource_power_index, JNI_FALSE);
+    vector<uint32_t> source_power_index;
+    source_power_index.reserve(env->GetArrayLength(jsource_power_index));
+    for (int i = 0; i < env->GetArrayLength(jsource_power_index); i++) {
+        source_power_index.push_back(index_ptr[i]);
+    }
+    for (size_t i = 0; i < slot_count; i++) {
+        plaintext_coeffs[i] = random->generate() % plain_modulus;
+    }
+    bool is_small_modulus;
+    if (plain_modulus < (1L << 32)) {
+        is_small_modulus = true;
+    } else {
+        is_small_modulus = false;
+    }
+    // 加密明文的幂次方
+    vector<Ciphertext> query_powers(source_power_index.size());
+    for (int i = 0; i < source_power_index.size(); i++) {
+        Plaintext plaintext_power;
+        vector<uint64_t> power_coeffs(slot_count);
+        for (int j = 0; j < slot_count; j++) {
+            power_coeffs[i] = mod_exp(plaintext_coeffs[j], source_power_index[i], plain_modulus, is_small_modulus);
+        }
+        encoder.encode(power_coeffs, plaintext_power);
+        encryptor.encrypt_symmetric(plaintext_power, query_powers[i]);
+    }
+    // 生成所有幂次的密文
+    uint32_t target_power_size = env->GetArrayLength(jparent_powers);
+    uint32_t parent_powers[target_power_size][2];
+    for (int i = 0; i < target_power_size; i++) {
+        auto rows = (jintArray) env->GetObjectArrayElement(jparent_powers, i);
+        jint* cols = env->GetIntArrayElements(rows, JNI_FALSE);
+        parent_powers[i][0] = cols[0];
+        parent_powers[i][1] = cols[1];
+    }
+    auto high_powers_parms_id = get_parms_id_for_chain_idx(context, 1);
+    auto low_powers_parms_id = get_parms_id_for_chain_idx(context, 2);
+    vector<Ciphertext> encrypted_powers;
+    encrypted_powers.resize(target_power_size);
+    if (ps_low_power > 0) {
+        // Paterson-Stockmeyer algorithm
+        uint32_t ps_high_degree = ps_low_power + 1;
+        for (int i = 0; i < query_powers.size(); i++) {
+            if (source_power_index[i] <= ps_low_power) {
+                encrypted_powers[source_power_index[i] - 1] = query_powers[i];
+            } else {
+                encrypted_powers[ps_low_power + (source_power_index[i] / ps_high_degree) - 1] = query_powers[i];
+            }
+        }
+        for (int i = 0; i < ps_low_power; i++) {
+            if (parent_powers[i][1] != 0) {
+                if (parent_powers[i][0] - 1 == parent_powers[i][1] - 1) {
+                    evaluator.square(encrypted_powers[parent_powers[i][0] - 1], encrypted_powers[i]);
+                } else {
+                    evaluator.multiply(encrypted_powers[parent_powers[i][0] - 1],
+                                       encrypted_powers[parent_powers[i][1] - 1], encrypted_powers[i]);
+                }
+                evaluator.relinearize_inplace(encrypted_powers[i], relin_keys);
+            }
+        }
+        for (int i = ps_low_power; i < target_power_size; i++) {
+            if (parent_powers[i][1] != 0) {
+                if (parent_powers[i][0] - 1 == parent_powers[i][1] - 1) {
+                    evaluator.square(encrypted_powers[parent_powers[i][0] - 1 + ps_low_power], encrypted_powers[i]);
+                } else {
+                    evaluator.multiply(encrypted_powers[parent_powers[i][0] - 1 + ps_low_power],
+                                       encrypted_powers[parent_powers[i][1] - 1 + ps_low_power], encrypted_powers[i]);
+                }
+                evaluator.relinearize_inplace(encrypted_powers[i], relin_keys);
+            }
+        }
+        for (int i = 0; i < ps_low_power; i++) {
+            // Low powers must be at a higher level than high powers
+            evaluator.mod_switch_to_inplace(encrypted_powers[i], low_powers_parms_id);
+
+            // Low powers must be in NTT form
+            evaluator.transform_to_ntt_inplace(encrypted_powers[i]);
+
+        }
+        for (int i = ps_low_power; i < encrypted_powers.size(); i++) {
+            // High powers are only modulus switched
+            evaluator.mod_switch_to_inplace(encrypted_powers[i], high_powers_parms_id);
+
+        }
+        for (int i = 0; i < database.size(); i++) {
+            if ((i % ps_high_degree) != 0) {
+                evaluator.transform_to_ntt_inplace(database[i], low_powers_parms_id);
+            }
+        }
+        // 计算f(x)
+        Ciphertext f_evaluated, cipher_temp, temp_in;
+        f_evaluated.resize(context, high_powers_parms_id, 3);
+        f_evaluated.is_ntt_form() = false;
+        uint32_t ps_high_degree_powers = max_bin_size / ps_high_degree;
+        // Calculate polynomial for i=1,...,ps_high_degree_powers-1
+        for (int i = 1; i < ps_high_degree_powers; i++) {
+            // Evaluate inner polynomial. The free term is left out and added later on.
+            // The evaluation result is stored in temp_in.
+            for (int j = 1; j < ps_high_degree; j++) {
+                evaluator.multiply_plain(encrypted_powers[j - 1], database[j + i * ps_high_degree], cipher_temp);
+                if (j == 1) {
+                    temp_in = cipher_temp;
+                } else {
+                    evaluator.add_inplace(temp_in, cipher_temp);
+                }
+            }
+            // Transform inner polynomial to coefficient form
+            evaluator.transform_from_ntt_inplace(temp_in);
+            evaluator.mod_switch_to_inplace(temp_in, high_powers_parms_id);
+            // The high powers are already in coefficient form
+            evaluator.multiply_inplace(temp_in, encrypted_powers[i - 1 + ps_low_power]);
+            evaluator.add_inplace(f_evaluated, temp_in);
+
+
+        }
+
+        // Calculate polynomial for i=ps_high_degree_powers.
+        // Done separately because here the degree of the inner poly is degree % ps_high_degree.
+        // Once again, the free term will only be added later on.
+        if (max_bin_size % ps_high_degree > 0 && ps_high_degree_powers > 0) {
+            for (int i = 1; i <= max_bin_size % ps_high_degree; i++) {
+                evaluator.multiply_plain(encrypted_powers[i - 1],
+                                         database[ps_high_degree * ps_high_degree_powers + i],
+                                         cipher_temp);
+                if (i == 1) {
+                    temp_in = cipher_temp;
+                } else {
+                    evaluator.add_inplace(temp_in, cipher_temp);
+                }
+            }
+            // Transform inner polynomial to coefficient form
+            evaluator.transform_from_ntt_inplace(temp_in);
+            evaluator.mod_switch_to_inplace(temp_in, high_powers_parms_id);
+            // The high powers are already in coefficient form
+            evaluator.multiply_inplace(temp_in, encrypted_powers[ps_high_degree_powers - 1 + ps_low_power]);
+            evaluator.add_inplace(f_evaluated, temp_in);
+        }
+        // Relinearize sum of ciphertext-ciphertext products
+        if (!f_evaluated.is_transparent()) {
+            evaluator.relinearize_inplace(f_evaluated, relin_keys);
+        }
+
+        // Calculate inner polynomial for i=0.
+        // Done separately since there is no multiplication with a power of high-degree
+        uint32_t length = ps_high_degree_powers == 0 ? max_bin_size : ps_low_power;
+        for (size_t j = 1; j <= length; j++) {
+            evaluator.multiply_plain(encrypted_powers[j-1], database[j], cipher_temp);
+            evaluator.transform_from_ntt_inplace(cipher_temp);
+            evaluator.mod_switch_to_inplace(cipher_temp, high_powers_parms_id);
+            evaluator.add_inplace(f_evaluated, cipher_temp);
+        }
+
+        // Add the constant coefficients of the inner polynomials multiplied by the respective powers of high-degree
+        for (size_t i = 1; i < ps_high_degree_powers + 1; i++) {
+            evaluator.multiply_plain(encrypted_powers[i - 1 + ps_low_power], database[ps_high_degree * i], cipher_temp);
+            evaluator.mod_switch_to_inplace(cipher_temp, high_powers_parms_id);
+            evaluator.add_inplace(f_evaluated, cipher_temp);
+        }
+        // Add the constant coefficient
+        evaluator.add_plain_inplace(f_evaluated, database[0]);
+        while (f_evaluated.parms_id() != context.last_parms_id()) {
+            evaluator.mod_switch_to_next_inplace(f_evaluated);
+        }
+        try_clear_irrelevant_bits(context.last_context_data()->parms(), f_evaluated);
+        return decryptor.invariant_noise_budget(f_evaluated);
+    } else {
+        // naive algorithm
+        for (int i = 0; i < query_powers.size(); i++) {
+            encrypted_powers[source_power_index[i] - 1] = query_powers[i];
+        }
+        // 计算密文的幂次方
+        for (int i = 0; i < target_power_size; i++) {
+            if (parent_powers[i][1] != 0) {
+                if (parent_powers[i][0] - 1 == parent_powers[i][1] - 1) {
+                    evaluator.square(encrypted_powers[parent_powers[i][0] - 1], encrypted_powers[i]);
+                } else {
+                    evaluator.multiply(encrypted_powers[parent_powers[i][0] - 1],
+                                       encrypted_powers[parent_powers[i][1] - 1], encrypted_powers[i]);
+                }
+                evaluator.relinearize_inplace(encrypted_powers[i], relin_keys);
+            }
+        }
+        for (auto & encrypted_power : encrypted_powers) {
+            // Only one ciphertext-plaintext multiplication is needed after this
+            evaluator.mod_switch_to_inplace(encrypted_power, high_powers_parms_id);
+            // All powers must be in NTT form
+            evaluator.transform_to_ntt_inplace(encrypted_power);
+        }
+        for (int i = 1; i < database.size(); i++) {
+            evaluator.transform_to_ntt_inplace(database[i], low_powers_parms_id);
+        }
+        Ciphertext f_evaluated, cipher_temp, temp_in;
+        f_evaluated.resize(context, high_powers_parms_id, 3);
+        f_evaluated.is_ntt_form() = false;
+        for (int i = 1; i <= max_bin_size; i++) {
+            evaluator.multiply_plain(encrypted_powers[i-1], database[i], cipher_temp);
+            if (i == 1) {
+                temp_in = cipher_temp;
+            } else {
+                evaluator.add_inplace(temp_in, cipher_temp);
+            }
+        }
+        // Add the constant coefficient
+        if (max_bin_size > 0) {
+            evaluator.transform_from_ntt(temp_in, f_evaluated);
+            evaluator.add_plain_inplace(f_evaluated, database[0]);
+        } else {
+            encryptor.encrypt(database[0], f_evaluated);
+        }
+        // Make the result as small as possible by modulus switching and possibly clearing irrelevant bits.
+        while (f_evaluated.parms_id() != context.last_parms_id()) {
+            evaluator.mod_switch_to_next_inplace(f_evaluated);
+        }
+        try_clear_irrelevant_bits(context.last_context_data()->parms(), f_evaluated);
+        return decryptor.invariant_noise_budget(f_evaluated);
+    }
 }
