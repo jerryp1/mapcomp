@@ -68,9 +68,18 @@ Most of the codes are in Java, except for very efficient implementations in C/C+
 
 ## Development
 
-`mpc4j` is developed under `JDK 8`. Specifically, `mpc4j` leverages `sun.misc.Unsafe`, which is deprecated since `JDK 9`, to do fast `byte[]` to `int[]` conversions. Therefore, you should also use `JDK 8` when you are implementing your protocols based `mpc4j`. Otherwise, you may encounter problem like "sun.misc.Unsafe is not found" when you compile the code to get the runnable `jar` file.
+`mpc4j` is developed under `JDK 8`. Specifically, `mpc4j` leverages `sun.misc.Unsafe`, which is deprecated since `JDK 9`, to do fast `byte[]` to `int[]` conversions. Therefore, you should also use `JDK 8` when you are implementing your protocols based `mpc4j`. Otherwise, you may encounter problem like "sun.misc.Unsafe is not found" when you compile the code to get the runnable `jar` file. Once obtaining the `jar` file, you can run it using any `JRE` with a higher version.
 
-Note that once obtaining the `jar` file, you can run it using any `JRE` with a higher version.
+We develop `mpc4j` using [Intellij IDEA](https://www.jetbrains.com/idea/) and [CLion](https://www.jetbrains.com/clion/). After successfully compiling `mpc4j-native-tool` and `mpc4j-native-fhe` (Please see the documentation in these modules for more details on how to compile them), you need to configure IDEA with the following procedures so that IDEA can link to these native libraries.
+
+1. Open `Run->Edit Configurations...`.
+2. Open `Edit Configuration templates...`.
+3. Select `JUnit`.
+4. Add the following command into `VM Options`:
+
+```text
+-Djava.library.path=/YOUR_MPC4J_ABSOLUTE_PATH/mpc4j-native-tool/cmake-build-release:/YOUR_MPC4J_ABSOLUTE_PATH/mpc4j-native-fhe/cmake-build-release
+```
 
 ## TODO List
 
