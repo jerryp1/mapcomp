@@ -112,7 +112,7 @@ public class ExpCdpConfig implements NominalCdpConfig {
 
         private void setUtility() {
             nounSet = new HashSet<>();
-            utilityMap = new HashMap<>();
+            utilityMap = new HashMap<>(nounPairDistances.size());
             deltaQ = 0.0;
             for (NounPairDistance nounPairDistance : nounPairDistances) {
                 // 取最大的Δq

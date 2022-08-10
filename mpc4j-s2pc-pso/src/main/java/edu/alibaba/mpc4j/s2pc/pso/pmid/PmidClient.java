@@ -32,6 +32,7 @@ public interface PmidClient<T> extends TwoPartyPto, SecurePto {
      *
      * @param clientElementMap 客户端元素与频次映射。
      * @param serverSetSize    服务端元素数量。
+     * @return 协议输出结果。
      * @throws MpcAbortException 如果协议异常中止。
      */
     PmidPartyOutput<T> pmid(Map<T, Integer> clientElementMap, int serverSetSize) throws MpcAbortException;

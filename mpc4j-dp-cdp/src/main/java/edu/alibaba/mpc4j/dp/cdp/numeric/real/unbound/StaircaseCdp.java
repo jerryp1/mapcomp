@@ -68,6 +68,7 @@ class StaircaseCdp implements UnboundRealCdp {
         return 0.0;
     }
 
+    @Override
     public double randomize(double value) {
         // Generate a random variable with Pr[S = 1] = Pr[S = -1] = 1/2
         double su = random.nextDouble();

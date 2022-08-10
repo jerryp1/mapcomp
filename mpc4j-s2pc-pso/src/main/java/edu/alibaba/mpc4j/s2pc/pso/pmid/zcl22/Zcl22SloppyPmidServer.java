@@ -500,7 +500,7 @@ public class Zcl22SloppyPmidServer<T> extends AbstractPmidServer<T> {
                 return ByteBuffer.wrap(pidBytes);
             })
             .toArray(ByteBuffer[]::new);
-        Map<ByteBuffer, T> serverPidMap = new HashMap<>();
+        Map<ByteBuffer, T> serverPidMap = new HashMap<>(serverSetSize);
         IntStream.range(0, serverBinNum).forEach(serverBinIndex -> {
             if (serverPids[serverBinIndex] != null) {
                 serverPidMap.put(serverPids[serverBinIndex], serverCuckooHashBin.getHashBinEntry(serverBinIndex).getItem());
