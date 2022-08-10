@@ -9,7 +9,7 @@
     </parent>
     <modelVersion>4.0.0</modelVersion>
 
-    <artifactId>mpc4j-common-phe</artifactId>
+    <artifactId>mpc4j-crypto-phe</artifactId>
 
     <properties>
         <maven.compiler.source>8</maven.compiler.source>
