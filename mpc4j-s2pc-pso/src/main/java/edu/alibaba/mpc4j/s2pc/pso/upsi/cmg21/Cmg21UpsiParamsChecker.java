@@ -36,7 +36,7 @@ public class Cmg21UpsiParamsChecker {
      * @param params 参数。
      * @return 非平衡PSI协议参数的有效性。
      */
-    public static boolean validCmg21UpsiParams(Cmg21UpsiParams params) {
+    public static boolean checkValid(Cmg21UpsiParams params) {
         assert params.getCuckooHashBinType().equals(CuckooHashBinFactory.CuckooHashBinType.NAIVE_3_HASH)
             || params.getCuckooHashBinType().equals(CuckooHashBinFactory.CuckooHashBinType.NO_STASH_ONE_HASH)
             : CuckooHashBinFactory.CuckooHashBinType.class.getSimpleName() + "only support "
@@ -96,7 +96,7 @@ public class Cmg21UpsiParamsChecker {
      * @param sourcePowers 问询幂次方数组（不一定有序）。
      * @param psLowDegree  最低问询阶。
      */
-    public static void checkQueryPowers(int[] sourcePowers, int psLowDegree) {
+    private static void checkQueryPowers(int[] sourcePowers, int psLowDegree) {
         int[] sortSourcePowers = Arrays.stream(sourcePowers)
             .peek(sourcePower -> {
                 assert sourcePower > 0 : "query power must be greater than 0: " + sourcePower;

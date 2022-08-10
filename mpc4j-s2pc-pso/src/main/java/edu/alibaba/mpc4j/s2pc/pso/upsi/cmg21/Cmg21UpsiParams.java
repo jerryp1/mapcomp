@@ -135,7 +135,7 @@ public class Cmg21UpsiParams implements UpsiParams {
             plainModulus, polyModulusDegree, coeffModulusBits,
             expectServerSize, maxClientSize
         );
-        if (Cmg21UpsiParamsChecker.validCmg21UpsiParams(cmg21UpsiParams)) {
+        if (Cmg21UpsiParamsChecker.checkValid(cmg21UpsiParams)) {
             return cmg21UpsiParams;
         } else {
             throw new IllegalArgumentException("Invalid SEAL parameters: " + cmg21UpsiParams);

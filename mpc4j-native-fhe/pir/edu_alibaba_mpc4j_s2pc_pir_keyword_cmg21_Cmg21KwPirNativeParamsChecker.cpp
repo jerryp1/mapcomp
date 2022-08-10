@@ -1,5 +1,5 @@
 //
-// Created by pengliqiang on 2022/8/9.
+// Created by Liqiang Peng on 2022/8/9.
 //
 
 #include "edu_alibaba_mpc4j_s2pc_pir_keyword_cmg21_Cmg21KwPirNativeParamsChecker.h"
@@ -10,10 +10,5 @@ JNIEXPORT jboolean JNICALL Java_edu_alibaba_mpc4j_s2pc_pir_keyword_cmg21_Cmg21Kw
  jobjectArray jparent_powers, jintArray jsource_power_index, jint ps_low_power, jint max_bin_size) {
     int noise_budget = checkSealParams(env, poly_modulus_degree, plain_modulus, coeff_modulus_bits, jparent_powers,
                                        jsource_power_index, ps_low_power, max_bin_size);
-    std::cerr << "noise_budget : " << noise_budget << std::endl;
-    if (noise_budget > 0) {
-        return true;
-    } else {
-        return false;
-    }
+    return noise_budget > 0;
 }

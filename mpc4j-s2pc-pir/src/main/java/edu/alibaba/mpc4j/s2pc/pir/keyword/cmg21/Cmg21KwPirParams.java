@@ -125,7 +125,6 @@ public class Cmg21KwPirParams implements KwPirParams {
      * @param maxRetrievalSize       支持查询的关键词数量。
      * @return 关键词PIR协议参数。
      */
-    @SuppressWarnings("UnusedReturnValue")
     public static Cmg21KwPirParams create(CuckooHashBinType cuckooHashBinType, int binNum,
                                           int maxPartitionSizePerBin, int itemEncodedSlotSize, int psLowDegree,
                                           int[] queryPowers, long plainModulus, int polyModulusDegree,
@@ -135,7 +134,7 @@ public class Cmg21KwPirParams implements KwPirParams {
             itemEncodedSlotSize, psLowDegree, queryPowers,
             plainModulus, polyModulusDegree, coeffModulusBits,
             expectServerSize, maxRetrievalSize);
-        if (Cmg21KwPirParamsChecker.validParams(cmg21KwPirParams)) {
+        if (Cmg21KwPirParamsChecker.checkValid(cmg21KwPirParams)) {
             return cmg21KwPirParams;
         } else {
             throw new IllegalArgumentException("Invalid SEAL parameters: " + cmg21KwPirParams);
