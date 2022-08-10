@@ -15,6 +15,13 @@ public interface MpOprfSenderOutput extends OprfSenderOutput {
      */
     byte[] getPrf(byte[] input);
 
+    /**
+     * 返回伪随机函数输出。
+     *
+     * @param index  索引值。
+     * @param input 伪随机函数输入。
+     * @return 伪随机函数输出。
+     */
     @Override
     default byte[] getPrf(int index, byte[] input) {
         return getPrf(input);

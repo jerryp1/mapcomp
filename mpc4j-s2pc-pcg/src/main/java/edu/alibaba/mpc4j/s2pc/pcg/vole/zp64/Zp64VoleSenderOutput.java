@@ -5,6 +5,12 @@ import edu.alibaba.mpc4j.common.tool.CommonConstants;
 import java.math.BigInteger;
 import java.util.Arrays;
 
+/**
+ * Zp64-VOLE发送方输出。
+ *
+ * @author Hanwen Feng
+ * @date 2022/06/15
+ */
 public class Zp64VoleSenderOutput {
     /**
      * 素数域
@@ -34,17 +40,17 @@ public class Zp64VoleSenderOutput {
         assert BigInteger.valueOf(prime).isProbablePrime(CommonConstants.STATS_BIT_LENGTH) : "input prime is not a prime: " + prime;
         senderOutput.prime = prime;
         senderOutput.x = Arrays.stream(x)
-                .peek(xi -> {
-                    assert xi >= 0 && xi < prime
-                            : "xi must be in range [0, " + prime + "): " + xi;
-                })
-                .toArray();
+            .peek(xi -> {
+                assert xi >= 0 && xi < prime
+                    : "xi must be in range [0, " + prime + "): " + xi;
+            })
+            .toArray();
         senderOutput.t = Arrays.stream(t)
-                .peek(ti -> {
-                    assert ti >= 0 && ti < prime
-                            : "ti must be in range [0, " + prime + "): " + ti;
-                })
-                .toArray();
+            .peek(ti -> {
+                assert ti >= 0 && ti < prime
+                    : "ti must be in range [0, " + prime + "): " + ti;
+            })
+            .toArray();
         return senderOutput;
     }
 
