@@ -202,21 +202,22 @@ public class Cmg21UpsiServer<T> extends AbstractUpsiServer<T> {
      */
     private ArrayList<long[][]> encodeDatabase(ArrayList<ArrayList<HashBinEntry<ByteBuffer>>> hashBins, int binSize) {
         Zp64Poly zp64Poly = Zp64PolyFactory.createInstance(envType, (long) params.getPlainModulus());
-        int itemPerCiphertext = params.getPolyModulusDegree() / params.getItemEncodedSlotSize();
-        int ciphertextNum = params.getBinNum() / (params.getPolyModulusDegree() / params.getItemEncodedSlotSize());
+        int itemEncodedSlotSize = params.getItemEncodedSlotSize();
+        int itemPerCiphertext = params.getPolyModulusDegree() / itemEncodedSlotSize;
+        int ciphertextNum = params.getBinNum() / itemPerCiphertext;
         // we will split the hash table into partitions
         int partitionNum = (binSize + params.getMaxPartitionSizePerBin() - 1) / params.getMaxPartitionSizePerBin();
         int bigPartitionIndex = binSize / params.getMaxPartitionSizePerBin();
-        long[][] coeffs = new long[params.getItemEncodedSlotSize() * itemPerCiphertext][];
+        long[][] coeffs = new long[itemEncodedSlotSize * itemPerCiphertext][];
         ArrayList<long[][]> coeffsPolys = new ArrayList<>();
-        long[][] encodedItemArray = new long[params.getBinNum() * params.getItemEncodedSlotSize()][binSize];
+        long[][] encodedItemArray = new long[params.getBinNum() * itemEncodedSlotSize][binSize];
         for (int i = 0; i < params.getBinNum(); i++) {
             IntStream intStream = parallel ? IntStream.range(0, binSize).parallel() : IntStream.range(0, binSize);
             int finalI = i;
             intStream.forEach(j -> {
                 long[] item = params.getHashBinEntryEncodedArray(hashBins.get(finalI).get(j), false, secureRandom);
-                for (int l = 0; l < params.getItemEncodedSlotSize(); l++) {
-                    encodedItemArray[finalI * params.getItemEncodedSlotSize() + l][j] = item[l];
+                for (int l = 0; l < itemEncodedSlotSize; l++) {
+                    encodedItemArray[finalI * itemEncodedSlotSize + l][j] = item[l];
                 }
             });
         }
@@ -228,23 +229,22 @@ public class Cmg21UpsiServer<T> extends AbstractUpsiServer<T> {
                     params.getMaxPartitionSizePerBin() : binSize % params.getMaxPartitionSizePerBin();
                 partitionStart = params.getMaxPartitionSizePerBin() * partition;
                 IntStream intStream = parallel ?
-                    IntStream.range(0, itemPerCiphertext * params.getItemEncodedSlotSize()).parallel() :
-                    IntStream.range(0, itemPerCiphertext * params.getItemEncodedSlotSize());
+                    IntStream.range(0, itemPerCiphertext * itemEncodedSlotSize).parallel() :
+                    IntStream.range(0, itemPerCiphertext * itemEncodedSlotSize);
                 int finalI = i;
                 intStream.forEach(j -> {
                     long[] tempVector = new long[partitionSize];
-                    System.arraycopy(encodedItemArray[finalI * itemPerCiphertext * params.getItemEncodedSlotSize() + j],
+                    System.arraycopy(encodedItemArray[finalI * itemPerCiphertext * itemEncodedSlotSize + j],
                         partitionStart, tempVector, 0, partitionSize);
                     coeffs[j] = zp64Poly.rootInterpolate(partitionSize, tempVector, 0L);
                 });
                 // 转换为列编码
                 long[][] temp = new long[partitionSize + 1][params.getPolyModulusDegree()];
                 for (int j = 0; j < partitionSize + 1; j++) {
-                    for (int l = 0; l < itemPerCiphertext * params.getItemEncodedSlotSize(); l++) {
+                    for (int l = 0; l < itemPerCiphertext * itemEncodedSlotSize; l++) {
                         temp[j][l] = coeffs[l][j];
                     }
-                    for (int l = itemPerCiphertext * params.getItemEncodedSlotSize(); l < params.getPolyModulusDegree();
-                         l++) {
+                    for (int l = itemPerCiphertext * itemEncodedSlotSize; l < params.getPolyModulusDegree(); l++) {
                         temp[j][l] = 0;
                     }
                 }
@@ -262,8 +262,8 @@ public class Cmg21UpsiServer<T> extends AbstractUpsiServer<T> {
      */
     private ArrayList<ByteBuffer> oprf() throws MpcAbortException {
         MpOprfSenderOutput oprfSenderOutput = mpOprfSender.oprf(clientElementSize);
-        IntStream intStream = parallel ?
-            IntStream.range(0, serverElementSize).parallel() : IntStream.range(0, serverElementSize);
+        IntStream intStream = IntStream.range(0, serverElementSize);
+        intStream = parallel ? intStream.parallel() : intStream;
         return new ArrayList<>(Arrays.asList(intStream
             .mapToObj(i -> ByteBuffer.wrap(oprfSenderOutput.getPrf(serverElementArrayList.get(i).array())))
             .toArray(ByteBuffer[]::new)));
