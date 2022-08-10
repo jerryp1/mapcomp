@@ -558,7 +558,7 @@ public class Zcl22SloppyPmidClient<T> extends AbstractPmidClient<T> {
                 return ByteBuffer.wrap(pidBytes);
             })
             .toArray(ByteBuffer[]::new);
-        Map<ByteBuffer, T> clientPidMap = new HashMap<>();
+        Map<ByteBuffer, T> clientPidMap = new HashMap<>(clientBinNum);
         IntStream.range(0, clientBinNum).forEach(clientBinIndex -> {
             if (clientPids[clientBinIndex] != null) {
                 clientPidMap.put(clientPids[clientBinIndex], clientCuckooHashBin.getHashBinEntry(clientBinIndex).getItem());
