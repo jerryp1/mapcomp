@@ -229,12 +229,12 @@ public class Cmg21KwPirClient<T> extends AbstractKwPirClient<T> {
                                                 Map<ByteBuffer, ByteBuffer> oprfMap) {
         Map<T, ByteBuffer> resultMap = new HashMap<>(retrievalSize);
         int itemEncodedSlotSize = params.getItemEncodedSlotSize();
-        int ciphertextNum = params.getBinNum() / (params.getPolyModulusDegree() / itemEncodedSlotSize);
         int itemPerCiphertext = params.getPolyModulusDegree() / itemEncodedSlotSize;
+        int ciphertextNum = params.getBinNum() / itemPerCiphertext;
         int itemPartitionNum = decryptedKeywordReply.size() / ciphertextNum;
-        int labelPartitionNum = (int) Math.ceil((labelByteLength + CommonConstants.BLOCK_BYTE_LENGTH) * 8.0 /
-            ((LongUtils.ceilLog2(params.getPlainModulus()) - 1) * itemEncodedSlotSize));
-        int shiftBits = (int) Math.ceil((labelByteLength + CommonConstants.BLOCK_BYTE_LENGTH) * 8.0 /
+        int labelPartitionNum = (int) Math.ceil(((double) (labelByteLength + CommonConstants.BLOCK_BYTE_LENGTH)
+            * Byte.SIZE) / ((LongUtils.ceilLog2(params.getPlainModulus()) - 1) * itemEncodedSlotSize));
+        int shiftBits = (int) Math.ceil(((double) (labelByteLength + CommonConstants.BLOCK_BYTE_LENGTH) * Byte.SIZE) /
             (itemEncodedSlotSize * labelPartitionNum));
         for (int i = 0; i < decryptedKeywordReply.size(); i++) {
             // 找到匹配元素的所在行
@@ -253,8 +253,7 @@ public class Cmg21KwPirClient<T> extends AbstractKwPirClient<T> {
                         int index = 0;
                         for (int l = 0; l < labelPartitionNum; l++) {
                             for (int k = 0; k < itemEncodedSlotSize; k++) {
-                                BigInteger temp = BigInteger.valueOf(
-                                        decryptedLabelReply.get(i * labelPartitionNum + l)[matchedItem.get(j + k)])
+                                BigInteger temp = BigInteger.valueOf(decryptedLabelReply.get(i * labelPartitionNum + l)[matchedItem.get(j + k)])
                                     .shiftLeft(shiftBits * index);
                                 label = label.add(temp);
                                 index++;
@@ -286,7 +285,7 @@ public class Cmg21KwPirClient<T> extends AbstractKwPirClient<T> {
     private byte[] labelDecryption(byte[] keyBytes, byte[] encryptedLabel) {
         assert encryptedLabel.length > CommonConstants.BLOCK_BYTE_LENGTH;
         BlockCipher blockCipher = new AESEngine();
-        StreamCipher streamCipher = new OFBBlockCipher(blockCipher, 8 * CommonConstants.BLOCK_BYTE_LENGTH);
+        StreamCipher streamCipher = new OFBBlockCipher(blockCipher, Byte.SIZE * CommonConstants.BLOCK_BYTE_LENGTH);
         byte[] ivBytes = new byte[CommonConstants.BLOCK_BYTE_LENGTH];
         System.arraycopy(encryptedLabel, 0, ivBytes, 0, CommonConstants.BLOCK_BYTE_LENGTH);
         byte[] inputs = new byte[encryptedLabel.length - CommonConstants.BLOCK_BYTE_LENGTH];
@@ -328,8 +327,8 @@ public class Cmg21KwPirClient<T> extends AbstractKwPirClient<T> {
      */
     public List<long[][]> encodeQuery() {
         int itemEncodedSlotSize = params.getItemEncodedSlotSize();
-        int ciphertextNum = params.getBinNum() / (params.getPolyModulusDegree() / itemEncodedSlotSize);
         int itemPerCiphertext = params.getPolyModulusDegree() / itemEncodedSlotSize;
+        int ciphertextNum = params.getBinNum() / itemPerCiphertext;
         long[][] items = new long[ciphertextNum][params.getPolyModulusDegree()];
         for (int i = 0; i < ciphertextNum; i++) {
             for (int j = 0; j < itemPerCiphertext; j++) {

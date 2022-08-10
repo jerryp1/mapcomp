@@ -361,12 +361,12 @@ public class Cmg21KwPirServer<T> extends AbstractKwPirServer<T> {
         long plainModulus = params.getPlainModulus();
         Zp64Poly zp64Poly = Zp64PolyFactory.createInstance(envType, plainModulus);
         int itemEncodedSlotSize = params.getItemEncodedSlotSize();
-        int ciphertextNum = params.getBinNum() / (params.getPolyModulusDegree() / itemEncodedSlotSize);
         int itemPerCiphertext = params.getPolyModulusDegree() / itemEncodedSlotSize;
+        int ciphertextNum = params.getBinNum() / itemPerCiphertext;
         int binSize = hashBins.get(0).size();
         int partitionCount = (binSize + params.getMaxPartitionSizePerBin() - 1) / params.getMaxPartitionSizePerBin();
         int bigPartitionCount = binSize / params.getMaxPartitionSizePerBin();
-        int labelPartitionCount = (int) Math.ceil((labelByteLength + CommonConstants.BLOCK_BYTE_LENGTH) * 8.0 /
+        int labelPartitionCount = (int) Math.ceil(((double) (labelByteLength + CommonConstants.BLOCK_BYTE_LENGTH) * Byte.SIZE) /
             ((LongUtils.ceilLog2(plainModulus) - 1) * itemEncodedSlotSize));
         serverKeywordEncode = new long[partitionCount * ciphertextNum][][];
         serverLabelEncode = new long[partitionCount * ciphertextNum * labelPartitionCount][][];
@@ -486,7 +486,7 @@ public class Cmg21KwPirServer<T> extends AbstractKwPirServer<T> {
      */
     private byte[] labelEncryption(byte[] keyBytes, byte[] labelBytes) {
         BlockCipher blockCipher = new AESEngine();
-        StreamCipher streamCipher = new OFBBlockCipher(blockCipher, 8 * CommonConstants.BLOCK_BYTE_LENGTH);
+        StreamCipher streamCipher = new OFBBlockCipher(blockCipher, Byte.SIZE * CommonConstants.BLOCK_BYTE_LENGTH);
         byte[] ivBytes = new byte[CommonConstants.BLOCK_BYTE_LENGTH];
         secureRandom.nextBytes(ivBytes);
         KeyParameter key = new KeyParameter(keyBytes);

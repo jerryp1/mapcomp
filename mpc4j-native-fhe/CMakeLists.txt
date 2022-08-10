@@ -52,8 +52,11 @@ add_library(
         apsi.cpp
         pir/edu_alibaba_mpc4j_s2pc_pir_keyword_cmg21_Cmg21KwPirNativeClient.cpp
         pir/edu_alibaba_mpc4j_s2pc_pir_keyword_cmg21_Cmg21KwPirNativeServer.cpp
+        pir/edu_alibaba_mpc4j_s2pc_pir_keyword_cmg21_Cmg21KwPirNativeParamsChecker.cpp
         upsi/edu_alibaba_mpc4j_s2pc_pso_upsi_cmg21_Cmg21UpsiNativeClient.cpp
         upsi/edu_alibaba_mpc4j_s2pc_pso_upsi_cmg21_Cmg21UpsiNativeServer.cpp
+        upsi/edu_alibaba_mpc4j_s2pc_pso_upsi_cmg21_Cmg21UpsiNativeParamsChecker.cpp
+        polynomials.cpp
 )
 # 链接SEAL库
 target_link_libraries(mpc4j-native-fhe PUBLIC SEAL::seal_shared)
