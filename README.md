@@ -4,14 +4,15 @@
 
 Multi-Party Computation for Java (`mpc4j`) is an efficient and easy-to-use Secure Multi-Party Computation (MPC) library mainly written in Java.
 
-The target of `mpc4j` is to provide an academic library for researchers to learn and develop MPC and related protocols in a unified manner. Researchers can use them to develop MPC protocols. In addition,  `mpc4j` tries to provide state-of-the-art MPC implementations. If researchers propose new MPC protocols, they can directly have efficiency/communication comparisons with existing ones and obtain experimental reports.
+The aim of `mpc4j` is to provide an academic library for researchers to study and develop MPC and related protocols in a unified manner. As `mpc4j` tries to provide state-of-the-art MPC implementations, researchers could leverage the library to have fair and quick comparisons between the new protocols they proposed and exisiting ones.
+
 
 ## Features
 
 `mpc4j` has the following features compared with existing open-source libraries:
 
 - **Aarch64 support**: We develop `mpc4j` so that it can be run on `x86_64` and `aarch64`. Therefore, researchers can develop and test on M1-chip Macbook (`aarch64`) and then run experiments on Linux OS (`x86_64`). 
-- **SM series support**: Due to some reasons, developers would want to use SM series algorithms (SM2 for public-key operations, SM3 for hashing, and SM4 for block cipher operations) instead of regular algorithms (like secp256k1 for public key operations, SHA256 for hashing, and AES for block cipher operations). Also, the SM series algorithms are accepted by ISO/IES, so it may be necessary to support SM series algorithms under MPC settings. `mpc4j` leverages [Bouncy Castle](https://www.bouncycastle.org/java.html) to support the SM series algorithms.
+- **SM series support**: In cases, developers may want to use SM series algorithms (SM2 for public-key operations, SM3 for hashing, and SM4 for block cipher operations) instead of regular algorithms (like secp256k1 for public key operations, SHA256 for hashing, and AES for block cipher operations). Also, the SM series algorithms are accepted by ISO/IES, so it may be necessary to support SM series algorithms under MPC settings. `mpc4j` leverages [Bouncy Castle](https://www.bouncycastle.org/java.html) to support the SM series algorithms.
 
 ## Some Implementations of our Work
 
@@ -67,7 +68,7 @@ Most of the codes are in Java, except for very efficient implementations in C/C+
 
 ## Development
 
-`mpc4j` is developed under `JDK 8`. Unfortunately, if you want to develop your own protocols or libraries based on `mpc4j`, you should also use `JDK 8`. The reason is that `mpc4j` leverages `sun.misc.Unsafe` to do fast `byte[]` to `int[]` conversions. However, `sun.misc.Unsafe` is deprecated since `JDK 9`. If you use `JDK` with a higher version, you may encounter problem like "sun.misc.Unsafe is not found" when you compile the code to get the runnable `jar` file.
+`mpc4j` is developed under `JDK 8`. Specifically, `mpc4j` leverages `sun.misc.Unsafe`, which is deprecated since `JDK 9`, to do fast `byte[]` to `int[]` conversions. Therefore, you should also use `JDK 8` when you are implementing your protocols based `mpc4j`. Otherwise, you may encounter problem like "sun.misc.Unsafe is not found" when you compile the code to get the runnable `jar` file.
 
 Note that once obtaining the `jar` file, you can run it using any `JRE` with a higher version.
 
