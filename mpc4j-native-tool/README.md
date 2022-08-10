@@ -2,17 +2,19 @@
 
 ## Introduction
 
-`mpc4j` leverages native C/C++ codes to speed up cryptographic operations. The native codes and Java codes are interacted by the [Java Native Interface (JNI)](https://docs.oracle.com/javase/8/docs/technotes/guides/jni/) technique. We separate native C/C++ codes into two modules, namely `mpc4j-native-cool` and `mpc4j-native-fhe`. `mpc4j-native-tool` contains native codes for basic cryptographic operations, while `mpc4j-native-fhe` contains native codes for Fully Homomorphic Encryption (FHE) using [SEAL](https://github.com/microsoft/SEAL). All basic cryptographic operations in `mpc4j-native-tool` have alternative pure-Java versions in `mpc4j` with the same functionalities and the same data representations.
+`mpc4j` leverages native C/C++ codes to speed up cryptographic operations. The native codes and Java codes are interacted by the [Java Native Interface (JNI)](https://docs.oracle.com/javase/8/docs/technotes/guides/jni/) technique. We separate native C/C++ codes into two modules, namely `mpc4j-native-cool` and `mpc4j-native-fhe`. `mpc4j-native-tool` contains native codes for basic cryptographic operations, while `mpc4j-native-fhe` contains native codes for Fully Homomorphic Encryption (FHE) using [SEAL](https://github.com/microsoft/SEAL). All basic cryptographic operations in `mpc4j-native-tool` have alternative pure-Java implementations in `mpc4j` with the same functionalities and the same data representations.
 
 `mpc4j-native-tool` relies on the following C/C++ libraries:
 
 - [GMP](https://gmplib.org/): an efficient library for operations with arbitrary precision integers, rationals, and floating-point numbers.
-- [NTL](https://libntl.org/): a high-performance, portable C++ library providing data structures and algorithms for manipulating signed, arbitrary length integers and for vectors, matrices, and polynomials over the integers and over finite fields, developed by [Victor Shoup](https://shoup.net/). Note that one can further introduce [GF2X](https://gitlab.inria.fr/gf2x/gf2x) for more efficient operations under Galois Field. The installation procedure for [GF2X](https://gitlab.inria.fr/gf2x/gf2x) is rather complicated. By default, we only use NTL.
+- [NTL](https://libntl.org/): a high-performance, portable C++ library providing data structures and algorithms for manipulating signed, arbitrary length integers and for vectors, matrices, and polynomials over the integers and over finite fields, developed by [Victor Shoup](https://shoup.net/). Note that one can further introduce [GF2X](https://gitlab.inria.fr/gf2x/gf2x) for more efficient operations in a Galois Field. However, since the installation procedure for [GF2X](https://gitlab.inria.fr/gf2x/gf2x) is rather complicated, we use NTL by default.
 - [MCL](https://github.com/herumi/mcl): A portable and fast pairing-based cryptography library. MCL also includes fast Elliptic Curve implementations. 
 
-Installing `mpc4j-native-tool` is a complicated task, especially for ones who are not so familiar with the Unix-like system. In addition, different platforms have slightly different installing procedures. Here we separately describe how to install `mpc4j-native-tool` on macOS (x86_64), macOS (M1), Ubuntu, and CentOS.
+Installing `mpc4j-native-tool` might be a bit complicated for ones who are not that familiar with Unix-like systems. As the procedures differ across platforms, here we provide installation instructions for macOS (x86_64), macOS (M1), Ubuntu, and CentOS, respectively.
 
 We recommend creating a new dictionary (such as `~/lib`) to temporarily store all source codes and libraries before you start to install `mpc4j-native-tool`. All installation procedures assume you are under the dictionary `~/lib`.
+
+**NOTE:** The following instructions are tested with the specified versions of the underlying libraries. Feel free to contact us if they do not work with newer versions.
 
 ## Install on MAC (x86_64)
 
@@ -35,13 +37,14 @@ GMP can be directly installed via `homebrew`:
 brew install gmp
 ```
 
-GMP can also be installed via the source code. In this way, you can add `CFLAGS="-march=native -O3"` to obtain a more efficient GMP. Run the following command to download the source code with versions higher than 6.2.1. Here we assume you install GMP 6.2.1.
+GMP can also be installed via the source code. In this way, you can add `CFLAGS="-march=native -O3"` to obtain a more efficient GMP. 
 
+Download GMP 6.2.1
 ```shell
 wget https://gmplib.org/download/gmp/gmp-6.2.1.tar.xz
 ```
 
-Run the following command to install GMP.
+Install GMP.
 
 ```shell
 xz -d gmp-6.2.1.tar.xz
@@ -56,19 +59,19 @@ cd .. # return to the original path
 
  ### NTL
 
-Download the source code of NTL. Currently, the latest version of NTL is 11.5.1. Run the following command to download `ntl-11.5.1.tar.gz`.
+Download `ntl-11.5.1.tar.gz`.
 
 ```shell
 wget https://libntl.org/ntl-11.5.1.tar.gz
 ```
 
-Run the following command to extract source codes from `ntl-11.5.1.tar.gz`.
+Extract source codes from `ntl-11.5.1.tar.gz`.
 
 ```shell
 tar -xvzf ntl-11.5.1.tar.gz
 ```
 
-Run the following command to compile, check, and install NTL on the default path.
+Compile, check, and install NTL on the default path.
 
 ```shell
 cd ntl-11.5.1
@@ -83,13 +86,13 @@ cd .. # return to the original path
 
 ### MCL
 
-Currently, we use [MCL v1.61](https://github.com/herumi/mcl/releases/tag/v1.61). Please contact us if new versions cannot be used in `mpc4j-native-tool`. Run the following command to download the source code.
+Download [MCL v1.61](https://github.com/herumi/mcl/releases/tag/v1.61).
 
 ```shell
 git clone -b v1.61 https://github.com/herumi/mcl.git
 ```
 
-Run the following command to compile and install MCL.
+Compile and install MCL.
 
 ```shell
 cd mcl
@@ -112,7 +115,7 @@ java --version
 
 If you cannot see the version information, then you may need to install Java on your own. We recommend installing Java from [oracle.com](https://www.oracle.com/java/technologies/downloads/). Recall that if you just want to run `mpc4j`, higher Java versions are OK. However, if you want to develop `mpc4j`, you may need to install JDK8.
 
-By default, Java would be installed under the path like `/Library/Java/JavaVirtualMachines/jdk-XX.X.X.jdk/Contents/Home` or `/Users/liuweiran/Library/Java/JavaVirtualMachines/JDK_NAME/Comtents/Home`. After you find the Java installation path, run the following command to open `bash_profile`.
+By default, Java will be installed under the path like `/Library/Java/JavaVirtualMachines/jdk-XX.X.X.jdk/Contents/Home` or `/Users/USERNAME/Library/Java/JavaVirtualMachines/JDK_NAME/Comtents/Home`. After you find the Java installation path, run the following command to open `bash_profile`.
 
 ```shell
 vim ~/.bash_profile
@@ -135,6 +138,8 @@ You can verify the result by running the following command and see if the Java i
 ```
 echo $JAVA_HOME
 ```
+
+**NOTE:** If your terminal is `zsh` instead of `bash`, you should replace `.bash_profile` with `.zshrc` in above commands.
 
 ### Compile `mpc4j-native-tool`
 
@@ -162,15 +167,15 @@ brew install cmake
 
 ### GMP
 
-One cannot directly install GMP via `homebrew`. This is because MCL needs GMP under aarch64. We need to install GMP in C (used in NTL) and in C++ (used in MCL) with versions higher than 6.2.1.
+Please **DO NOT** install GMP via `homebrew`. This is because MCL relies on GMP under aarch64. Instead, install GMP in C++ with versions higher than 6.2.1.
 
-Run the following command to download the source code with versions higher than 6.2.1. Here we assume you install GMP 6.2.1.
+Download the source code of GMP 6.2.1.
 
 ```shell
 wget https://gmplib.org/download/gmp/gmp-6.2.1.tar.xz
 ```
 
-Run the following command to install C++ version.
+Install the C++ version of GMP.
 
 ```shell
 xz -d gmp-6.2.1.tar.xz
@@ -185,19 +190,19 @@ cd .. # return to the original path
 
 ### NTL
 
-Download the source code of NTL. Currently, the latest version of NTL is 11.5.1. Run the following command to download `ntl-11.5.1.tar.gz`.
+Download `ntl-11.5.1.tar.gz`.
 
 ```shell
 wget https://libntl.org/ntl-11.5.1.tar.gz
 ```
 
-Run the following command to extract source codes from `ntl-11.5.1.tar.gz`.
+Extract source codes from `ntl-11.5.1.tar.gz`.
 
 ```shell
 tar -xvzf ntl-11.5.1.tar.gz
 ```
 
-Run the following command to compile, check, and install NTL on the default path.
+Compile, check, and install NTL on the default path.
 
 ```shell
 cd ntl-11.5.1
@@ -212,13 +217,13 @@ cd .. # return to the original path
 
 ### MCL
 
-Currently, we use [MCL v1.61](https://github.com/herumi/mcl/releases/tag/v1.61). Please contact us if new versions cannot be used in `mpc4j-native-tool`. Run the following command to download the source code.
+Download the source code of  [MCL v1.61](https://github.com/herumi/mcl/releases/tag/v1.61). 
 
 ```shell
 git clone -b v1.61 https://github.com/herumi/mcl.git
 ```
 
-Note that currently, MCL does not have specific assembly optimizations for aarch64 platforms. Therefore, we need to remove assembly language support when compiling MCL. Run the following command to compile and install MCL.
+MCL currently does not have specific assembly optimizations for aarch64 platforms. Therefore, we need to remove assembly language support when compiling MCL. Compile and install MCL as follows.
 
 ```shell
 cd mcl
@@ -241,7 +246,7 @@ java --version
 
 If you cannot see the version information, then you may need to install Java on your own. We recommend installing Java from [oracle.com](https://www.oracle.com/java/technologies/downloads/). Recall that if you just want to run `mpc4j`, higher Java versions are OK. However, if you want to develop `mpc4j`, you may need to install JDK8.
 
-By default, Java would be installed under the path like `/Library/Java/JavaVirtualMachines/jdk-XX.X.X.jdk/Contents/Home` or `/Users/liuweiran/Library/Java/JavaVirtualMachines/JDK_NAME/Comtents/Home`. After you find the Java installation path, run the following command to open `bash_profile`.
+By default, Java will be installed under the path like `/Library/Java/JavaVirtualMachines/jdk-XX.X.X.jdk/Contents/Home` or `/Users/USERNAME/Library/Java/JavaVirtualMachines/JDK_NAME/Comtents/Home`. After you find the Java installation path, run the following command to open `bash_profile`.
 
 ```shell
 vim ~/.bash_profile
@@ -264,6 +269,9 @@ You can verify the result by running the following command and see if the Java i
 ```
 echo $JAVA_HOME
 ```
+
+**NOTE:** If your terminal is `zsh` instead of `bash`, you should replace `.bash_profile` with `.zshrc` in above commands.
+
 
 ### Compile `mpc4j-native-tool`
 
@@ -317,7 +325,7 @@ Note that NTL on Ubuntu only supports [GMP v6.2.0](https://gmplib.org/download/g
 wget https://gmplib.org/download/gmp/gmp-6.2.0.tar.xz
 ```
 
-Run the following command to install GMP.
+Install GMP.
 
 ```shell
 xz -d gmp-6.2.0.tar.xz
@@ -330,7 +338,7 @@ sudo make install
 cd .. # return to the original path
 ```
 
-You may also need to install the development library for GMP by running the following command.
+Install the development library for GMP.
 
 ```shell
 sudo apt install libgmp-dev
@@ -338,19 +346,19 @@ sudo apt install libgmp-dev
 
  ### NTL
 
-Download the source code of NTL. Currently, the latest version of NTL is 11.5.1. Run the following command to download `ntl-11.5.1.tar.gz`.
+Download  `ntl-11.5.1.tar.gz`.
 
 ```shell
 wget https://libntl.org/ntl-11.5.1.tar.gz
 ```
 
-Run the following command to extract source codes from `ntl-11.5.1.tar.gz`.
+Extract source codes from `ntl-11.5.1.tar.gz`.
 
 ```shell
 tar -xvzf ntl-11.5.1.tar.gz
 ```
 
-Run the following command to compile, check, and install NTL on the default path.
+Compile, check, and install NTL on the default path.
 
 ```shell
 cd ntl-11.5.1
@@ -365,13 +373,13 @@ cd .. # return to the original path
 
 ### MCL
 
-Currently, we use [MCL v1.61](https://github.com/herumi/mcl/releases/tag/v1.61). Please contact us if new versions cannot be used in `mpc4j-native-tool`. Run the following command to download the source code.
+Download the source code of [MCL v1.61](https://github.com/herumi/mcl/releases/tag/v1.61). 
 
 ```shell
 git clone -b v1.61 https://github.com/herumi/mcl.git
 ```
 
-Run the following command to compile and install MCL.
+Compile and install MCL.
 
 ```shell
 cd mcl
@@ -505,19 +513,19 @@ sudo yum install gmp-devel # different from Ubuntu
 
  ### NTL
 
-Download the source code of NTL. Currently, the latest version of NTL is 11.5.1. Run the following command to download `ntl-11.5.1.tar.gz`.
+Download `ntl-11.5.1.tar.gz`.
 
 ```shell
 wget https://libntl.org/ntl-11.5.1.tar.gz
 ```
 
-Run the following command to extract source codes from `ntl-11.5.1.tar.gz`.
+Extract source codes from `ntl-11.5.1.tar.gz`.
 
 ```shell
 tar -xvzf ntl-11.5.1.tar.gz
 ```
 
-Run the following command to compile, check, and install NTL on the default path.
+Compile, check, and install NTL on the default path.
 
 ```shell
 cd ntl-11.5.1
@@ -532,7 +540,7 @@ cd .. # return to the original path
 
 ### MCL
 
-Currently, we use [MCL v1.61](https://github.com/herumi/mcl/releases/tag/v1.61). Please contact us if new versions cannot be used in `mpc4j-native-tool`. Run the following command to download the source code.
+Download the source code of [MCL v1.61](https://github.com/herumi/mcl/releases/tag/v1.61). 
 
 ```shell
 git clone -b v1.61 https://github.com/herumi/mcl.git
