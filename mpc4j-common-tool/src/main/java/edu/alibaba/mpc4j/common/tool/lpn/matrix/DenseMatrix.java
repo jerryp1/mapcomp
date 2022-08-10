@@ -297,8 +297,9 @@ public class DenseMatrix {
 
         for (int j = 0; j < cols; j++) {
             for (int i = 0; i < rows; i++) {
-                if (pureMatrix[i][j] == 1)
+                if (pureMatrix[i][j] == 1) {
                     vecY[j] ^= vecX[i];
+                }
             }
         }
     }
@@ -315,8 +316,9 @@ public class DenseMatrix {
 
         for (int j = 0; j < cols; j++) {
             for (int i = 0; i < rows; i++) {
-                if (pureMatrix[i][j] == 1)
+                if (pureMatrix[i][j] == 1) {
                     vecY[j] ^= vecX[i];
+                }
             }
         }
     }
@@ -333,8 +335,9 @@ public class DenseMatrix {
 
         for (int j = 0; j < cols; j++) {
             for (int i = 0; i < rows; i++) {
-                if (pureMatrix[i][j] == 1)
+                if (pureMatrix[i][j] == 1) {
                     BytesUtils.xori(vecY[j], vecX[i]);
+                }
             }
         }
     }
