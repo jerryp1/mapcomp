@@ -2,7 +2,6 @@ package edu.alibaba.mpc4j.s2pc.aby.bc;
 
 import edu.alibaba.mpc4j.common.tool.utils.BytesUtils;
 import edu.alibaba.mpc4j.common.tool.utils.CommonUtils;
-import edu.alibaba.mpc4j.s2pc.aby.OblivBitVector;
 import org.apache.commons.lang3.builder.EqualsBuilder;
 import org.apache.commons.lang3.builder.HashCodeBuilder;
 import org.bouncycastle.util.encoders.Hex;
@@ -10,12 +9,12 @@ import org.bouncycastle.util.encoders.Hex;
 import java.util.Arrays;
 
 /**
- * 布尔电路不经意比特向量（Boolean Circuit Oblivious Bit Vector），即布尔电路的布尔秘密分享值（Boolean Secret-Shared Value）。
+ * 布尔电路方括号向量（[x]），即布尔电路的布尔秘密分享值（Boolean Secret-Shared Value）。
  *
  * @author Weiran Liu
  * @date 2022/02/11
  */
-public class BcBitVector implements OblivBitVector {
+public class BcSquareVector implements BcVector {
     /**
      * 布尔秘密分享值
      */
@@ -37,16 +36,16 @@ public class BcBitVector implements OblivBitVector {
      * @param isPublic  是否为公开导线组。
      * @return 指定取值不经意比特向量。
      */
-    public static BcBitVector create(byte[] bytes, int bitLength, boolean isPublic) {
+    public static BcSquareVector create(byte[] bytes, int bitLength, boolean isPublic) {
         assert bitLength > 0;
         assert bytes.length == CommonUtils.getByteLength(bitLength);
         assert BytesUtils.isReduceByteArray(bytes, bitLength);
-        BcBitVector bcBitVector = new BcBitVector();
-        bcBitVector.bytes = bytes;
-        bcBitVector.bitLength = bitLength;
-        bcBitVector.isPublic = isPublic;
+        BcSquareVector bcSquareVector = new BcSquareVector();
+        bcSquareVector.bytes = bytes;
+        bcSquareVector.bitLength = bitLength;
+        bcSquareVector.isPublic = isPublic;
 
-        return bcBitVector;
+        return bcSquareVector;
     }
 
     /**
@@ -55,7 +54,7 @@ public class BcBitVector implements OblivBitVector {
      * @param bitLength 比特向量长度。
      * @return 全1取值不经意比特向量。
      */
-    public static BcBitVector createOnes(int bitLength) {
+    public static BcSquareVector createOnes(int bitLength) {
         assert bitLength > 0;
         int byteLength = CommonUtils.getByteLength(bitLength);
         // 创建全1导线并修正
@@ -63,7 +62,7 @@ public class BcBitVector implements OblivBitVector {
         Arrays.fill(ones, (byte)0xFF);
         BytesUtils.reduceByteArray(ones, bitLength);
         // 构造返回值
-        BcBitVector onesBcWireGroup = new BcBitVector();
+        BcSquareVector onesBcWireGroup = new BcSquareVector();
         onesBcWireGroup.bytes = ones;
         onesBcWireGroup.bitLength = bitLength;
         onesBcWireGroup.isPublic = true;
@@ -77,13 +76,13 @@ public class BcBitVector implements OblivBitVector {
      * @param bitLength 比特向量长度。
      * @return 全0取值不经意比特向量。
      */
-    public static BcBitVector createZeros(int bitLength) {
+    public static BcSquareVector createZeros(int bitLength) {
         assert bitLength > 0;
         int byteLength = CommonUtils.getByteLength(bitLength);
         // 创建全0导线组，不需要修正
         byte[] zeros = new byte[byteLength];
         // 构造返回值
-        BcBitVector zerosWireGroup = new BcBitVector();
+        BcSquareVector zerosWireGroup = new BcSquareVector();
         zerosWireGroup.bytes = zeros;
         zerosWireGroup.bitLength = bitLength;
         zerosWireGroup.isPublic = true;
@@ -97,8 +96,8 @@ public class BcBitVector implements OblivBitVector {
      * @param bcWireGroup 原始不经意比特向量。
      * @return 复制不经意比特向量。
      */
-    public static BcBitVector clone(BcBitVector bcWireGroup) {
-        BcBitVector clone = new BcBitVector();
+    public static BcSquareVector clone(BcSquareVector bcWireGroup) {
+        BcSquareVector clone = new BcSquareVector();
         clone.bytes = BytesUtils.clone(bcWireGroup.bytes);
         clone.bitLength = bcWireGroup.bitLength;
         clone.isPublic = bcWireGroup.isPublic;
@@ -106,7 +105,7 @@ public class BcBitVector implements OblivBitVector {
         return clone;
     }
 
-    private BcBitVector() {
+    private BcSquareVector() {
         // empty
     }
 
@@ -122,12 +121,6 @@ public class BcBitVector implements OblivBitVector {
 
     @Override
     public boolean isPublic() {
-        return isPublic;
-    }
-
-    @Override
-    public boolean isPublic(int index) {
-        assert index >= 0 && index < bitLength;
         return isPublic;
     }
 
@@ -154,8 +147,8 @@ public class BcBitVector implements OblivBitVector {
         if (this == obj) {
             return true;
         }
-        if (obj instanceof BcBitVector) {
-            BcBitVector that = (BcBitVector)obj;
+        if (obj instanceof BcSquareVector) {
+            BcSquareVector that = (BcSquareVector)obj;
             return new EqualsBuilder()
                 .append(this.bytes, that.bytes)
                 .append(this.bitLength, that.bitLength)
