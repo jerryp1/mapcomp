@@ -113,7 +113,7 @@ public class Mr19BaseOtSender extends AbstractBaseOtSender {
             // 读取接收端参数对R0、R1
             ECPoint upperR0 = rFlattenedArray[index * 2];
             ECPoint upperR1 = rFlattenedArray[index * 2 + 1];
-            // 计算A0 = Hash(R0) * R0、A1 = Hash(R0) * R1
+            // 计算A0 = Hash(R1) * R0、A1 = Hash(R0) * R1
             ECPoint upperA0 = ecc.hashToCurve(ecc.encode(upperR1, false)).add(upperR0);
             ECPoint upperA1 = ecc.hashToCurve(ecc.encode(upperR0, false)).add(upperR1);
             // 计算密钥k0 = H(index, b * A0)和k1 = H(index, b * A1)
