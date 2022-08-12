@@ -1,36 +1,35 @@
-package edu.alibaba.mpc4j.s2pc.pcg.ot.bnot.np99;
+package edu.alibaba.mpc4j.s2pc.pcg.bitot.bit2ot.nc.direct;
 
 import edu.alibaba.mpc4j.common.rpc.desc.PtoDesc;
 import edu.alibaba.mpc4j.common.rpc.desc.PtoDescManager;
 
 
 /**
- * NP99-基础n选1-OT协议信息。该论文提供使用2选1-OT构造N选1-OT的方案。论文来源：
- * <p>
- * Naor, Moni, and Benny Pinkas. Oblivious transfer and polynomial evaluation. STOC 1999.
- * </p>
+ * 直接通过截取COT输出的第一个比特构造BitOT。
  *
  * @author Hanwen Feng
- * @date 2022/07/19
+ * @date 2022/08/11
  */
-public class Np99BnotPtoDesc implements PtoDesc {
+class DirectNcBitOtPtoDesc implements PtoDesc {
     /**
      * 协议ID
      */
-    private static final int PTO_ID = Math.abs((int) 4300807284283819586L);
+    private static final int PTO_ID = Math.abs((int) 1726912431942336863L);
     /**
      * 协议名称
      */
-    private static final String PTO_NAME = "NP99_BNOT";
+    private static final String PTO_NAME = "DIRECT_NC_BitOT";
+
     /**
      * 单例模式
      */
-    private static final Np99BnotPtoDesc INSTANCE = new Np99BnotPtoDesc();
+    private static final DirectNcBitOtPtoDesc INSTANCE = new DirectNcBitOtPtoDesc();
+
 
     /**
      * 私有构造函数
      */
-    private Np99BnotPtoDesc() {
+    private DirectNcBitOtPtoDesc() {
         // empty
     }
 
@@ -51,4 +50,5 @@ public class Np99BnotPtoDesc implements PtoDesc {
     public String getPtoName() {
         return PTO_NAME;
     }
+
 }
