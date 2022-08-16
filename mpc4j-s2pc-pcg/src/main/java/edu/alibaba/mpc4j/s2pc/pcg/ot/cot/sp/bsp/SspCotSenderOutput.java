@@ -1,4 +1,4 @@
-package edu.alibaba.mpc4j.s2pc.pcg.ot.cot.sp.ssp;
+package edu.alibaba.mpc4j.s2pc.pcg.ot.cot.sp.bsp;
 
 import java.util.Arrays;
 

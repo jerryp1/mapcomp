@@ -127,30 +127,30 @@ public class Gf2kDpprfTest {
     public void test1AlphaBound() {
         Gf2kDpprfSender sender = Gf2kDpprfFactory.createSender(senderRpc, receiverRpc.ownParty(), config);
         Gf2kDpprfReceiver receiver = Gf2kDpprfFactory.createReceiver(receiverRpc, senderRpc.ownParty(), config);
-        int num = 1;
+        int alphaBound = 1;
         int[] alphaArray = IntStream.range(0, DEFAULT_BATCH_NUM)
-            .map(mIndex -> SECURE_RANDOM.nextInt(num))
+            .map(mIndex -> SECURE_RANDOM.nextInt(alphaBound))
             .toArray();
-        testPto(sender, receiver, alphaArray, num);
+        testPto(sender, receiver, alphaArray, alphaBound);
     }
 
     @Test
     public void test2AlphaBound() {
         Gf2kDpprfSender sender = Gf2kDpprfFactory.createSender(senderRpc, receiverRpc.ownParty(), config);
         Gf2kDpprfReceiver receiver = Gf2kDpprfFactory.createReceiver(receiverRpc, senderRpc.ownParty(), config);
-        int num = 2;
+        int alphaBound = 2;
         int[] alphaArray = IntStream.range(0, DEFAULT_BATCH_NUM)
-            .map(mIndex -> SECURE_RANDOM.nextInt(num))
+            .map(mIndex -> SECURE_RANDOM.nextInt(alphaBound))
             .toArray();
-        testPto(sender, receiver, alphaArray, num);
+        testPto(sender, receiver, alphaArray, alphaBound);
     }
 
     @Test
     public void test1Batch() {
         Gf2kDpprfSender sender = Gf2kDpprfFactory.createSender(senderRpc, receiverRpc.ownParty(), config);
         Gf2kDpprfReceiver receiver = Gf2kDpprfFactory.createReceiver(receiverRpc, senderRpc.ownParty(), config);
-        int batchIndex = 1;
-        int[] alphaArray = IntStream.range(0, batchIndex)
+        int batchNum = 1;
+        int[] alphaArray = IntStream.range(0, batchNum)
             .map(mIndex -> SECURE_RANDOM.nextInt(DEFAULT_ALPHA_BOUND))
             .toArray();
         testPto(sender, receiver, alphaArray, DEFAULT_ALPHA_BOUND);
