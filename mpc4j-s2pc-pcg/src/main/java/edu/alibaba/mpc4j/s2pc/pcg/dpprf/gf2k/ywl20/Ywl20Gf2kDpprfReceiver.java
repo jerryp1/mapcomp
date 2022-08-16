@@ -1,0 +1,280 @@
+package edu.alibaba.mpc4j.s2pc.pcg.dpprf.gf2k.ywl20;
+
+import edu.alibaba.mpc4j.common.rpc.MpcAbortException;
+import edu.alibaba.mpc4j.common.rpc.MpcAbortPreconditions;
+import edu.alibaba.mpc4j.common.rpc.Party;
+import edu.alibaba.mpc4j.common.rpc.Rpc;
+import edu.alibaba.mpc4j.common.rpc.utils.DataPacket;
+import edu.alibaba.mpc4j.common.rpc.utils.DataPacketHeader;
+import edu.alibaba.mpc4j.common.tool.CommonConstants;
+import edu.alibaba.mpc4j.common.tool.crypto.crhf.Crhf;
+import edu.alibaba.mpc4j.common.tool.crypto.crhf.CrhfFactory;
+import edu.alibaba.mpc4j.common.tool.crypto.prg.Prg;
+import edu.alibaba.mpc4j.common.tool.crypto.prg.PrgFactory;
+import edu.alibaba.mpc4j.common.tool.utils.BinaryUtils;
+import edu.alibaba.mpc4j.common.tool.utils.BytesUtils;
+import edu.alibaba.mpc4j.common.tool.utils.CommonUtils;
+import edu.alibaba.mpc4j.s2pc.pcg.dpprf.gf2k.AbstractGf2kDpprfReceiver;
+import edu.alibaba.mpc4j.s2pc.pcg.dpprf.gf2k.Gf2kDpprfReceiverOutput;
+import edu.alibaba.mpc4j.s2pc.pcg.dpprf.gf2k.ywl20.Ywl20Gf2kDpprfPtoDesc.PtoStep;
+import edu.alibaba.mpc4j.s2pc.pcg.ot.cot.CotReceiverOutput;
+import edu.alibaba.mpc4j.s2pc.pcg.ot.cot.core.CoreCotFactory;
+import edu.alibaba.mpc4j.s2pc.pcg.ot.cot.core.CoreCotReceiver;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
+import java.util.stream.IntStream;
+
+/**
+ * YWL20-GF2K-DPPRF接收方。
+ *
+ * @author Weiran Liu
+ * @date 2022/8/16
+ */
+public class Ywl20Gf2kDpprfReceiver extends AbstractGf2kDpprfReceiver {
+    /**
+     * 核COT协议接收方
+     */
+    private final CoreCotReceiver coreCotReceiver;
+    /**
+     * COT协议接收方输出
+     */
+    private CotReceiverOutput cotReceiverOutput;
+    /**
+     * 批处理数量个PPRF密钥，每个密钥包含l + 1层密钥数组，第i层包含2^i个扩展密钥
+     */
+    private ArrayList<ArrayList<byte[][]>> ggmPprfKeys;
+
+    public Ywl20Gf2kDpprfReceiver(Rpc receiverRpc, Party senderParty, Ywl20Gf2kDpprfConfig config) {
+        super(Ywl20Gf2kDpprfPtoDesc.getInstance(), receiverRpc, senderParty, config);
+        coreCotReceiver = CoreCotFactory.createReceiver(receiverRpc, senderParty, config.getCoreCotConfig());
+        coreCotReceiver.addLogLevel();
+    }
+
+    @Override
+    public void setTaskId(long taskId) {
+        super.setTaskId(taskId);
+        coreCotReceiver.setTaskId(taskId);
+    }
+
+    @Override
+    public void setParallel(boolean parallel) {
+        super.setParallel(parallel);
+        coreCotReceiver.setParallel(parallel);
+    }
+
+    @Override
+    public void addLogLevel() {
+        super.addLogLevel();
+        coreCotReceiver.addLogLevel();
+    }
+
+    @Override
+    public void init(int maxBatchNum, int maxAlphaBound) throws MpcAbortException {
+        setInitInput(maxBatchNum, maxAlphaBound);
+        info("{}{} Recv. Init begin", ptoBeginLogPrefix, getPtoDesc().getPtoName());
+
+        stopWatch.start();
+        coreCotReceiver.init(maxL * maxBatchNum);
+        stopWatch.stop();
+        long initTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
+        stopWatch.reset();
+        info("{}{} Recv. Init Step 1/1 ({}ms)", ptoStepLogPrefix, getPtoDesc().getPtoName(), initTime);
+
+        initialized = true;
+        info("{}{} Recv. Init end", ptoEndLogPrefix, getPtoDesc().getPtoName());
+    }
+
+    @Override
+    public Gf2kDpprfReceiverOutput puncture(int[] alphaArray, int alphaBound) throws MpcAbortException {
+        setPtoInput(alphaArray, alphaBound);
+        return puncture();
+    }
+
+    @Override
+    public Gf2kDpprfReceiverOutput puncture(int[] alphaArray, int alphaBound, CotReceiverOutput preReceiverOutput)
+        throws MpcAbortException {
+        setPtoInput(alphaArray, alphaBound, preReceiverOutput);
+        cotReceiverOutput = preReceiverOutput;
+        return puncture();
+    }
+
+    private Gf2kDpprfReceiverOutput puncture() throws MpcAbortException {
+        info("{}{} Recv. begin", ptoBeginLogPrefix, getPtoDesc().getPtoName());
+
+        stopWatch.start();
+        // R send (extend, h) to F_COT, which returns (r_i, t_i) ∈ {0,1} × {0,1}^κ to R
+        if (cotReceiverOutput == null) {
+            boolean[] rs = new boolean[l * batchNum];
+            IntStream.range(0, l * batchNum).forEach(index -> rs[index] = secureRandom.nextBoolean());
+            cotReceiverOutput = coreCotReceiver.receive(rs);
+        } else {
+            cotReceiverOutput.reduce(l * batchNum);
+        }
+        stopWatch.stop();
+        long cotTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
+        stopWatch.reset();
+        info("{}{} Recv. Step 1/4 ({}ms)", ptoStepLogPrefix, getPtoDesc().getPtoName(), cotTime);
+
+        stopWatch.start();
+        List<byte[]> binaryPayload = generateBinaryPayload();
+        DataPacketHeader binaryHeader = new DataPacketHeader(
+            taskId, getPtoDesc().getPtoId(), PtoStep.RECEIVER_SEND_BINARY.ordinal(), extraInfo,
+            ownParty().getPartyId(), otherParty().getPartyId()
+        );
+        rpc.send(DataPacket.fromByteArrayList(binaryHeader, binaryPayload));
+        stopWatch.stop();
+        long binaryTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
+        stopWatch.reset();
+        info("{}{} Recv. Step 2/4 ({}ms)", ptoStepLogPrefix, getPtoDesc().getPtoName(), binaryTime);
+
+        stopWatch.start();
+        DataPacketHeader messageHeader = new DataPacketHeader(
+            taskId, getPtoDesc().getPtoId(), PtoStep.SENDER_SEND_MESSAGE.ordinal(), extraInfo,
+            otherParty().getPartyId(), ownParty().getPartyId()
+        );
+        List<byte[]> messagePayload = rpc.receive(messageHeader).getPayload();
+        handleMessagePayload(messagePayload);
+        long messageTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
+        stopWatch.reset();
+        info("{}{} Recv. Step 3/4 ({}ms)", ptoStepLogPrefix, getPtoDesc().getPtoName(), messageTime);
+
+        stopWatch.start();
+        DataPacketHeader correlateHeader = new DataPacketHeader(
+            taskId, getPtoDesc().getPtoId(), PtoStep.SENDER_SEND_CORRELATE.ordinal(), extraInfo,
+            otherParty().getPartyId(), ownParty().getPartyId()
+        );
+        List<byte[]> correlatePayload = rpc.receive(correlateHeader).getPayload();
+        Gf2kDpprfReceiverOutput receiverOutput = handleCorrelatePayload(correlatePayload);
+        long correlateTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
+        stopWatch.reset();
+        info("{}{} Recv. Step 4/4 ({}ms)", ptoStepLogPrefix, getPtoDesc().getPtoName(), correlateTime);
+
+        info("{}{} Recv. end", ptoEndLogPrefix, getPtoDesc().getPtoName());
+        return receiverOutput;
+    }
+
+    private List<byte[]> generateBinaryPayload() {
+        IntStream batchIndexIntStream = IntStream.range(0, batchNum);
+        batchIndexIntStream = parallel ? batchIndexIntStream.parallel() : batchIndexIntStream;
+        int bByteLength = CommonUtils.getByteLength(l);
+        int offset = bByteLength * Byte.SIZE - l;
+        return batchIndexIntStream
+            .mapToObj(batchIndex -> {
+                byte[] bBytes = new byte[bByteLength];
+                // For each i ∈ {1,...,h}
+                for (int lIndex = 0; lIndex < l; lIndex++) {
+                    // R sends a bit b_i = r_i ⊕ α_i ⊕ 1 to S
+                    BinaryUtils.setBoolean(bBytes, offset + lIndex,
+                        alphaBinaryArray[batchIndex][lIndex] == cotReceiverOutput.getChoice(l * batchIndex + lIndex)
+                    );
+                }
+                return bBytes;
+            })
+            .collect(Collectors.toList());
+    }
+
+    private void handleMessagePayload(List<byte[]> messagePayload) throws MpcAbortException {
+        MpcAbortPreconditions.checkArgument(messagePayload.size() == 2 * l * batchNum);
+        byte[][] messagesArray = messagePayload.toArray(new byte[0][]);
+        Crhf crhf = CrhfFactory.createInstance(envType, CrhfFactory.CrhfType.MMO);
+        Prg prg = PrgFactory.createInstance(envType, 2 * CommonConstants.BLOCK_BYTE_LENGTH);
+        IntStream batchIndexIntStream = IntStream.range(0, batchNum);
+        batchIndexIntStream = parallel ? batchIndexIntStream.parallel() : batchIndexIntStream;
+        ggmPprfKeys = batchIndexIntStream
+            .mapToObj(batchIndex -> {
+                ArrayList<byte[][]> treeKeys = new ArrayList<>(l + 1);
+                // 把一个空字节作为第0项占位
+                treeKeys.add(new byte[0][]);
+                int alphaPrefix = 0;
+                // For each i ∈ {1,...,h}
+                for (int i = 1; i <= l; i++) {
+                    int hIndex = i - 1;
+                    byte[][] currentLevelSeeds = new byte[1 << i][];
+                    // R defines an i-bit string α_i^* = α_1 ... α_{i − 1} β_i
+                    boolean alphai = alphaBinaryArray[batchIndex][hIndex];
+                    int alphaiInt = alphai ? 1 : 0;
+                    boolean betai = notAlphaBinaryArray[batchIndex][hIndex];
+                    int betaiInt = betai ? 1 : 0;
+                    // Compute K_{β_i}^i = M_{β_i}^i ⊕ H(t_i, i || l)
+                    byte[] kiNot = BytesUtils.clone(cotReceiverOutput.getRb(l * batchIndex + hIndex));
+                    kiNot = crhf.hash(kiNot);
+                    if (betai) {
+                        BytesUtils.xori(kiNot, messagesArray[batchIndex * l * 2 + 2 * hIndex + 1]);
+                    } else {
+                        BytesUtils.xori(kiNot, messagesArray[batchIndex * l * 2 + 2 * hIndex]);
+                    }
+                    if (i == 1) {
+                        // If i = 1, define s_{β_i}^i = K_{β_i}^i
+                        currentLevelSeeds[alphaiInt] = null;
+                        currentLevelSeeds[betaiInt] = kiNot;
+                    } else {
+                        // If i ≥ 2
+                        byte[][] lowLevelSeeds = treeKeys.get(i - 1);
+                        // for j ∈ [2^i − 1], j ≠ α_1...α_{i − 1}, compute (s_{2j}^i, s_{2j + 1}^i = G(s_ja^{i - 1}).
+                        for (int j = 0; j < (1 << (i - 1)); j++) {
+                            if (j != alphaPrefix) {
+                                byte[] extendSeeds = prg.extendToBytes(lowLevelSeeds[j]);
+                                currentLevelSeeds[2 * j] = new byte[CommonConstants.BLOCK_BYTE_LENGTH];
+                                System.arraycopy(
+                                    extendSeeds, 0,
+                                    currentLevelSeeds[2 * j], 0,
+                                    CommonConstants.BLOCK_BYTE_LENGTH
+                                );
+                                currentLevelSeeds[2 * j + 1] = new byte[CommonConstants.BLOCK_BYTE_LENGTH];
+                                System.arraycopy(
+                                    extendSeeds, CommonConstants.BLOCK_BYTE_LENGTH,
+                                    currentLevelSeeds[2 * j + 1], 0,
+                                    CommonConstants.BLOCK_BYTE_LENGTH
+                                );
+                            }
+                        }
+                        // 计算剩余缺失的种子
+                        int alphaStar = (alphaPrefix << 1) + betaiInt;
+                        currentLevelSeeds[alphaStar] = kiNot;
+                        for (int j = 0; j < (1 << (i - 1)); j++) {
+                            if (j != alphaPrefix) {
+                                BytesUtils.xori(currentLevelSeeds[alphaStar], currentLevelSeeds[2 * j + betaiInt]);
+                            }
+                        }
+                    }
+                    // 更新α_1...α_{i − 1}
+                    alphaPrefix = (alphaPrefix << 1) + alphaiInt;
+                    treeKeys.add(currentLevelSeeds);
+                }
+                return treeKeys;
+            })
+            .collect(Collectors.toCollection(ArrayList::new));
+        cotReceiverOutput = null;
+    }
+
+    private Gf2kDpprfReceiverOutput handleCorrelatePayload(List<byte[]> correlatePayload) throws MpcAbortException {
+        MpcAbortPreconditions.checkArgument(correlatePayload.size() == batchNum);
+        byte[][] cBytesArray = correlatePayload.toArray(new byte[0][]);
+        IntStream batchIndexIntStream = IntStream.range(0, batchNum);
+        batchIndexIntStream = parallel ? batchIndexIntStream.parallel() : batchIndexIntStream;
+        byte[][][] pprfKeys = batchIndexIntStream
+            .mapToObj(batchIndex -> {
+                // R sets w[i] = s_i^h for i ∈ [n] \ {α}
+                byte[][] pprfKey = ggmPprfKeys.get(batchIndex).get(l);
+                // and computes w[α]
+                for (int i = 0; i < alphaBound; i++) {
+                    if (i != alphaArray[batchIndex]) {
+                        BytesUtils.xori(cBytesArray[batchIndex], pprfKey[i]);
+                    }
+                }
+                // 得到的PRF密钥数量为2^h，要裁剪到alphaBound个
+                if (alphaBound < (1 << l)) {
+                    byte[][] reducePprfKey = new byte[alphaBound][];
+                    System.arraycopy(pprfKey, 0, reducePprfKey, 0, alphaBound);
+                    pprfKey = reducePprfKey;
+                }
+                return pprfKey;
+            })
+            .toArray(byte[][][]::new);
+        ggmPprfKeys = null;
+        return new Gf2kDpprfReceiverOutput(alphaBound, pprfKeys, alphaArray, cBytesArray);
+    }
+}
