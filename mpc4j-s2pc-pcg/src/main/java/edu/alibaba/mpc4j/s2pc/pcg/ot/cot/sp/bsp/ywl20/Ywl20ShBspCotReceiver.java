@@ -11,10 +11,10 @@ import edu.alibaba.mpc4j.common.rpc.Party;
 import edu.alibaba.mpc4j.common.rpc.Rpc;
 import edu.alibaba.mpc4j.common.rpc.utils.DataPacketHeader;
 import edu.alibaba.mpc4j.common.tool.utils.BytesUtils;
-import edu.alibaba.mpc4j.s2pc.pcg.dpprf.gf2k.Gf2kDpprfConfig;
-import edu.alibaba.mpc4j.s2pc.pcg.dpprf.gf2k.Gf2kDpprfFactory;
-import edu.alibaba.mpc4j.s2pc.pcg.dpprf.gf2k.Gf2kDpprfReceiver;
-import edu.alibaba.mpc4j.s2pc.pcg.dpprf.gf2k.Gf2kDpprfReceiverOutput;
+import edu.alibaba.mpc4j.s2pc.pcg.dpprf.DpprfConfig;
+import edu.alibaba.mpc4j.s2pc.pcg.dpprf.DpprfFactory;
+import edu.alibaba.mpc4j.s2pc.pcg.dpprf.DpprfReceiver;
+import edu.alibaba.mpc4j.s2pc.pcg.dpprf.DpprfReceiverOutput;
 import edu.alibaba.mpc4j.s2pc.pcg.ot.cot.core.CoreCotFactory;
 import edu.alibaba.mpc4j.s2pc.pcg.ot.cot.core.CoreCotReceiver;
 import edu.alibaba.mpc4j.s2pc.pcg.ot.cot.CotReceiverOutput;
@@ -33,7 +33,7 @@ public class Ywl20ShBspCotReceiver extends AbstractBspCotReceiver {
     /**
      * GF2K-DPPRF协议配置项
      */
-    private final Gf2kDpprfConfig gf2kDpprfConfig;
+    private final DpprfConfig gf2kDpprfConfig;
     /**
      * COT协议接收方
      */
@@ -41,7 +41,7 @@ public class Ywl20ShBspCotReceiver extends AbstractBspCotReceiver {
     /**
      * GF2K-DPPRF协议接收方
      */
-    private final Gf2kDpprfReceiver gf2kDpprfReceiver;
+    private final DpprfReceiver dpprfReceiver;
     /**
      * COT协议接收方输出
      */
@@ -49,15 +49,15 @@ public class Ywl20ShBspCotReceiver extends AbstractBspCotReceiver {
     /**
      * GF2K-DPPRF接收方输出
      */
-    private Gf2kDpprfReceiverOutput gf2kDpprfReceiverOutput;
+    private DpprfReceiverOutput dpprfReceiverOutput;
 
     public Ywl20ShBspCotReceiver(Rpc receiverRpc, Party senderParty, Ywl20ShBspCotConfig config) {
         super(Ywl20ShBspCotPtoDesc.getInstance(), receiverRpc, senderParty, config);
         coreCotReceiver = CoreCotFactory.createReceiver(receiverRpc, senderParty, config.getCoreCotConfig());
         coreCotReceiver.addLogLevel();
         gf2kDpprfConfig = config.getGf2kDpprfConfig();
-        gf2kDpprfReceiver = Gf2kDpprfFactory.createReceiver(receiverRpc, senderParty, gf2kDpprfConfig);
-        gf2kDpprfReceiver.addLogLevel();
+        dpprfReceiver = DpprfFactory.createReceiver(receiverRpc, senderParty, gf2kDpprfConfig);
+        dpprfReceiver.addLogLevel();
     }
 
     @Override
@@ -66,21 +66,21 @@ public class Ywl20ShBspCotReceiver extends AbstractBspCotReceiver {
         // COT协议和GF2K-DPPRF协议需要使用不同的taskID
         byte[] taskIdBytes = ByteBuffer.allocate(Long.BYTES).putLong(taskId).array();
         coreCotReceiver.setTaskId(taskIdPrf.getLong(0, taskIdBytes, Long.MAX_VALUE));
-        gf2kDpprfReceiver.setTaskId(taskIdPrf.getLong(1, taskIdBytes, Long.MAX_VALUE));
+        dpprfReceiver.setTaskId(taskIdPrf.getLong(1, taskIdBytes, Long.MAX_VALUE));
     }
 
     @Override
     public void setParallel(boolean parallel) {
         super.setParallel(parallel);
         coreCotReceiver.setParallel(parallel);
-        gf2kDpprfReceiver.setParallel(parallel);
+        dpprfReceiver.setParallel(parallel);
     }
 
     @Override
     public void addLogLevel() {
         super.addLogLevel();
         coreCotReceiver.addLogLevel();
-        gf2kDpprfReceiver.addLogLevel();
+        dpprfReceiver.addLogLevel();
     }
 
     @Override
@@ -89,9 +89,9 @@ public class Ywl20ShBspCotReceiver extends AbstractBspCotReceiver {
         info("{}{} Recv. Init begin", ptoBeginLogPrefix, getPtoDesc().getPtoName());
 
         stopWatch.start();
-        int maxCotNum = Gf2kDpprfFactory.getPrecomputeNum(gf2kDpprfConfig, maxBatchNum, maxNum);
+        int maxCotNum = DpprfFactory.getPrecomputeNum(gf2kDpprfConfig, maxBatchNum, maxNum);
         coreCotReceiver.init(maxCotNum);
-        gf2kDpprfReceiver.init(maxBatchNum, maxNum);
+        dpprfReceiver.init(maxBatchNum, maxNum);
         stopWatch.stop();
         long initTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
         stopWatch.reset();
@@ -119,7 +119,7 @@ public class Ywl20ShBspCotReceiver extends AbstractBspCotReceiver {
         info("{}{} Recv. begin", ptoBeginLogPrefix, getPtoDesc().getPtoName());
 
         stopWatch.start();
-        int cotNum = Gf2kDpprfFactory.getPrecomputeNum(gf2kDpprfConfig, batchNum, num);
+        int cotNum = DpprfFactory.getPrecomputeNum(gf2kDpprfConfig, batchNum, num);
         // R send (extend, h) to F_COT, which returns (r_i, t_i) ∈ {0,1} × {0,1}^κ to R
         if (cotReceiverOutput == null) {
             boolean[] rs = new boolean[cotNum];
@@ -134,7 +134,7 @@ public class Ywl20ShBspCotReceiver extends AbstractBspCotReceiver {
         info("{}{} Recv. Step 1/3 ({}ms)", ptoStepLogPrefix, getPtoDesc().getPtoName(), cotTime);
 
         stopWatch.start();
-        gf2kDpprfReceiverOutput = gf2kDpprfReceiver.puncture(alphaArray, num, cotReceiverOutput);
+        dpprfReceiverOutput = dpprfReceiver.puncture(alphaArray, num, cotReceiverOutput);
         cotReceiverOutput = null;
         stopWatch.stop();
         long dpprfTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
@@ -148,7 +148,7 @@ public class Ywl20ShBspCotReceiver extends AbstractBspCotReceiver {
         );
         List<byte[]> correlatePayload = rpc.receive(correlateHeader).getPayload();
         BspCotReceiverOutput receiverOutput = generateReceiverOutput(correlatePayload);
-        gf2kDpprfReceiverOutput = null;
+        dpprfReceiverOutput = null;
         long correlateTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
         stopWatch.reset();
         info("{}{} Recv. Step 3/3 ({}ms)", ptoStepLogPrefix, getPtoDesc().getPtoName(), correlateTime);
@@ -164,7 +164,7 @@ public class Ywl20ShBspCotReceiver extends AbstractBspCotReceiver {
         batchIndexIntStream = parallel ? batchIndexIntStream.parallel() : batchIndexIntStream;
         SspCotReceiverOutput[] sspCotReceiverOutputs = batchIndexIntStream
             .mapToObj(batchIndex -> {
-                byte[][] rbArray = gf2kDpprfReceiverOutput.getPprfKey(batchIndex);
+                byte[][] rbArray = dpprfReceiverOutput.getPprfOutputArray(batchIndex);
                 // computes w[α]
                 for (int i = 0; i < num; i++) {
                     if (i != alphaArray[batchIndex]) {

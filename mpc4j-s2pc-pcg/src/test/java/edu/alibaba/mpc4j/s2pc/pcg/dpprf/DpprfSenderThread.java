@@ -1,19 +1,19 @@
-package edu.alibaba.mpc4j.s2pc.pcg.dpprf.gf2k;
+package edu.alibaba.mpc4j.s2pc.pcg.dpprf;
 
 import edu.alibaba.mpc4j.common.rpc.MpcAbortException;
 import edu.alibaba.mpc4j.s2pc.pcg.ot.cot.CotSenderOutput;
 
 /**
- * GF2K-DPPRF发送方线程。
+ * DPPRF发送方线程。
  *
  * @author Weiran Liu
  * @date 2022/8/16
  */
-class Gf2kDpprfSenderThread extends Thread {
+class DpprfSenderThread extends Thread {
     /**
      * 发送方
      */
-    private final Gf2kDpprfSender sender;
+    private final DpprfSender sender;
     /**
      * 批处理数量
      */
@@ -29,20 +29,20 @@ class Gf2kDpprfSenderThread extends Thread {
     /**
      * 输出
      */
-    private Gf2kDpprfSenderOutput senderOutput;
+    private DpprfSenderOutput senderOutput;
 
-    Gf2kDpprfSenderThread(Gf2kDpprfSender sender, int batchNum, int alphaBound) {
+    DpprfSenderThread(DpprfSender sender, int batchNum, int alphaBound) {
         this(sender, batchNum, alphaBound, null);
     }
 
-    Gf2kDpprfSenderThread(Gf2kDpprfSender sender, int batchNum, int alphaBound, CotSenderOutput preSenderOutput) {
+    DpprfSenderThread(DpprfSender sender, int batchNum, int alphaBound, CotSenderOutput preSenderOutput) {
         this.sender = sender;
         this.batchNum = batchNum;
         this.alphaBound = alphaBound;
         this.preSenderOutput = preSenderOutput;
     }
 
-    Gf2kDpprfSenderOutput getSenderOutput() {
+    DpprfSenderOutput getSenderOutput() {
         return senderOutput;
     }
 

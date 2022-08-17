@@ -1,4 +1,4 @@
-package edu.alibaba.mpc4j.s2pc.pcg.dpprf.gf2k.ywl20;
+package edu.alibaba.mpc4j.s2pc.pcg.dpprf.ywl20;
 
 import edu.alibaba.mpc4j.common.rpc.MpcAbortException;
 import edu.alibaba.mpc4j.common.rpc.MpcAbortPreconditions;
@@ -14,9 +14,9 @@ import edu.alibaba.mpc4j.common.tool.crypto.prg.PrgFactory;
 import edu.alibaba.mpc4j.common.tool.utils.BinaryUtils;
 import edu.alibaba.mpc4j.common.tool.utils.BytesUtils;
 import edu.alibaba.mpc4j.common.tool.utils.CommonUtils;
-import edu.alibaba.mpc4j.s2pc.pcg.dpprf.gf2k.AbstractGf2kDpprfReceiver;
-import edu.alibaba.mpc4j.s2pc.pcg.dpprf.gf2k.Gf2kDpprfReceiverOutput;
-import edu.alibaba.mpc4j.s2pc.pcg.dpprf.gf2k.ywl20.Ywl20Gf2kDpprfPtoDesc.PtoStep;
+import edu.alibaba.mpc4j.s2pc.pcg.dpprf.AbstractDpprfReceiver;
+import edu.alibaba.mpc4j.s2pc.pcg.dpprf.DpprfReceiverOutput;
+import edu.alibaba.mpc4j.s2pc.pcg.dpprf.ywl20.Ywl20DpprfPtoDesc.PtoStep;
 import edu.alibaba.mpc4j.s2pc.pcg.ot.cot.CotReceiverOutput;
 import edu.alibaba.mpc4j.s2pc.pcg.ot.cot.core.CoreCotFactory;
 import edu.alibaba.mpc4j.s2pc.pcg.ot.cot.core.CoreCotReceiver;
@@ -28,12 +28,12 @@ import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
 /**
- * YWL20-GF2K-DPPRF接收方。
+ * YWL20-DPPRF接收方。
  *
  * @author Weiran Liu
  * @date 2022/8/16
  */
-public class Ywl20Gf2kDpprfReceiver extends AbstractGf2kDpprfReceiver {
+public class Ywl20DpprfReceiver extends AbstractDpprfReceiver {
     /**
      * 核COT协议接收方
      */
@@ -45,10 +45,10 @@ public class Ywl20Gf2kDpprfReceiver extends AbstractGf2kDpprfReceiver {
     /**
      * 批处理数量个PPRF密钥，每个密钥包含l + 1层密钥数组，第i层包含2^i个扩展密钥
      */
-    private ArrayList<ArrayList<byte[][]>> ggmPprfKeys;
+    private ArrayList<ArrayList<byte[][]>> ggmTree;
 
-    public Ywl20Gf2kDpprfReceiver(Rpc receiverRpc, Party senderParty, Ywl20Gf2kDpprfConfig config) {
-        super(Ywl20Gf2kDpprfPtoDesc.getInstance(), receiverRpc, senderParty, config);
+    public Ywl20DpprfReceiver(Rpc receiverRpc, Party senderParty, Ywl20DpprfConfig config) {
+        super(Ywl20DpprfPtoDesc.getInstance(), receiverRpc, senderParty, config);
         coreCotReceiver = CoreCotFactory.createReceiver(receiverRpc, senderParty, config.getCoreCotConfig());
         coreCotReceiver.addLogLevel();
     }
@@ -77,7 +77,7 @@ public class Ywl20Gf2kDpprfReceiver extends AbstractGf2kDpprfReceiver {
         info("{}{} Recv. Init begin", ptoBeginLogPrefix, getPtoDesc().getPtoName());
 
         stopWatch.start();
-        coreCotReceiver.init(maxL * maxBatchNum);
+        coreCotReceiver.init(maxH * maxBatchNum);
         stopWatch.stop();
         long initTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
         stopWatch.reset();
@@ -88,30 +88,30 @@ public class Ywl20Gf2kDpprfReceiver extends AbstractGf2kDpprfReceiver {
     }
 
     @Override
-    public Gf2kDpprfReceiverOutput puncture(int[] alphaArray, int alphaBound) throws MpcAbortException {
+    public DpprfReceiverOutput puncture(int[] alphaArray, int alphaBound) throws MpcAbortException {
         setPtoInput(alphaArray, alphaBound);
         return puncture();
     }
 
     @Override
-    public Gf2kDpprfReceiverOutput puncture(int[] alphaArray, int alphaBound, CotReceiverOutput preReceiverOutput)
+    public DpprfReceiverOutput puncture(int[] alphaArray, int alphaBound, CotReceiverOutput preReceiverOutput)
         throws MpcAbortException {
         setPtoInput(alphaArray, alphaBound, preReceiverOutput);
         cotReceiverOutput = preReceiverOutput;
         return puncture();
     }
 
-    private Gf2kDpprfReceiverOutput puncture() throws MpcAbortException {
+    private DpprfReceiverOutput puncture() throws MpcAbortException {
         info("{}{} Recv. begin", ptoBeginLogPrefix, getPtoDesc().getPtoName());
 
         stopWatch.start();
         // R send (extend, h) to F_COT, which returns (r_i, t_i) ∈ {0,1} × {0,1}^κ to R
         if (cotReceiverOutput == null) {
-            boolean[] rs = new boolean[l * batchNum];
-            IntStream.range(0, l * batchNum).forEach(index -> rs[index] = secureRandom.nextBoolean());
+            boolean[] rs = new boolean[h * batchNum];
+            IntStream.range(0, h * batchNum).forEach(index -> rs[index] = secureRandom.nextBoolean());
             cotReceiverOutput = coreCotReceiver.receive(rs);
         } else {
-            cotReceiverOutput.reduce(l * batchNum);
+            cotReceiverOutput.reduce(h * batchNum);
         }
         stopWatch.stop();
         long cotTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
@@ -137,7 +137,7 @@ public class Ywl20Gf2kDpprfReceiver extends AbstractGf2kDpprfReceiver {
         );
         List<byte[]> messagePayload = rpc.receive(messageHeader).getPayload();
         handleMessagePayload(messagePayload);
-        Gf2kDpprfReceiverOutput receiverOutput = generateReceiverOutput();
+        DpprfReceiverOutput receiverOutput = generateReceiverOutput();
         long messageTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
         stopWatch.reset();
         info("{}{} Recv. Step 3/3 ({}ms)", ptoStepLogPrefix, getPtoDesc().getPtoName(), messageTime);
@@ -149,16 +149,16 @@ public class Ywl20Gf2kDpprfReceiver extends AbstractGf2kDpprfReceiver {
     private List<byte[]> generateBinaryPayload() {
         IntStream batchIndexIntStream = IntStream.range(0, batchNum);
         batchIndexIntStream = parallel ? batchIndexIntStream.parallel() : batchIndexIntStream;
-        int bByteLength = CommonUtils.getByteLength(l);
-        int offset = bByteLength * Byte.SIZE - l;
+        int bByteLength = CommonUtils.getByteLength(h);
+        int offset = bByteLength * Byte.SIZE - h;
         return batchIndexIntStream
             .mapToObj(batchIndex -> {
                 byte[] bBytes = new byte[bByteLength];
                 // For each i ∈ {1,...,h}
-                for (int lIndex = 0; lIndex < l; lIndex++) {
+                for (int lIndex = 0; lIndex < h; lIndex++) {
                     // R sends a bit b_i = r_i ⊕ α_i ⊕ 1 to S
                     BinaryUtils.setBoolean(bBytes, offset + lIndex,
-                        alphaBinaryArray[batchIndex][lIndex] == cotReceiverOutput.getChoice(l * batchIndex + lIndex)
+                        alphaBinaryArray[batchIndex][lIndex] == cotReceiverOutput.getChoice(h * batchIndex + lIndex)
                     );
                 }
                 return bBytes;
@@ -167,20 +167,20 @@ public class Ywl20Gf2kDpprfReceiver extends AbstractGf2kDpprfReceiver {
     }
 
     private void handleMessagePayload(List<byte[]> messagePayload) throws MpcAbortException {
-        MpcAbortPreconditions.checkArgument(messagePayload.size() == 2 * l * batchNum);
+        MpcAbortPreconditions.checkArgument(messagePayload.size() == 2 * h * batchNum);
         byte[][] messagesArray = messagePayload.toArray(new byte[0][]);
         Crhf crhf = CrhfFactory.createInstance(envType, CrhfFactory.CrhfType.MMO);
         Prg prg = PrgFactory.createInstance(envType, 2 * CommonConstants.BLOCK_BYTE_LENGTH);
         IntStream batchIndexIntStream = IntStream.range(0, batchNum);
         batchIndexIntStream = parallel ? batchIndexIntStream.parallel() : batchIndexIntStream;
-        ggmPprfKeys = batchIndexIntStream
+        ggmTree = batchIndexIntStream
             .mapToObj(batchIndex -> {
-                ArrayList<byte[][]> treeKeys = new ArrayList<>(l + 1);
+                ArrayList<byte[][]> treeKeys = new ArrayList<>(h + 1);
                 // 把一个空字节作为第0项占位
                 treeKeys.add(new byte[0][]);
                 int alphaPrefix = 0;
                 // For each i ∈ {1,...,h}
-                for (int i = 1; i <= l; i++) {
+                for (int i = 1; i <= h; i++) {
                     int hIndex = i - 1;
                     byte[][] currentLevelSeeds = new byte[1 << i][];
                     // R defines an i-bit string α_i^* = α_1 ... α_{i − 1} β_i
@@ -189,12 +189,12 @@ public class Ywl20Gf2kDpprfReceiver extends AbstractGf2kDpprfReceiver {
                     boolean betai = notAlphaBinaryArray[batchIndex][hIndex];
                     int betaiInt = betai ? 1 : 0;
                     // Compute K_{β_i}^i = M_{β_i}^i ⊕ H(t_i, i || l)
-                    byte[] kiNot = BytesUtils.clone(cotReceiverOutput.getRb(l * batchIndex + hIndex));
+                    byte[] kiNot = BytesUtils.clone(cotReceiverOutput.getRb(h * batchIndex + hIndex));
                     kiNot = crhf.hash(kiNot);
                     if (betai) {
-                        BytesUtils.xori(kiNot, messagesArray[batchIndex * l * 2 + 2 * hIndex + 1]);
+                        BytesUtils.xori(kiNot, messagesArray[batchIndex * h * 2 + 2 * hIndex + 1]);
                     } else {
-                        BytesUtils.xori(kiNot, messagesArray[batchIndex * l * 2 + 2 * hIndex]);
+                        BytesUtils.xori(kiNot, messagesArray[batchIndex * h * 2 + 2 * hIndex]);
                     }
                     if (i == 1) {
                         // If i = 1, define s_{β_i}^i = K_{β_i}^i
@@ -240,23 +240,23 @@ public class Ywl20Gf2kDpprfReceiver extends AbstractGf2kDpprfReceiver {
         cotReceiverOutput = null;
     }
 
-    private Gf2kDpprfReceiverOutput generateReceiverOutput() {
+    private DpprfReceiverOutput generateReceiverOutput() {
         IntStream batchIndexIntStream = IntStream.range(0, batchNum);
         batchIndexIntStream = parallel ? batchIndexIntStream.parallel() : batchIndexIntStream;
-        byte[][][] pprfKeys = batchIndexIntStream
+        byte[][][] pprfOutputArrays = batchIndexIntStream
             .mapToObj(batchIndex -> {
                 // R sets w[i] = s_i^h for i ∈ [n] \ {α}
-                byte[][] pprfKey = ggmPprfKeys.get(batchIndex).get(l);
+                byte[][] pprfOutputArray = ggmTree.get(batchIndex).get(h);
                 // 得到的PRF密钥数量为2^h，要裁剪到alphaBound个
-                if (alphaBound < (1 << l)) {
-                    byte[][] reducePprfKey = new byte[alphaBound][];
-                    System.arraycopy(pprfKey, 0, reducePprfKey, 0, alphaBound);
-                    pprfKey = reducePprfKey;
+                if (alphaBound < (1 << h)) {
+                    byte[][] reducePprfOutputArray = new byte[alphaBound][];
+                    System.arraycopy(pprfOutputArray, 0, reducePprfOutputArray, 0, alphaBound);
+                    pprfOutputArray = reducePprfOutputArray;
                 }
-                return pprfKey;
+                return pprfOutputArray;
             })
             .toArray(byte[][][]::new);
-        ggmPprfKeys = null;
-        return new Gf2kDpprfReceiverOutput(alphaBound, alphaArray, pprfKeys);
+        ggmTree = null;
+        return new DpprfReceiverOutput(alphaBound, alphaArray, pprfOutputArrays);
     }
 }

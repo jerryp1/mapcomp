@@ -1,24 +1,24 @@
-package edu.alibaba.mpc4j.s2pc.pcg.dpprf.gf2k;
+package edu.alibaba.mpc4j.s2pc.pcg.dpprf;
 
 import edu.alibaba.mpc4j.common.rpc.Party;
 import edu.alibaba.mpc4j.common.rpc.Rpc;
 import edu.alibaba.mpc4j.common.rpc.desc.SecurityModel;
 import edu.alibaba.mpc4j.common.tool.utils.LongUtils;
-import edu.alibaba.mpc4j.s2pc.pcg.dpprf.gf2k.ywl20.Ywl20Gf2kDpprfConfig;
-import edu.alibaba.mpc4j.s2pc.pcg.dpprf.gf2k.ywl20.Ywl20Gf2kDpprfReceiver;
-import edu.alibaba.mpc4j.s2pc.pcg.dpprf.gf2k.ywl20.Ywl20Gf2kDpprfSender;
+import edu.alibaba.mpc4j.s2pc.pcg.dpprf.ywl20.Ywl20DpprfConfig;
+import edu.alibaba.mpc4j.s2pc.pcg.dpprf.ywl20.Ywl20DpprfReceiver;
+import edu.alibaba.mpc4j.s2pc.pcg.dpprf.ywl20.Ywl20DpprfSender;
 
 /**
- * GF2K-DPPRF工厂。
+ * DPPRF工厂。
  *
  * @author Weiran Liu
  * @date 2022/8/16
  */
-public class Gf2kDpprfFactory {
+public class DpprfFactory {
     /**
      * 私有构造函数
      */
-    private Gf2kDpprfFactory() {
+    private DpprfFactory() {
         // empty
     }
 
@@ -26,10 +26,6 @@ public class Gf2kDpprfFactory {
      * 协议类型
      */
     public enum Gf2kDpprfType {
-        /**
-         * BCG19协议
-         */
-        BCG19,
         /**
          * YWL20协议
          */
@@ -44,14 +40,14 @@ public class Gf2kDpprfFactory {
      * @param alphaBound α上界。
      * @return 预计算数量。
      */
-    public static int getPrecomputeNum(Gf2kDpprfConfig config, int batchNum, int alphaBound) {
+    public static int getPrecomputeNum(DpprfConfig config, int batchNum, int alphaBound) {
         assert batchNum > 0 : "BatchNum must be greater than 0: " + batchNum;
         assert alphaBound > 0 : "alphaBound must be greater than 0: " + alphaBound;
         Gf2kDpprfType type = config.getPtoType();
+        //noinspection SwitchStatementWithTooFewBranches
         switch (type) {
             case YWL20:
                 return LongUtils.ceilLog2(alphaBound) * batchNum;
-            case BCG19:
             default:
                 throw new IllegalArgumentException("Invalid " + Gf2kDpprfType.class.getSimpleName() + ": " + type.name());
         }
@@ -65,12 +61,12 @@ public class Gf2kDpprfFactory {
      * @param config        配置项。
      * @return 发送方。
      */
-    public static Gf2kDpprfSender createSender(Rpc senderRpc, Party receiverParty, Gf2kDpprfConfig config) {
+    public static DpprfSender createSender(Rpc senderRpc, Party receiverParty, DpprfConfig config) {
         Gf2kDpprfType type = config.getPtoType();
+        //noinspection SwitchStatementWithTooFewBranches
         switch (type) {
             case YWL20:
-                return new Ywl20Gf2kDpprfSender(senderRpc, receiverParty, (Ywl20Gf2kDpprfConfig) config);
-            case BCG19:
+                return new Ywl20DpprfSender(senderRpc, receiverParty, (Ywl20DpprfConfig) config);
             default:
                 throw new IllegalArgumentException("Invalid " + Gf2kDpprfType.class.getSimpleName() + ": " + type.name());
         }
@@ -84,12 +80,12 @@ public class Gf2kDpprfFactory {
      * @param config      配置项。
      * @return 接收方。
      */
-    public static Gf2kDpprfReceiver createReceiver(Rpc receiverRpc, Party senderParty, Gf2kDpprfConfig config) {
+    public static DpprfReceiver createReceiver(Rpc receiverRpc, Party senderParty, DpprfConfig config) {
         Gf2kDpprfType type = config.getPtoType();
+        //noinspection SwitchStatementWithTooFewBranches
         switch (type) {
             case YWL20:
-                return new Ywl20Gf2kDpprfReceiver(receiverRpc, senderParty, (Ywl20Gf2kDpprfConfig) config);
-            case BCG19:
+                return new Ywl20DpprfReceiver(receiverRpc, senderParty, (Ywl20DpprfConfig) config);
             default:
                 throw new IllegalArgumentException("Invalid " + Gf2kDpprfType.class.getSimpleName() + ": " + type.name());
         }
@@ -101,7 +97,7 @@ public class Gf2kDpprfFactory {
      * @param securityModel 安全模型。
      * @return 默认协议配置项。
      */
-    public static Gf2kDpprfConfig createDefaultConfig(SecurityModel securityModel) {
-        return new Ywl20Gf2kDpprfConfig.Builder(securityModel).build();
+    public static DpprfConfig createDefaultConfig(SecurityModel securityModel) {
+        return new Ywl20DpprfConfig.Builder(securityModel).build();
     }
 }

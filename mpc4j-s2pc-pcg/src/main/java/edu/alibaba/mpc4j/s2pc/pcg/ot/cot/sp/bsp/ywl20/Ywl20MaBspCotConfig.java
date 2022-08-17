@@ -2,8 +2,8 @@ package edu.alibaba.mpc4j.s2pc.pcg.ot.cot.sp.bsp.ywl20;
 
 import edu.alibaba.mpc4j.common.rpc.desc.SecurityModel;
 import edu.alibaba.mpc4j.common.tool.EnvType;
-import edu.alibaba.mpc4j.s2pc.pcg.dpprf.gf2k.Gf2kDpprfConfig;
-import edu.alibaba.mpc4j.s2pc.pcg.dpprf.gf2k.Gf2kDpprfFactory;
+import edu.alibaba.mpc4j.s2pc.pcg.dpprf.DpprfConfig;
+import edu.alibaba.mpc4j.s2pc.pcg.dpprf.DpprfFactory;
 import edu.alibaba.mpc4j.s2pc.pcg.ot.cot.core.CoreCotConfig;
 import edu.alibaba.mpc4j.s2pc.pcg.ot.cot.core.CoreCotFactory;
 import edu.alibaba.mpc4j.s2pc.pcg.ot.cot.sp.bsp.BspCotConfig;
@@ -23,7 +23,7 @@ public class Ywl20MaBspCotConfig implements BspCotConfig {
     /**
      * GF2K-DPPRF协议配置项
      */
-    private final Gf2kDpprfConfig gf2kDpprfConfig;
+    private final DpprfConfig gf2kDpprfConfig;
 
     private Ywl20MaBspCotConfig(Builder builder) {
         // 两个协议的环境配型必须相同
@@ -36,7 +36,7 @@ public class Ywl20MaBspCotConfig implements BspCotConfig {
         return coreCotConfig;
     }
 
-    public Gf2kDpprfConfig getGf2kDpprfConfig() {
+    public DpprfConfig getGf2kDpprfConfig() {
         return gf2kDpprfConfig;
     }
 
@@ -70,11 +70,11 @@ public class Ywl20MaBspCotConfig implements BspCotConfig {
         /**
          * GF2K-DPPRF协议配置项
          */
-        private Gf2kDpprfConfig gf2kDpprfConfig;
+        private DpprfConfig gf2kDpprfConfig;
 
         public Builder() {
             coreCotConfig = CoreCotFactory.createDefaultConfig(SecurityModel.MALICIOUS);
-            gf2kDpprfConfig = Gf2kDpprfFactory.createDefaultConfig(SecurityModel.MALICIOUS);
+            gf2kDpprfConfig = DpprfFactory.createDefaultConfig(SecurityModel.MALICIOUS);
         }
 
         public Builder setCoreCotConfig(CoreCotConfig coreCotConfig) {
@@ -82,8 +82,8 @@ public class Ywl20MaBspCotConfig implements BspCotConfig {
             return this;
         }
 
-        public Builder setGf2kDpprfConfig(Gf2kDpprfConfig gf2kDpprfConfig) {
-            this.gf2kDpprfConfig = gf2kDpprfConfig;
+        public Builder setGf2kDpprfConfig(DpprfConfig dpprfConfig) {
+            this.gf2kDpprfConfig = dpprfConfig;
             return this;
         }
 

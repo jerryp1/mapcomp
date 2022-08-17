@@ -1,19 +1,19 @@
-package edu.alibaba.mpc4j.s2pc.pcg.dpprf.gf2k;
+package edu.alibaba.mpc4j.s2pc.pcg.dpprf;
 
 import edu.alibaba.mpc4j.common.rpc.MpcAbortException;
 import edu.alibaba.mpc4j.s2pc.pcg.ot.cot.CotReceiverOutput;
 
 /**
- * GF2K-DPPRF接收方线程。
+ * DPPRF接收方线程。
  *
  * @author Weiran Liu
  * @date 2022/8/16
  */
-class Gf2kDpprfReceiverThread extends Thread {
+class DpprfReceiverThread extends Thread {
     /**
      * 接收方
      */
-    private final Gf2kDpprfReceiver receiver;
+    private final DpprfReceiver receiver;
     /**
      * α数组
      */
@@ -29,20 +29,20 @@ class Gf2kDpprfReceiverThread extends Thread {
     /**
      * 输出
      */
-    private Gf2kDpprfReceiverOutput receiverOutput;
+    private DpprfReceiverOutput receiverOutput;
 
-    Gf2kDpprfReceiverThread(Gf2kDpprfReceiver receiver, int[] alphaArray, int alphaBound) {
+    DpprfReceiverThread(DpprfReceiver receiver, int[] alphaArray, int alphaBound) {
         this(receiver, alphaArray, alphaBound, null);
     }
 
-    Gf2kDpprfReceiverThread(Gf2kDpprfReceiver receiver, int[] alphaArray, int alphaBound, CotReceiverOutput preReceiverOutput) {
+    DpprfReceiverThread(DpprfReceiver receiver, int[] alphaArray, int alphaBound, CotReceiverOutput preReceiverOutput) {
         this.receiver = receiver;
         this.alphaArray = alphaArray;
         this.alphaBound = alphaBound;
         this.preReceiverOutput = preReceiverOutput;
     }
 
-    Gf2kDpprfReceiverOutput getReceiverOutput() {
+    DpprfReceiverOutput getReceiverOutput() {
         return receiverOutput;
     }
 

@@ -1,4 +1,4 @@
-package edu.alibaba.mpc4j.s2pc.pcg.dpprf.gf2k;
+package edu.alibaba.mpc4j.s2pc.pcg.dpprf;
 
 import edu.alibaba.mpc4j.common.rpc.Party;
 import edu.alibaba.mpc4j.common.rpc.Rpc;
@@ -8,24 +8,24 @@ import edu.alibaba.mpc4j.common.tool.utils.LongUtils;
 import edu.alibaba.mpc4j.s2pc.pcg.ot.cot.CotSenderOutput;
 
 /**
- * GF2K-DPPRF发送方抽象类。
+ * DPPRF发送方抽象类。
  *
  * @author Weiran Liu
  * @date 2022/8/16
  */
-public abstract class AbstractGf2kDpprfSender extends AbstractSecureTwoPartyPto implements Gf2kDpprfSender {
+public abstract class AbstractDpprfSender extends AbstractSecureTwoPartyPto implements DpprfSender {
     /**
      * 配置项
      */
-    private final Gf2kDpprfConfig config;
+    private final DpprfConfig config;
     /**
      * 最大α上界
      */
     protected int maxAlphaBound;
     /**
-     * 最大l取值
+     * 最大α比特长度
      */
-    protected int maxL;
+    protected int maxH;
     /**
      * 最大批处理数量
      */
@@ -35,21 +35,21 @@ public abstract class AbstractGf2kDpprfSender extends AbstractSecureTwoPartyPto 
      */
     protected int alphaBound;
     /**
-     * l取值
+     * α比特长度
      */
-    protected int l;
+    protected int h;
     /**
      * 批处理数量
      */
     protected int batchNum;
 
-    protected AbstractGf2kDpprfSender(PtoDesc ptoDesc, Rpc senderRpc, Party receiverParty, Gf2kDpprfConfig config) {
+    protected AbstractDpprfSender(PtoDesc ptoDesc, Rpc senderRpc, Party receiverParty, DpprfConfig config) {
         super(ptoDesc, senderRpc, receiverParty, config);
         this.config = config;
     }
 
     @Override
-    public Gf2kDpprfFactory.Gf2kDpprfType getPtoType() {
+    public DpprfFactory.Gf2kDpprfType getPtoType() {
         return config.getPtoType();
     }
 
@@ -58,7 +58,7 @@ public abstract class AbstractGf2kDpprfSender extends AbstractSecureTwoPartyPto 
         this.maxBatchNum = maxBatchNum;
         assert maxAlphaBound > 0 : "maxAlphaBound must be greater than 0: " + maxAlphaBound;
         this.maxAlphaBound = maxAlphaBound;
-        maxL = LongUtils.ceilLog2(maxAlphaBound);
+        maxH = LongUtils.ceilLog2(maxAlphaBound);
         initialized = false;
     }
 
@@ -71,12 +71,12 @@ public abstract class AbstractGf2kDpprfSender extends AbstractSecureTwoPartyPto 
         assert alphaBound > 0 && alphaBound <= maxAlphaBound
             : "alphaBound must be in range (0, " + maxAlphaBound + "]: " + alphaBound;
         this.alphaBound = alphaBound;
-        l = LongUtils.ceilLog2(alphaBound);
+        h = LongUtils.ceilLog2(alphaBound);
         extraInfo++;
     }
 
     protected void setPtoInput(int batch, int alphaBound, CotSenderOutput preSenderOutput) {
         setPtoInput(batch, alphaBound);
-        assert preSenderOutput.getNum() >= Gf2kDpprfFactory.getPrecomputeNum(config, batch, alphaBound);
+        assert preSenderOutput.getNum() >= DpprfFactory.getPrecomputeNum(config, batch, alphaBound);
     }
 }

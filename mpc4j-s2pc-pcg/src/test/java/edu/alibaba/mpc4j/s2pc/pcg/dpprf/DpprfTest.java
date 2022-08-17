@@ -1,4 +1,4 @@
-package edu.alibaba.mpc4j.s2pc.pcg.dpprf.gf2k;
+package edu.alibaba.mpc4j.s2pc.pcg.dpprf;
 
 import com.google.common.base.Preconditions;
 import edu.alibaba.mpc4j.common.rpc.Rpc;
@@ -6,7 +6,7 @@ import edu.alibaba.mpc4j.common.rpc.RpcManager;
 import edu.alibaba.mpc4j.common.rpc.desc.SecurityModel;
 import edu.alibaba.mpc4j.common.rpc.impl.memory.MemoryRpcManager;
 import edu.alibaba.mpc4j.common.tool.CommonConstants;
-import edu.alibaba.mpc4j.s2pc.pcg.dpprf.gf2k.ywl20.Ywl20Gf2kDpprfConfig;
+import edu.alibaba.mpc4j.s2pc.pcg.dpprf.ywl20.Ywl20DpprfConfig;
 import edu.alibaba.mpc4j.s2pc.pcg.ot.cot.CotReceiverOutput;
 import edu.alibaba.mpc4j.s2pc.pcg.ot.cot.CotSenderOutput;
 import edu.alibaba.mpc4j.s2pc.pcg.ot.cot.CotTestUtils;
@@ -26,14 +26,14 @@ import java.util.concurrent.TimeUnit;
 import java.util.stream.IntStream;
 
 /**
- * GF2K-DPPRF协议测试。
+ * DPPRF协议测试。
  *
  * @author Weiran Liu
  * @date 2022/8/16
  */
 @RunWith(Parameterized.class)
-public class Gf2kDpprfTest {
-    private static final Logger LOGGER = LoggerFactory.getLogger(Gf2kDpprfTest.class);
+public class DpprfTest {
+    private static final Logger LOGGER = LoggerFactory.getLogger(DpprfTest.class);
     /**
      * 随机状态
      */
@@ -60,13 +60,13 @@ public class Gf2kDpprfTest {
         Collection<Object[]> configurationParams = new ArrayList<>();
         // YWL20 (semi-honest)
         configurationParams.add(new Object[] {
-            Gf2kDpprfFactory.Gf2kDpprfType.YWL20.name() + " (semi-honest)",
-            new Ywl20Gf2kDpprfConfig.Builder(SecurityModel.SEMI_HONEST).build(),
+            DpprfFactory.Gf2kDpprfType.YWL20.name() + " (semi-honest)",
+            new Ywl20DpprfConfig.Builder(SecurityModel.SEMI_HONEST).build(),
         });
         // YWL20 (malicious)
         configurationParams.add(new Object[] {
-            Gf2kDpprfFactory.Gf2kDpprfType.YWL20.name() + " (malicious)",
-            new Ywl20Gf2kDpprfConfig.Builder(SecurityModel.MALICIOUS).build(),
+            DpprfFactory.Gf2kDpprfType.YWL20.name() + " (malicious)",
+            new Ywl20DpprfConfig.Builder(SecurityModel.MALICIOUS).build(),
         });
 
         return configurationParams;
@@ -83,9 +83,9 @@ public class Gf2kDpprfTest {
     /**
      * 协议类型
      */
-    private final Gf2kDpprfConfig config;
+    private final DpprfConfig config;
 
-    public Gf2kDpprfTest(String name, Gf2kDpprfConfig config) {
+    public DpprfTest(String name, DpprfConfig config) {
         Preconditions.checkArgument(StringUtils.isNotBlank(name));
         RpcManager rpcManager = new MemoryRpcManager(2);
         senderRpc = rpcManager.getRpc(0);
@@ -95,16 +95,16 @@ public class Gf2kDpprfTest {
 
     @Test
     public void testPtoType() {
-        Gf2kDpprfSender sender = Gf2kDpprfFactory.createSender(senderRpc, receiverRpc.ownParty(), config);
-        Gf2kDpprfReceiver receiver = Gf2kDpprfFactory.createReceiver(receiverRpc, senderRpc.ownParty(), config);
+        DpprfSender sender = DpprfFactory.createSender(senderRpc, receiverRpc.ownParty(), config);
+        DpprfReceiver receiver = DpprfFactory.createReceiver(receiverRpc, senderRpc.ownParty(), config);
         Assert.assertEquals(config.getPtoType(), sender.getPtoType());
         Assert.assertEquals(config.getPtoType(), receiver.getPtoType());
     }
 
     @Test
     public void testFirstAlpha() {
-        Gf2kDpprfSender sender = Gf2kDpprfFactory.createSender(senderRpc, receiverRpc.ownParty(), config);
-        Gf2kDpprfReceiver receiver = Gf2kDpprfFactory.createReceiver(receiverRpc, senderRpc.ownParty(), config);
+        DpprfSender sender = DpprfFactory.createSender(senderRpc, receiverRpc.ownParty(), config);
+        DpprfReceiver receiver = DpprfFactory.createReceiver(receiverRpc, senderRpc.ownParty(), config);
         int[] alphaArray = IntStream.range(0, DEFAULT_BATCH_NUM)
             .map(mIndex -> 0)
             .toArray();
@@ -113,8 +113,8 @@ public class Gf2kDpprfTest {
 
     @Test
     public void testLastAlpha() {
-        Gf2kDpprfSender sender = Gf2kDpprfFactory.createSender(senderRpc, receiverRpc.ownParty(), config);
-        Gf2kDpprfReceiver receiver = Gf2kDpprfFactory.createReceiver(receiverRpc, senderRpc.ownParty(), config);
+        DpprfSender sender = DpprfFactory.createSender(senderRpc, receiverRpc.ownParty(), config);
+        DpprfReceiver receiver = DpprfFactory.createReceiver(receiverRpc, senderRpc.ownParty(), config);
         int[] alphaArray = IntStream.range(0, DEFAULT_BATCH_NUM)
             .map(mIndex -> DEFAULT_ALPHA_BOUND - 1)
             .toArray();
@@ -123,8 +123,8 @@ public class Gf2kDpprfTest {
 
     @Test
     public void test1AlphaBound() {
-        Gf2kDpprfSender sender = Gf2kDpprfFactory.createSender(senderRpc, receiverRpc.ownParty(), config);
-        Gf2kDpprfReceiver receiver = Gf2kDpprfFactory.createReceiver(receiverRpc, senderRpc.ownParty(), config);
+        DpprfSender sender = DpprfFactory.createSender(senderRpc, receiverRpc.ownParty(), config);
+        DpprfReceiver receiver = DpprfFactory.createReceiver(receiverRpc, senderRpc.ownParty(), config);
         int alphaBound = 1;
         int[] alphaArray = IntStream.range(0, DEFAULT_BATCH_NUM)
             .map(mIndex -> SECURE_RANDOM.nextInt(alphaBound))
@@ -134,8 +134,8 @@ public class Gf2kDpprfTest {
 
     @Test
     public void test2AlphaBound() {
-        Gf2kDpprfSender sender = Gf2kDpprfFactory.createSender(senderRpc, receiverRpc.ownParty(), config);
-        Gf2kDpprfReceiver receiver = Gf2kDpprfFactory.createReceiver(receiverRpc, senderRpc.ownParty(), config);
+        DpprfSender sender = DpprfFactory.createSender(senderRpc, receiverRpc.ownParty(), config);
+        DpprfReceiver receiver = DpprfFactory.createReceiver(receiverRpc, senderRpc.ownParty(), config);
         int alphaBound = 2;
         int[] alphaArray = IntStream.range(0, DEFAULT_BATCH_NUM)
             .map(mIndex -> SECURE_RANDOM.nextInt(alphaBound))
@@ -145,8 +145,8 @@ public class Gf2kDpprfTest {
 
     @Test
     public void test1Batch() {
-        Gf2kDpprfSender sender = Gf2kDpprfFactory.createSender(senderRpc, receiverRpc.ownParty(), config);
-        Gf2kDpprfReceiver receiver = Gf2kDpprfFactory.createReceiver(receiverRpc, senderRpc.ownParty(), config);
+        DpprfSender sender = DpprfFactory.createSender(senderRpc, receiverRpc.ownParty(), config);
+        DpprfReceiver receiver = DpprfFactory.createReceiver(receiverRpc, senderRpc.ownParty(), config);
         int batchNum = 1;
         int[] alphaArray = IntStream.range(0, batchNum)
             .map(mIndex -> SECURE_RANDOM.nextInt(DEFAULT_ALPHA_BOUND))
@@ -156,8 +156,8 @@ public class Gf2kDpprfTest {
 
     @Test
     public void test2Batch() {
-        Gf2kDpprfSender sender = Gf2kDpprfFactory.createSender(senderRpc, receiverRpc.ownParty(), config);
-        Gf2kDpprfReceiver receiver = Gf2kDpprfFactory.createReceiver(receiverRpc, senderRpc.ownParty(), config);
+        DpprfSender sender = DpprfFactory.createSender(senderRpc, receiverRpc.ownParty(), config);
+        DpprfReceiver receiver = DpprfFactory.createReceiver(receiverRpc, senderRpc.ownParty(), config);
         int batchNum = 2;
         int[] alphaArray = IntStream.range(0, batchNum)
             .map(mIndex -> SECURE_RANDOM.nextInt(DEFAULT_ALPHA_BOUND))
@@ -167,8 +167,8 @@ public class Gf2kDpprfTest {
 
     @Test
     public void testDefault() {
-        Gf2kDpprfSender sender = Gf2kDpprfFactory.createSender(senderRpc, receiverRpc.ownParty(), config);
-        Gf2kDpprfReceiver receiver = Gf2kDpprfFactory.createReceiver(receiverRpc, senderRpc.ownParty(), config);
+        DpprfSender sender = DpprfFactory.createSender(senderRpc, receiverRpc.ownParty(), config);
+        DpprfReceiver receiver = DpprfFactory.createReceiver(receiverRpc, senderRpc.ownParty(), config);
         int[] alphaArray = IntStream.range(0, DEFAULT_BATCH_NUM)
             .map(mIndex -> SECURE_RANDOM.nextInt(DEFAULT_ALPHA_BOUND))
             .toArray();
@@ -177,8 +177,8 @@ public class Gf2kDpprfTest {
 
     @Test
     public void testParallelDefault() {
-        Gf2kDpprfSender sender = Gf2kDpprfFactory.createSender(senderRpc, receiverRpc.ownParty(), config);
-        Gf2kDpprfReceiver receiver = Gf2kDpprfFactory.createReceiver(receiverRpc, senderRpc.ownParty(), config);
+        DpprfSender sender = DpprfFactory.createSender(senderRpc, receiverRpc.ownParty(), config);
+        DpprfReceiver receiver = DpprfFactory.createReceiver(receiverRpc, senderRpc.ownParty(), config);
         sender.setParallel(true);
         receiver.setParallel(true);
         int[] alphaArray = IntStream.range(0, DEFAULT_BATCH_NUM)
@@ -189,8 +189,8 @@ public class Gf2kDpprfTest {
 
     @Test
     public void testLargeBatchNum() {
-        Gf2kDpprfSender sender = Gf2kDpprfFactory.createSender(senderRpc, receiverRpc.ownParty(), config);
-        Gf2kDpprfReceiver receiver = Gf2kDpprfFactory.createReceiver(receiverRpc, senderRpc.ownParty(), config);
+        DpprfSender sender = DpprfFactory.createSender(senderRpc, receiverRpc.ownParty(), config);
+        DpprfReceiver receiver = DpprfFactory.createReceiver(receiverRpc, senderRpc.ownParty(), config);
         int[] alphaArray = IntStream.range(0, LARGE_BATCH_NUM)
             .map(mIndex -> SECURE_RANDOM.nextInt(DEFAULT_ALPHA_BOUND))
             .toArray();
@@ -199,8 +199,8 @@ public class Gf2kDpprfTest {
 
     @Test
     public void testParallelLargeBatchNum() {
-        Gf2kDpprfSender sender = Gf2kDpprfFactory.createSender(senderRpc, receiverRpc.ownParty(), config);
-        Gf2kDpprfReceiver receiver = Gf2kDpprfFactory.createReceiver(receiverRpc, senderRpc.ownParty(), config);
+        DpprfSender sender = DpprfFactory.createSender(senderRpc, receiverRpc.ownParty(), config);
+        DpprfReceiver receiver = DpprfFactory.createReceiver(receiverRpc, senderRpc.ownParty(), config);
         sender.setParallel(true);
         receiver.setParallel(true);
         int[] alphaArray = IntStream.range(0, LARGE_BATCH_NUM)
@@ -211,8 +211,8 @@ public class Gf2kDpprfTest {
 
     @Test
     public void testLargeAlphaBound() {
-        Gf2kDpprfSender sender = Gf2kDpprfFactory.createSender(senderRpc, receiverRpc.ownParty(), config);
-        Gf2kDpprfReceiver receiver = Gf2kDpprfFactory.createReceiver(receiverRpc, senderRpc.ownParty(), config);
+        DpprfSender sender = DpprfFactory.createSender(senderRpc, receiverRpc.ownParty(), config);
+        DpprfReceiver receiver = DpprfFactory.createReceiver(receiverRpc, senderRpc.ownParty(), config);
         int[] alphaArray = IntStream.range(0, DEFAULT_BATCH_NUM)
             .map(mIndex -> SECURE_RANDOM.nextInt(LARGE_ALPHA_BOUND))
             .toArray();
@@ -221,8 +221,8 @@ public class Gf2kDpprfTest {
 
     @Test
     public void testParallelLargeAlphaBound() {
-        Gf2kDpprfSender sender = Gf2kDpprfFactory.createSender(senderRpc, receiverRpc.ownParty(), config);
-        Gf2kDpprfReceiver receiver = Gf2kDpprfFactory.createReceiver(receiverRpc, senderRpc.ownParty(), config);
+        DpprfSender sender = DpprfFactory.createSender(senderRpc, receiverRpc.ownParty(), config);
+        DpprfReceiver receiver = DpprfFactory.createReceiver(receiverRpc, senderRpc.ownParty(), config);
         sender.setParallel(true);
         receiver.setParallel(true);
         int[] alphaArray = IntStream.range(0, DEFAULT_BATCH_NUM)
@@ -231,15 +231,15 @@ public class Gf2kDpprfTest {
         testPto(sender, receiver, alphaArray, LARGE_ALPHA_BOUND);
     }
 
-    private void testPto(Gf2kDpprfSender sender, Gf2kDpprfReceiver receiver, int[] alphaArray, int alphaBound) {
+    private void testPto(DpprfSender sender, DpprfReceiver receiver, int[] alphaArray, int alphaBound) {
         long randomTaskId = Math.abs(SECURE_RANDOM.nextLong());
         sender.setTaskId(randomTaskId);
         receiver.setTaskId(randomTaskId);
         try {
             LOGGER.info("-----test {} start-----", sender.getPtoDesc().getPtoName());
             int batchNum = alphaArray.length;
-            Gf2kDpprfSenderThread senderThread = new Gf2kDpprfSenderThread(sender, batchNum, alphaBound);
-            Gf2kDpprfReceiverThread receiverThread = new Gf2kDpprfReceiverThread(receiver, alphaArray, alphaBound);
+            DpprfSenderThread senderThread = new DpprfSenderThread(sender, batchNum, alphaBound);
+            DpprfReceiverThread receiverThread = new DpprfReceiverThread(receiver, alphaArray, alphaBound);
             StopWatch stopWatch = new StopWatch();
             // 开始执行协议
             stopWatch.start();
@@ -254,8 +254,8 @@ public class Gf2kDpprfTest {
             long receiverByteLength = receiverRpc.getSendByteLength();
             senderRpc.reset();
             receiverRpc.reset();
-            Gf2kDpprfSenderOutput senderOutput = senderThread.getSenderOutput();
-            Gf2kDpprfReceiverOutput receiverOutput = receiverThread.getReceiverOutput();
+            DpprfSenderOutput senderOutput = senderThread.getSenderOutput();
+            DpprfReceiverOutput receiverOutput = receiverThread.getReceiverOutput();
             // 验证结果
             assertOutput(batchNum, alphaBound, senderOutput, receiverOutput);
             LOGGER.info("Sender sends {}B, Receiver sends {}B, time = {}ms",
@@ -269,8 +269,8 @@ public class Gf2kDpprfTest {
 
     @Test
     public void testPrecompute() {
-        Gf2kDpprfSender sender = Gf2kDpprfFactory.createSender(senderRpc, receiverRpc.ownParty(), config);
-        Gf2kDpprfReceiver receiver = Gf2kDpprfFactory.createReceiver(receiverRpc, senderRpc.ownParty(), config);
+        DpprfSender sender = DpprfFactory.createSender(senderRpc, receiverRpc.ownParty(), config);
+        DpprfReceiver receiver = DpprfFactory.createReceiver(receiverRpc, senderRpc.ownParty(), config);
         long randomTaskId = Math.abs(SECURE_RANDOM.nextLong());
         sender.setTaskId(randomTaskId);
         receiver.setTaskId(randomTaskId);
@@ -284,11 +284,11 @@ public class Gf2kDpprfTest {
                 .map(mIndex -> SECURE_RANDOM.nextInt(batchNum))
                 .toArray();
             CotSenderOutput preSenderOutput = CotTestUtils.genSenderOutput(
-                Gf2kDpprfFactory.getPrecomputeNum(config, batchNum, alphaBound), delta, SECURE_RANDOM
+                DpprfFactory.getPrecomputeNum(config, batchNum, alphaBound), delta, SECURE_RANDOM
             );
             CotReceiverOutput preReceiverOutput = CotTestUtils.genReceiverOutput(preSenderOutput, SECURE_RANDOM);
-            Gf2kDpprfSenderThread senderThread = new Gf2kDpprfSenderThread(sender, batchNum, alphaBound, preSenderOutput);
-            Gf2kDpprfReceiverThread receiverThread = new Gf2kDpprfReceiverThread(
+            DpprfSenderThread senderThread = new DpprfSenderThread(sender, batchNum, alphaBound, preSenderOutput);
+            DpprfReceiverThread receiverThread = new DpprfReceiverThread(
                 receiver, alphaArray, alphaBound, preReceiverOutput
             );
             StopWatch stopWatch = new StopWatch();
@@ -305,8 +305,8 @@ public class Gf2kDpprfTest {
             long receiverByteLength = receiverRpc.getSendByteLength();
             senderRpc.reset();
             receiverRpc.reset();
-            Gf2kDpprfSenderOutput senderOutput = senderThread.getSenderOutput();
-            Gf2kDpprfReceiverOutput receiverOutput = receiverThread.getReceiverOutput();
+            DpprfSenderOutput senderOutput = senderThread.getSenderOutput();
+            DpprfReceiverOutput receiverOutput = receiverThread.getReceiverOutput();
             // 验证结果
             assertOutput(batchNum, alphaBound, senderOutput, receiverOutput);
             LOGGER.info("Sender sends {}B, Receiver sends {}B, time = {}ms",
@@ -319,15 +319,15 @@ public class Gf2kDpprfTest {
     }
 
     private void assertOutput(int batchNum, int alphaBound,
-                              Gf2kDpprfSenderOutput senderOutput, Gf2kDpprfReceiverOutput receiverOutput) {
+                              DpprfSenderOutput senderOutput, DpprfReceiverOutput receiverOutput) {
         Assert.assertEquals(batchNum, senderOutput.getBatchNum());
         Assert.assertEquals(batchNum, receiverOutput.getBatchNum());
         Assert.assertEquals(alphaBound, senderOutput.getAlphaBound());
         Assert.assertEquals(alphaBound, receiverOutput.getAlphaBound());
         // 验证各个子结果
         IntStream.range(0, batchNum).forEach(batchIndex -> {
-            byte[][] prfKey = senderOutput.getPrfKey(batchIndex);
-            byte[][] pprfKey = receiverOutput.getPprfKey(batchIndex);
+            byte[][] prfKey = senderOutput.getPrfOutputArray(batchIndex);
+            byte[][] pprfKey = receiverOutput.getPprfOutputArray(batchIndex);
             IntStream.range(0, alphaBound).forEach(index -> {
                 if (index == receiverOutput.getAlpha(batchIndex)) {
                     Assert.assertNull(pprfKey[index]);

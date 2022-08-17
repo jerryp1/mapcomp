@@ -13,10 +13,10 @@ import edu.alibaba.mpc4j.common.rpc.Rpc;
 import edu.alibaba.mpc4j.common.rpc.utils.DataPacket;
 import edu.alibaba.mpc4j.common.rpc.utils.DataPacketHeader;
 import edu.alibaba.mpc4j.common.tool.utils.BytesUtils;
-import edu.alibaba.mpc4j.s2pc.pcg.dpprf.gf2k.Gf2kDpprfConfig;
-import edu.alibaba.mpc4j.s2pc.pcg.dpprf.gf2k.Gf2kDpprfFactory;
-import edu.alibaba.mpc4j.s2pc.pcg.dpprf.gf2k.Gf2kDpprfSender;
-import edu.alibaba.mpc4j.s2pc.pcg.dpprf.gf2k.Gf2kDpprfSenderOutput;
+import edu.alibaba.mpc4j.s2pc.pcg.dpprf.DpprfConfig;
+import edu.alibaba.mpc4j.s2pc.pcg.dpprf.DpprfFactory;
+import edu.alibaba.mpc4j.s2pc.pcg.dpprf.DpprfSender;
+import edu.alibaba.mpc4j.s2pc.pcg.dpprf.DpprfSenderOutput;
 import edu.alibaba.mpc4j.s2pc.pcg.ot.cot.core.CoreCotFactory;
 import edu.alibaba.mpc4j.s2pc.pcg.ot.cot.core.CoreCotSender;
 import edu.alibaba.mpc4j.s2pc.pcg.ot.cot.CotSenderOutput;
@@ -35,7 +35,7 @@ public class Ywl20ShBspCotSender extends AbstractBspCotSender {
     /**
      * GF2K-DPPRF协议配置项
      */
-    private final Gf2kDpprfConfig gf2kDpprfConfig;
+    private final DpprfConfig gf2kDpprfConfig;
     /**
      * 核COT协议发送方
      */
@@ -43,7 +43,7 @@ public class Ywl20ShBspCotSender extends AbstractBspCotSender {
     /**
      * GF2K-DPPRF协议发送方
      */
-    private final Gf2kDpprfSender gf2kDpprfSender;
+    private final DpprfSender dpprfSender;
     /**
      * COT协议发送方输出
      */
@@ -54,8 +54,8 @@ public class Ywl20ShBspCotSender extends AbstractBspCotSender {
         coreCotSender = CoreCotFactory.createSender(senderRpc, receiverParty, config.getCoreCotConfig());
         coreCotSender.addLogLevel();
         gf2kDpprfConfig = config.getGf2kDpprfConfig();
-        gf2kDpprfSender = Gf2kDpprfFactory.createSender(senderRpc, receiverParty, gf2kDpprfConfig);
-        gf2kDpprfSender.addLogLevel();
+        dpprfSender = DpprfFactory.createSender(senderRpc, receiverParty, gf2kDpprfConfig);
+        dpprfSender.addLogLevel();
     }
 
     @Override
@@ -64,21 +64,21 @@ public class Ywl20ShBspCotSender extends AbstractBspCotSender {
         // COT协议和GF2K-DPPRF协议需要使用不同的taskID
         byte[] taskIdBytes = ByteBuffer.allocate(Long.BYTES).putLong(taskId).array();
         coreCotSender.setTaskId(taskIdPrf.getLong(0, taskIdBytes, Long.MAX_VALUE));
-        gf2kDpprfSender.setTaskId(taskIdPrf.getLong(1, taskIdBytes, Long.MAX_VALUE));
+        dpprfSender.setTaskId(taskIdPrf.getLong(1, taskIdBytes, Long.MAX_VALUE));
     }
 
     @Override
     public void setParallel(boolean parallel) {
         super.setParallel(parallel);
         coreCotSender.setParallel(parallel);
-        gf2kDpprfSender.setParallel(parallel);
+        dpprfSender.setParallel(parallel);
     }
 
     @Override
     public void addLogLevel() {
         super.addLogLevel();
         coreCotSender.addLogLevel();
-        gf2kDpprfSender.addLogLevel();
+        dpprfSender.addLogLevel();
     }
 
     @Override
@@ -87,9 +87,9 @@ public class Ywl20ShBspCotSender extends AbstractBspCotSender {
         info("{}{} Send. Init begin", ptoBeginLogPrefix, getPtoDesc().getPtoName());
 
         stopWatch.start();
-        int maxCotNum = Gf2kDpprfFactory.getPrecomputeNum(gf2kDpprfConfig, maxBatchNum, maxNum);
+        int maxCotNum = DpprfFactory.getPrecomputeNum(gf2kDpprfConfig, maxBatchNum, maxNum);
         coreCotSender.init(delta, maxCotNum);
-        gf2kDpprfSender.init(maxBatchNum, maxNum);
+        dpprfSender.init(maxBatchNum, maxNum);
         stopWatch.stop();
         long initTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
         stopWatch.reset();
@@ -117,7 +117,7 @@ public class Ywl20ShBspCotSender extends AbstractBspCotSender {
 
         stopWatch.start();
         // S send (extend, h) to F_COT, which returns q_i ∈ {0,1}^κ to S
-        int cotNum = Gf2kDpprfFactory.getPrecomputeNum(gf2kDpprfConfig, batchNum, num);
+        int cotNum = DpprfFactory.getPrecomputeNum(gf2kDpprfConfig, batchNum, num);
         if (cotSenderOutput == null) {
             cotSenderOutput = coreCotSender.send(cotNum);
         } else {
@@ -129,7 +129,7 @@ public class Ywl20ShBspCotSender extends AbstractBspCotSender {
         info("{}{} Send. Step 1/3 ({}ms)", ptoStepLogPrefix, getPtoDesc().getPtoName(), cotTime);
 
         stopWatch.start();
-        Gf2kDpprfSenderOutput gf2kDpprfSenderOutput = gf2kDpprfSender.puncture(batchNum, num, cotSenderOutput);
+        DpprfSenderOutput dpprfSenderOutput = dpprfSender.puncture(batchNum, num, cotSenderOutput);
         cotSenderOutput = null;
         stopWatch.stop();
         long dpprfTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
@@ -142,7 +142,7 @@ public class Ywl20ShBspCotSender extends AbstractBspCotSender {
             .mapToObj(batchIndex -> {
                 correlateByteArrays[batchIndex] = BytesUtils.clone(delta);
                 // S sets v = (s_0^h,...,s_{n - 1}^h)
-                byte[][] vs = gf2kDpprfSenderOutput.getPrfKey(batchIndex);
+                byte[][] vs = dpprfSenderOutput.getPrfOutputArray(batchIndex);
                 // and sends c = Δ + \sum_{i ∈ [n]} {v[i]}
                 for (int i = 0; i < num; i++) {
                     BytesUtils.xori(correlateByteArrays[batchIndex], vs[i]);
