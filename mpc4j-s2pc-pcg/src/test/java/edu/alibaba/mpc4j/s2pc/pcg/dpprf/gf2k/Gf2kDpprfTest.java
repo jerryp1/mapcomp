@@ -6,7 +6,6 @@ import edu.alibaba.mpc4j.common.rpc.RpcManager;
 import edu.alibaba.mpc4j.common.rpc.desc.SecurityModel;
 import edu.alibaba.mpc4j.common.rpc.impl.memory.MemoryRpcManager;
 import edu.alibaba.mpc4j.common.tool.CommonConstants;
-import edu.alibaba.mpc4j.common.tool.utils.BytesUtils;
 import edu.alibaba.mpc4j.s2pc.pcg.dpprf.gf2k.ywl20.Ywl20Gf2kDpprfConfig;
 import edu.alibaba.mpc4j.s2pc.pcg.ot.cot.CotReceiverOutput;
 import edu.alibaba.mpc4j.s2pc.pcg.ot.cot.CotSenderOutput;
@@ -20,7 +19,6 @@ import org.junit.runners.Parameterized;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.nio.ByteBuffer;
 import java.security.SecureRandom;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -240,9 +238,7 @@ public class Gf2kDpprfTest {
         try {
             LOGGER.info("-----test {} start-----", sender.getPtoDesc().getPtoName());
             int batchNum = alphaArray.length;
-            byte[] delta = new byte[CommonConstants.BLOCK_BYTE_LENGTH];
-            SECURE_RANDOM.nextBytes(delta);
-            Gf2kDpprfSenderThread senderThread = new Gf2kDpprfSenderThread(sender, delta, batchNum, alphaBound);
+            Gf2kDpprfSenderThread senderThread = new Gf2kDpprfSenderThread(sender, batchNum, alphaBound);
             Gf2kDpprfReceiverThread receiverThread = new Gf2kDpprfReceiverThread(receiver, alphaArray, alphaBound);
             StopWatch stopWatch = new StopWatch();
             // 开始执行协议
@@ -291,9 +287,7 @@ public class Gf2kDpprfTest {
                 Gf2kDpprfFactory.getPrecomputeNum(config, batchNum, alphaBound), delta, SECURE_RANDOM
             );
             CotReceiverOutput preReceiverOutput = CotTestUtils.genReceiverOutput(preSenderOutput, SECURE_RANDOM);
-            Gf2kDpprfSenderThread senderThread = new Gf2kDpprfSenderThread(
-                sender, delta, batchNum, alphaBound, preSenderOutput
-            );
+            Gf2kDpprfSenderThread senderThread = new Gf2kDpprfSenderThread(sender, batchNum, alphaBound, preSenderOutput);
             Gf2kDpprfReceiverThread receiverThread = new Gf2kDpprfReceiverThread(
                 receiver, alphaArray, alphaBound, preReceiverOutput
             );
@@ -324,82 +318,6 @@ public class Gf2kDpprfTest {
         }
     }
 
-    @Test
-    public void testResetDelta() {
-        Gf2kDpprfSender sender = Gf2kDpprfFactory.createSender(senderRpc, receiverRpc.ownParty(), config);
-        Gf2kDpprfReceiver receiver = Gf2kDpprfFactory.createReceiver(receiverRpc, senderRpc.ownParty(), config);
-        long randomTaskId = Math.abs(SECURE_RANDOM.nextLong());
-        sender.setTaskId(randomTaskId);
-        receiver.setTaskId(randomTaskId);
-        int batchNum = DEFAULT_BATCH_NUM;
-        int alphaBound = DEFAULT_ALPHA_BOUND;
-        try {
-            LOGGER.info("-----test {} (reset Δ) start-----", sender.getPtoDesc().getPtoName());
-            byte[] delta = new byte[CommonConstants.BLOCK_BYTE_LENGTH];
-            SECURE_RANDOM.nextBytes(delta);
-            int[] alphaArray = IntStream.range(0, batchNum)
-                .map(mIndex -> SECURE_RANDOM.nextInt(alphaBound))
-                .toArray();
-            // 第一次执行
-            Gf2kDpprfSenderThread senderThread = new Gf2kDpprfSenderThread(sender, delta, batchNum, alphaBound);
-            Gf2kDpprfReceiverThread receiverThread = new Gf2kDpprfReceiverThread(receiver, alphaArray, alphaBound);
-            StopWatch stopWatch = new StopWatch();
-            stopWatch.start();
-            senderThread.start();
-            receiverThread.start();
-            senderThread.join();
-            receiverThread.join();
-            stopWatch.stop();
-            long firstTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
-            stopWatch.reset();
-            long firstSenderByteLength = senderRpc.getSendByteLength();
-            long firstReceiverByteLength = receiverRpc.getSendByteLength();
-            senderRpc.reset();
-            receiverRpc.reset();
-            Gf2kDpprfSenderOutput senderOutput = senderThread.getSenderOutput();
-            Gf2kDpprfReceiverOutput receiverOutput = receiverThread.getReceiverOutput();
-            assertOutput(batchNum, alphaBound, senderOutput, receiverOutput);
-            // 第二次执行，重置Δ
-            SECURE_RANDOM.nextBytes(delta);
-            alphaArray = IntStream.range(0, batchNum)
-                .map(mIndex -> SECURE_RANDOM.nextInt(alphaBound))
-                .toArray();
-            senderThread = new Gf2kDpprfSenderThread(sender, delta, batchNum, alphaBound);
-            receiverThread = new Gf2kDpprfReceiverThread(receiver, alphaArray, alphaBound);
-            stopWatch.start();
-            senderThread.start();
-            receiverThread.start();
-            senderThread.join();
-            receiverThread.join();
-            stopWatch.stop();
-            long secondTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
-            stopWatch.reset();
-            long secondSenderByteLength = senderRpc.getSendByteLength();
-            long secondReceiverByteLength = receiverRpc.getSendByteLength();
-            senderRpc.reset();
-            receiverRpc.reset();
-            Gf2kDpprfSenderOutput secondSenderOutput = senderThread.getSenderOutput();
-            Gf2kDpprfReceiverOutput secondReceiverOutput = receiverThread.getReceiverOutput();
-            // Δ应该不等
-            Assert.assertNotEquals(
-                ByteBuffer.wrap(secondSenderOutput.getDelta()), ByteBuffer.wrap(senderOutput.getDelta())
-            );
-            // 通信量应该相等
-            Assert.assertEquals(secondSenderByteLength, firstSenderByteLength);
-            Assert.assertEquals(secondReceiverByteLength, firstReceiverByteLength);
-            assertOutput(batchNum, alphaBound, secondSenderOutput, secondReceiverOutput);
-            LOGGER.info("1st round, Send. {}B, Recv. {}B, {}ms",
-                firstSenderByteLength, firstReceiverByteLength, firstTime
-            );
-            LOGGER.info("2nd round, Send. {}B, Recv. {}B, {}ms",
-                secondSenderByteLength, secondReceiverByteLength, secondTime
-            );
-            LOGGER.info("-----test {} (reset Δ) end-----", sender.getPtoDesc().getPtoName());
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        }
-    }
-
     private void assertOutput(int batchNum, int alphaBound,
                               Gf2kDpprfSenderOutput senderOutput, Gf2kDpprfReceiverOutput receiverOutput) {
         Assert.assertEquals(batchNum, senderOutput.getBatchNum());
@@ -412,8 +330,7 @@ public class Gf2kDpprfTest {
             byte[][] pprfKey = receiverOutput.getPprfKey(batchIndex);
             IntStream.range(0, alphaBound).forEach(index -> {
                 if (index == receiverOutput.getAlpha(batchIndex)) {
-                    byte[] evalValue = BytesUtils.xor(senderOutput.getDelta(), prfKey[index]);
-                    Assert.assertArrayEquals(evalValue, receiverOutput.getT(batchIndex));
+                    Assert.assertNull(pprfKey[index]);
                 } else {
                     Assert.assertArrayEquals(prfKey[index], pprfKey[index]);
                 }

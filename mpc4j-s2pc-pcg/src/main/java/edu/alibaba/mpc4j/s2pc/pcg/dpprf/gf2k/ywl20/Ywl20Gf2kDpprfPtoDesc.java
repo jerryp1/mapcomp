@@ -35,10 +35,6 @@ class Ywl20Gf2kDpprfPtoDesc implements PtoDesc {
          * 发送方发送纠正消息M
          */
         SENDER_SEND_MESSAGE,
-        /**
-         * 发送方发送组合消息C
-         */
-        SENDER_SEND_CORRELATE,
     }
 
     /**

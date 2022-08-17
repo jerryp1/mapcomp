@@ -15,10 +15,6 @@ class Gf2kDpprfSenderThread extends Thread {
      */
     private final Gf2kDpprfSender sender;
     /**
-     * 关联值Δ
-     */
-    private final byte[] delta;
-    /**
      * 批处理数量
      */
     private final int batchNum;
@@ -35,13 +31,12 @@ class Gf2kDpprfSenderThread extends Thread {
      */
     private Gf2kDpprfSenderOutput senderOutput;
 
-    Gf2kDpprfSenderThread(Gf2kDpprfSender sender, byte[] delta, int batchNum, int alphaBound) {
-        this(sender, delta, batchNum, alphaBound, null);
+    Gf2kDpprfSenderThread(Gf2kDpprfSender sender, int batchNum, int alphaBound) {
+        this(sender, batchNum, alphaBound, null);
     }
 
-    Gf2kDpprfSenderThread(Gf2kDpprfSender sender, byte[] delta, int batchNum, int alphaBound, CotSenderOutput preSenderOutput) {
+    Gf2kDpprfSenderThread(Gf2kDpprfSender sender, int batchNum, int alphaBound, CotSenderOutput preSenderOutput) {
         this.sender = sender;
-        this.delta = delta;
         this.batchNum = batchNum;
         this.alphaBound = alphaBound;
         this.preSenderOutput = preSenderOutput;
@@ -55,7 +50,7 @@ class Gf2kDpprfSenderThread extends Thread {
     public void run() {
         try {
             sender.getRpc().connect();
-            sender.init(delta, batchNum, alphaBound);
+            sender.init(batchNum, alphaBound);
             senderOutput = preSenderOutput == null ? sender.puncture(batchNum, alphaBound)
                 : sender.puncture(batchNum, alphaBound, preSenderOutput);
             sender.getRpc().disconnect();

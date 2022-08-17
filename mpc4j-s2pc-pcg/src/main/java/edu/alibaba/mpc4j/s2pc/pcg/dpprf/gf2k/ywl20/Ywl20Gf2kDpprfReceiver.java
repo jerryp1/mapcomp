@@ -116,7 +116,7 @@ public class Ywl20Gf2kDpprfReceiver extends AbstractGf2kDpprfReceiver {
         stopWatch.stop();
         long cotTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
         stopWatch.reset();
-        info("{}{} Recv. Step 1/4 ({}ms)", ptoStepLogPrefix, getPtoDesc().getPtoName(), cotTime);
+        info("{}{} Recv. Step 1/3 ({}ms)", ptoStepLogPrefix, getPtoDesc().getPtoName(), cotTime);
 
         stopWatch.start();
         List<byte[]> binaryPayload = generateBinaryPayload();
@@ -128,7 +128,7 @@ public class Ywl20Gf2kDpprfReceiver extends AbstractGf2kDpprfReceiver {
         stopWatch.stop();
         long binaryTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
         stopWatch.reset();
-        info("{}{} Recv. Step 2/4 ({}ms)", ptoStepLogPrefix, getPtoDesc().getPtoName(), binaryTime);
+        info("{}{} Recv. Step 2/3 ({}ms)", ptoStepLogPrefix, getPtoDesc().getPtoName(), binaryTime);
 
         stopWatch.start();
         DataPacketHeader messageHeader = new DataPacketHeader(
@@ -137,20 +137,10 @@ public class Ywl20Gf2kDpprfReceiver extends AbstractGf2kDpprfReceiver {
         );
         List<byte[]> messagePayload = rpc.receive(messageHeader).getPayload();
         handleMessagePayload(messagePayload);
+        Gf2kDpprfReceiverOutput receiverOutput = generateReceiverOutput();
         long messageTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
         stopWatch.reset();
-        info("{}{} Recv. Step 3/4 ({}ms)", ptoStepLogPrefix, getPtoDesc().getPtoName(), messageTime);
-
-        stopWatch.start();
-        DataPacketHeader correlateHeader = new DataPacketHeader(
-            taskId, getPtoDesc().getPtoId(), PtoStep.SENDER_SEND_CORRELATE.ordinal(), extraInfo,
-            otherParty().getPartyId(), ownParty().getPartyId()
-        );
-        List<byte[]> correlatePayload = rpc.receive(correlateHeader).getPayload();
-        Gf2kDpprfReceiverOutput receiverOutput = handleCorrelatePayload(correlatePayload);
-        long correlateTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
-        stopWatch.reset();
-        info("{}{} Recv. Step 4/4 ({}ms)", ptoStepLogPrefix, getPtoDesc().getPtoName(), correlateTime);
+        info("{}{} Recv. Step 3/3 ({}ms)", ptoStepLogPrefix, getPtoDesc().getPtoName(), messageTime);
 
         info("{}{} Recv. end", ptoEndLogPrefix, getPtoDesc().getPtoName());
         return receiverOutput;
@@ -250,21 +240,13 @@ public class Ywl20Gf2kDpprfReceiver extends AbstractGf2kDpprfReceiver {
         cotReceiverOutput = null;
     }
 
-    private Gf2kDpprfReceiverOutput handleCorrelatePayload(List<byte[]> correlatePayload) throws MpcAbortException {
-        MpcAbortPreconditions.checkArgument(correlatePayload.size() == batchNum);
-        byte[][] cBytesArray = correlatePayload.toArray(new byte[0][]);
+    private Gf2kDpprfReceiverOutput generateReceiverOutput() {
         IntStream batchIndexIntStream = IntStream.range(0, batchNum);
         batchIndexIntStream = parallel ? batchIndexIntStream.parallel() : batchIndexIntStream;
         byte[][][] pprfKeys = batchIndexIntStream
             .mapToObj(batchIndex -> {
                 // R sets w[i] = s_i^h for i ∈ [n] \ {α}
                 byte[][] pprfKey = ggmPprfKeys.get(batchIndex).get(l);
-                // and computes w[α]
-                for (int i = 0; i < alphaBound; i++) {
-                    if (i != alphaArray[batchIndex]) {
-                        BytesUtils.xori(cBytesArray[batchIndex], pprfKey[i]);
-                    }
-                }
                 // 得到的PRF密钥数量为2^h，要裁剪到alphaBound个
                 if (alphaBound < (1 << l)) {
                     byte[][] reducePprfKey = new byte[alphaBound][];
@@ -275,6 +257,6 @@ public class Ywl20Gf2kDpprfReceiver extends AbstractGf2kDpprfReceiver {
             })
             .toArray(byte[][][]::new);
         ggmPprfKeys = null;
-        return new Gf2kDpprfReceiverOutput(alphaBound, pprfKeys, alphaArray, cBytesArray);
+        return new Gf2kDpprfReceiverOutput(alphaBound, alphaArray, pprfKeys);
     }
 }

@@ -70,6 +70,10 @@ public class Ywl20MaBspCotReceiver extends AbstractBspCotReceiver {
      */
     private CotReceiverOutput checkCotReceiverOutput;
     /**
+     * GF2K-DPPRF接收方输出
+     */
+    private Gf2kDpprfReceiverOutput gf2kDpprfReceiverOutput;
+    /**
      * 随机预言机
      */
     private Prf randomOracle;
@@ -183,14 +187,20 @@ public class Ywl20MaBspCotReceiver extends AbstractBspCotReceiver {
         info("{}{} Recv. Step 1/4 ({}ms)", ptoStepLogPrefix, getPtoDesc().getPtoName(), cotTime);
 
         stopWatch.start();
-        Gf2kDpprfReceiverOutput gf2kDpprfReceiverOutput = gf2kDpprfReceiver.puncture(alphaArray, num, extendCotReceiverOutput);
+        gf2kDpprfReceiverOutput = gf2kDpprfReceiver.puncture(alphaArray, num, extendCotReceiverOutput);
         stopWatch.stop();
         long dpprfTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
         stopWatch.reset();
         info("{}{} Recv. Step 2/4 ({}ms)", ptoStepLogPrefix, getPtoDesc().getPtoName(), dpprfTime);
 
         stopWatch.start();
-        BspCotReceiverOutput receiverOutput = generateReceiverOutput(gf2kDpprfReceiverOutput);
+        DataPacketHeader correlateHeader = new DataPacketHeader(
+            taskId, getPtoDesc().getPtoId(), PtoStep.SENDER_SEND_CORRELATE.ordinal(), extraInfo,
+            otherParty().getPartyId(), ownParty().getPartyId()
+        );
+        List<byte[]> correlatePayload = rpc.receive(correlateHeader).getPayload();
+        BspCotReceiverOutput receiverOutput = generateReceiverOutput(correlatePayload);
+        gf2kDpprfReceiverOutput = null;
         stopWatch.stop();
         long outputTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
         stopWatch.reset();
@@ -222,13 +232,21 @@ public class Ywl20MaBspCotReceiver extends AbstractBspCotReceiver {
         return receiverOutput;
     }
 
-    private BspCotReceiverOutput generateReceiverOutput(Gf2kDpprfReceiverOutput gf2kDpprfReceiverOutput) {
+    private BspCotReceiverOutput generateReceiverOutput(List<byte[]> correlatePayload) throws MpcAbortException {
+        MpcAbortPreconditions.checkArgument(correlatePayload.size() == batchNum);
+        byte[][] correlateByteArrays = correlatePayload.toArray(new byte[0][]);
         IntStream batchIndexIntStream = IntStream.range(0, batchNum);
         batchIndexIntStream = parallel ? batchIndexIntStream.parallel() : batchIndexIntStream;
         SspCotReceiverOutput[] sspCotReceiverOutputs = batchIndexIntStream
             .mapToObj(batchIndex -> {
                 byte[][] rbArray = gf2kDpprfReceiverOutput.getPprfKey(batchIndex);
-                rbArray[alphaArray[batchIndex]] = gf2kDpprfReceiverOutput.getT(batchIndex);
+                // computes w[α]
+                for (int i = 0; i < num; i++) {
+                    if (i != alphaArray[batchIndex]) {
+                        BytesUtils.xori(correlateByteArrays[batchIndex], rbArray[i]);
+                    }
+                }
+                rbArray[alphaArray[batchIndex]] = correlateByteArrays[batchIndex];
                 return SspCotReceiverOutput.create(alphaArray[batchIndex], rbArray);
             })
             .toArray(SspCotReceiverOutput[]::new);

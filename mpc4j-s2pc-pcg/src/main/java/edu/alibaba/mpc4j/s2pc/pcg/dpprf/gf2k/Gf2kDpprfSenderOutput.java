@@ -1,7 +1,5 @@
 package edu.alibaba.mpc4j.s2pc.pcg.dpprf.gf2k;
 
-import edu.alibaba.mpc4j.common.tool.CommonConstants;
-import edu.alibaba.mpc4j.common.tool.utils.BytesUtils;
 import edu.alibaba.mpc4j.common.tool.utils.LongUtils;
 
 import java.util.Arrays;
@@ -13,10 +11,6 @@ import java.util.Arrays;
  * @date 2022/8/16
  */
 public class Gf2kDpprfSenderOutput {
-    /**
-     * 关联值Δ
-     */
-    private final byte[] delta;
     /**
      * α上界
      */
@@ -34,7 +28,7 @@ public class Gf2kDpprfSenderOutput {
      */
     private final int batchNum;
 
-    public Gf2kDpprfSenderOutput(byte[] delta, int alphaBound, byte[][][] prfKeys) {
+    public Gf2kDpprfSenderOutput(int alphaBound, byte[][][] prfKeys) {
         // 批处理数量设置
         batchNum = prfKeys.length;
         assert batchNum > 0 : "Batch Num must be greater than 0: " + batchNum;
@@ -48,17 +42,6 @@ public class Gf2kDpprfSenderOutput {
                 assert prfKey.length == alphaBound : "PrfKey length should be " + alphaBound + ": " + prfKey.length;
             })
             .toArray(byte[][][]::new);
-        assert delta.length == CommonConstants.BLOCK_BYTE_LENGTH;
-        this.delta = BytesUtils.clone(delta);
-    }
-
-    /**
-     * 返回关联值Δ。
-     *
-     * @return 关联值Δ。
-     */
-    public byte[] getDelta() {
-        return delta;
     }
 
     /**

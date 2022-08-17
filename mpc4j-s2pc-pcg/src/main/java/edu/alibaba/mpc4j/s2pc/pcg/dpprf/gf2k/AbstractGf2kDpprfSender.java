@@ -4,8 +4,6 @@ import edu.alibaba.mpc4j.common.rpc.Party;
 import edu.alibaba.mpc4j.common.rpc.Rpc;
 import edu.alibaba.mpc4j.common.rpc.desc.PtoDesc;
 import edu.alibaba.mpc4j.common.rpc.pto.AbstractSecureTwoPartyPto;
-import edu.alibaba.mpc4j.common.tool.CommonConstants;
-import edu.alibaba.mpc4j.common.tool.utils.BytesUtils;
 import edu.alibaba.mpc4j.common.tool.utils.LongUtils;
 import edu.alibaba.mpc4j.s2pc.pcg.ot.cot.CotSenderOutput;
 
@@ -20,10 +18,6 @@ public abstract class AbstractGf2kDpprfSender extends AbstractSecureTwoPartyPto 
      * 配置项
      */
     private final Gf2kDpprfConfig config;
-    /**
-     * 关联值Δ
-     */
-    protected byte[] delta;
     /**
      * 最大α上界
      */
@@ -59,9 +53,7 @@ public abstract class AbstractGf2kDpprfSender extends AbstractSecureTwoPartyPto 
         return config.getPtoType();
     }
 
-    protected void setInitInput(byte[] delta, int maxBatchNum, int maxAlphaBound) {
-        assert delta.length == CommonConstants.BLOCK_BYTE_LENGTH;
-        this.delta = BytesUtils.clone(delta);
+    protected void setInitInput(int maxBatchNum, int maxAlphaBound) {
         assert maxBatchNum > 0 : "maxBatchNum must be greater than 0:" + maxBatchNum;
         this.maxBatchNum = maxBatchNum;
         assert maxAlphaBound > 0 : "maxAlphaBound must be greater than 0: " + maxAlphaBound;

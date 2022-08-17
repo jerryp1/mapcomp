@@ -23,12 +23,11 @@ public interface Gf2kDpprfSender extends TwoPartyPto, SecurePto {
     /**
      * 初始化协议。
      *
-     * @param delta         关联值Δ。
      * @param maxBatchNum   最大批处理数量。
      * @param maxAlphaBound 最大α上界。
      * @throws MpcAbortException 如果协议异常中止。
      */
-    void init(byte[] delta, int maxBatchNum, int maxAlphaBound) throws MpcAbortException;
+    void init(int maxBatchNum, int maxAlphaBound) throws MpcAbortException;
 
     /**
      * 执行协议。

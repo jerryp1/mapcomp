@@ -30,6 +30,7 @@ import edu.alibaba.mpc4j.s2pc.pcg.ot.cot.sp.bsp.SspCotSenderOutput;
 import java.nio.ByteBuffer;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
 /**
@@ -116,7 +117,7 @@ public class Ywl20MaBspCotSender extends AbstractBspCotSender {
         int maxCotNum = Gf2kDpprfFactory.getPrecomputeNum(gf2kDpprfConfig, maxBatchNum, maxNum)
             + CommonConstants.BLOCK_BIT_LENGTH;
         coreCotSender.init(delta, maxCotNum);
-        gf2kDpprfSender.init(delta, maxBatchNum, maxNum);
+        gf2kDpprfSender.init(maxBatchNum, maxNum);
         stopWatch.stop();
         long initTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
         stopWatch.reset();
@@ -180,9 +181,25 @@ public class Ywl20MaBspCotSender extends AbstractBspCotSender {
         info("{}{} Send. Step 2/4 ({}ms)", ptoStepLogPrefix, getPtoDesc().getPtoName(), dpprfTime);
 
         stopWatch.start();
+        byte[][] correlateByteArrays = new byte[batchNum][];
         SspCotSenderOutput[] senderOutputs = IntStream.range(0, batchNum)
-            .mapToObj(batchIndex -> SspCotSenderOutput.create(delta, gf2kDpprfSenderOutput.getPrfKey(batchIndex)))
+            .mapToObj(batchIndex -> {
+                correlateByteArrays[batchIndex] = BytesUtils.clone(delta);
+                // S sets v = (s_0^h,...,s_{n - 1}^h)
+                byte[][] vs = gf2kDpprfSenderOutput.getPrfKey(batchIndex);
+                // and sends c = Δ + \sum_{i ∈ [n]} {v[i]}
+                for (int i = 0; i < num; i++) {
+                    BytesUtils.xori(correlateByteArrays[batchIndex], vs[i]);
+                }
+                return SspCotSenderOutput.create(delta, vs);
+            })
             .toArray(SspCotSenderOutput[]::new);
+        List<byte[]> correlatePayload = Arrays.stream(correlateByteArrays).collect(Collectors.toList());
+        DataPacketHeader correlateHeader = new DataPacketHeader(
+            taskId, getPtoDesc().getPtoId(), PtoStep.SENDER_SEND_CORRELATE.ordinal(), extraInfo,
+            ownParty().getPartyId(), otherParty().getPartyId()
+        );
+        rpc.send(DataPacket.fromByteArrayList(correlateHeader, correlatePayload));
         BspCotSenderOutput senderOutput = BspCotSenderOutput.create(senderOutputs);
         stopWatch.stop();
         long outputTime = stopWatch.getTime(TimeUnit.MILLISECONDS);

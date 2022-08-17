@@ -33,6 +33,10 @@ class Ywl20MaBspCotPtoDesc implements PtoDesc {
          */
         RECEIVER_SEND_RANDOM_ORACLE_KEY,
         /**
+         * 发送方发送组合消息C
+         */
+        SENDER_SEND_CORRELATE,
+        /**
          * 接收方发送x'
          */
         RECEIVER_SEND_CHECK_CHOICES,

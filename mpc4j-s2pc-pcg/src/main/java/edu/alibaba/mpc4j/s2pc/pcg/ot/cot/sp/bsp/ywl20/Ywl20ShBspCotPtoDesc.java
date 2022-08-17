@@ -35,6 +35,16 @@ class Ywl20ShBspCotPtoDesc implements PtoDesc {
         // empty
     }
 
+    /**
+     * 协议步骤
+     */
+    enum PtoStep {
+        /**
+         * 发送方发送组合消息C
+         */
+        SENDER_SEND_CORRELATE,
+    }
+
     public static PtoDesc getInstance() {
         return INSTANCE;
     }

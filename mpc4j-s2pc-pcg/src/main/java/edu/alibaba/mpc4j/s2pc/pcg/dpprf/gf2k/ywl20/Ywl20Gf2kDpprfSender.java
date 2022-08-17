@@ -82,11 +82,14 @@ public class Ywl20Gf2kDpprfSender extends AbstractGf2kDpprfSender {
     }
 
     @Override
-    public void init(byte[] delta, int maxBatchNum, int maxAlphaBound) throws MpcAbortException {
-        setInitInput(delta, maxBatchNum, maxAlphaBound);
+    public void init(int maxBatchNum, int maxAlphaBound) throws MpcAbortException {
+        setInitInput(maxBatchNum, maxAlphaBound);
         info("{}{} Send. Init begin", ptoBeginLogPrefix, getPtoDesc().getPtoName());
 
         stopWatch.start();
+        // DPPRF使用的是Random OT，所以可以随机选择Δ
+        byte[] delta = new byte[CommonConstants.BLOCK_BYTE_LENGTH];
+        secureRandom.nextBytes(delta);
         coreCotSender.init(delta, maxAlphaBound * maxBatchNum);
         stopWatch.stop();
         long initTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
@@ -123,14 +126,14 @@ public class Ywl20Gf2kDpprfSender extends AbstractGf2kDpprfSender {
         stopWatch.stop();
         long cotTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
         stopWatch.reset();
-        info("{}{} Send. Step 1/4 ({}ms)", ptoStepLogPrefix, getPtoDesc().getPtoName(), cotTime);
+        info("{}{} Send. Step 1/3 ({}ms)", ptoStepLogPrefix, getPtoDesc().getPtoName(), cotTime);
 
         stopWatch.start();
         generatePprfKeys();
         stopWatch.stop();
         long keyGenTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
         stopWatch.reset();
-        info("{}{} Send. Step 2/4 ({}ms)", ptoStepLogPrefix, getPtoDesc().getPtoName(), keyGenTime);
+        info("{}{} Send. Step 2/3 ({}ms)", ptoStepLogPrefix, getPtoDesc().getPtoName(), keyGenTime);
 
         stopWatch.start();
         DataPacketHeader binaryHeader = new DataPacketHeader(
@@ -144,23 +147,11 @@ public class Ywl20Gf2kDpprfSender extends AbstractGf2kDpprfSender {
             ownParty().getPartyId(), otherParty().getPartyId()
         );
         rpc.send(DataPacket.fromByteArrayList(messageHeader, messagePayload));
+        Gf2kDpprfSenderOutput senderOutput = generateSenderOutput();
         stopWatch.stop();
         long messageTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
         stopWatch.reset();
-        info("{}{} Send. Step 3/4 ({}ms)", ptoStepLogPrefix, getPtoDesc().getPtoName(), messageTime);
-
-        stopWatch.start();
-        List<byte[]> correlatePayload = generateCorrelatePayload();
-        DataPacketHeader correlateHeader = new DataPacketHeader(
-            taskId, getPtoDesc().getPtoId(), PtoStep.SENDER_SEND_CORRELATE.ordinal(), extraInfo,
-            ownParty().getPartyId(), otherParty().getPartyId()
-        );
-        rpc.send(DataPacket.fromByteArrayList(correlateHeader, correlatePayload));
-        Gf2kDpprfSenderOutput senderOutput = generateSenderOutput();
-        stopWatch.stop();
-        long correlateTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
-        stopWatch.reset();
-        info("{}{} Send. Step 4/4 ({}ms)", ptoStepLogPrefix, getPtoDesc().getPtoName(), correlateTime);
+        info("{}{} Send. Step 3/3 ({}ms)", ptoStepLogPrefix, getPtoDesc().getPtoName(), messageTime);
 
         info("{}{} Send. end", ptoEndLogPrefix, getPtoDesc().getPtoName());
         return senderOutput;
@@ -260,23 +251,6 @@ public class Ywl20Gf2kDpprfSender extends AbstractGf2kDpprfSender {
         return messagePayload;
     }
 
-    private List<byte[]> generateCorrelatePayload() {
-        IntStream batchIndexIntStream = IntStream.range(0, batchNum);
-        batchIndexIntStream = parallel ? batchIndexIntStream.parallel() : batchIndexIntStream;
-        return batchIndexIntStream
-            .mapToObj(batchIndex -> {
-                byte[] cBytes = BytesUtils.clone(delta);
-                // S sets v = (s_0^h,...,s_{n - 1}^h)
-                byte[][] vs = ggmPrfKeys.get(batchIndex).get(l);
-                // and sends c = Δ + \sum_{i ∈ [n]} {v[i]}
-                for (int i = 0; i < alphaBound; i++) {
-                    BytesUtils.xori(cBytes, vs[i]);
-                }
-                return cBytes;
-            })
-            .collect(Collectors.toList());
-    }
-
     private Gf2kDpprfSenderOutput generateSenderOutput() {
         byte[][][] prfKeys = IntStream.range(0, batchNum)
             .mapToObj(batchIndex -> {
@@ -291,6 +265,6 @@ public class Ywl20Gf2kDpprfSender extends AbstractGf2kDpprfSender {
             })
             .toArray(byte[][][]::new);
         ggmPrfKeys = null;
-        return new Gf2kDpprfSenderOutput(delta, alphaBound, prfKeys);
+        return new Gf2kDpprfSenderOutput(alphaBound, prfKeys);
     }
 }

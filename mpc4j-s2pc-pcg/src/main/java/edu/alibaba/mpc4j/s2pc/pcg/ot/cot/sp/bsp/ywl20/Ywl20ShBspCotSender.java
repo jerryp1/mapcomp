@@ -1,12 +1,18 @@
 package edu.alibaba.mpc4j.s2pc.pcg.ot.cot.sp.bsp.ywl20;
 
 import java.nio.ByteBuffer;
+import java.util.Arrays;
+import java.util.List;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
 import edu.alibaba.mpc4j.common.rpc.MpcAbortException;
 import edu.alibaba.mpc4j.common.rpc.Party;
 import edu.alibaba.mpc4j.common.rpc.Rpc;
+import edu.alibaba.mpc4j.common.rpc.utils.DataPacket;
+import edu.alibaba.mpc4j.common.rpc.utils.DataPacketHeader;
+import edu.alibaba.mpc4j.common.tool.utils.BytesUtils;
 import edu.alibaba.mpc4j.s2pc.pcg.dpprf.gf2k.Gf2kDpprfConfig;
 import edu.alibaba.mpc4j.s2pc.pcg.dpprf.gf2k.Gf2kDpprfFactory;
 import edu.alibaba.mpc4j.s2pc.pcg.dpprf.gf2k.Gf2kDpprfSender;
@@ -17,6 +23,7 @@ import edu.alibaba.mpc4j.s2pc.pcg.ot.cot.CotSenderOutput;
 import edu.alibaba.mpc4j.s2pc.pcg.ot.cot.sp.bsp.AbstractBspCotSender;
 import edu.alibaba.mpc4j.s2pc.pcg.ot.cot.sp.bsp.BspCotSenderOutput;
 import edu.alibaba.mpc4j.s2pc.pcg.ot.cot.sp.bsp.SspCotSenderOutput;
+import edu.alibaba.mpc4j.s2pc.pcg.ot.cot.sp.bsp.ywl20.Ywl20ShBspCotPtoDesc.PtoStep;
 
 /**
  * YWL20-BSP-COT半诚实安全协议发送方。
@@ -82,7 +89,7 @@ public class Ywl20ShBspCotSender extends AbstractBspCotSender {
         stopWatch.start();
         int maxCotNum = Gf2kDpprfFactory.getPrecomputeNum(gf2kDpprfConfig, maxBatchNum, maxNum);
         coreCotSender.init(delta, maxCotNum);
-        gf2kDpprfSender.init(delta, maxBatchNum, maxNum);
+        gf2kDpprfSender.init(maxBatchNum, maxNum);
         stopWatch.stop();
         long initTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
         stopWatch.reset();
@@ -130,9 +137,25 @@ public class Ywl20ShBspCotSender extends AbstractBspCotSender {
         info("{}{} Send. Step 2/3 ({}ms)", ptoStepLogPrefix, getPtoDesc().getPtoName(), dpprfTime);
 
         stopWatch.start();
+        byte[][] correlateByteArrays = new byte[batchNum][];
         SspCotSenderOutput[] senderOutputs = IntStream.range(0, batchNum)
-            .mapToObj(batchIndex -> SspCotSenderOutput.create(delta, gf2kDpprfSenderOutput.getPrfKey(batchIndex)))
+            .mapToObj(batchIndex -> {
+                correlateByteArrays[batchIndex] = BytesUtils.clone(delta);
+                // S sets v = (s_0^h,...,s_{n - 1}^h)
+                byte[][] vs = gf2kDpprfSenderOutput.getPrfKey(batchIndex);
+                // and sends c = Δ + \sum_{i ∈ [n]} {v[i]}
+                for (int i = 0; i < num; i++) {
+                    BytesUtils.xori(correlateByteArrays[batchIndex], vs[i]);
+                }
+                return SspCotSenderOutput.create(delta, vs);
+            })
             .toArray(SspCotSenderOutput[]::new);
+        List<byte[]> correlatePayload = Arrays.stream(correlateByteArrays).collect(Collectors.toList());
+        DataPacketHeader correlateHeader = new DataPacketHeader(
+            taskId, getPtoDesc().getPtoId(), PtoStep.SENDER_SEND_CORRELATE.ordinal(), extraInfo,
+            ownParty().getPartyId(), otherParty().getPartyId()
+        );
+        rpc.send(DataPacket.fromByteArrayList(correlateHeader, correlatePayload));
         BspCotSenderOutput senderOutput = BspCotSenderOutput.create(senderOutputs);
         stopWatch.stop();
         long outputTime = stopWatch.getTime(TimeUnit.MILLISECONDS);

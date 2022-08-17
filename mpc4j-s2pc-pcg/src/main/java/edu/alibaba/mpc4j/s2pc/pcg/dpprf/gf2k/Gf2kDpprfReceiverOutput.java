@@ -1,7 +1,5 @@
 package edu.alibaba.mpc4j.s2pc.pcg.dpprf.gf2k;
 
-import edu.alibaba.mpc4j.common.tool.CommonConstants;
-import edu.alibaba.mpc4j.common.tool.utils.BytesUtils;
 import edu.alibaba.mpc4j.common.tool.utils.LongUtils;
 
 import java.util.Arrays;
@@ -31,20 +29,15 @@ public class Gf2kDpprfReceiverOutput {
      */
     private final int[] alphaArray;
     /**
-     * 刺穿值t
-     */
-    private final byte[][] tArray;
-    /**
      * 批处理数量
      */
     private final int batchNum;
 
-    public Gf2kDpprfReceiverOutput(int alphaBound, byte[][][] pprfKeys, int[] alphaArray, byte[][] tArray) {
+    public Gf2kDpprfReceiverOutput(int alphaBound, int[] alphaArray, byte[][][] pprfKeys) {
         // 批处理数量设置
         batchNum = alphaArray.length;
         assert batchNum > 0 : "Batch Num must be greater than 0: " + batchNum;
         assert pprfKeys.length == batchNum : "# of pprfKeys must be equal to " + batchNum + ": " + pprfKeys.length;
-        assert tArray.length == batchNum : "# of ts must be equal to " + batchNum + ": " + tArray.length;
         // α设置
         assert alphaBound > 0 : "AlphaBound must be greater than 0: " + alphaBound;
         this.alphaBound = alphaBound;
@@ -64,12 +57,6 @@ public class Gf2kDpprfReceiverOutput {
                     return pprfKey;
                 })
             .toArray(byte[][][]::new);
-        this.tArray = Arrays.stream(tArray)
-            .peek(t -> {
-                assert t.length == CommonConstants.BLOCK_BYTE_LENGTH;
-            })
-            .map(BytesUtils::clone)
-            .toArray(byte[][]::new);
     }
 
     /**
@@ -80,16 +67,6 @@ public class Gf2kDpprfReceiverOutput {
      */
     public int getAlpha(int batchIndex) {
         return alphaArray[batchIndex];
-    }
-
-    /**
-     * 返回刺穿值t。
-     *
-     * @param batchIndex 批处理索引。
-     * @return 刺穿值t。
-     */
-    public byte[] getT(int batchIndex) {
-        return tArray[batchIndex];
     }
 
     /**
