@@ -7,9 +7,8 @@ import edu.alibaba.mpc4j.common.tool.crypto.prp.PrpFactory;
 import edu.alibaba.mpc4j.common.tool.utils.BinaryUtils;
 import edu.alibaba.mpc4j.common.tool.utils.BytesUtils;
 import edu.alibaba.mpc4j.common.tool.utils.CommonUtils;
-import sun.misc.Unsafe;
+import edu.alibaba.mpc4j.common.tool.utils.IntUtils;
 
-import java.lang.reflect.Field;
 import java.nio.ByteBuffer;
 import java.util.stream.IntStream;
 
@@ -37,22 +36,6 @@ public class LocalLinearCoder {
      * 随机分组对应的整数数量
      */
     private static final int RANDOM_INT_NUM = RANDOM_BLOCK_NUM * CommonConstants.BLOCK_BYTE_LENGTH / Integer.BYTES;
-    /**
-     * 不安全转换函数，参见https://stackoverflow.com/questions/43079234/convert-a-byte-array-into-an-int-array-in-java
-     */
-    private static final Unsafe UNSAFE;
-
-    static {
-        try {
-            Field theUnsafe = Unsafe.class.getDeclaredField("theUnsafe");
-            theUnsafe.setAccessible(true);
-            UNSAFE = (Unsafe) theUnsafe.get(null);
-        } catch (NoSuchFieldException | IllegalAccessException e) {
-            e.printStackTrace();
-            throw new IllegalStateException(e);
-        }
-    }
-
     /**
      * 编码输出行数
      */
@@ -195,13 +178,7 @@ public class LocalLinearCoder {
             // prp->permute_block(tmp, 3)
             indexByteBuffer.put(prp.prp(block));
         }
-        byte[] indexBytes = indexByteBuffer.array();
-        int[] sparseRow = new int[RANDOM_INT_NUM];
-        // uint32_t* r = (uint32_t*)(tmp)
-        UNSAFE.copyMemory(
-            indexBytes, Unsafe.ARRAY_BYTE_BASE_OFFSET, sparseRow, Unsafe.ARRAY_INT_BASE_OFFSET, indexBytes.length
-        );
-        return sparseRow;
+        return IntUtils.unsafeByteArrayToIntArray(indexByteBuffer.array(), RANDOM_INT_NUM);
     }
 
 }
