@@ -2,7 +2,7 @@
 // Created by Weiran Liu on 2021/12/13.
 //
 
-#include "mcl_ecc.h"
+#include "ecc_mcl.h"
 #include "edu_alibaba_mpc4j_common_tool_crypto_ecc_MclNativeSecP256k1Ecc.h"
 
 JNIEXPORT void JNICALL Java_edu_alibaba_mpc4j_common_tool_crypto_ecc_MclNativeSecP256k1Ecc_init

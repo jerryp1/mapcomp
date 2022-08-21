@@ -120,12 +120,12 @@ add_library(
         ntl_poly/ntl_gf2x.cpp
         ntl_poly/edu_alibaba_mpc4j_common_tool_polynomial_zp_NtlZpPoly.cpp
         ntl_poly/ntl_zp.cpp
-        mcl_ecc/edu_alibaba_mpc4j_common_tool_crypto_ecc_MclNativeSecP256k1Ecc.cpp
-        mcl_ecc/edu_alibaba_mpc4j_common_tool_crypto_ecc_MclNativeSecP256r1Ecc.cpp
+        ecc_mcl/edu_alibaba_mpc4j_common_tool_crypto_ecc_MclNativeSecP256k1Ecc.cpp
+        ecc_mcl/edu_alibaba_mpc4j_common_tool_crypto_ecc_MclNativeSecP256r1Ecc.cpp
         gf2k/edu_alibaba_mpc4j_common_tool_galoisfield_gf2k_SseGf2k.cpp
         gf2k/edu_alibaba_mpc4j_common_tool_galoisfield_gf2k_NtlGf2k.cpp
         gf2e/edu_alibaba_mpc4j_common_tool_galoisfield_gf2e_NtlNativeGf2e.cpp
-        mcl_ecc/mcl_ecc.cpp ntl_poly/ntl_zp64.h ntl_poly/ntl_zp64.cpp ntl_poly/edu_alibaba_mpc4j_common_tool_polynomial_zp64_NtlZp64Poly.cpp)
+        ecc_mcl/ecc_mcl.cpp ntl_poly/ntl_zp64.h ntl_poly/ntl_zp64.cpp ntl_poly/edu_alibaba_mpc4j_common_tool_polynomial_zp64_NtlZp64Poly.cpp)
 
 target_include_directories(
         mpc4j-native-tool

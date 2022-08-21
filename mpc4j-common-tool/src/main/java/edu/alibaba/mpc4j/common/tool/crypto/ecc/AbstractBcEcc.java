@@ -175,23 +175,23 @@ public abstract class AbstractBcEcc implements Ecc {
         ECLookupTable lookupTable = info.getLookupTable();
         int width = info.getWidth();
         int d = (size + width - 1) / width;
-        ECPoint R = c.getInfinity();
+        ECPoint result = c.getInfinity();
         int fullComb = d * width;
-        int[] K = Nat.fromBigInteger(fullComb, modR);
+        int[] k = Nat.fromBigInteger(fullComb, modR);
         int top = fullComb - 1;
         for (int i = 0; i < d; ++i) {
             int secretIndex = 0;
             for (int j = top - i; j >= 0; j -= d) {
-                int secretBit = K[j >>> 5] >>> (j & 0x1F);
+                int secretBit = k[j >>> 5] >>> (j & 0x1F);
                 secretIndex ^= secretBit >>> 1;
                 secretIndex <<= 1;
                 secretIndex ^= secretBit;
             }
 
             ECPoint add = lookupTable.lookup(secretIndex);
-            R = R.twicePlus(add);
+            result = result.twicePlus(add);
         }
-        return R.add(info.getOffset());
+        return result.add(info.getOffset());
     }
 
     @Override

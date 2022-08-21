@@ -1,7 +1,7 @@
 //
 // Created by Weiran Liu on 2022/7/7.
 //
-#include "mcl_ecc.h"
+#include "ecc_mcl.h"
 
 void ecFromString(const std::string &ecString, Ec &ecPoint) {
     cybozu::StringInputStream is(ecString);

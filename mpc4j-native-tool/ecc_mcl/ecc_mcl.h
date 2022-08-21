@@ -7,8 +7,8 @@
 #include <jni.h>
 #include <vector>
 
-#ifndef MPC4J_NATIVE_TOOL_MCL_ECC_H
-#define MPC4J_NATIVE_TOOL_MCL_ECC_H
+#ifndef MPC4J_NATIVE_TOOL_ECC_MCL_H
+#define MPC4J_NATIVE_TOOL_ECC_MCL_H
 
 struct TagZn;
 typedef mcl::FpT<> Fp;
@@ -36,4 +36,4 @@ jstring singleMultiply(JNIEnv *env, jstring jecString, jstring jznString);
 
 jobjectArray multiply(JNIEnv *env, jstring jecString, jobjectArray jznStringArray);
 
-#endif //MPC4J_NATIVE_TOOL_MCL_ECC_H
+#endif //MPC4J_NATIVE_TOOL_ECC_MCL_H

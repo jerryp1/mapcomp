@@ -1,4 +1,4 @@
-#include "mcl_ecc.h"
+#include "ecc_mcl.h"
 #include "edu_alibaba_mpc4j_common_tool_crypto_ecc_MclNativeSecP256r1Ecc.h"
 
 JNIEXPORT void JNICALL Java_edu_alibaba_mpc4j_common_tool_crypto_ecc_MclNativeSecP256r1Ecc_init
