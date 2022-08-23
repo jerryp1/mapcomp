@@ -125,7 +125,13 @@ add_library(
         gf2k/edu_alibaba_mpc4j_common_tool_galoisfield_gf2k_SseGf2k.cpp
         gf2k/edu_alibaba_mpc4j_common_tool_galoisfield_gf2k_NtlGf2k.cpp
         gf2e/edu_alibaba_mpc4j_common_tool_galoisfield_gf2e_NtlNativeGf2e.cpp
-        ecc_mcl/ecc_mcl.cpp ntl_poly/ntl_zp64.h ntl_poly/ntl_zp64.cpp ntl_poly/edu_alibaba_mpc4j_common_tool_polynomial_zp64_NtlZp64Poly.cpp)
+        ecc_mcl/ecc_mcl.cpp
+        ntl_poly/ntl_zp64.h
+        ntl_poly/ntl_zp64.cpp
+        ntl_poly/edu_alibaba_mpc4j_common_tool_polynomial_zp64_NtlZp64Poly.cpp
+        ecc_openssl/openssl_window_method.hpp
+        ecc_openssl/openssl_ecc.h
+        ecc_openssl/openssl_ecc.cpp ecc_openssl/openssl_bit_iterator.hpp)
 
 target_include_directories(
         mpc4j-native-tool
@@ -141,4 +147,21 @@ target_link_libraries(
         ${GMP_LIBRARY}
         ${OPENSSL_CRYPTO_LIBRARY}
         libmcl.a
+)
+
+add_executable(
+        openssl_ecc_test
+        ecc_openssl/openssl_window_method.hpp
+        ecc_openssl/openssl_ecc.cpp
+        )
+target_include_directories(
+        openssl_ecc_test
+        PUBLIC
+        /usr/local/include
+        common
+)
+target_link_libraries(
+        openssl_ecc_test
+        PUBLIC
+        ${OPENSSL_CRYPTO_LIBRARY}
 )
