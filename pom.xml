@@ -22,6 +22,7 @@
         <module>mpc4j-s2pc-pir</module>
         <module>mpc4j-s2pc-pso</module>
         <module>mpc4j-sml-opboost</module>
+        <module>mpc4j-common-kyber</module>
     </modules>
 
     <properties>
@@ -161,8 +162,8 @@
                 <artifactId>maven-compiler-plugin</artifactId>
                 <version>3.5.1</version>
                 <configuration>
-                    <source>8</source>
-                    <target>8</target>
+                    <source>18</source>
+                    <target>18</target>
                 </configuration>
             </plugin>
         </plugins>

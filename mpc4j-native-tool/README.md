@@ -341,7 +341,7 @@ make install
 
 ### M1 MAC安装
 
-目前MCL还没有针对Arm64 MacOS进行汇编优化，因此编译时需要移除汇编支持，即执行下述命令：
+目前MCL还没有针对Arm64 MacOS进行汇编优化，因此编译时需要移除汇编支持，即在mcl目录下执行下述命令：
 
 ```shell
 mkdir build

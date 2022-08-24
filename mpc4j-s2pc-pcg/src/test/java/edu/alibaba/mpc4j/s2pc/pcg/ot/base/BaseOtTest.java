@@ -1,12 +1,5 @@
 package edu.alibaba.mpc4j.s2pc.pcg.ot.base;
 
-import java.nio.ByteBuffer;
-import java.security.SecureRandom;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.concurrent.TimeUnit;
-import java.util.stream.IntStream;
-
 import com.google.common.base.Preconditions;
 import edu.alibaba.mpc4j.common.rpc.Rpc;
 import edu.alibaba.mpc4j.common.rpc.RpcManager;
@@ -15,6 +8,7 @@ import edu.alibaba.mpc4j.s2pc.pcg.ot.base.BaseOtFactory.BaseOtType;
 import edu.alibaba.mpc4j.s2pc.pcg.ot.base.co15.Co15BaseOtConfig;
 import edu.alibaba.mpc4j.s2pc.pcg.ot.base.csw20.Csw20BaseOtConfig;
 import edu.alibaba.mpc4j.s2pc.pcg.ot.base.mr19.Mr19BaseOtConfig;
+import edu.alibaba.mpc4j.s2pc.pcg.ot.base.mrkyber19.MrKyber19BaseOtConfig;
 import edu.alibaba.mpc4j.s2pc.pcg.ot.base.np01.Np01BaseOtConfig;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.time.StopWatch;
@@ -24,6 +18,13 @@ import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import java.nio.ByteBuffer;
+import java.security.SecureRandom;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.concurrent.TimeUnit;
+import java.util.stream.IntStream;
 
 /**
  * 基础OT协议测试。
@@ -55,6 +56,11 @@ public class BaseOtTest {
         configurationParams.add(new Object[] {
             BaseOtType.MR19.name() + " (uncompress)",
             new Mr19BaseOtConfig.Builder().setCompressEncode(false).build(),
+        });
+        //MRKYBER19
+        configurationParams.add(new Object[] {
+                BaseOtType.MRKYBER19.name() ,
+                new MrKyber19BaseOtConfig.Builder().build(),
         });
         // CO15，压缩编码
         configurationParams.add(new Object[] {
