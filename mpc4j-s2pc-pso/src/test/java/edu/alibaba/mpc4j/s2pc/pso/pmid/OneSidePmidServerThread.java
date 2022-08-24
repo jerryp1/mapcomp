@@ -5,12 +5,12 @@ import edu.alibaba.mpc4j.common.rpc.MpcAbortException;
 import java.util.Set;
 
 /**
- * PMID协议发送方线程。
+ * 单方多集合PMID协议发送方线程。
  *
  * @author Weiran Liu
  * @date 2022/05/10
  */
-class PmidServerThread extends Thread {
+class OneSidePmidServerThread extends Thread {
     /**
      * PMID发送方
      */
@@ -26,17 +26,24 @@ class PmidServerThread extends Thread {
     /**
      * 客户端重复元素上界
      */
-    private final int k;
+    private final int maxClientK;
+    /**
+     * 客户端重复元素数量
+     */
+    private final int clientK;
     /**
      * PMID输出结果
      */
     private PmidPartyOutput<String> serverOutput;
 
-    PmidServerThread(PmidServer<String> pmidServer, Set<String> serverElementSet, int clientSetSize, int k) {
+    OneSidePmidServerThread(PmidServer<String> pmidServer,
+                            Set<String> serverElementSet,
+                            int clientSetSize, int maxClientK, int ClientK) {
         this.pmidServer = pmidServer;
         this.serverElementSet = serverElementSet;
         this.clientSetSize = clientSetSize;
-        this.k = k;
+        this.maxClientK = maxClientK;
+        this.clientK = ClientK;
     }
 
     PmidPartyOutput<String> getServerOutput() {
@@ -47,8 +54,8 @@ class PmidServerThread extends Thread {
     public void run() {
         try {
             pmidServer.getRpc().connect();
-            pmidServer.init(serverElementSet.size(), clientSetSize, k);
-            serverOutput = pmidServer.pmid(serverElementSet, clientSetSize, k);
+            pmidServer.init(serverElementSet.size(), clientSetSize, maxClientK);
+            serverOutput = pmidServer.pmid(serverElementSet, clientSetSize, clientK);
             pmidServer.getRpc().disconnect();
         } catch (MpcAbortException e) {
             e.printStackTrace();

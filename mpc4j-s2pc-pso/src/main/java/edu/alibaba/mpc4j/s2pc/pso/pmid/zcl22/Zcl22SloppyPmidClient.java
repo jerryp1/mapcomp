@@ -189,8 +189,8 @@ public class Zcl22SloppyPmidClient<T> extends AbstractPmidClient<T> {
     }
 
     @Override
-    public void init(int maxClientSetSize, int maxServerSetSize, int maxK) throws MpcAbortException {
-        setInitInput(maxClientSetSize, maxServerSetSize, maxK);
+    public void init(int maxClientSetSize, int maxClientK, int maxServerSetSize) throws MpcAbortException {
+        setInitInput(maxClientSetSize, maxClientK, maxServerSetSize);
         info("{}{} Client Init begin", ptoBeginLogPrefix, getPtoDesc().getPtoName());
 
         stopWatch.start();
@@ -198,7 +198,7 @@ public class Zcl22SloppyPmidClient<T> extends AbstractPmidClient<T> {
         oprfSender.init(maxServerBinNum);
         int maxClientBinNum = CuckooHashBinFactory.getBinNum(cuckooHashBinType, maxClientSetSize);
         oprfReceiver.init(maxClientBinNum);
-        psuClient.init(maxK * maxClientSetSize, maxK * maxServerSetSize);
+        psuClient.init(maxClientK * maxClientSetSize, maxClientK * maxServerSetSize);
         stopWatch.stop();
         long initTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
         stopWatch.reset();
@@ -266,13 +266,13 @@ public class Zcl22SloppyPmidClient<T> extends AbstractPmidClient<T> {
         clientPidPrf.setKey(clientPidPrfKey);
         // PMID字节长度等于λ + log(nk) + log(m) = λ + log(m * n * k)
         int pmidByteLength = CommonConstants.STATS_BYTE_LENGTH + CommonUtils.getByteLength(
-            LongUtils.ceilLog2((long)k * clientSetSize * serverSetSize)
+            LongUtils.ceilLog2((long) clientK * clientSetSize * serverSetSize)
         );
         pmidMapPrf = PrfFactory.createInstance(envType, pmidByteLength);
         pmidMapPrf.setKey(pmidMapPrfKey);
         // σ = λ + Max{log(nk), log(mk)}
         sigma = CommonConstants.STATS_BYTE_LENGTH + Math.max(
-            LongUtils.ceilLog2((long) k * clientSetSize), LongUtils.ceilLog2((long) k * serverSetSize)
+            LongUtils.ceilLog2((long) clientK * clientSetSize), LongUtils.ceilLog2((long) clientK * serverSetSize)
         );
         sigmaMapPrf = PrfFactory.createInstance(envType, sigma);
         sigmaMapPrf.setKey(sigmaMapPrfKey);
@@ -578,7 +578,7 @@ public class Zcl22SloppyPmidClient<T> extends AbstractPmidClient<T> {
                 clientPid -> clientPid,
                 clientPid -> {
                     byte[] pid = clientPid.array();
-                    byte[] extendPid = ByteBuffer.allocate(pid.length + Integer.BYTES).put(pid).putInt(k + 1).array();
+                    byte[] extendPid = ByteBuffer.allocate(pid.length + Integer.BYTES).put(pid).putInt(clientK + 1).array();
                     return sigmaMapPrf.getBytes(extendPid);
                 })
             );
@@ -622,7 +622,7 @@ public class Zcl22SloppyPmidClient<T> extends AbstractPmidClient<T> {
 
     private Map<ByteBuffer, T> generateClientPmidMap() {
         // 构建客户端PmidMap
-        Map<ByteBuffer, T> clientPmidMap = new ConcurrentHashMap<>(clientSetSize * k);
+        Map<ByteBuffer, T> clientPmidMap = new ConcurrentHashMap<>(clientSetSize * clientK);
         Stream<ByteBuffer> clientPidStream = clientPidMap.keySet().stream();
         clientPidStream = parallel ? clientPidStream.parallel() : clientPidStream;
         clientPidStream.forEach(clientPid -> {

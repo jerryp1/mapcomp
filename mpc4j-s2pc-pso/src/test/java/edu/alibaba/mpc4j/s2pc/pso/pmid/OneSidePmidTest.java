@@ -6,7 +6,6 @@ import edu.alibaba.mpc4j.common.rpc.RpcManager;
 import edu.alibaba.mpc4j.common.rpc.impl.memory.MemoryRpcManager;
 import edu.alibaba.mpc4j.common.tool.okve.okvs.OkvsFactory.OkvsType;
 import edu.alibaba.mpc4j.s2pc.pso.PsoUtils;
-import edu.alibaba.mpc4j.s2pc.pso.pid.PidTest;
 import edu.alibaba.mpc4j.s2pc.pso.pmid.zcl22.Zcl22MpPmidConfig;
 import edu.alibaba.mpc4j.s2pc.pso.pmid.zcl22.Zcl22SloppyPmidConfig;
 import edu.alibaba.mpc4j.s2pc.pso.psu.jsz22.Jsz22SfcPsuConfig;
@@ -26,14 +25,14 @@ import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 /**
- * PMID协议测试。注意，PMID参与方的输入集合大小至少大于1。
+ * 单方多集合PMID协议测试。
  *
  * @author Weiran Liu
  * @date 2022/5/10
  */
 @RunWith(Parameterized.class)
-public class PmidTest {
-    private static final Logger LOGGER = LoggerFactory.getLogger(PidTest.class);
+public class OneSidePmidTest {
+    private static final Logger LOGGER = LoggerFactory.getLogger(OneSidePmidTest.class);
     /**
      * 随机状态
      */
@@ -41,7 +40,7 @@ public class PmidTest {
     /**
      * 默认数量
      */
-    private static final int DEFAULT_SET_SIZE = 1 << 10;
+    private static final int DEFAULT_SET_SIZE = 1 << 8;
     /**
      * 较大数量
      */
@@ -106,7 +105,7 @@ public class PmidTest {
      */
     private final PmidConfig config;
 
-    public PmidTest(String name, PmidConfig config) {
+    public OneSidePmidTest(String name, PmidConfig config) {
         Preconditions.checkArgument(StringUtils.isNotBlank(name));
         RpcManager rpcManager = new MemoryRpcManager(2);
         serverRpc = rpcManager.getRpc(0);
@@ -189,26 +188,27 @@ public class PmidTest {
         testPmid(server, client, LARGE_SET_SIZE, LARGE_SET_SIZE, DEFAULT_MAX_K);
     }
 
-    private void testPmid(PmidServer<String> server, PmidClient<String> client, int serverSize, int clientSize, int maxK) {
+    private void testPmid(PmidServer<String> server, PmidClient<String> client,
+                          int serverSetSize, int clientSetSize, int maxClientK) {
         long randomTaskId = Math.abs(SECURE_RANDOM.nextLong());
         server.setTaskId(randomTaskId);
         client.setTaskId(randomTaskId);
         try {
-            LOGGER.info("-----test {}，server size = {}, client size = {}, max(k) = {}-----",
-                server.getPtoDesc().getPtoName(), serverSize, clientSize, maxK
+            LOGGER.info("-----test {}，server set size = {}, client set size = {}, max(ClientK) = {}-----",
+                server.getPtoDesc().getPtoName(), serverSetSize, clientSetSize, maxClientK
             );
             // 生成集合和映射
-            ArrayList<Set<String>> sets = PsoUtils.generateStringSets("ID", serverSize, clientSize);
+            ArrayList<Set<String>> sets = PsoUtils.generateStringSets("ID", serverSetSize, clientSetSize);
             Set<String> serverSet = sets.get(0);
             Set<String> clientSet = sets.get(1);
             Map<String, Integer> clientMap = clientSet.stream().collect(Collectors.toMap(
                 element -> element,
-                element -> SECURE_RANDOM.nextInt(maxK) + 1
+                element -> SECURE_RANDOM.nextInt(maxClientK) + 1
             ));
-            int k = clientMap.keySet().stream().mapToInt(clientMap::get).max().orElse(0);
+            int clientK = clientSet.stream().mapToInt(clientMap::get).max().orElse(0);
             // 构建线程
-            PmidServerThread serverThread = new PmidServerThread(server, serverSet, clientSet.size(), k);
-            PmidClientThread clientThread = new PmidClientThread(client, clientMap, serverSet.size());
+            OneSidePmidServerThread serverThread = new OneSidePmidServerThread(server, serverSet, clientSet.size(), maxClientK, clientK);
+            OneSidePmidClientThread clientThread = new OneSidePmidClientThread(client, clientMap, maxClientK, serverSet.size());
             StopWatch stopWatch = new StopWatch();
             // 开始执行协议
             stopWatch.start();

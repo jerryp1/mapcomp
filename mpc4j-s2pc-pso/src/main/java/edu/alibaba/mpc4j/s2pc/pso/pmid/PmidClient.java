@@ -13,7 +13,11 @@ import java.util.Map;
  * @date 2022/5/6
  */
 public interface PmidClient<T> extends TwoPartyPto, SecurePto {
-
+    /**
+     * 返回PMID协议类型。
+     *
+     * @return PMID协议类型。
+     */
     @Override
     PmidFactory.PmidType getPtoType();
 
@@ -21,11 +25,11 @@ public interface PmidClient<T> extends TwoPartyPto, SecurePto {
      * 初始化协议。
      *
      * @param maxClientSetSize 客户端最大元素数量。
+     * @param maxClientK       客户端最大重复元素上界。
      * @param maxServerSetSize 服务端最大元素数量。
-     * @param maxK             客户端最大重复元素上界。
      * @throws MpcAbortException 如果协议异常中止。
      */
-    void init(int maxClientSetSize, int maxServerSetSize, int maxK) throws MpcAbortException;
+    void init(int maxClientSetSize, int maxClientK, int maxServerSetSize) throws MpcAbortException;
 
     /**
      * 执行协议。

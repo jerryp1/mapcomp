@@ -193,8 +193,8 @@ public class Zcl22SloppyPmidServer<T> extends AbstractPmidServer<T> {
     }
 
     @Override
-    public void init(int maxServerSetSize, int maxClientSetSize, int maxK) throws MpcAbortException {
-        setInitInput(maxServerSetSize, maxClientSetSize, maxK);
+    public void init(int maxServerSetSize, int maxClientSetSize, int maxClientK) throws MpcAbortException {
+        setInitInput(maxServerSetSize, maxClientSetSize, maxClientK);
         info("{}{} Server Init begin", ptoBeginLogPrefix, getPtoDesc().getPtoName());
 
         stopWatch.start();
@@ -202,7 +202,7 @@ public class Zcl22SloppyPmidServer<T> extends AbstractPmidServer<T> {
         oprfReceiver.init(serverMaxBinNum);
         int clientMaxBinNum = CuckooHashBinFactory.getBinNum(cuckooHashBinType, maxClientSetSize);
         oprfSender.init(clientMaxBinNum);
-        psuServer.init(maxK * maxServerSetSize, maxK * maxClientSetSize);
+        psuServer.init(maxClientK * maxServerSetSize, maxClientK * maxClientSetSize);
         stopWatch.stop();
         long initTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
         stopWatch.reset();
@@ -269,8 +269,8 @@ public class Zcl22SloppyPmidServer<T> extends AbstractPmidServer<T> {
     }
 
     @Override
-    public PmidPartyOutput<T> pmid(Set<T> serverElementSet, int clientSetSize, int k) throws MpcAbortException {
-        setPtoInput(serverElementSet, clientSetSize, k);
+    public PmidPartyOutput<T> pmid(Set<T> serverElementSet, int clientSetSize, int clientK) throws MpcAbortException {
+        setPtoInput(serverElementSet, clientSetSize, clientK);
         info("{}{} Server begin", ptoBeginLogPrefix, getPtoDesc().getPtoName());
 
         stopWatch.start();
@@ -282,15 +282,15 @@ public class Zcl22SloppyPmidServer<T> extends AbstractPmidServer<T> {
         pidMapPrf.setKey(pidMapPrfKey);
         serverPidPrf = PrfFactory.createInstance(envType, pidByteLength);
         serverPidPrf.setKey(serverPidPrfKey);
-        // PMID字节长度等于λ + log(nk) + log(m) = λ + log(m * n * k)
+        // PMID字节长度等于λ + log(nk) + log(m) = λ + log(m * n * clientK)
         int pmidByteLength = CommonConstants.STATS_BYTE_LENGTH + CommonUtils.getByteLength(
-            LongUtils.ceilLog2((long) k * serverSetSize * clientSetSize)
+            LongUtils.ceilLog2((long) clientK * serverSetSize * clientSetSize)
         );
         pmidMapPrf = PrfFactory.createInstance(envType, pmidByteLength);
         pmidMapPrf.setKey(pmidMapPrfKey);
         // σ = λ + Max{log(nk), log(mk)}
         sigma = CommonConstants.STATS_BYTE_LENGTH + Math.max(
-            LongUtils.ceilLog2((long) k * serverSetSize), LongUtils.ceilLog2((long) k * clientSetSize)
+            LongUtils.ceilLog2((long) clientK * serverSetSize), LongUtils.ceilLog2((long) clientK * clientSetSize)
         );
         sigmaMapPrf = PrfFactory.createInstance(envType, sigma);
         sigmaMapPrf.setKey(sigmaMapPrfKey);
@@ -598,7 +598,7 @@ public class Zcl22SloppyPmidServer<T> extends AbstractPmidServer<T> {
                 serverPid -> serverPid,
                 serverPid -> {
                     byte[] pid = serverPid.array();
-                    byte[] extendPid = ByteBuffer.allocate(pid.length + Integer.BYTES).put(pid).putInt(k + 1).array();
+                    byte[] extendPid = ByteBuffer.allocate(pid.length + Integer.BYTES).put(pid).putInt(clientK + 1).array();
                     return sigmaMapPrf.getBytes(extendPid);
                 })
             );
@@ -613,9 +613,9 @@ public class Zcl22SloppyPmidServer<T> extends AbstractPmidServer<T> {
             envType, sigmaOkvsType, clientSetSize, sigma * Byte.SIZE, sigmaOkvsHashKeys
         );
         // 初始化必要的参数
-        BigInteger kBigInteger = BigInteger.valueOf(k);
+        BigInteger kBigInteger = BigInteger.valueOf(clientK);
         // 构建服务端PmidMap
-        Map<ByteBuffer, T> serverPmidMap = new ConcurrentHashMap<>(serverSetSize * k);
+        Map<ByteBuffer, T> serverPmidMap = new ConcurrentHashMap<>(serverSetSize * clientK);
         Stream<ByteBuffer> serverPidStream = serverPidMap.keySet().stream();
         serverPidStream = parallel ? serverPidStream.parallel() : serverPidStream;
         serverPidStream.forEach(serverPid -> {

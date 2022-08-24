@@ -128,14 +128,14 @@ public class Zcl22MpPmidClient<T> extends AbstractPmidClient<T> {
     }
 
     @Override
-    public void init(int maxClientSetSize, int maxServerSetSize, int maxK) throws MpcAbortException {
-        setInitInput(maxClientSetSize, maxServerSetSize, maxK);
+    public void init(int maxClientSetSize, int maxClientK, int maxServerSetSize) throws MpcAbortException {
+        setInitInput(maxClientSetSize, maxClientK, maxServerSetSize);
         info("{}{} Client Init begin", ptoBeginLogPrefix, getPtoDesc().getPtoName());
 
         stopWatch.start();
         mpOprfReceiver.init(maxClientSetSize);
         mpOprfSender.init(maxServerSetSize);
-        psuClient.init(maxK * maxClientSetSize, maxK * maxServerSetSize);
+        psuClient.init(maxClientK * maxClientSetSize, maxClientK * maxServerSetSize);
         stopWatch.stop();
         long initTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
         stopWatch.reset();
@@ -169,13 +169,13 @@ public class Zcl22MpPmidClient<T> extends AbstractPmidClient<T> {
         stopWatch.start();
         // PMID字节长度等于λ + log(nk) + log(m) = λ + log(m * n * k)
         int pmidByteLength = CommonConstants.STATS_BYTE_LENGTH + CommonUtils.getByteLength(
-            LongUtils.ceilLog2((long)k * clientSetSize * serverSetSize)
+            LongUtils.ceilLog2((long) clientK * clientSetSize * serverSetSize)
         );
         pmidMapPrf = PrfFactory.createInstance(envType, pmidByteLength);
         pmidMapPrf.setKey(pmidMapPrfKey);
         // σ = λ + Max{log(nk), log(mk)}
         sigma = CommonConstants.STATS_BYTE_LENGTH + Math.max(
-            LongUtils.ceilLog2((long) k * clientSetSize), LongUtils.ceilLog2((long) k * serverSetSize)
+            LongUtils.ceilLog2((long) clientK * clientSetSize), LongUtils.ceilLog2((long) clientK * serverSetSize)
         );
         sigmaMapPrf = PrfFactory.createInstance(envType, sigma);
         sigmaMapPrf.setKey(sigmaMapPrfKey);
@@ -282,7 +282,7 @@ public class Zcl22MpPmidClient<T> extends AbstractPmidClient<T> {
         kyArray = clientElementIndexStream
             .mapToObj(index -> {
                 byte[] pid1 = pid1Array[index];
-                return ByteBuffer.allocate(pid1.length + Integer.BYTES).put(pid1).putInt(k + 1).array();
+                return ByteBuffer.allocate(pid1.length + Integer.BYTES).put(pid1).putInt(clientK + 1).array();
             })
             .map(sigmaMapPrf::getBytes)
             .toArray(byte[][]::new);
@@ -326,7 +326,7 @@ public class Zcl22MpPmidClient<T> extends AbstractPmidClient<T> {
 
     private Map<ByteBuffer, T> generateClientPmidMap() {
         // 构建客户端PmidMap
-        Map<ByteBuffer, T> clientPmidMap = new ConcurrentHashMap<>(clientSetSize * k);
+        Map<ByteBuffer, T> clientPmidMap = new ConcurrentHashMap<>(clientSetSize * clientK);
         IntStream clientElementIndexStream = IntStream.range(0, clientSetSize);
         clientElementIndexStream = parallel ? clientElementIndexStream.parallel() : clientElementIndexStream;
         clientElementIndexStream.forEach(index -> {

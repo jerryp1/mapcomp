@@ -90,7 +90,7 @@ public class Ywl20DpprfSender extends AbstractDpprfSender {
         // DPPRF使用的是Random OT，所以可以随机选择Δ
         byte[] delta = new byte[CommonConstants.BLOCK_BYTE_LENGTH];
         secureRandom.nextBytes(delta);
-        coreCotSender.init(delta, maxAlphaBound * maxBatchNum);
+        coreCotSender.init(delta, maxH * maxBatchNum);
         stopWatch.stop();
         long initTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
         stopWatch.reset();
