@@ -1,24 +1,25 @@
-package edu.alibaba.mpc4j.common.tool.crypto.ecc;
+package edu.alibaba.mpc4j.common.tool.crypto.ecc.mcl;
 
+import edu.alibaba.mpc4j.common.tool.crypto.ecc.EccFactory;
 import edu.alibaba.mpc4j.common.tool.crypto.hash.Hash;
 import edu.alibaba.mpc4j.common.tool.crypto.hash.HashFactory;
 import org.bouncycastle.math.ec.ECPoint;
 
 /**
- * 应用Bouncy Castle实现的SecP256r1。
+ * 调用MCL库实现的SecP256r1椭圆曲线。
  *
  * @author Weiran Liu
  * @date 2022/7/7
  */
-public class BcSecP256r1Ecc extends AbstractBcEcc {
+public class SecP256r1MclEcc extends AbstractMclEcc {
     /**
      * 哈希到椭圆曲线所用的哈希函数
      */
     private final Hash hash;
 
-    BcSecP256r1Ecc() {
-        super(EccFactory.EccType.BC_SEC_P256_R1, "secp256r1");
-        // 初始化哈希函数，为与MCL兼容，必须使用SHA256
+    public SecP256r1MclEcc() {
+        super(SecP256r1MclNativeEcc.getInstance(), EccFactory.EccType.SEC_P256_R1_MCL, "secp256r1");
+        // 初始化哈希函数
         hash = HashFactory.createInstance(HashFactory.HashType.JDK_SHA256, 32);
     }
 

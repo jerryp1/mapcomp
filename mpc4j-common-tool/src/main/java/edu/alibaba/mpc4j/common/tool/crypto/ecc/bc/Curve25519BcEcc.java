@@ -1,5 +1,7 @@
-package edu.alibaba.mpc4j.common.tool.crypto.ecc;
+package edu.alibaba.mpc4j.common.tool.crypto.ecc.bc;
 
+import edu.alibaba.mpc4j.common.tool.crypto.ecc.AbstractEcc;
+import edu.alibaba.mpc4j.common.tool.crypto.ecc.EccFactory;
 import edu.alibaba.mpc4j.common.tool.crypto.hash.Hash;
 import edu.alibaba.mpc4j.common.tool.crypto.hash.HashFactory;
 import org.bouncycastle.math.ec.ECPoint;
@@ -10,14 +12,14 @@ import org.bouncycastle.math.ec.ECPoint;
  * @author Weiran Liu
  * @date 2021/12/12
  */
-class BcCurve25519Ecc extends AbstractBcEcc {
+public class Curve25519BcEcc extends AbstractEcc {
     /**
      * 哈希到椭圆曲线所用的哈希函数
      */
     private final Hash hash;
 
-    BcCurve25519Ecc() {
-        super(EccFactory.EccType.BC_CURVE_25519, "curve25519");
+    public Curve25519BcEcc() {
+        super(EccFactory.EccType.CURVE_25519_BC, "curve25519");
         // 初始化哈希函数，为与MCL兼容，必须使用SHA256
         hash = HashFactory.createInstance(HashFactory.HashType.JDK_SHA256, 32);
     }

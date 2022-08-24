@@ -10,6 +10,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 - CHANGELOG: We add CHANGELOG.md to write any changes during our development.
 - UNSAFE: We find that `byte[]` to `int[]` conversion dominants the cost for Silent OT. We add `unsafeByteArrayToIntArray` in `IntUtils`, and introduce such method in our Silent OT implementation.
+- Ecc in OpenSSL: Ecc now supports OpenSSL. This means that we now have C/C++ SM2 implementation in `mpc4j`.
 
 ### Changed
 
@@ -24,8 +25,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ### Fixed
 
+- Ecc multiple init: We find a bug that if we first init the first native Ecc, then init the second native Ecc, and finally use the first one, an error would raise. This is because we call `native.init` in the constructor, and the later constructor would overlap the previous status. We fix this bug by refine our Ecc implementation.
 - APSI: That there would be some unknown error when using `try_clear_irrelevant_bits` (provided by [the original APSI implementation](https://github.com/microsoft/APSI/blob/main/sender/apsi/bin_bundle.cpp)) to reduce communication costs. The error occurs with relative low probability, around 0.8% in total tries. We remove it from our APSI implementation to ensure 100% correctness.
-- APSI: Add JNI memory release functions in `mpc4j-native-fhe/upsi/serialize.cpp`. 
+- APSI: Add JNI memory release functions in `mpc4j-native-fhe/upsi/serialize.cpp`.
 
 ## Reminder
 

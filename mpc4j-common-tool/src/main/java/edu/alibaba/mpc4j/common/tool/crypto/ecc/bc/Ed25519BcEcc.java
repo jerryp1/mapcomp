@@ -1,5 +1,7 @@
-package edu.alibaba.mpc4j.common.tool.crypto.ecc;
+package edu.alibaba.mpc4j.common.tool.crypto.ecc.bc;
 
+import edu.alibaba.mpc4j.common.tool.crypto.ecc.AbstractEcc;
+import edu.alibaba.mpc4j.common.tool.crypto.ecc.EccFactory;
 import edu.alibaba.mpc4j.common.tool.crypto.hash.Hash;
 import edu.alibaba.mpc4j.common.tool.crypto.hash.HashFactory;
 import edu.alibaba.mpc4j.common.tool.utils.BigIntegerUtils;
@@ -15,7 +17,7 @@ import java.nio.ByteBuffer;
  * @author Liqiang Peng, Weiran Liu
  * @date 2022/5/20
  */
-class BcEd25519Ecc extends AbstractBcEcc {
+public class Ed25519BcEcc extends AbstractEcc {
     /**
      * 坐标的字节长度
      */
@@ -41,8 +43,8 @@ class BcEd25519Ecc extends AbstractBcEcc {
      */
     private final Hash hash;
 
-    BcEd25519Ecc() {
-        super(EccFactory.EccType.BC_ED_25519, "curve25519");
+    public Ed25519BcEcc() {
+        super(EccFactory.EccType.ED_25519_BC, "curve25519");
         // 初始化哈希函数，为与MCL兼容，必须使用SHA256
         hash = HashFactory.createInstance(HashFactory.HashType.JDK_SHA256, 32);
         // 初始化常数

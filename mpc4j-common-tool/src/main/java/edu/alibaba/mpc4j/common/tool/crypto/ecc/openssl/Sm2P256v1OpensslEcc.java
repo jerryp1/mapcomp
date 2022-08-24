@@ -1,23 +1,24 @@
-package edu.alibaba.mpc4j.common.tool.crypto.ecc;
+package edu.alibaba.mpc4j.common.tool.crypto.ecc.openssl;
 
+import edu.alibaba.mpc4j.common.tool.crypto.ecc.EccFactory;
 import edu.alibaba.mpc4j.common.tool.crypto.hash.Hash;
 import edu.alibaba.mpc4j.common.tool.crypto.hash.HashFactory;
 import org.bouncycastle.math.ec.ECPoint;
 
 /**
- * 用Bouncy Castle实现的SM2椭圆曲线。
+ * 调用OpenSSL库实现的SecP256r1椭圆曲线。
  *
  * @author Weiran Liu
- * @date 2021/12/12
+ * @date 2022/8/24
  */
-class BcSm2P256v1Ecc extends AbstractBcEcc {
+public class Sm2P256v1OpensslEcc extends AbstractOpensslEcc {
     /**
      * 哈希到椭圆曲线所用的哈希函数
      */
     private final Hash hash;
 
-    BcSm2P256v1Ecc() {
-        super(EccFactory.EccType.BC_SM2_P256_V1, "sm2p256v1");
+    public Sm2P256v1OpensslEcc() {
+        super(Sm2P256v1OpensslNativeEcc.getInstance(), EccFactory.EccType.SM2_P256_V1_OPENSSL, "sm2p256v1");
         // 初始化哈希函数，国产椭圆曲线，使用SM3
         hash = HashFactory.createInstance(HashFactory.HashType.BC_SM3, 32);
     }

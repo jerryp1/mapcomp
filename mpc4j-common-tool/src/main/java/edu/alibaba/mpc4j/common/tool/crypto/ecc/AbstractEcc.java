@@ -21,7 +21,7 @@ import java.util.Map;
  * @author Weiran Liu
  * @date 2021/05/30
  */
-public abstract class AbstractBcEcc implements Ecc {
+public abstract class AbstractEcc implements Ecc {
     /**
      * 窗口大小
      */
@@ -29,7 +29,7 @@ public abstract class AbstractBcEcc implements Ecc {
     /**
      * 椭圆曲线类型
      */
-    private final EccFactory.EccType eccType;
+    protected final EccFactory.EccType eccType;
     /**
      * 椭圆曲线参数
      */
@@ -45,7 +45,7 @@ public abstract class AbstractBcEcc implements Ecc {
      * @param eccType     椭圆曲线类型。
      * @param bcCurveName Bouncy Castle下椭圆曲线的名字。
      */
-    AbstractBcEcc(EccFactory.EccType eccType, String bcCurveName) {
+    public AbstractEcc(EccFactory.EccType eccType, String bcCurveName) {
         X9ECParameters ecParameters = CustomNamedCurves.getByName(bcCurveName);
         ECParameterSpec ecParameterSpec = new ECParameterSpec(
             ecParameters.getCurve(), ecParameters.getG(), ecParameters.getN(),
