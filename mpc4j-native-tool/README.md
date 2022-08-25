@@ -451,25 +451,23 @@ The installation procedures on CentOS are almost identical with Ubuntu, except t
 
 ### Necessary Tools
 
-Install `gcc`, `m4`, `make`, `cmake`, `g++`, `openssl` by the following command.
+Install `gcc`, `m4`, `make`, `g++`, `openssl` by the following command.
 
 ```shell
 sudo yum install gcc
 sudo yum install m4
 sudo yum install make
-sudo yum install cmake
 sudo yum install gcc-c++ # different from Ubuntu
 sudo yum install openssl
 sudo yum install openssl-devel # additional installation compared with Ubuntu
 ```
 
-Note that the installed `cmake` version may be 2.8 (depends on `yum` source). We need `cmake` version greater than `3.10`. To do this, run the following command.
+Note that we cannot directly install `cmake` via `yum`. Instead, we need to install `cmake` from source code by running the following command.
 
 ```shell
-sudo yum remove cmake -y # uninstall current version
-wget https://github.com/Kitware/CMake/releases/download/vX.XX.X/cmake-X.XX.X.tar.gz # download a newer version
-tar -zxvf cmake-X.XX.X.tar.gz
-cd cmake-X.XX.X
+wget https://github.com/Kitware/CMake/releases/download/v3.24.0/cmake-3.24.0.tar.gz # download a newer version. Currently the newer version is 3.24.0
+tar -zxvf cmake-3.24.0.tar.gz
+cd cmake-3.24.0
 ./bootstrap
 make
 make install

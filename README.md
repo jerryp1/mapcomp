@@ -36,7 +36,7 @@ The aim of `mpc4j` is to provide an academic library for researchers to study an
 - [PSU](https://github.com/dujiajun/PSU): The implementation of the paper "Shuffle-based Private Set Union: Faster and More" accepted at [USENIX Security 2022](https://eprint.iacr.org/2022/157.pdf). We introduce the idea of how to run Oblivious Switching Network (OSN) in parallel. See package `psu` in `mpc4j-s2pc-pso` for details.
 - [SpOT-PSI](https://github.com/osu-crypto/SpOT-PSI): The implementation of the paper "SpOT-Light: Lightweight Private Set Intersection from Sparse OT Extension" published at [CRYPTO 2019](https://eprint.iacr.org/2019/634.pdf). We introduce many ideas for fast polynomial interpolations.
 - [OPRF-PSI](https://github.com/peihanmiao/OPRF-PSI): The implementation of the paper "Private Set Intersection in the Internet Setting From Lightweight Oblivious PRF" published in [CRYPTO 2020](https://eprint.iacr.org/2020/729.pdf). We introduce its OPRF implementations. See `oprf` in `mpc4j-s2pc-pso` for details.
-- [APSI](https://github.com/microsoft/APSI): The implementation of the paper "Labeled PSI from Homomorphic Encryption with Reduced Computation and Communication" published in [CCS 2021](https://eprint.iacr.org/2021/1116.pdf). We understand how to use Fully Homomorphic Encryption (FHE) library [SEAL](https://github.com/microsoft/SEAL). Also, most of the codes for Unbalanced Private Set Intersection (UPSI) are partially from ASPI. See `mpc4j-native-fhe` and `upsi` in `mpc-s2pc-pso` for details. 
+- [APSI](https://github.com/microsoft/APSI): The implementation of the paper "Labeled PSI from Homomorphic Encryption with Reduced Computation and Communication" published in [CCS 2021](https://eprint.iacr.org/2021/1116.pdf). We understand how to use Fully Homomorphic Encryption (FHE) library [SEAL](https://github.com/microsoft/SEAL). Most of the codes for Unbalanced Private Set Intersection (UPSI) are partially from ASPI. We also adapt the encoding part of [6857-private-categorization](https://github.com/aleksejspopovs/6857-private-categorization) to support arbitrary bit-length elements. See `mpc4j-native-fhe` and `upsi` in `mpc-s2pc-pso` for details.
 
 ## Acknowledge
 
@@ -68,9 +68,18 @@ Most of the codes are in Java, except for very efficient implementations in C/C+
 
 ## Development
 
-`mpc4j` is developed under `JDK 8`. Specifically, `mpc4j` leverages `sun.misc.Unsafe`, which is deprecated since `JDK 9`, to do fast `byte[]` to `int[]` conversions. Therefore, you should also use `JDK 8` when you are implementing your protocols based `mpc4j`. Otherwise, you may encounter problem like "sun.misc.Unsafe is not found" when you compile the code to get the runnable `jar` file.
+`mpc4j` is developed under `JDK 8`. Specifically, `mpc4j` leverages `sun.misc.Unsafe`, which is deprecated since `JDK 9`, to do fast `byte[]` to `int[]` conversions. Therefore, you should also use `JDK 8` when you are implementing your protocols based `mpc4j`. Otherwise, you may encounter problem like "sun.misc.Unsafe is not found" when you compile the code to get the runnable `jar` file. Once obtaining the `jar` file, you can run it using any `JRE` with a higher version.
 
-Note that once obtaining the `jar` file, you can run it using any `JRE` with a higher version.
+We develop `mpc4j` using [Intellij IDEA](https://www.jetbrains.com/idea/) and [CLion](https://www.jetbrains.com/clion/). After successfully compiling `mpc4j-native-tool` and `mpc4j-native-fhe` (Please see the documentation in these modules for more details on how to compile them), you need to configure IDEA with the following procedures so that IDEA can link to these native libraries.
+
+1. Open `Run->Edit Configurations...`.
+2. Open `Edit Configuration templates...`.
+3. Select `JUnit`.
+4. Add the following command into `VM Options`:
+
+```text
+-Djava.library.path=/YOUR_MPC4J_ABSOLUTE_PATH/mpc4j-native-tool/cmake-build-release:/YOUR_MPC4J_ABSOLUTE_PATH/mpc4j-native-fhe/cmake-build-release
+```
 
 ## TODO List
 
