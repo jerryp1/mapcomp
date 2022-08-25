@@ -74,6 +74,7 @@ public abstract class InternalNode implements Node {
     /**
      * Evaluates the tree over an instance.
      */
+    @Override
     public abstract LeafNode predict(Tuple x);
 
     /**
@@ -183,7 +184,9 @@ public abstract class InternalNode implements Node {
         StringBuilder line = new StringBuilder();
 
         // indent
-        for (int i = 0; i < depth; i++) line.append(" ");
+        for (int i = 0; i < depth; i++) {
+            line.append(" ");
+        }
         line.append(id).append(") ");
 
         // split

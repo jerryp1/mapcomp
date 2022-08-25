@@ -135,6 +135,7 @@ public class Jsz22SfsPsuServer extends AbstractPsuServer {
         secondOsnReceiver.addLogLevel();
     }
 
+    @Override
     public void init(int maxServerElementSize, int maxClientElementSize) throws MpcAbortException {
         setInitInput(maxServerElementSize, maxClientElementSize);
         info("{}{} Server Init begin", ptoBeginLogPrefix, getPtoDesc().getPtoName());

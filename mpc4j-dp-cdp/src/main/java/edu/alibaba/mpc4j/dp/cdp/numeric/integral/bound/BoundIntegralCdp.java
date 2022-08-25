@@ -39,6 +39,11 @@ public interface BoundIntegralCdp extends IntegralCdp {
         return ((BoundIntegralCdpConfig)getCdpConfig()).getUpperBound();
     }
 
+    /**
+     * 返回机制名称。
+     *
+     * @return 机制名称。
+     */
     @Override
     default String getMechanismName() {
         return "[" + getLowerBound() + ", " + getUpperBound() + "], "

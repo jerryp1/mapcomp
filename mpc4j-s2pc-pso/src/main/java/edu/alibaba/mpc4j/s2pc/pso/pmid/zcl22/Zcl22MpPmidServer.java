@@ -127,14 +127,14 @@ public class Zcl22MpPmidServer<T> extends AbstractPmidServer<T> {
     }
 
     @Override
-    public void init(int maxServerSetSize, int maxClientSetSize, int maxK) throws MpcAbortException {
-        setInitInput(maxServerSetSize, maxClientSetSize, maxK);
+    public void init(int maxServerSetSize, int maxClientSetSize, int maxClientK) throws MpcAbortException {
+        setInitInput(maxServerSetSize, maxClientSetSize, maxClientK);
         info("{}{} Server Init begin", ptoBeginLogPrefix, getPtoDesc().getPtoName());
 
         stopWatch.start();
         mpOprfSender.init(maxClientSetSize);
         mpOprfReceiver.init(maxServerSetSize);
-        psuServer.init(maxK * maxServerSetSize, maxK * maxClientSetSize);
+        psuServer.init(maxClientK * maxServerSetSize, maxClientK * maxClientSetSize);
         stopWatch.stop();
         long initTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
         stopWatch.reset();
@@ -175,20 +175,20 @@ public class Zcl22MpPmidServer<T> extends AbstractPmidServer<T> {
     }
 
     @Override
-    public PmidPartyOutput<T> pmid(Set<T> serverElementSet, int clientSetSize, int k) throws MpcAbortException {
-        setPtoInput(serverElementSet, clientSetSize, k);
+    public PmidPartyOutput<T> pmid(Set<T> serverElementSet, int clientSetSize, int clientK) throws MpcAbortException {
+        setPtoInput(serverElementSet, clientSetSize, clientK);
         info("{}{} Server begin", ptoBeginLogPrefix, getPtoDesc().getPtoName());
 
         stopWatch.start();
-        // PMID字节长度等于λ + log(nk) + log(m) = λ + log(m * n * k)
+        // PMID字节长度等于λ + log(nk) + log(m) = λ + log(m * n * clientK)
         int pmidByteLength = CommonConstants.STATS_BYTE_LENGTH + CommonUtils.getByteLength(
-            LongUtils.ceilLog2((long)k * serverSetSize * clientSetSize)
+            LongUtils.ceilLog2((long)clientK * serverSetSize * clientSetSize)
         );
         pmidMapPrf = PrfFactory.createInstance(envType, pmidByteLength);
         pmidMapPrf.setKey(pmidMapPrfKey);
         // σ = λ + Max{log(nk), log(mk)}
         sigma = CommonConstants.STATS_BYTE_LENGTH + Math.max(
-            LongUtils.ceilLog2((long) k * serverSetSize), LongUtils.ceilLog2((long) k * clientSetSize)
+            LongUtils.ceilLog2((long) clientK * serverSetSize), LongUtils.ceilLog2((long) clientK * clientSetSize)
         );
         sigmaMapPrf = PrfFactory.createInstance(envType, sigma);
         sigmaMapPrf.setKey(sigmaMapPrfKey);
@@ -284,7 +284,7 @@ public class Zcl22MpPmidServer<T> extends AbstractPmidServer<T> {
         kxArray = serverElementIndexStream
             .mapToObj(index -> {
                 byte[] pid1 = mpOprfReceiverOutput.getPrf(index);
-                return ByteBuffer.allocate(pid1.length + Integer.BYTES).put(pid1).putInt(k + 1).array();
+                return ByteBuffer.allocate(pid1.length + Integer.BYTES).put(pid1).putInt(clientK + 1).array();
             })
             .map(sigmaMapPrf::getBytes)
             .toArray(byte[][]::new);
@@ -299,9 +299,9 @@ public class Zcl22MpPmidServer<T> extends AbstractPmidServer<T> {
             envType, sigmaOkvsType, clientSetSize, sigma * Byte.SIZE, sigmaOkvsHashKeys
         );
         // 初始化必要的参数
-        BigInteger kBigInteger = BigInteger.valueOf(k);
+        BigInteger kBigInteger = BigInteger.valueOf(clientK);
         // 构建服务端PmidMap
-        Map<ByteBuffer, T> serverPmidMap = new ConcurrentHashMap<>(serverSetSize * k);
+        Map<ByteBuffer, T> serverPmidMap = new ConcurrentHashMap<>(serverSetSize * clientK);
         IntStream serverElementIndexStream = IntStream.range(0, serverSetSize);
         serverElementIndexStream = parallel ? serverElementIndexStream.parallel() : serverElementIndexStream;
         serverElementIndexStream.forEach(index -> {

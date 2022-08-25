@@ -33,14 +33,15 @@ public interface Loss {
      *
      * @param nodeSamples the index of node samples to their original locations in training dataset.
      * @param sampleCount samples[i] is the number of sampling of dataset[i]. 0 means that the
-     *               datum is not included and values of greater than 1 are
-     *               possible because of sampling with replacement.
+     *                    datum is not included and values of greater than 1 are
+     *                    possible because of sampling with replacement.
      * @return the node output
      */
     double output(int[] nodeSamples, int[] sampleCount);
 
     /**
      * Returns the intercept of model.
+     *
      * @param y the response variable.
      */
     double intercept(double[] y);
@@ -55,7 +56,9 @@ public interface Loss {
      */
     double[] residual();
 
-    /** The type of loss. */
+    /**
+     * The type of loss.
+     */
     enum Type {
         /**
          * Least squares regression. Least-squares is highly efficient for
@@ -237,7 +240,7 @@ public interface Loss {
 
             @Override
             public String toString() {
-                return String.format("Quantile(%3.1f%%)", 100*p);
+                return String.format("Quantile(%3.1f%%)", 100 * p);
             }
         };
     }
@@ -301,6 +304,7 @@ public interface Loss {
      * Huber loss function for M-regression, which attempts resistance to
      * long-tailed error distributions and outliers while maintaining high
      * efficiency for normally distributed errors.
+     *
      * @param p of residuals
      */
     static Loss huber(double p) {
@@ -371,13 +375,14 @@ public interface Loss {
 
             @Override
             public String toString() {
-                return String.format("Huber(%3.1f%%)", 100*p);
+                return String.format("Huber(%3.1f%%)", 100 * p);
             }
         };
     }
 
     /**
      * Logistic regression loss for binary classification.
+     *
      * @param labels the class labels.
      */
     static Loss logistic(int[] labels) {
@@ -435,10 +440,11 @@ public interface Loss {
 
     /**
      * Logistic regression loss for multi-class classification.
-     * @param c the class id that this loss function fits on.
-     * @param k the number of classes.
+     *
+     * @param c      the class id that this loss function fits on.
+     * @param k      the number of classes.
      * @param labels the class labels.
-     * @param p the posteriori probabilities.
+     * @param p      the posteriori probabilities.
      */
     static Loss logistic(int c, int k, int[] labels, double[][] p) {
         int n = labels.length;
@@ -465,7 +471,7 @@ public interface Loss {
                     return nu / nodeSamples.length;
                 }
 
-                return ((k-1.0) / k) * (nu / de);
+                return ((k - 1.0) / k) * (nu / de);
             }
 
             @Override
@@ -493,20 +499,26 @@ public interface Loss {
         };
     }
 
-    /** Parses the loss. */
+    /**
+     * Parses the loss.
+     */
     static Loss valueOf(String s) {
         switch (s) {
-            case "LeastSquares": return ls();
-            case "LeastAbsoluteDeviation": return lad();
+            case "LeastSquares":
+                return ls();
+            case "LeastAbsoluteDeviation":
+                return lad();
+            default:
+                break;
         }
 
         if (s.startsWith("Quantile(") && s.endsWith(")")) {
-            double p = Double.parseDouble(s.substring(9, s.length()-1));
+            double p = Double.parseDouble(s.substring(9, s.length() - 1));
             return quantile(p);
         }
 
         if (s.startsWith("Huber(") && s.endsWith(")")) {
-            double p = Double.parseDouble(s.substring(6, s.length()-1));
+            double p = Double.parseDouble(s.substring(6, s.length() - 1));
             return huber(p);
         }
 

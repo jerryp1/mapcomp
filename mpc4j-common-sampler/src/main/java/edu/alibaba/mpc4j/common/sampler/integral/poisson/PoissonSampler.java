@@ -20,11 +20,21 @@ public interface PoissonSampler extends IntegralSampler {
      */
     double getLambda();
 
+    /**
+     * 返回均值。
+     *
+     * @return 均值。如果未定义均值，则返回{@code Double.NaN}。
+     */
     @Override
     default double getMean() {
         return getLambda();
     }
 
+    /**
+     * 返回方差。
+     *
+     * @return 方差（可能为{@code Double.POSITIVE_INFINITY}）。如果未定义方差，则返回{@code Double.NaN}。
+     */
     @Override
     default double getVariance() {
         return getLambda();

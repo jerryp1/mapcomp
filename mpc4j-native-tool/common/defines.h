@@ -69,4 +69,22 @@ void jLongArrayToSet(JNIEnv *env, jlongArray jLongArray, std::vector<long> &set)
  */
 void setTojLongArray(JNIEnv *env, std::vector<long> &set, jint jNum, jlongArray &jLongArray);
 
+/**
+ * 将用jobjectArray表示的二维字符串数组解析为set<std::string>。
+ *
+ * @param env JNI环境。
+ * @param jStringArray 用jStringArray表示的二维长整型数组。
+ * @param set 转换结果存储地址。
+ */
+void jStringArrayToSet(JNIEnv *env, jobjectArray jStringArray, std::vector<std::string> &set);
+
+/**
+ * 将用set<std::string>表示的数据转换为jobjectArray表示的二维字符串数组。
+ *
+ * @param env JNI环境。
+ * @param set set<std::string>表示的数据。
+ * @param jLongArray 转换结果存储地址。
+ */
+void setTojStringArray(JNIEnv *env, std::vector<std::string> &set, jobjectArray &jStringArray);
+
 #endif //MPC4J_NATIVE_TOOL_DEFINES_H

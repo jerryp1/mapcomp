@@ -396,7 +396,7 @@ public class Gmr21SloppyPidServer<T> extends AbstractPidParty<T> {
                 return ByteBuffer.wrap(pidBytes);
             })
             .toArray(ByteBuffer[]::new);
-        Map<ByteBuffer, T> serverPidMap = new HashMap<>();
+        Map<ByteBuffer, T> serverPidMap = new HashMap<>(ownSetSize);
         IntStream.range(0, serverBinNum).forEach(serverBinIndex -> {
             if (serverPids[serverBinIndex] != null) {
                 serverPidMap.put(serverPids[serverBinIndex], serverCuckooHashBin.getHashBinEntry(serverBinIndex).getItem());

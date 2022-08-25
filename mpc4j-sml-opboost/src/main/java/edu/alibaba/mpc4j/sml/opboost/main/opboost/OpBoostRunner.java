@@ -11,6 +11,8 @@ import edu.alibaba.mpc4j.common.rpc.MpcAbortException;
 public interface OpBoostRunner {
     /**
      * 执行协议。
+     *
+     * @throws MpcAbortException 如果协议异常中止。
      */
     void run() throws MpcAbortException;
 

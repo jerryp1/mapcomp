@@ -51,12 +51,15 @@ public class EccEfficiencyTest {
      * 测试类型
      */
     private static final EccType[] ECC_TYPES = new EccType[] {
-        EccType.MCL_SEC_P256_K1,
-        EccType.BC_SEC_P256_K1,
-        EccType.MCL_SEC_P256_R1,
-        EccType.BC_SEC_P256_R1,
-        EccType.BC_SM2_P256_V1,
-        EccType.BC_CURVE_25519,
+        EccType.SEC_P256_K1_MCL,
+        EccType.SEC_P256_K1_OPENSSL,
+        EccType.SEC_P256_K1_BC,
+        EccType.SEC_P256_R1_MCL,
+        EccType.SEC_P256_R1_BC,
+        EccType.SM2_P256_V1_OPENSSL,
+        EccType.SM2_P256_V1_BC,
+        EccType.CURVE_25519_BC,
+        EccType.ED_25519_BC
     };
 
     @Test
