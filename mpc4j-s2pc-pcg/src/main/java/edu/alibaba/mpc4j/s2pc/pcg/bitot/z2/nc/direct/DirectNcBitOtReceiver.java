@@ -1,4 +1,4 @@
-package edu.alibaba.mpc4j.s2pc.pcg.bitot.bit2ot.nc.direct;
+package edu.alibaba.mpc4j.s2pc.pcg.bitot.z2.nc.direct;
 
 import edu.alibaba.mpc4j.common.rpc.MpcAbortException;
 import edu.alibaba.mpc4j.common.rpc.Party;
@@ -6,8 +6,10 @@ import edu.alibaba.mpc4j.common.rpc.Rpc;
 import edu.alibaba.mpc4j.common.tool.crypto.crhf.Crhf;
 import edu.alibaba.mpc4j.common.tool.crypto.crhf.CrhfFactory;
 import edu.alibaba.mpc4j.common.tool.utils.BinaryUtils;
-import edu.alibaba.mpc4j.s2pc.pcg.bitot.bit2ot.BitOtReceiverOutput;
-import edu.alibaba.mpc4j.s2pc.pcg.bitot.bit2ot.nc.AbstractNcBitOtReceiver;
+import edu.alibaba.mpc4j.common.tool.utils.BytesUtils;
+import edu.alibaba.mpc4j.common.tool.utils.CommonUtils;
+import edu.alibaba.mpc4j.s2pc.pcg.bitot.z2.BitOtReceiverOutput;
+import edu.alibaba.mpc4j.s2pc.pcg.bitot.z2.nc.AbstractNcBitOtReceiver;
 import edu.alibaba.mpc4j.s2pc.pcg.ot.cot.CotReceiverOutput;
 import edu.alibaba.mpc4j.s2pc.pcg.ot.cot.nc.NcCotFactory;
 import edu.alibaba.mpc4j.s2pc.pcg.ot.cot.nc.NcCotReceiver;
@@ -26,6 +28,14 @@ public class DirectNcBitOtReceiver extends AbstractNcBitOtReceiver {
      * NC-COT协议接收方。
      */
     private final NcCotReceiver ncCotReceiver;
+    /**
+     * 按byte存储时byte数量
+     */
+    protected int byteNum;
+    /**
+     * 按byte存储的偏置量
+     */
+    protected int offset;
 
     public DirectNcBitOtReceiver(Rpc receiverRpc, Party senderParty, DirectNcBitOtConfig config) {
         super(DirectNcBitOtPtoDesc.getInstance(), receiverRpc, senderParty, config);
@@ -54,6 +64,8 @@ public class DirectNcBitOtReceiver extends AbstractNcBitOtReceiver {
     @Override
     public void init(int num) throws MpcAbortException {
         setInitInput(num);
+        this.byteNum = CommonUtils.getByteLength(num);
+        this.offset = byteNum * Byte.SIZE - num;
         info("{}{} Recv. Init begin", ptoBeginLogPrefix, getPtoDesc().getPtoName());
 
         stopWatch.start();
@@ -78,6 +90,7 @@ public class DirectNcBitOtReceiver extends AbstractNcBitOtReceiver {
         BitOtReceiverOutput receiverOutput = generateBitOutput(cotReceiverOutput);
         stopWatch.stop();
         long cotTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
+        stopWatch.reset();
         info("{}{} Recv. Step 1/1 ({}ms)", ptoStepLogPrefix, getPtoDesc().getPtoName(), cotTime);
 
         info("{}{} Recv. end", ptoEndLogPrefix, getPtoDesc().getPtoName());
@@ -92,16 +105,13 @@ public class DirectNcBitOtReceiver extends AbstractNcBitOtReceiver {
      * @return Bit-OT接收方输出。
      */
     private BitOtReceiverOutput generateBitOutput(CotReceiverOutput cotReceiverOutput) {
-        boolean[] choices = new boolean[num];
-        boolean[] rbArray = new boolean[num];
+        byte[] choices = BinaryUtils.binaryToRoundByteArray(cotReceiverOutput.getChoices());
         Crhf crhf = CrhfFactory.createInstance(getEnvType(), CrhfFactory.CrhfType.MMO);
-        IntStream stream = IntStream.range(0, num);
-        stream = parallel? stream.parallel(): stream;
-        stream.forEach(index -> {
-            choices[index] = cotReceiverOutput.getChoice(index);
-            rbArray[index] = BinaryUtils.getBoolean(crhf.hash(cotReceiverOutput.getRb(index)),0);
-        });
-        return BitOtReceiverOutput.create(choices, rbArray);
+        IntStream keyStream = IntStream.range(0, num);
+        keyStream = parallel ? keyStream.parallel() : keyStream;
+        boolean[] rbArray = new boolean[num];
+        keyStream.forEach(index -> rbArray[index] = crhf.hash(cotReceiverOutput.getRb(index))[0] / 2 == 1);
+        return BitOtReceiverOutput.create(num, choices, BinaryUtils.binaryToRoundByteArray(rbArray));
     }
 
 }

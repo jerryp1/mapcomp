@@ -1,9 +1,9 @@
-package edu.alibaba.mpc4j.s2pc.pcg.bitot.bit2ot.nc.direct;
+package edu.alibaba.mpc4j.s2pc.pcg.bitot.z2.nc.direct;
 
 import edu.alibaba.mpc4j.common.rpc.desc.SecurityModel;
 import edu.alibaba.mpc4j.common.tool.EnvType;
-import edu.alibaba.mpc4j.s2pc.pcg.bitot.bit2ot.nc.NcBitOtConfig;
-import edu.alibaba.mpc4j.s2pc.pcg.bitot.bit2ot.nc.NcBitOtFactory;
+import edu.alibaba.mpc4j.s2pc.pcg.bitot.z2.nc.NcBitOtConfig;
+import edu.alibaba.mpc4j.s2pc.pcg.bitot.z2.nc.NcBitOtFactory;
 import edu.alibaba.mpc4j.s2pc.pcg.ot.cot.nc.NcCotConfig;
 import edu.alibaba.mpc4j.s2pc.pcg.ot.cot.nc.NcCotFactory;
 

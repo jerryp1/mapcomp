@@ -1,4 +1,4 @@
-package edu.alibaba.mpc4j.s2pc.pcg.bitot.bit2ot.nc.direct;
+package edu.alibaba.mpc4j.s2pc.pcg.bitot.z2.nc.direct;
 
 import edu.alibaba.mpc4j.common.rpc.desc.PtoDesc;
 import edu.alibaba.mpc4j.common.rpc.desc.PtoDescManager;

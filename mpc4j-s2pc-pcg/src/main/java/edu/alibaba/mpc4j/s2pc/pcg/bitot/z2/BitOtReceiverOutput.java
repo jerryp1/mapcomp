@@ -1,4 +1,4 @@
-package edu.alibaba.mpc4j.s2pc.pcg.bitot.bit2ot;
+package edu.alibaba.mpc4j.s2pc.pcg.bitot.z2;
 
 import java.math.BigInteger;
 

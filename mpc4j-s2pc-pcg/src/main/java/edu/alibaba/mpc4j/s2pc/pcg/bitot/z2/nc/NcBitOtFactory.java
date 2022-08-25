@@ -1,10 +1,13 @@
-package edu.alibaba.mpc4j.s2pc.pcg.bitot.bit2ot.nc;
+package edu.alibaba.mpc4j.s2pc.pcg.bitot.z2.nc;
 
 import edu.alibaba.mpc4j.common.rpc.Party;
 import edu.alibaba.mpc4j.common.rpc.Rpc;
-import edu.alibaba.mpc4j.s2pc.pcg.bitot.bit2ot.nc.direct.DirectNcBitOtConfig;
-import edu.alibaba.mpc4j.s2pc.pcg.bitot.bit2ot.nc.direct.DirectNcBitOtReceiver;
-import edu.alibaba.mpc4j.s2pc.pcg.bitot.bit2ot.nc.direct.DirectNcBitOtSender;
+import edu.alibaba.mpc4j.s2pc.pcg.bitot.z2.nc.direct.DirectNcBitOtConfig;
+import edu.alibaba.mpc4j.s2pc.pcg.bitot.z2.nc.direct.DirectNcBitOtReceiver;
+import edu.alibaba.mpc4j.s2pc.pcg.bitot.z2.nc.direct.DirectNcBitOtSender;
+import edu.alibaba.mpc4j.s2pc.pcg.bitot.z2.nc.kk13.Kk13NcBitOtConfig;
+import edu.alibaba.mpc4j.s2pc.pcg.bitot.z2.nc.kk13.Kk13NcBitOtReceiver;
+import edu.alibaba.mpc4j.s2pc.pcg.bitot.z2.nc.kk13.Kk13NcBitOtSender;
 
 /**
  * NC-BitOT协议工厂。
@@ -46,6 +49,7 @@ public class NcBitOtFactory {
         NcBitOtType type = config.getPtoType();
         switch (type) {
             case KK13:
+                return new Kk13NcBitOtSender(senderRpc, receiverParty, (Kk13NcBitOtConfig) config);
             case DIRECT:
                 return new DirectNcBitOtSender(senderRpc, receiverParty, (DirectNcBitOtConfig) config);
             default:
@@ -65,6 +69,7 @@ public class NcBitOtFactory {
         NcBitOtType type = config.getPtoType();
         switch (type) {
             case KK13:
+                return new Kk13NcBitOtReceiver(receiverRpc, senderParty, (Kk13NcBitOtConfig) config);
             case DIRECT:
                 return new DirectNcBitOtReceiver(receiverRpc, senderParty, (DirectNcBitOtConfig) config);
             default:

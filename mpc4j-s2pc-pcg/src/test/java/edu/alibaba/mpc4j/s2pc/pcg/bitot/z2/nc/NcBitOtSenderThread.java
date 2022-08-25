@@ -1,7 +1,7 @@
-package edu.alibaba.mpc4j.s2pc.pcg.bitot.bit2ot.nc;
+package edu.alibaba.mpc4j.s2pc.pcg.bitot.z2.nc;
 
 import edu.alibaba.mpc4j.common.rpc.MpcAbortException;
-import edu.alibaba.mpc4j.s2pc.pcg.bitot.bit2ot.BitOtSenderOutput;
+import edu.alibaba.mpc4j.s2pc.pcg.bitot.z2.BitOtSenderOutput;
 
 /**
  * NC-BitOt接收方线程。

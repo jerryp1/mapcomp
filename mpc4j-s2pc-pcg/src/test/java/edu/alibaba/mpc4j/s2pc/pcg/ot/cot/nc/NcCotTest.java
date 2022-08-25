@@ -57,7 +57,7 @@ public class NcCotTest {
     /**
      * 较大数量
      */
-    private static final int LARGE_NUM = 1 << 23;
+    private static final int LARGE_NUM = 1 << 18;
     /**
      * 较大轮数
      */

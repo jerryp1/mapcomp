@@ -1,4 +1,4 @@
-package edu.alibaba.mpc4j.s2pc.pcg.bitot.bit2ot;
+package edu.alibaba.mpc4j.s2pc.pcg.bitot.z2;
 
 import edu.alibaba.mpc4j.common.tool.utils.BigIntegerUtils;
 import edu.alibaba.mpc4j.common.tool.utils.BinaryUtils;
@@ -108,8 +108,8 @@ public abstract class AbstractBitOtOutput {
         if (length < num) {
             // 如果给定的数量小于当前数量，则裁剪，否则保持原样不动
             BigInteger mask = BigInteger.ONE.shiftLeft(length).subtract(BigInteger.ONE);
-            array0 = array0.add(mask);
-            array1 = array1.add(mask);
+            array0 = array0.and(mask);
+            array1 = array1.and(mask);
             setParams(length);
         }
     }

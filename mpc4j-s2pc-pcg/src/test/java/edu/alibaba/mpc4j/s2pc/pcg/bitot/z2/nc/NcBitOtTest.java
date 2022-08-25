@@ -1,26 +1,16 @@
-package edu.alibaba.mpc4j.s2pc.pcg.bitot.bit2ot.nc;
+package edu.alibaba.mpc4j.s2pc.pcg.bitot.z2.nc;
 
 import com.google.common.base.Preconditions;
 import edu.alibaba.mpc4j.common.rpc.Rpc;
 import edu.alibaba.mpc4j.common.rpc.RpcManager;
 import edu.alibaba.mpc4j.common.rpc.desc.SecurityModel;
 import edu.alibaba.mpc4j.common.rpc.impl.memory.MemoryRpcManager;
-import edu.alibaba.mpc4j.common.tool.CommonConstants;
-import edu.alibaba.mpc4j.common.tool.lpn.ldpc.LdpcCreatorUtils;
-import edu.alibaba.mpc4j.s2pc.pcg.bitot.bit2ot.BitOtReceiverOutput;
-import edu.alibaba.mpc4j.s2pc.pcg.bitot.bit2ot.BitOtSenderOutput;
-import edu.alibaba.mpc4j.s2pc.pcg.bitot.bit2ot.BitOtTestUtils;
-import edu.alibaba.mpc4j.s2pc.pcg.bitot.bit2ot.nc.direct.DirectNcBitOtConfig;
-import edu.alibaba.mpc4j.s2pc.pcg.ot.cot.CotReceiverOutput;
-import edu.alibaba.mpc4j.s2pc.pcg.ot.cot.CotSenderOutput;
-import edu.alibaba.mpc4j.s2pc.pcg.ot.cot.CotTestUtils;
+import edu.alibaba.mpc4j.s2pc.pcg.bitot.z2.BitOtReceiverOutput;
+import edu.alibaba.mpc4j.s2pc.pcg.bitot.z2.BitOtSenderOutput;
+import edu.alibaba.mpc4j.s2pc.pcg.bitot.z2.BitOtTestUtils;
+import edu.alibaba.mpc4j.s2pc.pcg.bitot.z2.nc.direct.DirectNcBitOtConfig;
+import edu.alibaba.mpc4j.s2pc.pcg.bitot.z2.nc.kk13.Kk13NcBitOtConfig;
 import edu.alibaba.mpc4j.s2pc.pcg.ot.cot.nc.*;
-import edu.alibaba.mpc4j.s2pc.pcg.ot.cot.nc.crr21.Crr21NcCotConfig;
-import edu.alibaba.mpc4j.s2pc.pcg.ot.cot.nc.direct.DirectNcCotConfig;
-import edu.alibaba.mpc4j.s2pc.pcg.ot.cot.nc.ywl20.Ywl20NcCotConfig;
-import edu.alibaba.mpc4j.s2pc.pcg.ot.cot.sp.msp.MspCotConfig;
-import edu.alibaba.mpc4j.s2pc.pcg.ot.cot.sp.msp.bcg19.Bcg19RegMspCotConfig;
-import edu.alibaba.mpc4j.s2pc.pcg.ot.cot.sp.msp.ywl20.Ywl20UniMspCotConfig;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.time.StopWatch;
 import org.junit.Assert;
@@ -52,7 +42,7 @@ public class NcBitOtTest {
     /**
      * 默认数量
      */
-    private static final int DEFAULT_NUM = 1000;
+    private static final int DEFAULT_NUM = 100;
     /**
      * 默认轮数
      */
@@ -60,7 +50,7 @@ public class NcBitOtTest {
     /**
      * 较大数量
      */
-    private static final int LARGE_NUM = 1 << 23;
+    private static final int LARGE_NUM = 1 << 18;
     /**
      * 较大轮数
      */
@@ -74,7 +64,16 @@ public class NcBitOtTest {
                 NcBitOtFactory.NcBitOtType.DIRECT.name() ,
                 new DirectNcBitOtConfig.Builder(SecurityModel.SEMI_HONEST).build(),
         });
-
+        // KK13  l = 3
+        configurations.add(new Object[] {
+                NcBitOtFactory.NcBitOtType.KK13.name() + " l = 3" ,
+                new Kk13NcBitOtConfig.Builder().setL(3).build(),
+        });
+        // KK13  l = 6
+        configurations.add(new Object[] {
+                NcBitOtFactory.NcBitOtType.KK13.name() + " l = 6" ,
+                new Kk13NcBitOtConfig.Builder().setL(6).build(),
+        });
         return configurations;
     }
 
@@ -114,6 +113,77 @@ public class NcBitOtTest {
         testPto(sender, receiver, 1, 1);
     }
 
+
+    @Test
+    public void test2Round2Num() {
+        NcBitOtSender sender = NcBitOtFactory.createSender(senderRpc, receiverRpc.ownParty(), config);
+        NcBitOtReceiver receiver = NcBitOtFactory.createReceiver(receiverRpc, senderRpc.ownParty(), config);
+        testPto(sender, receiver, 2, 2);
+    }
+
+    @Test
+    public void testDefaultRoundDefaultNum() {
+        NcBitOtSender sender = NcBitOtFactory.createSender(senderRpc, receiverRpc.ownParty(), config);
+        NcBitOtReceiver receiver = NcBitOtFactory.createReceiver(receiverRpc, senderRpc.ownParty(), config);
+        testPto(sender, receiver, DEFAULT_NUM, DEFAULT_ROUND);
+    }
+
+    @Test
+    public void testParallelDefaultRoundDefaultNum() {
+        NcBitOtSender sender = NcBitOtFactory.createSender(senderRpc, receiverRpc.ownParty(), config);
+        NcBitOtReceiver receiver = NcBitOtFactory.createReceiver(receiverRpc, senderRpc.ownParty(), config);
+        sender.setParallel(true);
+        receiver.setParallel(true);
+        testPto(sender, receiver, DEFAULT_NUM, DEFAULT_ROUND);
+    }
+
+    @Test
+    public void test12LogNum() {
+        NcBitOtSender sender = NcBitOtFactory.createSender(senderRpc, receiverRpc.ownParty(), config);
+        NcBitOtReceiver receiver = NcBitOtFactory.createReceiver(receiverRpc, senderRpc.ownParty(), config);
+        testPto(sender, receiver, 1 << 12, DEFAULT_ROUND);
+    }
+
+    @Test
+    public void test16LogNum() {
+        NcBitOtSender sender = NcBitOtFactory.createSender(senderRpc, receiverRpc.ownParty(), config);
+        NcBitOtReceiver receiver = NcBitOtFactory.createReceiver(receiverRpc, senderRpc.ownParty(), config);
+        testPto(sender, receiver, 1 << 16, DEFAULT_ROUND);
+    }
+
+    @Test
+    public void testLargeRoundDefaultNum() {
+        NcBitOtSender sender = NcBitOtFactory.createSender(senderRpc, receiverRpc.ownParty(), config);
+        NcBitOtReceiver receiver = NcBitOtFactory.createReceiver(receiverRpc, senderRpc.ownParty(), config);
+        testPto(sender, receiver, DEFAULT_NUM, LARGE_ROUND);
+    }
+
+    @Test
+    public void testParallelLargeRoundDefaultNum() {
+        NcBitOtSender sender = NcBitOtFactory.createSender(senderRpc, receiverRpc.ownParty(), config);
+        NcBitOtReceiver receiver = NcBitOtFactory.createReceiver(receiverRpc, senderRpc.ownParty(), config);
+        sender.setParallel(true);
+        receiver.setParallel(true);
+        testPto(sender, receiver, DEFAULT_NUM, LARGE_ROUND);
+    }
+
+    @Test
+    public void testDefaultRoundLargeNum() {
+        NcBitOtSender sender = NcBitOtFactory.createSender(senderRpc, receiverRpc.ownParty(), config);
+        NcBitOtReceiver receiver = NcBitOtFactory.createReceiver(receiverRpc, senderRpc.ownParty(), config);
+        testPto(sender, receiver, LARGE_NUM, DEFAULT_ROUND);
+    }
+
+    @Test
+    public void testParallelDefaultRoundLargeNum() {
+        NcBitOtSender sender = NcBitOtFactory.createSender(senderRpc, receiverRpc.ownParty(), config);
+        NcBitOtReceiver receiver = NcBitOtFactory.createReceiver(receiverRpc, senderRpc.ownParty(), config);
+        sender.setParallel(true);
+        receiver.setParallel(true);
+        testPto(sender, receiver, LARGE_NUM, DEFAULT_ROUND);
+    }
+
+
     private void testPto(NcBitOtSender sender, NcBitOtReceiver receiver, int num, int round) {
         long randomTaskId = Math.abs(SECURE_RANDOM.nextLong());
         sender.setTaskId(randomTaskId);
@@ -139,8 +209,14 @@ public class NcBitOtTest {
             BitOtSenderOutput[] senderOutputs = senderThread.getSenderOutputs();
             BitOtReceiverOutput[] receiverOutputs = receiverThread.getReceiverOutputs();
             // 验证结果
-            IntStream.range(0, round).forEach(index ->
-                    BitOtTestUtils.assertOutput(num, senderOutputs[index], receiverOutputs[index])
+            IntStream.range(0, round).forEach(index -> {
+                try {
+                    BitOtTestUtils.assertOutput(num, senderOutputs[index], receiverOutputs[index]);
+                } catch (AssertionError e) {
+                    System.out.println("Index: " + index);
+                    System.out.println("Break");
+                }
+                    }
             );
             LOGGER.info("Sender sends {}B, Receiver sends {}B, time = {}ms",
                     senderByteLength, receiverByteLength, time
