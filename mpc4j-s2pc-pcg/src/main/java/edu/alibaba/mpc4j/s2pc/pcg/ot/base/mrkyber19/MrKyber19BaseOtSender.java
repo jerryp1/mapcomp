@@ -1,11 +1,6 @@
 package edu.alibaba.mpc4j.s2pc.pcg.ot.base.mrkyber19;
 
-
-
-import edu.alibaba.mpc4j.common.kyber.provider.kyber.Indcpa;
-import edu.alibaba.mpc4j.common.kyber.provider.kyber.KyberParams;
-import edu.alibaba.mpc4j.common.kyber.provider.kyber.KyberPublicKeyOps;
-import edu.alibaba.mpc4j.common.kyber.provider.kyber.Poly;
+import edu.alibaba.mpc4j.common.kyber.provider.kyber.*;
 import edu.alibaba.mpc4j.common.rpc.MpcAbortException;
 import edu.alibaba.mpc4j.common.rpc.MpcAbortPreconditions;
 import edu.alibaba.mpc4j.common.rpc.Party;
@@ -42,13 +37,17 @@ public class MrKyber19BaseOtSender extends AbstractBaseOtSender {
      */
     private List<byte[]> bByte;
     /**
-     * 随机数种子的安全参数
+     * 公钥（As+e）长度
      */
-    private final int secureParameter = 128;
+    private int paramsPolyvecBytes;
     /**
-     * hash函数单位输出长度
+     * 公钥（（As+e），p）的长度
      */
-    static final int HASH_UNIT_BYTE_LENGTH = 32;
+    private int indcpaPublicKeyBytes;
+    /**
+     * 安全参数 K
+     */
+    private int paramsK;
 
     public MrKyber19BaseOtSender(Rpc senderRpc, Party receiverParty, MrKyber19BaseOtConfig config) {
         super(MrKyber19BaseOtPtoDesc.getInstance(), senderRpc, receiverParty, config);
@@ -66,6 +65,8 @@ public class MrKyber19BaseOtSender extends AbstractBaseOtSender {
 
     public BaseOtSenderOutput send(int num) throws MpcAbortException {
         setPtoInput(num);
+        paramsK = config.getParamsK();
+        paramsInit(paramsK);
         bByte = new ArrayList<>();
         info("{}{} Send. begin", ptoBeginLogPrefix, getPtoDesc().getPtoName());
         stopWatch.start();
@@ -94,18 +95,35 @@ public class MrKyber19BaseOtSender extends AbstractBaseOtSender {
         info("{}{} Send. end", ptoEndLogPrefix, getPtoDesc().getPtoName());
         return senderOutput;
     }
+    private void paramsInit(int paramsK){
+        switch (paramsK) {
+            case 2:
+                paramsPolyvecBytes = KyberParams.paramsPolyvecBytesK512;
+                indcpaPublicKeyBytes = KyberParams.paramsIndcpaPublicKeyBytesK512;
+                break;
+            case 3:
+                paramsPolyvecBytes = KyberParams.paramsPolyvecBytesK768;
+                indcpaPublicKeyBytes = KyberParams.paramsIndcpaPublicKeyBytesK768;
+                break;
+            default:
+                paramsPolyvecBytes = KyberParams.paramsPolyvecBytesK1024;
+                indcpaPublicKeyBytes = KyberParams.paramsIndcpaPublicKeyBytesK1024;
+        }
+    }
 
     private BaseOtSenderOutput handlePkPayload(List<byte[]> pkPayload) throws MpcAbortException{
         MpcAbortPreconditions.checkArgument(pkPayload.size() == num * 2);
         Hash hashFunction = HashFactory.createInstance(envType, 32);
         IntStream keyPairArrayIntStream = IntStream.range(0, num);
         keyPairArrayIntStream = parallel ? keyPairArrayIntStream.parallel() : keyPairArrayIntStream;
+        //OT协议的输出
         byte[][] r0Array = new byte[num][CommonConstants.BLOCK_BYTE_LENGTH];
         byte[][] r1Array = new byte[num][CommonConstants.BLOCK_BYTE_LENGTH];
         bByte = keyPairArrayIntStream.mapToObj(index -> {
-            //随机数
+            //计算密文时的随机数
             byte[] seed0 = new byte[KyberParams.paramsSymBytes];
             byte[] seed1 = new byte[KyberParams.paramsSymBytes];
+            //进行加密的密文
             byte[] message0 = new byte[KyberParams.paramsSymBytes];
             byte[] message1 = new byte[KyberParams.paramsSymBytes];
             SecureRandom Sr = new SecureRandom();
@@ -113,59 +131,37 @@ public class MrKyber19BaseOtSender extends AbstractBaseOtSender {
             Sr.nextBytes(seed1);
             Sr.nextBytes(message0);
             Sr.nextBytes(message1);
+            //因为消息m必须要256bit，因此传递的密文中选取前128bit作为OT的输出
             r0Array[index] = Arrays.copyOfRange(message0,0,CommonConstants.BLOCK_BYTE_LENGTH);
             r1Array[index] = Arrays.copyOfRange(message1,0,CommonConstants.BLOCK_BYTE_LENGTH);
             // 读取接收端参数对R0、R1
             byte[] upperR0 = pkPayload.get(index * 2);
             byte[] upperR1 = pkPayload.get(index * 2 + 1);
-
-            byte[] upperPKR0 = Arrays.copyOfRange(upperR0,0, KyberParams.paramsPolyvecBytesK1024);
-            byte[] upperPKR1 = Arrays.copyOfRange(upperR1,0, KyberParams.paramsPolyvecBytesK1024);
-            // 计算A0 = R0 - Hash(R1)、A1 = R1 - Hash(R0)
-
+            // 读取公钥（As+e）部分
+            byte[] upperPKR0 = Arrays.copyOfRange(upperR0,0, paramsPolyvecBytes);
+            byte[] upperPKR1 = Arrays.copyOfRange(upperR1,0, paramsPolyvecBytes);
             short[][] upperVectorR0 = Poly.polyVectorFromBytes(upperPKR0);
             short[][] upperVectorR1 = Poly.polyVectorFromBytes(upperPKR1);
-            short[][] upperA0 = KyberPublicKeyOps.kyberPKSub(upperVectorR0,Poly.polyVectorFromBytes(KyberPublicKeyOps.kyberPKHash(upperPKR1, hashFunction)));
-            short[][] upperA1 = KyberPublicKeyOps.kyberPKSub(upperVectorR1,Poly.polyVectorFromBytes(KyberPublicKeyOps.kyberPKHash(upperPKR0, hashFunction)));
-            //生成B0、B1
-            info("Sender A0 {} {})", upperA0,upperA0.length);
-            info("Sender A1 {} {})", upperA1,upperA1.length);
-            byte[] publicKeyA0 = new byte[KyberParams.paramsIndcpaPublicKeyBytesK1024];
-            System.arraycopy(Poly.polyVectorToBytes(upperA0),0,
-                            publicKeyA0,0,KyberParams.paramsPolyvecBytesK1024);
-            System.arraycopy(upperR0,KyberParams.paramsPolyvecBytesK1024,
-                            publicKeyA0,KyberParams.paramsPolyvecBytesK1024,KyberParams.paramsSymBytes);
-            byte[] publicKeyA1 = new byte[KyberParams.paramsIndcpaPublicKeyBytesK1024];
-            System.arraycopy(Poly.polyVectorToBytes(upperA1),0,
-                            publicKeyA1,0,KyberParams.paramsPolyvecBytesK1024);
-            System.arraycopy(upperR1,KyberParams.paramsPolyvecBytesK1024,
-                            publicKeyA1,KyberParams.paramsPolyvecBytesK1024,KyberParams.paramsSymBytes);
+            // 计算A0 = R0 - Hash(R1)、A1 = R1 - Hash(R0)
+            short[][] upperA0 =
+                    KyberPublicKeyOps.kyberPKSub(upperVectorR0,KyberPublicKeyOps.kyberPKHash(upperVectorR1, hashFunction));
+            short[][] upperA1 =
+                    KyberPublicKeyOps.kyberPKSub(upperVectorR1,KyberPublicKeyOps.kyberPKHash(upperVectorR0, hashFunction));
+
+            //计算密文
             byte [][] cipherText = new byte[2][];
-            cipherText[0] = Indcpa.encrypt(message0,publicKeyA0,seed0,4);
-            cipherText[1] = Indcpa.encrypt(message1,publicKeyA1,seed1,4);
-            //cipherText[0] = cipherGenerator(senderKeyGen1024,upperA0,r0Array[index]);
-            //cipherText[1] = cipherGenerator(senderKeyGen1024,upperA1,r1Array[index]);
+            cipherText[0] = KyberKeyOps.
+                    encrypt(message0,upperA0,
+                            Arrays.copyOfRange(upperR0,paramsPolyvecBytes,indcpaPublicKeyBytes),
+                            seed0,paramsK);
+            cipherText[1] = KyberKeyOps.
+                    encrypt(message1,upperA1,
+                            Arrays.copyOfRange(upperR1,paramsPolyvecBytes,indcpaPublicKeyBytes),
+                            seed1,paramsK);
             return cipherText;
         })
                 .flatMap(Arrays::stream)
                 .collect(Collectors.toList());
         return new BaseOtSenderOutput(r0Array, r1Array);
-    }
-
-    private byte[] largeByteHashFunction(Hash hashFunction,byte[] hashInput) {
-        int byteLenth = hashInput.length;
-        int startPoint = 0;
-        byte[] hashOutput = new byte[byteLenth];
-        while(byteLenth > HASH_UNIT_BYTE_LENGTH){
-            System.arraycopy(hashFunction.digestToBytes(Arrays.copyOfRange(hashInput,startPoint,startPoint + HASH_UNIT_BYTE_LENGTH)),
-                    0,hashOutput,startPoint,HASH_UNIT_BYTE_LENGTH);
-            startPoint = startPoint + HASH_UNIT_BYTE_LENGTH;
-            byteLenth = byteLenth - HASH_UNIT_BYTE_LENGTH;
-        }
-        if(byteLenth > 0){
-            System.arraycopy(hashFunction.digestToBytes(Arrays.copyOfRange(hashInput,startPoint,startPoint + byteLenth)),
-                    0,hashOutput,startPoint,byteLenth);
-        }
-        return hashOutput;
     }
 }

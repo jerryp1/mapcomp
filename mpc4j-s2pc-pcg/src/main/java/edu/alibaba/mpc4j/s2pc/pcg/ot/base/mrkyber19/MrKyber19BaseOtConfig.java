@@ -16,12 +16,15 @@ public class MrKyber19BaseOtConfig implements BaseOtConfig {
      * 环境类型
      */
     private final EnvType envType;
-
+    /**
+     * Kyber安全系数
+     */
+    private final int paramsK;
 
     private MrKyber19BaseOtConfig(MrKyber19BaseOtConfig.Builder builder) {
         envType = builder.envType;
+        paramsK = builder.paramsK;
     }
-
 
     @Override
     public BaseOtFactory.BaseOtType getPtoType() { return BaseOtFactory.BaseOtType.MRKYBER19; }
@@ -31,20 +34,31 @@ public class MrKyber19BaseOtConfig implements BaseOtConfig {
 
     @Override
     public SecurityModel getSecurityModel() { return SecurityModel.MALICIOUS; }
+    public int getParamsK() {return paramsK;}
 
     public static class Builder implements org.apache.commons.lang3.builder.Builder<MrKyber19BaseOtConfig>{
         /**
          * 环境类型
          */
         private EnvType envType;
+        /**
+         * Kyber安全系数
+         */
+        private int paramsK;
 
         public Builder() {
             super();
             envType = EnvType.STANDARD;
+            paramsK = 4;
         }
 
-        public MrKyber19BaseOtConfig.Builder setEnvType(EnvType envType) {
+        public Builder setEnvType(EnvType envType) {
             this.envType = envType;
+            return this;
+        }
+
+        public Builder setParamsK(int paramsK){
+            this.paramsK = paramsK;
             return this;
         }
 

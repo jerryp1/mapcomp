@@ -1,10 +1,7 @@
 package edu.alibaba.mpc4j.s2pc.pcg.ot.base.mrkyber19;
 
-import edu.alibaba.mpc4j.common.kyber.provider.KyberPackedPKI;
-import edu.alibaba.mpc4j.common.kyber.provider.kyber.Indcpa;
-import edu.alibaba.mpc4j.common.kyber.provider.kyber.KyberParams;
-import edu.alibaba.mpc4j.common.kyber.provider.kyber.KyberPublicKeyOps;
-import edu.alibaba.mpc4j.common.kyber.provider.kyber.Poly;
+import edu.alibaba.mpc4j.common.kyber.provider.KyberVecPKI;
+import edu.alibaba.mpc4j.common.kyber.provider.kyber.*;
 import edu.alibaba.mpc4j.common.rpc.MpcAbortException;
 import edu.alibaba.mpc4j.common.rpc.MpcAbortPreconditions;
 import edu.alibaba.mpc4j.common.rpc.Party;
@@ -14,13 +11,10 @@ import edu.alibaba.mpc4j.common.rpc.utils.DataPacketHeader;
 import edu.alibaba.mpc4j.common.tool.CommonConstants;
 import edu.alibaba.mpc4j.common.tool.crypto.hash.Hash;
 import edu.alibaba.mpc4j.common.tool.crypto.hash.HashFactory;
-import edu.alibaba.mpc4j.common.tool.utils.BytesUtils;
 import edu.alibaba.mpc4j.s2pc.pcg.ot.base.AbstractBaseOtReceiver;
 import edu.alibaba.mpc4j.s2pc.pcg.ot.base.BaseOtReceiverOutput;
 
 
-import java.security.InvalidKeyException;
-import java.security.KeyPair;
 import java.security.NoSuchAlgorithmException;
 import java.util.Arrays;
 import java.util.List;
@@ -44,11 +38,21 @@ public class MrKyber19BaseOtReceiver extends AbstractBaseOtReceiver {
     /**
      * OT协议接收方参数
      */
-    private KyberPackedPKI[] aArray;
+    private KyberVecPKI[] aArray;
     /**
-     * hash函数单位输出长度
+     * 公钥（As+e）长度
      */
-    static final int HASH_UNIT_BYTE_LENGTH = 32;
+    private int paramsPolyvecBytes;
+    /**
+     * 公钥（（As+e），p）的长度
+     */
+    private int indcpaPublicKeyBytes;
+    /**
+     * 安全参数 K
+     */
+    private int paramsK;
+
+
 
     public MrKyber19BaseOtReceiver(Rpc receiverRpc, Party senderParty, MrKyber19BaseOtConfig config) {
         super(MrKyber19BaseOtPtoDesc.getInstance(), receiverRpc, senderParty, config);
@@ -67,6 +71,8 @@ public class MrKyber19BaseOtReceiver extends AbstractBaseOtReceiver {
     @Override
     public BaseOtReceiverOutput receive(boolean[] choices) throws MpcAbortException {
         setPtoInput(choices);
+        paramsK = config.getParamsK();
+        paramsInit(paramsK);
         info("{}{} Recv. begin", ptoBeginLogPrefix, getPtoDesc().getPtoName());
 
         stopWatch.start();
@@ -97,44 +103,61 @@ public class MrKyber19BaseOtReceiver extends AbstractBaseOtReceiver {
         return handleBetaPayload(betaPayload);
     }
 
+    private void paramsInit(int paramsK){
+        switch (paramsK) {
+            case 2:
+                paramsPolyvecBytes = KyberParams.paramsPolyvecBytesK512;
+                indcpaPublicKeyBytes = KyberParams.paramsIndcpaPublicKeyBytesK512;
+                break;
+            case 3:
+                paramsPolyvecBytes = KyberParams.paramsPolyvecBytesK768;
+                indcpaPublicKeyBytes = KyberParams.paramsIndcpaPublicKeyBytesK768;
+                break;
+            default:
+                paramsPolyvecBytes = KyberParams.paramsPolyvecBytesK1024;
+                indcpaPublicKeyBytes = KyberParams.paramsIndcpaPublicKeyBytesK1024;
+        }
+    }
+
     private List<byte[]> generatePkPayload() {
-        aArray = new KyberPackedPKI[choices.length];
+        aArray = new KyberVecPKI[choices.length];
         Hash hashFunction = HashFactory.createInstance(envType,32);
         // 公钥生成流
         IntStream pkIntStream = IntStream.range(0, choices.length);
         pkIntStream = parallel ? pkIntStream.parallel() : pkIntStream;
         return pkIntStream
                 .mapToObj(index -> {
-                    byte[] randomKey;
+                    // 公钥（As+e）的向量
                     short[][] publickKeyVec;
-                    byte[] publicKey;
+                    // 随机的向量，R_1-sigma
+                    short[][] randomKeyVec;
+                    // 随机向量的生成元，g（R_1-sigma）
                     try {
-                        aArray[index] = Indcpa.generateKyberKeys(4);
                         // 随机生成一组钥匙对
-                        publicKey = aArray[index].getPackedPublicKey();
-                        //info("Receiver publickey {}  {})" ,index, publicKey);
-                        // 生成一个随机的参数R_1-sigma
-                        randomKey = KyberPublicKeyOps.getRandomKyberPK(4);
-                        byte[] hashKey = KyberPublicKeyOps.kyberPKHash(randomKey, hashFunction);
-                        publickKeyVec = Poly.polyVectorFromBytes(Arrays.copyOfRange(publicKey, 0, KyberParams.paramsPolyvecBytesK1024));
-                        publickKeyVec = KyberPublicKeyOps.kyberPKAdd(publickKeyVec, Poly.polyVectorFromBytes(hashKey));
+                        aArray[index] = KyberKeyOps.generateKyberKeys(paramsK);
+                        // 读取多项式格式下的公钥
+                        publickKeyVec = aArray[index].getPublicKeyVec();
+                        // 生成一个符合格式的随机公钥 R_1-sigma
+                        randomKeyVec = KyberPublicKeyOps.getRandomKyberPK(paramsK);
+                        // 计算 R_sigma = R_sigma + Hash(R_1-sigma)
+                        short[][] hashKeyVec = KyberPublicKeyOps.kyberPKHash(randomKeyVec, hashFunction);
+                        publickKeyVec = KyberPublicKeyOps.kyberPKAdd(publickKeyVec, hashKeyVec);
                     } catch (NoSuchAlgorithmException e) {
                         throw new RuntimeException(e);
                     }
-
-                    //info("Receiver Ab {}  {} l{})", publicKey, choices[index],publicKey.length);
                     // 根据选择值将两个参数R分别放入对应位置
                     int sigma = choices[index] ? 1 : 0;
-                    byte[][] pkPair = new byte[2][KyberParams.paramsIndcpaPublicKeyBytesK1024];
+                    byte[][] pkPair = new byte[2][indcpaPublicKeyBytes];
+                    //将（As+e，p_sigma）打包传输
                     System.arraycopy(Poly.polyVectorToBytes(publickKeyVec),0,
-                            pkPair[sigma],0,KyberParams.paramsPolyvecBytesK1024);
-                    System.arraycopy(publicKey,KyberParams.paramsPolyvecBytesK1024,
-                            pkPair[sigma],KyberParams.paramsPolyvecBytesK1024,KyberParams.paramsSymBytes);
-                    System.arraycopy(randomKey,0,pkPair[1 - sigma],0,KyberParams.paramsPolyvecBytesK1024);
-                    System.arraycopy(publicKey,KyberParams.paramsPolyvecBytesK1024,
-                            pkPair[1 - sigma],KyberParams.paramsPolyvecBytesK1024,KyberParams.paramsSymBytes);
-                    info("R A0 {} {})", randomKey,randomKey.length);
-                    info("R A1 {} {})", Poly.polyVectorToBytes(publickKeyVec),Poly.polyVectorToBytes(publickKeyVec).length);
+                            pkPair[sigma],0,paramsPolyvecBytes);
+                    System.arraycopy(aArray[index].getPublicKeyGenerator(),0,
+                            pkPair[sigma],paramsPolyvecBytes,KyberParams.paramsSymBytes);
+                    //将（randomKey，p_1 - sigma）打包传输
+                    System.arraycopy(Poly.polyVectorToBytes(randomKeyVec),0,
+                            pkPair[1 - sigma],0,paramsPolyvecBytes);
+                    System.arraycopy(KyberPublicKeyOps.getRandomKeyGenerator(paramsK),0,
+                            pkPair[1 - sigma],paramsPolyvecBytes,KyberParams.paramsSymBytes);
                     return pkPair;
                 })
                 .flatMap(Arrays::stream)
@@ -150,8 +173,8 @@ public class MrKyber19BaseOtReceiver extends AbstractBaseOtReceiver {
         decryptArrayIntStream.forEach(index ->{
             int sigma = choices[index] ? 1 : 0;
             rbArray[index] = new byte[CommonConstants.BLOCK_BYTE_LENGTH];
-            byte[] receiverPrivateKey = aArray[index].getPackedPrivateKey();
-            byte[] rbDecrypt = Indcpa.decrypt(betaPayload.get(2 * index + sigma),receiverPrivateKey,4);
+            short[][] receiverPrivateKey = aArray[index].getPrivateKeyVec();
+            byte[] rbDecrypt = KyberKeyOps.decrypt(betaPayload.get(2 * index + sigma),receiverPrivateKey,paramsK);
             System.arraycopy(rbDecrypt,0,rbArray[index],0, CommonConstants.BLOCK_BYTE_LENGTH);
         });
 

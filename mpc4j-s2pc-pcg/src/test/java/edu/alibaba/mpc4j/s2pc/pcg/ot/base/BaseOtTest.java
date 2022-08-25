@@ -57,10 +57,20 @@ public class BaseOtTest {
             BaseOtType.MR19.name() + " (uncompress)",
             new Mr19BaseOtConfig.Builder().setCompressEncode(false).build(),
         });
-        //MRKYBER19
+        //MRKYBER19,K = 2
         configurationParams.add(new Object[] {
-                BaseOtType.MRKYBER19.name() ,
-                new MrKyber19BaseOtConfig.Builder().build(),
+                BaseOtType.MRKYBER19.name() +"(2)",
+                new MrKyber19BaseOtConfig.Builder().setParamsK(2).build(),
+        });
+        //MRKYBER19,K = 3
+        configurationParams.add(new Object[] {
+                BaseOtType.MRKYBER19.name() +"(3)",
+                new MrKyber19BaseOtConfig.Builder().setParamsK(3).build(),
+        });
+        //MRKYBER19,K = 4
+        configurationParams.add(new Object[] {
+                BaseOtType.MRKYBER19.name() +"(4)",
+                new MrKyber19BaseOtConfig.Builder().setParamsK(4).build(),
         });
         // CO15，压缩编码
         configurationParams.add(new Object[] {

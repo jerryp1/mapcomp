@@ -1,7 +1,6 @@
 package edu.alibaba.mpc4j.common.kyber.provider.kyber;
 
 import edu.alibaba.mpc4j.common.tool.crypto.hash.Hash;
-import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
 import java.util.Arrays;
 
@@ -14,11 +13,12 @@ import java.util.Arrays;
 public class KyberPublicKeyOps {
     /**
      * 根据输入的seed，和安全参数生成公钥
-     * @param hashInput 随机数种子
+     * @param inputVector 随机数种子
      * @param hashFunction 随机数生成器
      * @return 论文中的公钥（As+e,p）和私钥s
      */
-    public static byte[] kyberPKHash(byte[] hashInput,Hash hashFunction){
+    public static short[][] kyberPKHash(short[][] inputVector,Hash hashFunction){
+        byte[] hashInput = Poly.polyVectorToBytes(inputVector);
         int byteLength = hashInput.length;
         int startPoint = 0;
         byte[] hashOutput = new byte[byteLength];
@@ -34,18 +34,18 @@ public class KyberPublicKeyOps {
         }
         short[][] r = Poly.polyVectorFromBytes(hashOutput);
         Poly.polyVectorReduce(r);
-        hashOutput = Poly.polyVectorToBytes(r);
 
-        return hashOutput;
+        return r;
     }
 
     /**
-     * 根据输入的seed，和安全参数生成公钥
+     * 由安全参数随机生成公钥
      * @param paramsK 安全参数
-     * @return 论文中的公钥（As+e,p）和私钥s
+     * @return 论文中的公钥 As+e
      */
-    public static byte[] getRandomKyberPK(int paramsK) throws NoSuchAlgorithmException {
+    public static short[][] getRandomKyberPK(int paramsK){
         byte[] newPublicKey;
+
         switch (paramsK) {
             case 2:
                 newPublicKey = new byte[KyberParams.paramsPolyvecBytesK512];
@@ -60,9 +60,23 @@ public class KyberPublicKeyOps {
         SecureRandom sr = new SecureRandom();
         sr.nextBytes(newPublicKey);
         short[][] r = Poly.polyVectorFromBytes(newPublicKey);
+        //将生成的随机数转移至符合多项式要求的域
         Poly.polyVectorReduce(r);
-        newPublicKey = Poly.polyVectorToBytes(r);
-        return newPublicKey;
+        return r;
+    }
+
+    /**
+     * 由安全参数随机生成公钥
+     * @param paramsK 安全参数
+     * @return 论文中的公钥 As+e
+     */
+    public static byte[] getRandomKeyGenerator(int paramsK){
+        //随机数种子为32byte
+        byte[] newRandomKeyGenerator = new byte[KyberParams.paramsSymBytes];
+        //随机生成
+        SecureRandom sr = new SecureRandom();
+        sr.nextBytes(newRandomKeyGenerator);
+        return newRandomKeyGenerator;
     }
 
     /**
@@ -86,10 +100,23 @@ public class KyberPublicKeyOps {
         int paramsK = KeyA.length;
         short[][] KeyC = new short[paramsK][];
         for(int i = 0;i < paramsK;i++){
-            KeyC[i] = Poly.polySub(KeyA[i],KeyB[i]);
+            KeyC[i] = polySub(KeyA[i],KeyB[i]);
         }
         return Poly.polyVectorReduce(KeyC);
     }
 
-
+    /**
+     * Subtract two polynomials
+     *
+     * @param polyA 多项式A的系数组
+     * @param polyB 多项式B的系数组
+     * @return 返回值是多项式A的系数减多项式B的系数
+     */
+    public static short[] polySub(short[] polyA, short[] polyB) {
+        short[] polyC = new short[polyA.length];
+        for (int i = 0; i < KyberParams.paramsN; i++) {
+            polyC[i] = (short) (polyA[i] - polyB[i]);
+        }
+        return polyC;
+    }
 }
