@@ -25,11 +25,12 @@ public interface PmidClient<T> extends TwoPartyPto, SecurePto {
      * 初始化协议。
      *
      * @param maxClientSetSize 客户端最大元素数量。
-     * @param maxClientK       客户端最大重复元素上界。
+     * @param maxClientU       客户端最大重复元素上界。
      * @param maxServerSetSize 服务端最大元素数量。
+     * @param maxServerU       服务端最大重复元素上界。
      * @throws MpcAbortException 如果协议异常中止。
      */
-    void init(int maxClientSetSize, int maxClientK, int maxServerSetSize) throws MpcAbortException;
+    void init(int maxClientSetSize, int maxClientU, int maxServerSetSize, int maxServerU) throws MpcAbortException;
 
     /**
      * 执行协议。

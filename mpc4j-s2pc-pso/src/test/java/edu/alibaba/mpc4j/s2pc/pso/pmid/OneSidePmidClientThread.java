@@ -26,18 +26,18 @@ public class OneSidePmidClientThread extends Thread {
     /**
      * 客户端重复元素上界
      */
-    private final int maxClientK;
+    private final int maxClientU;
     /**
      * PMID输出结果
      */
     private PmidPartyOutput<String> clientOutput;
 
     OneSidePmidClientThread(PmidClient<String> pmidClient,
-                            Map<String, Integer> clientElementMap, int maxClientK,
+                            Map<String, Integer> clientElementMap, int maxClientU,
                             int serverSetSize) {
         this.pmidClient = pmidClient;
         this.clientElementMap = clientElementMap;
-        this.maxClientK = maxClientK;
+        this.maxClientU = maxClientU;
         this.serverSetSize = serverSetSize;
     }
 
@@ -49,7 +49,7 @@ public class OneSidePmidClientThread extends Thread {
     public void run() {
         try {
             pmidClient.getRpc().connect();
-            pmidClient.init(clientElementMap.keySet().size(), maxClientK, serverSetSize);
+            pmidClient.init(clientElementMap.keySet().size(), maxClientU, serverSetSize, 1);
             clientOutput = pmidClient.pmid(clientElementMap, serverSetSize);
             pmidClient.getRpc().disconnect();
         } catch (MpcAbortException e) {

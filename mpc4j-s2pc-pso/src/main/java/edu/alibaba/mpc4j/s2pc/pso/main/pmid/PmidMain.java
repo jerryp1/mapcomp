@@ -164,7 +164,7 @@ public class PmidMain {
         pmidServer.getRpc().synchronize();
         // 初始化协议
         LOGGER.info("(warmup) {} init", pmidServer.ownParty().getPartyName());
-        pmidServer.init(WARMUP_SET_SIZE, WARMUP_SET_SIZE, DEFAULT_MAX_K);
+        pmidServer.init(WARMUP_SET_SIZE, 1, WARMUP_SET_SIZE, DEFAULT_MAX_K);
         pmidServer.getRpc().synchronize();
         // 执行协议
         LOGGER.info("(warmup) {} execute", pmidServer.ownParty().getPartyName());
@@ -186,7 +186,7 @@ public class PmidMain {
         // 初始化协议
         LOGGER.info("{} init", pmidServer.ownParty().getPartyName());
         stopWatch.start();
-        pmidServer.init(serverElementSize, clientElementSize, maxK);
+        pmidServer.init(serverElementSize, 1, clientElementSize, maxK);
         stopWatch.stop();
         long initTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
         stopWatch.reset();
@@ -323,7 +323,7 @@ public class PmidMain {
         pmidClient.getRpc().synchronize();
         // 初始化协议
         LOGGER.info("(warmup) {} init", pmidClient.ownParty().getPartyName());
-        pmidClient.init(WARMUP_SET_SIZE, WARMUP_SET_SIZE, DEFAULT_MAX_K);
+        pmidClient.init(WARMUP_SET_SIZE, DEFAULT_MAX_K, WARMUP_SET_SIZE, 1);
         pmidClient.getRpc().synchronize();
         // 执行协议
         LOGGER.info("(warmup) {} execute", pmidClient.ownParty().getPartyName());
@@ -348,7 +348,7 @@ public class PmidMain {
         // 初始化协议
         LOGGER.info("{} init", pmidClient.ownParty().getPartyName());
         stopWatch.start();
-        pmidClient.init(clientElementSize, serverElementSize, maxK);
+        pmidClient.init(clientElementSize, maxK, serverElementSize, 1);
         stopWatch.stop();
         long initTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
         stopWatch.reset();

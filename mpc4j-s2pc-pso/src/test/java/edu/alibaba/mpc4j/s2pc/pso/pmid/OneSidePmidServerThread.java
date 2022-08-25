@@ -26,7 +26,7 @@ class OneSidePmidServerThread extends Thread {
     /**
      * 客户端重复元素上界
      */
-    private final int maxClientK;
+    private final int maxClientU;
     /**
      * 客户端重复元素数量
      */
@@ -38,12 +38,12 @@ class OneSidePmidServerThread extends Thread {
 
     OneSidePmidServerThread(PmidServer<String> pmidServer,
                             Set<String> serverElementSet,
-                            int clientSetSize, int maxClientK, int ClientK) {
+                            int clientSetSize, int maxClientU, int ClientU) {
         this.pmidServer = pmidServer;
         this.serverElementSet = serverElementSet;
         this.clientSetSize = clientSetSize;
-        this.maxClientK = maxClientK;
-        this.clientK = ClientK;
+        this.maxClientU = maxClientU;
+        this.clientK = ClientU;
     }
 
     PmidPartyOutput<String> getServerOutput() {
@@ -54,7 +54,7 @@ class OneSidePmidServerThread extends Thread {
     public void run() {
         try {
             pmidServer.getRpc().connect();
-            pmidServer.init(serverElementSet.size(), clientSetSize, maxClientK);
+            pmidServer.init(serverElementSet.size(), 1, clientSetSize, maxClientU);
             serverOutput = pmidServer.pmid(serverElementSet, clientSetSize, clientK);
             pmidServer.getRpc().disconnect();
         } catch (MpcAbortException e) {
