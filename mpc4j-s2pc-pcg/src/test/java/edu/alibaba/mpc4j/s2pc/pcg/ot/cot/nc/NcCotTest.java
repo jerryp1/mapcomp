@@ -100,15 +100,58 @@ public class NcCotTest {
             NcCotType.YWL20.name() + " (Semi-honest, Unique-Index)",
             new Ywl20NcCotConfig.Builder(SecurityModel.SEMI_HONEST).setMspCotConfig(shUniMspCotConfig).build(),
         });
-        // CRR21 (Semi-Honest, Silver11)
+        // CRR21 (Semi-Honest, Regular-Index, Silver11)
         configurations.add(new Object[] {
-            NcCotType.CRR21.name() + " (Semi-honest, Silver 11)",
-            new Crr21NcCotConfig.Builder().setCodeType(LdpcCreatorUtils.CodeType.SILVER_11).build(),
+            NcCotType.CRR21.name() + " (Semi-honest, Regular-Index, Silver 11)",
+            new Crr21NcCotConfig.Builder().setCodeType(LdpcCreatorUtils.CodeType.SILVER_11)
+                    .setMspCotConfig(new Bcg19RegMspCotConfig.Builder(SecurityModel.SEMI_HONEST).build())
+                    .build(),
         });
-        // CRR21 (Semi-Honest, Silver5)
+        // CRR21 (Semi-Honest, Unique-Index, Silver11)
         configurations.add(new Object[] {
-            NcCotType.CRR21.name() + " (Semi-honest, Silver 5)",
-            new Crr21NcCotConfig.Builder().setCodeType(LdpcCreatorUtils.CodeType.SILVER_5).build(),
+                NcCotType.CRR21.name() + " (Semi-honest, Unique-Index, Silver 11)",
+                new Crr21NcCotConfig.Builder().setCodeType(LdpcCreatorUtils.CodeType.SILVER_11)
+                        .setMspCotConfig(new Ywl20UniMspCotConfig.Builder(SecurityModel.SEMI_HONEST).build())
+                        .build(),
+        });
+        // CRR21 (Malicious, Regular-Index, Silver11)
+        configurations.add(new Object[] {
+                NcCotType.CRR21.name() + " (Semi-honest, Regular-Index, Silver 11)",
+                new Crr21NcCotConfig.Builder().setCodeType(LdpcCreatorUtils.CodeType.SILVER_11)
+                        .setMspCotConfig(new Bcg19RegMspCotConfig.Builder(SecurityModel.MALICIOUS).build())
+                        .build(),
+        });
+        // CRR21 (Malicious, Unique-Index, Silver11)
+        configurations.add(new Object[] {
+                NcCotType.CRR21.name() + " (Semi-honest, Unique-Index, Silver 11)",
+                new Crr21NcCotConfig.Builder().setCodeType(LdpcCreatorUtils.CodeType.SILVER_11)
+                        .setMspCotConfig(new Ywl20UniMspCotConfig.Builder(SecurityModel.MALICIOUS).build())
+                        .build(),
+        });
+        // CRR21 (Semi-Honest, Regular-Index Silver5)
+        configurations.add(new Object[] {
+            NcCotType.CRR21.name() + " (Semi-honest, Regular, Silver 5)",
+            new Crr21NcCotConfig.Builder().setCodeType(LdpcCreatorUtils.CodeType.SILVER_5)
+                    .setMspCotConfig(new Bcg19RegMspCotConfig.Builder(SecurityModel.SEMI_HONEST).build())
+                    .build(),
+        });
+        // CRR21 (Semi-honest, Unique-Index, Silver5)
+        configurations.add(new Object[] {
+                NcCotType.CRR21.name() + " (Semi-honest, Unique-index, Silver 5)",
+                new Crr21NcCotConfig.Builder().setCodeType(LdpcCreatorUtils.CodeType.SILVER_5)
+                        .setMspCotConfig(new Ywl20UniMspCotConfig.Builder(SecurityModel.SEMI_HONEST).build()).build(),
+        });
+        // CRR21 (Malicious, Regular-Index, Silver5)
+        configurations.add(new Object[] {
+                NcCotType.CRR21.name() + " (Malicious, Regular, Silver 5)",
+                new Crr21NcCotConfig.Builder().setCodeType(LdpcCreatorUtils.CodeType.SILVER_5)
+                        .setMspCotConfig(new Bcg19RegMspCotConfig.Builder(SecurityModel.MALICIOUS).build()).build(),
+        });
+        // CRR21 (Malicious, Unique-Index, Silver5)
+        configurations.add(new Object[] {
+                NcCotType.CRR21.name() + " (Malicious, Unique-index, Silver 5)",
+                new Crr21NcCotConfig.Builder().setCodeType(LdpcCreatorUtils.CodeType.SILVER_5)
+                        .setMspCotConfig(new Ywl20UniMspCotConfig.Builder(SecurityModel.MALICIOUS).build()).build(),
         });
 
         return configurations;

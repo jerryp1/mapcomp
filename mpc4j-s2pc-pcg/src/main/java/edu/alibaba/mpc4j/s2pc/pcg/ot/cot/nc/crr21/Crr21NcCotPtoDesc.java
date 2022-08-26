@@ -80,11 +80,13 @@ class Crr21NcCotPtoDesc implements PtoDesc {
         if (ceilLogN < MIN_LOG_N) {
             ceilLogN = MIN_LOG_N;
         }
-        MspCotFactory.MspCotType mspcotType = config.getPtoType();
-        if (mspcotType.equals(MspCotFactory.MspCotType.BCG19_REG)) {
-            return LdpcCreatorUtils.getLpnParams(ceilLogN, silverCodeType);
-        } else {
-            throw new IllegalArgumentException(String.format("Invalid MspcotType %s", mspcotType));
+        MspCotFactory.MspCotType mspCotType = config.getPtoType();
+        switch (mspCotType) {
+            case BCG19_REG:
+            case YWL20_UNI:
+                return LdpcCreatorUtils.getLpnParams(ceilLogN, silverCodeType);
+            default: throw new IllegalArgumentException("Invalid MspCot Type :" + mspCotType.name());
         }
+
     }
 }

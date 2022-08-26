@@ -63,7 +63,7 @@ public class Crr21NcCotConfig implements NcCotConfig {
         /**
          * MSP-COT协议配置项
          */
-        private final MspCotConfig mspcotConfig;
+        private MspCotConfig mspcotConfig;
         /**
          * LDPC类型
          */
@@ -74,6 +74,10 @@ public class Crr21NcCotConfig implements NcCotConfig {
             codeType = LdpcCreatorUtils.CodeType.SILVER_5;
         }
 
+        public Builder setMspCotConfig(MspCotConfig mspcotConfig) {
+            this.mspcotConfig = mspcotConfig;
+            return this;
+        }
         public Builder setCodeType(LdpcCreatorUtils.CodeType codeType) {
             this.codeType = codeType;
             return this;
