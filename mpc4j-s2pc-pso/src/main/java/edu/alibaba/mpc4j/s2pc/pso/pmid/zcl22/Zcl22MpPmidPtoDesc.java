@@ -38,7 +38,7 @@ class Zcl22MpPmidPtoDesc implements PtoDesc {
         /**
          * 服务端发送OKVS
          */
-        SERVER_SEND_OKVS,
+        SERVER_SEND_SIGMA_OKVS,
         /**
          * 服务端发送PSU集合大小
          */

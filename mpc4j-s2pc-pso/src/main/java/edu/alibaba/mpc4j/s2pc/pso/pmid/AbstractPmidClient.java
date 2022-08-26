@@ -100,6 +100,16 @@ public abstract class AbstractPmidClient<T> extends AbstractSecureTwoPartyPto im
         setPtoInput(clientElementMap, serverSetSize, 1);
     }
 
+    protected void setPtoInput(Set<T> clientElementSet, int serverSetSize, int serverU) {
+        Map<T, Integer> clientElementMap = clientElementSet.stream()
+            .collect(Collectors.toMap(
+                    element -> element,
+                    element -> 1
+                )
+            );
+        setPtoInput(clientElementMap, serverSetSize, serverU);
+    }
+
     protected void setPtoInput(Map<T, Integer> clientElementMap, int serverSetSize, int serverU) {
         if (!initialized) {
             throw new IllegalStateException("Need init...");

@@ -98,6 +98,10 @@ public abstract class AbstractPmidServer<T> extends AbstractSecureTwoPartyPto im
         setPtoInput(serverElementMap, clientSetSize, clientU);
     }
 
+    protected void setPtoInput(Map<T, Integer> serverElementMap, int clientSetSize) {
+        setPtoInput(serverElementMap, clientSetSize, 1);
+    }
+
     protected void setPtoInput(Map<T, Integer> serverElementMap, int clientSetSize, int clientU) {
         if (!initialized) {
             throw new IllegalStateException("Need init...");

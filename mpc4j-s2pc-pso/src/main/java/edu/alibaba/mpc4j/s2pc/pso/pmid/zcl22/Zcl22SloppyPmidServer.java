@@ -291,8 +291,30 @@ public class Zcl22SloppyPmidServer<T> extends AbstractPmidServer<T> {
     }
 
     @Override
+    public PmidPartyOutput<T> pmid(Set<T> serverElementSet, int clientSetSize) throws MpcAbortException {
+        setPtoInput(serverElementSet, clientSetSize);
+        return pmid();
+    }
+
+    @Override
     public PmidPartyOutput<T> pmid(Set<T> serverElementSet, int clientSetSize, int clientU) throws MpcAbortException {
         setPtoInput(serverElementSet, clientSetSize, clientU);
+        return pmid();
+    }
+
+    @Override
+    public PmidPartyOutput<T> pmid(Map<T, Integer> serverElementMap, int clientSetSize) throws MpcAbortException {
+        setPtoInput(serverElementMap, clientSetSize);
+        return pmid();
+    }
+
+    @Override
+    public PmidPartyOutput<T> pmid(Map<T, Integer> serverElementMap, int clientSetSize, int clientU) throws MpcAbortException {
+        setPtoInput(serverElementMap, clientSetSize, clientU);
+        return pmid();
+    }
+
+    private PmidPartyOutput<T> pmid() throws MpcAbortException {
         info("{}{} Server begin", ptoBeginLogPrefix, getPtoDesc().getPtoName());
 
         stopWatch.start();
@@ -310,9 +332,20 @@ public class Zcl22SloppyPmidServer<T> extends AbstractPmidServer<T> {
         info("{}{} Server Step 2/5 ({}ms)", ptoStepLogPrefix, getPtoDesc().getPtoName(), serverPidMapTime);
 
         stopWatch.start();
-        // Alice defines q_{x_i}
-        generateQxMap();
-        clientSigmaOkvs();
+        if (serverU == 1 && clientU == 1) {
+            clientEmptySigmaOkvs();
+        } else if (serverU == 1) {
+            generateQxMap();
+            clientSigmaOkvs();
+        } else if (clientU == 1) {
+            generateQxMap();
+            serverSigmaOkvs();
+            clientEmptySigmaOkvs();
+        } else {
+            generateQxMap();
+            serverSigmaOkvs();
+            clientSigmaOkvs();
+        }
         stopWatch.stop();
         long sigmaOkvsTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
         stopWatch.reset();
@@ -569,6 +602,17 @@ public class Zcl22SloppyPmidServer<T> extends AbstractPmidServer<T> {
             );
     }
 
+    private void clientEmptySigmaOkvs() {
+        // 客户端没有重数，dx = 1
+        Stream<ByteBuffer> serverPidStream = serverPidMap.keySet().stream();
+        serverPidStream = parallel ? serverPidStream.parallel() : serverPidStream;
+        dxMap = serverPidStream.collect(Collectors.toMap(
+            serverPid -> serverPid,
+            serverPid -> 1
+            )
+        );
+    }
+
     private void clientSigmaOkvs() throws MpcAbortException {
         // Alice receives σ-OKVS^B
         DataPacketHeader clientSigmaOkvsHeader = new DataPacketHeader(
@@ -598,7 +642,7 @@ public class Zcl22SloppyPmidServer<T> extends AbstractPmidServer<T> {
                 BytesUtils.xori(dxBytes, qxBytes);
                 BigInteger dxBigInteger = BigIntegerUtils.byteArrayToNonNegBigInteger(dxBytes);
                 if (BigIntegerUtils.lessOrEqual(dxBigInteger, clientBigIntegerU) && BigIntegerUtils.greater(dxBigInteger, BigInteger.ONE)) {
-                    // If 1 < d_i ≤ K, Alice set d_i = d_i
+                    // If 1 < d_i ≤ clientU, Alice set d_i = d_i
                     return dxBigInteger.intValue();
                 } else {
                     // else, Alice set d_i = 1
@@ -606,6 +650,48 @@ public class Zcl22SloppyPmidServer<T> extends AbstractPmidServer<T> {
                 }
             })
         );
+    }
+
+    private void serverSigmaOkvs() {
+        // Alice computes an σ-OKVS^A
+        Stream<ByteBuffer> serverPidStream = serverPidMap.keySet().stream();
+        serverPidStream = parallel ? serverPidStream.parallel() : serverPidStream;
+        Map<ByteBuffer, byte[]> serverSigmaKeyValueMap = serverPidStream
+            .collect(Collectors.toMap(
+                // key = x_i
+                serverPid -> {
+                    T x = serverPidMap.get(serverPid);
+                    return ByteBuffer.wrap(sigmaOkvsValueMapPrf.getBytes(ObjectUtils.objectToByteArray(x)));
+                },
+                // value = q_{x_i} ⊕ c_{x_i}
+                serverPid -> {
+                    T x = serverPidMap.get(serverPid);
+                    int ux = serverElementMap.get(x);
+                    byte[] dx;
+                    if (ux == 1) {
+                        // if u_j = 1, Bob selects a random c_j ← {0, 1}^σ
+                        dx = new byte[sigmaOkvsValueByteLength];
+                        secureRandom.nextBytes(dx);
+                    } else {
+                        // else defines c_j = u_j
+                        dx = IntUtils.nonNegIntToFixedByteArray(ux, sigmaOkvsValueByteLength);
+                    }
+                    BytesUtils.xori(dx, qxMap.get(serverPid));
+                    return dx;
+                }
+            ));
+        Okvs<ByteBuffer> serverSigmaOkvs = OkvsFactory.createInstance(
+            envType, sigmaOkvsType, serverSetSize, sigmaOkvsValueByteLength * Byte.SIZE, serverSigmaOkvsHashKeys
+        );
+        // OKVS编码可以并行处理
+        serverSigmaOkvs.setParallelEncode(parallel);
+        byte[][] serverSigmaOkvsStorage = serverSigmaOkvs.encode(serverSigmaKeyValueMap);
+        List<byte[]> serverSigmaOkvsPayload = Arrays.stream(serverSigmaOkvsStorage).collect(Collectors.toList());
+        DataPacketHeader serverSigmaOkvsHeader = new DataPacketHeader(
+            taskId, getPtoDesc().getPtoId(), PtoStep.SERVER_SEND_SIGMA_OKVS.ordinal(), extraInfo,
+            ownParty().getPartyId(), otherParty().getPartyId()
+        );
+        rpc.send(DataPacket.fromByteArrayList(serverSigmaOkvsHeader, serverSigmaOkvsPayload));
     }
 
     private Map<ByteBuffer, T> generateServerPmidMap() {

@@ -2,42 +2,35 @@ package edu.alibaba.mpc4j.s2pc.pso.pmid;
 
 import edu.alibaba.mpc4j.common.rpc.MpcAbortException;
 
-import java.util.Map;
+import java.util.Set;
 
 /**
- * 单方多集合PMID协议接收方线程。
+ * 双方集合PMID客户端线程。
  *
  * @author Weiran Liu
- * @date 2022/05/10
+ * @date 2022/08/26
  */
-public class OneSidePmidClientThread extends Thread {
+class BothSetPmidClientThread extends Thread {
     /**
-     * PSU接收方
+     * PMID客户端
      */
     private final PmidClient<String> pmidClient;
     /**
-     * 接收方映射
+     * 客户端集合
      */
-    private final Map<String, Integer> clientElementMap;
+    private final Set<String> clientElementSet;
     /**
      * 服务端集合数量
      */
     private final int serverSetSize;
     /**
-     * 客户端重复元素上界
-     */
-    private final int maxClientU;
-    /**
      * PMID输出结果
      */
     private PmidPartyOutput<String> clientOutput;
 
-    OneSidePmidClientThread(PmidClient<String> pmidClient,
-                            Map<String, Integer> clientElementMap, int maxClientU,
-                            int serverSetSize) {
+    BothSetPmidClientThread(PmidClient<String> pmidClient, Set<String> clientElementSet, int serverSetSize) {
         this.pmidClient = pmidClient;
-        this.clientElementMap = clientElementMap;
-        this.maxClientU = maxClientU;
+        this.clientElementSet = clientElementSet;
         this.serverSetSize = serverSetSize;
     }
 
@@ -49,8 +42,8 @@ public class OneSidePmidClientThread extends Thread {
     public void run() {
         try {
             pmidClient.getRpc().connect();
-            pmidClient.init(clientElementMap.keySet().size(), maxClientU, serverSetSize, 1);
-            clientOutput = pmidClient.pmid(clientElementMap, serverSetSize);
+            pmidClient.init(clientElementSet.size(), 1, serverSetSize, 1);
+            clientOutput = pmidClient.pmid(clientElementSet, serverSetSize);
             pmidClient.getRpc().disconnect();
         } catch (MpcAbortException e) {
             e.printStackTrace();

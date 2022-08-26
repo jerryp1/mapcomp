@@ -20,6 +20,7 @@ import edu.alibaba.mpc4j.s2pc.pso.psu.PsuClient;
 import edu.alibaba.mpc4j.s2pc.pso.psu.PsuFactory;
 import edu.alibaba.mpc4j.common.tool.utils.*;
 
+import java.math.BigInteger;
 import java.nio.ByteBuffer;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
@@ -29,7 +30,7 @@ import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
 /**
- * 多点ZCL22PMID协议客户端
+ * 多点ZCL22PMID协议客户端。
  *
  * @author Weiran Liu
  * @date 2022/5/10
@@ -95,10 +96,6 @@ public class Zcl22MpPmidClient<T> extends AbstractPmidClient<T> {
      * 客户端元素字节数组
      */
     private byte[][] clientElementByteArrays;
-    /**
-     * k_y
-     */
-    private byte[][] qykaArray;
     /**
      * dy
      */
@@ -197,8 +194,30 @@ public class Zcl22MpPmidClient<T> extends AbstractPmidClient<T> {
     }
 
     @Override
+    public PmidPartyOutput<T> pmid(Set<T> clientElementSet, int serverSetSize) throws MpcAbortException {
+        setPtoInput(clientElementSet, serverSetSize);
+        return pmid();
+    }
+
+    @Override
     public PmidPartyOutput<T> pmid(Map<T, Integer> clientElementMap, int serverSetSize) throws MpcAbortException {
         setPtoInput(clientElementMap, serverSetSize);
+        return pmid();
+    }
+
+    @Override
+    public PmidPartyOutput<T> pmid(Set<T> clientElementSet, int serverSetSize, int serverU) throws MpcAbortException {
+        setPtoInput(clientElementSet, serverSetSize, serverU);
+        return pmid();
+    }
+
+    @Override
+    public PmidPartyOutput<T> pmid(Map<T, Integer> clientElementMap, int serverSetSize, int serverU) throws MpcAbortException {
+        setPtoInput(clientElementMap, serverSetSize, serverU);
+        return pmid();
+    }
+
+    private PmidPartyOutput<T> pmid() throws MpcAbortException {
         info("{}{} Client begin", ptoBeginLogPrefix, getPtoDesc().getPtoName());
 
         stopWatch.start();
@@ -210,12 +229,21 @@ public class Zcl22MpPmidClient<T> extends AbstractPmidClient<T> {
         info("{}{} Client Step 1/4 ({}ms)", ptoStepLogPrefix, getPtoDesc().getPtoName(), oprfTime);
 
         stopWatch.start();
-        clientSigmaOkvs();
-        serverEmptySigmaOkvs();
+        if (serverU == 1 && clientU == 1) {
+            serverEmptySigmaOkvs();
+        } else if (serverU == 1) {
+            clientSigmaOkvs();
+            serverEmptySigmaOkvs();
+        } else if (clientU == 1) {
+            serverSigmaOkvs();
+        } else {
+            clientSigmaOkvs();
+            serverSigmaOkvs();
+        }
         stopWatch.stop();
-        long clientSigmaOkvsTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
+        long sigmaOkvsTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
         stopWatch.reset();
-        info("{}{} Client Step 2/4 ({}ms)", ptoStepLogPrefix, getPtoDesc().getPtoName(), clientSigmaOkvsTime);
+        info("{}{} Client Step 2/4 ({}ms)", ptoStepLogPrefix, getPtoDesc().getPtoName(), sigmaOkvsTime);
 
         stopWatch.start();
         // Bob computes id_{y_i}^(j)
@@ -290,11 +318,11 @@ public class Zcl22MpPmidClient<T> extends AbstractPmidClient<T> {
                     int uy = clientElementMap.get(y);
                     byte[] dy;
                     if (uy == 1) {
-                        // if k_j = 1, Bob selects a random c_j ← {0, 1}^σ
+                        // if u_j = 1, Bob selects a random c_j ← {0, 1}^σ
                         dy = new byte[sigmaOkvsValueByteLength];
                         secureRandom.nextBytes(dy);
                     } else {
-                        // else defines c_j = k_j
+                        // else defines c_j = u_j
                         dy = IntUtils.nonNegIntToFixedByteArray(uy, sigmaOkvsValueByteLength);
                     }
                     BytesUtils.xori(dy, qykbArray[index]);
@@ -321,17 +349,49 @@ public class Zcl22MpPmidClient<T> extends AbstractPmidClient<T> {
         Arrays.fill(dyArray, 1);
     }
 
-    private void generateQykaArray() {
-        // Bob defines q_{y_i}^A = H(F_{k_B}(xi) || K + 1) for i ∈ [m]
+    private void serverSigmaOkvs() throws MpcAbortException {
+        // q_{y_i}^A = H(F_{k_A}(x_i) || 0) for i ∈ [n]
         IntStream clientElementIndexStream = IntStream.range(0, clientSetSize);
         clientElementIndexStream = parallel ? clientElementIndexStream.parallel() : clientElementIndexStream;
-        qykaArray = clientElementIndexStream
+        final byte[][] qykaArray = clientElementIndexStream
             .mapToObj(index -> {
                 byte[] fyka = kaMpOprfOutput.getPrf(index);
                 return ByteBuffer.allocate(fyka.length + Integer.BYTES).put(fyka).putInt(0).array();
             })
             .map(sigmaOkvsValueMapPrf::getBytes)
             .toArray(byte[][]::new);
+        // Bob receives σ-OKVS D^A
+        DataPacketHeader serverSigmaOkvsHeader = new DataPacketHeader(
+            taskId, getPtoDesc().getPtoId(), PtoStep.SERVER_SEND_SIGMA_OKVS.ordinal(), extraInfo,
+            otherParty().getPartyId(), ownParty().getPartyId()
+        );
+        List<byte[]> serverSigmaOkvsPayload = rpc.receive(serverSigmaOkvsHeader).getPayload();
+        int serverSigmaOkvsM = OkvsFactory.getM(sigmaOkvsType, serverSetSize);
+        MpcAbortPreconditions.checkArgument(serverSigmaOkvsPayload.size() == serverSigmaOkvsM);
+        // 读取服务端σ的OKVS
+        byte[][] serverSigmaOkvsStorage = serverSigmaOkvsPayload.toArray(new byte[0][]);
+        Okvs<ByteBuffer> serverSigmaOkvs = OkvsFactory.createInstance(
+            envType, sigmaOkvsType, serverSetSize, sigmaOkvsValueByteLength * Byte.SIZE, serverSigmaOkvsHashKeys
+        );
+        dyArray = new int[clientSetSize];
+        BigInteger serverBigIntegerU = BigInteger.valueOf(serverU);
+        clientElementIndexStream = IntStream.range(0, clientSetSize);
+        clientElementIndexStream = parallel ? clientElementIndexStream.parallel() : clientElementIndexStream;
+        clientElementIndexStream.forEach(index -> {
+            // Bob computes d_y = q_{y_i}^A ⊕ Decode_H(D, y_i) for i ∈ [n].
+            byte[] y = clientElementByteArrays[index];
+            ByteBuffer yi = ByteBuffer.wrap(sigmaOkvsValueMapPrf.getBytes(y));
+            byte[] dyBytes = serverSigmaOkvs.decode(serverSigmaOkvsStorage, yi);
+            BytesUtils.xori(dyBytes, qykaArray[index]);
+            BigInteger dyBigInteger = BigIntegerUtils.byteArrayToNonNegBigInteger(dyBytes);
+            if (BigIntegerUtils.lessOrEqual(dyBigInteger, serverBigIntegerU) && BigIntegerUtils.greater(dyBigInteger, BigInteger.ONE)) {
+                // If 1 < d_i ≤ serverU, set d_i = d_i
+                dyArray[index] = dyBigInteger.intValue();
+            } else {
+                // else, set d_i = 1
+                dyArray[index] = 1;
+            }
+        });
     }
 
     private Map<ByteBuffer, T> generateClientPmidMap() {
