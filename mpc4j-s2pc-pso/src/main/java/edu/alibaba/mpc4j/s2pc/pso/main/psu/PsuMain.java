@@ -1,5 +1,6 @@
 package edu.alibaba.mpc4j.s2pc.pso.main.psu;
 
+import edu.alibaba.mpc4j.common.rpc.MpcAbortException;
 import edu.alibaba.mpc4j.common.rpc.Party;
 import edu.alibaba.mpc4j.common.rpc.Rpc;
 import edu.alibaba.mpc4j.common.tool.CommonConstants;
@@ -17,6 +18,7 @@ import org.slf4j.LoggerFactory;
 
 import java.io.*;
 import java.nio.ByteBuffer;
+import java.util.Arrays;
 import java.util.Properties;
 import java.util.Set;
 import java.util.concurrent.ForkJoinPool;
@@ -44,12 +46,17 @@ public class PsuMain {
      */
     private static final int WARMUP_SET_SIZE = 1 << 10;
     /**
+     * 秒表
+     */
+    private final StopWatch stopWatch;
+    /**
      * 配置参数
      */
     private final Properties properties;
 
     public PsuMain(Properties properties) {
         this.properties = properties;
+        stopWatch = new StopWatch();
     }
 
     public void run() throws Exception {
@@ -67,9 +74,10 @@ public class PsuMain {
         // 读取协议参数
         LOGGER.info("{} read settings", serverRpc.ownParty().getPartyName());
         // 读取元素字节长度
-        int elementByteLength = PsoMainUtils.readElementByteLength(properties);
+        int elementByteLength = PsoMainUtils.readInt(properties, "element_byte_length");
         // 读取集合大小
-        int[] setSizes = PsoMainUtils.readSetSizes(properties);
+        int[] logSetSizes = PsoMainUtils.readLogIntArray(properties, "log_set_size");
+        int[] setSizes = Arrays.stream(logSetSizes).map(logSetSize -> 1 << logSetSize).toArray();
         // 读取特殊参数
         LOGGER.info("{} read PTO config", serverRpc.ownParty().getPartyName());
         PsuConfig config = PsuConfigUtils.createPsuConfig(properties);
@@ -91,7 +99,7 @@ public class PsuMain {
         FileWriter fileWriter = new FileWriter(filePath);
         PrintWriter printWriter = new PrintWriter(fileWriter, true);
         // 写入统计结果头文件
-        String tab = "Party ID\tServer Element Size\tClient Element Size\tIs Parallel\tThread Num"
+        String tab = "Party ID\tServer Set Size\tClient Set Size\tIs Parallel\tThread Num"
             + "\tInit Time(ms)\tInit DataPacket Num\tInit Payload Bytes(B)\tInit Send Bytes(B)"
             + "\tPto  Time(ms)\tPto  DataPacket Num\tPto  Payload Bytes(B)\tPto  Send Bytes(B)";
         printWriter.println(tab);
@@ -102,35 +110,14 @@ public class PsuMain {
         int taskId = 0;
         // 预热
         warmupServer(serverRpc, clientParty, config, taskId);
+        taskId++;
         // 正式测试
         for (int setSize : setSizes) {
-            // 读取输入文件
-            LOGGER.info("{} read element set", serverRpc.ownParty().getPartyName());
-            InputStreamReader inputStreamReader = new InputStreamReader(
-                new FileInputStream(PsoUtils.getBytesFileName(PsoUtils.BYTES_SERVER_PREFIX, setSize, elementByteLength)),
-                CommonConstants.DEFAULT_CHARSET
-            );
-            BufferedReader bufferedReader = new BufferedReader(inputStreamReader);
-            Set<ByteBuffer> serverElementSet = bufferedReader.lines()
-                .map(Hex::decode)
-                .map(ByteBuffer::wrap)
-                .collect(Collectors.toSet());
-            bufferedReader.close();
-            inputStreamReader.close();
-            // 多线程
-            LOGGER.info("{} multiple thread test", serverRpc.ownParty().getPartyName());
+            Set<ByteBuffer> serverElementSet = readServerElementSet(setSize, elementByteLength);
+            runServer(serverRpc, clientParty, config, taskId, true, serverElementSet, setSize, elementByteLength, printWriter);
             taskId++;
-            PsuServer parallelPsuServer = PsuFactory.createServer(serverRpc, clientParty, config);
-            parallelPsuServer.setTaskId(taskId);
-            parallelPsuServer.setParallel(true);
-            runServer(parallelPsuServer, serverElementSet, setSize, elementByteLength, printWriter);
-            // 单线程
-            LOGGER.info("{} single thread test", serverRpc.ownParty().getPartyName());
+            runServer(serverRpc, clientParty, config, taskId, false, serverElementSet, setSize, elementByteLength, printWriter);
             taskId++;
-            PsuServer sequencePsuServer = PsuFactory.createServer(serverRpc, clientParty, config);
-            sequencePsuServer.setTaskId(taskId);
-            sequencePsuServer.setParallel(false);
-            runServer(sequencePsuServer, serverElementSet, setSize, elementByteLength, printWriter);
         }
         // 断开连接
         serverRpc.disconnect();
@@ -138,19 +125,24 @@ public class PsuMain {
         fileWriter.close();
     }
 
-    private void warmupServer(Rpc serverRpc, Party clientParty, PsuConfig config, int taskId) throws Exception {
-        LOGGER.info("(warmup) {} read element set", serverRpc.ownParty().getPartyName());
-        InputStreamReader warmupInputStreamReader = new InputStreamReader(
-            new FileInputStream(PsoUtils.getBytesFileName(PsoUtils.BYTES_SERVER_PREFIX,
-                WARMUP_SET_SIZE, WARMUP_ELEMENT_BYTE_LENGTH)), CommonConstants.DEFAULT_CHARSET
+    private Set<ByteBuffer> readServerElementSet(int setSize, int elementByteLength) throws IOException {
+        LOGGER.info("Server read element set");
+        InputStreamReader inputStreamReader = new InputStreamReader(
+            new FileInputStream(PsoUtils.getBytesFileName(PsoUtils.BYTES_SERVER_PREFIX, setSize, elementByteLength)),
+            CommonConstants.DEFAULT_CHARSET
         );
-        BufferedReader bufferedReader = new BufferedReader(warmupInputStreamReader);
+        BufferedReader bufferedReader = new BufferedReader(inputStreamReader);
         Set<ByteBuffer> serverElementSet = bufferedReader.lines()
             .map(Hex::decode)
             .map(ByteBuffer::wrap)
             .collect(Collectors.toSet());
         bufferedReader.close();
-        warmupInputStreamReader.close();
+        inputStreamReader.close();
+        return serverElementSet;
+    }
+
+    private void warmupServer(Rpc serverRpc, Party clientParty, PsuConfig config, int taskId) throws Exception {
+        Set<ByteBuffer> serverElementSet = readServerElementSet(WARMUP_SET_SIZE, WARMUP_ELEMENT_BYTE_LENGTH);
         PsuServer psuServer = PsuFactory.createServer(serverRpc, clientParty, config);
         psuServer.setTaskId(taskId);
         psuServer.setParallel(false);
@@ -167,21 +159,24 @@ public class PsuMain {
         LOGGER.info("(warmup) {} finish", psuServer.ownParty().getPartyName());
     }
 
-    private void runServer(PsuServer psuServer,
-                           Set<ByteBuffer> serverElementSet, int clientElementSize, int elementByteLength,
-                           PrintWriter printWriter) throws Exception {
-        int serverElementSize = serverElementSet.size();
-        LOGGER.info("----- {} start, ServerSetSize = {}, ClientSetSize = {}, parallel = {}",
-            psuServer.getPtoDesc().getPtoName(), serverElementSize, clientElementSize, psuServer.getParallel()
+    private void runServer(Rpc serverRpc, Party clientParty, PsuConfig config, int taskId, boolean parallel,
+                           Set<ByteBuffer> serverElementSet, int clientSetSize, int elementByteLength,
+                           PrintWriter printWriter) throws MpcAbortException {
+        int serverSetSize = serverElementSet.size();
+        LOGGER.info(
+            "{}: serverSetSize = {}, clientSetSize = {}, parallel = {}",
+            serverRpc.ownParty().getPartyName(), serverSetSize, clientSetSize, parallel
         );
+        PsuServer psuServer = PsuFactory.createServer(serverRpc, clientParty, config);
+        psuServer.setTaskId(taskId);
+        psuServer.setParallel(parallel);
         // 启动测试
-        StopWatch stopWatch = new StopWatch();
         psuServer.getRpc().synchronize();
         psuServer.getRpc().reset();
         // 初始化协议
         LOGGER.info("{} init", psuServer.ownParty().getPartyName());
         stopWatch.start();
-        psuServer.init(serverElementSize, clientElementSize);
+        psuServer.init(serverSetSize, clientSetSize);
         stopWatch.stop();
         long initTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
         stopWatch.reset();
@@ -193,7 +188,7 @@ public class PsuMain {
         // 执行协议
         LOGGER.info("{} execute", psuServer.ownParty().getPartyName());
         stopWatch.start();
-        psuServer.psu(serverElementSet, clientElementSize, elementByteLength);
+        psuServer.psu(serverElementSet, clientSetSize, elementByteLength);
         stopWatch.stop();
         long ptoTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
         stopWatch.reset();
@@ -202,13 +197,14 @@ public class PsuMain {
         long ptoSendByteLength = psuServer.getRpc().getSendByteLength();
         // 写入统计结果
         String info = psuServer.ownParty().getPartyId()
-            + "\t" + serverElementSize
-            + "\t" + clientElementSize
+            + "\t" + serverSetSize
+            + "\t" + clientSetSize
             + "\t" + psuServer.getParallel()
             + "\t" + ForkJoinPool.getCommonPoolParallelism()
             + "\t" + initTime + "\t" + initDataPacketNum + "\t" + initPayloadByteLength + "\t" + initSendByteLength
             + "\t" + ptoTime + "\t" + ptoDataPacketNum + "\t" + ptoPayloadByteLength + "\t" + ptoSendByteLength;
         printWriter.println(info);
+        // 同步
         psuServer.getRpc().synchronize();
         psuServer.getRpc().reset();
         LOGGER.info("{} finish", psuServer.ownParty().getPartyName());
@@ -218,9 +214,10 @@ public class PsuMain {
         // 读取协议参数
         LOGGER.info("{} read settings", clientRpc.ownParty().getPartyName());
         // 读取元素字节长度
-        int elementByteLength = PsoMainUtils.readElementByteLength(properties);
+        int elementByteLength = PsoMainUtils.readInt(properties, "element_byte_length");
         // 读取集合大小
-        int[] setSizes = PsoMainUtils.readSetSizes(properties);
+        int[] logSetSizes = PsoMainUtils.readLogIntArray(properties, "log_set_size");
+        int[] setSizes = Arrays.stream(logSetSizes).map(logSetSize -> 1 << logSetSize).toArray();
         // 读取特殊参数
         LOGGER.info("{} read PTO config", clientRpc.ownParty().getPartyName());
         PsuConfig config = PsuConfigUtils.createPsuConfig(properties);
@@ -242,7 +239,7 @@ public class PsuMain {
         FileWriter fileWriter = new FileWriter(filePath);
         PrintWriter printWriter = new PrintWriter(fileWriter, true);
         // 写入统计结果头文件
-        String tab = "Party ID\tClient Element Size\tServer Element Size\tIs Parallel\tThread Num"
+        String tab = "Party ID\tServer Set Size\tClient Set Size\tIs Parallel\tThread Num"
             + "\tInit Time(ms)\tInit DataPacket Num\tInit Payload Bytes(B)\tInit Send Bytes(B)"
             + "\tPto  Time(ms)\tPto  DataPacket Num\tPto  Payload Bytes(B)\tPto  Send Bytes(B)";
         printWriter.println(tab);
@@ -253,34 +250,16 @@ public class PsuMain {
         int taskId = 0;
         // 预热
         warmupClient(clientRpc, serverParty, config, taskId);
+        taskId++;
         for (int setSize : setSizes) {
             // 读取输入文件
-            LOGGER.info("{} read element set", clientRpc.ownParty().getPartyName());
-            InputStreamReader inputStreamReader = new InputStreamReader(
-                new FileInputStream(PsoUtils.getBytesFileName(PsoUtils.BYTES_CLIENT_PREFIX, setSize, elementByteLength)),
-                CommonConstants.DEFAULT_CHARSET
-            );
-            BufferedReader bufferedReader = new BufferedReader(inputStreamReader);
-            Set<ByteBuffer> clientElementSet = bufferedReader.lines()
-                .map(Hex::decode)
-                .map(ByteBuffer::wrap)
-                .collect(Collectors.toSet());
-            bufferedReader.close();
-            inputStreamReader.close();
+            Set<ByteBuffer> clientElementSet = readClientElementSet(setSize, elementByteLength);
             // 多线程
-            LOGGER.info("{} multiple thread test", clientRpc.ownParty().getPartyName());
+            runClient(clientRpc, serverParty, config, taskId, true, clientElementSet, setSize, elementByteLength, printWriter);
             taskId++;
-            PsuClient parallelPsuClient = PsuFactory.createClient(clientRpc, serverParty, config);
-            parallelPsuClient.setTaskId(taskId);
-            parallelPsuClient.setParallel(true);
-            runClient(parallelPsuClient, clientElementSet, setSize, elementByteLength, printWriter);
             // 单线程
-            LOGGER.info("{} single thread test", clientRpc.ownParty().getPartyName());
+            runClient(clientRpc, serverParty, config, taskId, false, clientElementSet, setSize, elementByteLength, printWriter);
             taskId++;
-            PsuClient sequencePsuClient = PsuFactory.createClient(clientRpc, serverParty, config);
-            sequencePsuClient.setTaskId(taskId);
-            sequencePsuClient.setParallel(false);
-            runClient(sequencePsuClient, clientElementSet, setSize, elementByteLength, printWriter);
         }
         // 断开连接
         clientRpc.disconnect();
@@ -288,12 +267,11 @@ public class PsuMain {
         fileWriter.close();
     }
 
-    private void warmupClient(Rpc clientRpc, Party serverParty, PsuConfig config, int taskId) throws Exception {
-        // 读取输入文件
-        LOGGER.info("(warmup) {} read element set", clientRpc.ownParty().getPartyName());
+    private Set<ByteBuffer> readClientElementSet(int setSize, int elementByteLength) throws IOException {
+        LOGGER.info("Client read element set");
         InputStreamReader inputStreamReader = new InputStreamReader(
-            new FileInputStream(PsoUtils.getBytesFileName(PsoUtils.BYTES_CLIENT_PREFIX,
-                WARMUP_SET_SIZE, WARMUP_ELEMENT_BYTE_LENGTH)), CommonConstants.DEFAULT_CHARSET
+            new FileInputStream(PsoUtils.getBytesFileName(PsoUtils.BYTES_CLIENT_PREFIX, setSize, elementByteLength)),
+            CommonConstants.DEFAULT_CHARSET
         );
         BufferedReader bufferedReader = new BufferedReader(inputStreamReader);
         Set<ByteBuffer> clientElementSet = bufferedReader.lines()
@@ -302,6 +280,11 @@ public class PsuMain {
             .collect(Collectors.toSet());
         bufferedReader.close();
         inputStreamReader.close();
+        return clientElementSet;
+    }
+
+    private void warmupClient(Rpc clientRpc, Party serverParty, PsuConfig config, int taskId) throws Exception {
+        Set<ByteBuffer> clientElementSet = readClientElementSet(WARMUP_SET_SIZE, WARMUP_ELEMENT_BYTE_LENGTH);
         PsuClient psuClient = PsuFactory.createClient(clientRpc, serverParty, config);
         psuClient.setTaskId(taskId);
         psuClient.setParallel(false);
@@ -319,21 +302,24 @@ public class PsuMain {
         LOGGER.info("(warmup) {} finish", psuClient.ownParty().getPartyName());
     }
 
-    private void runClient(PsuClient psuClient,
-                           Set<ByteBuffer> clientElementSet, int serverElementSize, int elementByteLength,
-                           PrintWriter printWriter) throws Exception {
-        int clientElementSize = clientElementSet.size();
-        LOGGER.info("----- {} start, ClientSetSize = {}, ServerSetSize = {}, parallel = {}",
-            psuClient.getPtoDesc().getPtoName(), clientElementSize, serverElementSize, psuClient.getParallel()
+    private void runClient(Rpc clientRpc, Party serverParty, PsuConfig config, int taskId, boolean parallel,
+                           Set<ByteBuffer> clientElementSet, int serverSetSize, int elementByteLength,
+                           PrintWriter printWriter) throws MpcAbortException {
+        int clientSetSize = clientElementSet.size();
+        LOGGER.info(
+            "{}: serverSetSize = {}, clientSetSize = {}, parallel = {}",
+            clientRpc.ownParty().getPartyName(), serverSetSize, clientSetSize, parallel
         );
+        PsuClient psuClient = PsuFactory.createClient(clientRpc, serverParty, config);
+        psuClient.setTaskId(taskId);
+        psuClient.setParallel(parallel);
         // 启动测试
-        StopWatch stopWatch = new StopWatch();
         psuClient.getRpc().synchronize();
         psuClient.getRpc().reset();
         // 初始化协议
         LOGGER.info("{} init", psuClient.ownParty().getPartyName());
         stopWatch.start();
-        psuClient.init(clientElementSize, serverElementSize);
+        psuClient.init(clientSetSize, serverSetSize);
         stopWatch.stop();
         long initTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
         stopWatch.reset();
@@ -345,7 +331,7 @@ public class PsuMain {
         // 执行协议
         LOGGER.info("{} execute", psuClient.ownParty().getPartyName());
         stopWatch.start();
-        psuClient.psu(clientElementSet, serverElementSize, elementByteLength);
+        psuClient.psu(clientElementSet, serverSetSize, elementByteLength);
         stopWatch.stop();
         long ptoTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
         stopWatch.reset();
@@ -354,8 +340,8 @@ public class PsuMain {
         long ptoSendByteLength = psuClient.getRpc().getSendByteLength();
         // 写入统计结果
         String info = psuClient.ownParty().getPartyId()
-            + "\t" + clientElementSize
-            + "\t" + serverElementSize
+            + "\t" + clientSetSize
+            + "\t" + serverSetSize
             + "\t" + psuClient.getParallel()
             + "\t" + ForkJoinPool.getCommonPoolParallelism()
             + "\t" + initTime + "\t" + initDataPacketNum + "\t" + initPayloadByteLength + "\t" + initSendByteLength

@@ -2,8 +2,6 @@
 // Created by Weiran Liu on 2022/1/5.
 //
 #include "defines.h"
-#include <NTL/GF2E.h>
-#include <cstring>
 
 void initGF2E(JNIEnv *env, jbyteArray jMinBytes) {
     // 读取最小多项式系数

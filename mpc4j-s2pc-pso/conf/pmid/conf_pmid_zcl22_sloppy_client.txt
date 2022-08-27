@@ -18,10 +18,15 @@ client_port = 9001
 own_name = client
 
 # 对数集合大小（log(n)）
-log_set_size = 20,18,16,14
+# 两方都为集合
+non_side_log_set_size = 20,18,16,14
+# 一方为集合，一方为多集合
+one_side_log_set_size = 20,18,16,14
+# 两方都为多集合
+two_side_log_set_size = 18,16,14
 
-# max(k)
-max_k = 4,2,1
+# max(u)
+max_u = 3
 
 # Sloppy的OKVS类型
 sloppy_okvs_type = MEGA_BIN

@@ -74,60 +74,72 @@ public class PsoMainUtils {
     }
 
     /**
-     * 读取集合大小。
+     * 读取字符串。
      *
      * @param properties 配置项。
-     * @return 集合大小。
+     * @param keyword 关键字。
+     * @return 字符串。
      */
-    public static int[] readSetSizes(Properties properties) {
-        String logSetSizeString = Preconditions.checkNotNull(
-            properties.getProperty("log_set_size"), "Please set log_set_size"
+    public static String readString(Properties properties, String keyword) {
+        return Preconditions.checkNotNull(
+            properties.getProperty(keyword), "Please set " + keyword
         );
-        int[] setSizes = Arrays.stream(logSetSizeString.split(","))
-            .mapToInt(Integer::parseInt)
-            .peek(logSetSize -> Preconditions.checkArgument(
-                logSetSize > 0 && logSetSize < Integer.SIZE,
-                "log(n) must be in range (%s, %s]", 0, Integer.SIZE))
-            .map(logSetSize -> 1 << logSetSize)
-            .toArray();
-        LOGGER.info("setSizes = {}", Arrays.toString(setSizes));
-
-        return setSizes;
     }
 
     /**
-     * 读取max(k)。
+     * 读取整数。
      *
      * @param properties 配置项。
-     * @return max(k)。
+     * @param keyword 关键字。
+     * @return 整数。
      */
-    public static int[] readMaxKs(Properties properties) {
-        String maxKsString = Preconditions.checkNotNull(
-            properties.getProperty("max_k"), "Please set max_k"
+    public static int readInt(Properties properties, String keyword) {
+        String intString = readString(properties, keyword);
+        int intValue = Integer.parseInt(intString);
+        Preconditions.checkArgument(
+            intValue > 0 && intValue < Integer.MAX_VALUE,
+            "Int value must be in range (%s, %s)", 0, Integer.MAX_VALUE
         );
-        int[] maxKs = Arrays.stream(maxKsString.split(","))
-            .mapToInt(Integer::parseInt)
-            .peek(logSetSize -> Preconditions.checkArgument(
-                logSetSize > 0 && logSetSize < Integer.SIZE,
-                "max(k) must be in range (%s, %s]", 0, Integer.SIZE))
-            .toArray();
-        LOGGER.info("max(k) = {}", Arrays.toString(maxKs));
-        return maxKs;
+        LOGGER.info("{} = {}", keyword, intValue);
+        return intValue;
     }
 
     /**
-     * 读取元素字节长度。
+     * 读取对数整数数组。
      *
      * @param properties 配置项。
-     * @return 元素字节长度。
+     * @param keyword 关键字。
+     * @return 整数数组。
      */
-    public static int readElementByteLength(Properties properties) {
-        int elementByteLength = Integer.parseInt(Preconditions.checkNotNull(
-            properties.getProperty("element_byte_length"), "Please set element_byte_length"
-        ));
-        Preconditions.checkArgument(elementByteLength > 0,
-            "elementByteLength must be greater than 0: %s", elementByteLength
-        );
-        return elementByteLength;
+    public static int[] readLogIntArray(Properties properties, String keyword) {
+        String intArrayString = readString(properties, keyword);
+        int[] logIntArray = Arrays.stream(intArrayString.split(","))
+            .mapToInt(Integer::parseInt)
+            .peek(logIntValue -> Preconditions.checkArgument(
+                logIntValue > 0 && logIntValue < Integer.SIZE,
+                "Log int value must be in range (%s, %s)", 0, Integer.SIZE))
+            .toArray();
+        LOGGER.info("{} = {}", keyword, Arrays.toString(logIntArray));
+
+        return logIntArray;
+    }
+
+    /**
+     * 读取整数数组。
+     *
+     * @param properties 配置项。
+     * @param keyword 关键字。
+     * @return 整数数组。
+     */
+    public static int[] readIntArray(Properties properties, String keyword) {
+        String intArrayString = readString(properties, keyword);
+        int[] intArray = Arrays.stream(intArrayString.split(","))
+            .mapToInt(Integer::parseInt)
+            .peek(intValue -> Preconditions.checkArgument(
+                intValue > 0 && intValue < Integer.MAX_VALUE,
+                "Int value must be in range (%s, %s)", 0, Integer.MAX_VALUE))
+            .toArray();
+        LOGGER.info("{} = {}", keyword, Arrays.toString(intArray));
+        return intArray;
     }
 }

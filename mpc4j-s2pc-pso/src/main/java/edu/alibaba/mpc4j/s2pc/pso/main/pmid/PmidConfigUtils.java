@@ -64,7 +64,9 @@ public class PmidConfigUtils {
                 mpOprfConfig = new Ra17MpOprfConfig.Builder().build();
                 break;
             default:
-                throw new IllegalArgumentException("Invalid MpOprfType: " + mpOprfTypeString);
+                throw new IllegalArgumentException(
+                    "Invalid " + OprfFactory.OprfType.class.getSimpleName() + ": " + mpOprfTypeString
+                );
         }
         // σ的OKVS类型
         String sigmaOkvsTypeString = Preconditions.checkNotNull(
