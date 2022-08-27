@@ -114,8 +114,10 @@ public class PidMain {
             Set<ByteBuffer> serverElementSet = readServerElementSet(setSize);
             // 多线程
             runServer(serverRpc, clientParty, config, taskId, true, serverElementSet, setSize, printWriter);
+            taskId++;
             // 单线程
             runServer(serverRpc, clientParty, config, taskId, false, serverElementSet, setSize, printWriter);
+            taskId++;
         }
         // 断开连接
         serverRpc.disconnect();
