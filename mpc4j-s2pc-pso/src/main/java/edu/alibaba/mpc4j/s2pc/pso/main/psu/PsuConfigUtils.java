@@ -1,11 +1,11 @@
 package edu.alibaba.mpc4j.s2pc.pso.main.psu;
 
-import com.google.common.base.Preconditions;
 import edu.alibaba.mpc4j.common.rpc.desc.SecurityModel;
 import edu.alibaba.mpc4j.common.tool.hashbin.object.cuckoo.CuckooHashBinFactory.CuckooHashBinType;
 import edu.alibaba.mpc4j.common.tool.okve.okvs.OkvsFactory.OkvsType;
 import edu.alibaba.mpc4j.common.tool.okve.ovdm.ecc.EccOvdmFactory.EccOvdmType;
 import edu.alibaba.mpc4j.common.tool.okve.ovdm.gf2e.Gf2eOvdmFactory.Gf2eOvdmType;
+import edu.alibaba.mpc4j.common.tool.utils.PropertiesUtils;
 import edu.alibaba.mpc4j.s2pc.aby.bc.BcConfig;
 import edu.alibaba.mpc4j.s2pc.aby.bc.BcFactory;
 import edu.alibaba.mpc4j.s2pc.aby.bc.bea91.Bea91BcConfig;
@@ -56,9 +56,7 @@ public class PsuConfigUtils {
      */
     static PsuConfig createPsuConfig(Properties properties) {
         // 读取协议类型
-        String psuTypeString = Preconditions.checkNotNull(
-            properties.getProperty("pto_name"), "Please set pto_name"
-        );
+        String psuTypeString = PropertiesUtils.readString(properties, "pto_name");
         PsuType psuType = PsuType.valueOf(psuTypeString);
         switch (psuType) {
             case KRTW19_ORI:
@@ -76,15 +74,13 @@ public class PsuConfigUtils {
             case JSZ22_SFS:
                 return createJsz22SfsPsuConfig(properties);
             default:
-                throw new IllegalArgumentException("Invalid PsuType: " + psuType.name());
+                throw new IllegalArgumentException("Invalid " + PsuType.class.getSimpleName() + ": " + psuType.name());
         }
     }
 
     private static PsuConfig createKrtw19OriPsuConfig(Properties properties) {
         // OKVS类型
-        String okvsTypeString = Preconditions.checkNotNull(
-            properties.getProperty("okvs_type"), "Please set okvs_type"
-        );
+        String okvsTypeString = PropertiesUtils.readString(properties, "okvs_type");
         OkvsType okvsType = OkvsType.valueOf(okvsTypeString);
 
         return new Krtw19OriPsuConfig.Builder()
@@ -101,14 +97,10 @@ public class PsuConfigUtils {
 
     private static Gmr21PsuConfig generateGmr21PsuConfig(Properties properties) {
         // OKVS类型
-        String okvsTypeString = Preconditions.checkNotNull(
-            properties.getProperty("okvs_type"), "Please set okvs_type"
-        );
+        String okvsTypeString = PropertiesUtils.readString(properties, "okvs_type");
         OkvsType okvsType = OkvsType.valueOf(okvsTypeString);
         // 是否使用安静OT
-        boolean silentCot = Boolean.parseBoolean(Preconditions.checkNotNull(
-            properties.getProperty("silent_cot"), "Please set silent_cot"
-        ));
+        boolean silentCot = PropertiesUtils.readBoolean(properties, "silent_cot");
         OsnConfig osnConfig = silentCot
             ? new Gmr21OsnConfig.Builder()
                 .setCotConfig(new CacheCotConfig.Builder(SecurityModel.SEMI_HONEST).build())
@@ -127,13 +119,9 @@ public class PsuConfigUtils {
 
     private static Zcl22SkePsuConfig createZcl22SkePsuConfig(Properties properties) {
         // OVDM类型
-        String gf2eOvdmTypeString = Preconditions.checkNotNull(
-            properties.getProperty("gf2e_ovdm_type"), "Please set gf2e_ovdm_type"
-        );
+        String gf2eOvdmTypeString =PropertiesUtils.readString(properties, "gf2e_ovdm_type");
         Gf2eOvdmType gf2eOvdmType = Gf2eOvdmType.valueOf(gf2eOvdmTypeString);
-        boolean ignoreZ2Mtg = Boolean.parseBoolean(Preconditions.checkNotNull(
-            properties.getProperty("ignore_z2_mtg"), "Please set ignore_z2_mtg"
-        ));
+        boolean ignoreZ2Mtg = PropertiesUtils.readBoolean(properties, "ignore_z2_mtg");
         if (ignoreZ2Mtg) {
             Z2MtgConfig fileZ2MtgConfig = new FileZ2MtgConfig.Builder(SecurityModel.SEMI_HONEST).build();
             BcConfig fileBcConfig = new Bea91BcConfig.Builder()
@@ -160,14 +148,10 @@ public class PsuConfigUtils {
 
     private static Zcl22PkePsuConfig createZcl22PkePsuConfig(Properties properties) {
         // OVDM类型
-        String eccOvdmTypeString = Preconditions.checkNotNull(
-            properties.getProperty("ecc_ovdm_type"), "Please set ecc_odvm_type"
-        );
+        String eccOvdmTypeString = PropertiesUtils.readString(properties, "ecc_ovdm_type");
         EccOvdmType eccOvdmType = EccOvdmType.valueOf(eccOvdmTypeString);
         // 是否使用压缩编码
-        boolean compressEncode = Boolean.parseBoolean(Preconditions.checkNotNull(
-            properties.getProperty("compress_encode"), "Please set compress_encode"
-        ));
+        boolean compressEncode = PropertiesUtils.readBoolean(properties, "compress_encode");
 
         return new Zcl22PkePsuConfig.Builder()
             .setCoreCotConfig(CoreCotFactory.createDefaultConfig(SecurityModel.SEMI_HONEST))
@@ -178,9 +162,7 @@ public class PsuConfigUtils {
 
     private static Jsz22SfcPsuConfig createJsz22SfcPsuConfig(Properties properties) {
         // OPRF类型
-        String oprfTypeString = Preconditions.checkNotNull(
-            properties.getProperty("oprf_type"), "Please set oprf_type"
-        );
+        String oprfTypeString = PropertiesUtils.readString(properties, "oprf_type");
         OprfFactory.OprfType oprfType = OprfFactory.OprfType.valueOf(oprfTypeString);
         OprfConfig oprfConfig;
         switch (oprfType) {
@@ -194,14 +176,10 @@ public class PsuConfigUtils {
                 throw new IllegalArgumentException("JSZ22_SFC_PSU does not support OprfType: " + oprfType);
         }
         // 布谷鸟哈希类型
-        String cuckooHashTypeString = Preconditions.checkNotNull(
-            properties.getProperty("cuckoo_hash_bin_type"), "Please set cuckoo_hash_bin_type"
-        );
+        String cuckooHashTypeString = PropertiesUtils.readString(properties, "cuckoo_hash_bin_type");
         CuckooHashBinType cuckooHashBinType = CuckooHashBinType.valueOf(cuckooHashTypeString);
         // 是否使用安静OT
-        boolean silentCot = Boolean.parseBoolean(Preconditions.checkNotNull(
-            properties.getProperty("silent_cot"), "Please set silent_cot"
-        ));
+        boolean silentCot = PropertiesUtils.readBoolean(properties, "silent_cot");
         OsnConfig osnConfig = silentCot
             ? new Gmr21OsnConfig.Builder()
                 .setCotConfig(new CacheCotConfig.Builder(SecurityModel.SEMI_HONEST).build())
@@ -221,9 +199,7 @@ public class PsuConfigUtils {
 
     private static Jsz22SfsPsuConfig createJsz22SfsPsuConfig(Properties properties) {
         // OPRF类型
-        String oprfTypeString = Preconditions.checkNotNull(
-            properties.getProperty("oprf_type"), "Please set oprf_type"
-        );
+        String oprfTypeString = PropertiesUtils.readString(properties, "oprf_type");
         OprfFactory.OprfType oprfType = OprfFactory.OprfType.valueOf(oprfTypeString);
         OprfConfig oprfConfig;
         switch (oprfType) {
@@ -237,14 +213,10 @@ public class PsuConfigUtils {
                 throw new IllegalArgumentException("JSZ22_SFC_PSU does not support OprfType: " + oprfType);
         }
         // 布谷鸟哈希类型
-        String cuckooHashTypeString = Preconditions.checkNotNull(
-            properties.getProperty("cuckoo_hash_bin_type"), "Please set cuckoo_hash_bin_type"
-        );
+        String cuckooHashTypeString = PropertiesUtils.readString(properties, "cuckoo_hash_bin_type");
         CuckooHashBinType cuckooHashBinType = CuckooHashBinType.valueOf(cuckooHashTypeString);
         // 是否使用安静OT
-        boolean silentCot = Boolean.parseBoolean(Preconditions.checkNotNull(
-            properties.getProperty("silent_cot"), "Please set silent_cot"
-        ));
+        boolean silentCot = PropertiesUtils.readBoolean(properties, "silent_cot");
         OsnConfig osnConfig = silentCot
             ? new Gmr21OsnConfig.Builder()
             .setCotConfig(new CacheCotConfig.Builder(SecurityModel.SEMI_HONEST).build())

@@ -3,10 +3,11 @@ package edu.alibaba.mpc4j.s2pc.pso.main.pmid;
 import edu.alibaba.mpc4j.common.rpc.MpcAbortException;
 import edu.alibaba.mpc4j.common.rpc.Party;
 import edu.alibaba.mpc4j.common.rpc.Rpc;
+import edu.alibaba.mpc4j.common.rpc.RpcPropertiesUtils;
 import edu.alibaba.mpc4j.common.tool.CommonConstants;
+import edu.alibaba.mpc4j.common.tool.utils.PropertiesUtils;
 import edu.alibaba.mpc4j.s2pc.pso.PsoUtils;
 import edu.alibaba.mpc4j.s2pc.pso.main.PsoMain;
-import edu.alibaba.mpc4j.s2pc.pso.main.PsoMainUtils;
 import edu.alibaba.mpc4j.s2pc.pso.pmid.PmidClient;
 import edu.alibaba.mpc4j.s2pc.pso.pmid.PmidConfig;
 import edu.alibaba.mpc4j.s2pc.pso.pmid.PmidFactory;
@@ -64,7 +65,7 @@ public class PmidMain {
     }
 
     public void run() throws Exception {
-        Rpc ownRpc = PsoMainUtils.setRpc(properties);
+        Rpc ownRpc = RpcPropertiesUtils.readNettyRpc(properties, "server", "client");
         if (ownRpc.ownParty().getPartyId() == 0) {
             runServer(ownRpc, ownRpc.getParty(1));
         } else if (ownRpc.ownParty().getPartyId() == 1) {
@@ -78,14 +79,14 @@ public class PmidMain {
         // 读取协议参数
         LOGGER.info("{} read settings", serverRpc.ownParty().getPartyName());
         // 读取集合大小
-        int[] logNonSideSetSizes = PsoMainUtils.readLogIntArray(properties, "non_side_log_set_size");
+        int[] logNonSideSetSizes = PropertiesUtils.readLogIntArray(properties, "non_side_log_set_size");
         int[] nonSideSetSizes = Arrays.stream(logNonSideSetSizes).map(logSetSize -> 1 << logSetSize).toArray();
-        int[] logOneSideSetSizes = PsoMainUtils.readLogIntArray(properties, "one_side_log_set_size");
+        int[] logOneSideSetSizes = PropertiesUtils.readLogIntArray(properties, "one_side_log_set_size");
         int[] oneSideSetSizes = Arrays.stream(logOneSideSetSizes).map(logSetSize -> 1 << logSetSize).toArray();
-        int[] logTwoSideSetSizes = PsoMainUtils.readLogIntArray(properties, "two_side_log_set_size");
+        int[] logTwoSideSetSizes = PropertiesUtils.readLogIntArray(properties, "two_side_log_set_size");
         int[] twoSideSetSizes = Arrays.stream(logTwoSideSetSizes).map(logSetSize -> 1 << logSetSize).toArray();
         // 读取max(u)
-        int maxU = PsoMainUtils.readInt(properties, "max_u");
+        int maxU = PropertiesUtils.readInt(properties, "max_u");
         // 读取特殊参数
         LOGGER.info("{} read PTO config", serverRpc.ownParty().getPartyName());
         PmidConfig config = PmidConfigUtils.createConfig(properties);
@@ -257,14 +258,14 @@ public class PmidMain {
         // 读取协议参数
         LOGGER.info("{} read settings", clientRpc.ownParty().getPartyName());
         // 读取集合大小
-        int[] logNonSideSetSizes = PsoMainUtils.readLogIntArray(properties, "non_side_log_set_size");
+        int[] logNonSideSetSizes = PropertiesUtils.readLogIntArray(properties, "non_side_log_set_size");
         int[] nonSideSetSizes = Arrays.stream(logNonSideSetSizes).map(logSetSize -> 1 << logSetSize).toArray();
-        int[] logOneSideSetSizes = PsoMainUtils.readLogIntArray(properties, "one_side_log_set_size");
+        int[] logOneSideSetSizes = PropertiesUtils.readLogIntArray(properties, "one_side_log_set_size");
         int[] oneSideSetSizes = Arrays.stream(logOneSideSetSizes).map(logSetSize -> 1 << logSetSize).toArray();
-        int[] logTwoSideSetSizes = PsoMainUtils.readLogIntArray(properties, "two_side_log_set_size");
+        int[] logTwoSideSetSizes = PropertiesUtils.readLogIntArray(properties, "two_side_log_set_size");
         int[] twoSideSetSizes = Arrays.stream(logTwoSideSetSizes).map(logSetSize -> 1 << logSetSize).toArray();
         // 读取max(k)
-        int maxU = PsoMainUtils.readInt(properties, "max_u");
+        int maxU = PropertiesUtils.readInt(properties, "max_u");
         // 读取特殊参数
         LOGGER.info("{} read PTO config", clientRpc.ownParty().getPartyName());
         PmidConfig config = PmidConfigUtils.createConfig(properties);

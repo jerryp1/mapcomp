@@ -3,10 +3,11 @@ package edu.alibaba.mpc4j.s2pc.pso.main.psu;
 import edu.alibaba.mpc4j.common.rpc.MpcAbortException;
 import edu.alibaba.mpc4j.common.rpc.Party;
 import edu.alibaba.mpc4j.common.rpc.Rpc;
+import edu.alibaba.mpc4j.common.rpc.RpcPropertiesUtils;
 import edu.alibaba.mpc4j.common.tool.CommonConstants;
+import edu.alibaba.mpc4j.common.tool.utils.PropertiesUtils;
 import edu.alibaba.mpc4j.s2pc.pso.PsoUtils;
 import edu.alibaba.mpc4j.s2pc.pso.main.PsoMain;
-import edu.alibaba.mpc4j.s2pc.pso.main.PsoMainUtils;
 import edu.alibaba.mpc4j.s2pc.pso.psu.PsuClient;
 import edu.alibaba.mpc4j.s2pc.pso.psu.PsuConfig;
 import edu.alibaba.mpc4j.s2pc.pso.psu.PsuFactory;
@@ -60,10 +61,10 @@ public class PsuMain {
     }
 
     public void run() throws Exception {
-        Rpc ownRpc = PsoMainUtils.setRpc(properties);
+        Rpc ownRpc = RpcPropertiesUtils.readNettyRpc(properties, "server", "client");
         if (ownRpc.ownParty().getPartyId() == 0) {
             runServer(ownRpc, ownRpc.getParty(1));
-        } else if (ownRpc.ownParty().getPartyId() == 1){
+        } else if (ownRpc.ownParty().getPartyId() == 1) {
             runClient(ownRpc, ownRpc.getParty(0));
         } else {
             throw new IllegalArgumentException("Invalid PartyID for own_name: " + ownRpc.ownParty().getPartyName());
@@ -74,9 +75,9 @@ public class PsuMain {
         // 读取协议参数
         LOGGER.info("{} read settings", serverRpc.ownParty().getPartyName());
         // 读取元素字节长度
-        int elementByteLength = PsoMainUtils.readInt(properties, "element_byte_length");
+        int elementByteLength = PropertiesUtils.readInt(properties, "element_byte_length");
         // 读取集合大小
-        int[] logSetSizes = PsoMainUtils.readLogIntArray(properties, "log_set_size");
+        int[] logSetSizes = PropertiesUtils.readLogIntArray(properties, "log_set_size");
         int[] setSizes = Arrays.stream(logSetSizes).map(logSetSize -> 1 << logSetSize).toArray();
         // 读取特殊参数
         LOGGER.info("{} read PTO config", serverRpc.ownParty().getPartyName());
@@ -214,9 +215,9 @@ public class PsuMain {
         // 读取协议参数
         LOGGER.info("{} read settings", clientRpc.ownParty().getPartyName());
         // 读取元素字节长度
-        int elementByteLength = PsoMainUtils.readInt(properties, "element_byte_length");
+        int elementByteLength = PropertiesUtils.readInt(properties, "element_byte_length");
         // 读取集合大小
-        int[] logSetSizes = PsoMainUtils.readLogIntArray(properties, "log_set_size");
+        int[] logSetSizes = PropertiesUtils.readLogIntArray(properties, "log_set_size");
         int[] setSizes = Arrays.stream(logSetSizes).map(logSetSize -> 1 << logSetSize).toArray();
         // 读取特殊参数
         LOGGER.info("{} read PTO config", clientRpc.ownParty().getPartyName());
@@ -230,7 +231,7 @@ public class PsuMain {
         }
         // 创建统计结果文件
         LOGGER.info("{} create result file", clientRpc.ownParty().getPartyName());
-        String filePath =  PTO_TYPE_NAME
+        String filePath = PTO_TYPE_NAME
             + "_" + config.getPtoType().name()
             + "_" + elementByteLength * Byte.SIZE
             + "_" + clientRpc.ownParty().getPartyId()

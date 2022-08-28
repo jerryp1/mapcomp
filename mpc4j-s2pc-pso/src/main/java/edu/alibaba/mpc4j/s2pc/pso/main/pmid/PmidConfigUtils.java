@@ -1,7 +1,7 @@
 package edu.alibaba.mpc4j.s2pc.pso.main.pmid;
 
-import com.google.common.base.Preconditions;
 import edu.alibaba.mpc4j.common.tool.okve.okvs.OkvsFactory.OkvsType;
+import edu.alibaba.mpc4j.common.tool.utils.PropertiesUtils;
 import edu.alibaba.mpc4j.s2pc.pso.oprf.MpOprfConfig;
 import edu.alibaba.mpc4j.s2pc.pso.oprf.cm20.Cm20MpOprfConfig;
 import edu.alibaba.mpc4j.s2pc.pso.oprf.ra17.Ra17MpOprfConfig;
@@ -35,9 +35,7 @@ public class PmidConfigUtils {
      */
     static PmidConfig createConfig(Properties properties) {
         // 读取协议类型
-        String pmidTypeString = Preconditions.checkNotNull(
-            properties.getProperty("pto_name"), "Please set pto_name"
-        );
+        String pmidTypeString = PropertiesUtils.readString(properties, "pto_name");
         PmidType pmidType = PmidType.valueOf(pmidTypeString);
         switch (pmidType) {
             case ZCL22_MP:
@@ -51,9 +49,7 @@ public class PmidConfigUtils {
 
     private static Zcl22MpPmidConfig createZcl22MpPmidConfig(Properties properties) {
         // 多点OPRF类型
-        String mpOprfTypeString = Preconditions.checkNotNull(
-            properties.getProperty("mp_oprf_type"), "Please set mp_oprf_type"
-        );
+        String mpOprfTypeString = PropertiesUtils.readString(properties, "mp_oprf_type");
         OprfFactory.OprfType mpOprfType = OprfFactory.OprfType.valueOf(mpOprfTypeString);
         MpOprfConfig mpOprfConfig;
         switch (mpOprfType) {
@@ -69,9 +65,7 @@ public class PmidConfigUtils {
                 );
         }
         // σ的OKVS类型
-        String sigmaOkvsTypeString = Preconditions.checkNotNull(
-            properties.getProperty("sigma_okvs_type"), "Please set sigma_okvs_type"
-        );
+        String sigmaOkvsTypeString = PropertiesUtils.readString(properties, "sigma_okvs_type");
         OkvsType sigmaOkvsType = OkvsType.valueOf(sigmaOkvsTypeString);
         // PSU类型
         PsuConfig psuConfig = new Gmr21PsuConfig.Builder().build();
@@ -85,14 +79,10 @@ public class PmidConfigUtils {
 
     private static Zcl22SloppyPmidConfig createZcl22SloppyPmidConfig(Properties properties) {
         // Sloppy的OKVS类型
-        String sloppyOkvsTypeString = Preconditions.checkNotNull(
-            properties.getProperty("sloppy_okvs_type"), "Please set sloppy_okvs_type"
-        );
+        String sloppyOkvsTypeString = PropertiesUtils.readString(properties, "sloppy_okvs_type");
         OkvsType sloppyOkvsType = OkvsType.valueOf(sloppyOkvsTypeString);
         // σ的OKVS类型
-        String sigmaOkvsTypeString = Preconditions.checkNotNull(
-            properties.getProperty("sigma_okvs_type"), "Please set sigma_okvs_type"
-        );
+        String sigmaOkvsTypeString = PropertiesUtils.readString(properties, "sigma_okvs_type");
         OkvsType sigmaOkvsType = OkvsType.valueOf(sigmaOkvsTypeString);
         // PSU类型
         PsuConfig psuConfig = new Gmr21PsuConfig.Builder().build();
