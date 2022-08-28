@@ -287,10 +287,10 @@ public class Gmr21SloppyPidClient<T> extends AbstractPidParty<T> {
     }
 
     private void initVariable() throws MpcAbortException {
-        // PID字节长度等于λ + log(n) + log(m) = λ + log(m * n)
-        pidByteLength = CommonConstants.STATS_BYTE_LENGTH + CommonUtils.getByteLength(
-            LongUtils.ceilLog2((long) ownSetSize * otherSetSize)
-        );
+        // PID字节长度等于λ + log(n) + log(m)
+        pidByteLength = CommonConstants.STATS_BYTE_LENGTH
+            + CommonUtils.getByteLength(LongUtils.ceilLog2(ownSetSize))
+            + CommonUtils.getByteLength(LongUtils.ceilLog2(otherSetSize));
         pidMapPrf = PrfFactory.createInstance(envType, pidByteLength);
         pidMapPrf.setKey(pidMapPrfKey);
         clientPidPrf = PrfFactory.createInstance(envType, pidByteLength);

@@ -266,9 +266,8 @@ public class Zcl22MpPmidClient<T> extends AbstractPmidClient<T> {
     private void initVariables() {
         // PMID字节长度等于λ + log(m * serverU * clientU) + log(n * serverU * clientU)
         pmidByteLength = CommonConstants.STATS_BYTE_LENGTH
-            + CommonUtils.getByteLength(LongUtils.ceilLog2((long) serverSetSize * serverU * clientU)
-            + CommonUtils.getByteLength(LongUtils.ceilLog2((long) clientSetSize * serverU * clientU))
-        );
+            + CommonUtils.getByteLength(LongUtils.ceilLog2((long) serverSetSize * serverU * clientU))
+            + CommonUtils.getByteLength(LongUtils.ceilLog2((long) clientSetSize * serverU * clientU));
         pmidMapPrf = PrfFactory.createInstance(envType, pmidByteLength);
         pmidMapPrf.setKey(pmidMapPrfKey);
         // σ的OKVS值长度 = λ + Max{log(m * clientU), log(n * serverU)}
@@ -335,7 +334,7 @@ public class Zcl22MpPmidClient<T> extends AbstractPmidClient<T> {
         // σ的OKVS编码可以并行处理
         clientSigmaOkvs.setParallelEncode(parallel);
         byte[][] clientSigmaOkvsStorage = clientSigmaOkvs.encode(clientSigmaOkvsKeyValueMap);
-        List<byte[]> clientSigmaOkvsPayload =  Arrays.stream(clientSigmaOkvsStorage).collect(Collectors.toList());
+        List<byte[]> clientSigmaOkvsPayload = Arrays.stream(clientSigmaOkvsStorage).collect(Collectors.toList());
         DataPacketHeader clientSigmaOkvsHeader = new DataPacketHeader(
             taskId, getPtoDesc().getPtoId(), PtoStep.CLIENT_SEND_SIGMA_OKVS.ordinal(), extraInfo,
             ownParty().getPartyId(), otherParty().getPartyId()
@@ -404,13 +403,18 @@ public class Zcl22MpPmidClient<T> extends AbstractPmidClient<T> {
             byte[] fyka = kaMpOprfOutput.getPrf(index);
             byte[] fykb = kbMpOprfKey.getPrf(clientElementByteArrays[index]);
             for (int j = 1; j <= clientElementMap.get(y) * dyArray[index]; j++) {
-                byte[] extendPmid = ByteBuffer.allocate(fyka.length + fykb.length + Integer.BYTES)
+                byte[] extendPmid0 = ByteBuffer.allocate(fyka.length + Integer.BYTES)
                     .put(fyka)
+                    .put(IntUtils.intToByteArray(j))
+                    .array();
+                extendPmid0 = pmidMapPrf.getBytes(extendPmid0);
+                byte[] extendPmid1 = ByteBuffer.allocate(fykb.length + Integer.BYTES)
                     .put(fykb)
                     .put(IntUtils.intToByteArray(j))
                     .array();
-                byte[] pmid = pmidMapPrf.getBytes(extendPmid);
-                clientPmidMap.put(ByteBuffer.wrap(pmid), y);
+                extendPmid1 = pmidMapPrf.getBytes(extendPmid1);
+                BytesUtils.xori(extendPmid0, extendPmid1);
+                clientPmidMap.put(ByteBuffer.wrap(extendPmid0), y);
             }
         });
         clientElementByteArrays = null;

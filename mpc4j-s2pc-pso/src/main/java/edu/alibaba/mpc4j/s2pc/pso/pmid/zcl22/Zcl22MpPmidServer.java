@@ -276,9 +276,8 @@ public class Zcl22MpPmidServer<T> extends AbstractPmidServer<T> {
     private void initVariables() {
         // PMID字节长度等于λ + log(m * serverU * clientU) + log(n * serverU * clientU)
         pmidByteLength = CommonConstants.STATS_BYTE_LENGTH
-            + CommonUtils.getByteLength(LongUtils.ceilLog2((long) serverSetSize * serverU * clientU)
-            + CommonUtils.getByteLength(LongUtils.ceilLog2((long) clientSetSize * serverU * clientU))
-        );
+            + CommonUtils.getByteLength(LongUtils.ceilLog2((long) serverSetSize * serverU * clientU))
+            + CommonUtils.getByteLength(LongUtils.ceilLog2((long) clientSetSize * serverU * clientU));
         pmidMapPrf = PrfFactory.createInstance(envType, pmidByteLength);
         pmidMapPrf.setKey(pmidMapPrfKey);
         // σ的OKVS值长度 = λ + Max{log(m * clientU), log(n * serverU)}
@@ -412,13 +411,18 @@ public class Zcl22MpPmidServer<T> extends AbstractPmidServer<T> {
             byte[] fxka = kaMpOprfKey.getPrf(serverElementByteArrays[index]);
             byte[] fxkb = kbMpOprfOutput.getPrf(index);
             for (int j = 1; j <= serverElementMap.get(x) * dxArray[index]; j++) {
-                byte[] extendPmid = ByteBuffer.allocate(fxka.length + fxkb.length + Integer.BYTES)
+                byte[] extendPmid0 = ByteBuffer.allocate(fxka.length + Integer.BYTES)
                     .put(fxka)
+                    .put(IntUtils.intToByteArray(j))
+                    .array();
+                extendPmid0 = pmidMapPrf.getBytes(extendPmid0);
+                byte[] extendPmid1 = ByteBuffer.allocate(fxkb.length + Integer.BYTES)
                     .put(fxkb)
                     .put(IntUtils.intToByteArray(j))
                     .array();
-                byte[] pmid = pmidMapPrf.getBytes(extendPmid);
-                serverPmidMap.put(ByteBuffer.wrap(pmid), x);
+                extendPmid1 = pmidMapPrf.getBytes(extendPmid1);
+                BytesUtils.xori(extendPmid0, extendPmid1);
+                serverPmidMap.put(ByteBuffer.wrap(extendPmid0), x);
             }
         });
         serverElementByteArrays = null;
