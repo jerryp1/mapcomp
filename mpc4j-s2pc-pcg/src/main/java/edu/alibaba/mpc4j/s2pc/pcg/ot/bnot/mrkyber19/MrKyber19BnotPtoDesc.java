@@ -25,7 +25,7 @@ public class MrKyber19BnotPtoDesc implements PtoDesc {
      */
     enum PtoStep {
         /**
-         * 接收方发送参数R0、R1
+         * 接收方发送公钥RN
          */
         RECEIVER_SEND_PK,
         /**

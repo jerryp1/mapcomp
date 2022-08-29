@@ -8,7 +8,7 @@ package edu.alibaba.mpc4j.common.kyber.provider;
  * @author Sheng Hu
  * @date 2022/08/25
  */
-public class KyberVecPKI {
+public class KyberVecPki {
     private short[][] publicKeyVec;
     private byte[] publicKeyGenerator;
     private short[][] privateKeyVec;
@@ -16,7 +16,7 @@ public class KyberVecPKI {
     /**
      *  Default Constructor
      */
-    public KyberVecPKI() {
+    public KyberVecPki() {
 
     }
     /**

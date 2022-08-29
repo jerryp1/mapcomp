@@ -37,9 +37,9 @@ public final class Ntt {
     /**
      * Multiply the given shorts and then run a Montgomery reduce
      *
-     * @param a
-     * @param b
-     * @return
+     * @param a 乘法因子a
+     * @param b 乘法因子b
+     * @return 返回值是乘法的结果
      */
     public static short modQMulMont(short a, short b) {
         return ByteOps.montgomeryReduce( (long) a * (long) b);
@@ -52,8 +52,8 @@ public final class Ntt {
      *
      * Output is in bit-reversed order
      *
-     * @param r
-     * @return
+     * @param r 输入是一个short值，转换为NTT域
+     * @return NTT域上的值，方便进行计算
      */
     public static short[] ntt(short[] r) {
         int j = 0;

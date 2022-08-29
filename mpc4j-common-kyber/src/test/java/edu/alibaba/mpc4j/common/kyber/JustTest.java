@@ -1,6 +1,6 @@
 package edu.alibaba.mpc4j.common.kyber;
 import edu.alibaba.mpc4j.common.kyber.provider.KyberPackedPKI;
-import edu.alibaba.mpc4j.common.kyber.provider.KyberVecPKI;
+import edu.alibaba.mpc4j.common.kyber.provider.KyberVecPki;
 import edu.alibaba.mpc4j.common.kyber.provider.kyber.*;
 import edu.alibaba.mpc4j.common.tool.crypto.hash.Hash;
 import edu.alibaba.mpc4j.common.tool.crypto.hash.HashFactory;
@@ -44,7 +44,7 @@ public class JustTest {
     @Test
     public void testnewEncryptDecrypt() throws NoSuchAlgorithmException {
         for(int i = 0; i < 100;i++){
-            KyberVecPKI packedPKI= KyberKeyOps.generateKyberKeys(4);
+            KyberVecPki packedPKI= KyberKeyOps.generateKyberKeys(4);
             SecureRandom Sr = new SecureRandom();
             byte[] msg = new byte[32];
             Sr.nextBytes(msg);

@@ -1,7 +1,7 @@
 package edu.alibaba.mpc4j.s2pc.pcg.ot.bnot.mrkyber19;
 
 
-import edu.alibaba.mpc4j.common.kyber.provider.KyberVecPKI;
+import edu.alibaba.mpc4j.common.kyber.provider.KyberVecPki;
 import edu.alibaba.mpc4j.common.kyber.provider.kyber.KyberKeyOps;
 import edu.alibaba.mpc4j.common.kyber.provider.kyber.KyberParams;
 import edu.alibaba.mpc4j.common.kyber.provider.kyber.KyberPublicKeyOps;
@@ -39,7 +39,7 @@ public class Mrkyber19BnotReceiver extends AbstractBnotReceiver {
     /**
      * OT协议接收方参数
      */
-    private KyberVecPKI[] aArray;
+    private KyberVecPki[] aArray;
     /**
      * 公钥（As+e）长度
      */
@@ -119,7 +119,7 @@ public class Mrkyber19BnotReceiver extends AbstractBnotReceiver {
     }
 
     private List<byte[]> generatePkPayload() {
-        aArray = new KyberVecPKI[choices.length];
+        aArray = new KyberVecPki[choices.length];
         Hash hashFunction = HashFactory.createInstance(envType,32);
         // 公钥生成流
         IntStream pkIntStream = IntStream.range(0, choices.length);
@@ -145,10 +145,12 @@ public class Mrkyber19BnotReceiver extends AbstractBnotReceiver {
                             //生成（randomKey，p_1 - sigma）并打包传输
                             randomKeyVec = KyberPublicKeyOps.getRandomKyberPK(paramsK);
                             short[][] hashKeyVec = KyberPublicKeyOps.kyberPKHash(randomKeyVec, hashFunction);
+                            // PK = PK + Hash（RandomKey）
                             publickKeyVec = KyberPublicKeyOps.kyberPKAdd(publickKeyVec, hashKeyVec);
                             System.arraycopy(Poly.polyVectorToBytes(randomKeyVec),0,
                                     pkPair[i],0,paramsPolyvecBytes);
-                            System.arraycopy(KyberPublicKeyOps.getRandomKeyGenerator(paramsK),0,
+                            //随机生成的生成元p
+                            System.arraycopy(KyberPublicKeyOps.getRandomKeyGenerator(),0,
                                     pkPair[i],paramsPolyvecBytes,KyberParams.paramsSymBytes);
                         }
                     }
@@ -171,7 +173,9 @@ public class Mrkyber19BnotReceiver extends AbstractBnotReceiver {
         decryptArrayIntStream = parallel ? decryptArrayIntStream.parallel() : decryptArrayIntStream;
         decryptArrayIntStream.forEach(index ->{
             rbArray[index] = new byte[CommonConstants.BLOCK_BYTE_LENGTH];
+            //获取私钥
             short[][] receiverPrivateKey = aArray[index].getPrivateKeyVec();
+            //解密获得Receiver的结果
             byte[] rbDecrypt = KyberKeyOps.decrypt(betaPayload.get(n * index + choices[index]),receiverPrivateKey,paramsK);
             System.arraycopy(rbDecrypt,0,rbArray[index],0, CommonConstants.BLOCK_BYTE_LENGTH);
         });

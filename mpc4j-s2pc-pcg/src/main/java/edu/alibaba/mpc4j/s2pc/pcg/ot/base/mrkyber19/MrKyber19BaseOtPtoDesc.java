@@ -3,8 +3,6 @@ package edu.alibaba.mpc4j.s2pc.pcg.ot.base.mrkyber19;
 import edu.alibaba.mpc4j.common.rpc.desc.PtoDesc;
 import edu.alibaba.mpc4j.common.rpc.desc.PtoDescManager;
 
-import java.io.Serializable;
-
 /**
  * MRKYBER19-基础OT协议信息。论文来源：
  * Mansy D, Rindal P. Endemic oblivious transfer. CCS 2019. 2019: 309-326.
@@ -12,7 +10,7 @@ import java.io.Serializable;
  * @date 2022/08/05
  */
 
-public class MrKyber19BaseOtPtoDesc implements PtoDesc, Serializable {
+public class MrKyber19BaseOtPtoDesc implements PtoDesc {
     /**
      * 协议ID
      */
@@ -27,7 +25,7 @@ public class MrKyber19BaseOtPtoDesc implements PtoDesc, Serializable {
      */
     enum PtoStep {
         /**
-         * 接收方发送参数PK0、PK1
+         * 接收方发送公钥PK0、PK1
          */
         RECEIVER_SEND_PK,
         /**

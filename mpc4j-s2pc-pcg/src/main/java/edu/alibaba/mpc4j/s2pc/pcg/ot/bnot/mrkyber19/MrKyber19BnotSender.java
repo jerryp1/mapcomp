@@ -67,6 +67,7 @@ public class MrKyber19BnotSender extends AbstractBnotSender {
         info("{}{} Send. Init end", ptoEndLogPrefix, getPtoDesc().getPtoName());
     }
 
+    @Override
     public BnotSenderOutput send(int num) throws MpcAbortException {
         setPtoInput(num);
         paramsK = config.getParamsK();
@@ -121,19 +122,25 @@ public class MrKyber19BnotSender extends AbstractBnotSender {
         Hash hashFunction = HashFactory.createInstance(envType, 32);
         IntStream keyPairArrayIntStream = IntStream.range(0, num);
         keyPairArrayIntStream = parallel ? keyPairArrayIntStream.parallel() : keyPairArrayIntStream;
-        //OT协议的输出
+        //OT协议的输出，即num * n 个选项，每个长度为16*8 bit。
         byte[][][] rbArray = new byte[num][n][CommonConstants.BLOCK_BYTE_LENGTH];
         bByte = keyPairArrayIntStream.mapToObj(index -> {
+            //收到的公钥（As+e）
             short[][][] upperVector = new short[n][][];
+            //用于计算减去另外N-1个公钥的hash值
             short[][][] upperPkVector = new short[n][][];
+            //用于计算hash值
             short[][][] upperHashPkVector = new short[n][][];
             byte[][] upper = new byte[n][];
             for(int i = 0; i < n;i++) {
                 upper[i] = pkPayload.get(index * n + i);
                 byte[] upperPk = Arrays.copyOfRange(upper[i],0, paramsPolyvecBytes);
+                //As+e
                 upperVector[i] = Poly.polyVectorFromBytes(upperPk);
+                //Hash（As+e）
                 upperHashPkVector[i] = KyberPublicKeyOps.kyberPKHash(upperVector[i],hashFunction);
             }
+            //恢复出原油的公钥
             for(int i = 0;i < n;i++){
                 upperPkVector[i] = upperVector[i];
                 for(int j = 0; j < n;j++){
@@ -142,8 +149,8 @@ public class MrKyber19BnotSender extends AbstractBnotSender {
                        upperPkVector[i] = KyberPublicKeyOps.kyberPKSub(upperPkVector[i],upperHashPkVector[j]);
                     }
                 }
-                info("  the number ({}ms)", i);
             }
+            //密文
             byte[][] cipherText = new byte[n][];
             for(int i = 0;i < n;i++){
                 //生成随机数种子
@@ -155,6 +162,7 @@ public class MrKyber19BnotSender extends AbstractBnotSender {
                 sr.nextBytes(message);
                 //因为消息m必须要256bit，因此传递的密文中选取前128bit作为OT的输出
                 rbArray[index][i] = Arrays.copyOfRange(message,0,CommonConstants.BLOCK_BYTE_LENGTH);
+                //计算加密函数
                 cipherText[i] = KyberKeyOps.
                         encrypt(message,upperPkVector[i],
                                 Arrays.copyOfRange(upper[i],paramsPolyvecBytes,indcpaPublicKeyBytes),seed,paramsK);

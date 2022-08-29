@@ -1,6 +1,6 @@
 package edu.alibaba.mpc4j.s2pc.pcg.ot.base.mrkyber19;
 
-import edu.alibaba.mpc4j.common.kyber.provider.KyberVecPKI;
+import edu.alibaba.mpc4j.common.kyber.provider.KyberVecPki;
 import edu.alibaba.mpc4j.common.kyber.provider.kyber.*;
 import edu.alibaba.mpc4j.common.rpc.MpcAbortException;
 import edu.alibaba.mpc4j.common.rpc.MpcAbortPreconditions;
@@ -38,7 +38,7 @@ public class MrKyber19BaseOtReceiver extends AbstractBaseOtReceiver {
     /**
      * OT协议接收方参数
      */
-    private KyberVecPKI[] aArray;
+    private KyberVecPki[] aArray;
     /**
      * 公钥（As+e）长度
      */
@@ -120,7 +120,7 @@ public class MrKyber19BaseOtReceiver extends AbstractBaseOtReceiver {
     }
 
     private List<byte[]> generatePkPayload() {
-        aArray = new KyberVecPKI[choices.length];
+        aArray = new KyberVecPki[choices.length];
         Hash hashFunction = HashFactory.createInstance(envType,32);
         // 公钥生成流
         IntStream pkIntStream = IntStream.range(0, choices.length);
@@ -156,7 +156,7 @@ public class MrKyber19BaseOtReceiver extends AbstractBaseOtReceiver {
                     //将（randomKey，p_1 - sigma）打包传输
                     System.arraycopy(Poly.polyVectorToBytes(randomKeyVec),0,
                             pkPair[1 - sigma],0,paramsPolyvecBytes);
-                    System.arraycopy(KyberPublicKeyOps.getRandomKeyGenerator(paramsK),0,
+                    System.arraycopy(KyberPublicKeyOps.getRandomKeyGenerator(),0,
                             pkPair[1 - sigma],paramsPolyvecBytes,KyberParams.paramsSymBytes);
                     return pkPair;
                 })

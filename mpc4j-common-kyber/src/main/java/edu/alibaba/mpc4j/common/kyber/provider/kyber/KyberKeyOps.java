@@ -1,7 +1,7 @@
 package edu.alibaba.mpc4j.common.kyber.provider.kyber;
 
 import com.github.aelstad.keccakj.fips202.SHA3_512;
-import edu.alibaba.mpc4j.common.kyber.provider.KyberVecPKI;
+import edu.alibaba.mpc4j.common.kyber.provider.KyberVecPki;
 
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
@@ -21,7 +21,7 @@ public class KyberKeyOps {
      * @param paramsK 安全参数
      * @return 论文中的公钥（As+e,p）和私钥s
      */
-    public static KyberVecPKI generateKyberKeys(int paramsK) throws NoSuchAlgorithmException {
+    public static KyberVecPki generateKyberKeys(int paramsK) throws NoSuchAlgorithmException {
         //私钥s
         short[][] skpv = Poly.generateNewPolyVector(paramsK);
         //最后输出时是公钥 As+e
@@ -52,7 +52,7 @@ public class KyberKeyOps {
         }
         Poly.polyVectorNTT(skpv);
         Poly.polyVectorReduce(skpv);
-        e = Poly.polyVectorNTT(e);
+        Poly.polyVectorNTT(e);
         //计算 As
         for (int i = 0; i < paramsK; i++) {
             short[] temp = Poly.polyVectorPointWiseAccMont(a[i], skpv);
@@ -61,13 +61,13 @@ public class KyberKeyOps {
         //计算 As+e
         Poly.polyVectorAdd(pkpv, e);
         //每做一步，计算一次模Q
-        pkpv = Poly.polyVectorReduce(pkpv);
+        Poly.polyVectorReduce(pkpv);
         //将公钥、生成元、私钥放在一起打包
-        KyberVecPKI packedPKI = new KyberVecPKI();
-        packedPKI.setPublicKeyVec(pkpv);
-        packedPKI.setPublicKeyGenerator(publicSeed);
-        packedPKI.setPrivateKeyVec(skpv);
-        return packedPKI;
+        KyberVecPki packedPki = new KyberVecPki();
+        packedPki.setPublicKeyVec(pkpv);
+        packedPki.setPublicKeyGenerator(publicSeed);
+        packedPki.setPrivateKeyVec(skpv);
+        return packedPki;
     }
 
     /**
@@ -81,17 +81,17 @@ public class KyberKeyOps {
     public static byte[] decrypt(byte[] packedCipherText, short[][] privateKey, int paramsK) {
         //解压密文并获得U和v
         UnpackedCipherText unpackedCipherText = Indcpa.unpackCiphertext(packedCipherText, paramsK);
-        short[][] U = unpackedCipherText.getU();
+        short[][] u = unpackedCipherText.getU();
         short[] v = unpackedCipherText.getV();
         //将U转为NTT域
-        U = Poly.polyVectorNTT(U);
+        Poly.polyVectorNTT(u);
         // 执行乘法 计算 Us
-        short[] mp = Poly.polyVectorPointWiseAccMont(privateKey, U);
+        short[] mp = Poly.polyVectorPointWiseAccMont(privateKey, u);
         //将乘积转回正常计算域
-        mp = Poly.polyInvNTTMont(mp);
+        Poly.polyInvNTTMont(mp);
         // U - v
         mp = Poly.polySub(v, mp);
-        mp = Poly.polyReduce(mp);
+        Poly.polyReduce(mp);
         //将结果返回成消息
         return Poly.polyToMsg(mp);
     }

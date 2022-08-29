@@ -63,6 +63,7 @@ public class MrKyber19BaseOtSender extends AbstractBaseOtSender {
         info("{}{} Send. Init end", ptoEndLogPrefix, getPtoDesc().getPtoName());
     }
 
+    @Override
     public BaseOtSenderOutput send(int num) throws MpcAbortException {
         setPtoInput(num);
         paramsK = config.getParamsK();

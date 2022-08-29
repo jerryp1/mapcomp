@@ -67,10 +67,9 @@ public class KyberPublicKeyOps {
 
     /**
      * 由安全参数随机生成公钥
-     * @param paramsK 安全参数
      * @return 论文中的公钥 As+e
      */
-    public static byte[] getRandomKeyGenerator(int paramsK){
+    public static byte[] getRandomKeyGenerator(){
         //随机数种子为32byte
         byte[] newRandomKeyGenerator = new byte[KyberParams.paramsSymBytes];
         //随机生成
