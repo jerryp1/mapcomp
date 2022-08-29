@@ -9,6 +9,9 @@ import edu.alibaba.mpc4j.s2pc.pcg.ot.bnot.co15.Co15BnotSender;
 import edu.alibaba.mpc4j.s2pc.pcg.ot.bnot.mr19.Mr19BnotConfig;
 import edu.alibaba.mpc4j.s2pc.pcg.ot.bnot.mr19.Mr19BnotReceiver;
 import edu.alibaba.mpc4j.s2pc.pcg.ot.bnot.mr19.Mr19BnotSender;
+import edu.alibaba.mpc4j.s2pc.pcg.ot.bnot.mrkyber19.MrKyber19BnotConfig;
+import edu.alibaba.mpc4j.s2pc.pcg.ot.bnot.mrkyber19.MrKyber19BnotSender;
+import edu.alibaba.mpc4j.s2pc.pcg.ot.bnot.mrkyber19.Mrkyber19BnotReceiver;
 import edu.alibaba.mpc4j.s2pc.pcg.ot.bnot.np01.Np01BnotConfig;
 import edu.alibaba.mpc4j.s2pc.pcg.ot.bnot.np01.Np01BnotReceiver;
 import edu.alibaba.mpc4j.s2pc.pcg.ot.bnot.np01.Np01BnotSender;
@@ -47,6 +50,10 @@ public class BnotFactory {
          */
         MR19,
         /**
+         * MR19基于KYBER的协议
+         */
+        MRKYBER19,
+        /**
          * NP01协议
          */
         NP01,
@@ -71,6 +78,8 @@ public class BnotFactory {
                 return new Np01BnotSender(senderRpc, receiverParty, (Np01BnotConfig) config);
             case MR19:
                 return new Mr19BnotSender(senderRpc, receiverParty, (Mr19BnotConfig) config);
+            case MRKYBER19:
+                return new MrKyber19BnotSender(senderRpc,receiverParty,(MrKyber19BnotConfig) config);
             default:
                 throw new IllegalArgumentException("Invalid BaseOtType: " + type.name());
         }
@@ -95,6 +104,8 @@ public class BnotFactory {
                 return new Np01BnotReceiver(receiverRpc, senderParty, (Np01BnotConfig) config);
             case MR19:
                 return new Mr19BnotReceiver(receiverRpc, senderParty, (Mr19BnotConfig) config);
+            case MRKYBER19:
+                return new Mrkyber19BnotReceiver(receiverRpc,senderParty,(MrKyber19BnotConfig) config);
             default:
                 throw new IllegalArgumentException("Invalid BaseOtType: " + type.name());
         }

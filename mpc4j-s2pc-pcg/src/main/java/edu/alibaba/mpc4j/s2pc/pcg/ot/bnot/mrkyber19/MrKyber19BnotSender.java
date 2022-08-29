@@ -1,6 +1,10 @@
-package edu.alibaba.mpc4j.s2pc.pcg.ot.base.mrkyber19;
+package edu.alibaba.mpc4j.s2pc.pcg.ot.bnot.mrkyber19;
 
-import edu.alibaba.mpc4j.common.kyber.provider.kyber.*;
+
+import edu.alibaba.mpc4j.common.kyber.provider.kyber.KyberKeyOps;
+import edu.alibaba.mpc4j.common.kyber.provider.kyber.KyberParams;
+import edu.alibaba.mpc4j.common.kyber.provider.kyber.KyberPublicKeyOps;
+import edu.alibaba.mpc4j.common.kyber.provider.kyber.Poly;
 import edu.alibaba.mpc4j.common.rpc.MpcAbortException;
 import edu.alibaba.mpc4j.common.rpc.MpcAbortPreconditions;
 import edu.alibaba.mpc4j.common.rpc.Party;
@@ -10,8 +14,8 @@ import edu.alibaba.mpc4j.common.rpc.utils.DataPacketHeader;
 import edu.alibaba.mpc4j.common.tool.CommonConstants;
 import edu.alibaba.mpc4j.common.tool.crypto.hash.Hash;
 import edu.alibaba.mpc4j.common.tool.crypto.hash.HashFactory;
-import edu.alibaba.mpc4j.s2pc.pcg.ot.base.AbstractBaseOtSender;
-import edu.alibaba.mpc4j.s2pc.pcg.ot.base.BaseOtSenderOutput;
+import edu.alibaba.mpc4j.s2pc.pcg.ot.bnot.AbstractBnotSender;
+import edu.alibaba.mpc4j.s2pc.pcg.ot.bnot.BnotSenderOutput;
 
 import java.security.SecureRandom;
 import java.util.ArrayList;
@@ -22,16 +26,16 @@ import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
 /**
- * MRKYBER19-基础OT协议发送方。论文来源：
+ * MRKYBER19-基础N选1-OT协议发送方。论文来源：
  * Mansy D, Rindal P. Endemic oblivious transfer. CCS 2019. 2019: 309-326.
  * @author Sheng Hu
- * @date 2022/08/05
+ * @date 2022/08/26
  */
-public class MrKyber19BaseOtSender extends AbstractBaseOtSender {
+public class MrKyber19BnotSender extends AbstractBnotSender {
     /**
      * 配置项
      */
-    private final MrKyber19BaseOtConfig config;
+    private final MrKyber19BnotConfig config;
     /**
      * OT协议发送方参数
      */
@@ -49,21 +53,21 @@ public class MrKyber19BaseOtSender extends AbstractBaseOtSender {
      */
     private int paramsK;
 
-    public MrKyber19BaseOtSender(Rpc senderRpc, Party receiverParty, MrKyber19BaseOtConfig config) {
-        super(MrKyber19BaseOtPtoDesc.getInstance(), senderRpc, receiverParty, config);
+    public MrKyber19BnotSender(Rpc senderRpc, Party receiverParty, MrKyber19BnotConfig config) {
+        super(MrKyber19BnotPtoDesc.getInstance(), senderRpc, receiverParty, config);
         this.config = config;
     }
 
     @Override
-    public void init() throws MpcAbortException {
-        setInitInput();
+    public void init(int n) throws MpcAbortException {
+        setInitInput(n);
         info("{}{} Send. Init begin", ptoBeginLogPrefix, getPtoDesc().getPtoName());
 
         initialized = true;
         info("{}{} Send. Init end", ptoEndLogPrefix, getPtoDesc().getPtoName());
     }
 
-    public BaseOtSenderOutput send(int num) throws MpcAbortException {
+    public BnotSenderOutput send(int num) throws MpcAbortException {
         setPtoInput(num);
         paramsK = config.getParamsK();
         paramsInit(paramsK);
@@ -71,7 +75,7 @@ public class MrKyber19BaseOtSender extends AbstractBaseOtSender {
         info("{}{} Send. begin", ptoBeginLogPrefix, getPtoDesc().getPtoName());
         stopWatch.start();
         DataPacketHeader pkHeader = new DataPacketHeader(
-                taskId, getPtoDesc().getPtoId(), MrKyber19BaseOtPtoDesc.PtoStep.RECEIVER_SEND_PK.ordinal(), extraInfo,
+                taskId, getPtoDesc().getPtoId(), MrKyber19BnotPtoDesc.PtoStep.RECEIVER_SEND_PK.ordinal(), extraInfo,
                 otherParty().getPartyId(), ownParty().getPartyId()
         );
         List<byte[]> pkPayload = rpc.receive(pkHeader).getPayload();
@@ -81,9 +85,9 @@ public class MrKyber19BaseOtSender extends AbstractBaseOtSender {
         info("{}{} Send. Step 1/2 ({}ms)", ptoStepLogPrefix, getPtoDesc().getPtoName(), betaTime);
 
         stopWatch.start();
-        BaseOtSenderOutput senderOutput = handlePkPayload(pkPayload);
+        BnotSenderOutput senderOutput = handlePkPayload(pkPayload);
         DataPacketHeader betaHeader = new DataPacketHeader(
-                taskId, getPtoDesc().getPtoId(), MrKyber19BaseOtPtoDesc.PtoStep.SENDER_SEND_B.ordinal(), extraInfo,
+                taskId, getPtoDesc().getPtoId(), MrKyber19BnotPtoDesc.PtoStep.SENDER_SEND_B.ordinal(), extraInfo,
                 ownParty().getPartyId(), otherParty().getPartyId()
         );
         rpc.send(DataPacket.fromByteArrayList(betaHeader, bByte));
@@ -95,6 +99,7 @@ public class MrKyber19BaseOtSender extends AbstractBaseOtSender {
         info("{}{} Send. end", ptoEndLogPrefix, getPtoDesc().getPtoName());
         return senderOutput;
     }
+
     private void paramsInit(int paramsK){
         switch (paramsK) {
             case 2:
@@ -111,57 +116,53 @@ public class MrKyber19BaseOtSender extends AbstractBaseOtSender {
         }
     }
 
-    private BaseOtSenderOutput handlePkPayload(List<byte[]> pkPayload) throws MpcAbortException{
-        MpcAbortPreconditions.checkArgument(pkPayload.size() == num * 2);
+    private BnotSenderOutput handlePkPayload(List<byte[]> pkPayload) throws MpcAbortException{
+        MpcAbortPreconditions.checkArgument(pkPayload.size() == num * n);
         Hash hashFunction = HashFactory.createInstance(envType, 32);
         IntStream keyPairArrayIntStream = IntStream.range(0, num);
         keyPairArrayIntStream = parallel ? keyPairArrayIntStream.parallel() : keyPairArrayIntStream;
         //OT协议的输出
-        byte[][] r0Array = new byte[num][CommonConstants.BLOCK_BYTE_LENGTH];
-        byte[][] r1Array = new byte[num][CommonConstants.BLOCK_BYTE_LENGTH];
+        byte[][][] rbArray = new byte[num][n][CommonConstants.BLOCK_BYTE_LENGTH];
         bByte = keyPairArrayIntStream.mapToObj(index -> {
-            //计算密文时的随机数
-            byte[] seed0 = new byte[KyberParams.paramsSymBytes];
-            byte[] seed1 = new byte[KyberParams.paramsSymBytes];
-            //进行加密的明文
-            byte[] message0 = new byte[KyberParams.paramsSymBytes];
-            byte[] message1 = new byte[KyberParams.paramsSymBytes];
-            SecureRandom sR = new SecureRandom();
-            sR.nextBytes(seed0);
-            sR.nextBytes(seed1);
-            sR.nextBytes(message0);
-            sR.nextBytes(message1);
-            //因为消息m必须要256bit，因此传递的密文中选取前128bit作为OT的输出
-            r0Array[index] = Arrays.copyOfRange(message0,0,CommonConstants.BLOCK_BYTE_LENGTH);
-            r1Array[index] = Arrays.copyOfRange(message1,0,CommonConstants.BLOCK_BYTE_LENGTH);
-            // 读取接收端参数对R0、R1
-            byte[] upperR0 = pkPayload.get(index * 2);
-            byte[] upperR1 = pkPayload.get(index * 2 + 1);
-            // 读取公钥（As+e）部分
-            byte[] upperPkR0 = Arrays.copyOfRange(upperR0,0, paramsPolyvecBytes);
-            byte[] upperPkR1 = Arrays.copyOfRange(upperR1,0, paramsPolyvecBytes);
-            short[][] upperVectorR0 = Poly.polyVectorFromBytes(upperPkR0);
-            short[][] upperVectorR1 = Poly.polyVectorFromBytes(upperPkR1);
-            // 计算A0 = R0 - Hash(R1)、A1 = R1 - Hash(R0)
-            short[][] upperA0 =
-                    KyberPublicKeyOps.kyberPKSub(upperVectorR0,KyberPublicKeyOps.kyberPKHash(upperVectorR1, hashFunction));
-            short[][] upperA1 =
-                    KyberPublicKeyOps.kyberPKSub(upperVectorR1,KyberPublicKeyOps.kyberPKHash(upperVectorR0, hashFunction));
-
-            //计算密文
-            byte [][] cipherText = new byte[2][];
-            cipherText[0] = KyberKeyOps.
-                    encrypt(message0,upperA0,
-                            Arrays.copyOfRange(upperR0,paramsPolyvecBytes,indcpaPublicKeyBytes),
-                            seed0,paramsK);
-            cipherText[1] = KyberKeyOps.
-                    encrypt(message1,upperA1,
-                            Arrays.copyOfRange(upperR1,paramsPolyvecBytes,indcpaPublicKeyBytes),
-                            seed1,paramsK);
+            short[][][] upperVector = new short[n][][];
+            short[][][] upperPkVector = new short[n][][];
+            short[][][] upperHashPkVector = new short[n][][];
+            byte[][] upper = new byte[n][];
+            for(int i = 0; i < n;i++) {
+                upper[i] = pkPayload.get(index * n + i);
+                byte[] upperPk = Arrays.copyOfRange(upper[i],0, paramsPolyvecBytes);
+                upperVector[i] = Poly.polyVectorFromBytes(upperPk);
+                upperHashPkVector[i] = KyberPublicKeyOps.kyberPKHash(upperVector[i],hashFunction);
+            }
+            for(int i = 0;i < n;i++){
+                upperPkVector[i] = upperVector[i];
+                for(int j = 0; j < n;j++){
+                    if(i != j){
+                        // 计算A = Ri - Hash(Rj)
+                       upperPkVector[i] = KyberPublicKeyOps.kyberPKSub(upperPkVector[i],upperHashPkVector[j]);
+                    }
+                }
+                info("  the number ({}ms)", i);
+            }
+            byte[][] cipherText = new byte[n][];
+            for(int i = 0;i < n;i++){
+                //生成随机数种子
+                byte[] seed = new byte[KyberParams.paramsSymBytes];
+                //生成需要加密的明文
+                byte[] message = new byte[KyberParams.paramsSymBytes];
+                SecureRandom sr = new SecureRandom();
+                sr.nextBytes(seed);
+                sr.nextBytes(message);
+                //因为消息m必须要256bit，因此传递的密文中选取前128bit作为OT的输出
+                rbArray[index][i] = Arrays.copyOfRange(message,0,CommonConstants.BLOCK_BYTE_LENGTH);
+                cipherText[i] = KyberKeyOps.
+                        encrypt(message,upperPkVector[i],
+                                Arrays.copyOfRange(upper[i],paramsPolyvecBytes,indcpaPublicKeyBytes),seed,paramsK);
+            }
             return cipherText;
-        })
+                })
                 .flatMap(Arrays::stream)
                 .collect(Collectors.toList());
-        return new BaseOtSenderOutput(r0Array, r1Array);
+        return new MrKyber19BnotSenderOutput(n,num, rbArray);
     }
 }

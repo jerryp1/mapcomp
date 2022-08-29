@@ -6,6 +6,7 @@ import edu.alibaba.mpc4j.common.rpc.RpcManager;
 import edu.alibaba.mpc4j.common.rpc.impl.memory.MemoryRpcManager;
 import edu.alibaba.mpc4j.s2pc.pcg.ot.bnot.co15.Co15BnotConfig;
 import edu.alibaba.mpc4j.s2pc.pcg.ot.bnot.mr19.Mr19BnotConfig;
+import edu.alibaba.mpc4j.s2pc.pcg.ot.bnot.mrkyber19.MrKyber19BnotConfig;
 import edu.alibaba.mpc4j.s2pc.pcg.ot.bnot.np01.Np01BnotConfig;
 import edu.alibaba.mpc4j.s2pc.pcg.ot.bnot.np99.Np99BnotConfig;
 import org.apache.commons.lang3.StringUtils;
@@ -86,6 +87,21 @@ public class BnotTest {
         configurationParams.add(new Object[]{
                 BnotFactory.BnotType.MR19.name() + " (uncompress)",
                 new Mr19BnotConfig.Builder().setCompressEncode(false).build(),
+        });
+        // MRKYBER19 + k = 4
+        configurationParams.add(new Object[]{
+                BnotFactory.BnotType.MRKYBER19.name() + " (4)",
+                new MrKyber19BnotConfig.Builder().setParamsK(4).build(),
+        });
+        // MRKYBER19 + k = 3
+        configurationParams.add(new Object[]{
+                BnotFactory.BnotType.MRKYBER19.name() + " (3)",
+                new MrKyber19BnotConfig.Builder().setParamsK(3).build(),
+        });
+        // MRKYBER19 + k = 4
+        configurationParams.add(new Object[]{
+                BnotFactory.BnotType.MRKYBER19.name() + " (2)",
+                new MrKyber19BnotConfig.Builder().setParamsK(2).build(),
         });
 
         return configurationParams;
