@@ -10,7 +10,7 @@ import edu.alibaba.mpc4j.s2pc.aby.bc.BcConfig;
 import edu.alibaba.mpc4j.s2pc.aby.bc.BcFactory;
 import edu.alibaba.mpc4j.s2pc.aby.bc.bea91.Bea91BcConfig;
 import edu.alibaba.mpc4j.s2pc.pcg.mtg.z2.Z2MtgConfig;
-import edu.alibaba.mpc4j.s2pc.pcg.mtg.z2.impl.file.FileZ2MtgConfig;
+import edu.alibaba.mpc4j.s2pc.pcg.mtg.z2.impl.offline.OfflineZ2MtgConfig;
 import edu.alibaba.mpc4j.s2pc.pcg.ot.cot.impl.cache.CacheCotConfig;
 import edu.alibaba.mpc4j.s2pc.pcg.ot.cot.impl.direct.DirectCotConfig;
 import edu.alibaba.mpc4j.s2pc.pcg.ot.cot.core.CoreCotConfig;
@@ -121,19 +121,19 @@ public class PsuConfigUtils {
         // OVDM类型
         String gf2eOvdmTypeString =PropertiesUtils.readString(properties, "gf2e_ovdm_type");
         Gf2eOvdmType gf2eOvdmType = Gf2eOvdmType.valueOf(gf2eOvdmTypeString);
-        boolean ignoreZ2Mtg = PropertiesUtils.readBoolean(properties, "ignore_z2_mtg");
-        if (ignoreZ2Mtg) {
-            Z2MtgConfig fileZ2MtgConfig = new FileZ2MtgConfig.Builder(SecurityModel.SEMI_HONEST).build();
-            BcConfig fileBcConfig = new Bea91BcConfig.Builder()
-                .setZ2MtgConfig(fileZ2MtgConfig)
+        boolean offlineZ2Mtg = PropertiesUtils.readBoolean(properties, "offline_z2_mtg");
+        if (offlineZ2Mtg) {
+            Z2MtgConfig offlineZ2MtgConfig = new OfflineZ2MtgConfig.Builder(SecurityModel.SEMI_HONEST).build();
+            BcConfig offlineBcConfig = new Bea91BcConfig.Builder()
+                .setZ2MtgConfig(offlineZ2MtgConfig)
                 .build();
-            OprpConfig fileOprpConfig = new LowMcOprpConfig.Builder()
-                .setBcConfig(fileBcConfig)
+            OprpConfig offlineOprpConfig = new LowMcOprpConfig.Builder()
+                .setBcConfig(offlineBcConfig)
                 .build();
             return new Zcl22SkePsuConfig.Builder()
                 .setCoreCotConfig(CoreCotFactory.createDefaultConfig(SecurityModel.SEMI_HONEST))
-                .setOprpConfig(fileOprpConfig)
-                .setBcConfig(fileBcConfig)
+                .setOprpConfig(offlineOprpConfig)
+                .setBcConfig(offlineBcConfig)
                 .setGf2eOvdmType(gf2eOvdmType)
                 .build();
         } else {
