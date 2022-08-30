@@ -47,16 +47,14 @@ public final class Ntt {
 
     /**
      * Perform an in-place number-theoretic transform (NTT)
-     *
      * Input is in standard order
-     *
      * Output is in bit-reversed order
      *
      * @param r 输入是一个short值，转换为NTT域
      * @return NTT域上的值，方便进行计算
      */
     public static short[] ntt(short[] r) {
-        int j = 0;
+        int j;
         int k = 1;
         for (int l = KyberParams.PARAMS_NTT_NUM; l >= KyberParams.MATH_TWO; l >>= 1) {
             for (int start = 0; start < KyberParams.PARAMS_N; start = j + l) {
@@ -74,16 +72,14 @@ public final class Ntt {
 
     /**
      * Perform an in-place inverse number-theoretic transform (NTT)
-     *
      * Input is in bit-reversed order
-     *
      * Output is in standard order
      *
-     * @param r
-     * @return
+     * @param r 输入为NTT域上的数组
+     * @return 输出为正常域上的数组
      */
     public static short[] invNtt(short[] r) {
-        int j = 0;
+        int j;
         int k = 0;
         for (int l = 2; l <= KyberParams.PARAMS_NTT_NUM; l <<= 1) {
             for (int start = 0; start < KyberParams.PARAMS_N; start = j + l) {
@@ -106,12 +102,12 @@ public final class Ntt {
     /**
      * Performs the multiplication of polynomials
      *
-     * @param a0
-     * @param a1
-     * @param b0
-     * @param b1
-     * @param zeta
-     * @return
+     * @param a0 乘数
+     * @param a1 乘数
+     * @param b0 乘数
+     * @param b1 乘数
+     * @param zeta 乘法使用到的参数，申明在ByteOps类
+     * @return 返回的结果
      */
     public static short[] baseMultiplier(short a0, short a1, short b0, short b1, short zeta) {
         short[] r = new short[2];

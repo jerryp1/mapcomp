@@ -131,19 +131,15 @@ public class MrKyber19BaseOtReceiver extends AbstractBaseOtReceiver {
                     // 随机的向量，R_1-sigma
                     short[][] randomKeyVec;
                     // 随机向量的生成元，g（R_1-sigma）
-                    try {
-                        // 随机生成一组钥匙对
-                        aArray[index] = KyberKeyOps.generateKyberKeys(paramsK);
-                        // 读取多项式格式下的公钥
-                        publickKeyVec = aArray[index].getPublicKeyVec();
-                        // 生成一个符合格式的随机公钥 R_1-sigma
-                        randomKeyVec = KyberPublicKeyOps.getRandomKyberPk(paramsK);
-                        // 计算 R_sigma = R_sigma + Hash(R_1-sigma)
-                        short[][] hashKeyVec = KyberPublicKeyOps.kyberPkHash(randomKeyVec, hashFunction);
-                        publickKeyVec = KyberPublicKeyOps.kyberPkAdd(publickKeyVec, hashKeyVec);
-                    } catch (NoSuchAlgorithmException e) {
-                        throw new RuntimeException(e);
-                    }
+                    // 随机生成一组钥匙对
+                    aArray[index] = KyberKeyOps.generateKyberKeys(paramsK);
+                    // 读取多项式格式下的公钥
+                    publickKeyVec = aArray[index].getPublicKeyVec();
+                    // 生成一个符合格式的随机公钥 R_1-sigma
+                    randomKeyVec = KyberPublicKeyOps.getRandomKyberPk(paramsK);
+                    // 计算 R_sigma = R_sigma + Hash(R_1-sigma)
+                    short[][] hashKeyVec = KyberPublicKeyOps.kyberPkHash(randomKeyVec, hashFunction);
+                    publickKeyVec = KyberPublicKeyOps.kyberPkAdd(publickKeyVec, hashKeyVec);
                     // 根据选择值将两个参数R分别放入对应位置
                     int sigma = choices[index] ? 1 : 0;
                     byte[][] pkPair = new byte[2][indcpaPublicKeyBytes];

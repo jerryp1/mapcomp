@@ -90,18 +90,18 @@ public class BnotTest {
         });
         // MRKYBER19 + k = 4
         configurationParams.add(new Object[]{
-                BnotFactory.BnotType.MRKYBER19.name() + " (4)",
-                new MrKyber19BnotConfig.Builder().setParamsK(4).build(),
+                BnotFactory.BnotType.MRKYBER19.name() + " (k = 2)",
+                new MrKyber19BnotConfig.Builder().setParamsK(2).build(),
         });
         // MRKYBER19 + k = 3
         configurationParams.add(new Object[]{
-                BnotFactory.BnotType.MRKYBER19.name() + " (3)",
+                BnotFactory.BnotType.MRKYBER19.name() + " (k = 3)",
                 new MrKyber19BnotConfig.Builder().setParamsK(3).build(),
         });
         // MRKYBER19 + k = 4
         configurationParams.add(new Object[]{
-                BnotFactory.BnotType.MRKYBER19.name() + " (2)",
-                new MrKyber19BnotConfig.Builder().setParamsK(2).build(),
+                BnotFactory.BnotType.MRKYBER19.name() + " (k = 4)",
+                new MrKyber19BnotConfig.Builder().setParamsK(4).build(),
         });
 
         return configurationParams;

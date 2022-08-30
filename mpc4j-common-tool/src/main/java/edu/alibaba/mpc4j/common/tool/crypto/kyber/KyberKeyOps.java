@@ -20,7 +20,7 @@ public class KyberKeyOps {
      * @param paramsK 安全参数
      * @return 论文中的公钥（As+e,p）和私钥s
      */
-    public static KyberVecPki generateKyberKeys(int paramsK) throws NoSuchAlgorithmException {
+    public static KyberVecPki generateKyberKeys(int paramsK)  {
         //私钥s
         short[][] skpv = Poly.generateNewPolyVector(paramsK);
         //最后输出时是公钥 As+e
@@ -31,12 +31,10 @@ public class KyberKeyOps {
         byte[] publicSeed = new byte[KyberParams.SYM_BYTES];
         byte[] noiseSeed = new byte[KyberParams.SYM_BYTES];
         Prg prgFunction = PrgFactory.createInstance(PrgFactory.PrgType.JDK_AES_ECB,64);
-        //MessageDigest h = new SHA3_512();
-        SecureRandom sr = SecureRandom.getInstanceStrong();
+        SecureRandom sr = new SecureRandom();
         sr.nextBytes(prgSeed);
         //随机数被扩展至64位
         byte[] fullSeed = prgFunction.extendToBytes(prgSeed);
-        //byte[] fullSeed = h.digest(publicSeed);
         //将随机数前32位赋给publicSeed，后32位赋给noiseSeed
         System.arraycopy(fullSeed, 0, publicSeed, 0, KyberParams.SYM_BYTES);
         System.arraycopy(fullSeed, KyberParams.SYM_BYTES, noiseSeed, 0, KyberParams.SYM_BYTES);
@@ -53,9 +51,9 @@ public class KyberKeyOps {
             e[i] = Poly.getNoisePoly(noiseSeed, nonce, paramsK);
             nonce = (byte) (nonce + (byte) 1);
         }
-        Poly.polyVectorNTT(skpv);
+        Poly.polyVectorNtt(skpv);
         Poly.polyVectorReduce(skpv);
-        Poly.polyVectorNTT(e);
+        Poly.polyVectorNtt(e);
         //计算 As
         for (int i = 0; i < paramsK; i++) {
             short[] temp = Poly.polyVectorPointWiseAccMont(a[i], skpv);
@@ -87,11 +85,11 @@ public class KyberKeyOps {
         short[][] u = unpackedCipherText.getU();
         short[] v = unpackedCipherText.getV();
         //将U转为NTT域
-        Poly.polyVectorNTT(u);
+        Poly.polyVectorNtt(u);
         // 执行乘法 计算 Us
         short[] mp = Poly.polyVectorPointWiseAccMont(privateKey, u);
         //将乘积转回正常计算域
-        Poly.polyInvNTTMont(mp);
+        Poly.polyInvNttMont(mp);
         // U - v
         mp = Poly.polySub(v, mp);
         Poly.polyReduce(mp);
@@ -124,7 +122,7 @@ public class KyberKeyOps {
         //这个像是e2
         short[] epp = Poly.getNoisePoly(coins, (byte) (paramsK * 2), 3);
         //将r转换到NTT域进行计算
-        Poly.polyVectorNTT(r);
+        Poly.polyVectorNtt(r);
         Poly.polyVectorReduce(r);
         //计算Ar
         for (int i = 0; i < paramsK; i++) {
@@ -133,9 +131,9 @@ public class KyberKeyOps {
         //（As+e）* r
         short[] v = Poly.polyVectorPointWiseAccMont(publicKey, r);
         //取消INV域
-        Poly.polyVectorInvNTTMont(bp);
+        Poly.polyVectorInvNttMont(bp);
         //取消INV域
-        Poly.polyInvNTTMont(v);
+        Poly.polyInvNttMont(v);
         //计算Ar + e1
         Poly.polyVectorAdd(bp, ep);
         // 计算（As+e）* r + e_2 + m

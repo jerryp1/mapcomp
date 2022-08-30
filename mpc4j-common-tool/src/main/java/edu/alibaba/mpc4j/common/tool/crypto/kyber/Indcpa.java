@@ -40,7 +40,7 @@ public class Indcpa {
      * @param buf 随机数
      * @param bufl 随机数的长度
      * @param l 最终生成的uniformI的长度上限
-     * @return uniformRandom 随机参数 short[] R 和 int I 被重新修订了。
+     * 结果是uniformRandom 随机参数 short[] R 和 int I 被重新修订了。
      */
     public static void generateUniform(KyberUniformRandom uniformRandom, byte[] buf, int bufl, int l) {
         short[] uniformR = new short[KyberParams.POLY_BYTES];
@@ -57,7 +57,7 @@ public class Indcpa {
                 uniformR[uniformI] = (short) d1;
                 uniformI++;
             }
-            if (uniformI < l && d2 < (int) KyberParams.PARAMS_Q) {
+            if (uniformI < l && d2 <  KyberParams.PARAMS_Q) {
                 uniformR[uniformI] = (short) d2;
                 uniformI++;
             }
@@ -105,10 +105,9 @@ public class Indcpa {
                     generateUniform(uniformRandom, Arrays.copyOfRange(buf, 504, 672), 168, KyberParams.PARAMS_N - ui);
                     int ctrn = uniformRandom.getUniformI();
                     short[] missing = uniformRandom.getUniformR();
-                    for (int k = ui; k < KyberParams.PARAMS_N; k++) {
-                        //只补充后面的部分，不会修改前面的部分。
-                        r[i][j][k] = missing[k - ui];
-                    }
+                    //只补充后面的部分，不会修改前面的部分。
+                    if (KyberParams.PARAMS_N - ui >= 0){
+                        System.arraycopy(missing, 0, r[i][j], ui, KyberParams.PARAMS_N - ui);}
                     ui = ui + ctrn;
                 }
             }
@@ -176,24 +175,20 @@ public class Indcpa {
      * Pack the private key into a byte array
      * 将私钥从多项式转为byte
      * @param privateKey 私钥
-     * @param paramsK 安全参数
      * @return 打包后的私钥
      */
-    public static byte[] packPrivateKey(short[][] privateKey, int paramsK) {
-        byte[] packedPrivateKey = Poly.polyVectorToBytes(privateKey);
-        return packedPrivateKey;
+    public static byte[] packPrivateKey(short[][] privateKey) {
+        return Poly.polyVectorToBytes(privateKey);
     }
 
     /**
      * Unpack the private key byte array into a polynomial vector
      * 将私钥从byte转为多项式
      * @param packedPrivateKey 打包后的私钥
-     * @param paramsK 安全参数
      * @return 打包后的私钥
      */
-    public static short[][] unpackPrivateKey(byte[] packedPrivateKey, int paramsK) {
-        short[][] unpackedPrivateKey = Poly.polyVectorFromBytes(packedPrivateKey);
-        return unpackedPrivateKey;
+    public static short[][] unpackPrivateKey(byte[] packedPrivateKey) {
+        return Poly.polyVectorFromBytes(packedPrivateKey);
     }
     /**
      * Pack the ciphertext into a byte array
@@ -254,14 +249,15 @@ public class Indcpa {
         //最后输出时是公钥 As+e
         short[][] pkpv = Poly.generateNewPolyVector(paramsK);
         short[][] e = Poly.generateNewPolyVector(paramsK);
+        //prg要求输入为16bit。
+        byte[] prgSeed = new byte[KyberParams.SYM_BYTES /2];
         byte[] publicSeed = new byte[KyberParams.SYM_BYTES];
         byte[] noiseSeed = new byte[KyberParams.SYM_BYTES];
         Prg prgFunction = PrgFactory.createInstance(PrgFactory.PrgType.JDK_SECURE_RANDOM,64);
-        //MessageDigest h = new SHA3_512();
         SecureRandom sr = new SecureRandom();
-        sr.nextBytes(publicSeed);
+        sr.nextBytes(prgSeed);
         //随机数被扩展至64位
-        byte[] fullSeed = prgFunction.extendToBytes(publicSeed);
+        byte[] fullSeed = prgFunction.extendToBytes(prgSeed);
         //将随机数前32位赋给publicSeed，后32位赋给noiseSeed
         System.arraycopy(fullSeed, 0, publicSeed, 0, KyberParams.SYM_BYTES);
         System.arraycopy(fullSeed, KyberParams.SYM_BYTES, noiseSeed, 0, KyberParams.SYM_BYTES);
@@ -278,9 +274,9 @@ public class Indcpa {
             e[i] = Poly.getNoisePoly(noiseSeed, nonce, paramsK);
             nonce = (byte) (nonce + (byte) 1);
         }
-        Poly.polyVectorNTT(skpv);
+        Poly.polyVectorNtt(skpv);
         Poly.polyVectorReduce(skpv);
-        e = Poly.polyVectorNTT(e);
+        Poly.polyVectorNtt(e);
         //计算 As
         for (int i = 0; i < paramsK; i++) {
             short[] temp = Poly.polyVectorPointWiseAccMont(a[i], skpv);
@@ -288,9 +284,9 @@ public class Indcpa {
         }
         //计算 As+e
         Poly.polyVectorAdd(pkpv, e);
-        pkpv = Poly.polyVectorReduce(pkpv);
+        Poly.polyVectorReduce(pkpv);
         KyberPackedPki packedPki = new KyberPackedPki();
-        packedPki.setPackedPrivateKey(packPrivateKey(skpv, paramsK));
+        packedPki.setPackedPrivateKey(packPrivateKey(skpv));
         packedPki.setPackedPublicKey(packPublicKey(pkpv, publicSeed, paramsK));
         return packedPki;
     }
@@ -306,24 +302,23 @@ public class Indcpa {
      */
     public static byte[] encrypt(byte[] m, byte[] publicKey, byte[] coins, int paramsK) {
         short[][] sp = Poly.generateNewPolyVector(paramsK);
-        short[][] ep = Poly.generateNewPolyVector(paramsK);
+        short[][] e = Poly.generateNewPolyVector(paramsK);
         short[][] bp = Poly.generateNewPolyVector(paramsK);
         //将公钥（As+e）和seed一同放入UnpackedPublicKey
         UnpackedPublicKey unpackedPublicKey = unpackPublicKey(publicKey, paramsK);
         //将m转换为多项式
         short[] k = Poly.polyFromData(m);
-        //根据seed生成多项式，不知道这里拷贝的意义是什么(seed并不会在函数中被修改，不知道为啥拷贝一下，这里和生成的时候采用的transposed是不同的)
-        //这里相反的T or F 是不是因为转成byte以后的顺序相反了，后续研究一下哈哈哈
+        //在执行计算的时候实际上计算的是转秩的结果，所以这里的false改成了true
         short[][][] at = generateMatrix(unpackedPublicKey.getSeed(), true, paramsK);
         //生成的随机参数，是r和e1
         for (int i = 0; i < paramsK; i++) {
             sp[i] = Poly.getNoisePoly(coins, (byte) (i), paramsK);
-            ep[i] = Poly.getNoisePoly(coins, (byte) (i + paramsK), 3);
+            e[i] = Poly.getNoisePoly(coins, (byte) (i + paramsK), 3);
         }
         //这个像是e2
         short[] epp = Poly.getNoisePoly(coins, (byte) (paramsK * 2), 3);
         //这个像是r转换到NTT域进行计算
-        Poly.polyVectorNTT(sp);
+        Poly.polyVectorNtt(sp);
         Poly.polyVectorReduce(sp);
         //Ar
         for (int i = 0; i < paramsK; i++) {
@@ -332,11 +327,11 @@ public class Indcpa {
         //（As+e）* r
         short[] v = Poly.polyVectorPointWiseAccMont(unpackedPublicKey.getPublicKeyPolyvec(), sp);
         //取消INV域
-        Poly.polyVectorInvNTTMont(bp);
+        Poly.polyVectorInvNttMont(bp);
         //取消INV域
-        Poly.polyInvNTTMont(v);
+        Poly.polyInvNttMont(v);
         //Ar + e1
-        Poly.polyVectorAdd(bp, ep);
+        Poly.polyVectorAdd(bp, e);
         // （As+e）* r + e_2 + m
         Poly.polyAdd(Poly.polyAdd(v, epp), k);
         //压缩
@@ -358,16 +353,16 @@ public class Indcpa {
         short[][] u = unpackedCipherText.getU();
         short[] v = unpackedCipherText.getV();
         //获得私钥
-        short[][] unpackedPrivateKey = unpackPrivateKey(privateKey, paramsK);
+        short[][] unpackedPrivateKey = unpackPrivateKey(privateKey);
         //将U转为NTT域
-        u = Poly.polyVectorNTT(u);
+        Poly.polyVectorNtt(u);
         // 执行乘法 计算 Us
         short[] mp = Poly.polyVectorPointWiseAccMont(unpackedPrivateKey, u);
         //将乘积转回正常计算域
-        mp = Poly.polyInvNTTMont(mp);
+        Poly.polyInvNttMont(mp);
         // U - v
         mp = Poly.polySub(v, mp);
-        mp = Poly.polyReduce(mp);
+        Poly.polyReduce(mp);
         //将结果返回成消息
         return Poly.polyToMsg(mp);
     }

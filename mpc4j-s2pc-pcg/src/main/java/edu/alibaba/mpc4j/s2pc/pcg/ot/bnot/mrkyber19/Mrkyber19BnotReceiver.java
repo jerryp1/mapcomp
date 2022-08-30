@@ -14,7 +14,6 @@ import edu.alibaba.mpc4j.common.tool.crypto.hash.HashFactory;
 import edu.alibaba.mpc4j.s2pc.pcg.ot.bnot.AbstractBnotReceiver;
 import edu.alibaba.mpc4j.s2pc.pcg.ot.bnot.BnotReceiverOutput;
 
-import java.security.NoSuchAlgorithmException;
 import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
@@ -127,14 +126,10 @@ public class Mrkyber19BnotReceiver extends AbstractBnotReceiver {
                     // 随机的向量，R_1-sigma
                     short[][] randomKeyVec;
                     // 随机向量的生成元，g（R_1-sigma）
-                    try {
-                        // 随机生成一组钥匙对
-                        aArray[index] = KyberKeyOps.generateKyberKeys(paramsK);
-                        // 读取多项式格式下的公钥
-                        publickKeyVec = aArray[index].getPublicKeyVec();
-                    } catch (NoSuchAlgorithmException e) {
-                        throw new RuntimeException(e);
-                    }
+                    // 随机生成一组钥匙对
+                    aArray[index] = KyberKeyOps.generateKyberKeys(paramsK);
+                    // 读取多项式格式下的公钥
+                    publickKeyVec = aArray[index].getPublicKeyVec();
                     byte[][] pkPair = new byte[n][indcpaPublicKeyBytes];
                     for (int i = 0;i < n; i++){
                         if(i != choices[index]){

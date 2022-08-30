@@ -24,14 +24,13 @@ public final class Poly {
     /**
      * Applies the conditional subtraction of Q (KyberParams) to each coefficient of each element
      * of a vector of polynomials.
+     *
      * @param r 输入为一组多项式向量的系数
-     * @return 返回值为所有多项式向量系数大于等于Q的值经过减Q的处理
      */
-    public static short[][] polyVectorCSubQ(short[][] r) {
+    public static void polyVectorCoefficientSubQ(short[][] r) {
         for (int i = 0; i < r.length; i++) {
             r[i] = Poly.polyConditionalSubQ(r[i]);
         }
-        return r;
     }
 
     /**
@@ -85,7 +84,7 @@ public final class Poly {
      */
     public static short[] polyToMont(short[] polyR) {
         for (int i = 0; i < KyberParams.PARAMS_N; i++) {
-            polyR[i] = ByteOps.montgomeryReduce((long) (polyR[i] * 1353));
+            polyR[i] = ByteOps.montgomeryReduce( polyR[i] * 1353);
         }
         return polyR;
     }
@@ -126,12 +125,12 @@ public final class Poly {
     public static byte[] polyToBytes(short[] a) {
         int t0, t1;
         byte[] r = new byte[KyberParams.POLY_BYTES];
-        a = Poly.polyConditionalSubQ(a);
-        for (int i = 0; i < KyberParams.PARAMS_N / 2; i++) {
-            t0 = ((int) (a[2 * i] & 0xFFFF));
+        Poly.polyConditionalSubQ(a);
+        for (int i = 0; i < KyberParams.PARAMS_N / KyberParams.MATH_TWO; i++) {
+            t0 =  (a[2 * i] & 0xFFFF);
             t1 = ((int) (a[2 * i + 1]) & 0xFFFF);
             r[3 * i] = (byte) (t0);
-            r[3 * i + 1] = (byte) ((int) (t0 >> 8) | (int) (t1 << 4));
+            r[3 * i + 1] = (byte) ( (t0 >> 8) |  (t1 << 4));
             r[3 * i + 2] = (byte) (t1 >> 4);
         }
         return r;
@@ -161,7 +160,7 @@ public final class Poly {
      */
     public static short[] polyFromBytes(byte[] a) {
         short[] r = new short[KyberParams.PARAMS_N];
-        for (int i = 0; i < KyberParams.PARAMS_N / 2; i++) {
+        for (int i = 0; i < KyberParams.PARAMS_N / KyberParams.MATH_TWO; i++) {
             r[2 * i] = (short) ((((a[3 * i] & 0xFF)) | ((a[3 * i + 1] & 0xFF) << 8)) & 0xFFF);
             r[2 * i + 1] = (short) ((((a[3 * i + 1] & 0xFF) >> 4) | ((a[3 * i + 2] & 0xFF) << 4)) & 0xFFF);
         }
@@ -188,14 +187,14 @@ public final class Poly {
     /**
      * Convert a 32-byte message to a polynomial
      * 将256/8 = 32 的byte数组转换为多项式（256）short，对于每一个bit，如果为0，则输出为0，如果为1，则输出为1665。
-     * @param msg
-     * @return
+     * @param msg 输入的为msg数组，但是只读前面32个，不会全读
+     * @return 返回值为msg转为的short数组（长度为256）
      */
     public static short[] polyFromData(byte[] msg) {
         short[] r = new short[KyberParams.PARAMS_N];
         short mask;
-        for (int i = 0; i < KyberParams.PARAMS_N / 8; i++) {
-            for (int j = 0; j < 8; j++) {
+        for (int i = 0; i < KyberParams.PARAMS_N / KyberParams.MATH_EIGHT; i++) {
+            for (int j = 0; j < KyberParams.MATH_EIGHT; j++) {
                 //这里乘-1，是为了将1转换为-1，以在做and运算是变成-1的补码，即16个1，再去计算and
                 mask = (short) (-1 * (short) (((msg[i] & 0xFF) >> j) & 1));
                 r[8 * i + j] = (short) (mask & (short) ((KyberParams.PARAMS_Q + 1) / 2));
@@ -213,12 +212,12 @@ public final class Poly {
     public static byte[] polyToMsg(short[] a) {
         byte[] msg = new byte[KyberParams.SYM_BYTES];
         int t;
-        a = polyConditionalSubQ(a);
-        for (int i = 0; i < KyberParams.PARAMS_N / 8; i++) {
+        polyConditionalSubQ(a);
+        for (int i = 0; i < KyberParams.PARAMS_N / KyberParams.MATH_EIGHT; i++) {
             msg[i] = 0;
-            for (int j = 0; j < 8; j++) {
+            for (int j = 0; j < KyberParams.MATH_EIGHT; j++) {
                 // 计算 msg【i】 = (a * 2 + Q/2 ) / Q & 1
-                t = (int) ((((((int) (a[8 * i + j])) << 1) + (KyberParams.PARAMS_Q / 2)) / KyberParams.PARAMS_Q) & 1);
+                t =  ((((((int) (a[8 * i + j])) << 1) + (KyberParams.PARAMS_Q / 2)) / KyberParams.PARAMS_Q) & 1);
                 msg[i] = (byte) (msg[i] | (t << j));
             }
         }
@@ -232,20 +231,17 @@ public final class Poly {
      * @return 返回值是一个新的多项式向量
      */
     public static short[][] generateNewPolyVector(int paramsK) {
-        short[][] pv = new short[paramsK][KyberParams.POLY_BYTES];
-        return pv;
+        return new short[paramsK][KyberParams.POLY_BYTES];
     }
     /**
      * Computes an in-place negacyclic number-theoretic transform (NTT) of a polynomial
      * 将多项式系数转换至NTT域。
      * Input is assumed normal order
-     *
      * Output is assumed bit-revered order
-     *
      * @param r 多项式系数
-     * @return
+     * @return 返回值为NTT数域上的数
      */
-    public static short[] polyNTT(short[] r) {
+    public static short[] polyNtt(short[] r) {
         return Ntt.ntt(r);
     }
 
@@ -256,9 +252,9 @@ public final class Poly {
      * @param r 多项式向量
      * @return NTT域上多项式向量
      */
-    public static short[][] polyVectorNTT(short[][] r) {
+    public static short[][] polyVectorNtt(short[][] r) {
         for (int i = 0; i < r.length; i++) {
-            r[i] = Poly.polyNTT(r[i]);
+            r[i] = Poly.polyNtt(r[i]);
         }
         return r;
     }
@@ -267,13 +263,11 @@ public final class Poly {
      * Computes an in-place inverse of a negacyclic number-theoretic transform (NTT) of a polynomial
      * 将NTT域上的系数转换至多项式系数
      * Input is assumed bit-revered order
-     *
      * Output is assumed normal order
-     *
      * @param r NTT数域上的系数
      * @return 多项式系数
      */
-    public static short[] polyInvNTTMont(short[] r) {
+    public static short[] polyInvNttMont(short[] r) {
         return Ntt.invNtt(r);
     }
 
@@ -282,13 +276,11 @@ public final class Poly {
      * vector of polynomials and multiplies by Montgomery factor 2^16
      *
      * @param r NTT域多项式向量
-     * @return 多项式向量
      */
-    public static short[][] polyVectorInvNTTMont(short[][] r) {
+    public static void polyVectorInvNttMont(short[][] r) {
         for (int i = 0; i < r.length; i++) {
-            r[i] = Poly.polyInvNTTMont(r[i]);
+            r[i] = Poly.polyInvNttMont(r[i]);
         }
-        return r;
     }
 
     /**
@@ -299,11 +291,11 @@ public final class Poly {
      * @return 乘积在NTT域上的系数
      */
     public static short[] polyBaseMulMont(short[] polyA, short[] polyB) {
-        for (int i = 0; i < KyberParams.PARAMS_N / 4; i++) {
+        for (int i = 0; i < KyberParams.PARAMS_N / KyberParams.MATH_FOUR; i++) {
             short[] rx = Ntt.baseMultiplier(
                     polyA[4 * i], polyA[4 * i + 1],
                     polyB[4 * i], polyB[4 * i + 1],
-                    (short) Ntt.nttZetas[64 + i]
+                   Ntt.nttZetas[64 + i]
             );
             short[] ry = Ntt.baseMultiplier(
                     polyA[4 * i + 2], polyA[4 * i + 3],
@@ -324,13 +316,13 @@ public final class Poly {
      *
      * @param polyA 多项式向量乘法因子A
      * @param polyB 多项式向量乘法因子B
-     * @return
+     * @return 返回值为乘法乘出来的结果
      */
     public static short[] polyVectorPointWiseAccMont(short[][] polyA, short[][] polyB) {
         short[] r = Poly.polyBaseMulMont(polyA[0], polyB[0]);
         for (int i = 1; i < polyA.length; i++) {
             short[] t = Poly.polyBaseMulMont(polyA[i], polyB[i]);
-            r = Poly.polyAdd(r, t);
+            Poly.polyAdd(r, t);
         }
         return polyReduce(r);
     }
@@ -344,15 +336,15 @@ public final class Poly {
      */
     public static byte[] compressPoly(short[] polyA, int paramsK) {
         byte[] t = new byte[8];
-        polyA = Poly.polyConditionalSubQ(polyA);
+        Poly.polyConditionalSubQ(polyA);
         int rr = 0;
         byte[] r;
         switch (paramsK) {
             case 2:
             case 3:
                 r = new byte[KyberParams.POLY_COMPRESSED_BYTES_768];
-                for (int i = 0; i < KyberParams.PARAMS_N / 8; i++) {
-                    for (int j = 0; j < 8; j++) {
+                for (int i = 0; i < KyberParams.PARAMS_N / KyberParams.MATH_EIGHT; i++) {
+                    for (int j = 0; j < KyberParams.MATH_EIGHT; j++) {
                         t[j] = (byte) (((((polyA[8 * i + j]) << 4) + (KyberParams.PARAMS_Q / 2)) / (KyberParams.PARAMS_Q)) & 15);
                     }
                     r[rr] = (byte) (t[0] | (t[1] << 4));
@@ -364,8 +356,8 @@ public final class Poly {
                 break;
             default:
                 r = new byte[KyberParams.POLY_COMPRESSED_BYTES_1024];
-                for (int i = 0; i < KyberParams.PARAMS_N / 8; i++) {
-                    for (int j = 0; j < 8; j++) {
+                for (int i = 0; i < KyberParams.PARAMS_N / KyberParams.MATH_EIGHT; i++) {
+                    for (int j = 0; j < KyberParams.MATH_EIGHT; j++) {
                         t[j] = (byte) (((((polyA[8 * i + j]) << 5) + (KyberParams.PARAMS_Q / 2)) / (KyberParams.PARAMS_Q)) & 31);
                     }
                     r[rr] = (byte) ((t[0]) | (t[1] << 5));
@@ -382,12 +374,12 @@ public final class Poly {
     /**
      * Perform a lossly compression and serialization of a vector of polynomials
      * 将多项式向量（只有密文）压缩
-     * @param a
-     * @param paramsK
-     * @return
+     * @param a 输入的为密文的short格式
+     * @param paramsK 安全参数
+     * @return 输出为压缩后的函数
      */
     public static byte[] compressPolyVector(short[][] a, int paramsK) {
-        Poly.polyVectorCSubQ(a);
+        Poly.polyVectorCoefficientSubQ(a);
         int rr = 0;
         byte[] r;
         long[] t;
@@ -407,9 +399,10 @@ public final class Poly {
             case 3:
                 t = new long[4];
                 for (int i = 0; i < paramsK; i++) {
-                    for (int j = 0; j < KyberParams.PARAMS_N / 4; j++) {
-                        for (int k = 0; k < 4; k++) {
-                            t[k] = ((long) (((long) ((long) (a[i][4 * j + k]) << 10) + (long) (KyberParams.PARAMS_Q / 2)) / (long) (KyberParams.PARAMS_Q)) & 0x3ff);
+                    for (int j = 0; j < KyberParams.PARAMS_N / KyberParams.MATH_FOUR; j++) {
+                        for (int k = 0; k < KyberParams.MATH_FOUR; k++) {
+                            t[k] = ( (( ((long) (a[i][4 * j + k]) << 10) + (long) (KyberParams.PARAMS_Q / 2))
+                                    / (long) (KyberParams.PARAMS_Q)) & 0x3ff);
                         }
                         r[rr] = (byte) (t[0]);
                         r[rr + 1] = (byte) ((t[0] >> 8) | (t[1] << 2));
@@ -423,9 +416,10 @@ public final class Poly {
             default:
                 t = new long[8];
                 for (int i = 0; i < paramsK; i++) {
-                    for (int j = 0; j < KyberParams.PARAMS_N / 8; j++) {
-                        for (int k = 0; k < 8; k++) {
-                            t[k] = ((long) (((long) ((long) (a[i][8 * j + k]) << 11) + (long) (KyberParams.PARAMS_Q / 2)) / (long) (KyberParams.PARAMS_Q)) & 0x7ff);
+                    for (int j = 0; j < KyberParams.PARAMS_N / KyberParams.MATH_EIGHT; j++) {
+                        for (int k = 0; k < KyberParams.MATH_EIGHT; k++) {
+                            t[k] = ( (( ((long) (a[i][8 * j + k]) << 11) + (long) (KyberParams.PARAMS_Q / 2))
+                                    / (long) (KyberParams.PARAMS_Q)) & 0x7ff);
                         }
                         r[rr] = (byte) ((t[0]));
                         r[rr + 1] = (byte) ((t[0] >> 8) | (t[1] << 3));
@@ -452,33 +446,33 @@ public final class Poly {
      * 压缩是有损的，因此会与原多项式不同
      * @param a 压缩后的byte
      * @param paramsK 多项式系数
-     * @return
+     * @return 返回值为解压缩后的内容
      */
     public static short[] decompressPoly(byte[] a, int paramsK) {
         short[] r = new short[KyberParams.PARAMS_N];
         switch (paramsK) {
             case 2:
             case 3:
-                for (int i = 0; i < KyberParams.PARAMS_N / 2; i++) {
-                    r[2 * i] = (short) ((((int) (a[i] & 15) * KyberParams.PARAMS_Q) + 8) >> 4);
-                    r[2 * i + 1] = (short) (((((int) (a[i] & 0xFF) >> 4) * KyberParams.PARAMS_Q) + 8) >> 4);
+                for (int i = 0; i < KyberParams.PARAMS_N / KyberParams.MATH_TWO; i++) {
+                    r[2 * i] = (short) ((( (a[i] & 15) * KyberParams.PARAMS_Q) + 8) >> 4);
+                    r[2 * i + 1] = (short) (((( (a[i] & 0xFF) >> 4) * KyberParams.PARAMS_Q) + 8) >> 4);
                 }
                 break;
             default:
                 int aa = 0;
                 long[] t = new long[8];
-                for (int i = 0; i < KyberParams.PARAMS_N / 8; i++) {
-                    t[0] = (long) ((int) (a[aa] & 0xFF));
-                    t[1] = (long) ((byte) (((int) (a[aa] & 0xFF) >> 5)) | (byte) ((int) (a[aa + 1] & 0xFF) << 3)) & 0xFF;
-                    t[2] = (long) ((int) (a[aa + 1] & 0xFF) >> 2) & 0xFF;
-                    t[3] = (long) ((byte) (((int) (a[aa + 1] & 0xFF) >> 7)) | (byte) ((int) (a[aa + 2] & 0xFF) << 1)) & 0xFF;
-                    t[4] = (long) ((byte) (((int) (a[aa + 2] & 0xFF) >> 4)) | (byte) ((int) (a[aa + 3] & 0xFF) << 4)) & 0xFF;
-                    t[5] = (long) ((int) (a[aa + 3] & 0xFF) >> 1) & 0xFF;
-                    t[6] = (long) ((byte) (((int) (a[aa + 3] & 0xFF) >> 6)) | (byte) ((int) (a[aa + 4] & 0xFF) << 2)) & 0xFF;
-                    t[7] = ((long) ((int) (a[aa + 4] & 0xFF) >> 3)) & 0xFF;
+                for (int i = 0; i < KyberParams.PARAMS_N / KyberParams.MATH_EIGHT; i++) {
+                    t[0] =  ( (a[aa] & 0xFF));
+                    t[1] = (long) ((byte) (( (a[aa] & 0xFF) >> 5)) | (byte) ( (a[aa + 1] & 0xFF) << 3)) & 0xFF;
+                    t[2] = (long) ( (a[aa + 1] & 0xFF) >> 2) & 0xFF;
+                    t[3] = (long) ((byte) (( (a[aa + 1] & 0xFF) >> 7)) | (byte) ( (a[aa + 2] & 0xFF) << 1)) & 0xFF;
+                    t[4] = (long) ((byte) (( (a[aa + 2] & 0xFF) >> 4)) | (byte) ( (a[aa + 3] & 0xFF) << 4)) & 0xFF;
+                    t[5] = (long) ( (a[aa + 3] & 0xFF) >> 1) & 0xFF;
+                    t[6] = (long) ((byte) (( (a[aa + 3] & 0xFF) >> 6)) | (byte) ( (a[aa + 4] & 0xFF) << 2)) & 0xFF;
+                    t[7] = ((long) ( (a[aa + 4] & 0xFF) >> 3)) & 0xFF;
                     aa = aa + 5;
-                    for (int j = 0; j < 8; j++) {
-                        r[8 * i + j] = (short) ((((long) (t[j] & 31) * (KyberParams.PARAMS_Q)) + 16) >> 5);
+                    for (int j = 0; j < KyberParams.MATH_EIGHT; j++) {
+                        r[8 * i + j] = (short) ((( (t[j] & 31) * (KyberParams.PARAMS_Q)) + 16) >> 5);
                     }
                 }
         }
@@ -502,24 +496,26 @@ public final class Poly {
         switch (paramsK) {
             case 2:
             case 3:
-                t = new int[4]; // has to be unsigned..
+                // has to be unsigned
+                t = new int[4];
                 for (int i = 0; i < paramsK; i++) {
-                    for (int j = 0; j < (KyberParams.PARAMS_N / 4); j++) {
+                    for (int j = 0; j < (KyberParams.PARAMS_N / KyberParams.MATH_FOUR); j++) {
                         t[0] = ((a[aa] & 0xFF) | ((a[aa + 1] & 0xFF) << 8));
                         t[1] = ((a[aa + 1] & 0xFF) >> 2) | ((a[aa + 2] & 0xFF) << 6);
                         t[2] = ((a[aa + 2] & 0xFF) >> 4) | ((a[aa + 3] & 0xFF) << 4);
                         t[3] = ((a[aa + 3] & 0xFF) >> 6) | ((a[aa + 4] & 0xFF) << 2);
                         aa = aa + 5;
-                        for (int k = 0; k < 4; k++) {
+                        for (int k = 0; k < KyberParams.MATH_FOUR; k++) {
                             r[i][4 * j + k] = (short) (((long) (t[k] & 0x3FF) * (long) (KyberParams.PARAMS_Q) + 512) >> 10);
                         }
                     }
                 }
                 break;
             default:
-                t = new int[8]; // has to be unsigned..
+                // has to be unsigned
+                t = new int[8];
                 for (int i = 0; i < paramsK; i++) {
-                    for (int j = 0; j < (KyberParams.PARAMS_N / 8); j++) {
+                    for (int j = 0; j < (KyberParams.PARAMS_N / KyberParams.MATH_EIGHT); j++) {
                         t[0] = ((a[aa] & 0xff) | ((a[aa + 1] & 0xff) << 8));
                         t[1] = (((a[aa + 1] & 0xff) >> 3) | ((a[aa + 2] & 0xff) << 5));
                         t[2] = (((a[aa + 2] & 0xff) >> 6) | ((a[aa + 3] & 0xff) << 2) | ((a[aa + 4] & 0xff) << 10));
@@ -529,7 +525,7 @@ public final class Poly {
                         t[6] = (((a[aa + 8] & 0xff) >> 2) | ((a[aa + 9] & 0xff) << 6));
                         t[7] = (((a[aa + 9] & 0xff) >> 5) | ((a[aa + 10] & 0xff) << 3));
                         aa = aa + 11;
-                        for (int k = 0; k < 8; k++) {
+                        for (int k = 0; k < KyberParams.MATH_EIGHT; k++) {
                             r[i][8 * j + k] = (short) (((long) (t[k] & 0x7FF) * (long) (KyberParams.PARAMS_Q) + 1024) >> 11);
                         }
                     }
