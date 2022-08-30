@@ -100,16 +100,16 @@ public class MrKyber19BnotSender extends AbstractBnotSender {
     private void paramsInit(int paramsK){
         switch (paramsK) {
             case 2:
-                paramsPolyvecBytes = KyberParams.paramsPolyvecBytesK512;
-                indcpaPublicKeyBytes = KyberParams.paramsIndcpaPublicKeyBytesK512;
+                paramsPolyvecBytes = KyberParams.POLY_VECTOR_BYTES_512;
+                indcpaPublicKeyBytes = KyberParams.INDCPA_PK_BYTES_512;
                 break;
             case 3:
-                paramsPolyvecBytes = KyberParams.paramsPolyvecBytesK768;
-                indcpaPublicKeyBytes = KyberParams.paramsIndcpaPublicKeyBytesK768;
+                paramsPolyvecBytes = KyberParams.POLY_VECTOR_BYTES_768;
+                indcpaPublicKeyBytes = KyberParams.INDCPA_PK_BYTES_768;
                 break;
             default:
-                paramsPolyvecBytes = KyberParams.paramsPolyvecBytesK1024;
-                indcpaPublicKeyBytes = KyberParams.paramsIndcpaPublicKeyBytesK1024;
+                paramsPolyvecBytes = KyberParams.POLY_VECTOR_BYTES_1024;
+                indcpaPublicKeyBytes = KyberParams.INDCPA_PK_BYTES_1024;
         }
     }
 
@@ -134,7 +134,7 @@ public class MrKyber19BnotSender extends AbstractBnotSender {
                 //As+e
                 upperVector[i] = Poly.polyVectorFromBytes(upperPk);
                 //Hash（As+e）
-                upperHashPkVector[i] = KyberPublicKeyOps.kyberPKHash(upperVector[i],hashFunction);
+                upperHashPkVector[i] = KyberPublicKeyOps.kyberPkHash(upperVector[i],hashFunction);
             }
             //恢复出原油的公钥
             for(int i = 0;i < n;i++){
@@ -142,7 +142,7 @@ public class MrKyber19BnotSender extends AbstractBnotSender {
                 for(int j = 0; j < n;j++){
                     if(i != j){
                         // 计算A = Ri - Hash(Rj)
-                       upperPkVector[i] = KyberPublicKeyOps.kyberPKSub(upperPkVector[i],upperHashPkVector[j]);
+                       upperPkVector[i] = KyberPublicKeyOps.kyberPkSub(upperPkVector[i],upperHashPkVector[j]);
                     }
                 }
             }
@@ -150,9 +150,9 @@ public class MrKyber19BnotSender extends AbstractBnotSender {
             byte[][] cipherText = new byte[n][];
             for(int i = 0;i < n;i++){
                 //生成随机数种子
-                byte[] seed = new byte[KyberParams.paramsSymBytes];
+                byte[] seed = new byte[KyberParams.SYM_BYTES];
                 //生成需要加密的明文
-                byte[] message = new byte[KyberParams.paramsSymBytes];
+                byte[] message = new byte[KyberParams.SYM_BYTES];
                 SecureRandom sr = new SecureRandom();
                 sr.nextBytes(seed);
                 sr.nextBytes(message);

@@ -41,7 +41,7 @@ public final class Ntt {
      * @param b 乘法因子b
      * @return 返回值是乘法的结果
      */
-    public static short modQMulMont(short a, short b) {
+    public static short modqMulMont(short a, short b) {
         return ByteOps.montgomeryReduce( (long) a * (long) b);
     }
 
@@ -58,12 +58,12 @@ public final class Ntt {
     public static short[] ntt(short[] r) {
         int j = 0;
         int k = 1;
-        for (int l = 128; l >= 2; l >>= 1) {
-            for (int start = 0; start < 256; start = j + l) {
+        for (int l = KyberParams.PARAMS_NTT_NUM; l >= KyberParams.MATH_TWO; l >>= 1) {
+            for (int start = 0; start < KyberParams.PARAMS_N; start = j + l) {
                 short zeta = Ntt.nttZetas[k];
                 k = k + 1;
                 for (j = start; j < start + l; j++) {
-                    short t = Ntt.modQMulMont(zeta, r[j + l]);
+                    short t = Ntt.modqMulMont(zeta, r[j + l]);
                     r[j + l] = (short) (r[j] - t);
                     r[j] = (short) (r[j] + t);
                 }
@@ -82,23 +82,23 @@ public final class Ntt {
      * @param r
      * @return
      */
-    public static short[] invNTT(short[] r) {
+    public static short[] invNtt(short[] r) {
         int j = 0;
         int k = 0;
-        for (int l = 2; l <= 128; l <<= 1) {
-            for (int start = 0; start < 256; start = j + l) {
+        for (int l = 2; l <= KyberParams.PARAMS_NTT_NUM; l <<= 1) {
+            for (int start = 0; start < KyberParams.PARAMS_N; start = j + l) {
                 short zeta = Ntt.nttZetasInv[k];
                 k = k + 1;
                 for (j = start; j < start + l; j++) {
                     short t = r[j];
                     r[j] = ByteOps.barrettReduce((short) (t + r[j + l]));
                     r[j + l] = (short) (t - r[j + l]);
-                    r[j + l] = modQMulMont(zeta, r[j + l]);
+                    r[j + l] = modqMulMont(zeta, r[j + l]);
                 }
             }
         }
-        for (j = 0; j < 256; j++) {
-            r[j] = Ntt.modQMulMont(r[j], nttZetasInv[127]);
+        for (j = 0; j < KyberParams.PARAMS_N; j++) {
+            r[j] = Ntt.modqMulMont(r[j], nttZetasInv[127]);
         }
         return r;
     }
@@ -115,11 +115,11 @@ public final class Ntt {
      */
     public static short[] baseMultiplier(short a0, short a1, short b0, short b1, short zeta) {
         short[] r = new short[2];
-        r[0] = Ntt.modQMulMont(a1, b1);
-        r[0] = Ntt.modQMulMont(r[0], zeta);
-        r[0] = (short) (r[0] + Ntt.modQMulMont(a0, b0));
-        r[1] = Ntt.modQMulMont(a0, b1);
-        r[1] = (short) (r[1] + Ntt.modQMulMont(a1, b0));
+        r[0] = Ntt.modqMulMont(a1, b1);
+        r[0] = Ntt.modqMulMont(r[0], zeta);
+        r[0] = (short) (r[0] + Ntt.modqMulMont(a0, b0));
+        r[1] = Ntt.modqMulMont(a0, b1);
+        r[1] = (short) (r[1] + Ntt.modqMulMont(a1, b0));
         return r;
     }
 }

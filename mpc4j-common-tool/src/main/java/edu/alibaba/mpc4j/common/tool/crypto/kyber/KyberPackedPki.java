@@ -5,7 +5,7 @@ package edu.alibaba.mpc4j.common.tool.crypto.kyber;
  *
  * @author Steven K Fisher <swiftcryptollc@gmail.com>
  */
-public class KyberPackedPKI {
+public class KyberPackedPki {
 
     private byte[] packedPublicKey;
     private byte[] packedPrivateKey;
@@ -13,7 +13,7 @@ public class KyberPackedPKI {
     /**
      *  Default Constructor
      */
-    public KyberPackedPKI() {
+    public KyberPackedPki() {
 
     }
 

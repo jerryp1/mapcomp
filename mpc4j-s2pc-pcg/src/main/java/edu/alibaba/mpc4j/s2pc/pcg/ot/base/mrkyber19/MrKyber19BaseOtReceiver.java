@@ -105,16 +105,16 @@ public class MrKyber19BaseOtReceiver extends AbstractBaseOtReceiver {
     private void paramsInit(int paramsK){
         switch (paramsK) {
             case 2:
-                paramsPolyvecBytes = KyberParams.paramsPolyvecBytesK512;
-                indcpaPublicKeyBytes = KyberParams.paramsIndcpaPublicKeyBytesK512;
+                paramsPolyvecBytes = KyberParams.POLY_VECTOR_BYTES_512;
+                indcpaPublicKeyBytes = KyberParams.INDCPA_PK_BYTES_512;
                 break;
             case 3:
-                paramsPolyvecBytes = KyberParams.paramsPolyvecBytesK768;
-                indcpaPublicKeyBytes = KyberParams.paramsIndcpaPublicKeyBytesK768;
+                paramsPolyvecBytes = KyberParams.POLY_VECTOR_BYTES_768;
+                indcpaPublicKeyBytes = KyberParams.INDCPA_PK_BYTES_768;
                 break;
             default:
-                paramsPolyvecBytes = KyberParams.paramsPolyvecBytesK1024;
-                indcpaPublicKeyBytes = KyberParams.paramsIndcpaPublicKeyBytesK1024;
+                paramsPolyvecBytes = KyberParams.POLY_VECTOR_BYTES_1024;
+                indcpaPublicKeyBytes = KyberParams.INDCPA_PK_BYTES_1024;
         }
     }
 
@@ -137,10 +137,10 @@ public class MrKyber19BaseOtReceiver extends AbstractBaseOtReceiver {
                         // 读取多项式格式下的公钥
                         publickKeyVec = aArray[index].getPublicKeyVec();
                         // 生成一个符合格式的随机公钥 R_1-sigma
-                        randomKeyVec = KyberPublicKeyOps.getRandomKyberPK(paramsK);
+                        randomKeyVec = KyberPublicKeyOps.getRandomKyberPk(paramsK);
                         // 计算 R_sigma = R_sigma + Hash(R_1-sigma)
-                        short[][] hashKeyVec = KyberPublicKeyOps.kyberPKHash(randomKeyVec, hashFunction);
-                        publickKeyVec = KyberPublicKeyOps.kyberPKAdd(publickKeyVec, hashKeyVec);
+                        short[][] hashKeyVec = KyberPublicKeyOps.kyberPkHash(randomKeyVec, hashFunction);
+                        publickKeyVec = KyberPublicKeyOps.kyberPkAdd(publickKeyVec, hashKeyVec);
                     } catch (NoSuchAlgorithmException e) {
                         throw new RuntimeException(e);
                     }
@@ -151,12 +151,12 @@ public class MrKyber19BaseOtReceiver extends AbstractBaseOtReceiver {
                     System.arraycopy(Poly.polyVectorToBytes(publickKeyVec),0,
                             pkPair[sigma],0,paramsPolyvecBytes);
                     System.arraycopy(aArray[index].getPublicKeyGenerator(),0,
-                            pkPair[sigma],paramsPolyvecBytes,KyberParams.paramsSymBytes);
+                            pkPair[sigma],paramsPolyvecBytes,KyberParams.SYM_BYTES);
                     //将（randomKey，p_1 - sigma）打包传输
                     System.arraycopy(Poly.polyVectorToBytes(randomKeyVec),0,
                             pkPair[1 - sigma],0,paramsPolyvecBytes);
                     System.arraycopy(KyberPublicKeyOps.getRandomKeyGenerator(),0,
-                            pkPair[1 - sigma],paramsPolyvecBytes,KyberParams.paramsSymBytes);
+                            pkPair[1 - sigma],paramsPolyvecBytes,KyberParams.SYM_BYTES);
                     return pkPair;
                 })
                 .flatMap(Arrays::stream)

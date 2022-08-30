@@ -101,16 +101,16 @@ public class Mrkyber19BnotReceiver extends AbstractBnotReceiver {
     private void paramsInit(int paramsK){
         switch (paramsK) {
             case 2:
-                paramsPolyvecBytes = KyberParams.paramsPolyvecBytesK512;
-                indcpaPublicKeyBytes = KyberParams.paramsIndcpaPublicKeyBytesK512;
+                paramsPolyvecBytes = KyberParams.POLY_VECTOR_BYTES_512;
+                indcpaPublicKeyBytes = KyberParams.INDCPA_PK_BYTES_512;
                 break;
             case 3:
-                paramsPolyvecBytes = KyberParams.paramsPolyvecBytesK768;
-                indcpaPublicKeyBytes = KyberParams.paramsIndcpaPublicKeyBytesK768;
+                paramsPolyvecBytes = KyberParams.POLY_VECTOR_BYTES_768;
+                indcpaPublicKeyBytes = KyberParams.INDCPA_PK_BYTES_768;
                 break;
             default:
-                paramsPolyvecBytes = KyberParams.paramsPolyvecBytesK1024;
-                indcpaPublicKeyBytes = KyberParams.paramsIndcpaPublicKeyBytesK1024;
+                paramsPolyvecBytes = KyberParams.POLY_VECTOR_BYTES_1024;
+                indcpaPublicKeyBytes = KyberParams.INDCPA_PK_BYTES_1024;
         }
     }
 
@@ -139,22 +139,22 @@ public class Mrkyber19BnotReceiver extends AbstractBnotReceiver {
                     for (int i = 0;i < n; i++){
                         if(i != choices[index]){
                             //生成（randomKey，p_1 - sigma）并打包传输
-                            randomKeyVec = KyberPublicKeyOps.getRandomKyberPK(paramsK);
-                            short[][] hashKeyVec = KyberPublicKeyOps.kyberPKHash(randomKeyVec, hashFunction);
+                            randomKeyVec = KyberPublicKeyOps.getRandomKyberPk(paramsK);
+                            short[][] hashKeyVec = KyberPublicKeyOps.kyberPkHash(randomKeyVec, hashFunction);
                             // PK = PK + Hash（RandomKey）
-                            publickKeyVec = KyberPublicKeyOps.kyberPKAdd(publickKeyVec, hashKeyVec);
+                            publickKeyVec = KyberPublicKeyOps.kyberPkAdd(publickKeyVec, hashKeyVec);
                             System.arraycopy(Poly.polyVectorToBytes(randomKeyVec),0,
                                     pkPair[i],0,paramsPolyvecBytes);
                             //随机生成的生成元p
                             System.arraycopy(KyberPublicKeyOps.getRandomKeyGenerator(),0,
-                                    pkPair[i],paramsPolyvecBytes,KyberParams.paramsSymBytes);
+                                    pkPair[i],paramsPolyvecBytes,KyberParams.SYM_BYTES);
                         }
                     }
                     //将经过N-1个公钥遮掩后的（As+e，p_sigma）打包传输
                     System.arraycopy(Poly.polyVectorToBytes(publickKeyVec),0,
                             pkPair[choices[index]],0,paramsPolyvecBytes);
                     System.arraycopy(aArray[index].getPublicKeyGenerator(),0,
-                            pkPair[choices[index]],paramsPolyvecBytes,KyberParams.paramsSymBytes);
+                            pkPair[choices[index]],paramsPolyvecBytes,KyberParams.SYM_BYTES);
                     return pkPair;
                 })
                 .flatMap(Arrays::stream)

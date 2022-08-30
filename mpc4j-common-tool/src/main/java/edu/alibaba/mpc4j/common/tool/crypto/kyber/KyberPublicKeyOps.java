@@ -17,16 +17,16 @@ public class KyberPublicKeyOps {
      * @param hashFunction 随机数生成器
      * @return 论文中的公钥（As+e,p）和私钥s
      */
-    public static short[][] kyberPKHash(short[][] inputVector,Hash hashFunction){
+    public static short[][] kyberPkHash(short[][] inputVector, Hash hashFunction){
         byte[] hashInput = Poly.polyVectorToBytes(inputVector);
         int byteLength = hashInput.length;
         int startPoint = 0;
         byte[] hashOutput = new byte[byteLength];
-        while(byteLength > KyberParams.paramsSymBytes){
-            System.arraycopy(hashFunction.digestToBytes(Arrays.copyOfRange(hashInput,startPoint,startPoint + KyberParams.paramsSymBytes)),
-                    0,hashOutput,startPoint,KyberParams.paramsSymBytes);
-            startPoint = startPoint + KyberParams.paramsSymBytes;
-            byteLength = byteLength - KyberParams.paramsSymBytes;
+        while(byteLength > KyberParams.SYM_BYTES){
+            System.arraycopy(hashFunction.digestToBytes(Arrays.copyOfRange(hashInput,startPoint,startPoint + KyberParams.SYM_BYTES)),
+                    0,hashOutput,startPoint,KyberParams.SYM_BYTES);
+            startPoint = startPoint + KyberParams.SYM_BYTES;
+            byteLength = byteLength - KyberParams.SYM_BYTES;
         }
         if(byteLength > 0){
             System.arraycopy(hashFunction.digestToBytes(Arrays.copyOfRange(hashInput,startPoint,startPoint + byteLength)),
@@ -43,18 +43,18 @@ public class KyberPublicKeyOps {
      * @param paramsK 安全参数
      * @return 论文中的公钥 As+e
      */
-    public static short[][] getRandomKyberPK(int paramsK){
+    public static short[][] getRandomKyberPk(int paramsK){
         byte[] newPublicKey;
 
         switch (paramsK) {
             case 2:
-                newPublicKey = new byte[KyberParams.paramsPolyvecBytesK512];
+                newPublicKey = new byte[KyberParams.POLY_VECTOR_BYTES_512];
                 break;
             case 3:
-                newPublicKey = new byte[KyberParams.paramsPolyvecBytesK768];
+                newPublicKey = new byte[KyberParams.POLY_VECTOR_BYTES_768];
                 break;
             default:
-                newPublicKey = new byte[KyberParams.paramsPolyvecBytesK1024];
+                newPublicKey = new byte[KyberParams.POLY_VECTOR_BYTES_1024];
         }
         //采用了代码中原有的随机数生成方式。
         SecureRandom sr = new SecureRandom();
@@ -71,7 +71,7 @@ public class KyberPublicKeyOps {
      */
     public static byte[] getRandomKeyGenerator(){
         //随机数种子为32byte
-        byte[] newRandomKeyGenerator = new byte[KyberParams.paramsSymBytes];
+        byte[] newRandomKeyGenerator = new byte[KyberParams.SYM_BYTES];
         //随机生成
         SecureRandom sr = new SecureRandom();
         sr.nextBytes(newRandomKeyGenerator);
@@ -80,28 +80,28 @@ public class KyberPublicKeyOps {
 
     /**
      * 计算两个公钥的和
-     * @param KeyA 多项式A的参数
-     * @param KeyB 多项式B的参数
+     * @param keyA 多项式A的参数
+     * @param keyB 多项式B的参数
      * @return 多项式A+B的参数
      */
-    public static short[][] kyberPKAdd(short[][] KeyA,short[][] KeyB){
-        short[][] KeyC = Poly.polyVectorAdd(KeyA,KeyB);
-        return Poly.polyVectorReduce(KeyC);
+    public static short[][] kyberPkAdd(short[][] keyA, short[][] keyB){
+        short[][] keyC = Poly.polyVectorAdd(keyA,keyB);
+        return Poly.polyVectorReduce(keyC);
     }
 
     /**
      * 计算两个公钥的差
-     * @param KeyA 多项式A的参数
-     * @param KeyB 多项式B的参数
+     * @param keyA 多项式A的参数
+     * @param keyB 多项式B的参数
      * @return 多项式A-B的参数
      */
-    public static short[][] kyberPKSub(short[][] KeyA,short[][] KeyB){
-        int paramsK = KeyA.length;
-        short[][] KeyC = new short[paramsK][];
+    public static short[][] kyberPkSub(short[][] keyA, short[][] keyB){
+        int paramsK = keyA.length;
+        short[][] keyC = new short[paramsK][];
         for(int i = 0;i < paramsK;i++){
-            KeyC[i] = polySub(KeyA[i],KeyB[i]);
+            keyC[i] = polySub(keyA[i],keyB[i]);
         }
-        return Poly.polyVectorReduce(KeyC);
+        return Poly.polyVectorReduce(keyC);
     }
 
     /**
@@ -113,7 +113,7 @@ public class KyberPublicKeyOps {
      */
     public static short[] polySub(short[] polyA, short[] polyB) {
         short[] polyC = new short[polyA.length];
-        for (int i = 0; i < KyberParams.paramsN; i++) {
+        for (int i = 0; i < KyberParams.PARAMS_N; i++) {
             polyC[i] = (short) (polyA[i] - polyB[i]);
         }
         return polyC;

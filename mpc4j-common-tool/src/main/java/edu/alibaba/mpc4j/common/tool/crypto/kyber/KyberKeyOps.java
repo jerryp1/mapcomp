@@ -27,9 +27,9 @@ public class KyberKeyOps {
         short[][] pkpv = Poly.generateNewPolyVector(paramsK);
         short[][] e = Poly.generateNewPolyVector(paramsK);
         //prg要求输入为16bit。
-        byte[] prgSeed = new byte[KyberParams.paramsSymBytes/2];
-        byte[] publicSeed = new byte[KyberParams.paramsSymBytes];
-        byte[] noiseSeed = new byte[KyberParams.paramsSymBytes];
+        byte[] prgSeed = new byte[KyberParams.SYM_BYTES /2];
+        byte[] publicSeed = new byte[KyberParams.SYM_BYTES];
+        byte[] noiseSeed = new byte[KyberParams.SYM_BYTES];
         Prg prgFunction = PrgFactory.createInstance(PrgFactory.PrgType.JDK_AES_ECB,64);
         //MessageDigest h = new SHA3_512();
         SecureRandom sr = SecureRandom.getInstanceStrong();
@@ -38,8 +38,8 @@ public class KyberKeyOps {
         byte[] fullSeed = prgFunction.extendToBytes(prgSeed);
         //byte[] fullSeed = h.digest(publicSeed);
         //将随机数前32位赋给publicSeed，后32位赋给noiseSeed
-        System.arraycopy(fullSeed, 0, publicSeed, 0, KyberParams.paramsSymBytes);
-        System.arraycopy(fullSeed, KyberParams.paramsSymBytes, noiseSeed, 0, KyberParams.paramsSymBytes);
+        System.arraycopy(fullSeed, 0, publicSeed, 0, KyberParams.SYM_BYTES);
+        System.arraycopy(fullSeed, KyberParams.SYM_BYTES, noiseSeed, 0, KyberParams.SYM_BYTES);
         //生成了公钥中的A
         short[][][] a = Indcpa.generateMatrix(publicSeed, false, paramsK);
         byte nonce = (byte) 0;

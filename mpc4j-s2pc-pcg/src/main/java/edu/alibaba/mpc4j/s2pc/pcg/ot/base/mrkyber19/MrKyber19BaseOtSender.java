@@ -99,16 +99,16 @@ public class MrKyber19BaseOtSender extends AbstractBaseOtSender {
     private void paramsInit(int paramsK){
         switch (paramsK) {
             case 2:
-                paramsPolyvecBytes = KyberParams.paramsPolyvecBytesK512;
-                indcpaPublicKeyBytes = KyberParams.paramsIndcpaPublicKeyBytesK512;
+                paramsPolyvecBytes = KyberParams.POLY_VECTOR_BYTES_512;
+                indcpaPublicKeyBytes = KyberParams.INDCPA_PK_BYTES_512;
                 break;
             case 3:
-                paramsPolyvecBytes = KyberParams.paramsPolyvecBytesK768;
-                indcpaPublicKeyBytes = KyberParams.paramsIndcpaPublicKeyBytesK768;
+                paramsPolyvecBytes = KyberParams.POLY_VECTOR_BYTES_768;
+                indcpaPublicKeyBytes = KyberParams.INDCPA_PK_BYTES_768;
                 break;
             default:
-                paramsPolyvecBytes = KyberParams.paramsPolyvecBytesK1024;
-                indcpaPublicKeyBytes = KyberParams.paramsIndcpaPublicKeyBytesK1024;
+                paramsPolyvecBytes = KyberParams.POLY_VECTOR_BYTES_1024;
+                indcpaPublicKeyBytes = KyberParams.INDCPA_PK_BYTES_1024;
         }
     }
 
@@ -122,11 +122,11 @@ public class MrKyber19BaseOtSender extends AbstractBaseOtSender {
         byte[][] r1Array = new byte[num][CommonConstants.BLOCK_BYTE_LENGTH];
         bByte = keyPairArrayIntStream.mapToObj(index -> {
             //计算密文时的随机数
-            byte[] seed0 = new byte[KyberParams.paramsSymBytes];
-            byte[] seed1 = new byte[KyberParams.paramsSymBytes];
+            byte[] seed0 = new byte[KyberParams.SYM_BYTES];
+            byte[] seed1 = new byte[KyberParams.SYM_BYTES];
             //进行加密的明文
-            byte[] message0 = new byte[KyberParams.paramsSymBytes];
-            byte[] message1 = new byte[KyberParams.paramsSymBytes];
+            byte[] message0 = new byte[KyberParams.SYM_BYTES];
+            byte[] message1 = new byte[KyberParams.SYM_BYTES];
             SecureRandom sR = new SecureRandom();
             sR.nextBytes(seed0);
             sR.nextBytes(seed1);
@@ -145,9 +145,9 @@ public class MrKyber19BaseOtSender extends AbstractBaseOtSender {
             short[][] upperVectorR1 = Poly.polyVectorFromBytes(upperPkR1);
             // 计算A0 = R0 - Hash(R1)、A1 = R1 - Hash(R0)
             short[][] upperA0 =
-                    KyberPublicKeyOps.kyberPKSub(upperVectorR0,KyberPublicKeyOps.kyberPKHash(upperVectorR1, hashFunction));
+                    KyberPublicKeyOps.kyberPkSub(upperVectorR0,KyberPublicKeyOps.kyberPkHash(upperVectorR1, hashFunction));
             short[][] upperA1 =
-                    KyberPublicKeyOps.kyberPKSub(upperVectorR1,KyberPublicKeyOps.kyberPKHash(upperVectorR0, hashFunction));
+                    KyberPublicKeyOps.kyberPkSub(upperVectorR1,KyberPublicKeyOps.kyberPkHash(upperVectorR0, hashFunction));
 
             //计算密文
             byte [][] cipherText = new byte[2][];
