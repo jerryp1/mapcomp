@@ -1,4 +1,4 @@
-package edu.alibaba.mpc4j.common.kyber.provider;
+package edu.alibaba.mpc4j.common.tool.crypto.kyber;
 
 /**
  * Helper class for random uniform matrix usage

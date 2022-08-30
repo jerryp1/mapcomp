@@ -1,6 +1,6 @@
 package edu.alibaba.mpc4j.s2pc.pcg.ot.base.mrkyber19;
 
-import edu.alibaba.mpc4j.common.kyber.provider.kyber.*;
+import edu.alibaba.mpc4j.common.tool.crypto.kyber.*;
 import edu.alibaba.mpc4j.common.rpc.MpcAbortException;
 import edu.alibaba.mpc4j.common.rpc.MpcAbortPreconditions;
 import edu.alibaba.mpc4j.common.rpc.Party;

@@ -1,9 +1,8 @@
-package edu.alibaba.mpc4j.common.kyber.provider.kyber;
+package edu.alibaba.mpc4j.common.tool.crypto.kyber;
 
-import com.github.aelstad.keccakj.fips202.SHA3_512;
-import edu.alibaba.mpc4j.common.kyber.provider.KyberVecPki;
+import edu.alibaba.mpc4j.common.tool.crypto.prg.Prg;
+import edu.alibaba.mpc4j.common.tool.crypto.prg.PrgFactory;
 
-import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
 
@@ -27,13 +26,17 @@ public class KyberKeyOps {
         //最后输出时是公钥 As+e
         short[][] pkpv = Poly.generateNewPolyVector(paramsK);
         short[][] e = Poly.generateNewPolyVector(paramsK);
+        //prg要求输入为16bit。
+        byte[] prgSeed = new byte[KyberParams.paramsSymBytes/2];
         byte[] publicSeed = new byte[KyberParams.paramsSymBytes];
         byte[] noiseSeed = new byte[KyberParams.paramsSymBytes];
-        MessageDigest h = new SHA3_512();
+        Prg prgFunction = PrgFactory.createInstance(PrgFactory.PrgType.JDK_AES_ECB,64);
+        //MessageDigest h = new SHA3_512();
         SecureRandom sr = SecureRandom.getInstanceStrong();
-        sr.nextBytes(publicSeed);
+        sr.nextBytes(prgSeed);
         //随机数被扩展至64位
-        byte[] fullSeed = h.digest(publicSeed);
+        byte[] fullSeed = prgFunction.extendToBytes(prgSeed);
+        //byte[] fullSeed = h.digest(publicSeed);
         //将随机数前32位赋给publicSeed，后32位赋给noiseSeed
         System.arraycopy(fullSeed, 0, publicSeed, 0, KyberParams.paramsSymBytes);
         System.arraycopy(fullSeed, KyberParams.paramsSymBytes, noiseSeed, 0, KyberParams.paramsSymBytes);

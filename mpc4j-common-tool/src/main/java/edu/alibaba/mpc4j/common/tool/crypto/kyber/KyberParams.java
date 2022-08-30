@@ -1,4 +1,4 @@
-package edu.alibaba.mpc4j.common.kyber.provider.kyber;
+package edu.alibaba.mpc4j.common.tool.crypto.kyber;
 
 public final class KyberParams {
 

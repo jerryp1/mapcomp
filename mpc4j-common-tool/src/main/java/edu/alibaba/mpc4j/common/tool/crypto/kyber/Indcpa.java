@@ -1,14 +1,10 @@
-package edu.alibaba.mpc4j.common.kyber.provider.kyber;
+package edu.alibaba.mpc4j.common.tool.crypto.kyber;
 
-import com.github.aelstad.keccakj.core.KeccakSponge;
-import com.github.aelstad.keccakj.fips202.SHA3_512;
-import com.github.aelstad.keccakj.fips202.Shake128;
-import com.github.aelstad.keccakj.fips202.Shake256;
-import edu.alibaba.mpc4j.common.kyber.provider.KyberPackedPKI;
-import edu.alibaba.mpc4j.common.kyber.provider.KyberUniformRandom;
+import edu.alibaba.mpc4j.common.tool.crypto.hash.Hash;
+import edu.alibaba.mpc4j.common.tool.crypto.hash.HashFactory;
+import edu.alibaba.mpc4j.common.tool.crypto.prg.Prg;
+import edu.alibaba.mpc4j.common.tool.crypto.prg.PrgFactory;
 
-import java.security.MessageDigest;
-import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
 import java.util.Arrays;
 
@@ -28,14 +24,15 @@ public class Indcpa {
      * @return 返回是根据参数生成的固定值
      */
     public static byte[] generatePRFByteArray(int l, byte[] key, byte nonce) {
-        byte[] hash = new byte[l];
-        KeccakSponge xof = new Shake256();
+        Hash hashFunction = HashFactory.createInstance(HashFactory.HashType.BC_BLAKE_2B_160,16);
+        Prg prgFunction = PrgFactory.createInstance(PrgFactory.PrgType.JDK_SECURE_RANDOM,l);
+        //KeccakSponge xof = new Shake256();
         byte[] newKey = new byte[key.length + 1];
         System.arraycopy(key, 0, newKey, 0, key.length);
         newKey[key.length] = nonce;
-        xof.getAbsorbStream().write(newKey);
-        xof.getSqueezeStream().read(hash);
-        return hash;
+        //xof.getAbsorbStream().write(newKey);
+        //xof.getSqueezeStream().read(hash);
+        return prgFunction.extendToBytes(hashFunction.digestToBytes(newKey));
     }
 
     /**
@@ -81,15 +78,16 @@ public class Indcpa {
      */
     public static short[][][] generateMatrix(byte[] seed, boolean transposed, int paramsK) {
         short[][][] r = new short[paramsK][paramsK][KyberParams.paramsPolyBytes];
-        byte[] buf = new byte[672];
         KyberUniformRandom uniformRandom = new KyberUniformRandom();
-        KeccakSponge xof = new Shake128();
+        //KeccakSponge xof = new Shake128();
         for (int i = 0; i < paramsK; i++) {
             //生成一个空向量
             r[i] = Poly.generateNewPolyVector(paramsK);
             for (int j = 0; j < paramsK; j++) {
-                xof.reset();
-                xof.getAbsorbStream().write(seed);
+                Hash hashFunction = HashFactory.createInstance(HashFactory.HashType.BC_BLAKE_2B_160,16);
+                Prg prgFunction = PrgFactory.createInstance(PrgFactory.PrgType.JDK_SECURE_RANDOM,672);
+                //xof.reset();
+                //xof.getAbsorbStream().write(seed);
                 byte[] ij = new byte[2];
                 if (transposed) {
                     ij[0] = (byte) i;
@@ -98,8 +96,10 @@ public class Indcpa {
                     ij[0] = (byte) j;
                     ij[1] = (byte) i;
                 }
-                xof.getAbsorbStream().write(ij);
-                xof.getSqueezeStream().read(buf);
+                byte[] hashSeed = new byte[34];
+                System.arraycopy(seed,0,hashSeed,0,KyberParams.paramsSymBytes);
+                System.arraycopy(ij,0,hashSeed,KyberParams.paramsSymBytes,2);
+                byte[] buf = prgFunction.extendToBytes(hashFunction.digestToBytes(hashSeed));
                 //将随机生成的504个byte输入，并计算系数是否满足小于Q,最长可以得到min（256，332）。（504）/3 * 2 = 332
                 generateUniform(uniformRandom, Arrays.copyOfRange(buf, 0, 504), 504, KyberParams.paramsN);
                 int ui = uniformRandom.getUniformI();
@@ -252,7 +252,7 @@ public class Indcpa {
      * @param paramsK 安全参数
      * @return 论文中的公钥（As+e,p）和私钥s
      */
-    public static KyberPackedPKI generateKyberKeys(int paramsK) throws NoSuchAlgorithmException {
+    public static KyberPackedPKI generateKyberKeys(int paramsK) {
         //私钥s
         short[][] skpv = Poly.generateNewPolyVector(paramsK);
         //最后输出时是公钥 As+e
@@ -260,16 +260,12 @@ public class Indcpa {
         short[][] e = Poly.generateNewPolyVector(paramsK);
         byte[] publicSeed = new byte[KyberParams.paramsSymBytes];
         byte[] noiseSeed = new byte[KyberParams.paramsSymBytes];
-        /** MessageDigest h = new SHA3_512();
-         * SecureRandom sr = new SecureRandom();
-         * sr.nextBytes(publicSeed);
-         * 不知道是不是一定要用下面这种方式，后续联系师兄
-        */
-        MessageDigest h = new SHA3_512();
-        SecureRandom sr = SecureRandom.getInstanceStrong();
+        Prg prgFunction = PrgFactory.createInstance(PrgFactory.PrgType.JDK_SECURE_RANDOM,64);
+        //MessageDigest h = new SHA3_512();
+        SecureRandom sr = new SecureRandom();
         sr.nextBytes(publicSeed);
         //随机数被扩展至64位
-        byte[] fullSeed = h.digest(publicSeed);
+        byte[] fullSeed = prgFunction.extendToBytes(publicSeed);
         //将随机数前32位赋给publicSeed，后32位赋给noiseSeed
         System.arraycopy(fullSeed, 0, publicSeed, 0, KyberParams.paramsSymBytes);
         System.arraycopy(fullSeed, KyberParams.paramsSymBytes, noiseSeed, 0, KyberParams.paramsSymBytes);

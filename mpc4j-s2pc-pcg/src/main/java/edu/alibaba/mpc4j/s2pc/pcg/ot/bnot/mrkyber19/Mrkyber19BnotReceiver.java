@@ -1,11 +1,7 @@
 package edu.alibaba.mpc4j.s2pc.pcg.ot.bnot.mrkyber19;
 
 
-import edu.alibaba.mpc4j.common.kyber.provider.KyberVecPki;
-import edu.alibaba.mpc4j.common.kyber.provider.kyber.KyberKeyOps;
-import edu.alibaba.mpc4j.common.kyber.provider.kyber.KyberParams;
-import edu.alibaba.mpc4j.common.kyber.provider.kyber.KyberPublicKeyOps;
-import edu.alibaba.mpc4j.common.kyber.provider.kyber.Poly;
+import edu.alibaba.mpc4j.common.tool.crypto.kyber.*;
 import edu.alibaba.mpc4j.common.rpc.MpcAbortException;
 import edu.alibaba.mpc4j.common.rpc.MpcAbortPreconditions;
 import edu.alibaba.mpc4j.common.rpc.Party;

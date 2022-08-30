@@ -1,4 +1,4 @@
-package edu.alibaba.mpc4j.common.kyber.provider;
+package edu.alibaba.mpc4j.common.tool.crypto.kyber;
 
 /**
  * Kyber未封装的，以向量形式存储的密钥。论文来源：

@@ -22,7 +22,6 @@
         <module>mpc4j-s2pc-pir</module>
         <module>mpc4j-s2pc-pso</module>
         <module>mpc4j-sml-opboost</module>
-        <module>mpc4j-common-kyber</module>
     </modules>
 
     <properties>

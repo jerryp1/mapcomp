@@ -45,11 +45,5 @@
             <version>1.0.2-SNAPSHOT</version>
             <scope>compile</scope>
         </dependency>
-        <dependency>
-            <groupId>edu.alibaba</groupId>
-            <artifactId>mpc4j-common-kyber</artifactId>
-            <version>1.0.2-SNAPSHOT</version>
-            <scope>compile</scope>
-        </dependency>
     </dependencies>
 </project>
