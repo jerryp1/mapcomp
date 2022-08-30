@@ -119,7 +119,7 @@ public class KyberKeyOps {
             r[i] = Poly.getNoisePoly(coins, (byte) (i), paramsK);
             ep[i] = Poly.getNoisePoly(coins, (byte) (i + paramsK), 3);
         }
-        //这个像是e2
+        //这个是e2
         short[] epp = Poly.getNoisePoly(coins, (byte) (paramsK * 2), 3);
         //将r转换到NTT域进行计算
         Poly.polyVectorNtt(r);

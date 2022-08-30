@@ -190,6 +190,7 @@ public class Indcpa {
     public static short[][] unpackPrivateKey(byte[] packedPrivateKey) {
         return Poly.polyVectorFromBytes(packedPrivateKey);
     }
+
     /**
      * Pack the ciphertext into a byte array
      * 将密文（u,v）进行压缩。
@@ -301,8 +302,8 @@ public class Indcpa {
      * @return 加密后的密文
      */
     public static byte[] encrypt(byte[] m, byte[] publicKey, byte[] coins, int paramsK) {
-        short[][] sp = Poly.generateNewPolyVector(paramsK);
-        short[][] e = Poly.generateNewPolyVector(paramsK);
+        short[][] r = Poly.generateNewPolyVector(paramsK);
+        short[][] ep = Poly.generateNewPolyVector(paramsK);
         short[][] bp = Poly.generateNewPolyVector(paramsK);
         //将公钥（As+e）和seed一同放入UnpackedPublicKey
         UnpackedPublicKey unpackedPublicKey = unpackPublicKey(publicKey, paramsK);
@@ -312,26 +313,26 @@ public class Indcpa {
         short[][][] at = generateMatrix(unpackedPublicKey.getSeed(), true, paramsK);
         //生成的随机参数，是r和e1
         for (int i = 0; i < paramsK; i++) {
-            sp[i] = Poly.getNoisePoly(coins, (byte) (i), paramsK);
-            e[i] = Poly.getNoisePoly(coins, (byte) (i + paramsK), 3);
+            r[i] = Poly.getNoisePoly(coins, (byte) (i), paramsK);
+            ep[i] = Poly.getNoisePoly(coins, (byte) (i + paramsK), 3);
         }
-        //这个像是e2
+        //这个是e2
         short[] epp = Poly.getNoisePoly(coins, (byte) (paramsK * 2), 3);
         //这个像是r转换到NTT域进行计算
-        Poly.polyVectorNtt(sp);
-        Poly.polyVectorReduce(sp);
+        Poly.polyVectorNtt(r);
+        Poly.polyVectorReduce(r);
         //Ar
         for (int i = 0; i < paramsK; i++) {
-            bp[i] = Poly.polyVectorPointWiseAccMont(at[i], sp);
+            bp[i] = Poly.polyVectorPointWiseAccMont(at[i], r);
         }
         //（As+e）* r
-        short[] v = Poly.polyVectorPointWiseAccMont(unpackedPublicKey.getPublicKeyPolyvec(), sp);
+        short[] v = Poly.polyVectorPointWiseAccMont(unpackedPublicKey.getPublicKeyPolyvec(), r);
         //取消INV域
         Poly.polyVectorInvNttMont(bp);
         //取消INV域
         Poly.polyInvNttMont(v);
         //Ar + e1
-        Poly.polyVectorAdd(bp, e);
+        Poly.polyVectorAdd(bp, ep);
         // （As+e）* r + e_2 + m
         Poly.polyAdd(Poly.polyAdd(v, epp), k);
         //压缩
