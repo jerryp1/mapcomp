@@ -150,6 +150,7 @@ public class MrKyber19BaseOtReceiver extends AbstractBaseOtReceiver {
                     //将（randomKey，p_1 - sigma）打包传输
                     System.arraycopy(Poly.polyVectorToBytes(randomKeyVec),0,
                             pkPair[1 - sigma],0,paramsPolyvecBytes);
+                    //对于randomKey而言，生成元（32byte）是随机的
                     System.arraycopy(KyberPublicKeyOps.getRandomKeyGenerator(),0,
                             pkPair[1 - sigma],paramsPolyvecBytes,KyberParams.SYM_BYTES);
                     return pkPair;

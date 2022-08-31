@@ -133,14 +133,14 @@ public class Mrkyber19BnotReceiver extends AbstractBnotReceiver {
                     byte[][] pkPair = new byte[n][indcpaPublicKeyBytes];
                     for (int i = 0;i < n; i++){
                         if(i != choices[index]){
-                            //生成（randomKey，p_1 - sigma）并打包传输
+                            //生成（randomKey，p_1 - sigma）
                             randomKeyVec = KyberPublicKeyOps.getRandomKyberPk(paramsK);
                             short[][] hashKeyVec = KyberPublicKeyOps.kyberPkHash(randomKeyVec, hashFunction);
                             // PK = PK + Hash（RandomKey）
                             publickKeyVec = KyberPublicKeyOps.kyberPkAdd(publickKeyVec, hashKeyVec);
+                            //将钥匙打包，第一个为As+e，第二个为随机生成的生成元p
                             System.arraycopy(Poly.polyVectorToBytes(randomKeyVec),0,
                                     pkPair[i],0,paramsPolyvecBytes);
-                            //随机生成的生成元p
                             System.arraycopy(KyberPublicKeyOps.getRandomKeyGenerator(),0,
                                     pkPair[i],paramsPolyvecBytes,KyberParams.SYM_BYTES);
                         }

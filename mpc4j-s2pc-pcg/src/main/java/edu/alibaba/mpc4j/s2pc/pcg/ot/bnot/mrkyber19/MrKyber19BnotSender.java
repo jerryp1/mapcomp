@@ -158,7 +158,7 @@ public class MrKyber19BnotSender extends AbstractBnotSender {
                 sr.nextBytes(message);
                 //因为消息m必须要256bit，因此传递的密文中选取前128bit作为OT的输出
                 rbArray[index][i] = Arrays.copyOfRange(message,0,CommonConstants.BLOCK_BYTE_LENGTH);
-                //计算加密函数
+                //计算加密函数，加密函数的输入是明文、公钥（As+e）部分、生成元部分、随机数种子，安全参数k
                 cipherText[i] = KyberKeyOps.
                         encrypt(message,upperPkVector[i],
                                 Arrays.copyOfRange(upper[i],paramsPolyvecBytes,indcpaPublicKeyBytes),seed,paramsK);

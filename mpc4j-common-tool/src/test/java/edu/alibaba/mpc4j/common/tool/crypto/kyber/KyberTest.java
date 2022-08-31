@@ -28,6 +28,9 @@ public class KyberTest {
             sr.nextBytes(testBytes);
             byte[] cipherText = Indcpa.encrypt(testBytes,packedPki.getPackedPublicKey(),coins,k);
             byte[] plainText = Indcpa.decrypt(cipherText,packedPki.getPackedPrivateKey(),k);
+            for(int index = 0;index < 32;index++){
+                Assert.assertEquals(testBytes[index],plainText[index]);
+            }
             Assert.assertEquals(Arrays.toString(testBytes),Arrays.toString(plainText));
         }
     }

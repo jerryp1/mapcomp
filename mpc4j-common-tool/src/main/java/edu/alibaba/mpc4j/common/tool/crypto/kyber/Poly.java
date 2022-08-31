@@ -248,15 +248,13 @@ public final class Poly {
     /**
      * Applies forward number-theoretic transforms (NTT) to all elements of a
      * vector of polynomial
-     *
+     * 将多项式转移至NTT数域
      * @param r 多项式向量
-     * @return NTT域上多项式向量
      */
-    public static short[][] polyVectorNtt(short[][] r) {
+    public static void polyVectorNtt(short[][] r) {
         for (int i = 0; i < r.length; i++) {
             r[i] = Poly.polyNtt(r[i]);
         }
-        return r;
     }
 
     /**

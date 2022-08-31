@@ -151,6 +151,7 @@ public class MrKyber19BaseOtSender extends AbstractBaseOtSender {
 
             //计算密文
             byte [][] cipherText = new byte[2][];
+            //加密函数的输入是明文、公钥（As+e）部分、生成元部分、随机数种子，安全参数k
             cipherText[0] = KyberKeyOps.
                     encrypt(message0,upperA0,
                             Arrays.copyOfRange(upperR0,paramsPolyvecBytes,indcpaPublicKeyBytes),

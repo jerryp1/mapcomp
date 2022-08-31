@@ -6,28 +6,38 @@ package edu.alibaba.mpc4j.common.tool.crypto.kyber;
  * @author Steven K Fisher <swiftcryptollc@gmail.com>
  */
 public final class KyberParams {
+
     public final static int MATH_TWO = 2;
+
     public final static int MATH_THREE = 3;
+
     public final static int MATH_FOUR = 4;
+
     public final static int MATH_EIGHT = 8;
     /**
      * 多项式长度（short）256
      */
     public final static int PARAMS_N = 256;
+
     /**
      * 多项式计算乘法时使用的参数
      */
     public final static int PARAMS_NTT_NUM = 128;
+
     public final static int PARAMS_Q = 3329;
+
     public final static int PARAMS_QINV = 62209;
+
     /**
      * 多项式长度（Byte）384 = 128 * 3
      */
     public final static int POLY_BYTES = 384;
+
     /**
      * 决定噪声中hash值的长度(K=2)。
      */
     public final static int ETA_512 = 3;
+
     /**
      * 决定噪声中hash值的长度(K=3 或 4)。
      */

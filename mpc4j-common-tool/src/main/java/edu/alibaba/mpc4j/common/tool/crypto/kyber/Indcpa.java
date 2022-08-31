@@ -316,20 +316,19 @@ public class Indcpa {
             r[i] = Poly.getNoisePoly(coins, (byte) (i), paramsK);
             ep[i] = Poly.getNoisePoly(coins, (byte) (i + paramsK), 3);
         }
-        //这个是e2
+        //是e2
         short[] epp = Poly.getNoisePoly(coins, (byte) (paramsK * 2), 3);
-        //这个像是r转换到NTT域进行计算
+        //将r转换到NTT域进行计算
         Poly.polyVectorNtt(r);
         Poly.polyVectorReduce(r);
-        //Ar
+        //计算Ar
         for (int i = 0; i < paramsK; i++) {
             bp[i] = Poly.polyVectorPointWiseAccMont(at[i], r);
         }
         //（As+e）* r
         short[] v = Poly.polyVectorPointWiseAccMont(unpackedPublicKey.getPublicKeyPolyvec(), r);
-        //取消INV域
+        //取消（Ar）和（（As+e）*r）INV域
         Poly.polyVectorInvNttMont(bp);
-        //取消INV域
         Poly.polyInvNttMont(v);
         //Ar + e1
         Poly.polyVectorAdd(bp, ep);

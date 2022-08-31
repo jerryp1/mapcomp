@@ -3,7 +3,6 @@ package edu.alibaba.mpc4j.common.tool.crypto.kyber;
 import edu.alibaba.mpc4j.common.tool.crypto.prg.Prg;
 import edu.alibaba.mpc4j.common.tool.crypto.prg.PrgFactory;
 
-import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
 
 /**
