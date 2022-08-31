@@ -56,8 +56,12 @@ public class ZpPolyTest {
         configurationParams.add(new Object[]{ZpPolyType.NTL.name(), ZpPolyType.NTL,});
         // RINGS_NEWTON
         configurationParams.add(new Object[]{ZpPolyType.RINGS_NEWTON.name(), ZpPolyType.RINGS_NEWTON,});
+        // JDK_NEWTON
+        configurationParams.add(new Object[]{ZpPolyType.JDK_NEWTON.name(), ZpPolyType.JDK_NEWTON,});
         // RINGS_LAGRANGE
         configurationParams.add(new Object[]{ZpPolyType.RINGS_LAGRANGE.name(), ZpPolyType.RINGS_LAGRANGE,});
+        // JDK_LAGRANGE
+        configurationParams.add(new Object[]{ZpPolyType.JDK_LAGRANGE.name(), ZpPolyType.JDK_LAGRANGE,});
 
         return configurationParams;
     }

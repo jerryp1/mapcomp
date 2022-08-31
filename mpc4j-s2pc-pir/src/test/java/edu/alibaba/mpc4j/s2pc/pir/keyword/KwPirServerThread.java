@@ -11,42 +11,47 @@ import java.util.Map;
  * @author Liqiang Peng
  * @date 2022/6/22
  */
-public class KwPirServerThread extends Thread {
+public class KwPirServerThread<T> extends Thread {
     /**
-     * Keyword PIR协议服务端
+     * 服务端
      */
-    private final KwPirServer pirServer;
+    private final KwPirServer<T> server;
     /**
-     * 服务端元素和标签集合
+     * 关键字PIR配置项
      */
-    private final Map<ByteBuffer, ByteBuffer> serverElementMap;
+    private final KwPirParams kwPirParams;
     /**
-     * 元素字节长度
+     * 关键词标签映射
      */
-    private final int elementByteLength;
+    private final Map<T, ByteBuffer> keywordLabelMap;
     /**
      * 标签字节长度
      */
     private final int labelByteLength;
+    /**
+     * 重复次数
+     */
+    private final int repeatTime;
 
-    private final int retrievalNumber;
-
-    KwPirServerThread(KwPirServer pirServer, Map<ByteBuffer, ByteBuffer> serverElementMap, int elementByteLength,
-                      int labelByteLength, int retrievalNumber) {
-        this.pirServer = pirServer;
-        this.serverElementMap = serverElementMap;
-        this.elementByteLength = elementByteLength;
+    KwPirServerThread(KwPirServer<T> server, KwPirParams kwPirParams,
+                      Map<T, ByteBuffer> keywordLabelMap, int labelByteLength, int repeatTime) {
+        this.server = server;
+        this.kwPirParams = kwPirParams;
+        this.keywordLabelMap = keywordLabelMap;
         this.labelByteLength = labelByteLength;
-        this.retrievalNumber = retrievalNumber;
+        this.repeatTime = repeatTime;
     }
 
     @Override
     public void run() {
         try {
-            pirServer.getRpc().connect();
-            pirServer.init(serverElementMap, elementByteLength, labelByteLength);
-            pirServer.pir(retrievalNumber);
-            pirServer.getRpc().disconnect();
+            server.getRpc().connect();
+            server.init(kwPirParams, keywordLabelMap, labelByteLength);
+            server.getRpc().synchronize();
+            for (int i = 0; i < repeatTime; i++) {
+                server.pir();
+            }
+            server.getRpc().disconnect();
         } catch (MpcAbortException e) {
             e.printStackTrace();
         }

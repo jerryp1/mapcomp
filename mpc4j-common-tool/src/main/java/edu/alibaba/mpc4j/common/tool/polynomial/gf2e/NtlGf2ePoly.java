@@ -1,15 +1,11 @@
 package edu.alibaba.mpc4j.common.tool.polynomial.gf2e;
 
-import cc.redberry.rings.poly.FiniteField;
 import cc.redberry.rings.poly.univar.UnivariatePolynomialZp64;
 import edu.alibaba.mpc4j.common.tool.CommonConstants;
-import edu.alibaba.mpc4j.common.tool.galoisfield.gf2e.Gf2eManager;
 import edu.alibaba.mpc4j.common.tool.polynomial.gf2e.Gf2ePolyFactory.Gf2ePolyType;
 import edu.alibaba.mpc4j.common.tool.utils.BinaryUtils;
 import edu.alibaba.mpc4j.common.tool.utils.BytesUtils;
 import edu.alibaba.mpc4j.common.tool.utils.CommonUtils;
-
-import java.security.SecureRandom;
 
 /**
  * NTL实现的GF2E多项式插值抽象类。
@@ -17,34 +13,19 @@ import java.security.SecureRandom;
  * @author Weiran Liu
  * @date 2021/12/11
  */
-public class NtlGf2ePoly implements Gf2ePoly {
+public class NtlGf2ePoly extends AbstractGf2ePoly {
 
     static {
         System.loadLibrary(CommonConstants.MPC4J_NATIVE_TOOL_NAME);
     }
 
     /**
-     * 随机状态
-     */
-    private final SecureRandom secureRandom;
-    /**
      * 不可约多项式
      */
     private final byte[] minBytes;
-    /**
-     * 有限域比特长度
-     */
-    private final int l;
-    /**
-     * 有限域字节长度
-     */
-    protected final int byteL;
 
     NtlGf2ePoly(int l) {
-        FiniteField<UnivariatePolynomialZp64> finiteField = Gf2eManager.getFiniteField(l);
-        assert l > 0;
-        this.l = l;
-        byteL = CommonUtils.getByteLength(l);
+        super(l);
         // 设置不可约多项式，系数个数为l + 1
         int minNum = l + 1;
         int minByteNum = CommonUtils.getByteLength(minNum);
@@ -55,22 +36,11 @@ public class NtlGf2ePoly implements Gf2ePoly {
             boolean coefficient = minimalPolynomial.get(i) != 0L;
             BinaryUtils.setBoolean(minBytes, minRoundBytes - 1 - i, coefficient);
         }
-        secureRandom = new SecureRandom();
     }
 
     @Override
     public Gf2ePolyType getType() {
         return Gf2ePolyType.NTL;
-    }
-
-    @Override
-    public int getByteL() {
-        return byteL;
-    }
-
-    @Override
-    public int getL() {
-        return l;
     }
 
     @Override
@@ -109,7 +79,7 @@ public class NtlGf2ePoly implements Gf2ePoly {
                 coefficients[index] = BytesUtils.randomByteArray(l, byteL, secureRandom);
             }
             // 将最高位设置为1
-            coefficients[num][byteL - 1] = (byte)0x01;
+            coefficients[num][byteL - 1] = (byte) 0x01;
             return coefficients;
         }
         // 如果有插值数据，则调用本地函数完成插值
@@ -139,9 +109,5 @@ public class NtlGf2ePoly implements Gf2ePoly {
             assert validPoint(x);
         }
         return NtlNativeGf2ePoly.evaluate(minBytes, byteL, coefficients, xArray);
-    }
-
-    private boolean validPoint(byte[] point) {
-        return point.length == byteL && BytesUtils.isReduceByteArray(point, l);
     }
 }

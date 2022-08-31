@@ -5,8 +5,8 @@ import edu.alibaba.mpc4j.common.tool.EnvType;
 import edu.alibaba.mpc4j.common.tool.okve.ovdm.ecc.EccOvdmFactory;
 import edu.alibaba.mpc4j.common.tool.okve.ovdm.ecc.EccOvdmFactory.EccOvdmType;
 import edu.alibaba.mpc4j.common.tool.okve.ovdm.zp.ZpOvdmFactory.ZpOvdmType;
-import edu.alibaba.mpc4j.s2pc.pcg.ot.cot.rcot.RcotConfig;
-import edu.alibaba.mpc4j.s2pc.pcg.ot.cot.rcot.RcotFactory;
+import edu.alibaba.mpc4j.s2pc.pcg.ot.cot.core.CoreCotConfig;
+import edu.alibaba.mpc4j.s2pc.pcg.ot.cot.core.CoreCotFactory;
 import edu.alibaba.mpc4j.s2pc.pso.psu.PsuConfig;
 import edu.alibaba.mpc4j.s2pc.pso.psu.PsuFactory.PsuType;
 
@@ -18,9 +18,9 @@ import edu.alibaba.mpc4j.s2pc.pso.psu.PsuFactory.PsuType;
  */
 public class Zcl22PkePsuConfig implements PsuConfig {
     /**
-     * RCOT协议配置项
+     * 核COT协议配置项
      */
-    private final RcotConfig rcotConfig;
+    private final CoreCotConfig coreCotConfig;
     /**
      * Zp-OVDM类型
      */
@@ -39,7 +39,7 @@ public class Zcl22PkePsuConfig implements PsuConfig {
     private final int pipeSize;
 
     private Zcl22PkePsuConfig(Builder builder) {
-        rcotConfig = builder.rcotConfig;
+        coreCotConfig = builder.coreCotConfig;
         zpOvdmType = builder.zpOvdmType;
         eccOvdmType = builder.eccOvdmType;
         compressEncode = builder.compressEncode;
@@ -51,8 +51,8 @@ public class Zcl22PkePsuConfig implements PsuConfig {
         return PsuType.ZCL22_PKE;
     }
 
-    public RcotConfig getRcotConfig() {
-        return rcotConfig;
+    public CoreCotConfig getCoreCotConfig() {
+        return coreCotConfig;
     }
 
     public ZpOvdmType getZpOvdmType() {
@@ -73,23 +73,23 @@ public class Zcl22PkePsuConfig implements PsuConfig {
 
     @Override
     public EnvType getEnvType() {
-        return rcotConfig.getEnvType();
+        return coreCotConfig.getEnvType();
     }
 
     @Override
     public SecurityModel getSecurityModel() {
         SecurityModel securityModel = SecurityModel.SEMI_HONEST;
-        if (rcotConfig.getSecurityModel().compareTo(securityModel) < 0) {
-            securityModel = rcotConfig.getSecurityModel();
+        if (coreCotConfig.getSecurityModel().compareTo(securityModel) < 0) {
+            securityModel = coreCotConfig.getSecurityModel();
         }
         return securityModel;
     }
 
     public static class Builder implements org.apache.commons.lang3.builder.Builder<Zcl22PkePsuConfig> {
         /**
-         * RCOT协议配置项
+         * 核COT协议配置项
          */
-        private RcotConfig rcotConfig;
+        private CoreCotConfig coreCotConfig;
         /**
          * Zp-OVDM类型
          */
@@ -108,15 +108,15 @@ public class Zcl22PkePsuConfig implements PsuConfig {
         private int pipeSize;
 
         public Builder() {
-            rcotConfig = RcotFactory.createDefaultConfig(SecurityModel.SEMI_HONEST);
+            coreCotConfig = CoreCotFactory.createDefaultConfig(SecurityModel.SEMI_HONEST);
             zpOvdmType = ZpOvdmType.H3_SINGLETON_GCT;
             eccOvdmType = EccOvdmType.H3_SINGLETON_GCT;
             compressEncode = true;
             pipeSize = (1 << 8);
         }
 
-        public Builder setRcotConfig(RcotConfig rcotConfig) {
-            this.rcotConfig = rcotConfig;
+        public Builder setCoreCotConfig(CoreCotConfig coreCotConfig) {
+            this.coreCotConfig = coreCotConfig;
             return this;
         }
 

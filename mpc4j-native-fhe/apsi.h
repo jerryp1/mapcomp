@@ -33,4 +33,8 @@ jbyteArray JNICALL computeMatches(JNIEnv *env, jobjectArray database_coeffs, job
 jbyteArray JNICALL computeMatchesNaiveMethod(JNIEnv *env, jobjectArray database_coeffs, jobject query_list,
                                              jbyteArray relin_keys_bytes, jbyteArray params_bytes);
 
+jint JNICALL checkSealParams(JNIEnv *env, jint poly_modulus_degree, jlong plain_modulus, jintArray coeff_modulus_bits,
+                             jobjectArray jparent_powers, jintArray jsource_power_index, jint ps_low_power,
+                             jint max_bin_size);
+
 #endif //MPC3J_NATIVE_FHE_APSI_H

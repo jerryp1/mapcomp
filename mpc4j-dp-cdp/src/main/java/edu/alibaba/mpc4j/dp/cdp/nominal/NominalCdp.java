@@ -27,6 +27,11 @@ public interface NominalCdp extends Cdp {
      */
     String randomize(String noun);
 
+    /**
+     * 返回机制名称。
+     *
+     * @return 机制名称。
+     */
     @Override
     default String getMechanismName() {
         return "(ε = " + getEpsilon()

@@ -1,11 +1,9 @@
 package edu.alibaba.mpc4j.common.tool.polynomial.zp64;
 
 import edu.alibaba.mpc4j.common.tool.CommonConstants;
-import edu.alibaba.mpc4j.common.tool.galoisfield.Zp64.Zp64Manager;
 import edu.alibaba.mpc4j.common.tool.polynomial.zp64.Zp64PolyFactory.Zp64PolyType;
 import edu.alibaba.mpc4j.common.tool.utils.LongUtils;
 
-import java.math.BigInteger;
 import java.security.SecureRandom;
 
 /**
@@ -14,7 +12,7 @@ import java.security.SecureRandom;
  * @author Weiran Liu
  * @date 2022/8/5
  */
-class NtlZp64Poly implements Zp64Poly {
+class NtlZp64Poly extends AbstractZp64Poly {
 
     static {
         System.loadLibrary(CommonConstants.MPC4J_NATIVE_TOOL_NAME);
@@ -24,41 +22,20 @@ class NtlZp64Poly implements Zp64Poly {
      * 随机状态
      */
     private final SecureRandom secureRandom;
-    /**
-     * 质数p
-     */
-    private final long p;
-    /**
-     * 有限域比特长度
-     */
-    private final int l;
 
     public NtlZp64Poly(int l) {
-        p = Zp64Manager.getPrime(l);
-        this.l = l;
+        super(l);
         secureRandom = new SecureRandom();
     }
 
     public NtlZp64Poly(long p) {
-        assert BigInteger.valueOf(p).isProbablePrime(CommonConstants.STATS_BIT_LENGTH) : "p is probably not prime: " + p;
-        this.p = p;
-        this.l = LongUtils.ceilLog2(p) - 1;
+        super(p);
         secureRandom = new SecureRandom();
     }
 
     @Override
     public Zp64PolyType getType() {
         return Zp64PolyType.NTL;
-    }
-
-    @Override
-    public int getL() {
-        return l;
-    }
-
-    @Override
-    public long getPrime() {
-        return p;
     }
 
     @Override
@@ -179,8 +156,4 @@ class NtlZp64Poly implements Zp64Poly {
      * @return f(x_i)数组。
      */
     private static native long[] nativeEvaluate(long prime, long[] coefficients, long[] xArray);
-
-    private boolean validPoint(long point) {
-        return point >= 0 && point < p;
-    }
 }

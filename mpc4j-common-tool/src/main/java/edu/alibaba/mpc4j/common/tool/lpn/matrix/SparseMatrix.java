@@ -1106,6 +1106,7 @@ public class SparseMatrix {
         ArrayList<SparseVector> targetList = new ArrayList<>();
 
         int[] targetCounter = new int[originList.get(0).getBitSize()];
+        targetList.ensureCapacity(targetCounter.length);
 
         for (SparseVector array : originList) {
             array.indexCounter(targetCounter);

@@ -3,6 +3,7 @@ package edu.alibaba.mpc4j.s2pc.pcg.ot.bnot.np99;
 import edu.alibaba.mpc4j.common.rpc.desc.PtoDesc;
 import edu.alibaba.mpc4j.common.rpc.desc.PtoDescManager;
 
+
 /**
  * NP99-基础n选1-OT协议信息。该论文提供使用2选1-OT构造N选1-OT的方案。论文来源：
  * <p>

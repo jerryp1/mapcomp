@@ -114,6 +114,7 @@ public interface Gf2e {
      * 计算a * b，将结果置于a中。
      *
      * @param a 输入a。
+     * @param b 输入b。
      */
     void muli(byte[] a, byte[] b);
 

@@ -3,8 +3,6 @@ package edu.alibaba.mpc4j.s2pc.pcg.vole.zp64;
 import cc.redberry.rings.IntegersZp64;
 import edu.alibaba.mpc4j.common.tool.CommonConstants;
 import edu.alibaba.mpc4j.common.tool.utils.LongUtils;
-import edu.alibaba.mpc4j.s2pc.pcg.vole.zp64.vole.Zp64VoleReceiverOutput;
-import edu.alibaba.mpc4j.s2pc.pcg.vole.zp64.vole.Zp64VoleSenderOutput;
 import org.junit.Assert;
 
 import java.math.BigInteger;
@@ -12,7 +10,7 @@ import java.security.SecureRandom;
 import java.util.stream.IntStream;
 
 /**
- * ZP64-VOLE测试工具类。
+ * Zp64-VOLE测试工具类。
  *
  * @author Hanwen Feng
  * @date 2022/6/15
@@ -96,11 +94,7 @@ public class Zp64VoleTestUtils {
             IntStream.range(0, num).forEach(i -> {
                 long qt = zp64.add(senderOutput.getT(i), receiverOutput.getQ(i));
                 long xDelta = zp64.multiply(senderOutput.getX(i), receiverOutput.getDelta());
-                if (qt != xDelta) {
-                    System.out.println(i + " tuple is Incorrect! t:" + senderOutput.getT(i) + " q:"
-                            + receiverOutput.getQ(i) + " x:" + senderOutput.getX(i) + " delta:" + receiverOutput.getDelta()
-                            + " prime:" + senderOutput.getPrime());
-                }
+                Assert.assertEquals(qt, xDelta);
                 assert qt == xDelta;
             });
         }

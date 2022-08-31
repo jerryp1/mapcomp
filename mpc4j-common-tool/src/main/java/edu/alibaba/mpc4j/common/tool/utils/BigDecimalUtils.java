@@ -34,20 +34,27 @@ public class BigDecimalUtils {
         // Calculate the double-precision fraction of this number; as if the
         // binary point was left of the most significant '1' bit.
         // (Get the most significant 53 bits and divide by 2^53)
-        long mask = 1L << 52; // mantissa is 53 bits (including hidden bit)
+        // mantissa is 53 bits (including hidden bit)
+        long mask = 1L << 52;
         long mantissa = 0;
         int j = 0;
         for (int i = 1; i < 54; i++) {
             j = n - i;
-            if (j < 0) {break;}
+            if (j < 0) {
+                break;
+            }
 
-            if (val.testBit(j)) {mantissa |= mask;}
+            if (val.testBit(j)) {
+                mantissa |= mask;
+            }
             mask >>>= 1;
         }
         // Round up if next bit is 1.
-        if (j > 0 && val.testBit(j - 1)) {mantissa++;}
+        if (j > 0 && val.testBit(j - 1)) {
+            mantissa++;
+        }
 
-        double f = mantissa / (double)(1L << 52);
+        double f = mantissa / (double) (1L << 52);
 
         // Add the logarithm to the number of bits, and subtract 1 because the
         // number of bits is always higher than necessary for a number

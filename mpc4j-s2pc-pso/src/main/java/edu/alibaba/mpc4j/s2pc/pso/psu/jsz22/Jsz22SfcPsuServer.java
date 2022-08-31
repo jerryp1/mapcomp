@@ -18,8 +18,8 @@ import edu.alibaba.mpc4j.common.tool.hashbin.object.cuckoo.CuckooHashBinFactory;
 import edu.alibaba.mpc4j.common.tool.hashbin.object.cuckoo.CuckooHashBinFactory.CuckooHashBinType;
 import edu.alibaba.mpc4j.common.tool.utils.BytesUtils;
 import edu.alibaba.mpc4j.s2pc.pcg.ot.cot.CotSenderOutput;
-import edu.alibaba.mpc4j.s2pc.pcg.ot.cot.rcot.RcotFactory;
-import edu.alibaba.mpc4j.s2pc.pcg.ot.cot.rcot.RcotSender;
+import edu.alibaba.mpc4j.s2pc.pcg.ot.cot.core.CoreCotFactory;
+import edu.alibaba.mpc4j.s2pc.pcg.ot.cot.core.CoreCotSender;
 import edu.alibaba.mpc4j.s2pc.pso.oprf.OprfFactory;
 import edu.alibaba.mpc4j.s2pc.pso.oprf.OprfSender;
 import edu.alibaba.mpc4j.s2pc.pso.oprf.OprfSenderOutput;
@@ -52,9 +52,9 @@ public class Jsz22SfcPsuServer extends AbstractPsuServer {
      */
     private final OprfSender oprfSender;
     /**
-     * RCOT协议发送方
+     * 核COT协议发送方
      */
-    private final RcotSender rcotSender;
+    private final CoreCotSender coreCotSender;
     /**
      * 布谷鸟哈希类型
      */
@@ -106,8 +106,8 @@ public class Jsz22SfcPsuServer extends AbstractPsuServer {
         osnReceiver.addLogLevel();
         oprfSender = OprfFactory.createOprfSender(serverRpc, clientParty, config.getOprfConfig());
         oprfSender.addLogLevel();
-        rcotSender = RcotFactory.createSender(serverRpc, clientParty, config.getRcotConfig());
-        rcotSender.addLogLevel();
+        coreCotSender = CoreCotFactory.createSender(serverRpc, clientParty, config.getCoreCotConfig());
+        coreCotSender.addLogLevel();
         cuckooHashBinType = config.getCuckooHashBinType();
         cuckooHashNum = CuckooHashBinFactory.getHashNum(cuckooHashBinType);
         crhf = CrhfFactory.createInstance(getEnvType(), CrhfType.MMO);
@@ -119,7 +119,7 @@ public class Jsz22SfcPsuServer extends AbstractPsuServer {
         byte[] taskIdBytes = ByteBuffer.allocate(Long.BYTES).putLong(taskId).array();
         osnReceiver.setTaskId(taskIdPrf.getLong(1, taskIdBytes, Long.MAX_VALUE));
         oprfSender.setTaskId(taskIdPrf.getLong(2, taskIdBytes, Long.MAX_VALUE));
-        rcotSender.setTaskId(taskIdPrf.getLong(3, taskIdBytes, Long.MAX_VALUE));
+        coreCotSender.setTaskId(taskIdPrf.getLong(3, taskIdBytes, Long.MAX_VALUE));
     }
 
     @Override
@@ -127,7 +127,7 @@ public class Jsz22SfcPsuServer extends AbstractPsuServer {
         super.setParallel(parallel);
         osnReceiver.setParallel(parallel);
         oprfSender.setParallel(parallel);
-        rcotSender.setParallel(parallel);
+        coreCotSender.setParallel(parallel);
     }
 
     @Override
@@ -135,7 +135,7 @@ public class Jsz22SfcPsuServer extends AbstractPsuServer {
         super.addLogLevel();
         osnReceiver.addLogLevel();
         oprfSender.addLogLevel();
-        rcotSender.addLogLevel();
+        coreCotSender.addLogLevel();
     }
 
     @Override
@@ -150,7 +150,7 @@ public class Jsz22SfcPsuServer extends AbstractPsuServer {
         oprfSender.init(maxBinNum);
         byte[] delta = new byte[CommonConstants.BLOCK_BYTE_LENGTH];
         secureRandom.nextBytes(delta);
-        rcotSender.init(delta, maxServerElementSize);
+        coreCotSender.init(delta, maxServerElementSize);
         stopWatch.stop();
         long initTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
         stopWatch.reset();
@@ -247,7 +247,7 @@ public class Jsz22SfcPsuServer extends AbstractPsuServer {
 
         stopWatch.start();
         // 加密数据
-        CotSenderOutput cotSenderOutput = rcotSender.send(serverElementSize);
+        CotSenderOutput cotSenderOutput = coreCotSender.send(serverElementSize);
         Prg encPrg = PrgFactory.createInstance(envType, elementByteLength);
         IntStream encIntStream = IntStream.range(0, serverElementSize);
         encIntStream = parallel ? encIntStream.parallel() : encIntStream;

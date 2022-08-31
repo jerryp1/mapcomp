@@ -34,6 +34,7 @@ public interface PsuClient extends TwoPartyPto, SecurePto {
      * @param clientElementSet 客户端元素集合。
      * @param serverElementSize  服务端元素数量。
      * @param elementByteLength  元素字节长度。
+     * @return 协议输出结果。
      * @throws MpcAbortException 如果协议异常中止。
      */
     Set<ByteBuffer> psu(Set<ByteBuffer> clientElementSet, int serverElementSize, int elementByteLength)

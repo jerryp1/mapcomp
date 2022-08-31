@@ -9,11 +9,11 @@ import edu.alibaba.mpc4j.common.tool.CommonConstants;
 import edu.alibaba.mpc4j.common.tool.crypto.prp.Prp;
 import edu.alibaba.mpc4j.common.tool.crypto.prp.PrpFactory;
 import edu.alibaba.mpc4j.common.tool.utils.BytesUtils;
-import edu.alibaba.mpc4j.s2pc.aby.base.bc.BcConfig;
-import edu.alibaba.mpc4j.s2pc.aby.base.bc.bea91.Bea91BcConfig;
-import edu.alibaba.mpc4j.s2pc.pcg.btg.BtgConfig;
-import edu.alibaba.mpc4j.s2pc.pcg.btg.impl.cache.CacheBtgConfig;
-import edu.alibaba.mpc4j.s2pc.pcg.btg.impl.file.FileBtgConfig;
+import edu.alibaba.mpc4j.s2pc.aby.bc.BcConfig;
+import edu.alibaba.mpc4j.s2pc.aby.bc.bea91.Bea91BcConfig;
+import edu.alibaba.mpc4j.s2pc.pcg.mtg.z2.Z2MtgConfig;
+import edu.alibaba.mpc4j.s2pc.pcg.mtg.z2.impl.cache.CacheZ2MtgConfig;
+import edu.alibaba.mpc4j.s2pc.pcg.mtg.z2.impl.file.FileZ2MtgConfig;
 import edu.alibaba.mpc4j.s2pc.pso.oprp.lowmc.LowMcOprpConfig;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.time.StopWatch;
@@ -57,22 +57,22 @@ public class OprpTest {
     public static Collection<Object[]> configurations() {
         Collection<Object[]> configurationParams = new ArrayList<>();
         // LowMc (file)
-        BtgConfig fileBtgConfig = new FileBtgConfig.Builder(SecurityModel.SEMI_HONEST).build();
-        BcConfig fileBcConfig = new Bea91BcConfig.Builder().setBtgConfig(fileBtgConfig).build();
+        Z2MtgConfig fileZ2MtgConfig = new FileZ2MtgConfig.Builder(SecurityModel.SEMI_HONEST).build();
+        BcConfig fileBcConfig = new Bea91BcConfig.Builder().setZ2MtgConfig(fileZ2MtgConfig).build();
         configurationParams.add(new Object[] {
             OprpFactory.OprpType.LOW_MC.name() + " (file)",
             new LowMcOprpConfig.Builder().setBcConfig(fileBcConfig).build(),
         });
         // LowMc (ideal)
-        BtgConfig idealBtgConfig = new CacheBtgConfig.Builder(SecurityModel.IDEAL).build();
-        BcConfig idealBcConfig = new Bea91BcConfig.Builder().setBtgConfig(idealBtgConfig).build();
+        Z2MtgConfig idealZ2MtgConfig = new CacheZ2MtgConfig.Builder(SecurityModel.IDEAL).build();
+        BcConfig idealBcConfig = new Bea91BcConfig.Builder().setZ2MtgConfig(idealZ2MtgConfig).build();
         configurationParams.add(new Object[] {
             OprpFactory.OprpType.LOW_MC.name() + " (ideal)",
             new LowMcOprpConfig.Builder().setBcConfig(idealBcConfig).build(),
         });
         // LowMc (default)
-        BtgConfig defaultBtgConfig = new CacheBtgConfig.Builder(SecurityModel.SEMI_HONEST).build();
-        BcConfig defaultBcConfig = new Bea91BcConfig.Builder().setBtgConfig(defaultBtgConfig).build();
+        Z2MtgConfig defaultZ2MtgConfig = new CacheZ2MtgConfig.Builder(SecurityModel.SEMI_HONEST).build();
+        BcConfig defaultBcConfig = new Bea91BcConfig.Builder().setZ2MtgConfig(defaultZ2MtgConfig).build();
         configurationParams.add(new Object[] {
             OprpFactory.OprpType.LOW_MC.name() + " (default)",
             new LowMcOprpConfig.Builder().setBcConfig(defaultBcConfig).build(),

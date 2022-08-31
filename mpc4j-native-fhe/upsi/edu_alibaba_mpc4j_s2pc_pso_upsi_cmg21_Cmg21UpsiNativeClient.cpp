@@ -10,12 +10,11 @@ JNIEXPORT jobject JNICALL Java_edu_alibaba_mpc4j_s2pc_pso_upsi_cmg21_Cmg21UpsiNa
 }
 
 JNIEXPORT jobject JNICALL Java_edu_alibaba_mpc4j_s2pc_pso_upsi_cmg21_Cmg21UpsiNativeClient_generateQuery(
-        JNIEnv *env, jclass, jobjectArray jenc_arrays, jbyteArray params_bytes, jbyteArray pk_bytes,
-        jbyteArray sk_bytes) {
+        JNIEnv *env, jclass, jbyteArray params_bytes, jbyteArray pk_bytes, jbyteArray sk_bytes, jobjectArray jenc_arrays) {
     return generateQuery(env, jenc_arrays, params_bytes, pk_bytes, sk_bytes);
 }
 
 JNIEXPORT jlongArray JNICALL Java_edu_alibaba_mpc4j_s2pc_pso_upsi_cmg21_Cmg21UpsiNativeClient_decodeReply(
-        JNIEnv *env, jclass, jbyteArray response, jbyteArray params_bytes, jbyteArray sk_bytes) {
+        JNIEnv *env, jclass, jbyteArray params_bytes, jbyteArray sk_bytes, jbyteArray response) {
     return decodeReply(env, response, params_bytes, sk_bytes);
 }

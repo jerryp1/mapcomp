@@ -19,8 +19,8 @@ import edu.alibaba.mpc4j.common.tool.hashbin.object.cuckoo.CuckooHashBinFactory;
 import edu.alibaba.mpc4j.common.tool.hashbin.object.cuckoo.CuckooHashBinFactory.CuckooHashBinType;
 import edu.alibaba.mpc4j.common.tool.utils.BytesUtils;
 import edu.alibaba.mpc4j.s2pc.pcg.ot.cot.CotReceiverOutput;
-import edu.alibaba.mpc4j.s2pc.pcg.ot.cot.rcot.RcotFactory;
-import edu.alibaba.mpc4j.s2pc.pcg.ot.cot.rcot.RcotReceiver;
+import edu.alibaba.mpc4j.s2pc.pcg.ot.cot.core.CoreCotFactory;
+import edu.alibaba.mpc4j.s2pc.pcg.ot.cot.core.CoreCotReceiver;
 import edu.alibaba.mpc4j.s2pc.pso.oprf.OprfFactory;
 import edu.alibaba.mpc4j.s2pc.pso.oprf.OprfReceiver;
 import edu.alibaba.mpc4j.s2pc.pso.oprf.OprfReceiverOutput;
@@ -52,9 +52,9 @@ public class Jsz22SfcPsuClient extends AbstractPsuClient {
      */
     private final OprfReceiver oprfReceiver;
     /**
-     * RCOT接收方
+     * 核COT接收方
      */
-    private final RcotReceiver rcotReceiver;
+    private final CoreCotReceiver coreCotReceiver;
     /**
      * 布谷鸟哈希类型
      */
@@ -90,8 +90,8 @@ public class Jsz22SfcPsuClient extends AbstractPsuClient {
         osnSender.addLogLevel();
         oprfReceiver = OprfFactory.createOprfReceiver(clientRpc, serverParty, config.getOprfConfig());
         oprfReceiver.addLogLevel();
-        rcotReceiver = RcotFactory.createReceiver(clientRpc, serverParty, config.getRcotConfig());
-        rcotReceiver.addLogLevel();
+        coreCotReceiver = CoreCotFactory.createReceiver(clientRpc, serverParty, config.getCoreCotConfig());
+        coreCotReceiver.addLogLevel();
         cuckooHashBinType = config.getCuckooHashBinType();
         cuckooHashNum = CuckooHashBinFactory.getHashNum(cuckooHashBinType);
         crhf = CrhfFactory.createInstance(getEnvType(), CrhfType.MMO);
@@ -103,7 +103,7 @@ public class Jsz22SfcPsuClient extends AbstractPsuClient {
         byte[] taskIdBytes = ByteBuffer.allocate(Long.BYTES).putLong(taskId).array();
         osnSender.setTaskId(taskIdPrf.getLong(1, taskIdBytes, Long.MAX_VALUE));
         oprfReceiver.setTaskId(taskIdPrf.getLong(2, taskIdBytes, Long.MAX_VALUE));
-        rcotReceiver.setTaskId(taskIdPrf.getLong(3, taskIdBytes, Long.MAX_VALUE));
+        coreCotReceiver.setTaskId(taskIdPrf.getLong(3, taskIdBytes, Long.MAX_VALUE));
     }
 
     @Override
@@ -111,7 +111,7 @@ public class Jsz22SfcPsuClient extends AbstractPsuClient {
         super.setParallel(parallel);
         osnSender.setParallel(parallel);
         oprfReceiver.setParallel(parallel);
-        rcotReceiver.setParallel(parallel);
+        coreCotReceiver.setParallel(parallel);
     }
 
     @Override
@@ -119,7 +119,7 @@ public class Jsz22SfcPsuClient extends AbstractPsuClient {
         super.addLogLevel();
         osnSender.addLogLevel();
         oprfReceiver.addLogLevel();
-        rcotReceiver.addLogLevel();
+        coreCotReceiver.addLogLevel();
     }
 
     @Override
@@ -132,7 +132,7 @@ public class Jsz22SfcPsuClient extends AbstractPsuClient {
         // 初始化各个子协议
         osnSender.init(maxBinNum);
         oprfReceiver.init(maxBinNum);
-        rcotReceiver.init(maxServerElementSize);
+        coreCotReceiver.init(maxServerElementSize);
         stopWatch.stop();
         long initTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
         stopWatch.reset();
@@ -227,7 +227,7 @@ public class Jsz22SfcPsuClient extends AbstractPsuClient {
         info("{}{} Client Step 4/5 ({}ms)", ptoStepLogPrefix, getPtoDesc().getPtoName(), checkTime);
 
         stopWatch.start();
-        CotReceiverOutput cotReceiverOutput = rcotReceiver.receive(choiceArray);
+        CotReceiverOutput cotReceiverOutput = coreCotReceiver.receive(choiceArray);
         DataPacketHeader encHeader = new DataPacketHeader(
             taskId, getPtoDesc().getPtoId(), PtoStep.SERVER_SEND_ENC_ELEMENTS.ordinal(), extraInfo,
             otherParty().getPartyId(), ownParty().getPartyId()

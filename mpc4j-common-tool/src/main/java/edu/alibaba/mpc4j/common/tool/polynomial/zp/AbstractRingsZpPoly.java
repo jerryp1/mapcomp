@@ -1,12 +1,10 @@
 package edu.alibaba.mpc4j.common.tool.polynomial.zp;
 
-import cc.redberry.rings.IntegersZp;
+import cc.redberry.rings.Ring;
 import cc.redberry.rings.poly.univar.UnivariatePolynomial;
-import edu.alibaba.mpc4j.common.tool.galoisfield.zp.ZpManager;
 import edu.alibaba.mpc4j.common.tool.utils.BigIntegerUtils;
 
 import java.math.BigInteger;
-import java.security.SecureRandom;
 import java.util.Arrays;
 import java.util.stream.IntStream;
 
@@ -16,39 +14,15 @@ import java.util.stream.IntStream;
  * @author Weiran Liu
  * @date 2021/05/31
  */
-abstract class AbstractRingsZpPoly implements ZpPoly {
+abstract class AbstractRingsZpPoly extends AbstractZpPoly {
     /**
-     * 随机状态
+     * Zp有限域
      */
-    private final SecureRandom secureRandom;
-    /**
-     * Zp64有限域
-     */
-    protected final IntegersZp finiteField;
-    /**
-     * 有限域模数p
-     */
-    private final BigInteger p;
-    /**
-     * 有限域比特长度
-     */
-    private final int l;
+    protected final Ring<cc.redberry.rings.bigint.BigInteger> finiteField;
 
-    AbstractRingsZpPoly(int l) {
-        p = ZpManager.getPrime(l);
-        finiteField = ZpManager.getFiniteField(l);
-        this.l = l;
-        secureRandom = new SecureRandom();
-    }
-
-    @Override
-    public int getL() {
-        return l;
-    }
-
-    @Override
-    public BigInteger getPrime() {
-        return p;
+    AbstractRingsZpPoly(int l, Ring<cc.redberry.rings.bigint.BigInteger> finiteField) {
+        super(l);
+        this.finiteField = finiteField;
     }
 
     @Override
@@ -231,9 +205,5 @@ abstract class AbstractRingsZpPoly implements ZpPoly {
             .toArray(cc.redberry.rings.bigint.BigInteger[]::new);
 
         return UnivariatePolynomial.create(finiteField, polyCoefficients);
-    }
-
-    private boolean validPoint(BigInteger point) {
-        return BigIntegerUtils.greaterOrEqual(point, BigInteger.ZERO) && BigIntegerUtils.less(point, p);
     }
 }

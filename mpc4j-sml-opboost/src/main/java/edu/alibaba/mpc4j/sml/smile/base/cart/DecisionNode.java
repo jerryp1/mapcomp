@@ -75,7 +75,9 @@ public class DecisionNode extends LeafNode {
         StringBuilder line = new StringBuilder();
 
         // indent
-        for (int i = 0; i < depth; i++) line.append(" ");
+        for (int i = 0; i < depth; i++) {
+            line.append(" ");
+        }
         line.append(id).append(") ");
 
         // split
@@ -120,13 +122,13 @@ public class DecisionNode extends LeafNode {
 
         switch (rule) {
             case GINI:
-                double squared_sum = 0;
+                double squaredSum = 0;
                 for (int c : count) {
                     if (c > 0) {
-                        squared_sum += (double) c * c;
+                        squaredSum += (double) c * c;
                     }
                 }
-                impurity = 1 - squared_sum / ((double) size * size);
+                impurity = 1 - squaredSum / ((double) size * size);
                 break;
 
             case ENTROPY:
@@ -141,6 +143,9 @@ public class DecisionNode extends LeafNode {
             case CLASSIFICATION_ERROR:
                 impurity = Math.abs(1 - MathEx.max(count) / (double) size);
                 break;
+
+            default:
+                throw new IllegalStateException();
         }
 
         return impurity;

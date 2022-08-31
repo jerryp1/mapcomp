@@ -5,10 +5,10 @@ import edu.alibaba.mpc4j.common.rpc.Party;
 import edu.alibaba.mpc4j.common.rpc.Rpc;
 import edu.alibaba.mpc4j.s2pc.pcg.ot.cot.AbstractCotReceiver;
 import edu.alibaba.mpc4j.s2pc.pcg.ot.cot.CotReceiverOutput;
-import edu.alibaba.mpc4j.s2pc.pcg.ot.cot.nccot.NcCotFactory;
-import edu.alibaba.mpc4j.s2pc.pcg.ot.cot.nccot.NcCotReceiver;
-import edu.alibaba.mpc4j.s2pc.pcg.ot.cot.pcot.PcotFactory;
-import edu.alibaba.mpc4j.s2pc.pcg.ot.cot.pcot.PcotReceiver;
+import edu.alibaba.mpc4j.s2pc.pcg.ot.cot.nc.NcCotFactory;
+import edu.alibaba.mpc4j.s2pc.pcg.ot.cot.nc.NcCotReceiver;
+import edu.alibaba.mpc4j.s2pc.pcg.ot.cot.pre.PreCotFactory;
+import edu.alibaba.mpc4j.s2pc.pcg.ot.cot.pre.PreCotReceiver;
 
 import java.nio.ByteBuffer;
 import java.util.concurrent.TimeUnit;
@@ -21,13 +21,13 @@ import java.util.concurrent.TimeUnit;
  */
 public class CacheCotReceiver extends AbstractCotReceiver {
     /**
-     * NCCOT接收方
+     * NC-COT接收方
      */
     private final NcCotReceiver ncCotReceiver;
     /**
-     * PCOT协议接收方
+     * 预计算COT协议接收方
      */
-    private final PcotReceiver pcotReceiver;
+    private final PreCotReceiver preCotReceiver;
     /**
      * 更新时的执行轮数
      */
@@ -39,33 +39,33 @@ public class CacheCotReceiver extends AbstractCotReceiver {
 
     public CacheCotReceiver(Rpc receiverRpc, Party senderParty, CacheCotConfig config) {
         super(CacheCotPtoDesc.getInstance(), receiverRpc, senderParty, config);
-        ncCotReceiver = NcCotFactory.createReceiver(receiverRpc, senderParty, config.getNccotConfig());
+        ncCotReceiver = NcCotFactory.createReceiver(receiverRpc, senderParty, config.getNcCotConfig());
         ncCotReceiver.addLogLevel();
-        pcotReceiver = PcotFactory.createReceiver(receiverRpc, senderParty, config.getPcotConfig());
-        pcotReceiver.addLogLevel();
+        preCotReceiver = PreCotFactory.createReceiver(receiverRpc, senderParty, config.getPreCotConfig());
+        preCotReceiver.addLogLevel();
     }
 
     @Override
     public void setTaskId(long taskId) {
         super.setTaskId(taskId);
-        // NCCOT协议和PCOT协议需要使用不同的taskID
+        // NC-COT协议和预计算COT协议需要使用不同的taskID
         byte[] taskIdBytes = ByteBuffer.allocate(Long.BYTES).putLong(taskId).array();
         ncCotReceiver.setTaskId(taskIdPrf.getLong(0, taskIdBytes, Long.MAX_VALUE));
-        pcotReceiver.setTaskId(taskIdPrf.getLong(1, taskIdBytes, Long.MAX_VALUE));
+        preCotReceiver.setTaskId(taskIdPrf.getLong(1, taskIdBytes, Long.MAX_VALUE));
     }
 
     @Override
     public void setParallel(boolean parallel) {
         super.setParallel(parallel);
         ncCotReceiver.setParallel(parallel);
-        pcotReceiver.setParallel(parallel);
+        preCotReceiver.setParallel(parallel);
     }
 
     @Override
     public void addLogLevel() {
         super.addLogLevel();
         ncCotReceiver.addLogLevel();
-        pcotReceiver.addLogLevel();
+        preCotReceiver.addLogLevel();
     }
 
     @Override
@@ -86,7 +86,7 @@ public class CacheCotReceiver extends AbstractCotReceiver {
         }
         ncCotReceiver.init(updateRoundNum);
         buffer = CotReceiverOutput.createEmpty();
-        pcotReceiver.init();
+        preCotReceiver.init();
         stopWatch.stop();
         long initTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
         stopWatch.reset();
@@ -122,12 +122,12 @@ public class CacheCotReceiver extends AbstractCotReceiver {
         info("{}{} Recv. Step 1/2 ({}ms)", ptoStepLogPrefix, getPtoDesc().getPtoName(), splitTripleTime);
 
         stopWatch.start();
-        // 应用PCOT协议纠正选择比特
-        receiverOutput = pcotReceiver.receive(receiverOutput, choices);
+        // 应用预计算COT协议纠正选择比特
+        receiverOutput = preCotReceiver.receive(receiverOutput, choices);
         stopWatch.stop();
-        long pcotTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
+        long preCotTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
         stopWatch.reset();
-        info("{}{} Recv. Step 2/2 ({}ms)", ptoStepLogPrefix, getPtoDesc().getPtoName(), pcotTime);
+        info("{}{} Recv. Step 2/2 ({}ms)", ptoStepLogPrefix, getPtoDesc().getPtoName(), preCotTime);
 
         info("{}{} Recv. end", ptoEndLogPrefix, getPtoDesc().getPtoName());
         return receiverOutput;

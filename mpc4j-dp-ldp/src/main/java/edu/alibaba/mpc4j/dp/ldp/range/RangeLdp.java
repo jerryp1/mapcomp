@@ -24,6 +24,12 @@ public interface RangeLdp extends Ldp {
      */
     double getEpsilon();
 
+    /**
+     * 返回机制名称。
+     *
+     * @return 机制名称。
+     */
+    @Override
     default String getMechanismName() {
         return "(ε = " + getEpsilon() + ")-" + getClass().getSimpleName();
     }

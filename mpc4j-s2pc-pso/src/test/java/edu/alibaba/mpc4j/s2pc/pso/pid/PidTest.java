@@ -28,7 +28,7 @@ import java.util.Set;
 import java.util.concurrent.TimeUnit;
 
 /**
- * 基础OT协议测试。注意，PID参与方的输入集合大小至少大于1。
+ * PID协议测试。注意，PID参与方的输入集合大小至少大于1。
  *
  * @author Weiran Liu
  * @date 2019/07/12

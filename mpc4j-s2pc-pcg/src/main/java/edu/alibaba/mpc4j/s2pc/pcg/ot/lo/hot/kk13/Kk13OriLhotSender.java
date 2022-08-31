@@ -15,8 +15,8 @@ import edu.alibaba.mpc4j.common.tool.utils.BytesUtils;
 import edu.alibaba.mpc4j.s2pc.pcg.ot.lo.hot.AbstractLhotSender;
 import edu.alibaba.mpc4j.s2pc.pcg.ot.lo.hot.LhotSenderOutput;
 import edu.alibaba.mpc4j.s2pc.pcg.ot.lo.hot.kk13.Kk13OriLhotPtoDesc.PtoStep;
-import edu.alibaba.mpc4j.s2pc.pcg.ot.cot.rcot.RcotFactory;
-import edu.alibaba.mpc4j.s2pc.pcg.ot.cot.rcot.RcotReceiver;
+import edu.alibaba.mpc4j.s2pc.pcg.ot.cot.core.CoreCotFactory;
+import edu.alibaba.mpc4j.s2pc.pcg.ot.cot.core.CoreCotReceiver;
 import edu.alibaba.mpc4j.s2pc.pcg.ot.cot.CotReceiverOutput;
 
 import java.util.List;
@@ -33,7 +33,7 @@ public class Kk13OriLhotSender extends AbstractLhotSender {
     /**
      * COT协议接收方
      */
-    private final RcotReceiver rcotReceiver;
+    private final CoreCotReceiver coreCotReceiver;
     /**
      * 抗关联哈希函数
      */
@@ -45,27 +45,27 @@ public class Kk13OriLhotSender extends AbstractLhotSender {
 
     public Kk13OriLhotSender(Rpc senderRpc, Party receiverParty, Kk13OriLhotConfig config) {
         super(Kk13OriLhotPtoDesc.getInstance(), senderRpc, receiverParty, config);
-        rcotReceiver = RcotFactory.createReceiver(senderRpc, receiverParty, config.getRcotConfig());
-        rcotReceiver.addLogLevel();
+        coreCotReceiver = CoreCotFactory.createReceiver(senderRpc, receiverParty, config.getCoreCotConfig());
+        coreCotReceiver.addLogLevel();
         crhf = CrhfFactory.createInstance(envType, CrhfFactory.CrhfType.MMO);
     }
 
     @Override
     public void setTaskId(long taskId) {
         super.setTaskId(taskId);
-        rcotReceiver.setTaskId(taskId);
+        coreCotReceiver.setTaskId(taskId);
     }
 
     @Override
     public void setParallel(boolean parallel) {
         super.setParallel(parallel);
-        rcotReceiver.setParallel(parallel);
+        coreCotReceiver.setParallel(parallel);
     }
 
     @Override
     public void addLogLevel() {
         super.addLogLevel();
-        rcotReceiver.addLogLevel();
+        coreCotReceiver.addLogLevel();
     }
 
     @Override
@@ -74,8 +74,8 @@ public class Kk13OriLhotSender extends AbstractLhotSender {
         info("{}{} Send. Init begin", ptoBeginLogPrefix, getPtoDesc().getPtoName());
 
         stopWatch.start();
-        rcotReceiver.init(outputBitLength);
-        cotReceiverOutput = rcotReceiver.receive(deltaBinary);
+        coreCotReceiver.init(outputBitLength);
+        cotReceiverOutput = coreCotReceiver.receive(deltaBinary);
         stopWatch.stop();
         long initTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
         stopWatch.reset();
@@ -91,8 +91,8 @@ public class Kk13OriLhotSender extends AbstractLhotSender {
         info("{}{} Send. Init begin", ptoBeginLogPrefix, getPtoDesc().getPtoName());
 
         stopWatch.start();
-        rcotReceiver.init(deltaBinary.length);
-        cotReceiverOutput = rcotReceiver.receive(deltaBinary);
+        coreCotReceiver.init(deltaBinary.length);
+        cotReceiverOutput = coreCotReceiver.receive(deltaBinary);
         stopWatch.stop();
         long initTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
         stopWatch.reset();

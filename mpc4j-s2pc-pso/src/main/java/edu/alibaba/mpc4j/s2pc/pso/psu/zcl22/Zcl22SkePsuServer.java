@@ -19,12 +19,12 @@ import edu.alibaba.mpc4j.common.tool.okve.ovdm.gf2e.Gf2eOvdmFactory;
 import edu.alibaba.mpc4j.common.tool.okve.ovdm.gf2e.Gf2eOvdmFactory.Gf2eOvdmType;
 import edu.alibaba.mpc4j.common.tool.utils.BytesUtils;
 import edu.alibaba.mpc4j.common.tool.utils.LongUtils;
-import edu.alibaba.mpc4j.s2pc.aby.base.bc.BcBitVector;
-import edu.alibaba.mpc4j.s2pc.aby.base.bc.BcFactory;
-import edu.alibaba.mpc4j.s2pc.aby.base.bc.BcParty;
+import edu.alibaba.mpc4j.s2pc.aby.bc.BcSquareVector;
+import edu.alibaba.mpc4j.s2pc.aby.bc.BcFactory;
+import edu.alibaba.mpc4j.s2pc.aby.bc.BcParty;
 import edu.alibaba.mpc4j.s2pc.pcg.ot.cot.CotSenderOutput;
-import edu.alibaba.mpc4j.s2pc.pcg.ot.cot.rcot.RcotFactory;
-import edu.alibaba.mpc4j.s2pc.pcg.ot.cot.rcot.RcotSender;
+import edu.alibaba.mpc4j.s2pc.pcg.ot.cot.core.CoreCotFactory;
+import edu.alibaba.mpc4j.s2pc.pcg.ot.cot.core.CoreCotSender;
 import edu.alibaba.mpc4j.s2pc.pso.oprp.OprpFactory;
 import edu.alibaba.mpc4j.s2pc.pso.oprp.OprpReceiver;
 import edu.alibaba.mpc4j.s2pc.pso.oprp.OprpReceiverOutput;
@@ -54,9 +54,9 @@ public class Zcl22SkePsuServer extends AbstractPsuServer {
      */
     private final OprpReceiver oprpReceiver;
     /**
-     * RCOT协议发送方
+     * 核COT协议发送方
      */
-    private final RcotSender rcotSender;
+    private final CoreCotSender coreCotSender;
     /**
      * GF2X-OVDM类型
      */
@@ -80,8 +80,8 @@ public class Zcl22SkePsuServer extends AbstractPsuServer {
         bcSender.addLogLevel();
         oprpReceiver = OprpFactory.createReceiver(serverRpc, clientParty, config.getOprpConfig());
         oprpReceiver.addLogLevel();
-        rcotSender = RcotFactory.createSender(serverRpc, clientParty, config.getRcotConfig());
-        rcotSender.addLogLevel();
+        coreCotSender = CoreCotFactory.createSender(serverRpc, clientParty, config.getCoreCotConfig());
+        coreCotSender.addLogLevel();
         gf2eOvdmType = config.getGf2eOvdmType();
         crhf = CrhfFactory.createInstance(getEnvType(), CrhfType.MMO);
     }
@@ -92,7 +92,7 @@ public class Zcl22SkePsuServer extends AbstractPsuServer {
         byte[] taskIdBytes = ByteBuffer.allocate(Long.BYTES).putLong(taskId).array();
         bcSender.setTaskId(taskIdPrf.getLong(0, taskIdBytes, Long.MAX_VALUE));
         oprpReceiver.setTaskId(taskIdPrf.getLong(1, taskIdBytes, Long.MAX_VALUE));
-        rcotSender.setTaskId(taskIdPrf.getLong(2, taskIdBytes, Long.MAX_VALUE));
+        coreCotSender.setTaskId(taskIdPrf.getLong(2, taskIdBytes, Long.MAX_VALUE));
     }
 
     @Override
@@ -100,7 +100,7 @@ public class Zcl22SkePsuServer extends AbstractPsuServer {
         super.setParallel(parallel);
         bcSender.setParallel(parallel);
         oprpReceiver.setParallel(parallel);
-        rcotSender.setParallel(parallel);
+        coreCotSender.setParallel(parallel);
     }
 
     @Override
@@ -108,7 +108,7 @@ public class Zcl22SkePsuServer extends AbstractPsuServer {
         super.addLogLevel();
         bcSender.addLogLevel();
         oprpReceiver.addLogLevel();
-        rcotSender.addLogLevel();
+        coreCotSender.addLogLevel();
     }
 
     @Override
@@ -129,7 +129,7 @@ public class Zcl22SkePsuServer extends AbstractPsuServer {
         // 其他部分初始化
         byte[] delta = new byte[CommonConstants.BLOCK_BYTE_LENGTH];
         secureRandom.nextBytes(delta);
-        rcotSender.init(delta, maxServerElementSize);
+        coreCotSender.init(delta, maxServerElementSize);
         stopWatch.stop();
         long initTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
         stopWatch.reset();
@@ -196,7 +196,7 @@ public class Zcl22SkePsuServer extends AbstractPsuServer {
         info("{}{} Server Step 2/3 ({}ms)", ptoStepLogPrefix, getPtoDesc().getPtoName(), peqtTime);
 
         stopWatch.start();
-        CotSenderOutput cotSenderOutput = rcotSender.send(serverElementSize);
+        CotSenderOutput cotSenderOutput = coreCotSender.send(serverElementSize);
         Prg encPrg = PrgFactory.createInstance(envType, elementByteLength);
         IntStream encIntStream = IntStream.range(0, serverElementSize);
         encIntStream = parallel ? encIntStream.parallel() : encIntStream;
@@ -247,10 +247,10 @@ public class Zcl22SkePsuServer extends AbstractPsuServer {
         TransBitMatrix transposeTransBitMatrix = transBitMatrix.transpose();
         int logSize = LongUtils.ceilLog2(serverElementSize);
         // 服务端结构初始化全为1
-        BcBitVector serverPeqtShares = BcBitVector.createOnes(serverElementSize);
+        BcSquareVector serverPeqtShares = BcSquareVector.createOnes(serverElementSize);
         for (int index = 0; index < CommonConstants.BLOCK_BIT_LENGTH - logSize; index++) {
             byte[] bits = transposeTransBitMatrix.getColumn(index);
-            BcBitVector notBits = bcSender.not(BcBitVector.create(bits, serverElementSize, false));
+            BcSquareVector notBits = bcSender.not(BcSquareVector.create(bits, serverElementSize, false));
             serverPeqtShares = bcSender.and(serverPeqtShares, notBits);
         }
         return serverPeqtShares.getBytes();

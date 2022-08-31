@@ -2,8 +2,8 @@ package edu.alibaba.mpc4j.s2pc.pso.oprf.kkrt16;
 
 import edu.alibaba.mpc4j.common.rpc.desc.SecurityModel;
 import edu.alibaba.mpc4j.common.tool.EnvType;
-import edu.alibaba.mpc4j.s2pc.pcg.ot.cot.rcot.RcotConfig;
-import edu.alibaba.mpc4j.s2pc.pcg.ot.cot.rcot.RcotFactory;
+import edu.alibaba.mpc4j.s2pc.pcg.ot.cot.core.CoreCotConfig;
+import edu.alibaba.mpc4j.s2pc.pcg.ot.cot.core.CoreCotFactory;
 import edu.alibaba.mpc4j.s2pc.pso.oprf.OprfConfig;
 import edu.alibaba.mpc4j.s2pc.pso.oprf.OprfFactory;
 
@@ -15,16 +15,16 @@ import edu.alibaba.mpc4j.s2pc.pso.oprf.OprfFactory;
  */
 public class Kkrt16OptOprfConfig implements OprfConfig {
     /**
-     * RCOT协议配置项
+     * 核COT协议配置项
      */
-    private final RcotConfig rcotConfig;
+    private final CoreCotConfig coreCotConfig;
 
     private Kkrt16OptOprfConfig(Builder builder) {
-        rcotConfig = builder.rcotConfig;
+        coreCotConfig = builder.coreCotConfig;
     }
 
-    public RcotConfig getRcotConfig() {
-        return rcotConfig;
+    public CoreCotConfig getCoreCotConfig() {
+        return coreCotConfig;
     }
 
     @Override
@@ -34,30 +34,30 @@ public class Kkrt16OptOprfConfig implements OprfConfig {
 
     @Override
     public EnvType getEnvType() {
-        return rcotConfig.getEnvType();
+        return coreCotConfig.getEnvType();
     }
 
     @Override
     public SecurityModel getSecurityModel() {
         SecurityModel securityModel = SecurityModel.SEMI_HONEST;
-        if (rcotConfig.getSecurityModel().compareTo(securityModel) < 0) {
-            securityModel = rcotConfig.getSecurityModel();
+        if (coreCotConfig.getSecurityModel().compareTo(securityModel) < 0) {
+            securityModel = coreCotConfig.getSecurityModel();
         }
         return securityModel;
     }
 
     public static class Builder implements org.apache.commons.lang3.builder.Builder<Kkrt16OptOprfConfig> {
         /**
-         * RCOT协议配置项
+         * 核COT协议配置项
          */
-        private RcotConfig rcotConfig;
+        private CoreCotConfig coreCotConfig;
 
         public Builder() {
-            rcotConfig = RcotFactory.createDefaultConfig(SecurityModel.SEMI_HONEST);
+            coreCotConfig = CoreCotFactory.createDefaultConfig(SecurityModel.SEMI_HONEST);
         }
 
-        public Builder setRcotConfig(RcotConfig rcotConfig) {
-            this.rcotConfig = rcotConfig;
+        public Builder setCoreCotConfig(CoreCotConfig coreCotConfig) {
+            this.coreCotConfig = coreCotConfig;
             return this;
         }
 

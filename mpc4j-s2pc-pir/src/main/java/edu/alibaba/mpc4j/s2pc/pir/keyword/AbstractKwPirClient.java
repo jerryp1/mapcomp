@@ -5,11 +5,10 @@ import edu.alibaba.mpc4j.common.rpc.Rpc;
 import edu.alibaba.mpc4j.common.rpc.desc.PtoDesc;
 import edu.alibaba.mpc4j.common.rpc.pto.AbstractSecureTwoPartyPto;
 import edu.alibaba.mpc4j.common.tool.CommonConstants;
+import edu.alibaba.mpc4j.common.tool.utils.ObjectUtils;
 
 import java.nio.ByteBuffer;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Collectors;
 
 /**
@@ -18,27 +17,15 @@ import java.util.stream.Collectors;
  * @author Liqiang Peng
  * @date 2022/6/20
  */
-public abstract class AbstractKwPirClient extends AbstractSecureTwoPartyPto implements KwPirClient {
+public abstract class AbstractKwPirClient<T> extends AbstractSecureTwoPartyPto implements KwPirClient<T> {
     /**
      * 配置项
      */
     private final KwPirConfig config;
     /**
-     * 服务端元素集合
+     * 客户端单次查询最大查询关键词数目
      */
-    protected ArrayList<ByteBuffer> serverElementArrayList;
-    /**
-     * 客户端元素数量
-     */
-    protected int clientElementSize;
-    /**
-     * 客户端单次查询最大查询元素数目
-     */
-    protected int maxClientRetrievalElementSize;
-    /**
-     * 元素字节长度
-     */
-    protected int elementByteLength;
+    protected int maxRetrievalSize;
     /**
      * 标签字节长度
      */
@@ -48,9 +35,17 @@ public abstract class AbstractKwPirClient extends AbstractSecureTwoPartyPto impl
      */
     protected ByteBuffer botElementByteBuffer;
     /**
-     * 查询次数
+     * 客户端关键词数组
      */
-    protected int retrievalNumber;
+    protected ArrayList<ByteBuffer> retrievalArrayList;
+    /**
+     * 关键词字节数组和关键词对象映射
+     */
+    protected Map<ByteBuffer, T> byteArrayObjectMap;
+    /**
+     * 客户端关键词数量
+     */
+    protected int retrievalSize;
 
     protected AbstractKwPirClient(PtoDesc ptoDesc, Rpc clientRpc, Party serverParty, KwPirConfig config) {
         super(ptoDesc, clientRpc, serverParty, config);
@@ -58,41 +53,42 @@ public abstract class AbstractKwPirClient extends AbstractSecureTwoPartyPto impl
     }
 
     @Override
-    public KwPirFactory.PirType getPtoType() {
+    public KwPirFactory.KwPirType getPtoType() {
         return config.getProType();
     }
 
-    protected void setInitInput(Set<ByteBuffer> serverElementSet, int elementByteLength, int labelByteLength,
-                                int maxClientRetrievalElementSize) {
-        assert elementByteLength >= CommonConstants.STATS_BYTE_LENGTH;
-        this.elementByteLength = elementByteLength;
+    protected void setInitInput(KwPirParams kwPirParams, int labelByteLength) {
         assert labelByteLength >= 1;
         this.labelByteLength = labelByteLength;
+        maxRetrievalSize = kwPirParams.maxRetrievalSize();
         // 设置特殊空元素
-        byte[] botElementByteArray = new byte[elementByteLength];
+        byte[] botElementByteArray = new byte[CommonConstants.STATS_BYTE_LENGTH];
         Arrays.fill(botElementByteArray, (byte)0xFF);
         botElementByteBuffer = ByteBuffer.wrap(botElementByteArray);
-        assert serverElementSet.size() >= 1;
-        this.serverElementArrayList = serverElementSet.stream()
-            .peek(serverElement -> {
-                assert serverElement.array().length == elementByteLength;
-                assert !serverElement.equals(botElementByteBuffer) : "input equals ⊥";
-            })
-            .collect(Collectors.toCollection(ArrayList::new));
-        assert maxClientRetrievalElementSize > 0;
-        this.maxClientRetrievalElementSize = maxClientRetrievalElementSize;
         extraInfo++;
         initialized = false;
     }
 
-    protected void setPtoInput(int retrievalNumber, int retrievalElementSize) {
+    protected void setPtoInput(Set<T> clientKeywordSet) {
         if (!initialized) {
             throw new IllegalStateException("Need init...");
         }
-        assert retrievalElementSize <= maxClientRetrievalElementSize && retrievalElementSize > 0;
-        this.clientElementSize = retrievalElementSize;
-        assert retrievalNumber > 0;
-        this.retrievalNumber = retrievalNumber;
+        retrievalSize = clientKeywordSet.size();
+        assert retrievalSize > 0 && retrievalSize <= maxRetrievalSize
+            : "ClientKeywordSize must be in range (0, " + maxRetrievalSize + "]: " + retrievalSize;
+        retrievalArrayList = clientKeywordSet.stream()
+            .map(ObjectUtils::objectToByteArray)
+            .map(ByteBuffer::wrap)
+            .peek(clientElement -> {
+                assert !clientElement.equals(botElementByteBuffer) : "input equals ⊥";
+            })
+            .collect(Collectors.toCollection(ArrayList::new));
+        byteArrayObjectMap = new HashMap<>(retrievalSize);
+        clientKeywordSet.forEach(clientElementObject ->
+            byteArrayObjectMap.put(
+                ByteBuffer.wrap(ObjectUtils.objectToByteArray(clientElementObject)), clientElementObject
+            )
+        );
         extraInfo++;
     }
 }

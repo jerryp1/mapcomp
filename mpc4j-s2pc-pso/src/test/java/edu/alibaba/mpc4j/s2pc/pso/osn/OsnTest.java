@@ -9,7 +9,7 @@ import edu.alibaba.mpc4j.common.tool.CommonConstants;
 import edu.alibaba.mpc4j.common.tool.benes.BenesNetworkUtils;
 import edu.alibaba.mpc4j.common.tool.utils.BytesUtils;
 import edu.alibaba.mpc4j.s2pc.pcg.ot.cot.impl.cache.CacheCotConfig;
-import edu.alibaba.mpc4j.s2pc.pcg.ot.cot.impl.rto.RtoCotConfig;
+import edu.alibaba.mpc4j.s2pc.pcg.ot.cot.impl.direct.DirectCotConfig;
 import edu.alibaba.mpc4j.s2pc.pso.osn.gmr21.Gmr21OsnConfig;
 import edu.alibaba.mpc4j.s2pc.pso.osn.ms13.Ms13OsnConfig;
 import org.apache.commons.lang3.StringUtils;
@@ -72,11 +72,11 @@ public class OsnTest {
                 .setCotConfig(new CacheCotConfig.Builder(SecurityModel.SEMI_HONEST).build())
                 .build(),
         });
-        // GMR21 with root COT
+        // GMR21 with direct COT
         configurationParams.add(new Object[] {
-            OsnFactory.OsnType.GMR21.name() + " (root COT)",
+            OsnFactory.OsnType.GMR21.name() + " (direct COT)",
             new Gmr21OsnConfig.Builder()
-                .setCotConfig(new RtoCotConfig.Builder(SecurityModel.SEMI_HONEST).build())
+                .setCotConfig(new DirectCotConfig.Builder(SecurityModel.SEMI_HONEST).build())
                 .build(),
         });
         // MS13 with silent COT
@@ -86,11 +86,11 @@ public class OsnTest {
                 .setCotConfig(new CacheCotConfig.Builder(SecurityModel.SEMI_HONEST).build())
                 .build(),
         });
-        // MS13 with root COT
+        // MS13 with direct COT
         configurationParams.add(new Object[] {
-            OsnFactory.OsnType.MS13.name() + " (root COT)",
+            OsnFactory.OsnType.MS13.name() + " (direct COT)",
             new Ms13OsnConfig.Builder()
-                .setCotConfig(new RtoCotConfig.Builder(SecurityModel.SEMI_HONEST).build())
+                .setCotConfig(new DirectCotConfig.Builder(SecurityModel.SEMI_HONEST).build())
                 .build(),
         });
 

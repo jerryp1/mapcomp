@@ -5,7 +5,6 @@ import edu.alibaba.mpc4j.common.rpc.Rpc;
 import edu.alibaba.mpc4j.common.rpc.desc.SecurityModel;
 import edu.alibaba.mpc4j.s2pc.pir.keyword.cmg21.Cmg21KwPirClient;
 import edu.alibaba.mpc4j.s2pc.pir.keyword.cmg21.Cmg21KwPirConfig;
-import edu.alibaba.mpc4j.s2pc.pir.keyword.cmg21.Cmg21KwPirParams;
 import edu.alibaba.mpc4j.s2pc.pir.keyword.cmg21.Cmg21KwPirServer;
 
 /**
@@ -25,7 +24,7 @@ public class KwPirFactory {
     /**
      * 关键词索引PIR协议类型。
      */
-    public enum PirType {
+    public enum KwPirType {
         /**
          * CMG21
          */
@@ -40,12 +39,15 @@ public class KwPirFactory {
      * @param config      配置项。
      * @return 服务端。
      */
-    public static KwPirServer createServer(Rpc serverRpc, Party clientParty, KwPirConfig config) {
-        PirType type = config.getProType();
-        if (type == PirType.CMG21) {
-            return new Cmg21KwPirServer(serverRpc, clientParty, (Cmg21KwPirConfig) config);
+    public static <T> KwPirServer<T> createServer(Rpc serverRpc, Party clientParty, KwPirConfig config) {
+        KwPirType type = config.getProType();
+        //noinspection SwitchStatementWithTooFewBranches
+        switch (type) {
+            case CMG21:
+                return new Cmg21KwPirServer<>(serverRpc, clientParty, (Cmg21KwPirConfig) config);
+            default:
+                throw new IllegalArgumentException("Invalid " + KwPirType.class.getSimpleName() + ": " + type.name());
         }
-        throw new IllegalArgumentException("Invalid PirType: " + type.name());
     }
 
     /**
@@ -56,12 +58,15 @@ public class KwPirFactory {
      * @param config      配置项。
      * @return 客户端。
      */
-    public static KwPirClient createClient(Rpc clientRpc, Party serverParty, KwPirConfig config) {
-        PirType type = config.getProType();
-        if (type == PirType.CMG21) {
-            return new Cmg21KwPirClient(clientRpc, serverParty, (Cmg21KwPirConfig) config);
+    public static <T> KwPirClient<T> createClient(Rpc clientRpc, Party serverParty, KwPirConfig config) {
+        KwPirType type = config.getProType();
+        //noinspection SwitchStatementWithTooFewBranches
+        switch (type) {
+            case CMG21:
+                return new Cmg21KwPirClient<>(clientRpc, serverParty, (Cmg21KwPirConfig) config);
+            default:
+                throw new IllegalArgumentException("Invalid " + KwPirType.class.getSimpleName() + ": " + type.name());
         }
-        throw new IllegalArgumentException("Invalid UpsiType: " + type.name());
     }
 
     /**
@@ -76,9 +81,11 @@ public class KwPirFactory {
             case SEMI_HONEST:
             case COVERT:
             case MALICIOUS:
-                return new Cmg21KwPirConfig.Builder().setPirParams(Cmg21KwPirParams.ONE_MILLION_4096_32).build();
+                return new Cmg21KwPirConfig.Builder().build();
             default:
-                throw new IllegalArgumentException("Invalid SecurityModel: " + securityModel.name());
+                throw new IllegalArgumentException(
+                    "Invalid " + SecurityModel.class.getSimpleName() + ": " + securityModel.name()
+                );
         }
     }
 }

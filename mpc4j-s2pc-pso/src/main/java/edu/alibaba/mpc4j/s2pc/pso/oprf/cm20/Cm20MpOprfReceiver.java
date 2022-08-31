@@ -18,14 +18,13 @@ import edu.alibaba.mpc4j.common.tool.crypto.prg.PrgFactory;
 import edu.alibaba.mpc4j.common.tool.utils.BinaryUtils;
 import edu.alibaba.mpc4j.common.tool.utils.BytesUtils;
 import edu.alibaba.mpc4j.common.tool.utils.CommonUtils;
+import edu.alibaba.mpc4j.common.tool.utils.IntUtils;
 import edu.alibaba.mpc4j.s2pc.pcg.ot.cot.CotSenderOutput;
-import edu.alibaba.mpc4j.s2pc.pcg.ot.cot.rcot.RcotFactory;
-import edu.alibaba.mpc4j.s2pc.pcg.ot.cot.rcot.RcotSender;
+import edu.alibaba.mpc4j.s2pc.pcg.ot.cot.core.CoreCotFactory;
+import edu.alibaba.mpc4j.s2pc.pcg.ot.cot.core.CoreCotSender;
 import edu.alibaba.mpc4j.s2pc.pso.oprf.AbstractMpOprfReceiver;
 import edu.alibaba.mpc4j.s2pc.pso.oprf.MpOprfReceiverOutput;
-import sun.misc.Unsafe;
 
-import java.lang.reflect.Field;
 import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.List;
@@ -42,25 +41,9 @@ import java.util.stream.Stream;
  */
 public class Cm20MpOprfReceiver extends AbstractMpOprfReceiver {
     /**
-     * 不安全转换函数，参见https://stackoverflow.com/questions/43079234/convert-a-byte-array-into-an-int-array-in-java
+     * 核COT协议发送方
      */
-    private static final Unsafe UNSAFE;
-
-    static {
-        try {
-            Field theUnsafe = Unsafe.class.getDeclaredField("theUnsafe");
-            theUnsafe.setAccessible(true);
-            UNSAFE = (Unsafe) theUnsafe.get(null);
-        } catch (NoSuchFieldException | IllegalAccessException e) {
-            e.printStackTrace();
-            throw new IllegalStateException(e);
-        }
-    }
-
-    /**
-     * RCOT协议发送方
-     */
-    private final RcotSender rcotSender;
+    private final CoreCotSender coreCotSender;
     /**
      * 抗关联哈希函数
      */
@@ -112,8 +95,8 @@ public class Cm20MpOprfReceiver extends AbstractMpOprfReceiver {
 
     public Cm20MpOprfReceiver(Rpc receiverRpc, Party senderParty, Cm20MpOprfConfig config) {
         super(Cm20MpOprfPtoDesc.getInstance(), receiverRpc, senderParty, config);
-        rcotSender = RcotFactory.createSender(receiverRpc, senderParty, config.getRcotConfig());
-        rcotSender.addLogLevel();
+        coreCotSender = CoreCotFactory.createSender(receiverRpc, senderParty, config.getCoreCotConfig());
+        coreCotSender.addLogLevel();
         crhf = CrhfFactory.createInstance(envType, CrhfType.MMO);
         h1 = HashFactory.createInstance(envType, CommonConstants.BLOCK_BYTE_LENGTH * 2);
     }
@@ -121,19 +104,19 @@ public class Cm20MpOprfReceiver extends AbstractMpOprfReceiver {
     @Override
     public void setTaskId(long taskId) {
         super.setTaskId(taskId);
-        rcotSender.setTaskId(taskId);
+        coreCotSender.setTaskId(taskId);
     }
 
     @Override
     public void setParallel(boolean parallel) {
         super.setParallel(parallel);
-        rcotSender.setParallel(parallel);
+        coreCotSender.setParallel(parallel);
     }
 
     @Override
     public void addLogLevel() {
         super.addLogLevel();
-        rcotSender.addLogLevel();
+        coreCotSender.addLogLevel();
     }
 
     @Override
@@ -146,7 +129,7 @@ public class Cm20MpOprfReceiver extends AbstractMpOprfReceiver {
         int maxW = Cm20MpOprfUtils.getW(maxBatchSize);
         byte[] delta = new byte[CommonConstants.BLOCK_BYTE_LENGTH];
         secureRandom.nextBytes(delta);
-        rcotSender.init(delta, maxW);
+        coreCotSender.init(delta, maxW);
         stopWatch.stop();
         long initCotTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
         stopWatch.reset();
@@ -169,7 +152,7 @@ public class Cm20MpOprfReceiver extends AbstractMpOprfReceiver {
         wByteLength = CommonUtils.getByteLength(w);
         wOffset = wByteLength * Byte.SIZE - w;
         // 执行COT协议
-        cotSenderOutput = rcotSender.send(w);
+        cotSenderOutput = coreCotSender.send(w);
         stopWatch.stop();
         long cotTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
         stopWatch.reset();
@@ -232,11 +215,7 @@ public class Cm20MpOprfReceiver extends AbstractMpOprfReceiver {
                 // 计算哈希值
                 byte[] extendPrf = f.getBytes(h1.digestToBytes(input));
                 // F: {0, 1}^λ × {0, 1}^{2λ} → [m]^w，这里使用不安全转换函数来提高效率。
-                // 不安全转换函数的转换结果与IntUtils.byteArrayToIntArray不一致，使用时一定要保证两边使用相同的转换方法
-                int[] encode = new int[w];
-                UNSAFE.copyMemory(
-                    extendPrf, Unsafe.ARRAY_BYTE_BASE_OFFSET, encode, Unsafe.ARRAY_INT_BASE_OFFSET, extendPrf.length
-                );
+                int[] encode = IntUtils.unsafeByteArrayToIntArray(extendPrf, w);
                 for (int index = 0; index < w; index++) {
                     encode[index] = Math.abs(encode[index] % n) + nOffset;
                 }

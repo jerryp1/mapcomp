@@ -6,12 +6,9 @@ import edu.alibaba.mpc4j.common.rpc.desc.SecurityModel;
 import edu.alibaba.mpc4j.s2pc.pcg.ot.cot.impl.cache.CacheCotConfig;
 import edu.alibaba.mpc4j.s2pc.pcg.ot.cot.impl.cache.CacheCotReceiver;
 import edu.alibaba.mpc4j.s2pc.pcg.ot.cot.impl.cache.CacheCotSender;
-import edu.alibaba.mpc4j.s2pc.pcg.ot.cot.impl.nco.NcoCotConfig;
-import edu.alibaba.mpc4j.s2pc.pcg.ot.cot.impl.nco.NcoCotReceiver;
-import edu.alibaba.mpc4j.s2pc.pcg.ot.cot.impl.nco.NcoCotSender;
-import edu.alibaba.mpc4j.s2pc.pcg.ot.cot.impl.rto.RtoCotConfig;
-import edu.alibaba.mpc4j.s2pc.pcg.ot.cot.impl.rto.RtoCotReceiver;
-import edu.alibaba.mpc4j.s2pc.pcg.ot.cot.impl.rto.RtoCotSender;
+import edu.alibaba.mpc4j.s2pc.pcg.ot.cot.impl.direct.DirectCotConfig;
+import edu.alibaba.mpc4j.s2pc.pcg.ot.cot.impl.direct.DirectCotReceiver;
+import edu.alibaba.mpc4j.s2pc.pcg.ot.cot.impl.direct.DirectCotSender;
 
 /**
  * COT协议工厂。
@@ -32,19 +29,11 @@ public class CotFactory {
      */
     public enum CotType {
         /**
-         * 根协议单次调用
+         * 直接协议
          */
-        ROOT_ONCE,
+        DIRECT,
         /**
-         * 无选择协议单次调用
-         */
-        NO_CHOICE_ONCE,
-        /**
-         * 离线
-         */
-        OFFLINE,
-        /**
-         * 缓存
+         * 缓存协议
          */
         CACHE,
     }
@@ -60,13 +49,10 @@ public class CotFactory {
     public static CotSender createSender(Rpc senderRpc, Party receiverParty, CotConfig config) {
         CotType type = config.getPtoType();
         switch (type) {
-            case ROOT_ONCE:
-                return new RtoCotSender(senderRpc, receiverParty, (RtoCotConfig) config);
-            case NO_CHOICE_ONCE:
-                return new NcoCotSender(senderRpc, receiverParty, (NcoCotConfig) config);
+            case DIRECT:
+                return new DirectCotSender(senderRpc, receiverParty, (DirectCotConfig) config);
             case CACHE:
                 return new CacheCotSender(senderRpc, receiverParty, (CacheCotConfig) config);
-            case OFFLINE:
             default:
                 throw new IllegalArgumentException("Invalid " + CotType.class.getSimpleName() + ": " + type.name());
         }
@@ -83,13 +69,10 @@ public class CotFactory {
     public static CotReceiver createReceiver(Rpc receiverRpc, Party senderParty, CotConfig config) {
         CotType type = config.getPtoType();
         switch (type) {
-            case ROOT_ONCE:
-                return new RtoCotReceiver(receiverRpc, senderParty, (RtoCotConfig) config);
-            case NO_CHOICE_ONCE:
-                return new NcoCotReceiver(receiverRpc, senderParty, (NcoCotConfig) config);
+            case DIRECT:
+                return new DirectCotReceiver(receiverRpc, senderParty, (DirectCotConfig) config);
             case CACHE:
                 return new CacheCotReceiver(receiverRpc, senderParty, (CacheCotConfig) config);
-            case OFFLINE:
             default:
                 throw new IllegalArgumentException("Invalid " + CotType.class.getSimpleName() + ": " + type.name());
         }

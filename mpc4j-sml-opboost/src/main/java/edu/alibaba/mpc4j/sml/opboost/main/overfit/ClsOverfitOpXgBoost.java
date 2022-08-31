@@ -104,7 +104,7 @@ public class ClsOverfitOpXgBoost extends AbstractOverfitOpXgBoost {
         double[] trainMeasures = new double[treeNum];
         double[] testMeasures = new double[treeNum];
         DMatrix trainDataMatrix = OpXgBoostUtils.dataFrameToDataMatrix(formula, trainDataFrame);
-        Booster booster = XGBoost.train(trainDataMatrix, trainParams, treeNum, new HashMap<>(), null, null);
+        Booster booster = XGBoost.train(trainDataMatrix, trainParams, treeNum, new HashMap<>(0), null, null);
         String modelName = taskType + "_PLAIN.deprecated";
         booster.saveModel(modelName);
         File modelFile = new File(modelName);
@@ -216,7 +216,7 @@ public class ClsOverfitOpXgBoost extends AbstractOverfitOpXgBoost {
             DataFrame ldpTrainFeatureDataFrame = formula.x(ldpTrainDataFrame);
             // 用LDP后的数据进行训练
             DMatrix ldpTrainDataMatrix = OpXgBoostUtils.dataFrameToDataMatrix(formula, ldpTrainDataFrame);
-            Booster booster = XGBoost.train(ldpTrainDataMatrix, trainParams, treeNum, new HashMap<>(), null, null);
+            Booster booster = XGBoost.train(ldpTrainDataMatrix, trainParams, treeNum, new HashMap<>(0), null, null);
             String modelName = taskType + "_" + round + ".deprecated";
             booster.saveModel(modelName);
             File modelFile = new File(modelName);

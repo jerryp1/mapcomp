@@ -1,10 +1,15 @@
 package edu.alibaba.mpc4j.s2pc.pir.keyword.cmg21;
 
+import edu.alibaba.mpc4j.common.tool.CommonConstants;
 import edu.alibaba.mpc4j.common.tool.hashbin.object.HashBinEntry;
+import edu.alibaba.mpc4j.common.tool.hashbin.object.cuckoo.CuckooHashBinFactory;
+import edu.alibaba.mpc4j.common.tool.hashbin.object.cuckoo.CuckooHashBinFactory.CuckooHashBinType;
 import edu.alibaba.mpc4j.common.tool.utils.BigIntegerUtils;
+import edu.alibaba.mpc4j.s2pc.pir.keyword.KwPirParams;
 
 import java.math.BigInteger;
 import java.nio.ByteBuffer;
+import java.security.SecureRandom;
 import java.util.Arrays;
 import java.util.stream.IntStream;
 
@@ -14,70 +19,57 @@ import java.util.stream.IntStream;
  * @author Liqiang Peng
  * @date 2022/6/20
  */
-public class Cmg21KwPirParams {
+public class Cmg21KwPirParams implements KwPirParams {
     /**
-     * table params : 哈希算法数目
+     * 布谷鸟哈希类型
      */
-    private final int hashNum;
+    private final CuckooHashBinType cuckooHashBinType;
     /**
-     * table params : 哈希桶数目
+     * 哈希桶数目
      */
     private final int binNum;
     /**
-     * table params : 每个哈希桶内分块的最大元素个数
+     * 每个哈希桶内分块的最大元素个数
      */
     private final int maxPartitionSizePerBin;
     /**
-     * item params : 元素编码后占的卡槽个数
+     * 元素编码后占的卡槽个数
      */
     private final int itemEncodedSlotSize;
     /**
-     * query params : Paterson-Stockmeyer方法的低阶值
+     * Paterson-Stockmeyer方法的低阶值
      */
     private final int psLowDegree;
     /**
-     * table params : 查询幂次方
+     * 查询幂次方
      */
     private final int[] queryPowers;
     /**
-     * SEAL params : 明文模数
+     * 明文模数
      */
-    private final int plainModulus;
+    private final long plainModulus;
     /**
-     * SEAL params : 多项式阶
+     * 多项式阶
      */
     private final int polyModulusDegree;
     /**
-     * SEAL params : 系数模数的比特值
+     * 系数模数的比特值
      */
     private final int[] coeffModulusBits;
     /**
-     * 单次查询的最大查询元素数量
+     * 预估服务端数据量
      */
-    private final int maxItemPerQuery;
+    private final int expectServerSize;
+    /**
+     * 支持查询的关键词数量
+     */
+    private final int maxRetrievalSize;
 
-    public Cmg21KwPirParams(int hashNum, int binNum, int maxPartitionSizePerBin, int itemEncodedSlotSize, int psLowDegree,
-                            int[] queryPowers, int plainModulus, int polyModulusDegree, int[] coeffModulusBits,
-                            int maxItemPerQuery) {
-        assert hashNum >= 1 && hashNum <= 3 : "hash num must be in {1, 2, 3}";
-        assert binNum > 0 : "bin num should be greater than 0";
-        assert itemEncodedSlotSize >= 2 && itemEncodedSlotSize <= 32 : "the size of slots for encoded item should "
-            + "smaller than or equal 32 and greater than or equal 2";
-        assert psLowDegree <= maxPartitionSizePerBin : "psLowDegree should be smaller or equal than " +
-            "maxPartitionSizePerBin";
-        // 检查query powers是否合理
-        checkQueryPowers(queryPowers, psLowDegree);
-        assert (polyModulusDegree & (polyModulusDegree-1)) == 0 : "polyModulusDegree is not a power of two";
-        assert plainModulus % (2 * polyModulusDegree) == 1 : "plainModulus should be a specific prime number to " +
-            "supports batching ";
-        // 元素的比特长度为 itemEncodedSlotSize*floor(log_2(plain_modulus))
-        int encodedBitLength = itemEncodedSlotSize * (int) Math.floor(Math.log(plainModulus) / Math.log(2));
-        assert encodedBitLength >= 80 && encodedBitLength <= 128 : "encoded bits should greater than or equal 80 " +
-            "and smaller than or equal 128";
-        assert binNum % (polyModulusDegree / itemEncodedSlotSize) == 0 : "binNum should be a multiple of " +
-            "polyModulusDegree / itemEncodedSlotSize";
-        assert maxItemPerQuery > 0;
-        this.hashNum = hashNum;
+    private Cmg21KwPirParams(CuckooHashBinType cuckooHashBinType, int binNum, int maxPartitionSizePerBin,
+                             int itemEncodedSlotSize, int psLowDegree, int[] queryPowers,
+                             long plainModulus, int polyModulusDegree, int[] coeffModulusBits,
+                             int expectServerSize, int maxRetrievalSize) {
+        this.cuckooHashBinType = cuckooHashBinType;
         this.binNum = binNum;
         this.maxPartitionSizePerBin = maxPartitionSizePerBin;
         this.itemEncodedSlotSize = itemEncodedSlotSize;
@@ -86,30 +78,107 @@ public class Cmg21KwPirParams {
         this.plainModulus = plainModulus;
         this.polyModulusDegree = polyModulusDegree;
         this.coeffModulusBits = coeffModulusBits;
-        this.maxItemPerQuery = maxItemPerQuery;
+        this.expectServerSize = expectServerSize;
+        this.maxRetrievalSize = maxRetrievalSize;
     }
 
-    public static final Cmg21KwPirParams ONE_MILLION_4096_32 = new Cmg21KwPirParams(3, 6552, 770,
+    /**
+     * 创建关键词PIR协议参数，不检查参数的有效性。
+     *
+     * @param cuckooHashBinType      布谷鸟哈希类型
+     * @param binNum                 哈希桶数目。
+     * @param maxPartitionSizePerBin 每个哈希桶内分块的最大元素个数。
+     * @param itemEncodedSlotSize    元素编码后占的卡槽个数。
+     * @param psLowDegree            Paterson-Stockmeyer方法的低阶值。
+     * @param queryPowers            查询幂次方。
+     * @param plainModulus           明文模数。
+     * @param polyModulusDegree      多项式阶。
+     * @param coeffModulusBits       系数模数的比特值。
+     * @param expectServerSize       预估服务端数据量。
+     * @param maxRetrievalSize       支持查询的关键词数量。
+     * @return 关键词PIR协议参数。
+     */
+    public static Cmg21KwPirParams uncheckCreate(CuckooHashBinType cuckooHashBinType, int binNum, int maxPartitionSizePerBin,
+                                                 int itemEncodedSlotSize, int psLowDegree, int[] queryPowers,
+                                                 long plainModulus, int polyModulusDegree, int[] coeffModulusBits,
+                                                 int expectServerSize, int maxRetrievalSize) {
+        return new Cmg21KwPirParams(
+            cuckooHashBinType, binNum, maxPartitionSizePerBin,
+            itemEncodedSlotSize, psLowDegree, queryPowers,
+            plainModulus, polyModulusDegree, coeffModulusBits,
+            expectServerSize, maxRetrievalSize);
+    }
+
+    /**
+     * 创建关键词PIR协议参数，检查参数的有效性。
+     *
+     * @param cuckooHashBinType      布谷鸟哈希类型
+     * @param binNum                 哈希桶数目。
+     * @param maxPartitionSizePerBin 每个哈希桶内分块的最大元素个数。
+     * @param itemEncodedSlotSize    元素编码后占的卡槽个数。
+     * @param psLowDegree            Paterson-Stockmeyer方法的低阶值。
+     * @param queryPowers            查询幂次方。
+     * @param plainModulus           明文模数。
+     * @param polyModulusDegree      多项式阶。
+     * @param coeffModulusBits       系数模数的比特值。
+     * @param expectServerSize       预估服务端数据量。
+     * @param maxRetrievalSize       支持查询的关键词数量。
+     * @return 关键词PIR协议参数。
+     */
+    public static Cmg21KwPirParams create(CuckooHashBinType cuckooHashBinType, int binNum,
+                                          int maxPartitionSizePerBin, int itemEncodedSlotSize, int psLowDegree,
+                                          int[] queryPowers, long plainModulus, int polyModulusDegree,
+                                          int[] coeffModulusBits, int expectServerSize, int maxRetrievalSize) {
+        Cmg21KwPirParams cmg21KwPirParams = uncheckCreate(
+            cuckooHashBinType, binNum, maxPartitionSizePerBin,
+            itemEncodedSlotSize, psLowDegree, queryPowers,
+            plainModulus, polyModulusDegree, coeffModulusBits,
+            expectServerSize, maxRetrievalSize);
+        if (Cmg21KwPirParamsChecker.checkValid(cmg21KwPirParams)) {
+            return cmg21KwPirParams;
+        } else {
+            throw new IllegalArgumentException("Invalid SEAL parameters: " + cmg21KwPirParams);
+        }
+    }
+
+    /**
+     * 服务端100W，客户端最大检索数量4096
+     */
+    public static final Cmg21KwPirParams SERVER_1M_CLIENT_MAX_4096 = Cmg21KwPirParams.uncheckCreate(
+        CuckooHashBinType.NAIVE_3_HASH, 6552, 770,
         5,
         26, new int[]{1, 5, 8, 27, 135},
-        1785857, 8192, new int[]{50, 56, 56, 50},
-        4096
-    );
-
-    public static final Cmg21KwPirParams ONE_MILLION_1_32 = new Cmg21KwPirParams(1, 1638, 228,
-        5,
-        0, new int[]{1, 3, 8, 19, 33, 39, 92, 102},
-        65537, 8192, new int[]{56, 48, 48},
-        1
+        1785857L, 8192, new int[]{50, 56, 56, 50},
+        1000000, 4096
     );
 
     /**
-     * 返回哈希算法数目。
-     *
-     * @return 哈希算法数目。
+     * 服务端100W，客户端最大检索数量1
      */
-    public int getHashNum() {
-        return hashNum;
+    public static final Cmg21KwPirParams SERVER_1M_CLIENT_MAX_1 = Cmg21KwPirParams.uncheckCreate(
+        CuckooHashBinType.NO_STASH_ONE_HASH, 1638, 228,
+        5,
+        0, new int[]{1, 3, 8, 19, 33, 39, 92, 102},
+        65537L, 8192, new int[]{56, 48, 48},
+        1000000, 1
+    );
+
+    /**
+     * 返回布谷鸟哈希类型。
+     *
+     * @return 布谷鸟哈希类型。
+     */
+    public CuckooHashBinType getCuckooHashBinType() {
+        return cuckooHashBinType;
+    }
+
+    /**
+     * 返回布谷鸟哈希桶的哈希数量。
+     *
+     * @return 布谷鸟哈希桶的哈希数量。
+     */
+    public int getCuckooHashKeyNum() {
+        return CuckooHashBinFactory.getHashNum(cuckooHashBinType);
     }
 
     /**
@@ -162,7 +231,7 @@ public class Cmg21KwPirParams {
      *
      * @return 明文模数。
      */
-    public int getPlainModulus() {
+    public long getPlainModulus() {
         return plainModulus;
     }
 
@@ -184,18 +253,21 @@ public class Cmg21KwPirParams {
         return coeffModulusBits;
     }
 
-    /**
-     * 返回单次查询的最大查询元素数量。
-     *
-     * @return 单次查询的最大查询元素数量。
-     */
-    public int getMaxItemPerQuery() { return maxItemPerQuery; }
+    @Override
+    public int maxRetrievalSize() {
+        return maxRetrievalSize;
+    }
+
+    @Override
+    public int expectServerSize() {
+        return expectServerSize;
+    }
 
     @Override
     public String toString() {
         return "Parameters chosen:" + "\n" +
             "  - hash_bin_params: {" + "\n" +
-            "     - hash_num : " + hashNum + "\n" +
+            "     - cuckoo_hash_bin_type : " + cuckooHashBinType + "\n" +
             "     - bin_num : " + binNum + "\n" +
             "     - max_items_per_bin : " + maxPartitionSizePerBin + "\n" +
             "  }" + "\n" +
@@ -218,33 +290,35 @@ public class Cmg21KwPirParams {
      *
      * @param hashBinEntry 哈希桶条目。
      * @param isReceiver   是否为接收方。
+     * @param secureRandom 随机状态。
      * @return 哈希桶条目中元素对应的编码数组。
      */
-    public long[] getHashBinEntryEncodedArray(HashBinEntry<ByteBuffer> hashBinEntry, boolean isReceiver) {
-        long[] encodedResult = new long[itemEncodedSlotSize];
-        int encodedItemBitLength = (BigInteger.valueOf(plainModulus).bitLength()-1) * itemEncodedSlotSize;
-        assert encodedItemBitLength >= 80;
+    public long[] getHashBinEntryEncodedArray(HashBinEntry<ByteBuffer> hashBinEntry, boolean isReceiver,
+                                              SecureRandom secureRandom) {
+        long[] encodedArray = new long[itemEncodedSlotSize];
+        int bitLength = (BigInteger.valueOf(plainModulus).bitLength() - 1) * itemEncodedSlotSize;
+        assert bitLength >= 80;
         int shiftBits = BigInteger.valueOf(plainModulus).bitLength() - 1;
+        BigInteger shiftMask = BigInteger.ONE.shiftLeft(shiftBits).subtract(BigInteger.ONE);
         // 判断是否为空桶
         if (hashBinEntry.getHashIndex() != -1) {
-            // the index of the hash function should be [0, 1, 2], index 3 is used for dummy elements
-            assert(hashBinEntry.getHashIndex() < 3);
+            assert (hashBinEntry.getHashIndex() < 3) : "hash index should be [0, 1, 2]";
             BigInteger input = BigIntegerUtils.byteArrayToNonNegBigInteger(hashBinEntry.getItem().array());
-            input = input.shiftRight(input.bitLength() - encodedItemBitLength);
-            // encode the input itself, except for the last bucket_count_log() bits
+            input = input.mod(BigInteger.ONE.shiftLeft(CommonConstants.BLOCK_BIT_LENGTH));
             for (int i = 0; i < itemEncodedSlotSize; i++) {
-                encodedResult[i] = input.mod(BigInteger.ONE.shiftLeft(shiftBits)).longValueExact();
+                encodedArray[i] = input.and(shiftMask).longValueExact();
                 input = input.shiftRight(shiftBits);
             }
         } else {
-            // for the dummy element, we use a non-existent hash function index (3)
-            // and 0 or 1 for the input depending on whether it's the sender or the receiver who needs a dummy.
-            encodedResult = IntStream.range(0, itemEncodedSlotSize).mapToLong(i -> 3L | ((isReceiver ? 1L : 0L) << 2)).toArray();
+            IntStream.range(0, itemEncodedSlotSize).forEach(i -> {
+                long random = Math.abs(secureRandom.nextLong()) % plainModulus / 4;
+                encodedArray[i] = random << 1 | (isReceiver ? 1L : 0L);
+            });
         }
         for (int i = 0; i < itemEncodedSlotSize; i++) {
-            assert (encodedResult[i] < plainModulus);
+            assert (encodedArray[i] < plainModulus);
         }
-        return encodedResult;
+        return encodedArray;
     }
 
     /**
@@ -254,43 +328,22 @@ public class Cmg21KwPirParams {
      * @param partitionNum 分块数目。
      * @return 标签编码数组。
      */
-    public long[][] encodeLabel(ByteBuffer labelBytes, int partitionNum) {
-        long[][] encodedResult = new long[partitionNum][itemEncodedSlotSize];
-        int shiftBits = (int) Math.ceil(labelBytes.array().length*8.0 / (itemEncodedSlotSize*partitionNum));
-        BigInteger input = BigIntegerUtils.byteArrayToNonNegBigInteger(labelBytes.array());
+    public long[][] encodeLabel(byte[] labelBytes, int partitionNum) {
+        long[][] encodedArray = new long[partitionNum][itemEncodedSlotSize];
+        int shiftBits = (int) Math.ceil(((double) (labelBytes.length * Byte.SIZE)) / (itemEncodedSlotSize * partitionNum));
+        BigInteger bigIntLabel = BigIntegerUtils.byteArrayToNonNegBigInteger(labelBytes);
+        BigInteger shiftMask = BigInteger.ONE.shiftLeft(shiftBits).subtract(BigInteger.ONE);
         for (int i = 0; i < partitionNum; i++) {
             for (int j = 0; j < itemEncodedSlotSize; j++) {
-                encodedResult[i][j] = input.mod(BigInteger.ONE.shiftLeft(shiftBits)).longValueExact();
-                input = input.shiftRight(shiftBits);
+                encodedArray[i][j] = bigIntLabel.and(shiftMask).longValueExact();
+                bigIntLabel = bigIntLabel.shiftRight(shiftBits);
             }
         }
         for (int i = 0; i < partitionNum; i++) {
             for (int j = 0; j < itemEncodedSlotSize; j++) {
-                assert (encodedResult[i][j] < plainModulus);
+                assert (encodedArray[i][j] < plainModulus);
             }
         }
-        return encodedResult;
-    }
-
-    /**
-     * 检查问询幂次方的有效性。
-     *
-     * @param sourcePowers 问询幂次方数组（不一定有序）。
-     * @param psLowDegree  最低问询阶。
-     */
-    public static void checkQueryPowers(int[] sourcePowers, int psLowDegree) {
-        int[] sortSourcePowers = Arrays.stream(sourcePowers)
-            .peek(sourcePower -> {
-                assert sourcePower > 0 : "query power must be greater than 0: " + sourcePower;
-            })
-            .distinct()
-            .sorted()
-            .toArray();
-        assert sortSourcePowers.length == sourcePowers.length : "query powers must be distinct";
-        assert sortSourcePowers[0] == 1 : "query powers must contain 1";
-        for (int sourcePower : sourcePowers) {
-            assert sourcePower <= psLowDegree || sourcePower % (psLowDegree + 1) == 0
-                : "query powers中大于ps_low_degree的输入应能被ps_low_degree + 1整除: " + sourcePower;
-        }
+        return encodedArray;
     }
 }

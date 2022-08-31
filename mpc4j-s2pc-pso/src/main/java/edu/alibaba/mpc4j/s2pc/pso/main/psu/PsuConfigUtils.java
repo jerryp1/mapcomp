@@ -6,15 +6,15 @@ import edu.alibaba.mpc4j.common.tool.hashbin.object.cuckoo.CuckooHashBinFactory.
 import edu.alibaba.mpc4j.common.tool.okve.okvs.OkvsFactory.OkvsType;
 import edu.alibaba.mpc4j.common.tool.okve.ovdm.ecc.EccOvdmFactory.EccOvdmType;
 import edu.alibaba.mpc4j.common.tool.okve.ovdm.gf2e.Gf2eOvdmFactory.Gf2eOvdmType;
-import edu.alibaba.mpc4j.s2pc.aby.base.bc.BcConfig;
-import edu.alibaba.mpc4j.s2pc.aby.base.bc.BcFactory;
-import edu.alibaba.mpc4j.s2pc.aby.base.bc.bea91.Bea91BcConfig;
-import edu.alibaba.mpc4j.s2pc.pcg.btg.BtgConfig;
-import edu.alibaba.mpc4j.s2pc.pcg.btg.impl.file.FileBtgConfig;
+import edu.alibaba.mpc4j.s2pc.aby.bc.BcConfig;
+import edu.alibaba.mpc4j.s2pc.aby.bc.BcFactory;
+import edu.alibaba.mpc4j.s2pc.aby.bc.bea91.Bea91BcConfig;
+import edu.alibaba.mpc4j.s2pc.pcg.mtg.z2.Z2MtgConfig;
+import edu.alibaba.mpc4j.s2pc.pcg.mtg.z2.impl.file.FileZ2MtgConfig;
 import edu.alibaba.mpc4j.s2pc.pcg.ot.cot.impl.cache.CacheCotConfig;
-import edu.alibaba.mpc4j.s2pc.pcg.ot.cot.impl.rto.RtoCotConfig;
-import edu.alibaba.mpc4j.s2pc.pcg.ot.cot.rcot.RcotConfig;
-import edu.alibaba.mpc4j.s2pc.pcg.ot.cot.rcot.RcotFactory;
+import edu.alibaba.mpc4j.s2pc.pcg.ot.cot.impl.direct.DirectCotConfig;
+import edu.alibaba.mpc4j.s2pc.pcg.ot.cot.core.CoreCotConfig;
+import edu.alibaba.mpc4j.s2pc.pcg.ot.cot.core.CoreCotFactory;
 import edu.alibaba.mpc4j.s2pc.pso.oprf.OprfConfig;
 import edu.alibaba.mpc4j.s2pc.pso.oprf.cm20.Cm20MpOprfConfig;
 import edu.alibaba.mpc4j.s2pc.pso.oprf.kkrt16.Kkrt16OptOprfConfig;
@@ -88,14 +88,14 @@ public class PsuConfigUtils {
         OkvsType okvsType = OkvsType.valueOf(okvsTypeString);
 
         return new Krtw19OriPsuConfig.Builder()
-            .setRcotConfig(RcotFactory.createDefaultConfig(SecurityModel.SEMI_HONEST))
+            .setCoreCotConfig(CoreCotFactory.createDefaultConfig(SecurityModel.SEMI_HONEST))
             .setOkvsType(okvsType)
             .build();
     }
 
     private static Krtw19OptPsuConfig createKrtw19OptPsuConfig() {
         return new Krtw19OptPsuConfig.Builder()
-            .setRcotConfig(RcotFactory.createDefaultConfig(SecurityModel.SEMI_HONEST))
+            .setCoreCotConfig(CoreCotFactory.createDefaultConfig(SecurityModel.SEMI_HONEST))
             .build();
     }
 
@@ -114,12 +114,12 @@ public class PsuConfigUtils {
                 .setCotConfig(new CacheCotConfig.Builder(SecurityModel.SEMI_HONEST).build())
                 .build()
             : new Gmr21OsnConfig.Builder()
-                .setCotConfig(new RtoCotConfig.Builder(SecurityModel.SEMI_HONEST).build())
+                .setCotConfig(new DirectCotConfig.Builder(SecurityModel.SEMI_HONEST).build())
                 .build();
-        RcotConfig rcotConfig = RcotFactory.createDefaultConfig(SecurityModel.SEMI_HONEST);
+        CoreCotConfig coreCotConfig = CoreCotFactory.createDefaultConfig(SecurityModel.SEMI_HONEST);
 
         return new Gmr21PsuConfig.Builder()
-            .setRcotConfig(rcotConfig)
+            .setCoreCotConfig(coreCotConfig)
             .setOsnConfig(osnConfig)
             .setOkvsType(okvsType)
             .build();
@@ -131,26 +131,26 @@ public class PsuConfigUtils {
             properties.getProperty("gf2e_ovdm_type"), "Please set gf2e_ovdm_type"
         );
         Gf2eOvdmType gf2eOvdmType = Gf2eOvdmType.valueOf(gf2eOvdmTypeString);
-        boolean ignoreBtg = Boolean.parseBoolean(Preconditions.checkNotNull(
-            properties.getProperty("ignore_btg"), "Please set ignore_btg"
+        boolean ignoreZ2Mtg = Boolean.parseBoolean(Preconditions.checkNotNull(
+            properties.getProperty("ignore_z2_mtg"), "Please set ignore_z2_mtg"
         ));
-        if (ignoreBtg) {
-            BtgConfig fileBtgConfig = new FileBtgConfig.Builder(SecurityModel.SEMI_HONEST).build();
+        if (ignoreZ2Mtg) {
+            Z2MtgConfig fileZ2MtgConfig = new FileZ2MtgConfig.Builder(SecurityModel.SEMI_HONEST).build();
             BcConfig fileBcConfig = new Bea91BcConfig.Builder()
-                .setBtgConfig(fileBtgConfig)
+                .setZ2MtgConfig(fileZ2MtgConfig)
                 .build();
             OprpConfig fileOprpConfig = new LowMcOprpConfig.Builder()
                 .setBcConfig(fileBcConfig)
                 .build();
             return new Zcl22SkePsuConfig.Builder()
-                .setRcotConfig(RcotFactory.createDefaultConfig(SecurityModel.SEMI_HONEST))
+                .setCoreCotConfig(CoreCotFactory.createDefaultConfig(SecurityModel.SEMI_HONEST))
                 .setOprpConfig(fileOprpConfig)
                 .setBcConfig(fileBcConfig)
                 .setGf2eOvdmType(gf2eOvdmType)
                 .build();
         } else {
             return new Zcl22SkePsuConfig.Builder()
-                .setRcotConfig(RcotFactory.createDefaultConfig(SecurityModel.SEMI_HONEST))
+                .setCoreCotConfig(CoreCotFactory.createDefaultConfig(SecurityModel.SEMI_HONEST))
                 .setOprpConfig(OprpFactory.createDefaultConfig(SecurityModel.SEMI_HONEST))
                 .setBcConfig(BcFactory.createDefaultConfig(SecurityModel.SEMI_HONEST))
                 .setGf2eOvdmType(gf2eOvdmType)
@@ -170,7 +170,7 @@ public class PsuConfigUtils {
         ));
 
         return new Zcl22PkePsuConfig.Builder()
-            .setRcotConfig(RcotFactory.createDefaultConfig(SecurityModel.SEMI_HONEST))
+            .setCoreCotConfig(CoreCotFactory.createDefaultConfig(SecurityModel.SEMI_HONEST))
             .setCompressEncode(compressEncode)
             .setEccOvdmType(eccOvdmType)
             .build();
@@ -207,12 +207,12 @@ public class PsuConfigUtils {
                 .setCotConfig(new CacheCotConfig.Builder(SecurityModel.SEMI_HONEST).build())
                 .build()
             : new Gmr21OsnConfig.Builder()
-                .setCotConfig(new RtoCotConfig.Builder(SecurityModel.SEMI_HONEST).build())
+                .setCotConfig(new DirectCotConfig.Builder(SecurityModel.SEMI_HONEST).build())
                 .build();
-        RcotConfig rcotConfig = RcotFactory.createDefaultConfig(SecurityModel.SEMI_HONEST);
+        CoreCotConfig coreCotConfig = CoreCotFactory.createDefaultConfig(SecurityModel.SEMI_HONEST);
 
         return new Jsz22SfcPsuConfig.Builder()
-            .setRcotConfig(rcotConfig)
+            .setCoreCotConfig(coreCotConfig)
             .setOsnConfig(osnConfig)
             .setOprfConfig(oprfConfig)
             .setCuckooHashBinType(cuckooHashBinType)
@@ -250,7 +250,7 @@ public class PsuConfigUtils {
             .setCotConfig(new CacheCotConfig.Builder(SecurityModel.SEMI_HONEST).build())
             .build()
             : new Gmr21OsnConfig.Builder()
-                .setCotConfig(new RtoCotConfig.Builder(SecurityModel.SEMI_HONEST).build())
+                .setCotConfig(new DirectCotConfig.Builder(SecurityModel.SEMI_HONEST).build())
                 .build();
 
         return new Jsz22SfsPsuConfig.Builder()

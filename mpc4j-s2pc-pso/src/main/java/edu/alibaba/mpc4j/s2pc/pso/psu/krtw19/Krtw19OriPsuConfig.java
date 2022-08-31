@@ -3,8 +3,8 @@ package edu.alibaba.mpc4j.s2pc.pso.psu.krtw19;
 import edu.alibaba.mpc4j.common.rpc.desc.SecurityModel;
 import edu.alibaba.mpc4j.common.tool.EnvType;
 import edu.alibaba.mpc4j.common.tool.okve.okvs.OkvsFactory.OkvsType;
-import edu.alibaba.mpc4j.s2pc.pcg.ot.cot.rcot.RcotConfig;
-import edu.alibaba.mpc4j.s2pc.pcg.ot.cot.rcot.RcotFactory;
+import edu.alibaba.mpc4j.s2pc.pcg.ot.cot.core.CoreCotConfig;
+import edu.alibaba.mpc4j.s2pc.pcg.ot.cot.core.CoreCotFactory;
 import edu.alibaba.mpc4j.s2pc.pso.oprf.OprfConfig;
 import edu.alibaba.mpc4j.s2pc.pso.oprf.OprfFactory;
 import edu.alibaba.mpc4j.s2pc.pso.psu.PsuConfig;
@@ -26,9 +26,9 @@ public class Krtw19OriPsuConfig implements PsuConfig {
      */
     private final OprfConfig peqtOprfConfig;
     /**
-     * RCOT协议配置项
+     * 核COT协议配置项
      */
-    private final RcotConfig rcotConfig;
+    private final CoreCotConfig coreCotConfig;
     /**
      * OKVS类型
      */
@@ -41,10 +41,10 @@ public class Krtw19OriPsuConfig implements PsuConfig {
     private Krtw19OriPsuConfig(Builder builder) {
         // 协议的环境类型必须相同
         assert builder.rpmtOprfConfig.getEnvType().equals(builder.peqtOprfConfig.getEnvType());
-        assert builder.rpmtOprfConfig.getEnvType().equals(builder.rcotConfig.getEnvType());
+        assert builder.rpmtOprfConfig.getEnvType().equals(builder.coreCotConfig.getEnvType());
         rpmtOprfConfig = builder.rpmtOprfConfig;
         peqtOprfConfig = builder.peqtOprfConfig;
-        rcotConfig = builder.rcotConfig;
+        coreCotConfig = builder.coreCotConfig;
         okvsType = builder.okvsType;
         pipeSize = builder.pipeSize;
     }
@@ -68,8 +68,8 @@ public class Krtw19OriPsuConfig implements PsuConfig {
         if (peqtOprfConfig.getSecurityModel().compareTo(securityModel) < 0) {
             securityModel = peqtOprfConfig.getSecurityModel();
         }
-        if (rcotConfig.getSecurityModel().compareTo(securityModel) < 0) {
-            securityModel = rcotConfig.getSecurityModel();
+        if (coreCotConfig.getSecurityModel().compareTo(securityModel) < 0) {
+            securityModel = coreCotConfig.getSecurityModel();
         }
         return securityModel;
     }
@@ -82,8 +82,8 @@ public class Krtw19OriPsuConfig implements PsuConfig {
         return peqtOprfConfig;
     }
 
-    public RcotConfig getRcotConfig() {
-        return rcotConfig;
+    public CoreCotConfig getCoreCotConfig() {
+        return coreCotConfig;
     }
 
     public OkvsType getOkvsType() {
@@ -104,9 +104,9 @@ public class Krtw19OriPsuConfig implements PsuConfig {
          */
         private OprfConfig peqtOprfConfig;
         /**
-         * RCOT协议配置项
+         * 核COT协议配置项
          */
-        private RcotConfig rcotConfig;
+        private CoreCotConfig coreCotConfig;
         /**
          * OKVS类型
          */
@@ -119,7 +119,7 @@ public class Krtw19OriPsuConfig implements PsuConfig {
         public Builder() {
             rpmtOprfConfig = OprfFactory.createOprfDefaultConfig(SecurityModel.SEMI_HONEST);
             peqtOprfConfig = OprfFactory.createOprfDefaultConfig(SecurityModel.SEMI_HONEST);
-            rcotConfig = RcotFactory.createDefaultConfig(SecurityModel.SEMI_HONEST);
+            coreCotConfig = CoreCotFactory.createDefaultConfig(SecurityModel.SEMI_HONEST);
             okvsType = OkvsType.POLYNOMIAL;
             pipeSize = (1 << 8);
         }
@@ -134,8 +134,8 @@ public class Krtw19OriPsuConfig implements PsuConfig {
             return this;
         }
 
-        public Builder setRcotConfig(RcotConfig rcotConfig) {
-            this.rcotConfig = rcotConfig;
+        public Builder setCoreCotConfig(CoreCotConfig coreCotConfig) {
+            this.coreCotConfig = coreCotConfig;
             return this;
         }
 

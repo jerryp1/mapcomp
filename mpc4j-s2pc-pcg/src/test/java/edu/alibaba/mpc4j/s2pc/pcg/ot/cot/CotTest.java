@@ -7,7 +7,7 @@ import edu.alibaba.mpc4j.common.rpc.desc.SecurityModel;
 import edu.alibaba.mpc4j.common.rpc.impl.memory.MemoryRpcManager;
 import edu.alibaba.mpc4j.common.tool.CommonConstants;
 import edu.alibaba.mpc4j.s2pc.pcg.ot.cot.impl.cache.CacheCotConfig;
-import edu.alibaba.mpc4j.s2pc.pcg.ot.cot.impl.nco.NcoCotConfig;
+import edu.alibaba.mpc4j.s2pc.pcg.ot.cot.impl.direct.DirectCotConfig;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.time.StopWatch;
 import org.junit.Assert;
@@ -49,25 +49,15 @@ public class CotTest {
     @Parameterized.Parameters(name = "{0}")
     public static Collection<Object[]> configurations() {
         Collection<Object[]> configurations = new ArrayList<>();
-        // ROOT_ONCE (Semi-honest)
+        // DIRECT (Semi-honest)
         configurations.add(new Object[] {
-            CotFactory.CotType.ROOT_ONCE.name() + " (Semi-honest)",
-            new NcoCotConfig.Builder(SecurityModel.SEMI_HONEST).build(),
+            CotFactory.CotType.DIRECT.name() + " (Semi-honest)",
+            new DirectCotConfig.Builder(SecurityModel.SEMI_HONEST).build(),
         });
-        // ROOT_ONCE (Malicious)
+        // DIRECT (Malicious)
         configurations.add(new Object[] {
-            CotFactory.CotType.ROOT_ONCE.name() + " (Malicious)",
-            new NcoCotConfig.Builder(SecurityModel.MALICIOUS).build(),
-        });
-        // NO_CHOICE_ONCE (Semi-honest)
-        configurations.add(new Object[] {
-            CotFactory.CotType.NO_CHOICE_ONCE.name() + " (Semi-honest)",
-            new NcoCotConfig.Builder(SecurityModel.SEMI_HONEST).build(),
-        });
-        // NO_CHOICE_ONCE (Malicious)
-        configurations.add(new Object[] {
-            CotFactory.CotType.NO_CHOICE_ONCE.name() + " (Malicious)",
-            new NcoCotConfig.Builder(SecurityModel.SEMI_HONEST).build(),
+            CotFactory.CotType.DIRECT.name() + " (Malicious)",
+            new DirectCotConfig.Builder(SecurityModel.MALICIOUS).build(),
         });
         // CACHE (Semi-honest)
         configurations.add(new Object[] {
