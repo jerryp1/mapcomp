@@ -98,7 +98,7 @@ public class EccFactory {
     /**
      * 创建椭圆曲线。
      *
-     * @param envType 椭圆曲线类型。
+     * @param envType 环境类型。
      * @return 椭圆曲线。
      */
     public static Ecc createInstance(EnvType envType) {

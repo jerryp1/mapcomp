@@ -48,7 +48,7 @@ public class EccEfficiencyTest {
      */
     private static final StopWatch STOP_WATCH = new StopWatch();
     /**
-     * 测试类型
+     * 椭圆曲线测试类型
      */
     private static final EccType[] ECC_TYPES = new EccType[] {
         EccType.SEC_P256_K1_MCL,
@@ -60,6 +60,13 @@ public class EccEfficiencyTest {
         EccType.SM2_P256_V1_BC,
         EccType.CURVE_25519_BC,
         EccType.ED_25519_BC
+    };
+
+    /**
+     * 字节椭圆曲线测试类型
+     */
+    private static final ByteEccFactory.ByteEccType[] BYTE_ECC_TYPES = new ByteEccFactory.ByteEccType[] {
+        ByteEccFactory.ByteEccType.ED25519_BC,
     };
 
     @Test
@@ -140,6 +147,56 @@ public class EccEfficiencyTest {
                 StringUtils.leftPad(TIME_DECIMAL_FORMAT.format(batchMultiplyTime), 10),
                 StringUtils.leftPad(TIME_DECIMAL_FORMAT.format(singlePrecomputeMulTime), 10),
                 StringUtils.leftPad(TIME_DECIMAL_FORMAT.format(batchPrecomputeMulTime), 10)
+            );
+        }
+        for (ByteEccFactory.ByteEccType type : BYTE_ECC_TYPES) {
+            ByteEcc byteEcc = ByteEccFactory.createInstance(type);
+            // 生成随机消息
+            byte[][] messages = IntStream.range(0, n)
+                .mapToObj(index -> {
+                    byte[] message = new byte[CommonConstants.BLOCK_BYTE_LENGTH];
+                    SECURE_RANDOM.nextBytes(message);
+                    return message;
+                })
+                .toArray(byte[][]::new);
+            // 预热
+            Arrays.stream(messages).forEach(byteEcc::hashToCurve);
+            // 单次调用HashToCurve
+            STOP_WATCH.start();
+            Arrays.stream(messages).forEach(byteEcc::hashToCurve);
+            STOP_WATCH.stop();
+            double hashToCurveTime = (double) STOP_WATCH.getTime(TimeUnit.MILLISECONDS) / n;
+            STOP_WATCH.reset();
+            // 单次生成随机数
+            STOP_WATCH.start();
+            IntStream.range(0, n).forEach(index -> byteEcc.randomPoint(SECURE_RANDOM));
+            STOP_WATCH.stop();
+            double randomPointTime = (double) STOP_WATCH.getTime(TimeUnit.MILLISECONDS) / n;
+            STOP_WATCH.reset();
+
+            // 生成一个非生成元的点
+            BigInteger gr = BigIntegerUtils.randomPositive(byteEcc.getN(), SECURE_RANDOM);
+            byte[] h = byteEcc.mul(byteEcc.getG(), gr);
+            // 生成幂指数
+            BigInteger[] rs = IntStream.range(0, n)
+                .mapToObj(index -> BigIntegerUtils.randomPositive(byteEcc.getN(), SECURE_RANDOM))
+                .toArray(BigInteger[]::new);
+            // 单次幂运算
+            STOP_WATCH.start();
+            Arrays.stream(rs).forEach(r -> byteEcc.mul(h, r));
+            STOP_WATCH.stop();
+            double singleMultiplyTime = (double) STOP_WATCH.getTime(TimeUnit.MILLISECONDS) / n;
+            STOP_WATCH.reset();
+            LOGGER.info(
+                "{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}",
+                StringUtils.leftPad(type.name(), 20),
+                StringUtils.leftPad(LOG_N_DECIMAL_FORMAT.format(LOG_N), 10),
+                StringUtils.leftPad(TIME_DECIMAL_FORMAT.format(hashToCurveTime), 10),
+                StringUtils.leftPad(TIME_DECIMAL_FORMAT.format(randomPointTime), 10),
+                StringUtils.leftPad(TIME_DECIMAL_FORMAT.format(singleMultiplyTime), 10),
+                StringUtils.leftPad("    --    ", 10),
+                StringUtils.leftPad("    --    ", 10),
+                StringUtils.leftPad("    --    ", 10)
             );
         }
     }
