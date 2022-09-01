@@ -305,6 +305,7 @@ public class Ed25519ByteEccUtils {
      * @param p 输入的字节数组。
      * @return 如果是有效坐标，则返回{@code true}，否则返回{@code false}。
      */
+    @SuppressWarnings("BooleanMethodIsAlwaysInverted")
     private static boolean checkPoint(byte[] p) {
         if (p == null || p.length != POINT_BYTES) {
             return false;
