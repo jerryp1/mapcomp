@@ -130,8 +130,9 @@ public class Mrkyber19BnotReceiver extends AbstractBnotReceiver {
                     aArray[index] = KyberKeyOps.generateKyberKeys(paramsK);
                     // 读取多项式格式下的公钥
                     publickKeyVec = aArray[index].getPublicKeyVec();
-                    byte[][] pkPair = new byte[n][indcpaPublicKeyBytes];
+                    byte[][] pkPair = new byte[n+1][];
                     for (int i = 0;i < n; i++){
+                        pkPair[i] = new byte[paramsPolyvecBytes];
                         if(i != choices[index]){
                             //生成（randomKey，p_1 - sigma）
                             randomKeyVec = KyberPublicKeyOps.getRandomKyberPk(paramsK);
@@ -141,15 +142,15 @@ public class Mrkyber19BnotReceiver extends AbstractBnotReceiver {
                             //将钥匙打包，第一个为As+e，第二个为随机生成的生成元p
                             System.arraycopy(Poly.polyVectorToBytes(randomKeyVec),0,
                                     pkPair[i],0,paramsPolyvecBytes);
-                            System.arraycopy(KyberPublicKeyOps.getRandomKeyGenerator(),0,
-                                    pkPair[i],paramsPolyvecBytes,KyberParams.SYM_BYTES);
                         }
                     }
                     //将经过N-1个公钥遮掩后的（As+e，p_sigma）打包传输
                     System.arraycopy(Poly.polyVectorToBytes(publickKeyVec),0,
                             pkPair[choices[index]],0,paramsPolyvecBytes);
+                    //将生成元单独拷贝放入
+                    pkPair[n] = new byte[KyberParams.SYM_BYTES];
                     System.arraycopy(aArray[index].getPublicKeyGenerator(),0,
-                            pkPair[choices[index]],paramsPolyvecBytes,KyberParams.SYM_BYTES);
+                            pkPair[n],0,KyberParams.SYM_BYTES);
                     return pkPair;
                 })
                 .flatMap(Arrays::stream)
