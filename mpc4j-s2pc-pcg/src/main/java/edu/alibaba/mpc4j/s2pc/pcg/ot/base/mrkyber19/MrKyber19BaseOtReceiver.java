@@ -141,18 +141,17 @@ public class MrKyber19BaseOtReceiver extends AbstractBaseOtReceiver {
                     publickKeyVec = KyberPublicKeyOps.kyberPkAdd(publickKeyVec, hashKeyVec);
                     // 根据选择值将两个参数R分别放入对应位置
                     int sigma = choices[index] ? 1 : 0;
-                    byte[][] pkPair = new byte[2][indcpaPublicKeyBytes];
+                    byte[][] pkPair = new byte[3][];
+                    pkPair[0] = new byte[paramsPolyvecBytes];
+                    pkPair[1] = new byte[paramsPolyvecBytes];
+                    pkPair[2] = new byte[KyberParams.SYM_BYTES];
                     //将（As+e，p_sigma）打包传输
                     System.arraycopy(Poly.polyVectorToBytes(publickKeyVec),0,
                             pkPair[sigma],0,paramsPolyvecBytes);
-                    System.arraycopy(aArray[index].getPublicKeyGenerator(),0,
-                            pkPair[sigma],paramsPolyvecBytes,KyberParams.SYM_BYTES);
-                    //将（randomKey，p_1 - sigma）打包传输
                     System.arraycopy(Poly.polyVectorToBytes(randomKeyVec),0,
                             pkPair[1 - sigma],0,paramsPolyvecBytes);
-                    //对于randomKey而言，生成元（32byte）是随机的
-                    System.arraycopy(KyberPublicKeyOps.getRandomKeyGenerator(),0,
-                            pkPair[1 - sigma],paramsPolyvecBytes,KyberParams.SYM_BYTES);
+                    System.arraycopy(aArray[index].getPublicKeyGenerator(),0,
+                            pkPair[2],0,KyberParams.SYM_BYTES);
                     return pkPair;
                 })
                 .flatMap(Arrays::stream)

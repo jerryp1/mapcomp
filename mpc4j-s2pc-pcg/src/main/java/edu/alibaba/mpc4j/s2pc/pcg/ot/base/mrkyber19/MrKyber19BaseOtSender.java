@@ -113,7 +113,7 @@ public class MrKyber19BaseOtSender extends AbstractBaseOtSender {
     }
 
     private BaseOtSenderOutput handlePkPayload(List<byte[]> pkPayload) throws MpcAbortException{
-        MpcAbortPreconditions.checkArgument(pkPayload.size() == num * 2);
+        MpcAbortPreconditions.checkArgument(pkPayload.size() == num * 3);
         Hash hashFunction = HashFactory.createInstance(envType, 32);
         IntStream keyPairArrayIntStream = IntStream.range(0, num);
         keyPairArrayIntStream = parallel ? keyPairArrayIntStream.parallel() : keyPairArrayIntStream;
@@ -135,12 +135,9 @@ public class MrKyber19BaseOtSender extends AbstractBaseOtSender {
             //因为消息m必须要256bit，因此传递的密文中选取前128bit作为OT的输出
             r0Array[index] = Arrays.copyOfRange(message0,0,CommonConstants.BLOCK_BYTE_LENGTH);
             r1Array[index] = Arrays.copyOfRange(message1,0,CommonConstants.BLOCK_BYTE_LENGTH);
-            // 读取接收端参数对R0、R1
-            byte[] upperR0 = pkPayload.get(index * 2);
-            byte[] upperR1 = pkPayload.get(index * 2 + 1);
             // 读取公钥（As+e）部分
-            byte[] upperPkR0 = Arrays.copyOfRange(upperR0,0, paramsPolyvecBytes);
-            byte[] upperPkR1 = Arrays.copyOfRange(upperR1,0, paramsPolyvecBytes);
+            byte[] upperPkR0 = pkPayload.get(index * 3);
+            byte[] upperPkR1 = pkPayload.get(index * 3 + 1);
             short[][] upperVectorR0 = Poly.polyVectorFromBytes(upperPkR0);
             short[][] upperVectorR1 = Poly.polyVectorFromBytes(upperPkR1);
             // 计算A0 = R0 - Hash(R1)、A1 = R1 - Hash(R0)
@@ -153,13 +150,9 @@ public class MrKyber19BaseOtSender extends AbstractBaseOtSender {
             byte [][] cipherText = new byte[2][];
             //加密函数的输入是明文、公钥（As+e）部分、生成元部分、随机数种子，安全参数k
             cipherText[0] = KyberKeyOps.
-                    encrypt(message0,upperA0,
-                            Arrays.copyOfRange(upperR0,paramsPolyvecBytes,indcpaPublicKeyBytes),
-                            seed0,paramsK);
+                    encrypt(message0,upperA0, pkPayload.get(index * 3 + 2), seed0,paramsK);
             cipherText[1] = KyberKeyOps.
-                    encrypt(message1,upperA1,
-                            Arrays.copyOfRange(upperR1,paramsPolyvecBytes,indcpaPublicKeyBytes),
-                            seed1,paramsK);
+                    encrypt(message1,upperA1, pkPayload.get(index * 3 + 2), seed1,paramsK);
             return cipherText;
         })
                 .flatMap(Arrays::stream)
