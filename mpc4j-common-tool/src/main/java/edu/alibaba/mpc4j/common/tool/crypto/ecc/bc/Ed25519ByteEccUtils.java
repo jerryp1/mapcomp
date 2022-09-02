@@ -462,7 +462,7 @@ public class Ed25519ByteEccUtils {
         int result = checkPoint(x, y);
 
         Curve25519Field.encode(y, r, 0);
-        // y的最高位永远为0，因此利用x的最高位编码点
+        // y的最高位永远为0，因此利用y的最高位编码点
         r[POINT_BYTES - 1] |= ((x[0] & 1) << 7);
 
         return result;
