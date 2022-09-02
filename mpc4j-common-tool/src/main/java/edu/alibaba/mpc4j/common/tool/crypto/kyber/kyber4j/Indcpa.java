@@ -1,11 +1,10 @@
-package edu.alibaba.mpc4j.common.tool.crypto.kyber;
+package edu.alibaba.mpc4j.common.tool.crypto.kyber.kyber4j;
 
 import edu.alibaba.mpc4j.common.tool.crypto.hash.Hash;
 import edu.alibaba.mpc4j.common.tool.crypto.hash.HashFactory;
 import edu.alibaba.mpc4j.common.tool.crypto.prg.Prg;
 import edu.alibaba.mpc4j.common.tool.crypto.prg.PrgFactory;
 
-import java.security.SecureRandom;
 import java.util.Arrays;
 
 /**
@@ -18,14 +17,13 @@ public class Indcpa {
      * Pseudo-random function to derive a deterministic array of random bytes
      * from the supplied secret key object and other parameters.
      * PRF伪随机函数
-     * @param l hash的长度
-     * @param key 输入的参数，将决定hash值
+     *
+     * @param l     hash的长度
+     * @param key   输入的参数，将决定hash值
      * @param nonce 增加到Key后
      * @return 返回是根据参数生成的固定值
      */
-    public static byte[] generatePrfByteArray(int l, byte[] key, byte nonce) {
-        Hash hashFunction = HashFactory.createInstance(HashFactory.HashType.BC_BLAKE_2B_160,16);
-        Prg prgFunction = PrgFactory.createInstance(PrgFactory.PrgType.JDK_SECURE_RANDOM,l);
+    public static byte[] generatePrfByteArray(int l, byte[] key, byte nonce, Hash hashFunction, Prg prgFunction) {
         byte[] newKey = new byte[key.length + 1];
         System.arraycopy(key, 0, newKey, 0, key.length);
         newKey[key.length] = nonce;
@@ -36,11 +34,12 @@ public class Indcpa {
      * Runs rejection sampling on uniform random bytes to generate uniform
      * random integers modulo `Q`
      * 对均匀随机字节进行拒绝采样，生成模为'Q'的均匀随机整数
+     *
      * @param uniformRandom 随机参数 short[] R 和 int I
-     * @param buf 随机数
-     * @param bufl 随机数的长度
-     * @param l 最终生成的uniformI的长度上限
-     * 结果是uniformRandom 随机参数 short[] R 和 int I 被重新修订了。
+     * @param buf           随机数
+     * @param bufl          随机数的长度
+     * @param l             最终生成的uniformI的长度上限
+     *                      结果是uniformRandom 随机参数 short[] R 和 int I 被重新修订了。
      */
     public static void generateUniform(KyberUniformRandom uniformRandom, byte[] buf, int bufl, int l) {
         short[] uniformR = new short[KyberParams.POLY_BYTES];
@@ -50,14 +49,14 @@ public class Indcpa {
         int uniformI = 0;
         int j = 0;
         while ((uniformI < l) && ((j + KyberParams.MATH_THREE) <= bufl)) {
-            d1 =  (( (buf[j] & 0xFF) | (( buf[j + 1] & 0xFF) << 8)) & 0xFFF);
-            d2 =  (((( (buf[j + 1] & 0xFF)) >> 4) | ( (buf[j + 2] & 0xFF) << 4)) & 0xFFF);
+            d1 = (((buf[j] & 0xFF) | ((buf[j + 1] & 0xFF) << 8)) & 0xFFF);
+            d2 = (((((buf[j + 1] & 0xFF)) >> 4) | ((buf[j + 2] & 0xFF) << 4)) & 0xFFF);
             j = j + 3;
-            if (d1 <  KyberParams.PARAMS_Q) {
+            if (d1 < KyberParams.PARAMS_Q) {
                 uniformR[uniformI] = (short) d1;
                 uniformI++;
             }
-            if (uniformI < l && d2 <  KyberParams.PARAMS_Q) {
+            if (uniformI < l && d2 < KyberParams.PARAMS_Q) {
                 uniformR[uniformI] = (short) d2;
                 uniformI++;
             }
@@ -69,21 +68,19 @@ public class Indcpa {
     /**
      * Generate a polynomial vector matrix from the given seed
      * 根据Seed生成多项式矩阵
-     * @param seed 生成种子
+     *
+     * @param seed       生成种子
      * @param transposed 决定了i，j的先后顺序
-     * @param paramsK 安全参数
+     * @param paramsK    安全参数
      * @return 生成的矩阵
      */
-    public static short[][][] generateMatrix(byte[] seed, boolean transposed, int paramsK) {
+    public static short[][][] generateMatrix(byte[] seed, boolean transposed, Hash hashFunction, Prg prgFunction, int paramsK) {
         short[][][] r = new short[paramsK][paramsK][KyberParams.POLY_BYTES];
         KyberUniformRandom uniformRandom = new KyberUniformRandom();
-        //KeccakSponge xof = new Shake128();
         for (int i = 0; i < paramsK; i++) {
             //生成一个空向量
             r[i] = Poly.generateNewPolyVector(paramsK);
             for (int j = 0; j < paramsK; j++) {
-                Hash hashFunction = HashFactory.createInstance(HashFactory.HashType.BC_BLAKE_2B_160,16);
-                Prg prgFunction = PrgFactory.createInstance(PrgFactory.PrgType.JDK_SECURE_RANDOM,672);
                 byte[] ij = new byte[2];
                 if (transposed) {
                     ij[0] = (byte) i;
@@ -93,8 +90,8 @@ public class Indcpa {
                     ij[1] = (byte) i;
                 }
                 byte[] hashSeed = new byte[34];
-                System.arraycopy(seed,0,hashSeed,0,KyberParams.SYM_BYTES);
-                System.arraycopy(ij,0,hashSeed,KyberParams.SYM_BYTES,2);
+                System.arraycopy(seed, 0, hashSeed, 0, KyberParams.SYM_BYTES);
+                System.arraycopy(ij, 0, hashSeed, KyberParams.SYM_BYTES, 2);
                 byte[] buf = prgFunction.extendToBytes(hashFunction.digestToBytes(hashSeed));
                 //将随机生成的504个byte输入，并计算系数是否满足小于Q,最长可以得到min（256，332）。（504）/3 * 2 = 332
                 generateUniform(uniformRandom, Arrays.copyOfRange(buf, 0, 504), 504, KyberParams.PARAMS_N);
@@ -106,20 +103,23 @@ public class Indcpa {
                     int ctrn = uniformRandom.getUniformI();
                     short[] missing = uniformRandom.getUniformR();
                     //只补充后面的部分，不会修改前面的部分。
-                    if (KyberParams.PARAMS_N - ui >= 0){
-                        System.arraycopy(missing, 0, r[i][j], ui, KyberParams.PARAMS_N - ui);}
+                    if (KyberParams.PARAMS_N - ui >= 0) {
+                        System.arraycopy(missing, 0, r[i][j], ui, KyberParams.PARAMS_N - ui);
+                    }
                     ui = ui + ctrn;
                 }
             }
         }
         return r;
     }
+
     /**
      * Pack the public key with the given public key and seed into a polynomial vector
      * 将公钥以及生成参数（seed）放入byte
+     *
      * @param publicKey 公钥
-     * @param seed 随机数生成种子
-     * @param paramsK 安全系数
+     * @param seed      随机数生成种子
+     * @param paramsK   安全系数
      * @return byte数组
      */
     public static byte[] packPublicKey(short[][] publicKey, byte[] seed, int paramsK) {
@@ -149,8 +149,9 @@ public class Indcpa {
      * Unpack the packed public key into the public key polynomial vector and
      * see
      * 将公钥从byte转为多项式
+     *
      * @param packedPublicKey 打包后的公钥
-     * @param paramsK 安全参数
+     * @param paramsK         安全参数
      * @return 解开后的公钥
      */
     public static UnpackedPublicKey unpackPublicKey(byte[] packedPublicKey, int paramsK) {
@@ -174,6 +175,7 @@ public class Indcpa {
     /**
      * Pack the private key into a byte array
      * 将私钥从多项式转为byte
+     *
      * @param privateKey 私钥
      * @return 打包后的私钥
      */
@@ -184,6 +186,7 @@ public class Indcpa {
     /**
      * Unpack the private key byte array into a polynomial vector
      * 将私钥从byte转为多项式
+     *
      * @param packedPrivateKey 打包后的私钥
      * @return 打包后的私钥
      */
@@ -194,8 +197,9 @@ public class Indcpa {
     /**
      * Pack the ciphertext into a byte array
      * 将密文（u,v）进行压缩。
-     * @param u 论文中的u
-     * @param v 论文中的v（包含了明文的部分）
+     *
+     * @param u       论文中的u
+     * @param v       论文中的v（包含了明文的部分）
      * @param paramsK 安全系数K
      * @return 压缩后的密文转为了byte数组
      */
@@ -212,7 +216,8 @@ public class Indcpa {
      * Unpack the ciphertext from a byte array into a polynomial vector and
      * vector
      * 解包密文
-     * @param c 打包后的密文
+     *
+     * @param c       打包后的密文
      * @param paramsK 安全参数
      * @return 论文中的U和v
      */
@@ -238,135 +243,4 @@ public class Indcpa {
 
         return unpackedCipherText;
     }
-    /**
-     * Generates public and private keys for the CPA-secure public-key
-     * encryption scheme underlying Kyber.
-     * @param paramsK 安全参数
-     * @return 论文中的公钥（As+e,p）和私钥s
-     */
-    public static KyberPackedPki generateKyberKeys(int paramsK) {
-        //私钥s
-        short[][] skpv = Poly.generateNewPolyVector(paramsK);
-        //最后输出时是公钥 As+e
-        short[][] pkpv = Poly.generateNewPolyVector(paramsK);
-        short[][] e = Poly.generateNewPolyVector(paramsK);
-        //prg要求输入为16bit。
-        byte[] prgSeed = new byte[KyberParams.SYM_BYTES /2];
-        byte[] publicSeed = new byte[KyberParams.SYM_BYTES];
-        byte[] noiseSeed = new byte[KyberParams.SYM_BYTES];
-        Prg prgFunction = PrgFactory.createInstance(PrgFactory.PrgType.JDK_SECURE_RANDOM,64);
-        SecureRandom sr = new SecureRandom();
-        sr.nextBytes(prgSeed);
-        //随机数被扩展至64位
-        byte[] fullSeed = prgFunction.extendToBytes(prgSeed);
-        //将随机数前32位赋给publicSeed，后32位赋给noiseSeed
-        System.arraycopy(fullSeed, 0, publicSeed, 0, KyberParams.SYM_BYTES);
-        System.arraycopy(fullSeed, KyberParams.SYM_BYTES, noiseSeed, 0, KyberParams.SYM_BYTES);
-        //生成了公钥中的A
-        short[][][] a = generateMatrix(publicSeed, false, paramsK);
-        byte nonce = (byte) 0;
-        //生成了私钥
-        for (int i = 0; i < paramsK; i++) {
-            skpv[i] = Poly.getNoisePoly(noiseSeed, nonce, paramsK);
-            nonce = (byte) (nonce + (byte) 1);
-        }
-        //生成了噪声，没计算一步增加一步nonce
-        for (int i = 0; i < paramsK; i++) {
-            e[i] = Poly.getNoisePoly(noiseSeed, nonce, paramsK);
-            nonce = (byte) (nonce + (byte) 1);
-        }
-        Poly.polyVectorNtt(skpv);
-        Poly.polyVectorReduce(skpv);
-        Poly.polyVectorNtt(e);
-        //计算 As
-        for (int i = 0; i < paramsK; i++) {
-            short[] temp = Poly.polyVectorPointWiseAccMont(a[i], skpv);
-            pkpv[i] = Poly.polyToMont(temp);
-        }
-        //计算 As+e
-        Poly.polyVectorAdd(pkpv, e);
-        Poly.polyVectorReduce(pkpv);
-        KyberPackedPki packedPki = new KyberPackedPki();
-        packedPki.setPackedPrivateKey(packPrivateKey(skpv));
-        packedPki.setPackedPublicKey(packPublicKey(pkpv, publicSeed, paramsK));
-        return packedPki;
-    }
-
-    /**
-     * Encrypt the given message using the Kyber public-key encryption scheme
-     *
-     * @param m 加密的消息m
-     * @param publicKey 公钥，包含了As+e 和生成 A的种子 p
-     * @param coins 生成随机数的种子
-     * @param paramsK 安全参数
-     * @return 加密后的密文
-     */
-    public static byte[] encrypt(byte[] m, byte[] publicKey, byte[] coins, int paramsK) {
-        short[][] r = Poly.generateNewPolyVector(paramsK);
-        short[][] ep = Poly.generateNewPolyVector(paramsK);
-        short[][] bp = Poly.generateNewPolyVector(paramsK);
-        //将公钥（As+e）和seed一同放入UnpackedPublicKey
-        UnpackedPublicKey unpackedPublicKey = unpackPublicKey(publicKey, paramsK);
-        //将m转换为多项式
-        short[] k = Poly.polyFromData(m);
-        //在执行计算的时候实际上计算的是转秩的结果，所以这里的false改成了true
-        short[][][] at = generateMatrix(unpackedPublicKey.getSeed(), true, paramsK);
-        //生成的随机参数，是r和e1
-        for (int i = 0; i < paramsK; i++) {
-            r[i] = Poly.getNoisePoly(coins, (byte) (i), paramsK);
-            ep[i] = Poly.getNoisePoly(coins, (byte) (i + paramsK), 3);
-        }
-        //是e2
-        short[] epp = Poly.getNoisePoly(coins, (byte) (paramsK * 2), 3);
-        //将r转换到NTT域进行计算
-        Poly.polyVectorNtt(r);
-        Poly.polyVectorReduce(r);
-        //计算Ar
-        for (int i = 0; i < paramsK; i++) {
-            bp[i] = Poly.polyVectorPointWiseAccMont(at[i], r);
-        }
-        //（As+e）* r
-        short[] v = Poly.polyVectorPointWiseAccMont(unpackedPublicKey.getPublicKeyPolyvec(), r);
-        //取消（Ar）和（（As+e）*r）INV域
-        Poly.polyVectorInvNttMont(bp);
-        Poly.polyInvNttMont(v);
-        //Ar + e1
-        Poly.polyVectorAdd(bp, ep);
-        // （As+e）* r + e_2 + m
-        Poly.polyAdd(Poly.polyAdd(v, epp), k);
-        //压缩
-        Poly.polyVectorReduce(bp);
-        //返回密文，pack的时候会执行压缩函数
-        return packCiphertext(bp, Poly.polyReduce(v), paramsK);
-    }
-    /**
-     * Decrypt the given byte array using the Kyber public-key encryption scheme
-     *
-     * @param packedCipherText 压缩，打包后的密文
-     * @param privateKey 私钥
-     * @param paramsK 安全参数K
-     * @return 消息m
-     */
-    public static byte[] decrypt(byte[] packedCipherText, byte[] privateKey, int paramsK) {
-        //解压缩并获得U和v
-        UnpackedCipherText unpackedCipherText = unpackCiphertext(packedCipherText, paramsK);
-        short[][] u = unpackedCipherText.getU();
-        short[] v = unpackedCipherText.getV();
-        //获得私钥
-        short[][] unpackedPrivateKey = unpackPrivateKey(privateKey);
-        //将U转为NTT域
-        Poly.polyVectorNtt(u);
-        // 执行乘法 计算 Us
-        short[] mp = Poly.polyVectorPointWiseAccMont(unpackedPrivateKey, u);
-        //将乘积转回正常计算域
-        Poly.polyInvNttMont(mp);
-        // U - v
-        mp = Poly.polySub(v, mp);
-        Poly.polyReduce(mp);
-        //将结果返回成消息
-        return Poly.polyToMsg(mp);
-    }
-
-
-
 }
