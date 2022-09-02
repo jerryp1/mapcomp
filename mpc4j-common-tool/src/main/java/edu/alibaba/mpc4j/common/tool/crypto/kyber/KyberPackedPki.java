@@ -11,7 +11,7 @@ public class KyberPackedPki {
     private byte[] packedPrivateKey;
 
     /**
-     *  Default Constructor
+     * Default Constructor
      */
     public KyberPackedPki() {
 

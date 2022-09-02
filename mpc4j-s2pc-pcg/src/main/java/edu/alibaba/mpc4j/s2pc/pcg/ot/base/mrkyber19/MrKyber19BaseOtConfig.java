@@ -8,6 +8,7 @@ import edu.alibaba.mpc4j.s2pc.pcg.ot.base.BaseOtFactory;
 /**
  * MRKYBER19-基础OT协议配置项。论文来源：
  * Mansy D, Rindal P. Endemic oblivious transfer. CCS 2019. 2019: 309-326.
+ *
  * @author Sheng Hu
  * @date 2022/08/05
  */
@@ -27,16 +28,25 @@ public class MrKyber19BaseOtConfig implements BaseOtConfig {
     }
 
     @Override
-    public BaseOtFactory.BaseOtType getPtoType() { return BaseOtFactory.BaseOtType.MRKYBER19; }
+    public BaseOtFactory.BaseOtType getPtoType() {
+        return BaseOtFactory.BaseOtType.MRKYBER19;
+    }
 
     @Override
-    public EnvType getEnvType() { return envType; }
+    public EnvType getEnvType() {
+        return envType;
+    }
 
     @Override
-    public SecurityModel getSecurityModel() { return SecurityModel.MALICIOUS; }
-    public int getParamsK() {return paramsK;}
+    public SecurityModel getSecurityModel() {
+        return SecurityModel.MALICIOUS;
+    }
 
-    public static class Builder implements org.apache.commons.lang3.builder.Builder<MrKyber19BaseOtConfig>{
+    public int getParamsK() {
+        return paramsK;
+    }
+
+    public static class Builder implements org.apache.commons.lang3.builder.Builder<MrKyber19BaseOtConfig> {
         /**
          * 环境类型
          */
@@ -57,7 +67,7 @@ public class MrKyber19BaseOtConfig implements BaseOtConfig {
             return this;
         }
 
-        public Builder setParamsK(int paramsK){
+        public Builder setParamsK(int paramsK) {
             this.paramsK = paramsK;
             return this;
         }

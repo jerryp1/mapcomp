@@ -8,6 +8,7 @@ import edu.alibaba.mpc4j.s2pc.pcg.ot.bnot.BnotFactory;
 /**
  * MRKYBER19-基础n选1-OT协议配置项。论文来源：
  * Mansy D, Rindal P. Endemic oblivious transfer. CCS 2019. 2019: 309-326.
+ *
  * @author Sheng Hu
  * @date 2022/08/25
  */
@@ -27,16 +28,25 @@ public class MrKyber19BnotConfig implements BnotConfig {
     }
 
     @Override
-    public BnotFactory.BnotType getPtoType() { return BnotFactory.BnotType.MRKYBER19; }
+    public BnotFactory.BnotType getPtoType() {
+        return BnotFactory.BnotType.MRKYBER19;
+    }
 
     @Override
-    public EnvType getEnvType() { return envType; }
+    public EnvType getEnvType() {
+        return envType;
+    }
 
     @Override
-    public SecurityModel getSecurityModel() { return SecurityModel.MALICIOUS; }
-    public int getParamsK() {return paramsK;}
+    public SecurityModel getSecurityModel() {
+        return SecurityModel.MALICIOUS;
+    }
 
-    public static class Builder implements org.apache.commons.lang3.builder.Builder<MrKyber19BnotConfig>{
+    public int getParamsK() {
+        return paramsK;
+    }
+
+    public static class Builder implements org.apache.commons.lang3.builder.Builder<MrKyber19BnotConfig> {
         /**
          * 环境类型
          */
@@ -57,7 +67,7 @@ public class MrKyber19BnotConfig implements BnotConfig {
             return this;
         }
 
-        public MrKyber19BnotConfig.Builder setParamsK(int paramsK){
+        public MrKyber19BnotConfig.Builder setParamsK(int paramsK) {
             this.paramsK = paramsK;
             return this;
         }

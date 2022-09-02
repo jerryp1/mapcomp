@@ -1,4 +1,4 @@
-package edu.alibaba.mpc4j.common.tool.crypto.kyber;
+package edu.alibaba.mpc4j.common.tool.crypto.kyber.kyber4j;
 
 /**
  * Number Theoretic Transform (NTT) Helper class
@@ -33,7 +33,6 @@ public final class Ntt {
             3127, 3042, 1907, 1836, 1517, 359, 758, 1441};
 
 
-
     /**
      * Multiply the given shorts and then run a Montgomery reduce
      *
@@ -42,7 +41,7 @@ public final class Ntt {
      * @return 返回值是乘法的结果
      */
     public static short modqMulMont(short a, short b) {
-        return ByteOps.montgomeryReduce( (long) a * (long) b);
+        return ByteOps.montgomeryReduce((long) a * (long) b);
     }
 
     /**
@@ -102,10 +101,10 @@ public final class Ntt {
     /**
      * Performs the multiplication of polynomials
      *
-     * @param a0 乘数
-     * @param a1 乘数
-     * @param b0 乘数
-     * @param b1 乘数
+     * @param a0   乘数
+     * @param a1   乘数
+     * @param b0   乘数
+     * @param b1   乘数
      * @param zeta 乘法使用到的参数，申明在ByteOps类
      * @return 返回的结果
      */

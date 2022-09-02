@@ -1,4 +1,4 @@
-package edu.alibaba.mpc4j.common.tool.crypto.kyber;
+package edu.alibaba.mpc4j.common.tool.crypto.kyber.kyber4j;
 
 
 import java.util.Arrays;
@@ -17,10 +17,10 @@ public final class ByteOps {
      * @return 输出为一个long
      */
     public static long convertByteTo32BitUnsignedInt(byte[] x) {
-        long r =  (x[0] & 0xFF);
-        r = r |  ((long) (x[1] & 0xFF) << 8);
+        long r = (x[0] & 0xFF);
+        r = r | ((long) (x[1] & 0xFF) << 8);
         r = r | ((long) (x[2] & 0xFF) << 16);
-        r = r |  ((long) (x[3] & 0xFF) << 24);
+        r = r | ((long) (x[3] & 0xFF) << 24);
         return r;
     }
 
@@ -31,9 +31,9 @@ public final class ByteOps {
      * @return 输出为一个long
      */
     public static long convertByteTo24BitUnsignedInt(byte[] x) {
-        long r =  (x[0] & 0xFF);
+        long r = (x[0] & 0xFF);
         r = r | ((long) (x[1] & 0xFF) << 8);
-        r = r |  ((long) (x[2] & 0xFF) << 16);
+        r = r | ((long) (x[2] & 0xFF) << 16);
         return r;
     }
 
@@ -42,7 +42,7 @@ public final class ByteOps {
      * centered binomial distribution with parameter eta, given an array of
      * uniformly random bytes.
      *
-     * @param buf 生成的种子
+     * @param buf     生成的种子
      * @param paramsK 选择的安全系数
      * @return 符合二项分布的噪声系数
      */
@@ -58,7 +58,7 @@ public final class ByteOps {
                     d = d + ((t >> 1) & 0x00249249);
                     d = d + ((t >> 2) & 0x00249249);
                     for (int j = 0; j < KyberParams.MATH_FOUR; j++) {
-                        a = (short) ((d >> (6 * j )) & 0x7);
+                        a = (short) ((d >> (6 * j)) & 0x7);
                         b = (short) ((d >> (6 * j + KyberParams.ETA_512)) & 0x7);
                         r[4 * i + j] = (short) (a - b);
                     }
@@ -70,7 +70,7 @@ public final class ByteOps {
                     d = t & 0x55555555;
                     d = d + ((t >> 1) & 0x55555555);
                     for (int j = 0; j < KyberParams.MATH_EIGHT; j++) {
-                        a = (short) ((d >> (4 * j )) & 0x3);
+                        a = (short) ((d >> (4 * j)) & 0x3);
                         b = (short) ((d >> (4 * j + KyberParams.ETA_768_1024)) & 0x3);
                         r[8 * i + j] = (short) (a - b);
                     }
@@ -87,7 +87,7 @@ public final class ByteOps {
      */
     public static short montgomeryReduce(long a) {
         short u = (short) (a * KyberParams.PARAMS_QINV);
-        int t =  (u * KyberParams.PARAMS_Q);
+        int t = (u * KyberParams.PARAMS_Q);
         t = (int) (a - t);
         t >>= 16;
         return (short) t;
@@ -111,6 +111,7 @@ public final class ByteOps {
     /**
      * Conditionally subtract Q (from KyberParams) from a
      * 如果是大于等于Q（3329），那么是减Q，如果是小于Q那么则是不变（包括负数）
+     *
      * @param a 输入的值
      * @return 模Q后的数
      */

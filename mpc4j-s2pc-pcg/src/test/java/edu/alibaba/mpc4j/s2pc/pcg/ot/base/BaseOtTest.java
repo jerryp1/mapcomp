@@ -48,57 +48,57 @@ public class BaseOtTest {
     public static Collection<Object[]> configurations() {
         Collection<Object[]> configurationParams = new ArrayList<>();
         // MR19，压缩编码
-        configurationParams.add(new Object[] {
-            BaseOtType.MR19.name() + " (compress)",
-            new Mr19BaseOtConfig.Builder().setCompressEncode(true).build(),
+        configurationParams.add(new Object[]{
+                BaseOtType.MR19.name() + " (compress)",
+                new Mr19BaseOtConfig.Builder().setCompressEncode(true).build(),
         });
         // MR19，非压缩编码
-        configurationParams.add(new Object[] {
-            BaseOtType.MR19.name() + " (uncompress)",
-            new Mr19BaseOtConfig.Builder().setCompressEncode(false).build(),
+        configurationParams.add(new Object[]{
+                BaseOtType.MR19.name() + " (uncompress)",
+                new Mr19BaseOtConfig.Builder().setCompressEncode(false).build(),
         });
         //MRKYBER19,K = 2
-        configurationParams.add(new Object[] {
-                BaseOtType.MRKYBER19.name() +"(2)",
+        configurationParams.add(new Object[]{
+                BaseOtType.MRKYBER19.name() + "(2)",
                 new MrKyber19BaseOtConfig.Builder().setParamsK(2).build(),
         });
         //MRKYBER19,K = 3
-        configurationParams.add(new Object[] {
-                BaseOtType.MRKYBER19.name() +"(3)",
+        configurationParams.add(new Object[]{
+                BaseOtType.MRKYBER19.name() + "(3)",
                 new MrKyber19BaseOtConfig.Builder().setParamsK(3).build(),
         });
         //MRKYBER19,K = 4
-        configurationParams.add(new Object[] {
-                BaseOtType.MRKYBER19.name() +"(4)",
+        configurationParams.add(new Object[]{
+                BaseOtType.MRKYBER19.name() + "(4)",
                 new MrKyber19BaseOtConfig.Builder().setParamsK(4).build(),
         });
         // CO15，压缩编码
-        configurationParams.add(new Object[] {
-            BaseOtType.CO15.name() + " (compress)",
-            new Co15BaseOtConfig.Builder().setCompressEncode(true).build(),
+        configurationParams.add(new Object[]{
+                BaseOtType.CO15.name() + " (compress)",
+                new Co15BaseOtConfig.Builder().setCompressEncode(true).build(),
         });
         // CO15，非压缩编码
-        configurationParams.add(new Object[] {
-            BaseOtType.CO15.name() + " (uncompress)",
-            new Co15BaseOtConfig.Builder().setCompressEncode(false).build(),
+        configurationParams.add(new Object[]{
+                BaseOtType.CO15.name() + " (uncompress)",
+                new Co15BaseOtConfig.Builder().setCompressEncode(false).build(),
         });
         // NP01，压缩编码
-        configurationParams.add(new Object[] {
-            BaseOtType.NP01.name() + " (compress)",
-            new Np01BaseOtConfig.Builder().setCompressEncode(true).build(),
+        configurationParams.add(new Object[]{
+                BaseOtType.NP01.name() + " (compress)",
+                new Np01BaseOtConfig.Builder().setCompressEncode(true).build(),
         });
         // NP01，非压缩编码
-        configurationParams.add(new Object[] {
-            BaseOtType.NP01.name() + " (uncompress)",
-            new Np01BaseOtConfig.Builder().setCompressEncode(false).build(),
+        configurationParams.add(new Object[]{
+                BaseOtType.NP01.name() + " (uncompress)",
+                new Np01BaseOtConfig.Builder().setCompressEncode(false).build(),
         });
         // CSW20，压缩编码
-        configurationParams.add(new Object[] {
+        configurationParams.add(new Object[]{
                 BaseOtType.CSW20.name() + " (compress)",
                 new Csw20BaseOtConfig.Builder().setCompressEncode(true).build(),
         });
         // CSW20，非压缩编码
-        configurationParams.add(new Object[] {
+        configurationParams.add(new Object[]{
                 BaseOtType.CSW20.name() + " (uncompress)",
                 new Csw20BaseOtConfig.Builder().setCompressEncode(false).build(),
         });
@@ -189,7 +189,7 @@ public class BaseOtTest {
             // 验证结果
             assertOutput(num, senderThread.getSenderOutput(), receiverThread.getReceiverOutput());
             LOGGER.info("Sender sends {}B, Receiver sends {}B, time = {}ms",
-                senderRpc.getSendByteLength(), receiverRpc.getSendByteLength(), totalTime
+                    senderRpc.getSendByteLength(), receiverRpc.getSendByteLength(), totalTime
             );
             senderRpc.reset();
             receiverRpc.reset();
@@ -205,13 +205,13 @@ public class BaseOtTest {
         IntStream.range(0, num).forEach(index -> {
             if (receiverOutput.getChoice(index)) {
                 Assert.assertEquals(
-                    ByteBuffer.wrap(senderOutput.getR1(index)),
-                    ByteBuffer.wrap(receiverOutput.getRb(index))
+                        ByteBuffer.wrap(senderOutput.getR1(index)),
+                        ByteBuffer.wrap(receiverOutput.getRb(index))
                 );
             } else {
                 Assert.assertEquals(
-                    ByteBuffer.wrap(senderOutput.getR0(index)),
-                    ByteBuffer.wrap(receiverOutput.getRb(index))
+                        ByteBuffer.wrap(senderOutput.getR0(index)),
+                        ByteBuffer.wrap(receiverOutput.getRb(index))
                 );
             }
         });

@@ -8,12 +8,13 @@ import edu.alibaba.mpc4j.common.rpc.Rpc;
 import edu.alibaba.mpc4j.common.rpc.utils.DataPacket;
 import edu.alibaba.mpc4j.common.rpc.utils.DataPacketHeader;
 import edu.alibaba.mpc4j.common.tool.CommonConstants;
-import edu.alibaba.mpc4j.common.tool.crypto.hash.Hash;
-import edu.alibaba.mpc4j.common.tool.crypto.hash.HashFactory;
+import edu.alibaba.mpc4j.common.tool.crypto.kyber.kyber4j.KyberParams;
+import edu.alibaba.mpc4j.common.tool.crypto.kyber.kyber4j.Poly;
 import edu.alibaba.mpc4j.s2pc.pcg.ot.base.AbstractBaseOtReceiver;
 import edu.alibaba.mpc4j.s2pc.pcg.ot.base.BaseOtReceiverOutput;
 
 
+import java.security.SecureRandom;
 import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
@@ -21,10 +22,10 @@ import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
 
-
 /**
  * MRKYBER19-基础OT协议接收方。论文来源：
  * Mansy D, Rindal P. Endemic oblivious transfer. CCS 2019. 2019: 309-326.
+ *
  * @author Sheng Hu
  * @date 2022/08/05
  */
@@ -36,20 +37,15 @@ public class MrKyber19BaseOtReceiver extends AbstractBaseOtReceiver {
     /**
      * OT协议接收方参数
      */
-    private KyberVecPki[] aArray;
+    private KyberVecKeyPair[] aArray;
     /**
      * 公钥（As+e）长度
      */
     private int paramsPolyvecBytes;
     /**
-     * 公钥（（As+e），p）的长度
+     * 使用的kyber实例
      */
-    private int indcpaPublicKeyBytes;
-    /**
-     * 安全参数 K
-     */
-    private int paramsK;
-
+    private Kyber kyber;
 
 
     public MrKyber19BaseOtReceiver(Rpc receiverRpc, Party senderParty, MrKyber19BaseOtConfig config) {
@@ -69,8 +65,7 @@ public class MrKyber19BaseOtReceiver extends AbstractBaseOtReceiver {
     @Override
     public BaseOtReceiverOutput receive(boolean[] choices) throws MpcAbortException {
         setPtoInput(choices);
-        paramsK = config.getParamsK();
-        paramsInit(paramsK);
+        paramsInit(config.getParamsK());
         info("{}{} Recv. begin", ptoBeginLogPrefix, getPtoDesc().getPtoName());
 
         stopWatch.start();
@@ -101,25 +96,23 @@ public class MrKyber19BaseOtReceiver extends AbstractBaseOtReceiver {
         return handleBetaPayload(betaPayload);
     }
 
-    private void paramsInit(int paramsK){
+    private void paramsInit(int paramsK) {
+        SecureRandom secureRandom = new SecureRandom();
+        this.kyber = KyberFactory.createInstance(KyberFactory.KyberType.KYBER_JAVA, paramsK, secureRandom);
         switch (paramsK) {
             case 2:
                 paramsPolyvecBytes = KyberParams.POLY_VECTOR_BYTES_512;
-                indcpaPublicKeyBytes = KyberParams.INDCPA_PK_BYTES_512;
                 break;
             case 3:
                 paramsPolyvecBytes = KyberParams.POLY_VECTOR_BYTES_768;
-                indcpaPublicKeyBytes = KyberParams.INDCPA_PK_BYTES_768;
                 break;
             default:
                 paramsPolyvecBytes = KyberParams.POLY_VECTOR_BYTES_1024;
-                indcpaPublicKeyBytes = KyberParams.INDCPA_PK_BYTES_1024;
         }
     }
 
     private List<byte[]> generatePkPayload() {
-        aArray = new KyberVecPki[choices.length];
-        Hash hashFunction = HashFactory.createInstance(envType,32);
+        aArray = new KyberVecKeyPair[choices.length];
         // 公钥生成流
         IntStream pkIntStream = IntStream.range(0, choices.length);
         pkIntStream = parallel ? pkIntStream.parallel() : pkIntStream;
@@ -131,14 +124,14 @@ public class MrKyber19BaseOtReceiver extends AbstractBaseOtReceiver {
                     short[][] randomKeyVec;
                     // 随机向量的生成元，g（R_1-sigma）
                     // 随机生成一组钥匙对
-                    aArray[index] = KyberKeyOps.generateKyberKeys(paramsK);
+                    aArray[index] = this.kyber.generateKyberVecKeys();
                     // 读取多项式格式下的公钥
                     publickKeyVec = aArray[index].getPublicKeyVec();
                     // 生成一个符合格式的随机公钥 R_1-sigma
-                    randomKeyVec = KyberPublicKeyOps.getRandomKyberPk(paramsK);
+                    randomKeyVec = this.kyber.getRandomKyberPk();
                     // 计算 R_sigma = R_sigma + Hash(R_1-sigma)
-                    short[][] hashKeyVec = KyberPublicKeyOps.kyberPkHash(randomKeyVec, hashFunction);
-                    publickKeyVec = KyberPublicKeyOps.kyberPkAdd(publickKeyVec, hashKeyVec);
+                    short[][] hashKeyVec = this.kyber.hashToKyberPk(randomKeyVec);
+                    this.kyber.kyberPkAddi(publickKeyVec, hashKeyVec);
                     // 根据选择值将两个参数R分别放入对应位置
                     int sigma = choices[index] ? 1 : 0;
                     byte[][] pkPair = new byte[3][];
@@ -146,32 +139,32 @@ public class MrKyber19BaseOtReceiver extends AbstractBaseOtReceiver {
                     pkPair[1] = new byte[paramsPolyvecBytes];
                     pkPair[2] = new byte[KyberParams.SYM_BYTES];
                     //将（As+e，p_sigma）打包传输
-                    System.arraycopy(Poly.polyVectorToBytes(publickKeyVec),0,
-                            pkPair[sigma],0,paramsPolyvecBytes);
-                    System.arraycopy(Poly.polyVectorToBytes(randomKeyVec),0,
-                            pkPair[1 - sigma],0,paramsPolyvecBytes);
-                    System.arraycopy(aArray[index].getPublicKeyGenerator(),0,
-                            pkPair[2],0,KyberParams.SYM_BYTES);
+                    System.arraycopy(Poly.polyVectorToBytes(publickKeyVec), 0,
+                            pkPair[sigma], 0, paramsPolyvecBytes);
+                    System.arraycopy(Poly.polyVectorToBytes(randomKeyVec), 0,
+                            pkPair[1 - sigma], 0, paramsPolyvecBytes);
+                    System.arraycopy(aArray[index].getPublicKeyGenerator(), 0,
+                            pkPair[2], 0, KyberParams.SYM_BYTES);
                     return pkPair;
                 })
                 .flatMap(Arrays::stream)
                 .collect(Collectors.toList());
     }
 
-    private  BaseOtReceiverOutput handleBetaPayload(List<byte[]> betaPayload) throws MpcAbortException{
+    private BaseOtReceiverOutput handleBetaPayload(List<byte[]> betaPayload) throws MpcAbortException {
         MpcAbortPreconditions.checkArgument(betaPayload.size() == choices.length * 2);
         //解密消息获得相应的选择B_sigma
         byte[][] rbArray = new byte[choices.length][];
         IntStream decryptArrayIntStream = IntStream.range(0, choices.length);
         decryptArrayIntStream = parallel ? decryptArrayIntStream.parallel() : decryptArrayIntStream;
-        decryptArrayIntStream.forEach(index ->{
+        decryptArrayIntStream.forEach(index -> {
             int sigma = choices[index] ? 1 : 0;
             rbArray[index] = new byte[CommonConstants.BLOCK_BYTE_LENGTH];
             short[][] receiverPrivateKey = aArray[index].getPrivateKeyVec();
-            byte[] rbDecrypt = KyberKeyOps.decrypt(betaPayload.get(2 * index + sigma),receiverPrivateKey,paramsK);
-            System.arraycopy(rbDecrypt,0,rbArray[index],0, CommonConstants.BLOCK_BYTE_LENGTH);
+            byte[] rbDecrypt = this.kyber.decrypt(betaPayload.get(2 * index + sigma), receiverPrivateKey);
+            System.arraycopy(rbDecrypt, 0, rbArray[index], 0, CommonConstants.BLOCK_BYTE_LENGTH);
         });
 
-        return new BaseOtReceiverOutput(choices,rbArray);
+        return new BaseOtReceiverOutput(choices, rbArray);
     }
 }

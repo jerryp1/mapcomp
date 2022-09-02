@@ -1,4 +1,4 @@
-package edu.alibaba.mpc4j.common.tool.crypto.kyber;
+package edu.alibaba.mpc4j.common.tool.crypto.kyber.kyber4j;
 
 /**
  * Helper class for various static byte sizes

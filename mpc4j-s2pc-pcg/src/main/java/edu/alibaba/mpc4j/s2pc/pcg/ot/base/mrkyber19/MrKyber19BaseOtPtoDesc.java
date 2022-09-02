@@ -6,6 +6,7 @@ import edu.alibaba.mpc4j.common.rpc.desc.PtoDescManager;
 /**
  * MRKYBER19-基础OT协议信息。论文来源：
  * Mansy D, Rindal P. Endemic oblivious transfer. CCS 2019. 2019: 309-326.
+ *
  * @author Sheng Hu
  * @date 2022/08/05
  */
@@ -14,7 +15,7 @@ public class MrKyber19BaseOtPtoDesc implements PtoDesc {
     /**
      * 协议ID
      */
-    private static final int PTO_ID = Math.abs((int)7413097849730455724L);
+    private static final int PTO_ID = Math.abs((int) 7413097849730455724L);
     /**
      * 协议名称
      */
@@ -33,6 +34,7 @@ public class MrKyber19BaseOtPtoDesc implements PtoDesc {
          */
         SENDER_SEND_B,
     }
+
     /**
      * 单例模式
      */

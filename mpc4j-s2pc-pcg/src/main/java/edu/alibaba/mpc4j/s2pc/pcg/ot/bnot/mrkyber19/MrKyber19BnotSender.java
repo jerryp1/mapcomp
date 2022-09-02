@@ -8,8 +8,8 @@ import edu.alibaba.mpc4j.common.rpc.Rpc;
 import edu.alibaba.mpc4j.common.rpc.utils.DataPacket;
 import edu.alibaba.mpc4j.common.rpc.utils.DataPacketHeader;
 import edu.alibaba.mpc4j.common.tool.CommonConstants;
-import edu.alibaba.mpc4j.common.tool.crypto.hash.Hash;
-import edu.alibaba.mpc4j.common.tool.crypto.hash.HashFactory;
+import edu.alibaba.mpc4j.common.tool.crypto.kyber.kyber4j.KyberParams;
+import edu.alibaba.mpc4j.common.tool.crypto.kyber.kyber4j.Poly;
 import edu.alibaba.mpc4j.s2pc.pcg.ot.bnot.AbstractBnotSender;
 import edu.alibaba.mpc4j.s2pc.pcg.ot.bnot.BnotSenderOutput;
 
@@ -38,9 +38,13 @@ public class MrKyber19BnotSender extends AbstractBnotSender {
      */
     private List<byte[]> bByte;
     /**
-     * 安全参数 K
+     * 使用的kyber实例
      */
-    private int paramsK;
+    private Kyber kyber;
+    /**
+     * 随机函数
+     */
+    private SecureRandom secureRandom;
 
     public MrKyber19BnotSender(Rpc senderRpc, Party receiverParty, MrKyber19BnotConfig config) {
         super(MrKyber19BnotPtoDesc.getInstance(), senderRpc, receiverParty, config);
@@ -59,7 +63,7 @@ public class MrKyber19BnotSender extends AbstractBnotSender {
     @Override
     public BnotSenderOutput send(int num) throws MpcAbortException {
         setPtoInput(num);
-        paramsK = config.getParamsK();
+        paramsInit(config.getParamsK());
         bByte = new ArrayList<>();
         info("{}{} Send. begin", ptoBeginLogPrefix, getPtoDesc().getPtoName());
         stopWatch.start();
@@ -89,9 +93,13 @@ public class MrKyber19BnotSender extends AbstractBnotSender {
         return senderOutput;
     }
 
+    private void paramsInit(int paramsK) {
+        this.secureRandom = new SecureRandom();
+        this.kyber = KyberFactory.createInstance(KyberFactory.KyberType.KYBER_JAVA, paramsK, secureRandom);
+    }
+
     private BnotSenderOutput handlePkPayload(List<byte[]> pkPayload) throws MpcAbortException {
         MpcAbortPreconditions.checkArgument(pkPayload.size() == num * (n + 1));
-        Hash hashFunction = HashFactory.createInstance(envType, 32);
         IntStream keyPairArrayIntStream = IntStream.range(0, num);
         keyPairArrayIntStream = parallel ? keyPairArrayIntStream.parallel() : keyPairArrayIntStream;
         //OT协议的输出，即num * n 个选项，每个长度为16*8 bit。
@@ -108,7 +116,7 @@ public class MrKyber19BnotSender extends AbstractBnotSender {
                         //As+e
                         upperVector[i] = Poly.polyVectorFromBytes(upperPk);
                         //Hash（As+e）
-                        upperHashPkVector[i] = KyberPublicKeyOps.kyberPkHash(upperVector[i], hashFunction);
+                        upperHashPkVector[i] = this.kyber.hashToKyberPk(upperVector[i]);
                     }
                     //恢复出原油的公钥
                     for (int i = 0; i < n; i++) {
@@ -116,7 +124,7 @@ public class MrKyber19BnotSender extends AbstractBnotSender {
                         for (int j = 0; j < n; j++) {
                             if (i != j) {
                                 // 计算A = Ri - Hash(Rj)
-                                upperPkVector[i] = KyberPublicKeyOps.kyberPkSub(upperPkVector[i], upperHashPkVector[j]);
+                                this.kyber.kyberPkSubi(upperPkVector[i], upperHashPkVector[j]);
                             }
                         }
                     }
@@ -127,15 +135,13 @@ public class MrKyber19BnotSender extends AbstractBnotSender {
                         byte[] seed = new byte[KyberParams.SYM_BYTES];
                         //生成需要加密的明文
                         byte[] message = new byte[KyberParams.SYM_BYTES];
-                        SecureRandom sr = new SecureRandom();
-                        sr.nextBytes(seed);
-                        sr.nextBytes(message);
+                        this.secureRandom.nextBytes(seed);
+                        this.secureRandom.nextBytes(message);
                         //因为消息m必须要256bit，因此传递的密文中选取前128bit作为OT的输出
                         rbArray[index][i] = Arrays.copyOfRange(message, 0, CommonConstants.BLOCK_BYTE_LENGTH);
                         //计算加密函数，加密函数的输入是明文、公钥（As+e）部分、生成元部分、随机数种子，安全参数k
-                        cipherText[i] = KyberKeyOps.
-                                encrypt(message, upperPkVector[i],
-                                        pkPayload.get(index * (n + 1) + n), seed, paramsK);
+                        cipherText[i] = this.kyber.encrypt
+                                (message, upperPkVector[i], pkPayload.get(index * (n + 1) + n));
                     }
                     return cipherText;
                 })

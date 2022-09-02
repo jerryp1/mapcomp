@@ -1,4 +1,7 @@
-package edu.alibaba.mpc4j.common.tool.crypto.kyber;
+package edu.alibaba.mpc4j.common.tool.crypto.kyber.kyber4j;
+
+import edu.alibaba.mpc4j.common.tool.crypto.hash.Hash;
+import edu.alibaba.mpc4j.common.tool.crypto.prg.Prg;
 
 import java.util.Arrays;
 
@@ -62,6 +65,19 @@ public final class Poly {
     }
 
     /**
+     * Add two polynomial vectors
+     * 多项式向量系数相加的结果存储在了polyA
+     *
+     * @param polyA 一组多项式向量A
+     * @param polyB 一组多项式向量B
+     */
+    public static void polyVectorAddi(short[][] polyA, short[][] polyB) {
+        for (int i = 0; i < polyA.length; i++) {
+            polyA[i] = Poly.polyAdd(polyA[i], polyB[i]);
+        }
+    }
+
+    /**
      * Subtract two polynomials
      *
      * @param polyA 多项式A的系数组
@@ -69,6 +85,21 @@ public final class Poly {
      * @return 返回值是多项式A的系数减多项式B的系数
      */
     public static short[] polySub(short[] polyA, short[] polyB) {
+        short[] polyC = new short[polyA.length];
+        for (int i = 0; i < KyberParams.PARAMS_N; i++) {
+            polyC[i] = (short) (polyA[i] - polyB[i]);
+        }
+        return polyC;
+    }
+
+    /**
+     * Subtract two polynomials
+     *
+     * @param polyA 多项式A的系数组
+     * @param polyB 多项式B的系数组
+     * @return 返回值是多项式A的系数减多项式B的系数
+     */
+    public static short[] polySubi(short[] polyA, short[] polyB) {
         for (int i = 0; i < KyberParams.PARAMS_N; i++) {
             polyA[i] = (short) (polyA[i] - polyB[i]);
         }
@@ -84,7 +115,7 @@ public final class Poly {
      */
     public static short[] polyToMont(short[] polyR) {
         for (int i = 0; i < KyberParams.PARAMS_N; i++) {
-            polyR[i] = ByteOps.montgomeryReduce( polyR[i] * 1353);
+            polyR[i] = ByteOps.montgomeryReduce(polyR[i] * 1353);
         }
         return polyR;
     }
@@ -106,7 +137,7 @@ public final class Poly {
      * Applies Barrett reduction to each coefficient of each element of a vector
      * of polynomials.
      *
-     * @param r  对于所有的系数都执行Barrett reduction
+     * @param r 对于所有的系数都执行Barrett reduction
      * @return 返回值是多项式向量
      */
     public static short[][] polyVectorReduce(short[][] r) {
@@ -119,6 +150,7 @@ public final class Poly {
     /**
      * Serialize a polynomial in to an array of bytes
      * 将一个多项式转换为byte数组————每两个short对应3个byte
+     *
      * @param a 输入为short数组
      * @return 返回值是长度为384的byte数组
      */
@@ -127,10 +159,10 @@ public final class Poly {
         byte[] r = new byte[KyberParams.POLY_BYTES];
         Poly.polyConditionalSubQ(a);
         for (int i = 0; i < KyberParams.PARAMS_N / KyberParams.MATH_TWO; i++) {
-            t0 =  (a[2 * i] & 0xFFFF);
+            t0 = (a[2 * i] & 0xFFFF);
             t1 = ((int) (a[2 * i + 1]) & 0xFFFF);
             r[3 * i] = (byte) (t0);
-            r[3 * i + 1] = (byte) ( (t0 >> 8) |  (t1 << 4));
+            r[3 * i + 1] = (byte) ((t0 >> 8) | (t1 << 4));
             r[3 * i + 2] = (byte) (t1 >> 4);
         }
         return r;
@@ -139,6 +171,7 @@ public final class Poly {
     /**
      * Serialize a polynomial vector to a byte array
      * 将多项式向量转换为byte数组
+     *
      * @param polyA 多项式向量
      * @return 返回值是长度为 K * 384
      */
@@ -155,6 +188,7 @@ public final class Poly {
     /**
      * De-serialize a byte array into a polynomial
      * 将一个byte数组转换为多项式（short形式表现）————每3个byte对应两个short
+     *
      * @param a 输入为byte数组
      * @return 输出为short，长度可以修改为256原来为384
      */
@@ -170,11 +204,12 @@ public final class Poly {
     /**
      * Deserialize a byte array into a polynomial vector
      * 将byte数组转为多项式向量
+     *
      * @param polyA 输入的byte数组
      * @return 多项式向量
      */
     public static short[][] polyVectorFromBytes(byte[] polyA) {
-        int paramsK = polyA.length/KyberParams.POLY_BYTES;
+        int paramsK = polyA.length / KyberParams.POLY_BYTES;
         short[][] r = new short[paramsK][KyberParams.POLY_BYTES];
         for (int i = 0; i < paramsK; i++) {
             int start = (i * KyberParams.POLY_BYTES);
@@ -187,6 +222,7 @@ public final class Poly {
     /**
      * Convert a 32-byte message to a polynomial
      * 将256/8 = 32 的byte数组转换为多项式（256）short，对于每一个bit，如果为0，则输出为0，如果为1，则输出为1665。
+     *
      * @param msg 输入的为msg数组，但是只读前面32个，不会全读
      * @return 返回值为msg转为的short数组（长度为256）
      */
@@ -206,6 +242,7 @@ public final class Poly {
     /**
      * Convert a polynomial to a 32-byte message
      * 将多项式（256个short）转换为32个byte数组
+     *
      * @param a 多项式系数
      * @return byte数组，msg
      */
@@ -217,7 +254,7 @@ public final class Poly {
             msg[i] = 0;
             for (int j = 0; j < KyberParams.MATH_EIGHT; j++) {
                 // 计算 msg【i】 = (a * 2 + Q/2 ) / Q & 1
-                t =  ((((((int) (a[8 * i + j])) << 1) + (KyberParams.PARAMS_Q / 2)) / KyberParams.PARAMS_Q) & 1);
+                t = ((((((int) (a[8 * i + j])) << 1) + (KyberParams.PARAMS_Q / 2)) / KyberParams.PARAMS_Q) & 1);
                 msg[i] = (byte) (msg[i] | (t << j));
             }
         }
@@ -227,17 +264,20 @@ public final class Poly {
     /**
      * Create a new Polynomial Vector
      * 生成一个新的多项式
+     *
      * @param paramsK 输入为安全系数，决定了代码中的多项式系数是如何组织的
      * @return 返回值是一个新的多项式向量
      */
     public static short[][] generateNewPolyVector(int paramsK) {
         return new short[paramsK][KyberParams.POLY_BYTES];
     }
+
     /**
      * Computes an in-place negacyclic number-theoretic transform (NTT) of a polynomial
      * 将多项式系数转换至NTT域。
      * Input is assumed normal order
      * Output is assumed bit-revered order
+     *
      * @param r 多项式系数
      * @return 返回值为NTT数域上的数
      */
@@ -249,6 +289,7 @@ public final class Poly {
      * Applies forward number-theoretic transforms (NTT) to all elements of a
      * vector of polynomial
      * 将多项式转移至NTT数域
+     *
      * @param r 多项式向量
      */
     public static void polyVectorNtt(short[][] r) {
@@ -262,6 +303,7 @@ public final class Poly {
      * 将NTT域上的系数转换至多项式系数
      * Input is assumed bit-revered order
      * Output is assumed normal order
+     *
      * @param r NTT数域上的系数
      * @return 多项式系数
      */
@@ -284,6 +326,7 @@ public final class Poly {
     /**
      * Multiply two polynomials in the number-theoretic transform (NTT) domain
      * NTT数域上的乘法
+     *
      * @param polyA 乘法因子A
      * @param polyB 乘法因子B
      * @return 乘积在NTT域上的系数
@@ -293,7 +336,7 @@ public final class Poly {
             short[] rx = Ntt.baseMultiplier(
                     polyA[4 * i], polyA[4 * i + 1],
                     polyB[4 * i], polyB[4 * i + 1],
-                   Ntt.nttZetas[64 + i]
+                    Ntt.nttZetas[64 + i]
             );
             short[] ry = Ntt.baseMultiplier(
                     polyA[4 * i + 2], polyA[4 * i + 3],
@@ -328,7 +371,8 @@ public final class Poly {
     /**
      * Performs lossy compression and serialization of a polynomial
      * 压缩一个多项式（只有密文）
-     * @param polyA 压缩的多项式系数
+     *
+     * @param polyA   压缩的多项式系数
      * @param paramsK 安全系数,此处安全系数不能省略，因为不知道256个多项式系数中有多少位是有用的。
      * @return 压缩后的多项式系数
      */
@@ -369,10 +413,12 @@ public final class Poly {
 
         return r;
     }
+
     /**
      * Perform a lossly compression and serialization of a vector of polynomials
      * 将多项式向量（只有密文）压缩
-     * @param a 输入的为密文的short格式
+     *
+     * @param a       输入的为密文的short格式
      * @param paramsK 安全参数
      * @return 输出为压缩后的函数
      */
@@ -399,7 +445,7 @@ public final class Poly {
                 for (int i = 0; i < paramsK; i++) {
                     for (int j = 0; j < KyberParams.PARAMS_N / KyberParams.MATH_FOUR; j++) {
                         for (int k = 0; k < KyberParams.MATH_FOUR; k++) {
-                            t[k] = ( (( ((long) (a[i][4 * j + k]) << 10) + (long) (KyberParams.PARAMS_Q / 2))
+                            t[k] = (((((long) (a[i][4 * j + k]) << 10) + (long) (KyberParams.PARAMS_Q / 2))
                                     / (long) (KyberParams.PARAMS_Q)) & 0x3ff);
                         }
                         r[rr] = (byte) (t[0]);
@@ -416,7 +462,7 @@ public final class Poly {
                 for (int i = 0; i < paramsK; i++) {
                     for (int j = 0; j < KyberParams.PARAMS_N / KyberParams.MATH_EIGHT; j++) {
                         for (int k = 0; k < KyberParams.MATH_EIGHT; k++) {
-                            t[k] = ( (( ((long) (a[i][8 * j + k]) << 11) + (long) (KyberParams.PARAMS_Q / 2))
+                            t[k] = (((((long) (a[i][8 * j + k]) << 11) + (long) (KyberParams.PARAMS_Q / 2))
                                     / (long) (KyberParams.PARAMS_Q)) & 0x7ff);
                         }
                         r[rr] = (byte) ((t[0]));
@@ -436,13 +482,15 @@ public final class Poly {
         }
         return r;
     }
+
     /**
      * De-serialize and decompress a polynomial
      * 解密压缩后的多项式
      * Compression is lossy so the resulting polynomial will not match the
      * original polynomial
      * 压缩是有损的，因此会与原多项式不同
-     * @param a 压缩后的byte
+     *
+     * @param a       压缩后的byte
      * @param paramsK 多项式系数
      * @return 返回值为解压缩后的内容
      */
@@ -452,25 +500,25 @@ public final class Poly {
             case 2:
             case 3:
                 for (int i = 0; i < KyberParams.PARAMS_N / KyberParams.MATH_TWO; i++) {
-                    r[2 * i] = (short) ((( (a[i] & 15) * KyberParams.PARAMS_Q) + 8) >> 4);
-                    r[2 * i + 1] = (short) (((( (a[i] & 0xFF) >> 4) * KyberParams.PARAMS_Q) + 8) >> 4);
+                    r[2 * i] = (short) ((((a[i] & 15) * KyberParams.PARAMS_Q) + 8) >> 4);
+                    r[2 * i + 1] = (short) (((((a[i] & 0xFF) >> 4) * KyberParams.PARAMS_Q) + 8) >> 4);
                 }
                 break;
             default:
                 int aa = 0;
                 long[] t = new long[8];
                 for (int i = 0; i < KyberParams.PARAMS_N / KyberParams.MATH_EIGHT; i++) {
-                    t[0] =  ( (a[aa] & 0xFF));
-                    t[1] = (long) ((byte) (( (a[aa] & 0xFF) >> 5)) | (byte) ( (a[aa + 1] & 0xFF) << 3)) & 0xFF;
-                    t[2] = (long) ( (a[aa + 1] & 0xFF) >> 2) & 0xFF;
-                    t[3] = (long) ((byte) (( (a[aa + 1] & 0xFF) >> 7)) | (byte) ( (a[aa + 2] & 0xFF) << 1)) & 0xFF;
-                    t[4] = (long) ((byte) (( (a[aa + 2] & 0xFF) >> 4)) | (byte) ( (a[aa + 3] & 0xFF) << 4)) & 0xFF;
-                    t[5] = (long) ( (a[aa + 3] & 0xFF) >> 1) & 0xFF;
-                    t[6] = (long) ((byte) (( (a[aa + 3] & 0xFF) >> 6)) | (byte) ( (a[aa + 4] & 0xFF) << 2)) & 0xFF;
-                    t[7] = ((long) ( (a[aa + 4] & 0xFF) >> 3)) & 0xFF;
+                    t[0] = ((a[aa] & 0xFF));
+                    t[1] = (long) ((byte) (((a[aa] & 0xFF) >> 5)) | (byte) ((a[aa + 1] & 0xFF) << 3)) & 0xFF;
+                    t[2] = (long) ((a[aa + 1] & 0xFF) >> 2) & 0xFF;
+                    t[3] = (long) ((byte) (((a[aa + 1] & 0xFF) >> 7)) | (byte) ((a[aa + 2] & 0xFF) << 1)) & 0xFF;
+                    t[4] = (long) ((byte) (((a[aa + 2] & 0xFF) >> 4)) | (byte) ((a[aa + 3] & 0xFF) << 4)) & 0xFF;
+                    t[5] = (long) ((a[aa + 3] & 0xFF) >> 1) & 0xFF;
+                    t[6] = (long) ((byte) (((a[aa + 3] & 0xFF) >> 6)) | (byte) ((a[aa + 4] & 0xFF) << 2)) & 0xFF;
+                    t[7] = ((long) ((a[aa + 4] & 0xFF) >> 3)) & 0xFF;
                     aa = aa + 5;
                     for (int j = 0; j < KyberParams.MATH_EIGHT; j++) {
-                        r[8 * i + j] = (short) ((( (t[j] & 31) * (KyberParams.PARAMS_Q)) + 16) >> 5);
+                        r[8 * i + j] = (short) ((((t[j] & 31) * (KyberParams.PARAMS_Q)) + 16) >> 5);
                     }
                 }
         }
@@ -483,7 +531,8 @@ public final class Poly {
      * Since the compress is lossy, the results will not be exactly the same as
      * the original vector of polynomials
      * 压缩是有损的，因此会与原多项式向量不同
-     * @param a 压缩后的向量
+     *
+     * @param a       压缩后的向量
      * @param paramsK 安全参数K
      * @return 多项式向量
      */
@@ -536,12 +585,13 @@ public final class Poly {
      * Generate a deterministic noise polynomial from a seed and nonce
      * The polynomial output will be close to a centered binomial distribution
      * 通过seed和nonce生成符合二项分布的噪声多项式
-     * @param seed 随机数种子
-     * @param nonce 噪声
+     *
+     * @param seed    随机数种子
+     * @param nonce   噪声
      * @param paramsK 安全参数
      * @return 生成的噪声
      */
-    public static short[] getNoisePoly(byte[] seed, byte nonce, int paramsK) {
+    public static short[] getNoisePoly(byte[] seed, byte nonce, int paramsK, Hash hashFunction, Prg prgFunction) {
         int l;
         byte[] p;
         switch (paramsK) {
@@ -552,8 +602,9 @@ public final class Poly {
                 l = KyberParams.ETA_768_1024 * KyberParams.PARAMS_N / 4;
         }
 
-        p = Indcpa.generatePrfByteArray(l, seed, nonce);
+        p = Indcpa.generatePrfByteArray(l, seed, nonce, hashFunction, prgFunction);
         return ByteOps.generateCbdPoly(p, paramsK);
     }
+
 
 }

@@ -1,0 +1,42 @@
+package edu.alibaba.mpc4j.common.tool.crypto.kyber;
+
+import edu.alibaba.mpc4j.common.tool.crypto.kyber.kyber4j.KyberJava;
+
+import java.security.SecureRandom;
+
+/**
+ * Kyber工厂类。
+ *
+ * @author Sheng Hu
+ * @date 2022/09/01
+ */
+public class KyberFactory {
+    /**
+     * 私有构造函数。
+     */
+    private KyberFactory() {
+        // empty
+    }
+
+    /**
+     * Kyber方案枚举类
+     */
+    public enum KyberType {
+        /**
+         * Kyber的java实现
+         */
+        KYBER_JAVA
+    }
+
+    /**
+     * 创建Kyber类型
+     */
+    public static Kyber createInstance(KyberType kyberType, int paramsK, SecureRandom secureRandom) {
+        switch (kyberType) {
+            case KYBER_JAVA:
+                return new KyberJava(paramsK);
+            default:
+                throw new IllegalArgumentException("Invalid " + KyberFactory.KyberType.class.getSimpleName() + ": " + kyberType.name());
+        }
+    }
+}

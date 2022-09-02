@@ -8,8 +8,8 @@ import edu.alibaba.mpc4j.common.rpc.Rpc;
 import edu.alibaba.mpc4j.common.rpc.utils.DataPacket;
 import edu.alibaba.mpc4j.common.rpc.utils.DataPacketHeader;
 import edu.alibaba.mpc4j.common.tool.CommonConstants;
-import edu.alibaba.mpc4j.common.tool.crypto.hash.Hash;
-import edu.alibaba.mpc4j.common.tool.crypto.hash.HashFactory;
+import edu.alibaba.mpc4j.common.tool.crypto.kyber.kyber4j.KyberParams;
+import edu.alibaba.mpc4j.common.tool.crypto.kyber.kyber4j.Poly;
 import edu.alibaba.mpc4j.s2pc.pcg.ot.base.AbstractBaseOtSender;
 import edu.alibaba.mpc4j.s2pc.pcg.ot.base.BaseOtSenderOutput;
 
@@ -24,6 +24,7 @@ import java.util.stream.IntStream;
 /**
  * MRKYBER19-基础OT协议发送方。论文来源：
  * Mansy D, Rindal P. Endemic oblivious transfer. CCS 2019. 2019: 309-326.
+ *
  * @author Sheng Hu
  * @date 2022/08/05
  */
@@ -37,17 +38,13 @@ public class MrKyber19BaseOtSender extends AbstractBaseOtSender {
      */
     private List<byte[]> bByte;
     /**
-     * 公钥（As+e）长度
+     * 使用的kyber实例
      */
-    private int paramsPolyvecBytes;
+    private Kyber kyber;
     /**
-     * 公钥（（As+e），p）的长度
+     * 随机函数
      */
-    private int indcpaPublicKeyBytes;
-    /**
-     * 安全参数 K
-     */
-    private int paramsK;
+    private SecureRandom secureRandom;
 
     public MrKyber19BaseOtSender(Rpc senderRpc, Party receiverParty, MrKyber19BaseOtConfig config) {
         super(MrKyber19BaseOtPtoDesc.getInstance(), senderRpc, receiverParty, config);
@@ -66,8 +63,7 @@ public class MrKyber19BaseOtSender extends AbstractBaseOtSender {
     @Override
     public BaseOtSenderOutput send(int num) throws MpcAbortException {
         setPtoInput(num);
-        paramsK = config.getParamsK();
-        paramsInit(paramsK);
+        paramsInit(config.getParamsK());
         bByte = new ArrayList<>();
         info("{}{} Send. begin", ptoBeginLogPrefix, getPtoDesc().getPtoName());
         stopWatch.start();
@@ -96,65 +92,51 @@ public class MrKyber19BaseOtSender extends AbstractBaseOtSender {
         info("{}{} Send. end", ptoEndLogPrefix, getPtoDesc().getPtoName());
         return senderOutput;
     }
-    private void paramsInit(int paramsK){
-        switch (paramsK) {
-            case 2:
-                paramsPolyvecBytes = KyberParams.POLY_VECTOR_BYTES_512;
-                indcpaPublicKeyBytes = KyberParams.INDCPA_PK_BYTES_512;
-                break;
-            case 3:
-                paramsPolyvecBytes = KyberParams.POLY_VECTOR_BYTES_768;
-                indcpaPublicKeyBytes = KyberParams.INDCPA_PK_BYTES_768;
-                break;
-            default:
-                paramsPolyvecBytes = KyberParams.POLY_VECTOR_BYTES_1024;
-                indcpaPublicKeyBytes = KyberParams.INDCPA_PK_BYTES_1024;
-        }
+
+    private void paramsInit(int paramsK) {
+        this.secureRandom = new SecureRandom();
+        this.kyber = KyberFactory.createInstance(KyberFactory.KyberType.KYBER_JAVA, paramsK, secureRandom);
     }
 
-    private BaseOtSenderOutput handlePkPayload(List<byte[]> pkPayload) throws MpcAbortException{
+    private BaseOtSenderOutput handlePkPayload(List<byte[]> pkPayload) throws MpcAbortException {
         MpcAbortPreconditions.checkArgument(pkPayload.size() == num * 3);
-        Hash hashFunction = HashFactory.createInstance(envType, 32);
         IntStream keyPairArrayIntStream = IntStream.range(0, num);
         keyPairArrayIntStream = parallel ? keyPairArrayIntStream.parallel() : keyPairArrayIntStream;
         //OT协议的输出
         byte[][] r0Array = new byte[num][CommonConstants.BLOCK_BYTE_LENGTH];
         byte[][] r1Array = new byte[num][CommonConstants.BLOCK_BYTE_LENGTH];
         bByte = keyPairArrayIntStream.mapToObj(index -> {
-            //计算密文时的随机数
-            byte[] seed0 = new byte[KyberParams.SYM_BYTES];
-            byte[] seed1 = new byte[KyberParams.SYM_BYTES];
-            //进行加密的明文
-            byte[] message0 = new byte[KyberParams.SYM_BYTES];
-            byte[] message1 = new byte[KyberParams.SYM_BYTES];
-            SecureRandom sR = new SecureRandom();
-            sR.nextBytes(seed0);
-            sR.nextBytes(seed1);
-            sR.nextBytes(message0);
-            sR.nextBytes(message1);
-            //因为消息m必须要256bit，因此传递的密文中选取前128bit作为OT的输出
-            r0Array[index] = Arrays.copyOfRange(message0,0,CommonConstants.BLOCK_BYTE_LENGTH);
-            r1Array[index] = Arrays.copyOfRange(message1,0,CommonConstants.BLOCK_BYTE_LENGTH);
-            // 读取公钥（As+e）部分
-            byte[] upperPkR0 = pkPayload.get(index * 3);
-            byte[] upperPkR1 = pkPayload.get(index * 3 + 1);
-            short[][] upperVectorR0 = Poly.polyVectorFromBytes(upperPkR0);
-            short[][] upperVectorR1 = Poly.polyVectorFromBytes(upperPkR1);
-            // 计算A0 = R0 - Hash(R1)、A1 = R1 - Hash(R0)
-            short[][] upperA0 =
-                    KyberPublicKeyOps.kyberPkSub(upperVectorR0,KyberPublicKeyOps.kyberPkHash(upperVectorR1, hashFunction));
-            short[][] upperA1 =
-                    KyberPublicKeyOps.kyberPkSub(upperVectorR1,KyberPublicKeyOps.kyberPkHash(upperVectorR0, hashFunction));
+                    //计算密文时的随机数
+                    byte[] seed0 = new byte[KyberParams.SYM_BYTES];
+                    byte[] seed1 = new byte[KyberParams.SYM_BYTES];
+                    //进行加密的明文
+                    byte[] message0 = new byte[KyberParams.SYM_BYTES];
+                    byte[] message1 = new byte[KyberParams.SYM_BYTES];
+                    this.secureRandom.nextBytes(seed0);
+                    this.secureRandom.nextBytes(seed1);
+                    this.secureRandom.nextBytes(message0);
+                    this.secureRandom.nextBytes(message1);
+                    //因为消息m必须要256bit，因此传递的密文中选取前128bit作为OT的输出
+                    r0Array[index] = Arrays.copyOfRange(message0, 0, CommonConstants.BLOCK_BYTE_LENGTH);
+                    r1Array[index] = Arrays.copyOfRange(message1, 0, CommonConstants.BLOCK_BYTE_LENGTH);
+                    // 读取公钥（As+e）部分
+                    byte[] upperPkR0 = pkPayload.get(index * 3);
+                    byte[] upperPkR1 = pkPayload.get(index * 3 + 1);
+                    short[][] upperVectorR0 = Poly.polyVectorFromBytes(upperPkR0);
+                    short[][] upperVectorR1 = Poly.polyVectorFromBytes(upperPkR1);
+                    // 计算A0 = R0 - Hash(R1)、A1 = R1 - Hash(R0)
+                    short[][] upperA0 =
+                            this.kyber.kyberPkSub(upperVectorR0, this.kyber.hashToKyberPk(upperVectorR1));
+                    short[][] upperA1 =
+                            this.kyber.kyberPkSub(upperVectorR1, this.kyber.hashToKyberPk(upperVectorR0));
 
-            //计算密文
-            byte [][] cipherText = new byte[2][];
-            //加密函数的输入是明文、公钥（As+e）部分、生成元部分、随机数种子，安全参数k
-            cipherText[0] = KyberKeyOps.
-                    encrypt(message0,upperA0, pkPayload.get(index * 3 + 2), seed0,paramsK);
-            cipherText[1] = KyberKeyOps.
-                    encrypt(message1,upperA1, pkPayload.get(index * 3 + 2), seed1,paramsK);
-            return cipherText;
-        })
+                    //计算密文
+                    byte[][] cipherText = new byte[2][];
+                    //加密函数的输入是明文、公钥（As+e）部分、生成元部分、随机数种子，安全参数k
+                    cipherText[0] = this.kyber.encrypt(message0, upperA0, pkPayload.get(index * 3 + 2));
+                    cipherText[1] = this.kyber.encrypt(message1, upperA1, pkPayload.get(index * 3 + 2));
+                    return cipherText;
+                })
                 .flatMap(Arrays::stream)
                 .collect(Collectors.toList());
         return new BaseOtSenderOutput(r0Array, r1Array);
