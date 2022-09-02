@@ -5,25 +5,25 @@ import edu.alibaba.mpc4j.common.tool.crypto.ecc.NativeEcc;
 import java.nio.ByteBuffer;
 
 /**
- * OpenSSL实现SecP256k1椭圆曲线运算的本地函数。
+ * OpenSSL实现SecP256r1椭圆曲线运算的本地函数。
  *
  * @author Weiran Liu
- * @date 2022/8/24
+ * @date 2022/9/2
  */
-public class SecP256k1OpensslNativeEcc implements NativeEcc {
+public class SecP256r1OpensslNativeEcc implements NativeEcc {
     /**
      * 单例模式
      */
-    private static final SecP256k1OpensslNativeEcc INSTANCE = new SecP256k1OpensslNativeEcc();
+    private static final SecP256r1OpensslNativeEcc INSTANCE = new SecP256r1OpensslNativeEcc();
 
     /**
      * 单例模式
      */
-    private SecP256k1OpensslNativeEcc() {
+    private SecP256r1OpensslNativeEcc() {
         // empty
     }
 
-    public static SecP256k1OpensslNativeEcc getInstance() {
+    public static SecP256r1OpensslNativeEcc getInstance() {
         return INSTANCE;
     }
 

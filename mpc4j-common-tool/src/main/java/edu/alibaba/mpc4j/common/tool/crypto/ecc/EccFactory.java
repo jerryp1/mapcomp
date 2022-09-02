@@ -5,6 +5,7 @@ import edu.alibaba.mpc4j.common.tool.crypto.ecc.bc.*;
 import edu.alibaba.mpc4j.common.tool.crypto.ecc.mcl.SecP256k1MclEcc;
 import edu.alibaba.mpc4j.common.tool.crypto.ecc.mcl.SecP256r1MclEcc;
 import edu.alibaba.mpc4j.common.tool.crypto.ecc.openssl.SecP256k1OpensslEcc;
+import edu.alibaba.mpc4j.common.tool.crypto.ecc.openssl.SecP256r1OpensslEcc;
 import edu.alibaba.mpc4j.common.tool.crypto.ecc.openssl.Sm2P256v1OpensslEcc;
 
 /**
@@ -43,6 +44,10 @@ public class EccFactory {
          */
         SEC_P256_R1_MCL,
         /**
+         * OpenSSL实现的SecP256r1曲线
+         */
+        SEC_P256_R1_OPENSSL,
+        /**
          * BC实现的SecP256r1
          */
         SEC_P256_R1_BC,
@@ -80,6 +85,8 @@ public class EccFactory {
                 return new SecP256k1BcEcc();
             case SEC_P256_R1_MCL:
                 return new SecP256r1MclEcc();
+            case SEC_P256_R1_OPENSSL:
+                return new SecP256r1OpensslEcc();
             case SEC_P256_R1_BC:
                 return new SecP256r1BcEcc();
             case SM2_P256_V1_OPENSSL:

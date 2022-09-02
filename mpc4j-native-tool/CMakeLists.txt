@@ -133,6 +133,7 @@ add_library(
         ecc_openssl/openssl_ecc.cpp
         ecc_openssl/edu_alibaba_mpc4j_common_tool_crypto_ecc_openssl_SecP256k1OpensslNativeEcc.cpp
         ecc_openssl/edu_alibaba_mpc4j_common_tool_crypto_ecc_openssl_Sm2P256v1OpensslNativeEcc.cpp
+        ecc_openssl/edu_alibaba_mpc4j_common_tool_crypto_ecc_openssl_SecP256r1OpensslNativeEcc.cpp
 )
 
 target_include_directories(

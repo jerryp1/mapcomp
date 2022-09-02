@@ -46,22 +46,24 @@ public class EccTest {
     public static Collection<Object[]> configurations() {
         Collection<Object[]> configurationParams = new ArrayList<>();
 
-        // SM2_P256_V1_OPENSSL
-        configurationParams.add(new Object[]{EccType.SM2_P256_V1_OPENSSL.name(), EccType.SM2_P256_V1_OPENSSL,});
-        // SEC_P256_K1_OPENSSL
-        configurationParams.add(new Object[]{EccType.SEC_P256_K1_OPENSSL.name(), EccType.SEC_P256_K1_OPENSSL,});
         // SEC_P256_K1_MCL
         configurationParams.add(new Object[]{EccType.SEC_P256_K1_MCL.name(), EccType.SEC_P256_K1_MCL,});
-        // SEC_P256_R1_MCL
-        configurationParams.add(new Object[]{EccType.SEC_P256_R1_MCL.name(), EccType.SEC_P256_R1_MCL,});
+        // SEC_P256_K1_OPENSSL
+        configurationParams.add(new Object[]{EccType.SEC_P256_K1_OPENSSL.name(), EccType.SEC_P256_K1_OPENSSL,});
         // SEC_P256_K1_BC
         configurationParams.add(new Object[]{EccType.SEC_P256_K1_BC.name(), EccType.SEC_P256_K1_BC,});
+        // SEC_P256_R1_MCL
+        configurationParams.add(new Object[]{EccType.SEC_P256_R1_MCL.name(), EccType.SEC_P256_R1_MCL,});
+        // SEC_P256_R1_OPENSSL
+        configurationParams.add(new Object[]{EccType.SEC_P256_R1_OPENSSL.name(), EccType.SEC_P256_R1_OPENSSL,});
         // SEC_P256_R1_BC
         configurationParams.add(new Object[]{EccType.SEC_P256_R1_BC.name(), EccType.SEC_P256_R1_BC,});
-        // CURVE_25519_BC
-        configurationParams.add(new Object[]{EccType.CURVE25519_BC.name(), EccType.CURVE25519_BC,});
+        // SM2_P256_V1_OPENSSL
+        configurationParams.add(new Object[]{EccType.SM2_P256_V1_OPENSSL.name(), EccType.SM2_P256_V1_OPENSSL,});
         // SM2_P256_V1_BC
         configurationParams.add(new Object[]{EccType.SM2_P256_V1_BC.name(), EccType.SM2_P256_V1_BC,});
+        // CURVE_25519_BC
+        configurationParams.add(new Object[]{EccType.CURVE25519_BC.name(), EccType.CURVE25519_BC,});
         // ED_25519_BC
         configurationParams.add(new Object[]{EccType.ED25519_BC.name(), EccType.ED25519_BC,});
 
