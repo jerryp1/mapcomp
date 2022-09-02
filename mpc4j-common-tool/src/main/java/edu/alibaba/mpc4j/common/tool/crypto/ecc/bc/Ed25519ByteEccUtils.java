@@ -300,13 +300,13 @@ public class Ed25519ByteEccUtils {
     }
 
     /**
-     * 检查输入的字节数组是否为有效的椭圆曲线点。
+     * 检查输入的字节数组是否为有效的Fp群元素。
      *
      * @param p 输入的字节数组。
-     * @return 如果是有效坐标，则返回{@code true}，否则返回{@code false}。
+     * @return 如果为有效Fp群元素，则返回{@code true}，否则返回{@code false}。
      */
     @SuppressWarnings("BooleanMethodIsAlwaysInverted")
-    private static boolean checkPoint(byte[] p) {
+    private static boolean checkFp(byte[] p) {
         if (p == null || p.length != POINT_BYTES) {
             return false;
         }
@@ -317,12 +317,33 @@ public class Ed25519ByteEccUtils {
         return !Nat256.gte(t, P);
     }
 
+    private static int checkPoint(int[] x, int[] y, int[] z) {
+        int[] t = Curve25519Field.create();
+        int[] u = Curve25519Field.create();
+        int[] v = Curve25519Field.create();
+        int[] w = Curve25519Field.create();
+
+        Curve25519Field.sqr(x, u);
+        Curve25519Field.sqr(y, v);
+        Curve25519Field.sqr(z, w);
+        Curve25519Field.mul(u, v, t);
+        Curve25519Field.sub(v, u, v);
+        Curve25519Field.mul(v, w, v);
+        Curve25519Field.sqr(w, w);
+        Curve25519Field.mul(t, C_D_INT_VALUE, t);
+        Curve25519Field.add(t, w, t);
+        Curve25519Field.sub(t, v, t);
+        Curve25519Field.normalize(t);
+
+        return Curve25519Field.isZero(t);
+    }
+
     static boolean validPoint(byte[] p) {
         if (p == null || p.length != POINT_BYTES) {
             return false;
         }
         byte[] py = BytesUtils.clone(p);
-        if (!checkPoint(py)) {
+        if (!checkFp(py)) {
             return false;
         }
         int x0 = (py[POINT_BYTES - 1] & 0x80) >>> 7;
@@ -382,7 +403,7 @@ public class Ed25519ByteEccUtils {
 
     private static void decodePointVar(byte[] p, PointAffine r) {
         byte[] py = BytesUtils.clone(p);
-        if (!checkPoint(py)) {
+        if (!checkFp(py)) {
             throw new IllegalArgumentException("Invalid point p = " + Hex.toHexString(p));
         }
         // 恢复坐标y
@@ -805,6 +826,23 @@ public class Ed25519ByteEccUtils {
         Curve25519Field.one(p.z);
         // t = xy
         Curve25519Field.mul(p.x, p.y, p.t);
+    }
+
+    /**
+     * 计算YZ。
+     *
+     * @param k 幂指数k。
+     * @param y 坐标y。
+     * @param z 坐标z。
+     */
+    static void scalarMultBaseYZ(byte[] k, int[] y, int[] z) {
+        PointAccum p = new PointAccum();
+        scalarMultBase(k, p);
+        if (0 == checkPoint(p.x, p.y, p.z)) {
+            throw new IllegalStateException();
+        }
+        Curve25519Field.copy(p.y, 0, y, 0);
+        Curve25519Field.copy(p.z, 0, z, 0);
     }
 
     private static void pointLookup(int block, int index, PointPrecomp p) {

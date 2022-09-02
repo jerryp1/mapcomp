@@ -58,14 +58,15 @@ public class EccEfficiencyTest {
         EccType.SEC_P256_R1_BC,
         EccType.SM2_P256_V1_OPENSSL,
         EccType.SM2_P256_V1_BC,
-        EccType.CURVE_25519_BC,
-        EccType.ED_25519_BC
+        EccType.CURVE25519_BC,
+        EccType.ED25519_BC
     };
 
     /**
      * 字节椭圆曲线测试类型
      */
-    private static final ByteEccFactory.ByteEccType[] BYTE_ECC_TYPES = new ByteEccFactory.ByteEccType[] {
+    private static final ByteEccFactory.ByteEccType[] BYTE_MUL_ECC_TYPES = new ByteEccFactory.ByteEccType[] {
+        ByteEccFactory.ByteEccType.X25519_BC,
         ByteEccFactory.ByteEccType.ED25519_BC,
     };
 
@@ -149,8 +150,8 @@ public class EccEfficiencyTest {
                 StringUtils.leftPad(TIME_DECIMAL_FORMAT.format(batchPrecomputeMulTime), 10)
             );
         }
-        for (ByteEccFactory.ByteEccType type : BYTE_ECC_TYPES) {
-            ByteEcc byteEcc = ByteEccFactory.createInstance(type);
+        for (ByteEccFactory.ByteEccType type : BYTE_MUL_ECC_TYPES) {
+            ByteMulEcc byteMulEcc = ByteEccFactory.createMulInstance(type);
             // 生成随机消息
             byte[][] messages = IntStream.range(0, n)
                 .mapToObj(index -> {
@@ -160,40 +161,40 @@ public class EccEfficiencyTest {
                 })
                 .toArray(byte[][]::new);
             // 预热
-            Arrays.stream(messages).forEach(byteEcc::hashToCurve);
+            Arrays.stream(messages).forEach(byteMulEcc::hashToCurve);
             // 单次调用HashToCurve
             STOP_WATCH.start();
-            Arrays.stream(messages).forEach(byteEcc::hashToCurve);
+            Arrays.stream(messages).forEach(byteMulEcc::hashToCurve);
             STOP_WATCH.stop();
             double hashToCurveTime = (double) STOP_WATCH.getTime(TimeUnit.MILLISECONDS) / n;
             STOP_WATCH.reset();
             // 单次生成随机数
             STOP_WATCH.start();
-            IntStream.range(0, n).forEach(index -> byteEcc.randomPoint(SECURE_RANDOM));
+            IntStream.range(0, n).forEach(index -> byteMulEcc.randomPoint(SECURE_RANDOM));
             STOP_WATCH.stop();
             double randomPointTime = (double) STOP_WATCH.getTime(TimeUnit.MILLISECONDS) / n;
             STOP_WATCH.reset();
 
             // 生成一个非生成元的点
-            BigInteger gr = BigIntegerUtils.randomPositive(byteEcc.getN(), SECURE_RANDOM);
-            byte[] h = byteEcc.mul(byteEcc.getG(), gr);
+            byte[] hr = byteMulEcc.randomScalar(SECURE_RANDOM);
+            byte[] h = byteMulEcc.mul(byteMulEcc.getG(), hr);
             // 生成幂指数
-            BigInteger[] rs = IntStream.range(0, n)
-                .mapToObj(index -> BigIntegerUtils.randomPositive(byteEcc.getN(), SECURE_RANDOM))
-                .toArray(BigInteger[]::new);
+            byte[][] rs = IntStream.range(0, n)
+                .mapToObj(index -> byteMulEcc.randomScalar(SECURE_RANDOM))
+                .toArray(byte[][]::new);
             // 单次幂运算
             STOP_WATCH.start();
-            Arrays.stream(rs).forEach(r -> byteEcc.mul(h, r));
+            Arrays.stream(rs).forEach(r -> byteMulEcc.mul(h, r));
             STOP_WATCH.stop();
-            double singleMultiplyTime = (double) STOP_WATCH.getTime(TimeUnit.MILLISECONDS) / n;
+            double mulTime = (double) STOP_WATCH.getTime(TimeUnit.MILLISECONDS) / n;
             STOP_WATCH.reset();
             LOGGER.info(
                 "{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}",
-                StringUtils.leftPad(type.name(), 20),
+                StringUtils.leftPad("(BYTE) " + type.name(), 20),
                 StringUtils.leftPad(LOG_N_DECIMAL_FORMAT.format(LOG_N), 10),
                 StringUtils.leftPad(TIME_DECIMAL_FORMAT.format(hashToCurveTime), 10),
                 StringUtils.leftPad(TIME_DECIMAL_FORMAT.format(randomPointTime), 10),
-                StringUtils.leftPad(TIME_DECIMAL_FORMAT.format(singleMultiplyTime), 10),
+                StringUtils.leftPad(TIME_DECIMAL_FORMAT.format(mulTime), 10),
                 StringUtils.leftPad("    --    ", 10),
                 StringUtils.leftPad("    --    ", 10),
                 StringUtils.leftPad("    --    ", 10)

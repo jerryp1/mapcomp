@@ -39,6 +39,21 @@ public class BytesUtils {
      * 调换字节数组的大小端表示。只调换字节数组，不调换字节数组中的元素。
      *
      * @param byteArray 给定的字节数组。
+     * @return 调换结果。
+     */
+    public static byte[] reverseByteArray(byte[] byteArray) {
+        if (byteArray == null) {
+            return null;
+        }
+        byte[] reverseByteArray = BytesUtils.clone(byteArray);
+        innerReverseByteArray(reverseByteArray);
+        return reverseByteArray;
+    }
+
+    /**
+     * 调换字节数组的大小端表示。只调换字节数组，不调换字节数组中的元素。
+     *
+     * @param byteArray 给定的字节数组。
      */
     public static void innerReverseByteArray(byte[] byteArray) {
         if (byteArray == null) {

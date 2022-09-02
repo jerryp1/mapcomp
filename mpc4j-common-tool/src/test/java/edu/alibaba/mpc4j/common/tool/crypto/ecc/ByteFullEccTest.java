@@ -2,7 +2,6 @@ package edu.alibaba.mpc4j.common.tool.crypto.ecc;
 
 import com.google.common.base.Preconditions;
 import edu.alibaba.mpc4j.common.tool.CommonConstants;
-import edu.alibaba.mpc4j.common.tool.utils.BigIntegerUtils;
 import edu.alibaba.mpc4j.common.tool.crypto.ecc.ByteEccFactory.ByteEccType;
 import edu.alibaba.mpc4j.common.tool.utils.BytesUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -19,13 +18,13 @@ import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
 /**
- * 字节椭圆曲线测试。
+ * 全功能字节椭圆曲线测试。
  *
  * @author Weiran Liu
  * @date 2022/9/1
  */
 @RunWith(Parameterized.class)
-public class ByteEccTest {
+public class ByteFullEccTest {
     /**
      * 最大随机轮数
      */
@@ -54,17 +53,17 @@ public class ByteEccTest {
      */
     private final ByteEccType byteEccType;
 
-    public ByteEccTest(String name, ByteEccType byteEccType) {
+    public ByteFullEccTest(String name, ByteEccType byteEccType) {
         Preconditions.checkArgument(StringUtils.isNotBlank(name));
         this.byteEccType = byteEccType;
     }
 
     @Test
     public void testIllegalInputs() {
-        ByteEcc byteEcc = ByteEccFactory.createInstance(byteEccType);
+        ByteFullEcc byteFullEcc = ByteEccFactory.createFullInstance(byteEccType);
         // 尝试将长度为0的字节数组映射到椭圆曲线上
         try {
-            byteEcc.hashToCurve(new byte[0]);
+            byteFullEcc.hashToCurve(new byte[0]);
             throw new IllegalStateException("ERROR: successfully HashToCurve with 0-byte length message");
         } catch (AssertionError ignored) {
 
@@ -73,8 +72,8 @@ public class ByteEccTest {
 
     @Test
     public void testType() {
-        ByteEcc byteEcc = ByteEccFactory.createInstance(byteEccType);
-        Assert.assertEquals(byteEccType, byteEcc.getByteEccType());
+        ByteFullEcc byteFullEcc = ByteEccFactory.createFullInstance(byteEccType);
+        Assert.assertEquals(byteEccType, byteFullEcc.getByteEccType());
     }
 
     @Test
@@ -86,158 +85,158 @@ public class ByteEccTest {
     }
 
     private void testHashToCurve(int messageByteLength) {
-        ByteEcc byteEcc = ByteEccFactory.createInstance(byteEccType);
+        ByteFullEcc byteFullEcc = ByteEccFactory.createFullInstance(byteEccType);
         byte[] message = new byte[messageByteLength];
-        byte[] hash1 = byteEcc.hashToCurve(message);
-        Assert.assertTrue(byteEcc.isValid(hash1));
-        byte[] hash2 = byteEcc.hashToCurve(message);
+        byte[] hash1 = byteFullEcc.hashToCurve(message);
+        Assert.assertTrue(byteFullEcc.isValidPoint(hash1));
+        byte[] hash2 = byteFullEcc.hashToCurve(message);
         Assert.assertArrayEquals(hash1, hash2);
     }
 
     @Test
     public void testRandomHashToCurve() {
-        ByteEcc byteEcc = ByteEccFactory.createInstance(byteEccType);
-        Set<ByteBuffer> hashPointSet = new HashSet<>();
+        ByteFullEcc byteFullEcc = ByteEccFactory.createFullInstance(byteEccType);
+        Set<ByteBuffer> pointSet = new HashSet<>();
         for (int i = 0; i < MAX_RANDOM_ROUND; i++) {
             byte[] message = new byte[CommonConstants.BLOCK_BYTE_LENGTH];
             SECURE_RANDOM.nextBytes(message);
-            byte[] p = byteEcc.hashToCurve(message);
-            Assert.assertTrue(byteEcc.isValid(p));
-            hashPointSet.add(ByteBuffer.wrap(byteEcc.hashToCurve(message)));
+            byte[] p = byteFullEcc.hashToCurve(message);
+            Assert.assertTrue(byteFullEcc.isValidPoint(p));
+            pointSet.add(ByteBuffer.wrap(byteFullEcc.hashToCurve(message)));
         }
-        Assert.assertEquals(MAX_RANDOM_ROUND, hashPointSet.size());
+        Assert.assertEquals(MAX_RANDOM_ROUND, pointSet.size());
     }
 
     @Test
     public void testMul() {
-        ByteEcc byteEcc = ByteEccFactory.createInstance(byteEccType);
-        byte[] g = byteEcc.getG();
-        // 生成一个未归一化（normalized）的椭圆曲线点h
-        byte[] h = byteEcc.mul(g, byteEcc.randomZn(SECURE_RANDOM));
+        ByteFullEcc byteFullEcc = ByteEccFactory.createFullInstance(byteEccType);
+        byte[] g = byteFullEcc.getG();
+        // 生成一个椭圆曲线点h
+        byte[] h = byteFullEcc.randomPoint(SECURE_RANDOM);
         for (int i = 0; i < MAX_RANDOM_ROUND; i++) {
             // 生成r和r^{-1}
-            BigInteger r = byteEcc.randomZn(SECURE_RANDOM);
-            BigInteger rInv = r.modInverse(byteEcc.getN());
+            BigInteger r = byteFullEcc.randomZn(SECURE_RANDOM);
+            BigInteger rInv = r.modInverse(byteFullEcc.getN());
             // g^r
-            byte[] gr = byteEcc.mul(g, r);
-            byte[] grInv = byteEcc.mul(gr, rInv);
+            byte[] gr = byteFullEcc.mul(g, r);
+            byte[] grInv = byteFullEcc.mul(gr, rInv);
             Assert.assertArrayEquals(g, grInv);
             // h^r
-            byte[] hr = byteEcc.mul(h, r);
-            byte[] hrInv = byteEcc.mul(hr, rInv);
+            byte[] hr = byteFullEcc.mul(h, r);
+            byte[] hrInv = byteFullEcc.mul(hr, rInv);
             Assert.assertArrayEquals(h, hrInv);
         }
     }
 
     @Test
     public void testBaseMul() {
-        ByteEcc byteEcc = ByteEccFactory.createInstance(byteEccType);
-        byte[] g = byteEcc.getG();
+        ByteFullEcc byteFullEcc = ByteEccFactory.createFullInstance(byteEccType);
+        byte[] g = byteFullEcc.getG();
         for (int i = 0; i < MAX_RANDOM_ROUND; i++) {
             // 生成r和r^{-1}
-            BigInteger r = byteEcc.randomZn(SECURE_RANDOM);
-            BigInteger rInv = r.modInverse(byteEcc.getN());
+            BigInteger r = byteFullEcc.randomZn(SECURE_RANDOM);
+            BigInteger rInv = r.modInverse(byteFullEcc.getN());
             // g^r
-            byte[] gr = byteEcc.mul(g, r);
+            byte[] gr = byteFullEcc.mul(g, r);
             // 应用底数幂乘计算
-            byte[] baseGr = byteEcc.baseMul(r);
+            byte[] baseGr = byteFullEcc.baseMul(r);
             Assert.assertArrayEquals(gr, baseGr);
-            byte[] baseGrInv = byteEcc.mul(gr, rInv);
+            byte[] baseGrInv = byteFullEcc.mul(gr, rInv);
             Assert.assertArrayEquals(g, baseGrInv);
         }
     }
 
     @Test
     public void testAdd() {
-        ByteEcc byteEcc = ByteEccFactory.createInstance(byteEccType);
-        byte[] g = byteEcc.getG();
-        byte[] expect = byteEcc.baseMul(BigInteger.valueOf(MAX_RANDOM_ROUND));
+        ByteFullEcc byteFullEcc = ByteEccFactory.createFullInstance(byteEccType);
+        byte[] g = byteFullEcc.getG();
+        byte[] expect = byteFullEcc.baseMul(BigInteger.valueOf(MAX_RANDOM_ROUND));
         // 连续求和
-        byte[] actual = byteEcc.getInfinity();
+        byte[] actual = byteFullEcc.getInfinity();
         for (int i = 0; i < MAX_RANDOM_ROUND; i++) {
-            actual = byteEcc.add(actual, g);
+            actual = byteFullEcc.add(actual, g);
         }
         Assert.assertArrayEquals(expect, actual);
         // 连续内部求和
-        actual = byteEcc.getInfinity();
+        actual = byteFullEcc.getInfinity();
         for (int i = 0; i < MAX_RANDOM_ROUND; i++) {
-            byteEcc.addi(actual, g);
+            byteFullEcc.addi(actual, g);
         }
         Assert.assertArrayEquals(expect, actual);
         byte[] positive = BytesUtils.clone(actual);
 
-        BigInteger n = byteEcc.getN();
-        expect = byteEcc.baseMul(BigInteger.valueOf(MAX_RANDOM_ROUND).negate().mod(n));
-        actual = byteEcc.getInfinity();
+        BigInteger n = byteFullEcc.getN();
+        expect = byteFullEcc.baseMul(BigInteger.valueOf(MAX_RANDOM_ROUND).negate().mod(n));
+        actual = byteFullEcc.getInfinity();
         // 连续求差
         for (int i = 0; i < MAX_RANDOM_ROUND; i++) {
-            actual = byteEcc.sub(actual, g);
+            actual = byteFullEcc.sub(actual, g);
         }
         Assert.assertArrayEquals(expect, actual);
         // 连续内部求差
-        actual = byteEcc.getInfinity();
+        actual = byteFullEcc.getInfinity();
         for (int i = 0; i < MAX_RANDOM_ROUND; i++) {
-            byteEcc.subi(actual, g);
+            byteFullEcc.subi(actual, g);
         }
         Assert.assertArrayEquals(expect, actual);
         byte[] negative = BytesUtils.clone(actual);
 
         // 验证求逆
-        expect = byteEcc.neg(negative);
+        expect = byteFullEcc.neg(negative);
         Assert.assertArrayEquals(positive, expect);
-        expect = byteEcc.neg(positive);
+        expect = byteFullEcc.neg(positive);
         Assert.assertArrayEquals(negative, expect);
         // 验证内部求逆
         expect = BytesUtils.clone(negative);
-        byteEcc.negi(expect);
+        byteFullEcc.negi(expect);
         Assert.assertArrayEquals(positive, expect);
         expect = BytesUtils.clone(positive);
-        byteEcc.negi(expect);
+        byteFullEcc.negi(expect);
         Assert.assertArrayEquals(negative, expect);
     }
 
     @Test
     public void testParallel() {
-        ByteEcc byteEcc = ByteEccFactory.createInstance(byteEccType);
+        ByteFullEcc byteFullEcc = ByteEccFactory.createFullInstance(byteEccType);
         // HashToCurve并发测试
         byte[][] messages = IntStream.range(0, PARALLEL_NUM)
             .mapToObj(index -> new byte[CommonConstants.BLOCK_BYTE_LENGTH])
             .toArray(byte[][]::new);
         Set<ByteBuffer> hashMessageSet = Arrays.stream(messages)
             .parallel()
-            .map(byteEcc::hashToCurve)
+            .map(byteFullEcc::hashToCurve)
             .map(ByteBuffer::wrap)
             .collect(Collectors.toSet());
         Assert.assertEquals(1, hashMessageSet.size());
         // RandomPoint并发测试
         Set<ByteBuffer> randomPointSet = IntStream.range(0, PARALLEL_NUM)
             .parallel()
-            .mapToObj(index -> byteEcc.randomPoint(SECURE_RANDOM))
+            .mapToObj(index -> byteFullEcc.randomPoint(SECURE_RANDOM))
             .map(ByteBuffer::wrap)
             .collect(Collectors.toSet());
         Assert.assertEquals(PARALLEL_NUM, randomPointSet.size());
         // 运算并发测试
-        byte[] p = byteEcc.randomPoint(SECURE_RANDOM);
-        byte[] q = byteEcc.randomPoint(SECURE_RANDOM);
+        byte[] p = byteFullEcc.randomPoint(SECURE_RANDOM);
+        byte[] q = byteFullEcc.randomPoint(SECURE_RANDOM);
         // 加法并发测试
         Set<ByteBuffer> addSet = IntStream.range(0, PARALLEL_NUM)
             .parallel()
-            .mapToObj(index -> byteEcc.add(p, q))
+            .mapToObj(index -> byteFullEcc.add(p, q))
             .map(ByteBuffer::wrap)
             .collect(Collectors.toSet());
         Assert.assertEquals(1, addSet.size());
         // 减法并发测试
         Set<ByteBuffer> subSet = IntStream.range(0, PARALLEL_NUM)
             .parallel()
-            .mapToObj(index -> byteEcc.sub(p, q))
+            .mapToObj(index -> byteFullEcc.sub(p, q))
             .map(ByteBuffer::wrap)
             .collect(Collectors.toSet());
         Assert.assertEquals(1, subSet.size());
         // 乘法并发测试
-        BigInteger r = BigIntegerUtils.randomPositive(byteEcc.getN(), SECURE_RANDOM);
+        BigInteger r = byteFullEcc.randomZn(SECURE_RANDOM);
         Set<ByteBuffer> mulSet = IntStream.range(0, PARALLEL_NUM)
             .parallel()
-            .mapToObj(index -> byteEcc.mul(p, r))
+            .mapToObj(index -> byteFullEcc.mul(p, r))
             .map(ByteBuffer::wrap)
             .collect(Collectors.toSet());
         Assert.assertEquals(1, mulSet.size());
