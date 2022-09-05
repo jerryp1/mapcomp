@@ -100,7 +100,10 @@ public class Ed25519BcByteFullEcc implements ByteFullEcc {
             secureRandom.nextBytes(p);
             success = Ed25519ByteEccUtils.validPoint(p);
         }
-        return p;
+        // 需要乘以cofactor
+        byte[] r = new byte[POINT_BYTE_LENGTH];
+        Ed25519ByteEccUtils.scalarMultEncoded(SCALAR_COFACTOR, p, r);
+        return r;
     }
 
     @Override
