@@ -12,6 +12,7 @@ public interface Tcrhf {
     /**
      * 将输入的分组哈希为输出分组。
      *
+     * @param index 索引值。
      * @param block 输入分组。
      * @return 哈希结果。
      */

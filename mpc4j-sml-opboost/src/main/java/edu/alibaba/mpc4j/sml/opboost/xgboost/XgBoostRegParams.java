@@ -40,6 +40,7 @@ public class XgBoostRegParams implements XgBoostParams {
                 break;
             case ARRPOX:
                 params.put("tree_method", "approx");
+                break;
             default:
                 throw new IllegalArgumentException("Invalid TreeMethodType: " + builder.treeMethodType.name());
         }

@@ -206,7 +206,7 @@ public class Base2ExpCdpConfig implements NominalCdpConfig {
 
         private void setUtility() {
             nounSet = new HashSet<>();
-            utilityMap = new HashMap<>();
+            utilityMap = new HashMap<>(nounPairDistances.size());
 
             for (NounPairDistance nounPairDistance : nounPairDistances) {
                 // 设置评分函数前，需要将评分函数随机取整
