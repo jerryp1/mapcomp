@@ -37,7 +37,7 @@ public class PsuMain {
     /**
      * 协议类型名称
      */
-    private static final String PTO_TYPE_NAME = "PSU";
+    public static final String PTO_TYPE_NAME = "PSU";
     /**
      * 预热元素字节长度
      */

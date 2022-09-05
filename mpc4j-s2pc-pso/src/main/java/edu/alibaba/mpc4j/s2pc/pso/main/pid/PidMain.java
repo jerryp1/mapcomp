@@ -36,7 +36,7 @@ public class PidMain {
     /**
      * 协议类型名称
      */
-    private static final String PTO_TYPE_NAME = "PID";
+    public static final String PTO_TYPE_NAME = "PID";
     /**
      * 预热元素字节长度
      */

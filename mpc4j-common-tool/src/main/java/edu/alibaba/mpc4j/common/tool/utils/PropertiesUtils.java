@@ -27,9 +27,30 @@ public class PropertiesUtils {
      * @return 字符串。
      */
     public static String readString(Properties properties, String keyword) {
-        return Preconditions.checkNotNull(
+        String readString = Preconditions.checkNotNull(
             properties.getProperty(keyword), "Please set " + keyword
         );
+        LOGGER.info("{} is set, value: {}", keyword, readString);
+        return readString;
+    }
+
+    /**
+     * 读取字符串。
+     *
+     * @param properties   配置项。
+     * @param keyword      关键字。
+     * @param defaultValue 默认值。
+     * @return 字符串。
+     */
+    public static String readString(Properties properties, String keyword, String defaultValue) {
+        String readString = properties.getProperty(keyword);
+        if (readString == null) {
+            LOGGER.info("{} is not set, choose default value: {}", keyword, defaultValue);
+            return defaultValue;
+        } else {
+            LOGGER.info("{} is set, value: {}", keyword, readString);
+            return readString;
+        }
     }
 
     /**
@@ -59,6 +80,26 @@ public class PropertiesUtils {
         boolean booleanValue = Boolean.parseBoolean(booleanString);
         LOGGER.info("{} = {}", keyword, booleanValue);
         return booleanValue;
+    }
+
+    /**
+     * 读取布尔值。
+     *
+     * @param properties 配置项。
+     * @param keyword    关键字。
+     * @param defaultValue  默认值。
+     * @return 布尔值。
+     */
+    public static boolean readBoolean(Properties properties, String keyword, boolean defaultValue) {
+        String booleanString = properties.getProperty(keyword);
+        if (booleanString == null) {
+            LOGGER.info("{} is not set, choose default value: {}", keyword, defaultValue);
+            return defaultValue;
+        } else {
+            boolean booleanValue = Boolean.parseBoolean(booleanString);
+            LOGGER.info("{} is set, value: {}", keyword, booleanValue);
+            return booleanValue;
+        }
     }
 
     /**

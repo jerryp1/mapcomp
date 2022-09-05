@@ -37,7 +37,7 @@ public class PmidMain {
     /**
      * 协议类型名称
      */
-    private static final String PTO_TYPE_NAME = "PMID";
+    public static final String PTO_TYPE_NAME = "PMID";
     /**
      * 预热元素字节长度
      */
