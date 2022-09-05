@@ -24,7 +24,7 @@ The aim of `mpc4j` is to provide an academic library for researchers to study an
 
 `mpc4j` includes some implementation ideas and codes from the following open-source libraries.
 
-- [smile](https://github.com/haifengl/smile): A fast and comprehensive machine learning, NLP, linear algebra, graph, interpolation, and visualization system in Java and Scala. We understand many details of how to implement machine learning tasks from this library. We also introduce some codes into `mpc4j` for the dataset management and our privacy-preserving federated GBDT implementation. See packages `edu.alibaba.mpc4j.common.data` in `mpc4j-common-data` and package `edu.alibaba.mpc4j.sml.smile` in `mpc4j-sml-opboost` for details.
+- [smile](https://github.com/haifengl/smile): A fast and comprehensive machine learning, NLP, linear algebra, graph, interpolation, and visualization system in Java and Scala. We understand many details of how to implement machine learning tasks from this library. We also introduce some codes into `mpc4j` for the dataset management and our privacy-preserving federated GBDT implementation. See packages `edu.alibaba.mpc4j.common.data` in `mpc4j-common-data` and package `edu.alibaba.mpc4j.sml.smile` in `mpc4j-sml-opboost` for details. Note that we introduce source codes that are released only under [the GNU Lesser General Public License v3.0 (LGPLv3)](https://www.gnu.org/licenses/lgpl-3.0.en.html).
 - [Javallier](https://github.com/n1analytics/javallier): A Java library for [Paillier partially homomorphic encryption](https://en.wikipedia.org/wiki/Paillier_cryptosystem) based on [python-paillier](https://github.com/NICTA/python-paillier), with modifications to additionally support other schemes and optimizations. See `mpc4j-crypto-phe` for details.
 - [JNA GMP project](https://github.com/square/jna-gmp): A JNA wrapper around the [GNU Multiple Precision Arithmetic Library](http://gmplib.org/). We modify the code for supporting the `aarch64` system. See `mpc4j-common-jna-gmp` for details.
 - [Bouncy Castle](https://www.bouncycastle.org/java.html): A Java implementation of cryptographic algorithms, developed by the Legion of the Bouncy Castle, a registered Australian Charity. We understand many details of how to efficiently implement cryptographic algorithms using Java. We introduce its [X25519](https://github.com/bcgit/bc-java/blob/master/core/src/main/java/org/bouncycastle/math/ec/rfc7748/X25519.java) and [Ed25519](https://github.com/bcgit/bc-java/blob/master/core/src/main/java/org/bouncycastle/math/ec/rfc8032/Ed25519.java) implementations in `mpc4j` to support efficient Elliptic Curve Cryptographic (ECC) operations. See package `edu.alibaba.mpc4j.common.tool.crypto.ecc.bc` in `mpc4j-common-tool` for details.
@@ -121,11 +121,11 @@ Java HotSpot(TM) 64-Bit Server VM (build 25.301-b09, mixed mode)
 5. Using IntelliJ IDEA to open `mpc4j`.
 6. Open `Run->Edit Configurations...`.
 
-<img src="figures/macos_step_06.png" alt="macos_step_06" style="zoom:50%;" />
+<img src="figures/macos_step_06.png" alt="macos_step_06" style="zoom: 33%;" />
 
 5. Open `Edit Configuration templates...`.
 
-<img src="figures/macos_step_07.png" alt="macos_step_06" style="zoom:50%;" />
+<img src="figures/macos_step_07.png" alt="macos_step_06" style="zoom: 33%;" />
 
 5. Select `JUnit`, and add the following command into `VM Options` (**Note that you must replace  `/YOUR_MPC4J_ABSOLUTE_PATH` with your own absolute path for `libmpc4j-native-tool.dylib` and `libmpc4j-native-fhe.dylib`**.):
 
@@ -133,11 +133,11 @@ Java HotSpot(TM) 64-Bit Server VM (build 25.301-b09, mixed mode)
 -Djava.library.path=/YOUR_MPC4J_ABSOLUTE_PATH/mpc4j-native-tool/cmake-build-release:/YOUR_MPC4J_ABSOLUTE_PATH/mpc4j-native-fhe/cmake-build-release
 ```
 
-<img src="figures/macos_step_08.png" alt="macos_step_06" style="zoom:50%;" />
+<img src="figures/macos_step_08.png" alt="macos_step_06" style="zoom: 33%;" />
 
 9. Now, you can run tests of any submodule by pressing the **Green Arrows** showing on the left of the source code in test packages. 
 
-<img src="figures/macos_step_09.png" alt="macos_step_06" style="zoom:50%;" />
+<img src="figures/macos_step_09.png" alt="macos_step_06" style="zoom: 33%;" />
 
 ## TODO List
 
