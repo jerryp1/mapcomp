@@ -6,6 +6,7 @@ Multi-Party Computation for Java (`mpc4j`) is an efficient and easy-to-use Secur
 
 The aim of `mpc4j` is to provide an academic library for researchers to study and develop MPC and related protocols in a unified manner. As `mpc4j` tries to provide state-of-the-art MPC implementations, researchers could leverage the library to have fair and quick comparisons between the new protocols they proposed and existing ones.
 
+`mpc4j` is sponsored by the [DataTrust](https://dp.alibaba.com/product/datatrust) team.
 
 ## Features
 
@@ -57,7 +58,7 @@ We thank [Prof. Xiao Wang](https://wangxiao1254.github.io/) for discussions abou
 
 We thank [Prof. Peihan Miao](https://www.linkedin.com/in/peihan-miao-08919932/) for discussions about the implementation of the paper "Private Set Intersection in the Internet Setting From Lightweight Oblivious PRF." From the discussion, we understand there is a special case for the lightweight OPRF when $n = 1$. See package `oprf` in `mpc4j-s2pc-pso` for more details.
 
-We thank [Prof. Yu Chen](https://yuchen1024.github.io/) for many discussions on various MPC protocols. Here we recommend his open-source library [Kunlun](https://github.com/yuchen1024/Kunlun), a modern crypto library. We thank Dr. Minglang Dong for her example codes about implementing [the Window Method](https://www.geeksforgeeks.org/window-sliding-technique/) for fixed-base multiplication in ECC. 
+We thank [Prof. Yu Chen](https://yuchen1024.github.io/) for many discussions on various MPC protocols. Here we recommend his open-source library [Kunlun](https://github.com/yuchen1024/Kunlun), a modern crypto library. We thank [Minglang Dong](https://github.com/minglangdong) for her example codes about implementing [the Window Method](https://www.geeksforgeeks.org/window-sliding-technique/) for fixed-base multiplication in ECC. 
 
 We thank [Dr. Bolin Ding](https://www.bolin-ding.com/) for many discussions on how to introduce MPC into the database field. Here we recommend the open-source library [FederatedScope](https://federatedscope.io/), an easy-to-use federated learning package, from his team.
 
@@ -77,12 +78,16 @@ Most of the codes are in Java, except for very efficient implementations in C/C+
 
 ## Development
 
+### Attention
+
 `mpc4j` is developed under `JDK 8`. Specifically, `mpc4j` leverages `sun.misc.Unsafe`, which has been deprecated since `JDK 9`, to do fast `byte[]` to `int[]` conversions. Therefore, you should also use `JDK 8` when you are implementing your protocols based `mpc4j`. Otherwise, you may encounter a problem like "sun.misc.Unsafe is not found" when you compile the code to get the runnable `jar` file. Once obtaining the `jar` file, you can run it using any `JRE` with a higher version.
+
+### Development Guideline
 
 We develop `mpc4j` using [Intellij IDEA](https://www.jetbrains.com/idea/) and [CLion](https://www.jetbrains.com/clion/). After successfully compiling `mpc4j-native-tool` and `mpc4j-native-fhe` (Please see the documentation in these modules for more details on how to compile them), you need to configure IDEA with the following procedures so that IDEA can link to these native libraries.
 
-1. Open `Run->Edit Configurations...`.
-2. Open `Edit Configuration templates...`.
+1. Open `Run->Edit Configurations...`
+2. Open `Edit Configuration templates...`
 3. Select `JUnit`.
 4. Add the following command into `VM Options`:
 
@@ -90,9 +95,9 @@ We develop `mpc4j` using [Intellij IDEA](https://www.jetbrains.com/idea/) and [C
 -Djava.library.path=/YOUR_MPC4J_ABSOLUTE_PATH/mpc4j-native-tool/cmake-build-release:/YOUR_MPC4J_ABSOLUTE_PATH/mpc4j-native-fhe/cmake-build-release
 ```
 
-### Guideline for Development under macOS
+### Demonstration
 
-We thank [Qixian Zhou](https://github.com/qxzhou1010) for writing documentation on how to config the development environment on macOS. Here are the steps:
+We thank [Qixian Zhou](https://github.com/qxzhou1010) for writing a guideline with a demonstration on how to config the development environment on macOS (x86_64). We believe this guideline can also be used for other platforms, e.g., macOS (M1), Ubuntu, and CentOS. Here are the steps:
 
 1. Follow any guidelines to install JDK 8 and IntelliJ IDEA. If you successfully install JDK8, you can obtain similar information in the terminal when executing `java -version`.
 
