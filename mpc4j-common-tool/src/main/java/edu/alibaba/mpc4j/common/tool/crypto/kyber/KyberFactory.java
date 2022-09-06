@@ -24,9 +24,13 @@ public class KyberFactory {
      */
     public enum KyberType {
         /**
-         * Kyber的java实现
+         * Kyber的cpa实现
          */
-        KYBER_JAVA
+        KYBER_CPA,
+        /**
+         * Kyber的cca实现
+         */
+        KYBER_CCA,
     }
 
     /**
@@ -34,8 +38,10 @@ public class KyberFactory {
      */
     public static Kyber createInstance(KyberType kyberType, int paramsK, SecureRandom secureRandom, Hash hashFunction) {
         switch (kyberType) {
-            case KYBER_JAVA:
+            case KYBER_CPA:
                 return new KyberCpa(paramsK,secureRandom,hashFunction);
+            case KYBER_CCA:
+
             default:
                 throw new IllegalArgumentException("Invalid " + KyberFactory.KyberType.class.getSimpleName() + ": " + kyberType.name());
         }

@@ -102,7 +102,7 @@ public class MrKyber19BnotSender extends AbstractBnotSender {
     private void paramsInit(int paramsK) {
         this.secureRandom = new SecureRandom();
         this.hashFunction = HashFactory.createInstance(HashFactory.HashType.BC_BLAKE_2B_160, 16);
-        this.kyber = KyberFactory.createInstance(KyberFactory.KyberType.KYBER_JAVA, paramsK, secureRandom, this.hashFunction);
+        this.kyber = KyberFactory.createInstance(KyberFactory.KyberType.KYBER_CPA, paramsK, secureRandom, this.hashFunction);
     }
 
     private BnotSenderOutput handlePkPayload(List<byte[]> pkPayload) throws MpcAbortException {
@@ -126,18 +126,15 @@ public class MrKyber19BnotSender extends AbstractBnotSender {
                         for (int j = 0; j < n; j++) {
                             if (i != j) {
                                 // 计算A = Ri - Hash(Rj)
-                                upperBytes[i] = BytesUtils.xor(upperBytes[i],upperHashPkBytes[j]);
+                                upperBytes[i] = BytesUtils.xor(upperBytes[i], upperHashPkBytes[j]);
                             }
                         }
                     }
                     //密文
                     byte[][] cipherText = new byte[n][];
                     for (int i = 0; i < n; i++) {
-                        //生成随机数种子
-                        byte[] seed = new byte[KyberParams.SYM_BYTES];
                         //生成需要加密的明文
                         byte[] message = new byte[KyberParams.SYM_BYTES];
-                        this.secureRandom.nextBytes(seed);
                         this.secureRandom.nextBytes(message);
                         //因为消息m必须要256bit，因此传递的密文中选取前128bit作为OT的输出
                         rbArray[index][i] = Arrays.copyOfRange(message, 0, CommonConstants.BLOCK_BYTE_LENGTH);

@@ -40,10 +40,6 @@ public class Mrkyber19BnotReceiver extends AbstractBnotReceiver {
      */
     private KyberVecKeyPair[] aArray;
     /**
-     * 公钥（As+e）长度
-     */
-    private int paramsPolyvecBytes;
-    /**
      * 安全参数 K
      */
     private int paramsK;
@@ -51,10 +47,6 @@ public class Mrkyber19BnotReceiver extends AbstractBnotReceiver {
      * 使用的kyber实例
      */
     private Kyber kyber;
-    /**
-     * hash函数实例
-     */
-    private Hash hashFunction;
 
     public Mrkyber19BnotReceiver(Rpc receiverRpc, Party senderParty, MrKyber19BnotConfig config) {
         super(MrKyber19BnotPtoDesc.getInstance(), receiverRpc, senderParty, config);
@@ -106,18 +98,11 @@ public class Mrkyber19BnotReceiver extends AbstractBnotReceiver {
 
     private void paramsInit(int paramsK) {
         SecureRandom secureRandom = new SecureRandom();
-        this.hashFunction = HashFactory.createInstance(HashFactory.HashType.BC_BLAKE_2B_160, 16);
-        this.kyber = KyberFactory.createInstance(KyberFactory.KyberType.KYBER_JAVA, paramsK, secureRandom, this.hashFunction);
-        switch (paramsK) {
-            case 2:
-                paramsPolyvecBytes = KyberParams.POLY_VECTOR_BYTES_512;
-                break;
-            case 3:
-                paramsPolyvecBytes = KyberParams.POLY_VECTOR_BYTES_768;
-                break;
-            default:
-                paramsPolyvecBytes = KyberParams.POLY_VECTOR_BYTES_1024;
-        }
+        /**
+         * hash函数实例
+         */
+        Hash hashFunction = HashFactory.createInstance(HashFactory.HashType.BC_BLAKE_2B_160, 16);
+        this.kyber = KyberFactory.createInstance(KyberFactory.KyberType.KYBER_CPA, paramsK, secureRandom, hashFunction);
     }
 
     private List<byte[]> generatePkPayload() {
@@ -131,35 +116,24 @@ public class Mrkyber19BnotReceiver extends AbstractBnotReceiver {
                     short[][] publickKeyVec;
                     byte[] publicKeyBytes;
                     // 随机的向量，R_1-sigma
-                    short[][] randomKeyVec;
+                    byte[][] randomKeyByte = new byte[n][];
                     // 随机向量的生成元，g（R_1-sigma）
                     // 随机生成一组钥匙对
                     aArray[index] = this.kyber.generateKyberVecKeys();
                     // 读取多项式格式下的公钥
                     publickKeyVec = aArray[index].getPublicKeyVec();
                     publicKeyBytes = this.kyber.polyVectorToBytes(publickKeyVec);
-                    byte[][] pkPair = new byte[n + 1][];
                     for (int i = 0; i < n; i++) {
-                        pkPair[i] = new byte[paramsPolyvecBytes];
                         if (i != choices[index]) {
                             //生成（randomKey，p_1 - sigma）
-                            randomKeyVec = this.kyber.getRandomKyberPk();
-                            byte[] hashKeyByte = this.kyber.hashToByte(randomKeyVec);
+                            randomKeyByte[i] = this.kyber.getRandomKyberPk();
+                            byte[] hashKeyByte = this.kyber.hashToByte(randomKeyByte[i]);
                             // PK = PK + Hash（RandomKey）
-                            publicKeyBytes = BytesUtils.xor(publicKeyBytes,hashKeyByte);
-                            //将钥匙打包，第一个为As+e，第二个为随机生成的生成元p
-                            System.arraycopy(this.kyber.polyVectorToBytes(randomKeyVec), 0,
-                                    pkPair[i], 0, paramsPolyvecBytes);
+                            publicKeyBytes = BytesUtils.xor(publicKeyBytes, hashKeyByte);
                         }
                     }
-                    //将经过N-1个公钥遮掩后的（As+e）打包传输
-                    System.arraycopy(publicKeyBytes, 0,
-                            pkPair[choices[index]], 0, paramsPolyvecBytes);
-                    //将生成元单独拷贝放入
-                    pkPair[n] = new byte[KyberParams.SYM_BYTES];
-                    System.arraycopy(aArray[index].getPublicKeyGenerator(), 0,
-                            pkPair[n], 0, KyberParams.SYM_BYTES);
-                    return pkPair;
+                    return this.kyber.packageNumKeys
+                            (publicKeyBytes, randomKeyByte, aArray[index].getPublicKeyGenerator(), choices[index], n);
                 })
                 .flatMap(Arrays::stream)
                 .collect(Collectors.toList());

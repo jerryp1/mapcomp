@@ -14,7 +14,7 @@ import java.util.Arrays;
 
 
 /**
- * Kyber抽象类。
+ * Kyber-CPA抽象类。
  *
  * @author Sheng Hu
  * @date 2022/09/01
@@ -92,23 +92,14 @@ public class KyberCpa implements Kyber {
     }
 
     @Override
-    public short[][] getRandomKyberPk() {
+    public byte[] getRandomKyberPk() {
         byte[] newPublicKey;
-        switch (paramsK) {
-            case 2:
-                newPublicKey = new byte[KyberParams.POLY_VECTOR_BYTES_512];
-                break;
-            case 3:
-                newPublicKey = new byte[KyberParams.POLY_VECTOR_BYTES_768];
-                break;
-            default:
-                newPublicKey = new byte[KyberParams.POLY_VECTOR_BYTES_1024];
-        }
+        newPublicKey = new byte[paramsPolyvecBytes];
         secureRandom.nextBytes(newPublicKey);
         short[][] r = polyVectorFromBytes(newPublicKey);
         //将生成的随机数转移至符合多项式要求的域
         Poly.polyVectorReduce(r);
-        return r;
+        return Poly.polyVectorToBytes(r);
     }
 
     @Override
@@ -183,7 +174,7 @@ public class KyberCpa implements Kyber {
 
     @Override
     public byte[] encrypt(byte[] m, byte[] publicKey, byte[] publicKeyGenerator) {
-        return encrypt(m,Poly.polyVectorFromBytes(publicKey),publicKeyGenerator);
+        return encrypt(m, Poly.polyVectorFromBytes(publicKey), publicKeyGenerator);
     }
 
     @Override
@@ -211,36 +202,6 @@ public class KyberCpa implements Kyber {
         //将结果返回成消息
         return Poly.polyToMsg(mp);
     }
-
-    @Override
-    public short[][] kyberPkAdd(short[][] keyA, short[][] keyB) {
-        short[][] keyC = Poly.polyVectorAdd(keyA, keyB);
-        return Poly.polyVectorReduce(keyC);
-    }
-
-    @Override
-    public void kyberPkAddi(short[][] keyA, short[][] keyB) {
-        Poly.polyVectorAddi(keyA, keyB);
-        Poly.polyVectorReduce(keyA);
-    }
-
-    @Override
-    public short[][] kyberPkSub(short[][] keyA, short[][] keyB) {
-        short[][] keyC = new short[paramsK][];
-        for (int i = 0; i < paramsK; i++) {
-            keyC[i] = Poly.polySub(keyA[i], keyB[i]);
-        }
-        return Poly.polyVectorReduce(keyC);
-    }
-
-    @Override
-    public void kyberPkSubi(short[][] keyA, short[][] keyB) {
-        for (int i = 0; i < paramsK; i++) {
-            Poly.polySubi(keyA[i], keyB[i]);
-        }
-        Poly.polyVectorReduce(keyA);
-    }
-
     @Override
     public KyberPackedPki generateKyberByteKeys() {
         KyberVecKeyPair keyPair = generateKyberVecKeys();
@@ -320,18 +281,34 @@ public class KyberCpa implements Kyber {
     }
 
     @Override
-    public byte[][] packageTwoKeys(byte[] publickKeyBytes, short[][] randomKeyVec, byte[] publicKeyGenerator, int sigma) {
+    public byte[][] packageTwoKeys(byte[] publicKeyBytes, byte[] randomKeyByte, byte[] publicKeyGenerator, int sigma) {
         byte[][] pkPair = new byte[3][];
-        pkPair[0] = new byte[paramsPolyvecBytes];
-        pkPair[1] = new byte[paramsPolyvecBytes];
+        pkPair[sigma] = new byte[paramsPolyvecBytes];
+        System.arraycopy(publicKeyBytes, 0, pkPair[sigma], 0, paramsPolyvecBytes);
+        pkPair[1 - sigma] = new byte[paramsPolyvecBytes];
+        System.arraycopy(randomKeyByte, 0, pkPair[1 - sigma], 0, paramsPolyvecBytes);
         pkPair[2] = new byte[KyberParams.SYM_BYTES];
-        //将（As+e，p_sigma）打包传输
-        System.arraycopy(publickKeyBytes, 0,
-                pkPair[sigma], 0, paramsPolyvecBytes);
-        System.arraycopy(polyVectorToBytes(randomKeyVec), 0,
-                pkPair[1 - sigma], 0, paramsPolyvecBytes);
+        System.arraycopy(publicKeyGenerator, 0, pkPair[2], 0, KyberParams.SYM_BYTES);
+        return pkPair;
+    }
+
+    @Override
+    public byte[][] packageNumKeys(byte[] publicKeyBytes, byte[][] randomKeyByte, byte[] publicKeyGenerator, int choice, int n) {
+        byte[][] pkPair = new byte[n + 1][];
+        for (int i = 0; i < n; i++) {
+            pkPair[i] = new byte[paramsPolyvecBytes];
+            if(i != choice){
+                System.arraycopy(randomKeyByte[i], 0,
+                        pkPair[i], 0, paramsPolyvecBytes);
+            }
+            else{
+                System.arraycopy(publicKeyBytes, 0,
+                        pkPair[i], 0, paramsPolyvecBytes);
+            }
+        }
+        pkPair[n] = new byte[KyberParams.SYM_BYTES];
         System.arraycopy(publicKeyGenerator, 0,
-                pkPair[2], 0, KyberParams.SYM_BYTES);
+                pkPair[n], 0, KyberParams.SYM_BYTES);
         return pkPair;
     }
 

@@ -10,8 +10,6 @@ import edu.alibaba.mpc4j.common.rpc.Rpc;
 import edu.alibaba.mpc4j.common.rpc.utils.DataPacket;
 import edu.alibaba.mpc4j.common.rpc.utils.DataPacketHeader;
 import edu.alibaba.mpc4j.common.tool.CommonConstants;
-import edu.alibaba.mpc4j.common.tool.crypto.kyber.kyber4j.KyberParams;
-import edu.alibaba.mpc4j.common.tool.utils.BigIntegerUtils;
 import edu.alibaba.mpc4j.common.tool.utils.BytesUtils;
 import edu.alibaba.mpc4j.s2pc.pcg.ot.base.AbstractBaseOtReceiver;
 import edu.alibaba.mpc4j.s2pc.pcg.ot.base.BaseOtReceiverOutput;
@@ -46,10 +44,6 @@ public class MrKyber19BaseOtReceiver extends AbstractBaseOtReceiver {
      * 使用的kyber实例
      */
     private Kyber kyber;
-    /**
-     * hash函数实例
-     */
-    private Hash hashFunction;
 
 
     public MrKyber19BaseOtReceiver(Rpc receiverRpc, Party senderParty, MrKyber19BaseOtConfig config) {
@@ -102,8 +96,11 @@ public class MrKyber19BaseOtReceiver extends AbstractBaseOtReceiver {
 
     private void paramsInit(int paramsK) {
         SecureRandom secureRandom = new SecureRandom();
-        this.hashFunction = HashFactory.createInstance(HashFactory.HashType.BC_BLAKE_2B_160, 16);
-        this.kyber = KyberFactory.createInstance(KyberFactory.KyberType.KYBER_JAVA, paramsK, secureRandom, this.hashFunction);
+        /**
+         * hash函数实例
+         */
+        Hash hashFunction = HashFactory.createInstance(HashFactory.HashType.BC_BLAKE_2B_160, 16);
+        this.kyber = KyberFactory.createInstance(KyberFactory.KyberType.KYBER_CPA, paramsK, secureRandom, hashFunction);
     }
 
     private List<byte[]> generatePkPayload() {
@@ -116,21 +113,21 @@ public class MrKyber19BaseOtReceiver extends AbstractBaseOtReceiver {
                     // 公钥（As+e）的向量
                     byte[] publickKeyBytes;
                     // 随机的向量，R_1-sigma
-                    short[][] randomKeyVec;
+                    byte[] randomKeyByte;
                     // 随机向量的生成元，g（R_1-sigma）
                     // 随机生成一组钥匙对
                     aArray[index] = this.kyber.generateKyberVecKeys();
                     // 读取多项式格式下的公钥
                     publickKeyBytes = this.kyber.polyVectorToBytes(aArray[index].getPublicKeyVec());
                     // 生成一个符合格式的随机公钥 R_1-sigma
-                    randomKeyVec = this.kyber.getRandomKyberPk();
+                    randomKeyByte = this.kyber.getRandomKyberPk();
                     // 计算 R_sigma = R_sigma + Hash(R_1-sigma)
-                    byte[] hashKeyByte = this.kyber.hashToByte(randomKeyVec);
-                    publickKeyBytes = BytesUtils.xor(publickKeyBytes,hashKeyByte);
+                    byte[] hashKeyByte = this.kyber.hashToByte(randomKeyByte);
+                    publickKeyBytes = BytesUtils.xor(publickKeyBytes, hashKeyByte);
                     // 根据选择值将两个参数R分别放入对应位置
                     int sigma = choices[index] ? 1 : 0;
                     return this.kyber.packageTwoKeys
-                            (publickKeyBytes,randomKeyVec,aArray[index].getPublicKeyGenerator(),sigma);
+                            (publickKeyBytes,randomKeyByte,aArray[index].getPublicKeyGenerator(),sigma);
                 })
                 .flatMap(Arrays::stream)
                 .collect(Collectors.toList());

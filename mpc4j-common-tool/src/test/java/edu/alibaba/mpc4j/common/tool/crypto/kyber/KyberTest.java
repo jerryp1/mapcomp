@@ -2,7 +2,6 @@ package edu.alibaba.mpc4j.common.tool.crypto.kyber;
 
 import edu.alibaba.mpc4j.common.tool.crypto.hash.Hash;
 import edu.alibaba.mpc4j.common.tool.crypto.hash.HashFactory;
-import edu.alibaba.mpc4j.common.tool.crypto.kyber.kyber4j.Poly;
 import org.junit.Assert;
 import org.junit.Test;
 
@@ -28,7 +27,7 @@ public class KyberTest {
         for (int k = 2; k <= 4; k++) {
             byte[] testBytes = new byte[32];
             secureRandom.nextBytes(testBytes);
-            Kyber kyber = KyberFactory.createInstance(KyberFactory.KyberType.KYBER_JAVA, k, secureRandom,hashFunction);
+            Kyber kyber = KyberFactory.createInstance(KyberFactory.KyberType.KYBER_CPA, k, secureRandom,hashFunction);
             KyberVecKeyPair keyPair = kyber.generateKyberVecKeys();
             byte[] cipherText = kyber.encrypt(testBytes, keyPair.getPublicKeyVec(), keyPair.getPublicKeyGenerator());
             byte[] plainText = kyber.decrypt(cipherText, keyPair.getPrivateKeyVec());
@@ -46,7 +45,7 @@ public class KyberTest {
         for (int k = 2; k <= 4; k++) {
             byte[] testBytes = new byte[32];
             secureRandom.nextBytes(testBytes);
-            Kyber kyber = KyberFactory.createInstance(KyberFactory.KyberType.KYBER_JAVA, k, secureRandom,hashFunction);
+            Kyber kyber = KyberFactory.createInstance(KyberFactory.KyberType.KYBER_CPA, k, secureRandom,hashFunction);
             KyberPackedPki keyPair = kyber.generateKyberByteKeys();
             byte[] cipherText = kyber.encrypt(testBytes, keyPair.getPackedPublicKey());
             byte[] plainText = kyber.decrypt(cipherText, keyPair.getPackedPrivateKey());
@@ -64,10 +63,10 @@ public class KyberTest {
         for (int k = 2; k <= 4; k++) {
             byte[] testBytes = new byte[32];
             secureRandom.nextBytes(testBytes);
-            Kyber kyber = KyberFactory.createInstance(KyberFactory.KyberType.KYBER_JAVA, k, secureRandom,hashFunction);
+            Kyber kyber = KyberFactory.createInstance(KyberFactory.KyberType.KYBER_CPA, k, secureRandom,hashFunction);
             for (int index = 0; index < 32; index++) {
                 //测试一下是不是每次都不一样hh
-                System.out.println(Arrays.toString(kyber.polyVectorToBytes(kyber.getRandomKyberPk())));
+                System.out.println(Arrays.toString(kyber.getRandomKyberPk()));
             }
         }
     }

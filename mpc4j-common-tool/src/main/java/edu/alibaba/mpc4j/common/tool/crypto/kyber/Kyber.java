@@ -12,7 +12,7 @@ public interface Kyber {
      *
      * @return 随机Kyber公钥。
      */
-    short[][] getRandomKyberPk();
+    byte[] getRandomKyberPk();
 
     /**
      * 将{@code short[][]}表示的数据映射到Kyber部分公钥域上
@@ -92,42 +92,6 @@ public interface Kyber {
      * @return 消息m
      */
     byte[] decrypt(byte[] packedCipherText, short[][] privateKey);
-
-    /**
-     * 计算两个公钥的和
-     *
-     * @param keyA 多项式A的参数
-     * @param keyB 多项式B的参数
-     * @return 多项式A+B的参数
-     */
-    short[][] kyberPkAdd(short[][] keyA, short[][] keyB);
-
-    /**
-     * 计算两个公钥的和
-     *
-     * @param keyA 多项式A的参数
-     * @param keyB 多项式B的参数
-     * @return 多项式A+B的参数
-     */
-    void kyberPkAddi(short[][] keyA, short[][] keyB);
-
-    /**
-     * 计算两个公钥的差
-     *
-     * @param keyA 多项式A的参数
-     * @param keyB 多项式B的参数
-     * @return 多项式A-B的参数
-     */
-    short[][] kyberPkSub(short[][] keyA, short[][] keyB);
-
-    /**
-     * 计算两个公钥的差,返回值为A
-     *
-     * @param keyA 多项式A的参数
-     * @param keyB 多项式B的参数
-     */
-    void kyberPkSubi(short[][] keyA, short[][] keyB);
-
     /**
      * Generates public and private keys for the CPA-secure public-key
      * encryption scheme underlying Kyber.
@@ -165,11 +129,24 @@ public interface Kyber {
      * Deserialize a byte array into a polynomial vector
      * 将byte数组转为多项式向量
      *
-     * @param publickKeyBytes 遮掩后的As+e
-     * @param randomKeyVec 随机的As+e
-     * @param publicKeyGenerator 随机生成元
+     * @param publicKeyBytes 遮掩后的As+e
+     * @param randomKeyByte 随机的As+e
+     * @param publicKeyGenerator 生成元
      * @param sigma 2选一OT的选择
      * @return 多项式向量
      */
-    byte[][] packageTwoKeys(byte[] publickKeyBytes,short[][] randomKeyVec,byte[] publicKeyGenerator,int sigma);
+    byte[][] packageTwoKeys(byte[] publicKeyBytes,byte[] randomKeyByte,byte[] publicKeyGenerator,int sigma);
+
+    /**
+     * Deserialize a byte array into a polynomial vector
+     * 将byte数组转为多项式向量
+     *
+     * @param publicKeyBytes 遮掩后的As+e
+     * @param randomKeyByte 随机的As+e
+     * @param publicKeyGenerator 生成元
+     * @param choice n选一OT的选择
+     * @param n n选一OT的n
+     * @return 多项式向量
+     */
+    byte[][] packageNumKeys(byte[] publicKeyBytes,byte[][] randomKeyByte,byte[] publicKeyGenerator,int choice,int n);
 }
