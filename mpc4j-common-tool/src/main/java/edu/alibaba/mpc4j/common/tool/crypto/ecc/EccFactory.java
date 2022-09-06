@@ -5,6 +5,7 @@ import edu.alibaba.mpc4j.common.tool.crypto.ecc.bc.*;
 import edu.alibaba.mpc4j.common.tool.crypto.ecc.mcl.SecP256k1MclEcc;
 import edu.alibaba.mpc4j.common.tool.crypto.ecc.mcl.SecP256r1MclEcc;
 import edu.alibaba.mpc4j.common.tool.crypto.ecc.openssl.SecP256k1OpensslEcc;
+import edu.alibaba.mpc4j.common.tool.crypto.ecc.openssl.SecP256r1OpensslEcc;
 import edu.alibaba.mpc4j.common.tool.crypto.ecc.openssl.Sm2P256v1OpensslEcc;
 
 /**
@@ -43,6 +44,10 @@ public class EccFactory {
          */
         SEC_P256_R1_MCL,
         /**
+         * OpenSSL实现的SecP256r1曲线
+         */
+        SEC_P256_R1_OPENSSL,
+        /**
          * BC实现的SecP256r1
          */
         SEC_P256_R1_BC,
@@ -57,11 +62,11 @@ public class EccFactory {
         /**
          * BC实现的Curve25519
          */
-        CURVE_25519_BC,
+        CURVE25519_BC,
         /**
          * BC实现的ED25519
          */
-        ED_25519_BC,
+        ED25519_BC,
     }
 
     /**
@@ -80,15 +85,17 @@ public class EccFactory {
                 return new SecP256k1BcEcc();
             case SEC_P256_R1_MCL:
                 return new SecP256r1MclEcc();
+            case SEC_P256_R1_OPENSSL:
+                return new SecP256r1OpensslEcc();
             case SEC_P256_R1_BC:
                 return new SecP256r1BcEcc();
             case SM2_P256_V1_OPENSSL:
                 return new Sm2P256v1OpensslEcc();
             case SM2_P256_V1_BC:
                 return new Sm2P256v1BcEcc();
-            case CURVE_25519_BC:
+            case CURVE25519_BC:
                 return new Curve25519BcEcc();
-            case ED_25519_BC:
+            case ED25519_BC:
                 return new Ed25519BcEcc();
             default:
                 throw new IllegalArgumentException("Invalid " + EccType.class.getSimpleName() + ": " + eccType.name());
@@ -98,7 +105,7 @@ public class EccFactory {
     /**
      * 创建椭圆曲线。
      *
-     * @param envType 椭圆曲线类型。
+     * @param envType 环境类型。
      * @return 椭圆曲线。
      */
     public static Ecc createInstance(EnvType envType) {

@@ -5,6 +5,7 @@ import edu.alibaba.mpc4j.common.tool.crypto.ecc.EccFactory;
 import edu.alibaba.mpc4j.common.tool.crypto.hash.Hash;
 import edu.alibaba.mpc4j.common.tool.crypto.hash.HashFactory;
 import edu.alibaba.mpc4j.common.tool.utils.BigIntegerUtils;
+import edu.alibaba.mpc4j.common.tool.utils.BytesUtils;
 import org.bouncycastle.math.ec.ECFieldElement;
 import org.bouncycastle.math.ec.ECPoint;
 
@@ -22,6 +23,14 @@ public class Ed25519BcEcc extends AbstractEcc {
      * 坐标的字节长度
      */
     private static final int POINT_BYTES = 32;
+    /**
+     * 压缩坐标长度
+     */
+    private static final int COMPRESS_POINT_BYTES = POINT_BYTES + 1;
+    /**
+     * 非压缩坐标长度
+     */
+    private static final int UNCOMPRESS_POINT_BYTES = POINT_BYTES * 2 + 1;
     /**
      * 常数3
      */
@@ -44,7 +53,7 @@ public class Ed25519BcEcc extends AbstractEcc {
     private final Hash hash;
 
     public Ed25519BcEcc() {
-        super(EccFactory.EccType.ED_25519_BC, "curve25519");
+        super(EccFactory.EccType.ED25519_BC, "curve25519");
         // 初始化哈希函数，为与MCL兼容，必须使用SHA256
         hash = HashFactory.createInstance(HashFactory.HashType.JDK_SHA256, 32);
         // 初始化常数
@@ -61,36 +70,69 @@ public class Ed25519BcEcc extends AbstractEcc {
 
     @Override
     public byte[] encode(ECPoint ecPoint, boolean compressed) {
-        // 转换成ed25519曲线上的点，输出坐标，ED25519无法简单的压缩表示。
+        // 转换成ed25519曲线上的点
         ECPoint normalizedPoint = ecPoint.normalize();
         ECFieldElement[] t1 = weierstrassToMontgomery(normalizedPoint.getAffineXCoord(), normalizedPoint.getAffineYCoord());
         ECFieldElement[] t2 = montgomeryToEdwards(t1[0], t1[1]);
-        return ByteBuffer.allocate(POINT_BYTES * 2)
-                .put(BigIntegerUtils.nonNegBigIntegerToByteArray(t2[0].negate().toBigInteger(), POINT_BYTES))
-                .put(BigIntegerUtils.nonNegBigIntegerToByteArray(t2[1].toBigInteger(), POINT_BYTES))
+        byte[] encodeY = BigIntegerUtils.nonNegBigIntegerToByteArray(t2[1].toBigInteger(), POINT_BYTES);
+        if (compressed) {
+            // 压缩表示，将编码结果修正为y坐标
+            byte[] encoded = ecPoint.getEncoded(true);
+            // 将尾数修改为Edwards形式
+            System.arraycopy(encodeY, 0, encoded, 1, POINT_BYTES);
+            return encoded;
+        } else {
+            // 非压缩表示，第1个字节为符号位0x04
+            byte[] encodeX = BigIntegerUtils.nonNegBigIntegerToByteArray(t2[0].toBigInteger(), POINT_BYTES);
+            return ByteBuffer.allocate(UNCOMPRESS_POINT_BYTES)
+                .put((byte)0x04)
+                .put(encodeX)
+                .put(encodeY)
                 .array();
+        }
     }
 
     @Override
     public ECPoint decode(byte[] encoded) {
-        assert encoded.length == POINT_BYTES * 2;
-        byte[] encodeEdwardPoint = new byte[POINT_BYTES];
-        ECFieldElement[] edwardsPoint = new ECFieldElement[2];
-        // 转换x
-        System.arraycopy(encoded, 0, encodeEdwardPoint, 0, POINT_BYTES);
-        edwardsPoint[0] = getEcDomainParameters().getCurve().fromBigInteger(
+        assert encoded.length == COMPRESS_POINT_BYTES || encoded.length == UNCOMPRESS_POINT_BYTES
+            : "encode byte length must be either " + COMPRESS_POINT_BYTES
+            + " or " + UNCOMPRESS_POINT_BYTES + ": " + encoded.length;
+        byte[] copyEncode = BytesUtils.clone(encoded);
+        if (encoded.length == UNCOMPRESS_POINT_BYTES) {
+            // 完整表示
+            byte[] encodeEdwardPoint = new byte[POINT_BYTES];
+            ECFieldElement[] edwardsPoint = new ECFieldElement[2];
+            // 转换x
+            System.arraycopy(encoded, 1, encodeEdwardPoint, 0, POINT_BYTES);
+            edwardsPoint[0] = getEcDomainParameters().getCurve().fromBigInteger(
                 BigIntegerUtils.byteArrayToNonNegBigInteger(encodeEdwardPoint)
-        ).negate();
-        // 转换y
-        System.arraycopy(encoded, POINT_BYTES, encodeEdwardPoint, 0, POINT_BYTES);
-        edwardsPoint[1] = getEcDomainParameters().getCurve().fromBigInteger(
+            );
+            // 转换y
+            System.arraycopy(encoded, POINT_BYTES + 1, encodeEdwardPoint, 0, POINT_BYTES);
+            edwardsPoint[1] = getEcDomainParameters().getCurve().fromBigInteger(
                 BigIntegerUtils.byteArrayToNonNegBigInteger(encodeEdwardPoint)
-        );
-        // 转换为Weierstrass点
-        ECFieldElement[] t2 = edwardsToMontgomery(edwardsPoint[0], edwardsPoint[1]);
-        ECFieldElement[] t1 = montgomeryToWeierstrass(t2[0], t2[1]);
-
-        return getEcDomainParameters().getCurve().createPoint(t1[0].toBigInteger(), t1[1].toBigInteger());
+            );
+            // 转换为Weierstrass点
+            ECFieldElement[] t2 = edwardsToMontgomery(edwardsPoint[0], edwardsPoint[1]);
+            ECFieldElement[] t1 = montgomeryToWeierstrass(t2[0], t2[1]);
+            byte[] encodeX = BigIntegerUtils.nonNegBigIntegerToByteArray(t1[0].toBigInteger(), POINT_BYTES);
+            byte[] encodeY = BigIntegerUtils.nonNegBigIntegerToByteArray(t1[1].toBigInteger(), POINT_BYTES);
+            System.arraycopy(encodeX, 0, copyEncode, 1, POINT_BYTES);
+            System.arraycopy(encodeY, 0, copyEncode, POINT_BYTES + 1, POINT_BYTES);
+        } else {
+            // 压缩表示，将编码结果修正为x坐标
+            byte[] encodeEdwardY = new byte[POINT_BYTES];
+            System.arraycopy(encoded, 1, encodeEdwardY, 0, POINT_BYTES);
+            ECFieldElement edwardsY = getEcDomainParameters().getCurve().fromBigInteger(
+                BigIntegerUtils.byteArrayToNonNegBigInteger(encodeEdwardY)
+            );
+            ECFieldElement montgomeryX = one.add(edwardsY).divide(one.subtract(edwardsY));
+            ECFieldElement weierstrassX = (ecFieldElement3.multiply(montgomeryX).add(ecFieldElement486662))
+                .divide(ecFieldElement3);
+            byte[] encodeX = BigIntegerUtils.nonNegBigIntegerToByteArray(weierstrassX.toBigInteger(), POINT_BYTES);
+            System.arraycopy(encodeX, 0, copyEncode, 1, POINT_BYTES);
+        }
+        return getEcDomainParameters().getCurve().decodePoint(copyEncode);
     }
 
     private ECFieldElement[] weierstrassToMontgomery(ECFieldElement x, ECFieldElement y) {
