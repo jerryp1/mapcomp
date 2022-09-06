@@ -1,7 +1,8 @@
-package edu.alibaba.mpc4j.common.tool.crypto.ecc.bc;
+package edu.alibaba.mpc4j.common.tool.crypto.ecc.sodium;
 
-import edu.alibaba.mpc4j.common.tool.crypto.ecc.ByteFullEcc;
+import edu.alibaba.mpc4j.common.tool.CommonConstants;
 import edu.alibaba.mpc4j.common.tool.crypto.ecc.ByteEccFactory;
+import edu.alibaba.mpc4j.common.tool.crypto.ecc.ByteFullEcc;
 import edu.alibaba.mpc4j.common.tool.crypto.ecc.utils.Ed25519ByteEccUtils;
 import edu.alibaba.mpc4j.common.tool.crypto.hash.Hash;
 import edu.alibaba.mpc4j.common.tool.crypto.hash.HashFactory;
@@ -12,22 +13,31 @@ import java.math.BigInteger;
 import java.security.SecureRandom;
 
 /**
- * Bouncy Castle实现的Ed25519全功能字节椭圆曲线。
+ * Sodium实现的Ed25519全功能字节椭圆曲线。
  *
  * @author Weiran Liu
- * @date 2022/9/1
+ * @date 2022/9/6
  */
-public class Ed25519BcByteFullEcc implements ByteFullEcc {
+public class Ed25519SodiumByteFullEcc implements ByteFullEcc {
+
+    static {
+        System.loadLibrary(CommonConstants.MPC4J_NATIVE_TOOL_NAME);
+    }
+
     /**
      * 椭圆曲线点字节长度
      */
     private static final int POINT_BYTE_LENGTH = Ed25519ByteEccUtils.POINT_BYTES;
     /**
+     * 幂指数字节长度
+     */
+    private static final int SCALAR_BYTE_LENGTH = Ed25519ByteEccUtils.SCALAR_BYTES;
+    /**
      * 哈希函数
      */
     private final Hash hash;
 
-    public Ed25519BcByteFullEcc() {
+    public Ed25519SodiumByteFullEcc() {
         hash = HashFactory.createInstance(HashFactory.HashType.JDK_SHA256, POINT_BYTE_LENGTH);
         Ed25519ByteEccUtils.precomputeBase();
     }
@@ -90,7 +100,6 @@ public class Ed25519BcByteFullEcc implements ByteFullEcc {
                 p = hash.digestToBytes(p);
             }
         }
-        // 需要乘以cofactor
         byte[] r = new byte[POINT_BYTE_LENGTH];
         Ed25519ByteEccUtils.scalarMultEncoded(Ed25519ByteEccUtils.SCALAR_COFACTOR, p, r);
         return r;
@@ -98,16 +107,14 @@ public class Ed25519BcByteFullEcc implements ByteFullEcc {
 
     @Override
     public byte[] mul(byte[] p, byte[] k) {
-        byte[] byteK = BytesUtils.reverseByteArray(k);
-        BigInteger bigIntegerK = BigIntegerUtils.byteArrayToNonNegBigInteger(byteK);
-        return mul(p, bigIntegerK);
+        assert k.length == SCALAR_BYTE_LENGTH;
+        return nativeMul(p, k);
     }
 
     @Override
     public byte[] baseMul(byte[] k) {
-        byte[] byteK = BytesUtils.reverseByteArray(k);
-        BigInteger bigIntegerK = BigIntegerUtils.byteArrayToNonNegBigInteger(byteK);
-        return baseMul(bigIntegerK);
+        assert k.length == SCALAR_BYTE_LENGTH;
+        return nativeBaseMul(k);
     }
 
     @Override
@@ -157,21 +164,21 @@ public class Ed25519BcByteFullEcc implements ByteFullEcc {
     public byte[] mul(byte[] p, BigInteger k) {
         assert p.length == POINT_BYTE_LENGTH;
         byte[] byteK = Ed25519ByteEccUtils.toByteK(k);
-        byte[] r = new byte[POINT_BYTE_LENGTH];
-        Ed25519ByteEccUtils.scalarMultEncoded(byteK, p, r);
-        return r;
+        return nativeMul(p, byteK);
     }
 
     @Override
     public byte[] baseMul(BigInteger k) {
         byte[] byteK = Ed25519ByteEccUtils.toByteK(k);
-        byte[] r = new byte[POINT_BYTE_LENGTH];
-        Ed25519ByteEccUtils.scalarMultBaseEncoded(byteK, r);
-        return r;
+        return nativeBaseMul(byteK);
     }
+
+    private native byte[] nativeMul(byte[] p, byte[] k);
+
+    private native byte[] nativeBaseMul(byte[] k);
 
     @Override
     public ByteEccFactory.ByteEccType getByteEccType() {
-        return ByteEccFactory.ByteEccType.ED25519_BC;
+        return ByteEccFactory.ByteEccType.ED25519_SODIUM;
     }
 }

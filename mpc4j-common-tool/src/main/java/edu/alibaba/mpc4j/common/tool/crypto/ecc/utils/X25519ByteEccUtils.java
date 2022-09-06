@@ -1,6 +1,8 @@
-package edu.alibaba.mpc4j.common.tool.crypto.ecc.bc;
+package edu.alibaba.mpc4j.common.tool.crypto.ecc.utils;
 
 import org.bouncycastle.math.ec.rfc7748.X25519Field;
+
+import java.security.SecureRandom;
 
 /**
  * X25519字节椭圆曲线，实现由Bouncy Castle实现改造而来，参见：
@@ -12,7 +14,7 @@ import org.bouncycastle.math.ec.rfc7748.X25519Field;
  * @date 2022/9/1
  */
 @SuppressWarnings("SuspiciousNameCombination")
-class X25519ByteEccUtils {
+public class X25519ByteEccUtils {
     /**
      * Curve25519有限域
      */
@@ -27,7 +29,7 @@ class X25519ByteEccUtils {
     /**
      * 点的字节长度
      */
-    static final int POINT_BYTES = POINT_INTS * 4;
+    public static final int POINT_BYTES = POINT_INTS * 4;
     /**
      * 幂指数的整数长度
      */
@@ -35,11 +37,11 @@ class X25519ByteEccUtils {
     /**
      * 幂指数的字节长度
      */
-    static final int SCALAR_BYTES = SCALAR_INTS * 4;
+    private static final int SCALAR_BYTES = SCALAR_INTS * 4;
     /**
      * 无穷远点：X = 0，小端表示
      */
-    static final byte[] POINT_INFINITY = new byte[]{
+    public static final byte[] POINT_INFINITY = new byte[]{
         (byte) 0x00, (byte) 0x00, (byte) 0x00, (byte) 0x00, (byte) 0x00, (byte) 0x00, (byte) 0x00, (byte) 0x00,
         (byte) 0x00, (byte) 0x00, (byte) 0x00, (byte) 0x00, (byte) 0x00, (byte) 0x00, (byte) 0x00, (byte) 0x00,
         (byte) 0x00, (byte) 0x00, (byte) 0x00, (byte) 0x00, (byte) 0x00, (byte) 0x00, (byte) 0x00, (byte) 0x00,
@@ -49,7 +51,7 @@ class X25519ByteEccUtils {
     /**
      * 基点B：x = 9，小端表示
      */
-    static final byte[] POINT_B = new byte[]{
+    public static final byte[] POINT_B = new byte[]{
         (byte) 0x09, (byte) 0x00, (byte) 0x00, (byte) 0x00, (byte) 0x00, (byte) 0x00, (byte) 0x00, (byte) 0x00,
         (byte) 0x00, (byte) 0x00, (byte) 0x00, (byte) 0x00, (byte) 0x00, (byte) 0x00, (byte) 0x00, (byte) 0x00,
         (byte) 0x00, (byte) 0x00, (byte) 0x00, (byte) 0x00, (byte) 0x00, (byte) 0x00, (byte) 0x00, (byte) 0x00,
@@ -102,7 +104,7 @@ class X25519ByteEccUtils {
         Curve25519Field.mul(z, a, z);
     }
 
-    static void precomputeBase() {
+    public static void precomputeBase() {
         Ed25519ByteEccUtils.precomputeBase();
     }
 
@@ -113,7 +115,7 @@ class X25519ByteEccUtils {
      * @param u 基点U。
      * @param r 结果点R。
      */
-    static void scalarMult(byte[] k, byte[] u, byte[] r) {
+    public static void scalarMult(byte[] k, byte[] u, byte[] r) {
         int[] n = new int[SCALAR_INTS];
         decodeScalar(k, n);
 
@@ -177,7 +179,7 @@ class X25519ByteEccUtils {
      * @param k 幂指数k。
      * @param r 结果R。
      */
-    static void scalarMultBase(byte[] k, byte[] r) {
+    public static void scalarMultBase(byte[] k, byte[] r) {
         int[] y = Curve25519Field.create();
         int[] z = Curve25519Field.create();
         Ed25519ByteEccUtils.scalarMultBaseYZ(k, y, z);
@@ -186,5 +188,60 @@ class X25519ByteEccUtils {
         Curve25519Field.mul(y, z, y);
         Curve25519Field.normalize(y);
         Curve25519Field.encode(y, r, 0);
+    }
+
+    /**
+     * 检查幂指数是否符合运算要求。
+     *
+     * @param k 幂指数。
+     * @return 如果符合要求，返回{@code true}，否则返回{@code false}。
+     */
+    public static boolean checkScalar(byte[] k) {
+        if (k == null || k.length != SCALAR_BYTES) {
+            return false;
+        }
+        return ((k[0] & 0x07) == 0)
+            && ((k[SCALAR_BYTES - 1] & (byte)0x80) == 0)
+            && ((k[SCALAR_BYTES - 1] & (byte)0x40) != 0);
+    }
+
+    /**
+     * 检查椭圆曲线点是否符合运算要求。。
+     *
+     * @param p 椭圆曲线点。
+     * @return 如果符合要求，返回{@code true}，否则返回{@code false}。
+     */
+    public static boolean checkPoint(byte[] p) {
+        return p.length == POINT_BYTES;
+    }
+
+    /**
+     * 返回随机幂指数。
+     *
+     * @param secureRandom 随机状态。
+     * @return 随机幂指数。
+     */
+    public static byte[] randomScalar(SecureRandom secureRandom) {
+        byte[] k = new byte[SCALAR_BYTES];
+        secureRandom.nextBytes(k);
+        // 后三位设置为0，使结果为8的倍数
+        k[0] &= 0xF8;
+        // 首位设置为0
+        k[POINT_BYTES - 1] &= 0x7F;
+        // 次位设置为1，满足安全要求
+        k[POINT_BYTES - 1] |= 0x40;
+        return k;
+    }
+
+    /**
+     * 返回随机椭圆曲线点。
+     *
+     * @param secureRandom 随机状态。
+     * @return 随机椭圆曲线点。
+     */
+    public static byte[] randomPoint(SecureRandom secureRandom) {
+        byte[] p = new byte[POINT_BYTES];
+        secureRandom.nextBytes(p);
+        return p;
     }
 }

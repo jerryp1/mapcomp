@@ -1,5 +1,6 @@
-package edu.alibaba.mpc4j.common.tool.crypto.ecc.bc;
+package edu.alibaba.mpc4j.common.tool.crypto.ecc.sodium;
 
+import edu.alibaba.mpc4j.common.tool.CommonConstants;
 import edu.alibaba.mpc4j.common.tool.crypto.ecc.ByteEccFactory;
 import edu.alibaba.mpc4j.common.tool.crypto.ecc.ByteMulEcc;
 import edu.alibaba.mpc4j.common.tool.crypto.ecc.utils.X25519ByteEccUtils;
@@ -10,25 +11,23 @@ import edu.alibaba.mpc4j.common.tool.utils.BytesUtils;
 import java.security.SecureRandom;
 
 /**
- * Bouncy Castle实现的X25519乘法字节椭圆曲线。协因子处理方式参见：
- * <p>
- * https://neilmadden.blog/2020/05/28/whats-the-curve25519-clamping-all-about/
- * </p>
- * 快速求幂算法参见：
- * <p>
- * https://martin.kleppmann.com/papers/curve25519.pdf
- * </p>
+ * Sodium实现的X25519乘法字节椭圆曲线。
  *
  * @author Weiran Liu
- * @date 2022/9/2
+ * @date 2022/9/6
  */
-public class X25519BcByteMulEcc implements ByteMulEcc {
+public class X25519SodiumByteMulEcc implements ByteMulEcc {
+
+    static {
+        System.loadLibrary(CommonConstants.MPC4J_NATIVE_TOOL_NAME);
+    }
+
     /**
      * 哈希函数
      */
     private final Hash hash;
 
-    public X25519BcByteMulEcc() {
+    public X25519SodiumByteMulEcc() {
         hash = HashFactory.createInstance(HashFactory.HashType.JDK_SHA256, X25519ByteEccUtils.POINT_BYTES);
         X25519ByteEccUtils.precomputeBase();
     }
@@ -55,7 +54,7 @@ public class X25519BcByteMulEcc implements ByteMulEcc {
 
     @Override
     public byte[] randomPoint(SecureRandom secureRandom) {
-       return X25519ByteEccUtils.randomPoint(secureRandom);
+        return X25519ByteEccUtils.randomPoint(secureRandom);
     }
 
     @Override
@@ -67,21 +66,21 @@ public class X25519BcByteMulEcc implements ByteMulEcc {
     public byte[] mul(byte[] p, byte[] k) {
         assert X25519ByteEccUtils.checkPoint(p);
         assert X25519ByteEccUtils.checkScalar(k);
-        byte[] r = new byte[X25519ByteEccUtils.POINT_BYTES];
-        X25519ByteEccUtils.scalarMult(k, p, r);
-        return r;
+        return nativeMul(p, k);
     }
+
+    private native byte[] nativeMul(byte[] p, byte[] k);
 
     @Override
     public byte[] baseMul(byte[] k) {
         assert X25519ByteEccUtils.checkScalar(k);
-        byte[] r = new byte[X25519ByteEccUtils.POINT_BYTES];
-        X25519ByteEccUtils.scalarMultBase(k, r);
-        return r;
+        return nativeBaseMul(k);
     }
+
+    private native byte[] nativeBaseMul(byte[] k);
 
     @Override
     public ByteEccFactory.ByteEccType getByteEccType() {
-        return ByteEccFactory.ByteEccType.X25519_BC;
+        return ByteEccFactory.ByteEccType.X25519_SODIUM;
     }
 }

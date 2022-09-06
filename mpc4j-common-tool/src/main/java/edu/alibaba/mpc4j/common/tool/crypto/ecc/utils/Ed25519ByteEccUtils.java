@@ -1,11 +1,15 @@
-package edu.alibaba.mpc4j.common.tool.crypto.ecc.bc;
+package edu.alibaba.mpc4j.common.tool.crypto.ecc.utils;
 
+import edu.alibaba.mpc4j.common.tool.utils.BigIntegerUtils;
 import edu.alibaba.mpc4j.common.tool.utils.BytesUtils;
 import org.bouncycastle.math.ec.rfc7748.X25519Field;
 import org.bouncycastle.math.raw.Interleave;
 import org.bouncycastle.math.raw.Nat;
 import org.bouncycastle.math.raw.Nat256;
 import org.bouncycastle.util.encoders.Hex;
+
+import java.math.BigInteger;
+import java.util.Locale;
 
 /**
  * ED25519字节椭圆曲线，所有数据使用小端表示。ED25519原理可参考下述论文：
@@ -36,7 +40,7 @@ public class Ed25519ByteEccUtils {
     /**
      * 点的字节长度
      */
-    static final int POINT_BYTES = POINT_INTS * 4;
+    public static final int POINT_BYTES = POINT_INTS * 4;
     /**
      * 幂指数的整数长度
      */
@@ -44,7 +48,7 @@ public class Ed25519ByteEccUtils {
     /**
      * 幂指数的字节长度
      */
-    static final int SCALAR_BYTES = SCALAR_INTS * 4;
+    public static final int SCALAR_BYTES = SCALAR_INTS * 4;
     /**
      * Fp中的p = 2^{255} - 19 = 7FFFFFFF FFFFFFFF FFFFFFFF FFFFFFFF FFFFFFFF FFFFFFFF FFFFFFFF FFFFFFED
      */
@@ -62,7 +66,7 @@ public class Ed25519ByteEccUtils {
     /**
      * 无穷远点：00000000 00000000 00000000 00000000 00000000 00000000 00000000 00000001，小端表示
      */
-    static final byte[] POINT_INFINITY = new byte[]{
+    public static final byte[] POINT_INFINITY = new byte[]{
         (byte) 0x01, (byte) 0x00, (byte) 0x00, (byte) 0x00, (byte) 0x00, (byte) 0x00, (byte) 0x00, (byte) 0x00,
         (byte) 0x00, (byte) 0x00, (byte) 0x00, (byte) 0x00, (byte) 0x00, (byte) 0x00, (byte) 0x00, (byte) 0x00,
         (byte) 0x00, (byte) 0x00, (byte) 0x00, (byte) 0x00, (byte) 0x00, (byte) 0x00, (byte) 0x00, (byte) 0x00,
@@ -72,7 +76,7 @@ public class Ed25519ByteEccUtils {
     /**
      * 基点B：66666666 66666666 66666666 66666666 66666666 66666666 66666666 66666658，小端表示
      */
-    static final byte[] POINT_B = new byte[]{
+    public static final byte[] POINT_B = new byte[]{
         0x58, 0x66, 0x66, 0x66, 0x66, 0x66, 0x66, 0x66, 0x66, 0x66, 0x66, 0x66, 0x66, 0x66, 0x66, 0x66,
         0x66, 0x66, 0x66, 0x66, 0x66, 0x66, 0x66, 0x66, 0x66, 0x66, 0x66, 0x66, 0x66, 0x66, 0x66, 0x66,
     };
@@ -214,6 +218,43 @@ public class Ed25519ByteEccUtils {
         0x0165E2B2, 0x034DCA13, 0x002ADD7A, 0x01A8283B, 0x00038052,
         0x01E7A260, 0x03407977, 0x019CE331, 0x01C56DFF, 0x00901B67};
     /**
+     * 协因子
+     */
+    public static final byte[] SCALAR_COFACTOR = new byte[]{
+        0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+        0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x08,
+    };
+    /**
+     * l = 2^{252} + 27742317777372353535851937790883648493
+     */
+    public static final BigInteger N = BigInteger.ONE.shiftLeft(252)
+        .add(new BigInteger("27742317777372353535851937790883648493"));
+    /**
+     * 幂指数-1
+     */
+    public static final byte[] NEG_SCALAR_ONE;
+
+    static {
+        BigInteger negate = BigInteger.ONE.negate().mod(N);
+        NEG_SCALAR_ONE = BigIntegerUtils.nonNegBigIntegerToByteArray(negate, POINT_BYTES);
+        BytesUtils.innerReverseByteArray(NEG_SCALAR_ONE);
+    }
+
+    /**
+     * 将大整数表示的幂指数转换为字节数组。
+     *
+     * @param k 幂指数。
+     * @return 转换结果。
+     */
+    public static byte[] toByteK(BigInteger k) {
+        assert BigIntegerUtils.greaterOrEqual(k, BigInteger.ZERO) && BigIntegerUtils.less(k, N) :
+            "k must be in range [0, " + N.toString().toUpperCase(Locale.ROOT) + "): " + k;
+        byte[] byteK = BigIntegerUtils.nonNegBigIntegerToByteArray(k, SCALAR_BYTES);
+        BytesUtils.innerReverseByteArray(byteK);
+        return byteK;
+    }
+
+    /**
      * WNAF（W-ary Non-Adjacent Form）预计算参数
      */
     private static final int PRECOMP_BLOCKS = 8;
@@ -338,7 +379,7 @@ public class Ed25519ByteEccUtils {
         return Curve25519Field.isZero(t);
     }
 
-    static boolean validPoint(byte[] p) {
+    public static boolean validPoint(byte[] p) {
         if (p == null || p.length != POINT_BYTES) {
             return false;
         }
@@ -521,7 +562,7 @@ public class Ed25519ByteEccUtils {
      * @param r 点r。
      * @param p 点p。
      */
-    static void pointAdd(byte[] r, byte[] p) {
+    public static void pointAdd(byte[] r, byte[] p) {
         PointAffine pointAffline = new PointAffine();
         decodePointVar(p, pointAffline);
         PointExt pointExt = pointCopy(pointAffline);
@@ -571,7 +612,7 @@ public class Ed25519ByteEccUtils {
      *
      * @param r 点r。
      */
-    static void pointNegate(byte[] r) {
+    public static void pointNegate(byte[] r) {
         r[POINT_BYTES - 1] ^= (1 << 7);
     }
 
@@ -581,7 +622,7 @@ public class Ed25519ByteEccUtils {
      * @param p 点p。
      * @param r 点r。
      */
-    static void pointSubtract(byte[] r, byte[] p) {
+    public static void pointSubtract(byte[] r, byte[] p) {
         PointAffine pointAffline = new PointAffine();
         decodePointVar(p, pointAffline);
         PointExt pointExt = pointCopy(pointAffline);
@@ -1065,7 +1106,7 @@ public class Ed25519ByteEccUtils {
      * @param p 点p。
      * @param r 计算结果。
      */
-    static void scalarMultEncoded(byte[] k, byte[] p, byte[] r) {
+    public static void scalarMultEncoded(byte[] k, byte[] p, byte[] r) {
         // 解码点
         PointAffine pointAffline = new PointAffine();
         decodePointVar(p, pointAffline);
@@ -1134,7 +1175,7 @@ public class Ed25519ByteEccUtils {
      * @param k 幂指数k。
      * @param r 计算结果。
      */
-    static void scalarMultBaseEncoded(byte[] k, byte[] r) {
+    public static void scalarMultBaseEncoded(byte[] k, byte[] r) {
         PointAccum p = new PointAccum();
         scalarMultBase(k, p);
         if (0 == encodePoint(p, r)) {

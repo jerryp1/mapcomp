@@ -67,7 +67,9 @@ public class EccEfficiencyTest {
      * 字节椭圆曲线测试类型
      */
     private static final ByteEccFactory.ByteEccType[] BYTE_MUL_ECC_TYPES = new ByteEccFactory.ByteEccType[] {
+        ByteEccFactory.ByteEccType.X25519_SODIUM,
         ByteEccFactory.ByteEccType.X25519_BC,
+        ByteEccFactory.ByteEccType.ED25519_SODIUM,
         ByteEccFactory.ByteEccType.ED25519_BC,
     };
 
