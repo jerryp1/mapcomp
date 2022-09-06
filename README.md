@@ -68,7 +68,7 @@ This library is licensed under the Apache License 2.0.
 
 ## Specifications
 
-Most of the codes are in Java, except for very efficient implementations in C/C++. You need [OpenSSL](https://www.openssl.org/), [GMP](https://gmplib.org/), [NTL,](https://libntl.org/) and [MCL](https://github.com/herumi/mcl)  to compile `mpc4j-native-tool`, and [SEAL 4.0.0](https://github.com/microsoft/SEAL) to compile `mpc4j-native-fhe`. Please see READMD.md in `mpc4j-native-cool` on how to install required C/C++ libraries.
+Most of the codes are in Java, except for very efficient implementations in C/C++. You need [OpenSSL](https://www.openssl.org/), [GMP](https://gmplib.org/), [NTL,](https://libntl.org/), [MCL](https://github.com/herumi/mcl) and [libsodium](https://doc.libsodium.org/installation) to compile `mpc4j-native-tool`, and [SEAL 4.0.0](https://github.com/microsoft/SEAL) to compile `mpc4j-native-fhe`. Please see READMD.md in `mpc4j-native-cool` on how to install required C/C++ libraries.
 
  After successfully obtaining the compiled C/C++ library (named `libmpc4j-native-tool` and `libmpc4j-native-fhe`, respectively), you need to assign the native library location when running `mpc4j` using `-Djava.library.path`.
 

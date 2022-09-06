@@ -8,7 +8,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ### Added
 
-- ByteEcc: Add scalar validation for X25519.
+- ByteEcc: Add scalar validation for X25519. Add libsodium support (both for X25519 and Ed25519).
 
 ## \[1.0.3\]
 
