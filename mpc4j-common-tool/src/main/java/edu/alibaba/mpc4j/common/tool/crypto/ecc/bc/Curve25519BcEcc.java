@@ -19,7 +19,7 @@ public class Curve25519BcEcc extends AbstractEcc {
     private final Hash hash;
 
     public Curve25519BcEcc() {
-        super(EccFactory.EccType.CURVE_25519_BC, "curve25519");
+        super(EccFactory.EccType.CURVE25519_BC, "curve25519");
         // 初始化哈希函数，为与MCL兼容，必须使用SHA256
         hash = HashFactory.createInstance(HashFactory.HashType.JDK_SHA256, 32);
     }

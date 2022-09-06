@@ -5,45 +5,44 @@ import edu.alibaba.mpc4j.common.rpc.MpcAbortException;
 import java.util.Set;
 
 /**
- * 单方多集合PMID协议发送方线程。
+ * 服务端集合PMID协议服务端线程。
  *
  * @author Weiran Liu
  * @date 2022/05/10
  */
-class OneSidePmidServerThread extends Thread {
+class ServerSetPmidServerThread extends Thread {
     /**
-     * PMID发送方
+     * PMID服务端
      */
     private final PmidServer<String> pmidServer;
     /**
-     * 发送方集合
+     * 服务端集合
      */
     private final Set<String> serverElementSet;
     /**
-     * 接收方元素数量
+     * 客户端元素数量
      */
     private final int clientSetSize;
     /**
-     * 客户端重复元素上界
+     * 客户端最大重数上界
      */
-    private final int maxClientK;
+    private final int maxClientU;
     /**
-     * 客户端重复元素数量
+     * 客户端重数上界
      */
-    private final int clientK;
+    private final int clientU;
     /**
      * PMID输出结果
      */
     private PmidPartyOutput<String> serverOutput;
 
-    OneSidePmidServerThread(PmidServer<String> pmidServer,
-                            Set<String> serverElementSet,
-                            int clientSetSize, int maxClientK, int ClientK) {
+    ServerSetPmidServerThread(PmidServer<String> pmidServer,
+                              Set<String> serverElementSet, int clientSetSize, int maxClientU, int ClientU) {
         this.pmidServer = pmidServer;
         this.serverElementSet = serverElementSet;
         this.clientSetSize = clientSetSize;
-        this.maxClientK = maxClientK;
-        this.clientK = ClientK;
+        this.maxClientU = maxClientU;
+        this.clientU = ClientU;
     }
 
     PmidPartyOutput<String> getServerOutput() {
@@ -54,8 +53,8 @@ class OneSidePmidServerThread extends Thread {
     public void run() {
         try {
             pmidServer.getRpc().connect();
-            pmidServer.init(serverElementSet.size(), clientSetSize, maxClientK);
-            serverOutput = pmidServer.pmid(serverElementSet, clientSetSize, clientK);
+            pmidServer.init(serverElementSet.size(), 1, clientSetSize, maxClientU);
+            serverOutput = pmidServer.pmid(serverElementSet, clientSetSize, clientU);
             pmidServer.getRpc().disconnect();
         } catch (MpcAbortException e) {
             e.printStackTrace();

@@ -5,7 +5,7 @@ import edu.alibaba.mpc4j.common.tool.crypto.ecc.NativeEcc;
 import java.nio.ByteBuffer;
 
 /**
- * MCL实现SecP256r1椭圆曲线运算的本地函数。如果在MclSecP256r1Ecc直接定义，生成jni文件时会提示找不到ECPoint的定义。
+ * MCL实现SecP256r1椭圆曲线运算的本地函数。
  *
  * @author Weiran Liu
  * @date 2022/7/7
