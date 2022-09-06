@@ -107,7 +107,7 @@ Java(TM) SE Runtime Environment (build 1.9.0_301-b09)
 Java HotSpot(TM) 64-Bit Server VM (build 25.301-b09, mixed mode)
 ```
 
-2. Clone `mp4cj` source code using `git clone https://github.com/alibaba-edu/mpc4j.git`.
+2. Clone `mpc4j` source code using `git clone https://github.com/alibaba-edu/mpc4j.git`.
 
 3. Follow the documentation in https://github.com/alibaba-edu/mpc4j/tree/main/mpc4j-native-tool to compile `mpc4j-native-tool`. If all steps are correct, you will see:
 
