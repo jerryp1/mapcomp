@@ -10,7 +10,6 @@ import edu.alibaba.mpc4j.common.rpc.Rpc;
 import edu.alibaba.mpc4j.common.rpc.utils.DataPacket;
 import edu.alibaba.mpc4j.common.rpc.utils.DataPacketHeader;
 import edu.alibaba.mpc4j.common.tool.CommonConstants;
-import edu.alibaba.mpc4j.common.tool.crypto.kyber.kyber4j.KyberParams;
 import edu.alibaba.mpc4j.common.tool.utils.BytesUtils;
 import edu.alibaba.mpc4j.s2pc.pcg.ot.base.AbstractBaseOtSender;
 import edu.alibaba.mpc4j.s2pc.pcg.ot.base.BaseOtSenderOutput;
@@ -47,10 +46,6 @@ public class MrKyber19BaseOtSender extends AbstractBaseOtSender {
      * 随机函数
      */
     private SecureRandom secureRandom;
-    /**
-     * hash函数实例
-     */
-    private Hash hashFunction;
 
     public MrKyber19BaseOtSender(Rpc senderRpc, Party receiverParty, MrKyber19BaseOtConfig config) {
         super(MrKyber19BaseOtPtoDesc.getInstance(), senderRpc, receiverParty, config);
@@ -101,8 +96,8 @@ public class MrKyber19BaseOtSender extends AbstractBaseOtSender {
 
     private void paramsInit(int paramsK) {
         this.secureRandom = new SecureRandom();
-        this.hashFunction = HashFactory.createInstance(HashFactory.HashType.BC_BLAKE_2B_160, 16);
-        this.kyber = KyberFactory.createInstance(KyberFactory.KyberType.KYBER_CPA, paramsK, secureRandom, this.hashFunction);
+        Hash hashFunction = HashFactory.createInstance(HashFactory.HashType.BC_BLAKE_2B_160, 16);
+        this.kyber = KyberFactory.createInstance(KyberFactory.KyberType.KYBER_CPA, paramsK, secureRandom, hashFunction);
     }
 
     private BaseOtSenderOutput handlePkPayload(List<byte[]> pkPayload) throws MpcAbortException {
@@ -114,13 +109,8 @@ public class MrKyber19BaseOtSender extends AbstractBaseOtSender {
         byte[][] r1Array = new byte[num][CommonConstants.BLOCK_BYTE_LENGTH];
         bByte = keyPairArrayIntStream.mapToObj(index -> {
                     //进行加密的明文
-                    byte[] message0 = new byte[2 * CommonConstants.BLOCK_BYTE_LENGTH];
-                    byte[] message1 = new byte[2 * CommonConstants.BLOCK_BYTE_LENGTH];
-                    this.secureRandom.nextBytes(message0);
-                    this.secureRandom.nextBytes(message1);
-                    //因为消息m必须要256bit，因此传递的密文中选取前128bit作为OT的输出
-                    r0Array[index] = Arrays.copyOfRange(message0, 0, CommonConstants.BLOCK_BYTE_LENGTH);
-                    r1Array[index] = Arrays.copyOfRange(message1, 0, CommonConstants.BLOCK_BYTE_LENGTH);
+                    this.secureRandom.nextBytes(r0Array[index]);
+                    this.secureRandom.nextBytes(r1Array[index]);
                     // 读取公钥（As+e）部分
                     byte[] upperPkR0 = pkPayload.get(index * 3);
                     byte[] upperPkR1 = pkPayload.get(index * 3 + 1);
@@ -133,8 +123,8 @@ public class MrKyber19BaseOtSender extends AbstractBaseOtSender {
                     //计算密文
                     byte[][] cipherText = new byte[2][];
                     //加密函数的输入是明文、公钥（As+e）部分、生成元部分、随机数种子，安全参数k
-                    cipherText[0] = this.kyber.encrypt(message0, upperPkR0, pkPayload.get(index * 3 + 2));
-                    cipherText[1] = this.kyber.encrypt(message1, upperPkR1, pkPayload.get(index * 3 + 2));
+                    cipherText[0] = this.kyber.encrypt(r0Array[index], upperPkR0, pkPayload.get(index * 3 + 2));
+                    cipherText[1] = this.kyber.encrypt(r1Array[index], upperPkR1, pkPayload.get(index * 3 + 2));
                     return cipherText;
                 })
                 .flatMap(Arrays::stream)

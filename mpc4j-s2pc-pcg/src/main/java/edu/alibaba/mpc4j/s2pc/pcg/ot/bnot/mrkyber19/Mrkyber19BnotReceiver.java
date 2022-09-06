@@ -39,10 +39,6 @@ public class Mrkyber19BnotReceiver extends AbstractBnotReceiver {
      */
     private KyberKeyPair[] aArray;
     /**
-     * 安全参数 K
-     */
-    private int paramsK;
-    /**
      * 使用的kyber实例
      */
     private Kyber kyber;
@@ -97,9 +93,6 @@ public class Mrkyber19BnotReceiver extends AbstractBnotReceiver {
 
     private void paramsInit(int paramsK) {
         SecureRandom secureRandom = new SecureRandom();
-        /**
-         * hash函数实例
-         */
         Hash hashFunction = HashFactory.createInstance(HashFactory.HashType.BC_BLAKE_2B_160, 16);
         this.kyber = KyberFactory.createInstance(KyberFactory.KyberType.KYBER_CPA, paramsK, secureRandom, hashFunction);
     }
@@ -111,7 +104,7 @@ public class Mrkyber19BnotReceiver extends AbstractBnotReceiver {
         pkIntStream = parallel ? pkIntStream.parallel() : pkIntStream;
         return pkIntStream
                 .mapToObj(index -> {
-                    // 公钥（As+e）的byte
+                    // 公钥（As+e）的bytes格式
                     byte[] publicKeyBytes;
                     // 随机的向量，R_1-sigma
                     byte[][] randomKeyByte = new byte[n][];

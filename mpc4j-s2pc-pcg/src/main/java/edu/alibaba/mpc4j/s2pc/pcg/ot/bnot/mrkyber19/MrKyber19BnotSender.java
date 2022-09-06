@@ -2,7 +2,8 @@ package edu.alibaba.mpc4j.s2pc.pcg.ot.bnot.mrkyber19;
 
 import edu.alibaba.mpc4j.common.tool.crypto.hash.Hash;
 import edu.alibaba.mpc4j.common.tool.crypto.hash.HashFactory;
-import edu.alibaba.mpc4j.common.tool.crypto.kyber.*;
+import edu.alibaba.mpc4j.common.tool.crypto.kyber.Kyber;
+import edu.alibaba.mpc4j.common.tool.crypto.kyber.KyberFactory;
 import edu.alibaba.mpc4j.common.rpc.MpcAbortException;
 import edu.alibaba.mpc4j.common.rpc.MpcAbortPreconditions;
 import edu.alibaba.mpc4j.common.rpc.Party;
@@ -10,7 +11,6 @@ import edu.alibaba.mpc4j.common.rpc.Rpc;
 import edu.alibaba.mpc4j.common.rpc.utils.DataPacket;
 import edu.alibaba.mpc4j.common.rpc.utils.DataPacketHeader;
 import edu.alibaba.mpc4j.common.tool.CommonConstants;
-import edu.alibaba.mpc4j.common.tool.crypto.kyber.kyber4j.KyberParams;
 import edu.alibaba.mpc4j.common.tool.utils.BytesUtils;
 import edu.alibaba.mpc4j.s2pc.pcg.ot.bnot.AbstractBnotSender;
 import edu.alibaba.mpc4j.s2pc.pcg.ot.bnot.BnotSenderOutput;
@@ -47,10 +47,6 @@ public class MrKyber19BnotSender extends AbstractBnotSender {
      * 随机函数
      */
     private SecureRandom secureRandom;
-    /**
-     * hash函数实例
-     */
-    private Hash hashFunction;
 
     public MrKyber19BnotSender(Rpc senderRpc, Party receiverParty, MrKyber19BnotConfig config) {
         super(MrKyber19BnotPtoDesc.getInstance(), senderRpc, receiverParty, config);
@@ -101,8 +97,8 @@ public class MrKyber19BnotSender extends AbstractBnotSender {
 
     private void paramsInit(int paramsK) {
         this.secureRandom = new SecureRandom();
-        this.hashFunction = HashFactory.createInstance(HashFactory.HashType.BC_BLAKE_2B_160, 16);
-        this.kyber = KyberFactory.createInstance(KyberFactory.KyberType.KYBER_CPA, paramsK, secureRandom, this.hashFunction);
+        Hash hashFunction = HashFactory.createInstance(HashFactory.HashType.BC_BLAKE_2B_160, 16);
+        this.kyber = KyberFactory.createInstance(KyberFactory.KyberType.KYBER_CPA, paramsK, secureRandom, hashFunction);
     }
 
     private BnotSenderOutput handlePkPayload(List<byte[]> pkPayload) throws MpcAbortException {
@@ -134,13 +130,11 @@ public class MrKyber19BnotSender extends AbstractBnotSender {
                     byte[][] cipherText = new byte[n][];
                     for (int i = 0; i < n; i++) {
                         //生成需要加密的明文
-                        byte[] message = new byte[KyberParams.SYM_BYTES];
-                        this.secureRandom.nextBytes(message);
-                        //因为消息m必须要256bit，因此传递的密文中选取前128bit作为OT的输出
-                        rbArray[index][i] = Arrays.copyOfRange(message, 0, CommonConstants.BLOCK_BYTE_LENGTH);
+                        this.secureRandom.nextBytes(rbArray[index][i]);
                         //计算加密函数，加密函数的输入是明文、公钥（As+e）部分、生成元部分、随机数种子，安全参数k
                         cipherText[i] = this.kyber.encrypt
-                                (message, this.kyber.polyVectorFromBytes(upperBytes[i]), pkPayload.get(index * (n + 1) + n));
+                                (rbArray[index][i], this.kyber.polyVectorFromBytes(upperBytes[i]),
+                                        pkPayload.get(index * (n + 1) + n));
                     }
                     return cipherText;
                 })

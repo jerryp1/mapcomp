@@ -133,42 +133,19 @@ public class KyberCpa implements Kyber {
 
     @Override
     public byte[] encrypt(byte[] m, short[][] publicKey, byte[] publicKeyGenerator) {
-        byte[] coins = new byte[KyberParams.SYM_BYTES];
-        short[][] r = Poly.generateNewPolyVector(paramsK);
-        short[][] ep = Poly.generateNewPolyVector(paramsK);
-        short[][] bp = Poly.generateNewPolyVector(paramsK);
-        //将m转换为多项式
-        short[] k = Poly.polyFromData(m);
-        //注意，这里的T/F，和KEY生成的时候是不一样的，计算的是转制后的A
-        short[][][] at = Indcpa.generateMatrix(publicKeyGenerator, true, hashFunction, prgMatrixLength672, paramsK);
-        //生成的随机参数，是r和e1
-        for (int i = 0; i < paramsK; i++) {
-            r[i] = Poly.getNoisePoly(coins, (byte) (i), paramsK, this.hashFunction, this.prgNoiseLength);
-            ep[i] = Poly.getNoisePoly(coins, (byte) (i + paramsK), 3, this.hashFunction, this.prgNoiseLength);
+        assert m.length <= KyberParams.SYM_BYTES;
+        byte[] message = new byte[KyberParams.SYM_BYTES];
+        //如果加密的长度不足32bytes那么就自动补充后续的byte。
+        if(m.length < KyberParams.SYM_BYTES){
+            byte[] supBytes = new byte[KyberParams.SYM_BYTES - m.length];
+            secureRandom.nextBytes(supBytes);
+            System.arraycopy(m,0,message,0,m.length);
+            System.arraycopy(supBytes,0,message,m.length,KyberParams.SYM_BYTES - m.length);
+        }else {
+            message = m;
         }
-        //这个是e2
-        short[] epp = Poly.getNoisePoly(coins, (byte) (paramsK * 2), 3, this.hashFunction, this.prgNoiseLength);
-        //将r转换到NTT域进行计算
-        Poly.polyVectorNtt(r);
-        Poly.polyVectorReduce(r);
-        //计算Ar
-        for (int i = 0; i < paramsK; i++) {
-            bp[i] = Poly.polyVectorPointWiseAccMont(at[i], r);
-        }
-        //（As+e）* r
-        short[] v = Poly.polyVectorPointWiseAccMont(publicKey, r);
-        //取消INV域
-        Poly.polyVectorInvNttMont(bp);
-        //取消INV域
-        Poly.polyInvNttMont(v);
-        //计算Ar + e1
-        Poly.polyVectorAdd(bp, ep);
-        // 计算（As+e）* r + e_2 + m
-        Poly.polyAdd(Poly.polyAdd(v, epp), k);
-        //不知道为什么（As+e）* r + e_2 + m不需要进行reduce。
-        Poly.polyVectorReduce(bp);
-        //返回密文，pack的时候会执行压缩函数
-        return Indcpa.packCiphertext(bp, Poly.polyReduce(v), paramsK);
+        return Indcpa.encrypt
+                (message,publicKey,publicKeyGenerator,this.paramsK,this.hashFunction,this.prgMatrixLength672,this.prgNoiseLength);
     }
 
     @Override

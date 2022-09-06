@@ -1,9 +1,7 @@
 package edu.alibaba.mpc4j.common.tool.crypto.kyber.kyber4j;
 
 import edu.alibaba.mpc4j.common.tool.crypto.hash.Hash;
-import edu.alibaba.mpc4j.common.tool.crypto.hash.HashFactory;
 import edu.alibaba.mpc4j.common.tool.crypto.prg.Prg;
-import edu.alibaba.mpc4j.common.tool.crypto.prg.PrgFactory;
 
 import java.util.Arrays;
 
@@ -18,12 +16,11 @@ public class Indcpa {
      * from the supplied secret key object and other parameters.
      * PRF伪随机函数
      *
-     * @param l     hash的长度
      * @param key   输入的参数，将决定hash值
      * @param nonce 增加到Key后
      * @return 返回是根据参数生成的固定值
      */
-    public static byte[] generatePrfByteArray(int l, byte[] key, byte nonce, Hash hashFunction, Prg prgFunction) {
+    public static byte[] generatePrfByteArray(byte[] key, byte nonce, Hash hashFunction, Prg prgFunction) {
         byte[] newKey = new byte[key.length + 1];
         System.arraycopy(key, 0, newKey, 0, key.length);
         newKey[key.length] = nonce;
@@ -243,4 +240,54 @@ public class Indcpa {
         return unpackedCipherText;
     }
 
+    /**
+     *
+     * @param m 加密消息
+     * @param publicKey 一部分的公钥（As+e）
+     * @param publicKeyGenerator 公钥生成器
+     * @param paramsK 安全等级
+     * @param hashFunction 哈希函数
+     * @param prgMatrixLength672 矩阵所需扩展函数
+     * @param prgNoiseLength 噪声所需扩展函数
+     * @return 加密后的密文
+     */
+    public static byte[] encrypt(byte[] m, short[][] publicKey, byte[] publicKeyGenerator, int paramsK, Hash hashFunction,
+                                 Prg prgMatrixLength672, Prg prgNoiseLength) {
+        byte[] coins = new byte[KyberParams.SYM_BYTES];
+        short[][] r = Poly.generateNewPolyVector(paramsK);
+        short[][] ep = Poly.generateNewPolyVector(paramsK);
+        short[][] bp = Poly.generateNewPolyVector(paramsK);
+        //将m转换为多项式
+        short[] k = Poly.polyFromData(m);
+        //注意，这里的T/F，和KEY生成的时候是不一样的，计算的是转制后的A
+        short[][][] at = Indcpa.generateMatrix(publicKeyGenerator, true, hashFunction, prgMatrixLength672, paramsK);
+        //生成的随机参数，是r和e1
+        for (int i = 0; i < paramsK; i++) {
+            r[i] = Poly.getNoisePoly(coins, (byte) (i), paramsK, hashFunction, prgNoiseLength);
+            ep[i] = Poly.getNoisePoly(coins, (byte) (i + paramsK), 3, hashFunction, prgNoiseLength);
+        }
+        //这个是e2
+        short[] epp = Poly.getNoisePoly(coins, (byte) (paramsK * 2), 3, hashFunction, prgNoiseLength);
+        //将r转换到NTT域进行计算
+        Poly.polyVectorNtt(r);
+        Poly.polyVectorReduce(r);
+        //计算Ar
+        for (int i = 0; i < paramsK; i++) {
+            bp[i] = Poly.polyVectorPointWiseAccMont(at[i], r);
+        }
+        //（As+e）* r
+        short[] v = Poly.polyVectorPointWiseAccMont(publicKey, r);
+        //取消INV域
+        Poly.polyVectorInvNttMont(bp);
+        //取消INV域
+        Poly.polyInvNttMont(v);
+        //计算Ar + e1
+        Poly.polyVectorAdd(bp, ep);
+        // 计算（As+e）* r + e_2 + m
+        Poly.polyAdd(Poly.polyAdd(v, epp), k);
+        //不知道为什么（As+e）* r + e_2 + m不需要进行reduce。
+        Poly.polyVectorReduce(bp);
+        //返回密文，pack的时候会执行压缩函数
+        return Indcpa.packCiphertext(bp, Poly.polyReduce(v), paramsK);
+    }
 }

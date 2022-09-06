@@ -602,7 +602,7 @@ public final class Poly {
                 l = KyberParams.ETA_768_1024 * KyberParams.PARAMS_N / 4;
         }
 
-        p = Indcpa.generatePrfByteArray(l, seed, nonce, hashFunction, prgFunction);
+        p = Indcpa.generatePrfByteArray(seed, nonce, hashFunction, prgFunction);
         return ByteOps.generateCbdPoly(p, paramsK);
     }
 
