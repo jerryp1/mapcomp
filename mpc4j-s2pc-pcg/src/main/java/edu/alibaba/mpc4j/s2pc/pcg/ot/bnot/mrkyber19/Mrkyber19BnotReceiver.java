@@ -1,6 +1,8 @@
 package edu.alibaba.mpc4j.s2pc.pcg.ot.bnot.mrkyber19;
 
 
+import edu.alibaba.mpc4j.common.tool.crypto.hash.Hash;
+import edu.alibaba.mpc4j.common.tool.crypto.hash.HashFactory;
 import edu.alibaba.mpc4j.common.tool.crypto.kyber.*;
 import edu.alibaba.mpc4j.common.rpc.MpcAbortException;
 import edu.alibaba.mpc4j.common.rpc.MpcAbortPreconditions;
@@ -10,7 +12,7 @@ import edu.alibaba.mpc4j.common.rpc.utils.DataPacket;
 import edu.alibaba.mpc4j.common.rpc.utils.DataPacketHeader;
 import edu.alibaba.mpc4j.common.tool.CommonConstants;
 import edu.alibaba.mpc4j.common.tool.crypto.kyber.kyber4j.KyberParams;
-import edu.alibaba.mpc4j.common.tool.crypto.kyber.kyber4j.Poly;
+import edu.alibaba.mpc4j.common.tool.utils.BytesUtils;
 import edu.alibaba.mpc4j.s2pc.pcg.ot.bnot.AbstractBnotReceiver;
 import edu.alibaba.mpc4j.s2pc.pcg.ot.bnot.BnotReceiverOutput;
 
@@ -49,6 +51,10 @@ public class Mrkyber19BnotReceiver extends AbstractBnotReceiver {
      * 使用的kyber实例
      */
     private Kyber kyber;
+    /**
+     * hash函数实例
+     */
+    private Hash hashFunction;
 
     public Mrkyber19BnotReceiver(Rpc receiverRpc, Party senderParty, MrKyber19BnotConfig config) {
         super(MrKyber19BnotPtoDesc.getInstance(), receiverRpc, senderParty, config);
@@ -100,7 +106,8 @@ public class Mrkyber19BnotReceiver extends AbstractBnotReceiver {
 
     private void paramsInit(int paramsK) {
         SecureRandom secureRandom = new SecureRandom();
-        this.kyber = KyberFactory.createInstance(KyberFactory.KyberType.KYBER_JAVA, paramsK, secureRandom);
+        this.hashFunction = HashFactory.createInstance(HashFactory.HashType.BC_BLAKE_2B_160, 16);
+        this.kyber = KyberFactory.createInstance(KyberFactory.KyberType.KYBER_JAVA, paramsK, secureRandom, this.hashFunction);
         switch (paramsK) {
             case 2:
                 paramsPolyvecBytes = KyberParams.POLY_VECTOR_BYTES_512;
@@ -122,6 +129,7 @@ public class Mrkyber19BnotReceiver extends AbstractBnotReceiver {
                 .mapToObj(index -> {
                     // 公钥（As+e）的向量
                     short[][] publickKeyVec;
+                    byte[] publicKeyBytes;
                     // 随机的向量，R_1-sigma
                     short[][] randomKeyVec;
                     // 随机向量的生成元，g（R_1-sigma）
@@ -129,22 +137,23 @@ public class Mrkyber19BnotReceiver extends AbstractBnotReceiver {
                     aArray[index] = this.kyber.generateKyberVecKeys();
                     // 读取多项式格式下的公钥
                     publickKeyVec = aArray[index].getPublicKeyVec();
+                    publicKeyBytes = this.kyber.polyVectorToBytes(publickKeyVec);
                     byte[][] pkPair = new byte[n + 1][];
                     for (int i = 0; i < n; i++) {
                         pkPair[i] = new byte[paramsPolyvecBytes];
                         if (i != choices[index]) {
                             //生成（randomKey，p_1 - sigma）
                             randomKeyVec = this.kyber.getRandomKyberPk();
-                            short[][] hashKeyVec = this.kyber.hashToKyberPk(randomKeyVec);
+                            byte[] hashKeyByte = this.kyber.hashToByte(randomKeyVec);
                             // PK = PK + Hash（RandomKey）
-                            this.kyber.kyberPkAddi(publickKeyVec, hashKeyVec);
+                            publicKeyBytes = BytesUtils.xor(publicKeyBytes,hashKeyByte);
                             //将钥匙打包，第一个为As+e，第二个为随机生成的生成元p
-                            System.arraycopy(Poly.polyVectorToBytes(randomKeyVec), 0,
+                            System.arraycopy(this.kyber.polyVectorToBytes(randomKeyVec), 0,
                                     pkPair[i], 0, paramsPolyvecBytes);
                         }
                     }
                     //将经过N-1个公钥遮掩后的（As+e）打包传输
-                    System.arraycopy(Poly.polyVectorToBytes(publickKeyVec), 0,
+                    System.arraycopy(publicKeyBytes, 0,
                             pkPair[choices[index]], 0, paramsPolyvecBytes);
                     //将生成元单独拷贝放入
                     pkPair[n] = new byte[KyberParams.SYM_BYTES];

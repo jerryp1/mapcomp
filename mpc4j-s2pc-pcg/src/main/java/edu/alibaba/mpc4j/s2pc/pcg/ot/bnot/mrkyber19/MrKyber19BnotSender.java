@@ -1,5 +1,7 @@
 package edu.alibaba.mpc4j.s2pc.pcg.ot.bnot.mrkyber19;
 
+import edu.alibaba.mpc4j.common.tool.crypto.hash.Hash;
+import edu.alibaba.mpc4j.common.tool.crypto.hash.HashFactory;
 import edu.alibaba.mpc4j.common.tool.crypto.kyber.*;
 import edu.alibaba.mpc4j.common.rpc.MpcAbortException;
 import edu.alibaba.mpc4j.common.rpc.MpcAbortPreconditions;
@@ -9,7 +11,7 @@ import edu.alibaba.mpc4j.common.rpc.utils.DataPacket;
 import edu.alibaba.mpc4j.common.rpc.utils.DataPacketHeader;
 import edu.alibaba.mpc4j.common.tool.CommonConstants;
 import edu.alibaba.mpc4j.common.tool.crypto.kyber.kyber4j.KyberParams;
-import edu.alibaba.mpc4j.common.tool.crypto.kyber.kyber4j.Poly;
+import edu.alibaba.mpc4j.common.tool.utils.BytesUtils;
 import edu.alibaba.mpc4j.s2pc.pcg.ot.bnot.AbstractBnotSender;
 import edu.alibaba.mpc4j.s2pc.pcg.ot.bnot.BnotSenderOutput;
 
@@ -45,6 +47,10 @@ public class MrKyber19BnotSender extends AbstractBnotSender {
      * 随机函数
      */
     private SecureRandom secureRandom;
+    /**
+     * hash函数实例
+     */
+    private Hash hashFunction;
 
     public MrKyber19BnotSender(Rpc senderRpc, Party receiverParty, MrKyber19BnotConfig config) {
         super(MrKyber19BnotPtoDesc.getInstance(), senderRpc, receiverParty, config);
@@ -95,7 +101,8 @@ public class MrKyber19BnotSender extends AbstractBnotSender {
 
     private void paramsInit(int paramsK) {
         this.secureRandom = new SecureRandom();
-        this.kyber = KyberFactory.createInstance(KyberFactory.KyberType.KYBER_JAVA, paramsK, secureRandom);
+        this.hashFunction = HashFactory.createInstance(HashFactory.HashType.BC_BLAKE_2B_160, 16);
+        this.kyber = KyberFactory.createInstance(KyberFactory.KyberType.KYBER_JAVA, paramsK, secureRandom, this.hashFunction);
     }
 
     private BnotSenderOutput handlePkPayload(List<byte[]> pkPayload) throws MpcAbortException {
@@ -106,25 +113,20 @@ public class MrKyber19BnotSender extends AbstractBnotSender {
         byte[][][] rbArray = new byte[num][n][CommonConstants.BLOCK_BYTE_LENGTH];
         bByte = keyPairArrayIntStream.mapToObj(index -> {
                     //收到的公钥（As+e）
-                    short[][][] upperVector = new short[n][][];
-                    //用于计算减去另外N-1个公钥的hash值
-                    short[][][] upperPkVector = new short[n][][];
+                    byte[][] upperBytes = new byte[n][];
                     //用于计算hash值
-                    short[][][] upperHashPkVector = new short[n][][];
+                    byte[][] upperHashPkBytes = new byte[n][];
                     for (int i = 0; i < n; i++) {
-                        byte[] upperPk = pkPayload.get(index * (n + 1) + i);
-                        //As+e
-                        upperVector[i] = Poly.polyVectorFromBytes(upperPk);
+                        upperBytes[i] = pkPayload.get(index * (n + 1) + i);
                         //Hash（As+e）
-                        upperHashPkVector[i] = this.kyber.hashToKyberPk(upperVector[i]);
+                        upperHashPkBytes[i] = this.kyber.hashToByte(upperBytes[i]);
                     }
                     //恢复出原油的公钥
                     for (int i = 0; i < n; i++) {
-                        upperPkVector[i] = upperVector[i];
                         for (int j = 0; j < n; j++) {
                             if (i != j) {
                                 // 计算A = Ri - Hash(Rj)
-                                this.kyber.kyberPkSubi(upperPkVector[i], upperHashPkVector[j]);
+                                upperBytes[i] = BytesUtils.xor(upperBytes[i],upperHashPkBytes[j]);
                             }
                         }
                     }
@@ -141,7 +143,7 @@ public class MrKyber19BnotSender extends AbstractBnotSender {
                         rbArray[index][i] = Arrays.copyOfRange(message, 0, CommonConstants.BLOCK_BYTE_LENGTH);
                         //计算加密函数，加密函数的输入是明文、公钥（As+e）部分、生成元部分、随机数种子，安全参数k
                         cipherText[i] = this.kyber.encrypt
-                                (message, upperPkVector[i], pkPayload.get(index * (n + 1) + n));
+                                (message, this.kyber.polyVectorFromBytes(upperBytes[i]), pkPayload.get(index * (n + 1) + n));
                     }
                     return cipherText;
                 })

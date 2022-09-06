@@ -1,6 +1,7 @@
 package edu.alibaba.mpc4j.common.tool.crypto.kyber;
 
-import edu.alibaba.mpc4j.common.tool.crypto.kyber.kyber4j.KyberJava;
+import edu.alibaba.mpc4j.common.tool.crypto.hash.Hash;
+import edu.alibaba.mpc4j.common.tool.crypto.kyber.kyber4j.KyberCpa;
 
 import java.security.SecureRandom;
 
@@ -31,10 +32,10 @@ public class KyberFactory {
     /**
      * 创建Kyber类型
      */
-    public static Kyber createInstance(KyberType kyberType, int paramsK, SecureRandom secureRandom) {
+    public static Kyber createInstance(KyberType kyberType, int paramsK, SecureRandom secureRandom, Hash hashFunction) {
         switch (kyberType) {
             case KYBER_JAVA:
-                return new KyberJava(paramsK);
+                return new KyberCpa(paramsK,secureRandom,hashFunction);
             default:
                 throw new IllegalArgumentException("Invalid " + KyberFactory.KyberType.class.getSimpleName() + ": " + kyberType.name());
         }

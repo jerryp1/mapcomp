@@ -1,7 +1,6 @@
 package edu.alibaba.mpc4j.common.tool.crypto.kyber.kyber4j;
 
 import edu.alibaba.mpc4j.common.tool.crypto.hash.Hash;
-import edu.alibaba.mpc4j.common.tool.crypto.hash.HashFactory;
 import edu.alibaba.mpc4j.common.tool.crypto.kyber.Kyber;
 import edu.alibaba.mpc4j.common.tool.crypto.kyber.KyberPackedPki;
 import edu.alibaba.mpc4j.common.tool.crypto.kyber.KyberVecKeyPair;
@@ -11,6 +10,7 @@ import edu.alibaba.mpc4j.common.tool.crypto.prg.PrgFactory;
 import static edu.alibaba.mpc4j.common.tool.crypto.kyber.kyber4j.Indcpa.*;
 
 import java.security.SecureRandom;
+import java.util.Arrays;
 
 
 /**
@@ -19,11 +19,15 @@ import java.security.SecureRandom;
  * @author Sheng Hu
  * @date 2022/09/01
  */
-public class KyberJava implements Kyber {
+public class KyberCpa implements Kyber {
     /**
      * Kyber中的安全等级
      */
     private final int paramsK;
+    /**
+     * 公钥（As+e）长度
+     */
+    private final int paramsPolyvecBytes;
     /**
      * 随机数生成器
      */
@@ -50,10 +54,10 @@ public class KyberJava implements Kyber {
     /**
      * @param paramsK 安全等级
      */
-    public KyberJava(int paramsK) {
+    public KyberCpa(int paramsK, SecureRandom secureRandom, Hash hashFunction) {
         this.paramsK = paramsK;
-        this.secureRandom = new SecureRandom();
-        this.hashFunction = HashFactory.createInstance(HashFactory.HashType.BC_BLAKE_2B_160, 16);
+        this.secureRandom = secureRandom;
+        this.hashFunction = hashFunction;
         this.prgMatrixLength672 = PrgFactory.createInstance
                 (PrgFactory.PrgType.BC_SM4_ECB, 672);
         switch (paramsK) {
@@ -63,6 +67,7 @@ public class KyberJava implements Kyber {
                 this.prgPkLength =
                         PrgFactory.createInstance
                                 (PrgFactory.PrgType.BC_SM4_ECB, KyberParams.POLY_VECTOR_BYTES_512);
+                paramsPolyvecBytes = KyberParams.POLY_VECTOR_BYTES_512;
                 break;
             case 3:
                 this.prgNoiseLength = PrgFactory.createInstance
@@ -70,6 +75,7 @@ public class KyberJava implements Kyber {
                 this.prgPkLength =
                         PrgFactory.createInstance
                                 (PrgFactory.PrgType.BC_SM4_ECB, KyberParams.POLY_VECTOR_BYTES_768);
+                paramsPolyvecBytes = KyberParams.POLY_VECTOR_BYTES_768;
                 break;
             case 4:
                 this.prgNoiseLength = PrgFactory.createInstance
@@ -77,6 +83,7 @@ public class KyberJava implements Kyber {
                 this.prgPkLength =
                         PrgFactory.createInstance
                                 (PrgFactory.PrgType.BC_SM4_ECB, KyberParams.POLY_VECTOR_BYTES_1024);
+                paramsPolyvecBytes = KyberParams.POLY_VECTOR_BYTES_1024;
                 break;
             default:
                 throw new IllegalArgumentException("Invalid Secure level: " + paramsK);
@@ -98,7 +105,7 @@ public class KyberJava implements Kyber {
                 newPublicKey = new byte[KyberParams.POLY_VECTOR_BYTES_1024];
         }
         secureRandom.nextBytes(newPublicKey);
-        short[][] r = Poly.polyVectorFromBytes(newPublicKey);
+        short[][] r = polyVectorFromBytes(newPublicKey);
         //将生成的随机数转移至符合多项式要求的域
         Poly.polyVectorReduce(r);
         return r;
@@ -106,16 +113,26 @@ public class KyberJava implements Kyber {
 
     @Override
     public short[][] hashToKyberPk(short[][] inputVector) {
-        byte[] inputByte = Poly.polyVectorToBytes(inputVector);
+        byte[] inputByte = polyVectorToBytes(inputVector);
         return hashToKyberPk(inputByte);
     }
 
     @Override
-    public short[][] hashToKyberPk(byte[] inputVector) {
+    public short[][] hashToKyberPk(byte[] inputBytes) {
         short[][] r =
-                Poly.polyVectorFromBytes(this.prgPkLength.extendToBytes(this.hashFunction.digestToBytes(inputVector)));
+                polyVectorFromBytes(this.prgPkLength.extendToBytes(this.hashFunction.digestToBytes(inputBytes)));
         Poly.polyVectorReduce(r);
         return r;
+    }
+
+    @Override
+    public byte[] hashToByte(short[][] inputVector) {
+        return this.prgPkLength.extendToBytes(this.hashFunction.digestToBytes(polyVectorToBytes(inputVector)));
+    }
+
+    @Override
+    public byte[] hashToByte(byte[] inputByte) {
+        return this.prgPkLength.extendToBytes(this.hashFunction.digestToBytes(inputByte));
     }
 
     @Override
@@ -162,6 +179,11 @@ public class KyberJava implements Kyber {
         Poly.polyVectorReduce(bp);
         //返回密文，pack的时候会执行压缩函数
         return Indcpa.packCiphertext(bp, Poly.polyReduce(v), paramsK);
+    }
+
+    @Override
+    public byte[] encrypt(byte[] m, byte[] publicKey, byte[] publicKeyGenerator) {
+        return encrypt(m,Poly.polyVectorFromBytes(publicKey),publicKeyGenerator);
     }
 
     @Override
@@ -276,5 +298,41 @@ public class KyberJava implements Kyber {
         return packedPki;
     }
 
+    @Override
+    public byte[] polyVectorToBytes(short[][] polyA) {
+        byte[] r = new byte[this.paramsK * KyberParams.POLY_BYTES];
+        for (int i = 0; i < this.paramsK; i++) {
+            byte[] byteA = Poly.polyToBytes(polyA[i]);
+            System.arraycopy(byteA, 0, r, i * KyberParams.POLY_BYTES, byteA.length);
+        }
+        return r;
+    }
+
+    @Override
+    public short[][] polyVectorFromBytes(byte[] polyA) {
+        short[][] r = new short[this.paramsK][KyberParams.POLY_BYTES];
+        for (int i = 0; i < this.paramsK; i++) {
+            int start = (i * KyberParams.POLY_BYTES);
+            int end = (i + 1) * KyberParams.POLY_BYTES;
+            r[i] = Poly.polyFromBytes(Arrays.copyOfRange(polyA, start, end));
+        }
+        return r;
+    }
+
+    @Override
+    public byte[][] packageTwoKeys(byte[] publickKeyBytes, short[][] randomKeyVec, byte[] publicKeyGenerator, int sigma) {
+        byte[][] pkPair = new byte[3][];
+        pkPair[0] = new byte[paramsPolyvecBytes];
+        pkPair[1] = new byte[paramsPolyvecBytes];
+        pkPair[2] = new byte[KyberParams.SYM_BYTES];
+        //将（As+e，p_sigma）打包传输
+        System.arraycopy(publickKeyBytes, 0,
+                pkPair[sigma], 0, paramsPolyvecBytes);
+        System.arraycopy(polyVectorToBytes(randomKeyVec), 0,
+                pkPair[1 - sigma], 0, paramsPolyvecBytes);
+        System.arraycopy(publicKeyGenerator, 0,
+                pkPair[2], 0, KyberParams.SYM_BYTES);
+        return pkPair;
+    }
 
 }

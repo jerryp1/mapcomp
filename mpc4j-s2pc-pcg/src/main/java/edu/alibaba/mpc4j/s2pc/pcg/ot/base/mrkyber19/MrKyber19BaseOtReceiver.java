@@ -1,5 +1,7 @@
 package edu.alibaba.mpc4j.s2pc.pcg.ot.base.mrkyber19;
 
+import edu.alibaba.mpc4j.common.tool.crypto.hash.Hash;
+import edu.alibaba.mpc4j.common.tool.crypto.hash.HashFactory;
 import edu.alibaba.mpc4j.common.tool.crypto.kyber.*;
 import edu.alibaba.mpc4j.common.rpc.MpcAbortException;
 import edu.alibaba.mpc4j.common.rpc.MpcAbortPreconditions;
@@ -9,7 +11,8 @@ import edu.alibaba.mpc4j.common.rpc.utils.DataPacket;
 import edu.alibaba.mpc4j.common.rpc.utils.DataPacketHeader;
 import edu.alibaba.mpc4j.common.tool.CommonConstants;
 import edu.alibaba.mpc4j.common.tool.crypto.kyber.kyber4j.KyberParams;
-import edu.alibaba.mpc4j.common.tool.crypto.kyber.kyber4j.Poly;
+import edu.alibaba.mpc4j.common.tool.utils.BigIntegerUtils;
+import edu.alibaba.mpc4j.common.tool.utils.BytesUtils;
 import edu.alibaba.mpc4j.s2pc.pcg.ot.base.AbstractBaseOtReceiver;
 import edu.alibaba.mpc4j.s2pc.pcg.ot.base.BaseOtReceiverOutput;
 
@@ -38,14 +41,15 @@ public class MrKyber19BaseOtReceiver extends AbstractBaseOtReceiver {
      * OT协议接收方参数
      */
     private KyberVecKeyPair[] aArray;
-    /**
-     * 公钥（As+e）长度
-     */
-    private int paramsPolyvecBytes;
+
     /**
      * 使用的kyber实例
      */
     private Kyber kyber;
+    /**
+     * hash函数实例
+     */
+    private Hash hashFunction;
 
 
     public MrKyber19BaseOtReceiver(Rpc receiverRpc, Party senderParty, MrKyber19BaseOtConfig config) {
@@ -98,17 +102,8 @@ public class MrKyber19BaseOtReceiver extends AbstractBaseOtReceiver {
 
     private void paramsInit(int paramsK) {
         SecureRandom secureRandom = new SecureRandom();
-        this.kyber = KyberFactory.createInstance(KyberFactory.KyberType.KYBER_JAVA, paramsK, secureRandom);
-        switch (paramsK) {
-            case 2:
-                paramsPolyvecBytes = KyberParams.POLY_VECTOR_BYTES_512;
-                break;
-            case 3:
-                paramsPolyvecBytes = KyberParams.POLY_VECTOR_BYTES_768;
-                break;
-            default:
-                paramsPolyvecBytes = KyberParams.POLY_VECTOR_BYTES_1024;
-        }
+        this.hashFunction = HashFactory.createInstance(HashFactory.HashType.BC_BLAKE_2B_160, 16);
+        this.kyber = KyberFactory.createInstance(KyberFactory.KyberType.KYBER_JAVA, paramsK, secureRandom, this.hashFunction);
     }
 
     private List<byte[]> generatePkPayload() {
@@ -119,33 +114,23 @@ public class MrKyber19BaseOtReceiver extends AbstractBaseOtReceiver {
         return pkIntStream
                 .mapToObj(index -> {
                     // 公钥（As+e）的向量
-                    short[][] publickKeyVec;
+                    byte[] publickKeyBytes;
                     // 随机的向量，R_1-sigma
                     short[][] randomKeyVec;
                     // 随机向量的生成元，g（R_1-sigma）
                     // 随机生成一组钥匙对
                     aArray[index] = this.kyber.generateKyberVecKeys();
                     // 读取多项式格式下的公钥
-                    publickKeyVec = aArray[index].getPublicKeyVec();
+                    publickKeyBytes = this.kyber.polyVectorToBytes(aArray[index].getPublicKeyVec());
                     // 生成一个符合格式的随机公钥 R_1-sigma
                     randomKeyVec = this.kyber.getRandomKyberPk();
                     // 计算 R_sigma = R_sigma + Hash(R_1-sigma)
-                    short[][] hashKeyVec = this.kyber.hashToKyberPk(randomKeyVec);
-                    this.kyber.kyberPkAddi(publickKeyVec, hashKeyVec);
+                    byte[] hashKeyByte = this.kyber.hashToByte(randomKeyVec);
+                    publickKeyBytes = BytesUtils.xor(publickKeyBytes,hashKeyByte);
                     // 根据选择值将两个参数R分别放入对应位置
                     int sigma = choices[index] ? 1 : 0;
-                    byte[][] pkPair = new byte[3][];
-                    pkPair[0] = new byte[paramsPolyvecBytes];
-                    pkPair[1] = new byte[paramsPolyvecBytes];
-                    pkPair[2] = new byte[KyberParams.SYM_BYTES];
-                    //将（As+e，p_sigma）打包传输
-                    System.arraycopy(Poly.polyVectorToBytes(publickKeyVec), 0,
-                            pkPair[sigma], 0, paramsPolyvecBytes);
-                    System.arraycopy(Poly.polyVectorToBytes(randomKeyVec), 0,
-                            pkPair[1 - sigma], 0, paramsPolyvecBytes);
-                    System.arraycopy(aArray[index].getPublicKeyGenerator(), 0,
-                            pkPair[2], 0, KyberParams.SYM_BYTES);
-                    return pkPair;
+                    return this.kyber.packageTwoKeys
+                            (publickKeyBytes,randomKeyVec,aArray[index].getPublicKeyGenerator(),sigma);
                 })
                 .flatMap(Arrays::stream)
                 .collect(Collectors.toList());

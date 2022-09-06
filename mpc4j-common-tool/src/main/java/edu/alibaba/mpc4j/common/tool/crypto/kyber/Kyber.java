@@ -31,6 +31,22 @@ public interface Kyber {
     short[][] hashToKyberPk(byte[] inputVector);
 
     /**
+     * 将{@code short[][]}表示的数据映射到一个byte上
+     *
+     * @param inputVector 数据
+     * @return Hash后的公钥
+     */
+    byte[] hashToByte(short[][] inputVector);
+
+    /**
+     * 将{@code short[][]}表示的数据映射到一个byte上
+     *
+     * @param inputBytes 数据
+     * @return Hash后的公钥
+     */
+    byte[] hashToByte(byte[] inputBytes);
+
+    /**
      * 将{@code short[][]}表示的数据映射到Kyber部分公钥域上
      *
      * @param m         加密的消息
@@ -48,6 +64,16 @@ public interface Kyber {
      * @return 密文
      */
     byte[] encrypt(byte[] m, short[][] publicKey, byte[] publicKeyGenerator);
+
+    /**
+     * 将{@code short[][]}表示的数据映射到Kyber部分公钥域上
+     *
+     * @param m                  加密的消息
+     * @param publicKey          部分公钥（As+e)
+     * @param publicKeyGenerator 生成元
+     * @return 密文
+     */
+    byte[] encrypt(byte[] m, byte[] publicKey, byte[] publicKeyGenerator);
 
     /**
      * Decrypt the given byte array using the Kyber public-key encryption scheme
@@ -117,4 +143,33 @@ public interface Kyber {
      * @return 论文中的公钥（As+e,p）和私钥s
      */
     KyberVecKeyPair generateKyberVecKeys();
+    /**
+     * Serialize a polynomial vector to a byte array
+     * 将多项式向量转换为byte数组
+     *
+     * @param polyA 多项式向量
+     * @return 返回值是长度为 K * 384
+     */
+    byte[] polyVectorToBytes(short[][] polyA);
+
+    /**
+     * Deserialize a byte array into a polynomial vector
+     * 将byte数组转为多项式向量
+     *
+     * @param polyA 输入的byte数组
+     * @return 多项式向量
+     */
+    short[][] polyVectorFromBytes(byte[] polyA);
+
+    /**
+     * Deserialize a byte array into a polynomial vector
+     * 将byte数组转为多项式向量
+     *
+     * @param publickKeyBytes 遮掩后的As+e
+     * @param randomKeyVec 随机的As+e
+     * @param publicKeyGenerator 随机生成元
+     * @param sigma 2选一OT的选择
+     * @return 多项式向量
+     */
+    byte[][] packageTwoKeys(byte[] publickKeyBytes,short[][] randomKeyVec,byte[] publicKeyGenerator,int sigma);
 }

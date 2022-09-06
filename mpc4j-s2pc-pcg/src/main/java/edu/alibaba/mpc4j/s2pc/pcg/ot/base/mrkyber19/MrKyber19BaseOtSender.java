@@ -1,5 +1,7 @@
 package edu.alibaba.mpc4j.s2pc.pcg.ot.base.mrkyber19;
 
+import edu.alibaba.mpc4j.common.tool.crypto.hash.Hash;
+import edu.alibaba.mpc4j.common.tool.crypto.hash.HashFactory;
 import edu.alibaba.mpc4j.common.tool.crypto.kyber.*;
 import edu.alibaba.mpc4j.common.rpc.MpcAbortException;
 import edu.alibaba.mpc4j.common.rpc.MpcAbortPreconditions;
@@ -10,6 +12,7 @@ import edu.alibaba.mpc4j.common.rpc.utils.DataPacketHeader;
 import edu.alibaba.mpc4j.common.tool.CommonConstants;
 import edu.alibaba.mpc4j.common.tool.crypto.kyber.kyber4j.KyberParams;
 import edu.alibaba.mpc4j.common.tool.crypto.kyber.kyber4j.Poly;
+import edu.alibaba.mpc4j.common.tool.utils.BytesUtils;
 import edu.alibaba.mpc4j.s2pc.pcg.ot.base.AbstractBaseOtSender;
 import edu.alibaba.mpc4j.s2pc.pcg.ot.base.BaseOtSenderOutput;
 
@@ -45,6 +48,10 @@ public class MrKyber19BaseOtSender extends AbstractBaseOtSender {
      * 随机函数
      */
     private SecureRandom secureRandom;
+    /**
+     * hash函数实例
+     */
+    private Hash hashFunction;
 
     public MrKyber19BaseOtSender(Rpc senderRpc, Party receiverParty, MrKyber19BaseOtConfig config) {
         super(MrKyber19BaseOtPtoDesc.getInstance(), senderRpc, receiverParty, config);
@@ -95,7 +102,8 @@ public class MrKyber19BaseOtSender extends AbstractBaseOtSender {
 
     private void paramsInit(int paramsK) {
         this.secureRandom = new SecureRandom();
-        this.kyber = KyberFactory.createInstance(KyberFactory.KyberType.KYBER_JAVA, paramsK, secureRandom);
+        this.hashFunction = HashFactory.createInstance(HashFactory.HashType.BC_BLAKE_2B_160, 16);
+        this.kyber = KyberFactory.createInstance(KyberFactory.KyberType.KYBER_JAVA, paramsK, secureRandom, this.hashFunction);
     }
 
     private BaseOtSenderOutput handlePkPayload(List<byte[]> pkPayload) throws MpcAbortException {
@@ -122,19 +130,17 @@ public class MrKyber19BaseOtSender extends AbstractBaseOtSender {
                     // 读取公钥（As+e）部分
                     byte[] upperPkR0 = pkPayload.get(index * 3);
                     byte[] upperPkR1 = pkPayload.get(index * 3 + 1);
-                    short[][] upperVectorR0 = Poly.polyVectorFromBytes(upperPkR0);
-                    short[][] upperVectorR1 = Poly.polyVectorFromBytes(upperPkR1);
-                    // 计算A0 = R0 - Hash(R1)、A1 = R1 - Hash(R0)
-                    short[][] upperA0 =
-                            this.kyber.kyberPkSub(upperVectorR0, this.kyber.hashToKyberPk(upperVectorR1));
-                    short[][] upperA1 =
-                            this.kyber.kyberPkSub(upperVectorR1, this.kyber.hashToKyberPk(upperVectorR0));
+                    // 计算A0 = R0 xor Hash(R1)、A1 = R1 xor Hash(R0)
+                    byte[] hashKeyR0 = this.kyber.hashToByte(upperPkR0);
+                    byte[] hashKeyR1 = this.kyber.hashToByte(upperPkR1);
+                    upperPkR0 = BytesUtils.xor(upperPkR0,hashKeyR1);
+                    upperPkR1 = BytesUtils.xor(upperPkR1,hashKeyR0);
 
                     //计算密文
                     byte[][] cipherText = new byte[2][];
                     //加密函数的输入是明文、公钥（As+e）部分、生成元部分、随机数种子，安全参数k
-                    cipherText[0] = this.kyber.encrypt(message0, upperA0, pkPayload.get(index * 3 + 2));
-                    cipherText[1] = this.kyber.encrypt(message1, upperA1, pkPayload.get(index * 3 + 2));
+                    cipherText[0] = this.kyber.encrypt(message0, upperPkR0, pkPayload.get(index * 3 + 2));
+                    cipherText[1] = this.kyber.encrypt(message1, upperPkR1, pkPayload.get(index * 3 + 2));
                     return cipherText;
                 })
                 .flatMap(Arrays::stream)
