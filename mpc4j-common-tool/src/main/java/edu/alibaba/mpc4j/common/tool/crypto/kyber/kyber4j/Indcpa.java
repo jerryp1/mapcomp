@@ -122,24 +122,23 @@ public class Indcpa {
      * @param paramsK   安全系数
      * @return byte数组
      */
-    public static byte[] packPublicKey(short[][] publicKey, byte[] seed, int paramsK) {
-        byte[] initialArray = Poly.polyVectorToBytes(publicKey);
+    public static byte[] packPublicKey(byte[] publicKey, byte[] seed, int paramsK) {
         byte[] packedPublicKey;
         switch (paramsK) {
             case 2:
                 packedPublicKey = new byte[KyberParams.INDCPA_PK_BYTES_512];
-                System.arraycopy(initialArray, 0, packedPublicKey, 0, initialArray.length);
-                System.arraycopy(seed, 0, packedPublicKey, initialArray.length, seed.length);
+                System.arraycopy(publicKey, 0, packedPublicKey, 0, publicKey.length);
+                System.arraycopy(seed, 0, packedPublicKey, publicKey.length, seed.length);
                 break;
             case 3:
                 packedPublicKey = new byte[KyberParams.INDCPA_PK_BYTES_768];
-                System.arraycopy(initialArray, 0, packedPublicKey, 0, initialArray.length);
-                System.arraycopy(seed, 0, packedPublicKey, initialArray.length, seed.length);
+                System.arraycopy(publicKey, 0, packedPublicKey, 0, publicKey.length);
+                System.arraycopy(seed, 0, packedPublicKey, publicKey.length, seed.length);
                 break;
             default:
                 packedPublicKey = new byte[KyberParams.INDCPA_PK_BYTES_1024];
-                System.arraycopy(initialArray, 0, packedPublicKey, 0, initialArray.length);
-                System.arraycopy(seed, 0, packedPublicKey, initialArray.length, seed.length);
+                System.arraycopy(publicKey, 0, packedPublicKey, 0, publicKey.length);
+                System.arraycopy(seed, 0, packedPublicKey, publicKey.length, seed.length);
         }
 
         return packedPublicKey;
@@ -243,4 +242,5 @@ public class Indcpa {
 
         return unpackedCipherText;
     }
+
 }

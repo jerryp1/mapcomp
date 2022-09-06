@@ -11,7 +11,6 @@ import edu.alibaba.mpc4j.common.rpc.Rpc;
 import edu.alibaba.mpc4j.common.rpc.utils.DataPacket;
 import edu.alibaba.mpc4j.common.rpc.utils.DataPacketHeader;
 import edu.alibaba.mpc4j.common.tool.CommonConstants;
-import edu.alibaba.mpc4j.common.tool.crypto.kyber.kyber4j.KyberParams;
 import edu.alibaba.mpc4j.common.tool.utils.BytesUtils;
 import edu.alibaba.mpc4j.s2pc.pcg.ot.bnot.AbstractBnotReceiver;
 import edu.alibaba.mpc4j.s2pc.pcg.ot.bnot.BnotReceiverOutput;
@@ -38,7 +37,7 @@ public class Mrkyber19BnotReceiver extends AbstractBnotReceiver {
     /**
      * OT协议接收方参数
      */
-    private KyberVecKeyPair[] aArray;
+    private KyberKeyPair[] aArray;
     /**
      * 安全参数 K
      */
@@ -106,14 +105,13 @@ public class Mrkyber19BnotReceiver extends AbstractBnotReceiver {
     }
 
     private List<byte[]> generatePkPayload() {
-        aArray = new KyberVecKeyPair[choices.length];
+        aArray = new KyberKeyPair[choices.length];
         // 公钥生成流
         IntStream pkIntStream = IntStream.range(0, choices.length);
         pkIntStream = parallel ? pkIntStream.parallel() : pkIntStream;
         return pkIntStream
                 .mapToObj(index -> {
-                    // 公钥（As+e）的向量
-                    short[][] publickKeyVec;
+                    // 公钥（As+e）的byte
                     byte[] publicKeyBytes;
                     // 随机的向量，R_1-sigma
                     byte[][] randomKeyByte = new byte[n][];
@@ -121,8 +119,7 @@ public class Mrkyber19BnotReceiver extends AbstractBnotReceiver {
                     // 随机生成一组钥匙对
                     aArray[index] = this.kyber.generateKyberVecKeys();
                     // 读取多项式格式下的公钥
-                    publickKeyVec = aArray[index].getPublicKeyVec();
-                    publicKeyBytes = this.kyber.polyVectorToBytes(publickKeyVec);
+                    publicKeyBytes = aArray[index].getPublicKeyBytes();
                     for (int i = 0; i < n; i++) {
                         if (i != choices[index]) {
                             //生成（randomKey，p_1 - sigma）

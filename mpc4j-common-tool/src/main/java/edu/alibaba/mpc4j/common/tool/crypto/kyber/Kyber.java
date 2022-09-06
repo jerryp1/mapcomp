@@ -92,13 +92,6 @@ public interface Kyber {
      * @return 消息m
      */
     byte[] decrypt(byte[] packedCipherText, short[][] privateKey);
-    /**
-     * Generates public and private keys for the CPA-secure public-key
-     * encryption scheme underlying Kyber.
-     *
-     * @return 论文中的公钥（As+e,p）和私钥s
-     */
-    KyberPackedPki generateKyberByteKeys();
 
     /**
      * Generates public and private keys for the CPA-secure public-key
@@ -106,7 +99,7 @@ public interface Kyber {
      *
      * @return 论文中的公钥（As+e,p）和私钥s
      */
-    KyberVecKeyPair generateKyberVecKeys();
+    KyberKeyPair generateKyberVecKeys();
     /**
      * Serialize a polynomial vector to a byte array
      * 将多项式向量转换为byte数组

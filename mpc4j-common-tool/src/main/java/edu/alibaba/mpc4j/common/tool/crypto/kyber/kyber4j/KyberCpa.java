@@ -2,8 +2,7 @@ package edu.alibaba.mpc4j.common.tool.crypto.kyber.kyber4j;
 
 import edu.alibaba.mpc4j.common.tool.crypto.hash.Hash;
 import edu.alibaba.mpc4j.common.tool.crypto.kyber.Kyber;
-import edu.alibaba.mpc4j.common.tool.crypto.kyber.KyberPackedPki;
-import edu.alibaba.mpc4j.common.tool.crypto.kyber.KyberVecKeyPair;
+import edu.alibaba.mpc4j.common.tool.crypto.kyber.KyberKeyPair;
 import edu.alibaba.mpc4j.common.tool.crypto.prg.Prg;
 import edu.alibaba.mpc4j.common.tool.crypto.prg.PrgFactory;
 
@@ -202,60 +201,12 @@ public class KyberCpa implements Kyber {
         //将结果返回成消息
         return Poly.polyToMsg(mp);
     }
-    @Override
-    public KyberPackedPki generateKyberByteKeys() {
-        KyberVecKeyPair keyPair = generateKyberVecKeys();
-        KyberPackedPki packedPki = new KyberPackedPki();
-        packedPki.setPackedPrivateKey(packPrivateKey(keyPair.getPrivateKeyVec()));
-        packedPki.setPackedPublicKey(packPublicKey(keyPair.getPublicKeyVec(), keyPair.getPublicKeyGenerator(), paramsK));
-        return packedPki;
-    }
 
     @Override
-    public KyberVecKeyPair generateKyberVecKeys() {
-        //私钥s
-        short[][] skpv = Poly.generateNewPolyVector(paramsK);
-        //最后输出时是公钥 As+e
-        short[][] pkpv = Poly.generateNewPolyVector(paramsK);
-        short[][] e = Poly.generateNewPolyVector(paramsK);
-        //prg要求输入为16bit。
-        byte[] fullSeed = new byte[KyberParams.SYM_BYTES * 2];
-        byte[] publicSeed = new byte[KyberParams.SYM_BYTES];
-        byte[] noiseSeed = new byte[KyberParams.SYM_BYTES];
-        this.secureRandom.nextBytes(fullSeed);
-        //将随机数前32位赋给publicSeed，后32位赋给noiseSeed
-        System.arraycopy(fullSeed, 0, publicSeed, 0, KyberParams.SYM_BYTES);
-        System.arraycopy(fullSeed, KyberParams.SYM_BYTES, noiseSeed, 0, KyberParams.SYM_BYTES);
-        //生成了公钥中的A
-        short[][][] a = Indcpa.generateMatrix(publicSeed, false, this.hashFunction, this.prgMatrixLength672, paramsK);
-        byte nonce = (byte) 0;
-        //生成了私钥s（k个向量）
-        for (int i = 0; i < paramsK; i++) {
-            skpv[i] = Poly.getNoisePoly(noiseSeed, nonce, paramsK, this.hashFunction, this.prgNoiseLength);
-            nonce = (byte) (nonce + (byte) 1);
-        }
-        //生成了噪声，每计算一步增加一步nonce
-        for (int i = 0; i < paramsK; i++) {
-            e[i] = Poly.getNoisePoly(noiseSeed, nonce, paramsK, this.hashFunction, this.prgNoiseLength);
-            nonce = (byte) (nonce + (byte) 1);
-        }
-        Poly.polyVectorNtt(skpv);
-        Poly.polyVectorReduce(skpv);
-        Poly.polyVectorNtt(e);
-        //计算 As
-        for (int i = 0; i < paramsK; i++) {
-            short[] temp = Poly.polyVectorPointWiseAccMont(a[i], skpv);
-            pkpv[i] = Poly.polyToMont(temp);
-        }
-        //计算 As+e
-        Poly.polyVectorAdd(pkpv, e);
-        //每做一步，计算一次模Q
-        Poly.polyVectorReduce(pkpv);
-        //将公钥、生成元、私钥放在一起打包
-        KyberVecKeyPair packedPki = new KyberVecKeyPair();
-        packedPki.setPublicKeyVec(pkpv);
-        packedPki.setPublicKeyGenerator(publicSeed);
-        packedPki.setPrivateKeyVec(skpv);
+    public KyberKeyPair generateKyberVecKeys() {
+        KyberKeyPair packedPki = new KyberKeyPair();
+        packedPki.generateKyberKeys
+                (this.paramsK, this.hashFunction, this.prgNoiseLength, this.prgMatrixLength672, this.secureRandom);
         return packedPki;
     }
 
@@ -297,11 +248,10 @@ public class KyberCpa implements Kyber {
         byte[][] pkPair = new byte[n + 1][];
         for (int i = 0; i < n; i++) {
             pkPair[i] = new byte[paramsPolyvecBytes];
-            if(i != choice){
+            if (i != choice) {
                 System.arraycopy(randomKeyByte[i], 0,
                         pkPair[i], 0, paramsPolyvecBytes);
-            }
-            else{
+            } else {
                 System.arraycopy(publicKeyBytes, 0,
                         pkPair[i], 0, paramsPolyvecBytes);
             }

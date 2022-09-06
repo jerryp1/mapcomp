@@ -38,7 +38,7 @@ public class MrKyber19BaseOtReceiver extends AbstractBaseOtReceiver {
     /**
      * OT协议接收方参数
      */
-    private KyberVecKeyPair[] aArray;
+    private KyberKeyPair[] aArray;
 
     /**
      * 使用的kyber实例
@@ -104,7 +104,7 @@ public class MrKyber19BaseOtReceiver extends AbstractBaseOtReceiver {
     }
 
     private List<byte[]> generatePkPayload() {
-        aArray = new KyberVecKeyPair[choices.length];
+        aArray = new KyberKeyPair[choices.length];
         // 公钥生成流
         IntStream pkIntStream = IntStream.range(0, choices.length);
         pkIntStream = parallel ? pkIntStream.parallel() : pkIntStream;
@@ -118,7 +118,7 @@ public class MrKyber19BaseOtReceiver extends AbstractBaseOtReceiver {
                     // 随机生成一组钥匙对
                     aArray[index] = this.kyber.generateKyberVecKeys();
                     // 读取多项式格式下的公钥
-                    publickKeyBytes = this.kyber.polyVectorToBytes(aArray[index].getPublicKeyVec());
+                    publickKeyBytes = aArray[index].getPublicKeyBytes();
                     // 生成一个符合格式的随机公钥 R_1-sigma
                     randomKeyByte = this.kyber.getRandomKyberPk();
                     // 计算 R_sigma = R_sigma + Hash(R_1-sigma)

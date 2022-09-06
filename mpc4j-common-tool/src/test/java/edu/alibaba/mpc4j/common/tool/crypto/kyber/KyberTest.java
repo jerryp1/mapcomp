@@ -28,27 +28,9 @@ public class KyberTest {
             byte[] testBytes = new byte[32];
             secureRandom.nextBytes(testBytes);
             Kyber kyber = KyberFactory.createInstance(KyberFactory.KyberType.KYBER_CPA, k, secureRandom,hashFunction);
-            KyberVecKeyPair keyPair = kyber.generateKyberVecKeys();
-            byte[] cipherText = kyber.encrypt(testBytes, keyPair.getPublicKeyVec(), keyPair.getPublicKeyGenerator());
+            KyberKeyPair keyPair = kyber.generateKyberVecKeys();
+            byte[] cipherText = kyber.encrypt(testBytes, keyPair.getPublicKeyBytes(), keyPair.getPublicKeyGenerator());
             byte[] plainText = kyber.decrypt(cipherText, keyPair.getPrivateKeyVec());
-            for (int index = 0; index < 32; index++) {
-                Assert.assertEquals(testBytes[index], plainText[index]);
-            }
-            Assert.assertEquals(Arrays.toString(testBytes), Arrays.toString(plainText));
-        }
-    }
-
-    @Test
-    public void testKyberEncryptionDecryption_2() {
-        SecureRandom secureRandom = new SecureRandom();
-        Hash hashFunction = HashFactory.createInstance(HashFactory.HashType.BC_BLAKE_2B_160, 16);
-        for (int k = 2; k <= 4; k++) {
-            byte[] testBytes = new byte[32];
-            secureRandom.nextBytes(testBytes);
-            Kyber kyber = KyberFactory.createInstance(KyberFactory.KyberType.KYBER_CPA, k, secureRandom,hashFunction);
-            KyberPackedPki keyPair = kyber.generateKyberByteKeys();
-            byte[] cipherText = kyber.encrypt(testBytes, keyPair.getPackedPublicKey());
-            byte[] plainText = kyber.decrypt(cipherText, keyPair.getPackedPrivateKey());
             for (int index = 0; index < 32; index++) {
                 Assert.assertEquals(testBytes[index], plainText[index]);
             }
