@@ -84,7 +84,7 @@ public class X25519BcByteMulEcc implements ByteMulEcc {
     @Override
     public byte[] mul(byte[] p, byte[] k) {
         assert p.length == POINT_BYTE_LENGTH;
-        assert k.length == POINT_BYTE_LENGTH;
+        assert isValidScalar(k);
         byte[] r = new byte[POINT_BYTE_LENGTH];
         X25519ByteEccUtils.scalarMult(k, p, r);
         return r;
@@ -92,7 +92,7 @@ public class X25519BcByteMulEcc implements ByteMulEcc {
 
     @Override
     public byte[] baseMul(byte[] k) {
-        assert k.length == POINT_BYTE_LENGTH;
+        assert isValidScalar(k);
         byte[] r = new byte[POINT_BYTE_LENGTH];
         X25519ByteEccUtils.scalarMultBase(k, r);
         return r;
@@ -101,5 +101,14 @@ public class X25519BcByteMulEcc implements ByteMulEcc {
     @Override
     public ByteEccFactory.ByteEccType getByteEccType() {
         return ByteEccFactory.ByteEccType.X25519_BC;
+    }
+
+    private boolean isValidScalar(byte[] k) {
+        if (k == null || k.length != SCALAR_BYTE_LENGTH) {
+            return false;
+        }
+        return ((k[0] & 0x07) == 0)
+            && ((k[POINT_BYTE_LENGTH - 1] & (byte)0x80) == 0)
+            && ((k[POINT_BYTE_LENGTH - 1] & (byte)0x40) != 0);
     }
 }
