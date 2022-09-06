@@ -2,7 +2,9 @@ package edu.alibaba.mpc4j.common.tool.crypto.kyber.kyber4j;
 
 import edu.alibaba.mpc4j.common.tool.crypto.hash.Hash;
 import edu.alibaba.mpc4j.common.tool.crypto.kyber.Kyber;
-import edu.alibaba.mpc4j.common.tool.crypto.kyber.KyberKeyPair;
+import edu.alibaba.mpc4j.common.tool.crypto.kyber.KyberKey;
+import edu.alibaba.mpc4j.common.tool.crypto.kyber.KyberKeyFactory;
+import edu.alibaba.mpc4j.common.tool.crypto.kyber.KyberKeyPairJava;
 import edu.alibaba.mpc4j.common.tool.crypto.prg.Prg;
 import edu.alibaba.mpc4j.common.tool.crypto.prg.PrgFactory;
 
@@ -180,11 +182,11 @@ public class KyberCpa implements Kyber {
     }
 
     @Override
-    public KyberKeyPair generateKyberVecKeys() {
-        KyberKeyPair packedPki = new KyberKeyPair();
-        packedPki.generateKyberKeys
-                (this.paramsK, this.hashFunction, this.prgNoiseLength, this.prgMatrixLength672, this.secureRandom);
-        return packedPki;
+    public KyberKey generateKyberVecKeys() {
+        KyberKey packedKey = KyberKeyFactory.createInstance(KyberKeyFactory.KyberKeyType.KYBER_KEY_JAVA,
+                this.paramsK,this.secureRandom,this.hashFunction,this.prgNoiseLength,this.prgMatrixLength672);
+        packedKey.generateKyberKeys();
+        return packedKey;
     }
 
     @Override

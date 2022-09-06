@@ -99,7 +99,7 @@ public interface Kyber {
      *
      * @return 论文中的公钥（As+e,p）和私钥s
      */
-    KyberKeyPair generateKyberVecKeys();
+    KyberKey generateKyberVecKeys();
     /**
      * Serialize a polynomial vector to a byte array
      * 将多项式向量转换为byte数组

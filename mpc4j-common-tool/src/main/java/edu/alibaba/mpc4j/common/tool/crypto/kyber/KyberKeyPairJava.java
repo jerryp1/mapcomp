@@ -17,7 +17,12 @@ import java.security.SecureRandom;
  * @author Sheng Hu
  * @date 2022/08/25
  */
-public class KyberKeyPair {
+public class KyberKeyPairJava implements KyberKey {
+    private final int paramsK;
+    private final Hash hashFunction;
+    private final Prg prgNoiseLength;
+    private final Prg prgMatrixLength672;
+    private final SecureRandom secureRandom;
     private byte[] publicKeyBytes;
     private byte[] publicKeyGenerator;
     private short[][] privateKeyVec;
@@ -25,8 +30,12 @@ public class KyberKeyPair {
     /**
      * Default Constructor
      */
-    public KyberKeyPair() {
-
+    public KyberKeyPairJava(int paramsK, SecureRandom secureRandom, Hash hashFunction, Prg prgNoiseLength, Prg prgMatrixLength672) {
+        this.paramsK = paramsK;
+        this.hashFunction = hashFunction;
+        this.secureRandom = secureRandom;
+        this.prgNoiseLength = prgNoiseLength;
+        this.prgMatrixLength672 = prgMatrixLength672;
     }
 
     private void setKeyPair(byte[] publicKeyVec, short[][] privateKeyVec, byte[] publicKeyGenerator) {
@@ -38,6 +47,7 @@ public class KyberKeyPair {
     /**
      * @return the PublicKeyVec
      */
+    @Override
     public byte[] getPublicKeyBytes() {
         return publicKeyBytes;
     }
@@ -45,6 +55,7 @@ public class KyberKeyPair {
     /**
      * @return the PublcKeyGenerator
      */
+    @Override
     public byte[] getPublicKeyGenerator() {
         return publicKeyGenerator;
     }
@@ -53,19 +64,20 @@ public class KyberKeyPair {
     /**
      * @return the PrivateKeyVec
      */
+    @Override
     public short[][] getPrivateKeyVec() {
         return privateKeyVec;
     }
 
     /**
      * 计算公私钥
-     * @param paramsK 安全等级
-     * @param hashFunction 哈希函数
-     * @param prgNoiseLength 计算噪声时的扩展函数
+     *
+     * @param hashFunction       哈希函数
+     * @param prgNoiseLength     计算噪声时的扩展函数
      * @param prgMatrixLength672 计算矩阵时的扩展函数
-     * @param secureRandom 随机函数
+     * @param secureRandom       随机函数
      */
-    public void generateKyberKeys(int paramsK, Hash hashFunction, Prg prgNoiseLength, Prg prgMatrixLength672, SecureRandom secureRandom){
+    public void generateKyberKeys() {
         //私钥s
         short[][] skpv = Poly.generateNewPolyVector(paramsK);
         //最后输出时是公钥 As+e
@@ -105,7 +117,7 @@ public class KyberKeyPair {
         //每做一步，计算一次模Q
         Poly.polyVectorReduce(pkpv);
         //将公钥、生成元、私钥放在一起打包
-        setKeyPair(Poly.polyVectorToBytes(pkpv),skpv,publicSeed);
+        setKeyPair(Poly.polyVectorToBytes(pkpv), skpv, publicSeed);
     }
 
 

@@ -133,7 +133,7 @@ public class MrKyber19BnotSender extends AbstractBnotSender {
                         this.secureRandom.nextBytes(rbArray[index][i]);
                         //计算加密函数，加密函数的输入是明文、公钥（As+e）部分、生成元部分、随机数种子，安全参数k
                         cipherText[i] = this.kyber.encrypt
-                                (rbArray[index][i], this.kyber.polyVectorFromBytes(upperBytes[i]),
+                                (rbArray[index][i], upperBytes[i],
                                         pkPayload.get(index * (n + 1) + n));
                     }
                     return cipherText;

@@ -28,7 +28,7 @@ public class KyberTest {
             byte[] testBytes = new byte[32];
             secureRandom.nextBytes(testBytes);
             Kyber kyber = KyberFactory.createInstance(KyberFactory.KyberType.KYBER_CPA, k, secureRandom,hashFunction);
-            KyberKeyPair keyPair = kyber.generateKyberVecKeys();
+            KyberKey keyPair = kyber.generateKyberVecKeys();
             byte[] cipherText = kyber.encrypt(testBytes, keyPair.getPublicKeyBytes(), keyPair.getPublicKeyGenerator());
             byte[] plainText = kyber.decrypt(cipherText, keyPair.getPrivateKeyVec());
             for (int index = 0; index < 32; index++) {

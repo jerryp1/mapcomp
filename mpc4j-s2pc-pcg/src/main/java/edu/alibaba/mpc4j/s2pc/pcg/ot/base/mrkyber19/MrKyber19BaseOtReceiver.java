@@ -38,7 +38,7 @@ public class MrKyber19BaseOtReceiver extends AbstractBaseOtReceiver {
     /**
      * OT协议接收方参数
      */
-    private KyberKeyPair[] aArray;
+    private KyberKey[] aArray;
 
     /**
      * 使用的kyber实例
@@ -101,7 +101,7 @@ public class MrKyber19BaseOtReceiver extends AbstractBaseOtReceiver {
     }
 
     private List<byte[]> generatePkPayload() {
-        aArray = new KyberKeyPair[choices.length];
+        aArray = new KyberKey[choices.length];
         // 公钥生成流
         IntStream pkIntStream = IntStream.range(0, choices.length);
         pkIntStream = parallel ? pkIntStream.parallel() : pkIntStream;
