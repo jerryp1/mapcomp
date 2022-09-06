@@ -4,6 +4,18 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## \[Future\]
+
+- Add Kyber-based Oblivious Transfer.
+- PSU proposed by Prof. Yu Chen.
+- MR19-OT and PID based on X25519.
+- PSU proposed by Phi Hong Lee.
+- EC-DH-PSI and KKRT16-PSI.
+- GF2K (subfield) VOLE.
+- Multiplication triples under Zp, Zp64, Zl and Zl64.
+- Arithmetic circuit.
+- Hamming Distance.
+
 ## \[1.0.4\]
 
 ### Added
