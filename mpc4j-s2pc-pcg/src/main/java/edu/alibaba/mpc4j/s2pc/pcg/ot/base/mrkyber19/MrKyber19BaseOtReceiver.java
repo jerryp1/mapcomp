@@ -124,7 +124,7 @@ public class MrKyber19BaseOtReceiver extends AbstractBaseOtReceiver {
                     // 根据选择值将两个参数R分别放入对应位置
                     int sigma = choices[index] ? 1 : 0;
                     return this.kyber.packageTwoKeys
-                            (publickKeyBytes,randomKeyByte,aArray[index].getPublicKeyGenerator(),sigma);
+                            (publickKeyBytes, randomKeyByte, aArray[index].getPublicKeyGenerator(), sigma);
                 })
                 .flatMap(Arrays::stream)
                 .collect(Collectors.toList());
@@ -142,7 +142,7 @@ public class MrKyber19BaseOtReceiver extends AbstractBaseOtReceiver {
             short[][] receiverPrivateKey = aArray[index].getPrivateKeyVec();
             //解密函数——在cpa方案中无需公钥，在cca方案中需要公钥。
             byte[] rbDecrypt = this.kyber.decrypt(betaPayload.get(2 * index + sigma),
-                    receiverPrivateKey,aArray[index].getPublicKeyBytes(),aArray[index].getPublicKeyGenerator());
+                    receiverPrivateKey, aArray[index].getPublicKeyBytes(), aArray[index].getPublicKeyGenerator());
             System.arraycopy(rbDecrypt, 0, rbArray[index], 0, CommonConstants.BLOCK_BYTE_LENGTH);
         });
 

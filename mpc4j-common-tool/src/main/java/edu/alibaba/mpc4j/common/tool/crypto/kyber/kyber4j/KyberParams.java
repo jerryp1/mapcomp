@@ -12,7 +12,6 @@ public final class KyberParams {
     public final static int MATH_THREE = 3;
 
     public final static int MATH_FOUR = 4;
-
     public final static int MATH_EIGHT = 8;
     /**
      * 多项式长度（short）256

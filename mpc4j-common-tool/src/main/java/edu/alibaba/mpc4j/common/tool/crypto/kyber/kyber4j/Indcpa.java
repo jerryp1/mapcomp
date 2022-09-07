@@ -242,33 +242,31 @@ public class Indcpa {
     }
 
     /**
-     *
-     * @param m 加密消息
-     * @param publicKey 一部分的公钥（As+e）
+     * @param m                  加密消息
+     * @param publicKey          一部分的公钥（As+e）
      * @param publicKeyGenerator 公钥生成器
-     * @param paramsK 安全等级
-     * @param hashFunction 哈希函数
+     * @param paramsK            安全等级
+     * @param hashFunction       哈希函数
      * @param prgMatrixLength672 矩阵所需扩展函数
-     * @param prgNoiseLength 噪声所需扩展函数
+     * @param prgNoiseLength     噪声所需扩展函数
      * @return 加密后的密文
      */
     public static byte[] encrypt(byte[] m, short[][] publicKey, byte[] publicKeyGenerator, int paramsK, Hash hashFunction,
                                  Prg prgMatrixLength672, Prg prgNoiseLength, SecureRandom secureRandom) {
         byte[] coins = new byte[KyberParams.SYM_BYTES];
         secureRandom.nextBytes(coins);
-        return encrypt(m,publicKey,publicKeyGenerator,paramsK,hashFunction,prgMatrixLength672,prgNoiseLength,coins);
+        return encrypt(m, publicKey, publicKeyGenerator, paramsK, hashFunction, prgMatrixLength672, prgNoiseLength, coins);
     }
 
     /**
-     *
-     * @param m 加密消息
-     * @param publicKey 一部分的公钥（As+e）
+     * @param m                  加密消息
+     * @param publicKey          一部分的公钥（As+e）
      * @param publicKeyGenerator 公钥生成器
-     * @param paramsK 安全等级
-     * @param hashFunction 哈希函数
+     * @param paramsK            安全等级
+     * @param hashFunction       哈希函数
      * @param prgMatrixLength672 矩阵所需扩展函数
-     * @param prgNoiseLength 噪声所需扩展函数
-     * @param coins 随机数种子
+     * @param prgNoiseLength     噪声所需扩展函数
+     * @param coins              随机数种子
      * @return 加密后的密文
      */
     public static byte[] encrypt(byte[] m, short[][] publicKey, byte[] publicKeyGenerator, int paramsK, Hash hashFunction,
@@ -312,9 +310,10 @@ public class Indcpa {
 
     /**
      * 解密函数
+     *
      * @param packedCipherText 打包好的密文
-     * @param privateKey 私钥
-     * @param paramsK 安全等级
+     * @param privateKey       私钥
+     * @param paramsK          安全等级
      * @return 解密后的明文
      */
     public static byte[] decrypt(byte[] packedCipherText, short[][] privateKey, int paramsK) {

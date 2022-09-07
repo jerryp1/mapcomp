@@ -7,7 +7,7 @@ import edu.alibaba.mpc4j.common.tool.crypto.prg.Prg;
 import java.security.SecureRandom;
 
 /**
- * Kyber未封装的，以向量形式存储的密钥。论文来源：
+ * Kyber的密钥类。论文来源：
  * Joppe Bos, Léo Ducas, Eike Kiltz, Tancrède Lepoint, Vadim Lyubashevsky, John M. Schanck, Peter Schwabe,
  * Gregor Seiler, Damien Stehlé.CRYSTALS – Kyber: a CCA-secure module-lattice-based KEM
  * 2018 IEEE European Symposium on Security and Privacy (EuroS&P). IEEE, 2018: 353-367.
@@ -16,13 +16,37 @@ import java.security.SecureRandom;
  * @date 2022/08/25
  */
 public class KyberKeyPairJava implements KyberKey {
+    /**
+     * 安全等级
+     */
     private final int paramsK;
+    /**
+     * hash函数
+     */
     private final Hash hashFunction;
+    /**
+     * kyber中制造噪声时需要的随机扩展函数
+     */
     private final Prg prgNoiseLength;
+    /**
+     * kyber中制造矩阵时需要的随机扩展函数
+     */
     private final Prg prgMatrixLength672;
+    /**
+     * 随机数生成器
+     */
     private final SecureRandom secureRandom;
+    /**
+     * 公钥
+     */
     private byte[] publicKeyBytes;
+    /**
+     * 公钥生成元
+     */
     private byte[] publicKeyGenerator;
+    /**
+     * 私钥
+     */
     private short[][] privateKeyVec;
 
     /**

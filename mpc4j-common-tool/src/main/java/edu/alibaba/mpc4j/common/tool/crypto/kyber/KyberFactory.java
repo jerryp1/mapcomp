@@ -40,9 +40,9 @@ public class KyberFactory {
     public static Kyber createInstance(KyberType kyberType, int paramsK, SecureRandom secureRandom, Hash hashFunction) {
         switch (kyberType) {
             case KYBER_CPA:
-                return new KyberCpa(paramsK,secureRandom,hashFunction);
+                return new KyberCpa(paramsK, secureRandom, hashFunction);
             case KYBER_CCA:
-                return new KyberCca(paramsK,secureRandom,hashFunction);
+                return new KyberCca(paramsK, secureRandom, hashFunction);
             default:
                 throw new IllegalArgumentException("Invalid " + KyberFactory.KyberType.class.getSimpleName() + ": " + kyberType.name());
         }

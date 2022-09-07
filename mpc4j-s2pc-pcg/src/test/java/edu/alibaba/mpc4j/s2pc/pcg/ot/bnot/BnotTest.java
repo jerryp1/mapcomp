@@ -4,6 +4,7 @@ import com.google.common.base.Preconditions;
 import edu.alibaba.mpc4j.common.rpc.Rpc;
 import edu.alibaba.mpc4j.common.rpc.RpcManager;
 import edu.alibaba.mpc4j.common.rpc.impl.memory.MemoryRpcManager;
+import edu.alibaba.mpc4j.common.tool.crypto.kyber.KyberFactory;
 import edu.alibaba.mpc4j.s2pc.pcg.ot.bnot.co15.Co15BnotConfig;
 import edu.alibaba.mpc4j.s2pc.pcg.ot.bnot.mr19.Mr19BnotConfig;
 import edu.alibaba.mpc4j.s2pc.pcg.ot.bnot.mrkyber19.MrKyber19BnotConfig;
@@ -90,18 +91,34 @@ public class BnotTest {
         });
         // MRKYBER19 + k = 4
         configurationParams.add(new Object[]{
-                BnotFactory.BnotType.MRKYBER19.name() + " (k = 2)",
-                new MrKyber19BnotConfig.Builder().setParamsK(2).build(),
+                BnotFactory.BnotType.MRKYBER19.name() + " (k = 2)" + "cca",
+                new MrKyber19BnotConfig.Builder().setParamsK(2).setKyberType(KyberFactory.KyberType.KYBER_CCA).build(),
         });
         // MRKYBER19 + k = 3
         configurationParams.add(new Object[]{
-                BnotFactory.BnotType.MRKYBER19.name() + " (k = 3)",
-                new MrKyber19BnotConfig.Builder().setParamsK(3).build(),
+                BnotFactory.BnotType.MRKYBER19.name() + " (k = 3)" + "cca",
+                new MrKyber19BnotConfig.Builder().setParamsK(3).setKyberType(KyberFactory.KyberType.KYBER_CCA).build(),
         });
         // MRKYBER19 + k = 4
         configurationParams.add(new Object[]{
-                BnotFactory.BnotType.MRKYBER19.name() + " (k = 4)",
-                new MrKyber19BnotConfig.Builder().setParamsK(4).build(),
+                BnotFactory.BnotType.MRKYBER19.name() + " (k = 4)" + "cca",
+                new MrKyber19BnotConfig.Builder().setParamsK(4).setKyberType(KyberFactory.KyberType.KYBER_CCA).build(),
+        });
+
+        // MRKYBER19 + k = 4
+        configurationParams.add(new Object[]{
+                BnotFactory.BnotType.MRKYBER19.name() + " (k = 2)" + "cpa",
+                new MrKyber19BnotConfig.Builder().setParamsK(2).setKyberType(KyberFactory.KyberType.KYBER_CPA).build(),
+        });
+        // MRKYBER19 + k = 3
+        configurationParams.add(new Object[]{
+                BnotFactory.BnotType.MRKYBER19.name() + " (k = 3)" + "cpa",
+                new MrKyber19BnotConfig.Builder().setParamsK(3).setKyberType(KyberFactory.KyberType.KYBER_CPA).build(),
+        });
+        // MRKYBER19 + k = 4
+        configurationParams.add(new Object[]{
+                BnotFactory.BnotType.MRKYBER19.name() + " (k = 4)" + "cpa",
+                new MrKyber19BnotConfig.Builder().setParamsK(4).setKyberType(KyberFactory.KyberType.KYBER_CPA).build(),
         });
 
         return configurationParams;

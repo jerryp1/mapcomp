@@ -84,7 +84,8 @@ public interface Kyber {
      * @param privateKey       私钥
      * @return 消息m
      */
-    byte[] decrypt(byte[] packedCipherText, short[][] privateKey,byte[] publicKeyBytes,byte[] publicKeyGenerator);
+    byte[] decrypt(byte[] packedCipherText, short[][] privateKey, byte[] publicKeyBytes, byte[] publicKeyGenerator);
+
     /**
      * Generates public and private keys for the CPA-secure public-key
      * encryption scheme underlying Kyber.
@@ -96,23 +97,23 @@ public interface Kyber {
     /**
      * 将公钥打包传输，担心公钥的长度不一定，所以都放在了Kyber类里面
      *
-     * @param publicKeyBytes 遮掩后的As+e
-     * @param randomKeyByte 随机的As+e
+     * @param publicKeyBytes     遮掩后的As+e
+     * @param randomKeyByte      随机的As+e
      * @param publicKeyGenerator 生成元
-     * @param sigma 2选一OT的选择
+     * @param sigma              2选一OT的选择
      * @return 多项式向量
      */
-    byte[][] packageTwoKeys(byte[] publicKeyBytes,byte[] randomKeyByte,byte[] publicKeyGenerator,int sigma);
+    byte[][] packageTwoKeys(byte[] publicKeyBytes, byte[] randomKeyByte, byte[] publicKeyGenerator, int sigma);
 
     /**
      * 将公钥打包传输，担心公钥的长度不一定，所以都放在了Kyber类里面
      *
-     * @param publicKeyBytes 遮掩后的As+e
-     * @param randomKeyByte 随机的As+e
+     * @param publicKeyBytes     遮掩后的As+e
+     * @param randomKeyByte      随机的As+e
      * @param publicKeyGenerator 生成元
-     * @param choice n选一OT的选择
-     * @param n n选一OT的n
+     * @param choice             n选一OT的选择
+     * @param n                  n选一OT的n
      * @return 多项式向量
      */
-    byte[][] packageNumKeys(byte[] publicKeyBytes,byte[][] randomKeyByte,byte[] publicKeyGenerator,int choice,int n);
+    byte[][] packageNumKeys(byte[] publicKeyBytes, byte[][] randomKeyByte, byte[] publicKeyGenerator, int choice, int n);
 }

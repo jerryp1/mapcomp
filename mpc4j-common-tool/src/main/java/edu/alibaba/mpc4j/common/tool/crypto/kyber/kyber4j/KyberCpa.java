@@ -10,11 +10,10 @@ import edu.alibaba.mpc4j.common.tool.crypto.prg.PrgFactory;
 import static edu.alibaba.mpc4j.common.tool.crypto.kyber.kyber4j.Indcpa.*;
 
 import java.security.SecureRandom;
-import java.util.Arrays;
 
 
 /**
- * Kyber-CPA抽象类。
+ * Kyber-CPA类。
  *
  * @author Sheng Hu
  * @date 2022/09/01
@@ -42,7 +41,7 @@ public class KyberCpa implements Kyber {
      */
     private final Prg prgNoiseLength;
     /**
-     *  kyber中制造公钥时需要的随机扩展函数
+     * kyber中制造公钥时需要的随机扩展函数
      */
     private final Prg prgPkLength;
     /**
@@ -53,7 +52,8 @@ public class KyberCpa implements Kyber {
 
     /**
      * 初始化函数
-     * @param paramsK 安全参数k
+     *
+     * @param paramsK      安全参数k
      * @param secureRandom random函数
      * @param hashFunction 随机数种子
      */
@@ -126,17 +126,17 @@ public class KyberCpa implements Kyber {
         assert m.length <= KyberParams.SYM_BYTES;
         byte[] message = new byte[KyberParams.SYM_BYTES];
         //如果加密的长度不足32bytes那么就自动补充后续的byte。
-        if(m.length < KyberParams.SYM_BYTES){
+        if (m.length < KyberParams.SYM_BYTES) {
             byte[] supBytes = new byte[KyberParams.SYM_BYTES - m.length];
             secureRandom.nextBytes(supBytes);
-            System.arraycopy(m,0,message,0,m.length);
-            System.arraycopy(supBytes,0,message,m.length,KyberParams.SYM_BYTES - m.length);
-        }else {
+            System.arraycopy(m, 0, message, 0, m.length);
+            System.arraycopy(supBytes, 0, message, m.length, KyberParams.SYM_BYTES - m.length);
+        } else {
             message = m;
         }
         return Indcpa.encrypt
-                (message,publicKey,publicKeyGenerator,
-                        this.paramsK,this.hashFunction,this.prgMatrixLength672,this.prgNoiseLength,this.secureRandom);
+                (message, publicKey, publicKeyGenerator,
+                        this.paramsK, this.hashFunction, this.prgMatrixLength672, this.prgNoiseLength, this.secureRandom);
     }
 
     @Override
@@ -159,13 +159,13 @@ public class KyberCpa implements Kyber {
     @Override
     public byte[] decrypt(byte[] packedCipherText, short[][] privateKey, byte[] publicKeyBytes, byte[] publicKeyGenerator) {
         //cpa方案不要公钥进行解密
-        return decrypt(packedCipherText,privateKey);
+        return decrypt(packedCipherText, privateKey);
     }
 
     @Override
     public KyberKey generateKyberVecKeys() {
         KyberKey packedKey = KyberKeyFactory.createInstance(KyberKeyFactory.KyberKeyType.KYBER_KEY_JAVA,
-                this.paramsK,this.secureRandom,this.hashFunction,this.prgNoiseLength,this.prgMatrixLength672);
+                this.paramsK, this.secureRandom, this.hashFunction, this.prgNoiseLength, this.prgMatrixLength672);
         packedKey.generateKyberKeys();
         return packedKey;
     }

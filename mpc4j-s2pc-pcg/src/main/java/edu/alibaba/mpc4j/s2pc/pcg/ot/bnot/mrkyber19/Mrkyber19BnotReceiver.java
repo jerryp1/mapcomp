@@ -60,7 +60,7 @@ public class Mrkyber19BnotReceiver extends AbstractBnotReceiver {
     @Override
     public BnotReceiverOutput receive(int[] choices) throws MpcAbortException {
         setPtoInput(choices);
-        paramsInit(config.getParamsK());
+        paramsInit();
         info("{}{} Recv. begin", ptoBeginLogPrefix, getPtoDesc().getPtoName());
 
         stopWatch.start();
@@ -91,10 +91,10 @@ public class Mrkyber19BnotReceiver extends AbstractBnotReceiver {
         return handleBetaPayload(betaPayload);
     }
 
-    private void paramsInit(int paramsK) {
+    private void paramsInit() {
         SecureRandom secureRandom = new SecureRandom();
         Hash hashFunction = HashFactory.createInstance(HashFactory.HashType.BC_BLAKE_2B_160, 16);
-        this.kyber = KyberFactory.createInstance(KyberFactory.KyberType.KYBER_CPA, paramsK, secureRandom, hashFunction);
+        this.kyber = KyberFactory.createInstance(config.getKyberType(), config.getParamsK(), secureRandom, hashFunction);
     }
 
     private List<byte[]> generatePkPayload() {

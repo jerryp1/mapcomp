@@ -32,10 +32,10 @@ public class KyberKeyFactory {
     /**
      * 创建Kyber类型
      */
-    public static KyberKey createInstance(KyberKeyType kyberType, int paramsK, SecureRandom secureRandom, Hash hashFunction, Prg prgNoiseLength,Prg prgMatrixLength672) {
+    public static KyberKey createInstance(KyberKeyType kyberType, int paramsK, SecureRandom secureRandom, Hash hashFunction, Prg prgNoiseLength, Prg prgMatrixLength672) {
         switch (kyberType) {
             case KYBER_KEY_JAVA:
-                return new KyberKeyPairJava(paramsK,secureRandom,hashFunction,prgNoiseLength,prgMatrixLength672);
+                return new KyberKeyPairJava(paramsK, secureRandom, hashFunction, prgNoiseLength, prgMatrixLength672);
             default:
                 throw new IllegalArgumentException("Invalid " + KyberKeyFactory.KyberKeyType.class.getSimpleName() + ": " + kyberType.name());
         }

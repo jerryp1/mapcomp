@@ -30,7 +30,6 @@ public interface KyberKey {
 
     /**
      * 返回kyber的公钥
-     *
      */
     void generateKyberKeys();
 }

@@ -65,7 +65,7 @@ public class MrKyber19BnotSender extends AbstractBnotSender {
     @Override
     public BnotSenderOutput send(int num) throws MpcAbortException {
         setPtoInput(num);
-        paramsInit(config.getParamsK());
+        paramsInit();
         bByte = new ArrayList<>();
         info("{}{} Send. begin", ptoBeginLogPrefix, getPtoDesc().getPtoName());
         stopWatch.start();
@@ -95,10 +95,10 @@ public class MrKyber19BnotSender extends AbstractBnotSender {
         return senderOutput;
     }
 
-    private void paramsInit(int paramsK) {
+    private void paramsInit() {
         this.secureRandom = new SecureRandom();
         Hash hashFunction = HashFactory.createInstance(HashFactory.HashType.BC_BLAKE_2B_160, 16);
-        this.kyber = KyberFactory.createInstance(KyberFactory.KyberType.KYBER_CPA, paramsK, secureRandom, hashFunction);
+        this.kyber = KyberFactory.createInstance(config.getKyberType(), config.getParamsK(), secureRandom, hashFunction);
     }
 
     private BnotSenderOutput handlePkPayload(List<byte[]> pkPayload) throws MpcAbortException {
