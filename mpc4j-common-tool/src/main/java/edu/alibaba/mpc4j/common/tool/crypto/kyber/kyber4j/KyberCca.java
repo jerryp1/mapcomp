@@ -1,5 +1,6 @@
 package edu.alibaba.mpc4j.common.tool.crypto.kyber.kyber4j;
 
+import edu.alibaba.mpc4j.common.tool.CommonConstants;
 import edu.alibaba.mpc4j.common.tool.crypto.hash.Hash;
 import edu.alibaba.mpc4j.common.tool.crypto.kyber.Kyber;
 import edu.alibaba.mpc4j.common.tool.crypto.kyber.KyberKey;
@@ -123,7 +124,6 @@ public class KyberCca  implements Kyber{
 
     @Override
     public byte[] encrypt(byte[] m, byte[] publicKey) {
-        m = prgEncryptLength32.extendToBytes(hashFunction.digestToBytes(m));
         UnpackedPublicKey unpackedPublicKey = unpackPublicKey(publicKey, paramsK);
         byte[] newPublicKey = Poly.polyVectorToBytes(unpackedPublicKey.getPublicKeyPolyvec());
         return encrypt(m,newPublicKey, unpackedPublicKey.getPublicKeyPolyvec(), unpackedPublicKey.getSeed());
@@ -131,23 +131,22 @@ public class KyberCca  implements Kyber{
 
     @Override
     public byte[] encrypt(byte[] m, short[][] publicKeyVec, byte[] publicKeyGenerator) {
-        m = prgEncryptLength32.extendToBytes(hashFunction.digestToBytes(m));
         return encrypt(m, Poly.polyVectorToBytes(publicKeyVec),publicKeyVec, publicKeyGenerator);
     }
 
     @Override
     public byte[] encrypt(byte[] m, byte[] publicKeyBytes, byte[] publicKeyGenerator) {
-        m = prgEncryptLength32.extendToBytes(hashFunction.digestToBytes(m));
         return encrypt(m, publicKeyBytes,Poly.polyVectorFromBytes(publicKeyBytes), publicKeyGenerator);
     }
 
     public byte[] encrypt(byte[] message, byte[] publicKeyBytes,short[][] publicKeyVector ,byte[] publicKeyGenerator){
+        byte[] m = prgEncryptLength32.extendToBytes(hashFunction.digestToBytes(message));
         byte[] fullKey = new byte[paramsPolyvecBytes + KyberParams.SYM_BYTES];
         System.arraycopy(publicKeyBytes,0,fullKey,0,paramsPolyvecBytes);
         System.arraycopy(publicKeyGenerator,0,fullKey,paramsPolyvecBytes,KyberParams.SYM_BYTES);
         byte[] publicHashKey = prgEncryptLength32.extendToBytes(hashFunction.digestToBytes(fullKey));
         byte[] fullCode = new byte[2 * KyberParams.SYM_BYTES];
-        System.arraycopy(message,0,fullCode,0,KyberParams.SYM_BYTES);
+        System.arraycopy(m,0,fullCode,0,KyberParams.SYM_BYTES);
         System.arraycopy(publicHashKey,0,fullCode,KyberParams.SYM_BYTES,KyberParams.SYM_BYTES);
         //计算G（H（pk），m）需要注意的是原有代码是hash到了64bit，我们这里是使用了相同的扩展函数扩展到64bit的。
         byte[] kr = prgEncryptLength64.extendToBytes(hashFunction.digestToBytes(fullCode));
@@ -156,15 +155,16 @@ public class KyberCca  implements Kyber{
         System.arraycopy(kr,KyberParams.SYM_BYTES,subkr,0,KyberParams.SYM_BYTES);
         //以subkr为随机数种子计算密文c
         byte[] cipherText =
-                Indcpa.encrypt(message,publicKeyVector,publicKeyGenerator,
+                Indcpa.encrypt(m,publicKeyVector,publicKeyGenerator,
                         paramsK,hashFunction,prgMatrixLength672,prgNoiseLength,subkr);
         //论文中的H(C)
         byte[] krc = prgEncryptLength32.extendToBytes(hashFunction.digestToBytes(cipherText));
         byte[] newKr = new byte[2 * KyberParams.SYM_BYTES];
         System.arraycopy(kr,0,newKr,0,KyberParams.SYM_BYTES);
         System.arraycopy(krc,0,newKr,KyberParams.SYM_BYTES,KyberParams.SYM_BYTES);
-        //这个作为密文后续使用，不能删啊不能删。试图函数内参数传递hhh。
-        message = hashFunction.digestToBytes(newKr);
+        //请注意这里修改了message这个值，是作为密文输入的
+        byte[] newMessage = hashFunction.digestToBytes(newKr);
+        System.arraycopy(newMessage, 0, message, 0, KyberParams.SYM_BYTES / CommonConstants.BLOCK_LONG_LENGTH);
         return cipherText;
     }
 
@@ -205,17 +205,15 @@ public class KyberCca  implements Kyber{
         if(BytesUtils.equals(cipherText,packedCipherText)){
             //读取kr的前32bytes
             System.arraycopy(kr,0,newKr,0,KyberParams.SYM_BYTES);
-            System.arraycopy(krc,0,newKr,KyberParams.SYM_BYTES,KyberParams.SYM_BYTES);
-            return hashFunction.digestToBytes(newKr);
+
         }else {
             //如果走入这个分支说明输入的密文是错误的，因此返回的解密值也是随机的
             byte[] randomByte = new byte[KyberParams.SYM_BYTES];
             secureRandom.nextBytes(randomByte);
             System.arraycopy(randomByte,0,newKr,0,KyberParams.SYM_BYTES);
-            System.arraycopy(krc,0,newKr,KyberParams.SYM_BYTES,KyberParams.SYM_BYTES);
-            return hashFunction.digestToBytes(newKr);
         }
-
+        System.arraycopy(krc,0,newKr,KyberParams.SYM_BYTES,KyberParams.SYM_BYTES);
+        return hashFunction.digestToBytes(newKr);
     }
 
     @Override
