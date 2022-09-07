@@ -2,6 +2,7 @@ package edu.alibaba.mpc4j.s2pc.pcg.ot.base.mrkyber19;
 
 import edu.alibaba.mpc4j.common.rpc.desc.SecurityModel;
 import edu.alibaba.mpc4j.common.tool.EnvType;
+import edu.alibaba.mpc4j.common.tool.crypto.kyber.KyberFactory;
 import edu.alibaba.mpc4j.s2pc.pcg.ot.base.BaseOtConfig;
 import edu.alibaba.mpc4j.s2pc.pcg.ot.base.BaseOtFactory;
 
@@ -21,10 +22,15 @@ public class MrKyber19BaseOtConfig implements BaseOtConfig {
      * Kyber安全系数
      */
     private final int paramsK;
+    /**
+     * 方案类型
+     */
+    private final KyberFactory.KyberType kyberType;
 
     private MrKyber19BaseOtConfig(MrKyber19BaseOtConfig.Builder builder) {
         envType = builder.envType;
         paramsK = builder.paramsK;
+        kyberType = builder.kyberType;
     }
 
     @Override
@@ -46,6 +52,10 @@ public class MrKyber19BaseOtConfig implements BaseOtConfig {
         return paramsK;
     }
 
+    public KyberFactory.KyberType getKyberType() {
+        return kyberType;
+    }
+
     public static class Builder implements org.apache.commons.lang3.builder.Builder<MrKyber19BaseOtConfig> {
         /**
          * 环境类型
@@ -55,11 +65,16 @@ public class MrKyber19BaseOtConfig implements BaseOtConfig {
          * Kyber安全系数
          */
         private int paramsK;
+        /**
+         * 方案类型
+         */
+        private KyberFactory.KyberType kyberType;
 
         public Builder() {
             super();
             envType = EnvType.STANDARD;
             paramsK = 4;
+            kyberType = KyberFactory.KyberType.KYBER_CCA;
         }
 
         public Builder setEnvType(EnvType envType) {
@@ -69,6 +84,11 @@ public class MrKyber19BaseOtConfig implements BaseOtConfig {
 
         public Builder setParamsK(int paramsK) {
             this.paramsK = paramsK;
+            return this;
+        }
+
+        public Builder setKyberType(KyberFactory.KyberType kyberType) {
+            this.kyberType = kyberType;
             return this;
         }
 

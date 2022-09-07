@@ -1,6 +1,7 @@
 package edu.alibaba.mpc4j.common.tool.crypto.kyber;
 
 import edu.alibaba.mpc4j.common.tool.crypto.hash.Hash;
+import edu.alibaba.mpc4j.common.tool.crypto.kyber.kyber4j.KyberKeyPairJava;
 import edu.alibaba.mpc4j.common.tool.crypto.prg.Prg;
 
 import java.security.SecureRandom;

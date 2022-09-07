@@ -3,6 +3,7 @@ package edu.alibaba.mpc4j.common.tool.crypto.kyber.kyber4j;
 import edu.alibaba.mpc4j.common.tool.crypto.hash.Hash;
 import edu.alibaba.mpc4j.common.tool.crypto.prg.Prg;
 
+import java.security.SecureRandom;
 import java.util.Arrays;
 
 /**
@@ -252,8 +253,26 @@ public class Indcpa {
      * @return 加密后的密文
      */
     public static byte[] encrypt(byte[] m, short[][] publicKey, byte[] publicKeyGenerator, int paramsK, Hash hashFunction,
-                                 Prg prgMatrixLength672, Prg prgNoiseLength) {
+                                 Prg prgMatrixLength672, Prg prgNoiseLength, SecureRandom secureRandom) {
         byte[] coins = new byte[KyberParams.SYM_BYTES];
+        secureRandom.nextBytes(coins);
+        return encrypt(m,publicKey,publicKeyGenerator,paramsK,hashFunction,prgMatrixLength672,prgNoiseLength,coins);
+    }
+
+    /**
+     *
+     * @param m 加密消息
+     * @param publicKey 一部分的公钥（As+e）
+     * @param publicKeyGenerator 公钥生成器
+     * @param paramsK 安全等级
+     * @param hashFunction 哈希函数
+     * @param prgMatrixLength672 矩阵所需扩展函数
+     * @param prgNoiseLength 噪声所需扩展函数
+     * @param coins 随机数种子
+     * @return 加密后的密文
+     */
+    public static byte[] encrypt(byte[] m, short[][] publicKey, byte[] publicKeyGenerator, int paramsK, Hash hashFunction,
+                                 Prg prgMatrixLength672, Prg prgNoiseLength, byte[] coins) {
         short[][] r = Poly.generateNewPolyVector(paramsK);
         short[][] ep = Poly.generateNewPolyVector(paramsK);
         short[][] bp = Poly.generateNewPolyVector(paramsK);
@@ -289,5 +308,30 @@ public class Indcpa {
         Poly.polyVectorReduce(bp);
         //返回密文，pack的时候会执行压缩函数
         return Indcpa.packCiphertext(bp, Poly.polyReduce(v), paramsK);
+    }
+
+    /**
+     * 解密函数
+     * @param packedCipherText 打包好的密文
+     * @param privateKey 私钥
+     * @param paramsK 安全等级
+     * @return 解密后的明文
+     */
+    public static byte[] decrypt(byte[] packedCipherText, short[][] privateKey, int paramsK) {
+        //解压密文并获得U和v
+        UnpackedCipherText unpackedCipherText = Indcpa.unpackCiphertext(packedCipherText, paramsK);
+        short[][] u = unpackedCipherText.getU();
+        short[] v = unpackedCipherText.getV();
+        //将U转为NTT域
+        Poly.polyVectorNtt(u);
+        // 执行乘法 计算 Us
+        short[] mp = Poly.polyVectorPointWiseAccMont(privateKey, u);
+        //将乘积转回正常计算域
+        Poly.polyInvNttMont(mp);
+        // U - v
+        mp = Poly.polySub(v, mp);
+        Poly.polyReduce(mp);
+        //将结果返回成消息
+        return Poly.polyToMsg(mp);
     }
 }

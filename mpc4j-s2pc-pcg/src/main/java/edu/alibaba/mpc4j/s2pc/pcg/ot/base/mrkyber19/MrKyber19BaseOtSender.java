@@ -64,7 +64,7 @@ public class MrKyber19BaseOtSender extends AbstractBaseOtSender {
     @Override
     public BaseOtSenderOutput send(int num) throws MpcAbortException {
         setPtoInput(num);
-        paramsInit(config.getParamsK());
+        paramsInit();
         bByte = new ArrayList<>();
         info("{}{} Send. begin", ptoBeginLogPrefix, getPtoDesc().getPtoName());
         stopWatch.start();
@@ -94,10 +94,10 @@ public class MrKyber19BaseOtSender extends AbstractBaseOtSender {
         return senderOutput;
     }
 
-    private void paramsInit(int paramsK) {
+    private void paramsInit() {
         this.secureRandom = new SecureRandom();
         Hash hashFunction = HashFactory.createInstance(HashFactory.HashType.BC_BLAKE_2B_160, 16);
-        this.kyber = KyberFactory.createInstance(KyberFactory.KyberType.KYBER_CPA, paramsK, secureRandom, hashFunction);
+        this.kyber = KyberFactory.createInstance(config.getKyberType(), config.getParamsK(), secureRandom, hashFunction);
     }
 
     private BaseOtSenderOutput handlePkPayload(List<byte[]> pkPayload) throws MpcAbortException {
@@ -111,6 +111,7 @@ public class MrKyber19BaseOtSender extends AbstractBaseOtSender {
                     //进行加密的明文
                     this.secureRandom.nextBytes(r0Array[index]);
                     this.secureRandom.nextBytes(r1Array[index]);
+                    info("1  r0 {} Send. r1{})", r0Array[index], r1Array[index]);
                     // 读取公钥（As+e）部分
                     byte[] upperPkR0 = pkPayload.get(index * 3);
                     byte[] upperPkR1 = pkPayload.get(index * 3 + 1);
@@ -125,6 +126,7 @@ public class MrKyber19BaseOtSender extends AbstractBaseOtSender {
                     //加密函数的输入是明文、公钥（As+e）部分、生成元部分、随机数种子，安全参数k
                     cipherText[0] = this.kyber.encrypt(r0Array[index], upperPkR0, pkPayload.get(index * 3 + 2));
                     cipherText[1] = this.kyber.encrypt(r1Array[index], upperPkR1, pkPayload.get(index * 3 + 2));
+                    info("2  r0 {} Send. r1{})", r0Array[index], r1Array[index]);
                     return cipherText;
                 })
                 .flatMap(Arrays::stream)

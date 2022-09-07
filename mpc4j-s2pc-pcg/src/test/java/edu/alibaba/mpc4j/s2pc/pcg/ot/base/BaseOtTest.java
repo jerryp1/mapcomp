@@ -4,6 +4,7 @@ import com.google.common.base.Preconditions;
 import edu.alibaba.mpc4j.common.rpc.Rpc;
 import edu.alibaba.mpc4j.common.rpc.RpcManager;
 import edu.alibaba.mpc4j.common.rpc.impl.memory.MemoryRpcManager;
+import edu.alibaba.mpc4j.common.tool.crypto.kyber.KyberFactory;
 import edu.alibaba.mpc4j.s2pc.pcg.ot.base.BaseOtFactory.BaseOtType;
 import edu.alibaba.mpc4j.s2pc.pcg.ot.base.co15.Co15BaseOtConfig;
 import edu.alibaba.mpc4j.s2pc.pcg.ot.base.csw20.Csw20BaseOtConfig;
@@ -59,18 +60,33 @@ public class BaseOtTest {
         });
         //MRKYBER19,K = 2
         configurationParams.add(new Object[]{
-                BaseOtType.MRKYBER19.name() + "(2)",
-                new MrKyber19BaseOtConfig.Builder().setParamsK(2).build(),
+                BaseOtType.MRKYBER19.name() + "(k = 2)",
+                new MrKyber19BaseOtConfig.Builder().setParamsK(2).setKyberType(KyberFactory.KyberType.KYBER_CCA).build(),
         });
         //MRKYBER19,K = 3
         configurationParams.add(new Object[]{
-                BaseOtType.MRKYBER19.name() + "(3)",
-                new MrKyber19BaseOtConfig.Builder().setParamsK(3).build(),
+                BaseOtType.MRKYBER19.name() + "(k = 3)",
+                new MrKyber19BaseOtConfig.Builder().setParamsK(3).setKyberType(KyberFactory.KyberType.KYBER_CCA).build(),
         });
         //MRKYBER19,K = 4
         configurationParams.add(new Object[]{
-                BaseOtType.MRKYBER19.name() + "(4)",
-                new MrKyber19BaseOtConfig.Builder().setParamsK(4).build(),
+                BaseOtType.MRKYBER19.name() + "(k = 4)",
+                new MrKyber19BaseOtConfig.Builder().setParamsK(4).setKyberType(KyberFactory.KyberType.KYBER_CCA).build(),
+        });
+        //MRKYBER19,K = 2
+        configurationParams.add(new Object[]{
+                BaseOtType.MRKYBER19.name() + "(k = 2)",
+                new MrKyber19BaseOtConfig.Builder().setParamsK(2).setKyberType(KyberFactory.KyberType.KYBER_CPA).build(),
+        });
+        //MRKYBER19,K = 3
+        configurationParams.add(new Object[]{
+                BaseOtType.MRKYBER19.name() + "(k = 3)",
+                new MrKyber19BaseOtConfig.Builder().setParamsK(3).setKyberType(KyberFactory.KyberType.KYBER_CPA).build(),
+        });
+        //MRKYBER19,K = 4
+        configurationParams.add(new Object[]{
+                BaseOtType.MRKYBER19.name() + "(k = 4)",
+                new MrKyber19BaseOtConfig.Builder().setParamsK(4).setKyberType(KyberFactory.KyberType.KYBER_CPA).build(),
         });
         // CO15，压缩编码
         configurationParams.add(new Object[]{

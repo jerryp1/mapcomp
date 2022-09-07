@@ -15,22 +15,6 @@ public interface Kyber {
     byte[] getRandomKyberPk();
 
     /**
-     * 将{@code short[][]}表示的数据映射到Kyber部分公钥域上
-     *
-     * @param inputVector 数据
-     * @return Hash后的公钥
-     */
-    short[][] hashToKyberPk(short[][] inputVector);
-
-    /**
-     * 将{@code short[][]}表示的数据映射到Kyber部分公钥域上
-     *
-     * @param inputVector 数据
-     * @return Hash后的公钥
-     */
-    short[][] hashToKyberPk(byte[] inputVector);
-
-    /**
      * 将{@code short[][]}表示的数据映射到一个byte上
      *
      * @param inputVector 数据
@@ -94,33 +78,23 @@ public interface Kyber {
     byte[] decrypt(byte[] packedCipherText, short[][] privateKey);
 
     /**
+     * Decrypt the given byte array using the Kyber public-key encryption scheme
+     *
+     * @param packedCipherText 压缩，打包后的密文
+     * @param privateKey       私钥
+     * @return 消息m
+     */
+    byte[] decrypt(byte[] packedCipherText, short[][] privateKey,byte[] publicKeyBytes,byte[] publicKeyGenerator);
+    /**
      * Generates public and private keys for the CPA-secure public-key
      * encryption scheme underlying Kyber.
      *
      * @return 论文中的公钥（As+e,p）和私钥s
      */
     KyberKey generateKyberVecKeys();
-    /**
-     * Serialize a polynomial vector to a byte array
-     * 将多项式向量转换为byte数组
-     *
-     * @param polyA 多项式向量
-     * @return 返回值是长度为 K * 384
-     */
-    byte[] polyVectorToBytes(short[][] polyA);
 
     /**
-     * Deserialize a byte array into a polynomial vector
-     * 将byte数组转为多项式向量
-     *
-     * @param polyA 输入的byte数组
-     * @return 多项式向量
-     */
-    short[][] polyVectorFromBytes(byte[] polyA);
-
-    /**
-     * Deserialize a byte array into a polynomial vector
-     * 将byte数组转为多项式向量
+     * 将公钥打包传输，担心公钥的长度不一定，所以都放在了Kyber类里面
      *
      * @param publicKeyBytes 遮掩后的As+e
      * @param randomKeyByte 随机的As+e
@@ -131,8 +105,7 @@ public interface Kyber {
     byte[][] packageTwoKeys(byte[] publicKeyBytes,byte[] randomKeyByte,byte[] publicKeyGenerator,int sigma);
 
     /**
-     * Deserialize a byte array into a polynomial vector
-     * 将byte数组转为多项式向量
+     * 将公钥打包传输，担心公钥的长度不一定，所以都放在了Kyber类里面
      *
      * @param publicKeyBytes 遮掩后的As+e
      * @param randomKeyByte 随机的As+e

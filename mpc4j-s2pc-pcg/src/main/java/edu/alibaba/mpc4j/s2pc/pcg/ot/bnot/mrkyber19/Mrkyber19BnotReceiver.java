@@ -139,8 +139,9 @@ public class Mrkyber19BnotReceiver extends AbstractBnotReceiver {
             rbArray[index] = new byte[CommonConstants.BLOCK_BYTE_LENGTH];
             //获取私钥
             short[][] receiverPrivateKey = aArray[index].getPrivateKeyVec();
-            //解密获得Receiver的结果
-            byte[] rbDecrypt = this.kyber.decrypt(betaPayload.get(n * index + choices[index]), receiverPrivateKey);
+            ////解密函数——在cpa方案中无需公钥，在cca方案中需要公钥。
+            byte[] rbDecrypt = this.kyber.decrypt(betaPayload.get(n * index + choices[index]),
+                    receiverPrivateKey,aArray[index].getPublicKeyBytes(),aArray[index].getPublicKeyGenerator());
             System.arraycopy(rbDecrypt, 0, rbArray[index], 0, CommonConstants.BLOCK_BYTE_LENGTH);
         });
 

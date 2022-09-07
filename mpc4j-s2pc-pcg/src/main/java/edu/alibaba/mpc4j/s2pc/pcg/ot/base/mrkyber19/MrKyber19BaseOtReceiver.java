@@ -63,7 +63,7 @@ public class MrKyber19BaseOtReceiver extends AbstractBaseOtReceiver {
     @Override
     public BaseOtReceiverOutput receive(boolean[] choices) throws MpcAbortException {
         setPtoInput(choices);
-        paramsInit(config.getParamsK());
+        paramsInit();
         info("{}{} Recv. begin", ptoBeginLogPrefix, getPtoDesc().getPtoName());
 
         stopWatch.start();
@@ -94,10 +94,10 @@ public class MrKyber19BaseOtReceiver extends AbstractBaseOtReceiver {
         return handleBetaPayload(betaPayload);
     }
 
-    private void paramsInit(int paramsK) {
+    private void paramsInit() {
         SecureRandom secureRandom = new SecureRandom();
         Hash hashFunction = HashFactory.createInstance(HashFactory.HashType.BC_BLAKE_2B_160, 16);
-        this.kyber = KyberFactory.createInstance(KyberFactory.KyberType.KYBER_CPA, paramsK, secureRandom, hashFunction);
+        this.kyber = KyberFactory.createInstance(config.getKyberType(), config.getParamsK(), secureRandom, hashFunction);
     }
 
     private List<byte[]> generatePkPayload() {
@@ -140,7 +140,9 @@ public class MrKyber19BaseOtReceiver extends AbstractBaseOtReceiver {
             int sigma = choices[index] ? 1 : 0;
             rbArray[index] = new byte[CommonConstants.BLOCK_BYTE_LENGTH];
             short[][] receiverPrivateKey = aArray[index].getPrivateKeyVec();
-            byte[] rbDecrypt = this.kyber.decrypt(betaPayload.get(2 * index + sigma), receiverPrivateKey);
+            //解密函数——在cpa方案中无需公钥，在cca方案中需要公钥。
+            byte[] rbDecrypt = this.kyber.decrypt(betaPayload.get(2 * index + sigma),
+                    receiverPrivateKey,aArray[index].getPublicKeyBytes(),aArray[index].getPublicKeyGenerator());
             System.arraycopy(rbDecrypt, 0, rbArray[index], 0, CommonConstants.BLOCK_BYTE_LENGTH);
         });
 
