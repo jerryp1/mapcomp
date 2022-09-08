@@ -4,8 +4,8 @@ import edu.alibaba.mpc4j.common.tool.CommonConstants;
 import edu.alibaba.mpc4j.common.tool.EnvType;
 import edu.alibaba.mpc4j.common.tool.galoisfield.gf2k.Gf2k;
 import edu.alibaba.mpc4j.common.tool.galoisfield.gf2k.Gf2kFactory;
-import edu.alibaba.mpc4j.s2pc.pcg.vole.gf2k.vole.Gf2kVoleReceiverOutput;
-import edu.alibaba.mpc4j.s2pc.pcg.vole.gf2k.vole.Gf2kVoleSenderOutput;
+import edu.alibaba.mpc4j.s2pc.pcg.vole.gf2k.core.Gf2kVoleReceiverOutput;
+import edu.alibaba.mpc4j.s2pc.pcg.vole.gf2k.core.Gf2kVoleSenderOutput;
 import org.junit.Assert;
 
 import java.security.SecureRandom;
