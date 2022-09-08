@@ -1,7 +1,5 @@
 package edu.alibaba.mpc4j.s2pc.pcg.ot.bnot.mrkyber19;
 
-import edu.alibaba.mpc4j.common.tool.crypto.hash.Hash;
-import edu.alibaba.mpc4j.common.tool.crypto.hash.HashFactory;
 import edu.alibaba.mpc4j.common.tool.crypto.kyber.Kyber;
 import edu.alibaba.mpc4j.common.tool.crypto.kyber.KyberFactory;
 import edu.alibaba.mpc4j.common.rpc.MpcAbortException;
@@ -15,7 +13,6 @@ import edu.alibaba.mpc4j.common.tool.utils.BytesUtils;
 import edu.alibaba.mpc4j.s2pc.pcg.ot.bnot.AbstractBnotSender;
 import edu.alibaba.mpc4j.s2pc.pcg.ot.bnot.BnotSenderOutput;
 
-import java.security.SecureRandom;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -36,9 +33,9 @@ public class MrKyber19BnotSender extends AbstractBnotSender {
      */
     private final MrKyber19BnotConfig config;
     /**
-     * OT协议发送方参数
+     * OT协议发送方生成的密文
      */
-    private List<byte[]> bByte;
+    private List<byte[]> cipherList;
     /**
      * 使用的kyber实例
      */
@@ -61,9 +58,10 @@ public class MrKyber19BnotSender extends AbstractBnotSender {
     @Override
     public BnotSenderOutput send(int num) throws MpcAbortException {
         setPtoInput(num);
-        paramsInit();
-        bByte = new ArrayList<>();
+        cipherList = new ArrayList<>();
         info("{}{} Send. begin", ptoBeginLogPrefix, getPtoDesc().getPtoName());
+
+        paramsInit();
         stopWatch.start();
         DataPacketHeader pkHeader = new DataPacketHeader(
                 taskId, getPtoDesc().getPtoId(), MrKyber19BnotPtoDesc.PtoStep.RECEIVER_SEND_PK.ordinal(), extraInfo,
@@ -78,10 +76,10 @@ public class MrKyber19BnotSender extends AbstractBnotSender {
         stopWatch.start();
         BnotSenderOutput senderOutput = handlePkPayload(pkPayload);
         DataPacketHeader betaHeader = new DataPacketHeader(
-                taskId, getPtoDesc().getPtoId(), MrKyber19BnotPtoDesc.PtoStep.SENDER_SEND_B.ordinal(), extraInfo,
+                taskId, getPtoDesc().getPtoId(), MrKyber19BnotPtoDesc.PtoStep.SENDER_SEND_Cipher.ordinal(), extraInfo,
                 ownParty().getPartyId(), otherParty().getPartyId()
         );
-        rpc.send(DataPacket.fromByteArrayList(betaHeader, bByte));
+        rpc.send(DataPacket.fromByteArrayList(betaHeader, cipherList));
         stopWatch.stop();
         long pkTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
         stopWatch.reset();
@@ -92,43 +90,41 @@ public class MrKyber19BnotSender extends AbstractBnotSender {
     }
 
     private void paramsInit() {
-        SecureRandom secureRandom = new SecureRandom();
-        Hash hashFunction = HashFactory.createInstance(HashFactory.HashType.BC_BLAKE_2B_160, 16);
-        this.kyber = KyberFactory.createInstance(config.getKyberType(), config.getParamsK(), secureRandom, hashFunction);
+        this.kyber = KyberFactory.createInstance(config.getKyberType(), config.getParamsK());
     }
 
     private BnotSenderOutput handlePkPayload(List<byte[]> pkPayload) throws MpcAbortException {
         MpcAbortPreconditions.checkArgument(pkPayload.size() == num * (n + 1));
+        byte[][] publicKey = pkPayload.toArray(new byte[num * (n + 1)][]);
         IntStream keyPairArrayIntStream = IntStream.range(0, num);
         keyPairArrayIntStream = parallel ? keyPairArrayIntStream.parallel() : keyPairArrayIntStream;
-        //OT协议的输出，即num * n 个选项，每个长度为16*8 bit。
+        // OT协议的输出，即num * n 个选项，每个长度为16*8 bit。
         byte[][][] rbArray = new byte[num][n][CommonConstants.BLOCK_BYTE_LENGTH];
-        bByte = keyPairArrayIntStream.mapToObj(index -> {
-                    //收到的公钥（As+e）
+        cipherList = keyPairArrayIntStream.mapToObj(index -> {
+                    // 收到的公钥（As+e）
                     byte[][] upperBytes = new byte[n][];
-                    //用于计算hash值
+                    // 用于计算hash值
                     byte[][] upperHashPkBytes = new byte[n][];
                     for (int i = 0; i < n; i++) {
-                        upperBytes[i] = pkPayload.get(index * (n + 1) + i);
-                        //Hash（As+e）
+                        upperBytes[i] = publicKey[index * (n + 1) + i];
+                        // Hash（As+e）
                         upperHashPkBytes[i] = this.kyber.hashToByte(upperBytes[i]);
                     }
-                    //恢复出原油的公钥
+                    // 恢复出原有的公钥
                     for (int i = 0; i < n; i++) {
                         for (int j = 0; j < n; j++) {
                             if (i != j) {
-                                // 计算A = Ri - Hash(Rj)
-                                upperBytes[i] = BytesUtils.xor(upperBytes[i], upperHashPkBytes[j]);
+                                // 计算A = Ri xor Hash(Rj)
+                                BytesUtils.xori(upperBytes[i], upperHashPkBytes[j]);
                             }
                         }
                     }
-                    //密文
+                    // 密文
                     byte[][] cipherText = new byte[n][];
                     for (int i = 0; i < n; i++) {
-                        //计算加密函数，加密函数的输入是明文、公钥（As+e）部分、生成元部分、随机数种子，安全参数k
-                        cipherText[i] = this.kyber.encrypt
-                                (rbArray[index][i], upperBytes[i],
-                                        pkPayload.get(index * (n + 1) + n));
+                        //计算KEM，KEM的输入是秘密值、公钥（As+e）部分、生成元部分、随机数种子，安全参数k
+                        cipherText[i] = this.kyber.encaps
+                                (rbArray[index][i], upperBytes[i], publicKey[index * (n + 1) + n]);
                     }
                     return cipherText;
                 })

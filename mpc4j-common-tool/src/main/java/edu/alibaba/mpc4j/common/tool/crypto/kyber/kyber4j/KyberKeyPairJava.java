@@ -1,7 +1,6 @@
 package edu.alibaba.mpc4j.common.tool.crypto.kyber.kyber4j;
 
 import edu.alibaba.mpc4j.common.tool.crypto.hash.Hash;
-import edu.alibaba.mpc4j.common.tool.crypto.kyber.KyberKey;
 import edu.alibaba.mpc4j.common.tool.crypto.prg.Prg;
 
 import java.security.SecureRandom;
@@ -15,52 +14,24 @@ import java.security.SecureRandom;
  * @author Sheng Hu
  * @date 2022/08/25
  */
-public class KyberKeyPairJava implements KyberKey {
-    /**
-     * 安全等级
-     */
-    private final int paramsK;
-    /**
-     * hash函数
-     */
-    private final Hash hashFunction;
-    /**
-     * kyber中制造噪声时需要的随机扩展函数
-     */
-    private final Prg prgNoiseLength;
-    /**
-     * kyber中制造矩阵时需要的随机扩展函数
-     */
-    private final Prg prgMatrixLength672;
-    /**
-     * 随机数生成器
-     */
-    private final SecureRandom secureRandom;
+public class KyberKeyPairJava {
     /**
      * 公钥
      */
-    private byte[] publicKeyBytes;
+    private final byte[] publicKeyBytes;
     /**
      * 公钥生成元
      */
-    private byte[] publicKeyGenerator;
+    private final byte[] publicKeyGenerator;
     /**
      * 私钥
      */
-    private short[][] privateKeyVec;
+    private final short[][] privateKeyVec;
 
     /**
      * Default Constructor
      */
-    public KyberKeyPairJava(int paramsK, SecureRandom secureRandom, Hash hashFunction, Prg prgNoiseLength, Prg prgMatrixLength672) {
-        this.paramsK = paramsK;
-        this.hashFunction = hashFunction;
-        this.secureRandom = secureRandom;
-        this.prgNoiseLength = prgNoiseLength;
-        this.prgMatrixLength672 = prgMatrixLength672;
-    }
-
-    private void setKeyPair(byte[] publicKeyVec, short[][] privateKeyVec, byte[] publicKeyGenerator) {
+    public KyberKeyPairJava(byte[] publicKeyVec, short[][] privateKeyVec, byte[] publicKeyGenerator) {
         this.publicKeyBytes = publicKeyVec;
         this.privateKeyVec = privateKeyVec;
         this.publicKeyGenerator = publicKeyGenerator;
@@ -69,7 +40,6 @@ public class KyberKeyPairJava implements KyberKey {
     /**
      * @return the PublicKeyVec
      */
-    @Override
     public byte[] getPublicKeyBytes() {
         return publicKeyBytes;
     }
@@ -77,7 +47,6 @@ public class KyberKeyPairJava implements KyberKey {
     /**
      * @return the PublcKeyGenerator
      */
-    @Override
     public byte[] getPublicKeyGenerator() {
         return publicKeyGenerator;
     }
@@ -86,61 +55,11 @@ public class KyberKeyPairJava implements KyberKey {
     /**
      * @return the PrivateKeyVec
      */
-    @Override
     public short[][] getPrivateKeyVec() {
         return privateKeyVec;
     }
 
-    /**
-     * 计算公私钥
-     *
-     * @param hashFunction       哈希函数
-     * @param prgNoiseLength     计算噪声时的扩展函数
-     * @param prgMatrixLength672 计算矩阵时的扩展函数
-     * @param secureRandom       随机函数
-     */
-    public void generateKyberKeys() {
-        //私钥s
-        short[][] skpv = Poly.generateNewPolyVector(paramsK);
-        //最后输出时是公钥 As+e
-        short[][] pkpv = Poly.generateNewPolyVector(paramsK);
-        short[][] e = Poly.generateNewPolyVector(paramsK);
-        //prg要求输入为16bit。
-        byte[] fullSeed = new byte[KyberParams.SYM_BYTES * 2];
-        byte[] publicSeed = new byte[KyberParams.SYM_BYTES];
-        byte[] noiseSeed = new byte[KyberParams.SYM_BYTES];
-        secureRandom.nextBytes(fullSeed);
-        //将随机数前32位赋给publicSeed，后32位赋给noiseSeed
-        System.arraycopy(fullSeed, 0, publicSeed, 0, KyberParams.SYM_BYTES);
-        System.arraycopy(fullSeed, KyberParams.SYM_BYTES, noiseSeed, 0, KyberParams.SYM_BYTES);
-        //生成了公钥中的A
-        short[][][] a = Indcpa.generateMatrix(publicSeed, false, hashFunction, prgMatrixLength672, paramsK);
-        byte nonce = (byte) 0;
-        //生成了私钥s（k个向量）
-        for (int i = 0; i < paramsK; i++) {
-            skpv[i] = Poly.getNoisePoly(noiseSeed, nonce, paramsK, hashFunction, prgNoiseLength);
-            nonce = (byte) (nonce + (byte) 1);
-        }
-        //生成了噪声，每计算一步增加一步nonce
-        for (int i = 0; i < paramsK; i++) {
-            e[i] = Poly.getNoisePoly(noiseSeed, nonce, paramsK, hashFunction, prgNoiseLength);
-            nonce = (byte) (nonce + (byte) 1);
-        }
-        Poly.polyVectorNtt(skpv);
-        Poly.polyVectorReduce(skpv);
-        Poly.polyVectorNtt(e);
-        //计算 As
-        for (int i = 0; i < paramsK; i++) {
-            short[] temp = Poly.polyVectorPointWiseAccMont(a[i], skpv);
-            pkpv[i] = Poly.polyToMont(temp);
-        }
-        //计算 As+e
-        Poly.polyVectorAdd(pkpv, e);
-        //每做一步，计算一次模Q
-        Poly.polyVectorReduce(pkpv);
-        //将公钥、生成元、私钥放在一起打包
-        setKeyPair(Poly.polyVectorToBytes(pkpv), skpv, publicSeed);
-    }
+
 
 
 }

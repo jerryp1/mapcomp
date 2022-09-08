@@ -32,7 +32,7 @@ public class MrKyber19BaseOtPtoDesc implements PtoDesc {
         /**
          * 发送方发送参数B
          */
-        SENDER_SEND_B,
+        SENDER_SEND_Cipher,
     }
 
     /**

@@ -1,5 +1,7 @@
 package edu.alibaba.mpc4j.common.tool.crypto.kyber;
 
+import edu.alibaba.mpc4j.common.tool.crypto.kyber.kyber4j.KyberKeyPairJava;
+
 /**
  * Kyber运算接口。
  *
@@ -17,74 +19,42 @@ public interface Kyber {
     /**
      * 将{@code short[][]}表示的数据映射到一个byte上
      *
-     * @param inputVector 数据
-     * @return Hash后的公钥
-     */
-    byte[] hashToByte(short[][] inputVector);
-
-    /**
-     * 将{@code short[][]}表示的数据映射到一个byte上
-     *
      * @param inputBytes 数据
      * @return Hash后的公钥
      */
     byte[] hashToByte(byte[] inputBytes);
 
-    /**
-     * 将{@code short[][]}表示的数据映射到Kyber部分公钥域上
-     *
-     * @param m         加密的消息
-     * @param publicKey 公钥（（As+e），p）
-     * @return 密文
-     */
-    byte[] encrypt(byte[] m, byte[] publicKey);
 
     /**
      * 将{@code short[][]}表示的数据映射到Kyber部分公钥域上
      *
-     * @param m                  加密的消息
+     * @param k                  加密的消息
      * @param publicKey          部分公钥（As+e)
      * @param publicKeyGenerator 生成元
      * @return 密文
      */
-    byte[] encrypt(byte[] m, short[][] publicKey, byte[] publicKeyGenerator);
+    byte[] encaps(byte[] k, short[][] publicKey, byte[] publicKeyGenerator);
 
     /**
      * 将{@code short[][]}表示的数据映射到Kyber部分公钥域上
      *
-     * @param m                  加密的消息
+     * @param k                  加密的消息
      * @param publicKey          部分公钥（As+e)
      * @param publicKeyGenerator 生成元
      * @return 密文
      */
-    byte[] encrypt(byte[] m, byte[] publicKey, byte[] publicKeyGenerator);
+    byte[] encaps(byte[] k, byte[] publicKey, byte[] publicKeyGenerator);
 
     /**
      * Decrypt the given byte array using the Kyber public-key encryption scheme
      *
      * @param packedCipherText 压缩，打包后的密文
      * @param privateKey       私钥
-     * @return 消息m
+     * @param publicKeyBytes 公钥
+     * @param publicKeyGenerator 生成元
+     * @return 秘密值k
      */
-    byte[] decrypt(byte[] packedCipherText, byte[] privateKey);
-
-    /**
-     * Decrypt the given byte array using the Kyber public-key encryption scheme
-     *
-     * @param packedCipherText 压缩，打包后的密文
-     * @param privateKey       私钥
-     * @return 消息m
-     */
-    byte[] decrypt(byte[] packedCipherText, short[][] privateKey);
-
-    /**
-     * Decrypt the given byte array using the Kyber public-key encryption scheme
-     *
-     * @param packedCipherText 压缩，打包后的密文
-     * @param privateKey       私钥
-     * @return 消息m
-     */
-    byte[] decrypt(byte[] packedCipherText, short[][] privateKey, byte[] publicKeyBytes, byte[] publicKeyGenerator);
+    byte[] decaps(byte[] packedCipherText, short[][] privateKey, byte[] publicKeyBytes, byte[] publicKeyGenerator);
 
     /**
      * Generates public and private keys for the CPA-secure public-key
@@ -92,7 +62,7 @@ public interface Kyber {
      *
      * @return 论文中的公钥（As+e,p）和私钥s
      */
-    KyberKey generateKyberVecKeys();
+    KyberKeyPairJava generateKyberVecKeys();
 
     /**
      * 将公钥打包传输，担心公钥的长度不一定，所以都放在了Kyber类里面

@@ -2,16 +2,14 @@ package edu.alibaba.mpc4j.common.tool.crypto.kyber.kyber4j;
 
 import edu.alibaba.mpc4j.common.tool.CommonConstants;
 import edu.alibaba.mpc4j.common.tool.crypto.hash.Hash;
+import edu.alibaba.mpc4j.common.tool.crypto.hash.HashFactory;
 import edu.alibaba.mpc4j.common.tool.crypto.kyber.Kyber;
-import edu.alibaba.mpc4j.common.tool.crypto.kyber.KyberKey;
-import edu.alibaba.mpc4j.common.tool.crypto.kyber.KyberKeyFactory;
 import edu.alibaba.mpc4j.common.tool.crypto.prg.Prg;
 import edu.alibaba.mpc4j.common.tool.crypto.prg.PrgFactory;
 import edu.alibaba.mpc4j.common.tool.utils.BytesUtils;
 
 import java.security.SecureRandom;
 
-import static edu.alibaba.mpc4j.common.tool.crypto.kyber.kyber4j.Indcpa.unpackPublicKey;
 
 /**
  * Kyber-CCA类。
@@ -62,13 +60,11 @@ public class KyberCca implements Kyber {
      * 初始化函数
      *
      * @param paramsK      安全参数k
-     * @param secureRandom random函数
-     * @param hashFunction 随机数种子
      */
-    public KyberCca(int paramsK, SecureRandom secureRandom, Hash hashFunction) {
+    public KyberCca(int paramsK) {
         this.paramsK = paramsK;
-        this.secureRandom = secureRandom;
-        this.hashFunction = hashFunction;
+        this.secureRandom = new SecureRandom();
+        this.hashFunction = HashFactory.createInstance(HashFactory.HashType.BC_BLAKE_2B_160,16);
         this.prgMatrixLength672 = PrgFactory.createInstance
                 (PrgFactory.PrgType.BC_SM4_ECB, 672);
         this.prgEncryptLength32 = PrgFactory.createInstance(PrgFactory.PrgType.BC_SM4_ECB, KyberParams.SYM_BYTES);
@@ -116,110 +112,72 @@ public class KyberCca implements Kyber {
     }
 
     @Override
-    public byte[] hashToByte(short[][] inputVector) {
-        return this.prgPkLength.extendToBytes(this.hashFunction.digestToBytes(Poly.polyVectorToBytes(inputVector)));
-    }
-
-    @Override
     public byte[] hashToByte(byte[] inputBytes) {
         return this.prgPkLength.extendToBytes(this.hashFunction.digestToBytes(inputBytes));
     }
 
     @Override
-    public byte[] encrypt(byte[] m, byte[] publicKey) {
-        UnpackedPublicKey unpackedPublicKey = unpackPublicKey(publicKey, paramsK);
-        byte[] newPublicKey = Poly.polyVectorToBytes(unpackedPublicKey.getPublicKeyPolyvec());
-        return encrypt(m, newPublicKey, unpackedPublicKey.getPublicKeyPolyvec(), unpackedPublicKey.getSeed());
+    public byte[] encaps(byte[] k, short[][] publicKeyVec, byte[] publicKeyGenerator) {
+        return encaps(k, Poly.polyVectorToBytes(publicKeyVec), publicKeyVec, publicKeyGenerator);
     }
 
     @Override
-    public byte[] encrypt(byte[] m, short[][] publicKeyVec, byte[] publicKeyGenerator) {
-        return encrypt(m, Poly.polyVectorToBytes(publicKeyVec), publicKeyVec, publicKeyGenerator);
-    }
-
-    @Override
-    public byte[] encrypt(byte[] m, byte[] publicKeyBytes, byte[] publicKeyGenerator) {
-        return encrypt(m, publicKeyBytes, Poly.polyVectorFromBytes(publicKeyBytes), publicKeyGenerator);
+    public byte[] encaps(byte[] k, byte[] publicKeyBytes, byte[] publicKeyGenerator) {
+        return encaps(k, publicKeyBytes, Poly.polyVectorFromBytes(publicKeyBytes), publicKeyGenerator);
     }
 
     /**
-     * 基于cca的加密函数，中间会修改message。
-     * @param message 消息m
+     * 基于cca的打包函数，中间会修改message。
+     * @param k 输入的秘密值，会在函数中修改
      * @param publicKeyBytes 公钥
      * @param publicKeyVector 公钥的short格式（两者同时需要的原因在于byte格式的用于计算hash值，short格式的用于加密）
      * @param publicKeyGenerator 公钥的生成元
      * @return 返回值为加密后的密文
      */
-    public byte[] encrypt(byte[] message, byte[] publicKeyBytes, short[][] publicKeyVector, byte[] publicKeyGenerator) {
-        secureRandom.nextBytes(message);
-        byte[] m = prgEncryptLength32.extendToBytes(hashFunction.digestToBytes(message));
-        byte[] fullKey = new byte[paramsPolyvecBytes + KyberParams.SYM_BYTES];
-        System.arraycopy(publicKeyBytes, 0, fullKey, 0, paramsPolyvecBytes);
-        System.arraycopy(publicKeyGenerator, 0, fullKey, paramsPolyvecBytes, KyberParams.SYM_BYTES);
-        byte[] publicHashKey = prgEncryptLength32.extendToBytes(hashFunction.digestToBytes(fullKey));
-        byte[] fullCode = new byte[2 * KyberParams.SYM_BYTES];
-        System.arraycopy(m, 0, fullCode, 0, KyberParams.SYM_BYTES);
-        System.arraycopy(publicHashKey, 0, fullCode, KyberParams.SYM_BYTES, KyberParams.SYM_BYTES);
-        //计算G（H（pk），m）需要注意的是原有代码是hash到了64bit，我们这里是使用了相同的扩展函数扩展到64bit的。
-        byte[] kr = prgEncryptLength64.extendToBytes(hashFunction.digestToBytes(fullCode));
-        //从中选取后32bit作为随机数种子
-        byte[] subkr = new byte[KyberParams.SYM_BYTES];
-        System.arraycopy(kr, KyberParams.SYM_BYTES, subkr, 0, KyberParams.SYM_BYTES);
-        //以subkr为随机数种子计算密文c
+    public byte[] encaps(byte[] k, byte[] publicKeyBytes, short[][] publicKeyVector, byte[] publicKeyGenerator) {
+        byte[] randomSeed = new byte[CommonConstants.BLOCK_BYTE_LENGTH];
+        secureRandom.nextBytes(randomSeed);
+        byte[] m = prgEncryptLength32.extendToBytes(hashFunction.digestToBytes(randomSeed));
+        // 计算G（H（pk），m）需要注意的是原有代码是hash到了64bit，我们这里是使用了相同的扩展函数扩展到64bit的。
+        byte[] kr =countHashKey(m,publicKeyBytes,publicKeyGenerator);
+        // 从中选取后32bit作为随机数种子
+        byte[] coins = new byte[KyberParams.SYM_BYTES];
+        System.arraycopy(kr, KyberParams.SYM_BYTES, coins, 0, KyberParams.SYM_BYTES);
+        // 以subkr为随机数种子计算密文c
         byte[] cipherText =
                 Indcpa.encrypt(m, publicKeyVector, publicKeyGenerator,
-                        paramsK, hashFunction, prgMatrixLength672, prgNoiseLength, subkr);
-        //论文中的H(C)
+                        paramsK, hashFunction, prgMatrixLength672, prgNoiseLength, coins);
+        // 论文中的H(C)
         byte[] krc = prgEncryptLength32.extendToBytes(hashFunction.digestToBytes(cipherText));
         byte[] newKr = new byte[2 * KyberParams.SYM_BYTES];
         System.arraycopy(kr, 0, newKr, 0, KyberParams.SYM_BYTES);
         System.arraycopy(krc, 0, newKr, KyberParams.SYM_BYTES, KyberParams.SYM_BYTES);
-        //请注意这里修改了message这个值，是作为密文输入的
+        // 请注意这里修改了k这个值。
         byte[] newMessage = hashFunction.digestToBytes(newKr);
-        System.arraycopy(newMessage, 0, message, 0, KyberParams.SYM_BYTES / CommonConstants.BLOCK_LONG_LENGTH);
+        System.arraycopy(newMessage, 0, k, 0, KyberParams.SYM_BYTES / CommonConstants.BLOCK_LONG_LENGTH);
         return cipherText;
     }
 
     @Override
-    public byte[] decrypt(byte[] packedCipherText, byte[] privateKey) {
-        assert false : "Wrong input, CCA decryption scheme needs to use public key";
-        return new byte[0];
-    }
-
-    @Override
-    public byte[] decrypt(byte[] packedCipherText, short[][] privateKey) {
-        assert false : "Wrong input, CCA decryption scheme needs to use public key";
-        return new byte[0];
-    }
-
-    @Override
-    public byte[] decrypt(byte[] packedCipherText, short[][] privateKey, byte[] publicKeyBytes, byte[] publicKeyGenerator) {
+    public byte[] decaps(byte[] packedCipherText, short[][] privateKey, byte[] publicKeyBytes, byte[] publicKeyGenerator) {
         byte[] message = Indcpa.decrypt(packedCipherText, privateKey, this.paramsK);
-        byte[] fullKey = new byte[paramsPolyvecBytes + KyberParams.SYM_BYTES];
-        System.arraycopy(publicKeyBytes, 0, fullKey, 0, paramsPolyvecBytes);
-        System.arraycopy(publicKeyGenerator, 0, fullKey, paramsPolyvecBytes, KyberParams.SYM_BYTES);
-        byte[] publicHashKey = prgEncryptLength32.extendToBytes(hashFunction.digestToBytes(fullKey));
-        byte[] fullCode = new byte[2 * KyberParams.SYM_BYTES];
-        System.arraycopy(message, 0, fullCode, 0, KyberParams.SYM_BYTES);
-        System.arraycopy(publicHashKey, 0, fullCode, KyberParams.SYM_BYTES, KyberParams.SYM_BYTES);
-        //计算G（H（pk），m）需要注意的是原有代码是hash到了64bit，我们这里是使用了相同的扩展函数扩展到64bit的。
-        byte[] kr = prgEncryptLength64.extendToBytes(hashFunction.digestToBytes(fullCode));
-        //从kr中选取后32bit作为随机数种子
-        byte[] subkr = new byte[KyberParams.SYM_BYTES];
-        System.arraycopy(kr, KyberParams.SYM_BYTES, subkr, 0, KyberParams.SYM_BYTES);
-        //以subkr为随机数种子计算密文c
+        // 计算G（H（pk），m）需要注意的是原有代码是hash到了64bit，我们这里是使用了相同的扩展函数扩展到64bit的。
+        byte[] kr =countHashKey(message,publicKeyBytes,publicKeyGenerator);
+        // 从kr中选取后32bit作为随机数种子
+        byte[] coins = new byte[KyberParams.SYM_BYTES];
+        System.arraycopy(kr, KyberParams.SYM_BYTES, coins, 0, KyberParams.SYM_BYTES);
+        // 以subkr为随机数种子计算密文c
         byte[] cipherText =
                 Indcpa.encrypt(message, Poly.polyVectorFromBytes(publicKeyBytes), publicKeyGenerator,
-                        paramsK, hashFunction, prgMatrixLength672, prgNoiseLength, subkr);
-        //论文中的H(C)
+                        paramsK, hashFunction, prgMatrixLength672, prgNoiseLength, coins);
+        // 论文中的H(C)
         byte[] krc = prgEncryptLength32.extendToBytes(hashFunction.digestToBytes(cipherText));
         byte[] newKr = new byte[2 * KyberParams.SYM_BYTES];
         if (BytesUtils.equals(cipherText, packedCipherText)) {
-            //读取kr的前32bytes
+            // 读取kr的前32bytes
             System.arraycopy(kr, 0, newKr, 0, KyberParams.SYM_BYTES);
-
         } else {
-            //如果走入这个分支说明输入的密文是错误的，因此返回的解密值也是随机的
+            // 如果走入这个分支说明输入的密文是错误的，因此返回的解密值也是随机的
             byte[] randomByte = new byte[KyberParams.SYM_BYTES];
             secureRandom.nextBytes(randomByte);
             System.arraycopy(randomByte, 0, newKr, 0, KyberParams.SYM_BYTES);
@@ -228,12 +186,67 @@ public class KyberCca implements Kyber {
         return hashFunction.digestToBytes(newKr);
     }
 
+    /**
+     * 计算论文中的 G（H（PK），m）
+     * @param message 需要加密的秘密值
+     * @param publicKeyBytes 公钥（As+e）
+     * @param publicKeyGenerator 公钥生成元
+     * @return  G（H（PK），m）
+     */
+    public byte[] countHashKey(byte[] message, byte[] publicKeyBytes, byte[] publicKeyGenerator){
+        byte[] fullKey = new byte[paramsPolyvecBytes + KyberParams.SYM_BYTES];
+        System.arraycopy(publicKeyBytes, 0, fullKey, 0, paramsPolyvecBytes);
+        System.arraycopy(publicKeyGenerator, 0, fullKey, paramsPolyvecBytes, KyberParams.SYM_BYTES);
+        byte[] publicHashKey = prgEncryptLength32.extendToBytes(hashFunction.digestToBytes(fullKey));
+        byte[] fullCode = new byte[2 * KyberParams.SYM_BYTES];
+        System.arraycopy(message, 0, fullCode, 0, KyberParams.SYM_BYTES);
+        System.arraycopy(publicHashKey, 0, fullCode, KyberParams.SYM_BYTES, KyberParams.SYM_BYTES);
+        // 计算G（H（pk），m）需要注意的是原有代码是hash到了64bit，我们这里是使用了相同的扩展函数扩展到64bit的。
+        return prgEncryptLength64.extendToBytes(hashFunction.digestToBytes(fullCode));
+    }
+
     @Override
-    public KyberKey generateKyberVecKeys() {
-        KyberKey packedKey = KyberKeyFactory.createInstance(KyberKeyFactory.KyberKeyType.KYBER_KEY_JAVA,
-                this.paramsK, this.secureRandom, this.hashFunction, this.prgNoiseLength, this.prgMatrixLength672);
-        packedKey.generateKyberKeys();
-        return packedKey;
+    public KyberKeyPairJava generateKyberVecKeys() {
+        // 私钥s
+        short[][] skpv = Poly.generateNewPolyVector(paramsK);
+        // 最后输出时是公钥 As+e
+        short[][] pkpv = Poly.generateNewPolyVector(paramsK);
+        short[][] e = Poly.generateNewPolyVector(paramsK);
+        // prg要求输入为16bit。
+        byte[] fullSeed = new byte[KyberParams.SYM_BYTES * 2];
+        byte[] publicSeed = new byte[KyberParams.SYM_BYTES];
+        byte[] noiseSeed = new byte[KyberParams.SYM_BYTES];
+        secureRandom.nextBytes(fullSeed);
+        // 将随机数前32位赋给publicSeed，后32位赋给noiseSeed
+        System.arraycopy(fullSeed, 0, publicSeed, 0, KyberParams.SYM_BYTES);
+        System.arraycopy(fullSeed, KyberParams.SYM_BYTES, noiseSeed, 0, KyberParams.SYM_BYTES);
+        // 生成了公钥中的A
+        short[][][] a = Indcpa.generateMatrix(publicSeed, false, hashFunction, prgMatrixLength672, paramsK);
+        byte nonce = (byte) 0;
+        // 生成了私钥s（k个向量）
+        for (int i = 0; i < paramsK; i++) {
+            skpv[i] = Poly.getNoisePoly(noiseSeed, nonce, paramsK, hashFunction, prgNoiseLength);
+            nonce = (byte) (nonce + (byte) 1);
+        }
+        // 生成了噪声，每计算一步增加一步nonce
+        for (int i = 0; i < paramsK; i++) {
+            e[i] = Poly.getNoisePoly(noiseSeed, nonce, paramsK, hashFunction, prgNoiseLength);
+            nonce = (byte) (nonce + (byte) 1);
+        }
+        Poly.polyVectorNtt(skpv);
+        Poly.polyVectorReduce(skpv);
+        Poly.polyVectorNtt(e);
+        // 计算 As
+        for (int i = 0; i < paramsK; i++) {
+            short[] temp = Poly.polyVectorPointWiseAccMont(a[i], skpv);
+            pkpv[i] = Poly.polyToMont(temp);
+        }
+        // 计算 As+e
+        Poly.polyVectorAdd(pkpv, e);
+        // 每做一步，计算一次模Q
+        Poly.polyVectorReduce(pkpv);
+        // 将公钥、生成元、私钥放在一起打包
+        return new KyberKeyPairJava(Poly.polyVectorToBytes(pkpv), skpv, publicSeed);
     }
 
     @Override

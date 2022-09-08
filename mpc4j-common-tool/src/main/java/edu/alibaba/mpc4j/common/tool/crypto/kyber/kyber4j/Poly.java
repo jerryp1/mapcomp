@@ -55,13 +55,11 @@ public final class Poly {
      *
      * @param polyA 一组多项式向量A
      * @param polyB 一组多项式向量B
-     * @return 多项式向量系数相加的结果
      */
-    public static short[][] polyVectorAdd(short[][] polyA, short[][] polyB) {
+    public static void polyVectorAdd(short[][] polyA, short[][] polyB) {
         for (int i = 0; i < polyA.length; i++) {
             polyA[i] = Poly.polyAdd(polyA[i], polyB[i]);
         }
-        return polyA;
     }
 
     /**

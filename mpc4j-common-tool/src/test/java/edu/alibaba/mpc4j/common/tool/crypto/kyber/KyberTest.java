@@ -1,7 +1,6 @@
 package edu.alibaba.mpc4j.common.tool.crypto.kyber;
 
-import edu.alibaba.mpc4j.common.tool.crypto.hash.Hash;
-import edu.alibaba.mpc4j.common.tool.crypto.hash.HashFactory;
+import edu.alibaba.mpc4j.common.tool.crypto.kyber.kyber4j.KyberKeyPairJava;
 import org.junit.Assert;
 import org.junit.Test;
 
@@ -18,38 +17,38 @@ import java.util.Arrays;
 
 public class KyberTest {
     /**
-     * 测试传递的密钥为byte时的加密/解密函数
+     * 测试IDN-CPA方案
      */
     @Test
-    public void testKyberEncryptionDecryption_1() {
+    public void testKyberCpa() {
         SecureRandom secureRandom = new SecureRandom();
-        Hash hashFunction = HashFactory.createInstance(HashFactory.HashType.BC_BLAKE_2B_160, 16);
         for (int k = 2; k <= 4; k++) {
             byte[] testBytes = new byte[32];
             secureRandom.nextBytes(testBytes);
-            Kyber kyber = KyberFactory.createInstance(KyberFactory.KyberType.KYBER_CPA, k, secureRandom,hashFunction);
-            KyberKey keyPair = kyber.generateKyberVecKeys();
-            byte[] cipherText = kyber.encrypt(testBytes, keyPair.getPublicKeyBytes(), keyPair.getPublicKeyGenerator());
-            byte[] plainText = kyber.decrypt(cipherText, keyPair.getPrivateKeyVec());
+            Kyber kyber = KyberFactory.createInstance(KyberFactory.KyberType.KYBER_CPA, k);
+            KyberKeyPairJava keyPair = kyber.generateKyberVecKeys();
+            byte[] cipherText = kyber.encaps(testBytes, keyPair.getPublicKeyBytes(), keyPair.getPublicKeyGenerator());
+            byte[] plainText = kyber.decaps(cipherText, keyPair.getPrivateKeyVec(), keyPair.getPublicKeyBytes(), keyPair.getPublicKeyGenerator());
             for (int index = 0; index < 32; index++) {
                 Assert.assertEquals(testBytes[index], plainText[index]);
             }
             Assert.assertEquals(Arrays.toString(testBytes), Arrays.toString(plainText));
         }
     }
-
+    /**
+     * 测试CCA_KEM方案
+     */
     @Test
-    public void testKyberRandom() {
+    public void testKyberCca() {
         SecureRandom secureRandom = new SecureRandom();
-        Hash hashFunction = HashFactory.createInstance(HashFactory.HashType.BC_BLAKE_2B_160, 16);
         for (int k = 2; k <= 4; k++) {
-            byte[] testBytes = new byte[32];
+            Kyber kyber = KyberFactory.createInstance(KyberFactory.KyberType.KYBER_CCA, k);
+            byte[] testBytes = new byte[16];
             secureRandom.nextBytes(testBytes);
-            Kyber kyber = KyberFactory.createInstance(KyberFactory.KyberType.KYBER_CPA, k, secureRandom,hashFunction);
-            for (int index = 0; index < 32; index++) {
-                //测试一下是不是每次都不一样hh
-                System.out.println(Arrays.toString(kyber.getRandomKyberPk()));
-            }
+            KyberKeyPairJava keyPair = kyber.generateKyberVecKeys();
+            byte[] cipherText = kyber.encaps(testBytes, keyPair.getPublicKeyBytes(), keyPair.getPublicKeyGenerator());
+            byte[] secretText = kyber.decaps(cipherText, keyPair.getPrivateKeyVec(), keyPair.getPublicKeyBytes(), keyPair.getPublicKeyGenerator());
+            Assert.assertEquals(Arrays.toString(testBytes), Arrays.toString(secretText));
         }
     }
 }

@@ -76,7 +76,7 @@ public class Indcpa {
         short[][][] r = new short[paramsK][paramsK][KyberParams.POLY_BYTES];
         KyberUniformRandom uniformRandom = new KyberUniformRandom();
         for (int i = 0; i < paramsK; i++) {
-            //生成一个空向量
+            // 生成一个空向量
             r[i] = Poly.generateNewPolyVector(paramsK);
             for (int j = 0; j < paramsK; j++) {
                 byte[] ij = new byte[2];
@@ -91,16 +91,16 @@ public class Indcpa {
                 System.arraycopy(seed, 0, hashSeed, 0, KyberParams.SYM_BYTES);
                 System.arraycopy(ij, 0, hashSeed, KyberParams.SYM_BYTES, 2);
                 byte[] buf = prgFunction.extendToBytes(hashFunction.digestToBytes(hashSeed));
-                //将随机生成的504个byte输入，并计算系数是否满足小于Q,最长可以得到min（256，332）。（504）/3 * 2 = 332
+                // 将随机生成的504个byte输入，并计算系数是否满足小于Q,最长可以得到min（256，332）。（504）/3 * 2 = 332
                 generateUniform(uniformRandom, Arrays.copyOfRange(buf, 0, 504), 504, KyberParams.PARAMS_N);
                 int ui = uniformRandom.getUniformI();
                 r[i][j] = uniformRandom.getUniformR();
                 while (ui < KyberParams.PARAMS_N) {
-                    //如果写入的数不到256，那么说嘛写入的数大多大于Q，那么则用buf的后半部分进行额外的补充（672-504） = 168。
+                    // 如果写入的数不到256，那么说嘛写入的数大多大于Q，那么则用buf的后半部分进行额外的补充（672-504） = 168。
                     generateUniform(uniformRandom, Arrays.copyOfRange(buf, 504, 672), 168, KyberParams.PARAMS_N - ui);
                     int ctrn = uniformRandom.getUniformI();
                     short[] missing = uniformRandom.getUniformR();
-                    //只补充后面的部分，不会修改前面的部分。
+                    // 只补充后面的部分，不会修改前面的部分。
                     if (KyberParams.PARAMS_N - ui >= 0) {
                         System.arraycopy(missing, 0, r[i][j], ui, KyberParams.PARAMS_N - ui);
                     }
@@ -109,86 +109,6 @@ public class Indcpa {
             }
         }
         return r;
-    }
-
-    /**
-     * Pack the public key with the given public key and seed into a polynomial vector
-     * 将公钥以及生成参数（seed）放入byte
-     *
-     * @param publicKey 公钥
-     * @param seed      随机数生成种子
-     * @param paramsK   安全系数
-     * @return byte数组
-     */
-    public static byte[] packPublicKey(byte[] publicKey, byte[] seed, int paramsK) {
-        byte[] packedPublicKey;
-        switch (paramsK) {
-            case 2:
-                packedPublicKey = new byte[KyberParams.INDCPA_PK_BYTES_512];
-                System.arraycopy(publicKey, 0, packedPublicKey, 0, publicKey.length);
-                System.arraycopy(seed, 0, packedPublicKey, publicKey.length, seed.length);
-                break;
-            case 3:
-                packedPublicKey = new byte[KyberParams.INDCPA_PK_BYTES_768];
-                System.arraycopy(publicKey, 0, packedPublicKey, 0, publicKey.length);
-                System.arraycopy(seed, 0, packedPublicKey, publicKey.length, seed.length);
-                break;
-            default:
-                packedPublicKey = new byte[KyberParams.INDCPA_PK_BYTES_1024];
-                System.arraycopy(publicKey, 0, packedPublicKey, 0, publicKey.length);
-                System.arraycopy(seed, 0, packedPublicKey, publicKey.length, seed.length);
-        }
-
-        return packedPublicKey;
-    }
-
-    /**
-     * Unpack the packed public key into the public key polynomial vector and
-     * see
-     * 将公钥从byte转为多项式
-     *
-     * @param packedPublicKey 打包后的公钥
-     * @param paramsK         安全参数
-     * @return 解开后的公钥
-     */
-    public static UnpackedPublicKey unpackPublicKey(byte[] packedPublicKey, int paramsK) {
-        UnpackedPublicKey unpackedKey = new UnpackedPublicKey();
-        switch (paramsK) {
-            case 2:
-                unpackedKey.setPublicKeyPolyvec(Poly.polyVectorFromBytes(Arrays.copyOfRange(packedPublicKey, 0, KyberParams.POLY_VECTOR_BYTES_512)));
-                unpackedKey.setSeed(Arrays.copyOfRange(packedPublicKey, KyberParams.POLY_VECTOR_BYTES_512, packedPublicKey.length));
-                break;
-            case 3:
-                unpackedKey.setPublicKeyPolyvec(Poly.polyVectorFromBytes(Arrays.copyOfRange(packedPublicKey, 0, KyberParams.POLY_VECTOR_BYTES_768)));
-                unpackedKey.setSeed(Arrays.copyOfRange(packedPublicKey, KyberParams.POLY_VECTOR_BYTES_768, packedPublicKey.length));
-                break;
-            default:
-                unpackedKey.setPublicKeyPolyvec(Poly.polyVectorFromBytes(Arrays.copyOfRange(packedPublicKey, 0, KyberParams.POLY_VECTOR_BYTES_1024)));
-                unpackedKey.setSeed(Arrays.copyOfRange(packedPublicKey, KyberParams.POLY_VECTOR_BYTES_1024, packedPublicKey.length));
-        }
-        return unpackedKey;
-    }
-
-    /**
-     * Pack the private key into a byte array
-     * 将私钥从多项式转为byte
-     *
-     * @param privateKey 私钥
-     * @return 打包后的私钥
-     */
-    public static byte[] packPrivateKey(short[][] privateKey) {
-        return Poly.polyVectorToBytes(privateKey);
-    }
-
-    /**
-     * Unpack the private key byte array into a polynomial vector
-     * 将私钥从byte转为多项式
-     *
-     * @param packedPrivateKey 打包后的私钥
-     * @return 打包后的私钥
-     */
-    public static short[][] unpackPrivateKey(byte[] packedPrivateKey) {
-        return Poly.polyVectorFromBytes(packedPrivateKey);
     }
 
     /**
@@ -274,37 +194,37 @@ public class Indcpa {
         short[][] r = Poly.generateNewPolyVector(paramsK);
         short[][] ep = Poly.generateNewPolyVector(paramsK);
         short[][] bp = Poly.generateNewPolyVector(paramsK);
-        //将m转换为多项式
+        // 将m转换为多项式
         short[] k = Poly.polyFromData(m);
-        //注意，这里的T/F，和KEY生成的时候是不一样的，计算的是转制后的A
+        // 注意，这里的T/F，和KEY生成的时候是不一样的，计算的是转制后的A
         short[][][] at = Indcpa.generateMatrix(publicKeyGenerator, true, hashFunction, prgMatrixLength672, paramsK);
-        //生成的随机参数，是r和e1
+        // 生成的随机参数，是r和e1
         for (int i = 0; i < paramsK; i++) {
             r[i] = Poly.getNoisePoly(coins, (byte) (i), paramsK, hashFunction, prgNoiseLength);
             ep[i] = Poly.getNoisePoly(coins, (byte) (i + paramsK), 3, hashFunction, prgNoiseLength);
         }
-        //这个是e2
+        // 这个是e2
         short[] epp = Poly.getNoisePoly(coins, (byte) (paramsK * 2), 3, hashFunction, prgNoiseLength);
-        //将r转换到NTT域进行计算
+        // 将r转换到NTT域进行计算
         Poly.polyVectorNtt(r);
         Poly.polyVectorReduce(r);
-        //计算Ar
+        // 计算Ar
         for (int i = 0; i < paramsK; i++) {
             bp[i] = Poly.polyVectorPointWiseAccMont(at[i], r);
         }
         //（As+e）* r
         short[] v = Poly.polyVectorPointWiseAccMont(publicKey, r);
-        //取消INV域
+        // 取消INV域
         Poly.polyVectorInvNttMont(bp);
-        //取消INV域
+        // 取消INV域
         Poly.polyInvNttMont(v);
-        //计算Ar + e1
+        // 计算Ar + e1
         Poly.polyVectorAdd(bp, ep);
         // 计算（As+e）* r + e_2 + m
         Poly.polyAdd(Poly.polyAdd(v, epp), k);
-        //不知道为什么（As+e）* r + e_2 + m不需要进行reduce。
+        // 不知道为什么（As+e）* r + e_2 + m不需要进行reduce。
         Poly.polyVectorReduce(bp);
-        //返回密文，pack的时候会执行压缩函数
+        // 返回密文，pack的时候会执行压缩函数
         return Indcpa.packCiphertext(bp, Poly.polyReduce(v), paramsK);
     }
 
@@ -317,20 +237,20 @@ public class Indcpa {
      * @return 解密后的明文
      */
     public static byte[] decrypt(byte[] packedCipherText, short[][] privateKey, int paramsK) {
-        //解压密文并获得U和v
+        // 解压密文并获得U和v
         UnpackedCipherText unpackedCipherText = Indcpa.unpackCiphertext(packedCipherText, paramsK);
         short[][] u = unpackedCipherText.getU();
         short[] v = unpackedCipherText.getV();
-        //将U转为NTT域
+        // 将U转为NTT域
         Poly.polyVectorNtt(u);
         // 执行乘法 计算 Us
         short[] mp = Poly.polyVectorPointWiseAccMont(privateKey, u);
-        //将乘积转回正常计算域
+        // 将乘积转回正常计算域
         Poly.polyInvNttMont(mp);
         // U - v
         mp = Poly.polySub(v, mp);
         Poly.polyReduce(mp);
-        //将结果返回成消息
+        // 将结果返回成消息
         return Poly.polyToMsg(mp);
     }
 }

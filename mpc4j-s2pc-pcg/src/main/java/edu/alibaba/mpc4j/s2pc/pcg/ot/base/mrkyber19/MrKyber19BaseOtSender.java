@@ -1,7 +1,5 @@
 package edu.alibaba.mpc4j.s2pc.pcg.ot.base.mrkyber19;
 
-import edu.alibaba.mpc4j.common.tool.crypto.hash.Hash;
-import edu.alibaba.mpc4j.common.tool.crypto.hash.HashFactory;
 import edu.alibaba.mpc4j.common.tool.crypto.kyber.*;
 import edu.alibaba.mpc4j.common.rpc.MpcAbortException;
 import edu.alibaba.mpc4j.common.rpc.MpcAbortPreconditions;
@@ -14,7 +12,6 @@ import edu.alibaba.mpc4j.common.tool.utils.BytesUtils;
 import edu.alibaba.mpc4j.s2pc.pcg.ot.base.AbstractBaseOtSender;
 import edu.alibaba.mpc4j.s2pc.pcg.ot.base.BaseOtSenderOutput;
 
-import java.security.SecureRandom;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -35,9 +32,9 @@ public class MrKyber19BaseOtSender extends AbstractBaseOtSender {
      */
     private final MrKyber19BaseOtConfig config;
     /**
-     * OT协议发送方参数
+     * OT协议发送方密文
      */
-    private List<byte[]> bByte;
+    private List<byte[]> cipherList;
     /**
      * 使用的kyber实例
      */
@@ -60,9 +57,9 @@ public class MrKyber19BaseOtSender extends AbstractBaseOtSender {
     @Override
     public BaseOtSenderOutput send(int num) throws MpcAbortException {
         setPtoInput(num);
-        paramsInit();
-        bByte = new ArrayList<>();
+        cipherList = new ArrayList<>();
         info("{}{} Send. begin", ptoBeginLogPrefix, getPtoDesc().getPtoName());
+        paramsInit();
         stopWatch.start();
         DataPacketHeader pkHeader = new DataPacketHeader(
                 taskId, getPtoDesc().getPtoId(), MrKyber19BaseOtPtoDesc.PtoStep.RECEIVER_SEND_PK.ordinal(), extraInfo,
@@ -77,10 +74,10 @@ public class MrKyber19BaseOtSender extends AbstractBaseOtSender {
         stopWatch.start();
         BaseOtSenderOutput senderOutput = handlePkPayload(pkPayload);
         DataPacketHeader betaHeader = new DataPacketHeader(
-                taskId, getPtoDesc().getPtoId(), MrKyber19BaseOtPtoDesc.PtoStep.SENDER_SEND_B.ordinal(), extraInfo,
+                taskId, getPtoDesc().getPtoId(), MrKyber19BaseOtPtoDesc.PtoStep.SENDER_SEND_Cipher.ordinal(), extraInfo,
                 ownParty().getPartyId(), otherParty().getPartyId()
         );
-        rpc.send(DataPacket.fromByteArrayList(betaHeader, bByte));
+        rpc.send(DataPacket.fromByteArrayList(betaHeader, cipherList));
         stopWatch.stop();
         long pkTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
         stopWatch.reset();
@@ -91,35 +88,32 @@ public class MrKyber19BaseOtSender extends AbstractBaseOtSender {
     }
 
     private void paramsInit() {
-        SecureRandom secureRandom = new SecureRandom();
-        Hash hashFunction = HashFactory.createInstance(HashFactory.HashType.BC_BLAKE_2B_160, 16);
-        this.kyber = KyberFactory.createInstance(config.getKyberType(), config.getParamsK(), secureRandom, hashFunction);
+        this.kyber = KyberFactory.createInstance(config.getKyberType(), config.getParamsK());
     }
 
     private BaseOtSenderOutput handlePkPayload(List<byte[]> pkPayload) throws MpcAbortException {
         MpcAbortPreconditions.checkArgument(pkPayload.size() == num * 3);
+        byte[][] publicKey = pkPayload.toArray(new byte[num * 3][]);
         IntStream keyPairArrayIntStream = IntStream.range(0, num);
         keyPairArrayIntStream = parallel ? keyPairArrayIntStream.parallel() : keyPairArrayIntStream;
-        //OT协议的输出
+        // OT协议的输出
         byte[][] r0Array = new byte[num][CommonConstants.BLOCK_BYTE_LENGTH];
         byte[][] r1Array = new byte[num][CommonConstants.BLOCK_BYTE_LENGTH];
-        bByte = keyPairArrayIntStream.mapToObj(index -> {
-                    info("1  r0 {} Send. r1{})", r0Array[index], r1Array[index]);
+        cipherList = keyPairArrayIntStream.mapToObj(index -> {
                     // 读取公钥（As+e）部分
-                    byte[] upperPkR0 = pkPayload.get(index * 3);
-                    byte[] upperPkR1 = pkPayload.get(index * 3 + 1);
+                    byte[] upperPkR0 = publicKey[index * 3];
+                    byte[] upperPkR1 = publicKey[index * 3 + 1];
                     // 计算A0 = R0 xor Hash(R1)、A1 = R1 xor Hash(R0)
                     byte[] hashKeyR0 = this.kyber.hashToByte(upperPkR0);
                     byte[] hashKeyR1 = this.kyber.hashToByte(upperPkR1);
-                    upperPkR0 = BytesUtils.xor(upperPkR0, hashKeyR1);
-                    upperPkR1 = BytesUtils.xor(upperPkR1, hashKeyR0);
+                    BytesUtils.xori(upperPkR0, hashKeyR1);
+                    BytesUtils.xori(upperPkR1, hashKeyR0);
 
-                    //计算密文
+                    // 计算密文
                     byte[][] cipherText = new byte[2][];
-                    //加密函数的输入是明文、公钥（As+e）部分、生成元部分、随机数种子，安全参数k
-                    cipherText[0] = this.kyber.encrypt(r0Array[index], upperPkR0, pkPayload.get(index * 3 + 2));
-                    cipherText[1] = this.kyber.encrypt(r1Array[index], upperPkR1, pkPayload.get(index * 3 + 2));
-                    info("2  r0 {} Send. r1{})", r0Array[index], r1Array[index]);
+                    // KEM中的输入是秘密值、公钥（As+e）部分、生成元部分、随机数种子，安全参数k
+                    cipherText[0] = this.kyber.encaps(r0Array[index], upperPkR0, publicKey[index * 3 + 2]);
+                    cipherText[1] = this.kyber.encaps(r1Array[index], upperPkR1, publicKey[index * 3 + 2]);
                     return cipherText;
                 })
                 .flatMap(Arrays::stream)

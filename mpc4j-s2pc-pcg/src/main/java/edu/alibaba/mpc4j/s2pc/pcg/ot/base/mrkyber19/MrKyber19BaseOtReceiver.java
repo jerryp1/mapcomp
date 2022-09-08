@@ -1,7 +1,5 @@
 package edu.alibaba.mpc4j.s2pc.pcg.ot.base.mrkyber19;
 
-import edu.alibaba.mpc4j.common.tool.crypto.hash.Hash;
-import edu.alibaba.mpc4j.common.tool.crypto.hash.HashFactory;
 import edu.alibaba.mpc4j.common.tool.crypto.kyber.*;
 import edu.alibaba.mpc4j.common.rpc.MpcAbortException;
 import edu.alibaba.mpc4j.common.rpc.MpcAbortPreconditions;
@@ -10,12 +8,12 @@ import edu.alibaba.mpc4j.common.rpc.Rpc;
 import edu.alibaba.mpc4j.common.rpc.utils.DataPacket;
 import edu.alibaba.mpc4j.common.rpc.utils.DataPacketHeader;
 import edu.alibaba.mpc4j.common.tool.CommonConstants;
+import edu.alibaba.mpc4j.common.tool.crypto.kyber.kyber4j.KyberKeyPairJava;
 import edu.alibaba.mpc4j.common.tool.utils.BytesUtils;
 import edu.alibaba.mpc4j.s2pc.pcg.ot.base.AbstractBaseOtReceiver;
 import edu.alibaba.mpc4j.s2pc.pcg.ot.base.BaseOtReceiverOutput;
 
 
-import java.security.SecureRandom;
 import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
@@ -36,9 +34,9 @@ public class MrKyber19BaseOtReceiver extends AbstractBaseOtReceiver {
      */
     private final MrKyber19BaseOtConfig config;
     /**
-     * OT协议接收方参数
+     * OT协议接收方密钥对
      */
-    private KyberKey[] aArray;
+    private KyberKeyPairJava[] keyArray;
 
     /**
      * 使用的kyber实例
@@ -63,9 +61,9 @@ public class MrKyber19BaseOtReceiver extends AbstractBaseOtReceiver {
     @Override
     public BaseOtReceiverOutput receive(boolean[] choices) throws MpcAbortException {
         setPtoInput(choices);
-        paramsInit();
         info("{}{} Recv. begin", ptoBeginLogPrefix, getPtoDesc().getPtoName());
 
+        paramsInit();
         stopWatch.start();
         List<byte[]> pkPayload = generatePkPayload();
         DataPacketHeader pkHeader = new DataPacketHeader(
@@ -81,7 +79,7 @@ public class MrKyber19BaseOtReceiver extends AbstractBaseOtReceiver {
 
         stopWatch.start();
         DataPacketHeader betaHeader = new DataPacketHeader(
-                taskId, getPtoDesc().getPtoId(), MrKyber19BaseOtPtoDesc.PtoStep.SENDER_SEND_B.ordinal(), extraInfo,
+                taskId, getPtoDesc().getPtoId(), MrKyber19BaseOtPtoDesc.PtoStep.SENDER_SEND_Cipher.ordinal(), extraInfo,
                 otherParty().getPartyId(), ownParty().getPartyId()
         );
         List<byte[]> betaPayload = rpc.receive(betaHeader).getPayload();
@@ -95,13 +93,11 @@ public class MrKyber19BaseOtReceiver extends AbstractBaseOtReceiver {
     }
 
     private void paramsInit() {
-        SecureRandom secureRandom = new SecureRandom();
-        Hash hashFunction = HashFactory.createInstance(HashFactory.HashType.BC_BLAKE_2B_160, 16);
-        this.kyber = KyberFactory.createInstance(config.getKyberType(), config.getParamsK(), secureRandom, hashFunction);
+        this.kyber = KyberFactory.createInstance(config.getKyberType(), config.getParamsK());
     }
 
     private List<byte[]> generatePkPayload() {
-        aArray = new KyberKey[choices.length];
+        keyArray = new KyberKeyPairJava[choices.length];
         // 公钥生成流
         IntStream pkIntStream = IntStream.range(0, choices.length);
         pkIntStream = parallel ? pkIntStream.parallel() : pkIntStream;
@@ -111,20 +107,19 @@ public class MrKyber19BaseOtReceiver extends AbstractBaseOtReceiver {
                     byte[] publickKeyBytes;
                     // 随机的向量，R_1-sigma
                     byte[] randomKeyByte;
-                    // 随机向量的生成元，g（R_1-sigma）
                     // 随机生成一组钥匙对
-                    aArray[index] = this.kyber.generateKyberVecKeys();
+                    keyArray[index] = this.kyber.generateKyberVecKeys();
                     // 读取多项式格式下的公钥
-                    publickKeyBytes = aArray[index].getPublicKeyBytes();
+                    publickKeyBytes = keyArray[index].getPublicKeyBytes();
                     // 生成一个符合格式的随机公钥 R_1-sigma
                     randomKeyByte = this.kyber.getRandomKyberPk();
-                    // 计算 R_sigma = R_sigma + Hash(R_1-sigma)
+                    // 计算 R_sigma = R_sigma xor Hash(R_1-sigma)
                     byte[] hashKeyByte = this.kyber.hashToByte(randomKeyByte);
                     publickKeyBytes = BytesUtils.xor(publickKeyBytes, hashKeyByte);
                     // 根据选择值将两个参数R分别放入对应位置
                     int sigma = choices[index] ? 1 : 0;
                     return this.kyber.packageTwoKeys
-                            (publickKeyBytes, randomKeyByte, aArray[index].getPublicKeyGenerator(), sigma);
+                            (publickKeyBytes, randomKeyByte, keyArray[index].getPublicKeyGenerator(), sigma);
                 })
                 .flatMap(Arrays::stream)
                 .collect(Collectors.toList());
@@ -132,17 +127,17 @@ public class MrKyber19BaseOtReceiver extends AbstractBaseOtReceiver {
 
     private BaseOtReceiverOutput handleBetaPayload(List<byte[]> betaPayload) throws MpcAbortException {
         MpcAbortPreconditions.checkArgument(betaPayload.size() == choices.length * 2);
-        //解密消息获得相应的选择B_sigma
+        byte[][] cipherText = betaPayload.toArray(new byte[choices.length * 2][]);
+        // 解密消息获得相应的选择B_sigma
         byte[][] rbArray = new byte[choices.length][];
         IntStream decryptArrayIntStream = IntStream.range(0, choices.length);
         decryptArrayIntStream = parallel ? decryptArrayIntStream.parallel() : decryptArrayIntStream;
         decryptArrayIntStream.forEach(index -> {
             int sigma = choices[index] ? 1 : 0;
             rbArray[index] = new byte[CommonConstants.BLOCK_BYTE_LENGTH];
-            short[][] receiverPrivateKey = aArray[index].getPrivateKeyVec();
-            //解密函数——在cpa方案中无需公钥，在cca方案中需要公钥。
-            byte[] rbDecrypt = this.kyber.decrypt(betaPayload.get(2 * index + sigma),
-                    receiverPrivateKey, aArray[index].getPublicKeyBytes(), aArray[index].getPublicKeyGenerator());
+            // 解密函数——在cpa方案中无需公钥，在cca方案中需要公钥。
+            byte[] rbDecrypt = this.kyber.decaps(cipherText[2 * index + sigma],
+                    keyArray[index].getPrivateKeyVec(), keyArray[index].getPublicKeyBytes(), keyArray[index].getPublicKeyGenerator());
             System.arraycopy(rbDecrypt, 0, rbArray[index], 0, CommonConstants.BLOCK_BYTE_LENGTH);
         });
 

@@ -47,7 +47,7 @@ public final class ByteOps {
      * @return 符合二项分布的噪声系数
      */
     public static short[] generateCbdPoly(byte[] buf, int paramsK) {
-        long t, d; //both unsigned
+        long t, d; // both unsigned
         int a, b;
         short[] r = new short[KyberParams.PARAMS_N];
         switch (paramsK) {
