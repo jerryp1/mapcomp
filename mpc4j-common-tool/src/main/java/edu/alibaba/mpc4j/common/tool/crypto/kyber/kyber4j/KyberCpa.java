@@ -123,6 +123,7 @@ public class KyberCpa implements Kyber {
 
     @Override
     public byte[] encrypt(byte[] m, short[][] publicKey, byte[] publicKeyGenerator) {
+        secureRandom.nextBytes(m);
         assert m.length <= KyberParams.SYM_BYTES;
         byte[] message = new byte[KyberParams.SYM_BYTES];
         //如果加密的长度不足32bytes那么就自动补充后续的byte。

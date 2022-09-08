@@ -42,10 +42,6 @@ public class MrKyber19BaseOtSender extends AbstractBaseOtSender {
      * 使用的kyber实例
      */
     private Kyber kyber;
-    /**
-     * 随机函数
-     */
-    private SecureRandom secureRandom;
 
     public MrKyber19BaseOtSender(Rpc senderRpc, Party receiverParty, MrKyber19BaseOtConfig config) {
         super(MrKyber19BaseOtPtoDesc.getInstance(), senderRpc, receiverParty, config);
@@ -95,7 +91,7 @@ public class MrKyber19BaseOtSender extends AbstractBaseOtSender {
     }
 
     private void paramsInit() {
-        this.secureRandom = new SecureRandom();
+        SecureRandom secureRandom = new SecureRandom();
         Hash hashFunction = HashFactory.createInstance(HashFactory.HashType.BC_BLAKE_2B_160, 16);
         this.kyber = KyberFactory.createInstance(config.getKyberType(), config.getParamsK(), secureRandom, hashFunction);
     }
@@ -108,9 +104,6 @@ public class MrKyber19BaseOtSender extends AbstractBaseOtSender {
         byte[][] r0Array = new byte[num][CommonConstants.BLOCK_BYTE_LENGTH];
         byte[][] r1Array = new byte[num][CommonConstants.BLOCK_BYTE_LENGTH];
         bByte = keyPairArrayIntStream.mapToObj(index -> {
-                    //进行加密的明文
-                    this.secureRandom.nextBytes(r0Array[index]);
-                    this.secureRandom.nextBytes(r1Array[index]);
                     info("1  r0 {} Send. r1{})", r0Array[index], r1Array[index]);
                     // 读取公钥（As+e）部分
                     byte[] upperPkR0 = pkPayload.get(index * 3);

@@ -151,6 +151,7 @@ public class KyberCca implements Kyber {
      * @return 返回值为加密后的密文
      */
     public byte[] encrypt(byte[] message, byte[] publicKeyBytes, short[][] publicKeyVector, byte[] publicKeyGenerator) {
+        secureRandom.nextBytes(message);
         byte[] m = prgEncryptLength32.extendToBytes(hashFunction.digestToBytes(message));
         byte[] fullKey = new byte[paramsPolyvecBytes + KyberParams.SYM_BYTES];
         System.arraycopy(publicKeyBytes, 0, fullKey, 0, paramsPolyvecBytes);

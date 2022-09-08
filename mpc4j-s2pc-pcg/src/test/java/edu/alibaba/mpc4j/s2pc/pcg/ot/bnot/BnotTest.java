@@ -91,33 +91,33 @@ public class BnotTest {
         });
         // MRKYBER19 + k = 4
         configurationParams.add(new Object[]{
-                BnotFactory.BnotType.MRKYBER19.name() + " (k = 2)" + "cca",
+                BnotFactory.BnotType.MRKYBER19.name() + " (k = 2)" + "（CCA）",
                 new MrKyber19BnotConfig.Builder().setParamsK(2).setKyberType(KyberFactory.KyberType.KYBER_CCA).build(),
         });
         // MRKYBER19 + k = 3
         configurationParams.add(new Object[]{
-                BnotFactory.BnotType.MRKYBER19.name() + " (k = 3)" + "cca",
+                BnotFactory.BnotType.MRKYBER19.name() + " (k = 3)" + "（CCA）",
                 new MrKyber19BnotConfig.Builder().setParamsK(3).setKyberType(KyberFactory.KyberType.KYBER_CCA).build(),
         });
         // MRKYBER19 + k = 4
         configurationParams.add(new Object[]{
-                BnotFactory.BnotType.MRKYBER19.name() + " (k = 4)" + "cca",
+                BnotFactory.BnotType.MRKYBER19.name() + " (k = 4)" + "（CCA）",
                 new MrKyber19BnotConfig.Builder().setParamsK(4).setKyberType(KyberFactory.KyberType.KYBER_CCA).build(),
         });
 
         // MRKYBER19 + k = 4
         configurationParams.add(new Object[]{
-                BnotFactory.BnotType.MRKYBER19.name() + " (k = 2)" + "cpa",
+                BnotFactory.BnotType.MRKYBER19.name() + " (k = 2)" + "（CPA）",
                 new MrKyber19BnotConfig.Builder().setParamsK(2).setKyberType(KyberFactory.KyberType.KYBER_CPA).build(),
         });
         // MRKYBER19 + k = 3
         configurationParams.add(new Object[]{
-                BnotFactory.BnotType.MRKYBER19.name() + " (k = 3)" + "cpa",
+                BnotFactory.BnotType.MRKYBER19.name() + " (k = 3)" + "（CPA）",
                 new MrKyber19BnotConfig.Builder().setParamsK(3).setKyberType(KyberFactory.KyberType.KYBER_CPA).build(),
         });
         // MRKYBER19 + k = 4
         configurationParams.add(new Object[]{
-                BnotFactory.BnotType.MRKYBER19.name() + " (k = 4)" + "cpa",
+                BnotFactory.BnotType.MRKYBER19.name() + " (k = 4)" + "（CPA）",
                 new MrKyber19BnotConfig.Builder().setParamsK(4).setKyberType(KyberFactory.KyberType.KYBER_CPA).build(),
         });
 

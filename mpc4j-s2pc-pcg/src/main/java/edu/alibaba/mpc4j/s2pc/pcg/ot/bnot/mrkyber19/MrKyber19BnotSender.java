@@ -43,10 +43,6 @@ public class MrKyber19BnotSender extends AbstractBnotSender {
      * 使用的kyber实例
      */
     private Kyber kyber;
-    /**
-     * 随机函数
-     */
-    private SecureRandom secureRandom;
 
     public MrKyber19BnotSender(Rpc senderRpc, Party receiverParty, MrKyber19BnotConfig config) {
         super(MrKyber19BnotPtoDesc.getInstance(), senderRpc, receiverParty, config);
@@ -96,7 +92,7 @@ public class MrKyber19BnotSender extends AbstractBnotSender {
     }
 
     private void paramsInit() {
-        this.secureRandom = new SecureRandom();
+        SecureRandom secureRandom = new SecureRandom();
         Hash hashFunction = HashFactory.createInstance(HashFactory.HashType.BC_BLAKE_2B_160, 16);
         this.kyber = KyberFactory.createInstance(config.getKyberType(), config.getParamsK(), secureRandom, hashFunction);
     }
@@ -129,8 +125,6 @@ public class MrKyber19BnotSender extends AbstractBnotSender {
                     //密文
                     byte[][] cipherText = new byte[n][];
                     for (int i = 0; i < n; i++) {
-                        //生成需要加密的明文
-                        this.secureRandom.nextBytes(rbArray[index][i]);
                         //计算加密函数，加密函数的输入是明文、公钥（As+e）部分、生成元部分、随机数种子，安全参数k
                         cipherText[i] = this.kyber.encrypt
                                 (rbArray[index][i], upperBytes[i],

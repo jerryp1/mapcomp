@@ -60,32 +60,32 @@ public class BaseOtTest {
         });
         //MRKYBER19,K = 2
         configurationParams.add(new Object[]{
-                BaseOtType.MRKYBER19.name() + "(k = 2)",
+                BaseOtType.MRKYBER19.name() + "(k = 2)" + "(CCA)",
                 new MrKyber19BaseOtConfig.Builder().setParamsK(2).setKyberType(KyberFactory.KyberType.KYBER_CCA).build(),
         });
         //MRKYBER19,K = 3
         configurationParams.add(new Object[]{
-                BaseOtType.MRKYBER19.name() + "(k = 3)",
+                BaseOtType.MRKYBER19.name() + "(k = 3)" + "(CCA)",
                 new MrKyber19BaseOtConfig.Builder().setParamsK(3).setKyberType(KyberFactory.KyberType.KYBER_CCA).build(),
         });
         //MRKYBER19,K = 4
         configurationParams.add(new Object[]{
-                BaseOtType.MRKYBER19.name() + "(k = 4)",
+                BaseOtType.MRKYBER19.name() + "(k = 4)" + "(CCA)",
                 new MrKyber19BaseOtConfig.Builder().setParamsK(4).setKyberType(KyberFactory.KyberType.KYBER_CCA).build(),
         });
         //MRKYBER19,K = 2
         configurationParams.add(new Object[]{
-                BaseOtType.MRKYBER19.name() + "(k = 2)",
+                BaseOtType.MRKYBER19.name() + "(k = 2)" + "(CPA)",
                 new MrKyber19BaseOtConfig.Builder().setParamsK(2).setKyberType(KyberFactory.KyberType.KYBER_CPA).build(),
         });
         //MRKYBER19,K = 3
         configurationParams.add(new Object[]{
-                BaseOtType.MRKYBER19.name() + "(k = 3)",
+                BaseOtType.MRKYBER19.name() + "(k = 3)" + "(CPA)",
                 new MrKyber19BaseOtConfig.Builder().setParamsK(3).setKyberType(KyberFactory.KyberType.KYBER_CPA).build(),
         });
         //MRKYBER19,K = 4
         configurationParams.add(new Object[]{
-                BaseOtType.MRKYBER19.name() + "(k = 4)",
+                BaseOtType.MRKYBER19.name() + "(k = 4)" + "(CPA)",
                 new MrKyber19BaseOtConfig.Builder().setParamsK(4).setKyberType(KyberFactory.KyberType.KYBER_CPA).build(),
         });
         // CO15，压缩编码
