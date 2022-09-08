@@ -6,7 +6,7 @@ import edu.alibaba.mpc4j.common.tool.utils.BytesUtils;
 import java.util.Arrays;
 
 /**
- * GF(2^128)-VOLE协议接收方输出。
+ * GF(2^κ)-VOLE协议接收方输出。接收方得到(Δ, q)，满足t = q + Δ · x（x和t由发送方持有）。
  *
  * @author Weiran Liu
  * @date 2022/6/9
@@ -24,8 +24,8 @@ public class Gf2kVoleReceiverOutput {
     /**
      * 创建接收方输出。
      *
-     * @param delta   关联值Δ。
-     * @param q q_i。
+     * @param delta 关联值Δ。
+     * @param q     q_i。
      * @return 接收方输出。
      */
     public static Gf2kVoleReceiverOutput create(byte[] delta, byte[][] q) {
