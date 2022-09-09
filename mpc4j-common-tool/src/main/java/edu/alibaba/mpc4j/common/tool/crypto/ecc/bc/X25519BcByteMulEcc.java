@@ -35,7 +35,7 @@ public class X25519BcByteMulEcc implements ByteMulEcc {
 
     @Override
     public byte[] randomScalar(SecureRandom secureRandom) {
-        return X25519ByteEccUtils.randomScalar(secureRandom);
+        return X25519ByteEccUtils.randomClampScalar(secureRandom);
     }
 
     @Override
@@ -66,17 +66,17 @@ public class X25519BcByteMulEcc implements ByteMulEcc {
     @Override
     public byte[] mul(byte[] p, byte[] k) {
         assert X25519ByteEccUtils.checkPoint(p);
-        assert X25519ByteEccUtils.checkScalar(k);
+        assert X25519ByteEccUtils.checkClampScalar(k);
         byte[] r = new byte[X25519ByteEccUtils.POINT_BYTES];
-        X25519ByteEccUtils.scalarMult(k, p, r);
+        X25519ByteEccUtils.clampScalarMult(k, p, r);
         return r;
     }
 
     @Override
     public byte[] baseMul(byte[] k) {
-        assert X25519ByteEccUtils.checkScalar(k);
+        assert X25519ByteEccUtils.checkClampScalar(k);
         byte[] r = new byte[X25519ByteEccUtils.POINT_BYTES];
-        X25519ByteEccUtils.scalarMultBase(k, r);
+        X25519ByteEccUtils.clampScalarMultBase(k, r);
         return r;
     }
 

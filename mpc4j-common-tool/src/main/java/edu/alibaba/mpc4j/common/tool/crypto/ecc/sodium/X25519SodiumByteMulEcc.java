@@ -34,7 +34,7 @@ public class X25519SodiumByteMulEcc implements ByteMulEcc {
 
     @Override
     public byte[] randomScalar(SecureRandom secureRandom) {
-        return X25519ByteEccUtils.randomScalar(secureRandom);
+        return X25519ByteEccUtils.randomClampScalar(secureRandom);
     }
 
     @Override
@@ -65,7 +65,7 @@ public class X25519SodiumByteMulEcc implements ByteMulEcc {
     @Override
     public byte[] mul(byte[] p, byte[] k) {
         assert X25519ByteEccUtils.checkPoint(p);
-        assert X25519ByteEccUtils.checkScalar(k);
+        assert X25519ByteEccUtils.checkClampScalar(k);
         return nativeMul(p, k);
     }
 
@@ -73,7 +73,7 @@ public class X25519SodiumByteMulEcc implements ByteMulEcc {
 
     @Override
     public byte[] baseMul(byte[] k) {
-        assert X25519ByteEccUtils.checkScalar(k);
+        assert X25519ByteEccUtils.checkClampScalar(k);
         return nativeBaseMul(k);
     }
 
