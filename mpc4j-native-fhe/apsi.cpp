@@ -6,17 +6,9 @@
 #include "apsi.h"
 #include "serialize.h"
 #include <cstdint>
+#include <iomanip>
 #include "polynomials.h"
-
-parms_id_type get_parms_id_for_chain_idx(const SEALContext& seal_context, size_t chain_idx) {
-    // This function returns a parms_id matching the given chain index or -- if the chain
-    // index is too large -- for the largest possible parameters (first data level).
-    parms_id_type parms_id = seal_context.first_parms_id();
-    while (seal_context.get_context_data(parms_id)->chain_index() > chain_idx) {
-        parms_id = seal_context.get_context_data(parms_id)->next_context_data()->parms_id();
-    }
-    return parms_id;
-}
+#include "utils.h"
 
 jobject JNICALL genEncryptionParameters(JNIEnv *env, jint poly_modulus_degree, jlong plain_modulus,
                                         jintArray coeff_modulus_bits) {
@@ -150,8 +142,6 @@ jobject JNICALL computeEncryptedPowers(JNIEnv *env, jobject query_list, jbyteArr
         parent_powers[i][0] = cols[0];
         parent_powers[i][1] = cols[1];
     }
-    auto high_powers_parms_id = get_parms_id_for_chain_idx(context, 1);
-    auto low_powers_parms_id = get_parms_id_for_chain_idx(context, 2);
     vector<Ciphertext> encrypted_powers;
     encrypted_powers.resize(target_power_size);
     if (ps_low_power == 0) {
@@ -320,7 +310,6 @@ jbyteArray JNICALL computeMatchesNaiveMethod(JNIEnv *env, jobjectArray database_
     // encrypted query powers
     vector<Ciphertext> query_powers = deserialize_ciphertexts(env, query_list, context);
     auto high_powers_parms_id = get_parms_id_for_chain_idx(context, 1);
-    auto low_powers_parms_id = get_parms_id_for_chain_idx(context, 2);
     for (auto & query_power : query_powers) {
         // Only one ciphertext-plaintext multiplication is needed after this
         evaluator.mod_switch_to_inplace(query_power, high_powers_parms_id);
@@ -330,7 +319,7 @@ jbyteArray JNICALL computeMatchesNaiveMethod(JNIEnv *env, jobjectArray database_
     // 服务端明文多项式
     vector<Plaintext> plaintexts = deserialize_plaintexts(env, database_coeffs, context);
     for (int i = 1; i < plaintexts.size(); i++) {
-        evaluator.transform_to_ntt_inplace(plaintexts[i], low_powers_parms_id);
+        evaluator.transform_to_ntt_inplace(plaintexts[i], high_powers_parms_id);
     }
     uint32_t degree = plaintexts.size() - 1;
     Ciphertext f_evaluated, cipher_temp, temp_in;
@@ -479,7 +468,6 @@ jbyteArray JNICALL computeMatchesNaiveMethod(JNIEnv *env, jobjectArray database_
     // encrypted query powers
     vector<Ciphertext> query_powers = deserialize_ciphertexts(env, query_list, context);
     auto high_powers_parms_id = get_parms_id_for_chain_idx(context, 1);
-    auto low_powers_parms_id = get_parms_id_for_chain_idx(context, 2);
     for (auto & query_power : query_powers) {
         // Only one ciphertext-plaintext multiplication is needed after this
         evaluator.mod_switch_to_inplace(query_power, high_powers_parms_id);
@@ -489,7 +477,7 @@ jbyteArray JNICALL computeMatchesNaiveMethod(JNIEnv *env, jobjectArray database_
     // 服务端明文多项式
     vector<Plaintext> plaintexts = deserialize_plaintexts(env, database_coeffs, context);
     for (int i = 1; i < plaintexts.size(); i++) {
-        evaluator.transform_to_ntt_inplace(plaintexts[i], low_powers_parms_id);
+        evaluator.transform_to_ntt_inplace(plaintexts[i], high_powers_parms_id);
     }
     uint32_t degree = plaintexts.size() - 1;
     Ciphertext f_evaluated, cipher_temp, temp_in;
@@ -630,15 +618,12 @@ jint JNICALL checkSealParams(JNIEnv *env, jint poly_modulus_degree, jlong plain_
         for (int i = 0; i < ps_low_power; i++) {
             // Low powers must be at a higher level than high powers
             evaluator.mod_switch_to_inplace(encrypted_powers[i], low_powers_parms_id);
-
             // Low powers must be in NTT form
             evaluator.transform_to_ntt_inplace(encrypted_powers[i]);
-
         }
         for (int i = ps_low_power; i < encrypted_powers.size(); i++) {
             // High powers are only modulus switched
             evaluator.mod_switch_to_inplace(encrypted_powers[i], high_powers_parms_id);
-
         }
         for (int i = 0; i < database.size(); i++) {
             if ((i % ps_high_degree) != 0) {
@@ -668,8 +653,6 @@ jint JNICALL checkSealParams(JNIEnv *env, jint poly_modulus_degree, jlong plain_
             // The high powers are already in coefficient form
             evaluator.multiply_inplace(temp_in, encrypted_powers[i - 1 + ps_low_power]);
             evaluator.add_inplace(f_evaluated, temp_in);
-
-
         }
 
         // Calculate polynomial for i=ps_high_degree_powers.
@@ -744,7 +727,7 @@ jint JNICALL checkSealParams(JNIEnv *env, jint poly_modulus_degree, jlong plain_
             evaluator.transform_to_ntt_inplace(encrypted_power);
         }
         for (int i = 1; i < database.size(); i++) {
-            evaluator.transform_to_ntt_inplace(database[i], low_powers_parms_id);
+            evaluator.transform_to_ntt_inplace(database[i], high_powers_parms_id);
         }
         Ciphertext f_evaluated, cipher_temp, temp_in;
         f_evaluated.resize(context, high_powers_parms_id, 3);

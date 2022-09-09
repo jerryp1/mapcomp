@@ -33,6 +33,8 @@ vector<Plaintext> deserialize_plaintexts(JNIEnv *env, jobjectArray list, const S
 
 Plaintext deserialize_plaintext(JNIEnv *env, jbyteArray bytes, const SEALContext& context);
 
+jbyteArray serialize_plaintext(JNIEnv *env, const Plaintext& plaintext);
+
 RelinKeys deserialize_relin_key(JNIEnv *env, jbyteArray relin_key_bytes, const SEALContext& context);
 
 jbyteArray serialize_relin_key(JNIEnv *env, const Serializable<RelinKeys>& relin_keys);

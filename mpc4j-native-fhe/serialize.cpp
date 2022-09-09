@@ -49,6 +49,15 @@ jbyteArray serialize_ciphertext(JNIEnv *env, const Serializable<Ciphertext>& cip
     return result;
 }
 
+jbyteArray serialize_plaintext(JNIEnv *env, const Plaintext& plaintext) {
+    std::ostringstream output;
+    plaintext.save(output, Serialization::compr_mode_default);
+    uint32_t len = output.str().size();
+    jbyteArray result = env->NewByteArray((jsize) len);
+    env->SetByteArrayRegion(result, 0, (jsize) len, reinterpret_cast<const jbyte *>(output.str().c_str()));
+    return result;
+}
+
 PublicKey deserialize_public_key(JNIEnv *env, jbyteArray pk_bytes, const SEALContext& context) {
     jbyte* pk_byte_data = env->GetByteArrayElements(pk_bytes, JNI_FALSE);
     std::string str((char*)pk_byte_data, env->GetArrayLength(pk_bytes));
