@@ -242,6 +242,7 @@ public class X25519ByteEccUtils {
     public static byte[] randomPoint(SecureRandom secureRandom) {
         byte[] p = new byte[POINT_BYTES];
         secureRandom.nextBytes(p);
+        p[X25519ByteEccUtils.POINT_BYTES - 1] &= 0x7F;
         return p;
     }
 }

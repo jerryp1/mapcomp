@@ -54,12 +54,16 @@ public class X25519SodiumByteMulEcc implements ByteMulEcc {
 
     @Override
     public byte[] randomPoint(SecureRandom secureRandom) {
-        return X25519ByteEccUtils.randomPoint(secureRandom);
+        byte[] p = X25519ByteEccUtils.randomPoint(secureRandom);
+        p[X25519ByteEccUtils.POINT_BYTES - 1] &= 0x7F;
+        return p;
     }
 
     @Override
     public byte[] hashToCurve(byte[] message) {
-        return hash.digestToBytes(message);
+        byte[] p = hash.digestToBytes(message);
+        p[X25519ByteEccUtils.POINT_BYTES - 1] &= 0x7F;
+        return p;
     }
 
     @Override
