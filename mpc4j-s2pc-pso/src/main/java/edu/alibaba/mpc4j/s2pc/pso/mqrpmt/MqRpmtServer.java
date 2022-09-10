@@ -1,4 +1,4 @@
-package edu.alibaba.mpc4j.s2pc.pso.psu;
+package edu.alibaba.mpc4j.s2pc.pso.mqrpmt;
 
 import edu.alibaba.mpc4j.common.rpc.MpcAbortException;
 import edu.alibaba.mpc4j.common.rpc.pto.SecurePto;
@@ -8,24 +8,24 @@ import java.nio.ByteBuffer;
 import java.util.Set;
 
 /**
- * PSU协议服务端接口。
+ * mqRPMT协议服务端接口。
  *
  * @author Weiran Liu
- * @date 2022/02/15
+ * @date 2022/9/10
  */
-public interface PsuServer extends TwoPartyPto, SecurePto {
+public interface MqRpmtServer extends TwoPartyPto, SecurePto {
     /**
-     * 返回PSU协议类型。
+     * 返回mqRPMT协议类型。
      *
-     * @return PSU协议类型。
+     * @return mqRPMT协议类型。
      */
     @Override
-    PsuFactory.PsuType getPtoType();
+    MqRpmtFactory.MqRpmtType getPtoType();
 
     /**
      * 初始化协议。
      *
-     * @param maxServerElementSize   服务端最大元素数量。
+     * @param maxServerElementSize 服务端最大元素数量。
      * @param maxClientElementSize 客户端最大元素数量。
      * @throws MpcAbortException 如果协议异常中止。
      */
@@ -34,10 +34,10 @@ public interface PsuServer extends TwoPartyPto, SecurePto {
     /**
      * 执行协议。
      *
-     * @param serverElementSet    服务端元素集合。
+     * @param serverElementSet  服务端元素集合。
      * @param clientElementSize 客户端元素数量。
-     * @param elementByteLength   元素字节长度。
+     * @return 协议输出结果。
      * @throws MpcAbortException 如果协议异常中止。
      */
-    void psu(Set<ByteBuffer> serverElementSet, int clientElementSize, int elementByteLength) throws MpcAbortException;
+    ByteBuffer[] mqRpmt(Set<ByteBuffer> serverElementSet, int clientElementSize) throws MpcAbortException;
 }

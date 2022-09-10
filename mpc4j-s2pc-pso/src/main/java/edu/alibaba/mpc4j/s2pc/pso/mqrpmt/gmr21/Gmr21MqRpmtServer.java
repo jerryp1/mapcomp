@@ -1,4 +1,4 @@
-package edu.alibaba.mpc4j.s2pc.pso.psu.gmr21;
+package edu.alibaba.mpc4j.s2pc.pso.mqrpmt.gmr21;
 
 import edu.alibaba.mpc4j.common.rpc.MpcAbortException;
 import edu.alibaba.mpc4j.common.rpc.MpcAbortPreconditions;
@@ -7,31 +7,23 @@ import edu.alibaba.mpc4j.common.rpc.Rpc;
 import edu.alibaba.mpc4j.common.rpc.utils.DataPacket;
 import edu.alibaba.mpc4j.common.rpc.utils.DataPacketHeader;
 import edu.alibaba.mpc4j.common.tool.CommonConstants;
-import edu.alibaba.mpc4j.common.tool.crypto.crhf.Crhf;
-import edu.alibaba.mpc4j.common.tool.crypto.crhf.CrhfFactory;
-import edu.alibaba.mpc4j.common.tool.crypto.crhf.CrhfFactory.CrhfType;
+import edu.alibaba.mpc4j.common.tool.benes.BenesNetworkUtils;
 import edu.alibaba.mpc4j.common.tool.crypto.prf.Prf;
 import edu.alibaba.mpc4j.common.tool.crypto.prf.PrfFactory;
-import edu.alibaba.mpc4j.common.tool.crypto.prg.Prg;
-import edu.alibaba.mpc4j.common.tool.crypto.prg.PrgFactory;
 import edu.alibaba.mpc4j.common.tool.hashbin.object.HashBinEntry;
 import edu.alibaba.mpc4j.common.tool.hashbin.object.cuckoo.CuckooHashBin;
 import edu.alibaba.mpc4j.common.tool.hashbin.object.cuckoo.CuckooHashBinFactory;
 import edu.alibaba.mpc4j.common.tool.hashbin.object.cuckoo.CuckooHashBinFactory.CuckooHashBinType;
-import edu.alibaba.mpc4j.common.tool.benes.BenesNetworkUtils;
 import edu.alibaba.mpc4j.common.tool.okve.okvs.Okvs;
 import edu.alibaba.mpc4j.common.tool.okve.okvs.OkvsFactory;
 import edu.alibaba.mpc4j.common.tool.okve.okvs.OkvsFactory.OkvsType;
 import edu.alibaba.mpc4j.common.tool.utils.BytesUtils;
-import edu.alibaba.mpc4j.s2pc.pcg.ot.cot.CotSenderOutput;
-import edu.alibaba.mpc4j.s2pc.pcg.ot.cot.core.CoreCotFactory;
-import edu.alibaba.mpc4j.s2pc.pcg.ot.cot.core.CoreCotSender;
+import edu.alibaba.mpc4j.s2pc.pso.mqrpmt.AbstractMqRpmtServer;
+import edu.alibaba.mpc4j.s2pc.pso.mqrpmt.gmr21.Gmr21MqRpmtPtoDesc.PtoStep;
 import edu.alibaba.mpc4j.s2pc.pso.oprf.*;
 import edu.alibaba.mpc4j.s2pc.pso.osn.OsnFactory;
 import edu.alibaba.mpc4j.s2pc.pso.osn.OsnPartyOutput;
 import edu.alibaba.mpc4j.s2pc.pso.osn.OsnReceiver;
-import edu.alibaba.mpc4j.s2pc.pso.psu.AbstractPsuServer;
-import edu.alibaba.mpc4j.s2pc.pso.psu.gmr21.Gmr21PsuPtoDesc.PtoStep;
 
 import java.nio.ByteBuffer;
 import java.util.*;
@@ -40,12 +32,12 @@ import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
 /**
- * GMR21-PSU协议服务端。
+ * GMR21-mqRPMT协议服务端。
  *
  * @author Weiran Liu
- * @date 2022/02/15
+ * @date 2022/09/10
  */
-public class Gmr21PsuServer extends AbstractPsuServer {
+public class Gmr21MqRpmtServer extends AbstractMqRpmtServer {
     /**
      * 布谷鸟哈希所用OPRF接收方
      */
@@ -59,10 +51,6 @@ public class Gmr21PsuServer extends AbstractPsuServer {
      */
     private final OprfSender peqtOprfSender;
     /**
-     * 核COT协议发送方
-     */
-    private final CoreCotSender coreCotSender;
-    /**
      * OKVS类型
      */
     private final OkvsType okvsType;
@@ -74,10 +62,6 @@ public class Gmr21PsuServer extends AbstractPsuServer {
      * 布谷鸟哈希函数数量
      */
     private final int cuckooHashNum;
-    /**
-     * 抗关联哈希函数
-     */
-    private final Crhf crhf;
     /**
      * PEQT哈希密钥
      */
@@ -123,20 +107,17 @@ public class Gmr21PsuServer extends AbstractPsuServer {
      */
     private byte[][] aPrimeArray;
 
-    public Gmr21PsuServer(Rpc serverRpc, Party clientParty, Gmr21PsuConfig config) {
-        super(Gmr21PsuPtoDesc.getInstance(), serverRpc, clientParty, config);
+    public Gmr21MqRpmtServer(Rpc serverRpc, Party clientParty, Gmr21MqRpmtConfig config) {
+        super(Gmr21MqRpmtPtoDesc.getInstance(), serverRpc, clientParty, config);
         cuckooHashOprfReceiver = OprfFactory.createOprfReceiver(serverRpc, clientParty, config.getCuckooHashOprfConfig());
         cuckooHashOprfReceiver.addLogLevel();
         osnReceiver = OsnFactory.createReceiver(serverRpc, clientParty, config.getOsnConfig());
         osnReceiver.addLogLevel();
         peqtOprfSender = OprfFactory.createOprfSender(serverRpc, clientParty, config.getPeqtOprfConfig());
         peqtOprfSender.addLogLevel();
-        coreCotSender = CoreCotFactory.createSender(serverRpc, clientParty, config.getCoreCotConfig());
-        coreCotSender.addLogLevel();
         okvsType = config.getOkvsType();
         cuckooHashBinType = config.getCuckooHashBinType();
         cuckooHashNum = CuckooHashBinFactory.getHashNum(cuckooHashBinType);
-        crhf = CrhfFactory.createInstance(getEnvType(), CrhfType.MMO);
     }
 
     @Override
@@ -146,7 +127,6 @@ public class Gmr21PsuServer extends AbstractPsuServer {
         cuckooHashOprfReceiver.setTaskId(taskIdPrf.getLong(0, taskIdBytes, Long.MAX_VALUE));
         osnReceiver.setTaskId(taskIdPrf.getLong(1, taskIdBytes, Long.MAX_VALUE));
         peqtOprfSender.setTaskId(taskIdPrf.getLong(2, taskIdBytes, Long.MAX_VALUE));
-        coreCotSender.setTaskId(taskIdPrf.getLong(3, taskIdBytes, Long.MAX_VALUE));
     }
 
     @Override
@@ -155,7 +135,6 @@ public class Gmr21PsuServer extends AbstractPsuServer {
         cuckooHashOprfReceiver.setParallel(parallel);
         osnReceiver.setParallel(parallel);
         peqtOprfSender.setParallel(parallel);
-        coreCotSender.setParallel(parallel);
     }
 
     @Override
@@ -164,7 +143,6 @@ public class Gmr21PsuServer extends AbstractPsuServer {
         cuckooHashOprfReceiver.addLogLevel();
         osnReceiver.addLogLevel();
         peqtOprfSender.addLogLevel();
-        coreCotSender.addLogLevel();
     }
 
     @Override
@@ -178,9 +156,6 @@ public class Gmr21PsuServer extends AbstractPsuServer {
         cuckooHashOprfReceiver.init(maxBinNum);
         osnReceiver.init(maxBinNum);
         peqtOprfSender.init(maxBinNum);
-        byte[] delta = new byte[CommonConstants.BLOCK_BYTE_LENGTH];
-        secureRandom.nextBytes(delta);
-        coreCotSender.init(delta, maxBinNum);
         stopWatch.stop();
         long initTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
         stopWatch.reset();
@@ -193,7 +168,7 @@ public class Gmr21PsuServer extends AbstractPsuServer {
         secureRandom.nextBytes(finiteFieldHashKey);
         keysPayload.add(finiteFieldHashKey);
         // 可以提前初始化多项式有限域哈希，根据论文实现，固定为64比特
-        finiteFieldHash = PrfFactory.createInstance(envType, Gmr21PsuUtils.FINITE_FIELD_BYTE_LENGTH);
+        finiteFieldHash = PrfFactory.createInstance(envType, Gmr21MqRpmtUtils.FINITE_FIELD_BYTE_LENGTH);
         finiteFieldHash.setKey(finiteFieldHashKey);
         // 初始化PEQT哈希密钥
         peqtHashKey = new byte[CommonConstants.BLOCK_BYTE_LENGTH];
@@ -224,9 +199,8 @@ public class Gmr21PsuServer extends AbstractPsuServer {
     }
 
     @Override
-    public void psu(Set<ByteBuffer> serverElementSet, int clientElementSize, int elementByteLength)
-        throws MpcAbortException {
-        setPtoInput(serverElementSet, clientElementSize, elementByteLength);
+    public ByteBuffer[] mqRpmt(Set<ByteBuffer> serverElementSet, int clientElementSize) throws MpcAbortException {
+        setPtoInput(serverElementSet, clientElementSize);
         info("{}{} Server begin", ptoBeginLogPrefix, getPtoDesc().getPtoName());
 
         stopWatch.start();
@@ -240,7 +214,7 @@ public class Gmr21PsuServer extends AbstractPsuServer {
         // 设置OKVS大小
         okvsM = OkvsFactory.getM(okvsType, clientElementSize * cuckooHashNum);
         // 初始化PEQT哈希
-        Prf peqtHash = PrfFactory.createInstance(getEnvType(), Gmr21PsuUtils.getPeqtByteLength(binNum));
+        Prf peqtHash = PrfFactory.createInstance(getEnvType(), Gmr21MqRpmtUtils.getPeqtByteLength(binNum));
         peqtHash.setKey(peqtHashKey);
         // 构造交换映射
         List<Integer> shufflePermutationList = IntStream.range(0, binNum)
@@ -251,7 +225,7 @@ public class Gmr21PsuServer extends AbstractPsuServer {
         stopWatch.stop();
         long cuckooHashTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
         stopWatch.reset();
-        info("{}{} Server Step 1/6 ({}ms)", ptoStepLogPrefix, getPtoDesc().getPtoName(), cuckooHashTime);
+        info("{}{} Server Step 1/5 ({}ms)", ptoStepLogPrefix, getPtoDesc().getPtoName(), cuckooHashTime);
 
         stopWatch.start();
         // 生成服务端元素输入列表，即哈希桶中的元素 = 原始元素 || hashindex，贮存区中的元素 = 原始元素
@@ -266,7 +240,7 @@ public class Gmr21PsuServer extends AbstractPsuServer {
         stopWatch.stop();
         long cuckooHashOprfTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
         stopWatch.reset();
-        info("{}{} Server Step 2/6 ({}ms)", ptoStepLogPrefix, getPtoDesc().getPtoName(), cuckooHashOprfTime);
+        info("{}{} Server Step 2/5 ({}ms)", ptoStepLogPrefix, getPtoDesc().getPtoName(), cuckooHashOprfTime);
 
         stopWatch.start();
         DataPacketHeader okvsHeader = new DataPacketHeader(
@@ -278,15 +252,15 @@ public class Gmr21PsuServer extends AbstractPsuServer {
         stopWatch.stop();
         long okvsTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
         stopWatch.reset();
-        info("{}{} Server Step 3/6 ({}ms)", ptoStepLogPrefix, getPtoDesc().getPtoName(), okvsTime);
+        info("{}{} Server Step 3/5 ({}ms)", ptoStepLogPrefix, getPtoDesc().getPtoName(), okvsTime);
 
         stopWatch.start();
-        OsnPartyOutput osnReceiverOutput = osnReceiver.osn(permutationMap, Gmr21PsuUtils.FINITE_FIELD_BYTE_LENGTH);
+        OsnPartyOutput osnReceiverOutput = osnReceiver.osn(permutationMap, Gmr21MqRpmtUtils.FINITE_FIELD_BYTE_LENGTH);
         handleOsnReceiverOutput(osnReceiverOutput);
         stopWatch.stop();
         long osnTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
         stopWatch.reset();
-        info("{}{} Server Step 4/6 ({}ms)", ptoStepLogPrefix, getPtoDesc().getPtoName(), osnTime);
+        info("{}{} Server Step 4/5 ({}ms)", ptoStepLogPrefix, getPtoDesc().getPtoName(), osnTime);
 
         stopWatch.start();
         OprfSenderOutput peqtOprfSenderOutput = peqtOprfSender.oprf(binNum);
@@ -301,43 +275,14 @@ public class Gmr21PsuServer extends AbstractPsuServer {
             ownParty().getPartyId(), otherParty().getPartyId()
         );
         rpc.send(DataPacket.fromByteArrayList(aPrimeOprfHeader, aPrimeOprfPayload));
+        ByteBuffer[] serverVector = generateServerVector();
         stopWatch.stop();
         long peqtTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
         stopWatch.reset();
-        info("{}{} Server Step 5/6 ({}ms)", ptoStepLogPrefix, getPtoDesc().getPtoName(), peqtTime);
-
-        stopWatch.start();
-        // 求并集的时候服务端发给客户端的是交换后的数据顺序
-        Vector<Integer> permutedIndexVector = IntStream.range(0, binNum).boxed()
-            .collect(Collectors.toCollection(Vector::new));
-        permutedIndexVector = BenesNetworkUtils.permutation(permutationMap, permutedIndexVector);
-        int[] permutedIndexArray = permutedIndexVector.stream().mapToInt(permutedIndex -> permutedIndex).toArray();
-        // 加密数据
-        CotSenderOutput cotSenderOutput = coreCotSender.send(binNum);
-        Prg encPrg = PrgFactory.createInstance(envType, elementByteLength);
-        IntStream encIntStream = IntStream.range(0, binNum);
-        encIntStream = parallel ? encIntStream.parallel() : encIntStream;
-        List<byte[]> encPayload = encIntStream
-            .mapToObj(index -> {
-                int permuteIndex = permutedIndexArray[index];
-                byte[] key = cotSenderOutput.getR0(index);
-                key = crhf.hash(key);
-                byte[] ciphertext = encPrg.extendToBytes(key);
-                BytesUtils.xori(ciphertext, cuckooHashBin.getHashBinEntry(permuteIndex).getItem().array());
-                return ciphertext;
-            })
-            .collect(Collectors.toList());
-        DataPacketHeader encHeader = new DataPacketHeader(
-            taskId, getPtoDesc().getPtoId(), PtoStep.SERVER_SEND_ENC_ELEMENTS.ordinal(), extraInfo,
-            ownParty().getPartyId(), otherParty().getPartyId()
-        );
-        rpc.send(DataPacket.fromByteArrayList(encHeader, encPayload));
-        stopWatch.stop();
-        long encTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
-        stopWatch.reset();
-        info("{}{} Server Step 6/6 ({}ms)", ptoStepLogPrefix, getPtoDesc().getPtoName(), encTime);
+        info("{}{} Server Step 5/5 ({}ms)", ptoStepLogPrefix, getPtoDesc().getPtoName(), peqtTime);
 
         info("{}{} Server end", ptoEndLogPrefix, getPtoDesc().getPtoName());
+        return serverVector;
     }
 
     private List<byte[]> generateCuckooHashKeyPayload() {
@@ -366,7 +311,7 @@ public class Gmr21PsuServer extends AbstractPsuServer {
             }
         }
         // 如果成功，则向布谷鸟哈希的空余位置插入空元素
-        cuckooHashBin.insertPaddingItems(botElementByteBuffer);
+        cuckooHashBin.insertPaddingItems(BOT_ELEMENT_BYTE_BUFFER);
         return Arrays.stream(cuckooHashKeys).collect(Collectors.toList());
     }
 
@@ -390,7 +335,7 @@ public class Gmr21PsuServer extends AbstractPsuServer {
         byte[][] storage = okvsPayload.toArray(new byte[0][]);
         Okvs<ByteBuffer> okvs = OkvsFactory.createInstance(
             envType, okvsType, clientElementSize * cuckooHashNum,
-            Gmr21PsuUtils.FINITE_FIELD_BYTE_LENGTH * Byte.SIZE, okvsHashKeys
+            Gmr21MqRpmtUtils.FINITE_FIELD_BYTE_LENGTH * Byte.SIZE, okvsHashKeys
         );
         IntStream okvsDecodeIntStream = IntStream.range(0, binNum);
         okvsDecodeIntStream = parallel ? okvsDecodeIntStream.parallel() : okvsDecodeIntStream;
@@ -405,13 +350,11 @@ public class Gmr21PsuServer extends AbstractPsuServer {
                 return pi;
             })
             .collect(Collectors.toCollection(Vector::new));
-        // 清理fArray
         fArray = null;
         extendEntryBytes = null;
     }
 
     private void handleOsnReceiverOutput(OsnPartyOutput osnReceiverOutput) {
-        // 交换ts
         Vector<byte[]> tPiVector = BenesNetworkUtils.permutation(permutationMap, tVector);
         tVector = null;
         aPrimeArray = IntStream.range(0, binNum)
@@ -422,5 +365,24 @@ public class Gmr21PsuServer extends AbstractPsuServer {
                 return ai;
             })
             .toArray(byte[][]::new);
+    }
+
+    private ByteBuffer[] generateServerVector() {
+        // 求并集的时候服务端发给客户端的是交换后的数据顺序
+        Vector<Integer> permutedIndexVector = IntStream.range(0, binNum).boxed()
+            .collect(Collectors.toCollection(Vector::new));
+        permutedIndexVector = BenesNetworkUtils.permutation(permutationMap, permutedIndexVector);
+        int[] permutedIndexArray = permutedIndexVector.stream().mapToInt(permutedIndex -> permutedIndex).toArray();
+        IntStream binIndexIntStream = IntStream.range(0, binNum);
+        binIndexIntStream = parallel ? binIndexIntStream.parallel() : binIndexIntStream;
+        ByteBuffer[] serverVector = binIndexIntStream
+            .mapToObj(index -> {
+                int permuteIndex = permutedIndexArray[index];
+                return cuckooHashBin.getHashBinEntry(permuteIndex).getItem();
+            })
+            .toArray(ByteBuffer[]::new);
+        permutationMap = null;
+        cuckooHashBin = null;
+        return serverVector;
     }
 }
