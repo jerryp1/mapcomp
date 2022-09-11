@@ -5,6 +5,9 @@ import edu.alibaba.mpc4j.common.rpc.Rpc;
 import edu.alibaba.mpc4j.s2pc.pso.mqrpmt.gmr21.Gmr21MqRpmtClient;
 import edu.alibaba.mpc4j.s2pc.pso.mqrpmt.gmr21.Gmr21MqRpmtConfig;
 import edu.alibaba.mpc4j.s2pc.pso.mqrpmt.gmr21.Gmr21MqRpmtServer;
+import edu.alibaba.mpc4j.s2pc.pso.mqrpmt.czz22.Czz22ByteEccCwMqRpmtClient;
+import edu.alibaba.mpc4j.s2pc.pso.mqrpmt.czz22.Czz22ByteEccCwMqRpmtConfig;
+import edu.alibaba.mpc4j.s2pc.pso.mqrpmt.czz22.Czz22ByteEccCwMqRpmtServer;
 
 /**
  * Multi-Query RPMT协议工厂。
@@ -41,13 +44,17 @@ public class MqRpmtFactory {
          */
         ZCL22_SKE,
         /**
-         * CZZ22_CW_PRF方案
+         * CZZ22_BYTE_ECC_CW_PRF方案
          */
-        CZZ22_CW_PRF,
+        CZZ22_BYTE_ECC_CW,
         /**
-         * CZZ22_PO_PRF方案
+         * CZZ22_ECC_CW_PRF方案
          */
-        CZZ22_PO_PRF,
+        CZZ22_ECC_CW,
+        /**
+         * CZZ22_ECC_PO_PRF方案
+         */
+        CZZ22_ECC_PO,
     }
 
     /**
@@ -63,11 +70,13 @@ public class MqRpmtFactory {
         switch (type) {
             case GMR21:
                 return new Gmr21MqRpmtServer(serverRpc, clientParty, (Gmr21MqRpmtConfig) config);
+            case CZZ22_BYTE_ECC_CW:
+                return new Czz22ByteEccCwMqRpmtServer(serverRpc, clientParty, (Czz22ByteEccCwMqRpmtConfig) config);
             case ZCL22_SKE:
             case ZCL22_PKE:
             case JSZ22_SFC:
-            case CZZ22_CW_PRF:
-            case CZZ22_PO_PRF:
+            case CZZ22_ECC_CW:
+            case CZZ22_ECC_PO:
             default:
                 throw new IllegalArgumentException("Invalid " + MqRpmtType.class.getSimpleName() + ": " + type.name());
         }
@@ -76,7 +85,7 @@ public class MqRpmtFactory {
     /**
      * 构建客户端。
      *
-     * @param clientRpc 客户端通信接口。
+     * @param clientRpc   客户端通信接口。
      * @param serverParty 服务端信息。
      * @param config      配置项。
      * @return 客户端。
@@ -85,12 +94,14 @@ public class MqRpmtFactory {
         MqRpmtType type = config.getPtoType();
         switch (type) {
             case GMR21:
-                return new Gmr21MqRpmtClient(clientRpc, serverParty, (Gmr21MqRpmtConfig)config);
+                return new Gmr21MqRpmtClient(clientRpc, serverParty, (Gmr21MqRpmtConfig) config);
+            case CZZ22_BYTE_ECC_CW:
+                return new Czz22ByteEccCwMqRpmtClient(clientRpc, serverParty, (Czz22ByteEccCwMqRpmtConfig) config);
             case ZCL22_SKE:
             case ZCL22_PKE:
             case JSZ22_SFC:
-            case CZZ22_CW_PRF:
-            case CZZ22_PO_PRF:
+            case CZZ22_ECC_CW:
+            case CZZ22_ECC_PO:
             default:
                 throw new IllegalArgumentException("Invalid " + MqRpmtType.class.getSimpleName() + ": " + type.name());
         }

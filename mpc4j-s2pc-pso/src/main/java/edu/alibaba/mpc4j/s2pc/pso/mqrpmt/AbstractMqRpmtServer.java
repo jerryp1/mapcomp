@@ -9,6 +9,7 @@ import edu.alibaba.mpc4j.common.tool.CommonConstants;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -80,11 +81,12 @@ public abstract class AbstractMqRpmtServer extends AbstractSecureTwoPartyPto imp
             throw new IllegalStateException("Need init...");
         }
         assert serverElementSet.size() > 1 && serverElementSet.size() <= maxServerElementSize;
-        this.serverElementArrayList = serverElementSet.stream()
+        serverElementArrayList = serverElementSet.stream()
             .peek(senderElement -> {
                 assert !senderElement.equals(BOT_ELEMENT_BYTE_BUFFER) : "input equals ⊥";
             })
             .collect(Collectors.toCollection(ArrayList::new));
+        Collections.shuffle(serverElementArrayList, secureRandom);
         serverElementSize = serverElementSet.size();
         assert clientElementSize > 1 && clientElementSize <= maxClientElementSize;
         this.clientElementSize = clientElementSize;

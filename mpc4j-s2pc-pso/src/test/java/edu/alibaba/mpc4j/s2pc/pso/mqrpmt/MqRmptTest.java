@@ -6,14 +6,12 @@ import edu.alibaba.mpc4j.common.rpc.RpcManager;
 import edu.alibaba.mpc4j.common.rpc.desc.SecurityModel;
 import edu.alibaba.mpc4j.common.rpc.impl.memory.MemoryRpcManager;
 import edu.alibaba.mpc4j.common.tool.CommonConstants;
-import edu.alibaba.mpc4j.common.tool.hashbin.object.cuckoo.CuckooHashBinFactory.CuckooHashBinType;
-import edu.alibaba.mpc4j.common.tool.okve.okvs.OkvsFactory.OkvsType;
 import edu.alibaba.mpc4j.s2pc.pcg.ot.cot.impl.direct.DirectCotConfig;
 import edu.alibaba.mpc4j.s2pc.pso.PsoUtils;
 import edu.alibaba.mpc4j.s2pc.pso.mqrpmt.gmr21.Gmr21MqRpmtConfig;
+import edu.alibaba.mpc4j.s2pc.pso.mqrpmt.czz22.Czz22ByteEccCwMqRpmtConfig;
 import edu.alibaba.mpc4j.s2pc.pso.osn.OsnConfig;
 import edu.alibaba.mpc4j.s2pc.pso.osn.gmr21.Gmr21OsnConfig;
-import edu.alibaba.mpc4j.s2pc.pso.psu.PsuFactory;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.time.StopWatch;
 import org.junit.Assert;
@@ -121,55 +119,14 @@ public class MqRmptTest {
 //            PsuFactory.PsuType.ZCL22_SKE.name() + " (File Z2_MTG)",
 //            new Zcl22SkePsuConfig.Builder().setOprpConfig(fileOprpConfig).setBcConfig(fileBcConfig).build()
 //        });
-
-        // GMR21 (H3_SINGLETON_GCT OKVS, direct COT, NAIVE_3_HASH)
+        // GMR21
         configurationParams.add(new Object[] {
-            MqRpmtFactory.MqRpmtType.GMR21.name() + " (H3_SINGLETON_GCT OKVS, direct COT, NAIVE_3_HASH)",
-            new Gmr21MqRpmtConfig.Builder()
-                .setOsnConfig(directCotOsnConfig)
-                .setOkvsType(OkvsType.H3_SINGLETON_GCT)
-                .build(),
+            MqRpmtFactory.MqRpmtType.GMR21.name(),
+            new Gmr21MqRpmtConfig.Builder().setOsnConfig(directCotOsnConfig).build(),
         });
-        // GMR21 (H2_SINGLETON_GCT OKVS, direct COT, NAIVE_3_HASH)
+        // CZZ22_BYTE_ECC_CW
         configurationParams.add(new Object[] {
-            MqRpmtFactory.MqRpmtType.GMR21.name() + " (H2_SINGLETON_GCT OKVS, direct COT, NAIVE_3_HASH)",
-            new Gmr21MqRpmtConfig.Builder()
-                .setOsnConfig(directCotOsnConfig)
-                .setOkvsType(OkvsType.H2_SINGLETON_GCT)
-                .build(),
-        });
-        // GMR21 (MEGA_BIN OKVS, silent COT, NAIVE_3_HASH)
-        configurationParams.add(new Object[] {
-            PsuFactory.PsuType.GMR21.name() + " (MEGA_BIN OKVS, silent COT, NAIVE_3_HASH)",
-            new Gmr21MqRpmtConfig.Builder()
-                .setOkvsType(OkvsType.MEGA_BIN)
-                .build(),
-        });
-        // GMR21 (MEGA_BIN OKVS, direct COT, NAIVE_3_HASH)
-        configurationParams.add(new Object[] {
-            PsuFactory.PsuType.GMR21.name() + " (MEGA_BIN OKVS, direct COT, NAIVE_3_HASH)",
-            new Gmr21MqRpmtConfig.Builder()
-                .setOsnConfig(directCotOsnConfig)
-                .setOkvsType(OkvsType.MEGA_BIN)
-                .build(),
-        });
-        // GMR21 (MEGA_BIN OKVS, direct COT, NAIVE_4_HASH)
-        configurationParams.add(new Object[] {
-            PsuFactory.PsuType.GMR21.name() + " (MEGA_BIN OKVS, direct COT, NAIVE_4_HASH)",
-            new Gmr21MqRpmtConfig.Builder()
-                .setOsnConfig(directCotOsnConfig)
-                .setOkvsType(OkvsType.MEGA_BIN)
-                .setCuckooHashBinType(CuckooHashBinType.NAIVE_4_HASH)
-                .build(),
-        });
-        // GMR21 (MEGA_BIN OKVS, direct COT, NO_STASH_PSZ18_3_HASH)
-        configurationParams.add(new Object[] {
-            PsuFactory.PsuType.GMR21.name() + " (MEGA_BIN OKVS, direct COT, NO_STASH_PSZ18_3_HASH)",
-            new Gmr21MqRpmtConfig.Builder()
-                .setOsnConfig(directCotOsnConfig)
-                .setOkvsType(OkvsType.MEGA_BIN)
-                .setCuckooHashBinType(CuckooHashBinType.NO_STASH_PSZ18_3_HASH)
-                .build(),
+            MqRpmtFactory.MqRpmtType.CZZ22_BYTE_ECC_CW.name(), new Czz22ByteEccCwMqRpmtConfig.Builder().build(),
         });
 
         return configurationParams;

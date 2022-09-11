@@ -168,7 +168,7 @@ public class Gmr21MqRpmtServer extends AbstractMqRpmtServer {
         secureRandom.nextBytes(finiteFieldHashKey);
         keysPayload.add(finiteFieldHashKey);
         // 可以提前初始化多项式有限域哈希，根据论文实现，固定为64比特
-        finiteFieldHash = PrfFactory.createInstance(envType, Gmr21MqRpmtUtils.FINITE_FIELD_BYTE_LENGTH);
+        finiteFieldHash = PrfFactory.createInstance(envType, Gmr21MqRpmtPtoDesc.FINITE_FIELD_BYTE_LENGTH);
         finiteFieldHash.setKey(finiteFieldHashKey);
         // 初始化PEQT哈希密钥
         peqtHashKey = new byte[CommonConstants.BLOCK_BYTE_LENGTH];
@@ -214,7 +214,7 @@ public class Gmr21MqRpmtServer extends AbstractMqRpmtServer {
         // 设置OKVS大小
         okvsM = OkvsFactory.getM(okvsType, clientElementSize * cuckooHashNum);
         // 初始化PEQT哈希
-        Prf peqtHash = PrfFactory.createInstance(getEnvType(), Gmr21MqRpmtUtils.getPeqtByteLength(binNum));
+        Prf peqtHash = PrfFactory.createInstance(getEnvType(), Gmr21MqRpmtPtoDesc.getPeqtByteLength(binNum));
         peqtHash.setKey(peqtHashKey);
         // 构造交换映射
         List<Integer> shufflePermutationList = IntStream.range(0, binNum)
@@ -255,7 +255,7 @@ public class Gmr21MqRpmtServer extends AbstractMqRpmtServer {
         info("{}{} Server Step 3/5 ({}ms)", ptoStepLogPrefix, getPtoDesc().getPtoName(), okvsTime);
 
         stopWatch.start();
-        OsnPartyOutput osnReceiverOutput = osnReceiver.osn(permutationMap, Gmr21MqRpmtUtils.FINITE_FIELD_BYTE_LENGTH);
+        OsnPartyOutput osnReceiverOutput = osnReceiver.osn(permutationMap, Gmr21MqRpmtPtoDesc.FINITE_FIELD_BYTE_LENGTH);
         handleOsnReceiverOutput(osnReceiverOutput);
         stopWatch.stop();
         long osnTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
@@ -335,7 +335,7 @@ public class Gmr21MqRpmtServer extends AbstractMqRpmtServer {
         byte[][] storage = okvsPayload.toArray(new byte[0][]);
         Okvs<ByteBuffer> okvs = OkvsFactory.createInstance(
             envType, okvsType, clientElementSize * cuckooHashNum,
-            Gmr21MqRpmtUtils.FINITE_FIELD_BYTE_LENGTH * Byte.SIZE, okvsHashKeys
+            Gmr21MqRpmtPtoDesc.FINITE_FIELD_BYTE_LENGTH * Byte.SIZE, okvsHashKeys
         );
         IntStream okvsDecodeIntStream = IntStream.range(0, binNum);
         okvsDecodeIntStream = parallel ? okvsDecodeIntStream.parallel() : okvsDecodeIntStream;

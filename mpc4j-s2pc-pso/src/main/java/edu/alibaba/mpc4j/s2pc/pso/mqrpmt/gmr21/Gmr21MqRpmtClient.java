@@ -148,7 +148,7 @@ public class Gmr21MqRpmtClient extends AbstractMqRpmtClient {
         // 初始化值域哈希密钥
         byte[] finiteFieldHashKey = keysPayload.remove(0);
         // 可以提前初始化多项式有限域哈希，根据论文实现，固定为64比特
-        finiteFieldHash = PrfFactory.createInstance(envType, Gmr21MqRpmtUtils.FINITE_FIELD_BYTE_LENGTH);
+        finiteFieldHash = PrfFactory.createInstance(envType, Gmr21MqRpmtPtoDesc.FINITE_FIELD_BYTE_LENGTH);
         finiteFieldHash.setKey(finiteFieldHashKey);
         // 初始化PEQT哈希密钥
         peqtHashKey = keysPayload.remove(0);
@@ -172,7 +172,7 @@ public class Gmr21MqRpmtClient extends AbstractMqRpmtClient {
         // 设置最大桶数量
         binNum = CuckooHashBinFactory.getBinNum(cuckooHashBinType, serverElementSize);
         // 初始化PEQT哈希
-        Prf peqtHash = PrfFactory.createInstance(getEnvType(), Gmr21MqRpmtUtils.getPeqtByteLength(binNum));
+        Prf peqtHash = PrfFactory.createInstance(getEnvType(), Gmr21MqRpmtPtoDesc.getPeqtByteLength(binNum));
         peqtHash.setKey(peqtHashKey);
         DataPacketHeader cuckooHashKeyHeader = new DataPacketHeader(
             taskId, getPtoDesc().getPtoId(), PtoStep.SERVER_SEND_CUCKOO_HASH_KEYS.ordinal(), extraInfo,
@@ -205,7 +205,7 @@ public class Gmr21MqRpmtClient extends AbstractMqRpmtClient {
         info("{}{} Client Step 3/5 ({}ms)", ptoStepLogPrefix, getPtoDesc().getPtoName(), okvsTime);
 
         stopWatch.start();
-        OsnPartyOutput osnSenderOutput = osnSender.osn(sVector, Gmr21MqRpmtUtils.FINITE_FIELD_BYTE_LENGTH);
+        OsnPartyOutput osnSenderOutput = osnSender.osn(sVector, Gmr21MqRpmtPtoDesc.FINITE_FIELD_BYTE_LENGTH);
         IntStream bOprfIntStream = IntStream.range(0, binNum);
         bOprfIntStream = parallel ? bOprfIntStream.parallel() : bOprfIntStream;
         byte[][] bArray = bOprfIntStream.mapToObj(osnSenderOutput::getShare).toArray(byte[][]::new);
@@ -235,9 +235,9 @@ public class Gmr21MqRpmtClient extends AbstractMqRpmtClient {
             .map(ByteBuffer::wrap)
             .toArray(ByteBuffer[]::new);
         // 对比并得到结果
-        boolean[] choiceArray = new boolean[binNum];
+        boolean[] containVector = new boolean[binNum];
         IntStream.range(0, binNum).forEach(binIndex ->
-            choiceArray[binIndex] = bPrimeOprfs[binIndex].equals(aPrimeOprfs[binIndex])
+            containVector[binIndex] = bPrimeOprfs[binIndex].equals(aPrimeOprfs[binIndex])
         );
         stopWatch.stop();
         long peqtTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
@@ -245,7 +245,7 @@ public class Gmr21MqRpmtClient extends AbstractMqRpmtClient {
         info("{}{} Client Step 5/5 ({}ms)", ptoStepLogPrefix, getPtoDesc().getPtoName(), peqtTime);
 
         info("{}{} Client end", ptoEndLogPrefix, getPtoDesc().getPtoName());
-        return choiceArray;
+        return containVector;
     }
 
     private void handleCuckooHashKeyPayload(List<byte[]> cuckooHashKeyPayload) {
@@ -264,7 +264,7 @@ public class Gmr21MqRpmtClient extends AbstractMqRpmtClient {
         // For each j ∈ [m], Bob choose a random s_j.
         sVector = IntStream.range(0, binNum)
             .mapToObj(index -> {
-                byte[] si = new byte[Gmr21MqRpmtUtils.FINITE_FIELD_BYTE_LENGTH];
+                byte[] si = new byte[Gmr21MqRpmtPtoDesc.FINITE_FIELD_BYTE_LENGTH];
                 secureRandom.nextBytes(si);
                 return si;
             })
@@ -326,7 +326,7 @@ public class Gmr21MqRpmtClient extends AbstractMqRpmtClient {
             ));
         Okvs<ByteBuffer> okvs = OkvsFactory.createInstance(
             envType, okvsType, cuckooHashNum * clientElementSize,
-            Gmr21MqRpmtUtils.FINITE_FIELD_BYTE_LENGTH * Byte.SIZE, okvsHashKeys
+            Gmr21MqRpmtPtoDesc.FINITE_FIELD_BYTE_LENGTH * Byte.SIZE, okvsHashKeys
         );
         // OKVS编码可以并行处理
         okvs.setParallelEncode(parallel);
