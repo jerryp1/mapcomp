@@ -37,7 +37,7 @@ public class X25519ByteEccUtils {
     /**
      * 幂指数的字节长度
      */
-    private static final int SCALAR_BYTES = SCALAR_INTS * 4;
+    public static final int SCALAR_BYTES = SCALAR_INTS * 4;
     /**
      * 无穷远点：X = 0，小端表示
      */
@@ -212,7 +212,8 @@ public class X25519ByteEccUtils {
      * @return 如果符合要求，返回{@code true}，否则返回{@code false}。
      */
     public static boolean checkPoint(byte[] p) {
-        return p.length == POINT_BYTES;
+        // 首位必须为0
+        return p.length == POINT_BYTES && (p[POINT_BYTES - 1] & (byte) 0x80) == 0;
     }
 
     /**
