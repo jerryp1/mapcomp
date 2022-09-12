@@ -18,6 +18,16 @@ import java.security.SecureRandom;
  * <p>
  * https://martin.kleppmann.com/papers/curve25519.pdf
  * </p>
+ * 注意，X25519无法实现inverseScalar操作，这是因为任意一个随机点既可能在X25519上，也可能在扭曲X25519上，而两个曲线的阶不相等。参见：
+ * <p>
+ * https://loup-vaillant.fr/tutorials/cofactor
+ * </p>
+ * 详细描述为：
+ * <p>
+ * X25519 however only transmits the x-coordinate of the point, so the worst you can have is a point on the "twist".
+ * Since the twist of Curve25519 also has a big prime order (2^{253} minus something) and a small cofactor (4), the
+ * results will be similar, and the attacker will learn nothing. Curve25519 is thus "twist secure".
+ * </p>
  *
  * @author Weiran Liu
  * @date 2022/9/2
@@ -55,9 +65,7 @@ public class X25519BcByteMulEcc implements ByteMulEcc {
 
     @Override
     public byte[] randomPoint(SecureRandom secureRandom) {
-        byte[] p = X25519ByteEccUtils.randomPoint(secureRandom);
-        p[X25519ByteEccUtils.POINT_BYTES - 1] &= 0x7F;
-        return p;
+        return X25519ByteEccUtils.randomPoint(secureRandom);
     }
 
     @Override
