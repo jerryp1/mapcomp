@@ -21,6 +21,12 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 ### Added
 
 - ByteEcc: Add scalar validation for X25519. Add libsodium support (both for X25519 and Ed25519).
+- Multiplication Triple in Zl: Introduce Multiplication Triple Generation (MTC) under Zl in `mpc4j-s2pc-pcg`.
+- mqRPMT: Introduce mqRPMT in `mpc4j-s2pc-pso`.
+
+### Remove
+
+- `byte[]` -> `int[]`: More tests show that the ByteBuffer conversion is as fast as unsafe conversion. We remove the unsafe conversion method. Now, developer can use `mpc4j` on any JDK with version 1.8 or later (instead of only 1.8).
 
 ## \[1.0.3\]
 
