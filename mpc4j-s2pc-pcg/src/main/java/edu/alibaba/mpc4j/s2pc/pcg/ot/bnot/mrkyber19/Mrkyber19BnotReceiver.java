@@ -29,21 +29,18 @@ import java.util.stream.IntStream;
  */
 public class Mrkyber19BnotReceiver extends AbstractBnotReceiver {
     /**
-     * 配置项
-     */
-    private final MrKyber19BnotConfig config;
-    /**
      * OT协议接收方拥有的密钥对
      */
     private KyberKeyPairJava[] keyArray;
     /**
      * 使用的kyber实例
      */
-    private Kyber kyber;
+    private final Kyber kyber;
 
     public Mrkyber19BnotReceiver(Rpc receiverRpc, Party senderParty, MrKyber19BnotConfig config) {
         super(MrKyber19BnotPtoDesc.getInstance(), receiverRpc, senderParty, config);
-        this.config = config;
+        this.kyber = KyberFactory.createInstance(config.getKyberType(), config.getParamsK(), envType);
+
     }
 
     @Override
@@ -60,7 +57,6 @@ public class Mrkyber19BnotReceiver extends AbstractBnotReceiver {
         setPtoInput(choices);
         info("{}{} Recv. begin", ptoBeginLogPrefix, getPtoDesc().getPtoName());
 
-        paramsInit();
         stopWatch.start();
         List<byte[]> pkPayload = generatePkPayload();
         DataPacketHeader pkHeader = new DataPacketHeader(
@@ -87,10 +83,6 @@ public class Mrkyber19BnotReceiver extends AbstractBnotReceiver {
 
         info("{}{} Send. end", ptoEndLogPrefix, getPtoDesc().getPtoName());
         return handleBetaPayload(betaPayload);
-    }
-
-    private void paramsInit() {
-        this.kyber = KyberFactory.createInstance(config.getKyberType(), config.getParamsK());
     }
 
     private List<byte[]> generatePkPayload() {

@@ -30,10 +30,6 @@ import java.util.stream.IntStream;
  */
 public class MrKyber19BaseOtReceiver extends AbstractBaseOtReceiver {
     /**
-     * 配置项
-     */
-    private final MrKyber19BaseOtConfig config;
-    /**
      * OT协议接收方密钥对
      */
     private KyberKeyPairJava[] keyArray;
@@ -41,12 +37,12 @@ public class MrKyber19BaseOtReceiver extends AbstractBaseOtReceiver {
     /**
      * 使用的kyber实例
      */
-    private Kyber kyber;
+    private final Kyber kyber;
 
 
     public MrKyber19BaseOtReceiver(Rpc receiverRpc, Party senderParty, MrKyber19BaseOtConfig config) {
         super(MrKyber19BaseOtPtoDesc.getInstance(), receiverRpc, senderParty, config);
-        this.config = config;
+        this.kyber = KyberFactory.createInstance(config.getKyberType(), config.getParamsK(), envType);
     }
 
     @Override
@@ -62,8 +58,6 @@ public class MrKyber19BaseOtReceiver extends AbstractBaseOtReceiver {
     public BaseOtReceiverOutput receive(boolean[] choices) throws MpcAbortException {
         setPtoInput(choices);
         info("{}{} Recv. begin", ptoBeginLogPrefix, getPtoDesc().getPtoName());
-
-        paramsInit();
         stopWatch.start();
         List<byte[]> pkPayload = generatePkPayload();
         DataPacketHeader pkHeader = new DataPacketHeader(
@@ -92,10 +86,6 @@ public class MrKyber19BaseOtReceiver extends AbstractBaseOtReceiver {
         return handleBetaPayload(betaPayload);
     }
 
-    private void paramsInit() {
-        this.kyber = KyberFactory.createInstance(config.getKyberType(), config.getParamsK());
-    }
-
     private List<byte[]> generatePkPayload() {
         keyArray = new KyberKeyPairJava[choices.length];
         // 公钥生成流
@@ -118,8 +108,13 @@ public class MrKyber19BaseOtReceiver extends AbstractBaseOtReceiver {
                     publickKeyBytes = BytesUtils.xor(publickKeyBytes, hashKeyByte);
                     // 根据选择值将两个参数R分别放入对应位置
                     int sigma = choices[index] ? 1 : 0;
-                    return this.kyber.packageTwoKeys
-                            (publickKeyBytes, randomKeyByte, keyArray[index].getPublicKeyGenerator(), sigma);
+                    if (choices[index]) {
+                        return this.kyber.packageTwoKeys
+                                (randomKeyByte, publickKeyBytes, keyArray[index].getPublicKeyGenerator());
+                    } else {
+                        return this.kyber.packageTwoKeys
+                                (publickKeyBytes, randomKeyByte, keyArray[index].getPublicKeyGenerator());
+                    }
                 })
                 .flatMap(Arrays::stream)
                 .collect(Collectors.toList());

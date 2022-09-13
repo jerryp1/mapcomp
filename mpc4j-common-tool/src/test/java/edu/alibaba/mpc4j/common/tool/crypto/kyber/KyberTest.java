@@ -1,5 +1,6 @@
 package edu.alibaba.mpc4j.common.tool.crypto.kyber;
 
+import edu.alibaba.mpc4j.common.tool.EnvType;
 import edu.alibaba.mpc4j.common.tool.crypto.kyber.kyber4j.KyberKeyPairJava;
 import org.junit.Assert;
 import org.junit.Test;
@@ -22,10 +23,11 @@ public class KyberTest {
     @Test
     public void testKyberCpa() {
         SecureRandom secureRandom = new SecureRandom();
+        EnvType envType = EnvType.STANDARD;
         for (int k = 2; k <= 4; k++) {
             byte[] testBytes = new byte[32];
             secureRandom.nextBytes(testBytes);
-            Kyber kyber = KyberFactory.createInstance(KyberFactory.KyberType.KYBER_CPA, k);
+            Kyber kyber = KyberFactory.createInstance(KyberFactory.KyberType.KYBER_CPA, k,envType);
             KyberKeyPairJava keyPair = kyber.generateKyberVecKeys();
             byte[] cipherText = kyber.encaps(testBytes, keyPair.getPublicKeyBytes(), keyPair.getPublicKeyGenerator());
             byte[] plainText = kyber.decaps(cipherText, keyPair.getPrivateKeyVec(), keyPair.getPublicKeyBytes(), keyPair.getPublicKeyGenerator());
@@ -41,8 +43,9 @@ public class KyberTest {
     @Test
     public void testKyberCca() {
         SecureRandom secureRandom = new SecureRandom();
+        EnvType envType = EnvType.STANDARD;
         for (int k = 2; k <= 4; k++) {
-            Kyber kyber = KyberFactory.createInstance(KyberFactory.KyberType.KYBER_CCA, k);
+            Kyber kyber = KyberFactory.createInstance(KyberFactory.KyberType.KYBER_CCA, k,envType);
             byte[] testBytes = new byte[16];
             secureRandom.nextBytes(testBytes);
             KyberKeyPairJava keyPair = kyber.generateKyberVecKeys();

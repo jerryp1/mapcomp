@@ -28,21 +28,17 @@ import java.util.stream.IntStream;
  */
 public class MrKyber19BaseOtSender extends AbstractBaseOtSender {
     /**
-     * 配置项
-     */
-    private final MrKyber19BaseOtConfig config;
-    /**
      * OT协议发送方密文
      */
     private List<byte[]> cipherList;
     /**
      * 使用的kyber实例
      */
-    private Kyber kyber;
+    private final Kyber kyber;
 
     public MrKyber19BaseOtSender(Rpc senderRpc, Party receiverParty, MrKyber19BaseOtConfig config) {
         super(MrKyber19BaseOtPtoDesc.getInstance(), senderRpc, receiverParty, config);
-        this.config = config;
+        this.kyber = KyberFactory.createInstance(config.getKyberType(), config.getParamsK(), envType);
     }
 
     @Override
@@ -59,7 +55,6 @@ public class MrKyber19BaseOtSender extends AbstractBaseOtSender {
         setPtoInput(num);
         cipherList = new ArrayList<>();
         info("{}{} Send. begin", ptoBeginLogPrefix, getPtoDesc().getPtoName());
-        paramsInit();
         stopWatch.start();
         DataPacketHeader pkHeader = new DataPacketHeader(
                 taskId, getPtoDesc().getPtoId(), MrKyber19BaseOtPtoDesc.PtoStep.RECEIVER_SEND_PK.ordinal(), extraInfo,
@@ -87,10 +82,6 @@ public class MrKyber19BaseOtSender extends AbstractBaseOtSender {
         return senderOutput;
     }
 
-    private void paramsInit() {
-        this.kyber = KyberFactory.createInstance(config.getKyberType(), config.getParamsK());
-    }
-
     private BaseOtSenderOutput handlePkPayload(List<byte[]> pkPayload) throws MpcAbortException {
         MpcAbortPreconditions.checkArgument(pkPayload.size() == num * 3);
         byte[][] publicKey = pkPayload.toArray(new byte[num * 3][]);
@@ -112,6 +103,7 @@ public class MrKyber19BaseOtSender extends AbstractBaseOtSender {
                     // 计算密文
                     byte[][] cipherText = new byte[2][];
                     // KEM中的输入是秘密值、公钥（As+e）部分、生成元部分、随机数种子，安全参数k
+
                     cipherText[0] = this.kyber.encaps(r0Array[index], upperPkR0, publicKey[index * 3 + 2]);
                     cipherText[1] = this.kyber.encaps(r1Array[index], upperPkR1, publicKey[index * 3 + 2]);
                     return cipherText;

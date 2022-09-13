@@ -48,9 +48,9 @@ public interface Kyber {
     /**
      * Decrypt the given byte array using the Kyber public-key encryption scheme
      *
-     * @param packedCipherText 压缩，打包后的密文
-     * @param privateKey       私钥
-     * @param publicKeyBytes 公钥
+     * @param packedCipherText   压缩，打包后的密文
+     * @param privateKey         私钥
+     * @param publicKeyBytes     公钥
      * @param publicKeyGenerator 生成元
      * @return 秘密值k
      */
@@ -67,13 +67,12 @@ public interface Kyber {
     /**
      * 将公钥打包传输，担心公钥的长度不一定，所以都放在了Kyber类里面
      *
-     * @param publicKeyBytes     遮掩后的As+e
-     * @param randomKeyByte      随机的As+e
+     * @param firstKeyBytes      第一个公钥
+     * @param sencondKeyByte     第二个公钥
      * @param publicKeyGenerator 生成元
-     * @param sigma              2选一OT的选择
      * @return 多项式向量
      */
-    byte[][] packageTwoKeys(byte[] publicKeyBytes, byte[] randomKeyByte, byte[] publicKeyGenerator, int sigma);
+    byte[][] packageTwoKeys(byte[] firstKeyBytes, byte[] sencondKeyByte, byte[] publicKeyGenerator);
 
     /**
      * 将公钥打包传输，担心公钥的长度不一定，所以都放在了Kyber类里面

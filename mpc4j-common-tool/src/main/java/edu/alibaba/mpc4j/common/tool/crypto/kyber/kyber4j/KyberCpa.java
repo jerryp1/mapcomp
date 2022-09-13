@@ -1,5 +1,6 @@
 package edu.alibaba.mpc4j.common.tool.crypto.kyber.kyber4j;
 
+import edu.alibaba.mpc4j.common.tool.EnvType;
 import edu.alibaba.mpc4j.common.tool.crypto.hash.Hash;
 import edu.alibaba.mpc4j.common.tool.crypto.hash.HashFactory;
 import edu.alibaba.mpc4j.common.tool.crypto.kyber.Kyber;
@@ -51,37 +52,37 @@ public class KyberCpa implements Kyber {
     /**
      * 初始化函数
      *
-     * @param paramsK      安全参数k
+     * @param paramsK 安全等级k
+     * @param envType 环境参数
      */
-    public KyberCpa(int paramsK) {
+    public KyberCpa(int paramsK, EnvType envType) {
         this.paramsK = paramsK;
         this.secureRandom = new SecureRandom();
-        this.hashFunction = HashFactory.createInstance(HashFactory.HashType.BC_BLAKE_2B_160,16);
-        this.prgMatrixLength672 = PrgFactory.createInstance
-                (PrgFactory.PrgType.BC_SM4_ECB, 672);
+        this.hashFunction = HashFactory.createInstance(envType, 16);
+        this.prgMatrixLength672 = PrgFactory.createInstance(envType, 672);
         switch (paramsK) {
             case 2:
                 this.prgNoiseLength = PrgFactory.createInstance
-                        (PrgFactory.PrgType.BC_SM4_ECB, KyberParams.ETA_512 * KyberParams.PARAMS_N / 4);
+                        (envType, KyberParams.ETA_512 * KyberParams.PARAMS_N / 4);
                 this.prgPkLength =
                         PrgFactory.createInstance
-                                (PrgFactory.PrgType.BC_SM4_ECB, KyberParams.POLY_VECTOR_BYTES_512);
+                                (envType, KyberParams.POLY_VECTOR_BYTES_512);
                 paramsPolyvecBytes = KyberParams.POLY_VECTOR_BYTES_512;
                 break;
             case 3:
                 this.prgNoiseLength = PrgFactory.createInstance
-                        (PrgFactory.PrgType.BC_SM4_ECB, KyberParams.ETA_768_1024 * KyberParams.PARAMS_N / 4);
+                        (envType, KyberParams.ETA_768_1024 * KyberParams.PARAMS_N / 4);
                 this.prgPkLength =
                         PrgFactory.createInstance
-                                (PrgFactory.PrgType.BC_SM4_ECB, KyberParams.POLY_VECTOR_BYTES_768);
+                                (envType, KyberParams.POLY_VECTOR_BYTES_768);
                 paramsPolyvecBytes = KyberParams.POLY_VECTOR_BYTES_768;
                 break;
             case 4:
                 this.prgNoiseLength = PrgFactory.createInstance
-                        (PrgFactory.PrgType.BC_SM4_ECB, KyberParams.ETA_768_1024 * KyberParams.PARAMS_N / 4);
+                        (envType, KyberParams.ETA_768_1024 * KyberParams.PARAMS_N / 4);
                 this.prgPkLength =
                         PrgFactory.createInstance
-                                (PrgFactory.PrgType.BC_SM4_ECB, KyberParams.POLY_VECTOR_BYTES_1024);
+                                (envType, KyberParams.POLY_VECTOR_BYTES_1024);
                 paramsPolyvecBytes = KyberParams.POLY_VECTOR_BYTES_1024;
                 break;
             default:
@@ -133,8 +134,8 @@ public class KyberCpa implements Kyber {
 
     @Override
     public byte[] decaps(byte[] packedCipherText, short[][] privateKey, byte[] publicKeyBytes, byte[] publicKeyGenerator) {
-         // cpa方案不要公钥进行解密
-        return Indcpa.decrypt(packedCipherText, privateKey,paramsK);
+        // cpa方案不要公钥进行解密
+        return Indcpa.decrypt(packedCipherText, privateKey, paramsK);
     }
 
     @Override
@@ -182,12 +183,12 @@ public class KyberCpa implements Kyber {
     }
 
     @Override
-    public byte[][] packageTwoKeys(byte[] publicKeyBytes, byte[] randomKeyByte, byte[] publicKeyGenerator, int sigma) {
+    public byte[][] packageTwoKeys(byte[] firstKeyBytes, byte[] sencondKeyByte, byte[] publicKeyGenerator) {
         byte[][] pkPair = new byte[3][];
-        pkPair[sigma] = new byte[paramsPolyvecBytes];
-        System.arraycopy(publicKeyBytes, 0, pkPair[sigma], 0, paramsPolyvecBytes);
-        pkPair[1 - sigma] = new byte[paramsPolyvecBytes];
-        System.arraycopy(randomKeyByte, 0, pkPair[1 - sigma], 0, paramsPolyvecBytes);
+        pkPair[0] = new byte[paramsPolyvecBytes];
+        System.arraycopy(firstKeyBytes, 0, pkPair[0], 0, paramsPolyvecBytes);
+        pkPair[1] = new byte[paramsPolyvecBytes];
+        System.arraycopy(sencondKeyByte, 0, pkPair[1], 0, paramsPolyvecBytes);
         pkPair[2] = new byte[KyberParams.SYM_BYTES];
         System.arraycopy(publicKeyGenerator, 0, pkPair[2], 0, KyberParams.SYM_BYTES);
         return pkPair;

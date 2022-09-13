@@ -1,6 +1,7 @@
 package edu.alibaba.mpc4j.common.tool.crypto.kyber.kyber4j;
 
 import edu.alibaba.mpc4j.common.tool.CommonConstants;
+import edu.alibaba.mpc4j.common.tool.EnvType;
 import edu.alibaba.mpc4j.common.tool.crypto.hash.Hash;
 import edu.alibaba.mpc4j.common.tool.crypto.hash.HashFactory;
 import edu.alibaba.mpc4j.common.tool.crypto.kyber.Kyber;
@@ -59,39 +60,36 @@ public class KyberCca implements Kyber {
     /**
      * 初始化函数
      *
-     * @param paramsK      安全参数k
+     * @param paramsK 安全等级k
+     * @param envType 环境参数
      */
-    public KyberCca(int paramsK) {
+    public KyberCca(int paramsK, EnvType envType) {
         this.paramsK = paramsK;
         this.secureRandom = new SecureRandom();
-        this.hashFunction = HashFactory.createInstance(HashFactory.HashType.BC_BLAKE_2B_160,16);
-        this.prgMatrixLength672 = PrgFactory.createInstance
-                (PrgFactory.PrgType.BC_SM4_ECB, 672);
-        this.prgEncryptLength32 = PrgFactory.createInstance(PrgFactory.PrgType.BC_SM4_ECB, KyberParams.SYM_BYTES);
-        this.prgEncryptLength64 = PrgFactory.createInstance(PrgFactory.PrgType.BC_SM4_ECB, 2 * KyberParams.SYM_BYTES);
+        this.hashFunction = HashFactory.createInstance(envType, 16);
+        this.prgMatrixLength672 = PrgFactory.createInstance(envType, 672);
+        this.prgEncryptLength32 = PrgFactory.createInstance(envType, KyberParams.SYM_BYTES);
+        this.prgEncryptLength64 = PrgFactory.createInstance(envType, 2 * KyberParams.SYM_BYTES);
         switch (paramsK) {
             case 2:
                 this.prgNoiseLength = PrgFactory.createInstance
-                        (PrgFactory.PrgType.BC_SM4_ECB, KyberParams.ETA_512 * KyberParams.PARAMS_N / 4);
+                        (envType, KyberParams.ETA_512 * KyberParams.PARAMS_N / 4);
                 this.prgPkLength =
-                        PrgFactory.createInstance
-                                (PrgFactory.PrgType.BC_SM4_ECB, KyberParams.POLY_VECTOR_BYTES_512);
+                        PrgFactory.createInstance(envType, KyberParams.POLY_VECTOR_BYTES_512);
                 paramsPolyvecBytes = KyberParams.POLY_VECTOR_BYTES_512;
                 break;
             case 3:
                 this.prgNoiseLength = PrgFactory.createInstance
-                        (PrgFactory.PrgType.BC_SM4_ECB, KyberParams.ETA_768_1024 * KyberParams.PARAMS_N / 4);
+                        (envType, KyberParams.ETA_768_1024 * KyberParams.PARAMS_N / 4);
                 this.prgPkLength =
-                        PrgFactory.createInstance
-                                (PrgFactory.PrgType.BC_SM4_ECB, KyberParams.POLY_VECTOR_BYTES_768);
+                        PrgFactory.createInstance(envType, KyberParams.POLY_VECTOR_BYTES_768);
                 paramsPolyvecBytes = KyberParams.POLY_VECTOR_BYTES_768;
                 break;
             case 4:
                 this.prgNoiseLength = PrgFactory.createInstance
-                        (PrgFactory.PrgType.BC_SM4_ECB, KyberParams.ETA_768_1024 * KyberParams.PARAMS_N / 4);
+                        (envType, KyberParams.ETA_768_1024 * KyberParams.PARAMS_N / 4);
                 this.prgPkLength =
-                        PrgFactory.createInstance
-                                (PrgFactory.PrgType.BC_SM4_ECB, KyberParams.POLY_VECTOR_BYTES_1024);
+                        PrgFactory.createInstance(envType, KyberParams.POLY_VECTOR_BYTES_1024);
                 paramsPolyvecBytes = KyberParams.POLY_VECTOR_BYTES_1024;
                 break;
             default:
@@ -128,9 +126,10 @@ public class KyberCca implements Kyber {
 
     /**
      * 基于cca的打包函数，中间会修改message。
-     * @param k 输入的秘密值，会在函数中修改
-     * @param publicKeyBytes 公钥
-     * @param publicKeyVector 公钥的short格式（两者同时需要的原因在于byte格式的用于计算hash值，short格式的用于加密）
+     *
+     * @param k                  输入的秘密值，会在函数中修改
+     * @param publicKeyBytes     公钥
+     * @param publicKeyVector    公钥的short格式（两者同时需要的原因在于byte格式的用于计算hash值，short格式的用于加密）
      * @param publicKeyGenerator 公钥的生成元
      * @return 返回值为加密后的密文
      */
@@ -139,7 +138,7 @@ public class KyberCca implements Kyber {
         secureRandom.nextBytes(randomSeed);
         byte[] m = prgEncryptLength32.extendToBytes(hashFunction.digestToBytes(randomSeed));
         // 计算G（H（pk），m）需要注意的是原有代码是hash到了64bit，我们这里是使用了相同的扩展函数扩展到64bit的。
-        byte[] kr =countHashKey(m,publicKeyBytes,publicKeyGenerator);
+        byte[] kr = countHashKey(m, publicKeyBytes, publicKeyGenerator);
         // 从中选取后32bit作为随机数种子
         byte[] coins = new byte[KyberParams.SYM_BYTES];
         System.arraycopy(kr, KyberParams.SYM_BYTES, coins, 0, KyberParams.SYM_BYTES);
@@ -162,7 +161,7 @@ public class KyberCca implements Kyber {
     public byte[] decaps(byte[] packedCipherText, short[][] privateKey, byte[] publicKeyBytes, byte[] publicKeyGenerator) {
         byte[] message = Indcpa.decrypt(packedCipherText, privateKey, this.paramsK);
         // 计算G（H（pk），m）需要注意的是原有代码是hash到了64bit，我们这里是使用了相同的扩展函数扩展到64bit的。
-        byte[] kr =countHashKey(message,publicKeyBytes,publicKeyGenerator);
+        byte[] kr = countHashKey(message, publicKeyBytes, publicKeyGenerator);
         // 从kr中选取后32bit作为随机数种子
         byte[] coins = new byte[KyberParams.SYM_BYTES];
         System.arraycopy(kr, KyberParams.SYM_BYTES, coins, 0, KyberParams.SYM_BYTES);
@@ -188,12 +187,13 @@ public class KyberCca implements Kyber {
 
     /**
      * 计算论文中的 G（H（PK），m）
-     * @param message 需要加密的秘密值
-     * @param publicKeyBytes 公钥（As+e）
+     *
+     * @param message            需要加密的秘密值
+     * @param publicKeyBytes     公钥（As+e）
      * @param publicKeyGenerator 公钥生成元
-     * @return  G（H（PK），m）
+     * @return G（H（PK），m）
      */
-    public byte[] countHashKey(byte[] message, byte[] publicKeyBytes, byte[] publicKeyGenerator){
+    public byte[] countHashKey(byte[] message, byte[] publicKeyBytes, byte[] publicKeyGenerator) {
         byte[] fullKey = new byte[paramsPolyvecBytes + KyberParams.SYM_BYTES];
         System.arraycopy(publicKeyBytes, 0, fullKey, 0, paramsPolyvecBytes);
         System.arraycopy(publicKeyGenerator, 0, fullKey, paramsPolyvecBytes, KyberParams.SYM_BYTES);
@@ -250,12 +250,12 @@ public class KyberCca implements Kyber {
     }
 
     @Override
-    public byte[][] packageTwoKeys(byte[] publicKeyBytes, byte[] randomKeyByte, byte[] publicKeyGenerator, int sigma) {
+    public byte[][] packageTwoKeys(byte[] firstKeyBytes, byte[] sencondKeyByte, byte[] publicKeyGenerator) {
         byte[][] pkPair = new byte[3][];
-        pkPair[sigma] = new byte[paramsPolyvecBytes];
-        System.arraycopy(publicKeyBytes, 0, pkPair[sigma], 0, paramsPolyvecBytes);
-        pkPair[1 - sigma] = new byte[paramsPolyvecBytes];
-        System.arraycopy(randomKeyByte, 0, pkPair[1 - sigma], 0, paramsPolyvecBytes);
+        pkPair[0] = new byte[paramsPolyvecBytes];
+        System.arraycopy(firstKeyBytes, 0, pkPair[0], 0, paramsPolyvecBytes);
+        pkPair[1] = new byte[paramsPolyvecBytes];
+        System.arraycopy(sencondKeyByte, 0, pkPair[1], 0, paramsPolyvecBytes);
         pkPair[2] = new byte[KyberParams.SYM_BYTES];
         System.arraycopy(publicKeyGenerator, 0, pkPair[2], 0, KyberParams.SYM_BYTES);
         return pkPair;

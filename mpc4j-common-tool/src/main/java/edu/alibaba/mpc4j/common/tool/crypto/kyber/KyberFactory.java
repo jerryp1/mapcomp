@@ -1,5 +1,6 @@
 package edu.alibaba.mpc4j.common.tool.crypto.kyber;
 
+import edu.alibaba.mpc4j.common.tool.EnvType;
 import edu.alibaba.mpc4j.common.tool.crypto.hash.Hash;
 import edu.alibaba.mpc4j.common.tool.crypto.kyber.kyber4j.KyberCca;
 import edu.alibaba.mpc4j.common.tool.crypto.kyber.kyber4j.KyberCpa;
@@ -37,12 +38,12 @@ public class KyberFactory {
     /**
      * 创建Kyber类型
      */
-    public static Kyber createInstance(KyberType kyberType, int paramsK) {
+    public static Kyber createInstance(KyberType kyberType, int paramsK, EnvType envType) {
         switch (kyberType) {
             case KYBER_CPA:
-                return new KyberCpa(paramsK);
+                return new KyberCpa(paramsK, envType);
             case KYBER_CCA:
-                return new KyberCca(paramsK);
+                return new KyberCca(paramsK, envType);
             default:
                 throw new IllegalArgumentException("Invalid " + KyberFactory.KyberType.class.getSimpleName() + ": " + kyberType.name());
         }

@@ -29,21 +29,17 @@ import java.util.stream.IntStream;
  */
 public class MrKyber19BnotSender extends AbstractBnotSender {
     /**
-     * 配置项
-     */
-    private final MrKyber19BnotConfig config;
-    /**
      * OT协议发送方生成的密文
      */
     private List<byte[]> cipherList;
     /**
      * 使用的kyber实例
      */
-    private Kyber kyber;
+    private final Kyber kyber;
 
     public MrKyber19BnotSender(Rpc senderRpc, Party receiverParty, MrKyber19BnotConfig config) {
         super(MrKyber19BnotPtoDesc.getInstance(), senderRpc, receiverParty, config);
-        this.config = config;
+        this.kyber = KyberFactory.createInstance(config.getKyberType(), config.getParamsK(), envType);
     }
 
     @Override
@@ -61,7 +57,6 @@ public class MrKyber19BnotSender extends AbstractBnotSender {
         cipherList = new ArrayList<>();
         info("{}{} Send. begin", ptoBeginLogPrefix, getPtoDesc().getPtoName());
 
-        paramsInit();
         stopWatch.start();
         DataPacketHeader pkHeader = new DataPacketHeader(
                 taskId, getPtoDesc().getPtoId(), MrKyber19BnotPtoDesc.PtoStep.RECEIVER_SEND_PK.ordinal(), extraInfo,
@@ -87,10 +82,6 @@ public class MrKyber19BnotSender extends AbstractBnotSender {
 
         info("{}{} Send. end", ptoEndLogPrefix, getPtoDesc().getPtoName());
         return senderOutput;
-    }
-
-    private void paramsInit() {
-        this.kyber = KyberFactory.createInstance(config.getKyberType(), config.getParamsK());
     }
 
     private BnotSenderOutput handlePkPayload(List<byte[]> pkPayload) throws MpcAbortException {
