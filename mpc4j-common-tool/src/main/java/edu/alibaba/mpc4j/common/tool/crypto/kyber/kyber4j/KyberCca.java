@@ -206,7 +206,7 @@ public class KyberCca implements Kyber {
     }
 
     @Override
-    public KyberKeyPairJava generateKyberVecKeys() {
+    public KyberKeyPair generateKyberKeyPair() {
         // 私钥s
         short[][] skpv = Poly.generateNewPolyVector(paramsK);
         // 最后输出时是公钥 As+e
@@ -246,7 +246,7 @@ public class KyberCca implements Kyber {
         // 每做一步，计算一次模Q
         Poly.polyVectorReduce(pkpv);
         // 将公钥、生成元、私钥放在一起打包
-        return new KyberKeyPairJava(Poly.polyVectorToBytes(pkpv), skpv, publicSeed);
+        return new KyberKeyPair(Poly.polyVectorToBytes(pkpv), skpv, publicSeed);
     }
 
     @Override

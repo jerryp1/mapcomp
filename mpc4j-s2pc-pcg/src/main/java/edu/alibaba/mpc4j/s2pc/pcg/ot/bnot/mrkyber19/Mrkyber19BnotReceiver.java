@@ -9,7 +9,7 @@ import edu.alibaba.mpc4j.common.rpc.Rpc;
 import edu.alibaba.mpc4j.common.rpc.utils.DataPacket;
 import edu.alibaba.mpc4j.common.rpc.utils.DataPacketHeader;
 import edu.alibaba.mpc4j.common.tool.CommonConstants;
-import edu.alibaba.mpc4j.common.tool.crypto.kyber.kyber4j.KyberKeyPairJava;
+import edu.alibaba.mpc4j.common.tool.crypto.kyber.kyber4j.KyberKeyPair;
 import edu.alibaba.mpc4j.common.tool.utils.BytesUtils;
 import edu.alibaba.mpc4j.s2pc.pcg.ot.bnot.AbstractBnotReceiver;
 import edu.alibaba.mpc4j.s2pc.pcg.ot.bnot.BnotReceiverOutput;
@@ -31,7 +31,7 @@ public class Mrkyber19BnotReceiver extends AbstractBnotReceiver {
     /**
      * OT协议接收方拥有的密钥对
      */
-    private KyberKeyPairJava[] keyArray;
+    private KyberKeyPair[] keyArray;
     /**
      * 使用的kyber实例
      */
@@ -86,7 +86,7 @@ public class Mrkyber19BnotReceiver extends AbstractBnotReceiver {
     }
 
     private List<byte[]> generatePkPayload() {
-        keyArray = new KyberKeyPairJava[choices.length];
+        keyArray = new KyberKeyPair[choices.length];
         // 公钥生成流
         IntStream pkIntStream = IntStream.range(0, choices.length);
         pkIntStream = parallel ? pkIntStream.parallel() : pkIntStream;
@@ -97,9 +97,9 @@ public class Mrkyber19BnotReceiver extends AbstractBnotReceiver {
                     // 随机的向量
                     byte[][] randomKeyByte = new byte[n][];
                     // 随机生成一组钥匙对
-                    keyArray[index] = this.kyber.generateKyberVecKeys();
+                    keyArray[index] = this.kyber.generateKyberKeyPair();
                     // 读取多项式格式下的公钥
-                    publicKeyBytes = keyArray[index].getPublicKeyBytes();
+                    publicKeyBytes = keyArray[index].getPublicKey();
                     for (int i = 0; i < n; i++) {
                         if (i != choices[index]) {
                             // 生成 Hash（RandomKey）
@@ -127,7 +127,7 @@ public class Mrkyber19BnotReceiver extends AbstractBnotReceiver {
             rbArray[index] = new byte[CommonConstants.BLOCK_BYTE_LENGTH];
             // 解密函数——在cpa方案中无需公钥，在cca方案中需要公钥。
             byte[] rbDecrypt = this.kyber.decaps(cipherText[n * index + choices[index]],
-                    keyArray[index].getPrivateKeyVec(), keyArray[index].getPublicKeyBytes(), keyArray[index].getPublicKeyGenerator());
+                    keyArray[index].getPrivateKey(), keyArray[index].getPublicKey(), keyArray[index].getPublicKeyGenerator());
             System.arraycopy(rbDecrypt, 0, rbArray[index], 0, CommonConstants.BLOCK_BYTE_LENGTH);
         });
 

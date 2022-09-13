@@ -1,6 +1,6 @@
 package edu.alibaba.mpc4j.common.tool.crypto.kyber;
 
-import edu.alibaba.mpc4j.common.tool.crypto.kyber.kyber4j.KyberKeyPairJava;
+import edu.alibaba.mpc4j.common.tool.crypto.kyber.kyber4j.KyberKeyPair;
 
 /**
  * Kyber运算接口。
@@ -62,7 +62,7 @@ public interface Kyber {
      *
      * @return 论文中的公钥（As+e,p）和私钥s
      */
-    KyberKeyPairJava generateKyberVecKeys();
+    KyberKeyPair generateKyberKeyPair();
 
     /**
      * 将公钥打包传输，担心公钥的长度不一定，所以都放在了Kyber类里面

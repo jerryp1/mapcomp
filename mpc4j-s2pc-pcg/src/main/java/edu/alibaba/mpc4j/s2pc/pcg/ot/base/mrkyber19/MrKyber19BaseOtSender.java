@@ -99,11 +99,9 @@ public class MrKyber19BaseOtSender extends AbstractBaseOtSender {
                     byte[] hashKeyR1 = this.kyber.hashToByte(upperPkR1);
                     BytesUtils.xori(upperPkR0, hashKeyR1);
                     BytesUtils.xori(upperPkR1, hashKeyR0);
-
                     // 计算密文
                     byte[][] cipherText = new byte[2][];
                     // KEM中的输入是秘密值、公钥（As+e）部分、生成元部分、随机数种子，安全参数k
-
                     cipherText[0] = this.kyber.encaps(r0Array[index], upperPkR0, publicKey[index * 3 + 2]);
                     cipherText[1] = this.kyber.encaps(r1Array[index], upperPkR1, publicKey[index * 3 + 2]);
                     return cipherText;

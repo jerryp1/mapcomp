@@ -1,10 +1,5 @@
 package edu.alibaba.mpc4j.common.tool.crypto.kyber.kyber4j;
 
-import edu.alibaba.mpc4j.common.tool.crypto.hash.Hash;
-import edu.alibaba.mpc4j.common.tool.crypto.prg.Prg;
-
-import java.security.SecureRandom;
-
 /**
  * Kyber的密钥类。论文来源：
  * Joppe Bos, Léo Ducas, Eike Kiltz, Tancrède Lepoint, Vadim Lyubashevsky, John M. Schanck, Peter Schwabe,
@@ -14,11 +9,11 @@ import java.security.SecureRandom;
  * @author Sheng Hu
  * @date 2022/08/25
  */
-public class KyberKeyPairJava {
+public class KyberKeyPair {
     /**
      * 公钥
      */
-    private final byte[] publicKeyBytes;
+    private final byte[] publicKey;
     /**
      * 公钥生成元
      */
@@ -26,22 +21,22 @@ public class KyberKeyPairJava {
     /**
      * 私钥
      */
-    private final short[][] privateKeyVec;
+    private final short[][] privateKey;
 
     /**
      * Default Constructor
      */
-    public KyberKeyPairJava(byte[] publicKeyVec, short[][] privateKeyVec, byte[] publicKeyGenerator) {
-        this.publicKeyBytes = publicKeyVec;
-        this.privateKeyVec = privateKeyVec;
+    public KyberKeyPair(byte[] publicKeyVec, short[][] privateKey, byte[] publicKeyGenerator) {
+        this.publicKey = publicKeyVec;
+        this.privateKey = privateKey;
         this.publicKeyGenerator = publicKeyGenerator;
     }
 
     /**
      * @return the PublicKeyVec
      */
-    public byte[] getPublicKeyBytes() {
-        return publicKeyBytes;
+    public byte[] getPublicKey() {
+        return publicKey;
     }
 
     /**
@@ -55,8 +50,8 @@ public class KyberKeyPairJava {
     /**
      * @return the PrivateKeyVec
      */
-    public short[][] getPrivateKeyVec() {
-        return privateKeyVec;
+    public short[][] getPrivateKey() {
+        return privateKey;
     }
 
 
