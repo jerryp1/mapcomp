@@ -6,20 +6,15 @@ import edu.alibaba.mpc4j.common.rpc.Party;
 import edu.alibaba.mpc4j.common.rpc.Rpc;
 import edu.alibaba.mpc4j.common.rpc.utils.DataPacket;
 import edu.alibaba.mpc4j.common.rpc.utils.DataPacketHeader;
-import edu.alibaba.mpc4j.common.tool.CommonConstants;
-import edu.alibaba.mpc4j.common.tool.crypto.ecc.Ecc;
-import edu.alibaba.mpc4j.common.tool.crypto.ecc.EccFactory;
+import edu.alibaba.mpc4j.common.tool.crypto.ecc.ByteEccFactory;
+import edu.alibaba.mpc4j.common.tool.crypto.ecc.ByteMulEcc;
 import edu.alibaba.mpc4j.common.tool.crypto.prf.Prf;
 import edu.alibaba.mpc4j.common.tool.crypto.prf.PrfFactory;
-import edu.alibaba.mpc4j.common.tool.utils.CommonUtils;
-import edu.alibaba.mpc4j.common.tool.utils.LongUtils;
 import edu.alibaba.mpc4j.common.tool.utils.ObjectUtils;
 import edu.alibaba.mpc4j.s2pc.pso.pid.AbstractPidParty;
 import edu.alibaba.mpc4j.s2pc.pso.pid.PidPartyOutput;
-import edu.alibaba.mpc4j.s2pc.pso.pid.bkms20.Bkms20PidPtoDesc.PtoStep;
-import org.bouncycastle.math.ec.ECPoint;
+import edu.alibaba.mpc4j.s2pc.pso.pid.bkms20.Bkms20ByteEccPidPtoDesc.PtoStep;
 
-import java.math.BigInteger;
 import java.nio.ByteBuffer;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
@@ -29,20 +24,16 @@ import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
 /**
- * Facebook的PID方案服务端，对应论文中的参与方P。
+ * Facebook的字节椭圆曲线PID方案客户端，对应论文中的参与方P。
  *
  * @author Weiran Liu
- * @date 2022/01/20
+ * @date 2022/9/13
  */
-public class Bkms20PidClient<T> extends AbstractPidParty<T> {
+public class Bkms20ByteEccPidClient<T> extends AbstractPidParty<T> {
     /**
-     * 配置项
+     * 字节椭圆曲线
      */
-    private final Bkms20PidConfig config;
-    /**
-     * 椭圆曲线
-     */
-    private final Ecc ecc;
+    private final ByteMulEcc byteMulEcc;
     /**
      * PID映射密钥
      */
@@ -54,11 +45,11 @@ public class Bkms20PidClient<T> extends AbstractPidParty<T> {
     /**
      * k_p
      */
-    private BigInteger kp;
+    private byte[] kp;
     /**
      * r_p
      */
-    private BigInteger rp;
+    private byte[] rp;
     /**
      * 逆置换映射
      */
@@ -66,7 +57,7 @@ public class Bkms20PidClient<T> extends AbstractPidParty<T> {
     /**
      * E_c，用于计算差集，本质上是一个打乱后的集合
      */
-    private Set<ECPoint> ecSet;
+    private Set<ByteBuffer> ecSet;
     /**
      * 客户端PID映射
      */
@@ -76,10 +67,9 @@ public class Bkms20PidClient<T> extends AbstractPidParty<T> {
      */
     private Set<ByteBuffer> clientPidSet;
 
-    public Bkms20PidClient(Rpc clientRpc, Party serverParty, Bkms20PidConfig config) {
-        super(Bkms20PidPtoDesc.getInstance(), clientRpc, serverParty, config);
-        ecc = EccFactory.createInstance(envType);
-        this.config = config;
+    public Bkms20ByteEccPidClient(Rpc clientRpc, Party serverParty, Bkms20ByteEccPidConfig config) {
+        super(Bkms20EccPidPtoDesc.getInstance(), clientRpc, serverParty, config);
+        byteMulEcc = ByteEccFactory.createMulInstance(envType);
     }
 
     @Override
@@ -89,8 +79,8 @@ public class Bkms20PidClient<T> extends AbstractPidParty<T> {
 
         stopWatch.start();
         // Let k_c, r_c ←_R Z_q
-        kp = ecc.randomZn(secureRandom);
-        rp = ecc.randomZn(secureRandom);
+        kp = byteMulEcc.randomScalar(secureRandom);
+        rp = byteMulEcc.randomScalar(secureRandom);
         stopWatch.stop();
         long initTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
         stopWatch.reset();
@@ -119,10 +109,7 @@ public class Bkms20PidClient<T> extends AbstractPidParty<T> {
         info("{}{} Client begin", ptoBeginLogPrefix, getPtoDesc().getPtoName());
 
         stopWatch.start();
-        // PID字节长度等于λ + log(n) + log(m) = λ + log(m * n)
-        int pidByteLength = CommonConstants.STATS_BYTE_LENGTH
-            + CommonUtils.getByteLength(LongUtils.ceilLog2(ownSetSize))
-            + CommonUtils.getByteLength(LongUtils.ceilLog2(otherSetSize));
+        int pidByteLength = Bkms20EccPidPtoDesc.getPidByteLength(otherSetSize, ownSetSize);
         pidMapPrf = PrfFactory.createInstance(envType, pidByteLength);
         pidMapPrf.setKey(pidMapPrfKey);
         // 生成置乱映射，计算并发送U_p
@@ -214,16 +201,16 @@ public class Bkms20PidClient<T> extends AbstractPidParty<T> {
         // For each p_i ∈ P, compute u_p^i = H(p_i)^{k_p}
         Stream<T> pStream = ownElementArrayList.stream();
         pStream = parallel ? pStream.parallel() : pStream;
-        ECPoint[] up = pStream
-            .map(piElement -> ecc.hashToCurve(ObjectUtils.objectToByteArray(piElement)))
-            .map(pi -> ecc.multiply(pi, kp))
-            .toArray(ECPoint[]::new);
+        byte[][] up = pStream
+            .map(piElement -> byteMulEcc.hashToCurve(ObjectUtils.objectToByteArray(piElement)))
+            .map(pi -> byteMulEcc.mul(pi, kp))
+            .toArray(byte[][]::new);
         // Randomly shuffle the elements in U_p using a permutation π_p
         ArrayList<Integer> shuffleMap = IntStream.range(0, ownSetSize)
             .boxed()
             .collect(Collectors.toCollection(ArrayList::new));
         Collections.shuffle(shuffleMap, secureRandom);
-        ECPoint[] shuffleUp = new ECPoint[ownSetSize];
+        byte[][] shuffleUp = new byte[ownSetSize][];
         // For example, shuffleMap = [2, 0, 1, 3], input = [a_0, a_1, a_2, a_3], output = [a_2, a_0, a_1. a_3]
         for (int i = 0; i < ownSetSize; i++) {
             shuffleUp[i] = up[shuffleMap.get(i)];
@@ -233,9 +220,7 @@ public class Bkms20PidClient<T> extends AbstractPidParty<T> {
             .boxed()
             .collect(Collectors.toMap(shuffleMap::get, Function.identity()));
         // send to P
-        return Arrays.stream(shuffleUp)
-            .map(upi -> ecc.encode(upi, config.getCompressEncode()))
-            .collect(Collectors.toList());
+        return Arrays.stream(shuffleUp).collect(Collectors.toList());
     }
 
     private List<byte[]> handleUcPayload(List<byte[]> ucPayload) throws MpcAbortException {
@@ -243,16 +228,16 @@ public class Bkms20PidClient<T> extends AbstractPidParty<T> {
         // For each u_c^i ∈ U_c, Compute e_c^i = (u_c^i)^{k_p}
         Stream<byte[]> ucStream = ucPayload.stream();
         ucStream = parallel ? ucStream.parallel() : ucStream;
-        List<ECPoint> ecList = ucStream
-            .map(ecc::decode)
-            .map(uci -> ecc.multiply(uci, kp))
+        List<ByteBuffer> ecList = ucStream
+            .map(uci -> byteMulEcc.mul(uci, kp))
+            .map(ByteBuffer::wrap)
             .collect(Collectors.toList());
         // Compute v_p^i = (e_p^i)^{r_c}
-        Stream<ECPoint> ecStream = ecList.stream();
+        Stream<ByteBuffer> ecStream = ecList.stream();
         ecStream = parallel ? ecStream.parallel() : ecStream;
         List<byte[]> vcPayload = ecStream
-            .map(eci -> ecc.multiply(eci, rp))
-            .map(vci -> ecc.encode(vci, config.getCompressEncode()))
+            .map(ByteBuffer::array)
+            .map(eci -> byteMulEcc.mul(eci, rp))
             .collect(Collectors.toList());
         ecSet = new HashSet<>(ecList);
 
@@ -262,20 +247,17 @@ public class Bkms20PidClient<T> extends AbstractPidParty<T> {
     private void handleVpPayload(List<byte[]> vpPayload) throws MpcAbortException {
         MpcAbortPreconditions.checkArgument(vpPayload.size() == ownSetSize);
         // Shuffle back the elements of V_p using π^{−1}_p.
-        ECPoint[] shuffleVp = vpPayload.stream()
-            .map(ecc::decode)
-            .toArray(ECPoint[]::new);
-        ECPoint[] vp = new ECPoint[ownSetSize];
+        byte[][] shuffleVp = vpPayload.toArray(new byte[0][]);
+        byte[][] vp = new byte[ownSetSize][];
         for (int i = 0; i < ownSetSize; i++) {
             vp[i] = shuffleVp[reShuffleMap.get(i)];
         }
         reShuffleMap = null;
         // For every v_p^i ∈ V_p, let w_p^i = (v_p^i)^{r_p} and M_p[(v_p^i)^{r_p}] = p_i
-        Stream<ECPoint> vpStream = Arrays.stream(vp);
+        Stream<byte[]> vpStream = Arrays.stream(vp);
         vpStream = parallel ? vpStream.parallel() : vpStream;
         ByteBuffer[] wp = vpStream
-            .map(vpi -> ecc.multiply(vpi, rp))
-            .map(wpi -> ecc.encode(wpi, false))
+            .map(vpi -> byteMulEcc.mul(vpi, rp))
             .map(pidMapPrf::getBytes)
             .map(ByteBuffer::wrap)
             .toArray(ByteBuffer[]::new);
@@ -287,7 +269,7 @@ public class Bkms20PidClient<T> extends AbstractPidParty<T> {
 
     private List<byte[]> generateEcPayload() {
         List<byte[]> ecPayload = ecSet.stream()
-            .map(eci -> ecc.encode(eci, config.getCompressEncode()))
+            .map(ByteBuffer::array)
             .collect(Collectors.toList());
         ecSet = null;
         // Randomly shuffle the elements in E_c
@@ -303,9 +285,7 @@ public class Bkms20PidClient<T> extends AbstractPidParty<T> {
         Stream<byte[]> spStream = spPayload.stream();
         spStream = parallel ? spStream.parallel() : spStream;
         return spStream
-            .map(ecc::decode)
-            .map(spi -> ecc.multiply(spi, rp))
-            .map(sppi -> ecc.encode(sppi, config.getCompressEncode()))
+            .map(spi -> byteMulEcc.mul(spi, rp))
             .collect(Collectors.toList());
     }
 
@@ -317,9 +297,7 @@ public class Bkms20PidClient<T> extends AbstractPidParty<T> {
         Stream<byte[]> scpStream = scpPayload.stream();
         scpStream = parallel ? scpStream.parallel() : scpStream;
         List<ByteBuffer> dc = scpStream
-            .map(ecc::decode)
-            .map(scpi -> ecc.multiply(scpi, rp))
-            .map(wci -> ecc.encode(wci, false))
+            .map(scpi -> byteMulEcc.mul(scpi, rp))
             .map(pidMapPrf::getBytes)
             .map(ByteBuffer::wrap)
             .collect(Collectors.toList());

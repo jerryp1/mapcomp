@@ -6,12 +6,12 @@ import edu.alibaba.mpc4j.s2pc.pso.pid.PidConfig;
 import edu.alibaba.mpc4j.s2pc.pso.pid.PidFactory.PidType;
 
 /**
- * Facebook的PID协议配置项。
+ * Facebook的椭圆曲线PID协议配置项。
  *
  * @author Weiran Liu
  * @date 2022/01/19
  */
-public class Bkms20PidConfig implements PidConfig {
+public class Bkms20EccPidConfig implements PidConfig {
     /**
      * 环境类型
      */
@@ -21,14 +21,14 @@ public class Bkms20PidConfig implements PidConfig {
      */
     private final boolean compressEncode;
 
-    private Bkms20PidConfig(Builder builder) {
+    private Bkms20EccPidConfig(Builder builder) {
         envType = builder.envType;
         compressEncode = builder.compressEncode;
     }
 
     @Override
     public PidType getPtoType() {
-        return PidType.BKMS20;
+        return PidType.BKMS20_ECC;
     }
 
     @Override
@@ -45,7 +45,7 @@ public class Bkms20PidConfig implements PidConfig {
         return compressEncode;
     }
 
-    public static class Builder implements org.apache.commons.lang3.builder.Builder<Bkms20PidConfig> {
+    public static class Builder implements org.apache.commons.lang3.builder.Builder<Bkms20EccPidConfig> {
         /**
          * 环境类型
          */
@@ -72,8 +72,8 @@ public class Bkms20PidConfig implements PidConfig {
         }
 
         @Override
-        public Bkms20PidConfig build() {
-            return new Bkms20PidConfig(this);
+        public Bkms20EccPidConfig build() {
+            return new Bkms20EccPidConfig(this);
         }
     }
 }

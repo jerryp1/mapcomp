@@ -18,7 +18,7 @@ pto_type = PID
 log_set_size = 20,18,16,14
 
 # 协议名称
-pid_pto_name = BKMS20
+pid_pto_name = BKMS20_ECC
 
 # 是否压缩编码
 compress_encode = true

@@ -2,9 +2,12 @@ package edu.alibaba.mpc4j.s2pc.pso.pid.bkms20;
 
 import edu.alibaba.mpc4j.common.rpc.desc.PtoDesc;
 import edu.alibaba.mpc4j.common.rpc.desc.PtoDescManager;
+import edu.alibaba.mpc4j.common.tool.CommonConstants;
+import edu.alibaba.mpc4j.common.tool.utils.CommonUtils;
+import edu.alibaba.mpc4j.common.tool.utils.LongUtils;
 
 /**
- * Facebook的PID协议信息。论文来源：
+ * Facebook的椭圆曲线PID协议信息。论文来源：
  * <p>
  * Buddhavarapu, Prasad, Andrew Knox, Payman Mohassel, Shubho Sengupta, Erik Taubeneck, and Vlad Vlaskin. Private
  * Matching for Compute. IACR Cryptol. ePrint Arch. 2020 (2020): 599.
@@ -14,15 +17,15 @@ import edu.alibaba.mpc4j.common.rpc.desc.PtoDescManager;
  * @author Weiran Liu
  * @date 2022/01/19
  */
-class Bkms20PidPtoDesc implements PtoDesc {
+class Bkms20EccPidPtoDesc implements PtoDesc {
     /**
      * 协议ID
      */
-    private static final int PTO_ID = Math.abs((int)657236712253938130L);
+    private static final int PTO_ID = Math.abs((int) 657236712253938130L);
     /**
      * 协议名称
      */
-    private static final String PTO_NAME = "BKMS20_PID";
+    private static final String PTO_NAME = "BKMS20_ECC_PID";
 
     /**
      * 协议步骤
@@ -69,12 +72,12 @@ class Bkms20PidPtoDesc implements PtoDesc {
     /**
      * 单例模式
      */
-    private static final Bkms20PidPtoDesc INSTANCE = new Bkms20PidPtoDesc();
+    private static final Bkms20EccPidPtoDesc INSTANCE = new Bkms20EccPidPtoDesc();
 
     /**
      * 私有构造函数
      */
-    private Bkms20PidPtoDesc() {
+    private Bkms20EccPidPtoDesc() {
         // empty
     }
 
@@ -94,5 +97,18 @@ class Bkms20PidPtoDesc implements PtoDesc {
     @Override
     public String getPtoName() {
         return PTO_NAME;
+    }
+
+    /**
+     * 返回PID字节长度。
+     *
+     * @param serverSetSize 服务端元素数量。
+     * @param clientSetSize 客户端元素数量。
+     * @return PID字节长度。
+     */
+    static int getPidByteLength(int serverSetSize, int clientSetSize) {
+        return CommonConstants.STATS_BYTE_LENGTH
+            + CommonUtils.getByteLength(LongUtils.ceilLog2(serverSetSize))
+            + CommonUtils.getByteLength(LongUtils.ceilLog2(clientSetSize));
     }
 }

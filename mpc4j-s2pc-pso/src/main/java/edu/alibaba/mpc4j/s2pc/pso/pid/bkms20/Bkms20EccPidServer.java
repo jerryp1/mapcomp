@@ -11,12 +11,10 @@ import edu.alibaba.mpc4j.common.tool.crypto.ecc.Ecc;
 import edu.alibaba.mpc4j.common.tool.crypto.ecc.EccFactory;
 import edu.alibaba.mpc4j.common.tool.crypto.prf.Prf;
 import edu.alibaba.mpc4j.common.tool.crypto.prf.PrfFactory;
-import edu.alibaba.mpc4j.common.tool.utils.CommonUtils;
-import edu.alibaba.mpc4j.common.tool.utils.LongUtils;
 import edu.alibaba.mpc4j.common.tool.utils.ObjectUtils;
 import edu.alibaba.mpc4j.s2pc.pso.pid.AbstractPidParty;
 import edu.alibaba.mpc4j.s2pc.pso.pid.PidPartyOutput;
-import edu.alibaba.mpc4j.s2pc.pso.pid.bkms20.Bkms20PidPtoDesc.PtoStep;
+import edu.alibaba.mpc4j.s2pc.pso.pid.bkms20.Bkms20EccPidPtoDesc.PtoStep;
 import org.bouncycastle.math.ec.ECPoint;
 
 import java.math.BigInteger;
@@ -29,12 +27,12 @@ import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
 /**
- * Facebook的PID方案服务端，对应论文中的参与方C。
+ * Facebook的椭圆曲线PID方案服务端，对应论文中的参与方C。
  *
  * @author Weiran Liu
  * @date 2022/01/20
  */
-public class Bkms20PidServer<T> extends AbstractPidParty<T> {
+public class Bkms20EccPidServer<T> extends AbstractPidParty<T> {
     /**
      * 椭圆曲线
      */
@@ -88,8 +86,8 @@ public class Bkms20PidServer<T> extends AbstractPidParty<T> {
      */
     private Set<ByteBuffer> serverPidSet;
 
-    public Bkms20PidServer(Rpc serverRpc, Party clientParty, Bkms20PidConfig config) {
-        super(Bkms20PidPtoDesc.getInstance(), serverRpc, clientParty, config);
+    public Bkms20EccPidServer(Rpc serverRpc, Party clientParty, Bkms20EccPidConfig config) {
+        super(Bkms20EccPidPtoDesc.getInstance(), serverRpc, clientParty, config);
         ecc = EccFactory.createInstance(envType);
         compressEncode = config.getCompressEncode();
     }
@@ -134,10 +132,7 @@ public class Bkms20PidServer<T> extends AbstractPidParty<T> {
         info("{}{} Server begin", ptoBeginLogPrefix, getPtoDesc().getPtoName());
 
         stopWatch.start();
-        // PID字节长度等于λ + log(n) + log(m)
-        int pidByteLength = CommonConstants.STATS_BYTE_LENGTH
-            + CommonUtils.getByteLength(LongUtils.ceilLog2(ownSetSize))
-            + CommonUtils.getByteLength(LongUtils.ceilLog2(otherSetSize));
+        int pidByteLength = Bkms20EccPidPtoDesc.getPidByteLength(ownSetSize, otherSetSize);
         pidMapPrf = PrfFactory.createInstance(envType, pidByteLength);
         pidMapPrf.setKey(pidMapPrfKey);
         // 生成置乱映射，计算并发送U_c
