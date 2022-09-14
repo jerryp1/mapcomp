@@ -1,20 +1,25 @@
-package edu.alibaba.mpc4j.common.tool.crypto.kyber.kyber4j;
+package edu.alibaba.mpc4j.common.tool.crypto.kyber.utils;
 
+import edu.alibaba.mpc4j.common.tool.crypto.kyber.params.KyberParams;
 
 import java.util.Arrays;
 
 /**
- * Utility class for byte operations
+ * Utility class for byte operations. Modified from:
+ * <p>
+ * https://github.com/fisherstevenk/kyberJCE/blob/main/src/main/java/com/swiftcryptollc/crypto/provider/kyber/ByteOps.java
+ * </p>
+ * The modification is for removing unnecessary import packages.
  *
- * @author Steven K Fisher <swiftcryptollc@gmail.com>
+ * @author Steven K Fisher, Sheng Hu.
  */
 public final class ByteOps {
 
     /**
-     * Returns a 32-bit unsigned integer as a long from byte x
+     * Returns a 32-bit unsigned integer as a long from byte x (only involves the first 4 bytes, little-endian).
      *
-     * @param x 输入为byte数组，读取前四个byte转为long
-     * @return 输出为一个long
+     * @param x byte array.
+     * @return convert result.
      */
     public static long convertByteTo32BitUnsignedInt(byte[] x) {
         long r = (x[0] & 0xFF);
@@ -25,10 +30,10 @@ public final class ByteOps {
     }
 
     /**
-     * Returns a 24-bit unsigned integer as a long from byte x
+     * Returns a 24-bit unsigned integer as a long from byte x (only involves the first 4 bytes, little-endian).
      *
-     * @param x 输入为byte数组，读取前三个转为long
-     * @return 输出为一个long
+     * @param x byte array.
+     * @return convert result.
      */
     public static long convertByteTo24BitUnsignedInt(byte[] x) {
         long r = (x[0] & 0xFF);
@@ -38,22 +43,21 @@ public final class ByteOps {
     }
 
     /**
-     * Generate a polynomial with coefficients distributed according to a
-     * centered binomial distribution with parameter eta, given an array of
-     * uniformly random bytes.
+     * Generate a polynomial with coefficients distributed according to a centered binomial distribution with parameter
+     * η, given an array of uniformly random bytes.
      *
-     * @param buf     生成的种子
-     * @param paramsK 选择的安全系数
-     * @return 符合二项分布的噪声系数
+     * @param prfOutput Prf output.
+     * @param paramsK   parameter K, can be 2, 3 or 4.
+     * @return A polynomial with coefficients distributed according to a centered binomial distribution.
      */
-    public static short[] generateCbdPoly(byte[] buf, int paramsK) {
-        long t, d; // both unsigned
+    public static short[] generateCbdPoly(byte[] prfOutput, int paramsK) {
+        long t, d;
         int a, b;
         short[] r = new short[KyberParams.PARAMS_N];
         switch (paramsK) {
             case 2:
                 for (int i = 0; i < KyberParams.PARAMS_N / KyberParams.MATH_FOUR; i++) {
-                    t = ByteOps.convertByteTo24BitUnsignedInt(Arrays.copyOfRange(buf, (3 * i), buf.length));
+                    t = ByteOps.convertByteTo24BitUnsignedInt(Arrays.copyOfRange(prfOutput, (3 * i), prfOutput.length));
                     d = t & 0x00249249;
                     d = d + ((t >> 1) & 0x00249249);
                     d = d + ((t >> 2) & 0x00249249);
@@ -64,9 +68,10 @@ public final class ByteOps {
                     }
                 }
                 break;
-            default:
+            case 3:
+            case 4:
                 for (int i = 0; i < KyberParams.PARAMS_N / KyberParams.MATH_EIGHT; i++) {
-                    t = ByteOps.convertByteTo32BitUnsignedInt(Arrays.copyOfRange(buf, (4 * i), buf.length));
+                    t = ByteOps.convertByteTo32BitUnsignedInt(Arrays.copyOfRange(prfOutput, (4 * i), prfOutput.length));
                     d = t & 0x55555555;
                     d = d + ((t >> 1) & 0x55555555);
                     for (int j = 0; j < KyberParams.MATH_EIGHT; j++) {
@@ -75,18 +80,21 @@ public final class ByteOps {
                         r[8 * i + j] = (short) (a - b);
                     }
                 }
+                break;
+            default:
+                throw new IllegalArgumentException("Invalid K, must be 2, 3 or 4: " + paramsK);
         }
         return r;
     }
 
     /**
-     * Computes a Montgomery reduction given a 32-Bit Integer
+     * Computes a Montgomery reduction given a 32-Bit Integer.
      *
-     * @param a 对输入的long进行规约
-     * @return 输出为short
+     * @param a 32-Bit Integer.
+     * @return reduced integer mod q.
      */
     public static short montgomeryReduce(long a) {
-        short u = (short) (a * KyberParams.PARAMS_QINV);
+        short u = (short) (a * KyberParams.PARAMS_Q_INV);
         int t = (u * KyberParams.PARAMS_Q);
         t = (int) (a - t);
         t >>= 16;
@@ -94,10 +102,10 @@ public final class ByteOps {
     }
 
     /**
-     * Computes a Barrett reduction given a 16-Bit Integer
+     * Computes a Barrett reduction given a 16-Bit Integer.
      *
-     * @param a 输入为short值，同样也是为了规约
-     * @return 返回值为规约后的值
+     * @param a 16-Bit Integer.
+     * @return reduced integer mod q.
      */
     public static short barrettReduce(short a) {
         short t;
@@ -109,11 +117,16 @@ public final class ByteOps {
     }
 
     /**
-     * Conditionally subtract Q (from KyberParams) from a
-     * 如果是大于等于Q（3329），那么是减Q，如果是小于Q那么则是不变（包括负数）
+     * Conditionally subtract Q (from KyberParams) from the input a (i.e., compute a mod Q).
+     * <p>
+     * If the input is greater than or equal to Q = 3329, then subtract a by Q;
+     * </p>
+     * <p>
+     * Else, remains the input as the same (even if the input is a negative number).
+     * </p>
      *
-     * @param a 输入的值
-     * @return 模Q后的数
+     * @param a 16-Bit Integer.
+     * @return a mod q.
      */
     public static short conditionalSubQ(short a) {
         a = (short) (a - KyberParams.PARAMS_Q);

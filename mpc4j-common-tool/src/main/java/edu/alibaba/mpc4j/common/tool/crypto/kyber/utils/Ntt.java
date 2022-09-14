@@ -70,7 +70,7 @@ final class Ntt {
      * @param b input b。
      * @return 乘法结果。
      */
-    static short modqMulMont(short a, short b) {
+    static short modqMulMontgomery(short a, short b) {
         return ByteOps.montgomeryReduce((long) a * (long) b);
     }
 
@@ -78,10 +78,9 @@ final class Ntt {
      * Perform an in-place number-theoretic transform (NTT).
      * Input is in standard order. Output is in bit-reversed order.
      *
-     * @param r 正常域数组。
-     * @return NTT域数组。
+     * @param poly polynomial.
      */
-    static short[] ntt(short[] r) {
+    static void inNtt(short[] poly) {
         int j;
         int k = 1;
         // 使用蝴蝶（Butterfly）算法实现的快速傅里叶变换（Fast DFT）
@@ -90,23 +89,21 @@ final class Ntt {
                 short zeta = Ntt.NTT_ZETAS[k];
                 k = k + 1;
                 for (j = start; j < start + l; j++) {
-                    short t = Ntt.modqMulMont(zeta, r[j + l]);
-                    r[j + l] = (short) (r[j] - t);
-                    r[j] = (short) (r[j] + t);
+                    short t = Ntt.modqMulMontgomery(zeta, poly[j + l]);
+                    poly[j + l] = (short) (poly[j] - t);
+                    poly[j] = (short) (poly[j] + t);
                 }
             }
         }
-        return r;
     }
 
     /**
      * Perform an in-place inverse number-theoretic transform (NTT).
      * Input is in bit-reversed order. Output is in standard order.
      *
-     * @param r NTT域数组。
-     * @return 正常域数组。
+     * @param nttPolynomial NTT polynomial.
      */
-    static short[] invNtt(short[] r) {
+    static void inInvNtt(short[] nttPolynomial) {
         int j;
         int k = 0;
         // // 使用蝴蝶（Butterfly）算法实现的快速傅里叶拟变换（Fast inverse DFT）
@@ -115,36 +112,35 @@ final class Ntt {
                 short zeta = Ntt.NTT_ZETAS_INV[k];
                 k = k + 1;
                 for (j = start; j < start + l; j++) {
-                    short t = r[j];
-                    r[j] = ByteOps.barrettReduce((short) (t + r[j + l]));
-                    r[j + l] = (short) (t - r[j + l]);
-                    r[j + l] = modqMulMont(zeta, r[j + l]);
+                    short t = nttPolynomial[j];
+                    nttPolynomial[j] = ByteOps.barrettReduce((short) (t + nttPolynomial[j + l]));
+                    nttPolynomial[j + l] = (short) (t - nttPolynomial[j + l]);
+                    nttPolynomial[j + l] = modqMulMontgomery(zeta, nttPolynomial[j + l]);
                 }
             }
         }
         for (j = 0; j < KyberParams.PARAMS_N; j++) {
-            r[j] = Ntt.modqMulMont(r[j], NTT_ZETAS_INV[127]);
+            nttPolynomial[j] = Ntt.modqMulMontgomery(nttPolynomial[j], NTT_ZETAS_INV[127]);
         }
-        return r;
     }
 
     /**
-     * Performs the multiplication of polynomials.
+     * Performs the multiplication of a polynomial coefficient with parameter ξ.
      *
-     * @param a0   乘数。
-     * @param a1   乘数。
-     * @param b0   乘数。
-     * @param b1   乘数。
-     * @param zeta 乘法使用到的参数，存储在Ntt类中。
-     * @return 返回的结果。
+     * @param a0   a[h].
+     * @param a1   a[l].
+     * @param b0   b[h].
+     * @param b1   b[l].
+     * @param zeta ξ.
+     * @return multiplication result r[h], r[l].
      */
     static short[] baseMultiplier(short a0, short a1, short b0, short b1, short zeta) {
         short[] r = new short[2];
-        r[0] = Ntt.modqMulMont(a1, b1);
-        r[0] = Ntt.modqMulMont(r[0], zeta);
-        r[0] = (short) (r[0] + Ntt.modqMulMont(a0, b0));
-        r[1] = Ntt.modqMulMont(a0, b1);
-        r[1] = (short) (r[1] + Ntt.modqMulMont(a1, b0));
+        r[0] = Ntt.modqMulMontgomery(a1, b1);
+        r[0] = Ntt.modqMulMontgomery(r[0], zeta);
+        r[0] = (short) (r[0] + Ntt.modqMulMontgomery(a0, b0));
+        r[1] = Ntt.modqMulMontgomery(a0, b1);
+        r[1] = (short) (r[1] + Ntt.modqMulMontgomery(a1, b0));
         return r;
     }
 }
