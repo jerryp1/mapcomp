@@ -40,7 +40,7 @@ public final class KyberParams {
     /**
      * q^{-1} mod 2^16，即62209 = 3329^{-1} mod 65536
      */
-    public final static int PARAMS_QINV = 62209;
+    public final static int PARAMS_Q_INV = 62209;
     /**
      * 多项式字节长度，log_2(q) = 12，多项式共有256个系数，共3072比特，即384字节
      */
