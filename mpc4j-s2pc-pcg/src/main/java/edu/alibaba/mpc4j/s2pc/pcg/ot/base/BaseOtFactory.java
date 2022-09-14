@@ -12,6 +12,9 @@ import edu.alibaba.mpc4j.s2pc.pcg.ot.base.csw20.Csw20BaseOtSender;
 import edu.alibaba.mpc4j.s2pc.pcg.ot.base.mr19.Mr19BaseOtConfig;
 import edu.alibaba.mpc4j.s2pc.pcg.ot.base.mr19.Mr19BaseOtReceiver;
 import edu.alibaba.mpc4j.s2pc.pcg.ot.base.mr19.Mr19BaseOtSender;
+import edu.alibaba.mpc4j.s2pc.pcg.ot.base.mrkyber19.MrKyber19BaseOtConfig;
+import edu.alibaba.mpc4j.s2pc.pcg.ot.base.mrkyber19.MrKyber19BaseOtReceiver;
+import edu.alibaba.mpc4j.s2pc.pcg.ot.base.mrkyber19.MrKyber19BaseOtSender;
 import edu.alibaba.mpc4j.s2pc.pcg.ot.base.np01.Np01BaseOtConfig;
 import edu.alibaba.mpc4j.s2pc.pcg.ot.base.np01.Np01BaseOtReceiver;
 import edu.alibaba.mpc4j.s2pc.pcg.ot.base.np01.Np01BaseOtSender;
@@ -47,6 +50,10 @@ public class BaseOtFactory {
          */
         MR19,
         /**
+         * MRKyber19协议
+         */
+        MRKYBER19,
+        /**
          * CSW20协议
          */
         CSW20,
@@ -65,6 +72,8 @@ public class BaseOtFactory {
         switch (type) {
             case MR19:
                 return new Mr19BaseOtSender(senderRpc, receiverParty, (Mr19BaseOtConfig)config);
+            case MRKYBER19:
+                return new MrKyber19BaseOtSender(senderRpc, receiverParty, (MrKyber19BaseOtConfig)config);
             case CO15:
                 return new Co15BaseOtSender(senderRpc, receiverParty, (Co15BaseOtConfig)config);
             case NP01:
@@ -89,6 +98,8 @@ public class BaseOtFactory {
         switch (type) {
             case MR19:
                 return new Mr19BaseOtReceiver(receiverRpc, senderParty, (Mr19BaseOtConfig)config);
+            case MRKYBER19:
+                return new MrKyber19BaseOtReceiver(receiverRpc, senderParty, (MrKyber19BaseOtConfig)config);
             case CO15:
                 return new Co15BaseOtReceiver(receiverRpc, senderParty, (Co15BaseOtConfig)config);
             case NP01:
@@ -112,7 +123,7 @@ public class BaseOtFactory {
             case SEMI_HONEST:
             case COVERT:
             case MALICIOUS:
-                return new Np01BaseOtConfig.Builder().build();
+                return new Co15BaseOtConfig.Builder().build();
             default:
                 throw new IllegalArgumentException("Invalid SecurityModel: " + securityModel.name());
         }

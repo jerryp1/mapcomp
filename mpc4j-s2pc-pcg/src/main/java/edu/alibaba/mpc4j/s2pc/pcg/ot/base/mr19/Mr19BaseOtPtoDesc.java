@@ -1,7 +1,11 @@
 package edu.alibaba.mpc4j.s2pc.pcg.ot.base.mr19;
 
+
 import edu.alibaba.mpc4j.common.rpc.desc.PtoDesc;
 import edu.alibaba.mpc4j.common.rpc.desc.PtoDescManager;
+
+import java.io.Serializable;
+
 
 /**
  * MR19-基础OT协议信息。论文来源：
