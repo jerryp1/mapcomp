@@ -1,49 +1,53 @@
-package edu.alibaba.mpc4j.s2pc.pcg.ot.base.mrkyber19;
+package edu.alibaba.mpc4j.s2pc.pcg.ot.base.mr19;
 
 import edu.alibaba.mpc4j.common.rpc.desc.PtoDesc;
 import edu.alibaba.mpc4j.common.rpc.desc.PtoDescManager;
 
 /**
- * MRKYBER19-基础OT协议信息。论文来源：
+ * MR19-椭圆曲线基础OT协议信息。论文来源：
+ * <p>
  * Mansy D, Rindal P. Endemic oblivious transfer. CCS 2019. 2019: 309-326.
+ * </p>
+ * 采用了安全批处理操作，提高批量生成效率。批处理方法来自论文：
+ * <p>
+ * McQuoid I, Rosulek M, Roy L. Batching base oblivious transfers. ASIACRYPT 2021, Springer, Cham, 2021: 281-310.
+ * </p>
  *
- * @author Sheng Hu
- * @date 2022/08/05
+ * @author Weiran Liu, Hanwen Feng
+ * @date 2020/10/03
  */
-
-public class MrKyber19BaseOtPtoDesc implements PtoDesc {
+class Mr19EccBaseOtPtoDesc implements PtoDesc {
     /**
      * 协议ID
      */
-    private static final int PTO_ID = Math.abs((int) 7413097849730455724L);
+    private static final int PTO_ID = Math.abs((int)7464266642234682892L);
     /**
      * 协议名称
      */
-    private static final String PTO_NAME = "MRKYBER19_BASE_OT";
+    private static final String PTO_NAME = "MR19_ECC_BASE_OT";
 
     /**
      * 协议步骤
      */
     enum PtoStep {
         /**
-         * 接收方发送公钥PK0、PK1
+         * 接收方发送参数R0、R1
          */
-        RECEIVER_SEND_PK,
+        RECEIVER_SEND_R,
         /**
          * 发送方发送参数B
          */
-        SENDER_SEND_Cipher,
+        SENDER_SEND_B,
     }
-
     /**
      * 单例模式
      */
-    private static final MrKyber19BaseOtPtoDesc INSTANCE = new MrKyber19BaseOtPtoDesc();
+    private static final Mr19EccBaseOtPtoDesc INSTANCE = new Mr19EccBaseOtPtoDesc();
 
     /**
      * 私有构造函数
      */
-    private MrKyber19BaseOtPtoDesc() {
+    private Mr19EccBaseOtPtoDesc() {
         // empty
     }
 

@@ -27,11 +27,11 @@ import org.bouncycastle.math.ec.ECPoint;
  * @author Weiran Liu, Hanwen Feng
  * @date 2020/10/03
  */
-public class Mr19BaseOtSender extends AbstractBaseOtSender {
+public class Mr19EccBaseOtSender extends AbstractBaseOtSender {
     /**
      * 配置项
      */
-    private final Mr19BaseOtConfig config;
+    private final Mr19EccBaseOtConfig config;
     /**
      * 椭圆曲线
      */
@@ -41,8 +41,8 @@ public class Mr19BaseOtSender extends AbstractBaseOtSender {
      */
     private BigInteger bInteger;
 
-    public Mr19BaseOtSender(Rpc senderRpc, Party receiverParty, Mr19BaseOtConfig config) {
-        super(Mr19BaseOtPtoDesc.getInstance(), senderRpc, receiverParty, config);
+    public Mr19EccBaseOtSender(Rpc senderRpc, Party receiverParty, Mr19EccBaseOtConfig config) {
+        super(Mr19EccBaseOtPtoDesc.getInstance(), senderRpc, receiverParty, config);
         ecc = EccFactory.createInstance(envType);
         this.config = config;
     }
@@ -64,7 +64,7 @@ public class Mr19BaseOtSender extends AbstractBaseOtSender {
         stopWatch.start();
         List<byte[]> betaPayload = generateBetaPayload();
         DataPacketHeader betaHeader = new DataPacketHeader(
-                taskId, getPtoDesc().getPtoId(), Mr19BaseOtPtoDesc.PtoStep.SENDER_SEND_B.ordinal(), extraInfo,
+                taskId, getPtoDesc().getPtoId(), Mr19EccBaseOtPtoDesc.PtoStep.SENDER_SEND_B.ordinal(), extraInfo,
                 ownParty().getPartyId(), otherParty().getPartyId()
         );
         rpc.send(DataPacket.fromByteArrayList(betaHeader, betaPayload));
@@ -75,7 +75,7 @@ public class Mr19BaseOtSender extends AbstractBaseOtSender {
 
         stopWatch.start();
         DataPacketHeader pkHeader = new DataPacketHeader(
-                taskId, getPtoDesc().getPtoId(), Mr19BaseOtPtoDesc.PtoStep.RECEIVER_SEND_R.ordinal(), extraInfo,
+                taskId, getPtoDesc().getPtoId(), Mr19EccBaseOtPtoDesc.PtoStep.RECEIVER_SEND_R.ordinal(), extraInfo,
                 otherParty().getPartyId(), ownParty().getPartyId()
         );
         List<byte[]> pkPayload = rpc.receive(pkHeader).getPayload();

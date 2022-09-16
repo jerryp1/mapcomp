@@ -11,9 +11,10 @@ import edu.alibaba.mpc4j.common.tool.crypto.ecc.EccFactory;
 import edu.alibaba.mpc4j.common.tool.crypto.kdf.Kdf;
 import edu.alibaba.mpc4j.common.tool.crypto.kdf.KdfFactory;
 import edu.alibaba.mpc4j.common.tool.utils.BytesUtils;
-import edu.alibaba.mpc4j.common.tool.utils.IntUtils;
 import edu.alibaba.mpc4j.s2pc.pcg.ot.base.AbstractBaseOtSender;
 import edu.alibaba.mpc4j.s2pc.pcg.ot.base.BaseOtSenderOutput;
+import edu.alibaba.mpc4j.s2pc.pcg.ot.base.csw20.Csw20BaseOtPtoDesc.PtoStep;
+
 import org.bouncycastle.math.ec.ECPoint;
 
 import java.math.BigInteger;
@@ -41,15 +42,7 @@ public class Csw20BaseOtSender extends AbstractBaseOtSender {
      */
     private final Ecc ecc;
     /**
-     * 私钥y
-     */
-    private BigInteger y;
-    /**
-     * 椭圆曲线点S
-     */
-    private ECPoint capitalS;
-    /**
-     * 用于校验recerver回复的参数Ans
+     * 用于校验receiver回复的参数Ans
      */
     private byte[] answerBytes;
     /**
@@ -71,6 +64,7 @@ public class Csw20BaseOtSender extends AbstractBaseOtSender {
     public void init() throws MpcAbortException {
         setInitInput();
         info("{}{} Send. Init begin", ptoBeginLogPrefix, getPtoDesc().getPtoName());
+
         initialized = true;
         info("{}{} Send. Init end", ptoEndLogPrefix, getPtoDesc().getPtoName());
     }
@@ -82,8 +76,8 @@ public class Csw20BaseOtSender extends AbstractBaseOtSender {
 
         stopWatch.start();
         DataPacketHeader rChooseHeader = new DataPacketHeader(
-                taskId, ptoDesc.getPtoId(), Csw20BaseOtPtoDesc.PtoStep.RECEIVER_SEND_C.ordinal(), extraInfo,
-                otherParty().getPartyId(), ownParty().getPartyId()
+            taskId, ptoDesc.getPtoId(), PtoStep.RECEIVER_SEND_C.ordinal(), extraInfo,
+            otherParty().getPartyId(), ownParty().getPartyId()
         );
         List<byte[]> rChoosePayload = rpc.receive(rChooseHeader).getPayload();
         stopWatch.stop();
@@ -93,8 +87,8 @@ public class Csw20BaseOtSender extends AbstractBaseOtSender {
 
         stopWatch.start();
         DataPacketHeader sHeader = new DataPacketHeader(
-                taskId, ptoDesc.getPtoId(), Csw20BaseOtPtoDesc.PtoStep.SENDER_SEND_S.ordinal(), extraInfo,
-                ownParty().getPartyId(), otherParty().getPartyId()
+            taskId, ptoDesc.getPtoId(), PtoStep.SENDER_SEND_S.ordinal(), extraInfo,
+            ownParty().getPartyId(), otherParty().getPartyId()
         );
         List<byte[]> sPayLoad = generateSenderPayload(rChoosePayload);
         rpc.send(DataPacket.fromByteArrayList(sHeader, sPayLoad));
@@ -105,8 +99,8 @@ public class Csw20BaseOtSender extends AbstractBaseOtSender {
 
         stopWatch.start();
         DataPacketHeader rHeader = new DataPacketHeader(
-                taskId, ptoDesc.getPtoId(), Csw20BaseOtPtoDesc.PtoStep.RECEIVER_SEND_R.ordinal(), extraInfo,
-                otherParty().getPartyId(), ownParty().getPartyId()
+            taskId, ptoDesc.getPtoId(), PtoStep.RECEIVER_SEND_R.ordinal(), extraInfo,
+            otherParty().getPartyId(), ownParty().getPartyId()
         );
         List<byte[]> rPayload = rpc.receive(rHeader).getPayload();
         BaseOtSenderOutput senderOutput = handleReceiverPayload(rPayload);
@@ -116,11 +110,6 @@ public class Csw20BaseOtSender extends AbstractBaseOtSender {
         info("{}{} Send. Step 3/3 ({}ms)", ptoStepLogPrefix, getPtoDesc().getPtoName(), rTime);
 
         info("{}{} Send. end", ptoEndLogPrefix, getPtoDesc().getPtoName());
-        y = null;
-        capitalS = null;
-        r0Array = null;
-        r1Array = null;
-        answerBytes = null;
         return senderOutput;
     }
 
@@ -131,16 +120,15 @@ public class Csw20BaseOtSender extends AbstractBaseOtSender {
         ArrayList<byte[]> receiverPayloadArrayList = new ArrayList<>(receiverPayload);
         Kdf kdf = KdfFactory.createInstance(envType);
         // 随机生成y
-        y = ecc.randomZn(secureRandom);
+        final BigInteger y = ecc.randomZn(secureRandom);
         // 计算S = yB
-        capitalS = ecc.multiply(ecc.getG(), y);
+        ECPoint capitalS = ecc.multiply(ecc.getG(), y);
         // 读取seed，生成群元素T, 并计算yT
         byte[] seed = receiverPayloadArrayList.remove(receiverPayloadArrayList.size() - 1);
         ECPoint capitalTy = ecc.multiply(ecc.hashToCurve(ByteBuffer
-                        .allocate(Long.BYTES + seed.length)
-                        .putLong(extraInfo).put(seed)
-                        .array()),
-                y);
+                .allocate(Long.BYTES + seed.length)
+                .putLong(extraInfo).put(seed)
+                .array()), y);
         // 创建数组
         byte[][] rByteArray = receiverPayloadArrayList.toArray(new byte[0][]);
         r0Array = new byte[num][];
@@ -150,26 +138,25 @@ public class Csw20BaseOtSender extends AbstractBaseOtSender {
         IntStream keyPairArrayStream = IntStream.range(0, num);
         keyPairArrayStream = parallel ? keyPairArrayStream.parallel() : keyPairArrayStream;
         List<byte[]> senderPayload = keyPairArrayStream
-                .mapToObj(index -> {
-                    byte[] indexByteArray = IntUtils.intToByteArray(index);
-                    // 读取点B，并计算yB
-                    ECPoint capitalBy = ecc.multiply(ecc.decode(rByteArray[index]), y);
-                    // 计算k0 = H(index, yB)和k1 = H（index, yB - yT）
-                    byte[] k0InputArray = ecc.encode(capitalBy, false);
-                    byte[] k1InputArray = ecc.encode(capitalBy.subtract(capitalTy), false);
-                    r0Array[index] = kdf.deriveKey(ByteBuffer
-                            .allocate(Integer.BYTES + k0InputArray.length)
-                            .putInt(index).put(k0InputArray)
-                            .array());
-                    r1Array[index] = kdf.deriveKey(ByteBuffer
-                            .allocate(Integer.BYTES + k1InputArray.length)
-                            .putInt(index).put(k1InputArray)
-                            .array());
-                    // 计算挑战消息chall = H(k0) \xor H(k1)，并添加到paylaod
-                    answerInputArray[index] = kdf.deriveKey(r0Array[index]);
-                    return BytesUtils.xor(answerInputArray[index], kdf.deriveKey(r1Array[index]));
-                })
-                .collect(Collectors.toList());
+            .mapToObj(index -> {
+                // 读取点B，并计算yB
+                ECPoint capitalBy = ecc.multiply(ecc.decode(rByteArray[index]), y);
+                // 计算k0 = H(index, yB)和k1 = H（index, yB - yT）
+                byte[] k0InputArray = ecc.encode(capitalBy, false);
+                byte[] k1InputArray = ecc.encode(capitalBy.subtract(capitalTy), false);
+                r0Array[index] = kdf.deriveKey(ByteBuffer
+                    .allocate(Integer.BYTES + k0InputArray.length)
+                    .putInt(index).put(k0InputArray)
+                    .array());
+                r1Array[index] = kdf.deriveKey(ByteBuffer
+                    .allocate(Integer.BYTES + k1InputArray.length)
+                    .putInt(index).put(k1InputArray)
+                    .array());
+                // 计算挑战消息chall = H(k0) \xor H(k1)，并添加到paylaod
+                answerInputArray[index] = kdf.deriveKey(r0Array[index]);
+                return BytesUtils.xor(answerInputArray[index], kdf.deriveKey(r1Array[index]));
+            })
+            .collect(Collectors.toList());
         // 计算ans= H(k0_1, ...., k0_n)
         ByteBuffer answerByteBuffer = ByteBuffer.allocate(r0Array[0].length * num);
         for (int index = 0; index < num; index++) {
@@ -187,6 +174,10 @@ public class Csw20BaseOtSender extends AbstractBaseOtSender {
     private BaseOtSenderOutput handleReceiverPayload(List<byte[]> receiverPayload) throws MpcAbortException {
         MpcAbortPreconditions.checkArgument(receiverPayload.size() == 1);
         MpcAbortPreconditions.checkArgument(Arrays.equals(answerBytes, receiverPayload.get(0)));
-        return new BaseOtSenderOutput(r0Array, r1Array);
+        answerBytes = null;
+        BaseOtSenderOutput senderOutput = new BaseOtSenderOutput(r0Array, r1Array);
+        r0Array = null;
+        r1Array = null;
+        return senderOutput;
     }
 }

@@ -6,12 +6,12 @@ import edu.alibaba.mpc4j.s2pc.pcg.ot.base.BaseOtConfig;
 import edu.alibaba.mpc4j.s2pc.pcg.ot.base.BaseOtFactory;
 
 /**
- * MR19-基础OT协议配置项。
+ * MR19-椭圆曲线基础OT协议配置项。
  *
  * @author Weiran Liu
  * @date 2022/01/13
  */
-public class Mr19BaseOtConfig implements BaseOtConfig {
+public class Mr19EccBaseOtConfig implements BaseOtConfig {
     /**
      * 环境类型
      */
@@ -21,14 +21,14 @@ public class Mr19BaseOtConfig implements BaseOtConfig {
      */
     private final boolean compressEncode;
 
-    private Mr19BaseOtConfig(Builder builder) {
+    private Mr19EccBaseOtConfig(Builder builder) {
         envType = builder.envType;
         compressEncode = builder.compressEncode;
     }
 
     @Override
     public BaseOtFactory.BaseOtType getPtoType() {
-        return BaseOtFactory.BaseOtType.MR19;
+        return BaseOtFactory.BaseOtType.MR19_ECC;
     }
 
     @Override
@@ -45,7 +45,7 @@ public class Mr19BaseOtConfig implements BaseOtConfig {
         return compressEncode;
     }
 
-    public static class Builder implements org.apache.commons.lang3.builder.Builder<Mr19BaseOtConfig> {
+    public static class Builder implements org.apache.commons.lang3.builder.Builder<Mr19EccBaseOtConfig> {
         /**
          * 环境类型
          */
@@ -72,8 +72,8 @@ public class Mr19BaseOtConfig implements BaseOtConfig {
         }
 
         @Override
-        public Mr19BaseOtConfig build() {
-            return new Mr19BaseOtConfig(this);
+        public Mr19EccBaseOtConfig build() {
+            return new Mr19EccBaseOtConfig(this);
         }
     }
 }

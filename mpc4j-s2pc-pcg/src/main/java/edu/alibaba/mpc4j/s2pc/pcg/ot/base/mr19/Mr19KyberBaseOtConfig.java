@@ -1,8 +1,8 @@
-package edu.alibaba.mpc4j.s2pc.pcg.ot.base.mrkyber19;
+package edu.alibaba.mpc4j.s2pc.pcg.ot.base.mr19;
 
 import edu.alibaba.mpc4j.common.rpc.desc.SecurityModel;
 import edu.alibaba.mpc4j.common.tool.EnvType;
-import edu.alibaba.mpc4j.common.tool.crypto.kyber.KyberFactory;
+import edu.alibaba.mpc4j.common.tool.crypto.kyber.KyberEngineFactory;
 import edu.alibaba.mpc4j.s2pc.pcg.ot.base.BaseOtConfig;
 import edu.alibaba.mpc4j.s2pc.pcg.ot.base.BaseOtFactory;
 
@@ -13,7 +13,7 @@ import edu.alibaba.mpc4j.s2pc.pcg.ot.base.BaseOtFactory;
  * @author Sheng Hu
  * @date 2022/08/05
  */
-public class MrKyber19BaseOtConfig implements BaseOtConfig {
+public class Mr19KyberBaseOtConfig implements BaseOtConfig {
     /**
      * 环境类型
      */
@@ -25,9 +25,9 @@ public class MrKyber19BaseOtConfig implements BaseOtConfig {
     /**
      * 方案类型
      */
-    private final KyberFactory.KyberType kyberType;
+    private final KyberEngineFactory.KyberType kyberType;
 
-    private MrKyber19BaseOtConfig(MrKyber19BaseOtConfig.Builder builder) {
+    private Mr19KyberBaseOtConfig(Mr19KyberBaseOtConfig.Builder builder) {
         envType = builder.envType;
         paramsK = builder.paramsK;
         kyberType = builder.kyberType;
@@ -35,7 +35,7 @@ public class MrKyber19BaseOtConfig implements BaseOtConfig {
 
     @Override
     public BaseOtFactory.BaseOtType getPtoType() {
-        return BaseOtFactory.BaseOtType.MRKYBER19;
+        return BaseOtFactory.BaseOtType.MR19_KYBER;
     }
 
     @Override
@@ -52,11 +52,11 @@ public class MrKyber19BaseOtConfig implements BaseOtConfig {
         return paramsK;
     }
 
-    public KyberFactory.KyberType getKyberType() {
+    public KyberEngineFactory.KyberType getKyberType() {
         return kyberType;
     }
 
-    public static class Builder implements org.apache.commons.lang3.builder.Builder<MrKyber19BaseOtConfig> {
+    public static class Builder implements org.apache.commons.lang3.builder.Builder<Mr19KyberBaseOtConfig> {
         /**
          * 环境类型
          */
@@ -68,13 +68,13 @@ public class MrKyber19BaseOtConfig implements BaseOtConfig {
         /**
          * 方案类型
          */
-        private KyberFactory.KyberType kyberType;
+        private KyberEngineFactory.KyberType kyberType;
 
         public Builder() {
             super();
             envType = EnvType.STANDARD;
             paramsK = 4;
-            kyberType = KyberFactory.KyberType.KYBER_CCA;
+            kyberType = KyberEngineFactory.KyberType.KYBER_CCA;
         }
 
         public Builder setEnvType(EnvType envType) {
@@ -87,14 +87,14 @@ public class MrKyber19BaseOtConfig implements BaseOtConfig {
             return this;
         }
 
-        public Builder setKyberType(KyberFactory.KyberType kyberType) {
+        public Builder setKyberType(KyberEngineFactory.KyberType kyberType) {
             this.kyberType = kyberType;
             return this;
         }
 
         @Override
-        public MrKyber19BaseOtConfig build() {
-            return new MrKyber19BaseOtConfig(this);
+        public Mr19KyberBaseOtConfig build() {
+            return new Mr19KyberBaseOtConfig(this);
         }
     }
 
