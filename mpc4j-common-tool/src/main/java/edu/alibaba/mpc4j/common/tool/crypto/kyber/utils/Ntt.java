@@ -15,7 +15,7 @@ final class Ntt {
     /**
      * precomputed tables of powers of ζ, used for NTT.
      */
-    static short[] NTT_ZETAS = new short[]{
+    static final short[] NTT_ZETAS = new short[]{
         // 占位符
         2285,
         // W_2^0
@@ -40,7 +40,7 @@ final class Ntt {
     /**
      * precomputed tables of powers of ζ^-1, used for NTT inverse.
      */
-    static short[] NTT_ZETAS_INV = new short[]{
+    static final short[] NTT_ZETAS_INV = new short[]{
         // W'_128^0, ..., W'_128^63
         1701, 1807, 1460, 2371, 2338, 2333, 308, 108, 2851, 870, 854, 1510, 2535, 1278, 1530, 1185,
         1659, 1187, 3109, 874, 1335, 2111, 136, 1215, 2945, 1465, 1285, 2007, 2719, 2726, 2232, 2512,

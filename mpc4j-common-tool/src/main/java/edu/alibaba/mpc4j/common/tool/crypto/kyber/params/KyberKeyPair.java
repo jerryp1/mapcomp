@@ -38,7 +38,7 @@ public class KyberKeyPair {
      *
      * @return 公钥。
      */
-    public byte[] getPublicKeyVector() {
+    public byte[] getPublicKey() {
         return publicKeyVector;
     }
 
@@ -57,7 +57,7 @@ public class KyberKeyPair {
      *
      * @return 私钥向量。
      */
-    public short[][] getSecretKeyVector() {
+    public short[][] getSecretKey() {
         return secretKeyVector;
     }
 }

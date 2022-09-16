@@ -82,7 +82,7 @@ public final class ByteOps {
                 }
                 break;
             default:
-                throw new IllegalArgumentException("Invalid K, must be 2, 3 or 4: " + paramsK);
+                throw new IllegalArgumentException(KyberParams.INVALID_PARAMS_K_ERROR_MESSAGE + paramsK);
         }
         return r;
     }

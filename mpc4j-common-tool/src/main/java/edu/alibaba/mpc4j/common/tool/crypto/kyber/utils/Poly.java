@@ -362,7 +362,7 @@ public final class Poly {
                 }
                 break;
             default:
-                throw new IllegalArgumentException("Invalid K, must be 2, 3 or 4: " + paramsK);
+                throw new IllegalArgumentException(KyberParams.INVALID_PARAMS_K_ERROR_MESSAGE + paramsK);
         }
         return r;
     }
@@ -390,7 +390,7 @@ public final class Poly {
                 r = new byte[KyberParams.POLY_VECTOR_COMPRESSED_BYTES_1024];
                 break;
             default:
-                throw new IllegalArgumentException("Invalid K, must be 2, 3 or 4: " + paramsK);
+                throw new IllegalArgumentException(KyberParams.INVALID_PARAMS_K_ERROR_MESSAGE + paramsK);
         }
         switch (paramsK) {
             case 2:
@@ -435,7 +435,7 @@ public final class Poly {
                 }
                 break;
             default:
-                throw new IllegalArgumentException("Invalid K, must be 2, 3 or 4: " + paramsK);
+                throw new IllegalArgumentException(KyberParams.INVALID_PARAMS_K_ERROR_MESSAGE + paramsK);
         }
         return r;
     }
@@ -483,7 +483,7 @@ public final class Poly {
                 }
                 break;
             default:
-                throw new IllegalArgumentException("Invalid K, must be 2, 3 or 4: " + paramsK);
+                throw new IllegalArgumentException(KyberParams.INVALID_PARAMS_K_ERROR_MESSAGE + paramsK);
         }
         return r;
     }
@@ -543,7 +543,7 @@ public final class Poly {
                 }
                 break;
             default:
-                throw new IllegalArgumentException("Invalid K, must be 2, 3 or 4: " + paramsK);
+                throw new IllegalArgumentException(KyberParams.INVALID_PARAMS_K_ERROR_MESSAGE + paramsK);
         }
         return r;
     }
@@ -568,7 +568,7 @@ public final class Poly {
                 prfByteLength = KyberParams.ETA_768_1024 * KyberParams.PARAMS_N / 4;
                 break;
             default:
-                throw new IllegalArgumentException("Invalid K, must be 2, 3 or 4: " + paramsK);
+                throw new IllegalArgumentException(KyberParams.INVALID_PARAMS_K_ERROR_MESSAGE + paramsK);
         }
         byte[] p = KyberEngineHelper.generatePrfByteArray(prfByteLength, seed, nonce);
         return ByteOps.generateCbdPoly(p, paramsK);

@@ -12,81 +12,85 @@ public final class KyberParams {
     /**
      * 整数值2
      */
-    public final static int MATH_TWO = 2;
+    public static final int MATH_TWO = 2;
     /**
      * 整数值3
      */
-    public final static int MATH_THREE = 3;
+    public static final int MATH_THREE = 3;
     /**
      * 整数值4
      */
-    public final static int MATH_FOUR = 4;
+    public static final int MATH_FOUR = 4;
     /**
      * 整数值8
      */
-    public final static int MATH_EIGHT = 8;
+    public static final int MATH_EIGHT = 8;
     /**
      * 多项式系数数量，即环Zq[X] / (X^n + 1)中n的值
      */
-    public final static int PARAMS_N = 256;
+    public static final int PARAMS_N = 256;
     /**
      * NTT的查找表大小
      */
-    public final static int PARAMS_NTT_NUM = 128;
+    public static final int PARAMS_NTT_NUM = 128;
     /**
      * 有限域Zq的模数q
      */
-    public final static int PARAMS_Q = 3329;
+    public static final int PARAMS_Q = 3329;
     /**
      * q^{-1} mod 2^16，即62209 = 3329^{-1} mod 65536
      */
-    public final static int PARAMS_Q_INV = 62209;
+    public static final int PARAMS_Q_INV = 62209;
     /**
      * 多项式字节长度，log_2(q) = 12，多项式共有256个系数，共3072比特，即384字节
      */
-    public final static int POLY_BYTES = 384;
+    public static final int POLY_BYTES = 384;
     /**
      * K = 2时，加密时所需噪声的多项式数量
      */
-    public final static int ETA_512 = 3;
+    public static final int ETA_512 = 3;
     /**
      * K = 3或K = 4时，加密时所需噪声的多项式数量
      */
-    public final static int ETA_768_1024 = 2;
+    public static final int ETA_768_1024 = 2;
     /**
      * 噪声/随机数种子/明文消息字节长度，均为256比特，即32字节
      */
-    public final static int SYM_BYTES = 32;
+    public static final int SYM_BYTES = 32;
     /**
      * K = 2或K = 3时，压缩后的多项式字节长度
      */
-    public final static int POLY_COMPRESSED_BYTES_768 = 128;
+    public static final int POLY_COMPRESSED_BYTES_768 = 128;
     /**
      * K = 4时，压缩后的多项式字节长度
      */
-    public final static int POLY_COMPRESSED_BYTES_1024 = 160;
+    public static final int POLY_COMPRESSED_BYTES_1024 = 160;
     /**
      * K = 2时，压缩后的多项式向量字节长度
      */
-    public final static int POLY_VECTOR_COMPRESSED_BYTES_512 = 2 * 320;
+    public static final int POLY_VECTOR_COMPRESSED_BYTES_512 = 2 * 320;
     /**
      * K = 3时，压缩后的多项式向量字节长度
      */
-    public final static int POLY_VECTOR_COMPRESSED_BYTES_768 = 3 * 320;
+    public static final int POLY_VECTOR_COMPRESSED_BYTES_768 = 3 * 320;
     /**
      * K = 4时，压缩后的多项式向量字节长度
      */
-    public final static int POLY_VECTOR_COMPRESSED_BYTES_1024 = 4 * 352;
+    public static final int POLY_VECTOR_COMPRESSED_BYTES_1024 = 4 * 352;
     /**
      * K = 2时的公钥长度
      */
-    public final static int POLY_VECTOR_BYTES_512 = 2 * POLY_BYTES;
+    public static final int POLY_VECTOR_BYTES_512 = 2 * POLY_BYTES;
     /**
      * K = 3时的公钥长度
      */
-    public final static int POLY_VECTOR_BYTES_768 = 3 * POLY_BYTES;
+    public static final int POLY_VECTOR_BYTES_768 = 3 * POLY_BYTES;
     /**
      * K = 4时的公钥长度
      */
-    public final static int POLY_VECTOR_BYTES_1024 = 4 * POLY_BYTES;
+    public static final int POLY_VECTOR_BYTES_1024 = 4 * POLY_BYTES;
+    /**
+     * 非法参数K的错误消息
+     */
+    public static final String INVALID_PARAMS_K_ERROR_MESSAGE = "Invalid K, must be 2, 3 or 4: ";
 }
