@@ -1,4 +1,4 @@
-package edu.alibaba.mpc4j.s2pc.pir.keyword;
+package edu.alibaba.mpc4j.s2pc.pir;
 
 import java.nio.ByteBuffer;
 import java.security.SecureRandom;
@@ -77,7 +77,7 @@ public class PirUtils {
     }
 
     /**
-     * 生成关键词和标签映射。
+     * 生成参与方的测试集合。
      *
      * @param keywordSet      关键词集合。
      * @param labelByteLength 标签字节长度。
@@ -93,5 +93,40 @@ public class PirUtils {
                     return ByteBuffer.wrap(label);
                 }
             ));
+    }
+
+    /**
+     * 生成随机元素数组。
+     *
+     * @param elementSize       元素数量。
+     * @param elementByteLength 元素字节长度。
+     * @return 关键词和标签映射。
+     */
+    public static ArrayList<ByteBuffer> generateElementArrayList(int elementSize, int elementByteLength) {
+        return IntStream.range(0, elementSize)
+            .mapToObj(i -> {
+                byte[] element = new byte[elementByteLength];
+                SECURE_RANDOM.nextBytes(element);
+                return ByteBuffer.wrap(element);
+            })
+            .collect(Collectors.toCollection(ArrayList::new));
+    }
+
+    /**
+     * 生成索引值集合。
+     *
+     * @param elementSize   元素数量。
+     * @param setSize       集合数量。
+     * @param retrievalSize 查询数量。
+     * @return 索引值集合。
+     */
+    public static ArrayList<Set<Integer>> generateRetrievalSets(int elementSize, int setSize, int retrievalSize) {
+        return IntStream.range(0, setSize)
+            .mapToObj(i ->
+                IntStream.range(0, retrievalSize)
+                    .mapToObj(j -> SECURE_RANDOM.nextInt(elementSize))
+                    .collect(Collectors.toCollection(() -> new HashSet<>(retrievalSize)))
+            )
+            .collect(Collectors.toCollection(ArrayList::new));
     }
 }

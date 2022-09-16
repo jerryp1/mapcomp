@@ -165,6 +165,74 @@ vector<Ciphertext> deserialize_ciphertexts(JNIEnv *env, jobject list, const SEAL
     return result;
 }
 
+vector<Plaintext> deserialize_plaintexts(JNIEnv *env, jobject list, const SEALContext& context) {
+    jclass obj_class = env->FindClass("java/util/ArrayList");
+    if (obj_class == nullptr) {
+        std::cout << "ArrayList not found !" << std::endl;
+        return static_cast<std::vector<seal::Plaintext>>(0);
+
+    }
+    jmethodID get_method = env->GetMethodID(obj_class, "get", "(I)Ljava/lang/Object;");
+    jmethodID size_method = env->GetMethodID(obj_class, "size", "()I");
+    if (get_method == nullptr || size_method == nullptr) {
+        std::cout << "'get' or 'size' method not found !" << std::endl;
+        return static_cast<std::vector<seal::Plaintext>>(0);
+    }
+    int size = env->CallIntMethod(list, size_method);
+    vector<Plaintext> result;
+    result.reserve(size);
+    for (uint32_t i = 0; i < size; i++) {
+        auto bytes = (jbyteArray) env->CallObjectMethod(list, get_method, i);
+        result.push_back(deserialize_plaintext(env, bytes, context));
+        env->DeleteLocalRef(bytes);
+    }
+
+    // free
+    env->DeleteLocalRef(obj_class);
+    return result;
+}
+
+vector<Plaintext> deserialize_plaintext_from_coefficients(JNIEnv *env, jobject coeff_list, const SEALContext& context,
+                                                          uint32_t poly_modulus_degree) {
+    jclass obj_class = env->FindClass("java/util/ArrayList");
+    if (obj_class == nullptr) {
+        std::cout << "ArrayList not found !" << std::endl;
+        return static_cast<std::vector<seal::Plaintext>>(0);
+    }
+    jmethodID get_method = env->GetMethodID(obj_class, "get", "(I)Ljava/lang/Object;");
+    jmethodID size_method = env->GetMethodID(obj_class, "size", "()I");
+    if (get_method == nullptr || size_method == nullptr) {
+        std::cout << "'get' or 'size' method not found !" << std::endl;
+        return static_cast<std::vector<seal::Plaintext>>(0);
+    }
+    int size = env->CallIntMethod(coeff_list, size_method);
+    vector<Plaintext> result;
+    result.reserve(size);
+
+    for (uint32_t i = 0; i < size; i++) {
+        Plaintext plaintext(poly_modulus_degree);
+        auto coeffs = (jlongArray) env->CallObjectMethod(coeff_list, get_method, i);
+        uint32_t len = env->GetArrayLength(coeffs);
+        if (len > poly_modulus_degree) {
+            std::cout << "length is incorrect!" << std::endl;
+            return static_cast<std::vector<seal::Plaintext>>(0);
+        }
+        jlong *ptr = env->GetLongArrayElements(coeffs, JNI_FALSE);
+        vector<uint64_t> vec(ptr, ptr + len);
+
+        for (int j = 0; j < len; j++) {
+            plaintext[j] = vec[j];
+        }
+
+        result.push_back(plaintext);
+        env->DeleteLocalRef(coeffs);
+    }
+
+    // free
+    env->DeleteLocalRef(obj_class);
+    return result;
+}
+
 jobject serialize_ciphertexts(JNIEnv *env, const vector<Ciphertext>& ciphertexts) {
     // 获取ArrayList类引用
     jclass list_jcs = env->FindClass("java/util/ArrayList");
@@ -182,7 +250,6 @@ jobject serialize_ciphertexts(JNIEnv *env, const vector<Ciphertext>& ciphertexts
         std::cout << "'init' or 'add' method not found !" << std::endl;
         return nullptr;
     }
-    // 明文多项式转化为字节数组
     for (auto & ciphertext : ciphertexts) {
         jbyteArray byte_array = serialize_ciphertext(env, ciphertext);
         env->CallBooleanMethod(list_obj, list_add, byte_array);
@@ -194,6 +261,34 @@ jobject serialize_ciphertexts(JNIEnv *env, const vector<Ciphertext>& ciphertexts
     return list_obj;
 }
 
+
+jobject serialize_plaintexts(JNIEnv *env, const vector<Plaintext>& plaintexts) {
+    // 获取ArrayList类引用
+    jclass list_jcs = env->FindClass("java/util/ArrayList");
+    if (list_jcs == nullptr) {
+        std::cout << "ArrayList not found !" << std::endl;
+        return nullptr;
+    }
+    // 获取ArrayList构造函数id
+    jmethodID list_init = env->GetMethodID(list_jcs, "<init>", "()V");
+    // 创建一个ArrayList对象
+    jobject list_obj = env->NewObject(list_jcs, list_init, "");
+    // 获取ArrayList对象的add()的methodID
+    jmethodID list_add = env->GetMethodID(list_jcs, "add", "(Ljava/lang/Object;)Z");
+    if (list_add == nullptr || list_init == nullptr) {
+        std::cout << "'init' or 'add' method not found !" << std::endl;
+        return nullptr;
+    }
+    for (auto & plaintext : plaintexts) {
+        jbyteArray byte_array = serialize_plaintext(env, plaintext);
+        env->CallBooleanMethod(list_obj, list_add, byte_array);
+        env->DeleteLocalRef(byte_array);
+    }
+
+    // free
+    env->DeleteLocalRef(list_jcs);
+    return list_obj;
+}
 
 vector<Plaintext> deserialize_plaintexts(JNIEnv *env, jobjectArray array, const SEALContext& context) {
     BatchEncoder encoder(context);
@@ -225,8 +320,17 @@ seal::EncryptionParameters deserialize_encryption_params(JNIEnv *env, jbyteArray
     std::istringstream input(str);
     seal::EncryptionParameters params;
     params.load(input);
-
     // free
     env->ReleaseByteArrayElements(params_bytes, params_byte_data, 0);
     return params;
+}
+
+jlongArray get_plaintext_coeffs(JNIEnv *env, Plaintext plaintext) {
+    jlongArray result = env->NewLongArray((jsize) plaintext.coeff_count());
+    jlong coeff_array[plaintext.coeff_count()];
+    for (int i = 0; i < plaintext.coeff_count(); i++) {
+        coeff_array[i] = (jlong) plaintext[i];
+    }
+    env->SetLongArrayRegion(result, 0, (jsize) plaintext.coeff_count(), coeff_array);
+    return result;
 }

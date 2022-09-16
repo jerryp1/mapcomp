@@ -39,4 +39,11 @@ RelinKeys deserialize_relin_key(JNIEnv *env, jbyteArray relin_key_bytes, const S
 
 jbyteArray serialize_relin_key(JNIEnv *env, const Serializable<RelinKeys>& relin_keys);
 
+vector<Plaintext> deserialize_plaintext_from_coefficients(JNIEnv *env, jobject coeff_list, const SEALContext& context,
+                                                          uint32_t poly_modulus_degree);
 
+jobject serialize_plaintexts(JNIEnv *env, const vector<Plaintext>& plaintexts);
+
+vector<Plaintext> deserialize_plaintexts(JNIEnv *env, jobject list, const SEALContext& context);
+
+jlongArray get_plaintext_coeffs(JNIEnv *env, Plaintext plaintext);
