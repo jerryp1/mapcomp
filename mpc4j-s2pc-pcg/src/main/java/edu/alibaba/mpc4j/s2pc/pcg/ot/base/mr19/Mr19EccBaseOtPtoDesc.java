@@ -20,7 +20,7 @@ class Mr19EccBaseOtPtoDesc implements PtoDesc {
     /**
      * 协议ID
      */
-    private static final int PTO_ID = Math.abs((int)7464266642234682892L);
+    private static final int PTO_ID = Math.abs((int) 7464266642234682892L);
     /**
      * 协议名称
      */
@@ -39,6 +39,7 @@ class Mr19EccBaseOtPtoDesc implements PtoDesc {
          */
         SENDER_SEND_BETA,
     }
+
     /**
      * 单例模式
      */

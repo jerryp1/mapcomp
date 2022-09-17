@@ -8,10 +8,7 @@ import edu.alibaba.mpc4j.s2pc.pcg.ot.bnot.BaseNotConfig;
 import edu.alibaba.mpc4j.s2pc.pcg.ot.bnot.BaseNotFactory;
 
 /**
- * MR19-Kyber-基础n选1-OT协议配置项。论文来源：
- * <p>
- * Mansy D, Rindal P. Endemic oblivious transfer. CCS 2019. 2019: 309-326.
- * </p>
+ * MR19-Kyber-基础n选1-OT协议配置项。
  *
  * @author Sheng Hu, Weiran Liu
  * @date 2022/08/25

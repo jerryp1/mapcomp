@@ -8,8 +8,6 @@ import edu.alibaba.mpc4j.common.rpc.utils.DataPacket;
 import edu.alibaba.mpc4j.common.rpc.utils.DataPacketHeader;
 import edu.alibaba.mpc4j.common.tool.crypto.ecc.Ecc;
 import edu.alibaba.mpc4j.common.tool.crypto.ecc.EccFactory;
-import edu.alibaba.mpc4j.common.tool.crypto.kdf.Kdf;
-import edu.alibaba.mpc4j.common.tool.crypto.kdf.KdfFactory;
 import edu.alibaba.mpc4j.common.tool.utils.BytesUtils;
 import edu.alibaba.mpc4j.s2pc.pcg.ot.base.AbstractBaseOtSender;
 import edu.alibaba.mpc4j.s2pc.pcg.ot.base.BaseOtSenderOutput;
@@ -34,11 +32,11 @@ import java.util.stream.IntStream;
  */
 public class Csw20BaseOtSender extends AbstractBaseOtSender {
     /**
-     * 配置项
+     * 是否压缩表示
      */
-    private final Csw20BaseOtConfig config;
+    private final boolean compressEncode;
     /**
-     * 椭圆曲线参数
+     * 椭圆曲线
      */
     private final Ecc ecc;
     /**
@@ -56,8 +54,8 @@ public class Csw20BaseOtSender extends AbstractBaseOtSender {
 
     public Csw20BaseOtSender(Rpc senderRpc, Party receiverParty, Csw20BaseOtConfig config) {
         super(Csw20BaseOtPtoDesc.getInstance(), senderRpc, receiverParty, config);
+        compressEncode = config.getCompressEncode();
         ecc = EccFactory.createInstance(envType);
-        this.config = config;
     }
 
     @Override
@@ -118,7 +116,6 @@ public class Csw20BaseOtSender extends AbstractBaseOtSender {
         MpcAbortPreconditions.checkArgument(receiverPayload.size() == num + 1);
         // 由于要先取出最后一个元素，因此要先转换为数组
         ArrayList<byte[]> receiverPayloadArrayList = new ArrayList<>(receiverPayload);
-        Kdf kdf = KdfFactory.createInstance(envType);
         // 随机生成y
         final BigInteger y = ecc.randomZn(secureRandom);
         // 计算S = yB
@@ -152,7 +149,7 @@ public class Csw20BaseOtSender extends AbstractBaseOtSender {
                     .allocate(Integer.BYTES + k1InputArray.length)
                     .putInt(index).put(k1InputArray)
                     .array());
-                // 计算挑战消息chall = H(k0) \xor H(k1)，并添加到paylaod
+                // 计算挑战消息chall = H(k0) \xor H(k1)，并添加到payload
                 answerInputArray[index] = kdf.deriveKey(r0Array[index]);
                 return BytesUtils.xor(answerInputArray[index], kdf.deriveKey(r1Array[index]));
             })
@@ -167,7 +164,7 @@ public class Csw20BaseOtSender extends AbstractBaseOtSender {
         byte[] gammaBytes = kdf.deriveKey(answerBytes);
         senderPayload.add(gammaBytes);
         // 将S添加到payload
-        senderPayload.add(ecc.encode(capitalS, config.getCompressEncode()));
+        senderPayload.add(ecc.encode(capitalS, compressEncode));
         return senderPayload;
     }
 

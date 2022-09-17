@@ -9,8 +9,6 @@ import edu.alibaba.mpc4j.common.rpc.utils.DataPacketHeader;
 import edu.alibaba.mpc4j.common.tool.CommonConstants;
 import edu.alibaba.mpc4j.common.tool.crypto.ecc.Ecc;
 import edu.alibaba.mpc4j.common.tool.crypto.ecc.EccFactory;
-import edu.alibaba.mpc4j.common.tool.crypto.kdf.Kdf;
-import edu.alibaba.mpc4j.common.tool.crypto.kdf.KdfFactory;
 import edu.alibaba.mpc4j.common.tool.utils.BytesUtils;
 import edu.alibaba.mpc4j.s2pc.pcg.ot.base.AbstractBaseOtReceiver;
 import edu.alibaba.mpc4j.s2pc.pcg.ot.base.BaseOtReceiverOutput;
@@ -35,9 +33,9 @@ import java.util.stream.IntStream;
  */
 public class Csw20BaseOtReceiver extends AbstractBaseOtReceiver {
     /**
-     * 配置项
+     * 是否压缩表示
      */
-    private final Csw20BaseOtConfig config;
+    private final boolean compressEncode;
     /**
      * 椭圆曲线
      */
@@ -53,8 +51,8 @@ public class Csw20BaseOtReceiver extends AbstractBaseOtReceiver {
 
     public Csw20BaseOtReceiver(Rpc receiverRpc, Party senderParty, Csw20BaseOtConfig config) {
         super(Csw20BaseOtPtoDesc.getInstance(), receiverRpc, senderParty, config);
+        compressEncode = config.getCompressEncode();
         ecc = EccFactory.createInstance(envType);
-        this.config = config;
     }
 
     @Override
@@ -133,7 +131,7 @@ public class Csw20BaseOtReceiver extends AbstractBaseOtReceiver {
                 return choices[index] ?
                     ecc.multiply(ecc.getG(), aArray[index]).add(upperT) : ecc.multiply(ecc.getG(), aArray[index]);
             })
-            .map(capitalB -> ecc.encode(capitalB, config.getCompressEncode()))
+            .map(capitalB -> ecc.encode(capitalB, compressEncode))
             .collect(Collectors.toList());
         receiverChoosePayLoad.add(seed);
         return receiverChoosePayLoad;
@@ -143,7 +141,6 @@ public class Csw20BaseOtReceiver extends AbstractBaseOtReceiver {
         MpcAbortPreconditions.checkArgument(senderPayload.size() == choices.length + 2);
         // 由于要先移除最后一个元素，因此先转换为数组
         ArrayList<byte[]> senderPayloadArrayList = new ArrayList<>(senderPayload);
-        Kdf kdf = KdfFactory.createInstance(envType);
         ECPoint capitalS = ecc.decode(senderPayloadArrayList.remove(senderPayloadArrayList.size() - 1));
         byte[] gammaBytes = senderPayloadArrayList.remove(senderPayloadArrayList.size() - 1);
         rbArray = new byte[choices.length][];

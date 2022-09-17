@@ -2,8 +2,6 @@ package edu.alibaba.mpc4j.s2pc.pcg.ot.base.mr19;
 
 import edu.alibaba.mpc4j.common.tool.crypto.hash.Hash;
 import edu.alibaba.mpc4j.common.tool.crypto.hash.HashFactory;
-import edu.alibaba.mpc4j.common.tool.crypto.kdf.Kdf;
-import edu.alibaba.mpc4j.common.tool.crypto.kdf.KdfFactory;
 import edu.alibaba.mpc4j.common.tool.crypto.kyber.*;
 import edu.alibaba.mpc4j.common.rpc.MpcAbortException;
 import edu.alibaba.mpc4j.common.rpc.MpcAbortPreconditions;
@@ -24,10 +22,7 @@ import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
 /**
- * MR19-KYBER-基础OT协议接收方。论文来源：
- * <p>
- * Mansy D, Rindal P. Endemic oblivious transfer. CCS 2019. 2019: 309-326.
- * </p>
+ * MR19-KYBER-基础OT协议接收方。
  *
  * @author Sheng Hu, Weiran Liu
  * @date 2022/08/05
@@ -42,10 +37,6 @@ public class Mr19KyberBaseOtReceiver extends AbstractBaseOtReceiver {
      */
     private final Hash pkHash;
     /**
-     * 密钥派生函数
-     */
-    private final Kdf kdf;
-    /**
      * OT协议接收方密钥对
      */
     private KyberKeyPair[] keyArray;
@@ -54,7 +45,6 @@ public class Mr19KyberBaseOtReceiver extends AbstractBaseOtReceiver {
         super(Mr19KyberBaseOtPtoDesc.getInstance(), receiverRpc, senderParty, config);
         kyberEngine = KyberEngineFactory.createInstance(config.getKyberType(), config.getParamsK());
         pkHash = HashFactory.createInstance(HashFactory.HashType.BC_SHAKE_256, kyberEngine.publicKeyByteLength());
-        kdf = KdfFactory.createInstance(envType);
     }
 
     @Override

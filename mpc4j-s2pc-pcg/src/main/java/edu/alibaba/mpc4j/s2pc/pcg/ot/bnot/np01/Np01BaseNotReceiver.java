@@ -75,45 +75,44 @@ public class Np01BaseNotReceiver extends AbstractBaseNotReceiver {
             otherParty().getPartyId(), ownParty().getPartyId()
         );
         List<byte[]> initPayload = rpc.receive(initHeader).getPayload();
-        handleSenderPayload(initPayload);
+        handleInitPayload(initPayload);
         stopWatch.stop();
         long initTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
         stopWatch.reset();
         info("{}{} Recv. Step 1/2 ({}ms)", ptoStepLogPrefix, getPtoDesc().getPtoName(), initTime);
 
         stopWatch.start();
-        List<byte[]> publicKeyPayload = generateReceiverPayload();
-        DataPacketHeader publicKeyHeader = new DataPacketHeader(
+        List<byte[]> pkPayload = generatePkPayload();
+        DataPacketHeader pkHeader = new DataPacketHeader(
             taskId, ptoDesc.getPtoId(), PtoStep.RECEIVER_SEND_PK.ordinal(), extraInfo,
             ownParty().getPartyId(), otherParty().getPartyId()
         );
-        rpc.send(DataPacket.fromByteArrayList(publicKeyHeader, publicKeyPayload));
+        rpc.send(DataPacket.fromByteArrayList(pkHeader, pkPayload));
+        BaseNotReceiverOutput receiverOutput = new BaseNotReceiverOutput(maxChoice, choices, rbArray);
+        rbArray = null;
         stopWatch.stop();
         long pkTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
         stopWatch.reset();
         info("{}{} Recv. Step 2/2 ({}ms)", ptoStepLogPrefix, getPtoDesc().getPtoName(), pkTime);
 
         info("{}{} Recv. end", ptoEndLogPrefix, getPtoDesc().getPtoName());
-        BaseNotReceiverOutput receiverOutput = new BaseNotReceiverOutput(maxChoice, choices, rbArray);
-        rbArray = null;
-
         return receiverOutput;
     }
 
-    private void handleSenderPayload(List<byte[]> senderPayload) throws MpcAbortException {
-        MpcAbortPreconditions.checkArgument(senderPayload.size() == maxChoice);
+    private void handleInitPayload(List<byte[]> initPayload) throws MpcAbortException {
+        MpcAbortPreconditions.checkArgument(initPayload.size() == maxChoice);
         // 解包g^r、C
-        g2r = ecc.decode(senderPayload.remove(0));
-        Stream<byte[]> cStream = senderPayload.stream();
+        g2r = ecc.decode(initPayload.remove(0));
+        Stream<byte[]> cStream = initPayload.stream();
         cStream = parallel ? cStream.parallel() : cStream;
         cs = cStream.map(ecc::decode).toArray(ECPoint[]::new);
     }
 
-    private List<byte[]> generateReceiverPayload() {
+    private List<byte[]> generatePkPayload() {
         rbArray = new byte[num][];
         IntStream indexIntStream = IntStream.range(0, num);
         indexIntStream = parallel ? indexIntStream.parallel() : indexIntStream;
-        List<byte[]> receiverPayload = indexIntStream
+        List<byte[]> pkPayload = indexIntStream
             .mapToObj(index -> {
                 // The receiver picks a random k
                 BigInteger k = ecc.randomZn(secureRandom);
@@ -121,7 +120,7 @@ public class Np01BaseNotReceiver extends AbstractBaseNotReceiver {
                 ECPoint pkSigma = ecc.multiply(ecc.getG(), k);
                 // and PK_{1 - \sigma} = C / PK_{\sigma}
                 ECPoint pk0 = (choices[index] == 0) ? pkSigma : (cs[choices[index] - 1].subtract(pkSigma));
-                // 存储OT的密钥key=H(index,g^rk)
+                // 存储OT的密钥key = H(index, g^rk)
                 byte[] kInputByteArray = ecc.encode(ecc.multiply(g2r, k), false);
                 rbArray[index] = kdf.deriveKey(ByteBuffer
                     .allocate(Integer.BYTES + kInputByteArray.length)
@@ -135,6 +134,6 @@ public class Np01BaseNotReceiver extends AbstractBaseNotReceiver {
             .collect(Collectors.toList());
         cs = null;
         g2r = null;
-        return receiverPayload;
+        return pkPayload;
     }
 }

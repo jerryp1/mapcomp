@@ -66,7 +66,7 @@ public class Np01BaseNotSender extends AbstractBaseNotSender {
         info("{}{} Send. begin", ptoBeginLogPrefix, getPtoDesc().getPtoName());
 
         stopWatch.start();
-        List<byte[]> initPayload = generateSenderPayload();
+        List<byte[]> initPayload = generateInitPayload();
         DataPacketHeader initHeader = new DataPacketHeader(
             taskId, ptoDesc.getPtoId(), PtoStep.SENDER_SEND_INIT.ordinal(), extraInfo,
             ownParty().getPartyId(), otherParty().getPartyId()
@@ -83,17 +83,17 @@ public class Np01BaseNotSender extends AbstractBaseNotSender {
             otherParty().getPartyId(), ownParty().getPartyId()
         );
         List<byte[]> publicKeyPayload = rpc.receive(publicKeyHeader).getPayload();
-        BaseNotSenderOutput senderOutput = handleReceiverPayload(publicKeyPayload);
+        BaseNotSenderOutput senderOutput = handlePkPayload(publicKeyPayload);
         stopWatch.stop();
-        long keyGenTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
+        long pkTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
         stopWatch.reset();
-        info("{}{} Send. Step 2/2 ({}ms)", ptoStepLogPrefix, getPtoDesc().getPtoName(), keyGenTime);
+        info("{}{} Send. Step 2/2 ({}ms)", ptoStepLogPrefix, getPtoDesc().getPtoName(), pkTime);
 
         info("{}{} Send. end", ptoEndLogPrefix, getPtoDesc().getPtoName());
         return senderOutput;
     }
 
-    private List<byte[]> generateSenderPayload() {
+    private List<byte[]> generateInitPayload() {
         //（优化协议初始化部分）The sender computes g^r
         r = ecc.randomZn(secureRandom);
         ECPoint g2r = ecc.multiply(ecc.getG(), r);
@@ -107,27 +107,21 @@ public class Np01BaseNotSender extends AbstractBaseNotSender {
             return ecc.multiply(c, r);
         }).toArray(ECPoint[]::new);
 
-        List<byte[]> senderPayload = new LinkedList<>();
+        List<byte[]> initPayload = new LinkedList<>();
         // 打包g^r、{C_1, ..., C_{n-1}}
-        senderPayload.add(ecc.encode(g2r, compressEncode));
+        initPayload.add(ecc.encode(g2r, compressEncode));
         for (int i = 0; i < maxChoice - 1; i++) {
-            senderPayload.add(cs[i]);
+            initPayload.add(cs[i]);
         }
-        return senderPayload;
+        return initPayload;
     }
 
-    private BaseNotSenderOutput handleReceiverPayload(List<byte[]> receiverPayload) throws MpcAbortException {
-        MpcAbortPreconditions.checkArgument(receiverPayload.size() == num);
-        // 公钥格式转换流
-        Stream<byte[]> pkStream = receiverPayload.stream();
+    private BaseNotSenderOutput handlePkPayload(List<byte[]> pkPayload) throws MpcAbortException {
+        MpcAbortPreconditions.checkArgument(pkPayload.size() == num);
+        // 压缩编码的解码很慢，需要开并发
+        Stream<byte[]> pkStream = pkPayload.stream();
         pkStream = parallel ? pkStream.parallel() : pkStream;
-        ECPoint[] pk2rArray = pkStream
-            // 转换为ECPoint
-            .map(ecc::decode)
-            // 转换pk^r
-            .map(pk -> ecc.multiply(pk, r))
-            // 转换为ECPoint[]
-            .toArray(ECPoint[]::new);
+        ECPoint[] pk2rArray = pkStream.map(ecc::decode).map(pk -> ecc.multiply(pk, r)).toArray(ECPoint[]::new);
         IntStream indexIntStream = IntStream.range(0, num);
         indexIntStream = parallel ? indexIntStream.parallel() : indexIntStream;
         byte[][][] rMatrix = indexIntStream

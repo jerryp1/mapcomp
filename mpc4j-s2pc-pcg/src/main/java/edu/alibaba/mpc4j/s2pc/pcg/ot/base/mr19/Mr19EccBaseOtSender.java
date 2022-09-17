@@ -6,6 +6,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.IntStream;
+import java.util.stream.Stream;
 
 import edu.alibaba.mpc4j.common.rpc.MpcAbortException;
 import edu.alibaba.mpc4j.common.rpc.MpcAbortPreconditions;
@@ -15,10 +16,9 @@ import edu.alibaba.mpc4j.common.rpc.utils.DataPacket;
 import edu.alibaba.mpc4j.common.rpc.utils.DataPacketHeader;
 import edu.alibaba.mpc4j.common.tool.crypto.ecc.Ecc;
 import edu.alibaba.mpc4j.common.tool.crypto.ecc.EccFactory;
-import edu.alibaba.mpc4j.common.tool.crypto.kdf.Kdf;
-import edu.alibaba.mpc4j.common.tool.crypto.kdf.KdfFactory;
 import edu.alibaba.mpc4j.s2pc.pcg.ot.base.AbstractBaseOtSender;
 import edu.alibaba.mpc4j.s2pc.pcg.ot.base.BaseOtSenderOutput;
+import edu.alibaba.mpc4j.s2pc.pcg.ot.base.mr19.Mr19EccBaseOtPtoDesc.PtoStep;
 import org.bouncycastle.math.ec.ECPoint;
 
 /**
@@ -29,9 +29,9 @@ import org.bouncycastle.math.ec.ECPoint;
  */
 public class Mr19EccBaseOtSender extends AbstractBaseOtSender {
     /**
-     * 配置项
+     * 是否压缩表示
      */
-    private final Mr19EccBaseOtConfig config;
+    private final boolean compressEncode;
     /**
      * 椭圆曲线
      */
@@ -43,8 +43,8 @@ public class Mr19EccBaseOtSender extends AbstractBaseOtSender {
 
     public Mr19EccBaseOtSender(Rpc senderRpc, Party receiverParty, Mr19EccBaseOtConfig config) {
         super(Mr19EccBaseOtPtoDesc.getInstance(), senderRpc, receiverParty, config);
+        compressEncode = config.getCompressEncode();
         ecc = EccFactory.createInstance(envType);
-        this.config = config;
     }
 
     @Override
@@ -64,8 +64,8 @@ public class Mr19EccBaseOtSender extends AbstractBaseOtSender {
         stopWatch.start();
         List<byte[]> betaPayload = generateBetaPayload();
         DataPacketHeader betaHeader = new DataPacketHeader(
-                taskId, getPtoDesc().getPtoId(), Mr19EccBaseOtPtoDesc.PtoStep.SENDER_SEND_BETA.ordinal(), extraInfo,
-                ownParty().getPartyId(), otherParty().getPartyId()
+            taskId, getPtoDesc().getPtoId(), PtoStep.SENDER_SEND_BETA.ordinal(), extraInfo,
+            ownParty().getPartyId(), otherParty().getPartyId()
         );
         rpc.send(DataPacket.fromByteArrayList(betaHeader, betaPayload));
         stopWatch.stop();
@@ -75,8 +75,8 @@ public class Mr19EccBaseOtSender extends AbstractBaseOtSender {
 
         stopWatch.start();
         DataPacketHeader pkHeader = new DataPacketHeader(
-                taskId, getPtoDesc().getPtoId(), Mr19EccBaseOtPtoDesc.PtoStep.RECEIVER_SEND_R.ordinal(), extraInfo,
-                otherParty().getPartyId(), ownParty().getPartyId()
+            taskId, getPtoDesc().getPtoId(), PtoStep.RECEIVER_SEND_R.ordinal(), extraInfo,
+            otherParty().getPartyId(), ownParty().getPartyId()
         );
         List<byte[]> pkPayload = rpc.receive(pkHeader).getPayload();
         BaseOtSenderOutput senderOutput = handlePkPayload(pkPayload);
@@ -94,16 +94,16 @@ public class Mr19EccBaseOtSender extends AbstractBaseOtSender {
         beta = ecc.randomZn(secureRandom);
         List<byte[]> betaPayLoad = new ArrayList<>();
         // 发送方计算B = g^b
-        betaPayLoad.add(ecc.encode(ecc.multiply(ecc.getG(), beta), config.getCompressEncode()));
+        betaPayLoad.add(ecc.encode(ecc.multiply(ecc.getG(), beta), compressEncode));
         return betaPayLoad;
     }
 
     private BaseOtSenderOutput handlePkPayload(List<byte[]> pkPayload) throws MpcAbortException {
         MpcAbortPreconditions.checkArgument(pkPayload.size() == num * 2);
-        Kdf kdf = KdfFactory.createInstance(envType);
-        ECPoint[] rFlattenedArray = pkPayload.stream()
-                .map(ecc::decode)
-                .toArray(ECPoint[]::new);
+        // 压缩编码的解码很慢，需要开并发
+        Stream<byte[]> pkStream = pkPayload.stream();
+        pkStream = parallel ? pkStream.parallel() : pkStream;
+        ECPoint[] rFlattenedArray = pkStream.map(ecc::decode).toArray(ECPoint[]::new);
         // 密钥对生成流
         IntStream keyPairArrayIntStream = IntStream.range(0, num);
         keyPairArrayIntStream = parallel ? keyPairArrayIntStream.parallel() : keyPairArrayIntStream;
@@ -120,13 +120,13 @@ public class Mr19EccBaseOtSender extends AbstractBaseOtSender {
             byte[] k0InputByteArray = ecc.encode(ecc.multiply(upperA0, beta), false);
             byte[] k1InputByteArray = ecc.encode(ecc.multiply(upperA1, beta), false);
             r0Array[index] = kdf.deriveKey(ByteBuffer
-                    .allocate(Integer.BYTES + k0InputByteArray.length)
-                    .putInt(index).put(k0InputByteArray)
-                    .array());
+                .allocate(Integer.BYTES + k0InputByteArray.length)
+                .putInt(index).put(k0InputByteArray)
+                .array());
             r1Array[index] = kdf.deriveKey(ByteBuffer
-                    .allocate(Integer.BYTES + k1InputByteArray.length)
-                    .putInt(index).put(k1InputByteArray)
-                    .array());
+                .allocate(Integer.BYTES + k1InputByteArray.length)
+                .putInt(index).put(k1InputByteArray)
+                .array());
         });
         beta = null;
         return new BaseOtSenderOutput(r0Array, r1Array);
