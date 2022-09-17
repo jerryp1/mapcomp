@@ -22,7 +22,7 @@ import edu.alibaba.mpc4j.s2pc.pcg.ot.base.BaseOtSenderOutput;
 import org.bouncycastle.math.ec.ECPoint;
 
 /**
- * MR19-基础OT协议发送方。
+ * MR19-椭圆曲线-基础OT协议发送方。
  *
  * @author Weiran Liu, Hanwen Feng
  * @date 2020/10/03
@@ -37,9 +37,9 @@ public class Mr19EccBaseOtSender extends AbstractBaseOtSender {
      */
     private final Ecc ecc;
     /**
-     * OT协议发送方参数
+     * β
      */
-    private BigInteger bInteger;
+    private BigInteger beta;
 
     public Mr19EccBaseOtSender(Rpc senderRpc, Party receiverParty, Mr19EccBaseOtConfig config) {
         super(Mr19EccBaseOtPtoDesc.getInstance(), senderRpc, receiverParty, config);
@@ -64,7 +64,7 @@ public class Mr19EccBaseOtSender extends AbstractBaseOtSender {
         stopWatch.start();
         List<byte[]> betaPayload = generateBetaPayload();
         DataPacketHeader betaHeader = new DataPacketHeader(
-                taskId, getPtoDesc().getPtoId(), Mr19EccBaseOtPtoDesc.PtoStep.SENDER_SEND_B.ordinal(), extraInfo,
+                taskId, getPtoDesc().getPtoId(), Mr19EccBaseOtPtoDesc.PtoStep.SENDER_SEND_BETA.ordinal(), extraInfo,
                 ownParty().getPartyId(), otherParty().getPartyId()
         );
         rpc.send(DataPacket.fromByteArrayList(betaHeader, betaPayload));
@@ -90,11 +90,11 @@ public class Mr19EccBaseOtSender extends AbstractBaseOtSender {
     }
 
     private List<byte[]> generateBetaPayload() {
-        // 发送方选择Z_p^*域中的一个随机数b
-        bInteger = ecc.randomZn(secureRandom);
+        // 发送方选择Z_p^*域中的一个随机数β
+        beta = ecc.randomZn(secureRandom);
         List<byte[]> betaPayLoad = new ArrayList<>();
         // 发送方计算B = g^b
-        betaPayLoad.add(ecc.encode(ecc.multiply(ecc.getG(), bInteger), config.getCompressEncode()));
+        betaPayLoad.add(ecc.encode(ecc.multiply(ecc.getG(), beta), config.getCompressEncode()));
         return betaPayLoad;
     }
 
@@ -117,8 +117,8 @@ public class Mr19EccBaseOtSender extends AbstractBaseOtSender {
             ECPoint upperA0 = ecc.hashToCurve(ecc.encode(upperR1, false)).add(upperR0);
             ECPoint upperA1 = ecc.hashToCurve(ecc.encode(upperR0, false)).add(upperR1);
             // 计算密钥k0 = H(index, b * A0)和k1 = H(index, b * A1)
-            byte[] k0InputByteArray = ecc.encode(ecc.multiply(upperA0, bInteger), false);
-            byte[] k1InputByteArray = ecc.encode(ecc.multiply(upperA1, bInteger), false);
+            byte[] k0InputByteArray = ecc.encode(ecc.multiply(upperA0, beta), false);
+            byte[] k1InputByteArray = ecc.encode(ecc.multiply(upperA1, beta), false);
             r0Array[index] = kdf.deriveKey(ByteBuffer
                     .allocate(Integer.BYTES + k0InputByteArray.length)
                     .putInt(index).put(k0InputByteArray)
@@ -128,7 +128,7 @@ public class Mr19EccBaseOtSender extends AbstractBaseOtSender {
                     .putInt(index).put(k1InputByteArray)
                     .array());
         });
-        bInteger = null;
+        beta = null;
         return new BaseOtSenderOutput(r0Array, r1Array);
     }
 }

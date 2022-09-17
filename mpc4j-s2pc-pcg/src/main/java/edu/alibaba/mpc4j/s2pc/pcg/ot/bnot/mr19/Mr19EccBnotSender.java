@@ -10,7 +10,7 @@ import edu.alibaba.mpc4j.common.tool.crypto.ecc.Ecc;
 import edu.alibaba.mpc4j.common.tool.crypto.ecc.EccFactory;
 import edu.alibaba.mpc4j.s2pc.pcg.ot.bnot.AbstractBnotSender;
 import edu.alibaba.mpc4j.s2pc.pcg.ot.bnot.BnotSenderOutput;
-import org.apache.commons.lang3.time.StopWatch;
+import edu.alibaba.mpc4j.s2pc.pcg.ot.bnot.mr19.Mr19EccBnotPtoDesc.PtoStep;
 import org.bouncycastle.math.ec.ECPoint;
 
 import java.math.BigInteger;
@@ -20,12 +20,12 @@ import java.util.concurrent.TimeUnit;
 import java.util.stream.Stream;
 
 /**
- * MR19-基础n选1-OT协议发送方。
+ * MR19-椭圆曲线-基础n选1-OT协议发送方。
  *
  * @author Hanwen Feng
  * @date 2022/07/25
  */
-public class Mr19BnotSender extends AbstractBnotSender {
+public class Mr19EccBnotSender extends AbstractBnotSender {
     /**
      * 是否压缩表示
      */
@@ -35,12 +35,12 @@ public class Mr19BnotSender extends AbstractBnotSender {
      */
     private final Ecc ecc;
     /**
-     * OT协议发送方参数
+     * β
      */
-    private BigInteger bInteger;
+    private BigInteger beta;
 
-    public Mr19BnotSender(Rpc senderRpc, Party receiverParty, Mr19BnotConfig config) {
-        super(Mr19BnotPtoDesc.getInstance(), senderRpc, receiverParty, config);
+    public Mr19EccBnotSender(Rpc senderRpc, Party receiverParty, Mr19EccBnotConfig config) {
+        super(Mr19EccBnotPtoDesc.getInstance(), senderRpc, receiverParty, config);
         compressEncode = config.getCompressEncode();
         ecc = EccFactory.createInstance(envType);
     }
@@ -62,7 +62,7 @@ public class Mr19BnotSender extends AbstractBnotSender {
         stopWatch.start();
         List<byte[]> betaPayload = generateBetaPayload();
         DataPacketHeader betaHeader = new DataPacketHeader(
-            taskId, getPtoDesc().getPtoId(), Mr19BnotPtoDesc.PtoStep.SENDER_SEND_B.ordinal(), extraInfo,
+            taskId, getPtoDesc().getPtoId(), PtoStep.SENDER_SEND_BETA.ordinal(), extraInfo,
             ownParty().getPartyId(), otherParty().getPartyId()
         );
         rpc.send(DataPacket.fromByteArrayList(betaHeader, betaPayload));
@@ -73,12 +73,12 @@ public class Mr19BnotSender extends AbstractBnotSender {
 
         stopWatch.start();
         DataPacketHeader pkHeader = new DataPacketHeader(
-            taskId, getPtoDesc().getPtoId(), Mr19BnotPtoDesc.PtoStep.RECEIVER_SEND_R.ordinal(), extraInfo,
+            taskId, getPtoDesc().getPtoId(), PtoStep.RECEIVER_SEND_PK.ordinal(), extraInfo,
             otherParty().getPartyId(), ownParty().getPartyId()
         );
         List<byte[]> pkPayload = rpc.receive(pkHeader).getPayload();
         BnotSenderOutput senderOutput = handlePkPayload(pkPayload);
-        bInteger = null;
+        beta = null;
         stopWatch.stop();
         long pkTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
         stopWatch.reset();
@@ -89,11 +89,11 @@ public class Mr19BnotSender extends AbstractBnotSender {
     }
 
     private List<byte[]> generateBetaPayload() {
-        // 发送方选择Z_p^*域中的一个随机数b
-        bInteger = ecc.randomZn(secureRandom);
+        // 发送方选择Z_p^*域中的一个随机数β
+        beta = ecc.randomZn(secureRandom);
         List<byte[]> betaPayLoad = new ArrayList<>();
-        // 发送方计算B = g^b
-        betaPayLoad.add(ecc.encode(ecc.multiply(ecc.getG(), bInteger), compressEncode));
+        // 发送方计算B = g^β
+        betaPayLoad.add(ecc.encode(ecc.multiply(ecc.getG(), beta), compressEncode));
         return betaPayLoad;
     }
 
@@ -102,6 +102,6 @@ public class Mr19BnotSender extends AbstractBnotSender {
         Stream<byte[]> pStream = pkPayload.stream();
         pStream = parallel ? pStream.parallel() : pStream;
         ECPoint[] rArray = pStream.map(ecc::decode).toArray(ECPoint[]::new);
-        return new Mr19BnotSenderOutput(envType, n, num, bInteger, rArray);
+        return new Mr19EccBnotSenderOutput(envType, n, num, beta, rArray);
     }
 }

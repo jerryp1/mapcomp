@@ -21,7 +21,7 @@ class Np01BnotPtoDesc implements PtoDesc {
     /**
      * 协议名称
      */
-    private static final String PTO_NAME = "NP01_BNOT";
+    private static final String PTO_NAME = "NP01_BASE_NOT";
 
     /**
      * 协议步骤

@@ -20,7 +20,7 @@ class Co15BnotPtoDesc implements PtoDesc {
     /**
      * 协议名称
      */
-    private static final String PTO_NAME = "CO15_BNOT";
+    private static final String PTO_NAME = "CO15_BASE_NOT";
 
     /**
      * 协议步骤

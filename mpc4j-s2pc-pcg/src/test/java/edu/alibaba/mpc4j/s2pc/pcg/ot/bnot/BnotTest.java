@@ -4,10 +4,10 @@ import com.google.common.base.Preconditions;
 import edu.alibaba.mpc4j.common.rpc.Rpc;
 import edu.alibaba.mpc4j.common.rpc.RpcManager;
 import edu.alibaba.mpc4j.common.rpc.impl.memory.MemoryRpcManager;
-import edu.alibaba.mpc4j.common.tool.crypto.kyber.KyberFactory;
+import edu.alibaba.mpc4j.common.tool.crypto.kyber.KyberEngineFactory;
 import edu.alibaba.mpc4j.s2pc.pcg.ot.bnot.co15.Co15BnotConfig;
-import edu.alibaba.mpc4j.s2pc.pcg.ot.bnot.mr19.Mr19BnotConfig;
-import edu.alibaba.mpc4j.s2pc.pcg.ot.bnot.mrkyber19.MrKyber19BnotConfig;
+import edu.alibaba.mpc4j.s2pc.pcg.ot.bnot.mr19.Mr19EccBnotConfig;
+import edu.alibaba.mpc4j.s2pc.pcg.ot.bnot.mr19.Mr19KyberBnotConfig;
 import edu.alibaba.mpc4j.s2pc.pcg.ot.bnot.np01.Np01BnotConfig;
 import edu.alibaba.mpc4j.s2pc.pcg.ot.bnot.np99.Np99BnotConfig;
 import org.apache.commons.lang3.StringUtils;
@@ -26,7 +26,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.stream.IntStream;
 
 /**
- * 基础N选1-OT协议测试。
+ * 基础n选1-OT协议测试。
  *
  * @author Hanwen Feng
  * @date 2022/07/22
@@ -45,7 +45,7 @@ public class BnotTest {
     /**
      * 默认选择范围n
      */
-    private static final int DEFAULT_N = 512;
+    private static final int DEFAULT_N = 33;
     /**
      * 较小选择范围n
      */
@@ -53,75 +53,73 @@ public class BnotTest {
 
     @Parameterized.Parameters(name = "{0}")
     public static Collection<Object[]> configurations() {
-        Collection<Object[]> configurationParams = new ArrayList<>();
-        // NP99 + 默认Base-2选1-OT配置
-        configurationParams.add(new Object[]{
-                BnotFactory.BnotType.NP99.name() + "+ Default Base 2-1 OT",
-                new Np99BnotConfig.Builder().build(),
+        Collection<Object[]> configurations = new ArrayList<>();
+        // MR19_KYBER (CCA, k = 2)
+        configurations.add(new Object[]{
+            BnotFactory.BnotType.MR19_KYBER.name() + " (CCA, k = 2)",
+            new Mr19KyberBnotConfig.Builder().setParamsK(2).setKyberType(KyberEngineFactory.KyberType.KYBER_CCA).build(),
         });
-        // CO15 + 压缩编码
-        configurationParams.add(new Object[]{
-                BnotFactory.BnotType.CO15.name() + " (compress)",
-                new Co15BnotConfig.Builder().setCompressEncode(true).build(),
+        // MR19_KYBER (CCA, k = 3)
+        configurations.add(new Object[]{
+            BnotFactory.BnotType.MR19_KYBER.name() + " (CCA, k = 3)",
+            new Mr19KyberBnotConfig.Builder().setParamsK(3).setKyberType(KyberEngineFactory.KyberType.KYBER_CCA).build(),
         });
-        // CO15 + 非压缩编码
-        configurationParams.add(new Object[]{
-                BnotFactory.BnotType.CO15.name() + " (uncompress)",
-                new Co15BnotConfig.Builder().setCompressEncode(false).build(),
+        // MR19_KYBER (CCA, k = 4)
+        configurations.add(new Object[]{
+            BnotFactory.BnotType.MR19_KYBER.name() + " (CCA, k = 4)",
+            new Mr19KyberBnotConfig.Builder().setParamsK(4).setKyberType(KyberEngineFactory.KyberType.KYBER_CCA).build(),
         });
-        // NP01 + 压缩编码
-        configurationParams.add(new Object[]{
-                BnotFactory.BnotType.NP01.name() + " (compress)",
-                new Np01BnotConfig.Builder().setCompressEncode(true).build(),
+        // MR19_KYBER (CPA, k = 2)
+        configurations.add(new Object[]{
+            BnotFactory.BnotType.MR19_KYBER.name() + " (CPA, k = 2)",
+            new Mr19KyberBnotConfig.Builder().setParamsK(2).setKyberType(KyberEngineFactory.KyberType.KYBER_CPA).build(),
         });
-        // NP01 + 非压缩编码
-        configurationParams.add(new Object[]{
-                BnotFactory.BnotType.NP01.name() + " (uncompress)",
-                new Np01BnotConfig.Builder().setCompressEncode(false).build(),
+        // MR19_KYBER (CPA, k = 3)
+        configurations.add(new Object[]{
+            BnotFactory.BnotType.MR19_KYBER.name() + " (CPA, k = 3)",
+            new Mr19KyberBnotConfig.Builder().setParamsK(3).setKyberType(KyberEngineFactory.KyberType.KYBER_CPA).build(),
         });
-        // MR19 + 压缩编码
-        configurationParams.add(new Object[]{
-                BnotFactory.BnotType.MR19.name() + " (compress)",
-                new Mr19BnotConfig.Builder().setCompressEncode(true).build(),
+        // MR19_KYBER (CPA, k = 4)
+        configurations.add(new Object[]{
+            BnotFactory.BnotType.MR19_KYBER.name() + " (CPA, k = 4)",
+            new Mr19KyberBnotConfig.Builder().setParamsK(4).setKyberType(KyberEngineFactory.KyberType.KYBER_CPA).build(),
         });
-        // MR19 + 非压缩编码
-        configurationParams.add(new Object[]{
-                BnotFactory.BnotType.MR19.name() + " (uncompress)",
-                new Mr19BnotConfig.Builder().setCompressEncode(false).build(),
+        // NP99
+        configurations.add(new Object[]{
+            BnotFactory.BnotType.NP99.name(), new Np99BnotConfig.Builder().build(),
         });
-        // MRKYBER19 + k = 4
-        configurationParams.add(new Object[]{
-                BnotFactory.BnotType.MRKYBER19.name() + " (k = 2)" + "（CCA）",
-                new MrKyber19BnotConfig.Builder().setParamsK(2).setKyberType(KyberFactory.KyberType.KYBER_CCA).build(),
+        // CO15 (compress)
+        configurations.add(new Object[]{
+            BnotFactory.BnotType.CO15.name() + " (compress)",
+            new Co15BnotConfig.Builder().setCompressEncode(true).build(),
         });
-        // MRKYBER19 + k = 3
-        configurationParams.add(new Object[]{
-                BnotFactory.BnotType.MRKYBER19.name() + " (k = 3)" + "（CCA）",
-                new MrKyber19BnotConfig.Builder().setParamsK(3).setKyberType(KyberFactory.KyberType.KYBER_CCA).build(),
+        // CO15 (uncompress)
+        configurations.add(new Object[]{
+            BnotFactory.BnotType.CO15.name() + " (uncompress)",
+            new Co15BnotConfig.Builder().setCompressEncode(false).build(),
         });
-        // MRKYBER19 + k = 4
-        configurationParams.add(new Object[]{
-                BnotFactory.BnotType.MRKYBER19.name() + " (k = 4)" + "（CCA）",
-                new MrKyber19BnotConfig.Builder().setParamsK(4).setKyberType(KyberFactory.KyberType.KYBER_CCA).build(),
+        // NP01 (compress)
+        configurations.add(new Object[]{
+            BnotFactory.BnotType.NP01.name() + " (compress)",
+            new Np01BnotConfig.Builder().setCompressEncode(true).build(),
         });
-
-        // MRKYBER19 + k = 4
-        configurationParams.add(new Object[]{
-                BnotFactory.BnotType.MRKYBER19.name() + " (k = 2)" + "（CPA）",
-                new MrKyber19BnotConfig.Builder().setParamsK(2).setKyberType(KyberFactory.KyberType.KYBER_CPA).build(),
+        // NP01 (uncompress)
+        configurations.add(new Object[]{
+            BnotFactory.BnotType.NP01.name() + " (uncompress)",
+            new Np01BnotConfig.Builder().setCompressEncode(false).build(),
         });
-        // MRKYBER19 + k = 3
-        configurationParams.add(new Object[]{
-                BnotFactory.BnotType.MRKYBER19.name() + " (k = 3)" + "（CPA）",
-                new MrKyber19BnotConfig.Builder().setParamsK(3).setKyberType(KyberFactory.KyberType.KYBER_CPA).build(),
+        // MR19_ECC (compress)
+        configurations.add(new Object[]{
+            BnotFactory.BnotType.MR19_ECC.name() + " (compress)",
+            new Mr19EccBnotConfig.Builder().setCompressEncode(true).build(),
         });
-        // MRKYBER19 + k = 4
-        configurationParams.add(new Object[]{
-                BnotFactory.BnotType.MRKYBER19.name() + " (k = 4)" + "（CPA）",
-                new MrKyber19BnotConfig.Builder().setParamsK(4).setKyberType(KyberFactory.KyberType.KYBER_CPA).build(),
+        // MR19_ECC (uncompress)
+        configurations.add(new Object[]{
+            BnotFactory.BnotType.MR19_ECC.name() + " (uncompress)",
+            new Mr19EccBnotConfig.Builder().setCompressEncode(false).build(),
         });
 
-        return configurationParams;
+        return configurations;
     }
 
     /**
@@ -214,7 +212,7 @@ public class BnotTest {
             // 验证结果
             assertOutput(num, senderThread.getSenderOutput(), receiverThread.getReceiverOutput());
             LOGGER.info("Sender sends {}B, Receiver sends {}B, Online time = {}ms",
-                    senderRpc.getSendByteLength(), receiverRpc.getSendByteLength(), onlineTime
+                senderRpc.getSendByteLength(), receiverRpc.getSendByteLength(), onlineTime
             );
             senderRpc.reset();
             receiverRpc.reset();

@@ -1,4 +1,4 @@
-package edu.alibaba.mpc4j.s2pc.pcg.ot.base.mr19;
+package edu.alibaba.mpc4j.s2pc.pcg.ot.bnot.mr19;
 
 import edu.alibaba.mpc4j.common.tool.crypto.hash.Hash;
 import edu.alibaba.mpc4j.common.tool.crypto.hash.HashFactory;
@@ -13,9 +13,9 @@ import edu.alibaba.mpc4j.common.rpc.utils.DataPacket;
 import edu.alibaba.mpc4j.common.rpc.utils.DataPacketHeader;
 import edu.alibaba.mpc4j.common.tool.crypto.kyber.params.KyberKeyPair;
 import edu.alibaba.mpc4j.common.tool.utils.BytesUtils;
-import edu.alibaba.mpc4j.s2pc.pcg.ot.base.AbstractBaseOtReceiver;
-import edu.alibaba.mpc4j.s2pc.pcg.ot.base.BaseOtReceiverOutput;
-import edu.alibaba.mpc4j.s2pc.pcg.ot.base.mr19.Mr19KyberBaseOtPtoDesc.PtoStep;
+import edu.alibaba.mpc4j.s2pc.pcg.ot.bnot.AbstractBnotReceiver;
+import edu.alibaba.mpc4j.s2pc.pcg.ot.bnot.BnotReceiverOutput;
+import edu.alibaba.mpc4j.s2pc.pcg.ot.bnot.mr19.Mr19KyberBnotPtoDesc.PtoStep;
 
 import java.util.Arrays;
 import java.util.List;
@@ -24,17 +24,14 @@ import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
 /**
- * MR19-KYBER-基础OT协议接收方。论文来源：
- * <p>
- * Mansy D, Rindal P. Endemic oblivious transfer. CCS 2019. 2019: 309-326.
- * </p>
+ * MR19-Kyber-基础n选1-OT协议接收方。
  *
  * @author Sheng Hu, Weiran Liu
- * @date 2022/08/05
+ * @date 2022/08/26
  */
-public class Mr19KyberBaseOtReceiver extends AbstractBaseOtReceiver {
+public class Mr19KyberBnotReceiver extends AbstractBnotReceiver {
     /**
-     * Kyber引擎
+     * 使用的kyber实例
      */
     private final KyberEngine kyberEngine;
     /**
@@ -46,20 +43,20 @@ public class Mr19KyberBaseOtReceiver extends AbstractBaseOtReceiver {
      */
     private final Kdf kdf;
     /**
-     * OT协议接收方密钥对
+     * OT协议接收方拥有的密钥对
      */
-    private KyberKeyPair[] keyArray;
+    private KyberKeyPair[] keyPairArray;
 
-    public Mr19KyberBaseOtReceiver(Rpc receiverRpc, Party senderParty, Mr19KyberBaseOtConfig config) {
-        super(Mr19KyberBaseOtPtoDesc.getInstance(), receiverRpc, senderParty, config);
+    public Mr19KyberBnotReceiver(Rpc receiverRpc, Party senderParty, Mr19KyberBnotConfig config) {
+        super(Mr19KyberBnotPtoDesc.getInstance(), receiverRpc, senderParty, config);
         kyberEngine = KyberEngineFactory.createInstance(config.getKyberType(), config.getParamsK());
         pkHash = HashFactory.createInstance(HashFactory.HashType.BC_SHAKE_256, kyberEngine.publicKeyByteLength());
         kdf = KdfFactory.createInstance(envType);
     }
 
     @Override
-    public void init() throws MpcAbortException {
-        setInitInput();
+    public void init(int n) throws MpcAbortException {
+        setInitInput(n);
         info("{}{} Recv. Init begin", ptoBeginLogPrefix, getPtoDesc().getPtoName());
 
         initialized = true;
@@ -67,7 +64,7 @@ public class Mr19KyberBaseOtReceiver extends AbstractBaseOtReceiver {
     }
 
     @Override
-    public BaseOtReceiverOutput receive(boolean[] choices) throws MpcAbortException {
+    public BnotReceiverOutput receive(int[] choices) throws MpcAbortException {
         setPtoInput(choices);
         info("{}{} Recv. begin", ptoBeginLogPrefix, getPtoDesc().getPtoName());
 
@@ -89,59 +86,64 @@ public class Mr19KyberBaseOtReceiver extends AbstractBaseOtReceiver {
             otherParty().getPartyId(), ownParty().getPartyId()
         );
         List<byte[]> betaPayload = rpc.receive(betaHeader).getPayload();
+        BnotReceiverOutput receiverOutput = handleBetaPayload(betaPayload);
         stopWatch.stop();
         long betaTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
         stopWatch.reset();
-        info("{}{} Send. Step 2/2 ({}ms)", ptoStepLogPrefix, getPtoDesc().getPtoName(), betaTime);
+        info("{}{} Recv. Step 2/2 ({}ms)", ptoStepLogPrefix, getPtoDesc().getPtoName(), betaTime);
 
-        info("{}{} Send. end", ptoEndLogPrefix, getPtoDesc().getPtoName());
-        return handleBetaPayload(betaPayload);
+        info("{}{} Recv. end", ptoEndLogPrefix, getPtoDesc().getPtoName());
+        return receiverOutput;
     }
 
     private List<byte[]> generatePkPayload() {
-        keyArray = new KyberKeyPair[choices.length];
-        // 公钥生成流
-        IntStream pkIntStream = IntStream.range(0, choices.length);
-        pkIntStream = parallel ? pkIntStream.parallel() : pkIntStream;
-        return pkIntStream
+        keyPairArray = new KyberKeyPair[choices.length];
+        IntStream indexIntStream = IntStream.range(0, choices.length);
+        indexIntStream = parallel ? indexIntStream.parallel() : indexIntStream;
+        return indexIntStream
             .mapToObj(index -> {
-                keyArray[index] = kyberEngine.generateKeyPair();
-                // 公钥
-                byte[] pk = keyArray[index].getPublicKey();
+                // 生成公私钥对
+                keyPairArray[index] = kyberEngine.generateKeyPair();
+                byte[] publicKey = keyPairArray[index].getPublicKey();
                 // 随机公钥
-                byte[] randomPk = kyberEngine.randomPublicKey();
-                // 计算 R_σ = R_σ xor Hash(R_{1 - σ})
-                byte[] hashKey = pkHash.digestToBytes(randomPk);
-                byte[] maskPk = BytesUtils.xor(pk, hashKey);
-                if (choices[index]) {
-                    return new byte[][] {
-                        randomPk, maskPk, keyArray[index].getMatrixSeed()
-                    };
-                } else {
-                    return new byte[][] {
-                        maskPk, randomPk, keyArray[index].getMatrixSeed()
-                    };
+                byte[][] randomKeys = new byte[n][];
+                for (int i = 0; i < n; i++) {
+                    if (i != choices[index]) {
+                        // 生成 Hash（RandomKey）
+                        randomKeys[i] = kyberEngine.randomPublicKey();
+                        byte[] hashKey = pkHash.digestToBytes(randomKeys[i]);
+                        // PK = PK ⊕ Hash（RandomKey）
+                        BytesUtils.xori(publicKey, hashKey);
+                    }
                 }
+                byte[][] pkPayload = new byte[n + 1][];
+                for (int i = 0; i < n; i++) {
+                    if (i != choices[index]) {
+                        pkPayload[i] = randomKeys[i];
+                    } else {
+                        pkPayload[i] = publicKey;
+                    }
+                }
+                pkPayload[n] = keyPairArray[index].getMatrixSeed();
+                return pkPayload;
             })
             .flatMap(Arrays::stream)
             .collect(Collectors.toList());
     }
 
-    private BaseOtReceiverOutput handleBetaPayload(List<byte[]> betaPayload) throws MpcAbortException {
-        MpcAbortPreconditions.checkArgument(betaPayload.size() == choices.length * 2);
-        byte[][] ciphertexts = betaPayload.toArray(new byte[choices.length * 2][]);
-        // 解密消息获得相应的选择B_σ
-        byte[][] rbArray = new byte[choices.length][];
+    private BnotReceiverOutput handleBetaPayload(List<byte[]> betaPayload) throws MpcAbortException {
+        MpcAbortPreconditions.checkArgument(betaPayload.size() == choices.length * n);
+        byte[][] ciphertext = betaPayload.toArray(new byte[choices.length * n][]);
         IntStream indexIntStream = IntStream.range(0, choices.length);
         indexIntStream = parallel ? indexIntStream.parallel() : indexIntStream;
-        indexIntStream.forEach(index -> {
-            int sigma = choices[index] ? 1 : 0;
-            // 解密函数——在cpa方案中无需公钥，在cca方案中需要公钥。
-            byte[] decapsulateKey = kyberEngine.decapsulate(ciphertexts[2 * index + sigma],
-                keyArray[index].getSecretKey(), keyArray[index].getPublicKey(), keyArray[index].getMatrixSeed());
-            rbArray[index] = kdf.deriveKey(decapsulateKey);
-        });
-
-        return new BaseOtReceiverOutput(choices, rbArray);
+        byte[][] rbArray = indexIntStream
+            .mapToObj(index -> {
+                byte[] rb = kyberEngine.decapsulate(ciphertext[n * index + choices[index]],
+                    keyPairArray[index].getSecretKey(), keyPairArray[index].getPublicKey(), keyPairArray[index].getMatrixSeed());
+                return kdf.deriveKey(rb);
+            })
+            .toArray(byte[][]::new);
+        return new BnotReceiverOutput(n, choices, rbArray);
     }
+
 }

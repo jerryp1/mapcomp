@@ -1,25 +1,27 @@
-package edu.alibaba.mpc4j.s2pc.pcg.ot.bnot.mrkyber19;
+package edu.alibaba.mpc4j.s2pc.pcg.ot.bnot.mr19;
 
 import edu.alibaba.mpc4j.common.rpc.desc.PtoDesc;
 import edu.alibaba.mpc4j.common.rpc.desc.PtoDescManager;
 
 
 /**
- * MRKYBER19-基础N选1-OT协议信息。论文来源：
+ * MR19-Kyber-基础n选1-OT协议信息。论文来源：
+ * <p>
  * Mansy D, Rindal P. Endemic oblivious transfer. CCS 2019. 2019: 309-326.
+ * </p>
  *
- * @author Sheng Hu
+ * @author Sheng Hu, Weiran Liu
  * @date 2022/08/25
  */
-public class MrKyber19BnotPtoDesc implements PtoDesc {
+public class Mr19KyberBnotPtoDesc implements PtoDesc {
     /**
      * 协议ID
      */
-    private static final int PTO_ID = Math.abs((int) -2227932246488015483L);
+    private static final int PTO_ID = Math.abs((int) 2227932246488015483L);
     /**
      * 协议名称
      */
-    private static final String PTO_NAME = "MRKYBER19_BNOT";
+    private static final String PTO_NAME = "MR19_KYBER_BASE_NOT";
 
     /**
      * 协议步骤
@@ -32,18 +34,18 @@ public class MrKyber19BnotPtoDesc implements PtoDesc {
         /**
          * 发送方发送参数B
          */
-        SENDER_SEND_Cipher,
+        SENDER_SEND_BETA,
     }
 
     /**
      * 单例模式
      */
-    private static final MrKyber19BnotPtoDesc INSTANCE = new MrKyber19BnotPtoDesc();
+    private static final Mr19KyberBnotPtoDesc INSTANCE = new Mr19KyberBnotPtoDesc();
 
     /**
      * 私有构造函数
      */
-    private MrKyber19BnotPtoDesc() {
+    private Mr19KyberBnotPtoDesc() {
         // empty
     }
 

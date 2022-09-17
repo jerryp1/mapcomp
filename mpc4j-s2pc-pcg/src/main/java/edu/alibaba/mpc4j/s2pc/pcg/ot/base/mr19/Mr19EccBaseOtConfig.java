@@ -6,7 +6,7 @@ import edu.alibaba.mpc4j.s2pc.pcg.ot.base.BaseOtConfig;
 import edu.alibaba.mpc4j.s2pc.pcg.ot.base.BaseOtFactory;
 
 /**
- * MR19-椭圆曲线基础OT协议配置项。
+ * MR19-椭圆曲线-基础OT协议配置项。
  *
  * @author Weiran Liu
  * @date 2022/01/13
@@ -56,7 +56,6 @@ public class Mr19EccBaseOtConfig implements BaseOtConfig {
         private boolean compressEncode;
 
         public Builder() {
-            super();
             envType = EnvType.STANDARD;
             compressEncode = true;
         }

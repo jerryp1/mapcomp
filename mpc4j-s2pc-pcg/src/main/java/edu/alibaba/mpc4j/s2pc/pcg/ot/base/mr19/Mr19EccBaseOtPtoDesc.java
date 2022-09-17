@@ -4,7 +4,7 @@ import edu.alibaba.mpc4j.common.rpc.desc.PtoDesc;
 import edu.alibaba.mpc4j.common.rpc.desc.PtoDescManager;
 
 /**
- * MR19-椭圆曲线基础OT协议信息。论文来源：
+ * MR19-椭圆曲线-基础OT协议信息。论文来源：
  * <p>
  * Mansy D, Rindal P. Endemic oblivious transfer. CCS 2019. 2019: 309-326.
  * </p>
@@ -35,9 +35,9 @@ class Mr19EccBaseOtPtoDesc implements PtoDesc {
          */
         RECEIVER_SEND_R,
         /**
-         * 发送方发送参数B
+         * 发送方发送参数β
          */
-        SENDER_SEND_B,
+        SENDER_SEND_BETA,
     }
     /**
      * 单例模式

@@ -1,19 +1,22 @@
-package edu.alibaba.mpc4j.s2pc.pcg.ot.bnot.mrkyber19;
+package edu.alibaba.mpc4j.s2pc.pcg.ot.bnot.mr19;
 
 import edu.alibaba.mpc4j.common.rpc.desc.SecurityModel;
 import edu.alibaba.mpc4j.common.tool.EnvType;
-import edu.alibaba.mpc4j.common.tool.crypto.kyber.KyberFactory;
+import edu.alibaba.mpc4j.common.tool.crypto.kyber.KyberEngineFactory.KyberType;
+import edu.alibaba.mpc4j.common.tool.crypto.kyber.params.KyberParams;
 import edu.alibaba.mpc4j.s2pc.pcg.ot.bnot.BnotConfig;
 import edu.alibaba.mpc4j.s2pc.pcg.ot.bnot.BnotFactory;
 
 /**
- * MRKYBER19-基础n选1-OT协议配置项。论文来源：
+ * MR19-Kyber-基础n选1-OT协议配置项。论文来源：
+ * <p>
  * Mansy D, Rindal P. Endemic oblivious transfer. CCS 2019. 2019: 309-326.
+ * </p>
  *
- * @author Sheng Hu
+ * @author Sheng Hu, Weiran Liu
  * @date 2022/08/25
  */
-public class MrKyber19BnotConfig implements BnotConfig {
+public class Mr19KyberBnotConfig implements BnotConfig {
     /**
      * 环境类型
      */
@@ -23,11 +26,12 @@ public class MrKyber19BnotConfig implements BnotConfig {
      */
     private final int paramsK;
     /**
-     * 方案类型
+     * Kyber方案类型
      */
-    private final KyberFactory.KyberType kyberType;
+    private final KyberType kyberType;
 
-    private MrKyber19BnotConfig(MrKyber19BnotConfig.Builder builder) {
+    private Mr19KyberBnotConfig(Builder builder) {
+        assert KyberParams.validParamsK(builder.paramsK) : KyberParams.INVALID_PARAMS_K_ERROR_MESSAGE + builder.paramsK;
         envType = builder.envType;
         paramsK = builder.paramsK;
         kyberType = builder.kyberType;
@@ -35,7 +39,7 @@ public class MrKyber19BnotConfig implements BnotConfig {
 
     @Override
     public BnotFactory.BnotType getPtoType() {
-        return BnotFactory.BnotType.MRKYBER19;
+        return BnotFactory.BnotType.MR19_KYBER;
     }
 
     @Override
@@ -52,11 +56,11 @@ public class MrKyber19BnotConfig implements BnotConfig {
         return paramsK;
     }
 
-    public KyberFactory.KyberType getKyberType() {
+    public KyberType getKyberType() {
         return kyberType;
     }
 
-    public static class Builder implements org.apache.commons.lang3.builder.Builder<MrKyber19BnotConfig> {
+    public static class Builder implements org.apache.commons.lang3.builder.Builder<Mr19KyberBnotConfig> {
         /**
          * 环境类型
          */
@@ -68,33 +72,32 @@ public class MrKyber19BnotConfig implements BnotConfig {
         /**
          * 方案类型
          */
-        private KyberFactory.KyberType kyberType;
+        private KyberType kyberType;
 
         public Builder() {
-            super();
             envType = EnvType.STANDARD;
             paramsK = 4;
-            kyberType = KyberFactory.KyberType.KYBER_CCA;
+            kyberType = KyberType.KYBER_CCA;
         }
 
-        public MrKyber19BnotConfig.Builder setEnvType(EnvType envType) {
+        public Builder setEnvType(EnvType envType) {
             this.envType = envType;
             return this;
         }
 
-        public MrKyber19BnotConfig.Builder setParamsK(int paramsK) {
+        public Builder setParamsK(int paramsK) {
             this.paramsK = paramsK;
             return this;
         }
 
-        public MrKyber19BnotConfig.Builder setKyberType(KyberFactory.KyberType kyberType) {
+        public Builder setKyberType(KyberType kyberType) {
             this.kyberType = kyberType;
             return this;
         }
 
         @Override
-        public MrKyber19BnotConfig build() {
-            return new MrKyber19BnotConfig(this);
+        public Mr19KyberBnotConfig build() {
+            return new Mr19KyberBnotConfig(this);
         }
     }
 }

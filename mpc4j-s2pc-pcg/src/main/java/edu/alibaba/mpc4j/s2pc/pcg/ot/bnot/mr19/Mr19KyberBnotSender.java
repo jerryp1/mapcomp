@@ -1,10 +1,11 @@
-package edu.alibaba.mpc4j.s2pc.pcg.ot.base.mr19;
+package edu.alibaba.mpc4j.s2pc.pcg.ot.bnot.mr19;
 
 import edu.alibaba.mpc4j.common.tool.crypto.hash.Hash;
 import edu.alibaba.mpc4j.common.tool.crypto.hash.HashFactory;
 import edu.alibaba.mpc4j.common.tool.crypto.kdf.Kdf;
 import edu.alibaba.mpc4j.common.tool.crypto.kdf.KdfFactory;
-import edu.alibaba.mpc4j.common.tool.crypto.kyber.*;
+import edu.alibaba.mpc4j.common.tool.crypto.kyber.KyberEngine;
+import edu.alibaba.mpc4j.common.tool.crypto.kyber.KyberEngineFactory;
 import edu.alibaba.mpc4j.common.rpc.MpcAbortException;
 import edu.alibaba.mpc4j.common.rpc.MpcAbortPreconditions;
 import edu.alibaba.mpc4j.common.rpc.Party;
@@ -12,9 +13,9 @@ import edu.alibaba.mpc4j.common.rpc.Rpc;
 import edu.alibaba.mpc4j.common.rpc.utils.DataPacket;
 import edu.alibaba.mpc4j.common.rpc.utils.DataPacketHeader;
 import edu.alibaba.mpc4j.common.tool.utils.BytesUtils;
-import edu.alibaba.mpc4j.s2pc.pcg.ot.base.AbstractBaseOtSender;
-import edu.alibaba.mpc4j.s2pc.pcg.ot.base.BaseOtSenderOutput;
-import edu.alibaba.mpc4j.s2pc.pcg.ot.base.mr19.Mr19KyberBaseOtPtoDesc.PtoStep;
+import edu.alibaba.mpc4j.s2pc.pcg.ot.bnot.AbstractBnotSender;
+import edu.alibaba.mpc4j.s2pc.pcg.ot.bnot.BnotSenderOutput;
+import edu.alibaba.mpc4j.s2pc.pcg.ot.bnot.mr19.Mr19KyberBnotPtoDesc.PtoStep;
 
 import java.util.Arrays;
 import java.util.List;
@@ -23,17 +24,14 @@ import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
 /**
- * MR19-KYBER-基础OT协议发送方。论文来源：
- * <p>
- * Mansy D, Rindal P. Endemic oblivious transfer. CCS 2019. 2019: 309-326.
- * </p>
+ * MR19-Kyber-基础n选1-OT协议发送方。
  *
  * @author Sheng Hu, Weiran Liu
- * @date 2022/08/05
+ * @date 2022/08/26
  */
-public class Mr19KyberBaseOtSender extends AbstractBaseOtSender {
+public class Mr19KyberBnotSender extends AbstractBnotSender {
     /**
-     * Kyber引擎
+     * 使用的kyber实例
      */
     private final KyberEngine kyberEngine;
     /**
@@ -47,18 +45,18 @@ public class Mr19KyberBaseOtSender extends AbstractBaseOtSender {
     /**
      * 发送方输出
      */
-    private BaseOtSenderOutput senderOutput;
+    private BnotSenderOutput senderOutput;
 
-    public Mr19KyberBaseOtSender(Rpc senderRpc, Party receiverParty, Mr19KyberBaseOtConfig config) {
-        super(Mr19KyberBaseOtPtoDesc.getInstance(), senderRpc, receiverParty, config);
+    public Mr19KyberBnotSender(Rpc senderRpc, Party receiverParty, Mr19KyberBnotConfig config) {
+        super(Mr19KyberBnotPtoDesc.getInstance(), senderRpc, receiverParty, config);
         kyberEngine = KyberEngineFactory.createInstance(config.getKyberType(), config.getParamsK());
         pkHash = HashFactory.createInstance(HashFactory.HashType.BC_SHAKE_256, kyberEngine.publicKeyByteLength());
         kdf = KdfFactory.createInstance(envType);
     }
 
     @Override
-    public void init() throws MpcAbortException {
-        setInitInput();
+    public void init(int n) throws MpcAbortException {
+        setInitInput(n);
         info("{}{} Send. Init begin", ptoBeginLogPrefix, getPtoDesc().getPtoName());
 
         initialized = true;
@@ -66,7 +64,7 @@ public class Mr19KyberBaseOtSender extends AbstractBaseOtSender {
     }
 
     @Override
-    public BaseOtSenderOutput send(int num) throws MpcAbortException {
+    public BnotSenderOutput send(int num) throws MpcAbortException {
         setPtoInput(num);
         info("{}{} Send. begin", ptoBeginLogPrefix, getPtoDesc().getPtoName());
 
@@ -98,34 +96,40 @@ public class Mr19KyberBaseOtSender extends AbstractBaseOtSender {
     }
 
     private List<byte[]> handlePkPayload(List<byte[]> pkPayload) throws MpcAbortException {
-        MpcAbortPreconditions.checkArgument(pkPayload.size() == num * 3);
-        byte[][] publicKey = pkPayload.toArray(new byte[0][]);
-        IntStream keyPairArrayIntStream = IntStream.range(0, num);
-        keyPairArrayIntStream = parallel ? keyPairArrayIntStream.parallel() : keyPairArrayIntStream;
-        // OT协议的输出
-        byte[][] r0Array = new byte[num][kyberEngine.keyByteLength()];
-        byte[][] r1Array = new byte[num][kyberEngine.keyByteLength()];
-        List<byte[]> betaPayload = keyPairArrayIntStream.mapToObj(index -> {
-                // 读取公钥
-                byte[] pk0 = publicKey[index * 3];
-                byte[] pk1 = publicKey[index * 3 + 1];
-                // 计算A0 = R0 xor Hash(R1)、A1 = R1 xor Hash(R0)
-                byte[] hash0 = pkHash.digestToBytes(pk0);
-                byte[] hash1 = pkHash.digestToBytes(pk1);
-                BytesUtils.xori(pk0, hash1);
-                BytesUtils.xori(pk1, hash0);
-                // 计算密文
-                byte[][] ciphertext = new byte[2][];
-                // KEM中的输入是秘密值、公钥（As+e）部分、生成元部分、随机数种子，安全参数k
-                ciphertext[0] = kyberEngine.encapsulate(r0Array[index], pk0, publicKey[index * 3 + 2]);
-                r0Array[index] = kdf.deriveKey(r0Array[index]);
-                ciphertext[1] = kyberEngine.encapsulate(r1Array[index], pk1, publicKey[index * 3 + 2]);
-                r1Array[index] = kdf.deriveKey(r1Array[index]);
-                return ciphertext;
+        MpcAbortPreconditions.checkArgument(pkPayload.size() == num * (n + 1));
+        byte[][] publicKeyMatrix = pkPayload.toArray(new byte[0][]);
+        byte[][][] keyMatrix = new byte[num][n][kyberEngine.keyByteLength()];
+        IntStream indexIntStream = IntStream.range(0, num);
+        indexIntStream = parallel ? indexIntStream.parallel() : indexIntStream;
+        List<byte[]> betaPayload = indexIntStream
+            .mapToObj(index -> {
+                byte[][] publicKeys = new byte[n][];
+                byte[][] hashKeys = new byte[n][];
+                for (int i = 0; i < n; i++) {
+                    publicKeys[i] = publicKeyMatrix[index * (n + 1) + i];
+                    hashKeys[i] = pkHash.digestToBytes(publicKeys[i]);
+                }
+                for (int i = 0; i < n; i++) {
+                    for (int j = 0; j < n; j++) {
+                        if (i != j) {
+                            // A = R_i ⊕ Hash(R_j)
+                            BytesUtils.xori(publicKeys[i], hashKeys[j]);
+                        }
+                    }
+                }
+                return IntStream.range(0, n)
+                    .mapToObj(i -> {
+                        byte[] ciphertext = kyberEngine.encapsulate(
+                            keyMatrix[index][i], publicKeys[i], publicKeyMatrix[index * (n + 1) + n]
+                        );
+                        keyMatrix[index][i] = kdf.deriveKey(keyMatrix[index][i]);
+                        return ciphertext;
+                    })
+                    .toArray(byte[][]::new);
             })
             .flatMap(Arrays::stream)
             .collect(Collectors.toList());
-        senderOutput = new BaseOtSenderOutput(r0Array, r1Array);
+        senderOutput = new Mr19KyberBnotSenderOutput(n, num, keyMatrix);
         return betaPayload;
     }
 }

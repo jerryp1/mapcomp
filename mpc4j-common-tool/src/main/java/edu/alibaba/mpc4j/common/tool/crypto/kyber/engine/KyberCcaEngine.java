@@ -46,7 +46,7 @@ public class KyberCcaEngine implements KyberEngine {
     }
 
     public KyberCcaEngine(int paramsK, SecureRandom secureRandom) {
-        assert paramsK == 2 || paramsK == 3 || paramsK == 4 : KyberParams.INVALID_PARAMS_K_ERROR_MESSAGE + paramsK;
+        assert KyberParams.validParamsK(paramsK) : KyberParams.INVALID_PARAMS_K_ERROR_MESSAGE + paramsK;
         this.paramsK = paramsK;
         switch (paramsK) {
             case 2:

@@ -11,7 +11,7 @@ import edu.alibaba.mpc4j.common.tool.crypto.ecc.EccFactory;
 import edu.alibaba.mpc4j.common.tool.crypto.kdf.Kdf;
 import edu.alibaba.mpc4j.common.tool.crypto.kdf.KdfFactory;
 import edu.alibaba.mpc4j.s2pc.pcg.ot.bnot.BnotReceiverOutput;
-import edu.alibaba.mpc4j.s2pc.pcg.ot.bnot.mr19.Mr19BnotPtoDesc.PtoStep;
+import edu.alibaba.mpc4j.s2pc.pcg.ot.bnot.mr19.Mr19EccBnotPtoDesc.PtoStep;
 import edu.alibaba.mpc4j.s2pc.pcg.ot.bnot.AbstractBnotReceiver;
 import org.bouncycastle.math.ec.ECPoint;
 
@@ -24,12 +24,12 @@ import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
 /**
- * MR19-基础N选1-OT协议接收方。
+ * MR19-椭圆曲线-基础n选1-OT协议接收方。
  *
  * @author Hanwen Feng
  * @date 2022/07/26
  */
-public class Mr19BnotReceiver extends AbstractBnotReceiver {
+public class Mr19EccBnotReceiver extends AbstractBnotReceiver {
     /**
      * 是否压缩表示
      */
@@ -47,8 +47,8 @@ public class Mr19BnotReceiver extends AbstractBnotReceiver {
      */
     private BigInteger[] aArray;
 
-    public Mr19BnotReceiver(Rpc receiverRpc, Party senderParty, Mr19BnotConfig config) {
-        super(Mr19BnotPtoDesc.getInstance(), receiverRpc, senderParty, config);
+    public Mr19EccBnotReceiver(Rpc receiverRpc, Party senderParty, Mr19EccBnotConfig config) {
+        super(Mr19EccBnotPtoDesc.getInstance(), receiverRpc, senderParty, config);
         compressEncode = config.getCompressEncode();
         ecc = EccFactory.createInstance(envType);
         ecPointByteLength = ecc.getG().getEncoded(false).length;
@@ -71,7 +71,7 @@ public class Mr19BnotReceiver extends AbstractBnotReceiver {
         stopWatch.start();
         List<byte[]> pkPayload = generatePkPayload();
         DataPacketHeader pkHeader = new DataPacketHeader(
-            taskId, getPtoDesc().getPtoId(), PtoStep.RECEIVER_SEND_R.ordinal(), extraInfo,
+            taskId, getPtoDesc().getPtoId(), PtoStep.RECEIVER_SEND_PK.ordinal(), extraInfo,
             ownParty().getPartyId(), otherParty().getPartyId()
         );
         rpc.send(DataPacket.fromByteArrayList(pkHeader, pkPayload));
@@ -82,7 +82,7 @@ public class Mr19BnotReceiver extends AbstractBnotReceiver {
 
         stopWatch.start();
         DataPacketHeader betaHeader = new DataPacketHeader(
-            taskId, getPtoDesc().getPtoId(), PtoStep.SENDER_SEND_B.ordinal(), extraInfo,
+            taskId, getPtoDesc().getPtoId(), PtoStep.SENDER_SEND_BETA.ordinal(), extraInfo,
             otherParty().getPartyId(), ownParty().getPartyId()
         );
         List<byte[]> betaPayload = rpc.receive(betaHeader).getPayload();

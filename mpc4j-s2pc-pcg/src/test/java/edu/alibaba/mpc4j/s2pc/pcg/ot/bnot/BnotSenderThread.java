@@ -3,7 +3,7 @@ package edu.alibaba.mpc4j.s2pc.pcg.ot.bnot;
 import edu.alibaba.mpc4j.common.rpc.MpcAbortException;
 
 /**
- * 基础N选1-OT协议发送方线程。
+ * 基础n选1-OT协议发送方线程。
  *
  * @author Hanwen Feng
  * @date 2022/07/22

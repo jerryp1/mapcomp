@@ -12,12 +12,12 @@ import java.math.BigInteger;
 import java.nio.ByteBuffer;
 
 /**
- * MR19-Base N选1 OT协议发送方输出
+ * MR19-椭圆曲线-基础n选1-OT协议发送方输出。
  *
  * @author Hanwen Feng
  * @date 2022/07/26
  */
-public class Mr19BnotSenderOutput extends AbstractBnotSenderOutput {
+public class Mr19EccBnotSenderOutput extends AbstractBnotSenderOutput {
     /**
      * KDF
      */
@@ -39,7 +39,7 @@ public class Mr19BnotSenderOutput extends AbstractBnotSenderOutput {
      */
     private final ECPoint[] rArray;
 
-    public Mr19BnotSenderOutput(EnvType envType, int n, int num, BigInteger bInteger, ECPoint[] rArray) {
+    public Mr19EccBnotSenderOutput(EnvType envType, int n, int num, BigInteger bInteger, ECPoint[] rArray) {
         init(n, num);
         assert rArray.length == n * num;
         this.rArray = rArray;

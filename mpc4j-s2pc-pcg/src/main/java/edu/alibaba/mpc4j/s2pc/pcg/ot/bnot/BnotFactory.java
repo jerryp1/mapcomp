@@ -6,12 +6,12 @@ import edu.alibaba.mpc4j.common.rpc.desc.SecurityModel;
 import edu.alibaba.mpc4j.s2pc.pcg.ot.bnot.co15.Co15BnotConfig;
 import edu.alibaba.mpc4j.s2pc.pcg.ot.bnot.co15.Co15BnotReceiver;
 import edu.alibaba.mpc4j.s2pc.pcg.ot.bnot.co15.Co15BnotSender;
-import edu.alibaba.mpc4j.s2pc.pcg.ot.bnot.mr19.Mr19BnotConfig;
-import edu.alibaba.mpc4j.s2pc.pcg.ot.bnot.mr19.Mr19BnotReceiver;
-import edu.alibaba.mpc4j.s2pc.pcg.ot.bnot.mr19.Mr19BnotSender;
-import edu.alibaba.mpc4j.s2pc.pcg.ot.bnot.mrkyber19.MrKyber19BnotConfig;
-import edu.alibaba.mpc4j.s2pc.pcg.ot.bnot.mrkyber19.MrKyber19BnotSender;
-import edu.alibaba.mpc4j.s2pc.pcg.ot.bnot.mrkyber19.Mrkyber19BnotReceiver;
+import edu.alibaba.mpc4j.s2pc.pcg.ot.bnot.mr19.Mr19EccBnotConfig;
+import edu.alibaba.mpc4j.s2pc.pcg.ot.bnot.mr19.Mr19EccBnotReceiver;
+import edu.alibaba.mpc4j.s2pc.pcg.ot.bnot.mr19.Mr19EccBnotSender;
+import edu.alibaba.mpc4j.s2pc.pcg.ot.bnot.mr19.Mr19KyberBnotConfig;
+import edu.alibaba.mpc4j.s2pc.pcg.ot.bnot.mr19.Mr19KyberBnotSender;
+import edu.alibaba.mpc4j.s2pc.pcg.ot.bnot.mr19.Mr19KyberBnotReceiver;
 import edu.alibaba.mpc4j.s2pc.pcg.ot.bnot.np01.Np01BnotConfig;
 import edu.alibaba.mpc4j.s2pc.pcg.ot.bnot.np01.Np01BnotReceiver;
 import edu.alibaba.mpc4j.s2pc.pcg.ot.bnot.np01.Np01BnotSender;
@@ -48,11 +48,11 @@ public class BnotFactory {
         /**
          * MR19协议
          */
-        MR19,
+        MR19_ECC,
         /**
          * MR19基于KYBER的协议
          */
-        MRKYBER19,
+        MR19_KYBER,
         /**
          * NP01协议
          */
@@ -76,12 +76,12 @@ public class BnotFactory {
                 return new Co15BnotSender(senderRpc, receiverParty, (Co15BnotConfig) config);
             case NP01:
                 return new Np01BnotSender(senderRpc, receiverParty, (Np01BnotConfig) config);
-            case MR19:
-                return new Mr19BnotSender(senderRpc, receiverParty, (Mr19BnotConfig) config);
-            case MRKYBER19:
-                return new MrKyber19BnotSender(senderRpc,receiverParty,(MrKyber19BnotConfig) config);
+            case MR19_ECC:
+                return new Mr19EccBnotSender(senderRpc, receiverParty, (Mr19EccBnotConfig) config);
+            case MR19_KYBER:
+                return new Mr19KyberBnotSender(senderRpc, receiverParty, (Mr19KyberBnotConfig) config);
             default:
-                throw new IllegalArgumentException("Invalid BaseOtType: " + type.name());
+                throw new IllegalArgumentException("Invalid " + BnotType.class.getSimpleName() + ": " + type.name());
         }
     }
 
@@ -102,12 +102,12 @@ public class BnotFactory {
                 return new Co15BnotReceiver(receiverRpc, senderParty, (Co15BnotConfig) config);
             case NP01:
                 return new Np01BnotReceiver(receiverRpc, senderParty, (Np01BnotConfig) config);
-            case MR19:
-                return new Mr19BnotReceiver(receiverRpc, senderParty, (Mr19BnotConfig) config);
-            case MRKYBER19:
-                return new Mrkyber19BnotReceiver(receiverRpc,senderParty,(MrKyber19BnotConfig) config);
+            case MR19_ECC:
+                return new Mr19EccBnotReceiver(receiverRpc, senderParty, (Mr19EccBnotConfig) config);
+            case MR19_KYBER:
+                return new Mr19KyberBnotReceiver(receiverRpc, senderParty, (Mr19KyberBnotConfig) config);
             default:
-                throw new IllegalArgumentException("Invalid BaseOtType: " + type.name());
+                throw new IllegalArgumentException("Invalid " + BnotType.class.getSimpleName() + ": " + type.name());
         }
     }
 
@@ -125,7 +125,7 @@ public class BnotFactory {
             case MALICIOUS:
                 return new Np99BnotConfig.Builder().build();
             default:
-                throw new IllegalArgumentException("Invalid SecurityModel: " + securityModel.name());
+                throw new IllegalArgumentException("Invalid " + SecurityModel.class.getSimpleName() + ": " + securityModel.name());
         }
     }
 }

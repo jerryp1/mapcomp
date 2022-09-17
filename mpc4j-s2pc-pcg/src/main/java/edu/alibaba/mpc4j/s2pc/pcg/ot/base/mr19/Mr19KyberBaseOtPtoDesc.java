@@ -4,7 +4,7 @@ import edu.alibaba.mpc4j.common.rpc.desc.PtoDesc;
 import edu.alibaba.mpc4j.common.rpc.desc.PtoDescManager;
 
 /**
- * MRKYBER19-基础OT协议信息。论文来源：
+ * MR19-KYBER-基础OT协议信息。论文来源：
  * Mansy D, Rindal P. Endemic oblivious transfer. CCS 2019. 2019: 309-326.
  *
  * @author Sheng Hu
@@ -30,9 +30,9 @@ public class Mr19KyberBaseOtPtoDesc implements PtoDesc {
          */
         RECEIVER_SEND_PK,
         /**
-         * 发送方发送参数B
+         * 发送方发送参数β
          */
-        SENDER_SEND_B,
+        SENDER_SEND_BETA,
     }
 
     /**

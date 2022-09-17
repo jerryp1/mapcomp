@@ -2,15 +2,18 @@ package edu.alibaba.mpc4j.s2pc.pcg.ot.base.mr19;
 
 import edu.alibaba.mpc4j.common.rpc.desc.SecurityModel;
 import edu.alibaba.mpc4j.common.tool.EnvType;
-import edu.alibaba.mpc4j.common.tool.crypto.kyber.KyberEngineFactory;
+import edu.alibaba.mpc4j.common.tool.crypto.kyber.KyberEngineFactory.KyberType;
+import edu.alibaba.mpc4j.common.tool.crypto.kyber.params.KyberParams;
 import edu.alibaba.mpc4j.s2pc.pcg.ot.base.BaseOtConfig;
 import edu.alibaba.mpc4j.s2pc.pcg.ot.base.BaseOtFactory;
 
 /**
- * MRKYBER19-基础OT协议配置项。论文来源：
+ * MR19-KYBER-基础OT协议配置项。论文来源：
+ * <p>
  * Mansy D, Rindal P. Endemic oblivious transfer. CCS 2019. 2019: 309-326.
+ * </p>
  *
- * @author Sheng Hu
+ * @author Sheng Hu, Weiran Liu
  * @date 2022/08/05
  */
 public class Mr19KyberBaseOtConfig implements BaseOtConfig {
@@ -23,11 +26,12 @@ public class Mr19KyberBaseOtConfig implements BaseOtConfig {
      */
     private final int paramsK;
     /**
-     * 方案类型
+     * Kyber方案类型
      */
-    private final KyberEngineFactory.KyberType kyberType;
+    private final KyberType kyberType;
 
     private Mr19KyberBaseOtConfig(Mr19KyberBaseOtConfig.Builder builder) {
+        assert KyberParams.validParamsK(builder.paramsK) : KyberParams.INVALID_PARAMS_K_ERROR_MESSAGE + builder.paramsK;
         envType = builder.envType;
         paramsK = builder.paramsK;
         kyberType = builder.kyberType;
@@ -52,7 +56,7 @@ public class Mr19KyberBaseOtConfig implements BaseOtConfig {
         return paramsK;
     }
 
-    public KyberEngineFactory.KyberType getKyberType() {
+    public KyberType getKyberType() {
         return kyberType;
     }
 
@@ -68,13 +72,12 @@ public class Mr19KyberBaseOtConfig implements BaseOtConfig {
         /**
          * 方案类型
          */
-        private KyberEngineFactory.KyberType kyberType;
+        private KyberType kyberType;
 
         public Builder() {
-            super();
             envType = EnvType.STANDARD;
             paramsK = 4;
-            kyberType = KyberEngineFactory.KyberType.KYBER_CCA;
+            kyberType = KyberType.KYBER_CCA;
         }
 
         public Builder setEnvType(EnvType envType) {
@@ -87,7 +90,7 @@ public class Mr19KyberBaseOtConfig implements BaseOtConfig {
             return this;
         }
 
-        public Builder setKyberType(KyberEngineFactory.KyberType kyberType) {
+        public Builder setKyberType(KyberType kyberType) {
             this.kyberType = kyberType;
             return this;
         }

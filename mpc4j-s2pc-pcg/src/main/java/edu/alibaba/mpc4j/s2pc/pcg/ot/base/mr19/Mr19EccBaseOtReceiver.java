@@ -23,7 +23,7 @@ import edu.alibaba.mpc4j.s2pc.pcg.ot.base.BaseOtReceiverOutput;
 import org.bouncycastle.math.ec.ECPoint;
 
 /**
- * MR19-基础OT协议接收方。
+ * MR19-椭圆曲线-基础OT协议接收方。
  *
  * @author Weiran Liu, Hanwen Feng
  * @date 2020/10/03
@@ -76,7 +76,7 @@ public class Mr19EccBaseOtReceiver extends AbstractBaseOtReceiver {
 
         stopWatch.start();
         DataPacketHeader betaHeader = new DataPacketHeader(
-                taskId, getPtoDesc().getPtoId(), Mr19EccBaseOtPtoDesc.PtoStep.SENDER_SEND_B.ordinal(), extraInfo,
+                taskId, getPtoDesc().getPtoId(), Mr19EccBaseOtPtoDesc.PtoStep.SENDER_SEND_BETA.ordinal(), extraInfo,
                 otherParty().getPartyId(), ownParty().getPartyId()
         );
         List<byte[]> betaPayload = rpc.receive(betaHeader).getPayload();

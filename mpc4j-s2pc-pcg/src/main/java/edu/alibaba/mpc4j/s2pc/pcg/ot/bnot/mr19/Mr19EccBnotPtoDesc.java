@@ -4,7 +4,7 @@ import edu.alibaba.mpc4j.common.rpc.desc.PtoDesc;
 import edu.alibaba.mpc4j.common.rpc.desc.PtoDescManager;
 
 /**
- * MR19-基础N选1-OT协议信息。论文来源：
+ * MR19-椭圆曲线-基础n选1-OT协议信息。论文来源：
  * <p>
  * Mansy D, Rindal P. Endemic oblivious transfer. CCS 2019. 2019: 309-326.
  * </p>
@@ -17,7 +17,7 @@ import edu.alibaba.mpc4j.common.rpc.desc.PtoDescManager;
  * @author Hanwen Feng
  * @date 2022/07/26
  */
-class Mr19BnotPtoDesc implements PtoDesc {
+class Mr19EccBnotPtoDesc implements PtoDesc {
     /**
      * 协议ID
      */
@@ -25,7 +25,7 @@ class Mr19BnotPtoDesc implements PtoDesc {
     /**
      * 协议名称
      */
-    private static final String PTO_NAME = "MR19_BNOT";
+    private static final String PTO_NAME = "MR19_BASE_NOT";
 
     /**
      * 协议步骤
@@ -34,22 +34,22 @@ class Mr19BnotPtoDesc implements PtoDesc {
         /**
          * 接收方发送参数R0、R1
          */
-        RECEIVER_SEND_R,
+        RECEIVER_SEND_PK,
         /**
          * 发送方发送参数B
          */
-        SENDER_SEND_B,
+        SENDER_SEND_BETA,
     }
 
     /**
      * 单例模式
      */
-    private static final Mr19BnotPtoDesc INSTANCE = new Mr19BnotPtoDesc();
+    private static final Mr19EccBnotPtoDesc INSTANCE = new Mr19EccBnotPtoDesc();
 
     /**
      * 私有构造函数
      */
-    private Mr19BnotPtoDesc() {
+    private Mr19EccBnotPtoDesc() {
         // empty
     }
 

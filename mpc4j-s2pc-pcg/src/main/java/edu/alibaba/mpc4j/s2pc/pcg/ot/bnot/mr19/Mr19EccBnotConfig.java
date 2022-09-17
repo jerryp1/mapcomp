@@ -6,12 +6,12 @@ import edu.alibaba.mpc4j.s2pc.pcg.ot.bnot.BnotConfig;
 import edu.alibaba.mpc4j.s2pc.pcg.ot.bnot.BnotFactory;
 
 /**
- * MR19-基础n选1-OT协议配置项。
+ * MR19-椭圆曲线-基础n选1-OT协议配置项。
  *
  * @author Hanwen Feng
  * @date 2022/07/25
  */
-public class Mr19BnotConfig implements BnotConfig {
+public class Mr19EccBnotConfig implements BnotConfig {
     /**
      * 环境类型
      */
@@ -21,14 +21,14 @@ public class Mr19BnotConfig implements BnotConfig {
      */
     private final boolean compressEncode;
 
-    private Mr19BnotConfig(Builder builder) {
+    private Mr19EccBnotConfig(Builder builder) {
         envType = builder.envType;
         compressEncode = builder.compressEncode;
     }
 
     @Override
     public BnotFactory.BnotType getPtoType() {
-        return BnotFactory.BnotType.MR19;
+        return BnotFactory.BnotType.MR19_ECC;
     }
 
     @Override
@@ -45,7 +45,7 @@ public class Mr19BnotConfig implements BnotConfig {
         return compressEncode;
     }
 
-    public static class Builder implements org.apache.commons.lang3.builder.Builder<Mr19BnotConfig> {
+    public static class Builder implements org.apache.commons.lang3.builder.Builder<Mr19EccBnotConfig> {
         /**
          * 环境类型
          */
@@ -72,8 +72,8 @@ public class Mr19BnotConfig implements BnotConfig {
         }
 
         @Override
-        public Mr19BnotConfig build() {
-            return new Mr19BnotConfig(this);
+        public Mr19EccBnotConfig build() {
+            return new Mr19EccBnotConfig(this);
         }
     }
 }

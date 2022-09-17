@@ -93,4 +93,14 @@ public final class KyberParams {
      * 非法参数K的错误消息
      */
     public static final String INVALID_PARAMS_K_ERROR_MESSAGE = "Invalid K, must be 2, 3 or 4: ";
+
+    /**
+     * 验证K是否有效。
+     *
+     * @param paramsK 参数K。
+     * @return 如果参数K有效，则返回{@code true}，否则返回{@code false}。
+     */
+    public static boolean validParamsK(int paramsK) {
+        return paramsK == 2 || paramsK == 3 || paramsK == 4;
+    }
 }
