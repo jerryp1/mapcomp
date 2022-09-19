@@ -1,4 +1,4 @@
-package edu.alibaba.mpc4j.s2pc.pso.mqrpmt.czz22;
+package edu.alibaba.mpc4j.s2pc.pso.psi.hfh99;
 
 import edu.alibaba.mpc4j.common.rpc.MpcAbortException;
 import edu.alibaba.mpc4j.common.rpc.MpcAbortPreconditions;
@@ -6,59 +6,60 @@ import edu.alibaba.mpc4j.common.rpc.Party;
 import edu.alibaba.mpc4j.common.rpc.Rpc;
 import edu.alibaba.mpc4j.common.rpc.utils.DataPacket;
 import edu.alibaba.mpc4j.common.rpc.utils.DataPacketHeader;
-import edu.alibaba.mpc4j.common.tool.crypto.ecc.ByteEccFactory;
-import edu.alibaba.mpc4j.common.tool.crypto.ecc.ByteMulEcc;
+import edu.alibaba.mpc4j.common.tool.crypto.ecc.Ecc;
+import edu.alibaba.mpc4j.common.tool.crypto.ecc.EccFactory;
 import edu.alibaba.mpc4j.common.tool.crypto.hash.Hash;
 import edu.alibaba.mpc4j.common.tool.crypto.hash.HashFactory;
-import edu.alibaba.mpc4j.common.tool.filter.Filter;
-import edu.alibaba.mpc4j.common.tool.filter.FilterFactory;
-import edu.alibaba.mpc4j.s2pc.pso.mqrpmt.AbstractMqRpmtServer;
-import edu.alibaba.mpc4j.s2pc.pso.mqrpmt.czz22.Czz22ByteEccCwMqRpmtPtoDesc.PtoStep;
+import edu.alibaba.mpc4j.common.tool.utils.ObjectUtils;
+import edu.alibaba.mpc4j.s2pc.pso.psi.AbstractPsiServer;
+import edu.alibaba.mpc4j.s2pc.pso.psi.hfh99.Hfh99EccPsiPtoDesc.PtoStep;
+import edu.alibaba.mpc4j.s2pc.pso.psi.PsiUtils;
 
-import java.nio.ByteBuffer;
-import java.util.*;
+import java.math.BigInteger;
+import java.util.List;
+import java.util.Set;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 /**
- * ZZL22-字节椭圆曲线mqRPMT协议服务端。
+ * HFH99-椭圆曲线PSI协议服务端。
  *
  * @author Weiran Liu
- * @date 2022/9/10
+ * @date 2022/9/19
  */
-public class Czz22ByteEccCwMqRpmtServer extends AbstractMqRpmtServer {
+public class Hfh99EccPsiServer<T> extends AbstractPsiServer<T> {
     /**
-     * 字节椭圆曲线
+     * 椭圆曲线
      */
-    private final ByteMulEcc byteMulEcc;
+    private final Ecc ecc;
     /**
-     * 过滤器类型
+     * 是否压缩编码
      */
-    private final FilterFactory.FilterType filterType;
+    private final boolean compressEncode;
     /**
      * PEQT哈希函数
      */
     private Hash peqtHash;
     /**
-     * 服务端密钥α
+     * 密钥
      */
-    private byte[] alpha;
+    private BigInteger alpha;
 
-    public Czz22ByteEccCwMqRpmtServer(Rpc serverRpc, Party clientParty, Czz22ByteEccCwMqRpmtConfig config) {
-        super(Czz22ByteEccCwMqRpmtPtoDesc.getInstance(), serverRpc, clientParty, config);
-        byteMulEcc = ByteEccFactory.createMulInstance(envType);
-        filterType = config.getFilterType();
+    public Hfh99EccPsiServer(Rpc serverRpc, Party clientParty, Hfh99EccPsiConfig config) {
+        super(Hfh99EccPsiPtoDesc.getInstance(), serverRpc, clientParty, config);
+        ecc = EccFactory.createInstance(envType);
+        compressEncode = config.getCompressEncode();
     }
 
     @Override
-    public void init(int maxServerSetSize, int maxClientSetSize) {
-        setInitInput(maxServerSetSize, maxClientSetSize);
+    public void init(int maxServerElementSize, int maxClientElementSize) throws MpcAbortException {
+        setInitInput(maxServerElementSize, maxClientElementSize);
         info("{}{} Server Init begin", ptoBeginLogPrefix, getPtoDesc().getPtoName());
 
         stopWatch.start();
         // 生成α
-        alpha = byteMulEcc.randomScalar(secureRandom);
+        alpha = ecc.randomZn(secureRandom);
         stopWatch.stop();
         long initTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
         stopWatch.reset();
@@ -69,12 +70,12 @@ public class Czz22ByteEccCwMqRpmtServer extends AbstractMqRpmtServer {
     }
 
     @Override
-    public ByteBuffer[] mqRpmt(Set<ByteBuffer> serverElementSet, int clientElementSize) throws MpcAbortException {
+    public void psi(Set<T> serverElementSet, int clientElementSize) throws MpcAbortException {
         setPtoInput(serverElementSet, clientElementSize);
-        info("{}{} Server begin", ptoBeginLogPrefix, getPtoDesc().getPtoName());
+        info("{}{} Send. begin", ptoBeginLogPrefix, getPtoDesc().getPtoName());
 
         stopWatch.start();
-        int peqtByteLength = Czz22ByteEccCwMqRpmtPtoDesc.getPeqtByteLength(serverElementSize, clientElementSize);
+        int peqtByteLength = PsiUtils.getSemiHonestPeqtByteLength(serverElementSize, clientElementSize);
         peqtHash = HashFactory.createInstance(envType, peqtByteLength);
         // 服务端计算并发送H(x)^α
         List<byte[]> hxAlphaPayload = generateHxAlphaPayload();
@@ -108,15 +109,16 @@ public class Czz22ByteEccCwMqRpmtServer extends AbstractMqRpmtServer {
         info("{}{} Server Step 2/2 ({}ms)", ptoStepLogPrefix, getPtoDesc().getPtoName(), peqtTime);
 
         info("{}{} Server end", ptoEndLogPrefix, getPtoDesc().getPtoName());
-        return serverElementArrayList.toArray(new ByteBuffer[0]);
     }
 
     private List<byte[]> generateHxAlphaPayload() {
-        Stream<ByteBuffer> serverElementStream = serverElementArrayList.stream();
+        Stream<T> serverElementStream = serverElementArrayList.stream();
         serverElementStream = parallel ? serverElementStream.parallel() : serverElementStream;
         return serverElementStream
-            .map(serverElement -> byteMulEcc.hashToCurve(serverElement.array()))
-            .map(p -> byteMulEcc.mul(p, alpha))
+            .map(ObjectUtils::objectToByteArray)
+            .map(ecc::hashToCurve)
+            .map(p -> ecc.multiply(p, alpha))
+            .map(p -> ecc.encode(p, compressEncode))
             .collect(Collectors.toList());
     }
 
@@ -124,15 +126,11 @@ public class Czz22ByteEccCwMqRpmtServer extends AbstractMqRpmtServer {
         MpcAbortPreconditions.checkArgument(hyBetaPayload.size() == clientElementSize);
         Stream<byte[]> hyBetaStream = hyBetaPayload.stream();
         hyBetaStream = parallel ? hyBetaStream.parallel() : hyBetaStream;
-        List<byte[]> peqtPayload = hyBetaStream
-            .map(p -> byteMulEcc.mul(p, alpha))
+        return hyBetaStream
+            .map(ecc::decode)
+            .map(p -> ecc.multiply(p, alpha))
+            .map(p -> ecc.encode(p, false))
             .map(p -> peqtHash.digestToBytes(p))
             .collect(Collectors.toList());
-        // 置乱顺序
-        Collections.shuffle(peqtPayload, secureRandom);
-        // 将元素插入到过滤器中
-        Filter<byte[]> filter = FilterFactory.createFilter(envType, filterType, serverElementSize, secureRandom);
-        peqtPayload.forEach(filter::put);
-        return filter.toByteArrayList();
     }
 }

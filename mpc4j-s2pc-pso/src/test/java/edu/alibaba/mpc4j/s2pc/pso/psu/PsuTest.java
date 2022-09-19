@@ -50,7 +50,7 @@ public class PsuTest {
     /**
      * 默认数量
      */
-    private static final int DEFAULT_SIZE = 1000;
+    private static final int DEFAULT_SIZE = 99;
     /**
      * 默认元素字节长度
      */
@@ -70,57 +70,57 @@ public class PsuTest {
 
     @Parameterized.Parameters(name = "{0}")
     public static Collection<Object[]> configurations() {
-        Collection<Object[]> configurationParams = new ArrayList<>();
+        Collection<Object[]> configurations = new ArrayList<>();
         // 用直接COT实现的OSN
         OsnConfig directCotOsnConfig = new Gmr21OsnConfig.Builder()
             .setCotConfig(new DirectCotConfig.Builder(SecurityModel.SEMI_HONEST).build())
             .build();
 
         // JSZ22_SFS (direct COT)
-        configurationParams.add(new Object[] {
+        configurations.add(new Object[] {
             PsuFactory.PsuType.JSZ22_SFS.name() + " (direct COT)",
             new Jsz22SfsPsuConfig.Builder().setOsnConfig(directCotOsnConfig).build(),
         });
         // JSZ22_SFS (silent COT)
-        configurationParams.add(new Object[] {
+        configurations.add(new Object[] {
             PsuFactory.PsuType.JSZ22_SFS.name() + " (silent COT)", new Jsz22SfsPsuConfig.Builder().build(),
         });
         // JSZ22_SFC (direct COT)
-        configurationParams.add(new Object[] {
+        configurations.add(new Object[] {
             PsuFactory.PsuType.JSZ22_SFC.name() + " (direct COT)",
             new Jsz22SfcPsuConfig.Builder().setOsnConfig(directCotOsnConfig).build(),
         });
         // JSZ22_SFC (silent COT)
-        configurationParams.add(new Object[] {
+        configurations.add(new Object[] {
             PsuFactory.PsuType.JSZ22_SFC.name() + " (silent COT)", new Jsz22SfcPsuConfig.Builder().build(),
         });
         // ZCL22_PKE
-        configurationParams.add(new Object[] {
+        configurations.add(new Object[] {
             PsuFactory.PsuType.ZCL22_PKE.name(), new Zcl22PkePsuConfig.Builder().build(),
         });
         // ZCL22_SKE
-        configurationParams.add(new Object[] {
+        configurations.add(new Object[] {
             PsuFactory.PsuType.ZCL22_SKE.name(), new Zcl22SkePsuConfig.Builder().build(),
         });
         // GMR21 (silent COT)
-        configurationParams.add(new Object[] {
+        configurations.add(new Object[] {
             PsuFactory.PsuType.GMR21.name() + " (silent COT)", new Gmr21PsuConfig.Builder().build(),
         });
         // GMR21 (direct COT)
-        configurationParams.add(new Object[] {
+        configurations.add(new Object[] {
             PsuFactory.PsuType.GMR21.name() + " (direct COT)",
             new Gmr21PsuConfig.Builder().setOsnConfig(directCotOsnConfig).build(),
         });
         // KRTW19_OPT
-        configurationParams.add(new Object[] {
+        configurations.add(new Object[] {
             PsuFactory.PsuType.KRTW19_OPT.name(), new Krtw19OptPsuConfig.Builder().build(),
         });
         // KRTW19_ORI
-        configurationParams.add(new Object[] {
+        configurations.add(new Object[] {
             PsuFactory.PsuType.KRTW19_ORI.name(), new Krtw19OriPsuConfig.Builder().build(),
         });
 
-        return configurationParams;
+        return configurations;
     }
 
     /**
@@ -269,11 +269,11 @@ public class PsuTest {
         }
     }
 
-    private void assertOutput(Set<ByteBuffer> serverSet, Set<ByteBuffer> clientSet, Set<ByteBuffer> clientUnionSet) {
+    private void assertOutput(Set<ByteBuffer> serverSet, Set<ByteBuffer> clientSet, Set<ByteBuffer> outputUnionSet) {
         // 计算并集
-        Set<ByteBuffer> union = new HashSet<>(serverSet);
-        union.addAll(clientSet);
-        Assert.assertTrue(clientUnionSet.containsAll(union));
-        Assert.assertTrue(union.containsAll(clientUnionSet));
+        Set<ByteBuffer> expectUnioniSet = new HashSet<>(serverSet);
+        expectUnioniSet.addAll(clientSet);
+        Assert.assertTrue(outputUnionSet.containsAll(expectUnioniSet));
+        Assert.assertTrue(expectUnioniSet.containsAll(outputUnionSet));
     }
 }

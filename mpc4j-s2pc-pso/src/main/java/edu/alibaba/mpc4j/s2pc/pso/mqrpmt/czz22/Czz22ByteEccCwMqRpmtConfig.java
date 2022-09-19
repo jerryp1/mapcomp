@@ -57,7 +57,6 @@ public class Czz22ByteEccCwMqRpmtConfig implements MqRpmtConfig {
         private FilterFactory.FilterType filterType;
 
         public Builder() {
-            super();
             envType = EnvType.STANDARD;
             filterType = FilterFactory.FilterType.SET_FILTER;
         }

@@ -4,7 +4,6 @@ import edu.alibaba.mpc4j.common.rpc.MpcAbortException;
 import edu.alibaba.mpc4j.common.rpc.pto.SecurePto;
 import edu.alibaba.mpc4j.common.rpc.pto.TwoPartyPto;
 
-import java.nio.ByteBuffer;
 import java.util.Set;
 
 /**
@@ -39,5 +38,5 @@ public interface PsiClient<T> extends TwoPartyPto, SecurePto {
      * @return 协议输出结果。
      * @throws MpcAbortException 如果协议异常中止。
      */
-    Set<ByteBuffer> psu(Set<T> clientElementSet, int serverElementSize) throws MpcAbortException;
+    Set<T> psi(Set<T> clientElementSet, int serverElementSize) throws MpcAbortException;
 }

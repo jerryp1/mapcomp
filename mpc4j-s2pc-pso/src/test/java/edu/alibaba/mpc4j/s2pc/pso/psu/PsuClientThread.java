@@ -11,7 +11,7 @@ import java.util.Set;
  * @author Weiran Liu
  * @date 2022/02/15
  */
-public class PsuClientThread extends Thread {
+class PsuClientThread extends Thread {
     /**
      * PSU客户端
      */

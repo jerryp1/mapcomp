@@ -31,10 +31,6 @@ class Czz22ByteEccCwMqRpmtPtoDesc implements PtoDesc {
      */
     enum PtoStep {
         /**
-         * 服务端发送PEQT密钥
-         */
-        SERVER_SEND_PEQT_KEY,
-        /**
          * 客户端发送H(Y)^β
          */
         CLIENT_SEND_HY_BETA,

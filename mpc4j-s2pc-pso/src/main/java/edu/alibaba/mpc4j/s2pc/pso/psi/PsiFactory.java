@@ -2,6 +2,9 @@ package edu.alibaba.mpc4j.s2pc.pso.psi;
 
 import edu.alibaba.mpc4j.common.rpc.Party;
 import edu.alibaba.mpc4j.common.rpc.Rpc;
+import edu.alibaba.mpc4j.s2pc.pso.psi.hfh99.Hfh99EccPsiClient;
+import edu.alibaba.mpc4j.s2pc.pso.psi.hfh99.Hfh99EccPsiConfig;
+import edu.alibaba.mpc4j.s2pc.pso.psi.hfh99.Hfh99EccPsiServer;
 
 /**
  * PSI协议工厂。
@@ -43,11 +46,12 @@ public class PsiFactory {
      * @param config      配置项。
      * @return 服务端。
      */
-    public static PsiServer createServer(Rpc serverRpc, Party clientParty, PsiConfig config) {
+    public static <X> PsiServer<X> createServer(Rpc serverRpc, Party clientParty, PsiConfig config) {
         PsiType type = config.getPtoType();
         switch (type) {
-            case HFH99_BYTE_ECC:
             case HFH99_ECC:
+                return new Hfh99EccPsiServer<>(serverRpc, clientParty, (Hfh99EccPsiConfig) config);
+            case HFH99_BYTE_ECC:
             case KKRT16:
             default:
                 throw new IllegalArgumentException("Invalid " + PsiType.class.getSimpleName() + ": " + type.name());
@@ -62,11 +66,12 @@ public class PsiFactory {
      * @param config      配置项。
      * @return 客户端。
      */
-    public static PsiClient createClient(Rpc clientRpc, Party serverParty, PsiConfig config) {
+    public static <X> PsiClient<X> createClient(Rpc clientRpc, Party serverParty, PsiConfig config) {
         PsiType type = config.getPtoType();
         switch (type) {
-            case HFH99_BYTE_ECC:
             case HFH99_ECC:
+                return new Hfh99EccPsiClient<>(clientRpc, serverParty, (Hfh99EccPsiConfig) config);
+            case HFH99_BYTE_ECC:
             case KKRT16:
             default:
                 throw new IllegalArgumentException("Invalid " + PsiType.class.getSimpleName() + ": " + type.name());

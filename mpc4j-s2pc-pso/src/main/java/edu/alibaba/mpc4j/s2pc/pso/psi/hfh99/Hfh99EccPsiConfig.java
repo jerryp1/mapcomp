@@ -1,34 +1,34 @@
-package edu.alibaba.mpc4j.s2pc.pso.oprf.ra17;
+package edu.alibaba.mpc4j.s2pc.pso.psi.hfh99;
 
 import edu.alibaba.mpc4j.common.rpc.desc.SecurityModel;
 import edu.alibaba.mpc4j.common.tool.EnvType;
-import edu.alibaba.mpc4j.s2pc.pso.oprf.MpOprfConfig;
-import edu.alibaba.mpc4j.s2pc.pso.oprf.OprfFactory;
+import edu.alibaba.mpc4j.s2pc.pso.psi.PsiConfig;
+import edu.alibaba.mpc4j.s2pc.pso.psi.PsiFactory;
 
 /**
- * RA17-MPOPRF协议配置项。
+ * HFH99-椭圆曲线PSI协议配置项。
  *
  * @author Weiran Liu
- * @date 2022/02/06
+ * @date 2022/9/19
  */
-public class Ra17MpOprfConfig implements MpOprfConfig {
+public class Hfh99EccPsiConfig implements PsiConfig {
     /**
      * 环境类型
      */
     private final EnvType envType;
     /**
-     * 是否使用压缩椭圆曲线编码
+     * 是否压缩编码
      */
     private final boolean compressEncode;
 
-    private Ra17MpOprfConfig(Builder builder) {
+    private Hfh99EccPsiConfig(Builder builder) {
         envType = builder.envType;
         compressEncode = builder.compressEncode;
     }
 
     @Override
-    public OprfFactory.OprfType getPtoType() {
-        return OprfFactory.OprfType.RA17;
+    public PsiFactory.PsiType getPtoType() {
+        return PsiFactory.PsiType.HFH99_ECC;
     }
 
     @Override
@@ -45,13 +45,13 @@ public class Ra17MpOprfConfig implements MpOprfConfig {
         return compressEncode;
     }
 
-    public static class Builder implements org.apache.commons.lang3.builder.Builder<Ra17MpOprfConfig> {
+    public static class Builder implements org.apache.commons.lang3.builder.Builder<Hfh99EccPsiConfig> {
         /**
          * 环境类型
          */
         private EnvType envType;
         /**
-         * 是否使用压缩椭圆曲线编码
+         * 是否压缩编码
          */
         private boolean compressEncode;
 
@@ -71,8 +71,8 @@ public class Ra17MpOprfConfig implements MpOprfConfig {
         }
 
         @Override
-        public Ra17MpOprfConfig build() {
-            return new Ra17MpOprfConfig(this);
+        public Hfh99EccPsiConfig build() {
+            return new Hfh99EccPsiConfig(this);
         }
     }
 }
