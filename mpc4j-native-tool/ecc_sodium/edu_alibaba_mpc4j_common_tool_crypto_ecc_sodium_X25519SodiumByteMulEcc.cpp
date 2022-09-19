@@ -13,8 +13,8 @@ JNIEXPORT jbyteArray JNICALL Java_edu_alibaba_mpc4j_common_tool_crypto_ecc_sodiu
     memcpy(p, ecBuffer, crypto_core_ed25519_BYTES);
     (*env).ReleaseByteArrayElements(jEcByteArray, ecBuffer, 0);
     jbyte* znBuffer = (*env).GetByteArrayElements(jZnByteArray, nullptr);
-    auto* k = new unsigned char[crypto_core_ed25519_BYTES];
-    memcpy(k, znBuffer, crypto_core_ed25519_BYTES);
+    auto* k = new unsigned char[crypto_core_ed25519_SCALARBYTES];
+    memcpy(k, znBuffer, crypto_core_ed25519_SCALARBYTES);
     (*env).ReleaseByteArrayElements(jZnByteArray, znBuffer, 0);
     auto* r = new unsigned char[crypto_core_ed25519_BYTES];
     crypto_scalarmult(r, k, p);
@@ -29,8 +29,8 @@ JNIEXPORT jbyteArray JNICALL Java_edu_alibaba_mpc4j_common_tool_crypto_ecc_sodiu
 JNIEXPORT jbyteArray JNICALL Java_edu_alibaba_mpc4j_common_tool_crypto_ecc_sodium_X25519SodiumByteMulEcc_nativeBaseMul
         (JNIEnv *env, jobject context, jbyteArray jZnByteArray) {
     jbyte* znBuffer = (*env).GetByteArrayElements(jZnByteArray, nullptr);
-    auto* k = new unsigned char[crypto_core_ed25519_BYTES];
-    memcpy(k, znBuffer, crypto_core_ed25519_BYTES);
+    auto* k = new unsigned char[crypto_core_ed25519_SCALARBYTES];
+    memcpy(k, znBuffer, crypto_core_ed25519_SCALARBYTES);
     (*env).ReleaseByteArrayElements(jZnByteArray, znBuffer, 0);
     auto* r = new unsigned char[crypto_core_ed25519_BYTES];
     crypto_scalarmult_base(r, k);

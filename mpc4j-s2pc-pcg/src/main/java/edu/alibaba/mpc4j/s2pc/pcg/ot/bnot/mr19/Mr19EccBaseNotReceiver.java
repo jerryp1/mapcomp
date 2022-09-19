@@ -37,10 +37,6 @@ public class Mr19EccBaseNotReceiver extends AbstractBaseNotReceiver {
      */
     private final Ecc ecc;
     /**
-     * 椭圆曲线点长度
-     */
-    private final int ecPointByteLength;
-    /**
      * OT协议接收方参数
      */
     private BigInteger[] aArray;
@@ -49,7 +45,6 @@ public class Mr19EccBaseNotReceiver extends AbstractBaseNotReceiver {
         super(Mr19EccBaseNotPtoDesc.getInstance(), receiverRpc, senderParty, config);
         compressEncode = config.getCompressEncode();
         ecc = EccFactory.createInstance(envType);
-        ecPointByteLength = ecc.getG().getEncoded(false).length;
     }
 
     @Override
@@ -106,17 +101,26 @@ public class Mr19EccBaseNotReceiver extends AbstractBaseNotReceiver {
                 // 设置乘积A
                 ECPoint upperA = ecc.multiply(ecc.getG(), aArray[index]);
                 // 生成n个参数r
-                ECPoint[] rPoints = new ECPoint[maxChoice];
-                ByteBuffer hashBuffer = ByteBuffer.allocate(Integer.BYTES + ecPointByteLength * (maxChoice - 1));
+                ECPoint[] rArray = new ECPoint[maxChoice];
+                byte[][] rByteArrays = new byte[maxChoice][];
+                // 计算椭圆曲线点总字节长度
+                int pointByteLength = 0;
+                for (int i = 0; i < maxChoice; i++) {
+                    if (i != choices[index]) {
+                        rArray[i] = ecc.randomPoint(secureRandom);
+                        rByteArrays[i] = rArray[i].getEncoded(false);
+                        pointByteLength += rByteArrays.length;
+                    }
+                }
+                ByteBuffer hashBuffer = ByteBuffer.allocate(Integer.BYTES + pointByteLength);
                 hashBuffer.putInt(choices[index]);
                 for (int i = 0; i < maxChoice; i++) {
                     if (i != choices[index]) {
-                        rPoints[i] = ecc.randomPoint(secureRandom);
-                        hashBuffer.put(rPoints[i].getEncoded(false));
+                        hashBuffer.put(rByteArrays[i]);
                     }
                 }
-                rPoints[choices[index]] = upperA.add(ecc.hashToCurve(hashBuffer.array()).negate());
-                return rPoints;
+                rArray[choices[index]] = upperA.add(ecc.hashToCurve(hashBuffer.array()).negate());
+                return rArray;
             })
             .flatMap(Arrays::stream)
             .map(pk -> ecc.encode(pk, compressEncode))

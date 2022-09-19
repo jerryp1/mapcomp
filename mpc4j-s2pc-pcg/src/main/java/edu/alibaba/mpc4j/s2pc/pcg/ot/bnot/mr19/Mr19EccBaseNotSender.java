@@ -16,6 +16,7 @@ import org.bouncycastle.math.ec.ECPoint;
 import java.math.BigInteger;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.IntStream;
@@ -37,10 +38,6 @@ public class Mr19EccBaseNotSender extends AbstractBaseNotSender {
      */
     private final Ecc ecc;
     /**
-     * 椭圆曲线点长度
-     */
-    private final int ecPointByteLength;
-    /**
      * β
      */
     private BigInteger beta;
@@ -49,7 +46,6 @@ public class Mr19EccBaseNotSender extends AbstractBaseNotSender {
         super(Mr19EccBaseNotPtoDesc.getInstance(), senderRpc, receiverParty, config);
         compressEncode = config.getCompressEncode();
         ecc = EccFactory.createInstance(envType);
-        ecPointByteLength = ecc.getG().getEncoded(false).length;
     }
 
     @Override
@@ -109,17 +105,25 @@ public class Mr19EccBaseNotSender extends AbstractBaseNotSender {
         Stream<byte[]> pStream = pkPayload.stream();
         pStream = parallel ? pStream.parallel() : pStream;
         ECPoint[] rArray = pStream.map(ecc::decode).toArray(ECPoint[]::new);
+        byte[][] rByteArrays = Arrays.stream(rArray).map(r -> r.getEncoded(false)).toArray(byte[][]::new);
         IntStream indexIntStream = IntStream.range(0, num);
         indexIntStream = parallel ? indexIntStream.parallel() : indexIntStream;
         byte[][][] rMatrix = indexIntStream
             .mapToObj(index -> {
                 byte[][] rnArray = new byte[maxChoice][];
                 for (int choice = 0; choice < maxChoice; choice++) {
-                    ByteBuffer buffer = ByteBuffer.allocate(Integer.BYTES + ecPointByteLength * (maxChoice - 1));
+                    // 计算椭圆曲线点总字节长度
+                    int pointByteLength = 0;
+                    for (int i = 0; i < maxChoice; i++) {
+                        if (i != choice) {
+                            pointByteLength += rByteArrays[index * maxChoice + i].length;
+                        }
+                    }
+                    ByteBuffer buffer = ByteBuffer.allocate(Integer.BYTES + pointByteLength);
                     buffer.putInt(choice);
                     for (int i = 0; i < maxChoice; i++) {
                         if (i != choice) {
-                            buffer.put(rArray[index * maxChoice + i].getEncoded(false));
+                            buffer.put(rByteArrays[index * maxChoice + i]);
                         }
                     }
                     ECPoint k = ecc.hashToCurve(buffer.array());
