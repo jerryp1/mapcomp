@@ -6,6 +6,7 @@ import edu.alibaba.mpc4j.common.rpc.RpcManager;
 import edu.alibaba.mpc4j.common.rpc.impl.memory.MemoryRpcManager;
 import edu.alibaba.mpc4j.common.tool.CommonConstants;
 import edu.alibaba.mpc4j.s2pc.pso.PsoUtils;
+import edu.alibaba.mpc4j.s2pc.pso.psi.hfh99.Hfh99ByteEccPsiConfig;
 import edu.alibaba.mpc4j.s2pc.pso.psi.hfh99.Hfh99EccPsiConfig;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.time.StopWatch;
@@ -54,13 +55,19 @@ public class PsiTest {
     public static Collection<Object[]> configurations() {
         Collection<Object[]> configurations = new ArrayList<>();
 
+        // HFH99_BYTE_ECC
+        configurations.add(new Object[] {
+            PsiFactory.PsiType.HFH99_BYTE_ECC.name(), new Hfh99ByteEccPsiConfig.Builder().build(),
+        });
         // HFH99_ECC (compress)
         configurations.add(new Object[] {
-            PsiFactory.PsiType.HFH99_ECC.name() + " (compress)", new Hfh99EccPsiConfig.Builder().build(),
+            PsiFactory.PsiType.HFH99_ECC.name() + " (compress)",
+            new Hfh99EccPsiConfig.Builder().setCompressEncode(true).build(),
         });
         // HFH99_ECC (uncompress)
         configurations.add(new Object[] {
-            PsiFactory.PsiType.HFH99_ECC.name() + " (uncompress)", new Hfh99EccPsiConfig.Builder().build(),
+            PsiFactory.PsiType.HFH99_ECC.name() + " (uncompress)",
+            new Hfh99EccPsiConfig.Builder().setCompressEncode(false).build(),
         });
 
         return configurations;

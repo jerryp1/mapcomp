@@ -2,9 +2,7 @@ package edu.alibaba.mpc4j.s2pc.pso.psi;
 
 import edu.alibaba.mpc4j.common.rpc.Party;
 import edu.alibaba.mpc4j.common.rpc.Rpc;
-import edu.alibaba.mpc4j.s2pc.pso.psi.hfh99.Hfh99EccPsiClient;
-import edu.alibaba.mpc4j.s2pc.pso.psi.hfh99.Hfh99EccPsiConfig;
-import edu.alibaba.mpc4j.s2pc.pso.psi.hfh99.Hfh99EccPsiServer;
+import edu.alibaba.mpc4j.s2pc.pso.psi.hfh99.*;
 
 /**
  * PSI协议工厂。
@@ -52,6 +50,7 @@ public class PsiFactory {
             case HFH99_ECC:
                 return new Hfh99EccPsiServer<>(serverRpc, clientParty, (Hfh99EccPsiConfig) config);
             case HFH99_BYTE_ECC:
+                return new Hfh99ByteEccPsiServer<>(serverRpc, clientParty, (Hfh99ByteEccPsiConfig) config);
             case KKRT16:
             default:
                 throw new IllegalArgumentException("Invalid " + PsiType.class.getSimpleName() + ": " + type.name());
@@ -72,6 +71,7 @@ public class PsiFactory {
             case HFH99_ECC:
                 return new Hfh99EccPsiClient<>(clientRpc, serverParty, (Hfh99EccPsiConfig) config);
             case HFH99_BYTE_ECC:
+                return new Hfh99ByteEccPsiClient<>(clientRpc, serverParty, (Hfh99ByteEccPsiConfig) config);
             case KKRT16:
             default:
                 throw new IllegalArgumentException("Invalid " + PsiType.class.getSimpleName() + ": " + type.name());
