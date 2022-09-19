@@ -6,9 +6,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ## \[Future\]
 
-- Add Kyber-based Oblivious Transfer.
 - PSU proposed by Prof. Yu Chen.
-- MR19-OT and PID based on X25519.
 - PSU proposed by Phi Hong Lee.
 - EC-DH-PSI and KKRT16-PSI.
 - GF2K (subfield) VOLE.
@@ -20,9 +18,15 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ### Added
 
-- ByteEcc: Add scalar validation for X25519. Add libsodium support (both for X25519 and Ed25519).
-- Multiplication Triple in Zl: Introduce Multiplication Triple Generation (MTC) under Zl in `mpc4j-s2pc-pcg`.
-- mqRPMT: Introduce mqRPMT in `mpc4j-s2pc-pso`.
+- `mpc4j-common-tool`
+  - ByteEcc: Add scalar validation for X25519. Add libsodium support for both X25519 and Ed25519.
+  - Kyber: Add post-quantum secure public key encryption scheme Kyber. The implementation is modified from [KyberJCK](https://github.com/fisherstevenk/kyberJCE).
+- `mpc4j-s2pc-pcg`
+  - Multiplication Triple in Zl: Introduce Multiplication Triple Generation (MTC) under Zl in `mpc4j-s2pc-pcg`.
+  - Kyber Base-OT: Introduce Kyber Base-OT schemes.
+- `mpc4j-s2pc-pso`
+  - mqRPMT: Introduce mqRPMT.
+  - Facebook PID: Introduce the Facebook PID scheme based on X25519.
 
 ### Remove
 
