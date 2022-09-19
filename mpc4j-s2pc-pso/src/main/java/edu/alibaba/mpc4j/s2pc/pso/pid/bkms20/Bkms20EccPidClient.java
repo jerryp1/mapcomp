@@ -8,11 +8,12 @@ import edu.alibaba.mpc4j.common.rpc.utils.DataPacket;
 import edu.alibaba.mpc4j.common.rpc.utils.DataPacketHeader;
 import edu.alibaba.mpc4j.common.tool.crypto.ecc.Ecc;
 import edu.alibaba.mpc4j.common.tool.crypto.ecc.EccFactory;
-import edu.alibaba.mpc4j.common.tool.crypto.prf.Prf;
-import edu.alibaba.mpc4j.common.tool.crypto.prf.PrfFactory;
+import edu.alibaba.mpc4j.common.tool.crypto.hash.Hash;
+import edu.alibaba.mpc4j.common.tool.crypto.hash.HashFactory;
 import edu.alibaba.mpc4j.common.tool.utils.ObjectUtils;
 import edu.alibaba.mpc4j.s2pc.pso.pid.AbstractPidParty;
 import edu.alibaba.mpc4j.s2pc.pso.pid.PidPartyOutput;
+import edu.alibaba.mpc4j.s2pc.pso.pid.PidUtils;
 import edu.alibaba.mpc4j.s2pc.pso.pid.bkms20.Bkms20EccPidPtoDesc.PtoStep;
 import org.bouncycastle.math.ec.ECPoint;
 
@@ -41,13 +42,9 @@ public class Bkms20EccPidClient<T> extends AbstractPidParty<T> {
      */
     private final boolean compressEncode;
     /**
-     * PID映射密钥
+     * PID映射函数
      */
-    private byte[] pidMapPrfKey;
-    /**
-     * PID映射伪随机函数
-     */
-    private Prf pidMapPrf;
+    private Hash pidMap;
     /**
      * k_p
      */
@@ -91,20 +88,7 @@ public class Bkms20EccPidClient<T> extends AbstractPidParty<T> {
         stopWatch.stop();
         long initTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
         stopWatch.reset();
-        info("{}{} Client Init Step 1/2 ({}ms)", ptoStepLogPrefix, getPtoDesc().getPtoName(), initTime);
-
-        stopWatch.start();
-        DataPacketHeader serverKeysHeader = new DataPacketHeader(
-            taskId, getPtoDesc().getPtoId(), PtoStep.SERVER_SEND_KEYS.ordinal(), extraInfo,
-            otherParty().getPartyId(), ownParty().getPartyId()
-        );
-        List<byte[]> serverKeysPayload = rpc.receive(serverKeysHeader).getPayload();
-        MpcAbortPreconditions.checkArgument(serverKeysPayload.size() == 1);
-        pidMapPrfKey = serverKeysPayload.remove(0);
-        stopWatch.stop();
-        long keyTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
-        stopWatch.reset();
-        info("{}{} Client Init Step 2/2 ({}ms)", ptoStepLogPrefix, getPtoDesc().getPtoName(), keyTime);
+        info("{}{} Client Init Step 1/1 ({}ms)", ptoStepLogPrefix, getPtoDesc().getPtoName(), initTime);
 
         initialized = true;
         info("{}{} Client Init end", ptoEndLogPrefix, getPtoDesc().getPtoName());
@@ -116,9 +100,8 @@ public class Bkms20EccPidClient<T> extends AbstractPidParty<T> {
         info("{}{} Client begin", ptoBeginLogPrefix, getPtoDesc().getPtoName());
 
         stopWatch.start();
-        int pidByteLength = Bkms20EccPidPtoDesc.getPidByteLength(otherSetSize, ownSetSize);
-        pidMapPrf = PrfFactory.createInstance(envType, pidByteLength);
-        pidMapPrf.setKey(pidMapPrfKey);
+        int pidByteLength = PidUtils.getPidByteLength(otherSetSize, ownSetSize);
+        pidMap = HashFactory.createInstance(envType, pidByteLength);
         // 生成置乱映射，计算并发送U_p
         List<byte[]> upPayload = generateUpPayload();
         DataPacketHeader upHeader = new DataPacketHeader(
@@ -270,7 +253,7 @@ public class Bkms20EccPidClient<T> extends AbstractPidParty<T> {
         ByteBuffer[] wp = vpStream
             .map(vpi -> ecc.multiply(vpi, rp))
             .map(wpi -> ecc.encode(wpi, false))
-            .map(pidMapPrf::getBytes)
+            .map(pidMap::digestToBytes)
             .map(ByteBuffer::wrap)
             .toArray(ByteBuffer[]::new);
         clientPidMap = IntStream.range(0, ownSetSize)
@@ -314,7 +297,7 @@ public class Bkms20EccPidClient<T> extends AbstractPidParty<T> {
             .map(ecc::decode)
             .map(scpi -> ecc.multiply(scpi, rp))
             .map(wci -> ecc.encode(wci, false))
-            .map(pidMapPrf::getBytes)
+            .map(pidMap::digestToBytes)
             .map(ByteBuffer::wrap)
             .collect(Collectors.toList());
         clientPidSet.addAll(dc);

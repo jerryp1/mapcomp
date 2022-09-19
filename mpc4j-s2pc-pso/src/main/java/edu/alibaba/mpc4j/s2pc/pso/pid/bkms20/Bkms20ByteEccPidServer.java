@@ -6,14 +6,14 @@ import edu.alibaba.mpc4j.common.rpc.Party;
 import edu.alibaba.mpc4j.common.rpc.Rpc;
 import edu.alibaba.mpc4j.common.rpc.utils.DataPacket;
 import edu.alibaba.mpc4j.common.rpc.utils.DataPacketHeader;
-import edu.alibaba.mpc4j.common.tool.CommonConstants;
 import edu.alibaba.mpc4j.common.tool.crypto.ecc.ByteEccFactory;
 import edu.alibaba.mpc4j.common.tool.crypto.ecc.ByteMulEcc;
-import edu.alibaba.mpc4j.common.tool.crypto.prf.Prf;
-import edu.alibaba.mpc4j.common.tool.crypto.prf.PrfFactory;
+import edu.alibaba.mpc4j.common.tool.crypto.hash.Hash;
+import edu.alibaba.mpc4j.common.tool.crypto.hash.HashFactory;
 import edu.alibaba.mpc4j.common.tool.utils.ObjectUtils;
 import edu.alibaba.mpc4j.s2pc.pso.pid.AbstractPidParty;
 import edu.alibaba.mpc4j.s2pc.pso.pid.PidPartyOutput;
+import edu.alibaba.mpc4j.s2pc.pso.pid.PidUtils;
 import edu.alibaba.mpc4j.s2pc.pso.pid.bkms20.Bkms20ByteEccPidPtoDesc.PtoStep;
 
 import java.nio.ByteBuffer;
@@ -36,13 +36,9 @@ public class Bkms20ByteEccPidServer<T> extends AbstractPidParty<T> {
      */
     private final ByteMulEcc byteMulEcc;
     /**
-     * PID映射密钥
+     * PID映射函数
      */
-    private byte[] pidMapPrfKey;
-    /**
-     * PID映射伪随机函数
-     */
-    private Prf pidMapPrf;
+    private Hash pidMap;
     /**
      * k_c
      */
@@ -97,23 +93,7 @@ public class Bkms20ByteEccPidServer<T> extends AbstractPidParty<T> {
         stopWatch.stop();
         long initTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
         stopWatch.reset();
-        info("{}{} Server Init Step 1/2 ({}ms)", ptoStepLogPrefix, getPtoDesc().getPtoName(), initTime);
-
-        stopWatch.start();
-        List<byte[]> serverKeysPayload = new LinkedList<>();
-        // 初始化PID映射伪随机函数
-        pidMapPrfKey = new byte[CommonConstants.BLOCK_BYTE_LENGTH];
-        secureRandom.nextBytes(pidMapPrfKey);
-        serverKeysPayload.add(pidMapPrfKey);
-        DataPacketHeader serverKeysHeader = new DataPacketHeader(
-            taskId, getPtoDesc().getPtoId(), PtoStep.SERVER_SEND_KEYS.ordinal(), extraInfo,
-            ownParty().getPartyId(), otherParty().getPartyId()
-        );
-        rpc.send(DataPacket.fromByteArrayList(serverKeysHeader, serverKeysPayload));
-        stopWatch.stop();
-        long keyTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
-        stopWatch.reset();
-        info("{}{} Server Init Step 2/2 ({}ms)", ptoStepLogPrefix, getPtoDesc().getPtoName(), keyTime);
+        info("{}{} Server Init Step 1/1 ({}ms)", ptoStepLogPrefix, getPtoDesc().getPtoName(), initTime);
 
         initialized = true;
         info("{}{} Server Init end", ptoEndLogPrefix, getPtoDesc().getPtoName());
@@ -125,9 +105,8 @@ public class Bkms20ByteEccPidServer<T> extends AbstractPidParty<T> {
         info("{}{} Server begin", ptoBeginLogPrefix, getPtoDesc().getPtoName());
 
         stopWatch.start();
-        int pidByteLength = Bkms20ByteEccPidPtoDesc.getPidByteLength(ownSetSize, ownSetSize);
-        pidMapPrf = PrfFactory.createInstance(envType, pidByteLength);
-        pidMapPrf.setKey(pidMapPrfKey);
+        int pidByteLength = PidUtils.getPidByteLength(ownSetSize, ownSetSize);
+        pidMap = HashFactory.createInstance(envType, pidByteLength);
         // 生成置乱映射，计算并发送U_c
         List<byte[]> ucPayload = generateUcPayload();
         DataPacketHeader ucHeader = new DataPacketHeader(
@@ -274,7 +253,7 @@ public class Bkms20ByteEccPidServer<T> extends AbstractPidParty<T> {
         vcStream = parallel ? vcStream.parallel() : vcStream;
         ByteBuffer[] wc = vcStream
             .map(vci -> byteMulEcc.mul(vci, rc))
-            .map(pidMapPrf::getBytes)
+            .map(pidMap::digestToBytes)
             .map(ByteBuffer::wrap)
             .toArray(ByteBuffer[]::new);
         serverPidMap = IntStream.range(0, ownSetSize)
@@ -318,7 +297,7 @@ public class Bkms20ByteEccPidServer<T> extends AbstractPidParty<T> {
         sppStream = parallel ? sppStream.parallel() : sppStream;
         List<ByteBuffer> dp = sppStream
             .map(sppi -> byteMulEcc.mul(sppi, rc))
-            .map(pidMapPrf::getBytes)
+            .map(pidMap::digestToBytes)
             .map(ByteBuffer::wrap)
             .collect(Collectors.toList());
         serverPidSet.addAll(dp);

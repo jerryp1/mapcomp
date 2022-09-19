@@ -8,8 +8,8 @@ import edu.alibaba.mpc4j.common.rpc.utils.DataPacket;
 import edu.alibaba.mpc4j.common.rpc.utils.DataPacketHeader;
 import edu.alibaba.mpc4j.common.tool.crypto.ecc.ByteEccFactory;
 import edu.alibaba.mpc4j.common.tool.crypto.ecc.ByteMulEcc;
-import edu.alibaba.mpc4j.common.tool.crypto.prf.Prf;
-import edu.alibaba.mpc4j.common.tool.crypto.prf.PrfFactory;
+import edu.alibaba.mpc4j.common.tool.crypto.hash.Hash;
+import edu.alibaba.mpc4j.common.tool.crypto.hash.HashFactory;
 import edu.alibaba.mpc4j.common.tool.filter.Filter;
 import edu.alibaba.mpc4j.common.tool.filter.FilterFactory;
 import edu.alibaba.mpc4j.s2pc.pso.mqrpmt.AbstractMqRpmtClient;
@@ -34,17 +34,9 @@ public class Czz22ByteEccCwMqRpmtClient extends AbstractMqRpmtClient {
      */
     private final ByteMulEcc byteMulEcc;
     /**
-     * 是否使用过滤器
+     * PEQT哈希函数
      */
-    private final boolean useFilter;
-    /**
-     * PEQT映射密钥
-     */
-    private byte[] peqtMapKey;
-    /**
-     * PEQT映射伪随机函数
-     */
-    private Prf peqtMapPrf;
+    private Hash peqtHash;
     /**
      * 客户端密钥β
      */
@@ -53,7 +45,6 @@ public class Czz22ByteEccCwMqRpmtClient extends AbstractMqRpmtClient {
     public Czz22ByteEccCwMqRpmtClient(Rpc clientRpc, Party serverParty, Czz22ByteEccCwMqRpmtConfig config) {
         super(Czz22ByteEccCwMqRpmtPtoDesc.getInstance(), clientRpc, serverParty, config);
         byteMulEcc = ByteEccFactory.createMulInstance(envType);
-        useFilter = config.getUseFilter();
     }
 
     @Override
@@ -63,13 +54,6 @@ public class Czz22ByteEccCwMqRpmtClient extends AbstractMqRpmtClient {
 
         stopWatch.start();
         beta = byteMulEcc.randomScalar(secureRandom);
-        DataPacketHeader peqtKeyHeader = new DataPacketHeader(
-            taskId, getPtoDesc().getPtoId(), PtoStep.SERVER_SEND_PEQT_KEY.ordinal(), extraInfo,
-            otherParty().getPartyId(), ownParty().getPartyId()
-        );
-        List<byte[]> peqtKeyPayload = rpc.receive(peqtKeyHeader).getPayload();
-        MpcAbortPreconditions.checkArgument(peqtKeyPayload.size() == 1);
-        peqtMapKey = peqtKeyPayload.remove(0);
         stopWatch.stop();
         long initTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
         stopWatch.reset();
@@ -86,8 +70,7 @@ public class Czz22ByteEccCwMqRpmtClient extends AbstractMqRpmtClient {
 
         stopWatch.start();
         int peqtByteLength = Czz22ByteEccCwMqRpmtPtoDesc.getPeqtByteLength(serverElementSize, clientElementSize);
-        peqtMapPrf = PrfFactory.createInstance(envType, peqtByteLength);
-        peqtMapPrf.setKey(peqtMapKey);
+        peqtHash = HashFactory.createInstance(envType, peqtByteLength);
         // 客户端计算并发送H(y)^β
         List<byte[]> hyBetaPayload = generateHyBetaPayload();
         DataPacketHeader hyBetaHeader = new DataPacketHeader(
@@ -140,35 +123,23 @@ public class Czz22ByteEccCwMqRpmtClient extends AbstractMqRpmtClient {
         hxAlphaStream = parallel ? hxAlphaStream.parallel() : hxAlphaStream;
         return hxAlphaStream
             .map(p -> byteMulEcc.mul(p, beta))
-            .map(p -> peqtMapPrf.getBytes(p))
+            .map(p -> peqtHash.digestToBytes(p))
             .map(ByteBuffer::wrap)
             .toArray(ByteBuffer[]::new);
     }
 
     private boolean[] handlePeqtPayload(List<byte[]> peqtPayload, ByteBuffer[] clientPeqtArray) throws MpcAbortException {
-        if (useFilter) {
-            try {
-                Filter<byte[]> filter = FilterFactory.createFilter(envType, peqtPayload);
-                boolean[] containVector = new boolean[serverElementSize];
-                IntStream.range(0, serverElementSize).forEach(serverElementIndex -> {
-                    if (filter.mightContain(clientPeqtArray[serverElementIndex].array())) {
-                        containVector[serverElementIndex] = true;
-                    }
-                });
-                return containVector;
-            } catch (IllegalArgumentException e) {
-                throw new MpcAbortException();
-            }
-        } else {
-            MpcAbortPreconditions.checkArgument(peqtPayload.size() == clientElementSize);
-            Set<ByteBuffer> set = peqtPayload.stream().map(ByteBuffer::wrap).collect(Collectors.toSet());
+        try {
+            Filter<byte[]> filter = FilterFactory.createFilter(envType, peqtPayload);
             boolean[] containVector = new boolean[serverElementSize];
             IntStream.range(0, serverElementSize).forEach(serverElementIndex -> {
-                if (set.contains(clientPeqtArray[serverElementIndex])) {
+                if (filter.mightContain(clientPeqtArray[serverElementIndex].array())) {
                     containVector[serverElementIndex] = true;
                 }
             });
             return containVector;
+        } catch (IllegalArgumentException e) {
+            throw new MpcAbortException();
         }
     }
 }

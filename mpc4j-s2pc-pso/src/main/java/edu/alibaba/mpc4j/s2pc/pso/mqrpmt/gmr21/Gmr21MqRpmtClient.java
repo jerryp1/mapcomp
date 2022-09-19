@@ -6,6 +6,8 @@ import edu.alibaba.mpc4j.common.rpc.Party;
 import edu.alibaba.mpc4j.common.rpc.Rpc;
 import edu.alibaba.mpc4j.common.rpc.utils.DataPacket;
 import edu.alibaba.mpc4j.common.rpc.utils.DataPacketHeader;
+import edu.alibaba.mpc4j.common.tool.crypto.hash.Hash;
+import edu.alibaba.mpc4j.common.tool.crypto.hash.HashFactory;
 import edu.alibaba.mpc4j.common.tool.crypto.prf.Prf;
 import edu.alibaba.mpc4j.common.tool.crypto.prf.PrfFactory;
 import edu.alibaba.mpc4j.common.tool.hashbin.object.cuckoo.CuckooHashBinFactory;
@@ -59,13 +61,9 @@ public class Gmr21MqRpmtClient extends AbstractMqRpmtClient {
      */
     private final int cuckooHashNum;
     /**
-     * PEQT哈希密钥
-     */
-    private byte[] peqtHashKey;
-    /**
      * 多项式有限域哈希
      */
-    private Prf finiteFieldHash;
+    private Hash finiteFieldHash;
     /**
      * OKVS密钥
      */
@@ -132,6 +130,8 @@ public class Gmr21MqRpmtClient extends AbstractMqRpmtClient {
         cuckooHashOprfSender.init(maxBinNum);
         osnSender.init(maxBinNum);
         peqtOprfReceiver.init(maxBinNum);
+        // 初始化多项式有限域哈希，根据论文实现，固定为64比特
+        finiteFieldHash = HashFactory.createInstance(envType, Gmr21MqRpmtPtoDesc.FINITE_FIELD_BYTE_LENGTH);
         stopWatch.stop();
         long initTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
         stopWatch.reset();
@@ -144,14 +144,7 @@ public class Gmr21MqRpmtClient extends AbstractMqRpmtClient {
         );
         List<byte[]> keysPayload = rpc.receive(keysHeader).getPayload();
         int okvsHashKeyNum = OkvsFactory.getHashNum(okvsType);
-        MpcAbortPreconditions.checkArgument(keysPayload.size() == 2 + okvsHashKeyNum);
-        // 初始化值域哈希密钥
-        byte[] finiteFieldHashKey = keysPayload.remove(0);
-        // 可以提前初始化多项式有限域哈希，根据论文实现，固定为64比特
-        finiteFieldHash = PrfFactory.createInstance(envType, Gmr21MqRpmtPtoDesc.FINITE_FIELD_BYTE_LENGTH);
-        finiteFieldHash.setKey(finiteFieldHashKey);
-        // 初始化PEQT哈希密钥
-        peqtHashKey = keysPayload.remove(0);
+        MpcAbortPreconditions.checkArgument(keysPayload.size() == okvsHashKeyNum);
         // 初始化OKVS密钥
         okvsHashKeys = keysPayload.toArray(new byte[0][]);
         stopWatch.stop();
@@ -172,8 +165,7 @@ public class Gmr21MqRpmtClient extends AbstractMqRpmtClient {
         // 设置最大桶数量
         binNum = CuckooHashBinFactory.getBinNum(cuckooHashBinType, serverElementSize);
         // 初始化PEQT哈希
-        Prf peqtHash = PrfFactory.createInstance(getEnvType(), Gmr21MqRpmtPtoDesc.getPeqtByteLength(binNum));
-        peqtHash.setKey(peqtHashKey);
+        Hash peqtHash = HashFactory.createInstance(envType, Gmr21MqRpmtPtoDesc.getPeqtByteLength(binNum));
         DataPacketHeader cuckooHashKeyHeader = new DataPacketHeader(
             taskId, getPtoDesc().getPtoId(), PtoStep.SERVER_SEND_CUCKOO_HASH_KEYS.ordinal(), extraInfo,
             otherParty().getPartyId(), ownParty().getPartyId()
@@ -221,7 +213,7 @@ public class Gmr21MqRpmtClient extends AbstractMqRpmtClient {
         bPrimeOprfIntStream = parallel ? bPrimeOprfIntStream.parallel() : bPrimeOprfIntStream;
         ByteBuffer[] bPrimeOprfs = bPrimeOprfIntStream
             .mapToObj(peqtOprfReceiverOutput::getPrf)
-            .map(peqtHash::getBytes)
+            .map(peqtHash::digestToBytes)
             .map(ByteBuffer::wrap)
             .toArray(ByteBuffer[]::new);
         // 接收aPrimeOprf
@@ -295,7 +287,7 @@ public class Gmr21MqRpmtClient extends AbstractMqRpmtClient {
                         byte[] extendBytes = keyArrayVector.elementAt(hashIndex)[clientElementIndex];
                         int binIndex = binHashes[hashIndex].getInteger(clientElement, binNum);
                         byte[] oprf = cuckooHashOprfSenderOutput.getPrf(binIndex, extendBytes);
-                        byte[] value = finiteFieldHash.getBytes(oprf);
+                        byte[] value = finiteFieldHash.digestToBytes(oprf);
                         BytesUtils.xori(value, sVector.elementAt(binIndex));
                         return value;
                     })
@@ -311,7 +303,7 @@ public class Gmr21MqRpmtClient extends AbstractMqRpmtClient {
                 return clientElementIntStream
                     .mapToObj(clientElementIndex -> {
                         byte[] extendBytes = keyArrayVector.elementAt(hashIndex)[clientElementIndex];
-                        return finiteFieldHash.getBytes(extendBytes);
+                        return finiteFieldHash.digestToBytes(extendBytes);
                     })
                     .toArray(byte[][]::new);
             })

@@ -4,24 +4,20 @@ import edu.alibaba.mpc4j.common.rpc.MpcAbortException;
 import edu.alibaba.mpc4j.common.rpc.MpcAbortPreconditions;
 import edu.alibaba.mpc4j.common.rpc.Party;
 import edu.alibaba.mpc4j.common.rpc.Rpc;
-import edu.alibaba.mpc4j.common.rpc.utils.DataPacket;
 import edu.alibaba.mpc4j.common.rpc.utils.DataPacketHeader;
-import edu.alibaba.mpc4j.common.tool.CommonConstants;
-import edu.alibaba.mpc4j.common.tool.crypto.prf.Prf;
-import edu.alibaba.mpc4j.common.tool.crypto.prf.PrfFactory;
+import edu.alibaba.mpc4j.common.tool.crypto.hash.Hash;
+import edu.alibaba.mpc4j.common.tool.crypto.hash.HashFactory;
 import edu.alibaba.mpc4j.common.tool.utils.BytesUtils;
-import edu.alibaba.mpc4j.common.tool.utils.CommonUtils;
-import edu.alibaba.mpc4j.common.tool.utils.LongUtils;
 import edu.alibaba.mpc4j.common.tool.utils.ObjectUtils;
 import edu.alibaba.mpc4j.s2pc.pso.oprf.*;
 import edu.alibaba.mpc4j.s2pc.pso.pid.AbstractPidParty;
 import edu.alibaba.mpc4j.s2pc.pso.pid.PidPartyOutput;
+import edu.alibaba.mpc4j.s2pc.pso.pid.PidUtils;
 import edu.alibaba.mpc4j.s2pc.pso.pid.gmr21.Gmr21MpPidPtoDesc.PtoStep;
 import edu.alibaba.mpc4j.s2pc.pso.psu.PsuFactory;
 import edu.alibaba.mpc4j.s2pc.pso.psu.PsuServer;
 
 import java.nio.ByteBuffer;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -49,13 +45,9 @@ public class Gmr21MpPidServer<T> extends AbstractPidParty<T> {
      */
     private final PsuServer psuServer;
     /**
-     * PID映射密钥
-     */
-    private byte[] pidMapPrfKey;
-    /**
      * PID映射函数
      */
-    private Prf pidMapPrf;
+    private Hash pidMap;
     /**
      * k_A
      */
@@ -116,23 +108,7 @@ public class Gmr21MpPidServer<T> extends AbstractPidParty<T> {
         stopWatch.stop();
         long initTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
         stopWatch.reset();
-        info("{}{} Server Init Step 1/2 ({}ms)", ptoStepLogPrefix, getPtoDesc().getPtoName(), initTime);
-
-        stopWatch.start();
-        List<byte[]> serverKeysPayload = new LinkedList<>();
-        // PID映射密钥
-        pidMapPrfKey = new byte[CommonConstants.BLOCK_BYTE_LENGTH];
-        secureRandom.nextBytes(pidMapPrfKey);
-        serverKeysPayload.add(pidMapPrfKey);
-        DataPacketHeader serverKeysHeader = new DataPacketHeader(
-            taskId, getPtoDesc().getPtoId(), PtoStep.SERVER_SEND_KEYS.ordinal(), extraInfo,
-            ownParty().getPartyId(), otherParty().getPartyId()
-        );
-        rpc.send(DataPacket.fromByteArrayList(serverKeysHeader, serverKeysPayload));
-        stopWatch.stop();
-        long keyTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
-        stopWatch.reset();
-        info("{}{} Server Init Step 2/2 ({}ms)", ptoStepLogPrefix, getPtoDesc().getPtoName(), keyTime);
+        info("{}{} Server Init Step 1/1 ({}ms)", ptoStepLogPrefix, getPtoDesc().getPtoName(), initTime);
 
         initialized = true;
         info("{}{} Server Init end", ptoEndLogPrefix, getPtoDesc().getPtoName());
@@ -144,12 +120,8 @@ public class Gmr21MpPidServer<T> extends AbstractPidParty<T> {
         info("{}{} Server begin", ptoBeginLogPrefix, getPtoDesc().getPtoName());
 
         stopWatch.start();
-        // PID字节长度等于λ + log(n) + log(m)
-        int pidByteLength = CommonConstants.STATS_BYTE_LENGTH
-            + CommonUtils.getByteLength(LongUtils.ceilLog2(ownSetSize))
-            + CommonUtils.getByteLength(LongUtils.ceilLog2(otherSetSize));
-        pidMapPrf = PrfFactory.createInstance(envType, pidByteLength);
-        pidMapPrf.setKey(pidMapPrfKey);
+        int pidByteLength = PidUtils.getPidByteLength(ownSetSize, otherSetSize);
+        pidMap = HashFactory.createInstance(envType, pidByteLength);
         serverElementByteArrays = ownElementArrayList.stream()
             .map(ObjectUtils::objectToByteArray)
             .toArray(byte[][]::new);
@@ -208,8 +180,8 @@ public class Gmr21MpPidServer<T> extends AbstractPidParty<T> {
             .collect(Collectors.toMap(
                     index -> {
                         byte[] x = serverElementByteArrays[index];
-                        byte[] pid0 = pidMapPrf.getBytes(kaOprfKey.getPrf(x));
-                        byte[] pid1 = pidMapPrf.getBytes(kbOprfOutput.getPrf(index));
+                        byte[] pid0 = pidMap.digestToBytes(kaOprfKey.getPrf(x));
+                        byte[] pid1 = pidMap.digestToBytes(kbOprfOutput.getPrf(index));
                         BytesUtils.xori(pid0, pid1);
                         return ByteBuffer.wrap(pid0);
                     },

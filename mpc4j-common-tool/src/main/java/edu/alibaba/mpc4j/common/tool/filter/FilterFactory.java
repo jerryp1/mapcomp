@@ -107,12 +107,10 @@ public class FilterFactory {
      * @param secureRandom 随机状态
      * @return 指定类型的过滤器。
      */
-    public static <X> Filter<X> createFilter(EnvType envType, int maxSize, SecureRandom secureRandom) {
-        // 默认使用真空过滤器
-        FilterType type = FilterType.VACUUM_FILTER;
+    public static <X> Filter<X> createFilter(EnvType envType, FilterType type, int maxSize, SecureRandom secureRandom) {
         int hashNum = getHashNum(type, maxSize);
         byte[][] keys = CommonUtils.generateRandomKeys(hashNum, secureRandom);
-        return VacuumFilter.create(envType, maxSize, keys);
+        return createFilter(envType, type, maxSize, keys);
     }
 
     /**

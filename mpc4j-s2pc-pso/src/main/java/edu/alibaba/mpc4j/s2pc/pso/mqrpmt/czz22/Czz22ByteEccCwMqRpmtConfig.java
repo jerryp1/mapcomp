@@ -2,6 +2,7 @@ package edu.alibaba.mpc4j.s2pc.pso.mqrpmt.czz22;
 
 import edu.alibaba.mpc4j.common.rpc.desc.SecurityModel;
 import edu.alibaba.mpc4j.common.tool.EnvType;
+import edu.alibaba.mpc4j.common.tool.filter.FilterFactory;
 import edu.alibaba.mpc4j.s2pc.pso.mqrpmt.MqRpmtConfig;
 import edu.alibaba.mpc4j.s2pc.pso.mqrpmt.MqRpmtFactory;
 
@@ -17,13 +18,13 @@ public class Czz22ByteEccCwMqRpmtConfig implements MqRpmtConfig {
      */
     private final EnvType envType;
     /**
-     * 是否使用过滤器
+     * 过滤器类型
      */
-    private final boolean useFilter;
+    private final FilterFactory.FilterType filterType;
 
     private Czz22ByteEccCwMqRpmtConfig(Builder builder) {
         envType = builder.envType;
-        useFilter = builder.useFilter;
+        filterType = builder.filterType;
     }
 
     @Override
@@ -41,8 +42,8 @@ public class Czz22ByteEccCwMqRpmtConfig implements MqRpmtConfig {
         return SecurityModel.SEMI_HONEST;
     }
 
-    public boolean getUseFilter() {
-        return useFilter;
+    public FilterFactory.FilterType getFilterType() {
+        return filterType;
     }
 
     public static class Builder implements org.apache.commons.lang3.builder.Builder<Czz22ByteEccCwMqRpmtConfig> {
@@ -51,14 +52,14 @@ public class Czz22ByteEccCwMqRpmtConfig implements MqRpmtConfig {
          */
         private EnvType envType;
         /**
-         * 是否使用过滤器
+         * 过滤器类型
          */
-        private boolean useFilter;
+        private FilterFactory.FilterType filterType;
 
         public Builder() {
             super();
-            this.envType = EnvType.STANDARD;
-            useFilter = true;
+            envType = EnvType.STANDARD;
+            filterType = FilterFactory.FilterType.SET_FILTER;
         }
 
         public Builder setEnvType(EnvType envType) {
@@ -66,8 +67,8 @@ public class Czz22ByteEccCwMqRpmtConfig implements MqRpmtConfig {
             return this;
         }
 
-        public Builder setUseFilter(boolean useFilter) {
-            this.useFilter = useFilter;
+        public Builder setFilterType(FilterFactory.FilterType filterType) {
+            this.filterType = filterType;
             return this;
         }
 

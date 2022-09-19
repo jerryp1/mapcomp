@@ -6,11 +6,10 @@ import edu.alibaba.mpc4j.common.rpc.Party;
 import edu.alibaba.mpc4j.common.rpc.Rpc;
 import edu.alibaba.mpc4j.common.rpc.utils.DataPacket;
 import edu.alibaba.mpc4j.common.rpc.utils.DataPacketHeader;
-import edu.alibaba.mpc4j.common.tool.CommonConstants;
 import edu.alibaba.mpc4j.common.tool.crypto.ecc.ByteEccFactory;
 import edu.alibaba.mpc4j.common.tool.crypto.ecc.ByteMulEcc;
-import edu.alibaba.mpc4j.common.tool.crypto.prf.Prf;
-import edu.alibaba.mpc4j.common.tool.crypto.prf.PrfFactory;
+import edu.alibaba.mpc4j.common.tool.crypto.hash.Hash;
+import edu.alibaba.mpc4j.common.tool.crypto.hash.HashFactory;
 import edu.alibaba.mpc4j.common.tool.filter.Filter;
 import edu.alibaba.mpc4j.common.tool.filter.FilterFactory;
 import edu.alibaba.mpc4j.s2pc.pso.mqrpmt.AbstractMqRpmtServer;
@@ -36,15 +35,11 @@ public class Czz22ByteEccCwMqRpmtServer extends AbstractMqRpmtServer {
     /**
      * 是否使用过滤器
      */
-    private final boolean useFilter;
+    private final FilterFactory.FilterType filterType;
     /**
-     * PEQT映射密钥
+     * PEQT哈希函数
      */
-    private byte[] peqtMapKey;
-    /**
-     * PEQT映射伪随机函数
-     */
-    private Prf peqtMapPrf;
+    private Hash peqtHash;
     /**
      * 服务端密钥α
      */
@@ -53,7 +48,7 @@ public class Czz22ByteEccCwMqRpmtServer extends AbstractMqRpmtServer {
     public Czz22ByteEccCwMqRpmtServer(Rpc serverRpc, Party clientParty, Czz22ByteEccCwMqRpmtConfig config) {
         super(Czz22ByteEccCwMqRpmtPtoDesc.getInstance(), serverRpc, clientParty, config);
         byteMulEcc = ByteEccFactory.createMulInstance(envType);
-        useFilter = config.getUseFilter();
+        filterType = config.getFilterType();
     }
 
     @Override
@@ -64,15 +59,6 @@ public class Czz22ByteEccCwMqRpmtServer extends AbstractMqRpmtServer {
         stopWatch.start();
         // 生成α
         alpha = byteMulEcc.randomScalar(secureRandom);
-        peqtMapKey = new byte[CommonConstants.BLOCK_BYTE_LENGTH];
-        secureRandom.nextBytes(peqtMapKey);
-        List<byte[]> peqtKeyPayload = new LinkedList<>();
-        peqtKeyPayload.add(peqtMapKey);
-        DataPacketHeader peqtKeyHeader = new DataPacketHeader(
-            taskId, getPtoDesc().getPtoId(), PtoStep.SERVER_SEND_PEQT_KEY.ordinal(), extraInfo,
-            ownParty().getPartyId(), otherParty().getPartyId()
-        );
-        rpc.send(DataPacket.fromByteArrayList(peqtKeyHeader, peqtKeyPayload));
         stopWatch.stop();
         long initTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
         stopWatch.reset();
@@ -89,8 +75,7 @@ public class Czz22ByteEccCwMqRpmtServer extends AbstractMqRpmtServer {
 
         stopWatch.start();
         int peqtByteLength = Czz22ByteEccCwMqRpmtPtoDesc.getPeqtByteLength(serverElementSize, clientElementSize);
-        peqtMapPrf = PrfFactory.createInstance(envType, peqtByteLength);
-        peqtMapPrf.setKey(peqtMapKey);
+        peqtHash = HashFactory.createInstance(envType, peqtByteLength);
         // 服务端计算并发送H(x)^α
         List<byte[]> hxAlphaPayload = generateHxAlphaPayload();
         DataPacketHeader hxAlphaHeader = new DataPacketHeader(
@@ -141,17 +126,13 @@ public class Czz22ByteEccCwMqRpmtServer extends AbstractMqRpmtServer {
         hyBetaStream = parallel ? hyBetaStream.parallel() : hyBetaStream;
         List<byte[]> peqtPayload = hyBetaStream
             .map(p -> byteMulEcc.mul(p, alpha))
-            .map(p -> peqtMapPrf.getBytes(p))
+            .map(p -> peqtHash.digestToBytes(p))
             .collect(Collectors.toList());
-        if (useFilter) {
-            // 将元素插入到过滤器中
-            Filter<byte[]> filter = FilterFactory.createFilter(envType, serverElementSize, secureRandom);
-            peqtPayload.forEach(filter::put);
-            return filter.toByteArrayList();
-        } else {
-            // 置乱顺序
-            Collections.shuffle(peqtPayload, secureRandom);
-            return peqtPayload;
-        }
+        // 置乱顺序
+        Collections.shuffle(peqtPayload, secureRandom);
+        // 将元素插入到过滤器中
+        Filter<byte[]> filter = FilterFactory.createFilter(envType, filterType, serverElementSize, secureRandom);
+        peqtPayload.forEach(filter::put);
+        return filter.toByteArrayList();
     }
 }

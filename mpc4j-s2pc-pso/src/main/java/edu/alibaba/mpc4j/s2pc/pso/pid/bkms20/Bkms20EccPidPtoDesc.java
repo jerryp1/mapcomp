@@ -2,9 +2,6 @@ package edu.alibaba.mpc4j.s2pc.pso.pid.bkms20;
 
 import edu.alibaba.mpc4j.common.rpc.desc.PtoDesc;
 import edu.alibaba.mpc4j.common.rpc.desc.PtoDescManager;
-import edu.alibaba.mpc4j.common.tool.CommonConstants;
-import edu.alibaba.mpc4j.common.tool.utils.CommonUtils;
-import edu.alibaba.mpc4j.common.tool.utils.LongUtils;
 
 /**
  * Facebook的椭圆曲线PID协议信息。论文来源：
@@ -31,10 +28,6 @@ class Bkms20EccPidPtoDesc implements PtoDesc {
      * 协议步骤
      */
     enum PtoStep {
-        /**
-         * 服务端发送密钥
-         */
-        SERVER_SEND_KEYS,
         /**
          * 服务端发送U_c
          */
@@ -97,18 +90,5 @@ class Bkms20EccPidPtoDesc implements PtoDesc {
     @Override
     public String getPtoName() {
         return PTO_NAME;
-    }
-
-    /**
-     * 返回PID字节长度。
-     *
-     * @param serverSetSize 服务端元素数量。
-     * @param clientSetSize 客户端元素数量。
-     * @return PID字节长度。
-     */
-    static int getPidByteLength(int serverSetSize, int clientSetSize) {
-        return CommonConstants.STATS_BYTE_LENGTH
-            + CommonUtils.getByteLength(LongUtils.ceilLog2(serverSetSize))
-            + CommonUtils.getByteLength(LongUtils.ceilLog2(clientSetSize));
     }
 }
