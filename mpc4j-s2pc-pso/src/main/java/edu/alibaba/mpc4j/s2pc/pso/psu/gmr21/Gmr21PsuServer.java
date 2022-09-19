@@ -10,8 +10,8 @@ import edu.alibaba.mpc4j.common.tool.CommonConstants;
 import edu.alibaba.mpc4j.common.tool.crypto.crhf.Crhf;
 import edu.alibaba.mpc4j.common.tool.crypto.crhf.CrhfFactory;
 import edu.alibaba.mpc4j.common.tool.crypto.crhf.CrhfFactory.CrhfType;
-import edu.alibaba.mpc4j.common.tool.crypto.prf.Prf;
-import edu.alibaba.mpc4j.common.tool.crypto.prf.PrfFactory;
+import edu.alibaba.mpc4j.common.tool.crypto.hash.Hash;
+import edu.alibaba.mpc4j.common.tool.crypto.hash.HashFactory;
 import edu.alibaba.mpc4j.common.tool.crypto.prg.Prg;
 import edu.alibaba.mpc4j.common.tool.crypto.prg.PrgFactory;
 import edu.alibaba.mpc4j.common.tool.hashbin.object.HashBinEntry;
@@ -79,13 +79,9 @@ public class Gmr21PsuServer extends AbstractPsuServer {
      */
     private final Crhf crhf;
     /**
-     * PEQT哈希密钥
-     */
-    private byte[] peqtHashKey;
-    /**
      * 多项式有限域哈希
      */
-    private Prf finiteFieldHash;
+    private Hash finiteFieldHash;
     /**
      * OKVS密钥
      */
@@ -181,6 +177,8 @@ public class Gmr21PsuServer extends AbstractPsuServer {
         byte[] delta = new byte[CommonConstants.BLOCK_BYTE_LENGTH];
         secureRandom.nextBytes(delta);
         coreCotSender.init(delta, maxBinNum);
+        // 初始化多项式有限域哈希，根据论文实现，固定为64比特
+        finiteFieldHash = HashFactory.createInstance(envType, Gmr21PsuPtoDesc.FINITE_FIELD_BYTE_LENGTH);
         stopWatch.stop();
         long initTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
         stopWatch.reset();
@@ -188,17 +186,6 @@ public class Gmr21PsuServer extends AbstractPsuServer {
 
         stopWatch.start();
         List<byte[]> keysPayload = new LinkedList<>();
-        // 初始化多项式有限域哈希密钥
-        byte[] finiteFieldHashKey = new byte[CommonConstants.BLOCK_BYTE_LENGTH];
-        secureRandom.nextBytes(finiteFieldHashKey);
-        keysPayload.add(finiteFieldHashKey);
-        // 可以提前初始化多项式有限域哈希，根据论文实现，固定为64比特
-        finiteFieldHash = PrfFactory.createInstance(envType, Gmr21PsuUtils.FINITE_FIELD_BYTE_LENGTH);
-        finiteFieldHash.setKey(finiteFieldHashKey);
-        // 初始化PEQT哈希密钥
-        peqtHashKey = new byte[CommonConstants.BLOCK_BYTE_LENGTH];
-        secureRandom.nextBytes(peqtHashKey);
-        keysPayload.add(peqtHashKey);
         // 初始化OKVS密钥
         int okvsHashKeyNum = OkvsFactory.getHashNum(okvsType);
         okvsHashKeys = IntStream.range(0, okvsHashKeyNum)
@@ -240,8 +227,7 @@ public class Gmr21PsuServer extends AbstractPsuServer {
         // 设置OKVS大小
         okvsM = OkvsFactory.getM(okvsType, clientElementSize * cuckooHashNum);
         // 初始化PEQT哈希
-        Prf peqtHash = PrfFactory.createInstance(getEnvType(), Gmr21PsuUtils.getPeqtByteLength(binNum));
-        peqtHash.setKey(peqtHashKey);
+        Hash peqtHash = HashFactory.createInstance(envType, Gmr21PsuPtoDesc.getPeqtByteLength(binNum));
         // 构造交换映射
         List<Integer> shufflePermutationList = IntStream.range(0, binNum)
             .boxed()
@@ -261,7 +247,7 @@ public class Gmr21PsuServer extends AbstractPsuServer {
         oprfIntStream = parallel ? oprfIntStream.parallel() : oprfIntStream;
         fArray = oprfIntStream
             .mapToObj(cuckooHashOprfReceiverOutput::getPrf)
-            .map(finiteFieldHash::getBytes)
+            .map(finiteFieldHash::digestToBytes)
             .toArray(byte[][]::new);
         stopWatch.stop();
         long cuckooHashOprfTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
@@ -281,7 +267,7 @@ public class Gmr21PsuServer extends AbstractPsuServer {
         info("{}{} Server Step 3/6 ({}ms)", ptoStepLogPrefix, getPtoDesc().getPtoName(), okvsTime);
 
         stopWatch.start();
-        OsnPartyOutput osnReceiverOutput = osnReceiver.osn(permutationMap, Gmr21PsuUtils.FINITE_FIELD_BYTE_LENGTH);
+        OsnPartyOutput osnReceiverOutput = osnReceiver.osn(permutationMap, Gmr21PsuPtoDesc.FINITE_FIELD_BYTE_LENGTH);
         handleOsnReceiverOutput(osnReceiverOutput);
         stopWatch.stop();
         long osnTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
@@ -294,7 +280,7 @@ public class Gmr21PsuServer extends AbstractPsuServer {
         aPrimeOprfIntStream = parallel ? aPrimeOprfIntStream.parallel() : aPrimeOprfIntStream;
         List<byte[]> aPrimeOprfPayload = aPrimeOprfIntStream
             .mapToObj(aPrimeIndex -> peqtOprfSenderOutput.getPrf(aPrimeIndex, aPrimeArray[aPrimeIndex]))
-            .map(peqtHash::getBytes)
+            .map(peqtHash::digestToBytes)
             .collect(Collectors.toList());
         DataPacketHeader aPrimeOprfHeader = new DataPacketHeader(
             taskId, getPtoDesc().getPtoId(), PtoStep.SERVER_SEND_A_PRIME_OPRFS.ordinal(), extraInfo,
@@ -390,7 +376,7 @@ public class Gmr21PsuServer extends AbstractPsuServer {
         byte[][] storage = okvsPayload.toArray(new byte[0][]);
         Okvs<ByteBuffer> okvs = OkvsFactory.createInstance(
             envType, okvsType, clientElementSize * cuckooHashNum,
-            Gmr21PsuUtils.FINITE_FIELD_BYTE_LENGTH * Byte.SIZE, okvsHashKeys
+            Gmr21PsuPtoDesc.FINITE_FIELD_BYTE_LENGTH * Byte.SIZE, okvsHashKeys
         );
         IntStream okvsDecodeIntStream = IntStream.range(0, binNum);
         okvsDecodeIntStream = parallel ? okvsDecodeIntStream.parallel() : okvsDecodeIntStream;
@@ -398,7 +384,7 @@ public class Gmr21PsuServer extends AbstractPsuServer {
             .mapToObj(index -> {
                 // 扩展输入
                 byte[] extendBytes = extendEntryBytes[index];
-                ByteBuffer valueBytes = ByteBuffer.wrap(finiteFieldHash.getBytes(extendBytes));
+                ByteBuffer valueBytes = ByteBuffer.wrap(finiteFieldHash.digestToBytes(extendBytes));
                 byte[] pi = okvs.decode(storage, valueBytes);
                 byte[] fi = fArray[index];
                 BytesUtils.xori(pi, fi);
