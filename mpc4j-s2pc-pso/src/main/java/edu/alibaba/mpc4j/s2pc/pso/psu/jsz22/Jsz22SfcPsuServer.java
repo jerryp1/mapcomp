@@ -256,12 +256,10 @@ public class Jsz22SfcPsuServer extends AbstractPsuServer {
 
     private void handleCuckooHashKeyPayload(List<byte[]> cuckooHashKeyPayload) throws MpcAbortException {
         MpcAbortPreconditions.checkArgument(cuckooHashKeyPayload.size() == cuckooHashNum);
-        byte[][] cuckooHashKeys = cuckooHashKeyPayload.toArray(new byte[0][]);
-        // 依次设置密钥
-        hashes = IntStream.range(0, cuckooHashNum)
-            .mapToObj(hashIndex -> {
+        hashes = cuckooHashKeyPayload.stream()
+            .map(key -> {
                 Prf prf = PrfFactory.createInstance(envType, Integer.BYTES);
-                prf.setKey(cuckooHashKeys[hashIndex]);
+                prf.setKey(key);
                 return prf;
             })
             .toArray(Prf[]::new);

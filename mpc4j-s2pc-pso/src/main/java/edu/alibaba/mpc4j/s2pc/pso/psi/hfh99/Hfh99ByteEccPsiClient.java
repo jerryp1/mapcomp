@@ -51,8 +51,8 @@ public class Hfh99ByteEccPsiClient<T> extends AbstractPsiClient<T> {
     }
 
     @Override
-    public void init(int maxClientSetSize, int maxServerSetSize) throws MpcAbortException {
-        setInitInput(maxClientSetSize, maxServerSetSize);
+    public void init(int maxClientElementSize, int maxServerElementSize) throws MpcAbortException {
+        setInitInput(maxClientElementSize, maxServerElementSize);
         info("{}{} Client Init begin", ptoBeginLogPrefix, getPtoDesc().getPtoName());
 
         stopWatch.start();
@@ -68,8 +68,8 @@ public class Hfh99ByteEccPsiClient<T> extends AbstractPsiClient<T> {
     }
 
     @Override
-    public Set<T> psi(Set<T> clientElementSet, int serverSetSize) throws MpcAbortException {
-        setPtoInput(clientElementSet, serverSetSize);
+    public Set<T> psi(Set<T> clientElementSet, int serverElementSize) throws MpcAbortException {
+        setPtoInput(clientElementSet, serverElementSize);
         info("{}{} Client begin", ptoBeginLogPrefix, getPtoDesc().getPtoName());
 
         stopWatch.start();

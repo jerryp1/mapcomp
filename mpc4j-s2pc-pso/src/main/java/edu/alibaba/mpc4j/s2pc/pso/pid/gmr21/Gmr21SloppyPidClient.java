@@ -154,16 +154,16 @@ public class Gmr21SloppyPidClient<T> extends AbstractPidParty<T> {
     }
 
     @Override
-    public void init(int maxClientSetSize, int maxServerSetSize) throws MpcAbortException {
-        setInitInput(maxClientSetSize, maxServerSetSize);
+    public void init(int maxClientElementSize, int maxServerElementSize) throws MpcAbortException {
+        setInitInput(maxClientElementSize, maxServerElementSize);
         info("{}{} Client Init begin", ptoBeginLogPrefix, getPtoDesc().getPtoName());
 
         stopWatch.start();
-        int maxServerBinNum = CuckooHashBinFactory.getBinNum(cuckooHashBinType, maxServerSetSize);
+        int maxServerBinNum = CuckooHashBinFactory.getBinNum(cuckooHashBinType, maxServerElementSize);
         oprfSender.init(maxServerBinNum);
-        int maxClientBinNum = CuckooHashBinFactory.getBinNum(cuckooHashBinType, maxClientSetSize);
+        int maxClientBinNum = CuckooHashBinFactory.getBinNum(cuckooHashBinType, maxClientElementSize);
         oprfReceiver.init(maxClientBinNum);
-        psuClient.init(maxClientSetSize, maxServerSetSize);
+        psuClient.init(maxClientElementSize, maxServerElementSize);
         stopWatch.stop();
         long initTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
         stopWatch.reset();
@@ -208,8 +208,8 @@ public class Gmr21SloppyPidClient<T> extends AbstractPidParty<T> {
     }
 
     @Override
-    public PidPartyOutput<T> pid(Set<T> clientElementSet, int serverSetSize) throws MpcAbortException {
-        setPtoInput(clientElementSet, serverSetSize);
+    public PidPartyOutput<T> pid(Set<T> clientElementSet, int serverElementSize) throws MpcAbortException {
+        setPtoInput(clientElementSet, serverElementSize);
         info("{}{} Client begin", ptoBeginLogPrefix, getPtoDesc().getPtoName());
 
         stopWatch.start();
@@ -257,7 +257,7 @@ public class Gmr21SloppyPidClient<T> extends AbstractPidParty<T> {
 
         stopWatch.start();
         // The parties invoke F_{psu}, with inputs {R_B(x) | y ∈ Y} for Bob
-        Set<ByteBuffer> pidSet = psuClient.psu(clientPidMap.keySet(), serverSetSize, pidByteLength);
+        Set<ByteBuffer> pidSet = psuClient.psu(clientPidMap.keySet(), serverElementSize, pidByteLength);
         stopWatch.stop();
         long psuTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
         stopWatch.reset();
