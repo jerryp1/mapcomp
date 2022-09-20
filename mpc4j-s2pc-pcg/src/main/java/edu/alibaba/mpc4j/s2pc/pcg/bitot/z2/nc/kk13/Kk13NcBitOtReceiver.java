@@ -115,8 +115,8 @@ public class Kk13NcBitOtReceiver extends AbstractNcBitOtReceiver {
         // 使用LOT协议的密钥解密获得BitOT输出
         stopWatch.start();
         DataPacketHeader sHeader = new DataPacketHeader(
-                taskId, getPtoDesc().getPtoId(), Kk13NcBitOtPtoDesc.PtoStep.SENDER_SEND_CIPHER.ordinal(),
-                extraInfo, otherParty().getPartyId(), ownParty().getPartyId()
+            taskId, getPtoDesc().getPtoId(), Kk13NcBitOtPtoDesc.PtoStep.SENDER_SEND_CIPHER.ordinal(),
+            extraInfo, otherParty().getPartyId(), ownParty().getPartyId()
         );
         List<byte[]> sPayload = rpc.receive(sHeader).getPayload();
         BitOtReceiverOutput output = handlePayload(sPayload);
@@ -165,16 +165,16 @@ public class Kk13NcBitOtReceiver extends AbstractNcBitOtReceiver {
         byte[] rbArray = new byte[byteRoundNum];
         // 逐比特写入
         IntStream.range(0, lotNum).forEach(index -> {
-           for (int i = 0; i < l; i++) {
-               BinaryUtils.setBoolean(
-                       choices, offset + index * l + i,
-                       BinaryUtils.getBoolean(lotChoices[index], lOffset + i)
-               );
-               BinaryUtils.setBoolean(
-                       rbArray, offset + index * l + i,
-                       BinaryUtils.getBoolean(messages[index], lOffset + i)
-               );
-           }
+            for (int i = 0; i < l; i++) {
+                BinaryUtils.setBoolean(
+                    choices, offset + index * l + i,
+                    BinaryUtils.getBoolean(lotChoices[index], lOffset + i)
+                );
+                BinaryUtils.setBoolean(
+                    rbArray, offset + index * l + i,
+                    BinaryUtils.getBoolean(messages[index], lOffset + i)
+                );
+            }
         });
         return BitOtReceiverOutput.create(roundNum, choices, rbArray);
     }
