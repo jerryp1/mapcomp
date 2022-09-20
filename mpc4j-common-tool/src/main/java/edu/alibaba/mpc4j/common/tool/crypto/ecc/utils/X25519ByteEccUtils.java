@@ -37,7 +37,7 @@ public class X25519ByteEccUtils {
     /**
      * 幂指数的字节长度
      */
-    private static final int SCALAR_BYTES = SCALAR_INTS * 4;
+    public static final int SCALAR_BYTES = SCALAR_INTS * 4;
     /**
      * 无穷远点：X = 0，小端表示
      */
@@ -115,7 +115,7 @@ public class X25519ByteEccUtils {
      * @param u 基点U。
      * @param r 结果点R。
      */
-    public static void scalarMult(byte[] k, byte[] u, byte[] r) {
+    public static void clampScalarMult(byte[] k, byte[] u, byte[] r) {
         int[] n = new int[SCALAR_INTS];
         decodeScalar(k, n);
 
@@ -179,7 +179,7 @@ public class X25519ByteEccUtils {
      * @param k 幂指数k。
      * @param r 结果R。
      */
-    public static void scalarMultBase(byte[] k, byte[] r) {
+    public static void clampScalarMultBase(byte[] k, byte[] r) {
         int[] y = Curve25519Field.create();
         int[] z = Curve25519Field.create();
         Ed25519ByteEccUtils.scalarMultBaseYZ(k, y, z);
@@ -191,37 +191,38 @@ public class X25519ByteEccUtils {
     }
 
     /**
-     * 检查幂指数是否符合运算要求。
+     * 检查幂指数是否符合X25519特殊幂指数（即Clamp）的运算要求。
      *
      * @param k 幂指数。
      * @return 如果符合要求，返回{@code true}，否则返回{@code false}。
      */
-    public static boolean checkScalar(byte[] k) {
+    public static boolean checkClampScalar(byte[] k) {
         if (k == null || k.length != SCALAR_BYTES) {
             return false;
         }
         return ((k[0] & 0x07) == 0)
-            && ((k[SCALAR_BYTES - 1] & (byte)0x80) == 0)
-            && ((k[SCALAR_BYTES - 1] & (byte)0x40) != 0);
+            && ((k[SCALAR_BYTES - 1] & (byte) 0x80) == 0)
+            && ((k[SCALAR_BYTES - 1] & (byte) 0x40) != 0);
     }
 
     /**
-     * 检查椭圆曲线点是否符合运算要求。。
+     * 检查椭圆曲线点是否符合运算要求。
      *
      * @param p 椭圆曲线点。
      * @return 如果符合要求，返回{@code true}，否则返回{@code false}。
      */
     public static boolean checkPoint(byte[] p) {
-        return p.length == POINT_BYTES;
+        // 首位必须为0
+        return p.length == POINT_BYTES && (p[POINT_BYTES - 1] & (byte) 0x80) == 0;
     }
 
     /**
-     * 返回随机幂指数。
+     * 返回符合X25519特殊幂指数（即Clamp）要求的随机幂指数。
      *
      * @param secureRandom 随机状态。
      * @return 随机幂指数。
      */
-    public static byte[] randomScalar(SecureRandom secureRandom) {
+    public static byte[] randomClampScalar(SecureRandom secureRandom) {
         byte[] k = new byte[SCALAR_BYTES];
         secureRandom.nextBytes(k);
         // 后三位设置为0，使结果为8的倍数
@@ -242,6 +243,7 @@ public class X25519ByteEccUtils {
     public static byte[] randomPoint(SecureRandom secureRandom) {
         byte[] p = new byte[POINT_BYTES];
         secureRandom.nextBytes(p);
+        p[X25519ByteEccUtils.POINT_BYTES - 1] &= 0x7F;
         return p;
     }
 }

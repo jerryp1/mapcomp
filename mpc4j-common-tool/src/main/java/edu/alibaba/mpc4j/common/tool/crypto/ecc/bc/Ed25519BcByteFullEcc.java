@@ -71,6 +71,7 @@ public class Ed25519BcByteFullEcc implements ByteFullEcc {
         boolean success = false;
         while (!success) {
             secureRandom.nextBytes(p);
+            p[Ed25519ByteEccUtils.POINT_BYTES - 1] &= 0x7F;
             success = Ed25519ByteEccUtils.validPoint(p);
         }
         // 需要乘以cofactor
@@ -83,11 +84,13 @@ public class Ed25519BcByteFullEcc implements ByteFullEcc {
     public byte[] hashToCurve(byte[] message) {
         // 简单的重复哈希
         byte[] p = hash.digestToBytes(message);
+        p[Ed25519ByteEccUtils.POINT_BYTES - 1] &= 0x7F;
         boolean success = false;
         while (!success) {
             success = Ed25519ByteEccUtils.validPoint(p);
             if (!success) {
                 p = hash.digestToBytes(p);
+                p[Ed25519ByteEccUtils.POINT_BYTES - 1] &= 0x7F;
             }
         }
         // 需要乘以cofactor

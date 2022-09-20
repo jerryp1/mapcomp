@@ -4,12 +4,12 @@ import com.google.common.base.Preconditions;
 import edu.alibaba.mpc4j.common.rpc.Rpc;
 import edu.alibaba.mpc4j.common.rpc.RpcManager;
 import edu.alibaba.mpc4j.common.rpc.impl.memory.MemoryRpcManager;
-import edu.alibaba.mpc4j.common.tool.crypto.kyber.KyberFactory;
+import edu.alibaba.mpc4j.common.tool.crypto.kyber.KyberEngineFactory;
 import edu.alibaba.mpc4j.s2pc.pcg.ot.base.BaseOtFactory.BaseOtType;
 import edu.alibaba.mpc4j.s2pc.pcg.ot.base.co15.Co15BaseOtConfig;
 import edu.alibaba.mpc4j.s2pc.pcg.ot.base.csw20.Csw20BaseOtConfig;
-import edu.alibaba.mpc4j.s2pc.pcg.ot.base.mr19.Mr19BaseOtConfig;
-import edu.alibaba.mpc4j.s2pc.pcg.ot.base.mrkyber19.MrKyber19BaseOtConfig;
+import edu.alibaba.mpc4j.s2pc.pcg.ot.base.mr19.Mr19EccBaseOtConfig;
+import edu.alibaba.mpc4j.s2pc.pcg.ot.base.mr19.Mr19KyberBaseOtConfig;
 import edu.alibaba.mpc4j.s2pc.pcg.ot.base.np01.Np01BaseOtConfig;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.time.StopWatch;
@@ -48,75 +48,75 @@ public class BaseOtTest {
     @Parameterized.Parameters(name = "{0}")
     public static Collection<Object[]> configurations() {
         Collection<Object[]> configurationParams = new ArrayList<>();
-        // MR19，压缩编码
+        // MR19_ECC (compress)
         configurationParams.add(new Object[]{
-                BaseOtType.MR19.name() + " (compress)",
-                new Mr19BaseOtConfig.Builder().setCompressEncode(true).build(),
+            BaseOtType.MR19_ECC.name() + " (compress)",
+            new Mr19EccBaseOtConfig.Builder().setCompressEncode(true).build(),
         });
-        // MR19，非压缩编码
+        // MR19_ECC (uncompress)
         configurationParams.add(new Object[]{
-                BaseOtType.MR19.name() + " (uncompress)",
-                new Mr19BaseOtConfig.Builder().setCompressEncode(false).build(),
+            BaseOtType.MR19_ECC.name() + " (uncompress)",
+            new Mr19EccBaseOtConfig.Builder().setCompressEncode(false).build(),
         });
-        //MRKYBER19,K = 2
+        // MR19_KYBER (CCA, k = 2)
         configurationParams.add(new Object[]{
-                BaseOtType.MRKYBER19.name() + "(k = 2)" + "(CCA)",
-                new MrKyber19BaseOtConfig.Builder().setParamsK(2).setKyberType(KyberFactory.KyberType.KYBER_CCA).build(),
+            BaseOtType.MR19_KYBER.name() + "(CCA, k = 2)",
+            new Mr19KyberBaseOtConfig.Builder().setParamsK(2).setKyberType(KyberEngineFactory.KyberType.KYBER_CCA).build(),
         });
-        //MRKYBER19,K = 3
+        // MR19_KYBER (CCA, K = 3)
         configurationParams.add(new Object[]{
-                BaseOtType.MRKYBER19.name() + "(k = 3)" + "(CCA)",
-                new MrKyber19BaseOtConfig.Builder().setParamsK(3).setKyberType(KyberFactory.KyberType.KYBER_CCA).build(),
+            BaseOtType.MR19_KYBER.name() + "(CCA, k = 3)",
+            new Mr19KyberBaseOtConfig.Builder().setParamsK(3).setKyberType(KyberEngineFactory.KyberType.KYBER_CCA).build(),
         });
-        //MRKYBER19,K = 4
+        // MR19_KYBER (CCA, K = 4)
         configurationParams.add(new Object[]{
-                BaseOtType.MRKYBER19.name() + "(k = 4)" + "(CCA)",
-                new MrKyber19BaseOtConfig.Builder().setParamsK(4).setKyberType(KyberFactory.KyberType.KYBER_CCA).build(),
+            BaseOtType.MR19_KYBER.name() + "(CCA, k = 4)",
+            new Mr19KyberBaseOtConfig.Builder().setParamsK(4).setKyberType(KyberEngineFactory.KyberType.KYBER_CCA).build(),
         });
-        //MRKYBER19,K = 2
+        // MR19_KYBER (CPA, K = 2)
         configurationParams.add(new Object[]{
-                BaseOtType.MRKYBER19.name() + "(k = 2)" + "(CPA)",
-                new MrKyber19BaseOtConfig.Builder().setParamsK(2).setKyberType(KyberFactory.KyberType.KYBER_CPA).build(),
+            BaseOtType.MR19_KYBER.name() + "(CPA, k = 2)",
+            new Mr19KyberBaseOtConfig.Builder().setParamsK(2).setKyberType(KyberEngineFactory.KyberType.KYBER_CPA).build(),
         });
-        //MRKYBER19,K = 3
+        // MR19_KYBER (CPA, K = 3)
         configurationParams.add(new Object[]{
-                BaseOtType.MRKYBER19.name() + "(k = 3)" + "(CPA)",
-                new MrKyber19BaseOtConfig.Builder().setParamsK(3).setKyberType(KyberFactory.KyberType.KYBER_CPA).build(),
+            BaseOtType.MR19_KYBER.name() + "(CPA, k = 3)",
+            new Mr19KyberBaseOtConfig.Builder().setParamsK(3).setKyberType(KyberEngineFactory.KyberType.KYBER_CPA).build(),
         });
-        //MRKYBER19,K = 4
+        // MR19_KYBER (CPA, K = 4)
         configurationParams.add(new Object[]{
-                BaseOtType.MRKYBER19.name() + "(k = 4)" + "(CPA)",
-                new MrKyber19BaseOtConfig.Builder().setParamsK(4).setKyberType(KyberFactory.KyberType.KYBER_CPA).build(),
+            BaseOtType.MR19_KYBER.name() + "(CPA, k = 4)",
+            new Mr19KyberBaseOtConfig.Builder().setParamsK(4).setKyberType(KyberEngineFactory.KyberType.KYBER_CPA).build(),
         });
-        // CO15，压缩编码
+        // CO15 (compress)
         configurationParams.add(new Object[]{
-                BaseOtType.CO15.name() + " (compress)",
-                new Co15BaseOtConfig.Builder().setCompressEncode(true).build(),
+            BaseOtType.CO15.name() + " (compress)",
+            new Co15BaseOtConfig.Builder().setCompressEncode(true).build(),
         });
-        // CO15，非压缩编码
+        // CO15 (uncompress)
         configurationParams.add(new Object[]{
-                BaseOtType.CO15.name() + " (uncompress)",
-                new Co15BaseOtConfig.Builder().setCompressEncode(false).build(),
+            BaseOtType.CO15.name() + " (uncompress)",
+            new Co15BaseOtConfig.Builder().setCompressEncode(false).build(),
         });
-        // NP01，压缩编码
+        // NP01 (compress)
         configurationParams.add(new Object[]{
-                BaseOtType.NP01.name() + " (compress)",
-                new Np01BaseOtConfig.Builder().setCompressEncode(true).build(),
+            BaseOtType.NP01.name() + " (compress)",
+            new Np01BaseOtConfig.Builder().setCompressEncode(true).build(),
         });
-        // NP01，非压缩编码
+        // NP01 (uncompress)
         configurationParams.add(new Object[]{
-                BaseOtType.NP01.name() + " (uncompress)",
-                new Np01BaseOtConfig.Builder().setCompressEncode(false).build(),
+            BaseOtType.NP01.name() + " (uncompress)",
+            new Np01BaseOtConfig.Builder().setCompressEncode(false).build(),
         });
-        // CSW20，压缩编码
+        // CSW20 (compress)
         configurationParams.add(new Object[]{
-                BaseOtType.CSW20.name() + " (compress)",
-                new Csw20BaseOtConfig.Builder().setCompressEncode(true).build(),
+            BaseOtType.CSW20.name() + " (compress)",
+            new Csw20BaseOtConfig.Builder().setCompressEncode(true).build(),
         });
-        // CSW20，非压缩编码
+        // CSW20 (uncompress)
         configurationParams.add(new Object[]{
-                BaseOtType.CSW20.name() + " (uncompress)",
-                new Csw20BaseOtConfig.Builder().setCompressEncode(false).build(),
+            BaseOtType.CSW20.name() + " (uncompress)",
+            new Csw20BaseOtConfig.Builder().setCompressEncode(false).build(),
         });
 
         return configurationParams;
@@ -205,7 +205,7 @@ public class BaseOtTest {
             // 验证结果
             assertOutput(num, senderThread.getSenderOutput(), receiverThread.getReceiverOutput());
             LOGGER.info("Sender sends {}B, Receiver sends {}B, time = {}ms",
-                    senderRpc.getSendByteLength(), receiverRpc.getSendByteLength(), totalTime
+                senderRpc.getSendByteLength(), receiverRpc.getSendByteLength(), totalTime
             );
             senderRpc.reset();
             receiverRpc.reset();
@@ -221,13 +221,13 @@ public class BaseOtTest {
         IntStream.range(0, num).forEach(index -> {
             if (receiverOutput.getChoice(index)) {
                 Assert.assertEquals(
-                        ByteBuffer.wrap(senderOutput.getR1(index)),
-                        ByteBuffer.wrap(receiverOutput.getRb(index))
+                    ByteBuffer.wrap(senderOutput.getR1(index)),
+                    ByteBuffer.wrap(receiverOutput.getRb(index))
                 );
             } else {
                 Assert.assertEquals(
-                        ByteBuffer.wrap(senderOutput.getR0(index)),
-                        ByteBuffer.wrap(receiverOutput.getRb(index))
+                    ByteBuffer.wrap(senderOutput.getR0(index)),
+                    ByteBuffer.wrap(receiverOutput.getRb(index))
                 );
             }
         });

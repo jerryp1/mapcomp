@@ -4,11 +4,33 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## \[Future\]
+
+- PSU proposed by Prof. Yu Chen.
+- PSU proposed by Phi Hong Lee.
+- EC-DH-PSI and KKRT16-PSI.
+- GF2K (subfield) VOLE.
+- Multiplication triples under Zp, Zp64, Zl and Zl64.
+- Arithmetic circuit.
+- Hamming Distance.
+
 ## \[1.0.4\]
 
 ### Added
 
-- ByteEcc: Add scalar validation for X25519.
+- `mpc4j-common-tool`
+  - ByteEcc: Add scalar validation for X25519. Add libsodium support for both X25519 and Ed25519.
+  - Kyber: Add post-quantum secure public key encryption scheme Kyber. The implementation is modified from [KyberJCK](https://github.com/fisherstevenk/kyberJCE).
+- `mpc4j-s2pc-pcg`
+  - Multiplication Triple in Zl: Introduce Multiplication Triple Generation (MTC) under Zl in `mpc4j-s2pc-pcg`.
+  - Kyber Base-OT: Introduce Kyber Base-OT schemes.
+- `mpc4j-s2pc-pso`
+  - mqRPMT: Introduce mqRPMT.
+  - Facebook PID: Introduce the Facebook PID scheme based on X25519.
+
+### Remove
+
+- `byte[]` -> `int[]`: More tests show that the ByteBuffer conversion is as fast as unsafe conversion. We remove the unsafe conversion method. Now, developer can use `mpc4j` on any JDK with version 1.8 or later (instead of only 1.8).
 
 ## \[1.0.3\]
 

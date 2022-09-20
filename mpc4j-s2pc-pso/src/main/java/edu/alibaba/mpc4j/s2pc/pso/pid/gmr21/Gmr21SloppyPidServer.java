@@ -7,6 +7,8 @@ import edu.alibaba.mpc4j.common.rpc.Rpc;
 import edu.alibaba.mpc4j.common.rpc.utils.DataPacket;
 import edu.alibaba.mpc4j.common.rpc.utils.DataPacketHeader;
 import edu.alibaba.mpc4j.common.tool.CommonConstants;
+import edu.alibaba.mpc4j.common.tool.crypto.hash.Hash;
+import edu.alibaba.mpc4j.common.tool.crypto.hash.HashFactory;
 import edu.alibaba.mpc4j.common.tool.crypto.prf.Prf;
 import edu.alibaba.mpc4j.common.tool.crypto.prf.PrfFactory;
 import edu.alibaba.mpc4j.common.tool.hashbin.object.HashBinEntry;
@@ -17,12 +19,11 @@ import edu.alibaba.mpc4j.common.tool.okve.okvs.Okvs;
 import edu.alibaba.mpc4j.common.tool.okve.okvs.OkvsFactory;
 import edu.alibaba.mpc4j.common.tool.okve.okvs.OkvsFactory.OkvsType;
 import edu.alibaba.mpc4j.common.tool.utils.BytesUtils;
-import edu.alibaba.mpc4j.common.tool.utils.CommonUtils;
-import edu.alibaba.mpc4j.common.tool.utils.LongUtils;
 import edu.alibaba.mpc4j.common.tool.utils.ObjectUtils;
 import edu.alibaba.mpc4j.s2pc.pso.oprf.*;
 import edu.alibaba.mpc4j.s2pc.pso.pid.AbstractPidParty;
 import edu.alibaba.mpc4j.s2pc.pso.pid.PidPartyOutput;
+import edu.alibaba.mpc4j.s2pc.pso.pid.PidUtils;
 import edu.alibaba.mpc4j.s2pc.pso.pid.gmr21.Gmr21SloppyPidPtoDesc.PtoStep;
 import edu.alibaba.mpc4j.s2pc.pso.psu.PsuFactory;
 import edu.alibaba.mpc4j.s2pc.pso.psu.PsuServer;
@@ -66,10 +67,6 @@ public class Gmr21SloppyPidServer<T> extends AbstractPidParty<T> {
      */
     private final int cuckooHashNum;
     /**
-     * PID映射密钥
-     */
-    private byte[] pidMapPrfKey;
-    /**
      * 服务端PID映射密钥
      */
     private byte[] serverPidPrfKey;
@@ -88,7 +85,7 @@ public class Gmr21SloppyPidServer<T> extends AbstractPidParty<T> {
     /**
      * PID映射函数
      */
-    private Prf pidMapPrf;
+    private Hash pidMap;
     /**
      * 服务端PID伪随机函数
      */
@@ -173,14 +170,10 @@ public class Gmr21SloppyPidServer<T> extends AbstractPidParty<T> {
         info("{}{} Server Init Step 1/2 ({}ms)", ptoStepLogPrefix, getPtoDesc().getPtoName(), initTime);
 
         stopWatch.start();
-        List<byte[]> serverKeysPayload = new LinkedList<>();
-        // PID映射密钥
-        pidMapPrfKey = new byte[CommonConstants.BLOCK_BYTE_LENGTH];
-        secureRandom.nextBytes(pidMapPrfKey);
-        serverKeysPayload.add(pidMapPrfKey);
-        // s^A（不用放在数据包中）
+        // s^A
         serverPidPrfKey = new byte[CommonConstants.BLOCK_BYTE_LENGTH];
         secureRandom.nextBytes(serverPidPrfKey);
+        List<byte[]> serverKeysPayload = new LinkedList<>();
         // 服务端PID的OKVS密钥
         int sloppyOkvsHashKeyNum = OkvsFactory.getHashNum(sloppyOkvsType);
         serverOkvsHashKeys = IntStream.range(0, sloppyOkvsHashKeyNum)
@@ -292,11 +285,8 @@ public class Gmr21SloppyPidServer<T> extends AbstractPidParty<T> {
 
     private void initVariable() throws MpcAbortException {
         // PID字节长度等于λ + log(n) + log(m) = λ + log(m * n)
-        pidByteLength = CommonConstants.STATS_BYTE_LENGTH
-            + CommonUtils.getByteLength(LongUtils.ceilLog2(ownSetSize))
-            + CommonUtils.getByteLength(LongUtils.ceilLog2(otherSetSize));
-        pidMapPrf = PrfFactory.createInstance(envType, pidByteLength);
-        pidMapPrf.setKey(pidMapPrfKey);
+        pidByteLength = PidUtils.getPidByteLength(ownSetSize, otherSetSize);
+        pidMap = HashFactory.createInstance(envType, pidByteLength);
         serverPidPrf = PrfFactory.createInstance(envType, pidByteLength);
         serverPidPrf.setKey(serverPidPrfKey);
         // Alice inserts items into cuckoo hash
@@ -369,10 +359,10 @@ public class Gmr21SloppyPidServer<T> extends AbstractPidParty<T> {
                     .put(elementBytes)
                     .putInt(hashIndex)
                     .array();
-                ByteBuffer pidExtendElementBytes = ByteBuffer.wrap(pidMapPrf.getBytes(extendElementBytes));
+                ByteBuffer pidExtendElementBytes = ByteBuffer.wrap(pidMap.digestToBytes(extendElementBytes));
                 // R^A(x) = P^B(x || i) ⊕ f^A_{h_i(x)} ⊕ PRF'(s^A, x)
                 byte[] pidBytes = clientOkvs.decode(clientOkvsStorage, pidExtendElementBytes);
-                BytesUtils.xori(pidBytes, pidMapPrf.getBytes(kbOprfOutput.getPrf(serverBinIndex)));
+                BytesUtils.xori(pidBytes, pidMap.digestToBytes(kbOprfOutput.getPrf(serverBinIndex)));
                 BytesUtils.xori(pidBytes, serverPidPrf.getBytes(elementBytes));
                 return ByteBuffer.wrap(pidBytes);
             })
@@ -427,7 +417,7 @@ public class Gmr21SloppyPidServer<T> extends AbstractPidParty<T> {
                 hashExtendElementStream = parallel ? hashExtendElementStream.parallel() : hashExtendElementStream;
                 return hashExtendElementStream
                     .map(ByteBuffer::array)
-                    .map(pidMapPrf::getBytes)
+                    .map(pidMap::digestToBytes)
                     .toArray(byte[][]::new);
             })
             .flatMap(Arrays::stream)
@@ -445,7 +435,7 @@ public class Gmr21SloppyPidServer<T> extends AbstractPidParty<T> {
                         byte[] extendElementBytes = serverExtendElementByteBuffers[hashIndex][index].array();
                         byte[] pid0 = serverPidPrf.getBytes(elementBytes);
                         int clientBinIndex = clientCuckooHashes[hashIndex].getInteger(elementBytes, clientBinNum);
-                        byte[] pid1 = pidMapPrf.getBytes(kaOprfKey.getPrf(clientBinIndex, extendElementBytes));
+                        byte[] pid1 = pidMap.digestToBytes(kaOprfKey.getPrf(clientBinIndex, extendElementBytes));
                         BytesUtils.xori(pid0, pid1);
                         return pid0;
                     })

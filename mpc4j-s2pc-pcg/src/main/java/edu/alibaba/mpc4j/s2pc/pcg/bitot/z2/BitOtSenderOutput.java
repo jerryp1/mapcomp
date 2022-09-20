@@ -1,6 +1,5 @@
 package edu.alibaba.mpc4j.s2pc.pcg.bitot.z2;
 
-
 import java.math.BigInteger;
 
 /**
@@ -25,7 +24,8 @@ public class BitOtSenderOutput extends AbstractBitOtOutput {
 
     /**
      * 创建BitOT发送方输出。
-     * @param num OT数量。
+     *
+     * @param num         OT数量。
      * @param r0ByteArray r0的Byte数组。
      * @param r1ByteArray r1的Byte数组。
      * @return BitOT发送方输出。

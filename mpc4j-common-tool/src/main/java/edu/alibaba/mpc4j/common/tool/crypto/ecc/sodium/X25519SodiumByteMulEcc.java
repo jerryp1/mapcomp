@@ -11,7 +11,24 @@ import edu.alibaba.mpc4j.common.tool.utils.BytesUtils;
 import java.security.SecureRandom;
 
 /**
- * Sodium实现的X25519乘法字节椭圆曲线。
+ * Sodium实现的X25519乘法字节椭圆曲线。协因子处理方式参见：
+ * <p>
+ * https://neilmadden.blog/2020/05/28/whats-the-curve25519-clamping-all-about/
+ * </p>
+ * 快速求幂算法参见：
+ * <p>
+ * https://martin.kleppmann.com/papers/curve25519.pdf
+ * </p>
+ * 注意，X25519无法实现inverseScalar操作，这是因为任意一个随机点既可能在X25519上，也可能在扭曲X25519上，而两个曲线的阶不相等。参见：
+ * <p>
+ * https://loup-vaillant.fr/tutorials/cofactor
+ * </p>
+ * 详细描述为：
+ * <p>
+ * X25519 however only transmits the x-coordinate of the point, so the worst you can have is a point on the "twist".
+ * Since the twist of Curve25519 also has a big prime order (2^{253} minus something) and a small cofactor (4), the
+ * results will be similar, and the attacker will learn nothing. Curve25519 is thus "twist secure".
+ * </p>
  *
  * @author Weiran Liu
  * @date 2022/9/6
@@ -34,7 +51,7 @@ public class X25519SodiumByteMulEcc implements ByteMulEcc {
 
     @Override
     public byte[] randomScalar(SecureRandom secureRandom) {
-        return X25519ByteEccUtils.randomScalar(secureRandom);
+        return X25519ByteEccUtils.randomClampScalar(secureRandom);
     }
 
     @Override
@@ -59,13 +76,15 @@ public class X25519SodiumByteMulEcc implements ByteMulEcc {
 
     @Override
     public byte[] hashToCurve(byte[] message) {
-        return hash.digestToBytes(message);
+        byte[] p = hash.digestToBytes(message);
+        p[X25519ByteEccUtils.POINT_BYTES - 1] &= 0x7F;
+        return p;
     }
 
     @Override
     public byte[] mul(byte[] p, byte[] k) {
         assert X25519ByteEccUtils.checkPoint(p);
-        assert X25519ByteEccUtils.checkScalar(k);
+        assert X25519ByteEccUtils.checkClampScalar(k);
         return nativeMul(p, k);
     }
 
@@ -73,7 +92,7 @@ public class X25519SodiumByteMulEcc implements ByteMulEcc {
 
     @Override
     public byte[] baseMul(byte[] k) {
-        assert X25519ByteEccUtils.checkScalar(k);
+        assert X25519ByteEccUtils.checkClampScalar(k);
         return nativeBaseMul(k);
     }
 
