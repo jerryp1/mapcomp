@@ -112,7 +112,7 @@ public class Bkms20EccPidServer<T> extends AbstractPidParty<T> {
         info("{}{} Server begin", ptoBeginLogPrefix, getPtoDesc().getPtoName());
 
         stopWatch.start();
-        int pidByteLength = PidUtils.getPidByteLength(ownSetSize, otherSetSize);
+        int pidByteLength = PidUtils.GLOBAL_PID_BYTE_LENGTH;
         pidMap = HashFactory.createInstance(envType, pidByteLength);
         // 生成置乱映射，计算并发送U_c
         List<byte[]> ucPayload = generateUcPayload();

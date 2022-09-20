@@ -26,7 +26,7 @@ public class PsiUtils {
     public static int getSemiHonestPeqtByteLength(int serverElementSize, int clientElementSize) {
         assert serverElementSize > 0 : "server element size must be greater than 0: " + serverElementSize;
         assert clientElementSize > 0 : "client element size must be greater than 0: " + clientElementSize;
-        // λ + log(m) +  log(n)
+        // λ + log(m) + log(n)
         return CommonConstants.STATS_BYTE_LENGTH
             + CommonUtils.getByteLength(LongUtils.ceilLog2(serverElementSize))
             + CommonUtils.getByteLength(LongUtils.ceilLog2(clientElementSize));

@@ -17,6 +17,11 @@ public class PidUtils {
     }
 
     /**
+     * 全局PID字节长度
+     */
+    public static final int GLOBAL_PID_BYTE_LENGTH = CommonConstants.BLOCK_BYTE_LENGTH;
+
+    /**
      * 返回PID字节长度。
      *
      * @param serverSetSize 服务端元素数量。
