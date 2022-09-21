@@ -10,7 +10,7 @@ import edu.alibaba.mpc4j.common.rpc.Rpc;
 import edu.alibaba.mpc4j.common.rpc.utils.DataPacket;
 import edu.alibaba.mpc4j.common.rpc.utils.DataPacketHeader;
 import edu.alibaba.mpc4j.common.tool.crypto.kyber.params.KyberKeyPair;
-import edu.alibaba.mpc4j.common.tool.utils.BytesUtils;
+import edu.alibaba.mpc4j.common.tool.crypto.kyber.utils.Poly;
 import edu.alibaba.mpc4j.s2pc.pcg.ot.bnot.AbstractBaseNotReceiver;
 import edu.alibaba.mpc4j.s2pc.pcg.ot.bnot.BaseNotReceiverOutput;
 import edu.alibaba.mpc4j.s2pc.pcg.ot.bnot.mr19.Mr19KyberBaseNotPtoDesc.PtoStep;
@@ -29,6 +29,10 @@ import java.util.stream.IntStream;
  */
 public class Mr19KyberBaseNotReceiver extends AbstractBaseNotReceiver {
     /**
+     * Kyber的参数k
+     */
+    private final int paramsK;
+    /**
      * 使用的kyber实例
      */
     private final KyberEngine kyberEngine;
@@ -43,7 +47,8 @@ public class Mr19KyberBaseNotReceiver extends AbstractBaseNotReceiver {
 
     public Mr19KyberBaseNotReceiver(Rpc receiverRpc, Party senderParty, Mr19KyberBaseNotConfig config) {
         super(Mr19KyberBaseNotPtoDesc.getInstance(), receiverRpc, senderParty, config);
-        kyberEngine = KyberEngineFactory.createInstance(config.getKyberType(), config.getParamsK());
+        paramsK = config.getParamsK();
+        kyberEngine = KyberEngineFactory.createInstance(config.getKyberType(), paramsK);
         pkHash = HashFactory.createInstance(HashFactory.HashType.BC_SHAKE_256, kyberEngine.publicKeyByteLength());
     }
 
@@ -97,24 +102,29 @@ public class Mr19KyberBaseNotReceiver extends AbstractBaseNotReceiver {
             .mapToObj(index -> {
                 // 生成公私钥对
                 keyPairArray[index] = kyberEngine.generateKeyPair();
-                byte[] publicKey = keyPairArray[index].getPublicKey();
+                byte[] pk = keyPairArray[index].getPublicKey();
+                short[][] pkPolyVector = Poly.polyVectorFromBytes(pk);
                 // 随机公钥
-                byte[][] randomKeys = new byte[maxChoice][];
+                byte[][] randomPks = new byte[maxChoice][];
                 for (int i = 0; i < maxChoice; i++) {
                     if (i != choices[index]) {
-                        // 生成 Hash（RandomKey）
-                        randomKeys[i] = kyberEngine.randomPublicKey();
-                        byte[] hashKey = pkHash.digestToBytes(randomKeys[i]);
-                        // PK = PK ⊕ Hash（RandomKey）
-                        BytesUtils.xori(publicKey, hashKey);
+                        // Hash(RandomPk)
+                        randomPks[i] = kyberEngine.randomPublicKey();
+                        byte[] hashRandomPk = pkHash.digestToBytes(randomPks[i]);
+                        short[][] hashRandomPkPolyVector = Poly.decompressPolyVector(hashRandomPk, paramsK);
+                        Poly.inPolyVectorBarrettReduce(hashRandomPkPolyVector);
+                        // PK = PK ⊕ Hash(RandomPK）
+                        Poly.inPolyVectorAdd(pkPolyVector, hashRandomPkPolyVector);
+                        Poly.inPolyVectorBarrettReduce(pkPolyVector);
+                        pk = Poly.polyVectorToByteArray(pkPolyVector);
                     }
                 }
                 byte[][] pkPayload = new byte[maxChoice + 1][];
                 for (int i = 0; i < maxChoice; i++) {
                     if (i != choices[index]) {
-                        pkPayload[i] = randomKeys[i];
+                        pkPayload[i] = randomPks[i];
                     } else {
-                        pkPayload[i] = publicKey;
+                        pkPayload[i] = pk;
                     }
                 }
                 pkPayload[maxChoice] = keyPairArray[index].getMatrixSeed();

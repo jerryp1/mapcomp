@@ -29,14 +29,6 @@ public class HashFactory {
          */
         NATIVE_SHA256,
         /**
-         * JDK的SHA3-256
-         */
-        JDK_SHA3_256,
-        /**
-         * JDK的SHA3-512
-         */
-        JDK_SHA3_512,
-        /**
          * Bouncy Castle的Shake128
          */
         BC_SHAKE_128,
@@ -44,6 +36,14 @@ public class HashFactory {
          * Bouncy Castle的Shake256
          */
         BC_SHAKE_256,
+        /**
+         * Bouncy Castle的SHA3-256
+         */
+        BC_SHA3_256,
+        /**
+         * Bouncy Castle的SHA3-512
+         */
+        BC_SHA3_512,
         /**
          * Bouncy Castle的SM3
          */
@@ -74,13 +74,13 @@ public class HashFactory {
                 return JdkSha256Hash.DIGEST_BYTE_LENGTH;
             case NATIVE_SHA256:
                 return NativeSha256Hash.DIGEST_BYTE_LENGTH;
-            case JDK_SHA3_256:
-                return JdkSha3Series256Hash.DIGEST_BYTE_LENGTH;
-            case JDK_SHA3_512:
-                return JdkSha3Series512Hash.DIGEST_BYTE_LENGTH;
             case BC_SHAKE_128:
             case BC_SHAKE_256:
                 return Integer.MAX_VALUE / Byte.SIZE;
+            case BC_SHA3_256:
+                return BcSha3Series256Hash.DIGEST_BYTE_LENGTH;
+            case BC_SHA3_512:
+                return BcSha3Series512Hash.DIGEST_BYTE_LENGTH;
             case BC_SM3:
                 return BcSm3Hash.DIGEST_BYTE_LENGTH;
             case BC_BLAKE_2B_160:
@@ -107,14 +107,14 @@ public class HashFactory {
                 return new JdkSha256Hash(outputByteLength);
             case NATIVE_SHA256:
                 return new NativeSha256Hash(outputByteLength);
-            case JDK_SHA3_256:
-                return new JdkSha3Series256Hash(outputByteLength);
-            case JDK_SHA3_512:
-                return new JdkSha3Series512Hash(outputByteLength);
             case BC_SHAKE_128:
                 return new BcShake128Hash(outputByteLength);
             case BC_SHAKE_256:
                 return new BcShake256Hash(outputByteLength);
+            case BC_SHA3_256:
+                return new BcSha3Series256Hash(outputByteLength);
+            case BC_SHA3_512:
+                return new BcSha3Series512Hash(outputByteLength);
             case BC_SM3:
                 return new BcSm3Hash(outputByteLength);
             case BC_BLAKE_2B_160:
@@ -132,6 +132,7 @@ public class HashFactory {
      * 创建哈希函数实例。
      *
      * @param envType 哈希函数类型。
+     * @param outputByteLength 输出字节长度。
      * @return 哈希函数实例。
      */
     public static Hash createInstance(EnvType envType, int outputByteLength) {

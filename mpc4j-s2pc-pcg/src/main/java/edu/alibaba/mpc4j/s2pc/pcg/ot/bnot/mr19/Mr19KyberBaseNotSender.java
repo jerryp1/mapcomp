@@ -10,7 +10,7 @@ import edu.alibaba.mpc4j.common.rpc.Party;
 import edu.alibaba.mpc4j.common.rpc.Rpc;
 import edu.alibaba.mpc4j.common.rpc.utils.DataPacket;
 import edu.alibaba.mpc4j.common.rpc.utils.DataPacketHeader;
-import edu.alibaba.mpc4j.common.tool.utils.BytesUtils;
+import edu.alibaba.mpc4j.common.tool.crypto.kyber.utils.Poly;
 import edu.alibaba.mpc4j.s2pc.pcg.ot.bnot.AbstractBaseNotSender;
 import edu.alibaba.mpc4j.s2pc.pcg.ot.bnot.BaseNotSenderOutput;
 import edu.alibaba.mpc4j.s2pc.pcg.ot.bnot.mr19.Mr19KyberBaseNotPtoDesc.PtoStep;
@@ -29,6 +29,10 @@ import java.util.stream.IntStream;
  */
 public class Mr19KyberBaseNotSender extends AbstractBaseNotSender {
     /**
+     * Kyber的参数K
+     */
+    private final int paramsK;
+    /**
      * 使用的kyber实例
      */
     private final KyberEngine kyberEngine;
@@ -43,7 +47,8 @@ public class Mr19KyberBaseNotSender extends AbstractBaseNotSender {
 
     public Mr19KyberBaseNotSender(Rpc senderRpc, Party receiverParty, Mr19KyberBaseNotConfig config) {
         super(Mr19KyberBaseNotPtoDesc.getInstance(), senderRpc, receiverParty, config);
-        kyberEngine = KyberEngineFactory.createInstance(config.getKyberType(), config.getParamsK());
+        paramsK = config.getParamsK();
+        kyberEngine = KyberEngineFactory.createInstance(config.getKyberType(), paramsK);
         pkHash = HashFactory.createInstance(HashFactory.HashType.BC_SHAKE_256, kyberEngine.publicKeyByteLength());
     }
 
@@ -96,24 +101,32 @@ public class Mr19KyberBaseNotSender extends AbstractBaseNotSender {
         indexIntStream = parallel ? indexIntStream.parallel() : indexIntStream;
         List<byte[]> betaPayload = indexIntStream
             .mapToObj(index -> {
-                byte[][] publicKeys = new byte[maxChoice][];
-                byte[][] hashKeys = new byte[maxChoice][];
+                short[][][] pkVectors = new short[maxChoice][][];
+                short[][][] hashPkVectors = new short[maxChoice][][];
+                byte[][] recoverPks = new byte[maxChoice][];
                 for (int i = 0; i < maxChoice; i++) {
-                    publicKeys[i] = publicKeyMatrix[index * (maxChoice + 1) + i];
-                    hashKeys[i] = pkHash.digestToBytes(publicKeys[i]);
+                    byte[] pk = publicKeyMatrix[index * (maxChoice + 1) + i];
+                    pkVectors[i] = Poly.polyVectorFromBytes(pk);
+                    byte[] hashPk = pkHash.digestToBytes(pk);
+                    hashPkVectors[i] = Poly.decompressPolyVector(hashPk, paramsK);
+                    Poly.inPolyVectorBarrettReduce(hashPkVectors[i]);
                 }
                 for (int i = 0; i < maxChoice; i++) {
                     for (int j = 0; j < maxChoice; j++) {
                         if (i != j) {
-                            // A = R_i ⊕ Hash(R_j)
-                            BytesUtils.xori(publicKeys[i], hashKeys[j]);
+                            // A = R_i - Hash(R_j)
+                            Poly.inPolyVectorSub(pkVectors[i], hashPkVectors[j]);
+                            Poly.inPolyVectorBarrettReduce(pkVectors[i]);
                         }
                     }
+                }
+                for (int i = 0; i < maxChoice; i++) {
+                    recoverPks[i] = Poly.polyVectorToByteArray(pkVectors[i]);
                 }
                 return IntStream.range(0, maxChoice)
                     .mapToObj(i -> {
                         byte[] ciphertext = kyberEngine.encapsulate(
-                            rMatrix[index][i], publicKeys[i], publicKeyMatrix[index * (maxChoice + 1) + maxChoice]
+                            rMatrix[index][i], recoverPks[i], publicKeyMatrix[index * (maxChoice + 1) + maxChoice]
                         );
                         rMatrix[index][i] = kdf.deriveKey(rMatrix[index][i]);
                         return ciphertext;

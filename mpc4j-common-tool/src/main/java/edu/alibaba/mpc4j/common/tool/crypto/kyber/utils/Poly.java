@@ -51,7 +51,7 @@ public final class Poly {
     }
 
     /**
-     * Add two polynomial vectors. The result is set in the input polynomial As.
+     * Add two polynomial vectors. The result is set in the input polynomial vector A.
      *
      * @param polyVectorA polynomial vector A.
      * @param polyVectorB polynomial vector B.
@@ -75,6 +75,30 @@ public final class Poly {
             polyC[i] = (short) (polyA[i] - polyB[i]);
         }
         return polyC;
+    }
+
+    /**
+     * Subtract two polynomials. The result is set in the input polynomial A.
+     *
+     * @param polyA polynomial A.
+     * @param polyB polynomial B.
+     */
+    public static void inPolySub(short[] polyA, short[] polyB) {
+        for (int i = 0; i < KyberParams.PARAMS_N; i++) {
+            polyA[i] = (short) (polyA[i] - polyB[i]);
+        }
+    }
+
+    /**
+     * Subtract two polynomial vectors. The result is set in the input polynomial vector A.
+     *
+     * @param polyVectorA polynomial vector A.
+     * @param polyVectorB polynomial vector B.
+     */
+    public static void inPolyVectorSub(short[][] polyVectorA, short[][] polyVectorB) {
+        for (int i = 0; i < polyVectorA.length; i++) {
+            Poly.inPolySub(polyVectorA[i], polyVectorB[i]);
+        }
     }
 
     /**
@@ -368,7 +392,7 @@ public final class Poly {
     }
 
     /**
-     * Perform a lossly compression and serialization of a vector of polynomials.
+     * Perform a lossy compression and serialization of a vector of polynomials.
      *
      * @param polyVector polynomial vector.
      * @param paramsK    parameter K, can be 2, 3 or 4.
