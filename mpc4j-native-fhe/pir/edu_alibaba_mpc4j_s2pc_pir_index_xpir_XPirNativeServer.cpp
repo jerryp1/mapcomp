@@ -32,7 +32,8 @@ using namespace seal;
     EncryptionParameters params = deserialize_encryption_params(env, params_bytes);
     SEALContext context(params);
     Evaluator evaluator(context);
-    vector<Plaintext> database = deserialize_plaintexts(env, plaintext_list_bytes, context);
+    auto exception = env->FindClass("java/lang/Exception");
+    vector<Plaintext> database = deserialize_plaintexts_from_byte(env, plaintext_list_bytes, context);
     vector<Ciphertext> query = deserialize_ciphertexts(env, ciphertext_list_bytes, context);
     jint *ptr = env->GetIntArrayElements(nvec_array, JNI_FALSE);
     uint32_t d = env->GetArrayLength(nvec_array);
@@ -59,8 +60,8 @@ using namespace seal;
         cout << "Server: n_i = " << nvec[i] << endl;
 #endif
         if (query_list[i].size() != nvec[i]) {
-            cout << " size mismatch!!! " << query_list[i].size() << ", " << nvec[i]
-                 << endl;
+            cout << " size mismatch!!! " << query_list[i].size() << ", " << nvec[i] << endl;
+            env->ThrowNew(exception, "size mismatch!");
         }
         // Transform expanded query to NTT, and ...
         for (auto & jj : query_list[i]) {
@@ -113,7 +114,6 @@ using namespace seal;
 #endif
     }
     // This should never get here
-    assert(0);
-    vector<Ciphertext> fail(1);
-    return serialize_ciphertexts(env, fail);
+    env->ThrowNew(exception, "generate response failed!");
+    return nullptr;
 }

@@ -26,10 +26,10 @@ JNIEXPORT jbyteArray JNICALL Java_edu_alibaba_mpc4j_s2pc_pir_keyword_cmg21_Cmg21
 /*
  * Class:     edu_alibaba_mpc4j_s2pc_pir_keyword_cmg21_Cmg21KwPirNativeServer
  * Method:    computeMatchesNaiveMethod
- * Signature: ([B[B[B[[JLjava/util/List;)[B
+ * Signature: ([B[B[[JLjava/util/List;)[B
  */
 JNIEXPORT jbyteArray JNICALL Java_edu_alibaba_mpc4j_s2pc_pir_keyword_cmg21_Cmg21KwPirNativeServer_computeMatchesNaiveMethod
-  (JNIEnv *, jclass, jbyteArray, jbyteArray, jbyteArray, jobjectArray, jobject);
+  (JNIEnv *, jclass, jbyteArray, jbyteArray, jobjectArray, jobject);
 
 #ifdef __cplusplus
 }

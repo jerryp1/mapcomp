@@ -60,7 +60,7 @@ public class Zp64CoreMtgTest {
     }
 
     @Test
-    public void testDefault() {
+    public void testDefaultNum() {
         try {
             Zp64CoreMtgConfig config = new Rss19Zp64CoreMtgConfig.Builder()
                 .setPlainModulusSize(MODULUS_BIT_LENGTH)
@@ -75,7 +75,7 @@ public class Zp64CoreMtgTest {
     }
 
     @Test
-    public void testLarge() {
+    public void testLargeNum() {
         try {
             Zp64CoreMtgConfig config = new Rss19Zp64CoreMtgConfig.Builder()
                 .setPlainModulusSize(MODULUS_BIT_LENGTH)

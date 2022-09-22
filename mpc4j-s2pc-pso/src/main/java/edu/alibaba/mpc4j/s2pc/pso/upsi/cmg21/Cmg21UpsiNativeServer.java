@@ -46,12 +46,10 @@ class Cmg21UpsiNativeServer {
      * 一般方法计算密文匹配结果。
      *
      * @param encryptionParams 加密方案参数。
-     * @param relinKeys        重线性化密钥。
      * @param plaintextPolys   数据库编码。
      * @param ciphertextPolys  密文查询信息。
      * @return 密文匹配结果。
      */
-    static native byte[] computeMatchesNaiveMethod(byte[] encryptionParams, byte[] relinKeys, long[][] plaintextPolys,
-                                                   List<byte[]> ciphertextPolys);
+    static native byte[] computeMatchesNaiveMethod(byte[] encryptionParams, long[][] plaintextPolys, List<byte[]> ciphertextPolys);
 
 }

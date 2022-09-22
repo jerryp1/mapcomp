@@ -1,7 +1,3 @@
-//
-// Created by pengliqiang on 2022/9/13.
-//
-
 #include "index_pir.h"
 #include "seal/seal.h"
 
@@ -18,13 +14,11 @@ uint32_t compute_expansion_ratio(const EncryptionParameters& params) {
     return expansion_ratio;
 }
 
-vector<Plaintext> decompose_to_plaintexts(const EncryptionParameters& params,
-                                          const Ciphertext &ct) {
+vector<Plaintext> decompose_to_plaintexts(const EncryptionParameters& params, const Ciphertext &ct) {
     const auto pt_bits_per_coeff = (uint32_t) log2(params.plain_modulus().value());
     const auto coeff_count = params.poly_modulus_degree();
     const auto coeff_mod_count = params.coeff_modulus().size();
     const uint64_t pt_bitmask = (1 << pt_bits_per_coeff) - 1;
-
     vector<Plaintext> result(compute_expansion_ratio(params) * ct.size());
     auto pt_iter = result.begin();
     for (size_t poly_index = 0; poly_index < ct.size(); ++poly_index) {
@@ -49,13 +43,11 @@ void compose_to_ciphertext(const EncryptionParameters& params, const vector<Plai
     return compose_to_ciphertext(params, pts.begin(), pts.size() / compute_expansion_ratio(params), ct);
 }
 
-void compose_to_ciphertext(const EncryptionParameters& params,
-                           vector<Plaintext>::const_iterator pt_iter,
+void compose_to_ciphertext(const EncryptionParameters& params, vector<Plaintext>::const_iterator pt_iter,
                            const size_t ct_poly_count, Ciphertext &ct) {
     const auto pt_bits_per_coeff = (uint32_t) log2(params.plain_modulus().value());
     const auto coeff_count = params.poly_modulus_degree();
     const auto coeff_mod_count = params.coeff_modulus().size();
-
     ct.resize(ct_poly_count);
     for (size_t poly_index = 0; poly_index < ct_poly_count; ++poly_index) {
         for (size_t coeff_mod_index = 0; coeff_mod_index < coeff_mod_count; ++coeff_mod_index) {
@@ -75,12 +67,4 @@ void compose_to_ciphertext(const EncryptionParameters& params,
             }
         }
     }
-}
-
-EncryptionParameters generate_encryption_parameters(scheme_type type, uint32_t poly_modulus_degree, uint64_t plain_modulus) {
-    EncryptionParameters params = EncryptionParameters(type);
-    params.set_poly_modulus_degree(poly_modulus_degree);
-    params.set_plain_modulus(plain_modulus);
-    params.set_coeff_modulus(CoeffModulus::BFVDefault(poly_modulus_degree, sec_level_type::tc128));
-    return params;
 }

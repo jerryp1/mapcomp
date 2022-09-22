@@ -12,7 +12,7 @@ extern "C" {
  * Method:    computeResponse
  * Signature: ([B[B[B[J[J[J)[B
  */
-JNIEXPORT jbyteArray JNICALL Java_edu_alibaba_mpc4j_s2pc_pcg_mtg_zp64_core_rss19_Rss19Zp64CoreMtgNativeReceiver_computeResponse
+[[maybe_unused]] [[maybe_unused]] JNIEXPORT jbyteArray JNICALL Java_edu_alibaba_mpc4j_s2pc_pcg_mtg_zp64_core_rss19_Rss19Zp64CoreMtgNativeReceiver_computeResponse
   (JNIEnv *, jclass, jbyteArray, jbyteArray, jbyteArray, jlongArray, jlongArray, jlongArray);
 
 #ifdef __cplusplus

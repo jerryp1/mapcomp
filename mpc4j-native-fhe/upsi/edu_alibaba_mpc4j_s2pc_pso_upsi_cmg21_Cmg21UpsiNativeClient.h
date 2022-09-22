@@ -12,7 +12,7 @@ extern "C" {
  * Method:    genEncryptionParameters
  * Signature: (IJ[I)Ljava/util/List;
  */
-JNIEXPORT jobject JNICALL Java_edu_alibaba_mpc4j_s2pc_pso_upsi_cmg21_Cmg21UpsiNativeClient_genEncryptionParameters
+[[maybe_unused]] JNIEXPORT jobject JNICALL Java_edu_alibaba_mpc4j_s2pc_pso_upsi_cmg21_Cmg21UpsiNativeClient_genEncryptionParameters
   (JNIEnv *, jclass, jint, jlong, jintArray);
 
 /*
@@ -20,7 +20,7 @@ JNIEXPORT jobject JNICALL Java_edu_alibaba_mpc4j_s2pc_pso_upsi_cmg21_Cmg21UpsiNa
  * Method:    generateQuery
  * Signature: ([B[B[B[[J)Ljava/util/List;
  */
-JNIEXPORT jobject JNICALL Java_edu_alibaba_mpc4j_s2pc_pso_upsi_cmg21_Cmg21UpsiNativeClient_generateQuery
+[[maybe_unused]] JNIEXPORT jobject JNICALL Java_edu_alibaba_mpc4j_s2pc_pso_upsi_cmg21_Cmg21UpsiNativeClient_generateQuery
   (JNIEnv *, jclass, jbyteArray, jbyteArray, jbyteArray, jobjectArray);
 
 /*
@@ -28,7 +28,7 @@ JNIEXPORT jobject JNICALL Java_edu_alibaba_mpc4j_s2pc_pso_upsi_cmg21_Cmg21UpsiNa
  * Method:    decodeReply
  * Signature: ([B[B[B)[J
  */
-JNIEXPORT jlongArray JNICALL Java_edu_alibaba_mpc4j_s2pc_pso_upsi_cmg21_Cmg21UpsiNativeClient_decodeReply
+[[maybe_unused]] JNIEXPORT jlongArray JNICALL Java_edu_alibaba_mpc4j_s2pc_pso_upsi_cmg21_Cmg21UpsiNativeClient_decodeReply
   (JNIEnv *, jclass, jbyteArray, jbyteArray, jbyteArray);
 
 #ifdef __cplusplus

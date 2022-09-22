@@ -12,7 +12,7 @@ extern "C" {
  * Method:    genEncryptionParameters
  * Signature: (IJ)[B
  */
-JNIEXPORT jbyteArray JNICALL Java_edu_alibaba_mpc4j_s2pc_pir_index_xpir_XPirNativeParams_genEncryptionParameters
+[[maybe_unused]] JNIEXPORT jbyteArray JNICALL Java_edu_alibaba_mpc4j_s2pc_pir_index_xpir_XPirNativeParams_genEncryptionParameters
   (JNIEnv *, jclass, jint, jlong);
 
 #ifdef __cplusplus
