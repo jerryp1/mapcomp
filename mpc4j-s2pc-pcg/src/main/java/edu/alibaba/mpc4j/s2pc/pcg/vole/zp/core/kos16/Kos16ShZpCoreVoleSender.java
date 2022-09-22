@@ -147,7 +147,7 @@ public class Kos16ShZpCoreVoleSender extends AbstractZpCoreVoleSender {
         IntStream outputStream = IntStream.range(0, num);
         outputStream = parallel ? outputStream.parallel() : outputStream;
         BigInteger[] t = outputStream
-            .mapToObj(index -> zpGadget.composition(t0[index]))
+            .mapToObj(index -> zpGadget.innerProduct(t0[index]))
             .toArray(BigInteger[]::new);
         return ZpVoleSenderOutput.create(prime, x, t);
     }

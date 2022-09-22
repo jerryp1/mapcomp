@@ -142,7 +142,7 @@ public class Kos16ShZpCoreVoleReceiver extends AbstractZpCoreVoleReceiver {
         Stream<BigInteger[]> qMatrixStream = Arrays.stream(qMatrix);
         qMatrixStream = parallel ? qMatrixStream.parallel() : qMatrixStream;
         BigInteger[] q = qMatrixStream
-            .map(row -> zpGadget.composition(row))
+            .map(row -> zpGadget.innerProduct(row))
             .toArray(BigInteger[]::new);
         return ZpVoleReceiverOutput.create(prime, delta, q);
     }

@@ -12,6 +12,7 @@ import java.math.BigInteger;
 import java.security.SecureRandom;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.stream.IntStream;
 
 /**
  * Zp小工具测试。
@@ -58,7 +59,7 @@ public class ZpGadgetTest {
     }
 
     @Test
-    public void testZpGadget() {
+    public void testBitComposition() {
         for (int i = 0; i < RANDOM_ROUND; i++) {
             // 随机生成[0, 2^k)范围内的元素
             BigInteger randomElement = new BigInteger(k, SECURE_RANDOM);
@@ -66,5 +67,22 @@ public class ZpGadgetTest {
             BigInteger compositeRandomElement = zpGadget.composition(decomposition);
             Assert.assertEquals(randomElement, compositeRandomElement);
         }
+    }
+
+    @Test
+    public void testInnerProduct() {
+        // 全为0的内积为0
+        BigInteger[] zeroElementVector = IntStream.range(0, k)
+            .mapToObj(index -> BigInteger.ZERO)
+            .toArray(BigInteger[]::new);
+        BigInteger zeroInnerProduct = zpGadget.innerProduct(zeroElementVector);
+        Assert.assertEquals(BigInteger.ZERO, zeroInnerProduct);
+        // 全为1的内积为-1
+        BigInteger negOne = BigInteger.ONE.shiftLeft(k).subtract(BigInteger.ONE);
+        BigInteger[] oneElementVector = IntStream.range(0, k)
+            .mapToObj(index -> BigInteger.ONE)
+            .toArray(BigInteger[]::new);
+        BigInteger oneInnerProduct = zpGadget.innerProduct(oneElementVector);
+        Assert.assertEquals(negOne, oneInnerProduct);
     }
 }

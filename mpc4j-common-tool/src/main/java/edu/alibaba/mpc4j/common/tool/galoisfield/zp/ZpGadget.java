@@ -119,7 +119,7 @@ public class ZpGadget {
      * @param inputArray 输入向量。
      * @return 内积。
      */
-    public BigInteger composition(BigInteger[] inputArray) {
+    public BigInteger innerProduct(BigInteger[] inputArray) {
         assert inputArray.length == gadgetArray.length;
         BigInteger result = BigInteger.ZERO;
         for (int i = 0; i < inputArray.length; i++) {
@@ -129,21 +129,21 @@ public class ZpGadget {
     }
 
     /**
-     * 计算输入向量和小工具向量的内积。
+     * 将比特向量组合为Zp域的元素。
      *
-     * @param inputArray 输入向量。
-     * @return 内积。
+     * @param binary 比特向量。
+     * @return 组合结果。
      */
-    public BigInteger composition(boolean[] inputArray) {
-        assert inputArray.length == k;
-        return BigIntegerUtils.innerProduct(gadgetArray, prime, inputArray);
+    public BigInteger composition(boolean[] binary) {
+        assert binary.length == k;
+        return BigIntegerUtils.innerProduct(gadgetArray, prime, binary);
     }
 
     /**
-     * 将Zp域中的元素分解为长度和小工具向量一致的布尔向量，大端表示。
+     * 将Zp域中的元素分解为比特向量，大端表示。
      *
      * @param element Zp域元素。
-     * @return 分解得到的布尔向量。
+     * @return 分解结果。
      */
     public boolean[] decomposition(BigInteger element) {
         assert BigIntegerUtils.greaterOrEqual(element, BigInteger.ZERO) && BigIntegerUtils.less(element, maxValidElement);

@@ -53,7 +53,7 @@ public class Zp64Gadget {
      * @param inputArray 输入向量。
      * @return 内积。
      */
-    public long composition(long[] inputArray) {
+    public long innerProduct(long[] inputArray) {
         assert inputArray.length == l : "input array length must equal to " + l + ": " + inputArray.length;
         long result = 0;
         for (int i = 0; i < l; i++) {
@@ -64,12 +64,12 @@ public class Zp64Gadget {
     }
 
     /**
-     * 计算输入向量和小工具向量的内积。
+     * 将比特向量组合为Zp64域的元素。
      *
-     * @param inputArray 输入向量。
-     * @return 内积。
+     * @param inputArray 比特向量。
+     * @return 组合结果。
      */
-    public long composition(boolean[] inputArray) {
+    public long bitComposition(boolean[] inputArray) {
         assert inputArray.length == l : "input array length must equal to " + l + ": " + inputArray.length;
         long result = 0;
         for (int i = 0; i < l; i++) {
@@ -79,12 +79,12 @@ public class Zp64Gadget {
     }
 
     /**
-     * 将Zp64域中的元素分解为长度和小工具向量一致的布尔向量，大端表示。
+     * 将Zp64域中的元素分解为比特向量，大端表示。
      *
      * @param element Zp域元素。
-     * @return 分解得到的布尔向量。
+     * @return 分解结果。
      */
-    public boolean[] decomposition(long element) {
+    public boolean[] bitDecomposition(long element) {
         assert zp64.validateRangeElement(element) : "element must be in range [0, " + zp64.getRangeBound() + ")";
         byte[] elementByteArray = LongUtils.longToByteArray(element);
         return BinaryUtils.byteArrayToBinary(elementByteArray, l);
