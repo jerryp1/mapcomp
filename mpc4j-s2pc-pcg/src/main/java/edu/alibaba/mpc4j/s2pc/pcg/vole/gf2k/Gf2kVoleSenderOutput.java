@@ -1,4 +1,4 @@
-package edu.alibaba.mpc4j.s2pc.pcg.vole.gf2k.core;
+package edu.alibaba.mpc4j.s2pc.pcg.vole.gf2k;
 
 import edu.alibaba.mpc4j.common.tool.CommonConstants;
 import edu.alibaba.mpc4j.common.tool.utils.BytesUtils;
@@ -6,7 +6,7 @@ import edu.alibaba.mpc4j.common.tool.utils.BytesUtils;
 import java.util.Arrays;
 
 /**
- * GF(2^κ)-VOLE协议发送方输出。发送方得到(x, t)，满足t = q + Δ · x（Δ和q由接收方持有）。
+ * GF2K-VOLE协议发送方输出。发送方得到(x, t)，满足t = q + Δ · x（Δ和q由接收方持有）。
  *
  * @author Weiran Liu
  * @date 2022/6/9

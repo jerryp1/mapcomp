@@ -1,27 +1,28 @@
-package edu.alibaba.mpc4j.common.tool.galoisfield.Zp64;
+package edu.alibaba.mpc4j.common.tool.galoisfield.zp;
 
+import java.math.BigInteger;
 import java.security.SecureRandom;
 
 /**
- * Zp64有限域运算接口。
+ * Zp有限域运算接口。
  *
  * @author Weiran Liu
- * @date 2022/7/7
+ * @date 2022/9/22
  */
-public interface Zp64 {
+public interface Zp {
     /**
      * 返回运算类型。
      *
      * @return 运算类型。
      */
-    Zp64Factory.Zp64Type getZp64Type();
+    ZpFactory.ZpType getZpType();
 
     /**
-     * 返回模数。
+     * 返回质数。
      *
-     * @return 模数。
+     * @return 质数。
      */
-    long getPrime();
+    BigInteger getPrime();
 
     /**
      * 返回有限域比特长度l，使得p = 2^l + µ
@@ -56,7 +57,7 @@ public interface Zp64 {
      *
      * @return 有效范围上界。
      */
-    long getRangeBound();
+    BigInteger getRangeBound();
 
     /**
      * 计算a mod p。
@@ -64,7 +65,7 @@ public interface Zp64 {
      * @param a 输入a。
      * @return a mod p。
      */
-    long module(final long a);
+    BigInteger module(final BigInteger a);
 
     /**
      * 计算a + b。
@@ -73,7 +74,7 @@ public interface Zp64 {
      * @param b 输入b。
      * @return a + b。
      */
-    long add(final long a, final long b);
+    BigInteger add(final BigInteger a, final BigInteger b);
 
     /**
      * 计算-a。
@@ -81,7 +82,7 @@ public interface Zp64 {
      * @param a 输入a。
      * @return -a。
      */
-    long neg(final long a);
+    BigInteger neg(final BigInteger a);
 
     /**
      * 计算a - b。
@@ -90,7 +91,7 @@ public interface Zp64 {
      * @param b 输入b。
      * @return a - b。
      */
-    long sub(final long a, final long b);
+    BigInteger sub(final BigInteger a, final BigInteger b);
 
     /**
      * 计算a * b。
@@ -99,7 +100,7 @@ public interface Zp64 {
      * @param b 输入b。
      * @return a * b。
      */
-    long mul(final long a, final long b);
+    BigInteger mul(final BigInteger a, final BigInteger b);
 
     /**
      * 计算a / b。
@@ -108,7 +109,7 @@ public interface Zp64 {
      * @param b 输入b。
      * @return a / b。
      */
-    long div(final long a, final long b);
+    BigInteger div(final BigInteger a, final BigInteger b);
 
     /**
      * 计算1 / a。
@@ -116,7 +117,7 @@ public interface Zp64 {
      * @param a 输入a。
      * @return 1 / a。
      */
-    long inv(final long a);
+    BigInteger inv(final BigInteger a);
 
     /**
      * 计算a^b。
@@ -125,15 +126,24 @@ public interface Zp64 {
      * @param b 输入b。
      * @return a^b。
      */
-    long mulPow(final long a, final long b);
+    BigInteger mulPow(final BigInteger a, final BigInteger b);
+
+    /**
+     * 计算Zp元素向量a和布尔向量b的内积。
+     *
+     * @param zpVector     Zp元素向量。
+     * @param binaryVector 布尔向量。
+     * @return 内积结果。
+     */
+    BigInteger innerProduct(final BigInteger[] zpVector, final boolean[] binaryVector);
 
     /**
      * 创建0元。
      *
      * @return 0元。
      */
-    default long createZero() {
-        return 0L;
+    default BigInteger createZero() {
+        return BigInteger.ZERO;
     }
 
     /**
@@ -141,8 +151,8 @@ public interface Zp64 {
      *
      * @return 1元。
      */
-    default long createOne() {
-        return 1L;
+    default BigInteger createOne() {
+        return BigInteger.ONE;
     }
 
     /**
@@ -151,7 +161,7 @@ public interface Zp64 {
      * @param secureRandom 随机状态。
      * @return 随机元素。
      */
-    long createRandom(SecureRandom secureRandom);
+    BigInteger createRandom(SecureRandom secureRandom);
 
     /**
      * 创建随机元素。
@@ -159,7 +169,7 @@ public interface Zp64 {
      * @param seed 种子。
      * @return 随机元素。
      */
-    long createRandom(byte[] seed);
+    BigInteger createRandom(byte[] seed);
 
     /**
      * 创建非0随机元素。
@@ -167,7 +177,7 @@ public interface Zp64 {
      * @param secureRandom 随机状态。
      * @return 非0随机元素。
      */
-    long createNonZeroRandom(SecureRandom secureRandom);
+    BigInteger createNonZeroRandom(SecureRandom secureRandom);
 
     /**
      * 创建非0随机元素。
@@ -175,7 +185,7 @@ public interface Zp64 {
      * @param seed 种子。
      * @return 非0随机元素。
      */
-    long createNonZeroRandom(byte[] seed);
+    BigInteger createNonZeroRandom(byte[] seed);
 
     /**
      * 创建[0, 2^l)范围内的随机元素。
@@ -183,7 +193,7 @@ public interface Zp64 {
      * @param secureRandom 随机状态。
      * @return [0, 2^l)范围内的随机元素。
      */
-    long createRangeRandom(SecureRandom secureRandom);
+    BigInteger createRangeRandom(SecureRandom secureRandom);
 
     /**
      * 创建[0, 2^l)范围内的随机元素。
@@ -191,7 +201,7 @@ public interface Zp64 {
      * @param seed 种子。
      * @return [0, 2^l)范围内的随机元素。
      */
-    long createRangeRandom(byte[] seed);
+    BigInteger createRangeRandom(byte[] seed);
 
     /**
      * 判断a是否为0元。
@@ -199,9 +209,9 @@ public interface Zp64 {
      * @param a 输入a。
      * @return a是否为0元。
      */
-    default boolean isZero(final long a) {
+    default boolean isZero(BigInteger a) {
         assert validateElement(a);
-        return a == 0L;
+        return a.equals(BigInteger.ZERO);
     }
 
     /**
@@ -210,9 +220,9 @@ public interface Zp64 {
      * @param a 输入a。
      * @return a是否为1元。
      */
-    default boolean isOne(final long a) {
+    default boolean isOne(BigInteger a) {
         assert validateElement(a);
-        return a == 1L;
+        return a.equals(BigInteger.ONE);
     }
 
     /**
@@ -221,7 +231,7 @@ public interface Zp64 {
      * @param a 输入a。
      * @return a是否为有效的群元素。
      */
-    boolean validateElement(final long a);
+    boolean validateElement(BigInteger a);
 
     /**
      * 判断a是否为有效的（加法、乘法）域元素。
@@ -229,7 +239,7 @@ public interface Zp64 {
      * @param a 输入a。
      * @return a是否为有效的域元素。
      */
-    boolean validateNonZeroElement(final long a);
+    boolean validateNonZeroElement(BigInteger a);
 
     /**
      * 判断a是否在[0, 2^l)范围内。
@@ -237,5 +247,5 @@ public interface Zp64 {
      * @param a 输入a。
      * @return a是否在[0, 2^l)范围内。
      */
-    boolean validateRangeElement(final long a);
+    boolean validateRangeElement(BigInteger a);
 }

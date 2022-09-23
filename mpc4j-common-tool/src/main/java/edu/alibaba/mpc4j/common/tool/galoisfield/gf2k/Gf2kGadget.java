@@ -74,7 +74,7 @@ public class Gf2kGadget {
      * @return 组合结果。
      */
     public byte[] bitComposition(boolean[] binary) {
-        assert binary.length == L : "input array length must equal to " + L + ": " + binary.length;
+        assert binary.length == L : "binary length must equal to " + L + ": " + binary.length;
         byte[] result = new byte[L_BYTE_LENGTH];
         for (int i = 0; i < L; i++) {
             if (binary[i]) {

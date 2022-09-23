@@ -3,14 +3,21 @@ package edu.alibaba.mpc4j.common.tool.galoisfield.Zp64;
 import edu.alibaba.mpc4j.common.tool.EnvType;
 
 /**
- * Zp64有限域运算工厂。
+ * Zp64有限域工厂。
  *
  * @author Weiran Liu
  * @date 2022/7/7
  */
 public class Zp64Factory {
     /**
-     * GF2E运算类型
+     * 私有构造函数
+     */
+    private Zp64Factory() {
+        // empty
+    }
+
+    /**
+     * Zp64有限域类型
      */
     public enum Zp64Type {
         /**
@@ -24,7 +31,7 @@ public class Zp64Factory {
      *
      * @param type 类型。
      * @param l    l比特长度。
-     * @return GF2E运算实例。
+     * @return Zp64运算实例。
      */
     public static Zp64 createInstance(EnvType envType, Zp64Type type, int l) {
         //noinspection SwitchStatementWithTooFewBranches
@@ -32,7 +39,7 @@ public class Zp64Factory {
             case RINGS:
                 return new RingsZp64(envType, l);
             default:
-                throw new IllegalArgumentException("Invalid Zp64Type: " + type.name());
+                throw new IllegalArgumentException("Invalid " + Zp64Type.class.getSimpleName() + ": " + type.name());
         }
     }
 
@@ -41,7 +48,7 @@ public class Zp64Factory {
      *
      * @param type  类型。
      * @param prime 素数。
-     * @return GF2E运算实例。
+     * @return Zp64运算实例。
      */
     public static Zp64 createInstance(EnvType envType, Zp64Type type, long prime) {
         //noinspection SwitchStatementWithTooFewBranches
@@ -58,7 +65,7 @@ public class Zp64Factory {
      *
      * @param envType 环境类型。
      * @param l       l比特长度。
-     * @return GF2E运算实例。
+     * @return Zp64运算实例。
      */
     public static Zp64 createInstance(EnvType envType, int l) {
         switch (envType) {
@@ -77,7 +84,7 @@ public class Zp64Factory {
      *
      * @param envType 环境类型。
      * @param prime   质数。
-     * @return GF2E运算实例。
+     * @return Zp64运算实例。
      */
     public static Zp64 createInstance(EnvType envType, long prime) {
         switch (envType) {
