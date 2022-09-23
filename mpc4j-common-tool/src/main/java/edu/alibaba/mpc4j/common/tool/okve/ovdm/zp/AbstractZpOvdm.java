@@ -44,7 +44,7 @@ public abstract class AbstractZpOvdm<T> implements ZpOvdm<T> {
         assert n > 0 : "n must be greater than 0: " + n;
         this.n = n;
         zp = ZpFactory.createInstance(envType, prime);
-        zpLinearSolver = new ZpLinearSolver(prime);
+        zpLinearSolver = new ZpLinearSolver(zp);
         // 要求m >= n，且m可以被Byte.SIZE整除
         assert m >= n && m % Byte.SIZE == 0;
         this.m = m;
