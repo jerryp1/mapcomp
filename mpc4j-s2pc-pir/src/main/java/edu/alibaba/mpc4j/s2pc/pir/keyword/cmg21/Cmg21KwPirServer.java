@@ -601,7 +601,6 @@ public class Cmg21KwPirServer<T> extends AbstractKwPirServer<T> {
                             Cmg21KwPirNativeServer.computeMatchesNaiveMethod(
                                 encryptionParamsList.get(0),
                                 encryptionParamsList.get(2),
-                                encryptionParamsList.get(1),
                                 serverKeywordEncode[i * partitionCount + j],
                                 queryPowers.subList(i * powerDegree.length, (i + 1) * powerDegree.length)))
                         .toArray(byte[][]::new))
@@ -615,7 +614,6 @@ public class Cmg21KwPirServer<T> extends AbstractKwPirServer<T> {
                             Cmg21KwPirNativeServer.computeMatchesNaiveMethod(
                                 encryptionParamsList.get(0),
                                 encryptionParamsList.get(2),
-                                encryptionParamsList.get(1),
                                 serverLabelEncode[i * partitionCount + j],
                                 queryPowers.subList(i * powerDegree.length, (i + 1) * powerDegree.length)))
                         .toArray(byte[][]::new))
