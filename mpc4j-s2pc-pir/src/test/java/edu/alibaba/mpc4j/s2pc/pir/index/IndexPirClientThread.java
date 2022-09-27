@@ -4,7 +4,6 @@ import edu.alibaba.mpc4j.common.rpc.MpcAbortException;
 
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
-import java.util.Set;
 
 /**
  * 索引PIR协议客户端线程。
@@ -26,9 +25,9 @@ public class IndexPirClientThread extends Thread {
      */
     private final int elementByteLength;
     /**
-     * 检索集合
+     * 检索值列表
      */
-    private final ArrayList<Set<Integer>> retrievalSets;
+    private final ArrayList<Integer> retrievalIndexList;
     /**
      * 服务端元素数量
      */
@@ -40,22 +39,22 @@ public class IndexPirClientThread extends Thread {
     /**
      * 索引结果
      */
-    private final ArrayList<ByteBuffer> retrievalList;
+    private final ArrayList<ByteBuffer> indexPirResult;
 
-    IndexPirClientThread(IndexPirClient client, IndexPirParams indexPirParams, ArrayList<Set<Integer>> retrievalSets,
+    IndexPirClientThread(IndexPirClient client, IndexPirParams indexPirParams, ArrayList<Integer> retrievalIndexList,
                          int serverElementSize, int elementByteLength, int repeatTime) {
-        assert repeatTime == retrievalSets.size();
+        assert repeatTime == retrievalIndexList.size();
         this.client = client;
         this.indexPirParams = indexPirParams;
-        this.retrievalSets = retrievalSets;
+        this.retrievalIndexList = retrievalIndexList;
         this.serverElementSize = serverElementSize;
         this.elementByteLength = elementByteLength;
         this.repeatTime = repeatTime;
-        retrievalList = new ArrayList<>(repeatTime);
+        indexPirResult = new ArrayList<>(repeatTime);
     }
 
     public ArrayList<ByteBuffer> getRetrievalResult() {
-        return retrievalList;
+        return indexPirResult;
     }
 
     @Override
@@ -66,7 +65,7 @@ public class IndexPirClientThread extends Thread {
             client.init(indexPirParams, serverElementSize, elementByteLength);
             client.getRpc().synchronize();
             for (int i = 0; i < repeatTime; i++) {
-                retrievalList.addAll(new ArrayList<>(client.pir(retrievalSets.get(i))));
+                indexPirResult.add(client.pir(retrievalIndexList.get(i)));
             }
             client.getRpc().disconnect();
         } catch (MpcAbortException e) {

@@ -30,10 +30,6 @@ public class XPirClient extends AbstractIndexPirClient {
      * XPIR方案参数
      */
     private XPirParams params;
-    /**
-     * 索引值
-     */
-    private int indexValue;
 
     public XPirClient(Rpc clientRpc, Party serverParty, XPirConfig config) {
         super(XPirPtoDesc.getInstance(), clientRpc, serverParty, config);
@@ -41,7 +37,7 @@ public class XPirClient extends AbstractIndexPirClient {
 
     @Override
     public void init(IndexPirParams indexPirParams, int serverElementSize, int elementByteLength) throws MpcAbortException {
-        setInitInput(indexPirParams.maxRetrievalSize(), serverElementSize, elementByteLength);
+        setInitInput(serverElementSize, elementByteLength);
         info("{}{} Client Init begin", ptoBeginLogPrefix, getPtoDesc().getPtoName());
 
         assert (indexPirParams instanceof XPirParams);
@@ -52,11 +48,8 @@ public class XPirClient extends AbstractIndexPirClient {
     }
 
     @Override
-    public Set<ByteBuffer> pir(Set<Integer> indexSet) throws MpcAbortException {
-        setPtoInput(indexSet);
-
-        MpcAbortPreconditions.checkArgument(indexArray.length <= 1);
-        indexValue = indexArray[0];
+    public ByteBuffer pir(int index) throws MpcAbortException {
+        setPtoInput(index);
 
         info("{}{} Client begin", ptoBeginLogPrefix, getPtoDesc().getPtoName());
         // 客户端生成BFV算法公私钥对
@@ -89,8 +82,7 @@ public class XPirClient extends AbstractIndexPirClient {
 
         // 客户端解密服务端回复
         stopWatch.start();
-        Set<ByteBuffer> retrievalResult = new HashSet<>();
-        retrievalResult.add(ByteBuffer.wrap(decodeReply(keyPair.get(1), responsePayload)));
+        ByteBuffer retrievalResult = ByteBuffer.wrap(decodeReply(keyPair.get(1), responsePayload));
         stopWatch.stop();
         long decodeReplyTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
         stopWatch.reset();
@@ -115,7 +107,7 @@ public class XPirClient extends AbstractIndexPirClient {
         byte[] decodeByteArray = convertCoeffsToBytes(decodedCoeffArray);
         byte[] elementBytes = new byte[elementByteLength];
         // offset in FV plaintext
-        int offset =  indexValue % params.getElementSizeOfPlaintext();
+        int offset =  index % params.getElementSizeOfPlaintext();
         System.arraycopy(decodeByteArray, offset * elementByteLength, elementBytes, 0, elementByteLength);
         return elementBytes;
     }
@@ -131,9 +123,9 @@ public class XPirClient extends AbstractIndexPirClient {
     public ArrayList<byte[]> generateQuery(byte[] encryptionParams, byte[] publicKey, byte[] secretKey) {
         int[] dimensionSize = params.getDimensionsLength();
         // index of FV plaintext
-        int index = indexValue / params.getElementSizeOfPlaintext();
+        int indexOfPlaintext = index / params.getElementSizeOfPlaintext();
         // 计算每个维度的坐标
-        long[] indices = computeIndices(index, dimensionSize);
+        long[] indices = computeIndices(indexOfPlaintext, dimensionSize);
         ArrayList<Integer> plainQuery = new ArrayList<>();
         int pt;
         for (int i = 0; i < indices.length; i++) {

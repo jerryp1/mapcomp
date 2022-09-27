@@ -113,20 +113,15 @@ public class PirUtils {
     }
 
     /**
-     * 生成索引值集合。
+     * 生成索引值列表。
      *
      * @param elementSize   元素数量。
      * @param setSize       集合数量。
-     * @param retrievalSize 查询数量。
-     * @return 索引值集合。
+     * @return 索引值列表。
      */
-    public static ArrayList<Set<Integer>> generateRetrievalSets(int elementSize, int setSize, int retrievalSize) {
+    public static ArrayList<Integer> generateRetrievalIndexList(int elementSize, int setSize) {
         return IntStream.range(0, setSize)
-            .mapToObj(i ->
-                IntStream.range(0, retrievalSize)
-                    .mapToObj(j -> SECURE_RANDOM.nextInt(elementSize))
-                    .collect(Collectors.toCollection(() -> new HashSet<>(retrievalSize)))
-            )
+            .mapToObj(i -> SECURE_RANDOM.nextInt(elementSize))
             .collect(Collectors.toCollection(ArrayList::new));
     }
 }
