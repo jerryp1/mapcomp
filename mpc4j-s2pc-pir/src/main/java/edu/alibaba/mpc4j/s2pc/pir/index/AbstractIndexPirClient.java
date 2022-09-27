@@ -5,8 +5,6 @@ import edu.alibaba.mpc4j.common.rpc.Rpc;
 import edu.alibaba.mpc4j.common.rpc.desc.PtoDesc;
 import edu.alibaba.mpc4j.common.rpc.pto.AbstractSecureTwoPartyPto;
 
-import java.util.Set;
-
 /**
  * 索引PIR协议客户端抽象类。
  *
@@ -19,21 +17,13 @@ public abstract class AbstractIndexPirClient extends AbstractSecureTwoPartyPto i
      */
     private final IndexPirConfig config;
     /**
-     * 客户端单次查询最大查询关键词数目
-     */
-    protected int maxRetrievalSize;
-    /**
      * 元素字节长度
      */
     protected int elementByteLength;
     /**
      * 客户端检索值。
      */
-    protected int[] indexArray;
-    /**
-     * 客户端检索数量
-     */
-    protected int retrievalSize;
+    protected int index;
     /**
      * 服务端元素数量
      */
@@ -49,27 +39,21 @@ public abstract class AbstractIndexPirClient extends AbstractSecureTwoPartyPto i
         return config.getProType();
     }
 
-    protected void setInitInput(int maxRetrievalSize, int serverElementSize, int elementByteLength) {
+    protected void setInitInput(int serverElementSize, int elementByteLength) {
         assert elementByteLength >= 1;
         this.elementByteLength = elementByteLength;
         assert serverElementSize >= 1;
         this.serverElementSize = serverElementSize;
-        assert maxRetrievalSize >= 1;
-        this.maxRetrievalSize = maxRetrievalSize;
         extraInfo++;
         initialized = false;
     }
 
-    protected void setPtoInput(Set<Integer> indexSet) {
+    protected void setPtoInput(int index) {
         if (!initialized) {
             throw new IllegalStateException("Need init...");
         }
-        assert indexSet.size() <= maxRetrievalSize;
-        retrievalSize = indexSet.size();
-        indexArray = indexSet.stream().mapToInt(index -> {
-            assert index >= 0 && index < serverElementSize;
-            return index;
-        }).toArray();
+        assert index >= 0 && index < serverElementSize;
+        this.index = index;
         extraInfo++;
     }
 }

@@ -13,7 +13,6 @@ import org.slf4j.LoggerFactory;
 
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
-import java.util.Set;
 
 /**
  * 索引PIR测试类。
@@ -87,8 +86,7 @@ public class IndexPirTest {
     }
 
     public void testXPIR(XPirConfig config, IndexPirParams indexPirParams, int elementByteLength, boolean parallel) {
-        int retrievalSize = indexPirParams.maxRetrievalSize();
-        ArrayList<Set<Integer>> retrievalSets = PirUtils.generateRetrievalSets(SERVER_ELEMENT_SIZE, REPEAT_TIME, retrievalSize);
+        ArrayList<Integer> retrievalIndexList = PirUtils.generateRetrievalIndexList(SERVER_ELEMENT_SIZE, REPEAT_TIME);
         // 生成元素数组
         ArrayList<ByteBuffer> elementList = PirUtils.generateElementArrayList(SERVER_ELEMENT_SIZE, elementByteLength);
         // 创建参与方实例
@@ -101,7 +99,7 @@ public class IndexPirTest {
             server, indexPirParams, elementList, elementByteLength, REPEAT_TIME
         );
         IndexPirClientThread clientThread = new IndexPirClientThread(
-            client, indexPirParams, retrievalSets, SERVER_ELEMENT_SIZE, elementByteLength, REPEAT_TIME
+            client, indexPirParams, retrievalIndexList, SERVER_ELEMENT_SIZE, elementByteLength, REPEAT_TIME
         );
         try {
             // 开始执行协议
@@ -121,9 +119,8 @@ public class IndexPirTest {
         ArrayList<ByteBuffer> result = clientThread.getRetrievalResult();
         LOGGER.info("Client: The Retrieval Set Size is {}", result.size());
         for (int index = 0; index < REPEAT_TIME; index++) {
-            ArrayList<Integer> retrievalList = new ArrayList<>(retrievalSets.get(index));
             ByteBuffer retrievalElement = result.get(index);
-            Assert.assertEquals(retrievalElement, elementList.get(retrievalList.get(0)));
+            Assert.assertEquals(retrievalElement, elementList.get(retrievalIndexList.get(index)));
         }
     }
 }

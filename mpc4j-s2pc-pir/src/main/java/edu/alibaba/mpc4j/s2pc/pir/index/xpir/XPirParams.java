@@ -19,14 +19,6 @@ public class XPirParams implements IndexPirParams {
     }
 
     /**
-     * 数据库元素数量
-     */
-    private final int elementSizeOfDatabase;
-    /**
-     * 元素字节长度
-     */
-    private final int elementByteLength;
-    /**
      * 明文模数比特长度
      */
     private final int plainModulusBitLength;
@@ -55,19 +47,16 @@ public class XPirParams implements IndexPirParams {
      */
     private final int[] dimensionsLength;
 
-
-    public XPirParams(int elementSize, int elementByteLength, XPirConfig config, int dimension) {
-        this.elementSizeOfDatabase = elementSize;
-        this.elementByteLength = elementByteLength;
+    public XPirParams(int serverElementSize, int elementByteLength, XPirConfig config, int dimension) {
         this.polyModulusDegree = config.getPolyModulusDegree();
         this.plainModulusBitLength = config.getPlainModulusSize();
         this.dimension = dimension;
         // 生成加密方案参数
         this.encryptionParams = XPirNativeParams.genEncryptionParameters(polyModulusDegree, (1L << plainModulusBitLength) + 1);
         // 一个多项式可以包含的元素数量
-        this.elementSizeOfPlaintext = elementSizeOfPlaintext();
+        this.elementSizeOfPlaintext = elementSizeOfPlaintext(elementByteLength);
         // 多项式数量
-        this.plaintextSize = (int) Math.ceil((double) elementSizeOfDatabase / this.elementSizeOfPlaintext);
+        this.plaintextSize = (int) Math.ceil((double) serverElementSize / this.elementSizeOfPlaintext);
         // 各维度的向量长度
         this.dimensionsLength = computeDimensionLength();
     }
@@ -138,10 +127,11 @@ public class XPirParams implements IndexPirParams {
     /**
      * 返回多项式包含的数据库元素数量。
      *
+     * @param elementByteLength 元素字节长度。
      * @return 明文多项式包含的数据库元素数量。
      */
-    private int elementSizeOfPlaintext() {
-        int coeffSizeOfElement = coeffSizeOfElement();
+    private int elementSizeOfPlaintext(int elementByteLength) {
+        int coeffSizeOfElement = coeffSizeOfElement(elementByteLength);
         int elementSizeOfPlaintext = polyModulusDegree / coeffSizeOfElement;
         assert elementSizeOfPlaintext > 0 : "N should be larger than the of coefficients needed to represent a database element";
         return elementSizeOfPlaintext;
@@ -174,23 +164,17 @@ public class XPirParams implements IndexPirParams {
     /**
      * 返回元素的系数数量。
      *
+     * @param elementByteLength 元素字节长度。
      * @return 元素的系数数量。
      */
-    private int coeffSizeOfElement() {
+    private int coeffSizeOfElement(int elementByteLength) {
         return (int) Math.ceil(Byte.SIZE * elementByteLength / (double) plainModulusBitLength);
-    }
-
-    @Override
-    public int maxRetrievalSize() {
-        return 1;
     }
 
     @Override
     public String toString() {
         int product = Arrays.stream(dimensionsLength).reduce(1, (a, b) -> a * b);
         return "PIR Parameters :" + "\n" +
-            "  - number of elements : " + elementSizeOfDatabase + "\n" +
-            "  - element size : " + elementByteLength + "\n" +
             "  - elements per BFV plaintext : " + elementSizeOfPlaintext + "\n" +
             "  - dimensions for d-dimensional hyperrectangle : " + dimension + "\n" +
             "  - number of BFV plaintexts (before padding) : " + plaintextSize + "\n" +
