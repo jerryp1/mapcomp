@@ -2,9 +2,9 @@ package edu.alibaba.mpc4j.s2pc.pir.index;
 
 import edu.alibaba.mpc4j.common.rpc.Party;
 import edu.alibaba.mpc4j.common.rpc.Rpc;
-import edu.alibaba.mpc4j.s2pc.pir.index.xpir.XPirClient;
-import edu.alibaba.mpc4j.s2pc.pir.index.xpir.XPirConfig;
-import edu.alibaba.mpc4j.s2pc.pir.index.xpir.XPirServer;
+import edu.alibaba.mpc4j.s2pc.pir.index.xpir.Mbfk16IndexPirClient;
+import edu.alibaba.mpc4j.s2pc.pir.index.xpir.Mbfk16IndexPirConfig;
+import edu.alibaba.mpc4j.s2pc.pir.index.xpir.Mbfk16IndexPirServer;
 
 /**
  * 索引PIR协议工厂。
@@ -19,6 +19,7 @@ public class IndexPirFactory {
     private IndexPirFactory() {
         // empty
     }
+
     /**
      * 索引PIR协议类型。
      */
@@ -27,8 +28,14 @@ public class IndexPirFactory {
          * XPIR
          */
         XPIR,
-        // SEAL_PIR,
-        // ONION_PIR,
+        /**
+         * SealPIR
+         */
+        SEAL_PIR,
+        /**
+         * OnionPIR
+         */
+        ONION_PIR,
     }
 
     /**
@@ -41,10 +48,11 @@ public class IndexPirFactory {
      */
     public static IndexPirServer createServer(Rpc serverRpc, Party clientParty, IndexPirConfig config) {
         IndexPirType type = config.getProType();
-        //noinspection SwitchStatementWithTooFewBranches
         switch (type) {
             case XPIR:
-                return new XPirServer(serverRpc, clientParty, (XPirConfig) config);
+                return new Mbfk16IndexPirServer(serverRpc, clientParty, (Mbfk16IndexPirConfig) config);
+            case SEAL_PIR:
+            case ONION_PIR:
             default:
                 throw new IllegalArgumentException("Invalid " + IndexPirType.class.getSimpleName() + ": " + type.name());
         }
@@ -60,10 +68,11 @@ public class IndexPirFactory {
      */
     public static IndexPirClient createClient(Rpc clientRpc, Party serverParty, IndexPirConfig config) {
         IndexPirType type = config.getProType();
-        //noinspection SwitchStatementWithTooFewBranches
         switch (type) {
             case XPIR:
-                return new XPirClient(clientRpc, serverParty, (XPirConfig) config);
+                return new Mbfk16IndexPirClient(clientRpc, serverParty, (Mbfk16IndexPirConfig) config);
+            case SEAL_PIR:
+            case ONION_PIR:
             default:
                 throw new IllegalArgumentException("Invalid " + IndexPirType.class.getSimpleName() + ": " + type.name());
         }

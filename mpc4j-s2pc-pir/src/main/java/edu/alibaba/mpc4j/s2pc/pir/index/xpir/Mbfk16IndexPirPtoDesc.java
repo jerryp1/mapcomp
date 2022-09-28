@@ -4,14 +4,17 @@ import edu.alibaba.mpc4j.common.rpc.desc.PtoDesc;
 import edu.alibaba.mpc4j.common.rpc.desc.PtoDescManager;
 
 /**
- * XPIR协议信息。
- * Carlos Aguilar Melchor, Joris Barrier, Laurent Fousse, and Marc-Olivier Killijian.
- * XPIR : Private Information Retrieval for Everyone. Proc. Priv. Enhancing Technol. 2016, 2 (2016), 155–174
+ * XPIR协议信息。论文来源：
+ * <p>
+ * Carlos Aguilar Melchor, Joris Barrier, Laurent Fousse, and Marc-Olivier Killijian. XPIR : Private Information
+ * Retrieval for Everyone. Proc. Priv. Enhancing Technol. 2016, 2 (2016), 155–174
+ * </p>
+ * 原始方案使用libNTL实现，这里应用SEAL实现。
  *
  * @author Liqiang Peng
  * @date 2022/8/24
  */
-public class XPirPtoDesc implements PtoDesc {
+public class Mbfk16IndexPirPtoDesc implements PtoDesc {
     /**
      * 协议ID
      */
@@ -19,7 +22,7 @@ public class XPirPtoDesc implements PtoDesc {
     /**
      * 协议名称
      */
-    private static final String PTO_NAME = "XPIR";
+    private static final String PTO_NAME = "MBFK16_INDEX_PIR";
 
     /**
      * 协议步骤
@@ -38,12 +41,12 @@ public class XPirPtoDesc implements PtoDesc {
     /**
      * 单例模式
      */
-    private static final XPirPtoDesc INSTANCE = new XPirPtoDesc();
+    private static final Mbfk16IndexPirPtoDesc INSTANCE = new Mbfk16IndexPirPtoDesc();
 
     /**
      * 私有构造函数
      */
-    private XPirPtoDesc() {
+    private Mbfk16IndexPirPtoDesc() {
         // empty
     }
 

@@ -21,13 +21,13 @@ public abstract class AbstractIndexPirClient extends AbstractSecureTwoPartyPto i
      */
     protected int elementByteLength;
     /**
-     * 客户端检索值。
+     * 客户端检索值
      */
     protected int index;
     /**
      * 服务端元素数量
      */
-    protected int serverElementSize;
+    protected int num;
 
     protected AbstractIndexPirClient(PtoDesc ptoDesc, Rpc clientRpc, Party serverParty, IndexPirConfig config) {
         super(ptoDesc, clientRpc, serverParty, config);
@@ -39,11 +39,11 @@ public abstract class AbstractIndexPirClient extends AbstractSecureTwoPartyPto i
         return config.getProType();
     }
 
-    protected void setInitInput(int serverElementSize, int elementByteLength) {
-        assert elementByteLength >= 1;
+    protected void setInitInput(int num, int elementByteLength) {
+        assert elementByteLength > 0 : "element byte length must be greater than 0: " + elementByteLength;
         this.elementByteLength = elementByteLength;
-        assert serverElementSize >= 1;
-        this.serverElementSize = serverElementSize;
+        assert num > 0 : "num must be greater than 0";
+        this.num = num;
         extraInfo++;
         initialized = false;
     }
@@ -52,7 +52,7 @@ public abstract class AbstractIndexPirClient extends AbstractSecureTwoPartyPto i
         if (!initialized) {
             throw new IllegalStateException("Need init...");
         }
-        assert index >= 0 && index < serverElementSize;
+        assert index >= 0 && index < num : "index must be in range [0, " + num + "): " + index;
         this.index = index;
         extraInfo++;
     }

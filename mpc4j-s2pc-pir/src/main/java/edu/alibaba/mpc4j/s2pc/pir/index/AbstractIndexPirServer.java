@@ -27,7 +27,7 @@ public abstract class AbstractIndexPirServer extends AbstractSecureTwoPartyPto i
     /**
      * 服务端元素数量
      */
-    protected int elementSizeOfDatabase;
+    protected int num;
     /**
      * 元素字节长度
      */
@@ -44,15 +44,18 @@ public abstract class AbstractIndexPirServer extends AbstractSecureTwoPartyPto i
     }
 
     protected void setInitInput(ArrayList<ByteBuffer> elementArrayList, int elementByteLength) {
-        assert elementByteLength >= 1;
+        assert elementByteLength > 0 : "element byte length must be greater than 0: " + elementByteLength;
         this.elementByteLength = elementByteLength;
-        assert elementArrayList.size() >= 1;
-        this.elementSizeOfDatabase = elementArrayList.size();
-        this.elementByteArray = new byte[this.elementSizeOfDatabase * this.elementByteLength];
-        IntStream.range(0, elementSizeOfDatabase)
-            .forEach(i -> System.arraycopy(
-                elementArrayList.get(i).array(), 0, this.elementByteArray, i * elementByteLength, elementByteLength
-            ));
+        assert elementArrayList.size() > 0 : "num must be greater than 0";
+        num = elementArrayList.size();
+        // 将元素打平
+        elementByteArray = new byte[num * elementByteLength];
+        IntStream.range(0, num).forEach(index -> {
+            byte[] element = elementArrayList.get(index).array();
+            assert element.length == elementByteLength
+                : "element byte length must be " + elementByteLength + ": " + element.length;
+            System.arraycopy(element, 0, elementByteArray, index * elementByteLength, elementByteLength);
+        });
         extraInfo++;
         initialized = false;
     }

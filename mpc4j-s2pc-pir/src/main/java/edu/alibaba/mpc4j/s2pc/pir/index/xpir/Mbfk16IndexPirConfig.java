@@ -11,7 +11,7 @@ import edu.alibaba.mpc4j.s2pc.pir.index.IndexPirFactory;
  * @author Liqiang Peng
  * @date 2022/8/25
  */
-public class XPirConfig implements IndexPirConfig {
+public class Mbfk16IndexPirConfig implements IndexPirConfig {
     /**
      * 环境类型
      */
@@ -25,7 +25,7 @@ public class XPirConfig implements IndexPirConfig {
      */
     private final int plainModulusSize;
 
-    public XPirConfig(Builder builder) {
+    public Mbfk16IndexPirConfig(Builder builder) {
         this.envType = builder.envType;
         this.polyModulusDegree = builder.polyModulusDegree;
         this.plainModulusSize = builder.plainModulusSize;
@@ -54,7 +54,7 @@ public class XPirConfig implements IndexPirConfig {
         return plainModulusSize;
     }
 
-    public static class Builder implements org.apache.commons.lang3.builder.Builder<XPirConfig> {
+    public static class Builder implements org.apache.commons.lang3.builder.Builder<Mbfk16IndexPirConfig> {
         /**
          * 环境类型
          */
@@ -90,8 +90,8 @@ public class XPirConfig implements IndexPirConfig {
         }
 
         @Override
-        public XPirConfig build() {
-            return new XPirConfig(this);
+        public Mbfk16IndexPirConfig build() {
+            return new Mbfk16IndexPirConfig(this);
         }
     }
 }

@@ -12,7 +12,7 @@ import java.util.stream.IntStream;
  * @author Liqiang Peng
  * @date 2022/8/24
  */
-public class XPirParams implements IndexPirParams {
+public class Mbfk16IndexPirParams implements IndexPirParams {
 
     static {
         System.loadLibrary(CommonConstants.MPC4J_NATIVE_FHE_NAME);
@@ -47,12 +47,12 @@ public class XPirParams implements IndexPirParams {
      */
     private final int[] dimensionsLength;
 
-    public XPirParams(int serverElementSize, int elementByteLength, XPirConfig config, int dimension) {
+    public Mbfk16IndexPirParams(int serverElementSize, int elementByteLength, Mbfk16IndexPirConfig config, int dimension) {
         this.polyModulusDegree = config.getPolyModulusDegree();
         this.plainModulusBitLength = config.getPlainModulusSize();
         this.dimension = dimension;
         // 生成加密方案参数
-        this.encryptionParams = XPirNativeParams.genEncryptionParameters(polyModulusDegree, (1L << plainModulusBitLength) + 1);
+        this.encryptionParams = Mbfk16IndexPirNativeUtils.generateSealContext(polyModulusDegree, (1L << plainModulusBitLength) + 1);
         // 一个多项式可以包含的元素数量
         this.elementSizeOfPlaintext = elementSizeOfPlaintext(elementByteLength);
         // 多项式数量

@@ -60,10 +60,9 @@ add_library(
         mtg/edu_alibaba_mpc4j_s2pc_pcg_mtg_zp64_core_rss19_Rss19Zp64CoreMtgNativeReceiver.cpp
         mtg/edu_alibaba_mpc4j_s2pc_pcg_mtg_zp64_core_rss19_Rss19Zp64CoreMtgNativeSender.cpp
         mtg/edu_alibaba_mpc4j_s2pc_pcg_mtg_zp64_core_rss19_Rss19Zp64CoreMtgNativeConfigChecker.cpp
-        utils.cpp pir/edu_alibaba_mpc4j_s2pc_pir_index_xpir_XPirNativeClient.cpp
+        utils.cpp
         index_pir.cpp index_pir.h
-        pir/edu_alibaba_mpc4j_s2pc_pir_index_xpir_XPirNativeServer.cpp
-        pir/edu_alibaba_mpc4j_s2pc_pir_index_xpir_XPirNativeParams.cpp
+        pir/edu_alibaba_mpc4j_s2pc_pir_index_xpir_Mbfk16IndexPirNativeUtils.cpp
 )
 # 链接SEAL库
 target_link_libraries(mpc4j-native-fhe PUBLIC SEAL::seal_shared)

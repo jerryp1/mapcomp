@@ -4,8 +4,8 @@ import edu.alibaba.mpc4j.common.rpc.Rpc;
 import edu.alibaba.mpc4j.common.rpc.RpcManager;
 import edu.alibaba.mpc4j.common.rpc.impl.memory.MemoryRpcManager;
 import edu.alibaba.mpc4j.s2pc.pir.PirUtils;
-import edu.alibaba.mpc4j.s2pc.pir.index.xpir.XPirConfig;
-import edu.alibaba.mpc4j.s2pc.pir.index.xpir.XPirParams;
+import edu.alibaba.mpc4j.s2pc.pir.index.xpir.Mbfk16IndexPirConfig;
+import edu.alibaba.mpc4j.s2pc.pir.index.xpir.Mbfk16IndexPirParams;
 import org.junit.Assert;
 import org.junit.Test;
 import org.slf4j.Logger;
@@ -59,33 +59,33 @@ public class IndexPirTest {
 
     @Test
     public void testOneDimensionXPIR() {
-        XPirConfig config = new XPirConfig.Builder().setPolyModulusDegree(4096).setPlainModulusSize(20).build();
-        XPirParams xPirParams = new XPirParams(SERVER_ELEMENT_SIZE, DEFAULT_ELEMENT_BYTE_LENGTH, config, 1);
-        testXPIR(config, xPirParams, DEFAULT_ELEMENT_BYTE_LENGTH, false);
+        Mbfk16IndexPirConfig config = new Mbfk16IndexPirConfig.Builder().setPolyModulusDegree(4096).setPlainModulusSize(20).build();
+        Mbfk16IndexPirParams mbfk16IndexPirParams = new Mbfk16IndexPirParams(SERVER_ELEMENT_SIZE, DEFAULT_ELEMENT_BYTE_LENGTH, config, 1);
+        testXPIR(config, mbfk16IndexPirParams, DEFAULT_ELEMENT_BYTE_LENGTH, false);
     }
 
     @Test
     public void testTwoDimensionXPIRWithShortElementByteLength() {
-        XPirConfig config = new XPirConfig.Builder().setPolyModulusDegree(4096).setPlainModulusSize(20).build();
-        XPirParams xPirParams = new XPirParams(SERVER_ELEMENT_SIZE, SHORT_ELEMENT_BYTE_LENGTH, config, 2);
-        testXPIR(config, xPirParams, SHORT_ELEMENT_BYTE_LENGTH, false);
+        Mbfk16IndexPirConfig config = new Mbfk16IndexPirConfig.Builder().setPolyModulusDegree(4096).setPlainModulusSize(20).build();
+        Mbfk16IndexPirParams mbfk16IndexPirParams = new Mbfk16IndexPirParams(SERVER_ELEMENT_SIZE, SHORT_ELEMENT_BYTE_LENGTH, config, 2);
+        testXPIR(config, mbfk16IndexPirParams, SHORT_ELEMENT_BYTE_LENGTH, false);
     }
 
     @Test
     public void testTwoDimensionXPIRWithDefaultElementByteLength() {
-        XPirConfig config = new XPirConfig.Builder().setPolyModulusDegree(4096).setPlainModulusSize(20).build();
-        XPirParams xPirParams = new XPirParams(SERVER_ELEMENT_SIZE, DEFAULT_ELEMENT_BYTE_LENGTH, config, 2);
-        testXPIR(config, xPirParams, DEFAULT_ELEMENT_BYTE_LENGTH, false);
+        Mbfk16IndexPirConfig config = new Mbfk16IndexPirConfig.Builder().setPolyModulusDegree(4096).setPlainModulusSize(20).build();
+        Mbfk16IndexPirParams mbfk16IndexPirParams = new Mbfk16IndexPirParams(SERVER_ELEMENT_SIZE, DEFAULT_ELEMENT_BYTE_LENGTH, config, 2);
+        testXPIR(config, mbfk16IndexPirParams, DEFAULT_ELEMENT_BYTE_LENGTH, false);
     }
 
     @Test
     public void testTwoDimensionXPIRWithLongElementByteLength() {
-        XPirConfig config = new XPirConfig.Builder().setPolyModulusDegree(4096).setPlainModulusSize(20).build();
-        XPirParams xPirParams = new XPirParams(SERVER_ELEMENT_SIZE, LONG_ELEMENT_BYTE_LENGTH, config, 2);
-        testXPIR(config, xPirParams, LONG_ELEMENT_BYTE_LENGTH, false);
+        Mbfk16IndexPirConfig config = new Mbfk16IndexPirConfig.Builder().setPolyModulusDegree(4096).setPlainModulusSize(20).build();
+        Mbfk16IndexPirParams mbfk16IndexPirParams = new Mbfk16IndexPirParams(SERVER_ELEMENT_SIZE, LONG_ELEMENT_BYTE_LENGTH, config, 2);
+        testXPIR(config, mbfk16IndexPirParams, LONG_ELEMENT_BYTE_LENGTH, false);
     }
 
-    public void testXPIR(XPirConfig config, IndexPirParams indexPirParams, int elementByteLength, boolean parallel) {
+    public void testXPIR(Mbfk16IndexPirConfig config, IndexPirParams indexPirParams, int elementByteLength, boolean parallel) {
         ArrayList<Integer> retrievalIndexList = PirUtils.generateRetrievalIndexList(SERVER_ELEMENT_SIZE, REPEAT_TIME);
         // 生成元素数组
         ArrayList<ByteBuffer> elementList = PirUtils.generateElementArrayList(SERVER_ELEMENT_SIZE, elementByteLength);

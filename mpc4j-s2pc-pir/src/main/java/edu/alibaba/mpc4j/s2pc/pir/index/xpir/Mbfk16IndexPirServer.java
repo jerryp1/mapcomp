@@ -21,7 +21,7 @@ import java.util.stream.IntStream;
  * @author Liqiang Peng
  * @date 2022/8/24
  */
-public class XPirServer extends AbstractIndexPirServer {
+public class Mbfk16IndexPirServer extends AbstractIndexPirServer {
 
     static {
         System.loadLibrary(CommonConstants.MPC4J_NATIVE_FHE_NAME);
@@ -30,14 +30,14 @@ public class XPirServer extends AbstractIndexPirServer {
     /**
      * XPIR方案参数
      */
-    private XPirParams params;
+    private Mbfk16IndexPirParams params;
     /**
      * BFV明文（点值表示）
      */
     private ArrayList<byte[]> bfvPlaintext;
 
-    public XPirServer(Rpc serverRpc, Party clientParty, XPirConfig config) {
-        super(XPirPtoDesc.getInstance(), serverRpc, clientParty, config);
+    public Mbfk16IndexPirServer(Rpc serverRpc, Party clientParty, Mbfk16IndexPirConfig config) {
+        super(Mbfk16IndexPirPtoDesc.getInstance(), serverRpc, clientParty, config);
     }
 
     @Override
@@ -46,8 +46,8 @@ public class XPirServer extends AbstractIndexPirServer {
 
         info("{}{} Server Init begin", ptoBeginLogPrefix, getPtoDesc().getPtoName());
 
-        assert (indexPirParams instanceof XPirParams);
-        params = (XPirParams) indexPirParams;
+        assert (indexPirParams instanceof Mbfk16IndexPirParams);
+        params = (Mbfk16IndexPirParams) indexPirParams;
 
         stopWatch.start();
         // 服务端对数据库进行编码
@@ -68,7 +68,7 @@ public class XPirServer extends AbstractIndexPirServer {
 
         // 接收客户端的加密查询信息
         DataPacketHeader queryHeader = new DataPacketHeader(
-            taskId, getPtoDesc().getPtoId(), XPirPtoDesc.PtoStep.CLIENT_SEND_QUERY.ordinal(), extraInfo,
+            taskId, getPtoDesc().getPtoId(), Mbfk16IndexPirPtoDesc.PtoStep.CLIENT_SEND_QUERY.ordinal(), extraInfo,
             otherParty().getPartyId(), rpc.ownParty().getPartyId()
         );
         ArrayList<byte[]> queryPayload = new ArrayList<>(rpc.receive(queryHeader).getPayload());
@@ -77,11 +77,11 @@ public class XPirServer extends AbstractIndexPirServer {
 
         // 服务端密文态下计算查询信息
         stopWatch.start();
-        ArrayList<byte[]> response = XPirNativeServer.generateReply(
+        ArrayList<byte[]> response = Mbfk16IndexPirNativeUtils.generateReply(
             params.getEncryptionParams(), queryPayload, bfvPlaintext, params.getDimensionsLength()
         );
         DataPacketHeader keywordResponseHeader = new DataPacketHeader(
-            taskId, getPtoDesc().getPtoId(), XPirPtoDesc.PtoStep.SERVER_SEND_RESPONSE.ordinal(), extraInfo,
+            taskId, getPtoDesc().getPtoId(), Mbfk16IndexPirPtoDesc.PtoStep.SERVER_SEND_RESPONSE.ordinal(), extraInfo,
             rpc.ownParty().getPartyId(), otherParty().getPartyId()
         );
         rpc.send(DataPacket.fromByteArrayList(keywordResponseHeader, response));
@@ -112,7 +112,7 @@ public class XPirServer extends AbstractIndexPirServer {
         // 每个多项式包含的字节长度
         int byteSizeOfPlaintext = elementSizeOfPlaintext * elementByteLength;
         // 数据库总字节长度
-        int totalByteSize = elementSizeOfDatabase * elementByteLength;
+        int totalByteSize = num * elementByteLength;
         // 一个多项式中需要使用的系数个数
         int usedCoeffSize = elementSizeOfPlaintext * ((int) Math.ceil(Byte.SIZE * elementByteLength / (double) logt));
         // 系数个数不大于多项式阶数
@@ -146,7 +146,7 @@ public class XPirServer extends AbstractIndexPirServer {
             .mapToObj(i -> IntStream.range(0, polyModulusDegree).mapToLong(i1 -> 1L).toArray())
             .forEach(coeffsList::add);
         // 多项式NTT转换
-        return XPirNativeServer.transformToNttForm(params.getEncryptionParams(), coeffsList);
+        return Mbfk16IndexPirNativeUtils.nttTransform(params.getEncryptionParams(), coeffsList);
     }
 
     /**

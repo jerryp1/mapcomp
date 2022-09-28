@@ -20,7 +20,7 @@ import java.util.concurrent.TimeUnit;
  * @author Liqiang Peng
  * @date 2022/8/24
  */
-public class XPirClient extends AbstractIndexPirClient {
+public class Mbfk16IndexPirClient extends AbstractIndexPirClient {
 
     static {
         System.loadLibrary(CommonConstants.MPC4J_NATIVE_FHE_NAME);
@@ -29,10 +29,10 @@ public class XPirClient extends AbstractIndexPirClient {
     /**
      * XPIR方案参数
      */
-    private XPirParams params;
+    private Mbfk16IndexPirParams params;
 
-    public XPirClient(Rpc clientRpc, Party serverParty, XPirConfig config) {
-        super(XPirPtoDesc.getInstance(), clientRpc, serverParty, config);
+    public Mbfk16IndexPirClient(Rpc clientRpc, Party serverParty, Mbfk16IndexPirConfig config) {
+        super(Mbfk16IndexPirPtoDesc.getInstance(), clientRpc, serverParty, config);
     }
 
     @Override
@@ -40,8 +40,8 @@ public class XPirClient extends AbstractIndexPirClient {
         setInitInput(serverElementSize, elementByteLength);
         info("{}{} Client Init begin", ptoBeginLogPrefix, getPtoDesc().getPtoName());
 
-        assert (indexPirParams instanceof XPirParams);
-        params = (XPirParams) indexPirParams;
+        assert (indexPirParams instanceof Mbfk16IndexPirParams);
+        params = (Mbfk16IndexPirParams) indexPirParams;
 
         initialized = true;
         info("{}{} Client Init end", ptoEndLogPrefix, getPtoDesc().getPtoName());
@@ -54,7 +54,7 @@ public class XPirClient extends AbstractIndexPirClient {
         info("{}{} Client begin", ptoBeginLogPrefix, getPtoDesc().getPtoName());
         // 客户端生成BFV算法公私钥对
         stopWatch.start();
-        List<byte[]> keyPair = XPirNativeClient.keyGeneration(params.getEncryptionParams());
+        List<byte[]> keyPair = Mbfk16IndexPirNativeUtils.keyGen(params.getEncryptionParams());
         stopWatch.stop();
         long keyGenTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
         stopWatch.reset();
@@ -64,7 +64,7 @@ public class XPirClient extends AbstractIndexPirClient {
         stopWatch.start();
         List<byte[]> encryptedQueryList = generateQuery(params.getEncryptionParams(), keyPair.get(0), keyPair.get(1));
         DataPacketHeader clientQueryDataPacketHeader = new DataPacketHeader(
-            taskId, getPtoDesc().getPtoId(), XPirPtoDesc.PtoStep.CLIENT_SEND_QUERY.ordinal(), extraInfo,
+            taskId, getPtoDesc().getPtoId(), Mbfk16IndexPirPtoDesc.PtoStep.CLIENT_SEND_QUERY.ordinal(), extraInfo,
             rpc.ownParty().getPartyId(), otherParty().getPartyId()
         );
         rpc.send(DataPacket.fromByteArrayList(clientQueryDataPacketHeader, encryptedQueryList));
@@ -75,7 +75,7 @@ public class XPirClient extends AbstractIndexPirClient {
 
         // 客户端接收服务端回复
         DataPacketHeader responseHeader = new DataPacketHeader(
-            taskId, getPtoDesc().getPtoId(), XPirPtoDesc.PtoStep.SERVER_SEND_RESPONSE.ordinal(), extraInfo,
+            taskId, getPtoDesc().getPtoId(), Mbfk16IndexPirPtoDesc.PtoStep.SERVER_SEND_RESPONSE.ordinal(), extraInfo,
             otherParty().getPartyId(), rpc.ownParty().getPartyId()
         );
         List<byte[]> responsePayload = rpc.receive(responseHeader).getPayload();
@@ -101,7 +101,7 @@ public class XPirClient extends AbstractIndexPirClient {
      * @throws MpcAbortException 如果协议异常中止。
      */
     private byte[] decodeReply(byte[] secretKey, List<byte[]> response) throws MpcAbortException {
-        long[] decodedCoeffArray = XPirNativeClient.decodeReply(
+        long[] decodedCoeffArray = Mbfk16IndexPirNativeUtils.decryptReply(
             params.getEncryptionParams(), secretKey, (ArrayList<byte[]>) response, params.getDimension()
         );
         byte[] decodeByteArray = convertCoeffsToBytes(decodedCoeffArray);
@@ -139,7 +139,7 @@ public class XPirClient extends AbstractIndexPirClient {
             }
         }
         // 返回查询密文
-        return XPirNativeClient.generateQuery(
+        return Mbfk16IndexPirNativeUtils.generateQuery(
             encryptionParams, publicKey, secretKey, plainQuery.stream().mapToInt(integer -> integer).toArray()
         );
     }
