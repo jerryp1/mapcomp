@@ -1,9 +1,10 @@
-package edu.alibaba.mpc4j.common.tool.lpn.matrix;
+package edu.alibaba.mpc4j.common.tool.bitmatrix.sparse;
 
 import org.apache.commons.lang3.builder.EqualsBuilder;
 import org.apache.commons.lang3.builder.HashCodeBuilder;
 
 import java.util.ArrayList;
+
 /**
  * Extremely Sparse Matrix 类
  * SparseMatrix 类考虑了各行或者各列仅有少数点为1的情况
@@ -13,7 +14,7 @@ import java.util.ArrayList;
  * @author Hanwen Feng
  * @date 2022/03/10
  */
-public class ExtremeSparseMatrix {
+public class ExtremeSparseBitMatrix {
     /**
      * 记录非空列的index
      */
@@ -21,7 +22,7 @@ public class ExtremeSparseMatrix {
     /**
      * 存储非空列的list
      */
-    private final ArrayList<SparseVector> colsList;
+    private final ArrayList<SparseBitVector> colsList;
     /**
      * 矩阵的列数
      */
@@ -39,7 +40,7 @@ public class ExtremeSparseMatrix {
      * @param rows             行数
      * @param cols             列数
      */
-    public ExtremeSparseMatrix(ArrayList<SparseVector> colsList, int[] nonEmptyColIndex, int rows, int cols) {
+    public ExtremeSparseBitMatrix(ArrayList<SparseBitVector> colsList, int[] nonEmptyColIndex, int rows, int cols) {
         this.colsList = colsList;
         this.nonEmptyColIndex = nonEmptyColIndex;
         this.rows = rows;
@@ -52,7 +53,7 @@ public class ExtremeSparseMatrix {
      * @param xVec 布尔向量
      * @return 返回乘积
      */
-    public boolean[] lmul(boolean[] xVec) {
+    public boolean[] lExtMul(boolean[] xVec) {
         assert xVec.length == rows;
         boolean[] outputs = new boolean[cols];
         for (int i = 0; i < nonEmptyColIndex.length; i++) {
@@ -68,7 +69,7 @@ public class ExtremeSparseMatrix {
      * @param xVec 向量
      * @param yVec 向量
      */
-    public void lmulAdd(boolean[] xVec, boolean[] yVec) {
+    public void lExtMulAddi(boolean[] xVec, boolean[] yVec) {
         assert xVec.length == rows;
         assert yVec.length == cols;
         for (int i = 0; i < nonEmptyColIndex.length; i++) {
@@ -84,13 +85,13 @@ public class ExtremeSparseMatrix {
      * @param xVec 向量
      * @return 返回乘积
      */
-    public byte[][] lmul(byte[][] xVec) {
+    public byte[][] lExtMul(byte[][] xVec) {
         assert xVec.length == rows;
 
         byte[][] outputs = new byte[cols][xVec[0].length];
         for (int i = 0; i < nonEmptyColIndex.length; i++) {
             int index = nonEmptyColIndex[i];
-            colsList.get(i).multiplyAdd(xVec, outputs[index]);
+            colsList.get(i).multiplyAddi(xVec, outputs[index]);
         }
         return outputs;
     }
@@ -101,19 +102,20 @@ public class ExtremeSparseMatrix {
      * @param xVec 向量
      * @param yVec 向量
      */
-    public void lmulAdd(byte[][] xVec, byte[][] yVec) {
+    public void lExtMulAddi(byte[][] xVec, byte[][] yVec) {
         assert xVec.length == rows;
         assert yVec.length == cols;
         assert xVec[0].length == yVec[0].length;
 
         for (int i = 0; i < nonEmptyColIndex.length; i++) {
             int index = nonEmptyColIndex[i];
-            colsList.get(i).multiplyAdd(xVec, yVec[index]);
+            colsList.get(i).multiplyAddi(xVec, yVec[index]);
         }
     }
 
     /**
      * 读取矩阵列数
+     *
      * @return 列数
      */
     public int getCols() {
@@ -122,6 +124,7 @@ public class ExtremeSparseMatrix {
 
     /**
      * 读取矩阵行数
+     *
      * @return 行数
      */
     public int getRows() {
@@ -130,21 +133,21 @@ public class ExtremeSparseMatrix {
 
     @Override
     public boolean equals(Object obj) {
-        if (!(obj instanceof ExtremeSparseMatrix)) {
+        if (!(obj instanceof ExtremeSparseBitMatrix)) {
             return false;
         }
         if (this == obj) {
             return true;
         }
-        ExtremeSparseMatrix that = (ExtremeSparseMatrix) obj;
+        ExtremeSparseBitMatrix that = (ExtremeSparseBitMatrix) obj;
         return new EqualsBuilder().append(this.colsList, that.colsList).append(this.rows, that.rows)
-                .append(this.cols, that.cols).append(this.nonEmptyColIndex, that.nonEmptyColIndex).isEquals();
+            .append(this.cols, that.cols).append(this.nonEmptyColIndex, that.nonEmptyColIndex).isEquals();
     }
 
     @Override
     public int hashCode() {
         return new HashCodeBuilder().append(colsList).
-                append(rows).append(cols).append(nonEmptyColIndex).toHashCode();
+            append(rows).append(cols).append(nonEmptyColIndex).toHashCode();
     }
 
 }

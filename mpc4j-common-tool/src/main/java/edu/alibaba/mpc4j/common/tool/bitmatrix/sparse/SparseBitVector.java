@@ -1,4 +1,4 @@
-package edu.alibaba.mpc4j.common.tool.lpn.matrix;
+package edu.alibaba.mpc4j.common.tool.bitmatrix.sparse;
 
 import edu.alibaba.mpc4j.common.tool.utils.BytesUtils;
 import org.apache.commons.lang3.builder.HashCodeBuilder;
@@ -6,49 +6,61 @@ import org.apache.commons.lang3.builder.HashCodeBuilder;
 import java.util.Arrays;
 
 /**
- * 稀疏数组相关代数操作类，用于支持稀疏矩阵以及LDPC编码
+ * 稀疏数组相关代数操作类，用于支持稀疏矩阵以及LDPC编码。
  * 稀疏数组是指 只有少数点为1，多数点为0的 比特数组。
- * 对 int[] 的封装。 [1,2,5] 表示 该数组 第1、2、5位置为1，其余为0
+ * 对 int[] 的封装。 [1,2,5] 表示 该数组 第1、2、5位置为1，其余为0。
+ * 所有稀疏数组均已排序。
  *
  * @author Hanwen Feng
  * @date 2022.3.2
  */
 
-public class SparseVector {
+public class SparseBitVector {
     /**
      * 被封装的数组，记录稀疏向量中值为1的位置
      */
-    private final int[] pureVector;
+    private int[] nonZeroIndexArray;
 
     /**
      * 对应的比特向量的长度。例如pureVector=【1，2，5】，bitSize = 8. 则表示长度为8的0-1向量， 其中1,2,5的位置为1，其他为0
      */
-    private final int bitSize;
+    private int bitSize;
 
     /**
-     * 标记是否已经排序
-     */
-    private boolean sorted;
-
-    /**
-     * 将int[] 数组转换为 SparseArray对象
+     * 将int[] 数组转换为 SparseArray对象。
      *
-     * @param r       指定的数组
-     * @param bitSize 对应比特向量的长度
+     * @param indexArray 指定的数组。
+     * @param bitSize    对应比特向量的长度。
      */
-    public SparseVector(int[] r, int bitSize) {
-        pureVector = r;
-        this.bitSize = bitSize;
+    public static SparseBitVector create(int[] indexArray, int bitSize) {
+        if (indexArray.length != 0) {
+            Arrays.sort(indexArray);
+            if (indexArray[indexArray.length - 1] >= bitSize) {
+                throw new IllegalArgumentException("All indexes in int[] r must be smaller than bitSize.");
+            }
+        }
+        SparseBitVector sparseBitVector = new SparseBitVector();
+        sparseBitVector.nonZeroIndexArray = indexArray;
+        sparseBitVector.bitSize = bitSize;
+        return sparseBitVector;
     }
 
     /**
-     * 同上，支持在初始化阶段表明数组已排序，节省后续排序开销
-     *
-     * @param sorted 表明数组是否已经排序
+     * 私有构造函数。
      */
-    public SparseVector(int[] r, int bitArraySize, boolean sorted) {
-        this(r, bitArraySize);
-        this.sorted = sorted;
+    private SparseBitVector() {
+        // empty
+    }
+
+    /**
+     * 将已排序的int[] 数组转换为 SparseArray对象，节省后续排序开销。
+     *
+     */
+    public static SparseBitVector createUnCheck(int[] indexArray, int bitSize) {
+        SparseBitVector sparseBitVector = new SparseBitVector();
+        sparseBitVector.nonZeroIndexArray = indexArray;
+        sparseBitVector.bitSize = bitSize;
+        return sparseBitVector;
     }
 
 
@@ -58,9 +70,13 @@ public class SparseVector {
      * @param sparseArraySize 稀疏数组大小
      * @param bitArraySize    比特数组大小
      */
-    public SparseVector(int sparseArraySize, int bitArraySize) {
-        pureVector = new int[sparseArraySize];
-        this.bitSize = bitArraySize;
+    public static SparseBitVector createEmpty(int sparseArraySize, int bitArraySize) {
+        assert sparseArraySize <= bitArraySize
+            : "sparseArraySize: " + sparseArraySize + " should be smaller than bitArraySize: " + bitArraySize;
+        SparseBitVector sparseBitVector = new SparseBitVector();
+        sparseBitVector.nonZeroIndexArray = new int[sparseArraySize];
+        sparseBitVector.bitSize = bitArraySize;
+        return sparseBitVector;
     }
 
     /**
@@ -69,9 +85,8 @@ public class SparseVector {
      *
      * @return 返回移位一次后的稀疏向量
      */
-    public SparseVector cyclicMove() {
-        assert sorted;
-        SparseVector shiftArray = new SparseVector(getSize(), getBitSize());
+    public SparseBitVector cyclicMove() {
+        SparseBitVector shiftArray = createEmpty(getSize(), getBitSize());
         if (getValue(getSize() - 1) == getBitSize() - 1) {
             for (int i = getSize() - 1; i > 0; i--) {
                 shiftArray.setValue(i, getValue(i - 1) + 1);
@@ -82,7 +97,6 @@ public class SparseVector {
                 shiftArray.setValue(i, getValue(i) + 1);
             }
         }
-        shiftArray.setSorted();
         return shiftArray;
     }
 
@@ -91,13 +105,9 @@ public class SparseVector {
      *
      * @return 拷贝的稀疏向量
      */
-    public SparseVector copyOf() {
-        int[] nPureVector = Arrays.copyOf(pureVector, pureVector.length);
-        SparseVector nArray = new SparseVector(nPureVector, bitSize);
-        if (sorted) {
-            nArray.setSorted();
-        }
-        return nArray;
+    public SparseBitVector copyOf() {
+        int[] nPureVector = Arrays.copyOf(nonZeroIndexArray, nonZeroIndexArray.length);
+        return createUnCheck(nPureVector, bitSize);
     }
 
     /**
@@ -109,13 +119,9 @@ public class SparseVector {
      * @param newBitSize 拷贝得到向量的bitSize。
      * @return 拷贝的稀疏向量
      */
-    public SparseVector copyOfRange(int from, int to, int newBitSize) {
-        int[] nPureVector = Arrays.copyOfRange(pureVector, from, to);
-        SparseVector nVector = new SparseVector(nPureVector, newBitSize);
-        if (sorted) {
-            nVector.setSorted();
-        }
-        return nVector;
+    public SparseBitVector copyOfRange(int from, int to, int newBitSize) {
+        int[] nPureVector = Arrays.copyOfRange(nonZeroIndexArray, from, to);
+        return createUnCheck(nPureVector, newBitSize);
     }
 
     /**
@@ -125,13 +131,11 @@ public class SparseVector {
      * @param constant 移动的位数
      * @return 返回移位后的向量
      */
-    public SparseVector shiftConstant(int constant) {
-        assert sorted;
-
-        int[] nPureArray = new int[pureVector.length];
+    public SparseBitVector shiftConstant(int constant) {
+        int[] nPureArray = new int[nonZeroIndexArray.length];
         int lengthCount = 0;
-        for (int i = 0; i < pureVector.length; i++) {
-            int element = pureVector[i] + constant;
+        for (int i = 0; i < nonZeroIndexArray.length; i++) {
+            int element = nonZeroIndexArray[i] + constant;
             if (element < bitSize) {
                 nPureArray[i] = element;
                 lengthCount++;
@@ -140,7 +144,7 @@ public class SparseVector {
             }
         }
         int[] tPureArray = Arrays.copyOf(nPureArray, lengthCount);
-        return new SparseVector(tPureArray, bitSize, true);
+        return createUnCheck(tPureArray, bitSize);
     }
 
     /**
@@ -149,7 +153,7 @@ public class SparseVector {
      * @return 数组大小
      */
     public int getSize() {
-        return pureVector.length;
+        return nonZeroIndexArray.length;
     }
 
     /**
@@ -170,60 +174,58 @@ public class SparseVector {
      * 例如： 从（2，4，5，8，10），指定 (start = 3, end =6), 首先提取得到 (4,5)；
      * 由于初始位置为3, 平移得到 (1,2), 返回 (1,2)
      */
-    public SparseVector getSubArray(int startValue, int endValue) {
+    public SparseBitVector getSubArray(int startValue, int endValue) {
         assert endValue >= startValue && startValue >= 0;
         assert endValue <= getBitSize();
-        assert sorted;
 
         int targetBitSize = endValue - startValue;
 
         if (getSize() == 0) {
-            return new SparseVector(0, targetBitSize);
+            return createEmpty(0, targetBitSize);
         }
 
-        int startIndexI = Arrays.binarySearch(pureVector, startValue);
+        int startIndexI = Arrays.binarySearch(nonZeroIndexArray, startValue);
 
         if (startIndexI < 0) {
             startIndexI = (startIndexI + 1) * (-1);
         }
 
-        int endIndexI = Arrays.binarySearch(pureVector, endValue);
+        int endIndexI = Arrays.binarySearch(nonZeroIndexArray, endValue);
         if (endIndexI < 0) {
             endIndexI = (endIndexI + 1) * (-1);
         }
 
-        int[] nPureArray = Arrays.copyOfRange(pureVector, startIndexI, endIndexI);
+        int[] nPureArray = Arrays.copyOfRange(nonZeroIndexArray, startIndexI, endIndexI);
 
         for (int i = 0; i < nPureArray.length; i++) {
             nPureArray[i] = nPureArray[i] - startValue;
         }
 
-        return new SparseVector(nPureArray, targetBitSize, true);
+        return createUnCheck(nPureArray, targetBitSize);
     }
 
     /**
      * 两个sparseArray 相加
      *
-     * @param xArray 待加和的另一个sparseArray
+     * @param that 待加和的另一个sparseArray
      * @return 加和
      */
-    public SparseVector addSparseArray(SparseVector xArray) {
-        assert bitSize == xArray.bitSize;
-        assert sorted && xArray.sorted;
+    public SparseBitVector add(SparseBitVector that) {
+        assert bitSize == that.bitSize;
 
-        int[] temp = new int[getSize() + xArray.getSize()];
+        int[] temp = new int[getSize() + that.getSize()];
         int tempIndex = 0;
 
         int index0 = 0;
         int index1 = 0;
 
-        while (index0 != getSize() && index1 != xArray.getSize()) {
-            if (getValue(index0) < xArray.getValue(index1)) {
+        while (index0 != getSize() && index1 != that.getSize()) {
+            if (getValue(index0) < that.getValue(index1)) {
                 temp[tempIndex] = getValue(index0++);
                 tempIndex++;
 
-            } else if (getValue(index0) > xArray.getValue(index1)) {
-                temp[tempIndex] = xArray.getValue(index1++);
+            } else if (getValue(index0) > that.getValue(index1)) {
+                temp[tempIndex] = that.getValue(index1++);
                 tempIndex++;
             } else {
                 ++index0;
@@ -234,14 +236,12 @@ public class SparseVector {
             temp[tempIndex] = getValue(index0++);
             tempIndex++;
         }
-        while (index1 != xArray.getSize()) {
-            temp[tempIndex] = xArray.getValue(index1++);
+        while (index1 != that.getSize()) {
+            temp[tempIndex] = that.getValue(index1++);
             tempIndex++;
         }
-
         int[] nArray = Arrays.copyOf(temp, tempIndex);
-
-        return new SparseVector(nArray, bitSize, true);
+        return createUnCheck(nArray, bitSize);
     }
 
     /**
@@ -254,7 +254,7 @@ public class SparseVector {
         assert bitSize == xVec.length;
 
         boolean r = false;
-        for (int index : pureVector) {
+        for (int index : nonZeroIndexArray) {
             r = xVec[index] != r;
         }
         return r;
@@ -270,7 +270,7 @@ public class SparseVector {
         assert bitSize == xVec.length;
 
         byte r = 0;
-        for (int index : pureVector) {
+        for (int index : nonZeroIndexArray) {
             r ^= xVec[index];
         }
         return r;
@@ -285,7 +285,7 @@ public class SparseVector {
     public byte[] multiply(final byte[][] xVec) {
         assert bitSize == xVec.length;
         byte[] r = new byte[xVec[0].length];
-        for (int index : pureVector) {
+        for (int index : nonZeroIndexArray) {
             BytesUtils.xori(r, xVec[index]);
         }
         return r;
@@ -297,10 +297,10 @@ public class SparseVector {
      * @param xVec 向量
      * @param y    返回向量
      */
-    public void multiplyAdd(final byte[][] xVec, byte[] y) {
+    public void multiplyAddi(final byte[][] xVec, byte[] y) {
         assert bitSize == xVec.length;
         assert xVec[0].length == y.length;
-        for (int index : pureVector) {
+        for (int index : nonZeroIndexArray) {
             //noinspection SuspiciousNameCombination
             BytesUtils.xori(y, xVec[index]);
         }
@@ -312,7 +312,7 @@ public class SparseVector {
      * @param sVec 稀疏向量
      * @return 内积结果boolean值
      */
-    public boolean multiply(SparseVector sVec) {
+    public boolean multiply(SparseBitVector sVec) {
         boolean result = false;
 
         int rowIndex = 0;
@@ -320,10 +320,12 @@ public class SparseVector {
 
         // 乘积矩阵（i,j）位置等于 第i行和第i列做内积。
         while (rowIndex != getSize() && colIndex != sVec.getSize()) {
-            if (getValue(rowIndex) < sVec.getValue(colIndex))
+            if (getValue(rowIndex) < sVec.getValue(colIndex)) {
                 ++rowIndex;
-            else if (sVec.getValue(colIndex) < getValue(rowIndex))
+            }
+            else if (sVec.getValue(colIndex) < getValue(rowIndex)) {
                 ++colIndex;
+            }
             else {
                 result = !result;
                 ++rowIndex;
@@ -334,13 +336,13 @@ public class SparseVector {
     }
 
     /**
-     * 统计本稀疏数组记录的位置
+     * 统计本稀疏数组记录的位置。
+     * 例如，本稀疏数组为 [2,4]， 则将 indexCounterArray[2]，indexCounterArray[4] 分别加一。
      *
      * @param indexCounterArray 用于记录数量的向量
-     *                          例如，本稀疏数组为 [2,4]， 则将 indexCounterArray[2]，indexCounterArray[4] 分别加一。
      */
     public void indexCounter(int[] indexCounterArray) {
-        for (int index : pureVector) {
+        for (int index : nonZeroIndexArray) {
             indexCounterArray[index]++;
         }
     }
@@ -352,10 +354,10 @@ public class SparseVector {
      * @param index 位置
      * @param value 值
      */
-    public void setValue(int index, int value) {
+    private void setValue(int index, int value) {
         assert index < getSize();
         assert value < bitSize;
-        pureVector[index] = value;
+        nonZeroIndexArray[index] = value;
     }
 
     /**
@@ -365,7 +367,7 @@ public class SparseVector {
      * @return 值
      */
     public int getValue(int index) {
-        return pureVector[index];
+        return nonZeroIndexArray[index];
     }
 
     /**
@@ -374,88 +376,42 @@ public class SparseVector {
      * @return 返回最后一个元素
      */
     public int getLastValue() {
-        return pureVector[pureVector.length - 1];
+        return nonZeroIndexArray[nonZeroIndexArray.length - 1];
     }
 
-    /**
-     * 对数组排序
-     */
-    public void sort() {
-        Arrays.sort(pureVector);
-        sorted = true;
-    }
-
-    /**
-     * 判断给定index是否包含在稀疏数组中
-     *
-     * @param index 需要判断的index
-     * @return 返回是或否
-     */
-    public boolean checkIndex(int index) {
-        assert sorted;
-        return (Arrays.binarySearch(pureVector, index) >= 0);
-    }
-
-    /**
-     * 判断数组是否已经排序（升序）
-     *
-     * @return 若已经排序 返回true
-     */
-    public boolean isSorted() {
-        for (int i = 0; i < getSize() - 1; i++) {
-            if (getValue(i) > getValue(i + 1)) {
+    private static boolean isSorted(int[] indexArray) {
+        for (int i = 0; i < indexArray.length; i++) {
+            if (indexArray[i] > indexArray[i + 1]) {
                 return false;
             }
         }
-        setSorted();
         return true;
     }
 
-    private void setSorted() {
-        sorted = true;
-    }
-
-    public void setSortedWithCheck() {
-        assert (isSorted());
-        sorted = true;
-    }
-
-    /**
-     * 得到对应的bitArray.
-     * 数据类型为byte[]，每一个byte存储0或者1
-     *
-     * @return bitArray
-     */
-    public byte[] getBitVector() {
-        byte[] output = new byte[bitSize];
-        Arrays.stream(pureVector).forEach(i -> output[i] = 1);
-        return output;
-    }
-
-    public int[] getPureVector() {
-        return Arrays.copyOf(pureVector, pureVector.length);
+    public int[] getNonZeroIndexArray() {
+        return Arrays.copyOf(nonZeroIndexArray, nonZeroIndexArray.length);
     }
 
     @Override
     public String toString() {
-        return Arrays.toString(pureVector);
+        return Arrays.toString(nonZeroIndexArray);
     }
 
     @Override
     public boolean equals(Object obj) {
-        if (!(obj instanceof SparseVector)) {
+        if (!(obj instanceof SparseBitVector)) {
             return false;
         }
         if (this == obj) {
             return true;
         }
-        SparseVector that = (SparseVector) obj;
+        SparseBitVector that = (SparseBitVector) obj;
 
-        return Arrays.equals(this.pureVector, that.pureVector);
+        return Arrays.equals(this.nonZeroIndexArray, that.nonZeroIndexArray);
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(pureVector).toHashCode();
+        return new HashCodeBuilder().append(nonZeroIndexArray).toHashCode();
     }
 }
