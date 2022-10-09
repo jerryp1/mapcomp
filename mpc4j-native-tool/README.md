@@ -526,23 +526,33 @@ sudo yum install devtoolset-8
 
 ### GMP
 
-Note that NTL on CentOS only supports [GMP v6.0.0](https://gmplib.org/download/gmp/gmp-6.0.0.tar.xz). Run the following command to download the source code for version 6.0.0.
+As far as we know, Centos comes with its own GMP library. CentOS7 contains [GMP v6.0.0](https://gmplib.org/download/gmp/gmp-6.0.0.tar.xz), and CentOS8, it contains [GMP v6.1.2](https://gmplib.org/download/gmp/gmp-6.1.2.tar.xz). Therefore, we need to install the same version of GMP in the corresponding version of Centos.Or we can download the latest version of GMP and replace the GMP that comes with Centos.
+
+Run the following command to download the source code for version 6.x.x.
 
 ```shell
-wget https://gmplib.org/download/gmp/gmp-6.0.0.tar.xz
+wget https://gmplib.org/download/gmp/gmp-6.x.x.tar.xz
 ```
 
 Run the following command to install GMP.
 
 ```shell
-xz -d gmp-6.0.0.tar.xz
-tar -xvf gmp-6.0.0.tar
-cd gmp-6.0.0
+xz -d gmp-6.x.x.tar.xz
+tar -xvf gmp-6.x.x.tar
+cd gmp-6.x.x
 ./configure CFLAGS="-march=native -O3" CXXFLAGS="-march=native -O3"
 make
 make check
 sudo make install
 cd .. # return to the original path
+```
+
+You can replace the GMP of Centos through the following command.
+
+```shell
+cp /usr/local/lib/libgmp.so /usr/lib64/ #The first path in this command is the installation path of gmp
+cp /usr/local/lib/libgmp.so.10 /usr/lib64/
+cp /usr/local/lib/libgmp.so.10.4.1 /usr/lib64/
 ```
 
 You may also need to install the development library for GMP by running the following command.
