@@ -48,8 +48,8 @@ public class HashEfficiencyTest {
     private static final HashType[] TYPES = new HashType[] {
         HashType.JDK_SHA256,
         HashType.NATIVE_SHA256,
-        HashType.JDK_SHA3_256,
-        HashType.JDK_SHA3_512,
+        HashType.BC_SHA3_256,
+        HashType.BC_SHA3_512,
         HashType.BC_BLAKE_2B_160,
         HashType.NATIVE_BLAKE_2B_160,
         HashType.NATIVE_BLAKE_3,

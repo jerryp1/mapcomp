@@ -12,7 +12,7 @@ extern "C" {
  * Method:    checkSealParams
  * Signature: (IJ[I[[I[III)Z
  */
-JNIEXPORT jboolean JNICALL Java_edu_alibaba_mpc4j_s2pc_pso_upsi_cmg21_Cmg21UpsiNativeParamsChecker_checkSealParams
+[[maybe_unused]] JNIEXPORT jboolean JNICALL Java_edu_alibaba_mpc4j_s2pc_pso_upsi_cmg21_Cmg21UpsiNativeParamsChecker_checkSealParams
   (JNIEnv *, jclass, jint, jlong, jintArray, jobjectArray, jintArray, jint, jint);
 
 #ifdef __cplusplus

@@ -97,14 +97,14 @@ public class Gmr21MpPidClient<T> extends AbstractPidParty<T> {
     }
 
     @Override
-    public void init(int maxClientSetSize, int maxServerSetSize) throws MpcAbortException {
-        setInitInput(maxClientSetSize, maxServerSetSize);
+    public void init(int maxClientElementSize, int maxServerElementSize) throws MpcAbortException {
+        setInitInput(maxClientElementSize, maxServerElementSize);
         info("{}{} Client Init begin", ptoBeginLogPrefix, getPtoDesc().getPtoName());
 
         stopWatch.start();
-        mpOprfReceiver.init(maxClientSetSize);
-        mpOprfSender.init(maxServerSetSize);
-        psuClient.init(maxClientSetSize, maxServerSetSize);
+        mpOprfReceiver.init(maxClientElementSize);
+        mpOprfSender.init(maxServerElementSize);
+        psuClient.init(maxClientElementSize, maxServerElementSize);
         stopWatch.stop();
         long initTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
         stopWatch.reset();
@@ -115,8 +115,8 @@ public class Gmr21MpPidClient<T> extends AbstractPidParty<T> {
     }
 
     @Override
-    public PidPartyOutput<T> pid(Set<T> clientElementSet, int serverSetSize) throws MpcAbortException {
-        setPtoInput(clientElementSet, serverSetSize);
+    public PidPartyOutput<T> pid(Set<T> clientElementSet, int serverElementSize) throws MpcAbortException {
+        setPtoInput(clientElementSet, serverElementSize);
         info("{}{} Client begin", ptoBeginLogPrefix, getPtoDesc().getPtoName());
 
         stopWatch.start();
@@ -130,7 +130,7 @@ public class Gmr21MpPidClient<T> extends AbstractPidParty<T> {
         kaOprfOutput = mpOprfReceiver.oprf(clientElementByteArrays);
         // Alice and Bob invoke another OPRF functionality F_{oprf}.
         // Bob acts as sender and receives a PRF key k_B
-        kbOprfKey = mpOprfSender.oprf(serverSetSize);
+        kbOprfKey = mpOprfSender.oprf(serverElementSize);
         stopWatch.stop();
         long oprfTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
         stopWatch.reset();
@@ -146,7 +146,7 @@ public class Gmr21MpPidClient<T> extends AbstractPidParty<T> {
 
         stopWatch.start();
         // The parties invoke F_{psu}, with inputs {R_B(x) | y ∈ Y} for Bob
-        Set<ByteBuffer> pidSet = psuClient.psu(clientPidMap.keySet(), serverSetSize, pidByteLength);
+        Set<ByteBuffer> pidSet = psuClient.psu(clientPidMap.keySet(), serverElementSize, pidByteLength);
         stopWatch.stop();
         long psuTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
         stopWatch.reset();
@@ -164,7 +164,6 @@ public class Gmr21MpPidClient<T> extends AbstractPidParty<T> {
         long unionTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
         stopWatch.reset();
         info("{}{} Server Step 4/4 ({}ms)", ptoStepLogPrefix, getPtoDesc().getPtoName(), unionTime);
-
 
         info("{}{} Client end", ptoEndLogPrefix, getPtoDesc().getPtoName());
         return new PidPartyOutput<>(pidByteLength, pidSet, clientPidMap);

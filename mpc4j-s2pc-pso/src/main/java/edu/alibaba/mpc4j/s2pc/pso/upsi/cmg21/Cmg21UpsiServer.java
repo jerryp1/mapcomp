@@ -351,7 +351,6 @@ public class Cmg21UpsiServer<T> extends AbstractUpsiServer<T> {
                     (parallel ? IntStream.range(0, partitionCount).parallel() : IntStream.range(0, partitionCount))
                         .mapToObj(j -> Cmg21UpsiNativeServer.computeMatchesNaiveMethod(
                                 encryptionParams.get(0),
-                                encryptionParams.get(1),
                                 plaintextPoly.get(i * partitionCount + j),
                                 queryPowers.subList(i * powerDegree.length, (i + 1) * powerDegree.length)
                             )

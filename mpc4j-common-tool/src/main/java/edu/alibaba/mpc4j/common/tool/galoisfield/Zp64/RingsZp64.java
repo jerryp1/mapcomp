@@ -19,11 +19,19 @@ import java.security.SecureRandom;
  * @author Weiran Liu
  * @date 2022/7/7
  */
-public class RingsZp64 implements Zp64 {
+class RingsZp64 implements Zp64 {
     /**
      * 素数
      */
     private final long prime;
+    /**
+     * 素数比特长度
+     */
+    private final int primeBitLength;
+    /**
+     * 素数字节长度
+     */
+    private final int primeByteLength;
     /**
      * l比特长度
      */
@@ -33,7 +41,7 @@ public class RingsZp64 implements Zp64 {
      */
     private final int byteL;
     /**
-     * 最大有效元素：2^k - 1
+     * 最大有效元素：2^k
      */
     private final long rangeBound;
     /**
@@ -59,8 +67,10 @@ public class RingsZp64 implements Zp64 {
         assert BigInteger.valueOf(prime).isProbablePrime(CommonConstants.STATS_BIT_LENGTH)
             : "input prime is not a prime: " + prime;
         this.prime = prime;
+        primeBitLength = LongUtils.ceilLog2(prime);
+        primeByteLength = CommonUtils.getByteLength(primeBitLength);
         finiteField = new IntegersZp64(prime);
-        l = LongUtils.ceilLog2(prime) - 1;
+        l = primeBitLength - 1;
         byteL = CommonUtils.getByteLength(l);
         rangeBound = 1L << l;
         kdf = KdfFactory.createInstance(envType);
@@ -75,6 +85,8 @@ public class RingsZp64 implements Zp64 {
      */
     public RingsZp64(EnvType envType, int l) {
         prime = Zp64Manager.getPrime(l);
+        primeBitLength = LongUtils.ceilLog2(prime);
+        primeByteLength = CommonUtils.getByteLength(primeBitLength);
         this.l = l;
         finiteField = new IntegersZp64(prime);
         byteL = CommonUtils.getByteLength(l);
@@ -104,53 +116,67 @@ public class RingsZp64 implements Zp64 {
     }
 
     @Override
+    public int getPrimeBitLength() {
+        return primeBitLength;
+    }
+
+    @Override
+    public int getPrimeByteLength() {
+        return primeByteLength;
+    }
+
+    @Override
     public long getRangeBound() {
         return rangeBound;
     }
 
     @Override
-    public long module(long a) {
+    public long module(final long a) {
         return finiteField.modulus(a);
     }
 
     @Override
-    public long add(long a, long b) {
-        assert validateElement(a) && validateElement(b);
+    public long add(final long a, final long b) {
+        assert validateElement(a) : "a is not a valid element in Zp64: " + a;
+        assert validateElement(b) : "b is not a valid element in Zp64: " + b;
         return finiteField.add(a, b);
     }
 
     @Override
-    public long neg(long a) {
-        assert validateElement(a);
+    public long neg(final long a) {
+        assert validateElement(a) : "a is not a valid element in Zp64: " + a;
         return finiteField.negate(a);
     }
 
     @Override
-    public long sub(long a, long b) {
-        assert validateElement(a) && validateElement(b);
+    public long sub(final long a, final long b) {
+        assert validateElement(a) : "a is not a valid element in Zp64: " + a;
+        assert validateElement(b) : "b is not a valid element in Zp64: " + b;
         return finiteField.subtract(a, b);
     }
 
     @Override
-    public long mul(long a, long b) {
-        assert validateElement(a) && validateElement(b);
+    public long mul(final long a, final long b) {
+        assert validateElement(a) : "a is not a valid element in Zp64: " + a;
+        assert validateElement(b) : "b is not a valid element in Zp64: " + b;
         return finiteField.multiply(a, b);
     }
 
     @Override
-    public long div(long a, long b) {
-        assert validateElement(a) && validateNonZeroElement(b);
+    public long div(final long a, final long b) {
+        assert validateElement(a) : "a is not a valid element in Zp64: " + a;
+        assert validateNonZeroElement(b) : "b is not a valid non-zero element in Zp64: " + b;
         return finiteField.divide(a, b);
     }
 
     @Override
-    public long inv(long a) {
-        assert validateNonZeroElement(a);
+    public long inv(final long a) {
+        assert validateNonZeroElement(a) : "a is not a valid non-zero element in Zp64: " + a;
         return finiteField.divide(1L, a);
     }
 
     @Override
-    public long mulPow(long a, long b) {
+    public long mulPow(final long a, final long b) {
         assert validateElement(a) && validateElement(b);
         return finiteField.powMod(a, b);
     }
@@ -203,17 +229,17 @@ public class RingsZp64 implements Zp64 {
     }
 
     @Override
-    public boolean validateElement(long a) {
+    public boolean validateElement(final long a) {
         return a >= 0 && a < prime;
     }
 
     @Override
-    public boolean validateNonZeroElement(long a) {
+    public boolean validateNonZeroElement(final long a) {
         return a > 0 && a < prime;
     }
 
     @Override
-    public boolean validateRangeElement(long a) {
+    public boolean validateRangeElement(final long a) {
         return a >= 0 && a < rangeBound;
     }
 }

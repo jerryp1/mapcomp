@@ -49,7 +49,7 @@ public abstract class AbstractZp64CoreVoleReceiver extends AbstractSecureTwoPart
         zp64 = Zp64Factory.createInstance(envType, prime);
         assert zp64.validateRangeElement(delta) : "Δ must be in range [0, " + zp64.getRangeBound() + "): " + delta;
         this.delta = delta;
-        assert maxNum > 0 : "maxNum must be greater than 0";
+        assert maxNum > 0 : "max num must be greater than 0: " + maxNum;
         this.maxNum = maxNum;
         initialized = false;
     }

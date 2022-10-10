@@ -109,7 +109,7 @@ public class Mr19EccBaseNotReceiver extends AbstractBaseNotReceiver {
                     if (i != choices[index]) {
                         rArray[i] = ecc.randomPoint(secureRandom);
                         rByteArrays[i] = rArray[i].getEncoded(false);
-                        pointByteLength += rByteArrays.length;
+                        pointByteLength += rByteArrays[i].length;
                     }
                 }
                 ByteBuffer hashBuffer = ByteBuffer.allocate(Integer.BYTES + pointByteLength);

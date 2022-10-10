@@ -26,10 +26,10 @@ JNIEXPORT jbyteArray JNICALL Java_edu_alibaba_mpc4j_s2pc_pso_upsi_cmg21_Cmg21Ups
 /*
  * Class:     edu_alibaba_mpc4j_s2pc_pso_upsi_cmg21_Cmg21UpsiNativeServer
  * Method:    computeMatchesNaiveMethod
- * Signature: ([B[B[[JLjava/util/List;)[B
+ * Signature: ([B[[JLjava/util/List;)[B
  */
 JNIEXPORT jbyteArray JNICALL Java_edu_alibaba_mpc4j_s2pc_pso_upsi_cmg21_Cmg21UpsiNativeServer_computeMatchesNaiveMethod
-  (JNIEnv *, jclass, jbyteArray, jbyteArray, jobjectArray, jobject);
+  (JNIEnv *, jclass, jbyteArray, jobjectArray, jobject);
 
 #ifdef __cplusplus
 }

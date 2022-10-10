@@ -52,6 +52,7 @@ public abstract class AbstractZp64CoreVoleSender extends AbstractSecureTwoPartyP
     protected void setInitInput(long prime, int maxNum) {
         assert BigInteger.valueOf(prime).isProbablePrime(CommonConstants.STATS_BIT_LENGTH) : "input prime is not a prime: " + prime;
         zp64 = Zp64Factory.createInstance(envType, prime);
+        assert maxNum > 0 : "max num must be greater than 0: " + maxNum;
         this.maxNum = maxNum;
         initialized = false;
     }

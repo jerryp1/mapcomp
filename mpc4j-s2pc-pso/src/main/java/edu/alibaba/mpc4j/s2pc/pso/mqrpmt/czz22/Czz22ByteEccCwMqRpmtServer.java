@@ -52,8 +52,8 @@ public class Czz22ByteEccCwMqRpmtServer extends AbstractMqRpmtServer {
     }
 
     @Override
-    public void init(int maxServerSetSize, int maxClientSetSize) {
-        setInitInput(maxServerSetSize, maxClientSetSize);
+    public void init(int maxServerElementSize, int maxClientElementSize) {
+        setInitInput(maxServerElementSize, maxClientElementSize);
         info("{}{} Server Init begin", ptoBeginLogPrefix, getPtoDesc().getPtoName());
 
         stopWatch.start();

@@ -48,8 +48,8 @@ public class Czz22ByteEccCwMqRpmtClient extends AbstractMqRpmtClient {
     }
 
     @Override
-    public void init(int maxClientSetSize, int maxServerSetSize) throws MpcAbortException {
-        setInitInput(maxClientSetSize, maxServerSetSize);
+    public void init(int maxClientElementSize, int maxServerElementSize) throws MpcAbortException {
+        setInitInput(maxClientElementSize, maxServerElementSize);
         info("{}{} Client Init begin", ptoBeginLogPrefix, getPtoDesc().getPtoName());
 
         stopWatch.start();
@@ -64,12 +64,12 @@ public class Czz22ByteEccCwMqRpmtClient extends AbstractMqRpmtClient {
     }
 
     @Override
-    public boolean[] mqRpmt(Set<ByteBuffer> clientElementSet, int serverSetSize) throws MpcAbortException {
-        setPtoInput(clientElementSet, serverSetSize);
+    public boolean[] mqRpmt(Set<ByteBuffer> clientElementSet, int serverElementSize) throws MpcAbortException {
+        setPtoInput(clientElementSet, serverElementSize);
         info("{}{} Client begin", ptoBeginLogPrefix, getPtoDesc().getPtoName());
 
         stopWatch.start();
-        int peqtByteLength = Czz22ByteEccCwMqRpmtPtoDesc.getPeqtByteLength(serverElementSize, clientElementSize);
+        int peqtByteLength = Czz22ByteEccCwMqRpmtPtoDesc.getPeqtByteLength(this.serverElementSize, clientElementSize);
         peqtHash = HashFactory.createInstance(envType, peqtByteLength);
         // 客户端计算并发送H(y)^β
         List<byte[]> hyBetaPayload = generateHyBetaPayload();

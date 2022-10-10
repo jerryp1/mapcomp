@@ -102,7 +102,9 @@ public class BigIntegerUtils {
         if (nonNegBigInteger.equals(BigInteger.ZERO)) {
             return new byte[byteLength];
         }
-        assert CommonUtils.getByteLength(nonNegBigInteger.bitLength()) <= byteLength;
+        int inputByteLength = CommonUtils.getByteLength(nonNegBigInteger.bitLength());
+        assert inputByteLength <= byteLength
+            : "input byte length must be less than or equal to " + byteLength + ": " + inputByteLength;
         assert BigIntegerUtils.greaterOrEqual(nonNegBigInteger, BigInteger.ZERO);
         byte[] directByteArray = nonNegBigInteger.toByteArray();
         byte[] resultByteArray = new byte[byteLength];
@@ -289,25 +291,6 @@ public class BigIntegerUtils {
             }
             return r;
         }
-    }
-
-    /**
-     * 求x和y的内积。
-     *
-     * @param matrix 用{@code BigInteger[]}表示的矩阵。
-     * @param prime 质数p。
-     * @param x      用布尔值表示的x。
-     * @return x和y的内积。
-     */
-    public static BigInteger innerProduct(BigInteger[] matrix, BigInteger prime, boolean[] x) {
-        assert x.length == matrix.length;
-        BigInteger value = BigInteger.ZERO;
-        for (int i = 0; i < x.length; i++) {
-            if (x[i]) {
-                value = value.add(matrix[i]).mod(prime);
-            }
-        }
-        return value;
     }
 
     /**

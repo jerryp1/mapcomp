@@ -146,7 +146,7 @@ public class Kos16ShZp64CoreVoleSender extends AbstractZp64CoreVoleSender {
         IntStream outputStream = IntStream.range(0, num);
         outputStream = parallel ? outputStream.parallel() : outputStream;
         long[] t = outputStream
-            .mapToLong(index -> zp64Gadget.composition(t0[index]))
+            .mapToLong(index -> zp64Gadget.innerProduct(t0[index]))
             .toArray();
         return Zp64VoleSenderOutput.create(zp64.getPrime(), x, t);
     }

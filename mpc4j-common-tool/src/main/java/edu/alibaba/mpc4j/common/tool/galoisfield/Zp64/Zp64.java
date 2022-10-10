@@ -38,6 +38,20 @@ public interface Zp64 {
     int getByteL();
 
     /**
+     * 返回质数比特长度。
+     *
+     * @return 质数比特长度。
+     */
+    int getPrimeBitLength();
+
+    /**
+     * 返回质数字节长度。
+     *
+     * @return 质数字节长度。
+     */
+    int getPrimeByteLength();
+
+    /**
      * 返回有效范围上界（即2^l）。
      *
      * @return 有效范围上界。
@@ -50,7 +64,7 @@ public interface Zp64 {
      * @param a 输入a。
      * @return a mod p。
      */
-    long module(long a);
+    long module(final long a);
 
     /**
      * 计算a + b。
@@ -67,7 +81,7 @@ public interface Zp64 {
      * @param a 输入a。
      * @return -a。
      */
-    long neg(long a);
+    long neg(final long a);
 
     /**
      * 计算a - b。
@@ -85,7 +99,7 @@ public interface Zp64 {
      * @param b 输入b。
      * @return a * b。
      */
-    long mul(long a, long b);
+    long mul(final long a, final long b);
 
     /**
      * 计算a / b。
@@ -94,7 +108,7 @@ public interface Zp64 {
      * @param b 输入b。
      * @return a / b。
      */
-    long div(long a, long b);
+    long div(final long a, final long b);
 
     /**
      * 计算1 / a。
@@ -102,7 +116,7 @@ public interface Zp64 {
      * @param a 输入a。
      * @return 1 / a。
      */
-    long inv(long a);
+    long inv(final long a);
 
     /**
      * 计算a^b。
@@ -111,7 +125,7 @@ public interface Zp64 {
      * @param b 输入b。
      * @return a^b。
      */
-    long mulPow(long a, long b);
+    long mulPow(final long a, final long b);
 
     /**
      * 创建0元。
@@ -185,7 +199,7 @@ public interface Zp64 {
      * @param a 输入a。
      * @return a是否为0元。
      */
-    default boolean isZero(long a) {
+    default boolean isZero(final long a) {
         assert validateElement(a);
         return a == 0L;
     }
@@ -196,7 +210,7 @@ public interface Zp64 {
      * @param a 输入a。
      * @return a是否为1元。
      */
-    default boolean isOne(long a) {
+    default boolean isOne(final long a) {
         assert validateElement(a);
         return a == 1L;
     }
@@ -207,7 +221,7 @@ public interface Zp64 {
      * @param a 输入a。
      * @return a是否为有效的群元素。
      */
-    boolean validateElement(long a);
+    boolean validateElement(final long a);
 
     /**
      * 判断a是否为有效的（加法、乘法）域元素。
@@ -215,7 +229,7 @@ public interface Zp64 {
      * @param a 输入a。
      * @return a是否为有效的域元素。
      */
-    boolean validateNonZeroElement(long a);
+    boolean validateNonZeroElement(final long a);
 
     /**
      * 判断a是否在[0, 2^l)范围内。
@@ -223,5 +237,5 @@ public interface Zp64 {
      * @param a 输入a。
      * @return a是否在[0, 2^l)范围内。
      */
-    boolean validateRangeElement(long a);
+    boolean validateRangeElement(final long a);
 }

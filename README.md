@@ -6,7 +6,13 @@ Multi-Party Computation for Java (`mpc4j`) is an efficient and easy-to-use Secur
 
 The aim of `mpc4j` is to provide an academic library for researchers to study and develop MPC and related protocols in a unified manner. As `mpc4j` tries to provide state-of-the-art MPC implementations, researchers could leverage the library to have fair and quick comparisons between the new protocols they proposed and existing ones.
 
-`mpc4j` is sponsored by the [DataTrust](https://dp.alibaba.com/product/datatrust) team.
+## Contact
+
+`mpc4j` is mainly developed by Weiran Liu. Feel free to contact me at [mailto:liuweiran900217@gmail.com](mailto:liuweiran900217@gmail.com). The submodules involving Fully Homomorphic Encryption (FHE) is mainly developed by Liqiang Peng. The submodules involving Vector Oblivious Linear Evaluation (VOLE) is mainly developed by Hanwen Feng.
+
+## Who Uses `mpc4j`
+
+Currently, [DataTrust](https://dp.alibaba.com/product/datatrust) is powered by `mpc4j`. If your project uses `mpc4j` and you do not mind it appearing here please contact me.
 
 ## Features
 
@@ -17,9 +23,11 @@ The aim of `mpc4j` is to provide an academic library for researchers to study an
 
 ## Some Implementations of our Work
 
-- Package `psu` in `mpc4j-s2pc-pso` contains the implementation of our paper ["Optimal Private Set Union from Multi-Query Reverse Private Membership Test"](https://eprint.iacr.org/2022/358.pdf). The configuration files are under `conf/psu` in `mpc4j-s2pc-pso`. Just run `java -jar mpc4j-s2pc-pso-X.X.X-jar-with-dependencies.jar conf_file_name.txt` separately on two platforms with direct network connections (using the network channel assigned in config files) or on two terminals in one platform (using local network 127.0.0.1).
-- Module `mpc4j-sml-opboost` contains the implementation of our paper "OpBoost: A Vertical Federated Tree Boosting Framework Based on Order-Preserving Desensitization" (manuscript). The configuration files are under `conf` in `mpc4j-sml-opboost`. The paper is under review. We will release the final version when possible.
-- Package `pmid` in `mpc4j-s2pc-pso` contains the implementation of our paper "Efficient Private Multiset ID Protocols and Applications to Private Multiset Operations" (manuscript). The configuration files are under `conf/pmid` in `mpc4j-s2pc-pso`. We are still updating the paper. We will release the final version when possible.
+Package `pmid` in `mpc4j-s2pc-pso` contains the implementation of our paper "Efficient Private Multiset ID Protocols and Applications to Private Multiset Operations" (manuscript). The configuration files are under `conf/pmid` in `mpc4j-s2pc-pso`. We are still updating the paper. We will release the final version when possible.
+
+Our paper ["Linear Private Set Union from Multi-Query Reverse Private Membership Test"](https://eprint.iacr.org/2022/358.pdf) was accepted to USENIX Security 2023. Package `psu` in `mpc4j-s2pc-pso` contains the implementation of this paper. The configuration files are under `conf/psu` in `mpc4j-s2pc-pso`. Just run `java -jar mpc4j-s2pc-pso-X.X.X-jar-with-dependencies.jar conf_file_name.txt` separately on two platforms with direct network connections (using the network channel assigned in config files) or on two terminals in one platform (using local network 127.0.0.1).
+
+Our paper ["OpBoost: A Vertical Federated Tree Boosting Framework Based on Order-Preserving Desensitization"](https://arxiv.org/abs/2210.01318) was accpeted to VLDB 2023. Module `mpc4j-sml-opboost` contains the implementation of this paper. The configuration files are under `conf` in `mpc4j-sml-opboost`. Like `psu`, just run `java -jar mpc4j-s2pc-pso-X.X.X-jar-with-dependencies.jar conf_file_name.txt` separately on two platforms with direct network connections (using the network channel assigned in config files) or on two terminals in one platform (using local network 127.0.0.1).
 
 ## References
 
@@ -71,7 +79,7 @@ This library is licensed under the Apache License 2.0.
 
 Most of the codes are in Java, except for very efficient implementations in C/C++. You need [OpenSSL](https://www.openssl.org/), [GMP](https://gmplib.org/), [NTL,](https://libntl.org/), [MCL](https://github.com/herumi/mcl) and [libsodium](https://doc.libsodium.org/installation) to compile `mpc4j-native-tool`, and [SEAL 4.0.0](https://github.com/microsoft/SEAL) to compile `mpc4j-native-fhe`. Please see READMD.md in `mpc4j-native-cool` on how to install required C/C++ libraries.
 
- After successfully obtaining the compiled C/C++ library (named `libmpc4j-native-tool` and `libmpc4j-native-fhe`, respectively), you need to assign the native library location when running `mpc4j` using `-Djava.library.path`.
+After successfully obtaining the compiled C/C++ library (named `libmpc4j-native-tool` and `libmpc4j-native-fhe`, respectively), you need to assign the native library location when running `mpc4j` using `-Djava.library.path`.
 
 ## Tests
 
@@ -125,11 +133,11 @@ Java HotSpot(TM) 64-Bit Server VM (build 25.301-b09, mixed mode)
 
 <img src="figures/macos_step_06.png" alt="macos_step_06" style="zoom: 33%;" />
 
-5. Open `Edit Configuration templates...`.
+7. Open `Edit Configuration templates...`.
 
 <img src="figures/macos_step_07.png" alt="macos_step_06" style="zoom: 33%;" />
 
-5. Select `JUnit`, and add the following command into `VM Options` (**Note that you must replace  `/YOUR_MPC4J_ABSOLUTE_PATH` with your own absolute path for `libmpc4j-native-tool.dylib` and `libmpc4j-native-fhe.dylib`**.):
+8. Select `JUnit`, and add the following command into `VM Options` (**Note that you must replace  `/YOUR_MPC4J_ABSOLUTE_PATH` with your own absolute path for `libmpc4j-native-tool.dylib` and `libmpc4j-native-fhe.dylib`**.):
 
 ```shell
 -Djava.library.path=/YOUR_MPC4J_ABSOLUTE_PATH/mpc4j-native-tool/cmake-build-release:/YOUR_MPC4J_ABSOLUTE_PATH/mpc4j-native-fhe/cmake-build-release

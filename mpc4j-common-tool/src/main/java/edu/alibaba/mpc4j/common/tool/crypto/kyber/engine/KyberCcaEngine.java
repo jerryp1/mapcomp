@@ -63,7 +63,7 @@ public class KyberCcaEngine implements KyberEngine {
         }
         this.secureRandom = secureRandom;
         g = HashFactory.createInstance(HashFactory.HashType.BC_SHAKE_256, KyberParams.SYM_BYTES * 3);
-        h = HashFactory.createInstance(HashFactory.HashType.JDK_SHA3_256, KyberParams.SYM_BYTES);
+        h = HashFactory.createInstance(HashFactory.HashType.BC_SHA3_256, KyberParams.SYM_BYTES);
     }
 
     @Override

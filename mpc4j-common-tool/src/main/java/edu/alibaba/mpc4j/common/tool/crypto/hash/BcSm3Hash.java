@@ -7,7 +7,7 @@ import org.bouncycastle.jcajce.provider.digest.SM3;
 import java.util.Arrays;
 
 /**
- * 应用Bouncy Castle哈希引擎实现的哈希函数。
+ * 应用Bouncy Castle哈希引擎实现的SM3哈希函数。
  *
  * @author Weiran Liu
  * @date 2021/12/04
