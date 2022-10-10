@@ -53,7 +53,7 @@ public class ExtremeSparseBitMatrix {
      * @param xVec 布尔向量
      * @return 返回乘积
      */
-    public boolean[] lExtMul(boolean[] xVec) {
+    public boolean[] lmul(boolean[] xVec) {
         assert xVec.length == rows;
         boolean[] outputs = new boolean[cols];
         for (int i = 0; i < nonEmptyColIndex.length; i++) {
@@ -69,7 +69,7 @@ public class ExtremeSparseBitMatrix {
      * @param xVec 向量
      * @param yVec 向量
      */
-    public void lExtMulAddi(boolean[] xVec, boolean[] yVec) {
+    public void lmulAddi(boolean[] xVec, boolean[] yVec) {
         assert xVec.length == rows;
         assert yVec.length == cols;
         for (int i = 0; i < nonEmptyColIndex.length; i++) {

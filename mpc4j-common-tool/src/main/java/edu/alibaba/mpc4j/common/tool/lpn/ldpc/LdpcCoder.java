@@ -110,9 +110,9 @@ public class LdpcCoder {
         p = matrixEp.lmul(p);
         //step 4, 计算 x = p *D + x。
         //noinspection SuspiciousNameCombination
-        matrixD.lExtMulAddi(p, x);
+        matrixD.lmulAddi(p, x);
         // step 5 计算 ppp = p * F + ppp。
-        matrixF.lExtMulAddi(p, ppp);
+        matrixF.lmulAddi(p, ppp);
         // step 6, 计算 pp = ppp * C^{-1} + pp。
         matrixC.invLmulAddi(ppp, pp);
         // step 7, 计算 x = pp * A + x

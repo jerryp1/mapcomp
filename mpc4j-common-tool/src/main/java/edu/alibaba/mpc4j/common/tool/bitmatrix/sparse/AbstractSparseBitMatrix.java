@@ -210,7 +210,7 @@ public abstract class AbstractSparseBitMatrix {
      * @return A^T*M
      */
     public DenseBitMatrix transMultiply(DenseBitMatrix denseBitMatrix) {
-        assert denseBitMatrix.getRows() == cols;
+        assert denseBitMatrix.getRows() == rows;
 
         return (rows == denseBitMatrix.getColumns())
             ? ByteSquareDenseBitMatrix.fromDense(lExtMul(denseBitMatrix.toByteArrays()))
