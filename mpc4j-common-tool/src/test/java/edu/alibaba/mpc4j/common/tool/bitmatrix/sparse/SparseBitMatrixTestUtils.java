@@ -1,8 +1,6 @@
 package edu.alibaba.mpc4j.common.tool.bitmatrix.sparse;
 
-import org.checkerframework.common.value.qual.IntRange;
 import org.junit.Assert;
-
 import java.security.SecureRandom;
 import java.util.ArrayList;
 import java.util.Arrays;
