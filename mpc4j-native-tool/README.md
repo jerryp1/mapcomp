@@ -261,7 +261,7 @@ First, check if you have installed Java by the following command:
 java --version
 ```
 
-If you cannot see the version information, then you may need to install Java on your own. We recommend installing Java from [oracle.com](https://www.oracle.com/java/technologies/downloads/). Recall that if you just want to run `mpc4j`, higher Java versions are OK. However, if you want to develop `mpc4j`, you may need to install JDK8.
+If you cannot see the version information, then you may need to install Java on your own. We recommend installing Java from [oracle.com](https://www.oracle.com/java/technologies/downloads/). 
 
 By default, Java will be installed under the path like `/Library/Java/JavaVirtualMachines/jdk-XX.X.X.jdk/Contents/Home` or `/Users/USERNAME/Library/Java/JavaVirtualMachines/JDK_NAME/Comtents/Home`. After you find the Java installation path, run the following command to open `bash_profile`.
 
@@ -303,17 +303,23 @@ make
 
 ## Install Dependencies on Ubuntu
 
+The following guidelines have been tested both on Ubuntu 20.04 and Ubuntu 20.04 with Docker image.
+
 ### Necessary Tools
 
-Install `gcc`, `m4`, `make`, `cmake`, `g++`, and `openssl` by the following command.
+Install `gcc`, `m4`, `make`, `cmake`, `g++`, `openssl` (and its development tool), `wget`, `xz-util`, and `vim` by the following command.
 
 ```shell
 sudo apt install gcc
 sudo apt install m4
 sudo apt install make
 sudo apt install cmake
-sudo apt-get install g++
+sudo apt install g++
 sudo apt install openssl
+sudo apt install libssl-dev
+sudo apt install wget
+sudo apt install xz-utils
+sudo apt install vim
 ```
 
 Also, we need to add the default path `/usr/local/lib` to be the additional library path. Run the following command to open the configuration file for `ldconfig`.
@@ -336,18 +342,26 @@ Then, run the following command.
 
 ### GMP
 
-Note that NTL on Ubuntu only supports [GMP v6.2.0](https://gmplib.org/download/gmp/gmp-6.2.0.tar.xz). Run the following command to download the source code for version 6.2.0.
+Note that different Ubuntu platforms needs different GMP version for compiling NTL. For example, our Ubuntu platform only supports [GMP v6.2.0](https://gmplib.org/download/gmp/gmp-6.2.0.tar.xz). However, when using Ubuntu Docker image, [GMP v6.2.1](https://gmplib.org/download/gmp/gmp-6.2.1.tar.xz) is needed. When you compile NTL and you meet problems like:
+
+```text
+GMP version check (6.2.0/6.2.1)
+```
+
+you need to uninstall the inconsistent GMP version (by executing `make uninstall`) in the gmp source code dictionary, and compile and install the correct GMP version. In the following, we write `gmp-6.2.X` to represent different GMP version. Please replace `X` to the correct version number when executing the commands.
+
+Run the following command to download the source code of GMP.
 
 ```shell
-wget https://gmplib.org/download/gmp/gmp-6.2.0.tar.xz
+wget https://gmplib.org/download/gmp/gmp-6.2.X.tar.xz
 ```
 
 Install GMP.
 
 ```shell
-xz -d gmp-6.2.0.tar.xz
-tar -xvf gmp-6.2.0.tar
-cd gmp-6.2.0
+xz -d gmp-6.2.X.tar.xz
+tar -xvf gmp-6.2.X.tar
+cd gmp-6.2.X
 ./configure CFLAGS="-march=native -O3" CXXFLAGS="-march=native -O3"
 make
 make check
@@ -442,7 +456,11 @@ First, check if you have installed Java by the following command:
 java --version
 ```
 
-If you cannot see the version information, then you may need to install Java on your own. We recommend installing Java from [oracle.com](https://www.oracle.com/java/technologies/downloads/). Recall that if you just want to run `mpc4j`, higher Java versions are OK. However, if you want to develop `mpc4j`, you may need to install JDK8.
+If you cannot see the version information, then you may need to install Java on your own. We recommend installing Java from [oracle.com](https://www.oracle.com/java/technologies/downloads/). You can also simply install Java via the following command:
+
+```shell
+sudo apt install default-jdk
+```
 
 On Ubuntu, Java would be installed under the path like `/usr/lib/jvm/jdk-XX.X.X`. You can find the Java installation path by the following command.
 
@@ -486,6 +504,8 @@ cd cmake-build-release
 cmake ..
 make
 ```
+
+
 
 ## Install Dependencies on CentOS
 

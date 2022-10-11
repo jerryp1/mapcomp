@@ -5,17 +5,13 @@ set(CMAKE_CXX_STANDARD 17)
 # 增加汇编指令支持（参见：https://www.zhihu.com/question/61037115）
 ENABLE_LANGUAGE(ASM)
 # C编译指令
-set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -pthread -Wall -funroll-loops")
+set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wfatal-errors -fPIC -Wno-ignored-attributes -c -pthread -Wall -funroll-loops")
 message("Platform: ${CMAKE_SYSTEM_PROCESSOR}")
 IF(${CMAKE_SYSTEM_PROCESSOR} MATCHES "(aarch64)|(arm64)")
     set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -march=armv8-a+simd+crypto+crc")
 ELSE()
-    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -march=native -maes -mrdseed")
+    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -march=native -mrdseed -maes -msse2 -msse4.1 -mpclmul")
 ENDIF()
-# 打印C编译指令
-message(STATUS "C Flags (CMAKE_C_FLAGS): ${CMAKE_C_FLAGS}")
-# 设置C++编译指令
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${CMAKE_C_FLAGS} -std=c++11")
 # 默认为Release编译
 if(NOT CMAKE_BUILD_TYPE)
     set(CMAKE_BUILD_TYPE Release)
@@ -23,21 +19,24 @@ endif(NOT CMAKE_BUILD_TYPE)
 message(STATUS "Build type (CMAKE_BUILD_TYPE): ${CMAKE_BUILD_TYPE}")
 # 如果为debug模式，则不使用优化，增加调试编译指令
 if (CMAKE_BUILD_TYPE MATCHES Debug)
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O0 -ggdb")
+    set(CMAKE_CXX_FLAGS "${CMAKE_C_FLAGS} -O0 -ggdb")
 endif()
 # 如果为release模式，则使用优化
 if (CMAKE_BUILD_TYPE MATCHES Release)
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O3")
+    set(CMAKE_CXX_FLAGS "${CMAKE_C_FLAGS} -O3")
 endif()
-# 打印C++编译指令
+# 设置C++编译指令
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${CMAKE_C_FLAGS} -std=c++11")
+# 打印C/C++编译指令
+message(STATUS "C Flags (CMAKE_C_FLAGS): ${CMAKE_C_FLAGS}")
 message(STATUS "CXX Flags (CMAKE_CXX_FLAGS): ${CMAKE_CXX_FLAGS}")
+# 设置默认路径
 set(DEFAULT_DIR "/usr/local")
 
 # 引入NTL
 set(NTL_INCLUDE_DIR "${DEFAULT_DIR}/include/")
 find_library(NTL_LIBRARY NAMES ntl)
 message(STATUS "NTL_INCLUDE_DIRS:  ${NTL_INCLUDE_DIR}")
-set(CMAKE_C_FLAGS "-Wall -maes -msse2 -msse4.1 -mpclmul -Wfatal-errors -pthread -fPIC -Wno-ignored-attributes -c")
 
 # 引入GMP
 set(GMP_INCLUDE_DIR "${DEFAULT_DIR}/include/")

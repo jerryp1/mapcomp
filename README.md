@@ -8,11 +8,11 @@ The aim of `mpc4j` is to provide an academic library for researchers to study an
 
 ## Contact
 
-`mpc4j` is mainly developed by Weiran Liu. Feel free to contact me at [mailto:liuweiran900217@gmail.com](mailto:liuweiran900217@gmail.com). The submodules involving Fully Homomorphic Encryption (FHE) is mainly developed by Liqiang Peng. The submodules involving Vector Oblivious Linear Evaluation (VOLE) is mainly developed by Hanwen Feng.
+`mpc4j` is mainly developed by Weiran Liu. Feel free to contact me at [liuweiran900217@gmail.com](mailto:liuweiran900217@gmail.com). The submodules involving Fully Homomorphic Encryption (FHE) are mainly developed by [Liqiang Peng](mailto:shelleyatsun@gmail.com). The submodules involving Vector Oblivious Linear Evaluation (VOLE) are mainly developed by [Hanwen Feng](mailto:hanw.feng94@gmail.com).
 
 ## Who Uses `mpc4j`
 
-Currently, [DataTrust](https://dp.alibaba.com/product/datatrust) is powered by `mpc4j`. If your project uses `mpc4j` and you do not mind it appearing here please contact me.
+Currently, [DataTrust](https://dp.alibaba.com/product/datatrust) is powered by `mpc4j`. If your project uses `mpc4j` and you do not mind it appearing here, don't hesitate to get in touch with me.
 
 ## Features
 
