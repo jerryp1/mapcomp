@@ -113,6 +113,9 @@ public abstract class AbstractLdpcCreator implements LdpcCreator {
         weight = LdpcCreatorUtils.getWeight(codeType);
     }
 
+    /**
+     * 将lpn参数和矩阵ep写入文件
+     */
     protected void writeToFile() {
         String silverFileName = getFileName();
         try {
@@ -148,7 +151,7 @@ public abstract class AbstractLdpcCreator implements LdpcCreator {
                 AbstractLdpcCreator.class.getClassLoader().getResourceAsStream(silverFileName)
             );
             BufferedReader silverBufferedReader = new BufferedReader(new InputStreamReader(silverInputStream));
-            // read lpnparams
+            // read lpnParams
             int[] lpnArray = IntUtils.byteArrayToIntArray(Base64.getDecoder().decode(silverBufferedReader.readLine()));
             assert lpnArray.length == 3;
             lpnParams = LpnParams.uncheckCreate(lpnArray[0], lpnArray[1], lpnArray[2]);
