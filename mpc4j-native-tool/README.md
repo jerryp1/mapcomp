@@ -11,7 +11,7 @@
 - [MCL](https://github.com/herumi/mcl): A portable and fast pairing-based cryptography library. MCL also includes fast Elliptic Curve implementations. 
 - [libsodium](https://doc.libsodium.org/): A modern, easy-to-use software library for encryption, decryption, signatures, password hashing, and more. libsodium includes efficient X25519 and Ed25519 implementations. 
 
-Installing `mpc4j-native-tool` might be a bit complicated for ones who are not that familiar with Unix-like systems. As the procedures differ across platforms, here we provide installation instructions for macOS (x86_64), macOS (M1), Ubuntu, and CentOS, respectively.
+Installing `mpc4j-native-tool` might be a bit complicated for those who are not that familiar with Unix-like systems. As the procedures differ across platforms, here we provide installation instructions for macOS (x86_64), macOS (M1), Ubuntu, and CentOS, respectively.
 
 We recommend creating a new dictionary (such as `~/lib`) to temporarily store all source codes and libraries before you start to install `mpc4j-native-tool`. All installation procedures assume you are under the dictionary `~/lib`.
 
@@ -41,6 +41,7 @@ brew install gmp
 GMP can also be installed via the source code. In this way, you can add `CFLAGS="-march=native -O3"` to obtain a more efficient GMP. 
 
 Download GMP 6.2.1
+
 ```shell
 wget https://gmplib.org/download/gmp/gmp-6.2.1.tar.xz
 ```
@@ -303,7 +304,29 @@ make
 
 ## Install Dependencies on Ubuntu
 
-The following guidelines have been tested both on Ubuntu 20.04 and Ubuntu 20.04 with Docker image.
+The following guidelines have been tested both on Ubuntu 20.04 and [Docker](https://www.docker.com/) with the official Ubuntu image.
+
+### Ubuntu Docker image
+
+You can run the following commands if you want to use Ubuntu with a Docker image. First, pull the latest Ubuntu Docker image.
+
+```shell
+Docker pull ubuntu
+```
+
+Then, run the Ubuntu Docker image.
+
+```shell
+docker run -it ubuntu
+```
+
+Next, update the `apt` command.
+
+```shell
+apt update
+```
+
+**Note**: If you use Ubuntu Docker image to install `mpc4j-native-tool`, just execute all commands without `sudo`.
 
 ### Necessary Tools
 
@@ -328,7 +351,7 @@ Also, we need to add the default path `/usr/local/lib` to be the additional libr
 sudo vim /etc/ld.so.conf
 ```
 
-Then, add the following scripts in the end of `ld.so.conf`. If you are not familiar with `vim`, just type `i` and use it just like a notebook. When you finish editing, type `:wq` and press `Enter` to confirm the modification.
+Then, add the following scripts at the end of `ld.so.conf`. If you are not familiar with `vim`, just type `i` and use it just like a notebook. When you finish editing, type `:wq` and press `Enter` to confirm the modification.
 
 ```text
 /usr/local/lib
@@ -342,13 +365,13 @@ Then, run the following command.
 
 ### GMP
 
-Note that different Ubuntu platforms needs different GMP version for compiling NTL. For example, our Ubuntu platform only supports [GMP v6.2.0](https://gmplib.org/download/gmp/gmp-6.2.0.tar.xz). However, when using Ubuntu Docker image, [GMP v6.2.1](https://gmplib.org/download/gmp/gmp-6.2.1.tar.xz) is needed. When you compile NTL and you meet problems like:
+Note that different Ubuntu platforms need different GMP version for compiling NTL. For example, our Ubuntu platform only supports [GMP v6.2.0](https://gmplib.org/download/gmp/gmp-6.2.0.tar.xz). However, when using the Ubuntu Docker image, [GMP v6.2.1](https://gmplib.org/download/gmp/gmp-6.2.1.tar.xz) is needed. When you compile NTL, and you meet problems like:
 
 ```text
 GMP version check (6.2.0/6.2.1)
 ```
 
-you need to uninstall the inconsistent GMP version (by executing `make uninstall`) in the gmp source code dictionary, and compile and install the correct GMP version. In the following, we write `gmp-6.2.X` to represent different GMP version. Please replace `X` to the correct version number when executing the commands.
+you need to uninstall the inconsistent GMP version (by executing `make uninstall`) in the GMP source code dictionary and compile and install the correct GMP version. In the following, we write `gmp-6.2.X` to represent different GMP versions. Please replace `X` with the correct version number when executing the commands.
 
 Run the following command to download the source code of GMP.
 
@@ -465,10 +488,12 @@ sudo apt install default-jdk
 On Ubuntu, Java would be installed under the path like `/usr/lib/jvm/jdk-XX.X.X`. You can find the Java installation path by the following command.
 
 ```shell
-which java
+which java                      # It may show /usr/bin/java
+ls -lrt /usr/bin/java           # It may show /usr/bin/java -> /etc/alternatives/java
+ls -lrt /etc/alternatives/java  # It may show /etc/alternatives/java -> /usr/lib/jvm/java-1.8.0-openjdk-1.8.0.302.b08-0.el7_9.x86_64/jre/bin/java
 ```
 
-After you find the Java installation path, run the following command to open `bashrc`.
+This mains the Java installation path is `/usr/lib/jvm/java-1.8.0-openjdk-1.8.0.302.b08-0.el7_9.x86_64/jre`. After you find the Java installation path, run the following command to open `bashrc`.
 
 ```shell
 vim ~/.bashrc
@@ -476,7 +501,7 @@ vim ~/.bashrc
 
 Then, add the following scripts in `bashrc`. If you are not familiar with `vim`, just type `i` and use it just like a notebook. When you finish editing, type `:wq` and press `Enter` to confirm the modification.
 
-```
+```shell
 export JAVA_HOME=YOUR_JAVA_PATH
 ```
 
@@ -488,7 +513,7 @@ source ~/.bashrc
 
 You can verify the result by running the following command and see if the Java installation path can be correctly shown.
 
-```
+```shell
 echo $JAVA_HOME
 ```
 
@@ -505,15 +530,49 @@ cmake ..
 make
 ```
 
-
-
 ## Install Dependencies on CentOS
 
-The installation procedures on CentOS are almost identical with Ubuntu, except that CentOS uses `yum` instead of `apt` for library management.
+The following guidelines have been tested both on CentOS 7, CentOS 8, and [Docker](https://www.docker.com/) under `x86_84` with the official CentOS 8 image. The installation procedures on CentOS are almost identical with Ubuntu, except that CentOS uses `yum` instead of `apt` for library management.
+
+**Error**: We cannot install dependencies on CentOS with Docker under `aarch64` (e.g., MacBook M1) with the official CentOS 8 image. The reason is that CentOS does not provide `devtoolset-8` for `aarch64`. A candidate solution is to manually install all libraries related to [`devtoolset-8 (aarch64)`](https://centos.pkgs.org/7/centos-sclo-rh-aarch64/devtoolset-8-8.1-1.el7.aarch64.rpm.html) using `rpm`. 
+
+### CentOS Docker image
+
+You can run the following commands if you want to use CentOS with Docker image. First, pull the latest CentOS Docker image.
+
+```shell
+Docker pull centos
+```
+
+Then, run the CentOS Docker image.
+
+```shell
+docker run -it centos
+```
+
+Although `yum` has been installed in the CentOS Docker image, we need to update the repo url for successfully installing all libraries. First, we need to change the default mirror link (See [Error: Failed to download metadata for repo](https://blog.csdn.net/weixin_43252521/article/details/124409151) for details).
+
+```shell
+cd /etc/yum.repos.d/
+sed -i 's/mirrorlist/#mirrorlist/g' /etc/yum.repos.d/CentOS-*
+sed -i 's|#baseurl=http://mirror.centos.org|baseurl=http://vault.centos.org|g' /etc/yum.repos.d/CentOS-*
+yum makecache
+```
+
+Then, install `wget`, and run the following commands to change the repo url for `yum`.
+
+```shell
+yum install wget
+wget -O /etc/yum.repos.d/CentOS-Base.repo https://mirrors.aliyun.com/repo/Centos-vault-8.5.2111.repo
+wget -O /etc/yum.repos.d/CentOS-8.repo https://mirrors.aliyun.com/repo/Centos-8.repo
+yum makecache
+```
+
+**Note**: If you use CentOS Docker image to install `mpc4j-native-tool`, just execute all commands without `sudo`.
 
 ### Necessary Tools
 
-Install `gcc`, `m4`, `make`, `g++`, `openssl` by the following command.
+Install `gcc`, `m4`, `make`, `g++`, `openssl`, `perl`, `git`, and `vim` by the following commands.
 
 ```shell
 sudo yum install gcc
@@ -522,6 +581,9 @@ sudo yum install make
 sudo yum install gcc-c++ # different from Ubuntu
 sudo yum install openssl
 sudo yum install openssl-devel # additional installation compared with Ubuntu
+sudo yum install perl
+sudo yum install git
+sudo yum install vim
 ```
 
 Note that we cannot directly install `cmake` via `yum`. Instead, we need to install `cmake` from source code by running the following command.
@@ -537,16 +599,16 @@ make install
 cd .. # return to the original path
 ```
 
-CentOS needs to install related libraries to support AES-NI by running the following commands (See [Cannot compile from source on Centos7](https://discuss.zerotier.com/t/cannot-compile-from-source-on-centos7/842) for more details).
+CentOS (`x86_64`) needs to install related libraries to support AES-NI by running the following commands (See [Cannot compile from source on Centos7](https://discuss.zerotier.com/t/cannot-compile-from-source-on-centos7/842) for more details).
 
-```shell 
+```shell
 sudo yum install centos-release-scl
 sudo yum install devtoolset-8
 ```
 
 ### GMP
 
-As far as we know, Centos comes with its own GMP library. CentOS7 contains [GMP v6.0.0](https://gmplib.org/download/gmp/gmp-6.0.0.tar.xz), and CentOS8, it contains [GMP v6.1.2](https://gmplib.org/download/gmp/gmp-6.1.2.tar.xz). Therefore, we need to install the same version of GMP in the corresponding version of Centos.Or we can download the latest version of GMP and replace the GMP that comes with Centos.
+As far as we know, Centos comes with its own GMP library. CentOS7 contains [GMP v6.0.0](https://gmplib.org/download/gmp/gmp-6.0.0.tar.xz), and CentOS8, contains [GMP v6.1.2](https://gmplib.org/download/gmp/gmp-6.1.2.tar.xz). Therefore, we need to install the same version of GMP in the corresponding version of Centos. We can download the latest version of GMP and replace the GMP that comes with Centos.
 
 Run the following command to download the source code for version 6.x.x.
 
@@ -567,12 +629,12 @@ sudo make install
 cd .. # return to the original path
 ```
 
-You can replace the GMP of Centos through the following command.
+**Optimal**: You can replace the GMP of Centos through the following command.
 
 ```shell
 cp /usr/local/lib/libgmp.so /usr/lib64/ #The first path in this command is the installation path of gmp
 cp /usr/local/lib/libgmp.so.10 /usr/lib64/
-cp /usr/local/lib/libgmp.so.10.4.1 /usr/lib64/
+cp /usr/local/lib/libgmp.so.10.4.1 /usr/lib64/ # the name may be different, depending on which version of gmp you install.
 ```
 
 You may also need to install the development library for GMP by running the following command.
@@ -659,7 +721,8 @@ cd .. # return to the original path
 You can directly install Java by the following command.
 
 ```shell
-sudo yum install java-1.8.0-openjdk-devel.x86_64 # install JDK 8
+yum search java # You can get candidate version of Java that you can install
+sudo yum install java-1.8.0-openjdk-devel.x86_64 # install JDK (the name with "devel"), here we install JDK 8
 ```
 
 You can find the Java installation path by the following command.
@@ -670,7 +733,7 @@ ls -lrt /usr/bin/java           # It may show /usr/bin/java -> /etc/alternatives
 ls -lrt /etc/alternatives/java  # It may show /etc/alternatives/java -> /usr/lib/jvm/java-1.8.0-openjdk-1.8.0.302.b08-0.el7_9.x86_64/jre/bin/java
 ```
 
-After you find the Java installation path, run the following command to open `bash_profile`.
+This mains the Java installation path is `/usr/lib/jvm/java-1.8.0-openjdk-1.8.0.302.b08-0.el7_9.x86_64/jre`. After you find the Java installation path, run the following command to open `bash_profile`.
 
 ```shell
 vim ~/.bash_profile
@@ -678,7 +741,7 @@ vim ~/.bash_profile
 
 Then, add the following scripts in `bash_profile`. If you are not familiar with `vim`, just type `i` and use it just like a notebook. When you finish editing, type `:wq` and press `Enter` to confirm the modification.
 
-```
+```shell
 export JAVA_HOME=YOUR_JAVA_PATH
 ```
 

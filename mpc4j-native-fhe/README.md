@@ -35,25 +35,7 @@ cd .. # return to the original path
 
 ### Ubuntu
 
-As far as we know, you can use `apt-get` to install SEAL on Ubuntu previously. However, we cannot do that now. Here we demonstrate how to manually install SEAL on the official Ubuntu [Docker](https://www.docker.com/) image. We also successfully install SEAL on Ubuntu without Docker. Please feel free to contact us if you meet problems when installing.
-
-First, pull the latest Ubuntu Docker image.
-
-```shell
-Docker pull ubuntu
-```
-
-Then, run the Ubuntu Docker image.
-
-```shell
-docker run -it ubuntu
-```
-
-Next, update the `apt` command.
-
-```shell
-apt update
-```
+As far as we know, you could use `apt-get` to install SEAL on Ubuntu previously. However, we cannot do that now. Here we demonstrate how to manually install SEAL on the official Ubuntu [Docker](https://www.docker.com/) image. See readme.md in `mpc4j-native-tool` on how to pull and run Ubuntu Docker image. We also successfully install SEAL on Ubuntu without Docker following the same way. Please feel free to contact us if you meet problems when installing.
 
 Run the following command to install `git`, `clang`, and `cmake`, and download the source code of SEAL v4.0.0.
 
@@ -90,7 +72,7 @@ cmake --install build
 
 ### CentOS
 
-We cannot directly install clang by `yum`. Instead, run the following command to install clang manually. (See [How to install Clang and LLVM 3.9 on CentOS 7](https://stackoverflow.com/questions/44219158/how-to-install-clang-and-llvm-3-9-on-centos-7/48103599#48103599) for more details.)
+We cannot directly install clang by `yum` for CentOS 7. Instead, run the following command to install clang manually. (See [How to install Clang and LLVM 3.9 on CentOS 7](https://stackoverflow.com/questions/44219158/how-to-install-clang-and-llvm-3-9-on-centos-7/48103599#48103599) for more details.)
 
 ```shell
 sudo yum install centos-release-scl -y
