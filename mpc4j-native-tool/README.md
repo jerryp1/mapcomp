@@ -599,7 +599,7 @@ make install
 cd .. # return to the original path
 ```
 
-CentOS (`x86_64`) needs to install related libraries to support AES-NI by running the following commands (See [Cannot compile from source on Centos7](https://discuss.zerotier.com/t/cannot-compile-from-source-on-centos7/842) for more details).
+CentOS 7 needs to install related libraries to support AES-NI by running the following commands (See [Cannot compile from source on Centos7](https://discuss.zerotier.com/t/cannot-compile-from-source-on-centos7/842) for more details).
 
 ```shell
 sudo yum install centos-release-scl
