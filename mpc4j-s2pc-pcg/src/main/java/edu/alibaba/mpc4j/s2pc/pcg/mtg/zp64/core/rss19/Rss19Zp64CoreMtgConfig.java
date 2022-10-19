@@ -30,8 +30,8 @@ public class Rss19Zp64CoreMtgConfig implements Zp64CoreMtgConfig {
     private final long p;
 
     private Rss19Zp64CoreMtgConfig(Builder builder) {
-        this.polyModulusDegree = builder.polyModulusDegree;
-        this.p = Rss19Zp64CoreMtgNativeConfigChecker.checkCreatePlainModulus(this.polyModulusDegree, builder.plainModulusSize);
+        polyModulusDegree = builder.polyModulusDegree;
+        p = Rss19Zp64CoreMtgNativeConfigChecker.checkCreatePlainModulus(polyModulusDegree, builder.plainModulusSize);
         assert (BigInteger.valueOf(p).bitLength() == builder.plainModulusSize);
     }
 
@@ -52,6 +52,15 @@ public class Rss19Zp64CoreMtgConfig implements Zp64CoreMtgConfig {
     @Override
     public int maxAllowNum() {
         return Integer.MAX_VALUE;
+    }
+
+    @Override
+    public void setEnvType(EnvType envType) {
+        if (envType.equals(EnvType.STANDARD_JDK) || envType.equals(EnvType.INLAND_JDK)) {
+            throw new IllegalArgumentException("Protocol using " + CommonConstants.MPC4J_NATIVE_FHE_NAME
+                + " must not be " + EnvType.STANDARD_JDK.name() + " or " + EnvType.INLAND_JDK.name()
+                + ": " + envType.name());
+        }
     }
 
     @Override

@@ -4,6 +4,34 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## \[1.0.5\]
+
+### Added
+
+- Documentations
+  - We update documentations for how to install and run `mpc4j`. Now, the documentation contains installing `mpc4j` in Ubuntu and CentOS Docker images both for `aarch64` and `x86_64`. 
+- `mpc4j-common-rpc`
+  - Add the interface `PtoFactory` and make protocol factory classes implement `PtoFactory`.
+  - Add `setEnvType()` into the interface `SecurePtoConfig`. All protocol config can support `setEnvType()` so that we can switch `EnvType.STANDARD` to others in a unified way.
+- `mpc4j-s2pc-pso`
+  - `psu`
+    - Now `Main` supports unbalanced PSU inputs.
+    - Now `Main` supports BlackIP tests, recommended by anonymous USENIX Security 2023 reviewers.
+
+### Changed
+
+- `mpc4j-common-tool`
+  - We revise the code for `SparseBitMatrix`. Now the code is easier to understand.
+
+### Fixed
+
+- `mpc4j-common-rpc`
+  - Fix issue \#5.
+- `mpc4j-native-tool`
+  - We thank anonymous USENIX Security 2023 Artifact Evaluation (AE) reviewers for many suggestions for `mpc4j-native-tool`. These suggestions help us fix many memory leakage problems. Also, the comments help us remove many duplicate codes. 
+  - We update `CmakeList.txt` so that one can successfully compile `mpc4j-native-tool` in Ubuntu and CentOS Docker images both for `aarch64` and `x86_64`.
+
+
 ## \[1.0.4\]
 
 ### Added

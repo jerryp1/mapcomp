@@ -1,6 +1,7 @@
 package edu.alibaba.mpc4j.s2pc.pir.index.xpir;
 
 import edu.alibaba.mpc4j.common.rpc.desc.SecurityModel;
+import edu.alibaba.mpc4j.common.tool.CommonConstants;
 import edu.alibaba.mpc4j.common.tool.EnvType;
 import edu.alibaba.mpc4j.s2pc.pir.index.IndexPirConfig;
 import edu.alibaba.mpc4j.s2pc.pir.index.IndexPirFactory;
@@ -13,10 +14,6 @@ import edu.alibaba.mpc4j.s2pc.pir.index.IndexPirFactory;
  */
 public class Mbfk16IndexPirConfig implements IndexPirConfig {
     /**
-     * 环境类型
-     */
-    private final EnvType envType;
-    /**
      * 多项式阶
      */
     private final int polyModulusDegree;
@@ -26,7 +23,6 @@ public class Mbfk16IndexPirConfig implements IndexPirConfig {
     private final int plainModulusSize;
 
     public Mbfk16IndexPirConfig(Builder builder) {
-        this.envType = builder.envType;
         this.polyModulusDegree = builder.polyModulusDegree;
         this.plainModulusSize = builder.plainModulusSize;
     }
@@ -37,8 +33,17 @@ public class Mbfk16IndexPirConfig implements IndexPirConfig {
     }
 
     @Override
+    public void setEnvType(EnvType envType) {
+        if (envType.equals(EnvType.STANDARD_JDK) || envType.equals(EnvType.INLAND_JDK)) {
+            throw new IllegalArgumentException("Protocol using " + CommonConstants.MPC4J_NATIVE_FHE_NAME
+                + " must not be " + EnvType.STANDARD_JDK.name() + " or " + EnvType.INLAND_JDK.name()
+                + ": " + envType.name());
+        }
+    }
+
+    @Override
     public EnvType getEnvType() {
-        return envType;
+        return EnvType.STANDARD;
     }
 
     @Override

@@ -2,6 +2,7 @@ package edu.alibaba.mpc4j.s2pc.pcg.vole.gf2k.core;
 
 import edu.alibaba.mpc4j.common.rpc.Party;
 import edu.alibaba.mpc4j.common.rpc.Rpc;
+import edu.alibaba.mpc4j.common.rpc.pto.PtoFactory;
 
 /**
  * GF2K-核VOLE协议工厂。
@@ -9,7 +10,7 @@ import edu.alibaba.mpc4j.common.rpc.Rpc;
  * @author Weiran Liu
  * @date 2022/9/22
  */
-public class Gf2kCoreVoleFactory {
+public class Gf2kCoreVoleFactory implements PtoFactory {
     /**
      * 私有构造函数。
      */

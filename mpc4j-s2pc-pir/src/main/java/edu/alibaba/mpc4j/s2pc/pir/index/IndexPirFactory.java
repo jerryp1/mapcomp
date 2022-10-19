@@ -2,6 +2,7 @@ package edu.alibaba.mpc4j.s2pc.pir.index;
 
 import edu.alibaba.mpc4j.common.rpc.Party;
 import edu.alibaba.mpc4j.common.rpc.Rpc;
+import edu.alibaba.mpc4j.common.rpc.pto.PtoFactory;
 import edu.alibaba.mpc4j.s2pc.pir.index.xpir.Mbfk16IndexPirClient;
 import edu.alibaba.mpc4j.s2pc.pir.index.xpir.Mbfk16IndexPirConfig;
 import edu.alibaba.mpc4j.s2pc.pir.index.xpir.Mbfk16IndexPirServer;
@@ -12,7 +13,7 @@ import edu.alibaba.mpc4j.s2pc.pir.index.xpir.Mbfk16IndexPirServer;
  * @author Liqiang Peng
  * @date 2022/8/24
  */
-public class IndexPirFactory {
+public class IndexPirFactory implements PtoFactory {
     /**
      * 私有构造函数
      */

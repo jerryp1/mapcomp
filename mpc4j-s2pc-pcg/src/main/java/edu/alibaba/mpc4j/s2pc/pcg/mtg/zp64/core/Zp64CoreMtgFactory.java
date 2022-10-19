@@ -3,6 +3,7 @@ package edu.alibaba.mpc4j.s2pc.pcg.mtg.zp64.core;
 import edu.alibaba.mpc4j.common.rpc.Party;
 import edu.alibaba.mpc4j.common.rpc.Rpc;
 import edu.alibaba.mpc4j.common.rpc.desc.SecurityModel;
+import edu.alibaba.mpc4j.common.rpc.pto.PtoFactory;
 import edu.alibaba.mpc4j.s2pc.pcg.mtg.zp64.core.rss19.Rss19Zp64CoreMtgConfig;
 import edu.alibaba.mpc4j.s2pc.pcg.mtg.zp64.core.rss19.Rss19Zp64CoreMtgReceiver;
 import edu.alibaba.mpc4j.s2pc.pcg.mtg.zp64.core.rss19.Rss19Zp64CoreMtgSender;
@@ -13,7 +14,7 @@ import edu.alibaba.mpc4j.s2pc.pcg.mtg.zp64.core.rss19.Rss19Zp64CoreMtgSender;
  * @author Liqiang Peng
  * @date 2022/9/5
  */
-public class Zp64CoreMtgFactory {
+public class Zp64CoreMtgFactory implements PtoFactory {
     /**
      * 私有构造函数
      */
@@ -77,9 +78,7 @@ public class Zp64CoreMtgFactory {
             case COVERT:
             case MALICIOUS:
             default:
-                throw new IllegalArgumentException(
-                    "Invalid " + SecurityModel.class.getSimpleName() + ": " + securityModel.name()
-                );
+                throw new IllegalArgumentException("Invalid " + SecurityModel.class.getSimpleName() + ": " + securityModel.name());
         }
     }
 }
