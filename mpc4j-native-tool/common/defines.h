@@ -1,6 +1,11 @@
-//
-// Created by Weiran Liu on 2021/12/11.
-//
+/*
+ * Created by Weiran Liu on 2021/12/11.
+ *
+ * 2022/10/19 updates:
+ * Thanks the anonymous USENIX Security 2023 AE reviewer for the suggestion.
+ * We now use std::reverse to implement reverseBytes.
+ */
+
 #include <cstdint>
 #include <jni.h>
 #include <vector>
@@ -21,13 +26,8 @@
  */
 inline void reverseBytes(uint8_t* data, uint64_t size) {
     uint8_t *low = data;
-    uint8_t *high = data + size - 1;
-    uint8_t swap;
-    while (low < high) {
-        swap = *low;
-        *low++ = *high;
-        *high-- = swap;
-    }
+    uint8_t *high = data + size;
+    std::reverse(low, high);
 }
 
 void initGF2E(JNIEnv *env, jbyteArray jMinBytes);
@@ -52,6 +52,13 @@ void jByteArrayToSet(JNIEnv *env, jobjectArray jBytesArray, uint64_t byteLength,
  * @param jArray 转换结果存储地址。
  */
 void setTojByteArray(JNIEnv *env, std::vector<uint8_t*> &set, uint64_t byteLength, jint jNum, jobjectArray &jArray);
+
+/**
+ * 释放字节数组集合中各个元素的内存。
+ *
+ * @param set 字节数组集合
+ */
+void freeByteArraySet(std::vector<uint8_t*> &set);
 
 /**
  * 将jlongArray表示的二维长整数数组解析为set<long>。

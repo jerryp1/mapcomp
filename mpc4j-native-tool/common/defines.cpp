@@ -1,20 +1,25 @@
-//
-// Created by Weiran Liu on 2022/1/5.
-//
+/*
+ * Created by Weiran Liu on 2022/1/5.
+ *
+ * 2022/10/19 updates:
+ * Thanks the anonymous USENIX Security 2023 AE reviewer for the suggestion.
+ * ArrayRegion Routines is a family of functions that *copies back* a region of a primitive array from a buffer.
+ * Therefore, we need to delete the temporary variable in setTojLongArray and jLongArrayToSet.
+ * See https://docs.oracle.com/javase/7/docs/technotes/guides/jni/spec/functions.html for details.
+ */
 #include "defines.h"
 
 void initGF2E(JNIEnv *env, jbyteArray jMinBytes) {
     // 读取最小多项式系数
     uint64_t minBytesLength = (*env).GetArrayLength(jMinBytes);
     jbyte* jMinBytesBuffer = (*env).GetByteArrayElements(jMinBytes, nullptr);
-    auto* minBytes = new uint8_t[minBytesLength];
+    uint8_t minBytes[minBytesLength];
     memcpy(minBytes, jMinBytesBuffer, minBytesLength);
     reverseBytes(minBytes, minBytesLength);
     (*env).ReleaseByteArrayElements(jMinBytes, jMinBytesBuffer, 0);
-// 设置有限域
+    // 设置有限域
     NTL::GF2X finiteField = NTL::GF2XFromBytes(minBytes, (long)minBytesLength);
     NTL::GF2E::init(finiteField);
-    delete[] minBytes;
 }
 
 void jByteArrayToSet(JNIEnv *env, jobjectArray jBytesArray, uint64_t byteLength, std::vector<uint8_t*> &set) {
@@ -31,6 +36,12 @@ void jByteArrayToSet(JNIEnv *env, jobjectArray jBytesArray, uint64_t byteLength,
         set[i] = data;
         // 释放jx，jxBuffer，jy，jyBuffer
         (*env).ReleaseByteArrayElements(jElement, jElementBuffer, 0);
+    }
+}
+
+void freeByteArraySet(std::vector<uint8_t*> &set) {
+    for (auto & i : set) {
+        delete[] i;
     }
 }
 
@@ -64,26 +75,16 @@ void jLongArrayToSet(JNIEnv *env, jlongArray jLongArray, std::vector<long> &set)
     uint64_t length = (*env).GetArrayLength(jLongArray);
     set.resize(length);
     jlong* jLongPtr = (*env).GetLongArrayElements(jLongArray, JNI_FALSE);
-    auto* data = new long[length];
-    memcpy(data, jLongPtr, length * sizeof(long));
-    for (uint64_t i = 0; i < length; i++) {
-        // 读取第i个数据
-        set[i] = data[i];
-    }
+    memcpy(set.data(), jLongPtr, length * sizeof(long));
     // 释放资源
     (*env).ReleaseLongArrayElements(jLongArray, jLongPtr, 0);
 }
 
 void setTojLongArray(JNIEnv *env, std::vector<long> &set, jint jNum, jlongArray &jLongArray) {
-    auto * data = new long[jNum];
-    // 复制结果
-    for (uint64_t i = 0; i < set.size(); i++) {
-        data[i] = set[i];
-    }
-    // 补足剩余的系数
-    for (uint64_t i = set.size(); i < jNum; i++) {
-        data[i] = 0L;
-    }
+    uint64_t size = set.size();
+    long data[jNum];
+    memcpy(data, set.data(), size * sizeof(long));
+    memset(data + size, 0L, (jNum - size) * sizeof(long));
     // 为转换结果分配内存
     jLongArray = (*env).NewLongArray(jNum);
     (*env).SetLongArrayRegion(jLongArray, 0, jNum, data);

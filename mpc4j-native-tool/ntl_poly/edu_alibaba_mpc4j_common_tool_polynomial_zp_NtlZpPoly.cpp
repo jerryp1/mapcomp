@@ -1,6 +1,11 @@
-//
-// Created by Weiran Liu on 2022/1/5.
-//
+/*
+ * Created by Weiran Liu on 2022/1/5.
+ *
+ * 2022/10/19 updates:
+ * Thanks the anonymous USENIX Security 2023 AE reviewer for the suggestion.
+ * In setTojByteArray and jByteArrayToSet, we need to free the memory (in set) allocated in the interpolation function.
+ * All heap allocations (e.g., auto *p = new uint8_t[]) are replaced with stack allocations (e.g., uint8_t p[]).
+ */
 
 #include "edu_alibaba_mpc4j_common_tool_polynomial_zp_NtlZpPoly.h"
 #include "ntl_zp.h"
@@ -18,7 +23,7 @@ JNIEXPORT jobjectArray JNICALL Java_edu_alibaba_mpc4j_common_tool_polynomial_zp_
     // 读取质数的字节长度
     int primeByteLength = (*env).GetArrayLength(jprimeByteArray);
     // 读取质数
-    auto* primeByteArray = new uint8_t[primeByteLength];
+    uint8_t primeByteArray[primeByteLength];
     byteArrayToPrime(env, primeByteArray, jprimeByteArray, primeByteLength);
     // 设置有限域
     NTL::ZZ prime;
@@ -32,16 +37,19 @@ JNIEXPORT jobjectArray JNICALL Java_edu_alibaba_mpc4j_common_tool_polynomial_zp_
     std::vector<uint8_t*> setY;
     jByteArrayToSet(env, jyArray, static_cast<uint64_t>(primeByteLength), setY);
     // 插值
-    std::vector<uint8_t*> coeffs;
-    zp_interpolate(primeByteLength, static_cast<uint64_t>(jnum), setX, setY, coeffs);
+    std::vector<uint8_t*> polynomial;
+    zp_interpolate(primeByteLength, static_cast<uint64_t>(jnum), setX, setY, polynomial);
+    freeByteArraySet(setX);
     setX.clear();
+    freeByteArraySet(setY);
     setY.clear();
     // 返回结果
-    jobjectArray jCoeffArray;
-    setTojByteArray(env, coeffs, static_cast<uint64_t>(primeByteLength), jnum, jCoeffArray);
-    coeffs.clear();
+    jobjectArray jPolynomial;
+    setTojByteArray(env, polynomial, static_cast<uint64_t>(primeByteLength), jnum, jPolynomial);
+    freeByteArraySet(polynomial);
+    polynomial.clear();
 
-    return jCoeffArray;
+    return jPolynomial;
 }
 
 JNIEXPORT jobjectArray JNICALL Java_edu_alibaba_mpc4j_common_tool_polynomial_zp_NtlZpPoly_nativeRootInterpolate
@@ -49,7 +57,7 @@ JNIEXPORT jobjectArray JNICALL Java_edu_alibaba_mpc4j_common_tool_polynomial_zp_
     // 读取质数的字节长度
     int primeByteLength = (*env).GetArrayLength(jprimeByteArray);
     // 读取质数
-    auto* primeByteArray = new uint8_t[primeByteLength];
+    uint8_t primeByteArray[primeByteLength];
     byteArrayToPrime(env, primeByteArray, jprimeByteArray, primeByteLength);
     // 设置有限域
     NTL::ZZ prime;
@@ -62,20 +70,22 @@ JNIEXPORT jobjectArray JNICALL Java_edu_alibaba_mpc4j_common_tool_polynomial_zp_
     jByteArrayToSet(env, jxArray, static_cast<uint64_t>(primeByteLength), setX);
     // 读取y
     jbyte* jyBuffer = (*env).GetByteArrayElements(jy, nullptr);
-    auto* y = new uint8_t[primeByteLength];
+    uint8_t y[primeByteLength];
     memcpy(y, jyBuffer, primeByteLength);
     reverseBytes(y, primeByteLength);
     (*env).ReleaseByteArrayElements(jy, jyBuffer, 0);
     // 插值
-    std::vector<uint8_t*> coeffs;
-    zp_root_interpolate(primeByteLength, static_cast<uint64_t>(jnum), setX, y, coeffs);
+    std::vector<uint8_t*> polynomial;
+    zp_root_interpolate(primeByteLength, static_cast<uint64_t>(jnum), setX, y, polynomial);
+    freeByteArraySet(setX);
     setX.clear();
     // 返回结果
-    jobjectArray jCoeffArray;
-    setTojByteArray(env, coeffs, static_cast<uint64_t>(primeByteLength), jnum + 1, jCoeffArray);
-    coeffs.clear();
+    jobjectArray jPolynomial;
+    setTojByteArray(env, polynomial, static_cast<uint64_t>(primeByteLength), jnum + 1, jPolynomial);
+    freeByteArraySet(polynomial);
+    polynomial.clear();
 
-    return jCoeffArray;
+    return jPolynomial;
 }
 
 JNIEXPORT jbyteArray JNICALL Java_edu_alibaba_mpc4j_common_tool_polynomial_zp_NtlZpPoly_nativeSingleEvaluate
@@ -83,7 +93,7 @@ JNIEXPORT jbyteArray JNICALL Java_edu_alibaba_mpc4j_common_tool_polynomial_zp_Nt
     // 读取质数的字节长度
     int primeByteLength = (*env).GetArrayLength(jprimeByteArray);
     // 读取质数
-    auto* primeByteArray = new uint8_t[primeByteLength];
+    uint8_t primeByteArray[primeByteLength];
     byteArrayToPrime(env, primeByteArray, jprimeByteArray, primeByteLength);
     // 设置有限域
     NTL::ZZ prime;
@@ -92,34 +102,33 @@ JNIEXPORT jbyteArray JNICALL Java_edu_alibaba_mpc4j_common_tool_polynomial_zp_Nt
     // 将上下文设置为存储的pContext，参见https://libntl.org/doc/tour-ex7.html
     pContext.restore();
     // 读取系数
-    std::vector<uint8_t *> coeffs;
-    jByteArrayToSet(env, jCoeffArray, static_cast<uint64_t>(primeByteLength), coeffs);
+    std::vector<uint8_t *> polynomial;
+    jByteArrayToSet(env, jCoeffArray, static_cast<uint64_t>(primeByteLength), polynomial);
     // 读取x
     jbyte* jxBuffer = (*env).GetByteArrayElements(jx, nullptr);
-    auto* x = new uint8_t[primeByteLength];
+    uint8_t x[primeByteLength];
     memcpy(x, jxBuffer, primeByteLength);
     reverseBytes(x, primeByteLength);
     (*env).ReleaseByteArrayElements(jx, jxBuffer, 0);
     // 求值
-    auto* y = new uint8_t[primeByteLength];
-    zp_evaluate(primeByteLength, coeffs, x, y);
+    uint8_t y[primeByteLength];
+    zp_evaluate(primeByteLength, polynomial, x, y);
     reverseBytes(y, primeByteLength);
-    coeffs.clear();
-    delete[] x;
+    freeByteArraySet(polynomial);
+    polynomial.clear();
     // 返回结果
     jbyteArray jy = (*env).NewByteArray((jsize)primeByteLength);
     (*env).SetByteArrayRegion(jy, 0, primeByteLength, (const jbyte*)y);
-    delete[] y;
 
     return jy;
 }
 
 JNIEXPORT jobjectArray JNICALL Java_edu_alibaba_mpc4j_common_tool_polynomial_zp_NtlZpPoly_nativeEvaluate
-    (JNIEnv *env, jclass context, jbyteArray jprimeByteArray, jobjectArray jCoeffArray, jobjectArray jxArray) {
+    (JNIEnv *env, jclass context, jbyteArray jprimeByteArray, jobjectArray jPolynomial, jobjectArray jxArray) {
     // 读取质数的字节长度
     int primeByteLength = (*env).GetArrayLength(jprimeByteArray);
     // 读取质数
-    auto* primeByteArray = new uint8_t[primeByteLength];
+    uint8_t primeByteArray[primeByteLength];
     byteArrayToPrime(env, primeByteArray, jprimeByteArray, primeByteLength);
     // 设置有限域
     NTL::ZZ prime;
@@ -128,22 +137,25 @@ JNIEXPORT jobjectArray JNICALL Java_edu_alibaba_mpc4j_common_tool_polynomial_zp_
     // 将上下文设置为存储的pContext，参见https://libntl.org/doc/tour-ex7.html
     pContext.restore();
     // 读取系数
-    std::vector<uint8_t *> coeffs;
-    jByteArrayToSet(env, jCoeffArray, static_cast<uint64_t>(primeByteLength), coeffs);
+    std::vector<uint8_t *> polynomial;
+    jByteArrayToSet(env, jPolynomial, static_cast<uint64_t>(primeByteLength), polynomial);
     // 读取x
     std::vector<uint8_t*> setX;
     jByteArrayToSet(env, jxArray, static_cast<uint64_t>(primeByteLength), setX);
     // 求值
     std::vector<uint8_t*> setY(setX.size());
     for (uint64_t index = 0; index < setX.size(); index++) {
-        setY[index] = new uint8_t [primeByteLength];
-        zp_evaluate(primeByteLength, coeffs, setX[index], setY[index]);
+        setY[index] = new uint8_t[primeByteLength];
+        zp_evaluate(primeByteLength, polynomial, setX[index], setY[index]);
     }
-    coeffs.clear();
+    freeByteArraySet(polynomial);
+    polynomial.clear();
+    freeByteArraySet(setX);
     setX.clear();
     // 返回结果
     jobjectArray jyArray;
     setTojByteArray(env, setY, static_cast<uint64_t>(primeByteLength), static_cast<jint>(setY.size()), jyArray);
+    freeByteArraySet(setY);
     setY.clear();
 
     return jyArray;
