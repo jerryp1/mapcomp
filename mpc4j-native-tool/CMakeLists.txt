@@ -5,7 +5,7 @@ set(CMAKE_CXX_STANDARD 17)
 # 增加汇编指令支持（参见：https://www.zhihu.com/question/61037115）
 ENABLE_LANGUAGE(ASM)
 # C编译指令
-set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wfatal-errors -fPIC -Wno-ignored-attributes -c -pthread -Wall -funroll-loops")
+set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wfatal-errors -fPIC -Wno-ignored-attributes -pthread -Wall -funroll-loops")
 message("Platform: ${CMAKE_SYSTEM_PROCESSOR}")
 IF(${CMAKE_SYSTEM_PROCESSOR} MATCHES "(aarch64)|(arm64)")
     set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -march=armv8-a+simd+crypto+crc")
@@ -19,11 +19,11 @@ endif(NOT CMAKE_BUILD_TYPE)
 message(STATUS "Build type (CMAKE_BUILD_TYPE): ${CMAKE_BUILD_TYPE}")
 # 如果为debug模式，则不使用优化，增加调试编译指令
 if (CMAKE_BUILD_TYPE MATCHES Debug)
-    set(CMAKE_CXX_FLAGS "${CMAKE_C_FLAGS} -O0 -ggdb")
+    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -O0 -ggdb")
 endif()
 # 如果为release模式，则使用优化
 if (CMAKE_BUILD_TYPE MATCHES Release)
-    set(CMAKE_CXX_FLAGS "${CMAKE_C_FLAGS} -O3")
+    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -O3")
 endif()
 # 设置C++编译指令
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${CMAKE_C_FLAGS} -std=c++11")
