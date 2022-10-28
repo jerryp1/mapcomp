@@ -128,7 +128,7 @@ public class ByteMulEccTest {
             byte[] gr2 = byteMulEcc.mul(g, r2);
             byte[] gr21 = byteMulEcc.mul(gr2, r1);
             Assert.assertArrayEquals(gr12, gr21);
-            /// g^{r1 * r2}
+            // h^{r1 * r2}
             byte[] hr1 = byteMulEcc.mul(h, r1);
             byte[] hr12 = byteMulEcc.mul(hr1, r2);
             // h^{r2 * r1}
