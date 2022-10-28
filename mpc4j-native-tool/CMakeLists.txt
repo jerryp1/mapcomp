@@ -26,7 +26,7 @@ if (CMAKE_BUILD_TYPE MATCHES Release)
     set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -O3")
 endif()
 # 设置C++编译指令
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${CMAKE_C_FLAGS} -std=c++11")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${CMAKE_C_FLAGS}")
 # 打印C/C++编译指令
 message(STATUS "C Flags (CMAKE_C_FLAGS): ${CMAKE_C_FLAGS}")
 message(STATUS "CXX Flags (CMAKE_CXX_FLAGS): ${CMAKE_CXX_FLAGS}")
@@ -151,6 +151,8 @@ add_library(
         ecc_openssl/edu_alibaba_mpc4j_common_tool_crypto_ecc_openssl_SecP256r1OpensslNativeEcc.cpp
         ecc_sodium/edu_alibaba_mpc4j_common_tool_crypto_ecc_sodium_X25519SodiumByteMulEcc.cpp
         ecc_sodium/edu_alibaba_mpc4j_common_tool_crypto_ecc_sodium_Ed25519SodiumByteFullEcc.cpp
+        ntl_poly/ntl_tree_zp.h
+        ntl_poly/ntl_tree_zp.cpp
 )
 
 target_include_directories(

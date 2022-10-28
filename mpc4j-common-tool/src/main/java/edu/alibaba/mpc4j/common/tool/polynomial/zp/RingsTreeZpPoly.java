@@ -239,7 +239,7 @@ class RingsTreeZpPoly extends AbstractRingsZpPoly {
             }
             return;
         }
-        // 如果构造左右孩子节点
+        // 迭代构造左右孩子节点
         innerBuildBinaryTree(points, binaryTreePolynomial, numOfLeafNodes, leftChildIndex(index));
         innerBuildBinaryTree(points, binaryTreePolynomial, numOfLeafNodes, rightChildIndex(index));
         binaryTreePolynomial[index] = binaryTreePolynomial[leftChildIndex(index)].clone()

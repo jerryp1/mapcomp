@@ -12,6 +12,7 @@
 #include <string>
 #include <NTL/GF2E.h>
 #include <cstring>
+#include <algorithm>
 
 #ifndef MPC4J_NATIVE_TOOL_DEFINES_H
 #define MPC4J_NATIVE_TOOL_DEFINES_H
