@@ -26,9 +26,7 @@ class JdkNewtonZpPoly extends AbstractRingsZpPoly {
     }
 
     @Override
-    protected UnivariatePolynomial<BigInteger> polynomialInterpolate(int num,
-                                                                     java.math.BigInteger[] xArray,
-                                                                     java.math.BigInteger[] yArray) {
+    protected UnivariatePolynomial<BigInteger> polynomialInterpolate(java.math.BigInteger[] xArray, java.math.BigInteger[] yArray) {
         // 转换成多项式点
         BigInteger[] points = Arrays.stream(xArray)
             .map(BigInteger::new)

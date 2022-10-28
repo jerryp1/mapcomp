@@ -51,19 +51,21 @@ public class ZpPolyTest {
 
     @Parameterized.Parameters(name = "{0}")
     public static Collection<Object[]> configurations() {
-        Collection<Object[]> configurationParams = new ArrayList<>();
+        Collection<Object[]> configurations = new ArrayList<>();
         // NTL
-        configurationParams.add(new Object[]{ZpPolyType.NTL.name(), ZpPolyType.NTL,});
+        configurations.add(new Object[]{ZpPolyType.NTL.name(), ZpPolyType.NTL,});
         // RINGS_NEWTON
-        configurationParams.add(new Object[]{ZpPolyType.RINGS_NEWTON.name(), ZpPolyType.RINGS_NEWTON,});
+        configurations.add(new Object[]{ZpPolyType.RINGS_NEWTON.name(), ZpPolyType.RINGS_NEWTON,});
         // JDK_NEWTON
-        configurationParams.add(new Object[]{ZpPolyType.JDK_NEWTON.name(), ZpPolyType.JDK_NEWTON,});
+        configurations.add(new Object[]{ZpPolyType.JDK_NEWTON.name(), ZpPolyType.JDK_NEWTON,});
         // RINGS_LAGRANGE
-        configurationParams.add(new Object[]{ZpPolyType.RINGS_LAGRANGE.name(), ZpPolyType.RINGS_LAGRANGE,});
+        configurations.add(new Object[]{ZpPolyType.RINGS_LAGRANGE.name(), ZpPolyType.RINGS_LAGRANGE,});
         // JDK_LAGRANGE
-        configurationParams.add(new Object[]{ZpPolyType.JDK_LAGRANGE.name(), ZpPolyType.JDK_LAGRANGE,});
+        configurations.add(new Object[]{ZpPolyType.JDK_LAGRANGE.name(), ZpPolyType.JDK_LAGRANGE,});
+        // RINGS_TREE
+        configurations.add(new Object[]{ZpPolyType.RINGS_TREE.name(), ZpPolyType.RINGS_TREE,});
 
-        return configurationParams;
+        return configurations;
     }
 
     private final ZpPolyType type;
@@ -179,9 +181,10 @@ public class ZpPolyTest {
         BigInteger[] coefficients = zpPoly.interpolate(DEFAULT_NUM, xArray, yArray);
         assertCoefficient(zpPoly, DEFAULT_NUM, coefficients);
         assertEvaluate(zpPoly, coefficients, xArray, yArray);
-        // 多项式仍然过(0,0)点，因此常数项仍然为0，但其他位应该均不为0
+        // 多项式仍然过(0,0)点，因此常数项仍然为0
         Assert.assertEquals(BigInteger.ZERO, coefficients[0]);
-        IntStream.range(1, coefficients.length).forEach(i -> Assert.assertNotEquals(BigInteger.ZERO, coefficients[i]));
+        // 但其他位应该均不为0，不过对于二叉树求值，最高位可能为0，所以最高位不验证
+        IntStream.range(1, coefficients.length - 1).forEach(i -> Assert.assertNotEquals(BigInteger.ZERO, coefficients[i]));
     }
 
     @Test

@@ -38,6 +38,10 @@ public class ZpPolyFactory {
          * JDK实现的拉格朗日插值
          */
         JDK_LAGRANGE,
+        /**
+         * Rings实现的二叉树插值
+         */
+        RINGS_TREE,
     }
 
     /**
@@ -59,6 +63,8 @@ public class ZpPolyFactory {
                 return new RingsLagrangeZpPoly(l);
             case JDK_LAGRANGE:
                 return new JdkLagrangeZpPoly(l);
+            case RINGS_TREE:
+                return new RingsTreeZpPoly(l);
             default:
                 throw new IllegalArgumentException("Invalid " + ZpPolyType.class.getSimpleName() + ": " + type.name());
         }
