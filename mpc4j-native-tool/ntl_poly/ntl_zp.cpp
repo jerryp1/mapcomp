@@ -44,7 +44,7 @@ void zp_interpolate(uint64_t primeByteLength, uint64_t num, std::vector<uint8_t 
     polynomial = polynomial + dummy_polynomial * root_polynomial;
 
     coeffs.resize(NTL::deg(polynomial) + 1);
-    for (int i = 0; i < coeffs.size(); i++) {
+    for (uint32_t i = 0; i < coeffs.size(); i++) {
         // get the coefficient polynomial
         e_ZZ = rep(NTL::coeff(polynomial, i));
         coeffs[i] = new uint8_t[primeByteLength];
@@ -76,7 +76,7 @@ void zp_root_interpolate(uint64_t primeByteLength, uint64_t num, std::vector<uin
     NTL::ZZ_pX polynomial = e_ZZ_p + dummy_polynomial * root_polynomial;
     // 构建返回系数
     coeffs.resize(NTL::deg(polynomial) + 1);
-    for (int i = 0; i < coeffs.size(); i++) {
+    for (uint32_t i = 0; i < coeffs.size(); i++) {
         // get the coefficient polynomial
         e_ZZ = rep(NTL::coeff(polynomial, i));
         coeffs[i] = new uint8_t [primeByteLength];

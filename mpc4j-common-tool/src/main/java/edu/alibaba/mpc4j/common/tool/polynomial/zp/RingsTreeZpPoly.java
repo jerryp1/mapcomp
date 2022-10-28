@@ -113,39 +113,39 @@ class RingsTreeZpPoly extends AbstractRingsZpPoly {
 
     @Override
     protected BigInteger[] polynomialEvaluate(UnivariatePolynomial<cc.redberry.rings.bigint.BigInteger> polynomial, BigInteger[] xArray) {
-        cc.redberry.rings.bigint.BigInteger[] polynomialPoints = Arrays.stream(xArray)
+        cc.redberry.rings.bigint.BigInteger[] points = Arrays.stream(xArray)
             .map(cc.redberry.rings.bigint.BigInteger::new)
             .toArray(cc.redberry.rings.bigint.BigInteger[]::new);
-        // 如果只对一个点求值，则直接返回结果
         if (xArray.length == 1) {
-            cc.redberry.rings.bigint.BigInteger y = polynomial.evaluate(polynomialPoints[0]);
+            // 如果只对一个点求值，则直接返回结果
+            cc.redberry.rings.bigint.BigInteger y = polynomial.evaluate(points[0]);
             return new BigInteger[]{BigIntegerUtils.byteArrayToBigInteger(y.toByteArray())};
         }
-        cc.redberry.rings.bigint.BigInteger[] polynomialValues = new cc.redberry.rings.bigint.BigInteger[xArray.length];
+        cc.redberry.rings.bigint.BigInteger[] values = new cc.redberry.rings.bigint.BigInteger[xArray.length];
         // 将结果数组初始化为0
-        Arrays.fill(polynomialValues, finiteField.getZero());
+        Arrays.fill(values, finiteField.getZero());
         // 一次可以并行计算的阶数要求是离polynomial.degree()最近的n = 2^k
-        int maxNum = polynomial.degree() == 0 ? 1 : 1 << (LongUtils.ceilLog2(polynomial.degree()) - 1);
-        for (int index = 0; index < polynomialValues.length; index += maxNum) {
+        int intervalNum = polynomial.degree() == 0 ? 1 : 1 << (LongUtils.ceilLog2(polynomial.degree()) - 1);
+        for (int pointIndex = 0; pointIndex < values.length; pointIndex += intervalNum) {
             // 一次取出maxNum个点，如果不足则后面补0
-            cc.redberry.rings.bigint.BigInteger[] intervalPoints = new cc.redberry.rings.bigint.BigInteger[maxNum];
+            cc.redberry.rings.bigint.BigInteger[] intervalPoints = new cc.redberry.rings.bigint.BigInteger[intervalNum];
             Arrays.fill(intervalPoints, finiteField.getZero());
-            int minCopy = Math.min(maxNum, polynomialValues.length - index);
-            System.arraycopy(polynomialPoints, index, intervalPoints, 0, minCopy);
+            int minCopy = Math.min(intervalNum, values.length - pointIndex);
+            System.arraycopy(points, pointIndex, intervalPoints, 0, minCopy);
             cc.redberry.rings.bigint.BigInteger[] intervalValues = evaluation(polynomial.clone(), intervalPoints);
-            System.arraycopy(intervalValues, 0, polynomialValues, index, minCopy);
+            System.arraycopy(intervalValues, 0, values, pointIndex, minCopy);
         }
-        return Arrays.stream(polynomialValues)
+        return Arrays.stream(values)
             .map(y -> BigIntegerUtils.byteArrayToBigInteger(y.toByteArray()))
             .toArray(BigInteger[]::new);
     }
 
     private cc.redberry.rings.bigint.BigInteger[] evaluation(
-        UnivariatePolynomial<cc.redberry.rings.bigint.BigInteger> polynomialA,
+        UnivariatePolynomial<cc.redberry.rings.bigint.BigInteger> polynomial,
         cc.redberry.rings.bigint.BigInteger[] points) {
         // 批量求值的点数量要小于等于多项式A的阶
-        assert points.length <= polynomialA.degree()
-            : "batched evaluation num must be less than or equal to polynomial degree = " + polynomialA.degree()
+        assert points.length <= polynomial.degree()
+            : "batched evaluation num must be less than or equal to polynomial degree = " + polynomial.degree()
             + ": " + points.length;
         // 批量求值的点数量要恰好等于2^k，只需要验证n&(n-1)是否为0即可
         assert (points.length & (points.length - 1)) == 0
@@ -155,7 +155,7 @@ class RingsTreeZpPoly extends AbstractRingsZpPoly {
         int numOfNodes = (binaryTreePolynomial.length + 1) / 2;
         cc.redberry.rings.bigint.BigInteger[] values = new cc.redberry.rings.bigint.BigInteger[points.length];
         Arrays.fill(values, finiteField.getZero());
-        innerEvaluation(polynomialA, binaryTreePolynomial, numOfNodes, 0, values);
+        innerEvaluation(polynomial, binaryTreePolynomial, numOfNodes, 0, values);
         return values;
     }
 
@@ -184,7 +184,7 @@ class RingsTreeZpPoly extends AbstractRingsZpPoly {
                 polynomialQ.set(n - m - i, quotient);
                 polynomialR = polynomialR.subtract(polynomialB.clone().multiply(polynomialQuotient));
             }
-            if (index >= numOfNodes - 1 && numOfNodes <= 2 * numOfNodes - 1) {
+            if (index >= numOfNodes - 1 && index <= 2 * numOfNodes - 1) {
                 // 如果为叶子节点，计算得到二叉树节点索引值所对应的插值点索引值
                 int j = index + 1 - numOfNodes;
                 if (j < values.length) {
@@ -218,14 +218,11 @@ class RingsTreeZpPoly extends AbstractRingsZpPoly {
      * @param points               插值点x。
      * @param binaryTreePolynomial 插值二叉树的中间状态。
      * @param numOfLeafNodes       插值二叉树叶子结点个数。
-     * @param index                当前构造的叶子节点索引值。
+     * @param index                当前构造的二叉树节点索引值。
      */
     private void innerBuildBinaryTree(final cc.redberry.rings.bigint.BigInteger[] points,
                                       final UnivariatePolynomial<cc.redberry.rings.bigint.BigInteger>[] binaryTreePolynomial,
                                       final int numOfLeafNodes, final int index) {
-        if (binaryTreePolynomial[index] != null) {
-            return;
-        }
         if (index >= numOfLeafNodes - 1 && index <= 2 * numOfLeafNodes - 2) {
             // 如果为叶子节点，则在对应的位置上构造多项式
             binaryTreePolynomial[index] = UnivariatePolynomial.zero(finiteField);

@@ -50,7 +50,7 @@ void setTojByteArray(JNIEnv *env, std::vector<uint8_t*> &set, uint64_t byteLengt
     // 为转换结果分配内存
     jArray = (*env).NewObjectArray(jNum, jByteArrayType, nullptr);
     // 复制结果
-    for (uint64_t i = 0; i < set.size(); i++) {
+    for (std::vector<uint8_t*>::size_type i = 0; i < set.size(); i++) {
         jbyteArray jElement = (*env).NewByteArray((jsize)byteLength);
         jbyte* jElementBuffer = (*env).GetByteArrayElements(jElement, nullptr);
         // Java是大端表示，需要先reverse
@@ -62,7 +62,7 @@ void setTojByteArray(JNIEnv *env, std::vector<uint8_t*> &set, uint64_t byteLengt
         (*env).ReleaseByteArrayElements(jElement, jElementBuffer, 0);
     }
     // 补足剩余的系数
-    for (uint64_t i = set.size(); i < jNum; i++) {
+    for (std::vector<uint8_t*>::size_type i = set.size(); i < static_cast<std::vector<uint8_t*>::size_type>(jNum); i++) {
         jbyteArray jZeroElement = (*env).NewByteArray((jsize)byteLength);
         jbyte* jZeroElementBuffer = (*env).GetByteArrayElements(jZeroElement, nullptr);
         (*env).SetObjectArrayElement(jArray, (jsize)i, jZeroElement);
@@ -81,7 +81,7 @@ void jLongArrayToSet(JNIEnv *env, jlongArray jLongArray, std::vector<long> &set)
 }
 
 void setTojLongArray(JNIEnv *env, std::vector<long> &set, jint jNum, jlongArray &jLongArray) {
-    uint64_t size = set.size();
+    std::vector<long>::size_type size = set.size();
     long data[jNum];
     memcpy(data, set.data(), size * sizeof(long));
     memset(data + size, 0L, (jNum - size) * sizeof(long));
@@ -92,9 +92,9 @@ void setTojLongArray(JNIEnv *env, std::vector<long> &set, jint jNum, jlongArray 
 
 void jStringArrayToSet(JNIEnv *env, jobjectArray jStringArray, std::vector<std::string> &set) {
     // 获得数组的长度
-    uint64_t length = (*env).GetArrayLength(jStringArray);
-    set.resize(static_cast<unsigned long>(length));
-    for (uint64_t index = 0; index < length; index++) {
+    uint32_t length = (*env).GetArrayLength(jStringArray);
+    set.resize(length);
+    for (uint32_t index = 0; index < length; index++) {
         auto jString = (jstring) (*env).GetObjectArrayElement(jStringArray, static_cast<jsize>(index));
         const char *jStringHandler = (*env).GetStringUTFChars(jString, JNI_FALSE);
         set[index] = std::string(jStringHandler);
@@ -107,7 +107,7 @@ void setTojStringArray(JNIEnv *env, std::vector<std::string> &set, jobjectArray 
     jclass jStringClass = (*env).FindClass("java/lang/String");
     jStringArray = (*env).NewObjectArray(static_cast<jsize>(set.size()), jStringClass, nullptr);
     // 复制结果
-    for (uint64_t index = 0; index < set.size(); index++) {
+    for (std::vector<std::string>::size_type index = 0; index < set.size(); index++) {
         jstring jString = (*env).NewStringUTF(set[index].data());
         (*env).SetObjectArrayElement(jStringArray, static_cast<jsize>(index), jString);
         (*env).DeleteLocalRef(jString);
