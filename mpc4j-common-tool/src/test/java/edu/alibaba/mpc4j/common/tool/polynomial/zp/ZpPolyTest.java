@@ -62,6 +62,8 @@ public class ZpPolyTest {
         configurations.add(new Object[]{ZpPolyType.RINGS_LAGRANGE.name(), ZpPolyType.RINGS_LAGRANGE,});
         // JDK_LAGRANGE
         configurations.add(new Object[]{ZpPolyType.JDK_LAGRANGE.name(), ZpPolyType.JDK_LAGRANGE,});
+        // NTL_TREE
+        configurations.add(new Object[]{ZpPolyType.NTL_TREE.name(), ZpPolyType.NTL_TREE,});
         // RINGS_TREE
         configurations.add(new Object[]{ZpPolyType.RINGS_TREE.name(), ZpPolyType.RINGS_TREE,});
 

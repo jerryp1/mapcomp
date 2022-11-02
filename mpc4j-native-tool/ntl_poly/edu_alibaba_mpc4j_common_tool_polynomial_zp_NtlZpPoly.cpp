@@ -9,14 +9,7 @@
 
 #include "edu_alibaba_mpc4j_common_tool_polynomial_zp_NtlZpPoly.h"
 #include "ntl_zp.h"
-
-void byteArrayToPrime(JNIEnv *env, uint8_t* primeByteArray, jbyteArray jprimeByteArray, int primeByteLength) {
-    // 读取质数的字节长度，读取质数
-    jbyte* jprimeByteBuffer = (*env).GetByteArrayElements(jprimeByteArray, nullptr);
-    memcpy(primeByteArray, jprimeByteBuffer, static_cast<size_t>(primeByteLength));
-    reverseBytes(primeByteArray, static_cast<uint64_t>(primeByteLength));
-    (*env).ReleaseByteArrayElements(jprimeByteArray, jprimeByteBuffer, 0);
-}
+#include "ntl_zp_util.h"
 
 JNIEXPORT jobjectArray JNICALL Java_edu_alibaba_mpc4j_common_tool_polynomial_zp_NtlZpPoly_nativeInterpolate
     (JNIEnv *env, jclass context, jbyteArray jprimeByteArray, jint jnum, jobjectArray jxArray, jobjectArray jyArray) {
@@ -24,7 +17,7 @@ JNIEXPORT jobjectArray JNICALL Java_edu_alibaba_mpc4j_common_tool_polynomial_zp_
     int primeByteLength = (*env).GetArrayLength(jprimeByteArray);
     // 读取质数
     uint8_t primeByteArray[primeByteLength];
-    byteArrayToPrime(env, primeByteArray, jprimeByteArray, primeByteLength);
+    zp_byte_array_to_prime(env, primeByteArray, jprimeByteArray, primeByteLength);
     // 设置有限域
     NTL::ZZ prime;
     NTL::ZZFromBytes(prime, primeByteArray, static_cast<long>(primeByteLength));
@@ -58,7 +51,7 @@ JNIEXPORT jobjectArray JNICALL Java_edu_alibaba_mpc4j_common_tool_polynomial_zp_
     int primeByteLength = (*env).GetArrayLength(jprimeByteArray);
     // 读取质数
     uint8_t primeByteArray[primeByteLength];
-    byteArrayToPrime(env, primeByteArray, jprimeByteArray, primeByteLength);
+    zp_byte_array_to_prime(env, primeByteArray, jprimeByteArray, primeByteLength);
     // 设置有限域
     NTL::ZZ prime;
     NTL::ZZFromBytes(prime, primeByteArray, static_cast<long>(primeByteLength));
@@ -94,7 +87,7 @@ JNIEXPORT jbyteArray JNICALL Java_edu_alibaba_mpc4j_common_tool_polynomial_zp_Nt
     int primeByteLength = (*env).GetArrayLength(jprimeByteArray);
     // 读取质数
     uint8_t primeByteArray[primeByteLength];
-    byteArrayToPrime(env, primeByteArray, jprimeByteArray, primeByteLength);
+    zp_byte_array_to_prime(env, primeByteArray, jprimeByteArray, primeByteLength);
     // 设置有限域
     NTL::ZZ prime;
     NTL::ZZFromBytes(prime, primeByteArray, static_cast<long>(primeByteLength));
@@ -129,7 +122,7 @@ JNIEXPORT jobjectArray JNICALL Java_edu_alibaba_mpc4j_common_tool_polynomial_zp_
     int primeByteLength = (*env).GetArrayLength(jprimeByteArray);
     // 读取质数
     uint8_t primeByteArray[primeByteLength];
-    byteArrayToPrime(env, primeByteArray, jprimeByteArray, primeByteLength);
+    zp_byte_array_to_prime(env, primeByteArray, jprimeByteArray, primeByteLength);
     // 设置有限域
     NTL::ZZ prime;
     NTL::ZZFromBytes(prime, primeByteArray, static_cast<long>(primeByteLength));

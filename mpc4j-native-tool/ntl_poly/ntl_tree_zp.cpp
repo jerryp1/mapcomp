@@ -109,24 +109,25 @@ void zp_tree_evaluate(uint64_t primeByteLength, std::vector<uint8_t*> &coeffs, s
         e_ZZ_p = NTL::eval(polynomial, e_ZZ_p);
         // convert to byte[]
         e_ZZ = NTL::rep(e_ZZ_p);
+        setY[0] = new uint8_t[primeByteLength];
         NTL::BytesFromZZ(setY[0], e_ZZ, static_cast<long>(primeByteLength));
     } else {
         // 一次可以并行计算的阶数要求是离polynomial.degree()最近的n = 2^k
         long polynomial_degree = NTL::deg(polynomial);
         long interval_num = NTL::deg(polynomial) == 0 ? 1 : 1 << (ceilLog2(polynomial_degree) - 1);
-        long max_num = (long)std::ceil(point_num / interval_num) * interval_num;
+        long max_num = (long)std::ceil(point_num / (double)interval_num) * interval_num;;
         auto* x = new NTL::ZZ_p[max_num];
         auto* y = new NTL::ZZ_p[max_num];
         // build x and init y
         for (uint32_t i = 0; i < point_num; i++) {
             NTL::ZZFromBytes(e_ZZ, setX[i], static_cast<long>(primeByteLength));
             x[i] = NTL::to_ZZ_p(e_ZZ);
-            y[i] = NTL::ZZ_p(0);
+            y[i] = NTL::to_ZZ_p(0);
         }
         // 不足的补0
         for (uint32_t i = point_num; i < max_num; i++) {
             x[i] = NTL::to_ZZ_p(0);
-            y[i] = NTL::ZZ_p(0);
+            y[i] = NTL::to_ZZ_p(0);
         }
         for (long point_index = 0; point_index < max_num; point_index += interval_num) {
             // 一次取出interval_num个点

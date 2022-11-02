@@ -153,7 +153,7 @@ add_library(
         ecc_sodium/edu_alibaba_mpc4j_common_tool_crypto_ecc_sodium_Ed25519SodiumByteFullEcc.cpp
         ntl_poly/ntl_tree_zp.h
         ntl_poly/ntl_tree_zp.cpp
-)
+        ntl_poly/edu_alibaba_mpc4j_common_tool_polynomial_zp_NtlTreeZpPoly.cpp ntl_poly/ntl_zp_util.h ntl_poly/ntl_zp_util.cpp)
 
 target_include_directories(
         mpc4j-native-tool
