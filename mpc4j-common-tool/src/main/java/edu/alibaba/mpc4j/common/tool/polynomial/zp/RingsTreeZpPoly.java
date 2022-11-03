@@ -30,17 +30,21 @@ class RingsTreeZpPoly extends AbstractRingsZpPoly {
     }
 
     @Override
-    public int coefficientNum(int num) {
-        assert num >= 1 : "# of points must be greater than or equal to 1: " + num;
-        // 用二叉树快速插值时，num个点的插值多项式包含num + 1个系数
-        return num + 1;
+    public int coefficientNum(int pointNum, int expectNum) {
+        assert pointNum >= 0 && pointNum <= expectNum : "point num must be in range [0, " + expectNum + "]: " + pointNum;
+        // 用二叉树快速插值时，pointNum个点的插值多项式包含pointNum + 1个系数，但如果补了随机点，则会等于expectNum
+        if (pointNum == expectNum) {
+            return expectNum + 1;
+        } else {
+            return expectNum;
+        }
     }
 
     @Override
-    public int rootCoefficientNum(int num) {
-        assert num >= 1 : "# of points must be greater than or equal to 1: " + num;
-        // 用二叉树快速插值时，num个点的插值多项式包含num + 1个系数
-        return num + 1;
+    public int rootCoefficientNum(int pointNum, int expectNum) {
+        assert pointNum >= 0 && pointNum <= expectNum : "point num must be in range [0, " + expectNum + "]: " + pointNum;
+        // 用二叉树快速插值时，expectNum个点的插值多项式包含expectNum + 1个系数
+        return expectNum + 1;
     }
 
     @Override
@@ -54,16 +58,15 @@ class RingsTreeZpPoly extends AbstractRingsZpPoly {
             .toArray(cc.redberry.rings.bigint.BigInteger[]::new);
         // 构造满二叉树，二叉树的节点数量 = 2 * numOfLeafNodes - 1
         UnivariatePolynomial<cc.redberry.rings.bigint.BigInteger>[] binaryTreePolynomial = buildBinaryTree(points);
-        // 构造导数多项式，注意导数多项式的阶等于points.length，而不是numOfLeafNodes，cc.rings有求导的快速实现算法
+        // 构造导数多项式，注意导数多项式的阶等于points.length，而不是leafNodeNum，cc.rings有求导的快速实现算法
         UnivariatePolynomial<cc.redberry.rings.bigint.BigInteger> derivativePolynomial = binaryTreePolynomial[0]
             .derivative();
         // 计算导数，并存储导数的逆
-        cc.redberry.rings.bigint.BigInteger[] derivativeInverses
-            = new cc.redberry.rings.bigint.BigInteger[points.length];
-        cc.redberry.rings.bigint.BigInteger[] derivatives
-            = Arrays.stream(polynomialEvaluate(derivativePolynomial, xArray))
-            .map(cc.redberry.rings.bigint.BigInteger::new)
-            .toArray(cc.redberry.rings.bigint.BigInteger[]::new);
+        cc.redberry.rings.bigint.BigInteger[] derivatives = new cc.redberry.rings.bigint.BigInteger[points.length];
+        cc.redberry.rings.bigint.BigInteger[] derivativeInverses = new cc.redberry.rings.bigint.BigInteger[points.length];
+        // 这里求值可以使用批处理求值
+        int leafNodeNum = getLeafNodeNum(points.length);
+        innerEvaluation(derivativePolynomial, binaryTreePolynomial, leafNodeNum, 0, derivatives);
         for (int i = 0; i < derivatives.length; i++) {
             derivativeInverses[i] = finiteField.divideExact(finiteField.getOne(), derivatives[i]);
         }
@@ -79,26 +82,26 @@ class RingsTreeZpPoly extends AbstractRingsZpPoly {
     }
 
     private UnivariatePolynomial<cc.redberry.rings.bigint.BigInteger> innerFastInterpolate(
-        final cc.redberry.rings.bigint.BigInteger[] values, final int i, final int numOfNodes,
+        final cc.redberry.rings.bigint.BigInteger[] values, final int i, final int leafNodeNum,
         final UnivariatePolynomial<cc.redberry.rings.bigint.BigInteger>[] binaryTreePolynomial,
         final cc.redberry.rings.bigint.BigInteger[] derivativeInverses) {
-        if (i >= numOfNodes - 1 && i <= 2 * numOfNodes - 1) {
+        if (i >= leafNodeNum - 1) {
             // 如果为叶子节点，计算得到二叉树节点索引值所对应的插值点索引值
-            int j = i + 1 - numOfNodes;
-            if (j >= values.length) {
+            int pointIndex = i + 1 - leafNodeNum;
+            if (pointIndex >= values.length) {
                 // 如果j所对应的叶子节点没有插值点，这意味着j所对应的叶子节点用来补足满二叉树，直接返回1即可
                 return UnivariatePolynomial.constant(finiteField, finiteField.getOne());
             } else {
                 // 否则，j所对应的叶子节点有插值点，返回y_j * a_j
-                return UnivariatePolynomial.constant(finiteField, finiteField.multiply(values[j], derivativeInverses[j]));
+                return UnivariatePolynomial.constant(finiteField, finiteField.multiply(values[pointIndex], derivativeInverses[pointIndex]));
             }
         }
         int l = leftChildIndex(i);
         int r = rightChildIndex(i);
         UnivariatePolynomial<cc.redberry.rings.bigint.BigInteger> leftPolynomial
-            = innerFastInterpolate(values, l, numOfNodes, binaryTreePolynomial, derivativeInverses);
+            = innerFastInterpolate(values, l, leafNodeNum, binaryTreePolynomial, derivativeInverses);
         UnivariatePolynomial<cc.redberry.rings.bigint.BigInteger> rightPolynomial
-            = innerFastInterpolate(values, r, numOfNodes, binaryTreePolynomial, derivativeInverses);
+            = innerFastInterpolate(values, r, leafNodeNum, binaryTreePolynomial, derivativeInverses);
         return leftPolynomial.clone().multiply(binaryTreePolynomial[r]).add(
             rightPolynomial.clone().multiply(binaryTreePolynomial[l]));
     }
@@ -152,22 +155,22 @@ class RingsTreeZpPoly extends AbstractRingsZpPoly {
             : "batched evaluation num must have format 2^k: " + points.length;
         // 构建二叉树
         UnivariatePolynomial<cc.redberry.rings.bigint.BigInteger>[] binaryTreePolynomial = buildBinaryTree(points);
-        int numOfNodes = (binaryTreePolynomial.length + 1) / 2;
+        int leafNodeNum = getLeafNodeNum(points.length);
         cc.redberry.rings.bigint.BigInteger[] values = new cc.redberry.rings.bigint.BigInteger[points.length];
         Arrays.fill(values, finiteField.getZero());
-        innerEvaluation(polynomial, binaryTreePolynomial, numOfNodes, 0, values);
+        innerEvaluation(polynomial, binaryTreePolynomial, leafNodeNum, 0, values);
         return values;
     }
 
     private void innerEvaluation(UnivariatePolynomial<cc.redberry.rings.bigint.BigInteger> polynomialA,
                                  UnivariatePolynomial<cc.redberry.rings.bigint.BigInteger>[] binaryTreePolynomial,
-                                 int numOfNodes, int index, cc.redberry.rings.bigint.BigInteger[] values) {
+                                 int leafNodeNum, int index, cc.redberry.rings.bigint.BigInteger[] values) {
         UnivariatePolynomial<cc.redberry.rings.bigint.BigInteger> polynomialB = binaryTreePolynomial[index].clone();
         // 如果polynomialA的阶特别小，则继续循环，这是测试时发现的bug，有可能计算完商后就是非常小
         // 此外要注意，当插值多项式的y只有一个元素时，polynomialA的阶会一直特别小，陷入死循环。因此要验证2 * index + 2的长度
         if (polynomialB.degree() > polynomialA.degree() && rightChildIndex(index) <= binaryTreePolynomial.length) {
-            innerEvaluation(polynomialA, binaryTreePolynomial, numOfNodes, leftChildIndex(index), values);
-            innerEvaluation(polynomialA, binaryTreePolynomial, numOfNodes, rightChildIndex(index), values);
+            innerEvaluation(polynomialA, binaryTreePolynomial, leafNodeNum, leftChildIndex(index), values);
+            innerEvaluation(polynomialA, binaryTreePolynomial, leafNodeNum, rightChildIndex(index), values);
         } else {
             int n = polynomialA.degree();
             int m = polynomialB.degree();
@@ -184,9 +187,9 @@ class RingsTreeZpPoly extends AbstractRingsZpPoly {
                 polynomialQ.set(n - m - i, quotient);
                 polynomialR = polynomialR.subtract(polynomialB.clone().multiply(polynomialQuotient));
             }
-            if (index >= numOfNodes - 1 && index <= 2 * numOfNodes - 1) {
+            if (index >= leafNodeNum - 1) {
                 // 如果为叶子节点，计算得到二叉树节点索引值所对应的插值点索引值
-                int j = index + 1 - numOfNodes;
+                int j = index + 1 - leafNodeNum;
                 if (j < values.length) {
                     // 如果j所对应的叶子节点没有插值点，则不用进行任何操作，否则j所对应的值为R，这里R应该是一个常数
                     assert polynomialR.degree() == 0;
@@ -195,20 +198,19 @@ class RingsTreeZpPoly extends AbstractRingsZpPoly {
                 return;
             }
             // 分别计算左右孩子节点
-            innerEvaluation(polynomialR, binaryTreePolynomial, numOfNodes, leftChildIndex(index), values);
-            innerEvaluation(polynomialR, binaryTreePolynomial, numOfNodes, rightChildIndex(index), values);
+            innerEvaluation(polynomialR, binaryTreePolynomial, leafNodeNum, leftChildIndex(index), values);
+            innerEvaluation(polynomialR, binaryTreePolynomial, leafNodeNum, rightChildIndex(index), values);
         }
     }
 
     @SuppressWarnings("unchecked")
     private UnivariatePolynomial<cc.redberry.rings.bigint.BigInteger>[] buildBinaryTree
         (final cc.redberry.rings.bigint.BigInteger[] points) {
-        // 二叉树的叶子节点数量必须是2的阶，例如2^4, 2^8等，找到离points.length最近的n = 2^i
-        int numOfLeafNodes = points.length == 0 ? 1 : 1 << LongUtils.ceilLog2(points.length);
-        // 构造满二叉树，二叉树的节点数量 = 2 * numOfLeafNodes - 1
-        UnivariatePolynomial<cc.redberry.rings.bigint.BigInteger>[] binaryTreePolynomial = new UnivariatePolynomial[
-            2 * numOfLeafNodes - 1];
-        innerBuildBinaryTree(points, binaryTreePolynomial, numOfLeafNodes, 0);
+        int leafNodeNum = getLeafNodeNum(points.length);
+        int binaryTreeSize = getBinaryTreeSize(leafNodeNum);
+        UnivariatePolynomial<cc.redberry.rings.bigint.BigInteger>[] binaryTreePolynomial
+            = new UnivariatePolynomial[binaryTreeSize];
+        innerBuildBinaryTree(points, binaryTreePolynomial, leafNodeNum, 0);
         return binaryTreePolynomial;
     }
 
@@ -217,19 +219,19 @@ class RingsTreeZpPoly extends AbstractRingsZpPoly {
      *
      * @param points               插值点x。
      * @param binaryTreePolynomial 插值二叉树的中间状态。
-     * @param numOfLeafNodes       插值二叉树叶子结点个数。
+     * @param leafNodeNum          插值二叉树叶子结点个数。
      * @param index                当前构造的二叉树节点索引值。
      */
     private void innerBuildBinaryTree(final cc.redberry.rings.bigint.BigInteger[] points,
                                       final UnivariatePolynomial<cc.redberry.rings.bigint.BigInteger>[] binaryTreePolynomial,
-                                      final int numOfLeafNodes, final int index) {
-        if (index >= numOfLeafNodes - 1 && index <= 2 * numOfLeafNodes - 2) {
+                                      final int leafNodeNum, final int index) {
+        if (index >= leafNodeNum - 1) {
             // 如果为叶子节点，则在对应的位置上构造多项式
             binaryTreePolynomial[index] = UnivariatePolynomial.zero(finiteField);
-            if (index + 1 - numOfLeafNodes < points.length) {
+            if (index + 1 - leafNodeNum < points.length) {
                 // 如果有点的位置，则构造x - x_i
                 binaryTreePolynomial[index] = binaryTreePolynomial[index]
-                    .createLinear(finiteField.negate(points[index + 1 - numOfLeafNodes]), finiteField.getOne());
+                    .createLinear(finiteField.negate(points[index + 1 - leafNodeNum]), finiteField.getOne());
             } else {
                 // 如果没有点的位置，此多项式设置为1
                 binaryTreePolynomial[index] = binaryTreePolynomial[index].createConstant(finiteField.getOne());
@@ -237,10 +239,20 @@ class RingsTreeZpPoly extends AbstractRingsZpPoly {
             return;
         }
         // 迭代构造左右孩子节点
-        innerBuildBinaryTree(points, binaryTreePolynomial, numOfLeafNodes, leftChildIndex(index));
-        innerBuildBinaryTree(points, binaryTreePolynomial, numOfLeafNodes, rightChildIndex(index));
+        innerBuildBinaryTree(points, binaryTreePolynomial, leafNodeNum, leftChildIndex(index));
+        innerBuildBinaryTree(points, binaryTreePolynomial, leafNodeNum, rightChildIndex(index));
         binaryTreePolynomial[index] = binaryTreePolynomial[leftChildIndex(index)].clone()
             .multiply(binaryTreePolynomial[rightChildIndex(index)]);
+    }
+
+    private int getLeafNodeNum(int pointNum) {
+        // 二叉树的叶子节点数量必须是2的阶，例如2^4, 2^8等，找到离points.length最近的n = 2^i
+        return pointNum == 0 ? 1 : 1 << LongUtils.ceilLog2(pointNum);
+    }
+
+    private int getBinaryTreeSize(int leafNodeNum) {
+        // 满二叉树的节点数量 = 2 * leafNodeNum - 1
+        return 2 * leafNodeNum - 1;
     }
 
     private int leftChildIndex(int index) {

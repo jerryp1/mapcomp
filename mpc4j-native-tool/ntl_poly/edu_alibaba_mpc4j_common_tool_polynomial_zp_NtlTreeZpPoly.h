@@ -9,6 +9,30 @@ extern "C" {
 #endif
 /*
  * Class:     edu_alibaba_mpc4j_common_tool_polynomial_zp_NtlTreeZpPoly
+ * Method:    nativeRootInterpolate
+ * Signature: ([BI[[B[B)[[B
+ */
+JNIEXPORT jobjectArray JNICALL Java_edu_alibaba_mpc4j_common_tool_polynomial_zp_NtlTreeZpPoly_nativeRootInterpolate
+  (JNIEnv *, jclass, jbyteArray, jint, jobjectArray, jbyteArray);
+
+/*
+ * Class:     edu_alibaba_mpc4j_common_tool_polynomial_zp_NtlTreeZpPoly
+ * Method:    nativeTreeInterpolate
+ * Signature: ([BI[[B[[B)[[B
+ */
+JNIEXPORT jobjectArray JNICALL Java_edu_alibaba_mpc4j_common_tool_polynomial_zp_NtlTreeZpPoly_nativeTreeInterpolate
+  (JNIEnv *, jclass, jbyteArray, jint, jobjectArray, jobjectArray);
+
+/*
+ * Class:     edu_alibaba_mpc4j_common_tool_polynomial_zp_NtlTreeZpPoly
+ * Method:    nativeSingleEvaluate
+ * Signature: ([B[[B[B)[B
+ */
+JNIEXPORT jbyteArray JNICALL Java_edu_alibaba_mpc4j_common_tool_polynomial_zp_NtlTreeZpPoly_nativeSingleEvaluate
+  (JNIEnv *, jclass, jbyteArray, jobjectArray, jbyteArray);
+
+/*
+ * Class:     edu_alibaba_mpc4j_common_tool_polynomial_zp_NtlTreeZpPoly
  * Method:    nativeTreeEvaluate
  * Signature: ([B[[B[[B)[[B
  */

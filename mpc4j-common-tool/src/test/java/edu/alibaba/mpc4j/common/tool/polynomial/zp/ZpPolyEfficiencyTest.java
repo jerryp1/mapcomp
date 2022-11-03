@@ -58,10 +58,12 @@ public class ZpPolyEfficiencyTest {
         ZpPolyFactory.ZpPolyType.RINGS_NEWTON,
         // JDK_NEWTON
         ZpPolyFactory.ZpPolyType.JDK_NEWTON,
-        // RINGS_LAGRANGE
-        ZpPolyFactory.ZpPolyType.RINGS_LAGRANGE,
-        // JDK_LAGRANGE
-        ZpPolyFactory.ZpPolyType.JDK_LAGRANGE,
+//        // RINGS_LAGRANGE
+//        ZpPolyFactory.ZpPolyType.RINGS_LAGRANGE,
+//        // JDK_LAGRANGE
+//        ZpPolyFactory.ZpPolyType.JDK_LAGRANGE,
+        // NTL_TREE
+        ZpPolyFactory.ZpPolyType.NTL_TREE,
         // RINGS_TREE
         ZpPolyFactory.ZpPolyType.RINGS_TREE,
     };

@@ -10,9 +10,13 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 - Documentations
   - We update documentations for how to install and run `mpc4j`. Now, the documentation contains installing `mpc4j` in Ubuntu and CentOS Docker images both for `aarch64` and `x86_64`. 
+- `mpc4j-common-tool`
+  - Polynomial: We add batched polynomial implementation algorithms (both for `NTL` and `Rings`) proposed by Pinkas et al. at CRYPTO 2019.
 - `mpc4j-common-rpc`
   - Add the interface `PtoFactory` and make protocol factory classes implement `PtoFactory`.
   - Add `setEnvType()` into the interface `SecurePtoConfig`. All protocol config can support `setEnvType()` so that we can switch `EnvType.STANDARD` to others in a unified way.
+- `mpc4j-native-tool`
+  - We thank the anonymous USENIX Security 2023 AE reviewer for many suggestions. We replace constant-size heap allocations (e.g., `auto *p = new uint8_t[]`) with stack allocations (e.g., `uint8_t p[]`). We fixed many memory leakage bugs in our C/C++ implementations.
 - `mpc4j-s2pc-pso`
   - `psu`
     - Now `Main` supports unbalanced PSU inputs.

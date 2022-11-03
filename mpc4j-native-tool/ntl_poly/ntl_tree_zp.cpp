@@ -3,6 +3,7 @@
 //
 
 #include "ntl_tree_zp.h"
+#include "ntl_zp_util.h"
 
 #define LEFT(X) (2 * X + 1)
 #define RIGHT(X) (2 * X + 2)
@@ -17,9 +18,10 @@
  * @param leaf_node_num 叶子节点数量。
  * @param index 当前构造的二叉树节点索引值。
  */
-void inner_build_binary_tree(NTL::ZZ_pX* binary_tree, NTL::ZZ_p* points, long point_num, long leaf_node_num, long index) {
+void
+inner_build_binary_tree(NTL::ZZ_pX *binary_tree, NTL::ZZ_p *points, long point_num, long leaf_node_num, long index) {
     NTL::ZZ_p negated;
-    if (index >= leaf_node_num - 1 && index <= 2 * leaf_node_num - 2) {
+    if (index >= leaf_node_num - 1) {
         // 如果为叶子节点，则在对应的位置上构造多项式
         if (index + 1 - leaf_node_num < point_num) {
             // 如果有点的位置，则构造x - x_i
@@ -38,13 +40,24 @@ void inner_build_binary_tree(NTL::ZZ_pX* binary_tree, NTL::ZZ_p* points, long po
     binary_tree[index] = binary_tree[LEFT(index)] * binary_tree[RIGHT(index)];
 }
 
-void inner_evaluate(NTL::ZZ_pX& polynomial_a, NTL::ZZ_pX* binary_tree, long binary_tree_size, long node_num, long index, NTL::ZZ_p* values, long point_num) {
+long get_leaf_node_num(long point_num) {
+    // 二叉树的叶子节点数量必须是2的阶，找到离point_num最近的n = 2^i
+    return point_num == 0 ? 1 : 1 << ceilLog2(point_num);
+}
+
+long get_binary_tree_size(long leaf_node_num) {
+    // 二叉树的节点数量 = 2 * leaf_node_num - 1
+    return 2 * leaf_node_num - 1;
+}
+
+void zp_tree_main_inner_evaluate(NTL::ZZ_pX &polynomial_a, NTL::ZZ_pX *binary_tree, long binary_tree_size,
+                                 long leaf_node_num, long index, NTL::ZZ_p *values, long point_num) {
     NTL::ZZ_pX polynomial_b = binary_tree[index];
     // 如果polynomialA的阶特别小，则继续循环，这是测试时发现的bug，有可能计算完商后就是非常小
     // 此外要注意，当插值多项式的y只有一个元素时，polynomialA的阶会一直特别小，陷入死循环。因此要验证2 * index + 2的长度
     if (NTL::deg(polynomial_b) > NTL::deg(polynomial_a) && RIGHT(index) <= binary_tree_size) {
-        inner_evaluate(polynomial_a, binary_tree, binary_tree_size, node_num, LEFT(index), values, point_num);
-        inner_evaluate(polynomial_a, binary_tree, binary_tree_size, node_num, RIGHT(index), values, point_num);
+        zp_tree_main_inner_evaluate(polynomial_a, binary_tree, binary_tree_size, leaf_node_num, LEFT(index), values, point_num);
+        zp_tree_main_inner_evaluate(polynomial_a, binary_tree, binary_tree_size, leaf_node_num, RIGHT(index), values, point_num);
     } else {
         long n = NTL::deg(polynomial_a);
         long m = NTL::deg(polynomial_b);
@@ -58,9 +71,9 @@ void inner_evaluate(NTL::ZZ_pX& polynomial_a, NTL::ZZ_pX* binary_tree, long bina
             SetCoeff(polynomial_q, n - m - i, quotient);
             polynomial_r = polynomial_r - (polynomial_b * polynomial_quotient);
         }
-        if (index >= node_num - 1 && node_num <= 2 * node_num - 1) {
+        if (index >= leaf_node_num - 1 && leaf_node_num <= 2 * leaf_node_num - 1) {
             // 如果为叶子节点，计算得到二叉树节点索引值所对应的插值点索引值
-            long j = index + 1 - node_num;
+            long j = index + 1 - leaf_node_num;
             if (j < point_num) {
                 // 如果j所对应的叶子节点没有插值点，则不用进行任何操作，否则j所对应的值为R，这里R应该是一个常数
                 values[j] = NTL::coeff(polynomial_r, 0);
@@ -68,27 +81,28 @@ void inner_evaluate(NTL::ZZ_pX& polynomial_a, NTL::ZZ_pX* binary_tree, long bina
             return;
         }
         // 分别计算左右孩子节点
-        inner_evaluate(polynomial_r, binary_tree, binary_tree_size, node_num, LEFT(index), values, point_num);
-        inner_evaluate(polynomial_r, binary_tree, binary_tree_size, node_num, RIGHT(index), values, point_num);
+        zp_tree_main_inner_evaluate(polynomial_r, binary_tree, binary_tree_size, leaf_node_num, LEFT(index), values,
+                                    point_num);
+        zp_tree_main_inner_evaluate(polynomial_r, binary_tree, binary_tree_size, leaf_node_num, RIGHT(index), values,
+                                    point_num);
     }
 }
 
-void evaluate(NTL::ZZ_pX& polynomial, NTL::ZZ_p* points, NTL::ZZ_p* values, long point_num) {
-    // 二叉树的叶子节点数量必须是2的阶，找到离point_num最近的n = 2^i
-    long leaf_node_num = point_num == 0 ? 1 : 1 << ceilLog2(point_num);
-    // 构造满二叉树，二叉树的节点数量 = 2 * numOfLeafNodes - 1
-    long binary_tree_size = 2 * leaf_node_num - 1;
-    auto* binary_tree = new NTL::ZZ_pX[binary_tree_size];
+void zp_tree_main_evaluate(NTL::ZZ_pX &polynomial, NTL::ZZ_p *points, NTL::ZZ_p *values, long point_num) {
+    long leaf_node_num = get_leaf_node_num(point_num);
+    long binary_tree_size = get_binary_tree_size(leaf_node_num);
+    // 构造满二叉树
+    auto *binary_tree = new NTL::ZZ_pX[binary_tree_size];
     for (long index = 0; index < binary_tree_size; index++) {
         binary_tree[index] = NTL::ZZ_pX::zero();
     }
     inner_build_binary_tree(binary_tree, points, point_num, leaf_node_num, 0);
-    long node_num = (binary_tree_size + 1) / 2;
-    inner_evaluate(polynomial, binary_tree, binary_tree_size, node_num, 0, values, point_num);
+    zp_tree_main_inner_evaluate(polynomial, binary_tree, binary_tree_size, leaf_node_num, 0, values, point_num);
     delete[] binary_tree;
 }
 
-void zp_tree_evaluate(uint64_t primeByteLength, std::vector<uint8_t*> &coeffs, std::vector<uint8_t*> &setX, std::vector<uint8_t*> &setY) {
+void zp_tree_evaluate(uint64_t primeByteLength, std::vector<uint8_t *> &coeffs,
+                      std::vector<uint8_t *> &setX,std::vector<uint8_t *> &setY) {
     // 临时变量
     NTL::ZZ e_ZZ;
     NTL::ZZ_p e_ZZ_p;
@@ -115,9 +129,9 @@ void zp_tree_evaluate(uint64_t primeByteLength, std::vector<uint8_t*> &coeffs, s
         // 一次可以并行计算的阶数要求是离polynomial.degree()最近的n = 2^k
         long polynomial_degree = NTL::deg(polynomial);
         long interval_num = NTL::deg(polynomial) == 0 ? 1 : 1 << (ceilLog2(polynomial_degree) - 1);
-        long max_num = (long)std::ceil(point_num / (double)interval_num) * interval_num;;
-        auto* x = new NTL::ZZ_p[max_num];
-        auto* y = new NTL::ZZ_p[max_num];
+        long max_num = (long) std::ceil(point_num / (double) interval_num) * interval_num;
+        auto *x = new NTL::ZZ_p[max_num];
+        auto *y = new NTL::ZZ_p[max_num];
         // build x and init y
         for (uint32_t i = 0; i < point_num; i++) {
             NTL::ZZFromBytes(e_ZZ, setX[i], static_cast<long>(primeByteLength));
@@ -131,9 +145,9 @@ void zp_tree_evaluate(uint64_t primeByteLength, std::vector<uint8_t*> &coeffs, s
         }
         for (long point_index = 0; point_index < max_num; point_index += interval_num) {
             // 一次取出interval_num个点
-            auto* interval_x = x + point_index;
-            auto* interval_y = y + point_index;
-            evaluate(polynomial, interval_x, interval_y, interval_num);
+            auto *interval_x = x + point_index;
+            auto *interval_y = y + point_index;
+            zp_tree_main_evaluate(polynomial, interval_x, interval_y, interval_num);
         }
         // 返回结果
         setY.resize(point_num);
@@ -145,5 +159,88 @@ void zp_tree_evaluate(uint64_t primeByteLength, std::vector<uint8_t*> &coeffs, s
         // 清空内存
         delete[] x;
         delete[] y;
+    }
+}
+
+void zp_tree_main_inner_interpolate(NTL::ZZ_pX *temp_polynomials, NTL::ZZ_pX *binary_tree, long binary_tree_size, long leaf_node_num,
+                                    NTL::ZZ_p *values, NTL::ZZ_p *derivativeInverses, long point_num, long i) {
+    if (i >= leaf_node_num - 1) {
+        // 如果为叶子节点，计算得到二叉树节点索引值所对应的插值点索引值
+        long j = i + 1 - leaf_node_num;
+        if (j >= point_num) {
+            // 如果j所对应的叶子节点没有插值点，这意味着j所对应的叶子节点用来补足满二叉树，直接返回1即可
+            temp_polynomials[i] = NTL::ZZ_pX(1);
+        } else {
+            // 否则，j所对应的叶子节点有插值点，返回y_j * a_j
+            temp_polynomials[i] = NTL::ZZ_pX(0);
+            SetCoeff(temp_polynomials[i], 0, values[j] * derivativeInverses[j]);
+        }
+    } else {
+        zp_tree_main_inner_interpolate(temp_polynomials, binary_tree, binary_tree_size, leaf_node_num, values,
+                                       derivativeInverses, point_num, LEFT(i));
+        zp_tree_main_inner_interpolate(temp_polynomials, binary_tree, binary_tree_size, leaf_node_num, values,
+                                       derivativeInverses, point_num, RIGHT(i));
+        temp_polynomials[i] =
+            temp_polynomials[LEFT(i)] * binary_tree[RIGHT(i)] + temp_polynomials[RIGHT(i)] * binary_tree[LEFT(i)];
+    }
+}
+
+void zp_tree_main_interpolate(NTL::ZZ_pX &result_polynomial, NTL::ZZ_p *points, NTL::ZZ_p *values, long point_num) {
+    long leaf_node_num = get_leaf_node_num(point_num);
+    long binary_tree_size = get_binary_tree_size(leaf_node_num);
+    // 构造满二叉树
+    auto *binary_tree = new NTL::ZZ_pX[binary_tree_size];
+    for (long index = 0; index < binary_tree_size; index++) {
+        binary_tree[index] = NTL::ZZ_pX::zero();
+    }
+    inner_build_binary_tree(binary_tree, points, point_num, leaf_node_num, 0);
+    // 构造导数多项式，注意导数多项式的阶等于points.length，而不是leafNodeNum，cc.rings有求导的快速实现算法
+    NTL::ZZ_pX derivativePolynomial;
+    diff(derivativePolynomial, binary_tree[0]);
+    // 计算导数
+    auto *derivativeInverses = new NTL::ZZ_p[point_num];
+    zp_tree_main_inner_evaluate(derivativePolynomial, binary_tree, binary_tree_size, leaf_node_num, 0,
+                                derivativeInverses, point_num);
+    // 计算导数的逆
+    for (uint32_t i = 0; i < point_num; i++) {
+        inv(derivativeInverses[i], derivativeInverses[i]);
+    }
+    // 创建临时变量
+    auto *temp_polynomials = new NTL::ZZ_pX[binary_tree_size];
+    zp_tree_main_inner_interpolate(temp_polynomials, binary_tree, binary_tree_size, leaf_node_num, values,
+                                   derivativeInverses, point_num, 0);
+    // 取第0个多项式，就是取值结果
+    result_polynomial = temp_polynomials[0];
+    delete[] temp_polynomials;
+    delete[] derivativeInverses;
+    delete[] binary_tree;
+}
+
+void zp_tree_interpolate(uint64_t primeByteLength, uint64_t expect_num,
+                         std::vector<uint8_t*> &setX, std::vector<uint8_t*> &setY, std::vector<uint8_t*> &coeffs) {
+    NTL::ZZ e_ZZ;
+    NTL::ZZ_p e_ZZ_p;
+
+    uint32_t point_num = setX.size();
+    auto *x = new NTL::ZZ_p[point_num];
+    NTL::vec_ZZ_p x_vector;
+    auto *y = new NTL::ZZ_p[point_num];
+    // build x and init y
+    for (uint32_t i = 0; i < point_num; i++) {
+        NTL::ZZFromBytes(e_ZZ, setX[i], static_cast<long>(primeByteLength));
+        x[i] = NTL::to_ZZ_p(e_ZZ);
+        x_vector.append(x[i]);
+        NTL::ZZFromBytes(e_ZZ, setY[i], static_cast<long>(primeByteLength));
+        y[i] = NTL::to_ZZ_p(e_ZZ);
+    }
+    NTL::ZZ_pX polynomial;
+    zp_tree_main_interpolate(polynomial, x, y, point_num);
+    zp_polynomial_pad_dummy_item(polynomial, x_vector, expect_num);
+    coeffs.resize(NTL::deg(polynomial) + 1);
+    for (uint32_t i = 0; i < coeffs.size(); i++) {
+        // get the coefficient polynomial
+        e_ZZ = rep(NTL::coeff(polynomial, i));
+        coeffs[i] = new uint8_t[primeByteLength];
+        NTL::BytesFromZZ(coeffs[i], e_ZZ, (long) (primeByteLength));
     }
 }
