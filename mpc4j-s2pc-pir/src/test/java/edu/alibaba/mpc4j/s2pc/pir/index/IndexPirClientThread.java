@@ -65,7 +65,7 @@ public class IndexPirClientThread extends Thread {
             client.init(indexPirParams, serverElementSize, elementByteLength);
             client.getRpc().synchronize();
             for (int i = 0; i < repeatTime; i++) {
-                indexPirResult.add(client.pir(retrievalIndexList.get(i)));
+                indexPirResult.add(ByteBuffer.wrap(client.pir(retrievalIndexList.get(i))));
             }
             client.getRpc().disconnect();
         } catch (MpcAbortException e) {

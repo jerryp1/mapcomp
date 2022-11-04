@@ -38,5 +38,5 @@ public interface IndexPirClient extends TwoPartyPto, SecurePto {
      * @return 检索结果。
      * @throws MpcAbortException 如果协议异常中止。
      */
-    ByteBuffer pir(int index) throws MpcAbortException;
+    byte[] pir(int index) throws MpcAbortException;
 }

@@ -9,8 +9,8 @@ import edu.alibaba.mpc4j.common.rpc.utils.DataPacketHeader;
 import edu.alibaba.mpc4j.common.tool.CommonConstants;
 import edu.alibaba.mpc4j.s2pc.pir.index.AbstractIndexPirClient;
 import edu.alibaba.mpc4j.s2pc.pir.index.IndexPirParams;
+import edu.alibaba.mpc4j.s2pc.pir.index.xpir.Mbfk16IndexPirPtoDesc.PtoStep;
 
-import java.nio.ByteBuffer;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
 
@@ -48,68 +48,40 @@ public class Mbfk16IndexPirClient extends AbstractIndexPirClient {
     }
 
     @Override
-    public ByteBuffer pir(int index) throws MpcAbortException {
+    public byte[] pir(int index) throws MpcAbortException {
         setPtoInput(index);
-
         info("{}{} Client begin", ptoBeginLogPrefix, getPtoDesc().getPtoName());
-        // 客户端生成BFV算法公私钥对
-        stopWatch.start();
-        List<byte[]> keyPair = Mbfk16IndexPirNativeUtils.keyGen(params.getEncryptionParams());
-        stopWatch.stop();
-        long keyGenTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
-        stopWatch.reset();
-        info("{}{} Client Step 1/3 Key Generation ({}ms)", ptoStepLogPrefix, getPtoDesc().getPtoName(), keyGenTime);
 
-        // 客户端生成查询密文
         stopWatch.start();
-        List<byte[]> encryptedQueryList = generateQuery(params.getEncryptionParams(), keyPair.get(0), keyPair.get(1));
-        DataPacketHeader clientQueryDataPacketHeader = new DataPacketHeader(
-            taskId, getPtoDesc().getPtoId(), Mbfk16IndexPirPtoDesc.PtoStep.CLIENT_SEND_QUERY.ordinal(), extraInfo,
+        // 客户端生成BFV算法公私钥对
+        List<byte[]> keyPair = Mbfk16IndexPirNativeUtils.keyGen(params.getEncryptionParams());
+        // 客户端生成并发送问询
+        List<byte[]> clientQueryPayload = generateQuery(params.getEncryptionParams(), keyPair.get(0), keyPair.get(1));
+        DataPacketHeader clientQueryHeader = new DataPacketHeader(
+            taskId, getPtoDesc().getPtoId(), PtoStep.CLIENT_SEND_QUERY.ordinal(), extraInfo,
             rpc.ownParty().getPartyId(), otherParty().getPartyId()
         );
-        rpc.send(DataPacket.fromByteArrayList(clientQueryDataPacketHeader, encryptedQueryList));
+        rpc.send(DataPacket.fromByteArrayList(clientQueryHeader, clientQueryPayload));
         stopWatch.stop();
         long genQueryTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
         stopWatch.reset();
-        info("{}{} Client Step 2/3 Generation Query ({}ms)", ptoStepLogPrefix, getPtoDesc().getPtoName(), genQueryTime);
+        info("{}{} Client Step 1/2 ({}ms)", ptoStepLogPrefix, getPtoDesc().getPtoName(), genQueryTime);
 
-        // 客户端接收服务端回复
-        DataPacketHeader responseHeader = new DataPacketHeader(
-            taskId, getPtoDesc().getPtoId(), Mbfk16IndexPirPtoDesc.PtoStep.SERVER_SEND_RESPONSE.ordinal(), extraInfo,
+        stopWatch.start();
+        // 客户端接收并解密回复
+        DataPacketHeader serverResponseHeader = new DataPacketHeader(
+            taskId, getPtoDesc().getPtoId(), PtoStep.SERVER_SEND_RESPONSE.ordinal(), extraInfo,
             otherParty().getPartyId(), rpc.ownParty().getPartyId()
         );
-        List<byte[]> responsePayload = rpc.receive(responseHeader).getPayload();
-
-        // 客户端解密服务端回复
-        stopWatch.start();
-        ByteBuffer retrievalResult = ByteBuffer.wrap(decodeReply(keyPair.get(1), responsePayload));
+        List<byte[]> serverResponsePayload = rpc.receive(serverResponseHeader).getPayload();
+        byte[] element = handleServerResponsePayload(keyPair.get(1), serverResponsePayload);
         stopWatch.stop();
-        long decodeReplyTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
+        long responseTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
         stopWatch.reset();
-        info("{}{} Client Step 3/3 Decode Reply ({}ms)", ptoStepLogPrefix, getPtoDesc().getPtoName(), decodeReplyTime);
+        info("{}{} Client Step 2/2 ({}ms)", ptoStepLogPrefix, getPtoDesc().getPtoName(), responseTime);
 
         info("{}{} Client end", ptoEndLogPrefix, getPtoDesc().getPtoName());
-        return retrievalResult;
-    }
-
-    /**
-     * 解码回复得到检索结果。
-     *
-     * @param secretKey 私钥。
-     * @param response  回复。
-     * @return 检索结果。
-     * @throws MpcAbortException 如果协议异常中止。
-     */
-    private byte[] decodeReply(byte[] secretKey, List<byte[]> response) throws MpcAbortException {
-        long[] decodedCoeffArray = Mbfk16IndexPirNativeUtils.decryptReply(
-            params.getEncryptionParams(), secretKey, (ArrayList<byte[]>) response, params.getDimension()
-        );
-        byte[] decodeByteArray = convertCoeffsToBytes(decodedCoeffArray);
-        byte[] elementBytes = new byte[elementByteLength];
-        // offset in FV plaintext
-        int offset =  index % params.getElementSizeOfPlaintext();
-        System.arraycopy(decodeByteArray, offset * elementByteLength, elementBytes, 0, elementByteLength);
-        return elementBytes;
+        return element;
     }
 
     /**
@@ -129,9 +101,6 @@ public class Mbfk16IndexPirClient extends AbstractIndexPirClient {
         ArrayList<Integer> plainQuery = new ArrayList<>();
         int pt;
         for (int i = 0; i < indices.length; i++) {
-            // 该维度中密文多项式的数量
-            info("Client: index " + (i+1) + " / " + indices.length + " = " + indices[i]);
-            info("Client: number of ciphertexts needed for query = " + dimensionSize[i]);
             for (int j = 0; j < dimensionSize[i]; j++) {
                 // 第indices.get(i)个待加密明文为1, 其余明文为0
                 pt = j == indices[i] ? 1 : 0;
@@ -142,6 +111,26 @@ public class Mbfk16IndexPirClient extends AbstractIndexPirClient {
         return Mbfk16IndexPirNativeUtils.generateQuery(
             encryptionParams, publicKey, secretKey, plainQuery.stream().mapToInt(integer -> integer).toArray()
         );
+    }
+
+    /**
+     * 解码回复得到检索结果。
+     *
+     * @param secretKey 私钥。
+     * @param response  回复。
+     * @return 检索结果。
+     * @throws MpcAbortException 如果协议异常中止。
+     */
+    private byte[] handleServerResponsePayload(byte[] secretKey, List<byte[]> response) throws MpcAbortException {
+        long[] decodedCoefficientArray = Mbfk16IndexPirNativeUtils.decryptReply(
+            params.getEncryptionParams(), secretKey, (ArrayList<byte[]>) response, params.getDimension()
+        );
+        byte[] decodeByteArray = convertCoeffsToBytes(decodedCoefficientArray);
+        byte[] elementBytes = new byte[elementByteLength];
+        // offset in FV plaintext
+        int offset = index % params.getElementSizeOfPlaintext();
+        System.arraycopy(decodeByteArray, offset * elementByteLength, elementBytes, 0, elementByteLength);
+        return elementBytes;
     }
 
     /**

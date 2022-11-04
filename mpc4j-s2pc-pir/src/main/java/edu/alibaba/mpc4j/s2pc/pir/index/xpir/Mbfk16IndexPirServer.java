@@ -9,6 +9,7 @@ import edu.alibaba.mpc4j.common.rpc.utils.DataPacketHeader;
 import edu.alibaba.mpc4j.common.tool.CommonConstants;
 import edu.alibaba.mpc4j.s2pc.pir.index.AbstractIndexPirServer;
 import edu.alibaba.mpc4j.s2pc.pir.index.IndexPirParams;
+import edu.alibaba.mpc4j.s2pc.pir.index.xpir.Mbfk16IndexPirPtoDesc.PtoStep;
 
 import java.nio.ByteBuffer;
 import java.util.*;
@@ -41,17 +42,16 @@ public class Mbfk16IndexPirServer extends AbstractIndexPirServer {
     }
 
     @Override
-    public void init(IndexPirParams indexPirParams, ArrayList<ByteBuffer> elementArrayList, int elementByteLength) throws MpcAbortException {
+    public void init(IndexPirParams indexPirParams, ArrayList<ByteBuffer> elementArrayList, int elementByteLength)
+        throws MpcAbortException {
         setInitInput(elementArrayList, elementByteLength);
-
-        info("{}{} Server Init begin", ptoBeginLogPrefix, getPtoDesc().getPtoName());
-
         assert (indexPirParams instanceof Mbfk16IndexPirParams);
         params = (Mbfk16IndexPirParams) indexPirParams;
+        info("{}{} Server Init begin", ptoBeginLogPrefix, getPtoDesc().getPtoName());
 
         stopWatch.start();
         // 服务端对数据库进行编码
-        this.bfvPlaintext = encodeDatabase();
+        bfvPlaintext = encodeDatabase();
         stopWatch.stop();
         long initTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
         stopWatch.reset();
@@ -66,29 +66,33 @@ public class Mbfk16IndexPirServer extends AbstractIndexPirServer {
         setPtoInput();
         info("{}{} Server begin", ptoBeginLogPrefix, getPtoDesc().getPtoName());
 
-        // 接收客户端的加密查询信息
-        DataPacketHeader queryHeader = new DataPacketHeader(
-            taskId, getPtoDesc().getPtoId(), Mbfk16IndexPirPtoDesc.PtoStep.CLIENT_SEND_QUERY.ordinal(), extraInfo,
+        stopWatch.start();
+        // 服务端接收并处理问询
+        DataPacketHeader clientQueryHeader = new DataPacketHeader(
+            taskId, getPtoDesc().getPtoId(), PtoStep.CLIENT_SEND_QUERY.ordinal(), extraInfo,
             otherParty().getPartyId(), rpc.ownParty().getPartyId()
         );
-        ArrayList<byte[]> queryPayload = new ArrayList<>(rpc.receive(queryHeader).getPayload());
-        int querySize = Arrays.stream(params.getDimensionsLength()).sum();
-        MpcAbortPreconditions.checkArgument(queryPayload.size() == querySize, "The size of query is incorrect");
+        stopWatch.stop();
+        long receiveQueryTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
+        stopWatch.reset();
+        info("{}{} Server Step 1/2 ({}ms)", ptoStepLogPrefix, getPtoDesc().getPtoName(), receiveQueryTime);
 
-        // 服务端密文态下计算查询信息
         stopWatch.start();
-        ArrayList<byte[]> response = Mbfk16IndexPirNativeUtils.generateReply(
-            params.getEncryptionParams(), queryPayload, bfvPlaintext, params.getDimensionsLength()
+        ArrayList<byte[]> clientQueryPayload = new ArrayList<>(rpc.receive(clientQueryHeader).getPayload());
+        int querySize = Arrays.stream(params.getDimensionsLength()).sum();
+        MpcAbortPreconditions.checkArgument(clientQueryPayload.size() == querySize);
+        ArrayList<byte[]> serverResponsePayload = Mbfk16IndexPirNativeUtils.generateReply(
+            params.getEncryptionParams(), clientQueryPayload, bfvPlaintext, params.getDimensionsLength()
         );
-        DataPacketHeader keywordResponseHeader = new DataPacketHeader(
-            taskId, getPtoDesc().getPtoId(), Mbfk16IndexPirPtoDesc.PtoStep.SERVER_SEND_RESPONSE.ordinal(), extraInfo,
+        DataPacketHeader serverResponseHeader = new DataPacketHeader(
+            taskId, getPtoDesc().getPtoId(), PtoStep.SERVER_SEND_RESPONSE.ordinal(), extraInfo,
             rpc.ownParty().getPartyId(), otherParty().getPartyId()
         );
-        rpc.send(DataPacket.fromByteArrayList(keywordResponseHeader, response));
+        rpc.send(DataPacket.fromByteArrayList(serverResponseHeader, serverResponsePayload));
         stopWatch.stop();
-        long genReplyTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
+        long genResponseTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
         stopWatch.reset();
-        info("{}{} Server Step 1/1 Generate Reply ({}ms)", ptoStepLogPrefix, getPtoDesc().getPtoName(), genReplyTime);
+        info("{}{} Server Step 2/2 ({}ms)", ptoStepLogPrefix, getPtoDesc().getPtoName(), genResponseTime);
 
         info("{}{} Server end", ptoEndLogPrefix, getPtoDesc().getPtoName());
     }
@@ -116,7 +120,11 @@ public class Mbfk16IndexPirServer extends AbstractIndexPirServer {
         // 一个多项式中需要使用的系数个数
         int usedCoeffSize = elementSizeOfPlaintext * ((int) Math.ceil(Byte.SIZE * elementByteLength / (double) logt));
         // 系数个数不大于多项式阶数
-        MpcAbortPreconditions.checkArgument(usedCoeffSize <= polyModulusDegree);
+        MpcAbortPreconditions.checkArgument(
+            usedCoeffSize <= polyModulusDegree,
+            "coefficient num = %s must be less than or equal to polynomial degree = %s",
+            usedCoeffSize, polyModulusDegree
+        );
         // 字节转换为多项式系数
         int offset = 0;
         for (int i = 0; i < plaintextSize; i++) {

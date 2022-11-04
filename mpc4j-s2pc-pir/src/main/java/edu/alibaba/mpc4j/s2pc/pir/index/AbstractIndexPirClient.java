@@ -42,7 +42,7 @@ public abstract class AbstractIndexPirClient extends AbstractSecureTwoPartyPto i
     protected void setInitInput(int num, int elementByteLength) {
         assert elementByteLength > 0 : "element byte length must be greater than 0: " + elementByteLength;
         this.elementByteLength = elementByteLength;
-        assert num > 0 : "num must be greater than 0";
+        assert num > 0 : "num must be greater than 0: " + num;
         this.num = num;
         extraInfo++;
         initialized = false;
