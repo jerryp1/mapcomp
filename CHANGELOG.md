@@ -8,8 +8,6 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ### Added
 
-- Documentations
-  - We update documentations for how to install and run `mpc4j`. Now, the documentation contains installing `mpc4j` in Ubuntu and CentOS Docker images both for `aarch64` and `x86_64`. 
 - `mpc4j-common-tool`
   - Polynomial: We add batched polynomial implementation algorithms (both for `NTL` and `Rings`) proposed by Pinkas et al. at CRYPTO 2019.
 - `mpc4j-common-rpc`
@@ -17,6 +15,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
   - Add `setEnvType()` into the interface `SecurePtoConfig`. All protocol config can support `setEnvType()` so that we can switch `EnvType.STANDARD` to others in a unified way.
 - `mpc4j-native-tool`
   - We thank the anonymous USENIX Security 2023 AE reviewer for many suggestions. We replace constant-size heap allocations (e.g., `auto *p = new uint8_t[]`) with stack allocations (e.g., `uint8_t p[]`). We fixed many memory leakage bugs in our C/C++ implementations.
+- `mpc4j-native-fhe`
+  - We merged all native tools in one utils class for all protocols.
+- `mpc4j-s2pc-pcg`
+  - Multiplication Triple in Zp64: Introduce Multiplication Triple Generation (MTG) under Zp64 in `mpc4j-s2pc-pcg`.
 - `mpc4j-s2pc-pso`
   - `psu`
     - Now `Main` supports unbalanced PSU inputs.
@@ -24,6 +26,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ### Changed
 
+- Documentations
+  - We update documentations for how to install and run `mpc4j`. Now, the documentation contains installing `mpc4j` in Ubuntu and CentOS Docker images both for `aarch64` and `x86_64`.
 - `mpc4j-common-tool`
   - We revise the code for `SparseBitMatrix`. Now the code is easier to understand.
 
@@ -44,7 +48,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
   - ByteEcc: Add scalar validation for X25519. Add libsodium support for both X25519 and Ed25519.
   - Kyber: Add post-quantum secure public key encryption scheme Kyber. The implementation is modified from [KyberJCK](https://github.com/fisherstevenk/kyberJCE).
 - `mpc4j-s2pc-pcg`
-  - Multiplication Triple in Zl: Introduce Multiplication Triple Generation (MTC) under Zl in `mpc4j-s2pc-pcg`.
+  - Multiplication Triple in Zl: Introduce Multiplication Triple Generation (MTG) under Zl in `mpc4j-s2pc-pcg`.
   - Kyber Base-OT: Introduce Kyber Base-OT schemes.
 - `mpc4j-s2pc-pso`
   - mqRPMT: Introduce mqRPMT.
