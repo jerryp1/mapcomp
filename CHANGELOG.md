@@ -13,8 +13,6 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 - `mpc4j-common-rpc`
   - Add the interface `PtoFactory` and make protocol factory classes implement `PtoFactory`.
   - Add `setEnvType()` into the interface `SecurePtoConfig`. All protocol config can support `setEnvType()` so that we can switch `EnvType.STANDARD` to others in a unified way.
-- `mpc4j-native-tool`
-  - We thank the anonymous USENIX Security 2023 AE reviewer for many suggestions. We replace constant-size heap allocations (e.g., `auto *p = new uint8_t[]`) with stack allocations (e.g., `uint8_t p[]`). We fixed many memory leakage bugs in our C/C++ implementations.
 - `mpc4j-native-fhe`
   - We merged all native tools in one utils class for all protocols.
 - `mpc4j-s2pc-pcg`
@@ -36,7 +34,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 - `mpc4j-common-rpc`
   - Fix issue \#5.
 - `mpc4j-native-tool`
-  - We thank anonymous USENIX Security 2023 Artifact Evaluation (AE) reviewers for many suggestions for `mpc4j-native-tool`. These suggestions help us fix many memory leakage problems. Also, the comments help us remove many duplicate codes. 
+  - We thank anonymous USENIX Security 2023 Artifact Evaluation (AE) reviewers for many suggestions for `mpc4j-native-tool`. These suggestions help us fix many memory leakage problems. Also, the comments help us remove many duplicate codes. Specifically, we replace constant-size heap allocations (e.g., `auto *p = new uint8_t[]`) with stack allocations (e.g., `uint8_t p[]`). We fixed many memory leakage bugs in our C/C++ implementations.
   - We update `CmakeList.txt` so that one can successfully compile `mpc4j-native-tool` in Ubuntu and CentOS Docker images both for `aarch64` and `x86_64`.
 
 
