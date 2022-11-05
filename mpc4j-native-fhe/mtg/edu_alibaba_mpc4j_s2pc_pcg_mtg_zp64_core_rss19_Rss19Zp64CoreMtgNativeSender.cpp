@@ -10,7 +10,7 @@
 using namespace std;
 using namespace seal;
 
-[[maybe_unused]] JNIEXPORT jobject JNICALL Java_edu_alibaba_mpc4j_s2pc_pcg_mtg_zp64_core_rss19_Rss19Zp64CoreMtgNativeSender_keyGen(
+JNIEXPORT jobject JNICALL Java_edu_alibaba_mpc4j_s2pc_pcg_mtg_zp64_core_rss19_Rss19Zp64CoreMtgNativeSender_keyGen(
         JNIEnv *env, jclass, jint poly_modulus_degree, jlong plain_modulus) {
     EncryptionParameters parms = generate_encryption_parameters(scheme_type::bfv, poly_modulus_degree, plain_modulus);
     SEALContext context = SEALContext(parms);
@@ -20,7 +20,7 @@ using namespace seal;
     return serialize_public_key_secret_key(env, parms, public_key, secret_key);
 }
 
-[[maybe_unused]] JNIEXPORT jobject JNICALL Java_edu_alibaba_mpc4j_s2pc_pcg_mtg_zp64_core_rss19_Rss19Zp64CoreMtgNativeSender_encryption(
+JNIEXPORT jobject JNICALL Java_edu_alibaba_mpc4j_s2pc_pcg_mtg_zp64_core_rss19_Rss19Zp64CoreMtgNativeSender_encryption(
         JNIEnv *env, jclass, jbyteArray params_bytes, jbyteArray public_key_bytes, jbyteArray secret_key_bytes,
         jlongArray coeff_array0, jlongArray coeff_array1) {
     EncryptionParameters parms = deserialize_encryption_params(env, params_bytes);
@@ -58,7 +58,7 @@ using namespace seal;
     return serialize_ciphertexts(env, ct);
 }
 
-[[maybe_unused]] JNIEXPORT jlongArray JNICALL Java_edu_alibaba_mpc4j_s2pc_pcg_mtg_zp64_core_rss19_Rss19Zp64CoreMtgNativeSender_decryption(
+JNIEXPORT jlongArray JNICALL Java_edu_alibaba_mpc4j_s2pc_pcg_mtg_zp64_core_rss19_Rss19Zp64CoreMtgNativeSender_decryption(
         JNIEnv *env, jclass, jbyteArray params_bytes, jbyteArray secret_key_bytes, jbyteArray ciphertext_bytes) {
     EncryptionParameters parms = deserialize_encryption_params(env, params_bytes);
     SEALContext context(parms);

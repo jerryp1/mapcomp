@@ -10,7 +10,7 @@
 using namespace std;
 using namespace seal;
 
-[[maybe_unused]] JNIEXPORT jbyteArray JNICALL Java_edu_alibaba_mpc4j_s2pc_pcg_mtg_zp64_core_rss19_Rss19Zp64CoreMtgNativeReceiver_computeResponse(
+JNIEXPORT jbyteArray JNICALL Java_edu_alibaba_mpc4j_s2pc_pcg_mtg_zp64_core_rss19_Rss19Zp64CoreMtgNativeReceiver_computeResponse(
         JNIEnv *env, jclass, jbyteArray params_bytes, jbyteArray cipher1_bytes, jbyteArray cipher2_bytes,
         jlongArray plain1, jlongArray plain2, jlongArray r) {
     EncryptionParameters parms = deserialize_encryption_params(env, params_bytes);

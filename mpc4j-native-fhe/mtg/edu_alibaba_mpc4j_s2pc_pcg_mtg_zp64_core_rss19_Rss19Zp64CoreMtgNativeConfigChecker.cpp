@@ -1,5 +1,5 @@
 //
-// Created by pengliqiang on 2022/9/7.
+// Created by Liqiang Peng on 2022/9/7.
 //
 
 #include "edu_alibaba_mpc4j_s2pc_pcg_mtg_zp64_core_rss19_Rss19Zp64CoreMtgNativeConfigChecker.h"
@@ -9,7 +9,7 @@
 using namespace std;
 using namespace seal;
 
-[[maybe_unused]] JNIEXPORT jlong JNICALL Java_edu_alibaba_mpc4j_s2pc_pcg_mtg_zp64_core_rss19_Rss19Zp64CoreMtgNativeConfigChecker_checkCreatePlainModulus(
+JNIEXPORT jlong JNICALL Java_edu_alibaba_mpc4j_s2pc_pcg_mtg_zp64_core_rss19_Rss19Zp64CoreMtgNativeConfigChecker_checkCreatePlainModulus(
         JNIEnv *env, jclass, jint poly_modulus_degree, jint plain_modulus_size) {
     uint64_t plain_modulus;
     jclass exception = env->FindClass("java/lang/Exception");

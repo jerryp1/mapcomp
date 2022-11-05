@@ -1,16 +1,17 @@
 //
-// Created by Liqiang Peng on 2022/11/4.
+// Created by Liqiang Peng on 2022/11/5.
 //
-#include "edu_alibaba_mpc4j_s2pc_pir_keyword_cmg21_Cmg21KwPirNativeUtils.h"
+
+#include "edu_alibaba_mpc4j_s2pc_pso_upsi_cmg21_Cmg21UpsiNativeUtils.h"
 #include "../apsi.h"
 #include "../serialize.h"
 #include "../utils.h"
 #include "../polynomials.h"
 
-using namespace seal;
 using namespace std;
+using namespace seal;
 
-JNIEXPORT jobject JNICALL Java_edu_alibaba_mpc4j_s2pc_pir_keyword_cmg21_Cmg21KwPirNativeUtils_genEncryptionParameters(
+JNIEXPORT jobject JNICALL Java_edu_alibaba_mpc4j_s2pc_pso_upsi_cmg21_Cmg21UpsiNativeUtils_genEncryptionParameters(
     JNIEnv *env, jclass, jint poly_modulus_degree, jlong plain_modulus, jintArray coeff_modulus_bits) {
     uint32_t coeff_size = env->GetArrayLength(coeff_modulus_bits);
     jint* coeff_ptr = env->GetIntArrayElements(coeff_modulus_bits, JNI_FALSE);
@@ -24,7 +25,7 @@ JNIEXPORT jobject JNICALL Java_edu_alibaba_mpc4j_s2pc_pir_keyword_cmg21_Cmg21KwP
     return serialize_relin_public_secret_keys(env, parms, relin_keys, public_key, secret_key);
 }
 
-JNIEXPORT jboolean JNICALL Java_edu_alibaba_mpc4j_s2pc_pir_keyword_cmg21_Cmg21KwPirNativeUtils_checkSealParams(
+JNIEXPORT jboolean JNICALL Java_edu_alibaba_mpc4j_s2pc_pso_upsi_cmg21_Cmg21UpsiNativeUtils_checkSealParams(
     JNIEnv *env, jclass, jint poly_modulus_degree, jlong plain_modulus, jintArray coeff_modulus_bits,
     jobjectArray jparent_powers, jintArray jsource_power_index, jint ps_low_power, jint max_bin_size) {
     uint32_t coeff_size = env->GetArrayLength(coeff_modulus_bits);
@@ -123,7 +124,7 @@ JNIEXPORT jboolean JNICALL Java_edu_alibaba_mpc4j_s2pc_pir_keyword_cmg21_Cmg21Kw
     return noise_budget > 0;
 }
 
-JNIEXPORT jobject JNICALL Java_edu_alibaba_mpc4j_s2pc_pir_keyword_cmg21_Cmg21KwPirNativeUtils_computeEncryptedPowers(
+JNIEXPORT jobject JNICALL Java_edu_alibaba_mpc4j_s2pc_pso_upsi_cmg21_Cmg21UpsiNativeUtils_computeEncryptedPowers(
     JNIEnv *env, jclass, jbyteArray params_bytes, jbyteArray relin_keys_bytes, jobject query_list,
     jobjectArray jparent_powers, jintArray jsource_power_index, jint ps_low_power) {
     EncryptionParameters parms = deserialize_encryption_params(env, params_bytes);
@@ -155,16 +156,12 @@ JNIEXPORT jobject JNICALL Java_edu_alibaba_mpc4j_s2pc_pir_keyword_cmg21_Cmg21KwP
     return serialize_ciphertexts(env, encrypted_powers);
 }
 
-JNIEXPORT jbyteArray JNICALL Java_edu_alibaba_mpc4j_s2pc_pir_keyword_cmg21_Cmg21KwPirNativeUtils_optComputeMatches(
-    JNIEnv *env, jclass, jbyteArray params_bytes, jbyteArray pk_bytes, jbyteArray relin_keys_bytes,
-    jobjectArray database_coeffs, jobject query_list, jint ps_low_power) {
+JNIEXPORT jbyteArray JNICALL Java_edu_alibaba_mpc4j_s2pc_pso_upsi_cmg21_Cmg21UpsiNativeUtils_optComputeMatches(
+    JNIEnv *env, jclass, jbyteArray params_bytes, jbyteArray relin_keys_bytes, jobjectArray database_coeffs,
+    jobject query_list, jint ps_low_power) {
     EncryptionParameters parms = deserialize_encryption_params(env, params_bytes);
     SEALContext context(parms);
     jclass exception = env->FindClass("java/lang/Exception");
-    PublicKey public_key = deserialize_public_key(env, pk_bytes, context);
-    if (!is_metadata_valid_for(public_key, context)) {
-        env->ThrowNew(exception, "invalid public key for this SEALContext");
-    }
     RelinKeys relin_keys = deserialize_relin_key(env, relin_keys_bytes, context);
     if (!is_metadata_valid_for(relin_keys, context)) {
         env->ThrowNew(exception, "invalid relinearization key for this SEALContext");
@@ -181,19 +178,14 @@ JNIEXPORT jbyteArray JNICALL Java_edu_alibaba_mpc4j_s2pc_pir_keyword_cmg21_Cmg21
             evaluator.transform_to_ntt_inplace(plaintexts[i], low_powers_parms_id);
         }
     }
-    Ciphertext f_evaluated = polynomial_evaluation(parms, query_powers, plaintexts, ps_low_power, relin_keys, public_key);
+    Ciphertext f_evaluated = polynomial_evaluation(parms, query_powers, plaintexts, ps_low_power, relin_keys);
     return serialize_ciphertext(env, f_evaluated);
 }
 
-JNIEXPORT jbyteArray JNICALL Java_edu_alibaba_mpc4j_s2pc_pir_keyword_cmg21_Cmg21KwPirNativeUtils_naiveComputeMatches(
-    JNIEnv *env, jclass, jbyteArray params_bytes, jbyteArray pk_bytes, jobjectArray database_coeffs, jobject query_list) {
+JNIEXPORT jbyteArray JNICALL Java_edu_alibaba_mpc4j_s2pc_pso_upsi_cmg21_Cmg21UpsiNativeUtils_naiveComputeMatches(
+    JNIEnv *env, jclass, jbyteArray params_bytes, jobjectArray database_coeffs, jobject query_list) {
     EncryptionParameters parms = deserialize_encryption_params(env, params_bytes);
     SEALContext context(parms);
-    jclass exception = env->FindClass("java/lang/Exception");
-    PublicKey public_key = deserialize_public_key(env, pk_bytes, context);
-    if (!is_metadata_valid_for(public_key, context)) {
-        env->ThrowNew(exception, "invalid public key for this SEALContext");
-    }
     Evaluator evaluator(context);
     // encrypted query powers
     vector<Ciphertext> query_powers = deserialize_ciphertexts(env, query_list, context);
@@ -202,12 +194,12 @@ JNIEXPORT jbyteArray JNICALL Java_edu_alibaba_mpc4j_s2pc_pir_keyword_cmg21_Cmg21
     for (int i = 1; i < plaintexts.size(); i++) {
         evaluator.transform_to_ntt_inplace(plaintexts[i], parms_id);
     }
-    Ciphertext f_evaluated = polynomial_evaluation(parms, query_powers, plaintexts, public_key);
+    Ciphertext f_evaluated = polynomial_evaluation(parms, query_powers, plaintexts);
     return serialize_ciphertext(env, f_evaluated);
 }
 
-JNIEXPORT jobject JNICALL Java_edu_alibaba_mpc4j_s2pc_pir_keyword_cmg21_Cmg21KwPirNativeUtils_generateQuery(
-    JNIEnv *env, jclass, jbyteArray params_bytes, jbyteArray pk_bytes,jbyteArray sk_bytes, jobjectArray coeffs_array) {
+JNIEXPORT jobject JNICALL Java_edu_alibaba_mpc4j_s2pc_pso_upsi_cmg21_Cmg21UpsiNativeUtils_generateQuery(
+    JNIEnv *env, jclass, jbyteArray params_bytes, jbyteArray pk_bytes, jbyteArray sk_bytes, jobjectArray coeffs_array) {
     EncryptionParameters parms = deserialize_encryption_params(env, params_bytes);
     SEALContext context = SEALContext(parms);
     jclass exception = env->FindClass("java/lang/Exception");
@@ -234,7 +226,7 @@ JNIEXPORT jobject JNICALL Java_edu_alibaba_mpc4j_s2pc_pir_keyword_cmg21_Cmg21KwP
     return serialize_ciphertexts(env, query);
 }
 
-JNIEXPORT jlongArray JNICALL Java_edu_alibaba_mpc4j_s2pc_pir_keyword_cmg21_Cmg21KwPirNativeUtils_decodeReply(
+JNIEXPORT jlongArray JNICALL Java_edu_alibaba_mpc4j_s2pc_pso_upsi_cmg21_Cmg21UpsiNativeUtils_decodeReply(
     JNIEnv *env, jclass, jbyteArray params_bytes, jbyteArray sk_bytes, jbyteArray response_byte) {
     EncryptionParameters parms = deserialize_encryption_params(env, params_bytes);
     SEALContext context = SEALContext(parms);

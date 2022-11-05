@@ -12,7 +12,7 @@ extern "C" {
  * Method:    keyGen
  * Signature: (IJ)Ljava/util/ArrayList;
  */
-[[maybe_unused]] JNIEXPORT jobject JNICALL Java_edu_alibaba_mpc4j_s2pc_pcg_mtg_zp64_core_rss19_Rss19Zp64CoreMtgNativeSender_keyGen
+JNIEXPORT jobject JNICALL Java_edu_alibaba_mpc4j_s2pc_pcg_mtg_zp64_core_rss19_Rss19Zp64CoreMtgNativeSender_keyGen
   (JNIEnv *, jclass, jint, jlong);
 
 /*
@@ -20,7 +20,7 @@ extern "C" {
  * Method:    encryption
  * Signature: ([B[B[B[J[J)Ljava/util/ArrayList;
  */
-[[maybe_unused]] JNIEXPORT jobject JNICALL Java_edu_alibaba_mpc4j_s2pc_pcg_mtg_zp64_core_rss19_Rss19Zp64CoreMtgNativeSender_encryption
+JNIEXPORT jobject JNICALL Java_edu_alibaba_mpc4j_s2pc_pcg_mtg_zp64_core_rss19_Rss19Zp64CoreMtgNativeSender_encryption
   (JNIEnv *, jclass, jbyteArray, jbyteArray, jbyteArray, jlongArray, jlongArray);
 
 /*
@@ -28,7 +28,7 @@ extern "C" {
  * Method:    decryption
  * Signature: ([B[B[B)[J
  */
-[[maybe_unused]] JNIEXPORT jlongArray JNICALL Java_edu_alibaba_mpc4j_s2pc_pcg_mtg_zp64_core_rss19_Rss19Zp64CoreMtgNativeSender_decryption
+JNIEXPORT jlongArray JNICALL Java_edu_alibaba_mpc4j_s2pc_pcg_mtg_zp64_core_rss19_Rss19Zp64CoreMtgNativeSender_decryption
   (JNIEnv *, jclass, jbyteArray, jbyteArray, jbyteArray);
 
 #ifdef __cplusplus

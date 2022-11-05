@@ -1,22 +1,21 @@
-package edu.alibaba.mpc4j.s2pc.pir.keyword.cmg21;
+package edu.alibaba.mpc4j.s2pc.pso.upsi.cmg21;
 
 import edu.alibaba.mpc4j.common.tool.CommonConstants;
 
 import java.util.List;
 
 /**
- * APSI协议本地算法库工具类。
+ * CMG21非平衡PSI协议本地算法库工具类。
  *
  * @author Liqiang Peng
- * @date 2022/11/4
+ * @date 2022/11/5
  */
-class Cmg21KwPirNativeUtils {
-
+class Cmg21UpsiNativeUtils {
     static {
         System.loadLibrary(CommonConstants.MPC4J_NATIVE_FHE_NAME);
     }
 
-    private Cmg21KwPirNativeUtils() {
+    private Cmg21UpsiNativeUtils() {
         // empty
     }
 
@@ -64,45 +63,42 @@ class Cmg21KwPirNativeUtils {
      * Paterson-Stockmeyer方法计算密文匹配结果。
      *
      * @param encryptionParams 加密方案参数。
-     * @param publicKey        公钥。
      * @param relinKeys        重线性化密钥。
      * @param plaintextPolys   明文多项式。
      * @param ciphertextPolys  密文多项式。
      * @param psLowDegree      Paterson-Stockmeyer方法的低阶值。
      * @return 密文匹配结果。
      */
-    static native byte[] optComputeMatches(byte[] encryptionParams, byte[] publicKey, byte[] relinKeys,
-                                           long[][] plaintextPolys, List<byte[]> ciphertextPolys, int psLowDegree);
+    static native byte[] optComputeMatches(byte[] encryptionParams, byte[] relinKeys, long[][] plaintextPolys,
+                                        List<byte[]> ciphertextPolys, int psLowDegree);
 
     /**
      * 一般方法计算密文匹配结果。
      *
      * @param encryptionParams 加密方案参数。
-     * @param publicKey        公钥。
      * @param plaintextPolys   数据库编码。
      * @param ciphertextPolys  密文查询信息。
      * @return 密文匹配结果。
      */
-    static native byte[] naiveComputeMatches(byte[] encryptionParams, byte[] publicKey, long[][] plaintextPolys,
-                                             List<byte[]> ciphertextPolys);
+    static native byte[] naiveComputeMatches(byte[] encryptionParams, long[][] plaintextPolys, List<byte[]> ciphertextPolys);
 
     /**
-     * 生成索引信息密文。
+     * 生成索引信息。
      *
-     * @param plainQuery       明文索引信息。
      * @param encryptionParams 加密方案参数。
      * @param publicKey        公钥。
      * @param secretKey        私钥。
-     * @return 索引信息密文。
+     * @param plainQuery       明文索引信息。
+     * @return 索引信息。
      */
     static native List<byte[]> generateQuery(byte[] encryptionParams, byte[] publicKey, byte[] secretKey, long[][] plainQuery);
 
     /**
      * 解码查询结果。
      *
-     * @param encryptedResponse 密文查询结果。
      * @param encryptionParams  加密方案参数。
      * @param secretKey         私钥。
+     * @param encryptedResponse 密文查询结果。
      * @return 查询结果。
      */
     static native long[] decodeReply(byte[] encryptionParams, byte[] secretKey, byte[] encryptedResponse);
