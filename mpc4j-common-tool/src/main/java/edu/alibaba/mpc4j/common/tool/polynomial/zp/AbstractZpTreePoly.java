@@ -7,12 +7,12 @@ import java.math.BigInteger;
 import java.security.SecureRandom;
 
 /**
- * Zp多项式差值抽象类。
+ * Zp二叉树差值抽象类。
  *
  * @author Weiran Liu
- * @date 2022/8/7
+ * @date 2022/11/5
  */
-abstract class AbstractZpPoly implements ZpPoly {
+abstract class AbstractZpTreePoly implements ZpTreePoly {
     /**
      * 随机状态
      */
@@ -26,7 +26,7 @@ abstract class AbstractZpPoly implements ZpPoly {
      */
     protected final int l;
 
-    AbstractZpPoly(int l) {
+    AbstractZpTreePoly(int l) {
         p = ZpManager.getPrime(l);
         this.l = l;
         secureRandom = new SecureRandom();

@@ -39,12 +39,6 @@ public class NtlZpPoly extends AbstractZpPoly {
     }
 
     @Override
-    public int coefficientNum(int pointNum, int expectNum) {
-        assert pointNum >= 0 && pointNum <= expectNum : "point num must be in range [0, " + expectNum + "]: " + pointNum;
-        return expectNum;
-    }
-
-    @Override
     public BigInteger[] interpolate(int expectNum, BigInteger[] xArray, BigInteger[] yArray) {
         assert xArray.length == yArray.length;
         assert expectNum >= 1 && xArray.length <= expectNum;
@@ -60,12 +54,6 @@ public class NtlZpPoly extends AbstractZpPoly {
         byte[][] polynomial = nativeInterpolate(pByteArray, expectNum, xByteArray, yByteArray);
         // 转换为大整数
         return BigIntegerUtils.byteArraysToNonNegBigIntegers(polynomial);
-    }
-
-    @Override
-    public int rootCoefficientNum(int pointNum, int expectNum) {
-        assert pointNum >= 0 && pointNum <= expectNum : "point num must be in range [0, " + expectNum + "]: " + pointNum;
-        return expectNum + 1;
     }
 
     @Override

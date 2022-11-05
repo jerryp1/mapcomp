@@ -88,82 +88,8 @@ void zp_tree_main_inner_evaluate(NTL::ZZ_pX &polynomial_a, NTL::ZZ_pX *binary_tr
     }
 }
 
-void zp_tree_main_evaluate(NTL::ZZ_pX &polynomial, NTL::ZZ_p *points, NTL::ZZ_p *values, long point_num) {
-    long leaf_node_num = get_leaf_node_num(point_num);
-    long binary_tree_size = get_binary_tree_size(leaf_node_num);
-    // 构造满二叉树
-    auto *binary_tree = new NTL::ZZ_pX[binary_tree_size];
-    for (long index = 0; index < binary_tree_size; index++) {
-        binary_tree[index] = NTL::ZZ_pX::zero();
-    }
-    inner_build_binary_tree(binary_tree, points, point_num, leaf_node_num, 0);
-    zp_tree_main_inner_evaluate(polynomial, binary_tree, binary_tree_size, leaf_node_num, 0, values, point_num);
-    delete[] binary_tree;
-}
-
-void zp_tree_evaluate(uint64_t primeByteLength, std::vector<uint8_t *> &coeffs,
-                      std::vector<uint8_t *> &setX,std::vector<uint8_t *> &setY) {
-    // 临时变量
-    NTL::ZZ e_ZZ;
-    NTL::ZZ_p e_ZZ_p;
-    // build polynomial
-    uint32_t coeff_num = coeffs.size();
-    NTL::ZZ_pX polynomial;
-    for (uint32_t i = 0; i < coeff_num; i++) {
-        NTL::ZZFromBytes(e_ZZ, coeffs[i], static_cast<long>(primeByteLength));
-        e_ZZ_p = NTL::to_ZZ_p(e_ZZ);
-        NTL::SetCoeff(polynomial, static_cast<long>(i), e_ZZ_p);
-    }
-    uint32_t point_num = setX.size();
-    if (point_num == 1) {
-        setY.resize(1);
-        // 如果只对一个点求值，则直接返回结果
-        NTL::ZZFromBytes(e_ZZ, setX[0], static_cast<long>(primeByteLength));
-        e_ZZ_p = NTL::to_ZZ_p(e_ZZ);
-        e_ZZ_p = NTL::eval(polynomial, e_ZZ_p);
-        // convert to byte[]
-        e_ZZ = NTL::rep(e_ZZ_p);
-        setY[0] = new uint8_t[primeByteLength];
-        NTL::BytesFromZZ(setY[0], e_ZZ, static_cast<long>(primeByteLength));
-    } else {
-        // 一次可以并行计算的阶数要求是离polynomial.degree()最近的n = 2^k
-        long polynomial_degree = NTL::deg(polynomial);
-        long interval_num = NTL::deg(polynomial) == 0 ? 1 : 1 << (ceilLog2(polynomial_degree) - 1);
-        long max_num = (long) std::ceil(point_num / (double) interval_num) * interval_num;
-        auto *x = new NTL::ZZ_p[max_num];
-        auto *y = new NTL::ZZ_p[max_num];
-        // build x and init y
-        for (uint32_t i = 0; i < point_num; i++) {
-            NTL::ZZFromBytes(e_ZZ, setX[i], static_cast<long>(primeByteLength));
-            x[i] = NTL::to_ZZ_p(e_ZZ);
-            y[i] = NTL::to_ZZ_p(0);
-        }
-        // 不足的补0
-        for (uint32_t i = point_num; i < max_num; i++) {
-            x[i] = NTL::to_ZZ_p(0);
-            y[i] = NTL::to_ZZ_p(0);
-        }
-        for (long point_index = 0; point_index < max_num; point_index += interval_num) {
-            // 一次取出interval_num个点
-            auto *interval_x = x + point_index;
-            auto *interval_y = y + point_index;
-            zp_tree_main_evaluate(polynomial, interval_x, interval_y, interval_num);
-        }
-        // 返回结果
-        setY.resize(point_num);
-        for (uint32_t i = 0; i < point_num; i++) {
-            e_ZZ = rep(y[i]);
-            setY[i] = new uint8_t[primeByteLength];
-            NTL::BytesFromZZ(setY[i], e_ZZ, (long) (primeByteLength));
-        }
-        // 清空内存
-        delete[] x;
-        delete[] y;
-    }
-}
-
-void zp_tree_main_inner_interpolate(NTL::ZZ_pX *temp_polynomials, NTL::ZZ_pX *binary_tree, long binary_tree_size, long leaf_node_num,
-                                    NTL::ZZ_p *values, NTL::ZZ_p *derivativeInverses, long point_num, long i) {
+void zp_tree_inner_interpolate(NTL::ZZ_pX *temp_polynomials, NTL::ZZ_pX *binary_tree, long binary_tree_size, long leaf_node_num,
+                               NTL::ZZ_p *values, NTL::ZZ_p *derivativeInverses, long point_num, long i) {
     if (i >= leaf_node_num - 1) {
         // 如果为叶子节点，计算得到二叉树节点索引值所对应的插值点索引值
         long j = i + 1 - leaf_node_num;
@@ -176,16 +102,26 @@ void zp_tree_main_inner_interpolate(NTL::ZZ_pX *temp_polynomials, NTL::ZZ_pX *bi
             SetCoeff(temp_polynomials[i], 0, values[j] * derivativeInverses[j]);
         }
     } else {
-        zp_tree_main_inner_interpolate(temp_polynomials, binary_tree, binary_tree_size, leaf_node_num, values,
-                                       derivativeInverses, point_num, LEFT(i));
-        zp_tree_main_inner_interpolate(temp_polynomials, binary_tree, binary_tree_size, leaf_node_num, values,
-                                       derivativeInverses, point_num, RIGHT(i));
+        zp_tree_inner_interpolate(temp_polynomials, binary_tree, binary_tree_size, leaf_node_num, values,
+                                  derivativeInverses, point_num, LEFT(i));
+        zp_tree_inner_interpolate(temp_polynomials, binary_tree, binary_tree_size, leaf_node_num, values,
+                                  derivativeInverses, point_num, RIGHT(i));
         temp_polynomials[i] =
             temp_polynomials[LEFT(i)] * binary_tree[RIGHT(i)] + temp_polynomials[RIGHT(i)] * binary_tree[LEFT(i)];
     }
 }
 
-void zp_tree_main_interpolate(NTL::ZZ_pX &result_polynomial, NTL::ZZ_p *points, NTL::ZZ_p *values, long point_num) {
+NTL::ZZ_pX* build_binary_tree(uint64_t primeByteLength, std::vector<uint8_t*> &setX) {
+    NTL::ZZ e_ZZ;
+    NTL::ZZ_p e_ZZ_p;
+
+    uint32_t point_num = setX.size();
+    auto *points = new NTL::ZZ_p[point_num];
+    // build x
+    for (uint32_t i = 0; i < point_num; i++) {
+        NTL::ZZFromBytes(e_ZZ, setX[i], static_cast<long>(primeByteLength));
+        points[i] = NTL::to_ZZ_p(e_ZZ);
+    }
     long leaf_node_num = get_leaf_node_num(point_num);
     long binary_tree_size = get_binary_tree_size(leaf_node_num);
     // 构造满二叉树
@@ -194,48 +130,94 @@ void zp_tree_main_interpolate(NTL::ZZ_pX &result_polynomial, NTL::ZZ_p *points, 
         binary_tree[index] = NTL::ZZ_pX::zero();
     }
     inner_build_binary_tree(binary_tree, points, point_num, leaf_node_num, 0);
+    delete[] points;
+    return binary_tree;
+}
+
+void zp_free_binary_tree(NTL::ZZ_pX binary_tree[]) {
+    delete[] binary_tree;
+}
+
+NTL::ZZ_p* zp_derivative_inverses(NTL::ZZ_pX* binary_tree, long point_num) {
+    long leaf_node_num = get_leaf_node_num(point_num);
+    long binary_tree_size = get_binary_tree_size(leaf_node_num);
     // 构造导数多项式，注意导数多项式的阶等于points.length，而不是leafNodeNum，cc.rings有求导的快速实现算法
     NTL::ZZ_pX derivativePolynomial;
     diff(derivativePolynomial, binary_tree[0]);
     // 计算导数
-    auto *derivativeInverses = new NTL::ZZ_p[point_num];
+    auto *derivative_inverses = new NTL::ZZ_p[point_num];
     zp_tree_main_inner_evaluate(derivativePolynomial, binary_tree, binary_tree_size, leaf_node_num, 0,
-                                derivativeInverses, point_num);
+                                derivative_inverses, point_num);
     // 计算导数的逆
     for (uint32_t i = 0; i < point_num; i++) {
-        inv(derivativeInverses[i], derivativeInverses[i]);
+        inv(derivative_inverses[i], derivative_inverses[i]);
     }
-    // 创建临时变量
-    auto *temp_polynomials = new NTL::ZZ_pX[binary_tree_size];
-    zp_tree_main_inner_interpolate(temp_polynomials, binary_tree, binary_tree_size, leaf_node_num, values,
-                                   derivativeInverses, point_num, 0);
-    // 取第0个多项式，就是取值结果
-    result_polynomial = temp_polynomials[0];
-    delete[] temp_polynomials;
-    delete[] derivativeInverses;
-    delete[] binary_tree;
+    return derivative_inverses;
 }
 
-void zp_tree_interpolate(uint64_t primeByteLength, uint64_t expect_num,
-                         std::vector<uint8_t*> &setX, std::vector<uint8_t*> &setY, std::vector<uint8_t*> &coeffs) {
+void zp_free_derivative_inverse(NTL::ZZ_p derivative_inverses[]) {
+    delete[] derivative_inverses;
+}
+
+void zp_tree_evaluate(uint64_t primeByteLength, std::vector<uint8_t *> &coeffs, NTL::ZZ_pX *binary_tree, std::vector<uint8_t *> &setY) {
+    // 临时变量
+    NTL::ZZ e_ZZ;
+    NTL::ZZ_p e_ZZ_p;
+    // build polynomial
+    uint32_t coeff_num = coeffs.size();
+    NTL::ZZ_pX polynomial;
+    for (uint32_t i = 0; i < coeff_num; i++) {
+        NTL::ZZFromBytes(e_ZZ, coeffs[i], static_cast<long>(primeByteLength));
+        e_ZZ_p = NTL::to_ZZ_p(e_ZZ);
+        NTL::SetCoeff(polynomial, static_cast<long>(i), e_ZZ_p);
+    }
+    uint32_t point_num = setY.size();
+    long leaf_node_num = get_leaf_node_num(point_num);
+    long binary_tree_size = get_binary_tree_size(leaf_node_num);
+    auto *values = new NTL::ZZ_p[leaf_node_num];
+    // init y
+    for (uint32_t i = 0; i < point_num; i++) {
+        values[i] = NTL::to_ZZ_p(0);
+    }
+    // 不足的补0
+    for (uint32_t i = point_num; i < leaf_node_num; i++) {
+        values[i] = NTL::to_ZZ_p(0);
+    }
+    zp_tree_main_inner_evaluate(polynomial, binary_tree, binary_tree_size, leaf_node_num, 0, values, point_num);
+    // 返回结果
+    setY.resize(point_num);
+    for (uint32_t i = 0; i < point_num; i++) {
+        e_ZZ = rep(values[i]);
+        setY[i] = new uint8_t[primeByteLength];
+        NTL::BytesFromZZ(setY[i], e_ZZ, (long) (primeByteLength));
+    }
+    // 清空内存
+    delete[] values;
+}
+
+void zp_tree_interpolate(uint64_t primeByteLength, NTL::ZZ_pX* binary_tree, NTL::ZZ_p* derivative_inverses,
+                         std::vector<uint8_t*> &setY, std::vector<uint8_t*> &coeffs) {
     NTL::ZZ e_ZZ;
     NTL::ZZ_p e_ZZ_p;
 
-    uint32_t point_num = setX.size();
-    auto *x = new NTL::ZZ_p[point_num];
-    NTL::vec_ZZ_p x_vector;
-    auto *y = new NTL::ZZ_p[point_num];
-    // build x and init y
+    uint32_t point_num = setY.size();
+    auto *values = new NTL::ZZ_p[point_num];
+    // init values
     for (uint32_t i = 0; i < point_num; i++) {
-        NTL::ZZFromBytes(e_ZZ, setX[i], static_cast<long>(primeByteLength));
-        x[i] = NTL::to_ZZ_p(e_ZZ);
-        x_vector.append(x[i]);
         NTL::ZZFromBytes(e_ZZ, setY[i], static_cast<long>(primeByteLength));
-        y[i] = NTL::to_ZZ_p(e_ZZ);
+        values[i] = NTL::to_ZZ_p(e_ZZ);
     }
     NTL::ZZ_pX polynomial;
-    zp_tree_main_interpolate(polynomial, x, y, point_num);
-    zp_polynomial_pad_dummy_item(polynomial, x_vector, expect_num);
+    long leaf_node_num = get_leaf_node_num(point_num);
+    long binary_tree_size = get_binary_tree_size(leaf_node_num);
+    // 创建临时变量
+    auto *temp_polynomials = new NTL::ZZ_pX[binary_tree_size];
+    zp_tree_inner_interpolate(temp_polynomials, binary_tree, binary_tree_size, leaf_node_num, values,
+                              derivative_inverses, point_num, 0);
+    // 取第0个多项式，就是取值结果
+    polynomial = temp_polynomials[0];
+    delete[] values;
+    delete[] temp_polynomials;
     coeffs.resize(NTL::deg(polynomial) + 1);
     for (uint32_t i = 0; i < coeffs.size(); i++) {
         // get the coefficient polynomial

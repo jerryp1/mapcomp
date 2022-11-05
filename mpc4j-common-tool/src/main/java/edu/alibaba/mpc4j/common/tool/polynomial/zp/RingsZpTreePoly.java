@@ -1,12 +1,17 @@
 package edu.alibaba.mpc4j.common.tool.polynomial.zp;
 
+import cc.redberry.rings.JdkIntegersZp;
+import cc.redberry.rings.Ring;
 import cc.redberry.rings.poly.univar.UnivariatePolynomial;
 import edu.alibaba.mpc4j.common.tool.galoisfield.zp.ZpManager;
 import edu.alibaba.mpc4j.common.tool.utils.BigIntegerUtils;
+import edu.alibaba.mpc4j.common.tool.utils.CommonUtils;
 import edu.alibaba.mpc4j.common.tool.utils.LongUtils;
 
 import java.math.BigInteger;
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.stream.IntStream;
 
 /**
  * 用Rings实现的二叉树快速插值。方案描述参见下述论文完整版的附录C：Fast Interpolation and Multi-point Evaluation
@@ -18,59 +23,105 @@ import java.util.Arrays;
  * @author Weiran Liu
  * @date 2022/10/28
  */
-class RingsTreeZpPoly extends AbstractRingsZpPoly {
+class RingsZpTreePoly extends AbstractZpTreePoly {
+    /**
+     * Zp有限域
+     */
+    private final Ring<cc.redberry.rings.bigint.BigInteger> finiteField;
+    /**
+     * 插值点数量
+     */
+    private int interpolatePointNum;
+    /**
+     * 插值二叉树
+     */
+    private UnivariatePolynomial<cc.redberry.rings.bigint.BigInteger>[] interpolateBinaryTree;
+    /**
+     * 倒数的逆
+     */
+    private cc.redberry.rings.bigint.BigInteger[] derivativeInverses;
+    /**
+     * 求值多项式插值点数量
+     */
+    private int evaluatePolynomialPointNum;
+    /**
+     * 求指点数量
+     */
+    private int evaluatePointNum;
+    /**
+     * 单一求值点
+     */
+    private cc.redberry.rings.bigint.BigInteger singleEvaluatePoint;
+    /**
+     * 求值间隔点数量
+     */
+    private int intervalPointNum;
+    /**
+     * 求值二叉树
+     */
+    private ArrayList<UnivariatePolynomial<cc.redberry.rings.bigint.BigInteger>[]> evaluateBinaryTreeArrayList;
 
-    RingsTreeZpPoly(int l) {
-        super(l, ZpManager.getFiniteField(l));
+    RingsZpTreePoly(int l) {
+        super(l);
+        finiteField = new JdkIntegersZp(new cc.redberry.rings.bigint.BigInteger(ZpManager.getPrime(l)));
     }
 
     @Override
-    public ZpPolyFactory.ZpPolyType getType() {
-        return ZpPolyFactory.ZpPolyType.RINGS_TREE;
+    public ZpPolyFactory.ZpTreePolyType getType() {
+        return ZpPolyFactory.ZpTreePolyType.RINGS_TREE;
     }
 
     @Override
-    public int coefficientNum(int pointNum, int expectNum) {
-        assert pointNum >= 0 && pointNum <= expectNum : "point num must be in range [0, " + expectNum + "]: " + pointNum;
-        // 用二叉树快速插值时，pointNum个点的插值多项式包含pointNum + 1个系数，但如果补了随机点，则会等于expectNum
-        if (pointNum == expectNum) {
-            return expectNum + 1;
-        } else {
-            return expectNum;
+    public void prepareInterpolateBinaryTree(BigInteger[] xArray) {
+        assert xArray.length > 0 : "x.length must be greater than 0:" + xArray.length;
+        for (BigInteger x : xArray) {
+            assert validPoint(x);
         }
-    }
-
-    @Override
-    public int rootCoefficientNum(int pointNum, int expectNum) {
-        assert pointNum >= 0 && pointNum <= expectNum : "point num must be in range [0, " + expectNum + "]: " + pointNum;
-        // 用二叉树快速插值时，expectNum个点的插值多项式包含expectNum + 1个系数
-        return expectNum + 1;
-    }
-
-    @Override
-    protected UnivariatePolynomial<cc.redberry.rings.bigint.BigInteger> polynomialInterpolate(
-        BigInteger[] xArray, BigInteger[] yArray) {
+        interpolatePointNum = xArray.length;
         cc.redberry.rings.bigint.BigInteger[] points = Arrays.stream(xArray)
             .map(cc.redberry.rings.bigint.BigInteger::new)
             .toArray(cc.redberry.rings.bigint.BigInteger[]::new);
-        cc.redberry.rings.bigint.BigInteger[] values = Arrays.stream(yArray)
-            .map(cc.redberry.rings.bigint.BigInteger::new)
-            .toArray(cc.redberry.rings.bigint.BigInteger[]::new);
         // 构造满二叉树，二叉树的节点数量 = 2 * numOfLeafNodes - 1
-        UnivariatePolynomial<cc.redberry.rings.bigint.BigInteger>[] binaryTreePolynomial = buildBinaryTree(points);
+        interpolateBinaryTree = buildBinaryTree(points);
         // 构造导数多项式，注意导数多项式的阶等于points.length，而不是leafNodeNum，cc.rings有求导的快速实现算法
-        UnivariatePolynomial<cc.redberry.rings.bigint.BigInteger> derivativePolynomial = binaryTreePolynomial[0]
-            .derivative();
+        UnivariatePolynomial<cc.redberry.rings.bigint.BigInteger> derivativePolynomial
+            = interpolateBinaryTree[0].derivative();
         // 计算导数，并存储导数的逆
         cc.redberry.rings.bigint.BigInteger[] derivatives = new cc.redberry.rings.bigint.BigInteger[points.length];
-        cc.redberry.rings.bigint.BigInteger[] derivativeInverses = new cc.redberry.rings.bigint.BigInteger[points.length];
+        derivativeInverses = new cc.redberry.rings.bigint.BigInteger[points.length];
         // 这里求值可以使用批处理求值
         int leafNodeNum = getLeafNodeNum(points.length);
-        innerEvaluation(derivativePolynomial, binaryTreePolynomial, leafNodeNum, 0, derivatives);
+        innerEvaluation(derivativePolynomial, interpolateBinaryTree, leafNodeNum, 0, derivatives);
         for (int i = 0; i < derivatives.length; i++) {
             derivativeInverses[i] = finiteField.divideExact(finiteField.getOne(), derivatives[i]);
         }
-        return interpolate(values, binaryTreePolynomial, derivativeInverses);
+    }
+
+    @Override
+    public void destroyInterpolateBinaryTree() {
+        interpolatePointNum = 0;
+        interpolateBinaryTree = null;
+        derivativeInverses = null;
+    }
+
+    @Override
+    public BigInteger[] interpolate(BigInteger[] yArray) {
+        assert yArray.length == interpolatePointNum
+            : "y.length must be equal to x.length = " + interpolatePointNum + ": " + yArray.length;
+        for (BigInteger y : yArray) {
+            assert validPoint(y);
+        }
+        cc.redberry.rings.bigint.BigInteger[] values = Arrays.stream(yArray)
+            .map(cc.redberry.rings.bigint.BigInteger::new)
+            .toArray(cc.redberry.rings.bigint.BigInteger[]::new);
+        UnivariatePolynomial<cc.redberry.rings.bigint.BigInteger> interpolatePolynomial
+            = interpolate(values, interpolateBinaryTree, derivativeInverses);
+        int coefficientNum = coefficientNum(interpolatePointNum);
+        BigInteger[] coefficients = new BigInteger[coefficientNum];
+        IntStream.range(0, coefficientNum).forEach(degreeIndex -> coefficients[degreeIndex]
+            = BigIntegerUtils.byteArrayToBigInteger(interpolatePolynomial.get(degreeIndex).toByteArray())
+        );
+        return coefficients;
     }
 
     private UnivariatePolynomial<cc.redberry.rings.bigint.BigInteger> interpolate(
@@ -107,35 +158,73 @@ class RingsTreeZpPoly extends AbstractRingsZpPoly {
     }
 
     @Override
-    public BigInteger[] evaluate(BigInteger[] coefficients, BigInteger[] xArray) {
-        // 恢复多项式
-        UnivariatePolynomial<cc.redberry.rings.bigint.BigInteger> polynomial = bigIntegersToPolynomial(coefficients);
-        // 求值
-        return polynomialEvaluate(polynomial, xArray);
-    }
-
-    @Override
-    protected BigInteger[] polynomialEvaluate(UnivariatePolynomial<cc.redberry.rings.bigint.BigInteger> polynomial, BigInteger[] xArray) {
+    public void prepareEvaluateBinaryTrees(int evaluatePolynomialPointNum, BigInteger[] xArray) {
+        assert evaluatePolynomialPointNum > 0
+            : "evaluate polynomial point num must be greater than 0: " + evaluatePolynomialPointNum;
+        assert xArray.length > 0 : "x.length must be greater than 0:" + xArray.length;
+        for (BigInteger x : xArray) {
+            assert validPoint(x);
+        }
+        evaluatePointNum = xArray.length;
+        this.evaluatePolynomialPointNum = evaluatePolynomialPointNum;
         cc.redberry.rings.bigint.BigInteger[] points = Arrays.stream(xArray)
             .map(cc.redberry.rings.bigint.BigInteger::new)
             .toArray(cc.redberry.rings.bigint.BigInteger[]::new);
         if (xArray.length == 1) {
+            singleEvaluatePoint = points[0];
+        } else {
+            // 一次可以并行计算的阶数要求是离polynomial.degree()最近的n = 2^k
+            intervalPointNum = 1 << (LongUtils.ceilLog2(evaluatePolynomialPointNum) - 1);
+            int intervalNum = CommonUtils.getUnitNum(evaluatePointNum, intervalPointNum);
+            evaluateBinaryTreeArrayList = new ArrayList<>(intervalNum);
+            for (int pointIndex = 0; pointIndex < evaluatePointNum; pointIndex += intervalPointNum) {
+                // 一次取出maxNum个点，如果不足则后面补0
+                cc.redberry.rings.bigint.BigInteger[] intervalPoints
+                    = new cc.redberry.rings.bigint.BigInteger[intervalPointNum];
+                Arrays.fill(intervalPoints, finiteField.getZero());
+                int minCopy = Math.min(intervalPointNum, points.length - pointIndex);
+                System.arraycopy(points, pointIndex, intervalPoints, 0, minCopy);
+                evaluateBinaryTreeArrayList.add(buildBinaryTree(intervalPoints));
+            }
+        }
+    }
+
+    @Override
+    public void destroyEvaluateBinaryTree() {
+        evaluatePointNum = 0;
+        evaluatePolynomialPointNum = 0;
+        singleEvaluatePoint = null;
+        intervalPointNum = 0;
+        evaluateBinaryTreeArrayList = null;
+    }
+
+    @Override
+    public BigInteger[] evaluate(BigInteger[] coefficients) {
+        assert coefficients.length - 1 == evaluatePolynomialPointNum
+            : "coefficient.length must be equal to " + (evaluatePolynomialPointNum + 1) + ": " + coefficients.length;
+        for (BigInteger coefficient : coefficients) {
+            assert validPoint(coefficient);
+        }
+        // 恢复多项式
+        cc.redberry.rings.bigint.BigInteger[] polyCoefficients = Arrays.stream(coefficients)
+            .map(cc.redberry.rings.bigint.BigInteger::new)
+            .toArray(cc.redberry.rings.bigint.BigInteger[]::new);
+        UnivariatePolynomial<cc.redberry.rings.bigint.BigInteger> polynomial
+            = UnivariatePolynomial.create(finiteField, polyCoefficients);
+        if (evaluatePointNum == 1) {
             // 如果只对一个点求值，则直接返回结果
-            cc.redberry.rings.bigint.BigInteger y = polynomial.evaluate(points[0]);
+            cc.redberry.rings.bigint.BigInteger y = polynomial.evaluate(singleEvaluatePoint);
             return new BigInteger[]{BigIntegerUtils.byteArrayToBigInteger(y.toByteArray())};
         }
-        cc.redberry.rings.bigint.BigInteger[] values = new cc.redberry.rings.bigint.BigInteger[xArray.length];
+        cc.redberry.rings.bigint.BigInteger[] values = new cc.redberry.rings.bigint.BigInteger[evaluatePointNum];
         // 将结果数组初始化为0
         Arrays.fill(values, finiteField.getZero());
-        // 一次可以并行计算的阶数要求是离polynomial.degree()最近的n = 2^k
-        int intervalNum = polynomial.degree() == 0 ? 1 : 1 << (LongUtils.ceilLog2(polynomial.degree()) - 1);
-        for (int pointIndex = 0; pointIndex < values.length; pointIndex += intervalNum) {
-            // 一次取出maxNum个点，如果不足则后面补0
-            cc.redberry.rings.bigint.BigInteger[] intervalPoints = new cc.redberry.rings.bigint.BigInteger[intervalNum];
-            Arrays.fill(intervalPoints, finiteField.getZero());
-            int minCopy = Math.min(intervalNum, values.length - pointIndex);
-            System.arraycopy(points, pointIndex, intervalPoints, 0, minCopy);
-            cc.redberry.rings.bigint.BigInteger[] intervalValues = evaluation(polynomial.clone(), intervalPoints);
+        int evaluateBinaryTreeIndex = 0;
+        for (int pointIndex = 0; pointIndex < evaluatePointNum; pointIndex += intervalPointNum) {
+            int minCopy = Math.min(intervalPointNum, evaluatePointNum - pointIndex);
+            cc.redberry.rings.bigint.BigInteger[] intervalValues
+                = evaluation(polynomial.clone(), evaluateBinaryTreeArrayList.get(evaluateBinaryTreeIndex));
+            evaluateBinaryTreeIndex++;
             System.arraycopy(intervalValues, 0, values, pointIndex, minCopy);
         }
         return Arrays.stream(values)
@@ -145,18 +234,9 @@ class RingsTreeZpPoly extends AbstractRingsZpPoly {
 
     private cc.redberry.rings.bigint.BigInteger[] evaluation(
         UnivariatePolynomial<cc.redberry.rings.bigint.BigInteger> polynomial,
-        cc.redberry.rings.bigint.BigInteger[] points) {
-        // 批量求值的点数量要小于等于多项式A的阶
-        assert points.length <= polynomial.degree()
-            : "batched evaluation num must be less than or equal to polynomial degree = " + polynomial.degree()
-            + ": " + points.length;
-        // 批量求值的点数量要恰好等于2^k，只需要验证n&(n-1)是否为0即可
-        assert (points.length & (points.length - 1)) == 0
-            : "batched evaluation num must have format 2^k: " + points.length;
-        // 构建二叉树
-        UnivariatePolynomial<cc.redberry.rings.bigint.BigInteger>[] binaryTreePolynomial = buildBinaryTree(points);
-        int leafNodeNum = getLeafNodeNum(points.length);
-        cc.redberry.rings.bigint.BigInteger[] values = new cc.redberry.rings.bigint.BigInteger[points.length];
+        UnivariatePolynomial<cc.redberry.rings.bigint.BigInteger>[] binaryTreePolynomial) {
+        int leafNodeNum = (binaryTreePolynomial.length + 1) / 2;
+        cc.redberry.rings.bigint.BigInteger[] values = new cc.redberry.rings.bigint.BigInteger[leafNodeNum];
         Arrays.fill(values, finiteField.getZero());
         innerEvaluation(polynomial, binaryTreePolynomial, leafNodeNum, 0, values);
         return values;

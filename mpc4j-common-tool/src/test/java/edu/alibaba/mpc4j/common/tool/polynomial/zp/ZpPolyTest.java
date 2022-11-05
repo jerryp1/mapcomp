@@ -62,10 +62,6 @@ public class ZpPolyTest {
         configurations.add(new Object[]{ZpPolyType.RINGS_LAGRANGE.name(), ZpPolyType.RINGS_LAGRANGE,});
         // JDK_LAGRANGE
         configurations.add(new Object[]{ZpPolyType.JDK_LAGRANGE.name(), ZpPolyType.JDK_LAGRANGE,});
-        // NTL_TREE
-        configurations.add(new Object[]{ZpPolyType.NTL_TREE.name(), ZpPolyType.NTL_TREE,});
-        // RINGS_TREE
-        configurations.add(new Object[]{ZpPolyType.RINGS_TREE.name(), ZpPolyType.RINGS_TREE,});
 
         return configurations;
     }
@@ -247,12 +243,8 @@ public class ZpPolyTest {
     }
 
     private void assertCoefficient(ZpPoly zpPoly, int pointNum, int expectNum, BigInteger[] coefficients) {
-        BigInteger p = zpPoly.getPrime();
         Assert.assertEquals(zpPoly.coefficientNum(pointNum, expectNum), coefficients.length);
-        Arrays.stream(coefficients).forEach(coefficient -> {
-            Assert.assertTrue(BigIntegerUtils.greaterOrEqual(coefficient, BigInteger.ZERO));
-            Assert.assertTrue(BigIntegerUtils.less(coefficient, p));
-        });
+        Arrays.stream(coefficients).forEach(zpPoly::validPoint);
     }
 
     private void assertEvaluate(ZpPoly zpPoly, BigInteger[] coefficients, BigInteger[] xArray, BigInteger[] yArray) {
@@ -348,12 +340,8 @@ public class ZpPolyTest {
     }
 
     private void assertRootCoefficient(ZpPoly zpPoly, int pointNum, int expectNum, BigInteger[] coefficients) {
-        BigInteger p = zpPoly.getPrime();
         Assert.assertEquals(zpPoly.rootCoefficientNum(pointNum, expectNum), coefficients.length);
-        Arrays.stream(coefficients).forEach(coefficient -> {
-            Assert.assertTrue(BigIntegerUtils.greaterOrEqual(coefficient, BigInteger.ZERO));
-            Assert.assertTrue(BigIntegerUtils.less(coefficient, p));
-        });
+        Arrays.stream(coefficients).forEach(zpPoly::validPoint);
     }
 
     private void assertRootEvaluate(ZpPoly zpPoly, BigInteger[] coefficients, BigInteger[] xArray, BigInteger y) {

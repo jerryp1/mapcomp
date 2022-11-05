@@ -2,6 +2,7 @@ package edu.alibaba.mpc4j.common.tool.polynomial.zp;
 
 import cc.redberry.rings.Ring;
 import cc.redberry.rings.poly.univar.UnivariatePolynomial;
+import edu.alibaba.mpc4j.common.tool.galoisfield.zp.ZpManager;
 import edu.alibaba.mpc4j.common.tool.utils.BigIntegerUtils;
 
 import java.math.BigInteger;
@@ -20,15 +21,9 @@ abstract class AbstractRingsZpPoly extends AbstractZpPoly {
      */
     protected final Ring<cc.redberry.rings.bigint.BigInteger> finiteField;
 
-    AbstractRingsZpPoly(int l, Ring<cc.redberry.rings.bigint.BigInteger> finiteField) {
+    AbstractRingsZpPoly(int l) {
         super(l);
-        this.finiteField = finiteField;
-    }
-
-    @Override
-    public int coefficientNum(int pointNum, int expectNum) {
-        assert pointNum >= 0 && pointNum <= expectNum : "point num must be in range [0, " + expectNum + "]: " + pointNum;
-        return expectNum;
+        finiteField = ZpManager.getFiniteField(l);
     }
 
     @Override
@@ -69,12 +64,6 @@ abstract class AbstractRingsZpPoly extends AbstractZpPoly {
             interpolatePolynomial = interpolatePolynomial.add(p1.multiply(pr));
         }
         return polynomialToBigIntegers(xArray.length, expectNum, interpolatePolynomial);
-    }
-
-    @Override
-    public int rootCoefficientNum(int pointNum, int expectNum) {
-        assert pointNum >= 0 && pointNum <= expectNum : "point num must be in range [0, " + expectNum + "]: " + pointNum;
-        return expectNum + 1;
     }
 
     @Override

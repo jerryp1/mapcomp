@@ -2,8 +2,12 @@ package edu.alibaba.mpc4j.common.tool.polynomial.zp;
 
 import edu.alibaba.mpc4j.common.tool.CommonConstants;
 import edu.alibaba.mpc4j.common.tool.utils.BigIntegerUtils;
+import edu.alibaba.mpc4j.common.tool.utils.CommonUtils;
+import edu.alibaba.mpc4j.common.tool.utils.LongUtils;
 
 import java.math.BigInteger;
+import java.nio.ByteBuffer;
+import java.util.ArrayList;
 
 /**
  * 用NTL实现的二叉树快速插值。方案描述参见下述论文完整版的附录C：Fast Interpolation and Multi-point Evaluation
@@ -15,7 +19,7 @@ import java.math.BigInteger;
  * @author Weiran Liu
  * @date 2022/11/2
  */
-public class NtlTreeZpPoly extends AbstractZpPoly {
+public class NtlTreeZpPoly extends AbstractZpTreePoly {
 
     static {
         System.loadLibrary(CommonConstants.MPC4J_NATIVE_TOOL_NAME);
@@ -24,152 +28,177 @@ public class NtlTreeZpPoly extends AbstractZpPoly {
     /**
      * 有限域质数p的字节数组
      */
-    private final byte[] pByteArray;
+    private final byte[] primeByteArray;
     /**
      * 有限域质数p的字节长度，可能会大于byteL
      */
-    private final int pByteLength;
+    private final int primeByteLength;
+    /**
+     * 插值点数量
+     */
+    private int interpolatePointNum;
+    /**
+     * 插值二叉树
+     */
+    private ByteBuffer interpolateBinaryTreeHandler;
+    /**
+     * 倒数的逆
+     */
+    private ByteBuffer derivativeInversesHandler;
+    /**
+     * 求值多项式插值点数量
+     */
+    private int evaluatePolynomialPointNum;
+    /**
+     * 求指点数量
+     */
+    private int evaluatePointNum;
+    /**
+     * 单一求值点
+     */
+    private byte[] singleEvaluatePoint;
+    /**
+     * 求值间隔点数量
+     */
+    private int intervalPointNum;
+    /**
+     * 求值二叉树
+     */
+    private ArrayList<ByteBuffer> evaluateTreeHandlerArrayList;
 
     public NtlTreeZpPoly(int l) {
         super(l);
-        pByteArray = BigIntegerUtils.bigIntegerToByteArray(p);
-        pByteLength = pByteArray.length;
+        primeByteArray = BigIntegerUtils.bigIntegerToByteArray(p);
+        primeByteLength = primeByteArray.length;
     }
 
     @Override
-    public ZpPolyFactory.ZpPolyType getType() {
-        return ZpPolyFactory.ZpPolyType.NTL_TREE;
+    public ZpPolyFactory.ZpTreePolyType getType() {
+        return ZpPolyFactory.ZpTreePolyType.NTL_TREE;
     }
 
     @Override
-    public int coefficientNum(int pointNum, int expectNum) {
-        assert pointNum >= 0 && pointNum <= expectNum : "point num must be in range [0, " + expectNum + "]: " + pointNum;
-        // 用二叉树快速插值时，pointNum个点的插值多项式包含pointNum + 1个系数，但如果补了随机点，则会等于expectNum
-        if (pointNum == expectNum) {
-            return expectNum + 1;
-        } else {
-            return expectNum;
-        }
-    }
-
-    @Override
-    public BigInteger[] interpolate(int expectNum, BigInteger[] xArray, BigInteger[] yArray) {
-        assert xArray.length == yArray.length;
-        assert expectNum >= 1 && xArray.length <= expectNum;
+    public void prepareInterpolateBinaryTree(BigInteger[] xArray) {
+        assert xArray.length > 0 : "x.length must be greater than 0:" + xArray.length;
         for (BigInteger x : xArray) {
             assert validPoint(x);
         }
+        interpolatePointNum = xArray.length;
+        byte[][] xByteArrays = BigIntegerUtils.nonNegBigIntegersToByteArrays(xArray, primeByteLength);
+        // 构造满二叉树
+        interpolateBinaryTreeHandler = nativeBuildBinaryTree(primeByteArray, xByteArrays);
+        // 计算导数的逆
+        derivativeInversesHandler = nativeBuildDerivativeInverses(interpolateBinaryTreeHandler, xArray.length);
+    }
+
+    @Override
+    public void destroyInterpolateBinaryTree() {
+        interpolatePointNum = 0;
+        if (interpolateBinaryTreeHandler != null) {
+            nativeDestroyBinaryTree(interpolateBinaryTreeHandler);
+            interpolateBinaryTreeHandler = null;
+        }
+        if (derivativeInversesHandler != null) {
+            nativeDestroyDerivativeInverses(derivativeInversesHandler);
+            derivativeInversesHandler = null;
+        }
+    }
+
+    @Override
+    public BigInteger[] interpolate(BigInteger[] yArray) {
+        assert yArray.length == interpolatePointNum
+            : "y.length must be equal to x.length = " + interpolatePointNum + ": " + yArray.length;
         for (BigInteger y : yArray) {
             assert validPoint(y);
         }
-        byte[][] xByteArray = BigIntegerUtils.nonNegBigIntegersToByteArrays(xArray, pByteLength);
-        byte[][] yByteArray = BigIntegerUtils.nonNegBigIntegersToByteArrays(yArray, pByteLength);
+        byte[][] yByteArray = BigIntegerUtils.nonNegBigIntegersToByteArrays(yArray, primeByteLength);
         // 调用本地函数完成插值
-        byte[][] polynomial = nativeTreeInterpolate(pByteArray, expectNum, xByteArray, yByteArray);
+        byte[][] polynomial
+            = nativeInterpolate(primeByteArray, interpolateBinaryTreeHandler, derivativeInversesHandler, yByteArray);
         // 转换为大整数
         return BigIntegerUtils.byteArraysToNonNegBigIntegers(polynomial);
     }
 
-    @Override
-    public int rootCoefficientNum(int pointNum, int expectNum) {
-        assert pointNum >= 0 && pointNum <= expectNum : "point num must be in range [0, " + expectNum + "]: " + pointNum;
-        return expectNum + 1;
-    }
+    private static native ByteBuffer nativeBuildBinaryTree(byte[] primeByteArray, byte[][] xByteArrays);
+
+    private static native ByteBuffer nativeBuildDerivativeInverses(ByteBuffer binaryTreeHandler, int pointNum);
+
+    private static native void nativeDestroyBinaryTree(ByteBuffer binaryTreeHandler);
+
+    private static native void nativeDestroyDerivativeInverses(ByteBuffer derivativeInversesHandler);
+
+    private static native byte[][] nativeInterpolate(
+        byte[] primeByteArray, ByteBuffer interpolateTreeHandler, ByteBuffer derivativeInversesHandler, byte[][] yByteArrays
+    );
 
     @Override
-    public BigInteger[] rootInterpolate(int expectNum, BigInteger[] xArray, BigInteger y) {
-        assert expectNum >= 1 && xArray.length <= expectNum;
-        if (xArray.length == 0) {
-            // 返回随机多项式
-            BigInteger[] coefficients = new BigInteger[expectNum + 1];
-            for (int index = 0; index < expectNum; index++) {
-                coefficients[index] = BigIntegerUtils.randomNonNegative(p, secureRandom);
-            }
-            // 将最高位设置为1
-            coefficients[expectNum] = BigInteger.ONE;
-            return coefficients;
-        }
-        // 如果有插值数据，则继续插值
+    public void prepareEvaluateBinaryTrees(int evaluatePolynomialPointNum, BigInteger[] xArray) {
+        assert evaluatePolynomialPointNum > 0
+            : "evaluate polynomial point num must be greater than 0: " + evaluatePolynomialPointNum;
+        assert xArray.length > 0 : "x.length must be greater than 0:" + xArray.length;
         for (BigInteger x : xArray) {
             assert validPoint(x);
         }
-        assert validPoint(y);
-        byte[][] xByteArray = BigIntegerUtils.nonNegBigIntegersToByteArrays(xArray, pByteLength);
-        byte[] yBytes = BigIntegerUtils.nonNegBigIntegerToByteArray(y, pByteLength);
-        // 调用本地函数完成插值
-        byte[][] polynomial = nativeRootInterpolate(pByteArray, expectNum, xByteArray, yBytes);
-        // 转换为大整数
-        return BigIntegerUtils.byteArraysToNonNegBigIntegers(polynomial);
-    }
-
-    /**
-     * NTL底层库的虚拟点插值。
-     *
-     * @param primeBytes 质数字节数组。
-     * @param num        插值点数量。
-     * @param xArray     x_i数组。
-     * @param yBytes     y。
-     * @return 插值多项式的系数。
-     */
-    private static native byte[][] nativeRootInterpolate(byte[] primeBytes, int num, byte[][] xArray, byte[] yBytes);
-
-    /**
-     * NTL底层库的虚拟点插值。
-     *
-     * @param primeBytes 质数字节数组。
-     * @param num        插值点数量。
-     * @param xArray     x_i数组。
-     * @param yArray     y_i数组。
-     * @return 插值多项式的系数。
-     */
-    private static native byte[][] nativeTreeInterpolate(byte[] primeBytes, int num, byte[][] xArray, byte[][] yArray);
-
-    @Override
-    public BigInteger evaluate(BigInteger[] coefficients, BigInteger x) {
-        assert coefficients.length >= 1;
-        for (BigInteger coefficient : coefficients) {
-            validPoint(coefficient);
+        evaluatePointNum = xArray.length;
+        this.evaluatePolynomialPointNum = evaluatePolynomialPointNum;
+        byte[][] xByteArrays = BigIntegerUtils.nonNegBigIntegersToByteArrays(xArray, primeByteLength);
+        if (xArray.length == 1) {
+            singleEvaluatePoint = xByteArrays[0];
+        } else {
+            // 一次可以并行计算的阶数要求是离polynomial.degree()最近的n = 2^k
+            intervalPointNum = 1 << (LongUtils.ceilLog2(evaluatePolynomialPointNum) - 1);
+            int intervalNum = CommonUtils.getUnitNum(evaluatePointNum, intervalPointNum);
+            evaluateTreeHandlerArrayList = new ArrayList<>(intervalNum);
+            for (int pointIndex = 0; pointIndex < evaluatePointNum; pointIndex += intervalPointNum) {
+                // 一次取出maxNum个点，如果不足则后面补0
+                byte[][] intervalPoints = new byte[intervalPointNum][primeByteLength];
+                int minCopy = Math.min(intervalPointNum, xByteArrays.length - pointIndex);
+                System.arraycopy(xByteArrays, pointIndex, intervalPoints, 0, minCopy);
+                evaluateTreeHandlerArrayList.add(nativeBuildBinaryTree(primeByteArray, intervalPoints));
+            }
         }
-        // 验证x的有效性
-        assert validPoint(x);
-
-        byte[][] coefficientByteArrays = BigIntegerUtils.nonNegBigIntegersToByteArrays(coefficients, pByteLength);
-        byte[] xByteArray = BigIntegerUtils.nonNegBigIntegerToByteArray(x, pByteLength);
-        // 调用本地函数完成求值
-        byte[] yByteArray = nativeSingleEvaluate(pByteArray, coefficientByteArrays, xByteArray);
-        // 转换为大整数
-        return BigIntegerUtils.byteArrayToNonNegBigInteger(yByteArray);
     }
 
-    /**
-     * 多项式求值。
-     *
-     * @param primeBytes   质数字节数组。
-     * @param coefficients 插值多项式系数。
-     * @param x            输入x。
-     * @return f(x)。
-     */
-    private static native byte[] nativeSingleEvaluate(byte[] primeBytes, byte[][] coefficients, byte[] x);
-
+    @Override
+    public void destroyEvaluateBinaryTree() {
+        evaluatePointNum = 0;
+        evaluatePolynomialPointNum = 0;
+        singleEvaluatePoint = null;
+        intervalPointNum = 0;
+        if (evaluateTreeHandlerArrayList != null && evaluateTreeHandlerArrayList.size() > 0) {
+            for (ByteBuffer evaluateTreeHandler : evaluateTreeHandlerArrayList) {
+                nativeDestroyBinaryTree(evaluateTreeHandler);
+            }
+            evaluateTreeHandlerArrayList = null;
+        }
+    }
 
     @Override
-    public BigInteger[] evaluate(BigInteger[] coefficients, BigInteger[] xArray) {
-        assert coefficients.length >= 1;
+    public BigInteger[] evaluate(BigInteger[] coefficients) {
+        assert coefficients.length - 1 == evaluatePolynomialPointNum
+            : "coefficient.length must be equal to " + (evaluatePolynomialPointNum + 1) + ": " + coefficients.length;
         for (BigInteger coefficient : coefficients) {
             assert validPoint(coefficient);
         }
-        // 验证xArray的有效性
-        for (BigInteger x : xArray) {
-            assert validPoint(x);
+        byte[][] coefficientByteArrays = BigIntegerUtils.nonNegBigIntegersToByteArrays(coefficients, primeByteLength);
+        if (evaluatePointNum == 1) {
+            // 如果只对一个点求值，则直接返回结果
+            byte[] yByteArray = nativeSingleEvaluate(primeByteArray, coefficientByteArrays, singleEvaluatePoint);
+            return new BigInteger[]{BigIntegerUtils.byteArrayToNonNegBigInteger(yByteArray)};
         }
-
-        byte[][] coefficientByteArrays = BigIntegerUtils.nonNegBigIntegersToByteArrays(coefficients, pByteLength);
-        byte[][] xByteArrays = BigIntegerUtils.nonNegBigIntegersToByteArrays(xArray, pByteLength);
-        // 调用本地函数完成求值
-        byte[][] yByteArrays = nativeTreeEvaluate(pByteArray, coefficientByteArrays, xByteArrays);
-
+        byte[][] yByteArrays = new byte[evaluatePointNum][primeByteLength];
+        int evaluateBinaryTreeIndex = 0;
+        for (int pointIndex = 0; pointIndex < evaluatePointNum; pointIndex += intervalPointNum) {
+            int minCopy = Math.min(intervalPointNum, evaluatePointNum - pointIndex);
+            byte[][] intervalValues
+                = nativeTreeEvaluate(primeByteArray, coefficientByteArrays, evaluateTreeHandlerArrayList.get(evaluateBinaryTreeIndex), intervalPointNum);
+            evaluateBinaryTreeIndex++;
+            System.arraycopy(intervalValues, 0, yByteArrays, pointIndex, minCopy);
+        }
         return BigIntegerUtils.byteArraysToNonNegBigIntegers(yByteArrays);
     }
 
-    private static native byte[][] nativeTreeEvaluate(byte[] primeBytes, byte[][] coefficients, byte[][] xs);
+    private static native byte[] nativeSingleEvaluate(byte[] primeByteArray, byte[][] coefficients, byte[] xByteArray);
+
+    private static native byte[][] nativeTreeEvaluate(byte[] primeByteArray, byte[][] coefficients, ByteBuffer binaryTreeHandler, int pointNum);
 }

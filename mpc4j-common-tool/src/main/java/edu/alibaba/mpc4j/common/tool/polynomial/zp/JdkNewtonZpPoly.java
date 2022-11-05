@@ -1,10 +1,8 @@
 package edu.alibaba.mpc4j.common.tool.polynomial.zp;
 
-import cc.redberry.rings.JdkIntegersZp;
 import cc.redberry.rings.bigint.BigInteger;
 import cc.redberry.rings.poly.univar.UnivariateInterpolation;
 import cc.redberry.rings.poly.univar.UnivariatePolynomial;
-import edu.alibaba.mpc4j.common.tool.galoisfield.zp.ZpManager;
 
 import java.util.Arrays;
 
@@ -17,7 +15,7 @@ import java.util.Arrays;
 class JdkNewtonZpPoly extends AbstractRingsZpPoly {
 
     JdkNewtonZpPoly(int l) {
-        super(l, new JdkIntegersZp(new cc.redberry.rings.bigint.BigInteger(ZpManager.getPrime(l))));
+        super(l);
     }
 
     @Override

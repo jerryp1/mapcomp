@@ -38,6 +38,12 @@ public class ZpPolyFactory {
          * JDK实现的拉格朗日插值
          */
         JDK_LAGRANGE,
+    }
+
+    /**
+     * Zp二叉树多项式插值类型。
+     */
+    public enum ZpTreePolyType {
         /**
          * NTL实现的二叉树插值
          */
@@ -67,12 +73,26 @@ public class ZpPolyFactory {
                 return new RingsLagrangeZpPoly(l);
             case JDK_LAGRANGE:
                 return new JdkLagrangeZpPoly(l);
-            case NTL_TREE:
-                return new NtlTreeZpPoly(l);
-            case RINGS_TREE:
-                return new RingsTreeZpPoly(l);
             default:
                 throw new IllegalArgumentException("Invalid " + ZpPolyType.class.getSimpleName() + ": " + type.name());
+        }
+    }
+
+    /**
+     * 创建二叉树多项式插值实例。
+     *
+     * @param type 二叉树多项式插值类型。
+     * @param l    有限域比特长度。
+     * @return 二叉树多项式插值实例。
+     */
+    public static ZpTreePoly createInstance(ZpTreePolyType type, int l) {
+        switch (type) {
+            case RINGS_TREE:
+                return new RingsZpTreePoly(l);
+            case NTL_TREE:
+                return new NtlTreeZpPoly(l);
+            default:
+                throw new IllegalArgumentException("Invalid " + ZpTreePolyType.class.getSimpleName() + ": " + type.name());
         }
     }
 }
