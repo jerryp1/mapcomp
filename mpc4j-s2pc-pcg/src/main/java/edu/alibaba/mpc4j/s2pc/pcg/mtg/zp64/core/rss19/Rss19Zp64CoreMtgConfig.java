@@ -9,7 +9,7 @@ import edu.alibaba.mpc4j.s2pc.pcg.mtg.zp64.core.Zp64CoreMtgFactory;
 import java.math.BigInteger;
 
 /**
- * RSS19-核zp64三元组生成协议配置项。
+ * RSS19-核Zp64三元组生成协议配置项。
  *
  * @author Liqiang Peng
  * @date 2022/9/5
@@ -31,7 +31,7 @@ public class Rss19Zp64CoreMtgConfig implements Zp64CoreMtgConfig {
 
     private Rss19Zp64CoreMtgConfig(Builder builder) {
         polyModulusDegree = builder.polyModulusDegree;
-        p = Rss19Zp64CoreMtgNativeConfigChecker.checkCreatePlainModulus(polyModulusDegree, builder.plainModulusSize);
+        p = Rss19Zp64CoreMtgNativeUtils.checkCreatePlainModulus(polyModulusDegree, builder.plainModulusSize);
         assert (BigInteger.valueOf(p).bitLength() == builder.plainModulusSize);
     }
 

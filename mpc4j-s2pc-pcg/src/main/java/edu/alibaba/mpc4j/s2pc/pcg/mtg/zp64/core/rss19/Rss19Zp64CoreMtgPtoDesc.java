@@ -4,7 +4,11 @@ import edu.alibaba.mpc4j.common.rpc.desc.PtoDesc;
 import edu.alibaba.mpc4j.common.rpc.desc.PtoDescManager;
 
 /**
- * RSS19-核zp64三元组生成协议信息。
+ * RSS19-核Zp64三元组生成协议信息。论文来源：
+ * <p>
+ * Rathee, Deevashwer, Thomas Schneider, and K. K. Shukla. Improved multiplication triple generation over rings via
+ * RLWE-based AHE. ACNS 2019, pp. 347-359. Springer, Cham, 2019.
+ * </p>
  *
  * @author Liqiang Peng
  * @date 2022/9/5

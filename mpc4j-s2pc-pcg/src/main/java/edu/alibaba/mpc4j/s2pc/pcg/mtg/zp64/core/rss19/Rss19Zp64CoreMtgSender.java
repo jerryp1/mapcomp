@@ -18,7 +18,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.stream.IntStream;
 
 /**
- * RSS19-核zp64三元组生成协议发送方。
+ * RSS19-核Zp64三元组生成协议发送方。
  *
  * @author Liqiang Peng
  * @date 2022/9/5
@@ -69,7 +69,7 @@ public class Rss19Zp64CoreMtgSender extends AbstractZp64CoreMtgParty {
 
         // 生成密钥
         stopWatch.start();
-        ArrayList<byte[]> fheParams = Rss19Zp64CoreMtgNativeSender.keyGen(polyModulusDegree, p);
+        ArrayList<byte[]> fheParams = Rss19Zp64CoreMtgNativeUtils.keyGen(polyModulusDegree, p);
         handleFheParams(fheParams);
         zp64 = Zp64Factory.createInstance(envType, p);
         zp64TripleBuffer = Zp64Triple.createEmpty(p);
@@ -103,7 +103,7 @@ public class Rss19Zp64CoreMtgSender extends AbstractZp64CoreMtgParty {
             int updateRoundNum = round < bigRoundIndex ? polyModulusDegree : num % polyModulusDegree;
             a0[round] = generateRandom(updateRoundNum, p);
             b0[round] = generateRandom(updateRoundNum, p);
-            ArrayList<byte[]> ct = Rss19Zp64CoreMtgNativeSender.encryption(
+            ArrayList<byte[]> ct = Rss19Zp64CoreMtgNativeUtils.encryption(
                 encryptionParams, publicKey, secretKey, a0[round], b0[round]
             );
             ciphertextPayload.addAll(ct);
@@ -128,11 +128,11 @@ public class Rss19Zp64CoreMtgSender extends AbstractZp64CoreMtgParty {
         stopWatch.start();
         IntStream.range(0, updateRound).forEach(round -> {
             int updateRoundNum = round < bigRoundIndex ? polyModulusDegree : num % polyModulusDegree;
-            long[] d = Rss19Zp64CoreMtgNativeSender.decryption(encryptionParams, secretKey, response.get(round));
+            long[] d = Rss19Zp64CoreMtgNativeUtils.decryption(encryptionParams, secretKey, response.get(round));
             c0[round] = IntStream.range(0, updateRoundNum)
                 .mapToLong(i -> zp64.add(zp64.mul(a0[round][i], b0[round][i]), d[i]))
                 .toArray();
-            zp64TripleBuffer.merge(Zp64Triple.create(updateRoundNum, p, a0[round], b0[round], c0[round]));
+            zp64TripleBuffer.merge(Zp64Triple.create(p, updateRoundNum, a0[round], b0[round], c0[round]));
         });
         stopWatch.stop();
         long decTime = stopWatch.getTime(TimeUnit.MILLISECONDS);

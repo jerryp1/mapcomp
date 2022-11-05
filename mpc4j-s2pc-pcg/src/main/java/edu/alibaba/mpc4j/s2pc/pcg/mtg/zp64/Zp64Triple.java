@@ -1,5 +1,8 @@
 package edu.alibaba.mpc4j.s2pc.pcg.mtg.zp64;
 
+import edu.alibaba.mpc4j.common.tool.CommonConstants;
+
+import java.math.BigInteger;
 import java.util.stream.IntStream;
 
 /**
@@ -33,14 +36,15 @@ public class Zp64Triple {
     /**
      * 创建zp64乘法三元组。
      *
-     * @param num 乘法三元组数量。
      * @param p   模数。
+     * @param num 乘法三元组数量。
      * @param as  随机分量a。
      * @param bs  随机分量b。
      * @param cs  随机分量c。
      */
-    public static Zp64Triple create(int num, long p, long[] as, long[] bs, long[] cs) {
+    public static Zp64Triple create(long p, int num, long[] as, long[] bs, long[] cs) {
         assert num > 0 : "num must be greater than 0";
+        assert p >= 2 && BigInteger.valueOf(p).isProbablePrime(CommonConstants.STATS_BIT_LENGTH) : "p must be a prime: " + p;
         assert as.length == num && bs.length == num && cs.length == num;
         IntStream.range(0, num).forEach(i -> {
             assert as[i] >= 0 && as[i] < p;
@@ -64,6 +68,7 @@ public class Zp64Triple {
      * @return 长度为0的zp64三元组随机分量。
      */
     public static Zp64Triple createEmpty(long p) {
+        assert p >= 2 && BigInteger.valueOf(p).isProbablePrime(CommonConstants.STATS_BIT_LENGTH) : "p must be a prime: " + p;
         Zp64Triple emptyTriple = new Zp64Triple();
         emptyTriple.num = 0;
         emptyTriple.p = p;
@@ -114,7 +119,7 @@ public class Zp64Triple {
      *
      * @return 所有随机分量a。
      */
-    public long[] getAs() {
+    public long[] getA() {
         return as;
     }
 
@@ -133,7 +138,7 @@ public class Zp64Triple {
      *
      * @return 所有随机分量b。
      */
-    public long[] getBs() {
+    public long[] getB() {
         return bs;
     }
 
@@ -152,7 +157,7 @@ public class Zp64Triple {
      *
      * @return 所有随机分量c。
      */
-    public long[] getCs() {
+    public long[] getC() {
         return cs;
     }
 
@@ -181,8 +186,10 @@ public class Zp64Triple {
         System.arraycopy(cs, 0, cSubs, 0, length);
         System.arraycopy(cs, length, cRemains, 0, num - length);
         cs = cRemains;
+        // 更新长度
+        num = num - length;
 
-        return Zp64Triple.create(length, p, aSubs, bSubs, cSubs);
+        return Zp64Triple.create(p, length, aSubs, bSubs, cSubs);
     }
 
     /**
@@ -217,7 +224,7 @@ public class Zp64Triple {
      * @param that 另一个乘法三元组。
      */
     public void merge(Zp64Triple that) {
-        assert this.p == that.p : "merged triples must have the same l";
+        assert this.p == that.p : "merged " + Zp64Triple.class.getSimpleName() + " must have the same l";
         // 合并a
         long[] mergeAs = new long[this.as.length + that.as.length];
         System.arraycopy(this.as, 0, mergeAs, 0, this.as.length);

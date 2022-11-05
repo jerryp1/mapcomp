@@ -18,12 +18,13 @@ import java.util.concurrent.TimeUnit;
 import java.util.stream.IntStream;
 
 /**
- * RSS19-核zp64三元组生成协议接收方。
+ * RSS19-核Zp64三元组生成协议接收方。
  *
  * @author Liqiang Peng
  * @date 2022/9/5
  */
 public class Rss19Zp64CoreMtgReceiver extends AbstractZp64CoreMtgParty {
+
     static {
         System.loadLibrary(CommonConstants.MPC4J_NATIVE_FHE_NAME);
     }
@@ -102,10 +103,10 @@ public class Rss19Zp64CoreMtgReceiver extends AbstractZp64CoreMtgParty {
             long[] c1 = IntStream.range(0, updateRoundNum)
                 .mapToLong(i -> zp64.sub(zp64.mul(a1[i], b1[i]), mask[i]))
                 .toArray();
-            responsePayload.add(Rss19Zp64CoreMtgNativeReceiver.computeResponse(
+            responsePayload.add(Rss19Zp64CoreMtgNativeUtils.computeResponse(
                 encryptionParams, ciphertextPayload[2*round], ciphertextPayload[2*round+1], a1, b1, mask
             ));
-            zp64TripleBuffer.merge(Zp64Triple.create(updateRoundNum, p, a1, b1, c1));
+            zp64TripleBuffer.merge(Zp64Triple.create(p, updateRoundNum, a1, b1, c1));
         }
         DataPacketHeader responseHeader = new DataPacketHeader(
             taskId, getPtoDesc().getPtoId(), Rss19Zp64CoreMtgPtoDesc.PtoStep.RECEIVER_SEND_CT_D.ordinal(), extraInfo,

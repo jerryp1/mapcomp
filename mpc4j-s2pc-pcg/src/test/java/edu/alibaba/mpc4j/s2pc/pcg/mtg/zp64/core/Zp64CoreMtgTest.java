@@ -1,11 +1,11 @@
-package edu.alibaba.mpc4j.s2pc.pcg.mtg.zp64;
+package edu.alibaba.mpc4j.s2pc.pcg.mtg.zp64.core;
 
 import edu.alibaba.mpc4j.common.rpc.Rpc;
 import edu.alibaba.mpc4j.common.rpc.RpcManager;
 import edu.alibaba.mpc4j.common.rpc.impl.memory.MemoryRpcManager;
-import edu.alibaba.mpc4j.s2pc.pcg.mtg.zp64.core.Zp64CoreMtgConfig;
-import edu.alibaba.mpc4j.s2pc.pcg.mtg.zp64.core.Zp64CoreMtgFactory;
-import edu.alibaba.mpc4j.s2pc.pcg.mtg.zp64.core.Zp64CoreMtgParty;
+import edu.alibaba.mpc4j.common.tool.utils.LongUtils;
+import edu.alibaba.mpc4j.s2pc.pcg.mtg.zp64.Zp64MtgTestUtils;
+import edu.alibaba.mpc4j.s2pc.pcg.mtg.zp64.Zp64Triple;
 import edu.alibaba.mpc4j.s2pc.pcg.mtg.zp64.core.rss19.Rss19Zp64CoreMtgConfig;
 import org.apache.commons.lang3.time.StopWatch;
 import org.junit.Test;
@@ -91,15 +91,16 @@ public class Zp64CoreMtgTest {
 
     @Test
     public void testConfigSetPlainModulusSize() {
-        for (int size = 1; size < 64; size++) {
-            LOGGER.info(String.valueOf(size));
+        for (int size = 1; size < Long.SIZE - 1; size++) {
             try {
-                new Rss19Zp64CoreMtgConfig.Builder()
+                Rss19Zp64CoreMtgConfig config = new Rss19Zp64CoreMtgConfig.Builder()
                     .setPlainModulusSize(size)
                     .build();
-                LOGGER.info("config build succeed.");
+                long prime = config.getZp();
+                long primeBitLength = LongUtils.ceilLog2(prime);
+                LOGGER.info("config build success for plain bit length {}, prime = {} ({})", size, prime, primeBitLength);
             } catch (Exception e) {
-                LOGGER.info("config build failed : " + e);
+                LOGGER.info("config build  failed for plain bit length {}: ", size);
             }
         }
     }
@@ -107,13 +108,15 @@ public class Zp64CoreMtgTest {
     @Test
     public void testConfigSetPolyModulusDegree() {
         int polyModulusDegree = 2048;
-        for (int size = 1; size < 64; size++) {
+        for (int size = 1; size < Long.SIZE - 1; size++) {
             LOGGER.info(String.valueOf(size));
             try {
-                new Rss19Zp64CoreMtgConfig.Builder()
+                Rss19Zp64CoreMtgConfig config = new Rss19Zp64CoreMtgConfig.Builder()
                     .setPolyModulusDegree(polyModulusDegree, size)
                     .build();
-                LOGGER.info("config build succeed.");
+                long prime = config.getZp();
+                long primeBitLength = LongUtils.ceilLog2(prime);
+                LOGGER.info("config build success for modulus degree {}, prime = {} ({})", size, prime, primeBitLength);
             } catch (Exception e) {
                 LOGGER.info("config build failed : " + e);
             }

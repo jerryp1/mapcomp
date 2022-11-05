@@ -1,7 +1,7 @@
-package edu.alibaba.mpc4j.s2pc.pcg.mtg.zp64;
+package edu.alibaba.mpc4j.s2pc.pcg.mtg.zp64.core;
 
 import edu.alibaba.mpc4j.common.rpc.MpcAbortException;
-import edu.alibaba.mpc4j.s2pc.pcg.mtg.zp64.core.Zp64CoreMtgParty;
+import edu.alibaba.mpc4j.s2pc.pcg.mtg.zp64.Zp64Triple;
 
 /**
  * 核zp64三元组生成协议测试参与方线程。
