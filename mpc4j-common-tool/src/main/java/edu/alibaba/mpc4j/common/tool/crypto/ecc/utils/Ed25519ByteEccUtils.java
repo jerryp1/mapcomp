@@ -415,21 +415,6 @@ public class Ed25519ByteEccUtils {
     }
 
     /**
-     * 将字节数组偏移量开始的后32比特解码为整数。
-     *
-     * @param bs  字节数组。
-     * @param off 字节数组偏移量。
-     * @return 解码结果。
-     */
-    private static int decode32(byte[] bs, int off) {
-        int n = bs[off] & 0xFF;
-        n |= (bs[++off] & 0xFF) << 8;
-        n |= (bs[++off] & 0xFF) << 16;
-        n |= bs[++off] << 24;
-        return n;
-    }
-
-    /**
      * 将字节数组偏移量开始后的每32比特解码为1个整数，放置在给定整数数组中。
      *
      * @param bs   字节数组。
@@ -438,7 +423,7 @@ public class Ed25519ByteEccUtils {
      */
     private static void decode32(byte[] bs, int[] n, int nLen) {
         for (int i = 0; i < nLen; ++i) {
-            n[i] = decode32(bs, i * Integer.BYTES);
+            n[i] = ByteEccUtils.decodeInt32(bs, i * Integer.BYTES);
         }
     }
 

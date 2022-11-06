@@ -19,7 +19,7 @@ public class X25519ByteEccUtils {
      * Curve25519有限域
      */
     private static class Curve25519Field extends X25519Field {
-
+        // empty
     }
 
     /**
@@ -66,17 +66,9 @@ public class X25519ByteEccUtils {
      */
     private static final int C_A24 = (C_A + 2) / 4;
 
-    private static int decode32(byte[] bs, int off) {
-        int n = bs[off] & 0xFF;
-        n |= (bs[++off] & 0xFF) << 8;
-        n |= (bs[++off] & 0xFF) << 16;
-        n |= bs[++off] << 24;
-        return n;
-    }
-
     private static void decodeScalar(byte[] k, int[] n) {
         for (int i = 0; i < SCALAR_INTS; ++i) {
-            n[i] = decode32(k, i * 4);
+            n[i] = ByteEccUtils.decodeInt32(k, i * 4);
         }
         // 指数模l
         n[0] &= 0xFFFFFFF8;

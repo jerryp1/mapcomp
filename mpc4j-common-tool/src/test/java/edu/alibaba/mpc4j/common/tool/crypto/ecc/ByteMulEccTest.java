@@ -47,6 +47,8 @@ public class ByteMulEccTest {
         configurationParams.add(new Object[]{ByteEccType.ED25519_SODIUM.name(), ByteEccType.ED25519_SODIUM,});
         // ED25519_BC
         configurationParams.add(new Object[]{ByteEccType.ED25519_BC.name(), ByteEccType.ED25519_BC,});
+        // ED25519_CAFE
+        configurationParams.add(new Object[]{ByteEccType.ED25519_CAFE.name(), ByteEccType.ED25519_CAFE,});
 
         return configurationParams;
     }
