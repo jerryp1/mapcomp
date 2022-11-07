@@ -16,7 +16,7 @@ public class EdwardsBasepointTableTest {
     @Test
     public void scalarMulVsEd25519py() {
         EdwardsBasepointTable Bt = new EdwardsBasepointTable(Constants.ED25519_BASEPOINT);
-        EdwardsPoint aB = Bt.multiply(EdwardsPointTest.A_SCALAR);
+        EdwardsPoint aB = Bt.multiply(EdwardsPointTest.A_CAFE_SCALAR);
         assertThat(aB.compress(), Matchers.is(EdwardsPointTest.A_TIMES_BASEPOINT));
     }
 }

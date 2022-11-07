@@ -26,7 +26,7 @@ public class RistrettoGeneratorTable {
      * @param s the Scalar to multiply by.
      * @return $[s]B$
      */
-    public RistrettoElement multiply(final Scalar s) {
+    public RistrettoElement multiply(final CafeScalar s) {
         return new RistrettoElement(table.multiply(s));
     }
 }

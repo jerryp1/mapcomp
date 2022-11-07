@@ -6,22 +6,20 @@
 
 package edu.alibaba.mpc4j.common.tool.crypto.ecc.cafe;
 
-import edu.alibaba.mpc4j.common.tool.utils.CafeConstantTimeUtils;
-
 /**
  * A pre-computed point on the $\mathbb P^3$ model of the curve, represented as
  * $(Y+X, Y-X, Z, 2dXY)$ in "Niels coordinates".
  */
 class ProjectiveNielsPoint {
-    static final ProjectiveNielsPoint IDENTITY = new ProjectiveNielsPoint(FieldElement.ONE, FieldElement.ONE,
-            FieldElement.ONE, FieldElement.ZERO);
+    static final ProjectiveNielsPoint IDENTITY = new ProjectiveNielsPoint(CafeFieldElement.ONE_INTS, CafeFieldElement.ONE_INTS,
+            CafeFieldElement.ONE_INTS, CafeFieldElement.ZERO_INTS);
 
-    final FieldElement YPlusX;
-    final FieldElement YMinusX;
-    final FieldElement Z;
-    final FieldElement T2D;
+    final CafeFieldElement YPlusX;
+    final CafeFieldElement YMinusX;
+    final CafeFieldElement Z;
+    final CafeFieldElement T2D;
 
-    ProjectiveNielsPoint(FieldElement YPlusX, FieldElement YMinusX, FieldElement Z, FieldElement T2D) {
+    ProjectiveNielsPoint(CafeFieldElement YPlusX, CafeFieldElement YMinusX, CafeFieldElement Z, CafeFieldElement T2D) {
         this.YPlusX = YPlusX;
         this.YMinusX = YMinusX;
         this.Z = Z;

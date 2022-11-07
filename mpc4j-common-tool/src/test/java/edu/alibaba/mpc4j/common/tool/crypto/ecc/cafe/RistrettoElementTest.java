@@ -160,7 +160,7 @@ public class RistrettoElementTest {
     public void generatorTimesTwelveVsGenerator12() throws InvalidEncodingException {
         byte[] s = new byte[32];
         s[0] = 12;
-        Scalar twelve = new Scalar(s);
+        CafeScalar twelve = new CafeScalar(s);
         RistrettoElement expected = new CompressedRistretto(Hex.decode(GENERATOR_MULTIPLES[12])).decompress();
         assertThat(Constants.RISTRETTO_GENERATOR.multiply(twelve), is(expected));
     }

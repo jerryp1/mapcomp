@@ -7,7 +7,6 @@
 package edu.alibaba.mpc4j.common.tool.crypto.ecc.cafe;
 
 import edu.alibaba.mpc4j.common.tool.crypto.ecc.utils.ByteEccUtils;
-import edu.alibaba.mpc4j.common.tool.utils.CafeConstantTimeUtils;
 
 import java.util.Arrays;
 
@@ -20,23 +19,31 @@ import java.util.Arrays;
  * @author Weiran Liu
  * @date 2022/11/6
  */
-class FieldElement {
+class CafeFieldElement {
     /**
-     * 0
+     * 域元素的整数表示长度
      */
-    public static final FieldElement ZERO = new FieldElement(new int[]{0, 0, 0, 0, 0, 0, 0, 0, 0, 0});
+    static final int FIELD_INT_SIZE = 10;
     /**
-     * 1
+     * 域元素的字节表示长度
      */
-    public static final FieldElement ONE = new FieldElement(new int[]{1, 0, 0, 0, 0, 0, 0, 0, 0, 0});
+    static final int FIELD_BYTE_SIZE = 32;
     /**
-     * -1
+     * 0的整数数组表示
      */
-    public static final FieldElement MINUS_ONE = ZERO.sub(ONE);
+    public static final CafeFieldElement ZERO_INTS = new CafeFieldElement(new int[]{0, 0, 0, 0, 0, 0, 0, 0, 0, 0});
     /**
-     * 整数表示长度
+     * 0的字节数组表示
      */
-    private static final int INT_SIZE = 10;
+    private static final byte[] ZERO_BYTES = new byte[FIELD_BYTE_SIZE];
+    /**
+     * 1的整数数组表示
+     */
+    public static final CafeFieldElement ONE_INTS = new CafeFieldElement(new int[]{1, 0, 0, 0, 0, 0, 0, 0, 0, 0});
+    /**
+     * -1的整数数组表示
+     */
+    public static final CafeFieldElement MINUS_ONE_INTS = ZERO_INTS.sub(ONE_INTS);
 
     /**
      * An element $t$, entries $t[0] \dots t[9]$, represents the integer $t[0] +
@@ -50,8 +57,8 @@ class FieldElement {
      *
      * @param t The $2^{25.5}$ bit representation of the field element.
      */
-    public FieldElement(int[] t) {
-        if (t.length != INT_SIZE) {
+    public CafeFieldElement(int[] t) {
+        if (t.length != FIELD_INT_SIZE) {
             throw new IllegalArgumentException("Invalid radix-2^25.5 representation");
         }
         this.t = t;
@@ -63,7 +70,10 @@ class FieldElement {
      * @param in The 32-byte representation.
      * @return The field element in its $2^{25.5}$ bit representation.
      */
-    public static FieldElement decode(byte[] in) {
+    public static CafeFieldElement decode(byte[] in) {
+        if (in.length != FIELD_BYTE_SIZE) {
+            throw new IllegalArgumentException("Invalid byte[] representation");
+        }
         long h0 = ByteEccUtils.decodeLong32(in, 0);
         long h1 = ByteEccUtils.decodeLong24(in, 4) << 6;
         long h2 = ByteEccUtils.decodeLong24(in, 7) << 5;
@@ -120,7 +130,7 @@ class FieldElement {
         h8 -= carry8 << 26;
         // @formatter:on
 
-        int[] h = new int[INT_SIZE];
+        int[] h = new int[FIELD_INT_SIZE];
         h[0] = (int) h0;
         h[1] = (int) h1;
         h[2] = (int) h2;
@@ -131,7 +141,7 @@ class FieldElement {
         h[7] = (int) h7;
         h[8] = (int) h8;
         h[9] = (int) h9;
-        return new FieldElement(h);
+        return new CafeFieldElement(h);
     }
 
     /**
@@ -262,7 +272,7 @@ class FieldElement {
         // @formatter:on
 
         // Step 2 (straight forward conversion):
-        byte[] s = new byte[32];
+        byte[] s = new byte[FIELD_BYTE_SIZE];
         s[0] = (byte) h0;
         s[1] = (byte) (h0 >> 8);
         s[2] = (byte) (h0 >> 16);
@@ -303,7 +313,7 @@ class FieldElement {
      *
      * @return 1 if self and other are equal, 0 otherwise.
      */
-    public int areEqual(FieldElement other) {
+    public int cequals(CafeFieldElement other) {
         return CafeConstantTimeUtils.equal(encode(), other.encode());
     }
 
@@ -325,16 +335,16 @@ class FieldElement {
      * "https://github.com/floodyberry/supercop/blob/master/crypto_sign/ed25519/ref10/fe_cmov.c"
      * target="_top">SUPERCOP</a>
      */
-    public FieldElement cmov(FieldElement b, int c) {
+    public CafeFieldElement cmov(CafeFieldElement b, int c) {
         c = -c;
-        int[] result = new int[INT_SIZE];
-        for (int i = 0; i < INT_SIZE; i++) {
-            result[i] = this.t[i];
-            int x = this.t[i] ^ b.t[i];
+        int[] result = new int[FIELD_INT_SIZE];
+        for (int i = 0; i < FIELD_INT_SIZE; i++) {
+            result[i] = t[i];
+            int x = t[i] ^ b.t[i];
             x &= c;
             result[i] ^= x;
         }
-        return new FieldElement(result);
+        return new CafeFieldElement(result);
     }
 
     /**
@@ -342,7 +352,7 @@ class FieldElement {
      *
      * @return $|\text{this}|$.
      */
-    FieldElement abs() {
+    CafeFieldElement abs() {
         return cmov(negate(), isNegative());
     }
 
@@ -353,12 +363,12 @@ class FieldElement {
      */
     @Override
     public boolean equals(Object obj) {
-        if (!(obj instanceof FieldElement)) {
+        if (!(obj instanceof CafeFieldElement)) {
             return false;
         }
 
-        FieldElement other = (FieldElement) obj;
-        return areEqual(other) == 1;
+        CafeFieldElement other = (CafeFieldElement) obj;
+        return cequals(other) == 1;
     }
 
     @Override
@@ -370,8 +380,6 @@ class FieldElement {
         final byte[] s = encode();
         return Arrays.hashCode(s);
     }
-
-    private static final byte[] ZERO_BYTES = new byte[32];
 
     /**
      * Determine whether this FieldElement is zero.
@@ -414,12 +422,12 @@ class FieldElement {
      * @param val The field element to add.
      * @return The field element this + val.
      */
-    public FieldElement add(FieldElement val) {
-        int[] h = new int[INT_SIZE];
-        for (int i = 0; i < INT_SIZE; i++) {
+    public CafeFieldElement add(CafeFieldElement val) {
+        int[] h = new int[FIELD_INT_SIZE];
+        for (int i = 0; i < FIELD_INT_SIZE; i++) {
             h[i] = t[i] + val.t[i];
         }
-        return new FieldElement(h);
+        return new CafeFieldElement(h);
     }
 
     /**
@@ -441,12 +449,12 @@ class FieldElement {
      * @param val The field element to subtract.
      * @return The field element this - val.
      **/
-    public FieldElement sub(FieldElement val) {
-        int[] h = new int[INT_SIZE];
-        for (int i = 0; i < INT_SIZE; i++) {
+    public CafeFieldElement sub(CafeFieldElement val) {
+        int[] h = new int[FIELD_INT_SIZE];
+        for (int i = 0; i < FIELD_INT_SIZE; i++) {
             h[i] = t[i] - val.t[i];
         }
-        return new FieldElement(h);
+        return new CafeFieldElement(h);
     }
 
     /**
@@ -462,12 +470,12 @@ class FieldElement {
      *
      * @return The field element (-1) * this.
      */
-    public FieldElement negate() {
-        int[] h = new int[INT_SIZE];
-        for (int i = 0; i < INT_SIZE; i++) {
+    public CafeFieldElement negate() {
+        int[] h = new int[FIELD_INT_SIZE];
+        for (int i = 0; i < FIELD_INT_SIZE; i++) {
             h[i] = -t[i];
         }
-        return new FieldElement(h);
+        return new CafeFieldElement(h);
     }
 
     /**
@@ -505,7 +513,7 @@ class FieldElement {
      * @param val The field element to multiply.
      * @return The (reasonably reduced) field element this * val.
      */
-    public FieldElement mul(FieldElement val) {
+    public CafeFieldElement mul(CafeFieldElement val) {
         int[] g = val.t;
         // 1.959375*2^29
         int g1_19 = 19 * g[1];
@@ -737,7 +745,7 @@ class FieldElement {
         /* |h1| <= 1.01*2^24 */
         // @formatter:on
 
-        int[] h = new int[INT_SIZE];
+        int[] h = new int[FIELD_INT_SIZE];
         h[0] = (int) h0;
         h[1] = (int) h1;
         h[2] = (int) h2;
@@ -748,7 +756,7 @@ class FieldElement {
         h[7] = (int) h7;
         h[8] = (int) h8;
         h[9] = (int) h9;
-        return new FieldElement(h);
+        return new CafeFieldElement(h);
     }
 
     /**
@@ -764,12 +772,12 @@ class FieldElement {
      * <ul>
      * <li>$|h|$ bounded by $1.01*2^{25},1.01*2^{24},1.01*2^{25},1.01*2^{24},$ etc.
      * <p>
-     * See {@link #mul(FieldElement)} for discussion of implementation
+     * See {@link #mul(CafeFieldElement)} for discussion of implementation
      * strategy.
      *
      * @return The (reasonably reduced) square of this field element.
      */
-    public FieldElement sqr() {
+    public CafeFieldElement sqr() {
         int f0 = t[0];
         int f1 = t[1];
         int f2 = t[2];
@@ -929,7 +937,7 @@ class FieldElement {
         h0 -= carry0 << 26;
         // @formatter:on
 
-        int[] h = new int[INT_SIZE];
+        int[] h = new int[FIELD_INT_SIZE];
         h[0] = (int) h0;
         h[1] = (int) h1;
         h[2] = (int) h2;
@@ -940,7 +948,7 @@ class FieldElement {
         h[7] = (int) h7;
         h[8] = (int) h8;
         h[9] = (int) h9;
-        return new FieldElement(h);
+        return new CafeFieldElement(h);
     }
 
     /**
@@ -958,12 +966,12 @@ class FieldElement {
      * <li>$|h|$ bounded by $1.01*2^{25},1.01*2^{24},1.01*2^{25},1.01*2^{24},$ etc.
      * </ul>
      * <p>
-     * See {@link #mul(FieldElement)} for discussion of implementation
+     * See {@link #mul(CafeFieldElement)} for discussion of implementation
      * strategy.
      *
      * @return The (reasonably reduced) square of this field element times 2.
      */
-    public FieldElement squareAndDouble() {
+    public CafeFieldElement squareAndDouble() {
         int f0 = t[0];
         int f1 = t[1];
         int f2 = t[2];
@@ -1126,7 +1134,7 @@ class FieldElement {
         h0 -= carry0 << 26;
         // @formatter:on
 
-        int[] h = new int[INT_SIZE];
+        int[] h = new int[FIELD_INT_SIZE];
         h[0] = (int) h0;
         h[1] = (int) h1;
         h[2] = (int) h2;
@@ -1137,7 +1145,7 @@ class FieldElement {
         h[7] = (int) h7;
         h[8] = (int) h8;
         h[9] = (int) h9;
-        return new FieldElement(h);
+        return new CafeFieldElement(h);
     }
 
     /**
@@ -1149,8 +1157,8 @@ class FieldElement {
      *
      * @return The inverse of this field element.
      */
-    public FieldElement inv() {
-        FieldElement t0, t1, t2, t3;
+    public CafeFieldElement inv() {
+        CafeFieldElement t0, t1, t2, t3;
 
         // 2 == 2 * 1
         t0 = sqr();
@@ -1265,13 +1273,13 @@ class FieldElement {
     /**
      * Raises this field element to the power $(p - 5) / 8 = 2^{252} - 3$.
      * <p>
-     * Helper for {@link #sqrtRatioM1(FieldElement, FieldElement)}.
+     * Helper for {@link #sqrtRatioM1(CafeFieldElement, CafeFieldElement)}.
      * </p>
      *
      * @return $\text{this}^{(p-5)/8}$.
      */
-    FieldElement powPm5d8() {
-        FieldElement t0, t1, t2;
+    CafeFieldElement powPm5d8() {
+        CafeFieldElement t0, t1, t2;
 
         // 2 == 2 * 1
         t0 = sqr();
@@ -1382,15 +1390,59 @@ class FieldElement {
     }
 
     /**
-     * The result of calling {@link #sqrtRatioM1(FieldElement, FieldElement)}.
+     * The result of calling {@link #sqrtRatioM1(CafeFieldElement, CafeFieldElement)}.
      */
-    static class SqrtRatioM1Result {
-        int wasSquare;
-        FieldElement result;
+    public static class SqrtRatioM1Result {
+        /**
+         * <ul>
+         * <li>true (1) if $v$ is non-zero and $u / v$ is square.
+         * <li>true (1) if $u$ is zero.
+         * <li>false (0) if $v$ is zero and $u$ is non-zero.
+         * <li>false (0) if $u / v$ is non-square (so $i * u / v$ is square).
+         * </ul>
+         */
+        final int wasSquare;
+        /**
+         * <ul>
+         * <li>+$\sqrt{u / v}$ if $v$ is non-zero and $u / v$ is square.
+         * <li>zero if $u$ is zero.
+         * <li>zero if $v$ is zero and $u$ is non-zero.
+         * <li>+$\sqrt{i * u / v}$ if $u / v$ is non-square (so $i * u / v$ is square).
+         * </ul>
+         */
+        final CafeFieldElement result;
 
-        SqrtRatioM1Result(int wasSquare, FieldElement result) {
+        SqrtRatioM1Result(int wasSquare, CafeFieldElement result) {
             this.wasSquare = wasSquare;
             this.result = result;
+        }
+
+        /**
+         * Return true (1) or false (0) representing the status of computing $\sqrt{u / v}$.
+         *
+         * @return <ul>
+         * <li>true (1) if $v$ is non-zero and $u / v$ is square.
+         * <li>true (1) if $u$ is zero.
+         * <li>false (0) if $v$ is zero and $u$ is non-zero.
+         * <li>false (0) if $u / v$ is non-square (so $i * u / v$ is square).
+         * </ul>
+         */
+        public int getWasSquare() {
+            return wasSquare;
+        }
+
+        /**
+         * Return +$\sqrt{u / v}$, zero, or +$\sqrt{i * u / v}$ representing the result of $\sqrt{u / v}$.
+         *
+         * @return <ul>
+         * <li>+$\sqrt{u / v}$ if $v$ is non-zero and $u / v$ is square.
+         * <li>zero if $u$ is zero.
+         * <li>zero if $v$ is zero and $u$ is non-zero.
+         * <li>+$\sqrt{i * u / v}$ if $u / v$ is non-square (so $i * u / v$ is square).
+         * </ul>
+         */
+        public CafeFieldElement getResult() {
+            return result;
         }
     }
 
@@ -1409,18 +1461,18 @@ class FieldElement {
      * <li>(false, +$\sqrt{i * u / v}$) if $u / v$ is non-square (so $i * u / v$ is square).
      * </ul>
      */
-    static SqrtRatioM1Result sqrtRatioM1(FieldElement u, FieldElement v) {
-        FieldElement v3 = v.sqr().mul(v);
-        FieldElement v7 = v3.sqr().mul(v);
-        FieldElement r = u.mul(v3).mul(u.mul(v7).powPm5d8());
-        FieldElement check = v.mul(r.sqr());
+    static SqrtRatioM1Result sqrtRatioM1(CafeFieldElement u, CafeFieldElement v) {
+        CafeFieldElement v3 = v.sqr().mul(v);
+        CafeFieldElement v7 = v3.sqr().mul(v);
+        CafeFieldElement r = u.mul(v3).mul(u.mul(v7).powPm5d8());
+        CafeFieldElement check = v.mul(r.sqr());
 
-        FieldElement uNeg = u.negate();
-        int correctSignSqrt = check.areEqual(u);
-        int flippedSignSqrt = check.areEqual(uNeg);
-        int flippedSignSqrtM1 = check.areEqual(uNeg.mul(Constants.SQRT_M1));
+        CafeFieldElement uNeg = u.negate();
+        int correctSignSqrt = check.cequals(u);
+        int flippedSignSqrt = check.cequals(uNeg);
+        int flippedSignSqrtM1 = check.cequals(uNeg.mul(Constants.SQRT_M1));
 
-        FieldElement rPrime = r.mul(Constants.SQRT_M1);
+        CafeFieldElement rPrime = r.mul(Constants.SQRT_M1);
         r = r.cmov(rPrime, flippedSignSqrt | flippedSignSqrtM1);
 
         // Choose the non-negative square root.

@@ -14,18 +14,18 @@ import java.io.*;
 public class EdwardsPoint implements Serializable {
     private static final long serialVersionUID = 1L;
 
-    public static final EdwardsPoint IDENTITY = new EdwardsPoint(FieldElement.ZERO, FieldElement.ONE, FieldElement.ONE,
-            FieldElement.ZERO);
+    public static final EdwardsPoint IDENTITY = new EdwardsPoint(CafeFieldElement.ZERO_INTS, CafeFieldElement.ONE_INTS, CafeFieldElement.ONE_INTS,
+            CafeFieldElement.ZERO_INTS);
 
-    transient FieldElement X;
-    transient FieldElement Y;
-    transient FieldElement Z;
-    transient FieldElement T;
+    transient CafeFieldElement X;
+    transient CafeFieldElement Y;
+    transient CafeFieldElement Z;
+    transient CafeFieldElement T;
 
     /**
      * Only for internal use.
      */
-    EdwardsPoint(FieldElement X, FieldElement Y, FieldElement Z, FieldElement T) {
+    EdwardsPoint(CafeFieldElement X, CafeFieldElement Y, CafeFieldElement Z, CafeFieldElement T) {
         this.X = X;
         this.Y = Y;
         this.Z = Z;
@@ -68,9 +68,9 @@ public class EdwardsPoint implements Serializable {
      * @return the encoded point.
      */
     public CompressedEdwardsY compress() {
-        FieldElement recip = this.Z.inv();
-        FieldElement x = this.X.mul(recip);
-        FieldElement y = this.Y.mul(recip);
+        CafeFieldElement recip = this.Z.inv();
+        CafeFieldElement x = this.X.mul(recip);
+        CafeFieldElement y = this.Y.mul(recip);
         byte[] s = y.encode();
         s[31] |= (x.isNegative() << 7);
         return new CompressedEdwardsY(s);
@@ -146,10 +146,10 @@ public class EdwardsPoint implements Serializable {
      * Dehomogenize to an AffineNielsPoint.
      */
     AffineNielsPoint toAffineNiels() {
-        FieldElement recip = this.Z.inv();
-        FieldElement x = this.X.mul(recip);
-        FieldElement y = this.Y.mul(recip);
-        FieldElement xy2D = x.mul(y).mul(Constants.EDWARDS_2D);
+        CafeFieldElement recip = this.Z.inv();
+        CafeFieldElement x = this.X.mul(recip);
+        CafeFieldElement y = this.Y.mul(recip);
+        CafeFieldElement xy2D = x.mul(y).mul(Constants.EDWARDS_2D);
         return new AffineNielsPoint(y.add(x), y.sub(x), xy2D);
     }
 
@@ -170,13 +170,13 @@ public class EdwardsPoint implements Serializable {
      * @return $P + Q$
      */
     CompletedPoint add(ProjectiveNielsPoint Q) {
-        FieldElement YPlusX = this.Y.add(this.X);
-        FieldElement YMinusX = this.Y.sub(this.X);
-        FieldElement PP = YPlusX.mul(Q.YPlusX);
-        FieldElement MM = YMinusX.mul(Q.YMinusX);
-        FieldElement TT2D = this.T.mul(Q.T2D);
-        FieldElement ZZ = this.Z.mul(Q.Z);
-        FieldElement ZZ2 = ZZ.add(ZZ);
+        CafeFieldElement YPlusX = this.Y.add(this.X);
+        CafeFieldElement YMinusX = this.Y.sub(this.X);
+        CafeFieldElement PP = YPlusX.mul(Q.YPlusX);
+        CafeFieldElement MM = YMinusX.mul(Q.YMinusX);
+        CafeFieldElement TT2D = this.T.mul(Q.T2D);
+        CafeFieldElement ZZ = this.Z.mul(Q.Z);
+        CafeFieldElement ZZ2 = ZZ.add(ZZ);
         return new CompletedPoint(PP.sub(MM), PP.add(MM), ZZ2.add(TT2D), ZZ2.sub(TT2D));
     }
 
@@ -187,12 +187,12 @@ public class EdwardsPoint implements Serializable {
      * @return $P + q$
      */
     CompletedPoint add(AffineNielsPoint q) {
-        FieldElement YPlusX = this.Y.add(this.X);
-        FieldElement YMinusX = this.Y.sub(this.X);
-        FieldElement PP = YPlusX.mul(q.yPlusx);
-        FieldElement MM = YMinusX.mul(q.yMinusx);
-        FieldElement Txy2D = this.T.mul(q.xy2D);
-        FieldElement Z2 = this.Z.add(this.Z);
+        CafeFieldElement YPlusX = this.Y.add(this.X);
+        CafeFieldElement YMinusX = this.Y.sub(this.X);
+        CafeFieldElement PP = YPlusX.mul(q.yPlusx);
+        CafeFieldElement MM = YMinusX.mul(q.yMinusx);
+        CafeFieldElement Txy2D = this.T.mul(q.xy2D);
+        CafeFieldElement Z2 = this.Z.add(this.Z);
         return new CompletedPoint(PP.sub(MM), PP.add(MM), Z2.add(Txy2D), Z2.sub(Txy2D));
     }
 
@@ -214,13 +214,13 @@ public class EdwardsPoint implements Serializable {
      * @return $P - Q$
      */
     CompletedPoint subtract(ProjectiveNielsPoint Q) {
-        FieldElement YPlusX = this.Y.add(this.X);
-        FieldElement YMinusX = this.Y.sub(this.X);
-        FieldElement PM = YPlusX.mul(Q.YMinusX);
-        FieldElement MP = YMinusX.mul(Q.YPlusX);
-        FieldElement TT2D = this.T.mul(Q.T2D);
-        FieldElement ZZ = Z.mul(Q.Z);
-        FieldElement ZZ2 = ZZ.add(ZZ);
+        CafeFieldElement YPlusX = this.Y.add(this.X);
+        CafeFieldElement YMinusX = this.Y.sub(this.X);
+        CafeFieldElement PM = YPlusX.mul(Q.YMinusX);
+        CafeFieldElement MP = YMinusX.mul(Q.YPlusX);
+        CafeFieldElement TT2D = this.T.mul(Q.T2D);
+        CafeFieldElement ZZ = Z.mul(Q.Z);
+        CafeFieldElement ZZ2 = ZZ.add(ZZ);
         return new CompletedPoint(PM.sub(MP), PM.add(MP), ZZ2.sub(TT2D), ZZ2.add(TT2D));
     }
 
@@ -231,12 +231,12 @@ public class EdwardsPoint implements Serializable {
      * @return $P - q$
      */
     CompletedPoint subtract(AffineNielsPoint q) {
-        FieldElement YPlusX = this.Y.add(this.X);
-        FieldElement YMinusX = this.Y.sub(this.X);
-        FieldElement PM = YPlusX.mul(q.yMinusx);
-        FieldElement MP = YMinusX.mul(q.yPlusx);
-        FieldElement Txy2D = this.T.mul(q.xy2D);
-        FieldElement Z2 = this.Z.add(this.Z);
+        CafeFieldElement YPlusX = this.Y.add(this.X);
+        CafeFieldElement YMinusX = this.Y.sub(this.X);
+        CafeFieldElement PM = YPlusX.mul(q.yMinusx);
+        CafeFieldElement MP = YMinusX.mul(q.yPlusx);
+        CafeFieldElement Txy2D = this.T.mul(q.xy2D);
+        CafeFieldElement Z2 = this.Z.add(this.Z);
         return new CompletedPoint(PM.sub(MP), PM.add(MP), Z2.sub(Txy2D), Z2.add(Txy2D));
     }
 
@@ -264,7 +264,7 @@ public class EdwardsPoint implements Serializable {
      * @param s the Scalar to multiply by.
      * @return $[s]P$
      */
-    public EdwardsPoint multiply(final Scalar s) {
+    public EdwardsPoint multiply(final CafeScalar s) {
         // Construct a lookup table of [P,2P,3P,4P,5P,6P,7P,8P]
         final ProjectiveNielsPoint.LookupTable lookupTable = ProjectiveNielsPoint.buildLookupTable(this);
 
@@ -301,8 +301,8 @@ public class EdwardsPoint implements Serializable {
      * @param b a Scalar.
      * @return $[a]A + [b]B$
      */
-    public static EdwardsPoint vartimeDoubleScalarMultiplyBasepoint(final Scalar a, final EdwardsPoint A,
-            final Scalar b) {
+    public static EdwardsPoint vartimeDoubleScalarMultiplyBasepoint(final CafeScalar a, final EdwardsPoint A,
+                                                                    final CafeScalar b) {
         final byte[] aNaf = a.nonAdjacentForm();
         final byte[] bNaf = b.nonAdjacentForm();
 

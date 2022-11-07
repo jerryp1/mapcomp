@@ -161,9 +161,9 @@ public class Ed25519CafeByteFullEcc implements ByteFullEcc {
         assert p.length == POINT_BYTE_LENGTH;
         byte[] byteK = Ed25519ByteEccUtils.toByteK(k);
         try {
-            Scalar scalarK = new Scalar(byteK);
+            CafeScalar cafeScalarK = new CafeScalar(byteK);
             EdwardsPoint pFieldElement = new CompressedEdwardsY(p).decompress();
-            return pFieldElement.multiply(scalarK).compress().toByteArray();
+            return pFieldElement.multiply(cafeScalarK).compress().toByteArray();
         } catch (InvalidEncodingException e) {
             e.printStackTrace();
             throw new IllegalArgumentException("Invalid point p");
@@ -173,8 +173,8 @@ public class Ed25519CafeByteFullEcc implements ByteFullEcc {
     @Override
     public byte[] baseMul(BigInteger k) {
         byte[] byteK = Ed25519ByteEccUtils.toByteK(k);
-        Scalar scalarK = new Scalar(byteK);
-        return Constants.ED25519_BASEPOINT_TABLE.multiply(scalarK).compress().toByteArray();
+        CafeScalar cafeScalarK = new CafeScalar(byteK);
+        return Constants.ED25519_BASEPOINT_TABLE.multiply(cafeScalarK).compress().toByteArray();
     }
 
     @Override
@@ -196,9 +196,9 @@ public class Ed25519CafeByteFullEcc implements ByteFullEcc {
     public byte[] mul(byte[] p, byte[] k) {
         assert p.length == POINT_BYTE_LENGTH;
         try {
-            Scalar scalarK = new Scalar(k);
+            CafeScalar cafeScalarK = new CafeScalar(k);
             EdwardsPoint pFieldElement = new CompressedEdwardsY(p).decompress();
-            return pFieldElement.multiply(scalarK).compress().toByteArray();
+            return pFieldElement.multiply(cafeScalarK).compress().toByteArray();
         } catch (InvalidEncodingException e) {
             e.printStackTrace();
             throw new IllegalArgumentException("Invalid point p");
@@ -207,8 +207,8 @@ public class Ed25519CafeByteFullEcc implements ByteFullEcc {
 
     @Override
     public byte[] baseMul(byte[] k) {
-        Scalar scalarK = new Scalar(k);
-        return Constants.ED25519_BASEPOINT_TABLE.multiply(scalarK).compress().toByteArray();
+        CafeScalar cafeScalarK = new CafeScalar(k);
+        return Constants.ED25519_BASEPOINT_TABLE.multiply(cafeScalarK).compress().toByteArray();
     }
 
     @Override

@@ -6,21 +6,19 @@
 
 package edu.alibaba.mpc4j.common.tool.crypto.ecc.cafe;
 
-import edu.alibaba.mpc4j.common.tool.utils.CafeConstantTimeUtils;
-
 /**
  * A pre-computed point on the affine model of the curve, represented as $(y+x,
  * y-x, 2dxy)$ in "Niels coordinates".
  */
 class AffineNielsPoint {
-    static final AffineNielsPoint IDENTITY = new AffineNielsPoint(FieldElement.ONE, FieldElement.ONE,
-            FieldElement.ZERO);
+    static final AffineNielsPoint IDENTITY = new AffineNielsPoint(CafeFieldElement.ONE_INTS, CafeFieldElement.ONE_INTS,
+            CafeFieldElement.ZERO_INTS);
 
-    final FieldElement yPlusx;
-    final FieldElement yMinusx;
-    final FieldElement xy2D;
+    final CafeFieldElement yPlusx;
+    final CafeFieldElement yMinusx;
+    final CafeFieldElement xy2D;
 
-    AffineNielsPoint(FieldElement yPlusx, FieldElement yMinusx, FieldElement xy2D) {
+    AffineNielsPoint(CafeFieldElement yPlusx, CafeFieldElement yMinusx, CafeFieldElement xy2D) {
         this.yPlusx = yPlusx;
         this.yMinusx = yMinusx;
         this.xy2D = xy2D;

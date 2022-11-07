@@ -6,8 +6,6 @@
 
 package edu.alibaba.mpc4j.common.tool.crypto.ecc.cafe;
 
-import edu.alibaba.mpc4j.common.tool.utils.CafeConstantTimeUtils;
-
 import java.io.*;
 import java.util.Arrays;
 
@@ -63,24 +61,24 @@ public class CompressedEdwardsY implements Serializable {
      * @throws InvalidEncodingException if this is an invalid encoding.
      */
     public EdwardsPoint decompress() throws InvalidEncodingException {
-        FieldElement Y = FieldElement.decode(data);
-        FieldElement YY = Y.sqr();
+        CafeFieldElement Y = CafeFieldElement.decode(data);
+        CafeFieldElement YY = Y.sqr();
 
         // u = y²-1
-        FieldElement u = YY.sub(FieldElement.ONE);
+        CafeFieldElement u = YY.sub(CafeFieldElement.ONE_INTS);
 
         // v = dy²+1
-        FieldElement v = YY.mul(Constants.EDWARDS_D).add(FieldElement.ONE);
+        CafeFieldElement v = YY.mul(Constants.EDWARDS_D).add(CafeFieldElement.ONE_INTS);
 
-        FieldElement.SqrtRatioM1Result sqrt = FieldElement.sqrtRatioM1(u, v);
+        CafeFieldElement.SqrtRatioM1Result sqrt = CafeFieldElement.sqrtRatioM1(u, v);
         if (sqrt.wasSquare != 1) {
             throw new InvalidEncodingException("not a valid EdwardsPoint");
         }
 
-        FieldElement X = sqrt.result.negate().cmov(sqrt.result,
+        CafeFieldElement X = sqrt.result.negate().cmov(sqrt.result,
                 CafeConstantTimeUtils.equal(sqrt.result.isNegative(), CafeConstantTimeUtils.bit(data, 255)));
 
-        return new EdwardsPoint(X, Y, FieldElement.ONE, X.mul(Y));
+        return new EdwardsPoint(X, Y, CafeFieldElement.ONE_INTS, X.mul(Y));
     }
 
     /**

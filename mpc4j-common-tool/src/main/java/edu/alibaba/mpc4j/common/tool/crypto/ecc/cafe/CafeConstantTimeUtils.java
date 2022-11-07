@@ -4,7 +4,7 @@
  * See LICENSE for licensing information.
  */
 
-package edu.alibaba.mpc4j.common.tool.utils;
+package edu.alibaba.mpc4j.common.tool.crypto.ecc.cafe;
 
 /**
  * Constant-time functions. Modified from:

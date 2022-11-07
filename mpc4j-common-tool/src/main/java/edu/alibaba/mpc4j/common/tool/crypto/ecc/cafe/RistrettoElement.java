@@ -59,26 +59,26 @@ public class RistrettoElement implements Serializable {
     /**
      * The function MAP(t) from section 3.2.4 of the ristretto255 ID.
      */
-    static RistrettoElement map(final FieldElement t) {
-        final FieldElement r = t.sqr().mul(Constants.SQRT_M1);
-        final FieldElement u = r.add(FieldElement.ONE).mul(Constants.ONE_MINUS_D_SQ);
-        final FieldElement v = FieldElement.MINUS_ONE.sub(r.mul(Constants.EDWARDS_D))
+    static RistrettoElement map(final CafeFieldElement t) {
+        final CafeFieldElement r = t.sqr().mul(Constants.SQRT_M1);
+        final CafeFieldElement u = r.add(CafeFieldElement.ONE_INTS).mul(Constants.ONE_MINUS_D_SQ);
+        final CafeFieldElement v = CafeFieldElement.MINUS_ONE_INTS.sub(r.mul(Constants.EDWARDS_D))
                 .mul(r.add(Constants.EDWARDS_D));
 
-        final FieldElement.SqrtRatioM1Result sqrt = FieldElement.sqrtRatioM1(u, v);
-        FieldElement s = sqrt.result;
+        final CafeFieldElement.SqrtRatioM1Result sqrt = CafeFieldElement.sqrtRatioM1(u, v);
+        CafeFieldElement s = sqrt.result;
 
-        final FieldElement sPrime = s.mul(t).abs().negate();
+        final CafeFieldElement sPrime = s.mul(t).abs().negate();
         s = sPrime.cmov(s, sqrt.wasSquare);
-        final FieldElement c = r.cmov(FieldElement.MINUS_ONE, sqrt.wasSquare);
+        final CafeFieldElement c = r.cmov(CafeFieldElement.MINUS_ONE_INTS, sqrt.wasSquare);
 
-        final FieldElement N = c.mul(r.sub(FieldElement.ONE)).mul(Constants.D_MINUS_ONE_SQ).sub(v);
-        final FieldElement sSq = s.sqr();
+        final CafeFieldElement N = c.mul(r.sub(CafeFieldElement.ONE_INTS)).mul(Constants.D_MINUS_ONE_SQ).sub(v);
+        final CafeFieldElement sSq = s.sqr();
 
-        final FieldElement w0 = s.add(s).mul(v);
-        final FieldElement w1 = N.mul(Constants.SQRT_AD_MINUS_ONE);
-        final FieldElement w2 = FieldElement.ONE.sub(sSq);
-        final FieldElement w3 = FieldElement.ONE.add(sSq);
+        final CafeFieldElement w0 = s.add(s).mul(v);
+        final CafeFieldElement w1 = N.mul(Constants.SQRT_AD_MINUS_ONE);
+        final CafeFieldElement w2 = CafeFieldElement.ONE_INTS.sub(sSq);
+        final CafeFieldElement w3 = CafeFieldElement.ONE_INTS.add(sSq);
 
         return new RistrettoElement(
                 new EdwardsPoint(w0.mul(w3), w2.mul(w1), w1.mul(w3), w0.mul(w2)));
@@ -95,12 +95,12 @@ public class RistrettoElement implements Serializable {
         // 1. Interpret the least significant 255 bits of b[ 0..32] as an
         // integer r0 in little-endian representation. Reduce r0 modulo p.
         final byte[] b0 = Arrays.copyOfRange(b, 0, 32);
-        final FieldElement r0 = FieldElement.decode(b0);
+        final CafeFieldElement r0 = CafeFieldElement.decode(b0);
 
         // 2. Interpret the least significant 255 bits of b[32..64] as an
         // integer r1 in little-endian representation. Reduce r1 modulo p.
         final byte[] b1 = Arrays.copyOfRange(b, 32, 64);
-        final FieldElement r1 = FieldElement.decode(b1);
+        final CafeFieldElement r1 = CafeFieldElement.decode(b1);
 
         // 3. Compute group element P1 as MAP(r0)
         final RistrettoElement P1 = RistrettoElement.map(r0);
@@ -121,31 +121,31 @@ public class RistrettoElement implements Serializable {
      */
     public CompressedRistretto compress() {
         // 1. Process the internal representation into a field element s as follows:
-        final FieldElement u1 = this.repr.Z.add(this.repr.Y).mul(this.repr.Z.sub(this.repr.Y));
-        final FieldElement u2 = this.repr.X.mul(this.repr.Y);
+        final CafeFieldElement u1 = this.repr.Z.add(this.repr.Y).mul(this.repr.Z.sub(this.repr.Y));
+        final CafeFieldElement u2 = this.repr.X.mul(this.repr.Y);
 
         // Ignore was_square since this is always square
-        final FieldElement.SqrtRatioM1Result invsqrt = FieldElement.sqrtRatioM1(FieldElement.ONE,
+        final CafeFieldElement.SqrtRatioM1Result invsqrt = CafeFieldElement.sqrtRatioM1(CafeFieldElement.ONE_INTS,
                 u1.mul(u2.sqr()));
 
-        final FieldElement den1 = invsqrt.result.mul(u1);
-        final FieldElement den2 = invsqrt.result.mul(u2);
-        final FieldElement zInv = den1.mul(den2).mul(this.repr.T);
+        final CafeFieldElement den1 = invsqrt.result.mul(u1);
+        final CafeFieldElement den2 = invsqrt.result.mul(u2);
+        final CafeFieldElement zInv = den1.mul(den2).mul(this.repr.T);
 
-        final FieldElement ix = this.repr.X.mul(Constants.SQRT_M1);
-        final FieldElement iy = this.repr.Y.mul(Constants.SQRT_M1);
-        final FieldElement enchantedDenominator = den1.mul(Constants.INVSQRT_A_MINUS_D);
+        final CafeFieldElement ix = this.repr.X.mul(Constants.SQRT_M1);
+        final CafeFieldElement iy = this.repr.Y.mul(Constants.SQRT_M1);
+        final CafeFieldElement enchantedDenominator = den1.mul(Constants.INVSQRT_A_MINUS_D);
 
         final int rotate = this.repr.T.mul(zInv).isNegative();
 
-        final FieldElement x = this.repr.X.cmov(iy, rotate);
-        FieldElement y = this.repr.Y.cmov(ix, rotate);
-        final FieldElement z = this.repr.Z;
-        final FieldElement denInv = den2.cmov(enchantedDenominator, rotate);
+        final CafeFieldElement x = this.repr.X.cmov(iy, rotate);
+        CafeFieldElement y = this.repr.Y.cmov(ix, rotate);
+        final CafeFieldElement z = this.repr.Z;
+        final CafeFieldElement denInv = den2.cmov(enchantedDenominator, rotate);
 
         y = y.cmov(y.negate(), x.mul(zInv).isNegative());
 
-        FieldElement s = denInv.mul(z.sub(y));
+        CafeFieldElement s = denInv.mul(z.sub(y));
         final int sIsNegative = s.isNegative();
         s = s.cmov(s.negate(), sIsNegative);
 
@@ -161,11 +161,11 @@ public class RistrettoElement implements Serializable {
      * @return 1 if this and other are equal, 0 otherwise.
      */
     public int ctEquals(final RistrettoElement other) {
-        FieldElement X1Y2 = this.repr.X.mul(other.repr.Y);
-        FieldElement Y1X2 = this.repr.Y.mul(other.repr.X);
-        FieldElement Y1Y2 = this.repr.Y.mul(other.repr.Y);
-        FieldElement X1X2 = this.repr.X.mul(other.repr.X);
-        return X1Y2.areEqual(Y1X2) | Y1Y2.areEqual(X1X2);
+        CafeFieldElement X1Y2 = this.repr.X.mul(other.repr.Y);
+        CafeFieldElement Y1X2 = this.repr.Y.mul(other.repr.X);
+        CafeFieldElement Y1Y2 = this.repr.Y.mul(other.repr.Y);
+        CafeFieldElement X1X2 = this.repr.X.mul(other.repr.X);
+        return X1Y2.cequals(Y1X2) | Y1Y2.cequals(X1X2);
     }
 
     /**
@@ -250,7 +250,7 @@ public class RistrettoElement implements Serializable {
      * @param s the Scalar to multiply by.
      * @return $[s]P$
      */
-    public RistrettoElement multiply(final Scalar s) {
+    public RistrettoElement multiply(final CafeScalar s) {
         return new RistrettoElement(this.repr.multiply(s));
     }
 

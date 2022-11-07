@@ -38,13 +38,13 @@ public class EdwardsPointTest {
     /**
      * 4493907448824000747700850167940867464579944529806937181821189941592931634714
      */
-    static final Scalar A_SCALAR = new Scalar(
+    static final CafeScalar A_CAFE_SCALAR = new CafeScalar(
         Hex.decode("1a0e978a90f6622d3747023f8ad8264da758aa1b88e040d1589e7b7f2376ef09"));
 
     /**
      * 2506056684125797857694181776241676200180934651973138769173342316833279714961
      */
-    static final Scalar B_SCALAR = new Scalar(
+    static final CafeScalar B_CAFE_SCALAR = new CafeScalar(
         Hex.decode("91267acf25c2091ba217747b66f0b32e9df2a56741cfdac456a7d4aab8608a05"));
 
     /**
@@ -165,17 +165,17 @@ public class EdwardsPointTest {
 
     @Test
     public void scalarMulVsEd25519py() {
-        EdwardsPoint aB = Constants.ED25519_BASEPOINT.multiply(A_SCALAR);
+        EdwardsPoint aB = Constants.ED25519_BASEPOINT.multiply(A_CAFE_SCALAR);
         assertThat(aB.compress(), is(A_TIMES_BASEPOINT));
     }
 
     @Test
     public void testVartimeDoubleScalarMultiplyBasepoint() throws InvalidEncodingException {
         // Little-endian
-        Scalar zero = Scalar.ZERO;
-        Scalar one = Scalar.ONE;
-        Scalar two = new Scalar(Hex.decode("0200000000000000000000000000000000000000000000000000000000000000"));
-        Scalar a = new Scalar(Hex.decode("d072f8dd9c07fa7bc8d22a4b325d26301ee9202f6db89aa7c3731529e37e437c"));
+        CafeScalar zero = CafeScalar.ZERO;
+        CafeScalar one = CafeScalar.ONE;
+        CafeScalar two = new CafeScalar(Hex.decode("0200000000000000000000000000000000000000000000000000000000000000"));
+        CafeScalar a = new CafeScalar(Hex.decode("d072f8dd9c07fa7bc8d22a4b325d26301ee9202f6db89aa7c3731529e37e437c"));
         EdwardsPoint A = new CompressedEdwardsY(
             Hex.decode("d4cf8595571830644bd14af416954d09ab7159751ad9e0f7a6cbd92379e71a66")).decompress();
         EdwardsPoint B = Constants.ED25519_BASEPOINT;
@@ -205,7 +205,7 @@ public class EdwardsPointTest {
     @Test
     public void doubleScalarMulBasepointVsEd25519py() throws InvalidEncodingException {
         EdwardsPoint A = A_TIMES_BASEPOINT.decompress();
-        EdwardsPoint result = EdwardsPoint.vartimeDoubleScalarMultiplyBasepoint(A_SCALAR, A, B_SCALAR);
+        EdwardsPoint result = EdwardsPoint.vartimeDoubleScalarMultiplyBasepoint(A_CAFE_SCALAR, A, B_CAFE_SCALAR);
         assertThat(result.compress(), is(DOUBLE_SCALAR_MULT_RESULT));
     }
 

@@ -32,7 +32,7 @@ public class EdwardsBasepointTable {
      * @param s the Scalar to multiply by.
      * @return $[s]B$
      */
-    public EdwardsPoint multiply(final Scalar s) {
+    public EdwardsPoint multiply(final CafeScalar s) {
         int i;
 
         final byte[] e = s.toRadix16();

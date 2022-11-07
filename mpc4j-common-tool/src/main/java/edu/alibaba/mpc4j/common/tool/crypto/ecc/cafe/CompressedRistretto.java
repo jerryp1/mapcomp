@@ -6,8 +6,6 @@
 
 package edu.alibaba.mpc4j.common.tool.crypto.ecc.cafe;
 
-import edu.alibaba.mpc4j.common.tool.utils.CafeConstantTimeUtils;
-
 import java.io.*;
 import java.util.Arrays;
 
@@ -66,7 +64,7 @@ public class CompressedRistretto implements Serializable {
         // 1. First, interpret the string as an integer s in little-endian
         // representation. If the resulting value is >= p, decoding fails.
         // 2. If IS_NEGATIVE(s) returns TRUE, decoding fails.
-        final FieldElement s = FieldElement.decode(this.data);
+        final CafeFieldElement s = CafeFieldElement.decode(this.data);
         final byte[] sBytes = s.encode();
         final int sIsCanonical = CafeConstantTimeUtils.equal(this.data, sBytes);
         if (sIsCanonical == 0 || s.isNegative() == 1) {
@@ -74,21 +72,21 @@ public class CompressedRistretto implements Serializable {
         }
 
         // 3. Process s as follows:
-        final FieldElement ss = s.sqr();
-        final FieldElement u1 = FieldElement.ONE.sub(ss);
-        final FieldElement u2 = FieldElement.ONE.add(ss);
-        final FieldElement u2Sqr = u2.sqr();
+        final CafeFieldElement ss = s.sqr();
+        final CafeFieldElement u1 = CafeFieldElement.ONE_INTS.sub(ss);
+        final CafeFieldElement u2 = CafeFieldElement.ONE_INTS.add(ss);
+        final CafeFieldElement u2Sqr = u2.sqr();
 
-        final FieldElement v = Constants.NEG_EDWARDS_D.mul(u1.sqr()).sub(u2Sqr);
+        final CafeFieldElement v = Constants.NEG_EDWARDS_D.mul(u1.sqr()).sub(u2Sqr);
 
-        final FieldElement.SqrtRatioM1Result invsqrt = FieldElement.sqrtRatioM1(FieldElement.ONE, v.mul(u2Sqr));
+        final CafeFieldElement.SqrtRatioM1Result invsqrt = CafeFieldElement.sqrtRatioM1(CafeFieldElement.ONE_INTS, v.mul(u2Sqr));
 
-        final FieldElement denX = invsqrt.result.mul(u2);
-        final FieldElement denY = invsqrt.result.mul(denX).mul(v);
+        final CafeFieldElement denX = invsqrt.result.mul(u2);
+        final CafeFieldElement denY = invsqrt.result.mul(denX).mul(v);
 
-        final FieldElement x = s.add(s).mul(denX).abs();
-        final FieldElement y = u1.mul(denY);
-        final FieldElement t = x.mul(y);
+        final CafeFieldElement x = s.add(s).mul(denX).abs();
+        final CafeFieldElement y = u1.mul(denY);
+        final CafeFieldElement t = x.mul(y);
 
         // 4. If was_square is FALSE, or IS_NEGATIVE(t) returns TRUE, or y = 0, decoding
         // fails. Otherwise, return the internal representation in extended coordinates
@@ -96,7 +94,7 @@ public class CompressedRistretto implements Serializable {
         if (invsqrt.wasSquare == 0 || t.isNegative() == 1 || y.isZero() == 1) {
             throw new InvalidEncodingException("Invalid ristretto255 encoding");
         } else {
-            return new RistrettoElement(new EdwardsPoint(x, y, FieldElement.ONE, t));
+            return new RistrettoElement(new EdwardsPoint(x, y, CafeFieldElement.ONE_INTS, t));
         }
     }
 

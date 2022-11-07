@@ -15,30 +15,30 @@ import static org.hamcrest.Matchers.is;
 public class ConstantsTest {
     @Test
     public void checkEdwardsD() {
-        assertThat(Constants.EDWARDS_D, is(FieldElement
+        assertThat(Constants.EDWARDS_D, is(CafeFieldElement
                 .decode(Hex.decode("a3785913ca4deb75abd841414d0a700098e879777940c78c73fe6f2bee6c0352"))));
     }
 
     @Test
     public void checkEdwards2D() {
-        FieldElement two = FieldElement.ONE.add(FieldElement.ONE);
+        CafeFieldElement two = CafeFieldElement.ONE_INTS.add(CafeFieldElement.ONE_INTS);
         assertThat(Constants.EDWARDS_2D, is(Constants.EDWARDS_D.mul(two)));
     }
 
     @Test
     public void checkSqrtADMinusOne() {
-        assertThat(Constants.SQRT_AD_MINUS_ONE.sqr().add(FieldElement.ONE).negate(), is(Constants.EDWARDS_D));
+        assertThat(Constants.SQRT_AD_MINUS_ONE.sqr().add(CafeFieldElement.ONE_INTS).negate(), is(Constants.EDWARDS_D));
     }
 
     @Test
     public void checkInvSqrtAMinusD() {
-        assertThat(Constants.INVSQRT_A_MINUS_D.inv().sqr().add(FieldElement.ONE).negate(),
+        assertThat(Constants.INVSQRT_A_MINUS_D.inv().sqr().add(CafeFieldElement.ONE_INTS).negate(),
                 is(Constants.EDWARDS_D));
     }
 
     @Test
     public void checkSqrtM1() {
-        assertThat(Constants.SQRT_M1, is(FieldElement
+        assertThat(Constants.SQRT_M1, is(CafeFieldElement
                 .decode(Hex.decode("b0a00e4a271beec478e42fad0618432fa7d7fb3d99004d2b0bdfc14f8024832b"))));
     }
 

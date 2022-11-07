@@ -11,12 +11,12 @@ package edu.alibaba.mpc4j.common.tool.crypto.ecc.cafe;
  * curve.
  */
 class CompletedPoint {
-    final FieldElement X;
-    final FieldElement Y;
-    final FieldElement Z;
-    final FieldElement T;
+    final CafeFieldElement X;
+    final CafeFieldElement Y;
+    final CafeFieldElement Z;
+    final CafeFieldElement T;
 
-    CompletedPoint(FieldElement X, FieldElement Y, FieldElement Z, FieldElement T) {
+    CompletedPoint(CafeFieldElement X, CafeFieldElement Y, CafeFieldElement Z, CafeFieldElement T) {
         this.X = X;
         this.Y = Y;
         this.Z = Z;

@@ -4,8 +4,9 @@
  * See LICENSE for licensing information.
  */
 
-package edu.alibaba.mpc4j.common.tool.utils;
+package edu.alibaba.mpc4j.common.tool.crypto.ecc.cafe;
 
+import edu.alibaba.mpc4j.common.tool.utils.BytesUtils;
 import org.junit.Assert;
 import org.junit.Test;
 
