@@ -15,7 +15,7 @@
 
 Compiling `mpc4j-native-tool` might be a bit complicated for those who are not that familiar with Unix-like systems. Here we provide a brief guideline on how to compile `mpc4j-native-tool` for those familiar with Unix-like systems. If you meet any problems when trying to follow this brief introduction, or if you are a new user to Unix-like systems, see separate documentation in `/doc` on how to install dependencies (with default paths) and compile `mpc4j-native-tool` on different platforms.
 
-- `doc/compile_max_x86_64.md`: MacOS (`x86_64`).
+- `doc/compile_mac_x86_64.md`: MacOS (`x86_64`).
 - `doc/compile_mac_aarch64.md`: MacOS (`aarch64`), like MacBook M1.
 - `doc/compile_ubuntu.md`: Ubuntu 20.04 (including Ubuntu and Docker on Ubuntu / MacBook `x86_64` / MacBook `aarch64`)
 - `doc/compile_centos_x86_64.md`: CentOS 8 (including CentOS and Docker on CentOS / MacBook `x86_64`, failed on MacBook `aarch64`).
