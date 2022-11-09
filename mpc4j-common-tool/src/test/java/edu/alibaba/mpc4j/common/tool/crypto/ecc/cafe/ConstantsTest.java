@@ -27,12 +27,12 @@ public class ConstantsTest {
 
     @Test
     public void checkSqrtADMinusOne() {
-        assertThat(Constants.SQRT_AD_MINUS_ONE.sqr().add(CafeFieldElement.ONE_INTS).negate(), is(Constants.EDWARDS_D));
+        assertThat(Constants.SQRT_AD_MINUS_ONE.sqr().add(CafeFieldElement.ONE_INTS).neg(), is(Constants.EDWARDS_D));
     }
 
     @Test
     public void checkInvSqrtAMinusD() {
-        assertThat(Constants.INVSQRT_A_MINUS_D.inv().sqr().add(CafeFieldElement.ONE_INTS).negate(),
+        assertThat(Constants.INVSQRT_A_MINUS_D.inv().sqr().add(CafeFieldElement.ONE_INTS).neg(),
                 is(Constants.EDWARDS_D));
     }
 
@@ -44,12 +44,12 @@ public class ConstantsTest {
 
     @Test
     public void checkEd25519Basepoint() throws InvalidEncodingException {
-        CompressedEdwardsY encoded = new CompressedEdwardsY(
+        CafeEdwardsCompressedPoint encoded = new CafeEdwardsCompressedPoint(
                 Hex.decode("5866666666666666666666666666666666666666666666666666666666666666"));
-        EdwardsPoint B = encoded.decompress();
-        assertThat(Constants.ED25519_BASEPOINT.X, is(B.X));
-        assertThat(Constants.ED25519_BASEPOINT.Y, is(B.Y));
-        assertThat(Constants.ED25519_BASEPOINT.Z, is(B.Z));
-        assertThat(Constants.ED25519_BASEPOINT.T, is(B.T));
+        CafeEdwardsPoint B = encoded.decompress();
+        assertThat(Constants.ED25519_BASE_POINT.x, is(B.x));
+        assertThat(Constants.ED25519_BASE_POINT.y, is(B.y));
+        assertThat(Constants.ED25519_BASE_POINT.z, is(B.z));
+        assertThat(Constants.ED25519_BASE_POINT.t, is(B.t));
     }
 }

@@ -7,9 +7,9 @@
 package edu.alibaba.mpc4j.common.tool.crypto.ecc.cafe;
 
 /**
- * Thrown to indicate that a {@link CompressedEdwardsY} or
+ * Thrown to indicate that a {@link CafeEdwardsCompressedPoint} or
  * {@link CompressedRistretto} was an invalid encoding of an
- * {@link EdwardsPoint} or {@link RistrettoElement}.
+ * {@link CafeEdwardsPoint} or {@link RistrettoElement}.
  */
 public class InvalidEncodingException extends Exception {
     private static final long serialVersionUID = 1L;

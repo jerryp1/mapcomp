@@ -39,8 +39,8 @@ class CompletedPoint {
      * <p>
      * This costs $4 \mathrm M$.
      */
-    EdwardsPoint toExtended() {
-        return new EdwardsPoint(this.X.mul(this.T), Y.mul(this.Z), this.Z.mul(this.T),
+    CafeEdwardsPoint toExtended() {
+        return new CafeEdwardsPoint(this.X.mul(this.T), Y.mul(this.Z), this.Z.mul(this.T),
                 this.X.mul(this.Y));
     }
 }

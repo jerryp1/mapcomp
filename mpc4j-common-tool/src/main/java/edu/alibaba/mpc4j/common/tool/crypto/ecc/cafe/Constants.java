@@ -58,7 +58,7 @@ public final class Constants {
     /**
      * Edwards $-d$ value, equal to $121665/121666 \bmod p$.
      */
-    static final CafeFieldElement NEG_EDWARDS_D = EDWARDS_D.negate();
+    static final CafeFieldElement NEG_EDWARDS_D = EDWARDS_D.neg();
 
     /**
      * Edwards $2*d$ value, equal to $2*(-121665/121666) \bmod p$.
@@ -115,7 +115,7 @@ public final class Constants {
     /**
      * The Ed25519 basepoint, as an EdwardsPoint.
      */
-    public static final EdwardsPoint ED25519_BASEPOINT = new EdwardsPoint(
+    public static final CafeEdwardsPoint ED25519_BASE_POINT = new CafeEdwardsPoint(
     // @formatter:off
         new CafeFieldElement(new int[] {
             -14297830,  -7645148, 16144683, -16471763, 27570974,
@@ -136,18 +136,18 @@ public final class Constants {
     /**
      * Table containing pre-computed multiples of the Ed25519 basepoint.
      */
-    public static final EdwardsBasepointTable ED25519_BASEPOINT_TABLE = new EdwardsBasepointTable(ED25519_BASEPOINT);
+    public static final CafeEdwardsPrecomputeTable ED25519_BASEPOINT_TABLE = new CafeEdwardsPrecomputeTable(ED25519_BASE_POINT);
 
     /**
      * Odd multiples of the Ed25519 basepoint.
      */
-    static final AffineNielsPoint.NafLookupTable AFFINE_ODD_MULTIPLES_OF_BASEPOINT = AffineNielsPoint
-            .buildNafLookupTable(ED25519_BASEPOINT);
+    static final CafeAffineNielsPoint.NafLookupTable AFFINE_ODD_MULTIPLES_OF_BASEPOINT = CafeAffineNielsPoint
+            .buildNafLookupTable(ED25519_BASE_POINT);
 
     /**
      * The ristretto255 generator, as a RistrettoElement.
      */
-    public static final RistrettoElement RISTRETTO_GENERATOR = new RistrettoElement(ED25519_BASEPOINT);
+    public static final RistrettoElement RISTRETTO_GENERATOR = new RistrettoElement(ED25519_BASE_POINT);
 
     /**
      * Table containing pre-computed multiples of the ristretto255 generator.

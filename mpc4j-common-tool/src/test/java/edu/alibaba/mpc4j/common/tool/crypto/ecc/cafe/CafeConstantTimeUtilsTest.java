@@ -82,13 +82,13 @@ public class CafeConstantTimeUtilsTest {
 
     @Test
     public void isNegative() {
-        Assert.assertEquals(0, CafeConstantTimeUtils.isNegative(0));
-        Assert.assertEquals(0, CafeConstantTimeUtils.isNegative(1));
-        Assert.assertEquals(1, CafeConstantTimeUtils.isNegative(-1));
-        Assert.assertEquals(0, CafeConstantTimeUtils.isNegative(32));
-        Assert.assertEquals(1, CafeConstantTimeUtils.isNegative(-100));
-        Assert.assertEquals(0, CafeConstantTimeUtils.isNegative(127));
-        Assert.assertEquals(1, CafeConstantTimeUtils.isNegative(-255));
+        Assert.assertEquals(0, CafeConstantTimeUtils.isNeg(0));
+        Assert.assertEquals(0, CafeConstantTimeUtils.isNeg(1));
+        Assert.assertEquals(1, CafeConstantTimeUtils.isNeg(-1));
+        Assert.assertEquals(0, CafeConstantTimeUtils.isNeg(32));
+        Assert.assertEquals(1, CafeConstantTimeUtils.isNeg(-100));
+        Assert.assertEquals(0, CafeConstantTimeUtils.isNeg(127));
+        Assert.assertEquals(1, CafeConstantTimeUtils.isNeg(-255));
     }
 
     @Test

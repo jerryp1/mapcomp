@@ -7,8 +7,7 @@
 package edu.alibaba.mpc4j.common.tool.crypto.ecc.cafe;
 
 /**
- * A pre-computed point on the $\mathbb P^3$ model of the curve, represented as
- * $(Y+X, Y-X, Z, 2dXY)$ in "Niels coordinates".
+ * A pre-computed point on the $\mathbb P^3$ model of the curve, represented as $(Y+X, Y-X, Z, 2dXY)$ in "Niels coordinates".
  */
 class ProjectiveNielsPoint {
     static final ProjectiveNielsPoint IDENTITY = new ProjectiveNielsPoint(CafeFieldElement.ONE_INTS, CafeFieldElement.ONE_INTS,
@@ -44,7 +43,7 @@ class ProjectiveNielsPoint {
      * @return $-P$
      */
     public ProjectiveNielsPoint negate() {
-        return new ProjectiveNielsPoint(this.YMinusX, this.YPlusX, this.Z, this.T2D.negate());
+        return new ProjectiveNielsPoint(this.YMinusX, this.YPlusX, this.Z, this.T2D.neg());
     }
 
     /**
@@ -53,7 +52,7 @@ class ProjectiveNielsPoint {
      * @param P the point to calculate multiples for.
      * @return the lookup table.
      */
-    static LookupTable buildLookupTable(EdwardsPoint P) {
+    static LookupTable buildLookupTable(CafeEdwardsPoint P) {
         final ProjectiveNielsPoint[] points = new ProjectiveNielsPoint[8];
         points[0] = P.toProjectiveNiels();
         for (int i = 0; i < 7; i++) {
@@ -81,7 +80,7 @@ class ProjectiveNielsPoint {
             }
 
             // Is x negative?
-            final int xNegative = CafeConstantTimeUtils.isNegative(x);
+            final int xNegative = CafeConstantTimeUtils.isNeg(x);
             // |x|
             final int xabs = x - (((-xNegative) & x) << 1);
 
@@ -105,10 +104,10 @@ class ProjectiveNielsPoint {
      * @param P the point to calculate multiples for.
      * @return the lookup table.
      */
-    static NafLookupTable buildNafLookupTable(EdwardsPoint P) {
+    static NafLookupTable buildNafLookupTable(CafeEdwardsPoint P) {
         ProjectiveNielsPoint[] points = new ProjectiveNielsPoint[8];
         points[0] = P.toProjectiveNiels();
-        EdwardsPoint P2 = P.dbl();
+        CafeEdwardsPoint P2 = P.dbl();
         for (int i = 0; i < 7; i++) {
             points[i + 1] = P2.add(points[i]).toExtended().toProjectiveNiels();
         }

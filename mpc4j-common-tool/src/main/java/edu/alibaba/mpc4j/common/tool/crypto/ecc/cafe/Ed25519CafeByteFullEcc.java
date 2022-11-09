@@ -85,96 +85,61 @@ public class Ed25519CafeByteFullEcc implements ByteFullEcc {
 
     @Override
     public byte[] add(byte[] p, byte[] q) {
-        try {
-            EdwardsPoint pFieldElement = new CompressedEdwardsY(p).decompress();
-            EdwardsPoint qFieldElement = new CompressedEdwardsY(q).decompress();
-            return pFieldElement.add(qFieldElement).compress().toByteArray();
-        } catch (InvalidEncodingException e) {
-            e.printStackTrace();
-            throw new IllegalArgumentException("Invalid point p pr q");
-        }
+        CafeEdwardsPoint pFieldElement = new CafeEdwardsCompressedPoint(p).decompress();
+        CafeEdwardsPoint qFieldElement = new CafeEdwardsCompressedPoint(q).decompress();
+        return pFieldElement.add(qFieldElement).compress().encode();
     }
 
     @Override
     public void addi(byte[] p, byte[] q) {
-        try {
-            EdwardsPoint pFieldElement = new CompressedEdwardsY(p).decompress();
-            EdwardsPoint qFieldElement = new CompressedEdwardsY(q).decompress();
-            byte[] r = pFieldElement.add(qFieldElement).compress().toByteArray();
-            System.arraycopy(r, 0, p, 0, p.length);
-        } catch (InvalidEncodingException e) {
-            e.printStackTrace();
-            throw new IllegalArgumentException("Invalid point p pr q");
-        }
+        CafeEdwardsPoint pFieldElement = new CafeEdwardsCompressedPoint(p).decompress();
+        CafeEdwardsPoint qFieldElement = new CafeEdwardsCompressedPoint(q).decompress();
+        byte[] r = pFieldElement.add(qFieldElement).compress().encode();
+        System.arraycopy(r, 0, p, 0, p.length);
     }
 
     @Override
     public byte[] neg(byte[] p) {
-        try {
-            EdwardsPoint pFieldElement = new CompressedEdwardsY(p).decompress();
-            return pFieldElement.negate().compress().toByteArray();
-        } catch (InvalidEncodingException e) {
-            e.printStackTrace();
-            throw new IllegalArgumentException("Invalid point p");
-        }
+        CafeEdwardsPoint pFieldElement = new CafeEdwardsCompressedPoint(p).decompress();
+        return pFieldElement.neg().compress().encode();
     }
 
     @Override
     public void negi(byte[] p) {
-        try {
-            EdwardsPoint pFieldElement = new CompressedEdwardsY(p).decompress();
-            byte[] r = pFieldElement.negate().compress().toByteArray();
-            System.arraycopy(r, 0, p, 0, p.length);
-        } catch (InvalidEncodingException e) {
-            e.printStackTrace();
-            throw new IllegalArgumentException("Invalid point p");
-        }
+        CafeEdwardsPoint pFieldElement = new CafeEdwardsCompressedPoint(p).decompress();
+        byte[] r = pFieldElement.neg().compress().encode();
+        System.arraycopy(r, 0, p, 0, p.length);
     }
 
     @Override
     public byte[] sub(byte[] p, byte[] q) {
-        try {
-            EdwardsPoint pFieldElement = new CompressedEdwardsY(p).decompress();
-            EdwardsPoint qFieldElement = new CompressedEdwardsY(q).decompress();
-            return pFieldElement.subtract(qFieldElement).compress().toByteArray();
-        } catch (InvalidEncodingException e) {
-            e.printStackTrace();
-            throw new IllegalArgumentException("Invalid point p pr q");
-        }
+        CafeEdwardsPoint pFieldElement = new CafeEdwardsCompressedPoint(p).decompress();
+        CafeEdwardsPoint qFieldElement = new CafeEdwardsCompressedPoint(q).decompress();
+        return pFieldElement.sub(qFieldElement).compress().encode();
     }
 
     @Override
     public void subi(byte[] p, byte[] q) {
-        try {
-            EdwardsPoint pFieldElement = new CompressedEdwardsY(p).decompress();
-            EdwardsPoint qFieldElement = new CompressedEdwardsY(q).decompress();
-            byte[] r = pFieldElement.subtract(qFieldElement).compress().toByteArray();
-            System.arraycopy(r, 0, p, 0, p.length);
-        } catch (InvalidEncodingException e) {
-            e.printStackTrace();
-            throw new IllegalArgumentException("Invalid point p pr q");
-        }
+        CafeEdwardsPoint pFieldElement = new CafeEdwardsCompressedPoint(p).decompress();
+        CafeEdwardsPoint qFieldElement = new CafeEdwardsCompressedPoint(q).decompress();
+        byte[] r = pFieldElement.sub(qFieldElement).compress().encode();
+        System.arraycopy(r, 0, p, 0, p.length);
     }
 
     @Override
     public byte[] mul(byte[] p, BigInteger k) {
         assert p.length == POINT_BYTE_LENGTH;
         byte[] byteK = Ed25519ByteEccUtils.toByteK(k);
-        try {
-            CafeScalar cafeScalarK = new CafeScalar(byteK);
-            EdwardsPoint pFieldElement = new CompressedEdwardsY(p).decompress();
-            return pFieldElement.multiply(cafeScalarK).compress().toByteArray();
-        } catch (InvalidEncodingException e) {
-            e.printStackTrace();
-            throw new IllegalArgumentException("Invalid point p");
-        }
+        CafeScalar cafeScalarK = new CafeScalar(byteK);
+        CafeEdwardsPoint pFieldElement = new CafeEdwardsCompressedPoint(p).decompress();
+        return pFieldElement.mul(cafeScalarK).compress().encode();
     }
 
     @Override
     public byte[] baseMul(BigInteger k) {
         byte[] byteK = Ed25519ByteEccUtils.toByteK(k);
         CafeScalar cafeScalarK = new CafeScalar(byteK);
-        return Constants.ED25519_BASEPOINT_TABLE.multiply(cafeScalarK).compress().toByteArray();
+        return Constants.ED25519_BASEPOINT_TABLE.multiply(cafeScalarK).compress().encode();
     }
 
     @Override
@@ -189,26 +154,21 @@ public class Ed25519CafeByteFullEcc implements ByteFullEcc {
 
     @Override
     public byte[] getG() {
-        return Constants.ED25519_BASEPOINT.compress().toByteArray();
+        return Constants.ED25519_BASE_POINT.compress().encode();
     }
 
     @Override
     public byte[] mul(byte[] p, byte[] k) {
         assert p.length == POINT_BYTE_LENGTH;
-        try {
-            CafeScalar cafeScalarK = new CafeScalar(k);
-            EdwardsPoint pFieldElement = new CompressedEdwardsY(p).decompress();
-            return pFieldElement.multiply(cafeScalarK).compress().toByteArray();
-        } catch (InvalidEncodingException e) {
-            e.printStackTrace();
-            throw new IllegalArgumentException("Invalid point p");
-        }
+        CafeScalar cafeScalarK = new CafeScalar(k);
+        CafeEdwardsPoint pFieldElement = new CafeEdwardsCompressedPoint(p).decompress();
+        return pFieldElement.mul(cafeScalarK).compress().encode();
     }
 
     @Override
     public byte[] baseMul(byte[] k) {
         CafeScalar cafeScalarK = new CafeScalar(k);
-        return Constants.ED25519_BASEPOINT_TABLE.multiply(cafeScalarK).compress().toByteArray();
+        return Constants.ED25519_BASEPOINT_TABLE.multiply(cafeScalarK).compress().encode();
     }
 
     @Override

@@ -70,7 +70,7 @@ public final class CafeConstantTimeUtils {
      * @param b the byte to check, represented as an int.
      * @return 1 if the byte is negative, 0 otherwise.
      */
-    public static int isNegative(int b) {
+    public static int isNeg(int b) {
         assert b > -(1 << Byte.SIZE) && b < (1 << Byte.SIZE)
             : "b must be in range (" + -(1 << Byte.SIZE) + ", " + (1 << Byte.SIZE) + "): " + b;
         return (b >> Byte.SIZE) & 1;

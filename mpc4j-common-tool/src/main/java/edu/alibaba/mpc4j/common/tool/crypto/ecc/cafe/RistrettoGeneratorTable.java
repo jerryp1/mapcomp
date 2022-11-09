@@ -11,13 +11,13 @@ package edu.alibaba.mpc4j.common.tool.crypto.ecc.cafe;
  * fixed-base scalar multiplication.
  */
 public class RistrettoGeneratorTable {
-    final EdwardsBasepointTable table;
+    final CafeEdwardsPrecomputeTable table;
 
     /**
      * Create a table of pre-computed multiples of generator.
      */
     public RistrettoGeneratorTable(final RistrettoElement generator) {
-        this.table = new EdwardsBasepointTable(generator.repr);
+        this.table = new CafeEdwardsPrecomputeTable(generator.repr);
     }
 
     /**

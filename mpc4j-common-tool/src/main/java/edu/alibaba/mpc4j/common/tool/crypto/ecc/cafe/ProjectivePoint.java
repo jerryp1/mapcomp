@@ -25,8 +25,8 @@ class ProjectivePoint {
      * <p>
      * This costs $3 \mathrm M + 1 \mathrm S$.
      */
-    EdwardsPoint toExtended() {
-        return new EdwardsPoint(this.X.mul(this.Z), Y.mul(this.Z), this.Z.sqr(), this.X.mul(this.Y));
+    CafeEdwardsPoint toExtended() {
+        return new CafeEdwardsPoint(this.X.mul(this.Z), Y.mul(this.Z), this.Z.sqr(), this.X.mul(this.Y));
     }
 
     /**

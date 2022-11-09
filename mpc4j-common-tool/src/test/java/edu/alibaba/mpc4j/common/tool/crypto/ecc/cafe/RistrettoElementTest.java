@@ -118,7 +118,7 @@ public class RistrettoElementTest {
     @Test
     public void equalityRequiresSameClass() {
         RistrettoElement B = Constants.RISTRETTO_GENERATOR;
-        EdwardsPoint P = B.repr;
+        CafeEdwardsPoint P = B.repr;
         assertFalse(B.equals(P));
     }
 

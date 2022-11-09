@@ -57,7 +57,7 @@ public class CompressedRistrettoTest {
     public void equalityRequiresSameClass() {
         byte[] s = new byte[32];
         CompressedRistretto r = new CompressedRistretto(s);
-        CompressedEdwardsY e = new CompressedEdwardsY(s);
+        CafeEdwardsCompressedPoint e = new CafeEdwardsCompressedPoint(s);
         assertFalse(r.equals(e));
     }
 }

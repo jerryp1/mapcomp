@@ -55,7 +55,7 @@ public class CafeScalarTest {
     /**
      * A in Scalar
      */
-    private static final CafeScalar A_CAFE_SCALAR = new CafeScalar(
+    private static final CafeScalar A_SCALAR = new CafeScalar(
         Hex.decode("1a0e978a90f6622d3747023f8ad8264da758aa1b88e040d1589e7b7f2376ef09")
     );
     /**
@@ -73,26 +73,26 @@ public class CafeScalarTest {
     };
 
     @Test
-    public void testValidScalar() {
+    public void testValid() {
         byte[] s = new byte[CafeScalar.SCALAR_BYTE_SIZE];
         s[CafeScalar.SCALAR_BYTE_SIZE - 1] = 0x7f;
         new CafeScalar(s);
     }
 
     @Test(expected = IllegalArgumentException.class)
-    public void testInvalidHighestBitScalar() {
+    public void testInvalidHighestBit() {
         byte[] s = new byte[CafeScalar.SCALAR_BYTE_SIZE];
         s[31] = (byte) 0x80;
         new CafeScalar(s);
     }
 
     @Test(expected = IllegalArgumentException.class)
-    public void testInvalidShortScalar() {
+    public void testInvalidShort() {
         new CafeScalar(new byte[CafeScalar.SCALAR_BYTE_SIZE - 1]);
     }
 
     @Test(expected = IllegalArgumentException.class)
-    public void testInvalidLongScalar() {
+    public void testInvalidLong() {
         new CafeScalar(new byte[CafeScalar.SCALAR_BYTE_SIZE + 1]);
     }
 
@@ -211,7 +211,7 @@ public class CafeScalarTest {
 
     @Test
     public void testNonAdjacentForm() {
-        byte[] naf = A_CAFE_SCALAR.nonAdjacentForm();
+        byte[] naf = A_SCALAR.nonAdjacentForm();
         Assert.assertArrayEquals(A_NAF, naf);
     }
 

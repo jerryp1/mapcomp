@@ -94,7 +94,7 @@ public class CompressedRistretto implements Serializable {
         if (invsqrt.wasSquare == 0 || t.isNegative() == 1 || y.isZero() == 1) {
             throw new InvalidEncodingException("Invalid ristretto255 encoding");
         } else {
-            return new RistrettoElement(new EdwardsPoint(x, y, CafeFieldElement.ONE_INTS, t));
+            return new RistrettoElement(new CafeEdwardsPoint(x, y, CafeFieldElement.ONE_INTS, t));
         }
     }
 

@@ -353,7 +353,7 @@ class CafeFieldElement {
      * @return $|\text{this}|$.
      */
     CafeFieldElement abs() {
-        return cmov(negate(), isNegative());
+        return cmov(neg(), isNegative());
     }
 
     /**
@@ -470,7 +470,7 @@ class CafeFieldElement {
      *
      * @return The field element (-1) * this.
      */
-    public CafeFieldElement negate() {
+    public CafeFieldElement neg() {
         int[] h = new int[FIELD_INT_SIZE];
         for (int i = 0; i < FIELD_INT_SIZE; i++) {
             h[i] = -t[i];
@@ -1467,7 +1467,7 @@ class CafeFieldElement {
         CafeFieldElement r = u.mul(v3).mul(u.mul(v7).powPm5d8());
         CafeFieldElement check = v.mul(r.sqr());
 
-        CafeFieldElement uNeg = u.negate();
+        CafeFieldElement uNeg = u.neg();
         int correctSignSqrt = check.cequals(u);
         int flippedSignSqrt = check.cequals(uNeg);
         int flippedSignSqrtM1 = check.cequals(uNeg.mul(Constants.SQRT_M1));
