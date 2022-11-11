@@ -125,7 +125,6 @@ public class CafeScalar {
         long carry15;
         long carry16;
 
-        // @formatter:off
         /*
          * Lots of magic numbers :)
          * To understand what's going on below, note that
@@ -142,7 +141,6 @@ public class CafeScalar {
          *
          * The same procedure is then applied for s22,...,s18.
          */
-        // @formatter:on
         s11 += s23 * 666643;
         s12 += s23 * 470296;
         s13 += s23 * 654183;
@@ -188,7 +186,6 @@ public class CafeScalar {
         /*
          * Time to reduce the coefficient in order not to get an overflow.
          */
-        // @formatter:off
         carry6 = (s6 + (1 << 20)) >> 21;
         s7 += carry6;
         s6 -= carry6 << 21;
@@ -223,7 +220,6 @@ public class CafeScalar {
         carry15 = (s15 + (1 << 20)) >> 21;
         s16 += carry15;
         s15 -= carry15 << 21;
-        // @formatter:on
 
         /*
          * Continue with above procedure.
@@ -273,7 +269,6 @@ public class CafeScalar {
         /*
          * Reduce coefficients again.
          */
-        // @formatter:off
         carry0 = (s0 + (1 << 20)) >> 21;
         s1 += carry0;
         s0 -= carry0 << 21;
@@ -311,7 +306,6 @@ public class CafeScalar {
         carry11 = (s11 + (1 << 20)) >> 21;
         s12 = carry11;
         s11 -= carry11 << 21;
-        // @formatter:on
 
         s0 += s12 * 666643;
         s1 += s12 * 470296;
@@ -320,7 +314,6 @@ public class CafeScalar {
         s4 += s12 * 136657;
         s5 -= s12 * 683901;
 
-        // @formatter:off
         carry0 = s0 >> 21;
         s1 += carry0;
         s0 -= carry0 << 21;
@@ -357,7 +350,6 @@ public class CafeScalar {
         carry11 = s11 >> 21;
         s12 = carry11;
         s11 -= carry11 << 21;
-        // @formatter:on
 
         s0 += s12 * 666643;
         s1 += s12 * 470296;
@@ -366,7 +358,6 @@ public class CafeScalar {
         s4 += s12 * 136657;
         s5 -= s12 * 683901;
 
-        // @formatter:off
         carry0 = s0 >> 21;
         s1 += carry0;
         s0 -= carry0 << 21;
@@ -400,7 +391,6 @@ public class CafeScalar {
         carry10 = s10 >> 21;
         s11 += carry10;
         s10 -= carry10 << 21;
-        // @formatter:on
 
         // s0, ..., s11 got 21 bits each.
         byte[] result = new byte[SCALAR_BYTE_SIZE];
@@ -534,8 +524,8 @@ public class CafeScalar {
      * @return the reduced Scalar.
      */
     static CafeScalar reduce(byte[] x) {
-        long[] xR = UnpackedScalar.fromByteArray(x).mulInternal(Constants.R);
-        return new CafeScalar(UnpackedScalar.montgomeryReduce(xR).toByteArray());
+        long[] xR = CafeUnpackedScalar.decode(x).mulInternal(CafeConstants.R);
+        return new CafeScalar(CafeUnpackedScalar.montgomeryReduce(xR).encode());
     }
 
     /**
@@ -549,7 +539,7 @@ public class CafeScalar {
      * @return $a + b \bmod \ell$.
      */
     public CafeScalar add(final CafeScalar b) {
-        return new CafeScalar(UnpackedScalar.fromByteArray(s).add(UnpackedScalar.fromByteArray(b.s)).toByteArray());
+        return new CafeScalar(CafeUnpackedScalar.decode(s).add(CafeUnpackedScalar.decode(b.s)).encode());
     }
 
     /**
@@ -563,7 +553,7 @@ public class CafeScalar {
      * @return $a - b \bmod \ell$.
      */
     public CafeScalar sub(final CafeScalar b) {
-        return new CafeScalar(UnpackedScalar.fromByteArray(s).subtract(UnpackedScalar.fromByteArray(b.s)).toByteArray());
+        return new CafeScalar(CafeUnpackedScalar.decode(s).sub(CafeUnpackedScalar.decode(b.s)).encode());
     }
 
     /**
@@ -668,7 +658,6 @@ public class CafeScalar {
         long carry21;
         long carry22;
 
-        // @formatter:off
         s0 = c0 + a0 * b0;
         s1 = c1 + a0 * b1 + a1 * b0;
         s2 = c2 + a0 * b2 + a1 * b1 + a2 * b0;
@@ -763,7 +752,6 @@ public class CafeScalar {
         carry21 = (s21 + (1 << 20)) >> 21;
         s22 += carry21;
         s21 -= carry21 << 21;
-        // @formatter:on
 
         s11 += s23 * 666643;
         s12 += s23 * 470296;
@@ -807,7 +795,6 @@ public class CafeScalar {
         s10 += s18 * 136657;
         s11 -= s18 * 683901;
 
-        // @formatter:off
         carry6 = (s6 + (1 << 20)) >> 21;
         s7 += carry6;
         s6 -= carry6 << 21;
@@ -842,7 +829,6 @@ public class CafeScalar {
         carry15 = (s15 + (1 << 20)) >> 21;
         s16 += carry15;
         s15 -= carry15 << 21;
-        // @formatter:on
 
         s5 += s17 * 666643;
         s6 += s17 * 470296;
@@ -886,7 +872,6 @@ public class CafeScalar {
         s4 += s12 * 136657;
         s5 -= s12 * 683901;
 
-        // @formatter:off
         carry0 = (s0 + (1 << 20)) >> 21;
         s1 += carry0;
         s0 -= carry0 << 21;
@@ -924,7 +909,6 @@ public class CafeScalar {
         carry11 = (s11 + (1 << 20)) >> 21;
         s12 = carry11;
         s11 -= carry11 << 21;
-        // @formatter:on
 
         s0 += s12 * 666643;
         s1 += s12 * 470296;
@@ -933,7 +917,6 @@ public class CafeScalar {
         s4 += s12 * 136657;
         s5 -= s12 * 683901;
 
-        // @formatter:off
         carry0 = s0 >> 21;
         s1 += carry0;
         s0 -= carry0 << 21;
@@ -970,7 +953,6 @@ public class CafeScalar {
         carry11 = s11 >> 21;
         s12 = carry11;
         s11 -= carry11 << 21;
-        // @formatter:on
 
         s0 += s12 * 666643;
         s1 += s12 * 470296;
@@ -979,7 +961,6 @@ public class CafeScalar {
         s4 += s12 * 136657;
         s5 -= s12 * 683901;
 
-        // @formatter:off
         carry0 = s0 >> 21;
         s1 += carry0;
         s0 -= carry0 << 21;
@@ -1013,7 +994,6 @@ public class CafeScalar {
         carry10 = s10 >> 21;
         s11 += carry10;
         s10 -= carry10 << 21;
-        // @formatter:on
 
         byte[] result = new byte[SCALAR_BYTE_SIZE];
         result[0] = (byte) s0;

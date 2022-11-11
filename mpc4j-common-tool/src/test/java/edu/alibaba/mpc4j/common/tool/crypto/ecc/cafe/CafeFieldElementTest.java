@@ -95,7 +95,7 @@ public class CafeFieldElementTest {
     public void testSqrtRatioM1() {
         CafeFieldElement zero = CafeFieldElement.ZERO_INTS;
         CafeFieldElement one = CafeFieldElement.ONE_INTS;
-        CafeFieldElement i = Constants.SQRT_M1;
+        CafeFieldElement i = CafeConstants.SQRT_M1;
         // 2 is non-square mod p.
         CafeFieldElement two = one.add(one);
         // 4 is square mod p.

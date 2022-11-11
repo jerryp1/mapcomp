@@ -96,7 +96,6 @@ class CafeFieldElement {
         long carry9;
 
         // Remember: 2^255 congruent 19 modulo p
-        // @formatter:off
         carry9 = (h9 + (long) (1 << 24)) >> 25;
         h0 += carry9 * 19;
         h9 -= carry9 << 25;
@@ -128,7 +127,6 @@ class CafeFieldElement {
         carry8 = (h8 + (long) (1 << 25)) >> 26;
         h9 += carry8;
         h8 -= carry8 << 26;
-        // @formatter:on
 
         int[] h = new int[FIELD_INT_SIZE];
         h[0] = (int) h0;
@@ -239,7 +237,6 @@ class CafeFieldElement {
         // First add 19 * q then discard the bit 255
         h0 += 19 * q;
 
-        // @formatter:off
         carry0 = h0 >> 26;
         h1 += carry0;
         h0 -= carry0 << 26;
@@ -269,7 +266,6 @@ class CafeFieldElement {
         h8 -= carry8 << 26;
         carry9 = h9 >> 25;
         h9 -= carry9 << 25;
-        // @formatter:on
 
         // Step 2 (straight forward conversion):
         byte[] s = new byte[FIELD_BYTE_SIZE];
@@ -322,25 +318,25 @@ class CafeFieldElement {
      * <p>
      * Implemented as a conditional copy. Logic is inspired by the SUPERCOP implementation.
      * </p>
-     * This function is identical to CMOV(a, b, c):
+     * This function is identical to CMOV(a, that, c):
      * <p>
-     * If c is False, CMOV returns a, otherwise it returns b.
+     * If c is False, CMOV returns a, otherwise it returns that.
      * For constant-time implementations, this operation must run in time independent of the value of c.
      * </p>
      *
-     * @param b the other field element.
-     * @param c must be 0 or 1, otherwise results are undefined.
-     * @return a copy of this if $c == 0$, or a copy of val if $c == 1$.
+     * @param that the other field element.
+     * @param c    must be 0 or 1, otherwise results are undefined.
+     * @return a copy of this if $c == 0$, or a copy of that if $c == 1$.
      * @see <a href=
      * "https://github.com/floodyberry/supercop/blob/master/crypto_sign/ed25519/ref10/fe_cmov.c"
      * target="_top">SUPERCOP</a>
      */
-    public CafeFieldElement cmov(CafeFieldElement b, int c) {
+    public CafeFieldElement cmov(CafeFieldElement that, int c) {
         c = -c;
         int[] result = new int[FIELD_INT_SIZE];
         for (int i = 0; i < FIELD_INT_SIZE; i++) {
             result[i] = t[i];
-            int x = t[i] ^ b.t[i];
+            int x = t[i] ^ that.t[i];
             x &= c;
             result[i] ^= x;
         }
@@ -531,7 +527,7 @@ class CafeFieldElement {
         int f5_2 = 2 * t[5];
         int f7_2 = 2 * t[7];
         int f9_2 = 2 * t[9];
-        // @formatter:off
+
         long f0g0 = t[0] * (long) g[0];
         long f0g1 = t[0] * (long) g[1];
         long f0g2 = t[0] * (long) g[2];
@@ -632,7 +628,6 @@ class CafeFieldElement {
         long f9g7_38 = f9_2 * (long) g7_19;
         long f9g8_19 = t[9] * (long) g8_19;
         long f9g9_38 = f9_2 * (long) g9_19;
-        // @formatter:on
 
         /*
          * Remember: 2^255 congruent 19 modulo p. h = h0 * 2^0 + h1 * 2^26 + h2 *
@@ -646,7 +641,6 @@ class CafeFieldElement {
          * f2 * 2^51 * g8 * 2^204 = f2 * g8 * 2^255 congruent 19 * f2 * g8 * 2^0 modulo
          * p. and so on...
          */
-        // @formatter:off
         long h0 = f0g0 + f1g9_38 + f2g8_19 + f3g7_38 + f4g6_19 + f5g5_38 + f6g4_19 + f7g3_38 + f8g2_19 + f9g1_38;
         long h1 = f0g1 + f1g0 + f2g9_19 + f3g8_19 + f4g7_19 + f5g6_19 + f6g5_19 + f7g4_19 + f8g3_19 + f9g2_19;
         long h2 = f0g2 + f1g1_2 + f2g0 + f3g9_38 + f4g8_19 + f5g7_38 + f6g6_19 + f7g5_38 + f8g4_19 + f9g3_38;
@@ -657,7 +651,7 @@ class CafeFieldElement {
         long h7 = f0g7 + f1g6 + f2g5 + f3g4 + f4g3 + f5g2 + f6g1 + f7g0 + f8g9_19 + f9g8_19;
         long h8 = f0g8 + f1g7_2 + f2g6 + f3g5_2 + f4g4 + f5g3_2 + f6g2 + f7g1_2 + f8g0 + f9g9_38;
         long h9 = f0g9 + f1g8 + f2g7 + f3g6 + f4g5 + f5g4 + f6g3 + f7g2 + f8g1 + f9g0;
-        // @formatter:on
+
         long carry0;
         long carry1;
         long carry2;
@@ -676,7 +670,6 @@ class CafeFieldElement {
          * narrower ranges for h3, h5, h7, h9
          */
 
-        // @formatter:off
         carry0 = (h0 + (long) (1 << 25)) >> 26;
         h1 += carry0;
         h0 -= carry0 << 26;
@@ -743,7 +736,6 @@ class CafeFieldElement {
         h0 -= carry0 << 26;
         /* |h0| <= 2^25; from now on fits into int32 unchanged */
         /* |h1| <= 1.01*2^24 */
-        // @formatter:on
 
         int[] h = new int[FIELD_INT_SIZE];
         h[0] = (int) h0;
@@ -806,7 +798,7 @@ class CafeFieldElement {
         int f8_19 = 19 * f8;
         // 1.959375*2^30
         int f9_38 = 38 * f9;
-        // @formatter:off
+
         long f0f0 = f0 * (long) f0;
         long f0f1_2 = f0_2 * (long) f1;
         long f0f2_2 = f0_2 * (long) f2;
@@ -862,14 +854,12 @@ class CafeFieldElement {
         long f8f8_19 = f8 * (long) f8_19;
         long f8f9_38 = f8 * (long) f9_38;
         long f9f9_38 = f9 * (long) f9_38;
-        // @formatter:on
 
         /*
-         * Same procedure as in multiply, but this time we have a higher symmetry
-         * leading to less summands. e.g. f1f9_76 really stands for f1 * 2^26 * f9 *
-         * 2^230 + f9 * 2^230 + f1 * 2^26 congruent 2 * 2 * 19 * f1 * f9 2^0 modulo p.
+         * Same procedure as in multiply, but this time we have a higher symmetry leading to less summands. e.g.
+         * f1f9_76 really stands for f1 * 2^26 * f9 * 2^230 + f9 * 2^230 + f1 * 2^26 congruent 2 * 2 * 19 * f1 * f9 2^0
+         * modulo p.
          */
-        // @formatter:off
         long h0 = f0f0 + f1f9_76 + f2f8_38 + f3f7_76 + f4f6_38 + f5f5_38;
         long h1 = f0f1_2 + f2f9_38 + f3f8_38 + f4f7_38 + f5f6_38;
         long h2 = f0f2_2 + f1f1_2 + f3f9_76 + f4f8_38 + f5f7_76 + f6f6_19;
@@ -880,7 +870,7 @@ class CafeFieldElement {
         long h7 = f0f7_2 + f1f6_2 + f2f5_2 + f3f4_2 + f8f9_38;
         long h8 = f0f8_2 + f1f7_4 + f2f6_2 + f3f5_4 + f4f4 + f9f9_38;
         long h9 = f0f9_2 + f1f8_2 + f2f7_2 + f3f6_2 + f4f5_2;
-        // @formatter:on
+
         long carry0;
         long carry1;
         long carry2;
@@ -892,7 +882,6 @@ class CafeFieldElement {
         long carry8;
         long carry9;
 
-        // @formatter:off
         carry0 = (h0 + (long) (1 << 25)) >> 26;
         h1 += carry0;
         h0 -= carry0 << 26;
@@ -935,7 +924,6 @@ class CafeFieldElement {
         carry0 = (h0 + (long) (1 << 25)) >> 26;
         h1 += carry0;
         h0 -= carry0 << 26;
-        // @formatter:on
 
         int[] h = new int[FIELD_INT_SIZE];
         h[0] = (int) h0;
@@ -1000,7 +988,7 @@ class CafeFieldElement {
         int f8_19 = 19 * f8;
         // 1.959375*2^30
         int f9_38 = 38 * f9;
-        // @formatter:off
+
         long f0f0 = f0 * (long) f0;
         long f0f1_2 = f0_2 * (long) f1;
         long f0f2_2 = f0_2 * (long) f2;
@@ -1066,7 +1054,7 @@ class CafeFieldElement {
         long h7 = f0f7_2 + f1f6_2 + f2f5_2 + f3f4_2 + f8f9_38;
         long h8 = f0f8_2 + f1f7_4 + f2f6_2 + f3f5_4 + f4f4 + f9f9_38;
         long h9 = f0f9_2 + f1f8_2 + f2f7_2 + f3f6_2 + f4f5_2;
-        // @formatter:on
+
         long carry0;
         long carry1;
         long carry2;
@@ -1089,7 +1077,6 @@ class CafeFieldElement {
         h8 += h8;
         h9 += h9;
 
-        // @formatter:off
         carry0 = (h0 + (long) (1 << 25)) >> 26;
         h1 += carry0;
         h0 -= carry0 << 26;
@@ -1132,7 +1119,6 @@ class CafeFieldElement {
         carry0 = (h0 + (long) (1 << 25)) >> 26;
         h1 += carry0;
         h0 -= carry0 << 26;
-        // @formatter:on
 
         int[] h = new int[FIELD_INT_SIZE];
         h[0] = (int) h0;
@@ -1470,9 +1456,9 @@ class CafeFieldElement {
         CafeFieldElement uNeg = u.neg();
         int correctSignSqrt = check.cequals(u);
         int flippedSignSqrt = check.cequals(uNeg);
-        int flippedSignSqrtM1 = check.cequals(uNeg.mul(Constants.SQRT_M1));
+        int flippedSignSqrtM1 = check.cequals(uNeg.mul(CafeConstants.SQRT_M1));
 
-        CafeFieldElement rPrime = r.mul(Constants.SQRT_M1);
+        CafeFieldElement rPrime = r.mul(CafeConstants.SQRT_M1);
         r = r.cmov(rPrime, flippedSignSqrt | flippedSignSqrtM1);
 
         // Choose the non-negative square root.

@@ -82,12 +82,12 @@ public class CafeEdwardsPoint {
     /**
      * Constant-time selection between two EdwardsPoints.
      *
-     * @param b the other point.
-     * @param c must be 0 or 1, otherwise results are undefined.
-     * @return a copy of this if $c == 0$, or a copy of b if $c == 1$.
+     * @param that the other point.
+     * @param c    must be 0 or 1, otherwise results are undefined.
+     * @return a copy of this if $c == 0$, or a copy of that if $c == 1$.
      */
-    public CafeEdwardsPoint cmove(CafeEdwardsPoint b, int c) {
-        return new CafeEdwardsPoint(x.cmov(b.x, c), y.cmov(b.y, c), z.cmov(b.z, c), t.cmov(b.t, c));
+    public CafeEdwardsPoint cmove(CafeEdwardsPoint that, int c) {
+        return new CafeEdwardsPoint(x.cmov(that.x, c), y.cmov(that.y, c), z.cmov(that.z, c), t.cmov(that.t, c));
     }
 
     /**
@@ -118,8 +118,8 @@ public class CafeEdwardsPoint {
      *
      * @return projective coordinates.
      */
-    ProjectivePoint toProjective() {
-        return new ProjectivePoint(x, y, z);
+    CafeProjectivePoint toProjective() {
+        return new CafeProjectivePoint(x, y, z);
     }
 
     /**
@@ -127,9 +127,9 @@ public class CafeEdwardsPoint {
      *
      * @return projective Niels point.
      */
-    ProjectiveNielsPoint toProjectiveNiels() {
+    CafeProjectiveNielsPoint toProjectiveNiels() {
         // (y + x, y - x, z, 2d * x * y)
-        return new ProjectiveNielsPoint(y.add(x), y.sub(x), z, t.mul(Constants.EDWARDS_2D));
+        return new CafeProjectiveNielsPoint(y.add(x), y.sub(x), z, t.mul(CafeConstants.EDWARDS_2D));
     }
 
     /**
@@ -144,7 +144,7 @@ public class CafeEdwardsPoint {
         // y = y * (1 / z)
         CafeFieldElement y = this.y.mul(recip);
         // 2d * x * y
-        CafeFieldElement xy2d = x.mul(y).mul(Constants.EDWARDS_2D);
+        CafeFieldElement xy2d = x.mul(y).mul(CafeConstants.EDWARDS_2D);
         // y + x, y - x, 2d * x * y
         return new CafeAffineNielsPoint(y.add(x), y.sub(x), xy2d);
     }
@@ -165,15 +165,15 @@ public class CafeEdwardsPoint {
      * @param q the point to add to this one, in projective "Niels coordinates".
      * @return $P + Q$.
      */
-    CompletedPoint add(ProjectiveNielsPoint q) {
+    CafeCompletedPoint add(CafeProjectiveNielsPoint q) {
         CafeFieldElement yAddX = y.add(x);
         CafeFieldElement ySubX = y.sub(x);
-        CafeFieldElement pp = yAddX.mul(q.YPlusX);
-        CafeFieldElement mm = ySubX.mul(q.YMinusX);
-        CafeFieldElement tt2d = t.mul(q.T2D);
-        CafeFieldElement zz = z.mul(q.Z);
+        CafeFieldElement pp = yAddX.mul(q.yAddX);
+        CafeFieldElement mm = ySubX.mul(q.ySubX);
+        CafeFieldElement tt2d = t.mul(q.t2d);
+        CafeFieldElement zz = z.mul(q.z);
         CafeFieldElement zz2 = zz.add(zz);
-        return new CompletedPoint(pp.sub(mm), pp.add(mm), zz2.add(tt2d), zz2.sub(tt2d));
+        return new CafeCompletedPoint(pp.sub(mm), pp.add(mm), zz2.add(tt2d), zz2.sub(tt2d));
     }
 
     /**
@@ -182,14 +182,14 @@ public class CafeEdwardsPoint {
      * @param q the point to add to this one, in affine "Niels coordinates".
      * @return $P + Q$.
      */
-    CompletedPoint add(CafeAffineNielsPoint q) {
+    CafeCompletedPoint add(CafeAffineNielsPoint q) {
         CafeFieldElement YPlusX = y.add(x);
         CafeFieldElement YMinusX = y.sub(x);
         CafeFieldElement PP = YPlusX.mul(q.yAddX);
         CafeFieldElement MM = YMinusX.mul(q.ySubX);
         CafeFieldElement Txy2D = t.mul(q.xy2d);
         CafeFieldElement Z2 = z.add(z);
-        return new CompletedPoint(PP.sub(MM), PP.add(MM), Z2.add(Txy2D), Z2.sub(Txy2D));
+        return new CafeCompletedPoint(PP.sub(MM), PP.add(MM), Z2.add(Txy2D), Z2.sub(Txy2D));
     }
 
     /**
@@ -208,15 +208,15 @@ public class CafeEdwardsPoint {
      * @param q the point to subtract from this one, in projective "Niels coordinates".
      * @return $P - Q$.
      */
-    CompletedPoint sub(ProjectiveNielsPoint q) {
+    CafeCompletedPoint sub(CafeProjectiveNielsPoint q) {
         CafeFieldElement yAddX = y.add(x);
         CafeFieldElement ySubX = y.sub(x);
-        CafeFieldElement pm = yAddX.mul(q.YMinusX);
-        CafeFieldElement mp = ySubX.mul(q.YPlusX);
-        CafeFieldElement tt2d = t.mul(q.T2D);
-        CafeFieldElement zz = z.mul(q.Z);
+        CafeFieldElement pm = yAddX.mul(q.ySubX);
+        CafeFieldElement mp = ySubX.mul(q.yAddX);
+        CafeFieldElement tt2d = t.mul(q.t2d);
+        CafeFieldElement zz = z.mul(q.z);
         CafeFieldElement zz2 = zz.add(zz);
-        return new CompletedPoint(pm.sub(mp), pm.add(mp), zz2.sub(tt2d), zz2.add(tt2d));
+        return new CafeCompletedPoint(pm.sub(mp), pm.add(mp), zz2.sub(tt2d), zz2.add(tt2d));
     }
 
     /**
@@ -225,14 +225,14 @@ public class CafeEdwardsPoint {
      * @param q the point to subtract from this one, in affine "Niels coordinates".
      * @return $P - Q$.
      */
-    CompletedPoint sub(CafeAffineNielsPoint q) {
+    CafeCompletedPoint sub(CafeAffineNielsPoint q) {
         CafeFieldElement yAddX = y.add(x);
         CafeFieldElement ySubX = y.sub(x);
         CafeFieldElement pm = yAddX.mul(q.ySubX);
         CafeFieldElement mp = ySubX.mul(q.yAddX);
         CafeFieldElement txy2d = t.mul(q.xy2d);
         CafeFieldElement z2 = z.add(z);
-        return new CompletedPoint(pm.sub(mp), pm.add(mp), z2.sub(txy2d), z2.add(txy2d));
+        return new CafeCompletedPoint(pm.sub(mp), pm.add(mp), z2.sub(txy2d), z2.add(txy2d));
     }
 
     /**
@@ -261,7 +261,7 @@ public class CafeEdwardsPoint {
      */
     public CafeEdwardsPoint mul(final CafeScalar s) {
         // Construct a lookup table of [P,2P,3P,4P,5P,6P,7P,8P]
-        final ProjectiveNielsPoint.LookupTable lookupTable = ProjectiveNielsPoint.buildLookupTable(this);
+        final CafeProjectiveNielsPoint.LookupTable lookupTable = CafeProjectiveNielsPoint.buildLookupTable(this);
 
         /* Compute
          *
@@ -274,11 +274,9 @@ public class CafeEdwardsPoint {
         /*
          * Compute s*P as
          *
-         * @formatter:off
          *    s*P = P*(s_0 +   s_1*16^1 +   s_2*16^2 + ... +   s_63*16^63)
          *    s*P =  P*s_0 + P*s_1*16^1 + P*s_2*16^2 + ... + P*s_63*16^63
          *    s*P = P*s_0 + 16*(P*s_1 + 16*(P*s_2 + 16*( ... + P*s_63)...))
-         * @formatter:on
          *
          * We sum right-to-left.
          */
@@ -303,8 +301,8 @@ public class CafeEdwardsPoint {
         final byte[] aNaf = a.nonAdjacentForm();
         final byte[] bNaf = b.nonAdjacentForm();
 
-        ProjectiveNielsPoint.NafLookupTable tableA = ProjectiveNielsPoint.buildNafLookupTable(pointA);
-        CafeAffineNielsPoint.NafLookupTable tableB = Constants.AFFINE_ODD_MULTIPLES_OF_BASEPOINT;
+        CafeProjectiveNielsPoint.NafLookupTable tableA = CafeProjectiveNielsPoint.buildNafLookupTable(pointA);
+        CafeAffineNielsPoint.NafLookupTable tableB = CafeConstants.AFFINE_ODD_MULTIPLES_OF_BASE_POINT;
 
         int i;
         for (i = 255; i >= 0; --i) {
@@ -313,9 +311,9 @@ public class CafeEdwardsPoint {
             }
         }
 
-        ProjectivePoint r = CafeEdwardsPoint.IDENTITY.toProjective();
+        CafeProjectivePoint r = CafeEdwardsPoint.IDENTITY.toProjective();
         for (; i >= 0; --i) {
-            CompletedPoint t = r.dbl();
+            CafeCompletedPoint t = r.dbl();
 
             if (aNaf[i] > 0) {
                 t = t.toExtended().add(tableA.select(aNaf[i]));
@@ -354,7 +352,7 @@ public class CafeEdwardsPoint {
         if (k <= 0) {
             throw new IllegalArgumentException("Exponent must be positive and non-zero");
         }
-        ProjectivePoint s = toProjective();
+        CafeProjectivePoint s = toProjective();
         for (int i = 0; i < k - 1; i++) {
             s = s.dbl().toProjective();
         }
@@ -386,7 +384,7 @@ public class CafeEdwardsPoint {
      * @return true if this point has zero torsion component and is in the prime-order subgroup, false otherwise.
      */
     public boolean isTorsionFree() {
-        return this.mul(Constants.BASEPOINT_ORDER).isIdentity();
+        return this.mul(CafeConstants.BASE_POINT_ORDER).isIdentity();
     }
 
     @Override

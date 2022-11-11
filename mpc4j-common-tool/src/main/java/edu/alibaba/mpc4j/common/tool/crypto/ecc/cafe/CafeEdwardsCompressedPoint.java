@@ -26,7 +26,7 @@ import java.util.Arrays;
  */
 public class CafeEdwardsCompressedPoint {
     /**
-     * 压缩表示的字节长度
+     * The byte size in compressed form
      */
     static final int COMPRESSED_BYTE_SIZE = 32;
     /**
@@ -54,7 +54,7 @@ public class CafeEdwardsCompressedPoint {
         CafeFieldElement u = yy.sub(CafeFieldElement.ONE_INTS);
 
         // v = d * y^2+1
-        CafeFieldElement v = yy.mul(Constants.EDWARDS_D).add(CafeFieldElement.ONE_INTS);
+        CafeFieldElement v = yy.mul(CafeConstants.EDWARDS_D).add(CafeFieldElement.ONE_INTS);
 
         CafeFieldElement.SqrtRatioM1Result sqrt = CafeFieldElement.sqrtRatioM1(u, v);
         if (sqrt.wasSquare != 1) {

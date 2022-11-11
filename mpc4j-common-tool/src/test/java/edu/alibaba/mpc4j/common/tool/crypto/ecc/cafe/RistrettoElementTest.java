@@ -99,7 +99,7 @@ public class RistrettoElementTest {
     @Test
     public void generatorDecompressionCompression() throws InvalidEncodingException {
         RistrettoElement B = RISTRETTO_GENERATOR_COMPRESSED.decompress();
-        assertThat(B, is(Constants.RISTRETTO_GENERATOR));
+        assertThat(B, is(CafeConstants.RISTRETTO_GENERATOR));
         assertThat(B.compress(), is(RISTRETTO_GENERATOR_COMPRESSED));
     }
 
@@ -107,17 +107,17 @@ public class RistrettoElementTest {
     public void generatorSerializeDeserialize() throws IOException, ClassNotFoundException {
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
         ObjectOutputStream oos = new ObjectOutputStream(baos);
-        oos.writeObject(Constants.RISTRETTO_GENERATOR);
+        oos.writeObject(CafeConstants.RISTRETTO_GENERATOR);
         oos.close();
         ByteArrayInputStream bais = new ByteArrayInputStream(baos.toByteArray());
         ObjectInputStream ois = new ObjectInputStream(bais);
         RistrettoElement B = (RistrettoElement) ois.readObject();
-        assertThat(B, is(Constants.RISTRETTO_GENERATOR));
+        assertThat(B, is(CafeConstants.RISTRETTO_GENERATOR));
     }
 
     @Test
     public void equalityRequiresSameClass() {
-        RistrettoElement B = Constants.RISTRETTO_GENERATOR;
+        RistrettoElement B = CafeConstants.RISTRETTO_GENERATOR;
         CafeEdwardsPoint P = B.repr;
         assertFalse(B.equals(P));
     }
@@ -129,15 +129,15 @@ public class RistrettoElementTest {
             CompressedRistretto compressed = new CompressedRistretto(Hex.decode(GENERATOR_MULTIPLES[i]));
             assertThat(P.compress(), is(compressed));
             assertThat(compressed.decompress(), is(P));
-            P = P.add(Constants.RISTRETTO_GENERATOR);
+            P = P.add(CafeConstants.RISTRETTO_GENERATOR);
         }
     }
 
     @Test
     public void generatorMultiplesSubtract() throws InvalidEncodingException {
-        RistrettoElement P = Constants.RISTRETTO_GENERATOR.dbl().dbl().dbl().dbl();
+        RistrettoElement P = CafeConstants.RISTRETTO_GENERATOR.dbl().dbl().dbl().dbl();
         for (int i = GENERATOR_MULTIPLES.length - 1; i >= 0; i--) {
-            P = P.subtract(Constants.RISTRETTO_GENERATOR);
+            P = P.subtract(CafeConstants.RISTRETTO_GENERATOR);
             CompressedRistretto compressed = new CompressedRistretto(Hex.decode(GENERATOR_MULTIPLES[i]));
             assertThat(P.compress(), is(compressed));
             assertThat(compressed.decompress(), is(P));
@@ -146,14 +146,14 @@ public class RistrettoElementTest {
 
     @Test
     public void generatorNegateVsIdentityMinusGenerator() {
-        assertThat(Constants.RISTRETTO_GENERATOR.negate(),
-                is(RistrettoElement.IDENTITY.subtract(Constants.RISTRETTO_GENERATOR)));
+        assertThat(CafeConstants.RISTRETTO_GENERATOR.negate(),
+                is(RistrettoElement.IDENTITY.subtract(CafeConstants.RISTRETTO_GENERATOR)));
     }
 
     @Test
     public void generatorDblVsGenerator2() throws InvalidEncodingException {
         RistrettoElement expected = new CompressedRistretto(Hex.decode(GENERATOR_MULTIPLES[2])).decompress();
-        assertThat(Constants.RISTRETTO_GENERATOR.dbl(), is(expected));
+        assertThat(CafeConstants.RISTRETTO_GENERATOR.dbl(), is(expected));
     }
 
     @Test
@@ -162,7 +162,7 @@ public class RistrettoElementTest {
         s[0] = 12;
         CafeScalar twelve = new CafeScalar(s);
         RistrettoElement expected = new CompressedRistretto(Hex.decode(GENERATOR_MULTIPLES[12])).decompress();
-        assertThat(Constants.RISTRETTO_GENERATOR.multiply(twelve), is(expected));
+        assertThat(CafeConstants.RISTRETTO_GENERATOR.multiply(twelve), is(expected));
     }
 
     @Test

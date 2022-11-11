@@ -16,11 +16,11 @@ package edu.alibaba.mpc4j.common.tool.crypto.ecc.cafe;
  */
 public class CafeEdwardsPrecomputeTable {
     /**
-     * 预计算查找表大小
+     * precompute lookup table size
      */
     private static final int PRECOMPUTE_TABLE_SIZE = 32;
     /**
-     * 查找表，每个查找表包含16个元素
+     * lookup table, each contains 16 points.
      */
     private final CafeAffineNielsPoint.LookupTable[] tables;
 
@@ -51,13 +51,13 @@ public class CafeEdwardsPrecomputeTable {
         final byte[] e = s.toRadix16();
 
         CafeEdwardsPoint h = CafeEdwardsPoint.IDENTITY;
-        for (i = 1; i < 64; i += 2) {
+        for (i = 1; i < PRECOMPUTE_TABLE_SIZE * 2; i += 2) {
             h = h.add(tables[i / 2].select(e[i])).toExtended();
         }
 
         h = h.pow2Mul(4);
 
-        for (i = 0; i < 64; i += 2) {
+        for (i = 0; i < PRECOMPUTE_TABLE_SIZE * 2; i += 2) {
             h = h.add(tables[i / 2].select(e[i])).toExtended();
         }
 

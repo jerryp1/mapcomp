@@ -96,64 +96,64 @@ public class CafeEdwardsPointTest {
         negBaseBytes[CafeEdwardsCompressedPoint.COMPRESSED_BYTE_SIZE - 1] |= 1 << 7;
         CafeEdwardsPoint negBasePoint = new CafeEdwardsCompressedPoint(negBaseBytes).decompress();
         // Test projective coordinates exactly since we know they should only differ by a flipped sign.
-        Assert.assertEquals(Constants.ED25519_BASE_POINT.x.neg(), negBasePoint.x);
-        Assert.assertEquals(Constants.ED25519_BASE_POINT.y, negBasePoint.y);
-        Assert.assertEquals(Constants.ED25519_BASE_POINT.z, negBasePoint.z);
-        Assert.assertEquals(Constants.ED25519_BASE_POINT.t.neg(), negBasePoint.t);
+        Assert.assertEquals(CafeConstants.ED25519_BASE_POINT.x.neg(), negBasePoint.x);
+        Assert.assertEquals(CafeConstants.ED25519_BASE_POINT.y, negBasePoint.y);
+        Assert.assertEquals(CafeConstants.ED25519_BASE_POINT.z, negBasePoint.z);
+        Assert.assertEquals(CafeConstants.ED25519_BASE_POINT.t.neg(), negBasePoint.t);
     }
 
     @Test
     public void testCmov() {
-        Assert.assertEquals(Constants.ED25519_BASE_POINT, Constants.ED25519_BASE_POINT.cmove(CafeEdwardsPoint.IDENTITY, 0));
-        Assert.assertEquals(CafeEdwardsPoint.IDENTITY, Constants.ED25519_BASE_POINT.cmove(CafeEdwardsPoint.IDENTITY, 1));
-        Assert.assertEquals(CafeEdwardsPoint.IDENTITY, CafeEdwardsPoint.IDENTITY.cmove(Constants.ED25519_BASE_POINT, 0));
-        Assert.assertEquals(Constants.ED25519_BASE_POINT, CafeEdwardsPoint.IDENTITY.cmove(Constants.ED25519_BASE_POINT, 1));
+        Assert.assertEquals(CafeConstants.ED25519_BASE_POINT, CafeConstants.ED25519_BASE_POINT.cmove(CafeEdwardsPoint.IDENTITY, 0));
+        Assert.assertEquals(CafeEdwardsPoint.IDENTITY, CafeConstants.ED25519_BASE_POINT.cmove(CafeEdwardsPoint.IDENTITY, 1));
+        Assert.assertEquals(CafeEdwardsPoint.IDENTITY, CafeEdwardsPoint.IDENTITY.cmove(CafeConstants.ED25519_BASE_POINT, 0));
+        Assert.assertEquals(CafeConstants.ED25519_BASE_POINT, CafeEdwardsPoint.IDENTITY.cmove(CafeConstants.ED25519_BASE_POINT, 1));
     }
 
     @Test
     public void testAdd() {
-        CafeEdwardsPoint baseMul2 = Constants.ED25519_BASE_POINT.add(Constants.ED25519_BASE_POINT);
+        CafeEdwardsPoint baseMul2 = CafeConstants.ED25519_BASE_POINT.add(CafeConstants.ED25519_BASE_POINT);
         Assert.assertEquals(BASE_MUL_2_COMPRESSED, baseMul2.compress());
     }
 
     @Test
     public void testProjectiveNeilsAdd() {
-        CafeEdwardsPoint baseMul2 = Constants.ED25519_BASE_POINT
-            .add(Constants.ED25519_BASE_POINT.toProjectiveNiels())
+        CafeEdwardsPoint baseMul2 = CafeConstants.ED25519_BASE_POINT
+            .add(CafeConstants.ED25519_BASE_POINT.toProjectiveNiels())
             .toExtended();
         Assert.assertEquals(CafeEdwardsPointTest.BASE_MUL_2_COMPRESSED, baseMul2.compress());
     }
 
     @Test
     public void testAffineNielsAdd() {
-        CafeEdwardsPoint baseMul2 = Constants.ED25519_BASE_POINT
-            .add(Constants.ED25519_BASE_POINT.toAffineNiels())
+        CafeEdwardsPoint baseMul2 = CafeConstants.ED25519_BASE_POINT
+            .add(CafeConstants.ED25519_BASE_POINT.toAffineNiels())
             .toExtended();
         Assert.assertEquals(CafeEdwardsPointTest.BASE_MUL_2_COMPRESSED, baseMul2.compress());
     }
 
     @Test
     public void testDbl() {
-        CafeEdwardsPoint baseMul2 = Constants.ED25519_BASE_POINT.dbl();
+        CafeEdwardsPoint baseMul2 = CafeConstants.ED25519_BASE_POINT.dbl();
         Assert.assertEquals(BASE_MUL_2_COMPRESSED, baseMul2.compress());
     }
 
     @Test
     public void testSub() {
-        CafeEdwardsPoint baseMul2 = Constants.ED25519_BASE_POINT.dbl();
-        Assert.assertEquals(Constants.ED25519_BASE_POINT, baseMul2.sub(Constants.ED25519_BASE_POINT));
+        CafeEdwardsPoint baseMul2 = CafeConstants.ED25519_BASE_POINT.dbl();
+        Assert.assertEquals(CafeConstants.ED25519_BASE_POINT, baseMul2.sub(CafeConstants.ED25519_BASE_POINT));
     }
 
     @Test
     public void testNeg() {
         Assert.assertEquals(
-            Constants.ED25519_BASE_POINT.neg(), CafeEdwardsPoint.IDENTITY.sub(Constants.ED25519_BASE_POINT)
+            CafeConstants.ED25519_BASE_POINT.neg(), CafeEdwardsPoint.IDENTITY.sub(CafeConstants.ED25519_BASE_POINT)
         );
     }
 
     @Test
     public void testMul() {
-        Assert.assertEquals(A_MUL_BASE, Constants.ED25519_BASE_POINT.mul(A_SCALAR).compress());
+        Assert.assertEquals(A_MUL_BASE, CafeConstants.ED25519_BASE_POINT.mul(A_SCALAR).compress());
     }
 
     @Test
@@ -170,7 +170,7 @@ public class CafeEdwardsPointTest {
         CafeEdwardsPoint pointA = new CafeEdwardsCompressedPoint(Hex.decode(
             "d4cf8595571830644bd14af416954d09ab7159751ad9e0f7a6cbd92379e71a66"
         )).decompress();
-        CafeEdwardsPoint basePoint = Constants.ED25519_BASE_POINT;
+        CafeEdwardsPoint basePoint = CafeConstants.ED25519_BASE_POINT;
         CafeEdwardsPoint identityPoint = CafeEdwardsPoint.IDENTITY;
 
         // 0 * I + 0 * B = I
@@ -203,19 +203,19 @@ public class CafeEdwardsPointTest {
 
     @Test
     public void testPow2Mul() {
-        Assert.assertEquals(BASE_MUL_16_COMPRESSED.decompress(), Constants.ED25519_BASE_POINT.pow2Mul(4));
+        Assert.assertEquals(BASE_MUL_16_COMPRESSED.decompress(), CafeConstants.ED25519_BASE_POINT.pow2Mul(4));
     }
 
     @Test
     public void testIsIdentity() {
         Assert.assertTrue(CafeEdwardsPoint.IDENTITY.isIdentity());
-        Assert.assertFalse(Constants.ED25519_BASE_POINT.isIdentity());
+        Assert.assertFalse(CafeConstants.ED25519_BASE_POINT.isIdentity());
     }
 
     @Test
     public void testHashSmallOrder() {
         // The base point has large prime order
-        Assert.assertFalse(Constants.ED25519_BASE_POINT.hasSmallOrder());
+        Assert.assertFalse(CafeConstants.ED25519_BASE_POINT.hasSmallOrder());
         // EIGHT_TORSION_COMPRESSED has all points of small order.
         for (CafeEdwardsCompressedPoint torsionCompressedPoint : EIGHT_TORSION_COMPRESSED) {
             Assert.assertTrue(torsionCompressedPoint.decompress().hasSmallOrder());
@@ -225,15 +225,15 @@ public class CafeEdwardsPointTest {
     @Test
     public void isTorsionFree() {
         // The base point is torsion-free.
-        Assert.assertTrue(Constants.ED25519_BASE_POINT.isTorsionFree());
+        Assert.assertTrue(CafeConstants.ED25519_BASE_POINT.isTorsionFree());
 
         // Adding the identity leaves it torsion-free.
-        Assert.assertTrue(Constants.ED25519_BASE_POINT.add(CafeEdwardsPoint.IDENTITY).isTorsionFree());
+        Assert.assertTrue(CafeConstants.ED25519_BASE_POINT.add(CafeEdwardsPoint.IDENTITY).isTorsionFree());
 
         // Adding any of the 8-torsion points to it (except the identity) affects the result.
         Assert.assertEquals(EIGHT_TORSION_COMPRESSED[0], CafeEdwardsPoint.IDENTITY.compress());
         for (int i = 1; i < EIGHT_TORSION_COMPRESSED.length; i++) {
-            CafeEdwardsPoint withTorsion = Constants.ED25519_BASE_POINT.add(EIGHT_TORSION_COMPRESSED[i].decompress());
+            CafeEdwardsPoint withTorsion = CafeConstants.ED25519_BASE_POINT.add(EIGHT_TORSION_COMPRESSED[i].decompress());
             Assert.assertFalse(withTorsion.isTorsionFree());
         }
     }

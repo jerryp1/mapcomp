@@ -77,7 +77,7 @@ public class CompressedRistretto implements Serializable {
         final CafeFieldElement u2 = CafeFieldElement.ONE_INTS.add(ss);
         final CafeFieldElement u2Sqr = u2.sqr();
 
-        final CafeFieldElement v = Constants.NEG_EDWARDS_D.mul(u1.sqr()).sub(u2Sqr);
+        final CafeFieldElement v = CafeConstants.NEG_EDWARDS_D.mul(u1.sqr()).sub(u2Sqr);
 
         final CafeFieldElement.SqrtRatioM1Result invsqrt = CafeFieldElement.sqrtRatioM1(CafeFieldElement.ONE_INTS, v.mul(u2Sqr));
 

@@ -60,10 +60,10 @@ public class RistrettoElement implements Serializable {
      * The function MAP(t) from section 3.2.4 of the ristretto255 ID.
      */
     static RistrettoElement map(final CafeFieldElement t) {
-        final CafeFieldElement r = t.sqr().mul(Constants.SQRT_M1);
-        final CafeFieldElement u = r.add(CafeFieldElement.ONE_INTS).mul(Constants.ONE_MINUS_D_SQ);
-        final CafeFieldElement v = CafeFieldElement.MINUS_ONE_INTS.sub(r.mul(Constants.EDWARDS_D))
-                .mul(r.add(Constants.EDWARDS_D));
+        final CafeFieldElement r = t.sqr().mul(CafeConstants.SQRT_M1);
+        final CafeFieldElement u = r.add(CafeFieldElement.ONE_INTS).mul(CafeConstants.ONE_MINUS_D_SQ);
+        final CafeFieldElement v = CafeFieldElement.MINUS_ONE_INTS.sub(r.mul(CafeConstants.EDWARDS_D))
+                .mul(r.add(CafeConstants.EDWARDS_D));
 
         final CafeFieldElement.SqrtRatioM1Result sqrt = CafeFieldElement.sqrtRatioM1(u, v);
         CafeFieldElement s = sqrt.result;
@@ -72,11 +72,11 @@ public class RistrettoElement implements Serializable {
         s = sPrime.cmov(s, sqrt.wasSquare);
         final CafeFieldElement c = r.cmov(CafeFieldElement.MINUS_ONE_INTS, sqrt.wasSquare);
 
-        final CafeFieldElement N = c.mul(r.sub(CafeFieldElement.ONE_INTS)).mul(Constants.D_MINUS_ONE_SQ).sub(v);
+        final CafeFieldElement N = c.mul(r.sub(CafeFieldElement.ONE_INTS)).mul(CafeConstants.D_MINUS_ONE_SQ).sub(v);
         final CafeFieldElement sSq = s.sqr();
 
         final CafeFieldElement w0 = s.add(s).mul(v);
-        final CafeFieldElement w1 = N.mul(Constants.SQRT_AD_MINUS_ONE);
+        final CafeFieldElement w1 = N.mul(CafeConstants.SQRT_AD_MINUS_ONE);
         final CafeFieldElement w2 = CafeFieldElement.ONE_INTS.sub(sSq);
         final CafeFieldElement w3 = CafeFieldElement.ONE_INTS.add(sSq);
 
@@ -132,9 +132,9 @@ public class RistrettoElement implements Serializable {
         final CafeFieldElement den2 = invsqrt.result.mul(u2);
         final CafeFieldElement zInv = den1.mul(den2).mul(this.repr.t);
 
-        final CafeFieldElement ix = this.repr.x.mul(Constants.SQRT_M1);
-        final CafeFieldElement iy = this.repr.y.mul(Constants.SQRT_M1);
-        final CafeFieldElement enchantedDenominator = den1.mul(Constants.INVSQRT_A_MINUS_D);
+        final CafeFieldElement ix = this.repr.x.mul(CafeConstants.SQRT_M1);
+        final CafeFieldElement iy = this.repr.y.mul(CafeConstants.SQRT_M1);
+        final CafeFieldElement enchantedDenominator = den1.mul(CafeConstants.INVSQRT_A_MINUS_D);
 
         final int rotate = this.repr.t.mul(zInv).isNegative();
 
