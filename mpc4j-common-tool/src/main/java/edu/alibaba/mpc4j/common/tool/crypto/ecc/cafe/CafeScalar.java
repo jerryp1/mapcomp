@@ -24,7 +24,7 @@ public class CafeScalar {
     /**
      * 幂指数的字节长度
      */
-    static final int SCALAR_BYTE_SIZE = 32;
+    public static final int BYTE_SIZE = 32;
     /**
      * 0
      */
@@ -52,7 +52,7 @@ public class CafeScalar {
      * @param s the input byte array.
      */
     CafeScalar(byte[] s) {
-        if (s.length != SCALAR_BYTE_SIZE || (((s[SCALAR_BYTE_SIZE - 1] >> Byte.SIZE - 1) & 0x01) != 0)) {
+        if (s.length != BYTE_SIZE || (((s[BYTE_SIZE - 1] >> Byte.SIZE - 1) & 0x01) != 0)) {
             throw new IllegalArgumentException("Invalid scalar representation:" + Hex.toHexString(s));
         }
         // Store a copy to prevent interior mutability
@@ -65,8 +65,8 @@ public class CafeScalar {
      * @param input the input byte array.
      */
     public static CafeScalar fromBytesModOrder(final byte[] input) {
-        if (input.length != SCALAR_BYTE_SIZE) {
-            throw new IllegalArgumentException("Input must by " + SCALAR_BYTE_SIZE + " bytes");
+        if (input.length != BYTE_SIZE) {
+            throw new IllegalArgumentException("Input must by " + BYTE_SIZE + " bytes");
         }
 
         return CafeScalar.reduce(input);
@@ -78,8 +78,8 @@ public class CafeScalar {
      * @param input the input byte array.
      */
     public static CafeScalar fromBytesModOrderWide(byte[] input) {
-        if (input.length != SCALAR_BYTE_SIZE * 2) {
-            throw new IllegalArgumentException("Input must by " + SCALAR_BYTE_SIZE * 2 + " bytes");
+        if (input.length != BYTE_SIZE * 2) {
+            throw new IllegalArgumentException("Input must by " + BYTE_SIZE * 2 + " bytes");
         }
 
         // s0,..., s22 have 21 bits, s23 has 29 bits
@@ -393,7 +393,7 @@ public class CafeScalar {
         s10 -= carry10 << 21;
 
         // s0, ..., s11 got 21 bits each.
-        byte[] result = new byte[SCALAR_BYTE_SIZE];
+        byte[] result = new byte[BYTE_SIZE];
         result[0] = (byte) s0;
         result[1] = (byte) (s0 >> 8);
         result[2] = (byte) ((s0 >> 16) | (s1 << 5));
@@ -451,7 +451,7 @@ public class CafeScalar {
      */
     public static CafeScalar fromBytes(byte[] input) {
         // Ensure that s < 2^255 by masking the high bit
-        input[CafeScalar.SCALAR_BYTE_SIZE - 1] &= 0x7f;
+        input[CafeScalar.BYTE_SIZE - 1] &= 0x7f;
         return new CafeScalar(input);
     }
 
@@ -995,7 +995,7 @@ public class CafeScalar {
         s11 += carry10;
         s10 -= carry10 << 21;
 
-        byte[] result = new byte[SCALAR_BYTE_SIZE];
+        byte[] result = new byte[BYTE_SIZE];
         result[0] = (byte) s0;
         result[1] = (byte) (s0 >> 8);
         result[2] = (byte) ((s0 >> 16) | (s1 << 5));
@@ -1037,10 +1037,10 @@ public class CafeScalar {
      * @return 64 bytes, each between -8 and 7.
      */
     byte[] toRadix16() {
-        final byte[] e = new byte[SCALAR_BYTE_SIZE * 2];
+        final byte[] e = new byte[BYTE_SIZE * 2];
         int i;
         // Radix 16 notation
-        for (i = 0; i < SCALAR_BYTE_SIZE; i++) {
+        for (i = 0; i < BYTE_SIZE; i++) {
             e[2 * i] = (byte) (s[i] & 15);
             e[2 * i + 1] = (byte) ((s[i] >> 4) & 15);
         }

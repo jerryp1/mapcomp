@@ -28,14 +28,14 @@ public class CafeEdwardsCompressedPoint {
     /**
      * The byte size in compressed form
      */
-    static final int COMPRESSED_BYTE_SIZE = 32;
+    static final int BYTE_SIZE = 32;
     /**
      * The encoded point.
      */
     private final byte[] data;
 
     public CafeEdwardsCompressedPoint(byte[] data) {
-        if (data.length != COMPRESSED_BYTE_SIZE) {
+        if (data.length != BYTE_SIZE) {
             throw new IllegalArgumentException("Invalid CompressedEdwardsY encoding");
         }
         this.data = data;

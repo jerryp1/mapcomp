@@ -74,32 +74,32 @@ public class CafeScalarTest {
 
     @Test
     public void testValid() {
-        byte[] s = new byte[CafeScalar.SCALAR_BYTE_SIZE];
-        s[CafeScalar.SCALAR_BYTE_SIZE - 1] = 0x7f;
+        byte[] s = new byte[CafeScalar.BYTE_SIZE];
+        s[CafeScalar.BYTE_SIZE - 1] = 0x7f;
         new CafeScalar(s);
     }
 
     @Test(expected = IllegalArgumentException.class)
     public void testInvalidHighestBit() {
-        byte[] s = new byte[CafeScalar.SCALAR_BYTE_SIZE];
+        byte[] s = new byte[CafeScalar.BYTE_SIZE];
         s[31] = (byte) 0x80;
         new CafeScalar(s);
     }
 
     @Test(expected = IllegalArgumentException.class)
     public void testInvalidShort() {
-        new CafeScalar(new byte[CafeScalar.SCALAR_BYTE_SIZE - 1]);
+        new CafeScalar(new byte[CafeScalar.BYTE_SIZE - 1]);
     }
 
     @Test(expected = IllegalArgumentException.class)
     public void testInvalidLong() {
-        new CafeScalar(new byte[CafeScalar.SCALAR_BYTE_SIZE + 1]);
+        new CafeScalar(new byte[CafeScalar.BYTE_SIZE + 1]);
     }
 
     @Test
     public void testDecodeImmutable() {
         // Create byte array representing a zero scalar
-        byte[] bytes = new byte[CafeScalar.SCALAR_BYTE_SIZE];
+        byte[] bytes = new byte[CafeScalar.BYTE_SIZE];
         // Create a scalar from bytes
         CafeScalar s = new CafeScalar(bytes);
         Assert.assertEquals(s, CafeScalar.ZERO);
@@ -112,7 +112,7 @@ public class CafeScalarTest {
     @Test
     public void testEncodeImmutable() {
         // Create a zero scalar
-        CafeScalar s = new CafeScalar(new byte[CafeScalar.SCALAR_BYTE_SIZE]);
+        CafeScalar s = new CafeScalar(new byte[CafeScalar.BYTE_SIZE]);
         Assert.assertEquals(s, CafeScalar.ZERO);
         // Grab the scalar as bytes
         byte[] bytes = s.encode();
@@ -153,8 +153,8 @@ public class CafeScalarTest {
          * = 28380414028753969466561515933501938171588560817147392552250411230663687203 (mod l)
          * Non-canonical because unreduced mod l
          */
-        final byte[] nonCanonicalBytesBecauseUnreduced = new byte[CafeScalar.SCALAR_BYTE_SIZE];
-        for (int i = 0; i < CafeScalar.SCALAR_BYTE_SIZE; i++) {
+        final byte[] nonCanonicalBytesBecauseUnreduced = new byte[CafeScalar.BYTE_SIZE];
+        for (int i = 0; i < CafeScalar.BYTE_SIZE; i++) {
             nonCanonicalBytesBecauseUnreduced[i] = 16;
         }
         CafeScalar.fromCanonicalBytes(nonCanonicalBytesBecauseUnreduced);
@@ -163,8 +163,8 @@ public class CafeScalarTest {
     @Test(expected = IllegalArgumentException.class)
     public void testNonCanonicalDecodingHighestBit() {
         // Encoding with high bit set, to check that the parser isn't pre-masking the high bit
-        final byte[] nonCanonicalBytesBecauseHighestBit = new byte[CafeScalar.SCALAR_BYTE_SIZE];
-        nonCanonicalBytesBecauseHighestBit[CafeScalar.SCALAR_BYTE_SIZE - 1] = (byte) 0x80;
+        final byte[] nonCanonicalBytesBecauseHighestBit = new byte[CafeScalar.BYTE_SIZE];
+        nonCanonicalBytesBecauseHighestBit[CafeScalar.BYTE_SIZE - 1] = (byte) 0x80;
         CafeScalar.fromCanonicalBytes(nonCanonicalBytesBecauseHighestBit);
     }
 
@@ -257,12 +257,12 @@ public class CafeScalarTest {
 
     @Test(expected = IllegalArgumentException.class)
     public void testFromBytesInvalidShortModOrderWide() {
-        CafeScalar.fromBytesModOrderWide(new byte[CafeScalar.SCALAR_BYTE_SIZE * 2 - 1]);
+        CafeScalar.fromBytesModOrderWide(new byte[CafeScalar.BYTE_SIZE * 2 - 1]);
     }
 
     @Test(expected = IllegalArgumentException.class)
     public void testFromBytesInvalidLongModOrderWide() {
-        CafeScalar.fromBytesModOrderWide(new byte[CafeScalar.SCALAR_BYTE_SIZE * 2 + 1]);
+        CafeScalar.fromBytesModOrderWide(new byte[CafeScalar.BYTE_SIZE * 2 + 1]);
     }
 
     /**

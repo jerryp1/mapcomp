@@ -22,22 +22,22 @@ public class CafeEdwardsCompressedPointTest {
 
     @Test
     public void testValid() {
-        new CafeEdwardsCompressedPoint(new byte[CafeEdwardsCompressedPoint.COMPRESSED_BYTE_SIZE]);
+        new CafeEdwardsCompressedPoint(new byte[CafeEdwardsCompressedPoint.BYTE_SIZE]);
     }
 
     @Test(expected = IllegalArgumentException.class)
     public void testInvalidShort() {
-        new CafeEdwardsCompressedPoint(new byte[CafeEdwardsCompressedPoint.COMPRESSED_BYTE_SIZE - 1]);
+        new CafeEdwardsCompressedPoint(new byte[CafeEdwardsCompressedPoint.BYTE_SIZE - 1]);
     }
 
     @Test(expected = IllegalArgumentException.class)
     public void testInvalidLong() {
-        new CafeEdwardsCompressedPoint(new byte[CafeEdwardsCompressedPoint.COMPRESSED_BYTE_SIZE + 1]);
+        new CafeEdwardsCompressedPoint(new byte[CafeEdwardsCompressedPoint.BYTE_SIZE + 1]);
     }
 
     @Test
     public void testEncode() {
-        byte[] s = new byte[CafeEdwardsCompressedPoint.COMPRESSED_BYTE_SIZE];
+        byte[] s = new byte[CafeEdwardsCompressedPoint.BYTE_SIZE];
         s[0] = 0x1f;
         Assert.assertEquals(s, new CafeEdwardsCompressedPoint(s).encode());
     }

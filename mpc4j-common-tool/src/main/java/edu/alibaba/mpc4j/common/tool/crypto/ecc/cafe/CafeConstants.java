@@ -121,8 +121,7 @@ public final class CafeConstants {
     /**
      * Table containing pre-computed multiples of the Ed25519 base point.
      */
-    public static final CafeEdwardsPrecomputeTable ED25519_BASE_POINT_TABLE
-        = new CafeEdwardsPrecomputeTable(ED25519_BASE_POINT);
+    static final CafeEdwardsPrecomputeTable ED25519_BASE_POINT_TABLE = new CafeEdwardsPrecomputeTable(ED25519_BASE_POINT);
 
     /**
      * Odd multiples of the Ed25519 base point.
@@ -133,11 +132,10 @@ public final class CafeConstants {
     /**
      * The ristretto255 generator, as a RistrettoElement.
      */
-    public static final RistrettoElement RISTRETTO_GENERATOR = new RistrettoElement(ED25519_BASE_POINT);
+    static final CafeRistrettoPoint RISTRETTO_GENERATOR = new CafeRistrettoPoint(ED25519_BASE_POINT);
 
     /**
      * Table containing pre-computed multiples of the ristretto255 generator.
      */
-    public static final RistrettoGeneratorTable RISTRETTO_GENERATOR_TABLE
-        = new RistrettoGeneratorTable(RISTRETTO_GENERATOR);
+    static final CafeRistrettoGeneratorTable RISTRETTO_GENERATOR_TABLE = new CafeRistrettoGeneratorTable(RISTRETTO_GENERATOR);
 }

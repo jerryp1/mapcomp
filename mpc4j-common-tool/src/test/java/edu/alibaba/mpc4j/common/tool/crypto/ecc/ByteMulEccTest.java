@@ -38,19 +38,21 @@ public class ByteMulEccTest {
 
     @Parameterized.Parameters(name = "{0}")
     public static Collection<Object[]> configurations() {
-        Collection<Object[]> configurationParams = new ArrayList<>();
+        Collection<Object[]> configurations = new ArrayList<>();
         // X25519_SODIUM
-        configurationParams.add(new Object[]{ByteEccType.X25519_SODIUM.name(), ByteEccType.X25519_SODIUM,});
+        configurations.add(new Object[]{ByteEccType.X25519_SODIUM.name(), ByteEccType.X25519_SODIUM,});
         // X25519_BC
-        configurationParams.add(new Object[]{ByteEccType.X25519_BC.name(), ByteEccType.X25519_BC,});
+        configurations.add(new Object[]{ByteEccType.X25519_BC.name(), ByteEccType.X25519_BC,});
         // ED25519_SODIUM
-        configurationParams.add(new Object[]{ByteEccType.ED25519_SODIUM.name(), ByteEccType.ED25519_SODIUM,});
+        configurations.add(new Object[]{ByteEccType.ED25519_SODIUM.name(), ByteEccType.ED25519_SODIUM,});
         // ED25519_BC
-        configurationParams.add(new Object[]{ByteEccType.ED25519_BC.name(), ByteEccType.ED25519_BC,});
+        configurations.add(new Object[]{ByteEccType.ED25519_BC.name(), ByteEccType.ED25519_BC,});
         // ED25519_CAFE
-        configurationParams.add(new Object[]{ByteEccType.ED25519_CAFE.name(), ByteEccType.ED25519_CAFE,});
+        configurations.add(new Object[]{ByteEccType.ED25519_CAFE.name(), ByteEccType.ED25519_CAFE,});
+        // RISTRETTO_CAFE
+        configurations.add(new Object[]{ByteEccType.RISTRETTO_CAFE.name(), ByteEccType.RISTRETTO_CAFE,});
 
-        return configurationParams;
+        return configurations;
     }
 
     /**

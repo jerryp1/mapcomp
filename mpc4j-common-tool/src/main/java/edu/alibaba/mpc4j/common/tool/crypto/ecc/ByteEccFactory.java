@@ -3,6 +3,7 @@ package edu.alibaba.mpc4j.common.tool.crypto.ecc;
 import edu.alibaba.mpc4j.common.tool.EnvType;
 import edu.alibaba.mpc4j.common.tool.crypto.ecc.bc.*;
 import edu.alibaba.mpc4j.common.tool.crypto.ecc.cafe.Ed25519CafeByteFullEcc;
+import edu.alibaba.mpc4j.common.tool.crypto.ecc.cafe.RistrettoCafeByteFullEcc;
 import edu.alibaba.mpc4j.common.tool.crypto.ecc.sodium.Ed25519SodiumByteFullEcc;
 import edu.alibaba.mpc4j.common.tool.crypto.ecc.sodium.X25519SodiumByteMulEcc;
 
@@ -44,6 +45,10 @@ public class ByteEccFactory {
          * Cafe实现的ED25519
          */
         ED25519_CAFE,
+        /**
+         * Cafe实现的Ristretto
+         */
+        RISTRETTO_CAFE,
     }
 
     /**
@@ -60,6 +65,8 @@ public class ByteEccFactory {
                 return new Ed25519BcByteFullEcc();
             case ED25519_CAFE:
                 return new Ed25519CafeByteFullEcc();
+            case RISTRETTO_CAFE:
+                return new RistrettoCafeByteFullEcc();
             default:
                 throw new IllegalArgumentException(
                     "Invalid " + ByteEccType.class.getSimpleName() + ": " + byteEccType.name()
@@ -104,6 +111,8 @@ public class ByteEccFactory {
                 return new Ed25519BcByteFullEcc();
             case ED25519_CAFE:
                 return new Ed25519CafeByteFullEcc();
+            case RISTRETTO_CAFE:
+                return new RistrettoCafeByteFullEcc();
             default:
                 throw new IllegalArgumentException(
                     "Invalid " + ByteEccType.class.getSimpleName() + ": " + byteEccType.name()

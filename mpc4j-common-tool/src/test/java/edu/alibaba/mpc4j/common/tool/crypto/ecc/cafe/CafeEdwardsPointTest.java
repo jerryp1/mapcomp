@@ -93,7 +93,7 @@ public class CafeEdwardsPointTest {
     public void testCompress() {
         // Manually set the high bit of the last byte to flip the sign
         byte[] negBaseBytes = ED25519_BASE_COMPRESSED.encode();
-        negBaseBytes[CafeEdwardsCompressedPoint.COMPRESSED_BYTE_SIZE - 1] |= 1 << 7;
+        negBaseBytes[CafeEdwardsCompressedPoint.BYTE_SIZE - 1] |= 1 << 7;
         CafeEdwardsPoint negBasePoint = new CafeEdwardsCompressedPoint(negBaseBytes).decompress();
         // Test projective coordinates exactly since we know they should only differ by a flipped sign.
         Assert.assertEquals(CafeConstants.ED25519_BASE_POINT.x.neg(), negBasePoint.x);

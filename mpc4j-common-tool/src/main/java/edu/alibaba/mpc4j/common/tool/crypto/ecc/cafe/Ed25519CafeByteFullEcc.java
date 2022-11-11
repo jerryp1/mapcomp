@@ -19,17 +19,12 @@ import java.security.SecureRandom;
  */
 public class Ed25519CafeByteFullEcc implements ByteFullEcc {
     /**
-     * 椭圆曲线点字节长度
-     */
-    private static final int POINT_BYTE_LENGTH = Ed25519ByteEccUtils.POINT_BYTES;
-    /**
      * 哈希函数
      */
     private final Hash hash;
 
     public Ed25519CafeByteFullEcc() {
-        hash = HashFactory.createInstance(HashFactory.HashType.JDK_SHA256, POINT_BYTE_LENGTH);
-        Ed25519ByteEccUtils.precomputeBase();
+        hash = HashFactory.createInstance(HashFactory.HashType.JDK_SHA256, Ed25519ByteEccUtils.POINT_BYTES);
     }
 
     @Override
@@ -52,7 +47,7 @@ public class Ed25519CafeByteFullEcc implements ByteFullEcc {
 
     @Override
     public byte[] randomPoint(SecureRandom secureRandom) {
-        byte[] p = new byte[POINT_BYTE_LENGTH];
+        byte[] p = new byte[Ed25519ByteEccUtils.POINT_BYTES];
         boolean success = false;
         while (!success) {
             secureRandom.nextBytes(p);
@@ -60,7 +55,7 @@ public class Ed25519CafeByteFullEcc implements ByteFullEcc {
             success = Ed25519ByteEccUtils.validPoint(p);
         }
         // 需要乘以cofactor
-        byte[] r = new byte[POINT_BYTE_LENGTH];
+        byte[] r = new byte[Ed25519ByteEccUtils.POINT_BYTES];
         Ed25519ByteEccUtils.scalarMultEncoded(Ed25519ByteEccUtils.SCALAR_COFACTOR, p, r);
         return r;
     }
@@ -78,7 +73,7 @@ public class Ed25519CafeByteFullEcc implements ByteFullEcc {
                 p[Ed25519ByteEccUtils.POINT_BYTES - 1] &= 0x7F;
             }
         }
-        byte[] r = new byte[POINT_BYTE_LENGTH];
+        byte[] r = new byte[Ed25519ByteEccUtils.POINT_BYTES];
         Ed25519ByteEccUtils.scalarMultEncoded(Ed25519ByteEccUtils.SCALAR_COFACTOR, p, r);
         return r;
     }
@@ -128,7 +123,7 @@ public class Ed25519CafeByteFullEcc implements ByteFullEcc {
 
     @Override
     public byte[] mul(byte[] p, BigInteger k) {
-        assert p.length == POINT_BYTE_LENGTH;
+        assert p.length == Ed25519ByteEccUtils.POINT_BYTES;
         byte[] byteK = Ed25519ByteEccUtils.toByteK(k);
         CafeScalar cafeScalarK = new CafeScalar(byteK);
         CafeEdwardsPoint pFieldElement = new CafeEdwardsCompressedPoint(p).decompress();
@@ -159,10 +154,10 @@ public class Ed25519CafeByteFullEcc implements ByteFullEcc {
 
     @Override
     public byte[] mul(byte[] p, byte[] k) {
-        assert p.length == POINT_BYTE_LENGTH;
+        assert p.length == Ed25519ByteEccUtils.POINT_BYTES;
         CafeScalar cafeScalarK = new CafeScalar(k);
-        CafeEdwardsPoint pFieldElement = new CafeEdwardsCompressedPoint(p).decompress();
-        return pFieldElement.mul(cafeScalarK).compress().encode();
+        CafeEdwardsPoint point = new CafeEdwardsCompressedPoint(p).decompress();
+        return point.mul(cafeScalarK).compress().encode();
     }
 
     @Override

@@ -51,8 +51,8 @@ class CafeUnpackedScalar {
      * @param input the input scalar represented by a byte array.
      */
     static CafeUnpackedScalar decode(final byte[] input) {
-        if (input.length != CafeScalar.SCALAR_BYTE_SIZE) {
-            throw new IllegalArgumentException("Input must be " + CafeScalar.SCALAR_BYTE_SIZE + " bytes");
+        if (input.length != CafeScalar.BYTE_SIZE) {
+            throw new IllegalArgumentException("Input must be " + CafeScalar.BYTE_SIZE + " bytes");
         }
 
         int[] words = new int[WORD_INT_SIZE];
@@ -83,7 +83,7 @@ class CafeUnpackedScalar {
      * @return packed byte array.
      */
     byte[] encode() {
-        byte[] result = new byte[CafeScalar.SCALAR_BYTE_SIZE];
+        byte[] result = new byte[CafeScalar.BYTE_SIZE];
 
         // All limbs are 29 bits, but let's use the unsigned right shift anyway.
         result[0] = (byte) (s[0]);
