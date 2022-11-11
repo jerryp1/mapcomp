@@ -32,7 +32,7 @@ public class CafeConstantsTest {
     @Test
     public void testCheckEdwards2D() {
         Assert.assertEquals(
-            CafeConstants.EDWARDS_D.mul(CafeFieldElement.ONE_INTS.add(CafeFieldElement.ONE_INTS)),
+            CafeConstants.EDWARDS_D.mul(CafeFieldElement.ONE.add(CafeFieldElement.ONE)),
             CafeConstants.EDWARDS_2D
         );
     }
@@ -40,7 +40,7 @@ public class CafeConstantsTest {
     @Test
     public void testCheckSqrtAdSubOne() {
         Assert.assertEquals(
-            CafeConstants.SQRT_AD_MINUS_ONE.sqr().add(CafeFieldElement.ONE_INTS).neg(),
+            CafeConstants.SQRT_AD_MINUS_ONE.sqr().add(CafeFieldElement.ONE).neg(),
             CafeConstants.EDWARDS_D
         );
     }
@@ -48,7 +48,7 @@ public class CafeConstantsTest {
     @Test
     public void checkInvSqrtASubD() {
         Assert.assertEquals(
-            CafeConstants.INVSQRT_A_MINUS_D.inv().sqr().add(CafeFieldElement.ONE_INTS).neg(),
+            CafeConstants.INVSQRT_A_MINUS_D.inv().sqr().add(CafeFieldElement.ONE).neg(),
             CafeConstants.EDWARDS_D
         );
     }

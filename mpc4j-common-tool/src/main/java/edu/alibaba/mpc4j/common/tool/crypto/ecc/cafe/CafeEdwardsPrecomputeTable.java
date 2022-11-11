@@ -45,7 +45,7 @@ public class CafeEdwardsPrecomputeTable {
      * @param s the Scalar to multiply by.
      * @return $[s]B$.
      */
-    public CafeEdwardsPoint multiply(final CafeScalar s) {
+    public CafeEdwardsPoint mul(final CafeScalar s) {
         int i;
 
         final byte[] e = s.toRadix16();

@@ -20,7 +20,7 @@ public class CafeEdwardsPoint {
      * Edwards曲线无穷远点
      */
     public static final CafeEdwardsPoint IDENTITY = new CafeEdwardsPoint(
-        CafeFieldElement.ZERO_INTS, CafeFieldElement.ONE_INTS, CafeFieldElement.ONE_INTS, CafeFieldElement.ZERO_INTS
+        CafeFieldElement.ZERO, CafeFieldElement.ONE, CafeFieldElement.ONE, CafeFieldElement.ZERO
     );
     /**
      * x coordinate

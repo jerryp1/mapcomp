@@ -57,16 +57,16 @@ public class CafeRistrettoCompressedPoint {
         // s^2
         final CafeFieldElement ss = s.sqr();
         // u1 = 1 - s^2
-        final CafeFieldElement u1 = CafeFieldElement.ONE_INTS.sub(ss);
+        final CafeFieldElement u1 = CafeFieldElement.ONE.sub(ss);
         // u2 = 1 + s^2
-        final CafeFieldElement u2 = CafeFieldElement.ONE_INTS.add(ss);
+        final CafeFieldElement u2 = CafeFieldElement.ONE.add(ss);
         // u_2^2
         final CafeFieldElement u2Sqr = u2.sqr();
         // v = a · d · u_1^2 - u_2^2
         // since a = ±1, implementations can replace multiplications by a with sign changes, as appropriate.
         final CafeFieldElement v = CafeConstants.NEG_EDWARDS_D.mul(u1.sqr()).sub(u2Sqr);
         // I = inv_sqrt(v · u_2^2)
-        final CafeFieldElement.SqrtRatioM1Result invsqrt = CafeFieldElement.sqrtRatioM1(CafeFieldElement.ONE_INTS, v.mul(u2Sqr));
+        final CafeFieldElement.SqrtRatioM1Result invsqrt = CafeFieldElement.sqrtRatioM1(CafeFieldElement.ONE, v.mul(u2Sqr));
         // D_x = I · u_2
         final CafeFieldElement dx = invsqrt.result.mul(u2);
         // D_y = I · d_x · v
@@ -82,7 +82,7 @@ public class CafeRistrettoCompressedPoint {
             throw new IllegalArgumentException("Invalid ristretto255 encoding");
         } else {
             // Otherwise, return the Ristretto point represented by (x, y, 1, t).
-            return new CafeRistrettoPoint(new CafeEdwardsPoint(x, y, CafeFieldElement.ONE_INTS, t));
+            return new CafeRistrettoPoint(new CafeEdwardsPoint(x, y, CafeFieldElement.ONE, t));
         }
     }
 

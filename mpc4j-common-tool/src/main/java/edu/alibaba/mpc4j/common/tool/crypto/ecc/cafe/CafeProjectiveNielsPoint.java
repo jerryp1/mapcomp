@@ -21,7 +21,7 @@ class CafeProjectiveNielsPoint {
      * identity
      */
     private static final CafeProjectiveNielsPoint IDENTITY = new CafeProjectiveNielsPoint(
-        CafeFieldElement.ONE_INTS, CafeFieldElement.ONE_INTS, CafeFieldElement.ONE_INTS, CafeFieldElement.ZERO_INTS
+        CafeFieldElement.ONE, CafeFieldElement.ONE, CafeFieldElement.ONE, CafeFieldElement.ZERO
     );
     /**
      * lookup table size

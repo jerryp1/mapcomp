@@ -6,6 +6,8 @@
 
 package edu.alibaba.mpc4j.common.tool.crypto.ecc.cafe;
 
+import org.bouncycastle.util.encoders.Hex;
+
 import java.util.Arrays;
 
 /**
@@ -49,9 +51,9 @@ public class CafeRistrettoPoint {
         // r = √(-1) · r_0^2
         final CafeFieldElement r = r0.sqr().mul(CafeConstants.SQRT_M1);
         // N_s = (r + 1) · (1 - d^2)
-        final CafeFieldElement ns = r.add(CafeFieldElement.ONE_INTS).mul(CafeConstants.ONE_MINUS_D_SQ);
+        final CafeFieldElement ns = r.add(CafeFieldElement.ONE).mul(CafeConstants.ONE_MINUS_D_SQ);
         // c = -1, D = (c - dr) · (r + d)
-        final CafeFieldElement d = CafeFieldElement.MINUS_ONE_INTS.sub(r.mul(CafeConstants.EDWARDS_D))
+        final CafeFieldElement d = CafeFieldElement.MINUS_ONE.sub(r.mul(CafeConstants.EDWARDS_D))
             .mul(r.add(CafeConstants.EDWARDS_D));
 
         // s = sqrt_ratio_i(N_s, D)
@@ -63,10 +65,10 @@ public class CafeRistrettoPoint {
         // if sqrt, s = s'
         s = sPrime.cmov(s, sqrt.wasSquare);
         // if sqrt, c = r
-        final CafeFieldElement c = r.cmov(CafeFieldElement.MINUS_ONE_INTS, sqrt.wasSquare);
+        final CafeFieldElement c = r.cmov(CafeFieldElement.MINUS_ONE, sqrt.wasSquare);
 
         // N_t = c · (r - 1) · (d - 1)^2 - d
-        final CafeFieldElement nt = c.mul(r.sub(CafeFieldElement.ONE_INTS)).mul(CafeConstants.D_MINUS_ONE_SQ).sub(d);
+        final CafeFieldElement nt = c.mul(r.sub(CafeFieldElement.ONE)).mul(CafeConstants.D_MINUS_ONE_SQ).sub(d);
         // s^2
         final CafeFieldElement sSq = s.sqr();
 
@@ -75,9 +77,9 @@ public class CafeRistrettoPoint {
         // W_1 = N_t · √(a · d - 1)
         final CafeFieldElement w1 = nt.mul(CafeConstants.SQRT_AD_MINUS_ONE);
         // W_2 = 1 - s^2
-        final CafeFieldElement w2 = CafeFieldElement.ONE_INTS.sub(sSq);
+        final CafeFieldElement w2 = CafeFieldElement.ONE.sub(sSq);
         // W_3 = 1 + s^2
-        final CafeFieldElement w3 = CafeFieldElement.ONE_INTS.add(sSq);
+        final CafeFieldElement w3 = CafeFieldElement.ONE.add(sSq);
 
         // Return (W_0 · W_3, W_2 · W_1, W_1 · W_3, W_0 · W_2)
         return new CafeRistrettoPoint(new CafeEdwardsPoint(w0.mul(w3), w2.mul(w1), w1.mul(w3), w0.mul(w2)));
@@ -126,7 +128,7 @@ public class CafeRistrettoPoint {
 
         // I = invsqrt(u_1 · u_2^2). The inverse square root always exists when (x, y, z, t) is a valid representative.
         final CafeFieldElement.SqrtRatioM1Result invsqrt
-            = CafeFieldElement.sqrtRatioM1(CafeFieldElement.ONE_INTS, u1.mul(u2.sqr()));
+            = CafeFieldElement.sqrtRatioM1(CafeFieldElement.ONE, u1.mul(u2.sqr()));
 
         // d_1 = u_i · I
         final CafeFieldElement d1 = invsqrt.result.mul(u1);

@@ -88,13 +88,13 @@ public class CafeFieldElementTest {
         final CafeFieldElement inverseA = CafeFieldElement.decode(A_INVERSE_BYTES);
         final CafeFieldElement actualInverseA = a.inv();
         Assert.assertEquals(inverseA, actualInverseA);
-        Assert.assertEquals(CafeFieldElement.ONE_INTS, a.mul(actualInverseA));
+        Assert.assertEquals(CafeFieldElement.ONE, a.mul(actualInverseA));
     }
 
     @Test
     public void testSqrtRatioM1() {
-        CafeFieldElement zero = CafeFieldElement.ZERO_INTS;
-        CafeFieldElement one = CafeFieldElement.ONE_INTS;
+        CafeFieldElement zero = CafeFieldElement.ZERO;
+        CafeFieldElement one = CafeFieldElement.ONE;
         CafeFieldElement i = CafeConstants.SQRT_M1;
         // 2 is non-square mod p.
         CafeFieldElement two = one.add(one);
@@ -190,7 +190,7 @@ public class CafeFieldElementTest {
     public void encodeAndDecodeOnZero() {
         byte[] zero = new byte[CafeFieldElement.FIELD_BYTE_SIZE];
         final CafeFieldElement a = CafeFieldElement.decode(zero);
-        Assert.assertEquals(CafeFieldElement.ZERO_INTS, a);
+        Assert.assertEquals(CafeFieldElement.ZERO, a);
         Assert.assertArrayEquals(zero, a.encode());
     }
 

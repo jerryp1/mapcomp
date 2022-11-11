@@ -29,32 +29,44 @@ class CafeFieldElement {
      */
     static final int FIELD_BYTE_SIZE = 32;
     /**
-     * 0 in int array
+     * 0
      */
-    static final CafeFieldElement ZERO_INTS = new CafeFieldElement(new int[]{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, });
+    static final CafeFieldElement ZERO = new CafeFieldElement(new int[]{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, });
     /**
      * 0 in byte array
      */
     private static final byte[] ZERO_BYTES = new byte[FIELD_BYTE_SIZE];
     /**
-     * 1 in int array
+     * 1
      */
-    static final CafeFieldElement ONE_INTS = new CafeFieldElement(new int[]{1, 0, 0, 0, 0, 0, 0, 0, 0, 0, });
+    static final CafeFieldElement ONE = new CafeFieldElement(new int[]{1, 0, 0, 0, 0, 0, 0, 0, 0, 0, });
     /**
      * -1 in int array
      */
-    static final CafeFieldElement MINUS_ONE_INTS = ZERO_INTS.sub(ONE_INTS);
+    static final CafeFieldElement MINUS_ONE = ZERO.sub(ONE);
     /**
      * a = 486662
      */
-    static final CafeFieldElement A_486662 = new CafeFieldElement(new int[]{486662, 0, 0, 0, 0, 0, 0, 0, 0, 0, });
+    static final CafeFieldElement A = new CafeFieldElement(new int[]{486662, 0, 0, 0, 0, 0, 0, 0, 0, 0, });
+    /**
+     * √(-(a + 2))
+     */
+    static final CafeFieldElement SQRT_MINUS_A_PLUS_2 = new CafeFieldElement(new int[]{
+        -12222970, -8312128, -11511410, 9067497, -15300785, -241793, 25456130, 14121551, -12187136, 3972024,
+    });
+    /**
+     * √(-1 / 2)
+     */
+    static final CafeFieldElement SQRT_MINUS_HALF = new CafeFieldElement(new int[] {
+        -17256545, 3971863, 28865457, -1750208, 27359696, -16640980, 12573105, 1002827, -163343, 11073975,
+    });
 
     /**
      * An element $t$, entries $t[0] \dots t[9]$, represents the integer $t[0] +
      * 2^{26} t[1] + 2^{51} t[2] + 2^{77} t[3] + 2^{102} t[4] + \dots + 2^{230}
      * t[9]$. Bounds on each $t[i]$ vary depending on context.
      */
-    private final int[] t;
+    final int[] t;
 
     /**
      * Create a field element.
@@ -1377,6 +1389,104 @@ class CafeFieldElement {
 
         // 2^252 - 3
         return mul(t0);
+    }
+
+    /**
+     * Raises this field element to the power $(p - 1) / 2. The result is either 1, 0, or -1 depending on whether z is
+     * a non-zero square, zero, or a non-square.
+     * <p>
+     * See https://github.com/agl/ed25519/blob/5312a6153412/extra25519/extra25519.go for more details.
+     * </p>
+     *
+     * @return $\text{this}^{(p-1)/2}$.
+     */
+    CafeFieldElement chi() {
+        // edwards25519.FeSquare(&t0, z)     // 2^1
+        CafeFieldElement t0 = sqr();
+        // edwards25519.FeMul(&t1, &t0, z)   // 2^1 + 2^0
+        CafeFieldElement t1 = t0.mul(this);
+        // edwards25519.FeSquare(&t0, &t1)   // 2^2 + 2^1
+        t0 = t1.sqr();
+        // edwards25519.FeSquare(&t2, &t0)   // 2^3 + 2^2
+        CafeFieldElement t2 = t0.sqr();
+        // edwards25519.FeSquare(&t2, &t2)   // 4,3
+        t2 = t2.sqr();
+        // edwards25519.FeMul(&t2, &t2, &t0) // 4,3,2,1
+        t2 = t2.mul(t0);
+        // edwards25519.FeMul(&t1, &t2, z)   // 4..0
+        t1 = t2.mul(this);
+        // edwards25519.FeSquare(&t2, &t1)   // 5..1
+        t2 = t1.sqr();
+        // 9,8,7,6,5
+        for (int i = 1; i < 5; i++) {
+            // edwards25519.FeSquare(&t2, &t2)
+            t2 = t2.sqr();
+        }
+        // edwards25519.FeMul(&t1, &t2, &t1) // 9,8,7,6,5,4,3,2,1,0
+        t1 = t2.mul(t1);
+        // edwards25519.FeSquare(&t2, &t1)   // 10..1
+        t2 = t1.sqr();
+        // 19..10
+        for (int i = 1; i < 10; i++) {
+            // edwards25519.FeSquare(&t2, &t2)
+            t2 = t2.sqr();
+        }
+        // edwards25519.FeMul(&t2, &t2, &t1) // 19..0
+        t2 = t2.mul(t1);
+        // edwards25519.FeSquare(&t3, &t2)   // 20..1
+        CafeFieldElement t3 = t2.sqr();
+        // 39..20
+        for (int i = 1; i < 20; i++) {
+            // edwards25519.FeSquare(&t3, &t3)
+            t3 = t3.sqr();
+        }
+        // edwards25519.FeMul(&t2, &t3, &t2) // 39..0
+        t2 = t3.mul(t2);
+        // edwards25519.FeSquare(&t2, &t2)   // 40..1
+        t2 = t2.sqr();
+        // 49..10
+        for (int i = 1; i < 10; i++) {
+            // edwards25519.FeSquare(&t2, &t2)
+            t2 = t2.sqr();
+        }
+        // edwards25519.FeMul(&t1, &t2, &t1) // 49..0
+        t1 = t2.mul(t1);
+        // edwards25519.FeSquare(&t2, &t1)   // 50..1
+        t2 = t1.sqr();
+        // 99..50
+        for (int i = 1; i < 50; i++) {
+            // edwards25519.FeSquare(&t2, &t2)
+            t2 = t2.sqr();
+        }
+        // edwards25519.FeMul(&t2, &t2, &t1) // 99..0
+        t2 = t2.mul(t1);
+        // edwards25519.FeSquare(&t3, &t2)   // 100..1
+        t3 = t2.sqr();
+        // 199..100
+        for (int i = 1; i < 100; i++) {
+            // edwards25519.FeSquare(&t3, &t3)
+            t3 = t3.sqr();
+        }
+        // edwards25519.FeMul(&t2, &t3, &t2) // 199..0
+        t2 = t3.mul(t2);
+        // edwards25519.FeSquare(&t2, &t2)   // 200..1
+        t2 = t2.sqr();
+        // 249..50
+        for (int i = 1; i < 50; i++) {
+            // edwards25519.FeSquare(&t2, &t2)
+            t2 = t2.sqr();
+        }
+        // edwards25519.FeMul(&t1, &t2, &t1) // 249..0
+        t1 = t2.mul(t1);
+        // edwards25519.FeSquare(&t1, &t1)   // 250..1
+        t1 = t1.sqr();
+        // 253..4
+        for (int i = 1; i < 4; i++) {
+            // edwards25519.FeSquare(&t1, &t1)
+            t1 = t1.sqr();
+        }
+        // edwards25519.FeMul(out, &t1, &t0) // 253..4,2,1
+        return t1.mul(t0);
     }
 
     /**

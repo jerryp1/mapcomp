@@ -51,10 +51,10 @@ public class CafeEdwardsCompressedPoint {
         CafeFieldElement yy = y.sqr();
 
         // u = y^2-1
-        CafeFieldElement u = yy.sub(CafeFieldElement.ONE_INTS);
+        CafeFieldElement u = yy.sub(CafeFieldElement.ONE);
 
         // v = d * y^2+1
-        CafeFieldElement v = yy.mul(CafeConstants.EDWARDS_D).add(CafeFieldElement.ONE_INTS);
+        CafeFieldElement v = yy.mul(CafeConstants.EDWARDS_D).add(CafeFieldElement.ONE);
 
         CafeFieldElement.SqrtRatioM1Result sqrt = CafeFieldElement.sqrtRatioM1(u, v);
         if (sqrt.wasSquare != 1) {
@@ -65,7 +65,7 @@ public class CafeEdwardsCompressedPoint {
             sqrt.result, CafeConstantTimeUtils.equal(sqrt.result.isNegative(), CafeConstantTimeUtils.bit(data, 255))
         );
 
-        return new CafeEdwardsPoint(x, y, CafeFieldElement.ONE_INTS, x.mul(y));
+        return new CafeEdwardsPoint(x, y, CafeFieldElement.ONE, x.mul(y));
     }
 
     /**

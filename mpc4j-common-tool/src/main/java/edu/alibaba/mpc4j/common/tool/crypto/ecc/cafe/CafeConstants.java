@@ -72,12 +72,12 @@ public final class CafeConstants {
     /**
      * $= 1 - d^2$, where $d$ is the Edwards curve parameter.
      */
-    static final CafeFieldElement ONE_MINUS_D_SQ = CafeFieldElement.ONE_INTS.sub(EDWARDS_D.sqr());
+    static final CafeFieldElement ONE_MINUS_D_SQ = CafeFieldElement.ONE.sub(EDWARDS_D.sqr());
 
     /**
      * $= (d - 1)^2$, where $d$ is the Edwards curve parameter.
      */
-    static final CafeFieldElement D_MINUS_ONE_SQ = EDWARDS_D.sub(CafeFieldElement.ONE_INTS).sqr();
+    static final CafeFieldElement D_MINUS_ONE_SQ = EDWARDS_D.sub(CafeFieldElement.ONE).sqr();
 
     /**
      * $= \sqrt{a*d - 1}$, where $a = -1 \bmod p$, $d$ are the Edwards curve parameters.

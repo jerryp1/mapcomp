@@ -36,6 +36,6 @@ public class CafeRistrettoGeneratorTable {
      * @return $[s]B$.
      */
     public CafeRistrettoPoint mul(final CafeScalar s) {
-        return new CafeRistrettoPoint(table.multiply(s));
+        return new CafeRistrettoPoint(table.mul(s));
     }
 }

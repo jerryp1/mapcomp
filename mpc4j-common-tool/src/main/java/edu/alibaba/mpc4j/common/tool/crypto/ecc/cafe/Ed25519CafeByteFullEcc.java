@@ -134,7 +134,7 @@ public class Ed25519CafeByteFullEcc implements ByteFullEcc {
     public byte[] baseMul(BigInteger k) {
         byte[] byteK = Ed25519ByteEccUtils.toByteK(k);
         CafeScalar cafeScalarK = new CafeScalar(byteK);
-        return CafeConstants.ED25519_BASE_POINT_TABLE.multiply(cafeScalarK).compress().encode();
+        return CafeConstants.ED25519_BASE_POINT_TABLE.mul(cafeScalarK).compress().encode();
     }
 
     @Override
@@ -163,7 +163,7 @@ public class Ed25519CafeByteFullEcc implements ByteFullEcc {
     @Override
     public byte[] baseMul(byte[] k) {
         CafeScalar cafeScalarK = new CafeScalar(k);
-        return CafeConstants.ED25519_BASE_POINT_TABLE.multiply(cafeScalarK).compress().encode();
+        return CafeConstants.ED25519_BASE_POINT_TABLE.mul(cafeScalarK).compress().encode();
     }
 
     @Override

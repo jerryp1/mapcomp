@@ -21,7 +21,7 @@ class CafeAffineNielsPoint {
      * identity
      */
     private static final CafeAffineNielsPoint IDENTITY = new CafeAffineNielsPoint(
-        CafeFieldElement.ONE_INTS, CafeFieldElement.ONE_INTS, CafeFieldElement.ZERO_INTS
+        CafeFieldElement.ONE, CafeFieldElement.ONE, CafeFieldElement.ZERO
     );
     /**
      * lookup table size

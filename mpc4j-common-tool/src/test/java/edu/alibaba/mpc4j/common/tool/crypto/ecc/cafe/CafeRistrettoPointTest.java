@@ -6,12 +6,9 @@
 
 package edu.alibaba.mpc4j.common.tool.crypto.ecc.cafe;
 
-import edu.alibaba.mpc4j.common.tool.utils.BigIntegerUtils;
 import org.bouncycastle.util.encoders.Hex;
 import org.junit.Assert;
 import org.junit.Test;
-
-import java.math.BigInteger;
 
 /**
  * Ristretto element test. Modified from:

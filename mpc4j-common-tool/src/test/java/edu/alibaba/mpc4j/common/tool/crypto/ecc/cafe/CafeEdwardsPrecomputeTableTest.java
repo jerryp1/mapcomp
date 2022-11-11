@@ -22,7 +22,7 @@ public class CafeEdwardsPrecomputeTableTest {
     @Test
     public void scalarMulVsEd25519py() {
         CafeEdwardsPrecomputeTable precomputeTable = new CafeEdwardsPrecomputeTable(CafeConstants.ED25519_BASE_POINT);
-        CafeEdwardsPoint precomputeMulResult = precomputeTable.multiply(CafeEdwardsPointTest.A_SCALAR);
+        CafeEdwardsPoint precomputeMulResult = precomputeTable.mul(CafeEdwardsPointTest.A_SCALAR);
         Assert.assertEquals(CafeEdwardsPointTest.A_MUL_BASE, precomputeMulResult.compress());
     }
 }
