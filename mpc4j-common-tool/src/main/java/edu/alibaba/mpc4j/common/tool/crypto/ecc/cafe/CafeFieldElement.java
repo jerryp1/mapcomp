@@ -21,29 +21,33 @@ import java.util.Arrays;
  */
 class CafeFieldElement {
     /**
-     * 域元素的整数表示长度
+     * field int size
      */
     static final int FIELD_INT_SIZE = 10;
     /**
-     * 域元素的字节表示长度
+     * field byte size
      */
     static final int FIELD_BYTE_SIZE = 32;
     /**
-     * 0的整数数组表示
+     * 0 in int array
      */
-    public static final CafeFieldElement ZERO_INTS = new CafeFieldElement(new int[]{0, 0, 0, 0, 0, 0, 0, 0, 0, 0});
+    static final CafeFieldElement ZERO_INTS = new CafeFieldElement(new int[]{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, });
     /**
-     * 0的字节数组表示
+     * 0 in byte array
      */
     private static final byte[] ZERO_BYTES = new byte[FIELD_BYTE_SIZE];
     /**
-     * 1的整数数组表示
+     * 1 in int array
      */
-    public static final CafeFieldElement ONE_INTS = new CafeFieldElement(new int[]{1, 0, 0, 0, 0, 0, 0, 0, 0, 0});
+    static final CafeFieldElement ONE_INTS = new CafeFieldElement(new int[]{1, 0, 0, 0, 0, 0, 0, 0, 0, 0, });
     /**
-     * -1的整数数组表示
+     * -1 in int array
      */
-    public static final CafeFieldElement MINUS_ONE_INTS = ZERO_INTS.sub(ONE_INTS);
+    static final CafeFieldElement MINUS_ONE_INTS = ZERO_INTS.sub(ONE_INTS);
+    /**
+     * a = 486662
+     */
+    static final CafeFieldElement A_486662 = new CafeFieldElement(new int[]{486662, 0, 0, 0, 0, 0, 0, 0, 0, 0, });
 
     /**
      * An element $t$, entries $t[0] \dots t[9]$, represents the integer $t[0] +
@@ -1401,34 +1405,6 @@ class CafeFieldElement {
         SqrtRatioM1Result(int wasSquare, CafeFieldElement result) {
             this.wasSquare = wasSquare;
             this.result = result;
-        }
-
-        /**
-         * Return true (1) or false (0) representing the status of computing $\sqrt{u / v}$.
-         *
-         * @return <ul>
-         * <li>true (1) if $v$ is non-zero and $u / v$ is square.
-         * <li>true (1) if $u$ is zero.
-         * <li>false (0) if $v$ is zero and $u$ is non-zero.
-         * <li>false (0) if $u / v$ is non-square (so $i * u / v$ is square).
-         * </ul>
-         */
-        public int getWasSquare() {
-            return wasSquare;
-        }
-
-        /**
-         * Return +$\sqrt{u / v}$, zero, or +$\sqrt{i * u / v}$ representing the result of $\sqrt{u / v}$.
-         *
-         * @return <ul>
-         * <li>+$\sqrt{u / v}$ if $v$ is non-zero and $u / v$ is square.
-         * <li>zero if $u$ is zero.
-         * <li>zero if $v$ is zero and $u$ is non-zero.
-         * <li>+$\sqrt{i * u / v}$ if $u / v$ is non-square (so $i * u / v$ is square).
-         * </ul>
-         */
-        public CafeFieldElement getResult() {
-            return result;
         }
     }
 

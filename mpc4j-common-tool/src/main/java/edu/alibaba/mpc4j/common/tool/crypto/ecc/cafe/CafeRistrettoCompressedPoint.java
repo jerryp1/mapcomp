@@ -37,45 +37,51 @@ public class CafeRistrettoCompressedPoint {
 
     /**
      * Attempts to decompress to a RistrettoElement. This is the ristretto255 DECODE function.
+     * <p>
+     * See https://ristretto.group/formulas/decoding.html, Section Decoding to Extended Coordinates for more details.
+     * </p>
      *
      * @return a RistrettoElement, if this is the canonical encoding of an element of the ristretto255 group.
      * @throws IllegalArgumentException if this is not the canonical encoding of an element of the ristretto255 group.
      */
     public CafeRistrettoPoint decompress() {
-        // 1. First, interpret the string as an integer s in little-endian representation.
-        //    If the resulting value is >= p, decoding fails.
-        // 2. If IS_NEGATIVE(s) returns TRUE, decoding fails.
+        // decode s_bytes, a byte-string, into s, a field element.
         final CafeFieldElement s = CafeFieldElement.decode(data);
         final byte[] sBytes = s.encode();
+        // check that s_bytes is the canonical encoding of a field element, or else abort.
         final int sIsCanonical = CafeConstantTimeUtils.equal(data, sBytes);
+        // check that s is non-negative, or else abort.
         if (sIsCanonical == 0 || s.isNegative() == 1) {
             throw new IllegalArgumentException("Invalid ristretto255 encoding");
         }
-
-        // 3. Process s as follows:
+        // s^2
         final CafeFieldElement ss = s.sqr();
         // u1 = 1 - s^2
         final CafeFieldElement u1 = CafeFieldElement.ONE_INTS.sub(ss);
         // u2 = 1 + s^2
         final CafeFieldElement u2 = CafeFieldElement.ONE_INTS.add(ss);
+        // u_2^2
         final CafeFieldElement u2Sqr = u2.sqr();
-
+        // v = a · d · u_1^2 - u_2^2
+        // since a = ±1, implementations can replace multiplications by a with sign changes, as appropriate.
         final CafeFieldElement v = CafeConstants.NEG_EDWARDS_D.mul(u1.sqr()).sub(u2Sqr);
-
+        // I = inv_sqrt(v · u_2^2)
         final CafeFieldElement.SqrtRatioM1Result invsqrt = CafeFieldElement.sqrtRatioM1(CafeFieldElement.ONE_INTS, v.mul(u2Sqr));
-
-        final CafeFieldElement denX = invsqrt.result.mul(u2);
-        final CafeFieldElement denY = invsqrt.result.mul(denX).mul(v);
-
-        final CafeFieldElement x = s.add(s).mul(denX).abs();
-        final CafeFieldElement y = u1.mul(denY);
+        // D_x = I · u_2
+        final CafeFieldElement dx = invsqrt.result.mul(u2);
+        // D_y = I · d_x · v
+        final CafeFieldElement dy = invsqrt.result.mul(dx).mul(v);
+        // x = |2 · s · D_x|, i.e., compute 2 · s · D_x and negate it if it is negative.
+        final CafeFieldElement x = s.add(s).mul(dx).abs();
+        // y = u_1 · D_y
+        final CafeFieldElement y = u1.mul(dy);
+        // t = x · y
         final CafeFieldElement t = x.mul(y);
-
-        // 4. If was_square is FALSE, or IS_NEGATIVE(t) returns TRUE, or y = 0, decoding fails.
-        //    Otherwise, return the internal representation in extended coordinates (x, y, 1, t).
         if (invsqrt.wasSquare == 0 || t.isNegative() == 1 || y.isZero() == 1) {
+            // or abort if the square root does not exist; if t is negative or y = 0, abort.
             throw new IllegalArgumentException("Invalid ristretto255 encoding");
         } else {
+            // Otherwise, return the Ristretto point represented by (x, y, 1, t).
             return new CafeRistrettoPoint(new CafeEdwardsPoint(x, y, CafeFieldElement.ONE_INTS, t));
         }
     }
