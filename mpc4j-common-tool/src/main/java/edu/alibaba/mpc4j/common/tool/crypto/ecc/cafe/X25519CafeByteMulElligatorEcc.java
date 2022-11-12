@@ -7,7 +7,7 @@ import edu.alibaba.mpc4j.common.tool.crypto.ecc.utils.X25519ByteEccUtils;
 import java.security.SecureRandom;
 
 /**
- * Cafe实现的Ristretto全功能字节椭圆曲线。
+ * Cafe实现的X25519乘法Elligator字节椭圆曲线。
  *
  * @author Weiran Liu
  * @date 2022/11/11
@@ -25,7 +25,7 @@ public class X25519CafeByteMulElligatorEcc implements ByteMulElligatorEcc {
 
     @Override
     public ByteEccFactory.ByteEccType getByteEccType() {
-        return ByteEccFactory.ByteEccType.X25519_CAFE;
+        return ByteEccFactory.ByteEccType.X25519_ELLIGATOR_CAFE;
     }
 
     @Override
@@ -173,11 +173,11 @@ public class X25519CafeByteMulElligatorEcc implements ByteMulElligatorEcc {
 
         // edwards25519.FeToBytes(publicKey, &u)
         byte[] uBytes = u.encode();
-        System.arraycopy(uBytes, 0, result, 0, X25519ByteEccUtils.POINT_BYTES);
+        System.arraycopy(uBytes, 0, result, 0, CafeFieldElement.BYTE_SIZE);
 
         // edwards25519.FeToBytes(representative, &r)
         byte[] rBytes = r.encode();
-        System.arraycopy(rBytes, 0, uniformResult, 0, X25519ByteEccUtils.POINT_BYTES);
+        System.arraycopy(rBytes, 0, uniformResult, 0, CafeFieldElement.BYTE_SIZE);
 
         return true;
     }
@@ -190,7 +190,7 @@ public class X25519CafeByteMulElligatorEcc implements ByteMulElligatorEcc {
         CafeFieldElement rr2 = CafeFieldElement.decode(uniformPoint);
         // compute d = -A / (1 + 2r^2)
         // edwards25519.FeSquare2(&rr2, &rr2)
-        rr2 = rr2.squareAndDouble();
+        rr2 = rr2.sqrDbl();
         // rr2[0]++
         rr2.t[0]++;
         // edwards25519.FeInvert(&rr2, &rr2)

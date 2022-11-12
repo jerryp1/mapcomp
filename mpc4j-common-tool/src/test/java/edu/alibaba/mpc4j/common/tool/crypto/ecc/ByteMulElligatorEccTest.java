@@ -26,12 +26,23 @@ public class ByteMulElligatorEccTest {
      * 随机状态
      */
     private static final SecureRandom SECURE_RANDOM = new SecureRandom();
+    /**
+     * 常数幂指数
+     */
+    private static final byte[] CONSTANT_CLAMP_SCALAR = new byte[] {
+        (byte) 0x00, (byte) 0x00, (byte) 0x00, (byte) 0x00, (byte) 0x00, (byte) 0x00, (byte) 0x00, (byte) 0x00,
+        (byte) 0x00, (byte) 0x00, (byte) 0x00, (byte) 0x00, (byte) 0x00, (byte) 0x00, (byte) 0x00, (byte) 0x00,
+        (byte) 0x00, (byte) 0x00, (byte) 0x00, (byte) 0x00, (byte) 0x00, (byte) 0x00, (byte) 0x00, (byte) 0x00,
+        (byte) 0x00, (byte) 0x00, (byte) 0x00, (byte) 0x00, (byte) 0x00, (byte) 0x00, (byte) 0x00, (byte) 0x40,
+    };
 
     @Parameterized.Parameters(name = "{0}")
     public static Collection<Object[]> configurations() {
         Collection<Object[]> configurations = new ArrayList<>();
-        // RISTRETTO_CAFE
-        configurations.add(new Object[]{ByteEccFactory.ByteEccType.X25519_CAFE.name(), ByteEccFactory.ByteEccType.X25519_CAFE,});
+        // X25519_ELLIGATOR_CAFE
+        configurations.add(new Object[]{
+            ByteEccFactory.ByteEccType.X25519_ELLIGATOR_CAFE.name(), ByteEccFactory.ByteEccType.X25519_ELLIGATOR_CAFE,
+        });
 
         return configurations;
     }
@@ -47,7 +58,33 @@ public class ByteMulElligatorEccTest {
     }
 
     @Test
-    public void testBaseMulElligator() {
+    public void testConstantBaseMulElligator() {
+        ByteMulElligatorEcc byteMulElligatorEcc = ByteEccFactory.createMulElligatorInstance(byteEccType);
+        int pointByteLength = byteMulElligatorEcc.pointByteLength();
+        // g^{r1}
+        byte[] gr1 = new byte[pointByteLength];
+        byte[] encodeGr1 = new byte[pointByteLength];
+        Assert.assertTrue(byteMulElligatorEcc.baseMul(CONSTANT_CLAMP_SCALAR, gr1, encodeGr1));
+        // g^{r2}
+        byte[] gr2 = new byte[pointByteLength];
+        byte[] encodeGr2 = new byte[pointByteLength];
+        Assert.assertTrue(byteMulElligatorEcc.baseMul(CONSTANT_CLAMP_SCALAR, gr2, encodeGr2));
+        byte[] gr12 = byteMulElligatorEcc.mul(gr1, CONSTANT_CLAMP_SCALAR);
+        byte[] gr21 = byteMulElligatorEcc.mul(gr2, CONSTANT_CLAMP_SCALAR);
+        Assert.assertArrayEquals(gr12, gr21);
+        gr12 = byteMulElligatorEcc.uniformMul(encodeGr1, CONSTANT_CLAMP_SCALAR);
+        gr21 = byteMulElligatorEcc.uniformMul(encodeGr2, CONSTANT_CLAMP_SCALAR);
+        Assert.assertArrayEquals(gr12, gr21);
+        gr12 = byteMulElligatorEcc.mul(gr1, CONSTANT_CLAMP_SCALAR);
+        gr21 = byteMulElligatorEcc.uniformMul(encodeGr2, CONSTANT_CLAMP_SCALAR);
+        Assert.assertArrayEquals(gr12, gr21);
+        gr12 = byteMulElligatorEcc.uniformMul(encodeGr1, CONSTANT_CLAMP_SCALAR);
+        gr21 = byteMulElligatorEcc.mul(gr2, CONSTANT_CLAMP_SCALAR);
+        Assert.assertArrayEquals(gr12, gr21);
+    }
+
+    @Test
+    public void testRandomBaseMulElligator() {
         ByteMulElligatorEcc byteMulElligatorEcc = ByteEccFactory.createMulElligatorInstance(byteEccType);
         int scalarByteLength = byteMulElligatorEcc.scalarByteLength();
         int pointByteLength = byteMulElligatorEcc.pointByteLength();

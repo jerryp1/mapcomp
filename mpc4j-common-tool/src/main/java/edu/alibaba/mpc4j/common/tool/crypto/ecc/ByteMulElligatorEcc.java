@@ -3,7 +3,7 @@ package edu.alibaba.mpc4j.common.tool.crypto.ecc;
 import java.security.SecureRandom;
 
 /**
- * 支持Elligator的乘法字节椭圆曲线接口。
+ * 乘法Elligator字节椭圆曲线接口。
  *
  * @author Weiran Liu
  * @date 2022/11/11

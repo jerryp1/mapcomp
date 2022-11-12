@@ -6,8 +6,6 @@
 
 package edu.alibaba.mpc4j.common.tool.crypto.ecc.cafe;
 
-import org.bouncycastle.util.encoders.Hex;
-
 import java.util.Arrays;
 
 /**
@@ -97,11 +95,11 @@ public class CafeRistrettoPoint {
      */
     public static CafeRistrettoPoint fromUniformBytes(final byte[] b) {
         // r0 is the low 255 bites of bytes[0..32], taken mod p.
-        final byte[] b0 = Arrays.copyOfRange(b, 0, CafeFieldElement.FIELD_BYTE_SIZE);
+        final byte[] b0 = Arrays.copyOfRange(b, 0, CafeFieldElement.BYTE_SIZE);
         final CafeFieldElement r0 = CafeFieldElement.decode(b0);
 
         // r1 is the low 255 bites of bytes[32..64], taken mod p.
-        final byte[] b1 = Arrays.copyOfRange(b, CafeFieldElement.FIELD_BYTE_SIZE, CafeFieldElement.FIELD_BYTE_SIZE * 2);
+        final byte[] b1 = Arrays.copyOfRange(b, CafeFieldElement.BYTE_SIZE, CafeFieldElement.BYTE_SIZE * 2);
         final CafeFieldElement r1 = CafeFieldElement.decode(b1);
 
         // Apply the Elligator map below to the inputs r_0, r_1 to obtain points P_1, P_2

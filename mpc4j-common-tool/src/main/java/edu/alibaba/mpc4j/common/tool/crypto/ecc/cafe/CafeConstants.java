@@ -49,57 +49,48 @@ public final class CafeConstants {
     static final CafeUnpackedScalar RR = new CafeUnpackedScalar(new int[]{
         0x0b5f9d12, 0x1e141b17, 0x158d7f3d, 0x143f3757, 0x1972d781, 0x042feb7c, 0x1ceec73d, 0x1e184d1e, 0x0005046d,
     });
-
     /**
      * Edwards $d$ value, equal to $-121665/121666 \bmod p$.
      */
     static final CafeFieldElement EDWARDS_D = new CafeFieldElement(new int[]{
         -10913610, 13857413, -15372611, 6949391, 114729, -8787816, -6275908, -3247719, -18696448, -12055116,
     });
-
     /**
      * Edwards $-d$ value, equal to $121665/121666 \bmod p$.
      */
     static final CafeFieldElement NEG_EDWARDS_D = EDWARDS_D.neg();
-
     /**
      * Edwards $2*d$ value, equal to $2*(-121665/121666) \bmod p$.
      */
     static final CafeFieldElement EDWARDS_2D = new CafeFieldElement(new int[]{
         -21827239, -5839606, -30745221, 13898782, 229458, 15978800, -12551817, -6495438, 29715968, 9444199,
     });
-
     /**
      * $= 1 - d^2$, where $d$ is the Edwards curve parameter.
      */
     static final CafeFieldElement ONE_MINUS_D_SQ = CafeFieldElement.ONE.sub(EDWARDS_D.sqr());
-
     /**
      * $= (d - 1)^2$, where $d$ is the Edwards curve parameter.
      */
     static final CafeFieldElement D_MINUS_ONE_SQ = EDWARDS_D.sub(CafeFieldElement.ONE).sqr();
-
     /**
      * $= \sqrt{a*d - 1}$, where $a = -1 \bmod p$, $d$ are the Edwards curve parameters.
      */
     static final CafeFieldElement SQRT_AD_MINUS_ONE = new CafeFieldElement(new int[]{
         24849947, -153582, -23613485, 6347715, -21072328, -667138, -25271143, -15367704, -870347, 14525639,
     });
-
     /**
      * $= 1/\sqrt{a-d}$, where $a = -1 \bmod p$, $d$ are the Edwards curve parameters.
      */
     static final CafeFieldElement INVSQRT_A_MINUS_D = new CafeFieldElement(new int[]{
         6111485, 4156064, -27798727, 12243468, -25904040, 120897, 20826367, -7060776, 6093568, -1986012,
     });
-
     /**
      * Precomputed value of one of the square roots of -1 (mod p).
      */
     static final CafeFieldElement SQRT_M1 = new CafeFieldElement(new int[]{
         -32595792, -7943725, 9377950, 3500415, 12389472, -272473, -25146209, -2005654, 326686, 11406482,
     });
-
     /**
      * The Ed25519 basepoint, as an EdwardsPoint.
      */

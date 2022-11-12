@@ -46,9 +46,9 @@ public class ByteEccFactory {
          */
         ED25519_CAFE,
         /**
-         * Cafe实现的Ristretto
+         * Cafe实现的Elligator编码X25519
          */
-        X25519_CAFE,
+        X25519_ELLIGATOR_CAFE,
     }
 
     /**
@@ -119,24 +119,6 @@ public class ByteEccFactory {
     /**
      * 创建乘法字节椭圆曲线。
      *
-     * @param byteEccType 字节椭圆曲线类型。
-     * @return 字节椭圆曲线。
-     */
-    public static ByteMulElligatorEcc createMulElligatorInstance(ByteEccType byteEccType) {
-        //noinspection SwitchStatementWithTooFewBranches
-        switch (byteEccType) {
-            case X25519_CAFE:
-                return new X25519CafeByteMulElligatorEcc();
-            default:
-                throw new IllegalArgumentException(
-                    "Invalid " + ByteEccType.class.getSimpleName() + ": " + byteEccType.name()
-                );
-        }
-    }
-
-    /**
-     * 创建乘法字节椭圆曲线。
-     *
      * @param envType 环境类型。
      * @return 乘法字节椭圆曲线。
      */
@@ -150,6 +132,24 @@ public class ByteEccFactory {
                 return createMulInstance(ByteEccType.X25519_BC);
             default:
                 throw new IllegalArgumentException("Invalid " + EnvType.class.getSimpleName() + ": " + envType.name());
+        }
+    }
+
+    /**
+     * 创建乘法字节椭圆曲线。
+     *
+     * @param byteEccType 字节椭圆曲线类型。
+     * @return 字节椭圆曲线。
+     */
+    public static ByteMulElligatorEcc createMulElligatorInstance(ByteEccType byteEccType) {
+        //noinspection SwitchStatementWithTooFewBranches
+        switch (byteEccType) {
+            case X25519_ELLIGATOR_CAFE:
+                return new X25519CafeByteMulElligatorEcc();
+            default:
+                throw new IllegalArgumentException(
+                    "Invalid " + ByteEccType.class.getSimpleName() + ": " + byteEccType.name()
+                );
         }
     }
 }

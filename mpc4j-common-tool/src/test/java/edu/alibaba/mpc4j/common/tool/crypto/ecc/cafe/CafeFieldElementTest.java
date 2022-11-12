@@ -76,10 +76,10 @@ public class CafeFieldElementTest {
     }
 
     @Test
-    public void testSquareAndDouble() {
+    public void testSqrDbl() {
         final CafeFieldElement a = CafeFieldElement.decode(A_BYTES);
         final CafeFieldElement squareA = CafeFieldElement.decode(A_SQUARE_BYTES);
-        Assert.assertEquals(squareA.add(squareA), a.squareAndDouble());
+        Assert.assertEquals(squareA.add(squareA), a.sqrDbl());
     }
 
     @Test
@@ -161,7 +161,7 @@ public class CafeFieldElementTest {
     @Test
     public void testHighestBitIgnoredDecode() {
         byte[] clearedBytes = B_BYTES;
-        clearedBytes[CafeFieldElement.FIELD_BYTE_SIZE - 1] &= 0x7F;
+        clearedBytes[CafeFieldElement.BYTE_SIZE - 1] &= 0x7F;
         CafeFieldElement withHighestBitElement = CafeFieldElement.decode(B_BYTES);
         CafeFieldElement withoutHighestBitElement = CafeFieldElement.decode(clearedBytes);
         Assert.assertEquals(withoutHighestBitElement, withHighestBitElement);
@@ -181,14 +181,14 @@ public class CafeFieldElementTest {
         // Then check that the encoding is correct
         byte[] oneBytes = one.encode();
         Assert.assertEquals(1, oneBytes[0]);
-        for (int i = 1; i < CafeFieldElement.FIELD_BYTE_SIZE; i++) {
+        for (int i = 1; i < CafeFieldElement.BYTE_SIZE; i++) {
             Assert.assertEquals(0, oneBytes[i]);
         }
     }
 
     @Test
     public void encodeAndDecodeOnZero() {
-        byte[] zero = new byte[CafeFieldElement.FIELD_BYTE_SIZE];
+        byte[] zero = new byte[CafeFieldElement.BYTE_SIZE];
         final CafeFieldElement a = CafeFieldElement.decode(zero);
         Assert.assertEquals(CafeFieldElement.ZERO, a);
         Assert.assertArrayEquals(zero, a.encode());
@@ -196,9 +196,9 @@ public class CafeFieldElementTest {
 
     @Test
     public void testCmov() {
-        int[] tempA = new int[CafeFieldElement.FIELD_INT_SIZE];
-        int[] tempB = new int[CafeFieldElement.FIELD_INT_SIZE];
-        for (int i = 0; i < CafeFieldElement.FIELD_INT_SIZE; i++) {
+        int[] tempA = new int[CafeFieldElement.INT_SIZE];
+        int[] tempB = new int[CafeFieldElement.INT_SIZE];
+        for (int i = 0; i < CafeFieldElement.INT_SIZE; i++) {
             tempA[i] = i;
             tempB[i] = 10 - i;
         }

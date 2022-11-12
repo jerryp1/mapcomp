@@ -96,4 +96,14 @@ public class X25519BcByteMulEcc implements ByteMulEcc {
     public ByteEccFactory.ByteEccType getByteEccType() {
         return ByteEccFactory.ByteEccType.X25519_BC;
     }
+
+    @Override
+    public int pointByteLength() {
+        return X25519ByteEccUtils.POINT_BYTES;
+    }
+
+    @Override
+    public int scalarByteLength() {
+        return X25519ByteEccUtils.SCALAR_BYTES;
+    }
 }

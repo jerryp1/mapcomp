@@ -23,11 +23,11 @@ class CafeFieldElement {
     /**
      * field int size
      */
-    static final int FIELD_INT_SIZE = 10;
+    static final int INT_SIZE = 10;
     /**
      * field byte size
      */
-    static final int FIELD_BYTE_SIZE = 32;
+    static final int BYTE_SIZE = 32;
     /**
      * 0
      */
@@ -35,13 +35,13 @@ class CafeFieldElement {
     /**
      * 0 in byte array
      */
-    private static final byte[] ZERO_BYTES = new byte[FIELD_BYTE_SIZE];
+    private static final byte[] ZERO_BYTES = new byte[BYTE_SIZE];
     /**
      * 1
      */
     static final CafeFieldElement ONE = new CafeFieldElement(new int[]{1, 0, 0, 0, 0, 0, 0, 0, 0, 0, });
     /**
-     * -1 in int array
+     * -1
      */
     static final CafeFieldElement MINUS_ONE = ZERO.sub(ONE);
     /**
@@ -57,7 +57,7 @@ class CafeFieldElement {
     /**
      * √(-1 / 2)
      */
-    static final CafeFieldElement SQRT_MINUS_HALF = new CafeFieldElement(new int[] {
+    static final CafeFieldElement SQRT_MINUS_HALF = new CafeFieldElement(new int[]{
         -17256545, 3971863, 28865457, -1750208, 27359696, -16640980, 12573105, 1002827, -163343, 11073975,
     });
 
@@ -74,7 +74,7 @@ class CafeFieldElement {
      * @param t The $2^{25.5}$ bit representation of the field element.
      */
     public CafeFieldElement(int[] t) {
-        if (t.length != FIELD_INT_SIZE) {
+        if (t.length != INT_SIZE) {
             throw new IllegalArgumentException("Invalid radix-2^25.5 representation");
         }
         this.t = t;
@@ -87,7 +87,7 @@ class CafeFieldElement {
      * @return The field element in its $2^{25.5}$ bit representation.
      */
     public static CafeFieldElement decode(byte[] in) {
-        if (in.length != FIELD_BYTE_SIZE) {
+        if (in.length != BYTE_SIZE) {
             throw new IllegalArgumentException("Invalid byte[] representation");
         }
         long h0 = ByteEccUtils.decodeLong32(in, 0);
@@ -144,7 +144,7 @@ class CafeFieldElement {
         h9 += carry8;
         h8 -= carry8 << 26;
 
-        int[] h = new int[FIELD_INT_SIZE];
+        int[] h = new int[INT_SIZE];
         h[0] = (int) h0;
         h[1] = (int) h1;
         h[2] = (int) h2;
@@ -284,7 +284,7 @@ class CafeFieldElement {
         h9 -= carry9 << 25;
 
         // Step 2 (straight forward conversion):
-        byte[] s = new byte[FIELD_BYTE_SIZE];
+        byte[] s = new byte[BYTE_SIZE];
         s[0] = (byte) h0;
         s[1] = (byte) (h0 >> 8);
         s[2] = (byte) (h0 >> 16);
@@ -349,8 +349,8 @@ class CafeFieldElement {
      */
     public CafeFieldElement cmov(CafeFieldElement that, int c) {
         c = -c;
-        int[] result = new int[FIELD_INT_SIZE];
-        for (int i = 0; i < FIELD_INT_SIZE; i++) {
+        int[] result = new int[INT_SIZE];
+        for (int i = 0; i < INT_SIZE; i++) {
             result[i] = t[i];
             int x = t[i] ^ that.t[i];
             x &= c;
@@ -435,10 +435,10 @@ class CafeFieldElement {
      * @return The field element this + val.
      */
     public CafeFieldElement add(CafeFieldElement val) {
-        int[] h = new int[FIELD_INT_SIZE];
-        for (int i = 0; i < FIELD_INT_SIZE; i++) {
+        int[] h = new int[INT_SIZE];for (int i = 0; i < INT_SIZE; i++) {
             h[i] = t[i] + val.t[i];
         }
+
         return new CafeFieldElement(h);
     }
 
@@ -462,8 +462,8 @@ class CafeFieldElement {
      * @return The field element this - val.
      **/
     public CafeFieldElement sub(CafeFieldElement val) {
-        int[] h = new int[FIELD_INT_SIZE];
-        for (int i = 0; i < FIELD_INT_SIZE; i++) {
+        int[] h = new int[INT_SIZE];
+        for (int i = 0; i < INT_SIZE; i++) {
             h[i] = t[i] - val.t[i];
         }
         return new CafeFieldElement(h);
@@ -483,8 +483,8 @@ class CafeFieldElement {
      * @return The field element (-1) * this.
      */
     public CafeFieldElement neg() {
-        int[] h = new int[FIELD_INT_SIZE];
-        for (int i = 0; i < FIELD_INT_SIZE; i++) {
+        int[] h = new int[INT_SIZE];
+        for (int i = 0; i < INT_SIZE; i++) {
             h[i] = -t[i];
         }
         return new CafeFieldElement(h);
@@ -753,7 +753,7 @@ class CafeFieldElement {
         /* |h0| <= 2^25; from now on fits into int32 unchanged */
         /* |h1| <= 1.01*2^24 */
 
-        int[] h = new int[FIELD_INT_SIZE];
+        int[] h = new int[INT_SIZE];
         h[0] = (int) h0;
         h[1] = (int) h1;
         h[2] = (int) h2;
@@ -941,7 +941,7 @@ class CafeFieldElement {
         h1 += carry0;
         h0 -= carry0 << 26;
 
-        int[] h = new int[FIELD_INT_SIZE];
+        int[] h = new int[INT_SIZE];
         h[0] = (int) h0;
         h[1] = (int) h1;
         h[2] = (int) h2;
@@ -975,7 +975,7 @@ class CafeFieldElement {
      *
      * @return The (reasonably reduced) square of this field element times 2.
      */
-    public CafeFieldElement squareAndDouble() {
+    public CafeFieldElement sqrDbl() {
         int f0 = t[0];
         int f1 = t[1];
         int f2 = t[2];
@@ -1136,7 +1136,7 @@ class CafeFieldElement {
         h1 += carry0;
         h0 -= carry0 << 26;
 
-        int[] h = new int[FIELD_INT_SIZE];
+        int[] h = new int[INT_SIZE];
         h[0] = (int) h0;
         h[1] = (int) h1;
         h[2] = (int) h2;
@@ -1159,6 +1159,7 @@ class CafeFieldElement {
      *
      * @return The inverse of this field element.
      */
+    @SuppressWarnings("AlibabaUndefineMagicConstant")
     public CafeFieldElement inv() {
         CafeFieldElement t0, t1, t2, t3;
 

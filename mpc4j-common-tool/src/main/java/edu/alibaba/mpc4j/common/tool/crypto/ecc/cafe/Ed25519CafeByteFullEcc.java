@@ -56,7 +56,7 @@ public class Ed25519CafeByteFullEcc implements ByteFullEcc {
         }
         // 需要乘以cofactor
         byte[] r = new byte[Ed25519ByteEccUtils.POINT_BYTES];
-        Ed25519ByteEccUtils.scalarMultEncoded(Ed25519ByteEccUtils.SCALAR_COFACTOR, p, r);
+        Ed25519ByteEccUtils.scalarMulEncoded(Ed25519ByteEccUtils.SCALAR_COFACTOR, p, r);
         return r;
     }
 
@@ -74,7 +74,7 @@ public class Ed25519CafeByteFullEcc implements ByteFullEcc {
             }
         }
         byte[] r = new byte[Ed25519ByteEccUtils.POINT_BYTES];
-        Ed25519ByteEccUtils.scalarMultEncoded(Ed25519ByteEccUtils.SCALAR_COFACTOR, p, r);
+        Ed25519ByteEccUtils.scalarMulEncoded(Ed25519ByteEccUtils.SCALAR_COFACTOR, p, r);
         return r;
     }
 
@@ -169,5 +169,15 @@ public class Ed25519CafeByteFullEcc implements ByteFullEcc {
     @Override
     public ByteEccFactory.ByteEccType getByteEccType() {
         return ByteEccFactory.ByteEccType.ED25519_CAFE;
+    }
+
+    @Override
+    public int pointByteLength() {
+        return Ed25519ByteEccUtils.POINT_BYTES;
+    }
+
+    @Override
+    public int scalarByteLength() {
+        return Ed25519ByteEccUtils.SCALAR_BYTES;
     }
 }

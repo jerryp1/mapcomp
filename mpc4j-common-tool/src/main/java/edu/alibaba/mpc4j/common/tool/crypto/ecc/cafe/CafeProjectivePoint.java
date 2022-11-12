@@ -55,7 +55,7 @@ class CafeProjectivePoint {
     CafeCompletedPoint dbl() {
         CafeFieldElement xx = this.x.sqr();
         CafeFieldElement yy = this.y.sqr();
-        CafeFieldElement zz2 = this.z.squareAndDouble();
+        CafeFieldElement zz2 = this.z.sqrDbl();
         CafeFieldElement xAddY = this.x.add(this.y);
         CafeFieldElement xAddYsq = xAddY.sqr();
         CafeFieldElement yyAddXx = yy.add(xx);
