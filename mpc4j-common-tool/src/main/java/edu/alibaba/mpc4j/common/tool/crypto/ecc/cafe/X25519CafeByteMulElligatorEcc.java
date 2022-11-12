@@ -167,7 +167,7 @@ public class X25519CafeByteMulElligatorEcc implements ByteMulElligatorEcc {
         r = r.mul(maybeSqrtM1);
 
         // vInSquareRootImage := feBytesLE(&vBytes, &halfQMinus1Bytes)
-        int vInSquareRootImage = v.isNegative() ^ 1;
+        int vInSquareRootImage = v.isNeg() ^ 1;
         // edwards25519.FeCMove(&r, &r1, vInSquareRootImage)
         r = r.cmov(r1, vInSquareRootImage);
 

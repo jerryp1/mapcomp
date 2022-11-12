@@ -66,7 +66,7 @@ public class CafeEdwardsPoint {
         // y = y * (1 / z)
         CafeFieldElement y = this.y.mul(recip);
         byte[] s = y.encode();
-        s[CafeEdwardsCompressedPoint.BYTE_SIZE - 1] |= (x.isNegative() << 7);
+        s[CafeEdwardsCompressedPoint.BYTE_SIZE - 1] |= (x.isNeg() << 7);
         return new CafeEdwardsCompressedPoint(s);
     }
 

@@ -106,31 +106,31 @@ public class CafeFieldElementTest {
         sqrt = CafeFieldElement.sqrtRatioM1(zero, zero);
         Assert.assertEquals(1, sqrt.wasSquare);
         Assert.assertEquals(zero, sqrt.result);
-        Assert.assertEquals(0, sqrt.result.isNegative());
+        Assert.assertEquals(0, sqrt.result.isNeg());
 
         // 1/0 should return (0, 0) since v is 0, u is nonzero
         sqrt = CafeFieldElement.sqrtRatioM1(one, zero);
         Assert.assertEquals(0, sqrt.wasSquare);
         Assert.assertEquals(zero, sqrt.result);
-        Assert.assertEquals(0, sqrt.result.isNegative());
+        Assert.assertEquals(0, sqrt.result.isNeg());
 
         // 2/1 is non-square, so we expect (0, sqrt(i*2))
         sqrt = CafeFieldElement.sqrtRatioM1(two, one);
         Assert.assertEquals(0, sqrt.wasSquare);
         Assert.assertEquals(two.mul(i), sqrt.result.sqr());
-        Assert.assertEquals(0, sqrt.result.isNegative());
+        Assert.assertEquals(0, sqrt.result.isNeg());
 
         // 4/1 is square, so we expect (1, sqrt(4))
         sqrt = CafeFieldElement.sqrtRatioM1(four, one);
         Assert.assertEquals(1, sqrt.wasSquare);
         Assert.assertEquals(four, sqrt.result.sqr());
-        Assert.assertEquals(0, sqrt.result.isNegative());
+        Assert.assertEquals(0, sqrt.result.isNeg());
 
         // 1/4 is square, so we expect (1, 1/sqrt(4))
         sqrt = CafeFieldElement.sqrtRatioM1(one, four);
         Assert.assertEquals(1, sqrt.wasSquare);
         Assert.assertEquals(one, sqrt.result.sqr().mul(four));
-        Assert.assertEquals(0, sqrt.result.isNegative());
+        Assert.assertEquals(0, sqrt.result.isNeg());
     }
 
     @Test

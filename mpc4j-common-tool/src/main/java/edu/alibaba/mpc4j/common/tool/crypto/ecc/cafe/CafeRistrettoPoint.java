@@ -142,19 +142,19 @@ public class CafeRistrettoPoint {
         // d_1 / (√(a - d))
         final CafeFieldElement den1 = d1.mul(CafeConstants.INVSQRT_A_MINUS_D);
         // if t · z_inv is negative, (x, y) = (-y · √a, x · √a)
-        final int rotate = repr.t.mul(zInv).isNegative();
+        final int rotate = repr.t.mul(zInv).isNeg();
         final CafeFieldElement x = repr.x.cmov(iy, rotate);
         CafeFieldElement y = repr.y.cmov(ix, rotate);
         final CafeFieldElement z = repr.z;
         // if t · z_inv is negative, d_1 / (√(a - d)), else d = d_2
         final CafeFieldElement d = d2.cmov(den1, rotate);
         // if x · z_inv is negative, set y = -y
-        y = y.cmov(y.neg(), x.mul(zInv).isNegative());
+        y = y.cmov(y.neg(), x.mul(zInv).isNeg());
 
         // compute s = √(-a) · (z - y) · d.
         // Since a = ±1, implementations can replace multiplications by a with sign changes, as appropriate.
         CafeFieldElement s = d.mul(z.sub(y));
-        final int sIsNegative = s.isNegative();
+        final int sIsNegative = s.isNeg();
         s = s.cmov(s.neg(), sIsNegative);
 
         // Return the canonical little-endian encoding of s.

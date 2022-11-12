@@ -6,6 +6,8 @@
 
 package edu.alibaba.mpc4j.common.tool.crypto.ecc.cafe;
 
+import edu.alibaba.mpc4j.common.tool.crypto.ecc.utils.Curve25519FieldUtils;
+
 /**
  * Various constants and useful parameters. Modified from:
  * <p>
@@ -88,9 +90,7 @@ public final class CafeConstants {
     /**
      * Precomputed value of one of the square roots of -1 (mod p).
      */
-    static final CafeFieldElement SQRT_M1 = new CafeFieldElement(new int[]{
-        -32595792, -7943725, 9377950, 3500415, 12389472, -272473, -25146209, -2005654, 326686, 11406482,
-    });
+    static final CafeFieldElement SQRT_M1 = new CafeFieldElement(Curve25519FieldUtils.SQRT_M1_INTS);
     /**
      * The Ed25519 basepoint, as an EdwardsPoint.
      */

@@ -7,6 +7,7 @@
 package edu.alibaba.mpc4j.common.tool.crypto.ecc.cafe;
 
 import edu.alibaba.mpc4j.common.tool.crypto.ecc.utils.ByteEccUtils;
+import edu.alibaba.mpc4j.common.tool.crypto.ecc.utils.Curve25519FieldUtils;
 
 import java.util.Arrays;
 
@@ -23,43 +24,35 @@ class CafeFieldElement {
     /**
      * field int size
      */
-    static final int INT_SIZE = 10;
+    static final int INT_SIZE = Curve25519FieldUtils.INT_SIZE;
     /**
      * field byte size
      */
-    static final int BYTE_SIZE = 32;
+    static final int BYTE_SIZE = Curve25519FieldUtils.BYTE_SIZE;
     /**
      * 0
      */
-    static final CafeFieldElement ZERO = new CafeFieldElement(new int[]{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, });
-    /**
-     * 0 in byte array
-     */
-    private static final byte[] ZERO_BYTES = new byte[BYTE_SIZE];
+    static final CafeFieldElement ZERO = new CafeFieldElement(Curve25519FieldUtils.ZERO_INTS);
     /**
      * 1
      */
-    static final CafeFieldElement ONE = new CafeFieldElement(new int[]{1, 0, 0, 0, 0, 0, 0, 0, 0, 0, });
+    static final CafeFieldElement ONE = new CafeFieldElement(Curve25519FieldUtils.ONE_INTS);
     /**
      * -1
      */
-    static final CafeFieldElement MINUS_ONE = ZERO.sub(ONE);
+    static final CafeFieldElement MINUS_ONE = new CafeFieldElement(Curve25519FieldUtils.MINUS_ONE_INTS);
     /**
      * a = 486662
      */
-    static final CafeFieldElement A = new CafeFieldElement(new int[]{486662, 0, 0, 0, 0, 0, 0, 0, 0, 0, });
+    static final CafeFieldElement A = new CafeFieldElement(Curve25519FieldUtils.A_INTS);
     /**
      * √(-(a + 2))
      */
-    static final CafeFieldElement SQRT_MINUS_A_PLUS_2 = new CafeFieldElement(new int[]{
-        -12222970, -8312128, -11511410, 9067497, -15300785, -241793, 25456130, 14121551, -12187136, 3972024,
-    });
+    static final CafeFieldElement SQRT_MINUS_A_PLUS_2 = new CafeFieldElement(Curve25519FieldUtils.SQRT_MINUS_A_PLUS_2_INTS);
     /**
      * √(-1 / 2)
      */
-    static final CafeFieldElement SQRT_MINUS_HALF = new CafeFieldElement(new int[]{
-        -17256545, 3971863, 28865457, -1750208, 27359696, -16640980, 12573105, 1002827, -163343, 11073975,
-    });
+    static final CafeFieldElement SQRT_MINUS_HALF = new CafeFieldElement(Curve25519FieldUtils.SQRT_MINUS_HALF_INTS);
 
     /**
      * An element $t$, entries $t[0] \dots t[9]$, represents the integer $t[0] +
@@ -213,111 +206,7 @@ class CafeFieldElement {
      * @return the 32-byte encoding of this FieldElement.
      */
     byte[] encode() {
-        int h0 = t[0];
-        int h1 = t[1];
-        int h2 = t[2];
-        int h3 = t[3];
-        int h4 = t[4];
-        int h5 = t[5];
-        int h6 = t[6];
-        int h7 = t[7];
-        int h8 = t[8];
-        int h9 = t[9];
-        int q;
-        int carry0;
-        int carry1;
-        int carry2;
-        int carry3;
-        int carry4;
-        int carry5;
-        int carry6;
-        int carry7;
-        int carry8;
-        int carry9;
-
-        // Step 1:
-        // Calculate q
-        q = (19 * h9 + (1 << 24)) >> 25;
-        q = (h0 + q) >> 26;
-        q = (h1 + q) >> 25;
-        q = (h2 + q) >> 26;
-        q = (h3 + q) >> 25;
-        q = (h4 + q) >> 26;
-        q = (h5 + q) >> 25;
-        q = (h6 + q) >> 26;
-        q = (h7 + q) >> 25;
-        q = (h8 + q) >> 26;
-        q = (h9 + q) >> 25;
-
-        // r = h - q * p = h - 2^255 * q + 19 * q
-        // First add 19 * q then discard the bit 255
-        h0 += 19 * q;
-
-        carry0 = h0 >> 26;
-        h1 += carry0;
-        h0 -= carry0 << 26;
-        carry1 = h1 >> 25;
-        h2 += carry1;
-        h1 -= carry1 << 25;
-        carry2 = h2 >> 26;
-        h3 += carry2;
-        h2 -= carry2 << 26;
-        carry3 = h3 >> 25;
-        h4 += carry3;
-        h3 -= carry3 << 25;
-        carry4 = h4 >> 26;
-        h5 += carry4;
-        h4 -= carry4 << 26;
-        carry5 = h5 >> 25;
-        h6 += carry5;
-        h5 -= carry5 << 25;
-        carry6 = h6 >> 26;
-        h7 += carry6;
-        h6 -= carry6 << 26;
-        carry7 = h7 >> 25;
-        h8 += carry7;
-        h7 -= carry7 << 25;
-        carry8 = h8 >> 26;
-        h9 += carry8;
-        h8 -= carry8 << 26;
-        carry9 = h9 >> 25;
-        h9 -= carry9 << 25;
-
-        // Step 2 (straight forward conversion):
-        byte[] s = new byte[BYTE_SIZE];
-        s[0] = (byte) h0;
-        s[1] = (byte) (h0 >> 8);
-        s[2] = (byte) (h0 >> 16);
-        s[3] = (byte) ((h0 >> 24) | (h1 << 2));
-        s[4] = (byte) (h1 >> 6);
-        s[5] = (byte) (h1 >> 14);
-        s[6] = (byte) ((h1 >> 22) | (h2 << 3));
-        s[7] = (byte) (h2 >> 5);
-        s[8] = (byte) (h2 >> 13);
-        s[9] = (byte) ((h2 >> 21) | (h3 << 5));
-        s[10] = (byte) (h3 >> 3);
-        s[11] = (byte) (h3 >> 11);
-        s[12] = (byte) ((h3 >> 19) | (h4 << 6));
-        s[13] = (byte) (h4 >> 2);
-        s[14] = (byte) (h4 >> 10);
-        s[15] = (byte) (h4 >> 18);
-        s[16] = (byte) h5;
-        s[17] = (byte) (h5 >> 8);
-        s[18] = (byte) (h5 >> 16);
-        s[19] = (byte) ((h5 >> 24) | (h6 << 1));
-        s[20] = (byte) (h6 >> 7);
-        s[21] = (byte) (h6 >> 15);
-        s[22] = (byte) ((h6 >> 23) | (h7 << 3));
-        s[23] = (byte) (h7 >> 5);
-        s[24] = (byte) (h7 >> 13);
-        s[25] = (byte) ((h7 >> 21) | (h8 << 4));
-        s[26] = (byte) (h8 >> 4);
-        s[27] = (byte) (h8 >> 12);
-        s[28] = (byte) ((h8 >> 20) | (h9 << 6));
-        s[29] = (byte) (h9 >> 2);
-        s[30] = (byte) (h9 >> 10);
-        s[31] = (byte) (h9 >> 18);
-        return s;
+        return Curve25519FieldUtils.encode(t);
     }
 
     /**
@@ -326,7 +215,7 @@ class CafeFieldElement {
      * @return 1 if self and other are equal, 0 otherwise.
      */
     public int cequals(CafeFieldElement other) {
-        return CafeConstantTimeUtils.equal(encode(), other.encode());
+        return Curve25519FieldUtils.areEqual(t, other.t);
     }
 
     /**
@@ -348,14 +237,9 @@ class CafeFieldElement {
      * target="_top">SUPERCOP</a>
      */
     public CafeFieldElement cmov(CafeFieldElement that, int c) {
-        c = -c;
-        int[] result = new int[INT_SIZE];
-        for (int i = 0; i < INT_SIZE; i++) {
-            result[i] = t[i];
-            int x = t[i] ^ that.t[i];
-            x &= c;
-            result[i] ^= x;
-        }
+        int[] result = Curve25519FieldUtils.createZero();
+        Curve25519FieldUtils.copy(t, result);
+        Curve25519FieldUtils.cmov(c, that.t, result);
         return new CafeFieldElement(result);
     }
 
@@ -365,7 +249,7 @@ class CafeFieldElement {
      * @return $|\text{this}|$.
      */
     CafeFieldElement abs() {
-        return cmov(neg(), isNegative());
+        return cmov(neg(), isNeg());
     }
 
     /**
@@ -399,8 +283,7 @@ class CafeFieldElement {
      * @return 1 if this FieldElement is zero, 0 otherwise.
      */
     int isZero() {
-        final byte[] s = encode();
-        return CafeConstantTimeUtils.equal(s, ZERO_BYTES);
+        return Curve25519FieldUtils.isZero(t);
     }
 
     /**
@@ -412,9 +295,8 @@ class CafeFieldElement {
      * @return 1 if this FieldElement is negative, 0 otherwise.
      * @see <a href="https://tools.ietf.org/html/rfc8032" target="_top">RFC 8032</a>
      */
-    int isNegative() {
-        final byte[] s = encode();
-        return s[0] & 1;
+    int isNeg() {
+        return Curve25519FieldUtils.isNeg(t);
     }
 
     /**
@@ -435,10 +317,8 @@ class CafeFieldElement {
      * @return The field element this + val.
      */
     public CafeFieldElement add(CafeFieldElement val) {
-        int[] h = new int[INT_SIZE];for (int i = 0; i < INT_SIZE; i++) {
-            h[i] = t[i] + val.t[i];
-        }
-
+        int[] h = Curve25519FieldUtils.createZero();
+        Curve25519FieldUtils.add(t, val.t, h);
         return new CafeFieldElement(h);
     }
 
@@ -462,10 +342,8 @@ class CafeFieldElement {
      * @return The field element this - val.
      **/
     public CafeFieldElement sub(CafeFieldElement val) {
-        int[] h = new int[INT_SIZE];
-        for (int i = 0; i < INT_SIZE; i++) {
-            h[i] = t[i] - val.t[i];
-        }
+        int[] h = Curve25519FieldUtils.createZero();
+        Curve25519FieldUtils.sub(t, val.t, h);
         return new CafeFieldElement(h);
     }
 

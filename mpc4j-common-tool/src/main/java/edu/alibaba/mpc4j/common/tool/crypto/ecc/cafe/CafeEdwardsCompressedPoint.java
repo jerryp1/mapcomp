@@ -62,7 +62,7 @@ public class CafeEdwardsCompressedPoint {
         }
 
         CafeFieldElement x = sqrt.result.neg().cmov(
-            sqrt.result, CafeConstantTimeUtils.equal(sqrt.result.isNegative(), CafeConstantTimeUtils.bit(data, 255))
+            sqrt.result, CafeConstantTimeUtils.equal(sqrt.result.isNeg(), CafeConstantTimeUtils.bit(data, 255))
         );
 
         return new CafeEdwardsPoint(x, y, CafeFieldElement.ONE, x.mul(y));

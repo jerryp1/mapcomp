@@ -51,7 +51,7 @@ public class CafeRistrettoCompressedPoint {
         // check that s_bytes is the canonical encoding of a field element, or else abort.
         final int sIsCanonical = CafeConstantTimeUtils.equal(data, sBytes);
         // check that s is non-negative, or else abort.
-        if (sIsCanonical == 0 || s.isNegative() == 1) {
+        if (sIsCanonical == 0 || s.isNeg() == 1) {
             throw new IllegalArgumentException("Invalid ristretto255 encoding");
         }
         // s^2
@@ -77,7 +77,7 @@ public class CafeRistrettoCompressedPoint {
         final CafeFieldElement y = u1.mul(dy);
         // t = x · y
         final CafeFieldElement t = x.mul(y);
-        if (invsqrt.wasSquare == 0 || t.isNegative() == 1 || y.isZero() == 1) {
+        if (invsqrt.wasSquare == 0 || t.isNeg() == 1 || y.isZero() == 1) {
             // or abort if the square root does not exist; if t is negative or y = 0, abort.
             throw new IllegalArgumentException("Invalid ristretto255 encoding");
         } else {
