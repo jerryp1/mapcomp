@@ -27,7 +27,7 @@ public class ByteMulElligatorEccTest {
      */
     private static final SecureRandom SECURE_RANDOM = new SecureRandom();
     /**
-     * 常数幂指数
+     * 合法幂指数
      */
     private static final byte[] CONSTANT_CLAMP_SCALAR = new byte[] {
         (byte) 0x00, (byte) 0x00, (byte) 0x00, (byte) 0x00, (byte) 0x00, (byte) 0x00, (byte) 0x00, (byte) 0x00,

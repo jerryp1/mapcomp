@@ -48,6 +48,8 @@ public class ByteFullEccTest {
         configurations.add(new Object[]{ByteEccType.ED25519_BC.name(), ByteEccType.ED25519_BC,});
         // ED25519_CAFE
         configurations.add(new Object[]{ByteEccType.ED25519_CAFE.name(), ByteEccType.ED25519_CAFE,});
+        // RISTRETTO_CAFE
+        configurations.add(new Object[]{ByteEccType.RISTRETTO_CAFE.name(), ByteEccType.RISTRETTO_CAFE,});
 
         return configurations;
     }
