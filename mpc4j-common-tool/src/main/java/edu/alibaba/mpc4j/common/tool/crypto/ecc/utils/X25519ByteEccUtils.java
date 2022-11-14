@@ -107,7 +107,7 @@ public class X25519ByteEccUtils {
      * @param u 基点U。
      * @param r 结果点R。
      */
-    public static void clampScalarMult(byte[] k, byte[] u, byte[] r) {
+    public static void clampScalarMul(byte[] k, byte[] u, byte[] r) {
         int[] n = new int[SCALAR_INTS];
         decodeScalar(k, n);
 
@@ -171,7 +171,7 @@ public class X25519ByteEccUtils {
      * @param k 幂指数k。
      * @param r 结果R。
      */
-    public static void clampScalarMultBase(byte[] k, byte[] r) {
+    public static void clampScalarBaseMul(byte[] k, byte[] r) {
         int[] y = Curve25519Field.create();
         int[] z = Curve25519Field.create();
         Ed25519ByteEccUtils.scalarMultBaseYZ(k, y, z);

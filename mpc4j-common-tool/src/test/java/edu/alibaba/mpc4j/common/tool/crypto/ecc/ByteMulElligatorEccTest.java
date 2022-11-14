@@ -41,7 +41,7 @@ public class ByteMulElligatorEccTest {
         Collection<Object[]> configurations = new ArrayList<>();
         // X25519_ELLIGATOR_CAFE
         configurations.add(new Object[]{
-            ByteEccFactory.ByteEccType.X25519_ELLIGATOR_CAFE.name(), ByteEccFactory.ByteEccType.X25519_ELLIGATOR_CAFE,
+            ByteEccFactory.ByteEccType.X25519_ELLIGATOR_BC.name(), ByteEccFactory.ByteEccType.X25519_ELLIGATOR_BC,
         });
 
         return configurations;

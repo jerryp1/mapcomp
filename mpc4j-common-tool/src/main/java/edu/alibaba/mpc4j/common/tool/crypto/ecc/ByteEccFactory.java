@@ -3,7 +3,7 @@ package edu.alibaba.mpc4j.common.tool.crypto.ecc;
 import edu.alibaba.mpc4j.common.tool.EnvType;
 import edu.alibaba.mpc4j.common.tool.crypto.ecc.bc.*;
 import edu.alibaba.mpc4j.common.tool.crypto.ecc.cafe.Ed25519CafeByteFullEcc;
-import edu.alibaba.mpc4j.common.tool.crypto.ecc.cafe.X25519CafeByteMulElligatorEcc;
+import edu.alibaba.mpc4j.common.tool.crypto.ecc.bc.X25519BcByteMulElligatorEcc;
 import edu.alibaba.mpc4j.common.tool.crypto.ecc.sodium.Ed25519SodiumByteFullEcc;
 import edu.alibaba.mpc4j.common.tool.crypto.ecc.sodium.X25519SodiumByteMulEcc;
 
@@ -46,9 +46,9 @@ public class ByteEccFactory {
          */
         ED25519_CAFE,
         /**
-         * Cafe实现的Elligator编码X25519
+         * BC实现的Elligator编码X25519
          */
-        X25519_ELLIGATOR_CAFE,
+        X25519_ELLIGATOR_BC,
     }
 
     /**
@@ -144,8 +144,8 @@ public class ByteEccFactory {
     public static ByteMulElligatorEcc createMulElligatorInstance(ByteEccType byteEccType) {
         //noinspection SwitchStatementWithTooFewBranches
         switch (byteEccType) {
-            case X25519_ELLIGATOR_CAFE:
-                return new X25519CafeByteMulElligatorEcc();
+            case X25519_ELLIGATOR_BC:
+                return new X25519BcByteMulElligatorEcc();
             default:
                 throw new IllegalArgumentException(
                     "Invalid " + ByteEccType.class.getSimpleName() + ": " + byteEccType.name()

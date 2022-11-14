@@ -23,12 +23,12 @@ public interface ByteMulElligatorEcc {
      * See https://www.imperialviolet.org/2013/12/25/elligator.html for more details.
      * </p>
      *
-     * @param k             the scalar k.
-     * @param result        the obtained non-uniform representative to write to.
-     * @param uniformResult the obtained uniform representative to write to.
+     * @param k            the scalar k.
+     * @param point        the obtained non-uniform representative to write to.
+     * @param uniformPoint the obtained uniform representative to write to.
      * @return true if success, false otherwise.
      */
-    boolean baseMul(final byte[] k, byte[] result, byte[] uniformResult);
+    boolean baseMul(final byte[] k, byte[] point, byte[] uniformPoint);
 
     /**
      * The point multiplication under the elligator decoding.
@@ -37,7 +37,7 @@ public interface ByteMulElligatorEcc {
      * </p>
      *
      * @param uniformPoint the uniform or non-uniform representative for the point.
-     * @param k            the scalar k.
+     * @param k                  the scalar k.
      * @return k · P.
      */
     byte[] uniformMul(final byte[] uniformPoint, final byte[] k);

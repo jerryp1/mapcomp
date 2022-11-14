@@ -54,9 +54,7 @@ public final class CafeConstants {
     /**
      * Edwards $d$ value, equal to $-121665/121666 \bmod p$.
      */
-    static final CafeFieldElement EDWARDS_D = new CafeFieldElement(new int[]{
-        -10913610, 13857413, -15372611, 6949391, 114729, -8787816, -6275908, -3247719, -18696448, -12055116,
-    });
+    static final CafeFieldElement EDWARDS_D = new CafeFieldElement(Curve25519FieldUtils.EDWARDS_D_INTS);
     /**
      * Edwards $-d$ value, equal to $121665/121666 \bmod p$.
      */
