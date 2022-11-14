@@ -1,8 +1,8 @@
 package edu.alibaba.mpc4j.s2pc.pcg.mtg.zp64;
 
 import edu.alibaba.mpc4j.common.tool.EnvType;
-import edu.alibaba.mpc4j.common.tool.galoisfield.Zp64.Zp64;
-import edu.alibaba.mpc4j.common.tool.galoisfield.Zp64.Zp64Factory;
+import edu.alibaba.mpc4j.common.tool.galoisfield.zp64.Zp64;
+import edu.alibaba.mpc4j.common.tool.galoisfield.zp64.Zp64Factory;
 import org.junit.Assert;
 
 import java.util.stream.IntStream;

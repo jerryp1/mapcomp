@@ -7,8 +7,8 @@ import edu.alibaba.mpc4j.common.rpc.Rpc;
 import edu.alibaba.mpc4j.common.rpc.utils.DataPacket;
 import edu.alibaba.mpc4j.common.rpc.utils.DataPacketHeader;
 import edu.alibaba.mpc4j.common.tool.CommonConstants;
-import edu.alibaba.mpc4j.common.tool.galoisfield.Zp64.Zp64;
-import edu.alibaba.mpc4j.common.tool.galoisfield.Zp64.Zp64Factory;
+import edu.alibaba.mpc4j.common.tool.galoisfield.zp64.Zp64;
+import edu.alibaba.mpc4j.common.tool.galoisfield.zp64.Zp64Factory;
 import edu.alibaba.mpc4j.s2pc.pcg.mtg.zp64.core.AbstractZp64CoreMtgParty;
 import edu.alibaba.mpc4j.s2pc.pcg.mtg.zp64.Zp64Triple;
 

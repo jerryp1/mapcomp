@@ -5,8 +5,8 @@ import edu.alibaba.mpc4j.common.rpc.Rpc;
 import edu.alibaba.mpc4j.common.rpc.desc.PtoDesc;
 import edu.alibaba.mpc4j.common.rpc.pto.AbstractSecureTwoPartyPto;
 import edu.alibaba.mpc4j.common.tool.CommonConstants;
-import edu.alibaba.mpc4j.common.tool.galoisfield.Zp64.Zp64;
-import edu.alibaba.mpc4j.common.tool.galoisfield.Zp64.Zp64Factory;
+import edu.alibaba.mpc4j.common.tool.galoisfield.zp64.Zp64;
+import edu.alibaba.mpc4j.common.tool.galoisfield.zp64.Zp64Factory;
 
 import java.math.BigInteger;
 import java.util.Arrays;

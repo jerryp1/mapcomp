@@ -2,9 +2,7 @@ package edu.alibaba.mpc4j.common.tool.galoisfield.zp64;
 
 import com.google.common.base.Preconditions;
 import edu.alibaba.mpc4j.common.tool.EnvType;
-import edu.alibaba.mpc4j.common.tool.galoisfield.Zp64.Zp64;
-import edu.alibaba.mpc4j.common.tool.galoisfield.Zp64.Zp64Factory;
-import edu.alibaba.mpc4j.common.tool.galoisfield.Zp64.Zp64Factory.Zp64Type;
+import edu.alibaba.mpc4j.common.tool.galoisfield.zp64.Zp64Factory.Zp64Type;
 import org.apache.commons.lang3.StringUtils;
 import org.junit.Assert;
 import org.junit.Test;

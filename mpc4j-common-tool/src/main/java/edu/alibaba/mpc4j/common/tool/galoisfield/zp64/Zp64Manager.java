@@ -1,4 +1,4 @@
-package edu.alibaba.mpc4j.common.tool.galoisfield.Zp64;
+package edu.alibaba.mpc4j.common.tool.galoisfield.zp64;
 
 import cc.redberry.rings.IntegersZp64;
 import edu.alibaba.mpc4j.common.tool.galoisfield.zp.ZpManager;
