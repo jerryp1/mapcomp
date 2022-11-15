@@ -4,6 +4,9 @@ import com.google.common.base.Preconditions;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.io.InputStream;
 import java.util.*;
 
 /**
@@ -17,6 +20,24 @@ public class PropertiesUtils {
 
     private PropertiesUtils() {
         // empty
+    }
+
+    /**
+     * 从配置文件中读取参数。
+     *
+     * @param file 配置文件。
+     * @return 参数。
+     */
+    public static Properties loadProperties(String file) {
+        try (InputStream input = new FileInputStream(file)) {
+            Properties properties = new Properties();
+            // load a properties file
+            properties.load(input);
+            return properties;
+        } catch (IOException e) {
+            e.printStackTrace();
+            throw new IllegalArgumentException("Failed to load config file: " +  file);
+        }
     }
 
     /**

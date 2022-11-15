@@ -1,8 +1,9 @@
-package edu.alibaba.mpc4j.s2pc.pso.main;
+package edu.alibaba.mpc4j.s2pc.pjc.main;
 
 import edu.alibaba.mpc4j.common.tool.utils.PropertiesUtils;
-import edu.alibaba.mpc4j.s2pc.pso.main.psu.PsuBlackIpMain;
-import edu.alibaba.mpc4j.s2pc.pso.main.psu.PsuMain;
+import edu.alibaba.mpc4j.s2pc.pjc.main.pid.PidMain;
+import edu.alibaba.mpc4j.s2pc.pjc.main.pmid.PmidMain;
+import edu.alibaba.mpc4j.s2pc.pso.main.PsoMain;
 import org.apache.log4j.PropertyConfigurator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -10,12 +11,12 @@ import org.slf4j.LoggerFactory;
 import java.util.Properties;
 
 /**
- * PSO主函数。
+ * PJC协议主函数。
  *
  * @author Weiran Liu
- * @date 2022/02/16
+ * @date 2022/11/15
  */
-public class PsoMain {
+public class PjcMain {
     private static final Logger LOGGER = LoggerFactory.getLogger(PsoMain.class);
 
     /**
@@ -36,13 +37,13 @@ public class PsoMain {
         String ptoType = PropertiesUtils.readString(properties, "pto_type");
         LOGGER.info("pto_type = " + ptoType);
         switch (ptoType) {
-            case PsuBlackIpMain.PTO_TYPE_NAME:
-                PsuBlackIpMain psuBlackIpMain = new PsuBlackIpMain(properties);
-                psuBlackIpMain.run();
+            case PidMain.PTO_TYPE_NAME:
+                PidMain pidMain = new PidMain(properties);
+                pidMain.run();
                 break;
-            case PsuMain.PTO_TYPE_NAME:
-                PsuMain psuMain = new PsuMain(properties);
-                psuMain.run();
+            case PmidMain.PTO_TYPE_NAME:
+                PmidMain pmidMain = new PmidMain(properties);
+                pmidMain.run();
                 break;
             default:
                 throw new IllegalArgumentException("Invalid pto_type: " + ptoType);

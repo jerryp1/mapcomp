@@ -6,10 +6,20 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ## \[1.0.6\]
 
+### Added
+
+- `mpc4j-s2pc-pjc`
+  - We create a new module `mpc4j-s2pc-pjc` to manage "Private Join and Compute" protocols, such as PSI-CA, PID, PMID, PSI-CA-SUM, and others.
+
 ### Changed
 
 - `mpc4j-s2pc-pso`
   - We move blackIP data from module `mpc4j-s2pc-pso` to the dictionary `data`.
+  - We move PID and PMID from module `mpc4j-s2pc-pso` to module `mpc4j-s2pc-pjc`.
+
+### Removed
+
+- log4j: Previously, we place our own `log4j.properties` in `resources`. However, this may reject developers to use its own `log4j.properties`. We remove all `log4j.properties` in `resources`.
 
 ## \[1.0.5\]
 
