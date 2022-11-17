@@ -8,6 +8,11 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ### Added
 
+- `mpc4j-common-tool`
+
+- `mpc4j-dp-stream`
+  - We create a new module `mpc4j-dp-stream` for implementing differential private mechanisms on streaming data.
+  - BobHash: We implement pure-Java [BobHash](http://burtleburtle.net/bob/hash/evahash.html), modified from [HeavyGuardian](https://github.com/Gavindeed/HeavyGuardian).
 - `mpc4j-s2pc-pjc`
   - We create a new module `mpc4j-s2pc-pjc` to manage "Private Join and Compute" protocols, such as PSI-CA, PID, PMID, PSI-CA-SUM, and others.
 
