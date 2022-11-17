@@ -1,6 +1,5 @@
-package edu.alibaba.mpc4j.common.tool.correlation;
+package edu.alibaba.mpc4j.common.tool.utils;
 
-import edu.alibaba.mpc4j.common.tool.utils.DoubleUtils;
 import smile.math.MathEx;
 import smile.sort.QuickSort;
 

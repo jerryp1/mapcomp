@@ -1,5 +1,6 @@
-package edu.alibaba.mpc4j.common.tool.correlation;
+package edu.alibaba.mpc4j.common.tool.metrics;
 
+import edu.alibaba.mpc4j.common.tool.utils.RankUtils;
 import org.apache.commons.math3.exception.DimensionMismatchException;
 import org.apache.commons.math3.stat.correlation.KendallsCorrelation;
 import org.apache.commons.math3.util.FastMath;
@@ -35,6 +36,7 @@ import java.util.stream.IntStream;
  * @author Weiran Liu
  * @date 2021/08/11
  */
+@SuppressWarnings("AlibabaAvoidDoubleOrFloatEqualCompare")
 public class KendallCorrelation {
     /**
      * τ_b关联系数计算函数
@@ -168,19 +170,19 @@ public class KendallCorrelation {
      */
     private static long calculateN1(final ArrayList<Pair<Double, Double>> sortPairs) {
         long n1 = 0;
-        long consecutiveXTies = 1;
+        long consecutiveXties = 1;
         Pair<Double, Double> prev = sortPairs.get(0);
         for (int i = 1; i < sortPairs.size(); i++) {
             final Pair<Double, Double> curr = sortPairs.get(i);
             if (curr.getFirst().equals(prev.getFirst())) {
-                consecutiveXTies++;
+                consecutiveXties++;
             } else {
-                n1 += sum(consecutiveXTies - 1);
-                consecutiveXTies = 1;
+                n1 += sum(consecutiveXties - 1);
+                consecutiveXties = 1;
             }
             prev = curr;
         }
-        n1 += sum(consecutiveXTies - 1);
+        n1 += sum(consecutiveXties - 1);
 
         return n1;
     }

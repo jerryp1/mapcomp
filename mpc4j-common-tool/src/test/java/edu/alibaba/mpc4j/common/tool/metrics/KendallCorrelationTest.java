@@ -1,4 +1,4 @@
-package edu.alibaba.mpc4j.common.tool.correlation;
+package edu.alibaba.mpc4j.common.tool.metrics;
 
 import edu.alibaba.mpc4j.common.tool.utils.DoubleUtils;
 import org.junit.Assert;
