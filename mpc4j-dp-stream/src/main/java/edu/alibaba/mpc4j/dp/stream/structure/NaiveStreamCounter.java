@@ -2,6 +2,7 @@ package edu.alibaba.mpc4j.dp.stream.structure;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Set;
 
 /**
  * Naive stream counter.
@@ -48,5 +49,10 @@ public class NaiveStreamCounter<T> implements StreamCounter<T> {
     @Override
     public int getInsertNum() {
         return insertNum;
+    }
+
+    @Override
+    public Set<T> getItemSet() {
+        return countMap.keySet();
     }
 }

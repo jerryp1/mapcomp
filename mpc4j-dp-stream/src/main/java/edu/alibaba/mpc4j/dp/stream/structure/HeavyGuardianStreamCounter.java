@@ -49,6 +49,10 @@ public class HeavyGuardianStreamCounter<T> implements StreamCounter<T> {
      */
     private final ArrayList<Map<T, Integer>> lightPart;
     /**
+     * item set
+     */
+    private final Set<T> itemSet;
+    /**
      * the total number of insert items
      */
     private int insertNum;
@@ -77,12 +81,15 @@ public class HeavyGuardianStreamCounter<T> implements StreamCounter<T> {
             .collect(Collectors.toCollection(ArrayList::new));
         // init bob hash
         bobIntHash = new BobIntHash(primeIndex);
+        // set the initial set size as w * (λ_h + λ_l)
+        itemSet = new HashSet<>(w * (lambdaH + lambdaL));
         insertNum = 0;
     }
 
     @Override
     public boolean insert(T item) {
         insertNum++;
+        itemSet.add(item);
         // it first computes the hash function h(e) (1 ⩽ h(e) ⩽ w) to map e to bucket A[h(e)].
         byte[] itemByteArray = ObjectUtils.objectToByteArray(item);
         int bucketIndex = Math.abs(bobIntHash.hash(itemByteArray) % w);
@@ -173,6 +180,11 @@ public class HeavyGuardianStreamCounter<T> implements StreamCounter<T> {
     @Override
     public int getInsertNum() {
         return insertNum;
+    }
+
+    @Override
+    public Set<T> getItemSet() {
+        return itemSet;
     }
 
     /**

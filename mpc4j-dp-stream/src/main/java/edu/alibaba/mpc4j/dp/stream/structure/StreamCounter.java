@@ -1,5 +1,7 @@
 package edu.alibaba.mpc4j.dp.stream.structure;
 
+import java.util.Set;
+
 /**
  * Streaming-data counter interface.
  *
@@ -13,6 +15,7 @@ public interface StreamCounter<T> {
      * @param item the item.
      * @return return true if the item is not ignored and successfully inserted.
      */
+    @SuppressWarnings("UnusedReturnValue")
     boolean insert(T item);
 
     /**
@@ -29,4 +32,11 @@ public interface StreamCounter<T> {
      * @return the total insert item num.
      */
     int getInsertNum();
+
+    /**
+     * Return the item set.
+     *
+     * @return the item set.
+     */
+    Set<T> getItemSet();
 }
