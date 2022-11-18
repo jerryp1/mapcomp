@@ -5,6 +5,7 @@ import edu.alibaba.mpc4j.common.sampler.binary.bernoulli.ExpBernoulliSampler;
 import edu.alibaba.mpc4j.common.tool.utils.ObjectUtils;
 import edu.alibaba.mpc4j.dp.stream.tool.bobhash.BobIntHash;
 
+import java.security.SecureRandom;
 import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
@@ -53,15 +54,26 @@ public class HeavyGuardian implements StreamCounter {
      */
     private final Set<String> recordItemSet;
     /**
+     * random state
+     */
+    private final Random random;
+    /**
      * the total number of insert items
      */
-    private int insertNum;
+    private int num;
 
     public HeavyGuardian(int w, int lambdaH, int lambdaL) {
-        this(w, lambdaH, lambdaL, 0);
+        this(w, lambdaH, lambdaL, 0, new SecureRandom());
     }
 
+    public HeavyGuardian(int w, int lambdaH, int lambdaL, Random random) {
+        this(w, lambdaH, lambdaL, 0, random);
+    }
     public HeavyGuardian(int w, int lambdaH, int lambdaL, int primeIndex) {
+        this(w, lambdaH, lambdaL, primeIndex, new SecureRandom());
+    }
+
+    public HeavyGuardian(int w, int lambdaH, int lambdaL, int primeIndex, Random random) {
         Preconditions.checkArgument(w > 0,
             "w (# of buckets) must be greater than 0: %s", w);
         this.w = w;
@@ -83,12 +95,13 @@ public class HeavyGuardian implements StreamCounter {
         bobIntHash = new BobIntHash(primeIndex);
         // set the initial set size as w * (λ_h + λ_l)
         recordItemSet = new HashSet<>(w * (lambdaH + lambdaL));
-        insertNum = 0;
+        num = 0;
+        this.random = random;
     }
 
     @Override
     public boolean insert(String item) {
-        insertNum++;
+        num++;
         // it first computes the hash function h(e) (1 ⩽ h(e) ⩽ w) to map e to bucket A[h(e)].
         byte[] itemByteArray = ObjectUtils.objectToByteArray(item);
         int bucketIndex = Math.abs(bobIntHash.hash(itemByteArray) % w);
@@ -122,7 +135,7 @@ public class HeavyGuardian implements StreamCounter {
         int weakestHeavyPartCount = weakestHeavyPartCell.getValue();
         // Sample a boolean value, with probability P = b^{−C}, the boolean value is 1
         // Here we use the advanced Bernoulli(exp(−γ)) with γ = C * ln(b), and reverse the sample
-        ExpBernoulliSampler expBernoulliSampler = new ExpBernoulliSampler(weakestHeavyPartCount * LN_B);
+        ExpBernoulliSampler expBernoulliSampler = new ExpBernoulliSampler(random, weakestHeavyPartCount * LN_B);
         // decay (decrement) the count field of the weakest guardian by 1 with probability P = b^{−C}
         boolean sample = expBernoulliSampler.sample();
         if (!sample) {
@@ -181,8 +194,8 @@ public class HeavyGuardian implements StreamCounter {
     }
 
     @Override
-    public int getInsertNum() {
-        return insertNum;
+    public int getNum() {
+        return num;
     }
 
     @Override

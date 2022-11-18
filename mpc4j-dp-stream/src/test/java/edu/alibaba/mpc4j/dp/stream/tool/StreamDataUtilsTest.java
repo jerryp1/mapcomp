@@ -58,7 +58,7 @@ public class StreamDataUtilsTest {
         Collections.reverse(countList);
         LOGGER.info(
             "{}: # items = {}, # distinct items = {}, max items = <{}, {}>",
-            name, streamCounter.getInsertNum(), streamCounter.getRecordItemSet().size(),
+            name, streamCounter.getNum(), streamCounter.getRecordItemSet().size(),
             countList.get(0).getKey(), countList.get(0).getValue()
         );
     }

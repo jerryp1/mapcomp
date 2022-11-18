@@ -18,16 +18,16 @@ public class NaiveStreamCounter implements StreamCounter {
     /**
      * the total number of insert items
      */
-    private int insertNum;
+    private int num;
 
     public NaiveStreamCounter() {
         countMap = new HashMap<>();
-        insertNum = 0;
+        num = 0;
     }
 
     @Override
     public boolean insert(String item) {
-        insertNum++;
+        num++;
         if (countMap.containsKey(item)) {
             int count = countMap.get(item);
             count++;
@@ -47,8 +47,8 @@ public class NaiveStreamCounter implements StreamCounter {
     }
 
     @Override
-    public int getInsertNum() {
-        return insertNum;
+    public int getNum() {
+        return num;
     }
 
     @Override

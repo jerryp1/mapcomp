@@ -30,7 +30,7 @@ public interface StreamCounter {
      *
      * @return the total insert item num.
      */
-    int getInsertNum();
+    int getNum();
 
     /**
      * Return the recorded item set.

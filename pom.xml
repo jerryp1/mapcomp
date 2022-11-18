@@ -153,6 +153,12 @@
                 <artifactId>commons-csv</artifactId>
                 <version>1.9.0</version>
             </dependency>
+            <!-- https://mvnrepository.com/artifact/org.apache.lucene/lucene-core, use version 4.0.0 for correctness -->
+            <dependency>
+                <groupId>org.apache.lucene</groupId>
+                <artifactId>lucene-core</artifactId>
+                <version>4.0.0</version>
+            </dependency>
         </dependencies>
     </dependencyManagement>
 

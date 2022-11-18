@@ -28,18 +28,18 @@ public class TestStreamCounter {
     /**
      * File path for stream_counter_example_data.txt
      */
-    private static final String STREAM_COUNTER_EXAMPLE_DATA_PATH = Objects.requireNonNull(
+    private static final String EXAMPLE_DATA_PATH = Objects.requireNonNull(
         TestStreamCounter.class.getClassLoader().getResource("stream_counter_example_data.txt")
     ).getPath();
     /**
      * Key set for stream_counter_example_data.txt
      */
-    private static final Set<String> STREAM_COUNTER_EXAMPLE_KEYS = IntStream.rangeClosed(480, 520)
+    private static final Set<String> EXAMPLE_DOMAIN = IntStream.rangeClosed(480, 520)
         .mapToObj(String::valueOf).collect(Collectors.toSet());
     /**
      * Key num for stream_counter_example_data.txt
      */
-    private static final int STREAM_COUNTER_EXAMPLE_KEY_NUM = STREAM_COUNTER_EXAMPLE_KEYS.size();
+    private static final int EXAMPLE_D = EXAMPLE_DOMAIN.size();
 
     @Test
     public void testNaiveStreamCounterExample() throws IOException {
@@ -51,7 +51,7 @@ public class TestStreamCounter {
     @Test
     public void testFullHeavyPartHeavyGuardianExample() throws IOException {
         HeavyGuardian streamCounter = new HeavyGuardian(
-            1, STREAM_COUNTER_EXAMPLE_KEY_NUM, 0
+            1, EXAMPLE_D, 0
         );
         List<Map.Entry<String, Integer>> countList = getExampleCountList(streamCounter);
         assertExampleTopEntries(countList);
@@ -59,7 +59,7 @@ public class TestStreamCounter {
 
     @Test
     public void testFullPartHeavyGuardianExample() throws IOException {
-        int keyNum = STREAM_COUNTER_EXAMPLE_KEY_NUM;
+        int keyNum = EXAMPLE_D;
         HeavyGuardian streamCounter
             = new HeavyGuardian(1, keyNum / 2, keyNum - keyNum / 2);
         List<Map.Entry<String, Integer>> countList = getExampleCountList(streamCounter);
@@ -69,14 +69,14 @@ public class TestStreamCounter {
     @Test
     public void testHalfPartHeavyGuardianExample() throws IOException {
         HeavyGuardian streamCounter
-            = new HeavyGuardian(1, STREAM_COUNTER_EXAMPLE_KEY_NUM / 2, 0);
+            = new HeavyGuardian(1, EXAMPLE_D / 2, 0);
         List<Map.Entry<String, Integer>> countList = getExampleCountList(streamCounter);
         assertExampleTopEntries(countList);
     }
 
     private List<Map.Entry<String, Integer>> getExampleCountList(StreamCounter streamCounter) throws IOException {
-        Files.lines(Paths.get(STREAM_COUNTER_EXAMPLE_DATA_PATH)).forEach(streamCounter::insert);
-        Map<String, Integer> countMap = STREAM_COUNTER_EXAMPLE_KEYS.stream()
+        Files.lines(Paths.get(EXAMPLE_DATA_PATH)).forEach(streamCounter::insert);
+        Map<String, Integer> countMap = EXAMPLE_DOMAIN.stream()
             .collect(Collectors.toMap(item -> item, streamCounter::query));
         List<Map.Entry<String, Integer>> countList = new ArrayList<>(countMap.entrySet());
         // descending sort
