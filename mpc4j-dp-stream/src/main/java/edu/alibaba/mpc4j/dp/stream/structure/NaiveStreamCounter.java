@@ -10,11 +10,11 @@ import java.util.Set;
  * @author Weiran Liu
  * @date 2022/11/16
  */
-public class NaiveStreamCounter<T> implements StreamCounter<T> {
+public class NaiveStreamCounter implements StreamCounter {
     /**
      * counter
      */
-    private final Map<T, Integer> countMap;
+    private final Map<String, Integer> countMap;
     /**
      * the total number of insert items
      */
@@ -26,7 +26,7 @@ public class NaiveStreamCounter<T> implements StreamCounter<T> {
     }
 
     @Override
-    public boolean insert(T item) {
+    public boolean insert(String item) {
         insertNum++;
         if (countMap.containsKey(item)) {
             int count = countMap.get(item);
@@ -39,7 +39,7 @@ public class NaiveStreamCounter<T> implements StreamCounter<T> {
     }
 
     @Override
-    public int query(T item) {
+    public int query(String item) {
         if (countMap.containsKey(item)) {
             return countMap.get(item);
         }
@@ -52,7 +52,7 @@ public class NaiveStreamCounter<T> implements StreamCounter<T> {
     }
 
     @Override
-    public Set<T> getItemSet() {
+    public Set<String> getRecordItemSet() {
         return countMap.keySet();
     }
 }

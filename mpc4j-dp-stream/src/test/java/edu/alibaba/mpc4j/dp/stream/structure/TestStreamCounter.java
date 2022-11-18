@@ -43,14 +43,14 @@ public class TestStreamCounter {
 
     @Test
     public void testNaiveStreamCounterExample() throws IOException {
-        NaiveStreamCounter<String> streamCounter = new NaiveStreamCounter<>();
+        NaiveStreamCounter streamCounter = new NaiveStreamCounter();
         List<Map.Entry<String, Integer>> countList = getExampleCountList(streamCounter);
         assertExampleTopEntries(countList);
     }
 
     @Test
-    public void testFullHeavyPartHeavyGuardianStreamCounterExample() throws IOException {
-        HeavyGuardianStreamCounter<String> streamCounter = new HeavyGuardianStreamCounter<>(
+    public void testFullHeavyPartHeavyGuardianExample() throws IOException {
+        HeavyGuardian streamCounter = new HeavyGuardian(
             1, STREAM_COUNTER_EXAMPLE_KEY_NUM, 0
         );
         List<Map.Entry<String, Integer>> countList = getExampleCountList(streamCounter);
@@ -58,23 +58,23 @@ public class TestStreamCounter {
     }
 
     @Test
-    public void testFullPartHeavyGuardianStreamCounterExample() throws IOException {
+    public void testFullPartHeavyGuardianExample() throws IOException {
         int keyNum = STREAM_COUNTER_EXAMPLE_KEY_NUM;
-        HeavyGuardianStreamCounter<String> streamCounter
-            = new HeavyGuardianStreamCounter<>(1, keyNum / 2, keyNum - keyNum / 2);
+        HeavyGuardian streamCounter
+            = new HeavyGuardian(1, keyNum / 2, keyNum - keyNum / 2);
         List<Map.Entry<String, Integer>> countList = getExampleCountList(streamCounter);
         assertExampleTopEntries(countList);
     }
 
     @Test
-    public void testHalfPartHeavyGuardianStreamCounterExample() throws IOException {
-        HeavyGuardianStreamCounter<String> streamCounter
-            = new HeavyGuardianStreamCounter<>(1, STREAM_COUNTER_EXAMPLE_KEY_NUM / 2, 0);
+    public void testHalfPartHeavyGuardianExample() throws IOException {
+        HeavyGuardian streamCounter
+            = new HeavyGuardian(1, STREAM_COUNTER_EXAMPLE_KEY_NUM / 2, 0);
         List<Map.Entry<String, Integer>> countList = getExampleCountList(streamCounter);
         assertExampleTopEntries(countList);
     }
 
-    private List<Map.Entry<String, Integer>> getExampleCountList(StreamCounter<String> streamCounter) throws IOException {
+    private List<Map.Entry<String, Integer>> getExampleCountList(StreamCounter streamCounter) throws IOException {
         Files.lines(Paths.get(STREAM_COUNTER_EXAMPLE_DATA_PATH)).forEach(streamCounter::insert);
         Map<String, Integer> countMap = STREAM_COUNTER_EXAMPLE_KEYS.stream()
             .collect(Collectors.toMap(item -> item, streamCounter::query));

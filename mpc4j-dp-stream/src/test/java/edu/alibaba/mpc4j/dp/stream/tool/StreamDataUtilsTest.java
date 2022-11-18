@@ -48,9 +48,9 @@ public class StreamDataUtilsTest {
     }
 
     private void assertData(String name, Stream<String> itemStream) {
-        NaiveStreamCounter<String> streamCounter = new NaiveStreamCounter<>();
+        NaiveStreamCounter streamCounter = new NaiveStreamCounter();
         itemStream.forEach(streamCounter::insert);
-        Map<String, Integer> countMap = streamCounter.getItemSet().stream()
+        Map<String, Integer> countMap = streamCounter.getRecordItemSet().stream()
             .collect(Collectors.toMap(item -> item, streamCounter::query));
         List<Map.Entry<String, Integer>> countList = new ArrayList<>(countMap.entrySet());
         // descending sort
@@ -58,7 +58,7 @@ public class StreamDataUtilsTest {
         Collections.reverse(countList);
         LOGGER.info(
             "{}: # items = {}, # distinct items = {}, max items = <{}, {}>",
-            name, streamCounter.getInsertNum(), streamCounter.getItemSet().size(),
+            name, streamCounter.getInsertNum(), streamCounter.getRecordItemSet().size(),
             countList.get(0).getKey(), countList.get(0).getValue()
         );
     }

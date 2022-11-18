@@ -8,15 +8,14 @@ import java.util.Set;
  * @author Weiran Liu
  * @date 2022/11/16
  */
-public interface StreamCounter<T> {
+public interface StreamCounter {
     /**
      * Insert an item.
      *
      * @param item the item.
      * @return return true if the item is not ignored and successfully inserted.
      */
-    @SuppressWarnings("UnusedReturnValue")
-    boolean insert(T item);
+    boolean insert(String item);
 
     /**
      * Query an item.
@@ -24,7 +23,7 @@ public interface StreamCounter<T> {
      * @param item the item.
      * @return the query count, or 0 if no item matches.
      */
-    int query(T item);
+    int query(String item);
 
     /**
      * Return the total insert item num.
@@ -34,9 +33,9 @@ public interface StreamCounter<T> {
     int getInsertNum();
 
     /**
-     * Return the item set.
+     * Return the recorded item set.
      *
-     * @return the item set.
+     * @return the recorded item set.
      */
-    Set<T> getItemSet();
+    Set<String> getRecordItemSet();
 }
