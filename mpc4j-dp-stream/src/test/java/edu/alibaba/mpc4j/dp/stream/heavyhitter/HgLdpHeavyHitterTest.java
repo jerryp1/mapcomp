@@ -3,6 +3,7 @@ package edu.alibaba.mpc4j.dp.stream.heavyhitter;
 import com.google.common.base.Preconditions;
 import edu.alibaba.mpc4j.dp.stream.heavyhitter.LdpHeavyHitterFactory.LdpHeavyHitterType;
 import edu.alibaba.mpc4j.dp.stream.structure.HeavyGuardian;
+import edu.alibaba.mpc4j.dp.stream.tool.StreamDataUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.junit.Assert;
 import org.junit.Test;
@@ -47,7 +48,22 @@ public class HgLdpHeavyHitterTest {
             e.printStackTrace();
             throw new IllegalStateException();
         }
+    }
 
+    /**
+     * warmup num, 1% of the data
+     */
+    private static final int EXAMPLE_WARM_UP_NUM;
+
+    static {
+        try {
+            EXAMPLE_WARM_UP_NUM = (int)Math.round(
+                StreamDataUtils.obtainItemStream(LdpHeavyHitterTest.EXAMPLE_DATA_PATH).count() * 0.01
+            );
+        } catch (IOException e) {
+            e.printStackTrace();
+            throw new IllegalStateException();
+        }
     }
 
     @Parameterized.Parameters(name = "{0}")
@@ -74,15 +90,25 @@ public class HgLdpHeavyHitterTest {
 
     @Test
     public void testLargeEpsilon() throws IOException {
-        Random random = new Random(HEAVY_GUARDIAN_SEED);
-        LdpHeavyHitter ldpHeavyHitter = LdpHeavyHitterFactory.createHeavyGuardianInstance(
+        Random hgRandom = new Random(HEAVY_GUARDIAN_SEED);
+        Random ldpRandom = new Random();
+        HgLdpHeavyHitter hgLdpHeavyHitter = LdpHeavyHitterFactory.createHgInstance(
             type, LdpHeavyHitterTest.EXAMPLE_DATA_DOMAIN, LdpHeavyHitterTest.DEFAULT_K,
-            LdpHeavyHitterTest.LARGE_EPSILON, random
+            LdpHeavyHitterTest.LARGE_EPSILON, EXAMPLE_WARM_UP_NUM, hgRandom
         );
-        Files.lines(Paths.get(LdpHeavyHitterTest.EXAMPLE_DATA_PATH)).forEach(ldpHeavyHitter::insert);
-        Map<String, Double> heavyHitterMap = ldpHeavyHitter.responseHeavyHitters();
+        StreamDataUtils.obtainItemStream(LdpHeavyHitterTest.EXAMPLE_DATA_PATH)
+            .map(item -> {
+                if (!hgLdpHeavyHitter.optimizeRandomize()) {
+                    return hgLdpHeavyHitter.randomize(item, ldpRandom);
+                } else {
+                    Set<String> currentHeavyHitter = hgLdpHeavyHitter.getHeavyHitterSet();
+                    return hgLdpHeavyHitter.randomize(currentHeavyHitter, item, ldpRandom);
+                }
+            })
+            .forEach(hgLdpHeavyHitter::insert);
+        Map<String, Double> heavyHitterMap = hgLdpHeavyHitter.responseHeavyHitters();
         Assert.assertEquals(LdpHeavyHitterTest.DEFAULT_K, heavyHitterMap.size());
-        List<Map.Entry<String, Double>> orderedHeavyHitterList = ldpHeavyHitter.responseOrderedHeavyHitters();
+        List<Map.Entry<String, Double>> orderedHeavyHitterList = hgLdpHeavyHitter.responseOrderedHeavyHitters();
         Assert.assertEquals(LdpHeavyHitterTest.DEFAULT_K, orderedHeavyHitterList.size());
 
         for (int index = 0; index < LdpHeavyHitterTest.DEFAULT_K; index++) {

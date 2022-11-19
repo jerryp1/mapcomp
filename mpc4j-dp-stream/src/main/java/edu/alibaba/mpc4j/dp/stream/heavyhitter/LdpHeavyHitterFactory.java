@@ -63,10 +63,12 @@ public class LdpHeavyHitterFactory {
      * @param domainSet the domain set.
      * @param k         the heavy hitter num k.
      * @param epsilon   the privacy parameter ε.
+     * @param warmupNum the number of items the server used for warming up.
      * @param random    the random state.
      * @return an instance of HeavyGuardian-based Heavy Hitter with Local Differential Privacy.
      */
-    public static LdpHeavyHitter createHeavyGuardianInstance(LdpHeavyHitterType type, Set<String> domainSet, int k, double epsilon, Random random) {
+    public static HgLdpHeavyHitter createHgInstance(LdpHeavyHitterType type, Set<String> domainSet, int k, double epsilon,
+                                                  int warmupNum, Random random) {
         switch (type) {
             case BASIC_HEAVY_GUARDIAN:
                 return new BasicHgLdpHeavyHitter(domainSet, k, epsilon, random);

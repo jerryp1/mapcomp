@@ -13,7 +13,7 @@ import java.util.stream.Collectors;
  * @author Weiran Liu
  * @date 2022/11/18
  */
-public class BasicHgLdpHeavyHitter implements LdpHeavyHitter {
+public class BasicHgLdpHeavyHitter implements HgLdpHeavyHitter {
     /**
      * b = 1.08
      */
@@ -107,6 +107,22 @@ public class BasicHgLdpHeavyHitter implements LdpHeavyHitter {
             // answer the true item
             return item;
         }
+    }
+
+    @Override
+    public String randomize(Set<String> currentHeavyHitterSet, String item, Random random) {
+        // basic scheme does not consider optimized randomize
+        return randomize(item, random);
+    }
+
+    @Override
+    public boolean optimizeRandomize() {
+        return false;
+    }
+
+    @Override
+    public int getWarmupNum() {
+        return Integer.MAX_VALUE;
     }
 
     @Override

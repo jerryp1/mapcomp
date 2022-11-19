@@ -5,6 +5,7 @@ import edu.alibaba.mpc4j.common.tool.utils.DoubleUtils;
 import edu.alibaba.mpc4j.dp.stream.heavyhitter.LdpHeavyHitterFactory.LdpHeavyHitterType;
 import edu.alibaba.mpc4j.dp.stream.structure.NaiveStreamCounter;
 import edu.alibaba.mpc4j.dp.stream.structure.TestStreamCounter;
+import edu.alibaba.mpc4j.dp.stream.tool.StreamDataUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.lucene.util.RamUsageEstimator;
 import org.junit.Assert;
@@ -84,7 +85,6 @@ public class LdpHeavyHitterTest {
      * Key num for stream_counter_example_data.txt
      */
     private static final int CONNECT_D = CONNECT_DATA_DOMAIN.size();
-
     /**
      * large ε
      */
@@ -134,10 +134,13 @@ public class LdpHeavyHitterTest {
 
     @Test
     public void testLargeEpsilonFullK() throws IOException {
+        Random random = new Random();
         LdpHeavyHitter ldpHeavyHitter = LdpHeavyHitterFactory.createInstance(
             type, EXAMPLE_DATA_DOMAIN, EXAMPLE_D, LARGE_EPSILON
         );
-        Files.lines(Paths.get(EXAMPLE_DATA_PATH)).forEach(ldpHeavyHitter::insert);
+        StreamDataUtils.obtainItemStream(EXAMPLE_DATA_PATH)
+            .map(item -> ldpHeavyHitter.randomize(item, random))
+            .forEach(ldpHeavyHitter::insert);
         Map<String, Double> countMap = ldpHeavyHitter.responseDomain();
         double totalNum = 0;
         for (String item : EXAMPLE_DATA_DOMAIN) {
@@ -149,10 +152,13 @@ public class LdpHeavyHitterTest {
 
     @Test
     public void testFullK() throws IOException {
+        Random random = new Random();
         LdpHeavyHitter ldpHeavyHitter = LdpHeavyHitterFactory.createInstance(
             type, EXAMPLE_DATA_DOMAIN, EXAMPLE_D, LARGE_EPSILON
         );
-        Files.lines(Paths.get(EXAMPLE_DATA_PATH)).forEach(ldpHeavyHitter::insert);
+        StreamDataUtils.obtainItemStream(EXAMPLE_DATA_PATH)
+            .map(item -> ldpHeavyHitter.randomize(item, random))
+            .forEach(ldpHeavyHitter::insert);
         List<Map.Entry<String, Double>> countOrderedList = ldpHeavyHitter.responseOrderedDomain();
         Assert.assertEquals(CORRECT_EXAMPLE_COUNT_ORDERED_LIST.size(), countOrderedList.size());
         int domainSize = CORRECT_EXAMPLE_COUNT_ORDERED_LIST.size();
@@ -165,20 +171,26 @@ public class LdpHeavyHitterTest {
 
     @Test
     public void testDefault() throws IOException {
+        Random random = new Random();
         LdpHeavyHitter ldpHeavyHitter = LdpHeavyHitterFactory.createInstance(
             type, EXAMPLE_DATA_DOMAIN, DEFAULT_K, DEFAULT_EPSILON
         );
-        Files.lines(Paths.get(EXAMPLE_DATA_PATH)).forEach(ldpHeavyHitter::insert);
+        StreamDataUtils.obtainItemStream(EXAMPLE_DATA_PATH)
+            .map(item -> ldpHeavyHitter.randomize(item, random))
+            .forEach(ldpHeavyHitter::insert);
         Map<String, Double> heavyHitterMap = ldpHeavyHitter.responseHeavyHitters();
         Assert.assertEquals(heavyHitterMap.size(), DEFAULT_K);
     }
 
     @Test
     public void testMemory() throws IOException {
+        Random random = new Random();
         LdpHeavyHitter ldpHeavyHitter = LdpHeavyHitterFactory.createInstance(
             type, CONNECT_DATA_DOMAIN, DEFAULT_K, DEFAULT_EPSILON
         );
-        Files.lines(Paths.get(CONNECT_DATA_PATH)).forEach(ldpHeavyHitter::insert);
+        StreamDataUtils.obtainItemStream(CONNECT_DATA_PATH)
+            .map(item -> ldpHeavyHitter.randomize(item, random))
+            .forEach(ldpHeavyHitter::insert);
         String memory = RamUsageEstimator.humanSizeOf(ldpHeavyHitter);
         LOGGER.info("{}: k = {}, d = {}, memory = {}", type.name(), DEFAULT_K, CONNECT_D, memory);
     }
