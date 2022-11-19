@@ -28,9 +28,9 @@ public interface LdpHeavyHitter {
     String randomize(String item, Random random);
 
     /**
-     * Insert an (randomized) item.
+     * Insert a randomized item.
      *
-     * @param randomizedItem the randomized item.
+     * @param randomizedItem a randomized item.
      * @return return true if the randomized item is not ignored and successfully inserted.
      */
     boolean insert(String randomizedItem);
@@ -73,13 +73,13 @@ public interface LdpHeavyHitter {
      */
     default List<Map.Entry<String, Double>> responseOrderedHeavyHitters() {
         // Iterate all items in the domain set, then choose the top-k items.
-        Map<String, Double> countMap = responseDomain();
-        List<Map.Entry<String, Double>> countList = new ArrayList<>(countMap.entrySet());
+        Map<String, Double> heavyHitterMap = responseHeavyHitters();
+        List<Map.Entry<String, Double>> heavyHitterOrderedList = new ArrayList<>(heavyHitterMap.entrySet());
         // descending sort
-        countList.sort(Comparator.comparingDouble(Map.Entry::getValue));
-        Collections.reverse(countList);
+        heavyHitterOrderedList.sort(Comparator.comparingDouble(Map.Entry::getValue));
+        Collections.reverse(heavyHitterOrderedList);
 
-        return countList.subList(0, getK());
+        return heavyHitterOrderedList;
     }
 
     /**
@@ -87,9 +87,7 @@ public interface LdpHeavyHitter {
      *
      * @return Heavy Hitters.
      */
-    default Map<String, Double> responseHeavyHitters() {
-        return responseOrderedHeavyHitters().stream().collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
-    }
+    Map<String, Double> responseHeavyHitters();
 
     /**
      * Return the privacy parameter ε.

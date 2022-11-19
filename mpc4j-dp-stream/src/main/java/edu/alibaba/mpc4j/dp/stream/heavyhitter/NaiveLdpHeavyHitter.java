@@ -3,6 +3,7 @@ package edu.alibaba.mpc4j.dp.stream.heavyhitter;
 import com.google.common.base.Preconditions;
 
 import java.util.*;
+import java.util.stream.Collectors;
 
 /**
  * Naive Heavy Hitter with Local Differential Privacy.
@@ -28,7 +29,7 @@ public class NaiveLdpHeavyHitter implements LdpHeavyHitter {
      */
     private final int k;
     /**
-     * the bucket, has k cells, identical to the heavy part in HeavyGuardian with w = 1 buckets, and λ_h cells
+     * the bucket
      */
     private final Map<String, Double> budget;
     /**
@@ -100,6 +101,14 @@ public class NaiveLdpHeavyHitter implements LdpHeavyHitter {
     @Override
     public double response(String item) {
         return (budget.getOrDefault(item, 0.0) - num * q) / (p - q);
+    }
+
+    @Override
+    public Map<String, Double> responseHeavyHitters() {
+        return responseOrderedDomain()
+            .subList(0, k)
+            .stream()
+            .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
     }
 
     @Override

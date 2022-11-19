@@ -5,6 +5,7 @@ import edu.alibaba.mpc4j.common.sampler.binary.bernoulli.ExpBernoulliSampler;
 
 import java.security.SecureRandom;
 import java.util.*;
+import java.util.stream.Collectors;
 
 /**
  * Basic HeavyGuardian-based Heavy Hitter with Local Differential Privacy.
@@ -169,6 +170,12 @@ public class BasicHgLdpHeavyHitter implements LdpHeavyHitter {
     public double response(String item) {
         // (C - num * q) / (p − q)
         return (budget.getOrDefault(item, 0.0) - currentNum * q) / (p - q);
+    }
+
+    @Override
+    public Map<String, Double> responseHeavyHitters() {
+        // we only need to iterate items in the budget
+        return budget.keySet().stream().collect(Collectors.toMap(item -> item, this::response));
     }
 
     @Override

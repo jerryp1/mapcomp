@@ -164,6 +164,16 @@ public class LdpHeavyHitterTest {
     }
 
     @Test
+    public void testDefault() throws IOException {
+        LdpHeavyHitter ldpHeavyHitter = LdpHeavyHitterFactory.createInstance(
+            type, EXAMPLE_DATA_DOMAIN, DEFAULT_K, DEFAULT_EPSILON
+        );
+        Files.lines(Paths.get(EXAMPLE_DATA_PATH)).forEach(ldpHeavyHitter::insert);
+        Map<String, Double> heavyHitterMap = ldpHeavyHitter.responseHeavyHitters();
+        Assert.assertEquals(heavyHitterMap.size(), DEFAULT_K);
+    }
+
+    @Test
     public void testMemory() throws IOException {
         LdpHeavyHitter ldpHeavyHitter = LdpHeavyHitterFactory.createInstance(
             type, CONNECT_DATA_DOMAIN, DEFAULT_K, DEFAULT_EPSILON
