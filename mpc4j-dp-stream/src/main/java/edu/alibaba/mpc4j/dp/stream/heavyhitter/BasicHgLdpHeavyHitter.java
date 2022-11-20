@@ -2,7 +2,6 @@ package edu.alibaba.mpc4j.dp.stream.heavyhitter;
 
 import com.google.common.base.Preconditions;
 
-import java.security.SecureRandom;
 import java.util.*;
 
 /**
@@ -21,15 +20,11 @@ public class BasicHgLdpHeavyHitter extends AbstractHgLdpHeavyHitter {
      */
     protected final double q;
 
-    public BasicHgLdpHeavyHitter(Set<String> domainSet, int k, double epsilon) {
-        this(domainSet, k, epsilon, new SecureRandom());
-    }
-
-    public BasicHgLdpHeavyHitter(Set<String> domainSet, int k, double epsilon, Random hgRandom) {
-        super(domainSet, k, epsilon, hgRandom);
-        double expEpsilon = Math.exp(epsilon);
-        p = expEpsilon / (expEpsilon + d - 1);
-        q = 1 / (expEpsilon + d - 1);
+    BasicHgLdpHeavyHitter(Set<String> domainSet, int k, double windowEpsilon, Random heavyGuardianRandom) {
+        super(domainSet, k, windowEpsilon, heavyGuardianRandom);
+        double expWindowEpsilon = Math.exp(windowEpsilon);
+        p = expWindowEpsilon / (expWindowEpsilon + d - 1);
+        q = 1 / (expWindowEpsilon + d - 1);
     }
 
     @Override
@@ -40,7 +35,7 @@ public class BasicHgLdpHeavyHitter extends AbstractHgLdpHeavyHitter {
     @Override
     public void stopWarmup() {
         // bias all counts
-        for(Map.Entry<String, Double> entry : heavyGuardian.entrySet()) {
+        for (Map.Entry<String, Double> entry : heavyGuardian.entrySet()) {
             String item = entry.getKey();
             double value = entry.getValue();
             value = value * (p - q);
@@ -61,7 +56,7 @@ public class BasicHgLdpHeavyHitter extends AbstractHgLdpHeavyHitter {
 
     @Override
     public String randomize(Map<String, Double> currentDataStructure, String item, Random random) {
-        Preconditions.checkArgument(domainSet.contains(item), "The input idem is not in the domain: %s", item);
+        Preconditions.checkArgument(domainSet.contains(item), "The input item is not in the domain: %s", item);
         // basic HeavyGuardian solution does not consider the current data structure
         double randomSample = random.nextDouble();
         // Randomly sample an integer in [0, d)

@@ -52,6 +52,10 @@ public class HgLdpHeavyHitterTest {
     public static Collection<Object[]> configurations() {
         Collection<Object[]> configurations = new ArrayList<>();
 
+        // related heavy guardian
+        configurations.add(new Object[] {
+            LdpHeavyHitterType.RELAX_HEAVY_GUARDIAN.name(), LdpHeavyHitterType.RELAX_HEAVY_GUARDIAN,
+        });
         // advanced heavy guardian
         configurations.add(new Object[] {
             LdpHeavyHitterType.ADV_HEAVY_GUARDIAN.name(), LdpHeavyHitterType.ADV_HEAVY_GUARDIAN,

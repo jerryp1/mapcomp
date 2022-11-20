@@ -11,7 +11,7 @@ import java.util.stream.Collectors;
  * @author Weiran Liu
  * @date 2022/11/18
  */
-public class NaiveLdpHeavyHitter implements LdpHeavyHitter {
+class NaiveLdpHeavyHitter implements LdpHeavyHitter {
     /**
      * the domain set
      */
@@ -33,9 +33,9 @@ public class NaiveLdpHeavyHitter implements LdpHeavyHitter {
      */
     private final Map<String, Double> budget;
     /**
-     * ε
+     * the private parameter ε / w
      */
-    private final double epsilon;
+    private final double windowEpsilon;
     /**
      * p = e^ε / (e^ε + d - 1)
      */
@@ -53,7 +53,7 @@ public class NaiveLdpHeavyHitter implements LdpHeavyHitter {
      */
     private boolean warmupState;
 
-    public NaiveLdpHeavyHitter(Set<String> domainSet, int k, double epsilon) {
+    NaiveLdpHeavyHitter(Set<String> domainSet, int k, double windowEpsilon) {
         d = domainSet.size();
         Preconditions.checkArgument(d > 1, "|Ω| must be greater than 1: %s", d);
         this.domainSet = domainSet;
@@ -61,9 +61,9 @@ public class NaiveLdpHeavyHitter implements LdpHeavyHitter {
         Preconditions.checkArgument(k > 0 && k <= d, "k must be in range (0, %s]: %s", d, k);
         this.k = k;
         budget = new HashMap<>(d);
-        Preconditions.checkArgument(epsilon > 0, "ε must be greater than 0: %s", epsilon);
-        this.epsilon = epsilon;
-        double expEpsilon = Math.exp(epsilon);
+        Preconditions.checkArgument(windowEpsilon > 0, "ε / w must be greater than 0: %s", windowEpsilon);
+        this.windowEpsilon = windowEpsilon;
+        double expEpsilon = Math.exp(windowEpsilon);
         p = expEpsilon / (expEpsilon + d - 1);
         q = 1 / (expEpsilon + d - 1);
         num = 0;
@@ -156,8 +156,8 @@ public class NaiveLdpHeavyHitter implements LdpHeavyHitter {
     }
 
     @Override
-    public double getEpsilon() {
-        return epsilon;
+    public double getWindowEpsilon() {
+        return windowEpsilon;
     }
 
     @Override

@@ -38,21 +38,23 @@ public class LdpHeavyHitterFactory {
     /**
      * Create an instance of Heavy Hitter with Local Differential Privacy.
      *
-     * @param type      the type of Heavy Hitter with Local Differential Privacy.
-     * @param domainSet the domain set.
-     * @param k         the heavy hitter num k.
-     * @param epsilon   the privacy parameter ε.
+     * @param type          the type of Heavy Hitter with Local Differential Privacy.
+     * @param domainSet     the domain set.
+     * @param k             the heavy hitter num k.
+     * @param windowEpsilon the privacy parameter ε / w.
      * @return an instance of Heavy Hitter with Local Differential Privacy.
      */
-    public static LdpHeavyHitter createInstance(LdpHeavyHitterType type, Set<String> domainSet, int k, double epsilon) {
+    public static LdpHeavyHitter createInstance(LdpHeavyHitterType type, Set<String> domainSet, int k,
+                                                double windowEpsilon) {
         switch (type) {
             case BASIC_HEAVY_GUARDIAN:
-                return new BasicHgLdpHeavyHitter(domainSet, k, epsilon, new SecureRandom());
+                return new BasicHgLdpHeavyHitter(domainSet, k, windowEpsilon, new SecureRandom());
             case NAIVE:
-                return new NaiveLdpHeavyHitter(domainSet, k, epsilon);
+                return new NaiveLdpHeavyHitter(domainSet, k, windowEpsilon);
             case ADV_HEAVY_GUARDIAN:
-                return new AdvHgLdpHeavyHitter(domainSet, k, epsilon, new SecureRandom());
+                return new AdvHhgLdpHeavyHitter(domainSet, k, windowEpsilon, new SecureRandom());
             case RELAX_HEAVY_GUARDIAN:
+                return new RelaxHhgLdpHeavyHitter(domainSet, k, windowEpsilon, new SecureRandom());
             default:
                 throw new IllegalArgumentException("Invalid " + LdpHeavyHitterType.class.getSimpleName() + ": " + type);
         }
@@ -64,17 +66,29 @@ public class LdpHeavyHitterFactory {
      * @param type                the type of Heavy Hitter with Local Differential Privacy.
      * @param domainSet           the domain set.
      * @param k                   the heavy hitter num k.
-     * @param epsilon             the privacy parameter ε.
+     * @param windowEpsilon       the privacy parameter ε / w.
      * @param heavyGuardianRandom the HeavyGuardian random state.
      * @return an instance of Heavy Hitter with Local Differential Privacy.
      */
-    public static HgLdpHeavyHitter createHgInstance(LdpHeavyHitterType type, Set<String> domainSet,
-                                                  int k, double epsilon, Random heavyGuardianRandom) {
+    public static HgLdpHeavyHitter createHgInstance(LdpHeavyHitterType type, Set<String> domainSet, int k,
+                                                    double windowEpsilon, Random heavyGuardianRandom) {
         switch (type) {
             case BASIC_HEAVY_GUARDIAN:
-                return new BasicHgLdpHeavyHitter(domainSet, k, epsilon, heavyGuardianRandom);
+                return new BasicHgLdpHeavyHitter(domainSet, k, windowEpsilon, heavyGuardianRandom);
             case ADV_HEAVY_GUARDIAN:
-                return new AdvHgLdpHeavyHitter(domainSet, k, epsilon, heavyGuardianRandom);
+                return new AdvHhgLdpHeavyHitter(domainSet, k, windowEpsilon, heavyGuardianRandom);
+            case RELAX_HEAVY_GUARDIAN:
+                return new RelaxHhgLdpHeavyHitter(domainSet, k, windowEpsilon, heavyGuardianRandom);
+            default:
+                throw new IllegalArgumentException("Invalid " + LdpHeavyHitterType.class.getSimpleName() + ": " + type);
+        }
+    }
+
+    public static HhgLdpHeavyHitter createHhgInstance(LdpHeavyHitterType type, Set<String> domainSet, int k,
+                                                      double windowEpsilon, double alpha, Random heavyGuardianRandom) {
+        switch (type) {
+            case ADV_HEAVY_GUARDIAN:
+                return new AdvHhgLdpHeavyHitter(domainSet, k, windowEpsilon, alpha, heavyGuardianRandom);
             case RELAX_HEAVY_GUARDIAN:
             default:
                 throw new IllegalArgumentException("Invalid " + LdpHeavyHitterType.class.getSimpleName() + ": " + type);

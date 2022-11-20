@@ -3,33 +3,40 @@ package edu.alibaba.mpc4j.dp.stream.heavyhitter;
 import com.google.common.base.Preconditions;
 import edu.alibaba.mpc4j.common.sampler.binary.bernoulli.SecureBernoulliSampler;
 
-import java.security.SecureRandom;
 import java.util.*;
 import java.util.stream.Collectors;
 
 /**
- * Advanced HeavyGuardian-based Heavy Hitter with Local Differential Privacy.
+ * Advanced Hot HeavyGuardian-based Heavy Hitter with Local Differential Privacy.
  *
  * @author Weiran Liu
  * @date 2022/11/19
  */
-public class AdvHgLdpHeavyHitter extends AbstractHgLdpHeavyHitter {
+public class AdvHhgLdpHeavyHitter extends AbstractHgLdpHeavyHitter implements HhgLdpHeavyHitter {
+    /**
+     * default α
+     */
+    protected static final double DEFAULT_ALPHA = 1.0 / 3;
+    /**
+     * the privacy parameter allocation parameter α
+     */
+    private final double alpha;
     /**
      * p1 = e^ε_1 / (e^ε_1 + 1)
      */
-    private final double p1;
+    protected final double p1;
     /**
      * q1 = 1 / (e^ε_1 + 1)
      */
-    private final double q1;
+    protected final double q1;
     /**
      * p2 = e^ε_2 / (e^ε_2 + k - 1)
      */
-    private final double p2;
+    protected final double p2;
     /**
      * q2 = 1 / (e^ε_2 + k - 1)
      */
-    private final double q2;
+    protected final double q2;
     /**
      * p3 = e^ε_2 / (e^ε_2 + d - k - 1)
      */
@@ -41,26 +48,36 @@ public class AdvHgLdpHeavyHitter extends AbstractHgLdpHeavyHitter {
     /**
      * γ_h, proportion of hot items
      */
-    private double gammaH;
+    protected double gammaH;
 
-    public AdvHgLdpHeavyHitter(Set<String> domainSet, int k, double epsilon) {
-        this(domainSet, k, epsilon, new SecureRandom());
+    AdvHhgLdpHeavyHitter(Set<String> domainSet, int k, double windowEpsilon, Random hgRandom) {
+        this(domainSet, k, windowEpsilon, DEFAULT_ALPHA, hgRandom);
     }
 
-    public AdvHgLdpHeavyHitter(Set<String> domainSet, int k, double epsilon, Random hgRandom) {
-        super(domainSet, k, epsilon, hgRandom);
+    AdvHhgLdpHeavyHitter(Set<String> domainSet, int k, double windowEpsilon, double alpha, Random hgRandom) {
+        super(domainSet, k, windowEpsilon, hgRandom);
+        Preconditions.checkArgument(alpha > 0 && alpha < 1, "α must be in range (0, 1)", alpha);
+        this.alpha = alpha;
+        double alphaWindowEpsilon = windowEpsilon * alpha;
+        double remainedWindowEpsilon = windowEpsilon - alphaWindowEpsilon;
         // compute p1 and p1
-        double expHalfEpsilon = Math.exp(epsilon / 2);
-        p1 = expHalfEpsilon / (expHalfEpsilon + 1);
-        q1 = 1 / (expHalfEpsilon + 1);
+        double expAlphaWindowEpsilon = Math.exp(alphaWindowEpsilon);
+        p1 = expAlphaWindowEpsilon / (expAlphaWindowEpsilon + 1);
+        q1 = 1 / (expAlphaWindowEpsilon + 1);
         // compute p2 and q2
-        p2 = expHalfEpsilon / (expHalfEpsilon + k - 1);
-        q2 = 1 / (expHalfEpsilon + k - 1);
+        double expRemainedWindowEpsilon = Math.exp(remainedWindowEpsilon);
+        p2 = expRemainedWindowEpsilon / (expRemainedWindowEpsilon + k - 1);
+        q2 = 1 / (expRemainedWindowEpsilon + k - 1);
         // compute p3 and q3
-        p3 = expHalfEpsilon / (expHalfEpsilon + d - k - 1);
-        q3 = 1 / (expHalfEpsilon + d - k - 1);
+        p3 = expRemainedWindowEpsilon / (expRemainedWindowEpsilon + d - k - 1);
+        q3 = 1 / (expRemainedWindowEpsilon + d - k - 1);
         warmupState = true;
         gammaH = 0;
+    }
+
+    @Override
+    public LdpHeavyHitterFactory.LdpHeavyHitterType getType() {
+        return LdpHeavyHitterFactory.LdpHeavyHitterType.ADV_HEAVY_GUARDIAN;
     }
 
     @Override
@@ -96,11 +113,6 @@ public class AdvHgLdpHeavyHitter extends AbstractHgLdpHeavyHitter {
     }
 
     @Override
-    public LdpHeavyHitterFactory.LdpHeavyHitterType getType() {
-        return LdpHeavyHitterFactory.LdpHeavyHitterType.ADV_HEAVY_GUARDIAN;
-    }
-
-    @Override
     public String randomize(Map<String, Double> currentHeavyGuardian, String item, Random random) {
         Preconditions.checkArgument(
             currentHeavyGuardian.size() == k,
@@ -121,7 +133,7 @@ public class AdvHgLdpHeavyHitter extends AbstractHgLdpHeavyHitter {
         }
     }
 
-    private boolean userMechanism1(Set<String> currentHeavyHitterSet, String item, Random random) {
+    protected boolean userMechanism1(Set<String> currentHeavyHitterSet, String item, Random random) {
         // Let b = Ber(e^ε_1 / (e^ε_1 + 1))
         SecureBernoulliSampler bernoulliSampler = new SecureBernoulliSampler(random, p1);
         boolean b = bernoulliSampler.sample();
@@ -130,7 +142,7 @@ public class AdvHgLdpHeavyHitter extends AbstractHgLdpHeavyHitter {
         return b == currentHeavyHitterSet.contains(item);
     }
 
-    private String userMechanism2(Set<String> currentHeavyHitterSet, String item, Random random) {
+    protected String userMechanism2(Set<String> currentHeavyHitterSet, String item, Random random) {
         ArrayList<String> currentHeavyHitterArrayList = new ArrayList<>(currentHeavyHitterSet);
         double randomSample = random.nextDouble();
         // Randomly sample an integer in [0, k)
@@ -150,7 +162,7 @@ public class AdvHgLdpHeavyHitter extends AbstractHgLdpHeavyHitter {
         }
     }
 
-    private String userMechanism3(Map<String, Double> currentHeavyGuardian, String item, Random random) {
+    protected String userMechanism3(Map<String, Double> currentHeavyGuardian, String item, Random random) {
         // find the weakest guardian
         List<Map.Entry<String, Double>> currentList = new ArrayList<>(currentHeavyGuardian.entrySet());
         currentList.sort(Comparator.comparingDouble(Map.Entry::getValue));
@@ -193,5 +205,10 @@ public class AdvHgLdpHeavyHitter extends AbstractHgLdpHeavyHitter {
     public Map<String, Double> responseHeavyHitters() {
         // we only need to iterate items in the budget
         return heavyGuardian.keySet().stream().collect(Collectors.toMap(item -> item, this::response));
+    }
+
+    @Override
+    public double getAlpha() {
+        return alpha;
     }
 }

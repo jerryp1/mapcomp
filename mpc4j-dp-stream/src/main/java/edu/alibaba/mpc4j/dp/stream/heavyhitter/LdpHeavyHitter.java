@@ -113,11 +113,11 @@ public interface LdpHeavyHitter {
     }
 
     /**
-     * Return the privacy parameter ε.
+     * Return the privacy parameter ε / w.
      *
-     * @return the privacy parameter ε.
+     * @return the privacy parameter ε / w.
      */
-    double getEpsilon();
+    double getWindowEpsilon();
 
     /**
      * Get the number of Heavy Hitters k.

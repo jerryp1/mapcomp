@@ -12,7 +12,7 @@ import java.util.stream.Collectors;
  * @author Weiran Liu
  * @date 2022/11/19
  */
-public abstract class AbstractHgLdpHeavyHitter implements HgLdpHeavyHitter {
+abstract class AbstractHgLdpHeavyHitter implements HgLdpHeavyHitter {
     /**
      * the empty item ⊥
      */
@@ -46,13 +46,13 @@ public abstract class AbstractHgLdpHeavyHitter implements HgLdpHeavyHitter {
      */
     protected final Map<String, Double> heavyGuardian;
     /**
-     * ε
+     * the private parameter ε / w
      */
-    private final double epsilon;
+    private final double windowEpsilon;
     /**
      * random state for HeavyGuardian
      */
-    protected final Random hgRandom;
+    protected final Random heavyGuardianRandom;
     /**
      * the total number of insert items
      */
@@ -62,11 +62,11 @@ public abstract class AbstractHgLdpHeavyHitter implements HgLdpHeavyHitter {
      */
     protected boolean warmupState;
     /**
-     * current debias num
+     * current de-bias num
      */
     protected int currentNum;
 
-    public AbstractHgLdpHeavyHitter(Set<String> domainSet, int k, double epsilon, Random hgRandom) {
+    AbstractHgLdpHeavyHitter(Set<String> domainSet, int k, double windowEpsilon, Random heavyGuardianRandom) {
         d = domainSet.size();
         Preconditions.checkArgument(d > 1, "|Ω| must be greater than 1: %s", d);
         this.domainSet = domainSet;
@@ -74,9 +74,9 @@ public abstract class AbstractHgLdpHeavyHitter implements HgLdpHeavyHitter {
         Preconditions.checkArgument(k > 0 && k <= d, "k must be in range (0, %s]: %s", d, k);
         this.k = k;
         heavyGuardian = new HashMap<>(k);
-        Preconditions.checkArgument(epsilon > 0, "ε must be greater than 0: %s", epsilon);
-        this.epsilon = epsilon;
-        this.hgRandom = hgRandom;
+        Preconditions.checkArgument(windowEpsilon > 0, "ε must be greater than 0: %s", windowEpsilon);
+        this.windowEpsilon = windowEpsilon;
+        this.heavyGuardianRandom = heavyGuardianRandom;
         num = 0;
         currentNum = 0;
         warmupState = true;
@@ -127,26 +127,26 @@ public abstract class AbstractHgLdpHeavyHitter implements HgLdpHeavyHitter {
         // is the value of the Count field of the weakest guardian.
         assert heavyGuardian.size() == k;
         // find the weakest guardian
-        List<Map.Entry<String, Double>> heavyPartList = new ArrayList<>(heavyGuardian.entrySet());
-        heavyPartList.sort(Comparator.comparingDouble(Map.Entry::getValue));
-        Map.Entry<String, Double> weakestHeavyPartCell = heavyPartList.get(0);
-        String weakestHeavyPartItem = weakestHeavyPartCell.getKey();
-        double weakestHeavyPartCount = weakestHeavyPartCell.getValue();
+        List<Map.Entry<String, Double>> heavyGuardianList = new ArrayList<>(heavyGuardian.entrySet());
+        heavyGuardianList.sort(Comparator.comparingDouble(Map.Entry::getValue));
+        Map.Entry<String, Double> weakestCell = heavyGuardianList.get(0);
+        String weakestItem = weakestCell.getKey();
+        double weakestCount = weakestCell.getValue();
         // Sample a boolean value, with probability P = b^{−C}, the boolean value is 1
         // In LDP, the weakest count may be non-positive, if so, we do not need to sample, since it must be evicted.
-        if (weakestHeavyPartCount > 0) {
+        if (weakestCount > 0) {
             // Here we use the advanced Bernoulli(exp(−γ)) with γ = C * ln(b), and reverse the sample
-            ExpBernoulliSampler expBernoulliSampler = new ExpBernoulliSampler(hgRandom, weakestHeavyPartCount * LN_B);
+            ExpBernoulliSampler expBernoulliSampler = new ExpBernoulliSampler(heavyGuardianRandom, weakestCount * LN_B);
             // decay (decrement) the count field of the weakest guardian by 1 with probability P = b^{−C}
             boolean sample = expBernoulliSampler.sample();
             if (!sample) {
-                weakestHeavyPartCount--;
+                weakestCount--;
             }
         }
         // After decay, if the count field becomes 0, it replaces the ID field of the weakest guardian with e,
         // and sets the count field to 1
-        if (weakestHeavyPartCount <= 0) {
-            heavyGuardian.remove(weakestHeavyPartItem);
+        if (weakestCount <= 0) {
+            heavyGuardian.remove(weakestItem);
             if (!warmupState) {
                 // we partially de-bias the count for all items
                 for (Map.Entry<String, Double> budgetEntry : heavyGuardian.entrySet()) {
@@ -158,7 +158,7 @@ public abstract class AbstractHgLdpHeavyHitter implements HgLdpHeavyHitter {
             heavyGuardian.put(item, 1.0);
             return true;
         } else {
-            heavyGuardian.put(weakestHeavyPartItem, weakestHeavyPartCount);
+            heavyGuardian.put(weakestItem, weakestCount);
             if (!warmupState) {
                 currentNum++;
             }
@@ -201,8 +201,8 @@ public abstract class AbstractHgLdpHeavyHitter implements HgLdpHeavyHitter {
     }
 
     @Override
-    public double getEpsilon() {
-        return epsilon;
+    public double getWindowEpsilon() {
+        return windowEpsilon;
     }
 
     @Override
