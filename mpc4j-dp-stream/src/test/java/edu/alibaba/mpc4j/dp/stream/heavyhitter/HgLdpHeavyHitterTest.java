@@ -11,8 +11,6 @@ import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 
 import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Paths;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -37,8 +35,8 @@ public class HgLdpHeavyHitterTest {
         try {
             Random random = new Random(HEAVY_GUARDIAN_SEED);
             HeavyGuardian heavyGuardian = new HeavyGuardian(1, LdpHeavyHitterTest.DEFAULT_K, 0, random);
-            Files.lines(Paths.get(LdpHeavyHitterTest.EXAMPLE_DATA_PATH)).forEach(heavyGuardian::insert);
-            Map<String, Integer> correctCountMap = LdpHeavyHitterTest.EXAMPLE_DATA_DOMAIN.stream()
+            StreamDataUtils.obtainItemStream(LdpHeavyHitterTest.EXAMPLE_DATA_PATH).forEach(heavyGuardian::insert);
+            Map<String, Integer> correctCountMap = heavyGuardian.getRecordItemSet().stream()
                 .collect(Collectors.toMap(item -> item, heavyGuardian::query));
             CORRECT_HG_EXAMPLE_COUNT_ORDERED_LIST = new ArrayList<>(correctCountMap.entrySet());
             // descending sort
@@ -50,26 +48,14 @@ public class HgLdpHeavyHitterTest {
         }
     }
 
-    /**
-     * warmup num, 1% of the data
-     */
-    private static final int EXAMPLE_WARM_UP_NUM;
-
-    static {
-        try {
-            EXAMPLE_WARM_UP_NUM = (int)Math.round(
-                StreamDataUtils.obtainItemStream(LdpHeavyHitterTest.EXAMPLE_DATA_PATH).count() * 0.01
-            );
-        } catch (IOException e) {
-            e.printStackTrace();
-            throw new IllegalStateException();
-        }
-    }
-
     @Parameterized.Parameters(name = "{0}")
     public static Collection<Object[]> configurations() {
         Collection<Object[]> configurations = new ArrayList<>();
 
+        // advanced heavy guardian
+        configurations.add(new Object[] {
+            LdpHeavyHitterType.ADV_HEAVY_GUARDIAN.name(), LdpHeavyHitterType.ADV_HEAVY_GUARDIAN,
+        });
         // basic heavy guardian
         configurations.add(new Object[] {
             LdpHeavyHitterType.BASIC_HEAVY_GUARDIAN.name(), LdpHeavyHitterType.BASIC_HEAVY_GUARDIAN,
@@ -89,28 +75,68 @@ public class HgLdpHeavyHitterTest {
     }
 
     @Test
-    public void testLargeEpsilon() throws IOException {
-        Random hgRandom = new Random(HEAVY_GUARDIAN_SEED);
-        Random ldpRandom = new Random();
+    public void testWarmup() throws IOException {
+        Random heavyGuardianRandom = new Random(HEAVY_GUARDIAN_SEED);
+        HgLdpHeavyHitter ldpHeavyHitter = LdpHeavyHitterFactory.createHgInstance(
+            type, LdpHeavyHitterTest.EXAMPLE_DATA_DOMAIN, LdpHeavyHitterTest.DEFAULT_K,
+            LdpHeavyHitterTest.DEFAULT_EPSILON, heavyGuardianRandom
+        );
+        // warmup
+        StreamDataUtils.obtainItemStream(LdpHeavyHitterTest.EXAMPLE_DATA_PATH).forEach(ldpHeavyHitter::warmupInsert);
+        // get heavy hitters
+        Map<String, Double> heavyHitterMap = ldpHeavyHitter.responseHeavyHitters();
+        Assert.assertEquals(LdpHeavyHitterTest.DEFAULT_K, heavyHitterMap.size());
+        List<Map.Entry<String, Double>> orderedHeavyHitterList = ldpHeavyHitter.responseOrderedHeavyHitters();
+        Assert.assertEquals(LdpHeavyHitterTest.DEFAULT_K, orderedHeavyHitterList.size());
+        // verify no-error count
+        for (int index = 0; index < LdpHeavyHitterTest.DEFAULT_K; index++) {
+            Assert.assertEquals(
+                CORRECT_HG_EXAMPLE_COUNT_ORDERED_LIST.get(index).getKey(), orderedHeavyHitterList.get(index).getKey()
+            );
+        }
+    }
+
+    @Test
+    public void testStopWarmup() throws IOException {
+        Random heavyGuardianRandom = new Random(HEAVY_GUARDIAN_SEED);
         HgLdpHeavyHitter hgLdpHeavyHitter = LdpHeavyHitterFactory.createHgInstance(
             type, LdpHeavyHitterTest.EXAMPLE_DATA_DOMAIN, LdpHeavyHitterTest.DEFAULT_K,
-            LdpHeavyHitterTest.LARGE_EPSILON, EXAMPLE_WARM_UP_NUM, hgRandom
+            LdpHeavyHitterTest.DEFAULT_EPSILON, heavyGuardianRandom
         );
-        StreamDataUtils.obtainItemStream(LdpHeavyHitterTest.EXAMPLE_DATA_PATH)
-            .map(item -> {
-                if (!hgLdpHeavyHitter.optimizeRandomize()) {
-                    return hgLdpHeavyHitter.randomize(item, ldpRandom);
-                } else {
-                    Set<String> currentHeavyHitter = hgLdpHeavyHitter.getHeavyHitterSet();
-                    return hgLdpHeavyHitter.randomize(currentHeavyHitter, item, ldpRandom);
-                }
-            })
-            .forEach(hgLdpHeavyHitter::insert);
+        // warmup
+        StreamDataUtils.obtainItemStream(LdpHeavyHitterTest.EXAMPLE_DATA_PATH).forEach(hgLdpHeavyHitter::warmupInsert);
+        hgLdpHeavyHitter.stopWarmup();
+        // get heavy hitters
         Map<String, Double> heavyHitterMap = hgLdpHeavyHitter.responseHeavyHitters();
         Assert.assertEquals(LdpHeavyHitterTest.DEFAULT_K, heavyHitterMap.size());
         List<Map.Entry<String, Double>> orderedHeavyHitterList = hgLdpHeavyHitter.responseOrderedHeavyHitters();
         Assert.assertEquals(LdpHeavyHitterTest.DEFAULT_K, orderedHeavyHitterList.size());
+        // verify no-error count
+        for (int index = 0; index < LdpHeavyHitterTest.DEFAULT_K; index++) {
+            Assert.assertEquals(
+                CORRECT_HG_EXAMPLE_COUNT_ORDERED_LIST.get(index).getKey(), orderedHeavyHitterList.get(index).getKey()
+            );
+        }
+    }
 
+    @Test
+    public void testLargeEpsilon() throws IOException {
+        Random heavyGuardianRandom = new Random(HEAVY_GUARDIAN_SEED);
+        HgLdpHeavyHitter hgLdpHeavyHitter = LdpHeavyHitterFactory.createHgInstance(
+            type, LdpHeavyHitterTest.EXAMPLE_DATA_DOMAIN, LdpHeavyHitterTest.DEFAULT_K,
+            LdpHeavyHitterTest.LARGE_EPSILON, heavyGuardianRandom
+        );
+        // warmup
+        LdpHeavyHitterTest.exampleWarmupInsert(hgLdpHeavyHitter);
+        hgLdpHeavyHitter.stopWarmup();
+        // randomize
+        LdpHeavyHitterTest.exampleRandomizeInsert(hgLdpHeavyHitter);
+        // get heavy hitters
+        Map<String, Double> heavyHitterMap = hgLdpHeavyHitter.responseHeavyHitters();
+        Assert.assertEquals(LdpHeavyHitterTest.DEFAULT_K, heavyHitterMap.size());
+        List<Map.Entry<String, Double>> orderedHeavyHitterList = hgLdpHeavyHitter.responseOrderedHeavyHitters();
+        Assert.assertEquals(LdpHeavyHitterTest.DEFAULT_K, orderedHeavyHitterList.size());
+        // verify no-error count
         for (int index = 0; index < LdpHeavyHitterTest.DEFAULT_K; index++) {
             Assert.assertEquals(
                 CORRECT_HG_EXAMPLE_COUNT_ORDERED_LIST.get(index).getKey(), orderedHeavyHitterList.get(index).getKey()

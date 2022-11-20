@@ -45,16 +45,20 @@ public class NaiveLdpHeavyHitter implements LdpHeavyHitter {
      */
     private final double q;
     /**
-     * the total number of insert items
+     * the number of inserted items
      */
     private int num;
+    /**
+     * the warmup state
+     */
+    private boolean warmupState;
 
     public NaiveLdpHeavyHitter(Set<String> domainSet, int k, double epsilon) {
-        Preconditions.checkArgument(domainSet.size() > 1, "|Ω| must be greater than 1: %s", domainSet.size());
+        d = domainSet.size();
+        Preconditions.checkArgument(d > 1, "|Ω| must be greater than 1: %s", d);
         this.domainSet = domainSet;
         domainArrayList = new ArrayList<>(domainSet);
-        d = domainArrayList.size();
-        Preconditions.checkArgument(k > 0 && k <= domainSet.size(), "k must be in range (0, %s]: %s", domainSet.size(), k);
+        Preconditions.checkArgument(k > 0 && k <= d, "k must be in range (0, %s]: %s", d, k);
         this.k = k;
         budget = new HashMap<>(d);
         Preconditions.checkArgument(epsilon > 0, "ε must be greater than 0: %s", epsilon);
@@ -63,6 +67,7 @@ public class NaiveLdpHeavyHitter implements LdpHeavyHitter {
         p = expEpsilon / (expEpsilon + d - 1);
         q = 1 / (expEpsilon + d - 1);
         num = 0;
+        warmupState = true;
     }
 
     @Override
@@ -71,8 +76,40 @@ public class NaiveLdpHeavyHitter implements LdpHeavyHitter {
     }
 
     @Override
-    public String randomize(String item, Random random) {
+    public boolean warmupInsert(String item) {
+        Preconditions.checkArgument(warmupState, "The heavy hitter must be in the warm-up state");
+        num++;
+        if (budget.containsKey(item)) {
+            double itemCount = budget.get(item);
+            itemCount += 1;
+            budget.put(item, itemCount);
+        } else {
+            budget.put(item, 1.0);
+        }
+        return true;
+    }
+
+    @Override
+    public void stopWarmup() {
+        // bias all counts
+        for(Map.Entry<String, Double> entry : budget.entrySet()) {
+            String item = entry.getKey();
+            double value = entry.getValue();
+            value = value * (p - q) + num * q;
+            budget.put(item, value);
+        }
+        warmupState = false;
+    }
+
+    @Override
+    public Map<String, Double> getCurrentDataStructure() {
+        return budget;
+    }
+
+    @Override
+    public String randomize(Map<String, Double> currentDataStructure, String item, Random random) {
         Preconditions.checkArgument(domainSet.contains(item), "The input idem is not in the domain: %s", item);
+        // naive solution does not consider the current data structure
         double randomSample = random.nextDouble();
         // Randomly sample an integer in [0, d)
         int randomIndex = random.nextInt(d);
@@ -86,7 +123,8 @@ public class NaiveLdpHeavyHitter implements LdpHeavyHitter {
     }
 
     @Override
-    public boolean insert(String randomizedItem) {
+    public boolean randomizeInsert(String randomizedItem) {
+        Preconditions.checkArgument(!warmupState, "The heavy hitter must be not in the warm-up state");
         num++;
         if (budget.containsKey(randomizedItem)) {
             double itemCount = budget.get(randomizedItem);
@@ -100,7 +138,13 @@ public class NaiveLdpHeavyHitter implements LdpHeavyHitter {
 
     @Override
     public double response(String item) {
-        return (budget.getOrDefault(item, 0.0) - num * q) / (p - q);
+        if (warmupState) {
+            // we do not need to debias in the warm-up state
+            return budget.getOrDefault(item, 0.0);
+        } else {
+            return (budget.getOrDefault(item, 0.0) - num * q) / (p - q);
+        }
+
     }
 
     @Override

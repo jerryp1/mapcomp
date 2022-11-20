@@ -19,21 +19,44 @@ public interface LdpHeavyHitter {
     LdpHeavyHitterFactory.LdpHeavyHitterType getType();
 
     /**
-     * Randomize the item.
+     * Insert an item during the warmup state.
      *
      * @param item the item.
-     * @param random the random state.
+     * @return true if the randomized item is not ignored and successfully inserted.
+     */
+    boolean warmupInsert(String item);
+
+    /**
+     * Stop warming up.
+     *
+     * @throws IllegalStateException If warming up is not enough.
+     */
+    void stopWarmup();
+
+    /**
+     * Return the current data structure.
+     *
+     * @return the current data structure.
+     */
+    Map<String, Double> getCurrentDataStructure();
+
+    /**
+     * randomize the item based on the current data structure.
+     *
+     * @param currentDataStructure the current data structure.
+     * @param item                 the item.
+     * @param random               the random state.
      * @return the randomized item.
      */
-    String randomize(String item, Random random);
+    String randomize(Map<String, Double> currentDataStructure, String item, Random random);
 
     /**
      * Insert a randomized item.
      *
-     * @param randomizedItem a randomized item.
-     * @return return true if the randomized item is not ignored and successfully inserted.
+     * @param randomizedItem the randomized item.
+     * @return true if the randomized item is not ignored and successfully inserted.
      */
-    boolean insert(String randomizedItem);
+    boolean randomizeInsert(String randomizedItem);
 
     /**
      * Response the counting value for the given item.
@@ -67,6 +90,13 @@ public interface LdpHeavyHitter {
     }
 
     /**
+     * Response Heavy Hitters.
+     *
+     * @return Heavy Hitters.
+     */
+    Map<String, Double> responseHeavyHitters();
+
+    /**
      * Response Heavy Hitters with descending order list.
      *
      * @return the heavy hitter map.
@@ -81,13 +111,6 @@ public interface LdpHeavyHitter {
 
         return heavyHitterOrderedList;
     }
-
-    /**
-     * Response Heavy Hitters.
-     *
-     * @return Heavy Hitters.
-     */
-    Map<String, Double> responseHeavyHitters();
 
     /**
      * Return the privacy parameter ε.
