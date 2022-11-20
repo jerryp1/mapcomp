@@ -20,11 +20,26 @@ public class RelaxHhgLdpHeavyHitter extends AdvHhgLdpHeavyHitter {
 
     RelaxHhgLdpHeavyHitter(Set<String> domainSet, int k, double windowEpsilon, double alpha, Random hgRandom) {
         super(domainSet, k, windowEpsilon, alpha, hgRandom);
+        // recompute probabilities
+        double alphaWindowEpsilon = windowEpsilon * alpha;
+        double remainedWindowEpsilon = windowEpsilon - alphaWindowEpsilon;
+        // compute p1 and p1
+        double expAlphaWindowEpsilon = Math.exp(alphaWindowEpsilon);
+        p1 = expAlphaWindowEpsilon / (expAlphaWindowEpsilon + 1);
+        q1 = 1 / (expAlphaWindowEpsilon + 1);
+        // compute p2 and q2
+        double expWindowEpsilon = Math.exp(windowEpsilon);
+        p2 = expWindowEpsilon / (expWindowEpsilon + k - 1);
+        q2 = 1 / (expWindowEpsilon + k - 1);
+        // compute p3 and q3
+        double expRemainedWindowEpsilon = Math.exp(remainedWindowEpsilon);
+        p3 = expRemainedWindowEpsilon / (expRemainedWindowEpsilon + d - k - 1);
+        q3 = 1 / (expRemainedWindowEpsilon + d - k - 1);
     }
 
     @Override
     public LdpHeavyHitterFactory.LdpHeavyHitterType getType() {
-        return LdpHeavyHitterFactory.LdpHeavyHitterType.RELAX_HEAVY_GUARDIAN;
+        return LdpHeavyHitterFactory.LdpHeavyHitterType.RELAX_HG;
     }
 
     @Override

@@ -1,11 +1,10 @@
 package edu.alibaba.mpc4j.dp.stream.structure;
 
+import edu.alibaba.mpc4j.dp.stream.tool.StreamDataUtils;
 import org.junit.Assert;
 import org.junit.Test;
 
 import java.io.*;
-import java.nio.file.Files;
-import java.nio.file.Paths;
 import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
@@ -75,7 +74,7 @@ public class TestStreamCounter {
     }
 
     private List<Map.Entry<String, Integer>> getExampleCountList(StreamCounter streamCounter) throws IOException {
-        Files.lines(Paths.get(EXAMPLE_DATA_PATH)).forEach(streamCounter::insert);
+        StreamDataUtils.obtainItemStream(EXAMPLE_DATA_PATH).forEach(streamCounter::insert);
         Map<String, Integer> countMap = EXAMPLE_DOMAIN.stream()
             .collect(Collectors.toMap(item -> item, streamCounter::query));
         List<Map.Entry<String, Integer>> countList = new ArrayList<>(countMap.entrySet());

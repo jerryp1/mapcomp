@@ -24,27 +24,27 @@ public class AdvHhgLdpHeavyHitter extends AbstractHgLdpHeavyHitter implements Hh
     /**
      * p1 = e^ε_1 / (e^ε_1 + 1)
      */
-    protected final double p1;
+    protected double p1;
     /**
      * q1 = 1 / (e^ε_1 + 1)
      */
-    protected final double q1;
+    protected double q1;
     /**
      * p2 = e^ε_2 / (e^ε_2 + k - 1)
      */
-    protected final double p2;
+    protected double p2;
     /**
      * q2 = 1 / (e^ε_2 + k - 1)
      */
-    protected final double q2;
+    protected double q2;
     /**
-     * p3 = e^ε_2 / (e^ε_2 + d - k - 1)
+     * p3 = e^ε_3 / (e^ε_3 + d - k - 1)
      */
-    private final double p3;
+    protected double p3;
     /**
-     * q3 = 1 / (e^ε_2 + d - k - 1)
+     * q3 = 1 / (e^ε_3 + d - k - 1)
      */
-    private final double q3;
+    protected double q3;
     /**
      * γ_h, proportion of hot items
      */
@@ -77,7 +77,7 @@ public class AdvHhgLdpHeavyHitter extends AbstractHgLdpHeavyHitter implements Hh
 
     @Override
     public LdpHeavyHitterFactory.LdpHeavyHitterType getType() {
-        return LdpHeavyHitterFactory.LdpHeavyHitterType.ADV_HEAVY_GUARDIAN;
+        return LdpHeavyHitterFactory.LdpHeavyHitterType.ADVAN_HG;
     }
 
     @Override

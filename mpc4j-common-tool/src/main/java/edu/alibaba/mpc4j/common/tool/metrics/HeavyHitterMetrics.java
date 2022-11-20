@@ -139,23 +139,24 @@ public class HeavyHitterMetrics {
      * @param <T>           the data type.
      * @return the relative error.
      */
-    public static <T> double relativeError(Map<T, Integer> predictionMap, Map<T, Integer> realMap) {
+    public static <T> double relativeError(Map<T, Double> predictionMap, Map<T, Integer> realMap) {
         int predictionSize = predictionMap.size();
         if (predictionSize == 0) {
             return 0;
         }
         double relativeError = 0;
-        for (Map.Entry<T, Integer> itemEntry : predictionMap.entrySet()) {
+        for (Map.Entry<T, Double> itemEntry : predictionMap.entrySet()) {
             T item = itemEntry.getKey();
-            int prediction = itemEntry.getValue();
+            double prediction = itemEntry.getValue();
             if (!realMap.containsKey(item)) {
                 relativeError += 1;
             } else {
                 int real = realMap.get(item);
+                assert real >= 0 : "real value must be greater than or equal to 0: " + real;
                 if (real == 0) {
                     relativeError += 1;
                 } else {
-                    relativeError += (double)Math.abs(prediction - real) / real;
+                    relativeError += Math.abs(prediction - real) / real;
                 }
             }
         }

@@ -6,7 +6,7 @@ package edu.alibaba.mpc4j.dp.stream.heavyhitter;
  * @author Weiran Liu
  * @date 2022/11/20
  */
-public interface HhgLdpHeavyHitter {
+public interface HhgLdpHeavyHitter extends HgLdpHeavyHitter {
     /**
      * Get the value of α.
      *

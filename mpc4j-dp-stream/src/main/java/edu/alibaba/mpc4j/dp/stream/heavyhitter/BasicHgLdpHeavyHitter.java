@@ -29,7 +29,7 @@ public class BasicHgLdpHeavyHitter extends AbstractHgLdpHeavyHitter {
 
     @Override
     public LdpHeavyHitterFactory.LdpHeavyHitterType getType() {
-        return LdpHeavyHitterFactory.LdpHeavyHitterType.BASIC_HEAVY_GUARDIAN;
+        return LdpHeavyHitterFactory.LdpHeavyHitterType.BASIC_HG;
     }
 
     @Override

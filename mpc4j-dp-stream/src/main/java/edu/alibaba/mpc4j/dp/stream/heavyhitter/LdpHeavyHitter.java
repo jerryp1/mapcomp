@@ -1,5 +1,6 @@
 package edu.alibaba.mpc4j.dp.stream.heavyhitter;
 
+import java.security.SecureRandom;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -49,6 +50,17 @@ public interface LdpHeavyHitter {
      * @return the randomized item.
      */
     String randomize(Map<String, Double> currentDataStructure, String item, Random random);
+
+    /**
+     * randomize the item based on the current data structure.
+     *
+     * @param currentDataStructure the current data structure.
+     * @param item                 the item.
+     * @return the randomized item.
+     */
+    default String randomize(Map<String, Double> currentDataStructure, String item) {
+        return randomize(currentDataStructure, item, new SecureRandom());
+    }
 
     /**
      * Insert a randomized item.

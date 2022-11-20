@@ -72,7 +72,7 @@ class NaiveLdpHeavyHitter implements LdpHeavyHitter {
 
     @Override
     public LdpHeavyHitterFactory.LdpHeavyHitterType getType() {
-        return LdpHeavyHitterFactory.LdpHeavyHitterType.NAIVE;
+        return LdpHeavyHitterFactory.LdpHeavyHitterType.NAIVE_RR;
     }
 
     @Override

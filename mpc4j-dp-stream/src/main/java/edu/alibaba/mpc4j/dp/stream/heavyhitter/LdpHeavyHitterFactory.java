@@ -20,19 +20,19 @@ public class LdpHeavyHitterFactory {
         /**
          * naive
          */
-        NAIVE,
+        NAIVE_RR,
         /**
          * basic HeavyGuardian
          */
-        BASIC_HEAVY_GUARDIAN,
+        BASIC_HG,
         /**
          * Advanced HeavyGuardian
          */
-        ADV_HEAVY_GUARDIAN,
+        ADVAN_HG,
         /**
          * Related HeavyGuardian
          */
-        RELAX_HEAVY_GUARDIAN,
+        RELAX_HG,
     }
 
     /**
@@ -47,13 +47,13 @@ public class LdpHeavyHitterFactory {
     public static LdpHeavyHitter createInstance(LdpHeavyHitterType type, Set<String> domainSet, int k,
                                                 double windowEpsilon) {
         switch (type) {
-            case BASIC_HEAVY_GUARDIAN:
+            case BASIC_HG:
                 return new BasicHgLdpHeavyHitter(domainSet, k, windowEpsilon, new SecureRandom());
-            case NAIVE:
+            case NAIVE_RR:
                 return new NaiveLdpHeavyHitter(domainSet, k, windowEpsilon);
-            case ADV_HEAVY_GUARDIAN:
+            case ADVAN_HG:
                 return new AdvHhgLdpHeavyHitter(domainSet, k, windowEpsilon, new SecureRandom());
-            case RELAX_HEAVY_GUARDIAN:
+            case RELAX_HG:
                 return new RelaxHhgLdpHeavyHitter(domainSet, k, windowEpsilon, new SecureRandom());
             default:
                 throw new IllegalArgumentException("Invalid " + LdpHeavyHitterType.class.getSimpleName() + ": " + type);
@@ -61,35 +61,74 @@ public class LdpHeavyHitterFactory {
     }
 
     /**
-     * Create an instance of Heavy Hitter with Local Differential Privacy.
+     * Create an instance of HeavyGuardian-based Heavy Hitter with Local Differential Privacy.
      *
      * @param type                the type of Heavy Hitter with Local Differential Privacy.
      * @param domainSet           the domain set.
      * @param k                   the heavy hitter num k.
      * @param windowEpsilon       the privacy parameter ε / w.
+     * @return an instance of HeavyGuardian-based Heavy Hitter with Local Differential Privacy.
+     */
+    public static HgLdpHeavyHitter createHgInstance(LdpHeavyHitterType type, Set<String> domainSet, int k,
+                                                    double windowEpsilon) {
+        return createHgInstance(type, domainSet, k, windowEpsilon, new SecureRandom());
+    }
+
+    /**
+     * Create an instance of HeavyGuardian-based Heavy Hitter with Local Differential Privacy.
+     *
+     * @param type                the type of HeavyGuardian-based Heavy Hitter with Local Differential Privacy.
+     * @param domainSet           the domain set.
+     * @param k                   the heavy hitter num k.
+     * @param windowEpsilon       the privacy parameter ε / w.
      * @param heavyGuardianRandom the HeavyGuardian random state.
-     * @return an instance of Heavy Hitter with Local Differential Privacy.
+     * @return an instance of HeavyGuardian-based Heavy Hitter with Local Differential Privacy.
      */
     public static HgLdpHeavyHitter createHgInstance(LdpHeavyHitterType type, Set<String> domainSet, int k,
                                                     double windowEpsilon, Random heavyGuardianRandom) {
         switch (type) {
-            case BASIC_HEAVY_GUARDIAN:
+            case BASIC_HG:
                 return new BasicHgLdpHeavyHitter(domainSet, k, windowEpsilon, heavyGuardianRandom);
-            case ADV_HEAVY_GUARDIAN:
+            case ADVAN_HG:
                 return new AdvHhgLdpHeavyHitter(domainSet, k, windowEpsilon, heavyGuardianRandom);
-            case RELAX_HEAVY_GUARDIAN:
+            case RELAX_HG:
                 return new RelaxHhgLdpHeavyHitter(domainSet, k, windowEpsilon, heavyGuardianRandom);
             default:
                 throw new IllegalArgumentException("Invalid " + LdpHeavyHitterType.class.getSimpleName() + ": " + type);
         }
     }
 
+    /**
+     * Create an instance of Hot HeavyGuardian-based Heavy Hitter with Local Differential Privacy.
+     *
+     * @param type                the type of Hot HeavyGuardian-based Heavy Hitter with Local Differential Privacy.
+     * @param domainSet           the domain set.
+     * @param k                   the heavy hitter num k.
+     * @param windowEpsilon       the privacy parameter ε / w.
+     * @return an instance of Hot HeavyGuardian-based Heavy Hitter with Local Differential Privacy.
+     */
+    public static HhgLdpHeavyHitter createHhgInstance(LdpHeavyHitterType type, Set<String> domainSet, int k,
+                                                      double windowEpsilon, double alpha) {
+        return createHhgInstance(type, domainSet, k, windowEpsilon, alpha, new SecureRandom());
+    }
+
+    /**
+     * Create an instance of Hot HeavyGuardian-based Heavy Hitter with Local Differential Privacy.
+     *
+     * @param type                the type of Hot HeavyGuardian-based Heavy Hitter with Local Differential Privacy.
+     * @param domainSet           the domain set.
+     * @param k                   the heavy hitter num k.
+     * @param windowEpsilon       the privacy parameter ε / w.
+     * @param heavyGuardianRandom the HeavyGuardian random state.
+     * @return an instance of Hot HeavyGuardian-based Heavy Hitter with Local Differential Privacy.
+     */
     public static HhgLdpHeavyHitter createHhgInstance(LdpHeavyHitterType type, Set<String> domainSet, int k,
                                                       double windowEpsilon, double alpha, Random heavyGuardianRandom) {
         switch (type) {
-            case ADV_HEAVY_GUARDIAN:
+            case ADVAN_HG:
                 return new AdvHhgLdpHeavyHitter(domainSet, k, windowEpsilon, alpha, heavyGuardianRandom);
-            case RELAX_HEAVY_GUARDIAN:
+            case RELAX_HG:
+                return new RelaxHhgLdpHeavyHitter(domainSet, k, windowEpsilon, alpha, heavyGuardianRandom);
             default:
                 throw new IllegalArgumentException("Invalid " + LdpHeavyHitterType.class.getSimpleName() + ": " + type);
         }

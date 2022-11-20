@@ -4,6 +4,7 @@ import com.google.common.base.Preconditions;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -35,8 +36,8 @@ public class PropertiesUtils {
             properties.load(input);
             return properties;
         } catch (IOException e) {
-            e.printStackTrace();
-            throw new IllegalArgumentException("Failed to load config file: " +  file);
+            File fileObject = new File(file);
+            throw new IllegalArgumentException("Failed to load config file: " + fileObject.getAbsolutePath());
         }
     }
 
@@ -106,9 +107,9 @@ public class PropertiesUtils {
     /**
      * 读取布尔值。
      *
-     * @param properties 配置项。
-     * @param keyword    关键字。
-     * @param defaultValue  默认值。
+     * @param properties   配置项。
+     * @param keyword      关键字。
+     * @param defaultValue 默认值。
      * @return 布尔值。
      */
     public static boolean readBoolean(Properties properties, String keyword, boolean defaultValue) {
@@ -175,6 +176,20 @@ public class PropertiesUtils {
         LOGGER.info("{} = {}", keyword, Arrays.toString(logIntArray));
 
         return logIntArray;
+    }
+
+    /**
+     * 读取浮点数。
+     *
+     * @param properties 配置项。
+     * @param keyword    关键字。
+     * @return 浮点数。
+     */
+    public static double readDouble(Properties properties, String keyword) {
+        String doubleString = readString(properties, keyword);
+        double doubleValue = Double.parseDouble(doubleString);
+        LOGGER.info("{} = {}", keyword, doubleValue);
+        return doubleValue;
     }
 
     /**

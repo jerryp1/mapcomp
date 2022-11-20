@@ -123,19 +123,19 @@ public class LdpHeavyHitterTest {
 
         // relaxed heavy guardian
         configurations.add(new Object[]{
-            LdpHeavyHitterType.RELAX_HEAVY_GUARDIAN.name(), LdpHeavyHitterType.RELAX_HEAVY_GUARDIAN,
+            LdpHeavyHitterType.RELAX_HG.name(), LdpHeavyHitterType.RELAX_HG,
         });
         // advanced heavy guardian
         configurations.add(new Object[]{
-            LdpHeavyHitterType.ADV_HEAVY_GUARDIAN.name(), LdpHeavyHitterType.ADV_HEAVY_GUARDIAN,
+            LdpHeavyHitterType.ADVAN_HG.name(), LdpHeavyHitterType.ADVAN_HG,
         });
         // basic heavy guardian
         configurations.add(new Object[]{
-            LdpHeavyHitterType.BASIC_HEAVY_GUARDIAN.name(), LdpHeavyHitterType.BASIC_HEAVY_GUARDIAN,
+            LdpHeavyHitterType.BASIC_HG.name(), LdpHeavyHitterType.BASIC_HG,
         });
         // NAIVE
         configurations.add(new Object[]{
-            LdpHeavyHitterType.NAIVE.name(), LdpHeavyHitterType.NAIVE,
+            LdpHeavyHitterType.NAIVE_RR.name(), LdpHeavyHitterType.NAIVE_RR,
         });
 
         return configurations;
