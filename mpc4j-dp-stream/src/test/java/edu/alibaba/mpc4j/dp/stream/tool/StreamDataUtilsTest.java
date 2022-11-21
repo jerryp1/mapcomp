@@ -25,8 +25,9 @@ public class StreamDataUtilsTest {
         String path = Objects.requireNonNull(
             TestStreamCounter.class.getClassLoader().getResource("chess.dat")
         ).getPath();
-        Stream<String> itemStream = StreamDataUtils.obtainItemStream(path);
-        assertData("chess", itemStream);
+        Stream<String> dataStream = StreamDataUtils.obtainItemStream(path);
+        assertData("chess", dataStream);
+        dataStream.close();
     }
 
     @Test
@@ -34,8 +35,9 @@ public class StreamDataUtilsTest {
         String path = Objects.requireNonNull(
             TestStreamCounter.class.getClassLoader().getResource("connect.dat")
         ).getPath();
-        Stream<String> itemStream = StreamDataUtils.obtainItemStream(path);
-        assertData("connect", itemStream);
+        Stream<String> dataStream = StreamDataUtils.obtainItemStream(path);
+        assertData("connect", dataStream);
+        dataStream.close();
     }
 
     @Test
@@ -43,8 +45,9 @@ public class StreamDataUtilsTest {
         String path = Objects.requireNonNull(
             TestStreamCounter.class.getClassLoader().getResource("mushroom.dat")
         ).getPath();
-        Stream<String> itemStream = StreamDataUtils.obtainItemStream(path);
-        assertData("mushroom", itemStream);
+        Stream<String> dataStream = StreamDataUtils.obtainItemStream(path);
+        assertData("mushroom", dataStream);
+        dataStream.close();
     }
 
     private void assertData(String name, Stream<String> itemStream) {

@@ -22,6 +22,7 @@ import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
+import java.util.stream.Stream;
 
 /**
  * Heavy Hitter with Local Differential Privacy test.
@@ -62,9 +63,13 @@ public class LdpHeavyHitterTest {
 
     static {
         try {
-            EXAMPLE_WARMUP_NUM = (int)Math.round(StreamDataUtils.obtainItemStream(EXAMPLE_DATA_PATH).count() * 0.01);
+            Stream<String> dataStream = StreamDataUtils.obtainItemStream(EXAMPLE_DATA_PATH);
+            EXAMPLE_WARMUP_NUM = (int)Math.round(dataStream.count() * 0.01);
+            dataStream.close();
             NaiveStreamCounter streamCounter = new NaiveStreamCounter();
-            Files.lines(Paths.get(EXAMPLE_DATA_PATH)).forEach(streamCounter::insert);
+            dataStream = Files.lines(Paths.get(EXAMPLE_DATA_PATH));
+            dataStream.forEach(streamCounter::insert);
+            dataStream.close();
             CORRECT_EXAMPLE_COUNT_MAP = EXAMPLE_DATA_DOMAIN.stream()
                 .collect(Collectors.toMap(item -> item, streamCounter::query));
             CORRECT_EXAMPLE_COUNT_ORDERED_LIST = new ArrayList<>(CORRECT_EXAMPLE_COUNT_MAP.entrySet());
@@ -98,7 +103,9 @@ public class LdpHeavyHitterTest {
 
     static {
         try {
-            CONNECT_WARMUP_NUM = (int)Math.round(StreamDataUtils.obtainItemStream(CONNECT_DATA_PATH).count() * 0.01);
+            Stream<String> dataStream = StreamDataUtils.obtainItemStream(CONNECT_DATA_PATH);
+            CONNECT_WARMUP_NUM = (int)Math.round(dataStream.count() * 0.01);
+            dataStream.close();
         } catch (IOException e) {
             e.printStackTrace();
             throw new IllegalStateException();
@@ -165,7 +172,9 @@ public class LdpHeavyHitterTest {
             type, EXAMPLE_DATA_DOMAIN, EXAMPLE_D, DEFAULT_EPSILON
         );
         // warmup
-        StreamDataUtils.obtainItemStream(EXAMPLE_DATA_PATH).forEach(ldpHeavyHitter::warmupInsert);
+        Stream<String> dataStream = StreamDataUtils.obtainItemStream(EXAMPLE_DATA_PATH);
+        dataStream.forEach(ldpHeavyHitter::warmupInsert);
+        dataStream.close();
         Map<String, Double> countMap = ldpHeavyHitter.responseDomain();
         double totalNum = 0;
         for (String item : EXAMPLE_DATA_DOMAIN) {
@@ -181,7 +190,9 @@ public class LdpHeavyHitterTest {
             type, EXAMPLE_DATA_DOMAIN, EXAMPLE_D, DEFAULT_EPSILON
         );
         // warmup
-        StreamDataUtils.obtainItemStream(EXAMPLE_DATA_PATH).forEach(ldpHeavyHitter::warmupInsert);
+        Stream<String> dataStream = StreamDataUtils.obtainItemStream(EXAMPLE_DATA_PATH);
+        dataStream.forEach(ldpHeavyHitter::warmupInsert);
+        dataStream.close();
         ldpHeavyHitter.stopWarmup();
         Map<String, Double> countMap = ldpHeavyHitter.responseDomain();
         double totalNum = 0;
@@ -254,18 +265,20 @@ public class LdpHeavyHitterTest {
 
     static void exampleWarmupInsert(LdpHeavyHitter ldpHeavyHitter) throws IOException {
         AtomicInteger warmupIndex = new AtomicInteger();
-        StreamDataUtils.obtainItemStream(EXAMPLE_DATA_PATH)
-            .filter(item -> warmupIndex.getAndIncrement() <= EXAMPLE_WARMUP_NUM)
+        Stream<String> dataStream = StreamDataUtils.obtainItemStream(EXAMPLE_DATA_PATH);
+        dataStream.filter(item -> warmupIndex.getAndIncrement() <= EXAMPLE_WARMUP_NUM)
             .forEach(ldpHeavyHitter::warmupInsert);
+        dataStream.close();
     }
 
     static void exampleRandomizeInsert(LdpHeavyHitter ldpHeavyHitter) throws IOException {
         Random ldpRandom = new Random();
         AtomicInteger randomizedIndex = new AtomicInteger();
-        StreamDataUtils.obtainItemStream(EXAMPLE_DATA_PATH)
-            .filter(item -> randomizedIndex.getAndIncrement() > EXAMPLE_WARMUP_NUM)
+        Stream<String> dataStream = StreamDataUtils.obtainItemStream(EXAMPLE_DATA_PATH);
+        dataStream.filter(item -> randomizedIndex.getAndIncrement() > EXAMPLE_WARMUP_NUM)
             .map(item -> ldpHeavyHitter.randomize(ldpHeavyHitter.getCurrentDataStructure(), item, ldpRandom))
             .forEach(ldpHeavyHitter::randomizeInsert);
+        dataStream.close();
     }
 
     @Test
@@ -278,24 +291,26 @@ public class LdpHeavyHitterTest {
         ldpHeavyHitter.stopWarmup();
         // randomize
         connectRandomizeInsert(ldpHeavyHitter);
-        System.gc();
+        ldpHeavyHitter.cleanDomainSet();
         long memory = GraphLayout.parseInstance(ldpHeavyHitter).totalSize();
         LOGGER.info("{}: k = {}, d = {}, memory = {}", type.name(), DEFAULT_K, CONNECT_D, memory);
     }
 
     static void connectWarmupInsert(LdpHeavyHitter ldpHeavyHitter) throws IOException {
         AtomicInteger warmupIndex = new AtomicInteger();
-        StreamDataUtils.obtainItemStream(CONNECT_DATA_PATH)
-            .filter(item -> warmupIndex.getAndIncrement() <= CONNECT_WARMUP_NUM)
+        Stream<String> dataStream = StreamDataUtils.obtainItemStream(CONNECT_DATA_PATH);
+        dataStream.filter(item -> warmupIndex.getAndIncrement() <= CONNECT_WARMUP_NUM)
             .forEach(ldpHeavyHitter::warmupInsert);
+        dataStream.close();
     }
 
     static void connectRandomizeInsert(LdpHeavyHitter ldpHeavyHitter) throws IOException {
         Random ldpRandom = new Random();
         AtomicInteger randomizedIndex = new AtomicInteger();
-        StreamDataUtils.obtainItemStream(CONNECT_DATA_PATH)
-            .filter(item -> randomizedIndex.getAndIncrement() > CONNECT_WARMUP_NUM)
+        Stream<String> dataStream = StreamDataUtils.obtainItemStream(CONNECT_DATA_PATH);
+        dataStream.filter(item -> randomizedIndex.getAndIncrement() > CONNECT_WARMUP_NUM)
             .map(item -> ldpHeavyHitter.randomize(ldpHeavyHitter.getCurrentDataStructure(), item, ldpRandom))
             .forEach(ldpHeavyHitter::randomizeInsert);
+        dataStream.close();
     }
 }

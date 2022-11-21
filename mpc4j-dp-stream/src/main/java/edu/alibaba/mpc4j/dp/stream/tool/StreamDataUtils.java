@@ -21,7 +21,7 @@ public class StreamDataUtils {
     }
 
     /**
-     * Obtain item stream from the .dat file.
+     * Obtain item stream from the .dat file. Note that you need to invoke {@code close()} to close the stream.
      *
      * @param path file path.
      * @return item string.

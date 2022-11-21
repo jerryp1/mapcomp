@@ -15,11 +15,11 @@ class NaiveLdpHeavyHitter implements LdpHeavyHitter {
     /**
      * the domain set
      */
-    private final Set<String> domainSet;
+    private Set<String> domainSet;
     /**
      * the domain array list
      */
-    private final ArrayList<String> domainArrayList;
+    private ArrayList<String> domainArrayList;
     /**
      * d = |Ω|
      */
@@ -49,9 +49,9 @@ class NaiveLdpHeavyHitter implements LdpHeavyHitter {
      */
     private int num;
     /**
-     * the warmup state
+     * the state
      */
-    private boolean warmupState;
+    private HeavyHitterState heavyHitterState;
 
     NaiveLdpHeavyHitter(Set<String> domainSet, int k, double windowEpsilon) {
         d = domainSet.size();
@@ -67,7 +67,7 @@ class NaiveLdpHeavyHitter implements LdpHeavyHitter {
         p = expEpsilon / (expEpsilon + d - 1);
         q = 1 / (expEpsilon + d - 1);
         num = 0;
-        warmupState = true;
+        heavyHitterState = HeavyHitterState.WARMUP;
     }
 
     @Override
@@ -77,7 +77,10 @@ class NaiveLdpHeavyHitter implements LdpHeavyHitter {
 
     @Override
     public boolean warmupInsert(String item) {
-        Preconditions.checkArgument(warmupState, "The heavy hitter must be in the warm-up state");
+        Preconditions.checkArgument(
+            heavyHitterState.equals(HeavyHitterState.WARMUP),
+            "The heavy hitter must be %s: %s", HeavyHitterState.WARMUP, heavyHitterState
+        );
         num++;
         if (budget.containsKey(item)) {
             double itemCount = budget.get(item);
@@ -91,6 +94,10 @@ class NaiveLdpHeavyHitter implements LdpHeavyHitter {
 
     @Override
     public void stopWarmup() {
+        Preconditions.checkArgument(
+            heavyHitterState.equals(HeavyHitterState.WARMUP),
+            "The heavy hitter must be %s: %s", HeavyHitterState.WARMUP, heavyHitterState
+        );
         // bias all counts
         for(Map.Entry<String, Double> entry : budget.entrySet()) {
             String item = entry.getKey();
@@ -98,7 +105,7 @@ class NaiveLdpHeavyHitter implements LdpHeavyHitter {
             value = value * (p - q) + num * q;
             budget.put(item, value);
         }
-        warmupState = false;
+        heavyHitterState = HeavyHitterState.STATISTICS;
     }
 
     @Override
@@ -108,7 +115,14 @@ class NaiveLdpHeavyHitter implements LdpHeavyHitter {
 
     @Override
     public String randomize(Map<String, Double> currentDataStructure, String item, Random random) {
-        Preconditions.checkArgument(domainSet.contains(item), "The input idem is not in the domain: %s", item);
+        Preconditions.checkArgument(
+            heavyHitterState.equals(HeavyHitterState.STATISTICS),
+            "The heavy hitter must be %s: %s", HeavyHitterState.STATISTICS, heavyHitterState
+        );
+        Preconditions.checkArgument(
+            domainSet.contains(item),
+            "The input idem is not in the domain: %s", item
+        );
         // naive solution does not consider the current data structure
         double randomSample = random.nextDouble();
         // Randomly sample an integer in [0, d)
@@ -124,7 +138,10 @@ class NaiveLdpHeavyHitter implements LdpHeavyHitter {
 
     @Override
     public boolean randomizeInsert(String randomizedItem) {
-        Preconditions.checkArgument(!warmupState, "The heavy hitter must be not in the warm-up state");
+        Preconditions.checkArgument(
+            heavyHitterState.equals(HeavyHitterState.STATISTICS),
+            "The heavy hitter must be %s: %s", HeavyHitterState.STATISTICS, heavyHitterState
+        );
         num++;
         if (budget.containsKey(randomizedItem)) {
             double itemCount = budget.get(randomizedItem);
@@ -138,13 +155,17 @@ class NaiveLdpHeavyHitter implements LdpHeavyHitter {
 
     @Override
     public double response(String item) {
-        if (warmupState) {
-            // we do not need to debias in the warm-up state
-            return budget.getOrDefault(item, 0.0);
-        } else {
-            return (budget.getOrDefault(item, 0.0) - num * q) / (p - q);
-        }
+        switch (heavyHitterState) {
+            case WARMUP:
+                // we do not need to debias in the warm-up state
+                return budget.getOrDefault(item, 0.0);
+            case STATISTICS:
+            case CLEAN:
+                return (budget.getOrDefault(item, 0.0) - num * q) / (p - q);
+            default:
+                throw new IllegalStateException("Invalid " + HeavyHitterState.class.getSimpleName() + ": " + heavyHitterState);
 
+        }
     }
 
     @Override
@@ -153,6 +174,17 @@ class NaiveLdpHeavyHitter implements LdpHeavyHitter {
             .subList(0, k)
             .stream()
             .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
+    }
+
+    @Override
+    public void cleanDomainSet() {
+        Preconditions.checkArgument(
+            heavyHitterState.equals(HeavyHitterState.WARMUP) || heavyHitterState.equals(HeavyHitterState.STATISTICS),
+            "The heavy hitter must be %s or %s: %s", HeavyHitterState.WARMUP, HeavyHitterState.STATISTICS, heavyHitterState
+        );
+        domainSet = null;
+        domainArrayList = null;
+        heavyHitterState = HeavyHitterState.CLEAN;
     }
 
     @Override
@@ -172,6 +204,10 @@ class NaiveLdpHeavyHitter implements LdpHeavyHitter {
 
     @Override
     public Set<String> getDomainSet() {
+        Preconditions.checkArgument(
+            heavyHitterState.equals(HeavyHitterState.WARMUP) || heavyHitterState.equals(HeavyHitterState.STATISTICS),
+            "The heavy hitter must be %s or %s: %s", HeavyHitterState.WARMUP, HeavyHitterState.STATISTICS, heavyHitterState
+        );
         return domainSet;
     }
 

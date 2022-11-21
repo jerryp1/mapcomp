@@ -28,11 +28,11 @@ abstract class AbstractHgLdpHeavyHitter implements HgLdpHeavyHitter {
     /**
      * the domain set
      */
-    protected final Set<String> domainSet;
+    protected Set<String> domainSet;
     /**
      * the domain array list
      */
-    protected final ArrayList<String> domainArrayList;
+    protected ArrayList<String> domainArrayList;
     /**
      * d = |Ω|
      */
@@ -58,9 +58,9 @@ abstract class AbstractHgLdpHeavyHitter implements HgLdpHeavyHitter {
      */
     protected int num;
     /**
-     * the warmup state
+     * the state
      */
-    protected boolean warmupState;
+    protected HeavyHitterState heavyHitterState;
     /**
      * current de-bias num
      */
@@ -79,19 +79,28 @@ abstract class AbstractHgLdpHeavyHitter implements HgLdpHeavyHitter {
         this.heavyGuardianRandom = heavyGuardianRandom;
         num = 0;
         currentNum = 0;
-        warmupState = true;
+        heavyHitterState = HeavyHitterState.WARMUP;
     }
 
     @Override
     public boolean warmupInsert(String item) {
-        Preconditions.checkArgument(warmupState, "The heavy hitter must be in the warm-up state");
-        Preconditions.checkArgument(domainSet.contains(item), "The item is not in the domain set: %s", item);
+        Preconditions.checkArgument(
+            heavyHitterState.equals(HeavyHitterState.WARMUP),
+            "The heavy hitter must be %s: %s", HeavyHitterState.WARMUP, heavyHitterState
+        );
+        Preconditions.checkArgument(
+            domainSet.contains(item),
+            "The item is not in the domain set: %s", item
+        );
         return insert(item);
     }
 
     @Override
     public boolean randomizeInsert(String randomizedItem) {
-        Preconditions.checkArgument(!warmupState, "The heavy hitter must be not in the warm-up state");
+        Preconditions.checkArgument(
+            heavyHitterState.equals(HeavyHitterState.STATISTICS),
+            "The heavy hitter must be %s: %s", HeavyHitterState.STATISTICS, heavyHitterState
+        );
         Preconditions.checkArgument(
             domainSet.contains(randomizedItem) || randomizedItem.equals(BOT),
             "The item is not in the domain set and not ⊥: %s", randomizedItem);
@@ -106,7 +115,7 @@ abstract class AbstractHgLdpHeavyHitter implements HgLdpHeavyHitter {
             double itemCount = heavyGuardian.get(item);
             itemCount += 1;
             heavyGuardian.put(item, itemCount);
-            if (!warmupState) {
+            if (heavyHitterState.equals(HeavyHitterState.STATISTICS)) {
                 currentNum++;
             }
             return true;
@@ -116,7 +125,7 @@ abstract class AbstractHgLdpHeavyHitter implements HgLdpHeavyHitter {
             assert !item.equals(BOT) : "the item must not be ⊥: " + item;
             // It inserts e into an empty cell, i.e., sets the ID field to e and sets the count field to 1.
             heavyGuardian.put(item, 1.0);
-            if (!warmupState) {
+            if (heavyHitterState.equals(HeavyHitterState.STATISTICS)) {
                 currentNum++;
             }
             return true;
@@ -147,7 +156,7 @@ abstract class AbstractHgLdpHeavyHitter implements HgLdpHeavyHitter {
         // and sets the count field to 1
         if (weakestCount <= 0) {
             heavyGuardian.remove(weakestItem);
-            if (!warmupState) {
+            if (heavyHitterState.equals(HeavyHitterState.STATISTICS)) {
                 // we partially de-bias the count for all items
                 for (Map.Entry<String, Double> budgetEntry : heavyGuardian.entrySet()) {
                     budgetEntry.setValue(updateCount(budgetEntry.getValue()));
@@ -159,7 +168,7 @@ abstract class AbstractHgLdpHeavyHitter implements HgLdpHeavyHitter {
             return true;
         } else {
             heavyGuardian.put(weakestItem, weakestCount);
-            if (!warmupState) {
+            if (heavyHitterState.equals(HeavyHitterState.STATISTICS)) {
                 currentNum++;
             }
             return false;
@@ -177,12 +186,16 @@ abstract class AbstractHgLdpHeavyHitter implements HgLdpHeavyHitter {
 
     @Override
     public double response(String item) {
-        if (warmupState) {
-            // return C
-            return heavyGuardian.getOrDefault(item, 0.0);
-        } else {
-            // return de-biased C
-            return debiasCount(heavyGuardian.getOrDefault(item, 0.0));
+        switch (heavyHitterState) {
+            case WARMUP:
+                // return C
+                return heavyGuardian.getOrDefault(item, 0.0);
+            case STATISTICS:
+            case CLEAN:
+                // return de-biased C
+                return debiasCount(heavyGuardian.getOrDefault(item, 0.0));
+            default:
+                throw new IllegalStateException("Invalid " + HeavyHitterState.class.getSimpleName() + ": " + heavyHitterState);
         }
     }
 
@@ -198,6 +211,17 @@ abstract class AbstractHgLdpHeavyHitter implements HgLdpHeavyHitter {
     public Map<String, Double> responseHeavyHitters() {
         // we only need to iterate items in the budget
         return heavyGuardian.keySet().stream().collect(Collectors.toMap(item -> item, this::response));
+    }
+
+    @Override
+    public void cleanDomainSet() {
+        Preconditions.checkArgument(
+            heavyHitterState.equals(HeavyHitterState.WARMUP) || heavyHitterState.equals(HeavyHitterState.STATISTICS),
+            "The heavy hitter must be %s or %s: %s", HeavyHitterState.WARMUP, HeavyHitterState.STATISTICS, heavyHitterState
+        );
+        domainSet = null;
+        domainArrayList = null;
+        heavyHitterState = HeavyHitterState.CLEAN;
     }
 
     @Override
@@ -217,6 +241,10 @@ abstract class AbstractHgLdpHeavyHitter implements HgLdpHeavyHitter {
 
     @Override
     public Set<String> getDomainSet() {
+        Preconditions.checkArgument(
+            heavyHitterState.equals(HeavyHitterState.WARMUP) || heavyHitterState.equals(HeavyHitterState.STATISTICS),
+            "The heavy hitter must be %s or %s: %s", HeavyHitterState.WARMUP, HeavyHitterState.STATISTICS, heavyHitterState
+        );
         return domainSet;
     }
 

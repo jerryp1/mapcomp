@@ -122,6 +122,34 @@ public class HeavyHitterMetrics {
     }
 
     /**
+     * Calculates the absolute error measure on the prediction map based on the real map.
+     * <p>
+     * the absolute error is computed by the sum of the absolute error abe(t) for each item t, where
+     * abe(t) = |the prediction value for t - the real item value for t|.
+     * </p>
+     *
+     * @param predictionMap the prediction map.
+     * @param realMap       the real map.
+     * @param <T>           the data type.
+     * @return the absolute error.
+     */
+    public static <T> double absoluteError(Map<T, Double> predictionMap, Map<T, Integer> realMap) {
+        int predictionSize = predictionMap.size();
+        if (predictionSize == 0) {
+            return 0;
+        }
+        double absoluteError = 0;
+        for (Map.Entry<T, Double> itemEntry : predictionMap.entrySet()) {
+            T item = itemEntry.getKey();
+            int real = realMap.getOrDefault(item, 0);
+            assert real >= 0 : "real value must be greater than or equal to 0: " + real;
+            double prediction = itemEntry.getValue();
+            absoluteError += Math.abs(prediction - real);
+        }
+        return absoluteError / predictionSize;
+    }
+
+    /**
      * Calculates the relative error measure on the prediction map based on the real map.
      * <p>
      * the relative error is computed by the sum of the relative error re(t) for each item t, where

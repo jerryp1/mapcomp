@@ -71,7 +71,7 @@ public class AdvHhgLdpHeavyHitter extends AbstractHgLdpHeavyHitter implements Hh
         // compute p3 and q3
         p3 = expRemainedWindowEpsilon / (expRemainedWindowEpsilon + d - k - 1);
         q3 = 1 / (expRemainedWindowEpsilon + d - k - 1);
-        warmupState = true;
+        heavyHitterState = HeavyHitterState.WARMUP;
         gammaH = 0;
     }
 
@@ -82,6 +82,10 @@ public class AdvHhgLdpHeavyHitter extends AbstractHgLdpHeavyHitter implements Hh
 
     @Override
     public void stopWarmup() {
+        Preconditions.checkArgument(
+            heavyHitterState.equals(HeavyHitterState.WARMUP),
+            "The heavy hitter must be %s: %s", HeavyHitterState.WARMUP, heavyHitterState
+        );
         // bias all counts and calculate λ
         double lambdaH = 0;
         for (Map.Entry<String, Double> entry : heavyGuardian.entrySet()) {
@@ -104,7 +108,7 @@ public class AdvHhgLdpHeavyHitter extends AbstractHgLdpHeavyHitter implements Hh
                 heavyGuardian.put(remainedItem, 0.0);
             }
         }
-        warmupState = false;
+        heavyHitterState = HeavyHitterState.STATISTICS;
     }
 
     @Override
@@ -114,6 +118,14 @@ public class AdvHhgLdpHeavyHitter extends AbstractHgLdpHeavyHitter implements Hh
 
     @Override
     public String randomize(Map<String, Double> currentHeavyGuardian, String item, Random random) {
+        Preconditions.checkArgument(
+            heavyHitterState.equals(HeavyHitterState.STATISTICS),
+            "The heavy hitter must be %s: %s", HeavyHitterState.STATISTICS, heavyHitterState
+        );
+        Preconditions.checkArgument(
+            domainSet.contains(item),
+            "The input item is not in the domain: %s", item
+        );
         Preconditions.checkArgument(
             currentHeavyGuardian.size() == k,
             "Current HeavyGuardian size must be equal to k: %s", currentHeavyGuardian.size()

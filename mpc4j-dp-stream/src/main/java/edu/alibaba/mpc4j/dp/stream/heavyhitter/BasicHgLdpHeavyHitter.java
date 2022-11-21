@@ -34,6 +34,10 @@ public class BasicHgLdpHeavyHitter extends AbstractHgLdpHeavyHitter {
 
     @Override
     public void stopWarmup() {
+        Preconditions.checkArgument(
+            heavyHitterState.equals(HeavyHitterState.WARMUP),
+            "The heavy hitter must be %s: %s", HeavyHitterState.WARMUP, heavyHitterState
+        );
         // bias all counts
         for (Map.Entry<String, Double> entry : heavyGuardian.entrySet()) {
             String item = entry.getKey();
@@ -41,7 +45,7 @@ public class BasicHgLdpHeavyHitter extends AbstractHgLdpHeavyHitter {
             value = value * (p - q);
             heavyGuardian.put(item, value);
         }
-        warmupState = false;
+        heavyHitterState = HeavyHitterState.STATISTICS;
     }
 
     @Override
@@ -56,7 +60,14 @@ public class BasicHgLdpHeavyHitter extends AbstractHgLdpHeavyHitter {
 
     @Override
     public String randomize(Map<String, Double> currentDataStructure, String item, Random random) {
-        Preconditions.checkArgument(domainSet.contains(item), "The input item is not in the domain: %s", item);
+        Preconditions.checkArgument(
+            heavyHitterState.equals(HeavyHitterState.STATISTICS),
+            "The heavy hitter must be %s: %s", HeavyHitterState.STATISTICS, heavyHitterState
+        );
+        Preconditions.checkArgument(
+            domainSet.contains(item),
+            "The input item is not in the domain: %s", item
+        );
         // basic HeavyGuardian solution does not consider the current data structure
         double randomSample = random.nextDouble();
         // Randomly sample an integer in [0, d)

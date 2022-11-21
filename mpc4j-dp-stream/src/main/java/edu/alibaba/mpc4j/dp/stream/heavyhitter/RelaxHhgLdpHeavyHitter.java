@@ -50,6 +50,14 @@ public class RelaxHhgLdpHeavyHitter extends AdvHhgLdpHeavyHitter {
     @Override
     public String randomize(Map<String, Double> currentHeavyGuardian, String item, Random random) {
         Preconditions.checkArgument(
+            heavyHitterState.equals(HeavyHitterState.STATISTICS),
+            "The heavy hitter must be %s: %s", HeavyHitterState.STATISTICS, heavyHitterState
+        );
+        Preconditions.checkArgument(
+            domainSet.contains(item),
+            "The input item is not in the domain: %s", item
+        );
+        Preconditions.checkArgument(
             currentHeavyGuardian.size() == k,
             "Current HeavyGuardian size must be equal to k: %s", currentHeavyGuardian.size()
         );

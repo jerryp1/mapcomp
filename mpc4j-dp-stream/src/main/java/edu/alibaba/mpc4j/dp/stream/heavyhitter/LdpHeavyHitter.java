@@ -124,6 +124,11 @@ public interface LdpHeavyHitter {
     }
 
     /**
+     * clean domain set.
+     */
+    void cleanDomainSet();
+
+    /**
      * Return the privacy parameter ε / w.
      *
      * @return the privacy parameter ε / w.

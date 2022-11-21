@@ -13,6 +13,7 @@ import org.junit.runners.Parameterized;
 import java.io.IOException;
 import java.util.*;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 /**
  * HeavyGuardian Heavy Hitter with Local Differential Privacy test.
@@ -35,7 +36,9 @@ public class HgLdpHeavyHitterTest {
         try {
             Random random = new Random(HEAVY_GUARDIAN_SEED);
             HeavyGuardian heavyGuardian = new HeavyGuardian(1, LdpHeavyHitterTest.DEFAULT_K, 0, random);
-            StreamDataUtils.obtainItemStream(LdpHeavyHitterTest.EXAMPLE_DATA_PATH).forEach(heavyGuardian::insert);
+            Stream<String> dataStream = StreamDataUtils.obtainItemStream(LdpHeavyHitterTest.EXAMPLE_DATA_PATH);
+            dataStream.forEach(heavyGuardian::insert);
+            dataStream.close();
             Map<String, Integer> correctCountMap = heavyGuardian.getRecordItemSet().stream()
                 .collect(Collectors.toMap(item -> item, heavyGuardian::query));
             CORRECT_HG_EXAMPLE_COUNT_ORDERED_LIST = new ArrayList<>(correctCountMap.entrySet());
@@ -86,7 +89,9 @@ public class HgLdpHeavyHitterTest {
             LdpHeavyHitterTest.DEFAULT_EPSILON, heavyGuardianRandom
         );
         // warmup
-        StreamDataUtils.obtainItemStream(LdpHeavyHitterTest.EXAMPLE_DATA_PATH).forEach(ldpHeavyHitter::warmupInsert);
+        Stream<String> dataStream = StreamDataUtils.obtainItemStream(LdpHeavyHitterTest.EXAMPLE_DATA_PATH);
+        dataStream.forEach(ldpHeavyHitter::warmupInsert);
+        dataStream.close();
         // get heavy hitters
         Map<String, Double> heavyHitterMap = ldpHeavyHitter.responseHeavyHitters();
         Assert.assertEquals(LdpHeavyHitterTest.DEFAULT_K, heavyHitterMap.size());

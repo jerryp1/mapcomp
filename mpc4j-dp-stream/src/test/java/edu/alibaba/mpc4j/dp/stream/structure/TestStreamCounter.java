@@ -8,6 +8,7 @@ import java.io.*;
 import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
+import java.util.stream.Stream;
 
 /**
  * StreamCounter test.
@@ -74,7 +75,9 @@ public class TestStreamCounter {
     }
 
     private List<Map.Entry<String, Integer>> getExampleCountList(StreamCounter streamCounter) throws IOException {
-        StreamDataUtils.obtainItemStream(EXAMPLE_DATA_PATH).forEach(streamCounter::insert);
+        Stream<String> dataStream = StreamDataUtils.obtainItemStream(EXAMPLE_DATA_PATH);
+        dataStream.forEach(streamCounter::insert);
+        dataStream.close();
         Map<String, Integer> countMap = EXAMPLE_DOMAIN.stream()
             .collect(Collectors.toMap(item -> item, streamCounter::query));
         List<Map.Entry<String, Integer>> countList = new ArrayList<>(countMap.entrySet());

@@ -20,6 +20,7 @@ import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
+import java.util.stream.Stream;
 
 /**
  * Heavy Hitter with Local Differential Privacy main.
@@ -89,14 +90,16 @@ public class LdpHeavyHitterMain {
             domainMaxValue = PropertiesUtils.readInt(properties, "domain_max_item");
         } else {
             // automatically set domain
-            domainMinValue = StreamDataUtils.obtainItemStream(datasetPath)
-                .mapToInt(Integer::parseInt)
+            Stream<String> dataStream = StreamDataUtils.obtainItemStream(datasetPath);
+            domainMinValue = dataStream.mapToInt(Integer::parseInt)
                 .min()
                 .orElse(Integer.MIN_VALUE);
-            domainMaxValue = StreamDataUtils.obtainItemStream(datasetPath)
-                .mapToInt(Integer::parseInt)
+            dataStream.close();
+            dataStream = StreamDataUtils.obtainItemStream(datasetPath);
+            domainMaxValue = dataStream.mapToInt(Integer::parseInt)
                 .max()
                 .orElse(Integer.MAX_VALUE);
+            dataStream.close();
         }
         Preconditions.checkArgument(
             domainMinValue < domainMaxValue,
@@ -121,11 +124,15 @@ public class LdpHeavyHitterMain {
         // set test round
         testRound = PropertiesUtils.readInt(properties, "test_round");
         // num and warmup num
-        int num = (int)StreamDataUtils.obtainItemStream(datasetPath).count();
-        warmupNum = (int)Math.round(num * warmupPercentage);
+        Stream<String> dataStream = StreamDataUtils.obtainItemStream(datasetPath);
+        int num = (int) dataStream.count();
+        dataStream.close();
+        warmupNum = (int) Math.round(num * warmupPercentage);
         // correct counting result
         NaiveStreamCounter streamCounter = new NaiveStreamCounter();
-        StreamDataUtils.obtainItemStream(datasetPath).forEach(streamCounter::insert);
+        dataStream = StreamDataUtils.obtainItemStream(datasetPath);
+        dataStream.forEach(streamCounter::insert);
+        dataStream.close();
         correctCountMap = domainSet.stream()
             .collect(Collectors.toMap(item -> item, streamCounter::query));
         // correct heavy hitter
@@ -145,7 +152,7 @@ public class LdpHeavyHitterMain {
         FileWriter fileWriter = new FileWriter(filePath);
         PrintWriter printWriter = new PrintWriter(fileWriter, true);
         // write tab
-        String tab = "type\tw_epsilon\talpha\tNDCG\tPrecision\tRE\tMemory";
+        String tab = "type\tε_w\tα\tNDCG\tPrecision\tABE\tRE\tMemory(B)";
         printWriter.println(tab);
         runHeavyGuardian(printWriter);
         for (double windowEpsilon : windowEpsilons) {
@@ -173,15 +180,21 @@ public class LdpHeavyHitterMain {
         LOGGER.info("Run {}", typeName);
         double ndcg = 0.0;
         double precision = 0.0;
+        double abe = 0.0;
         double re = 0.0;
         double memory = 0.0;
         for (int round = 0; round < testRound; round++) {
             HeavyGuardian streamCounter = new HeavyGuardian(1, k, 0);
-            StreamDataUtils.obtainItemStream(datasetPath).forEach(streamCounter::insert);
+            Stream<String> dataStream = StreamDataUtils.obtainItemStream(datasetPath);
+            dataStream.forEach(streamCounter::insert);
+            dataStream.close();
             // heavy hitter map
             Map<String, Double> heavyHitterMap = streamCounter.getRecordItemSet().stream()
-                .collect(Collectors.toMap(item -> item, item -> (double)streamCounter.query(item)));
-            Preconditions.checkArgument(heavyHitterMap.size() == k);
+                .collect(Collectors.toMap(item -> item, item -> (double) streamCounter.query(item)));
+            Preconditions.checkArgument(
+                heavyHitterMap.size() == k,
+                "heavy hitter size must be equal to %s: %s", k, heavyHitterMap.size()
+            );
             // heavy hitter ordered list
             List<Map.Entry<String, Double>> heavyHitterOrderedList = new ArrayList<>(heavyHitterMap.entrySet());
             heavyHitterOrderedList.sort(Comparator.comparingDouble(Map.Entry::getValue));
@@ -191,16 +204,17 @@ public class LdpHeavyHitterMain {
             // metrics
             ndcg += HeavyHitterMetrics.ndcg(heavyHitters, correctHeavyHitters);
             precision += HeavyHitterMetrics.precision(heavyHitters, correctHeavyHitters);
+            abe += HeavyHitterMetrics.absoluteError(heavyHitterMap, correctCountMap);
             re += HeavyHitterMetrics.relativeError(heavyHitterMap, correctCountMap);
-            System.gc();
             memory += GraphLayout.parseInstance(streamCounter).totalSize();
         }
         ndcg = ndcg / testRound;
         precision = precision / testRound;
+        abe = abe / testRound;
         re = re / testRound;
         memory = memory / testRound;
         // output report
-        printInfo(printWriter, typeName, null, null, ndcg, precision, re, memory);
+        printInfo(printWriter, typeName, null, null, ndcg, precision, abe, re, memory);
     }
 
     private void runNaiveHeavyHitter(double windowEpsilon, PrintWriter printWriter) throws IOException {
@@ -208,6 +222,7 @@ public class LdpHeavyHitterMain {
         LOGGER.info("Run {}, ε_w = {}", type.name(), windowEpsilon);
         double ndcg = 0.0;
         double precision = 0.0;
+        double abe = 0.0;
         double re = 0.0;
         double memory = 0.0;
         for (int round = 0; round < testRound; round++) {
@@ -215,14 +230,16 @@ public class LdpHeavyHitterMain {
             double[] metrics = runLdpHeavyHitter(ldpHeavyHitter);
             ndcg += metrics[0];
             precision += metrics[1];
-            re += metrics[2];
-            memory += metrics[3];
+            abe += metrics[2];
+            re += metrics[3];
+            memory += metrics[4];
         }
         ndcg = ndcg / testRound;
         precision = precision / testRound;
+        abe = abe / testRound;
         re = re / testRound;
         memory = memory / testRound;
-        printInfo(printWriter, type.name(), windowEpsilon, null, ndcg, precision, re, memory);
+        printInfo(printWriter, type.name(), windowEpsilon, null, ndcg, precision, abe, re, memory);
     }
 
     private void runBasicHgHeavyHitter(double windowEpsilon, PrintWriter printWriter) throws IOException {
@@ -230,6 +247,7 @@ public class LdpHeavyHitterMain {
         LOGGER.info("Run {}, ε_w = {}", type.name(), windowEpsilon);
         double ndcg = 0.0;
         double precision = 0.0;
+        double abe = 0.0;
         double re = 0.0;
         double memory = 0.0;
         for (int round = 0; round < testRound; round++) {
@@ -237,14 +255,16 @@ public class LdpHeavyHitterMain {
             double[] metrics = runLdpHeavyHitter(ldpHeavyHitter);
             ndcg += metrics[0];
             precision += metrics[1];
-            re += metrics[2];
-            memory += metrics[3];
+            abe += metrics[2];
+            re += metrics[3];
+            memory += metrics[4];
         }
         ndcg = ndcg / testRound;
         precision = precision / testRound;
+        abe = abe / testRound;
         re = re / testRound;
         memory = memory / testRound;
-        printInfo(printWriter, type.name(), windowEpsilon, null, ndcg, precision, re, memory);
+        printInfo(printWriter, type.name(), windowEpsilon, null, ndcg, precision, abe, re, memory);
     }
 
     private void runAdvHhgHeavyHitter(double windowEpsilon, double alpha, PrintWriter printWriter) throws IOException {
@@ -252,6 +272,7 @@ public class LdpHeavyHitterMain {
         LOGGER.info("Run {}, ε_w = {}, α = {}", type.name(), windowEpsilon, alpha);
         double ndcg = 0.0;
         double precision = 0.0;
+        double abe = 0.0;
         double re = 0.0;
         double memory = 0.0;
         for (int round = 0; round < testRound; round++) {
@@ -259,14 +280,16 @@ public class LdpHeavyHitterMain {
             double[] metrics = runLdpHeavyHitter(ldpHeavyHitter);
             ndcg += metrics[0];
             precision += metrics[1];
-            re += metrics[2];
-            memory += metrics[3];
+            abe += metrics[2];
+            re += metrics[3];
+            memory += metrics[4];
         }
         ndcg = ndcg / testRound;
         precision = precision / testRound;
+        abe = abe / testRound;
         re = re / testRound;
         memory = memory / testRound;
-        printInfo(printWriter, type.name(), windowEpsilon, alpha, ndcg, precision, re, memory);
+        printInfo(printWriter, type.name(), windowEpsilon, alpha, ndcg, precision, abe, re, memory);
     }
 
     private void runRelaxHhgHeavyHitter(double windowEpsilon, double alpha, PrintWriter printWriter) throws IOException {
@@ -274,6 +297,7 @@ public class LdpHeavyHitterMain {
         LOGGER.info("Run {}, ε_w = {}, α = {}", type.name(), windowEpsilon, alpha);
         double ndcg = 0.0;
         double precision = 0.0;
+        double abe = 0.0;
         double re = 0.0;
         double memory = 0.0;
         for (int round = 0; round < testRound; round++) {
@@ -281,29 +305,32 @@ public class LdpHeavyHitterMain {
             double[] metrics = runLdpHeavyHitter(ldpHeavyHitter);
             ndcg += metrics[0];
             precision += metrics[1];
-            re += metrics[2];
-            memory += metrics[3];
+            abe += metrics[2];
+            re += metrics[3];
+            memory += metrics[4];
         }
         ndcg = ndcg / testRound;
         precision = precision / testRound;
+        abe = abe / testRound;
         re = re / testRound;
         memory = memory / testRound;
-        printInfo(printWriter, type.name(), windowEpsilon, alpha, ndcg, precision, re, memory);
+        printInfo(printWriter, type.name(), windowEpsilon, alpha, ndcg, precision, abe, re, memory);
     }
 
     private double[] runLdpHeavyHitter(LdpHeavyHitter ldpHeavyHitter) throws IOException {
         // warmup
         AtomicInteger warmupIndex = new AtomicInteger();
-        StreamDataUtils.obtainItemStream(datasetPath)
-            .filter(item -> warmupIndex.getAndIncrement() <= warmupNum)
-            .forEach(ldpHeavyHitter::warmupInsert);
+        Stream<String> dataStream = StreamDataUtils.obtainItemStream(datasetPath);
+        dataStream.filter(item -> warmupIndex.getAndIncrement() <= warmupNum).forEach(ldpHeavyHitter::warmupInsert);
+        dataStream.close();
         ldpHeavyHitter.stopWarmup();
         // randomize
         AtomicInteger randomizedIndex = new AtomicInteger();
-        StreamDataUtils.obtainItemStream(datasetPath)
-            .filter(item -> randomizedIndex.getAndIncrement() > warmupNum)
+        dataStream = StreamDataUtils.obtainItemStream(datasetPath);
+        dataStream.filter(item -> randomizedIndex.getAndIncrement() > warmupNum)
             .map(item -> ldpHeavyHitter.randomize(ldpHeavyHitter.getCurrentDataStructure(), item))
             .forEach(ldpHeavyHitter::randomizeInsert);
+        dataStream.close();
         // heavy hitter map
         Map<String, Double> heavyHitterMap = ldpHeavyHitter.responseHeavyHitters();
         Preconditions.checkArgument(heavyHitterMap.size() == k);
@@ -314,25 +341,30 @@ public class LdpHeavyHitterMain {
         // heavy hitters
         List<String> heavyHitters = heavyHitterOrderedList.stream().map(Map.Entry::getKey).collect(Collectors.toList());
         // metrics
-        double[] metrics = new double[4];
+        double[] metrics = new double[5];
         metrics[0] = HeavyHitterMetrics.ndcg(heavyHitters, correctHeavyHitters);
         metrics[1] = HeavyHitterMetrics.precision(heavyHitters, correctHeavyHitters);
-        metrics[2] = HeavyHitterMetrics.relativeError(heavyHitterMap, correctCountMap);
-        System.gc();
-        metrics[3] = GraphLayout.parseInstance(ldpHeavyHitter).totalSize();
+        metrics[2] = HeavyHitterMetrics.absoluteError(heavyHitterMap, correctCountMap);
+        metrics[3] = HeavyHitterMetrics.relativeError(heavyHitterMap, correctCountMap);
+        ldpHeavyHitter.cleanDomainSet();
+        metrics[4] = GraphLayout.parseInstance(ldpHeavyHitter).totalSize();
         return metrics;
     }
 
     private void printInfo(PrintWriter printWriter, String type, Double windowEpsilon, Double alpha,
-                           double ndcg, double precision, double re, double memory) {
+                           double ndcg, double precision, double abe, double re, double memory) {
         String windowEpsilonString = windowEpsilon == null ? "-" : String.valueOf(windowEpsilon);
         String alphaString = alpha == null ? "-" : String.valueOf(alpha);
-        double roundNdcg = (double)Math.round(ndcg * 10000) / 10000;
-        double roundPrecision = (double)Math.round(precision * 10000) / 10000;
-        double roundRe = (double)Math.round(re * 10000) / 10000;
-        double roundMemory = (double)Math.round(memory * 10000) / 10000;
-        LOGGER.info("NDCG = {}, Precision = {}, RE = {}, Memory = {}", roundNdcg, roundPrecision, roundRe, memory);
+        double roundNdcg = (double) Math.round(ndcg * 10000) / 10000;
+        double roundPrecision = (double) Math.round(precision * 10000) / 10000;
+        double roundAbe = (double) Math.round(abe * 10000) / 10000;
+        double roundRe = (double) Math.round(re * 10000) / 10000;
+        double roundMemory = (double) Math.round(memory * 10000) / 10000;
+        LOGGER.info(
+            "NDCG = {}, Precision = {}, ABE = {}, RE = {}, Memory = {}",
+            roundNdcg, roundPrecision, roundAbe, roundRe, roundMemory
+        );
         printWriter.println(type + "\t" + windowEpsilonString + "\t" + alphaString + "\t"
-            + roundNdcg + "\t" + roundPrecision + "\t" + roundRe + "\t" + roundMemory);
+            + roundNdcg + "\t" + roundPrecision + "\t" + roundAbe + "\t" + roundRe + "\t" + roundMemory);
     }
 }
