@@ -50,15 +50,26 @@ public class StreamDataUtilsTest {
     private void assertData(String name, Stream<String> itemStream) {
         NaiveStreamCounter streamCounter = new NaiveStreamCounter();
         itemStream.forEach(streamCounter::insert);
+        // get count map
         Map<String, Integer> countMap = streamCounter.getRecordItemSet().stream()
             .collect(Collectors.toMap(item -> item, streamCounter::query));
+        // get count list
         List<Map.Entry<String, Integer>> countList = new ArrayList<>(countMap.entrySet());
-        // descending sort
         countList.sort(Comparator.comparingInt(Map.Entry::getValue));
         Collections.reverse(countList);
+        // get count domain
+        int minDomainValue = countList.stream()
+            .mapToInt(entry -> Integer.parseInt(entry.getKey()))
+            .min()
+            .orElse(Integer.MIN_VALUE);
+        int maxDomainValue = countList.stream()
+            .mapToInt(entry -> Integer.parseInt(entry.getKey()))
+            .max()
+            .orElse(Integer.MAX_VALUE);
         LOGGER.info(
-            "{}: # items = {}, # distinct items = {}, max items = <{}, {}>",
-            name, streamCounter.getNum(), streamCounter.getRecordItemSet().size(),
+            "{}: [{}, {}], # items = {}, # distinct items = {}, max items = <{}, {}>",
+            name, minDomainValue, maxDomainValue,
+            streamCounter.getNum(), streamCounter.getRecordItemSet().size(),
             countList.get(0).getKey(), countList.get(0).getValue()
         );
     }

@@ -1,6 +1,5 @@
 package edu.alibaba.mpc4j.dp.stream.heavyhitter;
 
-import java.security.SecureRandom;
 import java.util.Random;
 import java.util.Set;
 
@@ -48,13 +47,13 @@ public class LdpHeavyHitterFactory {
                                                 double windowEpsilon) {
         switch (type) {
             case BASIC_HG:
-                return new BasicHgLdpHeavyHitter(domainSet, k, windowEpsilon, new SecureRandom());
+                return new BasicHgLdpHeavyHitter(domainSet, k, windowEpsilon, new Random());
             case NAIVE_RR:
                 return new NaiveLdpHeavyHitter(domainSet, k, windowEpsilon);
             case ADVAN_HG:
-                return new AdvHhgLdpHeavyHitter(domainSet, k, windowEpsilon, new SecureRandom());
+                return new AdvHhgLdpHeavyHitter(domainSet, k, windowEpsilon, new Random());
             case RELAX_HG:
-                return new RelaxHhgLdpHeavyHitter(domainSet, k, windowEpsilon, new SecureRandom());
+                return new RelaxHhgLdpHeavyHitter(domainSet, k, windowEpsilon, new Random());
             default:
                 throw new IllegalArgumentException("Invalid " + LdpHeavyHitterType.class.getSimpleName() + ": " + type);
         }
@@ -71,7 +70,7 @@ public class LdpHeavyHitterFactory {
      */
     public static HgLdpHeavyHitter createHgInstance(LdpHeavyHitterType type, Set<String> domainSet, int k,
                                                     double windowEpsilon) {
-        return createHgInstance(type, domainSet, k, windowEpsilon, new SecureRandom());
+        return createHgInstance(type, domainSet, k, windowEpsilon, new Random());
     }
 
     /**
@@ -109,7 +108,7 @@ public class LdpHeavyHitterFactory {
      */
     public static HhgLdpHeavyHitter createHhgInstance(LdpHeavyHitterType type, Set<String> domainSet, int k,
                                                       double windowEpsilon, double alpha) {
-        return createHhgInstance(type, domainSet, k, windowEpsilon, alpha, new SecureRandom());
+        return createHhgInstance(type, domainSet, k, windowEpsilon, alpha, new Random());
     }
 
     /**

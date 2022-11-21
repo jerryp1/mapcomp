@@ -79,13 +79,31 @@ public class LdpHeavyHitterMain {
         // set dataset path
         datasetPath = PropertiesUtils.readString(properties, "dataset_path");
         // set domain set
-        int domainMinValue = PropertiesUtils.readInt(properties, "domain_min_item");
-        int domainMaxValue = PropertiesUtils.readInt(properties, "domain_max_item");
+        boolean containsDomainMinValue = PropertiesUtils.containsKeyword(properties, "domain_min_item");
+        boolean containsDomainMaxValue = PropertiesUtils.containsKeyword(properties, "domain_max_item");
+        int domainMinValue;
+        int domainMaxValue;
+        if (containsDomainMinValue && containsDomainMaxValue) {
+            // if both values are set
+            domainMinValue = PropertiesUtils.readInt(properties, "domain_min_item");
+            domainMaxValue = PropertiesUtils.readInt(properties, "domain_max_item");
+        } else {
+            // automatically set domain
+            domainMinValue = StreamDataUtils.obtainItemStream(datasetPath)
+                .mapToInt(Integer::parseInt)
+                .min()
+                .orElse(Integer.MIN_VALUE);
+            domainMaxValue = StreamDataUtils.obtainItemStream(datasetPath)
+                .mapToInt(Integer::parseInt)
+                .max()
+                .orElse(Integer.MAX_VALUE);
+        }
         Preconditions.checkArgument(
             domainMinValue < domainMaxValue,
             "domain_min_value (%s) must be less than domain_max_value (%s)",
             domainMinValue, domainMaxValue
         );
+        LOGGER.info("Domain Range: [{}, {}]", domainMinValue, domainMaxValue);
         domainSet = IntStream.rangeClosed(domainMinValue, domainMaxValue)
             .mapToObj(String::valueOf).collect(Collectors.toSet());
         int d = domainSet.size();
@@ -180,7 +198,13 @@ public class LdpHeavyHitterMain {
         // test memory
         HeavyGuardian streamCounter = new HeavyGuardian(1, k, 0);
         StreamDataUtils.obtainItemStream(datasetPath).forEach(streamCounter::insert);
-        String memory = RamUsageEstimator.humanSizeOf(streamCounter);
+        String memory;
+        try {
+            memory = RamUsageEstimator.humanSizeOf(streamCounter);
+        } catch (Exception e) {
+            LOGGER.info("Unable to estimate size of Object, try using Java with lower version (e.g., Java 8)");
+            memory = "-";
+        }
         // output report
         printInfo(printWriter, typeName, null, null, ndcg, precision, re, memory);
     }
@@ -316,7 +340,12 @@ public class LdpHeavyHitterMain {
             .filter(item -> randomizedIndex.getAndIncrement() > warmupNum)
             .map(item -> ldpHeavyHitter.randomize(ldpHeavyHitter.getCurrentDataStructure(), item))
             .forEach(ldpHeavyHitter::randomizeInsert);
-        return RamUsageEstimator.humanSizeOf(ldpHeavyHitter);
+        try {
+            return RamUsageEstimator.humanSizeOf(ldpHeavyHitter);
+        } catch (Exception e) {
+            LOGGER.info("Unable to estimate size of Object, try using Java with lower version (e.g., Java 8)");
+            return "-";
+        }
     }
 
     private void printInfo(PrintWriter printWriter, String type, Double windowEpsilon, Double alpha,

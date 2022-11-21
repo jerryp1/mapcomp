@@ -278,7 +278,13 @@ public class LdpHeavyHitterTest {
         ldpHeavyHitter.stopWarmup();
         // randomize
         connectRandomizeInsert(ldpHeavyHitter);
-        String memory = RamUsageEstimator.humanSizeOf(ldpHeavyHitter);
+        String memory;
+        try {
+            memory = RamUsageEstimator.humanSizeOf(ldpHeavyHitter);
+        } catch (Exception e) {
+            LOGGER.info("Unable to estimate size of Object, try using Java with lower version (e.g., Java 8)");
+            memory = "-";
+        }
         LOGGER.info("{}: k = {}, d = {}, memory = {}", type.name(), DEFAULT_K, CONNECT_D, memory);
     }
 

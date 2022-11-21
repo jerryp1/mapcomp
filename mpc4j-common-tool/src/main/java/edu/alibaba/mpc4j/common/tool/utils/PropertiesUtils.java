@@ -42,6 +42,18 @@ public class PropertiesUtils {
     }
 
     /**
+     * 判断是否设置了指定关键字的属性。
+     *
+     * @param properties 配置项。
+     * @param keyword 关键字。
+     * @return 是否设置了此关键字的属性。
+     */
+    public static boolean containsKeyword(Properties properties, String keyword) {
+        String readString = properties.getProperty(keyword);
+        return !Objects.isNull(readString);
+    }
+
+    /**
      * 读取字符串。
      *
      * @param properties 配置项。
@@ -84,9 +96,7 @@ public class PropertiesUtils {
      */
     public static String[] readStringArray(Properties properties, String keyword) {
         String stringArrayString = readString(properties, keyword);
-        String[] stringArray = stringArrayString.split(",");
-        LOGGER.info("{} = {}", keyword, Arrays.toString(stringArray));
-        return stringArray;
+        return stringArrayString.split(",");
     }
 
 
@@ -99,9 +109,7 @@ public class PropertiesUtils {
      */
     public static boolean readBoolean(Properties properties, String keyword) {
         String booleanString = readString(properties, keyword);
-        boolean booleanValue = Boolean.parseBoolean(booleanString);
-        LOGGER.info("{} = {}", keyword, booleanValue);
-        return booleanValue;
+        return Boolean.parseBoolean(booleanString);
     }
 
     /**
@@ -113,7 +121,7 @@ public class PropertiesUtils {
      * @return 布尔值。
      */
     public static boolean readBoolean(Properties properties, String keyword, boolean defaultValue) {
-        String booleanString = properties.getProperty(keyword);
+        String booleanString = readString(properties, keyword);
         if (booleanString == null) {
             LOGGER.info("{} is not set, choose default value: {}", keyword, defaultValue);
             return defaultValue;
@@ -133,13 +141,7 @@ public class PropertiesUtils {
      */
     public static int readInt(Properties properties, String keyword) {
         String intString = readString(properties, keyword);
-        int intValue = Integer.parseInt(intString);
-        Preconditions.checkArgument(
-            intValue > 0 && intValue < Integer.MAX_VALUE,
-            "Int value must be in range (%s, %s)", 0, Integer.MAX_VALUE
-        );
-        LOGGER.info("{} = {}", keyword, intValue);
-        return intValue;
+        return Integer.parseInt(intString);
     }
 
     /**
@@ -151,11 +153,9 @@ public class PropertiesUtils {
      */
     public static int[] readIntArray(Properties properties, String keyword) {
         String intArrayString = readString(properties, keyword);
-        int[] intArray = Arrays.stream(intArrayString.split(","))
+        return Arrays.stream(intArrayString.split(","))
             .mapToInt(Integer::parseInt)
             .toArray();
-        LOGGER.info("{} = {}", keyword, Arrays.toString(intArray));
-        return intArray;
     }
 
     /**
@@ -167,15 +167,12 @@ public class PropertiesUtils {
      */
     public static int[] readLogIntArray(Properties properties, String keyword) {
         String intArrayString = readString(properties, keyword);
-        int[] logIntArray = Arrays.stream(intArrayString.split(","))
+        return Arrays.stream(intArrayString.split(","))
             .mapToInt(Integer::parseInt)
             .peek(logIntValue -> Preconditions.checkArgument(
                 logIntValue > 0 && logIntValue < Integer.SIZE,
                 "Log int value must be in range (%s, %s)", 0, Integer.SIZE))
             .toArray();
-        LOGGER.info("{} = {}", keyword, Arrays.toString(logIntArray));
-
-        return logIntArray;
     }
 
     /**
@@ -187,9 +184,7 @@ public class PropertiesUtils {
      */
     public static double readDouble(Properties properties, String keyword) {
         String doubleString = readString(properties, keyword);
-        double doubleValue = Double.parseDouble(doubleString);
-        LOGGER.info("{} = {}", keyword, doubleValue);
-        return doubleValue;
+        return Double.parseDouble(doubleString);
     }
 
     /**
@@ -201,10 +196,8 @@ public class PropertiesUtils {
      */
     public static double[] readDoubleArray(Properties properties, String keyword) {
         String doubleString = readString(properties, keyword);
-        double[] doubleArray = Arrays.stream(doubleString.split(","))
+        return Arrays.stream(doubleString.split(","))
             .mapToDouble(Double::parseDouble)
             .toArray();
-        LOGGER.info("{} = {}", keyword, Arrays.toString(doubleArray));
-        return doubleArray;
     }
 }
