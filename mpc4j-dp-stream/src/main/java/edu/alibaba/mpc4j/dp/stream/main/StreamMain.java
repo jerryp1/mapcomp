@@ -1,6 +1,5 @@
 package edu.alibaba.mpc4j.dp.stream.main;
 
-import com.google.common.base.Preconditions;
 import edu.alibaba.mpc4j.common.tool.utils.PropertiesUtils;
 import org.apache.log4j.PropertyConfigurator;
 import org.slf4j.Logger;

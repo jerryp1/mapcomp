@@ -7,11 +7,11 @@ import edu.alibaba.mpc4j.dp.stream.structure.NaiveStreamCounter;
 import edu.alibaba.mpc4j.dp.stream.structure.TestStreamCounter;
 import edu.alibaba.mpc4j.dp.stream.tool.StreamDataUtils;
 import org.apache.commons.lang3.StringUtils;
-import org.apache.lucene.util.RamUsageEstimator;
 import org.junit.Assert;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
+import org.openjdk.jol.info.GraphLayout;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -278,13 +278,8 @@ public class LdpHeavyHitterTest {
         ldpHeavyHitter.stopWarmup();
         // randomize
         connectRandomizeInsert(ldpHeavyHitter);
-        String memory;
-        try {
-            memory = RamUsageEstimator.humanSizeOf(ldpHeavyHitter);
-        } catch (Exception e) {
-            LOGGER.info("Unable to estimate size of Object, try using Java with lower version (e.g., Java 8)");
-            memory = "-";
-        }
+        System.gc();
+        long memory = GraphLayout.parseInstance(ldpHeavyHitter).totalSize();
         LOGGER.info("{}: k = {}, d = {}, memory = {}", type.name(), DEFAULT_K, CONNECT_D, memory);
     }
 

@@ -9,7 +9,7 @@ import edu.alibaba.mpc4j.dp.stream.heavyhitter.LdpHeavyHitterFactory.LdpHeavyHit
 import edu.alibaba.mpc4j.dp.stream.structure.HeavyGuardian;
 import edu.alibaba.mpc4j.dp.stream.structure.NaiveStreamCounter;
 import edu.alibaba.mpc4j.dp.stream.tool.StreamDataUtils;
-import org.apache.lucene.util.RamUsageEstimator;
+import org.openjdk.jol.info.GraphLayout;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -174,6 +174,7 @@ public class LdpHeavyHitterMain {
         double ndcg = 0.0;
         double precision = 0.0;
         double re = 0.0;
+        double memory = 0.0;
         for (int round = 0; round < testRound; round++) {
             HeavyGuardian streamCounter = new HeavyGuardian(1, k, 0);
             StreamDataUtils.obtainItemStream(datasetPath).forEach(streamCounter::insert);
@@ -191,20 +192,13 @@ public class LdpHeavyHitterMain {
             ndcg += HeavyHitterMetrics.ndcg(heavyHitters, correctHeavyHitters);
             precision += HeavyHitterMetrics.precision(heavyHitters, correctHeavyHitters);
             re += HeavyHitterMetrics.relativeError(heavyHitterMap, correctCountMap);
+            System.gc();
+            memory += GraphLayout.parseInstance(streamCounter).totalSize();
         }
         ndcg = ndcg / testRound;
         precision = precision / testRound;
         re = re / testRound;
-        // test memory
-        HeavyGuardian streamCounter = new HeavyGuardian(1, k, 0);
-        StreamDataUtils.obtainItemStream(datasetPath).forEach(streamCounter::insert);
-        String memory;
-        try {
-            memory = RamUsageEstimator.humanSizeOf(streamCounter);
-        } catch (Exception e) {
-            LOGGER.info("Unable to estimate size of Object, try using Java with lower version (e.g., Java 8)");
-            memory = "-";
-        }
+        memory = memory / testRound;
         // output report
         printInfo(printWriter, typeName, null, null, ndcg, precision, re, memory);
     }
@@ -215,19 +209,19 @@ public class LdpHeavyHitterMain {
         double ndcg = 0.0;
         double precision = 0.0;
         double re = 0.0;
+        double memory = 0.0;
         for (int round = 0; round < testRound; round++) {
             LdpHeavyHitter ldpHeavyHitter = LdpHeavyHitterFactory.createInstance(type, domainSet, k, windowEpsilon);
             double[] metrics = runLdpHeavyHitter(ldpHeavyHitter);
             ndcg += metrics[0];
             precision += metrics[1];
             re += metrics[2];
+            memory += metrics[3];
         }
         ndcg = ndcg / testRound;
         precision = precision / testRound;
         re = re / testRound;
-        // test memory
-        LdpHeavyHitter ldpHeavyHitter = LdpHeavyHitterFactory.createInstance(type, domainSet, k, windowEpsilon);
-        String memory = runMemory(ldpHeavyHitter);
+        memory = memory / testRound;
         printInfo(printWriter, type.name(), windowEpsilon, null, ndcg, precision, re, memory);
     }
 
@@ -237,19 +231,19 @@ public class LdpHeavyHitterMain {
         double ndcg = 0.0;
         double precision = 0.0;
         double re = 0.0;
+        double memory = 0.0;
         for (int round = 0; round < testRound; round++) {
             LdpHeavyHitter ldpHeavyHitter = LdpHeavyHitterFactory.createHgInstance(type, domainSet, k, windowEpsilon);
             double[] metrics = runLdpHeavyHitter(ldpHeavyHitter);
             ndcg += metrics[0];
             precision += metrics[1];
             re += metrics[2];
+            memory += metrics[3];
         }
         ndcg = ndcg / testRound;
         precision = precision / testRound;
         re = re / testRound;
-        // test memory
-        LdpHeavyHitter ldpHeavyHitter = LdpHeavyHitterFactory.createHgInstance(type, domainSet, k, windowEpsilon);
-        String memory = runMemory(ldpHeavyHitter);
+        memory = memory / testRound;
         printInfo(printWriter, type.name(), windowEpsilon, null, ndcg, precision, re, memory);
     }
 
@@ -259,19 +253,19 @@ public class LdpHeavyHitterMain {
         double ndcg = 0.0;
         double precision = 0.0;
         double re = 0.0;
+        double memory = 0.0;
         for (int round = 0; round < testRound; round++) {
             LdpHeavyHitter ldpHeavyHitter = LdpHeavyHitterFactory.createHhgInstance(type, domainSet, k, windowEpsilon, alpha);
             double[] metrics = runLdpHeavyHitter(ldpHeavyHitter);
             ndcg += metrics[0];
             precision += metrics[1];
             re += metrics[2];
+            memory += metrics[3];
         }
         ndcg = ndcg / testRound;
         precision = precision / testRound;
         re = re / testRound;
-        // test memory
-        LdpHeavyHitter ldpHeavyHitter = LdpHeavyHitterFactory.createHhgInstance(type, domainSet, k, windowEpsilon, alpha);
-        String memory = runMemory(ldpHeavyHitter);
+        memory = memory / testRound;
         printInfo(printWriter, type.name(), windowEpsilon, alpha, ndcg, precision, re, memory);
     }
 
@@ -281,19 +275,19 @@ public class LdpHeavyHitterMain {
         double ndcg = 0.0;
         double precision = 0.0;
         double re = 0.0;
+        double memory = 0.0;
         for (int round = 0; round < testRound; round++) {
             LdpHeavyHitter ldpHeavyHitter = LdpHeavyHitterFactory.createHhgInstance(type, domainSet, k, windowEpsilon, alpha);
             double[] metrics = runLdpHeavyHitter(ldpHeavyHitter);
             ndcg += metrics[0];
             precision += metrics[1];
             re += metrics[2];
+            memory += metrics[3];
         }
         ndcg = ndcg / testRound;
         precision = precision / testRound;
         re = re / testRound;
-        // test memory
-        LdpHeavyHitter ldpHeavyHitter = LdpHeavyHitterFactory.createHhgInstance(type, domainSet, k, windowEpsilon, alpha);
-        String memory = runMemory(ldpHeavyHitter);
+        memory = memory / testRound;
         printInfo(printWriter, type.name(), windowEpsilon, alpha, ndcg, precision, re, memory);
     }
 
@@ -320,43 +314,25 @@ public class LdpHeavyHitterMain {
         // heavy hitters
         List<String> heavyHitters = heavyHitterOrderedList.stream().map(Map.Entry::getKey).collect(Collectors.toList());
         // metrics
-        double[] metrics = new double[3];
+        double[] metrics = new double[4];
         metrics[0] = HeavyHitterMetrics.ndcg(heavyHitters, correctHeavyHitters);
         metrics[1] = HeavyHitterMetrics.precision(heavyHitters, correctHeavyHitters);
         metrics[2] = HeavyHitterMetrics.relativeError(heavyHitterMap, correctCountMap);
+        System.gc();
+        metrics[3] = GraphLayout.parseInstance(ldpHeavyHitter).totalSize();
         return metrics;
     }
 
-    private String runMemory(LdpHeavyHitter ldpHeavyHitter) throws IOException {
-        // warmup
-        AtomicInteger warmupIndex = new AtomicInteger();
-        StreamDataUtils.obtainItemStream(datasetPath)
-            .filter(item -> warmupIndex.getAndIncrement() <= warmupNum)
-            .forEach(ldpHeavyHitter::warmupInsert);
-        ldpHeavyHitter.stopWarmup();
-        // randomize
-        AtomicInteger randomizedIndex = new AtomicInteger();
-        StreamDataUtils.obtainItemStream(datasetPath)
-            .filter(item -> randomizedIndex.getAndIncrement() > warmupNum)
-            .map(item -> ldpHeavyHitter.randomize(ldpHeavyHitter.getCurrentDataStructure(), item))
-            .forEach(ldpHeavyHitter::randomizeInsert);
-        try {
-            return RamUsageEstimator.humanSizeOf(ldpHeavyHitter);
-        } catch (Exception e) {
-            LOGGER.info("Unable to estimate size of Object, try using Java with lower version (e.g., Java 8)");
-            return "-";
-        }
-    }
-
     private void printInfo(PrintWriter printWriter, String type, Double windowEpsilon, Double alpha,
-                           double ndcg, double precision, double re, String memory) {
+                           double ndcg, double precision, double re, double memory) {
         String windowEpsilonString = windowEpsilon == null ? "-" : String.valueOf(windowEpsilon);
         String alphaString = alpha == null ? "-" : String.valueOf(alpha);
         double roundNdcg = (double)Math.round(ndcg * 10000) / 10000;
         double roundPrecision = (double)Math.round(precision * 10000) / 10000;
         double roundRe = (double)Math.round(re * 10000) / 10000;
+        double roundMemory = (double)Math.round(memory * 10000) / 10000;
         LOGGER.info("NDCG = {}, Precision = {}, RE = {}, Memory = {}", roundNdcg, roundPrecision, roundRe, memory);
         printWriter.println(type + "\t" + windowEpsilonString + "\t" + alphaString + "\t"
-            + roundNdcg + "\t" + roundPrecision + "\t" + roundRe + "\t" + memory);
+            + roundNdcg + "\t" + roundPrecision + "\t" + roundRe + "\t" + roundMemory);
     }
 }

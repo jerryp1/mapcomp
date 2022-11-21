@@ -168,27 +168,34 @@ public class AdvHhgLdpHeavyHitter extends AbstractHgLdpHeavyHitter implements Hh
         currentList.sort(Comparator.comparingDouble(Map.Entry::getValue));
         Map.Entry<String, Double> weakestCurrentCell = currentList.get(0);
         double weakestCurrentCount = weakestCurrentCell.getValue();
+        // Honestly creating a remained set and randomly picking an element is slow, here we use re-sample technique.
         if (weakestCurrentCount <= 1.0) {
             // an item in HG is about to be evicted
-            Set<String> remainedDomainSet = new HashSet<>(domainSet);
-            remainedDomainSet.removeAll(currentHeavyGuardian.keySet());
-            assert remainedDomainSet.size() == d - k;
-            ArrayList<String> remainedDomainArrayList = new ArrayList<>(remainedDomainSet);
-            double randomSample = random.nextDouble();
-            // Randomly sample an integer in [0, d - k)
-            int randomIndex = random.nextInt(d - k);
-            if (remainedDomainSet.contains(item)) {
+            if (!currentHeavyGuardian.containsKey(item)) {
                 // if v ∉ HG, use random response
+                double randomSample = random.nextDouble();
                 if (randomSample > p3 - q3) {
                     // answer a random item in the remained domain
-                    return remainedDomainArrayList.get(randomIndex);
+                    while (true) {
+                        int randomIndex = random.nextInt(d);
+                        String randomizedItem = domainArrayList.get(randomIndex);
+                        if (!currentHeavyGuardian.containsKey(randomizedItem)) {
+                            return randomizedItem;
+                        }
+                    }
                 } else {
                     // answer the true item
                     return item;
                 }
             } else {
                 // if v ∈ HG, choose a random item in the remained domain
-                return remainedDomainArrayList.get(randomIndex);
+                while (true) {
+                    int randomIndex = random.nextInt(d);
+                    String randomizedItem = domainArrayList.get(randomIndex);
+                    if (!currentHeavyGuardian.containsKey(randomizedItem)) {
+                        return randomizedItem;
+                    }
+                }
             }
         } else {
             // return BOT
