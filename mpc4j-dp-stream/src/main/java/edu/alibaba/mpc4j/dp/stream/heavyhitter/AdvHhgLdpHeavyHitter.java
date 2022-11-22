@@ -16,7 +16,7 @@ public class AdvHhgLdpHeavyHitter extends AbstractHgLdpHeavyHitter implements Hh
     /**
      * default α
      */
-    protected static final double DEFAULT_ALPHA = 1.0 / 3;
+    private static final double DEFAULT_ALPHA = 1.0 / 3;
     /**
      * the privacy parameter allocation parameter α
      */

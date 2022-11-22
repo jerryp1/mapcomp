@@ -107,6 +107,43 @@ public class LdpHeavyHitterFactory {
      * @return an instance of Hot HeavyGuardian-based Heavy Hitter with Local Differential Privacy.
      */
     public static HhgLdpHeavyHitter createHhgInstance(LdpHeavyHitterType type, Set<String> domainSet, int k,
+                                                      double windowEpsilon) {
+        return createHhgInstance(type, domainSet, k, windowEpsilon, new Random());
+    }
+
+    /**
+     * Create an instance of Hot HeavyGuardian-based Heavy Hitter with Local Differential Privacy.
+     *
+     * @param type                the type of Hot HeavyGuardian-based Heavy Hitter with Local Differential Privacy.
+     * @param domainSet           the domain set.
+     * @param k                   the heavy hitter num k.
+     * @param windowEpsilon       the privacy parameter ε / w.
+     * @param heavyGuardianRandom the HeavyGuardian random state.
+     * @return an instance of Hot HeavyGuardian-based Heavy Hitter with Local Differential Privacy.
+     */
+    public static HhgLdpHeavyHitter createHhgInstance(LdpHeavyHitterType type, Set<String> domainSet, int k,
+                                                      double windowEpsilon, Random heavyGuardianRandom) {
+        switch (type) {
+            case ADVAN_HG:
+                return new AdvHhgLdpHeavyHitter(domainSet, k, windowEpsilon, heavyGuardianRandom);
+            case RELAX_HG:
+                return new RelaxHhgLdpHeavyHitter(domainSet, k, windowEpsilon, heavyGuardianRandom);
+            default:
+                throw new IllegalArgumentException("Invalid " + LdpHeavyHitterType.class.getSimpleName() + ": " + type);
+        }
+    }
+
+    /**
+     * Create an instance of Hot HeavyGuardian-based Heavy Hitter with Local Differential Privacy.
+     *
+     * @param type                the type of Hot HeavyGuardian-based Heavy Hitter with Local Differential Privacy.
+     * @param domainSet           the domain set.
+     * @param k                   the heavy hitter num k.
+     * @param windowEpsilon       the privacy parameter ε / w.
+     * @param alpha the privacy parameter percentage α.
+     * @return an instance of Hot HeavyGuardian-based Heavy Hitter with Local Differential Privacy.
+     */
+    public static HhgLdpHeavyHitter createHhgInstance(LdpHeavyHitterType type, Set<String> domainSet, int k,
                                                       double windowEpsilon, double alpha) {
         return createHhgInstance(type, domainSet, k, windowEpsilon, alpha, new Random());
     }
@@ -118,6 +155,7 @@ public class LdpHeavyHitterFactory {
      * @param domainSet           the domain set.
      * @param k                   the heavy hitter num k.
      * @param windowEpsilon       the privacy parameter ε / w.
+     * @param alpha the privacy parameter percentage α.
      * @param heavyGuardianRandom the HeavyGuardian random state.
      * @return an instance of Hot HeavyGuardian-based Heavy Hitter with Local Differential Privacy.
      */

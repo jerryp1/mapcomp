@@ -35,6 +35,10 @@ public class LdpHeavyHitterMain {
      */
     static final String TASK_TYPE_NAME = "LDP_HEAVY_HITTER";
     /**
+     * report file postfix
+     */
+    private final String reportFilePostfix;
+    /**
      * dataset name
      */
     private final String datasetName;
@@ -76,6 +80,7 @@ public class LdpHeavyHitterMain {
     private final List<String> correctHeavyHitters;
 
     public LdpHeavyHitterMain(Properties properties) throws IOException {
+        reportFilePostfix = PropertiesUtils.readString(properties, "report_file_postfix");
         datasetName = PropertiesUtils.readString(properties, "dataset_name");
         // set dataset path
         datasetPath = PropertiesUtils.readString(properties, "dataset_path");
@@ -148,7 +153,7 @@ public class LdpHeavyHitterMain {
     public void run() throws IOException {
         // create report file
         LOGGER.info("Create report file");
-        String filePath = TASK_TYPE_NAME + "_" + datasetName + "_" + testRound + ".txt";
+        String filePath = TASK_TYPE_NAME + "_" + datasetName + "_" + testRound + "_" + reportFilePostfix + ".txt";
         FileWriter fileWriter = new FileWriter(filePath);
         PrintWriter printWriter = new PrintWriter(fileWriter, true);
         // write tab
@@ -166,10 +171,8 @@ public class LdpHeavyHitterMain {
                 runAdvHhgHeavyHitter(windowEpsilon, alpha, printWriter);
             }
         }
-        for (double alpha : alphas) {
-            for (double windowEpsilon : windowEpsilons) {
-                runRelaxHhgHeavyHitter(windowEpsilon, alpha, printWriter);
-            }
+        for (double windowEpsilon : windowEpsilons) {
+            runRelaxHhgHeavyHitter(windowEpsilon, printWriter);
         }
         printWriter.close();
         fileWriter.close();
@@ -292,16 +295,16 @@ public class LdpHeavyHitterMain {
         printInfo(printWriter, type.name(), windowEpsilon, alpha, ndcg, precision, abe, re, memory);
     }
 
-    private void runRelaxHhgHeavyHitter(double windowEpsilon, double alpha, PrintWriter printWriter) throws IOException {
+    private void runRelaxHhgHeavyHitter(double windowEpsilon, PrintWriter printWriter) throws IOException {
         LdpHeavyHitterType type = LdpHeavyHitterType.RELAX_HG;
-        LOGGER.info("Run {}, ε_w = {}, α = {}", type.name(), windowEpsilon, alpha);
+        LOGGER.info("Run {}, ε_w = {}", type.name(), windowEpsilon);
         double ndcg = 0.0;
         double precision = 0.0;
         double abe = 0.0;
         double re = 0.0;
         double memory = 0.0;
         for (int round = 0; round < testRound; round++) {
-            LdpHeavyHitter ldpHeavyHitter = LdpHeavyHitterFactory.createHhgInstance(type, domainSet, k, windowEpsilon, alpha);
+            LdpHeavyHitter ldpHeavyHitter = LdpHeavyHitterFactory.createHhgInstance(type, domainSet, k, windowEpsilon);
             double[] metrics = runLdpHeavyHitter(ldpHeavyHitter);
             ndcg += metrics[0];
             precision += metrics[1];
@@ -314,7 +317,7 @@ public class LdpHeavyHitterMain {
         abe = abe / testRound;
         re = re / testRound;
         memory = memory / testRound;
-        printInfo(printWriter, type.name(), windowEpsilon, alpha, ndcg, precision, abe, re, memory);
+        printInfo(printWriter, type.name(), windowEpsilon, null, ndcg, precision, abe, re, memory);
     }
 
     private double[] runLdpHeavyHitter(LdpHeavyHitter ldpHeavyHitter) throws IOException {

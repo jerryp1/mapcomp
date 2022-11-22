@@ -13,6 +13,10 @@ import java.util.stream.Collectors;
  * @date 2022/11/20
  */
 public class RelaxHhgLdpHeavyHitter extends AdvHhgLdpHeavyHitter {
+    /**
+     * default α
+     */
+    private static final double DEFAULT_ALPHA = 1.0 / 2;
 
     RelaxHhgLdpHeavyHitter(Set<String> domainSet, int k, double windowEpsilon, Random hgRandom) {
         this(domainSet, k, windowEpsilon, DEFAULT_ALPHA, hgRandom);
