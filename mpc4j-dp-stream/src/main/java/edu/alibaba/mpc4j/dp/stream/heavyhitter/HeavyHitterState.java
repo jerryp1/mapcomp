@@ -6,7 +6,7 @@ package edu.alibaba.mpc4j.dp.stream.heavyhitter;
  * @author Weiran Liu
  * @date 2022/11/21
  */
-enum HeavyHitterState {
+public enum HeavyHitterState {
     /**
      * warm-up state
      */

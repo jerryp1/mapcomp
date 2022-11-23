@@ -70,15 +70,15 @@ public class Bea91BcSender extends AbstractBcParty {
     }
 
     @Override
-    public BcSquareVector and(BcSquareVector xi, BcSquareVector yi) throws MpcAbortException {
-        setAndInput(xi, yi);
+    public BcSquareVector and(BcSquareVector x0, BcSquareVector y0) throws MpcAbortException {
+        setAndInput(x0, y0);
 
-        if (xi.isPublic() && yi.isPublic()) {
+        if (x0.isPublic() && y0.isPublic()) {
             // x0和y0为公开导线，服务端和客户端都进行AND运算
-            return BcSquareVector.create(BytesUtils.and(xi.getBytes(), yi.getBytes()), num, true);
-        } else if (xi.isPublic() || yi.isPublic()) {
+            return BcSquareVector.create(BytesUtils.and(x0.getBytes(), y0.getBytes()), num, true);
+        } else if (x0.isPublic() || y0.isPublic()) {
             // x0或y0为公开导线，服务端和客户端都进行AND运算
-            return BcSquareVector.create(BytesUtils.and(xi.getBytes(), yi.getBytes()), num, false);
+            return BcSquareVector.create(BytesUtils.and(x0.getBytes(), y0.getBytes()), num, false);
         } else {
             // x0和y0为私有导线，执行三元组协议
             andGateNum += num;
@@ -97,9 +97,9 @@ public class Bea91BcSender extends AbstractBcParty {
             byte[] b0 = z2Triple.getB();
             byte[] c0 = z2Triple.getC();
             // e0 = x0 ⊕ a0
-            byte[] e0 = BytesUtils.xor(xi.getBytes(), a0);
+            byte[] e0 = BytesUtils.xor(x0.getBytes(), a0);
             // f0 = y0 ⊕ b0
-            byte[] f0 = BytesUtils.xor(yi.getBytes(), b0);
+            byte[] f0 = BytesUtils.xor(y0.getBytes(), b0);
             List<byte[]> e0f0Payload = new LinkedList<>();
             e0f0Payload.add(e0);
             e0f0Payload.add(f0);
@@ -143,21 +143,21 @@ public class Bea91BcSender extends AbstractBcParty {
     }
 
     @Override
-    public BcSquareVector xor(BcSquareVector xi, BcSquareVector yi) {
-        setXorInput(xi, yi);
-        if (xi.isPublic() && yi.isPublic()) {
+    public BcSquareVector xor(BcSquareVector x0, BcSquareVector y0) {
+        setXorInput(x0, y0);
+        if (x0.isPublic() && y0.isPublic()) {
             // x0和y0为公开导线，服务端和客户端都进行XOR运算
-            return BcSquareVector.create(BytesUtils.xor(xi.getBytes(), yi.getBytes()), num, true);
-        } else if (xi.isPublic() || yi.isPublic()) {
+            return BcSquareVector.create(BytesUtils.xor(x0.getBytes(), y0.getBytes()), num, true);
+        } else if (x0.isPublic() || y0.isPublic()) {
             // x0或y0为公开导线，服务端进行XOR运算，客户端不执行XOR运算
-            return BcSquareVector.create(BytesUtils.xor(xi.getBytes(), yi.getBytes()), num, false);
+            return BcSquareVector.create(BytesUtils.xor(x0.getBytes(), y0.getBytes()), num, false);
         } else {
             // x0和y0为私有导线，服务端和客户端都进行XOR运算
             xorGateNum += num;
             info("{}{} Send. XOR begin", ptoBeginLogPrefix, getPtoDesc().getPtoName());
 
             stopWatch.start();
-            BcSquareVector z0 = BcSquareVector.create(BytesUtils.xor(xi.getBytes(), yi.getBytes()), num, false);
+            BcSquareVector z0 = BcSquareVector.create(BytesUtils.xor(x0.getBytes(), y0.getBytes()), num, false);
             stopWatch.stop();
             long z0Time = stopWatch.getTime(TimeUnit.MILLISECONDS);
             stopWatch.reset();
@@ -169,8 +169,8 @@ public class Bea91BcSender extends AbstractBcParty {
     }
 
     @Override
-    public BcSquareVector not(BcSquareVector xi) {
-        return xor(xi, BcSquareVector.createOnes(xi.bitLength()));
+    public BcSquareVector not(BcSquareVector x0) {
+        return xor(x0, BcSquareVector.createOnes(x0.bitLength()));
     }
 
     @Override

@@ -1,6 +1,9 @@
-package edu.alibaba.mpc4j.dp.stream.heavyhitter;
+package edu.alibaba.mpc4j.dp.stream.heavyhitter.hg;
 
 import com.google.common.base.Preconditions;
+import edu.alibaba.mpc4j.dp.stream.heavyhitter.HeavyHitterState;
+import edu.alibaba.mpc4j.dp.stream.heavyhitter.HeavyHitterStructure;
+import edu.alibaba.mpc4j.dp.stream.heavyhitter.LdpHeavyHitterFactory;
 
 import java.util.*;
 
@@ -20,8 +23,14 @@ public class BasicHgLdpHeavyHitter extends AbstractHgLdpHeavyHitter {
      */
     protected final double q;
 
-    BasicHgLdpHeavyHitter(Set<String> domainSet, int k, double windowEpsilon, Random heavyGuardianRandom) {
-        super(domainSet, k, windowEpsilon, heavyGuardianRandom);
+    public BasicHgLdpHeavyHitter(Set<String> domainSet, Random heavyGuardianRandom,
+                                 int k, double windowEpsilon) {
+        this(domainSet, 1, k, 0, heavyGuardianRandom, k, windowEpsilon);
+    }
+
+    public BasicHgLdpHeavyHitter(Set<String> domainSet, int w, int lambdaH, int primeIndex, Random heavyGuardianRandom,
+                                 int k, double windowEpsilon) {
+        super(domainSet, w, lambdaH, primeIndex, heavyGuardianRandom, k, windowEpsilon);
         double expWindowEpsilon = Math.exp(windowEpsilon);
         p = expWindowEpsilon / (expWindowEpsilon + d - 1);
         q = 1 / (expWindowEpsilon + d - 1);
@@ -39,27 +48,34 @@ public class BasicHgLdpHeavyHitter extends AbstractHgLdpHeavyHitter {
             "The heavy hitter must be %s: %s", HeavyHitterState.WARMUP, heavyHitterState
         );
         // bias all counts
-        for (Map.Entry<String, Double> entry : heavyGuardian.entrySet()) {
-            String item = entry.getKey();
-            double value = entry.getValue();
-            value = value * (p - q);
-            heavyGuardian.put(item, value);
+        for (Map<String, Double> bucket : buckets) {
+            for (Map.Entry<String, Double> entry : bucket.entrySet()) {
+                String item = entry.getKey();
+                double value = entry.getValue();
+                value = value * (p - q);
+                bucket.put(item, value);
+            }
         }
         heavyHitterState = HeavyHitterState.STATISTICS;
     }
 
     @Override
-    protected double updateCount(double count) {
-        return count - currentNum * q;
+    protected double updateCount(int bucketIndex, double count) {
+        return count - currentNums[bucketIndex] * q;
     }
 
     @Override
-    protected double debiasCount(double count) {
-        return updateCount(count) / (p - q);
+    protected double debiasCount(int bucketIndex, double count) {
+        return updateCount(bucketIndex, count) / (p - q);
     }
 
     @Override
-    public String randomize(Map<String, Double> currentDataStructure, String item, Random random) {
+    public String randomize(HeavyHitterStructure currentHeavyHitterStructure, String item, Random random) {
+        Preconditions.checkArgument(
+            currentHeavyHitterStructure instanceof HgHeavyHitterStructure,
+            "The heavy hitter structure must be %s: %s",
+            HgHeavyHitterStructure.class.getSimpleName(), currentHeavyHitterStructure.getClass().getSimpleName()
+        );
         Preconditions.checkArgument(
             heavyHitterState.equals(HeavyHitterState.STATISTICS),
             "The heavy hitter must be %s: %s", HeavyHitterState.STATISTICS, heavyHitterState

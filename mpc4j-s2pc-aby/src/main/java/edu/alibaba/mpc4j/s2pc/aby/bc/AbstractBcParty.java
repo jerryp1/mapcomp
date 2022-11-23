@@ -6,7 +6,7 @@ import edu.alibaba.mpc4j.common.rpc.desc.PtoDesc;
 import edu.alibaba.mpc4j.common.rpc.pto.AbstractSecureTwoPartyPto;
 
 /**
- * 布尔电路服务端。
+ * 布尔电路参与方。
  *
  * @author Weiran Liu
  * @date 2022/02/13
@@ -58,23 +58,23 @@ public abstract class AbstractBcParty extends AbstractSecureTwoPartyPto implemen
         initialized = false;
     }
 
-    protected void setAndInput(BcSquareVector x0, BcSquareVector y0) {
+    protected void setAndInput(BcSquareVector xi, BcSquareVector yi) {
         if (!initialized) {
             throw new IllegalStateException("Need init...");
         }
-        assert x0.bitLength() == y0.bitLength();
-        assert x0.bitLength() <= maxRoundNum;
+        assert xi.bitLength() == yi.bitLength();
+        assert xi.bitLength() <= maxRoundNum;
         // 只有当两组导线都为密文导线时，才需要增加门数量，这里不增加门数量
-        num = x0.bitLength();
+        num = xi.bitLength();
     }
 
-    protected void setXorInput(BcSquareVector x0, BcSquareVector y0) {
+    protected void setXorInput(BcSquareVector xi, BcSquareVector yi) {
         if (!initialized) {
             throw new IllegalStateException("Need init...");
         }
-        assert x0.bitLength() == y0.bitLength();
-        assert x0.bitLength() <= maxRoundNum;
+        assert xi.bitLength() == yi.bitLength();
+        assert xi.bitLength() <= maxRoundNum;
         // 只有当两组导线都为密文导线时，才需要增加门数量，这里不增加门数量
-        num = x0.bitLength();
+        num = xi.bitLength();
     }
 }

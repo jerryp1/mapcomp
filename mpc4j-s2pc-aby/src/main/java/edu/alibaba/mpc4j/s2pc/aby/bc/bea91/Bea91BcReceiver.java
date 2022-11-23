@@ -174,13 +174,13 @@ public class Bea91BcReceiver extends AbstractBcParty {
     }
 
     @Override
-    public BcSquareVector not(BcSquareVector xi) {
-        if (xi.isPublic()) {
+    public BcSquareVector not(BcSquareVector x1) {
+        if (x1.isPublic()) {
             // x1为公开导线，客户端对x1进行NOT运算
-            return xor(xi, BcSquareVector.createOnes(xi.bitLength()));
+            return xor(x1, BcSquareVector.createOnes(x1.bitLength()));
         } else {
             // x1为私有导线，客户端对x1不做NOT运算
-            return xor(xi, BcSquareVector.createZeros(xi.bitLength()));
+            return xor(x1, BcSquareVector.createZeros(x1.bitLength()));
         }
     }
 

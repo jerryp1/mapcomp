@@ -331,7 +331,7 @@ public class LdpHeavyHitterMain {
         AtomicInteger randomizedIndex = new AtomicInteger();
         dataStream = StreamDataUtils.obtainItemStream(datasetPath);
         dataStream.filter(item -> randomizedIndex.getAndIncrement() > warmupNum)
-            .map(item -> ldpHeavyHitter.randomize(ldpHeavyHitter.getCurrentDataStructure(), item))
+            .map(item -> ldpHeavyHitter.randomize(ldpHeavyHitter.getCurrentHeavyHitterStructure(), item))
             .forEach(ldpHeavyHitter::randomizeInsert);
         dataStream.close();
         // heavy hitter map

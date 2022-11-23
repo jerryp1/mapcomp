@@ -34,31 +34,31 @@ public interface LdpHeavyHitter {
     void stopWarmup();
 
     /**
-     * Return the current data structure.
+     * Return the current heavy hitter structure.
      *
-     * @return the current data structure.
+     * @return the current heavy hitter structure.
      */
-    Map<String, Double> getCurrentDataStructure();
+    HeavyHitterStructure getCurrentHeavyHitterStructure();
 
     /**
      * randomize the item based on the current data structure.
      *
-     * @param currentDataStructure the current data structure.
-     * @param item                 the item.
-     * @param random               the random state.
+     * @param currentHeavyHitterStructure the current heavy hitter data structure.
+     * @param item                        the item.
+     * @param random                      the random state.
      * @return the randomized item.
      */
-    String randomize(Map<String, Double> currentDataStructure, String item, Random random);
+    String randomize(HeavyHitterStructure currentHeavyHitterStructure, String item, Random random);
 
     /**
      * randomize the item based on the current data structure.
      *
-     * @param currentDataStructure the current data structure.
-     * @param item                 the item.
+     * @param currentHeavyHitterStructure the current heavy hitter data structure.
+     * @param item                        the item.
      * @return the randomized item.
      */
-    default String randomize(Map<String, Double> currentDataStructure, String item) {
-        return randomize(currentDataStructure, item, new Random());
+    default String randomize(HeavyHitterStructure currentHeavyHitterStructure, String item) {
+        return randomize(currentHeavyHitterStructure, item, new Random());
     }
 
     /**
@@ -155,11 +155,4 @@ public interface LdpHeavyHitter {
      * @return the data domain.
      */
     Set<String> getDomainSet();
-
-    /**
-     * Get the heavy hitter set.
-     *
-     * @return the heavy hitter set.
-     */
-    Set<String> getHeavyHitterSet();
 }

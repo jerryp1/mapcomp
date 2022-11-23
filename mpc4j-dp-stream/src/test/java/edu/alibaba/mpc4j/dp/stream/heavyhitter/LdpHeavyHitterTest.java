@@ -276,7 +276,7 @@ public class LdpHeavyHitterTest {
         AtomicInteger randomizedIndex = new AtomicInteger();
         Stream<String> dataStream = StreamDataUtils.obtainItemStream(EXAMPLE_DATA_PATH);
         dataStream.filter(item -> randomizedIndex.getAndIncrement() > EXAMPLE_WARMUP_NUM)
-            .map(item -> ldpHeavyHitter.randomize(ldpHeavyHitter.getCurrentDataStructure(), item, ldpRandom))
+            .map(item -> ldpHeavyHitter.randomize(ldpHeavyHitter.getCurrentHeavyHitterStructure(), item, ldpRandom))
             .forEach(ldpHeavyHitter::randomizeInsert);
         dataStream.close();
     }
@@ -309,7 +309,7 @@ public class LdpHeavyHitterTest {
         AtomicInteger randomizedIndex = new AtomicInteger();
         Stream<String> dataStream = StreamDataUtils.obtainItemStream(CONNECT_DATA_PATH);
         dataStream.filter(item -> randomizedIndex.getAndIncrement() > CONNECT_WARMUP_NUM)
-            .map(item -> ldpHeavyHitter.randomize(ldpHeavyHitter.getCurrentDataStructure(), item, ldpRandom))
+            .map(item -> ldpHeavyHitter.randomize(ldpHeavyHitter.getCurrentHeavyHitterStructure(), item, ldpRandom))
             .forEach(ldpHeavyHitter::randomizeInsert);
         dataStream.close();
     }

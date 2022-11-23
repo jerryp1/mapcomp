@@ -52,7 +52,7 @@ public class BcFactory implements PtoFactory {
                 return new Bea91BcSender(senderRpc, receiverParty, (Bea91BcConfig)config);
             case GMW87:
             default:
-                throw new IllegalArgumentException("Invalid BcType: " + type.name());
+                throw new IllegalArgumentException("Invalid " + BcType.class.getSimpleName() + ": " + type.name());
         }
     }
 
@@ -71,7 +71,7 @@ public class BcFactory implements PtoFactory {
                 return new Bea91BcReceiver(receiverRpc, senderParty, (Bea91BcConfig)config);
             case GMW87:
             default:
-                throw new IllegalArgumentException("Invalid BcType: " + type.name());
+                throw new IllegalArgumentException("Invalid " + BcType.class.getSimpleName() + ": " + type.name());
         }
     }
 

@@ -1,6 +1,10 @@
-package edu.alibaba.mpc4j.dp.stream.heavyhitter;
+package edu.alibaba.mpc4j.dp.stream.heavyhitter.naive;
 
 import com.google.common.base.Preconditions;
+import edu.alibaba.mpc4j.dp.stream.heavyhitter.HeavyHitterState;
+import edu.alibaba.mpc4j.dp.stream.heavyhitter.HeavyHitterStructure;
+import edu.alibaba.mpc4j.dp.stream.heavyhitter.LdpHeavyHitter;
+import edu.alibaba.mpc4j.dp.stream.heavyhitter.LdpHeavyHitterFactory;
 
 import java.util.*;
 import java.util.stream.Collectors;
@@ -11,7 +15,7 @@ import java.util.stream.Collectors;
  * @author Weiran Liu
  * @date 2022/11/18
  */
-class NaiveLdpHeavyHitter implements LdpHeavyHitter {
+public class NaiveLdpHeavyHitter implements LdpHeavyHitter {
     /**
      * the domain set
      */
@@ -53,7 +57,7 @@ class NaiveLdpHeavyHitter implements LdpHeavyHitter {
      */
     private HeavyHitterState heavyHitterState;
 
-    NaiveLdpHeavyHitter(Set<String> domainSet, int k, double windowEpsilon) {
+    public NaiveLdpHeavyHitter(Set<String> domainSet, int k, double windowEpsilon) {
         d = domainSet.size();
         Preconditions.checkArgument(d > 1, "|Ω| must be greater than 1: %s", d);
         this.domainSet = domainSet;
@@ -109,12 +113,17 @@ class NaiveLdpHeavyHitter implements LdpHeavyHitter {
     }
 
     @Override
-    public Map<String, Double> getCurrentDataStructure() {
-        return budget;
+    public HeavyHitterStructure getCurrentHeavyHitterStructure() {
+        return new NaiveHeavyHitterStructure(budget);
     }
 
     @Override
-    public String randomize(Map<String, Double> currentDataStructure, String item, Random random) {
+    public String randomize(HeavyHitterStructure currentHeavyHitterStructure, String item, Random random) {
+        Preconditions.checkArgument(
+            currentHeavyHitterStructure instanceof NaiveHeavyHitterStructure,
+            "The heavy hitter structure must be %s: %s",
+            NaiveHeavyHitterStructure.class.getSimpleName(), currentHeavyHitterStructure.getClass().getSimpleName()
+        );
         Preconditions.checkArgument(
             heavyHitterState.equals(HeavyHitterState.STATISTICS),
             "The heavy hitter must be %s: %s", HeavyHitterState.STATISTICS, heavyHitterState
@@ -209,10 +218,5 @@ class NaiveLdpHeavyHitter implements LdpHeavyHitter {
             "The heavy hitter must be %s or %s: %s", HeavyHitterState.WARMUP, HeavyHitterState.STATISTICS, heavyHitterState
         );
         return domainSet;
-    }
-
-    @Override
-    public Set<String> getHeavyHitterSet() {
-        return responseHeavyHitters().keySet();
     }
 }
