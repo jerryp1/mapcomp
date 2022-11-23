@@ -28,6 +28,10 @@ class Bcp13ShHammingPtoDesc implements PtoDesc {
      */
     enum PtoStep {
         /**
+         * 发送方发送OT数据
+         */
+        SENDER_SEND_PAYLOAD,
+        /**
          * 接收方发送T
          */
         RECEIVER_SEND_T,

@@ -45,10 +45,12 @@ public abstract class AbstractHammingParty extends AbstractSecureTwoPartyPto imp
         initialized = false;
     }
 
-    protected void setInput(BcSquareVector xi) {
+    protected void setPtoInput(BcSquareVector xi) {
         if (!initialized) {
             throw new IllegalStateException("Need init...");
         }
         assert xi.bitLength() <= maxBitNum;
+        bitNum = xi.bitLength();
+        extraInfo++;
     }
 }

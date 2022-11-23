@@ -29,7 +29,7 @@ public class Bcp13ShHammingConfig implements HammingConfig {
 
     @Override
     public HammingFactory.HammingType getPtoType() {
-        return HammingFactory.HammingType.BCP13_SEMI_HOSNT;
+        return HammingFactory.HammingType.BCP13_SEMI_HONEST;
     }
 
     @Override

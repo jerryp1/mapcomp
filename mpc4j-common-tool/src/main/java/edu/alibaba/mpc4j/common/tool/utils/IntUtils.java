@@ -40,6 +40,23 @@ public class IntUtils {
     }
 
     /**
+     * 返回上界bound下，将整数转换为字节数组的数组长度。
+     *
+     * @param bound value的最大取值（包括此最大值）。
+     * @return 字节数组的数组长度。
+     */
+    public static int boundedIntByteLength(int bound) {
+        assert bound > 0 : "bound must be greater than 0: " + bound;
+        if (bound <= Byte.MAX_VALUE) {
+            return Byte.BYTES;
+        } else if (bound <= Short.MAX_VALUE) {
+            return Short.BYTES;
+        } else {
+            return Integer.BYTES;
+        }
+    }
+
+    /**
      * 将{@code int}转换为{@code byte[]}，尽可能使用较小的转换长度。
      *
      * @param value 给定的{@code int}。
@@ -47,7 +64,8 @@ public class IntUtils {
      * @return 转换结果。
      */
     public static byte[] boundedIntToByteArray(int value, int bound) {
-        assert (value >= 0 && value <= bound);
+        assert bound > 0 : "bound must be greater than 0: " + bound;
+        assert value >= 0 && value <= bound : "value must be in range [0, " + bound + "]: " + value;
         if (bound <= Byte.MAX_VALUE) {
             return ByteBuffer.allocate(Byte.BYTES).put((byte) value).array();
         } else if (bound <= Short.MAX_VALUE) {
