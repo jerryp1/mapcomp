@@ -3,6 +3,9 @@ package edu.alibaba.mpc4j.dp.stream.structure;
 import edu.alibaba.mpc4j.dp.stream.tool.StreamDataUtils;
 import org.junit.Assert;
 import org.junit.Test;
+import org.openjdk.jol.info.GraphLayout;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.*;
 import java.util.*;
@@ -25,6 +28,7 @@ import java.util.stream.Stream;
  * @date 2022/11/16
  */
 public class TestStreamCounter {
+    private static final Logger LOGGER = LoggerFactory.getLogger(TestStreamCounter.class);
     /**
      * File path for stream_counter_example_data.txt
      */
@@ -55,6 +59,30 @@ public class TestStreamCounter {
         );
         List<Map.Entry<String, Integer>> countList = getExampleCountList(streamCounter);
         assertExampleTopEntries(countList);
+    }
+
+    @Test
+    public void testMemory() throws IOException {
+        NaiveStreamCounter naiveStreamCounter = new NaiveStreamCounter();
+        Stream<String> dataStream = StreamDataUtils.obtainItemStream(EXAMPLE_DATA_PATH);
+        dataStream.forEach(naiveStreamCounter::insert);
+        dataStream.close();
+        long naiveStreamCounterMemory = GraphLayout.parseInstance(naiveStreamCounter).totalSize();
+        LOGGER.info("{}: memory = {}", NaiveStreamCounter.class.getSimpleName(), naiveStreamCounterMemory);
+
+        HeavyGuardian fullHeavyGuardian = new HeavyGuardian(1, EXAMPLE_D, 0);
+        dataStream = StreamDataUtils.obtainItemStream(EXAMPLE_DATA_PATH);
+        dataStream.forEach(fullHeavyGuardian::insert);
+        dataStream.close();
+        long fullHeavyGuardianMemory = GraphLayout.parseInstance(fullHeavyGuardian).totalSize();
+        LOGGER.info("{} (full): memory = {}", HeavyGuardian.class.getSimpleName(), fullHeavyGuardianMemory);
+
+        HeavyGuardian halfHeavyGuardian = new HeavyGuardian(1, EXAMPLE_D / 2, 0);
+        dataStream = StreamDataUtils.obtainItemStream(EXAMPLE_DATA_PATH);
+        dataStream.forEach(halfHeavyGuardian::insert);
+        dataStream.close();
+        long halfHeavyGuardianMemory = GraphLayout.parseInstance(halfHeavyGuardian).totalSize();
+        LOGGER.info("{} (half): memory = {}", HeavyGuardian.class.getSimpleName(), halfHeavyGuardianMemory);
     }
 
     @Test

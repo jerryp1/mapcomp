@@ -187,13 +187,13 @@ public class LdpHeavyHitterMain {
         double re = 0.0;
         double memory = 0.0;
         for (int round = 0; round < testRound; round++) {
-            HeavyGuardian streamCounter = new HeavyGuardian(1, k, 0);
+            HeavyGuardian heavyGuardian = new HeavyGuardian(1, k, 0);
             Stream<String> dataStream = StreamDataUtils.obtainItemStream(datasetPath);
-            dataStream.forEach(streamCounter::insert);
+            dataStream.forEach(heavyGuardian::insert);
             dataStream.close();
             // heavy hitter map
-            Map<String, Double> heavyHitterMap = streamCounter.getRecordItemSet().stream()
-                .collect(Collectors.toMap(item -> item, item -> (double) streamCounter.query(item)));
+            Map<String, Double> heavyHitterMap = heavyGuardian.getRecordItemSet().stream()
+                .collect(Collectors.toMap(item -> item, item -> (double) heavyGuardian.query(item)));
             Preconditions.checkArgument(
                 heavyHitterMap.size() == k,
                 "heavy hitter size must be equal to %s: %s", k, heavyHitterMap.size()
@@ -209,7 +209,7 @@ public class LdpHeavyHitterMain {
             precision += HeavyHitterMetrics.precision(heavyHitters, correctHeavyHitters);
             abe += HeavyHitterMetrics.absoluteError(heavyHitterMap, correctCountMap);
             re += HeavyHitterMetrics.relativeError(heavyHitterMap, correctCountMap);
-            memory += GraphLayout.parseInstance(streamCounter).totalSize();
+            memory += GraphLayout.parseInstance(heavyGuardian).totalSize();
         }
         ndcg = ndcg / testRound;
         precision = precision / testRound;

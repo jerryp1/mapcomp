@@ -50,10 +50,6 @@ public class HeavyGuardian implements StreamCounter {
      */
     private final ArrayList<Map<String, Integer>> lightPart;
     /**
-     * recorded item set
-     */
-    private final Set<String> recordItemSet;
-    /**
      * random state
      */
     private final Random random;
@@ -63,12 +59,13 @@ public class HeavyGuardian implements StreamCounter {
     private int num;
 
     public HeavyGuardian(int w, int lambdaH, int lambdaL) {
-        this(w, lambdaH, lambdaL, 0, new SecureRandom());
+        this(w, lambdaH, lambdaL, 0, new Random());
     }
 
     public HeavyGuardian(int w, int lambdaH, int lambdaL, Random random) {
         this(w, lambdaH, lambdaL, 0, random);
     }
+
     public HeavyGuardian(int w, int lambdaH, int lambdaL, int primeIndex) {
         this(w, lambdaH, lambdaL, primeIndex, new SecureRandom());
     }
@@ -93,8 +90,6 @@ public class HeavyGuardian implements StreamCounter {
             .collect(Collectors.toCollection(ArrayList::new));
         // init bob hash
         bobIntHash = new BobIntHash(primeIndex);
-        // set the initial set size as w * (λ_h + λ_l)
-        recordItemSet = new HashSet<>(w * (lambdaH + lambdaL));
         num = 0;
         this.random = random;
     }
@@ -119,7 +114,6 @@ public class HeavyGuardian implements StreamCounter {
         if (heavyPartBucket.size() < lambdaH) {
             // It inserts e into an empty cell, i.e., sets the ID field to e and sets the count field to 1.
             heavyPartBucket.put(item, 1);
-            recordItemSet.add(item);
             return true;
         }
         // Case 3: e is not in any cell in the heavy part of A[h(e)], and there is no empty cell.
@@ -145,9 +139,7 @@ public class HeavyGuardian implements StreamCounter {
         // and sets the count field to 1
         if (weakestHeavyPartCount == 0) {
             heavyPartBucket.remove(weakestHeavyPartItem);
-            recordItemSet.remove(weakestHeavyPartItem);
             heavyPartBucket.put(item, 1);
-            recordItemSet.add(item);
             return true;
         } else {
             heavyPartBucket.put(weakestHeavyPartItem, weakestHeavyPartCount);
@@ -168,7 +160,6 @@ public class HeavyGuardian implements StreamCounter {
         if (lightPartBucket.size() < lambdaL) {
             // It inserts e into an empty cell, i.e., sets the ID field to e and sets the count field to 1.
             lightPartBucket.put(item, 1);
-            recordItemSet.add(item);
             return true;
         }
         // Case 3: e is not in any cell in the heavy part of A[h(e)], and there is no empty cell, return false
@@ -200,6 +191,9 @@ public class HeavyGuardian implements StreamCounter {
 
     @Override
     public Set<String> getRecordItemSet() {
+        Set<String> recordItemSet = heavyPart.stream().map(Map::keySet).flatMap(Set::stream).collect(Collectors.toSet());
+        recordItemSet.addAll(lightPart.stream().map(Map::keySet).flatMap(Set::stream).collect(Collectors.toSet()));
+
         return recordItemSet;
     }
 
