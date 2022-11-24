@@ -40,5 +40,10 @@
             <version>1.0.6-SNAPSHOT</version>
             <scope>compile</scope>
         </dependency>
+        <dependency>
+            <groupId>org.roaringbitmap</groupId>
+            <artifactId>RoaringBitmap</artifactId>
+            <version>0.9.15</version>
+        </dependency>
     </dependencies>
 </project>

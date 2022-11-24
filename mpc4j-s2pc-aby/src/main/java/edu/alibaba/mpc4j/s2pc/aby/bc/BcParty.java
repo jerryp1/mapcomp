@@ -89,7 +89,7 @@ public interface BcParty extends TwoPartyPto, SecurePto {
         assert ci.bitLength() == 1;
         byte[] choiceBytes = new byte[xi.byteLength()];
         byte[] ciBytes = ci.getBytes();
-        Arrays.fill(choiceBytes, BinaryUtils.getBoolean(ciBytes, Byte.SIZE - 1) ? (byte)0xFF : (byte)0x00);
+        Arrays.fill(choiceBytes, BinaryUtils.getBoolean(ciBytes, Byte.SIZE - 1) ? (byte) 0xFF : (byte) 0x00);
         BcSquareVector choice = BcSquareVector.create(choiceBytes, xi.bitLength(), ci.isPublic());
         BcSquareVector t = xor(xi, yi);
         t = and(t, choice);
@@ -111,4 +111,39 @@ public interface BcParty extends TwoPartyPto, SecurePto {
      * @return XOR门数量。
      */
     long xorGateNum(boolean reset);
+
+
+    /**
+     * 设置自身数据输入作为秘密分享
+     *
+     * @param ownInputs 自身数据
+     * @param bitLength 输入bit长度
+     * @return BcBitVector
+     */
+    BcSquareVector setOwnInputs(byte[] ownInputs, int bitLength);
+
+    /**
+     * 设置来自对方的数据作为秘密分享
+     *
+     * @param arrayLength 数据长度
+     * @param bitLength   输入bit长度
+     * @return BcBitVector
+     */
+    BcSquareVector setOtherInputs(int arrayLength, int bitLength);
+
+
+    /**
+     * 获得明文数据输出
+     *
+     * @param v 自身布尔秘密分享向量
+     * @return 明文数据输出
+     */
+    byte[] getOwnOutputs(BcSquareVector v);
+
+    /**
+     * 辅助对方，获得明文数据输出
+     *
+     * @param v 自身布尔秘密分享向量
+     */
+    void getOtherOutputs(BcSquareVector v);
 }
