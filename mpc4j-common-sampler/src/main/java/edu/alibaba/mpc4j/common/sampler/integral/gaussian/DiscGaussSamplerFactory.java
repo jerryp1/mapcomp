@@ -13,7 +13,7 @@ public class DiscGaussSamplerFactory {
     /**
      * default τ
      */
-    private static final int DEFAULT_TAU = 6;
+    static final int DEFAULT_TAU = 6;
 
     private DiscGaussSamplerFactory() {
         // empty
@@ -35,10 +35,14 @@ public class DiscGaussSamplerFactory {
         UNIFORM_ONLINE,
         /**
          * σ_2 Discrete Gaussian Sampler, where σ = k · σ_2, and σ_2 = \sqrt{1 / (2 \log 2)}, and
-         * $\exp(-(x-c)²/(2σ²))$ is computed using logarithmically many calls to Bernoulli distributions
+         * $\exp(-(x - c)²/(2σ²))$ is computed using logarithmically many calls to Bernoulli distributions
          * (but no calls to $\exp$).
          */
         SIGMA2_LOG_TABLE,
+        /**
+         * σ_2 Discrete Gaussian Sampler with a cut-off parameter τ.
+         */
+        SIGMA2_LOG_TABLE_TAU,
         /**
          * Discrete Gaussian Sampler with Alias method.
          */
@@ -57,24 +61,61 @@ public class DiscGaussSamplerFactory {
         CKS20_TAU,
     }
 
+    /**
+     * Create an instance of Discrete Gaussian sampler.
+     *
+     * @param type  the type.
+     * @param c     the mean of the distribution c.
+     * @param sigma the width parameter σ.
+     * @return an instance of Discrete Gaussian sampler.
+     */
     public static DiscGaussSampler createInstance(DiscGaussSamplerType type, int c, double sigma) {
         return createInstance(type, new SecureRandom(), c, sigma);
     }
 
+    /**
+     * Create an instance of Discrete Gaussian sampler.
+     *
+     * @param type   the type.
+     * @param random the random state.
+     * @param c      the mean of the distribution c.
+     * @param sigma  the width parameter σ.
+     * @return an instance of Discrete Gaussian sampler.
+     */
     public static DiscGaussSampler createInstance(DiscGaussSamplerType type, Random random, int c, double sigma) {
-        //noinspection SwitchStatementWithTooFewBranches
         switch (type) {
             case CKS20:
                 return new Cks20DiscGaussSampler(random, c, sigma);
+            case SIGMA2_LOG_TABLE:
+                return new Sigma2LogTableDiscGaussSampler(random, c, sigma);
             default:
                 return createTauInstance(type, random, c, sigma, DEFAULT_TAU);
         }
     }
 
+    /**
+     * Create an instance of Discrete Gaussian sampler with a cut-off parameter τ.
+     *
+     * @param type  the type.
+     * @param c     the mean of the distribution c.
+     * @param sigma the width parameter σ.
+     * @param tau   the cut-off parameter τ.
+     * @return an instance of Discrete Gaussian sampler with a cut-off parameter τ.
+     */
     public static TauDiscGaussSampler createTauInstance(DiscGaussSamplerType type, int c, double sigma, int tau) {
         return createTauInstance(type, new SecureRandom(), c, sigma, tau);
     }
 
+    /**
+     * Create an instance of Discrete Gaussian sampler with a cut-off parameter τ.
+     *
+     * @param type   the type.
+     * @param random the random state.
+     * @param c      the mean of the distribution c.
+     * @param sigma  the width parameter σ.
+     * @param tau    the cut-off parameter τ.
+     * @return an instance of Discrete Gaussian sampler with a cut-off parameter τ.
+     */
     public static TauDiscGaussSampler createTauInstance(DiscGaussSamplerType type, Random random, int c, double sigma, int tau) {
         switch (type) {
             case CKS20_TAU:
@@ -84,7 +125,9 @@ public class DiscGaussSamplerFactory {
             case UNIFORM_ONLINE:
                 return new UniOnlineTauDiscGaussSampler(random, c, sigma, tau);
             case UNIFORM_LOG_TABLE:
-            case SIGMA2_LOG_TABLE:
+                return new UniLogTableTauDiscGaussSampler(random, c, sigma, tau);
+            case SIGMA2_LOG_TABLE_TAU:
+                return new Sigma2LogTableTauDiscGaussSampler(random, c, sigma, tau);
             case ALIAS:
             case CONVOLUTION:
             default:

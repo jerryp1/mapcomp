@@ -16,7 +16,7 @@ import java.util.Random;
 import java.util.stream.IntStream;
 
 /**
- * Tests for Discrete Gaussian sampler.
+ * Discrete Gaussian sampler tests.
  *
  * @author Weiran Liu
  * @date 2022/4/19
@@ -26,7 +26,7 @@ public class DiscGaussSamplerTest {
     /**
      * number of trials
      */
-    private static final int N_TRIALS = 100000;
+    private static final int N_TRIALS = 1 << 18;
     /**
      * α
      */
@@ -38,26 +38,38 @@ public class DiscGaussSamplerTest {
 
     @Parameterized.Parameters(name = "{0}")
     public static Collection<Object[]> configurations() {
-        Collection<Object[]> configurationParams = new ArrayList<>();
+        Collection<Object[]> configurations = new ArrayList<>();
 
+        // SIGMA2_LOG_TABLE_TAU
+        configurations.add(new Object[]{
+            DiscGaussSamplerType.SIGMA2_LOG_TABLE_TAU.name(), DiscGaussSamplerType.SIGMA2_LOG_TABLE_TAU,
+        });
+        // SIGMA2_LOG_TABLE
+        configurations.add(new Object[]{
+            DiscGaussSamplerType.SIGMA2_LOG_TABLE.name(), DiscGaussSamplerType.SIGMA2_LOG_TABLE,
+        });
+        // UNIFORM_LOG_TABLE
+        configurations.add(new Object[]{
+            DiscGaussSamplerType.UNIFORM_LOG_TABLE.name(), DiscGaussSamplerType.UNIFORM_LOG_TABLE,
+        });
         // UNIFORM_ONLINE
-        configurationParams.add(new Object[]{
+        configurations.add(new Object[]{
             DiscGaussSamplerType.UNIFORM_ONLINE.name(), DiscGaussSamplerType.UNIFORM_ONLINE,
         });
         // UNIFORM_TABLE
-        configurationParams.add(new Object[]{
+        configurations.add(new Object[]{
             DiscGaussSamplerType.UNIFORM_TABLE.name(), DiscGaussSamplerType.UNIFORM_TABLE,
         });
         // CKS20_TAU
-        configurationParams.add(new Object[]{
+        configurations.add(new Object[]{
             DiscGaussSamplerType.CKS20_TAU.name(), DiscGaussSamplerType.CKS20_TAU,
         });
         // CKS20
-        configurationParams.add(new Object[]{
+        configurations.add(new Object[]{
             DiscGaussSamplerType.CKS20.name(), DiscGaussSamplerType.CKS20,
         });
 
-        return configurationParams;
+        return configurations;
     }
 
     /**
@@ -97,13 +109,13 @@ public class DiscGaussSamplerTest {
     }
 
     @Test
-    public void testC() {
+    public void testMean() {
         for (int c : C_ARRAY) {
-            testC(c);
+            testMean(c);
         }
     }
 
-    private void testC(int c) {
+    private void testMean(int c) {
         DiscGaussSampler sampler = DiscGaussSamplerFactory.createInstance(type, c, 1);
         Assert.assertEquals(c, sampler.getC());
         int[] samples = IntStream.range(0, N_TRIALS)
@@ -114,15 +126,15 @@ public class DiscGaussSamplerTest {
     }
 
     @Test
-    public void testSigma() {
+    public void testVariance() {
         for (double sigma : SIGMA_ARRAY) {
-            testSigma(sigma);
+            testVariance(sigma);
         }
     }
 
-    public void testSigma(double sigma) {
+    public void testVariance(double sigma) {
         DiscGaussSampler sampler = DiscGaussSamplerFactory.createInstance(type, 0, sigma);
-        Assert.assertEquals(sigma, sampler.getSigma(), DoubleUtils.PRECISION);
+        Assert.assertEquals(sigma, sampler.getInputSigma(), DoubleUtils.PRECISION);
         int[] samples = IntStream.range(0, N_TRIALS)
             .map(index -> sampler.sample())
             .toArray();
@@ -149,5 +161,4 @@ public class DiscGaussSamplerTest {
 
         }
     }
-
 }

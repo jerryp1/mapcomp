@@ -34,22 +34,30 @@ public class TauDiscGaussSamplerTest {
 
     @Parameterized.Parameters(name = "{0}")
     public static Collection<Object[]> configurations() {
-        Collection<Object[]> configurationParams = new ArrayList<>();
+        Collection<Object[]> configurations = new ArrayList<>();
 
+        // SIGMA2_LOG_TABLE_TAU
+        configurations.add(new Object[]{
+            DiscGaussSamplerType.SIGMA2_LOG_TABLE_TAU.name(), DiscGaussSamplerType.SIGMA2_LOG_TABLE_TAU,
+        });
+        // UNIFORM_LOG_TABLE
+        configurations.add(new Object[]{
+            DiscGaussSamplerType.UNIFORM_LOG_TABLE.name(), DiscGaussSamplerType.UNIFORM_LOG_TABLE,
+        });
         // UNIFORM_ONLINE
-        configurationParams.add(new Object[]{
-            DiscGaussSamplerFactory.DiscGaussSamplerType.UNIFORM_ONLINE.name(), DiscGaussSamplerFactory.DiscGaussSamplerType.UNIFORM_ONLINE,
+        configurations.add(new Object[]{
+            DiscGaussSamplerType.UNIFORM_ONLINE.name(), DiscGaussSamplerType.UNIFORM_ONLINE,
         });
         // UNIFORM_TABLE
-        configurationParams.add(new Object[]{
-            DiscGaussSamplerFactory.DiscGaussSamplerType.UNIFORM_TABLE.name(), DiscGaussSamplerFactory.DiscGaussSamplerType.UNIFORM_TABLE,
+        configurations.add(new Object[]{
+            DiscGaussSamplerType.UNIFORM_TABLE.name(), DiscGaussSamplerType.UNIFORM_TABLE,
         });
         // CKS20_TAU
-        configurationParams.add(new Object[]{
-            DiscGaussSamplerFactory.DiscGaussSamplerType.CKS20_TAU.name(), DiscGaussSamplerFactory.DiscGaussSamplerType.CKS20_TAU,
+        configurations.add(new Object[]{
+            DiscGaussSamplerType.CKS20_TAU.name(), DiscGaussSamplerType.CKS20_TAU,
         });
 
-        return configurationParams;
+        return configurations;
     }
 
     /**
@@ -116,15 +124,38 @@ public class TauDiscGaussSamplerTest {
     private void testUniformBoundaries(int c, double sigma, int tau) {
         TauDiscGaussSampler sampler = DiscGaussSamplerFactory.createTauInstance(type, c, sigma, tau);
         // [c - τ * σ, c + τ * σ]
-        int lowerBound = (sampler.getC()) - (int)Math.ceil(sampler.getSigma() * sampler.getTau());
-        int upperBound = (sampler.getC()) + (int)Math.ceil(sampler.getSigma() * sampler.getTau());
+        int lowerBound = (sampler.getC()) - (int) Math.ceil(sampler.getActualSigma() * sampler.getTau());
+        int upperBound = (sampler.getC()) + (int) Math.ceil(sampler.getActualSigma() * sampler.getTau());
 
-        for(int i = 0; i<N_TRIALS; i++) {
+        for (int i = 0; i < N_TRIALS; i++) {
             int r = sampler.sample();
-            Assert.assertTrue(r >= lowerBound);
-            Assert.assertTrue(r <= upperBound);
+            if (r < lowerBound || r > upperBound) {
+                System.out.println();
+            }
+            Assert.assertTrue(r >= lowerBound && r <= upperBound);
         }
     }
 
+    @Test
+    public void testMean() {
+        testMean(0, 3.0, 6);
+        testMean(0, 10.0, 6);
+        testMean(1, 3.3, 6);
+        testMean(2, 2.0, 6);
 
+        testMean(0, 3.0, 3);
+        testMean(0, 10.0, 3);
+        testMean(1, 3.3, 3);
+        testMean(2, 2.0, 3);
+    }
+
+    private void testMean(int c, double sigma, int tau) {
+        TauDiscGaussSampler sampler = DiscGaussSamplerFactory.createTauInstance(type, c, sigma, tau);
+        double mean = 0.0;
+        for (int i = 0; i < N_TRIALS; i++) {
+            mean += sampler.sample();
+        }
+        mean /= N_TRIALS;
+        Assert.assertTrue(Math.abs(mean - c) <= TOLERANCE);
+    }
 }

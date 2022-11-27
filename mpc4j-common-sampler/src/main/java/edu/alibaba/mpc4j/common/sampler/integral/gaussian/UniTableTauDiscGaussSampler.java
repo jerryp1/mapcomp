@@ -18,7 +18,7 @@ import java.util.stream.IntStream;
  * @author Weiran Liu
  * @date 2022/11/25
  */
-public class UniTableTauDiscGaussSampler extends AbstractTauDiscGaussSampler {
+class UniTableTauDiscGaussSampler extends AbstractTauDiscGaussSampler {
     /**
      * We sample x with abs(x) < upper_bound
      */

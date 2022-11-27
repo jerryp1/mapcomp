@@ -14,11 +14,11 @@ abstract class AbstractDiscGaussSampler implements DiscGaussSampler {
      */
     protected final Random random;
     /**
-     * The mean of the distribution c
+     * the mean of the distribution c
      */
     protected final int c;
     /**
-     * The width parameter σ
+     * the width parameter σ
      */
     protected final double sigma;
 
@@ -35,7 +35,7 @@ abstract class AbstractDiscGaussSampler implements DiscGaussSampler {
     }
 
     @Override
-    public double getSigma() {
+    public double getInputSigma() {
         return sigma;
     }
 

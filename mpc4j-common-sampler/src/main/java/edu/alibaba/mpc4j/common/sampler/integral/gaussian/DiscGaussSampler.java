@@ -32,11 +32,20 @@ public interface DiscGaussSampler extends IntegralSampler {
     int getC();
 
     /**
-     * Get the width parameter σ.
+     * Get the input width parameter σ. Note that some samplers would modify σ so that the actual σ would be different.
      *
-     * @return the width parameter σ.
+     * @return the input width parameter σ.
      */
-    double getSigma();
+    double getInputSigma();
+
+    /**
+     * Get the actual width parameter σ. Note that some samplers would modify σ so that the actual σ would be different.
+     *
+     * @return the actual width parameter σ.
+     */
+    default double getActualSigma() {
+        return getInputSigma();
+    }
 
     /**
      * Get the mean of the distribution. In Discrete Gaussian sampling, it is often denoted as c.
@@ -49,12 +58,13 @@ public interface DiscGaussSampler extends IntegralSampler {
     }
 
     /**
-     * Get the variance of the distribution. In Discrete Gaussian sampling, it is often denoted as σ.
+     * Get the actual variance of the distribution. Note that some samplers would modify sigma. In Discrete Gaussian
+     * sampling, it is often denoted as σ.
      *
-     * @return the variance of the distribution.
+     * @return the actual variance of the distribution.
      */
     @Override
     default double getVariance() {
-        return getSigma() * getSigma();
+        return getActualSigma() * getActualSigma();
     }
 }

@@ -17,7 +17,7 @@ import java.util.Random;
  * @author Weiran Liu
  * @date 2022/4/19
  */
-public class Cks20DiscGaussSampler extends AbstractDiscGaussSampler {
+class Cks20DiscGaussSampler extends AbstractDiscGaussSampler {
     /**
      * Discrete Laplace sampler
      */

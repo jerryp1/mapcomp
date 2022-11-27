@@ -14,11 +14,11 @@ import java.util.Random;
  * @author Weiran Liu
  * @date 2022/4/19
  */
-public class Cks20TauDiscGaussSampler extends Cks20DiscGaussSampler implements TauDiscGaussSampler {
+class Cks20TauDiscGaussSampler extends Cks20DiscGaussSampler implements TauDiscGaussSampler {
     /**
      * Cutoff `τ`, samples outside the range `(⌊c⌉ - ⌈στ⌉, ..., ⌊c⌉ + ⌈στ⌉)` are considered to have probability zero.
      */
-    protected final int tau;
+    private final int tau;
     /**
      * We sample x with abs(x) < upper_bound
      */

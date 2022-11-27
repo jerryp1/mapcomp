@@ -15,7 +15,7 @@ import java.util.Random;
  * @author Weiran Liu
  * @date 2022/11/25
  */
-public class UniOnlineTauDiscGaussSampler extends AbstractTauDiscGaussSampler {
+class UniOnlineTauDiscGaussSampler extends AbstractTauDiscGaussSampler {
     /**
      * We sample x with abs(x) <= upper_bound - 1
      */
