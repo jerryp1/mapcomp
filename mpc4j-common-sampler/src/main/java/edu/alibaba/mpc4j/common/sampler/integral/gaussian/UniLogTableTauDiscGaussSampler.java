@@ -43,7 +43,7 @@ class UniLogTableTauDiscGaussSampler extends AbstractTauDiscGaussSampler {
      */
     UniLogTableTauDiscGaussSampler(Random random, int c, double sigma, int tau) {
         super(random, c, sigma, tau);
-        int upperBound = (int) Math.ceil(sigma * tau) + 1;
+        int upperBound = DiscGaussSamplerFactory.getUpperBound(sigma, tau);
         upperBoundMinusOne = upperBound - 1;
         twoUpperBoundMinusOne = 2 * upperBound - 1;
         double f = 2.0 * sigma * sigma;

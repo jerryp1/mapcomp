@@ -45,7 +45,7 @@ class Sigma2LogTableTauDiscGaussSampler extends Sigma2LogTableDiscGaussSampler i
         super(random, c, sigma);
         assert tau > 0 : "τ must be greater than 0: " + tau;
         this.tau = tau;
-        upperBound = (int) Math.ceil(actualSigma * tau) + 1;
+        upperBound = DiscGaussSamplerFactory.getUpperBound(sigma, tau);
     }
 
     @Override

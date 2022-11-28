@@ -36,7 +36,7 @@ class Cks20TauDiscGaussSampler extends Cks20DiscGaussSampler implements TauDiscG
         super(random, c, sigma);
         assert tau > 0 : "τ must be greater than 0: " + tau;
         this.tau = tau;
-        upperBound = (int) Math.ceil(sigma * tau) + 1;
+        upperBound = DiscGaussSamplerFactory.getUpperBound(sigma, tau);
     }
 
     @Override

@@ -21,10 +21,6 @@ import java.util.Random;
  */
 class AliasTauDiscGaussSampler extends AbstractTauDiscGaussSampler {
     /**
-     * We consider two doubles ``x`` and ``y`` strongly equal if ``abs(x-y) <= STRONG_EQUAL_PRECISION``
-     */
-    private static final double STRONG_EQUAL_PRECISION = Math.pow(2, -45);
-    /**
      * We sample x with abs(x) <= upper_bound - 1
      */
     private final int upperBoundMinusOne;
@@ -55,10 +51,10 @@ class AliasTauDiscGaussSampler extends AbstractTauDiscGaussSampler {
      */
     AliasTauDiscGaussSampler(Random random, int c, double sigma, int tau) {
         super(random, c, sigma, tau);
-        int upperBound = (int) Math.ceil(sigma * tau) + 1;
+        int upperBound = DiscGaussSamplerFactory.getUpperBound(sigma, tau);
         upperBoundMinusOne = upperBound - 1;
         twoUpperBoundMinusOne = 2 * upperBound - 1;
-        double f = -1.0 / (2.0 * (sigma * sigma));
+        double f = DiscGaussSamplerFactory.getUnitProbability(sigma);
         rho = new double[twoUpperBoundMinusOne];
         for (int x = -upperBoundMinusOne; x <= upperBoundMinusOne; x++) {
             rho[x + upperBoundMinusOne] = Math.exp(x * x * f);
@@ -78,7 +74,7 @@ class AliasTauDiscGaussSampler extends AbstractTauDiscGaussSampler {
         double avg = 1.0 / twoUpperBoundMinusOne;
         int low = getLowestRhoIndex();
         int high;
-        while (avg - rho[low] > STRONG_EQUAL_PRECISION) {
+        while (avg - rho[low] > DiscGaussSamplerFactory.STRONG_EQUAL_PRECISION) {
             high = getHighestRhoIndex();
             bias[low]  = new SecureBernoulliSampler(random, twoUpperBoundMinusOne * rho[low]);
             alias[low] = high;

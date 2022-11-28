@@ -42,8 +42,8 @@ class UniTableTauDiscGaussSampler extends AbstractTauDiscGaussSampler {
      */
     public UniTableTauDiscGaussSampler(Random random, int c, double sigma, int tau) {
         super(random, c, sigma, tau);
-        upperBound = (int) Math.ceil(sigma * tau) + 1;
-        f = -1.0 / (2.0 * (sigma * sigma));
+        upperBound = DiscGaussSamplerFactory.getUpperBound(sigma, tau);
+        f = DiscGaussSamplerFactory.getUnitProbability(sigma);
         rho = IntStream.range(0, upperBound)
             .mapToDouble(x -> Math.exp(x * x * f))
             .toArray();

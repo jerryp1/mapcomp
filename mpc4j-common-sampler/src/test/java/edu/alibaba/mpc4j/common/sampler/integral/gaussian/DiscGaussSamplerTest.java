@@ -2,7 +2,6 @@ package edu.alibaba.mpc4j.common.sampler.integral.gaussian;
 
 import com.google.common.base.Preconditions;
 import edu.alibaba.mpc4j.common.sampler.integral.gaussian.DiscGaussSamplerFactory.DiscGaussSamplerType;
-import edu.alibaba.mpc4j.common.tool.utils.DoubleUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.junit.Assert;
 import org.junit.Test;
@@ -10,7 +9,6 @@ import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.Random;
 import java.util.stream.IntStream;
@@ -23,23 +21,15 @@ import java.util.stream.IntStream;
  */
 @RunWith(Parameterized.class)
 public class DiscGaussSamplerTest {
-    /**
-     * number of trials
-     */
-    private static final int N_TRIALS = 1 << 18;
-    /**
-     * α
-     */
-    private static final int[] SIGMA_ARRAY = new int[]{1, 2, 4};
-    /**
-     * c
-     */
-    private static final int[] C_ARRAY = new int[]{0, 5, -5};
 
     @Parameterized.Parameters(name = "{0}")
     public static Collection<Object[]> configurations() {
         Collection<Object[]> configurations = new ArrayList<>();
 
+        // CONVOLUTION
+        configurations.add(new Object[]{
+            DiscGaussSamplerType.CONVOLUTION.name(), DiscGaussSamplerType.CONVOLUTION,
+        });
         // ALIAS
         configurations.add(new Object[]{
             DiscGaussSamplerType.ALIAS.name(), DiscGaussSamplerType.ALIAS,
@@ -95,15 +85,15 @@ public class DiscGaussSamplerTest {
     @Test
     public void testSample() {
         DiscGaussSampler sampler = DiscGaussSamplerFactory.createInstance(type, 0, 1);
-        int[] round1Samples = IntStream.range(0, N_TRIALS)
+        int[] round1Samples = IntStream.range(0, DiscGaussSamplerTestUtils.N_TRIALS)
             .map(index -> sampler.sample())
             .toArray();
-        int[] round2Samples = IntStream.range(0, N_TRIALS)
+        int[] round2Samples = IntStream.range(0, DiscGaussSamplerTestUtils.N_TRIALS)
             .map(index -> sampler.sample())
             .toArray();
         // different sample results
         boolean allEqual = true;
-        for (int i = 0; i < N_TRIALS; i++) {
+        for (int i = 0; i < DiscGaussSamplerTestUtils.N_TRIALS; i++) {
             if (round1Samples[i] != round2Samples[i]) {
                 allEqual = false;
                 break;
@@ -114,38 +104,29 @@ public class DiscGaussSamplerTest {
 
     @Test
     public void testMean() {
-        for (int c : C_ARRAY) {
-            testMean(c);
-        }
+        testMean(0, 3.0);
+        testMean(0, 10.0);
+        testMean(1, 3.3);
+        testMean(2, 2.0);
     }
 
-    private void testMean(int c) {
-        DiscGaussSampler sampler = DiscGaussSamplerFactory.createInstance(type, c, 1);
-        Assert.assertEquals(c, sampler.getC());
-        int[] samples = IntStream.range(0, N_TRIALS)
-            .map(index -> sampler.sample())
-            .toArray();
-        double mean = Arrays.stream(samples).average().orElse(0);
-        Assert.assertEquals(sampler.getMean(), mean, 1.0);
+    private void testMean(int c, double sigma) {
+        DiscGaussSampler sampler = DiscGaussSamplerFactory.createInstance(type, c, sigma);
+        DiscGaussSamplerTestUtils.testMean(sampler);
     }
 
     @Test
-    public void testVariance() {
-        for (double sigma : SIGMA_ARRAY) {
-            testVariance(sigma);
-        }
+    public void testRatios() {
+        // test proportional probabilities
+        testRatios(3.0);
+        testRatios(2.0);
+        testRatios(4.0);
+        testRatios(15.4);
     }
 
-    public void testVariance(double sigma) {
+    private void testRatios(double sigma) {
         DiscGaussSampler sampler = DiscGaussSamplerFactory.createInstance(type, 0, sigma);
-        Assert.assertEquals(sigma, sampler.getInputSigma(), DoubleUtils.PRECISION);
-        int[] samples = IntStream.range(0, N_TRIALS)
-            .map(index -> sampler.sample())
-            .toArray();
-        double variance = Arrays.stream(samples)
-            .mapToDouble(sample -> Math.pow(sample, 2))
-            .sum() / N_TRIALS;
-        Assert.assertEquals(sampler.getVariance(), variance, sampler.getVariance() * 0.3);
+        DiscGaussSamplerTestUtils.testRatios(sampler);
     }
 
     @Test
@@ -153,11 +134,11 @@ public class DiscGaussSamplerTest {
         DiscGaussSampler sampler = DiscGaussSamplerFactory.createInstance(type, new Random(), 0, 1);
         try {
             sampler.reseed(0L);
-            int[] round1Samples = IntStream.range(0, N_TRIALS)
+            int[] round1Samples = IntStream.range(0, DiscGaussSamplerTestUtils.N_TRIALS)
                 .map(index -> sampler.sample())
                 .toArray();
             sampler.reseed(0L);
-            int[] round2Samples = IntStream.range(0, N_TRIALS)
+            int[] round2Samples = IntStream.range(0, DiscGaussSamplerTestUtils.N_TRIALS)
                 .map(index -> sampler.sample())
                 .toArray();
             Assert.assertArrayEquals(round1Samples, round2Samples);

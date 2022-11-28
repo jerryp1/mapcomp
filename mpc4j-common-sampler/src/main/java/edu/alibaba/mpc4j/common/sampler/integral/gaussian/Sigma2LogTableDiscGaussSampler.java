@@ -56,7 +56,7 @@ class Sigma2LogTableDiscGaussSampler extends AbstractDiscGaussSampler {
         k = (int)Math.round(sigma / Sigma2DiscGaussSampler.SIGMA_2);
         actualSigma = k * Sigma2DiscGaussSampler.SIGMA_2;
         double f = 2 * sigma * sigma;
-        int upperBound = (int) Math.ceil(actualSigma * DiscGaussSamplerFactory.DEFAULT_TAU) + 1;
+        int upperBound = DiscGaussSamplerFactory.getUpperBound(actualSigma, DiscGaussSamplerFactory.DEFAULT_TAU);
         expfBernoulliSampler = new ExpfBernoulliSampler(random, f, upperBound);
         sigma2DiscGaussSampler = new Sigma2DiscGaussSampler(random);
     }
