@@ -1,6 +1,5 @@
 package edu.alibaba.mpc4j.common.sampler.integral.gaussian;
 
-import java.security.SecureRandom;
 import java.util.Random;
 
 /**
@@ -14,10 +13,6 @@ abstract class AbstractTauDiscGaussSampler extends AbstractDiscGaussSampler impl
      * Cutoff `τ`, samples outside the range `(⌊c⌉ - ⌈στ⌉, ..., ⌊c⌉ + ⌈στ⌉)` are considered to have probability zero.
      */
     protected final int tau;
-
-    AbstractTauDiscGaussSampler(int c, double sigma, int tau) {
-        this(new SecureRandom(), c, sigma, tau);
-    }
 
     AbstractTauDiscGaussSampler(Random random, int c, double sigma, int tau) {
         super(random, c, sigma);

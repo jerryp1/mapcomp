@@ -40,6 +40,10 @@ public class DiscGaussSamplerTest {
     public static Collection<Object[]> configurations() {
         Collection<Object[]> configurations = new ArrayList<>();
 
+        // ALIAS
+        configurations.add(new Object[]{
+            DiscGaussSamplerType.ALIAS.name(), DiscGaussSamplerType.ALIAS,
+        });
         // SIGMA2_LOG_TABLE_TAU
         configurations.add(new Object[]{
             DiscGaussSamplerType.SIGMA2_LOG_TABLE_TAU.name(), DiscGaussSamplerType.SIGMA2_LOG_TABLE_TAU,

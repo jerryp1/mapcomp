@@ -129,6 +129,7 @@ public class DiscGaussSamplerFactory {
             case SIGMA2_LOG_TABLE_TAU:
                 return new Sigma2LogTableTauDiscGaussSampler(random, c, sigma, tau);
             case ALIAS:
+                return new AliasTauDiscGaussSampler(random, c, sigma, tau);
             case CONVOLUTION:
             default:
                 throw new IllegalArgumentException("Invalid " + DiscGaussSamplerType.class.getSimpleName() + ": " + type.name());
