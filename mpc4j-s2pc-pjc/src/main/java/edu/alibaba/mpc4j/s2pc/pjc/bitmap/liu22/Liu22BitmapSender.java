@@ -10,14 +10,14 @@ import edu.alibaba.mpc4j.s2pc.aby.bc.BcParty;
 import edu.alibaba.mpc4j.s2pc.aby.bc.BcSquareVector;
 import edu.alibaba.mpc4j.s2pc.pjc.bitmap.AbstractBitmapParty;
 import edu.alibaba.mpc4j.s2pc.pjc.bitmap.BitmapFactory.BitmapType;
+import edu.alibaba.mpc4j.s2pc.pjc.bitmap.BitmapUtils;
 import edu.alibaba.mpc4j.s2pc.pjc.bitmap.SecureBitmapContainer;
-import org.roaringbitmap.BitmapContainer;
 import org.roaringbitmap.RoaringBitmap;
 
+import java.util.concurrent.TimeUnit;
 import java.util.stream.IntStream;
 
-import static edu.alibaba.mpc4j.s2pc.pjc.bitmap.SecureBitmapContainer.BYTE_LENGTH;
-import static edu.alibaba.mpc4j.s2pc.pjc.bitmap.SecureBitmapContainer.CONTAINER_BYTE_SIZE;
+import static edu.alibaba.mpc4j.s2pc.pjc.bitmap.SecureBitmapContainer.*;
 
 /**
  * Liu22-Bitmap协议服务端。
@@ -39,25 +39,25 @@ public class Liu22BitmapSender extends AbstractBitmapParty {
 
     @Override
     public SecureBitmapContainer and(SecureBitmapContainer x, SecureBitmapContainer y) throws MpcAbortException {
-        BcSquareVector vector = bcSender.and(x.getVector(), y.getVector());
+        BcSquareVector vector = bcSender.and(x.getVectors(), y.getVectors());
         return new SecureBitmapContainer(vector);
     }
 
     @Override
     public SecureBitmapContainer xor(SecureBitmapContainer x, SecureBitmapContainer y) throws MpcAbortException {
-        BcSquareVector vector = bcSender.xor(x.getVector(), y.getVector());
+        BcSquareVector vector = bcSender.xor(x.getVectors(), y.getVectors());
         return new SecureBitmapContainer(vector);
     }
 
     @Override
     public SecureBitmapContainer or(SecureBitmapContainer x, SecureBitmapContainer y) throws MpcAbortException {
-        BcSquareVector vector = bcSender.or(x.getVector(), y.getVector());
+        BcSquareVector vector = bcSender.or(x.getVectors(), y.getVectors());
         return new SecureBitmapContainer(vector);
     }
 
     @Override
     public SecureBitmapContainer not(SecureBitmapContainer x) throws MpcAbortException {
-        BcSquareVector vector = bcSender.not(x.getVector());
+        BcSquareVector vector = bcSender.not(x.getVectors());
         return new SecureBitmapContainer(vector);
     }
 
@@ -86,43 +86,47 @@ public class Liu22BitmapSender extends AbstractBitmapParty {
 
     @Override
     public void init(int maxRoundNum, int updateNum) throws MpcAbortException {
+        info("{}{} Send. Init begin", ptoBeginLogPrefix, getPtoDesc().getPtoName());
 
+        stopWatch.start();
+        bcSender.init(maxRoundNum, updateNum);
+        stopWatch.stop();
+        long initTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
+        stopWatch.reset();
+        info("{}{} Send. Init Step 1/1 ({}ms)", ptoStepLogPrefix, getPtoDesc().getPtoName(), initTime);
+
+        initialized = true;
+        info("{}{} Send. Init end", ptoEndLogPrefix, getPtoDesc().getPtoName());
     }
 
     @Override
-    public SecureBitmapContainer fromOwnRoaringBitmap(RoaringBitmap roaringBitmap) {
-        BitmapContainer[] cs = expandContainers(roaringBitmap);
-        byte[] shares = new byte[BYTE_LENGTH];
-        for (int i = 0; i < cs.length; i++) {
-            byte[] bitmap = LongUtils.longArrayToByteArray(cs[i].toLongBuffer().array());
-            assert bitmap.length == BitmapContainer.MAX_CAPACITY / Byte.SIZE;
-            System.arraycopy(bitmap, 0, shares, i * CONTAINER_BYTE_SIZE, CONTAINER_BYTE_SIZE);
-        }
-        BcSquareVector BcSquareVector = bcSender.setOwnInputs(shares, Integer.MAX_VALUE);
+    public SecureBitmapContainer setOwnRoaringBitmap(RoaringBitmap roaringBitmap) {
+        byte[] shares = BitmapUtils.roaringBitmapToBytes(roaringBitmap);
+        BcSquareVector BcSquareVector = bcSender.setOwnInputs(shares, BIT_LENGTH);
         return new SecureBitmapContainer(BcSquareVector);
     }
 
     @Override
-    public SecureBitmapContainer fromOtherRoaringBitmap() {
-        BcSquareVector BcSquareVector = bcSender.setOtherInputs(1, Integer.MAX_VALUE);
+    public SecureBitmapContainer setOtherRoaringBitmap() {
+        BcSquareVector BcSquareVector = bcSender.setOtherInputs(BYTE_LENGTH, BIT_LENGTH);
         return new SecureBitmapContainer(BcSquareVector);
     }
 
     @Override
     public long[][] revealOwn(SecureBitmapContainer secureBitmapContainer) {
         Preconditions.checkNotNull(secureBitmapContainer);
-        byte[] outputs = bcSender.getOwnOutputs(secureBitmapContainer.getVector());
+        byte[] outputs = bcSender.getOwnOutputs(secureBitmapContainer.getVectors());
         int containerNum = secureBitmapContainer.getContainerNum();
         return IntStream.range(0, containerNum).mapToObj(i -> {
             byte[] containerBytes = new byte[CONTAINER_BYTE_SIZE];
             System.arraycopy(outputs, i * CONTAINER_BYTE_SIZE, containerBytes, 0, CONTAINER_BYTE_SIZE);
-            return LongUtils.byteArrayToLongArray(containerBytes);
+            return LongUtils.byteArrayToLongArrayLE(containerBytes);
         }).toArray(long[][]::new);
     }
 
     @Override
     public void revealOther(SecureBitmapContainer secureBitmapContainer) {
         Preconditions.checkNotNull(secureBitmapContainer);
-        bcSender.getOtherOutputs(secureBitmapContainer.getVector());
+        bcSender.getOtherOutputs(secureBitmapContainer.getVectors());
     }
 }

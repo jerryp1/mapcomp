@@ -1,6 +1,7 @@
 package edu.alibaba.mpc4j.common.tool.utils;
 
 import java.nio.ByteBuffer;
+import java.nio.ByteOrder;
 import java.nio.LongBuffer;
 import java.security.SecureRandom;
 import java.util.Arrays;
@@ -55,6 +56,20 @@ public class LongUtils {
         return byteBuffer.array();
     }
 
+
+    /**
+     * 将{@code long[]}转换为{@code byte[]}，小端序。
+     *
+     * @param longArray 待转换的{@code long[]}。
+     * @return 转换结果。
+     */
+    public static byte[] longArrayToByteArrayLE(long[] longArray) {
+        assert longArray.length > 0;
+        ByteBuffer byteBuffer = ByteBuffer.allocate(longArray.length * Long.BYTES);
+        IntStream.range(0, longArray.length).forEach(index -> byteBuffer.order(ByteOrder.LITTLE_ENDIAN).putLong(longArray[index]));
+        return byteBuffer.array();
+    }
+
     /**
      * 将{@code long[]}转换为{@code byte[]}。
      *
@@ -94,6 +109,25 @@ public class LongUtils {
         // 不能用ByteBuffer.warp(byteArray).asLongBuffer().array()操作，因为此时的LongBuffer是readOnly的，无法array()
         long[] longArray = new long[byteArray.length / Long.BYTES];
         LongBuffer longBuffer = ByteBuffer.wrap(byteArray).asLongBuffer();
+        IntStream.range(0, longBuffer.capacity()).forEach(index -> longArray[index] = longBuffer.get());
+        return longArray;
+    }
+
+
+    /**
+     * 将{@code byte[]}转换为{@code long[]}，小端表示。此转换要求{@code byte[]}的长度可以被{@code Long.BYTES}整除。
+     *
+     * @param byteArray 待转换的{@code byte[]}。
+     * @return 转换结果。
+     */
+    public static long[] byteArrayToLongArrayLE(byte[] byteArray) {
+        assert byteArray.length % Long.BYTES == 0 : "byteArray.length must divides Long.BYTES: " + byteArray.length;
+        if (byteArray.length == 0) {
+            return new long[0];
+        }
+        // 不能用ByteBuffer.warp(byteArray).asLongBuffer().array()操作，因为此时的LongBuffer是readOnly的，无法array()
+        long[] longArray = new long[byteArray.length / Long.BYTES];
+        LongBuffer longBuffer = ByteBuffer.wrap(byteArray).order(ByteOrder.LITTLE_ENDIAN).asLongBuffer();
         IntStream.range(0, longBuffer.capacity()).forEach(index -> longArray[index] = longBuffer.get());
         return longArray;
     }

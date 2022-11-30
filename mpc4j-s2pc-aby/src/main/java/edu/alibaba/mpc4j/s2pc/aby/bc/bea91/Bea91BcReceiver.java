@@ -87,7 +87,7 @@ public class Bea91BcReceiver extends AbstractBcParty {
         } else {
             // x0和y0为私有导线，执行三元组协议
             andGateNum += num;
-            info("{}{} Recv. begin", ptoBeginLogPrefix, getPtoDesc().getPtoName());
+            info("{}{} Recv. And begin", ptoBeginLogPrefix, getPtoDesc().getPtoName());
 
             stopWatch.start();
             Z2Triple z2Triple = z2MtgReceiver.generate(num);
@@ -211,7 +211,7 @@ public class Bea91BcReceiver extends AbstractBcParty {
         assert arrayLength == (bitLength + Byte.SIZE - 1) / Byte.SIZE;
         info("客户端设置客户端输入，客户端输入数组长度{}，数据比特长度{}", arrayLength, bitLength);
         // 构造sender标签
-        byte[] senderInputWire = new byte[(bitLength + Byte.SIZE - 1) / Byte.SIZE];
+        byte[] senderInputWire = new byte[(bitLength - 1) / Byte.SIZE + 1];
         secureRandom.nextBytes(senderInputWire);
         // 按顺序打包receiver标签
         byte[] labelArrays = BytesUtils.xor(senderInputs, senderInputWire);
@@ -230,7 +230,7 @@ public class Bea91BcReceiver extends AbstractBcParty {
     public BcSquareVector setOtherInputs(int arrayLength, int bitLength) {
         DataPacketHeader labelHeader = new DataPacketHeader(
                 taskId, getPtoDesc().getPtoId(), PtoStep.SENDER_SEND_INPUT.ordinal(), num,
-                ownParty().getPartyId(), otherParty().getPartyId()
+                otherParty().getPartyId(), ownParty().getPartyId()
         );
         byte[] label = rpc.receive(labelHeader).getPayload().get(0);
         // 检查数据包长度
@@ -247,7 +247,7 @@ public class Bea91BcReceiver extends AbstractBcParty {
         // 客户端接收服务端发送标签值
         DataPacketHeader otherSharesHeader = new DataPacketHeader(
                 taskId, getPtoDesc().getPtoId(), PtoStep.SENDER_SEND_OUTPUT.ordinal(), num,
-                ownParty().getPartyId(), otherParty().getPartyId()
+                otherParty().getPartyId(), ownParty().getPartyId()
         );
         byte[] otherShares = rpc.receive(otherSharesHeader).getPayload().get(0);
         byte[] ownShares = v.getBytes();

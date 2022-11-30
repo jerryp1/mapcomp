@@ -3,6 +3,7 @@ package edu.alibaba.mpc4j.s2pc.pjc.bitmap;
 import edu.alibaba.mpc4j.common.rpc.MpcAbortException;
 import edu.alibaba.mpc4j.common.rpc.pto.SecurePto;
 import edu.alibaba.mpc4j.common.rpc.pto.TwoPartyPto;
+import edu.alibaba.mpc4j.s2pc.aby.bc.BcSquareVector;
 import edu.alibaba.mpc4j.s2pc.pjc.bitmap.BitmapFactory.BitmapType;
 import org.roaringbitmap.BitmapContainer;
 import org.roaringbitmap.Container;
@@ -10,8 +11,8 @@ import org.roaringbitmap.RoaringBitmap;
 
 import java.util.Arrays;
 
-import static edu.alibaba.mpc4j.s2pc.pjc.bitmap.AbstractBitmapParty.CONTAINER_CAPACITY;
-import static edu.alibaba.mpc4j.s2pc.pjc.bitmap.AbstractBitmapParty.CONTAINER_NUM;
+import static edu.alibaba.mpc4j.s2pc.pjc.bitmap.SecureBitmapContainer.BIT_LENGTH;
+import static edu.alibaba.mpc4j.s2pc.pjc.bitmap.SecureBitmapContainer.CONTAINERS_NUM;
 
 /**
  * Bitmap参与方类
@@ -36,8 +37,8 @@ public interface BitmapParty extends TwoPartyPto, SecurePto {
     /**
      * 执行AND运算，得到zi，满足z0 ⊕ z1 = z = x & y = (x0 ⊕ x1) & (y0 ⊕ y1)。
      *
-     * @param xi xi。
-     * @param yi yi。
+     * @param x x。
+     * @param y y。
      * @return zi。
      * @throws MpcAbortException 如果协议异常中止。
      */
@@ -78,14 +79,20 @@ public interface BitmapParty extends TwoPartyPto, SecurePto {
      * @param roaringBitmap roaringBitmap
      * @return SecureBitmapContainer
      */
-    SecureBitmapContainer fromOwnRoaringBitmap(RoaringBitmap roaringBitmap);
+    SecureBitmapContainer setOwnRoaringBitmap(RoaringBitmap roaringBitmap);
 
     /**
      * RoaringBitmap -> SecureContainer
      *
      * @return SecureBitmapContainer
      */
-    SecureBitmapContainer fromOtherRoaringBitmap();
+    SecureBitmapContainer setOtherRoaringBitmap();
+
+    default SecureBitmapContainer setPublicRoaringBitmap(RoaringBitmap roaringBitmap) {
+        byte[] bytes = BitmapUtils.roaringBitmapToBytes(roaringBitmap);
+        BcSquareVector vector = BcSquareVector.create(bytes, BIT_LENGTH, true);
+        return new SecureBitmapContainer(vector);
+    }
 
     /**
      * SecureContainer -> RoaringBitmap
@@ -95,8 +102,8 @@ public interface BitmapParty extends TwoPartyPto, SecurePto {
     default RoaringBitmap toOwnRoaringBitmap(SecureBitmapContainer secureBitmapContainer) {
         // 先reveal所有元素
         long[][] bitmaps = revealOwn(secureBitmapContainer);
-        assert bitmaps.length == CONTAINER_NUM;
-        assert bitmaps[0].length == CONTAINER_CAPACITY;
+        assert bitmaps.length == CONTAINERS_NUM;
+        assert bitmaps[0].length == BitmapContainer.MAX_CAPACITY;
         RoaringBitmap roaringBitmap = new RoaringBitmap();
         // 获得各container内元素数量
         int[] cardinalities = Arrays.stream(bitmaps).mapToInt(bitmap ->
