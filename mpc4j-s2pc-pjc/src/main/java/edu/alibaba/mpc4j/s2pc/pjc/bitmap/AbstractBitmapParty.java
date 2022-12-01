@@ -6,11 +6,7 @@ import edu.alibaba.mpc4j.common.rpc.Party;
 import edu.alibaba.mpc4j.common.rpc.Rpc;
 import edu.alibaba.mpc4j.common.rpc.desc.PtoDesc;
 import edu.alibaba.mpc4j.common.rpc.pto.AbstractSecureTwoPartyPto;
-import org.roaringbitmap.BitmapContainer;
-import org.roaringbitmap.ContainerPointer;
-import org.roaringbitmap.RoaringBitmap;
 
-import static edu.alibaba.mpc4j.s2pc.pjc.bitmap.SecureBitmapContainer.CONTAINERS_NUM;
 
 /**
  * @author Li Peng (jerry.pl@alibaba-inc.com)

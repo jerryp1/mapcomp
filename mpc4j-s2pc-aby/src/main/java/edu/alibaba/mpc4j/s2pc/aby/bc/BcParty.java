@@ -129,7 +129,7 @@ public interface BcParty extends TwoPartyPto, SecurePto {
      * @param bitLength   输入bit长度
      * @return BcBitVector
      */
-    BcSquareVector setOtherInputs(int arrayLength, int bitLength);
+    BcSquareVector setOtherInputs(int bitLength);
 
 
     /**

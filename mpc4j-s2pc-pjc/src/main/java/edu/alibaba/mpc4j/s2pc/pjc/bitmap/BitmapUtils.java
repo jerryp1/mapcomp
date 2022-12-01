@@ -2,12 +2,14 @@ package edu.alibaba.mpc4j.s2pc.pjc.bitmap;
 
 import com.sun.org.slf4j.internal.Logger;
 import com.sun.org.slf4j.internal.LoggerFactory;
+import edu.alibaba.mpc4j.common.tool.utils.CommonUtils;
 import edu.alibaba.mpc4j.common.tool.utils.LongUtils;
+import org.junit.Assert;
 import org.roaringbitmap.BitmapContainer;
 import org.roaringbitmap.ContainerPointer;
 import org.roaringbitmap.RoaringBitmap;
 
-import static edu.alibaba.mpc4j.s2pc.pjc.bitmap.SecureBitmapContainer.*;
+import static edu.alibaba.mpc4j.s2pc.pjc.bitmap.SecureBitmapContainer.CONTAINER_BYTE_SIZE;
 
 /**
  * Bitmap工具类
@@ -18,19 +20,23 @@ import static edu.alibaba.mpc4j.s2pc.pjc.bitmap.SecureBitmapContainer.*;
 public class BitmapUtils {
     private static final Logger LOGGER = LoggerFactory.getLogger(BitmapUtils.class);
 
-    public static byte[] roaringBitmapToBytes(RoaringBitmap roaringBitmap) {
-        // TODO 这里是否要检测，元素是否超过2^24?
-        BitmapContainer[] cs = expandContainers(roaringBitmap);
-        byte[] bytes = new byte[BYTE_LENGTH];
+    /**
+     * 将roaringBitmap转换为byte[]
+     * @param roaringBitmap 将roaringBitmap转换为byte
+     * @param maxNum 最大元素数量
+     * @return byte[]
+     */
+    public static byte[] roaringBitmapToBytes(RoaringBitmap roaringBitmap, int maxNum) {
+        int containerNum = getContainerNum(maxNum);
+        BitmapContainer[] cs = expandContainers(roaringBitmap, containerNum);
+        byte[] bytes = new byte[CommonUtils.getUnitNum(getBitLength(maxNum), Byte.SIZE)];
         for (int i = 0; i < cs.length; i++) {
-            // TODO 这里对转换后的长度没有做检测
             byte[] bitmap = LongUtils.longArrayToByteArrayLE(cs[i].toLongBuffer().array());
-            assert bitmap.length == BitmapContainer.MAX_CAPACITY / Byte.SIZE;
+            Assert.assertEquals(BitmapContainer.MAX_CAPACITY / Byte.SIZE, bitmap.length);
             System.arraycopy(bitmap, 0, bytes, i * CONTAINER_BYTE_SIZE, CONTAINER_BYTE_SIZE);
         }
         return bytes;
     }
-
 
     /**
      * 将roaringBitmap拓展为全量bitmap容器
@@ -38,12 +44,12 @@ public class BitmapUtils {
      * @param roaringBitmap roaringBitmap
      * @return 全量bitmap容器
      */
-    public static BitmapContainer[] expandContainers(RoaringBitmap roaringBitmap) {
+    public static BitmapContainer[] expandContainers(RoaringBitmap roaringBitmap, int containerNum) {
         ContainerPointer cp = roaringBitmap.getContainerPointer();
         if (cp.getCardinality() == 0) {
             LOGGER.error("error cardinality {}", cp.getCardinality());
         }
-        BitmapContainer[] cs = new BitmapContainer[CONTAINERS_NUM];
+        BitmapContainer[] cs = new BitmapContainer[containerNum];
         int lastKey = -1;
         while (cp.getContainer() != null) {
             int currentKey = cp.key();
@@ -52,7 +58,7 @@ public class BitmapUtils {
             lastKey = currentKey;
             cp.advance();
         }
-        expandContainers(cs, lastKey, CONTAINERS_NUM);
+        expandContainers(cs, lastKey, containerNum);
         return cs;
     }
 
@@ -73,5 +79,23 @@ public class BitmapUtils {
         for (int i = lastKey + 1; i < currentKey; i++) {
             cs[i] = new BitmapContainer();
         }
+    }
+
+    /**
+     * 获得maxNum数量个元素至少需要多少个Container存储
+     * @param maxNum 最大数量
+     * @return 需要的Container数量
+     */
+    public static int getContainerNum(int maxNum) {
+        return maxNum <= BitmapContainer.MAX_CAPACITY ? 1 : (maxNum - 1) / BitmapContainer.MAX_CAPACITY + 1;
+    }
+
+    /**
+     * 获得maxNum数量个元素在Container中至少需要多少bit
+     * @param maxNum 最大数量
+     * @return 需要的bit数量
+     */
+    public static int getBitLength(int maxNum) {
+        return getContainerNum(maxNum) * BitmapContainer.MAX_CAPACITY;
     }
 }

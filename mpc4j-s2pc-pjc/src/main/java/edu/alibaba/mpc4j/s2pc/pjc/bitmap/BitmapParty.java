@@ -11,9 +11,6 @@ import org.roaringbitmap.RoaringBitmap;
 
 import java.util.Arrays;
 
-import static edu.alibaba.mpc4j.s2pc.pjc.bitmap.SecureBitmapContainer.BIT_LENGTH;
-import static edu.alibaba.mpc4j.s2pc.pjc.bitmap.SecureBitmapContainer.CONTAINERS_NUM;
-
 /**
  * Bitmap参与方类
  *
@@ -74,23 +71,35 @@ public interface BitmapParty extends TwoPartyPto, SecurePto {
     SecureBitmapContainer or(SecureBitmapContainer xi, SecureBitmapContainer yi) throws MpcAbortException;
 
     /**
-     * RoaringBitmap -> SecureContainer
+     * 执行count运算，获得当前secureBitmapContainer中的元素个数。
      *
-     * @param roaringBitmap roaringBitmap
-     * @return SecureBitmapContainer
+     * @param x x。
+     * @return 元素个数。
+     * @throws MpcAbortException 如果协议异常中止。
      */
-    SecureBitmapContainer setOwnRoaringBitmap(RoaringBitmap roaringBitmap);
+    int count(SecureBitmapContainer x) throws MpcAbortException;
 
     /**
      * RoaringBitmap -> SecureContainer
      *
+     * @param roaringBitmap roaringBitmap
+     * @param maxNum        max num of elements
      * @return SecureBitmapContainer
      */
-    SecureBitmapContainer setOtherRoaringBitmap();
+    SecureBitmapContainer setOwnRoaringBitmap(RoaringBitmap roaringBitmap, int maxNum);
 
-    default SecureBitmapContainer setPublicRoaringBitmap(RoaringBitmap roaringBitmap) {
-        byte[] bytes = BitmapUtils.roaringBitmapToBytes(roaringBitmap);
-        BcSquareVector vector = BcSquareVector.create(bytes, BIT_LENGTH, true);
+    /**
+     * RoaringBitmap -> SecureContainer
+     *
+     * @param maxNum max num of elements
+     * @return SecureBitmapContainer
+     */
+    SecureBitmapContainer setOtherRoaringBitmap(int maxNum);
+
+    default SecureBitmapContainer setPublicRoaringBitmap(RoaringBitmap roaringBitmap, int maxNum) {
+        int maxBitLength = BitmapUtils.getBitLength(maxNum);
+        byte[] bytes = BitmapUtils.roaringBitmapToBytes(roaringBitmap, maxBitLength);
+        BcSquareVector vector = BcSquareVector.create(bytes, maxBitLength, true);
         return new SecureBitmapContainer(vector);
     }
 
@@ -102,8 +111,6 @@ public interface BitmapParty extends TwoPartyPto, SecurePto {
     default RoaringBitmap toOwnRoaringBitmap(SecureBitmapContainer secureBitmapContainer) {
         // 先reveal所有元素
         long[][] bitmaps = revealOwn(secureBitmapContainer);
-        assert bitmaps.length == CONTAINERS_NUM;
-        assert bitmaps[0].length == BitmapContainer.MAX_CAPACITY;
         RoaringBitmap roaringBitmap = new RoaringBitmap();
         // 获得各container内元素数量
         int[] cardinalities = Arrays.stream(bitmaps).mapToInt(bitmap ->
@@ -127,7 +134,7 @@ public interface BitmapParty extends TwoPartyPto, SecurePto {
      * @param secureBitmapContainer secureBitmapContainer
      */
     default void toOtherRoaringBitmap(SecureBitmapContainer secureBitmapContainer) {
-        // 先reveal所有元素
+        // reveal所有元素
         revealOther(secureBitmapContainer);
     }
 

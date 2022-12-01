@@ -8,6 +8,7 @@ import edu.alibaba.mpc4j.common.rpc.Rpc;
 import edu.alibaba.mpc4j.common.rpc.utils.DataPacket;
 import edu.alibaba.mpc4j.common.rpc.utils.DataPacketHeader;
 import edu.alibaba.mpc4j.common.tool.utils.BytesUtils;
+import edu.alibaba.mpc4j.common.tool.utils.CommonUtils;
 import edu.alibaba.mpc4j.s2pc.aby.bc.AbstractBcParty;
 import edu.alibaba.mpc4j.s2pc.aby.bc.BcSquareVector;
 import edu.alibaba.mpc4j.s2pc.pcg.mtg.z2.Z2MtgFactory;
@@ -200,7 +201,7 @@ public class Bea91BcSender extends AbstractBcParty {
         assert arrayLength == (bitLength + Byte.SIZE - 1) / Byte.SIZE;
         info("客户端设置客户端输入，客户端输入数组长度{}，数据比特长度{}", arrayLength, bitLength);
         // 构造sender标签
-        byte[] senderInputWire = new byte[(bitLength - 1) / Byte.SIZE + 1];
+        byte[] senderInputWire = new byte[CommonUtils.getByteLength(bitLength)];
         secureRandom.nextBytes(senderInputWire);
         // 按顺序打包receiver标签
         byte[] labelArrays = BytesUtils.xor(senderInputs, senderInputWire);
@@ -216,14 +217,14 @@ public class Bea91BcSender extends AbstractBcParty {
     }
 
     @Override
-    public BcSquareVector setOtherInputs(int arrayLength, int bitLength) {
+    public BcSquareVector setOtherInputs(int bitLength) {
         DataPacketHeader labelHeader = new DataPacketHeader(
                 taskId, getPtoDesc().getPtoId(), PtoStep.RECEIVER_SEND_INPUT.ordinal(), num,
                 otherParty().getPartyId(), ownParty().getPartyId()
         );
         byte[] label = rpc.receive(labelHeader).getPayload().get(0);
         // 检查数据包长度
-        Preconditions.checkArgument(label.length == arrayLength);
+        Preconditions.checkArgument(label.length == CommonUtils.getByteLength(bitLength));
         // 返回秘密分享值标签
         return BcSquareVector.create(label, bitLength, false);
     }

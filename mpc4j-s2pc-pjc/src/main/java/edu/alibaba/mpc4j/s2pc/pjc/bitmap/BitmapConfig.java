@@ -1,6 +1,8 @@
 package edu.alibaba.mpc4j.s2pc.pjc.bitmap;
 
 import edu.alibaba.mpc4j.common.rpc.pto.SecurePtoConfig;
+import edu.alibaba.mpc4j.s2pc.aby.bc.BcConfig;
+import edu.alibaba.mpc4j.s2pc.aby.hamming.HammingConfig;
 import edu.alibaba.mpc4j.s2pc.pjc.bitmap.BitmapFactory.BitmapType;
 
 /**
@@ -23,4 +25,18 @@ public interface BitmapConfig extends SecurePtoConfig {
      * @return 底层协议最大数量。
      */
     int maxBaseNum();
+
+    /**
+     * 返回Bc协议配置项
+     *
+     * @return Bc协议配置项
+     */
+    BcConfig getBcConfig();
+
+    /**
+     * 返回汉明距离协议配置项
+     *
+     * @return 汉明距离协议配置项
+     */
+    HammingConfig getHammingConfig();
 }

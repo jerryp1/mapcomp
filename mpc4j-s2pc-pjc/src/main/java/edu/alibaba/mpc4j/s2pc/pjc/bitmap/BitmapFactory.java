@@ -4,6 +4,7 @@ import edu.alibaba.mpc4j.common.rpc.Party;
 import edu.alibaba.mpc4j.common.rpc.Rpc;
 import edu.alibaba.mpc4j.common.rpc.desc.SecurityModel;
 import edu.alibaba.mpc4j.s2pc.aby.bc.BcFactory;
+import edu.alibaba.mpc4j.s2pc.aby.hamming.HammingFactory;
 import edu.alibaba.mpc4j.s2pc.pjc.bitmap.liu22.Liu22BitmapConfig;
 import edu.alibaba.mpc4j.s2pc.pjc.bitmap.liu22.Liu22BitmapReceiver;
 import edu.alibaba.mpc4j.s2pc.pjc.bitmap.liu22.Liu22BitmapSender;
@@ -44,7 +45,7 @@ public class BitmapFactory {
         BitmapType type = config.getPtoType();
         switch (type) {
             case LIU22:
-                return new Liu22BitmapSender(senderRpc, receiverParty, (Liu22BitmapConfig) config);
+                return new Liu22BitmapSender(senderRpc, receiverParty, config);
             default:
                 throw new IllegalArgumentException("Invalid BitmapType: " + type.name());
         }
@@ -62,7 +63,7 @@ public class BitmapFactory {
         BitmapType type = config.getPtoType();
         switch (type) {
             case LIU22:
-                return new Liu22BitmapReceiver(receiverRpc, senderParty, (Liu22BitmapConfig) config);
+                return new Liu22BitmapReceiver(receiverRpc, senderParty, config);
             default:
                 throw new IllegalArgumentException("Invalid BitmapType: " + type.name());
         }
@@ -79,10 +80,12 @@ public class BitmapFactory {
             case IDEAL:
                 return new Liu22BitmapConfig.Builder()
                         .setBcConfig(BcFactory.createDefaultConfig(SecurityModel.IDEAL))
+                        .setHammingConfig(HammingFactory.createDefaultConfig(SecurityModel.IDEAL))
                         .build();
             case SEMI_HONEST:
                 return new Liu22BitmapConfig.Builder()
                         .setBcConfig(BcFactory.createDefaultConfig(SecurityModel.SEMI_HONEST))
+                        .setHammingConfig(HammingFactory.createDefaultConfig(SecurityModel.SEMI_HONEST))
                         .build();
             case COVERT:
             case MALICIOUS:
