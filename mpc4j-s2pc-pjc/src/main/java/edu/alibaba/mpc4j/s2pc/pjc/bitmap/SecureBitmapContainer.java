@@ -18,7 +18,7 @@ public class SecureBitmapContainer {
      */
     public static final int CONTAINER_BYTE_SIZE = BitmapContainer.MAX_CAPACITY / Byte.SIZE;
     /**
-     * 容器数量，暂时为所有容器总和
+     * 容器数量
      */
     private final int containerNum;
     /**

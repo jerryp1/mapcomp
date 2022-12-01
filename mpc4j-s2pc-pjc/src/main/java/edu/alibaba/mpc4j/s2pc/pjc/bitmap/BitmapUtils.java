@@ -3,13 +3,13 @@ package edu.alibaba.mpc4j.s2pc.pjc.bitmap;
 import com.sun.org.slf4j.internal.Logger;
 import com.sun.org.slf4j.internal.LoggerFactory;
 import edu.alibaba.mpc4j.common.tool.utils.CommonUtils;
-import edu.alibaba.mpc4j.common.tool.utils.LongUtils;
-import org.junit.Assert;
 import org.roaringbitmap.BitmapContainer;
 import org.roaringbitmap.ContainerPointer;
 import org.roaringbitmap.RoaringBitmap;
 
-import static edu.alibaba.mpc4j.s2pc.pjc.bitmap.SecureBitmapContainer.CONTAINER_BYTE_SIZE;
+import java.nio.ByteBuffer;
+import java.nio.ByteOrder;
+import java.util.Arrays;
 
 /**
  * Bitmap工具类
@@ -29,13 +29,9 @@ public class BitmapUtils {
     public static byte[] roaringBitmapToBytes(RoaringBitmap roaringBitmap, int maxNum) {
         int containerNum = getContainerNum(maxNum);
         BitmapContainer[] cs = expandContainers(roaringBitmap, containerNum);
-        byte[] bytes = new byte[CommonUtils.getUnitNum(getBitLength(maxNum), Byte.SIZE)];
-        for (int i = 0; i < cs.length; i++) {
-            byte[] bitmap = LongUtils.longArrayToByteArrayLE(cs[i].toLongBuffer().array());
-            Assert.assertEquals(BitmapContainer.MAX_CAPACITY / Byte.SIZE, bitmap.length);
-            System.arraycopy(bitmap, 0, bytes, i * CONTAINER_BYTE_SIZE, CONTAINER_BYTE_SIZE);
-        }
-        return bytes;
+        ByteBuffer buffer = ByteBuffer.allocate(CommonUtils.getUnitNum(getBitLength(maxNum), Byte.SIZE)).order(ByteOrder.LITTLE_ENDIAN);
+        Arrays.stream(cs).forEach(c -> c.writeArray(buffer));
+        return buffer.array();
     }
 
     /**
