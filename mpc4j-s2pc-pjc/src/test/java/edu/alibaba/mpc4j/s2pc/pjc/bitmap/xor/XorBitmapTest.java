@@ -1,4 +1,4 @@
-package edu.alibaba.mpc4j.s2pc.pjc.bitmap.count;
+package edu.alibaba.mpc4j.s2pc.pjc.bitmap.xor;
 
 import edu.alibaba.mpc4j.common.rpc.Rpc;
 import edu.alibaba.mpc4j.common.rpc.RpcManager;
@@ -6,11 +6,7 @@ import edu.alibaba.mpc4j.common.rpc.impl.memory.MemoryRpcManager;
 import edu.alibaba.mpc4j.common.tool.EnvType;
 import edu.alibaba.mpc4j.common.tool.crypto.kdf.Kdf;
 import edu.alibaba.mpc4j.common.tool.crypto.kdf.KdfFactory;
-import edu.alibaba.mpc4j.s2pc.pjc.bitmap.BitmapConfig;
-import edu.alibaba.mpc4j.s2pc.pjc.bitmap.BitmapParty;
-import edu.alibaba.mpc4j.s2pc.pjc.bitmap.BitmapReceiver;
-import edu.alibaba.mpc4j.s2pc.pjc.bitmap.BitmapSender;
-import edu.alibaba.mpc4j.s2pc.pjc.bitmap.SecureBitmapConfig;
+import edu.alibaba.mpc4j.s2pc.pjc.bitmap.*;
 import org.apache.commons.lang3.time.StopWatch;
 import org.junit.Assert;
 import org.junit.Test;
@@ -22,19 +18,20 @@ import org.slf4j.LoggerFactory;
 
 import java.security.SecureRandom;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.IntStream;
 
 
 /**
- * Bitmap and测试类
+ * Bitmap xor测试类
  * @author Li Peng   
  * @date 2022/11/24
  */
 @RunWith(Parameterized.class)
-public class CountBitmapTest {
-    private static final Logger LOGGER = LoggerFactory.getLogger(CountBitmapTest.class);
+public class XorBitmapTest {
+    private static final Logger LOGGER = LoggerFactory.getLogger(XorBitmapTest.class);
     /**
      * 随机状态
      */
@@ -79,7 +76,7 @@ public class CountBitmapTest {
      */
     private final boolean yPublic;
 
-    public CountBitmapTest(BitmapConfig bitmapConfig, boolean xPublic, boolean yPublic) {
+    public XorBitmapTest(BitmapConfig bitmapConfig, boolean xPublic, boolean yPublic) {
         RpcManager rpcManager = new MemoryRpcManager(2);
         senderRpc = rpcManager.getRpc(0);
         receiverRpc = rpcManager.getRpc(1);
@@ -156,6 +153,7 @@ public class CountBitmapTest {
         System.out.println(123);
     }
 
+
     private void testBitmap(BitmapParty sender, BitmapParty receiver, int maxNum) {
         long randomTaskId = Math.abs(SECURE_RANDOM.nextLong());
         sender.setTaskId(randomTaskId);
@@ -169,8 +167,8 @@ public class CountBitmapTest {
 
         try {
             LOGGER.info("-----test {} start-----", sender.getPtoDesc().getPtoName());
-            CountBitmapSenderThread senderThread = new CountBitmapSenderThread(sender, xPlain, xPublic, yPublic ? yPlain : null, yPublic, maxNum);
-            CountBitmapReceiverThread receiverThread = new CountBitmapReceiverThread(receiver, xPublic ? xPlain : null, xPublic, yPlain, yPublic, maxNum);
+            XorBitmapSenderThread senderThread = new XorBitmapSenderThread(sender, xPlain, xPublic, yPublic ? yPlain : null, yPublic, maxNum);
+            XorBitmapReceiverThread receiverThread = new XorBitmapReceiverThread(receiver, xPublic ? xPlain : null, xPublic, yPlain, yPublic, maxNum);
 
             StopWatch stopWatch = new StopWatch();
             // 开始执行协议
@@ -187,10 +185,10 @@ public class CountBitmapTest {
             senderRpc.reset();
             receiverRpc.reset();
 
-            int countResult = receiverThread.getCount();
+            RoaringBitmap zResult = receiverThread.getOutput();
 
             // 验证结果
-            assertOutput(xPlain, yPlain, countResult);
+            assertOutput(xPlain, yPlain, zResult);
             LOGGER.info("Sender sends {}B, Receiver sends {}B, time = {}ms",
                     senderByteLength, receiverByteLength, time
             );
@@ -200,12 +198,14 @@ public class CountBitmapTest {
         }
     }
 
-    private void assertOutput(RoaringBitmap xPlain, RoaringBitmap yPlain, int countResult) {
+
+    private void assertOutput(RoaringBitmap xPlain, RoaringBitmap yPlain, RoaringBitmap zResult) {
         RoaringBitmap zPlain = xPlain.clone();
-        zPlain.and(yPlain);
-        System.out.println("zPlain count:" + zPlain.getCardinality());
-        System.out.println("countResult:" + countResult);
-        Assert.assertEquals(zPlain.getCardinality(), countResult);
+        zPlain.xor(yPlain);
+        System.out.println("zResult(top100 elements):" + Arrays.toString(zResult.stream().limit(100).toArray()));
+        System.out.println("zPlain(top100 elements):" + Arrays.toString(zPlain.stream().limit(100).toArray()));
+        Assert.assertEquals(zResult.toString(), zPlain.toString());
+        Assert.assertEquals(zResult, zResult);
     }
 
 }

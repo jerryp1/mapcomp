@@ -52,13 +52,9 @@ public class AndBitmapTest {
     @Parameterized.Parameters(name = "{0}")
     public static Collection<Object[]> configurations() {
         Collection<Object[]> configurationParams = new ArrayList<>();
-        // Liu22
         configurationParams.add(new Object[]{new SecureBitmapConfig.Builder().build(), false, false});
-        // Liu22
         configurationParams.add(new Object[]{new SecureBitmapConfig.Builder().build(), true, false});
-        // Liu22
         configurationParams.add(new Object[]{new SecureBitmapConfig.Builder().build(), false, true});
-        // Liu22
         configurationParams.add(new Object[]{new SecureBitmapConfig.Builder().build(), true, true});
         return configurationParams;
     }
