@@ -1,4 +1,4 @@
-package edu.alibaba.mpc4j.s2pc.pjc.bitmap.liu22;
+package edu.alibaba.mpc4j.s2pc.pjc.bitmap;
 
 import edu.alibaba.mpc4j.common.rpc.desc.SecurityModel;
 import edu.alibaba.mpc4j.common.tool.EnvType;
@@ -6,17 +6,16 @@ import edu.alibaba.mpc4j.s2pc.aby.bc.BcConfig;
 import edu.alibaba.mpc4j.s2pc.aby.bc.BcFactory;
 import edu.alibaba.mpc4j.s2pc.aby.hamming.HammingConfig;
 import edu.alibaba.mpc4j.s2pc.aby.hamming.HammingFactory;
-import edu.alibaba.mpc4j.s2pc.pjc.bitmap.BitmapConfig;
+import edu.alibaba.mpc4j.s2pc.pjc.bitmap.BitmapPtoDesc.BitmapType;
 
-import static edu.alibaba.mpc4j.s2pc.pjc.bitmap.BitmapFactory.BitmapType;
 
 /**
  * Liu22 bitmap协议配置项。
  *
- * @author Li Peng (jerry.pl@alibaba-inc.com)
+ * @author Li Peng  
  * @date 2022/11/24
  */
-public class Liu22BitmapConfig implements BitmapConfig {
+public class SecureBitmapConfig implements BitmapConfig {
     /**
      * BC协议
      */
@@ -26,14 +25,14 @@ public class Liu22BitmapConfig implements BitmapConfig {
      */
     private final HammingConfig hammingConfig;
 
-    private Liu22BitmapConfig(Builder builder) {
+    private SecureBitmapConfig(Builder builder) {
         bcConfig = builder.bcConfig;
         hammingConfig = builder.hammingConfig;
     }
 
     @Override
     public BitmapType getPtoType() {
-        return BitmapType.LIU22;
+        return BitmapType.BITMAP;
     }
 
     @Override
@@ -70,7 +69,7 @@ public class Liu22BitmapConfig implements BitmapConfig {
         return hammingConfig;
     }
 
-    public static class Builder implements org.apache.commons.lang3.builder.Builder<Liu22BitmapConfig> {
+    public static class Builder implements org.apache.commons.lang3.builder.Builder<SecureBitmapConfig> {
         /**
          * BTG协议配置项
          */
@@ -96,8 +95,8 @@ public class Liu22BitmapConfig implements BitmapConfig {
         }
 
         @Override
-        public Liu22BitmapConfig build() {
-            return new Liu22BitmapConfig(this);
+        public SecureBitmapConfig build() {
+            return new SecureBitmapConfig(this);
         }
     }
 }

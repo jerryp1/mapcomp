@@ -1,4 +1,4 @@
-package edu.alibaba.mpc4j.s2pc.pjc.bitmap.liu22;
+package edu.alibaba.mpc4j.s2pc.pjc.bitmap;
 
 import com.google.common.base.Preconditions;
 import edu.alibaba.mpc4j.common.rpc.MpcAbortException;
@@ -11,26 +11,23 @@ import edu.alibaba.mpc4j.s2pc.aby.bc.BcParty;
 import edu.alibaba.mpc4j.s2pc.aby.bc.BcSquareVector;
 import edu.alibaba.mpc4j.s2pc.aby.hamming.HammingFactory;
 import edu.alibaba.mpc4j.s2pc.aby.hamming.HammingParty;
-import edu.alibaba.mpc4j.s2pc.pjc.bitmap.AbstractBitmapParty;
-import edu.alibaba.mpc4j.s2pc.pjc.bitmap.BitmapConfig;
-import edu.alibaba.mpc4j.s2pc.pjc.bitmap.BitmapFactory.BitmapType;
-import edu.alibaba.mpc4j.s2pc.pjc.bitmap.BitmapUtils;
-import edu.alibaba.mpc4j.s2pc.pjc.bitmap.SecureBitmapContainer;
 import org.junit.Assert;
 import org.roaringbitmap.RoaringBitmap;
 
 import java.util.concurrent.TimeUnit;
 import java.util.stream.IntStream;
 
+import static edu.alibaba.mpc4j.s2pc.pjc.bitmap.BitmapPtoDesc.BitmapType;
+import static edu.alibaba.mpc4j.s2pc.pjc.bitmap.BitmapPtoDesc.getInstance;
 import static edu.alibaba.mpc4j.s2pc.pjc.bitmap.SecureBitmapContainer.CONTAINER_BYTE_SIZE;
 
 /**
  * Liu22-Bitmap协议客户端。
  *
- * @author Li Peng (jerry.pl@alibaba-inc.com)
+ * @author Li Peng  
  * @date 2022/11/24
  */
-public class Liu22BitmapReceiver extends AbstractBitmapParty {
+public class BitmapReceiver extends AbstractBitmapParty {
     /**
      * Bc协议接收端
      */
@@ -40,8 +37,8 @@ public class Liu22BitmapReceiver extends AbstractBitmapParty {
      */
     private final HammingParty hammingReceiver;
 
-    public Liu22BitmapReceiver(Rpc receiverRpc, Party senderParty, BitmapConfig bitmapConfig) {
-        super(Liu22BitmapPtoDesc.getInstance(), receiverRpc, senderParty, bitmapConfig);
+    public BitmapReceiver(Rpc receiverRpc, Party senderParty, BitmapConfig bitmapConfig) {
+        super(getInstance(), receiverRpc, senderParty, bitmapConfig);
         bcReceiver = BcFactory.createReceiver(receiverRpc, senderParty, bitmapConfig.getBcConfig());
         bcReceiver.addLogLevel();
         hammingReceiver = HammingFactory.createReceiver(receiverRpc, senderParty, bitmapConfig.getHammingConfig());
@@ -105,7 +102,7 @@ public class Liu22BitmapReceiver extends AbstractBitmapParty {
 
     @Override
     public BitmapType getPtoType() {
-        return BitmapType.LIU22;
+        return BitmapType.BITMAP;
     }
 
     @Override

@@ -4,7 +4,7 @@ import edu.alibaba.mpc4j.common.rpc.MpcAbortException;
 import edu.alibaba.mpc4j.common.rpc.pto.SecurePto;
 import edu.alibaba.mpc4j.common.rpc.pto.TwoPartyPto;
 import edu.alibaba.mpc4j.s2pc.aby.bc.BcSquareVector;
-import edu.alibaba.mpc4j.s2pc.pjc.bitmap.BitmapFactory.BitmapType;
+import edu.alibaba.mpc4j.s2pc.pjc.bitmap.BitmapPtoDesc.BitmapType;
 import org.roaringbitmap.BitmapContainer;
 import org.roaringbitmap.Container;
 import org.roaringbitmap.RoaringBitmap;
@@ -14,7 +14,7 @@ import java.util.Arrays;
 /**
  * Bitmap参与方类
  *
- * @author Li Peng (jerry.pl@alibaba-inc.com)
+ * @author Li Peng  
  * @date 2022/11/24
  */
 public interface BitmapParty extends TwoPartyPto, SecurePto {

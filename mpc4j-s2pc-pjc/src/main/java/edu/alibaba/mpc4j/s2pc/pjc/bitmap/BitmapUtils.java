@@ -14,7 +14,7 @@ import java.util.Arrays;
 /**
  * Bitmap工具类
  *
- * @author Li Peng (jerry.pl@alibaba-inc.com)
+ * @author Li Peng  
  * @date 2022/11/28
  */
 public class BitmapUtils {
@@ -22,8 +22,9 @@ public class BitmapUtils {
 
     /**
      * 将roaringBitmap转换为byte[]
+     *
      * @param roaringBitmap 将roaringBitmap转换为byte
-     * @param maxNum 最大元素数量
+     * @param maxNum        最大元素数量
      * @return byte[]
      */
     public static byte[] roaringBitmapToBytes(RoaringBitmap roaringBitmap, int maxNum) {
@@ -79,6 +80,7 @@ public class BitmapUtils {
 
     /**
      * 获得maxNum数量个元素至少需要多少个Container存储
+     *
      * @param maxNum 最大数量
      * @return 需要的Container数量
      */
@@ -88,6 +90,7 @@ public class BitmapUtils {
 
     /**
      * 获得maxNum数量个元素在Container中至少需要多少bit
+     *
      * @param maxNum 最大数量
      * @return 需要的bit数量
      */

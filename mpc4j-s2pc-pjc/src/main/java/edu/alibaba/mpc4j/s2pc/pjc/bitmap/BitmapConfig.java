@@ -3,12 +3,12 @@ package edu.alibaba.mpc4j.s2pc.pjc.bitmap;
 import edu.alibaba.mpc4j.common.rpc.pto.SecurePtoConfig;
 import edu.alibaba.mpc4j.s2pc.aby.bc.BcConfig;
 import edu.alibaba.mpc4j.s2pc.aby.hamming.HammingConfig;
-import edu.alibaba.mpc4j.s2pc.pjc.bitmap.BitmapFactory.BitmapType;
+import edu.alibaba.mpc4j.s2pc.pjc.bitmap.BitmapPtoDesc.BitmapType;
 
 /**
  * Bitmap配置类
  *
- * @author Li Peng (jerry.pl@alibaba-inc.com)
+ * @author Li Peng  
  * @date 2022/11/24
  */
 public interface BitmapConfig extends SecurePtoConfig {

@@ -1,4 +1,4 @@
-package edu.alibaba.mpc4j.s2pc.pjc.bitmap.liu22;
+package edu.alibaba.mpc4j.s2pc.pjc.bitmap;
 
 import com.google.common.base.Preconditions;
 import edu.alibaba.mpc4j.common.rpc.MpcAbortException;
@@ -11,11 +11,7 @@ import edu.alibaba.mpc4j.s2pc.aby.bc.BcParty;
 import edu.alibaba.mpc4j.s2pc.aby.bc.BcSquareVector;
 import edu.alibaba.mpc4j.s2pc.aby.hamming.HammingFactory;
 import edu.alibaba.mpc4j.s2pc.aby.hamming.HammingParty;
-import edu.alibaba.mpc4j.s2pc.pjc.bitmap.AbstractBitmapParty;
-import edu.alibaba.mpc4j.s2pc.pjc.bitmap.BitmapConfig;
-import edu.alibaba.mpc4j.s2pc.pjc.bitmap.BitmapFactory.BitmapType;
-import edu.alibaba.mpc4j.s2pc.pjc.bitmap.BitmapUtils;
-import edu.alibaba.mpc4j.s2pc.pjc.bitmap.SecureBitmapContainer;
+import edu.alibaba.mpc4j.s2pc.pjc.bitmap.BitmapPtoDesc.BitmapType;
 import org.roaringbitmap.RoaringBitmap;
 
 import java.util.concurrent.TimeUnit;
@@ -26,10 +22,10 @@ import static edu.alibaba.mpc4j.s2pc.pjc.bitmap.SecureBitmapContainer.CONTAINER_
 /**
  * Liu22-Bitmap协议服务端。
  *
- * @author Li Peng (jerry.pl@alibaba-inc.com)
+ * @author Li Peng  
  * @date 2022/11/24
  */
-public class Liu22BitmapSender extends AbstractBitmapParty {
+public class BitmapSender extends AbstractBitmapParty {
     /**
      * Bc协议发送端
      */
@@ -39,8 +35,8 @@ public class Liu22BitmapSender extends AbstractBitmapParty {
      */
     private final HammingParty hammingSender;
 
-    public Liu22BitmapSender(Rpc senderRpc, Party receiverParty, BitmapConfig bitmapConfig) {
-        super(Liu22BitmapPtoDesc.getInstance(), senderRpc, receiverParty, bitmapConfig);
+    public BitmapSender(Rpc senderRpc, Party receiverParty, BitmapConfig bitmapConfig) {
+        super(BitmapPtoDesc.getInstance(), senderRpc, receiverParty, bitmapConfig);
         bcSender = BcFactory.createSender(senderRpc, receiverParty, bitmapConfig.getBcConfig());
         bcSender.addLogLevel();
         hammingSender = HammingFactory.createSender(senderRpc, receiverParty, bitmapConfig.getHammingConfig());
@@ -100,7 +96,7 @@ public class Liu22BitmapSender extends AbstractBitmapParty {
 
     @Override
     public BitmapType getPtoType() {
-        return BitmapType.LIU22;
+        return BitmapType.BITMAP;
     }
 
     @Override

@@ -11,7 +11,7 @@ import org.roaringbitmap.RoaringBitmap;
 /**
  * Bitmap发送方线程
  *
- * @author Li Peng (jerry.pl@alibaba-inc.com)
+ * @author Li Peng   
  * @date 2022/11/24
  */
 class AndBitmapSenderThread extends Thread {

@@ -9,11 +9,11 @@ import edu.alibaba.mpc4j.common.rpc.pto.AbstractSecureTwoPartyPto;
 
 
 /**
- * @author Li Peng (jerry.pl@alibaba-inc.com)
+ * Bitmap参与方抽象类
+ * @author Li Peng  
  * @date 2022/11/24
  */
 public abstract class AbstractBitmapParty extends AbstractSecureTwoPartyPto implements BitmapParty {
-    private static final Logger LOGGER = LoggerFactory.getLogger(AbstractBitmapParty.class);
     /**
      * BitmapConfig
      */

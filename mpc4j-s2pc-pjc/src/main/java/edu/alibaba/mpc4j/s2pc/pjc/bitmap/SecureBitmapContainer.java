@@ -8,7 +8,7 @@ import org.roaringbitmap.BitmapContainer;
 /**
  * 安全Bitmap容器
  *
- * @author Li Peng (jerry.pl@alibaba-inc.com)
+ * @author Li Peng  
  * @date 2022/11/24
  */
 public class SecureBitmapContainer {

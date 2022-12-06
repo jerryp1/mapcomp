@@ -1,6 +1,5 @@
 package edu.alibaba.mpc4j.s2pc.pjc.bitmap.and;
 
-import com.google.common.base.Preconditions;
 import edu.alibaba.mpc4j.common.rpc.Rpc;
 import edu.alibaba.mpc4j.common.rpc.RpcManager;
 import edu.alibaba.mpc4j.common.rpc.impl.memory.MemoryRpcManager;
@@ -8,10 +7,10 @@ import edu.alibaba.mpc4j.common.tool.EnvType;
 import edu.alibaba.mpc4j.common.tool.crypto.kdf.Kdf;
 import edu.alibaba.mpc4j.common.tool.crypto.kdf.KdfFactory;
 import edu.alibaba.mpc4j.s2pc.pjc.bitmap.BitmapConfig;
-import edu.alibaba.mpc4j.s2pc.pjc.bitmap.BitmapFactory;
 import edu.alibaba.mpc4j.s2pc.pjc.bitmap.BitmapParty;
-import edu.alibaba.mpc4j.s2pc.pjc.bitmap.liu22.Liu22BitmapConfig;
-import org.apache.commons.lang3.StringUtils;
+import edu.alibaba.mpc4j.s2pc.pjc.bitmap.BitmapReceiver;
+import edu.alibaba.mpc4j.s2pc.pjc.bitmap.BitmapSender;
+import edu.alibaba.mpc4j.s2pc.pjc.bitmap.SecureBitmapConfig;
 import org.apache.commons.lang3.time.StopWatch;
 import org.junit.Assert;
 import org.junit.Test;
@@ -28,10 +27,10 @@ import java.util.Collection;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.IntStream;
 
-import static edu.alibaba.mpc4j.s2pc.pjc.bitmap.BitmapFactory.BitmapType;
 
 /**
- * @author Li Peng (jerry.pl@alibaba-inc.com)
+ * Bitmap and测试类
+ * @author Li Peng   
  * @date 2022/11/24
  */
 @RunWith(Parameterized.class)
@@ -54,17 +53,13 @@ public class AndBitmapTest {
     public static Collection<Object[]> configurations() {
         Collection<Object[]> configurationParams = new ArrayList<>();
         // Liu22
-        configurationParams.add(new Object[]{
-                BitmapType.LIU22.name(), new Liu22BitmapConfig.Builder().build(), false, false});
+        configurationParams.add(new Object[]{new SecureBitmapConfig.Builder().build(), false, false});
         // Liu22
-        configurationParams.add(new Object[]{
-                BitmapType.LIU22.name(), new Liu22BitmapConfig.Builder().build(), true, false});
+        configurationParams.add(new Object[]{new SecureBitmapConfig.Builder().build(), true, false});
         // Liu22
-        configurationParams.add(new Object[]{
-                BitmapType.LIU22.name(), new Liu22BitmapConfig.Builder().build(), false, true});
+        configurationParams.add(new Object[]{new SecureBitmapConfig.Builder().build(), false, true});
         // Liu22
-        configurationParams.add(new Object[]{
-                BitmapType.LIU22.name(), new Liu22BitmapConfig.Builder().build(), true, true});
+        configurationParams.add(new Object[]{new SecureBitmapConfig.Builder().build(), true, true});
         return configurationParams;
     }
 
@@ -89,8 +84,7 @@ public class AndBitmapTest {
      */
     private final boolean yPublic;
 
-    public AndBitmapTest(String name, BitmapConfig bitmapConfig, boolean xPublic, boolean yPublic) {
-        Preconditions.checkArgument(StringUtils.isNotBlank(name));
+    public AndBitmapTest(BitmapConfig bitmapConfig, boolean xPublic, boolean yPublic) {
         RpcManager rpcManager = new MemoryRpcManager(2);
         senderRpc = rpcManager.getRpc(0);
         receiverRpc = rpcManager.getRpc(1);
@@ -101,44 +95,44 @@ public class AndBitmapTest {
 
     @Test
     public void testPtoType() {
-        BitmapParty sender = BitmapFactory.createSender(senderRpc, receiverRpc.ownParty(), config);
-        BitmapParty receiver = BitmapFactory.createReceiver(receiverRpc, senderRpc.ownParty(), config);
+        BitmapParty sender = new BitmapSender(senderRpc, receiverRpc.ownParty(), config);
+        BitmapParty receiver = new BitmapReceiver(receiverRpc, senderRpc.ownParty(), config);
         Assert.assertEquals(config.getPtoType(), sender.getPtoType());
         Assert.assertEquals(config.getPtoType(), receiver.getPtoType());
     }
 
     @Test
     public void test1() {
-        BitmapParty sender = BitmapFactory.createSender(senderRpc, receiverRpc.ownParty(), config);
-        BitmapParty receiver = BitmapFactory.createReceiver(receiverRpc, senderRpc.ownParty(), config);
+        BitmapParty sender = new BitmapSender(senderRpc, receiverRpc.ownParty(), config);
+        BitmapParty receiver = new BitmapReceiver(receiverRpc, senderRpc.ownParty(), config);
         testBitmap(sender, receiver, 1);
     }
 
     @Test
     public void test2() {
-        BitmapParty sender = BitmapFactory.createSender(senderRpc, receiverRpc.ownParty(), config);
-        BitmapParty receiver = BitmapFactory.createReceiver(receiverRpc, senderRpc.ownParty(), config);
+        BitmapParty sender = new BitmapSender(senderRpc, receiverRpc.ownParty(), config);
+        BitmapParty receiver = new BitmapReceiver(receiverRpc, senderRpc.ownParty(), config);
         testBitmap(sender, receiver, 2);
     }
 
     @Test
     public void test8() {
-        BitmapParty sender = BitmapFactory.createSender(senderRpc, receiverRpc.ownParty(), config);
-        BitmapParty receiver = BitmapFactory.createReceiver(receiverRpc, senderRpc.ownParty(), config);
+        BitmapParty sender = new BitmapSender(senderRpc, receiverRpc.ownParty(), config);
+        BitmapParty receiver = new BitmapReceiver(receiverRpc, senderRpc.ownParty(), config);
         testBitmap(sender, receiver, 8);
     }
 
     @Test
     public void testDefaultNum() {
-        BitmapParty sender = BitmapFactory.createSender(senderRpc, receiverRpc.ownParty(), config);
-        BitmapParty receiver = BitmapFactory.createReceiver(receiverRpc, senderRpc.ownParty(), config);
+        BitmapParty sender = new BitmapSender(senderRpc, receiverRpc.ownParty(), config);
+        BitmapParty receiver = new BitmapReceiver(receiverRpc, senderRpc.ownParty(), config);
         testBitmap(sender, receiver, DEFAULT_NUM);
     }
 
     @Test
     public void testParallelDefaultNum() {
-        BitmapParty sender = BitmapFactory.createSender(senderRpc, receiverRpc.ownParty(), config);
-        BitmapParty receiver = BitmapFactory.createReceiver(receiverRpc, senderRpc.ownParty(), config);
+        BitmapParty sender = new BitmapSender(senderRpc, receiverRpc.ownParty(), config);
+        BitmapParty receiver = new BitmapReceiver(receiverRpc, senderRpc.ownParty(), config);
         sender.setParallel(true);
         receiver.setParallel(true);
         testBitmap(sender, receiver, DEFAULT_NUM);
@@ -146,15 +140,15 @@ public class AndBitmapTest {
 
     @Test
     public void testLargeNum() {
-        BitmapParty sender = BitmapFactory.createSender(senderRpc, receiverRpc.ownParty(), config);
-        BitmapParty receiver = BitmapFactory.createReceiver(receiverRpc, senderRpc.ownParty(), config);
+        BitmapParty sender = new BitmapSender(senderRpc, receiverRpc.ownParty(), config);
+        BitmapParty receiver = new BitmapReceiver(receiverRpc, senderRpc.ownParty(), config);
         testBitmap(sender, receiver, LARGE_NUM);
     }
 
     @Test
     public void testParallelLargeNum() {
-        BitmapParty sender = BitmapFactory.createSender(senderRpc, receiverRpc.ownParty(), config);
-        BitmapParty receiver = BitmapFactory.createReceiver(receiverRpc, senderRpc.ownParty(), config);
+        BitmapParty sender = new BitmapSender(senderRpc, receiverRpc.ownParty(), config);
+        BitmapParty receiver = new BitmapReceiver(receiverRpc, senderRpc.ownParty(), config);
         sender.setParallel(true);
         receiver.setParallel(true);
         testBitmap(sender, receiver, LARGE_NUM);
