@@ -1,0 +1,132 @@
+package edu.alibaba.mpc4j.common.tool.bitvector;
+
+import java.math.BigInteger;
+
+/**
+ * Bit Vector.
+ *
+ * @author Weiran Liu
+ * @date 2022/12/16
+ */
+public interface BitVector {
+    /**
+     * Get BitVector type.
+     *
+     * @return BitVector type.
+     */
+    BitVectorFactory.BitVectorType getType();
+
+    /**
+     * Copy the bit vector.
+     *
+     * @return the copied bit vector.
+     */
+    BitVector copy();
+
+    /**
+     * Get the number of bits in the bit vector.
+     *
+     * @return the number of bits in the bit vector.
+     */
+    int bitNum();
+
+    /**
+     * Get the number of bytes in the bit vector.
+     *
+     * @return the number of bytes in the bit vector.
+     */
+    int byteNum();
+
+    /**
+     * Get the bit vector represented by bytes.
+     *
+     * @return the bit vector represented by bytes.
+     */
+    byte[] getBytes();
+
+    /**
+     * Get the bit vector represented by non-negative BigInteger. Return 0 if the bit length is 0.
+     *
+     * @return the bit vector represented by non-negative BigInteger.
+     */
+    BigInteger getBigInteger();
+
+    /**
+     * Split a bit vector with the given number of bits. The current bit vector keeps the remaining bits.
+     *
+     * @param bitNum the assigned number of bits.
+     * @return the split bit vector.
+     */
+    BitVector split(int bitNum);
+
+    /**
+     * Reduce the bit vector with the given number of bits.
+     *
+     * @param bitNum the assigned number of bits.
+     */
+    void reduce(int bitNum);
+
+    /**
+     * Merge the other bit vector.
+     *
+     * @param that the other bit vector.
+     */
+    void merge(BitVector that);
+
+    /**
+     * XOR with the other bit vector.
+     *
+     * @param that the other bit vector.
+     * @return the XOR result.
+     */
+    BitVector xor(BitVector that);
+
+    /**
+     * Inner XOR with the other bit vector.
+     *
+     * @param that the other bit vector.
+     */
+    void xori(BitVector that);
+
+    /**
+     * AND with the other bit vector.
+     *
+     * @param that the other bit vector.
+     * @return the AND result.
+     */
+    BitVector and(BitVector that);
+
+    /**
+     * Inner AND with the other bit vector.
+     *
+     * @param that the other bit vector.
+     */
+    void andi(BitVector that);
+
+    /**
+     * OR with the other bit vector.
+     *
+     * @param that the other bit vector.
+     * @return the OR result.
+     */
+    BitVector or(BitVector that);
+
+    /**
+     * Inner OR with the other bit vector.
+     *
+     * @param that the other bit vector.
+     */
+    void ori(BitVector that);
+
+    /**
+     * NOT with the other bit vector.
+     *
+     * @return the NOT result.
+     */
+    BitVector not();
+
+    /**
+     * Inner NOT with the other bit vector.
+     */
+    void noti();
+}

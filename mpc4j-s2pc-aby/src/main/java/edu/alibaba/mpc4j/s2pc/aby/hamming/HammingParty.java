@@ -45,6 +45,4 @@ public interface HammingParty extends TwoPartyPto, SecurePto {
      * @throws MpcAbortException 如果协议异常中止。
      */
     int receiveHammingDistance(BcSquareVector xi) throws MpcAbortException;
-
-
 }

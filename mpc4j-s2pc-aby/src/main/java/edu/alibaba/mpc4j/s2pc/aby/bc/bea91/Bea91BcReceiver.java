@@ -73,10 +73,10 @@ public class Bea91BcReceiver extends AbstractBcParty {
     public BcSquareVector and(BcSquareVector x1, BcSquareVector y1) throws MpcAbortException {
         setAndInput(x1, y1);
 
-        if (x1.isPublic() && y1.isPublic()) {
+        if (x1.isPlain() && y1.isPlain()) {
             // x0和y0为公开导线，服务端和客户端都进行AND运算
             return BcSquareVector.create(BytesUtils.and(x1.getBytes(), y1.getBytes()), num, true);
-        } else if (x1.isPublic() || y1.isPublic()) {
+        } else if (x1.isPlain() || y1.isPlain()) {
             // x0或y0为公开导线，服务端和客户端都进行AND运算
             return BcSquareVector.create(BytesUtils.and(x1.getBytes(), y1.getBytes()), num, false);
         } else {
@@ -147,15 +147,15 @@ public class Bea91BcReceiver extends AbstractBcParty {
     public BcSquareVector xor(BcSquareVector x1, BcSquareVector y1) {
         setXorInput(x1, y1);
 
-        if (x1.isPublic() && y1.isPublic()) {
+        if (x1.isPlain() && y1.isPlain()) {
             // x1和y1为公开导线，服务端和客户端都进行XOR运算
-            return BcSquareVector.create(BytesUtils.xor(x1.getBytes(), y1.getBytes()), num, true);
-        } else if (x1.isPublic()) {
+            return x1.xor(y1);
+        } else if (x1.isPlain()) {
             // x1为公开导线，y1为私有导线，客户端不做XOR运算，克隆y1
-            return BcSquareVector.clone(y1);
-        } else if (y1.isPublic()) {
+            return y1.copy();
+        } else if (y1.isPlain()) {
             // x1为私有导线，y1为公开导线，客户端不做XOR运算，克隆x1
-            return BcSquareVector.clone(x1);
+            return x1.copy();
         } else {
             // x1和y1为私有导线，服务端和客户端都进行XOR运算
             xorGateNum += num;
@@ -175,7 +175,7 @@ public class Bea91BcReceiver extends AbstractBcParty {
 
     @Override
     public BcSquareVector not(BcSquareVector x1) {
-        if (x1.isPublic()) {
+        if (x1.isPlain()) {
             // x1为公开导线，客户端对x1进行NOT运算
             return xor(x1, BcSquareVector.createOnes(x1.bitLength()));
         } else {

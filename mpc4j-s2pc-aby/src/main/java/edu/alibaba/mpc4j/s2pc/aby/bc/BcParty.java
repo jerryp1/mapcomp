@@ -90,7 +90,7 @@ public interface BcParty extends TwoPartyPto, SecurePto {
         byte[] choiceBytes = new byte[xi.byteLength()];
         byte[] ciBytes = ci.getBytes();
         Arrays.fill(choiceBytes, BinaryUtils.getBoolean(ciBytes, Byte.SIZE - 1) ? (byte)0xFF : (byte)0x00);
-        BcSquareVector choice = BcSquareVector.create(choiceBytes, xi.bitLength(), ci.isPublic());
+        BcSquareVector choice = BcSquareVector.create(choiceBytes, xi.bitLength(), ci.isPlain());
         BcSquareVector t = xor(xi, yi);
         t = and(t, choice);
         return xor(t, xi);
