@@ -1,5 +1,6 @@
 package edu.alibaba.mpc4j.s2pc.aby.bc.bea91;
 
+import com.google.common.base.Preconditions;
 import edu.alibaba.mpc4j.common.rpc.MpcAbortException;
 import edu.alibaba.mpc4j.common.rpc.MpcAbortPreconditions;
 import edu.alibaba.mpc4j.common.rpc.Party;
@@ -7,15 +8,20 @@ import edu.alibaba.mpc4j.common.rpc.Rpc;
 import edu.alibaba.mpc4j.common.rpc.utils.DataPacket;
 import edu.alibaba.mpc4j.common.rpc.utils.DataPacketHeader;
 import edu.alibaba.mpc4j.common.tool.utils.BytesUtils;
+import edu.alibaba.mpc4j.common.tool.utils.CommonUtils;
 import edu.alibaba.mpc4j.s2pc.aby.bc.AbstractBcParty;
 import edu.alibaba.mpc4j.s2pc.aby.bc.BcSquareVector;
-import edu.alibaba.mpc4j.s2pc.pcg.mtg.z2.Z2Triple;
 import edu.alibaba.mpc4j.s2pc.pcg.mtg.z2.Z2MtgFactory;
 import edu.alibaba.mpc4j.s2pc.pcg.mtg.z2.Z2MtgParty;
+import edu.alibaba.mpc4j.s2pc.pcg.mtg.z2.Z2Triple;
 
+import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
+
+import static edu.alibaba.mpc4j.s2pc.aby.bc.bea91.Bea91BcPtoDesc.PtoStep;
+import static edu.alibaba.mpc4j.s2pc.aby.bc.bea91.Bea91BcPtoDesc.getInstance;
 
 /**
  * Beaver91-BC协议客户端。
@@ -30,7 +36,7 @@ public class Bea91BcReceiver extends AbstractBcParty {
     private final Z2MtgParty z2MtgReceiver;
 
     public Bea91BcReceiver(Rpc receiverRpc, Party senderParty, Bea91BcConfig config) {
-        super(Bea91BcPtoDesc.getInstance(), receiverRpc, senderParty, config);
+        super(getInstance(), receiverRpc, senderParty, config);
         z2MtgReceiver = Z2MtgFactory.createReceiver(receiverRpc, senderParty, config.getZ2MtgConfig());
         z2MtgReceiver.addLogLevel();
     }
@@ -82,7 +88,7 @@ public class Bea91BcReceiver extends AbstractBcParty {
         } else {
             // x0和y0为私有导线，执行三元组协议
             andGateNum += num;
-            info("{}{} Recv. begin", ptoBeginLogPrefix, getPtoDesc().getPtoName());
+            info("{}{} Recv. And begin", ptoBeginLogPrefix, getPtoDesc().getPtoName());
 
             stopWatch.start();
             Z2Triple z2Triple = z2MtgReceiver.generate(num);
@@ -90,7 +96,7 @@ public class Bea91BcReceiver extends AbstractBcParty {
             long z2MtgTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
             stopWatch.reset();
             info("{}{} Recv. AND Step 1/3 ({}ms)", ptoStepLogPrefix, getPtoDesc().getPtoName(), z2MtgTime);
-            
+
             stopWatch.start();
             byte[] a1 = z2Triple.getA();
             byte[] b1 = z2Triple.getB();
@@ -103,8 +109,8 @@ public class Bea91BcReceiver extends AbstractBcParty {
             e1f1Payload.add(e1);
             e1f1Payload.add(f1);
             DataPacketHeader e1f1Header = new DataPacketHeader(
-                taskId, getPtoDesc().getPtoId(), Bea91BcPtoDesc.PtoStep.RECEIVER_SEND_E1_F1.ordinal(), andGateNum,
-                ownParty().getPartyId(), otherParty().getPartyId()
+                    taskId, getPtoDesc().getPtoId(), PtoStep.RECEIVER_SEND_E1_F1.ordinal(), andGateNum,
+                    ownParty().getPartyId(), otherParty().getPartyId()
             );
             rpc.send(DataPacket.fromByteArrayList(e1f1Header, e1f1Payload));
             stopWatch.stop();
@@ -114,8 +120,8 @@ public class Bea91BcReceiver extends AbstractBcParty {
 
             stopWatch.start();
             DataPacketHeader e0f0Header = new DataPacketHeader(
-                taskId, getPtoDesc().getPtoId(), Bea91BcPtoDesc.PtoStep.SENDER_SEND_E0_F0.ordinal(), andGateNum,
-                otherParty().getPartyId(), ownParty().getPartyId()
+                    taskId, getPtoDesc().getPtoId(), PtoStep.SENDER_SEND_E0_F0.ordinal(), andGateNum,
+                    otherParty().getPartyId(), ownParty().getPartyId()
             );
             List<byte[]> e0f0Payload = rpc.receive(e0f0Header).getPayload();
             MpcAbortPreconditions.checkArgument(e0f0Payload.size() == 2);
@@ -196,5 +202,69 @@ public class Bea91BcReceiver extends AbstractBcParty {
         long result = xorGateNum;
         xorGateNum = reset ? 0L : xorGateNum;
         return result;
+    }
+
+    @Override
+    public BcSquareVector setOwnInputs(byte[] senderInputs, int bitLength) {
+        // 输入不为空
+        Preconditions.checkNotNull(senderInputs);
+        int arrayLength = senderInputs.length;
+        assert arrayLength == CommonUtils.getBlockLength(bitLength);
+        info("客户端设置客户端输入，客户端输入数组长度{}，数据比特长度{}", arrayLength, bitLength);
+        // 构造sender标签
+        byte[] senderInputWire = new byte[arrayLength];
+        secureRandom.nextBytes(senderInputWire);
+        // 按顺序打包receiver标签
+        byte[] labelArrays = BytesUtils.xor(senderInputs, senderInputWire);
+        List<byte[]> senderInputWiresDataPacket = Collections.singletonList(labelArrays);
+        // sender发送标签
+        DataPacketHeader labelHeader = new DataPacketHeader(
+                taskId, getPtoDesc().getPtoId(), PtoStep.RECEIVER_SEND_INPUT.ordinal(), num,
+                ownParty().getPartyId(), otherParty().getPartyId()
+        );
+        rpc.send(DataPacket.fromByteArrayList(labelHeader, senderInputWiresDataPacket));
+        // 返回sender输入导线
+        return BcSquareVector.create(senderInputWire, bitLength, false);
+    }
+
+    @Override
+    public BcSquareVector setOtherInputs(int bitLength) {
+        DataPacketHeader labelHeader = new DataPacketHeader(
+                taskId, getPtoDesc().getPtoId(), PtoStep.SENDER_SEND_INPUT.ordinal(), num,
+                otherParty().getPartyId(), ownParty().getPartyId()
+        );
+        byte[] label = rpc.receive(labelHeader).getPayload().get(0);
+        // 检查数据包长度
+        Preconditions.checkArgument(label.length == CommonUtils.getByteLength(bitLength));
+        // 返回秘密分享值标签
+        return BcSquareVector.create(label, bitLength, false);
+    }
+
+    @Override
+    public byte[] getOwnOutputs(BcSquareVector v) {
+        Preconditions.checkNotNull(v);
+        int bitLength = v.bitLength();
+        info("服务端设置服务端输出, 数据比特长度{}", bitLength);
+        // 客户端接收服务端发送标签值
+        DataPacketHeader otherSharesHeader = new DataPacketHeader(
+                taskId, getPtoDesc().getPtoId(), PtoStep.SENDER_SEND_OUTPUT.ordinal(), num,
+                otherParty().getPartyId(), ownParty().getPartyId()
+        );
+        byte[] otherShares = rpc.receive(otherSharesHeader).getPayload().get(0);
+        byte[] ownShares = v.getBytes();
+        return BytesUtils.xor(ownShares, otherShares);
+    }
+
+    @Override
+    public void getOtherOutputs(BcSquareVector v) {
+        Preconditions.checkNotNull(v);
+        int bitLength = v.bitLength();
+        info("服务端设置服务端输出, 数据比特长度{}", bitLength);
+        List<byte[]> ownShares = Collections.singletonList(v.getBytes());
+        DataPacketHeader ownSharesHeader = new DataPacketHeader(
+                taskId, getPtoDesc().getPtoId(), PtoStep.RECEIVER_SEND_OUTPUT.ordinal(), num,
+                ownParty().getPartyId(), otherParty().getPartyId()
+        );
+        rpc.send(DataPacket.fromByteArrayList(ownSharesHeader, ownShares));
     }
 }
