@@ -3,7 +3,7 @@ package edu.alibaba.mpc4j.s2pc.pjc.bitmap;
 import edu.alibaba.mpc4j.common.rpc.MpcAbortException;
 import edu.alibaba.mpc4j.common.rpc.pto.SecurePto;
 import edu.alibaba.mpc4j.common.rpc.pto.TwoPartyPto;
-import edu.alibaba.mpc4j.s2pc.aby.bc.BcSquareVector;
+import edu.alibaba.mpc4j.s2pc.aby.bc.SquareSbitVector;
 import edu.alibaba.mpc4j.s2pc.pjc.bitmap.BitmapPtoDesc.BitmapType;
 import org.roaringbitmap.BitmapContainer;
 import org.roaringbitmap.Container;
@@ -94,12 +94,11 @@ public interface BitmapParty extends TwoPartyPto, SecurePto {
      * @param maxNum max num of elements
      * @return SecureBitmapContainer
      */
-    SecureBitmapContainer setOtherRoaringBitmap(int maxNum);
+    SecureBitmapContainer setOtherRoaringBitmap(int maxNum) throws MpcAbortException;
 
     default SecureBitmapContainer setPublicRoaringBitmap(RoaringBitmap roaringBitmap, int maxNum) {
-        int maxBitLength = BitmapUtils.getBitLength(maxNum);
-        byte[] bytes = BitmapUtils.roaringBitmapToBytes(roaringBitmap, maxBitLength);
-        BcSquareVector vector = BcSquareVector.create(bytes, maxBitLength, true);
+        byte[] bytes = BitmapUtils.roaringBitmapToBytes(roaringBitmap, maxNum);
+        SquareSbitVector vector = SquareSbitVector.create(maxNum, bytes, true);
         return new SecureBitmapContainer(vector);
     }
 
@@ -108,7 +107,7 @@ public interface BitmapParty extends TwoPartyPto, SecurePto {
      *
      * @return roaringBitmap
      */
-    default RoaringBitmap toOwnRoaringBitmap(SecureBitmapContainer secureBitmapContainer) {
+    default RoaringBitmap toOwnRoaringBitmap(SecureBitmapContainer secureBitmapContainer) throws MpcAbortException {
         // 先reveal所有元素
         long[][] bitmaps = revealOwn(secureBitmapContainer);
         RoaringBitmap roaringBitmap = new RoaringBitmap();
@@ -144,7 +143,7 @@ public interface BitmapParty extends TwoPartyPto, SecurePto {
      * @param secureBitmapContainer secureBitmapContainer
      * @return 以long[][]表示的数据明文
      */
-    long[][] revealOwn(SecureBitmapContainer secureBitmapContainer);
+    long[][] revealOwn(SecureBitmapContainer secureBitmapContainer) throws MpcAbortException;
 
     /**
      * 辅助获得对方数据明文

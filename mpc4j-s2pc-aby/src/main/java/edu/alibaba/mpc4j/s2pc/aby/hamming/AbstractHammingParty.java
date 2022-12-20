@@ -4,7 +4,7 @@ import edu.alibaba.mpc4j.common.rpc.Party;
 import edu.alibaba.mpc4j.common.rpc.Rpc;
 import edu.alibaba.mpc4j.common.rpc.desc.PtoDesc;
 import edu.alibaba.mpc4j.common.rpc.pto.AbstractSecureTwoPartyPto;
-import edu.alibaba.mpc4j.s2pc.aby.bc.BcSquareVector;
+import edu.alibaba.mpc4j.s2pc.aby.bc.SquareSbitVector;
 
 /**
  * 汉明距离协议参与方。
@@ -45,12 +45,12 @@ public abstract class AbstractHammingParty extends AbstractSecureTwoPartyPto imp
         initialized = false;
     }
 
-    protected void setPtoInput(BcSquareVector xi) {
+    protected void setPtoInput(SquareSbitVector xi) {
         if (!initialized) {
             throw new IllegalStateException("Need init...");
         }
-        assert xi.bitLength() <= maxBitNum;
-        bitNum = xi.bitLength();
+        assert xi.bitNum() <= maxBitNum;
+        bitNum = xi.bitNum();
         extraInfo++;
     }
 }

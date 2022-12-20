@@ -3,6 +3,8 @@ package edu.alibaba.mpc4j.common.tool.bitvector;
 import edu.alibaba.mpc4j.common.tool.utils.BigIntegerUtils;
 import edu.alibaba.mpc4j.common.tool.utils.BytesUtils;
 import edu.alibaba.mpc4j.common.tool.utils.CommonUtils;
+import org.apache.commons.lang3.builder.EqualsBuilder;
+import org.apache.commons.lang3.builder.HashCodeBuilder;
 
 import java.math.BigInteger;
 import java.security.SecureRandom;
@@ -252,6 +254,29 @@ public class BytesBitVector implements BitVector {
     @Override
     public void noti() {
         BytesUtils.noti(bytes, bitNum);
+    }
+
+    @Override
+    public int hashCode() {
+        return new HashCodeBuilder()
+            .append(bytes)
+            .append(bitNum)
+            .hashCode();
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (this == obj) {
+            return true;
+        }
+        if (obj instanceof BytesBitVector) {
+            BytesBitVector that = (BytesBitVector) obj;
+            return new EqualsBuilder()
+                .append(this.bytes, that.bytes)
+                .append(this.bitNum, that.bitNum)
+                .isEquals();
+        }
+        return false;
     }
 
     @Override

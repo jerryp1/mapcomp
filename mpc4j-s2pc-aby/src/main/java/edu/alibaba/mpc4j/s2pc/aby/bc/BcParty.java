@@ -3,147 +3,135 @@ package edu.alibaba.mpc4j.s2pc.aby.bc;
 import edu.alibaba.mpc4j.common.rpc.MpcAbortException;
 import edu.alibaba.mpc4j.common.rpc.pto.SecurePto;
 import edu.alibaba.mpc4j.common.rpc.pto.TwoPartyPto;
-import edu.alibaba.mpc4j.common.tool.utils.BinaryUtils;
-
-import java.util.Arrays;
+import edu.alibaba.mpc4j.common.tool.bitvector.BitVector;
 
 /**
- * BC协议参与方接口。
+ * Boolean circuit party.
  *
  * @author Weiran Liu
  * @date 2022/02/11
  */
 public interface BcParty extends TwoPartyPto, SecurePto {
-
     /**
-     * 返回协议类型。
+     * Get the protocol type.
      *
-     * @return 协议类型。
+     * @return the protocol typ.e
      */
     @Override
     BcFactory.BcType getPtoType();
 
     /**
-     * 初始化协议。
+     * init the protocol.
      *
-     * @param maxRoundNum 最大单轮数量。
-     * @param updateNum   更新数量。
-     * @throws MpcAbortException 如果协议异常中止。
+     * @param maxRoundBitNum maximum number of bits in round.
+     * @param updateBitNum   total number of bits for updates.
+     * @throws MpcAbortException if the protocol is abort.
      */
-    void init(int maxRoundNum, int updateNum) throws MpcAbortException;
+    void init(int maxRoundBitNum, int updateBitNum) throws MpcAbortException;
 
     /**
-     * 执行AND运算，得到zi，满足z0 ⊕ z1 = z = x & y = (x0 ⊕ x1) & (y0 ⊕ y1)。
+     * Share its own BitVector。
      *
-     * @param xi xi。
-     * @param yi yi。
-     * @return zi。
-     * @throws MpcAbortException 如果协议异常中止。
+     * @param x the BitVector to be shared.
+     * @return the shared BitVector.
      */
-    BcSquareVector and(BcSquareVector xi, BcSquareVector yi) throws MpcAbortException;
+    SquareSbitVector shareOwn(BitVector x);
 
     /**
-     * 执行XOR运算，得到zi，满足z0 ⊕ z1 = z = x ^ y = (x0 ⊕ x1) ^ (y0 ⊕ y1)。
+     * Share other's BitVector.
      *
-     * @param xi xi。
-     * @param yi yi。
-     * @return zi。
-     * @throws MpcAbortException 如果协议异常中止。
+     * @param bitNum the number of bits to be shared.
+     * @return the shared BitVector.
+     * @throws MpcAbortException if the protocol is abort.
      */
-    BcSquareVector xor(BcSquareVector xi, BcSquareVector yi) throws MpcAbortException;
+    SquareSbitVector shareOther(int bitNum) throws MpcAbortException;
 
     /**
-     * 执行NOT运算，得到zi，满足z0 ⊕ z1 = z = !x = (x0 ⊕ x1)。
+     * AND operation.
      *
-     * @param xi xi。
-     * @return zi。
-     * @throws MpcAbortException 如果协议异常中止。
+     * @param xi xi,
+     * @param yi yi,
+     * @return zi, such that z0 ⊕ z1 = z = x & y = (x0 ⊕ x1) & (y0 ⊕ y1).
+     * @throws MpcAbortException if the protocol is abort.
      */
-    BcSquareVector not(BcSquareVector xi) throws MpcAbortException;
+    SquareSbitVector and(SquareSbitVector xi, SquareSbitVector yi) throws MpcAbortException;
 
     /**
-     * 执行OR运算，得到zi，满足z0 ⊕ z1 = z = x | y = (x0 ⊕ x1) | (y0 ⊕ y1)。
+     * XOR operation.
      *
-     * @param xi xi。
-     * @param yi yi。
-     * @return zi。
-     * @throws MpcAbortException 如果协议异常中止。
+     * @param xi xi.
+     * @param yi yi.
+     * @return zi, such that z0 ⊕ z1 = z = x ^ y = (x0 ⊕ x1) ^ (y0 ⊕ y1)
+     * @throws MpcAbortException if the protocol is abort.
      */
-    default BcSquareVector or(BcSquareVector xi, BcSquareVector yi) throws MpcAbortException {
+    SquareSbitVector xor(SquareSbitVector xi, SquareSbitVector yi) throws MpcAbortException;
+
+    /**
+     * OR operation.
+     *
+     * @param xi xi.
+     * @param yi yi.
+     * @return zi, such that z0 ⊕ z1 = z = x | y = (x0 ⊕ x1) | (y0 ⊕ y1).
+     * @throws MpcAbortException if the protocol is abort.
+     */
+    default SquareSbitVector or(SquareSbitVector xi, SquareSbitVector yi) throws MpcAbortException {
         return xor(xor(xi, yi), and(xi, yi));
     }
 
     /**
-     * 执行MUX运算，得到zi，满足：
-     * - 如果c0 ⊕ c1 = c == 0，则z0 ⊕ z1 = z = x。
-     * - 如果c0 ⊕ c1 = c == 1，则z0 ⊕ z1 = z = y。
+     * NOT operation.
      *
-     * @param xi xi。
-     * @param yi yi。
-     * @param ci ci。
-     * @return zi。
-     * @throws MpcAbortException 如果协议异常中止。
+     * @param xi xi.
+     * @return zi, such that z0 ⊕ z1 = z = !x = !(x0 ⊕ x1).
+     * @throws MpcAbortException if the protocol is abort.
      */
-    default BcSquareVector mux(BcSquareVector xi, BcSquareVector yi, BcSquareVector ci) throws MpcAbortException {
-        assert xi.bitLength() == yi.bitLength();
-        assert ci.bitLength() == 1;
-        byte[] choiceBytes = new byte[xi.byteLength()];
-        byte[] ciBytes = ci.getBytes();
-        Arrays.fill(choiceBytes, BinaryUtils.getBoolean(ciBytes, Byte.SIZE - 1) ? (byte)0xFF : (byte)0x00);
-        BcSquareVector choice = BcSquareVector.create(choiceBytes, xi.bitLength(), ci.isPlain());
-        BcSquareVector t = xor(xi, yi);
-        t = and(t, choice);
-        return xor(t, xi);
-    }
+    SquareSbitVector not(SquareSbitVector xi) throws MpcAbortException;
 
     /**
-     * 返回AND门数量。
+     * Reveal its own BitVector.
      *
-     * @param reset 是否重置。
-     * @return AND门数量。
+     * @param xi the shared BitVector.
+     * @return the reconstructed BitVector.
+     * @throws MpcAbortException if the protocol is abort.
+     */
+    BitVector revealOwn(SquareSbitVector xi) throws MpcAbortException;
+
+    /**
+     * Reconstruct other's BitVector.
+     *
+     * @param xi the shared BitVector.
+     */
+    void revealOther(SquareSbitVector xi);
+
+    /**
+     * Get the number of input bits for secure boolean circuit computation.
+     *
+     * @param reset whether to reset the counter.
+     * @return the number of input gits.
+     */
+    long inputBitNum(boolean reset);
+
+    /**
+     * Get the number of AND gates for secure boolean circuit computation.
+     *
+     * @param reset whether to reset the counter.
+     * @return the number of AND gates.
      */
     long andGateNum(boolean reset);
 
     /**
-     * 返回XOR门数量。
+     * Get the number of XOR gates for secure boolean circuit computation.
      *
-     * @param reset 是否重置。
-     * @return XOR门数量。
+     * @param reset whether to reset the counter.
+     * @return the number of XOR gates for secure boolean circuit computation.
      */
     long xorGateNum(boolean reset);
 
-
     /**
-     * 设置自身数据输入作为秘密分享
+     * Get the number of output bits for secure boolean circuit computation.
      *
-     * @param ownInputs 自身数据
-     * @param bitLength 输入bit长度
-     * @return BcBitVector
+     * @param reset whether to reset the counter.
+     * @return the number of output gits.
      */
-    BcSquareVector setOwnInputs(byte[] ownInputs, int bitLength);
-
-    /**
-     * 设置来自对方的数据作为秘密分享
-     *
-     * @param arrayLength 数据长度
-     * @param bitLength   输入bit长度
-     * @return BcBitVector
-     */
-    BcSquareVector setOtherInputs(int bitLength);
-
-
-    /**
-     * 获得明文数据输出
-     *
-     * @param v 自身布尔秘密分享向量
-     * @return 明文数据输出
-     */
-    byte[] getOwnOutputs(BcSquareVector v);
-
-    /**
-     * 辅助对方，获得明文数据输出
-     *
-     * @param v 自身布尔秘密分享向量
-     */
-    void getOtherOutputs(BcSquareVector v);
+    long outputBitNum(boolean reset);
 }

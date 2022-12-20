@@ -28,13 +28,13 @@ class Bea91BcPtoDesc implements PtoDesc {
      */
     enum PtoStep {
         /**
-         * 服务端发送输入的分享
+         * 发送方发送输入分享值
          */
-        SENDER_SEND_INPUT,
+        SENDER_SEND_INPUT_SHARE,
         /**
-         * 客户端发送输入的分享
+         * 接收方发送输入分享值
          */
-        RECEIVER_SEND_INPUT,
+        RECEIVER_SEND_INPUT_SHARE,
         /**
          * 发送方发送e0和f0
          */
@@ -44,13 +44,13 @@ class Bea91BcPtoDesc implements PtoDesc {
          */
         RECEIVER_SEND_E1_F1,
         /**
-         * 服务端发送输出的分享
+         * 发送方发送输出分享值
          */
-        SENDER_SEND_OUTPUT,
+        SENDER_SEND_OUTPUT_SHARE,
         /**
-         * 客户端发送输出的分享
+         * 接收方发送输出分享值
          */
-        RECEIVER_SEND_OUTPUT
+        RECEIVER_SEND_SHARE_OUTPUT
     }
 
     /**

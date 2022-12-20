@@ -2,6 +2,7 @@ package edu.alibaba.mpc4j.s2pc.pjc.bitmap;
 
 import com.sun.org.slf4j.internal.Logger;
 import com.sun.org.slf4j.internal.LoggerFactory;
+import edu.alibaba.mpc4j.common.tool.utils.BytesUtils;
 import edu.alibaba.mpc4j.common.tool.utils.CommonUtils;
 import org.roaringbitmap.BitmapContainer;
 import org.roaringbitmap.ContainerPointer;
@@ -28,11 +29,14 @@ public class BitmapUtils {
      * @return byte[]
      */
     public static byte[] roaringBitmapToBytes(RoaringBitmap roaringBitmap, int maxNum) {
+        int byteNum = CommonUtils.getByteLength(maxNum);
         int containerNum = getContainerNum(maxNum);
         BitmapContainer[] cs = expandContainers(roaringBitmap, containerNum);
-        ByteBuffer buffer = ByteBuffer.allocate(CommonUtils.getUnitNum(getBitLength(maxNum), Byte.SIZE)).order(ByteOrder.LITTLE_ENDIAN);
+        ByteBuffer buffer = ByteBuffer.allocate(CommonUtils.getByteLength(getRoundContainerNumBitLength(maxNum)))
+            .order(ByteOrder.LITTLE_ENDIAN);
         Arrays.stream(cs).forEach(c -> c.writeArray(buffer));
-        return buffer.array();
+        byte[] roundContainerBytes = buffer.array();
+        return Arrays.copyOf(roundContainerBytes, byteNum);
     }
 
     /**
@@ -85,7 +89,7 @@ public class BitmapUtils {
      * @return 需要的Container数量
      */
     public static int getContainerNum(int maxNum) {
-        return maxNum <= BitmapContainer.MAX_CAPACITY ? 1 : (maxNum - 1) / BitmapContainer.MAX_CAPACITY + 1;
+        return CommonUtils.getUnitNum(maxNum, BitmapContainer.MAX_CAPACITY);
     }
 
     /**
@@ -94,7 +98,7 @@ public class BitmapUtils {
      * @param maxNum 最大数量
      * @return 需要的bit数量
      */
-    public static int getBitLength(int maxNum) {
+    public static int getRoundContainerNumBitLength(int maxNum) {
         return getContainerNum(maxNum) * BitmapContainer.MAX_CAPACITY;
     }
 }

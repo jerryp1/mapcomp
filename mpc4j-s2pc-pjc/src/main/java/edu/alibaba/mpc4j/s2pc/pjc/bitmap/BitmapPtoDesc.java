@@ -13,7 +13,7 @@ public class BitmapPtoDesc implements PtoDesc {
     /**
      * 协议ID
      */
-    private static final int PTO_ID = Math.abs((int) 139609527980746823L);
+    private static final int PTO_ID = Math.abs((int) 1465402972366807155L);
     /**
      * 协议名称
      */

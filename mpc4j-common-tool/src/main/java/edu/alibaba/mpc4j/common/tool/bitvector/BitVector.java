@@ -45,7 +45,7 @@ public interface BitVector {
     byte[] getBytes();
 
     /**
-     * Get the bit vector represented by non-negative BigInteger. Return 0 if the bit length is 0.
+     * Get the bit vector represented by non-negative BigInteger. Return 0 if the number of bits is 0.
      *
      * @return the bit vector represented by non-negative BigInteger.
      */
@@ -74,7 +74,7 @@ public interface BitVector {
     void merge(BitVector that);
 
     /**
-     * XOR with the other bit vector.
+     * XOR operation.
      *
      * @param that the other bit vector.
      * @return the XOR result.
@@ -82,14 +82,14 @@ public interface BitVector {
     BitVector xor(BitVector that);
 
     /**
-     * Inner XOR with the other bit vector.
+     * Inner XOR operation.
      *
      * @param that the other bit vector.
      */
     void xori(BitVector that);
 
     /**
-     * AND with the other bit vector.
+     * AND operation.
      *
      * @param that the other bit vector.
      * @return the AND result.
@@ -97,14 +97,14 @@ public interface BitVector {
     BitVector and(BitVector that);
 
     /**
-     * Inner AND with the other bit vector.
+     * Inner AND operation.
      *
      * @param that the other bit vector.
      */
     void andi(BitVector that);
 
     /**
-     * OR with the other bit vector.
+     * OR operation.
      *
      * @param that the other bit vector.
      * @return the OR result.
@@ -112,21 +112,21 @@ public interface BitVector {
     BitVector or(BitVector that);
 
     /**
-     * Inner OR with the other bit vector.
+     * Inner OR operation.
      *
      * @param that the other bit vector.
      */
     void ori(BitVector that);
 
     /**
-     * NOT with the other bit vector.
+     * NOT operation.
      *
      * @return the NOT result.
      */
     BitVector not();
 
     /**
-     * Inner NOT with the other bit vector.
+     * Inner NOT operation.
      */
     void noti();
 }

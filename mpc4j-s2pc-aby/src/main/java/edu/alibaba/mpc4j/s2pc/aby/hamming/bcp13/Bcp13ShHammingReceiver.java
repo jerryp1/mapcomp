@@ -11,7 +11,7 @@ import edu.alibaba.mpc4j.common.tool.crypto.crhf.CrhfFactory;
 import edu.alibaba.mpc4j.common.tool.utils.BinaryUtils;
 import edu.alibaba.mpc4j.common.tool.utils.BytesUtils;
 import edu.alibaba.mpc4j.common.tool.utils.IntUtils;
-import edu.alibaba.mpc4j.s2pc.aby.bc.BcSquareVector;
+import edu.alibaba.mpc4j.s2pc.aby.bc.SquareSbitVector;
 import edu.alibaba.mpc4j.s2pc.aby.hamming.AbstractHammingParty;
 import edu.alibaba.mpc4j.s2pc.aby.hamming.bcp13.Bcp13ShHammingPtoDesc.PtoStep;
 import edu.alibaba.mpc4j.s2pc.pcg.ot.cot.*;
@@ -81,7 +81,7 @@ public class Bcp13ShHammingReceiver extends AbstractHammingParty {
     }
 
     @Override
-    public void sendHammingDistance(BcSquareVector x1) throws MpcAbortException {
+    public void sendHammingDistance(SquareSbitVector x1) throws MpcAbortException {
         setPtoInput(x1);
         info("{}{} Recv. begin", ptoBeginLogPrefix, getPtoDesc().getPtoName());
 
@@ -103,7 +103,7 @@ public class Bcp13ShHammingReceiver extends AbstractHammingParty {
     }
 
     @Override
-    public int receiveHammingDistance(BcSquareVector x1) throws MpcAbortException {
+    public int receiveHammingDistance(SquareSbitVector x1) throws MpcAbortException {
         setPtoInput(x1);
         info("{}{} Recv. begin", ptoBeginLogPrefix, getPtoDesc().getPtoName());
 
@@ -127,7 +127,7 @@ public class Bcp13ShHammingReceiver extends AbstractHammingParty {
         return hammingDistance;
     }
 
-    private int executeOtSteps(BcSquareVector x0) throws MpcAbortException {
+    private int executeOtSteps(SquareSbitVector x0) throws MpcAbortException {
         stopWatch.start();
         boolean[] ys = BinaryUtils.byteArrayToBinary(x0.getBytes(), bitNum);
         stopWatch.stop();

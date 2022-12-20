@@ -2,7 +2,7 @@ package edu.alibaba.mpc4j.s2pc.pjc.bitmap;
 
 import com.sun.org.slf4j.internal.Logger;
 import com.sun.org.slf4j.internal.LoggerFactory;
-import edu.alibaba.mpc4j.s2pc.aby.bc.BcSquareVector;
+import edu.alibaba.mpc4j.s2pc.aby.bc.SquareSbitVector;
 import org.roaringbitmap.BitmapContainer;
 
 /**
@@ -24,14 +24,14 @@ public class SecureBitmapContainer {
     /**
      * 秘密分享值
      */
-    final BcSquareVector vector;
+    final SquareSbitVector vector;
 
-    public SecureBitmapContainer(BcSquareVector vector) {
-        this.containerNum = BitmapUtils.getContainerNum(vector.bitLength());
+    public SecureBitmapContainer(SquareSbitVector vector) {
+        this.containerNum = BitmapUtils.getContainerNum(vector.bitNum());
         this.vector = vector;
     }
 
-    public BcSquareVector getVector() {
+    public SquareSbitVector getVector() {
         return vector;
     }
 
@@ -40,11 +40,11 @@ public class SecureBitmapContainer {
     }
 
     public int getCapacity() {
-        return vector.bitLength();
+        return vector.bitNum();
     }
 
     public boolean isPublic() {
-        return vector.isPublic();
+        return vector.isPlain();
     }
 
 }

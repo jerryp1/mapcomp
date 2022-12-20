@@ -6,7 +6,7 @@ import edu.alibaba.mpc4j.common.rpc.RpcManager;
 import edu.alibaba.mpc4j.common.rpc.impl.memory.MemoryRpcManager;
 import edu.alibaba.mpc4j.common.tool.utils.BytesUtils;
 import edu.alibaba.mpc4j.common.tool.utils.CommonUtils;
-import edu.alibaba.mpc4j.s2pc.aby.bc.BcSquareVector;
+import edu.alibaba.mpc4j.s2pc.aby.bc.SquareSbitVector;
 import edu.alibaba.mpc4j.s2pc.aby.hamming.bcp13.Bcp13ShHammingConfig;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.time.StopWatch;
@@ -182,8 +182,8 @@ public class HammingTest {
         sender.setTaskId(randomTaskId);
         receiver.setTaskId(randomTaskId);
 
-        BcSquareVector x0 = BcSquareVector.create(x0Bytes, num, false);
-        BcSquareVector x1 = BcSquareVector.create(x1Bytes, num, false);
+        SquareSbitVector x0 = SquareSbitVector.create(num, x0Bytes, false);
+        SquareSbitVector x1 = SquareSbitVector.create(num, x1Bytes, false);
         try {
             LOGGER.info("-----test {} start-----", sender.getPtoDesc().getPtoName());
             HammingSenderThread senderThread = new HammingSenderThread(sender, x0);

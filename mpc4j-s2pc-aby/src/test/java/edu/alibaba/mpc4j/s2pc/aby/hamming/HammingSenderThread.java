@@ -1,7 +1,7 @@
 package edu.alibaba.mpc4j.s2pc.aby.hamming;
 
 import edu.alibaba.mpc4j.common.rpc.MpcAbortException;
-import edu.alibaba.mpc4j.s2pc.aby.bc.BcSquareVector;
+import edu.alibaba.mpc4j.s2pc.aby.bc.SquareSbitVector;
 
 /**
  * 汉明距离协议发送方线程。
@@ -17,7 +17,7 @@ class HammingSenderThread extends Thread {
     /**
      * xi
      */
-    private final BcSquareVector x0;
+    private final SquareSbitVector x0;
     /**
      * 运算数量
      */
@@ -27,10 +27,10 @@ class HammingSenderThread extends Thread {
      */
     private int hammingDistance;
 
-    HammingSenderThread(HammingParty hammingSender, BcSquareVector x0) {
+    HammingSenderThread(HammingParty hammingSender, SquareSbitVector x0) {
         this.hammingSender = hammingSender;
         this.x0 = x0;
-        bitNum = x0.bitLength();
+        bitNum = x0.bitNum();
     }
 
     int getHammingDistance() {

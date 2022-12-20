@@ -80,7 +80,7 @@ public class BitmapSenderRunner extends AbstractBitmapRunner {
         for (int round = 1; round <= totalRound; round++) {
             stopWatch.start();
             sender.getRpc().connect();
-            sender.init(BitmapUtils.getBitLength(maxNum), BitmapUtils.getBitLength(maxNum));
+            sender.init(BitmapUtils.getRoundContainerNumBitLength(maxNum), BitmapUtils.getRoundContainerNumBitLength(maxNum));
             SecureBitmapContainer x0 = xPublic ? sender.setPublicRoaringBitmap(x, maxNum) : sender.setOtherRoaringBitmap(maxNum);
             SecureBitmapContainer y0 = yPublic ? sender.setPublicRoaringBitmap(y, maxNum) : sender.setOwnRoaringBitmap(y, maxNum);
             // 执行and运算

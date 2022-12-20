@@ -15,7 +15,7 @@ import java.util.Arrays;
  * @author Weiran Liu
  * @date 2022/12/13
  */
-public class BcSquareVectorTest {
+public class SquareSbitVectorTest {
     /**
      * 最小比特长度
      */
@@ -32,20 +32,20 @@ public class BcSquareVectorTest {
     @Test
     public void testIllegalInputs() {
         // create vector with 0 length
-        Assert.assertThrows(AssertionError.class, () -> BcSquareVector.create(new byte[0], 0, true));
-        Assert.assertThrows(AssertionError.class, () -> BcSquareVector.create(new byte[0], 0, false));
-        // create vector with mismatch bit length
-        Assert.assertThrows(AssertionError.class, () -> BcSquareVector.create(new byte[] { (byte)0x0F, }, 1, true));
-        Assert.assertThrows(AssertionError.class, () -> BcSquareVector.create(new byte[] { (byte)0x0F, }, 1, false));
-        // create vector with mismatch byte length
-        Assert.assertThrows(AssertionError.class, () -> BcSquareVector.create(new byte[2], 1, true));
-        Assert.assertThrows(AssertionError.class, () -> BcSquareVector.create(new byte[2], 1, false));
-        Assert.assertThrows(AssertionError.class, () -> BcSquareVector.create(new byte[1], 9, true));
-        Assert.assertThrows(AssertionError.class, () -> BcSquareVector.create(new byte[1], 9, false));
-        // merge vector with mismatch byte length
+        Assert.assertThrows(AssertionError.class, () -> SquareSbitVector.create(0, new byte[0], true));
+        Assert.assertThrows(AssertionError.class, () -> SquareSbitVector.create(0, new byte[0], false));
+        // create vector with mismatch bit num
+        Assert.assertThrows(AssertionError.class, () -> SquareSbitVector.create(1, new byte[] { (byte)0x0F, }, true));
+        Assert.assertThrows(AssertionError.class, () -> SquareSbitVector.create(1, new byte[] { (byte)0x0F, }, false));
+        // create vector with mismatch byte num
+        Assert.assertThrows(AssertionError.class, () -> SquareSbitVector.create(1, new byte[2], true));
+        Assert.assertThrows(AssertionError.class, () -> SquareSbitVector.create(1, new byte[2], false));
+        Assert.assertThrows(AssertionError.class, () -> SquareSbitVector.create(9, new byte[1], true));
+        Assert.assertThrows(AssertionError.class, () -> SquareSbitVector.create(9, new byte[1], false));
+        // merge vector with mismatch byte plain state
         Assert.assertThrows(AssertionError.class, () -> {
-            BcSquareVector vector0 = BcSquareVector.create(new byte[] {(byte) 0x0F, }, 4, true);
-            BcSquareVector vector1 = BcSquareVector.create(new byte[] {(byte) 0x0F, }, 4, false);
+            SquareSbitVector vector0 = SquareSbitVector.create(4, new byte[] {(byte) 0x0F, }, true);
+            SquareSbitVector vector1 = SquareSbitVector.create(4, new byte[] {(byte) 0x0F, }, false);
             vector0.merge(vector1);
         });
     }
@@ -60,8 +60,8 @@ public class BcSquareVectorTest {
     }
 
     private void testOnesMerge(int num1, int num2) {
-        BcSquareVector vector1 = BcSquareVector.createOnes(num1);
-        BcSquareVector vector2 = BcSquareVector.createOnes(num2);
+        SquareSbitVector vector1 = SquareSbitVector.createOnes(num1);
+        SquareSbitVector vector2 = SquareSbitVector.createOnes(num2);
         // manually merge
         int expectMergeByteLength = CommonUtils.getByteLength(num1 + num2);
         byte[] expectMerge = new byte[expectMergeByteLength];
@@ -70,7 +70,7 @@ public class BcSquareVectorTest {
         // merge and verify
         vector1.merge(vector2);
         Assert.assertTrue(vector1.isPlain());
-        Assert.assertEquals(num1 + num2, vector1.bitLength());
+        Assert.assertEquals(num1 + num2, vector1.bitNum());
         Assert.assertArrayEquals(expectMerge, vector1.getBytes());
     }
 
@@ -86,8 +86,8 @@ public class BcSquareVectorTest {
     private void testRandomMerge(int num1, int num2) {
         int num1Offset = CommonUtils.getByteLength(num1) * Byte.SIZE - num1;
         int num2Offset = CommonUtils.getByteLength(num2) * Byte.SIZE - num2;
-        BcSquareVector vector1 = BcSquareVector.createRandom(num1, SECURE_RANDOM);
-        BcSquareVector vector2 = BcSquareVector.createRandom(num2, SECURE_RANDOM);
+        SquareSbitVector vector1 = SquareSbitVector.createRandom(num1, SECURE_RANDOM);
+        SquareSbitVector vector2 = SquareSbitVector.createRandom(num2, SECURE_RANDOM);
         // manually merge
         byte[] vector1Bytes = vector1.getBytes();
         byte[] vector2Bytes = vector2.getBytes();
@@ -106,7 +106,7 @@ public class BcSquareVectorTest {
         }
         // merge and verify
         vector1.merge(vector2);
-        Assert.assertEquals(num1 + num2, vector1.bitLength());
+        Assert.assertEquals(num1 + num2, vector1.bitNum());
         Assert.assertArrayEquals(expectMerge, vector1.getBytes());
     }
 }

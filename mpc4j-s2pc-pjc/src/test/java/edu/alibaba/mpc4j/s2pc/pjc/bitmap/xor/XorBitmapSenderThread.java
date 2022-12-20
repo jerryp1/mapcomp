@@ -55,7 +55,7 @@ class XorBitmapSenderThread extends Thread {
     public void run() {
         try {
             sender.getRpc().connect();
-            sender.init(BitmapUtils.getBitLength(maxNum), BitmapUtils.getBitLength(maxNum));
+            sender.init(maxNum, maxNum);
             SecureBitmapContainer x0 = xPublic ? sender.setPublicRoaringBitmap(x, maxNum) : sender.setOwnRoaringBitmap(x, maxNum);
             SecureBitmapContainer y0 = yPublic ? sender.setPublicRoaringBitmap(y, maxNum) : sender.setOtherRoaringBitmap(maxNum);
             SecureBitmapContainer z0 = sender.xor(x0, y0);

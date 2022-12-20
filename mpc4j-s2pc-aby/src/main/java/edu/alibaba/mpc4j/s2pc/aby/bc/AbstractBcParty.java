@@ -4,38 +4,47 @@ import edu.alibaba.mpc4j.common.rpc.Party;
 import edu.alibaba.mpc4j.common.rpc.Rpc;
 import edu.alibaba.mpc4j.common.rpc.desc.PtoDesc;
 import edu.alibaba.mpc4j.common.rpc.pto.AbstractSecureTwoPartyPto;
+import edu.alibaba.mpc4j.common.tool.bitvector.BitVector;
 
 /**
- * 布尔电路参与方。
+ * Abstract Boolean circuit party.
  *
  * @author Weiran Liu
  * @date 2022/02/13
  */
 public abstract class AbstractBcParty extends AbstractSecureTwoPartyPto implements BcParty {
     /**
-     * 配置项
+     * protocol configuration
      */
     private final BcConfig config;
     /**
-     * 最大单次运算数量
+     * maximum number of bits in round.
      */
-    protected int maxRoundNum;
+    protected int maxRoundBitNum;
     /**
-     * 更新数量
+     * total number of bits for updates.
      */
-    protected long maxUpdateNum;
+    protected long maxUpdateBitNum;
     /**
-     * 当前运算数量
+     * current number of bits.
      */
-    protected int num;
+    protected int bitNum;
     /**
-     * AND门数量
+     * the number of input bits
+     */
+    protected long inputBitNum;
+    /**
+     * the number of AND gates.
      */
     protected long andGateNum;
     /**
-     * XOR门数量
+     * the number of XOR gates.
      */
     protected long xorGateNum;
+    /**
+     * the number of output bits
+     */
+    protected long outputBitNum;
 
     public AbstractBcParty(PtoDesc ptoDesc, Rpc ownRpc, Party otherParty, BcConfig config) {
         super(ptoDesc, ownRpc, otherParty, config);
@@ -49,32 +58,103 @@ public abstract class AbstractBcParty extends AbstractSecureTwoPartyPto implemen
         return config.getPtoType();
     }
 
-    protected void setInitInput(int maxRoundNum, int updateNum) {
-        assert maxRoundNum > 0 && maxRoundNum <= config.maxBaseNum()
-            : "maxRoundNum must be in range (0, " + config.maxBaseNum() + "]";
-        this.maxRoundNum = maxRoundNum;
-        assert updateNum >= maxRoundNum : "updateNum must be greater or equal to maxRoundNum";
-        this.maxUpdateNum = updateNum;
+    protected void setInitInput(int maxRoundBitNum, int updateBitNum) {
+        assert maxRoundBitNum > 0 && maxRoundBitNum <= config.maxBaseNum()
+            : "maxRoundBitNum must be in range (0, " + config.maxBaseNum() + "]";
+        this.maxRoundBitNum = maxRoundBitNum;
+        assert updateBitNum >= maxRoundBitNum : "updateBitNum must be greater or equal to maxRoundBitNum";
+        this.maxUpdateBitNum = updateBitNum;
         initialized = false;
     }
 
-    protected void setAndInput(BcSquareVector xi, BcSquareVector yi) {
+    protected void setShareOwnInput(BitVector bitVector) {
         if (!initialized) {
             throw new IllegalStateException("Need init...");
         }
-        assert xi.bitLength() == yi.bitLength();
-        assert xi.bitLength() <= maxRoundNum;
-        // 只有当两组导线都为密文导线时，才需要增加门数量，这里不增加门数量
-        num = xi.bitLength();
+        assert bitVector.bitNum() <= maxRoundBitNum
+            : "the number of bits must be less than or equal to " + maxRoundBitNum + ": " + bitVector.bitNum();
+        bitNum = bitVector.bitNum();
+        inputBitNum += bitNum;
     }
 
-    protected void setXorInput(BcSquareVector xi, BcSquareVector yi) {
+    protected void setShareOtherInput(int bitNum) {
         if (!initialized) {
             throw new IllegalStateException("Need init...");
         }
-        assert xi.bitLength() == yi.bitLength();
-        assert xi.bitLength() <= maxRoundNum;
-        // 只有当两组导线都为密文导线时，才需要增加门数量，这里不增加门数量
-        num = xi.bitLength();
+        assert bitNum <= maxRoundBitNum
+            : "the number of bits must be less than or equal to " + maxRoundBitNum + ": " + bitNum;
+        this.bitNum = bitNum;
+        inputBitNum += bitNum;
+    }
+
+    protected void setAndInput(SquareSbitVector xi, SquareSbitVector yi) {
+        if (!initialized) {
+            throw new IllegalStateException("Need init...");
+        }
+        assert xi.bitNum() == yi.bitNum()
+            : "two BitVector must have the same number of bits (" + xi.bitNum() + " : " + yi.bitNum() + ")";
+        assert xi.bitNum() <= maxRoundBitNum
+            : "the number of bits must be less than or equal to " + maxRoundBitNum + ": " + xi.bitNum();
+        // the number of AND gates is added during the protocol execution.
+        bitNum = xi.bitNum();
+    }
+
+    protected void setXorInput(SquareSbitVector xi, SquareSbitVector yi) {
+        if (!initialized) {
+            throw new IllegalStateException("Need init...");
+        }
+        assert xi.bitNum() == yi.bitNum()
+            : "two BitVector must have the same number of bits (" + xi.bitNum() + " : " + yi.bitNum() + ")";
+        assert xi.bitNum() <= maxRoundBitNum
+            : "the number of bits must be less than or equal to " + maxRoundBitNum + ": " + xi.bitNum();
+        // the number of XOR gates is added during the protocol execution.
+        bitNum = xi.bitNum();
+    }
+
+    protected void setRevealOwnInput(SquareSbitVector xi) {
+        if (!initialized) {
+            throw new IllegalStateException("Need init...");
+        }
+        assert xi.bitNum() <= maxRoundBitNum
+            : "the number of bits must be less than or equal to " + maxRoundBitNum + ": " + xi.bitNum();
+        // the number of output bits is added during the protocol execution.
+        bitNum = xi.bitNum();
+    }
+
+    protected void setRevealOtherInput(SquareSbitVector xi) {
+        if (!initialized) {
+            throw new IllegalStateException("Need init...");
+        }
+        assert xi.bitNum() <= maxRoundBitNum
+            : "the number of bits must be less than or equal to " + maxRoundBitNum + ": " + xi.bitNum();
+        // the number of output bits is added during the protocol execution.
+        bitNum = xi.bitNum();
+    }
+
+    @Override
+    public long inputBitNum(boolean reset) {
+        long result = inputBitNum;
+        inputBitNum = reset ? 0L : inputBitNum;
+        return result;
+    }
+
+    @Override
+    public long andGateNum(boolean reset) {
+        long result = andGateNum;
+        andGateNum = reset ? 0L : andGateNum;
+        return result;
+    }
+
+    @Override
+    public long xorGateNum(boolean reset) {
+        long result = xorGateNum;
+        xorGateNum = reset ? 0L : xorGateNum;
+        return result;
+    }
+    @Override
+    public long outputBitNum(boolean reset) {
+        long result = outputBitNum;
+        outputBitNum = reset ? 0L : outputBitNum;
+        return result;
     }
 }

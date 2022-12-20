@@ -4,7 +4,7 @@ import edu.alibaba.mpc4j.common.tool.EnvType;
 import edu.alibaba.mpc4j.common.tool.bitmatrix.trans.TransBitMatrix;
 import edu.alibaba.mpc4j.common.tool.bitmatrix.trans.TransBitMatrixFactory;
 import edu.alibaba.mpc4j.common.tool.utils.IntUtils;
-import edu.alibaba.mpc4j.s2pc.aby.bc.BcSquareVector;
+import edu.alibaba.mpc4j.s2pc.aby.bc.SquareSbitVector;
 
 import java.util.stream.IntStream;
 
@@ -26,7 +26,7 @@ public class IntegerSquareVector {
     /**
      * 二进制方括号向量
      */
-    private BcSquareVector[] binaryVectors;
+    private SquareSbitVector[] binaryVectors;
     /**
      * 是否为明文状态
      */
@@ -63,10 +63,10 @@ public class IntegerSquareVector {
         IntegerSquareVector integerSquareVector = new IntegerSquareVector();
         integerSquareVector.num = values.length;
         integerSquareVector.isPublic = true;
-        integerSquareVector.binaryVectors = new BcSquareVector[SIZE];
+        integerSquareVector.binaryVectors = new SquareSbitVector[SIZE];
         for (int index = 0; index < SIZE; index++) {
-            integerSquareVector.binaryVectors[index] = BcSquareVector.create(
-                transBitMatrix.getColumn(index), integerSquareVector.num, true
+            integerSquareVector.binaryVectors[index] = SquareSbitVector.create(
+                integerSquareVector.num, transBitMatrix.getColumn(index), true
             );
         }
         return integerSquareVector;
@@ -78,19 +78,19 @@ public class IntegerSquareVector {
      * @param binaryVectors 布尔向量。
      * @return 密文整数方括号向量。
      */
-    public static IntegerSquareVector create(BcSquareVector[] binaryVectors) {
+    public static IntegerSquareVector create(SquareSbitVector[] binaryVectors) {
         // 允许输入长度小于SIZE，前面补明文0
         assert binaryVectors.length > 0 && binaryVectors.length <= SIZE
             : "the length of binary vectors must be in range (0, " + SIZE + "]: " + binaryVectors.length;
         // create IntegerSquareVector
         IntegerSquareVector integerSquareVector = new IntegerSquareVector();
-        integerSquareVector.num = binaryVectors[0].bitLength();
+        integerSquareVector.num = binaryVectors[0].bitNum();
         integerSquareVector.isPublic = binaryVectors[0].isPlain();
-        integerSquareVector.binaryVectors = new BcSquareVector[SIZE];
+        integerSquareVector.binaryVectors = new SquareSbitVector[SIZE];
         for (int index = 0; index < binaryVectors.length; index++) {
-            assert binaryVectors[index].bitLength() == integerSquareVector.num
+            assert binaryVectors[index].bitNum() == integerSquareVector.num
                 : "the " + index + "-th binary vector must contain the same bits "
-                + "(" + integerSquareVector.num + "): " + binaryVectors[index].bitLength();
+                + "(" + integerSquareVector.num + "): " + binaryVectors[index].bitNum();
             assert binaryVectors[index].isPlain() == integerSquareVector.isPublic
                 : "the " + index + "-th binary vector must have the same public state "
                 + "(" + integerSquareVector.isPublic + "): " + binaryVectors[index].isPlain();
@@ -98,7 +98,7 @@ public class IntegerSquareVector {
         }
         // padding remaining binary vectors with 0
         for (int index = binaryVectors.length; index < SIZE; index++) {
-            integerSquareVector.binaryVectors[index] = BcSquareVector.createZeros(integerSquareVector.num);
+            integerSquareVector.binaryVectors[index] = SquareSbitVector.createZeros(integerSquareVector.num);
         }
         return integerSquareVector;
     }
