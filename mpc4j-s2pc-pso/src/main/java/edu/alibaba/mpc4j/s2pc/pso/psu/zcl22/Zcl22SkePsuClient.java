@@ -9,9 +9,6 @@ import edu.alibaba.mpc4j.common.rpc.utils.DataPacketHeader;
 import edu.alibaba.mpc4j.common.tool.CommonConstants;
 import edu.alibaba.mpc4j.common.tool.bitmatrix.trans.TransBitMatrix;
 import edu.alibaba.mpc4j.common.tool.bitmatrix.trans.TransBitMatrixFactory;
-import edu.alibaba.mpc4j.common.tool.crypto.crhf.Crhf;
-import edu.alibaba.mpc4j.common.tool.crypto.crhf.CrhfFactory;
-import edu.alibaba.mpc4j.common.tool.crypto.crhf.CrhfFactory.CrhfType;
 import edu.alibaba.mpc4j.common.tool.crypto.prg.Prg;
 import edu.alibaba.mpc4j.common.tool.crypto.prg.PrgFactory;
 import edu.alibaba.mpc4j.common.tool.crypto.prp.Prp;
@@ -63,10 +60,6 @@ public class Zcl22SkePsuClient extends AbstractPsuClient {
      */
     private final Gf2eOvdmType gf2eOvdmType;
     /**
-     * 抗关联哈希函数
-     */
-    private final Crhf crhf;
-    /**
      * GF(2^l)-OVDM哈希密钥
      */
     private byte[][] gf2eOvdmHashKeys;
@@ -88,7 +81,6 @@ public class Zcl22SkePsuClient extends AbstractPsuClient {
         coreCotReceiver = CoreCotFactory.createReceiver(clientRpc, serverParty, config.getCoreCotConfig());
         coreCotReceiver.addLogLevel();
         gf2eOvdmType = config.getGf2eOvdmType();
-        crhf = CrhfFactory.createInstance(getEnvType(), CrhfType.MMO);
     }
 
     @Override
@@ -216,9 +208,8 @@ public class Zcl22SkePsuClient extends AbstractPsuClient {
                 if (choiceArray[index]) {
                     return botElementByteBuffer;
                 } else {
-                    byte[] key = cotReceiverOutput.getRb(index);
-                    key = crhf.hash(key);
-                    byte[] message = encPrg.extendToBytes(key);
+                    // do not need CRHF since we call prg
+                    byte[] message = encPrg.extendToBytes(cotReceiverOutput.getRb(index));
                     BytesUtils.xori(message, encArrayList.get(index));
                     return ByteBuffer.wrap(message);
                 }

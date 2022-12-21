@@ -6,8 +6,7 @@ import edu.alibaba.mpc4j.common.rpc.Party;
 import edu.alibaba.mpc4j.common.rpc.Rpc;
 import edu.alibaba.mpc4j.common.rpc.utils.DataPacket;
 import edu.alibaba.mpc4j.common.rpc.utils.DataPacketHeader;
-import edu.alibaba.mpc4j.common.tool.crypto.crhf.Crhf;
-import edu.alibaba.mpc4j.common.tool.crypto.crhf.CrhfFactory;
+import edu.alibaba.mpc4j.common.tool.crypto.crhf.CrhfFactory.CrhfType;
 import edu.alibaba.mpc4j.common.tool.utils.BinaryUtils;
 import edu.alibaba.mpc4j.common.tool.utils.BytesUtils;
 import edu.alibaba.mpc4j.common.tool.utils.IntUtils;
@@ -33,16 +32,11 @@ public class Bcp13ShHammingReceiver extends AbstractHammingParty {
      * COT协议接收方
      */
     private final CotReceiver cotReceiver;
-    /**
-     * 抗关联哈希函数
-     */
-    private final Crhf crhf;
 
     public Bcp13ShHammingReceiver(Rpc receiverRpc, Party senderParty, Bcp13ShHammingConfig config) {
         super(Bcp13ShHammingPtoDesc.getInstance(), receiverRpc, senderParty, config);
         cotReceiver = CotFactory.createReceiver(receiverRpc, senderParty, config.getCotConfig());
         cotReceiver.addLogLevel();
-        crhf = CrhfFactory.createInstance(getEnvType(), CrhfFactory.CrhfType.MMO);
     }
 
     @Override
@@ -138,6 +132,7 @@ public class Bcp13ShHammingReceiver extends AbstractHammingParty {
         stopWatch.start();
         // P_1 and P_2 engage in a OT_1^2, where P_2's selection bit is y_i.
         CotReceiverOutput cotReceiverOutput = cotReceiver.receive(ys);
+        RotReceiverOutput rotReceiverOutput = new RotReceiverOutput(envType, CrhfType.MMO, cotReceiverOutput);
         DataPacketHeader senderMessageHeader = new DataPacketHeader(
             taskId, getPtoDesc().getPtoId(), PtoStep.SENDER_SEND_PAYLOAD.ordinal(), extraInfo,
             otherParty().getPartyId(), ownParty().getPartyId()
@@ -148,7 +143,7 @@ public class Bcp13ShHammingReceiver extends AbstractHammingParty {
         int messageByteLength = IntUtils.boundedIntByteLength(bitNum);
         int[] ts = IntStream.range(0, bitNum)
             .map(index -> {
-                byte[] keyi = Arrays.copyOf(crhf.hash(cotReceiverOutput.getRb(index)), messageByteLength);
+                byte[] keyi = Arrays.copyOf(rotReceiverOutput.getRb(index), messageByteLength);
                 byte[] choiceCiphertext = ys[index] ?
                     senderMessageFlattenArray[index * 2 + 1] : senderMessageFlattenArray[index * 2];
                 BytesUtils.xori(choiceCiphertext, keyi);
