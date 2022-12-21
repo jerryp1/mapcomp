@@ -109,6 +109,22 @@ public class BigIntegerBitVector implements BitVector {
     }
 
     @Override
+    public void set(int index, boolean value) {
+        assert index >= 0 && index < bitNum : "index must be in range [0, " + bitNum + ")";
+        if (value) {
+            bigInteger = bigInteger.setBit(bitNum - 1 - index);
+        } else {
+            bigInteger = bigInteger.setBit(bitNum - 1 - index).flipBit(bitNum - 1 - index);
+        }
+    }
+
+    @Override
+    public boolean get(int index) {
+        assert index >= 0 && index < bitNum : "index must be in range [0, " + bitNum + ")";
+        return bigInteger.testBit(bitNum - 1 - index);
+    }
+
+    @Override
     public BitVector copy() {
         BigIntegerBitVector copyBitVector = new BigIntegerBitVector();
         // BigInteger is immutable, do not need to copy

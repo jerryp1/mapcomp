@@ -17,6 +17,22 @@ public interface BitVector {
     BitVectorFactory.BitVectorType getType();
 
     /**
+     * Set the value at the given index.
+     *
+     * @param index the index.
+     * @param value the value.
+     */
+    void set(int index, boolean value);
+
+    /**
+     * Get the value at the index.
+     *
+     * @param index the index.
+     * @return the value at the index.
+     */
+    boolean get(int index);
+
+    /**
      * Copy the bit vector.
      *
      * @return the copied bit vector.

@@ -1,12 +1,12 @@
-package edu.alibaba.mpc4j.s2pc.aby.bc;
+package edu.alibaba.mpc4j.s2pc.aby.basics.bc;
 
 import edu.alibaba.mpc4j.common.rpc.Party;
 import edu.alibaba.mpc4j.common.rpc.Rpc;
 import edu.alibaba.mpc4j.common.rpc.desc.SecurityModel;
 import edu.alibaba.mpc4j.common.rpc.pto.PtoFactory;
-import edu.alibaba.mpc4j.s2pc.aby.bc.bea91.Bea91BcConfig;
-import edu.alibaba.mpc4j.s2pc.aby.bc.bea91.Bea91BcReceiver;
-import edu.alibaba.mpc4j.s2pc.aby.bc.bea91.Bea91BcSender;
+import edu.alibaba.mpc4j.s2pc.aby.basics.bc.bea91.Bea91BcConfig;
+import edu.alibaba.mpc4j.s2pc.aby.basics.bc.bea91.Bea91BcReceiver;
+import edu.alibaba.mpc4j.s2pc.aby.basics.bc.bea91.Bea91BcSender;
 import edu.alibaba.mpc4j.s2pc.pcg.mtg.z2.Z2MtgFactory;
 
 /**

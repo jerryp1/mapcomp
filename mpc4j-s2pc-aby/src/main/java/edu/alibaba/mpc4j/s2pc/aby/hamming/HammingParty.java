@@ -3,7 +3,7 @@ package edu.alibaba.mpc4j.s2pc.aby.hamming;
 import edu.alibaba.mpc4j.common.rpc.MpcAbortException;
 import edu.alibaba.mpc4j.common.rpc.pto.SecurePto;
 import edu.alibaba.mpc4j.common.rpc.pto.TwoPartyPto;
-import edu.alibaba.mpc4j.s2pc.aby.bc.SquareSbitVector;
+import edu.alibaba.mpc4j.s2pc.aby.basics.bc.SquareSbitVector;
 
 /**
  * 汉明距离协议服务端接口。

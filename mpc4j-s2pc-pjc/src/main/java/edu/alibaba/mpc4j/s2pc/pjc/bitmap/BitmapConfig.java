@@ -1,7 +1,7 @@
 package edu.alibaba.mpc4j.s2pc.pjc.bitmap;
 
 import edu.alibaba.mpc4j.common.rpc.pto.SecurePtoConfig;
-import edu.alibaba.mpc4j.s2pc.aby.bc.BcConfig;
+import edu.alibaba.mpc4j.s2pc.aby.basics.bc.BcConfig;
 import edu.alibaba.mpc4j.s2pc.aby.hamming.HammingConfig;
 import edu.alibaba.mpc4j.s2pc.pjc.bitmap.BitmapPtoDesc.BitmapType;
 

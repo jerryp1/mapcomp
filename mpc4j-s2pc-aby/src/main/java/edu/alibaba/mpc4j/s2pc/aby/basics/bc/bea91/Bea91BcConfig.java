@@ -1,9 +1,9 @@
-package edu.alibaba.mpc4j.s2pc.aby.bc.bea91;
+package edu.alibaba.mpc4j.s2pc.aby.basics.bc.bea91;
 
 import edu.alibaba.mpc4j.common.rpc.desc.SecurityModel;
 import edu.alibaba.mpc4j.common.tool.EnvType;
-import edu.alibaba.mpc4j.s2pc.aby.bc.BcConfig;
-import edu.alibaba.mpc4j.s2pc.aby.bc.BcFactory;
+import edu.alibaba.mpc4j.s2pc.aby.basics.bc.BcFactory;
+import edu.alibaba.mpc4j.s2pc.aby.basics.bc.BcConfig;
 import edu.alibaba.mpc4j.s2pc.pcg.mtg.z2.Z2MtgConfig;
 import edu.alibaba.mpc4j.s2pc.pcg.mtg.z2.Z2MtgFactory;
 

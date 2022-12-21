@@ -2,7 +2,7 @@ package edu.alibaba.mpc4j.s2pc.pjc.bitmap;
 
 import com.sun.org.slf4j.internal.Logger;
 import com.sun.org.slf4j.internal.LoggerFactory;
-import edu.alibaba.mpc4j.s2pc.aby.bc.SquareSbitVector;
+import edu.alibaba.mpc4j.s2pc.aby.basics.bc.SquareSbitVector;
 import org.roaringbitmap.BitmapContainer;
 
 /**

@@ -1,6 +1,7 @@
 package edu.alibaba.mpc4j.common.tool.bitvector;
 
 import edu.alibaba.mpc4j.common.tool.utils.BigIntegerUtils;
+import edu.alibaba.mpc4j.common.tool.utils.BinaryUtils;
 import edu.alibaba.mpc4j.common.tool.utils.BytesUtils;
 import edu.alibaba.mpc4j.common.tool.utils.CommonUtils;
 import org.apache.commons.lang3.builder.EqualsBuilder;
@@ -29,6 +30,10 @@ public class BytesBitVector implements BitVector {
      * number of byte.
      */
     private int byteNum;
+    /**
+     * the offset
+     */
+    private int offset;
 
     static BitVector create(int bitNum, byte[] bytes) {
         assert bitNum > 0 : "the number of bits must be greater than 0: " + bitNum;
@@ -40,6 +45,7 @@ public class BytesBitVector implements BitVector {
         bitVector.bytes = bytes;
         bitVector.bitNum = bitNum;
         bitVector.byteNum = byteLength;
+        bitVector.offset = bitVector.byteNum * Byte.SIZE - bitVector.bitNum;
         return bitVector;
     }
 
@@ -55,6 +61,7 @@ public class BytesBitVector implements BitVector {
         bitVector.bytes = BigIntegerUtils.nonNegBigIntegerToByteArray(bigInteger, byteLength);
         bitVector.bitNum = bitNum;
         bitVector.byteNum = byteLength;
+        bitVector.offset = bitVector.byteNum * Byte.SIZE - bitVector.bitNum;
         return bitVector;
     }
 
@@ -70,6 +77,7 @@ public class BytesBitVector implements BitVector {
         bitVector.bytes = bytes;
         bitVector.bitNum = bitNum;
         bitVector.byteNum = byteLength;
+        bitVector.offset = bitVector.byteNum * Byte.SIZE - bitVector.bitNum;
         return bitVector;
     }
 
@@ -85,6 +93,7 @@ public class BytesBitVector implements BitVector {
         bitVector.bytes = ones;
         bitVector.bitNum = bitNum;
         bitVector.byteNum = byteLength;
+        bitVector.offset = bitVector.byteNum * Byte.SIZE - bitVector.bitNum;
         return bitVector;
     }
 
@@ -98,6 +107,7 @@ public class BytesBitVector implements BitVector {
         bitVector.bytes = zeros;
         bitVector.bitNum = bitNum;
         bitVector.byteNum = byteLength;
+        bitVector.offset = bitVector.byteNum * Byte.SIZE - bitVector.bitNum;
         return bitVector;
     }
 
@@ -106,6 +116,7 @@ public class BytesBitVector implements BitVector {
         bitVector.bytes = new byte[0];
         bitVector.bitNum = 0;
         bitVector.byteNum = 0;
+        bitVector.offset = 0;
         return bitVector;
     }
 
@@ -115,11 +126,24 @@ public class BytesBitVector implements BitVector {
     }
 
     @Override
+    public void set(int index, boolean value) {
+        assert index >= 0 && index < bitNum : "index must be in range [0, " + bitNum + ")";
+        BinaryUtils.setBoolean(bytes, index + offset, value);
+    }
+
+    @Override
+    public boolean get(int index) {
+        assert index >= 0 && index < bitNum : "index must be in range [0, " + bitNum + ")";
+        return BinaryUtils.getBoolean(bytes, index + offset);
+    }
+
+    @Override
     public BitVector copy() {
         BytesBitVector copyBitVector = new BytesBitVector();
         copyBitVector.bytes = BytesUtils.clone(bytes);
         copyBitVector.bitNum = bitNum;
         copyBitVector.byteNum = byteNum;
+        copyBitVector.offset = offset;
 
         return copyBitVector;
     }
@@ -162,6 +186,7 @@ public class BytesBitVector implements BitVector {
         this.bitNum = this.bitNum - bitNum;
         byteNum = this.bitNum == 0 ? 0 : CommonUtils.getByteLength(this.bitNum);
         bytes = BigIntegerUtils.nonNegBigIntegerToByteArray(remainBigInteger, byteNum);
+        offset = byteNum * Byte.SIZE - this.bitNum;
         // return a new instance
         return BytesBitVector.create(bitNum, splitBigInteger);
     }
@@ -179,6 +204,7 @@ public class BytesBitVector implements BitVector {
             this.bitNum = bitNum;
             byteNum = CommonUtils.getByteLength(this.bitNum);
             bytes = BigIntegerUtils.nonNegBigIntegerToByteArray(remainBigInteger, byteNum);
+            offset = byteNum * Byte.SIZE - this.bitNum;
         }
     }
 
@@ -192,6 +218,7 @@ public class BytesBitVector implements BitVector {
         bitNum += that.bitNum();
         byteNum = bitNum == 0 ? 0 : CommonUtils.getByteLength(bitNum);
         bytes = BigIntegerUtils.nonNegBigIntegerToByteArray(remainBigInteger, byteNum);
+        offset = byteNum * Byte.SIZE - bitNum;
     }
 
     @Override

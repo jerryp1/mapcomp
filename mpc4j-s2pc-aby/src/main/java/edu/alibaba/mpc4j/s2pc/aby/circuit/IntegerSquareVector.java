@@ -4,7 +4,7 @@ import edu.alibaba.mpc4j.common.tool.EnvType;
 import edu.alibaba.mpc4j.common.tool.bitmatrix.trans.TransBitMatrix;
 import edu.alibaba.mpc4j.common.tool.bitmatrix.trans.TransBitMatrixFactory;
 import edu.alibaba.mpc4j.common.tool.utils.IntUtils;
-import edu.alibaba.mpc4j.s2pc.aby.bc.SquareSbitVector;
+import edu.alibaba.mpc4j.s2pc.aby.basics.bc.SquareSbitVector;
 
 import java.util.stream.IntStream;
 

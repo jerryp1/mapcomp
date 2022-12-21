@@ -11,7 +11,7 @@ import edu.alibaba.mpc4j.common.tool.crypto.crhf.CrhfFactory;
 import edu.alibaba.mpc4j.common.tool.utils.BinaryUtils;
 import edu.alibaba.mpc4j.common.tool.utils.BytesUtils;
 import edu.alibaba.mpc4j.common.tool.utils.IntUtils;
-import edu.alibaba.mpc4j.s2pc.aby.bc.SquareSbitVector;
+import edu.alibaba.mpc4j.s2pc.aby.basics.bc.SquareSbitVector;
 import edu.alibaba.mpc4j.s2pc.aby.hamming.AbstractHammingParty;
 import edu.alibaba.mpc4j.s2pc.aby.hamming.bcp13.Bcp13ShHammingPtoDesc.PtoStep;
 import edu.alibaba.mpc4j.s2pc.pcg.ot.cot.*;

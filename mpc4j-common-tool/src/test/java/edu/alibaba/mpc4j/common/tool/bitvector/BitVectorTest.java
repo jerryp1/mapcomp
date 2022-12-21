@@ -15,6 +15,7 @@ import java.security.SecureRandom;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.stream.IntStream;
 
 /**
  * BitVector tests.
@@ -304,6 +305,63 @@ public class BitVectorTest {
             assertOnesCorrectness(bitVectorHalf, bitNum - bitNum / 2);
             assertOnesCorrectness(splitBitVectorHalf, bitNum / 2);
         }
+    }
+
+    @Test
+    public void testGet() {
+        testGet(new byte[]{0b01000011,},
+            new boolean[]{false, true, false, false, false, false, true, true,}
+        );
+        testGet(
+            new byte[]{0b00111010, 0b01000011,},
+            new boolean[]{
+                false, false, true, true, true, false, true, false,
+                false, true, false, false, false, false, true, true,
+            }
+        );
+        testGet(new byte[]{0b01000011,},
+            new boolean[]{true, false, false, false, false, true, true,}
+        );
+        testGet(
+            new byte[]{0b00111010, 0b01000011,},
+            new boolean[]{
+                true, true, true, false, true, false,
+                false, true, false, false, false, false, true, true,
+            }
+        );
+    }
+
+    private void testGet(byte[] byteArray, boolean[] binary) {
+        int bitNum = binary.length;
+        BitVector bitVector = BitVectorFactory.create(type, bitNum, byteArray);
+        IntStream.range(0, bitNum).forEach(binaryIndex ->
+            Assert.assertEquals(binary[binaryIndex], bitVector.get(binaryIndex))
+        );
+    }
+
+    @Test
+    public void testSet() {
+        testSet(8, new byte[]{0b01000011,});
+        testSet(16, new byte[]{0b00111010, 0b01000011,});
+        testSet(7, new byte[]{0b01000011,});
+        testSet(14, new byte[]{0b00111010, 0b01000011,});
+    }
+
+    private void testSet(int bitNum, byte[] byteArray) {
+        // set every position to 1
+        byte[] trueByteArray = Arrays.copyOf(byteArray, byteArray.length);
+        BitVector trueBitVector = BitVectorFactory.create(type, bitNum, trueByteArray);
+        IntStream.range(0, bitNum).forEach(binaryIndex -> {
+            trueBitVector.set(binaryIndex, true);
+            Assert.assertTrue(trueBitVector.get(binaryIndex));
+        });
+        // set every position to 0
+        byte[] falseByteArray = Arrays.copyOf(byteArray, byteArray.length);
+        BitVector falseBitVector = BitVectorFactory.create(type, bitNum, falseByteArray);
+        IntStream.range(0, bitNum).forEach(binaryIndex -> {
+            falseBitVector.set(binaryIndex, false);
+            Assert.assertFalse(falseBitVector.get(binaryIndex));
+        });
     }
 
     @Test

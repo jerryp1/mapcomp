@@ -1,4 +1,4 @@
-package edu.alibaba.mpc4j.s2pc.aby.bc.bea91;
+package edu.alibaba.mpc4j.s2pc.aby.basics.bc.bea91;
 
 import edu.alibaba.mpc4j.common.rpc.MpcAbortException;
 import edu.alibaba.mpc4j.common.rpc.MpcAbortPreconditions;
@@ -10,8 +10,8 @@ import edu.alibaba.mpc4j.common.tool.bitvector.BitVector;
 import edu.alibaba.mpc4j.common.tool.bitvector.BitVectorFactory;
 import edu.alibaba.mpc4j.common.tool.bitvector.BitVectorFactory.BitVectorType;
 import edu.alibaba.mpc4j.common.tool.utils.BytesUtils;
-import edu.alibaba.mpc4j.s2pc.aby.bc.AbstractBcParty;
-import edu.alibaba.mpc4j.s2pc.aby.bc.SquareSbitVector;
+import edu.alibaba.mpc4j.s2pc.aby.basics.bc.AbstractBcParty;
+import edu.alibaba.mpc4j.s2pc.aby.basics.bc.SquareSbitVector;
 import edu.alibaba.mpc4j.s2pc.pcg.mtg.z2.Z2MtgFactory;
 import edu.alibaba.mpc4j.s2pc.pcg.mtg.z2.Z2MtgParty;
 import edu.alibaba.mpc4j.s2pc.pcg.mtg.z2.Z2Triple;
@@ -20,9 +20,6 @@ import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
-
-import static edu.alibaba.mpc4j.s2pc.aby.bc.bea91.Bea91BcPtoDesc.PtoStep;
-import static edu.alibaba.mpc4j.s2pc.aby.bc.bea91.Bea91BcPtoDesc.getInstance;
 
 /**
  * Beaver91-BC协议发送方。
@@ -37,7 +34,7 @@ public class Bea91BcSender extends AbstractBcParty {
     private final Z2MtgParty z2MtgSender;
 
     public Bea91BcSender(Rpc senderRpc, Party receiverParty, Bea91BcConfig config) {
-        super(getInstance(), senderRpc, receiverParty, config);
+        super(Bea91BcPtoDesc.getInstance(), senderRpc, receiverParty, config);
         z2MtgSender = Z2MtgFactory.createSender(senderRpc, receiverParty, config.getZ2MtgConfig());
         z2MtgSender.addLogLevel();
     }
@@ -86,7 +83,7 @@ public class Bea91BcSender extends AbstractBcParty {
         BitVector x1BitVector = x.xor(x0BitVector);
         List<byte[]> x1Payload = Collections.singletonList(x1BitVector.getBytes());
         DataPacketHeader x1Header = new DataPacketHeader(
-            taskId, getPtoDesc().getPtoId(), PtoStep.SENDER_SEND_INPUT_SHARE.ordinal(), inputBitNum,
+            taskId, getPtoDesc().getPtoId(), Bea91BcPtoDesc.PtoStep.SENDER_SEND_INPUT_SHARE.ordinal(), inputBitNum,
             ownParty().getPartyId(), otherParty().getPartyId()
         );
         rpc.send(DataPacket.fromByteArrayList(x1Header, x1Payload));
@@ -106,7 +103,7 @@ public class Bea91BcSender extends AbstractBcParty {
 
         stopWatch.start();
         DataPacketHeader x0Header = new DataPacketHeader(
-            taskId, getPtoDesc().getPtoId(), PtoStep.RECEIVER_SEND_INPUT_SHARE.ordinal(), inputBitNum,
+            taskId, getPtoDesc().getPtoId(), Bea91BcPtoDesc.PtoStep.RECEIVER_SEND_INPUT_SHARE.ordinal(), inputBitNum,
             otherParty().getPartyId(), ownParty().getPartyId()
         );
         List<byte[]> x0Payload = rpc.receive(x0Header).getPayload();
@@ -155,7 +152,7 @@ public class Bea91BcSender extends AbstractBcParty {
             e0f0Payload.add(e0);
             e0f0Payload.add(f0);
             DataPacketHeader e0f0Header = new DataPacketHeader(
-                taskId, getPtoDesc().getPtoId(), PtoStep.SENDER_SEND_E0_F0.ordinal(), andGateNum,
+                taskId, getPtoDesc().getPtoId(), Bea91BcPtoDesc.PtoStep.SENDER_SEND_E0_F0.ordinal(), andGateNum,
                 ownParty().getPartyId(), otherParty().getPartyId()
             );
             rpc.send(DataPacket.fromByteArrayList(e0f0Header, e0f0Payload));
@@ -166,7 +163,7 @@ public class Bea91BcSender extends AbstractBcParty {
 
             stopWatch.start();
             DataPacketHeader e1f1Header = new DataPacketHeader(
-                taskId, getPtoDesc().getPtoId(), PtoStep.RECEIVER_SEND_E1_F1.ordinal(), andGateNum,
+                taskId, getPtoDesc().getPtoId(), Bea91BcPtoDesc.PtoStep.RECEIVER_SEND_E1_F1.ordinal(), andGateNum,
                 otherParty().getPartyId(), ownParty().getPartyId()
             );
             List<byte[]> e1f1Payload = rpc.receive(e1f1Header).getPayload();
@@ -234,7 +231,7 @@ public class Bea91BcSender extends AbstractBcParty {
 
             stopWatch.start();
             DataPacketHeader x1Header = new DataPacketHeader(
-                taskId, getPtoDesc().getPtoId(), PtoStep.RECEIVER_SEND_SHARE_OUTPUT.ordinal(), outputBitNum,
+                taskId, getPtoDesc().getPtoId(), Bea91BcPtoDesc.PtoStep.RECEIVER_SEND_SHARE_OUTPUT.ordinal(), outputBitNum,
                 otherParty().getPartyId(), ownParty().getPartyId()
             );
             List<byte[]> x1Payload = rpc.receive(x1Header).getPayload();
@@ -260,7 +257,7 @@ public class Bea91BcSender extends AbstractBcParty {
             stopWatch.start();
             List<byte[]> x0Payload = Collections.singletonList(x0.getBytes());
             DataPacketHeader x0Header = new DataPacketHeader(
-                taskId, getPtoDesc().getPtoId(), PtoStep.SENDER_SEND_OUTPUT_SHARE.ordinal(), outputBitNum,
+                taskId, getPtoDesc().getPtoId(), Bea91BcPtoDesc.PtoStep.SENDER_SEND_OUTPUT_SHARE.ordinal(), outputBitNum,
                 ownParty().getPartyId(), otherParty().getPartyId()
             );
             rpc.send(DataPacket.fromByteArrayList(x0Header, x0Payload));
