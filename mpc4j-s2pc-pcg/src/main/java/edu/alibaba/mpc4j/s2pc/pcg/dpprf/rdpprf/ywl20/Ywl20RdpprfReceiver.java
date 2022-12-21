@@ -1,4 +1,4 @@
-package edu.alibaba.mpc4j.s2pc.pcg.dpprf.ywl20;
+package edu.alibaba.mpc4j.s2pc.pcg.dpprf.rdpprf.ywl20;
 
 import edu.alibaba.mpc4j.common.rpc.MpcAbortException;
 import edu.alibaba.mpc4j.common.rpc.MpcAbortPreconditions;
@@ -16,7 +16,7 @@ import edu.alibaba.mpc4j.common.tool.utils.BytesUtils;
 import edu.alibaba.mpc4j.common.tool.utils.CommonUtils;
 import edu.alibaba.mpc4j.s2pc.pcg.dpprf.AbstractDpprfReceiver;
 import edu.alibaba.mpc4j.s2pc.pcg.dpprf.DpprfReceiverOutput;
-import edu.alibaba.mpc4j.s2pc.pcg.dpprf.ywl20.Ywl20DpprfPtoDesc.PtoStep;
+import edu.alibaba.mpc4j.s2pc.pcg.dpprf.rdpprf.ywl20.Ywl20RdpprfPtoDesc.PtoStep;
 import edu.alibaba.mpc4j.s2pc.pcg.ot.cot.CotReceiverOutput;
 import edu.alibaba.mpc4j.s2pc.pcg.ot.cot.core.CoreCotFactory;
 import edu.alibaba.mpc4j.s2pc.pcg.ot.cot.core.CoreCotReceiver;
@@ -28,12 +28,12 @@ import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
 /**
- * YWL20-DPPRF接收方。
+ * YWL20-RDPPRF接收方。
  *
  * @author Weiran Liu
  * @date 2022/8/16
  */
-public class Ywl20DpprfReceiver extends AbstractDpprfReceiver {
+public class Ywl20RdpprfReceiver extends AbstractDpprfReceiver {
     /**
      * 核COT协议接收方
      */
@@ -47,8 +47,8 @@ public class Ywl20DpprfReceiver extends AbstractDpprfReceiver {
      */
     private ArrayList<ArrayList<byte[][]>> ggmTree;
 
-    public Ywl20DpprfReceiver(Rpc receiverRpc, Party senderParty, Ywl20DpprfConfig config) {
-        super(Ywl20DpprfPtoDesc.getInstance(), receiverRpc, senderParty, config);
+    public Ywl20RdpprfReceiver(Rpc receiverRpc, Party senderParty, Ywl20RdpprfConfig config) {
+        super(Ywl20RdpprfPtoDesc.getInstance(), receiverRpc, senderParty, config);
         coreCotReceiver = CoreCotFactory.createReceiver(receiverRpc, senderParty, config.getCoreCotConfig());
         coreCotReceiver.addLogLevel();
     }

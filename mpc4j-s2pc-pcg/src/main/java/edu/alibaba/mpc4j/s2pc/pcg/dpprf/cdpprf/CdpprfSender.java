@@ -1,33 +1,25 @@
-package edu.alibaba.mpc4j.s2pc.pcg.dpprf;
+package edu.alibaba.mpc4j.s2pc.pcg.dpprf.cdpprf;
 
 import edu.alibaba.mpc4j.common.rpc.MpcAbortException;
-import edu.alibaba.mpc4j.common.rpc.pto.SecurePto;
-import edu.alibaba.mpc4j.common.rpc.pto.TwoPartyPto;
+import edu.alibaba.mpc4j.s2pc.pcg.dpprf.DpprfSender;
 import edu.alibaba.mpc4j.s2pc.pcg.ot.cot.CotSenderOutput;
 
 /**
- * DPPRF sender.
+ * Correlated DPPRF sender.
  *
  * @author Weiran Liu
- * @date 2022/8/16
+ * @date 2022/12/21
  */
-public interface DpprfSender extends TwoPartyPto, SecurePto {
-    /**
-     * Get the protocol type.
-     *
-     * @return the protocol type.
-     */
-    @Override
-    DpprfFactory.DpprfType getPtoType();
-
+public interface CdpprfSender extends DpprfSender {
     /**
      * Init the protocol.
      *
+     * @param delta         Δ.
      * @param maxBatchNum   maximal batch num.
      * @param maxAlphaBound maximal α upper bound.
      * @throws MpcAbortException if the protocol aborts.
      */
-    void init(int maxBatchNum, int maxAlphaBound) throws MpcAbortException;
+    void init(byte[] delta, int maxBatchNum, int maxAlphaBound) throws MpcAbortException;
 
     /**
      * Execute the protocol.
@@ -37,7 +29,8 @@ public interface DpprfSender extends TwoPartyPto, SecurePto {
      * @return sender output.
      * @throws MpcAbortException if the protocol aborts.
      */
-    DpprfSenderOutput puncture(int batchNum, int alphaBound) throws MpcAbortException;
+    @Override
+    CdpprfSenderOutput puncture(int batchNum, int alphaBound) throws MpcAbortException;
 
     /**
      * Execute the protocol.
@@ -48,5 +41,6 @@ public interface DpprfSender extends TwoPartyPto, SecurePto {
      * @return sender output.
      * @throws MpcAbortException if the protocol aborts.
      */
-    DpprfSenderOutput puncture(int batchNum, int alphaBound, CotSenderOutput preSenderOutput) throws MpcAbortException;
+    @Override
+    CdpprfSenderOutput puncture(int batchNum, int alphaBound, CotSenderOutput preSenderOutput) throws MpcAbortException;
 }

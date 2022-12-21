@@ -8,7 +8,7 @@ import edu.alibaba.mpc4j.common.tool.utils.LongUtils;
 import edu.alibaba.mpc4j.s2pc.pcg.ot.cot.CotSenderOutput;
 
 /**
- * DPPRF发送方抽象类。
+ * DPPRF abstract sender.
  *
  * @author Weiran Liu
  * @date 2022/8/16
