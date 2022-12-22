@@ -5,7 +5,6 @@ import edu.alibaba.mpc4j.common.rpc.Rpc;
 import edu.alibaba.mpc4j.common.rpc.desc.SecurityModel;
 import edu.alibaba.mpc4j.common.rpc.pto.PtoFactory;
 import edu.alibaba.mpc4j.common.tool.utils.LongUtils;
-import edu.alibaba.mpc4j.s2pc.pcg.dpprf.rdpprf.RdpprfConfig;
 import edu.alibaba.mpc4j.s2pc.pcg.dpprf.rdpprf.ywl20.Ywl20RdpprfConfig;
 import edu.alibaba.mpc4j.s2pc.pcg.dpprf.rdpprf.ywl20.Ywl20RdpprfReceiver;
 import edu.alibaba.mpc4j.s2pc.pcg.dpprf.rdpprf.ywl20.Ywl20RdpprfSender;
@@ -32,10 +31,6 @@ public class DpprfFactory implements PtoFactory {
          * GYW22 correlated DPPRF
          */
         GYW22_CORRELATED,
-        /**
-         * GYW22 random DPPRF
-         */
-        GYW22_RANDOM,
         /**
          * YWL20 random DPPRF
          */
