@@ -137,8 +137,7 @@ public class SquareSbitVector implements SbitVector {
 
     @Override
     public void replaceCopy(BitVector bitVector, boolean plain) {
-        assert this.bitVector.bitNum() == bitVector.bitNum();
-        this.bitVector = bitVector.copy();
+        this.bitVector.replaceCopy(bitVector);
         this.plain = plain;
     }
 

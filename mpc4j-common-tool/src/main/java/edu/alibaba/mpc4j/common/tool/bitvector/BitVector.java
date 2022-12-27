@@ -40,6 +40,13 @@ public interface BitVector {
     BitVector copy();
 
     /**
+     * Replace the bit vector with the copied given bit vector.
+     *
+     * @param that the other bit vector.
+     */
+    void replaceCopy(BitVector that);
+
+    /**
      * Get the number of bits in the bit vector.
      *
      * @return the number of bits in the bit vector.

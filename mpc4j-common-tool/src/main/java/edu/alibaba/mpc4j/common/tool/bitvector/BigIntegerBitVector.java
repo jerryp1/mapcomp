@@ -136,6 +136,13 @@ public class BigIntegerBitVector implements BitVector {
     }
 
     @Override
+    public void replaceCopy(BitVector that) {
+        assertEqualBitNum(that);
+        // BigInteger is immutable, do not need to copy
+        this.bigInteger = that.getBigInteger();
+    }
+
+    @Override
     public int bitNum() {
         return bitNum;
     }
@@ -196,7 +203,7 @@ public class BigIntegerBitVector implements BitVector {
 
     @Override
     public BitVector xor(BitVector that) {
-        assert bitNum == that.bitNum() : "the operated bit vector must contain same number of bits";
+        assertEqualBitNum(that);
         if (bitNum == 0) {
             return BigIntegerBitVector.createEmpty();
         } else {
@@ -206,13 +213,13 @@ public class BigIntegerBitVector implements BitVector {
 
     @Override
     public void xori(BitVector that) {
-        assert bitNum == that.bitNum() : "the operated bit vector must contain same number of bits";
+        assertEqualBitNum(that);
         bigInteger = bigInteger.xor(that.getBigInteger());
     }
 
     @Override
     public BitVector and(BitVector that) {
-        assert bitNum == that.bitNum() : "the operated bit vector must contain same number of bits";
+        assertEqualBitNum(that);
         if (bitNum == 0) {
             return BigIntegerBitVector.createEmpty();
         } else {
@@ -222,13 +229,13 @@ public class BigIntegerBitVector implements BitVector {
 
     @Override
     public void andi(BitVector that) {
-        assert bitNum == that.bitNum() : "the operated bit vector must contain same number of bits";
+        assertEqualBitNum(that);
         bigInteger = bigInteger.and(that.getBigInteger());
     }
 
     @Override
     public BitVector or(BitVector that) {
-        assert bitNum == that.bitNum() : "the operated bit vector must contain same number of bits";
+        assertEqualBitNum(that);
         if (bitNum == 0) {
             return BigIntegerBitVector.createEmpty();
         } else {
@@ -238,7 +245,7 @@ public class BigIntegerBitVector implements BitVector {
 
     @Override
     public void ori(BitVector that) {
-        assert bitNum == that.bitNum() : "the operated bit vector must contain same number of bits";
+        assertEqualBitNum(that);
         bigInteger = bigInteger.or(that.getBigInteger());
     }
 
@@ -256,6 +263,10 @@ public class BigIntegerBitVector implements BitVector {
     public void noti() {
         BigInteger notBigInteger = BigInteger.ONE.shiftLeft(bitNum).subtract(BigInteger.ONE);
         bigInteger = bigInteger.xor(notBigInteger);
+    }
+
+    private void assertEqualBitNum(BitVector that) {
+        assert bitNum == that.bitNum() : "the given bit vector must contain " + bitNum + " bits: " + that.bitNum();
     }
 
     @Override

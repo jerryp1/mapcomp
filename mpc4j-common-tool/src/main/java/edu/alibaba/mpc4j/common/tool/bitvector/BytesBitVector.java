@@ -126,6 +126,13 @@ public class BytesBitVector implements BitVector {
     }
 
     @Override
+    public void replaceCopy(BitVector that) {
+        assertEqualBitNum(that);
+        byte[] thatBytes = that.getBytes();
+        System.arraycopy(thatBytes, 0, bytes, 0, byteNum);
+    }
+
+    @Override
     public void set(int index, boolean value) {
         assert index >= 0 && index < bitNum : "index must be in range [0, " + bitNum + ")";
         BinaryUtils.setBoolean(bytes, index + offset, value);
@@ -223,7 +230,7 @@ public class BytesBitVector implements BitVector {
 
     @Override
     public BitVector xor(BitVector that) {
-        assert bitNum == that.bitNum() : "the operated bit vector must contain same number of bits";
+        assertEqualBitNum(that);
         if (bitNum == 0) {
             return BytesBitVector.createEmpty();
         } else {
@@ -233,13 +240,13 @@ public class BytesBitVector implements BitVector {
 
     @Override
     public void xori(BitVector that) {
-        assert bitNum == that.bitNum() : "the operated bit vector must contain same number of bits";
+        assertEqualBitNum(that);
         BytesUtils.xori(bytes, that.getBytes());
     }
 
     @Override
     public BitVector and(BitVector that) {
-        assert bitNum == that.bitNum() : "the operated bit vector must contain same number of bits";
+        assertEqualBitNum(that);
         if (bitNum == 0) {
             return BytesBitVector.createEmpty();
         } else {
@@ -249,13 +256,13 @@ public class BytesBitVector implements BitVector {
 
     @Override
     public void andi(BitVector that) {
-        assert bitNum == that.bitNum() : "the operated bit vector must contain same number of bits";
+        assertEqualBitNum(that);
         BytesUtils.andi(bytes, that.getBytes());
     }
 
     @Override
     public BitVector or(BitVector that) {
-        assert bitNum == that.bitNum() : "the operated bit vector must contain same number of bits";
+        assertEqualBitNum(that);
         if (bitNum == 0) {
             return BytesBitVector.createEmpty();
         } else {
@@ -265,7 +272,7 @@ public class BytesBitVector implements BitVector {
 
     @Override
     public void ori(BitVector that) {
-        assert bitNum == that.bitNum() : "the operated bit vector must contain same number of bits";
+        assertEqualBitNum(that);
         BytesUtils.ori(bytes, that.getBytes());
     }
 
@@ -281,6 +288,10 @@ public class BytesBitVector implements BitVector {
     @Override
     public void noti() {
         BytesUtils.noti(bytes, bitNum);
+    }
+
+    private void assertEqualBitNum(BitVector that) {
+        assert bitNum == that.bitNum() : "the given bit vector must contain " + bitNum + " bits: " + that.bitNum();
     }
 
     @Override
