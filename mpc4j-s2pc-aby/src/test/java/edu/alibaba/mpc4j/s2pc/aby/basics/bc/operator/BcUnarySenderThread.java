@@ -1,4 +1,4 @@
-package edu.alibaba.mpc4j.s2pc.aby.basics.bc.std;
+package edu.alibaba.mpc4j.s2pc.aby.basics.bc.operator;
 
 import edu.alibaba.mpc4j.common.rpc.MpcAbortException;
 import edu.alibaba.mpc4j.common.tool.bitvector.BitVector;
@@ -12,7 +12,7 @@ import edu.alibaba.mpc4j.s2pc.aby.basics.bc.SquareSbitVector;
  * @author Weiran Liu
  * @date 2022/02/14
  */
-class BcStdUnarySenderThread extends Thread {
+class BcUnarySenderThread extends Thread {
     /**
      * sender
      */
@@ -26,9 +26,9 @@ class BcStdUnarySenderThread extends Thread {
      */
     private final BitVector xBitVector;
     /**
-     * z bit vector
+     * expect bit vector
      */
-    private final BitVector zBitVector;
+    private final BitVector expectBitVector;
     /**
      * number of bits
      */
@@ -44,13 +44,13 @@ class BcStdUnarySenderThread extends Thread {
     /**
      * z (plain)
      */
-    private BitVector z1;
+    private BitVector z1Vector;
     /**
      * z (secret)
      */
-    private BitVector z0;
+    private BitVector z0Vector;
 
-    BcStdUnarySenderThread(BcParty bcSender, BcOperator bcOperator, BitVector xBitVector) {
+    BcUnarySenderThread(BcParty bcSender, BcOperator bcOperator, BitVector xBitVector) {
         this.bcSender = bcSender;
         this.bcOperator = bcOperator;
         this.xBitVector = xBitVector;
@@ -58,23 +58,23 @@ class BcStdUnarySenderThread extends Thread {
         //noinspection SwitchStatementWithTooFewBranches
         switch (bcOperator) {
             case NOT:
-                zBitVector = xBitVector.not();
+                expectBitVector = xBitVector.not();
                 break;
             default:
                 throw new IllegalStateException("Invalid unary boolean operator: " + bcOperator.name());
         }
     }
 
-    BitVector getZ() {
-        return zBitVector;
+    BitVector getExpectVector() {
+        return expectBitVector;
     }
 
-    BitVector getZ1() {
-        return z1;
+    BitVector getZ1Vector() {
+        return z1Vector;
     }
 
-    BitVector getZ0() {
-        return z0;
+    BitVector getZ0Vector() {
+        return z0Vector;
     }
 
     SquareSbitVector getShareX0() {
@@ -100,12 +100,12 @@ class BcStdUnarySenderThread extends Thread {
                 case NOT:
                     // (plain, plain)
                     z00 = bcSender.not(x);
-                    z0 = bcSender.revealOwn(z00);
+                    z0Vector = bcSender.revealOwn(z00);
                     bcSender.revealOther(z00);
                     // (plain, secret)
                     z10 = bcSender.not(x0);
                     finalX0 = x0.copy();
-                    z1 = bcSender.revealOwn(z10);
+                    z1Vector = bcSender.revealOwn(z10);
                     bcSender.revealOther(z10);
                     break;
                 default:

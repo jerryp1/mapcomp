@@ -43,7 +43,7 @@ public class SquareSbitVector implements SbitVector {
      * Create a square-share bit vector.
      *
      * @param bitVector the bit vector.
-     * @param plain  whether the bit vector is in plain state.
+     * @param plain     whether the bit vector is in plain state.
      * @return the created square-share bit vector.
      */
     public static SquareSbitVector create(BitVector bitVector, boolean plain) {
@@ -58,7 +58,7 @@ public class SquareSbitVector implements SbitVector {
      * Create a square-share bit vector, the given bit vector is copied.
      *
      * @param bitVector the bit vector.
-     * @param plain  whether the bit vector is in plain state.
+     * @param plain     whether the bit vector is in plain state.
      * @return the created square-share bit vector.
      */
     public static SquareSbitVector createCopy(BitVector bitVector, boolean plain) {
@@ -72,7 +72,7 @@ public class SquareSbitVector implements SbitVector {
     /**
      * Create a (secret) random square-share bit vector.
      *
-     * @param bitNum    number of bits.
+     * @param bitNum       number of bits.
      * @param secureRandom the random states.
      * @return the created square-share bit vector.
      */
@@ -108,6 +108,20 @@ public class SquareSbitVector implements SbitVector {
         SquareSbitVector squareShareBitVector = new SquareSbitVector();
         squareShareBitVector.bitVector = BitVectorFactory.createZeros(bitNum);
         squareShareBitVector.plain = true;
+
+        return squareShareBitVector;
+    }
+
+    /**
+     * Create an empty square-share bit vector.
+     *
+     * @param plain whether the bit vector is in plain state.
+     * @return the created square-share bit vector.
+     */
+    public static SquareSbitVector createEmpty(boolean plain) {
+        SquareSbitVector squareShareBitVector = new SquareSbitVector();
+        squareShareBitVector.bitVector = BitVectorFactory.createEmpty();
+        squareShareBitVector.plain = plain;
 
         return squareShareBitVector;
     }

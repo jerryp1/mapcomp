@@ -167,11 +167,11 @@ public class BigIntegerBitVector implements BitVector {
         assert bitNum > 0 && bitNum <= this.bitNum
             : "number of split bits must be in range (0, " + this.bitNum + "]: " + bitNum;
         // 切分方法：分别对2^length取模数和取余数，模数作为split结果，余数作为剩余结果
-        BigInteger mask = BigInteger.ONE.shiftLeft(bitNum).subtract(BigInteger.ONE);
+        BigInteger mask = BigInteger.ONE.shiftLeft(this.bitNum - bitNum).subtract(BigInteger.ONE);
         // 由于模数一定是2^length格式，因此可以用位运算更高效地实现
-        BigInteger splitBigInteger = bigInteger.and(mask);
+        BigInteger splitBigInteger = bigInteger.shiftRight(this.bitNum - bitNum);
         // update the remained bit vector
-        bigInteger = bigInteger.shiftRight(bitNum);
+        bigInteger = bigInteger.and(mask);
         this.bitNum = this.bitNum - bitNum;
         byteNum = this.bitNum == 0 ? 0 : CommonUtils.getByteLength(this.bitNum);
         // return a new instance

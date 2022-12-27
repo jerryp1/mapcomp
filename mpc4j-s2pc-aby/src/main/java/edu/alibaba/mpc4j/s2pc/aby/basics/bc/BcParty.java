@@ -5,6 +5,8 @@ import edu.alibaba.mpc4j.common.rpc.pto.SecurePto;
 import edu.alibaba.mpc4j.common.rpc.pto.TwoPartyPto;
 import edu.alibaba.mpc4j.common.tool.bitvector.BitVector;
 
+import java.util.Arrays;
+
 /**
  * Boolean circuit party.
  *
@@ -30,12 +32,20 @@ public interface BcParty extends TwoPartyPto, SecurePto {
     void init(int maxRoundBitNum, int updateBitNum) throws MpcAbortException;
 
     /**
-     * Share its own BitVector。
+     * Share its own BitVector.
      *
      * @param x the BitVector to be shared.
      * @return the shared BitVector.
      */
     SquareSbitVector shareOwn(BitVector x);
+
+    /**
+     * Share its own BitVectors。
+     *
+     * @param xArray the BitVectors to be shared.
+     * @return the shared BitVectors.
+     */
+    SquareSbitVector[] shareOwn(BitVector[] xArray);
 
     /**
      * Share other's BitVector.
@@ -45,6 +55,15 @@ public interface BcParty extends TwoPartyPto, SecurePto {
      * @throws MpcAbortException if the protocol is abort.
      */
     SquareSbitVector shareOther(int bitNum) throws MpcAbortException;
+
+    /**
+     * Share other's BitVectors.
+     *
+     * @param bitNums the number of bits for each bit vector to be shared.
+     * @return the shared BitVectors.
+     * @throws MpcAbortException if the protocol is abort.
+     */
+    SquareSbitVector[] shareOther(int[] bitNums) throws MpcAbortException;
 
     /**
      * AND operation.
@@ -57,32 +76,34 @@ public interface BcParty extends TwoPartyPto, SecurePto {
     SquareSbitVector and(SquareSbitVector xi, SquareSbitVector yi) throws MpcAbortException;
 
     /**
-     * Inner AND operation. The result is assigned in xi.
+     * Vector AND operations.
      *
-     * @param xi xi.
-     * @param yi yi.
+     * @param xiArray xi array.
+     * @param yiArray yi array.
+     * @return zi array, such that for each j, z0[j] ⊕ z1[j] = z[j] = x[j] & y[j] = (x0[j] ⊕ x1[j]) & (y0[j] ⊕ y1[j]).
      * @throws MpcAbortException if the protocol is abort.
      */
-    void andi(SquareSbitVector xi, SquareSbitVector yi) throws MpcAbortException;
+    SquareSbitVector[] and(SquareSbitVector[] xiArray, SquareSbitVector[] yiArray) throws MpcAbortException;
 
     /**
      * XOR operation.
      *
      * @param xi xi.
      * @param yi yi.
-     * @return zi, such that z0 ⊕ z1 = z = x ^ y = (x0 ⊕ x1) ^ (y0 ⊕ y1)
+     * @return zi, such that z0 ⊕ z1 = z = x ^ y = (x0 ⊕ x1) ^ (y0 ⊕ y1).
      * @throws MpcAbortException if the protocol is abort.
      */
     SquareSbitVector xor(SquareSbitVector xi, SquareSbitVector yi) throws MpcAbortException;
 
     /**
-     * Inner XOR operation. The result is assigned in xi.
+     * Vector XOR operation.
      *
-     * @param xi xi.
-     * @param yi yi.
+     * @param xiArray xi array.
+     * @param yiArray yi array.
+     * @return zi array, such that for each j, z0[j] ⊕ z1[j] = z[j] = x[j] ^ y[j] = (x0[j] ⊕ x1[j]) ^ (y0[j] ⊕ y1[j]).
      * @throws MpcAbortException if the protocol is abort.
      */
-    void xori(SquareSbitVector xi, SquareSbitVector yi) throws MpcAbortException;
+    SquareSbitVector[] xor(SquareSbitVector[] xiArray, SquareSbitVector[] yiArray) throws MpcAbortException;
 
     /**
      * OR operation.
@@ -97,17 +118,15 @@ public interface BcParty extends TwoPartyPto, SecurePto {
     }
 
     /**
-     * Inner OR operation. The result is assigned in xi.
+     * Vector OR operation.
      *
-     * @param xi xi.
-     * @param yi yi.
+     * @param xiArray xi array.
+     * @param yiArray yi array.
+     * @return zi array, such that for each j, z0[j] ⊕ z1[j] = z[j] = x[j] | y[j] = (x0[j] ⊕ x1[j]) | (y0[j] ⊕ y1[j]).
      * @throws MpcAbortException if the protocol is abort.
      */
-    default void ori(SquareSbitVector xi, SquareSbitVector yi) throws MpcAbortException {
-        // create a temp variable for AND operation.
-        SquareSbitVector and = and(xi, yi);
-        xori(xi, yi);
-        xori(xi, and);
+    default SquareSbitVector[] or(SquareSbitVector[] xiArray, SquareSbitVector[] yiArray) throws MpcAbortException {
+        return xor(xor(xiArray, yiArray), and(xiArray, yiArray));
     }
 
     /**
@@ -122,13 +141,17 @@ public interface BcParty extends TwoPartyPto, SecurePto {
     }
 
     /**
-     * Inner NOT operation. The result is assigned in xi.
+     * Vector NOT operation.
      *
-     * @param xi xi.
+     * @param xiArray xi array.
+     * @return zi array, such that for each j, z0[j] ⊕ z1[j] = z[j] = !x[j] = !(x0[j] ⊕ x1[j]).
      * @throws MpcAbortException if the protocol is abort.
      */
-    default void noti(SquareSbitVector xi) throws MpcAbortException {
-        xori(xi, SquareSbitVector.createOnes(xi.bitNum()));
+    default SquareSbitVector[] not(SquareSbitVector[] xiArray) throws MpcAbortException {
+        SquareSbitVector[] onesArray = Arrays.stream(xiArray)
+            .map(xi -> SquareSbitVector.createOnes(xi.bitNum()))
+            .toArray(SquareSbitVector[]::new);
+        return xor(xiArray, onesArray);
     }
 
     /**
@@ -141,11 +164,27 @@ public interface BcParty extends TwoPartyPto, SecurePto {
     BitVector revealOwn(SquareSbitVector xi) throws MpcAbortException;
 
     /**
+     * Reveal its own BitVectors.
+     *
+     * @param xiArray the shared BitVectors.
+     * @return the reconstructed BitVectors.
+     * @throws MpcAbortException if the protocol is abort.
+     */
+    BitVector[] revealOwn(SquareSbitVector[] xiArray) throws MpcAbortException;
+
+    /**
      * Reconstruct other's BitVector.
      *
      * @param xi the shared BitVector.
      */
     void revealOther(SquareSbitVector xi);
+
+    /**
+     * Reconstruct other's BitVectors.
+     *
+     * @param xiArray the shared BitVectors.
+     */
+    void revealOther(SquareSbitVector[] xiArray);
 
     /**
      * Get the number of input bits for secure boolean circuit computation.

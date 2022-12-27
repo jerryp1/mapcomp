@@ -1,4 +1,4 @@
-package edu.alibaba.mpc4j.s2pc.aby.basics.bc.std;
+package edu.alibaba.mpc4j.s2pc.aby.basics.bc.operator;
 
 import edu.alibaba.mpc4j.common.rpc.MpcAbortException;
 import edu.alibaba.mpc4j.common.tool.bitvector.BitVector;
@@ -12,7 +12,7 @@ import edu.alibaba.mpc4j.s2pc.aby.basics.bc.SquareSbitVector;
  * @author Weiran Liu
  * @date 2022/02/14
  */
-class BcStdBinaryReceiverThread extends Thread {
+class BcBinaryReceiverThread extends Thread {
     /**
      * receiver
      */
@@ -48,43 +48,42 @@ class BcStdBinaryReceiverThread extends Thread {
     /**
      * z (plain, plain)
      */
-    private BitVector z11;
+    private BitVector z11Vector;
     /**
      * z (plain, secret)
      */
-    private BitVector z10;
+    private BitVector z10Vector;
     /**
      * z (secret, plain)
      */
-    private BitVector z01;
+    private BitVector z01Vector;
     /**
-     * zi (secret, secret)
+     * z (secret, secret)
      */
-    private BitVector z00;
+    private BitVector z00Vector;
 
-    BcStdBinaryReceiverThread(BcParty bcReceiver, BcOperator bcOperator, BitVector xBitVector, BitVector yBitVector) {
+    BcBinaryReceiverThread(BcParty bcReceiver, BcOperator bcOperator, BitVector xBitVector, BitVector yBitVector) {
         this.bcReceiver = bcReceiver;
         this.bcOperator = bcOperator;
-        assert xBitVector.bitNum() == yBitVector.bitNum();
         this.xBitVector = xBitVector;
         this.yBitVector = yBitVector;
         bitNum = xBitVector.bitNum();
     }
 
-    BitVector getZ11() {
-        return z11;
+    BitVector getZ11Vector() {
+        return z11Vector;
     }
 
-    BitVector getZ10() {
-        return z10;
+    BitVector getZ10Vector() {
+        return z10Vector;
     }
 
-    BitVector getZ01() {
-        return z01;
+    BitVector getZ01Vector() {
+        return z01Vector;
     }
 
-    BitVector getZ00() {
-        return z00;
+    BitVector getZ00Vector() {
+        return z00Vector;
     }
 
     SquareSbitVector getShareX1() {
@@ -104,7 +103,7 @@ class BcStdBinaryReceiverThread extends Thread {
         try {
             bcReceiver.getRpc().connect();
             bcReceiver.init(bitNum, bitNum);
-            // set inputs
+            // generate x and y
             SquareSbitVector x = SquareSbitVector.create(xBitVector, true);
             SquareSbitVector y = SquareSbitVector.create(yBitVector, true);
             SquareSbitVector x1 = bcReceiver.shareOther(bitNum);
@@ -116,61 +115,61 @@ class BcStdBinaryReceiverThread extends Thread {
                     // (plain, plain)
                     z111 = bcReceiver.xor(x, y);
                     bcReceiver.revealOther(z111);
-                    z11 = bcReceiver.revealOwn(z111);
+                    z11Vector = bcReceiver.revealOwn(z111);
                     // (plain, secret)
                     z101 = bcReceiver.xor(x, y1);
                     bcReceiver.revealOther(z101);
-                    z10 = bcReceiver.revealOwn(z101);
+                    z10Vector = bcReceiver.revealOwn(z101);
                     // (secret, plain)
                     z011 = bcReceiver.xor(x1, y);
                     finalX011 = x1.copy();
                     bcReceiver.revealOther(z011);
-                    z01 = bcReceiver.revealOwn(z011);
+                    z01Vector = bcReceiver.revealOwn(z011);
                     // (secret, secret)
                     z001 = bcReceiver.xor(x1, y1);
                     finalX001 = x1.copy();
                     bcReceiver.revealOther(z001);
-                    z00 = bcReceiver.revealOwn(z001);
+                    z00Vector = bcReceiver.revealOwn(z001);
                     break;
                 case AND:
                     // (plain, plain)
                     z111 = bcReceiver.and(x, y);
                     bcReceiver.revealOther(z111);
-                    z11 = bcReceiver.revealOwn(z111);
+                    z11Vector = bcReceiver.revealOwn(z111);
                     // (plain, secret)
                     z101 = bcReceiver.and(x, y1);
                     bcReceiver.revealOther(z101);
-                    z10 = bcReceiver.revealOwn(z101);
+                    z10Vector = bcReceiver.revealOwn(z101);
                     // (secret, plain)
                     z011 = bcReceiver.and(x1, y);
                     finalX011 = x1.copy();
                     bcReceiver.revealOther(z011);
-                    z01 = bcReceiver.revealOwn(z011);
+                    z01Vector = bcReceiver.revealOwn(z011);
                     // (secret, secret)
                     z001 = bcReceiver.and(x1, y1);
                     finalX001 = x1.copy();
                     bcReceiver.revealOther(z001);
-                    z00 = bcReceiver.revealOwn(z001);
+                    z00Vector = bcReceiver.revealOwn(z001);
                     break;
                 case OR:
                     // (plain, plain)
                     z111 = bcReceiver.or(x, y);
                     bcReceiver.revealOther(z111);
-                    z11 = bcReceiver.revealOwn(z111);
+                    z11Vector = bcReceiver.revealOwn(z111);
                     // (plain, secret)
                     z101 = bcReceiver.or(x, y1);
                     bcReceiver.revealOther(z101);
-                    z10 = bcReceiver.revealOwn(z101);
+                    z10Vector = bcReceiver.revealOwn(z101);
                     // (secret, plain)
                     z011 = bcReceiver.or(x1, y);
                     finalX011 = x1.copy();
                     bcReceiver.revealOther(z011);
-                    z01 = bcReceiver.revealOwn(z011);
+                    z01Vector = bcReceiver.revealOwn(z011);
                     // (secret, secret)
                     z001 = bcReceiver.or(x1, y1);
                     finalX001 = x1.copy();
                     bcReceiver.revealOther(z001);
-                    z00 = bcReceiver.revealOwn(z001);
+                    z00Vector = bcReceiver.revealOwn(z001);
                     break;
                 default:
                     throw new IllegalStateException("Invalid binary boolean operator: " + bcOperator.name());

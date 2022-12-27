@@ -308,6 +308,34 @@ public class BitVectorTest {
     }
 
     @Test
+    public void testMergeSplitConsistency() {
+        for (int maxBitNum = MIN_BIT_NUM; maxBitNum < MAX_BIT_NUM; maxBitNum++) {
+            testMergeSplitConsistency(maxBitNum);
+        }
+    }
+
+    private void testMergeSplitConsistency(int maxBitNum) {
+        int totalNum = 10;
+        BitVector[] bitVectors = IntStream.range(0, totalNum)
+            .mapToObj(index -> {
+                int bitNum = SECURE_RANDOM.nextInt(maxBitNum) + 1;
+                return BitVectorFactory.createRandom(type, bitNum, SECURE_RANDOM);
+            })
+            .toArray(BitVector[]::new);
+        // merge
+        BitVector mergeBitVector = BitVectorFactory.createEmpty(type);
+        for (BitVector bitVector : bitVectors) {
+            mergeBitVector.merge(bitVector);
+        }
+        // split
+        BitVector[] splitBitVectors = new BitVector[totalNum];
+        for (int index = 0; index < totalNum; index++) {
+            splitBitVectors[index] = mergeBitVector.split(bitVectors[index].bitNum());
+        }
+        Assert.assertArrayEquals(bitVectors, splitBitVectors);
+    }
+
+    @Test
     public void testGet() {
         testGet(new byte[]{0b01000011,},
             new boolean[]{false, true, false, false, false, false, true, true,}
