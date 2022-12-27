@@ -8,7 +8,6 @@ import edu.alibaba.mpc4j.common.rpc.utils.DataPacket;
 import edu.alibaba.mpc4j.common.rpc.utils.DataPacketHeader;
 import edu.alibaba.mpc4j.common.tool.bitvector.BitVector;
 import edu.alibaba.mpc4j.common.tool.bitvector.BitVectorFactory;
-import edu.alibaba.mpc4j.common.tool.bitvector.BitVectorFactory.BitVectorType;
 import edu.alibaba.mpc4j.common.tool.utils.BytesUtils;
 import edu.alibaba.mpc4j.s2pc.aby.basics.bc.AbstractBcParty;
 import edu.alibaba.mpc4j.s2pc.aby.basics.bc.SquareSbitVector;
@@ -79,7 +78,7 @@ public class Bea91BcReceiver extends AbstractBcParty {
         info("{}{} Recv. share (Recv.) begin", ptoBeginLogPrefix, getPtoDesc().getPtoName());
 
         stopWatch.start();
-        BitVector x1BitVector = BitVectorFactory.createRandom(BitVectorType.BYTES_BIT_VECTOR, bitNum, secureRandom);
+        BitVector x1BitVector = BitVectorFactory.createRandom(bitNum, secureRandom);
         BitVector x0BitVector = x.xor(x1BitVector);
         List<byte[]> x0Payload = Collections.singletonList(x0BitVector.getBytes());
         DataPacketHeader x0Header = new DataPacketHeader(
@@ -108,7 +107,7 @@ public class Bea91BcReceiver extends AbstractBcParty {
         );
         List<byte[]> x1Payload = rpc.receive(x1Header).getPayload();
         MpcAbortPreconditions.checkArgument(x1Payload.size() == 1);
-        BitVector x1BitVector = BitVectorFactory.create(BitVectorType.BYTES_BIT_VECTOR, bitNum, x1Payload.get(0));
+        BitVector x1BitVector = BitVectorFactory.create(bitNum, x1Payload.get(0));
         stopWatch.stop();
         long shareTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
         stopWatch.reset();
@@ -193,6 +192,79 @@ public class Bea91BcReceiver extends AbstractBcParty {
     }
 
     @Override
+    public void andi(SquareSbitVector x1, SquareSbitVector y1) throws MpcAbortException {
+        setAndInput(x1, y1);
+
+        if (x1.isPlain() && y1.isPlain()) {
+            // x1和y1为明文比特向量，发送方和接收方都执行AND运算
+            x1.andi(y1);
+        } else if (x1.isPlain() || y1.isPlain()) {
+            // x1或y1为明文比特向量，发送方和接收方都执行AND运算
+            x1.andi(y1);
+        } else {
+            // x1和y1为密文比特向量，执行AND协议
+            andGateNum += bitNum;
+            info("{}{} Recv. And begin", ptoBeginLogPrefix, getPtoDesc().getPtoName());
+
+            stopWatch.start();
+            Z2Triple z2Triple = z2MtgReceiver.generate(bitNum);
+            stopWatch.stop();
+            long z2MtgTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
+            stopWatch.reset();
+            info("{}{} Recv. AND Step 1/3 ({}ms)", ptoStepLogPrefix, getPtoDesc().getPtoName(), z2MtgTime);
+
+            stopWatch.start();
+            byte[] a1 = z2Triple.getA();
+            byte[] b1 = z2Triple.getB();
+            byte[] c1 = z2Triple.getC();
+            // e1 = x1 ⊕ a1
+            byte[] e1 = x1.getBytes();
+            BytesUtils.xori(e1, a1);
+            // f1 = y1 ⊕ b1
+            byte[] f1 = BytesUtils.xor(y1.getBytes(), b1);
+            List<byte[]> e1f1Payload = new LinkedList<>();
+            e1f1Payload.add(e1);
+            e1f1Payload.add(f1);
+            DataPacketHeader e1f1Header = new DataPacketHeader(
+                taskId, getPtoDesc().getPtoId(), Bea91BcPtoDesc.PtoStep.RECEIVER_SEND_E1_F1.ordinal(), andGateNum,
+                ownParty().getPartyId(), otherParty().getPartyId()
+            );
+            rpc.send(DataPacket.fromByteArrayList(e1f1Header, e1f1Payload));
+            stopWatch.stop();
+            long e1f1Time = stopWatch.getTime(TimeUnit.MILLISECONDS);
+            stopWatch.reset();
+            info("{}{} Recv. AND Step 2/3 ({}ms)", ptoStepLogPrefix, getPtoDesc().getPtoName(), e1f1Time);
+
+            stopWatch.start();
+            DataPacketHeader e0f0Header = new DataPacketHeader(
+                taskId, getPtoDesc().getPtoId(), Bea91BcPtoDesc.PtoStep.SENDER_SEND_E0_F0.ordinal(), andGateNum,
+                otherParty().getPartyId(), ownParty().getPartyId()
+            );
+            List<byte[]> e0f0Payload = rpc.receive(e0f0Header).getPayload();
+            MpcAbortPreconditions.checkArgument(e0f0Payload.size() == 2);
+            byte[] e0 = e0f0Payload.remove(0);
+            byte[] f0 = e0f0Payload.remove(0);
+            // e = (e0 ⊕ e1)
+            byte[] z1 = BytesUtils.xor(e0, e1);
+            // f = (f0 ⊕ f1)
+            byte[] f = BytesUtils.xor(f0, f1);
+            // z1 = (e ☉ b1) ⊕ (f ☉ a1) ⊕ c1 ⊕ (e ☉ f)
+            byte[] ef = BytesUtils.and(z1, f);
+            BytesUtils.andi(z1, b1);
+            BytesUtils.andi(f, a1);
+            BytesUtils.xori(z1, f);
+            BytesUtils.xori(z1, c1);
+            BytesUtils.xori(z1, ef);
+            stopWatch.stop();
+            long z1Time = stopWatch.getTime(TimeUnit.MILLISECONDS);
+            stopWatch.reset();
+            info("{}{} Recv. AND Step 3/3 ({}ms)", ptoStepLogPrefix, getPtoDesc().getPtoName(), z1Time);
+
+            info("{}{} Recv. AND end", ptoEndLogPrefix, getPtoDesc().getPtoName());
+        }
+    }
+
+    @Override
     public SquareSbitVector xor(SquareSbitVector x1, SquareSbitVector y1) {
         setXorInput(x1, y1);
 
@@ -223,8 +295,32 @@ public class Bea91BcReceiver extends AbstractBcParty {
     }
 
     @Override
-    public SquareSbitVector not(SquareSbitVector x1) {
-        return xor(x1, SquareSbitVector.createOnes(x1.bitNum()));
+    public void xori(SquareSbitVector x1, SquareSbitVector y1) throws MpcAbortException {
+        setXorInput(x1, y1);
+
+        if (x1.isPlain() && y1.isPlain()) {
+            // x1和y1为明文比特向量，发送方和接收方都执行XOR运算
+            x1.xori(y1, true);
+        } else if (x1.isPlain()) {
+            // x1为明文比特向量，y1为密文比特向量，接收方不执行XOR运算，把y1的值赋值给x1
+            byte[] x1Bytes = x1.getBytes();
+            byte[] y1Bytes = y1.getBytes();
+            System.arraycopy(y1Bytes, 0, x1Bytes, 0, x1.byteNum());
+        } else if (!x1.isPlain() && !y1.isPlain()) {
+            // x1和y1为密文比特向量，发送方和接收方都执行XOR运算
+            xorGateNum += bitNum;
+            info("{}{} Recv. XOR begin", ptoBeginLogPrefix, getPtoDesc().getPtoName());
+
+            stopWatch.start();
+            x1.xori(y1, false);
+            stopWatch.stop();
+            long z1Time = stopWatch.getTime(TimeUnit.MILLISECONDS);
+            stopWatch.reset();
+            info("{}{} Recv. XOR Step 1/1 ({}ms)", ptoStepLogPrefix, getPtoDesc().getPtoName(), z1Time);
+
+            info("{}{} Recv. XOR end", ptoEndLogPrefix, getPtoDesc().getPtoName());
+        }
+        // x1为密文比特向量，y1为明文比特向量，接收方不执行XOR运算，克隆x1
     }
 
     @Override

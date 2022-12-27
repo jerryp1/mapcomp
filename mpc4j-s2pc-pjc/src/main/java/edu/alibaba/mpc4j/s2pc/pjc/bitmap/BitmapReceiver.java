@@ -6,7 +6,6 @@ import edu.alibaba.mpc4j.common.rpc.Party;
 import edu.alibaba.mpc4j.common.rpc.Rpc;
 import edu.alibaba.mpc4j.common.tool.bitvector.BitVector;
 import edu.alibaba.mpc4j.common.tool.bitvector.BitVectorFactory;
-import edu.alibaba.mpc4j.common.tool.bitvector.BitVectorFactory.BitVectorType;
 import edu.alibaba.mpc4j.common.tool.utils.BytesUtils;
 import edu.alibaba.mpc4j.common.tool.utils.LongUtils;
 import edu.alibaba.mpc4j.s2pc.aby.basics.bc.BcFactory;
@@ -128,7 +127,7 @@ public class BitmapReceiver extends AbstractBitmapParty {
     @Override
     public SecureBitmapContainer setOwnRoaringBitmap(RoaringBitmap roaringBitmap, int maxNum) {
         byte[] y = BitmapUtils.roaringBitmapToBytes(roaringBitmap, maxNum);
-        BitVector yBitVector = BitVectorFactory.create(BitVectorType.BYTES_BIT_VECTOR, maxNum, y);
+        BitVector yBitVector = BitVectorFactory.create(maxNum, y);
         SquareSbitVector y1 = bcReceiver.shareOwn(yBitVector);
         return new SecureBitmapContainer(y1);
     }

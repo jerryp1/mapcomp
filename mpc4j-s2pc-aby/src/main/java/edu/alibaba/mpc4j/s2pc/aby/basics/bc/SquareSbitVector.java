@@ -2,7 +2,6 @@ package edu.alibaba.mpc4j.s2pc.aby.basics.bc;
 
 import edu.alibaba.mpc4j.common.tool.bitvector.BitVector;
 import edu.alibaba.mpc4j.common.tool.bitvector.BitVectorFactory;
-import edu.alibaba.mpc4j.common.tool.bitvector.BitVectorFactory.BitVectorType;
 import org.apache.commons.lang3.builder.EqualsBuilder;
 import org.apache.commons.lang3.builder.HashCodeBuilder;
 
@@ -34,7 +33,7 @@ public class SquareSbitVector implements SbitVector {
      */
     public static SquareSbitVector create(int bitNum, byte[] bytes, boolean plain) {
         SquareSbitVector shareBitVector = new SquareSbitVector();
-        shareBitVector.bitVector = BitVectorFactory.create(BitVectorType.BYTES_BIT_VECTOR, bitNum, bytes);
+        shareBitVector.bitVector = BitVectorFactory.create(bitNum, bytes);
         shareBitVector.plain = plain;
 
         return shareBitVector;
@@ -64,7 +63,7 @@ public class SquareSbitVector implements SbitVector {
      */
     public static SquareSbitVector createRandom(int bitNum, SecureRandom secureRandom) {
         SquareSbitVector shareBitVector = new SquareSbitVector();
-        shareBitVector.bitVector = BitVectorFactory.createRandom(BitVectorType.BYTES_BIT_VECTOR, bitNum, secureRandom);
+        shareBitVector.bitVector = BitVectorFactory.createRandom(bitNum, secureRandom);
         shareBitVector.plain = false;
 
         return shareBitVector;
@@ -78,7 +77,7 @@ public class SquareSbitVector implements SbitVector {
      */
     public static SquareSbitVector createOnes(int bitNum) {
         SquareSbitVector squareShareBitVector = new SquareSbitVector();
-        squareShareBitVector.bitVector = BitVectorFactory.createOnes(BitVectorType.BYTES_BIT_VECTOR, bitNum);
+        squareShareBitVector.bitVector = BitVectorFactory.createOnes(bitNum);
         squareShareBitVector.plain = true;
 
         return squareShareBitVector;
@@ -92,7 +91,7 @@ public class SquareSbitVector implements SbitVector {
      */
     public static SquareSbitVector createZeros(int bitNum) {
         SquareSbitVector squareShareBitVector = new SquareSbitVector();
-        squareShareBitVector.bitVector = BitVectorFactory.createZeros(BitVectorType.BYTES_BIT_VECTOR, bitNum);
+        squareShareBitVector.bitVector = BitVectorFactory.createZeros(bitNum);
         squareShareBitVector.plain = true;
 
         return squareShareBitVector;

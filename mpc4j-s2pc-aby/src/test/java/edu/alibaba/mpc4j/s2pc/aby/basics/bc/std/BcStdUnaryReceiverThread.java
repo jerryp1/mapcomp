@@ -1,15 +1,18 @@
-package edu.alibaba.mpc4j.s2pc.aby.basics.bc;
+package edu.alibaba.mpc4j.s2pc.aby.basics.bc.std;
 
 import edu.alibaba.mpc4j.common.rpc.MpcAbortException;
 import edu.alibaba.mpc4j.common.tool.bitvector.BitVector;
+import edu.alibaba.mpc4j.s2pc.aby.basics.bc.BcOperator;
+import edu.alibaba.mpc4j.s2pc.aby.basics.bc.BcParty;
+import edu.alibaba.mpc4j.s2pc.aby.basics.bc.SquareSbitVector;
 
 /**
- * Sender test thread for Boolean circuit unary operator.
+ * Receiver test thread for Boolean circuit unary operator.
  *
  * @author Weiran Liu
  * @date 2022/02/14
  */
-class BcUnarySenderThread extends Thread {
+class BcStdUnaryReceiverThread extends Thread {
     /**
      * sender
      */
@@ -23,13 +26,17 @@ class BcUnarySenderThread extends Thread {
      */
     private final BitVector xBitVector;
     /**
-     * z bit vector
-     */
-    private final BitVector zBitVector;
-    /**
      * number of bits
      */
     private final int bitNum;
+    /**
+     * share x1
+     */
+    private SquareSbitVector shareX1;
+    /**
+     * final x1
+     */
+    private SquareSbitVector finalX1;
     /**
      * z (plain)
      */
@@ -39,23 +46,11 @@ class BcUnarySenderThread extends Thread {
      */
     private BitVector z0;
 
-    BcUnarySenderThread(BcParty bcSender, BcOperator bcOperator, BitVector xBitVector) {
+    BcStdUnaryReceiverThread(BcParty bcSender, BcOperator booleanOperator, BitVector xBitVector) {
         this.bcSender = bcSender;
-        this.booleanOperator = bcOperator;
+        this.booleanOperator = booleanOperator;
         this.xBitVector = xBitVector;
         bitNum = xBitVector.bitNum();
-        //noinspection SwitchStatementWithTooFewBranches
-        switch (bcOperator) {
-            case NOT:
-                zBitVector = xBitVector.not();
-                break;
-            default:
-                throw new IllegalStateException("Invalid unary boolean operator: " + booleanOperator.name());
-        }
-    }
-
-    BitVector getZ() {
-        return zBitVector;
     }
 
     BitVector getZ1() {
@@ -66,6 +61,14 @@ class BcUnarySenderThread extends Thread {
         return z0;
     }
 
+    SquareSbitVector getShareX1() {
+        return shareX1;
+    }
+
+    SquareSbitVector getFinalX1() {
+        return finalX1;
+    }
+
     @Override
     public void run() {
         try {
@@ -73,19 +76,20 @@ class BcUnarySenderThread extends Thread {
             bcSender.init(bitNum, bitNum);
             // set inputs
             SquareSbitVector x = SquareSbitVector.create(xBitVector, true);
-            SquareSbitVector x0 = bcSender.shareOwn(xBitVector);
-            SquareSbitVector z00, z10;
+            SquareSbitVector x1 = bcSender.shareOther(bitNum);
+            shareX1 = x1.copy();
             //noinspection SwitchStatementWithTooFewBranches
             switch (booleanOperator) {
                 case NOT:
                     // (plain, plain)
-                    z00 = bcSender.not(x);
-                    z0 = bcSender.revealOwn(z00);
-                    bcSender.revealOther(z00);
+                    SquareSbitVector z01 = bcSender.not(x);
+                    bcSender.revealOther(z01);
+                    z0 = bcSender.revealOwn(z01);
                     // (plain, secret)
-                    z10 = bcSender.not(x0);
-                    z1 = bcSender.revealOwn(z10);
-                    bcSender.revealOther(z10);
+                    SquareSbitVector z11 = bcSender.not(x1);
+                    finalX1 = x1.copy();
+                    bcSender.revealOther(z11);
+                    z1 = bcSender.revealOwn(z11);
                     break;
                 default:
                     throw new IllegalStateException("Invalid unary boolean operator: " + booleanOperator.name());

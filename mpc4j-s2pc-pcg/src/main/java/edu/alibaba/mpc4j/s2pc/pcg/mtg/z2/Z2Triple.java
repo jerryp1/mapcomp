@@ -2,7 +2,6 @@ package edu.alibaba.mpc4j.s2pc.pcg.mtg.z2;
 
 import edu.alibaba.mpc4j.common.tool.bitvector.BitVector;
 import edu.alibaba.mpc4j.common.tool.bitvector.BitVectorFactory;
-import edu.alibaba.mpc4j.common.tool.bitvector.BitVectorFactory.BitVectorType;
 import edu.alibaba.mpc4j.common.tool.utils.CommonUtils;
 
 import java.security.SecureRandom;
@@ -50,9 +49,9 @@ public class Z2Triple {
         Z2Triple triple = new Z2Triple();
         triple.num = num;
         triple.byteNum = byteNum;
-        triple.a = BitVectorFactory.create(BitVectorType.BIGINTEGER_BIT_VECTOR, num, a);
-        triple.b = BitVectorFactory.create(BitVectorType.BIGINTEGER_BIT_VECTOR, num, b);
-        triple.c = BitVectorFactory.create(BitVectorType.BIGINTEGER_BIT_VECTOR, num, c);
+        triple.a = BitVectorFactory.create(num, a);
+        triple.b = BitVectorFactory.create(num, b);
+        triple.c = BitVectorFactory.create(num, c);
         return triple;
     }
 
@@ -68,9 +67,9 @@ public class Z2Triple {
         Z2Triple triple = new Z2Triple();
         triple.num = num;
         triple.byteNum = byteNum;
-        triple.a = BitVectorFactory.createRandom(BitVectorType.BIGINTEGER_BIT_VECTOR, num, secureRandom);
-        triple.b = BitVectorFactory.createRandom(BitVectorType.BIGINTEGER_BIT_VECTOR, num, secureRandom);
-        triple.c = BitVectorFactory.createRandom(BitVectorType.BIGINTEGER_BIT_VECTOR, num, secureRandom);
+        triple.a = BitVectorFactory.createRandom(num, secureRandom);
+        triple.b = BitVectorFactory.createRandom(num, secureRandom);
+        triple.c = BitVectorFactory.createRandom(num, secureRandom);
         return triple;
     }
 
@@ -86,9 +85,9 @@ public class Z2Triple {
         Z2Triple triple = new Z2Triple();
         triple.num = num;
         triple.byteNum = byteNum;
-        triple.a = BitVectorFactory.createOnes(BitVectorType.BIGINTEGER_BIT_VECTOR, num);
-        triple.b = BitVectorFactory.createOnes(BitVectorType.BIGINTEGER_BIT_VECTOR, num);
-        triple.c = BitVectorFactory.createOnes(BitVectorType.BIGINTEGER_BIT_VECTOR, num);
+        triple.a = BitVectorFactory.createOnes(num);
+        triple.b = BitVectorFactory.createOnes(num);
+        triple.c = BitVectorFactory.createOnes(num);
         return triple;
     }
 
@@ -101,9 +100,9 @@ public class Z2Triple {
         Z2Triple triple = new Z2Triple();
         triple.num = 0;
         triple.byteNum = 0;
-        triple.a = BitVectorFactory.createEmpty(BitVectorType.BIGINTEGER_BIT_VECTOR);
-        triple.b = BitVectorFactory.createEmpty(BitVectorType.BIGINTEGER_BIT_VECTOR);
-        triple.c = BitVectorFactory.createEmpty(BitVectorType.BIGINTEGER_BIT_VECTOR);
+        triple.a = BitVectorFactory.createEmpty();
+        triple.b = BitVectorFactory.createEmpty();
+        triple.c = BitVectorFactory.createEmpty();
 
         return triple;
     }

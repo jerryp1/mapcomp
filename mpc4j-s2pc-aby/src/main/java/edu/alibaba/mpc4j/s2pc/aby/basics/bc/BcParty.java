@@ -49,12 +49,21 @@ public interface BcParty extends TwoPartyPto, SecurePto {
     /**
      * AND operation.
      *
-     * @param xi xi,
-     * @param yi yi,
+     * @param xi xi.
+     * @param yi yi.
      * @return zi, such that z0 ⊕ z1 = z = x & y = (x0 ⊕ x1) & (y0 ⊕ y1).
      * @throws MpcAbortException if the protocol is abort.
      */
     SquareSbitVector and(SquareSbitVector xi, SquareSbitVector yi) throws MpcAbortException;
+
+    /**
+     * Inner AND operation. The result is assigned in xi.
+     *
+     * @param xi xi.
+     * @param yi yi.
+     * @throws MpcAbortException if the protocol is abort.
+     */
+    void andi(SquareSbitVector xi, SquareSbitVector yi) throws MpcAbortException;
 
     /**
      * XOR operation.
@@ -65,6 +74,15 @@ public interface BcParty extends TwoPartyPto, SecurePto {
      * @throws MpcAbortException if the protocol is abort.
      */
     SquareSbitVector xor(SquareSbitVector xi, SquareSbitVector yi) throws MpcAbortException;
+
+    /**
+     * Inner XOR operation. The result is assigned in xi.
+     *
+     * @param xi xi.
+     * @param yi yi.
+     * @throws MpcAbortException if the protocol is abort.
+     */
+    void xori(SquareSbitVector xi, SquareSbitVector yi) throws MpcAbortException;
 
     /**
      * OR operation.
@@ -79,13 +97,39 @@ public interface BcParty extends TwoPartyPto, SecurePto {
     }
 
     /**
+     * Inner OR operation. The result is assigned in xi.
+     *
+     * @param xi xi.
+     * @param yi yi.
+     * @throws MpcAbortException if the protocol is abort.
+     */
+    default void ori(SquareSbitVector xi, SquareSbitVector yi) throws MpcAbortException {
+        // create a temp variable for AND operation.
+        SquareSbitVector and = and(xi, yi);
+        xori(xi, yi);
+        xori(xi, and);
+    }
+
+    /**
      * NOT operation.
      *
      * @param xi xi.
      * @return zi, such that z0 ⊕ z1 = z = !x = !(x0 ⊕ x1).
      * @throws MpcAbortException if the protocol is abort.
      */
-    SquareSbitVector not(SquareSbitVector xi) throws MpcAbortException;
+    default SquareSbitVector not(SquareSbitVector xi) throws MpcAbortException {
+        return xor(xi, SquareSbitVector.createOnes(xi.bitNum()));
+    }
+
+    /**
+     * Inner NOT operation. The result is assigned in xi.
+     *
+     * @param xi xi.
+     * @throws MpcAbortException if the protocol is abort.
+     */
+    default void noti(SquareSbitVector xi) throws MpcAbortException {
+        xori(xi, SquareSbitVector.createOnes(xi.bitNum()));
+    }
 
     /**
      * Reveal its own BitVector.

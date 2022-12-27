@@ -1,7 +1,10 @@
-package edu.alibaba.mpc4j.s2pc.aby.basics.bc;
+package edu.alibaba.mpc4j.s2pc.aby.basics.bc.std;
 
 import edu.alibaba.mpc4j.common.rpc.MpcAbortException;
 import edu.alibaba.mpc4j.common.tool.bitvector.BitVector;
+import edu.alibaba.mpc4j.s2pc.aby.basics.bc.BcOperator;
+import edu.alibaba.mpc4j.s2pc.aby.basics.bc.BcParty;
+import edu.alibaba.mpc4j.s2pc.aby.basics.bc.SquareSbitVector;
 
 /**
  * Sender test thread for Boolean circuit binary operator.
@@ -9,7 +12,7 @@ import edu.alibaba.mpc4j.common.tool.bitvector.BitVector;
  * @author Weiran Liu
  * @date 2022/02/14
  */
-class BcBinarySenderThread extends Thread {
+class BcStdBinarySenderThread extends Thread {
     /**
      * sender
      */
@@ -35,6 +38,18 @@ class BcBinarySenderThread extends Thread {
      */
     private final int bitNum;
     /**
+     * share x0
+     */
+    private SquareSbitVector shareX0;
+    /**
+     * final x100
+     */
+    private SquareSbitVector finalX010;
+    /**
+     * final x000
+     */
+    private SquareSbitVector finalX000;
+    /**
      * z (plain, plain)
      */
     private BitVector z11;
@@ -51,7 +66,7 @@ class BcBinarySenderThread extends Thread {
      */
     private BitVector z00;
 
-    BcBinarySenderThread(BcParty bcSender, BcOperator bcOperator, BitVector xBitVector, BitVector yBitVector) {
+    BcStdBinarySenderThread(BcParty bcSender, BcOperator bcOperator, BitVector xBitVector, BitVector yBitVector) {
         this.bcSender = bcSender;
         this.bcOperator = bcOperator;
         assert xBitVector.bitNum() == yBitVector.bitNum();
@@ -93,6 +108,18 @@ class BcBinarySenderThread extends Thread {
         return z00;
     }
 
+    SquareSbitVector getShareX0() {
+        return shareX0;
+    }
+
+    SquareSbitVector getFinalX010() {
+        return finalX010;
+    }
+
+    SquareSbitVector getFinalX000() {
+        return finalX000;
+    }
+
     @Override
     public void run() {
         try {
@@ -102,6 +129,7 @@ class BcBinarySenderThread extends Thread {
             SquareSbitVector x = SquareSbitVector.create(xBitVector, true);
             SquareSbitVector y = SquareSbitVector.create(yBitVector, true);
             SquareSbitVector x0 = bcSender.shareOwn(xBitVector);
+            shareX0 = x0.copy();
             SquareSbitVector y0 = bcSender.shareOther(bitNum);
             SquareSbitVector z110, z100, z010, z000;
             switch (bcOperator) {
@@ -116,10 +144,12 @@ class BcBinarySenderThread extends Thread {
                     bcSender.revealOther(z100);
                     // (secret, plain)
                     z010 = bcSender.xor(x0, y);
+                    finalX010 = x0.copy();
                     z01 = bcSender.revealOwn(z010);
                     bcSender.revealOther(z010);
                     // (secret, secret)
                     z000 = bcSender.xor(x0, y0);
+                    finalX000 = x0.copy();
                     z00 = bcSender.revealOwn(z000);
                     bcSender.revealOther(z000);
                     break;
@@ -134,10 +164,12 @@ class BcBinarySenderThread extends Thread {
                     bcSender.revealOther(z100);
                     // (secret, plain)
                     z010 = bcSender.and(x0, y);
+                    finalX010 = x0.copy();
                     z01 = bcSender.revealOwn(z010);
                     bcSender.revealOther(z010);
                     // (secret, secret)
                     z000 = bcSender.and(x0, y0);
+                    finalX000 = x0.copy();
                     z00 = bcSender.revealOwn(z000);
                     bcSender.revealOther(z000);
                     break;
@@ -152,10 +184,12 @@ class BcBinarySenderThread extends Thread {
                     bcSender.revealOther(z100);
                     // (secret, plain)
                     z010 = bcSender.or(x0, y);
+                    finalX010 = x0.copy();
                     z01 = bcSender.revealOwn(z010);
                     bcSender.revealOther(z010);
                     // (secret, secret)
                     z000 = bcSender.or(x0, y0);
+                    finalX000 = x0.copy();
                     z00 = bcSender.revealOwn(z000);
                     bcSender.revealOther(z000);
                     break;
