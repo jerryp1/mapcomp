@@ -38,6 +38,14 @@ public interface SbitVector {
     int byteNum();
 
     /**
+     * Replace the bit vector.
+     *
+     * @param bitVector the bit vector.
+     * @param plain if the share bit vector is in plain state.
+     */
+    void replaceCopy(BitVector bitVector, boolean plain);
+
+    /**
      * Get the inner bit vector.
      *
      * @return the inner bit vector.

@@ -1,4 +1,4 @@
-package edu.alibaba.mpc4j.s2pc.aby.basics.bc.std;
+package edu.alibaba.mpc4j.s2pc.aby.basics.bc.inner;
 
 import com.google.common.base.Preconditions;
 import edu.alibaba.mpc4j.common.rpc.Rpc;
@@ -26,14 +26,14 @@ import java.util.Collection;
 import java.util.concurrent.TimeUnit;
 
 /**
- * Boolean circuit protocol test.
+ * Inner Boolean circuit protocol test.
  *
  * @author Weiran Liu
- * @date 2022/02/14
+ * @date 2022/12/27
  */
 @RunWith(Parameterized.class)
-public class BcStdTest {
-    private static final Logger LOGGER = LoggerFactory.getLogger(BcStdTest.class);
+public class BcInnerTest {
+    private static final Logger LOGGER = LoggerFactory.getLogger(BcInnerTest.class);
     /**
      * 随机状态
      */
@@ -71,7 +71,7 @@ public class BcStdTest {
      */
     private final BcConfig config;
 
-    public BcStdTest(String name, BcConfig config) {
+    public BcInnerTest(String name, BcConfig config) {
         Preconditions.checkArgument(StringUtils.isNotBlank(name));
         RpcManager rpcManager = new MemoryRpcManager(2);
         senderRpc = rpcManager.getRpc(0);
@@ -164,8 +164,8 @@ public class BcStdTest {
         BitVector yBitVector = BitVectorFactory.createRandom(bitNum, SECURE_RANDOM);
         try {
             LOGGER.info("-----test {} ({}) start-----", sender.getPtoDesc().getPtoName(), bcOperator.name());
-            BcStdBinarySenderThread senderThread = new BcStdBinarySenderThread(sender, bcOperator, xBitVector, yBitVector);
-            BcStdBinaryReceiverThread receiverThread = new BcStdBinaryReceiverThread(receiver, bcOperator, xBitVector, yBitVector);
+            BcInnerBinarySenderThread senderThread = new BcInnerBinarySenderThread(sender, bcOperator, xBitVector, yBitVector);
+            BcInnerBinaryReceiverThread receiverThread = new BcInnerBinaryReceiverThread(receiver, bcOperator, xBitVector, yBitVector);
             StopWatch stopWatch = new StopWatch();
             // 开始执行协议
             stopWatch.start();
@@ -193,11 +193,6 @@ public class BcStdTest {
             // (secret, secret)
             Assert.assertEquals(zBitVector, senderThread.getZ00());
             Assert.assertEquals(zBitVector, receiverThread.getZ00());
-            // immutable shares
-            Assert.assertEquals(senderThread.getShareX0(), senderThread.getFinalX010());
-            Assert.assertEquals(senderThread.getShareX0(), senderThread.getFinalX000());
-            Assert.assertEquals(receiverThread.getShareX1(), receiverThread.getFinalX011());
-            Assert.assertEquals(receiverThread.getShareX1(), receiverThread.getFinalX001());
 
             LOGGER.info("Sender sends {}B, Receiver sends {}B, time = {}ms",
                 senderByteLength, receiverByteLength, time
@@ -217,8 +212,8 @@ public class BcStdTest {
         BitVector xBitVector = BitVectorFactory.createRandom(bitNum, SECURE_RANDOM);
         try {
             LOGGER.info("-----test {} ({}) start-----", sender.getPtoDesc().getPtoName(), bcOperator.name());
-            BcStdUnarySenderThread senderThread = new BcStdUnarySenderThread(sender, bcOperator, xBitVector);
-            BcStdUnaryReceiverThread receiverThread = new BcStdUnaryReceiverThread(receiver, bcOperator, xBitVector);
+            BcInnerUnarySenderThread senderThread = new BcInnerUnarySenderThread(sender, bcOperator, xBitVector);
+            BcInnerUnaryReceiverThread receiverThread = new BcInnerUnaryReceiverThread(receiver, bcOperator, xBitVector);
             StopWatch stopWatch = new StopWatch();
             // 开始执行协议
             stopWatch.start();
@@ -240,9 +235,6 @@ public class BcStdTest {
             // (secret)
             Assert.assertEquals(zBitVector, senderThread.getZ0());
             Assert.assertEquals(zBitVector, receiverThread.getZ0());
-            // immutable shares
-            Assert.assertEquals(senderThread.getShareX0(), senderThread.getFinalX0());
-            Assert.assertEquals(receiverThread.getShareX1(), receiverThread.getFinalX1());
 
             LOGGER.info("Sender sends {}B, Receiver sends {}B, time = {}ms",
                 senderByteLength, receiverByteLength, time

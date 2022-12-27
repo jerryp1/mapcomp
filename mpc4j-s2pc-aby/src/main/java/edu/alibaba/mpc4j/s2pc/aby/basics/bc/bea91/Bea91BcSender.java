@@ -208,7 +208,7 @@ public class Bea91BcSender extends AbstractBcParty {
             stopWatch.stop();
             long z2MtgTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
             stopWatch.reset();
-            info("{}{} Send. AND Step 1/3 ({}ms)", ptoStepLogPrefix, getPtoDesc().getPtoName(), z2MtgTime);
+            info("{}{} Send. ANDI Step 1/3 ({}ms)", ptoStepLogPrefix, getPtoDesc().getPtoName(), z2MtgTime);
 
             // 计算e0和f0
             stopWatch.start();
@@ -216,12 +216,11 @@ public class Bea91BcSender extends AbstractBcParty {
             byte[] b0 = z2Triple.getB();
             byte[] c0 = z2Triple.getC();
             // e0 = x0 ⊕ a0
-            byte[] e0 = x0.getBytes();
-            BytesUtils.xori(e0, a0);
+            byte[] e0 = BytesUtils.xor(x0.getBytes(), a0);
             // f0 = y0 ⊕ b0
             byte[] f0 = BytesUtils.xor(y0.getBytes(), b0);
             List<byte[]> e0f0Payload = new LinkedList<>();
-            e0f0Payload.add(x0.getBytes());
+            e0f0Payload.add(e0);
             e0f0Payload.add(f0);
             DataPacketHeader e0f0Header = new DataPacketHeader(
                 taskId, getPtoDesc().getPtoId(), Bea91BcPtoDesc.PtoStep.SENDER_SEND_E0_F0.ordinal(), andGateNum,
@@ -231,7 +230,7 @@ public class Bea91BcSender extends AbstractBcParty {
             stopWatch.stop();
             long e0f0Time = stopWatch.getTime(TimeUnit.MILLISECONDS);
             stopWatch.reset();
-            info("{}{} Send. AND Step 2/3 ({}ms)", ptoStepLogPrefix, getPtoDesc().getPtoName(), e0f0Time);
+            info("{}{} Send. ANDI Step 2/3 ({}ms)", ptoStepLogPrefix, getPtoDesc().getPtoName(), e0f0Time);
 
             stopWatch.start();
             DataPacketHeader e1f1Header = new DataPacketHeader(
@@ -251,12 +250,13 @@ public class Bea91BcSender extends AbstractBcParty {
             BytesUtils.andi(f, a0);
             BytesUtils.xori(z0, f);
             BytesUtils.xori(z0, c0);
+            x0.replaceCopy(BitVectorFactory.create(bitNum, z0), false);
             stopWatch.stop();
             long z0Time = stopWatch.getTime(TimeUnit.MILLISECONDS);
             stopWatch.reset();
-            info("{}{} Send. AND Step 3/3 ({}ms)", ptoStepLogPrefix, getPtoDesc().getPtoName(), z0Time);
+            info("{}{} Send. ANDI Step 3/3 ({}ms)", ptoStepLogPrefix, getPtoDesc().getPtoName(), z0Time);
 
-            info("{}{} Send. AND end", ptoEndLogPrefix, getPtoDesc().getPtoName());
+            info("{}{} Send. ANDI end", ptoEndLogPrefix, getPtoDesc().getPtoName());
         }
     }
 
@@ -272,7 +272,7 @@ public class Bea91BcSender extends AbstractBcParty {
         } else {
             // x0和y0为密文比特向量，发送方和接收方都执行XOR运算
             xorGateNum += bitNum;
-            info("{}{} Send. AND begin", ptoBeginLogPrefix, getPtoDesc().getPtoName());
+            info("{}{} Send. XOR begin", ptoBeginLogPrefix, getPtoDesc().getPtoName());
             stopWatch.start();
             SquareSbitVector z0ShareBitVector = x0.xor(y0, false);
             stopWatch.stop();
@@ -297,15 +297,15 @@ public class Bea91BcSender extends AbstractBcParty {
         } else {
             // x0和y0为密文比特向量，发送方和接收方都执行XOR运算
             xorGateNum += bitNum;
-            info("{}{} Send. AND begin", ptoBeginLogPrefix, getPtoDesc().getPtoName());
+            info("{}{} Send. XORI begin", ptoBeginLogPrefix, getPtoDesc().getPtoName());
             stopWatch.start();
             x0.xori(y0, false);
             stopWatch.stop();
             long z0Time = stopWatch.getTime(TimeUnit.MILLISECONDS);
             stopWatch.reset();
-            info("{}{} Send. XOR Step 1/1 ({}ms)", ptoStepLogPrefix, getPtoDesc().getPtoName(), z0Time);
+            info("{}{} Send. XORI Step 1/1 ({}ms)", ptoStepLogPrefix, getPtoDesc().getPtoName(), z0Time);
 
-            info("{}{} Send. XOR end", ptoEndLogPrefix, getPtoDesc().getPtoName());
+            info("{}{} Send. XORI end", ptoEndLogPrefix, getPtoDesc().getPtoName());
         }
     }
 

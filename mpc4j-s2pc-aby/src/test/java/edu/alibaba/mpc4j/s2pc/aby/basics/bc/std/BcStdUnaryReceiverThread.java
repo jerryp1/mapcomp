@@ -20,7 +20,7 @@ class BcStdUnaryReceiverThread extends Thread {
     /**
      * operator
      */
-    private final BcOperator booleanOperator;
+    private final BcOperator bcOperator;
     /**
      * x bit vector
      */
@@ -46,9 +46,9 @@ class BcStdUnaryReceiverThread extends Thread {
      */
     private BitVector z0;
 
-    BcStdUnaryReceiverThread(BcParty bcSender, BcOperator booleanOperator, BitVector xBitVector) {
+    BcStdUnaryReceiverThread(BcParty bcSender, BcOperator bcOperator, BitVector xBitVector) {
         this.bcSender = bcSender;
-        this.booleanOperator = booleanOperator;
+        this.bcOperator = bcOperator;
         this.xBitVector = xBitVector;
         bitNum = xBitVector.bitNum();
     }
@@ -79,7 +79,7 @@ class BcStdUnaryReceiverThread extends Thread {
             SquareSbitVector x1 = bcSender.shareOther(bitNum);
             shareX1 = x1.copy();
             //noinspection SwitchStatementWithTooFewBranches
-            switch (booleanOperator) {
+            switch (bcOperator) {
                 case NOT:
                     // (plain, plain)
                     SquareSbitVector z01 = bcSender.not(x);
@@ -92,7 +92,7 @@ class BcStdUnaryReceiverThread extends Thread {
                     z1 = bcSender.revealOwn(z11);
                     break;
                 default:
-                    throw new IllegalStateException("Invalid unary boolean operator: " + booleanOperator.name());
+                    throw new IllegalStateException("Invalid unary boolean operator: " + bcOperator.name());
             }
             bcSender.getRpc().disconnect();
         } catch (MpcAbortException e) {

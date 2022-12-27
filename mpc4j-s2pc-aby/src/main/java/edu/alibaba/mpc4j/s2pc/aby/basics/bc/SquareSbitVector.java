@@ -55,6 +55,21 @@ public class SquareSbitVector implements SbitVector {
     }
 
     /**
+     * Create a square-share bit vector, the given bit vector is copied.
+     *
+     * @param bitVector the bit vector.
+     * @param plain  whether the bit vector is in plain state.
+     * @return the created square-share bit vector.
+     */
+    public static SquareSbitVector createCopy(BitVector bitVector, boolean plain) {
+        SquareSbitVector shareBitVector = new SquareSbitVector();
+        shareBitVector.bitVector = bitVector.copy();
+        shareBitVector.plain = plain;
+
+        return shareBitVector;
+    }
+
+    /**
      * Create a (secret) random square-share bit vector.
      *
      * @param bitNum    number of bits.
@@ -118,6 +133,13 @@ public class SquareSbitVector implements SbitVector {
     @Override
     public int byteNum() {
         return bitVector.byteNum();
+    }
+
+    @Override
+    public void replaceCopy(BitVector bitVector, boolean plain) {
+        assert this.bitVector.bitNum() == bitVector.bitNum();
+        this.bitVector = bitVector.copy();
+        this.plain = plain;
     }
 
     @Override
