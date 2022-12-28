@@ -5,14 +5,14 @@ import java.nio.IntBuffer;
 import java.util.stream.IntStream;
 
 /**
- * 整数工具类。
+ * Integer Utilities.
  *
  * @author Weiran Liu
  * @date 2021/12/09
  */
 public class IntUtils {
     /**
-     * 私有构造函数
+     * private constructor.
      */
     private IntUtils() {
         // empty
@@ -100,8 +100,10 @@ public class IntUtils {
 
     /**
      * 将{@code int}转换为指定长度的{@code byte[]}，大端表示，不能用于负数。
-     * - 如果指定长度{@code byteLength}小于{@code Integer.BYTES}，则在前面截断。
-     * - 如果指定长度{@code byteLength}大于{@code Integer.BYTES}，则在前面补0.
+     * <p>
+     *     <li>如果指定长度{@code byteLength}小于{@code Integer.BYTES}，则在前面截断。</li>
+     *     <li><如果指定长度{@code byteLength}大于{@code Integer.BYTES}，则在前面补0。/li>
+     * </p>
      *
      * @param value      给定的{@code int}。
      * @param byteLength 要求字节长度。
@@ -126,8 +128,10 @@ public class IntUtils {
 
     /**
      * 将指定长度的{@code byte[]}转换为{@code int}，大端表示。转换结果一定为正整数。
-     * - 如果{@code byte[]}的长度小于{@code Integer.BYTES}，则在前面补0后转换。
-     * - 如果{@code byte[]}的长度大于{@code Integer.BYTES}，则支取最后{@code Integer.BYTES}个字节转换。
+     * <p>
+     *     <li>如果{@code byte[]}的长度小于{@code Integer.BYTES}，则在前面补0后转换。</li>
+     *     <li>如果{@code byte[]}的长度大于{@code Integer.BYTES}，则只取最后{@code Integer.BYTES}个字节转换。</li>
+     * </p>
      *
      * @param value 给定的{@code byte[]}。
      * @return 转换结果。

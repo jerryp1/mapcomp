@@ -14,9 +14,8 @@ import java.util.stream.IntStream;
  * @date 2021/12/10
  */
 public class LongUtils {
-
     /**
-     * 私有构造函数
+     * private constructor
      */
     private LongUtils() {
         // empty
@@ -131,40 +130,27 @@ public class LongUtils {
     }
 
     /**
-     * 计算Math.min(1, log_2(x))，计算结果向上取整。
+     * Returns the base-2 logarithm of {@code x} with ceiling rounding mode.
      *
-     * @param x 输入值。
-     * @return log_2(x)。
+     * @param x the input x.
+     * @return the base-2 logarithm of {@code x} with ceiling rounding mode.
      */
     public static int ceilLog2(long x) {
         assert x > 0 : "x must be greater than 0: " + x;
-        if (x == 1) {
-            // 输入为n = 1要特殊处理，因为下面的循环会让n取不到1
-            return 1;
-        }
-        // 感谢@麟琦的意见，需要单独处理63比特和62比特，因为1L << 63会变成负数，不能使用下述powK的方法执行
-        if (x > (1L << 62)) {
-            return 63;
-        }
-        int k = 0;
-        long powK = 1;
-        while (powK < x) {
-            k++;
-            powK = powK << 1;
-        }
-        return k;
+        // See https://github.com/google/guava/blob/master/guava/src/com/google/common/math/LongMath.java for details.
+        return Long.SIZE - Long.numberOfLeadingZeros(x - 1);
     }
 
     /**
-     * 计算Math.min(minCeilLog2, log_2(x))，计算结果向上取整。
+     * Returns the base-2 logarithm of {@code x} with ceiling rounding mode and the result is less than {@code min}.
      *
-     * @param x           输入值。
-     * @param minCeilLog2 最小值。
-     * @return Math.min(minCeilLog2, log_2 ( x))。
+     * @param x   the input x.
+     * @param min the minimal returned value.
+     * @return the base-2 logarithm of {@code x} with ceiling rounding mode and the result is less than {@code min}.
      */
-    public static int ceilLog2(long x, int minCeilLog2) {
-        assert minCeilLog2 >= 1 : "minCeilLog2 must be greater than 0: " + minCeilLog2;
-        return Math.max(ceilLog2(x), minCeilLog2);
+    public static int ceilLog2(long x, int min) {
+        assert min >= 1 : "min must be greater than 0: " + min;
+        return Math.max(ceilLog2(x), min);
     }
 
     /**

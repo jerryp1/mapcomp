@@ -85,21 +85,6 @@ public class Zp64CoreMtgTest {
     }
 
     @Test
-    public void testConfigSetPrimeBitLength() {
-        for (int size = 1; size < Long.SIZE - 1; size++) {
-            try {
-                Rss19Zp64CoreMtgConfig config = new Rss19Zp64CoreMtgConfig.Builder()
-                    .setPrimeBitLength(size)
-                    .build();
-                long prime = config.getZp();
-                LOGGER.info("config build success for plain bit length {}, prime = {}", size, prime);
-            } catch (Exception e) {
-                LOGGER.info("config build  failed for plain bit length: {}", size);
-            }
-        }
-    }
-
-    @Test
     public void testConfigSetPolyModulusDegree() {
         int polyModulusDegree = 2048;
         for (int size = 1; size < Long.SIZE - 1; size++) {

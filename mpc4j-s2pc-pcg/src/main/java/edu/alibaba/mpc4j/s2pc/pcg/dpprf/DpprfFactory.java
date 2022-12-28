@@ -52,7 +52,7 @@ public class DpprfFactory implements PtoFactory {
         //noinspection SwitchStatementWithTooFewBranches
         switch (type) {
             case YWL20_RANDOM:
-                return LongUtils.ceilLog2(alphaBound) * batchNum;
+                return LongUtils.ceilLog2(alphaBound, 1) * batchNum;
             default:
                 throw new IllegalArgumentException("Invalid " + DpprfType.class.getSimpleName() + ": " + type.name());
         }
