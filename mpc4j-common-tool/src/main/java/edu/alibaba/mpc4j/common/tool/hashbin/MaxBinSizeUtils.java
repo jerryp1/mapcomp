@@ -148,7 +148,7 @@ public class MaxBinSizeUtils {
         BigDecimal probability = BigDecimal.ZERO
             .setScale(STRUCTURE_SCALE, RoundingMode.HALF_UP);
         for (int i = k; i <= n; i++) {
-            BigInteger combinatorial = BigIntegerUtils.combinatorial(n, i);
+            BigInteger combinatorial = BigIntegerUtils.binomial(n, i);
             probability = probability.add(
                 new BigDecimal(combinatorial).setScale(STRUCTURE_SCALE, RoundingMode.HALF_UP)
                     .multiply(binInverseBigDecimal.pow(i)).setScale(STRUCTURE_SCALE, RoundingMode.HALF_UP)

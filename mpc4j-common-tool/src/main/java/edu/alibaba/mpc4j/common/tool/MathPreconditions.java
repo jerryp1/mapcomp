@@ -132,19 +132,68 @@ public class MathPreconditions {
     }
 
     /**
+     * Check x > min.
+     *
+     * @param role the name of the value x.
+     * @param x the value x.
+     * @param min the value min.
+     * @return the value x.
+     * @throws IllegalArgumentException if x < min.
+     */
+    @CanIgnoreReturnValue
+    public static int checkGreaterThan(String role, int x, int min) {
+        if (x <= min) {
+            throw new IllegalArgumentException(role + " (" + x + ") must be > " + min);
+        }
+        return x;
+    }
+
+    /**
+     * Check x > min.
+     *
+     * @param role the name of the value x.
+     * @param x the value x.
+     * @param min the value min.
+     * @return the value x.
+     * @throws IllegalArgumentException if x < min.
+     */
+    @CanIgnoreReturnValue
+    public static long checkGreaterThan(String role, long x, long min) {
+        if (x <= min) {
+            throw new IllegalArgumentException(role + " (" + x + ") must be > " + min);
+        }
+        return x;
+    }
+
+    /**
+     * Check x > min.
+     *
+     * @param role the name of the value x.
+     * @param x the value x.
+     * @param min the value min.
+     * @return the value x.
+     * @throws IllegalArgumentException if x < min.
+     */
+    @CanIgnoreReturnValue
+    public static BigInteger checkGreaterThan(String role, BigInteger x, BigInteger min) {
+        if (BigIntegerUtils.lessOrEqual(x, min)) {
+            throw new IllegalArgumentException(role + " (" + x + ") must be > " + min);
+        }
+        return x;
+    }
+
+    /**
      * Check x ∈ (0, max).
      *
      * @param role the name of the value x.
-     * @param max the value max.
      * @param x the value x.
+     * @param max the value max.
      * @return the value x.
      * @throws IllegalArgumentException if max <= 0 or x ∉ [0, max).
      */
     @CanIgnoreReturnValue
-    public static int checkPositiveInRange(String role, int max, int x) {
-        if (max <= 1) {
-            throw new IllegalArgumentException("max" + " (" + max + ") must be > 1");
-        }
+    public static int checkPositiveInRange(String role, int x, int max) {
+        checkGreaterThan("max", max, 1);
         if (x <= 0 || x >= max) {
             throw new IllegalArgumentException(role + " (" + x + ") must be in range (0, " + max + ")");
         }
@@ -155,16 +204,14 @@ public class MathPreconditions {
      * Check x ∈ (0, max).
      *
      * @param role the name of the value x.
-     * @param max the value max.
      * @param x the value x.
+     * @param max the value max.
      * @return the value x.
      * @throws IllegalArgumentException if max <= 0 or x ∉ [0, max).
      */
     @CanIgnoreReturnValue
-    public static long checkPositiveInRange(String role, long max, long x) {
-        if (max <= 1) {
-            throw new IllegalArgumentException("max" + " (" + max + ") must be > 1");
-        }
+    public static long checkPositiveInRange(String role, long x, long max) {
+        checkGreaterThan("max", max, 1);
         if (x <= 0 || x >= max) {
             throw new IllegalArgumentException(role + " (" + x + ") must be in range (0, " + max + ")");
         }
@@ -175,16 +222,14 @@ public class MathPreconditions {
      * Check x ∈ (0, max).
      *
      * @param role the name of the value x.
-     * @param max the value max.
      * @param x the value x.
+     * @param max the value max.
      * @return the value x.
      * @throws IllegalArgumentException if max <= 0 or x ∉ [0, max).
      */
     @CanIgnoreReturnValue
-    public static BigInteger checkPositiveInRange(String role, BigInteger max, BigInteger x) {
-        if (BigIntegerUtils.lessOrEqual(max, BigInteger.ONE)) {
-            throw new IllegalArgumentException("max" + " (" + max + ") must be > 1");
-        }
+    public static BigInteger checkPositiveInRange(String role, BigInteger x, BigInteger max) {
+        checkGreaterThan("max", max, BigInteger.ONE);
         if (x.signum() <= 0 || BigIntegerUtils.greaterOrEqual(x, max)) {
             throw new IllegalArgumentException(role + " (" + x + ") must be in range (0, " + max + ")");
         }
@@ -195,13 +240,13 @@ public class MathPreconditions {
      * Check x ∈ [0, max).
      *
      * @param role the name of the value x.
-     * @param max the value max.
      * @param x the value x.
+     * @param max the value max.
      * @return the value x.
      * @throws IllegalArgumentException if max <= 0 or x ∉ [0, max).
      */
     @CanIgnoreReturnValue
-    public static int checkNonNegativeInRange(String role, int max, int x) {
+    public static int checkNonNegativeInRange(String role, int x, int max) {
         checkPositive("max", max);
         if (x < 0 || x >= max) {
             throw new IllegalArgumentException(role + " (" + x + ") must be in range [0, " + max + ")");
@@ -213,13 +258,13 @@ public class MathPreconditions {
      * Check x ∈ [0, max).
      *
      * @param role the name of the value x.
-     * @param max the value max.
      * @param x the value x.
+     * @param max the value max.
      * @return the value x.
      * @throws IllegalArgumentException if max <= 0 or x ∉ [0, max).
      */
     @CanIgnoreReturnValue
-    public static long checkNonNegativeInRange(String role, long max, long x) {
+    public static long checkNonNegativeInRange(String role, long x, long max) {
         checkPositive("max", max);
         if (x < 0 || x >= max) {
             throw new IllegalArgumentException(role + " (" + x + ") must be in range [0, " + max + ")");
@@ -231,13 +276,13 @@ public class MathPreconditions {
      * Check x ∈ [0, max).
      *
      * @param role the name of the value x.
-     * @param max the value max.
      * @param x the value x.
+     * @param max the value max.
      * @return the value x.
      * @throws IllegalArgumentException if max <= 0 or x ∉ [0, max).
      */
     @CanIgnoreReturnValue
-    public static BigInteger checkNonNegativeInRange(String role, BigInteger max, BigInteger x) {
+    public static BigInteger checkNonNegativeInRange(String role, BigInteger x, BigInteger max) {
         checkPositive("max", max);
         if (x.signum() < 0 || BigIntegerUtils.greaterOrEqual(x, max)) {
             throw new IllegalArgumentException(role + " (" + x + ") must be in range [0, " + max + ")");

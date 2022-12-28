@@ -11,12 +11,16 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
 /**
- * 高精度浮点数运算测试。代码来自https://github.com/eobermuhlner/big-math/下面的BigDecimalMathTest.java，有修改。
+ * tests for BigDecimal Utilities. The source code is modified from:
+ * <p>
+ *     https://github.com/eobermuhlner/big-math/blob/master/ch.obermuhlner.math.big/src/test/java/ch/obermuhlner/math/
+ *     big/BigDecimalMathTest.java
+ * </p>
  *
  * @author Weiran Liu
  * @date 2021/12/20
  */
-public class BigDecimalMathTest {
+public class BigDecimalUtilsTest {
     /**
      * 精度
      */
