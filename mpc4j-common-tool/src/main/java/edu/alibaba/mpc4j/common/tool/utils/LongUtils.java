@@ -149,7 +149,7 @@ public class LongUtils {
      * @return the base-2 logarithm of {@code x} with ceiling rounding mode and the result is less than {@code min}.
      */
     public static int ceilLog2(long x, int min) {
-        assert min >= 1 : "min must be greater than 0: " + min;
+        assert min > 0 : "min must be greater than 0: " + min;
         return Math.max(ceilLog2(x), min);
     }
 
