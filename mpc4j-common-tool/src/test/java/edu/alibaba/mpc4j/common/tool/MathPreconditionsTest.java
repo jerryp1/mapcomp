@@ -52,6 +52,29 @@ public class MathPreconditionsTest {
     }
 
     @Test
+    public void testCheckEqual() {
+        // check -1 is not equal to 0
+        Assert.assertThrows(IllegalArgumentException.class, () ->
+            MathPreconditions.checkEqual("x", "y", -1, 0)
+        );
+        Assert.assertThrows(IllegalArgumentException.class, () ->
+            MathPreconditions.checkEqual("x", "y", -1L, 0L)
+        );
+        Assert.assertThrows(IllegalArgumentException.class, () ->
+            MathPreconditions.checkEqual("x", "y", BigInteger.ONE.negate(), BigInteger.ZERO)
+        );
+        // check -1 is equal to -1
+        MathPreconditions.checkEqual("x", "y", -1, -1);
+        MathPreconditions.checkEqual("x", "y", -1L, -1L);
+        MathPreconditions.checkEqual("x", "y", BigInteger.ONE.negate(), BigInteger.ONE.negate());
+        // check 2 is equal to 2
+        MathPreconditions.checkEqual("x", "y", 2, 2);
+        MathPreconditions.checkEqual("x", "y", 2L, 2L);
+        // use two ways of creating BigInteger
+        MathPreconditions.checkEqual("x", "y", BigInteger.ONE.add(BigInteger.ONE), BigInteger.valueOf(2));
+    }
+
+    @Test
     public void testCheckGreaterThan() {
         // check -1 is not greater than -1
         Assert.assertThrows(IllegalArgumentException.class, () -> MathPreconditions.checkGreaterThan("x", -1, -1));
@@ -67,8 +90,28 @@ public class MathPreconditionsTest {
         );
         // check 1 is greater than 0
         MathPreconditions.checkGreaterThan("x", 1, 0);
-        MathPreconditions.checkGreaterThan("x", 1, 0L);
+        MathPreconditions.checkGreaterThan("x", 1L, 0L);
         MathPreconditions.checkGreaterThan("x", BigInteger.ONE, BigInteger.ZERO);
+    }
+
+    @Test
+    public void testCheckLessThan() {
+        // check -1 is not less than -1
+        Assert.assertThrows(IllegalArgumentException.class, () -> MathPreconditions.checkLessThan("x", -1, -1));
+        Assert.assertThrows(IllegalArgumentException.class, () -> MathPreconditions.checkLessThan("x", -1L, -1L));
+        Assert.assertThrows(IllegalArgumentException.class, () ->
+            MathPreconditions.checkLessThan("x", BigInteger.ONE.negate(), BigInteger.ONE.negate())
+        );
+        // check 1 is not less than 0
+        Assert.assertThrows(IllegalArgumentException.class, () -> MathPreconditions.checkLessThan("x", 1, 0));
+        Assert.assertThrows(IllegalArgumentException.class, () -> MathPreconditions.checkLessThan("x", 1L, 0L));
+        Assert.assertThrows(IllegalArgumentException.class, () ->
+            MathPreconditions.checkLessThan("x", BigInteger.ONE, BigInteger.ZERO)
+        );
+        // check -1 is less than 0
+        MathPreconditions.checkLessThan("x", -1, 0);
+        MathPreconditions.checkLessThan("x", -1L, 0L);
+        MathPreconditions.checkLessThan("x", BigInteger.ONE.negate(), BigInteger.ZERO);
     }
 
     @Test

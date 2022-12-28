@@ -132,13 +132,58 @@ public class MathPreconditions {
     }
 
     /**
+     * Check x == y.
+     *
+     * @param roleX the name of the value x.
+     * @param roleY the name of the value y.
+     * @param x the value x.
+     * @param y the value y.
+     * @throws IllegalArgumentException if x != y.
+     */
+    public static void checkEqual(String roleX, String roleY, int x, int y) {
+        if (x != y) {
+            throw new IllegalArgumentException(roleX + " (" + x + ") must be equal to " + roleY + " (" + y + ")");
+        }
+    }
+
+    /**
+     * Check x == y.
+     *
+     * @param roleX the name of the value x.
+     * @param roleY the name of the value y.
+     * @param x the value x.
+     * @param y the value y.
+     * @throws IllegalArgumentException if x != y.
+     */
+    public static void checkEqual(String roleX, String roleY, long x, long y) {
+        if (x != y) {
+            throw new IllegalArgumentException(roleX + " (" + x + ") must be equal to " + roleY + " (" + y + ")");
+        }
+    }
+
+    /**
+     * Check x == y.
+     *
+     * @param roleX the name of the value x.
+     * @param roleY the name of the value y.
+     * @param x the value x.
+     * @param y the value y.
+     * @throws IllegalArgumentException if x != y.
+     */
+    public static void checkEqual(String roleX, String roleY, BigInteger x, BigInteger y) {
+        if (!x.equals(y)) {
+            throw new IllegalArgumentException(roleX + " (" + x + ") must be equal to " + roleY + " (" + y + ")");
+        }
+    }
+
+    /**
      * Check x > min.
      *
      * @param role the name of the value x.
      * @param x the value x.
      * @param min the value min.
      * @return the value x.
-     * @throws IllegalArgumentException if x < min.
+     * @throws IllegalArgumentException if x <= min.
      */
     @CanIgnoreReturnValue
     public static int checkGreaterThan(String role, int x, int min) {
@@ -155,7 +200,7 @@ public class MathPreconditions {
      * @param x the value x.
      * @param min the value min.
      * @return the value x.
-     * @throws IllegalArgumentException if x < min.
+     * @throws IllegalArgumentException if x <= min.
      */
     @CanIgnoreReturnValue
     public static long checkGreaterThan(String role, long x, long min) {
@@ -172,12 +217,63 @@ public class MathPreconditions {
      * @param x the value x.
      * @param min the value min.
      * @return the value x.
-     * @throws IllegalArgumentException if x < min.
+     * @throws IllegalArgumentException if x <= min.
      */
     @CanIgnoreReturnValue
     public static BigInteger checkGreaterThan(String role, BigInteger x, BigInteger min) {
         if (BigIntegerUtils.lessOrEqual(x, min)) {
             throw new IllegalArgumentException(role + " (" + x + ") must be > " + min);
+        }
+        return x;
+    }
+
+    /**
+     * Check x < max.
+     *
+     * @param role the name of the value x.
+     * @param x the value x.
+     * @param max the value max.
+     * @return the value x.
+     * @throws IllegalArgumentException if x >= max.
+     */
+    @CanIgnoreReturnValue
+    public static int checkLessThan(String role, int x, int max) {
+        if (x >= max) {
+            throw new IllegalArgumentException(role + " (" + x + ") must be < " + max);
+        }
+        return x;
+    }
+
+    /**
+     * Check x < max.
+     *
+     * @param role the name of the value x.
+     * @param x the value x.
+     * @param max the value max.
+     * @return the value x.
+     * @throws IllegalArgumentException if x >= max.
+     */
+    @CanIgnoreReturnValue
+    public static long checkLessThan(String role, long x, long max) {
+        if (x >= max) {
+            throw new IllegalArgumentException(role + " (" + x + ") must be < " + max);
+        }
+        return x;
+    }
+
+    /**
+     * Check x < max.
+     *
+     * @param role the name of the value x.
+     * @param x the value x.
+     * @param max the value max.
+     * @return the value x.
+     * @throws IllegalArgumentException if x >= max.
+     */
+    @CanIgnoreReturnValue
+    public static BigInteger checkLessThan(String role, BigInteger x, BigInteger max) {
+        if (BigIntegerUtils.greaterOrEqual(x, max)) {
+            throw new IllegalArgumentException(role + " (" + x + ") must be < " + max);
         }
         return x;
     }

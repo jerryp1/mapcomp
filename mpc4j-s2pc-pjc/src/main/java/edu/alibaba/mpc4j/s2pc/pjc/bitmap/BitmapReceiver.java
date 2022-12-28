@@ -13,7 +13,6 @@ import edu.alibaba.mpc4j.s2pc.aby.basics.bc.BcParty;
 import edu.alibaba.mpc4j.s2pc.aby.basics.bc.SquareSbitVector;
 import edu.alibaba.mpc4j.s2pc.aby.hamming.HammingFactory;
 import edu.alibaba.mpc4j.s2pc.aby.hamming.HammingParty;
-import org.junit.Assert;
 import org.roaringbitmap.RoaringBitmap;
 
 import java.nio.ByteOrder;
@@ -50,21 +49,21 @@ public class BitmapReceiver extends AbstractBitmapParty {
 
     @Override
     public SecureBitmapContainer and(SecureBitmapContainer x, SecureBitmapContainer y) throws MpcAbortException {
-        Assert.assertEquals(x.getCapacity(), y.getCapacity());
+        assert x.getCapacity() == y.getCapacity();
         SquareSbitVector vector = bcReceiver.and(x.getVector(), y.getVector());
         return new SecureBitmapContainer(vector);
     }
 
     @Override
     public SecureBitmapContainer xor(SecureBitmapContainer x, SecureBitmapContainer y) throws MpcAbortException {
-        Assert.assertEquals(x.getCapacity(), y.getCapacity());
+        assert x.getCapacity() == y.getCapacity();
         SquareSbitVector vector = bcReceiver.xor(x.getVector(), y.getVector());
         return new SecureBitmapContainer(vector);
     }
 
     @Override
     public SecureBitmapContainer or(SecureBitmapContainer x, SecureBitmapContainer y) throws MpcAbortException {
-        Assert.assertEquals(x.getCapacity(), y.getCapacity());
+        assert x.getCapacity() == y.getCapacity();
         SquareSbitVector vector = bcReceiver.or(x.getVector(), y.getVector());
         return new SecureBitmapContainer(vector);
     }

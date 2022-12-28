@@ -23,6 +23,10 @@
             <scope>test</scope>
         </dependency>
         <dependency>
+            <groupId>org.roaringbitmap</groupId>
+            <artifactId>RoaringBitmap</artifactId>
+        </dependency>
+        <dependency>
             <groupId>edu.alibaba</groupId>
             <artifactId>mpc4j-common-tool</artifactId>
             <version>1.0.6-SNAPSHOT</version>
@@ -38,16 +42,6 @@
             <groupId>edu.alibaba</groupId>
             <artifactId>mpc4j-s2pc-pso</artifactId>
             <version>1.0.6-SNAPSHOT</version>
-            <scope>compile</scope>
-        </dependency>
-        <dependency>
-            <groupId>org.roaringbitmap</groupId>
-            <artifactId>RoaringBitmap</artifactId>
-            <version>0.9.15</version>
-        </dependency>
-        <dependency>
-            <groupId>junit</groupId>
-            <artifactId>junit</artifactId>
             <scope>compile</scope>
         </dependency>
     </dependencies>
