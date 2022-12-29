@@ -14,7 +14,7 @@ public interface SecureBitmap {
      *
      * @return the SecureBitMap type.
      */
-    SecureBitmapFactory.SecureBitMapType getType();
+    SecureBitmapFactory.SecureBitmapType getType();
 
     /**
      * Returns the maximal number of containers allowed in the SecureBitmap.
