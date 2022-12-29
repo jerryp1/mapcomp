@@ -46,38 +46,41 @@ public class SecureBitmapTest {
     @Test
     public void testIllegalCreateFromBitmap() {
         RoaringBitmap validBitmap = RoaringBitmap.bitmapOf(0, 3, 5, 8);
-        // create with maxBitNum = 0
+        // create with totalBitNum = 0
         Assert.assertThrows(IllegalArgumentException.class, () ->
             SecureBitmapFactory.createFromBitMap(type, 0, validBitmap)
         );
-        // create with maxBitNum = -1 * BitmapContainer.MAX_CAPACITY
+        // create with totalBitNum = -1 * BitmapContainer.MAX_CAPACITY
         Assert.assertThrows(IllegalArgumentException.class, () ->
             SecureBitmapFactory.createFromBitMap(type, -1 * BitmapContainer.MAX_CAPACITY, validBitmap)
         );
-        // create with invalid positive maxBitNum
+        // create with invalid positive totalBitNum
         Assert.assertThrows(IllegalArgumentException.class, () ->
-            SecureBitmapFactory.createFromBitMap(type, 10, validBitmap)
+            SecureBitmapFactory.createFromBitMap(type, 7, validBitmap)
         );
-        // create with large bit position
-        Assert.assertThrows(IllegalArgumentException.class, () -> {
-            RoaringBitmap largeBitmap = RoaringBitmap.bitmapOf(0, 3, 5, 8, BitmapContainer.MAX_CAPACITY);
-                SecureBitmapFactory.createFromBitMap(type, 0, largeBitmap);
-        });
+        // create with bound positive totalBitNum
+        Assert.assertThrows(IllegalArgumentException.class, () ->
+            SecureBitmapFactory.createFromBitMap(type, 8, validBitmap)
+        );
     }
 
     @Test
     public void testIllegalCreateOfRange() {
         // create with negative rangeStart
         Assert.assertThrows(IllegalArgumentException.class, () ->
-            SecureBitmapFactory.createOfRange(type, BitmapContainer.MAX_CAPACITY, -1, 1)
+            SecureBitmapFactory.createOfRange(type, 7, -1, 1)
         );
         // create with negative rangeEnd = rangeStart
         Assert.assertThrows(IllegalArgumentException.class, () ->
-            SecureBitmapFactory.createOfRange(type, BitmapContainer.MAX_CAPACITY, 1, 1)
+            SecureBitmapFactory.createOfRange(type, 7, 1, 1)
         );
         // create with large rangeEnd
         Assert.assertThrows(IllegalArgumentException.class, () ->
-            SecureBitmapFactory.createOfRange(type, BitmapContainer.MAX_CAPACITY, 1, BitmapContainer.MAX_CAPACITY + 1)
+            SecureBitmapFactory.createOfRange(type, 7, 1, 8)
+        );
+        // create with bound rangeEnd
+        Assert.assertThrows(IllegalArgumentException.class, () ->
+            SecureBitmapFactory.createOfRange(type, 7, 1, 7)
         );
     }
 }

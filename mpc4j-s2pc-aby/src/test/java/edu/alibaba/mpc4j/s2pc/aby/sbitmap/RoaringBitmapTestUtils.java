@@ -27,18 +27,34 @@ public class RoaringBitmapTestUtils {
      * Generate a sorted array containing {@code count} integers.
      *
      * @param random the random state.
-     * @param count the number of integers in the array.
-     * @param max the maximal integer value (excluded).
-     * @return  sorted array containing {@code count} integers.
+     * @param count  the number of integers in the array.
+     * @param max    the maximal integer value (excluded).
+     * @return sorted array containing {@code count} integers.
      */
     public static int[] takeSortedAndDistinct(Random random, int count, int max) {
+        return takeSortedAndDistinct(random, count, 0, max);
+    }
+
+    /**
+     * Generate a sorted array containing {@code count} integers.
+     *
+     * @param random the random state.
+     * @param count  the number of integers in the array.
+     * @param min    the minimal integer value (included).
+     * @param max    the maximal integer value (excluded).
+     * @return sorted array containing {@code count} integers.
+     */
+    public static int[] takeSortedAndDistinct(Random random, int count, int min, int max) {
+        MathPreconditions.checkNonNegative("min", min);
+        MathPreconditions.checkGreaterThan("max", max, min);
         // we require count < max / 2 so that we can quickly generate the int array
-        MathPreconditions.checkNonNegativeInRange("count", count, max / 2);
+        int range = max - min;
+        MathPreconditions.checkNonNegativeInRange("count", count, range / 2);
         LinkedHashSet<Integer> ints = new LinkedHashSet<>(count);
         for (int size = 0; size < count; size++) {
             int next;
             do {
-                next = Math.abs(random.nextInt(max));
+                next = Math.abs(random.nextInt(range) + min);
             } while (!ints.add(next));
         }
         int[] unboxed = ints.stream().mapToInt(value -> value).toArray();

@@ -15,17 +15,17 @@ import org.roaringbitmap.RoaringBitmap;
  */
 public class FullSecureBitmap implements SecureBitmap {
     /**
-     * maximal number of bits.
+     * total number of bits.
      */
-    protected int maxBitNum;
+    protected int totalBitNum;
     /**
-     * maximal number of containers.
+     * total number of containers.
      */
-    protected int maxContainerNum;
+    protected int totalContainerNum;
     /**
-     * maximal number of bytes.
+     * total number of bytes.
      */
-    protected int maxByteNum;
+    protected int totalByteNum;
     /**
      * the plain state
      */
@@ -42,19 +42,14 @@ public class FullSecureBitmap implements SecureBitmap {
     /**
      * Create a full secure bitmap in plain state.
      *
-     * @param maxBitNum max number of bits.
+     * @param totalBitNum total number of bits.
      * @param bitmap    the plain bitmap.
      * @return the created secure bitmap.
-     * @throws IllegalArgumentException if maxBitNum is invalid, or a key is larger than the max number of containers.
      */
-    public static FullSecureBitmap fromBitmap(int maxBitNum, RoaringBitmap bitmap) {
+    public static FullSecureBitmap fromBitmap(int totalBitNum, RoaringBitmap bitmap) {
+        RoaringBitmapUtils.checkContainValidBits(totalBitNum, bitmap);
         FullSecureBitmap secureBitmap = new FullSecureBitmap();
-        secureBitmap.setMaxBitNum(maxBitNum);
-        // check all keys are in range [0, maxContainerNum)
-        char[] keys = RoaringBitmapUtils.getKeyCharArray(bitmap);
-        for (char key : keys) {
-            MathPreconditions.checkNonNegativeInRange("key", key, secureBitmap.maxContainerNum);
-        }
+        secureBitmap.setTotalBitNum(totalBitNum);
         secureBitmap.plain = true;
         secureBitmap.bitmap = bitmap;
         secureBitmap.sbitVector = null;
@@ -66,37 +61,35 @@ public class FullSecureBitmap implements SecureBitmap {
      * Create a (plain) full secure bitmap with all 1's in the given range [rangeStart, rangeEnd).
      * The input range must be valid, that is,
      * <p>
-     * <li>rangeEnd should be in range (0, maxBitNum)</li>
+     * <li>rangeEnd should be in range (0, totalBitNum)</li>
      * <li>rangeStart should be in range [0, rangeEnd)</li>
      * </p>
      *
-     * @param maxBitNum  max number of bits.
+     * @param totalBitNum  total number of bits.
      * @param rangeStart inclusive beginning of range.
      * @param rangeEnd   exclusive ending of range.
      * @return the created secure bitmap.
-     * @throws IllegalArgumentException if maxBitNum or the range is invalid.
      */
-    public static FullSecureBitmap ofRange(int maxBitNum, int rangeStart, int rangeEnd) {
-        RoaringBitmapUtils.checkValidBitNum(maxBitNum);
+    public static FullSecureBitmap ofRange(int totalBitNum, int rangeStart, int rangeEnd) {
         // check if range is valid
-        MathPreconditions.checkPositiveInRange("rangeEnd", rangeEnd, maxBitNum);
+        MathPreconditions.checkPositiveInRange("rangeEnd", rangeEnd, totalBitNum);
         MathPreconditions.checkNonNegativeInRange("rangeStart", rangeStart, rangeEnd);
         RoaringBitmap roaringBitmap = RoaringBitmap.bitmapOfRange(rangeStart, rangeEnd);
 
-        return fromBitmap(maxBitNum, roaringBitmap);
+        return fromBitmap(totalBitNum, roaringBitmap);
     }
 
     /**
      * Create a (plain) full secure bitmap with all 1's in bit positions.
      *
-     * @param maxBitNum max number of bits.
+     * @param totalBitNum total number of bits.
      * @return  the created secure bitmap.
      */
-    public static FullSecureBitmap ones(int maxBitNum) {
-        RoaringBitmapUtils.checkValidBitNum(maxBitNum);
-        RoaringBitmap roaringBitmap = RoaringBitmap.bitmapOfRange(0, maxBitNum);
+    public static FullSecureBitmap ones(int totalBitNum) {
+        MathPreconditions.checkPositive("totalBitNum", totalBitNum);
+        RoaringBitmap roaringBitmap = RoaringBitmap.bitmapOfRange(0, totalBitNum);
 
-        return fromBitmap(maxBitNum, roaringBitmap);
+        return fromBitmap(totalBitNum, roaringBitmap);
     }
 
     /**
@@ -108,8 +101,8 @@ public class FullSecureBitmap implements SecureBitmap {
      */
     public static FullSecureBitmap fromSbitVectors(SquareSbitVector vector) {
         FullSecureBitmap secureBitmap = new FullSecureBitmap();
-        int maxBitNum = vector.bitNum();
-        secureBitmap.setMaxBitNum(maxBitNum);
+        int totalBitNum = vector.bitNum();
+        secureBitmap.setTotalBitNum(totalBitNum);
         // check that the vector is in non-plain state.
         Preconditions.checkArgument(!vector.isPlain(), "all vectors must in non-plain state");
         secureBitmap.plain = false;
@@ -119,11 +112,11 @@ public class FullSecureBitmap implements SecureBitmap {
         return secureBitmap;
     }
 
-    private void setMaxBitNum(int maxBitNum) {
-        RoaringBitmapUtils.checkValidBitNum(maxBitNum);
-        this.maxBitNum = maxBitNum;
-        maxContainerNum = RoaringBitmapUtils.getContainerNum(maxBitNum);
-        maxByteNum = RoaringBitmapUtils.getByteNum(maxBitNum);
+    private void setTotalBitNum(int totalBitNum) {
+        MathPreconditions.checkPositive("totalBitNum", totalBitNum);
+        this.totalBitNum = totalBitNum;
+        totalContainerNum = RoaringBitmapUtils.getContainerNum(totalBitNum);
+        totalByteNum = RoaringBitmapUtils.getByteNum(totalBitNum);
     }
 
     /**
@@ -134,7 +127,7 @@ public class FullSecureBitmap implements SecureBitmap {
     public SquareSbitVector getSbitVector() {
         if (plain) {
             // convert the bitmap to be a bit vector, then create its corresponding secure bit vector.
-            BitVector bitVector = RoaringBitmapUtils.toBitVector(maxBitNum, bitmap);
+            BitVector bitVector = RoaringBitmapUtils.toBitVector(totalBitNum, bitmap);
             return SquareSbitVector.create(bitVector, plain);
         } else {
             // directly return the secure bit vector.
@@ -148,18 +141,18 @@ public class FullSecureBitmap implements SecureBitmap {
     }
 
     @Override
-    public int maxContainerNum() {
-        return maxContainerNum;
+    public int totalContainerNum() {
+        return totalContainerNum;
     }
 
     @Override
-    public int maxBitNum() {
-        return maxBitNum;
+    public int totalBitNum() {
+        return totalBitNum;
     }
 
     @Override
-    public int maxByteNum() {
-        return maxByteNum;
+    public int totalByteNum() {
+        return totalByteNum;
     }
 
     @Override
@@ -168,7 +161,7 @@ public class FullSecureBitmap implements SecureBitmap {
     }
 
     @Override
-    public RoaringBitmap toRoaringBitmap() {
+    public RoaringBitmap toBitmap() {
         Preconditions.checkArgument(plain, "secure bitmap must be in plain state");
         return bitmap;
     }
