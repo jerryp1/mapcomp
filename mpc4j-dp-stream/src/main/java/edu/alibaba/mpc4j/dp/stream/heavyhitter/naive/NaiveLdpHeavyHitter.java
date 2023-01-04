@@ -60,7 +60,7 @@ public class NaiveLdpHeavyHitter implements LdpHeavyHitter {
 
     public NaiveLdpHeavyHitter(Set<String> domainSet, int k, double windowEpsilon) {
         d = domainSet.size();
-        MathPreconditions.checkGreaterThan("|Ω|", d, 1);
+        MathPreconditions.checkGreater("|Ω|", d, 1);
         this.domainSet = domainSet;
         domainArrayList = new ArrayList<>(domainSet);
         MathPreconditions.checkPositiveInRangeClosed("k", k, d);

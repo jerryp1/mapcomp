@@ -2,6 +2,7 @@ package edu.alibaba.mpc4j.dp.stream.heavyhitter.hg;
 
 import com.google.common.base.Preconditions;
 import edu.alibaba.mpc4j.common.sampler.binary.bernoulli.SecureBernoulliSampler;
+import edu.alibaba.mpc4j.common.tool.MathPreconditions;
 import edu.alibaba.mpc4j.common.tool.utils.ObjectUtils;
 import edu.alibaba.mpc4j.dp.stream.heavyhitter.HeavyHitterState;
 import edu.alibaba.mpc4j.dp.stream.heavyhitter.HeavyHitterStructure;
@@ -28,17 +29,17 @@ public class RelaxHhgLdpHeavyHitter extends AdvHhgLdpHeavyHitter {
 
     public RelaxHhgLdpHeavyHitter(Set<String> domainSet, Random heavyGuardianRandom,
                                   int k, double windowEpsilon, double alpha) {
-        this(domainSet, 1, k, 0, heavyGuardianRandom, k, windowEpsilon, alpha);
+        this(domainSet, 1, k, heavyGuardianRandom, k, windowEpsilon, alpha);
     }
 
-    public RelaxHhgLdpHeavyHitter(Set<String> domainSet, int w, int lambdaH, int primeIndex, Random heavyGuardianRandom,
+    public RelaxHhgLdpHeavyHitter(Set<String> domainSet, int w, int lambdaH, Random heavyGuardianRandom,
                                   int k, double windowEpsilon) {
-        this(domainSet, w, lambdaH, primeIndex, heavyGuardianRandom, k, windowEpsilon, DEFAULT_ALPHA);
+        this(domainSet, w, lambdaH, heavyGuardianRandom, k, windowEpsilon, DEFAULT_ALPHA);
     }
 
-    public RelaxHhgLdpHeavyHitter(Set<String> domainSet, int w, int lambdaH, int primeIndex, Random heavyGuardianRandom,
+    public RelaxHhgLdpHeavyHitter(Set<String> domainSet, int w, int lambdaH, Random heavyGuardianRandom,
                                   int k, double windowEpsilon, double alpha) {
-        super(domainSet, w, lambdaH, primeIndex, heavyGuardianRandom, k, windowEpsilon, alpha);
+        super(domainSet, w, lambdaH, heavyGuardianRandom, k, windowEpsilon, alpha);
         // recompute p2 and q2
         double expWindowEpsilon = Math.exp(windowEpsilon);
         p2 = expWindowEpsilon / (expWindowEpsilon + lambdaH - 1);
@@ -72,13 +73,10 @@ public class RelaxHhgLdpHeavyHitter extends AdvHhgLdpHeavyHitter {
             "The input item is not in the domain: %s", item
         );
         byte[] itemByteArray = ObjectUtils.objectToByteArray(item);
-        int bucketIndex = Math.abs(bobIntHash.hash(itemByteArray) % w);
+        int bucketIndex = Math.abs(intHash.hash(itemByteArray) % w);
         assert bucketDomainSets.get(bucketIndex).contains(item);
         Map<String, Double> currentBucket = hgHeavyHitterStructure.getBudget(bucketIndex);
-        Preconditions.checkArgument(
-            currentBucket.size() == lambdaH,
-            "Current bucket size must be equal to %s: %s", lambdaH, currentBucket.size()
-        );
+        MathPreconditions.checkEqual("Current bucket size", "λ_h", currentBucket.size(), lambdaH);
         if (bucketDs[bucketIndex] == lambdaH) {
             return userMechanism2(currentBucket.keySet(), item, random);
         }

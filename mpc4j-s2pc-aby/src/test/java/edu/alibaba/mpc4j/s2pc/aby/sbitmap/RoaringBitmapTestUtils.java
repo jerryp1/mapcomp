@@ -46,7 +46,7 @@ public class RoaringBitmapTestUtils {
      */
     public static int[] takeSortedAndDistinct(Random random, int count, int min, int max) {
         MathPreconditions.checkNonNegative("min", min);
-        MathPreconditions.checkGreaterThan("max", max, min);
+        MathPreconditions.checkGreater("max", max, min);
         // we require count < max / 2 so that we can quickly generate the int array
         int range = max - min;
         MathPreconditions.checkNonNegativeInRange("count", count, range / 2);

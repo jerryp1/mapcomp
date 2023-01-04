@@ -79,7 +79,7 @@ public class RoaringBitmapUtils {
     public static void checkContainValidBits(int totalBitNum, RoaringBitmap bitmap) {
         if (!bitmap.isEmpty()) {
             MathPreconditions.checkNonNegative("first element", bitmap.first());
-            MathPreconditions.checkLessThan("last element", bitmap.last(), totalBitNum);
+            MathPreconditions.checkLess("last element", bitmap.last(), totalBitNum);
         }
     }
 

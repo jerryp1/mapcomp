@@ -25,12 +25,12 @@ public class BasicHgLdpHeavyHitter extends AbstractHgLdpHeavyHitter {
 
     public BasicHgLdpHeavyHitter(Set<String> domainSet, Random heavyGuardianRandom,
                                  int k, double windowEpsilon) {
-        this(domainSet, 1, k, 0, heavyGuardianRandom, k, windowEpsilon);
+        this(domainSet, 1, k, heavyGuardianRandom, k, windowEpsilon);
     }
 
-    public BasicHgLdpHeavyHitter(Set<String> domainSet, int w, int lambdaH, int primeIndex, Random heavyGuardianRandom,
+    public BasicHgLdpHeavyHitter(Set<String> domainSet, int w, int lambdaH, Random heavyGuardianRandom,
                                  int k, double windowEpsilon) {
-        super(domainSet, w, lambdaH, primeIndex, heavyGuardianRandom, k, windowEpsilon);
+        super(domainSet, w, lambdaH, heavyGuardianRandom, k, windowEpsilon);
         double expWindowEpsilon = Math.exp(windowEpsilon);
         p = expWindowEpsilon / (expWindowEpsilon + d - 1);
         q = 1 / (expWindowEpsilon + d - 1);

@@ -292,7 +292,7 @@ public class BigIntegerUtils {
      * @return 随机数。
      */
     public static BigInteger randomPositive(final BigInteger n, SecureRandom secureRandom) {
-        MathPreconditions.checkGreaterThan("n", n, BigInteger.ONE);
+        MathPreconditions.checkGreater("n", n, BigInteger.ONE);
         int bits = n.bitLength();
         while (true) {
             BigInteger r = new BigInteger(bits, secureRandom);

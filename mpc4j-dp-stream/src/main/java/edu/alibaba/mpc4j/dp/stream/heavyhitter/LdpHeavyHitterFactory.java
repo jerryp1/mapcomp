@@ -122,11 +122,11 @@ public class LdpHeavyHitterFactory {
                                                     int k, double windowEpsilon) {
         switch (type) {
             case BASIC_HG:
-                return new BasicHgLdpHeavyHitter(domainSet, w, lambdaH, 0, heavyGuardianRandom, k, windowEpsilon);
+                return new BasicHgLdpHeavyHitter(domainSet, w, lambdaH, heavyGuardianRandom, k, windowEpsilon);
             case ADVAN_HG:
-                return new AdvHhgLdpHeavyHitter(domainSet, w, lambdaH, 0, heavyGuardianRandom, k, windowEpsilon);
+                return new AdvHhgLdpHeavyHitter(domainSet, w, lambdaH, heavyGuardianRandom, k, windowEpsilon);
             case RELAX_HG:
-                return new RelaxHhgLdpHeavyHitter(domainSet, w, lambdaH, 0, heavyGuardianRandom, k, windowEpsilon);
+                return new RelaxHhgLdpHeavyHitter(domainSet, w, lambdaH, heavyGuardianRandom, k, windowEpsilon);
             default:
                 throw new IllegalArgumentException("Invalid " + LdpHeavyHitterType.class.getSimpleName() + ": " + type);
         }

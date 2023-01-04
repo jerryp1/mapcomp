@@ -2,10 +2,12 @@ package edu.alibaba.mpc4j.dp.stream.heavyhitter.hg;
 
 import com.google.common.base.Preconditions;
 import edu.alibaba.mpc4j.common.sampler.binary.bernoulli.ExpBernoulliSampler;
+import edu.alibaba.mpc4j.common.tool.MathPreconditions;
+import edu.alibaba.mpc4j.common.tool.hash.IntHash;
+import edu.alibaba.mpc4j.common.tool.hash.IntHashFactory;
 import edu.alibaba.mpc4j.common.tool.utils.ObjectUtils;
 import edu.alibaba.mpc4j.dp.stream.heavyhitter.HeavyHitterState;
 import edu.alibaba.mpc4j.dp.stream.heavyhitter.HgLdpHeavyHitter;
-import edu.alibaba.mpc4j.common.tool.hash.bobhash.BobIntHash;
 
 import java.util.*;
 import java.util.stream.Collectors;
@@ -47,9 +49,9 @@ abstract class AbstractHgLdpHeavyHitter implements HgLdpHeavyHitter {
      */
     protected final int k;
     /**
-     * the BobHash
+     * the non-cryptographic 32-bit hash function
      */
-    protected final BobIntHash bobIntHash;
+    protected final IntHash intHash;
     /**
      * budget num
      */
@@ -95,26 +97,21 @@ abstract class AbstractHgLdpHeavyHitter implements HgLdpHeavyHitter {
      */
     protected int[] currentNums;
 
-    AbstractHgLdpHeavyHitter(Set<String> domainSet, int w, int lambdaH, int primeIndex, Random heavyGuardianRandom,
+    AbstractHgLdpHeavyHitter(Set<String> domainSet, int w, int lambdaH, Random heavyGuardianRandom,
                              int k, double windowEpsilon) {
         d = domainSet.size();
-        Preconditions.checkArgument(d > 1, "|Ω| must be greater than 1: %s", d);
+        MathPreconditions.checkGreater("|Ω|", d, 1);
         this.domainSet = domainSet;
         domainArrayList = new ArrayList<>(domainSet);
-        Preconditions.checkArgument(k > 0 && k <= d, "k must be in range (0, %s]: %s", d, k);
+        MathPreconditions.checkPositiveInRangeClosed("k", k, d);
         this.k = k;
-        // init hash function
-        bobIntHash = new BobIntHash(primeIndex);
-        Preconditions.checkArgument(w > 0,
-            "w (# of buckets) must be greater than 0: %s", w);
+        MathPreconditions.checkPositive("w (# of buckets)", w);
         this.w = w;
+        // init hash function
+        intHash = IntHashFactory.fastestInstance();
         // init budgets
-        Preconditions.checkArgument(lambdaH > 0,
-            "λ_h (# of items in each bucket) must be greater than 0: %s", lambdaH);
-        Preconditions.checkArgument(lambdaH * w >= k,
-            "λ_h * w must be greater than %s, otherwise we cannot have %s heavy hitters: %s",
-            k, k, lambdaH * w
-        );
+        MathPreconditions.checkPositive("λ_h (# of heavy part)", lambdaH);
+        MathPreconditions.checkGreaterOrEqual("λ_h * w", lambdaH * w, k);
         this.lambdaH = lambdaH;
         buckets = IntStream.range(0, w)
             .mapToObj(bucketIndex -> new HashMap<String, Double>(lambdaH))
@@ -124,23 +121,19 @@ abstract class AbstractHgLdpHeavyHitter implements HgLdpHeavyHitter {
             .mapToObj(budgetIndex -> new HashSet<String>())
             .collect(Collectors.toCollection(ArrayList::new));
         domainSet.forEach(item -> {
-            int bucketIndex = Math.abs(bobIntHash.hash(ObjectUtils.objectToByteArray(item)) % w);
+            int bucketIndex = Math.abs(intHash.hash(ObjectUtils.objectToByteArray(item)) % w);
             bucketDomainSets.get(bucketIndex).add(item);
         });
         bucketDs = new int[w];
         for (int bucketIndex = 0; bucketIndex < w; bucketIndex++) {
             Set<String> budgetDomainSet = bucketDomainSets.get(bucketIndex);
-            Preconditions.checkArgument(
-                budgetDomainSet.size() >= lambdaH,
-                "The %s-th bucket domain set contains less than %s items: %s",
-                bucketIndex, lambdaH, budgetDomainSet.size()
-            );
+            MathPreconditions.checkGreaterOrEqual("# of " + bucketIndex + "-th bucket", budgetDomainSet.size(), lambdaH);
             bucketDs[bucketIndex] = budgetDomainSet.size();
         }
         bucketDomainArrayLists = IntStream.range(0, w)
             .mapToObj(bucketIndex -> new ArrayList<>(bucketDomainSets.get(bucketIndex)))
             .collect(Collectors.toCollection(ArrayList::new));
-        Preconditions.checkArgument(windowEpsilon > 0, "ε must be greater than 0: %s", windowEpsilon);
+        MathPreconditions.checkPositive("ε / w", windowEpsilon);
         this.windowEpsilon = windowEpsilon;
         this.heavyGuardianRandom = heavyGuardianRandom;
         num = 0;
@@ -182,7 +175,7 @@ abstract class AbstractHgLdpHeavyHitter implements HgLdpHeavyHitter {
             bucketIndex = Integer.parseInt(item.substring(BOT_PREFIX.length()));
         } else {
             byte[] itemByteArray = ObjectUtils.objectToByteArray(item);
-            bucketIndex = Math.abs(bobIntHash.hash(itemByteArray) % w);
+            bucketIndex = Math.abs(intHash.hash(itemByteArray) % w);
         }
         Map<String, Double> bucket = buckets.get(bucketIndex);
         // Case 1: e is in one cell in the heavy part of A[h(e)] (being a king or a guardian).
@@ -264,7 +257,7 @@ abstract class AbstractHgLdpHeavyHitter implements HgLdpHeavyHitter {
     @Override
     public double response(String item) {
         byte[] itemByteArray = ObjectUtils.objectToByteArray(item);
-        int bucketIndex = Math.abs(bobIntHash.hash(itemByteArray) % w);
+        int bucketIndex = Math.abs(intHash.hash(itemByteArray) % w);
         // first, it checks the heavy part in bucket A[h(e)].
         Map<String, Double> bucket = buckets.get(bucketIndex);
         switch (heavyHitterState) {
