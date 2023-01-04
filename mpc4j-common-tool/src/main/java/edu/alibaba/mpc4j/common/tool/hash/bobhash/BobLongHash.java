@@ -1,17 +1,25 @@
-package edu.alibaba.mpc4j.dp.stream.tool.bobhash;
+package edu.alibaba.mpc4j.common.tool.hash.bobhash;
+
+import edu.alibaba.mpc4j.common.tool.MathPreconditions;
+import edu.alibaba.mpc4j.common.tool.hash.LongHash;
+import edu.alibaba.mpc4j.common.tool.hash.LongHashFactory;
+
+import java.nio.ByteBuffer;
 
 /**
  * Bob hash that outputs 64-bit long. Modified from:
+ * <p>
+ * https://github.com/Gavindeed/HeavyGuardian/blob/master/heavyhitter/BOBHash64.h
+ * </p>
  *
  * @author Weiran Liu
  * @date 2022/11/15
  */
-public class BobLongHash {
+public class BobLongHash implements LongHash {
     /**
-     * 单次处理的分组长度
+     * byte length per block
      */
     private static final int BLOCK_BYTE_LENGTH = 24;
-
     /**
      * the golden ratio: an arbitrary value
      */
@@ -27,20 +35,19 @@ public class BobLongHash {
     }
 
     public BobLongHash(int primeTableIndex) {
-        assert primeTableIndex >= 0 && primeTableIndex < BobHashUtils.PRIME_BIT_TABLE_SIZE
-            : "prime index must be in range [0, " + BobHashUtils.PRIME_BIT_TABLE_SIZE + ": " + primeTableIndex;
+        MathPreconditions.checkNonNegativeInRange("prime index", primeTableIndex, BobHashUtils.PRIME_BIT_TABLE_SIZE);
         this.primeTableIndex = primeTableIndex;
     }
 
-    /**
-     * 计算输入数据的哈希值。
-     *
-     * @param data 数据。
-     * @return 数据的哈希值。
-     */
+    @Override
+    public LongHashFactory.LongHashType getType() {
+        return LongHashFactory.LongHashType.BOB_HASH_64;
+    }
+
+    @Override
     @SuppressWarnings({"AlibabaMethodTooLong", "AlibabaSwitchStatement"})
     public long hash(byte[] data) {
-        assert data.length > 0 : "data length must be greater than 0: " + data.length;
+        MathPreconditions.checkPositive("data.length", data.length);
         // Set up the internal state;
         long a = GOLDEN_RATIO;
         long b = GOLDEN_RATIO;
@@ -195,5 +202,11 @@ public class BobLongHash {
         c ^= (b >> 22);
 
         return c;
+    }
+
+    @Override
+    public long hash(byte[] data, long seed) {
+        MathPreconditions.checkPositive("data.length", data.length);
+        return hash(ByteBuffer.allocate(Long.BYTES + data.length).putLong(seed).put(data).array());
     }
 }

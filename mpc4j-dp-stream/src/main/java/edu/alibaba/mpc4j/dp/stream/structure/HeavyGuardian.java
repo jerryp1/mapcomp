@@ -1,17 +1,17 @@
 package edu.alibaba.mpc4j.dp.stream.structure;
 
-import com.google.common.base.Preconditions;
 import edu.alibaba.mpc4j.common.sampler.binary.bernoulli.ExpBernoulliSampler;
+import edu.alibaba.mpc4j.common.tool.MathPreconditions;
+import edu.alibaba.mpc4j.common.tool.hash.IntHash;
+import edu.alibaba.mpc4j.common.tool.hash.IntHashFactory;
 import edu.alibaba.mpc4j.common.tool.utils.ObjectUtils;
-import edu.alibaba.mpc4j.dp.stream.tool.bobhash.BobIntHash;
 
-import java.security.SecureRandom;
 import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
 /**
- * HeavyGuardian节点。
+ * The HeavyGuardian implementation.
  *
  * @author Weiran Liu
  * @date 2022/11/15
@@ -26,11 +26,11 @@ public class HeavyGuardian implements StreamCounter {
      */
     private static final double LN_B = Math.log(B);
     /**
-     * 哈希函数
+     * the non-cryptographic 32-bit hash function
      */
-    private final BobIntHash bobIntHash;
+    private final IntHash intHash;
     /**
-     * 桶数量
+     * the bucket num
      */
     private final int w;
     /**
@@ -59,37 +59,26 @@ public class HeavyGuardian implements StreamCounter {
     private int num;
 
     public HeavyGuardian(int w, int lambdaH, int lambdaL) {
-        this(w, lambdaH, lambdaL, 0, new Random());
+        this(w, lambdaH, lambdaL, new Random());
     }
 
     public HeavyGuardian(int w, int lambdaH, int lambdaL, Random random) {
-        this(w, lambdaH, lambdaL, 0, random);
-    }
-
-    public HeavyGuardian(int w, int lambdaH, int lambdaL, int primeIndex) {
-        this(w, lambdaH, lambdaL, primeIndex, new SecureRandom());
-    }
-
-    public HeavyGuardian(int w, int lambdaH, int lambdaL, int primeIndex, Random random) {
-        Preconditions.checkArgument(w > 0,
-            "w (# of buckets) must be greater than 0: %s", w);
+        MathPreconditions.checkPositive("w (# of buckets)", w);
         this.w = w;
         // init heavy part
-        Preconditions.checkArgument(lambdaH > 0,
-            "λ_h (# of heavy part) must be greater than 0: %s", lambdaH);
+        MathPreconditions.checkPositive("λ_h (# of heavy part)", lambdaH);
         this.lambdaH = lambdaH;
         heavyPart = IntStream.range(0, w)
             .mapToObj(bucketIndex -> new HashMap<String, Integer>(lambdaH))
             .collect(Collectors.toCollection(ArrayList::new));
         // init light part
-        Preconditions.checkArgument(lambdaL >= 0,
-            "λ_l (# of light part) must be greater than or equal to 0: %s", lambdaL);
+        MathPreconditions.checkNonNegative("λ_l (# of light part)", lambdaL);
         this.lambdaL = lambdaL;
         lightPart = IntStream.range(0, w)
             .mapToObj(bucketIndex -> new HashMap<String, Integer>(lambdaL))
             .collect(Collectors.toCollection(ArrayList::new));
-        // init bob hash
-        bobIntHash = new BobIntHash(primeIndex);
+        // init int hash
+        intHash = IntHashFactory.fastestInstance();
         num = 0;
         this.random = random;
     }
@@ -99,7 +88,7 @@ public class HeavyGuardian implements StreamCounter {
         num++;
         // it first computes the hash function h(e) (1 ⩽ h(e) ⩽ w) to map e to bucket A[h(e)].
         byte[] itemByteArray = ObjectUtils.objectToByteArray(item);
-        int bucketIndex = Math.abs(bobIntHash.hash(itemByteArray) % w);
+        int bucketIndex = Math.abs(intHash.hash(itemByteArray) % w);
         Map<String, Integer> heavyPartBucket = heavyPart.get(bucketIndex);
         // We first try to insert e into the heavy part. If failed, then we insert it into the light part.
         // Case 1: e is in one cell in the heavy part of A[h(e)] (being a king or a guardian).
@@ -169,7 +158,7 @@ public class HeavyGuardian implements StreamCounter {
     @Override
     public int query(String item) {
         byte[] itemByteArray = ObjectUtils.objectToByteArray(item);
-        int bucketIndex = Math.abs(bobIntHash.hash(itemByteArray) % w);
+        int bucketIndex = Math.abs(intHash.hash(itemByteArray) % w);
         // first, it checks the heavy part in bucket A[h(e)].
         Map<String, Integer> heavyPartBucket = heavyPart.get(bucketIndex);
         if (heavyPartBucket.containsKey(item)) {

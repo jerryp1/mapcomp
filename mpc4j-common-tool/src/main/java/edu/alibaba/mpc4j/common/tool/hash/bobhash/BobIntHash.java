@@ -1,17 +1,23 @@
-package edu.alibaba.mpc4j.dp.stream.tool.bobhash;
+package edu.alibaba.mpc4j.common.tool.hash.bobhash;
+
+import edu.alibaba.mpc4j.common.tool.MathPreconditions;
+import edu.alibaba.mpc4j.common.tool.hash.IntHash;
+import edu.alibaba.mpc4j.common.tool.hash.IntHashFactory;
+
+import java.nio.ByteBuffer;
 
 /**
  * Bob hash that outputs 32-bit integer. Modified from:
  * <p>
- * github.com/Gavindeed/HeavyGuardian/blob/master/heavyhitter/BOBHash32.h
+ * https://github.com/Gavindeed/HeavyGuardian/blob/master/heavyhitter/BOBHash32.h
  * </p>
  *
  * @author Weiran Liu
  * @date 2022/11/15
  */
-public class BobIntHash {
+public class BobIntHash implements IntHash {
     /**
-     * 单次处理的分组长度
+     * byte length per block
      */
     private static final int BLOCK_BYTE_LENGTH = 12;
     /**
@@ -19,7 +25,7 @@ public class BobIntHash {
      */
     private static final int GOLDEN_RATIO = 0x9e3779b9;
     /**
-     * 质数表索引
+     * the prime index
      */
     private final int primeTableIndex;
 
@@ -28,20 +34,19 @@ public class BobIntHash {
     }
 
     public BobIntHash(int primeTableIndex) {
-        assert primeTableIndex >= 0 && primeTableIndex < BobHashUtils.PRIME_BIT_TABLE_SIZE
-            : "prime index must be in range [0, " + BobHashUtils.PRIME_BIT_TABLE_SIZE + ": " + primeTableIndex;
+        MathPreconditions.checkNonNegativeInRange("prime index", primeTableIndex, BobHashUtils.PRIME_BIT_TABLE_SIZE);
         this.primeTableIndex = primeTableIndex;
     }
 
-    /**
-     * 计算输入数据的哈希值。
-     *
-     * @param data 数据。
-     * @return 数据的哈希值。
-     */
+    @Override
+    public IntHashFactory.IntHashType getType() {
+        return IntHashFactory.IntHashType.BOB_HASH_32;
+    }
+
+    @Override
     @SuppressWarnings({"AlibabaMethodTooLong", "AlibabaSwitchStatement"})
     public int hash(byte[] data) {
-        assert data.length > 0 : "data length must be greater than 0: " + data.length;
+        MathPreconditions.checkPositive("data.length", data.length);
         // Set up the internal state;
         int a = GOLDEN_RATIO;
         int b = GOLDEN_RATIO;
@@ -145,5 +150,11 @@ public class BobIntHash {
         c ^= (b >> 15);
 
         return c;
+    }
+
+    @Override
+    public int hash(byte[] data, int seed) {
+        MathPreconditions.checkPositive("data.length", data.length);
+        return hash(ByteBuffer.allocate(Integer.BYTES + data.length).putInt(seed).put(data).array());
     }
 }

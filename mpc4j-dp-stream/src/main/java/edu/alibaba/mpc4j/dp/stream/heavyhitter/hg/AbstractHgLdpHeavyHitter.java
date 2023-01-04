@@ -5,7 +5,7 @@ import edu.alibaba.mpc4j.common.sampler.binary.bernoulli.ExpBernoulliSampler;
 import edu.alibaba.mpc4j.common.tool.utils.ObjectUtils;
 import edu.alibaba.mpc4j.dp.stream.heavyhitter.HeavyHitterState;
 import edu.alibaba.mpc4j.dp.stream.heavyhitter.HgLdpHeavyHitter;
-import edu.alibaba.mpc4j.dp.stream.tool.bobhash.BobIntHash;
+import edu.alibaba.mpc4j.common.tool.hash.bobhash.BobIntHash;
 
 import java.util.*;
 import java.util.stream.Collectors;

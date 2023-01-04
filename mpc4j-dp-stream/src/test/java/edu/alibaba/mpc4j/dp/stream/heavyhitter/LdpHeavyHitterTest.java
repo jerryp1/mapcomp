@@ -4,7 +4,7 @@ import com.google.common.base.Preconditions;
 import edu.alibaba.mpc4j.common.tool.utils.DoubleUtils;
 import edu.alibaba.mpc4j.dp.stream.heavyhitter.LdpHeavyHitterFactory.LdpHeavyHitterType;
 import edu.alibaba.mpc4j.dp.stream.structure.NaiveStreamCounter;
-import edu.alibaba.mpc4j.dp.stream.structure.TestStreamCounter;
+import edu.alibaba.mpc4j.dp.stream.structure.StreamCounterTest;
 import edu.alibaba.mpc4j.dp.stream.tool.StreamDataUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.junit.Assert;
@@ -37,13 +37,15 @@ public class LdpHeavyHitterTest {
      * File path for stream_counter_example_data.txt
      */
     static final String EXAMPLE_DATA_PATH = Objects.requireNonNull(
-        TestStreamCounter.class.getClassLoader().getResource("stream_counter_example_data.txt")
+        StreamCounterTest.class.getClassLoader().getResource("stream_counter_example_data.txt")
     ).getPath();
     /**
      * Key set for stream_counter_example_data.txt
      */
-    static final Set<String> EXAMPLE_DATA_DOMAIN = IntStream.rangeClosed(480, 520)
-        .mapToObj(String::valueOf).collect(Collectors.toSet());
+    static final Set<String> EXAMPLE_DATA_DOMAIN = IntStream
+        .rangeClosed(480, 520)
+        .mapToObj(String::valueOf)
+        .collect(Collectors.toSet());
     /**
      * Key num for stream_counter_example_data.txt
      */
@@ -85,7 +87,7 @@ public class LdpHeavyHitterTest {
      * File path for connect.dat
      */
     static final String CONNECT_DATA_PATH = Objects.requireNonNull(
-        TestStreamCounter.class.getClassLoader().getResource("connect.dat")
+        StreamCounterTest.class.getClassLoader().getResource("connect.dat")
     ).getPath();
     /**
      * Key set for connect.dat

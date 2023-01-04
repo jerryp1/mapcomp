@@ -1,14 +1,14 @@
-package edu.alibaba.mpc4j.dp.stream.tool.bobhash;
+package edu.alibaba.mpc4j.common.tool.hash.bobhash;
 
 /**
- * BobHash工具类。
+ * BobHash utilities.
  *
  * @author Weiran Liu
  * @date 2022/11/15
  */
-class BobHashUtils {
+public class BobHashUtils {
     /**
-     * 用整数数组表示的质数表
+     * the prime table
      */
     static final int[] PRIME_12_BIT_TABLE = new int[]{
         2, 3, 5, 7, 11, 13, 17, 19, 23, 29,
@@ -137,7 +137,7 @@ class BobHashUtils {
         9973
     };
     /**
-     * 质数表大小
+     * size of the prime table
      */
-    static final int PRIME_BIT_TABLE_SIZE = PRIME_12_BIT_TABLE.length;
+    public static final int PRIME_BIT_TABLE_SIZE = PRIME_12_BIT_TABLE.length;
 }

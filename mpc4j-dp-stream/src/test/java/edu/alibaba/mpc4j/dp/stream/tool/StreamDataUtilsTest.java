@@ -1,7 +1,7 @@
 package edu.alibaba.mpc4j.dp.stream.tool;
 
 import edu.alibaba.mpc4j.dp.stream.structure.NaiveStreamCounter;
-import edu.alibaba.mpc4j.dp.stream.structure.TestStreamCounter;
+import edu.alibaba.mpc4j.dp.stream.structure.StreamCounterTest;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -23,7 +23,7 @@ public class StreamDataUtilsTest {
     @Test
     public void testChess() throws IOException {
         String path = Objects.requireNonNull(
-            TestStreamCounter.class.getClassLoader().getResource("chess.dat")
+            StreamCounterTest.class.getClassLoader().getResource("chess.dat")
         ).getPath();
         Stream<String> dataStream = StreamDataUtils.obtainItemStream(path);
         assertData("chess", dataStream);
@@ -33,7 +33,7 @@ public class StreamDataUtilsTest {
     @Test
     public void testConnect() throws IOException {
         String path = Objects.requireNonNull(
-            TestStreamCounter.class.getClassLoader().getResource("connect.dat")
+            StreamCounterTest.class.getClassLoader().getResource("connect.dat")
         ).getPath();
         Stream<String> dataStream = StreamDataUtils.obtainItemStream(path);
         assertData("connect", dataStream);
@@ -43,7 +43,7 @@ public class StreamDataUtilsTest {
     @Test
     public void testMushroom() throws IOException {
         String path = Objects.requireNonNull(
-            TestStreamCounter.class.getClassLoader().getResource("mushroom.dat")
+            StreamCounterTest.class.getClassLoader().getResource("mushroom.dat")
         ).getPath();
         Stream<String> dataStream = StreamDataUtils.obtainItemStream(path);
         assertData("mushroom", dataStream);

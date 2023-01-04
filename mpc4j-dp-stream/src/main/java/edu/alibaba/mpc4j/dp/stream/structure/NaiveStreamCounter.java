@@ -5,14 +5,14 @@ import java.util.Map;
 import java.util.Set;
 
 /**
- * Naive stream counter.
+ * Naive stream counter, recording the counter using a map.
  *
  * @author Weiran Liu
  * @date 2022/11/16
  */
 public class NaiveStreamCounter implements StreamCounter {
     /**
-     * counter
+     * counter map
      */
     private final Map<String, Integer> countMap;
     /**

@@ -27,23 +27,33 @@ import java.util.stream.Stream;
  * @author Weiran Liu
  * @date 2022/11/16
  */
-public class TestStreamCounter {
-    private static final Logger LOGGER = LoggerFactory.getLogger(TestStreamCounter.class);
+public class StreamCounterTest {
+    private static final Logger LOGGER = LoggerFactory.getLogger(StreamCounterTest.class);
     /**
      * File path for stream_counter_example_data.txt
      */
     private static final String EXAMPLE_DATA_PATH = Objects.requireNonNull(
-        TestStreamCounter.class.getClassLoader().getResource("stream_counter_example_data.txt")
+        StreamCounterTest.class.getClassLoader().getResource("stream_counter_example_data.txt")
     ).getPath();
     /**
      * Key set for stream_counter_example_data.txt
      */
-    private static final Set<String> EXAMPLE_DOMAIN = IntStream.rangeClosed(480, 520)
-        .mapToObj(String::valueOf).collect(Collectors.toSet());
+    private static final Set<String> EXAMPLE_DOMAIN = IntStream
+        .rangeClosed(480, 520)
+        .mapToObj(String::valueOf)
+        .collect(Collectors.toSet());
     /**
      * Key num for stream_counter_example_data.txt
      */
     private static final int EXAMPLE_D = EXAMPLE_DOMAIN.size();
+
+    @Test
+    public void testHeavyGuardianIllegalInput() {
+        // try creating HeavyGuardian with w = 0
+        Assert.assertThrows(IllegalArgumentException.class, () -> new HeavyGuardian(0, EXAMPLE_D, 0));
+        // try creating HeavyGuardian with λ_h = 0
+        Assert.assertThrows(IllegalArgumentException.class, () -> new HeavyGuardian(0, 0, 0));
+    }
 
     @Test
     public void testNaiveStreamCounterExample() throws IOException {
@@ -54,9 +64,7 @@ public class TestStreamCounter {
 
     @Test
     public void testFullHeavyPartHeavyGuardianExample() throws IOException {
-        HeavyGuardian streamCounter = new HeavyGuardian(
-            1, EXAMPLE_D, 0
-        );
+        HeavyGuardian streamCounter = new HeavyGuardian(1, EXAMPLE_D, 0);
         List<Map.Entry<String, Integer>> countList = getExampleCountList(streamCounter);
         assertExampleTopEntries(countList);
     }

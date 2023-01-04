@@ -1,6 +1,7 @@
 package edu.alibaba.mpc4j.dp.stream.heavyhitter.naive;
 
 import com.google.common.base.Preconditions;
+import edu.alibaba.mpc4j.common.tool.MathPreconditions;
 import edu.alibaba.mpc4j.dp.stream.heavyhitter.HeavyHitterState;
 import edu.alibaba.mpc4j.dp.stream.heavyhitter.HeavyHitterStructure;
 import edu.alibaba.mpc4j.dp.stream.heavyhitter.LdpHeavyHitter;
@@ -59,13 +60,13 @@ public class NaiveLdpHeavyHitter implements LdpHeavyHitter {
 
     public NaiveLdpHeavyHitter(Set<String> domainSet, int k, double windowEpsilon) {
         d = domainSet.size();
-        Preconditions.checkArgument(d > 1, "|Ω| must be greater than 1: %s", d);
+        MathPreconditions.checkGreaterThan("|Ω|", d, 1);
         this.domainSet = domainSet;
         domainArrayList = new ArrayList<>(domainSet);
-        Preconditions.checkArgument(k > 0 && k <= d, "k must be in range (0, %s]: %s", d, k);
+        MathPreconditions.checkPositiveInRangeClosed("k", k, d);
         this.k = k;
         budget = new HashMap<>(d);
-        Preconditions.checkArgument(windowEpsilon > 0, "ε / w must be greater than 0: %s", windowEpsilon);
+        MathPreconditions.checkPositive("ε / w", windowEpsilon);
         this.windowEpsilon = windowEpsilon;
         double expEpsilon = Math.exp(windowEpsilon);
         p = expEpsilon / (expEpsilon + d - 1);

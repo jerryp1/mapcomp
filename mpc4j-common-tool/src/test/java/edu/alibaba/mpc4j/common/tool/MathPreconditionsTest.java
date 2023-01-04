@@ -18,18 +18,21 @@ public class MathPreconditionsTest {
         // check -1 is not positive
         Assert.assertThrows(IllegalArgumentException.class, () -> MathPreconditions.checkPositive("x", -1));
         Assert.assertThrows(IllegalArgumentException.class, () -> MathPreconditions.checkPositive("x", -1L));
+        Assert.assertThrows(IllegalArgumentException.class, () -> MathPreconditions.checkPositive("x", -1.0));
         Assert.assertThrows(IllegalArgumentException.class, () ->
             MathPreconditions.checkPositive("x", BigInteger.ONE.negate())
         );
         // check 0 is not positive
         Assert.assertThrows(IllegalArgumentException.class, () -> MathPreconditions.checkPositive("x", 0));
         Assert.assertThrows(IllegalArgumentException.class, () -> MathPreconditions.checkPositive("x", 0L));
+        Assert.assertThrows(IllegalArgumentException.class, () -> MathPreconditions.checkPositive("x", 0.0));
         Assert.assertThrows(IllegalArgumentException.class, () ->
             MathPreconditions.checkPositive("x", BigInteger.ZERO)
         );
         // check 1 is positive
         MathPreconditions.checkPositive("x", 1);
         MathPreconditions.checkPositive("x", 1L);
+        MathPreconditions.checkPositive("x", 1.0);
         MathPreconditions.checkPositive("x", BigInteger.ONE);
     }
 
@@ -128,13 +131,13 @@ public class MathPreconditionsTest {
         );
         // check 1 is not a valid max
         Assert.assertThrows(IllegalArgumentException.class, () ->
-            MathPreconditions.checkPositiveInRange("x", 0, 1)
+            MathPreconditions.checkPositiveInRange("x", 1, 1)
         );
         Assert.assertThrows(IllegalArgumentException.class, () ->
-            MathPreconditions.checkPositiveInRange("x", 0L, 1L)
+            MathPreconditions.checkPositiveInRange("x", 1L, 1L)
         );
         Assert.assertThrows(IllegalArgumentException.class, () ->
-            MathPreconditions.checkPositiveInRange("x", BigInteger.ZERO, BigInteger.ONE)
+            MathPreconditions.checkPositiveInRange("x", BigInteger.ONE, BigInteger.ONE)
         );
         // check -1 is not positive
         Assert.assertThrows(IllegalArgumentException.class, () ->
@@ -170,6 +173,58 @@ public class MathPreconditionsTest {
         MathPreconditions.checkPositiveInRange("x", 1, 2);
         MathPreconditions.checkPositiveInRange("x", 1L, 2L);
         MathPreconditions.checkPositiveInRange("x", BigInteger.ONE, BigInteger.valueOf(2));
+    }
+
+    @Test
+    public void testCheckPositiveInRangeClosed() {
+        // check 0 is not a valid max
+        Assert.assertThrows(IllegalArgumentException.class, () ->
+            MathPreconditions.checkPositiveInRangeClosed("x", 0, 0)
+        );
+        Assert.assertThrows(IllegalArgumentException.class, () ->
+            MathPreconditions.checkPositiveInRangeClosed("x", 0L, 0L)
+        );
+        Assert.assertThrows(IllegalArgumentException.class, () ->
+            MathPreconditions.checkPositiveInRangeClosed("x", BigInteger.ZERO, BigInteger.ZERO)
+        );
+        // check 1 is a valid max
+        MathPreconditions.checkPositiveInRangeClosed("x", 1, 1);
+        MathPreconditions.checkPositiveInRangeClosed("x", 1L, 1L);
+        MathPreconditions.checkPositiveInRangeClosed("x", BigInteger.ONE, BigInteger.ONE);
+        // check -1 is not positive
+        Assert.assertThrows(IllegalArgumentException.class, () ->
+            MathPreconditions.checkPositiveInRangeClosed("x", -1, 2)
+        );
+        Assert.assertThrows(IllegalArgumentException.class, () ->
+            MathPreconditions.checkPositiveInRangeClosed("x", -1L, 2L)
+        );
+        Assert.assertThrows(IllegalArgumentException.class, () ->
+            MathPreconditions.checkPositiveInRangeClosed("x", BigInteger.ONE.negate(), BigInteger.valueOf(2))
+        );
+        // check 0 is not positive
+        Assert.assertThrows(IllegalArgumentException.class, () ->
+            MathPreconditions.checkPositiveInRangeClosed("x", 0, 2)
+        );
+        Assert.assertThrows(IllegalArgumentException.class, () ->
+            MathPreconditions.checkPositiveInRangeClosed("x", 0L, 2L)
+        );
+        Assert.assertThrows(IllegalArgumentException.class, () ->
+            MathPreconditions.checkPositiveInRangeClosed("x", BigInteger.ZERO, BigInteger.valueOf(2))
+        );
+        // check 2 is not positive in range (0, 1]
+        Assert.assertThrows(IllegalArgumentException.class, () ->
+            MathPreconditions.checkPositiveInRangeClosed("x", 2, 1)
+        );
+        Assert.assertThrows(IllegalArgumentException.class, () ->
+            MathPreconditions.checkPositiveInRangeClosed("x", 2L, 1L)
+        );
+        Assert.assertThrows(IllegalArgumentException.class, () ->
+            MathPreconditions.checkPositiveInRangeClosed("x", BigInteger.valueOf(2), BigInteger.ONE)
+        );
+        // check 1 is positive in range (0, 1]
+        MathPreconditions.checkPositiveInRangeClosed("x", 1, 1);
+        MathPreconditions.checkPositiveInRangeClosed("x", 1L, 1L);
+        MathPreconditions.checkPositiveInRangeClosed("x", BigInteger.ONE, BigInteger.ONE);
     }
 
     @Test

@@ -76,6 +76,22 @@ public class MathPreconditions {
      * @throws IllegalArgumentException if x <= 0.
      */
     @CanIgnoreReturnValue
+    public static double checkPositive(String role, double x) {
+        if (x <= 0) {
+            throw new IllegalArgumentException(role + " (" + x + ") must be > 0");
+        }
+        return x;
+    }
+
+    /**
+     * Check x > 0.
+     *
+     * @param role the name of the value x.
+     * @param x the value x.
+     * @return the value x.
+     * @throws IllegalArgumentException if x <= 0.
+     */
+    @CanIgnoreReturnValue
     public static BigInteger checkPositive(String role, BigInteger x) {
         if (x.signum() <= 0) {
             throw new IllegalArgumentException(role + " (" + x + ") must be > 0");
@@ -285,7 +301,7 @@ public class MathPreconditions {
      * @param x the value x.
      * @param max the value max.
      * @return the value x.
-     * @throws IllegalArgumentException if max <= 0 or x ∉ [0, max).
+     * @throws IllegalArgumentException if max <= 0 or x ∉ (0, max).
      */
     @CanIgnoreReturnValue
     public static int checkPositiveInRange(String role, int x, int max) {
@@ -303,7 +319,7 @@ public class MathPreconditions {
      * @param x the value x.
      * @param max the value max.
      * @return the value x.
-     * @throws IllegalArgumentException if max <= 0 or x ∉ [0, max).
+     * @throws IllegalArgumentException if max <= 0 or x ∉ (0, max).
      */
     @CanIgnoreReturnValue
     public static long checkPositiveInRange(String role, long x, long max) {
@@ -321,13 +337,67 @@ public class MathPreconditions {
      * @param x the value x.
      * @param max the value max.
      * @return the value x.
-     * @throws IllegalArgumentException if max <= 0 or x ∉ [0, max).
+     * @throws IllegalArgumentException if max <= 0 or x ∉ (0, max).
      */
     @CanIgnoreReturnValue
     public static BigInteger checkPositiveInRange(String role, BigInteger x, BigInteger max) {
         checkGreaterThan("max", max, BigInteger.ONE);
         if (x.signum() <= 0 || BigIntegerUtils.greaterOrEqual(x, max)) {
             throw new IllegalArgumentException(role + " (" + x + ") must be in range (0, " + max + ")");
+        }
+        return x;
+    }
+
+    /**
+     * Check x ∈ (0, max].
+     *
+     * @param role the name of the value x.
+     * @param x the value x.
+     * @param max the value max.
+     * @return the value x.
+     * @throws IllegalArgumentException if max <= 0 or x ∉ (0, max].
+     */
+    @CanIgnoreReturnValue
+    public static int checkPositiveInRangeClosed(String role, int x, int max) {
+        checkGreaterThan("max", max, 0);
+        if (x <= 0 || x > max) {
+            throw new IllegalArgumentException(role + " (" + x + ") must be in range (0, " + max + "]");
+        }
+        return x;
+    }
+
+    /**
+     * Check x ∈ (0, max].
+     *
+     * @param role the name of the value x.
+     * @param x the value x.
+     * @param max the value max.
+     * @return the value x.
+     * @throws IllegalArgumentException if max <= 0 or x ∉ (0, max].
+     */
+    @CanIgnoreReturnValue
+    public static long checkPositiveInRangeClosed(String role, long x, long max) {
+        checkGreaterThan("max", max, 0);
+        if (x <= 0 || x > max) {
+            throw new IllegalArgumentException(role + " (" + x + ") must be in range (0, " + max + "]");
+        }
+        return x;
+    }
+
+    /**
+     * Check x ∈ (0, max].
+     *
+     * @param role the name of the value x.
+     * @param x the value x.
+     * @param max the value max.
+     * @return the value x.
+     * @throws IllegalArgumentException if max <= 0 or x ∉ (0, max].
+     */
+    @CanIgnoreReturnValue
+    public static BigInteger checkPositiveInRangeClosed(String role, BigInteger x, BigInteger max) {
+        checkGreaterThan("max", max, BigInteger.ZERO);
+        if (x.signum() <= 0 || BigIntegerUtils.greater(x, max)) {
+            throw new IllegalArgumentException(role + " (" + x + ") must be in range (0, " + max + "]");
         }
         return x;
     }
