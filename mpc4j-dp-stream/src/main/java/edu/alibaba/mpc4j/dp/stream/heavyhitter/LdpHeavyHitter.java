@@ -1,5 +1,7 @@
 package edu.alibaba.mpc4j.dp.stream.heavyhitter;
 
+import com.google.errorprone.annotations.CanIgnoreReturnValue;
+
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -24,6 +26,7 @@ public interface LdpHeavyHitter {
      * @param item the item.
      * @return true if the randomized item is not ignored and successfully inserted.
      */
+    @CanIgnoreReturnValue
     boolean warmupInsert(String item);
 
     /**
@@ -67,6 +70,7 @@ public interface LdpHeavyHitter {
      * @param randomizedItem the randomized item.
      * @return true if the randomized item is not ignored and successfully inserted.
      */
+    @CanIgnoreReturnValue
     boolean randomizeInsert(String randomizedItem);
 
     /**

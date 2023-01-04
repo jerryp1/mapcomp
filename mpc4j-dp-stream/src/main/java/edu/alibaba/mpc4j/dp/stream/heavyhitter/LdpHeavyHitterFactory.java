@@ -1,9 +1,7 @@
 package edu.alibaba.mpc4j.dp.stream.heavyhitter;
 
-import edu.alibaba.mpc4j.dp.stream.heavyhitter.hg.AdvHhgLdpHeavyHitter;
-import edu.alibaba.mpc4j.dp.stream.heavyhitter.hg.BasicHgLdpHeavyHitter;
-import edu.alibaba.mpc4j.dp.stream.heavyhitter.hg.RelaxHhgLdpHeavyHitter;
-import edu.alibaba.mpc4j.dp.stream.heavyhitter.naive.NaiveLdpHeavyHitter;
+import edu.alibaba.mpc4j.dp.stream.heavyhitter.hg.*;
+import edu.alibaba.mpc4j.dp.stream.heavyhitter.fo.de.DeLdpHeavyHitter;
 
 import java.util.Random;
 import java.util.Set;
@@ -22,9 +20,9 @@ public class LdpHeavyHitterFactory {
 
     public enum LdpHeavyHitterType {
         /**
-         * naive
+         * direct encoding
          */
-        NAIVE_RR,
+        DE_FO,
         /**
          * basic HeavyGuardian
          */
@@ -54,8 +52,8 @@ public class LdpHeavyHitterFactory {
         switch (type) {
             case BASIC_HG:
                 return new BasicHgLdpHeavyHitter(domainSet, new Random(), k, windowEpsilon);
-            case NAIVE_RR:
-                return new NaiveLdpHeavyHitter(domainSet, k, windowEpsilon);
+            case DE_FO:
+                return new DeLdpHeavyHitter(domainSet, k, windowEpsilon);
             case ADVAN_HG:
                 return new AdvHhgLdpHeavyHitter(domainSet, new Random(), k, windowEpsilon);
             case RELAX_HG:

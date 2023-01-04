@@ -7,7 +7,6 @@ import edu.alibaba.mpc4j.common.tool.hash.IntHash;
 import edu.alibaba.mpc4j.common.tool.hash.IntHashFactory;
 import edu.alibaba.mpc4j.common.tool.utils.ObjectUtils;
 import edu.alibaba.mpc4j.dp.stream.heavyhitter.HeavyHitterState;
-import edu.alibaba.mpc4j.dp.stream.heavyhitter.HgLdpHeavyHitter;
 
 import java.util.*;
 import java.util.stream.Collectors;
@@ -252,7 +251,6 @@ abstract class AbstractHgLdpHeavyHitter implements HgLdpHeavyHitter {
      * @return the updated count.
      */
     protected abstract double updateCount(int bucketIndex, double count);
-
 
     @Override
     public double response(String item) {

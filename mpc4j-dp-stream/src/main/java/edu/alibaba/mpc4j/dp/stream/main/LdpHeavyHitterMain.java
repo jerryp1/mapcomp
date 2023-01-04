@@ -221,7 +221,7 @@ public class LdpHeavyHitterMain {
     }
 
     private void runNaiveHeavyHitter(double windowEpsilon, PrintWriter printWriter) throws IOException {
-        LdpHeavyHitterType type = LdpHeavyHitterType.NAIVE_RR;
+        LdpHeavyHitterType type = LdpHeavyHitterType.DE_FO;
         LOGGER.info("Run {}, ε_w = {}", type.name(), windowEpsilon);
         double ndcg = 0.0;
         double precision = 0.0;

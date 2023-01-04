@@ -6,7 +6,6 @@ import edu.alibaba.mpc4j.common.tool.MathPreconditions;
 import edu.alibaba.mpc4j.common.tool.utils.ObjectUtils;
 import edu.alibaba.mpc4j.dp.stream.heavyhitter.HeavyHitterState;
 import edu.alibaba.mpc4j.dp.stream.heavyhitter.HeavyHitterStructure;
-import edu.alibaba.mpc4j.dp.stream.heavyhitter.HhgLdpHeavyHitter;
 import edu.alibaba.mpc4j.dp.stream.heavyhitter.LdpHeavyHitterFactory;
 
 import java.util.*;

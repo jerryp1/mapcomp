@@ -1,46 +1,25 @@
-package edu.alibaba.mpc4j.dp.stream.heavyhitter.naive;
+package edu.alibaba.mpc4j.dp.stream.heavyhitter.fo.de;
 
 import com.google.common.base.Preconditions;
-import edu.alibaba.mpc4j.common.tool.MathPreconditions;
 import edu.alibaba.mpc4j.dp.stream.heavyhitter.HeavyHitterState;
 import edu.alibaba.mpc4j.dp.stream.heavyhitter.HeavyHitterStructure;
-import edu.alibaba.mpc4j.dp.stream.heavyhitter.LdpHeavyHitter;
 import edu.alibaba.mpc4j.dp.stream.heavyhitter.LdpHeavyHitterFactory;
+import edu.alibaba.mpc4j.dp.stream.heavyhitter.fo.AbstractFoLdpHeavyHitter;
 
 import java.util.*;
 import java.util.stream.Collectors;
 
 /**
- * Naive Heavy Hitter with Local Differential Privacy.
+ * Direct Encoding Heavy Hitter with Local Differential Privacy.
  *
  * @author Weiran Liu
  * @date 2022/11/18
  */
-public class NaiveLdpHeavyHitter implements LdpHeavyHitter {
-    /**
-     * the domain set
-     */
-    private Set<String> domainSet;
-    /**
-     * the domain array list
-     */
-    private ArrayList<String> domainArrayList;
-    /**
-     * d = |Ω|
-     */
-    private final int d;
-    /**
-     * the number of heavy hitters k, which is equal to the cell num in the heavy part λ_h
-     */
-    private final int k;
+public class DeLdpHeavyHitter extends AbstractFoLdpHeavyHitter {
     /**
      * the bucket
      */
     private final Map<String, Double> budget;
-    /**
-     * the private parameter ε / w
-     */
-    private final double windowEpsilon;
     /**
      * p = e^ε / (e^ε + d - 1)
      */
@@ -49,35 +28,18 @@ public class NaiveLdpHeavyHitter implements LdpHeavyHitter {
      * q = 1 / (e^ε + d - 1)
      */
     private final double q;
-    /**
-     * the number of inserted items
-     */
-    private int num;
-    /**
-     * the state
-     */
-    private HeavyHitterState heavyHitterState;
 
-    public NaiveLdpHeavyHitter(Set<String> domainSet, int k, double windowEpsilon) {
-        d = domainSet.size();
-        MathPreconditions.checkGreater("|Ω|", d, 1);
-        this.domainSet = domainSet;
-        domainArrayList = new ArrayList<>(domainSet);
-        MathPreconditions.checkPositiveInRangeClosed("k", k, d);
-        this.k = k;
+    public DeLdpHeavyHitter(Set<String> domainSet, int k, double windowEpsilon) {
+        super(domainSet, k, windowEpsilon);
         budget = new HashMap<>(d);
-        MathPreconditions.checkPositive("ε / w", windowEpsilon);
-        this.windowEpsilon = windowEpsilon;
         double expEpsilon = Math.exp(windowEpsilon);
         p = expEpsilon / (expEpsilon + d - 1);
         q = 1 / (expEpsilon + d - 1);
-        num = 0;
-        heavyHitterState = HeavyHitterState.WARMUP;
     }
 
     @Override
     public LdpHeavyHitterFactory.LdpHeavyHitterType getType() {
-        return LdpHeavyHitterFactory.LdpHeavyHitterType.NAIVE_RR;
+        return LdpHeavyHitterFactory.LdpHeavyHitterType.DE_FO;
     }
 
     @Override
@@ -115,15 +77,15 @@ public class NaiveLdpHeavyHitter implements LdpHeavyHitter {
 
     @Override
     public HeavyHitterStructure getCurrentHeavyHitterStructure() {
-        return new NaiveHeavyHitterStructure(budget);
+        return new DeHeavyHitterStructure(budget);
     }
 
     @Override
     public String randomize(HeavyHitterStructure currentHeavyHitterStructure, String item, Random random) {
         Preconditions.checkArgument(
-            currentHeavyHitterStructure instanceof NaiveHeavyHitterStructure,
+            currentHeavyHitterStructure instanceof DeHeavyHitterStructure,
             "The heavy hitter structure must be %s: %s",
-            NaiveHeavyHitterStructure.class.getSimpleName(), currentHeavyHitterStructure.getClass().getSimpleName()
+            DeHeavyHitterStructure.class.getSimpleName(), currentHeavyHitterStructure.getClass().getSimpleName()
         );
         Preconditions.checkArgument(
             heavyHitterState.equals(HeavyHitterState.STATISTICS),
@@ -184,40 +146,5 @@ public class NaiveLdpHeavyHitter implements LdpHeavyHitter {
             .subList(0, k)
             .stream()
             .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
-    }
-
-    @Override
-    public void cleanDomainSet() {
-        Preconditions.checkArgument(
-            heavyHitterState.equals(HeavyHitterState.WARMUP) || heavyHitterState.equals(HeavyHitterState.STATISTICS),
-            "The heavy hitter must be %s or %s: %s", HeavyHitterState.WARMUP, HeavyHitterState.STATISTICS, heavyHitterState
-        );
-        domainSet = null;
-        domainArrayList = null;
-        heavyHitterState = HeavyHitterState.CLEAN;
-    }
-
-    @Override
-    public double getWindowEpsilon() {
-        return windowEpsilon;
-    }
-
-    @Override
-    public int getK() {
-        return k;
-    }
-
-    @Override
-    public int getNum() {
-        return num;
-    }
-
-    @Override
-    public Set<String> getDomainSet() {
-        Preconditions.checkArgument(
-            heavyHitterState.equals(HeavyHitterState.WARMUP) || heavyHitterState.equals(HeavyHitterState.STATISTICS),
-            "The heavy hitter must be %s or %s: %s", HeavyHitterState.WARMUP, HeavyHitterState.STATISTICS, heavyHitterState
-        );
-        return domainSet;
     }
 }

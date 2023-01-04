@@ -2,6 +2,7 @@ package edu.alibaba.mpc4j.dp.stream.heavyhitter;
 
 import com.google.common.base.Preconditions;
 import edu.alibaba.mpc4j.dp.stream.heavyhitter.LdpHeavyHitterFactory.LdpHeavyHitterType;
+import edu.alibaba.mpc4j.dp.stream.heavyhitter.hg.HgLdpHeavyHitter;
 import edu.alibaba.mpc4j.dp.stream.structure.HeavyGuardian;
 import edu.alibaba.mpc4j.dp.stream.tool.StreamDataUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -16,7 +17,7 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 /**
- * HeavyGuardian Heavy Hitter with Local Differential Privacy test.
+ * tests for Heavy Hitter with Local Differential Privacy based on HeavyGuardian.
  *
  * @author Weiran Liu
  * @date 2022/11/18

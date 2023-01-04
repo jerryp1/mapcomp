@@ -144,7 +144,7 @@ public class LdpHeavyHitterTest {
         });
         // NAIVE
         configurations.add(new Object[]{
-            LdpHeavyHitterType.NAIVE_RR.name(), LdpHeavyHitterType.NAIVE_RR,
+            LdpHeavyHitterType.DE_FO.name(), LdpHeavyHitterType.DE_FO,
         });
 
         return configurations;
