@@ -2,7 +2,11 @@ package edu.alibaba.mpc4j.dp.stream.heavyhitter;
 
 import com.google.common.base.Preconditions;
 import edu.alibaba.mpc4j.common.tool.utils.DoubleUtils;
-import edu.alibaba.mpc4j.dp.stream.heavyhitter.LdpHeavyHitterFactory.LdpHeavyHitterType;
+import edu.alibaba.mpc4j.dp.stream.heavyhitter.LdpHhFactory.LdpHhType;
+import edu.alibaba.mpc4j.dp.stream.heavyhitter.config.BasicLdpHhClientConfig;
+import edu.alibaba.mpc4j.dp.stream.heavyhitter.config.BasicLdpHhServerConfig;
+import edu.alibaba.mpc4j.dp.stream.heavyhitter.config.LdpHhClientConfig;
+import edu.alibaba.mpc4j.dp.stream.heavyhitter.config.LdpHhServerConfig;
 import edu.alibaba.mpc4j.dp.stream.structure.NaiveStreamCounter;
 import edu.alibaba.mpc4j.dp.stream.structure.StreamCounterTest;
 import edu.alibaba.mpc4j.dp.stream.tool.StreamDataUtils;
@@ -31,8 +35,8 @@ import java.util.stream.Stream;
  * @date 2022/11/18
  */
 @RunWith(Parameterized.class)
-public class LdpHeavyHitterTest {
-    private static final Logger LOGGER = LoggerFactory.getLogger(LdpHeavyHitterTest.class);
+public class LdpHhServerTest {
+    private static final Logger LOGGER = LoggerFactory.getLogger(LdpHhServerTest.class);
     /**
      * File path for stream_counter_example_data.txt
      */
@@ -49,7 +53,7 @@ public class LdpHeavyHitterTest {
     /**
      * Key num for stream_counter_example_data.txt
      */
-    private static final int EXAMPLE_D = EXAMPLE_DATA_DOMAIN.size();
+    static final int EXAMPLE_D = EXAMPLE_DATA_DOMAIN.size();
     /**
      * warmup num for stream_counter_example_data.txt
      */
@@ -132,19 +136,19 @@ public class LdpHeavyHitterTest {
 
         // relaxed heavy guardian
         configurations.add(new Object[]{
-            LdpHeavyHitterType.RELAX_HG.name(), LdpHeavyHitterType.RELAX_HG,
+            LdpHhType.RELAX_HG.name(), LdpHhType.RELAX_HG,
         });
         // advanced heavy guardian
         configurations.add(new Object[]{
-            LdpHeavyHitterType.ADVAN_HG.name(), LdpHeavyHitterType.ADVAN_HG,
+            LdpHhType.ADVAN_HG.name(), LdpHhType.ADVAN_HG,
         });
         // basic heavy guardian
         configurations.add(new Object[]{
-            LdpHeavyHitterType.BASIC_HG.name(), LdpHeavyHitterType.BASIC_HG,
+            LdpHhType.BASIC_HG.name(), LdpHhType.BASIC_HG,
         });
         // NAIVE
         configurations.add(new Object[]{
-            LdpHeavyHitterType.DE_FO.name(), LdpHeavyHitterType.DE_FO,
+            LdpHhType.DE_FO.name(), LdpHhType.DE_FO,
         });
 
         return configurations;
@@ -153,69 +157,88 @@ public class LdpHeavyHitterTest {
     /**
      * the type
      */
-    private final LdpHeavyHitterType type;
+    private final LdpHhType type;
 
-    public LdpHeavyHitterTest(String name, LdpHeavyHitterType type) {
+    public LdpHhServerTest(String name, LdpHhType type) {
         Preconditions.checkArgument(StringUtils.isNotBlank(name));
         this.type = type;
     }
 
     @Test
     public void testType() {
-        LdpHeavyHitter ldpHeavyHitter = LdpHeavyHitterFactory.createInstance(
-            type, EXAMPLE_DATA_DOMAIN, EXAMPLE_D, DEFAULT_EPSILON
-        );
-        Assert.assertEquals(type, ldpHeavyHitter.getType());
+        // create server
+        LdpHhServerConfig serverConfig = new BasicLdpHhServerConfig
+            .Builder(type, EXAMPLE_D, EXAMPLE_D, DEFAULT_EPSILON)
+            .build();
+        LdpHhServer server = LdpHhFactory.createServer(serverConfig);
+        Assert.assertEquals(type, server.getType());
+        // create client
+        LdpHhClientConfig clientConfig = new BasicLdpHhClientConfig
+            .Builder(type, EXAMPLE_DATA_DOMAIN, EXAMPLE_D, DEFAULT_EPSILON)
+            .build();
+        LdpHhClient client = LdpHhFactory.createClient(clientConfig);
+        Assert.assertEquals(type, client.getType());
     }
 
     @Test
     public void testWarmup() throws IOException {
-        LdpHeavyHitter ldpHeavyHitter = LdpHeavyHitterFactory.createInstance(
-            type, EXAMPLE_DATA_DOMAIN, EXAMPLE_D, DEFAULT_EPSILON
-        );
+        // create server
+        LdpHhServerConfig serverConfig = new BasicLdpHhServerConfig
+            .Builder(type, EXAMPLE_D, EXAMPLE_D, DEFAULT_EPSILON)
+            .build();
+        LdpHhServer server = LdpHhFactory.createServer(serverConfig);
         // warmup
         Stream<String> dataStream = StreamDataUtils.obtainItemStream(EXAMPLE_DATA_PATH);
-        dataStream.forEach(ldpHeavyHitter::warmupInsert);
+        dataStream.forEach(server::warmupInsert);
         dataStream.close();
-        Map<String, Double> countMap = ldpHeavyHitter.responseDomain();
+        Map<String, Double> countMap = server.responseDomain(EXAMPLE_DATA_DOMAIN);
         double totalNum = 0;
         for (String item : EXAMPLE_DATA_DOMAIN) {
             totalNum += countMap.get(item);
             Assert.assertEquals(CORRECT_EXAMPLE_COUNT_MAP.get(item), countMap.get(item), DoubleUtils.PRECISION);
         }
-        Assert.assertEquals(ldpHeavyHitter.getNum(), totalNum, DoubleUtils.PRECISION);
+        Assert.assertEquals(server.getNum(), totalNum, DoubleUtils.PRECISION);
     }
 
     @Test
     public void testStopWarmup() throws IOException {
-        LdpHeavyHitter ldpHeavyHitter = LdpHeavyHitterFactory.createInstance(
-            type, EXAMPLE_DATA_DOMAIN, EXAMPLE_D, DEFAULT_EPSILON
-        );
+        // create server
+        LdpHhServerConfig serverConfig = new BasicLdpHhServerConfig
+            .Builder(type, EXAMPLE_D, EXAMPLE_D, DEFAULT_EPSILON)
+            .build();
+        LdpHhServer server = LdpHhFactory.createServer(serverConfig);
         // warmup
         Stream<String> dataStream = StreamDataUtils.obtainItemStream(EXAMPLE_DATA_PATH);
-        dataStream.forEach(ldpHeavyHitter::warmupInsert);
+        dataStream.forEach(server::warmupInsert);
         dataStream.close();
-        ldpHeavyHitter.stopWarmup();
-        Map<String, Double> countMap = ldpHeavyHitter.responseDomain();
+        server.stopWarmup();
+        Map<String, Double> countMap = server.responseDomain(EXAMPLE_DATA_DOMAIN);
         double totalNum = 0;
         for (String item : EXAMPLE_DATA_DOMAIN) {
             totalNum += countMap.get(item);
             Assert.assertEquals(CORRECT_EXAMPLE_COUNT_MAP.get(item), countMap.get(item), 0.1);
         }
-        Assert.assertEquals(ldpHeavyHitter.getNum(), totalNum, 0.1);
+        Assert.assertEquals(server.getNum(), totalNum, 0.1);
     }
 
     @Test
     public void testLargeEpsilonFullK() throws IOException {
-        LdpHeavyHitter ldpHeavyHitter = LdpHeavyHitterFactory.createInstance(
-            type, EXAMPLE_DATA_DOMAIN, EXAMPLE_D, LARGE_EPSILON
-        );
+        // create server
+        LdpHhServerConfig serverConfig = new BasicLdpHhServerConfig
+            .Builder(type, EXAMPLE_D, EXAMPLE_D, LARGE_EPSILON)
+            .build();
+        LdpHhServer server = LdpHhFactory.createServer(serverConfig);
+        // create client
+        LdpHhClientConfig clientConfig = new BasicLdpHhClientConfig
+            .Builder(type, EXAMPLE_DATA_DOMAIN, EXAMPLE_D, LARGE_EPSILON)
+            .build();
+        LdpHhClient client = LdpHhFactory.createClient(clientConfig);
         // warmup
-        exampleWarmupInsert(ldpHeavyHitter);
-        ldpHeavyHitter.stopWarmup();
+        exampleWarmupInsert(server);
+        server.stopWarmup();
         // randomize
-        exampleRandomizeInsert(ldpHeavyHitter);
-        Map<String, Double> countMap = ldpHeavyHitter.responseDomain();
+        exampleRandomizeInsert(server, client);
+        Map<String, Double> countMap = server.responseDomain(EXAMPLE_DATA_DOMAIN);
         for (String item : EXAMPLE_DATA_DOMAIN) {
             // verify no-error count
             Assert.assertEquals(CORRECT_EXAMPLE_COUNT_MAP.get(item), countMap.get(item), DoubleUtils.PRECISION);
@@ -224,15 +247,22 @@ public class LdpHeavyHitterTest {
 
     @Test
     public void testFullK() throws IOException {
-        LdpHeavyHitter ldpHeavyHitter = LdpHeavyHitterFactory.createInstance(
-            type, EXAMPLE_DATA_DOMAIN, EXAMPLE_D, DEFAULT_EPSILON
-        );
+        // create server
+        LdpHhServerConfig serverConfig = new BasicLdpHhServerConfig
+            .Builder(type, EXAMPLE_D, EXAMPLE_D, DEFAULT_EPSILON)
+            .build();
+        LdpHhServer server = LdpHhFactory.createServer(serverConfig);
+        // create client
+        LdpHhClientConfig clientConfig = new BasicLdpHhClientConfig
+            .Builder(type, EXAMPLE_DATA_DOMAIN, EXAMPLE_D, DEFAULT_EPSILON)
+            .build();
+        LdpHhClient client = LdpHhFactory.createClient(clientConfig);
         // warmup
-        exampleWarmupInsert(ldpHeavyHitter);
-        ldpHeavyHitter.stopWarmup();
+        exampleWarmupInsert(server);
+        server.stopWarmup();
         // randomize
-        exampleRandomizeInsert(ldpHeavyHitter);
-        List<Map.Entry<String, Double>> countOrderedList = ldpHeavyHitter.responseOrderedDomain();
+        exampleRandomizeInsert(server, client);
+        List<Map.Entry<String, Double>> countOrderedList = server.responseOrderedDomain(EXAMPLE_DATA_DOMAIN);
         Assert.assertEquals(CORRECT_EXAMPLE_COUNT_ORDERED_LIST.size(), countOrderedList.size());
         // verify unbaised count
         double totalNum = 0;
@@ -240,24 +270,31 @@ public class LdpHeavyHitterTest {
         for (int index = 0; index < domainSize; index++) {
             totalNum += countOrderedList.get(index).getValue();
         }
-        Assert.assertEquals(ldpHeavyHitter.getNum(), totalNum, totalNum * 0.01);
+        Assert.assertEquals(server.getNum(), totalNum, totalNum * 0.01);
     }
 
     @Test
     public void testDefault() throws IOException {
-        LdpHeavyHitter ldpHeavyHitter = LdpHeavyHitterFactory.createInstance(
-            type, EXAMPLE_DATA_DOMAIN, DEFAULT_K, DEFAULT_EPSILON
-        );
+        // create server
+        LdpHhServerConfig serverConfig = new BasicLdpHhServerConfig
+            .Builder(type, EXAMPLE_D, DEFAULT_K, DEFAULT_EPSILON)
+            .build();
+        LdpHhServer server = LdpHhFactory.createServer(serverConfig);
+        // create client
+        LdpHhClientConfig clientConfig = new BasicLdpHhClientConfig
+            .Builder(type, EXAMPLE_DATA_DOMAIN, DEFAULT_K, DEFAULT_EPSILON)
+            .build();
+        LdpHhClient client = LdpHhFactory.createClient(clientConfig);
         // warmup
-        exampleWarmupInsert(ldpHeavyHitter);
-        ldpHeavyHitter.stopWarmup();
+        exampleWarmupInsert(server);
+        server.stopWarmup();
         // randomize
-        exampleRandomizeInsert(ldpHeavyHitter);
+        exampleRandomizeInsert(server, client);
         // verify there are k heavy hitters
-        Map<String, Double> heavyHitterMap = ldpHeavyHitter.responseHeavyHitters();
+        Map<String, Double> heavyHitterMap = server.responseHeavyHitters();
         Assert.assertEquals(heavyHitterMap.size(), DEFAULT_K);
         // verify k/2 heavy hitters are the same
-        List<Map.Entry<String, Double>> heavyHitterOrderedList = ldpHeavyHitter.responseOrderedHeavyHitters();
+        List<Map.Entry<String, Double>> heavyHitterOrderedList = server.responseOrderedHeavyHitters();
         for (int index = 0; index < DEFAULT_K / 2; index++) {
             Assert.assertEquals(
                 CORRECT_EXAMPLE_COUNT_ORDERED_LIST.get(index).getKey(), heavyHitterOrderedList.get(index).getKey()
@@ -265,54 +302,59 @@ public class LdpHeavyHitterTest {
         }
     }
 
-    static void exampleWarmupInsert(LdpHeavyHitter ldpHeavyHitter) throws IOException {
+    static void exampleWarmupInsert(LdpHhServer server) throws IOException {
         AtomicInteger warmupIndex = new AtomicInteger();
         Stream<String> dataStream = StreamDataUtils.obtainItemStream(EXAMPLE_DATA_PATH);
-        dataStream.filter(item -> warmupIndex.getAndIncrement() <= EXAMPLE_WARMUP_NUM)
-            .forEach(ldpHeavyHitter::warmupInsert);
+        dataStream.filter(item -> warmupIndex.getAndIncrement() <= EXAMPLE_WARMUP_NUM).forEach(server::warmupInsert);
         dataStream.close();
     }
 
-    static void exampleRandomizeInsert(LdpHeavyHitter ldpHeavyHitter) throws IOException {
+    static void exampleRandomizeInsert(LdpHhServer server, LdpHhClient client) throws IOException {
         Random ldpRandom = new Random();
         AtomicInteger randomizedIndex = new AtomicInteger();
         Stream<String> dataStream = StreamDataUtils.obtainItemStream(EXAMPLE_DATA_PATH);
         dataStream.filter(item -> randomizedIndex.getAndIncrement() > EXAMPLE_WARMUP_NUM)
-            .map(item -> ldpHeavyHitter.randomize(ldpHeavyHitter.getCurrentHeavyHitterStructure(), item, ldpRandom))
-            .forEach(ldpHeavyHitter::randomizeInsert);
+            .map(item -> client.randomize(server.getServerContext(), item, ldpRandom))
+            .forEach(server::randomizeInsert);
         dataStream.close();
     }
 
     @Test
     public void testMemory() throws IOException {
-        LdpHeavyHitter ldpHeavyHitter = LdpHeavyHitterFactory.createInstance(
-            type, CONNECT_DATA_DOMAIN, DEFAULT_K, DEFAULT_EPSILON
-        );
+        // create server
+        LdpHhServerConfig serverConfig = new BasicLdpHhServerConfig
+            .Builder(type, CONNECT_D, DEFAULT_K, DEFAULT_EPSILON)
+            .build();
+        LdpHhServer server = LdpHhFactory.createServer(serverConfig);
+        // create client
+        LdpHhClientConfig clientConfig = new BasicLdpHhClientConfig
+            .Builder(type, CONNECT_DATA_DOMAIN, DEFAULT_K, DEFAULT_EPSILON)
+            .build();
+        LdpHhClient client = LdpHhFactory.createClient(clientConfig);
         // warmup
-        connectWarmupInsert(ldpHeavyHitter);
-        ldpHeavyHitter.stopWarmup();
+        connectWarmupInsert(server);
+        server.stopWarmup();
         // randomize
-        connectRandomizeInsert(ldpHeavyHitter);
-        ldpHeavyHitter.cleanDomainSet();
-        long memory = GraphLayout.parseInstance(ldpHeavyHitter).totalSize();
+        connectRandomizeInsert(server, client);
+        long memory = GraphLayout.parseInstance(server).totalSize();
         LOGGER.info("{}: k = {}, d = {}, memory = {}", type.name(), DEFAULT_K, CONNECT_D, memory);
     }
 
-    static void connectWarmupInsert(LdpHeavyHitter ldpHeavyHitter) throws IOException {
+    static void connectWarmupInsert(LdpHhServer server) throws IOException {
         AtomicInteger warmupIndex = new AtomicInteger();
         Stream<String> dataStream = StreamDataUtils.obtainItemStream(CONNECT_DATA_PATH);
         dataStream.filter(item -> warmupIndex.getAndIncrement() <= CONNECT_WARMUP_NUM)
-            .forEach(ldpHeavyHitter::warmupInsert);
+            .forEach(server::warmupInsert);
         dataStream.close();
     }
 
-    static void connectRandomizeInsert(LdpHeavyHitter ldpHeavyHitter) throws IOException {
+    static void connectRandomizeInsert(LdpHhServer server, LdpHhClient client) throws IOException {
         Random ldpRandom = new Random();
         AtomicInteger randomizedIndex = new AtomicInteger();
         Stream<String> dataStream = StreamDataUtils.obtainItemStream(CONNECT_DATA_PATH);
         dataStream.filter(item -> randomizedIndex.getAndIncrement() > CONNECT_WARMUP_NUM)
-            .map(item -> ldpHeavyHitter.randomize(ldpHeavyHitter.getCurrentHeavyHitterStructure(), item, ldpRandom))
-            .forEach(ldpHeavyHitter::randomizeInsert);
+            .map(item -> client.randomize(server.getServerContext(), item, ldpRandom))
+            .forEach(server::randomizeInsert);
         dataStream.close();
     }
 }

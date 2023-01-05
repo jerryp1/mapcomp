@@ -1,24 +1,24 @@
 package edu.alibaba.mpc4j.dp.stream.heavyhitter;
 
 import com.google.errorprone.annotations.CanIgnoreReturnValue;
+import edu.alibaba.mpc4j.dp.stream.heavyhitter.utils.LdpHhServerContext;
 
 import java.util.*;
 import java.util.stream.Collectors;
 
 /**
- * Interface for Heavy Hitter with Local Differentially Privacy.
+ * Heavy Hitter server with Local Differentially Privacy.
  *
  * @author Weiran Liu
  * @date 2022/11/18
  */
-public interface LdpHeavyHitter {
-
+public interface LdpHhServer {
     /**
      * Get the type of Heavy Hitter with Local Differential Privacy.
      *
      * @return the type of Heavy Hitter with Local Differential Privacy.
      */
-    LdpHeavyHitterFactory.LdpHeavyHitterType getType();
+    LdpHhFactory.LdpHhType getType();
 
     /**
      * Insert an item during the warmup state.
@@ -37,32 +37,11 @@ public interface LdpHeavyHitter {
     void stopWarmup();
 
     /**
-     * Return the current heavy hitter structure.
+     * Return the server context.
      *
-     * @return the current heavy hitter structure.
+     * @return the server context.
      */
-    HeavyHitterStructure getCurrentHeavyHitterStructure();
-
-    /**
-     * randomize the item based on the current data structure.
-     *
-     * @param currentHeavyHitterStructure the current heavy hitter data structure.
-     * @param item                        the item.
-     * @param random                      the random state.
-     * @return the randomized item.
-     */
-    String randomize(HeavyHitterStructure currentHeavyHitterStructure, String item, Random random);
-
-    /**
-     * randomize the item based on the current data structure.
-     *
-     * @param currentHeavyHitterStructure the current heavy hitter data structure.
-     * @param item                        the item.
-     * @return the randomized item.
-     */
-    default String randomize(HeavyHitterStructure currentHeavyHitterStructure, String item) {
-        return randomize(currentHeavyHitterStructure, item, new Random());
-    }
+    LdpHhServerContext getServerContext();
 
     /**
      * Insert a randomized item.
@@ -84,19 +63,21 @@ public interface LdpHeavyHitter {
     /**
      * Response counting values for all items.
      *
+     * @param domainSet the domain set.
      * @return counting values for all items.
      */
-    default Map<String, Double> responseDomain() {
-        return getDomainSet().stream().collect(Collectors.toMap(item -> item, this::response));
+    default Map<String, Double> responseDomain(Set<String> domainSet) {
+        return domainSet.stream().collect(Collectors.toMap(item -> item, this::response));
     }
 
     /**
      * Response counting values for all items with descending order list.
      *
+     * @param domainSet the domain set.
      * @return counting values for all items with descending order list.
      */
-    default List<Map.Entry<String, Double>> responseOrderedDomain() {
-        Map<String, Double> countMap = responseDomain();
+    default List<Map.Entry<String, Double>> responseOrderedDomain(Set<String> domainSet) {
+        Map<String, Double> countMap = responseDomain(domainSet);
         List<Map.Entry<String, Double>> countList = new ArrayList<>(countMap.entrySet());
         // descending sort
         countList.sort(Comparator.comparingDouble(Map.Entry::getValue));
@@ -128,11 +109,6 @@ public interface LdpHeavyHitter {
     }
 
     /**
-     * clean domain set.
-     */
-    void cleanDomainSet();
-
-    /**
      * Return the privacy parameter ε / w.
      *
      * @return the privacy parameter ε / w.
@@ -140,23 +116,23 @@ public interface LdpHeavyHitter {
     double getWindowEpsilon();
 
     /**
-     * Get the number of Heavy Hitters k.
+     * Gets the domain size d, i.e., |Ω|.
+     *
+     * @return the domain size d.
+     */
+    int getD();
+
+    /**
+     * Gets the number of Heavy Hitters k.
      *
      * @return the number of Heavy Hitters.
      */
     int getK();
 
     /**
-     * Return the total insert item num.
+     * Returns the total insert item num.
      *
      * @return the total insert item num.
      */
     int getNum();
-
-    /**
-     * Get the data domain.
-     *
-     * @return the data domain.
-     */
-    Set<String> getDomainSet();
 }

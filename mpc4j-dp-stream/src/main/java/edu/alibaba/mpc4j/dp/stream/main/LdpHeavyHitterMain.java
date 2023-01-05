@@ -3,9 +3,11 @@ package edu.alibaba.mpc4j.dp.stream.main;
 import com.google.common.base.Preconditions;
 import edu.alibaba.mpc4j.common.tool.metrics.HeavyHitterMetrics;
 import edu.alibaba.mpc4j.common.tool.utils.PropertiesUtils;
-import edu.alibaba.mpc4j.dp.stream.heavyhitter.LdpHeavyHitter;
-import edu.alibaba.mpc4j.dp.stream.heavyhitter.LdpHeavyHitterFactory;
-import edu.alibaba.mpc4j.dp.stream.heavyhitter.LdpHeavyHitterFactory.LdpHeavyHitterType;
+import edu.alibaba.mpc4j.dp.stream.heavyhitter.LdpHhClient;
+import edu.alibaba.mpc4j.dp.stream.heavyhitter.LdpHhServer;
+import edu.alibaba.mpc4j.dp.stream.heavyhitter.LdpHhFactory;
+import edu.alibaba.mpc4j.dp.stream.heavyhitter.LdpHhFactory.LdpHhType;
+import edu.alibaba.mpc4j.dp.stream.heavyhitter.config.*;
 import edu.alibaba.mpc4j.dp.stream.structure.HeavyGuardian;
 import edu.alibaba.mpc4j.dp.stream.structure.NaiveStreamCounter;
 import edu.alibaba.mpc4j.dp.stream.tool.StreamDataUtils;
@@ -221,7 +223,7 @@ public class LdpHeavyHitterMain {
     }
 
     private void runNaiveHeavyHitter(double windowEpsilon, PrintWriter printWriter) throws IOException {
-        LdpHeavyHitterType type = LdpHeavyHitterType.DE_FO;
+        LdpHhType type = LdpHhType.DE_FO;
         LOGGER.info("Run {}, ε_w = {}", type.name(), windowEpsilon);
         double ndcg = 0.0;
         double precision = 0.0;
@@ -229,8 +231,15 @@ public class LdpHeavyHitterMain {
         double re = 0.0;
         double memory = 0.0;
         for (int round = 0; round < testRound; round++) {
-            LdpHeavyHitter ldpHeavyHitter = LdpHeavyHitterFactory.createInstance(type, domainSet, k, windowEpsilon);
-            double[] metrics = runLdpHeavyHitter(ldpHeavyHitter);
+            LdpHhServerConfig serverConfig = new BasicLdpHhServerConfig
+                .Builder(type, domainSet.size(), k, windowEpsilon)
+                .build();
+            LdpHhServer server = LdpHhFactory.createServer(serverConfig);
+            LdpHhClientConfig clientConfig = new BasicLdpHhClientConfig
+                .Builder(type, domainSet, k, windowEpsilon)
+                .build();
+            LdpHhClient client = LdpHhFactory.createClient(clientConfig);
+            double[] metrics = runLdpHeavyHitter(server, client);
             ndcg += metrics[0];
             precision += metrics[1];
             abe += metrics[2];
@@ -246,7 +255,7 @@ public class LdpHeavyHitterMain {
     }
 
     private void runBasicHgHeavyHitter(double windowEpsilon, PrintWriter printWriter) throws IOException {
-        LdpHeavyHitterType type = LdpHeavyHitterType.BASIC_HG;
+        LdpHhType type = LdpHhType.BASIC_HG;
         LOGGER.info("Run {}, ε_w = {}", type.name(), windowEpsilon);
         double ndcg = 0.0;
         double precision = 0.0;
@@ -254,8 +263,15 @@ public class LdpHeavyHitterMain {
         double re = 0.0;
         double memory = 0.0;
         for (int round = 0; round < testRound; round++) {
-            LdpHeavyHitter ldpHeavyHitter = LdpHeavyHitterFactory.createHgInstance(type, domainSet, k, windowEpsilon);
-            double[] metrics = runLdpHeavyHitter(ldpHeavyHitter);
+            HgLdpHhServerConfig serverConfig = new HgLdpHhServerConfig
+                .Builder(type, domainSet.size(), k, windowEpsilon)
+                .build();
+            LdpHhServer server = LdpHhFactory.createHgServer(serverConfig);
+            HgLdpHhClientConfig clientConfig = new HgLdpHhClientConfig
+                .Builder(type, domainSet, k, windowEpsilon)
+                .build();
+            LdpHhClient client = LdpHhFactory.createHgClient(clientConfig);
+            double[] metrics = runLdpHeavyHitter(server, client);
             ndcg += metrics[0];
             precision += metrics[1];
             abe += metrics[2];
@@ -271,7 +287,7 @@ public class LdpHeavyHitterMain {
     }
 
     private void runAdvHhgHeavyHitter(double windowEpsilon, double alpha, PrintWriter printWriter) throws IOException {
-        LdpHeavyHitterType type = LdpHeavyHitterType.ADVAN_HG;
+        LdpHhType type = LdpHhType.ADVAN_HG;
         LOGGER.info("Run {}, ε_w = {}, α = {}", type.name(), windowEpsilon, alpha);
         double ndcg = 0.0;
         double precision = 0.0;
@@ -279,8 +295,17 @@ public class LdpHeavyHitterMain {
         double re = 0.0;
         double memory = 0.0;
         for (int round = 0; round < testRound; round++) {
-            LdpHeavyHitter ldpHeavyHitter = LdpHeavyHitterFactory.createHhgInstance(type, domainSet, k, windowEpsilon, alpha);
-            double[] metrics = runLdpHeavyHitter(ldpHeavyHitter);
+            HhgLdpHhServerConfig serverConfig = new HhgLdpHhServerConfig
+                .Builder(type, domainSet.size(), k, windowEpsilon)
+                .setAlpha(alpha)
+                .build();
+            LdpHhServer server = LdpHhFactory.createHhgServer(serverConfig);
+            HhgLdpHhClientConfig clientConfig = new HhgLdpHhClientConfig
+                .Builder(type, domainSet, k, windowEpsilon)
+                .setAlpha(alpha)
+                .build();
+            LdpHhClient client = LdpHhFactory.createHhgClient(clientConfig);
+            double[] metrics = runLdpHeavyHitter(server, client);
             ndcg += metrics[0];
             precision += metrics[1];
             abe += metrics[2];
@@ -296,7 +321,7 @@ public class LdpHeavyHitterMain {
     }
 
     private void runRelaxHhgHeavyHitter(double windowEpsilon, PrintWriter printWriter) throws IOException {
-        LdpHeavyHitterType type = LdpHeavyHitterType.RELAX_HG;
+        LdpHhType type = LdpHhType.RELAX_HG;
         LOGGER.info("Run {}, ε_w = {}", type.name(), windowEpsilon);
         double ndcg = 0.0;
         double precision = 0.0;
@@ -304,8 +329,15 @@ public class LdpHeavyHitterMain {
         double re = 0.0;
         double memory = 0.0;
         for (int round = 0; round < testRound; round++) {
-            LdpHeavyHitter ldpHeavyHitter = LdpHeavyHitterFactory.createHhgInstance(type, domainSet, k, windowEpsilon);
-            double[] metrics = runLdpHeavyHitter(ldpHeavyHitter);
+            HhgLdpHhServerConfig serverConfig = new HhgLdpHhServerConfig
+                .Builder(type, domainSet.size(), k, windowEpsilon)
+                .build();
+            LdpHhServer server = LdpHhFactory.createHhgServer(serverConfig);
+            HhgLdpHhClientConfig clientConfig = new HhgLdpHhClientConfig
+                .Builder(type, domainSet, k, windowEpsilon)
+                .build();
+            LdpHhClient client = LdpHhFactory.createHhgClient(clientConfig);
+            double[] metrics = runLdpHeavyHitter(server, client);
             ndcg += metrics[0];
             precision += metrics[1];
             abe += metrics[2];
@@ -320,22 +352,22 @@ public class LdpHeavyHitterMain {
         printInfo(printWriter, type.name(), windowEpsilon, null, ndcg, precision, abe, re, memory);
     }
 
-    private double[] runLdpHeavyHitter(LdpHeavyHitter ldpHeavyHitter) throws IOException {
+    private double[] runLdpHeavyHitter(LdpHhServer server, LdpHhClient client) throws IOException {
         // warmup
         AtomicInteger warmupIndex = new AtomicInteger();
         Stream<String> dataStream = StreamDataUtils.obtainItemStream(datasetPath);
-        dataStream.filter(item -> warmupIndex.getAndIncrement() <= warmupNum).forEach(ldpHeavyHitter::warmupInsert);
+        dataStream.filter(item -> warmupIndex.getAndIncrement() <= warmupNum).forEach(server::warmupInsert);
         dataStream.close();
-        ldpHeavyHitter.stopWarmup();
+        server.stopWarmup();
         // randomize
         AtomicInteger randomizedIndex = new AtomicInteger();
         dataStream = StreamDataUtils.obtainItemStream(datasetPath);
         dataStream.filter(item -> randomizedIndex.getAndIncrement() > warmupNum)
-            .map(item -> ldpHeavyHitter.randomize(ldpHeavyHitter.getCurrentHeavyHitterStructure(), item))
-            .forEach(ldpHeavyHitter::randomizeInsert);
+            .map(item -> client.randomize(server.getServerContext(), item))
+            .forEach(server::randomizeInsert);
         dataStream.close();
         // heavy hitter map
-        Map<String, Double> heavyHitterMap = ldpHeavyHitter.responseHeavyHitters();
+        Map<String, Double> heavyHitterMap = server.responseHeavyHitters();
         Preconditions.checkArgument(heavyHitterMap.size() == k);
         // heavy hitter ordered list
         List<Map.Entry<String, Double>> heavyHitterOrderedList = new ArrayList<>(heavyHitterMap.entrySet());
@@ -349,8 +381,7 @@ public class LdpHeavyHitterMain {
         metrics[1] = HeavyHitterMetrics.precision(heavyHitters, correctHeavyHitters);
         metrics[2] = HeavyHitterMetrics.absoluteError(heavyHitterMap, correctCountMap);
         metrics[3] = HeavyHitterMetrics.relativeError(heavyHitterMap, correctCountMap);
-        ldpHeavyHitter.cleanDomainSet();
-        metrics[4] = GraphLayout.parseInstance(ldpHeavyHitter).totalSize();
+        metrics[4] = GraphLayout.parseInstance(server).totalSize();
         return metrics;
     }
 
