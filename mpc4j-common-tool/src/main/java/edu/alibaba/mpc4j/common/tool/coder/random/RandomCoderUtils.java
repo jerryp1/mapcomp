@@ -107,7 +107,7 @@ public class RandomCoderUtils {
             // 如果小于查找表最小对数，则返回最小对数取值
             return CODEWORD_BYTE_LENGTH_TABLE.get(MIN_INPUT_LOG);
         } else {
-            // 如果大于查找表最大对数，则返回最大对数取值
+            // 如果大于查找表最小对数，则返回最大对数取值，如果MAX_INPUT_LOG
             return CODEWORD_BYTE_LENGTH_TABLE.get(MAX_INPUT_LOG);
         }
     }
