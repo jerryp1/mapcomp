@@ -10,7 +10,7 @@ using namespace std;
 // serialize encryption parameters
 jbyteArray serialize_encryption_parms(JNIEnv *env, const EncryptionParameters& params);
 // deserialize encryption parameters
-EncryptionParameters deserialize_encryption_params(JNIEnv *env, jbyteArray parms_bytes);
+EncryptionParameters deserialize_encryption_parms(JNIEnv *env, jbyteArray parms_bytes);
 // serialize public key
 jbyteArray serialize_public_key(JNIEnv *env, const PublicKey& public_key);
 // deserialize public key

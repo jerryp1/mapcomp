@@ -10,7 +10,7 @@ jbyteArray serialize_encryption_parms(JNIEnv *env, const EncryptionParameters& p
     return result;
 }
 
-seal::EncryptionParameters deserialize_encryption_params(JNIEnv *env, jbyteArray parms_bytes) {
+seal::EncryptionParameters deserialize_encryption_parms(JNIEnv *env, jbyteArray parms_bytes) {
     jbyte* parms_byte_data = env->GetByteArrayElements(parms_bytes, JNI_FALSE);
     std::string str((char*)parms_byte_data, env->GetArrayLength(parms_bytes));
     std::istringstream input(str);

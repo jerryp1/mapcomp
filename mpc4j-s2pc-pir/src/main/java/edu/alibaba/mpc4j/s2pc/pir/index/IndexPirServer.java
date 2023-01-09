@@ -30,7 +30,7 @@ public interface IndexPirServer extends TwoPartyPto, SecurePto {
      * @param elementByteLength 元素字节长度。
      * @throws MpcAbortException 如果协议异常中止。
      */
-    void init(IndexPirParams indexPirParams, ArrayList<ByteBuffer> elementArrayList, int elementByteLength)
+    void init(AbstractIndexPirParams indexPirParams, ArrayList<ByteBuffer> elementArrayList, int elementByteLength)
         throws MpcAbortException;
 
     /**

@@ -144,7 +144,7 @@ JNIEXPORT jboolean JNICALL Java_edu_alibaba_mpc4j_s2pc_pso_upsi_cmg21_Cmg21UpsiN
 JNIEXPORT jobject JNICALL Java_edu_alibaba_mpc4j_s2pc_pso_upsi_cmg21_Cmg21UpsiNativeUtils_computeEncryptedPowers(
     JNIEnv *env, jclass, jbyteArray params_bytes, jbyteArray relin_keys_bytes, jobject query_list,
     jobjectArray jparent_powers, jintArray jsource_power_index, jint ps_low_power) {
-    EncryptionParameters parms = deserialize_encryption_params(env, params_bytes);
+    EncryptionParameters parms = deserialize_encryption_parms(env, params_bytes);
     SEALContext context = SEALContext(parms);
     RelinKeys relin_keys = deserialize_relin_keys(env, relin_keys_bytes, context);
     jclass exception = env->FindClass("java/lang/Exception");
@@ -176,7 +176,7 @@ JNIEXPORT jobject JNICALL Java_edu_alibaba_mpc4j_s2pc_pso_upsi_cmg21_Cmg21UpsiNa
 JNIEXPORT jbyteArray JNICALL Java_edu_alibaba_mpc4j_s2pc_pso_upsi_cmg21_Cmg21UpsiNativeUtils_optComputeMatches(
     JNIEnv *env, jclass, jbyteArray params_bytes, jbyteArray relin_keys_bytes, jobjectArray database_coeffs,
     jobject query_list, jint ps_low_power) {
-    EncryptionParameters parms = deserialize_encryption_params(env, params_bytes);
+    EncryptionParameters parms = deserialize_encryption_parms(env, params_bytes);
     SEALContext context(parms);
     jclass exception = env->FindClass("java/lang/Exception");
     RelinKeys relin_keys = deserialize_relin_keys(env, relin_keys_bytes, context);
@@ -201,7 +201,7 @@ JNIEXPORT jbyteArray JNICALL Java_edu_alibaba_mpc4j_s2pc_pso_upsi_cmg21_Cmg21Ups
 
 JNIEXPORT jbyteArray JNICALL Java_edu_alibaba_mpc4j_s2pc_pso_upsi_cmg21_Cmg21UpsiNativeUtils_naiveComputeMatches(
     JNIEnv *env, jclass, jbyteArray params_bytes, jobjectArray database_coeffs, jobject query_list) {
-    EncryptionParameters parms = deserialize_encryption_params(env, params_bytes);
+    EncryptionParameters parms = deserialize_encryption_parms(env, params_bytes);
     SEALContext context(parms);
     Evaluator evaluator(context);
     // encrypted query powers
@@ -217,7 +217,7 @@ JNIEXPORT jbyteArray JNICALL Java_edu_alibaba_mpc4j_s2pc_pso_upsi_cmg21_Cmg21Ups
 
 JNIEXPORT jobject JNICALL Java_edu_alibaba_mpc4j_s2pc_pso_upsi_cmg21_Cmg21UpsiNativeUtils_generateQuery(
     JNIEnv *env, jclass, jbyteArray params_bytes, jbyteArray pk_bytes, jbyteArray sk_bytes, jobjectArray coeffs_array) {
-    EncryptionParameters parms = deserialize_encryption_params(env, params_bytes);
+    EncryptionParameters parms = deserialize_encryption_parms(env, params_bytes);
     SEALContext context = SEALContext(parms);
     jclass exception = env->FindClass("java/lang/Exception");
     PublicKey public_key = deserialize_public_key(env, pk_bytes, context);
@@ -246,7 +246,7 @@ JNIEXPORT jobject JNICALL Java_edu_alibaba_mpc4j_s2pc_pso_upsi_cmg21_Cmg21UpsiNa
 
 JNIEXPORT jlongArray JNICALL Java_edu_alibaba_mpc4j_s2pc_pso_upsi_cmg21_Cmg21UpsiNativeUtils_decodeReply(
     JNIEnv *env, jclass, jbyteArray params_bytes, jbyteArray sk_bytes, jbyteArray response_byte) {
-    EncryptionParameters parms = deserialize_encryption_params(env, params_bytes);
+    EncryptionParameters parms = deserialize_encryption_parms(env, params_bytes);
     SEALContext context = SEALContext(parms);
     SecretKey secret_key = deserialize_secret_key(env, sk_bytes, context);
     jclass exception = env->FindClass("java/lang/Exception");

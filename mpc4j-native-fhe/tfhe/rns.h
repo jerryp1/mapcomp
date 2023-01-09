@@ -17,10 +17,31 @@ namespace seal
     class TFHERNS
     {
     public:
-        TFHERNS() = default;
-        TFHERNS(SEALContext &context) : context_(context)
+        explicit TFHERNS(SEALContext &context) : context_(context)
         {
-            Initialize();
+            auto &context_data = *context_.first_context_data();
+            auto &parms = context_data.parms();
+            auto &coeff_modulus = parms.coeff_modulus();
+            auto Mcnt = coeff_modulus.size();
+            auto Qlen = targetP::digits;
+            size_t Wlen = targetP::Bgbit;
+            Qword = Qlen / Wlen + 1;
+            coeff_modulus_size = Mcnt;
+            poly_degree = parms.poly_modulus_degree();
+            auto punctured_prod_array = context_data.rns_tool()->base_q()->punctured_prod_array();
+            auto inv_punctured_prod = context_data.rns_tool()->base_q()->inv_punctured_prod_mod_base_array();
+            auto base_prod = context_data.rns_tool()->base_q()->base_prod();
+            size_t Qsize = context_data.rns_tool()->base_q()->size();
+            Qrst.resize(Mcnt);
+            Qinv.resize(Mcnt);
+            Qtot.resize(Qword);
+            basered(base_prod, Qtot, Qsize, 0);
+            for (size_t i = 0; i < Mcnt; i++)
+                Qinv[i] = inv_punctured_prod[i].operand;
+            for (size_t i = 0; i < Mcnt; i++) {
+                Qrst[i].resize(Qword);
+                basered(punctured_prod_array + Qsize * i, Qrst[i], Qsize, 0);
+            }
         }
         void CRTDecPoly(Ciphertext::ct_coeff_type *poly, vector<vector<uint64_t>> &crtdec)
         {
@@ -44,34 +65,8 @@ namespace seal
                     }
                 }
         }
-        void Initialize(void)
-        {
-            auto &context_data = *context_.first_context_data().get();
-            auto &parms = context_data.parms();
-            auto &coeff_modulus = parms.coeff_modulus();
-            auto Mcnt = coeff_modulus.size();
-            auto Qlen = targetP::digits;
-            size_t Wlen = targetP::Bgbit;
-            Qword = Qlen / Wlen + 1;
-            coeff_modulus_size = Mcnt;
-            poly_degree = parms.poly_modulus_degree();
-            auto punctured_prod_array = context_data.rns_tool()->base_q()->punctured_prod_array();
-            auto inv_punctured_prod = context_data.rns_tool()->base_q()->inv_punctured_prod_mod_base_array();
-            auto base_prod = context_data.rns_tool()->base_q()->base_prod();
-            size_t Qsize = context_data.rns_tool()->base_q()->size();
-            Qrst.resize(Mcnt);
-            Qinv.resize(Mcnt);
-            Qtot.resize(Qword);
-            basered(base_prod, Qtot, Qsize, 0);
-            for (size_t i = 0; i < Mcnt; i++)
-                Qinv[i] = inv_punctured_prod[i].operand;
-            for (size_t i = 0; i < Mcnt; i++) {
-                Qrst[i].resize(Qword);
-                basered(punctured_prod_array + Qsize * i, Qrst[i], Qsize, 0);
-            }
-            RNSinitialized = true;
-        }
-        inline void basered(const uint64_t *vec_in, vector<uint64_t> &vec_out, size_t in_cnt, const size_t sft)
+
+        inline void basered(const uint64_t *vec_in, vector<uint64_t> &vec_out, size_t in_cnt, const size_t sft) const
         {
             std::bitset<targetP::digits + targetP::Bgbit + 4> buff(0);
             std::bitset<targetP::digits + targetP::Bgbit + 4> mask(targetP::Bg - 1);
@@ -94,6 +89,5 @@ namespace seal
         size_t coeff_modulus_size;
         size_t poly_degree;
         size_t Qword;
-        bool RNSinitialized;
     };
 } // namespace seal

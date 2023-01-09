@@ -3,6 +3,9 @@ package edu.alibaba.mpc4j.s2pc.pir.index;
 import edu.alibaba.mpc4j.common.rpc.Party;
 import edu.alibaba.mpc4j.common.rpc.Rpc;
 import edu.alibaba.mpc4j.common.rpc.pto.PtoFactory;
+import edu.alibaba.mpc4j.s2pc.pir.index.onionpir.Mcr21IndexPirClient;
+import edu.alibaba.mpc4j.s2pc.pir.index.onionpir.Mcr21IndexPirConfig;
+import edu.alibaba.mpc4j.s2pc.pir.index.onionpir.Mcr21IndexPirServer;
 import edu.alibaba.mpc4j.s2pc.pir.index.xpir.Mbfk16IndexPirClient;
 import edu.alibaba.mpc4j.s2pc.pir.index.xpir.Mbfk16IndexPirConfig;
 import edu.alibaba.mpc4j.s2pc.pir.index.xpir.Mbfk16IndexPirServer;
@@ -54,6 +57,7 @@ public class IndexPirFactory implements PtoFactory {
                 return new Mbfk16IndexPirServer(serverRpc, clientParty, (Mbfk16IndexPirConfig) config);
             case SEAL_PIR:
             case ONION_PIR:
+                return new Mcr21IndexPirServer(serverRpc, clientParty, (Mcr21IndexPirConfig) config);
             default:
                 throw new IllegalArgumentException("Invalid " + IndexPirType.class.getSimpleName() + ": " + type.name());
         }
@@ -74,6 +78,7 @@ public class IndexPirFactory implements PtoFactory {
                 return new Mbfk16IndexPirClient(clientRpc, serverParty, (Mbfk16IndexPirConfig) config);
             case SEAL_PIR:
             case ONION_PIR:
+                return new Mcr21IndexPirClient(clientRpc,serverParty, (Mcr21IndexPirConfig) config);
             default:
                 throw new IllegalArgumentException("Invalid " + IndexPirType.class.getSimpleName() + ": " + type.name());
         }

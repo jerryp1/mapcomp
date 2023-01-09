@@ -1,6 +1,7 @@
 #include "index_pir.h"
 #include "seal/seal.h"
 #include "tfhe/params.h"
+#include "tfhe/tfhe.h"
 
 using namespace std;
 using namespace seal;
@@ -70,83 +71,171 @@ void compose_to_ciphertext(const EncryptionParameters& parms, vector<Plaintext>:
     }
 }
 
-vector<Ciphertext> generate_first_dimension_query(const EncryptionParameters& parms, Encryptor encryptor, int index,
-                                                  int dimension_size) {
-    auto pool = MemoryManager::GetPool();
-    uint64_t decomp_size = 2;
-    int plain_bits = parms.plain_modulus().bit_count();
-    int plain_base = (int) (parms.plain_modulus().bit_count() / decomp_size);
-    auto ptr0(seal::util::allocate_uint(2, pool));
-    auto ptr1(seal::util::allocate_uint(2, pool));
-    size_t coeff_count = parms.poly_modulus_degree();
-    Plaintext pt(coeff_count);
-    pt.set_zero();
-    uint64_t h;
-    vector<Ciphertext> result(decomp_size);
-    for (int i = 0; i < decomp_size; i++) {
-        int shift_amount = plain_bits - (i + 1) * plain_base;
-        ptr1[0] = 0;
-        ptr1[1] = 0;
-        ptr0[0] = 1;
-        ptr0[1] = 0;
-        util::left_shift_uint128(ptr0.get(), shift_amount, ptr1.get());
-        h = seal::util::barrett_reduce_128(ptr1.get(), parms.plain_modulus().value());
-        if (dimension_size > 0) {
-            uint64_t tt;
-            util::try_invert_uint_mod(dimension_size, parms.plain_modulus().value(),tt);
-            h = util::multiply_uint_mod(h ,tt , parms.plain_modulus());
-        }
-        pt[index] = h;
-        Ciphertext res;
-        encryptor.encrypt_symmetric(pt,res);
-        result[i] = res;
+Ciphertext decomp_mul(vector<Ciphertext> ct_decomp, vector<uint64_t *> pt_decomp, const SEALContext& context) {
+    const auto &context_data = context.first_context_data();
+    auto &parms = context_data->parms();
+    auto &coeff_modulus = parms.coeff_modulus();
+    uint32_t poly_modulus_degree = parms.poly_modulus_degree();
+    uint32_t coeff_modulus_size = coeff_modulus.size();
+    Ciphertext dst, product;
+    dst.resize(context, 2);
+    product.resize(context, 2);
+    auto ntt_tables = context.first_context_data()->small_ntt_tables();
+    util::RNSIter res_iter0(dst.data(0), poly_modulus_degree);
+    util::RNSIter res_iter1(dst.data(1), poly_modulus_degree);
+    util::RNSIter prod_iter0(product.data(0), poly_modulus_degree);
+    util::RNSIter prod_iter1(product.data(1), poly_modulus_degree);
+    for (int i = 0; i < 2; i++) {
+        util::RNSIter pt_iter(pt_decomp[i], poly_modulus_degree);
+        util::RNSIter ct_iter0(ct_decomp[i].data(0), poly_modulus_degree);
+        util::RNSIter ct_iter1(ct_decomp[i].data(1), poly_modulus_degree);
+        // ntt
+        util::ntt_negacyclic_harvey_lazy(pt_iter, coeff_modulus_size, ntt_tables);
+        util::ntt_negacyclic_harvey_lazy(ct_iter0, coeff_modulus_size, ntt_tables);
+        util::ntt_negacyclic_harvey_lazy(ct_iter1, coeff_modulus_size, ntt_tables);
+        util::dyadic_product_coeffmod(pt_iter, ct_iter0, coeff_modulus_size, coeff_modulus, prod_iter0);
+        util::dyadic_product_coeffmod(pt_iter, ct_iter1, coeff_modulus_size, coeff_modulus, prod_iter1);
+        util::add_poly_coeffmod(res_iter0, prod_iter0, coeff_modulus_size, coeff_modulus, res_iter0);
+        util::add_poly_coeffmod(res_iter1, prod_iter1, coeff_modulus_size, coeff_modulus, res_iter1);
     }
-    return result;
+    dst.is_ntt_form() = true;
+    return dst;
 }
 
-Ciphertext generate_remaining_dimension_query(const EncryptionParameters& parms, Encryptor encryptor,
-                                              const vector<uint32_t>& indices, int dimension_size) {
-    auto pool = MemoryManager::GetPool();
-    Plaintext pt;
-    pt.set_zero();
-    for (unsigned int index : indices) {
-        pt[index] = 1;
-    }
-    uint64_t h;
-    auto &coeff_modulus = parms.coeff_modulus();
-    Ciphertext res;
-    encryptor.encrypt_zero_symmetric(res);
+void poc_expand_flat(vector<vector<Ciphertext>>::iterator &result, vector<Ciphertext> &packed_swap_bits,
+                     const SEALContext& context, uint32_t size, seal::GaloisKeys &galois_keys) {
+    auto &parms = context.first_context_data()->parms();
     size_t coeff_count = parms.poly_modulus_degree();
-    int logsize = ceil(log2(dimension_size * targetP::l_));
-    int gap = ceil(coeff_count / (1 << logsize));
-    uint64_t total_dim_with_gap = dimension_size * gap;
-    size_t coeff_mod_count = coeff_modulus.size();
-    int inv = 1 << logsize;
-    for (int p = 0; p < targetP::l_; p++) {
-        int shift_amount = (int) (targetP::digits - ((p + 1) * targetP::Bgbit));
-        for (size_t i = 0; i < total_dim_with_gap; i++) {
+    vector<Ciphertext> expanded_ciphers(coeff_count);
+    for (int i = 0; i < packed_swap_bits.size(); i++) {
+        expanded_ciphers = poc_rlwe_expand(packed_swap_bits[i], context, galois_keys, size);
+        for (int j = 0; j < size; j++) {
+            // put jth expanded ct in ith idx slot of jt gsw_ct
+            result[j][i] = expanded_ciphers[j];
+        }
+    }
+}
+
+vector<Ciphertext> poc_rlwe_expand(const Ciphertext& packed_query, const SEALContext& context, const seal::GaloisKeys& galois_keys, uint32_t size) {
+    // this function return size vector of RLWE ciphertexts it takes a single RLWE packed ciphertext
+    Evaluator evaluator(context);
+    const auto &context_data = context.first_context_data();
+    auto &parms = context_data->parms();
+    auto &coeff_modulus = parms.coeff_modulus();
+    uint32_t N2 = parms.poly_modulus_degree();
+    Ciphertext tempctxt_rotated;
+    Ciphertext tempctxt_shifted;
+    vector<Ciphertext> temp;
+    Ciphertext tmp;
+    temp.push_back(packed_query);
+    int numIters = ceil(log2(size));
+    if (numIters > ceil(log2(N2))) {
+        throw logic_error("m > coeff_count is not allowed.");
+    }
+    int startIndex = static_cast<int>(log2(N2) - numIters);
+    for (long i = 0; i < numIters; i++) {
+        vector<Ciphertext> newtemp(temp.size() << 1);
+        uint32_t index = startIndex + i;
+        uint32_t power = (N2 >> index) + 1;
+        int ai = (1 << index);
+        for (int j = 0; j < (1 << i); j++) {
+            // temp_ctxt_rotated = subs(result[j])
+            evaluator.apply_galois(temp[j], power, galois_keys, tempctxt_rotated);
+            // result[j+ 2**i] = result[j] - temp_ctxt_rotated;
+            evaluator.sub(temp[j], tempctxt_rotated, newtemp[j + (1 << i)]);
+            // divide by x^ai = multiply by x^(2N - ai).
+            multiply_power_of_X(newtemp[j + (1 << i)], tempctxt_shifted, (N2 << 1) - ai, context);
+            newtemp[j + (1 << i)] = tempctxt_shifted;
+            evaluator.add(tempctxt_rotated, temp[j], newtemp[j]);
+        }
+        temp = newtemp;
+    }
+    return temp;
+}
+
+void multiply_power_of_X(const Ciphertext &encrypted, Ciphertext &destination, uint32_t index, const SEALContext& context) {
+    const auto &context_data = context.first_context_data();
+    auto &parms = context_data->parms();
+    auto coeff_mod_count = parms.coeff_modulus().size();
+    auto coeff_count = parms.poly_modulus_degree();
+    auto encrypted_count = encrypted.size();
+    destination = encrypted;
+    for (int i = 0; i < encrypted_count; i++) {
+        for (int j = 0; j < coeff_mod_count; j++) {
+            seal::util::negacyclic_shift_poly_coeffmod(encrypted.data(i) + (j * coeff_count),
+                                                       coeff_count, index,
+                                                       parms.coeff_modulus()[j],
+                                                       destination.data(i) + (j * coeff_count));
+        }
+    }
+
+}
+
+void plain_decomposition(Plaintext &pt, const SEALContext &context, uint64_t decomp_size, uint64_t base_bit,
+                         vector<uint64_t *> &plain_decomp) {
+    auto context_data = context.first_context_data();
+    auto parms = context_data->parms();
+    const auto& coeff_modulus = parms.coeff_modulus();
+    size_t coeff_modulus_size = coeff_modulus.size();
+    size_t coeff_count = parms.poly_modulus_degree();
+    auto plain_modulus = parms.plain_modulus();
+    const uint64_t base = UINT64_C(1) << base_bit;
+    const uint64_t mask = base - 1;
+    uint64_t r_l = decomp_size;
+    std::uint64_t *res;
+    int total_bits = (plain_modulus.bit_count());
+    uint64_t *raw_ptr = pt.data();
+    for (int p = 0; p < r_l; p++) {
+        vector<uint64_t *> results;
+        res = (std::uint64_t *) calloc((coeff_count * coeff_modulus_size), sizeof(uint64_t));
+        int shift_amount = ((total_bits) - ((p + 1) * (int) base_bit));
+        for (size_t k = 0; k < coeff_count; k++) {
+            auto ptr(seal::util::allocate_uint(2, MemoryManager::GetPool()));
+            auto ptr1(seal::util::allocate_uint(2, MemoryManager::GetPool()));
+            ptr[0] = 0;
+            ptr[1] = 0;
+            ptr1[0] = raw_ptr[k];
+            ptr1[1] = 0;
+            seal::util::right_shift_uint128(ptr1.get(), shift_amount, ptr.get());
+            uint64_t temp1 = ptr[0] & mask;
+            res[k * coeff_modulus_size] = temp1;
+        }
+        plain_decomp.push_back(res);
+    }
+    for (auto & i : plain_decomp) {
+        poc_decompose_array(i, coeff_count, coeff_modulus, coeff_modulus_size);
+    }
+}
+
+void poc_decompose_array(uint64_t *value, uint32_t count, std::vector<Modulus> coeff_modulus, uint32_t coeff_mod_count) {
+    if (!value) {
+        throw invalid_argument("value cannot be null");
+    }
+    if (coeff_mod_count > 1) {
+        if (!seal::util::product_fits_in(count, coeff_mod_count)) {
+            throw logic_error("invalid parameters");
+        }
+        // Decompose an array of multi-precision integers into an array of arrays, one per each base element
+        auto temp_array(seal::util::allocate_uint(count * coeff_mod_count, MemoryManager::GetPool()));
+        // Merge the coefficients first
+        for (size_t i = 0; i < count; i++) {
             for (size_t j = 0; j < coeff_mod_count; j++) {
-                auto ptr0(seal::util::allocate_uint(coeff_mod_count, pool));
-                auto ptr1(seal::util::allocate_uint(coeff_mod_count, pool));
-                uint64_t poly_inv;
-                uint64_t plain_coeff;
-                if (inv > 0) {
-                    seal::util::try_invert_uint_mod(inv, coeff_modulus[j], poly_inv);
-                    plain_coeff = seal::util::multiply_uint_mod(pt.data()[i], poly_inv, coeff_modulus[j]);
-                } else {
-                    plain_coeff = pt.data()[i];
+                temp_array[j + (i * coeff_mod_count)] = value[j + (i * coeff_mod_count)];
+            }
+        }
+        seal::util::set_zero_uint(count * coeff_mod_count, value);
+        for (size_t i = 0; i < count; i++) {
+            // Temporary space for 128-bit reductions
+            for (size_t j = 0; j < coeff_mod_count; j++) {
+                // Reduce in blocks
+                uint64_t temp[2]{0, temp_array[(i * coeff_mod_count) + coeff_mod_count - 1]};
+                for (size_t k = coeff_mod_count - 1; k--;) {
+                    temp[0] = temp_array[(i * coeff_mod_count) + k];
+                    temp[1] = seal::util::barrett_reduce_128(temp, coeff_modulus[j]);
                 }
-                ptr1[0] = 0;
-                ptr1[1] = 0;
-                ptr0[0] = 1;
-                ptr0[1] = 0;
-                util::left_shift_uint128(ptr0.get(), shift_amount, ptr1.get());
-                h = seal::util::barrett_reduce_128(ptr1.get(), coeff_modulus[j]);
-                h = seal::util::multiply_uint_mod(h, plain_coeff, coeff_modulus[j]);
-                uint64_t index = i + p * total_dim_with_gap + j * coeff_count;
-                res.data(0)[index] = seal::util::add_uint_mod(res.data(0)[index], h, coeff_modulus[j]);
+                // Save the result modulo i-th base element
+                value[(j * count) + i] = temp[1];
             }
         }
     }
-    return res;
 }

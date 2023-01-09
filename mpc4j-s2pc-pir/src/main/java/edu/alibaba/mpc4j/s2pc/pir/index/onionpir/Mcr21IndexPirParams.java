@@ -1,31 +1,45 @@
-package edu.alibaba.mpc4j.s2pc.pir.index.xpir;
+package edu.alibaba.mpc4j.s2pc.pir.index.onionpir;
 
 import edu.alibaba.mpc4j.common.tool.CommonConstants;
 import edu.alibaba.mpc4j.s2pc.pir.index.AbstractIndexPirParams;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.stream.IntStream;
 
+
 /**
- * XPIR协议参数。
+ * OnionPIR协议参数。
  *
  * @author Liqiang Peng
- * @date 2022/8/24
+ * @date 2022/11/11
  */
-public class Mbfk16IndexPirParams extends AbstractIndexPirParams {
+public class Mcr21IndexPirParams extends AbstractIndexPirParams {
 
     static {
         System.loadLibrary(CommonConstants.MPC4J_NATIVE_FHE_NAME);
     }
 
     /**
+     * 第一维度向量长度
+     */
+    private static final int FIRST_DIMENSION_SIZE = 128;
+    /**
+     * 其余维度向量长度
+     */
+    private static final int SUBSEQUENT_DIMENSION_SIZE = 4;
+    /**
      * 明文模数比特长度
      */
-    private final int plainModulusBitLength;
+    private final int plainModulusBitLength = 40;
     /**
      * 多项式阶
      */
-    private final int polyModulusDegree;
+    private final int polyModulusDegree = 8192;
+    /**
+     * GSW密文参数
+     */
+    private final int gswDecompSize = 7;
     /**
      * 维数
      */
@@ -47,19 +61,17 @@ public class Mbfk16IndexPirParams extends AbstractIndexPirParams {
      */
     private final int[] dimensionsLength;
 
-    public Mbfk16IndexPirParams(int serverElementSize, int elementByteLength, int polyModulusDegree,
-                                int plainModulusBitLength, int dimension) {
-        this.polyModulusDegree = polyModulusDegree;
-        this.plainModulusBitLength = plainModulusBitLength;
-        this.dimension = dimension;
+
+    public Mcr21IndexPirParams(int serverElementSize, int elementByteLength) {
         // 生成加密方案参数
-        this.encryptionParams = Mbfk16IndexPirNativeUtils.generateSealContext(polyModulusDegree, (1L << plainModulusBitLength) + 1);
+        this.encryptionParams = Mcr21IndexPirNativeUtils.generateSealContext(polyModulusDegree, plainModulusBitLength);
         // 一个多项式可以包含的元素数量
         this.elementSizeOfPlaintext = elementSizeOfPlaintext(elementByteLength, polyModulusDegree, plainModulusBitLength);
         // 多项式数量
         this.plaintextSize = (int) Math.ceil((double) serverElementSize / this.elementSizeOfPlaintext);
         // 各维度的向量长度
         this.dimensionsLength = computeDimensionLength();
+        this.dimension = this.dimensionsLength.length;
     }
 
     /**
@@ -131,28 +143,27 @@ public class Mbfk16IndexPirParams extends AbstractIndexPirParams {
      * @return 数据库编码后每个维度的长度。
      */
     private int[] computeDimensionLength() {
-        int[] dimensionLength = IntStream.range(0, dimension)
-            .map(i -> (int) Math.max(2, Math.floor(Math.pow(plaintextSize, 1.0 / dimension))))
-            .toArray();
-        int product = 1;
-        int j = 0;
-        // if plaintext_num is not a d-power
-        if (dimensionLength[0] != Math.pow(plaintextSize, 1.0 / dimension)) {
-            while (product < plaintextSize && j < dimension) {
-                product = 1;
-                dimensionLength[j++]++;
-                for (int i = 0; i < dimension; i++) {
-                    product *= dimensionLength[i];
-                }
-            }
+        ArrayList<Integer> dimensionLength = new ArrayList<>();
+        dimensionLength.add(FIRST_DIMENSION_SIZE);
+        int product = FIRST_DIMENSION_SIZE;
+        for (int i = plaintextSize / FIRST_DIMENSION_SIZE; i >= SUBSEQUENT_DIMENSION_SIZE; i /= SUBSEQUENT_DIMENSION_SIZE) {
+            dimensionLength.add(SUBSEQUENT_DIMENSION_SIZE);
+            product *= SUBSEQUENT_DIMENSION_SIZE;
         }
-        return dimensionLength;
+        int dimensionSize = dimensionLength.size();
+        int[] dimensionArray = IntStream.range(0, dimensionSize).map(dimensionLength::get).toArray();
+        while (product < plaintextSize) {
+            dimensionArray[dimensionSize - 1]++;
+            product = 1;
+            product *= Arrays.stream(dimensionArray, 0, dimensionSize).reduce(1, (a, b) -> a * b);
+        }
+        return dimensionArray;
     }
 
     @Override
     public String toString() {
         int product = Arrays.stream(dimensionsLength).reduce(1, (a, b) -> a * b);
-        return "XPIR Parameters :" + "\n" +
+        return "OnionPIR Parameters :" + "\n" +
             "  - elements per BFV plaintext : " + elementSizeOfPlaintext + "\n" +
             "  - dimensions for d-dimensional hyperrectangle : " + dimension + "\n" +
             "  - number of BFV plaintexts (before padding) : " + plaintextSize + "\n" +
@@ -161,5 +172,14 @@ public class Mbfk16IndexPirParams extends AbstractIndexPirParams {
             "SEAL encryption parameters : " + "\n" +
             " - degree of polynomial modulus : " + polyModulusDegree + "\n" +
             " - size of plaintext modulus : " + plainModulusBitLength + "\n";
+    }
+
+    /**
+     * 返回GSW密文参数。
+     *
+     * @return RGSW密文参数。
+     */
+    public int getGswDecompSize() {
+        return gswDecompSize;
     }
 }

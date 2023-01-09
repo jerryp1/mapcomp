@@ -107,7 +107,7 @@ JNIEXPORT jobject JNICALL Java_edu_alibaba_mpc4j_s2pc_pcg_mtg_zp64_core_rss19_Rs
 JNIEXPORT jobject JNICALL Java_edu_alibaba_mpc4j_s2pc_pcg_mtg_zp64_core_rss19_Rss19Zp64CoreMtgNativeUtils_encryption(
     JNIEnv *env, jclass, jbyteArray params_bytes, jbyteArray public_key_bytes, jbyteArray secret_key_bytes,
     jlongArray coeff_array0, jlongArray coeff_array1) {
-    EncryptionParameters parms = deserialize_encryption_params(env, params_bytes);
+    EncryptionParameters parms = deserialize_encryption_parms(env, params_bytes);
     SEALContext context(parms);
     auto exception = env->FindClass("java/lang/Exception");
     PublicKey public_key = deserialize_public_key(env, public_key_bytes, context);
@@ -144,7 +144,7 @@ JNIEXPORT jobject JNICALL Java_edu_alibaba_mpc4j_s2pc_pcg_mtg_zp64_core_rss19_Rs
 
 JNIEXPORT jlongArray JNICALL Java_edu_alibaba_mpc4j_s2pc_pcg_mtg_zp64_core_rss19_Rss19Zp64CoreMtgNativeUtils_decryption(
     JNIEnv *env, jclass, jbyteArray params_bytes, jbyteArray secret_key_bytes, jbyteArray ciphertext_bytes) {
-    EncryptionParameters parms = deserialize_encryption_params(env, params_bytes);
+    EncryptionParameters parms = deserialize_encryption_parms(env, params_bytes);
     SEALContext context(parms);
     auto exception = env->FindClass("java/lang/Exception");
     SecretKey secret_key = deserialize_secret_key(env, secret_key_bytes, context);
@@ -175,7 +175,7 @@ JNIEXPORT jlongArray JNICALL Java_edu_alibaba_mpc4j_s2pc_pcg_mtg_zp64_core_rss19
 JNIEXPORT jbyteArray JNICALL Java_edu_alibaba_mpc4j_s2pc_pcg_mtg_zp64_core_rss19_Rss19Zp64CoreMtgNativeUtils_computeResponse(
     JNIEnv *env, jclass, jbyteArray params_bytes, jbyteArray cipher1_bytes, jbyteArray cipher2_bytes,
     jlongArray plain1, jlongArray plain2, jlongArray r) {
-    EncryptionParameters parms = deserialize_encryption_params(env, params_bytes);
+    EncryptionParameters parms = deserialize_encryption_parms(env, params_bytes);
     SEALContext context(parms);
     Evaluator evaluator(context);
     BatchEncoder encoder(context);

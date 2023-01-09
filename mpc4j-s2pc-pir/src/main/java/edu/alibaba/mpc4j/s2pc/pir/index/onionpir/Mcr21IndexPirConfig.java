@@ -1,4 +1,4 @@
-package edu.alibaba.mpc4j.s2pc.pir.index.xpir;
+package edu.alibaba.mpc4j.s2pc.pir.index.onionpir;
 
 import edu.alibaba.mpc4j.common.rpc.desc.SecurityModel;
 import edu.alibaba.mpc4j.common.tool.CommonConstants;
@@ -7,14 +7,14 @@ import edu.alibaba.mpc4j.s2pc.pir.index.IndexPirConfig;
 import edu.alibaba.mpc4j.s2pc.pir.index.IndexPirFactory;
 
 /**
- * XPIR协议配置项。
+ * OnionPIR协议配置项。
  *
  * @author Liqiang Peng
- * @date 2022/8/25
+ * @date 2022/11/11
  */
-public class Mbfk16IndexPirConfig implements IndexPirConfig {
+public class Mcr21IndexPirConfig implements IndexPirConfig {
 
-    public Mbfk16IndexPirConfig() {
+    public Mcr21IndexPirConfig() {
         // empty
     }
 
@@ -39,6 +39,6 @@ public class Mbfk16IndexPirConfig implements IndexPirConfig {
 
     @Override
     public IndexPirFactory.IndexPirType getProType() {
-        return IndexPirFactory.IndexPirType.XPIR;
+        return IndexPirFactory.IndexPirType.ONION_PIR;
     }
 }

@@ -4,8 +4,6 @@ import edu.alibaba.mpc4j.common.rpc.MpcAbortException;
 import edu.alibaba.mpc4j.common.rpc.pto.SecurePto;
 import edu.alibaba.mpc4j.common.rpc.pto.TwoPartyPto;
 
-import java.nio.ByteBuffer;
-
 /**
  * 索引PIR协议客户端接口。
  *
@@ -29,7 +27,7 @@ public interface IndexPirClient extends TwoPartyPto, SecurePto {
      * @param elementByteLength 元素字节长度。
      * @throws MpcAbortException 如果协议异常中止。
      */
-    void init(IndexPirParams indexPirParams, int serverElementSize, int elementByteLength) throws MpcAbortException;
+    void init(AbstractIndexPirParams indexPirParams, int serverElementSize, int elementByteLength) throws MpcAbortException;
 
     /**
      * 执行协议。

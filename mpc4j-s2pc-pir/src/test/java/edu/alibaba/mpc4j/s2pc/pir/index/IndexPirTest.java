@@ -5,6 +5,8 @@ import edu.alibaba.mpc4j.common.rpc.Rpc;
 import edu.alibaba.mpc4j.common.rpc.RpcManager;
 import edu.alibaba.mpc4j.common.rpc.impl.memory.MemoryRpcManager;
 import edu.alibaba.mpc4j.s2pc.pir.PirUtils;
+import edu.alibaba.mpc4j.s2pc.pir.index.onionpir.Mcr21IndexPirConfig;
+import edu.alibaba.mpc4j.s2pc.pir.index.onionpir.Mcr21IndexPirParams;
 import edu.alibaba.mpc4j.s2pc.pir.index.xpir.Mbfk16IndexPirConfig;
 import edu.alibaba.mpc4j.s2pc.pir.index.xpir.Mbfk16IndexPirParams;
 import org.apache.commons.lang3.StringUtils;
@@ -15,9 +17,11 @@ import org.junit.runners.Parameterized;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.nio.Buffer;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.stream.IntStream;
 
 /**
  * 索引PIR测试类。
@@ -31,7 +35,7 @@ public class IndexPirTest {
     /**
      * 重复检索次数
      */
-    private static final int REPEAT_TIME = 5;
+    private static final int REPEAT_TIME = 1;
     /**
      * 短标签字节长度
      */
@@ -39,7 +43,7 @@ public class IndexPirTest {
     /**
      * 默认标签字节长度
      */
-    private static final int DEFAULT_ELEMENT_BYTE_LENGTH = 16;
+    private static final int DEFAULT_ELEMENT_BYTE_LENGTH = 30000;
     /**
      * 长标签字节长度
      */
@@ -47,31 +51,55 @@ public class IndexPirTest {
     /**
      * 服务端元素数量
      */
-    private static final int SERVER_ELEMENT_SIZE = 1 << 20;
+    private static final int SERVER_ELEMENT_SIZE = 1 << 10;
+    /**
+     * 明文模数比特长度
+     */
+    private static final int PLAIN_MODULUS_BIT_LENGTH = 20;
+    /**
+     * 多项式阶
+     */
+    private static final int POLY_MODULUS_DEGREE = 4096;
 
     @Parameterized.Parameters(name = "{0}")
     public static Collection<Object[]> configurations() {
         Collection<Object[]> configurations = new ArrayList<>();
 
         // XPIR
-        Mbfk16IndexPirConfig xpirConfig = new Mbfk16IndexPirConfig.Builder()
-            .setPolyModulusDegree(4096)
-            .setPlainModulusSize(20)
-            .build();
+        Mbfk16IndexPirConfig xpirConfig = new Mbfk16IndexPirConfig();
         // XPIR (1-dimension)
-        configurations.add(new Object[] {
-            IndexPirFactory.IndexPirType.XPIR.name() + " (1-dimension)",
-            xpirConfig,
-            new Mbfk16IndexPirParams(
-                SERVER_ELEMENT_SIZE, LARGE_ELEMENT_BYTE_LENGTH, xpirConfig, 1
-            )
-        });
+//        configurations.add(new Object[] {
+//            IndexPirFactory.IndexPirType.XPIR.name() + " (1-dimension)",
+//            xpirConfig,
+//            new Mbfk16IndexPirParams(
+//                SERVER_ELEMENT_SIZE,
+//                LARGE_ELEMENT_BYTE_LENGTH,
+//                POLY_MODULUS_DEGREE,
+//                PLAIN_MODULUS_BIT_LENGTH,
+//                1
+//            )
+//        });
         // XPIR (2-dimension)
+//        configurations.add(new Object[] {
+//            IndexPirFactory.IndexPirType.XPIR.name() + " (2-dimension)",
+//            xpirConfig,
+//            new Mbfk16IndexPirParams(
+//                SERVER_ELEMENT_SIZE,
+//                LARGE_ELEMENT_BYTE_LENGTH,
+//                POLY_MODULUS_DEGREE,
+//                PLAIN_MODULUS_BIT_LENGTH,
+//                2
+//            )
+//        });
+
+        // OnionPIR
+        Mcr21IndexPirConfig onionpirConfig = new Mcr21IndexPirConfig();
         configurations.add(new Object[] {
-            IndexPirFactory.IndexPirType.XPIR.name() + " (2-dimension)",
-            xpirConfig,
-            new Mbfk16IndexPirParams(
-                SERVER_ELEMENT_SIZE, LARGE_ELEMENT_BYTE_LENGTH, xpirConfig, 2
+            IndexPirFactory.IndexPirType.ONION_PIR.name(),
+            onionpirConfig,
+            new Mcr21IndexPirParams(
+                SERVER_ELEMENT_SIZE,
+                DEFAULT_ELEMENT_BYTE_LENGTH
             )
         });
 
@@ -93,9 +121,9 @@ public class IndexPirTest {
     /**
      * 索引PIR参数
      */
-    private final IndexPirParams indexPirParams;
+    private final AbstractIndexPirParams indexPirParams;
 
-    public IndexPirTest(String name, IndexPirConfig indexPirConfig, IndexPirParams indexPirParams) {
+    public IndexPirTest(String name, IndexPirConfig indexPirConfig, AbstractIndexPirParams indexPirParams) {
         Preconditions.checkArgument(StringUtils.isNotBlank(name));
         RpcManager rpcManager = new MemoryRpcManager(2);
         serverRpc = rpcManager.getRpc(0);
@@ -124,7 +152,7 @@ public class IndexPirTest {
         testIndexPir(indexPirConfig, indexPirParams, DEFAULT_ELEMENT_BYTE_LENGTH, true);
     }
 
-    public void testIndexPir(IndexPirConfig config, IndexPirParams indexPirParams, int elementByteLength, boolean parallel) {
+    public void testIndexPir(IndexPirConfig config, AbstractIndexPirParams indexPirParams, int elementByteLength, boolean parallel) {
         ArrayList<Integer> retrievalIndexList = PirUtils.generateRetrievalIndexList(SERVER_ELEMENT_SIZE, REPEAT_TIME);
         // 生成元素数组
         ArrayList<ByteBuffer> elementList = PirUtils.generateElementArrayList(SERVER_ELEMENT_SIZE, elementByteLength);
@@ -156,10 +184,13 @@ public class IndexPirTest {
         clientRpc.reset();
         // 验证结果
         ArrayList<ByteBuffer> result = clientThread.getRetrievalResult();
-        LOGGER.info("Client: The Retrieval Set Size is {}", result.size());
         for (int index = 0; index < REPEAT_TIME; index++) {
             ByteBuffer retrievalElement = result.get(index);
             Assert.assertEquals(retrievalElement, elementList.get(retrievalIndexList.get(index)));
         }
+        LOGGER.info("Client: The Retrieval Set Size is {}", result.size());
+        IntStream.range(0, result.size())
+            .forEach(i -> LOGGER.info("Client: The Retrieval Element {}", result.get(i).array()));
+
     }
 }

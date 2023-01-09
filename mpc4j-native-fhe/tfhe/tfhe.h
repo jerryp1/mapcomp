@@ -15,11 +15,10 @@ namespace seal
     class TFHEcipher
     {
     public:
-        TFHEcipher(void) = default;
         TFHEcipher(SEALContext &context, PublicKey &public_key) :
             context_(context), evaluator_(context_), public_key_(public_key),
             encryptor_(context_, public_key), rns_(context_),
-            parms(context_.first_context_data().get()->parms())
+            parms(context_.first_context_data()->parms())
         {
             poly_modulus_degree = parms.poly_modulus_degree();
             coeff_modulus_size = parms.coeff_modulus().size();
