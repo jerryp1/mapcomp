@@ -14,7 +14,8 @@ using namespace std;
 
 JNIEXPORT jbyteArray JNICALL Java_edu_alibaba_mpc4j_s2pc_pir_index_xpir_Mbfk16IndexPirNativeUtils_generateSealContext(
         JNIEnv *env, jclass, jint poly_modulus_degree, jlong plain_modulus) {
-    EncryptionParameters parms = generate_encryption_parameters(scheme_type::bfv, poly_modulus_degree, plain_modulus);
+    EncryptionParameters parms = generate_encryption_parameters(scheme_type::bfv, poly_modulus_degree, plain_modulus,
+                                                                CoeffModulus::BFVDefault(poly_modulus_degree, sec_level_type::tc128));
     return serialize_encryption_parms(env, parms);
 }
 
@@ -24,8 +25,18 @@ JNIEXPORT jobject JNICALL Java_edu_alibaba_mpc4j_s2pc_pir_index_xpir_Mbfk16Index
     SEALContext context(parms);
     KeyGenerator key_gen(context);
     const SecretKey& secret_key = key_gen.secret_key();
-    Serializable public_key = key_gen.create_public_key();
-    return serialize_public_key_secret_key(env, public_key, secret_key);
+    PublicKey public_key;
+    key_gen.create_public_key(public_key);
+    // serialization
+    jclass list_jcs = env->FindClass("java/util/ArrayList");
+    jmethodID list_init = env->GetMethodID(list_jcs, "<init>", "()V");
+    jobject list_obj = env->NewObject(list_jcs, list_init, "");
+    jmethodID list_add = env->GetMethodID(list_jcs, "add", "(Ljava/lang/Object;)Z");
+    jbyteArray pk_byte = serialize_public_key(env, public_key);
+    jbyteArray sk_byte = serialize_secret_key(env, secret_key);
+    env->CallBooleanMethod(list_obj, list_add, pk_byte);
+    env->CallBooleanMethod(list_obj, list_add, sk_byte);
+    return list_obj;
 }
 
 JNIEXPORT jobject JNICALL Java_edu_alibaba_mpc4j_s2pc_pir_index_xpir_Mbfk16IndexPirNativeUtils_nttTransform(
@@ -33,8 +44,7 @@ JNIEXPORT jobject JNICALL Java_edu_alibaba_mpc4j_s2pc_pir_index_xpir_Mbfk16Index
     EncryptionParameters params = deserialize_encryption_params(env, params_bytes);
     SEALContext context(params);
     Evaluator evaluator(context);
-    vector<Plaintext> plaintexts = deserialize_plaintext_from_coefficients(env, plaintext_list, context,
-                                                                           params.poly_modulus_degree());
+    vector<Plaintext> plaintexts = deserialize_plaintexts_from_coeff_without_batch_encode(env, plaintext_list, context);
     // Transform plaintext to NTT.
     for (auto & plaintext : plaintexts) {
         evaluator.transform_to_ntt_inplace(plaintext, context.first_parms_id());
@@ -82,7 +92,7 @@ JNIEXPORT jobject JNICALL Java_edu_alibaba_mpc4j_s2pc_pir_index_xpir_Mbfk16Index
     SEALContext context(params);
     Evaluator evaluator(context);
     auto exception = env->FindClass("java/lang/Exception");
-    vector<Plaintext> database = deserialize_plaintexts_from_byte(env, plaintext_list_bytes, context);
+    vector<Plaintext> database = deserialize_plaintexts(env, plaintext_list_bytes, context);
     vector<Ciphertext> query = deserialize_ciphertexts(env, ciphertext_list_bytes, context);
     jint *ptr = env->GetIntArrayElements(nvec_array, JNI_FALSE);
     uint32_t d = env->GetArrayLength(nvec_array);
@@ -210,7 +220,13 @@ JNIEXPORT jlongArray JNICALL Java_edu_alibaba_mpc4j_s2pc_pir_index_xpir_Mbfk16In
             if (temp.size() != 1) {
                 env->ThrowNew(exception, "decode response failed!");
             }
-            return get_plaintext_coeffs(env, tempplain[0]);
+            jlongArray result = env->NewLongArray((jsize) tempplain[0].coeff_count());
+            jlong coeff_array[tempplain[0].coeff_count()];
+            for (int ii = 0; ii < tempplain[0].coeff_count(); ii++) {
+                coeff_array[ii] = (jlong) tempplain[0][ii];
+            }
+            env->SetLongArrayRegion(result, 0, (jsize) tempplain[0].coeff_count(), coeff_array);
+            return result;
         } else {
             tempplain.clear();
             temp = newtemp;

@@ -15,13 +15,29 @@ JNIEXPORT jobject JNICALL Java_edu_alibaba_mpc4j_s2pc_pir_keyword_cmg21_Cmg21KwP
     uint32_t coeff_size = env->GetArrayLength(coeff_modulus_bits);
     jint* coeff_ptr = env->GetIntArrayElements(coeff_modulus_bits, JNI_FALSE);
     vector<int> bit_sizes(coeff_ptr, coeff_ptr + coeff_size);
-    EncryptionParameters parms = generate_encryption_parameters(scheme_type::bfv, poly_modulus_degree, plain_modulus, bit_sizes);
+    EncryptionParameters parms = generate_encryption_parameters(scheme_type::bfv, poly_modulus_degree, plain_modulus,
+                                                                CoeffModulus::Create(poly_modulus_degree, std::move(bit_sizes)));
     SEALContext context = SEALContext(parms);
     KeyGenerator key_gen = KeyGenerator(context);
     const SecretKey &secret_key = key_gen.secret_key();
-    Serializable relin_keys = key_gen.create_relin_keys();
-    Serializable public_key = key_gen.create_public_key();
-    return serialize_relin_public_secret_keys(env, parms, relin_keys, public_key, secret_key);
+    PublicKey public_key;
+    key_gen.create_public_key(public_key);
+    RelinKeys relin_keys;
+    key_gen.create_relin_keys(relin_keys);
+    // serialization
+    jclass list_jcs = env->FindClass("java/util/ArrayList");
+    jmethodID list_init = env->GetMethodID(list_jcs, "<init>", "()V");
+    jobject list_obj = env->NewObject(list_jcs, list_init, "");
+    jmethodID list_add = env->GetMethodID(list_jcs, "add", "(Ljava/lang/Object;)Z");
+    jbyteArray params_bytes = serialize_encryption_parms(env, parms);
+    jbyteArray pk_byte = serialize_public_key(env, public_key);
+    jbyteArray relin_keys_byte = serialize_relin_keys(env, relin_keys);
+    jbyteArray sk_byte = serialize_secret_key(env, secret_key);
+    env->CallBooleanMethod(list_obj, list_add, params_bytes);
+    env->CallBooleanMethod(list_obj, list_add, relin_keys_byte);
+    env->CallBooleanMethod(list_obj, list_add, pk_byte);
+    env->CallBooleanMethod(list_obj, list_add, sk_byte);
+    return list_obj;
 }
 
 JNIEXPORT jboolean JNICALL Java_edu_alibaba_mpc4j_s2pc_pir_keyword_cmg21_Cmg21KwPirNativeUtils_checkSealParams(
@@ -30,7 +46,8 @@ JNIEXPORT jboolean JNICALL Java_edu_alibaba_mpc4j_s2pc_pir_keyword_cmg21_Cmg21Kw
     uint32_t coeff_size = env->GetArrayLength(coeff_modulus_bits);
     jint* ptr = env->GetIntArrayElements(coeff_modulus_bits, JNI_FALSE);
     vector<int> bit_sizes(ptr, ptr + coeff_size);
-    EncryptionParameters parms = generate_encryption_parameters(scheme_type::bfv, poly_modulus_degree, plain_modulus, bit_sizes);
+    EncryptionParameters parms = generate_encryption_parameters(scheme_type::bfv, poly_modulus_degree, plain_modulus,
+                                                                CoeffModulus::Create(poly_modulus_degree, std::move(bit_sizes)));
     SEALContext context = SEALContext(parms);
     jclass exception = env->FindClass("java/lang/Exception");
     if (!context.parameters_set()) {
@@ -128,7 +145,7 @@ JNIEXPORT jobject JNICALL Java_edu_alibaba_mpc4j_s2pc_pir_keyword_cmg21_Cmg21KwP
     jobjectArray jparent_powers, jintArray jsource_power_index, jint ps_low_power) {
     EncryptionParameters parms = deserialize_encryption_params(env, params_bytes);
     SEALContext context = SEALContext(parms);
-    RelinKeys relin_keys = deserialize_relin_key(env, relin_keys_bytes, context);
+    RelinKeys relin_keys = deserialize_relin_keys(env, relin_keys_bytes, context);
     jclass exception = env->FindClass("java/lang/Exception");
     if (!is_metadata_valid_for(relin_keys, context)) {
         env->ThrowNew(exception, "invalid relinearization key for this SEALContext");
@@ -165,7 +182,7 @@ JNIEXPORT jbyteArray JNICALL Java_edu_alibaba_mpc4j_s2pc_pir_keyword_cmg21_Cmg21
     if (!is_metadata_valid_for(public_key, context)) {
         env->ThrowNew(exception, "invalid public key for this SEALContext");
     }
-    RelinKeys relin_keys = deserialize_relin_key(env, relin_keys_bytes, context);
+    RelinKeys relin_keys = deserialize_relin_keys(env, relin_keys_bytes, context);
     if (!is_metadata_valid_for(relin_keys, context)) {
         env->ThrowNew(exception, "invalid relinearization key for this SEALContext");
     }
@@ -207,7 +224,7 @@ JNIEXPORT jbyteArray JNICALL Java_edu_alibaba_mpc4j_s2pc_pir_keyword_cmg21_Cmg21
 }
 
 JNIEXPORT jobject JNICALL Java_edu_alibaba_mpc4j_s2pc_pir_keyword_cmg21_Cmg21KwPirNativeUtils_generateQuery(
-    JNIEnv *env, jclass, jbyteArray params_bytes, jbyteArray pk_bytes,jbyteArray sk_bytes, jobjectArray coeffs_array) {
+    JNIEnv *env, jclass, jbyteArray params_bytes, jbyteArray pk_bytes, jbyteArray sk_bytes, jobjectArray coeffs_array) {
     EncryptionParameters parms = deserialize_encryption_params(env, params_bytes);
     SEALContext context = SEALContext(parms);
     jclass exception = env->FindClass("java/lang/Exception");
@@ -225,10 +242,11 @@ JNIEXPORT jobject JNICALL Java_edu_alibaba_mpc4j_s2pc_pir_keyword_cmg21_Cmg21KwP
     BatchEncoder encoder(context);
     Encryptor encryptor(context, public_key);
     encryptor.set_secret_key(secret_key);
-    vector<Serializable<Ciphertext>> query;
+    vector<Ciphertext> query;
     query.reserve(plain_query.size());
     for (auto & i : plain_query) {
-        Serializable ciphertext = encryptor.encrypt_symmetric(i);
+        Ciphertext ciphertext;
+        encryptor.encrypt_symmetric(i, ciphertext);
         query.push_back(ciphertext);
     }
     return serialize_ciphertexts(env, query);

@@ -26,7 +26,7 @@ JNIEXPORT jobject JNICALL Java_edu_alibaba_mpc4j_s2pc_pir_index_xpir_Mbfk16Index
 /*
  * Class:     edu_alibaba_mpc4j_s2pc_pir_index_xpir_Mbfk16IndexPirNativeUtils
  * Method:    nttTransform
- * Signature: ([BLjava/util/ArrayList;)Ljava/util/ArrayList;
+ * Signature: ([BLjava/util/List;)Ljava/util/ArrayList;
  */
 JNIEXPORT jobject JNICALL Java_edu_alibaba_mpc4j_s2pc_pir_index_xpir_Mbfk16IndexPirNativeUtils_nttTransform
   (JNIEnv *, jclass, jbyteArray, jobject);
@@ -42,7 +42,7 @@ JNIEXPORT jobject JNICALL Java_edu_alibaba_mpc4j_s2pc_pir_index_xpir_Mbfk16Index
 /*
  * Class:     edu_alibaba_mpc4j_s2pc_pir_index_xpir_Mbfk16IndexPirNativeUtils
  * Method:    generateReply
- * Signature: ([BLjava/util/ArrayList;Ljava/util/ArrayList;[I)Ljava/util/ArrayList;
+ * Signature: ([BLjava/util/List;Ljava/util/List;[I)Ljava/util/ArrayList;
  */
 JNIEXPORT jobject JNICALL Java_edu_alibaba_mpc4j_s2pc_pir_index_xpir_Mbfk16IndexPirNativeUtils_generateReply
   (JNIEnv *, jclass, jbyteArray, jobject, jobject, jintArray);

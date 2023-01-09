@@ -19,7 +19,8 @@ JNIEXPORT jlong JNICALL Java_edu_alibaba_mpc4j_s2pc_pcg_mtg_zp64_core_rss19_Rss1
     } catch (...) {
         return env->ThrowNew(exception, "Failed to find enough qualifying primes.");
     }
-    EncryptionParameters parms = generate_encryption_parameters(scheme_type::bfv, poly_modulus_degree, plain_modulus);
+    EncryptionParameters parms = generate_encryption_parameters(scheme_type::bfv, poly_modulus_degree, plain_modulus,
+                                                                CoeffModulus::BFVDefault(poly_modulus_degree, sec_level_type::tc128));
     SEALContext context(parms, true);
     if (!context.parameters_set()) {
         return env->ThrowNew(exception, "SEAL parameters not valid.");
@@ -82,12 +83,25 @@ JNIEXPORT jlong JNICALL Java_edu_alibaba_mpc4j_s2pc_pcg_mtg_zp64_core_rss19_Rss1
 
 JNIEXPORT jobject JNICALL Java_edu_alibaba_mpc4j_s2pc_pcg_mtg_zp64_core_rss19_Rss19Zp64CoreMtgNativeUtils_keyGen(
     JNIEnv *env, jclass, jint poly_modulus_degree, jlong plain_modulus) {
-    EncryptionParameters parms = generate_encryption_parameters(scheme_type::bfv, poly_modulus_degree, plain_modulus);
+    EncryptionParameters parms = generate_encryption_parameters(scheme_type::bfv, poly_modulus_degree, plain_modulus,
+                                                                CoeffModulus::BFVDefault(poly_modulus_degree, sec_level_type::tc128));
     SEALContext context = SEALContext(parms);
     KeyGenerator key_gen = KeyGenerator(context);
     const SecretKey &secret_key = key_gen.secret_key();
-    Serializable public_key = key_gen.create_public_key();
-    return serialize_public_key_secret_key(env, parms, public_key, secret_key);
+    PublicKey public_key;
+    key_gen.create_public_key(public_key);
+    // serialization
+    jclass list_jcs = env->FindClass("java/util/ArrayList");
+    jmethodID list_init = env->GetMethodID(list_jcs, "<init>", "()V");
+    jobject list_obj = env->NewObject(list_jcs, list_init, "");
+    jmethodID list_add = env->GetMethodID(list_jcs, "add", "(Ljava/lang/Object;)Z");
+    jbyteArray parms_bytes = serialize_encryption_parms(env, parms);
+    jbyteArray pk_byte = serialize_public_key(env, public_key);
+    jbyteArray sk_byte = serialize_secret_key(env, secret_key);
+    env->CallBooleanMethod(list_obj, list_add, parms_bytes);
+    env->CallBooleanMethod(list_obj, list_add, pk_byte);
+    env->CallBooleanMethod(list_obj, list_add, sk_byte);
+    return list_obj;
 }
 
 JNIEXPORT jobject JNICALL Java_edu_alibaba_mpc4j_s2pc_pcg_mtg_zp64_core_rss19_Rss19Zp64CoreMtgNativeUtils_encryption(
