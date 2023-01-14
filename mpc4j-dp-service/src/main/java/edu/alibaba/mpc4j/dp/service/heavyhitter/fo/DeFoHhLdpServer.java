@@ -4,7 +4,6 @@ import edu.alibaba.mpc4j.dp.service.heavyhitter.utils.HhLdpServerContext;
 import edu.alibaba.mpc4j.dp.service.heavyhitter.HhLdpServerState;
 import edu.alibaba.mpc4j.dp.service.heavyhitter.config.HhLdpConfig;
 import edu.alibaba.mpc4j.dp.service.heavyhitter.utils.EmptyHhLdpServerContext;
-import edu.alibaba.mpc4j.dp.service.heavyhitter.HhLdpFactory;
 
 import java.util.*;
 import java.util.stream.Collectors;
@@ -35,11 +34,6 @@ public class DeFoHhLdpServer extends AbstractFoHhLdpServer {
         double expEpsilon = Math.exp(windowEpsilon);
         p = expEpsilon / (expEpsilon + d - 1);
         q = 1 / (expEpsilon + d - 1);
-    }
-
-    @Override
-    public HhLdpFactory.HhLdpType getType() {
-        return HhLdpFactory.HhLdpType.DE_FO;
     }
 
     @Override

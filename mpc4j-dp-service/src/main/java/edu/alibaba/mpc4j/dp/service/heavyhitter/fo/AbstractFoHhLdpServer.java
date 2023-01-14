@@ -1,16 +1,21 @@
 package edu.alibaba.mpc4j.dp.service.heavyhitter.fo;
 
 import com.google.common.base.Preconditions;
+import edu.alibaba.mpc4j.dp.service.heavyhitter.HhLdpFactory;
 import edu.alibaba.mpc4j.dp.service.heavyhitter.HhLdpServerState;
 import edu.alibaba.mpc4j.dp.service.heavyhitter.config.HhLdpConfig;
 
 /**
- * abstract Heavy Hitter server with Local Differential Privacy based on Frequency Oracle.
+ * Abstract Heavy Hitter LDP server based on Frequency Oracle.
  *
  * @author Weiran Liu
  * @date 2023/1/4
  */
 public abstract class AbstractFoHhLdpServer implements FoHhLdpServer {
+    /**
+     * the type
+     */
+    private final HhLdpFactory.HhLdpType type;
     /**
      * d = |Ω|
      */
@@ -33,6 +38,7 @@ public abstract class AbstractFoHhLdpServer implements FoHhLdpServer {
     protected HhLdpServerState hhLdpServerState;
 
     public AbstractFoHhLdpServer(HhLdpConfig hhLdpConfig) {
+        type = hhLdpConfig.getType();
         d = hhLdpConfig.getD();
         k = hhLdpConfig.getK();
         windowEpsilon = hhLdpConfig.getWindowEpsilon();
@@ -42,6 +48,11 @@ public abstract class AbstractFoHhLdpServer implements FoHhLdpServer {
 
     protected void checkState(HhLdpServerState expect) {
         Preconditions.checkArgument(hhLdpServerState.equals(expect), "The state must be %s: %s", expect, hhLdpServerState);
+    }
+
+    @Override
+    public HhLdpFactory.HhLdpType getType() {
+        return type;
     }
 
     @Override

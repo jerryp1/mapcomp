@@ -1,6 +1,7 @@
 package edu.alibaba.mpc4j.dp.service.heavyhitter.hg;
 
 import com.google.common.base.Preconditions;
+import edu.alibaba.mpc4j.dp.service.heavyhitter.HhLdpFactory;
 import edu.alibaba.mpc4j.dp.service.heavyhitter.config.HgHhLdpConfig;
 import edu.alibaba.mpc4j.dp.service.tool.BucketDomain;
 
@@ -11,6 +12,10 @@ import edu.alibaba.mpc4j.dp.service.tool.BucketDomain;
  * @date 2023/1/5
  */
 public abstract class AbstractHgHhLdpClient implements HgHhLdpClient {
+    /**
+     * the type
+     */
+    private final HhLdpFactory.HhLdpType type;
     /**
      * the bucket domain
      */
@@ -36,18 +41,24 @@ public abstract class AbstractHgHhLdpClient implements HgHhLdpClient {
      */
     protected final double windowEpsilon;
 
-    AbstractHgHhLdpClient(HgHhLdpConfig clientConfig) {
-        d = clientConfig.getD();
-        k = clientConfig.getK();
-        windowEpsilon = clientConfig.getWindowEpsilon();
-        w = clientConfig.getW();
-        lambdaH = clientConfig.getLambdaH();
+    AbstractHgHhLdpClient(HgHhLdpConfig hgHhLdpConfig) {
+        type = hgHhLdpConfig.getType();
+        d = hgHhLdpConfig.getD();
+        k = hgHhLdpConfig.getK();
+        windowEpsilon = hgHhLdpConfig.getWindowEpsilon();
+        w = hgHhLdpConfig.getW();
+        lambdaH = hgHhLdpConfig.getLambdaH();
         // init bucket domain
-        bucketDomain = new BucketDomain(clientConfig.getDomainSet(), w, lambdaH);
+        bucketDomain = new BucketDomain(hgHhLdpConfig.getDomainSet(), w, lambdaH);
     }
 
     protected void checkItemInDomain(String item) {
         Preconditions.checkArgument(bucketDomain.contains(item), "%s is not in the domain", item);
+    }
+
+    @Override
+    public HhLdpFactory.HhLdpType getType() {
+        return type;
     }
 
     @Override

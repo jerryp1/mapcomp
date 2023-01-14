@@ -26,11 +26,6 @@ public class RelaxHhgHhLdpClient extends AdvHhgHhLdpClient {
     }
 
     @Override
-    public HhLdpFactory.HhLdpType getType() {
-        return HhLdpFactory.HhLdpType.RELAX_HG;
-    }
-
-    @Override
     public String randomize(HhLdpServerContext serverContext, String item, Random random) {
         Preconditions.checkArgument(serverContext instanceof HgHhLdpServerContext);
         HgHhLdpServerContext hgServerContext = (HgHhLdpServerContext) serverContext;

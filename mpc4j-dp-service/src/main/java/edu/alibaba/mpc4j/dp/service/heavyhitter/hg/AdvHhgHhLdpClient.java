@@ -75,11 +75,6 @@ public class AdvHhgHhLdpClient extends AbstractHgHhLdpClient implements HhgHhLdp
     }
 
     @Override
-    public HhLdpFactory.HhLdpType getType() {
-        return HhLdpFactory.HhLdpType.ADVAN_HG;
-    }
-
-    @Override
     public String randomize(HhLdpServerContext serverContext, String item, Random random) {
         Preconditions.checkArgument(serverContext instanceof HgHhLdpServerContext);
         HgHhLdpServerContext hgServerContext = (HgHhLdpServerContext) serverContext;

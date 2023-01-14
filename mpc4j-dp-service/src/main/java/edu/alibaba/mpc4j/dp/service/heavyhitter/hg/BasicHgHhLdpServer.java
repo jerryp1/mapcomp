@@ -32,11 +32,6 @@ public class BasicHgHhLdpServer extends AbstractHgHhLdpServer {
     }
 
     @Override
-    public HhLdpFactory.HhLdpType getType() {
-        return HhLdpFactory.HhLdpType.BASIC_HG;
-    }
-
-    @Override
     public void stopWarmup() {
         checkState(HhLdpServerState.WARMUP);
         // bias all counts

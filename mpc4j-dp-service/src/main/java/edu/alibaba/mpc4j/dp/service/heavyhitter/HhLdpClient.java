@@ -12,9 +12,9 @@ import java.util.Random;
  */
 public interface HhLdpClient {
     /**
-     * Get the type of Heavy Hitter with Local Differential Privacy.
+     * Get the type.
      *
-     * @return the type of Heavy Hitter with Local Differential Privacy.
+     * @return the type.
      */
     HhLdpFactory.HhLdpType getType();
     /**

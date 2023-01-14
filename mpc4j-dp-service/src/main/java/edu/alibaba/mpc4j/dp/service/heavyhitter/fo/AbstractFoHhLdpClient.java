@@ -1,16 +1,21 @@
 package edu.alibaba.mpc4j.dp.service.heavyhitter.fo;
 
 import com.google.common.base.Preconditions;
+import edu.alibaba.mpc4j.dp.service.heavyhitter.HhLdpFactory;
 import edu.alibaba.mpc4j.dp.service.heavyhitter.config.HhLdpConfig;
 import edu.alibaba.mpc4j.dp.service.tool.Domain;
 
 /**
- * abstract Heavy Hitter client with Local Differential Privacy based on Frequency Oracle.
+ * Abstract Heavy Hitter LDP client based on Frequency Oracle.
  *
  * @author Weiran Liu
  * @date 2023/1/5
  */
 public abstract class AbstractFoHhLdpClient implements FoHhLdpClient {
+    /**
+     * the type
+     */
+    private final HhLdpFactory.HhLdpType type;
     /**
      * the domain
      */
@@ -29,6 +34,7 @@ public abstract class AbstractFoHhLdpClient implements FoHhLdpClient {
     protected final double windowEpsilon;
 
     public AbstractFoHhLdpClient(HhLdpConfig hhLdpConfig) {
+        type = hhLdpConfig.getType();
         domain = new Domain(hhLdpConfig.getDomainSet());
         d = domain.getD();
         k = hhLdpConfig.getK();
@@ -37,6 +43,11 @@ public abstract class AbstractFoHhLdpClient implements FoHhLdpClient {
 
     protected void checkItemInDomain(String item) {
         Preconditions.checkArgument(domain.contains(item), "%s is not in the domain", item);
+    }
+
+    @Override
+    public HhLdpFactory.HhLdpType getType() {
+        return type;
     }
 
     @Override

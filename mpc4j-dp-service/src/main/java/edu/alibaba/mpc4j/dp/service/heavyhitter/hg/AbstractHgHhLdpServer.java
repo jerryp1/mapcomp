@@ -29,6 +29,10 @@ abstract class AbstractHgHhLdpServer implements HgHhLdpServer {
      */
     private static final double LN_B = Math.log(B);
     /**
+     * the type
+     */
+    private final HhLdpFactory.HhLdpType type;
+    /**
      * d = |Ω|
      */
     protected final int d;
@@ -74,6 +78,7 @@ abstract class AbstractHgHhLdpServer implements HgHhLdpServer {
     protected int[] currentNums;
 
     AbstractHgHhLdpServer(HgHhLdpConfig hgHhLdpConfig) {
+        type = hgHhLdpConfig.getType();
         d = hgHhLdpConfig.getD();
         k = hgHhLdpConfig.getK();
         w = hgHhLdpConfig.getW();
@@ -239,6 +244,11 @@ abstract class AbstractHgHhLdpServer implements HgHhLdpServer {
         } else {
             return countList.subList(0, k).stream().collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
         }
+    }
+
+    @Override
+    public HhLdpFactory.HhLdpType getType() {
+        return type;
     }
 
     @Override

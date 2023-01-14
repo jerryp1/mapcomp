@@ -13,9 +13,9 @@ import java.util.*;
  */
 public interface HhLdpServer {
     /**
-     * Get the type of Heavy Hitter with Local Differential Privacy.
+     * Get the type.
      *
-     * @return the type of Heavy Hitter with Local Differential Privacy.
+     * @return the type.
      */
     HhLdpFactory.HhLdpType getType();
 

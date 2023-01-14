@@ -37,11 +37,6 @@ public class BasicHgHhLdpClient extends AbstractHgHhLdpClient {
     }
 
     @Override
-    public HhLdpFactory.HhLdpType getType() {
-        return HhLdpFactory.HhLdpType.BASIC_HG;
-    }
-
-    @Override
     public String randomize(HhLdpServerContext serverContext, String item, Random random) {
         Preconditions.checkArgument(serverContext instanceof EmptyHhLdpServerContext);
         checkItemInDomain(item);

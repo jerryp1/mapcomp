@@ -1,5 +1,9 @@
 package edu.alibaba.mpc4j.dp.service.fo;
 
+import edu.alibaba.mpc4j.dp.service.heavyhitter.HhLdpFactory;
+
+import java.util.Map;
+
 /**
  * Frequency Oracle (FO) LDP server.
  *
@@ -8,6 +12,13 @@ package edu.alibaba.mpc4j.dp.service.fo;
  */
 public interface FoLdpServer {
     /**
+     * Get the type.
+     *
+     * @return the type.
+     */
+    FoLdpFactory.FoLdpType getType();
+
+    /**
      * Aggregate a randomized item.
      *
      * @param data the encoded randomized item.
@@ -15,12 +26,11 @@ public interface FoLdpServer {
     void aggregate(byte[] data);
 
     /**
-     * Calculates frequency estimate of the given item.
+     * Calculate frequency estimates for all items in the domain.
      *
-     * @param item item to estimate the frequency.
-     * @return the frequency estimate result.
+     * @return the frequency estimates for all items in the domain.
      */
-    double estimate(String item);
+    Map<String, Double> estimate();
 
     /**
      * Return the privacy parameter ε.

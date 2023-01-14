@@ -57,11 +57,6 @@ public class AdvHhgHhLdpServer extends AbstractHgHhLdpServer implements HhgHhLdp
     }
 
     @Override
-    public HhLdpFactory.HhLdpType getType() {
-        return HhLdpFactory.HhLdpType.ADVAN_HG;
-    }
-
-    @Override
     public void stopWarmup() {
         checkState(HhLdpServerState.WARMUP);
         double hotNum = 0;

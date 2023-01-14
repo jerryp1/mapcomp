@@ -20,11 +20,6 @@ public class RelaxHhgHhLdpServer extends AdvHhgHhLdpServer {
     }
 
     @Override
-    public HhLdpFactory.HhLdpType getType() {
-        return HhLdpFactory.HhLdpType.RELAX_HG;
-    }
-
-    @Override
     protected double updateCount(int bucketIndex, double count) {
         return count - currentNums[bucketIndex] * gammaH * p1 * q2;
     }
