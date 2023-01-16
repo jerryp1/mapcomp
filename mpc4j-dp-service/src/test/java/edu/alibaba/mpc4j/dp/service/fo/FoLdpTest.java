@@ -42,6 +42,10 @@ public class FoLdpTest {
     public static Collection<Object[]> configurations() {
         Collection<Object[]> configurations = new ArrayList<>();
 
+        // DE_INDEX_ENCODING
+        configurations.add(new Object[]{
+            FoLdpType.DE_INDEX_ENCODING.name(), FoLdpType.DE_INDEX_ENCODING,
+        });
         // DE_STRING_ENCODING
         configurations.add(new Object[]{
             FoLdpType.DE_STRING_ENCODING.name(), FoLdpType.DE_STRING_ENCODING,

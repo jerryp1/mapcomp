@@ -59,24 +59,31 @@ public class HgHhLdpConfig extends BasicHhLdpConfig {
         /**
          * budget num
          */
-        private int w;
+        protected int w;
         /**
          * λ_h, i.e., the cell num in each bucket
          */
-        private int lambdaH;
+        protected int lambdaH;
         /**
          * HeavyGuardian random state, used only for the server
          */
-        private Random hgRandom;
+        protected Random hgRandom;
 
         public Builder(HhLdpType type, Set<String> domainSet, int k, double windowEpsilon) {
             super(type, domainSet, k, windowEpsilon);
             setDefault();
         }
 
-        public Builder(HhLdpConfig clientConfig) {
-            super(clientConfig.getType(), clientConfig.getDomainSet(), clientConfig.getK(), clientConfig.getWindowEpsilon());
-            setDefault();
+        public Builder(HhLdpConfig config) {
+            super(config.getType(), config.getDomainSet(), config.getK(), config.getWindowEpsilon());
+            if (config instanceof HgHhLdpConfig) {
+                HgHhLdpConfig hgHhLdpConfig = (HgHhLdpConfig) config;
+                w = hgHhLdpConfig.w;
+                lambdaH = hgHhLdpConfig.lambdaH;
+                hgRandom = hgHhLdpConfig.hgRandom;
+            } else {
+                setDefault();
+            }
         }
 
         private void setDefault() {

@@ -1,10 +1,11 @@
 package edu.alibaba.mpc4j.dp.service.heavyhitter;
 
+import edu.alibaba.mpc4j.dp.service.heavyhitter.config.FoHhLdpConfig;
 import edu.alibaba.mpc4j.dp.service.heavyhitter.config.HgHhLdpConfig;
 import edu.alibaba.mpc4j.dp.service.heavyhitter.config.HhLdpConfig;
 import edu.alibaba.mpc4j.dp.service.heavyhitter.config.HhgHhLdpConfig;
-import edu.alibaba.mpc4j.dp.service.heavyhitter.fo.DeFoHhLdpClient;
-import edu.alibaba.mpc4j.dp.service.heavyhitter.fo.DeFoHhLdpServer;
+import edu.alibaba.mpc4j.dp.service.heavyhitter.fo.FoHhLdpClient;
+import edu.alibaba.mpc4j.dp.service.heavyhitter.fo.FoHhLdpServer;
 import edu.alibaba.mpc4j.dp.service.heavyhitter.hg.*;
 
 import java.nio.charset.Charset;
@@ -32,9 +33,9 @@ public class HhLdpFactory {
 
     public enum HhLdpType {
         /**
-         * direct encoding
+         * frequency oracle
          */
-        DE_FO,
+        FO,
         /**
          * basic HeavyGuardian
          */
@@ -50,24 +51,25 @@ public class HhLdpFactory {
     }
 
     /**
-     * Create an instance of Heavy Hitter server with Local Differential Privacy.
+     * Create an instance of Heavy Hitter LDP server.
      *
-     * @param hhLdpConfig the config.
-     * @return an instance of Heavy Hitter server with Local Differential Privacy.
+     * @param config the config.
+     * @return an instance of Heavy Hitter LDP server.
      */
-    public static HhLdpServer createServer(HhLdpConfig hhLdpConfig) {
-        HhLdpType type = hhLdpConfig.getType();
+    public static HhLdpServer createServer(HhLdpConfig config) {
+        HhLdpType type = config.getType();
         switch (type) {
-            case DE_FO:
-                return new DeFoHhLdpServer(hhLdpConfig);
+            case FO:
+                FoHhLdpConfig foConfig = new FoHhLdpConfig.Builder(config).build();
+                return new FoHhLdpServer(foConfig);
             case BASIC_HG:
-                HgHhLdpConfig basicConfig = new HgHhLdpConfig.Builder(hhLdpConfig).build();
+                HgHhLdpConfig basicConfig = new HgHhLdpConfig.Builder(config).build();
                 return new BasicHgHhLdpServer(basicConfig);
             case ADVAN_HG:
-                HhgHhLdpConfig advConfig = new HhgHhLdpConfig.Builder(hhLdpConfig).build();
+                HhgHhLdpConfig advConfig = new HhgHhLdpConfig.Builder(config).build();
                 return new AdvHhgHhLdpServer(advConfig);
             case RELAX_HG:
-                HhgHhLdpConfig relaxConfig = new HhgHhLdpConfig.Builder(hhLdpConfig).build();
+                HhgHhLdpConfig relaxConfig = new HhgHhLdpConfig.Builder(config).build();
                 return new RelaxHhgHhLdpServer(relaxConfig);
             default:
                 throw new IllegalArgumentException("Invalid " + HhLdpType.class.getSimpleName() + ": " + type);
@@ -75,24 +77,25 @@ public class HhLdpFactory {
     }
 
     /**
-     * Create an instance of Heavy Hitter client with Local Differential Privacy.
+     * Create an instance of Heavy Hitter LDP client.
      *
-     * @param hhLdpConfig the config.
-     * @return an instance of Heavy Hitter client with Local Differential Privacy.
+     * @param config the config.
+     * @return an instance of Heavy Hitter LDP client.
      */
-    public static HhLdpClient createClient(HhLdpConfig hhLdpConfig) {
-        HhLdpType type = hhLdpConfig.getType();
+    public static HhLdpClient createClient(HhLdpConfig config) {
+        HhLdpType type = config.getType();
         switch (type) {
-            case DE_FO:
-                return new DeFoHhLdpClient(hhLdpConfig);
+            case FO:
+                FoHhLdpConfig foConfig = new FoHhLdpConfig.Builder(config).build();
+                return new FoHhLdpClient(foConfig);
             case BASIC_HG:
-                HgHhLdpConfig basicClientConfig = new HgHhLdpConfig.Builder(hhLdpConfig).build();
+                HgHhLdpConfig basicClientConfig = new HgHhLdpConfig.Builder(config).build();
                 return new BasicHgHhLdpClient(basicClientConfig);
             case ADVAN_HG:
-                HhgHhLdpConfig advClientConfig = new HhgHhLdpConfig.Builder(hhLdpConfig).build();
+                HhgHhLdpConfig advClientConfig = new HhgHhLdpConfig.Builder(config).build();
                 return new AdvHhgHhLdpClient(advClientConfig);
             case RELAX_HG:
-                HhgHhLdpConfig relaxClientConfig = new HhgHhLdpConfig.Builder(hhLdpConfig).build();
+                HhgHhLdpConfig relaxClientConfig = new HhgHhLdpConfig.Builder(config).build();
                 return new RelaxHhgHhLdpClient(relaxClientConfig);
             default:
                 throw new IllegalArgumentException("Invalid " + HhLdpType.class.getSimpleName() + ": " + type);
@@ -100,21 +103,41 @@ public class HhLdpFactory {
     }
 
     /**
-     * Create an instance of HeavyGuardian-based Heavy Hitter server with Local Differential Privacy.
+     * Create an instance of Heavy Hitter LDP server based on Frequency Oracle.
      *
-     * @param hgHhLdpConfig the config.
-     * @return an instance of HeavyGuardian-based Heavy Hitter server with Local Differential Privacy.
+     * @param config the config.
+     * @return an instance of Heavy Hitter LDP server based on Frequency Oracle.
      */
-    public static HgHhLdpServer createHgServer(HgHhLdpConfig hgHhLdpConfig) {
-        HhLdpType type = hgHhLdpConfig.getType();
+    public static HhLdpServer createFoServer(FoHhLdpConfig config) {
+        return new FoHhLdpServer(config);
+    }
+
+    /**
+     * Create an instance of Heavy Hitter LDP client based on Frequency Oracle.
+     *
+     * @param config the config.
+     * @return an instance of Heavy Hitter LDP client based on Frequency Oracle.
+     */
+    public static HhLdpClient createFoClient(FoHhLdpConfig config) {
+        return new FoHhLdpClient(config);
+    }
+
+    /**
+     * Create an instance of HeavyGuardian-based Heavy Hitter LDP server.
+     *
+     * @param config the config.
+     * @return an instance of HeavyGuardian-based Heavy Hitter LDP server.
+     */
+    public static HgHhLdpServer createHgServer(HgHhLdpConfig config) {
+        HhLdpType type = config.getType();
         switch (type) {
             case BASIC_HG:
-                return new BasicHgHhLdpServer(hgHhLdpConfig);
+                return new BasicHgHhLdpServer(config);
             case ADVAN_HG:
-                HhgHhLdpConfig advConfig = new HhgHhLdpConfig.Builder(hgHhLdpConfig).build();
+                HhgHhLdpConfig advConfig = new HhgHhLdpConfig.Builder(config).build();
                 return new AdvHhgHhLdpServer(advConfig);
             case RELAX_HG:
-                HhgHhLdpConfig relaxConfig = new HhgHhLdpConfig.Builder(hgHhLdpConfig).build();
+                HhgHhLdpConfig relaxConfig = new HhgHhLdpConfig.Builder(config).build();
                 return new RelaxHhgHhLdpServer(relaxConfig);
             default:
                 throw new IllegalArgumentException("Invalid " + HhLdpType.class.getSimpleName() + ": " + type);
@@ -122,21 +145,21 @@ public class HhLdpFactory {
     }
 
     /**
-     * Create an instance of HeavyGuardian-based Heavy Hitter client with Local Differential Privacy.
+     * Create an instance of HeavyGuardian-based Heavy Hitter LDP client.
      *
-     * @param hgHhLdpConfig the config.
-     * @return an instance of HeavyGuardian-based Heavy Hitter client with Local Differential Privacy.
+     * @param config the config.
+     * @return an instance of HeavyGuardian-based Heavy Hitter LDP client.
      */
-    public static HgHhLdpClient createHgClient(HgHhLdpConfig hgHhLdpConfig) {
-        HhLdpType type = hgHhLdpConfig.getType();
+    public static HgHhLdpClient createHgClient(HgHhLdpConfig config) {
+        HhLdpType type = config.getType();
         switch (type) {
             case BASIC_HG:
-                return new BasicHgHhLdpClient(hgHhLdpConfig);
+                return new BasicHgHhLdpClient(config);
             case ADVAN_HG:
-                HhgHhLdpConfig advClientConfig = new HhgHhLdpConfig.Builder(hgHhLdpConfig).build();
+                HhgHhLdpConfig advClientConfig = new HhgHhLdpConfig.Builder(config).build();
                 return new AdvHhgHhLdpClient(advClientConfig);
             case RELAX_HG:
-                HhgHhLdpConfig relaxClientConfig = new HhgHhLdpConfig.Builder(hgHhLdpConfig).build();
+                HhgHhLdpConfig relaxClientConfig = new HhgHhLdpConfig.Builder(config).build();
                 return new RelaxHhgHhLdpClient(relaxClientConfig);
             default:
                 throw new IllegalArgumentException("Invalid " + HhLdpType.class.getSimpleName() + ": " + type);
@@ -144,36 +167,36 @@ public class HhLdpFactory {
     }
 
     /**
-     * Create an instance of Hot HeavyGuardian-based Heavy Hitter server with Local Differential Privacy.
+     * Create an instance of Hot HeavyGuardian-based Heavy Hitter LDP server.
      *
-     * @param hhgHhLdpConfig the config.
-     * @return an instance of Hot HeavyGuardian-based Heavy Hitter server with Local Differential Privacy.
+     * @param config the config.
+     * @return an instance of Hot HeavyGuardian-based Heavy Hitter LDP server.
      */
-    public static HhgHhLdpServer createHhgServer(HhgHhLdpConfig hhgHhLdpConfig) {
-        HhLdpType type = hhgHhLdpConfig.getType();
+    public static HhgHhLdpServer createHhgServer(HhgHhLdpConfig config) {
+        HhLdpType type = config.getType();
         switch (type) {
             case ADVAN_HG:
-                return new AdvHhgHhLdpServer(hhgHhLdpConfig);
+                return new AdvHhgHhLdpServer(config);
             case RELAX_HG:
-                return new RelaxHhgHhLdpServer(hhgHhLdpConfig);
+                return new RelaxHhgHhLdpServer(config);
             default:
                 throw new IllegalArgumentException("Invalid " + HhLdpType.class.getSimpleName() + ": " + type);
         }
     }
 
     /**
-     * Create an instance of Hot HeavyGuardian-based Heavy Hitter client with Local Differential Privacy.
+     * Create an instance of Hot HeavyGuardian-based Heavy Hitter LDP client.
      *
-     * @param hhgHhLdpConfig the config.
-     * @return an instance of Hot HeavyGuardian-based Heavy Hitter client with Local Differential Privacy.
+     * @param config the config.
+     * @return an instance of Hot HeavyGuardian-based Heavy Hitter LDP client.
      */
-    public static HhgHhLdpClient createHhgClient(HhgHhLdpConfig hhgHhLdpConfig) {
-        HhLdpType type = hhgHhLdpConfig.getType();
+    public static HhgHhLdpClient createHhgClient(HhgHhLdpConfig config) {
+        HhLdpType type = config.getType();
         switch (type) {
             case ADVAN_HG:
-                return new AdvHhgHhLdpClient(hhgHhLdpConfig);
+                return new AdvHhgHhLdpClient(config);
             case RELAX_HG:
-                return new RelaxHhgHhLdpClient(hhgHhLdpConfig);
+                return new RelaxHhgHhLdpClient(config);
             default:
                 throw new IllegalArgumentException("Invalid " + HhLdpType.class.getSimpleName() + ": " + type);
         }

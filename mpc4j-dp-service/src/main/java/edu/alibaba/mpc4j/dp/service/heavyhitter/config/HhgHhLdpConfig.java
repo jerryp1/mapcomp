@@ -43,15 +43,13 @@ public class HhgHhLdpConfig extends HgHhLdpConfig {
         }
 
         public Builder(HhLdpConfig config) {
-            super(config.getType(), config.getDomainSet(), config.getK(), config.getWindowEpsilon());
-            setDefault();
-        }
-
-        public Builder(HgHhLdpConfig config) {
-            super(config.getType(), config.getDomainSet(), config.getK(), config.getWindowEpsilon());
-            setBucketParams(config.getW(), config.getLambdaH());
-            setHgRandom(config.getHgRandom());
-            setDefault();
+            super(config);
+            if (config instanceof HhgHhLdpConfig) {
+                HhgHhLdpConfig hhgHhLdpConfig = (HhgHhLdpConfig) config;
+                alpha = hhgHhLdpConfig.alpha;
+            } else {
+                setDefault();
+            }
         }
 
         private void setDefault() {

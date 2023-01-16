@@ -43,6 +43,10 @@ public class HhLdpTest {
     public static Collection<Object[]> configurations() {
         Collection<Object[]> configurations = new ArrayList<>();
 
+        // Frequency Oracle
+        configurations.add(new Object[]{
+            HhLdpType.FO.name(), HhLdpType.FO,
+        });
         // relaxed heavy guardian
         configurations.add(new Object[]{
             HhLdpType.RELAX_HG.name(), HhLdpType.RELAX_HG,
@@ -54,10 +58,6 @@ public class HhLdpTest {
         // basic heavy guardian
         configurations.add(new Object[]{
             HhLdpType.BASIC_HG.name(), HhLdpType.BASIC_HG,
-        });
-        // NAIVE
-        configurations.add(new Object[]{
-            HhLdpType.DE_FO.name(), HhLdpType.DE_FO,
         });
 
         return configurations;

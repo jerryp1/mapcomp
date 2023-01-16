@@ -1,6 +1,7 @@
 package edu.alibaba.mpc4j.dp.service.fo.config;
 
 import edu.alibaba.mpc4j.dp.service.fo.FoLdpFactory;
+import edu.alibaba.mpc4j.dp.service.tool.Domain;
 
 import java.util.Set;
 
@@ -19,11 +20,20 @@ public interface FoLdpConfig {
     FoLdpFactory.FoLdpType getType();
 
     /**
+     * Gets the domain.
+     *
+     * @return the domain.
+     */
+    Domain getDomain();
+
+    /**
      * Gets the domain set.
      *
      * @return the domain set.
      */
-    Set<String> getDomainSet();
+    default Set<String> getDomainSet() {
+        return getDomain().getDomainSet();
+    }
 
     /**
      * Gets the domain size d, i.e., |Ω|.

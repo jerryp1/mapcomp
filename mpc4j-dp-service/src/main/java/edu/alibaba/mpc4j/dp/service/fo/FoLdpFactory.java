@@ -1,6 +1,8 @@
 package edu.alibaba.mpc4j.dp.service.fo;
 
 import edu.alibaba.mpc4j.dp.service.fo.config.FoLdpConfig;
+import edu.alibaba.mpc4j.dp.service.fo.de.DeIndexFoLdpClient;
+import edu.alibaba.mpc4j.dp.service.fo.de.DeIndexFoLdpServer;
 import edu.alibaba.mpc4j.dp.service.fo.de.DeStringFoLdpClient;
 import edu.alibaba.mpc4j.dp.service.fo.de.DeStringFoLdpServer;
 
@@ -49,6 +51,8 @@ public class FoLdpFactory {
         switch (type) {
             case DE_STRING_ENCODING:
                 return new DeStringFoLdpServer(config);
+            case DE_INDEX_ENCODING:
+                return new DeIndexFoLdpServer(config);
             default:
                 throw new IllegalArgumentException("Invalid " + FoLdpType.class.getSimpleName() + ": " + type.name());
         }
@@ -65,6 +69,8 @@ public class FoLdpFactory {
         switch (type) {
             case DE_STRING_ENCODING:
                 return new DeStringFoLdpClient(config);
+            case DE_INDEX_ENCODING:
+                return new DeIndexFoLdpClient(config);
             default:
                 throw new IllegalArgumentException("Invalid " + FoLdpType.class.getSimpleName() + ": " + type.name());
         }

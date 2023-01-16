@@ -2,8 +2,13 @@ package edu.alibaba.mpc4j.dp.service.heavyhitter;
 
 import com.google.common.base.Preconditions;
 import edu.alibaba.mpc4j.dp.service.LdpTestDataUtils;
-import edu.alibaba.mpc4j.dp.service.heavyhitter.config.BasicHhLdpConfig;
+import edu.alibaba.mpc4j.dp.service.fo.FoLdpFactory;
+import edu.alibaba.mpc4j.dp.service.fo.config.BasicFoLdpConfig;
+import edu.alibaba.mpc4j.dp.service.fo.config.FoLdpConfig;
+import edu.alibaba.mpc4j.dp.service.heavyhitter.config.FoHhLdpConfig;
+import edu.alibaba.mpc4j.dp.service.heavyhitter.config.HgHhLdpConfig;
 import edu.alibaba.mpc4j.dp.service.heavyhitter.config.HhLdpConfig;
+import edu.alibaba.mpc4j.dp.service.heavyhitter.config.HhgHhLdpConfig;
 import edu.alibaba.mpc4j.dp.service.tool.StreamDataUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.time.StopWatch;
@@ -52,41 +57,68 @@ public class HhLdpEfficiencyTest {
     public static Collection<Object[]> configurations() {
         Collection<Object[]> configurations = new ArrayList<>();
 
+        // DE_STRING_ENCODING
+        FoLdpConfig deIndexFoLdpConfig = new BasicFoLdpConfig
+            .Builder(FoLdpFactory.FoLdpType.DE_INDEX_ENCODING, LdpTestDataUtils.CONNECT_DATA_DOMAIN, DEFAULT_EPSILON)
+            .build();
+        configurations.add(new Object[]{
+            HhLdpFactory.HhLdpType.FO.name() + " (" + deIndexFoLdpConfig.getType().name() + ")",
+            new FoHhLdpConfig
+                .Builder(deIndexFoLdpConfig, DEFAULT_K)
+                .build()
+        });
+        // DE_STRING_ENCODING
+        FoLdpConfig deStringFoLdpConfig = new BasicFoLdpConfig
+            .Builder(FoLdpFactory.FoLdpType.DE_STRING_ENCODING, LdpTestDataUtils.CONNECT_DATA_DOMAIN, DEFAULT_EPSILON)
+            .build();
+        configurations.add(new Object[]{
+            HhLdpFactory.HhLdpType.FO.name() + " (" + deStringFoLdpConfig.getType().name() + ")",
+            new FoHhLdpConfig
+                .Builder(deStringFoLdpConfig, DEFAULT_K)
+                .build()
+        });
         // relaxed heavy guardian
         configurations.add(new Object[]{
-            HhLdpFactory.HhLdpType.RELAX_HG.name(), HhLdpFactory.HhLdpType.RELAX_HG,
+            HhLdpFactory.HhLdpType.RELAX_HG.name(),
+            new HhgHhLdpConfig
+                .Builder(HhLdpFactory.HhLdpType.RELAX_HG, LdpTestDataUtils.CONNECT_DATA_DOMAIN, DEFAULT_K, DEFAULT_EPSILON)
+                .build()
         });
         // advanced heavy guardian
         configurations.add(new Object[]{
-            HhLdpFactory.HhLdpType.ADVAN_HG.name(), HhLdpFactory.HhLdpType.ADVAN_HG,
+            HhLdpFactory.HhLdpType.ADVAN_HG.name(),
+            new HhgHhLdpConfig
+                .Builder(HhLdpFactory.HhLdpType.ADVAN_HG, LdpTestDataUtils.CONNECT_DATA_DOMAIN, DEFAULT_K, DEFAULT_EPSILON)
+                .build()
         });
         // basic heavy guardian
         configurations.add(new Object[]{
-            HhLdpFactory.HhLdpType.BASIC_HG.name(), HhLdpFactory.HhLdpType.BASIC_HG,
-        });
-        // NAIVE
-        configurations.add(new Object[]{
-            HhLdpFactory.HhLdpType.DE_FO.name(), HhLdpFactory.HhLdpType.DE_FO,
+            HhLdpFactory.HhLdpType.BASIC_HG.name(),
+            new HgHhLdpConfig
+                .Builder(HhLdpFactory.HhLdpType.BASIC_HG, LdpTestDataUtils.CONNECT_DATA_DOMAIN, DEFAULT_K, DEFAULT_EPSILON)
+                .build()
         });
 
         return configurations;
     }
 
     /**
+     * the name
+     */
+    private final String name;
+    /**
      * the type
      */
-    private final HhLdpFactory.HhLdpType type;
+    private final HhLdpConfig config;
 
-    public HhLdpEfficiencyTest(String name, HhLdpFactory.HhLdpType type) {
+    public HhLdpEfficiencyTest(String name, HhLdpConfig config) {
         Preconditions.checkArgument(StringUtils.isNotBlank(name));
-        this.type = type;
+        this.name = name;
+        this.config = config;
     }
 
     @Test
     public void testEfficiency() throws IOException {
-        HhLdpConfig config = new BasicHhLdpConfig
-            .Builder(type, LdpTestDataUtils.CONNECT_DATA_DOMAIN, DEFAULT_K, DEFAULT_EPSILON)
-            .build();
         // create server and client
         HhLdpServer server = HhLdpFactory.createServer(config);
         HhLdpClient client = HhLdpFactory.createClient(config);
@@ -128,9 +160,8 @@ public class HhLdpEfficiencyTest {
         double clientTime = (double) CLIENT_STOP_WATCH.getTime(TimeUnit.MILLISECONDS) / 1000;
         CLIENT_STOP_WATCH.reset();
         long memory = GraphLayout.parseInstance(server).totalSize();
-        LOGGER.info("{}: k = {}, d = {}, s_time = {}, c_time = {}, byte_length = {}, memory = {}",
-            type.name(), DEFAULT_K, LdpTestDataUtils.CONNECT_DATA_D,
-            serverTime,  clientTime, itemByteLength, memory
+        LOGGER.info("{}: s_time = {}, c_time = {}, byte_length = {}, memory = {}",
+            name, serverTime, clientTime, itemByteLength, memory
         );
     }
 }

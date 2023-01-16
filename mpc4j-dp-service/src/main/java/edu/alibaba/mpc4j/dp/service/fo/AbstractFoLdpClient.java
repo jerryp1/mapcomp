@@ -30,7 +30,7 @@ public abstract class AbstractFoLdpClient implements FoLdpClient {
 
     public AbstractFoLdpClient(FoLdpConfig foLdpConfig) {
         type = foLdpConfig.getType();
-        domain = new Domain(foLdpConfig.getDomainSet());
+        domain = foLdpConfig.getDomain();
         d = domain.getD();
         epsilon = foLdpConfig.getEpsilon();
     }

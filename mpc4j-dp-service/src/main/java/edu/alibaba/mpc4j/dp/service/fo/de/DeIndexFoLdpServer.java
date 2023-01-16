@@ -1,21 +1,21 @@
 package edu.alibaba.mpc4j.dp.service.fo.de;
 
-import com.google.common.base.Preconditions;
+import edu.alibaba.mpc4j.common.tool.MathPreconditions;
+import edu.alibaba.mpc4j.common.tool.utils.IntUtils;
 import edu.alibaba.mpc4j.dp.service.fo.AbstractFoLdpServer;
-import edu.alibaba.mpc4j.dp.service.fo.FoLdpFactory;
 import edu.alibaba.mpc4j.dp.service.fo.config.FoLdpConfig;
 
-import java.util.*;
+import java.util.Map;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
 /**
- * Direct Encoding (DE) Frequency Oracle LDP server. The item is encoded via string.
+ * Direct Encoding (DE) Frequency Oracle LDP server. The item is encoded via index.
  *
  * @author Weiran Liu
- * @date 2023/1/10
+ * @date 2023/1/16
  */
-public class DeStringFoLdpServer extends AbstractFoLdpServer {
+public class DeIndexFoLdpServer extends AbstractFoLdpServer {
     /**
      * the bucket
      */
@@ -29,7 +29,7 @@ public class DeStringFoLdpServer extends AbstractFoLdpServer {
      */
     private final double q;
 
-    public DeStringFoLdpServer(FoLdpConfig foLdpConfig) {
+    public DeIndexFoLdpServer(FoLdpConfig foLdpConfig) {
         super(foLdpConfig);
         budget = new int[d];
         double expEpsilon = Math.exp(epsilon);
@@ -39,9 +39,8 @@ public class DeStringFoLdpServer extends AbstractFoLdpServer {
 
     @Override
     public void insert(byte[] itemBytes) {
-        String item = new String(itemBytes, FoLdpFactory.DEFAULT_CHARSET);
-        Preconditions.checkArgument(domain.contains(item), "%s is not in the domain", item);
-        int itemIndex = domain.getItemIndex(item);
+        int itemIndex = IntUtils.byteArrayToBoundedInt(itemBytes, d);
+        MathPreconditions.checkNonNegativeInRange("item index", itemIndex, d);
         num++;
         budget[itemIndex]++;
     }

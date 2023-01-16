@@ -2,6 +2,7 @@ package edu.alibaba.mpc4j.dp.service.fo.config;
 
 import edu.alibaba.mpc4j.common.tool.MathPreconditions;
 import edu.alibaba.mpc4j.dp.service.fo.FoLdpFactory;
+import edu.alibaba.mpc4j.dp.service.tool.Domain;
 
 import java.util.Set;
 
@@ -17,9 +18,9 @@ public class BasicFoLdpConfig implements FoLdpConfig {
      */
     private final FoLdpFactory.FoLdpType type;
     /**
-     * the domain set
+     * the domain
      */
-    private final Set<String> domainSet;
+    private final Domain domain;
     /**
      * the domain size d
      */
@@ -31,7 +32,7 @@ public class BasicFoLdpConfig implements FoLdpConfig {
 
     protected BasicFoLdpConfig(Builder builder) {
         type = builder.type;
-        domainSet = builder.domainSet;
+        domain = new Domain(builder.domainSet);
         d = builder.d;
         epsilon = builder.epsilon;
     }
@@ -42,8 +43,8 @@ public class BasicFoLdpConfig implements FoLdpConfig {
     }
 
     @Override
-    public Set<String> getDomainSet() {
-        return domainSet;
+    public Domain getDomain() {
+        return domain;
     }
 
     @Override

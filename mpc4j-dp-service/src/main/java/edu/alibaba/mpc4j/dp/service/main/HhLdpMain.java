@@ -226,7 +226,7 @@ public class HhLdpMain {
     }
 
     private void runNaiveHeavyHitter(double windowEpsilon, PrintWriter printWriter) throws IOException {
-        HhLdpType type = HhLdpType.DE_FO;
+        HhLdpType type = HhLdpType.FO;
         LOGGER.info("Run {}, ε_w = {}", type.name(), windowEpsilon);
         double ndcg = 0.0;
         double precision = 0.0;

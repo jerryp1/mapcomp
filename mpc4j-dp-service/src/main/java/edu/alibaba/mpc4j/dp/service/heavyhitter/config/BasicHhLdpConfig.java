@@ -74,7 +74,7 @@ public class BasicHhLdpConfig implements HhLdpConfig {
         /**
          * the domain set
          */
-        private final Set<String> domainSet;
+        protected final Set<String> domainSet;
         /**
          * the domain size d
          */
@@ -86,7 +86,7 @@ public class BasicHhLdpConfig implements HhLdpConfig {
         /**
          * the privacy parameter ε / w
          */
-        private final double windowEpsilon;
+        protected final double windowEpsilon;
 
         public Builder(HhLdpType type, Set<String> domainSet, int k, double windowEpsilon) {
             this.type = type;
