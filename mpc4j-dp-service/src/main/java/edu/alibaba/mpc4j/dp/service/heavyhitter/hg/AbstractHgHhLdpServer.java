@@ -103,15 +103,17 @@ abstract class AbstractHgHhLdpServer implements HgHhLdpServer {
     }
 
     @Override
-    public boolean warmupInsert(String item) {
+    public boolean warmupInsert(byte[] itemBytes) {
         checkState(HhLdpServerState.WARMUP);
+        String item = new String(itemBytes, HhLdpFactory.DEFAULT_CHARSET);
         return insert(item);
     }
 
     @Override
-    public boolean randomizeInsert(String randomizedItem) {
+    public boolean randomizeInsert(byte[] itemBytes) {
         checkState(HhLdpServerState.STATISTICS);
-        return insert(randomizedItem);
+        String item = new String(itemBytes, HhLdpFactory.DEFAULT_CHARSET);
+        return insert(item);
     }
 
     private boolean insert(String item) {

@@ -346,7 +346,9 @@ public class HhLdpMain {
         // warmup
         AtomicInteger warmupIndex = new AtomicInteger();
         Stream<String> dataStream = StreamDataUtils.obtainItemStream(datasetPath);
-        dataStream.filter(item -> warmupIndex.getAndIncrement() <= warmupNum).forEach(server::warmupInsert);
+        dataStream.filter(item -> warmupIndex.getAndIncrement() <= warmupNum)
+            .map(client::warmup)
+            .forEach(server::warmupInsert);
         dataStream.close();
         server.stopWarmup();
         // randomize

@@ -37,7 +37,7 @@ public class BasicHgHhLdpClient extends AbstractHgHhLdpClient {
     }
 
     @Override
-    public String randomize(HhLdpServerContext serverContext, String item, Random random) {
+    public byte[] randomize(HhLdpServerContext serverContext, String item, Random random) {
         Preconditions.checkArgument(serverContext instanceof EmptyHhLdpServerContext);
         checkItemInDomain(item);
         // basic HeavyGuardian solution does not consider the current data structure
@@ -46,10 +46,10 @@ public class BasicHgHhLdpClient extends AbstractHgHhLdpClient {
         int randomIndex = random.nextInt(d);
         if (randomSample > p - q) {
             // answer a random item
-            return bucketDomain.getUniversalIndexItem(randomIndex);
+            return bucketDomain.getUniversalIndexItem(randomIndex).getBytes(HhLdpFactory.DEFAULT_CHARSET);
         } else {
             // answer the true item
-            return item;
+            return item.getBytes(HhLdpFactory.DEFAULT_CHARSET);
         }
     }
 }

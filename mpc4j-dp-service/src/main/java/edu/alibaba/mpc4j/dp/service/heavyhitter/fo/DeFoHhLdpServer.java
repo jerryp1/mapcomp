@@ -1,5 +1,6 @@
 package edu.alibaba.mpc4j.dp.service.heavyhitter.fo;
 
+import edu.alibaba.mpc4j.dp.service.heavyhitter.HhLdpFactory;
 import edu.alibaba.mpc4j.dp.service.heavyhitter.utils.HhLdpServerContext;
 import edu.alibaba.mpc4j.dp.service.heavyhitter.HhLdpServerState;
 import edu.alibaba.mpc4j.dp.service.heavyhitter.config.HhLdpConfig;
@@ -37,8 +38,9 @@ public class DeFoHhLdpServer extends AbstractFoHhLdpServer {
     }
 
     @Override
-    public boolean warmupInsert(String item) {
+    public boolean warmupInsert(byte[] itemBytes) {
         checkState(HhLdpServerState.WARMUP);
+        String item = new String(itemBytes, HhLdpFactory.DEFAULT_CHARSET);
         num++;
         if (budget.containsKey(item)) {
             double itemCount = budget.get(item);
@@ -69,15 +71,16 @@ public class DeFoHhLdpServer extends AbstractFoHhLdpServer {
     }
 
     @Override
-    public boolean randomizeInsert(String randomizedItem) {
+    public boolean randomizeInsert(byte[] itemBytes) {
         checkState(HhLdpServerState.STATISTICS);
+        String item = new String(itemBytes, HhLdpFactory.DEFAULT_CHARSET);
         num++;
-        if (budget.containsKey(randomizedItem)) {
-            double itemCount = budget.get(randomizedItem);
+        if (budget.containsKey(item)) {
+            double itemCount = budget.get(item);
             itemCount += 1;
-            budget.put(randomizedItem, itemCount);
+            budget.put(item, itemCount);
         } else {
-            budget.put(randomizedItem, 1.0);
+            budget.put(item, 1.0);
         }
         return true;
     }

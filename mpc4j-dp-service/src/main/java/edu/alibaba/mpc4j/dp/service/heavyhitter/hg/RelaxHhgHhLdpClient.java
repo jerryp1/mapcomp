@@ -26,7 +26,7 @@ public class RelaxHhgHhLdpClient extends AdvHhgHhLdpClient {
     }
 
     @Override
-    public String randomize(HhLdpServerContext serverContext, String item, Random random) {
+    public byte[] randomize(HhLdpServerContext serverContext, String item, Random random) {
         Preconditions.checkArgument(serverContext instanceof HgHhLdpServerContext);
         HgHhLdpServerContext hgServerContext = (HgHhLdpServerContext) serverContext;
         checkItemInDomain(item);
@@ -48,17 +48,17 @@ public class RelaxHhgHhLdpClient extends AdvHhgHhLdpClient {
         assert copyCurrentBucket.size() == lambdaH;
         if (bucketDomain.getD(bucketIndex) == lambdaH) {
             // if the domain size equals to λ_h, then there is no cold item, use M2
-            return userMechanism2(copyCurrentBucket.keySet(), item, random);
+            return userMechanism2(copyCurrentBucket.keySet(), item, random).getBytes(HhLdpFactory.DEFAULT_CHARSET);
         }
         // M1
         boolean flag = userMechanism1(copyCurrentBucket.keySet(), item, random);
         // M2
         if (flag) {
             // v is determined as hot
-            return userMechanism2(copyCurrentBucket.keySet(), item, random);
+            return userMechanism2(copyCurrentBucket.keySet(), item, random).getBytes(HhLdpFactory.DEFAULT_CHARSET);
         } else {
             // v is determined as code
-            return userMechanism3(bucketIndex, copyCurrentBucket, item, random);
+            return userMechanism3(bucketIndex, copyCurrentBucket, item, random).getBytes(HhLdpFactory.DEFAULT_CHARSET);
         }
     }
 

@@ -12,34 +12,44 @@ import java.util.Random;
  */
 public interface HhLdpClient {
     /**
-     * Get the type.
+     * Gets the type.
      *
      * @return the type.
      */
     HhLdpFactory.HhLdpType getType();
+
     /**
-     * randomize the item based on the current data structure.
+     * Encodes the item in the warm-up state.
+     *
+     * @param item the item.
+     * @return the encoded item in the warm-up state.
+     */
+    byte[] warmup(String item);
+
+
+    /**
+     * Randomizes the item based on the current data structure.
      *
      * @param serverContext the server context.
      * @param item          the item.
      * @param random        the random state.
      * @return the randomized item.
      */
-    String randomize(HhLdpServerContext serverContext, String item, Random random);
+    byte[] randomize(HhLdpServerContext serverContext, String item, Random random);
 
     /**
-     * randomize the item based on the current data structure.
+     * Randomizes the item based on the current data structure.
      *
      * @param serverContext the server context.
      * @param item          the item.
      * @return the randomized item.
      */
-    default String randomize(HhLdpServerContext serverContext, String item) {
+    default byte[] randomize(HhLdpServerContext serverContext, String item) {
         return randomize(serverContext, item, new Random());
     }
 
     /**
-     * Return the privacy parameter ε / w.
+     * Returns the privacy parameter ε / w.
      *
      * @return the privacy parameter ε / w.
      */
@@ -53,7 +63,7 @@ public interface HhLdpClient {
     int getD();
 
     /**
-     * Get the number of Heavy Hitters k.
+     * Gets the number of Heavy Hitters k.
      *
      * @return the number of Heavy Hitters.
      */

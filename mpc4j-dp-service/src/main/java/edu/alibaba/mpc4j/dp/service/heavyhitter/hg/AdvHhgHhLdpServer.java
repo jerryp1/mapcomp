@@ -2,7 +2,6 @@ package edu.alibaba.mpc4j.dp.service.heavyhitter.hg;
 
 import edu.alibaba.mpc4j.dp.service.heavyhitter.utils.HgHhLdpServerContext;
 import edu.alibaba.mpc4j.dp.service.heavyhitter.HhLdpServerState;
-import edu.alibaba.mpc4j.dp.service.heavyhitter.HhLdpFactory;
 import edu.alibaba.mpc4j.dp.service.heavyhitter.config.HhgHhLdpConfig;
 
 import java.util.*;

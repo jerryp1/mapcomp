@@ -180,11 +180,12 @@ public class HhLdpServerTest {
         HhLdpConfig config = new BasicHhLdpConfig
             .Builder(type, EXAMPLE_DATA_DOMAIN, k, DEFAULT_EPSILON)
             .build();
-        // create server
+        // create server and client
         HhLdpServer server = HhLdpFactory.createServer(config);
+        HhLdpClient client = HhLdpFactory.createClient(config);
         // warmup
         Stream<String> dataStream = StreamDataUtils.obtainItemStream(EXAMPLE_DATA_PATH);
-        dataStream.forEach(server::warmupInsert);
+        dataStream.map(client::warmup).forEach(server::warmupInsert);
         dataStream.close();
         Map<String, Double> heavyHitters = server.responseHeavyHitters();
         Assert.assertTrue(heavyHitters.size() <= k);
@@ -203,11 +204,12 @@ public class HhLdpServerTest {
         HhLdpConfig config = new BasicHhLdpConfig
             .Builder(type, EXAMPLE_DATA_DOMAIN, k, DEFAULT_EPSILON)
             .build();
-        // create server
+        // create server and client
         HhLdpServer server = HhLdpFactory.createServer(config);
+        HhLdpClient client = HhLdpFactory.createClient(config);
         // warmup
         Stream<String> dataStream = StreamDataUtils.obtainItemStream(EXAMPLE_DATA_PATH);
-        dataStream.forEach(server::warmupInsert);
+        dataStream.map(client::warmup).forEach(server::warmupInsert);
         dataStream.close();
         server.stopWarmup();
         Map<String, Double> heavyHitters = server.responseHeavyHitters();
@@ -231,7 +233,7 @@ public class HhLdpServerTest {
         HhLdpServer server = HhLdpFactory.createServer(config);
         HhLdpClient client = HhLdpFactory.createClient(config);
         // warmup
-        exampleWarmupInsert(server);
+        exampleWarmupInsert(server, client);
         server.stopWarmup();
         // randomize
         exampleRandomizeInsert(server, client);
@@ -256,7 +258,7 @@ public class HhLdpServerTest {
         HhLdpServer server = HhLdpFactory.createServer(config);
         HhLdpClient client = HhLdpFactory.createClient(config);
         // warmup
-        exampleWarmupInsert(server);
+        exampleWarmupInsert(server, client);
         server.stopWarmup();
         // randomize
         exampleRandomizeInsert(server, client);
@@ -276,7 +278,7 @@ public class HhLdpServerTest {
         HhLdpServer server = HhLdpFactory.createServer(config);
         HhLdpClient client = HhLdpFactory.createClient(config);
         // warmup
-        exampleWarmupInsert(server);
+        exampleWarmupInsert(server, client);
         server.stopWarmup();
         // randomize
         exampleRandomizeInsert(server, client);
@@ -292,10 +294,12 @@ public class HhLdpServerTest {
         }
     }
 
-    static void exampleWarmupInsert(HhLdpServer server) throws IOException {
+    static void exampleWarmupInsert(HhLdpServer server, HhLdpClient client) throws IOException {
         AtomicInteger warmupIndex = new AtomicInteger();
         Stream<String> dataStream = StreamDataUtils.obtainItemStream(EXAMPLE_DATA_PATH);
-        dataStream.filter(item -> warmupIndex.getAndIncrement() <= EXAMPLE_WARMUP_NUM).forEach(server::warmupInsert);
+        dataStream.filter(item -> warmupIndex.getAndIncrement() <= EXAMPLE_WARMUP_NUM)
+            .map(client::warmup)
+            .forEach(server::warmupInsert);
         dataStream.close();
     }
 
@@ -318,7 +322,7 @@ public class HhLdpServerTest {
         HhLdpServer server = HhLdpFactory.createServer(config);
         HhLdpClient client = HhLdpFactory.createClient(config);
         // warmup
-        connectWarmupInsert(server);
+        connectWarmupInsert(server, client);
         server.stopWarmup();
         // randomize
         connectRandomizeInsert(server, client);
@@ -326,10 +330,11 @@ public class HhLdpServerTest {
         LOGGER.info("{}: k = {}, d = {}, memory = {}", type.name(), DEFAULT_K, CONNECT_D, memory);
     }
 
-    static void connectWarmupInsert(HhLdpServer server) throws IOException {
+    static void connectWarmupInsert(HhLdpServer server, HhLdpClient client) throws IOException {
         AtomicInteger warmupIndex = new AtomicInteger();
         Stream<String> dataStream = StreamDataUtils.obtainItemStream(CONNECT_DATA_PATH);
         dataStream.filter(item -> warmupIndex.getAndIncrement() <= CONNECT_WARMUP_NUM)
+            .map(client::warmup)
             .forEach(server::warmupInsert);
         dataStream.close();
     }

@@ -57,6 +57,12 @@ public abstract class AbstractHgHhLdpClient implements HgHhLdpClient {
     }
 
     @Override
+    public byte[] warmup(String item) {
+        checkItemInDomain(item);
+        return item.getBytes(HhLdpFactory.DEFAULT_CHARSET);
+    }
+
+    @Override
     public HhLdpFactory.HhLdpType getType() {
         return type;
     }

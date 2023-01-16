@@ -1,6 +1,5 @@
 package edu.alibaba.mpc4j.dp.service.heavyhitter.hg;
 
-import edu.alibaba.mpc4j.dp.service.heavyhitter.HhLdpFactory;
 import edu.alibaba.mpc4j.dp.service.heavyhitter.config.HhgHhLdpConfig;
 
 /**

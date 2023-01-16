@@ -13,53 +13,53 @@ import java.util.*;
  */
 public interface HhLdpServer {
     /**
-     * Get the type.
+     * Gets the type.
      *
      * @return the type.
      */
     HhLdpFactory.HhLdpType getType();
 
     /**
-     * Insert an item during the warmup state.
+     * Inserts an item during the warmup state.
      *
-     * @param item the item.
+     * @param itemBytes the item.
      * @return true if the randomized item is not ignored and successfully inserted.
      */
     @CanIgnoreReturnValue
-    boolean warmupInsert(String item);
+    boolean warmupInsert(byte[] itemBytes);
 
     /**
-     * Stop warming up.
+     * Stops warming up.
      *
      * @throws IllegalStateException If warming up is not enough.
      */
     void stopWarmup();
 
     /**
-     * Return the server context.
+     * Returns the server context.
      *
      * @return the server context.
      */
     HhLdpServerContext getServerContext();
 
     /**
-     * Insert a randomized item.
+     * Inserts a randomized item.
      *
-     * @param randomizedItem the randomized item.
+     * @param itemBytes the randomized item.
      * @return true if the randomized item is not ignored and successfully inserted.
      */
     @CanIgnoreReturnValue
-    boolean randomizeInsert(String randomizedItem);
+    boolean randomizeInsert(byte[] itemBytes);
 
     /**
-     * Response Heavy Hitters.
+     * Responses Heavy Hitters.
      *
      * @return Heavy Hitters.
      */
     Map<String, Double> responseHeavyHitters();
 
     /**
-     * Response Heavy Hitters with descending order list.
+     * Responses Heavy Hitters with descending order list.
      *
      * @return the heavy hitter map.
      */
@@ -75,7 +75,7 @@ public interface HhLdpServer {
     }
 
     /**
-     * Return the privacy parameter ε / w.
+     * Returns the privacy parameter ε / w.
      *
      * @return the privacy parameter ε / w.
      */

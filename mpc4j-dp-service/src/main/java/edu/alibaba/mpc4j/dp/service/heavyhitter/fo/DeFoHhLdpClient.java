@@ -37,7 +37,13 @@ public class DeFoHhLdpClient extends AbstractFoHhLdpClient {
     }
 
     @Override
-    public String randomize(HhLdpServerContext serverContext, String item, Random random) {
+    public byte[] warmup(String item) {
+        checkItemInDomain(item);
+        return item.getBytes(HhLdpFactory.DEFAULT_CHARSET);
+    }
+
+    @Override
+    public byte[] randomize(HhLdpServerContext serverContext, String item, Random random) {
         Preconditions.checkArgument(serverContext instanceof EmptyHhLdpServerContext);
         checkItemInDomain(item);
         // naive solution does not consider the current data structure
@@ -46,10 +52,10 @@ public class DeFoHhLdpClient extends AbstractFoHhLdpClient {
         int randomIndex = random.nextInt(d);
         if (randomSample > p - q) {
             // answer a random item
-            return domain.getIndexItem(randomIndex);
+            return domain.getIndexItem(randomIndex).getBytes(HhLdpFactory.DEFAULT_CHARSET);
         } else {
             // answer the true item
-            return item;
+            return item.getBytes(HhLdpFactory.DEFAULT_CHARSET);
         }
     }
 }

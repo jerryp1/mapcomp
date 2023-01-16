@@ -7,6 +7,9 @@ import edu.alibaba.mpc4j.dp.service.heavyhitter.fo.DeFoHhLdpClient;
 import edu.alibaba.mpc4j.dp.service.heavyhitter.fo.DeFoHhLdpServer;
 import edu.alibaba.mpc4j.dp.service.heavyhitter.hg.*;
 
+import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
+
 /**
  * Heavy Hitter LDP Factory.
  *
@@ -18,6 +21,10 @@ public class HhLdpFactory {
      * the empty item prefix ⊥
      */
     public static final String BOT_PREFIX = "⊥_";
+    /**
+     * the default charset
+     */
+    public static final Charset DEFAULT_CHARSET = StandardCharsets.UTF_8;
 
     private HhLdpFactory() {
         // empty

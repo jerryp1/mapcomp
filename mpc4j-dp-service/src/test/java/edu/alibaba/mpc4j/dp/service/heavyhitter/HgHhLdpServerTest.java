@@ -149,7 +149,8 @@ public class HgHhLdpServerTest {
             .setHgRandom(hgRandom)
             .build();
         HgHhLdpServer server = HhLdpFactory.createHgServer(config);
-        testWarmup(server, CORRECT_W1_HG_EXAMPLE_COUNT_ORDERED_LIST);
+        HgHhLdpClient client = HhLdpFactory.createHgClient(config);
+        testWarmup(server, client, CORRECT_W1_HG_EXAMPLE_COUNT_ORDERED_LIST);
     }
 
     @Test
@@ -161,7 +162,8 @@ public class HgHhLdpServerTest {
             .setHgRandom(hgRandom)
             .build();
         HgHhLdpServer server = HhLdpFactory.createHgServer(config);
-        testWarmup(server, CORRECT_W2_HG_EXAMPLE_COUNT_ORDERED_LIST);
+        HgHhLdpClient client = HhLdpFactory.createHgClient(config);
+        testWarmup(server, client, CORRECT_W2_HG_EXAMPLE_COUNT_ORDERED_LIST);
     }
 
     @Test
@@ -173,14 +175,15 @@ public class HgHhLdpServerTest {
             .setHgRandom(hgRandom)
             .build();
         HgHhLdpServer server = HhLdpFactory.createHgServer(config);
-        testWarmup(server, CORRECT_W3_HG_EXAMPLE_COUNT_ORDERED_LIST);
+        HgHhLdpClient client = HhLdpFactory.createHgClient(config);
+        testWarmup(server, client, CORRECT_W3_HG_EXAMPLE_COUNT_ORDERED_LIST);
     }
 
-    private void testWarmup(HgHhLdpServer server, List<Map.Entry<String, Integer>> correctOrderedList)
-        throws IOException {
+    private void testWarmup(HgHhLdpServer server, HgHhLdpClient client,
+                            List<Map.Entry<String, Integer>> correctOrderedList) throws IOException {
         // warmup
         Stream<String> dataStream = StreamDataUtils.obtainItemStream(HhLdpServerTest.EXAMPLE_DATA_PATH);
-        dataStream.forEach(server::warmupInsert);
+        dataStream.map(client::warmup).forEach(server::warmupInsert);
         dataStream.close();
         // get heavy hitters
         Map<String, Double> heavyHitters = server.responseHeavyHitters();
@@ -202,7 +205,8 @@ public class HgHhLdpServerTest {
             .setHgRandom(hgRandom)
             .build();
         HgHhLdpServer server = HhLdpFactory.createHgServer(config);
-        testStopWarmup(server, CORRECT_W1_HG_EXAMPLE_COUNT_ORDERED_LIST);
+        HgHhLdpClient client = HhLdpFactory.createHgClient(config);
+        testStopWarmup(server, client, CORRECT_W1_HG_EXAMPLE_COUNT_ORDERED_LIST);
     }
 
     @Test
@@ -214,7 +218,8 @@ public class HgHhLdpServerTest {
             .setHgRandom(hgRandom)
             .build();
         HgHhLdpServer server = HhLdpFactory.createHgServer(config);
-        testStopWarmup(server, CORRECT_W2_HG_EXAMPLE_COUNT_ORDERED_LIST);
+        HgHhLdpClient client = HhLdpFactory.createHgClient(config);
+        testStopWarmup(server, client, CORRECT_W2_HG_EXAMPLE_COUNT_ORDERED_LIST);
     }
 
     @Test
@@ -226,18 +231,21 @@ public class HgHhLdpServerTest {
             .setHgRandom(hgRandom)
             .build();
         HgHhLdpServer server = HhLdpFactory.createHgServer(config);
-        testStopWarmup(server, CORRECT_W3_HG_EXAMPLE_COUNT_ORDERED_LIST);
+        HgHhLdpClient client = HhLdpFactory.createHgClient(config);
+        testStopWarmup(server, client, CORRECT_W3_HG_EXAMPLE_COUNT_ORDERED_LIST);
     }
 
-    private void testStopWarmup(HgHhLdpServer hgLdpHeavyHitter, List<Map.Entry<String, Integer>> correctOrderedList)
-        throws IOException {
+    private void testStopWarmup(HgHhLdpServer server, HgHhLdpClient client,
+                                List<Map.Entry<String, Integer>> correctOrderedList) throws IOException {
         // warmup
-        StreamDataUtils.obtainItemStream(HhLdpServerTest.EXAMPLE_DATA_PATH).forEach(hgLdpHeavyHitter::warmupInsert);
-        hgLdpHeavyHitter.stopWarmup();
+        StreamDataUtils.obtainItemStream(HhLdpServerTest.EXAMPLE_DATA_PATH)
+            .map(client::warmup)
+            .forEach(server::warmupInsert);
+        server.stopWarmup();
         // get heavy hitters
-        Map<String, Double> heavyHitters = hgLdpHeavyHitter.responseHeavyHitters();
+        Map<String, Double> heavyHitters = server.responseHeavyHitters();
         Assert.assertEquals(HhLdpServerTest.DEFAULT_K, heavyHitters.size());
-        List<Map.Entry<String, Double>> orderedHeavyHitters = hgLdpHeavyHitter.responseOrderedHeavyHitters();
+        List<Map.Entry<String, Double>> orderedHeavyHitters = server.responseOrderedHeavyHitters();
         Assert.assertEquals(HhLdpServerTest.DEFAULT_K, orderedHeavyHitters.size());
         // verify no-error count
         for (int index = 0; index < HhLdpServerTest.DEFAULT_K; index++) {
@@ -287,7 +295,7 @@ public class HgHhLdpServerTest {
     private void testLargeEpsilon(HgHhLdpServer server, HgHhLdpClient client,
                                   List<Map.Entry<String, Integer>> correctOrderedList) throws IOException {
         // warmup
-        HhLdpServerTest.exampleWarmupInsert(server);
+        HhLdpServerTest.exampleWarmupInsert(server, client);
         server.stopWarmup();
         // randomize
         HhLdpServerTest.exampleRandomizeInsert(server, client);
