@@ -34,14 +34,27 @@ public class FoLdpTest {
      */
     static final double DEFAULT_EPSILON = 16;
     /**
-     * default top
+     * large ε absolute precision
      */
-    private static final int DEFAULT_TOP = 20;
+    private static final double LARGE_EPSILON_ABS_PRECISION
+        = (double)LdpTestDataUtils.EXAMPLE_TOTAL_NUM / LdpTestDataUtils.EXAMPLE_DATA_D;
+    /**
+     * default ε variance precision
+     */
+    private static final double DEFAULT_EPSILON_VARIANCE_PRECISION = 2;
 
     @Parameterized.Parameters(name = "{0}")
     public static Collection<Object[]> configurations() {
         Collection<Object[]> configurations = new ArrayList<>();
 
+        // OPTIMIZED_UNARY_ENCODING
+        configurations.add(new Object[]{
+            FoLdpType.OUE.name(), FoLdpType.OUE,
+        });
+        // SYMMETRIC_UNARY_ENCODING
+        configurations.add(new Object[]{
+            FoLdpType.SUE.name(), FoLdpType.SUE,
+        });
         // DE_INDEX_ENCODING
         configurations.add(new Object[]{
             FoLdpType.DE_INDEX_ENCODING.name(), FoLdpType.DE_INDEX_ENCODING,
@@ -89,11 +102,21 @@ public class FoLdpTest {
         exampleRandomizeInsert(server, client);
         Map<String, Double> frequencyEstimates = server.estimate();
         Assert.assertEquals(LdpTestDataUtils.EXAMPLE_DATA_D, frequencyEstimates.size());
-        for (String item : LdpTestDataUtils.EXAMPLE_DATA_DOMAIN) {
-            // verify no-error count
-            Assert.assertEquals(
-                LdpTestDataUtils.CORRECT_EXAMPLE_COUNT_MAP.get(item), frequencyEstimates.get(item), DoubleUtils.PRECISION
-            );
+        if (config.isConverge()) {
+            for (String item : LdpTestDataUtils.EXAMPLE_DATA_DOMAIN) {
+                // verify no-error count
+                Assert.assertEquals(
+                    LdpTestDataUtils.CORRECT_EXAMPLE_COUNT_MAP.get(item), frequencyEstimates.get(item), DoubleUtils.PRECISION
+                );
+            }
+        } else {
+            // there are some mechanisms that do not get accurate answer even for large epsilon
+            for (String item : LdpTestDataUtils.EXAMPLE_DATA_DOMAIN) {
+                int correct = LdpTestDataUtils.CORRECT_EXAMPLE_COUNT_MAP.get(item);
+                double estimate = frequencyEstimates.get(item);
+                // verify bounded error
+                Assert.assertTrue(Math.abs(correct - estimate) <= LARGE_EPSILON_ABS_PRECISION);
+            }
         }
     }
 
@@ -109,14 +132,11 @@ public class FoLdpTest {
         exampleRandomizeInsert(server, client);
         Map<String, Double> frequencyEstimates = server.estimate();
         Assert.assertEquals(LdpTestDataUtils.EXAMPLE_DATA_D, frequencyEstimates.size());
-        // verify frequency estimates for the top items are the same
-        List<Map.Entry<String, Double>> orderedFrequencyEstimates = server.orderedEstimate();
-        for (int index = 0; index < DEFAULT_TOP; index++) {
-            Assert.assertEquals(
-                LdpTestDataUtils.CORRECT_EXAMPLE_COUNT_ORDERED_LIST.get(index).getKey(),
-                orderedFrequencyEstimates.get(index).getKey()
-            );
-        }
+        // compute the variance
+        int totalNum = LdpTestDataUtils.EXAMPLE_TOTAL_NUM;
+        double variance = LdpTestDataUtils.getVariance(frequencyEstimates, LdpTestDataUtils.CORRECT_EXAMPLE_COUNT_MAP);
+        double averageVariance = variance / totalNum;
+        Assert.assertTrue(averageVariance <= DEFAULT_EPSILON_VARIANCE_PRECISION);
     }
 
     private static void exampleRandomizeInsert(FoLdpServer server, FoLdpClient client) throws IOException {

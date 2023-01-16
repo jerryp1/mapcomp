@@ -24,6 +24,11 @@ public class FoHhLdpConfig extends BasicHhLdpConfig {
         this.foLdpConfig = builder.foLdpConfig;
     }
 
+    @Override
+    public boolean isConverge() {
+        return foLdpConfig.isConverge();
+    }
+
     public FoLdpConfig getFoLdpConfig() {
         return foLdpConfig;
     }

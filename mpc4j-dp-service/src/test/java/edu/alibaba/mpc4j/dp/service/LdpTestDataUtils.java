@@ -5,8 +5,6 @@ import edu.alibaba.mpc4j.dp.service.structure.StreamCounterTest;
 import edu.alibaba.mpc4j.dp.service.tool.StreamDataUtils;
 
 import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Paths;
 import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
@@ -37,6 +35,10 @@ public class LdpTestDataUtils {
      */
     public static final int EXAMPLE_DATA_D = EXAMPLE_DATA_DOMAIN.size();
     /**
+     * total num for stream_counter_example_data.txt
+     */
+    public static final int EXAMPLE_TOTAL_NUM;
+    /**
      * warmup num for stream_counter_example_data.txt
      */
     public static final int EXAMPLE_WARMUP_NUM;
@@ -52,10 +54,11 @@ public class LdpTestDataUtils {
     static {
         try {
             Stream<String> dataStream = StreamDataUtils.obtainItemStream(EXAMPLE_DATA_PATH);
-            EXAMPLE_WARMUP_NUM = (int)Math.round(dataStream.count() * 0.01);
+            EXAMPLE_TOTAL_NUM = (int)dataStream.count();
+            EXAMPLE_WARMUP_NUM = (int)Math.round(EXAMPLE_TOTAL_NUM* 0.01);
             dataStream.close();
             NaiveStreamCounter streamCounter = new NaiveStreamCounter();
-            dataStream = Files.lines(Paths.get(EXAMPLE_DATA_PATH));
+            dataStream = StreamDataUtils.obtainItemStream(EXAMPLE_DATA_PATH);
             dataStream.forEach(streamCounter::insert);
             dataStream.close();
             CORRECT_EXAMPLE_COUNT_MAP = EXAMPLE_DATA_DOMAIN.stream()
@@ -81,22 +84,44 @@ public class LdpTestDataUtils {
     public static final Set<String> CONNECT_DATA_DOMAIN = IntStream.rangeClosed(1, 129)
         .mapToObj(String::valueOf).collect(Collectors.toSet());
     /**
-     * domain size for connect.dat
+     * total num for connect.txt
      */
-    public static final int CONNECT_DATA_D = CONNECT_DATA_DOMAIN.size();
+    public static final int CONNECT_TOTAL_NUM;
     /**
      * warmup num for connect.dat
      */
     public static final int CONNECT_WARMUP_NUM;
+    /**
+     * correct count map for stream_counter_example_data.txt
+     */
+    public static final Map<String, Integer> CORRECT_CONNECT_COUNT_MAP;
 
     static {
         try {
             Stream<String> dataStream = StreamDataUtils.obtainItemStream(CONNECT_DATA_PATH);
-            CONNECT_WARMUP_NUM = (int)Math.round(dataStream.count() * 0.01);
+            CONNECT_TOTAL_NUM = (int)dataStream.count();
+            CONNECT_WARMUP_NUM = (int)Math.round(CONNECT_TOTAL_NUM * 0.01);
             dataStream.close();
+            NaiveStreamCounter streamCounter = new NaiveStreamCounter();
+            dataStream = StreamDataUtils.obtainItemStream(CONNECT_DATA_PATH);
+            dataStream.forEach(streamCounter::insert);
+            dataStream.close();
+            CORRECT_CONNECT_COUNT_MAP = CONNECT_DATA_DOMAIN.stream()
+                .collect(Collectors.toMap(item -> item, streamCounter::query));
         } catch (IOException e) {
             e.printStackTrace();
             throw new IllegalStateException();
         }
+    }
+
+    public static double getVariance(Map<String, Double> estimates, Map<String, Integer> corrects) {
+        // compute the variance
+        double variance = 0;
+        for (String item : corrects.keySet()) {
+            double estimate = estimates.get(item);
+            int correct = corrects.get(item);
+            variance += Math.pow(estimate - correct, 2);
+        }
+        return variance;
     }
 }

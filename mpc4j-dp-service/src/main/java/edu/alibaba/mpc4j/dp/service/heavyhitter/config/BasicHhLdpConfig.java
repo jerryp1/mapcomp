@@ -66,6 +66,11 @@ public class BasicHhLdpConfig implements HhLdpConfig {
         return windowEpsilon;
     }
 
+    @Override
+    public boolean isConverge() {
+        return true;
+    }
+
     public static class Builder implements org.apache.commons.lang3.builder.Builder<BasicHhLdpConfig> {
         /**
          * the type

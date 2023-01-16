@@ -45,4 +45,11 @@ public interface HhLdpConfig {
      * @return the privacy parameter ε / w.
      */
     double getWindowEpsilon();
+
+    /**
+     * Returns whether the mechanism obtain accurate estimation for extremely large ε.
+     *
+     * @return whether the mechanism obtain accurate estimation for extremely large ε.
+     */
+    boolean isConverge();
 }

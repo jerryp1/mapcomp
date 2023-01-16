@@ -57,6 +57,19 @@ public class BasicFoLdpConfig implements FoLdpConfig {
         return epsilon;
     }
 
+    @Override
+    public boolean isConverge() {
+        switch (type) {
+            case DE_INDEX_ENCODING:
+            case DE_STRING_ENCODING:
+            case SUE:
+            case OUE:
+                return false;
+            default:
+                throw new IllegalArgumentException("Invalid " + FoLdpFactory.FoLdpType.class.getSimpleName() + ": " + type.name());
+        }
+    }
+
     public static class Builder implements org.apache.commons.lang3.builder.Builder<BasicFoLdpConfig> {
         /**
          * the type

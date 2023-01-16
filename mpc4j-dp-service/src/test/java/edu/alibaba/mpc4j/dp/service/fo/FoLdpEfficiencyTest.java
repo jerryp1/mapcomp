@@ -17,6 +17,7 @@ import org.slf4j.LoggerFactory;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Map;
 import java.util.Random;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Stream;
@@ -33,11 +34,7 @@ public class FoLdpEfficiencyTest {
     /**
      * default ε
      */
-    private static final double DEFAULT_EPSILON = 16;
-    /**
-     * default k
-     */
-    private static final int DEFAULT_K = 20;
+    private static final double DEFAULT_EPSILON = 8;
     /**
      * server stop watch
      */
@@ -51,6 +48,14 @@ public class FoLdpEfficiencyTest {
     public static Collection<Object[]> configurations() {
         Collection<Object[]> configurations = new ArrayList<>();
 
+        // OPTIMIZED_UNARY_ENCODING
+        configurations.add(new Object[]{
+            FoLdpFactory.FoLdpType.OUE.name(), FoLdpFactory.FoLdpType.OUE,
+        });
+        // SYMMETRIC_UNARY_ENCODING
+        configurations.add(new Object[]{
+            FoLdpFactory.FoLdpType.SUE.name(), FoLdpFactory.FoLdpType.SUE,
+        });
         // DE_INDEX_ENCODING
         configurations.add(new Object[]{
             FoLdpFactory.FoLdpType.DE_INDEX_ENCODING.name(), FoLdpFactory.FoLdpType.DE_INDEX_ENCODING,
@@ -88,7 +93,7 @@ public class FoLdpEfficiencyTest {
         CLIENT_STOP_WATCH.suspend();
         Random ldpRandom = new Random();
         Stream<String> dataStream = StreamDataUtils.obtainItemStream(LdpTestDataUtils.CONNECT_DATA_PATH);
-        long itemByteLength = dataStream
+        long payloadBytes = dataStream
             .mapToLong(item -> {
                 CLIENT_STOP_WATCH.resume();
                 byte[] itemBytes = client.randomize(item, ldpRandom);
@@ -100,6 +105,8 @@ public class FoLdpEfficiencyTest {
             })
             .sum();
         dataStream.close();
+        Map<String, Double> estimates = server.estimate();
+        double variance = LdpTestDataUtils.getVariance(estimates, LdpTestDataUtils.CORRECT_CONNECT_COUNT_MAP);
         // server time
         SERVER_STOP_WATCH.stop();
         double serverTime = (double) SERVER_STOP_WATCH.getTime(TimeUnit.MILLISECONDS) / 1000;
@@ -109,9 +116,8 @@ public class FoLdpEfficiencyTest {
         double clientTime = (double) CLIENT_STOP_WATCH.getTime(TimeUnit.MILLISECONDS) / 1000;
         CLIENT_STOP_WATCH.reset();
         long memory = GraphLayout.parseInstance(server).totalSize();
-        LOGGER.info("{}: k = {}, d = {}, s_time = {}, c_time = {}, byte_length = {}, memory = {}",
-            type.name(), DEFAULT_K, LdpTestDataUtils.CONNECT_DATA_D,
-            serverTime,  clientTime, itemByteLength, memory
+        LOGGER.info("{}: variance = {}, s_time = {}, c_time = {}, byte_length = {}, memory = {}",
+            type.name(), variance, serverTime, clientTime, payloadBytes, memory
         );
     }
 }

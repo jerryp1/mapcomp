@@ -32,7 +32,6 @@ public class DeStringFoLdpClient extends AbstractFoLdpClient {
     @Override
     public byte[] randomize(String item, Random random) {
         checkItemInDomain(item);
-        // naive solution does not consider the current data structure
         double randomSample = random.nextDouble();
         // Randomly sample an integer in [0, d)
         int randomIndex = random.nextInt(d);

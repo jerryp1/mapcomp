@@ -27,6 +27,11 @@ import java.util.stream.Stream;
 @RunWith(Parameterized.class)
 public class HhLdpTest {
     /**
+     * large ε absolute precision
+     */
+    private static final double LARGE_EPSILON_ABS_PRECISION
+        = (double)LdpTestDataUtils.EXAMPLE_TOTAL_NUM / LdpTestDataUtils.EXAMPLE_DATA_D;
+    /**
      * large ε
      */
     private static final double LARGE_EPSILON = 128;
@@ -155,13 +160,24 @@ public class HhLdpTest {
         exampleRandomizeInsert(server, client);
         Map<String, Double> heavyHitters = server.heavyHitters();
         Assert.assertTrue(heavyHitters.size() <= k);
-        for (String item : LdpTestDataUtils.EXAMPLE_DATA_DOMAIN) {
-            // there are the cases when the example data does not contain some items in the domain.
-            if (heavyHitters.containsKey(item)) {
-                // verify no-error count
-                Assert.assertEquals(
-                    LdpTestDataUtils.CORRECT_EXAMPLE_COUNT_MAP.get(item), heavyHitters.get(item), DoubleUtils.PRECISION
-                );
+        if (config.isConverge()) {
+            for (String item : LdpTestDataUtils.EXAMPLE_DATA_DOMAIN) {
+                // there are the cases when the example data does not contain some items in the domain.
+                if (heavyHitters.containsKey(item)) {
+                    // verify no-error count
+                    Assert.assertEquals(
+                        LdpTestDataUtils.CORRECT_EXAMPLE_COUNT_MAP.get(item),
+                        heavyHitters.get(item), DoubleUtils.PRECISION
+                    );
+                }
+            }
+        } else {
+            // there are some mechanisms that do not get accurate answer even for large epsilon
+            for (String item : LdpTestDataUtils.EXAMPLE_DATA_DOMAIN) {
+                int correct = LdpTestDataUtils.CORRECT_EXAMPLE_COUNT_MAP.get(item);
+                double estimate = heavyHitters.get(item);
+                // verify bounded error
+                Assert.assertTrue(Math.abs(correct - estimate) <= LARGE_EPSILON_ABS_PRECISION);
             }
         }
     }

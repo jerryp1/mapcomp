@@ -48,4 +48,11 @@ public interface FoLdpConfig {
      * @return the privacy parameter ε.
      */
     double getEpsilon();
+
+    /**
+     * Returns whether the mechanism obtain accurate estimation for extremely large ε.
+     *
+     * @return whether the mechanism obtain accurate estimation for extremely large ε.
+     */
+    boolean isConverge();
 }

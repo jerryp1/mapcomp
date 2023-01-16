@@ -5,6 +5,10 @@ import edu.alibaba.mpc4j.dp.service.fo.de.DeIndexFoLdpClient;
 import edu.alibaba.mpc4j.dp.service.fo.de.DeIndexFoLdpServer;
 import edu.alibaba.mpc4j.dp.service.fo.de.DeStringFoLdpClient;
 import edu.alibaba.mpc4j.dp.service.fo.de.DeStringFoLdpServer;
+import edu.alibaba.mpc4j.dp.service.fo.ue.OueFoLdpClient;
+import edu.alibaba.mpc4j.dp.service.fo.ue.OueFoLdpServer;
+import edu.alibaba.mpc4j.dp.service.fo.ue.SueFoLdpClient;
+import edu.alibaba.mpc4j.dp.service.fo.ue.SueFoLdpServer;
 
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
@@ -35,6 +39,14 @@ public class FoLdpFactory {
          */
         DE_INDEX_ENCODING,
         /**
+         * Symmetric Unary Encoding, also known as basic RAPPOR.
+         */
+        SUE,
+        /**
+         * Optimized Unary Encoding
+         */
+        OUE,
+        /**
          * RAPPOR
          */
         RAPPOR,
@@ -53,6 +65,10 @@ public class FoLdpFactory {
                 return new DeStringFoLdpServer(config);
             case DE_INDEX_ENCODING:
                 return new DeIndexFoLdpServer(config);
+            case SUE:
+                return new SueFoLdpServer(config);
+            case OUE:
+                return new OueFoLdpServer(config);
             default:
                 throw new IllegalArgumentException("Invalid " + FoLdpType.class.getSimpleName() + ": " + type.name());
         }
@@ -71,6 +87,10 @@ public class FoLdpFactory {
                 return new DeStringFoLdpClient(config);
             case DE_INDEX_ENCODING:
                 return new DeIndexFoLdpClient(config);
+            case SUE:
+                return new SueFoLdpClient(config);
+            case OUE:
+                return new OueFoLdpClient(config);
             default:
                 throw new IllegalArgumentException("Invalid " + FoLdpType.class.getSimpleName() + ": " + type.name());
         }
