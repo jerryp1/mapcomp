@@ -1,6 +1,7 @@
 package edu.alibaba.mpc4j.dp.service.heavyhitter;
 
 import com.google.common.base.Preconditions;
+import edu.alibaba.mpc4j.dp.service.LdpTestDataUtils;
 import edu.alibaba.mpc4j.dp.service.heavyhitter.HhLdpFactory.HhLdpType;
 import edu.alibaba.mpc4j.dp.service.heavyhitter.config.HgHhLdpConfig;
 import edu.alibaba.mpc4j.dp.service.heavyhitter.hg.HgHhLdpClient;
@@ -19,17 +20,29 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 /**
- * tests for Heavy Hitter with Local Differential Privacy based on HeavyGuardian.
+ * HeavyGuardian-based Heavy Hitter LDP test.
  *
  * @author Weiran Liu
  * @date 2022/11/18
  */
 @RunWith(Parameterized.class)
-public class HgHhLdpServerTest {
+public class HgHhLdpTest {
     /**
      * HeavyGuardian seed
      */
     private static final long HEAVY_GUARDIAN_SEED = 1234567890L;
+    /**
+     * large ε
+     */
+    private static final double LARGE_EPSILON = 128;
+    /**
+     * default ε
+     */
+    private static final double DEFAULT_EPSILON = 16;
+    /**
+     * default k
+     */
+    private static final int DEFAULT_K = 20;
     /**
      * w = 1
      */
@@ -37,7 +50,7 @@ public class HgHhLdpServerTest {
     /**
      * λ_h for w = 1
      */
-    private static final int W1_LAMBDA_H = (int) Math.ceil((double) HhLdpServerTest.DEFAULT_K / W1);
+    private static final int W1_LAMBDA_H = (int) Math.ceil((double) DEFAULT_K / W1);
     /**
      * w = 2
      */
@@ -45,7 +58,7 @@ public class HgHhLdpServerTest {
     /**
      * λ_h for w = 2
      */
-    private static final int W2_LAMBDA_H = (int) Math.ceil((double) HhLdpServerTest.DEFAULT_K / W2);
+    private static final int W2_LAMBDA_H = (int) Math.ceil((double) DEFAULT_K / W2);
     /**
      * w = 3
      */
@@ -53,7 +66,7 @@ public class HgHhLdpServerTest {
     /**
      * λ_h for w = 3
      */
-    private static final int W3_LAMBDA_H = (int) Math.ceil((double) HhLdpServerTest.DEFAULT_K / W3);
+    private static final int W3_LAMBDA_H = (int) Math.ceil((double) DEFAULT_K / W3);
     /**
      * correct HeavyGuardian count ordered list for stream_counter_example_data.txt with w = 1
      */
@@ -73,7 +86,7 @@ public class HgHhLdpServerTest {
             // w = 1
             random.setSeed(HEAVY_GUARDIAN_SEED);
             HeavyGuardian w1HeavyGuardian = new HeavyGuardian(W1, W1_LAMBDA_H, 0, random);
-            Stream<String> w1DataStream = StreamDataUtils.obtainItemStream(HhLdpServerTest.EXAMPLE_DATA_PATH);
+            Stream<String> w1DataStream = StreamDataUtils.obtainItemStream(LdpTestDataUtils.EXAMPLE_DATA_PATH);
             w1DataStream.forEach(w1HeavyGuardian::insert);
             w1DataStream.close();
             Map<String, Integer> correctW1CountMap = w1HeavyGuardian.getRecordItemSet().stream()
@@ -84,7 +97,7 @@ public class HgHhLdpServerTest {
             // w = 2
             random.setSeed(HEAVY_GUARDIAN_SEED);
             HeavyGuardian w2HeavyGuardian = new HeavyGuardian(W2, W2_LAMBDA_H, 0, random);
-            Stream<String> w2DataStream = StreamDataUtils.obtainItemStream(HhLdpServerTest.EXAMPLE_DATA_PATH);
+            Stream<String> w2DataStream = StreamDataUtils.obtainItemStream(LdpTestDataUtils.EXAMPLE_DATA_PATH);
             w2DataStream.forEach(w2HeavyGuardian::insert);
             w2DataStream.close();
             Map<String, Integer> correctW2CountMap = w2HeavyGuardian.getRecordItemSet().stream()
@@ -95,7 +108,7 @@ public class HgHhLdpServerTest {
             // w = 3
             random.setSeed(HEAVY_GUARDIAN_SEED);
             HeavyGuardian w3HeavyGuardian = new HeavyGuardian(W3, W3_LAMBDA_H, 0, random);
-            Stream<String> w3DataStream = StreamDataUtils.obtainItemStream(HhLdpServerTest.EXAMPLE_DATA_PATH);
+            Stream<String> w3DataStream = StreamDataUtils.obtainItemStream(LdpTestDataUtils.EXAMPLE_DATA_PATH);
             w3DataStream.forEach(w3HeavyGuardian::insert);
             w3DataStream.close();
             Map<String, Integer> correctW3CountMap = w3HeavyGuardian.getRecordItemSet().stream()
@@ -135,7 +148,7 @@ public class HgHhLdpServerTest {
      */
     private final HhLdpType type;
 
-    public HgHhLdpServerTest(String name, HhLdpType type) {
+    public HgHhLdpTest(String name, HhLdpType type) {
         Preconditions.checkArgument(StringUtils.isNotBlank(name));
         this.type = type;
     }
@@ -144,7 +157,7 @@ public class HgHhLdpServerTest {
     public void testW1Warmup() throws IOException {
         Random hgRandom = new Random(HEAVY_GUARDIAN_SEED);
         HgHhLdpConfig config = new HgHhLdpConfig
-            .Builder(type, HhLdpServerTest.EXAMPLE_DATA_DOMAIN, HhLdpServerTest.DEFAULT_K, HhLdpServerTest.DEFAULT_EPSILON)
+            .Builder(type, LdpTestDataUtils.EXAMPLE_DATA_DOMAIN, DEFAULT_K, DEFAULT_EPSILON)
             .setBucketParams(W1, W1_LAMBDA_H)
             .setHgRandom(hgRandom)
             .build();
@@ -157,7 +170,7 @@ public class HgHhLdpServerTest {
     public void testW2Warmup() throws IOException {
         Random hgRandom = new Random(HEAVY_GUARDIAN_SEED);
         HgHhLdpConfig config = new HgHhLdpConfig
-            .Builder(type, HhLdpServerTest.EXAMPLE_DATA_DOMAIN, HhLdpServerTest.DEFAULT_K, HhLdpServerTest.DEFAULT_EPSILON)
+            .Builder(type, LdpTestDataUtils.EXAMPLE_DATA_DOMAIN, DEFAULT_K, DEFAULT_EPSILON)
             .setBucketParams(W2, W2_LAMBDA_H)
             .setHgRandom(hgRandom)
             .build();
@@ -170,7 +183,7 @@ public class HgHhLdpServerTest {
     public void testW3Warmup() throws IOException {
         Random hgRandom = new Random(HEAVY_GUARDIAN_SEED);
         HgHhLdpConfig config = new HgHhLdpConfig
-            .Builder(type, HhLdpServerTest.EXAMPLE_DATA_DOMAIN, HhLdpServerTest.DEFAULT_K, HhLdpServerTest.DEFAULT_EPSILON)
+            .Builder(type, LdpTestDataUtils.EXAMPLE_DATA_DOMAIN, DEFAULT_K, DEFAULT_EPSILON)
             .setBucketParams(W3, W3_LAMBDA_H)
             .setHgRandom(hgRandom)
             .build();
@@ -182,16 +195,16 @@ public class HgHhLdpServerTest {
     private void testWarmup(HgHhLdpServer server, HgHhLdpClient client,
                             List<Map.Entry<String, Integer>> correctOrderedList) throws IOException {
         // warmup
-        Stream<String> dataStream = StreamDataUtils.obtainItemStream(HhLdpServerTest.EXAMPLE_DATA_PATH);
+        Stream<String> dataStream = StreamDataUtils.obtainItemStream(LdpTestDataUtils.EXAMPLE_DATA_PATH);
         dataStream.map(client::warmup).forEach(server::warmupInsert);
         dataStream.close();
         // get heavy hitters
-        Map<String, Double> heavyHitters = server.responseHeavyHitters();
-        Assert.assertEquals(HhLdpServerTest.DEFAULT_K, heavyHitters.size());
-        List<Map.Entry<String, Double>> orderedHeavyHitters = server.responseOrderedHeavyHitters();
-        Assert.assertEquals(HhLdpServerTest.DEFAULT_K, orderedHeavyHitters.size());
+        Map<String, Double> heavyHitters = server.heavyHitters();
+        Assert.assertEquals(DEFAULT_K, heavyHitters.size());
+        List<Map.Entry<String, Double>> orderedHeavyHitters = server.orderedHeavyHitters();
+        Assert.assertEquals(DEFAULT_K, orderedHeavyHitters.size());
         // verify no-error count
-        for (int index = 0; index < HhLdpServerTest.DEFAULT_K; index++) {
+        for (int index = 0; index < DEFAULT_K; index++) {
             Assert.assertEquals(correctOrderedList.get(index).getKey(), orderedHeavyHitters.get(index).getKey());
         }
     }
@@ -200,7 +213,7 @@ public class HgHhLdpServerTest {
     public void testW1StopWarmup() throws IOException {
         Random hgRandom = new Random(HEAVY_GUARDIAN_SEED);
         HgHhLdpConfig config = new HgHhLdpConfig
-            .Builder(type, HhLdpServerTest.EXAMPLE_DATA_DOMAIN, HhLdpServerTest.DEFAULT_K, HhLdpServerTest.DEFAULT_EPSILON)
+            .Builder(type, LdpTestDataUtils.EXAMPLE_DATA_DOMAIN, DEFAULT_K, DEFAULT_EPSILON)
             .setBucketParams(W1, W1_LAMBDA_H)
             .setHgRandom(hgRandom)
             .build();
@@ -213,7 +226,7 @@ public class HgHhLdpServerTest {
     public void testW2StopWarmup() throws IOException {
         Random hgRandom = new Random(HEAVY_GUARDIAN_SEED);
         HgHhLdpConfig config = new HgHhLdpConfig
-            .Builder(type, HhLdpServerTest.EXAMPLE_DATA_DOMAIN, HhLdpServerTest.DEFAULT_K, HhLdpServerTest.DEFAULT_EPSILON)
+            .Builder(type, LdpTestDataUtils.EXAMPLE_DATA_DOMAIN, DEFAULT_K, DEFAULT_EPSILON)
             .setBucketParams(W2, W2_LAMBDA_H)
             .setHgRandom(hgRandom)
             .build();
@@ -226,7 +239,7 @@ public class HgHhLdpServerTest {
     public void testW3StopWarmup() throws IOException {
         Random hgRandom = new Random(HEAVY_GUARDIAN_SEED);
         HgHhLdpConfig config = new HgHhLdpConfig
-            .Builder(type, HhLdpServerTest.EXAMPLE_DATA_DOMAIN, HhLdpServerTest.DEFAULT_K, HhLdpServerTest.DEFAULT_EPSILON)
+            .Builder(type, LdpTestDataUtils.EXAMPLE_DATA_DOMAIN, DEFAULT_K, DEFAULT_EPSILON)
             .setBucketParams(W3, W3_LAMBDA_H)
             .setHgRandom(hgRandom)
             .build();
@@ -238,17 +251,17 @@ public class HgHhLdpServerTest {
     private void testStopWarmup(HgHhLdpServer server, HgHhLdpClient client,
                                 List<Map.Entry<String, Integer>> correctOrderedList) throws IOException {
         // warmup
-        StreamDataUtils.obtainItemStream(HhLdpServerTest.EXAMPLE_DATA_PATH)
+        StreamDataUtils.obtainItemStream(LdpTestDataUtils.EXAMPLE_DATA_PATH)
             .map(client::warmup)
             .forEach(server::warmupInsert);
         server.stopWarmup();
         // get heavy hitters
-        Map<String, Double> heavyHitters = server.responseHeavyHitters();
-        Assert.assertEquals(HhLdpServerTest.DEFAULT_K, heavyHitters.size());
-        List<Map.Entry<String, Double>> orderedHeavyHitters = server.responseOrderedHeavyHitters();
-        Assert.assertEquals(HhLdpServerTest.DEFAULT_K, orderedHeavyHitters.size());
+        Map<String, Double> heavyHitters = server.heavyHitters();
+        Assert.assertEquals(DEFAULT_K, heavyHitters.size());
+        List<Map.Entry<String, Double>> orderedHeavyHitters = server.orderedHeavyHitters();
+        Assert.assertEquals(DEFAULT_K, orderedHeavyHitters.size());
         // verify no-error count
-        for (int index = 0; index < HhLdpServerTest.DEFAULT_K; index++) {
+        for (int index = 0; index < DEFAULT_K; index++) {
             Assert.assertEquals(correctOrderedList.get(index).getKey(), orderedHeavyHitters.get(index).getKey());
         }
     }
@@ -257,7 +270,7 @@ public class HgHhLdpServerTest {
     public void testW1LargeEpsilon() throws IOException {
         Random hgRandom = new Random(HEAVY_GUARDIAN_SEED);
         HgHhLdpConfig config = new HgHhLdpConfig
-            .Builder(type, HhLdpServerTest.EXAMPLE_DATA_DOMAIN, HhLdpServerTest.DEFAULT_K, HhLdpServerTest.LARGE_EPSILON)
+            .Builder(type, LdpTestDataUtils.EXAMPLE_DATA_DOMAIN, DEFAULT_K, LARGE_EPSILON)
             .setBucketParams(W1, W1_LAMBDA_H)
             .setHgRandom(hgRandom)
             .build();
@@ -270,7 +283,7 @@ public class HgHhLdpServerTest {
     public void testW2LargeEpsilon() throws IOException {
         Random hgRandom = new Random(HEAVY_GUARDIAN_SEED);
         HgHhLdpConfig config = new HgHhLdpConfig
-            .Builder(type, HhLdpServerTest.EXAMPLE_DATA_DOMAIN, HhLdpServerTest.DEFAULT_K, HhLdpServerTest.LARGE_EPSILON)
+            .Builder(type, LdpTestDataUtils.EXAMPLE_DATA_DOMAIN, DEFAULT_K, LARGE_EPSILON)
             .setBucketParams(W2, W2_LAMBDA_H)
             .setHgRandom(hgRandom)
             .build();
@@ -283,7 +296,7 @@ public class HgHhLdpServerTest {
     public void testW3LargeEpsilon() throws IOException {
         Random hgRandom = new Random(HEAVY_GUARDIAN_SEED);
         HgHhLdpConfig config = new HgHhLdpConfig
-            .Builder(type, HhLdpServerTest.EXAMPLE_DATA_DOMAIN, HhLdpServerTest.DEFAULT_K, HhLdpServerTest.LARGE_EPSILON)
+            .Builder(type, LdpTestDataUtils.EXAMPLE_DATA_DOMAIN, DEFAULT_K, LARGE_EPSILON)
             .setBucketParams(W3, W3_LAMBDA_H)
             .setHgRandom(hgRandom)
             .build();
@@ -295,17 +308,17 @@ public class HgHhLdpServerTest {
     private void testLargeEpsilon(HgHhLdpServer server, HgHhLdpClient client,
                                   List<Map.Entry<String, Integer>> correctOrderedList) throws IOException {
         // warmup
-        HhLdpServerTest.exampleWarmupInsert(server, client);
+        HhLdpTest.exampleWarmupInsert(server, client);
         server.stopWarmup();
         // randomize
-        HhLdpServerTest.exampleRandomizeInsert(server, client);
+        HhLdpTest.exampleRandomizeInsert(server, client);
         // get heavy hitters
-        Map<String, Double> heavyHitters = server.responseHeavyHitters();
-        Assert.assertEquals(HhLdpServerTest.DEFAULT_K, heavyHitters.size());
-        List<Map.Entry<String, Double>> orderedHeavyHitters = server.responseOrderedHeavyHitters();
-        Assert.assertEquals(HhLdpServerTest.DEFAULT_K, orderedHeavyHitters.size());
+        Map<String, Double> heavyHitters = server.heavyHitters();
+        Assert.assertEquals(DEFAULT_K, heavyHitters.size());
+        List<Map.Entry<String, Double>> orderedHeavyHitters = server.orderedHeavyHitters();
+        Assert.assertEquals(DEFAULT_K, orderedHeavyHitters.size());
         // verify no-error count
-        for (int index = 0; index < HhLdpServerTest.DEFAULT_K; index++) {
+        for (int index = 0; index < DEFAULT_K; index++) {
             Assert.assertEquals(correctOrderedList.get(index).getKey(), orderedHeavyHitters.get(index).getKey());
         }
     }

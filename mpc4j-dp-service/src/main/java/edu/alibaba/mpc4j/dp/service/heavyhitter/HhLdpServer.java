@@ -56,22 +56,21 @@ public interface HhLdpServer {
      *
      * @return Heavy Hitters.
      */
-    Map<String, Double> responseHeavyHitters();
+    Map<String, Double> heavyHitters();
 
     /**
      * Responses Heavy Hitters with descending order list.
      *
      * @return the heavy hitter map.
      */
-    default List<Map.Entry<String, Double>> responseOrderedHeavyHitters() {
-        // Iterate all items in the domain set, then choose the top-k items.
-        Map<String, Double> heavyHitterMap = responseHeavyHitters();
-        List<Map.Entry<String, Double>> heavyHitterOrderedList = new ArrayList<>(heavyHitterMap.entrySet());
+    default List<Map.Entry<String, Double>> orderedHeavyHitters() {
+        Map<String, Double> heavyHitters = heavyHitters();
+        List<Map.Entry<String, Double>> orderedHeavyHitters = new ArrayList<>(heavyHitters.entrySet());
         // descending sort
-        heavyHitterOrderedList.sort(Comparator.comparingDouble(Map.Entry::getValue));
-        Collections.reverse(heavyHitterOrderedList);
+        orderedHeavyHitters.sort(Comparator.comparingDouble(Map.Entry::getValue));
+        Collections.reverse(orderedHeavyHitters);
 
-        return heavyHitterOrderedList;
+        return orderedHeavyHitters;
     }
 
     /**

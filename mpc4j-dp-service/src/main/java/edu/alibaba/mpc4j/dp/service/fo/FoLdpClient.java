@@ -10,18 +10,18 @@ import java.util.Random;
  */
 public interface FoLdpClient {
     /**
-     * Get the type.
+     * Gets the type.
      *
      * @return the type.
      */
     FoLdpFactory.FoLdpType getType();
 
     /**
-     * randomizes and encodes the user's item.
+     * Randomizes an item.
      *
-     * @param item the user's item.
+     * @param item an item.
      * @param random the random state.
-     * @return the encoded randomized item.
+     * @return the randomized item.
      */
     byte[] randomize(String item, Random random);
 

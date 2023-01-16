@@ -1,23 +1,18 @@
 package edu.alibaba.mpc4j.dp.service.fo.de;
 
-import edu.alibaba.mpc4j.common.tool.utils.IntUtils;
 import edu.alibaba.mpc4j.dp.service.fo.AbstractFoLdpClient;
+import edu.alibaba.mpc4j.dp.service.fo.FoLdpFactory;
 import edu.alibaba.mpc4j.dp.service.fo.config.FoLdpConfig;
 
 import java.util.Random;
 
 /**
- * Direct Encoding (DE) Frequency Oracle LDP client. DE is a generation of the Random Response technique.
- * See Section 4.1 of the following paper:
- * <p>
- * Wang, Tianhao, Jeremiah Blocki, Ninghui Li, and Somesh Jha. Locally differentially private protocols for frequency
- * estimation. In 26th USENIX Security Symposium (USENIX Security 17), pp. 729-745. 2017.
- * </p>
+ * Direct Encoding (DE) Frequency Oracle LDP client. The item is encoded via string.
  *
  * @author Weiran Liu
  * @date 2023/1/14
  */
-public class DeFoLdpClient extends AbstractFoLdpClient {
+public class DeStringFoLdpClient extends AbstractFoLdpClient {
     /**
      * p = e^ε / (e^ε + d - 1)
      */
@@ -27,7 +22,7 @@ public class DeFoLdpClient extends AbstractFoLdpClient {
      */
     private final double q;
 
-    public DeFoLdpClient(FoLdpConfig foLdpConfig) {
+    public DeStringFoLdpClient(FoLdpConfig foLdpConfig) {
         super(foLdpConfig);
         double expEpsilon = Math.exp(epsilon);
         p = expEpsilon / (expEpsilon + d - 1);
@@ -43,10 +38,10 @@ public class DeFoLdpClient extends AbstractFoLdpClient {
         int randomIndex = random.nextInt(d);
         if (randomSample > p - q) {
             // answer a random item
-            return IntUtils.boundedIntToByteArray(randomIndex, d);
+            return domain.getIndexItem(randomIndex).getBytes(FoLdpFactory.DEFAULT_CHARSET);
         } else {
             // answer the true item
-            return IntUtils.boundedIntToByteArray(domain.getItemIndex(item), d);
+            return item.getBytes(FoLdpFactory.DEFAULT_CHARSET);
         }
     }
 }

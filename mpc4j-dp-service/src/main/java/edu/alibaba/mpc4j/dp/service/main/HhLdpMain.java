@@ -359,7 +359,7 @@ public class HhLdpMain {
             .forEach(server::randomizeInsert);
         dataStream.close();
         // heavy hitter map
-        Map<String, Double> heavyHitterMap = server.responseHeavyHitters();
+        Map<String, Double> heavyHitterMap = server.heavyHitters();
         Preconditions.checkArgument(heavyHitterMap.size() == k);
         // heavy hitter ordered list
         List<Map.Entry<String, Double>> heavyHitterOrderedList = new ArrayList<>(heavyHitterMap.entrySet());

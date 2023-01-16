@@ -1,6 +1,5 @@
 package edu.alibaba.mpc4j.dp.service.fo.de;
 
-import edu.alibaba.mpc4j.common.tool.utils.IntUtils;
 import edu.alibaba.mpc4j.dp.service.fo.AbstractFoLdpServer;
 import edu.alibaba.mpc4j.dp.service.fo.FoLdpFactory;
 import edu.alibaba.mpc4j.dp.service.fo.config.FoLdpConfig;
@@ -10,8 +9,10 @@ import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
 /**
- * Direct Encoding (DE) Frequency Oracle LDP server. DE is a generation of the Random Response technique.
- * See Section 4.1 of the following paper:
+ * Direct Encoding (DE) Frequency Oracle LDP server. The item is encoded via string.
+ * <p>
+ * DE is a generation of the Random Response technique. See Section 4.1 of the following paper:
+ * </p>
  * <p>
  * Wang, Tianhao, Jeremiah Blocki, Ninghui Li, and Somesh Jha. Locally differentially private protocols for frequency
  * estimation. In 26th USENIX Security Symposium (USENIX Security 17), pp. 729-745. 2017.
@@ -20,7 +21,7 @@ import java.util.stream.IntStream;
  * @author Weiran Liu
  * @date 2023/1/10
  */
-public class DeFoLdpServer extends AbstractFoLdpServer {
+public class DeStringFoLdpServer extends AbstractFoLdpServer {
     /**
      * the bucket
      */
@@ -34,7 +35,7 @@ public class DeFoLdpServer extends AbstractFoLdpServer {
      */
     private final double q;
 
-    public DeFoLdpServer(FoLdpConfig foLdpConfig) {
+    public DeStringFoLdpServer(FoLdpConfig foLdpConfig) {
         super(foLdpConfig);
         budget = new int[d];
         double expEpsilon = Math.exp(epsilon);
@@ -43,8 +44,10 @@ public class DeFoLdpServer extends AbstractFoLdpServer {
     }
 
     @Override
-    public void aggregate(byte[] data) {
-        int itemIndex = IntUtils.byteArrayToBoundedInt(data, d);
+    public void insert(byte[] itemBytes) {
+        String item = new String(itemBytes, FoLdpFactory.DEFAULT_CHARSET);
+        checkItemInDomain(item);
+        int itemIndex = domain.getItemIndex(item);
         num++;
         budget[itemIndex]++;
     }

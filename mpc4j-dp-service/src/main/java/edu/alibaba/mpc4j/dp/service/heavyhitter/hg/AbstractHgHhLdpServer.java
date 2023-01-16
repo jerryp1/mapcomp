@@ -229,7 +229,7 @@ abstract class AbstractHgHhLdpServer implements HgHhLdpServer {
     protected abstract double debiasCount(int bucketIndex, double count);
 
     @Override
-    public Map<String, Double> responseHeavyHitters() {
+    public Map<String, Double> heavyHitters() {
         Set<String> flatKeySet = buckets.stream()
             .map(Map::keySet)
             .flatMap(Set::stream)

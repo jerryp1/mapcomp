@@ -1,5 +1,6 @@
 package edu.alibaba.mpc4j.dp.service.fo;
 
+import com.google.common.base.Preconditions;
 import edu.alibaba.mpc4j.dp.service.fo.config.FoLdpConfig;
 import edu.alibaba.mpc4j.dp.service.tool.Domain;
 
@@ -37,6 +38,10 @@ public abstract class AbstractFoLdpServer implements FoLdpServer {
         d = domain.getD();
         epsilon = foLdpConfig.getEpsilon();
         num = 0;
+    }
+
+    protected void checkItemInDomain(String item) {
+        Preconditions.checkArgument(domain.contains(item), "%s is not in the domain", item);
     }
 
     @Override

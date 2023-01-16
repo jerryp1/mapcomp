@@ -1,8 +1,6 @@
 package edu.alibaba.mpc4j.dp.service.fo;
 
-import edu.alibaba.mpc4j.dp.service.heavyhitter.HhLdpFactory;
-
-import java.util.Map;
+import java.util.*;
 
 /**
  * Frequency Oracle (FO) LDP server.
@@ -12,28 +10,43 @@ import java.util.Map;
  */
 public interface FoLdpServer {
     /**
-     * Get the type.
+     * Gets the type.
      *
      * @return the type.
      */
     FoLdpFactory.FoLdpType getType();
 
     /**
-     * Aggregate a randomized item.
+     * Inserts a randomized item.
      *
-     * @param data the encoded randomized item.
+     * @param itemBytes the randomized item.
      */
-    void aggregate(byte[] data);
+    void insert(byte[] itemBytes);
 
     /**
-     * Calculate frequency estimates for all items in the domain.
+     * Calculates frequency estimates for all items in the domain.
      *
      * @return the frequency estimates for all items in the domain.
      */
     Map<String, Double> estimate();
 
     /**
-     * Return the privacy parameter ε.
+     * Calculates ordered frequency estimates with descending order list.
+     *
+     * @return ordered frequency estimates.
+     */
+    default List<Map.Entry<String, Double>> orderedEstimate() {
+        Map<String, Double> frequencyEstimates = estimate();
+        List<Map.Entry<String, Double>> orderedFrequencyEstimates = new ArrayList<>(frequencyEstimates.entrySet());
+        // descending sort
+        orderedFrequencyEstimates.sort(Comparator.comparingDouble(Map.Entry::getValue));
+        Collections.reverse(orderedFrequencyEstimates);
+
+        return orderedFrequencyEstimates;
+    }
+
+    /**
+     * Returns the privacy parameter ε.
      *
      * @return the privacy parameter ε.
      */

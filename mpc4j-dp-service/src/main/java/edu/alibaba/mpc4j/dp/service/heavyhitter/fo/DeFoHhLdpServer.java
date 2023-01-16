@@ -99,7 +99,7 @@ public class DeFoHhLdpServer extends AbstractFoHhLdpServer {
     }
 
     @Override
-    public Map<String, Double> responseHeavyHitters() {
+    public Map<String, Double> heavyHitters() {
         Map<String, Double> domainCountMap = budget.keySet()
             .stream()
             .collect(Collectors.toMap(item -> item, this::response));
