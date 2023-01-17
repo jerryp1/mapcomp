@@ -135,7 +135,14 @@ public class RapporFoLdpServer extends AbstractFoLdpServer {
                 if (!Precision.equals(lassoCoefficients[dIndex], 0.0, DoubleUtils.PRECISION)) {
                     indexMap[dIndex] = tempIndex;
                     tempIndex++;
-                    dataFrame = dataFrame.merge(IntVector.of(String.valueOf(dIndex), x[dIndex]));
+                    int finalColumnIndex = dIndex;
+                    int[] mergeColumn = IntStream.range(0, cohortNum * m)
+                        .map(index -> x[index][finalColumnIndex])
+                        .toArray();
+                    dataFrame = dataFrame.merge(IntVector.of(String.valueOf(dIndex), mergeColumn));
+                } else {
+                    // index_map[d_index] = -1 means that this column should be removed in the training.
+                    indexMap[dIndex] = -1;
                 }
             }
             // model.fit(X_red, y)
@@ -146,7 +153,8 @@ public class RapporFoLdpServer extends AbstractFoLdpServer {
                 .collect(Collectors.toMap(
                     domain::getIndexItem,
                     dIndex -> {
-                        if (Precision.equals(lassoCoefficients[dIndex], 0.0, DoubleUtils.PRECISION)) {
+                        if (indexMap[dIndex] < 0) {
+                            // index_map[d_index] = -1 means that this column should be removed in the training.
                             return 0.0;
                         } else {
                             return coefficients[indexMap[dIndex]] * cohortNum;
