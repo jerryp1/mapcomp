@@ -8,6 +8,7 @@ import edu.alibaba.mpc4j.common.tool.utils.ObjectUtils;
 import edu.alibaba.mpc4j.dp.service.heavyhitter.HhLdpFactory;
 import edu.alibaba.mpc4j.dp.service.heavyhitter.HhLdpServerState;
 import edu.alibaba.mpc4j.dp.service.heavyhitter.config.HgHhLdpConfig;
+import edu.alibaba.mpc4j.dp.service.heavyhitter.config.HhLdpConfig;
 
 import java.util.*;
 import java.util.stream.Collectors;
@@ -77,7 +78,8 @@ abstract class AbstractHgHhLdpServer implements HgHhLdpServer {
      */
     protected int[] currentNums;
 
-    AbstractHgHhLdpServer(HgHhLdpConfig hgHhLdpConfig) {
+    AbstractHgHhLdpServer(HhLdpConfig config) {
+        HgHhLdpConfig hgHhLdpConfig = (HgHhLdpConfig) config;
         type = hgHhLdpConfig.getType();
         d = hgHhLdpConfig.getD();
         k = hgHhLdpConfig.getK();

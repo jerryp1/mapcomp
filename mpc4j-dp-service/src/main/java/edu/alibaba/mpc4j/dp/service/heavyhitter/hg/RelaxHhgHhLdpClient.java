@@ -2,7 +2,7 @@ package edu.alibaba.mpc4j.dp.service.heavyhitter.hg;
 
 import com.google.common.base.Preconditions;
 import edu.alibaba.mpc4j.common.sampler.binary.bernoulli.SecureBernoulliSampler;
-import edu.alibaba.mpc4j.dp.service.heavyhitter.config.HhgHhLdpConfig;
+import edu.alibaba.mpc4j.dp.service.heavyhitter.config.HhLdpConfig;
 import edu.alibaba.mpc4j.dp.service.heavyhitter.utils.HgHhLdpServerContext;
 import edu.alibaba.mpc4j.dp.service.heavyhitter.utils.HhLdpServerContext;
 import edu.alibaba.mpc4j.dp.service.heavyhitter.HhLdpFactory;
@@ -17,8 +17,8 @@ import java.util.*;
  */
 public class RelaxHhgHhLdpClient extends AdvHhgHhLdpClient {
 
-    public RelaxHhgHhLdpClient(HhgHhLdpConfig clientConfig) {
-        super(clientConfig);
+    public RelaxHhgHhLdpClient(HhLdpConfig config) {
+        super(config);
         // recompute p2 and q2
         double expWindowEpsilon = Math.exp(windowEpsilon);
         p2 = expWindowEpsilon / (expWindowEpsilon + lambdaH - 1);

@@ -8,6 +8,7 @@ import edu.alibaba.mpc4j.dp.service.heavyhitter.HhLdpFactory;
 import edu.alibaba.mpc4j.dp.service.heavyhitter.HhLdpServer;
 import edu.alibaba.mpc4j.dp.service.heavyhitter.HhLdpServerState;
 import edu.alibaba.mpc4j.dp.service.heavyhitter.config.FoHhLdpConfig;
+import edu.alibaba.mpc4j.dp.service.heavyhitter.config.HhLdpConfig;
 import edu.alibaba.mpc4j.dp.service.heavyhitter.utils.EmptyHhLdpServerContext;
 import edu.alibaba.mpc4j.dp.service.heavyhitter.utils.HhLdpServerContext;
 import edu.alibaba.mpc4j.dp.service.tool.Domain;
@@ -51,7 +52,8 @@ public class FoHhLdpServer implements HhLdpServer {
      */
     protected HhLdpServerState hhLdpServerState;
 
-    public FoHhLdpServer(FoHhLdpConfig foHhLdpConfig) {
+    public FoHhLdpServer(HhLdpConfig config) {
+        FoHhLdpConfig foHhLdpConfig = (FoHhLdpConfig) config;
         type = foHhLdpConfig.getType();
         k = foHhLdpConfig.getK();
         FoLdpConfig foLdpConfig = foHhLdpConfig.getFoLdpConfig();

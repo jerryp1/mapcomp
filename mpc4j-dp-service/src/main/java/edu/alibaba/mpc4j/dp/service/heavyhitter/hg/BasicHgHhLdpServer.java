@@ -1,7 +1,7 @@
 package edu.alibaba.mpc4j.dp.service.heavyhitter.hg;
 
+import edu.alibaba.mpc4j.dp.service.heavyhitter.config.HhLdpConfig;
 import edu.alibaba.mpc4j.dp.service.heavyhitter.utils.HhLdpServerContext;
-import edu.alibaba.mpc4j.dp.service.heavyhitter.config.HgHhLdpConfig;
 import edu.alibaba.mpc4j.dp.service.heavyhitter.utils.EmptyHhLdpServerContext;
 import edu.alibaba.mpc4j.dp.service.heavyhitter.HhLdpServerState;
 
@@ -23,8 +23,8 @@ public class BasicHgHhLdpServer extends AbstractHgHhLdpServer {
      */
     private final double q;
 
-    public BasicHgHhLdpServer(HgHhLdpConfig hgHhLdpConfig) {
-        super(hgHhLdpConfig);
+    public BasicHgHhLdpServer(HhLdpConfig config) {
+        super(config);
         double expWindowEpsilon = Math.exp(windowEpsilon);
         p = expWindowEpsilon / (expWindowEpsilon + d - 1);
         q = 1 / (expWindowEpsilon + d - 1);

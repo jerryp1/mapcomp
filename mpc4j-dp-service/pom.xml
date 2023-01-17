@@ -33,6 +33,26 @@
             <artifactId>jol-core</artifactId>
         </dependency>
         <dependency>
+            <groupId>com.github.haifengl</groupId>
+            <artifactId>smile-core</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.bytedeco</groupId>
+            <artifactId>openblas</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.bytedeco</groupId>
+            <artifactId>javacpp-platform</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.bytedeco</groupId>
+            <artifactId>openblas-platform</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.bytedeco</groupId>
+            <artifactId>arpack-ng-platform</artifactId>
+        </dependency>
+        <dependency>
             <groupId>edu.alibaba</groupId>
             <artifactId>mpc4j-common-tool</artifactId>
             <version>1.0.6-SNAPSHOT</version>

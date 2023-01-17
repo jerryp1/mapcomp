@@ -1,6 +1,6 @@
 package edu.alibaba.mpc4j.dp.service.heavyhitter.hg;
 
-import edu.alibaba.mpc4j.dp.service.heavyhitter.config.HhgHhLdpConfig;
+import edu.alibaba.mpc4j.dp.service.heavyhitter.config.HhLdpConfig;
 
 /**
  * Relaxed Hot HeavyGuardian-based Heavy Hitter LDP server.
@@ -10,8 +10,8 @@ import edu.alibaba.mpc4j.dp.service.heavyhitter.config.HhgHhLdpConfig;
  */
 public class RelaxHhgHhLdpServer extends AdvHhgHhLdpServer {
 
-    public RelaxHhgHhLdpServer(HhgHhLdpConfig hhgHhLdpConfig) {
-        super(hhgHhLdpConfig);
+    public RelaxHhgHhLdpServer(HhLdpConfig config) {
+        super(config);
         // recompute p2 and q2
         double expWindowEpsilon = Math.exp(windowEpsilon);
         p2 = expWindowEpsilon / (expWindowEpsilon + lambdaH - 1);

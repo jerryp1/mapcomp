@@ -10,7 +10,6 @@ import edu.alibaba.mpc4j.dp.service.heavyhitter.HhLdpFactory.HhLdpType;
 import edu.alibaba.mpc4j.dp.service.heavyhitter.config.BasicHhLdpConfig;
 import edu.alibaba.mpc4j.dp.service.heavyhitter.config.HgHhLdpConfig;
 import edu.alibaba.mpc4j.dp.service.heavyhitter.config.HhLdpConfig;
-import edu.alibaba.mpc4j.dp.service.heavyhitter.config.HhgHhLdpConfig;
 import edu.alibaba.mpc4j.dp.service.structure.HeavyGuardian;
 import edu.alibaba.mpc4j.dp.service.structure.NaiveStreamCounter;
 import edu.alibaba.mpc4j.dp.service.tool.StreamDataUtils;
@@ -266,8 +265,8 @@ public class HhLdpMain {
             HgHhLdpConfig config = new HgHhLdpConfig
                 .Builder(type, domainSet, k, windowEpsilon)
                 .build();
-            HhLdpServer server = HhLdpFactory.createHgServer(config);
-            HhLdpClient client = HhLdpFactory.createHgClient(config);
+            HhLdpServer server = HhLdpFactory.createServer(config);
+            HhLdpClient client = HhLdpFactory.createClient(config);
             double[] metrics = runLdpHeavyHitter(server, client);
             ndcg += metrics[0];
             precision += metrics[1];
@@ -292,12 +291,12 @@ public class HhLdpMain {
         double re = 0.0;
         double memory = 0.0;
         for (int round = 0; round < testRound; round++) {
-            HhgHhLdpConfig config = new HhgHhLdpConfig
+            HgHhLdpConfig config = new HgHhLdpConfig
                 .Builder(type, domainSet, k, windowEpsilon)
                 .setAlpha(alpha)
                 .build();
-            HhLdpServer server = HhLdpFactory.createHhgServer(config);
-            HhLdpClient client = HhLdpFactory.createHhgClient(config);
+            HhLdpServer server = HhLdpFactory.createServer(config);
+            HhLdpClient client = HhLdpFactory.createClient(config);
             double[] metrics = runLdpHeavyHitter(server, client);
             ndcg += metrics[0];
             precision += metrics[1];
@@ -322,11 +321,11 @@ public class HhLdpMain {
         double re = 0.0;
         double memory = 0.0;
         for (int round = 0; round < testRound; round++) {
-            HhgHhLdpConfig config = new HhgHhLdpConfig
+            HgHhLdpConfig config = new HgHhLdpConfig
                 .Builder(type, domainSet, k, windowEpsilon)
                 .build();
-            HhLdpServer server = HhLdpFactory.createHhgServer(config);
-            HhLdpClient client = HhLdpFactory.createHhgClient(config);
+            HhLdpServer server = HhLdpFactory.createServer(config);
+            HhLdpClient client = HhLdpFactory.createClient(config);
             double[] metrics = runLdpHeavyHitter(server, client);
             ndcg += metrics[0];
             precision += metrics[1];

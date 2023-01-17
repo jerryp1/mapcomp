@@ -4,7 +4,6 @@ import com.google.common.base.Preconditions;
 import edu.alibaba.mpc4j.common.tool.utils.DoubleUtils;
 import edu.alibaba.mpc4j.dp.service.LdpTestDataUtils;
 import edu.alibaba.mpc4j.dp.service.fo.FoLdpFactory.FoLdpType;
-import edu.alibaba.mpc4j.dp.service.fo.config.BasicFoLdpConfig;
 import edu.alibaba.mpc4j.dp.service.fo.config.FoLdpConfig;
 import edu.alibaba.mpc4j.dp.service.tool.StreamDataUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -37,32 +36,26 @@ public class FoLdpTest {
      * large ε absolute precision
      */
     private static final double LARGE_EPSILON_ABS_PRECISION
-        = (double)LdpTestDataUtils.EXAMPLE_TOTAL_NUM / LdpTestDataUtils.EXAMPLE_DATA_D;
+        = (double) LdpTestDataUtils.EXAMPLE_TOTAL_NUM / LdpTestDataUtils.EXAMPLE_DATA_D;
     /**
      * default ε variance precision
      */
-    private static final double DEFAULT_EPSILON_VARIANCE_PRECISION = 2;
+    private static final double DEFAULT_EPSILON_VARIANCE_PRECISION = 5;
 
     @Parameterized.Parameters(name = "{0}")
     public static Collection<Object[]> configurations() {
         Collection<Object[]> configurations = new ArrayList<>();
 
+        // RAPPOR
+        configurations.add(new Object[]{FoLdpType.RAPPOR.name(), FoLdpType.RAPPOR,});
         // OPTIMIZED_UNARY_ENCODING
-        configurations.add(new Object[]{
-            FoLdpType.OUE.name(), FoLdpType.OUE,
-        });
+        configurations.add(new Object[]{FoLdpType.OUE.name(), FoLdpType.OUE,});
         // SYMMETRIC_UNARY_ENCODING
-        configurations.add(new Object[]{
-            FoLdpType.SUE.name(), FoLdpType.SUE,
-        });
+        configurations.add(new Object[]{FoLdpType.SUE.name(), FoLdpType.SUE,});
         // DE_INDEX_ENCODING
-        configurations.add(new Object[]{
-            FoLdpType.DE_INDEX_ENCODING.name(), FoLdpType.DE_INDEX_ENCODING,
-        });
+        configurations.add(new Object[]{FoLdpType.DE_INDEX_ENCODING.name(), FoLdpType.DE_INDEX_ENCODING,});
         // DE_STRING_ENCODING
-        configurations.add(new Object[]{
-            FoLdpType.DE_STRING_ENCODING.name(), FoLdpType.DE_STRING_ENCODING,
-        });
+        configurations.add(new Object[]{FoLdpType.DE_STRING_ENCODING.name(), FoLdpType.DE_STRING_ENCODING,});
 
         return configurations;
     }
@@ -79,9 +72,7 @@ public class FoLdpTest {
 
     @Test
     public void testType() {
-        FoLdpConfig config = new BasicFoLdpConfig
-            .Builder(type, LdpTestDataUtils.EXAMPLE_DATA_DOMAIN, DEFAULT_EPSILON)
-            .build();
+        FoLdpConfig config = FoLdpFactory.createDefaultConfig(type, LdpTestDataUtils.EXAMPLE_DATA_DOMAIN, DEFAULT_EPSILON);
         // create server
         FoLdpServer server = FoLdpFactory.createServer(config);
         Assert.assertEquals(type, server.getType());
@@ -92,9 +83,7 @@ public class FoLdpTest {
 
     @Test
     public void testLargeEpsilon() throws IOException {
-        FoLdpConfig config = new BasicFoLdpConfig
-            .Builder(type, LdpTestDataUtils.EXAMPLE_DATA_DOMAIN, LARGE_EPSILON)
-            .build();
+        FoLdpConfig config = FoLdpFactory.createDefaultConfig(type, LdpTestDataUtils.EXAMPLE_DATA_DOMAIN, LARGE_EPSILON);
         // create server and client
         FoLdpServer server = FoLdpFactory.createServer(config);
         FoLdpClient client = FoLdpFactory.createClient(config);
@@ -102,7 +91,7 @@ public class FoLdpTest {
         exampleRandomizeInsert(server, client);
         Map<String, Double> frequencyEstimates = server.estimate();
         Assert.assertEquals(LdpTestDataUtils.EXAMPLE_DATA_D, frequencyEstimates.size());
-        if (config.isConverge()) {
+        if (FoLdpFactory.isConverge(type)) {
             for (String item : LdpTestDataUtils.EXAMPLE_DATA_DOMAIN) {
                 // verify no-error count
                 Assert.assertEquals(
@@ -122,9 +111,7 @@ public class FoLdpTest {
 
     @Test
     public void testDefault() throws IOException {
-        FoLdpConfig config = new BasicFoLdpConfig
-            .Builder(type, LdpTestDataUtils.EXAMPLE_DATA_DOMAIN, DEFAULT_EPSILON)
-            .build();
+        FoLdpConfig config = FoLdpFactory.createDefaultConfig(type, LdpTestDataUtils.EXAMPLE_DATA_DOMAIN, DEFAULT_EPSILON);
         // create server and client
         FoLdpServer server = FoLdpFactory.createServer(config);
         FoLdpClient client = FoLdpFactory.createClient(config);

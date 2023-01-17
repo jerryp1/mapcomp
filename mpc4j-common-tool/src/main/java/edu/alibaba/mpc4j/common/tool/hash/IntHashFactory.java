@@ -42,12 +42,22 @@ public class IntHashFactory {
     }
 
     /**
-     * Create the fastest instance of IntHash.
+     * Gets the fastest IntHash type.
+     *
+     * @return the fastest IntHash type.
+     */
+    public static IntHashType fastestType() {
+        // the efficient test shows that BobHash is the fastest one.
+        return IntHashType.BOB_HASH_32;
+    }
+
+    /**
+     * Creates the fastest instance of IntHash.
      *
      * @return the fastest instance of IntHash.
      */
     public static IntHash fastestInstance() {
         // the efficient test shows that BobHash is the fastest one.
-        return createInstance(IntHashType.BOB_HASH_32);
+        return createInstance(fastestType());
     }
 }

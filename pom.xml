@@ -147,6 +147,30 @@
                 <artifactId>smile-io</artifactId>
                 <version>${smile.version}</version>
             </dependency>
+            <!-- https://mvnrepository.com/artifact/org.bytedeco/openblas -->
+            <dependency>
+                <groupId>org.bytedeco</groupId>
+                <artifactId>openblas</artifactId>
+                <version>0.3.21-1.5.8</version>
+            </dependency>
+            <dependency>
+                <groupId>org.bytedeco</groupId>
+                <artifactId>javacpp-platform</artifactId>
+                <version>1.5.8</version>
+            </dependency>
+            <!-- https://mvnrepository.com/artifact/org.bytedeco/openblas-platform -->
+            <dependency>
+                <groupId>org.bytedeco</groupId>
+                <artifactId>openblas-platform</artifactId>
+                <version>0.3.21-1.5.8</version>
+            </dependency>
+            <!-- https://mvnrepository.com/artifact/org.bytedeco/arpack-ng-platform -->
+            <dependency>
+                <groupId>org.bytedeco</groupId>
+                <artifactId>arpack-ng-platform</artifactId>
+                <version>3.8.0-1.5.8</version>
+            </dependency>
+
             <!-- https://mvnrepository.com/artifact/org.apache.commons/commons-csv -->
             <dependency>
                 <groupId>org.apache.commons</groupId>

@@ -1,0 +1,194 @@
+package edu.alibaba.mpc4j.dp.service.fo.rappor;
+
+import edu.alibaba.mpc4j.common.tool.MathPreconditions;
+import edu.alibaba.mpc4j.common.tool.bitvector.BitVector;
+import edu.alibaba.mpc4j.common.tool.bitvector.BitVectorFactory;
+import edu.alibaba.mpc4j.common.tool.hash.IntHash;
+import edu.alibaba.mpc4j.common.tool.hash.IntHashFactory;
+import edu.alibaba.mpc4j.common.tool.utils.CommonUtils;
+import edu.alibaba.mpc4j.common.tool.utils.DoubleUtils;
+import edu.alibaba.mpc4j.common.tool.utils.IntUtils;
+import edu.alibaba.mpc4j.dp.service.fo.AbstractFoLdpServer;
+import edu.alibaba.mpc4j.dp.service.fo.config.FoLdpConfig;
+import edu.alibaba.mpc4j.dp.service.fo.config.RapporFoLdpConfig;
+import org.apache.commons.math3.util.Precision;
+import smile.data.DataFrame;
+import smile.data.formula.Formula;
+import smile.data.vector.DoubleVector;
+import smile.data.vector.IntVector;
+import smile.regression.LASSO;
+import smile.regression.LinearModel;
+import smile.regression.RidgeRegression;
+
+import java.util.Map;
+import java.util.stream.Collectors;
+import java.util.stream.IntStream;
+
+/**
+ * RAPPOR Frequency Oracle LDP server.
+ *
+ * @author Weiran Liu
+ * @date 2023/1/16
+ */
+public class RapporFoLdpServer extends AbstractFoLdpServer {
+    /**
+     * d is large when d > LARGE_D_THRESHOLD
+     */
+    private static final int LARGE_D_THRESHOLD = 1000;
+    /**
+     * alpha = 0.8
+     */
+    private static final double LASSO_ALPHA = 0.8;
+    /**
+     * the label name
+     */
+    private static final String LABEL_NAME = "y";
+    /**
+     * the formula
+     */
+    private static final Formula FORMULA_Y = Formula.lhs(LABEL_NAME);
+    /**
+     * number of cohorts.
+     */
+    private final int cohortNum;
+    /**
+     * hash seeds
+     */
+    private final int[][] hashSeeds;
+    /**
+     * the size of the bloom filter
+     */
+    private final int m;
+    /**
+     * the byte size of the bloom filter
+     */
+    private final int mByteLength;
+    /**
+     * the IntHash
+     */
+    private final IntHash intHash;
+    /**
+     * f
+     */
+    private final double f;
+    /**
+     * the budget
+     */
+    private final int[][] budget;
+    /**
+     * num in each cohorts
+     */
+    private final int[] cohortCounts;
+
+    public RapporFoLdpServer(FoLdpConfig config) {
+        super(config);
+        RapporFoLdpConfig rapporConfig = (RapporFoLdpConfig)config;
+        cohortNum = rapporConfig.getCohortNum();
+        hashSeeds = rapporConfig.getHashSeeds();
+        m = rapporConfig.getM();
+        mByteLength = CommonUtils.getByteLength(m);
+        intHash = IntHashFactory.createInstance(rapporConfig.getIntHashType());
+        f = rapporConfig.getF();
+        // init the bucket
+        budget = new int[cohortNum][m];
+        cohortCounts = new int[cohortNum];
+    }
+
+    @Override
+    public void insert(byte[] itemBytes) {
+        // read the bloom filter bytes
+        byte[] bloomFilterBytes = new byte[mByteLength];
+        System.arraycopy(itemBytes, 0, bloomFilterBytes, 0, bloomFilterBytes.length);
+        BitVector bloomFilter = BitVectorFactory.create(BitVectorFactory.BitVectorType.BYTES_BIT_VECTOR, m, bloomFilterBytes);
+        // read the cohort index
+        int cohortIndexByteLength = IntUtils.boundedIntByteLength(cohortNum);
+        byte[] cohortIndexBytes = new byte[cohortIndexByteLength];
+        System.arraycopy(itemBytes, mByteLength, cohortIndexBytes, 0, cohortIndexBytes.length);
+        int cohortIndex = IntUtils.byteArrayToBoundedInt(cohortIndexBytes, cohortNum);
+        MathPreconditions.checkNonNegativeInRange("cohort index", cohortIndex, cohortNum);
+        cohortCounts[cohortIndex]++;
+        num++;
+        IntStream.range(0, m).forEach(hashPosition -> {
+            if (bloomFilter.get(hashPosition)) {
+                budget[cohortIndex][hashPosition]++;
+            }
+        });
+    }
+
+    @Override
+    public Map<String, Double> estimate() {
+        int[][] x = createX();
+        DoubleVector yVector = DoubleVector.of(LABEL_NAME, createY());
+        String[] featureNames = IntStream.range(0, d).mapToObj(String::valueOf).toArray(String[]::new);
+        if (d > LARGE_D_THRESHOLD) {
+            // If d is large, we perform feature selection to reduce computation time
+            DataFrame lassoDataFrame = DataFrame.of(x, featureNames);
+            lassoDataFrame = lassoDataFrame.merge(yVector);
+            LinearModel lasso = LASSO.fit(FORMULA_Y, lassoDataFrame, LASSO_ALPHA);
+            double[] lassoCoefficients = lasso.coefficients();
+            // indexes = np.nonzero(lasso_model.coef_)[0]
+            DataFrame dataFrame = DataFrame.of(yVector);
+            int[] indexMap = new int[d];
+            int tempIndex = 0;
+            for (int dIndex = 0; dIndex < d; dIndex++) {
+                // X_red = X[:, indexes]
+                if (!Precision.equals(lassoCoefficients[dIndex], 0.0, DoubleUtils.PRECISION)) {
+                    indexMap[dIndex] = tempIndex;
+                    tempIndex++;
+                    dataFrame = dataFrame.merge(IntVector.of(String.valueOf(dIndex), x[dIndex]));
+                }
+            }
+            // model.fit(X_red, y)
+            LinearModel model = RidgeRegression.fit(FORMULA_Y, dataFrame);
+            double[] coefficients = model.coefficients();
+            return IntStream.range(0, d)
+                .boxed()
+                .collect(Collectors.toMap(
+                    domain::getIndexItem,
+                    dIndex -> {
+                        if (Precision.equals(lassoCoefficients[dIndex], 0.0, DoubleUtils.PRECISION)) {
+                            return 0.0;
+                        } else {
+                            return coefficients[indexMap[dIndex]] * cohortNum;
+                        }
+                    }
+                ));
+        } else {
+            DataFrame dataFrame = DataFrame.of(x, featureNames);
+            dataFrame = dataFrame.merge(yVector);
+            LinearModel model = RidgeRegression.fit(FORMULA_Y, dataFrame);
+            double[] coefficients = model.coefficients();
+            return IntStream.range(0, d)
+                .boxed()
+                .collect(Collectors.toMap(
+                    domain::getIndexItem,
+                    dIndex -> coefficients[dIndex] * cohortNum
+                ));
+        }
+    }
+
+    private int[][] createX() {
+        int[][] x = new int[cohortNum * m][d];
+        for (int itemIndex = 0; itemIndex < d; itemIndex++) {
+            for (int cohortIndex = 0; cohortIndex < cohortNum; cohortIndex++) {
+                String item = domain.getIndexItem(itemIndex);
+                int[] hashPositions = RapporFoLdpUtils.hash(intHash, item, m, hashSeeds[cohortIndex]);
+                for (int hashPosition : hashPositions) {
+                    x[cohortIndex * m + hashPosition][itemIndex] = 1;
+                }
+            }
+        }
+        return x;
+    }
+
+    private double[] createY() {
+        double[] y = new double[cohortNum * m];
+        for (int cohortIndex = 0; cohortIndex < cohortNum; cohortIndex++) {
+            for (int hashPosition = 0; hashPosition < m; hashPosition++) {
+                y[cohortIndex * m + hashPosition]
+                    = (budget[cohortIndex][hashPosition] - 0.5 * f * cohortCounts[cohortIndex]) / (1 - f);
+            }
+        }
+        return y;
+    }
+}

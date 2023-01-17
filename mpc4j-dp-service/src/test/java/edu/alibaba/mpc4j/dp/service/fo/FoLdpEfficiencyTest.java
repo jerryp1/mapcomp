@@ -2,7 +2,6 @@ package edu.alibaba.mpc4j.dp.service.fo;
 
 import com.google.common.base.Preconditions;
 import edu.alibaba.mpc4j.dp.service.LdpTestDataUtils;
-import edu.alibaba.mpc4j.dp.service.fo.config.BasicFoLdpConfig;
 import edu.alibaba.mpc4j.dp.service.fo.config.FoLdpConfig;
 import edu.alibaba.mpc4j.dp.service.tool.StreamDataUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -48,6 +47,10 @@ public class FoLdpEfficiencyTest {
     public static Collection<Object[]> configurations() {
         Collection<Object[]> configurations = new ArrayList<>();
 
+        // RAPPOR
+        configurations.add(new Object[]{
+            FoLdpFactory.FoLdpType.RAPPOR.name(), FoLdpFactory.FoLdpType.RAPPOR,
+        });
         // OPTIMIZED_UNARY_ENCODING
         configurations.add(new Object[]{
             FoLdpFactory.FoLdpType.OUE.name(), FoLdpFactory.FoLdpType.OUE,
@@ -80,9 +83,7 @@ public class FoLdpEfficiencyTest {
 
     @Test
     public void testEfficiency() throws IOException {
-        FoLdpConfig config = new BasicFoLdpConfig
-            .Builder(type, LdpTestDataUtils.CONNECT_DATA_DOMAIN, DEFAULT_EPSILON)
-            .build();
+        FoLdpConfig config = FoLdpFactory.createDefaultConfig(type, LdpTestDataUtils.CONNECT_DATA_DOMAIN, DEFAULT_EPSILON);
         // create server and client
         FoLdpServer server = FoLdpFactory.createServer(config);
         FoLdpClient client = FoLdpFactory.createClient(config);

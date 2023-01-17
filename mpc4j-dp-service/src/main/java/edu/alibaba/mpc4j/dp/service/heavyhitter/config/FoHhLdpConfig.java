@@ -26,7 +26,7 @@ public class FoHhLdpConfig extends BasicHhLdpConfig {
 
     @Override
     public boolean isConverge() {
-        return foLdpConfig.isConverge();
+        return FoLdpFactory.isConverge(foLdpConfig.getType());
     }
 
     public FoLdpConfig getFoLdpConfig() {
@@ -44,17 +44,6 @@ public class FoHhLdpConfig extends BasicHhLdpConfig {
             foLdpConfig = new BasicFoLdpConfig
                 .Builder(FoLdpFactory.FoLdpType.DE_INDEX_ENCODING, domainSet, windowEpsilon)
                 .build();
-        }
-
-        public Builder(HhLdpConfig hhLdpConfig) {
-            super(HhLdpFactory.HhLdpType.FO, hhLdpConfig.getDomainSet(), hhLdpConfig.getK(), hhLdpConfig.getWindowEpsilon());
-            if (hhLdpConfig instanceof FoHhLdpConfig) {
-                foLdpConfig = ((FoHhLdpConfig)hhLdpConfig).foLdpConfig;
-            } else {
-                foLdpConfig = new BasicFoLdpConfig
-                    .Builder(FoLdpFactory.FoLdpType.DE_INDEX_ENCODING, domainSet, windowEpsilon)
-                    .build();
-            }
         }
 
         public Builder(FoLdpConfig foLdpConfig, int k) {

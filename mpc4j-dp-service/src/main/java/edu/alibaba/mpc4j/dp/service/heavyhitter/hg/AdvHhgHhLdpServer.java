@@ -1,8 +1,9 @@
 package edu.alibaba.mpc4j.dp.service.heavyhitter.hg;
 
+import edu.alibaba.mpc4j.dp.service.heavyhitter.config.HgHhLdpConfig;
+import edu.alibaba.mpc4j.dp.service.heavyhitter.config.HhLdpConfig;
 import edu.alibaba.mpc4j.dp.service.heavyhitter.utils.HgHhLdpServerContext;
 import edu.alibaba.mpc4j.dp.service.heavyhitter.HhLdpServerState;
-import edu.alibaba.mpc4j.dp.service.heavyhitter.config.HhgHhLdpConfig;
 
 import java.util.*;
 
@@ -38,9 +39,10 @@ public class AdvHhgHhLdpServer extends AbstractHgHhLdpServer implements HhgHhLdp
      */
     protected double gammaH;
 
-    public AdvHhgHhLdpServer(HhgHhLdpConfig hhgHhLdpConfig) {
-        super(hhgHhLdpConfig);
-        alpha = hhgHhLdpConfig.getAlpha();
+    public AdvHhgHhLdpServer(HhLdpConfig config) {
+        super(config);
+        HgHhLdpConfig hgHhLdpConfig = (HgHhLdpConfig) config;
+        alpha = hgHhLdpConfig.getAlpha();
         double alphaWindowEpsilon = windowEpsilon * alpha;
         double remainedWindowEpsilon = windowEpsilon - alphaWindowEpsilon;
         // compute p1 and p1

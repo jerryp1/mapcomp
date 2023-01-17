@@ -4,8 +4,6 @@ import com.google.common.base.Preconditions;
 import edu.alibaba.mpc4j.dp.service.LdpTestDataUtils;
 import edu.alibaba.mpc4j.dp.service.heavyhitter.HhLdpFactory.HhLdpType;
 import edu.alibaba.mpc4j.dp.service.heavyhitter.config.HgHhLdpConfig;
-import edu.alibaba.mpc4j.dp.service.heavyhitter.hg.HgHhLdpClient;
-import edu.alibaba.mpc4j.dp.service.heavyhitter.hg.HgHhLdpServer;
 import edu.alibaba.mpc4j.dp.service.structure.HeavyGuardian;
 import edu.alibaba.mpc4j.dp.service.tool.StreamDataUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -128,17 +126,11 @@ public class HgHhLdpTest {
         Collection<Object[]> configurations = new ArrayList<>();
 
         // related heavy guardian
-        configurations.add(new Object[]{
-            HhLdpType.RELAX_HG.name(), HhLdpType.RELAX_HG,
-        });
+        configurations.add(new Object[]{HhLdpType.RELAX_HG.name(), HhLdpType.RELAX_HG,});
         // advanced heavy guardian
-        configurations.add(new Object[]{
-            HhLdpType.ADVAN_HG.name(), HhLdpType.ADVAN_HG,
-        });
+        configurations.add(new Object[]{HhLdpType.ADVAN_HG.name(), HhLdpType.ADVAN_HG,});
         // basic heavy guardian
-        configurations.add(new Object[]{
-            HhLdpType.BASIC_HG.name(), HhLdpType.BASIC_HG,
-        });
+        configurations.add(new Object[]{HhLdpType.BASIC_HG.name(), HhLdpType.BASIC_HG,});
 
         return configurations;
     }
@@ -161,8 +153,8 @@ public class HgHhLdpTest {
             .setBucketParams(W1, W1_LAMBDA_H)
             .setHgRandom(hgRandom)
             .build();
-        HgHhLdpServer server = HhLdpFactory.createHgServer(config);
-        HgHhLdpClient client = HhLdpFactory.createHgClient(config);
+        HhLdpServer server = HhLdpFactory.createServer(config);
+        HhLdpClient client = HhLdpFactory.createClient(config);
         testWarmup(server, client, CORRECT_W1_HG_EXAMPLE_COUNT_ORDERED_LIST);
     }
 
@@ -174,8 +166,8 @@ public class HgHhLdpTest {
             .setBucketParams(W2, W2_LAMBDA_H)
             .setHgRandom(hgRandom)
             .build();
-        HgHhLdpServer server = HhLdpFactory.createHgServer(config);
-        HgHhLdpClient client = HhLdpFactory.createHgClient(config);
+        HhLdpServer server = HhLdpFactory.createServer(config);
+        HhLdpClient client = HhLdpFactory.createClient(config);
         testWarmup(server, client, CORRECT_W2_HG_EXAMPLE_COUNT_ORDERED_LIST);
     }
 
@@ -187,12 +179,12 @@ public class HgHhLdpTest {
             .setBucketParams(W3, W3_LAMBDA_H)
             .setHgRandom(hgRandom)
             .build();
-        HgHhLdpServer server = HhLdpFactory.createHgServer(config);
-        HgHhLdpClient client = HhLdpFactory.createHgClient(config);
+        HhLdpServer server = HhLdpFactory.createServer(config);
+        HhLdpClient client = HhLdpFactory.createClient(config);
         testWarmup(server, client, CORRECT_W3_HG_EXAMPLE_COUNT_ORDERED_LIST);
     }
 
-    private void testWarmup(HgHhLdpServer server, HgHhLdpClient client,
+    private void testWarmup(HhLdpServer server, HhLdpClient client,
                             List<Map.Entry<String, Integer>> correctOrderedList) throws IOException {
         // warmup
         Stream<String> dataStream = StreamDataUtils.obtainItemStream(LdpTestDataUtils.EXAMPLE_DATA_PATH);
@@ -217,8 +209,8 @@ public class HgHhLdpTest {
             .setBucketParams(W1, W1_LAMBDA_H)
             .setHgRandom(hgRandom)
             .build();
-        HgHhLdpServer server = HhLdpFactory.createHgServer(config);
-        HgHhLdpClient client = HhLdpFactory.createHgClient(config);
+        HhLdpServer server = HhLdpFactory.createServer(config);
+        HhLdpClient client = HhLdpFactory.createClient(config);
         testStopWarmup(server, client, CORRECT_W1_HG_EXAMPLE_COUNT_ORDERED_LIST);
     }
 
@@ -230,8 +222,8 @@ public class HgHhLdpTest {
             .setBucketParams(W2, W2_LAMBDA_H)
             .setHgRandom(hgRandom)
             .build();
-        HgHhLdpServer server = HhLdpFactory.createHgServer(config);
-        HgHhLdpClient client = HhLdpFactory.createHgClient(config);
+        HhLdpServer server = HhLdpFactory.createServer(config);
+        HhLdpClient client = HhLdpFactory.createClient(config);
         testStopWarmup(server, client, CORRECT_W2_HG_EXAMPLE_COUNT_ORDERED_LIST);
     }
 
@@ -243,12 +235,12 @@ public class HgHhLdpTest {
             .setBucketParams(W3, W3_LAMBDA_H)
             .setHgRandom(hgRandom)
             .build();
-        HgHhLdpServer server = HhLdpFactory.createHgServer(config);
-        HgHhLdpClient client = HhLdpFactory.createHgClient(config);
+        HhLdpServer server = HhLdpFactory.createServer(config);
+        HhLdpClient client = HhLdpFactory.createClient(config);
         testStopWarmup(server, client, CORRECT_W3_HG_EXAMPLE_COUNT_ORDERED_LIST);
     }
 
-    private void testStopWarmup(HgHhLdpServer server, HgHhLdpClient client,
+    private void testStopWarmup(HhLdpServer server, HhLdpClient client,
                                 List<Map.Entry<String, Integer>> correctOrderedList) throws IOException {
         // warmup
         StreamDataUtils.obtainItemStream(LdpTestDataUtils.EXAMPLE_DATA_PATH)
@@ -274,8 +266,8 @@ public class HgHhLdpTest {
             .setBucketParams(W1, W1_LAMBDA_H)
             .setHgRandom(hgRandom)
             .build();
-        HgHhLdpServer server = HhLdpFactory.createHgServer(config);
-        HgHhLdpClient client = HhLdpFactory.createHgClient(config);
+        HhLdpServer server = HhLdpFactory.createServer(config);
+        HhLdpClient client = HhLdpFactory.createClient(config);
         testLargeEpsilon(server, client, CORRECT_W1_HG_EXAMPLE_COUNT_ORDERED_LIST);
     }
 
@@ -287,8 +279,8 @@ public class HgHhLdpTest {
             .setBucketParams(W2, W2_LAMBDA_H)
             .setHgRandom(hgRandom)
             .build();
-        HgHhLdpServer server = HhLdpFactory.createHgServer(config);
-        HgHhLdpClient client = HhLdpFactory.createHgClient(config);
+        HhLdpServer server = HhLdpFactory.createServer(config);
+        HhLdpClient client = HhLdpFactory.createClient(config);
         testLargeEpsilon(server, client, CORRECT_W2_HG_EXAMPLE_COUNT_ORDERED_LIST);
     }
 
@@ -300,12 +292,12 @@ public class HgHhLdpTest {
             .setBucketParams(W3, W3_LAMBDA_H)
             .setHgRandom(hgRandom)
             .build();
-        HgHhLdpServer server = HhLdpFactory.createHgServer(config);
-        HgHhLdpClient client = HhLdpFactory.createHgClient(config);
+        HhLdpServer server = HhLdpFactory.createServer(config);
+        HhLdpClient client = HhLdpFactory.createClient(config);
         testLargeEpsilon(server, client, CORRECT_W3_HG_EXAMPLE_COUNT_ORDERED_LIST);
     }
 
-    private void testLargeEpsilon(HgHhLdpServer server, HgHhLdpClient client,
+    private void testLargeEpsilon(HhLdpServer server, HhLdpClient client,
                                   List<Map.Entry<String, Integer>> correctOrderedList) throws IOException {
         // warmup
         HhLdpTest.exampleWarmupInsert(server, client);

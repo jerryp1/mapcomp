@@ -2,7 +2,8 @@ package edu.alibaba.mpc4j.dp.service.heavyhitter.hg;
 
 import com.google.common.base.Preconditions;
 import edu.alibaba.mpc4j.common.sampler.binary.bernoulli.SecureBernoulliSampler;
-import edu.alibaba.mpc4j.dp.service.heavyhitter.config.HhgHhLdpConfig;
+import edu.alibaba.mpc4j.dp.service.heavyhitter.config.HgHhLdpConfig;
+import edu.alibaba.mpc4j.dp.service.heavyhitter.config.HhLdpConfig;
 import edu.alibaba.mpc4j.dp.service.heavyhitter.utils.HgHhLdpServerContext;
 import edu.alibaba.mpc4j.dp.service.heavyhitter.utils.HhLdpServerContext;
 import edu.alibaba.mpc4j.dp.service.heavyhitter.HhLdpFactory;
@@ -46,9 +47,10 @@ public class AdvHhgHhLdpClient extends AbstractHgHhLdpClient implements HhgHhLdp
      */
     private final double[] q3s;
 
-    public AdvHhgHhLdpClient(HhgHhLdpConfig clientConfig) {
-        super(clientConfig);
-        alpha = clientConfig.getAlpha();
+    public AdvHhgHhLdpClient(HhLdpConfig config) {
+        super(config);
+        HgHhLdpConfig hgHhLdpConfig = (HgHhLdpConfig) config;
+        alpha = hgHhLdpConfig.getAlpha();
         double alphaWindowEpsilon = windowEpsilon * alpha;
         double remainedWindowEpsilon = windowEpsilon - alphaWindowEpsilon;
         // compute p1 and p1

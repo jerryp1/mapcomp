@@ -1,5 +1,7 @@
 package edu.alibaba.mpc4j.common.tool.hash;
 
+import java.nio.ByteBuffer;
+
 /**
  * Non-cryptographic hash function that outputs 32-bit integers.
  *

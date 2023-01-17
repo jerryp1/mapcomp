@@ -20,15 +20,15 @@ public class BasicFoLdpConfig implements FoLdpConfig {
     /**
      * the domain
      */
-    private final Domain domain;
+    protected final Domain domain;
     /**
      * the domain size d
      */
-    private final int d;
+    protected final int d;
     /**
      * the privacy parameter ε
      */
-    private final double epsilon;
+    protected final double epsilon;
 
     protected BasicFoLdpConfig(Builder builder) {
         type = builder.type;
@@ -57,24 +57,11 @@ public class BasicFoLdpConfig implements FoLdpConfig {
         return epsilon;
     }
 
-    @Override
-    public boolean isConverge() {
-        switch (type) {
-            case DE_INDEX_ENCODING:
-            case DE_STRING_ENCODING:
-            case SUE:
-            case OUE:
-                return false;
-            default:
-                throw new IllegalArgumentException("Invalid " + FoLdpFactory.FoLdpType.class.getSimpleName() + ": " + type.name());
-        }
-    }
-
     public static class Builder implements org.apache.commons.lang3.builder.Builder<BasicFoLdpConfig> {
         /**
          * the type
          */
-        protected final FoLdpFactory.FoLdpType type;
+        private final FoLdpFactory.FoLdpType type;
         /**
          * the domain set
          */

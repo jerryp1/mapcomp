@@ -8,7 +8,6 @@ import edu.alibaba.mpc4j.dp.service.fo.config.FoLdpConfig;
 import edu.alibaba.mpc4j.dp.service.heavyhitter.config.FoHhLdpConfig;
 import edu.alibaba.mpc4j.dp.service.heavyhitter.config.HgHhLdpConfig;
 import edu.alibaba.mpc4j.dp.service.heavyhitter.config.HhLdpConfig;
-import edu.alibaba.mpc4j.dp.service.heavyhitter.config.HhgHhLdpConfig;
 import edu.alibaba.mpc4j.dp.service.tool.StreamDataUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.time.StopWatch;
@@ -80,14 +79,14 @@ public class HhLdpEfficiencyTest {
         // relaxed heavy guardian
         configurations.add(new Object[]{
             HhLdpFactory.HhLdpType.RELAX_HG.name(),
-            new HhgHhLdpConfig
+            new HgHhLdpConfig
                 .Builder(HhLdpFactory.HhLdpType.RELAX_HG, LdpTestDataUtils.CONNECT_DATA_DOMAIN, DEFAULT_K, DEFAULT_EPSILON)
                 .build()
         });
         // advanced heavy guardian
         configurations.add(new Object[]{
             HhLdpFactory.HhLdpType.ADVAN_HG.name(),
-            new HhgHhLdpConfig
+            new HgHhLdpConfig
                 .Builder(HhLdpFactory.HhLdpType.ADVAN_HG, LdpTestDataUtils.CONNECT_DATA_DOMAIN, DEFAULT_K, DEFAULT_EPSILON)
                 .build()
         });

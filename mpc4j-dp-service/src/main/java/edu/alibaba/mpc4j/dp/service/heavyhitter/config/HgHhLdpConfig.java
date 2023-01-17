@@ -25,12 +25,17 @@ public class HgHhLdpConfig extends BasicHhLdpConfig {
      * HeavyGuardian random state, used only for the server
      */
     private final Random hgRandom;
+    /**
+     * the privacy allocation parameter α
+     */
+    private final double alpha;
 
     protected HgHhLdpConfig(Builder builder) {
         super(builder);
         w = builder.w;
         lambdaH = builder.lambdaH;
         hgRandom = builder.hgRandom;
+        alpha = builder.alpha;
     }
 
     /**
@@ -55,6 +60,15 @@ public class HgHhLdpConfig extends BasicHhLdpConfig {
         return hgRandom;
     }
 
+    /**
+     * Gets the privacy allocation parameter α.
+     *
+     * @return the privacy allocation parameter α.
+     */
+    public double getAlpha() {
+        return alpha;
+    }
+
     public static class Builder extends BasicHhLdpConfig.Builder {
         /**
          * budget num
@@ -68,29 +82,21 @@ public class HgHhLdpConfig extends BasicHhLdpConfig {
          * HeavyGuardian random state, used only for the server
          */
         protected Random hgRandom;
+        /**
+         * the privacy allocation parameter α
+         */
+        private double alpha;
 
         public Builder(HhLdpType type, Set<String> domainSet, int k, double windowEpsilon) {
             super(type, domainSet, k, windowEpsilon);
-            setDefault();
-        }
-
-        public Builder(HhLdpConfig config) {
-            super(config.getType(), config.getDomainSet(), config.getK(), config.getWindowEpsilon());
-            if (config instanceof HgHhLdpConfig) {
-                HgHhLdpConfig hgHhLdpConfig = (HgHhLdpConfig) config;
-                w = hgHhLdpConfig.w;
-                lambdaH = hgHhLdpConfig.lambdaH;
-                hgRandom = hgHhLdpConfig.hgRandom;
-            } else {
-                setDefault();
-            }
-        }
-
-        private void setDefault() {
             switch (type) {
                 case BASIC_HG:
+                    break;
                 case ADVAN_HG:
+                    alpha = 1.0 / 3;
+                    break;
                 case RELAX_HG:
+                    alpha = 1.0 / 2;
                     break;
                 default:
                     throw new IllegalArgumentException("Invalid " + HhLdpType.class.getSimpleName() + ": " + type);
@@ -118,6 +124,17 @@ public class HgHhLdpConfig extends BasicHhLdpConfig {
 
         public Builder setHgRandom(Random hgRandom) {
             this.hgRandom = hgRandom;
+            return this;
+        }
+
+        /**
+         * Sets the privacy allocation parameter α.
+         *
+         * @param alpha the privacy allocation parameter α.
+         */
+        public Builder setAlpha(double alpha) {
+            MathPreconditions.checkPositiveInRange("α", alpha, 1);
+            this.alpha = alpha;
             return this;
         }
 

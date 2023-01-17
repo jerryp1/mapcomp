@@ -3,6 +3,7 @@ package edu.alibaba.mpc4j.dp.service.heavyhitter.hg;
 import com.google.common.base.Preconditions;
 import edu.alibaba.mpc4j.dp.service.heavyhitter.HhLdpFactory;
 import edu.alibaba.mpc4j.dp.service.heavyhitter.config.HgHhLdpConfig;
+import edu.alibaba.mpc4j.dp.service.heavyhitter.config.HhLdpConfig;
 import edu.alibaba.mpc4j.dp.service.tool.BucketDomain;
 
 /**
@@ -41,11 +42,12 @@ public abstract class AbstractHgHhLdpClient implements HgHhLdpClient {
      */
     protected final double windowEpsilon;
 
-    AbstractHgHhLdpClient(HgHhLdpConfig hgHhLdpConfig) {
+    AbstractHgHhLdpClient(HhLdpConfig config) {
+        HgHhLdpConfig hgHhLdpConfig = (HgHhLdpConfig) config;
         type = hgHhLdpConfig.getType();
         d = hgHhLdpConfig.getD();
         k = hgHhLdpConfig.getK();
-        windowEpsilon = hgHhLdpConfig.getWindowEpsilon();
+        windowEpsilon = config.getWindowEpsilon();
         w = hgHhLdpConfig.getW();
         lambdaH = hgHhLdpConfig.getLambdaH();
         // init bucket domain

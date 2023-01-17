@@ -1,7 +1,7 @@
 package edu.alibaba.mpc4j.dp.service.heavyhitter.hg;
 
 import com.google.common.base.Preconditions;
-import edu.alibaba.mpc4j.dp.service.heavyhitter.config.HgHhLdpConfig;
+import edu.alibaba.mpc4j.dp.service.heavyhitter.config.HhLdpConfig;
 import edu.alibaba.mpc4j.dp.service.heavyhitter.utils.HhLdpServerContext;
 import edu.alibaba.mpc4j.dp.service.heavyhitter.HhLdpFactory;
 import edu.alibaba.mpc4j.dp.service.heavyhitter.utils.EmptyHhLdpServerContext;
@@ -28,8 +28,8 @@ public class BasicHgHhLdpClient extends AbstractHgHhLdpClient {
      */
     private final double q;
 
-    public BasicHgHhLdpClient(HgHhLdpConfig clientConfig) {
-        super(clientConfig);
+    public BasicHgHhLdpClient(HhLdpConfig config) {
+        super(config);
         double expWindowEpsilon = Math.exp(windowEpsilon);
         d = bucketDomain.getUniversalD();
         p = expWindowEpsilon / (expWindowEpsilon + d - 1);

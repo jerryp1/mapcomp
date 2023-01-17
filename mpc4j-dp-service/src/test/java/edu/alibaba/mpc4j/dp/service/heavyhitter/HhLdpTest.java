@@ -49,21 +49,13 @@ public class HhLdpTest {
         Collection<Object[]> configurations = new ArrayList<>();
 
         // Frequency Oracle
-        configurations.add(new Object[]{
-            HhLdpType.FO.name(), HhLdpType.FO,
-        });
+        configurations.add(new Object[]{HhLdpType.FO.name(), HhLdpType.FO,});
         // relaxed heavy guardian
-        configurations.add(new Object[]{
-            HhLdpType.RELAX_HG.name(), HhLdpType.RELAX_HG,
-        });
+        configurations.add(new Object[]{HhLdpType.RELAX_HG.name(), HhLdpType.RELAX_HG,});
         // advanced heavy guardian
-        configurations.add(new Object[]{
-            HhLdpType.ADVAN_HG.name(), HhLdpType.ADVAN_HG,
-        });
+        configurations.add(new Object[]{HhLdpType.ADVAN_HG.name(), HhLdpType.ADVAN_HG,});
         // basic heavy guardian
-        configurations.add(new Object[]{
-            HhLdpType.BASIC_HG.name(), HhLdpType.BASIC_HG,
-        });
+        configurations.add(new Object[]{HhLdpType.BASIC_HG.name(), HhLdpType.BASIC_HG,});
 
         return configurations;
     }
@@ -80,9 +72,9 @@ public class HhLdpTest {
 
     @Test
     public void testType() {
-        HhLdpConfig config = new BasicHhLdpConfig
-            .Builder(type, LdpTestDataUtils.EXAMPLE_DATA_DOMAIN, LdpTestDataUtils.EXAMPLE_DATA_D, DEFAULT_EPSILON)
-            .build();
+        HhLdpConfig config = HhLdpFactory.createDefaultConfig(
+            type, LdpTestDataUtils.EXAMPLE_DATA_DOMAIN, LdpTestDataUtils.EXAMPLE_DATA_D, DEFAULT_EPSILON
+        );
         // create server
         HhLdpServer server = HhLdpFactory.createServer(config);
         Assert.assertEquals(type, server.getType());
@@ -94,9 +86,9 @@ public class HhLdpTest {
     @Test
     public void testWarmup() throws IOException {
         int k = LdpTestDataUtils.EXAMPLE_DATA_D;
-        HhLdpConfig config = new BasicHhLdpConfig
-            .Builder(type, LdpTestDataUtils.EXAMPLE_DATA_DOMAIN, k, DEFAULT_EPSILON)
-            .build();
+        HhLdpConfig config = HhLdpFactory.createDefaultConfig(
+            type, LdpTestDataUtils.EXAMPLE_DATA_DOMAIN, k, DEFAULT_EPSILON
+        );
         // create server and client
         HhLdpServer server = HhLdpFactory.createServer(config);
         HhLdpClient client = HhLdpFactory.createClient(config);
@@ -120,9 +112,9 @@ public class HhLdpTest {
     @Test
     public void testStopWarmup() throws IOException {
         int k = LdpTestDataUtils.EXAMPLE_DATA_D;
-        HhLdpConfig config = new BasicHhLdpConfig
-            .Builder(type, LdpTestDataUtils.EXAMPLE_DATA_DOMAIN, k, DEFAULT_EPSILON)
-            .build();
+        HhLdpConfig config = HhLdpFactory.createDefaultConfig(
+            type, LdpTestDataUtils.EXAMPLE_DATA_DOMAIN, k, DEFAULT_EPSILON
+        );
         // create server and client
         HhLdpServer server = HhLdpFactory.createServer(config);
         HhLdpClient client = HhLdpFactory.createClient(config);
@@ -147,9 +139,9 @@ public class HhLdpTest {
     @Test
     public void testLargeEpsilonFullK() throws IOException {
         int k = LdpTestDataUtils.EXAMPLE_DATA_D;
-        HhLdpConfig config = new BasicHhLdpConfig
-            .Builder(type, LdpTestDataUtils.EXAMPLE_DATA_DOMAIN, k, LARGE_EPSILON)
-            .build();
+        HhLdpConfig config = HhLdpFactory.createDefaultConfig(
+            type, LdpTestDataUtils.EXAMPLE_DATA_DOMAIN, k, LARGE_EPSILON
+        );
         // create server and client
         HhLdpServer server = HhLdpFactory.createServer(config);
         HhLdpClient client = HhLdpFactory.createClient(config);
@@ -185,9 +177,9 @@ public class HhLdpTest {
     @Test
     public void testFullK() throws IOException {
         int k = LdpTestDataUtils.EXAMPLE_DATA_D;
-        HhLdpConfig config = new BasicHhLdpConfig
-            .Builder(type, LdpTestDataUtils.EXAMPLE_DATA_DOMAIN, k, DEFAULT_EPSILON)
-            .build();
+        HhLdpConfig config = HhLdpFactory.createDefaultConfig(
+            type, LdpTestDataUtils.EXAMPLE_DATA_DOMAIN, k, DEFAULT_EPSILON
+        );
         // create server and client
         HhLdpServer server = HhLdpFactory.createServer(config);
         HhLdpClient client = HhLdpFactory.createClient(config);
@@ -205,9 +197,9 @@ public class HhLdpTest {
 
     @Test
     public void testDefault() throws IOException {
-        HhLdpConfig config = new BasicHhLdpConfig
-            .Builder(type, LdpTestDataUtils.EXAMPLE_DATA_DOMAIN, DEFAULT_K, DEFAULT_EPSILON)
-            .build();
+        HhLdpConfig config = HhLdpFactory.createDefaultConfig(
+            type, LdpTestDataUtils.EXAMPLE_DATA_DOMAIN, DEFAULT_K, DEFAULT_EPSILON
+        );
         // create server and client
         HhLdpServer server = HhLdpFactory.createServer(config);
         HhLdpClient client = HhLdpFactory.createClient(config);
