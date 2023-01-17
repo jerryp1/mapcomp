@@ -1,20 +1,18 @@
-package edu.alibaba.mpc4j.s2pc.pir.index.xpir;
+package edu.alibaba.mpc4j.s2pc.pir.index.sealpir;
 
 import java.util.ArrayList;
 import java.util.List;
 
 /**
- * XPIR协议本地算法库工具类。
- *
  * @author Liqiang Peng
- * @date 2022/8/24
+ * @date 2023/1/17
  */
-class Mbfk16IndexPirNativeUtils {
+public class Acls18IndexPirNativeUtils {
 
     /**
      * 单例模式
      */
-    private Mbfk16IndexPirNativeUtils() {
+    private Acls18IndexPirNativeUtils() {
         // empty
     }
 
@@ -61,13 +59,14 @@ class Mbfk16IndexPirNativeUtils {
      * 生成回复密文。
      *
      * @param sealContext  SEAL上下文参数。
+     * @param galoisKey    Galois密钥。
      * @param queryList    检索值密文。
      * @param dbPlaintexts 数据库明文。
      * @param nvec         各维度长度。
      * @return 检索结果密文。
      */
-    static native ArrayList<byte[]> generateReply(byte[] sealContext, List<byte[]> queryList, List<byte[]> dbPlaintexts,
-                                                  int[] nvec);
+    static native ArrayList<byte[]> generateReply(byte[] sealContext, byte[] galoisKey, List<byte[]> queryList,
+                                                  List<byte[]> dbPlaintexts, int[] nvec);
 
     /**
      * 解密回复密文。

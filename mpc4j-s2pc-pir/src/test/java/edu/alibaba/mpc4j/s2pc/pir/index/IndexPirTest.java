@@ -8,6 +8,8 @@ import edu.alibaba.mpc4j.common.rpc.impl.memory.MemoryRpcManager;
 import edu.alibaba.mpc4j.s2pc.pir.PirUtils;
 import edu.alibaba.mpc4j.s2pc.pir.index.onionpir.Mcr21IndexPirConfig;
 import edu.alibaba.mpc4j.s2pc.pir.index.onionpir.Mcr21IndexPirParams;
+import edu.alibaba.mpc4j.s2pc.pir.index.sealpir.Acls18IndexPirConfig;
+import edu.alibaba.mpc4j.s2pc.pir.index.sealpir.Acls18IndexPirParams;
 import edu.alibaba.mpc4j.s2pc.pir.index.xpir.Mbfk16IndexPirConfig;
 import edu.alibaba.mpc4j.s2pc.pir.index.xpir.Mbfk16IndexPirParams;
 import org.apache.commons.lang3.StringUtils;
@@ -38,11 +40,11 @@ public class IndexPirTest {
     /**
      * 默认标签字节长度
      */
-    private static final int DEFAULT_ELEMENT_BYTE_LENGTH = 40000;
+    private static final int DEFAULT_ELEMENT_BYTE_LENGTH = 64;
     /**
      * 服务端元素数量
      */
-    private static final int SERVER_ELEMENT_SIZE = 1 << 10;
+    private static final int SERVER_ELEMENT_SIZE = 1 << 20;
 
     @Parameterized.Parameters(name = "{0}")
     public static Collection<Object[]> configurations() {
@@ -67,6 +69,33 @@ public class IndexPirTest {
             IndexPirFactory.IndexPirType.XPIR.name() + " (2-dimension)",
             xpirConfig,
             new Mbfk16IndexPirParams(
+                SERVER_ELEMENT_SIZE,
+                DEFAULT_ELEMENT_BYTE_LENGTH,
+                4096,
+                20,
+                2
+            )
+        });
+
+        // SEAL PIR
+        Acls18IndexPirConfig sealpirConfig = new Acls18IndexPirConfig();
+        // SEAL PIR (1-dimension)
+        configurations.add(new Object[] {
+            IndexPirFactory.IndexPirType.SEAL_PIR.name() + " (1-dimension)",
+            sealpirConfig,
+            new Acls18IndexPirParams(
+                SERVER_ELEMENT_SIZE,
+                DEFAULT_ELEMENT_BYTE_LENGTH,
+                4096,
+                20,
+                1
+            )
+        });
+        // SEAL PIR (2-dimension)
+        configurations.add(new Object[] {
+            IndexPirFactory.IndexPirType.SEAL_PIR.name() + " (2-dimension)",
+            sealpirConfig,
+            new Acls18IndexPirParams(
                 SERVER_ELEMENT_SIZE,
                 DEFAULT_ELEMENT_BYTE_LENGTH,
                 4096,

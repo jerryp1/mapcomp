@@ -123,10 +123,9 @@ public class Mbfk16IndexPirServer extends AbstractIndexPirServer {
         throws MpcAbortException {
         int totalSize = clientQueryPayload.size();
         int bundleNum = params.getBundleNum();
-        int expectSize1, expectSize2 = 0;
         ArrayList<ArrayList<byte[]>> clientQuery = new ArrayList<>();
+        int expectSize1 = Arrays.stream(params.getDimensionsLength()[0]).sum(), expectSize2 = 0;
         if ((bundleNum > 1) && (params.getPlaintextSize()[0] != params.getPlaintextSize()[bundleNum - 1])) {
-            expectSize1 = Arrays.stream(params.getDimensionsLength()[0]).sum();
             expectSize2 = Arrays.stream(params.getDimensionsLength()[bundleNum - 1]).sum();
             for (int i = 0; i < bundleNum - 1; i++) {
                 clientQuery.add(new ArrayList<>());
@@ -139,7 +138,6 @@ public class Mbfk16IndexPirServer extends AbstractIndexPirServer {
                 clientQuery.get(bundleNum - 1).add(clientQueryPayload.get(expectSize1 + j));
             }
         } else {
-            expectSize1 = Arrays.stream(params.getDimensionsLength()[0]).sum();
             for (int i = 0; i < bundleNum; i++) {
                 clientQuery.add(new ArrayList<>());
                 for (int j = 0; j < expectSize1; j++) {

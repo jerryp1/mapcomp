@@ -1,4 +1,4 @@
-package edu.alibaba.mpc4j.s2pc.pir.index.xpir;
+package edu.alibaba.mpc4j.s2pc.pir.index.sealpir;
 
 import edu.alibaba.mpc4j.common.tool.CommonConstants;
 import edu.alibaba.mpc4j.s2pc.pir.index.AbstractIndexPirParams;
@@ -7,13 +7,12 @@ import java.util.Arrays;
 import java.util.stream.IntStream;
 
 /**
- * XPIR协议参数。
+ * SEAL PIR协议参数。
  *
  * @author Liqiang Peng
- * @date 2022/8/24
+ * @date 2023/1/17
  */
-public class Mbfk16IndexPirParams extends AbstractIndexPirParams {
-
+public class Acls18IndexPirParams extends AbstractIndexPirParams {
     static {
         System.loadLibrary(CommonConstants.MPC4J_NATIVE_FHE_NAME);
     }
@@ -55,7 +54,7 @@ public class Mbfk16IndexPirParams extends AbstractIndexPirParams {
      */
     private final int expansionRatio;
 
-    public Mbfk16IndexPirParams(int serverElementSize, int elementByteLength, int polyModulusDegree,
+    public Acls18IndexPirParams(int serverElementSize, int elementByteLength, int polyModulusDegree,
                                 int plainModulusBitLength, int dimension) {
         this.polyModulusDegree = polyModulusDegree;
         this.plainModulusBitLength = plainModulusBitLength;
@@ -68,8 +67,8 @@ public class Mbfk16IndexPirParams extends AbstractIndexPirParams {
         this.plaintextSize = new int[this.bundleNum];
         this.dimensionsLength = new int[this.bundleNum][];
         // 生成加密方案参数
-        this.encryptionParams = Mbfk16IndexPirNativeUtils.generateSealContext(polyModulusDegree, (1L << plainModulusBitLength) + 1);
-        this.expansionRatio = Mbfk16IndexPirNativeUtils.expansionRatio(this.encryptionParams);
+        this.encryptionParams = Acls18IndexPirNativeUtils.generateSealContext(polyModulusDegree, (1L << plainModulusBitLength) + 1);
+        this.expansionRatio = Acls18IndexPirNativeUtils.expansionRatio(this.encryptionParams);
         IntStream.range(0, this.bundleNum).forEach(index -> {
             int bundleElementByteLength = index == this.bundleNum - 1 ? elementByteLength % maxElementByteLength : maxElementByteLength;
             // 一个多项式可以包含的元素数量
@@ -189,7 +188,7 @@ public class Mbfk16IndexPirParams extends AbstractIndexPirParams {
 
     @Override
     public String toString() {
-        return "XPIR Parameters :" + "\n" +
+        return "SealPIR Parameters :" + "\n" +
             "  - elements per BFV plaintext : " + Arrays.toString(elementSizeOfPlaintext) + "\n" +
             "  - dimensions for d-dimensional hyperrectangle : " + dimension + "\n" +
             "  - number of BFV plaintexts (before padding) : " + Arrays.toString(plaintextSize) + "\n" +

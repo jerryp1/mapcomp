@@ -39,4 +39,7 @@ void poc_decompose_array(uint64_t *value, uint32_t count, std::vector<Modulus> c
 void plain_decomposition(Plaintext &pt, const SEALContext &context, uint32_t decomp_size, uint32_t base_bit,
                          vector<uint64_t *> &plain_decomp);
 
+vector<Ciphertext> expand_query(const EncryptionParameters& parms, const Ciphertext &encrypted,
+                                const GaloisKeys& galois_keys, uint32_t m);
+
 #endif //MPC4J_NATIVE_FHE_INDEX_PIR_H

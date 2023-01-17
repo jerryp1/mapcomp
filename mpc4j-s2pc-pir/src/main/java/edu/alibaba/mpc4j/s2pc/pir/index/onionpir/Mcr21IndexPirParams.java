@@ -85,7 +85,7 @@ public class Mcr21IndexPirParams extends AbstractIndexPirParams {
             // 各维度的向量长度
             this.dimensionsLength[index] = computeDimensionLength(this.plaintextSize[index]);
             assert (dimensionsLength[index][0] <= 512) : "first dimension is too large";
-            this.dimension[index] = this.dimensionsLength.length;
+            this.dimension[index] = this.dimensionsLength[index].length;
         });
     }
 

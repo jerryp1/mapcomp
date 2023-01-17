@@ -50,10 +50,18 @@ JNIEXPORT jobject JNICALL Java_edu_alibaba_mpc4j_s2pc_pir_index_xpir_Mbfk16Index
 /*
  * Class:     edu_alibaba_mpc4j_s2pc_pir_index_xpir_Mbfk16IndexPirNativeUtils
  * Method:    decryptReply
- * Signature: ([B[BLjava/util/ArrayList;I)[J
+ * Signature: ([B[BLjava/util/List;I)[J
  */
 JNIEXPORT jlongArray JNICALL Java_edu_alibaba_mpc4j_s2pc_pir_index_xpir_Mbfk16IndexPirNativeUtils_decryptReply
   (JNIEnv *, jclass, jbyteArray, jbyteArray, jobject, jint);
+
+/*
+ * Class:     edu_alibaba_mpc4j_s2pc_pir_index_xpir_Mbfk16IndexPirNativeUtils
+ * Method:    expansionRatio
+ * Signature: ([B)I
+ */
+JNIEXPORT jint JNICALL Java_edu_alibaba_mpc4j_s2pc_pir_index_xpir_Mbfk16IndexPirNativeUtils_expansionRatio
+  (JNIEnv *, jclass, jbyteArray);
 
 #ifdef __cplusplus
 }

@@ -115,6 +115,70 @@ void poc_expand_flat(vector<vector<Ciphertext>>::iterator &result, vector<Cipher
     }
 }
 
+vector<Ciphertext> expand_query(const EncryptionParameters& parms, const Ciphertext &encrypted,
+                                const GaloisKeys& galois_keys, uint32_t m) {
+    SEALContext context(parms);
+    Evaluator evaluator(context);
+    // Assume that m is a power of 2. If not, round it to the next power of 2.
+    uint32_t logm = ceil(log2(m));
+    Plaintext two("2");
+    vector<uint32_t> galois_elts;
+    auto n = parms.poly_modulus_degree();
+    if (logm > ceil(log2(n))) {
+        throw logic_error("m > n is not allowed.");
+    }
+    for (int i = 0; i < ceil(log2(n)); i++) {
+        galois_elts.push_back((n + seal::util::exponentiate_uint(2, i)) /seal::util::exponentiate_uint(2, i));
+    }
+    vector<Ciphertext> temp;
+    temp.push_back(encrypted);
+    Ciphertext tempctxt;
+    Ciphertext tempctxt_rotated;
+    Ciphertext tempctxt_shifted;
+    Ciphertext tempctxt_rotatedshifted;
+    for (uint32_t i = 0; i < logm - 1; i++) {
+        vector<Ciphertext> newtemp(temp.size() << 1);
+        // temp[a] = (j0 = a (mod 2**i) ? ) : Enc(x^{j0 - a}) else Enc(0).
+        uint32_t index_raw = (n << 1) - (1 << i);
+        uint32_t index = (index_raw * galois_elts[i]) % (n << 1);
+
+        for (uint32_t a = 0; a < temp.size(); a++) {
+            evaluator.apply_galois(temp[a], galois_elts[i], galois_keys,tempctxt_rotated);
+            evaluator.add(temp[a], tempctxt_rotated, newtemp[a]);
+            multiply_power_of_X(temp[a], tempctxt_shifted, index_raw, context);
+            // cout << "mul by x^pow: " <<
+            multiply_power_of_X(tempctxt_rotated, tempctxt_rotatedshifted, index, context);
+            // cout << "mul by x^pow: " <<
+            // Enc(2^i x^j) if j = 0 (mod 2**i).
+            evaluator.add(tempctxt_shifted, tempctxt_rotatedshifted,newtemp[a + temp.size()]);
+        }
+        temp = newtemp;
+    }
+    // Last step of the loop
+    vector<Ciphertext> newtemp(temp.size() << 1);
+    uint32_t index_raw = (n << 1) - (1 << (logm - 1));
+    uint32_t index = (index_raw * galois_elts[logm - 1]) % (n << 1);
+    for (uint32_t a = 0; a < temp.size(); a++) {
+        if (a >= (m - (1 << (logm - 1)))) { // corner case.
+            evaluator.multiply_plain(temp[a], two,
+                                       newtemp[a]); // plain multiplication by 2.
+            // cout << client.decryptor_->invariant_noise_budget(newtemp[a]) << ", ";
+        } else {
+            evaluator.apply_galois(temp[a], galois_elts[logm - 1], galois_keys,
+                                     tempctxt_rotated);
+            evaluator.add(temp[a], tempctxt_rotated, newtemp[a]);
+            multiply_power_of_X(temp[a], tempctxt_shifted, index_raw, context);
+            multiply_power_of_X(tempctxt_rotated, tempctxt_rotatedshifted, index, context);
+            evaluator.add(tempctxt_shifted, tempctxt_rotatedshifted,
+                            newtemp[a + temp.size()]);
+        }
+    }
+    auto first = newtemp.begin();
+    auto last = newtemp.begin() + m;
+    vector<Ciphertext> newVec(first, last);
+    return newVec;
+}
+
 vector<Ciphertext> poc_rlwe_expand(const Ciphertext& packed_query, const SEALContext& context, const seal::GaloisKeys& galois_keys, uint32_t size) {
     // this function return size vector of RLWE ciphertexts it takes a single RLWE packed ciphertext
     Evaluator evaluator(context);
