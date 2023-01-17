@@ -37,10 +37,10 @@ JNIEXPORT jlong JNICALL Java_edu_alibaba_mpc4j_s2pc_pcg_mtg_zp64_core_rss19_Rss1
     BatchEncoder encoder(context);
     encryptor.set_secret_key(secret_key);
     Decryptor decryptor(context, secret_key);
-    size_t slot_count = encoder.slot_count();
+    uint32_t slot_count = encoder.slot_count();
     vector<uint64_t> coeffs(slot_count);
     vector<uint64_t> a0(slot_count), a1(slot_count), b0(slot_count), b1(slot_count), r(slot_count);
-    for (int j = 0; j < slot_count; j++) {
+    for (uint32_t j = 0; j < slot_count; j++) {
         a0[j] = random_uint64() % plain_modulus;
         a1[j] = random_uint64() % plain_modulus;
         b0[j] = random_uint64() % plain_modulus;
@@ -90,31 +90,30 @@ JNIEXPORT jobject JNICALL Java_edu_alibaba_mpc4j_s2pc_pcg_mtg_zp64_core_rss19_Rs
     const SecretKey &secret_key = key_gen.secret_key();
     PublicKey public_key;
     key_gen.create_public_key(public_key);
-    // serialization
     jclass list_jcs = env->FindClass("java/util/ArrayList");
     jmethodID list_init = env->GetMethodID(list_jcs, "<init>", "()V");
     jobject list_obj = env->NewObject(list_jcs, list_init, "");
     jmethodID list_add = env->GetMethodID(list_jcs, "add", "(Ljava/lang/Object;)Z");
     jbyteArray parms_bytes = serialize_encryption_parms(env, parms);
-    jbyteArray pk_byte = serialize_public_key(env, public_key);
-    jbyteArray sk_byte = serialize_secret_key(env, secret_key);
+    jbyteArray pk_bytes = serialize_public_key(env, public_key);
+    jbyteArray sk_bytes = serialize_secret_key(env, secret_key);
     env->CallBooleanMethod(list_obj, list_add, parms_bytes);
-    env->CallBooleanMethod(list_obj, list_add, pk_byte);
-    env->CallBooleanMethod(list_obj, list_add, sk_byte);
+    env->CallBooleanMethod(list_obj, list_add, pk_bytes);
+    env->CallBooleanMethod(list_obj, list_add, sk_bytes);
     return list_obj;
 }
 
 JNIEXPORT jobject JNICALL Java_edu_alibaba_mpc4j_s2pc_pcg_mtg_zp64_core_rss19_Rss19Zp64CoreMtgNativeUtils_encryption(
-    JNIEnv *env, jclass, jbyteArray params_bytes, jbyteArray public_key_bytes, jbyteArray secret_key_bytes,
-    jlongArray coeff_array0, jlongArray coeff_array1) {
-    EncryptionParameters parms = deserialize_encryption_parms(env, params_bytes);
+        JNIEnv *env, jclass, jbyteArray parms_bytes, jbyteArray pk_bytes, jbyteArray sk_bytes, jlongArray coeff_array0,
+        jlongArray coeff_array1) {
+    EncryptionParameters parms = deserialize_encryption_parms(env, parms_bytes);
     SEALContext context(parms);
     auto exception = env->FindClass("java/lang/Exception");
-    PublicKey public_key = deserialize_public_key(env, public_key_bytes, context);
+    PublicKey public_key = deserialize_public_key(env, pk_bytes, context);
     if (!is_metadata_valid_for(public_key, context)) {
         env->ThrowNew(exception, "invalid public key for this SEALContext!");
     }
-    SecretKey secret_key = deserialize_secret_key(env, secret_key_bytes, context);
+    SecretKey secret_key = deserialize_secret_key(env, sk_bytes, context);
     if (!is_metadata_valid_for(secret_key, context)) {
         env->ThrowNew(exception, "invalid secret key for this SEALContext!");
     }
@@ -122,9 +121,9 @@ JNIEXPORT jobject JNICALL Java_edu_alibaba_mpc4j_s2pc_pcg_mtg_zp64_core_rss19_Rs
     encryptor.set_secret_key(secret_key);
     Evaluator evaluator(context);
     BatchEncoder encoder(context);
-    int size = env->GetArrayLength(coeff_array0);
-    long *ptr0 = env->GetLongArrayElements(coeff_array0, JNI_FALSE);
-    long *ptr1 = env->GetLongArrayElements(coeff_array1, JNI_FALSE);
+    uint32_t size = env->GetArrayLength(coeff_array0);
+    auto *ptr0 = reinterpret_cast<uint64_t *>(env->GetLongArrayElements(coeff_array0, JNI_FALSE));
+    auto *ptr1 = reinterpret_cast<uint64_t *>(env->GetLongArrayElements(coeff_array1, JNI_FALSE));
     vector<uint64_t> vec0(ptr0, ptr0 + size), vec1(ptr1, ptr1 + size);
     Plaintext plaintext0, plaintext1;
     encoder.encode(vec0, plaintext0);
@@ -143,11 +142,11 @@ JNIEXPORT jobject JNICALL Java_edu_alibaba_mpc4j_s2pc_pcg_mtg_zp64_core_rss19_Rs
 }
 
 JNIEXPORT jlongArray JNICALL Java_edu_alibaba_mpc4j_s2pc_pcg_mtg_zp64_core_rss19_Rss19Zp64CoreMtgNativeUtils_decryption(
-    JNIEnv *env, jclass, jbyteArray params_bytes, jbyteArray secret_key_bytes, jbyteArray ciphertext_bytes) {
-    EncryptionParameters parms = deserialize_encryption_parms(env, params_bytes);
+        JNIEnv *env, jclass, jbyteArray parms_bytes, jbyteArray sk_bytes, jbyteArray ciphertext_bytes) {
+    EncryptionParameters parms = deserialize_encryption_parms(env, parms_bytes);
     SEALContext context(parms);
     auto exception = env->FindClass("java/lang/Exception");
-    SecretKey secret_key = deserialize_secret_key(env, secret_key_bytes, context);
+    SecretKey secret_key = deserialize_secret_key(env, sk_bytes, context);
     if (!is_metadata_valid_for(secret_key, context)) {
         env->ThrowNew(exception, "invalid secret key for this SEALContext!");
     }
@@ -165,7 +164,7 @@ JNIEXPORT jlongArray JNICALL Java_edu_alibaba_mpc4j_s2pc_pcg_mtg_zp64_core_rss19
     jlongArray result;
     result = env->NewLongArray((jsize) parms.poly_modulus_degree());
     jlong temp[parms.poly_modulus_degree()];
-    for (int i = 0; i < parms.poly_modulus_degree(); i++) {
+    for (uint32_t i = 0; i < parms.poly_modulus_degree(); i++) {
         temp[i] = (jlong) coeffs[i];
     }
     env->SetLongArrayRegion(result, 0, (jsize) parms.poly_modulus_degree(), temp);
@@ -173,9 +172,9 @@ JNIEXPORT jlongArray JNICALL Java_edu_alibaba_mpc4j_s2pc_pcg_mtg_zp64_core_rss19
 }
 
 JNIEXPORT jbyteArray JNICALL Java_edu_alibaba_mpc4j_s2pc_pcg_mtg_zp64_core_rss19_Rss19Zp64CoreMtgNativeUtils_computeResponse(
-    JNIEnv *env, jclass, jbyteArray params_bytes, jbyteArray cipher1_bytes, jbyteArray cipher2_bytes,
-    jlongArray plain1, jlongArray plain2, jlongArray r) {
-    EncryptionParameters parms = deserialize_encryption_parms(env, params_bytes);
+    JNIEnv *env, jclass, jbyteArray parms_bytes, jbyteArray cipher1_bytes, jbyteArray cipher2_bytes, jlongArray plain1,
+    jlongArray plain2, jlongArray r) {
+    EncryptionParameters parms = deserialize_encryption_parms(env, parms_bytes);
     SEALContext context(parms);
     Evaluator evaluator(context);
     BatchEncoder encoder(context);
@@ -187,10 +186,10 @@ JNIEXPORT jbyteArray JNICALL Java_edu_alibaba_mpc4j_s2pc_pcg_mtg_zp64_core_rss19
     if (!is_metadata_valid_for(ct[0], context) ||  !is_metadata_valid_for(ct[1], context)) {
         env->ThrowNew(exception, "invalid ciphertext for this SEALContext!");
     }
-    int size = env->GetArrayLength(plain1);
-    long *ptr_plain1 = env->GetLongArrayElements(plain1, JNI_FALSE);
-    long *ptr_plain2 = env->GetLongArrayElements(plain2, JNI_FALSE);
-    long *ptr_r = env->GetLongArrayElements(r, JNI_FALSE);
+    uint32_t size = env->GetArrayLength(plain1);
+    auto *ptr_plain1 = reinterpret_cast<uint64_t *>(env->GetLongArrayElements(plain1, JNI_FALSE));
+    auto *ptr_plain2 = reinterpret_cast<uint64_t *>(env->GetLongArrayElements(plain2, JNI_FALSE));
+    auto *ptr_r = reinterpret_cast<uint64_t *>(env->GetLongArrayElements(r, JNI_FALSE));
     vector<uint64_t> vec_plain1(ptr_plain1, ptr_plain1 + size);
     vector<uint64_t> vec_plain2(ptr_plain2, ptr_plain2 + size);
     vector<uint64_t> vec_r(ptr_r, ptr_r + size);

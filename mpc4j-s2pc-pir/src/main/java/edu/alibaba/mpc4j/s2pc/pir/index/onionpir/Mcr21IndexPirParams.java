@@ -23,7 +23,7 @@ public class Mcr21IndexPirParams extends AbstractIndexPirParams {
     /**
      * 第一维度向量长度
      */
-    private static final int FIRST_DIMENSION_SIZE = 128;
+    private final int firstDimensionSize;
     /**
      * 其余维度向量长度
      */
@@ -31,19 +31,15 @@ public class Mcr21IndexPirParams extends AbstractIndexPirParams {
     /**
      * 明文模数比特长度
      */
-    private final int plainModulusBitLength = 40;
+    private final int plainModulusBitLength = 54;
     /**
      * 多项式阶
      */
-    private final int polyModulusDegree = 8192;
-    /**
-     * GSW密文参数
-     */
-    private final int gswDecompSize = 7;
+    private final int polyModulusDegree = 4096;
     /**
      * 维数
      */
-    private final int dimension;
+    private final int[] dimension;
     /**
      * 加密方案参数
      */
@@ -51,27 +47,46 @@ public class Mcr21IndexPirParams extends AbstractIndexPirParams {
     /**
      * 多项式里的元素数量
      */
-    private final int elementSizeOfPlaintext;
+    private final int[] elementSizeOfPlaintext;
     /**
      * 多项式数量
      */
-    private final int plaintextSize;
+    private final int[] plaintextSize;
     /**
      * 各维度的向量长度
      */
-    private final int[] dimensionsLength;
+    private final int[][] dimensionsLength;
+    /**
+     * 数据库分块数量
+     */
+    private final int bundleNum;
 
-
-    public Mcr21IndexPirParams(int serverElementSize, int elementByteLength) {
+    public Mcr21IndexPirParams(int serverElementSize, int elementByteLength, int firstDimensionSize) {
+        this.firstDimensionSize = firstDimensionSize;
         // 生成加密方案参数
         this.encryptionParams = Mcr21IndexPirNativeUtils.generateSealContext(polyModulusDegree, plainModulusBitLength);
-        // 一个多项式可以包含的元素数量
-        this.elementSizeOfPlaintext = elementSizeOfPlaintext(elementByteLength, polyModulusDegree, plainModulusBitLength);
-        // 多项式数量
-        this.plaintextSize = (int) Math.ceil((double) serverElementSize / this.elementSizeOfPlaintext);
-        // 各维度的向量长度
-        this.dimensionsLength = computeDimensionLength();
-        this.dimension = this.dimensionsLength.length;
+        // 一个多项式可表示的字节长度
+        int maxElementByteLength = polyModulusDegree * plainModulusBitLength / Byte.SIZE;
+        // 数据库分块数量
+        this.bundleNum = (elementByteLength + maxElementByteLength) / maxElementByteLength;
+        this.elementSizeOfPlaintext = new int[this.bundleNum];
+        this.plaintextSize = new int[this.bundleNum];
+        this.dimensionsLength = new int[this.bundleNum][];
+        this.dimension = new int[this.bundleNum];
+        IntStream.range(0, this.bundleNum).forEach(index -> {
+            int bundleElementByteLength = index == this.bundleNum - 1 ?
+                elementByteLength % maxElementByteLength : maxElementByteLength;
+            // 一个多项式可以包含的元素数量
+            this.elementSizeOfPlaintext[index] = elementSizeOfPlaintext(
+                bundleElementByteLength, polyModulusDegree, plainModulusBitLength
+            );
+            // 多项式数量
+            this.plaintextSize[index] = (int) Math.ceil((double)serverElementSize / this.elementSizeOfPlaintext[index]);
+            // 各维度的向量长度
+            this.dimensionsLength[index] = computeDimensionLength(this.plaintextSize[index]);
+            assert (dimensionsLength[index][0] <= 512) : "first dimension is too large";
+            this.dimension[index] = this.dimensionsLength.length;
+        });
     }
 
     /**
@@ -93,15 +108,6 @@ public class Mcr21IndexPirParams extends AbstractIndexPirParams {
     }
 
     /**
-     * 返回维数。
-     *
-     * @return 维数。
-     */
-    public int getDimension() {
-        return dimension;
-    }
-
-    /**
      * 返回加密方案参数。
      *
      * @return 加密方案参数。
@@ -115,7 +121,7 @@ public class Mcr21IndexPirParams extends AbstractIndexPirParams {
      *
      * @return 各维度的向量长度。
      */
-    public int[] getDimensionsLength() {
+    public int[][] getDimensionsLength() {
         return dimensionsLength;
     }
 
@@ -124,7 +130,7 @@ public class Mcr21IndexPirParams extends AbstractIndexPirParams {
      *
      * @return 多项式数量。
      */
-    public int getPlaintextSize() {
+    public int[] getPlaintextSize() {
         return plaintextSize;
     }
 
@@ -133,45 +139,8 @@ public class Mcr21IndexPirParams extends AbstractIndexPirParams {
      *
      * @return 多项式里的元素数量。
      */
-    public int getElementSizeOfPlaintext() {
+    public int[] getElementSizeOfPlaintext() {
         return elementSizeOfPlaintext;
-    }
-
-    /**
-     * 返回数据库编码后每个维度的长度。
-     *
-     * @return 数据库编码后每个维度的长度。
-     */
-    private int[] computeDimensionLength() {
-        ArrayList<Integer> dimensionLength = new ArrayList<>();
-        dimensionLength.add(FIRST_DIMENSION_SIZE);
-        int product = FIRST_DIMENSION_SIZE;
-        for (int i = plaintextSize / FIRST_DIMENSION_SIZE; i >= SUBSEQUENT_DIMENSION_SIZE; i /= SUBSEQUENT_DIMENSION_SIZE) {
-            dimensionLength.add(SUBSEQUENT_DIMENSION_SIZE);
-            product *= SUBSEQUENT_DIMENSION_SIZE;
-        }
-        int dimensionSize = dimensionLength.size();
-        int[] dimensionArray = IntStream.range(0, dimensionSize).map(dimensionLength::get).toArray();
-        while (product < plaintextSize) {
-            dimensionArray[dimensionSize - 1]++;
-            product = 1;
-            product *= Arrays.stream(dimensionArray, 0, dimensionSize).reduce(1, (a, b) -> a * b);
-        }
-        return dimensionArray;
-    }
-
-    @Override
-    public String toString() {
-        int product = Arrays.stream(dimensionsLength).reduce(1, (a, b) -> a * b);
-        return "OnionPIR Parameters :" + "\n" +
-            "  - elements per BFV plaintext : " + elementSizeOfPlaintext + "\n" +
-            "  - dimensions for d-dimensional hyperrectangle : " + dimension + "\n" +
-            "  - number of BFV plaintexts (before padding) : " + plaintextSize + "\n" +
-            "  - number of BFV plaintexts after padding (to fill d-dimensional hyperrectangle) : " + product + "\n" +
-            "\n" +
-            "SEAL encryption parameters : " + "\n" +
-            " - degree of polynomial modulus : " + polyModulusDegree + "\n" +
-            " - size of plaintext modulus : " + plainModulusBitLength + "\n";
     }
 
     /**
@@ -180,6 +149,54 @@ public class Mcr21IndexPirParams extends AbstractIndexPirParams {
      * @return RGSW密文参数。
      */
     public int getGswDecompSize() {
-        return gswDecompSize;
+        return 7;
+    }
+
+    /**
+     * 返回分块数目。
+     *
+     * @return RGSW密文参数。
+     */
+    public int getBundleNum() {
+        return this.bundleNum;
+    }
+
+    /**
+     * 返回数据库编码后每个维度的长度。
+     *
+     * @param elementSize 元素数量。
+     * @return 数据库编码后每个维度的长度。
+     */
+    private int[] computeDimensionLength(int elementSize) {
+        ArrayList<Integer> dimensionLength = new ArrayList<>();
+        dimensionLength.add(firstDimensionSize);
+        int product = firstDimensionSize;
+        for (int i = elementSize / firstDimensionSize; i >= SUBSEQUENT_DIMENSION_SIZE; i /= SUBSEQUENT_DIMENSION_SIZE) {
+            dimensionLength.add(SUBSEQUENT_DIMENSION_SIZE);
+            product *= SUBSEQUENT_DIMENSION_SIZE;
+        }
+        int dimensionSize = dimensionLength.size();
+        int[] dimensionArray = IntStream.range(0, dimensionSize).map(dimensionLength::get).toArray();
+        while (product < elementSize) {
+            dimensionArray[dimensionSize - 1]++;
+            product = 1;
+            product *= Arrays.stream(dimensionArray, 0, dimensionSize).reduce(1, (a, b) -> a * b);
+        }
+        if (dimensionSize == 1 && dimensionArray[0] > firstDimensionSize) {
+            dimensionArray = new int[] {firstDimensionSize, SUBSEQUENT_DIMENSION_SIZE};
+        }
+        return dimensionArray;
+    }
+
+    @Override
+    public String toString() {
+        return "OnionPIR Parameters :" + "\n" +
+            "  - elements per BFV plaintext : " + Arrays.toString(elementSizeOfPlaintext) + "\n" +
+            "  - dimensions for d-dimensional hyperrectangle : " + Arrays.toString(dimension) + "\n" +
+            "  - number of BFV plaintexts (before padding) : " + Arrays.toString(plaintextSize) + "\n" +
+            "\n" +
+            "SEAL encryption parameters : " + "\n" +
+            " - degree of polynomial modulus : " + polyModulusDegree + "\n" +
+            " - size of plaintext modulus : " + plainModulusBitLength + "\n";
     }
 }

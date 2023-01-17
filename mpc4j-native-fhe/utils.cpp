@@ -2,7 +2,7 @@
 #include <utility>
 #include <seal/util/polyarithsmallmod.h>
 
-parms_id_type get_parms_id_for_chain_idx(const SEALContext& seal_context, size_t chain_idx) {
+parms_id_type get_parms_id_for_chain_idx(const SEALContext& seal_context, uint32_t chain_idx) {
     // This function returns a parms_id matching the given chain index or -- if the chain
     // index is too large -- for the largest possible parameters (first data level).
     parms_id_type parms_id = seal_context.first_parms_id();
@@ -23,10 +23,10 @@ EncryptionParameters generate_encryption_parameters(scheme_type type, uint32_t p
 GaloisKeys generate_galois_keys(const SEALContext& context, KeyGenerator &keygen) {
     std::vector<uint32_t> galois_elts;
     auto &parms = context.first_context_data()->parms();
-    uint32_t N = parms.poly_modulus_degree();
-    int logN = seal::util::get_power_of_two(N);
-    for (int i = 0; i < logN; i++) {
-        galois_elts.push_back((N + seal::util::exponentiate_uint(2, i)) / seal::util::exponentiate_uint(2, i));
+    uint32_t degree = parms.poly_modulus_degree();
+    uint32_t logN = seal::util::get_power_of_two(degree);
+    for (uint32_t i = 0; i < logN; i++) {
+        galois_elts.push_back((degree + seal::util::exponentiate_uint(2, i)) / seal::util::exponentiate_uint(2, i));
     }
     GaloisKeys galois_keys;
     keygen.create_galois_keys(galois_elts, galois_keys);

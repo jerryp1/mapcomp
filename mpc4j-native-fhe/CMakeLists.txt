@@ -57,6 +57,8 @@ add_library(
         pir/edu_alibaba_mpc4j_s2pc_pir_keyword_cmg21_Cmg21KwPirNativeUtils.cpp
         upsi/edu_alibaba_mpc4j_s2pc_pso_upsi_cmg21_Cmg21UpsiNativeUtils.cpp
         mtg/edu_alibaba_mpc4j_s2pc_pcg_mtg_zp64_core_rss19_Rss19Zp64CoreMtgNativeUtils.cpp
-        pir/edu_alibaba_mpc4j_s2pc_pir_index_onionpir_Mcr21IndexPirNativeUtils.cpp tfhe/rns.h tfhe/params.h tfhe/tfhe.cpp tfhe/tfhe.h)
+        pir/edu_alibaba_mpc4j_s2pc_pir_index_onionpir_Mcr21IndexPirNativeUtils.cpp
+        tfhe/tfhe.cpp
+)
 # 链接SEAL库
 target_link_libraries(mpc4j-native-fhe PUBLIC SEAL::seal_shared)

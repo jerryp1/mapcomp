@@ -25,9 +25,8 @@ public interface IndexPirClient extends TwoPartyPto, SecurePto {
      * @param indexPirParams    索引PIR协议参数。
      * @param serverElementSize 服务端元素数量。
      * @param elementByteLength 元素字节长度。
-     * @throws MpcAbortException 如果协议异常中止。
      */
-    void init(AbstractIndexPirParams indexPirParams, int serverElementSize, int elementByteLength) throws MpcAbortException;
+    void init(AbstractIndexPirParams indexPirParams, int serverElementSize, int elementByteLength);
 
     /**
      * 执行协议。

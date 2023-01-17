@@ -106,10 +106,7 @@ public class PirUtils {
         return IntStream.range(0, elementSize)
             .mapToObj(i -> {
                 byte[] element = new byte[elementByteLength];
-                // SECURE_RANDOM.nextBytes(element);
-                for (int j = 0; j < elementByteLength; j++) {
-                    element[j] = 1;
-                }
+                SECURE_RANDOM.nextBytes(element);
                 return ByteBuffer.wrap(element);
             })
             .collect(Collectors.toCollection(ArrayList::new));

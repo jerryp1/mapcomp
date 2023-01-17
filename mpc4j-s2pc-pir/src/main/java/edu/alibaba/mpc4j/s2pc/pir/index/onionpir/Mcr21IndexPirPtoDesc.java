@@ -33,14 +33,6 @@ public class Mcr21IndexPirPtoDesc implements PtoDesc {
          */
         CLIENT_SEND_QUERY,
         /**
-         * 客户端发送密钥密文
-         */
-        CLIENT_SEND_ENC_SK,
-        /**
-         * 客户端发送Galois密钥、公钥
-         */
-        CLIENT_SEND_GALOIS_KEY_PUBLIC_KEY,
-        /**
          * 服务端回复密文
          */
         SERVER_SEND_RESPONSE,

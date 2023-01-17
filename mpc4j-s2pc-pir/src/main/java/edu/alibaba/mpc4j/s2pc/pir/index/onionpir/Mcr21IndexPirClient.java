@@ -31,18 +31,46 @@ public class Mcr21IndexPirClient extends AbstractIndexPirClient {
      * OnionPIR方案参数
      */
     private Mcr21IndexPirParams params;
+    /**
+     * 公钥
+     */
+    private byte[] publicKey;
+    /**
+     * 私钥
+     */
+    private byte[] secretKey;
+    /**
+     * Galois密钥
+     */
+    private byte[] galoisKeys;
+    /**
+     * 私钥密文
+     */
+    private ArrayList<byte[]> encryptedSecretKey;
 
     public Mcr21IndexPirClient(Rpc clientRpc, Party serverParty, Mcr21IndexPirConfig config) {
         super(Mcr21IndexPirPtoDesc.getInstance(), clientRpc, serverParty, config);
     }
 
     @Override
-    public void init(AbstractIndexPirParams indexPirParams, int serverElementSize, int elementByteLength) throws MpcAbortException {
+    public void init(AbstractIndexPirParams indexPirParams, int serverElementSize, int elementByteLength) {
         setInitInput(serverElementSize, elementByteLength);
-        info("{}{} Client Init begin", ptoBeginLogPrefix, getPtoDesc().getPtoName());
-
         assert (indexPirParams instanceof Mcr21IndexPirParams);
         params = (Mcr21IndexPirParams) indexPirParams;
+        info("{}{} Client Init begin", ptoBeginLogPrefix, getPtoDesc().getPtoName());
+
+        stopWatch.start();
+        // 客户端生成密钥对
+        clientGenerateKeyPair(params.getEncryptionParams());
+        // 客户端加密私钥
+        this.encryptedSecretKey = new ArrayList<>();
+        this.encryptedSecretKey = Mcr21IndexPirNativeUtils.encryptSecretKey(
+            params.getEncryptionParams(), publicKey, secretKey
+        );
+        stopWatch.stop();
+        long initTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
+        stopWatch.reset();
+        info("{}{} Client Init Step 1/1 ({}ms)", ptoStepLogPrefix, getPtoDesc().getPtoName(), initTime);
 
         initialized = true;
         info("{}{} Client Init end", ptoEndLogPrefix, getPtoDesc().getPtoName());
@@ -54,44 +82,33 @@ public class Mcr21IndexPirClient extends AbstractIndexPirClient {
         info("{}{} Client begin", ptoBeginLogPrefix, getPtoDesc().getPtoName());
 
         stopWatch.start();
-        // 客户端生成BFV算法公私钥对
-        List<byte[]> keyPair = Mcr21IndexPirNativeUtils.keyGen(params.getEncryptionParams());
-        List<byte[]> encryptedSecretKey = Mcr21IndexPirNativeUtils.encryptSecretKey(params.getEncryptionParams(), keyPair.get(0), keyPair.get(1));
         // 客户端生成并发送问询
-        List<byte[]> clientQueryPayload = generateQuery(params.getEncryptionParams(), keyPair.get(0), keyPair.get(1));
+        List<byte[]> clientQueryPayload = generateQuery(params.getEncryptionParams(), publicKey, secretKey);
+        // 添加公钥
+        clientQueryPayload.add(publicKey);
+        // 添加Galois密钥
+        clientQueryPayload.add(galoisKeys);
+        // 添加私钥密文
+        clientQueryPayload.addAll(encryptedSecretKey);
         DataPacketHeader clientQueryHeader = new DataPacketHeader(
             taskId, getPtoDesc().getPtoId(), Mcr21IndexPirPtoDesc.PtoStep.CLIENT_SEND_QUERY.ordinal(), extraInfo,
             rpc.ownParty().getPartyId(), otherParty().getPartyId()
         );
         rpc.send(DataPacket.fromByteArrayList(clientQueryHeader, clientQueryPayload));
-        DataPacketHeader clientEncSecretKeyHeader = new DataPacketHeader(
-            taskId, getPtoDesc().getPtoId(), Mcr21IndexPirPtoDesc.PtoStep.CLIENT_SEND_ENC_SK.ordinal(), extraInfo,
-            rpc.ownParty().getPartyId(), otherParty().getPartyId()
-        );
-        rpc.send(DataPacket.fromByteArrayList(clientEncSecretKeyHeader, encryptedSecretKey));
-        DataPacketHeader clientKeyHeader = new DataPacketHeader(
-            taskId, getPtoDesc().getPtoId(), Mcr21IndexPirPtoDesc.PtoStep.CLIENT_SEND_GALOIS_KEY_PUBLIC_KEY.ordinal(), extraInfo,
-            rpc.ownParty().getPartyId(), otherParty().getPartyId()
-        );
-        ArrayList<byte[]> clientKey = new ArrayList<>();
-        clientKey.add(keyPair.get(0));
-        clientKey.add(keyPair.get(2));
-        rpc.send(DataPacket.fromByteArrayList(clientKeyHeader, clientKey));
-
         stopWatch.stop();
         long genQueryTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
         stopWatch.reset();
         info("{}{} Client Step 1/2 ({}ms)", ptoStepLogPrefix, getPtoDesc().getPtoName(), genQueryTime);
 
-        stopWatch.start();
         // 客户端接收并解密回复
         DataPacketHeader serverResponseHeader = new DataPacketHeader(
             taskId, getPtoDesc().getPtoId(), Mcr21IndexPirPtoDesc.PtoStep.SERVER_SEND_RESPONSE.ordinal(), extraInfo,
             otherParty().getPartyId(), rpc.ownParty().getPartyId()
         );
         List<byte[]> serverResponsePayload = rpc.receive(serverResponseHeader).getPayload();
-        MpcAbortPreconditions.checkArgument(serverResponsePayload.size() == 1);
-        byte[] element = handleServerResponsePayload(keyPair.get(1), serverResponsePayload.get(0));
+        MpcAbortPreconditions.checkArgument(serverResponsePayload.size() == params.getBundleNum());
+        stopWatch.start();
+        byte[] element = handleServerResponsePayload(secretKey, serverResponsePayload);
         stopWatch.stop();
         long responseTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
         stopWatch.reset();
@@ -109,43 +126,33 @@ public class Mcr21IndexPirClient extends AbstractIndexPirClient {
      * @param secretKey        私钥。
      * @return 查询密文。
      */
-    public ArrayList<byte[]> generateQuery(byte[] encryptionParams, byte[] publicKey, byte[] secretKey) throws MpcAbortException {
-        int[] nvec = params.getDimensionsLength();
-        int degree = params.getPolyModulusDegree();
-        IntStream.range(0, nvec.length).forEach(i -> {
-            assert nvec[i] <= degree;
-        });
-        // index of FV plaintext
-        int indexOfPlaintext = index / params.getElementSizeOfPlaintext();
+    public ArrayList<byte[]> generateQuery(byte[] encryptionParams, byte[] publicKey, byte[] secretKey) {
+        int bundleNum = params.getBundleNum();
+        // 前n-1个分块
+        int[] nvec = params.getDimensionsLength()[0];
+        int indexOfPlaintext = index / params.getElementSizeOfPlaintext()[0];
         // 计算每个维度的坐标
         int[] indices = computeIndices(indexOfPlaintext, nvec);
-        ArrayList<Integer> plainQuery = new ArrayList<>();
-        // handling first dimension first
-        int firstDimensionSize = nvec[0];
-        int logSize = (int) Math.ceil(Math.log(firstDimensionSize) / Math.log(2));
-        int gap = (int) Math.ceil(degree * 1.0 / (1 << logSize));
-        info("Client: index 1 / {} = {}", indices.length, indices[0]);
-        plainQuery.add(indices[0] * gap);
-        // compressing all the remaining dimensions into one dimension of size equal to sum of remaining dimensions
-        int remainingDimensionSize = 0;
-        ArrayList<Integer> newIndices = new ArrayList<>();
-        if (indices.length > 1) {
-            for (int i = 1; i < indices.length; i++) {
-                newIndices.add(indices[i] + remainingDimensionSize);
-                remainingDimensionSize += nvec[i];
-            }
-            logSize = (int) Math.ceil(Math.log(remainingDimensionSize * params.getGswDecompSize()) / Math.log(2));
-            gap = (int) Math.ceil(degree * 1.0 / (1 << logSize));
-            for (int i = 0; i < newIndices.size(); i++) {
-                info("Client: index {} / {} = {}", i + 2, indices.length, indices[i + 1]);
-                plainQuery.add(newIndices.get(i) * gap);
-            }
-        }
-        // 返回查询密文
-        return Mcr21IndexPirNativeUtils.generateQuery(
-            encryptionParams, publicKey, secretKey, plainQuery.stream().mapToInt(integer -> integer).toArray(),
-            firstDimensionSize, remainingDimensionSize
+        IntStream.range(0, indices.length)
+            .forEach(i -> info("Client: index {} / {} = {} / {}", i + 1, indices.length, indices[i], nvec[i]));
+        ArrayList<byte[]> result = new ArrayList<>(
+            Mcr21IndexPirNativeUtils.generateQuery(encryptionParams, publicKey, secretKey, indices, nvec)
         );
+        if ((bundleNum > 1) && (params.getPlaintextSize()[0] != params.getPlaintextSize()[bundleNum - 1])) {
+            // 最后一个分块
+            int[] lastNvec = params.getDimensionsLength()[bundleNum - 1];
+            int lastIndexOfPlaintext = index / params.getElementSizeOfPlaintext()[bundleNum - 1];
+            // 计算每个维度的坐标
+            int[] lastIndices = computeIndices(lastIndexOfPlaintext, lastNvec);
+            IntStream.range(0, lastIndices.length)
+                .forEach(i -> info("Client: last bundle index {} / {} = {} / {}",
+                    i + 1, lastIndices.length, lastIndices[i], lastNvec[i]));
+            // 返回查询密文
+            result.addAll(
+                Mcr21IndexPirNativeUtils.generateQuery(encryptionParams, publicKey, secretKey, lastIndices, lastNvec)
+            );
+        }
+        return result;
     }
 
     /**
@@ -154,18 +161,35 @@ public class Mcr21IndexPirClient extends AbstractIndexPirClient {
      * @param secretKey 私钥。
      * @param response  回复。
      * @return 检索结果。
-     * @throws MpcAbortException 如果协议异常中止。
      */
-    private byte[] handleServerResponsePayload(byte[] secretKey, byte[] response) throws MpcAbortException {
-        long[] decodedCoefficientArray = Mcr21IndexPirNativeUtils.decryptReply(
-            params.getEncryptionParams(), secretKey, response
-        );
-        MpcAbortPreconditions.checkArgument(decodedCoefficientArray.length == params.getPolyModulusDegree());
-        byte[] decodeByteArray = convertCoeffsToBytes(decodedCoefficientArray, params.getPlainModulusBitLength());
+    private byte[] handleServerResponsePayload(byte[] secretKey, List<byte[]> response) {
         byte[] elementBytes = new byte[elementByteLength];
-        // offset in FV plaintext
-        int offset = index % params.getElementSizeOfPlaintext();
-        System.arraycopy(decodeByteArray, offset * elementByteLength, elementBytes, 0, elementByteLength);
+        int maxElementByteLength = params.getPolyModulusDegree() * params.getPlainModulusBitLength() / Byte.SIZE;
+        int bundleNum = params.getBundleNum();
+        IntStream intStream = this.parallel ? IntStream.range(0, bundleNum).parallel() : IntStream.range(0, bundleNum);
+        intStream.forEach(bundleIndex -> {
+            long[] coeffs = Mcr21IndexPirNativeUtils.decryptReply(
+                params.getEncryptionParams(), secretKey, response.get(bundleIndex)
+            );
+            assert (coeffs.length == params.getPolyModulusDegree()) : "多项式阶不匹配";
+            byte[] bytes = convertCoeffsToBytes(coeffs, params.getPlainModulusBitLength());
+            int offset = this.index % params.getElementSizeOfPlaintext()[bundleIndex];
+            int size = bundleIndex == params.getBundleNum() - 1 ? elementByteLength % maxElementByteLength : maxElementByteLength;
+            System.arraycopy(bytes, offset * size, elementBytes, bundleIndex * maxElementByteLength, size);
+        });
         return elementBytes;
+    }
+
+    /**
+     * 客户端生成密钥对。
+     *
+     * @param sealContext SEAL上下文参数。
+     */
+    private void clientGenerateKeyPair(byte[] sealContext) {
+        ArrayList<byte[]> keyPair = Mcr21IndexPirNativeUtils.keyGen(sealContext);
+        assert (keyPair.size() == 3);
+        this.publicKey = keyPair.remove(0);
+        this.secretKey = keyPair.remove(0);
+        this.galoisKeys = keyPair.remove(0);
     }
 }

@@ -16,7 +16,7 @@ using namespace seal;
 
 
 void compose_to_ciphertext(const EncryptionParameters& parms, vector<Plaintext>::const_iterator pt_iter,
-                           size_t ct_poly_count, Ciphertext &ct);
+                           uint32_t ct_poly_count, Ciphertext &ct);
 
 vector<Plaintext> decompose_to_plaintexts(const EncryptionParameters& parms, const Ciphertext &ct);
 
@@ -36,7 +36,7 @@ void multiply_power_of_X(const Ciphertext &encrypted, Ciphertext &destination,
 
 void poc_decompose_array(uint64_t *value, uint32_t count, std::vector<Modulus> coeff_modulus, uint32_t coeff_mod_count);
 
-void plain_decomposition(Plaintext &pt, const SEALContext &context, uint64_t decomp_size, uint64_t base_bit,
+void plain_decomposition(Plaintext &pt, const SEALContext &context, uint32_t decomp_size, uint32_t base_bit,
                          vector<uint64_t *> &plain_decomp);
 
 #endif //MPC4J_NATIVE_FHE_INDEX_PIR_H

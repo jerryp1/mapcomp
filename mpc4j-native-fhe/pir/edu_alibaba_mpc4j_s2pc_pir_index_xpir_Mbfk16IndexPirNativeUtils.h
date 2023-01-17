@@ -34,10 +34,10 @@ JNIEXPORT jobject JNICALL Java_edu_alibaba_mpc4j_s2pc_pir_index_xpir_Mbfk16Index
 /*
  * Class:     edu_alibaba_mpc4j_s2pc_pir_index_xpir_Mbfk16IndexPirNativeUtils
  * Method:    generateQuery
- * Signature: ([B[B[B[I)Ljava/util/ArrayList;
+ * Signature: ([B[B[B[I[I)Ljava/util/ArrayList;
  */
 JNIEXPORT jobject JNICALL Java_edu_alibaba_mpc4j_s2pc_pir_index_xpir_Mbfk16IndexPirNativeUtils_generateQuery
-  (JNIEnv *, jclass, jbyteArray, jbyteArray, jbyteArray, jintArray);
+  (JNIEnv *, jclass, jbyteArray, jbyteArray, jbyteArray, jintArray, jintArray);
 
 /*
  * Class:     edu_alibaba_mpc4j_s2pc_pir_index_xpir_Mbfk16IndexPirNativeUtils

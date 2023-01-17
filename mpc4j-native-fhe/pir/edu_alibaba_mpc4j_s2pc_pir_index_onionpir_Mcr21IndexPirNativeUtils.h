@@ -10,10 +10,10 @@ extern "C" {
 /*
  * Class:     edu_alibaba_mpc4j_s2pc_pir_index_onionpir_Mcr21IndexPirNativeUtils
  * Method:    generateSealContext
- * Signature: (IJ)[B
+ * Signature: (II)[B
  */
 JNIEXPORT jbyteArray JNICALL Java_edu_alibaba_mpc4j_s2pc_pir_index_onionpir_Mcr21IndexPirNativeUtils_generateSealContext
-  (JNIEnv *, jclass, jint, jlong);
+  (JNIEnv *, jclass, jint, jint);
 
 /*
  * Class:     edu_alibaba_mpc4j_s2pc_pir_index_onionpir_Mcr21IndexPirNativeUtils
@@ -33,14 +33,6 @@ JNIEXPORT jobject JNICALL Java_edu_alibaba_mpc4j_s2pc_pir_index_onionpir_Mcr21In
 
 /*
  * Class:     edu_alibaba_mpc4j_s2pc_pir_index_onionpir_Mcr21IndexPirNativeUtils
- * Method:    preprocessDatabase1
- * Signature: ([BLjava/util/List;[[I)V
- */
-JNIEXPORT void JNICALL Java_edu_alibaba_mpc4j_s2pc_pir_index_onionpir_Mcr21IndexPirNativeUtils_preprocessDatabase1
-  (JNIEnv *, jclass, jbyteArray, jobject, jobjectArray);
-
-/*
- * Class:     edu_alibaba_mpc4j_s2pc_pir_index_onionpir_Mcr21IndexPirNativeUtils
  * Method:    encryptSecretKey
  * Signature: ([B[B[B)Ljava/util/ArrayList;
  */
@@ -50,10 +42,10 @@ JNIEXPORT jobject JNICALL Java_edu_alibaba_mpc4j_s2pc_pir_index_onionpir_Mcr21In
 /*
  * Class:     edu_alibaba_mpc4j_s2pc_pir_index_onionpir_Mcr21IndexPirNativeUtils
  * Method:    generateQuery
- * Signature: ([B[B[B[III)Ljava/util/ArrayList;
+ * Signature: ([B[B[B[I[I)Ljava/util/ArrayList;
  */
 JNIEXPORT jobject JNICALL Java_edu_alibaba_mpc4j_s2pc_pir_index_onionpir_Mcr21IndexPirNativeUtils_generateQuery
-  (JNIEnv *, jclass, jbyteArray, jbyteArray, jbyteArray, jintArray, jint, jint);
+  (JNIEnv *, jclass, jbyteArray, jbyteArray, jbyteArray, jintArray, jintArray);
 
 /*
  * Class:     edu_alibaba_mpc4j_s2pc_pir_index_onionpir_Mcr21IndexPirNativeUtils

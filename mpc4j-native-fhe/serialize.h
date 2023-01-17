@@ -30,11 +30,11 @@ GaloisKeys deserialize_galois_keys(JNIEnv *env, jbyteArray galois_key_bytes, con
 // serialize ciphertext
 jbyteArray serialize_ciphertext(JNIEnv *env, const Ciphertext& ciphertext);
 // deserialize ciphertext
-Ciphertext deserialize_ciphertext(JNIEnv *env, jbyteArray bytes, const SEALContext& context);
+Ciphertext deserialize_ciphertext(JNIEnv *env, jbyteArray ciphertext_bytes, const SEALContext& context);
 // serialize ciphertexts
 jobject serialize_ciphertexts(JNIEnv *env, const vector<Ciphertext>& ciphertexts);
 // deserialize ciphertexts
-vector<Ciphertext> deserialize_ciphertexts(JNIEnv *env, jobject list, const SEALContext& context);
+vector<Ciphertext> deserialize_ciphertexts(JNIEnv *env, jobject ciphertext_list, const SEALContext& context);
 // serialize plaintext
 jbyteArray serialize_plaintext(JNIEnv *env, const Plaintext& plaintext);
 // deserialize plaintext

@@ -1,6 +1,7 @@
 package edu.alibaba.mpc4j.s2pc.pir.index;
 
 import com.google.common.base.Preconditions;
+import edu.alibaba.mpc4j.common.rpc.MpcAbortException;
 import edu.alibaba.mpc4j.common.rpc.Rpc;
 import edu.alibaba.mpc4j.common.rpc.RpcManager;
 import edu.alibaba.mpc4j.common.rpc.impl.memory.MemoryRpcManager;
@@ -17,11 +18,9 @@ import org.junit.runners.Parameterized;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.nio.Buffer;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.stream.IntStream;
 
 /**
  * 索引PIR测试类。
@@ -37,29 +36,13 @@ public class IndexPirTest {
      */
     private static final int REPEAT_TIME = 1;
     /**
-     * 短标签字节长度
-     */
-    private static final int SHORT_ELEMENT_BYTE_LENGTH = 1;
-    /**
      * 默认标签字节长度
      */
-    private static final int DEFAULT_ELEMENT_BYTE_LENGTH = 30000;
-    /**
-     * 长标签字节长度
-     */
-    private static final int LARGE_ELEMENT_BYTE_LENGTH = 33;
+    private static final int DEFAULT_ELEMENT_BYTE_LENGTH = 40000;
     /**
      * 服务端元素数量
      */
     private static final int SERVER_ELEMENT_SIZE = 1 << 10;
-    /**
-     * 明文模数比特长度
-     */
-    private static final int PLAIN_MODULUS_BIT_LENGTH = 20;
-    /**
-     * 多项式阶
-     */
-    private static final int POLY_MODULUS_DEGREE = 4096;
 
     @Parameterized.Parameters(name = "{0}")
     public static Collection<Object[]> configurations() {
@@ -68,41 +51,62 @@ public class IndexPirTest {
         // XPIR
         Mbfk16IndexPirConfig xpirConfig = new Mbfk16IndexPirConfig();
         // XPIR (1-dimension)
-//        configurations.add(new Object[] {
-//            IndexPirFactory.IndexPirType.XPIR.name() + " (1-dimension)",
-//            xpirConfig,
-//            new Mbfk16IndexPirParams(
-//                SERVER_ELEMENT_SIZE,
-//                LARGE_ELEMENT_BYTE_LENGTH,
-//                POLY_MODULUS_DEGREE,
-//                PLAIN_MODULUS_BIT_LENGTH,
-//                1
-//            )
-//        });
-        // XPIR (2-dimension)
-//        configurations.add(new Object[] {
-//            IndexPirFactory.IndexPirType.XPIR.name() + " (2-dimension)",
-//            xpirConfig,
-//            new Mbfk16IndexPirParams(
-//                SERVER_ELEMENT_SIZE,
-//                LARGE_ELEMENT_BYTE_LENGTH,
-//                POLY_MODULUS_DEGREE,
-//                PLAIN_MODULUS_BIT_LENGTH,
-//                2
-//            )
-//        });
-
-        // OnionPIR
-        Mcr21IndexPirConfig onionpirConfig = new Mcr21IndexPirConfig();
         configurations.add(new Object[] {
-            IndexPirFactory.IndexPirType.ONION_PIR.name(),
-            onionpirConfig,
-            new Mcr21IndexPirParams(
+            IndexPirFactory.IndexPirType.XPIR.name() + " (1-dimension)",
+            xpirConfig,
+            new Mbfk16IndexPirParams(
                 SERVER_ELEMENT_SIZE,
-                DEFAULT_ELEMENT_BYTE_LENGTH
+                DEFAULT_ELEMENT_BYTE_LENGTH,
+                4096,
+                20,
+                1
+            )
+        });
+        // XPIR (2-dimension)
+        configurations.add(new Object[] {
+            IndexPirFactory.IndexPirType.XPIR.name() + " (2-dimension)",
+            xpirConfig,
+            new Mbfk16IndexPirParams(
+                SERVER_ELEMENT_SIZE,
+                DEFAULT_ELEMENT_BYTE_LENGTH,
+                4096,
+                20,
+                2
             )
         });
 
+        // OnionPIR
+        Mcr21IndexPirConfig onionpirConfig = new Mcr21IndexPirConfig();
+        // first dimension is 32
+        configurations.add(new Object[] {
+            IndexPirFactory.IndexPirType.ONION_PIR.name() + " (first dimension 32)",
+            onionpirConfig,
+            new Mcr21IndexPirParams(
+                SERVER_ELEMENT_SIZE,
+                DEFAULT_ELEMENT_BYTE_LENGTH,
+                32
+            )
+        });
+        // first dimension is 128
+        configurations.add(new Object[] {
+            IndexPirFactory.IndexPirType.ONION_PIR.name() + " (first dimension 128)",
+            onionpirConfig,
+            new Mcr21IndexPirParams(
+                SERVER_ELEMENT_SIZE,
+                DEFAULT_ELEMENT_BYTE_LENGTH,
+                128
+            )
+        });
+        // first dimension is 256
+        configurations.add(new Object[] {
+            IndexPirFactory.IndexPirType.ONION_PIR.name() + " (first dimension 256)",
+            onionpirConfig,
+            new Mcr21IndexPirParams(
+                SERVER_ELEMENT_SIZE,
+                DEFAULT_ELEMENT_BYTE_LENGTH,
+                256
+            )
+        });
         return configurations;
     }
 
@@ -133,22 +137,12 @@ public class IndexPirTest {
     }
 
     @Test
-    public void testShortElements() {
+    public void testIndexPir() {
         testIndexPir(indexPirConfig, indexPirParams, DEFAULT_ELEMENT_BYTE_LENGTH, false);
     }
 
     @Test
-    public void testDefaultElements() {
-        testIndexPir(indexPirConfig, indexPirParams, SHORT_ELEMENT_BYTE_LENGTH, false);
-    }
-
-    @Test
-    public void testLargeElements() {
-        testIndexPir(indexPirConfig, indexPirParams, LARGE_ELEMENT_BYTE_LENGTH, false);
-    }
-
-    @Test
-    public void testParallel() {
+    public void testParallelIndexPir() {
         testIndexPir(indexPirConfig, indexPirParams, DEFAULT_ELEMENT_BYTE_LENGTH, true);
     }
 
@@ -182,6 +176,7 @@ public class IndexPirTest {
         serverRpc.reset();
         LOGGER.info("Client: The Communication costs {}MB", clientRpc.getSendByteLength() * 1.0 / (1024 * 1024));
         clientRpc.reset();
+        LOGGER.info("Parameters: \n {}", indexPirParams.toString());
         // 验证结果
         ArrayList<ByteBuffer> result = clientThread.getRetrievalResult();
         for (int index = 0; index < REPEAT_TIME; index++) {
@@ -189,8 +184,5 @@ public class IndexPirTest {
             Assert.assertEquals(retrievalElement, elementList.get(retrievalIndexList.get(index)));
         }
         LOGGER.info("Client: The Retrieval Set Size is {}", result.size());
-        IntStream.range(0, result.size())
-            .forEach(i -> LOGGER.info("Client: The Retrieval Element {}", result.get(i).array()));
-
     }
 }

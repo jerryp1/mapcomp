@@ -1,5 +1,6 @@
 package edu.alibaba.mpc4j.s2pc.pir.index.xpir;
 
+import com.google.common.collect.Lists;
 import edu.alibaba.mpc4j.common.rpc.MpcAbortException;
 import edu.alibaba.mpc4j.common.rpc.MpcAbortPreconditions;
 import edu.alibaba.mpc4j.common.rpc.Party;
@@ -37,7 +38,7 @@ public class Mbfk16IndexPirClient extends AbstractIndexPirClient {
     }
 
     @Override
-    public void init(AbstractIndexPirParams indexPirParams, int serverElementSize, int elementByteLength) throws MpcAbortException {
+    public void init(AbstractIndexPirParams indexPirParams, int serverElementSize, int elementByteLength) {
         setInitInput(serverElementSize, elementByteLength);
         info("{}{} Client Init begin", ptoBeginLogPrefix, getPtoDesc().getPtoName());
 
@@ -75,6 +76,7 @@ public class Mbfk16IndexPirClient extends AbstractIndexPirClient {
             otherParty().getPartyId(), rpc.ownParty().getPartyId()
         );
         List<byte[]> serverResponsePayload = rpc.receive(serverResponseHeader).getPayload();
+        MpcAbortPreconditions.checkArgument(serverResponsePayload.size() % params.getBundleNum() == 0);
         byte[] element = handleServerResponsePayload(keyPair.get(1), serverResponsePayload);
         stopWatch.stop();
         long responseTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
@@ -94,27 +96,31 @@ public class Mbfk16IndexPirClient extends AbstractIndexPirClient {
      * @return 查询密文。
      */
     public ArrayList<byte[]> generateQuery(byte[] encryptionParams, byte[] publicKey, byte[] secretKey) {
-        int[] nvec = params.getDimensionsLength();
-        IntStream.range(0, nvec.length).forEach(i -> {
-            assert nvec[i] <= params.getPolyModulusDegree();
-        });
-        // index of FV plaintext
-        int indexOfPlaintext = index / params.getElementSizeOfPlaintext();
+        int bundleNum = params.getBundleNum();
+        // 前n-1个分块
+        int[] nvec = params.getDimensionsLength()[0];
+        int indexOfPlaintext = index / params.getElementSizeOfPlaintext()[0];
         // 计算每个维度的坐标
         int[] indices = computeIndices(indexOfPlaintext, nvec);
-        ArrayList<Integer> plainQuery = new ArrayList<>();
-        int pt;
-        for (int i = 0; i < indices.length; i++) {
-            for (int j = 0; j < nvec[i]; j++) {
-                // 第indices.get(i)个待加密明文为1, 其余明文为0
-                pt = j == indices[i] ? 1 : 0;
-                plainQuery.add(pt);
-            }
-        }
-        // 返回查询密文
-        return Mbfk16IndexPirNativeUtils.generateQuery(
-            encryptionParams, publicKey, secretKey, plainQuery.stream().mapToInt(integer -> integer).toArray()
+        IntStream.range(0, indices.length)
+            .forEach(i -> info("Client: index {} / {} = {} / {}", i + 1, indices.length, indices[i], nvec[i]));
+        ArrayList<byte[]> result = new ArrayList<>(
+            Mbfk16IndexPirNativeUtils.generateQuery(encryptionParams, publicKey, secretKey, indices, nvec)
         );
+        if ((bundleNum > 1) && (params.getPlaintextSize()[0] != params.getPlaintextSize()[bundleNum - 1])) {
+            // 最后一个分块
+            int[] lastNvec = params.getDimensionsLength()[bundleNum - 1];
+            int lastIndexOfPlaintext = index / params.getElementSizeOfPlaintext()[bundleNum - 1];
+            // 计算每个维度的坐标
+            int[] lastIndices = computeIndices(lastIndexOfPlaintext, lastNvec);
+            IntStream.range(0, lastIndices.length).forEach(i -> info("Client: last bundle index {} / {} = {} / {}",
+                i + 1, lastIndices.length, lastIndices[i], lastNvec[i]));
+            // 返回查询密文
+            result.addAll(
+                Mbfk16IndexPirNativeUtils.generateQuery(encryptionParams, publicKey, secretKey, lastIndices, lastNvec)
+            );
+        }
+        return result;
     }
 
     /**
@@ -123,18 +129,27 @@ public class Mbfk16IndexPirClient extends AbstractIndexPirClient {
      * @param secretKey 私钥。
      * @param response  回复。
      * @return 检索结果。
-     * @throws MpcAbortException 如果协议异常中止。
      */
-    private byte[] handleServerResponsePayload(byte[] secretKey, List<byte[]> response) throws MpcAbortException {
-        long[] decodedCoefficientArray = Mbfk16IndexPirNativeUtils.decryptReply(
-            params.getEncryptionParams(), secretKey, (ArrayList<byte[]>) response, params.getDimension()
-        );
-        MpcAbortPreconditions.checkArgument(decodedCoefficientArray.length == params.getPolyModulusDegree());
-        byte[] decodeByteArray = convertCoeffsToBytes(decodedCoefficientArray, params.getPlainModulusBitLength());
+    private byte[] handleServerResponsePayload(byte[] secretKey, List<byte[]> response) {
         byte[] elementBytes = new byte[elementByteLength];
-        // offset in FV plaintext
-        int offset = index % params.getElementSizeOfPlaintext();
-        System.arraycopy(decodeByteArray, offset * elementByteLength, elementBytes, 0, elementByteLength);
+        int expansion = response.size() / params.getBundleNum();
+        int maxElementByteLength = params.getPolyModulusDegree() * params.getPlainModulusBitLength() / Byte.SIZE;
+        int bundleNum = params.getBundleNum();
+        IntStream intStream = this.parallel ? IntStream.range(0, bundleNum).parallel() : IntStream.range(0, bundleNum);
+        intStream.forEach(bundleIndex -> {
+            long[] coeffs = Mbfk16IndexPirNativeUtils.decryptReply(
+                params.getEncryptionParams(),
+                secretKey,
+                Lists.newArrayList(response.subList(bundleIndex * expansion, (bundleIndex + 1) * expansion)),
+                params.getDimension()
+            );
+            assert (coeffs.length == params.getPolyModulusDegree()) : "多项式阶不匹配";
+            byte[] bytes = convertCoeffsToBytes(coeffs, params.getPlainModulusBitLength());
+            int offset = this.index % params.getElementSizeOfPlaintext()[bundleIndex];
+            int size = bundleIndex == params.getBundleNum() - 1 ?
+                elementByteLength % maxElementByteLength : maxElementByteLength;
+            System.arraycopy(bytes, offset * size, elementBytes, bundleIndex * maxElementByteLength, size);
+        });
         return elementBytes;
     }
 }
