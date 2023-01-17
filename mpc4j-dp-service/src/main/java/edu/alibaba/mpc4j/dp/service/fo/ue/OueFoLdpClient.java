@@ -24,8 +24,8 @@ public class OueFoLdpClient extends AbstractFoLdpClient {
      */
     private final double q;
 
-    public OueFoLdpClient(FoLdpConfig foLdpConfig) {
-        super(foLdpConfig);
+    public OueFoLdpClient(FoLdpConfig config) {
+        super(config);
         q = 1 / (Math.exp(epsilon) + 1);
     }
 

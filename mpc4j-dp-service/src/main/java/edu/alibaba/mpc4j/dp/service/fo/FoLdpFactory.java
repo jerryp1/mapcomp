@@ -7,6 +7,8 @@ import edu.alibaba.mpc4j.dp.service.fo.de.DeIndexFoLdpClient;
 import edu.alibaba.mpc4j.dp.service.fo.de.DeIndexFoLdpServer;
 import edu.alibaba.mpc4j.dp.service.fo.de.DeStringFoLdpClient;
 import edu.alibaba.mpc4j.dp.service.fo.de.DeStringFoLdpServer;
+import edu.alibaba.mpc4j.dp.service.fo.lh.BlhFoLdpClient;
+import edu.alibaba.mpc4j.dp.service.fo.lh.BlhFoLdpServer;
 import edu.alibaba.mpc4j.dp.service.fo.rappor.RapporFoLdpClient;
 import edu.alibaba.mpc4j.dp.service.fo.rappor.RapporFoLdpServer;
 import edu.alibaba.mpc4j.dp.service.fo.ue.OueFoLdpClient;
@@ -55,6 +57,10 @@ public class FoLdpFactory {
          * RAPPOR
          */
         RAPPOR,
+        /**
+         * Binary Local Hash
+         */
+        BLH,
     }
 
 
@@ -71,6 +77,7 @@ public class FoLdpFactory {
                 return true;
             case OUE:
             case RAPPOR:
+            case BLH:
                 return false;
             default:
                 throw new IllegalArgumentException("Invalid " + FoLdpFactory.FoLdpType.class.getSimpleName() + ": " + type.name());
@@ -91,6 +98,7 @@ public class FoLdpFactory {
             case DE_INDEX_ENCODING:
             case SUE:
             case OUE:
+            case BLH:
                 return new BasicFoLdpConfig.Builder(type, domainSet, epsilon).build();
             case RAPPOR:
                 return new RapporFoLdpConfig.Builder(type, domainSet, epsilon).build();
@@ -118,6 +126,8 @@ public class FoLdpFactory {
                 return new OueFoLdpServer(config);
             case RAPPOR:
                 return new RapporFoLdpServer(config);
+            case BLH:
+                return new BlhFoLdpServer(config);
             default:
                 throw new IllegalArgumentException("Invalid " + FoLdpType.class.getSimpleName() + ": " + type.name());
         }
@@ -142,6 +152,8 @@ public class FoLdpFactory {
                 return new OueFoLdpClient(config);
             case RAPPOR:
                 return new RapporFoLdpClient(config);
+            case BLH:
+                return new BlhFoLdpClient(config);
             default:
                 throw new IllegalArgumentException("Invalid " + FoLdpType.class.getSimpleName() + ": " + type.name());
         }

@@ -29,8 +29,8 @@ public class DeStringFoLdpServer extends AbstractFoLdpServer {
      */
     private final double q;
 
-    public DeStringFoLdpServer(FoLdpConfig foLdpConfig) {
-        super(foLdpConfig);
+    public DeStringFoLdpServer(FoLdpConfig config) {
+        super(config);
         budget = new int[d];
         double expEpsilon = Math.exp(epsilon);
         p = expEpsilon / (expEpsilon + d - 1);

@@ -24,8 +24,8 @@ public class SueFoLdpClient extends AbstractFoLdpClient {
      */
     private final double q;
 
-    public SueFoLdpClient(FoLdpConfig foLdpConfig) {
-        super(foLdpConfig);
+    public SueFoLdpClient(FoLdpConfig config) {
+        super(config);
         double expHalfEpsilon = Math.exp(epsilon / 2);
         p = expHalfEpsilon / (expHalfEpsilon + 1);
         q = 1 / (expHalfEpsilon + 1);

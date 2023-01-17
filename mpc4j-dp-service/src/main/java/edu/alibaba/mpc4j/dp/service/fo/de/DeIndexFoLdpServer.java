@@ -29,8 +29,8 @@ public class DeIndexFoLdpServer extends AbstractFoLdpServer {
      */
     private final double q;
 
-    public DeIndexFoLdpServer(FoLdpConfig foLdpConfig) {
-        super(foLdpConfig);
+    public DeIndexFoLdpServer(FoLdpConfig config) {
+        super(config);
         budget = new int[d];
         double expEpsilon = Math.exp(epsilon);
         p = expEpsilon / (expEpsilon + d - 1);

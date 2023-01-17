@@ -22,8 +22,8 @@ public class DeStringFoLdpClient extends AbstractFoLdpClient {
      */
     private final double q;
 
-    public DeStringFoLdpClient(FoLdpConfig foLdpConfig) {
-        super(foLdpConfig);
+    public DeStringFoLdpClient(FoLdpConfig config) {
+        super(config);
         double expEpsilon = Math.exp(epsilon);
         p = expEpsilon / (expEpsilon + d - 1);
         q = 1 / (expEpsilon + d - 1);

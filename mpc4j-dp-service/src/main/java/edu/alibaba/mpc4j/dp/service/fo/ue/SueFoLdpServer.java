@@ -29,8 +29,8 @@ public class SueFoLdpServer extends AbstractFoLdpServer {
      */
     private final double q;
 
-    public SueFoLdpServer(FoLdpConfig foLdpConfig) {
-        super(foLdpConfig);
+    public SueFoLdpServer(FoLdpConfig config) {
+        super(config);
         budget = new int[d];
         double expHalfEpsilon = Math.exp(epsilon / 2);
         p = expHalfEpsilon / (expHalfEpsilon + 1);

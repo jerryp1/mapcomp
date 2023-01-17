@@ -29,8 +29,8 @@ public class OueFoLdpServer extends AbstractFoLdpServer {
      */
     private final double q;
 
-    public OueFoLdpServer(FoLdpConfig foLdpConfig) {
-        super(foLdpConfig);
+    public OueFoLdpServer(FoLdpConfig config) {
+        super(config);
         budget = new int[d];
         q = 1 / (Math.exp(epsilon) + 1);
     }
