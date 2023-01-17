@@ -35,6 +35,17 @@ public class LdpTestDataUtils {
      */
     public static final int EXAMPLE_DATA_D = EXAMPLE_DATA_DOMAIN.size();
     /**
+     * large key set for stream_counter_example_data.txt
+     */
+    public static final Set<String> EXAMPLE_DATA_LARGE_DOMAIN = IntStream
+        .range(0, 2000)
+        .mapToObj(String::valueOf)
+        .collect(Collectors.toSet());
+    /**
+     * large domain size for stream_counter_example_data.txt
+     */
+    public static final int EXAMPLE_LARGE_D = EXAMPLE_DATA_LARGE_DOMAIN.size();
+    /**
      * total num for stream_counter_example_data.txt
      */
     public static final int EXAMPLE_TOTAL_NUM;

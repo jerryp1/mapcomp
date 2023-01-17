@@ -132,4 +132,21 @@ public class FoLdpTest {
         dataStream.map(item -> client.randomize(item, ldpRandom)).forEach(server::insert);
         dataStream.close();
     }
+
+    @Test
+    public void testLargeDomain() throws IOException {
+        FoLdpConfig config = FoLdpFactory.createDefaultConfig(type, LdpTestDataUtils.EXAMPLE_DATA_LARGE_DOMAIN, DEFAULT_EPSILON);
+        // create server and client
+        FoLdpServer server = FoLdpFactory.createServer(config);
+        FoLdpClient client = FoLdpFactory.createClient(config);
+        // randomize
+        exampleRandomizeInsert(server, client);
+        Map<String, Double> frequencyEstimates = server.estimate();
+        Assert.assertEquals(LdpTestDataUtils.EXAMPLE_LARGE_D, frequencyEstimates.size());
+        // compute the variance
+        int totalNum = LdpTestDataUtils.EXAMPLE_TOTAL_NUM;
+        double variance = LdpTestDataUtils.getVariance(frequencyEstimates, LdpTestDataUtils.CORRECT_EXAMPLE_COUNT_MAP);
+        double averageVariance = variance / totalNum;
+        Assert.assertTrue(averageVariance <= DEFAULT_EPSILON_VARIANCE_PRECISION);
+    }
 }

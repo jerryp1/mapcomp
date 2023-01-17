@@ -6,7 +6,6 @@ import edu.alibaba.mpc4j.common.tool.bitvector.BitVectorFactory;
 import edu.alibaba.mpc4j.common.tool.hash.IntHash;
 import edu.alibaba.mpc4j.common.tool.hash.IntHashFactory;
 import edu.alibaba.mpc4j.common.tool.utils.CommonUtils;
-import edu.alibaba.mpc4j.common.tool.utils.DoubleUtils;
 import edu.alibaba.mpc4j.common.tool.utils.IntUtils;
 import edu.alibaba.mpc4j.dp.service.fo.AbstractFoLdpServer;
 import edu.alibaba.mpc4j.dp.service.fo.config.FoLdpConfig;
@@ -16,6 +15,7 @@ import smile.data.DataFrame;
 import smile.data.formula.Formula;
 import smile.data.vector.DoubleVector;
 import smile.data.vector.IntVector;
+import smile.regression.ElasticNet;
 import smile.regression.LASSO;
 import smile.regression.LinearModel;
 import smile.regression.RidgeRegression;
@@ -39,6 +39,18 @@ public class RapporFoLdpServer extends AbstractFoLdpServer {
      * alpha = 0.8
      */
     private static final double LASSO_ALPHA = 0.8;
+    /**
+     * max_iter = 10000
+     */
+    private static final int MAX_ITERATION = 10000;
+    /**
+     * l1_ratio, smile does not support l1_ratio = 0
+     */
+    private static final double LAMBDA_1_RATIO = 0.1;
+    /**
+     * l2_ratio
+     */
+    private static final double LAMBDA_2_RATIO = 0.9;
     /**
      * the label name
      */
@@ -79,6 +91,10 @@ public class RapporFoLdpServer extends AbstractFoLdpServer {
      * num in each cohorts
      */
     private final int[] cohortCounts;
+    /**
+     * the learning rate
+     */
+    private final double learningRate;
 
     public RapporFoLdpServer(FoLdpConfig config) {
         super(config);
@@ -92,6 +108,8 @@ public class RapporFoLdpServer extends AbstractFoLdpServer {
         // init the bucket
         budget = new int[cohortNum][m];
         cohortCounts = new int[cohortNum];
+        // init the learning rate, self.reg_const = 0.025 * self.f
+        learningRate = 0.025 * f;
     }
 
     @Override
@@ -132,7 +150,7 @@ public class RapporFoLdpServer extends AbstractFoLdpServer {
             int tempIndex = 0;
             for (int dIndex = 0; dIndex < d; dIndex++) {
                 // X_red = X[:, indexes]
-                if (!Precision.equals(lassoCoefficients[dIndex], 0.0, DoubleUtils.PRECISION)) {
+                if (!Precision.equals(lassoCoefficients[dIndex], 0.0, 1)) {
                     indexMap[dIndex] = tempIndex;
                     tempIndex++;
                     int finalColumnIndex = dIndex;
@@ -146,7 +164,10 @@ public class RapporFoLdpServer extends AbstractFoLdpServer {
                 }
             }
             // model.fit(X_red, y)
-            LinearModel model = RidgeRegression.fit(FORMULA_Y, dataFrame);
+            // The original implementation use ElasticNet with l1_ratio = 0. In SMILE, we cannot set l1_ratio = 0.
+            // The comment in SMILE suggests using RidgeRegression instead of ElasticNet when l1_ratio = 0.
+            // However, the test shows that due to the high memory consumption, we cannot use RidgeRegression.
+            LinearModel model = ElasticNet.fit(FORMULA_Y, dataFrame, LAMBDA_1_RATIO, LAMBDA_2_RATIO, learningRate, MAX_ITERATION);
             double[] coefficients = model.coefficients();
             return IntStream.range(0, d)
                 .boxed()
