@@ -19,6 +19,11 @@ public class IntUtils {
     }
 
     /**
+     * maximal signed power of 2
+     */
+    public static final int MAX_SIGNED_POWER_OF_TWO = 1 << (Integer.SIZE - 2);
+
+    /**
      * 将{@code int}转换为{@code byte[]}，大端表示。
      *
      * @param value 给定的{@code int}。

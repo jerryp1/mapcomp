@@ -14,8 +14,6 @@ import java.util.Arrays;
 /**
  * Hadamard Coder. Hadamard coder is a linear code that can encode a k-bit dataword to 2^k-bit codeword.
  * For the hamming distances between all codewords (except for the codeword for dataword = 0) are  2^{k-1}.
- * <li>The referenced source code is from https://github.com/rick7661/HadamardCoder/blob/master/Hadamard.java</li>
- * <li>The algorithm description is from http://introcs.cs.princeton.edu/java/14array/Hadamard.java.html</li>
  * <p>
  * The following paper introduces standard properties of Hadamard matrices.
  * </p>
@@ -29,6 +27,9 @@ import java.util.Arrays;
  * <li>Vector multiplication with HK is possible in time O(K log K) with Fast Walsh Hadamard transform.</li>
  * <li>We can uniformly sample from the +1’s the -1’s) in any row in time O(log K).</li>
  * All properties are additionally implemented.
+ * <li>The referenced source code is from https://github.com/rick7661/HadamardCoder/blob/master/Hadamard.java</li>
+ * <li>The Hadamard algorithm description is from http://introcs.cs.princeton.edu/java/14array/Hadamard.java.html</li>
+ * <li>The property algorithm description is from https://github.com/Samuel-Maddock/pure-LDP/</li>
  *
  * @author Weiran Liu
  * @date 2021/12/14
@@ -122,6 +123,23 @@ public class HadamardCoder implements LinearCoder {
         int n = inputVector.length;
         Preconditions.checkArgument((n & (n - 1)) == 0, "n must be a power of 2: %s", n);
         return innerFastWhTransMul(inputVector);
+    }
+
+    /**
+     * Checks if the Hadamard entry in the Hadamard matrix is 1.
+     *
+     * @param x the x coordinate.
+     * @param y the y coordinate.
+     * @return true if the entry is 1.
+     */
+    public static boolean checkParity(int x, int y) {
+        assert x >= 0 && x <= IntUtils.MAX_SIGNED_POWER_OF_TWO
+            : "x must be in range [0, " + IntUtils.MAX_SIGNED_POWER_OF_TWO + "): " + x;
+        assert y >= 0 && y <= IntUtils.MAX_SIGNED_POWER_OF_TWO
+            : "y must be in range [0, " + IntUtils.MAX_SIGNED_POWER_OF_TWO + "): " + y;
+        // the parity equals to \sum_i (x_i y_i) (mod 2)
+        int z = x & y;
+        return Integer.bitCount(z) % 2 == 0;
     }
 
     private static double[] innerFastWhTransMul(double[] inputVector) {

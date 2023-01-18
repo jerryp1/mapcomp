@@ -148,4 +148,14 @@ public class HadamardCoderTest {
             Assert.assertEquals(0, outputVector[i], DoubleUtils.PRECISION);
         }
     }
+
+    @Test
+    public void testCheckParity() {
+        boolean[][] hadamardMatrix = HadamardCoder.createHadamardMatrix(k);
+        for (int x = 0; x < n; x++) {
+            for (int y = 0; y < n; y++) {
+                Assert.assertEquals(hadamardMatrix[x][y], HadamardCoder.checkParity(x, y));
+            }
+        }
+    }
 }
