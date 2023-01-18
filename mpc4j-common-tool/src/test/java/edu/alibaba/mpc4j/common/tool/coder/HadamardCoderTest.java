@@ -19,7 +19,7 @@ import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
 /**
- * 哈达码编码器测试。
+ * Hadamard coder test.
  *
  * @author Weiran Liu
  * @date 2021/12/14
@@ -27,37 +27,37 @@ import java.util.stream.IntStream;
 @RunWith(Parameterized.class)
 public class HadamardCoderTest {
     /**
-     * 最大编码数量
+     * maximal number of datawords used in the test.
      */
     private static final int MAX_CODE_NUM = 1 << Byte.SIZE;
 
     @Parameterized.Parameters(name="{0}")
     public static Collection<Object[]> configurations() {
-        Collection<Object[]> configurationParams = new ArrayList<>();
+        Collection<Object[]> configurations = new ArrayList<>();
         // k = 1
-        configurationParams.add(new Object[] {"k = 1", new HadamardCoder(1), });
+        configurations.add(new Object[] {"k = 1", new HadamardCoder(1), });
         // k = 2
-        configurationParams.add(new Object[] {"k = 2", new HadamardCoder(2), });
+        configurations.add(new Object[] {"k = 2", new HadamardCoder(2), });
         // k = 3
-        configurationParams.add(new Object[] {"k = 3", new HadamardCoder(3), });
+        configurations.add(new Object[] {"k = 3", new HadamardCoder(3), });
         // k = 4
-        configurationParams.add(new Object[] {"k = 4", new HadamardCoder(4), });
+        configurations.add(new Object[] {"k = 4", new HadamardCoder(4), });
         // k = 7
-        configurationParams.add(new Object[] {"k = 7", new HadamardCoder(7), });
+        configurations.add(new Object[] {"k = 7", new HadamardCoder(7), });
         // k = 8
-        configurationParams.add(new Object[] {"k = 8", new HadamardCoder(8), });
+        configurations.add(new Object[] {"k = 8", new HadamardCoder(8), });
         // k = 10
-        configurationParams.add(new Object[] {"k = 10", new HadamardCoder(10), });
+        configurations.add(new Object[] {"k = 10", new HadamardCoder(10), });
 
-        return configurationParams;
+        return configurations;
     }
 
     /**
-     * 待测试的哈达码编码
+     * the Hadamard coder
      */
     private final HadamardCoder coder;
     /**
-     * 测试数据码数量
+     * the number of datawords used in the tests.
      */
     private final int datawordNum;
 
@@ -75,12 +75,13 @@ public class HadamardCoderTest {
         byte[][] codewords = Arrays.stream(datawords)
             .map(coder::encode)
             .toArray(byte[][]::new);
-        // 验证码字长度
-        Arrays.stream(codewords).forEach(codeword -> {
-            Assert.assertEquals(coder.getCodewordByteLength(), codeword.length);
-            Assert.assertTrue(BytesUtils.isReduceByteArray(codeword, coder.getCodewordBitLength()));
-        });
-        // 验证汉明距离
+        // verify the codeword length
+        Arrays.stream(codewords).forEach(codeword ->
+            Assert.assertTrue(BytesUtils.isFixedReduceByteArray(
+                codeword, coder.getCodewordByteLength(), coder.getCodewordBitLength()
+            )
+        ));
+        // verify the hamming distance
         for (int i = 0; i < codewords.length; i++) {
             for (int j = i + 1; j < codewords.length; j++) {
                 int distance = BytesUtils.hammingDistance(codewords[i], codewords[j]);

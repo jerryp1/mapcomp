@@ -1,5 +1,6 @@
 package edu.alibaba.mpc4j.common.tool.coder.linear;
 
+import edu.alibaba.mpc4j.common.tool.MathPreconditions;
 import edu.alibaba.mpc4j.common.tool.utils.BinaryUtils;
 import edu.alibaba.mpc4j.common.tool.utils.BytesUtils;
 import edu.alibaba.mpc4j.common.tool.utils.CommonUtils;
@@ -10,14 +11,88 @@ import org.apache.commons.lang3.builder.HashCodeBuilder;
 import java.util.Arrays;
 
 /**
- * 哈达码（Hadamard）编码器。哈达码是一个线性码，将n比特长的输入编码为长度为2^n的码字，且任意两个非0码字的汉明距离均为2^{n-1}。
- * 参考代码来自于：https://github.com/rick7661/HadamardCoder/blob/master/Hadamard.java.
- * 算法来自于：http://introcs.cs.princeton.edu/java/14array/Hadamard.java.html
+ * Hadamard Coder. Hadamard coder is a linear code that can encode a k-bit dataword to 2^k-bit codeword.
+ * For the hamming distances between all codewords (except for the codeword for dataword = 0) are  2^{k-1}.
+ * <p>
+ * <li>The referenced source code is from https://github.com/rick7661/HadamardCoder/blob/master/Hadamard.java</li>
+ * <li>The algorithm description is from http://introcs.cs.princeton.edu/java/14array/Hadamard.java.html</li>
+ * </p>
  *
  * @author Weiran Liu
  * @date 2021/12/14
  */
 public class HadamardCoder implements LinearCoder {
+    /**
+     * Creates a Hadamard matrix with size 2^k * 2^k.
+     *
+     * @param k the maximal bit length of the integer for encoding.
+     * @return the Hadamard matrix.
+     */
+    public static boolean[][] createHadamardMatrix(int k) {
+        // we need 0 < k < 31, otherwise the matrix size would be greater than Integer.MAX_VALUE.
+        MathPreconditions.checkNonNegativeInRange("k", k, Integer.SIZE - 1);
+        if (k == 0) {
+            /*
+             * H(2^0) = H(1)
+             *     -----
+             *       T
+             *     -----
+             */
+            boolean[][] matrix = new boolean[1][1];
+            matrix[0] = new boolean[]{true};
+            return matrix;
+        } else if (k == 1) {
+            /*
+             * H(2^1) = H(2)
+             *     -----
+             *      T T
+             *      T F
+             *     -----
+             */
+            boolean[][] matrix = new boolean[2][2];
+            matrix[0] = new boolean[]{true, true};
+            matrix[1] = new boolean[]{true, false};
+            return matrix;
+        } else {
+            /*
+             * H(1) is a 1-by-1 matrix with the single entry true,
+             * and for n > 1, H(2n) is obtained by aligning four copies of H(n) in a large square,
+             * and then inverting all entries in the lower right n-by-n copy, as shown in the following example.
+             * H(1)  H(2)    H(4)
+             * -------------------
+             *  T    T T   T T T T
+             *       T F   T F T F
+             *             T T F F
+             * -------------------
+             * See https://introcs.cs.princeton.edu/java/14array/，Creative Exercises 29 for details.
+             */
+            int n = 1 << k;
+            boolean[][] matrix = new boolean[n][n];
+            matrix[0][0] = true;
+            /*
+             * i1 = 1
+             * while i1 < k:
+             *     for i2 in range(i1):
+             *         for i3 in range(i1):
+             *             H[i2+i1][i3]    = H[i2][i3]
+             *             H[i2][i3+i1]    = H[i2][i3]
+             *             H[i2+i1][i3+i1] = not H[i2][i3]
+             *     i1 += i1
+             * return H
+             */
+            for (int i1 = 1; i1 < n; i1 += i1) {
+                for (int i2 = 0; i2 < i1; i2++) {
+                    for (int i3 = 0; i3 < i1; i3++) {
+                        matrix[i2 + i1][i3] = matrix[i2][i3];
+                        matrix[i2][i3 + i1] = matrix[i2][i3];
+                        matrix[i2 + i1][i3 + i1] = (!matrix[i2][i3]);
+                    }
+                }
+            }
+            return matrix;
+        }
+    }
+
     /**
      * n比特 * n比特的哈达码矩阵
      */
@@ -40,63 +115,39 @@ public class HadamardCoder implements LinearCoder {
     private final int codewordByteLength;
 
     /**
-     * 构造哈达码编码器。
+     * Creates a Hadamard coder.
      *
-     * @param k 哈达码编码的输入比特长度。
+     * @param k the dataword bit length.
      */
     public HadamardCoder(int k) {
-        // 要求0 < k < 31，否则矩阵长度会超过int的最大长度
-        assert k > 0 && k < Integer.SIZE - 1;
+        MathPreconditions.checkNonNegativeInRange("k", k, Integer.SIZE - 1);
         datawordBitLength = k;
         datawordByteLength = CommonUtils.getByteLength(datawordBitLength);
         int n = 1 << k;
         codewordBitLength = n;
         codewordByteLength = CommonUtils.getByteLength(codewordBitLength);
         if (k == 1) {
-            hadamardCode = new byte[][] {
-                {(byte)0b00000000,},
-                {(byte)0b00000001,},
+            hadamardCode = new byte[][]{
+                {(byte) 0b00000000,},
+                {(byte) 0b00000001,},
             };
-        } else if (k == 2) {
-            hadamardCode = new byte[][] {
-                {(byte)0b00000000,},
-                {(byte)0b00000101,},
-                {(byte)0b00000011,},
-                {(byte)0b00000110,},
+        } else if (k == (1 << 1)) {
+            hadamardCode = new byte[][]{
+                {(byte) 0b00000000,},
+                {(byte) 0b00000101,},
+                {(byte) 0b00000011,},
+                {(byte) 0b00000110,},
             };
         } else {
-            // 初始化维度为n = 2^k的哈达码矩阵
-            boolean[][] hadamardBinaryMatrix = new boolean[n][n];
-            hadamardBinaryMatrix[0][0] = true;
-            /*
-             * 构建哈达码矩阵上半部分，原理参见https://introcs.cs.princeton.edu/java/14array/，Creative Exercises第29题的描述：
-             * H(1) is a 1-by-1 matrix with the single entry true,
-             * and for n > 1, H(2n) is obtained by aligning four copies of H(n) in a large square,
-             * and then inverting all entries in the lower right n-by-n copy, as shown in the following example.
-             * H(1)  H(2)    H(4)
-             * -------------------
-             *  T    T T   T T T T
-             *       T F   T F T F
-             *             T T F F
-             * -------------------
-             */
-            for (int m = 1; m < n; m += m) {
-                for (int i = 0; i < m; i++) {
-                    for (int j = 0; j < m; j++) {
-                        hadamardBinaryMatrix[i + m][j] = hadamardBinaryMatrix[i][j];
-                        hadamardBinaryMatrix[i][j + m] = hadamardBinaryMatrix[i][j];
-                        hadamardBinaryMatrix[i + m][j + m] = (!hadamardBinaryMatrix[i][j]);
-                    }
-                }
-            }
-            // 还需要把结果翻转一遍，否则无法满足线性关系
+            // create a hadamard matrix with n = 2^k
+            boolean[][] matrix = createHadamardMatrix(k);
+            // we need to flip all elements in the hadamard matrix for ensuring linearity
             for (int i = 0; i < n; i++) {
                 for (int j = 0; j < n; j++) {
-                    hadamardBinaryMatrix[i][j] = !hadamardBinaryMatrix[i][j];
+                    matrix[i][j] = !matrix[i][j];
                 }
             }
-
-            hadamardCode = Arrays.stream(hadamardBinaryMatrix)
+            hadamardCode = Arrays.stream(matrix)
                 .map(BinaryUtils::binaryToByteArray)
                 .toArray(byte[][]::new);
         }
@@ -141,10 +192,10 @@ public class HadamardCoder implements LinearCoder {
     }
 
     /**
-     * 将哈达码矩阵表示为字符串形式。
+     * Represents the Hadamard matrix to a String.
      *
-     * @param matrix 矩阵。
-     * @return 字符串表示的哈达码矩阵。
+     * @param matrix the Hadamard matrix.
+     * @return the String representation.
      */
     private String binaryToString(byte[][] matrix) {
         StringBuilder builder = new StringBuilder();
@@ -169,7 +220,7 @@ public class HadamardCoder implements LinearCoder {
         if (this == obj) {
             return true;
         }
-        HadamardCoder that = (HadamardCoder)obj;
+        HadamardCoder that = (HadamardCoder) obj;
         return new EqualsBuilder().append(this.datawordBitLength, that.datawordBitLength).isEquals();
     }
 
