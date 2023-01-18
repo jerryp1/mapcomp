@@ -3,6 +3,7 @@ package edu.alibaba.mpc4j.common.tool.coder;
 import com.google.common.base.Preconditions;
 import edu.alibaba.mpc4j.common.tool.coder.linear.HadamardCoder;
 import edu.alibaba.mpc4j.common.tool.utils.BytesUtils;
+import edu.alibaba.mpc4j.common.tool.utils.DoubleUtils;
 import edu.alibaba.mpc4j.common.tool.utils.IntUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.junit.Assert;
@@ -35,23 +36,31 @@ public class HadamardCoderTest {
     public static Collection<Object[]> configurations() {
         Collection<Object[]> configurations = new ArrayList<>();
         // k = 1
-        configurations.add(new Object[] {"k = 1", new HadamardCoder(1), });
+        configurations.add(new Object[] {"k = 1", 1, });
         // k = 2
-        configurations.add(new Object[] {"k = 2", new HadamardCoder(2), });
+        configurations.add(new Object[] {"k = 2", 2, });
         // k = 3
-        configurations.add(new Object[] {"k = 3", new HadamardCoder(3), });
+        configurations.add(new Object[] {"k = 3", 3, });
         // k = 4
-        configurations.add(new Object[] {"k = 4", new HadamardCoder(4), });
+        configurations.add(new Object[] {"k = 4", 4, });
         // k = 7
-        configurations.add(new Object[] {"k = 7", new HadamardCoder(7), });
+        configurations.add(new Object[] {"k = 7", 7, });
         // k = 8
-        configurations.add(new Object[] {"k = 8", new HadamardCoder(8), });
+        configurations.add(new Object[] {"k = 8", 8, });
         // k = 10
-        configurations.add(new Object[] {"k = 10", new HadamardCoder(10), });
+        configurations.add(new Object[] {"k = 10", 10, });
 
         return configurations;
     }
 
+    /**
+     * the input bit length k
+     */
+    private final int k;
+    /**
+     * the output bit length n
+     */
+    private final int n;
     /**
      * the Hadamard coder
      */
@@ -61,10 +70,22 @@ public class HadamardCoderTest {
      */
     private final int datawordNum;
 
-    public HadamardCoderTest(String name, HadamardCoder coder) {
+    public HadamardCoderTest(String name, int k) {
         Preconditions.checkArgument(StringUtils.isNotBlank(name));
-        this.coder = coder;
+        coder = new HadamardCoder(k);
+        this.k = k;
+        n = 1 << k;
         datawordNum = Math.min(MAX_CODE_NUM, 1 << coder.getDatawordBitLength());
+    }
+
+    @Test
+    public void testParams() {
+        // dataword bit length = k
+        Assert.assertEquals(k, coder.getDatawordBitLength());
+        // codeword bit length = n
+        Assert.assertEquals(n, coder.getCodewordBitLength());
+        // hamming distance = n / 2
+        Assert.assertEquals(n / 2, coder.getMinimalHammingDistance());
     }
 
     @Test
@@ -101,5 +122,30 @@ public class HadamardCoderTest {
             .map(ByteBuffer::wrap)
             .collect(Collectors.toSet());
         Assert.assertEquals(1, codewordSet.size());
+    }
+
+    @Test
+    public void testMul() {
+        double[] inputVector, outputVector;
+        // all 0 results in 0
+        inputVector = new double[n];
+        outputVector = HadamardCoder.fastWhTransMul(inputVector);
+        for (int i = 0; i < n; i++) {
+            Assert.assertEquals(0, outputVector[i], DoubleUtils.PRECISION);
+        }
+        // all 1 results in n in the first place, and 0 otherwise
+        Arrays.fill(inputVector, 1);
+        outputVector = HadamardCoder.fastWhTransMul(inputVector);
+        Assert.assertEquals(n, outputVector[0], DoubleUtils.PRECISION);
+        for (int i = 1; i < n; i++) {
+            Assert.assertEquals(0, outputVector[i], DoubleUtils.PRECISION);
+        }
+        // all -1 results in -n in the first place, and 0 otherwise
+        Arrays.fill(inputVector, -1);
+        outputVector = HadamardCoder.fastWhTransMul(inputVector);
+        Assert.assertEquals(-n, outputVector[0], DoubleUtils.PRECISION);
+        for (int i = 1; i < n; i++) {
+            Assert.assertEquals(0, outputVector[i], DoubleUtils.PRECISION);
+        }
     }
 }

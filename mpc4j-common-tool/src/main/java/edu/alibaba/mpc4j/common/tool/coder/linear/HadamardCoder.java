@@ -1,5 +1,6 @@
 package edu.alibaba.mpc4j.common.tool.coder.linear;
 
+import com.google.common.base.Preconditions;
 import edu.alibaba.mpc4j.common.tool.MathPreconditions;
 import edu.alibaba.mpc4j.common.tool.utils.BinaryUtils;
 import edu.alibaba.mpc4j.common.tool.utils.BytesUtils;
@@ -13,10 +14,21 @@ import java.util.Arrays;
 /**
  * Hadamard Coder. Hadamard coder is a linear code that can encode a k-bit dataword to 2^k-bit codeword.
  * For the hamming distances between all codewords (except for the codeword for dataword = 0) are  2^{k-1}.
- * <p>
  * <li>The referenced source code is from https://github.com/rick7661/HadamardCoder/blob/master/Hadamard.java</li>
  * <li>The algorithm description is from http://introcs.cs.princeton.edu/java/14array/Hadamard.java.html</li>
+ * <p>
+ * The following paper introduces standard properties of Hadamard matrices.
  * </p>
+ * <p>
+ * Acharya, Jayadev, Ziteng Sun, and Huanyu Zhang. Hadamard response: Estimating distributions privately, efficiently,
+ * and with little communication. In The 22nd International Conference on Artificial Intelligence and Statistics, pp.
+ * 1120-1129. PMLR, 2019.
+ * </p>
+ * <li>The number of +1’s in each row except the first is K/2.</li>
+ * <li>Any two rows agree (and disagree) on exactly K/2 locations.</li>
+ * <li>Vector multiplication with HK is possible in time O(K log K) with Fast Walsh Hadamard transform.</li>
+ * <li>We can uniformly sample from the +1’s the -1’s) in any row in time O(log K).</li>
+ * All properties are additionally implemented.
  *
  * @author Weiran Liu
  * @date 2021/12/14
@@ -63,6 +75,7 @@ public class HadamardCoder implements LinearCoder {
              *  T    T T   T T T T
              *       T F   T F T F
              *             T T F F
+             *             T F F T
              * -------------------
              * See https://introcs.cs.princeton.edu/java/14array/，Creative Exercises 29 for details.
              */
@@ -91,6 +104,58 @@ public class HadamardCoder implements LinearCoder {
             }
             return matrix;
         }
+    }
+
+    /**
+     * Multiplies the input vector with the Hadamard matrix using fast Walsh-Hadamard transformation.
+     * <p>
+     * Given an input vector, its fast Walsh-Hadamard transformation multiplication computes v · H(n), where Ts are
+     * treated as +1, and Fs are treated as -1. For example:
+     * <li>[1, 1, 1, 1, 1, 1, 1, 1] · H(8) = [8, 0, 0, 0, 0, 0, 0, 0].</li>
+     * <li>[1, 0, 1, 0, 0, 1, 1, 0] · H(8) = [4, 2, 0, -2, 0, 2, 0, 2].</li>
+     * </p>
+     *
+     * @param inputVector the input vector.
+     * @return the result of v · H(n).
+     */
+    public static double[] fastWhTransMul(double[] inputVector) {
+        int n = inputVector.length;
+        Preconditions.checkArgument((n & (n - 1)) == 0, "n must be a power of 2: %s", n);
+        return innerFastWhTransMul(inputVector);
+    }
+
+    private static double[] innerFastWhTransMul(double[] inputVector) {
+        int n = inputVector.length;
+        assert n > 0 : "n must be greater than 0: " + n;
+        assert (n & (n - 1)) == 0 : "n must be a power of 2: " + n;
+        /*
+         * if k == 1:
+         *     return dist
+         * dist1 = dist[0 : k//2]
+         * dist2 = dist[k//2 : k]
+         * trans1 = FWHT_A(k//2, dist1)
+         * trans2 = FWHT_A(k//2, dist2)
+         * trans = np.concatenate((trans1 + trans2, trans1 - trans2))
+         * return trans
+         */
+        if (n == 1) {
+            return inputVector;
+        }
+        int halfN = n / 2;
+        double[] leftInputVector = new double[halfN];
+        double[] rightInputVector = new double[n - halfN];
+        System.arraycopy(inputVector, 0, leftInputVector, 0 , leftInputVector.length);
+        System.arraycopy(inputVector, halfN, rightInputVector, 0, rightInputVector.length);
+        double[] leftOutputVector = innerFastWhTransMul(leftInputVector);
+        double[] rightOutputVector = innerFastWhTransMul(rightInputVector);
+        double[] outputVector = new double[n];
+        for (int i = 0; i < halfN; i++) {
+            outputVector[i] = leftOutputVector[i] + rightOutputVector[i];
+        }
+        for (int i = halfN; i < n; i++) {
+            outputVector[i] = leftOutputVector[i - halfN] - rightOutputVector[i - halfN];
+        }
+        return outputVector;
     }
 
     /**
