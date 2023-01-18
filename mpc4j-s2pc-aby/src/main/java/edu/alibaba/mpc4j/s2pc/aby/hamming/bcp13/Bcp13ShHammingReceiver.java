@@ -82,7 +82,7 @@ public class Bcp13ShHammingReceiver extends AbstractHammingParty {
         int t = executeOtSteps(x1);
         stopWatch.start();
         List<byte[]> tPayload = new LinkedList<>();
-        tPayload.add(IntUtils.boundedIntToByteArray(t, bitNum));
+        tPayload.add(IntUtils.boundedNonNegIntToByteArray(t, bitNum));
         DataPacketHeader tHeader = new DataPacketHeader(
             taskId, getPtoDesc().getPtoId(), PtoStep.RECEIVER_SEND_T.ordinal(), extraInfo,
             ownParty().getPartyId(), otherParty().getPartyId()
@@ -109,7 +109,7 @@ public class Bcp13ShHammingReceiver extends AbstractHammingParty {
         );
         List<byte[]> rPayload = rpc.receive(rHeader).getPayload();
         MpcAbortPreconditions.checkArgument(rPayload.size() == 1);
-        int r = IntUtils.byteArrayToBoundedInt(rPayload.remove(0), bitNum);
+        int r = IntUtils.byteArrayToBoundedNonNegInt(rPayload.remove(0), bitNum);
         int hammingDistance = (t - r) % (bitNum + 1);
         hammingDistance = hammingDistance < 0 ? hammingDistance + bitNum + 1 : hammingDistance;
         stopWatch.stop();
@@ -140,14 +140,14 @@ public class Bcp13ShHammingReceiver extends AbstractHammingParty {
         List<byte[]> senderMessagePayload = rpc.receive(senderMessageHeader).getPayload();
         MpcAbortPreconditions.checkArgument(senderMessagePayload.size() == bitNum * 2);
         byte[][] senderMessageFlattenArray = senderMessagePayload.toArray(new byte[0][]);
-        int messageByteLength = IntUtils.boundedIntByteLength(bitNum);
+        int messageByteLength = IntUtils.boundedNonNegIntByteLength(bitNum);
         int[] ts = IntStream.range(0, bitNum)
             .map(index -> {
                 byte[] keyi = Arrays.copyOf(rotReceiverOutput.getRb(index), messageByteLength);
                 byte[] choiceCiphertext = ys[index] ?
                     senderMessageFlattenArray[index * 2 + 1] : senderMessageFlattenArray[index * 2];
                 BytesUtils.xori(choiceCiphertext, keyi);
-                return IntUtils.byteArrayToBoundedInt(choiceCiphertext, bitNum);
+                return IntUtils.byteArrayToBoundedNonNegInt(choiceCiphertext, bitNum);
             })
             .toArray();
         int t = 0;

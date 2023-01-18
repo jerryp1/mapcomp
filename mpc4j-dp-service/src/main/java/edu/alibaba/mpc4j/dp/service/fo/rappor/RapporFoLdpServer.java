@@ -119,10 +119,10 @@ public class RapporFoLdpServer extends AbstractFoLdpServer {
         System.arraycopy(itemBytes, 0, bloomFilterBytes, 0, bloomFilterBytes.length);
         BitVector bloomFilter = BitVectorFactory.create(BitVectorFactory.BitVectorType.BYTES_BIT_VECTOR, m, bloomFilterBytes);
         // read the cohort index
-        int cohortIndexByteLength = IntUtils.boundedIntByteLength(cohortNum);
+        int cohortIndexByteLength = IntUtils.boundedNonNegIntByteLength(cohortNum);
         byte[] cohortIndexBytes = new byte[cohortIndexByteLength];
         System.arraycopy(itemBytes, mByteLength, cohortIndexBytes, 0, cohortIndexBytes.length);
-        int cohortIndex = IntUtils.byteArrayToBoundedInt(cohortIndexBytes, cohortNum);
+        int cohortIndex = IntUtils.byteArrayToBoundedNonNegInt(cohortIndexBytes, cohortNum);
         MathPreconditions.checkNonNegativeInRange("cohort index", cohortIndex, cohortNum);
         cohortCounts[cohortIndex]++;
         num++;

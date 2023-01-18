@@ -90,7 +90,7 @@ public class Bcp13ShHammingSender extends AbstractHammingParty {
         int r = executeOtSteps(x0);
         stopWatch.start();
         List<byte[]> rPayload = new LinkedList<>();
-        rPayload.add(IntUtils.boundedIntToByteArray(r, bitNum));
+        rPayload.add(IntUtils.boundedNonNegIntToByteArray(r, bitNum));
         DataPacketHeader rHeader = new DataPacketHeader(
             taskId, getPtoDesc().getPtoId(), PtoStep.SENDER_SEND_R.ordinal(), extraInfo,
             ownParty().getPartyId(), otherParty().getPartyId()
@@ -117,7 +117,7 @@ public class Bcp13ShHammingSender extends AbstractHammingParty {
         );
         List<byte[]> tPayload = rpc.receive(tHeader).getPayload();
         MpcAbortPreconditions.checkArgument(tPayload.size() == 1);
-        int t = IntUtils.byteArrayToBoundedInt(tPayload.remove(0), bitNum);
+        int t = IntUtils.byteArrayToBoundedNonNegInt(tPayload.remove(0), bitNum);
         int hammingDistance = (t - r) % (bitNum + 1);
         hammingDistance = hammingDistance < 0 ? hammingDistance + bitNum + 1 : hammingDistance;
         stopWatch.stop();
@@ -148,7 +148,7 @@ public class Bcp13ShHammingSender extends AbstractHammingParty {
         // P_1 and P_2 engage in a OT_1^2, where P_1 acts as the sender, P_1's input is (r_i + x_i, r_i + \neg x_i).
         CotSenderOutput cotSenderOutput = cotSender.send(bitNum);
         RotSenderOutput rotSenderOutput = new RotSenderOutput(envType, CrhfType.MMO, cotSenderOutput);
-        int messageByteLength = IntUtils.boundedIntByteLength(bitNum);
+        int messageByteLength = IntUtils.boundedNonNegIntByteLength(bitNum);
         int offset = CommonUtils.getByteLength(bitNum) * Byte.SIZE - bitNum;
         List<byte[]> senderMessagePayload = IntStream.range(0, bitNum)
             .mapToObj(index -> {
@@ -161,8 +161,8 @@ public class Bcp13ShHammingSender extends AbstractHammingParty {
                 negRxi = (negRxi + rs[index]) % (bitNum + 1);
                 negRxi = negRxi < 0 ? negRxi + bitNum + 1 : negRxi;
                 byte[][] ciphertexts = new byte[2][];
-                ciphertexts[0] = IntUtils.boundedIntToByteArray(rxi, bitNum);
-                ciphertexts[1] = IntUtils.boundedIntToByteArray(negRxi, bitNum);
+                ciphertexts[0] = IntUtils.boundedNonNegIntToByteArray(rxi, bitNum);
+                ciphertexts[1] = IntUtils.boundedNonNegIntToByteArray(negRxi, bitNum);
                 BytesUtils.xori(ciphertexts[0], key0);
                 BytesUtils.xori(ciphertexts[1], key1);
                 return ciphertexts;

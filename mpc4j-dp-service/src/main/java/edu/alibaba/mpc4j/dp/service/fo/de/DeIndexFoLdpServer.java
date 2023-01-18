@@ -39,7 +39,7 @@ public class DeIndexFoLdpServer extends AbstractFoLdpServer {
 
     @Override
     public void insert(byte[] itemBytes) {
-        int itemIndex = IntUtils.byteArrayToBoundedInt(itemBytes, d);
+        int itemIndex = IntUtils.byteArrayToBoundedNonNegInt(itemBytes, d);
         MathPreconditions.checkNonNegativeInRange("item index", itemIndex, d);
         num++;
         budget[itemIndex]++;

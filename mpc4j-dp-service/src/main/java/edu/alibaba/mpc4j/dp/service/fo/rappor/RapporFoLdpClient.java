@@ -83,8 +83,8 @@ public class RapporFoLdpClient extends AbstractFoLdpClient {
                 bloomFilter.set(hashPosition, true);
             }
         });
-        int cohortIndexByteLength = IntUtils.boundedIntByteLength(cohortNum);
-        byte[] cohortIndexBytes = IntUtils.boundedIntToByteArray(cohortIndex, cohortNum);
+        int cohortIndexByteLength = IntUtils.boundedNonNegIntByteLength(cohortNum);
+        byte[] cohortIndexBytes = IntUtils.boundedNonNegIntToByteArray(cohortIndex, cohortNum);
         return ByteBuffer.allocate(mByteLength + cohortIndexByteLength)
             .put(bloomFilter.getBytes())
             .put(cohortIndexBytes)

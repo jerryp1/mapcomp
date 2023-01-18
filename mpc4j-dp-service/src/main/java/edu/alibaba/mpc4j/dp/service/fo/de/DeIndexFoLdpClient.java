@@ -37,10 +37,10 @@ public class DeIndexFoLdpClient extends AbstractFoLdpClient {
         int randomIndex = random.nextInt(d);
         if (randomSample > p - q) {
             // answer a random item
-            return IntUtils.boundedIntToByteArray(randomIndex, d);
+            return IntUtils.boundedNonNegIntToByteArray(randomIndex, d);
         } else {
             // answer the true item
-            return IntUtils.boundedIntToByteArray(domain.getItemIndex(item), d);
+            return IntUtils.boundedNonNegIntToByteArray(domain.getItemIndex(item), d);
         }
     }
 }
