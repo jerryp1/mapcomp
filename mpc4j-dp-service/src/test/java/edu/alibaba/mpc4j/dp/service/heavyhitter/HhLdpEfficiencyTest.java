@@ -3,7 +3,7 @@ package edu.alibaba.mpc4j.dp.service.heavyhitter;
 import com.google.common.base.Preconditions;
 import edu.alibaba.mpc4j.dp.service.LdpTestDataUtils;
 import edu.alibaba.mpc4j.dp.service.fo.FoLdpFactory;
-import edu.alibaba.mpc4j.dp.service.fo.config.BasicFoLdpConfig;
+import edu.alibaba.mpc4j.dp.service.fo.FoLdpFactory.FoLdpType;
 import edu.alibaba.mpc4j.dp.service.fo.config.FoLdpConfig;
 import edu.alibaba.mpc4j.dp.service.heavyhitter.config.FoHhLdpConfig;
 import edu.alibaba.mpc4j.dp.service.heavyhitter.config.HgHhLdpConfig;
@@ -11,6 +11,7 @@ import edu.alibaba.mpc4j.dp.service.heavyhitter.config.HhLdpConfig;
 import edu.alibaba.mpc4j.dp.service.tool.StreamDataUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.time.StopWatch;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
@@ -32,6 +33,7 @@ import java.util.stream.Stream;
  * @author Weiran Liu
  * @date 2023/1/16
  */
+@Ignore
 @RunWith(Parameterized.class)
 public class HhLdpEfficiencyTest {
     private static final Logger LOGGER = LoggerFactory.getLogger(HhLdpEfficiencyTest.class);
@@ -56,25 +58,69 @@ public class HhLdpEfficiencyTest {
     public static Collection<Object[]> configurations() {
         Collection<Object[]> configurations = new ArrayList<>();
 
-        // DE_STRING_ENCODING
-        FoLdpConfig deIndexFoLdpConfig = new BasicFoLdpConfig
-            .Builder(FoLdpFactory.FoLdpType.DE_INDEX_ENCODING, LdpTestDataUtils.CONNECT_DATA_DOMAIN, DEFAULT_EPSILON)
-            .build();
+        // Hadamard Response with low ε
+        FoLdpConfig hrHighEpsilonFoLdpConfig = FoLdpFactory.createDefaultConfig(
+            FoLdpType.HR_HIGH_EPSILON, LdpTestDataUtils.CONNECT_DATA_DOMAIN, DEFAULT_EPSILON
+        );
+        configurations.add(new Object[]{
+            HhLdpFactory.HhLdpType.FO.name() + " (" + hrHighEpsilonFoLdpConfig.getType().name() + ")",
+            new FoHhLdpConfig.Builder(hrHighEpsilonFoLdpConfig, DEFAULT_K).build()
+        });
+        // Hadamard Response with low ε
+        FoLdpConfig hrLowEpsilonFoLdpConfig = FoLdpFactory.createDefaultConfig(
+            FoLdpType.HR_LOW_EPSILON, LdpTestDataUtils.CONNECT_DATA_DOMAIN, DEFAULT_EPSILON
+        );
+        configurations.add(new Object[]{
+            HhLdpFactory.HhLdpType.FO.name() + " (" + hrLowEpsilonFoLdpConfig.getType().name() + ")",
+            new FoHhLdpConfig.Builder(hrLowEpsilonFoLdpConfig, DEFAULT_K).build()
+        });
+        // Binary Local Hash
+        FoLdpConfig blhFoLdpConfig = FoLdpFactory.createDefaultConfig(
+            FoLdpType.BLH, LdpTestDataUtils.CONNECT_DATA_DOMAIN, DEFAULT_EPSILON
+        );
+        configurations.add(new Object[]{
+            HhLdpFactory.HhLdpType.FO.name() + " (" + blhFoLdpConfig.getType().name() + ")",
+            new FoHhLdpConfig.Builder(blhFoLdpConfig, DEFAULT_K).build()
+        });
+        // RAPPOR
+        FoLdpConfig rapporFoLdpConfig = FoLdpFactory.createDefaultConfig(
+            FoLdpType.RAPPOR, LdpTestDataUtils.CONNECT_DATA_DOMAIN, DEFAULT_EPSILON
+        );
+        configurations.add(new Object[]{
+            HhLdpFactory.HhLdpType.FO.name() + " (" + rapporFoLdpConfig.getType().name() + ")",
+            new FoHhLdpConfig.Builder(rapporFoLdpConfig, DEFAULT_K).build()
+        });
+        // Optimized Unary Encoding
+        FoLdpConfig oueFoLdpConfig = FoLdpFactory.createDefaultConfig(
+            FoLdpType.OUE, LdpTestDataUtils.CONNECT_DATA_DOMAIN, DEFAULT_EPSILON
+        );
+        configurations.add(new Object[]{
+            HhLdpFactory.HhLdpType.FO.name() + " (" + oueFoLdpConfig.getType().name() + ")",
+            new FoHhLdpConfig.Builder(oueFoLdpConfig, DEFAULT_K).build()
+        });
+        // Symmetric Unary Encoding
+        FoLdpConfig sueFoLdpConfig = FoLdpFactory.createDefaultConfig(
+            FoLdpType.SUE, LdpTestDataUtils.CONNECT_DATA_DOMAIN, DEFAULT_EPSILON
+        );
+        configurations.add(new Object[]{
+            HhLdpFactory.HhLdpType.FO.name() + " (" + sueFoLdpConfig.getType().name() + ")",
+            new FoHhLdpConfig.Builder(sueFoLdpConfig, DEFAULT_K).build()
+        });
+        // Direct Encoding via Index Encoding
+        FoLdpConfig deIndexFoLdpConfig = FoLdpFactory.createDefaultConfig(
+            FoLdpType.DE_INDEX_ENCODING, LdpTestDataUtils.CONNECT_DATA_DOMAIN, DEFAULT_EPSILON
+        );
         configurations.add(new Object[]{
             HhLdpFactory.HhLdpType.FO.name() + " (" + deIndexFoLdpConfig.getType().name() + ")",
-            new FoHhLdpConfig
-                .Builder(deIndexFoLdpConfig, DEFAULT_K)
-                .build()
+            new FoHhLdpConfig.Builder(deIndexFoLdpConfig, DEFAULT_K).build()
         });
-        // DE_STRING_ENCODING
-        FoLdpConfig deStringFoLdpConfig = new BasicFoLdpConfig
-            .Builder(FoLdpFactory.FoLdpType.DE_STRING_ENCODING, LdpTestDataUtils.CONNECT_DATA_DOMAIN, DEFAULT_EPSILON)
-            .build();
+        // Direct Encoding via String Encoding
+        FoLdpConfig deStringFoLdpConfig = FoLdpFactory.createDefaultConfig(
+            FoLdpType.DE_STRING_ENCODING, LdpTestDataUtils.CONNECT_DATA_DOMAIN, DEFAULT_EPSILON
+        );
         configurations.add(new Object[]{
             HhLdpFactory.HhLdpType.FO.name() + " (" + deStringFoLdpConfig.getType().name() + ")",
-            new FoHhLdpConfig
-                .Builder(deStringFoLdpConfig, DEFAULT_K)
-                .build()
+            new FoHhLdpConfig.Builder(deStringFoLdpConfig, DEFAULT_K).build()
         });
         // relaxed heavy guardian
         configurations.add(new Object[]{

@@ -108,24 +108,6 @@ public class HadamardCoder implements LinearCoder {
     }
 
     /**
-     * Multiplies the input vector with the Hadamard matrix using fast Walsh-Hadamard transformation.
-     * <p>
-     * Given an input vector, its fast Walsh-Hadamard transformation multiplication computes v · H(n), where Ts are
-     * treated as +1, and Fs are treated as -1. For example:
-     * <li>[1, 1, 1, 1, 1, 1, 1, 1] · H(8) = [8, 0, 0, 0, 0, 0, 0, 0].</li>
-     * <li>[1, 0, 1, 0, 0, 1, 1, 0] · H(8) = [4, 2, 0, -2, 0, 2, 0, 2].</li>
-     * </p>
-     *
-     * @param inputVector the input vector.
-     * @return the result of v · H(n).
-     */
-    public static double[] fastWhTransMul(double[] inputVector) {
-        int n = inputVector.length;
-        Preconditions.checkArgument((n & (n - 1)) == 0, "n must be a power of 2: %s", n);
-        return innerFastWhTransMul(inputVector);
-    }
-
-    /**
      * Checks if the Hadamard entry in the Hadamard matrix is 1.
      *
      * @param x the x coordinate.
@@ -142,7 +124,25 @@ public class HadamardCoder implements LinearCoder {
         return Integer.bitCount(z) % 2 == 0;
     }
 
-    private static double[] innerFastWhTransMul(double[] inputVector) {
+    /**
+     * Multiplies the input vector with the Hadamard matrix using fast Walsh-Hadamard transformation.
+     * <p>
+     * Given an input vector, its fast Walsh-Hadamard transformation multiplication computes v · H(n), where Ts are
+     * treated as +1, and Fs are treated as -1. For example:
+     * <li>[1, 1, 1, 1, 1, 1, 1, 1] · H(8) = [8, 0, 0, 0, 0, 0, 0, 0].</li>
+     * <li>[1, 0, 1, 0, 0, 1, 1, 0] · H(8) = [4, 2, 0, -2, 0, 2, 0, 2].</li>
+     * </p>
+     *
+     * @param inputVector the input vector.
+     * @return the result of v · H(n).
+     */
+    public static int[] fastWhTransMul(int[] inputVector) {
+        int n = inputVector.length;
+        Preconditions.checkArgument((n & (n - 1)) == 0, "n must be a power of 2: %s", n);
+        return innerFastWhTransMul(inputVector);
+    }
+
+    private static int[] innerFastWhTransMul(int[] inputVector) {
         int n = inputVector.length;
         assert n > 0 : "n must be greater than 0: " + n;
         assert (n & (n - 1)) == 0 : "n must be a power of 2: " + n;
@@ -160,13 +160,13 @@ public class HadamardCoder implements LinearCoder {
             return inputVector;
         }
         int halfN = n / 2;
-        double[] leftInputVector = new double[halfN];
-        double[] rightInputVector = new double[n - halfN];
+        int[] leftInputVector = new int[halfN];
+        int[] rightInputVector = new int[n - halfN];
         System.arraycopy(inputVector, 0, leftInputVector, 0 , leftInputVector.length);
         System.arraycopy(inputVector, halfN, rightInputVector, 0, rightInputVector.length);
-        double[] leftOutputVector = innerFastWhTransMul(leftInputVector);
-        double[] rightOutputVector = innerFastWhTransMul(rightInputVector);
-        double[] outputVector = new double[n];
+        int[] leftOutputVector = innerFastWhTransMul(leftInputVector);
+        int[] rightOutputVector = innerFastWhTransMul(rightInputVector);
+        int[] outputVector = new int[n];
         for (int i = 0; i < halfN; i++) {
             outputVector[i] = leftOutputVector[i] + rightOutputVector[i];
         }

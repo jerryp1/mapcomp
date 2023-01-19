@@ -126,9 +126,9 @@ public class HadamardCoderTest {
 
     @Test
     public void testMul() {
-        double[] inputVector, outputVector;
+        int[] inputVector, outputVector;
         // all 0 results in 0
-        inputVector = new double[n];
+        inputVector = new int[n];
         outputVector = HadamardCoder.fastWhTransMul(inputVector);
         for (int i = 0; i < n; i++) {
             Assert.assertEquals(0, outputVector[i], DoubleUtils.PRECISION);

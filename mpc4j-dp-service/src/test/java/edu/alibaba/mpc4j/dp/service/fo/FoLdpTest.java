@@ -37,17 +37,21 @@ public class FoLdpTest {
     public static Collection<Object[]> configurations() {
         Collection<Object[]> configurations = new ArrayList<>();
 
-        // BLH
+        // Hadamard Response with high ε
+        configurations.add(new Object[]{FoLdpType.HR_HIGH_EPSILON.name(), FoLdpType.HR_HIGH_EPSILON,});
+        // Hadamard Response with low ε
+        configurations.add(new Object[]{FoLdpType.HR_LOW_EPSILON.name(), FoLdpType.HR_LOW_EPSILON,});
+        // Binary Local Hash
         configurations.add(new Object[]{FoLdpType.BLH.name(), FoLdpType.BLH,});
         // RAPPOR
         configurations.add(new Object[]{FoLdpType.RAPPOR.name(), FoLdpType.RAPPOR,});
-        // OPTIMIZED_UNARY_ENCODING
+        // Optimized Unary Encoding
         configurations.add(new Object[]{FoLdpType.OUE.name(), FoLdpType.OUE,});
-        // SYMMETRIC_UNARY_ENCODING
+        // Symmetric Unary Encoding
         configurations.add(new Object[]{FoLdpType.SUE.name(), FoLdpType.SUE,});
-        // DE_INDEX_ENCODING
+        // Direct Encoding via Index Encoding
         configurations.add(new Object[]{FoLdpType.DE_INDEX_ENCODING.name(), FoLdpType.DE_INDEX_ENCODING,});
-        // DE_STRING_ENCODING
+        // Direct Encoding via String Encoding
         configurations.add(new Object[]{FoLdpType.DE_STRING_ENCODING.name(), FoLdpType.DE_STRING_ENCODING,});
 
         return configurations;

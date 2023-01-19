@@ -1,6 +1,7 @@
 package edu.alibaba.mpc4j.dp.service.fo.config;
 
 import edu.alibaba.mpc4j.common.tool.MathPreconditions;
+import edu.alibaba.mpc4j.common.tool.utils.IntUtils;
 import edu.alibaba.mpc4j.dp.service.fo.FoLdpFactory;
 import edu.alibaba.mpc4j.dp.service.tool.Domain;
 
@@ -78,6 +79,7 @@ public class BasicFoLdpConfig implements FoLdpConfig {
         public Builder(FoLdpFactory.FoLdpType type, Set<String> domainSet, double epsilon) {
             this.type = type;
             d = domainSet.size();
+            MathPreconditions.checkPositiveInRange("|Ω|", d, IntUtils.MAX_SIGNED_POWER_OF_TWO);
             MathPreconditions.checkGreater("|Ω|", d, 1);
             this.domainSet = domainSet;
             MathPreconditions.checkPositive("ε", epsilon);

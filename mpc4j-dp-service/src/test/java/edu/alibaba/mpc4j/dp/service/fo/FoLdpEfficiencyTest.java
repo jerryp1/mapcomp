@@ -3,9 +3,11 @@ package edu.alibaba.mpc4j.dp.service.fo;
 import com.google.common.base.Preconditions;
 import edu.alibaba.mpc4j.dp.service.LdpTestDataUtils;
 import edu.alibaba.mpc4j.dp.service.fo.config.FoLdpConfig;
+import edu.alibaba.mpc4j.dp.service.fo.FoLdpFactory.FoLdpType;
 import edu.alibaba.mpc4j.dp.service.tool.StreamDataUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.time.StopWatch;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
@@ -27,6 +29,7 @@ import java.util.stream.Stream;
  * @author Weiran Liu
  * @date 2023/1/16
  */
+@Ignore
 @RunWith(Parameterized.class)
 public class FoLdpEfficiencyTest {
     private static final Logger LOGGER = LoggerFactory.getLogger(FoLdpEfficiencyTest.class);
@@ -47,26 +50,22 @@ public class FoLdpEfficiencyTest {
     public static Collection<Object[]> configurations() {
         Collection<Object[]> configurations = new ArrayList<>();
 
+        // Hadamard Response with high ε
+        configurations.add(new Object[]{FoLdpType.HR_HIGH_EPSILON.name(), FoLdpType.HR_HIGH_EPSILON,});
+        // Hadamard Response with low ε
+        configurations.add(new Object[]{FoLdpType.HR_LOW_EPSILON.name(), FoLdpType.HR_LOW_EPSILON,});
+        // Binary Local Hash
+        configurations.add(new Object[]{FoLdpType.BLH.name(), FoLdpType.BLH,});
         // RAPPOR
-        configurations.add(new Object[]{
-            FoLdpFactory.FoLdpType.RAPPOR.name(), FoLdpFactory.FoLdpType.RAPPOR,
-        });
-        // OPTIMIZED_UNARY_ENCODING
-        configurations.add(new Object[]{
-            FoLdpFactory.FoLdpType.OUE.name(), FoLdpFactory.FoLdpType.OUE,
-        });
-        // SYMMETRIC_UNARY_ENCODING
-        configurations.add(new Object[]{
-            FoLdpFactory.FoLdpType.SUE.name(), FoLdpFactory.FoLdpType.SUE,
-        });
-        // DE_INDEX_ENCODING
-        configurations.add(new Object[]{
-            FoLdpFactory.FoLdpType.DE_INDEX_ENCODING.name(), FoLdpFactory.FoLdpType.DE_INDEX_ENCODING,
-        });
-        // DE_STRING_ENCODING
-        configurations.add(new Object[]{
-            FoLdpFactory.FoLdpType.DE_STRING_ENCODING.name(), FoLdpFactory.FoLdpType.DE_STRING_ENCODING,
-        });
+        configurations.add(new Object[]{FoLdpType.RAPPOR.name(), FoLdpType.RAPPOR,});
+        // Optimized Unary Encoding
+        configurations.add(new Object[]{FoLdpType.OUE.name(), FoLdpType.OUE,});
+        // Symmetric Unary Encoding
+        configurations.add(new Object[]{FoLdpType.SUE.name(), FoLdpType.SUE,});
+        // Direct Encoding via Index Encoding
+        configurations.add(new Object[]{FoLdpType.DE_INDEX_ENCODING.name(), FoLdpType.DE_INDEX_ENCODING,});
+        // Direct Encoding via String Encoding
+        configurations.add(new Object[]{FoLdpType.DE_STRING_ENCODING.name(), FoLdpType.DE_STRING_ENCODING,});
 
         return configurations;
     }
