@@ -42,4 +42,11 @@ void plain_decomposition(Plaintext &pt, const SEALContext &context, uint32_t dec
 vector<Ciphertext> expand_query(const EncryptionParameters& parms, const Ciphertext &encrypted,
                                 const GaloisKeys& galois_keys, uint32_t m);
 
+uint32_t get_next_power_of_two(uint32_t number);
+
+uint32_t get_number_of_bits(uint64_t number);
+
+Ciphertext get_sum(vector<Ciphertext> &query, Evaluator& evaluator, GaloisKeys &gal_keys, vector<Plaintext> &encoded_db,
+                   uint32_t start, uint32_t end);
+
 #endif //MPC4J_NATIVE_FHE_INDEX_PIR_H

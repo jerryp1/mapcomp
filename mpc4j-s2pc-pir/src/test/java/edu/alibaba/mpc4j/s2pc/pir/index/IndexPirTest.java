@@ -1,11 +1,12 @@
 package edu.alibaba.mpc4j.s2pc.pir.index;
 
 import com.google.common.base.Preconditions;
-import edu.alibaba.mpc4j.common.rpc.MpcAbortException;
 import edu.alibaba.mpc4j.common.rpc.Rpc;
 import edu.alibaba.mpc4j.common.rpc.RpcManager;
 import edu.alibaba.mpc4j.common.rpc.impl.memory.MemoryRpcManager;
 import edu.alibaba.mpc4j.s2pc.pir.PirUtils;
+import edu.alibaba.mpc4j.s2pc.pir.index.fastpir.Ayaa21IndexPirConfig;
+import edu.alibaba.mpc4j.s2pc.pir.index.fastpir.Ayaa21IndexPirParams;
 import edu.alibaba.mpc4j.s2pc.pir.index.onionpir.Mcr21IndexPirConfig;
 import edu.alibaba.mpc4j.s2pc.pir.index.onionpir.Mcr21IndexPirParams;
 import edu.alibaba.mpc4j.s2pc.pir.index.sealpir.Acls18IndexPirConfig;
@@ -136,6 +137,21 @@ public class IndexPirTest {
                 256
             )
         });
+
+        // FastPIR
+        Ayaa21IndexPirConfig fastpirConfig = new Ayaa21IndexPirConfig();
+        configurations.add(new Object[] {
+            IndexPirFactory.IndexPirType.FAST_PIR.name(),
+            fastpirConfig,
+            new Ayaa21IndexPirParams(
+                SERVER_ELEMENT_SIZE,
+                DEFAULT_ELEMENT_BYTE_LENGTH,
+                4096,
+                1073153L,
+                new long[]{1152921504606830593L, 562949953216513L}
+            )
+        });
+
         return configurations;
     }
 
@@ -169,7 +185,7 @@ public class IndexPirTest {
     public void testIndexPir() {
         testIndexPir(indexPirConfig, indexPirParams, DEFAULT_ELEMENT_BYTE_LENGTH, false);
     }
-
+    
     @Test
     public void testParallelIndexPir() {
         testIndexPir(indexPirConfig, indexPirParams, DEFAULT_ELEMENT_BYTE_LENGTH, true);

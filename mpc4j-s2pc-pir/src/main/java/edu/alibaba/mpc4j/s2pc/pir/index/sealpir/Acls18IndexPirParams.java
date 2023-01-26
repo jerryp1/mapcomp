@@ -48,7 +48,7 @@ public class Acls18IndexPirParams extends AbstractIndexPirParams {
     /**
      * 数据库分块数量
      */
-    private final int bundleNum;
+    private final int binNum;
     /**
      * 密文和明文的比例。
      */
@@ -60,23 +60,27 @@ public class Acls18IndexPirParams extends AbstractIndexPirParams {
         this.plainModulusBitLength = plainModulusBitLength;
         this.dimension = dimension;
         // 一个多项式可表示的字节长度
-        int maxElementByteLength = polyModulusDegree * plainModulusBitLength / Byte.SIZE;
+        int binMaxByteLength = polyModulusDegree * plainModulusBitLength / Byte.SIZE;
         // 数据库分块数量
-        this.bundleNum = (elementByteLength + maxElementByteLength) / maxElementByteLength;
-        this.elementSizeOfPlaintext = new int[this.bundleNum];
-        this.plaintextSize = new int[this.bundleNum];
-        this.dimensionsLength = new int[this.bundleNum][];
+        this.binNum = (elementByteLength + binMaxByteLength - 1) / binMaxByteLength;
+        int lastBinByteLength = elementByteLength % binMaxByteLength == 0 ?
+            binMaxByteLength : elementByteLength % binMaxByteLength;
+        this.elementSizeOfPlaintext = new int[this.binNum];
+        this.plaintextSize = new int[this.binNum];
+        this.dimensionsLength = new int[this.binNum][];
         // 生成加密方案参数
-        this.encryptionParams = Acls18IndexPirNativeUtils.generateSealContext(polyModulusDegree, (1L << plainModulusBitLength) + 1);
+        this.encryptionParams = Acls18IndexPirNativeUtils.generateSealContext(
+            polyModulusDegree, (1L << plainModulusBitLength) + 1
+        );
         this.expansionRatio = Acls18IndexPirNativeUtils.expansionRatio(this.encryptionParams);
-        IntStream.range(0, this.bundleNum).forEach(index -> {
-            int bundleElementByteLength = index == this.bundleNum - 1 ? elementByteLength % maxElementByteLength : maxElementByteLength;
+        IntStream.range(0, this.binNum).forEach(i -> {
+            int byteLength = i == binNum - 1 ? lastBinByteLength : binMaxByteLength;
             // 一个多项式可以包含的元素数量
-            this.elementSizeOfPlaintext[index] = elementSizeOfPlaintext(bundleElementByteLength, polyModulusDegree, plainModulusBitLength);
+            elementSizeOfPlaintext[i] = elementSizeOfPlaintext(byteLength, polyModulusDegree, plainModulusBitLength);
             // 多项式数量
-            this.plaintextSize[index] = (int) Math.ceil((double) serverElementSize / this.elementSizeOfPlaintext[index]);
+            this.plaintextSize[i] = (int) Math.ceil((double) serverElementSize / this.elementSizeOfPlaintext[i]);
             // 各维度的向量长度
-            this.dimensionsLength[index] = computeDimensionLength(this.plaintextSize[index]);
+            this.dimensionsLength[i] = computeDimensionLength(this.plaintextSize[i]);
         });
     }
 
@@ -148,8 +152,8 @@ public class Acls18IndexPirParams extends AbstractIndexPirParams {
      *
      * @return RGSW密文参数。
      */
-    public int getBundleNum() {
-        return this.bundleNum;
+    public int getBinNum() {
+        return this.binNum;
     }
 
     /**

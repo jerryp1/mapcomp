@@ -20,7 +20,8 @@ JNIEXPORT jlong JNICALL Java_edu_alibaba_mpc4j_s2pc_pcg_mtg_zp64_core_rss19_Rss1
         return env->ThrowNew(exception, "Failed to find enough qualifying primes.");
     }
     EncryptionParameters parms = generate_encryption_parameters(scheme_type::bfv, poly_modulus_degree, plain_modulus,
-                                                                CoeffModulus::BFVDefault(poly_modulus_degree, sec_level_type::tc128));
+                                                                CoeffModulus::BFVDefault(poly_modulus_degree,
+                                                                                         sec_level_type::tc128));
     SEALContext context(parms, true);
     if (!context.parameters_set()) {
         return env->ThrowNew(exception, "SEAL parameters not valid.");
@@ -84,7 +85,8 @@ JNIEXPORT jlong JNICALL Java_edu_alibaba_mpc4j_s2pc_pcg_mtg_zp64_core_rss19_Rss1
 JNIEXPORT jobject JNICALL Java_edu_alibaba_mpc4j_s2pc_pcg_mtg_zp64_core_rss19_Rss19Zp64CoreMtgNativeUtils_keyGen(
     JNIEnv *env, jclass, jint poly_modulus_degree, jlong plain_modulus) {
     EncryptionParameters parms = generate_encryption_parameters(scheme_type::bfv, poly_modulus_degree, plain_modulus,
-                                                                CoeffModulus::BFVDefault(poly_modulus_degree, sec_level_type::tc128));
+                                                                CoeffModulus::BFVDefault(poly_modulus_degree,
+                                                                                         sec_level_type::tc128));
     SEALContext context = SEALContext(parms);
     KeyGenerator key_gen = KeyGenerator(context);
     const SecretKey &secret_key = key_gen.secret_key();
@@ -108,15 +110,8 @@ JNIEXPORT jobject JNICALL Java_edu_alibaba_mpc4j_s2pc_pcg_mtg_zp64_core_rss19_Rs
         jlongArray coeff_array1) {
     EncryptionParameters parms = deserialize_encryption_parms(env, parms_bytes);
     SEALContext context(parms);
-    auto exception = env->FindClass("java/lang/Exception");
     PublicKey public_key = deserialize_public_key(env, pk_bytes, context);
-    if (!is_metadata_valid_for(public_key, context)) {
-        env->ThrowNew(exception, "invalid public key for this SEALContext!");
-    }
     SecretKey secret_key = deserialize_secret_key(env, sk_bytes, context);
-    if (!is_metadata_valid_for(secret_key, context)) {
-        env->ThrowNew(exception, "invalid secret key for this SEALContext!");
-    }
     Encryptor encryptor(context, public_key);
     encryptor.set_secret_key(secret_key);
     Evaluator evaluator(context);
@@ -145,15 +140,8 @@ JNIEXPORT jlongArray JNICALL Java_edu_alibaba_mpc4j_s2pc_pcg_mtg_zp64_core_rss19
         JNIEnv *env, jclass, jbyteArray parms_bytes, jbyteArray sk_bytes, jbyteArray ciphertext_bytes) {
     EncryptionParameters parms = deserialize_encryption_parms(env, parms_bytes);
     SEALContext context(parms);
-    auto exception = env->FindClass("java/lang/Exception");
     SecretKey secret_key = deserialize_secret_key(env, sk_bytes, context);
-    if (!is_metadata_valid_for(secret_key, context)) {
-        env->ThrowNew(exception, "invalid secret key for this SEALContext!");
-    }
     Ciphertext ciphertext = deserialize_ciphertext(env, ciphertext_bytes, context);
-    if (!is_metadata_valid_for(ciphertext, context)) {
-        env->ThrowNew(exception, "invalid ciphertext for this SEALContext!");
-    }
     Decryptor decryptor(context, secret_key);
     Plaintext plaintext;
     decryptor.decrypt(ciphertext, plaintext);
@@ -182,10 +170,6 @@ JNIEXPORT jbyteArray JNICALL Java_edu_alibaba_mpc4j_s2pc_pcg_mtg_zp64_core_rss19
     ct.resize(2);
     ct[0] = deserialize_ciphertext(env, cipher1_bytes, context);
     ct[1] = deserialize_ciphertext(env, cipher2_bytes, context);
-    auto exception = env->FindClass("java/lang/Exception");
-    if (!is_metadata_valid_for(ct[0], context) ||  !is_metadata_valid_for(ct[1], context)) {
-        env->ThrowNew(exception, "invalid ciphertext for this SEALContext!");
-    }
     uint32_t size = env->GetArrayLength(plain1);
     auto *ptr_plain1 = reinterpret_cast<uint64_t *>(env->GetLongArrayElements(plain1, JNI_FALSE));
     auto *ptr_plain2 = reinterpret_cast<uint64_t *>(env->GetLongArrayElements(plain2, JNI_FALSE));

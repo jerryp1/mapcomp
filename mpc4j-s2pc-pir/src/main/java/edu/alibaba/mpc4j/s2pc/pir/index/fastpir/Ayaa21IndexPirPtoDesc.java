@@ -1,29 +1,29 @@
-package edu.alibaba.mpc4j.s2pc.pir.index.sealpir;
+package edu.alibaba.mpc4j.s2pc.pir.index.fastpir;
 
 import edu.alibaba.mpc4j.common.rpc.desc.PtoDesc;
 import edu.alibaba.mpc4j.common.rpc.desc.PtoDescManager;
 
 /**
- * SEAL PIR协议信息。论文来源：
+ * FastPIR协议信息。论文来源：
  * <p>
- * Sebastian Angel, Hao Chen, Kim Laine, and Srinath Setty.
- * PIR with compressed queries and amortized query processing.
- * In 2018 IEEE Symposium on Security and Privacy. 2018, 962–979
+ * Ishtiyaque Ahmad, Yuntian Yang, Divyakant Agrawal, Amr El Abbadi, and Trinabh Gupta.
+ * Addra: Metadata-private voice communication over fully untrusted infrastructure.
+ * In 15th USENIX Symposium on Operating Systems Design and Implementation, OSDI. 2021, 313-329
  * </p>
- * 参考 https://github.com/microsoft/SealPIR 实现。
+ * 参考 https://github.com/ishtiyaque/FastPIR 实现。
  *
  * @author Liqiang Peng
- * @date 2023/1/17
+ * @date 2023/1/18
  */
-public class Acls18IndexPirPtoDesc implements PtoDesc {
+public class Ayaa21IndexPirPtoDesc implements PtoDesc {
     /**
      * 协议ID
      */
-    private static final int PTO_ID = Math.abs((int) 2505605775962582927L);
+    private static final int PTO_ID = Math.abs((int) 4569274851469795906L);
     /**
      * 协议名称
      */
-    private static final String PTO_NAME = "SEAL_PIR";
+    private static final String PTO_NAME = "FAST_PIR";
 
     /**
      * 协议步骤
@@ -42,12 +42,12 @@ public class Acls18IndexPirPtoDesc implements PtoDesc {
     /**
      * 单例模式
      */
-    private static final Acls18IndexPirPtoDesc INSTANCE = new Acls18IndexPirPtoDesc();
+    private static final Ayaa21IndexPirPtoDesc INSTANCE = new Ayaa21IndexPirPtoDesc();
 
     /**
      * 私有构造函数
      */
-    private Acls18IndexPirPtoDesc() {
+    private Ayaa21IndexPirPtoDesc() {
         // empty
     }
 

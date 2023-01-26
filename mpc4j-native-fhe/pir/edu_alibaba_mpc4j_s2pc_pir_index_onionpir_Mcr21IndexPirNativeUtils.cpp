@@ -316,15 +316,8 @@ JNIEXPORT jlongArray JNICALL Java_edu_alibaba_mpc4j_s2pc_pir_index_onionpir_Mcr2
         JNIEnv *env, jclass, jbyteArray parms_bytes, jbyteArray sk_bytes, jbyteArray response_bytes) {
     EncryptionParameters parms = deserialize_encryption_parms(env, parms_bytes);
     SEALContext context(parms, true, sec_level_type::none);
-    auto exception = env->FindClass("java/lang/Exception");
     SecretKey secret_key = deserialize_secret_key(env, sk_bytes, context);
-    if (!is_metadata_valid_for(secret_key, context)) {
-        env->ThrowNew(exception, "invalid secret key for this SEALContext!");
-    }
     Ciphertext response = deserialize_ciphertext(env, response_bytes, context);
-    if (!is_metadata_valid_for(response, context)) {
-        env->ThrowNew(exception, "invalid ciphertext for this SEALContext!");
-    }
     // decrypt response
     Decryptor decryptor(context, secret_key);
     uint32_t coeff_count = parms.poly_modulus_degree();

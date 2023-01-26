@@ -46,7 +46,8 @@ JNIEXPORT jboolean JNICALL Java_edu_alibaba_mpc4j_s2pc_pir_keyword_cmg21_Cmg21Kw
     jint* ptr = env->GetIntArrayElements(coeff_modulus_bits, JNI_FALSE);
     vector<int32_t> bit_sizes(ptr, ptr + coeff_size);
     EncryptionParameters parms = generate_encryption_parameters(scheme_type::bfv, poly_modulus_degree, plain_modulus,
-                                                                CoeffModulus::Create(poly_modulus_degree, std::move(bit_sizes)));
+                                                                CoeffModulus::Create(poly_modulus_degree,
+                                                                                     std::move(bit_sizes)));
     SEALContext context = SEALContext(parms);
     jclass exception = env->FindClass("java/lang/Exception");
     if (!context.parameters_set()) {
@@ -138,10 +139,6 @@ JNIEXPORT jobject JNICALL Java_edu_alibaba_mpc4j_s2pc_pir_keyword_cmg21_Cmg21KwP
     EncryptionParameters parms = deserialize_encryption_parms(env, parms_bytes);
     SEALContext context = SEALContext(parms);
     RelinKeys relin_keys = deserialize_relin_keys(env, relin_keys_bytes, context);
-    jclass exception = env->FindClass("java/lang/Exception");
-    if (!is_metadata_valid_for(relin_keys, context)) {
-        env->ThrowNew(exception, "invalid relinearization key for this SEALContext");
-    }
     Evaluator evaluator(context);
     vector<Ciphertext> query = deserialize_ciphertexts(env, query_list, context);
     // compute all the powers of the receiver's input.
@@ -169,15 +166,8 @@ JNIEXPORT jbyteArray JNICALL Java_edu_alibaba_mpc4j_s2pc_pir_keyword_cmg21_Cmg21
     jobjectArray database_coeffs, jobject query_list, jint ps_low_power) {
     EncryptionParameters parms = deserialize_encryption_parms(env, parms_bytes);
     SEALContext context(parms);
-    jclass exception = env->FindClass("java/lang/Exception");
     PublicKey public_key = deserialize_public_key(env, pk_bytes, context);
-    if (!is_metadata_valid_for(public_key, context)) {
-        env->ThrowNew(exception, "invalid public key for this SEALContext");
-    }
     RelinKeys relin_keys = deserialize_relin_keys(env, relin_keys_bytes, context);
-    if (!is_metadata_valid_for(relin_keys, context)) {
-        env->ThrowNew(exception, "invalid relinearization key for this SEALContext");
-    }
     Evaluator evaluator(context);
     // encrypted query powers
     vector<Ciphertext> query_powers = deserialize_ciphertexts(env, query_list, context);
@@ -198,11 +188,7 @@ JNIEXPORT jbyteArray JNICALL Java_edu_alibaba_mpc4j_s2pc_pir_keyword_cmg21_Cmg21
     JNIEnv *env, jclass, jbyteArray parms_bytes, jbyteArray pk_bytes, jobjectArray database_coeffs, jobject query_list) {
     EncryptionParameters parms = deserialize_encryption_parms(env, parms_bytes);
     SEALContext context(parms);
-    jclass exception = env->FindClass("java/lang/Exception");
     PublicKey public_key = deserialize_public_key(env, pk_bytes, context);
-    if (!is_metadata_valid_for(public_key, context)) {
-        env->ThrowNew(exception, "invalid public key for this SEALContext");
-    }
     Evaluator evaluator(context);
     // encrypted query powers
     vector<Ciphertext> query_powers = deserialize_ciphertexts(env, query_list, context);
@@ -219,18 +205,9 @@ JNIEXPORT jobject JNICALL Java_edu_alibaba_mpc4j_s2pc_pir_keyword_cmg21_Cmg21KwP
     JNIEnv *env, jclass, jbyteArray parms_bytes, jbyteArray pk_bytes, jbyteArray sk_bytes, jobjectArray coeffs_array) {
     EncryptionParameters parms = deserialize_encryption_parms(env, parms_bytes);
     SEALContext context = SEALContext(parms);
-    jclass exception = env->FindClass("java/lang/Exception");
     PublicKey public_key = deserialize_public_key(env, pk_bytes, context);
     SecretKey secret_key = deserialize_secret_key(env, sk_bytes, context);
-    if (!is_metadata_valid_for(public_key, context) || !is_metadata_valid_for(secret_key, context)) {
-        env->ThrowNew(exception, "invalid public key or secret key for this SEALContext");
-    }
     vector<Plaintext> plain_query = deserialize_plaintexts_from_coeff(env, coeffs_array, context);
-    for (auto & plaintext : plain_query) {
-        if (!is_metadata_valid_for(plaintext, context)) {
-            env->ThrowNew(exception, "invalid plaintext for this SEALContext");
-        }
-    }
     BatchEncoder encoder(context);
     Encryptor encryptor(context, public_key);
     encryptor.set_secret_key(secret_key);
@@ -249,18 +226,11 @@ JNIEXPORT jlongArray JNICALL Java_edu_alibaba_mpc4j_s2pc_pir_keyword_cmg21_Cmg21
     EncryptionParameters parms = deserialize_encryption_parms(env, paras_bytes);
     SEALContext context = SEALContext(parms);
     SecretKey secret_key = deserialize_secret_key(env, sk_bytes, context);
-    jclass exception = env->FindClass("java/lang/Exception");
-    if (!is_metadata_valid_for(secret_key, context)) {
-        env->ThrowNew(exception, "invalid secret key for this SEALContext");
-    }
     BatchEncoder encoder(context);
     Decryptor decryptor(context, secret_key);
     uint32_t slot_count = encoder.slot_count();
     vector<uint64_t> result;
     Ciphertext response = deserialize_ciphertext(env, response_byte, context);
-    if (!is_metadata_valid_for(response, context)) {
-        env->ThrowNew(exception, "invalid ciphertext for this SEALContext");
-    }
     Plaintext decrypted;
     vector<uint64_t> dec_vec(slot_count);
     decryptor.decrypt(response, decrypted);

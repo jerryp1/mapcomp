@@ -4,6 +4,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
+ * SEAL PIR协议本地算法库工具类。
+ *
  * @author Liqiang Peng
  * @date 2023/1/17
  */

@@ -1,6 +1,5 @@
-package edu.alibaba.mpc4j.s2pc.pir.index.sealpir;
+package edu.alibaba.mpc4j.s2pc.pir.index.fastpir;
 
-import com.google.common.collect.Lists;
 import edu.alibaba.mpc4j.common.rpc.MpcAbortException;
 import edu.alibaba.mpc4j.common.rpc.MpcAbortPreconditions;
 import edu.alibaba.mpc4j.common.rpc.Party;
@@ -17,21 +16,21 @@ import java.util.concurrent.TimeUnit;
 import java.util.stream.IntStream;
 
 /**
- * SEAL PIR协议客户端。
+ * FastPIR协议客户端。
  *
  * @author Liqiang Peng
- * @date 2023/1/17
+ * @date 2023/1/18
  */
-public class Acls18IndexPirClient extends AbstractIndexPirClient {
+public class Ayaa21IndexPirClient extends AbstractIndexPirClient {
 
     static {
         System.loadLibrary(CommonConstants.MPC4J_NATIVE_FHE_NAME);
     }
 
     /**
-     * SEAL PIR方案参数
+     * Fast PIR方案参数
      */
-    private Acls18IndexPirParams params;
+    private Ayaa21IndexPirParams params;
     /**
      * 公钥
      */
@@ -45,8 +44,8 @@ public class Acls18IndexPirClient extends AbstractIndexPirClient {
      */
     private byte[] galoisKeys;
 
-    public Acls18IndexPirClient(Rpc clientRpc, Party serverParty, Acls18IndexPirConfig config) {
-        super(Acls18IndexPirPtoDesc.getInstance(), clientRpc, serverParty, config);
+    public Ayaa21IndexPirClient(Rpc clientRpc, Party serverParty, Ayaa21IndexPirConfig config) {
+        super(Ayaa21IndexPirPtoDesc.getInstance(), clientRpc, serverParty, config);
     }
 
     @Override
@@ -54,8 +53,8 @@ public class Acls18IndexPirClient extends AbstractIndexPirClient {
         setInitInput(serverElementSize, elementByteLength);
         info("{}{} Client Init begin", ptoBeginLogPrefix, getPtoDesc().getPtoName());
 
-        assert (indexPirParams instanceof Acls18IndexPirParams);
-        params = (Acls18IndexPirParams) indexPirParams;
+        assert (indexPirParams instanceof Ayaa21IndexPirParams);
+        params = (Ayaa21IndexPirParams) indexPirParams;
 
         stopWatch.start();
         // 客户端生成密钥对
@@ -75,12 +74,15 @@ public class Acls18IndexPirClient extends AbstractIndexPirClient {
         info("{}{} Client begin", ptoBeginLogPrefix, getPtoDesc().getPtoName());
 
         stopWatch.start();
-        // 客户端生成并发送问询
-        List<byte[]> clientQueryPayload = generateQuery();
+        // 客户端生成问询
+        List<byte[]> clientQueryPayload = Ayaa21IndexPirNativeUtils.generateQuery(
+            params.getEncryptionParams(), publicKey, secretKey, index, params.getQuerySize()
+        );
         // 添加Galois密钥
         clientQueryPayload.add(galoisKeys);
+        // 发送问询
         DataPacketHeader clientQueryHeader = new DataPacketHeader(
-            taskId, getPtoDesc().getPtoId(), Acls18IndexPirPtoDesc.PtoStep.CLIENT_SEND_QUERY.ordinal(), extraInfo,
+            taskId, getPtoDesc().getPtoId(), Ayaa21IndexPirPtoDesc.PtoStep.CLIENT_SEND_QUERY.ordinal(), extraInfo,
             rpc.ownParty().getPartyId(), otherParty().getPartyId()
         );
         rpc.send(DataPacket.fromByteArrayList(clientQueryHeader, clientQueryPayload));
@@ -89,97 +91,70 @@ public class Acls18IndexPirClient extends AbstractIndexPirClient {
         stopWatch.reset();
         info("{}{} Client Step 1/2 ({}ms)", ptoStepLogPrefix, getPtoDesc().getPtoName(), genQueryTime);
 
-
-        // 客户端接收并解密回复
+        // 客户端接收回复
         DataPacketHeader serverResponseHeader = new DataPacketHeader(
-            taskId, getPtoDesc().getPtoId(), Acls18IndexPirPtoDesc.PtoStep.SERVER_SEND_RESPONSE.ordinal(), extraInfo,
+            taskId, getPtoDesc().getPtoId(), Ayaa21IndexPirPtoDesc.PtoStep.SERVER_SEND_RESPONSE.ordinal(), extraInfo,
             otherParty().getPartyId(), rpc.ownParty().getPartyId()
         );
         List<byte[]> serverResponsePayload = rpc.receive(serverResponseHeader).getPayload();
+
         stopWatch.start();
-        byte[] element = handleServerResponsePayload(serverResponsePayload);
+        // 客户端解密
+        byte[] result = handleServerResponsePayload(serverResponsePayload);
         stopWatch.stop();
         long responseTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
         stopWatch.reset();
         info("{}{} Client Step 2/2 ({}ms)", ptoStepLogPrefix, getPtoDesc().getPtoName(), responseTime);
 
         info("{}{} Client end", ptoEndLogPrefix, getPtoDesc().getPtoName());
-        return element;
-    }
-
-    /**
-     * 返回查询密文。
-     *
-     * @return 查询密文。
-     */
-    public ArrayList<byte[]> generateQuery() {
-        int binNum = params.getBinNum();
-        // 前n-1个分块
-        int[] nvec = params.getDimensionsLength()[0];
-        int indexOfPlaintext = index / params.getElementSizeOfPlaintext()[0];
-        // 计算每个维度的坐标
-        int[] indices = computeIndices(indexOfPlaintext, nvec);
-        IntStream.range(0, indices.length)
-            .forEach(i -> info("Client: index {} / {} = {} / {}", i + 1, indices.length, indices[i], nvec[i]));
-        ArrayList<byte[]> result = new ArrayList<>(
-            Acls18IndexPirNativeUtils.generateQuery(params.getEncryptionParams(), publicKey, secretKey, indices, nvec)
-        );
-        if ((binNum > 1) && (params.getPlaintextSize()[0] != params.getPlaintextSize()[binNum - 1])) {
-            // 最后一个分块
-            int[] lastNvec = params.getDimensionsLength()[binNum - 1];
-            int lastIndexOfPlaintext = index / params.getElementSizeOfPlaintext()[binNum - 1];
-            // 计算每个维度的坐标
-            int[] lastIndices = computeIndices(lastIndexOfPlaintext, lastNvec);
-            IntStream.range(0, lastIndices.length).forEach(i -> info("Client: last bin index {} / {} = {} / {}",
-                i + 1, lastIndices.length, lastIndices[i], lastNvec[i]));
-            // 返回查询密文
-            result.addAll(
-                Acls18IndexPirNativeUtils.generateQuery(
-                    params.getEncryptionParams(), publicKey, secretKey, lastIndices, lastNvec
-                )
-            );
-        }
         return result;
     }
 
     /**
      * 解码回复得到检索结果。
      *
-     * @param response  回复。
+     * @param response 回复。
      * @return 检索结果。
      * @throws MpcAbortException 如果协议异常中止。
      */
     private byte[] handleServerResponsePayload(List<byte[]> response) throws MpcAbortException {
-        byte[] element = new byte[elementByteLength];
-        int expansionRatio = params.getExpansionRatio();
         int binNum = params.getBinNum();
-        int dimension = params.getDimension();
-        int binResponseSize = IntStream.range(0, dimension - 1).map(i -> expansionRatio).reduce(1, (a, b) -> a * b);
-        MpcAbortPreconditions.checkArgument(response.size() == binResponseSize * binNum);
+        MpcAbortPreconditions.checkArgument(response.size() == binNum);
+        byte[] result = new byte[elementByteLength];
         int binMaxByteLength = params.getPolyModulusDegree() * params.getPlainModulusBitLength() / Byte.SIZE;
         int lastBinByteLength = elementByteLength % binMaxByteLength == 0 ?
             binMaxByteLength : elementByteLength % binMaxByteLength;
         IntStream intStream = this.parallel ? IntStream.range(0, binNum).parallel() : IntStream.range(0, binNum);
-        intStream.forEach(i -> {
-            int byteLength = i == binNum - 1 ? lastBinByteLength : binMaxByteLength;
-            long[] coeffs = Acls18IndexPirNativeUtils.decryptReply(
-                params.getEncryptionParams(),
-                secretKey,
-                Lists.newArrayList(response.subList(i * binResponseSize, (i + 1) * binResponseSize)),
-                params.getDimension()
+        intStream.forEach(binIndex -> {
+            int byteLength = binIndex == binNum - 1 ? lastBinByteLength : binMaxByteLength;
+            long[] coeffs = Ayaa21IndexPirNativeUtils.decodeResponse(
+                params.getEncryptionParams(), secretKey, response.get(binIndex)
             );
-            byte[] bytes = convertCoeffsToBytes(coeffs, params.getPlainModulusBitLength());
-            int offset = this.index % params.getElementSizeOfPlaintext()[i];
-            System.arraycopy(bytes, offset * byteLength, element, i * binMaxByteLength, byteLength);
+            int rowCount = coeffs.length / 2;
+            long[][] rotatedCoeffs = new long[2][rowCount];
+            IntStream.range(0, rowCount).forEach(i -> {
+                rotatedCoeffs[0][i] = coeffs[(index + i) % rowCount];
+                rotatedCoeffs[1][i] = coeffs[rowCount + ((index + i) % rowCount)];
+            });
+            byte[] upperBytes = convertCoeffsToBytes(rotatedCoeffs[0], params.getPlainModulusBitLength());
+            byte[] lowerBytes = convertCoeffsToBytes(rotatedCoeffs[1], params.getPlainModulusBitLength());
+            System.arraycopy(upperBytes, 0, result, binIndex * binMaxByteLength, byteLength / 2);
+            System.arraycopy(lowerBytes, 0, result, binIndex * binMaxByteLength + byteLength / 2, byteLength / 2);
         });
-        return element;
+        return result;
     }
 
     /**
      * 客户端生成密钥对。
      */
     private void generateKeyPair() {
-        List<byte[]> keyPair = Acls18IndexPirNativeUtils.keyGen(params.getEncryptionParams());
+        ArrayList<Integer> steps = new ArrayList<>();
+        for (int i = 1; i < params.getElementColumnLength()[0]; i <<= 1) {
+            steps.add(-i);
+        }
+        List<byte[]> keyPair = Ayaa21IndexPirNativeUtils.keyGen(
+            params.getEncryptionParams(), steps.stream().mapToInt(step -> step).toArray()
+        );
         assert (keyPair.size() == 3);
         this.publicKey = keyPair.remove(0);
         this.secretKey = keyPair.remove(0);

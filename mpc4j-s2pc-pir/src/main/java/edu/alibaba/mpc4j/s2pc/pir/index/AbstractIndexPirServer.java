@@ -23,7 +23,7 @@ public abstract class AbstractIndexPirServer extends AbstractSecureTwoPartyPto i
     /**
      * 服务端元素字节数组
      */
-    protected byte[][] elementByteArray;
+    protected ArrayList<byte[][]> elementByteArray = new ArrayList<>();
     /**
      * 服务端元素数量
      */
@@ -43,8 +43,8 @@ public abstract class AbstractIndexPirServer extends AbstractSecureTwoPartyPto i
         return config.getProType();
     }
 
-    protected void setInitInput(ArrayList<ByteBuffer> elementArrayList, int elementByteLength,
-                                int maxElementByteLength) {
+    protected void setInitInput(ArrayList<ByteBuffer> elementArrayList, int elementByteLength, int binMaxByteLength,
+                                String protocolName) {
         assert elementByteLength > 0 : "element byte length must be greater than 0: " + elementByteLength;
         this.elementByteLength = elementByteLength;
         assert elementArrayList.size() > 0 : "num must be greater than 0";
@@ -53,25 +53,19 @@ public abstract class AbstractIndexPirServer extends AbstractSecureTwoPartyPto i
             byte[] element = elementArrayList.get(index).array();
             assert element.length == elementByteLength :
                 "element byte length must be " + elementByteLength + ": " + element.length;
+            assert !protocolName.equals(IndexPirFactory.IndexPirType.FAST_PIR.name()) || elementByteLength % 2 == 0;
         });
         // 分块数量
-        int bundleNum = (elementByteLength + maxElementByteLength) / maxElementByteLength;
-        elementByteArray = new byte[bundleNum][];
-        // 将元素打平
-        for (int i = 0; i < bundleNum; i++) {
-            int bundleElementByteLength = i == bundleNum - 1 ?
-                elementByteLength % maxElementByteLength : maxElementByteLength;
-            elementByteArray[i] = new byte[num * bundleElementByteLength];
+        int binNum = (elementByteLength + binMaxByteLength - 1) / binMaxByteLength;
+        int lastBinByteLength = elementByteLength % binMaxByteLength == 0 ?
+            binMaxByteLength : elementByteLength % binMaxByteLength;
+        for (int i = 0; i < binNum; i++) {
+            int byteLength = i == binNum - 1 ? lastBinByteLength : binMaxByteLength;
+            byte[][] byteArray = new byte[num][byteLength];
             for (int j = 0; j < num; j++) {
-                byte[] totalElement = elementArrayList.get(j).array();
-                System.arraycopy(
-                    totalElement,
-                    i * maxElementByteLength,
-                    elementByteArray[i],
-                    j * bundleElementByteLength,
-                    bundleElementByteLength
-                );
+                System.arraycopy(elementArrayList.get(j).array(), i * binMaxByteLength, byteArray[j], 0, byteLength);
             }
+            elementByteArray.add(byteArray);
         }
         extraInfo++;
         initialized = false;
@@ -87,20 +81,20 @@ public abstract class AbstractIndexPirServer extends AbstractSecureTwoPartyPto i
     /**
      * 将字节数组转换为指定比特长度的long型数组。
      *
-     * @param limit       long型数值的比特长度。
-     * @param offset      移位。
-     * @param size        字节数组长度。
-     * @param bundleIndex 分块索引。
+     * @param limit     long型数值的比特长度。
+     * @param offset    移位。
+     * @param size      待转换的字节数组长度。
+     * @param byteArray 字节数组。
      * @return long型数组。
      */
-    private long[] convertBytesToCoeffs(int limit, int offset, double size, int bundleIndex) {
+    protected long[] convertBytesToCoeffs(int limit, int offset, int size, byte[] byteArray) {
         // 需要使用的系数个数
         int longArraySize = (int) Math.ceil(Byte.SIZE * size / (double) limit);
         long[] longArray = new long[longArraySize];
         int room = limit;
         int flag = 0;
         for (int i = 0; i < size; i++) {
-            int src = elementByteArray[bundleIndex][i+offset];
+            int src = byteArray[i+offset];
             if (src < 0) {
                 src &= 0xFF;
             }
@@ -121,64 +115,5 @@ public abstract class AbstractIndexPirServer extends AbstractSecureTwoPartyPto i
         }
         longArray[flag] = longArray[flag] << room;
         return longArray;
-    }
-
-    /**
-     * 返回数据库编码后的多项式。
-     *
-     * @param polyModulusDegree       多项式阶。
-     * @param plaintextSize           明文数量。
-     * @param coeffBitLength          系数比特长度。
-     * @param dimensionLength         各维度向量长度。
-     * @param elementSizeOfPlaintext  多项式包含的元素数量。
-     * @param bundleElementByteLength 分块字节长度。
-     * @param bundleIndex             分块索引。
-     * @return 数据库编码后的多项式。
-     */
-    protected ArrayList<long[]> encodeDatabase(int polyModulusDegree, int plaintextSize, int coeffBitLength,
-                                               int[] dimensionLength, int elementSizeOfPlaintext,
-                                               int bundleElementByteLength, int bundleIndex) {
-        // number of FV plaintexts needed to create the d-dimensional matrix
-        int prod = Arrays.stream(dimensionLength).reduce(1, (a, b) -> a * b);
-        assert (plaintextSize <= prod);
-        ArrayList<long[]> coeffsList = new ArrayList<>();
-        // 每个多项式包含的字节长度
-        int byteSizeOfPlaintext = elementSizeOfPlaintext * bundleElementByteLength;
-        // 数据库总字节长度
-        int totalByteSize = num * bundleElementByteLength;
-        // 一个多项式中需要使用的系数个数
-        int usedCoeffSize = elementSizeOfPlaintext *
-            ((int) Math.ceil(Byte.SIZE * bundleElementByteLength / (double) coeffBitLength));
-        // 系数个数不大于多项式阶数
-        assert (usedCoeffSize <= polyModulusDegree) : "coefficient num must be less than or equal to polynomial degree";
-        // 字节转换为多项式系数
-        int offset = 0;
-        for (int i = 0; i < plaintextSize; i++) {
-            long processByteSize;
-            if (totalByteSize <= offset) {
-                break;
-            } else if (totalByteSize < offset + byteSizeOfPlaintext) {
-                processByteSize = totalByteSize - offset;
-            } else {
-                processByteSize = byteSizeOfPlaintext;
-            }
-            assert (processByteSize % bundleElementByteLength == 0);
-            // Get the coefficients of the elements that will be packed in plaintext i
-            long[] coeffsArray = convertBytesToCoeffs(coeffBitLength, offset, processByteSize, bundleIndex);
-            assert (coeffsArray.length <= usedCoeffSize);
-            offset += processByteSize;
-            long[] paddingCoeffsArray = new long[polyModulusDegree];
-            System.arraycopy(coeffsArray, 0, paddingCoeffsArray, 0, coeffsArray.length);
-            // Pad the rest with 1s
-            IntStream.range(coeffsArray.length, polyModulusDegree).forEach(j -> paddingCoeffsArray[j] = 1L);
-            coeffsList.add(paddingCoeffsArray);
-        }
-        // Add padding plaintext to make database a matrix
-        int currentPlaintextSize = coeffsList.size();
-        assert (currentPlaintextSize <= plaintextSize);
-        IntStream.range(0, (prod - currentPlaintextSize))
-            .mapToObj(i -> IntStream.range(0, polyModulusDegree).mapToLong(i1 -> 1L).toArray())
-            .forEach(coeffsList::add);
-        return coeffsList;
     }
 }

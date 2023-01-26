@@ -32,6 +32,14 @@ public class Mbfk16IndexPirClient extends AbstractIndexPirClient {
      * XPIR方案参数
      */
     private Mbfk16IndexPirParams params;
+    /**
+     * 公钥
+     */
+    private byte[] publicKey;
+    /**
+     * 私钥
+     */
+    private byte[] secretKey;
 
     public Mbfk16IndexPirClient(Rpc clientRpc, Party serverParty, Mbfk16IndexPirConfig config) {
         super(Mbfk16IndexPirPtoDesc.getInstance(), clientRpc, serverParty, config);
@@ -45,6 +53,14 @@ public class Mbfk16IndexPirClient extends AbstractIndexPirClient {
         assert (indexPirParams instanceof Mbfk16IndexPirParams);
         params = (Mbfk16IndexPirParams) indexPirParams;
 
+        stopWatch.start();
+        // 客户端生成密钥对
+        generateKeyPair();
+        stopWatch.stop();
+        long initTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
+        stopWatch.reset();
+        info("{}{} Client Init Step 1/1 ({}ms)", ptoStepLogPrefix, getPtoDesc().getPtoName(), initTime);
+
         initialized = true;
         info("{}{} Client Init end", ptoEndLogPrefix, getPtoDesc().getPtoName());
     }
@@ -55,10 +71,8 @@ public class Mbfk16IndexPirClient extends AbstractIndexPirClient {
         info("{}{} Client begin", ptoBeginLogPrefix, getPtoDesc().getPtoName());
 
         stopWatch.start();
-        // 客户端生成BFV算法公私钥对
-        List<byte[]> keyPair = Mbfk16IndexPirNativeUtils.keyGen(params.getEncryptionParams());
         // 客户端生成并发送问询
-        List<byte[]> clientQueryPayload = generateQuery(params.getEncryptionParams(), keyPair.get(0), keyPair.get(1));
+        List<byte[]> clientQueryPayload = generateQuery();
         DataPacketHeader clientQueryHeader = new DataPacketHeader(
             taskId, getPtoDesc().getPtoId(), PtoStep.CLIENT_SEND_QUERY.ordinal(), extraInfo,
             rpc.ownParty().getPartyId(), otherParty().getPartyId()
@@ -76,7 +90,7 @@ public class Mbfk16IndexPirClient extends AbstractIndexPirClient {
             otherParty().getPartyId(), rpc.ownParty().getPartyId()
         );
         List<byte[]> serverResponsePayload = rpc.receive(serverResponseHeader).getPayload();
-        byte[] element = handleServerResponsePayload(keyPair.get(1), serverResponsePayload);
+        byte[] element = handleServerResponsePayload(serverResponsePayload);
         stopWatch.stop();
         long responseTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
         stopWatch.reset();
@@ -89,13 +103,10 @@ public class Mbfk16IndexPirClient extends AbstractIndexPirClient {
     /**
      * 返回查询密文。
      *
-     * @param encryptionParams 加密方案参数。
-     * @param publicKey        公钥。
-     * @param secretKey        私钥。
      * @return 查询密文。
      */
-    public ArrayList<byte[]> generateQuery(byte[] encryptionParams, byte[] publicKey, byte[] secretKey) {
-        int bundleNum = params.getBundleNum();
+    public ArrayList<byte[]> generateQuery() {
+        int bundleNum = params.getBinNum();
         // 前n-1个分块
         int[] nvec = params.getDimensionsLength()[0];
         int indexOfPlaintext = index / params.getElementSizeOfPlaintext()[0];
@@ -104,7 +115,7 @@ public class Mbfk16IndexPirClient extends AbstractIndexPirClient {
         IntStream.range(0, indices.length)
             .forEach(i -> info("Client: index {} / {} = {} / {}", i + 1, indices.length, indices[i], nvec[i]));
         ArrayList<byte[]> result = new ArrayList<>(
-            Mbfk16IndexPirNativeUtils.generateQuery(encryptionParams, publicKey, secretKey, indices, nvec)
+            Mbfk16IndexPirNativeUtils.generateQuery(params.getEncryptionParams(), publicKey, secretKey, indices, nvec)
         );
         if ((bundleNum > 1) && (params.getPlaintextSize()[0] != params.getPlaintextSize()[bundleNum - 1])) {
             // 最后一个分块
@@ -116,7 +127,9 @@ public class Mbfk16IndexPirClient extends AbstractIndexPirClient {
                 i + 1, lastIndices.length, lastIndices[i], lastNvec[i]));
             // 返回查询密文
             result.addAll(
-                Mbfk16IndexPirNativeUtils.generateQuery(encryptionParams, publicKey, secretKey, lastIndices, lastNvec)
+                Mbfk16IndexPirNativeUtils.generateQuery(
+                    params.getEncryptionParams(), publicKey, secretKey, lastIndices, lastNvec
+                )
             );
         }
         return result;
@@ -125,36 +138,43 @@ public class Mbfk16IndexPirClient extends AbstractIndexPirClient {
     /**
      * 解码回复得到检索结果。
      *
-     * @param secretKey 私钥。
-     * @param response  回复。
+     * @param response 回复。
      * @return 检索结果。
      * @throws MpcAbortException 如果协议异常中止。
      */
-    private byte[] handleServerResponsePayload(byte[] secretKey, List<byte[]> response) throws MpcAbortException {
+    private byte[] handleServerResponsePayload(List<byte[]> response) throws MpcAbortException {
         byte[] elementBytes = new byte[elementByteLength];
         int expansionRatio = params.getExpansionRatio();
-        int bundleNum = params.getBundleNum();
+        int binNum = params.getBinNum();
         int dimension = params.getDimension();
-        int bundleResponseSize = IntStream.range(0, dimension - 1).map(i -> expansionRatio).reduce(1, (a, b) -> a * b);
-        MpcAbortPreconditions.checkArgument(response.size() == bundleResponseSize * bundleNum);
-        int maxElementByteLength = params.getPolyModulusDegree() * params.getPlainModulusBitLength() / Byte.SIZE;
-        IntStream intStream = this.parallel ? IntStream.range(0, bundleNum).parallel() : IntStream.range(0, bundleNum);
-        intStream.forEach(bundleIndex -> {
+        int binResponseSize = IntStream.range(0, dimension - 1).map(i -> expansionRatio).reduce(1, (a, b) -> a * b);
+        MpcAbortPreconditions.checkArgument(response.size() == binResponseSize * binNum);
+        int binMaxByteLength = params.getPolyModulusDegree() * params.getPlainModulusBitLength() / Byte.SIZE;
+        int lastBinByteLength = elementByteLength % binMaxByteLength == 0 ?
+            binMaxByteLength : elementByteLength % binMaxByteLength;
+        IntStream intStream = this.parallel ? IntStream.range(0, binNum).parallel() : IntStream.range(0, binNum);
+        intStream.forEach(binIndex -> {
+            int byteLength = binIndex == binNum - 1 ? lastBinByteLength : binMaxByteLength;
             long[] coeffs = Mbfk16IndexPirNativeUtils.decryptReply(
                 params.getEncryptionParams(),
                 secretKey,
-                Lists.newArrayList(
-                    response.subList(bundleIndex * bundleResponseSize, (bundleIndex + 1) * bundleResponseSize)
-                ),
+                Lists.newArrayList(response.subList(binIndex * binResponseSize, (binIndex + 1) * binResponseSize)),
                 params.getDimension()
             );
-            assert (coeffs.length == params.getPolyModulusDegree()) : "多项式阶不匹配";
             byte[] bytes = convertCoeffsToBytes(coeffs, params.getPlainModulusBitLength());
-            int offset = this.index % params.getElementSizeOfPlaintext()[bundleIndex];
-            int size = bundleIndex == params.getBundleNum() - 1 ?
-                elementByteLength % maxElementByteLength : maxElementByteLength;
-            System.arraycopy(bytes, offset * size, elementBytes, bundleIndex * maxElementByteLength, size);
+            int offset = this.index % params.getElementSizeOfPlaintext()[binIndex];
+            System.arraycopy(bytes, offset * byteLength, elementBytes, binIndex * binMaxByteLength, byteLength);
         });
         return elementBytes;
+    }
+
+    /**
+     * 客户端生成密钥对。
+     */
+    private void generateKeyPair() {
+        List<byte[]> keyPair = Mbfk16IndexPirNativeUtils.keyGen(params.getEncryptionParams());
+        assert (keyPair.size() == 2);
+        this.publicKey = keyPair.remove(0);
+        this.secretKey = keyPair.remove(0);
     }
 }

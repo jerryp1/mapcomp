@@ -60,13 +60,7 @@ JNIEXPORT jobject JNICALL Java_edu_alibaba_mpc4j_s2pc_pir_index_xpir_Mbfk16Index
     SEALContext context(parms);
     auto exception = env->FindClass("java/lang/Exception");
     PublicKey public_key = deserialize_public_key(env, pk_bytes, context);
-    if (!is_metadata_valid_for(public_key, context)) {
-        env->ThrowNew(exception, "invalid public key for this SEALContext!");
-    }
     SecretKey secret_key = deserialize_secret_key(env, sk_bytes, context);
-    if (!is_metadata_valid_for(secret_key, context)) {
-        env->ThrowNew(exception, "invalid secret key for this SEALContext!");
-    }
     Encryptor encryptor(context, public_key, secret_key);
     uint32_t dimension = env->GetArrayLength(indices_array);
     jint *ptr0 = env->GetIntArrayElements(indices_array, JNI_FALSE);
@@ -185,9 +179,6 @@ JNIEXPORT jlongArray JNICALL Java_edu_alibaba_mpc4j_s2pc_pir_index_xpir_Mbfk16In
     SEALContext context(parms);
     auto exception = env->FindClass("java/lang/Exception");
     SecretKey secret_key = deserialize_secret_key(env, sk_bytes, context);
-    if (!is_metadata_valid_for(secret_key, context)) {
-        env->ThrowNew(exception, "invalid secret key for this SEALContext!");
-    }
     Decryptor decryptor(context, secret_key);
     parms = context.last_context_data()->parms();
     parms_id_type parms_id = context.last_parms_id();

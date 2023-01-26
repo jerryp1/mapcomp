@@ -22,7 +22,7 @@ public class Mcr21IndexPirPtoDesc implements PtoDesc {
     /**
      * 协议名称
      */
-    private static final String PTO_NAME = "MCR21_INDEX_PIR";
+    private static final String PTO_NAME = "ONION_PIR";
 
     /**
      * 协议步骤

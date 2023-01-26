@@ -34,12 +34,7 @@ GaloisKeys generate_galois_keys(const SEALContext& context, KeyGenerator &keygen
 }
 
 uint64_t invert_mod(uint64_t m, const seal::Modulus &mod) {
-    if (mod.uint64_count() > 1) {
-        cout << "Mod too big to invert";
-    }
     uint64_t inverse = 0;
-    if (!seal::util::try_invert_uint_mod(m, mod.value(), inverse)) {
-        cout << "Could not invert value";
-    }
+    seal::util::try_invert_uint_mod(m, mod.value(), inverse);
     return inverse;
 }
