@@ -103,12 +103,13 @@ public class RandomCoderUtils {
     public static int getCodewordByteLength(long maxN) {
         assert maxN > 0;
         int ceilLogMaxN = LongUtils.ceilLog2(maxN);
+        assert ceilLogMaxN > 0 && ceilLogMaxN <= Long.SIZE
+            : "log(maxN) must be in range (0, " + Long.SIZE + ": " + ceilLogMaxN;
         if (ceilLogMaxN < MIN_INPUT_LOG) {
-            // 如果小于查找表最小对数，则返回最小对数取值
+            // we have a minimal input log, so that the codeword byte length has a min value.
             return CODEWORD_BYTE_LENGTH_TABLE.get(MIN_INPUT_LOG);
         } else {
-            // 如果大于查找表最小对数，则返回最大对数取值，如果MAX_INPUT_LOG
-            return CODEWORD_BYTE_LENGTH_TABLE.get(MAX_INPUT_LOG);
+            return CODEWORD_BYTE_LENGTH_TABLE.get(ceilLogMaxN);
         }
     }
 
