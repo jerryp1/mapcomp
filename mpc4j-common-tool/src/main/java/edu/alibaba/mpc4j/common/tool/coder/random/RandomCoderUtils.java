@@ -149,7 +149,7 @@ public class RandomCoderUtils {
         }
         // 2^{-n} * Σ_{i = 0}^{d - 1} {C(n, i)}
         probability *= Math.pow(0.5, codewordBitLength);
-        // 2^{-n} * Σ_{i = 0}^{d - 1} {C(n, i)} + 2^{-218}
+        // 2^{-n} * Σ_{i = 0}^{d - 1} {C(n, i)} + 2^{-128}
         probability += DoubleUtils.COMP_NEG_PROBABILITY;
         // 对结果去log和负数
         return (int)Math.floor(-1 * Math.log(probability) / Math.log(2.0)) - CommonConstants.STATS_BIT_LENGTH;
