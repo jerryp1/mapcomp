@@ -15,13 +15,9 @@ import java.util.Map;
  */
 public class RandomCoderUtils {
     /**
-     * 输入最小值对数
+     * 输入最小值对数，输入最大值对数为Long.SIZE = 64
      */
     private static final int MIN_INPUT_LOG = 8;
-    /**
-     * 输入最大值对数
-     */
-    private static final int MAX_INPUT_LOG = 64;
     /**
      * 私有构造函数
      */
@@ -109,6 +105,8 @@ public class RandomCoderUtils {
             // we have a minimal input log, so that the codeword byte length has a min value.
             return CODEWORD_BYTE_LENGTH_TABLE.get(MIN_INPUT_LOG);
         } else {
+            // We thank Qixian Zhou for pointing out that
+            // here we should call get(ceilLogMaxN) instead of get(MAX_INPUT_LOG)
             return CODEWORD_BYTE_LENGTH_TABLE.get(ceilLogMaxN);
         }
     }
@@ -152,6 +150,6 @@ public class RandomCoderUtils {
         // 2^{-n} * Σ_{i = 0}^{d - 1} {C(n, i)} + 2^{-128}
         probability += DoubleUtils.COMP_NEG_PROBABILITY;
         // 对结果去log和负数
-        return (int)Math.floor(-1 * Math.log(probability) / Math.log(2.0)) - CommonConstants.STATS_BIT_LENGTH;
+        return (int)Math.floor(-1 * DoubleUtils.log2(probability)) - CommonConstants.STATS_BIT_LENGTH;
     }
 }
