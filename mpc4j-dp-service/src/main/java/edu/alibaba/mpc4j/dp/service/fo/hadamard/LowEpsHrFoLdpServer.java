@@ -1,4 +1,4 @@
-package edu.alibaba.mpc4j.dp.service.fo.hr;
+package edu.alibaba.mpc4j.dp.service.fo.hadamard;
 
 import edu.alibaba.mpc4j.common.tool.coder.linear.HadamardCoder;
 import edu.alibaba.mpc4j.common.tool.utils.IntUtils;
@@ -52,7 +52,7 @@ public class LowEpsHrFoLdpServer extends AbstractFoLdpServer {
 
     @Override
     public Map<String, Double> estimate() {
-        int[] cs = HadamardCoder.fastWhTransMul(budgets);
+        int[] cs = HadamardCoder.fastWalshHadamardTrans(budgets);
         return IntStream.range(0, d)
             .boxed()
             .collect(Collectors.toMap(

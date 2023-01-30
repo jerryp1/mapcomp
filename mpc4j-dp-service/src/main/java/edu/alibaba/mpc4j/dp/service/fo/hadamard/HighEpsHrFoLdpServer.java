@@ -1,4 +1,4 @@
-package edu.alibaba.mpc4j.dp.service.fo.hr;
+package edu.alibaba.mpc4j.dp.service.fo.hadamard;
 
 import edu.alibaba.mpc4j.common.tool.coder.linear.HadamardCoder;
 import edu.alibaba.mpc4j.common.tool.utils.DoubleUtils;
@@ -79,7 +79,7 @@ public class HighEpsHrFoLdpServer extends AbstractFoLdpServer {
         for (int blockIndex = 0; blockIndex < blockNum; blockIndex++) {
             int[] blockBudget = new int[blockSize];
             System.arraycopy(budgets, blockIndex * blockSize, blockBudget, 0, blockSize);
-            int[] blockCounts = HadamardCoder.fastWhTransMul(blockBudget);
+            int[] blockCounts = HadamardCoder.fastWalshHadamardTrans(blockBudget);
             System.arraycopy(blockCounts, 0, counts, blockIndex * blockSize, blockSize);
         }
         return IntStream.range(0, d)

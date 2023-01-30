@@ -1,4 +1,4 @@
-package edu.alibaba.mpc4j.dp.service.fo.hr;
+package edu.alibaba.mpc4j.dp.service.fo.hadamard;
 
 import edu.alibaba.mpc4j.common.tool.coder.linear.HadamardCoder;
 import edu.alibaba.mpc4j.common.tool.utils.IntUtils;
