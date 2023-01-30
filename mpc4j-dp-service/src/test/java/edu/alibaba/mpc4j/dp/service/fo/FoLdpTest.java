@@ -11,9 +11,13 @@ import org.junit.Assert;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.util.*;
+import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
 /**
@@ -24,6 +28,7 @@ import java.util.stream.Stream;
  */
 @RunWith(Parameterized.class)
 public class FoLdpTest {
+    private static final Logger LOGGER = LoggerFactory.getLogger(FoLdpTest.class);
     /**
      * large ε
      */
@@ -32,11 +37,35 @@ public class FoLdpTest {
      * default ε
      */
     static final double DEFAULT_EPSILON = 16;
+    /**
+     * constant input
+     */
+    private static final String CONSTANT_INPUT = String.valueOf(0);
+    /**
+     * number of items for constant input
+     */
+    private static final int CONSTANT_INPUT_NUM = 1000000;
+    /**
+     * constant input d = 2^k
+     */
+    private static final int CONSTANT_INPUT_POW_2_D = 1 << 5;
+    /**
+     * constant input d = 2^k + 1
+     */
+    private static final int CONSTANT_INPUT_POW_2_ADD_1_D = CONSTANT_INPUT_POW_2_D + 1;
+    /**
+     * constant input d = 2^k - 1
+     */
+    private static final int CONSTANT_INPUT_POW_2_SUB_1_D = CONSTANT_INPUT_POW_2_D - 1;
 
     @Parameterized.Parameters(name = "{0}")
     public static Collection<Object[]> configurations() {
         Collection<Object[]> configurations = new ArrayList<>();
 
+        // Hadamard Mechanism with low ε
+        configurations.add(new Object[]{FoLdpType.HM_HIGH_EPSILON.name(), FoLdpType.HM_HIGH_EPSILON,});
+        // Hadamard Mechanism with low ε
+        configurations.add(new Object[]{FoLdpType.HM_LOW_EPSILON.name(), FoLdpType.HM_LOW_EPSILON,});
         // Hadamard Response with high ε
         configurations.add(new Object[]{FoLdpType.HR_HIGH_EPSILON.name(), FoLdpType.HR_HIGH_EPSILON,});
         // Hadamard Response with low ε
@@ -79,6 +108,32 @@ public class FoLdpTest {
     }
 
     @Test
+    public void testLargeEpsilonConstantInput() {
+        testConstantInput(CONSTANT_INPUT_POW_2_D);
+        testConstantInput(CONSTANT_INPUT_POW_2_ADD_1_D);
+        testConstantInput(CONSTANT_INPUT_POW_2_SUB_1_D);
+    }
+
+    private void testConstantInput(int d) {
+        Set<String> domain = IntStream.range(0, d)
+            .mapToObj(String::valueOf)
+            .collect(Collectors.toSet());
+        FoLdpConfig config = FoLdpFactory.createDefaultConfig(type, domain, LARGE_EPSILON);
+        // create server and client
+        FoLdpServer server = FoLdpFactory.createServer(config);
+        FoLdpClient client = FoLdpFactory.createClient(config);
+        // randomize
+        Random ldpRandom = new Random();
+        IntStream.range(0, CONSTANT_INPUT_NUM)
+            .mapToObj(num -> client.randomize(CONSTANT_INPUT, ldpRandom))
+            .forEach(server::insert);
+        // estimate
+        Map<String, Double> frequencyEstimates = server.estimate();
+        Assert.assertEquals(d, frequencyEstimates.size());
+        Assert.assertEquals(CONSTANT_INPUT_NUM, frequencyEstimates.get(CONSTANT_INPUT), 0.01 * CONSTANT_INPUT_NUM);
+    }
+
+    @Test
     public void testLargeEpsilon() throws IOException {
         FoLdpConfig config = FoLdpFactory.createDefaultConfig(type, LdpTestDataUtils.EXAMPLE_DATA_DOMAIN, LARGE_EPSILON);
         // create server and client
@@ -96,10 +151,10 @@ public class FoLdpTest {
                 );
             }
         } else {
-            // there are some mechanisms that do not get accurate answer even for large epsilon
-            // for those mechanisms, we only measure is nearly un-biased estimations
+            // there are some mechanism that do not provide un-biased sum even for large epsilon
+            // for those mechanisms, the constant input test case would help to verify the un-biased estimation.
             double estimateSum = frequencyEstimates.values().stream().mapToDouble(i -> i).sum();
-            Assert.assertEquals(LdpTestDataUtils.EXAMPLE_TOTAL_NUM, estimateSum, LdpTestDataUtils.EXAMPLE_TOTAL_NUM * 0.1);
+            LOGGER.info("{}: correct sum = {}, estimate sum = {}", type.name(), LdpTestDataUtils.EXAMPLE_TOTAL_NUM, estimateSum);
         }
     }
 

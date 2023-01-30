@@ -8,8 +8,8 @@ import org.apache.commons.lang3.builder.EqualsBuilder;
 import org.apache.commons.lang3.builder.HashCodeBuilder;
 
 import java.math.BigInteger;
-import java.security.SecureRandom;
 import java.util.Arrays;
+import java.util.Random;
 
 /**
  * The bit vector represented by bytes.
@@ -65,12 +65,12 @@ public class BytesBitVector implements BitVector {
         return bitVector;
     }
 
-    static BitVector createRandom(int bitNum, SecureRandom secureRandom) {
+    static BitVector createRandom(int bitNum, Random random) {
         assert bitNum > 0 : "the number of bits must be greater than 0: " + bitNum;
         int byteLength = CommonUtils.getByteLength(bitNum);
         // create random bytes
         byte[] bytes = new byte[byteLength];
-        secureRandom.nextBytes(bytes);
+        random.nextBytes(bytes);
         BytesUtils.reduceByteArray(bytes, bitNum);
         // create instance
         BytesBitVector bitVector = new BytesBitVector();

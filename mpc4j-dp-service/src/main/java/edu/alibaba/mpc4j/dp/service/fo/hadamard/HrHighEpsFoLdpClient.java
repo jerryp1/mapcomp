@@ -30,7 +30,7 @@ import java.util.Random;
  * @author Weiran Liu
  * @date 2023/1/19
  */
-public class HighEpsHrFoLdpClient extends AbstractFoLdpClient {
+public class HrHighEpsFoLdpClient extends AbstractFoLdpClient {
     /**
      * the number of blocks, we create 2^t blocks.
      */
@@ -52,7 +52,7 @@ public class HighEpsHrFoLdpClient extends AbstractFoLdpClient {
      */
     private final double expEpsilon;
 
-    public HighEpsHrFoLdpClient(FoLdpConfig foLdpConfig) {
+    public HrHighEpsFoLdpClient(FoLdpConfig foLdpConfig) {
         super(foLdpConfig);
         expEpsilon = Math.exp(epsilon);
         // e^ε > 1, d > 1

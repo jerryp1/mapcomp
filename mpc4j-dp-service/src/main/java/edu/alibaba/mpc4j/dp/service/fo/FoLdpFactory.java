@@ -7,10 +7,7 @@ import edu.alibaba.mpc4j.dp.service.fo.de.DeIndexFoLdpClient;
 import edu.alibaba.mpc4j.dp.service.fo.de.DeIndexFoLdpServer;
 import edu.alibaba.mpc4j.dp.service.fo.de.DeStringFoLdpClient;
 import edu.alibaba.mpc4j.dp.service.fo.de.DeStringFoLdpServer;
-import edu.alibaba.mpc4j.dp.service.fo.hadamard.HighEpsHrFoLdpClient;
-import edu.alibaba.mpc4j.dp.service.fo.hadamard.HighEpsHrFoLdpServer;
-import edu.alibaba.mpc4j.dp.service.fo.hadamard.LowEpsHrFoLdpClient;
-import edu.alibaba.mpc4j.dp.service.fo.hadamard.LowEpsHrFoLdpServer;
+import edu.alibaba.mpc4j.dp.service.fo.hadamard.*;
 import edu.alibaba.mpc4j.dp.service.fo.lh.BlhFoLdpClient;
 import edu.alibaba.mpc4j.dp.service.fo.lh.BlhFoLdpServer;
 import edu.alibaba.mpc4j.dp.service.fo.rappor.RapporFoLdpClient;
@@ -73,12 +70,21 @@ public class FoLdpFactory {
          * Hadamard Response with high privacy parameter ε
          */
         HR_HIGH_EPSILON,
+        /**
+         * Hadamard Mechanism with low privacy parameter ε
+         */
+        HM_LOW_EPSILON,
+        /**
+         * Hadamard Mechanism with high privacy parameter ε
+         */
+        HM_HIGH_EPSILON,
     }
 
 
     /**
      * Returns whether the mechanism obtain accurate estimation for extremely large ε.
      *
+     * @param type the type.
      * @return whether the mechanism obtain accurate estimation for extremely large ε.
      */
     public static boolean isConverge(FoLdpType type) {
@@ -92,6 +98,8 @@ public class FoLdpFactory {
             case RAPPOR:
             case BLH:
             case HR_LOW_EPSILON:
+            case HM_LOW_EPSILON:
+            case HM_HIGH_EPSILON:
                 return false;
             default:
                 throw new IllegalArgumentException("Invalid " + FoLdpFactory.FoLdpType.class.getSimpleName() + ": " + type.name());
@@ -115,6 +123,8 @@ public class FoLdpFactory {
             case BLH:
             case HR_LOW_EPSILON:
             case HR_HIGH_EPSILON:
+            case HM_LOW_EPSILON:
+            case HM_HIGH_EPSILON:
                 return new BasicFoLdpConfig.Builder(type, domainSet, epsilon).build();
             case RAPPOR:
                 return new RapporFoLdpConfig.Builder(type, domainSet, epsilon).build();
@@ -145,9 +155,13 @@ public class FoLdpFactory {
             case BLH:
                 return new BlhFoLdpServer(config);
             case HR_LOW_EPSILON:
-                return new LowEpsHrFoLdpServer(config);
+                return new HrLowEpsFoLdpServer(config);
             case HR_HIGH_EPSILON:
-                return new HighEpsHrFoLdpServer(config);
+                return new HrHighEpsFoLdpServer(config);
+            case HM_LOW_EPSILON:
+                return new HmLowEpsFoLdpServer(config);
+            case HM_HIGH_EPSILON:
+                return new HmHighEpsFoLdpServer(config);
             default:
                 throw new IllegalArgumentException("Invalid " + FoLdpType.class.getSimpleName() + ": " + type.name());
         }
@@ -175,9 +189,13 @@ public class FoLdpFactory {
             case BLH:
                 return new BlhFoLdpClient(config);
             case HR_LOW_EPSILON:
-                return new LowEpsHrFoLdpClient(config);
+                return new HrLowEpsFoLdpClient(config);
             case HR_HIGH_EPSILON:
-                return new HighEpsHrFoLdpClient(config);
+                return new HrHighEpsFoLdpClient(config);
+            case HM_LOW_EPSILON:
+                return new HmLowEpsFoLdpClient(config);
+            case HM_HIGH_EPSILON:
+                return new HmHighEpsFoLdpClient(config);
             default:
                 throw new IllegalArgumentException("Invalid " + FoLdpType.class.getSimpleName() + ": " + type.name());
         }

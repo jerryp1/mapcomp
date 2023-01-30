@@ -7,7 +7,7 @@ import org.apache.commons.lang3.builder.EqualsBuilder;
 import org.apache.commons.lang3.builder.HashCodeBuilder;
 
 import java.math.BigInteger;
-import java.security.SecureRandom;
+import java.util.Random;
 
 /**
  * The bit vector represented by BigInteger.
@@ -57,10 +57,10 @@ public class BigIntegerBitVector implements BitVector {
         return bitVector;
     }
 
-    static BitVector createRandom(int bitNum, SecureRandom secureRandom) {
+    static BitVector createRandom(int bitNum, Random random) {
         assert bitNum > 0 : "the number of bits must be greater than 0: " + bitNum;
         // create random BigInteger
-        BigInteger bigInteger = new BigInteger(bitNum, secureRandom);
+        BigInteger bigInteger = new BigInteger(bitNum, random);
         int byteNum = CommonUtils.getByteLength(bitNum);
         // create instance
         BigIntegerBitVector bitVector = new BigIntegerBitVector();

@@ -1,7 +1,7 @@
 package edu.alibaba.mpc4j.common.tool.bitvector;
 
 import java.math.BigInteger;
-import java.security.SecureRandom;
+import java.util.Random;
 
 /**
  * BitVector Factory. The efficiency test shows that one may choose BIGINTEGER_BIT_VECTOR, since it is easy for merge,
@@ -89,28 +89,28 @@ public class BitVectorFactory {
     /**
      * Create a random bit vector.
      *
-     * @param bitNum       the number of bits.
-     * @param secureRandom the random state.
+     * @param bitNum the number of bits.
+     * @param random the random state.
      * @return the created bit vector.
      */
-    public static BitVector createRandom(int bitNum, SecureRandom secureRandom) {
-        return createRandom(BitVectorType.BIGINTEGER_BIT_VECTOR, bitNum, secureRandom);
+    public static BitVector createRandom(int bitNum, Random random) {
+        return createRandom(BitVectorType.BIGINTEGER_BIT_VECTOR, bitNum, random);
     }
 
     /**
      * Create a random bit vector.
      *
-     * @param type         the BitVector type.
-     * @param bitNum       the number of bits.
-     * @param secureRandom the random state.
+     * @param type   the BitVector type.
+     * @param bitNum the number of bits.
+     * @param random the random state.
      * @return the created bit vector.
      */
-    public static BitVector createRandom(BitVectorType type, int bitNum, SecureRandom secureRandom) {
+    public static BitVector createRandom(BitVectorType type, int bitNum, Random random) {
         switch (type) {
             case BYTES_BIT_VECTOR:
-                return BytesBitVector.createRandom(bitNum, secureRandom);
+                return BytesBitVector.createRandom(bitNum, random);
             case BIGINTEGER_BIT_VECTOR:
-                return BigIntegerBitVector.createRandom(bitNum, secureRandom);
+                return BigIntegerBitVector.createRandom(bitNum, random);
             default:
                 throw new IllegalArgumentException("Invalid " + BitVectorType.class.getSimpleName() + ": " + type);
         }

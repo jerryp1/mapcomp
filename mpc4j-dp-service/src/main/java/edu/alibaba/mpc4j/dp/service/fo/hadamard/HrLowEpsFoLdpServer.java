@@ -21,7 +21,7 @@ import java.util.stream.IntStream;
  * @author Weiran Liu
  * @date 2023/1/19
  */
-public class LowEpsHrFoLdpServer extends AbstractFoLdpServer {
+public class HrLowEpsFoLdpServer extends AbstractFoLdpServer {
     /**
      * the Hadamard matrix size, the smallest exponent of 2 that is bigger than d, which also equals to the output size.
      */
@@ -35,7 +35,7 @@ public class LowEpsHrFoLdpServer extends AbstractFoLdpServer {
      */
     private final int[] budgets;
 
-    public LowEpsHrFoLdpServer(FoLdpConfig foLdpConfig) {
+    public HrLowEpsFoLdpServer(FoLdpConfig foLdpConfig) {
         super(foLdpConfig);
         // the smallest exponent of 2 which is bigger than d
         int k = LongUtils.ceilLog2(d + 1);

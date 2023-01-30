@@ -32,7 +32,7 @@ import java.util.stream.IntStream;
  * @author Weiran Liu
  * @date 2023/1/19
  */
-public class HighEpsHrFoLdpServer extends AbstractFoLdpServer {
+public class HrHighEpsFoLdpServer extends AbstractFoLdpServer {
     /**
      * the number of blocks, we create 2^t blocks.
      */
@@ -54,7 +54,7 @@ public class HighEpsHrFoLdpServer extends AbstractFoLdpServer {
      */
     private final int[] budgets;
 
-    public HighEpsHrFoLdpServer(FoLdpConfig foLdpConfig) {
+    public HrHighEpsFoLdpServer(FoLdpConfig foLdpConfig) {
         super(foLdpConfig);
         expEpsilon = Math.exp(epsilon);
         // e^ε > 1, d > 1

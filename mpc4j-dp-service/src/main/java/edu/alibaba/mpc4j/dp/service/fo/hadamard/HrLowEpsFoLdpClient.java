@@ -19,7 +19,7 @@ import java.util.Random;
  * @author Weiran Liu
  * @date 2023/1/19
  */
-public class LowEpsHrFoLdpClient extends AbstractFoLdpClient {
+public class HrLowEpsFoLdpClient extends AbstractFoLdpClient {
     /**
      * the Hadamard matrix dataword bit length, which also equals to the output bit length.
      */
@@ -33,7 +33,7 @@ public class LowEpsHrFoLdpClient extends AbstractFoLdpClient {
      */
     private final double p;
 
-    public LowEpsHrFoLdpClient(FoLdpConfig foLdpConfig) {
+    public HrLowEpsFoLdpClient(FoLdpConfig foLdpConfig) {
         super(foLdpConfig);
         // the smallest exponent of 2 which is bigger than d
         k = LongUtils.ceilLog2(d + 1);
