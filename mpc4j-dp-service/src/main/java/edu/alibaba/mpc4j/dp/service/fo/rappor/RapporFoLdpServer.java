@@ -8,6 +8,7 @@ import edu.alibaba.mpc4j.common.tool.hash.IntHashFactory;
 import edu.alibaba.mpc4j.common.tool.utils.CommonUtils;
 import edu.alibaba.mpc4j.common.tool.utils.IntUtils;
 import edu.alibaba.mpc4j.dp.service.fo.AbstractFoLdpServer;
+import edu.alibaba.mpc4j.dp.service.fo.FoLdpFactory;
 import edu.alibaba.mpc4j.dp.service.fo.config.FoLdpConfig;
 import edu.alibaba.mpc4j.dp.service.fo.config.RapporFoLdpConfig;
 import org.apache.commons.math3.util.Precision;
@@ -201,7 +202,13 @@ public class RapporFoLdpServer extends AbstractFoLdpServer {
         for (int itemIndex = 0; itemIndex < d; itemIndex++) {
             for (int cohortIndex = 0; cohortIndex < cohortNum; cohortIndex++) {
                 String item = domain.getIndexItem(itemIndex);
-                int[] hashPositions = RapporFoLdpUtils.hash(intHash, item, m, hashSeeds[cohortIndex]);
+                int hashNum = hashSeeds[cohortIndex].length;
+                MathPreconditions.checkGreaterOrEqual("m", m, hashNum);
+                byte[] itemBytes = item.getBytes(FoLdpFactory.DEFAULT_CHARSET);
+                int[] hashPositions = new int[hashNum];
+                for (int hashIndex = 0; hashIndex < hashNum; hashIndex++) {
+                    hashPositions[hashIndex] = Math.abs(intHash.hash(itemBytes, hashSeeds[cohortIndex][hashIndex])) % m;
+                }
                 for (int hashPosition : hashPositions) {
                     x[cohortIndex * m + hashPosition][itemIndex] = 1;
                 }

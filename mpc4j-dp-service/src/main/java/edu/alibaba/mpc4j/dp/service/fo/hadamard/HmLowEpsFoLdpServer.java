@@ -41,8 +41,8 @@ public class HmLowEpsFoLdpServer extends AbstractFoLdpServer {
      */
     private final int[] budgets;
 
-    public HmLowEpsFoLdpServer(FoLdpConfig foLdpConfig) {
-        super(foLdpConfig);
+    public HmLowEpsFoLdpServer(FoLdpConfig config) {
+        super(config);
         double expEpsilon = Math.exp(epsilon);
         p = expEpsilon / (expEpsilon + 1);
         // the smallest exponent of 2 which is bigger than or equal to d

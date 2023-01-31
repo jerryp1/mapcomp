@@ -1,5 +1,6 @@
 package edu.alibaba.mpc4j.dp.service.fo;
 
+import edu.alibaba.mpc4j.dp.service.fo.config.AppleCmsFoLdpConfig;
 import edu.alibaba.mpc4j.dp.service.fo.config.BasicFoLdpConfig;
 import edu.alibaba.mpc4j.dp.service.fo.config.FoLdpConfig;
 import edu.alibaba.mpc4j.dp.service.fo.config.RapporFoLdpConfig;
@@ -78,6 +79,10 @@ public class FoLdpFactory {
          * Hadamard Mechanism with high privacy parameter ε
          */
         HM_HIGH_EPSILON,
+        /**
+         * Apple's Count Mean Sketch (CMS)
+         */
+        APPLE_CMS,
     }
 
 
@@ -128,6 +133,8 @@ public class FoLdpFactory {
                 return new BasicFoLdpConfig.Builder(type, domainSet, epsilon).build();
             case RAPPOR:
                 return new RapporFoLdpConfig.Builder(type, domainSet, epsilon).build();
+            case APPLE_CMS:
+                return new AppleCmsFoLdpConfig.Builder(type, domainSet, epsilon).build();
             default:
                 throw new IllegalArgumentException("Invalid " + FoLdpType.class.getSimpleName() + ": " + type.name());
         }

@@ -31,11 +31,11 @@ public abstract class AbstractFoLdpServer implements FoLdpServer {
      */
     protected int num;
 
-    public AbstractFoLdpServer(FoLdpConfig foLdpConfig) {
-        type = foLdpConfig.getType();
-        domain = foLdpConfig.getDomain();
+    public AbstractFoLdpServer(FoLdpConfig config) {
+        type = config.getType();
+        domain = config.getDomain();
         d = domain.getD();
-        epsilon = foLdpConfig.getEpsilon();
+        epsilon = config.getEpsilon();
         num = 0;
     }
 

@@ -35,8 +35,8 @@ public class HrLowEpsFoLdpServer extends AbstractFoLdpServer {
      */
     private final int[] budgets;
 
-    public HrLowEpsFoLdpServer(FoLdpConfig foLdpConfig) {
-        super(foLdpConfig);
+    public HrLowEpsFoLdpServer(FoLdpConfig config) {
+        super(config);
         // the smallest exponent of 2 which is bigger than d
         int k = LongUtils.ceilLog2(d + 1);
         n = 1 << k;

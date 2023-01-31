@@ -1,17 +1,13 @@
 package edu.alibaba.mpc4j.dp.service.fo.config;
 
 import edu.alibaba.mpc4j.common.tool.MathPreconditions;
-import edu.alibaba.mpc4j.common.tool.hash.IntHash;
 import edu.alibaba.mpc4j.common.tool.hash.IntHashFactory;
-import edu.alibaba.mpc4j.common.tool.utils.IntUtils;
+import edu.alibaba.mpc4j.common.tool.hash.IntHashFactory.IntHashType;
 import edu.alibaba.mpc4j.dp.service.fo.FoLdpFactory;
 import edu.alibaba.mpc4j.dp.service.fo.rappor.RapporFoLdpUtils;
 
-import java.nio.ByteBuffer;
-import java.util.Arrays;
 import java.util.Random;
 import java.util.Set;
-import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
 /**
@@ -36,7 +32,7 @@ public class RapporFoLdpConfig extends BasicFoLdpConfig {
     /**
      * the IntHash type
      */
-    private final IntHashFactory.IntHashType intHashType;
+    private final IntHashType intHashType;
     /**
      * the size of the bloom filter
      */
@@ -47,27 +43,10 @@ public class RapporFoLdpConfig extends BasicFoLdpConfig {
         cohortNum = builder.cohortNum;
         hashNum = builder.hashNum;
         m = RapporFoLdpUtils.getM(d, hashNum);
-        int m = RapporFoLdpUtils.getM(d, hashNum);
         intHashType = builder.intHashType;
-        IntHash intHash = IntHashFactory.createInstance(builder.intHashType);
         hashSeeds = IntStream.range(0, cohortNum)
-            .mapToObj(cohortIndex -> {
-                while (true) {
-                    // we need to ensure that every hash seed group would have distinct hash values for all items.
-                    int[] cohortHashSeeds = IntStream.range(0, hashNum).map(hashIndex -> builder.random.nextInt()).toArray();
-                    Set<ByteBuffer> hashValueSet = domain.getDomainSet().stream()
-                        .map(item -> {
-                            int[] hashValues = RapporFoLdpUtils.hash(intHash, item, m, cohortHashSeeds);
-                            Arrays.sort(hashValues);
-                            return ByteBuffer.wrap(IntUtils.intArrayToByteArray(hashValues));
-                        })
-                        .collect(Collectors.toSet());
-                    if (hashValueSet.size() == d) {
-                        // all hash values are distinct
-                        return cohortHashSeeds;
-                    }
-                }
-            })
+            // here we do not need to ensure that all hash values for one item are distinct
+            .mapToObj(cohortIndex -> IntStream.range(0, hashNum).map(hashIndex -> builder.random.nextInt()).toArray())
             .toArray(int[][]::new);
     }
 
@@ -133,7 +112,7 @@ public class RapporFoLdpConfig extends BasicFoLdpConfig {
         /**
          * IntHash type
          */
-        private IntHashFactory.IntHashType intHashType;
+        private IntHashType intHashType;
 
         public Builder(FoLdpFactory.FoLdpType type, Set<String> domainSet, double epsilon) {
             super(type, domainSet, epsilon);
@@ -181,7 +160,7 @@ public class RapporFoLdpConfig extends BasicFoLdpConfig {
          * @param intHashType the IntHash type.
          * @return the builder.
          */
-        public Builder setIntHashType(IntHashFactory.IntHashType intHashType) {
+        public Builder setIntHashType(IntHashType intHashType) {
             this.intHashType = intHashType;
             return this;
         }

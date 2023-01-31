@@ -1,5 +1,6 @@
 package edu.alibaba.mpc4j.dp.service.fo.rappor;
 
+import edu.alibaba.mpc4j.common.tool.MathPreconditions;
 import edu.alibaba.mpc4j.common.tool.bitvector.BitVector;
 import edu.alibaba.mpc4j.common.tool.bitvector.BitVectorFactory;
 import edu.alibaba.mpc4j.common.tool.hash.IntHash;
@@ -7,6 +8,7 @@ import edu.alibaba.mpc4j.common.tool.hash.IntHashFactory;
 import edu.alibaba.mpc4j.common.tool.utils.CommonUtils;
 import edu.alibaba.mpc4j.common.tool.utils.IntUtils;
 import edu.alibaba.mpc4j.dp.service.fo.AbstractFoLdpClient;
+import edu.alibaba.mpc4j.dp.service.fo.FoLdpFactory;
 import edu.alibaba.mpc4j.dp.service.fo.config.FoLdpConfig;
 import edu.alibaba.mpc4j.dp.service.fo.config.RapporFoLdpConfig;
 
@@ -69,7 +71,13 @@ public class RapporFoLdpClient extends AbstractFoLdpClient {
         // encode
         int cohortIndex = random.nextInt(cohortNum);
         BitVector bloomFilter = BitVectorFactory.createZeros(BitVectorFactory.BitVectorType.BYTES_BIT_VECTOR, m);
-        int[] hashPositions = RapporFoLdpUtils.hash(intHash, item, m, hashSeeds[cohortIndex]);
+        int hashNum = hashSeeds[cohortIndex].length;
+        MathPreconditions.checkGreaterOrEqual("m", m, hashNum);
+        byte[] itemBytes = item.getBytes(FoLdpFactory.DEFAULT_CHARSET);
+        int[] hashPositions = new int[hashNum];
+        for (int hashIndex = 0; hashIndex < hashNum; hashIndex++) {
+            hashPositions[hashIndex] = Math.abs(intHash.hash(itemBytes, hashSeeds[cohortIndex][hashIndex])) % m;
+        }
         for (int hashPosition : hashPositions) {
             bloomFilter.set(hashPosition, true);
         }

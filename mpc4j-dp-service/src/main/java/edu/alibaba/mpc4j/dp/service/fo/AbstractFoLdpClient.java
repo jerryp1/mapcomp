@@ -28,11 +28,11 @@ public abstract class AbstractFoLdpClient implements FoLdpClient {
      */
     protected final double epsilon;
 
-    public AbstractFoLdpClient(FoLdpConfig foLdpConfig) {
-        type = foLdpConfig.getType();
-        domain = foLdpConfig.getDomain();
+    public AbstractFoLdpClient(FoLdpConfig config) {
+        type = config.getType();
+        domain = config.getDomain();
         d = domain.getD();
-        epsilon = foLdpConfig.getEpsilon();
+        epsilon = config.getEpsilon();
     }
 
     protected void checkItemInDomain(String item) {

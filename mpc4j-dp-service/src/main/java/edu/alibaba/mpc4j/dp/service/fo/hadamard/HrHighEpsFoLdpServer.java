@@ -54,8 +54,8 @@ public class HrHighEpsFoLdpServer extends AbstractFoLdpServer {
      */
     private final int[] budgets;
 
-    public HrHighEpsFoLdpServer(FoLdpConfig foLdpConfig) {
-        super(foLdpConfig);
+    public HrHighEpsFoLdpServer(FoLdpConfig config) {
+        super(config);
         expEpsilon = Math.exp(epsilon);
         // e^ε > 1, d > 1
         int blockNumBitLength = (int)Math.floor(DoubleUtils.log2(Math.min(2 * d, Math.max(expEpsilon, 2))));

@@ -34,8 +34,8 @@ public class HmLowEpsFoLdpClient extends AbstractFoLdpClient {
      */
     private final double p;
 
-    public HmLowEpsFoLdpClient(FoLdpConfig foLdpConfig) {
-        super(foLdpConfig);
+    public HmLowEpsFoLdpClient(FoLdpConfig config) {
+        super(config);
         // the smallest exponent of 2 which is bigger than d
         int k = LongUtils.ceilLog2(d + 1);
         n = 1 << k;

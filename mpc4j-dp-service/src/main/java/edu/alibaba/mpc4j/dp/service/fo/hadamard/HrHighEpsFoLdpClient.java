@@ -52,8 +52,8 @@ public class HrHighEpsFoLdpClient extends AbstractFoLdpClient {
      */
     private final double expEpsilon;
 
-    public HrHighEpsFoLdpClient(FoLdpConfig foLdpConfig) {
-        super(foLdpConfig);
+    public HrHighEpsFoLdpClient(FoLdpConfig config) {
+        super(config);
         expEpsilon = Math.exp(epsilon);
         // e^ε > 1, d > 1
         int blockNumBitLength = (int)Math.floor(DoubleUtils.log2(Math.min(2 * d, Math.max(expEpsilon, 2))));
