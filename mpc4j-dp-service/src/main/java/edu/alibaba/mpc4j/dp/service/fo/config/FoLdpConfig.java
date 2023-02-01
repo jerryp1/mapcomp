@@ -20,6 +20,15 @@ public interface FoLdpConfig {
     FoLdpFactory.FoLdpType getType();
 
     /**
+     * Gets the name.
+     *
+     * @return the name.
+     */
+    default String getName() {
+        return getType().name();
+    }
+
+    /**
      * Gets the domain.
      *
      * @return the domain.

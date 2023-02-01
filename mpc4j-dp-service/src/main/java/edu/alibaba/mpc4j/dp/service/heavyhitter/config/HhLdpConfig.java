@@ -19,6 +19,15 @@ public interface HhLdpConfig {
     HhLdpFactory.HhLdpType getType();
 
     /**
+     * Gets the name.
+     *
+     * @return the name.
+     */
+    default String getName() {
+        return getType().name();
+    }
+
+    /**
      * Gets the domain set.
      *
      * @return the domain set.

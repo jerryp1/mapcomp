@@ -93,7 +93,7 @@ public class HrHighEpsFoLdpServer extends AbstractFoLdpServer {
                     // map to C(x)
                     int cx = counts[blockIndex * blockSize + x];
                     // p(x)
-                    return cx * (expEpsilon + blockNum - 1) / (expEpsilon - 1);
+                    return cx * (expEpsilon + 2 * blockNum - 2) / (expEpsilon - 1);
                 }
             ));
     }

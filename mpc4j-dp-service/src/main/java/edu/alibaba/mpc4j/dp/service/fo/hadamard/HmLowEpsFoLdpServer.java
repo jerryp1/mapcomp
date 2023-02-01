@@ -1,6 +1,11 @@
 package edu.alibaba.mpc4j.dp.service.fo.hadamard;
 
+import edu.alibaba.mpc4j.common.tool.bitvector.BitVector;
+import edu.alibaba.mpc4j.common.tool.bitvector.BitVectorFactory;
+import edu.alibaba.mpc4j.common.tool.bitvector.BitVectorFactory.BitVectorType;
 import edu.alibaba.mpc4j.common.tool.coder.linear.HadamardCoder;
+import edu.alibaba.mpc4j.common.tool.utils.CommonUtils;
+import edu.alibaba.mpc4j.common.tool.utils.DoubleUtils;
 import edu.alibaba.mpc4j.common.tool.utils.IntUtils;
 import edu.alibaba.mpc4j.common.tool.utils.LongUtils;
 import edu.alibaba.mpc4j.dp.service.fo.AbstractFoLdpServer;
@@ -12,17 +17,18 @@ import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
 /**
- * Hadamard Mechanism (HM) Frequency Oracle LDP server. This is the original Hadamard Mechanism. See paper:
+ * Hadamard Mechanism (HM) Frequency Oracle LDP server. This is the optimized Hadamard Mechanism. See paper:
  * <p>
  * Cormode, Graham, Samuel Maddock, and Carsten Maple. "Frequency estimation under local differential privacy.
  * VLDB 2021, no. 11, pp. 2046-2058.
  * </p>
- * The original Hadamard Mechanism samples t = 1 Boolean value as the report. The server description is as follows:
+ * The paper shown above introduce an optimization for Hadamard Mechanism.
  * <p>
- * To build an unbiased estimator for frequencies, we take the contribution of the inverse of the unbiased estimator of
- * the reported θ'_j = Σ (θ_j^(i)). The unbiased estimator for θ_j is θ'_j / (2p - 1). For a given x, to estimate f(x),
- * we sum the contribution to f(x) from all reports.
+ * To improve the bound when e^ε is large we can sample t Hadamard coefficients to produce a hash function with g = 2^t
+ * possible outcomes. This preserves the result with probability p^* = e^ε / (e^ε + 2^t - 1), and otherwise perturbs it
+ * uniformly.
  * </p>
+ * The experiments show that the optimized Hadamard Mechanism is better when ε is small.
  *
  * @author Weiran Liu
  * @date 2023/1/30
@@ -33,7 +39,11 @@ public class HmLowEpsFoLdpServer extends AbstractFoLdpServer {
      */
     private final int n;
     /**
-     * p = e^ε / (e^ε + 1)
+     * 2^t - 1 = e^ε, so that t = log_2(e^ε + 1).
+     */
+    private final int t;
+    /**
+     * p = e^ε / (e^ε + 2^t - 1)
      */
     private final double p;
     /**
@@ -43,11 +53,15 @@ public class HmLowEpsFoLdpServer extends AbstractFoLdpServer {
 
     public HmLowEpsFoLdpServer(FoLdpConfig config) {
         super(config);
-        double expEpsilon = Math.exp(epsilon);
-        p = expEpsilon / (expEpsilon + 1);
-        // the smallest exponent of 2 which is bigger than or equal to d
+        // the smallest exponent of 2 which is bigger than d
         int k = LongUtils.ceilLog2(d + 1);
         n = 1 << k;
+        double expEpsilon = Math.exp(epsilon);
+        // the optimal t = log_2(e^ε + 1)
+        t = (int)Math.ceil(DoubleUtils.log2(expEpsilon + 1));
+        assert t >= 1 : "t must be greater than or equal to 1: " + t;
+        // p = e^ε / (e^ε + 2^t - 1)
+        p = expEpsilon / (expEpsilon + (1 << t) - 1);
         budgets = new int[n];
     }
 
@@ -55,10 +69,19 @@ public class HmLowEpsFoLdpServer extends AbstractFoLdpServer {
     public void insert(byte[] itemBytes) {
         ByteBuffer byteBuffer = ByteBuffer.wrap(itemBytes);
         byte[] jBytes = new byte[IntUtils.boundedNonNegIntByteLength(n)];
-        byteBuffer.get(jBytes);
-        int j = IntUtils.byteArrayToBoundedNonNegInt(jBytes, n);
-        byte theta = byteBuffer.get();
-        budgets[j] += theta;
+        int[] jArray = new int[t];
+        for (int i = 0; i < t; i++) {
+            byteBuffer.get(jBytes);
+            jArray[i] = IntUtils.byteArrayToBoundedNonNegInt(jBytes, n);
+        }
+        byte[] coefficientBytes = new byte[CommonUtils.getByteLength(t)];
+        byteBuffer.get(coefficientBytes);
+        BitVector coefficients = BitVectorFactory.create(BitVectorType.BYTES_BIT_VECTOR, t, coefficientBytes);
+        for (int i = 0; i < t; i++) {
+            int hadamardCoefficient = coefficients.get(i) ? 1 : -1;
+            budgets[jArray[i]] += hadamardCoefficient;
+        }
+
     }
 
     @Override
@@ -73,8 +96,8 @@ public class HmLowEpsFoLdpServer extends AbstractFoLdpServer {
                     int x = itemIndex + 1;
                     // map to C(x)
                     int cx = cs[x];
-                    // p(x) = C(x) / (2p - 1)
-                    return cx / (2 * p - 1);
+                    // p(x) = C(x) / (2p - 1) / t
+                    return cx / (2 * p - 1) / t;
                 }
             ));
     }

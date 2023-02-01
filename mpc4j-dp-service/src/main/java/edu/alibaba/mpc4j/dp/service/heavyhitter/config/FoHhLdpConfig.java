@@ -25,6 +25,11 @@ public class FoHhLdpConfig extends BasicHhLdpConfig {
     }
 
     @Override
+    public String getName() {
+        return super.getName() + " (" + foLdpConfig.getName() + ")";
+    }
+
+    @Override
     public boolean isConverge() {
         return FoLdpFactory.isConverge(foLdpConfig.getType());
     }
@@ -42,7 +47,7 @@ public class FoHhLdpConfig extends BasicHhLdpConfig {
         public Builder(HhLdpFactory.HhLdpType type, Set<String> domainSet, int k, double windowEpsilon) {
             super(type, domainSet, k, windowEpsilon);
             foLdpConfig = new BasicFoLdpConfig
-                .Builder(FoLdpFactory.FoLdpType.DE_INDEX_ENCODING, domainSet, windowEpsilon)
+                .Builder(FoLdpFactory.FoLdpType.DE_INDEX, domainSet, windowEpsilon)
                 .build();
         }
 

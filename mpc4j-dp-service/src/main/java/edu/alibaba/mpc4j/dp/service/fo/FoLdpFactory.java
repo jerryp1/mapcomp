@@ -42,11 +42,11 @@ public class FoLdpFactory {
         /**
          * direct encoding with items encoded via string.
          */
-        DE_STRING_ENCODING,
+        DE_STRING,
         /**
          * direct encoding with items encoded via index.
          */
-        DE_INDEX_ENCODING,
+        DE_INDEX,
         /**
          * Symmetric Unary Encoding, also known as basic RAPPOR.
          */
@@ -64,21 +64,21 @@ public class FoLdpFactory {
          */
         BLH,
         /**
-         * Hadamard Response with low privacy parameter ε
+         * Hadamard Response
          */
-        HR_LOW_EPSILON,
+        HR,
         /**
          * Hadamard Response with high privacy parameter ε
          */
         HR_HIGH_EPSILON,
         /**
+         * Hadamard Mechanism
+         */
+        HM,
+        /**
          * Hadamard Mechanism with low privacy parameter ε
          */
         HM_LOW_EPSILON,
-        /**
-         * Hadamard Mechanism with high privacy parameter ε
-         */
-        HM_HIGH_EPSILON,
         /**
          * Apple's Count Mean Sketch (CMS)
          */
@@ -94,17 +94,17 @@ public class FoLdpFactory {
      */
     public static boolean isConverge(FoLdpType type) {
         switch (type) {
-            case DE_INDEX_ENCODING:
-            case DE_STRING_ENCODING:
+            case DE_INDEX:
+            case DE_STRING:
             case SUE:
             case HR_HIGH_EPSILON:
                 return true;
             case OUE:
             case RAPPOR:
             case BLH:
-            case HR_LOW_EPSILON:
+            case HR:
+            case HM:
             case HM_LOW_EPSILON:
-            case HM_HIGH_EPSILON:
                 return false;
             default:
                 throw new IllegalArgumentException("Invalid " + FoLdpFactory.FoLdpType.class.getSimpleName() + ": " + type.name());
@@ -121,15 +121,15 @@ public class FoLdpFactory {
      */
     public static FoLdpConfig createDefaultConfig(FoLdpType type, Set<String> domainSet, double epsilon) {
         switch (type) {
-            case DE_STRING_ENCODING:
-            case DE_INDEX_ENCODING:
+            case DE_STRING:
+            case DE_INDEX:
             case SUE:
             case OUE:
             case BLH:
-            case HR_LOW_EPSILON:
+            case HR:
             case HR_HIGH_EPSILON:
+            case HM:
             case HM_LOW_EPSILON:
-            case HM_HIGH_EPSILON:
                 return new BasicFoLdpConfig.Builder(type, domainSet, epsilon).build();
             case RAPPOR:
                 return new RapporFoLdpConfig.Builder(type, domainSet, epsilon).build();
@@ -149,9 +149,9 @@ public class FoLdpFactory {
     public static FoLdpServer createServer(FoLdpConfig config) {
         FoLdpType type = config.getType();
         switch (type) {
-            case DE_STRING_ENCODING:
+            case DE_STRING:
                 return new DeStringFoLdpServer(config);
-            case DE_INDEX_ENCODING:
+            case DE_INDEX:
                 return new DeIndexFoLdpServer(config);
             case SUE:
                 return new SueFoLdpServer(config);
@@ -161,14 +161,14 @@ public class FoLdpFactory {
                 return new RapporFoLdpServer(config);
             case BLH:
                 return new BlhFoLdpServer(config);
-            case HR_LOW_EPSILON:
-                return new HrLowEpsFoLdpServer(config);
+            case HR:
+                return new HrFoLdpServer(config);
             case HR_HIGH_EPSILON:
                 return new HrHighEpsFoLdpServer(config);
+            case HM:
+                return new HmFoLdpServer(config);
             case HM_LOW_EPSILON:
                 return new HmLowEpsFoLdpServer(config);
-            case HM_HIGH_EPSILON:
-                return new HmHighEpsFoLdpServer(config);
             default:
                 throw new IllegalArgumentException("Invalid " + FoLdpType.class.getSimpleName() + ": " + type.name());
         }
@@ -183,9 +183,9 @@ public class FoLdpFactory {
     public static FoLdpClient createClient(FoLdpConfig config) {
         FoLdpType type = config.getType();
         switch (type) {
-            case DE_STRING_ENCODING:
+            case DE_STRING:
                 return new DeStringFoLdpClient(config);
-            case DE_INDEX_ENCODING:
+            case DE_INDEX:
                 return new DeIndexFoLdpClient(config);
             case SUE:
                 return new SueFoLdpClient(config);
@@ -195,14 +195,14 @@ public class FoLdpFactory {
                 return new RapporFoLdpClient(config);
             case BLH:
                 return new BlhFoLdpClient(config);
-            case HR_LOW_EPSILON:
-                return new HrLowEpsFoLdpClient(config);
+            case HR:
+                return new HrFoLdpClient(config);
             case HR_HIGH_EPSILON:
                 return new HrHighEpsFoLdpClient(config);
+            case HM:
+                return new HmFoLdpClient(config);
             case HM_LOW_EPSILON:
                 return new HmLowEpsFoLdpClient(config);
-            case HM_HIGH_EPSILON:
-                return new HmHighEpsFoLdpClient(config);
             default:
                 throw new IllegalArgumentException("Invalid " + FoLdpType.class.getSimpleName() + ": " + type.name());
         }

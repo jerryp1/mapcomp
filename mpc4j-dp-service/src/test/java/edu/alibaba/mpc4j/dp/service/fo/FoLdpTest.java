@@ -38,6 +38,10 @@ public class FoLdpTest {
      */
     static final double DEFAULT_EPSILON = 16;
     /**
+     * the top-k ordered frequency estimate num
+     */
+    private static final int ORDERED_FREQUENCY_ESTIMATE_TOP_K = 10;
+    /**
      * constant input
      */
     private static final String CONSTANT_INPUT = String.valueOf(0);
@@ -63,13 +67,13 @@ public class FoLdpTest {
         Collection<Object[]> configurations = new ArrayList<>();
 
         // Hadamard Mechanism with low ε
-        configurations.add(new Object[]{FoLdpType.HM_HIGH_EPSILON.name(), FoLdpType.HM_HIGH_EPSILON,});
-        // Hadamard Mechanism with low ε
         configurations.add(new Object[]{FoLdpType.HM_LOW_EPSILON.name(), FoLdpType.HM_LOW_EPSILON,});
+        // Hadamard Mechanism
+        configurations.add(new Object[]{FoLdpType.HM.name(), FoLdpType.HM,});
         // Hadamard Response with high ε
         configurations.add(new Object[]{FoLdpType.HR_HIGH_EPSILON.name(), FoLdpType.HR_HIGH_EPSILON,});
-        // Hadamard Response with low ε
-        configurations.add(new Object[]{FoLdpType.HR_LOW_EPSILON.name(), FoLdpType.HR_LOW_EPSILON,});
+        // Hadamard Response
+        configurations.add(new Object[]{FoLdpType.HR.name(), FoLdpType.HR,});
         // Binary Local Hash
         configurations.add(new Object[]{FoLdpType.BLH.name(), FoLdpType.BLH,});
         // RAPPOR
@@ -79,9 +83,9 @@ public class FoLdpTest {
         // Symmetric Unary Encoding
         configurations.add(new Object[]{FoLdpType.SUE.name(), FoLdpType.SUE,});
         // Direct Encoding via Index Encoding
-        configurations.add(new Object[]{FoLdpType.DE_INDEX_ENCODING.name(), FoLdpType.DE_INDEX_ENCODING,});
+        configurations.add(new Object[]{FoLdpType.DE_INDEX.name(), FoLdpType.DE_INDEX,});
         // Direct Encoding via String Encoding
-        configurations.add(new Object[]{FoLdpType.DE_STRING_ENCODING.name(), FoLdpType.DE_STRING_ENCODING,});
+        configurations.add(new Object[]{FoLdpType.DE_STRING.name(), FoLdpType.DE_STRING,});
 
         return configurations;
     }
@@ -153,8 +157,25 @@ public class FoLdpTest {
         } else {
             // there are some mechanism that do not provide un-biased sum even for large epsilon
             // for those mechanisms, the constant input test case would help to verify the un-biased estimation.
+            // here we just print the top-10 results
+            List<Map.Entry<String, Double>> orderedFrequencyEstimateList = server.orderedEstimate();
+            StringBuilder expectOrderedStringBuilder = new StringBuilder();
+            StringBuilder actualOrderedStringBuilder = new StringBuilder();
+            for (int i = 0; i < ORDERED_FREQUENCY_ESTIMATE_TOP_K; i++) {
+                Map.Entry<String, Integer> expectMap = LdpTestDataUtils.CORRECT_EXAMPLE_COUNT_ORDERED_LIST.get(i);
+                expectOrderedStringBuilder
+                    .append(StringUtils.leftPad("(" + expectMap.getKey() + ", " + expectMap.getValue() + ")", 10))
+                    .append("\t");
+                Map.Entry<String, Double> actualMap = orderedFrequencyEstimateList.get(i);
+                actualOrderedStringBuilder
+                    .append(StringUtils.leftPad("(" + actualMap.getKey() + ", " + actualMap.getValue().intValue() + ")", 10))
+                    .append("\t");
+            }
             double estimateSum = frequencyEstimates.values().stream().mapToDouble(i -> i).sum();
-            LOGGER.info("{}: correct sum = {}, estimate sum = {}", type.name(), LdpTestDataUtils.EXAMPLE_TOTAL_NUM, estimateSum);
+            LOGGER.info("{}:\n expect sum = {}\n actual sum = {}\n expect order = {}\n actual order = {}",
+                type.name(), LdpTestDataUtils.EXAMPLE_TOTAL_NUM, estimateSum,
+                expectOrderedStringBuilder, actualOrderedStringBuilder
+            );
         }
     }
 
@@ -180,6 +201,7 @@ public class FoLdpTest {
             double averageStdDev = Math.sqrt(variance) / totalNum;
             Assert.assertTrue(averageStdDev <= 1);
         }
+
     }
 
     private static void exampleRandomizeInsert(FoLdpServer server, FoLdpClient client) throws IOException {

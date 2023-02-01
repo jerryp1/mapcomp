@@ -51,19 +51,19 @@ public class FoLdpEfficiencyTest {
     /**
      * ε array
      */
-    private static final double[] EPSILONS = new double[] {0.125, 0.25, 0.5, 1, 2, 4, 8, 16};
+    private static final double[] EPSILONS = new double[] {0.01, 0.04, 0.16, 0.64, 2.56, 10.24};
     /**
      * the type
      */
     private static final FoLdpType[] TYPES = new FoLdpType[] {
-        // Hadamard Mechanism with high ε
-        FoLdpType.HM_HIGH_EPSILON,
         // Hadamard Mechanism with low ε
         FoLdpType.HM_LOW_EPSILON,
+        // Hadamard Mechanism
+        FoLdpType.HM,
         // Hadamard Response with high ε
         FoLdpType.HR_HIGH_EPSILON,
-        // Hadamard Response with low ε
-        FoLdpType.HR_LOW_EPSILON,
+        // Hadamard Response
+        FoLdpType.HR,
         // Binary Local Hash
         FoLdpType.BLH,
         // RAPPOR
@@ -73,9 +73,9 @@ public class FoLdpEfficiencyTest {
         // Symmetric Unary Encoding
         FoLdpType.SUE,
         // Direct Encoding via Index Encoding
-        FoLdpType.DE_INDEX_ENCODING,
+        FoLdpType.DE_INDEX,
         // Direct Encoding via String Encoding
-        FoLdpType.DE_STRING_ENCODING,
+        FoLdpType.DE_STRING,
     };
 
     public FoLdpEfficiencyTest() {

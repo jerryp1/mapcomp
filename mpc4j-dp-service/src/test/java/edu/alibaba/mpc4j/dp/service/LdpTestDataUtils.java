@@ -95,7 +95,7 @@ public class LdpTestDataUtils {
     public static final Set<String> CONNECT_DATA_DOMAIN = IntStream.rangeClosed(1, 129)
         .mapToObj(String::valueOf).collect(Collectors.toSet());
     /**
-     * total num for connect.txt
+     * total num for connect.dat
      */
     public static final int CONNECT_TOTAL_NUM;
     /**
@@ -103,9 +103,13 @@ public class LdpTestDataUtils {
      */
     public static final int CONNECT_WARMUP_NUM;
     /**
-     * correct count map for stream_counter_example_data.txt
+     * correct count map for connect.dat
      */
     public static final Map<String, Integer> CORRECT_CONNECT_COUNT_MAP;
+    /**
+     * correct count ordered list for connect.dat
+     */
+    public static final List<Map.Entry<String, Integer>> CORRECT_CONNECT_COUNT_ORDER_LIST;
 
     static {
         try {
@@ -119,6 +123,11 @@ public class LdpTestDataUtils {
             dataStream.close();
             CORRECT_CONNECT_COUNT_MAP = CONNECT_DATA_DOMAIN.stream()
                 .collect(Collectors.toMap(item -> item, streamCounter::query));
+            CORRECT_CONNECT_COUNT_ORDER_LIST = new ArrayList<>(CORRECT_CONNECT_COUNT_MAP.entrySet());
+            // descending sort
+            CORRECT_CONNECT_COUNT_ORDER_LIST.sort(Comparator.comparingInt(Map.Entry::getValue));
+            Collections.reverse(CORRECT_CONNECT_COUNT_ORDER_LIST);
+
         } catch (IOException e) {
             e.printStackTrace();
             throw new IllegalStateException();

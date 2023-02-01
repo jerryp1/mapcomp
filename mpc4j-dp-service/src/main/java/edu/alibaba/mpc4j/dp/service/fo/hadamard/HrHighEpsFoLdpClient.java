@@ -75,7 +75,7 @@ public class HrHighEpsFoLdpClient extends AbstractFoLdpClient {
         int y1Encode = random.nextInt(outputSize);
         double u = random.nextDouble();
         // return uniformly random result, including choosing random block, and choosing random y.
-        if (u < blockNum / (expEpsilon + blockNum - 1)) {
+        if (u < 2 * blockNum / (expEpsilon + 2 * blockNum - 1)) {
             return IntUtils.boundedNonNegIntToByteArray(y1Encode, outputSize);
         } else {
             // remove all information related to the block index

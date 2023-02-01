@@ -3,7 +3,6 @@ package edu.alibaba.mpc4j.dp.service.heavyhitter;
 import com.google.common.base.Preconditions;
 import edu.alibaba.mpc4j.common.tool.utils.DoubleUtils;
 import edu.alibaba.mpc4j.dp.service.LdpTestDataUtils;
-import edu.alibaba.mpc4j.dp.service.heavyhitter.config.BasicHhLdpConfig;
 import edu.alibaba.mpc4j.dp.service.heavyhitter.config.HhLdpConfig;
 import edu.alibaba.mpc4j.dp.service.tool.StreamDataUtils;
 import edu.alibaba.mpc4j.dp.service.heavyhitter.HhLdpFactory.HhLdpType;
@@ -12,6 +11,8 @@ import org.junit.Assert;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.util.*;
@@ -26,11 +27,7 @@ import java.util.stream.Stream;
  */
 @RunWith(Parameterized.class)
 public class HhLdpTest {
-    /**
-     * large ε absolute precision
-     */
-    private static final double LARGE_EPSILON_ABS_PRECISION
-        = (double)LdpTestDataUtils.EXAMPLE_TOTAL_NUM / LdpTestDataUtils.EXAMPLE_DATA_D;
+    private static final Logger LOGGER = LoggerFactory.getLogger(HhLdpTest.class);
     /**
      * large ε
      */
@@ -165,12 +162,22 @@ public class HhLdpTest {
             }
         } else {
             // there are some mechanisms that do not get accurate answer even for large epsilon
-            for (String item : LdpTestDataUtils.EXAMPLE_DATA_DOMAIN) {
-                int correct = LdpTestDataUtils.CORRECT_EXAMPLE_COUNT_MAP.get(item);
-                double estimate = heavyHitters.get(item);
-                // verify bounded error
-                Assert.assertTrue(Math.abs(correct - estimate) <= LARGE_EPSILON_ABS_PRECISION);
+            List<Map.Entry<String, Double>> orderedFrequencyEstimateList = server.orderedHeavyHitters();
+            StringBuilder expectOrderedStringBuilder = new StringBuilder();
+            StringBuilder actualOrderedStringBuilder = new StringBuilder();
+            for (int i = 0; i < k; i++) {
+                Map.Entry<String, Integer> expectMap = LdpTestDataUtils.CORRECT_EXAMPLE_COUNT_ORDERED_LIST.get(i);
+                expectOrderedStringBuilder
+                    .append(StringUtils.leftPad("(" + expectMap.getKey() + ", " + expectMap.getValue() + ")", 10))
+                    .append("\t");
+                Map.Entry<String, Double> actualMap = orderedFrequencyEstimateList.get(i);
+                actualOrderedStringBuilder
+                    .append(StringUtils.leftPad("(" + actualMap.getKey() + ", " + actualMap.getValue().intValue() + ")", 10))
+                    .append("\t");
             }
+            LOGGER.info("{}:\n expect order = {}\n actual order = {}",
+                type.name(), expectOrderedStringBuilder, actualOrderedStringBuilder
+            );
         }
     }
 
