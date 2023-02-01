@@ -70,16 +70,31 @@ public class HhLdpEfficiencyTest {
     static  {
         CONFIGS = new ArrayList<>();
         for (double epsilon : EPSILONS) {
+            // Apple Hadamard Count Mean Sketch
+            FoLdpConfig appleHcmsFoLdpConfig = FoLdpFactory.createDefaultConfig(
+                FoLdpType.APPLE_HCMS, LdpTestDataUtils.CONNECT_DATA_DOMAIN, epsilon
+            );
+            CONFIGS.add(new FoHhLdpConfig.Builder(appleHcmsFoLdpConfig, DEFAULT_K).build());
+            // Apple Count Mean Sketch
+            FoLdpConfig appleCmsFoLdpConfig = FoLdpFactory.createDefaultConfig(
+                FoLdpType.APPLE_CMS, LdpTestDataUtils.CONNECT_DATA_DOMAIN, epsilon
+            );
+            CONFIGS.add(new FoHhLdpConfig.Builder(appleCmsFoLdpConfig, DEFAULT_K).build());
+            // Hadamard Mechanism
+            FoLdpConfig hmFoLdpConfig = FoLdpFactory.createDefaultConfig(
+                FoLdpType.HM, LdpTestDataUtils.CONNECT_DATA_DOMAIN, epsilon
+            );
+            CONFIGS.add(new FoHhLdpConfig.Builder(hmFoLdpConfig, DEFAULT_K).build());
             // Hadamard Response with high ε
             FoLdpConfig hrHighEpsilonFoLdpConfig = FoLdpFactory.createDefaultConfig(
                 FoLdpType.HR_HIGH_EPSILON, LdpTestDataUtils.CONNECT_DATA_DOMAIN, epsilon
             );
             CONFIGS.add(new FoHhLdpConfig.Builder(hrHighEpsilonFoLdpConfig, DEFAULT_K).build());
             // Hadamard Response
-            FoLdpConfig hrLowEpsilonFoLdpConfig = FoLdpFactory.createDefaultConfig(
+            FoLdpConfig hrFoLdpConfig = FoLdpFactory.createDefaultConfig(
                 FoLdpType.HR, LdpTestDataUtils.CONNECT_DATA_DOMAIN, epsilon
             );
-            CONFIGS.add(new FoHhLdpConfig.Builder(hrLowEpsilonFoLdpConfig, DEFAULT_K).build());
+            CONFIGS.add(new FoHhLdpConfig.Builder(hrFoLdpConfig, DEFAULT_K).build());
             // Binary Local Hash
             FoLdpConfig blhFoLdpConfig = FoLdpFactory.createDefaultConfig(
                 FoLdpType.BLH, LdpTestDataUtils.CONNECT_DATA_DOMAIN, epsilon
