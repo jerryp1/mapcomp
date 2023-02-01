@@ -1,12 +1,13 @@
 package edu.alibaba.mpc4j.dp.service.fo.hadamard;
 
+import com.google.common.base.Preconditions;
+import edu.alibaba.mpc4j.common.tool.MathPreconditions;
 import edu.alibaba.mpc4j.common.tool.coder.linear.HadamardCoder;
 import edu.alibaba.mpc4j.common.tool.utils.IntUtils;
 import edu.alibaba.mpc4j.common.tool.utils.LongUtils;
 import edu.alibaba.mpc4j.dp.service.fo.AbstractFoLdpServer;
 import edu.alibaba.mpc4j.dp.service.fo.config.FoLdpConfig;
 
-import java.nio.ByteBuffer;
 import java.util.Map;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
@@ -33,6 +34,10 @@ public class HmFoLdpServer extends AbstractFoLdpServer {
      */
     private final int n;
     /**
+     * n byte length
+     */
+    private final int nByteLength;
+    /**
      * p = e^ε / (e^ε + 1)
      */
     private final double p;
@@ -45,20 +50,26 @@ public class HmFoLdpServer extends AbstractFoLdpServer {
         super(config);
         double expEpsilon = Math.exp(epsilon);
         p = expEpsilon / (expEpsilon + 1);
-        // the smallest exponent of 2 which is bigger than or equal to d
+        // the smallest exponent of 2 which is bigger than d
         int k = LongUtils.ceilLog2(d + 1);
         n = 1 << k;
+        nByteLength = IntUtils.boundedNonNegIntByteLength(n);
         budgets = new int[n];
     }
 
     @Override
     public void insert(byte[] itemBytes) {
-        ByteBuffer byteBuffer = ByteBuffer.wrap(itemBytes);
-        byte[] jBytes = new byte[IntUtils.boundedNonNegIntByteLength(n)];
-        byteBuffer.get(jBytes);
+        MathPreconditions.checkEqual(
+            "actual byte length", "expect byte length", itemBytes.length, nByteLength + 1
+        );
+        byte[] jBytes = new byte[nByteLength];
+        System.arraycopy(itemBytes, 0, jBytes, 0, jBytes.length);
         int j = IntUtils.byteArrayToBoundedNonNegInt(jBytes, n);
-        byte theta = byteBuffer.get();
+        MathPreconditions.checkNonNegativeInRange("j", j, n);
+        byte theta = itemBytes[nByteLength];
+        Preconditions.checkArgument(theta == (byte)1 || theta == (byte)-1);
         budgets[j] += theta;
+        num++;
     }
 
     @Override

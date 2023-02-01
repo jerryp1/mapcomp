@@ -153,6 +153,34 @@ public class HadamardCoder implements LinearCoder {
     }
 
     /**
+     * In-place multiplies the input vector with the Hadamard matrix using fast Walsh-Hadamard transformation.
+     * <p>
+     * Given an input vector, its fast Walsh-Hadamard transformation multiplication computes v · H(n), where Ts are
+     * treated as +1, and Fs are treated as -1. For example:
+     * <li>[1, 1, 1, 1, 1, 1, 1, 1] · H(8) = [8, 0, 0, 0, 0, 0, 0, 0].</li>
+     * <li>[1, 0, 1, 0, 0, 1, 1, 0] · H(8) = [4, 2, 0, -2, 0, 2, 0, 2].</li>
+     * </p>
+     *
+     * @param array the given array.
+     */
+    public static void inplaceFastWalshHadamardTrans(double[] array) {
+        int n = array.length;
+        Preconditions.checkArgument((n & (n - 1)) == 0, "n must be a power of 2: %s", n);
+        int h = 1;
+        while (h < n) {
+            for (int i = 0; i < array.length; i += (h * 2)) {
+                for (int j = i; j < i + h; j++) {
+                    double x = array[j];
+                    double y = array[j + h];
+                    array[j] = x + y;
+                    array[j + h] = x - y;
+                }
+            }
+            h *= 2;
+        }
+    }
+
+    /**
      * Multiplies the input vector with the Hadamard matrix using fast Walsh-Hadamard transformation.
      * <p>
      * Given an input vector, its fast Walsh-Hadamard transformation multiplication computes v · H(n), where Ts are
@@ -195,6 +223,58 @@ public class HadamardCoder implements LinearCoder {
         int[] leftOutputVector = innerFastWalshHadamardTrans(leftInputVector);
         int[] rightOutputVector = innerFastWalshHadamardTrans(rightInputVector);
         int[] outputVector = new int[n];
+        for (int i = 0; i < halfN; i++) {
+            outputVector[i] = leftOutputVector[i] + rightOutputVector[i];
+        }
+        for (int i = halfN; i < n; i++) {
+            outputVector[i] = leftOutputVector[i - halfN] - rightOutputVector[i - halfN];
+        }
+        return outputVector;
+    }
+
+    /**
+     * Multiplies the input vector with the Hadamard matrix using fast Walsh-Hadamard transformation.
+     * <p>
+     * Given an input vector, its fast Walsh-Hadamard transformation multiplication computes v · H(n), where Ts are
+     * treated as +1, and Fs are treated as -1. For example:
+     * <li>[1, 1, 1, 1, 1, 1, 1, 1] · H(8) = [8, 0, 0, 0, 0, 0, 0, 0].</li>
+     * <li>[1, 0, 1, 0, 0, 1, 1, 0] · H(8) = [4, 2, 0, -2, 0, 2, 0, 2].</li>
+     * </p>
+     *
+     * @param inputArray the input array.
+     * @return the result of v · H(n).
+     */
+    public static double[] fastWalshHadamardTrans(double[] inputArray) {
+        int n = inputArray.length;
+        Preconditions.checkArgument((n & (n - 1)) == 0, "n must be a power of 2: %s", n);
+        return innerFastWalshHadamardTrans(inputArray);
+    }
+
+    private static double[] innerFastWalshHadamardTrans(double[] inputArray) {
+        int n = inputArray.length;
+        assert n > 0 : "n must be greater than 0: " + n;
+        assert (n & (n - 1)) == 0 : "n must be a power of 2: " + n;
+        /*
+         * if k == 1:
+         *     return dist
+         * dist1 = dist[0 : k//2]
+         * dist2 = dist[k//2 : k]
+         * trans1 = FWHT_A(k//2, dist1)
+         * trans2 = FWHT_A(k//2, dist2)
+         * trans = np.concatenate((trans1 + trans2, trans1 - trans2))
+         * return trans
+         */
+        if (n == 1) {
+            return inputArray;
+        }
+        int halfN = n / 2;
+        double[] leftInputVector = new double[halfN];
+        double[] rightInputVector = new double[n - halfN];
+        System.arraycopy(inputArray, 0, leftInputVector, 0 , leftInputVector.length);
+        System.arraycopy(inputArray, halfN, rightInputVector, 0, rightInputVector.length);
+        double[] leftOutputVector = innerFastWalshHadamardTrans(leftInputVector);
+        double[] rightOutputVector = innerFastWalshHadamardTrans(rightInputVector);
+        double[] outputVector = new double[n];
         for (int i = 0; i < halfN; i++) {
             outputVector[i] = leftOutputVector[i] + rightOutputVector[i];
         }

@@ -1,9 +1,10 @@
 package edu.alibaba.mpc4j.dp.service.fo;
 
-import edu.alibaba.mpc4j.dp.service.fo.config.AppleCmsFoLdpConfig;
-import edu.alibaba.mpc4j.dp.service.fo.config.BasicFoLdpConfig;
-import edu.alibaba.mpc4j.dp.service.fo.config.FoLdpConfig;
-import edu.alibaba.mpc4j.dp.service.fo.config.RapporFoLdpConfig;
+import edu.alibaba.mpc4j.dp.service.fo.cms.AppleCmsFoLdpClient;
+import edu.alibaba.mpc4j.dp.service.fo.cms.AppleCmsFoLdpServer;
+import edu.alibaba.mpc4j.dp.service.fo.cms.AppleHcmsFoLdpClient;
+import edu.alibaba.mpc4j.dp.service.fo.cms.AppleHcmsFoLdpServer;
+import edu.alibaba.mpc4j.dp.service.fo.config.*;
 import edu.alibaba.mpc4j.dp.service.fo.de.DeIndexFoLdpClient;
 import edu.alibaba.mpc4j.dp.service.fo.de.DeIndexFoLdpServer;
 import edu.alibaba.mpc4j.dp.service.fo.de.DeStringFoLdpClient;
@@ -83,6 +84,10 @@ public class FoLdpFactory {
          * Apple's Count Mean Sketch (CMS)
          */
         APPLE_CMS,
+        /**
+         * Apple's Hadamard Count Mean Sketch (HCMS)
+         */
+        APPLE_HCMS,
     }
 
 
@@ -105,6 +110,8 @@ public class FoLdpFactory {
             case HR:
             case HM:
             case HM_LOW_EPSILON:
+            case APPLE_CMS:
+            case APPLE_HCMS:
                 return false;
             default:
                 throw new IllegalArgumentException("Invalid " + FoLdpFactory.FoLdpType.class.getSimpleName() + ": " + type.name());
@@ -135,6 +142,8 @@ public class FoLdpFactory {
                 return new RapporFoLdpConfig.Builder(type, domainSet, epsilon).build();
             case APPLE_CMS:
                 return new AppleCmsFoLdpConfig.Builder(type, domainSet, epsilon).build();
+            case APPLE_HCMS:
+                return new AppleHcmsFoLdpConfig.Builder(type, domainSet, epsilon).build();
             default:
                 throw new IllegalArgumentException("Invalid " + FoLdpType.class.getSimpleName() + ": " + type.name());
         }
@@ -169,6 +178,10 @@ public class FoLdpFactory {
                 return new HmFoLdpServer(config);
             case HM_LOW_EPSILON:
                 return new HmLowEpsFoLdpServer(config);
+            case APPLE_CMS:
+                return new AppleCmsFoLdpServer(config);
+            case APPLE_HCMS:
+                return new AppleHcmsFoLdpServer(config);
             default:
                 throw new IllegalArgumentException("Invalid " + FoLdpType.class.getSimpleName() + ": " + type.name());
         }
@@ -203,6 +216,10 @@ public class FoLdpFactory {
                 return new HmFoLdpClient(config);
             case HM_LOW_EPSILON:
                 return new HmLowEpsFoLdpClient(config);
+            case APPLE_CMS:
+                return new AppleCmsFoLdpClient(config);
+            case APPLE_HCMS:
+                return new AppleHcmsFoLdpClient(config);
             default:
                 throw new IllegalArgumentException("Invalid " + FoLdpType.class.getSimpleName() + ": " + type.name());
         }

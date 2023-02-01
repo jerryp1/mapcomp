@@ -1,5 +1,6 @@
 package edu.alibaba.mpc4j.dp.service.fo.hadamard;
 
+import edu.alibaba.mpc4j.common.tool.MathPreconditions;
 import edu.alibaba.mpc4j.common.tool.coder.linear.HadamardCoder;
 import edu.alibaba.mpc4j.common.tool.utils.IntUtils;
 import edu.alibaba.mpc4j.common.tool.utils.LongUtils;
@@ -27,6 +28,10 @@ public class HrFoLdpServer extends AbstractFoLdpServer {
      */
     private final int n;
     /**
+     * n byte length
+     */
+    private final int nByteLength;
+    /**
      * e^ε
      */
     private final double expEpsilon;
@@ -40,14 +45,20 @@ public class HrFoLdpServer extends AbstractFoLdpServer {
         // the smallest exponent of 2 which is bigger than d
         int k = LongUtils.ceilLog2(d + 1);
         n = 1 << k;
+        nByteLength = IntUtils.boundedNonNegIntByteLength(n);
         expEpsilon = Math.exp(epsilon);
         budgets = new int[n];
     }
 
     @Override
     public void insert(byte[] itemBytes) {
+        MathPreconditions.checkEqual(
+            "actual byte length", "expect byte length", itemBytes.length, nByteLength
+        );
         int y = IntUtils.byteArrayToBoundedNonNegInt(itemBytes, n);
+        MathPreconditions.checkNonNegativeInRange("y", y, n);
         budgets[y]++;
+        num++;
     }
 
     @Override

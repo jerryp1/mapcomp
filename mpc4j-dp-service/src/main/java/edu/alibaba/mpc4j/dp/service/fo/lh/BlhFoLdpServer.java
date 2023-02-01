@@ -1,5 +1,6 @@
 package edu.alibaba.mpc4j.dp.service.fo.lh;
 
+import edu.alibaba.mpc4j.common.tool.MathPreconditions;
 import edu.alibaba.mpc4j.common.tool.hash.IntHash;
 import edu.alibaba.mpc4j.common.tool.hash.IntHashFactory;
 import edu.alibaba.mpc4j.dp.service.fo.AbstractFoLdpServer;
@@ -41,11 +42,13 @@ public class BlhFoLdpServer extends AbstractFoLdpServer {
 
     @Override
     public void insert(byte[] itemBytes) {
+        MathPreconditions.checkEqual(
+            "actual byte length", "expect byte length", itemBytes.length, Integer.BYTES + 1
+        );
         ByteBuffer byteBuffer = ByteBuffer.wrap(itemBytes);
         int seed = byteBuffer.getInt();
         byte byteB = byteBuffer.get();
         assert byteB == 0x00 || byteB == 0x01;
-        num++;
         // each reported ⟨H,b⟩ supports all values that are hashed by H to b, which are half of the input values.
         IntStream.range(0, d)
             .forEach(itemIndex -> {
@@ -55,6 +58,7 @@ public class BlhFoLdpServer extends AbstractFoLdpServer {
                     budget[itemIndex]++;
                 }
             });
+        num++;
     }
 
     @Override

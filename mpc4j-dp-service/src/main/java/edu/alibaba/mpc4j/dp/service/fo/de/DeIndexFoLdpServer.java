@@ -17,6 +17,10 @@ import java.util.stream.IntStream;
  */
 public class DeIndexFoLdpServer extends AbstractFoLdpServer {
     /**
+     * d byte length
+     */
+    private final int dByteLength;
+    /**
      * the bucket
      */
     private final int[] budget;
@@ -31,6 +35,7 @@ public class DeIndexFoLdpServer extends AbstractFoLdpServer {
 
     public DeIndexFoLdpServer(FoLdpConfig config) {
         super(config);
+        dByteLength = IntUtils.boundedNonNegIntByteLength(d);
         budget = new int[d];
         double expEpsilon = Math.exp(epsilon);
         p = expEpsilon / (expEpsilon + d - 1);
@@ -39,10 +44,13 @@ public class DeIndexFoLdpServer extends AbstractFoLdpServer {
 
     @Override
     public void insert(byte[] itemBytes) {
+        MathPreconditions.checkEqual(
+            "actual byte length", "expect byte length", itemBytes.length, dByteLength
+        );
         int itemIndex = IntUtils.byteArrayToBoundedNonNegInt(itemBytes, d);
         MathPreconditions.checkNonNegativeInRange("item index", itemIndex, d);
-        num++;
         budget[itemIndex]++;
+        num++;
     }
 
     @Override

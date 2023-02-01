@@ -35,6 +35,10 @@ public class HmLowEpsFoLdpClient extends AbstractFoLdpClient {
      */
     private final int n;
     /**
+     * n byte length
+     */
+    private final int nByteLength;
+    /**
      * 2^t - 1 = e^ε, so that t = log_2(e^ε + 1).
      */
     private final int t;
@@ -48,6 +52,7 @@ public class HmLowEpsFoLdpClient extends AbstractFoLdpClient {
         // the smallest exponent of 2 which is bigger than d
         int k = LongUtils.ceilLog2(d + 1);
         n = 1 << k;
+        nByteLength = IntUtils.boundedNonNegIntByteLength(n);
         double expEpsilon = Math.exp(epsilon);
         // the optimal t = log_2(e^ε + 1)
         t = (int)Math.ceil(DoubleUtils.log2(expEpsilon + 1));
@@ -80,7 +85,7 @@ public class HmLowEpsFoLdpClient extends AbstractFoLdpClient {
             }
             coefficients = randomCoefficients;
         }
-        ByteBuffer byteBuffer = ByteBuffer.allocate(t * IntUtils.boundedNonNegIntByteLength(n) + coefficients.byteNum());
+        ByteBuffer byteBuffer = ByteBuffer.allocate(t * nByteLength + coefficients.byteNum());
         for (int i = 0; i < t; i++) {
             byteBuffer.put(IntUtils.boundedNonNegIntToByteArray(jArray[i], n));
         }

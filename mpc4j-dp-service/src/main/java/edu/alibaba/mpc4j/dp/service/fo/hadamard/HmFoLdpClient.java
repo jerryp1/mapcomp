@@ -30,6 +30,10 @@ public class HmFoLdpClient extends AbstractFoLdpClient {
      */
     private final int n;
     /**
+     * n byte length
+     */
+    private final int nByteLength;
+    /**
      * p = e^ε / (e^ε + 1)
      */
     private final double p;
@@ -39,6 +43,7 @@ public class HmFoLdpClient extends AbstractFoLdpClient {
         // the smallest exponent of 2 which is bigger than d
         int k = LongUtils.ceilLog2(d + 1);
         n = 1 << k;
+        nByteLength = IntUtils.boundedNonNegIntByteLength(n);
         double expEpsilon = Math.exp(epsilon);
         p = expEpsilon / (expEpsilon + 1);
     }
@@ -56,7 +61,7 @@ public class HmFoLdpClient extends AbstractFoLdpClient {
             // with probability 1 - e^ε / (1 + e^ε), the mechanism reports (j, -θ_j^(i)).
             hadamardCoefficient = !hadamardCoefficient;
         }
-        return ByteBuffer.allocate(IntUtils.boundedNonNegIntByteLength(n) + 1)
+        return ByteBuffer.allocate(nByteLength + 1)
             .put(IntUtils.boundedNonNegIntToByteArray(j, n))
             .put(hadamardCoefficient ? (byte)1 : (byte)-1)
             .array();

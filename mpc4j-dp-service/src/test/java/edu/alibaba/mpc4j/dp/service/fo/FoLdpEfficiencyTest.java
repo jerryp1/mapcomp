@@ -56,6 +56,10 @@ public class FoLdpEfficiencyTest {
      * the type
      */
     private static final FoLdpType[] TYPES = new FoLdpType[] {
+        // Apple's Hadamard Count Mean Sketch
+        FoLdpType.APPLE_HCMS,
+        // Apple's Count Mean Sketch
+        FoLdpType.APPLE_CMS,
         // Hadamard Mechanism with low ε
         FoLdpType.HM_LOW_EPSILON,
         // Hadamard Mechanism
@@ -85,7 +89,7 @@ public class FoLdpEfficiencyTest {
     @Test
     public void testEfficiency() throws IOException {
         LOGGER.info("{}\t{}\t{}\t{}\t{}\t{}\t{}",
-            "                name", "       ε", "            variance", "s_time(ms)", "c_time(ms)", "  comm.(B)", "   mem.(B)"
+            "                name", "       ε", "            variance", " s_time(s)", " c_time(s)", "  comm.(B)", "   mem.(B)"
         );
         for (double epsilon : EPSILONS) {
             testEfficiency(epsilon);

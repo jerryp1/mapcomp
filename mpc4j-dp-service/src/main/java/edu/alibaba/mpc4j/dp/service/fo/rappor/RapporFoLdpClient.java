@@ -8,7 +8,6 @@ import edu.alibaba.mpc4j.common.tool.hash.IntHashFactory;
 import edu.alibaba.mpc4j.common.tool.utils.CommonUtils;
 import edu.alibaba.mpc4j.common.tool.utils.IntUtils;
 import edu.alibaba.mpc4j.dp.service.fo.AbstractFoLdpClient;
-import edu.alibaba.mpc4j.dp.service.fo.FoLdpFactory;
 import edu.alibaba.mpc4j.dp.service.fo.config.FoLdpConfig;
 import edu.alibaba.mpc4j.dp.service.fo.config.RapporFoLdpConfig;
 
@@ -73,10 +72,10 @@ public class RapporFoLdpClient extends AbstractFoLdpClient {
         BitVector bloomFilter = BitVectorFactory.createZeros(BitVectorFactory.BitVectorType.BYTES_BIT_VECTOR, m);
         int hashNum = hashSeeds[cohortIndex].length;
         MathPreconditions.checkGreaterOrEqual("m", m, hashNum);
-        byte[] itemBytes = item.getBytes(FoLdpFactory.DEFAULT_CHARSET);
+        byte[] itemIndexBytes = IntUtils.intToByteArray(domain.getItemIndex(item));
         int[] hashPositions = new int[hashNum];
         for (int hashIndex = 0; hashIndex < hashNum; hashIndex++) {
-            hashPositions[hashIndex] = Math.abs(intHash.hash(itemBytes, hashSeeds[cohortIndex][hashIndex])) % m;
+            hashPositions[hashIndex] = Math.abs(intHash.hash(itemIndexBytes, hashSeeds[cohortIndex][hashIndex])) % m;
         }
         for (int hashPosition : hashPositions) {
             bloomFilter.set(hashPosition, true);

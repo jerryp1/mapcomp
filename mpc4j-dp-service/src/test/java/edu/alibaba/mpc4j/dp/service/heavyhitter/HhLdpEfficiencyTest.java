@@ -138,7 +138,7 @@ public class HhLdpEfficiencyTest {
     @Test
     public void testEfficiency() throws IOException {
         LOGGER.info("{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}", "                name",
-            "         ε", "s_time(ms)", "c_time(ms)", "  comm.(B)", "   mem.(B)",
+            "         ε", " s_time(s)", " c_time(s)", "  comm.(B)", "   mem.(B)",
             "      ndcg", " precision", "       abe", "        re"
             );
         for (HhLdpConfig config : CONFIGS) {

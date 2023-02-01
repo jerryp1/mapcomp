@@ -125,10 +125,35 @@ public class HadamardCoderTest {
     }
 
     @Test
-    public void testMul() {
+    public void testIntMul() {
         int[] inputVector, outputVector;
         // all 0 results in 0
         inputVector = new int[n];
+        outputVector = HadamardCoder.fastWalshHadamardTrans(inputVector);
+        for (int i = 0; i < n; i++) {
+            Assert.assertEquals(0, outputVector[i]);
+        }
+        // all 1 results in n in the first place, and 0 otherwise
+        Arrays.fill(inputVector, 1);
+        outputVector = HadamardCoder.fastWalshHadamardTrans(inputVector);
+        Assert.assertEquals(n, outputVector[0], DoubleUtils.PRECISION);
+        for (int i = 1; i < n; i++) {
+            Assert.assertEquals(0, outputVector[i]);
+        }
+        // all -1 results in -n in the first place, and 0 otherwise
+        Arrays.fill(inputVector, -1);
+        outputVector = HadamardCoder.fastWalshHadamardTrans(inputVector);
+        Assert.assertEquals(-n, outputVector[0], DoubleUtils.PRECISION);
+        for (int i = 1; i < n; i++) {
+            Assert.assertEquals(0, outputVector[i]);
+        }
+    }
+
+    @Test
+    public void testDoubleMul() {
+        double[] inputVector, outputVector;
+        // all 0 results in 0
+        inputVector = new double[n];
         outputVector = HadamardCoder.fastWalshHadamardTrans(inputVector);
         for (int i = 0; i < n; i++) {
             Assert.assertEquals(0, outputVector[i], DoubleUtils.PRECISION);
@@ -150,10 +175,35 @@ public class HadamardCoderTest {
     }
 
     @Test
-    public void testInplaceMul() {
+    public void testIntInplaceMul() {
         int[] vector;
         // all 0 results in 0
         vector = new int[n];
+        HadamardCoder.inplaceFastWalshHadamardTrans(vector);
+        for (int i = 0; i < n; i++) {
+            Assert.assertEquals(0, vector[i]);
+        }
+        // all 1 results in n in the first place, and 0 otherwise
+        Arrays.fill(vector, 1);
+        HadamardCoder.inplaceFastWalshHadamardTrans(vector);
+        Assert.assertEquals(n, vector[0], DoubleUtils.PRECISION);
+        for (int i = 1; i < n; i++) {
+            Assert.assertEquals(0, vector[i]);
+        }
+        // all -1 results in -n in the first place, and 0 otherwise
+        Arrays.fill(vector, -1);
+        HadamardCoder.inplaceFastWalshHadamardTrans(vector);
+        Assert.assertEquals(-n, vector[0]);
+        for (int i = 1; i < n; i++) {
+            Assert.assertEquals(0, vector[i]);
+        }
+    }
+
+    @Test
+    public void testDoubleInplaceMul() {
+        double[] vector;
+        // all 0 results in 0
+        vector = new double[n];
         HadamardCoder.inplaceFastWalshHadamardTrans(vector);
         for (int i = 0; i < n; i++) {
             Assert.assertEquals(0, vector[i], DoubleUtils.PRECISION);

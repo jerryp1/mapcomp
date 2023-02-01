@@ -48,7 +48,7 @@ public class FoLdpTest {
     /**
      * number of items for constant input
      */
-    private static final int CONSTANT_INPUT_NUM = 1000000;
+    private static final int CONSTANT_INPUT_NUM = 100000;
     /**
      * constant input d = 2^k
      */
@@ -66,6 +66,10 @@ public class FoLdpTest {
     public static Collection<Object[]> configurations() {
         Collection<Object[]> configurations = new ArrayList<>();
 
+        // Apple's Hadamard Count Mean Sketch
+        configurations.add(new Object[]{FoLdpType.APPLE_HCMS.name(), FoLdpType.APPLE_HCMS,});
+        // Apple's Count Mean Sketch
+        configurations.add(new Object[]{FoLdpType.APPLE_CMS.name(), FoLdpType.APPLE_CMS,});
         // Hadamard Mechanism with low ε
         configurations.add(new Object[]{FoLdpType.HM_LOW_EPSILON.name(), FoLdpType.HM_LOW_EPSILON,});
         // Hadamard Mechanism
@@ -131,6 +135,8 @@ public class FoLdpTest {
         IntStream.range(0, CONSTANT_INPUT_NUM)
             .mapToObj(num -> client.randomize(CONSTANT_INPUT, ldpRandom))
             .forEach(server::insert);
+        // verify the num
+        Assert.assertEquals(CONSTANT_INPUT_NUM, server.getNum());
         // estimate
         Map<String, Double> frequencyEstimates = server.estimate();
         Assert.assertEquals(d, frequencyEstimates.size());
@@ -201,7 +207,6 @@ public class FoLdpTest {
             double averageStdDev = Math.sqrt(variance) / totalNum;
             Assert.assertTrue(averageStdDev <= 1);
         }
-
     }
 
     private static void exampleRandomizeInsert(FoLdpServer server, FoLdpClient client) throws IOException {

@@ -1,5 +1,6 @@
 package edu.alibaba.mpc4j.dp.service.fo.hadamard;
 
+import edu.alibaba.mpc4j.common.tool.MathPreconditions;
 import edu.alibaba.mpc4j.common.tool.bitvector.BitVector;
 import edu.alibaba.mpc4j.common.tool.bitvector.BitVectorFactory;
 import edu.alibaba.mpc4j.common.tool.bitvector.BitVectorFactory.BitVectorType;
@@ -11,7 +12,6 @@ import edu.alibaba.mpc4j.common.tool.utils.LongUtils;
 import edu.alibaba.mpc4j.dp.service.fo.AbstractFoLdpServer;
 import edu.alibaba.mpc4j.dp.service.fo.config.FoLdpConfig;
 
-import java.nio.ByteBuffer;
 import java.util.Map;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
@@ -39,9 +39,17 @@ public class HmLowEpsFoLdpServer extends AbstractFoLdpServer {
      */
     private final int n;
     /**
+     * n byte length
+     */
+    private final int nByteLength;
+    /**
      * 2^t - 1 = e^ε, so that t = log_2(e^ε + 1).
      */
     private final int t;
+    /**
+     * t byte length
+     */
+    private final int tByteLength;
     /**
      * p = e^ε / (e^ε + 2^t - 1)
      */
@@ -56,10 +64,12 @@ public class HmLowEpsFoLdpServer extends AbstractFoLdpServer {
         // the smallest exponent of 2 which is bigger than d
         int k = LongUtils.ceilLog2(d + 1);
         n = 1 << k;
+        nByteLength = IntUtils.boundedNonNegIntByteLength(n);
         double expEpsilon = Math.exp(epsilon);
         // the optimal t = log_2(e^ε + 1)
         t = (int)Math.ceil(DoubleUtils.log2(expEpsilon + 1));
         assert t >= 1 : "t must be greater than or equal to 1: " + t;
+        tByteLength = CommonUtils.getByteLength(t);
         // p = e^ε / (e^ε + 2^t - 1)
         p = expEpsilon / (expEpsilon + (1 << t) - 1);
         budgets = new int[n];
@@ -67,21 +77,24 @@ public class HmLowEpsFoLdpServer extends AbstractFoLdpServer {
 
     @Override
     public void insert(byte[] itemBytes) {
-        ByteBuffer byteBuffer = ByteBuffer.wrap(itemBytes);
-        byte[] jBytes = new byte[IntUtils.boundedNonNegIntByteLength(n)];
+        MathPreconditions.checkEqual(
+            "actual byte length", "expect byte length", itemBytes.length, nByteLength * t + tByteLength
+        );
+        byte[] jBytes = new byte[nByteLength];
         int[] jArray = new int[t];
         for (int i = 0; i < t; i++) {
-            byteBuffer.get(jBytes);
+            System.arraycopy(itemBytes, i * nByteLength, jBytes, 0, jBytes.length);
             jArray[i] = IntUtils.byteArrayToBoundedNonNegInt(jBytes, n);
+            MathPreconditions.checkNonNegativeInRange("j_" + i, jArray[i], n);
         }
-        byte[] coefficientBytes = new byte[CommonUtils.getByteLength(t)];
-        byteBuffer.get(coefficientBytes);
+        byte[] coefficientBytes = new byte[tByteLength];
+        System.arraycopy(itemBytes, nByteLength * t, coefficientBytes, 0, coefficientBytes.length);
         BitVector coefficients = BitVectorFactory.create(BitVectorType.BYTES_BIT_VECTOR, t, coefficientBytes);
         for (int i = 0; i < t; i++) {
             int hadamardCoefficient = coefficients.get(i) ? 1 : -1;
             budgets[jArray[i]] += hadamardCoefficient;
         }
-
+        num++;
     }
 
     @Override

@@ -3,12 +3,12 @@ package edu.alibaba.mpc4j.dp.service.fo.rappor;
 import edu.alibaba.mpc4j.common.tool.MathPreconditions;
 import edu.alibaba.mpc4j.common.tool.bitvector.BitVector;
 import edu.alibaba.mpc4j.common.tool.bitvector.BitVectorFactory;
+import edu.alibaba.mpc4j.common.tool.bitvector.BitVectorFactory.BitVectorType;
 import edu.alibaba.mpc4j.common.tool.hash.IntHash;
 import edu.alibaba.mpc4j.common.tool.hash.IntHashFactory;
 import edu.alibaba.mpc4j.common.tool.utils.CommonUtils;
 import edu.alibaba.mpc4j.common.tool.utils.IntUtils;
 import edu.alibaba.mpc4j.dp.service.fo.AbstractFoLdpServer;
-import edu.alibaba.mpc4j.dp.service.fo.FoLdpFactory;
 import edu.alibaba.mpc4j.dp.service.fo.config.FoLdpConfig;
 import edu.alibaba.mpc4j.dp.service.fo.config.RapporFoLdpConfig;
 import org.apache.commons.math3.util.Precision;
@@ -118,7 +118,7 @@ public class RapporFoLdpServer extends AbstractFoLdpServer {
         // read the bloom filter bytes
         byte[] bloomFilterBytes = new byte[mByteLength];
         System.arraycopy(itemBytes, 0, bloomFilterBytes, 0, bloomFilterBytes.length);
-        BitVector bloomFilter = BitVectorFactory.create(BitVectorFactory.BitVectorType.BYTES_BIT_VECTOR, m, bloomFilterBytes);
+        BitVector bloomFilter = BitVectorFactory.create(BitVectorType.BYTES_BIT_VECTOR, m, bloomFilterBytes);
         // read the cohort index
         int cohortIndexByteLength = IntUtils.boundedNonNegIntByteLength(cohortNum);
         byte[] cohortIndexBytes = new byte[cohortIndexByteLength];
@@ -201,13 +201,12 @@ public class RapporFoLdpServer extends AbstractFoLdpServer {
         int[][] x = new int[cohortNum * m][d];
         for (int itemIndex = 0; itemIndex < d; itemIndex++) {
             for (int cohortIndex = 0; cohortIndex < cohortNum; cohortIndex++) {
-                String item = domain.getIndexItem(itemIndex);
                 int hashNum = hashSeeds[cohortIndex].length;
                 MathPreconditions.checkGreaterOrEqual("m", m, hashNum);
-                byte[] itemBytes = item.getBytes(FoLdpFactory.DEFAULT_CHARSET);
+                byte[] itemIndexBytes = IntUtils.intToByteArray(itemIndex);
                 int[] hashPositions = new int[hashNum];
                 for (int hashIndex = 0; hashIndex < hashNum; hashIndex++) {
-                    hashPositions[hashIndex] = Math.abs(intHash.hash(itemBytes, hashSeeds[cohortIndex][hashIndex])) % m;
+                    hashPositions[hashIndex] = Math.abs(intHash.hash(itemIndexBytes, hashSeeds[cohortIndex][hashIndex])) % m;
                 }
                 for (int hashPosition : hashPositions) {
                     x[cohortIndex * m + hashPosition][itemIndex] = 1;

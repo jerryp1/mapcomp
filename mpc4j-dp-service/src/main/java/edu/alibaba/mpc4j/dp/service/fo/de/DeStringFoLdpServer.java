@@ -42,8 +42,8 @@ public class DeStringFoLdpServer extends AbstractFoLdpServer {
         String item = new String(itemBytes, FoLdpFactory.DEFAULT_CHARSET);
         Preconditions.checkArgument(domain.contains(item), "%s is not in the domain", item);
         int itemIndex = domain.getItemIndex(item);
-        num++;
         budget[itemIndex]++;
+        num++;
     }
 
     @Override
