@@ -61,7 +61,6 @@ public class OlhFoLdpServer extends AbstractFoLdpServer {
             config instanceof OlhFoLdpConfig,
             "config must be an instance of %s", OlhFoLdpConfig.class.getSimpleName()
         );
-        budget = new int[d];
         double expEpsilon = Math.exp(epsilon);
         // g = e^ε + 1
         g = (int)Math.round(expEpsilon) + 1;
@@ -70,6 +69,8 @@ public class OlhFoLdpServer extends AbstractFoLdpServer {
         // p = e^ε / (e^ε + 1)
         qStar = 1 / (expEpsilon + 1);
         intHash = IntHashFactory.fastestInstance();
+        // init budget
+        budget = new int[d];
     }
 
     @Override

@@ -712,4 +712,76 @@ public class MathPreconditions {
         }
         return x;
     }
+
+    /**
+     * Check x ∈ [0, max].
+     *
+     * @param role the name of the value x.
+     * @param x the value x.
+     * @param max the value max.
+     * @return the value x.
+     * @throws IllegalArgumentException if max < 0 or x ∉ [0, max].
+     */
+    @CanIgnoreReturnValue
+    public static int checkNonNegativeInRangeClosed(String role, int x, int max) {
+        checkNonNegative("max", max);
+        if (x < 0 || x > max) {
+            throw new IllegalArgumentException(role + " (" + x + ") must be in range [0, " + max + "]");
+        }
+        return x;
+    }
+
+    /**
+     * Check x ∈ [0, max].
+     *
+     * @param role the name of the value x.
+     * @param x the value x.
+     * @param max the value max.
+     * @return the value x.
+     * @throws IllegalArgumentException if max < 0 or x ∉ [0, max].
+     */
+    @CanIgnoreReturnValue
+    public static long checkNonNegativeInRangeClosed(String role, long x, long max) {
+        checkNonNegative("max", max);
+        if (x < 0 || x > max) {
+            throw new IllegalArgumentException(role + " (" + x + ") must be in range [0, " + max + "]");
+        }
+        return x;
+    }
+
+    /**
+     * Check x ∈ [0, max].
+     *
+     * @param role the name of the value x.
+     * @param x the value x.
+     * @param max the value max.
+     * @return the value x.
+     * @throws IllegalArgumentException if max < 0 or x ∉ [0, max].
+     */
+    @CanIgnoreReturnValue
+    public static double checkNonNegativeInRangeClosed(String role, double x, double max) {
+        checkNonNegative("max", max);
+        if (x < 0 || x > max) {
+            throw new IllegalArgumentException(role + " (" + x + ") must be in range [0, " + max + "]");
+        }
+        return x;
+    }
+
+    /**
+     * Check x ∈ [0, max].
+     *
+     * @param role the name of the value x.
+     * @param x the value x.
+     * @param max the value max.
+     * @return the value x.
+     * @throws IllegalArgumentException if max < 0 or x ∉ [0, max].
+     */
+    @CanIgnoreReturnValue
+    public static BigInteger checkNonNegativeInRangeClosed(String role, BigInteger x, BigInteger max) {
+        checkNonNegative("max", max);
+        if (x.signum() < 0 || BigIntegerUtils.greater(x, max)) {
+            throw new IllegalArgumentException(role + " (" + x + ") must be in range [0, " + max + "]");
+        }
+        return x;
+    }
 }

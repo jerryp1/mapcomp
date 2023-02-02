@@ -78,6 +78,8 @@ public class FoLdpTest {
         configurations.add(new Object[]{FoLdpType.HR_HIGH_EPSILON.name(), FoLdpType.HR_HIGH_EPSILON,});
         // Hadamard Response
         configurations.add(new Object[]{FoLdpType.HR.name(), FoLdpType.HR,});
+        // Fast Local Hash
+        configurations.add(new Object[]{FoLdpType.FLH.name(), FoLdpType.FLH,});
         // Optimal Local Hash
         configurations.add(new Object[]{FoLdpType.OLH.name(), FoLdpType.OLH,});
         // Binary Local Hash

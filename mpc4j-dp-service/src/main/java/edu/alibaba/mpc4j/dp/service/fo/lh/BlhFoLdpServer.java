@@ -51,6 +51,7 @@ public class BlhFoLdpServer extends AbstractFoLdpServer {
         double expEpsilon = Math.exp(epsilon);
         pStar = expEpsilon / (expEpsilon + 1);
         intHash = IntHashFactory.fastestInstance();
+        // init budget
         budget = new int[d];
     }
 

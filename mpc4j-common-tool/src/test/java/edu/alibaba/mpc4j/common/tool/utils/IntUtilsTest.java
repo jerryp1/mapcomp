@@ -67,6 +67,81 @@ public class IntUtilsTest {
         Assert.assertThrows(AssertionError.class, () ->
             IntUtils.byteArrayToBoundedNonNegInt(new byte[]{(byte) 0xF0, (byte) 0x00}, Short.MAX_VALUE)
         );
+        // convert an int to a byte array that is greater than the bound
+        // for Byte
+        Assert.assertThrows(AssertionError.class, () ->
+            IntUtils.boundedNonNegIntToByteArray(Byte.MAX_VALUE, Byte.MAX_VALUE - 1)
+        );
+        Assert.assertThrows(AssertionError.class, () ->
+            IntUtils.boundedNonNegIntToByteArray(Byte.MAX_VALUE - 1, Byte.MAX_VALUE - 2)
+        );
+        // for Short
+        Assert.assertThrows(AssertionError.class, () ->
+            IntUtils.boundedNonNegIntToByteArray(Short.MAX_VALUE, Short.MAX_VALUE - 1)
+        );
+        Assert.assertThrows(AssertionError.class, () ->
+            IntUtils.boundedNonNegIntToByteArray(Short.MAX_VALUE - 1, Short.MAX_VALUE - 2)
+        );
+        // for Integer
+        Assert.assertThrows(AssertionError.class, () ->
+            IntUtils.boundedNonNegIntToByteArray(Integer.MAX_VALUE, Integer.MAX_VALUE - 1)
+        );
+        Assert.assertThrows(AssertionError.class, () ->
+            IntUtils.boundedNonNegIntToByteArray(Integer.MAX_VALUE - 1, Integer.MAX_VALUE - 2)
+        );
+        // convert a byte array to an int that is greater than the bound
+        // for Bytes
+        Assert.assertThrows(AssertionError.class, () -> {
+            byte[] byteArray = IntUtils.boundedNonNegIntToByteArray(Byte.MAX_VALUE, Byte.MAX_VALUE);
+            IntUtils.byteArrayToBoundedNonNegInt(byteArray, Byte.MAX_VALUE - 1);
+        });
+        Assert.assertThrows(AssertionError.class, () -> {
+            byte[] byteArray = IntUtils.boundedNonNegIntToByteArray(Byte.MAX_VALUE - 1, Byte.MAX_VALUE);
+            IntUtils.byteArrayToBoundedNonNegInt(byteArray, Byte.MAX_VALUE - 2);
+        });
+        // for Short
+        Assert.assertThrows(AssertionError.class, () -> {
+            byte[] byteArray = IntUtils.boundedNonNegIntToByteArray(Short.MAX_VALUE, Short.MAX_VALUE);
+            IntUtils.byteArrayToBoundedNonNegInt(byteArray, Short.MAX_VALUE - 1);
+        });
+        Assert.assertThrows(AssertionError.class, () -> {
+            byte[] byteArray = IntUtils.boundedNonNegIntToByteArray(Short.MAX_VALUE - 1, Short.MAX_VALUE);
+            IntUtils.byteArrayToBoundedNonNegInt(byteArray, Short.MAX_VALUE - 2);
+        });
+        // for Integer
+        Assert.assertThrows(AssertionError.class, () -> {
+            byte[] byteArray = IntUtils.boundedNonNegIntToByteArray(Integer.MAX_VALUE, Integer.MAX_VALUE);
+            IntUtils.byteArrayToBoundedNonNegInt(byteArray, Integer.MAX_VALUE - 1);
+        });
+        Assert.assertThrows(AssertionError.class, () -> {
+            byte[] byteArray = IntUtils.boundedNonNegIntToByteArray(Integer.MAX_VALUE - 1, Integer.MAX_VALUE);
+            IntUtils.byteArrayToBoundedNonNegInt(byteArray, Integer.MAX_VALUE - 2);
+        });
+    }
+
+    @Test
+    public void testConstantBoundedIntByteArray() {
+        // convert a byte array that is equal to 0, or equal to the bound
+        // for Byte
+        testConstantBoundedIntByteArray(0, Byte.MAX_VALUE - 1);
+        testConstantBoundedIntByteArray(Byte.MAX_VALUE - 1, Byte.MAX_VALUE - 1);
+        testConstantBoundedIntByteArray(0, Byte.MAX_VALUE);
+        testConstantBoundedIntByteArray(Byte.MAX_VALUE, Byte.MAX_VALUE);
+        // for Short
+        testConstantBoundedIntByteArray(0, Short.MAX_VALUE - 1);
+        testConstantBoundedIntByteArray(Short.MAX_VALUE - 1, Short.MAX_VALUE - 1);
+        testConstantBoundedIntByteArray(0, Short.MAX_VALUE);
+        testConstantBoundedIntByteArray(Short.MAX_VALUE, Short.MAX_VALUE);
+        // for Integer
+        testConstantBoundedIntByteArray(0, Integer.MAX_VALUE - 1);
+        testConstantBoundedIntByteArray(Integer.MAX_VALUE - 1, Integer.MAX_VALUE - 1);
+        testConstantBoundedIntByteArray(0, Integer.MAX_VALUE);
+        testConstantBoundedIntByteArray(Integer.MAX_VALUE, Integer.MAX_VALUE);
+    }
+
+    private void testConstantBoundedIntByteArray(int boundInt, int bound) {
+        byte[] boundIntByteArray = IntUtils.boundedNonNegIntToByteArray(boundInt, bound);
+        Assert.assertEquals(boundInt, IntUtils.byteArrayToBoundedNonNegInt(boundIntByteArray, bound));
     }
 
     @Test
@@ -106,7 +181,6 @@ public class IntUtilsTest {
         }
         int convertValue = IntUtils.byteArrayToBoundedNonNegInt(convertByteArray, bound);
         Assert.assertEquals(value, convertValue);
-
     }
 
     @Test

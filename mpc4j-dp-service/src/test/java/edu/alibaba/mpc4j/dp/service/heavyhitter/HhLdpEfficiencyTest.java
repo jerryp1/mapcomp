@@ -61,7 +61,7 @@ public class HhLdpEfficiencyTest {
     /**
      * ε array
      */
-    private static final double[] EPSILONS = new double[]{0.2, 0.8, 3.2, 12.8};
+    private static final double[] EPSILONS = new double[]{1, 2, 4, 8, 16};
     /**
      * the type
      */

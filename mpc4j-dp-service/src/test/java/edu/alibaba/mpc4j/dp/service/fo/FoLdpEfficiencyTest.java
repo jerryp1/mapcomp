@@ -51,7 +51,7 @@ public class FoLdpEfficiencyTest {
     /**
      * ε array
      */
-    private static final double[] EPSILONS = new double[] {0.01, 0.04, 0.16, 0.64, 2.56, 10.24};
+    private static final double[] EPSILONS = new double[] {1, 2, 4, 8, 16};
     /**
      * the type
      */
@@ -68,6 +68,8 @@ public class FoLdpEfficiencyTest {
         FoLdpType.HR_HIGH_EPSILON,
         // Hadamard Response
         FoLdpType.HR,
+        // Fast Local Hash
+        FoLdpType.FLH,
         // Optimal Local Hash
         FoLdpType.OLH,
         // Binary Local Hash

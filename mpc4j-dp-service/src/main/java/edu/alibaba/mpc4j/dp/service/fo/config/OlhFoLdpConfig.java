@@ -18,7 +18,7 @@ public class OlhFoLdpConfig extends BasicFoLdpConfig {
      */
     public static final double MAX_EPSILON = Math.log(Integer.MAX_VALUE) - 1;
 
-    protected OlhFoLdpConfig(Builder builder) {
+    private OlhFoLdpConfig(Builder builder) {
         super(builder);
     }
 

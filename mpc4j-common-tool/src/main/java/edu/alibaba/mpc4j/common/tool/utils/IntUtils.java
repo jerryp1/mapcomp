@@ -99,7 +99,7 @@ public class IntUtils {
             assert bytes.length == Integer.BYTES : "byte.length must be equal to " + Integer.BYTES + ": " + bytes.length;
             output = ByteBuffer.wrap(bytes).getInt();
         }
-        assert output >= 0 : "the output must be greater than or equal to 0: " + output;
+        assert output >= 0 && output <= bound: "the output must be in range [0, " + bound + "]: " + output;
         return output;
     }
 

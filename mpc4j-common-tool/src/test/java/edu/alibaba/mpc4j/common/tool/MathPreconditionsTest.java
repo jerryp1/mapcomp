@@ -382,4 +382,46 @@ public class MathPreconditionsTest {
         MathPreconditions.checkPositiveInRange("x", 1.0, 2.0);
         MathPreconditions.checkPositiveInRange("x", BigInteger.ONE, BigInteger.valueOf(2));
     }
+
+    @Test
+    public void testCheckNonNegativeInRangeClosed() {
+        // check 0 is a valid max
+        MathPreconditions.checkNonNegativeInRangeClosed("x", 0, 0);
+        MathPreconditions.checkNonNegativeInRangeClosed("x", 0L, 0L);
+        MathPreconditions.checkNonNegativeInRangeClosed("x", 0.0, 0.0);
+        MathPreconditions.checkNonNegativeInRangeClosed("x", BigInteger.ZERO, BigInteger.ZERO);
+        // check 1 is a valid max
+        MathPreconditions.checkNonNegativeInRangeClosed("x", 0, 1);
+        MathPreconditions.checkNonNegativeInRangeClosed("x", 0L, 1L);
+        MathPreconditions.checkNonNegativeInRangeClosed("x", 0.0, 1.0);
+        MathPreconditions.checkNonNegativeInRangeClosed("x", BigInteger.ZERO, BigInteger.ONE);
+        // check -1 is not non-negative
+        Assert.assertThrows(IllegalArgumentException.class, () ->
+            MathPreconditions.checkNonNegativeInRangeClosed("x", -1, 1)
+        );
+        Assert.assertThrows(IllegalArgumentException.class, () ->
+            MathPreconditions.checkNonNegativeInRangeClosed("x", -1L, 1L)
+        );
+        Assert.assertThrows(IllegalArgumentException.class, () ->
+            MathPreconditions.checkNonNegativeInRangeClosed("x", -1.0, 1.0)
+        );
+        Assert.assertThrows(IllegalArgumentException.class, () ->
+            MathPreconditions.checkNonNegativeInRangeClosed("x", BigInteger.ONE.negate(), BigInteger.ONE)
+        );
+        // check 0 is non-negative in range [0, 1]
+        MathPreconditions.checkNonNegativeInRangeClosed("x", 0, 1);
+        MathPreconditions.checkNonNegativeInRangeClosed("x", 0L, 1L);
+        MathPreconditions.checkNonNegativeInRangeClosed("x", 0.0, 1.0);
+        MathPreconditions.checkNonNegativeInRangeClosed("x", BigInteger.ZERO, BigInteger.ONE);
+        // check 1 is non-negative in range [0, 1]
+        MathPreconditions.checkNonNegativeInRangeClosed("x", 1, 1);
+        MathPreconditions.checkNonNegativeInRangeClosed("x", 1L, 1L);
+        MathPreconditions.checkNonNegativeInRangeClosed("x", 1.0, 1.0);
+        MathPreconditions.checkNonNegativeInRangeClosed("x", BigInteger.ONE, BigInteger.ONE);
+        // check 1 is non-negative in range [0, 2]
+        MathPreconditions.checkNonNegativeInRangeClosed("x", 1, 2);
+        MathPreconditions.checkNonNegativeInRangeClosed("x", 1L, 2L);
+        MathPreconditions.checkNonNegativeInRangeClosed("x", 1.0, 2.0);
+        MathPreconditions.checkNonNegativeInRangeClosed("x", BigInteger.ONE, BigInteger.valueOf(2));
+    }
 }

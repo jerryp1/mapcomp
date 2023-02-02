@@ -32,7 +32,7 @@ public class AppleCmsFoLdpConfig extends BasicFoLdpConfig {
         k = builder.k;
         m = builder.m;
         hashSeeds = IntStream.range(0, k)
-            .map(cohortIndex -> builder.random.nextInt(m))
+            .map(cohortIndex -> builder.random.nextInt())
             .toArray();
     }
 

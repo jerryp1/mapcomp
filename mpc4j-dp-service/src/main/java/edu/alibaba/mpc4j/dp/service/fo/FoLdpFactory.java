@@ -10,10 +10,7 @@ import edu.alibaba.mpc4j.dp.service.fo.de.DeIndexFoLdpServer;
 import edu.alibaba.mpc4j.dp.service.fo.de.DeStringFoLdpClient;
 import edu.alibaba.mpc4j.dp.service.fo.de.DeStringFoLdpServer;
 import edu.alibaba.mpc4j.dp.service.fo.hadamard.*;
-import edu.alibaba.mpc4j.dp.service.fo.lh.BlhFoLdpClient;
-import edu.alibaba.mpc4j.dp.service.fo.lh.BlhFoLdpServer;
-import edu.alibaba.mpc4j.dp.service.fo.lh.OlhFoLdpClient;
-import edu.alibaba.mpc4j.dp.service.fo.lh.OlhFoLdpServer;
+import edu.alibaba.mpc4j.dp.service.fo.lh.*;
 import edu.alibaba.mpc4j.dp.service.fo.rappor.RapporFoLdpClient;
 import edu.alibaba.mpc4j.dp.service.fo.rappor.RapporFoLdpServer;
 import edu.alibaba.mpc4j.dp.service.fo.ue.OueFoLdpClient;
@@ -71,6 +68,10 @@ public class FoLdpFactory {
          */
         OLH,
         /**
+         * Fast Local Hash
+         */
+        FLH,
+        /**
          * Hadamard Response
          */
         HR,
@@ -114,6 +115,7 @@ public class FoLdpFactory {
             case RAPPOR:
             case BLH:
             case OLH:
+            case FLH:
             case HR:
             case HM:
             case HM_LOW_EPSILON:
@@ -149,6 +151,8 @@ public class FoLdpFactory {
                 return 128;
             case OLH:
                 return OlhFoLdpConfig.MAX_EPSILON;
+            case FLH:
+                return FlhFoLdpConfig.MAX_EPSILON;
             default:
                 throw new IllegalArgumentException("Invalid " + FoLdpFactory.FoLdpType.class.getSimpleName() + ": " + type.name());
         }
@@ -176,6 +180,8 @@ public class FoLdpFactory {
                 return new BasicFoLdpConfig.Builder(type, domainSet, epsilon).build();
             case OLH:
                 return new OlhFoLdpConfig.Builder(type, domainSet, epsilon).build();
+            case FLH:
+                return new FlhFoLdpConfig.Builder(type, domainSet, epsilon).build();
             case RAPPOR:
                 return new RapporFoLdpConfig.Builder(type, domainSet, epsilon).build();
             case APPLE_CMS:
@@ -210,6 +216,8 @@ public class FoLdpFactory {
                 return new BlhFoLdpServer(config);
             case OLH:
                 return new OlhFoLdpServer(config);
+            case FLH:
+                return new FlhFoLdpServer(config);
             case HR:
                 return new HrFoLdpServer(config);
             case HR_HIGH_EPSILON:
@@ -250,6 +258,8 @@ public class FoLdpFactory {
                 return new BlhFoLdpClient(config);
             case OLH:
                 return new OlhFoLdpClient(config);
+            case FLH:
+                return new FlhFoLdpClient(config);
             case HR:
                 return new HrFoLdpClient(config);
             case HR_HIGH_EPSILON:
