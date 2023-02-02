@@ -3,16 +3,21 @@ package edu.alibaba.mpc4j.dp.service.main;
 import com.google.common.base.Preconditions;
 import edu.alibaba.mpc4j.common.tool.metrics.HeavyHitterMetrics;
 import edu.alibaba.mpc4j.common.tool.utils.PropertiesUtils;
+import edu.alibaba.mpc4j.dp.service.fo.FoLdpFactory;
+import edu.alibaba.mpc4j.dp.service.fo.FoLdpFactory.FoLdpType;
+import edu.alibaba.mpc4j.dp.service.fo.config.FoLdpConfig;
 import edu.alibaba.mpc4j.dp.service.heavyhitter.HhLdpClient;
 import edu.alibaba.mpc4j.dp.service.heavyhitter.HhLdpServer;
 import edu.alibaba.mpc4j.dp.service.heavyhitter.HhLdpFactory;
 import edu.alibaba.mpc4j.dp.service.heavyhitter.HhLdpFactory.HhLdpType;
-import edu.alibaba.mpc4j.dp.service.heavyhitter.config.BasicHhLdpConfig;
+import edu.alibaba.mpc4j.dp.service.heavyhitter.config.FoHhLdpConfig;
 import edu.alibaba.mpc4j.dp.service.heavyhitter.config.HgHhLdpConfig;
 import edu.alibaba.mpc4j.dp.service.heavyhitter.config.HhLdpConfig;
 import edu.alibaba.mpc4j.dp.service.structure.HeavyGuardian;
 import edu.alibaba.mpc4j.dp.service.structure.NaiveStreamCounter;
 import edu.alibaba.mpc4j.dp.service.tool.StreamDataUtils;
+import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.time.StopWatch;
 import org.openjdk.jol.info.GraphLayout;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -20,7 +25,9 @@ import org.slf4j.LoggerFactory;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.text.DecimalFormat;
 import java.util.*;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
@@ -35,9 +42,29 @@ import java.util.stream.Stream;
 public class HhLdpMain {
     private static final Logger LOGGER = LoggerFactory.getLogger(HhLdpMain.class);
     /**
+     * double output format
+     */
+    private static final DecimalFormat DOUBLE_DECIMAL_FORMAT = new DecimalFormat("0.000");
+    /**
+     * time output format
+     */
+    private static final DecimalFormat TIME_DECIMAL_FORMAT = new DecimalFormat("0.0000");
+    /**
+     * int format
+     */
+    private static final DecimalFormat INTEGER_DECIMAL_FORMAT = new DecimalFormat("0");
+    /**
      * 任务类型名称
      */
     static final String TASK_TYPE_NAME = "LDP_HEAVY_HITTER";
+    /**
+     * server stop watch
+     */
+    private final StopWatch serverStopWatch;
+    /**
+     * client stop watch
+     */
+    private final StopWatch clientStopWatch;
     /**
      * report file postfix
      */
@@ -75,6 +102,14 @@ public class HhLdpMain {
      */
     private final int testRound;
     /**
+     * Frequency Oracle based type
+     */
+    private final List<FoLdpType> foTypeList;
+    /**
+     * HeavyGuardian based type
+     */
+    private final List<HhLdpType> hgTypeList;
+    /**
      * correct count map
      */
     private final Map<String, Integer> correctCountMap;
@@ -84,6 +119,8 @@ public class HhLdpMain {
     private final List<String> correctHeavyHitters;
 
     public HhLdpMain(Properties properties) throws IOException {
+        serverStopWatch = new StopWatch();
+        clientStopWatch = new StopWatch();
         reportFilePostfix = PropertiesUtils.readString(properties, "report_file_postfix");
         datasetName = PropertiesUtils.readString(properties, "dataset_name");
         // set dataset path
@@ -137,6 +174,18 @@ public class HhLdpMain {
         int num = (int) dataStream.count();
         dataStream.close();
         warmupNum = (int) Math.round(num * warmupPercentage);
+        // set Frequency Oracle based types
+        String[] foTypeStrings = PropertiesUtils.readTrimStringArray(properties, "fo_types");
+        foTypeList = Arrays.stream(foTypeStrings)
+            .map(FoLdpType::valueOf)
+            .collect(Collectors.toList());
+        // set HeavyGuardian based types
+        String[] hgTypeStrings = PropertiesUtils.readTrimStringArray(properties, "hg_types");
+        hgTypeList = Arrays.stream(hgTypeStrings)
+            .map(HhLdpType::valueOf)
+            // ignore fo types
+            .filter(type -> !type.equals(HhLdpType.FO))
+            .collect(Collectors.toList());
         // correct counting result
         NaiveStreamCounter streamCounter = new NaiveStreamCounter();
         dataStream = StreamDataUtils.obtainItemStream(datasetPath);
@@ -163,20 +212,33 @@ public class HhLdpMain {
         // write tab
         String tab = "type\tε_w\tα\tNDCG\tPrecision\tABE\tRE\tMemory(B)";
         printWriter.println(tab);
+        LOGGER.info("{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}", "                name", "         ε", "         α",
+            "           s_time(s)", "           c_time(s)",
+            "            comm.(B)", "             mem.(B)",
+            "                ndcg", "           precision", "                 abe", "                  re"
+        );
         runHeavyGuardian(printWriter);
-        for (double windowEpsilon : windowEpsilons) {
-            runNaiveHeavyHitter(windowEpsilon, printWriter);
-        }
-        for (double windowEpsilon : windowEpsilons) {
-            runBasicHgHeavyHitter(windowEpsilon, printWriter);
-        }
-        for (double alpha : alphas) {
+        if (!foTypeList.isEmpty()) {
             for (double windowEpsilon : windowEpsilons) {
-                runAdvHhgHeavyHitter(windowEpsilon, alpha, printWriter);
+                runFoHeavyHitter(windowEpsilon, printWriter);
             }
         }
-        for (double windowEpsilon : windowEpsilons) {
-            runRelaxHhgHeavyHitter(windowEpsilon, printWriter);
+        if (hgTypeList.contains(HhLdpType.BASIC)) {
+            for (double windowEpsilon : windowEpsilons) {
+                runBasicHgHeavyHitter(windowEpsilon, printWriter);
+            }
+        }
+        if (hgTypeList.contains(HhLdpType.ADV)) {
+            for (double alpha : alphas) {
+                for (double windowEpsilon : windowEpsilons) {
+                    runAdvHhgHeavyHitter(windowEpsilon, alpha, printWriter);
+                }
+            }
+        }
+        if (hgTypeList.contains(HhLdpType.RELAX)) {
+            for (double windowEpsilon : windowEpsilons) {
+                runRelaxHhgHeavyHitter(windowEpsilon, printWriter);
+            }
         }
         printWriter.close();
         fileWriter.close();
@@ -184,17 +246,35 @@ public class HhLdpMain {
 
     private void runHeavyGuardian(PrintWriter printWriter) throws IOException {
         String typeName = " PURE_HG";
-        LOGGER.info("Run {}", typeName);
-        double ndcg = 0.0;
-        double precision = 0.0;
-        double abe = 0.0;
-        double re = 0.0;
-        double memory = 0.0;
+        HhLdpAggMetrics aggMetrics = new HhLdpAggMetrics();
         for (int round = 0; round < testRound; round++) {
             HeavyGuardian heavyGuardian = new HeavyGuardian(1, k, 0);
             Stream<String> dataStream = StreamDataUtils.obtainItemStream(datasetPath);
-            dataStream.forEach(heavyGuardian::insert);
+            serverStopWatch.start();
+            serverStopWatch.suspend();
+            clientStopWatch.start();
+            clientStopWatch.suspend();
+            long payloadBytes = dataStream
+                .mapToLong(item -> {
+                    clientStopWatch.resume();
+                    byte[] itemBytes = item.getBytes(HhLdpFactory.DEFAULT_CHARSET);
+                    clientStopWatch.suspend();
+                    serverStopWatch.resume();
+                    String recoverItem = new String(itemBytes, HhLdpFactory.DEFAULT_CHARSET);
+                    heavyGuardian.insert(recoverItem);
+                    serverStopWatch.suspend();
+                    return itemBytes.length;
+                })
+                .sum();
             dataStream.close();
+            serverStopWatch.stop();
+            long serverTimeMs = serverStopWatch.getTime(TimeUnit.MILLISECONDS);
+            serverStopWatch.reset();
+            // client time
+            clientStopWatch.stop();
+            long clientTimeMs = clientStopWatch.getTime(TimeUnit.MILLISECONDS);
+            clientStopWatch.reset();
+            long memoryBytes = GraphLayout.parseInstance(heavyGuardian).totalSize();
             // heavy hitter map
             Map<String, Double> heavyHitterMap = heavyGuardian.getRecordItemSet().stream()
                 .collect(Collectors.toMap(item -> item, item -> (double) heavyGuardian.query(item)));
@@ -209,87 +289,56 @@ public class HhLdpMain {
             // heavy hitters
             List<String> heavyHitters = heavyHitterOrderedList.stream().map(Map.Entry::getKey).collect(Collectors.toList());
             // metrics
-            ndcg += HeavyHitterMetrics.ndcg(heavyHitters, correctHeavyHitters);
-            precision += HeavyHitterMetrics.precision(heavyHitters, correctHeavyHitters);
-            abe += HeavyHitterMetrics.absoluteError(heavyHitterMap, correctCountMap);
-            re += HeavyHitterMetrics.relativeError(heavyHitterMap, correctCountMap);
-            memory += GraphLayout.parseInstance(heavyGuardian).totalSize();
+            HhLdpMetrics metrics = new HhLdpMetrics();
+            metrics.setServerTimeMs(serverTimeMs);
+            metrics.setClientTimeMs(clientTimeMs);
+            metrics.setPayloadBytes(payloadBytes);
+            metrics.setMemoryBytes(memoryBytes);
+            metrics.setNdcg(HeavyHitterMetrics.ndcg(heavyHitters, correctHeavyHitters));
+            metrics.setPrecision(HeavyHitterMetrics.precision(heavyHitters, correctHeavyHitters));
+            metrics.setAbe(HeavyHitterMetrics.absoluteError(heavyHitterMap, correctCountMap));
+            metrics.setRe(HeavyHitterMetrics.relativeError(heavyHitterMap, correctCountMap));
+            aggMetrics.addMetrics(metrics);
         }
-        ndcg = ndcg / testRound;
-        precision = precision / testRound;
-        abe = abe / testRound;
-        re = re / testRound;
-        memory = memory / testRound;
         // output report
-        printInfo(printWriter, typeName, null, null, ndcg, precision, abe, re, memory);
+        printInfo(printWriter, typeName, null, null, aggMetrics);
     }
 
-    private void runNaiveHeavyHitter(double windowEpsilon, PrintWriter printWriter) throws IOException {
-        HhLdpType type = HhLdpType.FO;
-        LOGGER.info("Run {}, ε_w = {}", type.name(), windowEpsilon);
-        double ndcg = 0.0;
-        double precision = 0.0;
-        double abe = 0.0;
-        double re = 0.0;
-        double memory = 0.0;
-        for (int round = 0; round < testRound; round++) {
-            HhLdpConfig config = new BasicHhLdpConfig
-                .Builder(type, domainSet, k, windowEpsilon)
-                .build();
-            HhLdpServer server = HhLdpFactory.createServer(config);
-            HhLdpClient client = HhLdpFactory.createClient(config);
-            double[] metrics = runLdpHeavyHitter(server, client);
-            ndcg += metrics[0];
-            precision += metrics[1];
-            abe += metrics[2];
-            re += metrics[3];
-            memory += metrics[4];
+    private void runFoHeavyHitter(double windowEpsilon, PrintWriter printWriter) throws IOException {
+        for (FoLdpType foLdpType : foTypeList) {
+            HhLdpAggMetrics aggMetrics = new HhLdpAggMetrics();
+            for (int round = 0; round < testRound; round++) {
+                FoLdpConfig foLdpConfig = FoLdpFactory.createDefaultConfig(foLdpType, domainSet, windowEpsilon);
+                HhLdpConfig hhLdpConfig = new FoHhLdpConfig
+                    .Builder(foLdpConfig, k)
+                    .build();
+                HhLdpServer server = HhLdpFactory.createServer(hhLdpConfig);
+                HhLdpClient client = HhLdpFactory.createClient(hhLdpConfig);
+                HhLdpMetrics metrics = runLdpHeavyHitter(server, client);
+                aggMetrics.addMetrics(metrics);
+            }
+            printInfo(printWriter, "FO (" + foLdpType.name() + ")", windowEpsilon, null, aggMetrics);
         }
-        ndcg = ndcg / testRound;
-        precision = precision / testRound;
-        abe = abe / testRound;
-        re = re / testRound;
-        memory = memory / testRound;
-        printInfo(printWriter, type.name(), windowEpsilon, null, ndcg, precision, abe, re, memory);
     }
 
     private void runBasicHgHeavyHitter(double windowEpsilon, PrintWriter printWriter) throws IOException {
-        HhLdpType type = HhLdpType.BASIC_HG;
-        LOGGER.info("Run {}, ε_w = {}", type.name(), windowEpsilon);
-        double ndcg = 0.0;
-        double precision = 0.0;
-        double abe = 0.0;
-        double re = 0.0;
-        double memory = 0.0;
+        HhLdpType type = HhLdpType.BASIC;
+        HhLdpAggMetrics aggMetrics = new HhLdpAggMetrics();
         for (int round = 0; round < testRound; round++) {
             HgHhLdpConfig config = new HgHhLdpConfig
                 .Builder(type, domainSet, k, windowEpsilon)
                 .build();
             HhLdpServer server = HhLdpFactory.createServer(config);
             HhLdpClient client = HhLdpFactory.createClient(config);
-            double[] metrics = runLdpHeavyHitter(server, client);
-            ndcg += metrics[0];
-            precision += metrics[1];
-            abe += metrics[2];
-            re += metrics[3];
-            memory += metrics[4];
+            HhLdpMetrics metrics = runLdpHeavyHitter(server, client);
+            aggMetrics.addMetrics(metrics);
         }
-        ndcg = ndcg / testRound;
-        precision = precision / testRound;
-        abe = abe / testRound;
-        re = re / testRound;
-        memory = memory / testRound;
-        printInfo(printWriter, type.name(), windowEpsilon, null, ndcg, precision, abe, re, memory);
+        printInfo(printWriter, type.name(), windowEpsilon, null, aggMetrics);
     }
 
     private void runAdvHhgHeavyHitter(double windowEpsilon, double alpha, PrintWriter printWriter) throws IOException {
-        HhLdpType type = HhLdpType.ADVAN_HG;
-        LOGGER.info("Run {}, ε_w = {}, α = {}", type.name(), windowEpsilon, alpha);
-        double ndcg = 0.0;
-        double precision = 0.0;
-        double abe = 0.0;
-        double re = 0.0;
-        double memory = 0.0;
+        HhLdpType type = HhLdpType.ADV;
+        HhLdpAggMetrics aggMetrics = new HhLdpAggMetrics();
         for (int round = 0; round < testRound; round++) {
             HgHhLdpConfig config = new HgHhLdpConfig
                 .Builder(type, domainSet, k, windowEpsilon)
@@ -297,51 +346,28 @@ public class HhLdpMain {
                 .build();
             HhLdpServer server = HhLdpFactory.createServer(config);
             HhLdpClient client = HhLdpFactory.createClient(config);
-            double[] metrics = runLdpHeavyHitter(server, client);
-            ndcg += metrics[0];
-            precision += metrics[1];
-            abe += metrics[2];
-            re += metrics[3];
-            memory += metrics[4];
+            HhLdpMetrics metrics = runLdpHeavyHitter(server, client);
+            aggMetrics.addMetrics(metrics);
         }
-        ndcg = ndcg / testRound;
-        precision = precision / testRound;
-        abe = abe / testRound;
-        re = re / testRound;
-        memory = memory / testRound;
-        printInfo(printWriter, type.name(), windowEpsilon, alpha, ndcg, precision, abe, re, memory);
+        printInfo(printWriter, type.name(), windowEpsilon, alpha, aggMetrics);
     }
 
     private void runRelaxHhgHeavyHitter(double windowEpsilon, PrintWriter printWriter) throws IOException {
-        HhLdpType type = HhLdpType.RELAX_HG;
-        LOGGER.info("Run {}, ε_w = {}", type.name(), windowEpsilon);
-        double ndcg = 0.0;
-        double precision = 0.0;
-        double abe = 0.0;
-        double re = 0.0;
-        double memory = 0.0;
+        HhLdpType type = HhLdpType.RELAX;
+        HhLdpAggMetrics aggMetrics = new HhLdpAggMetrics();
         for (int round = 0; round < testRound; round++) {
             HgHhLdpConfig config = new HgHhLdpConfig
                 .Builder(type, domainSet, k, windowEpsilon)
                 .build();
             HhLdpServer server = HhLdpFactory.createServer(config);
             HhLdpClient client = HhLdpFactory.createClient(config);
-            double[] metrics = runLdpHeavyHitter(server, client);
-            ndcg += metrics[0];
-            precision += metrics[1];
-            abe += metrics[2];
-            re += metrics[3];
-            memory += metrics[4];
+            HhLdpMetrics metrics = runLdpHeavyHitter(server, client);
+            aggMetrics.addMetrics(metrics);
         }
-        ndcg = ndcg / testRound;
-        precision = precision / testRound;
-        abe = abe / testRound;
-        re = re / testRound;
-        memory = memory / testRound;
-        printInfo(printWriter, type.name(), windowEpsilon, null, ndcg, precision, abe, re, memory);
+        printInfo(printWriter, type.name(), windowEpsilon, null, aggMetrics);
     }
 
-    private double[] runLdpHeavyHitter(HhLdpServer server, HhLdpClient client) throws IOException {
+    private HhLdpMetrics runLdpHeavyHitter(HhLdpServer server, HhLdpClient client) throws IOException {
         // warmup
         AtomicInteger warmupIndex = new AtomicInteger();
         Stream<String> dataStream = StreamDataUtils.obtainItemStream(datasetPath);
@@ -351,12 +377,33 @@ public class HhLdpMain {
         dataStream.close();
         server.stopWarmup();
         // randomize
+        serverStopWatch.start();
+        serverStopWatch.suspend();
+        clientStopWatch.start();
+        clientStopWatch.suspend();
         AtomicInteger randomizedIndex = new AtomicInteger();
         dataStream = StreamDataUtils.obtainItemStream(datasetPath);
-        dataStream.filter(item -> randomizedIndex.getAndIncrement() > warmupNum)
-            .map(item -> client.randomize(server.getServerContext(), item))
-            .forEach(server::randomizeInsert);
+        long payloadBytes = dataStream
+            .filter(item -> randomizedIndex.getAndIncrement() > warmupNum)
+            .mapToLong(item -> {
+                clientStopWatch.resume();
+                byte[] itemBytes = client.randomize(server.getServerContext(), item);
+                clientStopWatch.suspend();
+                serverStopWatch.resume();
+                server.randomizeInsert(itemBytes);
+                serverStopWatch.suspend();
+                return itemBytes.length;
+            })
+            .sum();
         dataStream.close();
+        serverStopWatch.stop();
+        long serverTimeMs = serverStopWatch.getTime(TimeUnit.MILLISECONDS);
+        serverStopWatch.reset();
+        // client time
+        clientStopWatch.stop();
+        long clientTimeMs = clientStopWatch.getTime(TimeUnit.MILLISECONDS);
+        clientStopWatch.reset();
+        long memoryBytes = GraphLayout.parseInstance(server).totalSize();
         // heavy hitter map
         Map<String, Double> heavyHitterMap = server.heavyHitters();
         Preconditions.checkArgument(heavyHitterMap.size() == k);
@@ -367,29 +414,45 @@ public class HhLdpMain {
         // heavy hitters
         List<String> heavyHitters = heavyHitterOrderedList.stream().map(Map.Entry::getKey).collect(Collectors.toList());
         // metrics
-        double[] metrics = new double[5];
-        metrics[0] = HeavyHitterMetrics.ndcg(heavyHitters, correctHeavyHitters);
-        metrics[1] = HeavyHitterMetrics.precision(heavyHitters, correctHeavyHitters);
-        metrics[2] = HeavyHitterMetrics.absoluteError(heavyHitterMap, correctCountMap);
-        metrics[3] = HeavyHitterMetrics.relativeError(heavyHitterMap, correctCountMap);
-        metrics[4] = GraphLayout.parseInstance(server).totalSize();
+        HhLdpMetrics metrics = new HhLdpMetrics();
+        metrics.setServerTimeMs(serverTimeMs);
+        metrics.setClientTimeMs(clientTimeMs);
+        metrics.setPayloadBytes(payloadBytes);
+        metrics.setMemoryBytes(memoryBytes);
+        metrics.setNdcg(HeavyHitterMetrics.ndcg(heavyHitters, correctHeavyHitters));
+        metrics.setPrecision(HeavyHitterMetrics.precision(heavyHitters, correctHeavyHitters));
+        metrics.setAbe(HeavyHitterMetrics.absoluteError(heavyHitterMap, correctCountMap));
+        metrics.setRe(HeavyHitterMetrics.relativeError(heavyHitterMap, correctCountMap));
         return metrics;
     }
 
     private void printInfo(PrintWriter printWriter, String type, Double windowEpsilon, Double alpha,
-                           double ndcg, double precision, double abe, double re, double memory) {
+                           HhLdpAggMetrics aggMetrics) {
         String windowEpsilonString = windowEpsilon == null ? "-" : String.valueOf(windowEpsilon);
         String alphaString = alpha == null ? "-" : String.valueOf(alpha);
-        double roundNdcg = (double) Math.round(ndcg * 10000) / 10000;
-        double roundPrecision = (double) Math.round(precision * 10000) / 10000;
-        double roundAbe = (double) Math.round(abe * 10000) / 10000;
-        double roundRe = (double) Math.round(re * 10000) / 10000;
-        double roundMemory = (double) Math.round(memory * 10000) / 10000;
-        LOGGER.info(
-            "NDCG = {}, Precision = {}, ABE = {}, RE = {}, Memory = {}",
-            roundNdcg, roundPrecision, roundAbe, roundRe, roundMemory
+        double serverTime = aggMetrics.getServerTimeSecond();
+        double clientTime = aggMetrics.getClientTimeSecond();
+        long payloadBytes = aggMetrics.getPayloadBytes();
+        long memoryBytes = aggMetrics.getMemoryBytes();
+        double ndcg = aggMetrics.getNdcg();
+        double precision = aggMetrics.getPrecision();
+        double abe = aggMetrics.getAbe();
+        double re = aggMetrics.getRe();
+        LOGGER.info("{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}",
+            StringUtils.leftPad(type, 20),
+            StringUtils.leftPad(windowEpsilonString, 10),
+            StringUtils.leftPad(alphaString, 10),
+            StringUtils.leftPad(TIME_DECIMAL_FORMAT.format(serverTime), 20),
+            StringUtils.leftPad(TIME_DECIMAL_FORMAT.format(clientTime), 20),
+            StringUtils.leftPad(INTEGER_DECIMAL_FORMAT.format(payloadBytes), 20),
+            StringUtils.leftPad(INTEGER_DECIMAL_FORMAT.format(memoryBytes), 20),
+            StringUtils.leftPad(DOUBLE_DECIMAL_FORMAT.format(ndcg), 20),
+            StringUtils.leftPad(DOUBLE_DECIMAL_FORMAT.format(precision), 20),
+            StringUtils.leftPad(DOUBLE_DECIMAL_FORMAT.format(abe), 20),
+            StringUtils.leftPad(DOUBLE_DECIMAL_FORMAT.format(re), 20)
         );
         printWriter.println(type + "\t" + windowEpsilonString + "\t" + alphaString + "\t"
-            + roundNdcg + "\t" + roundPrecision + "\t" + roundAbe + "\t" + roundRe + "\t" + roundMemory);
+            + serverTime + "\t" + clientTime + "\t" + payloadBytes + "\t" + memoryBytes + "\t"
+            + ndcg + "\t" + precision + "\t" + abe + "\t" + re);
     }
 }

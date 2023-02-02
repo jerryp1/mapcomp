@@ -133,19 +133,19 @@ public class HhLdpEfficiencyTest {
             // relaxed heavy guardian
             CONFIGS.add(
                 new HgHhLdpConfig
-                    .Builder(HhLdpFactory.HhLdpType.RELAX_HG, LdpTestDataUtils.CONNECT_DATA_DOMAIN, DEFAULT_K, epsilon)
+                    .Builder(HhLdpFactory.HhLdpType.RELAX, LdpTestDataUtils.CONNECT_DATA_DOMAIN, DEFAULT_K, epsilon)
                     .build()
             );
             // advanced heavy guardian
             CONFIGS.add(
                 new HgHhLdpConfig
-                    .Builder(HhLdpFactory.HhLdpType.ADVAN_HG, LdpTestDataUtils.CONNECT_DATA_DOMAIN, DEFAULT_K, epsilon)
+                    .Builder(HhLdpFactory.HhLdpType.ADV, LdpTestDataUtils.CONNECT_DATA_DOMAIN, DEFAULT_K, epsilon)
                     .build()
             );
             // basic heavy guardian
             CONFIGS.add(
                 new HgHhLdpConfig
-                    .Builder(HhLdpFactory.HhLdpType.BASIC_HG, LdpTestDataUtils.CONNECT_DATA_DOMAIN, DEFAULT_K, epsilon)
+                    .Builder(HhLdpFactory.HhLdpType.BASIC, LdpTestDataUtils.CONNECT_DATA_DOMAIN, DEFAULT_K, epsilon)
                     .build()
             );
         }

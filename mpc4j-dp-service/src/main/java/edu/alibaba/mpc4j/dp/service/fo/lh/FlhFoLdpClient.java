@@ -79,7 +79,7 @@ public class FlhFoLdpClient extends AbstractFoLdpClient {
             .toArray(byte[][]::new);
         for (int i = 0; i < k; i++) {
             for (int j = 0; j < d; j++) {
-                hashMap[i][j] = Math.abs(intHash.hash(itemIndexBytesArray[j], hashSeeds[i])) % g;
+                hashMap[i][j] = Math.abs(intHash.hash(itemIndexBytesArray[j], hashSeeds[i]) % g);
             }
         }
         // p = e^ε / (e^ε + g - 1)

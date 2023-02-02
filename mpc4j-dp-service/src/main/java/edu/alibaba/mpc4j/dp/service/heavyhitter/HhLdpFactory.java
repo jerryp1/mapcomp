@@ -39,15 +39,15 @@ public class HhLdpFactory {
         /**
          * basic HeavyGuardian
          */
-        BASIC_HG,
+        BASIC,
         /**
          * Advanced HeavyGuardian
          */
-        ADVAN_HG,
+        ADV,
         /**
          * Related HeavyGuardian
          */
-        RELAX_HG,
+        RELAX,
     }
 
     /**
@@ -63,9 +63,9 @@ public class HhLdpFactory {
         switch (type) {
             case FO:
                 return new FoHhLdpConfig.Builder(type, domainSet, k, windowEpsilon).build();
-            case BASIC_HG:
-            case ADVAN_HG:
-            case RELAX_HG:
+            case BASIC:
+            case ADV:
+            case RELAX:
                 return new HgHhLdpConfig.Builder(type, domainSet, k, windowEpsilon).build();
             default:
                 throw new IllegalArgumentException("Invalid " + HhLdpType.class.getSimpleName() + ": " + type);
@@ -83,11 +83,11 @@ public class HhLdpFactory {
         switch (type) {
             case FO:
                 return new FoHhLdpServer(config);
-            case BASIC_HG:
+            case BASIC:
                 return new BasicHgHhLdpServer(config);
-            case ADVAN_HG:
+            case ADV:
                 return new AdvHhgHhLdpServer(config);
-            case RELAX_HG:
+            case RELAX:
                 return new RelaxHhgHhLdpServer(config);
             default:
                 throw new IllegalArgumentException("Invalid " + HhLdpType.class.getSimpleName() + ": " + type);
@@ -105,11 +105,11 @@ public class HhLdpFactory {
         switch (type) {
             case FO:
                 return new FoHhLdpClient(config);
-            case BASIC_HG:
+            case BASIC:
                 return new BasicHgHhLdpClient(config);
-            case ADVAN_HG:
+            case ADV:
                 return new AdvHhgHhLdpClient(config);
-            case RELAX_HG:
+            case RELAX:
                 return new RelaxHhgHhLdpClient(config);
             default:
                 throw new IllegalArgumentException("Invalid " + HhLdpType.class.getSimpleName() + ": " + type);

@@ -89,7 +89,7 @@ public class OlhFoLdpServer extends AbstractFoLdpServer {
         IntStream.range(0, d)
             .forEach(itemIndex -> {
                 byte[] itemIndexBytes = IntUtils.intToByteArray(itemIndex);
-                int hv = Math.abs(intHash.hash(itemIndexBytes, seed)) % g;
+                int hv = Math.abs(intHash.hash(itemIndexBytes, seed) % g);
                 if (hv == y) {
                     budget[itemIndex]++;
                 }

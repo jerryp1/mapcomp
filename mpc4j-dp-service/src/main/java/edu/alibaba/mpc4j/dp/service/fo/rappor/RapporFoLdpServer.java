@@ -206,7 +206,7 @@ public class RapporFoLdpServer extends AbstractFoLdpServer {
                 byte[] itemIndexBytes = IntUtils.intToByteArray(itemIndex);
                 int[] hashPositions = new int[hashNum];
                 for (int hashIndex = 0; hashIndex < hashNum; hashIndex++) {
-                    hashPositions[hashIndex] = Math.abs(intHash.hash(itemIndexBytes, hashSeeds[cohortIndex][hashIndex])) % m;
+                    hashPositions[hashIndex] = Math.abs(intHash.hash(itemIndexBytes, hashSeeds[cohortIndex][hashIndex]) % m);
                 }
                 for (int hashPosition : hashPositions) {
                     x[cohortIndex * m + hashPosition][itemIndex] = 1;

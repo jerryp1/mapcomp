@@ -76,7 +76,7 @@ public class AppleCmsFoLdpClient extends AbstractFoLdpClient {
         int j = random.nextInt(k);
         byte[] itemIndexBytes = IntUtils.intToByteArray(domain.getItemIndex(item));
         // sets the encoding vector \vec v {-1, 1}^m to be 1 in position h_j(d) and -1 everywhere else.
-        int hj = Math.abs(intHash.hash(itemIndexBytes, hashSeeds[j])) % m;
+        int hj = Math.abs(intHash.hash(itemIndexBytes, hashSeeds[j]) % m);
         // for reducing the communication cost, we use a BitVector to represent \vec v, false for -1 and true for 1.
         BitVector bitVector = BitVectorFactory.createZeros(BitVectorType.BYTES_BIT_VECTOR, m);
         for (int i = 0; i < m; i++) {

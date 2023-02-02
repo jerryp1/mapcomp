@@ -90,12 +90,12 @@ public class HgHhLdpConfig extends BasicHhLdpConfig {
         public Builder(HhLdpType type, Set<String> domainSet, int k, double windowEpsilon) {
             super(type, domainSet, k, windowEpsilon);
             switch (type) {
-                case BASIC_HG:
+                case BASIC:
                     break;
-                case ADVAN_HG:
+                case ADV:
                     alpha = 1.0 / 3;
                     break;
-                case RELAX_HG:
+                case RELAX:
                     alpha = 1.0 / 2;
                     break;
                 default:

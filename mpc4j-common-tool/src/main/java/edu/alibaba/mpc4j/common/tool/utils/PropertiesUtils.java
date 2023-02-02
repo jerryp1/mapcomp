@@ -88,15 +88,17 @@ public class PropertiesUtils {
     }
 
     /**
-     * 读取字符串数组。
+     * Reads a String array, each of which is trimmed (i.e., with any leading and trailing whitespace removed).
      *
-     * @param properties 配置项。
-     * @param keyword    关键字。
-     * @return 字符串数组。
+     * @param properties the properties.
+     * @param keyword    the keyword.
+     * @return the trimmed String array.
      */
-    public static String[] readStringArray(Properties properties, String keyword) {
+    public static String[] readTrimStringArray(Properties properties, String keyword) {
         String stringArrayString = readString(properties, keyword);
-        return stringArrayString.split(",");
+        return Arrays.stream(stringArrayString.split(","))
+            .map(String::trim)
+            .toArray(String[]::new);
     }
 
 

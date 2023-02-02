@@ -76,7 +76,7 @@ public class OlhFoLdpClient extends AbstractFoLdpClient {
         int seed = random.nextInt();
         byteBuffer.putInt(seed);
         byte[] itemIndexBytes = IntUtils.intToByteArray(domain.getItemIndex(item));
-        int x = Math.abs(intHash.hash(itemIndexBytes, seed)) % g;
+        int x = Math.abs(intHash.hash(itemIndexBytes, seed) % g);
         // Perturb x to y with probability 1 - e^ε / (e^ε + g - 1)
         double u = random.nextDouble();
         if (u > p - q) {

@@ -48,11 +48,11 @@ public class HhLdpTest {
         // Frequency Oracle
         configurations.add(new Object[]{HhLdpType.FO.name(), HhLdpType.FO,});
         // relaxed heavy guardian
-        configurations.add(new Object[]{HhLdpType.RELAX_HG.name(), HhLdpType.RELAX_HG,});
+        configurations.add(new Object[]{HhLdpType.RELAX.name(), HhLdpType.RELAX,});
         // advanced heavy guardian
-        configurations.add(new Object[]{HhLdpType.ADVAN_HG.name(), HhLdpType.ADVAN_HG,});
+        configurations.add(new Object[]{HhLdpType.ADV.name(), HhLdpType.ADV,});
         // basic heavy guardian
-        configurations.add(new Object[]{HhLdpType.BASIC_HG.name(), HhLdpType.BASIC_HG,});
+        configurations.add(new Object[]{HhLdpType.BASIC.name(), HhLdpType.BASIC,});
 
         return configurations;
     }
