@@ -430,6 +430,74 @@ public class MathPreconditions {
     }
 
     /**
+     * Check x <= max.
+     *
+     * @param role the name of the value x.
+     * @param x the value x.
+     * @param max the value max.
+     * @return the value x.
+     * @throws IllegalArgumentException if x > max.
+     */
+    @CanIgnoreReturnValue
+    public static int checkLessOrEqual(String role, int x, int max) {
+        if (x > max) {
+            throw new IllegalArgumentException(role + " (" + x + ") must be <= " + max);
+        }
+        return x;
+    }
+
+    /**
+     * Check x <= max.
+     *
+     * @param role the name of the value x.
+     * @param x the value x.
+     * @param max the value max.
+     * @return the value x.
+     * @throws IllegalArgumentException if x > max.
+     */
+    @CanIgnoreReturnValue
+    public static long checkLessOrEqual(String role, long x, long max) {
+        if (x > max) {
+            throw new IllegalArgumentException(role + " (" + x + ") must be <= " + max);
+        }
+        return x;
+    }
+
+    /**
+     * Check x <= max.
+     *
+     * @param role the name of the value x.
+     * @param x the value x.
+     * @param max the value max.
+     * @return the value x.
+     * @throws IllegalArgumentException if x > max.
+     */
+    @CanIgnoreReturnValue
+    public static double checkLessOrEqual(String role, double x, double max) {
+        if (x > max) {
+            throw new IllegalArgumentException(role + " (" + x + ") must be <= " + max);
+        }
+        return x;
+    }
+
+    /**
+     * Check x <= max.
+     *
+     * @param role the name of the value x.
+     * @param x the value x.
+     * @param max the value max.
+     * @return the value x.
+     * @throws IllegalArgumentException if x >= max.
+     */
+    @CanIgnoreReturnValue
+    public static BigInteger checkLessOrEqual(String role, BigInteger x, BigInteger max) {
+        if (BigIntegerUtils.greater(x, max)) {
+            throw new IllegalArgumentException(role + " (" + x + ") must be <= " + max);
+        }
+        return x;
+    }
+
+    /**
      * Check x ∈ (0, max).
      *
      * @param role the name of the value x.

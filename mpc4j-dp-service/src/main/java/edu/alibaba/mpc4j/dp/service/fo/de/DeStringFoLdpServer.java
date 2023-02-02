@@ -21,20 +21,20 @@ public class DeStringFoLdpServer extends AbstractFoLdpServer {
      */
     private final int[] budget;
     /**
-     * p = e^ε / (e^ε + d - 1)
+     * p* = e^ε / (e^ε + d - 1)
      */
-    private final double p;
+    private final double pStar;
     /**
-     * q = 1 / (e^ε + d - 1)
+     * q* = 1 / (e^ε + d - 1)
      */
-    private final double q;
+    private final double qStar;
 
     public DeStringFoLdpServer(FoLdpConfig config) {
         super(config);
         budget = new int[d];
         double expEpsilon = Math.exp(epsilon);
-        p = expEpsilon / (expEpsilon + d - 1);
-        q = 1 / (expEpsilon + d - 1);
+        pStar = expEpsilon / (expEpsilon + d - 1);
+        qStar = 1 / (expEpsilon + d - 1);
     }
 
     @Override
@@ -52,7 +52,7 @@ public class DeStringFoLdpServer extends AbstractFoLdpServer {
             .boxed()
             .collect(Collectors.toMap(
                 domain::getIndexItem,
-                itemIndex -> (budget[itemIndex] - num * q) / (p - q)
+                itemIndex -> (budget[itemIndex] - num * qStar) / (pStar - qStar)
             ));
     }
 }

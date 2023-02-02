@@ -65,7 +65,7 @@ public class AppleCmsFoLdpClient extends AbstractFoLdpClient {
         kByteLength = IntUtils.boundedNonNegIntByteLength(k);
         m = appleCmsFoLdpConfig.getM();
         hashSeeds = appleCmsFoLdpConfig.getHashSeeds();
-        intHash = IntHashFactory.createInstance(appleCmsFoLdpConfig.getIntHashType());
+        intHash = IntHashFactory.fastestInstance();
         p = 1 / (Math.exp(epsilon / 2) + 1);
     }
 

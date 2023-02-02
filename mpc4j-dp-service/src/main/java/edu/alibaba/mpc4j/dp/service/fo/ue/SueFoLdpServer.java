@@ -21,20 +21,20 @@ public class SueFoLdpServer extends AbstractFoLdpServer {
      */
     private final int[] budget;
     /**
-     * p = e^(ε/2) / (e^(ε/2) - 1)
+     * p* = e^(ε/2) / (e^(ε/2) - 1)
      */
-    private final double p;
+    private final double pStar;
     /**
-     * q = 1 / (e^(ε/2) - 1)
+     * q* = 1 / (e^(ε/2) - 1)
      */
-    private final double q;
+    private final double qStar;
 
     public SueFoLdpServer(FoLdpConfig config) {
         super(config);
         budget = new int[d];
         double expHalfEpsilon = Math.exp(epsilon / 2);
-        p = expHalfEpsilon / (expHalfEpsilon + 1);
-        q = 1 / (expHalfEpsilon + 1);
+        pStar = expHalfEpsilon / (expHalfEpsilon + 1);
+        qStar = 1 / (expHalfEpsilon + 1);
     }
 
     @Override
@@ -54,7 +54,7 @@ public class SueFoLdpServer extends AbstractFoLdpServer {
             .boxed()
             .collect(Collectors.toMap(
                 domain::getIndexItem,
-                itemIndex -> (budget[itemIndex] - num * q) / (p - q)
+                itemIndex -> (budget[itemIndex] - num * qStar) / (pStar - qStar)
             ));
     }
 }

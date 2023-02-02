@@ -58,7 +58,7 @@ public class RapporFoLdpClient extends AbstractFoLdpClient {
         hashSeeds = rapporConfig.getHashSeeds();
         m = rapporConfig.getM();
         mByteLength = CommonUtils.getByteLength(m);
-        intHash = IntHashFactory.createInstance(rapporConfig.getIntHashType());
+        intHash = IntHashFactory.fastestInstance();
         double f = rapporConfig.getF();
         p = 1 - 0.5 * f;
         q = 0.5 * f;

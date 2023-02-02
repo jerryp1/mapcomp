@@ -160,6 +160,33 @@ public class MathPreconditionsTest {
     }
 
     @Test
+    public void testCheckLessOrEqual() {
+        // check -1 is less than or equal to -1
+        MathPreconditions.checkLessOrEqual("x", -1, -1);
+        MathPreconditions.checkLessOrEqual("x", -1L, -1L);
+        MathPreconditions.checkLessOrEqual("x", -1.0, -1.0);
+        MathPreconditions.checkLessOrEqual("x", BigInteger.ONE.negate(), BigInteger.ONE.negate());
+        // check 1 is not less than 0
+        Assert.assertThrows(IllegalArgumentException.class, () ->
+            MathPreconditions.checkLessOrEqual("x", 1, 0)
+        );
+        Assert.assertThrows(IllegalArgumentException.class, () ->
+            MathPreconditions.checkLessOrEqual("x", 1L, 0L)
+        );
+        Assert.assertThrows(IllegalArgumentException.class, () ->
+            MathPreconditions.checkLessOrEqual("x", 1.0, 0.0)
+        );
+        Assert.assertThrows(IllegalArgumentException.class, () ->
+            MathPreconditions.checkLessOrEqual("x", BigInteger.ONE, BigInteger.ZERO)
+        );
+        // check -1 is less than 0
+        MathPreconditions.checkLessOrEqual("x", -1, 0);
+        MathPreconditions.checkLessOrEqual("x", -1L, 0L);
+        MathPreconditions.checkLessOrEqual("x", -1.0, 0.0);
+        MathPreconditions.checkLessOrEqual("x", BigInteger.ONE.negate(), BigInteger.ZERO);
+    }
+
+    @Test
     public void testCheckPositiveInRange() {
         // check 0 is not a valid max
         Assert.assertThrows(IllegalArgumentException.class, () ->

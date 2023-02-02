@@ -12,6 +12,8 @@ import edu.alibaba.mpc4j.dp.service.fo.de.DeStringFoLdpServer;
 import edu.alibaba.mpc4j.dp.service.fo.hadamard.*;
 import edu.alibaba.mpc4j.dp.service.fo.lh.BlhFoLdpClient;
 import edu.alibaba.mpc4j.dp.service.fo.lh.BlhFoLdpServer;
+import edu.alibaba.mpc4j.dp.service.fo.lh.OlhFoLdpClient;
+import edu.alibaba.mpc4j.dp.service.fo.lh.OlhFoLdpServer;
 import edu.alibaba.mpc4j.dp.service.fo.rappor.RapporFoLdpClient;
 import edu.alibaba.mpc4j.dp.service.fo.rappor.RapporFoLdpServer;
 import edu.alibaba.mpc4j.dp.service.fo.ue.OueFoLdpClient;
@@ -65,6 +67,10 @@ public class FoLdpFactory {
          */
         BLH,
         /**
+         * Optimal Local Hash
+         */
+        OLH,
+        /**
          * Hadamard Response
          */
         HR,
@@ -107,6 +113,7 @@ public class FoLdpFactory {
             case OUE:
             case RAPPOR:
             case BLH:
+            case OLH:
             case HR:
             case HM:
             case HM_LOW_EPSILON:
@@ -119,11 +126,40 @@ public class FoLdpFactory {
     }
 
     /**
-     * Creates an default config.
+     * Gets the maximal supported ε.
      *
      * @param type the type.
+     * @return the maximal supported ε.
+     */
+    public static double getMaximalEpsilon(FoLdpType type) {
+        switch (type) {
+            case DE_INDEX:
+            case DE_STRING:
+            case SUE:
+            case HR_HIGH_EPSILON:
+            case OUE:
+            case RAPPOR:
+            case BLH:
+            case HR:
+            case HM:
+            case HM_LOW_EPSILON:
+            case APPLE_CMS:
+            case APPLE_HCMS:
+                // although many schemes support much larger ε, we manually restrict a maximal one.
+                return 128;
+            case OLH:
+                return OlhFoLdpConfig.MAX_EPSILON;
+            default:
+                throw new IllegalArgumentException("Invalid " + FoLdpFactory.FoLdpType.class.getSimpleName() + ": " + type.name());
+        }
+    }
+
+    /**
+     * Creates an default config.
+     *
+     * @param type      the type.
      * @param domainSet the domain set.
-     * @param epsilon the epsilon.
+     * @param epsilon   the epsilon.
      * @return an default config.
      */
     public static FoLdpConfig createDefaultConfig(FoLdpType type, Set<String> domainSet, double epsilon) {
@@ -138,6 +174,8 @@ public class FoLdpFactory {
             case HM:
             case HM_LOW_EPSILON:
                 return new BasicFoLdpConfig.Builder(type, domainSet, epsilon).build();
+            case OLH:
+                return new OlhFoLdpConfig.Builder(type, domainSet, epsilon).build();
             case RAPPOR:
                 return new RapporFoLdpConfig.Builder(type, domainSet, epsilon).build();
             case APPLE_CMS:
@@ -170,6 +208,8 @@ public class FoLdpFactory {
                 return new RapporFoLdpServer(config);
             case BLH:
                 return new BlhFoLdpServer(config);
+            case OLH:
+                return new OlhFoLdpServer(config);
             case HR:
                 return new HrFoLdpServer(config);
             case HR_HIGH_EPSILON:
@@ -208,6 +248,8 @@ public class FoLdpFactory {
                 return new RapporFoLdpClient(config);
             case BLH:
                 return new BlhFoLdpClient(config);
+            case OLH:
+                return new OlhFoLdpClient(config);
             case HR:
                 return new HrFoLdpClient(config);
             case HR_HIGH_EPSILON:

@@ -17,22 +17,22 @@ import java.util.stream.IntStream;
  */
 public class OueFoLdpServer extends AbstractFoLdpServer {
     /**
+     * p* = 0.5
+     */
+    private static final double P_STAR = 0.5;
+    /**
      * the bucket
      */
     private final int[] budget;
     /**
-     * p = 1 / 2
+     * q* = 1 / (e^ε + 1)
      */
-    private static final double CONSTANT_P = 1.0 / 2;
-    /**
-     * q = 1 / (e^ε + 1)
-     */
-    private final double q;
+    private final double qStar;
 
     public OueFoLdpServer(FoLdpConfig config) {
         super(config);
         budget = new int[d];
-        q = 1 / (Math.exp(epsilon) + 1);
+        qStar = 1 / (Math.exp(epsilon) + 1);
     }
 
     @Override
@@ -52,7 +52,7 @@ public class OueFoLdpServer extends AbstractFoLdpServer {
             .boxed()
             .collect(Collectors.toMap(
                 domain::getIndexItem,
-                itemIndex -> (budget[itemIndex] - num * q) / (CONSTANT_P - q)
+                itemIndex -> (budget[itemIndex] - num * qStar) / (P_STAR - qStar)
             ));
     }
 }

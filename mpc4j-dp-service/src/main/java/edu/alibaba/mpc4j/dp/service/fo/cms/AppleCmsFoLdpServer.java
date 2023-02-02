@@ -79,7 +79,7 @@ public class AppleCmsFoLdpServer extends AbstractFoLdpServer {
         mByteLength = CommonUtils.getByteLength(m);
         budget = new double[k][m];
         hashSeeds = appleCmsFoLdpConfig.getHashSeeds();
-        intHash = IntHashFactory.createInstance(appleCmsFoLdpConfig.getIntHashType());
+        intHash = IntHashFactory.fastestInstance();
         // c_ε = (e^{ε / 2} + 1) / (e^{ε / 2} - 1)
         double expHalfEpsilon = Math.exp(epsilon / 2);
         cEpsilon = (expHalfEpsilon + 1) / (expHalfEpsilon - 1);

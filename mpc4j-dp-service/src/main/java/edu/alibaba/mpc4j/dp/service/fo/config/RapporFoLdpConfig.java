@@ -1,8 +1,6 @@
 package edu.alibaba.mpc4j.dp.service.fo.config;
 
 import edu.alibaba.mpc4j.common.tool.MathPreconditions;
-import edu.alibaba.mpc4j.common.tool.hash.IntHashFactory;
-import edu.alibaba.mpc4j.common.tool.hash.IntHashFactory.IntHashType;
 import edu.alibaba.mpc4j.dp.service.fo.FoLdpFactory;
 import edu.alibaba.mpc4j.dp.service.fo.rappor.RapporFoLdpUtils;
 
@@ -30,20 +28,15 @@ public class RapporFoLdpConfig extends BasicFoLdpConfig {
      */
     private final int[][] hashSeeds;
     /**
-     * the IntHash type
-     */
-    private final IntHashType intHashType;
-    /**
      * the size of the bloom filter
      */
     private final int m;
 
-    protected RapporFoLdpConfig(Builder builder) {
+    private RapporFoLdpConfig(Builder builder) {
         super(builder);
         cohortNum = builder.cohortNum;
         hashNum = builder.hashNum;
         m = RapporFoLdpUtils.getM(d, hashNum);
-        intHashType = builder.intHashType;
         hashSeeds = IntStream.range(0, cohortNum)
             // here we do not need to ensure that all hash values for one item are distinct
             .mapToObj(cohortIndex -> IntStream.range(0, hashNum).map(hashIndex -> builder.random.nextInt()).toArray())
@@ -66,15 +59,6 @@ public class RapporFoLdpConfig extends BasicFoLdpConfig {
      */
     public int[][] getHashSeeds() {
         return hashSeeds;
-    }
-
-    /**
-     * Gets the IntHash type.
-     *
-     * @return the IntHash type.
-     */
-    public IntHashFactory.IntHashType getIntHashType() {
-        return intHashType;
     }
 
     /**
@@ -109,10 +93,6 @@ public class RapporFoLdpConfig extends BasicFoLdpConfig {
          * the randomness for generating the hash seeds
          */
         private Random random;
-        /**
-         * IntHash type
-         */
-        private IntHashType intHashType;
 
         public Builder(FoLdpFactory.FoLdpType type, Set<String> domainSet, double epsilon) {
             super(type, domainSet, epsilon);
@@ -120,8 +100,6 @@ public class RapporFoLdpConfig extends BasicFoLdpConfig {
             cohortNum = 8;
             // default hash num is 2
             hashNum = 2;
-            // default IntHash type
-            intHashType = IntHashFactory.fastestType();
             // default random
             random = new Random();
         }
@@ -151,17 +129,6 @@ public class RapporFoLdpConfig extends BasicFoLdpConfig {
             MathPreconditions.checkGreaterOrEqual("# of hashes", hashNum, 2);
             this.hashNum = hashNum;
             this.random = random;
-            return this;
-        }
-
-        /**
-         * Sets the IntHash type.
-         *
-         * @param intHashType the IntHash type.
-         * @return the builder.
-         */
-        public Builder setIntHashType(IntHashType intHashType) {
-            this.intHashType = intHashType;
             return this;
         }
 

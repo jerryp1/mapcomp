@@ -104,7 +104,7 @@ public class RapporFoLdpServer extends AbstractFoLdpServer {
         hashSeeds = rapporConfig.getHashSeeds();
         m = rapporConfig.getM();
         mByteLength = CommonUtils.getByteLength(m);
-        intHash = IntHashFactory.createInstance(rapporConfig.getIntHashType());
+        intHash = IntHashFactory.fastestInstance();
         f = rapporConfig.getF();
         // init the bucket
         budget = new int[cohortNum][m];

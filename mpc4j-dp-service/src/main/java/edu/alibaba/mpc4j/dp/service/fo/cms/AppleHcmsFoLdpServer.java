@@ -79,7 +79,7 @@ public class AppleHcmsFoLdpServer extends AbstractFoLdpServer {
         mByteLength = IntUtils.boundedNonNegIntByteLength(m);
         budget = new double[k][m];
         hashSeeds = appleHcmsFoLdpConfig.getHashSeeds();
-        intHash = IntHashFactory.createInstance(appleHcmsFoLdpConfig.getIntHashType());
+        intHash = IntHashFactory.fastestInstance();
         // c_ε = (e^ε + 1) / (e^ε - 1)
         double expEpsilon = Math.exp(epsilon);
         cEpsilon = (expEpsilon + 1) / (expEpsilon - 1);

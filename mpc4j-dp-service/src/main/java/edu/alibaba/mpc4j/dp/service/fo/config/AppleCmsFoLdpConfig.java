@@ -1,9 +1,6 @@
 package edu.alibaba.mpc4j.dp.service.fo.config;
 
 import edu.alibaba.mpc4j.common.tool.MathPreconditions;
-import edu.alibaba.mpc4j.common.tool.hash.IntHash;
-import edu.alibaba.mpc4j.common.tool.hash.IntHashFactory;
-import edu.alibaba.mpc4j.common.tool.hash.IntHashFactory.IntHashType;
 import edu.alibaba.mpc4j.dp.service.fo.FoLdpFactory;
 
 import java.util.Random;
@@ -29,17 +26,11 @@ public class AppleCmsFoLdpConfig extends BasicFoLdpConfig {
      * hash seeds
      */
     private final int[] hashSeeds;
-    /**
-     * the IntHash type
-     */
-    private final IntHashType intHashType;
 
     protected AppleCmsFoLdpConfig(Builder builder) {
         super(builder);
         k = builder.k;
         m = builder.m;
-        intHashType = builder.intHashType;
-        IntHash intHash = IntHashFactory.createInstance(builder.intHashType);
         hashSeeds = IntStream.range(0, k)
             .map(cohortIndex -> builder.random.nextInt(m))
             .toArray();
@@ -72,15 +63,6 @@ public class AppleCmsFoLdpConfig extends BasicFoLdpConfig {
         return hashSeeds;
     }
 
-    /**
-     * Gets the IntHash type.
-     *
-     * @return the IntHash type.
-     */
-    public IntHashType getIntHashType() {
-        return intHashType;
-    }
-
     public static class Builder extends BasicFoLdpConfig.Builder {
         /**
          * number of hash functions k
@@ -94,10 +76,6 @@ public class AppleCmsFoLdpConfig extends BasicFoLdpConfig {
          * the randomness for generating the hash seeds
          */
         private Random random;
-        /**
-         * the IntHash type
-         */
-        private IntHashType intHashType;
 
         public Builder(FoLdpFactory.FoLdpType type, Set<String> domainSet, double epsilon) {
             super(type, domainSet, epsilon);
@@ -105,8 +83,6 @@ public class AppleCmsFoLdpConfig extends BasicFoLdpConfig {
             k = 65536;
             // default m = 1024
             m = 1024;
-            // default IntHash type
-            intHashType = IntHashFactory.fastestType();
             // default random
             random = new Random();
         }
@@ -136,17 +112,6 @@ public class AppleCmsFoLdpConfig extends BasicFoLdpConfig {
             MathPreconditions.checkGreaterOrEqual("output bound of hash functions", m, 2);
             this.m = m;
             this.random = random;
-            return this;
-        }
-
-        /**
-         * Sets the IntHash type.
-         *
-         * @param intHashType the IntHash type.
-         * @return the builder.
-         */
-        public Builder setIntHashType(IntHashType intHashType) {
-            this.intHashType = intHashType;
             return this;
         }
 

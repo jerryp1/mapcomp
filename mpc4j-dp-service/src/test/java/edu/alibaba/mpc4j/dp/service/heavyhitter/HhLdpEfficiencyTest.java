@@ -61,7 +61,7 @@ public class HhLdpEfficiencyTest {
     /**
      * ε array
      */
-    private static final double[] EPSILONS = new double[]{0.1, 0.4, 1.6, 6.4, 25.6};
+    private static final double[] EPSILONS = new double[]{0.2, 0.8, 3.2, 12.8};
     /**
      * the type
      */
@@ -95,6 +95,11 @@ public class HhLdpEfficiencyTest {
                 FoLdpType.HR, LdpTestDataUtils.CONNECT_DATA_DOMAIN, epsilon
             );
             CONFIGS.add(new FoHhLdpConfig.Builder(hrFoLdpConfig, DEFAULT_K).build());
+            // Optimal Local Hash
+            FoLdpConfig olhFoLdpConfig = FoLdpFactory.createDefaultConfig(
+                FoLdpType.OLH, LdpTestDataUtils.CONNECT_DATA_DOMAIN, epsilon
+            );
+            CONFIGS.add(new FoHhLdpConfig.Builder(olhFoLdpConfig, DEFAULT_K).build());
             // Binary Local Hash
             FoLdpConfig blhFoLdpConfig = FoLdpFactory.createDefaultConfig(
                 FoLdpType.BLH, LdpTestDataUtils.CONNECT_DATA_DOMAIN, epsilon

@@ -68,6 +68,8 @@ public class FoLdpEfficiencyTest {
         FoLdpType.HR_HIGH_EPSILON,
         // Hadamard Response
         FoLdpType.HR,
+        // Optimal Local Hash
+        FoLdpType.OLH,
         // Binary Local Hash
         FoLdpType.BLH,
         // RAPPOR
@@ -89,7 +91,8 @@ public class FoLdpEfficiencyTest {
     @Test
     public void testEfficiency() throws IOException {
         LOGGER.info("{}\t{}\t{}\t{}\t{}\t{}\t{}",
-            "                name", "       ε", "            variance", " s_time(s)", " c_time(s)", "  comm.(B)", "   mem.(B)"
+            "                name", "         ε", "            variance",
+            " s_time(s)", " c_time(s)", "  comm.(B)", "   mem.(B)"
         );
         for (double epsilon : EPSILONS) {
             testEfficiency(epsilon);

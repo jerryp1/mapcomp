@@ -78,6 +78,8 @@ public class FoLdpTest {
         configurations.add(new Object[]{FoLdpType.HR_HIGH_EPSILON.name(), FoLdpType.HR_HIGH_EPSILON,});
         // Hadamard Response
         configurations.add(new Object[]{FoLdpType.HR.name(), FoLdpType.HR,});
+        // Optimal Local Hash
+        configurations.add(new Object[]{FoLdpType.OLH.name(), FoLdpType.OLH,});
         // Binary Local Hash
         configurations.add(new Object[]{FoLdpType.BLH.name(), FoLdpType.BLH,});
         // RAPPOR
@@ -98,10 +100,20 @@ public class FoLdpTest {
      * the type
      */
     private final FoLdpType type;
+    /**
+     * large ε
+     */
+    private final double largeEpsilon;
+    /**
+     * default ε
+     */
+    private final double defaultEpsilon;
 
     public FoLdpTest(String name, FoLdpType type) {
         Preconditions.checkArgument(StringUtils.isNotBlank(name));
         this.type = type;
+        largeEpsilon = Math.min(FoLdpFactory.getMaximalEpsilon(type), LARGE_EPSILON);
+        defaultEpsilon = Math.min(FoLdpFactory.getMaximalEpsilon(type), DEFAULT_EPSILON);
     }
 
     @Test
@@ -126,7 +138,7 @@ public class FoLdpTest {
         Set<String> domain = IntStream.range(0, d)
             .mapToObj(String::valueOf)
             .collect(Collectors.toSet());
-        FoLdpConfig config = FoLdpFactory.createDefaultConfig(type, domain, LARGE_EPSILON);
+        FoLdpConfig config = FoLdpFactory.createDefaultConfig(type, domain, largeEpsilon);
         // create server and client
         FoLdpServer server = FoLdpFactory.createServer(config);
         FoLdpClient client = FoLdpFactory.createClient(config);
@@ -145,7 +157,7 @@ public class FoLdpTest {
 
     @Test
     public void testLargeEpsilon() throws IOException {
-        FoLdpConfig config = FoLdpFactory.createDefaultConfig(type, LdpTestDataUtils.EXAMPLE_DATA_DOMAIN, LARGE_EPSILON);
+        FoLdpConfig config = FoLdpFactory.createDefaultConfig(type, LdpTestDataUtils.EXAMPLE_DATA_DOMAIN, largeEpsilon);
         // create server and client
         FoLdpServer server = FoLdpFactory.createServer(config);
         FoLdpClient client = FoLdpFactory.createClient(config);
@@ -187,7 +199,7 @@ public class FoLdpTest {
 
     @Test
     public void testDefault() throws IOException {
-        FoLdpConfig config = FoLdpFactory.createDefaultConfig(type, LdpTestDataUtils.EXAMPLE_DATA_DOMAIN, DEFAULT_EPSILON);
+        FoLdpConfig config = FoLdpFactory.createDefaultConfig(type, LdpTestDataUtils.EXAMPLE_DATA_DOMAIN, defaultEpsilon);
         // create server and client
         FoLdpServer server = FoLdpFactory.createServer(config);
         FoLdpClient client = FoLdpFactory.createClient(config);
@@ -218,7 +230,7 @@ public class FoLdpTest {
 
     @Test
     public void testLargeDomain() throws IOException {
-        FoLdpConfig config = FoLdpFactory.createDefaultConfig(type, LdpTestDataUtils.EXAMPLE_DATA_LARGE_DOMAIN, DEFAULT_EPSILON);
+        FoLdpConfig config = FoLdpFactory.createDefaultConfig(type, LdpTestDataUtils.EXAMPLE_DATA_LARGE_DOMAIN, defaultEpsilon);
         // create server and client
         FoLdpServer server = FoLdpFactory.createServer(config);
         FoLdpClient client = FoLdpFactory.createClient(config);

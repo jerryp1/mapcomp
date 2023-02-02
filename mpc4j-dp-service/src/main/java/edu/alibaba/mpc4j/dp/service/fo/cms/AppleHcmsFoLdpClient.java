@@ -70,7 +70,7 @@ public class AppleHcmsFoLdpClient extends AbstractFoLdpClient {
         m = appleHcmsFoLdpConfig.getM();
         mByteLength = IntUtils.boundedNonNegIntByteLength(m);
         hashSeeds = appleHcmsFoLdpConfig.getHashSeeds();
-        intHash = IntHashFactory.createInstance(appleHcmsFoLdpConfig.getIntHashType());
+        intHash = IntHashFactory.fastestInstance();
         // p = 1 / (1 + e^ε)
         p = 1 / (Math.exp(epsilon) + 1);
     }

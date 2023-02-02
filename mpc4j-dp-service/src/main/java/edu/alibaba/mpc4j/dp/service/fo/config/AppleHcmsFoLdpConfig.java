@@ -16,7 +16,7 @@ import java.util.Set;
  */
 public class AppleHcmsFoLdpConfig extends AppleCmsFoLdpConfig {
 
-    protected AppleHcmsFoLdpConfig(Builder builder) {
+    private AppleHcmsFoLdpConfig(Builder builder) {
         super(builder);
     }
 
