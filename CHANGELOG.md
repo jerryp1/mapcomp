@@ -40,7 +40,7 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
     - We move blackIP data from module `mpc4j-s2pc-pso` to the dictionary `data`.
     - We move PID and PMID from module `mpc4j-s2pc-pso` to module `mpc4j-s2pc-pjc`.
 
-## Fixed
+### Fixed
 
 - `mpc4j-common-tool`
   - We fixed a bug in `RandomCoderUtils.java`, thanks Qixian Zhou for reporting.
