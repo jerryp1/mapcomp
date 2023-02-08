@@ -1,9 +1,5 @@
 /*
  * Created by pengliqiang on 2022/9/13.
- * This implementation is based on the public domain SealPIR in SealPIR project:
- * <p>
- * https://github.com/microsoft/SealPIR/blob/master/src/pir.cpp
- * </p>
  */
 
 #ifndef MPC4J_NATIVE_FHE_INDEX_PIR_H
