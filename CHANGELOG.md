@@ -10,8 +10,7 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 ### Added
 
 - `mpc4j-common-sampler`
-    - We implement many discrete Gaussian sampling techniques. 
-    
+    - We implement many discrete Gaussian sampling techniques, including native sampling, Alias sampling, sigma-2 sampling, convolution techniques, and discrete gaussian sampling introduced in NIPS 2020.
 - `mpc4j-common-tool`
     - We implement metrics used for HeavyHitter (in `metrics/HeavyHitterMetrics.java`), including NDCG (Normalized
       Discounted Cumulative Gain), precision, and relative error.
@@ -20,6 +19,9 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
     - We implement the non-cryptographic hash function [BobHash](http://burtleburtle.net/bob/hash/evahash.html) and introduce [xxHash](https://github.com/lz4/lz4-java) in pure-Java.
 - `mpc4j-dp-service`
     - We create a new module `mpc4j-dp-service` for implementing specific differential private mechanisms, e.g., Frequency Oracles.
+    - We implement state-of-the-art LDP-based frequency oracle mechanisms, including Hadamard-related mechanisms, Unary Encoding (UE)-related mechanisms, Direct Encoding (DE)-related mechanisms, Local Hash (LH)-based mechanisms.
+- `mpc4j-s2pc-pir`
+    - We implement SealPIR, OnionPIR and FastPIR.
 - `mpc4j-s2pc-pjc`
     - We create a new module `mpc4j-s2pc-pjc` to manage "Private Join and Compute" protocols, such as PSI-CA, PID, PMID,
       PSI-CA-SUM, and others.
@@ -34,9 +36,6 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
     - We rename package `correlation` to `metrics` so that we can include other metrics in that package.
     - We replace `RankUtils.java` with package `util`.
     - We optimize implementations for the Hadamard matrix and the Hadamard coder.
-- `mpc4j-s2pc-pir`
-    - We implement SealPIR, OnionPIR and FastPIR.
-    
 - `mpc4j-s2pc-pso`
     - We move blackIP data from module `mpc4j-s2pc-pso` to the dictionary `data`.
     - We move PID and PMID from module `mpc4j-s2pc-pso` to module `mpc4j-s2pc-pjc`.
