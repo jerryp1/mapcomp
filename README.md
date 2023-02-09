@@ -35,82 +35,7 @@ Our paper ["OpBoost: A Vertical Federated Tree Boosting Framework Based on Order
 
 ## Some Implementations of Existing Works
 
-`mpc4j` contains some implementations of existing works, parts of which as listed below. We note that we rewrite some of the implementations to have a unified style.
-
-- `mpc4j-common-sampler`
-
-  - Canonne, Clément L., Gautam Kamath, and Thomas Steinke. The discrete gaussian for differential privacy. Advances in Neural Information Processing Systems 33 (2020): 15676-15688.
-  - Daniele Micciancio, Michael Walter. Gaussian Sampling over the Integers: Efficient, Generic, Constant-Time. CRYPTO 2017, pp 455-485, 2017.
-  - Thomas Pöppelmann, Léo Ducas, Tim Güneysu. Enhanced Lattice-Based Signatures on Reconfigurable Hardware. CHES 2014, pp 353-370, 2014.
-  - Ducas, Léo, Alain Durmus, Tancrède Lepoint, and Vadim Lyubashevsky. Lattice signatures and bimodal Gaussians. CRYPTO 2013, pp. 40-56. Springer, Berlin, Heidelberg, 2013.
-
-- `mpc4j-common-tool`
-
-  - **Filter**
-    - Vacuum Filter: Wang M, Zhou M, Shi S, et al. Vacuum filters: more space-efficient and faster replacement for bloom and cuckoo filters. Proceedings of the VLDB Endowment, 2019, 13(2): 197-210.
-    - Cuckoo Filter: Fan B, Andersen D G, Kaminsky M, et al. Cuckoo filter: Practically better than bloom. CoNET 2014, pp. 75-88.
-  - **crypto tools**
-    - Kyber: Bos J, Ducas L, Kiltz E, et al. CRYSTALS - Kyber: A CCA-Secure Module-Lattice-Based KEM. EuroS&P 2018.
-    - CRHF and TCRHF: Guo C, Katz J, Wang X, et al. Efficient and secure multiparty computation from fixed-key block ciphers. S&P 2020, pp. 825-841.
-    - OKVS
-      - Generalized OKVS: Pinkas B, Rosulek M, Trieu N, et al. PSI from PaXoS: Fast, Malicious Private Set Intersection. EUROCRYPT 2020. Springer, Cham, 2020, pp. 739-767. 
-      - Mega-Bin: Pinkas B, Schneider T, Tkachenko O, et al. Efficient circuit-based PSI with linear communication. EUROCRYPT 2019. Springer, Cham, pp. 122-153.
-      -  XePaXoS: Rindal P, Schoppmann P. VOLE-PSI: Fast OPRF and Circuit-PSI from Vector-OLE. EUROCRYPT 2021. Springer, Cham, pp. 901-930.
-
-- `mpc4j-dp-service`
-
-  - **Frequency Oracle with Local Differential Privacy**
-    - Cormode, Graham, Samuel Maddock, and Carsten Maple. "Frequency estimation under local differential privacy. VLDB 2021, no. 11, pp. 2046-2058.
-    - Acharya, Jayadev, Ziteng Sun, and Huanyu Zhang. Hadamard response: Estimating distributions privately, efficiently, and with little communication. AISATAS 2019, pp. 1120-1129. PMLR, 2019.
-    - Wang, Tianhao, and Jeremiah Blocki. Locally differentially private protocols for frequency estimation. USENIX Security 2017.
-    - Differential Privacy Team, Apple. Learning with Privacy at Scale. Technique Report, 2017.
-    - Erlingsson U, Pihur V, Korolova A. RAPPOR: Randomized Aggregatable Privacy-Preserving Ordinal Response. CCS 2014, ACM, pp. 1054–1067.
-
-  - Data Structure
-    - Yang T, Gong J, Zhang H, et al. HeavyGuardian: Separate and Guard Hot Items in Data Streams. KDD 2018, ACM, pp. 2584–2593.
-
-- `mpc4j-s2pc-pcg`
-
-  - **Base OT**
-    - Canetti R, Sarkar P, Wang X. Blazing Fast OT for Three-Round UC OT Extension. PKC 2020, Springer, 2020, pp. 299-327.
-    - Mansy D, Rindal P. Endemic oblivious transfer. CCS 2019. 2019: 309-326.
-    - McQuoid I, Rosulek M, Roy L. Batching base oblivious transfers. ASIACRYPT 2021, Springer, Cham, 2021: 281-310.
-    - Chou T, Orlandi C. The simplest protocol for oblivious transfer. LATINCRYPT 2015, Springer, 2015, pp. 40-58.
-    - Naor M, Pinkas B. Efficient Oblivious Transfer Protocols.SODA 2001, Society for Industrial and Applied Mathematics, 2001, pp. 448-457.
-    - Beaver, Donald. Precomputing oblivious transfer. CRYPTO 1995, pp. 97-109. Springer, Berlin, Heidelberg, 1995.
-  - **OT Extension and Silent OT** (without fixing malicious security problems in the paper "SoftSpokenOT: Communication – Computation Tradeoffs in OT Extension" accepted to CRYPTO 2022)
-    - Geoffroy Couteau, Peter Rindal, Srinivasan Raghuraman. Silver: Silent VOLE and Oblivious Transfer from Hardness of Decoding Structured LDPC Codes. CRYPTO 2021, pp. 502-534. 2021.
-    - Yang, Kang, Chenkai Weng, Xiao Lan, Jiang Zhang, and Xiao Wang. Ferret: Fast extension for correlated OT with small communication. CCS 2020, pp. 1607-1626.
-    - Orru M, Orsini E, Scholl P. Actively Secure 1-out-of-N OT Extension with Application to Private Set Intersection. CT-RSA 2017, Springer, Cham, 2017: 381-396.
-    - Keller M, Orsini E, Scholl P. Actively secure OT extension with optimal overhead. CRYPTO 2015, Springer, Berlin, Heidelberg, 2015, pp. 724-741.
-    - Kolesnikov V, Kumaresan R. Improved OT Extension for Transferring Short Secrets. CRYPTO 2013, Springer, Berlin, Heidelberg, 2013, pp. 54-70.
-    - Asharov G, Lindell Y, Schneider T, et al. More efficient oblivious transfer and extensions for faster secure computation. CCS 2013, ACM, 2013, pp. 535-548.
-  - **Multiplication Triple Generation**
-    - Rathee, Deevashwer, Thomas Schneider, and K. K. Shukla. Improved multiplication triple generation over rings via RLWE-based AHE. ACNS 2019, pp. 347-359. Springer, Cham, 2019.
-    - Daniel Demmler, Thomas Schneider, Michael Zohner: ABY - A Framework for Efficient Mixed-Protocol Secure Two-Party Computation. NDSS 2015.
-
-- `mpc4j-s2pc-pir`
-
-  - **Index Private Information Retrieval**
-    - FastPIR: Ishtiyaque Ahmad, Yuntian Yang, Divyakant Agrawal, Amr El Abbadi, and Trinabh Gupta. Addra: Metadata-private voice communication over fully untrusted infrastructure. In 15th USENIX Symposium on Operating Systems Design and Implementation, OSDI. 2021, 313-329
-    - OnionPIR: Muhammad Haris Mughees, Hao Chen, and Ling Ren. XPIR : OnionPIR: Response Efficient Single-Server PIR. 2021 ACM SIGSAC Conference on Computer and Communications Security. 2021, 15–19
-    - SealPIR: Sebastian Angel, Hao Chen, Kim Laine, and Srinath Setty. PIR with compressed queries and amortized query processing. In 2018 IEEE Symposium on Security and Privacy. 2018, 962–979
-    - XPIR (re-implemented using SEAL): Carlos Aguilar Melchor, Joris Barrier, Laurent Fousse, and Marc-Olivier Killijian. XPIR: Private Information Retrieval for Everyone. Proc. Priv. Enhancing Technol. 2016, 2 (2016), 155–174.
-  - **Keyword Private Information Retrieval (or Labeled PSI)**
-    - Cong, Kelong, Radames Cruz Moreno, Mariana Botelho da Gama, Wei Dai, Ilia Iliashenko, Kim Laine, and Michael Rosenberg. Labeled psi from homomorphic encryption with reduced computation and communication. ACM CCS 2021, pp. 1135-1150. 2021.
-
-- `mpc4j-s2pc-pso`
-
-  - **Oblivious PRF and Private Set Intersection**
-    - Chase M, Miao P. Private Set Intersection in the Internet Setting from Lightweight Oblivious PRF. CRYPTO 2020.
-    - Resende A C D, Aranha D F. Faster unbalanced private set intersection. FC 2018. Springer, Berlin, Heidelberg, pp. 203-221.
-    - Albreche M, Rechberger C, Schneider T, et al. Ciphers for MPC and FHE. EUROCRYPT 2015, Springer, Cham, pp. 430-454. 
-    - Kolesnikov V, Kumaresan R, Rosulek M, et al. Efficient batched oblivious PRF with applications to private set intersection. CCS 2016, ACM, 2016, pp. 818-829.
-    - C A Meadows. A more efficient cryptographic match-making protocol for use in the absence of a continuously available third party. S&P 1986, IEEE, 1986, pp. 134–137.
-  - **Private Set Union**
-    - Jia, Yanxue, Shi-Feng Sun, Hong-Sheng Zhou, Jiajun Du, and Dawu Gu. Shuffle-based Private Set Union: Faster and More Secure. USENIX Security 2022.
-    - Garimella G, Mohassel P, Rosulek M, et al. Private Set Operations from Oblivious Switching. PKC 2021, Springer, Cham, pp. 591-617.
-    - Kolesnikov V, Rosulek M, Trieu N, et al. Scalable private set union from symmetric-key techniques. ASIACRYPT 2019, pp. 636-666.
+`mpc4j` contains some implementations of existing works. See `PAPERS.md` for more details.
 
 ## References
 
@@ -152,6 +77,7 @@ Here are some libraries that inspire our implementations.
 - [Ed25519](https://github.com/agl/ed25519/tree/5312a61534124124185d41f09206b9fef1d88403): Ed25519 in for Go. We understand how to implement Elliagtor in Ed25519. See package `crypto/ecc/bc/X25519BcByteMulElligatorEcc` in `mpc4j-common-tool` for details.
 - [dgs](https://github.com/malb/dgs): Discrete Gaussians over the Integers. We learn many ways of discrete Gaussian sampling. See package `common/sampler/integral/gaussian` in `mpc4j-common-sampler` for details.
 - [Pure-DP](https://github.com/Samuel-Maddock/pure-LDP): a Python package that provides simple implementations of various state-of-the-art LDP algorithms (both Frequency Oracles and Heavy Hitters) with the main goal of providing a single, simple interface to benchmark and experiment with these algorithms. We learn many efficient LDP implementation details.
+- [FastPIR](https://github.com/ishtiyaque/FastPIR), [Onion-PIR](https://github.com/mhmughees/Onion-PIR), [SealPIR,](https://github.com/microsoft/SealPIR) and [XPIR](https://github.com/XPIR-team/XPIR): We understand many details for implementing PIR schemes. We re-implement some protocols based on [SEAL](https://github.com/microsoft/SEAL) instead of [NFLlib](https://github.com/quarkslab/NFLlib), since we found we cannot compile NFLlib on Macbook M1 with `aarch64`.
 
 ## Acknowledge
 
