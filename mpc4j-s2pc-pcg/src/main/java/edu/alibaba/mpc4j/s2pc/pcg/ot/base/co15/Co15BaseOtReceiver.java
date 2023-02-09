@@ -7,10 +7,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
-import edu.alibaba.mpc4j.common.rpc.MpcAbortException;
-import edu.alibaba.mpc4j.common.rpc.MpcAbortPreconditions;
-import edu.alibaba.mpc4j.common.rpc.Party;
-import edu.alibaba.mpc4j.common.rpc.Rpc;
+import edu.alibaba.mpc4j.common.rpc.*;
 import edu.alibaba.mpc4j.common.rpc.utils.DataPacket;
 import edu.alibaba.mpc4j.common.rpc.utils.DataPacketHeader;
 import edu.alibaba.mpc4j.common.tool.crypto.ecc.Ecc;
@@ -49,16 +46,15 @@ public class Co15BaseOtReceiver extends AbstractBaseOtReceiver {
     @Override
     public void init() throws MpcAbortException {
         setInitInput();
-        info("{}{} Recv. Init begin", ptoBeginLogPrefix, getPtoDesc().getPtoName());
-
-        initialized = true;
-        info("{}{} Recv. Init end", ptoEndLogPrefix, getPtoDesc().getPtoName());
+        logP1BeginEndInfo(PtoState.INIT_BEGIN);
+        // empty init step
+        logP1BeginEndInfo(PtoState.INIT_END);
     }
 
     @Override
     public BaseOtReceiverOutput receive(boolean[] choices) throws MpcAbortException {
         setPtoInput(choices);
-        info("{}{} Recv. begin", ptoBeginLogPrefix, getPtoDesc().getPtoName());
+        logP1BeginEndInfo(PtoState.PTO_BEGIN);
 
         stopWatch.start();
         DataPacketHeader sHeader = new DataPacketHeader(
@@ -69,7 +65,7 @@ public class Co15BaseOtReceiver extends AbstractBaseOtReceiver {
         stopWatch.stop();
         long sTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
         stopWatch.reset();
-        info("{}{} Recv. Step 1/2 ({}ms)", ptoStepLogPrefix, getPtoDesc().getPtoName(), sTime);
+        logP1StepInfo(PtoState.PTO_STEP, 1, 2, sTime);
 
         stopWatch.start();
         List<byte[]> rPayload = generateReceiverPayload(sPayload);
@@ -83,9 +79,9 @@ public class Co15BaseOtReceiver extends AbstractBaseOtReceiver {
         stopWatch.stop();
         long rTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
         stopWatch.reset();
-        info("{}{} Recv. Step 2/2 ({}ms)", ptoStepLogPrefix, getPtoDesc().getPtoName(), rTime);
+        logP1StepInfo(PtoState.PTO_STEP, 2, 2, rTime);
 
-        info("{}{} Recv. end", ptoEndLogPrefix, getPtoDesc().getPtoName());
+        logP1BeginEndInfo(PtoState.PTO_END);
         return receiverOutput;
     }
 

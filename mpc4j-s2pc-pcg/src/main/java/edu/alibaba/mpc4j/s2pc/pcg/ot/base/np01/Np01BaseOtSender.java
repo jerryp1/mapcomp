@@ -8,10 +8,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
-import edu.alibaba.mpc4j.common.rpc.MpcAbortException;
-import edu.alibaba.mpc4j.common.rpc.MpcAbortPreconditions;
-import edu.alibaba.mpc4j.common.rpc.Party;
-import edu.alibaba.mpc4j.common.rpc.Rpc;
+import edu.alibaba.mpc4j.common.rpc.*;
 import edu.alibaba.mpc4j.common.rpc.utils.DataPacket;
 import edu.alibaba.mpc4j.common.rpc.utils.DataPacketHeader;
 import edu.alibaba.mpc4j.common.tool.crypto.ecc.Ecc;
@@ -54,16 +51,15 @@ public class Np01BaseOtSender extends AbstractBaseOtSender {
     @Override
     public void init() throws MpcAbortException {
         setInitInput();
-        info("{}{} Send. Init begin", ptoBeginLogPrefix, getPtoDesc().getPtoName());
-
-        initialized = true;
-        info("{}{} Send. Init end", ptoEndLogPrefix, getPtoDesc().getPtoName());
+        logP0BeginEndInfo(PtoState.INIT_BEGIN);
+        // empty init step
+        logP0BeginEndInfo(PtoState.INIT_END);
     }
 
     @Override
     public BaseOtSenderOutput send(int num) throws MpcAbortException {
         setPtoInput(num);
-        info("{}{} Send. begin", ptoBeginLogPrefix, getPtoDesc().getPtoName());
+        logP0BeginEndInfo(PtoState.PTO_BEGIN);
 
         stopWatch.start();
         List<byte[]> initPayload = generateInitPayload();
@@ -75,7 +71,7 @@ public class Np01BaseOtSender extends AbstractBaseOtSender {
         stopWatch.stop();
         long initTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
         stopWatch.reset();
-        info("{}{} Send. Step 1/2 ({}ms)", ptoStepLogPrefix, getPtoDesc().getPtoName(), initTime);
+        logP0StepInfo(PtoState.PTO_STEP, 1, 2, initTime);
 
         stopWatch.start();
         DataPacketHeader pkHeader = new DataPacketHeader(
@@ -87,9 +83,9 @@ public class Np01BaseOtSender extends AbstractBaseOtSender {
         stopWatch.stop();
         long pkTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
         stopWatch.reset();
-        info("{}{} Send. Step 2/2 ({}ms)", ptoStepLogPrefix, getPtoDesc().getPtoName(), pkTime);
+        logP0StepInfo(PtoState.PTO_STEP, 2, 2, pkTime);
 
-        info("{}{} Send. end", ptoEndLogPrefix, getPtoDesc().getPtoName());
+        logP0BeginEndInfo(PtoState.PTO_END);
         return senderOutput;
     }
 

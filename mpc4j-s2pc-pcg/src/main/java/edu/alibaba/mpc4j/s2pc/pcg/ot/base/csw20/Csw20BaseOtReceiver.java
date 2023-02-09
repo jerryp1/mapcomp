@@ -1,9 +1,6 @@
 package edu.alibaba.mpc4j.s2pc.pcg.ot.base.csw20;
 
-import edu.alibaba.mpc4j.common.rpc.MpcAbortException;
-import edu.alibaba.mpc4j.common.rpc.MpcAbortPreconditions;
-import edu.alibaba.mpc4j.common.rpc.Party;
-import edu.alibaba.mpc4j.common.rpc.Rpc;
+import edu.alibaba.mpc4j.common.rpc.*;
 import edu.alibaba.mpc4j.common.rpc.utils.DataPacket;
 import edu.alibaba.mpc4j.common.rpc.utils.DataPacketHeader;
 import edu.alibaba.mpc4j.common.tool.CommonConstants;
@@ -58,16 +55,15 @@ public class Csw20BaseOtReceiver extends AbstractBaseOtReceiver {
     @Override
     public void init() throws MpcAbortException {
         setInitInput();
-        info("{}{} Recv. Init begin", ptoBeginLogPrefix, getPtoDesc().getPtoName());
-
-        initialized = true;
-        info("{}{} Recv. Init end", ptoEndLogPrefix, getPtoDesc().getPtoName());
+        logP1BeginEndInfo(PtoState.INIT_BEGIN);
+        // empty init step
+        logP1BeginEndInfo(PtoState.INIT_END);
     }
 
     @Override
     public BaseOtReceiverOutput receive(boolean[] choices) throws MpcAbortException {
         setPtoInput(choices);
-        info("{}{} Recv. begin", ptoBeginLogPrefix, getPtoDesc().getPtoName());
+        logP1BeginEndInfo(PtoState.PTO_BEGIN);
 
         stopWatch.start();
         DataPacketHeader rChooseHeader = new DataPacketHeader(
@@ -79,7 +75,7 @@ public class Csw20BaseOtReceiver extends AbstractBaseOtReceiver {
         stopWatch.stop();
         long cTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
         stopWatch.reset();
-        info("{}{} Recv. Step 1/3 ({}ms)", ptoStepLogPrefix, getPtoDesc().getPtoName(), cTime);
+        logP1StepInfo(PtoState.PTO_STEP, 1, 3, cTime);
 
         stopWatch.start();
         DataPacketHeader senderHeader = new DataPacketHeader(
@@ -90,7 +86,7 @@ public class Csw20BaseOtReceiver extends AbstractBaseOtReceiver {
         stopWatch.stop();
         long sTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
         stopWatch.reset();
-        info("{}{} Recv. Step 2/3 ({}ms)", ptoStepLogPrefix, getPtoDesc().getPtoName(), sTime);
+        logP1StepInfo(PtoState.PTO_STEP, 2, 3, sTime);
 
         stopWatch.start();
         List<byte[]> receiverPayload = generateReceiverPayload(senderPayload);
@@ -104,10 +100,9 @@ public class Csw20BaseOtReceiver extends AbstractBaseOtReceiver {
         stopWatch.stop();
         long rTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
         stopWatch.reset();
-        info("{}{} Recv. Step 3/3 ({}ms)", ptoStepLogPrefix, getPtoDesc().getPtoName(), rTime);
+        logP1StepInfo(PtoState.PTO_STEP, 3, 3, rTime);
 
-        info("{}{} Recv. end", ptoEndLogPrefix, getPtoDesc().getPtoName());
-
+        logP1BeginEndInfo(PtoState.PTO_END);
         return receiverOutput;
     }
 

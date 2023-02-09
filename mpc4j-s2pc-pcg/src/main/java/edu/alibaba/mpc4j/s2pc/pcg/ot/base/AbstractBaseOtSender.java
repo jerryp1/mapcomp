@@ -4,6 +4,7 @@ import edu.alibaba.mpc4j.common.rpc.Party;
 import edu.alibaba.mpc4j.common.rpc.Rpc;
 import edu.alibaba.mpc4j.common.rpc.desc.PtoDesc;
 import edu.alibaba.mpc4j.common.rpc.pto.AbstractSecureTwoPartyPto;
+import edu.alibaba.mpc4j.common.tool.MathPreconditions;
 import edu.alibaba.mpc4j.common.tool.crypto.kdf.Kdf;
 import edu.alibaba.mpc4j.common.tool.crypto.kdf.KdfFactory;
 import edu.alibaba.mpc4j.s2pc.pcg.ot.base.BaseOtFactory.BaseOtType;
@@ -40,14 +41,12 @@ public abstract class AbstractBaseOtSender extends AbstractSecureTwoPartyPto imp
     }
 
     protected void setInitInput() {
-        initialized = false;
+        super.initState();
     }
 
     protected void setPtoInput(int num) {
-        if (!initialized) {
-            throw new IllegalStateException("Need init...");
-        }
-        assert num > 0 : "num must be greater than 0: " + num;
+        checkReadyState();
+        MathPreconditions.checkPositive("num", num);
         this.num = num;
         extraInfo++;
     }
