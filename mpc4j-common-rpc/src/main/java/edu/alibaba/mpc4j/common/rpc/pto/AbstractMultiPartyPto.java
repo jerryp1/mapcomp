@@ -2,9 +2,11 @@ package edu.alibaba.mpc4j.common.rpc.pto;
 
 import edu.alibaba.mpc4j.common.rpc.Party;
 import edu.alibaba.mpc4j.common.rpc.PartyState;
+import edu.alibaba.mpc4j.common.rpc.PtoState;
 import edu.alibaba.mpc4j.common.rpc.Rpc;
 import edu.alibaba.mpc4j.common.rpc.desc.PtoDesc;
 import edu.alibaba.mpc4j.common.tool.CommonConstants;
+import edu.alibaba.mpc4j.common.tool.MathPreconditions;
 import edu.alibaba.mpc4j.common.tool.crypto.prf.Prf;
 import edu.alibaba.mpc4j.common.tool.crypto.prf.PrfFactory;
 import org.apache.commons.lang3.time.StopWatch;
@@ -152,7 +154,7 @@ public abstract class AbstractMultiPartyPto implements MultiPartyPto {
 
     @Override
     public void setTaskId(long taskId) {
-        assert taskId >= 0;
+        MathPreconditions.checkNonNegative("taskID", taskId);
         this.taskId = taskId;
     }
 
@@ -220,6 +222,43 @@ public abstract class AbstractMultiPartyPto implements MultiPartyPto {
             case DESTROYED:
             default:
                 throw new IllegalStateException("Party state must not be " + PartyState.DESTROYED);
+        }
+    }
+
+    protected void logBeginEndInfo(PtoState ptoState) {
+        switch (ptoState) {
+            case INIT_BEGIN:
+                info("{}{} {} Init begin", ptoBeginLogPrefix, getPtoDesc().getPtoName(), ownParty().getPartyName());
+                break;
+            case INIT_END:
+                info("{}{} {} Init end", ptoEndLogPrefix, getPtoDesc().getPtoName(), ownParty().getPartyName());
+                break;
+            case PTO_BEGIN:
+                info("{}{} {} Pto begin", ptoBeginLogPrefix, getPtoDesc().getPtoName(), ownParty().getPartyName());
+                break;
+            case PTO_END:
+                info("{}{} {} Pto end", ptoBeginLogPrefix, getPtoDesc().getPtoName(), ownParty().getPartyName());
+                break;
+            default:
+                throw new IllegalStateException("Invalid " + PtoState.class.getSimpleName() + ": " + ptoState);
+        }
+    }
+
+    protected void logStepInfo(PtoState ptoState, int currentStepIndex, int totalStepIndex, long time) {
+        assert currentStepIndex >= 0 && currentStepIndex <= totalStepIndex
+            : "current step index must be in range [0, " + totalStepIndex + "]: " + currentStepIndex;
+        switch (ptoState) {
+            case INIT_STEP:
+                info("{}{} {} init Step {}/{} ({}ms)",
+                    ptoStepLogPrefix, getPtoDesc().getPtoName(), ownParty().getPartyName(),
+                    currentStepIndex, totalStepIndex, time);
+                break;
+            case PTO_STEP:
+                info("{}{} P0 Step {}/{} ({}ms)", ptoStepLogPrefix, getPtoDesc().getPtoName(),
+                    ownParty().getPartyName(), currentStepIndex, totalStepIndex, time);
+                break;
+            default:
+                throw new IllegalStateException("Invalid " + PtoState.class.getSimpleName() + ": " + ptoState);
         }
     }
 }

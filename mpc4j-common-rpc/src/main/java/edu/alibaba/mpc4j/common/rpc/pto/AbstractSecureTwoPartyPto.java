@@ -8,22 +8,22 @@ import edu.alibaba.mpc4j.common.tool.EnvType;
 import java.security.SecureRandom;
 
 /**
- * 抽象安全两方计算协议。
+ * Abstract secure two-party protocol.
  *
  * @author Weiran Liu
  * @date 2022/01/11
  */
 public abstract class AbstractSecureTwoPartyPto extends AbstractTwoPartyPto implements SecurePto {
     /**
-     * 环境类型
+     * environment
      */
     protected final EnvType envType;
     /**
-     * 随机状态
+     * secure random state
      */
     protected SecureRandom secureRandom;
     /**
-     * 是否并发
+     * parallel computing
      */
     public boolean parallel;
     /**
@@ -31,14 +31,6 @@ public abstract class AbstractSecureTwoPartyPto extends AbstractTwoPartyPto impl
      */
     protected boolean initialized;
 
-    /**
-     * 构建安全两方计算协议。
-     *
-     * @param ptoDesc    协议描述信息。
-     * @param rpc        通信接口。
-     * @param otherParty 另一个参与方。
-     * @param config     安全计算协议配置项。
-     */
     protected AbstractSecureTwoPartyPto(PtoDesc ptoDesc, Rpc rpc, Party otherParty, SecurePtoConfig config) {
         super(ptoDesc, rpc, otherParty);
         envType = config.getEnvType();

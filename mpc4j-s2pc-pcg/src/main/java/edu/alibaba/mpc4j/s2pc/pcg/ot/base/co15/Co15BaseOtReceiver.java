@@ -46,15 +46,15 @@ public class Co15BaseOtReceiver extends AbstractBaseOtReceiver {
     @Override
     public void init() throws MpcAbortException {
         setInitInput();
-        logP1BeginEndInfo(PtoState.INIT_BEGIN);
+        logBeginEndInfo(PtoState.INIT_BEGIN);
         // empty init step
-        logP1BeginEndInfo(PtoState.INIT_END);
+        logBeginEndInfo(PtoState.INIT_END);
     }
 
     @Override
     public BaseOtReceiverOutput receive(boolean[] choices) throws MpcAbortException {
         setPtoInput(choices);
-        logP1BeginEndInfo(PtoState.PTO_BEGIN);
+        logBeginEndInfo(PtoState.PTO_BEGIN);
 
         stopWatch.start();
         DataPacketHeader sHeader = new DataPacketHeader(
@@ -65,7 +65,7 @@ public class Co15BaseOtReceiver extends AbstractBaseOtReceiver {
         stopWatch.stop();
         long sTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
         stopWatch.reset();
-        logP1StepInfo(PtoState.PTO_STEP, 1, 2, sTime);
+        logStepInfo(PtoState.PTO_STEP, 1, 2, sTime);
 
         stopWatch.start();
         List<byte[]> rPayload = generateReceiverPayload(sPayload);
@@ -79,9 +79,9 @@ public class Co15BaseOtReceiver extends AbstractBaseOtReceiver {
         stopWatch.stop();
         long rTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
         stopWatch.reset();
-        logP1StepInfo(PtoState.PTO_STEP, 2, 2, rTime);
+        logStepInfo(PtoState.PTO_STEP, 2, 2, rTime);
 
-        logP1BeginEndInfo(PtoState.PTO_END);
+        logBeginEndInfo(PtoState.PTO_END);
         return receiverOutput;
     }
 

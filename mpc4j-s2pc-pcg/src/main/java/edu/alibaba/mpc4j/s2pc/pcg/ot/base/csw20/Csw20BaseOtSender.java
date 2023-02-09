@@ -58,15 +58,15 @@ public class Csw20BaseOtSender extends AbstractBaseOtSender {
     @Override
     public void init() throws MpcAbortException {
         setInitInput();
-        logP0BeginEndInfo(PtoState.INIT_BEGIN);
+        logBeginEndInfo(PtoState.INIT_BEGIN);
         // empty init step
-        logP0BeginEndInfo(PtoState.INIT_END);
+        logBeginEndInfo(PtoState.INIT_END);
     }
 
     @Override
     public BaseOtSenderOutput send(int num) throws MpcAbortException {
         setPtoInput(num);
-        logP0BeginEndInfo(PtoState.PTO_BEGIN);
+        logBeginEndInfo(PtoState.PTO_BEGIN);
 
         stopWatch.start();
         DataPacketHeader rChooseHeader = new DataPacketHeader(
@@ -76,7 +76,7 @@ public class Csw20BaseOtSender extends AbstractBaseOtSender {
         List<byte[]> rChoosePayload = rpc.receive(rChooseHeader).getPayload();
         stopWatch.stop();
         long rChooseTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
-        logP0StepInfo(PtoState.PTO_STEP, 1, 3, rChooseTime);
+        logStepInfo(PtoState.PTO_STEP, 1, 3, rChooseTime);
         stopWatch.reset();
 
         stopWatch.start();
@@ -88,7 +88,7 @@ public class Csw20BaseOtSender extends AbstractBaseOtSender {
         rpc.send(DataPacket.fromByteArrayList(sHeader, sPayLoad));
         stopWatch.stop();
         long sTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
-        logP0StepInfo(PtoState.PTO_STEP, 2, 3, sTime);
+        logStepInfo(PtoState.PTO_STEP, 2, 3, sTime);
         stopWatch.reset();
 
         stopWatch.start();
@@ -101,9 +101,9 @@ public class Csw20BaseOtSender extends AbstractBaseOtSender {
         stopWatch.stop();
         long rTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
         stopWatch.reset();
-        logP0StepInfo(PtoState.PTO_STEP, 3, 3, rTime);
+        logStepInfo(PtoState.PTO_STEP, 3, 3, rTime);
 
-        logP0BeginEndInfo(PtoState.PTO_END);
+        logBeginEndInfo(PtoState.PTO_END);
         return senderOutput;
     }
 

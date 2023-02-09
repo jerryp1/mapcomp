@@ -3,37 +3,37 @@ package edu.alibaba.mpc4j.common.rpc.pto;
 import edu.alibaba.mpc4j.common.tool.EnvType;
 
 /**
- * 安全计算协议接口。
+ * secure protocol.
  *
  * @author Weiran Liu
  * @date 2022/01/11
  */
 public interface SecurePto {
     /**
-     * 设置是否并发计算。
+     * Sets parallel computing.
      *
-     * @param parallel 是否并发计算。
+     * @param parallel parallel computing.
      */
     void setParallel(boolean parallel);
 
     /**
-     * 返回是否并发计算。
+     * Gets parallel computing.
      *
-     * @return 是否并发计算。
+     * @return parallel computing.
      */
     boolean getParallel();
 
     /**
-     * 返回环境类型。
+     * Gets environment.
      *
-     * @return 环境类型。
+     * @return environment.
      */
     EnvType getEnvType();
 
     /**
-     * 返回协议类型。
+     * Gets protocol type.
      *
-     * @return 协议类型。
+     * @return protocol type.
      */
     @SuppressWarnings("rawtypes")
     Enum getPtoType();

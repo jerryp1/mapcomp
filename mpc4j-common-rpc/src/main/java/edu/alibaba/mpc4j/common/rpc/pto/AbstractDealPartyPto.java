@@ -5,12 +5,12 @@ import edu.alibaba.mpc4j.common.rpc.Rpc;
 import edu.alibaba.mpc4j.common.rpc.desc.PtoDesc;
 
 /**
- * 抽象三方计算协议。
+ * Abstract
  *
  * @author Weiran Liu
  * @date 2022/4/29
  */
-public abstract class AbstractThreePartyPto extends AbstractMultiPartyPto implements ThreePartyPto {
+public abstract class AbstractDealPartyPto extends AbstractMultiPartyPto implements ThreePartyPto {
 
     /**
      * 构建三方计算协议。
@@ -20,7 +20,7 @@ public abstract class AbstractThreePartyPto extends AbstractMultiPartyPto implem
      * @param leftParty  左参与方。
      * @param rightParty 右参与方。
      */
-    protected AbstractThreePartyPto(PtoDesc ptoDesc, Rpc rpc, Party leftParty, Party rightParty) {
+    protected AbstractDealPartyPto(PtoDesc ptoDesc, Rpc rpc, Party leftParty, Party rightParty) {
         super(ptoDesc, rpc, leftParty, rightParty);
     }
 
