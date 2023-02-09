@@ -81,7 +81,15 @@ public abstract class AbstractOpBoostHost extends AbstractMultiPartyPto {
         super(OpBoostPtoDesc.getInstance(), hostRpc, slaveParties);
     }
 
+    /**
+     * init the protocol.
+     */
+    public void init() {
+        super.initState();
+    }
+
     protected void setPtoInput(Formula formula, DataFrame hostDataFrame, OpBoostHostConfig hostConfig) {
+        checkReadyState();
         // 验证DataFrame与配置参数中的schema相同
         assert hostDataFrame.schema().equals(hostConfig.getSchema());
         this.formula = formula;

@@ -57,6 +57,13 @@ public class OpBoostSlave extends AbstractMultiPartyPto {
         super(OpBoostPtoDesc.getInstance(), slaveRpc, hostParty);
     }
 
+    /**
+     * init the protocol.
+     */
+    public void init() {
+        super.initState();
+    }
+
     public void fit(DataFrame slaveDataFrame, OpBoostSlaveConfig slaveConfig) throws MpcAbortException {
         setPtoInput(slaveDataFrame, slaveConfig);
         info("{}{} Slave {} begin", ptoBeginLogPrefix, getPtoDesc().getPtoName(), ownParty().getPartyName());
@@ -119,6 +126,7 @@ public class OpBoostSlave extends AbstractMultiPartyPto {
     }
 
     private void setPtoInput(DataFrame slaveDataFrame, OpBoostSlaveConfig slaveConfig) {
+        checkReadyState();
         // 验证DataFrame与配置参数中的schema相同
         assert slaveDataFrame.schema().equals(slaveConfig.getSchema());
         this.slaveDataFrame = slaveDataFrame;

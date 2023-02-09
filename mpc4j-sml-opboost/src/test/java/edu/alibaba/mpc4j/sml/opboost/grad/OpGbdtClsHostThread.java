@@ -48,7 +48,9 @@ public class OpGbdtClsHostThread extends Thread {
     public void run() {
         try {
             host.getRpc().connect();
+            host.init();
             model = host.fit(formula, hostDataFrame, hostConfig);
+            host.destroy();
             host.getRpc().disconnect();
         } catch (MpcAbortException e) {
             e.printStackTrace();

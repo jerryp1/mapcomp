@@ -1,6 +1,7 @@
 package edu.alibaba.mpc4j.common.rpc.pto;
 
 import edu.alibaba.mpc4j.common.rpc.Party;
+import edu.alibaba.mpc4j.common.rpc.PartyState;
 import edu.alibaba.mpc4j.common.rpc.Rpc;
 import edu.alibaba.mpc4j.common.rpc.desc.PtoDesc;
 import edu.alibaba.mpc4j.common.tool.CommonConstants;
@@ -13,7 +14,7 @@ import org.slf4j.LoggerFactory;
 import java.util.Set;
 
 /**
- * 抽象多方计算协议。
+ * Abstract multi-party protocol.
  *
  * @author Weiran Liu
  * @date 2022/4/29
@@ -21,53 +22,57 @@ import java.util.Set;
 public abstract class AbstractMultiPartyPto implements MultiPartyPto {
     private static final Logger LOGGER = LoggerFactory.getLogger(MultiPartyPto.class);
     /**
-     * 显示日志层级
+     * display log level.
      */
     private static final int DISPLAY_LOG_LEVEL = 2;
     /**
-     * 任务ID的PRF
+     * the PRF used to extend the task ID.
      */
     protected final Prf taskIdPrf;
     /**
-     * 协议描述信息
+     * protocol description.
      */
     protected final PtoDesc ptoDesc;
     /**
-     * 通信接口
+     * the invoked rpc instance.
      */
     protected final Rpc rpc;
     /**
-     * 其他参与方
+     * other parties' information.
      */
     private final Party[] otherParties;
     /**
-     * 秒表，用于记录时间
+     * the stopwatch, used to record times for each step.
      */
     protected final StopWatch stopWatch;
     /**
-     * 任务ID
+     * task ID
      */
     protected long taskId;
     /**
-     * 协议日志层数
+     * current log level
      */
     private int logLevel;
     /**
-     * 协议开始日志前缀
+     * the log prefix for beginning a task
      */
     protected String ptoBeginLogPrefix;
     /**
-     * 协议中间步骤前缀
+     * the log prefix for each step
      */
     protected String ptoStepLogPrefix;
     /**
-     * 协议结束日志前缀
+     * the log prefix for ending a task
      */
     protected String ptoEndLogPrefix;
     /**
-     * 额外信息
+     * the extra information
      */
     protected long extraInfo;
+    /**
+     * party state
+     */
+    protected PartyState partyState;
 
     /**
      * 构建两方计算协议。虽然Rpc可以得到所有参与方信息，但实际协议有可能不会用到全部的参与方，且协议执行时会用到参与方的顺序。
@@ -96,6 +101,7 @@ public abstract class AbstractMultiPartyPto implements MultiPartyPto {
         ptoStepLogPrefix = "    ↓";
         ptoEndLogPrefix = "↙";
         extraInfo = 0;
+        partyState = PartyState.NON_INITIALIZED;
     }
 
     @Override
@@ -168,5 +174,52 @@ public abstract class AbstractMultiPartyPto implements MultiPartyPto {
     @Override
     public Party[] otherParties() {
         return otherParties;
+    }
+
+    @Override
+    public PartyState getPartyState() {
+        return partyState;
+    }
+
+    /**
+     * init, check and update party state.
+     */
+    protected void initState() {
+        switch (partyState) {
+            case NON_INITIALIZED:
+            case INITIALIZED:
+                partyState = PartyState.INITIALIZED;
+                return;
+            case DESTROYED:
+            default:
+                throw new IllegalStateException("Party state must not be " + PartyState.DESTROYED);
+        }
+    }
+
+    /**
+     * check ready state.
+     */
+    protected void checkReadyState() {
+        switch (partyState) {
+            case INITIALIZED:
+                return;
+            case NON_INITIALIZED:
+            case DESTROYED:
+            default:
+                throw new IllegalStateException("Party state must not be " + PartyState.DESTROYED);
+        }
+    }
+
+    @Override
+    public void destroy() {
+        switch (partyState) {
+            case NON_INITIALIZED:
+            case INITIALIZED:
+                partyState = PartyState.DESTROYED;
+                return;
+            case DESTROYED:
+            default:
+                throw new IllegalStateException("Party state must not be " + PartyState.DESTROYED);
+        }
     }
 }

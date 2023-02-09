@@ -33,7 +33,9 @@ public class OpBoostSlaveThread extends Thread {
     public void run() {
         try {
             slave.getRpc().connect();
+            slave.init();
             slave.fit(slaveDataFrame, slaveConfig);
+            slave.destroy();
             slave.getRpc().disconnect();
         } catch (MpcAbortException e) {
             e.printStackTrace();

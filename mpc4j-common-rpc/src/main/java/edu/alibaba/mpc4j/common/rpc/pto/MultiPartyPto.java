@@ -1,11 +1,12 @@
 package edu.alibaba.mpc4j.common.rpc.pto;
 
 import edu.alibaba.mpc4j.common.rpc.Party;
+import edu.alibaba.mpc4j.common.rpc.PartyState;
 import edu.alibaba.mpc4j.common.rpc.Rpc;
 import edu.alibaba.mpc4j.common.rpc.desc.PtoDesc;
 
 /**
- * 多参与方协议接口。
+ * Multi-party protocol.
  *
  * @author Weiran Liu
  * @date 2021/12/19
@@ -13,51 +14,63 @@ import edu.alibaba.mpc4j.common.rpc.desc.PtoDesc;
 public interface MultiPartyPto {
 
     /**
-     * 设置任务ID。
+     * Sets task ID.
      *
-     * @param taskId 任务ID。
+     * @param taskId task ID.
      */
     void setTaskId(long taskId);
 
     /**
-     * 返回任务ID>
+     * Gets task ID.
      *
-     * @return 任务ID。
+     * @return task ID.
      */
     long getTaskId();
 
     /**
-     * 返回通信接口。
+     * Gets the invoked rpc instance.
      *
-     * @return 通信接口。
+     * @return the invoked rpc instance.
      */
     Rpc getRpc();
 
     /**
-     * 返回自己的参与方信息。
+     * Gets its own party information.
      *
-     * @return 自己的参与方信息。
+     * @return its own party information.
      */
     default Party ownParty() {
         return getRpc().ownParty();
     }
 
     /**
-     * 返回协议描述。
+     * Gets the protocol description.
      *
-     * @return 协议描述。
+     * @return the protocol description.
      */
     PtoDesc getPtoDesc();
 
     /**
-     * 增加日志层次。
+     * Adds the log level.
      */
     void addLogLevel();
 
     /**
-     * 返回其他参与方信息。
+     * Gets other parties' information.
      *
-     * @return 其他参与方信息。
+     * @return other parties' information.
      */
     Party[] otherParties();
+
+    /**
+     * Gets party state.
+     *
+     * @return party state.
+     */
+    PartyState getPartyState();
+
+    /**
+     * Destroys the protocol.
+     */
+    void destroy();
 }
