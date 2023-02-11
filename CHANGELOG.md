@@ -5,6 +5,19 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and this project adheres
 to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## \[1.0.7\]
+
+### Added
+
+- `mpc4j-dp-service`
+  - Now main supports more configurations: (1) Allow running without plain case; (2) Allow no/empty settings for α, ε_w, fo_types, hg_types.
+  - Add necessary test cases for HhLdpMain.
+
+### Fixed
+
+- `mpc4j-dp-service`
+  - Fixa bug for AppleHcmsFoLdp, we note that in Java, a % b (for b > 0) can have negative value. Therefore, we need to write Math.abs(a % b) instead of directly a % b to ensure a % b must be in \[0, b). Thanks Xiaochen Li for the report.
+
 ## \[1.0.6\]
 
 ### Added

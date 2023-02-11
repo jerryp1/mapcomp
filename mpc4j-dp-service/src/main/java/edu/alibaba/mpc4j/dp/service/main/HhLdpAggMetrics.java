@@ -8,6 +8,18 @@ package edu.alibaba.mpc4j.dp.service.main;
  */
 public class HhLdpAggMetrics {
     /**
+     * the type string
+     */
+    private final String typeString;
+    /**
+     * ε_w
+     */
+    private final Double windowEpsilon;
+    /**
+     * α
+     */
+    private final Double alpha;
+    /**
      * round
      */
     private int round;
@@ -44,6 +56,12 @@ public class HhLdpAggMetrics {
      */
     private double re;
 
+    public HhLdpAggMetrics(String typeString, Double windowEpsilon, Double alpha) {
+        this.typeString = typeString;
+        this.windowEpsilon = windowEpsilon;
+        this.alpha = alpha;
+    }
+
     public void addMetrics(HhLdpMetrics metrics) {
         round++;
         serverTimeMs += metrics.getServerTimeMs();
@@ -56,6 +74,17 @@ public class HhLdpAggMetrics {
         re += metrics.getRe();
     }
 
+    public String getTypeString() {
+        return typeString;
+    }
+
+    public String getWindowEpsilonString() {
+        return windowEpsilon == null ? "-" : String.valueOf(windowEpsilon);
+    }
+
+    public String getAlphaString() {
+        return alpha == null ? "-" : String.valueOf(alpha);
+    }
 
     public double getServerTimeSecond() {
         double averageTimeMs = Math.round(serverTimeMs / round);
