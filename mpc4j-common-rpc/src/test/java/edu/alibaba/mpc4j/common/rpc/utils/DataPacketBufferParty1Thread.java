@@ -56,7 +56,7 @@ public class DataPacketBufferParty1Thread extends Thread {
             // take set data
             for (long j = DataPacketBufferTest.SET_START_INDEX; j < DataPacketBufferTest.SET_END_INDEX; j++) {
                 List<byte[]> party2Payload = dataPacketBuffer
-                    .takeAny( DataPacketBufferTest.PARTY_2_ID, DataPacketBufferTest.PARTY_1_ID)
+                    .takeAny(DataPacketBufferTest.PARTY_2_ID, DataPacketBufferTest.PARTY_1_ID)
                     .getPayload();
                 payloadSet.add(LongUtils.byteArrayToLong(party2Payload.remove(0)));
             }

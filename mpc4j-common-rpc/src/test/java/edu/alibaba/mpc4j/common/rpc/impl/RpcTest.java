@@ -103,5 +103,14 @@ public class RpcTest {
         }
         Assert.assertTrue(extraInfoSendDataPacketSet.containsAll(extraInfoReceivedDataPacketSet));
         Assert.assertTrue(extraInfoReceivedDataPacketSet.containsAll(extraInfoSendDataPacketSet));
+        // take any data packet verification
+        Set<DataPacket> takeAnySendDataPacketSet = new HashSet<>();
+        Set<DataPacket> takeAnyReceivedDataPacketSet = new HashSet<>();
+        for (RpcDataThread thread : threads) {
+            takeAnySendDataPacketSet.addAll(thread.getTakeAnySendDataPacketSet());
+            takeAnyReceivedDataPacketSet.addAll(thread.getTakeAnyReceivedDataPacketSet());
+        }
+        Assert.assertTrue(takeAnySendDataPacketSet.containsAll(takeAnyReceivedDataPacketSet));
+        Assert.assertTrue(takeAnyReceivedDataPacketSet.containsAll(takeAnySendDataPacketSet));
     }
 }

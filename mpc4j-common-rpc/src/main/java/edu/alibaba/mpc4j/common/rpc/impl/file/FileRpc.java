@@ -23,6 +23,10 @@ import java.util.stream.Collectors;
 public class FileRpc implements Rpc {
     private static final Logger LOGGER = LoggerFactory.getLogger(FileRpc.class);
     /**
+     * each file contains 7 fields: taskId, ptoId, stepId, extraInfo, senderId, receiverId, suffix.
+     */
+    private static final int FILE_NAME_SPLIT_NUM = 7;
+    /**
      * 读取文件单位等待时间
      */
     private static final int DEFAULT_READ_WAIT_MILLI_SECOND = 1;
@@ -127,21 +131,8 @@ public class FileRpc implements Rpc {
         String receiverFilePath = partyIdHashMap.get(header.getReceiverId()).getPartyFilePath();
         List<byte[]> payload = dataPacket.getPayload();
         try {
-            // 发送数据，文件名为：任务ID_协议ID_步骤ID_额外信息_发送方ID_接收方ID_PAYLOAD
-            String payloadFileName = header.getTaskId()
-                + FILE_NAME_SEPARATOR + header.getPtoId()
-                + FILE_NAME_SEPARATOR + header.getStepId()
-                + FILE_NAME_SEPARATOR + header.getExtraInfo()
-                + FILE_NAME_SEPARATOR + header.getSenderId()
-                + FILE_NAME_SEPARATOR + header.getReceiverId()
-                + FILE_NAME_SEPARATOR + FILE_PAYLOAD_SUFFIX;
-            String statusFileName = header.getTaskId()
-                + FILE_NAME_SEPARATOR + header.getPtoId()
-                + FILE_NAME_SEPARATOR + header.getStepId()
-                + FILE_NAME_SEPARATOR + header.getExtraInfo()
-                + FILE_NAME_SEPARATOR + header.getSenderId()
-                + FILE_NAME_SEPARATOR + header.getReceiverId()
-                + FILE_NAME_SEPARATOR + FILE_STATUS_SUFFIX;
+            String payloadFileName = getPayloadFileName(header);
+            String statusFileName = getStatusFileName(header);
             // 在写入之前必然没有状态文件
             File statusFile = new File(receiverFilePath + File.separator + statusFileName);
             if (statusFile.exists()) {
@@ -166,8 +157,6 @@ public class FileRpc implements Rpc {
             }
             payloadPrintWriter.close();
             dataPacketNum++;
-
-            // 发送状态，文件名为：任务ID_协议ID_步骤ID_额外信息_发送方ID_接收方ID_STATUS
             FileWriter statusFileWriter = new FileWriter(statusFile);
             PrintWriter statusPrintWriter = new PrintWriter(statusFileWriter, true);
             statusPrintWriter.println(FILE_STATUS_SUFFIX);
@@ -191,20 +180,8 @@ public class FileRpc implements Rpc {
         String ownFilePath = ownParty.getPartyFilePath();
         // 收取数据
         try {
-            String payloadFileName = header.getTaskId()
-                + FILE_NAME_SEPARATOR + header.getPtoId()
-                + FILE_NAME_SEPARATOR + header.getStepId()
-                + FILE_NAME_SEPARATOR + header.getExtraInfo()
-                + FILE_NAME_SEPARATOR + header.getSenderId()
-                + FILE_NAME_SEPARATOR + header.getReceiverId()
-                + FILE_NAME_SEPARATOR + FILE_PAYLOAD_SUFFIX;
-            String statusFileName = header.getTaskId()
-                + FILE_NAME_SEPARATOR + header.getPtoId()
-                + FILE_NAME_SEPARATOR + header.getStepId()
-                + FILE_NAME_SEPARATOR + header.getExtraInfo()
-                + FILE_NAME_SEPARATOR + header.getSenderId()
-                + FILE_NAME_SEPARATOR + header.getReceiverId()
-                + FILE_NAME_SEPARATOR + FILE_STATUS_SUFFIX;
+            String payloadFileName = getPayloadFileName(header);
+            String statusFileName = getStatusFileName(header);
             File statusFile = new File(ownFilePath + File.separator + statusFileName);
             File payloadFile = new File(ownFilePath + File.separator + payloadFileName);
             while (!statusFile.exists() || !payloadFile.exists()) {
@@ -243,6 +220,21 @@ public class FileRpc implements Rpc {
             e.printStackTrace();
             throw new IllegalStateException("Unknown IOException for receiver file path: " + ownFilePath);
         }
+    }
+
+    @Override
+    public DataPacket receiveAny(int senderId, int receiverId) {
+        DataPacketHeader[] receivedDataPacketHeaders;
+        while ((receivedDataPacketHeaders = getReceivedDataPacketHeaders(senderId, receiverId)).length == 0) {
+            try {
+                //noinspection BusyWait
+                Thread.sleep(DEFAULT_READ_WAIT_MILLI_SECOND);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+                throw new IllegalStateException("Unknown IOException for receiver");
+            }
+        }
+        return receive(receivedDataPacketHeaders[0]);
     }
 
     @Override
@@ -301,6 +293,57 @@ public class FileRpc implements Rpc {
         });
         LOGGER.info("{} synchronized", ownParty);
     }
+
+    private String getPayloadFileName(DataPacketHeader header) {
+        // testId_PtoId_StepId_extraInfo_senderId_receiverId_PAYLOAD
+        return header.getTaskId()
+            + FILE_NAME_SEPARATOR + header.getPtoId()
+            + FILE_NAME_SEPARATOR + header.getStepId()
+            + FILE_NAME_SEPARATOR + header.getExtraInfo()
+            + FILE_NAME_SEPARATOR + header.getSenderId()
+            + FILE_NAME_SEPARATOR + header.getReceiverId()
+            + FILE_NAME_SEPARATOR + FILE_PAYLOAD_SUFFIX;
+    }
+
+    private String getStatusFileName(DataPacketHeader header) {
+        // testId_PtoId_StepId_extraInfo_senderId_receiverId_STATUS
+        return header.getTaskId()
+            + FILE_NAME_SEPARATOR + header.getPtoId()
+            + FILE_NAME_SEPARATOR + header.getStepId()
+            + FILE_NAME_SEPARATOR + header.getExtraInfo()
+            + FILE_NAME_SEPARATOR + header.getSenderId()
+            + FILE_NAME_SEPARATOR + header.getReceiverId()
+            + FILE_NAME_SEPARATOR + FILE_STATUS_SUFFIX;
+    }
+
+    private DataPacketHeader[] getReceivedDataPacketHeaders(int senderId, int receiverId) {
+        // read all status file
+        File ownFilePath = new File(ownParty.getPartyFilePath());
+        File[] files = ownFilePath.listFiles();
+        Objects.requireNonNull(files, ownFilePath + " is not a dictionary");
+        return Arrays.stream(files)
+            .map(File::getName)
+            .map(fileName -> fileName.split(FILE_NAME_SEPARATOR))
+            // valid file name
+            .filter(splitFileName -> splitFileName.length == FILE_NAME_SPLIT_NUM)
+            // given sender and receiver
+            .filter(splitFileName ->
+                splitFileName[FILE_NAME_SPLIT_NUM - 1].equals(FILE_STATUS_SUFFIX)
+                && Integer.parseInt(splitFileName[4]) == senderId
+                && Integer.parseInt(splitFileName[5]) == receiverId
+            )
+            .map(splitFileName -> {
+                long taskId = Long.parseLong(splitFileName[0]);
+                int ptoId = Integer.parseInt(splitFileName[1]);
+                int stepId = Integer.parseInt(splitFileName[2]);
+                long extraInfo = Long.parseLong(splitFileName[3]);
+                return new DataPacketHeader(taskId, ptoId, stepId, extraInfo, senderId, receiverId);
+            })
+            .filter(header -> header.getReceiverId() == ownParty.getPartyId())
+            .toArray(DataPacketHeader[]::new);
+    }
+
+
 
     @Override
     public void disconnect() {

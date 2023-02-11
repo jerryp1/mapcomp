@@ -3,6 +3,7 @@ package edu.alibaba.mpc4j.common.rpc.impl;
 import edu.alibaba.mpc4j.common.rpc.Party;
 import edu.alibaba.mpc4j.common.rpc.Rpc;
 import edu.alibaba.mpc4j.common.rpc.RpcTestUtils;
+import edu.alibaba.mpc4j.common.rpc.desc.PtoDesc;
 import edu.alibaba.mpc4j.common.rpc.utils.DataPacket;
 import edu.alibaba.mpc4j.common.rpc.utils.DataPacketHeader;
 
@@ -24,6 +25,10 @@ class RpcDataThread extends Thread {
      * 多条数据数量
      */
     private static final int MULTI_DATA_PACKET_NUM = 5;
+    /**
+     * test protocol description
+     */
+    private static final PtoDesc TEST_PTO_DESC = RpcTestPtoDesc.getInstance();
     /**
      * 远程通信接口
      */
@@ -64,6 +69,14 @@ class RpcDataThread extends Thread {
      * 接收的额外信息数据包
      */
     private final Set<DataPacket> extraInfoReceivedDataPacketSet;
+    /**
+     * take any receive data packet
+     */
+    private final Set<DataPacket> takeAnySendDataPacketSet;
+    /**
+     * take any sent data packet
+     */
+    private final Set<DataPacket> takeAnyReceivedDataPacketSet;
 
     RpcDataThread(long taskId, Rpc rpc) {
         this.taskId = taskId;
@@ -76,6 +89,8 @@ class RpcDataThread extends Thread {
         singleReceivedDataPacketSet = new HashSet<>();
         extraInfoSendDataPacketSet = new HashSet<>();
         extraInfoReceivedDataPacketSet = new HashSet<>();
+        takeAnySendDataPacketSet = new HashSet<>();
+        takeAnyReceivedDataPacketSet = new HashSet<>();
     }
 
     Set<DataPacket> getEmptySendDataPacketSet() {
@@ -110,6 +125,14 @@ class RpcDataThread extends Thread {
         return extraInfoReceivedDataPacketSet;
     }
 
+    Set<DataPacket> getTakeAnySendDataPacketSet() {
+        return takeAnySendDataPacketSet;
+    }
+
+    Set<DataPacket> getTakeAnyReceivedDataPacketSet() {
+        return takeAnyReceivedDataPacketSet;
+    }
+
     @Override
     public void run() {
         rpc.connect();
@@ -126,6 +149,8 @@ class RpcDataThread extends Thread {
         extraInfoDataPacket();
         rpc.synchronize();
         rpc.reset();
+        // 发送多个单条数据发送包并接收
+        takeAnyDataPacket();
         rpc.disconnect();
     }
 
@@ -135,7 +160,7 @@ class RpcDataThread extends Thread {
             // 不测试自己给自己发送数据包
             if (!party.equals(rpc.ownParty())) {
                 DataPacketHeader header = new DataPacketHeader(
-                    taskId, RpcTestPtoDesc.getInstance().getPtoId(), RpcTestPtoDesc.PtoStep.EMPTY.ordinal(),
+                    taskId, TEST_PTO_DESC.getPtoId(), RpcTestPtoDesc.PtoStep.EMPTY.ordinal(),
                     rpc.ownParty().getPartyId(), party.getPartyId()
                 );
                 DataPacket dataPacket = DataPacket.fromByteArrayList(header, new LinkedList<>());
@@ -148,7 +173,7 @@ class RpcDataThread extends Thread {
             // 不测试自己给自己发送数据包
             if (!party.equals(rpc.ownParty())) {
                 DataPacketHeader header = new DataPacketHeader(
-                    taskId, RpcTestPtoDesc.getInstance().getPtoId(), RpcTestPtoDesc.PtoStep.EMPTY.ordinal(),
+                    taskId, TEST_PTO_DESC.getPtoId(), RpcTestPtoDesc.PtoStep.EMPTY.ordinal(),
                     party.getPartyId(), rpc.ownParty().getPartyId()
                 );
                 DataPacket dataPacket = rpc.receive(header);
@@ -163,7 +188,7 @@ class RpcDataThread extends Thread {
             // 不测试自己给自己发送数据包
             if (!party.equals(rpc.ownParty())) {
                 DataPacketHeader header = new DataPacketHeader(
-                    taskId, RpcTestPtoDesc.getInstance().getPtoId(), RpcTestPtoDesc.PtoStep.ZERO_LENGTH.ordinal(),
+                    taskId, TEST_PTO_DESC.getPtoId(), RpcTestPtoDesc.PtoStep.ZERO_LENGTH.ordinal(),
                     rpc.ownParty().getPartyId(), party.getPartyId()
                 );
                 List<byte[]> payload = new LinkedList<>();
@@ -178,7 +203,7 @@ class RpcDataThread extends Thread {
             // 不测试自己给自己发送数据包
             if (!party.equals(rpc.ownParty())) {
                 DataPacketHeader header = new DataPacketHeader(
-                    taskId, RpcTestPtoDesc.getInstance().getPtoId(), RpcTestPtoDesc.PtoStep.ZERO_LENGTH.ordinal(),
+                    taskId, TEST_PTO_DESC.getPtoId(), RpcTestPtoDesc.PtoStep.ZERO_LENGTH.ordinal(),
                     party.getPartyId(), rpc.ownParty().getPartyId()
                 );
                 DataPacket dataPacket = rpc.receive(header);
@@ -193,7 +218,7 @@ class RpcDataThread extends Thread {
             // 不测试自己给自己发送数据包
             if (!party.equals(rpc.ownParty())) {
                 DataPacketHeader header = new DataPacketHeader(
-                    taskId, RpcTestPtoDesc.getInstance().getPtoId(), RpcTestPtoDesc.PtoStep.SINGLE.ordinal(),
+                    taskId, TEST_PTO_DESC.getPtoId(), RpcTestPtoDesc.PtoStep.SINGLE.ordinal(),
                     rpc.ownParty().getPartyId(), party.getPartyId()
                 );
                 List<byte[]> payload = new LinkedList<>();
@@ -210,7 +235,7 @@ class RpcDataThread extends Thread {
             // 不测试自己给自己发送数据包
             if (!party.equals(rpc.ownParty())) {
                 DataPacketHeader header = new DataPacketHeader(
-                    taskId, RpcTestPtoDesc.getInstance().getPtoId(), RpcTestPtoDesc.PtoStep.SINGLE.ordinal(),
+                    taskId, TEST_PTO_DESC.getPtoId(), RpcTestPtoDesc.PtoStep.SINGLE.ordinal(),
                     party.getPartyId(), rpc.ownParty().getPartyId()
                 );
                 DataPacket dataPacket = rpc.receive(header);
@@ -230,7 +255,7 @@ class RpcDataThread extends Thread {
                         .getBytes(StandardCharsets.UTF_8)
                     );
                     DataPacketHeader header = new DataPacketHeader(
-                        taskId, RpcTestPtoDesc.getInstance().getPtoId(), RpcTestPtoDesc.PtoStep.EXTRA_INFO.ordinal(), packetIndex,
+                        taskId, TEST_PTO_DESC.getPtoId(), RpcTestPtoDesc.PtoStep.EXTRA_INFO.ordinal(), packetIndex,
                         rpc.ownParty().getPartyId(), party.getPartyId()
                     );
                     DataPacket dataPacket = DataPacket.fromByteArrayList(header, payload);
@@ -245,12 +270,38 @@ class RpcDataThread extends Thread {
             if (!party.equals(rpc.ownParty())) {
                 IntStream.range(0, MULTI_DATA_PACKET_NUM).forEach(packetIndex -> {
                     DataPacketHeader header = new DataPacketHeader(
-                        taskId, RpcTestPtoDesc.getInstance().getPtoId(), RpcTestPtoDesc.PtoStep.EXTRA_INFO.ordinal(), packetIndex,
+                        taskId, TEST_PTO_DESC.getPtoId(), RpcTestPtoDesc.PtoStep.EXTRA_INFO.ordinal(), packetIndex,
                         party.getPartyId(), rpc.ownParty().getPartyId()
                     );
                     DataPacket dataPacket = rpc.receive(header);
                     extraInfoReceivedDataPacketSet.add(dataPacket);
                 });
+            }
+        }
+    }
+
+    private void takeAnyDataPacket() {
+        for (int extraInfo = 0; extraInfo < 100; extraInfo++) {
+            // 发送单条数据
+            for (Party party : rpc.getPartySet()) {
+                // 不测试自己给自己发送数据包
+                if (!party.equals(rpc.ownParty())) {
+                    DataPacketHeader header = new DataPacketHeader(
+                        taskId, TEST_PTO_DESC.getPtoId(), RpcTestPtoDesc.PtoStep.TAKE_ANY.ordinal(), extraInfo,
+                        rpc.ownParty().getPartyId(), party.getPartyId()
+                    );
+                    DataPacket dataPacket = DataPacket.fromByteArrayList(header, new LinkedList<>());
+                    takeAnySendDataPacketSet.add(dataPacket);
+                    rpc.send(dataPacket);
+                }
+            }
+            // 接收任意数据
+            for (Party party : rpc.getPartySet()) {
+                // 不测试自己给自己发送数据包
+                if (!party.equals(rpc.ownParty())) {
+                    DataPacket dataPacket = rpc.receiveAny(party.getPartyId(), rpc.ownParty().getPartyId());
+                    takeAnyReceivedDataPacketSet.add(dataPacket);
+                }
             }
         }
     }

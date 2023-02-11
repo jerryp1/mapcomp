@@ -171,6 +171,31 @@ public class MemoryRpc implements Rpc {
     }
 
     @Override
+    public DataPacket receiveAny(int senderId, int receiverId) {
+        // 尝试从buffer中取出满足数据头的数据
+        try {
+            DataPacket dataPacket = dataPacketBuffer.takeAny(senderId, receiverId);
+            // 统计数据包大小
+            int dataPacketByteLength = dataPacket.getPayload().stream().mapToInt(data -> data.length).sum();
+            // 网络延迟等待时间，虽然往返时间是来回的时间，但实际中还是要等待完整的RTT时间
+            if (memoryDelayType.getRtt() > 0) {
+                TimeUnit.MICROSECONDS.sleep((long)(memoryDelayType.getRtt() * 1000));
+            }
+            // 网络带宽等待时间，数据包总量按照比特计算，除以带宽（按照Mbps）计算，单位修正后得到的是需要等待的微秒值
+            if (memoryDelayType.getBandWidth() > 0) {
+                // 带宽等待时间为数据包总比特量除以总带宽量，单位为微妙。注意总带宽量要放大1.024^2倍
+                long waitNanoSeconds = (long)((long)dataPacketByteLength * Byte.SIZE * 1000
+                    / (memoryDelayType.getBandWidth() * 1.024 * 1.024));
+                TimeUnit.NANOSECONDS.sleep(waitNanoSeconds);
+            }
+            return dataPacket;
+        } catch (InterruptedException e) {
+            // 线程终端，不需要等待，直接返回空
+            return null;
+        }
+    }
+
+    @Override
     public long getPayloadByteLength() {
         return payloadByteLength;
     }

@@ -220,6 +220,17 @@ public class NettyRpc implements Rpc {
     }
 
     @Override
+    public DataPacket receiveAny(int senderId, int receiverId) {
+        try {
+            // 尝试从缓存区中读取数据
+            return dataPacketBuffer.takeAny(senderId, receiverId);
+        } catch (InterruptedException e) {
+            // 线程中断，不需要等待，直接返回空
+            return null;
+        }
+    }
+
+    @Override
     public long getPayloadByteLength() {
         return payloadByteLength;
     }
