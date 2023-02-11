@@ -1,12 +1,11 @@
 package edu.alibaba.mpc4j.s2pc.pjc.bitmap;
 
-import com.sun.org.slf4j.internal.Logger;
-import com.sun.org.slf4j.internal.LoggerFactory;
-import edu.alibaba.mpc4j.common.tool.utils.BytesUtils;
 import edu.alibaba.mpc4j.common.tool.utils.CommonUtils;
 import org.roaringbitmap.BitmapContainer;
 import org.roaringbitmap.ContainerPointer;
 import org.roaringbitmap.RoaringBitmap;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;

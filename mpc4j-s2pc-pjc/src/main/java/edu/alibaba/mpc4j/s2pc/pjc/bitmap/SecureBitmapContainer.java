@@ -1,7 +1,5 @@
 package edu.alibaba.mpc4j.s2pc.pjc.bitmap;
 
-import com.sun.org.slf4j.internal.Logger;
-import com.sun.org.slf4j.internal.LoggerFactory;
 import edu.alibaba.mpc4j.s2pc.aby.basics.bc.SquareSbitVector;
 import org.roaringbitmap.BitmapContainer;
 
@@ -12,7 +10,6 @@ import org.roaringbitmap.BitmapContainer;
  * @date 2022/11/24
  */
 public class SecureBitmapContainer {
-    private static final Logger LOGGER = LoggerFactory.getLogger(SecureBitmapContainer.class);
     /**
      * 单个容器的byte总长度，即2^16bits转换为bytes的长度
      */
