@@ -232,7 +232,7 @@ public class HhLdpMain {
         FileWriter fileWriter = new FileWriter(filePath);
         PrintWriter printWriter = new PrintWriter(fileWriter, true);
         // write tab
-        String tab = "type\tε_w\tα\tNDCG\tPrecision\tABE\tRE\tMemory(B)";
+        String tab = "type\tε_w\tα\ts_time(s)\tc_time(s)\tcomm.(B)\tmem.(B)\tMemory(B)\tndcg\tprecision\tabe\tre";
         printWriter.println(tab);
         LOGGER.info("{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}", "                name", "         ε", "         α",
             "           s_time(s)", "           c_time(s)",
@@ -429,12 +429,10 @@ public class HhLdpMain {
         // heavy hitter map
         Map<String, Double> heavyHitterMap = server.heavyHitters();
         Preconditions.checkArgument(heavyHitterMap.size() == k);
-        // heavy hitter ordered list
-        List<Map.Entry<String, Double>> heavyHitterOrderedList = new ArrayList<>(heavyHitterMap.entrySet());
-        heavyHitterOrderedList.sort(Comparator.comparingDouble(Map.Entry::getValue));
-        Collections.reverse(heavyHitterOrderedList);
-        // heavy hitters
-        List<String> heavyHitters = heavyHitterOrderedList.stream().map(Map.Entry::getKey).collect(Collectors.toList());
+        // ordered heavy hitter
+        List<String> heavyHitters = server.orderedHeavyHitters().stream()
+            .map(Map.Entry::getKey)
+            .collect(Collectors.toList());
         // metrics
         HhLdpMetrics metrics = new HhLdpMetrics();
         metrics.setServerTimeMs(serverTimeMs);

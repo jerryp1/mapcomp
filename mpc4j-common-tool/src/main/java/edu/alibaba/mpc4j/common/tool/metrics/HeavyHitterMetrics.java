@@ -1,6 +1,7 @@
 package edu.alibaba.mpc4j.common.tool.metrics;
 
 import com.google.common.base.Preconditions;
+import edu.alibaba.mpc4j.common.tool.MathPreconditions;
 import edu.alibaba.mpc4j.common.tool.utils.DoubleUtils;
 import org.apache.commons.math3.util.Precision;
 
@@ -54,11 +55,7 @@ public class HeavyHitterMetrics {
      * @return the NDCG.
      */
     public static <T> double ndcg(List<T> predictionList, List<T> realList) {
-        Preconditions.checkArgument(
-            predictionList.size() == realList.size(),
-            "prediction list size = %s, real list size = %s, must be equal.",
-            predictionList.size(), realList.size()
-        );
+        MathPreconditions.checkEqual("prediction list", "real list", predictionList.size(), realList.size());
         int k = predictionList.size();
         double idcg = idcg(k);
         // k = 0时，idcg = 0
