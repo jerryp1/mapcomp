@@ -47,25 +47,8 @@ public class LowMcOprpSender extends AbstractOprpSender {
     public LowMcOprpSender(Rpc senderRpc, Party receiverParty, LowMcOprpConfig config) {
         super(LowMcOprpPtoDesc.getInstance(), senderRpc, receiverParty, config);
         bcSender = BcFactory.createSender(senderRpc, receiverParty, config.getBcConfig());
-        bcSender.addLogLevel();
-    }
-
-    @Override
-    public void setTaskId(long taskId) {
-        super.setTaskId(taskId);
-        bcSender.setTaskId(taskId);
-    }
-
-    @Override
-    public void setParallel(boolean parallel) {
-        super.setParallel(parallel);
-        bcSender.setParallel(parallel);
-    }
-
-    @Override
-    public void addLogLevel() {
-        super.addLogLevel();
-        bcSender.addLogLevel();
+        addSubPtos(bcSender);
+        addSecureSubPtos(bcSender);
     }
 
     @Override
@@ -110,7 +93,7 @@ public class LowMcOprpSender extends AbstractOprpSender {
         List<byte[]> shareKeyDataPacket = new LinkedList<>();
         shareKeyDataPacket.add(receiverShareKeyBytes);
         DataPacketHeader shareKeyHeader = new DataPacketHeader(
-            taskId, getPtoDesc().getPtoId(), LowMcOprpPtoDesc.PtoStep.SERVER_SEND_SHARE_KEY.ordinal(), extraInfo,
+            encodeTaskId, getPtoDesc().getPtoId(), LowMcOprpPtoDesc.PtoStep.SERVER_SEND_SHARE_KEY.ordinal(), extraInfo,
             ownParty().getPartyId(), otherParty().getPartyId()
         );
         rpc.send(DataPacket.fromByteArrayList(shareKeyHeader, shareKeyDataPacket));
@@ -128,7 +111,7 @@ public class LowMcOprpSender extends AbstractOprpSender {
 
         stopWatch.start();
         DataPacketHeader shareMessageHeader = new DataPacketHeader(
-            taskId, getPtoDesc().getPtoId(), LowMcOprpPtoDesc.PtoStep.CLIENT_SEND_SHARE_MESSAGE.ordinal(), extraInfo,
+            encodeTaskId, getPtoDesc().getPtoId(), LowMcOprpPtoDesc.PtoStep.CLIENT_SEND_SHARE_MESSAGE.ordinal(), extraInfo,
             otherParty().getPartyId(), ownParty().getPartyId()
         );
         List<byte[]> shareMessagePayload = rpc.receive(shareMessageHeader).getPayload();

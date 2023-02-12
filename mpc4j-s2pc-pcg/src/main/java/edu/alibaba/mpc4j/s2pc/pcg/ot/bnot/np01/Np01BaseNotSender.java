@@ -68,7 +68,7 @@ public class Np01BaseNotSender extends AbstractBaseNotSender {
         stopWatch.start();
         List<byte[]> initPayload = generateInitPayload();
         DataPacketHeader initHeader = new DataPacketHeader(
-            taskId, ptoDesc.getPtoId(), PtoStep.SENDER_SEND_INIT.ordinal(), extraInfo,
+            encodeTaskId, ptoDesc.getPtoId(), PtoStep.SENDER_SEND_INIT.ordinal(), extraInfo,
             ownParty().getPartyId(), otherParty().getPartyId()
         );
         rpc.send(DataPacket.fromByteArrayList(initHeader, initPayload));
@@ -79,7 +79,7 @@ public class Np01BaseNotSender extends AbstractBaseNotSender {
 
         stopWatch.start();
         DataPacketHeader publicKeyHeader = new DataPacketHeader(
-            taskId, ptoDesc.getPtoId(), PtoStep.RECEIVER_SEND_PK.ordinal(), extraInfo,
+            encodeTaskId, ptoDesc.getPtoId(), PtoStep.RECEIVER_SEND_PK.ordinal(), extraInfo,
             otherParty().getPartyId(), ownParty().getPartyId()
         );
         List<byte[]> publicKeyPayload = rpc.receive(publicKeyHeader).getPayload();

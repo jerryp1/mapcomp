@@ -160,7 +160,7 @@ public class BcVectorTest {
     }
 
     private void testBinaryOperator(BcParty sender, BcParty receiver, BcOperator bcOperator, int maxBitNum) {
-        long randomTaskId = Math.abs(SECURE_RANDOM.nextLong());
+        int randomTaskId = Math.abs(SECURE_RANDOM.nextInt());
         sender.setTaskId(randomTaskId);
         receiver.setTaskId(randomTaskId);
         // generate xs
@@ -228,7 +228,7 @@ public class BcVectorTest {
 
     @SuppressWarnings("SameParameterValue")
     private void testUnaryOperator(BcParty sender, BcParty receiver, BcOperator bcOperator, int maxBitNum) {
-        long randomTaskId = Math.abs(SECURE_RANDOM.nextLong());
+        int randomTaskId = Math.abs(SECURE_RANDOM.nextInt());
         sender.setTaskId(randomTaskId);
         receiver.setTaskId(randomTaskId);
         // generate xs

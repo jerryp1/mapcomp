@@ -186,7 +186,7 @@ public class PsiTest {
     }
 
     private void testPto(PsiServer<ByteBuffer> server, PsiClient<ByteBuffer> client, int serverSize, int clientSize) {
-        long randomTaskId = Math.abs(SECURE_RANDOM.nextLong());
+        int randomTaskId = Math.abs(SECURE_RANDOM.nextInt());
         server.setTaskId(randomTaskId);
         client.setTaskId(randomTaskId);
         try {

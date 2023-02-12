@@ -90,7 +90,7 @@ public class Mcr21IndexPirClient extends AbstractIndexPirClient {
         // 添加私钥密文
         clientQueryPayload.addAll(encryptedSecretKey);
         DataPacketHeader clientQueryHeader = new DataPacketHeader(
-            taskId, getPtoDesc().getPtoId(), Mcr21IndexPirPtoDesc.PtoStep.CLIENT_SEND_QUERY.ordinal(), extraInfo,
+            encodeTaskId, getPtoDesc().getPtoId(), Mcr21IndexPirPtoDesc.PtoStep.CLIENT_SEND_QUERY.ordinal(), extraInfo,
             rpc.ownParty().getPartyId(), otherParty().getPartyId()
         );
         rpc.send(DataPacket.fromByteArrayList(clientQueryHeader, clientQueryPayload));
@@ -101,7 +101,7 @@ public class Mcr21IndexPirClient extends AbstractIndexPirClient {
 
         // 客户端接收并解密回复
         DataPacketHeader serverResponseHeader = new DataPacketHeader(
-            taskId, getPtoDesc().getPtoId(), Mcr21IndexPirPtoDesc.PtoStep.SERVER_SEND_RESPONSE.ordinal(), extraInfo,
+            encodeTaskId, getPtoDesc().getPtoId(), Mcr21IndexPirPtoDesc.PtoStep.SERVER_SEND_RESPONSE.ordinal(), extraInfo,
             otherParty().getPartyId(), rpc.ownParty().getPartyId()
         );
         List<byte[]> serverResponsePayload = rpc.receive(serverResponseHeader).getPayload();

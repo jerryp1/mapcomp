@@ -81,35 +81,14 @@ public class Ywl20MaBspCotReceiver extends AbstractBspCotReceiver {
     public Ywl20MaBspCotReceiver(Rpc receiverRpc, Party senderParty, Ywl20MaBspCotConfig config) {
         super(Ywl20MaBspCotPtoDesc.getInstance(), receiverRpc, senderParty, config);
         coreCotReceiver = CoreCotFactory.createReceiver(receiverRpc, senderParty, config.getCoreCotConfig());
-        coreCotReceiver.addLogLevel();
+        addSubPtos(coreCotReceiver);
+        addSecureSubPtos(coreCotReceiver);
         dpprfConfig = config.getDpprfConfig();
         dpprfReceiver = DpprfFactory.createReceiver(receiverRpc, senderParty, dpprfConfig);
-        dpprfReceiver.addLogLevel();
+        addSubPtos(dpprfReceiver);
+        addSecureSubPtos(dpprfReceiver);
         gf2k = Gf2kFactory.createInstance(envType);
         hash = HashFactory.createInstance(envType, 2 * CommonConstants.BLOCK_BYTE_LENGTH);
-    }
-
-    @Override
-    public void setTaskId(long taskId) {
-        super.setTaskId(taskId);
-        // COT协议和DPPRF协议需要使用不同的taskID
-        byte[] taskIdBytes = ByteBuffer.allocate(Long.BYTES).putLong(taskId).array();
-        coreCotReceiver.setTaskId(taskIdPrf.getLong(0, taskIdBytes, Long.MAX_VALUE));
-        dpprfReceiver.setTaskId(taskIdPrf.getLong(1, taskIdBytes, Long.MAX_VALUE));
-    }
-
-    @Override
-    public void setParallel(boolean parallel) {
-        super.setParallel(parallel);
-        coreCotReceiver.setParallel(parallel);
-        dpprfReceiver.setParallel(parallel);
-    }
-
-    @Override
-    public void addLogLevel() {
-        super.addLogLevel();
-        coreCotReceiver.addLogLevel();
-        dpprfReceiver.addLogLevel();
     }
 
     @Override
@@ -134,7 +113,7 @@ public class Ywl20MaBspCotReceiver extends AbstractBspCotReceiver {
         secureRandom.nextBytes(randomOracleKey);
         randomOracleKeyPayload.add(randomOracleKey);
         DataPacketHeader randomOracleKeyHeader = new DataPacketHeader(
-            taskId, getPtoDesc().getPtoId(), PtoStep.RECEIVER_SEND_RANDOM_ORACLE_KEY.ordinal(), extraInfo,
+            encodeTaskId, getPtoDesc().getPtoId(), PtoStep.RECEIVER_SEND_RANDOM_ORACLE_KEY.ordinal(), extraInfo,
             ownParty().getPartyId(), otherParty().getPartyId()
         );
         rpc.send(DataPacket.fromByteArrayList(randomOracleKeyHeader, randomOracleKeyPayload));
@@ -195,7 +174,7 @@ public class Ywl20MaBspCotReceiver extends AbstractBspCotReceiver {
 
         stopWatch.start();
         DataPacketHeader correlateHeader = new DataPacketHeader(
-            taskId, getPtoDesc().getPtoId(), PtoStep.SENDER_SEND_CORRELATE.ordinal(), extraInfo,
+            encodeTaskId, getPtoDesc().getPtoId(), PtoStep.SENDER_SEND_CORRELATE.ordinal(), extraInfo,
             otherParty().getPartyId(), ownParty().getPartyId()
         );
         List<byte[]> correlatePayload = rpc.receive(correlateHeader).getPayload();
@@ -209,14 +188,14 @@ public class Ywl20MaBspCotReceiver extends AbstractBspCotReceiver {
         stopWatch.start();
         List<byte[]> checkChoicePayload = generateCheckChoicePayload();
         DataPacketHeader checkChoiceHeader = new DataPacketHeader(
-            taskId, getPtoDesc().getPtoId(), PtoStep.RECEIVER_SEND_CHECK_CHOICES.ordinal(), extraInfo,
+            encodeTaskId, getPtoDesc().getPtoId(), PtoStep.RECEIVER_SEND_CHECK_CHOICES.ordinal(), extraInfo,
             ownParty().getPartyId(), otherParty().getPartyId()
         );
         rpc.send(DataPacket.fromByteArrayList(checkChoiceHeader, checkChoicePayload));
         // 先本地计算H'(w)，再接收对方的值
         byte[] expectHashValue = computeExpectHashValue(receiverOutput);
         DataPacketHeader actualHashValueHeader = new DataPacketHeader(
-            taskId, getPtoDesc().getPtoId(), PtoStep.SENDER_SEND_HASH_VALUE.ordinal(), extraInfo,
+            encodeTaskId, getPtoDesc().getPtoId(), PtoStep.SENDER_SEND_HASH_VALUE.ordinal(), extraInfo,
             otherParty().getPartyId(), ownParty().getPartyId()
         );
         List<byte[]> actualHashValuePayload = rpc.receive(actualHashValueHeader).getPayload();

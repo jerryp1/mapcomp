@@ -41,9 +41,11 @@ public class BitmapSender extends AbstractBitmapParty {
     public BitmapSender(Rpc senderRpc, Party receiverParty, BitmapConfig bitmapConfig) {
         super(BitmapPtoDesc.getInstance(), senderRpc, receiverParty, bitmapConfig);
         bcSender = BcFactory.createSender(senderRpc, receiverParty, bitmapConfig.getBcConfig());
-        bcSender.addLogLevel();
+        addSubPtos(bcSender);
+        addSecureSubPtos(bcSender);
         hammingSender = HammingFactory.createSender(senderRpc, receiverParty, bitmapConfig.getHammingConfig());
-        hammingSender.addLogLevel();
+        addSubPtos(hammingSender);
+        addSecureSubPtos(hammingSender);
     }
 
     @Override
@@ -77,24 +79,6 @@ public class BitmapSender extends AbstractBitmapParty {
         }
         hammingSender.sendHammingDistance(x.getVector());
         return hammingSender.receiveHammingDistance(x.getVector());
-    }
-
-    @Override
-    public void setTaskId(long taskId) {
-        super.setTaskId(taskId);
-        bcSender.setTaskId(taskId);
-    }
-
-    @Override
-    public void setParallel(boolean parallel) {
-        super.setParallel(parallel);
-        bcSender.setParallel(parallel);
-    }
-
-    @Override
-    public void addLogLevel() {
-        super.addLogLevel();
-        bcSender.addLogLevel();
     }
 
     @Override

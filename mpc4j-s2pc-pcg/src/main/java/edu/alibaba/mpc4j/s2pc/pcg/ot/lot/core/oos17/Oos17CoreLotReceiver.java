@@ -68,25 +68,8 @@ public class Oos17CoreLotReceiver extends AbstractCoreLotReceiver {
     public Oos17CoreLotReceiver(Rpc receiverRpc, Party senderParty, Oos17CoreLotConfig config) {
         super(Oos17CoreLotPtoDesc.getInstance(), receiverRpc, senderParty, config);
         coreCotSender = CoreCotFactory.createSender(receiverRpc, senderParty, config.getCoreCotConfig());
-        coreCotSender.addLogLevel();
-    }
-
-    @Override
-    public void setTaskId(long taskId) {
-        super.setTaskId(taskId);
-        coreCotSender.setTaskId(taskId);
-    }
-
-    @Override
-    public void setParallel(boolean parallel) {
-        super.setParallel(parallel);
-        coreCotSender.setParallel(parallel);
-    }
-
-    @Override
-    public void addLogLevel() {
-        super.addLogLevel();
-        coreCotSender.addLogLevel();
+        addSubPtos(coreCotSender);
+        addSecureSubPtos(coreCotSender);
     }
 
     @Override
@@ -106,7 +89,7 @@ public class Oos17CoreLotReceiver extends AbstractCoreLotReceiver {
 
         stopWatch.start();
         DataPacketHeader randomOracleKeyHeader = new DataPacketHeader(
-            taskId, getPtoDesc().getPtoId(), Oos17CoreLotPtoDesc.PtoStep.SENDER_SEND_RANDOM_ORACLE_KEY.ordinal(), extraInfo,
+            encodeTaskId, getPtoDesc().getPtoId(), Oos17CoreLotPtoDesc.PtoStep.SENDER_SEND_RANDOM_ORACLE_KEY.ordinal(), extraInfo,
             otherParty().getPartyId(), ownParty().getPartyId()
         );
         List<byte[]> randomOracleKeyPayload = rpc.receive(randomOracleKeyHeader).getPayload();
@@ -129,7 +112,7 @@ public class Oos17CoreLotReceiver extends AbstractCoreLotReceiver {
         stopWatch.start();
         List<byte[]> matrixPayload = generateMatrixPayload();
         DataPacketHeader matrixHeader = new DataPacketHeader(
-            taskId, getPtoDesc().getPtoId(), Oos17CoreLotPtoDesc.PtoStep.RECEIVER_SEND_MATRIX.ordinal(), extraInfo,
+            encodeTaskId, getPtoDesc().getPtoId(), Oos17CoreLotPtoDesc.PtoStep.RECEIVER_SEND_MATRIX.ordinal(), extraInfo,
             ownParty().getPartyId(), otherParty().getPartyId()
         );
         rpc.send(DataPacket.fromByteArrayList(matrixHeader, matrixPayload));
@@ -141,7 +124,7 @@ public class Oos17CoreLotReceiver extends AbstractCoreLotReceiver {
         stopWatch.start();
         List<byte[]> correlateCheckPayload = generateCorrelateCheckPayload();
         DataPacketHeader correlateCheckHeader = new DataPacketHeader(
-            taskId, getPtoDesc().getPtoId(), Oos17CoreLotPtoDesc.PtoStep.RECEIVER_SEND_CHECK.ordinal(), extraInfo,
+            encodeTaskId, getPtoDesc().getPtoId(), Oos17CoreLotPtoDesc.PtoStep.RECEIVER_SEND_CHECK.ordinal(), extraInfo,
             ownParty().getPartyId(), otherParty().getPartyId()
         );
         rpc.send(DataPacket.fromByteArrayList(correlateCheckHeader, correlateCheckPayload));

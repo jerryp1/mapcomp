@@ -152,7 +152,7 @@ public class ZlCoreMtgTest {
     }
 
     private void testPto(ZlCoreMtgParty sender, ZlCoreMtgParty receiver, int num) {
-        long randomTaskId = Math.abs(SECURE_RANDOM.nextLong());
+        int randomTaskId = Math.abs(SECURE_RANDOM.nextInt());
         sender.setTaskId(randomTaskId);
         receiver.setTaskId(randomTaskId);
         try {

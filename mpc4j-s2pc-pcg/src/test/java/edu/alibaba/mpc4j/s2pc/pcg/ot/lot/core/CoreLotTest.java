@@ -11,7 +11,6 @@ import edu.alibaba.mpc4j.s2pc.pcg.ot.lot.LotTest;
 import edu.alibaba.mpc4j.s2pc.pcg.ot.lot.core.kk13.Kk13OptCoreLotConfig;
 import edu.alibaba.mpc4j.s2pc.pcg.ot.lot.core.kk13.Kk13OriCoreLotConfig;
 import edu.alibaba.mpc4j.s2pc.pcg.ot.lot.core.oos17.Oos17CoreLotConfig;
-import edu.alibaba.mpc4j.s2pc.pcg.ot.lot.LotFactory;
 import edu.alibaba.mpc4j.s2pc.pcg.ot.lot.LotReceiverOutput;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.time.StopWatch;
@@ -172,7 +171,7 @@ public class CoreLotTest {
     }
 
     private void testPto(CoreLotSender sender, CoreLotReceiver receiver, int inputBitLength, int num) {
-        long randomTaskId = Math.abs(SECURE_RANDOM.nextLong());
+        int randomTaskId = Math.abs(SECURE_RANDOM.nextInt());
         sender.setTaskId(randomTaskId);
         receiver.setTaskId(randomTaskId);
         try {

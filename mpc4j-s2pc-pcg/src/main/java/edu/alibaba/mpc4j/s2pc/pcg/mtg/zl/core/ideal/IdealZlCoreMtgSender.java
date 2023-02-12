@@ -57,7 +57,7 @@ public class IdealZlCoreMtgSender extends AbstractZlCoreMtgParty {
         List<byte[]> rootKeyPayload = new LinkedList<>();
         rootKeyPayload.add(rootKey);
         DataPacketHeader rootKeyHeader = new DataPacketHeader(
-            taskId, getPtoDesc().getPtoId(), PtoStep.SERVER_SEND_ROOT_KEY.ordinal(), extraInfo,
+            encodeTaskId, getPtoDesc().getPtoId(), PtoStep.SERVER_SEND_ROOT_KEY.ordinal(), extraInfo,
             ownParty().getPartyId(), otherParty().getPartyId()
         );
         rpc.send(DataPacket.fromByteArrayList(rootKeyHeader, rootKeyPayload));

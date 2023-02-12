@@ -42,9 +42,11 @@ public class BitmapReceiver extends AbstractBitmapParty {
     public BitmapReceiver(Rpc receiverRpc, Party senderParty, BitmapConfig bitmapConfig) {
         super(getInstance(), receiverRpc, senderParty, bitmapConfig);
         bcReceiver = BcFactory.createReceiver(receiverRpc, senderParty, bitmapConfig.getBcConfig());
-        bcReceiver.addLogLevel();
+        addSubPtos(bcReceiver);
+        addSecureSubPtos(bcReceiver);
         hammingReceiver = HammingFactory.createReceiver(receiverRpc, senderParty, bitmapConfig.getHammingConfig());
-        hammingReceiver.addLogLevel();
+        addSubPtos(hammingReceiver);
+        addSecureSubPtos(hammingReceiver);
     }
 
     @Override
@@ -82,24 +84,6 @@ public class BitmapReceiver extends AbstractBitmapParty {
         int count = hammingReceiver.receiveHammingDistance(x.getVector());
         hammingReceiver.sendHammingDistance(x.getVector());
         return count;
-    }
-
-    @Override
-    public void setTaskId(long taskId) {
-        super.setTaskId(taskId);
-        bcReceiver.setTaskId(taskId);
-    }
-
-    @Override
-    public void setParallel(boolean parallel) {
-        super.setParallel(parallel);
-        bcReceiver.setParallel(parallel);
-    }
-
-    @Override
-    public void addLogLevel() {
-        super.addLogLevel();
-        bcReceiver.addLogLevel();
     }
 
     @Override

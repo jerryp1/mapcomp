@@ -42,25 +42,8 @@ public class Bcp13ShHammingSender extends AbstractHammingParty {
     public Bcp13ShHammingSender(Rpc senderRpc, Party receiverParty, Bcp13ShHammingConfig config) {
         super(Bcp13ShHammingPtoDesc.getInstance(), senderRpc, receiverParty, config);
         cotSender = CotFactory.createSender(senderRpc, receiverParty, config.getCotConfig());
-        cotSender.addLogLevel();
-    }
-
-    @Override
-    public void setTaskId(long taskId) {
-        super.setTaskId(taskId);
-        cotSender.setTaskId(taskId);
-    }
-
-    @Override
-    public void setParallel(boolean parallel) {
-        super.setParallel(parallel);
-        cotSender.setParallel(parallel);
-    }
-
-    @Override
-    public void addLogLevel() {
-        super.addLogLevel();
-        cotSender.addLogLevel();
+        addSubPtos(cotSender);
+        addSecureSubPtos(cotSender);
     }
 
     @Override
@@ -92,7 +75,7 @@ public class Bcp13ShHammingSender extends AbstractHammingParty {
         List<byte[]> rPayload = new LinkedList<>();
         rPayload.add(IntUtils.boundedNonNegIntToByteArray(r, bitNum));
         DataPacketHeader rHeader = new DataPacketHeader(
-            taskId, getPtoDesc().getPtoId(), PtoStep.SENDER_SEND_R.ordinal(), extraInfo,
+            encodeTaskId, getPtoDesc().getPtoId(), PtoStep.SENDER_SEND_R.ordinal(), extraInfo,
             ownParty().getPartyId(), otherParty().getPartyId()
         );
         rpc.send(DataPacket.fromByteArrayList(rHeader, rPayload));
@@ -112,7 +95,7 @@ public class Bcp13ShHammingSender extends AbstractHammingParty {
         int r = executeOtSteps(x0);
         stopWatch.start();
         DataPacketHeader tHeader = new DataPacketHeader(
-            taskId, getPtoDesc().getPtoId(), PtoStep.RECEIVER_SEND_T.ordinal(), extraInfo,
+            encodeTaskId, getPtoDesc().getPtoId(), PtoStep.RECEIVER_SEND_T.ordinal(), extraInfo,
             otherParty().getPartyId(), ownParty().getPartyId()
         );
         List<byte[]> tPayload = rpc.receive(tHeader).getPayload();
@@ -170,7 +153,7 @@ public class Bcp13ShHammingSender extends AbstractHammingParty {
             .flatMap(Arrays::stream)
             .collect(Collectors.toList());
         DataPacketHeader senderMessageHeader = new DataPacketHeader(
-            taskId, getPtoDesc().getPtoId(), PtoStep.SENDER_SEND_PAYLOAD.ordinal(), extraInfo,
+            encodeTaskId, getPtoDesc().getPtoId(), PtoStep.SENDER_SEND_PAYLOAD.ordinal(), extraInfo,
             ownParty().getPartyId(), otherParty().getPartyId()
         );
         rpc.send(DataPacket.fromByteArrayList(senderMessageHeader, senderMessagePayload));

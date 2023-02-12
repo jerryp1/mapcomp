@@ -173,7 +173,7 @@ public class BothSetPmidTest {
     }
 
     private void testPmid(PmidServer<String> server, PmidClient<String> client, int serverSetSize, int clientSetSize) {
-        long randomTaskId = Math.abs(SECURE_RANDOM.nextLong());
+        int randomTaskId = Math.abs(SECURE_RANDOM.nextInt());
         server.setTaskId(randomTaskId);
         client.setTaskId(randomTaskId);
         try {

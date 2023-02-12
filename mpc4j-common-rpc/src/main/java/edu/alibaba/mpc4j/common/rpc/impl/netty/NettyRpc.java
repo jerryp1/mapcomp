@@ -173,7 +173,7 @@ public class NettyRpc implements Rpc {
         // 打包数据包head
         NettyRpcProtobuf.DataPacketProto.HeaderProto headerProto = NettyRpcProtobuf.DataPacketProto.HeaderProto
             .newBuilder()
-            .setTaskId(header.getTaskId())
+            .setTaskId(header.getEncodeTaskId())
             .setPtoId(header.getPtoId())
             .setStepId(header.getStepId())
             .setExtraInfo(header.getExtraInfo())

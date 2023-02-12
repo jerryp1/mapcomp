@@ -250,7 +250,7 @@ public class OpXgBoostClsMultiSlaveTest {
                                        DataFrame rightSlaveDataFrame, OpBoostSlaveConfig rightSlaveConfig
                                        ) {
         LOGGER.info("-----{} training-----", name);
-        long randomTaskId = Math.abs(OpBoostTestUtils.SECURE_RANDOM.nextLong());
+        int randomTaskId = Math.abs(OpBoostTestUtils.SECURE_RANDOM.nextInt());
         host.setTaskId(randomTaskId);
         leftSlave.setTaskId(randomTaskId);
         rightSlave.setTaskId(randomTaskId);

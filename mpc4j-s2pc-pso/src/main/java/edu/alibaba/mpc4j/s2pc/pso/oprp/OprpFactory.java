@@ -49,7 +49,7 @@ public class OprpFactory implements PtoFactory {
         OprpType type = config.getPtoType();
         switch (type) {
             case LOW_MC:
-                return new LowMcOprpSender(senderRpc, receiverParty, (LowMcOprpConfig)config);
+                return new LowMcOprpSender(senderRpc, receiverParty, (LowMcOprpConfig) config);
             case LOW_MC_INV:
             default:
                 throw new IllegalArgumentException("Invalid " + OprpType.class.getSimpleName() + ": " + type.name());
@@ -68,7 +68,7 @@ public class OprpFactory implements PtoFactory {
         OprpType type = config.getPtoType();
         switch (type) {
             case LOW_MC:
-                return new LowMcOprpReceiver(receiverRpc, senderParty, (LowMcOprpConfig)config);
+                return new LowMcOprpReceiver(receiverRpc, senderParty, (LowMcOprpConfig) config);
             case LOW_MC_INV:
             default:
                 throw new IllegalArgumentException("Invalid " + OprpType.class.getSimpleName() + ": " + type.name());

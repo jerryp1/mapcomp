@@ -40,25 +40,8 @@ public class Kk13OptCoreLotSender extends AbstractCoreLotSender {
     public Kk13OptCoreLotSender(Rpc senderRpc, Party receiverParty, Kk13OptCoreLotConfig config) {
         super(Kk13OptCoreLotPtoDesc.getInstance(), senderRpc, receiverParty, config);
         coreCotReceiver = CoreCotFactory.createReceiver(senderRpc, receiverParty, config.getCoreCotConfig());
-        coreCotReceiver.addLogLevel();
-    }
-
-    @Override
-    public void setTaskId(long taskId) {
-        super.setTaskId(taskId);
-        coreCotReceiver.setTaskId(taskId);
-    }
-
-    @Override
-    public void setParallel(boolean parallel) {
-        super.setParallel(parallel);
-        coreCotReceiver.setParallel(parallel);
-    }
-
-    @Override
-    public void addLogLevel() {
-        super.addLogLevel();
-        coreCotReceiver.addLogLevel();
+        addSubPtos(coreCotReceiver);
+        addSecureSubPtos(coreCotReceiver);
     }
 
     @Override
@@ -95,7 +78,7 @@ public class Kk13OptCoreLotSender extends AbstractCoreLotSender {
 
         stopWatch.start();
         DataPacketHeader matrixHeader = new DataPacketHeader(
-            taskId, ptoDesc.getPtoId(), PtoStep.RECEIVER_SEND_MATRIX.ordinal(), extraInfo,
+            encodeTaskId, ptoDesc.getPtoId(), PtoStep.RECEIVER_SEND_MATRIX.ordinal(), extraInfo,
             otherParty().getPartyId(), ownParty().getPartyId());
         List<byte[]> matrixPayload = rpc.receive(matrixHeader).getPayload();
         CoreLotSenderOutput senderOutput = handleMatrixPayload(matrixPayload);

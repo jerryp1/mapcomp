@@ -93,44 +93,20 @@ public class Gmr21PsuClient extends AbstractPsuClient {
     public Gmr21PsuClient(Rpc clientRpc, Party serverParty, Gmr21PsuConfig config) {
         super(Gmr21PsuPtoDesc.getInstance(), clientRpc, serverParty, config);
         cuckooHashOprfSender = OprfFactory.createOprfSender(clientRpc, serverParty, config.getCuckooHashOprfConfig());
-        cuckooHashOprfSender.addLogLevel();
+        addSubPtos(cuckooHashOprfSender);
+        addSecureSubPtos(cuckooHashOprfSender);
         osnSender = OsnFactory.createSender(clientRpc, serverParty, config.getOsnConfig());
-        osnSender.addLogLevel();
+        addSubPtos(osnSender);
+        addSecureSubPtos(osnSender);
         peqtOprfReceiver = OprfFactory.createOprfReceiver(clientRpc, serverParty, config.getPeqtOprfConfig());
-        peqtOprfReceiver.addLogLevel();
+        addSubPtos(peqtOprfReceiver);
+        addSecureSubPtos(peqtOprfReceiver);
         coreCotReceiver = CoreCotFactory.createReceiver(clientRpc, serverParty, config.getCoreCotConfig());
-        coreCotReceiver.addLogLevel();
+        addSubPtos(coreCotReceiver);
+        addSecureSubPtos(coreCotReceiver);
         okvsType = config.getOkvsType();
         cuckooHashBinType = config.getCuckooHashBinType();
         cuckooHashNum = CuckooHashBinFactory.getHashNum(cuckooHashBinType);
-    }
-
-    @Override
-    public void setTaskId(long taskId) {
-        super.setTaskId(taskId);
-        byte[] taskIdBytes = ByteBuffer.allocate(Long.BYTES).putLong(taskId).array();
-        cuckooHashOprfSender.setTaskId(taskIdPrf.getLong(0, taskIdBytes, Long.MAX_VALUE));
-        osnSender.setTaskId(taskIdPrf.getLong(1, taskIdBytes, Long.MAX_VALUE));
-        peqtOprfReceiver.setTaskId(taskIdPrf.getLong(2, taskIdBytes, Long.MAX_VALUE));
-        coreCotReceiver.setTaskId(taskIdPrf.getLong(3, taskIdBytes, Long.MAX_VALUE));
-    }
-
-    @Override
-    public void setParallel(boolean parallel) {
-        super.setParallel(parallel);
-        cuckooHashOprfSender.setParallel(parallel);
-        osnSender.setParallel(parallel);
-        peqtOprfReceiver.setParallel(parallel);
-        coreCotReceiver.setParallel(parallel);
-    }
-
-    @Override
-    public void addLogLevel() {
-        super.addLogLevel();
-        cuckooHashOprfSender.addLogLevel();
-        osnSender.addLogLevel();
-        peqtOprfReceiver.addLogLevel();
-        coreCotReceiver.addLogLevel();
     }
 
     @Override
@@ -154,7 +130,7 @@ public class Gmr21PsuClient extends AbstractPsuClient {
 
         stopWatch.start();
         DataPacketHeader keysHeader = new DataPacketHeader(
-            taskId, getPtoDesc().getPtoId(), PtoStep.SERVER_SEND_KEYS.ordinal(), extraInfo,
+            encodeTaskId, getPtoDesc().getPtoId(), PtoStep.SERVER_SEND_KEYS.ordinal(), extraInfo,
             otherParty().getPartyId(), ownParty().getPartyId()
         );
         List<byte[]> keysPayload = rpc.receive(keysHeader).getPayload();
@@ -183,7 +159,7 @@ public class Gmr21PsuClient extends AbstractPsuClient {
         // 初始化PEQT哈希
         Hash peqtHash = HashFactory.createInstance(envType, Gmr21PsuPtoDesc.getPeqtByteLength(binNum));
         DataPacketHeader cuckooHashKeyHeader = new DataPacketHeader(
-            taskId, getPtoDesc().getPtoId(), PtoStep.SERVER_SEND_CUCKOO_HASH_KEYS.ordinal(), extraInfo,
+            encodeTaskId, getPtoDesc().getPtoId(), PtoStep.SERVER_SEND_CUCKOO_HASH_KEYS.ordinal(), extraInfo,
             otherParty().getPartyId(), ownParty().getPartyId()
         );
         List<byte[]> cuckooHashKeyPayload = rpc.receive(cuckooHashKeyHeader).getPayload();
@@ -203,7 +179,7 @@ public class Gmr21PsuClient extends AbstractPsuClient {
         stopWatch.start();
         List<byte[]> okvsPayload = generateOkvsPayload(cuckooHashOprfSenderOutput);
         DataPacketHeader okvsHeader = new DataPacketHeader(
-            taskId, getPtoDesc().getPtoId(), PtoStep.CLIENT_SEND_OKVS.ordinal(), extraInfo,
+            encodeTaskId, getPtoDesc().getPtoId(), PtoStep.CLIENT_SEND_OKVS.ordinal(), extraInfo,
             ownParty().getPartyId(), otherParty().getPartyId()
         );
         rpc.send(DataPacket.fromByteArrayList(okvsHeader, okvsPayload));
@@ -234,7 +210,7 @@ public class Gmr21PsuClient extends AbstractPsuClient {
             .toArray(ByteBuffer[]::new);
         // 接收aPrimeOprf
         DataPacketHeader aPrimeOprfHeader = new DataPacketHeader(
-            taskId, getPtoDesc().getPtoId(), PtoStep.SERVER_SEND_A_PRIME_OPRFS.ordinal(), extraInfo,
+            encodeTaskId, getPtoDesc().getPtoId(), PtoStep.SERVER_SEND_A_PRIME_OPRFS.ordinal(), extraInfo,
             otherParty().getPartyId(), ownParty().getPartyId()
         );
         List<byte[]> aPrimeOprfPayload = rpc.receive(aPrimeOprfHeader).getPayload();
@@ -255,7 +231,7 @@ public class Gmr21PsuClient extends AbstractPsuClient {
         stopWatch.start();
         CotReceiverOutput cotReceiverOutput = coreCotReceiver.receive(choiceArray);
         DataPacketHeader encHeader = new DataPacketHeader(
-            taskId, getPtoDesc().getPtoId(), PtoStep.SERVER_SEND_ENC_ELEMENTS.ordinal(), extraInfo,
+            encodeTaskId, getPtoDesc().getPtoId(), PtoStep.SERVER_SEND_ENC_ELEMENTS.ordinal(), extraInfo,
             otherParty().getPartyId(), ownParty().getPartyId()
         );
         List<byte[]> encPayload = rpc.receive(encHeader).getPayload();

@@ -175,7 +175,7 @@ public class PidTest {
     }
 
     private void testPid(PidParty<String> server, PidParty<String> client, int size) {
-        long randomTaskId = Math.abs(SECURE_RANDOM.nextLong());
+        int randomTaskId = Math.abs(SECURE_RANDOM.nextInt());
         server.setTaskId(randomTaskId);
         client.setTaskId(randomTaskId);
         try {

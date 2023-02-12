@@ -25,25 +25,8 @@ public class DirectNcCotSender extends AbstractNcCotSender {
     public DirectNcCotSender(Rpc senderRpc, Party receiverParty, DirectNcCotConfig config) {
         super(DirectNcCotPtoDesc.getInstance(), senderRpc, receiverParty, config);
         coreCotSender = CoreCotFactory.createSender(senderRpc, receiverParty, config.getCoreCotConfig());
-        coreCotSender.addLogLevel();
-    }
-
-    @Override
-    public void setTaskId(long taskId) {
-        super.setTaskId(taskId);
-        coreCotSender.setTaskId(taskId);
-    }
-
-    @Override
-    public void setParallel(boolean parallel) {
-        super.setParallel(parallel);
-        coreCotSender.setParallel(parallel);
-    }
-
-    @Override
-    public void addLogLevel() {
-        super.addLogLevel();
-        coreCotSender.addLogLevel();
+        addSubPtos(coreCotSender);
+        addSecureSubPtos(coreCotSender);
     }
 
     @Override

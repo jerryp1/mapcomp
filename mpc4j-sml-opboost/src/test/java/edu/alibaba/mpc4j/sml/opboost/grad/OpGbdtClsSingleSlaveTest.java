@@ -177,7 +177,7 @@ public class OpGbdtClsSingleSlaveTest {
     private GradientTreeBoost federateTraining(Formula formula,
                                                DataFrame hostDataFrame, ClsOpGradBoostHostConfig hostConfig,
                                                DataFrame slaveDataFrame, OpBoostSlaveConfig slaveConfig) {
-        long randomTaskId = Math.abs(OpBoostTestUtils.SECURE_RANDOM.nextLong());
+        int randomTaskId = Math.abs(OpBoostTestUtils.SECURE_RANDOM.nextInt());
         host.setTaskId(randomTaskId);
         slave.setTaskId(randomTaskId);
         try {

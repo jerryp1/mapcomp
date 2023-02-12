@@ -162,7 +162,7 @@ public class OprfTest {
     }
 
     private void testPto(OprfSender sender, OprfReceiver receiver, int batchSize) {
-        long randomTaskId = Math.abs(SECURE_RANDOM.nextLong());
+        int randomTaskId = Math.abs(SECURE_RANDOM.nextInt());
         sender.setTaskId(randomTaskId);
         receiver.setTaskId(randomTaskId);
         try {

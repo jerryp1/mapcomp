@@ -38,25 +38,8 @@ public class Bcg19RegMspCotReceiver extends AbstractMspCotReceiver {
     public Bcg19RegMspCotReceiver(Rpc senderRpc, Party receiverParty, Bcg19RegMspCotConfig config) {
         super(Bcg19RegMspCotPtoDesc.getInstance(), senderRpc, receiverParty, config);
         bspCotReceiver = BspCotFactory.createReceiver(senderRpc, receiverParty, config.getBspCotConfig());
-        bspCotReceiver.addLogLevel();
-    }
-
-    @Override
-    public void setTaskId(long taskId) {
-        super.setTaskId(taskId);
-        bspCotReceiver.setTaskId(taskId);
-    }
-
-    @Override
-    public void setParallel(boolean parallel) {
-        super.setParallel(parallel);
-        bspCotReceiver.setParallel(parallel);
-    }
-
-    @Override
-    public void addLogLevel() {
-        super.addLogLevel();
-        bspCotReceiver.addLogLevel();
+        addSubPtos(bspCotReceiver);
+        addSecureSubPtos(bspCotReceiver);
     }
 
     @Override
@@ -97,17 +80,17 @@ public class Bcg19RegMspCotReceiver extends AbstractMspCotReceiver {
         int[] innerTargetArray = IntStream.range(0, t)
             .map(i -> {
                 // 需要转换为long计算，否则n和t比较大时会溢出
-                int lowerBound = (int)(i * (long) num / t);
-                int upperBound = (int)((i + 1) * (long) num / t);
+                int lowerBound = (int) (i * (long) num / t);
+                int upperBound = (int) ((i + 1) * (long) num / t);
                 return secureRandom.nextInt(upperBound - lowerBound);
             })
             .toArray();
         // 执行2选1-单点批处理COT
         if (cotReceiverOutput == null) {
-            bspCotReceiverOutput = bspCotReceiver.receive(innerTargetArray, (int)Math.ceil((double) num / t));
+            bspCotReceiverOutput = bspCotReceiver.receive(innerTargetArray, (int) Math.ceil((double) num / t));
         } else {
             bspCotReceiverOutput = bspCotReceiver.receive(
-                innerTargetArray, (int)Math.ceil((double) num / t), cotReceiverOutput
+                innerTargetArray, (int) Math.ceil((double) num / t), cotReceiverOutput
             );
             cotReceiverOutput = null;
         }
@@ -133,8 +116,8 @@ public class Bcg19RegMspCotReceiver extends AbstractMspCotReceiver {
         byte[][] rbArray = IntStream.range(0, t)
             .mapToObj(i -> {
                 // 需要转换为long计算，否则n和t比较大时会溢出
-                int lowerBound = (int)(i * (long) num / t);
-                int upperBound = (int)((i + 1) * (long) num / t);
+                int lowerBound = (int) (i * (long) num / t);
+                int upperBound = (int) ((i + 1) * (long) num / t);
                 targetArray[i] = innerTargetArray[i] + lowerBound;
                 SspCotReceiverOutput sspcotReceiverOutput = bspCotReceiverOutput.get(i);
                 return IntStream.range(0, upperBound - lowerBound)

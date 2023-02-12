@@ -62,25 +62,8 @@ public class Kkrt16OriOprfReceiver extends AbstractOprfReceiver {
     public Kkrt16OriOprfReceiver(Rpc receiverRpc, Party senderParty, Kkrt16OriOprfConfig config) {
         super(Kkrt16OriOprfPtoDesc.getInstance(), receiverRpc, senderParty, config);
         coreCotSender = CoreCotFactory.createSender(receiverRpc, senderParty, config.getCoreCotConfig());
-        coreCotSender.addLogLevel();
-    }
-
-    @Override
-    public void setTaskId(long taskId) {
-        super.setTaskId(taskId);
-        coreCotSender.setTaskId(taskId);
-    }
-
-    @Override
-    public void setParallel(boolean parallel) {
-        super.setParallel(parallel);
-        coreCotSender.setParallel(parallel);
-    }
-
-    @Override
-    public void addLogLevel() {
-        super.addLogLevel();
-        coreCotSender.addLogLevel();
+        addSubPtos(coreCotSender);
+        addSecureSubPtos(coreCotSender);
     }
 
     @Override
@@ -126,7 +109,7 @@ public class Kkrt16OriOprfReceiver extends AbstractOprfReceiver {
         keyPayload.add(randomCoderKey);
         // 发送伪随机编码密钥
         DataPacketHeader keyHeader = new DataPacketHeader(
-            taskId, getPtoDesc().getPtoId(), Kkrt16OriOprfPtoDesc.PtoStep.RECEIVER_SEND_KEY.ordinal(), extraInfo,
+            encodeTaskId, getPtoDesc().getPtoId(), Kkrt16OriOprfPtoDesc.PtoStep.RECEIVER_SEND_KEY.ordinal(), extraInfo,
             ownParty().getPartyId(), otherParty().getPartyId()
         );
         rpc.send(DataPacket.fromByteArrayList(keyHeader, keyPayload));
@@ -139,7 +122,7 @@ public class Kkrt16OriOprfReceiver extends AbstractOprfReceiver {
         // 生成矩阵
         List<byte[]> matrixPayload = generateMatrixPayload();
         DataPacketHeader matrixHeader = new DataPacketHeader(
-            taskId, getPtoDesc().getPtoId(), Kkrt16OriOprfPtoDesc.PtoStep.RECEIVER_SEND_MATRIX.ordinal(), extraInfo,
+            encodeTaskId, getPtoDesc().getPtoId(), Kkrt16OriOprfPtoDesc.PtoStep.RECEIVER_SEND_MATRIX.ordinal(), extraInfo,
             ownParty().getPartyId(), otherParty().getPartyId()
         );
         rpc.send(DataPacket.fromByteArrayList(matrixHeader, matrixPayload));

@@ -44,7 +44,7 @@ public class IdealZ2CoreMtgReceiver extends AbstractZ2CoreMtgParty {
 
         stopWatch.start();
         DataPacketHeader rootKeyHeader = new DataPacketHeader(
-            taskId, getPtoDesc().getPtoId(), IdealZ2CoreMtgPtoDesc.PtoStep.SERVER_SEND_ROOT_KEY.ordinal(), extraInfo,
+            encodeTaskId, getPtoDesc().getPtoId(), IdealZ2CoreMtgPtoDesc.PtoStep.SERVER_SEND_ROOT_KEY.ordinal(), extraInfo,
             otherParty().getPartyId(), ownParty().getPartyId()
         );
         List<byte[]> rootKeyPayload = rpc.receive(rootKeyHeader).getPayload();

@@ -12,20 +12,43 @@ import edu.alibaba.mpc4j.common.rpc.desc.PtoDesc;
  * @date 2021/12/19
  */
 public interface MultiPartyPto {
+    /**
+     * Sets the task ID.
+     *
+     * @param taskId the task ID.
+     */
+    void setTaskId(int taskId);
 
     /**
-     * Sets task ID.
+     * Gets the task ID.
      *
-     * @param taskId task ID.
+     * @return the task ID.
      */
-    void setTaskId(long taskId);
+    int getTaskId();
 
     /**
-     * Gets task ID.
+     * Sets the encoded task ID.
      *
-     * @return task ID.
+     * @param taskId       the task ID.
+     * @param parentTreeId the parent tree ID.
      */
-    long getTaskId();
+    void setEncodeTaskId(int taskId, int parentTreeId);
+
+    /**
+     * Adds the tree level.
+     *
+     * @param rowLevel     row level.
+     * @param taskId       the task ID.
+     * @param parentTreeId the parent tree ID.
+     */
+    void addTreeLevel(int rowLevel, int taskId, int parentTreeId);
+
+    /**
+     * Gets the encoded task ID.
+     *
+     * @return the encoded task ID.
+     */
+    long getEncodeTaskId();
 
     /**
      * Gets the invoked rpc instance.
@@ -49,11 +72,6 @@ public interface MultiPartyPto {
      * @return the protocol description.
      */
     PtoDesc getPtoDesc();
-
-    /**
-     * Adds the log level.
-     */
-    void addLogLevel();
 
     /**
      * Gets other parties' information.

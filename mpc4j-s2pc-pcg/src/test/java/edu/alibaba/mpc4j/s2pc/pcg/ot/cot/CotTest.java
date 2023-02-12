@@ -149,7 +149,7 @@ public class CotTest {
     }
 
     private void testPto(CotSender sender, CotReceiver receiver, int num) {
-        long randomTaskId = Math.abs(SECURE_RANDOM.nextLong());
+        int randomTaskId = Math.abs(SECURE_RANDOM.nextInt());
         sender.setTaskId(randomTaskId);
         receiver.setTaskId(randomTaskId);
         try {
@@ -191,7 +191,7 @@ public class CotTest {
     public void testResetDelta() {
         CotSender sender = CotFactory.createSender(senderRpc, receiverRpc.ownParty(), config);
         CotReceiver receiver = CotFactory.createReceiver(receiverRpc, senderRpc.ownParty(), config);
-        long randomTaskId = Math.abs(SECURE_RANDOM.nextLong());
+        int randomTaskId = Math.abs(SECURE_RANDOM.nextInt());
         sender.setTaskId(randomTaskId);
         receiver.setTaskId(randomTaskId);
         try {

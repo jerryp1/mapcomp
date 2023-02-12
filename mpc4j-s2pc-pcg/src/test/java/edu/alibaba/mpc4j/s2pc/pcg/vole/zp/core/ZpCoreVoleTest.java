@@ -151,7 +151,7 @@ public class ZpCoreVoleTest {
     }
 
     private void testPto(ZpCoreVoleSender sender, ZpCoreVoleReceiver receiver, int num, BigInteger prime) {
-        long randomTaskId = Math.abs(SECURE_RANDOM.nextLong());
+        int randomTaskId = Math.abs(SECURE_RANDOM.nextInt());
         sender.setTaskId(randomTaskId);
         receiver.setTaskId(randomTaskId);
         try {
@@ -194,7 +194,7 @@ public class ZpCoreVoleTest {
     public void testResetDelta() {
         ZpCoreVoleSender sender = ZpCoreVoleFactory.createSender(senderRpc, receiverRpc.ownParty(), config);
         ZpCoreVoleReceiver receiver = ZpCoreVoleFactory.createReceiver(receiverRpc, senderRpc.ownParty(), config);
-        long randomTaskId = Math.abs(SECURE_RANDOM.nextLong());
+        int randomTaskId = Math.abs(SECURE_RANDOM.nextInt());
         sender.setTaskId(randomTaskId);
         receiver.setTaskId(randomTaskId);
         try {

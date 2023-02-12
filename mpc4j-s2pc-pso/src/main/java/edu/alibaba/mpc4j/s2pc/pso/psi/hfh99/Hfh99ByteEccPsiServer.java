@@ -74,7 +74,7 @@ public class Hfh99ByteEccPsiServer<T> extends AbstractPsiServer<T> {
         // 服务端计算并发送H(x)^α
         List<byte[]> hxAlphaPayload = generateHxAlphaPayload();
         DataPacketHeader hxAlphaHeader = new DataPacketHeader(
-            taskId, getPtoDesc().getPtoId(), PtoStep.SERVER_SEND_HX_ALPHA.ordinal(), extraInfo,
+            encodeTaskId, getPtoDesc().getPtoId(), PtoStep.SERVER_SEND_HX_ALPHA.ordinal(), extraInfo,
             ownParty().getPartyId(), otherParty().getPartyId()
         );
         rpc.send(DataPacket.fromByteArrayList(hxAlphaHeader, hxAlphaPayload));
@@ -86,14 +86,14 @@ public class Hfh99ByteEccPsiServer<T> extends AbstractPsiServer<T> {
         stopWatch.start();
         // 服务端接收H(y)^β
         DataPacketHeader hyBetaHeader = new DataPacketHeader(
-            taskId, getPtoDesc().getPtoId(), PtoStep.CLIENT_SEND_HY_BETA.ordinal(), extraInfo,
+            encodeTaskId, getPtoDesc().getPtoId(), PtoStep.CLIENT_SEND_HY_BETA.ordinal(), extraInfo,
             otherParty().getPartyId(), ownParty().getPartyId()
         );
         List<byte[]> hyBetaPayload = rpc.receive(hyBetaHeader).getPayload();
         // 服务端计算并发送H(y)^βα
         List<byte[]> peqtPayload = handleHyBetaPayload(hyBetaPayload);
         DataPacketHeader peqtHeader = new DataPacketHeader(
-            taskId, getPtoDesc().getPtoId(), PtoStep.CLIENT_SEND_HY_BETA_ALPHA.ordinal(), extraInfo,
+            encodeTaskId, getPtoDesc().getPtoId(), PtoStep.CLIENT_SEND_HY_BETA_ALPHA.ordinal(), extraInfo,
             ownParty().getPartyId(), otherParty().getPartyId()
         );
         rpc.send(DataPacket.fromByteArrayList(peqtHeader, peqtPayload));

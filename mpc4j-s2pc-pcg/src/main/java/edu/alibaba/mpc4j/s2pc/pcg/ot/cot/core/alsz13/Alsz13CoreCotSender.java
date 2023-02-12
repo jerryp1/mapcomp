@@ -41,25 +41,8 @@ public class Alsz13CoreCotSender extends AbstractCoreCotSender {
     public Alsz13CoreCotSender(Rpc senderRpc, Party receiverParty, Alsz13CoreCotConfig config) {
         super(Alsz13CoreCotPtoDesc.getInstance(), senderRpc, receiverParty, config);
         baseOtReceiver = BaseOtFactory.createReceiver(senderRpc, receiverParty, config.getBaseOtConfig());
-        baseOtReceiver.addLogLevel();
-    }
-
-    @Override
-    public void setTaskId(long taskId) {
-        super.setTaskId(taskId);
-        baseOtReceiver.setTaskId(taskId);
-    }
-
-    @Override
-    public void setParallel(boolean parallel) {
-        super.setParallel(parallel);
-        baseOtReceiver.setParallel(parallel);
-    }
-
-    @Override
-    public void addLogLevel() {
-        super.addLogLevel();
-        baseOtReceiver.addLogLevel();
+        addSubPtos(baseOtReceiver);
+        addSecureSubPtos(baseOtReceiver);
     }
 
     @Override
@@ -86,7 +69,7 @@ public class Alsz13CoreCotSender extends AbstractCoreCotSender {
 
         stopWatch.start();
         DataPacketHeader matrixHeader = new DataPacketHeader(
-            taskId, getPtoDesc().getPtoId(), Alsz13CoreCotPtoDesc.PtoStep.RECEIVER_SEND_MATRIX.ordinal(), extraInfo,
+            encodeTaskId, getPtoDesc().getPtoId(), Alsz13CoreCotPtoDesc.PtoStep.RECEIVER_SEND_MATRIX.ordinal(), extraInfo,
             otherParty().getPartyId(), ownParty().getPartyId()
         );
         List<byte[]> matrixPayload = rpc.receive(matrixHeader).getPayload();

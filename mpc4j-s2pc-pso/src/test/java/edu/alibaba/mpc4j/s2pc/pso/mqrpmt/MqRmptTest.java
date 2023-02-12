@@ -222,7 +222,7 @@ public class MqRmptTest {
     }
 
     private void testPto(MqRpmtServer server, MqRpmtClient client, int serverSize, int clientSize) {
-        long randomTaskId = Math.abs(SECURE_RANDOM.nextLong());
+        int randomTaskId = Math.abs(SECURE_RANDOM.nextInt());
         server.setTaskId(randomTaskId);
         client.setTaskId(randomTaskId);
         try {

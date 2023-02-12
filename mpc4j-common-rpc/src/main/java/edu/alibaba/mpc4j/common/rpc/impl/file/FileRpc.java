@@ -296,7 +296,7 @@ public class FileRpc implements Rpc {
 
     private String getPayloadFileName(DataPacketHeader header) {
         // testId_PtoId_StepId_extraInfo_senderId_receiverId_PAYLOAD
-        return header.getTaskId()
+        return header.getEncodeTaskId()
             + FILE_NAME_SEPARATOR + header.getPtoId()
             + FILE_NAME_SEPARATOR + header.getStepId()
             + FILE_NAME_SEPARATOR + header.getExtraInfo()
@@ -307,7 +307,7 @@ public class FileRpc implements Rpc {
 
     private String getStatusFileName(DataPacketHeader header) {
         // testId_PtoId_StepId_extraInfo_senderId_receiverId_STATUS
-        return header.getTaskId()
+        return header.getEncodeTaskId()
             + FILE_NAME_SEPARATOR + header.getPtoId()
             + FILE_NAME_SEPARATOR + header.getStepId()
             + FILE_NAME_SEPARATOR + header.getExtraInfo()

@@ -52,25 +52,8 @@ public class Cmg21UpsiClient<T> extends AbstractUpsiClient<T> {
     public Cmg21UpsiClient(Rpc clientRpc, Party serverParty, Cmg21UpsiConfig config) {
         super(Cmg21UpsiPtoDesc.getInstance(), clientRpc, serverParty, config);
         mpOprfReceiver = OprfFactory.createMpOprfReceiver(clientRpc, serverParty, config.getMpOprfConfig());
-        mpOprfReceiver.addLogLevel();
-    }
-
-    @Override
-    public void setTaskId(long taskId) {
-        super.setTaskId(taskId);
-        mpOprfReceiver.setTaskId(taskId);
-    }
-
-    @Override
-    public void setParallel(boolean parallel) {
-        super.setParallel(parallel);
-        mpOprfReceiver.setParallel(parallel);
-    }
-
-    @Override
-    public void addLogLevel() {
-        super.addLogLevel();
-        mpOprfReceiver.addLogLevel();
+        addSubPtos(mpOprfReceiver);
+        addSecureSubPtos(mpOprfReceiver);
     }
 
     @Override
@@ -124,7 +107,7 @@ public class Cmg21UpsiClient<T> extends AbstractUpsiClient<T> {
         // 向布谷鸟哈希的空余位置插入空元素
         cuckooHashBin.insertPaddingItems(botElementByteBuffer);
         DataPacketHeader hashKeyHeader = new DataPacketHeader(
-            taskId, getPtoDesc().getPtoId(), PtoStep.CLIENT_SEND_CUCKOO_HASH_KEYS.ordinal(), extraInfo,
+            encodeTaskId, getPtoDesc().getPtoId(), PtoStep.CLIENT_SEND_CUCKOO_HASH_KEYS.ordinal(), extraInfo,
             rpc.ownParty().getPartyId(), otherParty().getPartyId()
         );
         List<byte[]> hashKeyPayload = Arrays.stream(hashKeys).collect(Collectors.toList());
@@ -141,7 +124,7 @@ public class Cmg21UpsiClient<T> extends AbstractUpsiClient<T> {
         );
         List<byte[]> fheParams = encryptionParams.subList(0, 2);
         DataPacketHeader fheParamsHeader = new DataPacketHeader(
-            taskId, getPtoDesc().getPtoId(), PtoStep.CLIENT_SEND_ENCRYPTION_PARAMS.ordinal(), extraInfo,
+            encodeTaskId, getPtoDesc().getPtoId(), PtoStep.CLIENT_SEND_ENCRYPTION_PARAMS.ordinal(), extraInfo,
             rpc.ownParty().getPartyId(), otherParty().getPartyId()
         );
         rpc.send(DataPacket.fromByteArrayList(fheParamsHeader, fheParams));
@@ -160,7 +143,7 @@ public class Cmg21UpsiClient<T> extends AbstractUpsiClient<T> {
             .flatMap(Collection::stream)
             .collect(Collectors.toList());
         DataPacketHeader queryHeader = new DataPacketHeader(
-            taskId, getPtoDesc().getPtoId(), PtoStep.CLIENT_SEND_QUERY.ordinal(), extraInfo,
+            encodeTaskId, getPtoDesc().getPtoId(), PtoStep.CLIENT_SEND_QUERY.ordinal(), extraInfo,
             rpc.ownParty().getPartyId(), otherParty().getPartyId()
         );
         rpc.send(DataPacket.fromByteArrayList(queryHeader, queryPayload));
@@ -172,7 +155,7 @@ public class Cmg21UpsiClient<T> extends AbstractUpsiClient<T> {
         stopWatch.start();
         // 客户端接收服务端的计算结果
         DataPacketHeader responseHeader = new DataPacketHeader(
-            taskId, getPtoDesc().getPtoId(), PtoStep.SERVER_SEND_RESPONSE.ordinal(), extraInfo,
+            encodeTaskId, getPtoDesc().getPtoId(), PtoStep.SERVER_SEND_RESPONSE.ordinal(), extraInfo,
             otherParty().getPartyId(), rpc.ownParty().getPartyId()
         );
         List<byte[]> responsePayload = rpc.receive(responseHeader).getPayload();

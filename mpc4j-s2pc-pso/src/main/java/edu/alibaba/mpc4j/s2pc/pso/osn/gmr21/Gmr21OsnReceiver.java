@@ -53,25 +53,8 @@ public class Gmr21OsnReceiver extends AbstractOsnReceiver {
     public Gmr21OsnReceiver(Rpc receiverRpc, Party senderParty, Gmr21OsnConfig config) {
         super(Gmr21OsnPtoDesc.getInstance(), receiverRpc, senderParty, config);
         cotReceiver = CotFactory.createReceiver(receiverRpc, senderParty, config.getCotConfig());
-        cotReceiver.addLogLevel();
-    }
-
-    @Override
-    public void setTaskId(long taskId) {
-        super.setTaskId(taskId);
-        cotReceiver.setTaskId(taskId);
-    }
-
-    @Override
-    public void setParallel(boolean parallel) {
-        super.setParallel(parallel);
-        cotReceiver.setParallel(parallel);
-    }
-
-    @Override
-    public void addLogLevel() {
-        super.addLogLevel();
-        cotReceiver.addLogLevel();
+        addSubPtos(cotReceiver);
+        addSecureSubPtos(cotReceiver);
     }
 
     @Override
@@ -97,7 +80,7 @@ public class Gmr21OsnReceiver extends AbstractOsnReceiver {
 
         stopWatch.start();
         DataPacketHeader inputCorrectionHeader = new DataPacketHeader(
-            taskId, getPtoDesc().getPtoId(), Gmr21OsnPtoDesc.PtoStep.SENDER_SEND_INPUT_CORRECTIONS.ordinal(), extraInfo,
+            encodeTaskId, getPtoDesc().getPtoId(), Gmr21OsnPtoDesc.PtoStep.SENDER_SEND_INPUT_CORRECTIONS.ordinal(), extraInfo,
             otherParty().getPartyId(), ownParty().getPartyId()
         );
         List<byte[]> inputCorrectionPayload = rpc.receive(inputCorrectionHeader).getPayload();
@@ -120,7 +103,7 @@ public class Gmr21OsnReceiver extends AbstractOsnReceiver {
 
         stopWatch.start();
         DataPacketHeader switchCorrectionHeader = new DataPacketHeader(
-            taskId, getPtoDesc().getPtoId(), Gmr21OsnPtoDesc.PtoStep.SENDER_SEND_SWITCH_CORRECTIONS.ordinal(), extraInfo,
+            encodeTaskId, getPtoDesc().getPtoId(), Gmr21OsnPtoDesc.PtoStep.SENDER_SEND_SWITCH_CORRECTIONS.ordinal(), extraInfo,
             otherParty().getPartyId(), ownParty().getPartyId()
         );
         List<byte[]> switchCorrectionPayload = rpc.receive(switchCorrectionHeader).getPayload();

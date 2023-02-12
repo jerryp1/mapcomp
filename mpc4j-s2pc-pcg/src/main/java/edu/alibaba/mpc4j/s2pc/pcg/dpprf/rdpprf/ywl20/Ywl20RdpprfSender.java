@@ -60,25 +60,8 @@ public class Ywl20RdpprfSender extends AbstractDpprfSender {
     public Ywl20RdpprfSender(Rpc senderRpc, Party receiverParty, Ywl20RdpprfConfig config) {
         super(Ywl20RdpprfPtoDesc.getInstance(), senderRpc, receiverParty, config);
         coreCotSender = CoreCotFactory.createSender(senderRpc, receiverParty, config.getCoreCotConfig());
-        coreCotSender.addLogLevel();
-    }
-
-    @Override
-    public void setTaskId(long taskId) {
-        super.setTaskId(taskId);
-        coreCotSender.setTaskId(taskId);
-    }
-
-    @Override
-    public void setParallel(boolean parallel) {
-        super.setParallel(parallel);
-        coreCotSender.setParallel(parallel);
-    }
-
-    @Override
-    public void addLogLevel() {
-        super.addLogLevel();
-        coreCotSender.addLogLevel();
+        addSubPtos(coreCotSender);
+        addSecureSubPtos(coreCotSender);
     }
 
     @Override
@@ -137,13 +120,13 @@ public class Ywl20RdpprfSender extends AbstractDpprfSender {
 
         stopWatch.start();
         DataPacketHeader binaryHeader = new DataPacketHeader(
-            taskId, getPtoDesc().getPtoId(), PtoStep.RECEIVER_SEND_BINARY.ordinal(), extraInfo,
+            encodeTaskId, getPtoDesc().getPtoId(), PtoStep.RECEIVER_SEND_BINARY.ordinal(), extraInfo,
             otherParty().getPartyId(), ownParty().getPartyId()
         );
         List<byte[]> binaryPayload = rpc.receive(binaryHeader).getPayload();
         List<byte[]> messagePayload = generateMessagePayload(binaryPayload);
         DataPacketHeader messageHeader = new DataPacketHeader(
-            taskId, getPtoDesc().getPtoId(), PtoStep.SENDER_SEND_MESSAGE.ordinal(), extraInfo,
+            encodeTaskId, getPtoDesc().getPtoId(), PtoStep.SENDER_SEND_MESSAGE.ordinal(), extraInfo,
             ownParty().getPartyId(), otherParty().getPartyId()
         );
         rpc.send(DataPacket.fromByteArrayList(messageHeader, messagePayload));

@@ -100,38 +100,16 @@ public class Krtw19OriPsuClient extends AbstractPsuClient {
     public Krtw19OriPsuClient(Rpc clientRpc, Party serverParty, Krtw19OriPsuConfig config) {
         super(Krtw19OriPsuPtoDesc.getInstance(), clientRpc, serverParty, config);
         rpmtOprfSender = OprfFactory.createOprfSender(clientRpc, serverParty, config.getRpmtOprfConfig());
-        rpmtOprfSender.addLogLevel();
+        addSubPtos(rpmtOprfSender);
+        addSecureSubPtos(rpmtOprfSender);
         peqtOprfReceiver = OprfFactory.createOprfReceiver(clientRpc, serverParty, config.getPeqtOprfConfig());
-        peqtOprfReceiver.addLogLevel();
+        addSubPtos(peqtOprfReceiver);
+        addSecureSubPtos(peqtOprfReceiver);
         coreCotReceiver = CoreCotFactory.createReceiver(clientRpc, serverParty, config.getCoreCotConfig());
-        coreCotReceiver.addLogLevel();
+        addSubPtos(coreCotReceiver);
+        addSecureSubPtos(coreCotReceiver);
         okvsType = config.getOkvsType();
         pipeSize = config.getPipeSize();
-    }
-
-    @Override
-    public void setTaskId(long taskId) {
-        super.setTaskId(taskId);
-        byte[] taskIdBytes = ByteBuffer.allocate(Long.BYTES).putLong(taskId).array();
-        rpmtOprfSender.setTaskId(taskIdPrf.getLong(0, taskIdBytes, Long.MAX_VALUE));
-        peqtOprfReceiver.setTaskId(taskIdPrf.getLong(1, taskIdBytes, Long.MAX_VALUE));
-        coreCotReceiver.setTaskId(taskIdPrf.getLong(2, taskIdBytes, Long.MAX_VALUE));
-    }
-
-    @Override
-    public void setParallel(boolean parallel) {
-        super.setParallel(parallel);
-        rpmtOprfSender.setParallel(parallel);
-        peqtOprfReceiver.setParallel(parallel);
-        coreCotReceiver.setParallel(parallel);
-    }
-
-    @Override
-    public void addLogLevel() {
-        super.addLogLevel();
-        rpmtOprfSender.addLogLevel();
-        peqtOprfReceiver.addLogLevel();
-        coreCotReceiver.addLogLevel();
     }
 
     @Override
@@ -151,7 +129,7 @@ public class Krtw19OriPsuClient extends AbstractPsuClient {
 
         stopWatch.start();
         DataPacketHeader keysHeader = new DataPacketHeader(
-            taskId, getPtoDesc().getPtoId(), PtoStep.SERVER_SEND_KEYS.ordinal(), extraInfo,
+            encodeTaskId, getPtoDesc().getPtoId(), PtoStep.SERVER_SEND_KEYS.ordinal(), extraInfo,
             otherParty().getPartyId(), ownParty().getPartyId()
         );
         List<byte[]> keysPayload = rpc.receive(keysHeader).getPayload();
@@ -253,7 +231,7 @@ public class Krtw19OriPsuClient extends AbstractPsuClient {
                 .collect(Collectors.toList());
             // 发送OKVS
             DataPacketHeader okvsHeader = new DataPacketHeader(
-                taskId, getPtoDesc().getPtoId(), PtoStep.CLIENT_SEND_OKVS.ordinal(), extraInfo,
+                encodeTaskId, getPtoDesc().getPtoId(), PtoStep.CLIENT_SEND_OKVS.ordinal(), extraInfo,
                 ownParty().getPartyId(), otherParty().getPartyId()
             );
             rpc.send(DataPacket.fromByteArrayList(okvsHeader, okvsPayload));
@@ -268,7 +246,7 @@ public class Krtw19OriPsuClient extends AbstractPsuClient {
                 .collect(Collectors.toList());
             // 发送OKVS
             DataPacketHeader okvsHeader = new DataPacketHeader(
-                taskId, getPtoDesc().getPtoId(), PtoStep.CLIENT_SEND_OKVS.ordinal(), extraInfo,
+                encodeTaskId, getPtoDesc().getPtoId(), PtoStep.CLIENT_SEND_OKVS.ordinal(), extraInfo,
                 ownParty().getPartyId(), otherParty().getPartyId()
             );
             rpc.send(DataPacket.fromByteArrayList(okvsHeader, okvsPayload));
@@ -291,7 +269,7 @@ public class Krtw19OriPsuClient extends AbstractPsuClient {
             .toArray(ByteBuffer[]::new);
         // 接收sStarsOprf
         DataPacketHeader sStarOprfHeader = new DataPacketHeader(
-            taskId, getPtoDesc().getPtoId(), PtoStep.SERVER_SEND_S_STAR_OPRFS.ordinal(), extraInfo,
+            encodeTaskId, getPtoDesc().getPtoId(), PtoStep.SERVER_SEND_S_STAR_OPRFS.ordinal(), extraInfo,
             otherParty().getPartyId(), ownParty().getPartyId()
         );
         List<byte[]> sStarOprfPayload = rpc.receive(sStarOprfHeader).getPayload();
@@ -312,7 +290,7 @@ public class Krtw19OriPsuClient extends AbstractPsuClient {
         stopWatch.start();
         CotReceiverOutput cotReceiverOutput = coreCotReceiver.receive(choiceArray);
         DataPacketHeader encHeader = new DataPacketHeader(
-            taskId, getPtoDesc().getPtoId(), PtoStep.SERVER_SEND_ENC_ELEMENTS.ordinal(), extraInfo,
+            encodeTaskId, getPtoDesc().getPtoId(), PtoStep.SERVER_SEND_ENC_ELEMENTS.ordinal(), extraInfo,
             otherParty().getPartyId(), ownParty().getPartyId()
         );
         List<byte[]> encPayload = rpc.receive(encHeader).getPayload();

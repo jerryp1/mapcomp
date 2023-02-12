@@ -73,7 +73,7 @@ public class Acls18IndexPirServer extends AbstractIndexPirServer {
         info("{}{} Server begin", ptoBeginLogPrefix, getPtoDesc().getPtoName());
 
         DataPacketHeader clientQueryHeader = new DataPacketHeader(
-            taskId, getPtoDesc().getPtoId(), Acls18IndexPirPtoDesc.PtoStep.CLIENT_SEND_QUERY.ordinal(), extraInfo,
+            encodeTaskId, getPtoDesc().getPtoId(), Acls18IndexPirPtoDesc.PtoStep.CLIENT_SEND_QUERY.ordinal(), extraInfo,
             otherParty().getPartyId(), rpc.ownParty().getPartyId()
         );
         ArrayList<byte[]> clientQueryPayload = new ArrayList<>(rpc.receive(clientQueryHeader).getPayload());
@@ -82,7 +82,7 @@ public class Acls18IndexPirServer extends AbstractIndexPirServer {
         stopWatch.start();
         ArrayList<byte[]> serverResponsePayload = handleClientQueryPayload(clientQueryPayload);
         DataPacketHeader serverResponseHeader = new DataPacketHeader(
-            taskId, getPtoDesc().getPtoId(), Acls18IndexPirPtoDesc.PtoStep.SERVER_SEND_RESPONSE.ordinal(), extraInfo,
+            encodeTaskId, getPtoDesc().getPtoId(), Acls18IndexPirPtoDesc.PtoStep.SERVER_SEND_RESPONSE.ordinal(), extraInfo,
             rpc.ownParty().getPartyId(), otherParty().getPartyId()
         );
         rpc.send(DataPacket.fromByteArrayList(serverResponseHeader, serverResponsePayload));

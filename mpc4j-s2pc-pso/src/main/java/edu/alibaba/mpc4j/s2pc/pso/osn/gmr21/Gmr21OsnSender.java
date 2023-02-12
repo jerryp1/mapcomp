@@ -59,25 +59,8 @@ public class Gmr21OsnSender extends AbstractOsnSender {
     public Gmr21OsnSender(Rpc senderRpc, Party receiverParty, Gmr21OsnConfig config) {
         super(Gmr21OsnPtoDesc.getInstance(), senderRpc, receiverParty, config);
         cotSender = CotFactory.createSender(senderRpc, receiverParty, config.getCotConfig());
-        cotSender.addLogLevel();
-    }
-
-    @Override
-    public void setTaskId(long taskId) {
-        super.setTaskId(taskId);
-        cotSender.setTaskId(taskId);
-    }
-
-    @Override
-    public void setParallel(boolean parallel) {
-        super.setParallel(parallel);
-        cotSender.setParallel(parallel);
-    }
-
-    @Override
-    public void addLogLevel() {
-        super.addLogLevel();
-        cotSender.addLogLevel();
+        addSubPtos(cotSender);
+        addSecureSubPtos(cotSender);
     }
 
     @Override
@@ -106,7 +89,7 @@ public class Gmr21OsnSender extends AbstractOsnSender {
         stopWatch.start();
         List<byte[]> inputCorrectionPayload = generateInputCorrectionPayload();
         DataPacketHeader inputCorrectionHeader = new DataPacketHeader(
-            taskId, getPtoDesc().getPtoId(), PtoStep.SENDER_SEND_INPUT_CORRECTIONS.ordinal(), extraInfo,
+            encodeTaskId, getPtoDesc().getPtoId(), PtoStep.SENDER_SEND_INPUT_CORRECTIONS.ordinal(), extraInfo,
             ownParty().getPartyId(), otherParty().getPartyId()
         );
         rpc.send(DataPacket.fromByteArrayList(inputCorrectionHeader, inputCorrectionPayload));
@@ -129,7 +112,7 @@ public class Gmr21OsnSender extends AbstractOsnSender {
         stopWatch.start();
         List<byte[]> switchCorrectionPayload = generateSwitchCorrectionPayload();
         DataPacketHeader switchCorrectionHeader = new DataPacketHeader(
-            taskId, getPtoDesc().getPtoId(), PtoStep.SENDER_SEND_SWITCH_CORRECTIONS.ordinal(), extraInfo,
+            encodeTaskId, getPtoDesc().getPtoId(), PtoStep.SENDER_SEND_SWITCH_CORRECTIONS.ordinal(), extraInfo,
             ownParty().getPartyId(), otherParty().getPartyId()
         );
         rpc.send(DataPacket.fromByteArrayList(switchCorrectionHeader, switchCorrectionPayload));

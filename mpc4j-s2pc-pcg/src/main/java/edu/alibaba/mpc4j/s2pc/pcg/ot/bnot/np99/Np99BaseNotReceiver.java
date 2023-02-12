@@ -36,25 +36,8 @@ public class Np99BaseNotReceiver extends AbstractBaseNotReceiver {
     public Np99BaseNotReceiver(Rpc receiverRpc, Party senderParty, Np99BaseNotConfig config) {
         super(Np99BaseNotPtoDesc.getInstance(), receiverRpc, senderParty, config);
         baseOtReceiver = BaseOtFactory.createReceiver(receiverRpc, senderParty, config.getBaseOtConfig());
-        baseOtReceiver.addLogLevel();
-    }
-
-    @Override
-    public void setTaskId(long taskId) {
-        super.setTaskId(taskId);
-        baseOtReceiver.setTaskId(taskId);
-    }
-
-    @Override
-    public void setParallel(boolean parallel) {
-        super.setParallel(parallel);
-        baseOtReceiver.setParallel(parallel);
-    }
-
-    @Override
-    public void addLogLevel() {
-        super.addLogLevel();
-        baseOtReceiver.addLogLevel();
+        addSubPtos(baseOtReceiver);
+        addSecureSubPtos(baseOtReceiver);
     }
 
     @Override

@@ -49,7 +49,7 @@ public class Bea95PreCotReceiver extends AbstractPreCotReceiver {
         List<byte[]> xorPayload = new LinkedList<>();
         xorPayload.add(xors);
         DataPacketHeader xorHeader = new DataPacketHeader(
-            taskId, getPtoDesc().getPtoId(), PtoStep.RECEIVER_SEND_XOR.ordinal(), extraInfo,
+            encodeTaskId, getPtoDesc().getPtoId(), PtoStep.RECEIVER_SEND_XOR.ordinal(), extraInfo,
             ownParty().getPartyId(), otherParty().getPartyId()
         );
         rpc.send(DataPacket.fromByteArrayList(xorHeader, xorPayload));

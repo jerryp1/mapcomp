@@ -10,7 +10,6 @@ import edu.alibaba.mpc4j.s2pc.pcg.ot.cot.nc.NcCotReceiver;
 import edu.alibaba.mpc4j.s2pc.pcg.ot.cot.pre.PreCotFactory;
 import edu.alibaba.mpc4j.s2pc.pcg.ot.cot.pre.PreCotReceiver;
 
-import java.nio.ByteBuffer;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -40,32 +39,11 @@ public class CacheCotReceiver extends AbstractCotReceiver {
     public CacheCotReceiver(Rpc receiverRpc, Party senderParty, CacheCotConfig config) {
         super(CacheCotPtoDesc.getInstance(), receiverRpc, senderParty, config);
         ncCotReceiver = NcCotFactory.createReceiver(receiverRpc, senderParty, config.getNcCotConfig());
-        ncCotReceiver.addLogLevel();
+        addSubPtos(ncCotReceiver);
+        addSecureSubPtos(ncCotReceiver);
         preCotReceiver = PreCotFactory.createReceiver(receiverRpc, senderParty, config.getPreCotConfig());
-        preCotReceiver.addLogLevel();
-    }
-
-    @Override
-    public void setTaskId(long taskId) {
-        super.setTaskId(taskId);
-        // NC-COT协议和预计算COT协议需要使用不同的taskID
-        byte[] taskIdBytes = ByteBuffer.allocate(Long.BYTES).putLong(taskId).array();
-        ncCotReceiver.setTaskId(taskIdPrf.getLong(0, taskIdBytes, Long.MAX_VALUE));
-        preCotReceiver.setTaskId(taskIdPrf.getLong(1, taskIdBytes, Long.MAX_VALUE));
-    }
-
-    @Override
-    public void setParallel(boolean parallel) {
-        super.setParallel(parallel);
-        ncCotReceiver.setParallel(parallel);
-        preCotReceiver.setParallel(parallel);
-    }
-
-    @Override
-    public void addLogLevel() {
-        super.addLogLevel();
-        ncCotReceiver.addLogLevel();
-        preCotReceiver.addLogLevel();
+        addSubPtos(preCotReceiver);
+        addSecureSubPtos(preCotReceiver);
     }
 
     @Override

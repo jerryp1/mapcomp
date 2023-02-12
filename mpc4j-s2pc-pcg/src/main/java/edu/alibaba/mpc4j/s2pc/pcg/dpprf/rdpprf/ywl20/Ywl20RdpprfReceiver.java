@@ -50,25 +50,8 @@ public class Ywl20RdpprfReceiver extends AbstractDpprfReceiver {
     public Ywl20RdpprfReceiver(Rpc receiverRpc, Party senderParty, Ywl20RdpprfConfig config) {
         super(Ywl20RdpprfPtoDesc.getInstance(), receiverRpc, senderParty, config);
         coreCotReceiver = CoreCotFactory.createReceiver(receiverRpc, senderParty, config.getCoreCotConfig());
-        coreCotReceiver.addLogLevel();
-    }
-
-    @Override
-    public void setTaskId(long taskId) {
-        super.setTaskId(taskId);
-        coreCotReceiver.setTaskId(taskId);
-    }
-
-    @Override
-    public void setParallel(boolean parallel) {
-        super.setParallel(parallel);
-        coreCotReceiver.setParallel(parallel);
-    }
-
-    @Override
-    public void addLogLevel() {
-        super.addLogLevel();
-        coreCotReceiver.addLogLevel();
+        addSubPtos(coreCotReceiver);
+        addSecureSubPtos(coreCotReceiver);
     }
 
     @Override
@@ -121,7 +104,7 @@ public class Ywl20RdpprfReceiver extends AbstractDpprfReceiver {
         stopWatch.start();
         List<byte[]> binaryPayload = generateBinaryPayload();
         DataPacketHeader binaryHeader = new DataPacketHeader(
-            taskId, getPtoDesc().getPtoId(), PtoStep.RECEIVER_SEND_BINARY.ordinal(), extraInfo,
+            encodeTaskId, getPtoDesc().getPtoId(), PtoStep.RECEIVER_SEND_BINARY.ordinal(), extraInfo,
             ownParty().getPartyId(), otherParty().getPartyId()
         );
         rpc.send(DataPacket.fromByteArrayList(binaryHeader, binaryPayload));
@@ -132,7 +115,7 @@ public class Ywl20RdpprfReceiver extends AbstractDpprfReceiver {
 
         stopWatch.start();
         DataPacketHeader messageHeader = new DataPacketHeader(
-            taskId, getPtoDesc().getPtoId(), PtoStep.SENDER_SEND_MESSAGE.ordinal(), extraInfo,
+            encodeTaskId, getPtoDesc().getPtoId(), PtoStep.SENDER_SEND_MESSAGE.ordinal(), extraInfo,
             otherParty().getPartyId(), ownParty().getPartyId()
         );
         List<byte[]> messagePayload = rpc.receive(messageHeader).getPayload();

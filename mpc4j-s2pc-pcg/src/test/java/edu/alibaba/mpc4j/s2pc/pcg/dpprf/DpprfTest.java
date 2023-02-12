@@ -232,7 +232,7 @@ public class DpprfTest {
     }
 
     private void testPto(DpprfSender sender, DpprfReceiver receiver, int[] alphaArray, int alphaBound) {
-        long randomTaskId = Math.abs(SECURE_RANDOM.nextLong());
+        int randomTaskId = Math.abs(SECURE_RANDOM.nextInt());
         sender.setTaskId(randomTaskId);
         receiver.setTaskId(randomTaskId);
         try {
@@ -271,7 +271,7 @@ public class DpprfTest {
     public void testPrecompute() {
         DpprfSender sender = DpprfFactory.createSender(senderRpc, receiverRpc.ownParty(), config);
         DpprfReceiver receiver = DpprfFactory.createReceiver(receiverRpc, senderRpc.ownParty(), config);
-        long randomTaskId = Math.abs(SECURE_RANDOM.nextLong());
+        int randomTaskId = Math.abs(SECURE_RANDOM.nextInt());
         sender.setTaskId(randomTaskId);
         receiver.setTaskId(randomTaskId);
         int batchNum = DEFAULT_BATCH_NUM;

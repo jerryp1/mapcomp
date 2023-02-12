@@ -77,25 +77,8 @@ public class Ywl20UniMspCotReceiver extends AbstractMspCotReceiver {
     public Ywl20UniMspCotReceiver(Rpc senderRpc, Party receiverParty, Ywl20UniMspCotConfig config) {
         super(Ywl20UniMspCotPtoDesc.getInstance(), senderRpc, receiverParty, config);
         bspCotReceiver = BspCotFactory.createReceiver(senderRpc, receiverParty, config.getBspCotConfig());
-        bspCotReceiver.addLogLevel();
-    }
-
-    @Override
-    public void setTaskId(long taskId) {
-        super.setTaskId(taskId);
-        bspCotReceiver.setTaskId(taskId);
-    }
-
-    @Override
-    public void setParallel(boolean parallel) {
-        super.setParallel(parallel);
-        bspCotReceiver.setParallel(parallel);
-    }
-
-    @Override
-    public void addLogLevel() {
-        super.addLogLevel();
-        bspCotReceiver.addLogLevel();
+        addSubPtos(bspCotReceiver);
+        addSecureSubPtos(bspCotReceiver);
     }
 
     @Override
@@ -135,7 +118,7 @@ public class Ywl20UniMspCotReceiver extends AbstractMspCotReceiver {
         stopWatch.start();
         List<byte[]> hashKeysPayload = generateHashKeysPayload();
         DataPacketHeader hashKeysHeader = new DataPacketHeader(
-            taskId, getPtoDesc().getPtoId(), PtoStep.RECEIVER_SEND_CUCKOO_HASH_KEYS.ordinal(), extraInfo,
+            encodeTaskId, getPtoDesc().getPtoId(), PtoStep.RECEIVER_SEND_CUCKOO_HASH_KEYS.ordinal(), extraInfo,
             ownParty().getPartyId(), otherParty().getPartyId()
         );
         rpc.send(DataPacket.fromByteArrayList(hashKeysHeader, hashKeysPayload));

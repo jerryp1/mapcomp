@@ -13,6 +13,8 @@ import org.apache.commons.lang3.time.StopWatch;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Set;
 
 /**
@@ -27,6 +29,14 @@ public abstract class AbstractMultiPartyPto implements MultiPartyPto {
      * display log level.
      */
     private static final int DISPLAY_LOG_LEVEL = 2;
+    /**
+     * maximal number of sub-protocols. Note that some protocols would have many levels (e.g., PSU based on SKE).
+     */
+    protected static final int MAX_SUB_PROTOCOL_NUM = 5;
+    /**
+     * maximal tree level
+     */
+    protected static final int MAX_TREE_LEVEL = (int) Math.floor(Math.log(Integer.MAX_VALUE) / Math.log(MAX_SUB_PROTOCOL_NUM + 1));
     /**
      * the PRF used to extend the task ID.
      */
@@ -48,13 +58,29 @@ public abstract class AbstractMultiPartyPto implements MultiPartyPto {
      */
     protected final StopWatch stopWatch;
     /**
+     * sub protocols
+     */
+    private final List<MultiPartyPto> subPtos;
+    /**
+     * tree level
+     */
+    private int treeLevel;
+    /**
+     * row level
+     */
+    private int rowLevel;
+    /**
      * task ID
      */
-    protected long taskId;
+    private int taskId;
     /**
-     * current log level
+     * the tree ID
      */
-    private int logLevel;
+    private int treeId;
+    /**
+     * encode task ID
+     */
+    protected long encodeTaskId;
     /**
      * the log prefix for beginning a task
      */
@@ -97,8 +123,12 @@ public abstract class AbstractMultiPartyPto implements MultiPartyPto {
         taskIdPrf = PrfFactory.createInstance(PrfFactory.PrfType.JDK_AES_CBC, Long.BYTES);
         taskIdPrf.setKey(new byte[CommonConstants.BLOCK_BYTE_LENGTH]);
         stopWatch = new StopWatch();
-        taskId = 0L;
-        logLevel = 0;
+        subPtos = new ArrayList<>(MAX_SUB_PROTOCOL_NUM);
+        treeLevel = 0;
+        rowLevel = 0;
+        treeId = 0;
+        taskId = 0;
+        encodeTaskId = 0L;
         ptoBeginLogPrefix = "↘";
         ptoStepLogPrefix = "    ↓";
         ptoEndLogPrefix = "↙";
@@ -106,61 +136,72 @@ public abstract class AbstractMultiPartyPto implements MultiPartyPto {
         partyState = PartyState.NON_INITIALIZED;
     }
 
+    protected void addSubPtos(MultiPartyPto subPto) {
+        int rowLevel = subPtos.size();
+        subPtos.add(subPto);
+        MathPreconditions.checkLessOrEqual("# of sub-protocols", subPtos.size(), MAX_SUB_PROTOCOL_NUM);
+        subPto.addTreeLevel(rowLevel, taskId, treeId);
+    }
+
     @Override
-    public void addLogLevel() {
-        logLevel++;
+    public void addTreeLevel(int rowLevel, int taskId, int parentTreeId) {
+        MathPreconditions.checkNonNegativeInRange("rowLevel", rowLevel, MAX_SUB_PROTOCOL_NUM);
+        treeLevel++;
+        MathPreconditions.checkNonNegativeInRange("treeLevel", treeLevel, MAX_TREE_LEVEL);
+        this.rowLevel = rowLevel;
+        this.taskId = taskId;
+        treeId = (int) Math.pow(MAX_SUB_PROTOCOL_NUM, treeLevel) * (rowLevel + 1) + parentTreeId;
+        encodeTaskId = (((long) treeId) << Integer.SIZE) + taskId;
         ptoBeginLogPrefix = "    " + ptoBeginLogPrefix;
         ptoStepLogPrefix = "    " + ptoStepLogPrefix;
         ptoEndLogPrefix = "    " + ptoEndLogPrefix;
-    }
-
-    /**
-     * Log a message at the INFO level if {@code logLevel} is not greater than {@code DISPLAY_LOG_LEVEL}.
-     *
-     * @param message the message string to be logged.
-     */
-    protected void info(String message) {
-        if (logLevel < DISPLAY_LOG_LEVEL) {
-            LOGGER.info(message);
-        }
-    }
-
-    /**
-     * Log a message at the INFO level according to the specified format and arguments, if {@code logLevel} is not
-     * greater than {@code DISPLAY_LOG_LEVEL}.
-     *
-     * @param format the format string.
-     * @param arg0   the first argument.
-     * @param arg1   the second argument.
-     */
-    protected void info(String format, Object arg0, Object arg1) {
-        if (logLevel < DISPLAY_LOG_LEVEL) {
-            LOGGER.info(format, arg0, arg1);
-        }
-    }
-
-    /**
-     * Log a message at the INFO level according to the specified format and arguments, if {@code logLevel} is not
-     * greater than {@code DISPLAY_LOG_LEVEL}.
-     *
-     * @param format    the format string.
-     * @param arguments a list of 3 or more arguments
-     */
-    protected void info(String format, Object... arguments) {
-        if (logLevel < DISPLAY_LOG_LEVEL) {
-            LOGGER.info(format, arguments);
+        // set sub-protocols
+        for (int subPtoIndex = 0; subPtoIndex < subPtos.size(); subPtoIndex++) {
+            subPtos.get(subPtoIndex).addTreeLevel(subPtoIndex, taskId, treeId);
         }
     }
 
     @Override
-    public void setTaskId(long taskId) {
-        MathPreconditions.checkNonNegative("taskID", taskId);
+    public void setTaskId(int taskId) {
+        // taskId >= 0
+        MathPreconditions.checkNonNegative("taskId", taskId);
+        // only the root protocol (treeId = 0) can set the task ID.
+        MathPreconditions.checkEqual("treeId", "0", treeId, 0);
+
         this.taskId = taskId;
+        encodeTaskId = (((long) treeId) << Integer.SIZE) + taskId;
+        // set sub-protocols
+        for (MultiPartyPto subPto : subPtos) {
+            subPto.setEncodeTaskId(taskId, treeId);
+        }
     }
 
     @Override
-    public long getTaskId() {
+    public int getTaskId() {
         return taskId;
+    }
+
+    @Override
+    public void setEncodeTaskId(int taskId, int parentTreeId) {
+        // taskId >= 0
+        MathPreconditions.checkNonNegative("taskId", taskId);
+        // parentTreeId >= 0
+        MathPreconditions.checkNonNegative("treeId", treeId);
+        // tree level must be greater than 0, so that it is not the root protocol
+        MathPreconditions.checkPositive("treeLevel", treeLevel);
+
+        this.taskId = taskId;
+        treeId = (int) Math.pow(MAX_SUB_PROTOCOL_NUM, treeLevel) * (rowLevel + 1) + parentTreeId;
+        encodeTaskId = (((long) treeId) << Integer.SIZE) + taskId;
+        // set sub-protocols
+        for (MultiPartyPto subPto : subPtos) {
+            subPto.setEncodeTaskId(taskId, treeId);
+        }
+    }
+
+    @Override
+    public long getEncodeTaskId() {
+        return encodeTaskId;
     }
 
     @Override
@@ -237,7 +278,7 @@ public abstract class AbstractMultiPartyPto implements MultiPartyPto {
                 info("{}{} {} Pto begin", ptoBeginLogPrefix, getPtoDesc().getPtoName(), ownParty().getPartyName());
                 break;
             case PTO_END:
-                info("{}{} {} Pto end", ptoBeginLogPrefix, getPtoDesc().getPtoName(), ownParty().getPartyName());
+                info("{}{} {} Pto end", ptoEndLogPrefix, getPtoDesc().getPtoName(), ownParty().getPartyName());
                 break;
             default:
                 throw new IllegalStateException("Invalid " + PtoState.class.getSimpleName() + ": " + ptoState);
@@ -254,11 +295,49 @@ public abstract class AbstractMultiPartyPto implements MultiPartyPto {
                     currentStepIndex, totalStepIndex, time);
                 break;
             case PTO_STEP:
-                info("{}{} P0 Step {}/{} ({}ms)", ptoStepLogPrefix, getPtoDesc().getPtoName(),
-                    ownParty().getPartyName(), currentStepIndex, totalStepIndex, time);
+                info("{}{} {} Step {}/{} ({}ms)", ptoStepLogPrefix, getPtoDesc().getPtoName(), ownParty().getPartyName(),
+                    currentStepIndex, totalStepIndex, time);
                 break;
             default:
                 throw new IllegalStateException("Invalid " + PtoState.class.getSimpleName() + ": " + ptoState);
+        }
+    }
+
+    /**
+     * Log a message at the INFO level if {@code logLevel} is not greater than {@code DISPLAY_LOG_LEVEL}.
+     *
+     * @param message the message string to be logged.
+     */
+    protected void info(String message) {
+        if (treeLevel < DISPLAY_LOG_LEVEL) {
+            LOGGER.info(message);
+        }
+    }
+
+    /**
+     * Log a message at the INFO level according to the specified format and arguments, if {@code logLevel} is not
+     * greater than {@code DISPLAY_LOG_LEVEL}.
+     *
+     * @param format the format string.
+     * @param arg0   the first argument.
+     * @param arg1   the second argument.
+     */
+    protected void info(String format, Object arg0, Object arg1) {
+        if (treeLevel < DISPLAY_LOG_LEVEL) {
+            LOGGER.info(format, arg0, arg1);
+        }
+    }
+
+    /**
+     * Log a message at the INFO level according to the specified format and arguments, if {@code logLevel} is not
+     * greater than {@code DISPLAY_LOG_LEVEL}.
+     *
+     * @param format    the format string.
+     * @param arguments a list of 3 or more arguments
+     */
+    protected void info(String format, Object... arguments) {
+        if (treeLevel < DISPLAY_LOG_LEVEL) {
+            LOGGER.info(format, arguments);
         }
     }
 }

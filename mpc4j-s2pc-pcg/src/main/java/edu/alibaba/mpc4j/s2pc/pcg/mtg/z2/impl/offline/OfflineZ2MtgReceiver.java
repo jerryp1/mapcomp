@@ -37,25 +37,8 @@ public class OfflineZ2MtgReceiver extends AbstractZ2MtgParty {
     public OfflineZ2MtgReceiver(Rpc receiverRpc, Party senderParty, OfflineZ2MtgConfig config) {
         super(OfflineZ2MtgPtoDesc.getInstance(), receiverRpc, senderParty, config);
         z2CoreMtgReceiver = Z2CoreMtgFactory.createReceiver(receiverRpc, senderParty, config.getZ2CoreMtgConfig());
-        z2CoreMtgReceiver.addLogLevel();
-    }
-
-    @Override
-    public void setTaskId(long taskId) {
-        super.setTaskId(taskId);
-        z2CoreMtgReceiver.setTaskId(taskId);
-    }
-
-    @Override
-    public void setParallel(boolean parallel) {
-        super.setParallel(parallel);
-        z2CoreMtgReceiver.setParallel(parallel);
-    }
-
-    @Override
-    public void addLogLevel() {
-        super.addLogLevel();
-        z2CoreMtgReceiver.addLogLevel();
+        addSubPtos(z2CoreMtgReceiver);
+        addSecureSubPtos(z2CoreMtgReceiver);
     }
 
     @Override

@@ -232,7 +232,7 @@ public class OpXgBoostClsSingleSlaveTest {
                                        DataFrame hostDataFrame, OpXgBoostHostConfig hostConfig,
                                        DataFrame slaveDataFrame, OpBoostSlaveConfig slaveConfig) {
         LOGGER.info("-----{} training-----", name);
-        long randomTaskId = Math.abs(OpBoostTestUtils.SECURE_RANDOM.nextLong());
+        int randomTaskId = Math.abs(OpBoostTestUtils.SECURE_RANDOM.nextInt());
         host.setTaskId(randomTaskId);
         slave.setTaskId(randomTaskId);
         try {

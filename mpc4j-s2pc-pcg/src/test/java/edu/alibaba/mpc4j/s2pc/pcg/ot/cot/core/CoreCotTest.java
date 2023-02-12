@@ -145,7 +145,7 @@ public class CoreCotTest {
     }
 
     private void testPto(CoreCotSender sender, CoreCotReceiver receiver, int num) {
-        long randomTaskId = Math.abs(SECURE_RANDOM.nextLong());
+        int randomTaskId = Math.abs(SECURE_RANDOM.nextInt());
         sender.setTaskId(randomTaskId);
         receiver.setTaskId(randomTaskId);
         try {
@@ -187,7 +187,7 @@ public class CoreCotTest {
     public void testResetDelta() {
         CoreCotSender sender = CoreCotFactory.createSender(senderRpc, receiverRpc.ownParty(), config);
         CoreCotReceiver receiver = CoreCotFactory.createReceiver(receiverRpc, senderRpc.ownParty(), config);
-        long randomTaskId = Math.abs(SECURE_RANDOM.nextLong());
+        int randomTaskId = Math.abs(SECURE_RANDOM.nextInt());
         sender.setTaskId(randomTaskId);
         receiver.setTaskId(randomTaskId);
         try {

@@ -48,25 +48,8 @@ public class Kos16ShZpCoreVoleSender extends AbstractZpCoreVoleSender {
     public Kos16ShZpCoreVoleSender(Rpc receiverRpc, Party senderParty, Kos16ShZpCoreVoleConfig config) {
         super(Kos16ShZpCoreVolePtoDesc.getInstance(), receiverRpc, senderParty, config);
         baseOtSender = BaseOtFactory.createSender(receiverRpc, senderParty, config.getBaseOtConfig());
-        baseOtSender.addLogLevel();
-    }
-
-    @Override
-    public void setTaskId(long taskId) {
-        super.setTaskId(taskId);
-        baseOtSender.setTaskId(taskId);
-    }
-
-    @Override
-    public void setParallel(boolean parallel) {
-        super.setParallel(parallel);
-        baseOtSender.setParallel(parallel);
-    }
-
-    @Override
-    public void addLogLevel() {
-        super.addLogLevel();
-        baseOtSender.addLogLevel();
+        addSubPtos(baseOtSender);
+        addSecureSubPtos(baseOtSender);
     }
 
     @Override
@@ -95,7 +78,7 @@ public class Kos16ShZpCoreVoleSender extends AbstractZpCoreVoleSender {
         stopWatch.start();
         List<byte[]> matrixPayLoad = generateMatrixPayLoad();
         DataPacketHeader matrixHeader = new DataPacketHeader(
-            taskId, getPtoDesc().getPtoId(), Kos16ShZpCoreVolePtoDesc.PtoStep.RECEIVER_SEND_MATRIX.ordinal(), extraInfo,
+            encodeTaskId, getPtoDesc().getPtoId(), Kos16ShZpCoreVolePtoDesc.PtoStep.RECEIVER_SEND_MATRIX.ordinal(), extraInfo,
             ownParty().getPartyId(), otherParty().getPartyId()
         );
         rpc.send(DataPacket.fromByteArrayList(matrixHeader, matrixPayLoad));

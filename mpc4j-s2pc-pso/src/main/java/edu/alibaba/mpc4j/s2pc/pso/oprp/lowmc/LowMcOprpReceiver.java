@@ -48,25 +48,8 @@ public class LowMcOprpReceiver extends AbstractOprpReceiver {
     public LowMcOprpReceiver(Rpc receiverRpc, Party senderParty, LowMcOprpConfig config) {
         super(LowMcOprpPtoDesc.getInstance(), receiverRpc, senderParty, config);
         bcReceiver = BcFactory.createReceiver(receiverRpc, senderParty, config.getBcConfig());
-        bcReceiver.addLogLevel();
-    }
-
-    @Override
-    public void setTaskId(long taskId) {
-        super.setTaskId(taskId);
-        bcReceiver.setTaskId(taskId);
-    }
-
-    @Override
-    public void setParallel(boolean parallel) {
-        super.setParallel(parallel);
-        bcReceiver.setParallel(parallel);
-    }
-
-    @Override
-    public void addLogLevel() {
-        super.addLogLevel();
-        bcReceiver.addLogLevel();
+        addSubPtos(bcReceiver);
+        addSecureSubPtos(bcReceiver);
     }
 
     @Override
@@ -113,7 +96,7 @@ public class LowMcOprpReceiver extends AbstractOprpReceiver {
             })
             .collect(Collectors.toList());
         DataPacketHeader shareMessageHeader = new DataPacketHeader(
-            taskId, getPtoDesc().getPtoId(), PtoStep.CLIENT_SEND_SHARE_MESSAGE.ordinal(), extraInfo,
+            encodeTaskId, getPtoDesc().getPtoId(), PtoStep.CLIENT_SEND_SHARE_MESSAGE.ordinal(), extraInfo,
             ownParty().getPartyId(), otherParty().getPartyId()
         );
         rpc.send(DataPacket.fromByteArrayList(shareMessageHeader, shareMessagePayload));
@@ -124,7 +107,7 @@ public class LowMcOprpReceiver extends AbstractOprpReceiver {
 
         stopWatch.start();
         DataPacketHeader shareKeyHeader = new DataPacketHeader(
-            taskId, getPtoDesc().getPtoId(), PtoStep.SERVER_SEND_SHARE_KEY.ordinal(), extraInfo,
+            encodeTaskId, getPtoDesc().getPtoId(), PtoStep.SERVER_SEND_SHARE_KEY.ordinal(), extraInfo,
             otherParty().getPartyId(), ownParty().getPartyId()
         );
         List<byte[]> shareKeyPayload = rpc.receive(shareKeyHeader).getPayload();

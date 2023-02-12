@@ -1,6 +1,5 @@
 package edu.alibaba.mpc4j.s2pc.pcg.ot.cot.nc.ywl20;
 
-import java.nio.ByteBuffer;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
@@ -12,8 +11,6 @@ import edu.alibaba.mpc4j.common.rpc.Rpc;
 import edu.alibaba.mpc4j.common.rpc.utils.DataPacket;
 import edu.alibaba.mpc4j.common.rpc.utils.DataPacketHeader;
 import edu.alibaba.mpc4j.common.tool.CommonConstants;
-import edu.alibaba.mpc4j.common.tool.crypto.prf.Prf;
-import edu.alibaba.mpc4j.common.tool.crypto.prf.PrfFactory;
 import edu.alibaba.mpc4j.common.tool.lpn.llc.LocalLinearCoder;
 import edu.alibaba.mpc4j.common.tool.lpn.LpnParams;
 import edu.alibaba.mpc4j.common.tool.utils.BytesUtils;
@@ -34,10 +31,6 @@ import edu.alibaba.mpc4j.s2pc.pcg.ot.cot.msp.MspCotReceiverOutput;
  * @date 2022/02/02
  */
 public class Ywl20NcCotReceiver extends AbstractNcCotReceiver {
-    /**
-     * 任务ID的PRF
-     */
-    private final Prf taskIdPrf;
     /**
      * MSP-COT配置项
      */
@@ -78,35 +71,12 @@ public class Ywl20NcCotReceiver extends AbstractNcCotReceiver {
     public Ywl20NcCotReceiver(Rpc receiverRpc, Party senderParty, Ywl20NcCotConfig config) {
         super(Ywl20NcCotPtoDesc.getInstance(), receiverRpc, senderParty, config);
         coreCotReceiver = CoreCotFactory.createReceiver(receiverRpc, senderParty, config.getCoreCotConfig());
-        coreCotReceiver.addLogLevel();
+        addSubPtos(coreCotReceiver);
+        addSecureSubPtos(coreCotReceiver);
         mspCotConfig = config.getMspCotConfig();
         mspCotReceiver = MspCotFactory.createReceiver(receiverRpc, senderParty, config.getMspCotConfig());
-        mspCotReceiver.addLogLevel();
-        taskIdPrf = PrfFactory.createInstance(getEnvType(), Long.BYTES);
-        taskIdPrf.setKey(new byte[CommonConstants.BLOCK_BYTE_LENGTH]);
-    }
-
-    @Override
-    public void setTaskId(long taskId) {
-        super.setTaskId(taskId);
-        // COT协议和MSPCOT协议需要使用不同的taskID
-        byte[] taskIdBytes = ByteBuffer.allocate(Long.BYTES).putLong(taskId).array();
-        coreCotReceiver.setTaskId(taskIdPrf.getLong(0, taskIdBytes, Long.MAX_VALUE));
-        mspCotReceiver.setTaskId(taskIdPrf.getLong(1, taskIdBytes, Long.MAX_VALUE));
-    }
-
-    @Override
-    public void setParallel(boolean parallel) {
-        super.setParallel(parallel);
-        coreCotReceiver.setParallel(parallel);
-        mspCotReceiver.setParallel(parallel);
-    }
-
-    @Override
-    public void addLogLevel() {
-        super.addLogLevel();
-        coreCotReceiver.addLogLevel();
-        mspCotReceiver.addLogLevel();
+        addSubPtos(mspCotReceiver);
+        addSecureSubPtos(mspCotReceiver);
     }
 
     @Override
@@ -148,7 +118,7 @@ public class Ywl20NcCotReceiver extends AbstractNcCotReceiver {
         List<byte[]> matrixInitKeyPayload = new LinkedList<>();
         matrixInitKeyPayload.add(matrixInitKey);
         DataPacketHeader matrixInitKeyHeader = new DataPacketHeader(
-            taskId, getPtoDesc().getPtoId(), PtoStep.RECEIVER_SEND_SETUP_KEY.ordinal(),
+            encodeTaskId, getPtoDesc().getPtoId(), PtoStep.RECEIVER_SEND_SETUP_KEY.ordinal(),
             ownParty().getPartyId(), otherParty().getPartyId()
         );
         rpc.send(DataPacket.fromByteArrayList(matrixInitKeyHeader, matrixInitKeyPayload));
@@ -202,7 +172,7 @@ public class Ywl20NcCotReceiver extends AbstractNcCotReceiver {
         List<byte[]> matrixKeyPayload = new LinkedList<>();
         matrixKeyPayload.add(matrixKey);
         DataPacketHeader matrixKeyHeader = new DataPacketHeader(
-            taskId, getPtoDesc().getPtoId(), PtoStep.RECEIVER_SEND_ITERATION_LEY.ordinal(), extraInfo,
+            encodeTaskId, getPtoDesc().getPtoId(), PtoStep.RECEIVER_SEND_ITERATION_LEY.ordinal(), extraInfo,
             ownParty().getPartyId(), otherParty().getPartyId()
         );
         rpc.send(DataPacket.fromByteArrayList(matrixKeyHeader, matrixKeyPayload));

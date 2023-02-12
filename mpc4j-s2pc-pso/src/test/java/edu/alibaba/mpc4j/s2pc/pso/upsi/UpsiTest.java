@@ -137,7 +137,7 @@ public class UpsiTest {
         // 创建参与方实例
         UpsiServer<String> server = UpsiFactory.createServer(serverRpc, clientRpc.ownParty(), config);
         UpsiClient<String> client = UpsiFactory.createClient(clientRpc, serverRpc.ownParty(), config);
-        long randomTaskId = Math.abs(new SecureRandom().nextLong());
+        int randomTaskId = Math.abs(new SecureRandom().nextInt());
         server.setTaskId(randomTaskId);
         client.setTaskId(randomTaskId);
         // 设置并发

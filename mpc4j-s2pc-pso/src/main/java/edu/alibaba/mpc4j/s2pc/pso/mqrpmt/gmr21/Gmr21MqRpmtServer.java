@@ -106,39 +106,17 @@ public class Gmr21MqRpmtServer extends AbstractMqRpmtServer {
     public Gmr21MqRpmtServer(Rpc serverRpc, Party clientParty, Gmr21MqRpmtConfig config) {
         super(Gmr21MqRpmtPtoDesc.getInstance(), serverRpc, clientParty, config);
         cuckooHashOprfReceiver = OprfFactory.createOprfReceiver(serverRpc, clientParty, config.getCuckooHashOprfConfig());
-        cuckooHashOprfReceiver.addLogLevel();
+        addSubPtos(cuckooHashOprfReceiver);
+        addSecureSubPtos(cuckooHashOprfReceiver);
         osnReceiver = OsnFactory.createReceiver(serverRpc, clientParty, config.getOsnConfig());
-        osnReceiver.addLogLevel();
+        addSubPtos(osnReceiver);
+        addSecureSubPtos(osnReceiver);
         peqtOprfSender = OprfFactory.createOprfSender(serverRpc, clientParty, config.getPeqtOprfConfig());
-        peqtOprfSender.addLogLevel();
+        addSubPtos(peqtOprfSender);
+        addSecureSubPtos(peqtOprfSender);
         okvsType = config.getOkvsType();
         cuckooHashBinType = config.getCuckooHashBinType();
         cuckooHashNum = CuckooHashBinFactory.getHashNum(cuckooHashBinType);
-    }
-
-    @Override
-    public void setTaskId(long taskId) {
-        super.setTaskId(taskId);
-        byte[] taskIdBytes = ByteBuffer.allocate(Long.BYTES).putLong(taskId).array();
-        cuckooHashOprfReceiver.setTaskId(taskIdPrf.getLong(0, taskIdBytes, Long.MAX_VALUE));
-        osnReceiver.setTaskId(taskIdPrf.getLong(1, taskIdBytes, Long.MAX_VALUE));
-        peqtOprfSender.setTaskId(taskIdPrf.getLong(2, taskIdBytes, Long.MAX_VALUE));
-    }
-
-    @Override
-    public void setParallel(boolean parallel) {
-        super.setParallel(parallel);
-        cuckooHashOprfReceiver.setParallel(parallel);
-        osnReceiver.setParallel(parallel);
-        peqtOprfSender.setParallel(parallel);
-    }
-
-    @Override
-    public void addLogLevel() {
-        super.addLogLevel();
-        cuckooHashOprfReceiver.addLogLevel();
-        osnReceiver.addLogLevel();
-        peqtOprfSender.addLogLevel();
     }
 
     @Override
@@ -172,7 +150,7 @@ public class Gmr21MqRpmtServer extends AbstractMqRpmtServer {
             })
             .toArray(byte[][]::new);
         DataPacketHeader keysHeader = new DataPacketHeader(
-            taskId, getPtoDesc().getPtoId(), PtoStep.SERVER_SEND_KEYS.ordinal(), extraInfo,
+            encodeTaskId, getPtoDesc().getPtoId(), PtoStep.SERVER_SEND_KEYS.ordinal(), extraInfo,
             ownParty().getPartyId(), otherParty().getPartyId()
         );
         rpc.send(DataPacket.fromByteArrayList(keysHeader, keysPayload));
@@ -193,7 +171,7 @@ public class Gmr21MqRpmtServer extends AbstractMqRpmtServer {
         stopWatch.start();
         List<byte[]> cuckooHashKeyPayload = generateCuckooHashKeyPayload();
         DataPacketHeader cuckooHashKeyHeader = new DataPacketHeader(
-            taskId, getPtoDesc().getPtoId(), PtoStep.SERVER_SEND_CUCKOO_HASH_KEYS.ordinal(), extraInfo,
+            encodeTaskId, getPtoDesc().getPtoId(), PtoStep.SERVER_SEND_CUCKOO_HASH_KEYS.ordinal(), extraInfo,
             ownParty().getPartyId(), otherParty().getPartyId()
         );
         rpc.send(DataPacket.fromByteArrayList(cuckooHashKeyHeader, cuckooHashKeyPayload));
@@ -230,7 +208,7 @@ public class Gmr21MqRpmtServer extends AbstractMqRpmtServer {
 
         stopWatch.start();
         DataPacketHeader okvsHeader = new DataPacketHeader(
-            taskId, getPtoDesc().getPtoId(), PtoStep.CLIENT_SEND_OKVS.ordinal(), extraInfo,
+            encodeTaskId, getPtoDesc().getPtoId(), PtoStep.CLIENT_SEND_OKVS.ordinal(), extraInfo,
             otherParty().getPartyId(), ownParty().getPartyId()
         );
         List<byte[]> okvsPayload = rpc.receive(okvsHeader).getPayload();
@@ -257,7 +235,7 @@ public class Gmr21MqRpmtServer extends AbstractMqRpmtServer {
             .map(peqtHash::digestToBytes)
             .collect(Collectors.toList());
         DataPacketHeader aPrimeOprfHeader = new DataPacketHeader(
-            taskId, getPtoDesc().getPtoId(), PtoStep.SERVER_SEND_A_PRIME_OPRFS.ordinal(), extraInfo,
+            encodeTaskId, getPtoDesc().getPtoId(), PtoStep.SERVER_SEND_A_PRIME_OPRFS.ordinal(), extraInfo,
             ownParty().getPartyId(), otherParty().getPartyId()
         );
         rpc.send(DataPacket.fromByteArrayList(aPrimeOprfHeader, aPrimeOprfPayload));

@@ -178,7 +178,7 @@ public class HammingTest {
                               byte[] x0Bytes, byte[] x1Bytes, int num, int expectHammingDistance) {
         assert BytesUtils.isReduceByteArray(x0Bytes, num);
         assert BytesUtils.isReduceByteArray(x1Bytes, num);
-        long randomTaskId = Math.abs(SECURE_RANDOM.nextLong());
+        int randomTaskId = Math.abs(SECURE_RANDOM.nextInt());
         sender.setTaskId(randomTaskId);
         receiver.setTaskId(randomTaskId);
 
@@ -216,7 +216,7 @@ public class HammingTest {
     }
 
     private void assertOutput(int expectHammingDistance, int senderHammingDistance, int receiverHammingDistance) {
-//        Assert.assertEquals(expectHammingDistance, senderHammingDistance);
+        Assert.assertEquals(expectHammingDistance, senderHammingDistance);
         Assert.assertEquals(expectHammingDistance, receiverHammingDistance);
     }
 }

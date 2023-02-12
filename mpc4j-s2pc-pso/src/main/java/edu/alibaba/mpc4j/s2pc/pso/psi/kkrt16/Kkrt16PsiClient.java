@@ -78,27 +78,10 @@ public class Kkrt16PsiClient<T> extends AbstractPsiClient<T> {
     public Kkrt16PsiClient(Rpc clientRpc, Party serverParty, Kkrt16PsiConfig config) {
         super(Kkrt16PsiPtoDesc.getInstance(), clientRpc, serverParty, config);
         oprfReceiver = OprfFactory.createOprfReceiver(clientRpc, serverParty, config.getOprfConfig());
-        oprfReceiver.addLogLevel();
+        addSubPtos(oprfReceiver);
+        addSecureSubPtos(oprfReceiver);
         cuckooHashBinType = config.getCuckooHashBinType();
         cuckooHashNum = CuckooHashBinFactory.getHashNum(cuckooHashBinType);
-    }
-
-    @Override
-    public void setTaskId(long taskId) {
-        super.setTaskId(taskId);
-        oprfReceiver.setTaskId(taskId);
-    }
-
-    @Override
-    public void setParallel(boolean parallel) {
-        super.setParallel(parallel);
-        oprfReceiver.setParallel(parallel);
-    }
-
-    @Override
-    public void addLogLevel() {
-        super.addLogLevel();
-        oprfReceiver.addLogLevel();
     }
 
     @Override
@@ -131,7 +114,7 @@ public class Kkrt16PsiClient<T> extends AbstractPsiClient<T> {
         stashSize = CuckooHashBinFactory.getStashSize(cuckooHashBinType, clientElementSize);
         List<byte[]> cuckooHashKeyPayload = generateCuckooHashKeyPayload();
         DataPacketHeader cuckooHashKeyHeader = new DataPacketHeader(
-            taskId, getPtoDesc().getPtoId(), PtoStep.CLIENT_SEND_CUCKOO_HASH_KEYS.ordinal(), extraInfo,
+            encodeTaskId, getPtoDesc().getPtoId(), PtoStep.CLIENT_SEND_CUCKOO_HASH_KEYS.ordinal(), extraInfo,
             ownParty().getPartyId(), otherParty().getPartyId()
         );
         rpc.send(DataPacket.fromByteArrayList(cuckooHashKeyHeader, cuckooHashKeyPayload));
@@ -159,7 +142,7 @@ public class Kkrt16PsiClient<T> extends AbstractPsiClient<T> {
         serverBinPrfFilterArrayList.ensureCapacity(cuckooHashNum);
         for (int hashIndex = 0; hashIndex < cuckooHashNum; hashIndex++) {
             DataPacketHeader serverBinPrfHeader = new DataPacketHeader(
-                taskId, getPtoDesc().getPtoId(), PtoStep.SERVER_SEND_BIN_PRFS.ordinal(), extraInfo,
+                encodeTaskId, getPtoDesc().getPtoId(), PtoStep.SERVER_SEND_BIN_PRFS.ordinal(), extraInfo,
                 otherParty().getPartyId(), ownParty().getPartyId()
             );
             List<byte[]> serverBinPrfPayload = rpc.receive(serverBinPrfHeader).getPayload();
@@ -171,7 +154,7 @@ public class Kkrt16PsiClient<T> extends AbstractPsiClient<T> {
         serverStashPrfFilterArrayList.ensureCapacity(stashSize);
         for (int stashIndex = 0; stashIndex < stashSize; stashIndex++) {
             DataPacketHeader serverBinPrfHeader = new DataPacketHeader(
-                taskId, getPtoDesc().getPtoId(), PtoStep.SERVER_SEND_STASH_PRFS.ordinal(), extraInfo,
+                encodeTaskId, getPtoDesc().getPtoId(), PtoStep.SERVER_SEND_STASH_PRFS.ordinal(), extraInfo,
                 otherParty().getPartyId(), ownParty().getPartyId()
             );
             List<byte[]> serverBinPrfPayload = rpc.receive(serverBinPrfHeader).getPayload();

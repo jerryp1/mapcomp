@@ -38,25 +38,8 @@ public class Bcg19RegMspCotSender extends AbstractMspCotSender {
     public Bcg19RegMspCotSender(Rpc senderRpc, Party receiverParty, Bcg19RegMspCotConfig config) {
         super(Bcg19RegMspCotPtoDesc.getInstance(), senderRpc, receiverParty, config);
         bspCotSender = BspCotFactory.createSender(senderRpc, receiverParty, config.getBspCotConfig());
-        bspCotSender.addLogLevel();
-    }
-
-    @Override
-    public void setTaskId(long taskId) {
-        super.setTaskId(taskId);
-        bspCotSender.setTaskId(taskId);
-    }
-
-    @Override
-    public void setParallel(boolean parallel) {
-        super.setParallel(parallel);
-        bspCotSender.setParallel(parallel);
-    }
-
-    @Override
-    public void addLogLevel() {
-        super.addLogLevel();
-        bspCotSender.addLogLevel();
+        addSubPtos(bspCotSender);
+        addSecureSubPtos(bspCotSender);
     }
 
     @Override
@@ -95,9 +78,9 @@ public class Bcg19RegMspCotSender extends AbstractMspCotSender {
         stopWatch.start();
         // 执行t次2选1-单点批处理COT，每一个的选择范围是n/t
         if (cotSenderOutput == null) {
-            bspCotSenderOutput = bspCotSender.send(t, (int)Math.ceil((double) num / t));
+            bspCotSenderOutput = bspCotSender.send(t, (int) Math.ceil((double) num / t));
         } else {
-            bspCotSenderOutput = bspCotSender.send(t, (int)Math.ceil((double) num / t), cotSenderOutput);
+            bspCotSenderOutput = bspCotSender.send(t, (int) Math.ceil((double) num / t), cotSenderOutput);
             cotSenderOutput = null;
         }
         stopWatch.stop();
@@ -121,8 +104,8 @@ public class Bcg19RegMspCotSender extends AbstractMspCotSender {
         byte[][] r0Array = IntStream.range(0, t)
             .mapToObj(i -> {
                 // 需要转换为long计算，否则n和t比较大时会溢出
-                int lowerBound = (int)(i * (long) num / t);
-                int upperBound = (int)((i + 1) * (long) num / t);
+                int lowerBound = (int) (i * (long) num / t);
+                int upperBound = (int) ((i + 1) * (long) num / t);
                 SspCotSenderOutput spcotSenderOutput = bspCotSenderOutput.get(i);
                 return IntStream.range(0, upperBound - lowerBound)
                     .mapToObj(spcotSenderOutput::getR0)

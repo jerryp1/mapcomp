@@ -25,25 +25,8 @@ public class DirectNcLotSender extends AbstractNcLotSender {
     public DirectNcLotSender(Rpc senderRpc, Party receiverParty, DirectNcLotConfig config) {
         super(DirectNcLotPtoDesc.getInstance(), senderRpc, receiverParty, config);
         coreLotSender = CoreLotFactory.createSender(senderRpc, receiverParty, config.getCoreLotConfig());
-        coreLotSender.addLogLevel();
-    }
-
-    @Override
-    public void setTaskId(long taskId) {
-        super.setTaskId(taskId);
-        coreLotSender.setTaskId(taskId);
-    }
-
-    @Override
-    public void setParallel(boolean parallel) {
-        super.setParallel(parallel);
-        coreLotSender.setParallel(parallel);
-    }
-
-    @Override
-    public void addLogLevel() {
-        super.addLogLevel();
-        coreLotSender.addLogLevel();
+        addSubPtos(coreLotSender);
+        addSecureSubPtos(coreLotSender);
     }
 
     @Override

@@ -64,36 +64,14 @@ public class Gmr21MpPidServer<T> extends AbstractPidParty<T> {
     public Gmr21MpPidServer(Rpc serverRpc, Party clientParty, Gmr21MpPidConfig config) {
         super(Gmr21MpPidPtoDesc.getInstance(), serverRpc, clientParty, config);
         mpOprfSender = OprfFactory.createMpOprfSender(serverRpc, clientParty, config.getMpOprfConfig());
-        mpOprfSender.addLogLevel();
+        addSubPtos(mpOprfSender);
+        addSecureSubPtos(mpOprfSender);
         mpOprfReceiver = OprfFactory.createMpOprfReceiver(serverRpc, clientParty, config.getMpOprfConfig());
-        mpOprfReceiver.addLogLevel();
+        addSubPtos(mpOprfReceiver);
+        addSecureSubPtos(mpOprfReceiver);
         psuServer = PsuFactory.createServer(serverRpc, clientParty, config.getPsuConfig());
-        psuServer.addLogLevel();
-    }
-
-    @Override
-    public void setTaskId(long taskId) {
-        super.setTaskId(taskId);
-        byte[] taskIdBytes = ByteBuffer.allocate(Long.BYTES).putLong(taskId).array();
-        mpOprfSender.setTaskId(taskIdPrf.getLong(0, taskIdBytes, Long.MAX_VALUE));
-        mpOprfReceiver.setTaskId(taskIdPrf.getLong(1, taskIdBytes, Long.MAX_VALUE));
-        psuServer.setTaskId(taskIdPrf.getLong(2, taskIdBytes, Long.MAX_VALUE));
-    }
-
-    @Override
-    public void setParallel(boolean parallel) {
-        super.setParallel(parallel);
-        mpOprfSender.setParallel(parallel);
-        mpOprfReceiver.setParallel(parallel);
-        psuServer.setParallel(parallel);
-    }
-
-    @Override
-    public void addLogLevel() {
-        super.addLogLevel();
-        mpOprfSender.addLogLevel();
-        mpOprfReceiver.addLogLevel();
-        psuServer.addLogLevel();
+        addSubPtos(psuServer);
+        addSecureSubPtos(psuServer);
     }
 
     @Override
@@ -155,7 +133,7 @@ public class Gmr21MpPidServer<T> extends AbstractPidParty<T> {
         stopWatch.start();
         // Alice receives union
         DataPacketHeader unionHeader = new DataPacketHeader(
-            taskId, getPtoDesc().getPtoId(), PtoStep.CLIENT_SEND_UNION.ordinal(), extraInfo,
+            encodeTaskId, getPtoDesc().getPtoId(), PtoStep.CLIENT_SEND_UNION.ordinal(), extraInfo,
             otherParty().getPartyId(), ownParty().getPartyId()
         );
         List<byte[]> unionPayload = rpc.receive(unionHeader).getPayload();

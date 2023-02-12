@@ -4,7 +4,6 @@ import edu.alibaba.mpc4j.common.rpc.MpcAbortException;
 import edu.alibaba.mpc4j.common.rpc.Party;
 import edu.alibaba.mpc4j.common.rpc.Rpc;
 import edu.alibaba.mpc4j.common.tool.utils.BytesUtils;
-import edu.alibaba.mpc4j.common.tool.utils.CommonUtils;
 import edu.alibaba.mpc4j.s2pc.pcg.ot.lot.LotReceiverOutput;
 import edu.alibaba.mpc4j.s2pc.pcg.ot.lot.core.CoreLotFactory;
 import edu.alibaba.mpc4j.s2pc.pcg.ot.lot.core.CoreLotReceiver;
@@ -28,25 +27,8 @@ public class DirectNcLotReceiver extends AbstractNcLotReceiver {
     public DirectNcLotReceiver(Rpc receiverRpc, Party senderParty, DirectNcLotConfig config) {
         super(DirectNcLotPtoDesc.getInstance(), receiverRpc, senderParty, config);
         coreLotReceiver = CoreLotFactory.createReceiver(receiverRpc, senderParty, config.getCoreLotConfig());
-        coreLotReceiver.addLogLevel();
-    }
-
-    @Override
-    public void setTaskId(long taskId) {
-        super.setTaskId(taskId);
-        coreLotReceiver.setTaskId(taskId);
-    }
-
-    @Override
-    public void setParallel(boolean parallel) {
-        super.setParallel(parallel);
-        coreLotReceiver.setParallel(parallel);
-    }
-
-    @Override
-    public void addLogLevel() {
-        super.addLogLevel();
-        coreLotReceiver.addLogLevel();
+        addSubPtos(coreLotReceiver);
+        addSecureSubPtos(coreLotReceiver);
     }
 
     @Override

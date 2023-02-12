@@ -2,6 +2,8 @@ package edu.alibaba.mpc4j.common.rpc.pto;
 
 import edu.alibaba.mpc4j.common.tool.EnvType;
 
+import java.security.SecureRandom;
+
 /**
  * secure protocol.
  *
@@ -22,6 +24,13 @@ public interface SecurePto {
      * @return parallel computing.
      */
     boolean getParallel();
+
+    /**
+     * Sets the secure random state.
+     *
+     * @param secureRandom the secure random state.
+     */
+    void setSecureRandom(SecureRandom secureRandom);
 
     /**
      * Gets environment.

@@ -103,7 +103,7 @@ public class OpXgBoostHost extends AbstractOpBoostHost {
             int treeNum = xgBoostParams.getTreeNum();
             // 训练并存储模型
             Booster booster = XGBoost.train(trainDataMatrix, params, treeNum, new HashMap<>(0), null, null);
-            String modelName = taskId + "_" + extraInfo + ".deprecated";
+            String modelName = encodeTaskId + "_" + extraInfo + ".deprecated";
             booster.saveModel(modelName);
             File modelFile = new File(modelName);
             FileInputStream fileInputStream = new FileInputStream(modelFile);

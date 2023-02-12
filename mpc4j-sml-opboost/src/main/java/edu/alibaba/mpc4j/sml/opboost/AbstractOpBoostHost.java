@@ -106,7 +106,7 @@ public abstract class AbstractOpBoostHost extends AbstractMultiPartyPto {
         columnSlaveMap = new HashMap<>(otherParties().length);
         for (Party slaveParty : otherParties()) {
             DataPacketHeader slaveSchemaHeader = new DataPacketHeader(
-                taskId, ptoDesc.getPtoId(), OpBoostPtoDesc.PtoStep.SLAVE_SEND_SCHEMA.ordinal(), extraInfo,
+                encodeTaskId, ptoDesc.getPtoId(), OpBoostPtoDesc.PtoStep.SLAVE_SEND_SCHEMA.ordinal(), extraInfo,
                 slaveParty.getPartyId(), ownParty().getPartyId()
             );
             List<byte[]> slaveSchemaPayload = rpc.receive(slaveSchemaHeader).getPayload();
@@ -141,7 +141,7 @@ public abstract class AbstractOpBoostHost extends AbstractMultiPartyPto {
     protected final void slaveDataStep() throws MpcAbortException {
         for (Party slaveParty : otherParties()) {
             DataPacketHeader slaveDataHeader = new DataPacketHeader(
-                taskId, ptoDesc.getPtoId(), OpBoostPtoDesc.PtoStep.SLAVE_SEND_ORDER_DATA_FRAME.ordinal(), extraInfo,
+                encodeTaskId, ptoDesc.getPtoId(), OpBoostPtoDesc.PtoStep.SLAVE_SEND_ORDER_DATA_FRAME.ordinal(), extraInfo,
                 slaveParty.getPartyId(), ownParty().getPartyId()
             );
             List<byte[]> slaveDataPayload = rpc.receive(slaveDataHeader).getPayload();
@@ -216,13 +216,13 @@ public abstract class AbstractOpBoostHost extends AbstractMultiPartyPto {
             List<byte[]> slaveOrderSplitsPayload = generateSlaveOrderSplitsPayload(slaveParty);
             // 发送请求
             DataPacketHeader slaveOrderSplitsHeader = new DataPacketHeader(
-                taskId, ptoDesc.getPtoId(), OpBoostPtoDesc.PtoStep.HOST_SEND_ORDER_SPLIT_NODE.ordinal(), extraInfo,
+                encodeTaskId, ptoDesc.getPtoId(), OpBoostPtoDesc.PtoStep.HOST_SEND_ORDER_SPLIT_NODE.ordinal(), extraInfo,
                 ownParty().getPartyId(), slaveParty.getPartyId()
             );
             rpc.send(DataPacket.fromByteArrayList(slaveOrderSplitsHeader, slaveOrderSplitsPayload));
             // 接收请求
             DataPacketHeader slaveSplitsHeader = new DataPacketHeader(
-                taskId, ptoDesc.getPtoId(), OpBoostPtoDesc.PtoStep.SLAVE_SEND_SPLIT_NODE.ordinal(), extraInfo,
+                encodeTaskId, ptoDesc.getPtoId(), OpBoostPtoDesc.PtoStep.SLAVE_SEND_SPLIT_NODE.ordinal(), extraInfo,
                 slaveParty.getPartyId(), ownParty().getPartyId()
             );
             List<byte[]> slaveSplitsPayload = rpc.receive(slaveSplitsHeader).getPayload();

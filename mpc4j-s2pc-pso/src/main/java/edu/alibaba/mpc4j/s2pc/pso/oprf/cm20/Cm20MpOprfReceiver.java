@@ -89,26 +89,9 @@ public class Cm20MpOprfReceiver extends AbstractMpOprfReceiver {
     public Cm20MpOprfReceiver(Rpc receiverRpc, Party senderParty, Cm20MpOprfConfig config) {
         super(Cm20MpOprfPtoDesc.getInstance(), receiverRpc, senderParty, config);
         coreCotSender = CoreCotFactory.createSender(receiverRpc, senderParty, config.getCoreCotConfig());
-        coreCotSender.addLogLevel();
+        addSubPtos(coreCotSender);
+        addSecureSubPtos(coreCotSender);
         h1 = HashFactory.createInstance(envType, CommonConstants.BLOCK_BYTE_LENGTH * 2);
-    }
-
-    @Override
-    public void setTaskId(long taskId) {
-        super.setTaskId(taskId);
-        coreCotSender.setTaskId(taskId);
-    }
-
-    @Override
-    public void setParallel(boolean parallel) {
-        super.setParallel(parallel);
-        coreCotSender.setParallel(parallel);
-    }
-
-    @Override
-    public void addLogLevel() {
-        super.addLogLevel();
-        coreCotSender.addLogLevel();
     }
 
     @Override
@@ -157,7 +140,7 @@ public class Cm20MpOprfReceiver extends AbstractMpOprfReceiver {
         List<byte[]> prfKeyPayload = new LinkedList<>();
         prfKeyPayload.add(prfKey);
         DataPacketHeader prfKeyHeader = new DataPacketHeader(
-            taskId, getPtoDesc().getPtoId(), Cm20MpOprfPtoDesc.PtoStep.RECEIVER_SEND_KEY.ordinal(), extraInfo,
+            encodeTaskId, getPtoDesc().getPtoId(), Cm20MpOprfPtoDesc.PtoStep.RECEIVER_SEND_KEY.ordinal(), extraInfo,
             ownParty().getPartyId(), otherParty().getPartyId()
         );
         rpc.send(DataPacket.fromByteArrayList(prfKeyHeader, prfKeyPayload));
@@ -174,7 +157,7 @@ public class Cm20MpOprfReceiver extends AbstractMpOprfReceiver {
         List<byte[]> deltaPayload = generateDeltaPayload();
         cotSenderOutput = null;
         DataPacketHeader deltaHeader = new DataPacketHeader(
-            taskId, ptoDesc.getPtoId(), Cm20MpOprfPtoDesc.PtoStep.RECEIVER_SEND_DELTA.ordinal(), extraInfo,
+            encodeTaskId, ptoDesc.getPtoId(), Cm20MpOprfPtoDesc.PtoStep.RECEIVER_SEND_DELTA.ordinal(), extraInfo,
             ownParty().getPartyId(), otherParty().getPartyId()
         );
         rpc.send(DataPacket.fromByteArrayList(deltaHeader, deltaPayload));

@@ -178,7 +178,7 @@ public class MspCotTest {
     }
 
     private void testPto(MspCotSender sender, MspCotReceiver receiver, int t, int num) {
-        long randomTaskId = Math.abs(SECURE_RANDOM.nextLong());
+        int randomTaskId = Math.abs(SECURE_RANDOM.nextInt());
         sender.setTaskId(randomTaskId);
         receiver.setTaskId(randomTaskId);
         try {
@@ -218,7 +218,7 @@ public class MspCotTest {
     public void testPrecomputeLargeNumLargeT() {
         MspCotSender sender = MspCotFactory.createSender(senderRpc, receiverRpc.ownParty(), config);
         MspCotReceiver receiver = MspCotFactory.createReceiver(receiverRpc, senderRpc.ownParty(), config);
-        long randomTaskId = Math.abs(SECURE_RANDOM.nextLong());
+        int randomTaskId = Math.abs(SECURE_RANDOM.nextInt());
         sender.setTaskId(randomTaskId);
         receiver.setTaskId(randomTaskId);
         try {
@@ -264,7 +264,7 @@ public class MspCotTest {
     public void testResetDelta() {
         MspCotSender sender = MspCotFactory.createSender(senderRpc, receiverRpc.ownParty(), config);
         MspCotReceiver receiver = MspCotFactory.createReceiver(receiverRpc, senderRpc.ownParty(), config);
-        long randomTaskId = Math.abs(SECURE_RANDOM.nextLong());
+        int randomTaskId = Math.abs(SECURE_RANDOM.nextInt());
         sender.setTaskId(randomTaskId);
         receiver.setTaskId(randomTaskId);
         try {

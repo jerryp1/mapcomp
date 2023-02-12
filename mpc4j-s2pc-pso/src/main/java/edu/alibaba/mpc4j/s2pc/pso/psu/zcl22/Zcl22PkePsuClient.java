@@ -87,29 +87,12 @@ public class Zcl22PkePsuClient extends AbstractPsuClient {
     public Zcl22PkePsuClient(Rpc clientRpc, Party serverParty, Zcl22PkePsuConfig config) {
         super(Zcl22PkePsuPtoDesc.getInstance(), clientRpc, serverParty, config);
         coreCotReceiver = CoreCotFactory.createReceiver(clientRpc, serverParty, config.getCoreCotConfig());
-        coreCotReceiver.addLogLevel();
+        addSubPtos(coreCotReceiver);
+        addSecureSubPtos(coreCotReceiver);
         zpOvdmType = config.getZpOvdmType();
         compressEncode = config.getCompressEncode();
         pipeSize = config.getPipeSize();
         ecc = EccFactory.createInstance(getEnvType());
-    }
-
-    @Override
-    public void setTaskId(long taskId) {
-        super.setTaskId(taskId);
-        coreCotReceiver.setTaskId(taskId);
-    }
-
-    @Override
-    public void setParallel(boolean parallel) {
-        super.setParallel(parallel);
-        coreCotReceiver.setParallel(parallel);
-    }
-
-    @Override
-    public void addLogLevel() {
-        super.addLogLevel();
-        coreCotReceiver.addLogLevel();
     }
 
     @Override
@@ -132,7 +115,7 @@ public class Zcl22PkePsuClient extends AbstractPsuClient {
         List<byte[]> pkPayload = new LinkedList<>();
         pkPayload.add(ecc.encode(y, compressEncode));
         DataPacketHeader pkHeader = new DataPacketHeader(
-            taskId, getPtoDesc().getPtoId(), Zcl22PkePsuPtoDesc.PtoStep.CLIENT_SEND_PK.ordinal(), extraInfo,
+            encodeTaskId, getPtoDesc().getPtoId(), Zcl22PkePsuPtoDesc.PtoStep.CLIENT_SEND_PK.ordinal(), extraInfo,
             ownParty().getPartyId(), otherParty().getPartyId()
         );
         rpc.send(DataPacket.fromByteArrayList(pkHeader, pkPayload));
@@ -143,7 +126,7 @@ public class Zcl22PkePsuClient extends AbstractPsuClient {
 
         stopWatch.start();
         DataPacketHeader keysHeader = new DataPacketHeader(
-            taskId, getPtoDesc().getPtoId(), Zcl22PkePsuPtoDesc.PtoStep.SERVER_SEND_OVDM_KEYS.ordinal(), extraInfo,
+            encodeTaskId, getPtoDesc().getPtoId(), Zcl22PkePsuPtoDesc.PtoStep.SERVER_SEND_OVDM_KEYS.ordinal(), extraInfo,
             otherParty().getPartyId(), ownParty().getPartyId()
         );
         List<byte[]> keysPayload = rpc.receive(keysHeader).getPayload();
@@ -173,13 +156,13 @@ public class Zcl22PkePsuClient extends AbstractPsuClient {
         stopWatch.stop();
         // 发送密文header
         DataPacketHeader kemOvdmHeader = new DataPacketHeader(
-            taskId, getPtoDesc().getPtoId(), Zcl22PkePsuPtoDesc.PtoStep.CLIENT_SEND_OVDM_KEM.ordinal(), extraInfo,
+            encodeTaskId, getPtoDesc().getPtoId(), Zcl22PkePsuPtoDesc.PtoStep.CLIENT_SEND_OVDM_KEM.ordinal(), extraInfo,
             ownParty().getPartyId(), otherParty().getPartyId()
         );
         rpc.send(DataPacket.fromByteArrayList(kemOvdmHeader, kemOvdmPayload));
         // 发送密文payload
         DataPacketHeader ctOvdmHeader = new DataPacketHeader(
-            taskId, getPtoDesc().getPtoId(), Zcl22PkePsuPtoDesc.PtoStep.CLIENT_SEND_OVDM_CT.ordinal(), extraInfo,
+            encodeTaskId, getPtoDesc().getPtoId(), Zcl22PkePsuPtoDesc.PtoStep.CLIENT_SEND_OVDM_CT.ordinal(), extraInfo,
             ownParty().getPartyId(), otherParty().getPartyId()
         );
         rpc.send(DataPacket.fromByteArrayList(ctOvdmHeader, ctOvdmPayload));
@@ -197,7 +180,7 @@ public class Zcl22PkePsuClient extends AbstractPsuClient {
         stopWatch.start();
         CotReceiverOutput cotReceiverOutput = coreCotReceiver.receive(peqtArray);
         DataPacketHeader encHeader = new DataPacketHeader(
-            taskId, getPtoDesc().getPtoId(), Zcl22PkePsuPtoDesc.PtoStep.SERVER_SEND_ENC_ELEMENTS.ordinal(), extraInfo,
+            encodeTaskId, getPtoDesc().getPtoId(), Zcl22PkePsuPtoDesc.PtoStep.SERVER_SEND_ENC_ELEMENTS.ordinal(), extraInfo,
             otherParty().getPartyId(), ownParty().getPartyId()
         );
         List<byte[]> encPayload = rpc.receive(encHeader).getPayload();
@@ -275,7 +258,7 @@ public class Zcl22PkePsuClient extends AbstractPsuClient {
         for (round = 0; round < pipelineTime; round++) {
             // 接收KEM
             DataPacketHeader reRandKemHeader = new DataPacketHeader(
-                taskId, getPtoDesc().getPtoId(), Zcl22PkePsuPtoDesc.PtoStep.SERVER_SEND_RERAND_KEM.ordinal(), extraInfo,
+                encodeTaskId, getPtoDesc().getPtoId(), Zcl22PkePsuPtoDesc.PtoStep.SERVER_SEND_RERAND_KEM.ordinal(), extraInfo,
                 otherParty().getPartyId(), ownParty().getPartyId()
             );
             List<byte[]> reRandKemPayload = rpc.receive(reRandKemHeader).getPayload();
@@ -288,7 +271,7 @@ public class Zcl22PkePsuClient extends AbstractPsuClient {
                 .toArray(ECPoint[]::new);
             // 接收密文
             DataPacketHeader reRandCtHeader = new DataPacketHeader(
-                taskId, getPtoDesc().getPtoId(), Zcl22PkePsuPtoDesc.PtoStep.SERVER_SEND_RERAND_CT.ordinal(), extraInfo,
+                encodeTaskId, getPtoDesc().getPtoId(), Zcl22PkePsuPtoDesc.PtoStep.SERVER_SEND_RERAND_CT.ordinal(), extraInfo,
                 otherParty().getPartyId(), ownParty().getPartyId()
             );
             List<byte[]> reRandCtPayload = rpc.receive(reRandCtHeader).getPayload();
@@ -314,7 +297,7 @@ public class Zcl22PkePsuClient extends AbstractPsuClient {
         if (remain > 0) {
             // 接收KEM
             DataPacketHeader reRandKemHeader = new DataPacketHeader(
-                taskId, getPtoDesc().getPtoId(), Zcl22PkePsuPtoDesc.PtoStep.SERVER_SEND_RERAND_KEM.ordinal(), extraInfo,
+                encodeTaskId, getPtoDesc().getPtoId(), Zcl22PkePsuPtoDesc.PtoStep.SERVER_SEND_RERAND_KEM.ordinal(), extraInfo,
                 otherParty().getPartyId(), ownParty().getPartyId()
             );
             List<byte[]> reRandKemPayload = rpc.receive(reRandKemHeader).getPayload();
@@ -327,7 +310,7 @@ public class Zcl22PkePsuClient extends AbstractPsuClient {
                 .toArray(ECPoint[]::new);
             // 接收密文
             DataPacketHeader reRandCtHeader = new DataPacketHeader(
-                taskId, getPtoDesc().getPtoId(), Zcl22PkePsuPtoDesc.PtoStep.SERVER_SEND_RERAND_CT.ordinal(), extraInfo,
+                encodeTaskId, getPtoDesc().getPtoId(), Zcl22PkePsuPtoDesc.PtoStep.SERVER_SEND_RERAND_CT.ordinal(), extraInfo,
                 otherParty().getPartyId(), ownParty().getPartyId()
             );
             List<byte[]> reRandCtPayload = rpc.receive(reRandCtHeader).getPayload();

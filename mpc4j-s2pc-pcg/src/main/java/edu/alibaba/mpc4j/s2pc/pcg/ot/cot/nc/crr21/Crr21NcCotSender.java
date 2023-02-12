@@ -1,6 +1,5 @@
 package edu.alibaba.mpc4j.s2pc.pcg.ot.cot.nc.crr21;
 
-import java.nio.ByteBuffer;
 import java.util.concurrent.TimeUnit;
 
 import edu.alibaba.mpc4j.common.rpc.MpcAbortException;
@@ -66,27 +65,8 @@ public class Crr21NcCotSender extends AbstractNcCotSender {
         mspCotConfig = config.getMspCotConfig();
         codeType = config.getCodeType();
         mspCotSender = MspCotFactory.createSender(senderRpc, receiverParty, config.getMspCotConfig());
-        mspCotSender.addLogLevel();
-    }
-
-    @Override
-    public void setTaskId(long taskId) {
-        super.setTaskId(taskId);
-        // COT协议和MSPCOT协议需要使用不同的taskID
-        byte[] taskIdBytes = ByteBuffer.allocate(Long.BYTES).putLong(taskId).array();
-        mspCotSender.setTaskId(taskIdPrf.getLong(1, taskIdBytes, Long.MAX_VALUE));
-    }
-
-    @Override
-    public void setParallel(boolean parallel) {
-        super.setParallel(parallel);
-        mspCotSender.setParallel(parallel);
-    }
-
-    @Override
-    public void addLogLevel() {
-        super.addLogLevel();
-        mspCotSender.addLogLevel();
+        addSubPtos(mspCotSender);
+        addSecureSubPtos(mspCotSender);
     }
 
     @Override

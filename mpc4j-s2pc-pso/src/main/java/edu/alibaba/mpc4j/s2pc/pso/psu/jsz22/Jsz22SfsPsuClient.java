@@ -92,38 +92,16 @@ public class Jsz22SfsPsuClient extends AbstractPsuClient {
     public Jsz22SfsPsuClient(Rpc clientRpc, Party serverParty, Jsz22SfsPsuConfig config) {
         super(Jsz22SfsPsuPtoDesc.getInstance(), clientRpc, serverParty, config);
         firstOsnReceiver = OsnFactory.createReceiver(clientRpc, serverParty, config.getOsnConfig());
-        firstOsnReceiver.addLogLevel();
+        addSubPtos(firstOsnReceiver);
+        addSecureSubPtos(firstOsnReceiver);
         oprfSender = OprfFactory.createOprfSender(clientRpc, serverParty, config.getOprfConfig());
-        oprfSender.addLogLevel();
+        addSubPtos(oprfSender);
+        addSecureSubPtos(oprfSender);
         secondOsnSender = OsnFactory.createSender(clientRpc, serverParty, config.getOsnConfig());
-        secondOsnSender.addLogLevel();
+        addSubPtos(secondOsnSender);
+        addSecureSubPtos(secondOsnSender);
         cuckooHashBinType = config.getCuckooHashBinType();
         cuckooHashNum = CuckooHashBinFactory.getHashNum(cuckooHashBinType);
-    }
-
-    @Override
-    public void setTaskId(long taskId) {
-        super.setTaskId(taskId);
-        byte[] taskIdBytes = ByteBuffer.allocate(Long.BYTES).putLong(taskId).array();
-        firstOsnReceiver.setTaskId(taskIdPrf.getLong(1, taskIdBytes, Long.MAX_VALUE));
-        oprfSender.setTaskId(taskIdPrf.getLong(2, taskIdBytes, Long.MAX_VALUE));
-        secondOsnSender.setTaskId(taskIdPrf.getLong(3, taskIdBytes, Long.MAX_VALUE));
-    }
-
-    @Override
-    public void setParallel(boolean parallel) {
-        super.setParallel(parallel);
-        firstOsnReceiver.setParallel(parallel);
-        oprfSender.setParallel(parallel);
-        secondOsnSender.setParallel(parallel);
-    }
-
-    @Override
-    public void addLogLevel() {
-        super.addLogLevel();
-        firstOsnReceiver.addLogLevel();
-        oprfSender.addLogLevel();
-        secondOsnSender.addLogLevel();
     }
 
     @Override
@@ -166,7 +144,7 @@ public class Jsz22SfsPsuClient extends AbstractPsuClient {
         firstPi = firstPiList.stream().mapToInt(permutation -> permutation).toArray();
         // 设置布谷鸟哈希
         DataPacketHeader cuckooHashKeyHeader = new DataPacketHeader(
-            taskId, getPtoDesc().getPtoId(), Jsz22SfsPsuPtoDesc.PtoStep.SERVER_SEND_CUCKOO_HASH_KEYS.ordinal(), extraInfo,
+            encodeTaskId, getPtoDesc().getPtoId(), Jsz22SfsPsuPtoDesc.PtoStep.SERVER_SEND_CUCKOO_HASH_KEYS.ordinal(), extraInfo,
             otherParty().getPartyId(), ownParty().getPartyId()
         );
         List<byte[]> cuckooHashKeyPayload = rpc.receive(cuckooHashKeyHeader).getPayload();
@@ -201,7 +179,7 @@ public class Jsz22SfsPsuClient extends AbstractPsuClient {
         // For i ∈ [b], S yj ∈ Y_B[π(i)], R computes F(k, y_j ⊕ a′_i)
         List<byte[]> clientOprfPayload = generateClientOprfPayload();
         DataPacketHeader clientOprfHeader = new DataPacketHeader(
-            taskId, getPtoDesc().getPtoId(), Jsz22SfsPsuPtoDesc.PtoStep.CLIENT_SEND_OPRFS.ordinal(), extraInfo,
+            encodeTaskId, getPtoDesc().getPtoId(), Jsz22SfsPsuPtoDesc.PtoStep.CLIENT_SEND_OPRFS.ordinal(), extraInfo,
             ownParty().getPartyId(), otherParty().getPartyId()
         );
         rpc.send(DataPacket.fromByteArrayList(clientOprfHeader, clientOprfPayload));
@@ -226,7 +204,7 @@ public class Jsz22SfsPsuClient extends AbstractPsuClient {
 
         stopWatch.start();
         DataPacketHeader zsHeader = new DataPacketHeader(
-            taskId, getPtoDesc().getPtoId(), Jsz22SfsPsuPtoDesc.PtoStep.SERVER_SEND_ZS.ordinal(), extraInfo,
+            encodeTaskId, getPtoDesc().getPtoId(), Jsz22SfsPsuPtoDesc.PtoStep.SERVER_SEND_ZS.ordinal(), extraInfo,
             otherParty().getPartyId(), ownParty().getPartyId()
         );
         List<byte[]> zsPayload = rpc.receive(zsHeader).getPayload();

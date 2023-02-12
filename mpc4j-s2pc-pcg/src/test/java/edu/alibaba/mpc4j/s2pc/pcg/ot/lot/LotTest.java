@@ -150,7 +150,7 @@ public class LotTest {
     }
 
     private void testPto(LotSender sender, LotReceiver receiver, int inputBitLength, int num) {
-        long randomTaskId = Math.abs(SECURE_RANDOM.nextLong());
+        int randomTaskId = Math.abs(SECURE_RANDOM.nextInt());
         sender.setTaskId(randomTaskId);
         receiver.setTaskId(randomTaskId);
         try {

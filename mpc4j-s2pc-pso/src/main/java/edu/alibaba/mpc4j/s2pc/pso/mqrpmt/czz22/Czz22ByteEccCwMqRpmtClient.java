@@ -74,7 +74,7 @@ public class Czz22ByteEccCwMqRpmtClient extends AbstractMqRpmtClient {
         // 客户端计算并发送H(y)^β
         List<byte[]> hyBetaPayload = generateHyBetaPayload();
         DataPacketHeader hyBetaHeader = new DataPacketHeader(
-            taskId, getPtoDesc().getPtoId(), PtoStep.CLIENT_SEND_HY_BETA.ordinal(), extraInfo,
+            encodeTaskId, getPtoDesc().getPtoId(), PtoStep.CLIENT_SEND_HY_BETA.ordinal(), extraInfo,
             ownParty().getPartyId(), otherParty().getPartyId()
         );
         rpc.send(DataPacket.fromByteArrayList(hyBetaHeader, hyBetaPayload));
@@ -86,7 +86,7 @@ public class Czz22ByteEccCwMqRpmtClient extends AbstractMqRpmtClient {
         stopWatch.start();
         // 客户端接收H(x)^α
         DataPacketHeader hxAlphaHeader = new DataPacketHeader(
-            taskId, getPtoDesc().getPtoId(), PtoStep.SERVER_SEND_HX_ALPHA.ordinal(), extraInfo,
+            encodeTaskId, getPtoDesc().getPtoId(), PtoStep.SERVER_SEND_HX_ALPHA.ordinal(), extraInfo,
             otherParty().getPartyId(), ownParty().getPartyId()
         );
         List<byte[]> hxAlphaPayload = rpc.receive(hxAlphaHeader).getPayload();
@@ -94,7 +94,7 @@ public class Czz22ByteEccCwMqRpmtClient extends AbstractMqRpmtClient {
         ByteBuffer[] clientPeqtArray = handleHxAlphaPayload(hxAlphaPayload);
         // 客户端接收H(H(y)^βα)
         DataPacketHeader peqtHeader = new DataPacketHeader(
-            taskId, getPtoDesc().getPtoId(), PtoStep.CLIENT_SEND_HY_BETA_ALPHA.ordinal(), extraInfo,
+            encodeTaskId, getPtoDesc().getPtoId(), PtoStep.CLIENT_SEND_HY_BETA_ALPHA.ordinal(), extraInfo,
             otherParty().getPartyId(), ownParty().getPartyId()
         );
         List<byte[]> peqtPayload = rpc.receive(peqtHeader).getPayload();

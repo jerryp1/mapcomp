@@ -263,7 +263,7 @@ public class NcCotTest {
     }
 
     private void testPto(NcCotSender sender, NcCotReceiver receiver, int num, int round) {
-        long randomTaskId = Math.abs(SECURE_RANDOM.nextLong());
+        int randomTaskId = Math.abs(SECURE_RANDOM.nextInt());
         sender.setTaskId(randomTaskId);
         receiver.setTaskId(randomTaskId);
         try {
@@ -305,7 +305,7 @@ public class NcCotTest {
     public void testResetDelta() {
         NcCotSender sender = NcCotFactory.createSender(senderRpc, receiverRpc.ownParty(), config);
         NcCotReceiver receiver = NcCotFactory.createReceiver(receiverRpc, senderRpc.ownParty(), config);
-        long randomTaskId = Math.abs(SECURE_RANDOM.nextLong());
+        int randomTaskId = Math.abs(SECURE_RANDOM.nextInt());
         sender.setTaskId(randomTaskId);
         receiver.setTaskId(randomTaskId);
         try {

@@ -10,7 +10,6 @@ import edu.alibaba.mpc4j.s2pc.pcg.ot.cot.nc.NcCotSender;
 import edu.alibaba.mpc4j.s2pc.pcg.ot.cot.pre.PreCotFactory;
 import edu.alibaba.mpc4j.s2pc.pcg.ot.cot.pre.PreCotSender;
 
-import java.nio.ByteBuffer;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -40,32 +39,11 @@ public class CacheCotSender extends AbstractCotSender {
     public CacheCotSender(Rpc senderRpc, Party receiverParty, CacheCotConfig config) {
         super(CacheCotPtoDesc.getInstance(), senderRpc, receiverParty, config);
         nccotSender = NcCotFactory.createSender(senderRpc, receiverParty, config.getNcCotConfig());
-        nccotSender.addLogLevel();
+        addSubPtos(nccotSender);
+        addSecureSubPtos(nccotSender);
         preCotSender = PreCotFactory.createSender(senderRpc, receiverParty, config.getPreCotConfig());
-        preCotSender.addLogLevel();
-    }
-
-    @Override
-    public void setTaskId(long taskId) {
-        super.setTaskId(taskId);
-        // NCCOT协议和PCOT协议需要使用不同的taskID
-        byte[] taskIdBytes = ByteBuffer.allocate(Long.BYTES).putLong(taskId).array();
-        nccotSender.setTaskId(taskIdPrf.getLong(0, taskIdBytes, Long.MAX_VALUE));
-        preCotSender.setTaskId(taskIdPrf.getLong(1, taskIdBytes, Long.MAX_VALUE));
-    }
-
-    @Override
-    public void setParallel(boolean parallel) {
-        super.setParallel(parallel);
-        nccotSender.setParallel(parallel);
-        preCotSender.setParallel(parallel);
-    }
-
-    @Override
-    public void addLogLevel() {
-        super.addLogLevel();
-        nccotSender.addLogLevel();
-        preCotSender.addLogLevel();
+        addSubPtos(preCotSender);
+        addSecureSubPtos(preCotSender);
     }
 
     @Override

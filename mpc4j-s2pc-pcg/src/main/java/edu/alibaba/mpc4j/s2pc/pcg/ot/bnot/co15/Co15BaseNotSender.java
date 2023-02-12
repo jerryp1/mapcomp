@@ -71,7 +71,7 @@ public class Co15BaseNotSender extends AbstractBaseNotSender {
         stopWatch.start();
         List<byte[]> sPayload = generateSenderPayload();
         DataPacketHeader sDataPacketHeader = new DataPacketHeader(
-            taskId, ptoDesc.getPtoId(), Co15BaseNotPtoDesc.PtoStep.SENDER_SEND_S.ordinal(), extraInfo,
+            encodeTaskId, ptoDesc.getPtoId(), Co15BaseNotPtoDesc.PtoStep.SENDER_SEND_S.ordinal(), extraInfo,
             ownParty().getPartyId(), otherParty().getPartyId()
         );
         rpc.send(DataPacket.fromByteArrayList(sDataPacketHeader, sPayload));
@@ -82,7 +82,7 @@ public class Co15BaseNotSender extends AbstractBaseNotSender {
 
         stopWatch.start();
         DataPacketHeader rHeader = new DataPacketHeader(
-            taskId, ptoDesc.getPtoId(), Co15BaseNotPtoDesc.PtoStep.RECEIVER_SEND_R.ordinal(), extraInfo,
+            encodeTaskId, ptoDesc.getPtoId(), Co15BaseNotPtoDesc.PtoStep.RECEIVER_SEND_R.ordinal(), extraInfo,
             otherParty().getPartyId(), ownParty().getPartyId()
         );
         List<byte[]> rPayload = rpc.receive(rHeader).getPayload();

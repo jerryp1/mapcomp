@@ -70,37 +70,15 @@ public class Zcl22SkePsuServer extends AbstractPsuServer {
     public Zcl22SkePsuServer(Rpc serverRpc, Party clientParty, Zcl22SkePsuConfig config) {
         super(Zcl22SkePsuPtoDesc.getInstance(), serverRpc, clientParty, config);
         bcSender = BcFactory.createSender(serverRpc, clientParty, config.getBcConfig());
-        bcSender.addLogLevel();
+        addSubPtos(bcSender);
+        addSecureSubPtos(bcSender);
         oprpReceiver = OprpFactory.createReceiver(serverRpc, clientParty, config.getOprpConfig());
-        oprpReceiver.addLogLevel();
+        addSubPtos(oprpReceiver);
+        addSecureSubPtos(oprpReceiver);
         coreCotSender = CoreCotFactory.createSender(serverRpc, clientParty, config.getCoreCotConfig());
-        coreCotSender.addLogLevel();
+        addSubPtos(coreCotSender);
+        addSecureSubPtos(coreCotSender);
         gf2eOvdmType = config.getGf2eOvdmType();
-    }
-
-    @Override
-    public void setTaskId(long taskId) {
-        super.setTaskId(taskId);
-        byte[] taskIdBytes = ByteBuffer.allocate(Long.BYTES).putLong(taskId).array();
-        bcSender.setTaskId(taskIdPrf.getLong(0, taskIdBytes, Long.MAX_VALUE));
-        oprpReceiver.setTaskId(taskIdPrf.getLong(1, taskIdBytes, Long.MAX_VALUE));
-        coreCotSender.setTaskId(taskIdPrf.getLong(2, taskIdBytes, Long.MAX_VALUE));
-    }
-
-    @Override
-    public void setParallel(boolean parallel) {
-        super.setParallel(parallel);
-        bcSender.setParallel(parallel);
-        oprpReceiver.setParallel(parallel);
-        coreCotSender.setParallel(parallel);
-    }
-
-    @Override
-    public void addLogLevel() {
-        super.addLogLevel();
-        bcSender.addLogLevel();
-        oprpReceiver.addLogLevel();
-        coreCotSender.addLogLevel();
     }
 
     @Override
@@ -140,7 +118,7 @@ public class Zcl22SkePsuServer extends AbstractPsuServer {
             })
             .toArray(byte[][]::new);
         DataPacketHeader keysHeader = new DataPacketHeader(
-            taskId, getPtoDesc().getPtoId(), Zcl22SkePsuPtoDesc.PtoStep.SERVER_SEND_OVDM_KEYS.ordinal(), extraInfo,
+            encodeTaskId, getPtoDesc().getPtoId(), Zcl22SkePsuPtoDesc.PtoStep.SERVER_SEND_OVDM_KEYS.ordinal(), extraInfo,
             ownParty().getPartyId(), otherParty().getPartyId()
         );
         rpc.send(DataPacket.fromByteArrayList(keysHeader, keysPayload));
@@ -161,7 +139,7 @@ public class Zcl22SkePsuServer extends AbstractPsuServer {
 
         stopWatch.start();
         DataPacketHeader ovdmHeader = new DataPacketHeader(
-            taskId, getPtoDesc().getPtoId(), Zcl22SkePsuPtoDesc.PtoStep.CLIENT_SEND_OVDM.ordinal(), extraInfo,
+            encodeTaskId, getPtoDesc().getPtoId(), Zcl22SkePsuPtoDesc.PtoStep.CLIENT_SEND_OVDM.ordinal(), extraInfo,
             otherParty().getPartyId(), ownParty().getPartyId()
         );
         List<byte[]> ovdmPayload = rpc.receive(ovdmHeader).getPayload();
@@ -178,7 +156,7 @@ public class Zcl22SkePsuServer extends AbstractPsuServer {
         List<byte[]> peqtSharesPayload = new LinkedList<>();
         peqtSharesPayload.add(serverChoiceShares);
         DataPacketHeader peqtSharesHeader = new DataPacketHeader(
-            taskId, getPtoDesc().getPtoId(), Zcl22SkePsuPtoDesc.PtoStep.SERVER_SEND_PEQT_SHARES.ordinal(), extraInfo,
+            encodeTaskId, getPtoDesc().getPtoId(), Zcl22SkePsuPtoDesc.PtoStep.SERVER_SEND_PEQT_SHARES.ordinal(), extraInfo,
             ownParty().getPartyId(), otherParty().getPartyId()
         );
         rpc.send(DataPacket.fromByteArrayList(peqtSharesHeader, peqtSharesPayload));
@@ -201,7 +179,7 @@ public class Zcl22SkePsuServer extends AbstractPsuServer {
             })
             .collect(Collectors.toList());
         DataPacketHeader encHeader = new DataPacketHeader(
-            taskId, getPtoDesc().getPtoId(), Zcl22SkePsuPtoDesc.PtoStep.SERVER_SEND_ENC_ELEMENTS.ordinal(), extraInfo,
+            encodeTaskId, getPtoDesc().getPtoId(), Zcl22SkePsuPtoDesc.PtoStep.SERVER_SEND_ENC_ELEMENTS.ordinal(), extraInfo,
             ownParty().getPartyId(), otherParty().getPartyId()
         );
         rpc.send(DataPacket.fromByteArrayList(encHeader, encPayload));

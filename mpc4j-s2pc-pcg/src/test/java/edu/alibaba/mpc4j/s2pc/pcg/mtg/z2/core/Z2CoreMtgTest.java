@@ -136,7 +136,7 @@ public class Z2CoreMtgTest {
     }
 
     private void testPto(Z2CoreMtgParty sender, Z2CoreMtgParty receiver, int num) {
-        long randomTaskId = Math.abs(SECURE_RANDOM.nextLong());
+        int randomTaskId = Math.abs(SECURE_RANDOM.nextInt());
         sender.setTaskId(randomTaskId);
         receiver.setTaskId(randomTaskId);
         try {

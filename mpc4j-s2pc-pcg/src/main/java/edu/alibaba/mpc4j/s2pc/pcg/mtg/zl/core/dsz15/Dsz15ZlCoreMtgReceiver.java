@@ -18,7 +18,6 @@ import edu.alibaba.mpc4j.s2pc.pcg.mtg.zl.core.dsz15.Dsz15ZlCoreMtgPtoDesc.PtoSte
 import edu.alibaba.mpc4j.s2pc.pcg.ot.cot.*;
 
 import java.math.BigInteger;
-import java.nio.ByteBuffer;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
@@ -73,33 +72,12 @@ public class Dsz15ZlCoreMtgReceiver extends AbstractZlCoreMtgParty {
     public Dsz15ZlCoreMtgReceiver(Rpc receiverRpc, Party senderParty, Dsz15ZlCoreMtgConfig config) {
         super(Dsz15ZlCoreMtgPtoDesc.getInstance(), receiverRpc, senderParty, config);
         cotSender = CotFactory.createSender(receiverRpc, senderParty, config.getCotConfig());
-        cotSender.addLogLevel();
+        addSubPtos(cotSender);
+        addSecureSubPtos(cotSender);
         cotReceiver = CotFactory.createReceiver(receiverRpc, senderParty, config.getCotConfig());
-        cotReceiver.addLogLevel();
+        addSubPtos(cotReceiver);
+        addSecureSubPtos(cotReceiver);
         prg = PrgFactory.createInstance(envType, byteL);
-    }
-
-    @Override
-    public void setTaskId(long taskId) {
-        super.setTaskId(taskId);
-        // NCCOT协议和PCOT协议需要使用不同的taskID
-        byte[] taskIdBytes = ByteBuffer.allocate(Long.BYTES).putLong(taskId).array();
-        cotSender.setTaskId(taskIdPrf.getLong(0, taskIdBytes, Long.MAX_VALUE));
-        cotReceiver.setTaskId(taskIdPrf.getLong(1, taskIdBytes, Long.MAX_VALUE));
-    }
-
-    @Override
-    public void setParallel(boolean parallel) {
-        super.setParallel(parallel);
-        cotSender.setParallel(parallel);
-        cotReceiver.setParallel(parallel);
-    }
-
-    @Override
-    public void addLogLevel() {
-        super.addLogLevel();
-        cotSender.addLogLevel();
-        cotReceiver.addLogLevel();
     }
 
     @Override
@@ -138,7 +116,7 @@ public class Dsz15ZlCoreMtgReceiver extends AbstractZlCoreMtgParty {
         CotSenderOutput cotSenderOutput = cotSender.send(num * l);
         List<byte[]> receiverMessagesPayload = generateReceiverMessagesPayload(cotSenderOutput);
         DataPacketHeader receiverMessagesHeader = new DataPacketHeader(
-            taskId, getPtoDesc().getPtoId(), PtoStep.RECEIVER_SEND_MESSAGES.ordinal(), extraInfo,
+            encodeTaskId, getPtoDesc().getPtoId(), PtoStep.RECEIVER_SEND_MESSAGES.ordinal(), extraInfo,
             ownParty().getPartyId(), otherParty().getPartyId()
         );
         rpc.send(DataPacket.fromByteArrayList(receiverMessagesHeader, receiverMessagesPayload));
@@ -151,7 +129,7 @@ public class Dsz15ZlCoreMtgReceiver extends AbstractZlCoreMtgParty {
         // 第二轮OT协议
         CotReceiverOutput cotReceiverOutput = cotReceiver.receive(receiverChoices);
         DataPacketHeader senderMessagesHeader = new DataPacketHeader(
-            taskId, getPtoDesc().getPtoId(), PtoStep.SENDER_SEND_MESSAGES.ordinal(), extraInfo,
+            encodeTaskId, getPtoDesc().getPtoId(), PtoStep.SENDER_SEND_MESSAGES.ordinal(), extraInfo,
             otherParty().getPartyId(), ownParty().getPartyId()
         );
         List<byte[]> senderMessagesPayload = rpc.receive(senderMessagesHeader).getPayload();

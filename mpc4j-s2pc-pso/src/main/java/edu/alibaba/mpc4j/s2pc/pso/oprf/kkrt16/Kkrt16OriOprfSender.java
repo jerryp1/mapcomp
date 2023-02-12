@@ -63,25 +63,8 @@ public class Kkrt16OriOprfSender extends AbstractOprfSender {
     public Kkrt16OriOprfSender(Rpc senderRpc, Party receiverParty, Kkrt16OriOprfConfig config) {
         super(Kkrt16OriOprfPtoDesc.getInstance(), senderRpc, receiverParty, config);
         coreCotReceiver = CoreCotFactory.createReceiver(senderRpc, receiverParty, config.getCoreCotConfig());
-        coreCotReceiver.addLogLevel();
-    }
-
-    @Override
-    public void setTaskId(long taskId) {
-        super.setTaskId(taskId);
-        coreCotReceiver.setTaskId(taskId);
-    }
-
-    @Override
-    public void setParallel(boolean parallel) {
-        super.setParallel(parallel);
-        coreCotReceiver.setParallel(parallel);
-    }
-
-    @Override
-    public void addLogLevel() {
-        super.addLogLevel();
-        coreCotReceiver.addLogLevel();
+        addSubPtos(coreCotReceiver);
+        addSecureSubPtos(coreCotReceiver);
     }
 
     @Override
@@ -124,7 +107,7 @@ public class Kkrt16OriOprfSender extends AbstractOprfSender {
         stopWatch.start();
         // 初始化伪随机编码
         DataPacketHeader keyHeader = new DataPacketHeader(
-            taskId, getPtoDesc().getPtoId(), Kkrt16OriOprfPtoDesc.PtoStep.RECEIVER_SEND_KEY.ordinal(), extraInfo,
+            encodeTaskId, getPtoDesc().getPtoId(), Kkrt16OriOprfPtoDesc.PtoStep.RECEIVER_SEND_KEY.ordinal(), extraInfo,
             otherParty().getPartyId(), ownParty().getPartyId()
         );
         List<byte[]> keyPayload = rpc.receive(keyHeader).getPayload();
@@ -137,7 +120,7 @@ public class Kkrt16OriOprfSender extends AbstractOprfSender {
 
         stopWatch.start();
         DataPacketHeader matrixHeader = new DataPacketHeader(
-            taskId, getPtoDesc().getPtoId(), Kkrt16OriOprfPtoDesc.PtoStep.RECEIVER_SEND_MATRIX.ordinal(), extraInfo,
+            encodeTaskId, getPtoDesc().getPtoId(), Kkrt16OriOprfPtoDesc.PtoStep.RECEIVER_SEND_MATRIX.ordinal(), extraInfo,
             otherParty().getPartyId(), ownParty().getPartyId()
         );
         List<byte[]> matrixPayload = rpc.receive(matrixHeader).getPayload();

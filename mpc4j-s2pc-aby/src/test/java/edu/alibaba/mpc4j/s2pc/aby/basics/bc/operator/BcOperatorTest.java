@@ -155,7 +155,7 @@ public class BcOperatorTest {
     }
 
     private void testBinaryOperator(BcParty sender, BcParty receiver, BcOperator bcOperator, int bitNum) {
-        long randomTaskId = Math.abs(SECURE_RANDOM.nextLong());
+        int randomTaskId = Math.abs(SECURE_RANDOM.nextInt());
         sender.setTaskId(randomTaskId);
         receiver.setTaskId(randomTaskId);
         // generate x
@@ -210,7 +210,7 @@ public class BcOperatorTest {
 
     @SuppressWarnings("SameParameterValue")
     private void testUnaryOperator(BcParty sender, BcParty receiver, BcOperator bcOperator, int bitNum) {
-        long randomTaskId = Math.abs(SECURE_RANDOM.nextLong());
+        int randomTaskId = Math.abs(SECURE_RANDOM.nextInt());
         sender.setTaskId(randomTaskId);
         receiver.setTaskId(randomTaskId);
         // generate x

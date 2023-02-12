@@ -193,7 +193,7 @@ public class OpGbdtClsMultiSlaveTest {
                                                DataFrame leftSlaveDataFrame, OpBoostSlaveConfig leftSlaveConfig,
                                                DataFrame rightSlaveDataFrame, OpBoostSlaveConfig rightSlaveConfig
                                                ) {
-        long randomTaskId = Math.abs(OpBoostTestUtils.SECURE_RANDOM.nextLong());
+        int randomTaskId = Math.abs(OpBoostTestUtils.SECURE_RANDOM.nextInt());
         host.setTaskId(randomTaskId);
         leftSlave.setTaskId(randomTaskId);
         rightSlave.setTaskId(randomTaskId);

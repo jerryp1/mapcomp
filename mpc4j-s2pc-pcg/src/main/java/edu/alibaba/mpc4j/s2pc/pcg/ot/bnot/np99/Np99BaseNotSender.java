@@ -36,25 +36,8 @@ public class Np99BaseNotSender extends AbstractBaseNotSender {
     public Np99BaseNotSender(Rpc senderRpc, Party receiverParty, Np99BaseNotConfig config) {
         super(Np99BaseNotPtoDesc.getInstance(), senderRpc, receiverParty, config);
         baseOtSender = BaseOtFactory.createSender(senderRpc, receiverParty, config.getBaseOtConfig());
-        baseOtSender.addLogLevel();
-    }
-
-    @Override
-    public void setTaskId(long taskId) {
-        super.setTaskId(taskId);
-        baseOtSender.setTaskId(taskId);
-    }
-
-    @Override
-    public void setParallel(boolean parallel) {
-        super.setParallel(parallel);
-        baseOtSender.setParallel(parallel);
-    }
-
-    @Override
-    public void addLogLevel() {
-        super.addLogLevel();
-        baseOtSender.addLogLevel();
+        addSubPtos(baseOtSender);
+        addSecureSubPtos(baseOtSender);
     }
 
     @Override

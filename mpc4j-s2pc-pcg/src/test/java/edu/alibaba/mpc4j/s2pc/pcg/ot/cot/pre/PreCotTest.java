@@ -112,7 +112,7 @@ public class PreCotTest {
     }
 
     private void testPto(PreCotSender sender, PreCotReceiver receiver, int num) {
-        long randomTaskId = Math.abs(SECURE_RANDOM.nextLong());
+        int randomTaskId = Math.abs(SECURE_RANDOM.nextInt());
         sender.setTaskId(randomTaskId);
         receiver.setTaskId(randomTaskId);
         try {

@@ -227,7 +227,7 @@ public class PsuTest {
     }
 
     private void testPto(PsuServer server, PsuClient client, int serverSize, int clientSize, int elementByteLength) {
-        long randomTaskId = Math.abs(SECURE_RANDOM.nextLong());
+        int randomTaskId = Math.abs(SECURE_RANDOM.nextInt());
         server.setTaskId(randomTaskId);
         client.setTaskId(randomTaskId);
         try {

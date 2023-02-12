@@ -17,7 +17,6 @@ import edu.alibaba.mpc4j.s2pc.pcg.ot.cot.nc.NcCotFactory;
 import edu.alibaba.mpc4j.s2pc.pcg.ot.cot.nc.NcCotReceiver;
 import edu.alibaba.mpc4j.s2pc.pcg.ot.cot.nc.NcCotSender;
 
-import java.nio.ByteBuffer;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.IntStream;
 
@@ -56,31 +55,11 @@ public class Alsz13Z2CoreMtgSender extends AbstractZ2CoreMtgParty {
     public Alsz13Z2CoreMtgSender(Rpc senderRpc, Party receiverParty, Alsz13Z2CoreMtgConfig config) {
         super(Alsz13Z2CoreMtgPtoDesc.getInstance(), senderRpc, receiverParty, config);
         ncCotSender = NcCotFactory.createSender(senderRpc, receiverParty, config.getNcCotConfig());
-        ncCotSender.addLogLevel();
+        addSubPtos(ncCotSender);
+        addSecureSubPtos(ncCotSender);
         ncCotReceiver = NcCotFactory.createReceiver(senderRpc, receiverParty, config.getNcCotConfig());
-        ncCotReceiver.addLogLevel();
-    }
-
-    @Override
-    public void setTaskId(long taskId) {
-        super.setTaskId(taskId);
-        byte[] taskIdBytes = ByteBuffer.allocate(Long.BYTES).putLong(taskId).array();
-        ncCotSender.setTaskId(taskIdPrf.getLong(0, taskIdBytes, Long.MAX_VALUE));
-        ncCotReceiver.setTaskId(taskIdPrf.getLong(1, taskIdBytes, Long.MAX_VALUE));
-    }
-
-    @Override
-    public void setParallel(boolean parallel) {
-        super.setParallel(parallel);
-        ncCotSender.setParallel(parallel);
-        ncCotReceiver.setParallel(parallel);
-    }
-
-    @Override
-    public void addLogLevel() {
-        super.addLogLevel();
-        ncCotSender.addLogLevel();
-        ncCotReceiver.addLogLevel();
+        addSubPtos(ncCotReceiver);
+        addSecureSubPtos(ncCotReceiver);
     }
 
     @Override

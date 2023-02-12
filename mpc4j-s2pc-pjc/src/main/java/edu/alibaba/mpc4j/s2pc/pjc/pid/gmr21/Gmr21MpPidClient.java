@@ -64,36 +64,14 @@ public class Gmr21MpPidClient<T> extends AbstractPidParty<T> {
     public Gmr21MpPidClient(Rpc clientRpc, Party serverParty, Gmr21MpPidConfig config) {
         super(Gmr21MpPidPtoDesc.getInstance(), clientRpc, serverParty, config);
         mpOprfReceiver = OprfFactory.createMpOprfReceiver(clientRpc, serverParty, config.getMpOprfConfig());
-        mpOprfReceiver.addLogLevel();
+        addSubPtos(mpOprfReceiver);
+        addSecureSubPtos(mpOprfReceiver);
         mpOprfSender = OprfFactory.createMpOprfSender(clientRpc, serverParty, config.getMpOprfConfig());
-        mpOprfSender.addLogLevel();
+        addSubPtos(mpOprfSender);
+        addSecureSubPtos(mpOprfSender);
         psuClient = PsuFactory.createClient(clientRpc, serverParty, config.getPsuConfig());
-        psuClient.addLogLevel();
-    }
-
-    @Override
-    public void setTaskId(long taskId) {
-        super.setTaskId(taskId);
-        byte[] taskIdBytes = ByteBuffer.allocate(Long.BYTES).putLong(taskId).array();
-        mpOprfReceiver.setTaskId(taskIdPrf.getLong(0, taskIdBytes, Long.MAX_VALUE));
-        mpOprfSender.setTaskId(taskIdPrf.getLong(1, taskIdBytes, Long.MAX_VALUE));
-        psuClient.setTaskId(taskIdPrf.getLong(2, taskIdBytes, Long.MAX_VALUE));
-    }
-
-    @Override
-    public void setParallel(boolean parallel) {
-        super.setParallel(parallel);
-        mpOprfReceiver.setParallel(parallel);
-        mpOprfSender.setParallel(parallel);
-        psuClient.setParallel(parallel);
-    }
-
-    @Override
-    public void addLogLevel() {
-        super.addLogLevel();
-        mpOprfReceiver.addLogLevel();
-        mpOprfSender.addLogLevel();
-        psuClient.addLogLevel();
+        addSubPtos(psuClient);
+        addSecureSubPtos(psuClient);
     }
 
     @Override
@@ -156,7 +134,7 @@ public class Gmr21MpPidClient<T> extends AbstractPidParty<T> {
         // Bob sends union
         List<byte[]> unionPayload = pidSet.stream().map(ByteBuffer::array).collect(Collectors.toList());
         DataPacketHeader unionHeader = new DataPacketHeader(
-            taskId, getPtoDesc().getPtoId(), PtoStep.CLIENT_SEND_UNION.ordinal(), extraInfo,
+            encodeTaskId, getPtoDesc().getPtoId(), PtoStep.CLIENT_SEND_UNION.ordinal(), extraInfo,
             ownParty().getPartyId(), otherParty().getPartyId()
         );
         rpc.send(DataPacket.fromByteArrayList(unionHeader, unionPayload));

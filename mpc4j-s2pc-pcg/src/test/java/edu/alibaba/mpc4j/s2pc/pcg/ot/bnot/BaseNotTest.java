@@ -190,7 +190,7 @@ public class BaseNotTest {
     private void testPto(BaseNotSender sender, BaseNotReceiver receiver, int num, int maxChoice, boolean parallel) {
         sender.setParallel(parallel);
         receiver.setParallel(parallel);
-        long randomTaskId = Math.abs(SECURE_RANDOM.nextLong());
+        int randomTaskId = Math.abs(SECURE_RANDOM.nextInt());
         sender.setTaskId(randomTaskId);
         receiver.setTaskId(randomTaskId);
         try {

@@ -10,6 +10,7 @@ import edu.alibaba.mpc4j.common.tool.CommonConstants;
 import edu.alibaba.mpc4j.common.tool.galoisfield.zp64.Zp64;
 import edu.alibaba.mpc4j.common.tool.galoisfield.zp64.Zp64Factory;
 import edu.alibaba.mpc4j.s2pc.pcg.mtg.zp64.core.AbstractZp64CoreMtgParty;
+import edu.alibaba.mpc4j.s2pc.pcg.mtg.zp64.core.rss19.Rss19Zp64CoreMtgPtoDesc.PtoStep;
 import edu.alibaba.mpc4j.s2pc.pcg.mtg.zp64.Zp64Triple;
 
 import java.util.ArrayList;
@@ -63,7 +64,7 @@ public class Rss19Zp64CoreMtgReceiver extends AbstractZp64CoreMtgParty {
         // 接收密钥
         stopWatch.start();
         DataPacketHeader fheParamsHeader = new DataPacketHeader(
-            taskId, getPtoDesc().getPtoId(), Rss19Zp64CoreMtgPtoDesc.PtoStep.SENDER_SEND_ENCRYPTION_PARAMS.ordinal(), extraInfo,
+            encodeTaskId, getPtoDesc().getPtoId(), PtoStep.SENDER_SEND_ENCRYPTION_PARAMS.ordinal(), extraInfo,
             otherParty().getPartyId(), rpc.ownParty().getPartyId()
         );
         List<byte[]> fheParams = rpc.receive(fheParamsHeader).getPayload();
@@ -89,7 +90,7 @@ public class Rss19Zp64CoreMtgReceiver extends AbstractZp64CoreMtgParty {
         int bigRoundIndex = num / polyModulusDegree;
         int updateRound = (num + polyModulusDegree - 1) / polyModulusDegree;
         DataPacketHeader ciphertextHeader = new DataPacketHeader(
-            taskId, getPtoDesc().getPtoId(), Rss19Zp64CoreMtgPtoDesc.PtoStep.SENDER_SEND_CT_A_CT_B.ordinal(), extraInfo,
+            encodeTaskId, getPtoDesc().getPtoId(), PtoStep.SENDER_SEND_CT_A_CT_B.ordinal(), extraInfo,
             otherParty().getPartyId(), rpc.ownParty().getPartyId()
         );
         byte[][] ciphertextPayload = rpc.receive(ciphertextHeader).getPayload().toArray(new byte[0][]);
@@ -109,7 +110,7 @@ public class Rss19Zp64CoreMtgReceiver extends AbstractZp64CoreMtgParty {
             zp64TripleBuffer.merge(Zp64Triple.create(p, updateRoundNum, a1, b1, c1));
         }
         DataPacketHeader responseHeader = new DataPacketHeader(
-            taskId, getPtoDesc().getPtoId(), Rss19Zp64CoreMtgPtoDesc.PtoStep.RECEIVER_SEND_CT_D.ordinal(), extraInfo,
+            encodeTaskId, getPtoDesc().getPtoId(), PtoStep.RECEIVER_SEND_CT_D.ordinal(), extraInfo,
             rpc.ownParty().getPartyId(), otherParty().getPartyId()
         );
         rpc.send(DataPacket.fromByteArrayList(responseHeader, responsePayload));

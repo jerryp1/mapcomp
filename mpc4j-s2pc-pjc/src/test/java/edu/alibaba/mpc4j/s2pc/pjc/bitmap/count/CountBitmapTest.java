@@ -3,9 +3,6 @@ package edu.alibaba.mpc4j.s2pc.pjc.bitmap.count;
 import edu.alibaba.mpc4j.common.rpc.Rpc;
 import edu.alibaba.mpc4j.common.rpc.RpcManager;
 import edu.alibaba.mpc4j.common.rpc.impl.memory.MemoryRpcManager;
-import edu.alibaba.mpc4j.common.tool.EnvType;
-import edu.alibaba.mpc4j.common.tool.crypto.kdf.Kdf;
-import edu.alibaba.mpc4j.common.tool.crypto.kdf.KdfFactory;
 import edu.alibaba.mpc4j.s2pc.pjc.bitmap.BitmapConfig;
 import edu.alibaba.mpc4j.s2pc.pjc.bitmap.BitmapParty;
 import edu.alibaba.mpc4j.s2pc.pjc.bitmap.BitmapReceiver;
@@ -26,10 +23,10 @@ import java.util.Collection;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.IntStream;
 
-
 /**
- * Bitmap and测试类
- * @author Li Peng   
+ * Bitmap count test.
+ *
+ * @author Li Peng
  * @date 2022/11/24
  */
 @RunWith(Parameterized.class)
@@ -149,15 +146,8 @@ public class CountBitmapTest {
         testBitmap(sender, receiver, LARGE_NUM);
     }
 
-    @Test
-    public void testTriple() {
-        Kdf kdf = KdfFactory.createInstance(EnvType.STANDARD);
-        byte[] a0Key = kdf.deriveKey(new byte[100]);
-        System.out.println(123);
-    }
-
     private void testBitmap(BitmapParty sender, BitmapParty receiver, int maxNum) {
-        long randomTaskId = Math.abs(SECURE_RANDOM.nextLong());
+        int randomTaskId = Math.abs(SECURE_RANDOM.nextInt());
         sender.setTaskId(randomTaskId);
         receiver.setTaskId(randomTaskId);
 
@@ -192,7 +182,7 @@ public class CountBitmapTest {
             // 验证结果
             assertOutput(xPlain, yPlain, countResult);
             LOGGER.info("Sender sends {}B, Receiver sends {}B, time = {}ms",
-                    senderByteLength, receiverByteLength, time
+                senderByteLength, receiverByteLength, time
             );
             LOGGER.info("-----test {} end-----", sender.getPtoDesc().getPtoName());
         } catch (InterruptedException e) {

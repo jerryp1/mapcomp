@@ -182,7 +182,7 @@ public class BaseOtTest {
     }
 
     private void testPto(BaseOtSender sender, BaseOtReceiver receiver, int num) {
-        long randomTaskId = Math.abs(SECURE_RANDOM.nextLong());
+        int randomTaskId = Math.abs(SECURE_RANDOM.nextInt());
         sender.setTaskId(randomTaskId);
         receiver.setTaskId(randomTaskId);
         try {

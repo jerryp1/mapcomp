@@ -201,7 +201,7 @@ public class OsnTest {
     }
 
     private void testPto(OsnSender sender, OsnReceiver receiver, int n, int byteLength) {
-        long randomTaskId = Math.abs(SECURE_RANDOM.nextLong());
+        int randomTaskId = Math.abs(SECURE_RANDOM.nextInt());
         sender.setTaskId(randomTaskId);
         receiver.setTaskId(randomTaskId);
         try {

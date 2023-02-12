@@ -228,7 +228,7 @@ public class BspCotTest {
     }
 
     private void testPto(BspCotSender sender, BspCotReceiver receiver, int[] alphaArray, int num) {
-        long randomTaskId = Math.abs(SECURE_RANDOM.nextLong());
+        int randomTaskId = Math.abs(SECURE_RANDOM.nextInt());
         sender.setTaskId(randomTaskId);
         receiver.setTaskId(randomTaskId);
         try {
@@ -269,7 +269,7 @@ public class BspCotTest {
     public void testPrecompute() {
         BspCotSender sender = BspCotFactory.createSender(senderRpc, receiverRpc.ownParty(), config);
         BspCotReceiver receiver = BspCotFactory.createReceiver(receiverRpc, senderRpc.ownParty(), config);
-        long randomTaskId = Math.abs(SECURE_RANDOM.nextLong());
+        int randomTaskId = Math.abs(SECURE_RANDOM.nextInt());
         sender.setTaskId(randomTaskId);
         receiver.setTaskId(randomTaskId);
         int batchNum = DEFAULT_BATCH_NUM;
@@ -320,7 +320,7 @@ public class BspCotTest {
     public void testResetDelta() {
         BspCotSender sender = BspCotFactory.createSender(senderRpc, receiverRpc.ownParty(), config);
         BspCotReceiver receiver = BspCotFactory.createReceiver(receiverRpc, senderRpc.ownParty(), config);
-        long randomTaskId = Math.abs(SECURE_RANDOM.nextLong());
+        int randomTaskId = Math.abs(SECURE_RANDOM.nextInt());
         sender.setTaskId(randomTaskId);
         receiver.setTaskId(randomTaskId);
         int batchNum = DEFAULT_BATCH_NUM;

@@ -98,7 +98,7 @@ public class Bkms20ByteEccPidClient<T> extends AbstractPidParty<T> {
         // 生成置乱映射，计算并发送U_p
         List<byte[]> upPayload = generateUpPayload();
         DataPacketHeader upHeader = new DataPacketHeader(
-            taskId, getPtoDesc().getPtoId(), PtoStep.CLIENT_SEND_UP.ordinal(), extraInfo,
+            encodeTaskId, getPtoDesc().getPtoId(), PtoStep.CLIENT_SEND_UP.ordinal(), extraInfo,
             ownParty().getPartyId(), otherParty().getPartyId()
         );
         rpc.send(DataPacket.fromByteArrayList(upHeader, upPayload));
@@ -110,13 +110,13 @@ public class Bkms20ByteEccPidClient<T> extends AbstractPidParty<T> {
         stopWatch.start();
         // 接收U_c，根据U_c计算E_c和V_c，存储E_c，发送V_c
         DataPacketHeader ucHeader = new DataPacketHeader(
-            taskId, getPtoDesc().getPtoId(), PtoStep.SERVER_SEND_UC.ordinal(), extraInfo,
+            encodeTaskId, getPtoDesc().getPtoId(), PtoStep.SERVER_SEND_UC.ordinal(), extraInfo,
             otherParty().getPartyId(), ownParty().getPartyId()
         );
         List<byte[]> ucPayload = rpc.receive(ucHeader).getPayload();
         List<byte[]> vcPayload = handleUcPayload(ucPayload);
         DataPacketHeader vcHeader = new DataPacketHeader(
-            taskId, getPtoDesc().getPtoId(), PtoStep.CLIENT_SEND_VC.ordinal(), extraInfo,
+            encodeTaskId, getPtoDesc().getPtoId(), PtoStep.CLIENT_SEND_VC.ordinal(), extraInfo,
             ownParty().getPartyId(), otherParty().getPartyId()
         );
         rpc.send(DataPacket.fromByteArrayList(vcHeader, vcPayload));
@@ -128,7 +128,7 @@ public class Bkms20ByteEccPidClient<T> extends AbstractPidParty<T> {
         stopWatch.start();
         // 接收V_p，计算自己ID对应的PID
         DataPacketHeader vpHeader = new DataPacketHeader(
-            taskId, getPtoDesc().getPtoId(), PtoStep.SERVER_SEND_VP.ordinal(), extraInfo,
+            encodeTaskId, getPtoDesc().getPtoId(), PtoStep.SERVER_SEND_VP.ordinal(), extraInfo,
             otherParty().getPartyId(), ownParty().getPartyId()
         );
         List<byte[]> vpPayload = rpc.receive(vpHeader).getPayload();
@@ -136,7 +136,7 @@ public class Bkms20ByteEccPidClient<T> extends AbstractPidParty<T> {
         // 发送E_c
         List<byte[]> ecPayload = generateEcPayload();
         DataPacketHeader ecHeader = new DataPacketHeader(
-            taskId, getPtoDesc().getPtoId(), PtoStep.CLIENT_SEND_EC.ordinal(), extraInfo,
+            encodeTaskId, getPtoDesc().getPtoId(), PtoStep.CLIENT_SEND_EC.ordinal(), extraInfo,
             ownParty().getPartyId(), otherParty().getPartyId()
         );
         rpc.send(DataPacket.fromByteArrayList(ecHeader, ecPayload));
@@ -148,13 +148,13 @@ public class Bkms20ByteEccPidClient<T> extends AbstractPidParty<T> {
         stopWatch.start();
         // 接收S_p，计算并发送S_p'
         DataPacketHeader spHeader = new DataPacketHeader(
-            taskId, getPtoDesc().getPtoId(), PtoStep.SERVER_SEND_SP.ordinal(), extraInfo,
+            encodeTaskId, getPtoDesc().getPtoId(), PtoStep.SERVER_SEND_SP.ordinal(), extraInfo,
             otherParty().getPartyId(), ownParty().getPartyId()
         );
         List<byte[]> spPayload = rpc.receive(spHeader).getPayload();
         List<byte[]> sppPayload = handleSpPayload(spPayload);
         DataPacketHeader sppHeader = new DataPacketHeader(
-            taskId, getPtoDesc().getPtoId(), PtoStep.CLIENT_SEND_SPP.ordinal(), extraInfo,
+            encodeTaskId, getPtoDesc().getPtoId(), PtoStep.CLIENT_SEND_SPP.ordinal(), extraInfo,
             ownParty().getPartyId(), otherParty().getPartyId()
         );
         rpc.send(DataPacket.fromByteArrayList(sppHeader, sppPayload));
@@ -166,7 +166,7 @@ public class Bkms20ByteEccPidClient<T> extends AbstractPidParty<T> {
         stopWatch.start();
         // 接收S_c'，得到非自己ID对应的PID
         DataPacketHeader scpHeader = new DataPacketHeader(
-            taskId, getPtoDesc().getPtoId(), PtoStep.SERVER_SEND_SCP.ordinal(), extraInfo,
+            encodeTaskId, getPtoDesc().getPtoId(), PtoStep.SERVER_SEND_SCP.ordinal(), extraInfo,
             otherParty().getPartyId(), ownParty().getPartyId()
         );
         List<byte[]> scpPayload = rpc.receive(scpHeader).getPayload();

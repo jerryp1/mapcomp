@@ -70,7 +70,7 @@ public class Csw20BaseOtSender extends AbstractBaseOtSender {
 
         stopWatch.start();
         DataPacketHeader rChooseHeader = new DataPacketHeader(
-            taskId, ptoDesc.getPtoId(), PtoStep.RECEIVER_SEND_C.ordinal(), extraInfo,
+            encodeTaskId, ptoDesc.getPtoId(), PtoStep.RECEIVER_SEND_C.ordinal(), extraInfo,
             otherParty().getPartyId(), ownParty().getPartyId()
         );
         List<byte[]> rChoosePayload = rpc.receive(rChooseHeader).getPayload();
@@ -81,7 +81,7 @@ public class Csw20BaseOtSender extends AbstractBaseOtSender {
 
         stopWatch.start();
         DataPacketHeader sHeader = new DataPacketHeader(
-            taskId, ptoDesc.getPtoId(), PtoStep.SENDER_SEND_S.ordinal(), extraInfo,
+            encodeTaskId, ptoDesc.getPtoId(), PtoStep.SENDER_SEND_S.ordinal(), extraInfo,
             ownParty().getPartyId(), otherParty().getPartyId()
         );
         List<byte[]> sPayLoad = generateSenderPayload(rChoosePayload);
@@ -93,7 +93,7 @@ public class Csw20BaseOtSender extends AbstractBaseOtSender {
 
         stopWatch.start();
         DataPacketHeader rHeader = new DataPacketHeader(
-            taskId, ptoDesc.getPtoId(), PtoStep.RECEIVER_SEND_R.ordinal(), extraInfo,
+            encodeTaskId, ptoDesc.getPtoId(), PtoStep.RECEIVER_SEND_R.ordinal(), extraInfo,
             otherParty().getPartyId(), ownParty().getPartyId()
         );
         List<byte[]> rPayload = rpc.receive(rHeader).getPayload();
