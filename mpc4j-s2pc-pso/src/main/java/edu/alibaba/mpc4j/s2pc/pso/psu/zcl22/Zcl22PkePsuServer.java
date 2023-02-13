@@ -82,7 +82,6 @@ public class Zcl22PkePsuServer extends AbstractPsuServer {
         super(Zcl22PkePsuPtoDesc.getInstance(), serverRpc, clientParty, config);
         coreCotSender = CoreCotFactory.createSender(serverRpc, clientParty, config.getCoreCotConfig());
         addSubPtos(coreCotSender);
-        addSecureSubPtos(coreCotSender);
         eccOvdmType = config.getEccOvdmType();
         compressEncode = config.getCompressEncode();
         pipeSize = config.getPipeSize();
@@ -146,7 +145,6 @@ public class Zcl22PkePsuServer extends AbstractPsuServer {
         stopWatch.reset();
         info("{}{} Server Init Step 3/3 ({}ms)", ptoStepLogPrefix, getPtoDesc().getPtoName(), pkTime);
 
-        initialized = true;
         info("{}{} Server Init end", ptoEndLogPrefix, getPtoDesc().getPtoName());
     }
 

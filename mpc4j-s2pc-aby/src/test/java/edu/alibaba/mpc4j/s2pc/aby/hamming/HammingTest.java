@@ -78,14 +78,6 @@ public class HammingTest {
     }
 
     @Test
-    public void testPtoType() {
-        HammingParty sender = HammingFactory.createSender(senderRpc, receiverRpc.ownParty(), config);
-        HammingParty receiver = HammingFactory.createReceiver(receiverRpc, senderRpc.ownParty(), config);
-        Assert.assertEquals(config.getPtoType(), sender.getPtoType());
-        Assert.assertEquals(config.getPtoType(), receiver.getPtoType());
-    }
-
-    @Test
     public void test1Num() {
         HammingParty sender = HammingFactory.createSender(senderRpc, receiverRpc.ownParty(), config);
         HammingParty receiver = HammingFactory.createReceiver(receiverRpc, senderRpc.ownParty(), config);

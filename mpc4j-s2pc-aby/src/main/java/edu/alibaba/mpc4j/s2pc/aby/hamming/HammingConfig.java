@@ -1,6 +1,6 @@
 package edu.alibaba.mpc4j.s2pc.aby.hamming;
 
-import edu.alibaba.mpc4j.common.rpc.pto.SecurePtoConfig;
+import edu.alibaba.mpc4j.common.rpc.pto.MultiPartyPtoConfig;
 
 /**
  * 汉明距离协议配置项。
@@ -8,7 +8,7 @@ import edu.alibaba.mpc4j.common.rpc.pto.SecurePtoConfig;
  * @author Weiran Liu
  * @date 2022/11/22
  */
-public interface HammingConfig extends SecurePtoConfig {
+public interface HammingConfig extends MultiPartyPtoConfig {
     /**
      * 返回协议类型。
      *

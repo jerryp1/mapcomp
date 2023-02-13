@@ -64,7 +64,6 @@ public class Czz22ByteEccCwMqRpmtServer extends AbstractMqRpmtServer {
         stopWatch.reset();
         info("{}{} Server Init Step 1/1 ({}ms)", ptoStepLogPrefix, getPtoDesc().getPtoName(), initTime);
 
-        initialized = true;
         info("{}{} Server Init end", ptoEndLogPrefix, getPtoDesc().getPtoName());
     }
 

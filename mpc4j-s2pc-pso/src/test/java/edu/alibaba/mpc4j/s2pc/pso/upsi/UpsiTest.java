@@ -130,7 +130,7 @@ public class UpsiTest {
 
     public void testUpsi(Cmg21UpsiConfig config, UpsiParams upsiParams, boolean parallel) {
         int serverSize = upsiParams.expectServerSize();
-        int clientSize = upsiParams.maxClientSize();
+        int clientSize = upsiParams.maxClientElementSize();
         List<Set<String>> sets = PsoUtils.generateStringSets("ID", serverSize, clientSize);
         Set<String> serverElementSet = sets.get(0);
         Set<String> clientElementSet = sets.get(1);

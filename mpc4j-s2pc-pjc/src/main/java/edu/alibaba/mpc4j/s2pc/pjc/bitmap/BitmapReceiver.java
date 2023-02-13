@@ -19,7 +19,6 @@ import java.nio.ByteOrder;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.IntStream;
 
-import static edu.alibaba.mpc4j.s2pc.pjc.bitmap.BitmapPtoDesc.BitmapType;
 import static edu.alibaba.mpc4j.s2pc.pjc.bitmap.BitmapPtoDesc.getInstance;
 import static edu.alibaba.mpc4j.s2pc.pjc.bitmap.SecureBitmapContainer.CONTAINER_BYTE_SIZE;
 
@@ -43,10 +42,8 @@ public class BitmapReceiver extends AbstractBitmapParty {
         super(getInstance(), receiverRpc, senderParty, bitmapConfig);
         bcReceiver = BcFactory.createReceiver(receiverRpc, senderParty, bitmapConfig.getBcConfig());
         addSubPtos(bcReceiver);
-        addSecureSubPtos(bcReceiver);
         hammingReceiver = HammingFactory.createReceiver(receiverRpc, senderParty, bitmapConfig.getHammingConfig());
         addSubPtos(hammingReceiver);
-        addSecureSubPtos(hammingReceiver);
     }
 
     @Override
@@ -87,11 +84,6 @@ public class BitmapReceiver extends AbstractBitmapParty {
     }
 
     @Override
-    public BitmapType getPtoType() {
-        return BitmapType.BITMAP;
-    }
-
-    @Override
     public void init(int maxRoundNum, int updateNum) throws MpcAbortException {
         info("{}{} Recv. Init begin", ptoBeginLogPrefix, getPtoDesc().getPtoName());
 
@@ -103,7 +95,6 @@ public class BitmapReceiver extends AbstractBitmapParty {
         stopWatch.reset();
         info("{}{} Recv. Init Step 1/1 ({}ms)", ptoStepLogPrefix, getPtoDesc().getPtoName(), initTime);
 
-        initialized = true;
         info("{}{} Recv. Init end", ptoEndLogPrefix, getPtoDesc().getPtoName());
     }
 

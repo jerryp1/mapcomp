@@ -40,10 +40,8 @@ public class CacheCotSender extends AbstractCotSender {
         super(CacheCotPtoDesc.getInstance(), senderRpc, receiverParty, config);
         nccotSender = NcCotFactory.createSender(senderRpc, receiverParty, config.getNcCotConfig());
         addSubPtos(nccotSender);
-        addSecureSubPtos(nccotSender);
         preCotSender = PreCotFactory.createSender(senderRpc, receiverParty, config.getPreCotConfig());
         addSubPtos(preCotSender);
-        addSecureSubPtos(preCotSender);
     }
 
     @Override
@@ -70,7 +68,6 @@ public class CacheCotSender extends AbstractCotSender {
         stopWatch.reset();
         info("{}{} Send. Init Step 1/1 ({}ms)", ptoStepLogPrefix, getPtoDesc().getPtoName(), initTime);
 
-        initialized = true;
         info("{}{} Send. Init end", ptoEndLogPrefix, getPtoDesc().getPtoName());
     }
 

@@ -80,14 +80,6 @@ public class BcOperatorTest {
     }
 
     @Test
-    public void testPtoType() {
-        BcParty sender = BcFactory.createSender(senderRpc, receiverRpc.ownParty(), config);
-        BcParty receiver = BcFactory.createReceiver(receiverRpc, senderRpc.ownParty(), config);
-        Assert.assertEquals(config.getPtoType(), sender.getPtoType());
-        Assert.assertEquals(config.getPtoType(), receiver.getPtoType());
-    }
-
-    @Test
     public void test1BitNum() {
         BcParty sender = BcFactory.createSender(senderRpc, receiverRpc.ownParty(), config);
         BcParty receiver = BcFactory.createReceiver(receiverRpc, senderRpc.ownParty(), config);

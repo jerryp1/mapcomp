@@ -9,7 +9,6 @@ import edu.alibaba.mpc4j.common.rpc.MpcAbortException;
  * @date 2022/03/03
  */
 public interface MpOprfReceiver extends OprfReceiver {
-
     /**
      * 执行协议。
      *

@@ -51,11 +51,10 @@ public class Ra17MpOprfReceiver extends AbstractMpOprfReceiver {
     }
 
     @Override
-    public void init(int maxBatchSize) throws MpcAbortException {
-        setInitInput(maxBatchSize);
+    public void init(int maxBatchSize, int maxPrfNum) {
+        setInitInput(maxBatchSize, maxPrfNum);
         info("{}{} Recv. Init begin", ptoBeginLogPrefix, getPtoDesc().getPtoName());
 
-        initialized = true;
         info("{}{} Recv. Init end", ptoEndLogPrefix, getPtoDesc().getPtoName());
     }
 

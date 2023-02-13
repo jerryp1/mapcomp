@@ -54,7 +54,6 @@ public class Gmr21OsnReceiver extends AbstractOsnReceiver {
         super(Gmr21OsnPtoDesc.getInstance(), receiverRpc, senderParty, config);
         cotReceiver = CotFactory.createReceiver(receiverRpc, senderParty, config.getCotConfig());
         addSubPtos(cotReceiver);
-        addSecureSubPtos(cotReceiver);
     }
 
     @Override
@@ -69,7 +68,6 @@ public class Gmr21OsnReceiver extends AbstractOsnReceiver {
         stopWatch.reset();
         info("{}{} Recv. Step 1/1 ({}ms)", ptoStepLogPrefix, getPtoDesc().getPtoName(), cotInitTime);
 
-        initialized = true;
         info("{}{} Redv. Init end", ptoEndLogPrefix, getPtoDesc().getPtoName());
     }
 

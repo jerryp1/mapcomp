@@ -58,8 +58,8 @@ public class Cmg21UpsiParamsChecker {
             "polyModulusDegree / itemEncodedSlotSize";
         assert params.expectServerSize() > 0 : "ExpectServerSize must be greater than 0: " + params.expectServerSize();
         int maxItemSize = CuckooHashBinFactory.getMaxItemSize(params.getCuckooHashBinType(), params.getBinNum());
-        assert params.maxClientSize() > 0 && params.maxClientSize() <= maxItemSize
-            : "MaxClientElementSize must be in range (0, " + maxItemSize + "]: " + params.maxClientSize();
+        assert params.maxClientElementSize() > 0 && params.maxClientElementSize() <= maxItemSize
+            : "MaxClientElementSize must be in range (0, " + maxItemSize + "]: " + params.maxClientElementSize();
         int[][] parentPowers;
         if (params.getPsLowDegree() > 0) {
             Set<Integer> innerPowersSet = new HashSet<>();

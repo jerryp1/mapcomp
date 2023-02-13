@@ -103,14 +103,6 @@ public class CoreLotTest {
     }
 
     @Test
-    public void testPtoType() {
-        CoreLotSender sender = CoreLotFactory.createSender(senderRpc, receiverRpc.ownParty(), config);
-        CoreLotReceiver receiver = CoreLotFactory.createReceiver(receiverRpc, senderRpc.ownParty(), config);
-        Assert.assertEquals(config.getPtoType(), sender.getPtoType());
-        Assert.assertEquals(config.getPtoType(), receiver.getPtoType());
-    }
-
-    @Test
     public void test1() {
         CoreLotSender sender = CoreLotFactory.createSender(senderRpc, receiverRpc.ownParty(), config);
         CoreLotReceiver receiver = CoreLotFactory.createReceiver(receiverRpc, senderRpc.ownParty(), config);

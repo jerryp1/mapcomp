@@ -3,7 +3,8 @@ package edu.alibaba.mpc4j.s2pc.pcg.ot.lot.nc;
 import edu.alibaba.mpc4j.common.rpc.Party;
 import edu.alibaba.mpc4j.common.rpc.Rpc;
 import edu.alibaba.mpc4j.common.rpc.desc.PtoDesc;
-import edu.alibaba.mpc4j.common.rpc.pto.AbstractSecureTwoPartyPto;
+import edu.alibaba.mpc4j.common.rpc.pto.AbstractTwoPartyPto;
+import edu.alibaba.mpc4j.common.tool.MathPreconditions;
 import edu.alibaba.mpc4j.common.tool.utils.CommonUtils;
 
 /**
@@ -12,7 +13,7 @@ import edu.alibaba.mpc4j.common.tool.utils.CommonUtils;
  * @author Hanwen Feng
  * @date 2022/08/16
  */
-public abstract class AbstractNcLotSender extends AbstractSecureTwoPartyPto implements NcLotSender {
+public abstract class AbstractNcLotSender extends AbstractTwoPartyPto implements NcLotSender {
     /**
      * 配置项
      */
@@ -35,24 +36,17 @@ public abstract class AbstractNcLotSender extends AbstractSecureTwoPartyPto impl
         this.config = config;
     }
 
-    @Override
-    public NcLotFactory.NcLotType getPtoType() {
-        return config.getPtoType();
-    }
-
     protected void setInitInput(int inputBitLength, int num) {
-        assert inputBitLength > 0: "input bit length must be greater than 0: " + inputBitLength;
+        MathPreconditions.checkPositive("inputBitLength", inputBitLength);
         this.inputBitLength = inputBitLength;
         inputByteLength = CommonUtils.getByteLength(inputBitLength);
-        assert num > 0 && num <= config.maxAllowNum() : "num must be in range: (0, " + config.maxAllowNum() + "]: " + num;
+        MathPreconditions.checkPositiveInRangeClosed("num", num, config.maxAllowNum());
         this.num = num;
-        initialized = false;
+        initState();
     }
 
     protected void setPtoInput() {
-        if (!initialized) {
-            throw new IllegalStateException("Need init...");
-        }
+        checkReadyState();
         extraInfo++;
     }
 }

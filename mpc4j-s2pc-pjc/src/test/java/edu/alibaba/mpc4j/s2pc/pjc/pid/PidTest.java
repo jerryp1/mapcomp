@@ -121,14 +121,6 @@ public class PidTest {
     }
 
     @Test
-    public void testPtoType() {
-        PidParty<String> server = PidFactory.createServer(serverRpc, clientRpc.ownParty(), config);
-        PidParty<String> client = PidFactory.createClient(clientRpc, serverRpc.ownParty(), config);
-        Assert.assertEquals(config.getPtoType(), server.getPtoType());
-        Assert.assertEquals(config.getPtoType(), client.getPtoType());
-    }
-
-    @Test
     public void test2() {
         PidParty<String> server = PidFactory.createServer(serverRpc, clientRpc.ownParty(), config);
         PidParty<String> client = PidFactory.createClient(clientRpc, serverRpc.ownParty(), config);

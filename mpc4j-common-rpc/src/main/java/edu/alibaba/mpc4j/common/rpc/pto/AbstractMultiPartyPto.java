@@ -6,6 +6,7 @@ import edu.alibaba.mpc4j.common.rpc.PtoState;
 import edu.alibaba.mpc4j.common.rpc.Rpc;
 import edu.alibaba.mpc4j.common.rpc.desc.PtoDesc;
 import edu.alibaba.mpc4j.common.tool.CommonConstants;
+import edu.alibaba.mpc4j.common.tool.EnvType;
 import edu.alibaba.mpc4j.common.tool.MathPreconditions;
 import edu.alibaba.mpc4j.common.tool.crypto.prf.Prf;
 import edu.alibaba.mpc4j.common.tool.crypto.prf.PrfFactory;
@@ -13,6 +14,7 @@ import org.apache.commons.lang3.time.StopWatch;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.security.SecureRandom;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
@@ -101,17 +103,21 @@ public abstract class AbstractMultiPartyPto implements MultiPartyPto {
      * party state
      */
     protected PartyState partyState;
-
     /**
-     * 构建两方计算协议。虽然Rpc可以得到所有参与方信息，但实际协议有可能不会用到全部的参与方，且协议执行时会用到参与方的顺序。
-     * 为此，要通过{@code otherParties}指定其他参与方。
-     *
-     * @param ptoDesc      协议描述信息。
-     * @param rpc          通信接口。
-     * @param otherParties 其他参与方。
+     * environment
      */
-    protected AbstractMultiPartyPto(PtoDesc ptoDesc, Rpc rpc, Party... otherParties) {
-        // 验证其他参与方均在通信参与方之中
+    protected final EnvType envType;
+    /**
+     * secure random state
+     */
+    protected SecureRandom secureRandom;
+    /**
+     * parallel computing
+     */
+    protected boolean parallel;
+
+    protected AbstractMultiPartyPto(PtoDesc ptoDesc, MultiPartyPtoConfig config, Rpc rpc, Party... otherParties) {
+        // verify other parties are all valid.
         Set<Party> partySet = rpc.getPartySet();
         for (Party otherParty : otherParties) {
             assert partySet.contains(otherParty) : otherParty.toString() + " does not in the Party Set";
@@ -134,6 +140,9 @@ public abstract class AbstractMultiPartyPto implements MultiPartyPto {
         ptoEndLogPrefix = "↙";
         extraInfo = 0;
         partyState = PartyState.NON_INITIALIZED;
+        envType = config.getEnvType();
+        secureRandom = new SecureRandom();
+        parallel = false;
     }
 
     protected void addSubPtos(MultiPartyPto subPto) {
@@ -215,8 +224,41 @@ public abstract class AbstractMultiPartyPto implements MultiPartyPto {
     }
 
     @Override
+    public String getPtoName() {
+        return ptoDesc.getPtoName();
+    }
+
+    @Override
     public Party[] otherParties() {
         return otherParties;
+    }
+
+    @Override
+    public void setParallel(boolean parallel) {
+        this.parallel = parallel;
+        // set sub-protocols
+        for (MultiPartyPto subPto : subPtos) {
+            subPto.setParallel(parallel);
+        }
+    }
+
+    @Override
+    public void setSecureRandom(SecureRandom secureRandom) {
+        this.secureRandom = secureRandom;
+        // set sub-protocols
+        for (MultiPartyPto subPto : subPtos) {
+            subPto.setSecureRandom(secureRandom);
+        }
+    }
+
+    @Override
+    public boolean getParallel() {
+        return parallel;
+    }
+
+    @Override
+    public EnvType getEnvType() {
+        return envType;
     }
 
     @Override

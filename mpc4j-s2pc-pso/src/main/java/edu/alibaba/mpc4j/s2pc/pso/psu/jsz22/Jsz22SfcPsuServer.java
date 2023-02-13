@@ -95,13 +95,10 @@ public class Jsz22SfcPsuServer extends AbstractPsuServer {
         super(Jsz22SfcPsuPtoDesc.getInstance(), serverRpc, clientParty, config);
         osnReceiver = OsnFactory.createReceiver(serverRpc, clientParty, config.getOsnConfig());
         addSubPtos(osnReceiver);
-        addSecureSubPtos(osnReceiver);
         oprfSender = OprfFactory.createOprfSender(serverRpc, clientParty, config.getOprfConfig());
         addSubPtos(oprfSender);
-        addSecureSubPtos(oprfSender);
         coreCotSender = CoreCotFactory.createSender(serverRpc, clientParty, config.getCoreCotConfig());
         addSubPtos(coreCotSender);
-        addSecureSubPtos(coreCotSender);
         cuckooHashBinType = config.getCuckooHashBinType();
         cuckooHashNum = CuckooHashBinFactory.getHashNum(cuckooHashBinType);
     }
@@ -113,9 +110,11 @@ public class Jsz22SfcPsuServer extends AbstractPsuServer {
 
         stopWatch.start();
         int maxBinNum = CuckooHashBinFactory.getBinNum(cuckooHashBinType, maxClientElementSize);
+        // note that in PSU, we must use no-stash cuckoo hash
+        int maxPrfNum = CuckooHashBinFactory.getHashNum(cuckooHashBinType) * maxServerElementSize;
         // 初始化各个子协议
         osnReceiver.init(maxBinNum);
-        oprfSender.init(maxBinNum);
+        oprfSender.init(maxBinNum, maxPrfNum);
         byte[] delta = new byte[CommonConstants.BLOCK_BYTE_LENGTH];
         secureRandom.nextBytes(delta);
         coreCotSender.init(delta, maxServerElementSize);
@@ -124,7 +123,6 @@ public class Jsz22SfcPsuServer extends AbstractPsuServer {
         stopWatch.reset();
         info("{}{} Server Init Step 1/1 ({}ms)", ptoStepLogPrefix, getPtoDesc().getPtoName(), initTime);
 
-        initialized = true;
         info("{}{} Server Init end", ptoEndLogPrefix, getPtoDesc().getPtoName());
     }
 

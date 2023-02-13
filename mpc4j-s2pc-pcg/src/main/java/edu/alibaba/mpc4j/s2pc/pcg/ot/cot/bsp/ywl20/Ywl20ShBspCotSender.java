@@ -52,11 +52,9 @@ public class Ywl20ShBspCotSender extends AbstractBspCotSender {
         super(Ywl20ShBspCotPtoDesc.getInstance(), senderRpc, receiverParty, config);
         coreCotSender = CoreCotFactory.createSender(senderRpc, receiverParty, config.getCoreCotConfig());
         addSubPtos(coreCotSender);
-        addSecureSubPtos(coreCotSender);
         dpprfConfig = config.getDpprfConfig();
         dpprfSender = DpprfFactory.createSender(senderRpc, receiverParty, dpprfConfig);
         addSubPtos(dpprfSender);
-        addSecureSubPtos(dpprfSender);
     }
 
     @Override
@@ -73,7 +71,6 @@ public class Ywl20ShBspCotSender extends AbstractBspCotSender {
         stopWatch.reset();
         info("{}{} Send. Init Step 1/1 ({}ms)", ptoStepLogPrefix, getPtoDesc().getPtoName(), initTime);
 
-        initialized = true;
         info("{}{} Send. Init end", ptoBeginLogPrefix, getPtoDesc().getPtoName());
     }
 

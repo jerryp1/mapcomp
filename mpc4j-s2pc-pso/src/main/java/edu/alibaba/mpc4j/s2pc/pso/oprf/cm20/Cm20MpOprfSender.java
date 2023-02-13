@@ -60,24 +60,22 @@ public class Cm20MpOprfSender extends AbstractMpOprfSender {
         super(Cm20MpOprfPtoDesc.getInstance(), senderRpc, receiverParty, config);
         coreCotReceiver = CoreCotFactory.createReceiver(senderRpc, receiverParty, config.getCoreCotConfig());
         addSubPtos(coreCotReceiver);
-        addSecureSubPtos(coreCotReceiver);
     }
 
     @Override
-    public void init(int maxBatchSize) throws MpcAbortException {
-        setInitInput(maxBatchSize);
+    public void init(int maxBatchSize, int maxPrfNum) throws MpcAbortException {
+        setInitInput(maxBatchSize, maxPrfNum);
         info("{}{} Send. Init begin", ptoBeginLogPrefix, getPtoDesc().getPtoName());
 
         stopWatch.start();
         // 计算maxW，初始化COT协议
-        int maxW = Cm20MpOprfUtils.getW(maxBatchSize);
+        int maxW = Cm20MpOprfUtils.getW(Math.max(maxBatchSize, maxPrfNum));
         coreCotReceiver.init(maxW);
         stopWatch.stop();
         long initCotTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
         stopWatch.reset();
         info("{}{} Send. Init Step 1/1 ({}ms)", ptoStepLogPrefix, getPtoDesc().getPtoName(), initCotTime);
 
-        initialized = true;
         info("{}{} Send. Init end", ptoEndLogPrefix, getPtoDesc().getPtoName());
     }
 

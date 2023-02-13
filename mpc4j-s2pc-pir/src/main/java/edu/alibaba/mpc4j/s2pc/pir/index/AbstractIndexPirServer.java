@@ -3,7 +3,9 @@ package edu.alibaba.mpc4j.s2pc.pir.index;
 import edu.alibaba.mpc4j.common.rpc.Party;
 import edu.alibaba.mpc4j.common.rpc.Rpc;
 import edu.alibaba.mpc4j.common.rpc.desc.PtoDesc;
-import edu.alibaba.mpc4j.common.rpc.pto.AbstractSecureTwoPartyPto;
+import edu.alibaba.mpc4j.common.rpc.pto.AbstractTwoPartyPto;
+import edu.alibaba.mpc4j.common.tool.MathPreconditions;
+import edu.alibaba.mpc4j.s2pc.pir.index.fastpir.Ayaa21IndexPirPtoDesc;
 
 import java.nio.ByteBuffer;
 import java.util.*;
@@ -15,11 +17,7 @@ import java.util.stream.IntStream;
  * @author Liqiang Peng
  * @date 2022/8/24
  */
-public abstract class AbstractIndexPirServer extends AbstractSecureTwoPartyPto implements IndexPirServer {
-    /**
-     * 配置项
-     */
-    private final IndexPirConfig config;
+public abstract class AbstractIndexPirServer extends AbstractTwoPartyPto implements IndexPirServer {
     /**
      * 服务端元素字节数组
      */
@@ -35,25 +33,19 @@ public abstract class AbstractIndexPirServer extends AbstractSecureTwoPartyPto i
 
     protected AbstractIndexPirServer(PtoDesc ptoDesc, Rpc serverRpc, Party clientParty, IndexPirConfig config) {
         super(ptoDesc, serverRpc, clientParty, config);
-        this.config = config;
-    }
-
-    @Override
-    public IndexPirFactory.IndexPirType getPtoType() {
-        return config.getProType();
     }
 
     protected void setInitInput(ArrayList<ByteBuffer> elementArrayList, int elementByteLength, int binMaxByteLength,
                                 String protocolName) {
-        assert elementByteLength > 0 : "element byte length must be greater than 0: " + elementByteLength;
+        MathPreconditions.checkPositive("elementByteLength", elementByteLength);
         this.elementByteLength = elementByteLength;
-        assert elementArrayList.size() > 0 : "num must be greater than 0";
+        MathPreconditions.checkPositive("num", elementArrayList.size());
         num = elementArrayList.size();
         IntStream.range(0, num).forEach(index -> {
             byte[] element = elementArrayList.get(index).array();
-            assert element.length == elementByteLength :
-                "element byte length must be " + elementByteLength + ": " + element.length;
-            assert !protocolName.equals(IndexPirFactory.IndexPirType.FAST_PIR.name()) || elementByteLength % 2 == 0;
+            MathPreconditions.checkEqual("element.length", "elementByteLength", element.length, elementByteLength);
+            //TODO @庚序 remove here. A candidate solution is to put elementByteLength into the IndexPirParams
+            assert !protocolName.equals(Ayaa21IndexPirPtoDesc.getInstance().getPtoName()) || elementByteLength % 2 == 0;
         });
         // 分块数量
         int binNum = (elementByteLength + binMaxByteLength - 1) / binMaxByteLength;
@@ -67,14 +59,11 @@ public abstract class AbstractIndexPirServer extends AbstractSecureTwoPartyPto i
             }
             elementByteArray.add(byteArray);
         }
-        extraInfo++;
-        initialized = false;
+        initState();
     }
 
     protected void setPtoInput() {
-        if (!initialized) {
-            throw new IllegalStateException("Need init...");
-        }
+        checkReadyState();
         extraInfo++;
     }
 

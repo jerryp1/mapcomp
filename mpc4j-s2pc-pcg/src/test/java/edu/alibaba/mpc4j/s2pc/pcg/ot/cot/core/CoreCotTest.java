@@ -91,14 +91,6 @@ public class CoreCotTest {
     }
 
     @Test
-    public void testPtoType() {
-        CoreCotSender sender = CoreCotFactory.createSender(senderRpc, receiverRpc.ownParty(), config);
-        CoreCotReceiver receiver = CoreCotFactory.createReceiver(receiverRpc, senderRpc.ownParty(), config);
-        Assert.assertEquals(config.getPtoType(), sender.getPtoType());
-        Assert.assertEquals(config.getPtoType(), receiver.getPtoType());
-    }
-
-    @Test
     public void test1Num() {
         CoreCotSender sender = CoreCotFactory.createSender(senderRpc, receiverRpc.ownParty(), config);
         CoreCotReceiver receiver = CoreCotFactory.createReceiver(receiverRpc, senderRpc.ownParty(), config);

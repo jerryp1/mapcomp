@@ -78,7 +78,7 @@ public abstract class AbstractOpBoostHost extends AbstractMultiPartyPto {
     protected Map<Party, Map<String, Map<Integer, Double>>> slavesSplitValueMap;
 
     protected AbstractOpBoostHost(Rpc hostRpc, Party... slaveParties) {
-        super(OpBoostPtoDesc.getInstance(), hostRpc, slaveParties);
+        super(OpBoostPtoDesc.getInstance(), new OpBoostPtoConfig(), hostRpc, slaveParties);
     }
 
     /**

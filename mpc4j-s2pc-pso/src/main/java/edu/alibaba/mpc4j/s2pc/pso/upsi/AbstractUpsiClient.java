@@ -1,10 +1,12 @@
 package edu.alibaba.mpc4j.s2pc.pso.upsi;
 
+import com.google.common.base.Preconditions;
 import edu.alibaba.mpc4j.common.rpc.Party;
 import edu.alibaba.mpc4j.common.rpc.Rpc;
 import edu.alibaba.mpc4j.common.rpc.desc.PtoDesc;
-import edu.alibaba.mpc4j.common.rpc.pto.AbstractSecureTwoPartyPto;
+import edu.alibaba.mpc4j.common.rpc.pto.AbstractTwoPartyPto;
 import edu.alibaba.mpc4j.common.tool.CommonConstants;
+import edu.alibaba.mpc4j.common.tool.MathPreconditions;
 import edu.alibaba.mpc4j.common.tool.utils.ObjectUtils;
 
 import java.nio.ByteBuffer;
@@ -17,11 +19,7 @@ import java.util.stream.Collectors;
  * @author Liqiang Peng
  * @date 2022/6/13
  */
-public abstract class AbstractUpsiClient<T> extends AbstractSecureTwoPartyPto implements UpsiClient<T> {
-    /**
-     * 配置项
-     */
-    private final UpsiConfig config;
+public abstract class AbstractUpsiClient<T> extends AbstractTwoPartyPto implements UpsiClient<T> {
     /**
      * 客户端最大元素数量
      */
@@ -45,41 +43,30 @@ public abstract class AbstractUpsiClient<T> extends AbstractSecureTwoPartyPto im
 
     protected AbstractUpsiClient(PtoDesc ptoDesc, Rpc clientRpc, Party serverParty, UpsiConfig config) {
         super(ptoDesc, clientRpc, serverParty, config);
-        this.config = config;
-    }
-
-    @Override
-    public UpsiFactory.UpsiType getPtoType() {
-        return config.getPtoType();
     }
 
     protected void setInitInput(UpsiParams upsiParams) {
-        assert upsiParams.maxClientSize() >= 1;
-        maxClientElementSize = upsiParams.maxClientSize();
-        extraInfo++;
-        initialized = false;
+        MathPreconditions.checkPositive("maxClientElementSize", upsiParams.maxClientElementSize());
+        maxClientElementSize = upsiParams.maxClientElementSize();
+        initState();
     }
 
     protected void setPtoInput(Set<T> clientElementSet) {
-        if (!initialized) {
-            throw new IllegalStateException("Need init...");
-        }
+        checkReadyState();
         // 设置特殊空元素
         byte[] botElementByteArray = new byte[CommonConstants.STATS_BYTE_LENGTH];
         Arrays.fill(botElementByteArray, (byte)0xFF);
         botElementByteBuffer = ByteBuffer.wrap(botElementByteArray);
-        assert clientElementSet.size() >= 1 && clientElementSet.size() <= maxClientElementSize;
-        this.clientElementArrayList = clientElementSet.stream()
+        MathPreconditions.checkPositiveInRangeClosed("clientElementSize", clientElementSet.size(), maxClientElementSize);
+        clientElementArrayList = clientElementSet.stream()
             .map(ObjectUtils::objectToByteArray)
             .map(ByteBuffer::wrap)
-            .peek(clientElement -> {
-                assert !clientElement.equals(botElementByteBuffer) : "input equals ⊥";
-            })
+            .peek(yi -> Preconditions.checkArgument(!yi.equals(botElementByteBuffer), "xi must not equal ⊥"))
             .collect(Collectors.toCollection(ArrayList::new));
         clientElementSize = clientElementSet.size();
-        this.byteArrayObjectMap = new HashMap<>(clientElementSize);
+        byteArrayObjectMap = new HashMap<>(clientElementSize);
         clientElementSet.forEach(clientElement ->
-            this.byteArrayObjectMap.put(ByteBuffer.wrap(ObjectUtils.objectToByteArray(clientElement)), clientElement)
+            byteArrayObjectMap.put(ByteBuffer.wrap(ObjectUtils.objectToByteArray(clientElement)), clientElement)
         );
         extraInfo++;
     }

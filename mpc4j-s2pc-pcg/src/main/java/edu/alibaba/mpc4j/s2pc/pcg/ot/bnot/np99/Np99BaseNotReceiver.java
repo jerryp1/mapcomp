@@ -37,7 +37,6 @@ public class Np99BaseNotReceiver extends AbstractBaseNotReceiver {
         super(Np99BaseNotPtoDesc.getInstance(), receiverRpc, senderParty, config);
         baseOtReceiver = BaseOtFactory.createReceiver(receiverRpc, senderParty, config.getBaseOtConfig());
         addSubPtos(baseOtReceiver);
-        addSecureSubPtos(baseOtReceiver);
     }
 
     @Override
@@ -53,7 +52,6 @@ public class Np99BaseNotReceiver extends AbstractBaseNotReceiver {
         stopWatch.reset();
         info("{}{} Recv. Step 1/1 ({}ms)", ptoStepLogPrefix, getPtoDesc().getPtoName(), initTime);
 
-        initialized = true;
         info("{}{} Recv. Init end", ptoEndLogPrefix, getPtoDesc().getPtoName());
     }
 

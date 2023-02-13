@@ -1,7 +1,6 @@
 package edu.alibaba.mpc4j.s2pc.pcg.ot.lot.nc;
 
 import edu.alibaba.mpc4j.common.rpc.MpcAbortException;
-import edu.alibaba.mpc4j.common.rpc.pto.SecurePto;
 import edu.alibaba.mpc4j.common.rpc.pto.TwoPartyPto;
 import edu.alibaba.mpc4j.s2pc.pcg.ot.lot.LotSenderOutput;
 
@@ -11,15 +10,7 @@ import edu.alibaba.mpc4j.s2pc.pcg.ot.lot.LotSenderOutput;
  * @author Hanwen Feng
  * @date 2022/08/16
  */
-public interface NcLotSender extends TwoPartyPto, SecurePto {
-    /**
-     * 返回NC-2^l选1-OT协议类型。
-     *
-     * @return NC-2^l选1-OT协议类型。
-     */
-    @Override
-    NcLotFactory.NcLotType getPtoType();
-
+public interface NcLotSender extends TwoPartyPto {
     /**
      * 初始化协议。
      *

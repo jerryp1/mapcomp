@@ -57,7 +57,6 @@ public class Mr19KyberBaseNotReceiver extends AbstractBaseNotReceiver {
         setInitInput(maxChoice);
         info("{}{} Recv. Init begin", ptoBeginLogPrefix, getPtoDesc().getPtoName());
 
-        initialized = true;
         info("{}{} Recv. Init end", ptoEndLogPrefix, getPtoDesc().getPtoName());
     }
 

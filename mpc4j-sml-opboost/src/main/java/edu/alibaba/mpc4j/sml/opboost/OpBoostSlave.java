@@ -54,7 +54,7 @@ public class OpBoostSlave extends AbstractMultiPartyPto {
     private Map<String, Map<Integer, Double>> slaveSplitValueMap;
 
     public OpBoostSlave(Rpc slaveRpc, Party hostParty) {
-        super(OpBoostPtoDesc.getInstance(), slaveRpc, hostParty);
+        super(OpBoostPtoDesc.getInstance(), new OpBoostPtoConfig(), slaveRpc, hostParty);
     }
 
     /**

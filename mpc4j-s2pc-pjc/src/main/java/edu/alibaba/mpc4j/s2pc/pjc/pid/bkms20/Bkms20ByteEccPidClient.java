@@ -70,8 +70,8 @@ public class Bkms20ByteEccPidClient<T> extends AbstractPidParty<T> {
     }
 
     @Override
-    public void init(int maxClientSetSize, int maxServerSetSize) throws MpcAbortException {
-        setInitInput(maxClientSetSize, maxServerSetSize);
+    public void init(int maxOwnElementSetSize, int maxOtherElementSetSize) throws MpcAbortException {
+        setInitInput(maxOwnElementSetSize, maxOtherElementSetSize);
         info("{}{} Client Init begin", ptoBeginLogPrefix, getPtoDesc().getPtoName());
 
         stopWatch.start();
@@ -83,13 +83,12 @@ public class Bkms20ByteEccPidClient<T> extends AbstractPidParty<T> {
         stopWatch.reset();
         info("{}{} Client Init Step 1/1 ({}ms)", ptoStepLogPrefix, getPtoDesc().getPtoName(), initTime);
 
-        initialized = true;
         info("{}{} Client Init end", ptoEndLogPrefix, getPtoDesc().getPtoName());
     }
 
     @Override
-    public PidPartyOutput<T> pid(Set<T> clientElementSet, int serverSetSize) throws MpcAbortException {
-        setPtoInput(clientElementSet, serverSetSize);
+    public PidPartyOutput<T> pid(Set<T> ownElementSet, int otherElementSetSize) throws MpcAbortException {
+        setPtoInput(ownElementSet, otherElementSetSize);
         info("{}{} Client begin", ptoBeginLogPrefix, getPtoDesc().getPtoName());
 
         stopWatch.start();
@@ -189,17 +188,17 @@ public class Bkms20ByteEccPidClient<T> extends AbstractPidParty<T> {
             .map(pi -> byteMulEcc.mul(pi, kp))
             .toArray(byte[][]::new);
         // Randomly shuffle the elements in U_p using a permutation π_p
-        ArrayList<Integer> shuffleMap = IntStream.range(0, ownSetSize)
+        ArrayList<Integer> shuffleMap = IntStream.range(0, ownElementSetSize)
             .boxed()
             .collect(Collectors.toCollection(ArrayList::new));
         Collections.shuffle(shuffleMap, secureRandom);
-        byte[][] shuffleUp = new byte[ownSetSize][];
+        byte[][] shuffleUp = new byte[ownElementSetSize][];
         // For example, shuffleMap = [2, 0, 1, 3], input = [a_0, a_1, a_2, a_3], output = [a_2, a_0, a_1. a_3]
-        for (int i = 0; i < ownSetSize; i++) {
+        for (int i = 0; i < ownElementSetSize; i++) {
             shuffleUp[i] = up[shuffleMap.get(i)];
         }
         // Given shuffleMap = [2, 0, 1, 3], reShuffleMap = [2 -> 0, 0 -> 1, 1 -> 2, 3 -> 3]
-        reShuffleMap = IntStream.range(0, otherSetSize)
+        reShuffleMap = IntStream.range(0, otherElementSetSize)
             .boxed()
             .collect(Collectors.toMap(shuffleMap::get, Function.identity()));
         // send to P
@@ -207,7 +206,7 @@ public class Bkms20ByteEccPidClient<T> extends AbstractPidParty<T> {
     }
 
     private List<byte[]> handleUcPayload(List<byte[]> ucPayload) throws MpcAbortException {
-        MpcAbortPreconditions.checkArgument(ucPayload.size() == otherSetSize);
+        MpcAbortPreconditions.checkArgument(ucPayload.size() == otherElementSetSize);
         // For each u_c^i ∈ U_c, Compute e_c^i = (u_c^i)^{k_p}
         Stream<byte[]> ucStream = ucPayload.stream();
         ucStream = parallel ? ucStream.parallel() : ucStream;
@@ -228,11 +227,11 @@ public class Bkms20ByteEccPidClient<T> extends AbstractPidParty<T> {
     }
 
     private void handleVpPayload(List<byte[]> vpPayload) throws MpcAbortException {
-        MpcAbortPreconditions.checkArgument(vpPayload.size() == ownSetSize);
+        MpcAbortPreconditions.checkArgument(vpPayload.size() == ownElementSetSize);
         // Shuffle back the elements of V_p using π^{−1}_p.
         byte[][] shuffleVp = vpPayload.toArray(new byte[0][]);
-        byte[][] vp = new byte[ownSetSize][];
-        for (int i = 0; i < ownSetSize; i++) {
+        byte[][] vp = new byte[ownElementSetSize][];
+        for (int i = 0; i < ownElementSetSize; i++) {
             vp[i] = shuffleVp[reShuffleMap.get(i)];
         }
         reShuffleMap = null;
@@ -244,7 +243,7 @@ public class Bkms20ByteEccPidClient<T> extends AbstractPidParty<T> {
             .map(pidMap::digestToBytes)
             .map(ByteBuffer::wrap)
             .toArray(ByteBuffer[]::new);
-        clientPidMap = IntStream.range(0, ownSetSize)
+        clientPidMap = IntStream.range(0, ownElementSetSize)
             .boxed()
             .collect(Collectors.toMap(index -> wp[index], index -> ownElementArrayList.get(index)));
         clientPidSet = Arrays.stream(wp).collect(Collectors.toSet());
@@ -262,7 +261,7 @@ public class Bkms20ByteEccPidClient<T> extends AbstractPidParty<T> {
 
     private List<byte[]> handleSpPayload(List<byte[]> spPayload) throws MpcAbortException {
         MpcAbortPreconditions.checkArgument(
-            spPayload.size() <= otherSetSize && spPayload.size() <= ownSetSize
+            spPayload.size() <= otherElementSetSize && spPayload.size() <= ownElementSetSize
         );
         // For each s_p^i ∈ S_p, s_p^i' = (s_p^i)^{r_p}
         Stream<byte[]> spStream = spPayload.stream();
@@ -274,7 +273,7 @@ public class Bkms20ByteEccPidClient<T> extends AbstractPidParty<T> {
 
     private void handleScpPayload(List<byte[]> scpPayload) throws MpcAbortException {
         MpcAbortPreconditions.checkArgument(
-            scpPayload.size() <= otherSetSize && scpPayload.size() <= ownSetSize
+            scpPayload.size() <= otherElementSetSize && scpPayload.size() <= ownElementSetSize
         );
         // For every s_c^i ∈ S_c', let s_c^i'' = s_c^i^{r_p} and M_p[(s_p^i)^{r_p}] = ⊥
         Stream<byte[]> scpStream = scpPayload.stream();

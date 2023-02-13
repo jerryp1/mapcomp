@@ -26,7 +26,6 @@ public class DirectCotSender extends AbstractCotSender {
         super(DirectCotPtoDesc.getInstance(), senderRpc, receiverParty, config);
         coreCotSender = CoreCotFactory.createSender(senderRpc, receiverParty, config.getCoreCotConfig());
         addSubPtos(coreCotSender);
-        addSecureSubPtos(coreCotSender);
     }
 
     @Override
@@ -41,7 +40,6 @@ public class DirectCotSender extends AbstractCotSender {
         stopWatch.reset();
         info("{}{} Send. Init Step 1/1 ({}ms)", ptoStepLogPrefix, getPtoDesc().getPtoName(), initTime);
 
-        initialized = true;
         info("{}{} Send. Init end", ptoEndLogPrefix, getPtoDesc().getPtoName());
     }
 

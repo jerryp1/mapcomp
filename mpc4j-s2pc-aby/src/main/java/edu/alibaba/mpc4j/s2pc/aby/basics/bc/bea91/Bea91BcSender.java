@@ -36,7 +36,6 @@ public class Bea91BcSender extends AbstractBcParty {
         super(Bea91BcPtoDesc.getInstance(), senderRpc, receiverParty, config);
         z2MtgSender = Z2MtgFactory.createSender(senderRpc, receiverParty, config.getZ2MtgConfig());
         addSubPtos(z2MtgSender);
-        addSecureSubPtos(z2MtgSender);
     }
 
     @Override
@@ -51,7 +50,6 @@ public class Bea91BcSender extends AbstractBcParty {
         stopWatch.reset();
         info("{}{} Send. Init Step 1/1 ({}ms)", ptoStepLogPrefix, getPtoDesc().getPtoName(), initTime);
 
-        initialized = true;
         info("{}{} Send. Init end", ptoEndLogPrefix, getPtoDesc().getPtoName());
     }
 

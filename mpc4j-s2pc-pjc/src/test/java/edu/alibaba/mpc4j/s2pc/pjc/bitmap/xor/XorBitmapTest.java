@@ -83,14 +83,6 @@ public class XorBitmapTest {
     }
 
     @Test
-    public void testPtoType() {
-        BitmapParty sender = new BitmapSender(senderRpc, receiverRpc.ownParty(), config);
-        BitmapParty receiver = new BitmapReceiver(receiverRpc, senderRpc.ownParty(), config);
-        Assert.assertEquals(config.getPtoType(), sender.getPtoType());
-        Assert.assertEquals(config.getPtoType(), receiver.getPtoType());
-    }
-
-    @Test
     public void test1() {
         BitmapParty sender = new BitmapSender(senderRpc, receiverRpc.ownParty(), config);
         BitmapParty receiver = new BitmapReceiver(receiverRpc, senderRpc.ownParty(), config);

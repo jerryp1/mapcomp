@@ -1,7 +1,6 @@
 package edu.alibaba.mpc4j.s2pc.pso.oprp;
 
 import edu.alibaba.mpc4j.common.rpc.MpcAbortException;
-import edu.alibaba.mpc4j.common.rpc.pto.SecurePto;
 import edu.alibaba.mpc4j.common.rpc.pto.TwoPartyPto;
 import edu.alibaba.mpc4j.common.tool.crypto.prp.PrpFactory.PrpType;
 
@@ -11,11 +10,7 @@ import edu.alibaba.mpc4j.common.tool.crypto.prp.PrpFactory.PrpType;
  * @author Weiran Liu
  * @date 2022/02/11
  */
-public interface OprpSender extends TwoPartyPto, SecurePto {
-
-    @Override
-    OprpFactory.OprpType getPtoType();
-
+public interface OprpSender extends TwoPartyPto {
     /**
      * 返回PRP类型。
      *

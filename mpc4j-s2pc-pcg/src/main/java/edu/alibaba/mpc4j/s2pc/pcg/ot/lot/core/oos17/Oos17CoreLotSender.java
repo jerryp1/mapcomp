@@ -65,7 +65,6 @@ public class Oos17CoreLotSender extends AbstractCoreLotSender {
         super(Oos17CoreLotPtoDesc.getInstance(), senderRpc, receiverParty, config);
         coreCotReceiver = CoreCotFactory.createReceiver(senderRpc, receiverParty, config.getCoreCotConfig());
         addSubPtos(coreCotReceiver);
-        addSecureSubPtos(coreCotReceiver);
     }
 
     @Override
@@ -106,7 +105,6 @@ public class Oos17CoreLotSender extends AbstractCoreLotSender {
         stopWatch.reset();
         info("{}{} Send. Init Step 2/2 ({}ms)", ptoStepLogPrefix, getPtoDesc().getPtoName(), randomOracleTime);
 
-        initialized = true;
         info("{}{} Send. Init end", ptoEndLogPrefix, getPtoDesc().getPtoName());
     }
 

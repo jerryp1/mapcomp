@@ -1,7 +1,6 @@
 package edu.alibaba.mpc4j.s2pc.pcg.ot.lot.core;
 
 import edu.alibaba.mpc4j.common.rpc.MpcAbortException;
-import edu.alibaba.mpc4j.common.rpc.pto.SecurePto;
 import edu.alibaba.mpc4j.common.rpc.pto.TwoPartyPto;
 import edu.alibaba.mpc4j.s2pc.pcg.ot.lot.LotReceiverOutput;
 
@@ -11,7 +10,7 @@ import edu.alibaba.mpc4j.s2pc.pcg.ot.lot.LotReceiverOutput;
  * @author Weiran Liu
  * @date 2022/5/25
  */
-public interface CoreLotReceiver extends TwoPartyPto, SecurePto {
+public interface CoreLotReceiver extends TwoPartyPto {
     /**
      * 初始化协议。
      *

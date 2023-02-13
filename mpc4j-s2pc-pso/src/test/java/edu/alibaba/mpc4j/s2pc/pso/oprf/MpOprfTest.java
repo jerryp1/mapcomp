@@ -89,14 +89,6 @@ public class MpOprfTest {
     }
 
     @Test
-    public void testPtoType() {
-        MpOprfSender sender = OprfFactory.createMpOprfSender(senderRpc, receiverRpc.ownParty(), config);
-        MpOprfReceiver receiver = OprfFactory.createMpOprfReceiver(receiverRpc, senderRpc.ownParty(), config);
-        Assert.assertEquals(config.getPtoType(), sender.getPtoType());
-        Assert.assertEquals(config.getPtoType(), receiver.getPtoType());
-    }
-
-    @Test
     public void test1N() {
         MpOprfSender sender = OprfFactory.createMpOprfSender(senderRpc, receiverRpc.ownParty(), config);
         MpOprfReceiver receiver = OprfFactory.createMpOprfReceiver(receiverRpc, senderRpc.ownParty(), config);

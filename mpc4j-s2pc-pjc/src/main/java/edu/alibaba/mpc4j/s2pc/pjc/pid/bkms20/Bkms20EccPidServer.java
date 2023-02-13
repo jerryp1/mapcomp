@@ -89,8 +89,8 @@ public class Bkms20EccPidServer<T> extends AbstractPidParty<T> {
     }
 
     @Override
-    public void init(int maxServerSetSize, int maxClientSetSize) {
-        setInitInput(maxServerSetSize, maxClientSetSize);
+    public void init(int maxOwnElementSetSize, int maxOtherElementSetSize) {
+        setInitInput(maxOwnElementSetSize, maxOtherElementSetSize);
         info("{}{} Server Init begin", ptoBeginLogPrefix, getPtoDesc().getPtoName());
 
         stopWatch.start();
@@ -102,13 +102,12 @@ public class Bkms20EccPidServer<T> extends AbstractPidParty<T> {
         stopWatch.reset();
         info("{}{} Server Init Step 1/1 ({}ms)", ptoStepLogPrefix, getPtoDesc().getPtoName(), initTime);
 
-        initialized = true;
         info("{}{} Server Init end", ptoEndLogPrefix, getPtoDesc().getPtoName());
     }
 
     @Override
-    public PidPartyOutput<T> pid(Set<T> serverElementSet, int clientSetSize) throws MpcAbortException {
-        setPtoInput(serverElementSet, clientSetSize);
+    public PidPartyOutput<T> pid(Set<T> ownElementSet, int otherElementSetSize) throws MpcAbortException {
+        setPtoInput(ownElementSet, otherElementSetSize);
         info("{}{} Server begin", ptoBeginLogPrefix, getPtoDesc().getPtoName());
 
         stopWatch.start();
@@ -208,17 +207,17 @@ public class Bkms20EccPidServer<T> extends AbstractPidParty<T> {
             .map(ci -> ecc.multiply(ci, kc))
             .toArray(ECPoint[]::new);
         // Randomly shuffle the elements in U_c using a permutation π_c
-        ArrayList<Integer> shuffleMap = IntStream.range(0, ownSetSize)
+        ArrayList<Integer> shuffleMap = IntStream.range(0, ownElementSetSize)
             .boxed()
             .collect(Collectors.toCollection(ArrayList::new));
         Collections.shuffle(shuffleMap, secureRandom);
-        ECPoint[] shuffleUc = new ECPoint[ownSetSize];
+        ECPoint[] shuffleUc = new ECPoint[ownElementSetSize];
         // For example, shuffleMap = [2, 0, 1, 3], input = [a_0, a_1, a_2, a_3], output = [a_2, a_0, a_1. a_3]
-        for (int i = 0; i < ownSetSize; i++) {
+        for (int i = 0; i < ownElementSetSize; i++) {
             shuffleUc[i] = uc[shuffleMap.get(i)];
         }
         // Given shuffleMap = [2, 0, 1, 3], reShuffleMap = [2 -> 0, 0 -> 1, 1 -> 2, 3 -> 3]
-        reShuffleMap = IntStream.range(0, ownSetSize)
+        reShuffleMap = IntStream.range(0, ownElementSetSize)
             .boxed()
             .collect(Collectors.toMap(shuffleMap::get, Function.identity()));
         // send to P
@@ -228,7 +227,7 @@ public class Bkms20EccPidServer<T> extends AbstractPidParty<T> {
     }
 
     private List<byte[]> handleUpPayload(List<byte[]> upPayload) throws MpcAbortException {
-        MpcAbortPreconditions.checkArgument(upPayload.size() == otherSetSize);
+        MpcAbortPreconditions.checkArgument(upPayload.size() == otherElementSetSize);
         // For each u_p^i ∈ U_p, Compute e_p^i = (u_p^i)^{k_c}
         Stream<byte[]> upStream = upPayload.stream();
         upStream = parallel ? upStream.parallel() : upStream;
@@ -249,13 +248,13 @@ public class Bkms20EccPidServer<T> extends AbstractPidParty<T> {
     }
 
     private void handleVcPayload(List<byte[]> vcPayload) throws MpcAbortException {
-        MpcAbortPreconditions.checkArgument(vcPayload.size() == ownSetSize);
+        MpcAbortPreconditions.checkArgument(vcPayload.size() == ownElementSetSize);
         // Shuffle back the elements of V_c using π^{−1}_c.
         ECPoint[] shuffleVc = vcPayload.stream()
             .map(ecc::decode)
             .toArray(ECPoint[]::new);
-        ECPoint[] vc = new ECPoint[ownSetSize];
-        for (int i = 0; i < ownSetSize; i++) {
+        ECPoint[] vc = new ECPoint[ownElementSetSize];
+        for (int i = 0; i < ownElementSetSize; i++) {
             vc[i] = shuffleVc[reShuffleMap.get(i)];
         }
         reShuffleMap = null;
@@ -268,7 +267,7 @@ public class Bkms20EccPidServer<T> extends AbstractPidParty<T> {
             .map(pidMap::digestToBytes)
             .map(ByteBuffer::wrap)
             .toArray(ByteBuffer[]::new);
-        serverPidMap = IntStream.range(0, ownSetSize)
+        serverPidMap = IntStream.range(0, ownElementSetSize)
             .boxed()
             .collect(Collectors.toMap(index -> wc[index], index -> ownElementArrayList.get(index)));
         serverPidSet = Arrays.stream(wc).collect(Collectors.toSet());

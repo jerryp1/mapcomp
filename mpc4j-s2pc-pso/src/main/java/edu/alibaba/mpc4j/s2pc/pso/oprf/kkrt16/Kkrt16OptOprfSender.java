@@ -64,17 +64,16 @@ public class Kkrt16OptOprfSender extends AbstractOprfSender {
         super(Kkrt16OptOprfPtoDesc.getInstance(), senderRpc, receiverParty, config);
         coreCotReceiver = CoreCotFactory.createReceiver(senderRpc, receiverParty, config.getCoreCotConfig());
         addSubPtos(coreCotReceiver);
-        addSecureSubPtos(coreCotReceiver);
     }
 
     @Override
-    public void init(int maxBatchSize) throws MpcAbortException {
-        setBatchInitInput(maxBatchSize);
+    public void init(int maxBatchSize, int maxPrfNum) throws MpcAbortException {
+        setInitInput(maxBatchSize, maxPrfNum);
         info("{}{} Send. Init begin", ptoBeginLogPrefix, getPtoDesc().getPtoName());
 
         stopWatch.start();
         // 初始化码字字节长度
-        codewordByteLength = RandomCoderUtils.getCodewordByteLength(maxBatchSize);
+        codewordByteLength = RandomCoderUtils.getCodewordByteLength(Math.max(maxBatchSize, maxPrfNum));
         codewordBitLength = codewordByteLength * Byte.SIZE;
         // 初始化COT协议
         coreCotReceiver.init(codewordBitLength);
@@ -95,13 +94,12 @@ public class Kkrt16OptOprfSender extends AbstractOprfSender {
         stopWatch.reset();
         info("{}{} Send. Init Step 2/2 ({}ms)", ptoStepLogPrefix, getPtoDesc().getPtoName(), cotTime);
 
-        initialized = true;
         info("{}{} Send. Init end", ptoEndLogPrefix, getPtoDesc().getPtoName());
     }
 
     @Override
     public OprfSenderOutput oprf(int batchSize) throws MpcAbortException {
-        setBatchPtoInput(batchSize);
+        setPtoInput(batchSize);
         info("{}{} Send. begin", ptoBeginLogPrefix, getPtoDesc().getPtoName());
 
         stopWatch.start();

@@ -51,7 +51,6 @@ public class Cmg21UpsiServer<T> extends AbstractUpsiServer<T> {
         super(Cmg21UpsiPtoDesc.getInstance(), serverRpc, clientParty, config);
         mpOprfSender = OprfFactory.createMpOprfSender(serverRpc, clientParty, config.getMpOprfConfig());
         addSubPtos(mpOprfSender);
-        addSecureSubPtos(mpOprfSender);
     }
 
     @Override
@@ -62,13 +61,12 @@ public class Cmg21UpsiServer<T> extends AbstractUpsiServer<T> {
         stopWatch.start();
         assert (upsiParams instanceof Cmg21UpsiParams);
         params = (Cmg21UpsiParams) upsiParams;
-        mpOprfSender.init(params.maxClientSize());
+        mpOprfSender.init(params.maxClientElementSize());
         stopWatch.stop();
         long initTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
         stopWatch.reset();
         info("{}{} Server Init Step 1/1 ({}ms)", ptoStepLogPrefix, getPtoDesc().getPtoName(), initTime);
 
-        initialized = true;
         info("{}{} Server Init end", ptoEndLogPrefix, getPtoDesc().getPtoName());
     }
 

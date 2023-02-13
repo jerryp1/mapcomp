@@ -103,14 +103,6 @@ public class Z2MtgTest {
     }
 
     @Test
-    public void testPtoType() {
-        Z2MtgParty sender = Z2MtgFactory.createSender(senderRpc, receiverRpc.ownParty(), config);
-        Z2MtgParty receiver = Z2MtgFactory.createReceiver(receiverRpc, senderRpc.ownParty(), config);
-        Assert.assertEquals(config.getPtoType(), sender.getPtoType());
-        Assert.assertEquals(config.getPtoType(), receiver.getPtoType());
-    }
-
-    @Test
     public void test1Num() {
         Z2MtgParty sender = Z2MtgFactory.createSender(senderRpc, receiverRpc.ownParty(), config);
         Z2MtgParty receiver = Z2MtgFactory.createReceiver(receiverRpc, senderRpc.ownParty(), config);

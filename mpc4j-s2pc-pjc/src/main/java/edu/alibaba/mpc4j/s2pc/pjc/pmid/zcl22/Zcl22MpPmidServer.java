@@ -98,13 +98,10 @@ public class Zcl22MpPmidServer<T> extends AbstractPmidServer<T> {
         super(Zcl22MpPmidPtoDesc.getInstance(), serverRpc, clientParty, config);
         mpOprfSender = OprfFactory.createMpOprfSender(serverRpc, clientParty, config.getMpOprfConfig());
         addSubPtos(mpOprfSender);
-        addSecureSubPtos(mpOprfSender);
         mpOprfReceiver = OprfFactory.createMpOprfReceiver(serverRpc, clientParty, config.getMpOprfConfig());
         addSubPtos(mpOprfReceiver);
-        addSecureSubPtos(mpOprfReceiver);
         psuServer = PsuFactory.createServer(serverRpc, clientParty, config.getPsuConfig());
         addSubPtos(psuServer);
-        addSecureSubPtos(psuServer);
         sigmaOkvsType = config.getSigmaOkvsType();
     }
 
@@ -161,7 +158,6 @@ public class Zcl22MpPmidServer<T> extends AbstractPmidServer<T> {
         stopWatch.reset();
         info("{}{} Server Init Step 3/3 ({}ms)", ptoStepLogPrefix, getPtoDesc().getPtoName(), clientKeyTime);
 
-        initialized = true;
         info("{}{} Server Init end", ptoEndLogPrefix, getPtoDesc().getPtoName());
     }
 

@@ -3,7 +3,8 @@ package edu.alibaba.mpc4j.s2pc.pcg.dpprf;
 import edu.alibaba.mpc4j.common.rpc.Party;
 import edu.alibaba.mpc4j.common.rpc.Rpc;
 import edu.alibaba.mpc4j.common.rpc.desc.PtoDesc;
-import edu.alibaba.mpc4j.common.rpc.pto.AbstractSecureTwoPartyPto;
+import edu.alibaba.mpc4j.common.rpc.pto.AbstractTwoPartyPto;
+import edu.alibaba.mpc4j.common.tool.MathPreconditions;
 import edu.alibaba.mpc4j.common.tool.utils.BinaryUtils;
 import edu.alibaba.mpc4j.common.tool.utils.IntUtils;
 import edu.alibaba.mpc4j.common.tool.utils.LongUtils;
@@ -19,7 +20,7 @@ import java.util.stream.IntStream;
  * @author Weiran Liu
  * @date 2022/8/16
  */
-public abstract class AbstractDpprfReceiver extends AbstractSecureTwoPartyPto implements DpprfReceiver {
+public abstract class AbstractDpprfReceiver extends AbstractTwoPartyPto implements DpprfReceiver {
     /**
      * config
      */
@@ -66,34 +67,24 @@ public abstract class AbstractDpprfReceiver extends AbstractSecureTwoPartyPto im
         this.config = config;
     }
 
-    @Override
-    public DpprfFactory.DpprfType getPtoType() {
-        return config.getPtoType();
-    }
-
     protected void setInitInput(int maxBatchNum, int maxAlphaBound) {
-        assert maxBatchNum > 0: "maxBatchNum must be greater than 0:" + maxBatchNum;
+        MathPreconditions.checkPositive("maxBatchNum", maxBatchNum);
         this.maxBatchNum = maxBatchNum;
-        assert maxAlphaBound > 0 : "maxAlphaBound must be greater than 0: " + maxAlphaBound;
+        MathPreconditions.checkPositive("maxAlphaBound", maxAlphaBound);
         this.maxAlphaBound = maxAlphaBound;
         maxH = LongUtils.ceilLog2(maxAlphaBound, 1);
-        initialized = false;
+        initState();
     }
 
     protected void setPtoInput(int[] alphaArray, int alphaBound) {
-        if (!initialized) {
-            throw new IllegalStateException("Need init...");
-        }
-        assert alphaBound > 0 && alphaBound <= maxAlphaBound
-            : "alphaBound must be in range (0, " + maxAlphaBound + "]: " + alphaBound;
+        checkReadyState();
+        MathPreconditions.checkPositiveInRangeClosed("alphaBound", alphaBound, maxAlphaBound);
         this.alphaBound = alphaBound;
         h = LongUtils.ceilLog2(alphaBound, 1);
         batchNum = alphaArray.length;
-        assert batchNum > 0 && batchNum <= maxBatchNum : "batch must be in range (0, " + maxBatchNum + "]: " + batchNum;
+        MathPreconditions.checkPositiveInRangeClosed("batchNum", batchNum, maxBatchNum);
         this.alphaArray = Arrays.stream(alphaArray)
-            .peek(alpha -> {
-                assert alpha >= 0 && alpha < alphaBound : "α must be in range [0, " + alphaBound + "): " + alpha;
-            })
+            .peek(alpha -> MathPreconditions.checkNonNegativeInRange("alpha", alpha, alphaBound))
             .toArray();
         int offset = Integer.SIZE - h;
         alphaBinaryArray = new boolean[batchNum][h];
@@ -112,6 +103,8 @@ public abstract class AbstractDpprfReceiver extends AbstractSecureTwoPartyPto im
 
     protected void setPtoInput(int[] alphaArray, int alphaBound, CotReceiverOutput preReceiverOutput) {
         setPtoInput(alphaArray, alphaBound);
-        assert preReceiverOutput.getNum() >= DpprfFactory.getPrecomputeNum(config, batchNum, alphaBound);
+        MathPreconditions.checkGreaterOrEqual(
+            "preCotNum", preReceiverOutput.getNum(), DpprfFactory.getPrecomputeNum(config, batchNum, alphaBound)
+        );
     }
 }

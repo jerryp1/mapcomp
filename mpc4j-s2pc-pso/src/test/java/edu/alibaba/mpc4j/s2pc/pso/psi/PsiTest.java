@@ -111,14 +111,6 @@ public class PsiTest {
     }
 
     @Test
-    public void testPtoType() {
-        PsiServer<ByteBuffer> server = PsiFactory.createServer(serverRpc, clientRpc.ownParty(), config);
-        PsiClient<ByteBuffer> client = PsiFactory.createClient(clientRpc, serverRpc.ownParty(), config);
-        Assert.assertEquals(config.getPtoType(), server.getPtoType());
-        Assert.assertEquals(config.getPtoType(), client.getPtoType());
-    }
-
-    @Test
     public void test1() {
         PsiServer<ByteBuffer> server = PsiFactory.createServer(serverRpc, clientRpc.ownParty(), config);
         PsiClient<ByteBuffer> client = PsiFactory.createClient(clientRpc, serverRpc.ownParty(), config);

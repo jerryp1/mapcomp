@@ -1,7 +1,6 @@
 package edu.alibaba.mpc4j.s2pc.pcg.ot.lot.core;
 
 import edu.alibaba.mpc4j.common.rpc.MpcAbortException;
-import edu.alibaba.mpc4j.common.rpc.pto.SecurePto;
 import edu.alibaba.mpc4j.common.rpc.pto.TwoPartyPto;
 
 /**
@@ -10,7 +9,7 @@ import edu.alibaba.mpc4j.common.rpc.pto.TwoPartyPto;
  * @author Weiran Liu
  * @date 2022/5/25
  */
-public interface CoreLotSender extends TwoPartyPto, SecurePto {
+public interface CoreLotSender extends TwoPartyPto {
     /**
      * 初始化协议。
      *

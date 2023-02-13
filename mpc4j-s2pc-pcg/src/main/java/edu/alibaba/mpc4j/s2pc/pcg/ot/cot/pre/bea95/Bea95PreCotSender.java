@@ -33,7 +33,6 @@ public class Bea95PreCotSender extends AbstractPreCotSender {
         setInitInput();
         info("{}{} Send. Init begin", ptoBeginLogPrefix, getPtoDesc().getPtoName());
 
-        initialized = true;
         info("{}{} Send. Init end", ptoEndLogPrefix, getPtoDesc().getPtoName());
     }
 

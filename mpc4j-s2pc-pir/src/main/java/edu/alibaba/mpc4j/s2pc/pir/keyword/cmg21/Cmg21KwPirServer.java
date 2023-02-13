@@ -142,7 +142,6 @@ public class Cmg21KwPirServer<T> extends AbstractKwPirServer<T> {
         stopWatch.reset();
         info("{}{} Server Init Step 4/4 ({}ms)", ptoStepLogPrefix, getPtoDesc().getPtoName(), encodeTime);
 
-        initialized = true;
         info("{}{} Server Init end", ptoEndLogPrefix, getPtoDesc().getPtoName());
     }
 

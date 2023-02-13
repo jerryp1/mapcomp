@@ -92,7 +92,6 @@ public class IdealZlCoreMtgReceiver extends AbstractZlCoreMtgParty {
         stopWatch.reset();
         info("{}{} Recv. Init Step 2/2 ({}ms)", ptoStepLogPrefix, getPtoDesc().getPtoName(), initTime);
 
-        initialized = true;
         info("{}{} Recv. Init end", ptoEndLogPrefix, getPtoDesc().getPtoName());
     }
 

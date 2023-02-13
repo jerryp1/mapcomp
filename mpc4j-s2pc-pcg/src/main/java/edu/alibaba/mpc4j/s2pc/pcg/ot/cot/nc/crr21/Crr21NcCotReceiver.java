@@ -65,7 +65,6 @@ public class Crr21NcCotReceiver extends AbstractNcCotReceiver {
         codeType = config.getCodeType();
         mspCotReceiver = MspCotFactory.createReceiver(receiverRpc, senderParty, config.getMspCotConfig());
         addSubPtos(mspCotReceiver);
-        addSecureSubPtos(mspCotReceiver);
     }
 
     @Override
@@ -98,7 +97,6 @@ public class Crr21NcCotReceiver extends AbstractNcCotReceiver {
         stopWatch.reset();
         info("{}{} Recv. Init Step 2/2 ({}ms)", ptoStepLogPrefix, getPtoDesc().getPtoName(), initTime);
 
-        initialized = true;
         info("{}{} Recv. Init end", ptoBeginLogPrefix, getPtoDesc().getPtoName());
     }
 
@@ -134,7 +132,7 @@ public class Crr21NcCotReceiver extends AbstractNcCotReceiver {
         stopWatch.stop();
         long extendTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
         stopWatch.reset();
-        info("{}{} Recv. Iter. Step 2.{}/2.{} ({}ms)", ptoStepLogPrefix, getPtoDesc().getPtoName(), extendTime);
+        info("{}{} Recv. Iter. Step 2/2 ({}ms)", ptoStepLogPrefix, getPtoDesc().getPtoName(), extendTime);
 
         info("{}{} Recv. end", ptoEndLogPrefix, getPtoDesc().getPtoName());
         return receiverOutput;

@@ -1,7 +1,6 @@
 package edu.alibaba.mpc4j.s2pc.pcg.ot.lot;
 
 import edu.alibaba.mpc4j.common.rpc.MpcAbortException;
-import edu.alibaba.mpc4j.common.rpc.pto.SecurePto;
 import edu.alibaba.mpc4j.common.rpc.pto.TwoPartyPto;
 import edu.alibaba.mpc4j.s2pc.pcg.ot.lot.LotFactory.LotType;
 
@@ -11,15 +10,7 @@ import edu.alibaba.mpc4j.s2pc.pcg.ot.lot.LotFactory.LotType;
  * @author Weiran Liu
  * @date 2022/5/23
  */
-public interface LotReceiver extends TwoPartyPto, SecurePto {
-    /**
-     * 返回2^l选1-OT协议类型。
-     *
-     * @return 2^l选1-OT协议类型。
-     */
-    @Override
-    LotType getPtoType();
-
+public interface LotReceiver extends TwoPartyPto {
     /**
      * 初始化协议。
      *

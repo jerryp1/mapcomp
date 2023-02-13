@@ -48,7 +48,6 @@ public class LowMcOprpSender extends AbstractOprpSender {
         super(LowMcOprpPtoDesc.getInstance(), senderRpc, receiverParty, config);
         bcSender = BcFactory.createSender(senderRpc, receiverParty, config.getBcConfig());
         addSubPtos(bcSender);
-        addSecureSubPtos(bcSender);
     }
 
     @Override
@@ -77,7 +76,6 @@ public class LowMcOprpSender extends AbstractOprpSender {
         stopWatch.reset();
         info("{}{} Send. Init Step 1/1 ({}ms)", ptoStepLogPrefix, getPtoDesc().getPtoName(), initBcTime);
 
-        initialized = true;
         info("{}{} Send. Init end", ptoEndLogPrefix, getPtoDesc().getPtoName());
     }
 

@@ -122,14 +122,6 @@ public class PmidTest {
     }
 
     @Test
-    public void testPtoType() {
-        PmidServer<String> server = PmidFactory.createServer(serverRpc, clientRpc.ownParty(), config);
-        PmidClient<String> client = PmidFactory.createClient(clientRpc, serverRpc.ownParty(), config);
-        Assert.assertEquals(config.getPtoType(), server.getPtoType());
-        Assert.assertEquals(config.getPtoType(), client.getPtoType());
-    }
-
-    @Test
     public void test2() {
         PmidServer<String> server = PmidFactory.createServer(serverRpc, clientRpc.ownParty(), config);
         PmidClient<String> client = PmidFactory.createClient(clientRpc, serverRpc.ownParty(), config);

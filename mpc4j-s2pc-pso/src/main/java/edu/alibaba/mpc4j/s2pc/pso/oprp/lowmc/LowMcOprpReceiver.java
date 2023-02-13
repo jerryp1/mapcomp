@@ -49,7 +49,6 @@ public class LowMcOprpReceiver extends AbstractOprpReceiver {
         super(LowMcOprpPtoDesc.getInstance(), receiverRpc, senderParty, config);
         bcReceiver = BcFactory.createReceiver(receiverRpc, senderParty, config.getBcConfig());
         addSubPtos(bcReceiver);
-        addSecureSubPtos(bcReceiver);
     }
 
     @Override
@@ -78,7 +77,6 @@ public class LowMcOprpReceiver extends AbstractOprpReceiver {
         stopWatch.reset();
         info("{}{} Recv. Init Step 1/1 ({}ms)", ptoStepLogPrefix, getPtoDesc().getPtoName(), initBcTime);
 
-        initialized = true;
         info("{}{} Recv. Init end", ptoEndLogPrefix, getPtoDesc().getPtoName());
     }
 

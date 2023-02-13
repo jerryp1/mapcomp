@@ -1,6 +1,6 @@
 package edu.alibaba.mpc4j.s2pc.pso.oprp;
 
-import edu.alibaba.mpc4j.common.rpc.pto.SecurePtoConfig;
+import edu.alibaba.mpc4j.common.rpc.pto.MultiPartyPtoConfig;
 import edu.alibaba.mpc4j.s2pc.pso.oprp.OprpFactory.OprpType;
 
 /**
@@ -9,7 +9,7 @@ import edu.alibaba.mpc4j.s2pc.pso.oprp.OprpFactory.OprpType;
  * @author Weiran Liu
  * @date 2022/02/11
  */
-public interface OprpConfig extends SecurePtoConfig {
+public interface OprpConfig extends MultiPartyPtoConfig {
     /**
      * 返回协议类型。
      *

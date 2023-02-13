@@ -82,14 +82,6 @@ public class LotTest {
     }
 
     @Test
-    public void testPtoType() {
-        LotSender sender = LotFactory.createSender(senderRpc, receiverRpc.ownParty(), config);
-        LotReceiver receiver = LotFactory.createReceiver(receiverRpc, senderRpc.ownParty(), config);
-        Assert.assertEquals(config.getPtoType(), sender.getPtoType());
-        Assert.assertEquals(config.getPtoType(), receiver.getPtoType());
-    }
-
-    @Test
     public void test1Num() {
         LotSender sender = LotFactory.createSender(senderRpc, receiverRpc.ownParty(), config);
         LotReceiver receiver = LotFactory.createReceiver(receiverRpc, senderRpc.ownParty(), config);

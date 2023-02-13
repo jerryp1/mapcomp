@@ -1,6 +1,6 @@
 package edu.alibaba.mpc4j.s2pc.pcg.ot.cot;
 
-import edu.alibaba.mpc4j.common.rpc.pto.SecurePtoConfig;
+import edu.alibaba.mpc4j.common.rpc.pto.MultiPartyPtoConfig;
 
 /**
  * 关联不经意传输（Correlated Oblivious Transfer，COT）协议配置项。
@@ -8,7 +8,7 @@ import edu.alibaba.mpc4j.common.rpc.pto.SecurePtoConfig;
  * @author Weiran Liu
  * @date 2022/7/13
  */
-public interface CotConfig extends SecurePtoConfig {
+public interface CotConfig extends MultiPartyPtoConfig {
     /**
      * 返回协议类型。
      *

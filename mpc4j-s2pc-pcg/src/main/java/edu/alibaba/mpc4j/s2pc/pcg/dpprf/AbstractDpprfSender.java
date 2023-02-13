@@ -3,7 +3,8 @@ package edu.alibaba.mpc4j.s2pc.pcg.dpprf;
 import edu.alibaba.mpc4j.common.rpc.Party;
 import edu.alibaba.mpc4j.common.rpc.Rpc;
 import edu.alibaba.mpc4j.common.rpc.desc.PtoDesc;
-import edu.alibaba.mpc4j.common.rpc.pto.AbstractSecureTwoPartyPto;
+import edu.alibaba.mpc4j.common.rpc.pto.AbstractTwoPartyPto;
+import edu.alibaba.mpc4j.common.tool.MathPreconditions;
 import edu.alibaba.mpc4j.common.tool.utils.LongUtils;
 import edu.alibaba.mpc4j.s2pc.pcg.ot.cot.CotSenderOutput;
 
@@ -13,7 +14,7 @@ import edu.alibaba.mpc4j.s2pc.pcg.ot.cot.CotSenderOutput;
  * @author Weiran Liu
  * @date 2022/8/16
  */
-public abstract class AbstractDpprfSender extends AbstractSecureTwoPartyPto implements DpprfSender {
+public abstract class AbstractDpprfSender extends AbstractTwoPartyPto implements DpprfSender {
     /**
      * 配置项
      */
@@ -48,35 +49,29 @@ public abstract class AbstractDpprfSender extends AbstractSecureTwoPartyPto impl
         this.config = config;
     }
 
-    @Override
-    public DpprfFactory.DpprfType getPtoType() {
-        return config.getPtoType();
-    }
-
     protected void setInitInput(int maxBatchNum, int maxAlphaBound) {
-        assert maxBatchNum > 0 : "maxBatchNum must be greater than 0:" + maxBatchNum;
+        MathPreconditions.checkPositive("maxBatchNum", maxBatchNum);
         this.maxBatchNum = maxBatchNum;
-        assert maxAlphaBound > 0 : "maxAlphaBound must be greater than 0: " + maxAlphaBound;
+        MathPreconditions.checkPositive("maxAlphaBound", maxAlphaBound);
         this.maxAlphaBound = maxAlphaBound;
         maxH = LongUtils.ceilLog2(maxAlphaBound, 1);
-        initialized = false;
+        initState();
     }
 
     protected void setPtoInput(int batchNum, int alphaBound) {
-        if (!initialized) {
-            throw new IllegalStateException("Need init...");
-        }
-        assert batchNum > 0 && batchNum <= maxBatchNum : "BatchNum must be in range (0, " + maxBatchNum + "]: " + batchNum;
+        checkReadyState();
+        MathPreconditions.checkPositiveInRangeClosed("batchNum", batchNum, maxBatchNum);
         this.batchNum = batchNum;
-        assert alphaBound > 0 && alphaBound <= maxAlphaBound
-            : "alphaBound must be in range (0, " + maxAlphaBound + "]: " + alphaBound;
+        MathPreconditions.checkPositiveInRangeClosed("alphaBound", alphaBound, maxAlphaBound);
         this.alphaBound = alphaBound;
         h = LongUtils.ceilLog2(alphaBound, 1);
         extraInfo++;
     }
 
-    protected void setPtoInput(int batch, int alphaBound, CotSenderOutput preSenderOutput) {
-        setPtoInput(batch, alphaBound);
-        assert preSenderOutput.getNum() >= DpprfFactory.getPrecomputeNum(config, batch, alphaBound);
+    protected void setPtoInput(int batchNum, int alphaBound, CotSenderOutput preSenderOutput) {
+        setPtoInput(batchNum, alphaBound);
+        MathPreconditions.checkGreaterOrEqual(
+            "preCotNum", preSenderOutput.getNum(), DpprfFactory.getPrecomputeNum(config, batchNum, alphaBound)
+        );
     }
 }

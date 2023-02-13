@@ -1,10 +1,12 @@
 package edu.alibaba.mpc4j.s2pc.pso.mqrpmt;
 
+import com.google.common.base.Preconditions;
 import edu.alibaba.mpc4j.common.rpc.Party;
 import edu.alibaba.mpc4j.common.rpc.Rpc;
 import edu.alibaba.mpc4j.common.rpc.desc.PtoDesc;
-import edu.alibaba.mpc4j.common.rpc.pto.AbstractSecureTwoPartyPto;
+import edu.alibaba.mpc4j.common.rpc.pto.AbstractTwoPartyPto;
 import edu.alibaba.mpc4j.common.tool.CommonConstants;
+import edu.alibaba.mpc4j.common.tool.MathPreconditions;
 
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
@@ -19,7 +21,7 @@ import java.util.stream.Collectors;
  * @author Weiran Liu
  * @date 2022/9/10
  */
-public abstract class AbstractMqRpmtServer extends AbstractSecureTwoPartyPto implements MqRpmtServer {
+public abstract class AbstractMqRpmtServer extends AbstractTwoPartyPto implements MqRpmtServer {
     /**
      * 特殊空元素字节缓存区
      */
@@ -31,10 +33,6 @@ public abstract class AbstractMqRpmtServer extends AbstractSecureTwoPartyPto imp
         BOT_ELEMENT_BYTE_BUFFER = ByteBuffer.wrap(botElementByteArray);
     }
 
-    /**
-     * 配置项
-     */
-    private final MqRpmtConfig config;
     /**
      * 服务端最大元素数量
      */
@@ -59,36 +57,32 @@ public abstract class AbstractMqRpmtServer extends AbstractSecureTwoPartyPto imp
 
     protected AbstractMqRpmtServer(PtoDesc ptoDesc, Rpc serverRpc, Party clientParty, MqRpmtConfig config) {
         super(ptoDesc, serverRpc, clientParty, config);
-        this.config = config;
-    }
-
-    @Override
-    public MqRpmtFactory.MqRpmtType getPtoType() {
-        return config.getPtoType();
     }
 
     protected void setInitInput(int maxServerElementSize, int maxClientElementSize) {
-        assert maxServerElementSize > 1;
+        MathPreconditions.checkGreater("maxServerElementSize", maxServerElementSize, 1);
         this.maxServerElementSize = maxServerElementSize;
-        assert maxClientElementSize > 1;
+        MathPreconditions.checkGreater("maxClientElementSize", maxClientElementSize, 1);
         this.maxClientElementSize = maxClientElementSize;
         extraInfo++;
-        initialized = false;
+        initState();
     }
 
     protected void setPtoInput(Set<ByteBuffer> serverElementSet, int clientElementSize) {
-        if (!initialized) {
-            throw new IllegalStateException("Need init...");
-        }
-        assert serverElementSet.size() > 1 && serverElementSet.size() <= maxServerElementSize;
+        checkReadyState();
+        MathPreconditions.checkGreater("serverElementSetSize", serverElementSet.size(), 1);
+        MathPreconditions.checkLessOrEqual("serverElementSetSize", serverElementSet.size(), maxServerElementSize);
         serverElementArrayList = serverElementSet.stream()
-            .peek(senderElement -> {
-                assert !senderElement.equals(BOT_ELEMENT_BYTE_BUFFER) : "input equals ⊥";
-            })
+            .peek(element ->
+                Preconditions.checkArgument(
+                    !element.equals(BOT_ELEMENT_BYTE_BUFFER), "element must not equal ⊥"
+                )
+            )
             .collect(Collectors.toCollection(ArrayList::new));
         Collections.shuffle(serverElementArrayList, secureRandom);
         serverElementSize = serverElementSet.size();
-        assert clientElementSize > 1 && clientElementSize <= maxClientElementSize;
+        MathPreconditions.checkGreater("clientElementSize", clientElementSize, 1);
+        MathPreconditions.checkLessOrEqual("clientElementSize", clientElementSize, maxClientElementSize);
         this.clientElementSize = clientElementSize;
         extraInfo++;
     }

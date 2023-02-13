@@ -73,10 +73,8 @@ public class Dsz15ZlCoreMtgReceiver extends AbstractZlCoreMtgParty {
         super(Dsz15ZlCoreMtgPtoDesc.getInstance(), receiverRpc, senderParty, config);
         cotSender = CotFactory.createSender(receiverRpc, senderParty, config.getCotConfig());
         addSubPtos(cotSender);
-        addSecureSubPtos(cotSender);
         cotReceiver = CotFactory.createReceiver(receiverRpc, senderParty, config.getCotConfig());
         addSubPtos(cotReceiver);
-        addSecureSubPtos(cotReceiver);
         prg = PrgFactory.createInstance(envType, byteL);
     }
 
@@ -95,7 +93,6 @@ public class Dsz15ZlCoreMtgReceiver extends AbstractZlCoreMtgParty {
         stopWatch.reset();
         info("{}{} Recv. Init Step 1/1 ({}ms)", ptoStepLogPrefix, getPtoDesc().getPtoName(), initTime);
 
-        initialized = true;
         info("{}{} Recv. Init end", ptoEndLogPrefix, getPtoDesc().getPtoName());
     }
 

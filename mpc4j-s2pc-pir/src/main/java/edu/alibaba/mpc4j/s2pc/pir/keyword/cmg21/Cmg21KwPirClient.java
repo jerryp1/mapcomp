@@ -94,7 +94,6 @@ public class Cmg21KwPirClient<T> extends AbstractKwPirClient<T> {
         stopWatch.reset();
         info("{}{} Client Init Step 1/1 ({}ms)", ptoStepLogPrefix, getPtoDesc().getPtoName(), cuckooHashKeyTime);
 
-        initialized = true;
         info("{}{} Client Init end", ptoEndLogPrefix, getPtoDesc().getPtoName());
     }
 

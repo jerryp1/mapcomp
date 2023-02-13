@@ -66,7 +66,6 @@ public class Crr21NcCotSender extends AbstractNcCotSender {
         codeType = config.getCodeType();
         mspCotSender = MspCotFactory.createSender(senderRpc, receiverParty, config.getMspCotConfig());
         addSubPtos(mspCotSender);
-        addSecureSubPtos(mspCotSender);
     }
 
     @Override
@@ -98,7 +97,6 @@ public class Crr21NcCotSender extends AbstractNcCotSender {
         stopWatch.reset();
         info("{}{} Send. Init Step 2/2 ({}ms)", ptoStepLogPrefix, getPtoDesc().getPtoName(), initTime);
 
-        initialized = true;
         info("{}{} Send. Init end", ptoBeginLogPrefix, getPtoDesc().getPtoName());
     }
 

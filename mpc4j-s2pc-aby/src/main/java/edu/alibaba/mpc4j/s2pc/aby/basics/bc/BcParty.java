@@ -1,7 +1,6 @@
 package edu.alibaba.mpc4j.s2pc.aby.basics.bc;
 
 import edu.alibaba.mpc4j.common.rpc.MpcAbortException;
-import edu.alibaba.mpc4j.common.rpc.pto.SecurePto;
 import edu.alibaba.mpc4j.common.rpc.pto.TwoPartyPto;
 import edu.alibaba.mpc4j.common.tool.bitvector.BitVector;
 
@@ -13,15 +12,7 @@ import java.util.Arrays;
  * @author Weiran Liu
  * @date 2022/02/11
  */
-public interface BcParty extends TwoPartyPto, SecurePto {
-    /**
-     * Get the protocol type.
-     *
-     * @return the protocol typ.e
-     */
-    @Override
-    BcFactory.BcType getPtoType();
-
+public interface BcParty extends TwoPartyPto {
     /**
      * init the protocol.
      *

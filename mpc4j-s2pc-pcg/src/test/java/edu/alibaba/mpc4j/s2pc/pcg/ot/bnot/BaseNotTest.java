@@ -145,14 +145,6 @@ public class BaseNotTest {
     }
 
     @Test
-    public void testPtoType() {
-        BaseNotSender sender = BaseNotFactory.createSender(senderRpc, receiverRpc.ownParty(), config);
-        BaseNotReceiver receiver = BaseNotFactory.createReceiver(receiverRpc, senderRpc.ownParty(), config);
-        Assert.assertEquals(config.getPtoType(), sender.getPtoType());
-        Assert.assertEquals(config.getPtoType(), receiver.getPtoType());
-    }
-
-    @Test
     public void test1() {
         BaseNotSender sender = BaseNotFactory.createSender(senderRpc, receiverRpc.ownParty(), config);
         BaseNotReceiver receiver = BaseNotFactory.createReceiver(receiverRpc, senderRpc.ownParty(), config);

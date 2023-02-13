@@ -85,13 +85,10 @@ public class Gmr21MqRpmtClient extends AbstractMqRpmtClient {
         super(Gmr21MqRpmtPtoDesc.getInstance(), clientRpc, serverParty, config);
         cuckooHashOprfSender = OprfFactory.createOprfSender(clientRpc, serverParty, config.getCuckooHashOprfConfig());
         addSubPtos(cuckooHashOprfSender);
-        addSecureSubPtos(cuckooHashOprfSender);
         osnSender = OsnFactory.createSender(clientRpc, serverParty, config.getOsnConfig());
         addSubPtos(osnSender);
-        addSecureSubPtos(osnSender);
         peqtOprfReceiver = OprfFactory.createOprfReceiver(clientRpc, serverParty, config.getPeqtOprfConfig());
         addSubPtos(peqtOprfReceiver);
-        addSecureSubPtos(peqtOprfReceiver);
         okvsType = config.getOkvsType();
         cuckooHashBinType = config.getCuckooHashBinType();
         cuckooHashNum = CuckooHashBinFactory.getHashNum(cuckooHashBinType);
@@ -104,8 +101,9 @@ public class Gmr21MqRpmtClient extends AbstractMqRpmtClient {
 
         stopWatch.start();
         int maxBinNum = CuckooHashBinFactory.getBinNum(cuckooHashBinType, maxServerElementSize);
+        int maxPrfNum = CuckooHashBinFactory.getHashNum(cuckooHashBinType) * maxClientElementSize;
         // 初始化各个子协议
-        cuckooHashOprfSender.init(maxBinNum);
+        cuckooHashOprfSender.init(maxBinNum, maxPrfNum);
         osnSender.init(maxBinNum);
         peqtOprfReceiver.init(maxBinNum);
         // 初始化多项式有限域哈希，根据论文实现，固定为64比特
@@ -130,7 +128,6 @@ public class Gmr21MqRpmtClient extends AbstractMqRpmtClient {
         stopWatch.reset();
         info("{}{} Client Init Step 2/2 ({}ms)", ptoStepLogPrefix, getPtoDesc().getPtoName(), keyTime);
 
-        initialized = true;
         info("{}{} Client Init end", ptoEndLogPrefix, getPtoDesc().getPtoName());
     }
 

@@ -124,7 +124,7 @@ public class FileZ2MtgReceiver extends AbstractZ2MtgParty {
             e.printStackTrace();
             throw new IllegalStateException("Cannot read data from file " + recvZ2MtgFile.getAbsolutePath());
         }
-        initialized = true;
+
         info("{}{} Recv. Init end", ptoEndLogPrefix, getPtoDesc().getPtoName());
     }
 

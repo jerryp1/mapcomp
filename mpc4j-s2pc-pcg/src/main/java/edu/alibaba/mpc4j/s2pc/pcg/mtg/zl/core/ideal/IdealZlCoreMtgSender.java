@@ -82,7 +82,6 @@ public class IdealZlCoreMtgSender extends AbstractZlCoreMtgParty {
         stopWatch.reset();
         info("{}{} Send. Init Step 2/2 ({}ms)", ptoStepLogPrefix, getPtoDesc().getPtoName(), initTime);
 
-        initialized = true;
         info("{}{} Send. Init end", ptoEndLogPrefix, getPtoDesc().getPtoName());
     }
 

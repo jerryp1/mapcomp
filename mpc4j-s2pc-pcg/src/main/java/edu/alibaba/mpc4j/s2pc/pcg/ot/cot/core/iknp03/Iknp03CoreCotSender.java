@@ -43,7 +43,6 @@ public class Iknp03CoreCotSender extends AbstractCoreCotSender {
         super(Iknp03CoreCotPtoDesc.getInstance(), senderRpc, receiverParty, config);
         baseOtReceiver = BaseOtFactory.createReceiver(senderRpc, receiverParty, config.getBaseOtConfig());
         addSubPtos(baseOtReceiver);
-        addSecureSubPtos(baseOtReceiver);
     }
 
     @Override
@@ -59,7 +58,6 @@ public class Iknp03CoreCotSender extends AbstractCoreCotSender {
         stopWatch.reset();
         info("{}{} Send. Init Step 1/1 ({}ms)", ptoStepLogPrefix, getPtoDesc().getPtoName(), initTime);
 
-        initialized = true;
         info("{}{} Send. Init end", ptoEndLogPrefix, getPtoDesc().getPtoName());
     }
 

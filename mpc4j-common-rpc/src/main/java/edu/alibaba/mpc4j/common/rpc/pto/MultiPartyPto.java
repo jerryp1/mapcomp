@@ -4,6 +4,9 @@ import edu.alibaba.mpc4j.common.rpc.Party;
 import edu.alibaba.mpc4j.common.rpc.PartyState;
 import edu.alibaba.mpc4j.common.rpc.Rpc;
 import edu.alibaba.mpc4j.common.rpc.desc.PtoDesc;
+import edu.alibaba.mpc4j.common.tool.EnvType;
+
+import java.security.SecureRandom;
 
 /**
  * Multi-party protocol.
@@ -79,6 +82,41 @@ public interface MultiPartyPto {
      * @return other parties' information.
      */
     Party[] otherParties();
+
+    /**
+     * Sets parallel computing.
+     *
+     * @param parallel parallel computing.
+     */
+    void setParallel(boolean parallel);
+
+    /**
+     * Gets parallel computing.
+     *
+     * @return parallel computing.
+     */
+    boolean getParallel();
+
+    /**
+     * Sets the secure random state.
+     *
+     * @param secureRandom the secure random state.
+     */
+    void setSecureRandom(SecureRandom secureRandom);
+
+    /**
+     * Gets the environment.
+     *
+     * @return the environment.
+     */
+    EnvType getEnvType();
+
+    /**
+     * Gets the protocol name.
+     *
+     * @return the protocol name.
+     */
+    String getPtoName();
 
     /**
      * Gets party state.

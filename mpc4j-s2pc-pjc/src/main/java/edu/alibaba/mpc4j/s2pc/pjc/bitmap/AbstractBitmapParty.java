@@ -3,7 +3,7 @@ package edu.alibaba.mpc4j.s2pc.pjc.bitmap;
 import edu.alibaba.mpc4j.common.rpc.Party;
 import edu.alibaba.mpc4j.common.rpc.Rpc;
 import edu.alibaba.mpc4j.common.rpc.desc.PtoDesc;
-import edu.alibaba.mpc4j.common.rpc.pto.AbstractSecureTwoPartyPto;
+import edu.alibaba.mpc4j.common.rpc.pto.AbstractTwoPartyPto;
 
 
 /**
@@ -11,12 +11,7 @@ import edu.alibaba.mpc4j.common.rpc.pto.AbstractSecureTwoPartyPto;
  * @author Li Peng  
  * @date 2022/11/24
  */
-public abstract class AbstractBitmapParty extends AbstractSecureTwoPartyPto implements BitmapParty {
-    /**
-     * BitmapConfig
-     */
-    private final BitmapConfig config;
-
+public abstract class AbstractBitmapParty extends AbstractTwoPartyPto implements BitmapParty {
     /**
      * 构建安全两方计算协议。
      *
@@ -27,6 +22,5 @@ public abstract class AbstractBitmapParty extends AbstractSecureTwoPartyPto impl
      */
     protected AbstractBitmapParty(PtoDesc ptoDesc, Rpc rpc, Party otherParty, BitmapConfig config) {
         super(ptoDesc, rpc, otherParty, config);
-        this.config = config;
     }
 }

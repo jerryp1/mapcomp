@@ -39,7 +39,6 @@ public class Bcg19RegMspCotSender extends AbstractMspCotSender {
         super(Bcg19RegMspCotPtoDesc.getInstance(), senderRpc, receiverParty, config);
         bspCotSender = BspCotFactory.createSender(senderRpc, receiverParty, config.getBspCotConfig());
         addSubPtos(bspCotSender);
-        addSecureSubPtos(bspCotSender);
     }
 
     @Override
@@ -55,7 +54,6 @@ public class Bcg19RegMspCotSender extends AbstractMspCotSender {
         stopWatch.reset();
         info("{}{} Send. Init Step 1/1 ({}ms)", ptoStepLogPrefix, getPtoDesc().getPtoName(), initTime);
 
-        initialized = true;
         info("{}{} Send. Init end", ptoBeginLogPrefix, getPtoDesc().getPtoName());
     }
 

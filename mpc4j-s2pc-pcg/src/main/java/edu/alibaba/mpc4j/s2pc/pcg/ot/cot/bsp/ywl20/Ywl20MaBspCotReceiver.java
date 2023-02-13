@@ -82,11 +82,9 @@ public class Ywl20MaBspCotReceiver extends AbstractBspCotReceiver {
         super(Ywl20MaBspCotPtoDesc.getInstance(), receiverRpc, senderParty, config);
         coreCotReceiver = CoreCotFactory.createReceiver(receiverRpc, senderParty, config.getCoreCotConfig());
         addSubPtos(coreCotReceiver);
-        addSecureSubPtos(coreCotReceiver);
         dpprfConfig = config.getDpprfConfig();
         dpprfReceiver = DpprfFactory.createReceiver(receiverRpc, senderParty, dpprfConfig);
         addSubPtos(dpprfReceiver);
-        addSecureSubPtos(dpprfReceiver);
         gf2k = Gf2kFactory.createInstance(envType);
         hash = HashFactory.createInstance(envType, 2 * CommonConstants.BLOCK_BYTE_LENGTH);
     }
@@ -124,7 +122,6 @@ public class Ywl20MaBspCotReceiver extends AbstractBspCotReceiver {
         stopWatch.reset();
         info("{}{} Recv. Init Step 2/2 ({}ms)", ptoStepLogPrefix, getPtoDesc().getPtoName(), keyTime);
 
-        initialized = true;
         info("{}{} Recv. Init end", ptoEndLogPrefix, getPtoDesc().getPtoName());
     }
 

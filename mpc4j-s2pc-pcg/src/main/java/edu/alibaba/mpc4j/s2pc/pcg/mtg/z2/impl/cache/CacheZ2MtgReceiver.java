@@ -38,7 +38,6 @@ public class CacheZ2MtgReceiver extends AbstractZ2MtgParty {
         super(CacheZ2MtgPtoDesc.getInstance(), receiverRpc, senderParty, config);
         z2CoreMtgReceiver = Z2CoreMtgFactory.createReceiver(receiverRpc, senderParty, config.getZ2CoreMtgConfig());
         addSubPtos(z2CoreMtgReceiver);
-        addSecureSubPtos(z2CoreMtgReceiver);
     }
 
     @Override
@@ -63,7 +62,6 @@ public class CacheZ2MtgReceiver extends AbstractZ2MtgParty {
         stopWatch.reset();
         info("{}{} Recv. Init Step 1/1 ({}ms)", ptoStepLogPrefix, getPtoDesc().getPtoName(), initTime);
 
-        initialized = true;
         info("{}{} Recv. Init end", ptoEndLogPrefix, getPtoDesc().getPtoName());
     }
 

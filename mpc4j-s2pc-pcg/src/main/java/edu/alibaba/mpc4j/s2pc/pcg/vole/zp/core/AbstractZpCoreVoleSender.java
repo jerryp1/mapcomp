@@ -1,9 +1,11 @@
 package edu.alibaba.mpc4j.s2pc.pcg.vole.zp.core;
 
+import com.google.common.base.Preconditions;
 import edu.alibaba.mpc4j.common.rpc.Party;
 import edu.alibaba.mpc4j.common.rpc.Rpc;
 import edu.alibaba.mpc4j.common.rpc.desc.PtoDesc;
-import edu.alibaba.mpc4j.common.rpc.pto.AbstractSecureTwoPartyPto;
+import edu.alibaba.mpc4j.common.rpc.pto.AbstractTwoPartyPto;
+import edu.alibaba.mpc4j.common.tool.MathPreconditions;
 import edu.alibaba.mpc4j.common.tool.galoisfield.zp.Zp;
 import edu.alibaba.mpc4j.common.tool.galoisfield.zp.ZpFactory;
 
@@ -16,11 +18,7 @@ import java.util.Arrays;
  * @author Hanwen Feng
  * @date 2022/06/13
  */
-public abstract class AbstractZpCoreVoleSender extends AbstractSecureTwoPartyPto implements ZpCoreVoleSender {
-    /**
-     * 配置项
-     */
-    private final ZpCoreVoleConfig config;
+public abstract class AbstractZpCoreVoleSender extends AbstractTwoPartyPto implements ZpCoreVoleSender {
     /**
      * 素数域Zp
      */
@@ -48,33 +46,27 @@ public abstract class AbstractZpCoreVoleSender extends AbstractSecureTwoPartyPto
 
     protected AbstractZpCoreVoleSender(PtoDesc ptoDesc, Rpc senderRpc, Party receiverParty, ZpCoreVoleConfig config) {
         super(ptoDesc, senderRpc, receiverParty, config);
-        this.config = config;
-    }
-
-    @Override
-    public ZpCoreVoleFactory.ZpCoreVoleType getPtoType() {
-        return config.getPtoType();
     }
 
     protected void setInitInput(BigInteger prime, int maxNum) {
         zp = ZpFactory.createInstance(envType, prime);
         l = zp.getL();
         primeByteLength = zp.getPrimeByteLength();
-        assert maxNum > 0 : "max num must be greater than 0: " + maxNum;
+        MathPreconditions.checkPositive("maxNum", maxNum);
         this.maxNum = maxNum;
-        initialized = false;
+        initState();
     }
 
     protected void setPtoInput(BigInteger[] x) {
-        if (!initialized) {
-            throw new IllegalStateException("Need init ...");
-        }
-        assert x.length > 0 & x.length <= maxNum : "num must be in range [0, " + maxNum + "): " + x.length;
+        checkReadyState();
+        MathPreconditions.checkPositiveInRangeClosed("num", x.length, maxNum);
         num = x.length;
         this.x = Arrays.stream(x)
-            .peek(xi -> {
-                assert zp.validateElement(xi) : "xi must be in range [0, " + zp.getPrime() + "): " + xi;
-            })
+            .peek(xi ->
+                Preconditions.checkArgument(
+                    zp.validateElement(xi), "xi must be in range [0, %s): %s", zp.getPrime(), xi
+                )
+            )
             .toArray(BigInteger[]::new);
         extraInfo++;
     }

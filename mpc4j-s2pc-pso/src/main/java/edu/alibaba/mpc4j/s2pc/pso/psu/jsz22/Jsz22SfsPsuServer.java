@@ -98,13 +98,10 @@ public class Jsz22SfsPsuServer extends AbstractPsuServer {
         super(Jsz22SfsPsuPtoDesc.getInstance(), serverRpc, clientParty, config);
         firstOsnSender = OsnFactory.createSender(serverRpc, clientParty, config.getOsnConfig());
         addSubPtos(firstOsnSender);
-        addSecureSubPtos(firstOsnSender);
         oprfReceiver = OprfFactory.createOprfReceiver(serverRpc, clientParty, config.getOprfConfig());
         addSubPtos(oprfReceiver);
-        addSecureSubPtos(oprfReceiver);
         secondOsnReceiver = OsnFactory.createReceiver(serverRpc, clientParty, config.getOsnConfig());
         addSubPtos(secondOsnReceiver);
-        addSecureSubPtos(secondOsnReceiver);
         cuckooHashBinType = config.getCuckooHashBinType();
         cuckooHashNum = CuckooHashBinFactory.getHashNum(cuckooHashBinType);
     }
@@ -116,6 +113,7 @@ public class Jsz22SfsPsuServer extends AbstractPsuServer {
 
         stopWatch.start();
         int maxBinNum = CuckooHashBinFactory.getBinNum(cuckooHashBinType, maxServerElementSize);
+        int maxPrfNum = CuckooHashBinFactory.getHashNum(cuckooHashBinType) * maxClientElementSize;
         // 初始化各个子协议
         firstOsnSender.init(maxBinNum);
         oprfReceiver.init(maxBinNum);
@@ -125,7 +123,6 @@ public class Jsz22SfsPsuServer extends AbstractPsuServer {
         stopWatch.reset();
         info("{}{} Server Init Step 1/1 ({}ms)", ptoStepLogPrefix, getPtoDesc().getPtoName(), initTime);
 
-        initialized = true;
         info("{}{} Server Init end", ptoEndLogPrefix, getPtoDesc().getPtoName());
     }
 

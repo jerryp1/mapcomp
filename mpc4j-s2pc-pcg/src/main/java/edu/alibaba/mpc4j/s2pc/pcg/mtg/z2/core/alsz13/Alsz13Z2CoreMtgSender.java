@@ -56,10 +56,8 @@ public class Alsz13Z2CoreMtgSender extends AbstractZ2CoreMtgParty {
         super(Alsz13Z2CoreMtgPtoDesc.getInstance(), senderRpc, receiverParty, config);
         ncCotSender = NcCotFactory.createSender(senderRpc, receiverParty, config.getNcCotConfig());
         addSubPtos(ncCotSender);
-        addSecureSubPtos(ncCotSender);
         ncCotReceiver = NcCotFactory.createReceiver(senderRpc, receiverParty, config.getNcCotConfig());
         addSubPtos(ncCotReceiver);
-        addSecureSubPtos(ncCotReceiver);
     }
 
     @Override
@@ -79,7 +77,6 @@ public class Alsz13Z2CoreMtgSender extends AbstractZ2CoreMtgParty {
         stopWatch.reset();
         info("{}{} Send. Init Step 1/1 ({}ms)", ptoStepLogPrefix, getPtoDesc().getPtoName(), initTime);
 
-        initialized = true;
         info("{}{} Send. Init end", ptoEndLogPrefix, getPtoDesc().getPtoName());
     }
 

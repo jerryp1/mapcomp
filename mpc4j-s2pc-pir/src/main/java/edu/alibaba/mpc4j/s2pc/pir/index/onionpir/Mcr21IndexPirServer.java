@@ -53,7 +53,7 @@ public class Mcr21IndexPirServer extends AbstractIndexPirServer {
         stopWatch.start();
         // 一个多项式可表示的字节长度
         int binMaxByteLength = params.getPolyModulusDegree() * params.getPlainModulusBitLength() / Byte.SIZE;
-        setInitInput(elementArrayList, elementByteLength, binMaxByteLength, getPtoType().name());
+        setInitInput(elementArrayList, elementByteLength, binMaxByteLength, getPtoDesc().getPtoName());
         // 服务端对数据库进行编码
         int binNum = params.getBinNum();
         IntStream intStream = this.parallel ? IntStream.range(0, binNum).parallel() : IntStream.range(0, binNum);
@@ -63,7 +63,6 @@ public class Mcr21IndexPirServer extends AbstractIndexPirServer {
         stopWatch.reset();
         info("{}{} Server Init Step 1/1 ({}ms)", ptoStepLogPrefix, getPtoDesc().getPtoName(), initTime);
 
-        initialized = true;
         info("{}{} Server Init end", ptoEndLogPrefix, getPtoDesc().getPtoName());
     }
 

@@ -94,14 +94,6 @@ public class DpprfTest {
     }
 
     @Test
-    public void testPtoType() {
-        DpprfSender sender = DpprfFactory.createSender(senderRpc, receiverRpc.ownParty(), config);
-        DpprfReceiver receiver = DpprfFactory.createReceiver(receiverRpc, senderRpc.ownParty(), config);
-        Assert.assertEquals(config.getPtoType(), sender.getPtoType());
-        Assert.assertEquals(config.getPtoType(), receiver.getPtoType());
-    }
-
-    @Test
     public void testFirstAlpha() {
         DpprfSender sender = DpprfFactory.createSender(senderRpc, receiverRpc.ownParty(), config);
         DpprfReceiver receiver = DpprfFactory.createReceiver(receiverRpc, senderRpc.ownParty(), config);

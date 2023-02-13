@@ -93,13 +93,10 @@ public class Jsz22SfsPsuClient extends AbstractPsuClient {
         super(Jsz22SfsPsuPtoDesc.getInstance(), clientRpc, serverParty, config);
         firstOsnReceiver = OsnFactory.createReceiver(clientRpc, serverParty, config.getOsnConfig());
         addSubPtos(firstOsnReceiver);
-        addSecureSubPtos(firstOsnReceiver);
         oprfSender = OprfFactory.createOprfSender(clientRpc, serverParty, config.getOprfConfig());
         addSubPtos(oprfSender);
-        addSecureSubPtos(oprfSender);
         secondOsnSender = OsnFactory.createSender(clientRpc, serverParty, config.getOsnConfig());
         addSubPtos(secondOsnSender);
-        addSecureSubPtos(secondOsnSender);
         cuckooHashBinType = config.getCuckooHashBinType();
         cuckooHashNum = CuckooHashBinFactory.getHashNum(cuckooHashBinType);
     }
@@ -120,7 +117,6 @@ public class Jsz22SfsPsuClient extends AbstractPsuClient {
         stopWatch.reset();
         info("{}{} Client Init Step 1/1 ({}ms)", ptoStepLogPrefix, getPtoDesc().getPtoName(), initTime);
 
-        initialized = true;
         info("{}{} Client Init end", ptoEndLogPrefix, getPtoDesc().getPtoName());
     }
 

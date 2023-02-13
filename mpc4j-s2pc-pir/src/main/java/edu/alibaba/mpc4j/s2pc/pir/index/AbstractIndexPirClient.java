@@ -3,7 +3,8 @@ package edu.alibaba.mpc4j.s2pc.pir.index;
 import edu.alibaba.mpc4j.common.rpc.Party;
 import edu.alibaba.mpc4j.common.rpc.Rpc;
 import edu.alibaba.mpc4j.common.rpc.desc.PtoDesc;
-import edu.alibaba.mpc4j.common.rpc.pto.AbstractSecureTwoPartyPto;
+import edu.alibaba.mpc4j.common.rpc.pto.AbstractTwoPartyPto;
+import edu.alibaba.mpc4j.common.tool.MathPreconditions;
 
 import java.util.Arrays;
 
@@ -13,11 +14,7 @@ import java.util.Arrays;
  * @author Liqiang Peng
  * @date 2022/8/24
  */
-public abstract class AbstractIndexPirClient extends AbstractSecureTwoPartyPto implements IndexPirClient {
-    /**
-     * 配置项
-     */
-    private final IndexPirConfig config;
+public abstract class AbstractIndexPirClient extends AbstractTwoPartyPto implements IndexPirClient {
     /**
      * 元素字节长度
      */
@@ -33,28 +30,19 @@ public abstract class AbstractIndexPirClient extends AbstractSecureTwoPartyPto i
 
     protected AbstractIndexPirClient(PtoDesc ptoDesc, Rpc clientRpc, Party serverParty, IndexPirConfig config) {
         super(ptoDesc, clientRpc, serverParty, config);
-        this.config = config;
-    }
-
-    @Override
-    public IndexPirFactory.IndexPirType getPtoType() {
-        return config.getProType();
     }
 
     protected void setInitInput(int num, int elementByteLength) {
-        assert elementByteLength > 0 : "element byte length must be greater than 0: " + elementByteLength;
+        MathPreconditions.checkPositive("elementByteLength", elementByteLength);
         this.elementByteLength = elementByteLength;
-        assert num > 0 : "num must be greater than 0: " + num;
+        MathPreconditions.checkPositive("num", num);
         this.num = num;
-        extraInfo++;
-        initialized = false;
+        initState();
     }
 
     protected void setPtoInput(int index) {
-        if (!initialized) {
-            throw new IllegalStateException("Need init...");
-        }
-        assert index >= 0 && index < num : "index must be in range [0, " + num + "): " + index;
+        checkReadyState();
+        MathPreconditions.checkNonNegativeInRange("index", index, num);
         this.index = index;
         extraInfo++;
     }

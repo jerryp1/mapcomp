@@ -1,9 +1,11 @@
 package edu.alibaba.mpc4j.s2pc.pcg.ot.lot.core;
 
+import com.google.common.base.Preconditions;
 import edu.alibaba.mpc4j.common.rpc.Party;
 import edu.alibaba.mpc4j.common.rpc.Rpc;
 import edu.alibaba.mpc4j.common.rpc.desc.PtoDesc;
-import edu.alibaba.mpc4j.common.rpc.pto.AbstractSecureTwoPartyPto;
+import edu.alibaba.mpc4j.common.rpc.pto.AbstractTwoPartyPto;
+import edu.alibaba.mpc4j.common.tool.MathPreconditions;
 import edu.alibaba.mpc4j.common.tool.coder.linear.LinearCoder;
 import edu.alibaba.mpc4j.common.tool.coder.linear.LinearCoderFactory;
 import edu.alibaba.mpc4j.common.tool.utils.BinaryUtils;
@@ -16,11 +18,7 @@ import edu.alibaba.mpc4j.common.tool.utils.CommonUtils;
  * @author Weiran Liu
  * @date 2022/5/25
  */
-public abstract class AbstractCoreLotSender extends AbstractSecureTwoPartyPto implements CoreLotSender {
-    /**
-     * 配置项
-     */
-    private final CoreLotConfig config;
+public abstract class AbstractCoreLotSender extends AbstractTwoPartyPto implements CoreLotSender {
     /**
      * 输入比特长度
      */
@@ -64,31 +62,26 @@ public abstract class AbstractCoreLotSender extends AbstractSecureTwoPartyPto im
 
     protected AbstractCoreLotSender(PtoDesc ptoDesc, Rpc senderRpc, Party receiverParty, CoreLotConfig config) {
         super(ptoDesc, senderRpc, receiverParty, config);
-        this.config = config;
-    }
-
-    @Override
-    public CoreLotFactory.CoreLotType getPtoType() {
-        return config.getPtoType();
     }
 
     protected void setInitInput(int inputBitLength, byte[] delta, int maxNum) {
-        assert inputBitLength > 0: "input bit length must be greater than 0: " + inputBitLength;
+        MathPreconditions.checkPositive("inputBitLength", inputBitLength);
         this.inputBitLength = inputBitLength;
         inputByteLength = CommonUtils.getByteLength(inputBitLength);
         linearCoder = LinearCoderFactory.getInstance(inputBitLength);
         outputBitLength = linearCoder.getCodewordBitLength();
         outputByteLength = linearCoder.getCodewordByteLength();
-        assert delta.length == outputByteLength && BytesUtils.isReduceByteArray(delta, outputBitLength);
+        MathPreconditions.checkEqual("Δ.length", "outputByteLength", delta.length, outputByteLength);
+        Preconditions.checkArgument(BytesUtils.isReduceByteArray(delta, outputBitLength));
         this.delta = BytesUtils.clone(delta);
         deltaBinary = BinaryUtils.byteArrayToBinary(delta, outputBitLength);
-        assert maxNum > 0 : "max num must be greater than 0: " + maxNum;
+        MathPreconditions.checkPositive("maxNum", maxNum);
         this.maxNum = maxNum;
-        initialized = false;
+        initState();
     }
 
     protected void setInitInput(int inputBitLength, int maxNum) {
-        assert inputBitLength > 0: "input bit length must be greater than 0: " + inputBitLength;
+        MathPreconditions.checkPositive("inputBitLength", inputBitLength);
         this.inputBitLength = inputBitLength;
         inputByteLength = CommonUtils.getByteLength(inputBitLength);
         linearCoder = LinearCoderFactory.getInstance(inputBitLength);
@@ -99,16 +92,14 @@ public abstract class AbstractCoreLotSender extends AbstractSecureTwoPartyPto im
         secureRandom.nextBytes(delta);
         BytesUtils.reduceByteArray(delta, outputBitLength);
         deltaBinary = BinaryUtils.byteArrayToBinary(delta, outputBitLength);
-        assert maxNum > 0 : "max num must be greater than 0: " + maxNum;
+        MathPreconditions.checkPositive("maxNum", maxNum);
         this.maxNum = maxNum;
-        initialized = false;
+        initState();
     }
 
     protected void setPtoInput(int num) {
-        if (!initialized) {
-            throw new IllegalStateException("Need init...");
-        }
-        assert num > 0 && num <= maxNum : "num must be in range (0, " + maxNum + "]: " + num;
+        checkReadyState();
+        MathPreconditions.checkPositiveInRangeClosed("num", num, maxNum);
         this.num = num;
         byteNum = CommonUtils.getByteLength(num);
         extraInfo++;

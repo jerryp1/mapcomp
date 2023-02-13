@@ -28,7 +28,6 @@ public class DirectNcLotReceiver extends AbstractNcLotReceiver {
         super(DirectNcLotPtoDesc.getInstance(), receiverRpc, senderParty, config);
         coreLotReceiver = CoreLotFactory.createReceiver(receiverRpc, senderParty, config.getCoreLotConfig());
         addSubPtos(coreLotReceiver);
-        addSecureSubPtos(coreLotReceiver);
     }
 
     @Override
@@ -43,7 +42,6 @@ public class DirectNcLotReceiver extends AbstractNcLotReceiver {
         stopWatch.reset();
         info("{}{} Recv. Init Step 1/1 ({}ms)", ptoStepLogPrefix, getPtoDesc().getPtoName(), initTime);
 
-        initialized = true;
         info("{}{} Recv. Init end", ptoEndLogPrefix, getPtoDesc().getPtoName());
 
     }

@@ -1,7 +1,6 @@
 package edu.alibaba.mpc4j.s2pc.aby.hamming;
 
 import edu.alibaba.mpc4j.common.rpc.MpcAbortException;
-import edu.alibaba.mpc4j.common.rpc.pto.SecurePto;
 import edu.alibaba.mpc4j.common.rpc.pto.TwoPartyPto;
 import edu.alibaba.mpc4j.s2pc.aby.basics.bc.SquareSbitVector;
 
@@ -11,16 +10,7 @@ import edu.alibaba.mpc4j.s2pc.aby.basics.bc.SquareSbitVector;
  * @author Weiran Liu
  * @date 2022/11/22
  */
-public interface HammingParty extends TwoPartyPto, SecurePto {
-
-    /**
-     * 返回协议类型。
-     *
-     * @return 协议类型。
-     */
-    @Override
-    HammingFactory.HammingType getPtoType();
-
+public interface HammingParty extends TwoPartyPto {
     /**
      * 初始化协议。
      *

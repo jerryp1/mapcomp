@@ -1,7 +1,6 @@
 package edu.alibaba.mpc4j.s2pc.pcg.ot.cot;
 
 import edu.alibaba.mpc4j.common.rpc.MpcAbortException;
-import edu.alibaba.mpc4j.common.rpc.pto.SecurePto;
 import edu.alibaba.mpc4j.common.rpc.pto.TwoPartyPto;
 
 /**
@@ -10,10 +9,7 @@ import edu.alibaba.mpc4j.common.rpc.pto.TwoPartyPto;
  * @author Weiran Liu
  * @date 2022/7/13
  */
-public interface CotReceiver extends TwoPartyPto, SecurePto {
-
-    @Override
-    CotFactory.CotType getPtoType();
+public interface CotReceiver extends TwoPartyPto {
 
     /**
      * 初始化协议。

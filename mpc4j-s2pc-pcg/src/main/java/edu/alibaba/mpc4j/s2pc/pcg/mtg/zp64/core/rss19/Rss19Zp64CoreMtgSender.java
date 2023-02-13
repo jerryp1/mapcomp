@@ -84,7 +84,6 @@ public class Rss19Zp64CoreMtgSender extends AbstractZp64CoreMtgParty {
         stopWatch.reset();
         info("{}{} Sender Step 1/1 ({}ms)", ptoStepLogPrefix, getPtoDesc().getPtoName(), initTime);
 
-        initialized = true;
         info("{}{} Sender Init end", ptoEndLogPrefix, getPtoDesc().getPtoName());
     }
 

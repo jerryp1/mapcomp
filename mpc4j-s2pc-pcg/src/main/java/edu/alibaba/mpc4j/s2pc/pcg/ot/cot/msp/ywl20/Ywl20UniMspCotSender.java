@@ -65,7 +65,6 @@ public class Ywl20UniMspCotSender extends AbstractMspCotSender {
         super(Ywl20UniMspCotPtoDesc.getInstance(), senderRpc, receiverParty, config);
         bspCotSender = BspCotFactory.createSender(senderRpc, receiverParty, config.getBspCotConfig());
         addSubPtos(bspCotSender);
-        addSecureSubPtos(bspCotSender);
     }
 
     @Override
@@ -82,7 +81,6 @@ public class Ywl20UniMspCotSender extends AbstractMspCotSender {
         stopWatch.reset();
         info("{}{} Send. Init Step 1/1 ({}ms)", ptoStepLogPrefix, getPtoDesc().getPtoName(), initTime);
 
-        initialized = true;
         info("{}{} Send. Init end", ptoBeginLogPrefix, getPtoDesc().getPtoName());
     }
 

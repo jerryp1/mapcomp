@@ -179,14 +179,6 @@ public class NcCotTest {
     }
 
     @Test
-    public void testPtoType() {
-        NcCotSender sender = NcCotFactory.createSender(senderRpc, receiverRpc.ownParty(), config);
-        NcCotReceiver receiver = NcCotFactory.createReceiver(receiverRpc, senderRpc.ownParty(), config);
-        Assert.assertEquals(config.getPtoType(), sender.getPtoType());
-        Assert.assertEquals(config.getPtoType(), receiver.getPtoType());
-    }
-
-    @Test
     public void test1Round1Num() {
         NcCotSender sender = NcCotFactory.createSender(senderRpc, receiverRpc.ownParty(), config);
         NcCotReceiver receiver = NcCotFactory.createReceiver(receiverRpc, senderRpc.ownParty(), config);

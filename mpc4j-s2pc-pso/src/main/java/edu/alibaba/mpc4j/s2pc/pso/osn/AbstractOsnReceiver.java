@@ -1,13 +1,17 @@
 package edu.alibaba.mpc4j.s2pc.pso.osn;
 
+import com.google.common.base.Preconditions;
 import edu.alibaba.mpc4j.common.rpc.Party;
 import edu.alibaba.mpc4j.common.rpc.Rpc;
 import edu.alibaba.mpc4j.common.rpc.desc.PtoDesc;
-import edu.alibaba.mpc4j.common.rpc.pto.AbstractSecureTwoPartyPto;
+import edu.alibaba.mpc4j.common.rpc.pto.AbstractTwoPartyPto;
 import edu.alibaba.mpc4j.common.tool.CommonConstants;
+import edu.alibaba.mpc4j.common.tool.MathPreconditions;
 import edu.alibaba.mpc4j.common.tool.benes.BenesNetwork;
 import edu.alibaba.mpc4j.common.tool.benes.BenesNetworkFactory;
 import edu.alibaba.mpc4j.common.tool.benes.BenesNetworkUtils;
+
+import java.util.Arrays;
 
 /**
  * OSN协议接收方。
@@ -15,7 +19,7 @@ import edu.alibaba.mpc4j.common.tool.benes.BenesNetworkUtils;
  * @author Weiran Liu
  * @date 2022/02/09
  */
-public abstract class AbstractOsnReceiver extends AbstractSecureTwoPartyPto implements OsnReceiver {
+public abstract class AbstractOsnReceiver extends AbstractTwoPartyPto implements OsnReceiver {
     /**
      * 配置项
      */
@@ -66,24 +70,25 @@ public abstract class AbstractOsnReceiver extends AbstractSecureTwoPartyPto impl
         this.config = config;
     }
 
-    @Override
-    public OsnFactory.OsnType getPtoType() {
-        return config.getPtoType();
-    }
-
     protected void setInitInput(int maxN) {
-        assert maxN > 1;
+        MathPreconditions.checkGreater("maxN", maxN, 1);
         this.maxN = maxN;
-        this.maxLevel = BenesNetworkUtils.getLevel(maxN);
-        this.maxWidth = BenesNetworkUtils.getWidth(maxN);
-        this.maxSwitchNum = maxLevel * maxWidth;
-        initialized = false;
+        maxLevel = BenesNetworkUtils.getLevel(maxN);
+        maxWidth = BenesNetworkUtils.getWidth(maxN);
+        maxSwitchNum = maxLevel * maxWidth;
+        initState();
     }
 
     protected void setPtoInput(int[] permutationMap, int byteLength) {
-        assert byteLength >= CommonConstants.STATS_BYTE_LENGTH;
+        checkReadyState();
+        MathPreconditions.checkGreaterOrEqual("byteLength", byteLength, CommonConstants.STATS_BYTE_LENGTH);
         this.byteLength = byteLength;
-        assert BenesNetworkUtils.validPermutation(permutationMap) && permutationMap.length <= maxN;
+        Preconditions.checkArgument(
+            BenesNetworkUtils.validPermutation(permutationMap),
+            "permutation map is invalid: %s", Arrays.toString(permutationMap)
+        );
+        MathPreconditions.checkGreater("n", permutationMap.length, 1);
+        MathPreconditions.checkLessOrEqual("n", permutationMap.length, maxN);
         n = permutationMap.length;
         benesNetwork = BenesNetworkFactory.createInstance(envType, permutationMap);
         level = benesNetwork.getLevel();

@@ -1,7 +1,6 @@
 package edu.alibaba.mpc4j.s2pc.pcg.mtg.zl.core;
 
 import edu.alibaba.mpc4j.common.rpc.MpcAbortException;
-import edu.alibaba.mpc4j.common.rpc.pto.SecurePto;
 import edu.alibaba.mpc4j.common.rpc.pto.TwoPartyPto;
 import edu.alibaba.mpc4j.s2pc.pcg.mtg.zl.ZlTriple;
 
@@ -11,15 +10,7 @@ import edu.alibaba.mpc4j.s2pc.pcg.mtg.zl.ZlTriple;
  * @author Weiran Liu
  * @date 2022/8/11
  */
-public interface ZlCoreMtgParty extends TwoPartyPto, SecurePto {
-    /**
-     * 返回协议类型。
-     *
-     * @return 协议类型。
-     */
-    @Override
-    ZlCoreMtgFactory.ZlCoreMtgType getPtoType();
-
+public interface ZlCoreMtgParty extends TwoPartyPto {
     /**
      * 初始化协议。
      *

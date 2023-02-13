@@ -4,7 +4,8 @@ import edu.alibaba.mpc4j.common.rpc.MpcAbortException;
 import edu.alibaba.mpc4j.common.rpc.Party;
 import edu.alibaba.mpc4j.common.rpc.Rpc;
 import edu.alibaba.mpc4j.common.rpc.desc.PtoDesc;
-import edu.alibaba.mpc4j.common.rpc.pto.AbstractSecureTwoPartyPto;
+import edu.alibaba.mpc4j.common.rpc.pto.AbstractTwoPartyPto;
+import edu.alibaba.mpc4j.common.tool.MathPreconditions;
 import edu.alibaba.mpc4j.common.tool.bitvector.BitVector;
 import edu.alibaba.mpc4j.common.tool.bitvector.BitVectorFactory;
 
@@ -16,7 +17,7 @@ import java.util.Arrays;
  * @author Weiran Liu
  * @date 2022/02/13
  */
-public abstract class AbstractBcParty extends AbstractSecureTwoPartyPto implements BcParty {
+public abstract class AbstractBcParty extends AbstractTwoPartyPto implements BcParty {
     /**
      * protocol configuration
      */
@@ -57,80 +58,54 @@ public abstract class AbstractBcParty extends AbstractSecureTwoPartyPto implemen
         xorGateNum = 0;
     }
 
-    @Override
-    public BcFactory.BcType getPtoType() {
-        return config.getPtoType();
-    }
-
     protected void setInitInput(int maxRoundBitNum, int updateBitNum) {
-        assert maxRoundBitNum > 0 && maxRoundBitNum <= config.maxBaseNum()
-            : "maxRoundBitNum must be in range (0, " + config.maxBaseNum() + "]";
+        MathPreconditions.checkPositiveInRangeClosed("maxRoundBitNum", maxRoundBitNum, config.maxBaseNum());
         this.maxRoundBitNum = maxRoundBitNum;
-        assert updateBitNum >= maxRoundBitNum : "updateBitNum must be greater or equal to maxRoundBitNum";
+        MathPreconditions.checkGreaterOrEqual("updateBitNum", updateBitNum, maxRoundBitNum);
         this.maxUpdateBitNum = updateBitNum;
-        initialized = false;
+        initState();
     }
 
     protected void setShareOwnInput(BitVector bitVector) {
-        if (!initialized) {
-            throw new IllegalStateException("Need init...");
-        }
-        assert bitVector.bitNum() <= maxRoundBitNum
-            : "the number of bits must be less than or equal to " + maxRoundBitNum + ": " + bitVector.bitNum();
+        checkReadyState();
+        MathPreconditions.checkPositiveInRangeClosed("bitNum", bitVector.bitNum(), maxRoundBitNum);
         bitNum = bitVector.bitNum();
         inputBitNum += bitNum;
     }
 
     protected void setShareOtherInput(int bitNum) {
-        if (!initialized) {
-            throw new IllegalStateException("Need init...");
-        }
-        assert bitNum <= maxRoundBitNum
-            : "the number of bits must be less than or equal to " + maxRoundBitNum + ": " + bitNum;
+        checkReadyState();
+        MathPreconditions.checkPositiveInRangeClosed("bitNum", bitNum, maxRoundBitNum);
         this.bitNum = bitNum;
         inputBitNum += bitNum;
     }
 
     protected void setAndInput(SquareSbitVector xi, SquareSbitVector yi) {
-        if (!initialized) {
-            throw new IllegalStateException("Need init...");
-        }
-        assert xi.bitNum() == yi.bitNum()
-            : "two BitVector must have the same number of bits (" + xi.bitNum() + " : " + yi.bitNum() + ")";
-        assert xi.bitNum() <= maxRoundBitNum
-            : "the number of bits must be less than or equal to " + maxRoundBitNum + ": " + xi.bitNum();
+        checkReadyState();
+        MathPreconditions.checkEqual("xi.bitNum", "yi.bitNum", xi.bitNum(), yi.bitNum());
+        MathPreconditions.checkPositiveInRangeClosed("bitNum", xi.bitNum(), maxRoundBitNum);
         // the number of AND gates is added during the protocol execution.
         bitNum = xi.bitNum();
     }
 
     protected void setXorInput(SquareSbitVector xi, SquareSbitVector yi) {
-        if (!initialized) {
-            throw new IllegalStateException("Need init...");
-        }
-        assert xi.bitNum() == yi.bitNum()
-            : "two BitVector must have the same number of bits (" + xi.bitNum() + " : " + yi.bitNum() + ")";
-        assert xi.bitNum() <= maxRoundBitNum
-            : "the number of bits must be less than or equal to " + maxRoundBitNum + ": " + xi.bitNum();
+        checkReadyState();
+        MathPreconditions.checkEqual("xi.bitNum", "yi.bitNum", xi.bitNum(), yi.bitNum());
+        MathPreconditions.checkPositiveInRangeClosed("bitNum", xi.bitNum(), maxRoundBitNum);
         // the number of XOR gates is added during the protocol execution.
         bitNum = xi.bitNum();
     }
 
     protected void setRevealOwnInput(SquareSbitVector xi) {
-        if (!initialized) {
-            throw new IllegalStateException("Need init...");
-        }
-        assert xi.bitNum() <= maxRoundBitNum
-            : "the number of bits must be less than or equal to " + maxRoundBitNum + ": " + xi.bitNum();
+        checkReadyState();
+        MathPreconditions.checkPositiveInRangeClosed("xi.bitNum", xi.bitNum(), maxRoundBitNum);
         // the number of output bits is added during the protocol execution.
         bitNum = xi.bitNum();
     }
 
     protected void setRevealOtherInput(SquareSbitVector xi) {
-        if (!initialized) {
-            throw new IllegalStateException("Need init...");
-        }
-        assert xi.bitNum() <= maxRoundBitNum
-            : "the number of bits must be less than or equal to " + maxRoundBitNum + ": " + xi.bitNum();
+        checkReadyState();
+        MathPreconditions.checkPositiveInRangeClosed("xi.bitNum", xi.bitNum(), maxRoundBitNum);
         // the number of output bits is added during the protocol execution.
         bitNum = xi.bitNum();
     }

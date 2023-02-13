@@ -433,7 +433,7 @@ public class Cmg21UpsiParams implements UpsiParams {
     }
 
     @Override
-    public int maxClientSize() {
+    public int maxClientElementSize() {
         return maxClientSize;
     }
 

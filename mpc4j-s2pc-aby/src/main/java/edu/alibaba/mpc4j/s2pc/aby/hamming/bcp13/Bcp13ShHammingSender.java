@@ -43,7 +43,6 @@ public class Bcp13ShHammingSender extends AbstractHammingParty {
         super(Bcp13ShHammingPtoDesc.getInstance(), senderRpc, receiverParty, config);
         cotSender = CotFactory.createSender(senderRpc, receiverParty, config.getCotConfig());
         addSubPtos(cotSender);
-        addSecureSubPtos(cotSender);
     }
 
     @Override
@@ -61,7 +60,6 @@ public class Bcp13ShHammingSender extends AbstractHammingParty {
         stopWatch.reset();
         info("{}{} Send. Init Step 1/1 ({}ms)", ptoStepLogPrefix, getPtoDesc().getPtoName(), initTime);
 
-        initialized = true;
         info("{}{} Send. Init end", ptoEndLogPrefix, getPtoDesc().getPtoName());
     }
 

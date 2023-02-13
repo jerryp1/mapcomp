@@ -1,6 +1,6 @@
 package edu.alibaba.mpc4j.s2pc.pcg.ot.lot;
 
-import edu.alibaba.mpc4j.common.rpc.pto.SecurePtoConfig;
+import edu.alibaba.mpc4j.common.rpc.pto.MultiPartyPtoConfig;
 
 /**
  * 2^l选1-OT协议配置项。
@@ -8,7 +8,7 @@ import edu.alibaba.mpc4j.common.rpc.pto.SecurePtoConfig;
  * @author Weiran Liu
  * @date 2022/5/23
  */
-public interface LotConfig extends SecurePtoConfig {
+public interface LotConfig extends MultiPartyPtoConfig {
     /**
      * 返回协议类型。
      *

@@ -119,14 +119,6 @@ public class OsnTest {
     }
 
     @Test
-    public void testPtoType() {
-        OsnSender sender = OsnFactory.createSender(senderRpc, receiverRpc.ownParty(), config);
-        OsnReceiver receiver = OsnFactory.createReceiver(receiverRpc, senderRpc.ownParty(), config);
-        Assert.assertEquals(config.getPtoType(), sender.getPtoType());
-        Assert.assertEquals(config.getPtoType(), receiver.getPtoType());
-    }
-
-    @Test
     public void test2N() {
         OsnSender sender = OsnFactory.createSender(senderRpc, receiverRpc.ownParty(), config);
         OsnReceiver receiver = OsnFactory.createReceiver(receiverRpc, senderRpc.ownParty(), config);

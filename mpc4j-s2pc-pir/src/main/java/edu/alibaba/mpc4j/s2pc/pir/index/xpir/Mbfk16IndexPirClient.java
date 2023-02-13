@@ -61,7 +61,6 @@ public class Mbfk16IndexPirClient extends AbstractIndexPirClient {
         stopWatch.reset();
         info("{}{} Client Init Step 1/1 ({}ms)", ptoStepLogPrefix, getPtoDesc().getPtoName(), initTime);
 
-        initialized = true;
         info("{}{} Client Init end", ptoEndLogPrefix, getPtoDesc().getPtoName());
     }
 

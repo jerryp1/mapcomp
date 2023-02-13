@@ -3,7 +3,8 @@ package edu.alibaba.mpc4j.s2pc.pcg.vole.gf2k.core;
 import edu.alibaba.mpc4j.common.rpc.Party;
 import edu.alibaba.mpc4j.common.rpc.Rpc;
 import edu.alibaba.mpc4j.common.rpc.desc.PtoDesc;
-import edu.alibaba.mpc4j.common.rpc.pto.AbstractSecureTwoPartyPto;
+import edu.alibaba.mpc4j.common.rpc.pto.AbstractTwoPartyPto;
+import edu.alibaba.mpc4j.common.tool.MathPreconditions;
 import edu.alibaba.mpc4j.common.tool.galoisfield.gf2k.Gf2k;
 import edu.alibaba.mpc4j.common.tool.galoisfield.gf2k.Gf2kFactory;
 import edu.alibaba.mpc4j.common.tool.galoisfield.gf2k.Gf2kGadget;
@@ -16,11 +17,7 @@ import java.util.Arrays;
  * @author Weiran Liu
  * @date 2022/9/22
  */
-public abstract class AbstractGf2kCoreVoleSender extends AbstractSecureTwoPartyPto implements Gf2kCoreVoleSender {
-    /**
-     * 配置项
-     */
-    private final Gf2kCoreVoleConfig config;
+public abstract class AbstractGf2kCoreVoleSender extends AbstractTwoPartyPto implements Gf2kCoreVoleSender {
     /**
      * GF2K算法
      */
@@ -52,33 +49,24 @@ public abstract class AbstractGf2kCoreVoleSender extends AbstractSecureTwoPartyP
 
     protected AbstractGf2kCoreVoleSender(PtoDesc ptoDesc, Rpc senderRpc, Party receiverParty, Gf2kCoreVoleConfig config) {
         super(ptoDesc, senderRpc, receiverParty, config);
-        this.config = config;
         gf2k = Gf2kFactory.createInstance(envType);
         l = gf2k.getL();
         byteL = gf2k.getByteL();
         gf2kGadget = new Gf2kGadget(gf2k);
     }
 
-    @Override
-    public Gf2kCoreVoleFactory.Gf2kCoreVoleType getPtoType() {
-        return config.getPtoType();
-    }
-
     protected void setInitInput(int maxNum) {
+        MathPreconditions.checkPositive("maxNum", maxNum);
         this.maxNum = maxNum;
-        initialized = false;
+        initState();
     }
 
     protected void setPtoInput(byte[][] x) {
-        if (!initialized) {
-            throw new IllegalStateException("Need init ...");
-        }
-        assert x.length > 0 & x.length <= maxNum : "num must be in range [0, " + maxNum + "): " + x.length;
+        checkReadyState();
+        MathPreconditions.checkPositiveInRangeClosed("num", x.length, maxNum);
         num = x.length;
         this.x = Arrays.stream(x)
-            .peek(xi -> {
-                assert xi.length == byteL;
-            })
+            .peek(xi -> MathPreconditions.checkEqual("x.length", "l(B)", xi.length, byteL))
             .toArray(byte[][]::new);
         extraInfo++;
     }

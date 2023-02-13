@@ -145,14 +145,6 @@ public class PsuTest {
     }
 
     @Test
-    public void testPtoType() {
-        PsuServer server = PsuFactory.createServer(serverRpc, clientRpc.ownParty(), config);
-        PsuClient client = PsuFactory.createClient(clientRpc, serverRpc.ownParty(), config);
-        Assert.assertEquals(config.getPtoType(), server.getPtoType());
-        Assert.assertEquals(config.getPtoType(), client.getPtoType());
-    }
-
-    @Test
     public void test2() {
         PsuServer server = PsuFactory.createServer(serverRpc, clientRpc.ownParty(), config);
         PsuClient client = PsuFactory.createClient(clientRpc, serverRpc.ownParty(), config);

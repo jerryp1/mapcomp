@@ -77,13 +77,10 @@ public class Jsz22SfcPsuClient extends AbstractPsuClient {
         super(Jsz22SfcPsuPtoDesc.getInstance(), clientRpc, serverParty, config);
         osnSender = OsnFactory.createSender(clientRpc, serverParty, config.getOsnConfig());
         addSubPtos(osnSender);
-        addSecureSubPtos(osnSender);
         oprfReceiver = OprfFactory.createOprfReceiver(clientRpc, serverParty, config.getOprfConfig());
         addSubPtos(oprfReceiver);
-        addSecureSubPtos(oprfReceiver);
         coreCotReceiver = CoreCotFactory.createReceiver(clientRpc, serverParty, config.getCoreCotConfig());
         addSubPtos(coreCotReceiver);
-        addSecureSubPtos(coreCotReceiver);
         cuckooHashBinType = config.getCuckooHashBinType();
         cuckooHashNum = CuckooHashBinFactory.getHashNum(cuckooHashBinType);
     }
@@ -95,16 +92,17 @@ public class Jsz22SfcPsuClient extends AbstractPsuClient {
 
         stopWatch.start();
         int maxBinNum = CuckooHashBinFactory.getBinNum(cuckooHashBinType, maxClientElementSize);
+        // note that in PSU, we must use no-stash cuckoo hash
+        int maxPrfNum = CuckooHashBinFactory.getHashNum(cuckooHashBinType) * maxServerElementSize;
         // 初始化各个子协议
         osnSender.init(maxBinNum);
-        oprfReceiver.init(maxBinNum);
+        oprfReceiver.init(maxBinNum, maxPrfNum);
         coreCotReceiver.init(maxServerElementSize);
         stopWatch.stop();
         long initTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
         stopWatch.reset();
         info("{}{} Client Init Step 1/1 ({}ms)", ptoStepLogPrefix, getPtoDesc().getPtoName(), initTime);
 
-        initialized = true;
         info("{}{} Client Init end", ptoEndLogPrefix, getPtoDesc().getPtoName());
     }
 

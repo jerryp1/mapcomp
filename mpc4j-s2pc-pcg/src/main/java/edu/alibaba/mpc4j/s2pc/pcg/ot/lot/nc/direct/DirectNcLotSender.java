@@ -26,7 +26,6 @@ public class DirectNcLotSender extends AbstractNcLotSender {
         super(DirectNcLotPtoDesc.getInstance(), senderRpc, receiverParty, config);
         coreLotSender = CoreLotFactory.createSender(senderRpc, receiverParty, config.getCoreLotConfig());
         addSubPtos(coreLotSender);
-        addSecureSubPtos(coreLotSender);
     }
 
     @Override
@@ -41,7 +40,6 @@ public class DirectNcLotSender extends AbstractNcLotSender {
         stopWatch.reset();
         info("{}{} Send. Init Step 1/1 ({}ms)", ptoStepLogPrefix, getPtoDesc().getPtoName(), initTime);
 
-        initialized = true;
         info("{}{} Send. Init end", ptoEndLogPrefix, getPtoDesc().getPtoName());
     }
 

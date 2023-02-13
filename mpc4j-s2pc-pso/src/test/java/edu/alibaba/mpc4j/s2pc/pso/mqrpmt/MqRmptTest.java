@@ -62,63 +62,6 @@ public class MqRmptTest {
         OsnConfig directCotOsnConfig = new Gmr21OsnConfig.Builder()
             .setCotConfig(new DirectCotConfig.Builder(SecurityModel.SEMI_HONEST).build())
             .build();
-//
-//        // JSZ22_SFC (direct COT, NAIVE_3_HASH)
-//        configurationParams.add(new Object[] {
-//            PsuFactory.PsuType.JSZ22_SFC.name() + " (direct COT, NAIVE_3_HASH)",
-//            new Jsz22SfcPsuConfig.Builder().setOsnConfig(directCotOsnConfig).build(),
-//        });
-//        // JSZ22_SFC (silent COT, NAIVE_3_HASH)
-//        configurationParams.add(new Object[] {
-//            PsuFactory.PsuType.JSZ22_SFC.name() + " (silent COT, NAIVE_3_HASH)",
-//            new Jsz22SfcPsuConfig.Builder().build(),
-//        });
-//        // JSZ22_SFC (direct COT, NAIVE_4_HASH)
-//        configurationParams.add(new Object[] {
-//            PsuFactory.PsuType.JSZ22_SFC.name() + " (direct COT, NAIVE_4_HASH)",
-//            new Jsz22SfcPsuConfig.Builder()
-//                .setOsnConfig(directCotOsnConfig)
-//                .setCuckooHashBinType(CuckooHashBinType.NAIVE_4_HASH)
-//                .build(),
-//        });
-//        // JSZ22_SFC (direct COT, NO_STASH_PSZ18_3_HASH)
-//        configurationParams.add(new Object[] {
-//            PsuFactory.PsuType.JSZ22_SFC.name() + " (direct COT, NO_STASH_PSZ18_3_HASH)",
-//            new Jsz22SfcPsuConfig.Builder()
-//                .setOsnConfig(directCotOsnConfig)
-//                .setCuckooHashBinType(CuckooHashBinType.NO_STASH_PSZ18_3_HASH)
-//                .build(),
-//        });
-//
-//        // ZCL22_PKE (H3_SINGLETON_GCT)
-//        configurationParams.add(new Object[] {
-//            PsuFactory.PsuType.ZCL22_PKE.name() + " (H3_SINGLETON_GCT)",
-//            new Zcl22PkePsuConfig.Builder().setEccOvdmType(EccOvdmType.H3_SINGLETON_GCT).build(),
-//        });
-//        // ZCL22_PKE (H2_SINGLETON_GCT)
-//        configurationParams.add(new Object[] {
-//            PsuFactory.PsuType.ZCL22_PKE.name() + " (H3_SINGLETON_GCT)",
-//            new Zcl22PkePsuConfig.Builder().setEccOvdmType(EccOvdmType.H2_SINGLETON_GCT).build(),
-//        });
-//
-//        // ZCL22_SKE (H3_SINGLETON_GCT)
-//        configurationParams.add(new Object[] {
-//            PsuFactory.PsuType.ZCL22_SKE.name() + " (H3_SINGLETON_GCT)",
-//            new Zcl22SkePsuConfig.Builder().setGf2eOvdmType(Gf2eOvdmType.H3_SINGLETON_GCT).build(),
-//        });
-//        // ZCL22_SKE (H2_SINGLETON_GCT)
-//        configurationParams.add(new Object[] {
-//            PsuFactory.PsuType.ZCL22_SKE.name() + " (H2_SINGLETON_GCT)",
-//            new Zcl22SkePsuConfig.Builder().setGf2eOvdmType(Gf2eOvdmType.H2_SINGLETON_GCT).build(),
-//        });
-//        // ZCL22_SKE (file Z2_MTG)
-//        Z2MtgConfig fileZ2MtgConfig = new FileZ2MtgConfig.Builder(SecurityModel.SEMI_HONEST).build();
-//        BcConfig fileBcConfig = new Bea91BcConfig.Builder().setZ2MtgConfig(fileZ2MtgConfig).build();
-//        OprpConfig fileOprpConfig = new LowMcOprpConfig.Builder().setBcConfig(fileBcConfig).build();
-//        configurationParams.add(new Object[] {
-//            PsuFactory.PsuType.ZCL22_SKE.name() + " (File Z2_MTG)",
-//            new Zcl22SkePsuConfig.Builder().setOprpConfig(fileOprpConfig).setBcConfig(fileBcConfig).build()
-//        });
         // GMR21
         configurationParams.add(new Object[] {
             MqRpmtFactory.MqRpmtType.GMR21.name(),
@@ -151,14 +94,6 @@ public class MqRmptTest {
         serverRpc = rpcManager.getRpc(0);
         clientRpc = rpcManager.getRpc(1);
         this.config = config;
-    }
-
-    @Test
-    public void testPtoType() {
-        MqRpmtServer server = MqRpmtFactory.createServer(serverRpc, clientRpc.ownParty(), config);
-        MqRpmtClient client = MqRpmtFactory.createClient(clientRpc, serverRpc.ownParty(), config);
-        Assert.assertEquals(config.getPtoType(), server.getPtoType());
-        Assert.assertEquals(config.getPtoType(), client.getPtoType());
     }
 
     @Test

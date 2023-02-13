@@ -1,7 +1,6 @@
 package edu.alibaba.mpc4j.s2pc.pir.index;
 
 import edu.alibaba.mpc4j.common.rpc.MpcAbortException;
-import edu.alibaba.mpc4j.common.rpc.pto.SecurePto;
 import edu.alibaba.mpc4j.common.rpc.pto.TwoPartyPto;
 
 /**
@@ -10,15 +9,7 @@ import edu.alibaba.mpc4j.common.rpc.pto.TwoPartyPto;
  * @author Liqiang Peng
  * @date 2022/8/10
  */
-public interface IndexPirClient extends TwoPartyPto, SecurePto {
-    /**
-     * 返回协议类型。
-     *
-     * @return 协议类型。
-     */
-    @Override
-    IndexPirFactory.IndexPirType getPtoType();
-
+public interface IndexPirClient extends TwoPartyPto {
     /**
      * 初始化协议。
      *

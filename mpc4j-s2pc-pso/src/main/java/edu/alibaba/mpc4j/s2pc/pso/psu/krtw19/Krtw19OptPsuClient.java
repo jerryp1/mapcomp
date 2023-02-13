@@ -91,13 +91,10 @@ public class Krtw19OptPsuClient extends AbstractPsuClient {
         super(Krtw19OptPsuPtoDesc.getInstance(), clientRpc, serverParty, config);
         rpmtOprfSender = OprfFactory.createOprfSender(clientRpc, serverParty, config.getRpmtOprfConfig());
         addSubPtos(rpmtOprfSender);
-        addSecureSubPtos(rpmtOprfSender);
         peqtOprfReceiver = OprfFactory.createOprfReceiver(clientRpc, serverParty, config.getPeqtOprfConfig());
         addSubPtos(peqtOprfReceiver);
-        addSecureSubPtos(peqtOprfReceiver);
         coreCotReceiver = CoreCotFactory.createReceiver(clientRpc, serverParty, config.getCoreCotConfig());
         addSubPtos(coreCotReceiver);
-        addSecureSubPtos(coreCotReceiver);
         pipeSize = config.getPipeSize();
     }
 
@@ -131,7 +128,6 @@ public class Krtw19OptPsuClient extends AbstractPsuClient {
         stopWatch.reset();
         info("{}{} Client Init Step 2/2 ({}ms)", ptoStepLogPrefix, getPtoDesc().getPtoName(), keyTime);
 
-        initialized = true;
         info("{}{} Client Init end", ptoEndLogPrefix, getPtoDesc().getPtoName());
     }
 

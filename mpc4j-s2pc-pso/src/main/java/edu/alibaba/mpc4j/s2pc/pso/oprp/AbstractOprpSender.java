@@ -4,8 +4,9 @@ import edu.alibaba.mpc4j.common.rpc.MpcAbortException;
 import edu.alibaba.mpc4j.common.rpc.Party;
 import edu.alibaba.mpc4j.common.rpc.Rpc;
 import edu.alibaba.mpc4j.common.rpc.desc.PtoDesc;
-import edu.alibaba.mpc4j.common.rpc.pto.AbstractSecureTwoPartyPto;
+import edu.alibaba.mpc4j.common.rpc.pto.AbstractTwoPartyPto;
 import edu.alibaba.mpc4j.common.tool.CommonConstants;
+import edu.alibaba.mpc4j.common.tool.MathPreconditions;
 import edu.alibaba.mpc4j.common.tool.utils.CommonUtils;
 
 /**
@@ -14,11 +15,7 @@ import edu.alibaba.mpc4j.common.tool.utils.CommonUtils;
  * @author Weiran Liu
  * @date 2022/02/14
  */
-public abstract class AbstractOprpSender extends AbstractSecureTwoPartyPto implements OprpSender {
-    /**
-     * 配置项
-     */
-    private final OprpConfig config;
+public abstract class AbstractOprpSender extends AbstractTwoPartyPto implements OprpSender {
     /**
      * 最大批处理数量
      */
@@ -46,25 +43,20 @@ public abstract class AbstractOprpSender extends AbstractSecureTwoPartyPto imple
 
     protected AbstractOprpSender(PtoDesc ptoDesc, Rpc senderRpc, Party receiverParty, OprpConfig config) {
         super(ptoDesc, senderRpc, receiverParty, config);
-        this.config = config;
     }
 
-    @Override
-    public OprpFactory.OprpType getPtoType() {
-        return config.getPtoType();
-    }
-
-    protected void setInitInput(int matchBatchSize) {
-        assert matchBatchSize > 0;
-        this.maxBatchSize = matchBatchSize;
-        maxRoundBatchSize = CommonUtils.getByteLength(maxBatchSize) * Byte.SIZE;
-        initialized = false;
+    protected void setInitInput(int maxBatchSize) {
+        MathPreconditions.checkPositive("maxBatchSize", maxBatchSize);
+        this.maxBatchSize = maxBatchSize;
+        maxRoundBatchSize = CommonUtils.getByteLength(this.maxBatchSize) * Byte.SIZE;
+        initState();
     }
 
     protected void setPtoInput(byte[] key, int batchSize) throws MpcAbortException {
-        assert key.length == CommonConstants.BLOCK_BYTE_LENGTH;
-        assert batchSize > 0 && batchSize <= maxBatchSize;
+        checkReadyState();
+        MathPreconditions.checkEqual("key.length", "λ(B)", key.length, CommonConstants.BLOCK_BYTE_LENGTH);
         this.key = key;
+        MathPreconditions.checkPositiveInRangeClosed("batchSize", batchSize, maxBatchSize);
         this.batchSize = batchSize;
         batchByteSize = CommonUtils.getByteLength(batchSize);
         roundBatchSize = batchByteSize * Byte.SIZE;

@@ -78,7 +78,6 @@ public class Ywl20UniMspCotReceiver extends AbstractMspCotReceiver {
         super(Ywl20UniMspCotPtoDesc.getInstance(), senderRpc, receiverParty, config);
         bspCotReceiver = BspCotFactory.createReceiver(senderRpc, receiverParty, config.getBspCotConfig());
         addSubPtos(bspCotReceiver);
-        addSecureSubPtos(bspCotReceiver);
     }
 
     @Override
@@ -95,7 +94,6 @@ public class Ywl20UniMspCotReceiver extends AbstractMspCotReceiver {
         stopWatch.reset();
         info("{}{} Recv. Init Step 1/1 ({}ms)", ptoStepLogPrefix, getPtoDesc().getPtoName(), initTime);
 
-        initialized = true;
         info("{}{} Recv. Init end", ptoEndLogPrefix, getPtoDesc().getPtoName());
     }
 

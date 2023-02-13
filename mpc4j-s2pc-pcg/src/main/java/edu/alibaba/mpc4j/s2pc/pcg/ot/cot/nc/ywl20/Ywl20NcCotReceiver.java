@@ -72,11 +72,9 @@ public class Ywl20NcCotReceiver extends AbstractNcCotReceiver {
         super(Ywl20NcCotPtoDesc.getInstance(), receiverRpc, senderParty, config);
         coreCotReceiver = CoreCotFactory.createReceiver(receiverRpc, senderParty, config.getCoreCotConfig());
         addSubPtos(coreCotReceiver);
-        addSecureSubPtos(coreCotReceiver);
         mspCotConfig = config.getMspCotConfig();
         mspCotReceiver = MspCotFactory.createReceiver(receiverRpc, senderParty, config.getMspCotConfig());
         addSubPtos(mspCotReceiver);
-        addSecureSubPtos(mspCotReceiver);
     }
 
     @Override
@@ -156,7 +154,6 @@ public class Ywl20NcCotReceiver extends AbstractNcCotReceiver {
         stopWatch.reset();
         info("{}{} Recv. Init Step 5/5 ({}ms)", ptoStepLogPrefix, getPtoDesc().getPtoName(), extendInitTime);
 
-        initialized = true;
         info("{}{} Recv. Init end", ptoBeginLogPrefix, getPtoDesc().getPtoName());
     }
 

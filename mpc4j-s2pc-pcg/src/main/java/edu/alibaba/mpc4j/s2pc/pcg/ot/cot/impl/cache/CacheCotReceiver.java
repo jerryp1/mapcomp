@@ -40,10 +40,8 @@ public class CacheCotReceiver extends AbstractCotReceiver {
         super(CacheCotPtoDesc.getInstance(), receiverRpc, senderParty, config);
         ncCotReceiver = NcCotFactory.createReceiver(receiverRpc, senderParty, config.getNcCotConfig());
         addSubPtos(ncCotReceiver);
-        addSecureSubPtos(ncCotReceiver);
         preCotReceiver = PreCotFactory.createReceiver(receiverRpc, senderParty, config.getPreCotConfig());
         addSubPtos(preCotReceiver);
-        addSecureSubPtos(preCotReceiver);
     }
 
     @Override
@@ -70,7 +68,6 @@ public class CacheCotReceiver extends AbstractCotReceiver {
         stopWatch.reset();
         info("{}{} Recv. Init Step 1/1 ({}ms)", ptoStepLogPrefix, getPtoDesc().getPtoName(), initTime);
 
-        initialized = true;
         info("{}{} Recv. Init end", ptoEndLogPrefix, getPtoDesc().getPtoName());
     }
 

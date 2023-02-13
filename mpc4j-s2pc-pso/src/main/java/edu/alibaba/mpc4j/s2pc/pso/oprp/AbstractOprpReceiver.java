@@ -4,8 +4,9 @@ import edu.alibaba.mpc4j.common.rpc.MpcAbortException;
 import edu.alibaba.mpc4j.common.rpc.Party;
 import edu.alibaba.mpc4j.common.rpc.Rpc;
 import edu.alibaba.mpc4j.common.rpc.desc.PtoDesc;
-import edu.alibaba.mpc4j.common.rpc.pto.AbstractSecureTwoPartyPto;
+import edu.alibaba.mpc4j.common.rpc.pto.AbstractTwoPartyPto;
 import edu.alibaba.mpc4j.common.tool.CommonConstants;
+import edu.alibaba.mpc4j.common.tool.MathPreconditions;
 import edu.alibaba.mpc4j.common.tool.utils.CommonUtils;
 
 import java.util.Arrays;
@@ -16,11 +17,7 @@ import java.util.Arrays;
  * @author Weiran Liu
  * @date 2022/02/14
  */
-public abstract class AbstractOprpReceiver extends AbstractSecureTwoPartyPto implements OprpReceiver {
-    /**
-     * 配置项
-     */
-    private final OprpConfig config;
+public abstract class AbstractOprpReceiver extends AbstractTwoPartyPto implements OprpReceiver {
     /**
      * 最大批处理数量
      */
@@ -48,30 +45,27 @@ public abstract class AbstractOprpReceiver extends AbstractSecureTwoPartyPto imp
 
     protected AbstractOprpReceiver(PtoDesc ptoDesc, Rpc receiverRpc, Party senderParty, OprpConfig config) {
         super(ptoDesc, receiverRpc, senderParty, config);
-        this.config = config;
     }
 
-    @Override
-    public OprpFactory.OprpType getPtoType() {
-        return config.getPtoType();
-    }
-
-    protected void setInitInput(int matchBatchSize) {
-        assert matchBatchSize > 0;
-        this.maxBatchSize = matchBatchSize;
-        maxRoundBatchSize = CommonUtils.getByteLength(maxBatchSize) * Byte.SIZE;
-        initialized = false;
+    protected void setInitInput(int maxBatchSize) {
+        MathPreconditions.checkPositive("maxBatchSize", maxBatchSize);
+        this.maxBatchSize = maxBatchSize;
+        maxRoundBatchSize = CommonUtils.getByteLength(this.maxBatchSize) * Byte.SIZE;
+        initState();
     }
 
     protected void setPtoInput(byte[][] messages) throws MpcAbortException {
-        assert messages.length > 0 && messages.length <= maxBatchSize;
+        checkReadyState();
+        MathPreconditions.checkPositiveInRangeClosed("batchSize", messages.length, maxBatchSize);
         batchSize = messages.length;
         batchByteSize = CommonUtils.getByteLength(batchSize);
         roundBatchSize = batchByteSize * Byte.SIZE;
         this.messages = Arrays.stream(messages)
-            .peek(message -> {
-                assert message.length == CommonConstants.BLOCK_BYTE_LENGTH;
-            })
+            .peek(message ->
+                MathPreconditions.checkEqual(
+                    "message.length", "λ(B)", message.length, CommonConstants.BLOCK_BYTE_LENGTH
+                )
+            )
             .toArray(byte[][]::new);
         extraInfo++;
     }

@@ -101,14 +101,6 @@ public class OprfTest {
     }
 
     @Test
-    public void testPtoType() {
-        OprfSender sender = OprfFactory.createOprfSender(senderRpc, receiverRpc.ownParty(), config);
-        OprfReceiver receiver = OprfFactory.createOprfReceiver(receiverRpc, senderRpc.ownParty(), config);
-        Assert.assertEquals(config.getPtoType(), sender.getPtoType());
-        Assert.assertEquals(config.getPtoType(), receiver.getPtoType());
-    }
-
-    @Test
     public void test2N() {
         OprfSender sender = OprfFactory.createOprfSender(senderRpc, receiverRpc.ownParty(), config);
         OprfReceiver receiver = OprfFactory.createOprfReceiver(receiverRpc, senderRpc.ownParty(), config);

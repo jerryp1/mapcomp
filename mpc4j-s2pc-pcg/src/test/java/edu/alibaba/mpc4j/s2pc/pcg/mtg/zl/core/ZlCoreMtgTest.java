@@ -98,14 +98,6 @@ public class ZlCoreMtgTest {
     }
 
     @Test
-    public void testPtoType() {
-        ZlCoreMtgParty sender = ZlCoreMtgFactory.createSender(senderRpc, receiverRpc.ownParty(), config);
-        ZlCoreMtgParty receiver = ZlCoreMtgFactory.createReceiver(receiverRpc, senderRpc.ownParty(), config);
-        Assert.assertEquals(config.getPtoType(), sender.getPtoType());
-        Assert.assertEquals(config.getPtoType(), receiver.getPtoType());
-    }
-
-    @Test
     public void test1Num() {
         ZlCoreMtgParty sender = ZlCoreMtgFactory.createSender(senderRpc, receiverRpc.ownParty(), config);
         ZlCoreMtgParty receiver = ZlCoreMtgFactory.createReceiver(receiverRpc, senderRpc.ownParty(), config);

@@ -1,7 +1,6 @@
 package edu.alibaba.mpc4j.s2pc.aby.sbitmap;
 
 import edu.alibaba.mpc4j.common.rpc.MpcAbortException;
-import edu.alibaba.mpc4j.common.rpc.pto.SecurePto;
 import edu.alibaba.mpc4j.common.rpc.pto.TwoPartyPto;
 import edu.alibaba.mpc4j.common.tool.MathPreconditions;
 import org.roaringbitmap.RoaringBitmap;
@@ -12,15 +11,7 @@ import org.roaringbitmap.RoaringBitmap;
  * @author Weiran Liu
  * @date 2022/12/28
  */
-public interface SecureBitmapParty extends TwoPartyPto, SecurePto {
-    /**
-     * Returns the protocol type.
-     *
-     * @return the protocol type.
-     */
-    @Override
-    SecureBitmapFactory.SecureBitmapPtoType getPtoType();
-
+public interface SecureBitmapParty extends TwoPartyPto {
     /**
      * Returns the supported secure bitmap type.
      *

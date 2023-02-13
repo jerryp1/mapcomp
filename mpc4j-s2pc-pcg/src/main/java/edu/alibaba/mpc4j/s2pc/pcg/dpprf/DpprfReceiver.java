@@ -1,7 +1,6 @@
 package edu.alibaba.mpc4j.s2pc.pcg.dpprf;
 
 import edu.alibaba.mpc4j.common.rpc.MpcAbortException;
-import edu.alibaba.mpc4j.common.rpc.pto.SecurePto;
 import edu.alibaba.mpc4j.common.rpc.pto.TwoPartyPto;
 import edu.alibaba.mpc4j.s2pc.pcg.ot.cot.CotReceiverOutput;
 
@@ -11,15 +10,7 @@ import edu.alibaba.mpc4j.s2pc.pcg.ot.cot.CotReceiverOutput;
  * @author Weiran Liu
  * @date 2022/8/16
  */
-public interface DpprfReceiver extends TwoPartyPto, SecurePto {
-    /**
-     * Get the protocol type.
-     *
-     * @return the protocol type.
-     */
-    @Override
-    DpprfFactory.DpprfType getPtoType();
-
+public interface DpprfReceiver extends TwoPartyPto {
     /**
      * Init the protocol.
      *

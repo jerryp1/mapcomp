@@ -1,7 +1,6 @@
 package edu.alibaba.mpc4j.s2pc.pso.mqrpmt;
 
 import edu.alibaba.mpc4j.common.rpc.MpcAbortException;
-import edu.alibaba.mpc4j.common.rpc.pto.SecurePto;
 import edu.alibaba.mpc4j.common.rpc.pto.TwoPartyPto;
 
 import java.nio.ByteBuffer;
@@ -13,15 +12,7 @@ import java.util.Set;
  * @author Weiran Liu
  * @date 2022/9/10
  */
-public interface MqRpmtClient extends TwoPartyPto, SecurePto {
-    /**
-     * 返回mqRPMT协议类型。
-     *
-     * @return mqRPMT协议类型。
-     */
-    @Override
-    MqRpmtFactory.MqRpmtType getPtoType();
-
+public interface MqRpmtClient extends TwoPartyPto {
     /**
      * 初始化协议。
      *

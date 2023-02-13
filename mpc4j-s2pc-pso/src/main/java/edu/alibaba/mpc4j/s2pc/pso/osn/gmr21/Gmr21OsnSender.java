@@ -60,7 +60,6 @@ public class Gmr21OsnSender extends AbstractOsnSender {
         super(Gmr21OsnPtoDesc.getInstance(), senderRpc, receiverParty, config);
         cotSender = CotFactory.createSender(senderRpc, receiverParty, config.getCotConfig());
         addSubPtos(cotSender);
-        addSecureSubPtos(cotSender);
     }
 
     @Override
@@ -77,7 +76,6 @@ public class Gmr21OsnSender extends AbstractOsnSender {
         stopWatch.reset();
         info("{}{} Send. Step 1/1 ({}ms)", ptoStepLogPrefix, getPtoDesc().getPtoName(), cotInitTime);
 
-        initialized = true;
         info("{}{} Send. Init end", ptoEndLogPrefix, getPtoDesc().getPtoName());
     }
 

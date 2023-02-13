@@ -1,6 +1,6 @@
 package edu.alibaba.mpc4j.s2pc.pcg.mtg.z2;
 
-import edu.alibaba.mpc4j.common.rpc.pto.SecurePtoConfig;
+import edu.alibaba.mpc4j.common.rpc.pto.MultiPartyPtoConfig;
 import edu.alibaba.mpc4j.s2pc.pcg.mtg.z2.Z2MtgFactory.Z2MtgType;
 
 /**
@@ -9,7 +9,7 @@ import edu.alibaba.mpc4j.s2pc.pcg.mtg.z2.Z2MtgFactory.Z2MtgType;
  * @author Weiran Liu
  * @date 2022/02/07
  */
-public interface Z2MtgConfig extends SecurePtoConfig {
+public interface Z2MtgConfig extends MultiPartyPtoConfig {
     /**
      * 返回协议类型。
      *

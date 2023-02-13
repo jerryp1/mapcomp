@@ -48,7 +48,6 @@ public class Kk13OriCoreLotReceiver extends AbstractCoreLotReceiver {
         super(Kk13OriCoreLotPtoDesc.getInstance(), receiverRpc, senderParty, config);
         coreCotSender = CoreCotFactory.createSender(receiverRpc, senderParty, config.getCoreCotConfig());
         addSubPtos(coreCotSender);
-        addSecureSubPtos(coreCotSender);
     }
 
     @Override
@@ -66,7 +65,6 @@ public class Kk13OriCoreLotReceiver extends AbstractCoreLotReceiver {
         stopWatch.reset();
         info("{}{} Recv. Init Step 1/1 ({}ms)", ptoStepLogPrefix, getPtoDesc().getPtoName(), initTime);
 
-        initialized = true;
         info("{}{} Recv. Init end", ptoEndLogPrefix, getPtoDesc().getPtoName());
     }
 

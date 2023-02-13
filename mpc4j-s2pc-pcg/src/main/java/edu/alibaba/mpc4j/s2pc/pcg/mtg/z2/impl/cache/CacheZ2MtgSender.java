@@ -38,7 +38,6 @@ public class CacheZ2MtgSender extends AbstractZ2MtgParty {
         super(CacheZ2MtgPtoDesc.getInstance(), senderRpc, receiverParty, config);
         z2CoreMtgSender = Z2CoreMtgFactory.createSender(senderRpc, receiverParty, config.getZ2CoreMtgConfig());
         addSubPtos(z2CoreMtgSender);
-        addSecureSubPtos(z2CoreMtgSender);
     }
 
     @Override
@@ -63,7 +62,6 @@ public class CacheZ2MtgSender extends AbstractZ2MtgParty {
         stopWatch.reset();
         info("{}{} Send. Init Step 1/1 ({}ms)", ptoStepLogPrefix, getPtoDesc().getPtoName(), initTime);
 
-        initialized = true;
         info("{}{} Send. Init end", ptoEndLogPrefix, getPtoDesc().getPtoName());
     }
 

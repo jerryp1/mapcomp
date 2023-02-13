@@ -33,7 +33,6 @@ public class Bea95PreCotReceiver extends AbstractPreCotReceiver {
         setInitInput();
         info("{}{} Recv. Init begin", ptoBeginLogPrefix, getPtoDesc().getPtoName());
 
-        initialized = true;
         info("{}{} Recv. Init end", ptoEndLogPrefix, getPtoDesc().getPtoName());
     }
 

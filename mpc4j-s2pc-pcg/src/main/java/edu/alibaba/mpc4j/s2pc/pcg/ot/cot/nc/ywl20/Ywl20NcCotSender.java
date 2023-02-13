@@ -70,11 +70,9 @@ public class Ywl20NcCotSender extends AbstractNcCotSender {
         super(Ywl20NcCotPtoDesc.getInstance(), senderRpc, receiverParty, config);
         coreCotSender = CoreCotFactory.createSender(senderRpc, receiverParty, config.getCoreCotConfig());
         addSubPtos(coreCotSender);
-        addSecureSubPtos(coreCotSender);
         mspCotConfig = config.getMspCotConfig();
         mspCotSender = MspCotFactory.createSender(senderRpc, receiverParty, config.getMspCotConfig());
         addSubPtos(mspCotSender);
-        addSecureSubPtos(mspCotSender);
     }
 
     @Override
@@ -145,7 +143,6 @@ public class Ywl20NcCotSender extends AbstractNcCotSender {
         stopWatch.reset();
         info("{}{} Send. Init Step 5/5 ({}ms)", ptoStepLogPrefix, getPtoDesc().getPtoName(), extendInitTime);
 
-        initialized = true;
         info("{}{} Send. Init end", ptoBeginLogPrefix, getPtoDesc().getPtoName());
     }
 

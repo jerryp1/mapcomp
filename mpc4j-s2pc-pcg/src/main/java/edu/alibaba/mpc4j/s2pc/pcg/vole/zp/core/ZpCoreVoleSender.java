@@ -1,7 +1,6 @@
 package edu.alibaba.mpc4j.s2pc.pcg.vole.zp.core;
 
 import edu.alibaba.mpc4j.common.rpc.MpcAbortException;
-import edu.alibaba.mpc4j.common.rpc.pto.SecurePto;
 import edu.alibaba.mpc4j.common.rpc.pto.TwoPartyPto;
 import edu.alibaba.mpc4j.s2pc.pcg.vole.zp.ZpVoleSenderOutput;
 
@@ -13,15 +12,7 @@ import java.math.BigInteger;
  * @author Hanwen Feng
  * @date 2022/06/13
  */
-public interface ZpCoreVoleSender extends TwoPartyPto, SecurePto {
-    /**
-     * 返回协议类型。
-     *
-     * @return 协议类型。
-     */
-    @Override
-    ZpCoreVoleFactory.ZpCoreVoleType getPtoType();
-
+public interface ZpCoreVoleSender extends TwoPartyPto {
     /**
      * 初始化协议。
      *

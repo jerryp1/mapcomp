@@ -46,7 +46,7 @@ public class Ayaa21IndexPirServer extends AbstractIndexPirServer {
                      int elementByteLength) {
         assert (indexPirParams instanceof Ayaa21IndexPirParams);
         params = (Ayaa21IndexPirParams) indexPirParams;
-        info("{}{} Server Init begin", ptoBeginLogPrefix, getPtoType().name());
+        info("{}{} Server Init begin", ptoBeginLogPrefix, getPtoDesc().getPtoName());
 
         stopWatch.start();
         int binMaxByteLength = params.getPolyModulusDegree() * params.getPlainModulusBitLength() / Byte.SIZE;
@@ -60,7 +60,6 @@ public class Ayaa21IndexPirServer extends AbstractIndexPirServer {
         stopWatch.reset();
         info("{}{} Server Init Step 1/1 ({}ms)", ptoStepLogPrefix, getPtoDesc().getPtoName(), initTime);
 
-        initialized = true;
         info("{}{} Server Init end", ptoEndLogPrefix, getPtoDesc().getPtoName());
     }
 

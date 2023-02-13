@@ -94,16 +94,12 @@ public class Gmr21PsuClient extends AbstractPsuClient {
         super(Gmr21PsuPtoDesc.getInstance(), clientRpc, serverParty, config);
         cuckooHashOprfSender = OprfFactory.createOprfSender(clientRpc, serverParty, config.getCuckooHashOprfConfig());
         addSubPtos(cuckooHashOprfSender);
-        addSecureSubPtos(cuckooHashOprfSender);
         osnSender = OsnFactory.createSender(clientRpc, serverParty, config.getOsnConfig());
         addSubPtos(osnSender);
-        addSecureSubPtos(osnSender);
         peqtOprfReceiver = OprfFactory.createOprfReceiver(clientRpc, serverParty, config.getPeqtOprfConfig());
         addSubPtos(peqtOprfReceiver);
-        addSecureSubPtos(peqtOprfReceiver);
         coreCotReceiver = CoreCotFactory.createReceiver(clientRpc, serverParty, config.getCoreCotConfig());
         addSubPtos(coreCotReceiver);
-        addSecureSubPtos(coreCotReceiver);
         okvsType = config.getOkvsType();
         cuckooHashBinType = config.getCuckooHashBinType();
         cuckooHashNum = CuckooHashBinFactory.getHashNum(cuckooHashBinType);
@@ -116,8 +112,10 @@ public class Gmr21PsuClient extends AbstractPsuClient {
 
         stopWatch.start();
         int maxBinNum = CuckooHashBinFactory.getBinNum(cuckooHashBinType, maxServerElementSize);
+        // note that in PSU, we must use no-stash cucko hash
+        int maxPrfNum = CuckooHashBinFactory.getHashNum(cuckooHashBinType) * maxClientElementSize;
         // 初始化各个子协议
-        cuckooHashOprfSender.init(maxBinNum);
+        cuckooHashOprfSender.init(maxBinNum, maxPrfNum);
         osnSender.init(maxBinNum);
         peqtOprfReceiver.init(maxBinNum);
         coreCotReceiver.init(maxBinNum);
@@ -143,7 +141,6 @@ public class Gmr21PsuClient extends AbstractPsuClient {
         stopWatch.reset();
         info("{}{} Client Init Step 2/2 ({}ms)", ptoStepLogPrefix, getPtoDesc().getPtoName(), keyTime);
 
-        initialized = true;
         info("{}{} Client Init end", ptoEndLogPrefix, getPtoDesc().getPtoName());
     }
 

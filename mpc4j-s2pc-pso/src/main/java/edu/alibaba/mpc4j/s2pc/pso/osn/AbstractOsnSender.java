@@ -4,8 +4,9 @@ import edu.alibaba.mpc4j.common.rpc.MpcAbortException;
 import edu.alibaba.mpc4j.common.rpc.Party;
 import edu.alibaba.mpc4j.common.rpc.Rpc;
 import edu.alibaba.mpc4j.common.rpc.desc.PtoDesc;
-import edu.alibaba.mpc4j.common.rpc.pto.AbstractSecureTwoPartyPto;
+import edu.alibaba.mpc4j.common.rpc.pto.AbstractTwoPartyPto;
 import edu.alibaba.mpc4j.common.tool.CommonConstants;
+import edu.alibaba.mpc4j.common.tool.MathPreconditions;
 import edu.alibaba.mpc4j.common.tool.benes.BenesNetworkUtils;
 
 import java.util.Vector;
@@ -17,7 +18,7 @@ import java.util.stream.Collectors;
  * @author Weiran Liu
  * @date 2022/02/09
  */
-public abstract class AbstractOsnSender extends AbstractSecureTwoPartyPto implements OsnSender {
+public abstract class AbstractOsnSender extends AbstractTwoPartyPto implements OsnSender {
     /**
      * 配置项
      */
@@ -68,28 +69,22 @@ public abstract class AbstractOsnSender extends AbstractSecureTwoPartyPto implem
         this.config = config;
     }
 
-    @Override
-    public OsnFactory.OsnType getPtoType() {
-        return config.getPtoType();
-    }
-
     protected void setInitInput(int maxN) {
-        assert maxN > 1;
+        MathPreconditions.checkGreater("maxN", maxN, 1);
         this.maxN = maxN;
-        this.maxLevel = BenesNetworkUtils.getLevel(maxN);
-        this.maxWidth = BenesNetworkUtils.getWidth(maxN);
-        this.maxSwitchNum = maxLevel * maxWidth;
-        initialized = false;
+        maxLevel = BenesNetworkUtils.getLevel(maxN);
+        maxWidth = BenesNetworkUtils.getWidth(maxN);
+        maxSwitchNum = maxLevel * maxWidth;
+        initState();
     }
 
     protected void setPtoInput(Vector<byte[]> inputVector, int byteLength) throws MpcAbortException {
-        assert byteLength >= CommonConstants.STATS_BYTE_LENGTH;
+        checkReadyState();
+        MathPreconditions.checkGreaterOrEqual("byteLength", byteLength, CommonConstants.STATS_BYTE_LENGTH);
         this.byteLength = byteLength;
-        assert inputVector.size() > 1 && inputVector.size() <= maxN;
+        MathPreconditions.checkLessOrEqual("n", inputVector.size(), maxN);
         this.inputVector = inputVector.stream()
-            .peek(input -> {
-                assert input.length == byteLength;
-            })
+            .peek(input -> MathPreconditions.checkEqual("input.length", "byteLength", input.length, byteLength))
             .collect(Collectors.toCollection(Vector::new));
         n = inputVector.size();
         level = BenesNetworkUtils.getLevel(n);

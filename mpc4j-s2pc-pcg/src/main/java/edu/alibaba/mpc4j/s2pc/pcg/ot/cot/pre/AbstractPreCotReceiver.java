@@ -3,7 +3,8 @@ package edu.alibaba.mpc4j.s2pc.pcg.ot.cot.pre;
 import edu.alibaba.mpc4j.common.rpc.Party;
 import edu.alibaba.mpc4j.common.rpc.Rpc;
 import edu.alibaba.mpc4j.common.rpc.desc.PtoDesc;
-import edu.alibaba.mpc4j.common.rpc.pto.AbstractSecureTwoPartyPto;
+import edu.alibaba.mpc4j.common.rpc.pto.AbstractTwoPartyPto;
+import edu.alibaba.mpc4j.common.tool.MathPreconditions;
 import edu.alibaba.mpc4j.s2pc.pcg.ot.cot.CotReceiverOutput;
 
 /**
@@ -12,11 +13,7 @@ import edu.alibaba.mpc4j.s2pc.pcg.ot.cot.CotReceiverOutput;
  * @author Weiran Liu
  * @date 2022/01/14
  */
-public abstract class AbstractPreCotReceiver extends AbstractSecureTwoPartyPto implements PreCotReceiver {
-    /**
-     * 配置项
-     */
-    private final PreCotConfig config;
+public abstract class AbstractPreCotReceiver extends AbstractTwoPartyPto implements PreCotReceiver {
     /**
      * 预计算接收方输出
      */
@@ -28,24 +25,16 @@ public abstract class AbstractPreCotReceiver extends AbstractSecureTwoPartyPto i
 
     protected AbstractPreCotReceiver(PtoDesc ptoDesc, Rpc receiverRpc, Party senderParty, PreCotConfig config) {
         super(ptoDesc, receiverRpc, senderParty, config);
-        this.config = config;
-    }
-
-    @Override
-    public PreCotFactory.PreCotType getPtoType() {
-        return config.getPtoType();
     }
 
     protected void setInitInput() {
-        initialized = false;
+        initState();
     }
 
     protected void setPtoInput(CotReceiverOutput preReceiverOutput, boolean[] choices) {
-        if (!initialized) {
-            throw new IllegalStateException("Need init...");
-        }
-        assert preReceiverOutput.getNum() > 0;
-        assert preReceiverOutput.getNum() == choices.length;
+        checkReadyState();
+        MathPreconditions.checkPositive("preCotNum", preReceiverOutput.getNum());
+        MathPreconditions.checkEqual("num", "preCotNum", choices.length, preReceiverOutput.getNum());
         this.preReceiverOutput = preReceiverOutput;
         this.choices = choices;
         extraInfo++;

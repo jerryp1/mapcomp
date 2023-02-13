@@ -110,14 +110,6 @@ public class MspCotTest {
     }
 
     @Test
-    public void testPtoType() {
-        MspCotSender sender = MspCotFactory.createSender(senderRpc, receiverRpc.ownParty(), config);
-        MspCotReceiver receiver = MspCotFactory.createReceiver(receiverRpc, senderRpc.ownParty(), config);
-        Assert.assertEquals(config.getPtoType(), sender.getPtoType());
-        Assert.assertEquals(config.getPtoType(), receiver.getPtoType());
-    }
-
-    @Test
     public void testDefaultNum1T() {
         MspCotSender sender = MspCotFactory.createSender(senderRpc, receiverRpc.ownParty(), config);
         MspCotReceiver receiver = MspCotFactory.createReceiver(receiverRpc, senderRpc.ownParty(), config);

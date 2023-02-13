@@ -90,14 +90,6 @@ public class Zp64CoreVoleTest {
     }
 
     @Test
-    public void testPtoType() {
-        Zp64CoreVoleSender sender = Zp64CoreVoleFactory.createSender(senderRpc, receiverRpc.ownParty(), config);
-        Zp64CoreVoleReceiver receiver = Zp64CoreVoleFactory.createReceiver(receiverRpc, senderRpc.ownParty(), config);
-        Assert.assertEquals(config.getPtoType(), sender.getPtoType());
-        Assert.assertEquals(config.getPtoType(), receiver.getPtoType());
-    }
-
-    @Test
     public void test1Num() {
         Zp64CoreVoleSender sender = Zp64CoreVoleFactory.createSender(senderRpc, receiverRpc.ownParty(), config);
         Zp64CoreVoleReceiver receiver = Zp64CoreVoleFactory.createReceiver(receiverRpc, senderRpc.ownParty(), config);

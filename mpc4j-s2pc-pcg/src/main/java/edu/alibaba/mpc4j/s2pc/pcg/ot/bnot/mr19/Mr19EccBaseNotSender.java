@@ -53,7 +53,6 @@ public class Mr19EccBaseNotSender extends AbstractBaseNotSender {
         setInitInput(maxChoice);
         info("{}{} Send. Init begin", ptoBeginLogPrefix, getPtoDesc().getPtoName());
 
-        initialized = true;
         info("{}{} Send. Init end", ptoEndLogPrefix, getPtoDesc().getPtoName());
     }
 

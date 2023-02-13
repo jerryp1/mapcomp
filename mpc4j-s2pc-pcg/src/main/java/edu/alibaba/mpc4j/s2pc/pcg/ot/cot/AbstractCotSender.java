@@ -3,8 +3,9 @@ package edu.alibaba.mpc4j.s2pc.pcg.ot.cot;
 import edu.alibaba.mpc4j.common.rpc.Party;
 import edu.alibaba.mpc4j.common.rpc.Rpc;
 import edu.alibaba.mpc4j.common.rpc.desc.PtoDesc;
-import edu.alibaba.mpc4j.common.rpc.pto.AbstractSecureTwoPartyPto;
+import edu.alibaba.mpc4j.common.rpc.pto.AbstractTwoPartyPto;
 import edu.alibaba.mpc4j.common.tool.CommonConstants;
+import edu.alibaba.mpc4j.common.tool.MathPreconditions;
 import edu.alibaba.mpc4j.common.tool.utils.BytesUtils;
 
 /**
@@ -13,7 +14,7 @@ import edu.alibaba.mpc4j.common.tool.utils.BytesUtils;
  * @author Weiran Liu
  * @date 2022/7/13
  */
-public abstract class AbstractCotSender extends AbstractSecureTwoPartyPto implements CotSender {
+public abstract class AbstractCotSender extends AbstractTwoPartyPto implements CotSender {
     /**
      * 配置项
      */
@@ -40,30 +41,20 @@ public abstract class AbstractCotSender extends AbstractSecureTwoPartyPto implem
         this.config = config;
     }
 
-    @Override
-    public CotFactory.CotType getPtoType() {
-        return config.getPtoType();
-    }
-
     protected void setInitInput(byte[] delta, int maxRoundNum, int updateNum) {
-        assert delta.length == CommonConstants.BLOCK_BYTE_LENGTH
-            : "Δ byte length must be " + CommonConstants.BLOCK_BYTE_LENGTH + ": " + delta.length;
+        MathPreconditions.checkEqual("Δ.length", "λ(B)", delta.length, CommonConstants.BLOCK_BYTE_LENGTH);
         // 拷贝一份
         this.delta = BytesUtils.clone(delta);
-        assert maxRoundNum > 0 && maxRoundNum <= config.maxBaseNum()
-            : "maxRoundNum must be in range (0, " + config.maxBaseNum() + "]: " + maxRoundNum;
+        MathPreconditions.checkPositiveInRangeClosed("maxRoundNum", maxRoundNum, config.maxBaseNum());
         this.maxRoundNum = maxRoundNum;
-        assert updateNum >= maxRoundNum
-            : "updateNum must be greater than or equal to " + maxRoundNum + "]: " + updateNum;
+        MathPreconditions.checkGreaterOrEqual("updateNum", updateNum, maxRoundNum);
         this.updateNum = updateNum;
-        initialized = false;
+        initState();
     }
 
     protected void setPtoInput(int num) {
-        if (!initialized) {
-            throw new IllegalStateException("Need init...");
-        }
-        assert num > 0 && num <= maxRoundNum : "num must be in range [0, " + maxRoundNum + "]: " + num;
+        checkReadyState();
+        MathPreconditions.checkPositiveInRangeClosed("num", num, maxRoundNum);
         this.num = num;
         extraInfo ++;
     }

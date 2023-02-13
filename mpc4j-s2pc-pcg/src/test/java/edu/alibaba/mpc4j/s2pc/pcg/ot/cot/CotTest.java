@@ -95,14 +95,6 @@ public class CotTest {
     }
 
     @Test
-    public void testPtoType() {
-        CotSender sender = CotFactory.createSender(senderRpc, receiverRpc.ownParty(), config);
-        CotReceiver receiver = CotFactory.createReceiver(receiverRpc, senderRpc.ownParty(), config);
-        Assert.assertEquals(config.getPtoType(), sender.getPtoType());
-        Assert.assertEquals(config.getPtoType(), receiver.getPtoType());
-    }
-
-    @Test
     public void test1Num() {
         CotSender sender = CotFactory.createSender(senderRpc, receiverRpc.ownParty(), config);
         CotReceiver receiver = CotFactory.createReceiver(receiverRpc, senderRpc.ownParty(), config);

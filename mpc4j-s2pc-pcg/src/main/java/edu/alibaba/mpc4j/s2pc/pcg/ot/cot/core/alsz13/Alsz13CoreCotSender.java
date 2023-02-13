@@ -42,7 +42,6 @@ public class Alsz13CoreCotSender extends AbstractCoreCotSender {
         super(Alsz13CoreCotPtoDesc.getInstance(), senderRpc, receiverParty, config);
         baseOtReceiver = BaseOtFactory.createReceiver(senderRpc, receiverParty, config.getBaseOtConfig());
         addSubPtos(baseOtReceiver);
-        addSecureSubPtos(baseOtReceiver);
     }
 
     @Override
@@ -58,7 +57,6 @@ public class Alsz13CoreCotSender extends AbstractCoreCotSender {
         stopWatch.reset();
         info("{}{} Send. Init Step 1/1 ({}ms)", ptoStepLogPrefix, getPtoDesc().getPtoName(), initTime);
 
-        initialized = true;
         info("{}{} Send. Init end", ptoEndLogPrefix, getPtoDesc().getPtoName());
     }
 

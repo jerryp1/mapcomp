@@ -54,7 +54,6 @@ public class Ms13OsnReceiver extends AbstractOsnReceiver {
         super(Ms13OsnPtoDesc.getInstance(), receiverRpc, senderParty, config);
         cotReceiver = CotFactory.createReceiver(receiverRpc, senderParty, config.getCotConfig());
         addSubPtos(cotReceiver);
-        addSecureSubPtos(cotReceiver);
     }
 
     @Override
@@ -69,7 +68,6 @@ public class Ms13OsnReceiver extends AbstractOsnReceiver {
         stopWatch.reset();
         info("{}{} Recv. Step 1/1 ({}ms)", ptoStepLogPrefix, getPtoDesc().getPtoName(), cotInitTime);
 
-        initialized = true;
         info("{}{} Redv. Init end", ptoEndLogPrefix, getPtoDesc().getPtoName());
     }
 

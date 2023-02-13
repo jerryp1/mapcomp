@@ -161,13 +161,10 @@ public class Zcl22SloppyPmidServer<T> extends AbstractPmidServer<T> {
         super(Zcl22SloppyPmidPtoDesc.getInstance(), serverRpc, clientParty, config);
         oprfReceiver = OprfFactory.createOprfReceiver(serverRpc, clientParty, config.getOprfConfig());
         addSubPtos(oprfReceiver);
-        addSecureSubPtos(oprfReceiver);
         oprfSender = OprfFactory.createOprfSender(serverRpc, clientParty, config.getOprfConfig());
         addSubPtos(oprfSender);
-        addSecureSubPtos(oprfSender);
         psuServer = PsuFactory.createServer(serverRpc, clientParty, config.getPsuConfig());
         addSubPtos(psuServer);
-        addSecureSubPtos(psuServer);
         sloppyOkvsType = config.getSloppyOkvsType();
         sigmaOkvsType = config.getSigmaOkvsType();
         cuckooHashBinType = config.getCuckooHashBinType();
@@ -244,7 +241,6 @@ public class Zcl22SloppyPmidServer<T> extends AbstractPmidServer<T> {
         stopWatch.reset();
         info("{}{} Server Init Step 3/3 ({}ms)", ptoStepLogPrefix, getPtoDesc().getPtoName(), clientKeyTime);
 
-        initialized = true;
         info("{}{} Server Init end", ptoEndLogPrefix, getPtoDesc().getPtoName());
     }
 

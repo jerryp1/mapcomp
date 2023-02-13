@@ -144,14 +144,6 @@ public class BaseOtTest {
     }
 
     @Test
-    public void testPtoType() {
-        BaseOtSender sender = BaseOtFactory.createSender(senderRpc, receiverRpc.ownParty(), config);
-        BaseOtReceiver receiver = BaseOtFactory.createReceiver(receiverRpc, senderRpc.ownParty(), config);
-        Assert.assertEquals(config.getPtoType(), sender.getPtoType());
-        Assert.assertEquals(config.getPtoType(), receiver.getPtoType());
-    }
-
-    @Test
     public void test1Num() {
         BaseOtSender sender = BaseOtFactory.createSender(senderRpc, receiverRpc.ownParty(), config);
         BaseOtReceiver receiver = BaseOtFactory.createReceiver(receiverRpc, senderRpc.ownParty(), config);

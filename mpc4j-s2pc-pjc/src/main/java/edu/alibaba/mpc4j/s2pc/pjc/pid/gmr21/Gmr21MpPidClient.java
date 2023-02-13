@@ -65,40 +65,36 @@ public class Gmr21MpPidClient<T> extends AbstractPidParty<T> {
         super(Gmr21MpPidPtoDesc.getInstance(), clientRpc, serverParty, config);
         mpOprfReceiver = OprfFactory.createMpOprfReceiver(clientRpc, serverParty, config.getMpOprfConfig());
         addSubPtos(mpOprfReceiver);
-        addSecureSubPtos(mpOprfReceiver);
         mpOprfSender = OprfFactory.createMpOprfSender(clientRpc, serverParty, config.getMpOprfConfig());
         addSubPtos(mpOprfSender);
-        addSecureSubPtos(mpOprfSender);
         psuClient = PsuFactory.createClient(clientRpc, serverParty, config.getPsuConfig());
         addSubPtos(psuClient);
-        addSecureSubPtos(psuClient);
     }
 
     @Override
-    public void init(int maxClientElementSize, int maxServerElementSize) throws MpcAbortException {
-        setInitInput(maxClientElementSize, maxServerElementSize);
+    public void init(int maxOwnElementSetSize, int maxOtherElementSetSize) throws MpcAbortException {
+        setInitInput(maxOwnElementSetSize, maxOtherElementSetSize);
         info("{}{} Client Init begin", ptoBeginLogPrefix, getPtoDesc().getPtoName());
 
         stopWatch.start();
-        mpOprfReceiver.init(maxClientElementSize);
-        mpOprfSender.init(maxServerElementSize);
-        psuClient.init(maxClientElementSize, maxServerElementSize);
+        mpOprfReceiver.init(maxOwnElementSetSize);
+        mpOprfSender.init(maxOtherElementSetSize);
+        psuClient.init(maxOwnElementSetSize, maxOtherElementSetSize);
         stopWatch.stop();
         long initTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
         stopWatch.reset();
         info("{}{} Client Init Step 1/1 ({}ms)", ptoStepLogPrefix, getPtoDesc().getPtoName(), initTime);
 
-        initialized = true;
         info("{}{} Client Init end", ptoEndLogPrefix, getPtoDesc().getPtoName());
     }
 
     @Override
-    public PidPartyOutput<T> pid(Set<T> clientElementSet, int serverElementSize) throws MpcAbortException {
-        setPtoInput(clientElementSet, serverElementSize);
+    public PidPartyOutput<T> pid(Set<T> ownElementSet, int otherElementSetSize) throws MpcAbortException {
+        setPtoInput(ownElementSet, otherElementSetSize);
         info("{}{} Client begin", ptoBeginLogPrefix, getPtoDesc().getPtoName());
 
         stopWatch.start();
-        int pidByteLength = PidUtils.getPidByteLength(otherSetSize, ownSetSize);
+        int pidByteLength = PidUtils.getPidByteLength(this.otherElementSetSize, ownElementSetSize);
         pidMap = HashFactory.createInstance(envType, pidByteLength);
         clientElementByteArrays = ownElementArrayList.stream()
             .map(ObjectUtils::objectToByteArray)
@@ -108,7 +104,7 @@ public class Gmr21MpPidClient<T> extends AbstractPidParty<T> {
         kaOprfOutput = mpOprfReceiver.oprf(clientElementByteArrays);
         // Alice and Bob invoke another OPRF functionality F_{oprf}.
         // Bob acts as sender and receives a PRF key k_B
-        kbOprfKey = mpOprfSender.oprf(serverElementSize);
+        kbOprfKey = mpOprfSender.oprf(otherElementSetSize);
         stopWatch.stop();
         long oprfTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
         stopWatch.reset();
@@ -124,7 +120,7 @@ public class Gmr21MpPidClient<T> extends AbstractPidParty<T> {
 
         stopWatch.start();
         // The parties invoke F_{psu}, with inputs {R_B(x) | y ∈ Y} for Bob
-        Set<ByteBuffer> pidSet = psuClient.psu(clientPidMap.keySet(), serverElementSize, pidByteLength);
+        Set<ByteBuffer> pidSet = psuClient.psu(clientPidMap.keySet(), otherElementSetSize, pidByteLength);
         stopWatch.stop();
         long psuTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
         stopWatch.reset();
@@ -148,7 +144,7 @@ public class Gmr21MpPidClient<T> extends AbstractPidParty<T> {
     }
 
     private Map<ByteBuffer, T> generateClientPidMap() {
-        IntStream clientElementIndexStream = IntStream.range(0, ownSetSize);
+        IntStream clientElementIndexStream = IntStream.range(0, ownElementSetSize);
         clientElementIndexStream = parallel ? clientElementIndexStream.parallel() : clientElementIndexStream;
         return clientElementIndexStream
             .boxed()

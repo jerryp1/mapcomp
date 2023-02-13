@@ -37,7 +37,6 @@ public class Np99BaseNotSender extends AbstractBaseNotSender {
         super(Np99BaseNotPtoDesc.getInstance(), senderRpc, receiverParty, config);
         baseOtSender = BaseOtFactory.createSender(senderRpc, receiverParty, config.getBaseOtConfig());
         addSubPtos(baseOtSender);
-        addSecureSubPtos(baseOtSender);
     }
 
     @Override
@@ -53,7 +52,6 @@ public class Np99BaseNotSender extends AbstractBaseNotSender {
         stopWatch.reset();
         info("{}{} Send. Step 1/ ({}ms)", ptoStepLogPrefix, getPtoDesc().getPtoName(), initTime);
 
-        initialized = true;
         info("{}{} Send. Init end", ptoEndLogPrefix, getPtoDesc().getPtoName());
     }
 

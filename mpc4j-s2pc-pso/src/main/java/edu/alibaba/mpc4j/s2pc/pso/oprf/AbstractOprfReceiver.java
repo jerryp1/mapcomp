@@ -3,7 +3,8 @@ package edu.alibaba.mpc4j.s2pc.pso.oprf;
 import edu.alibaba.mpc4j.common.rpc.Party;
 import edu.alibaba.mpc4j.common.rpc.Rpc;
 import edu.alibaba.mpc4j.common.rpc.desc.PtoDesc;
-import edu.alibaba.mpc4j.common.rpc.pto.AbstractSecureTwoPartyPto;
+import edu.alibaba.mpc4j.common.rpc.pto.AbstractTwoPartyPto;
+import edu.alibaba.mpc4j.common.tool.MathPreconditions;
 
 /**
  * OPRF接收方。
@@ -11,15 +12,15 @@ import edu.alibaba.mpc4j.common.rpc.pto.AbstractSecureTwoPartyPto;
  * @author Weiran Liu
  * @date 2022/02/06
  */
-public abstract class AbstractOprfReceiver extends AbstractSecureTwoPartyPto implements OprfReceiver {
-    /**
-     * 配置项
-     */
-    private final OprfConfig config;
+public abstract class AbstractOprfReceiver extends AbstractTwoPartyPto implements OprfReceiver {
     /**
      * 最大批处理数量
      */
-    private long maxBatchSize;
+    protected long maxBatchSize;
+    /**
+     * scale num
+     */
+    protected int maxPrfNum;
     /**
      * 输入数组
      */
@@ -31,37 +32,22 @@ public abstract class AbstractOprfReceiver extends AbstractSecureTwoPartyPto imp
 
     protected AbstractOprfReceiver(PtoDesc ptoDesc, Rpc receiverRpc, Party senderParty, OprfConfig config) {
         super(ptoDesc, receiverRpc, senderParty, config);
-        this.config = config;
     }
 
-    @Override
-    public OprfFactory.OprfType getPtoType() {
-        return config.getPtoType();
-    }
-
-    protected void setInitInput(int maxBatchSize) {
-        assert maxBatchSize > 0 : "MaxBatchSize must be greater than 0:" + maxBatchSize;
+    protected void setInitInput(int maxBatchSize, int maxPrfNum) {
+        // standard OPRF requires maxBatchSize > 1
+        MathPreconditions.checkGreater("maxBatchSize", maxBatchSize, 1);
         this.maxBatchSize = maxBatchSize;
-        initialized = false;
-    }
-
-    protected void setBatchInitInput(int maxBatchSize) {
-        assert maxBatchSize > 1 : "MaxBatchSize must be greater than 1:" + maxBatchSize;
-        this.maxBatchSize = maxBatchSize;
-        initialized = false;
+        MathPreconditions.checkNonNegative("maxPrfNum", maxPrfNum);
+        this.maxPrfNum = maxPrfNum;
+        initState();
     }
 
     protected void setPtoInput(byte[][] inputs) {
-        assert inputs.length > 0 && inputs.length <= maxBatchSize
-            : "BatchSize must be in range [1, " + maxBatchSize + "]: " + inputs.length;
-        this.inputs = inputs;
-        batchSize = inputs.length;
-        extraInfo++;
-    }
-
-    protected void setBatchPtoInput(byte[][] inputs) {
-        assert inputs.length > 1 && inputs.length <= maxBatchSize
-            : "BatchSize must be in range (1, " + maxBatchSize + "]: " + inputs.length;
+        checkReadyState();
+        // standard OPRF requires batchSize > 1
+        MathPreconditions.checkGreater("batchSize", inputs.length, 1);
+        MathPreconditions.checkLessOrEqual("batchSize", inputs.length, maxBatchSize);
         this.inputs = inputs;
         batchSize = inputs.length;
         extraInfo++;

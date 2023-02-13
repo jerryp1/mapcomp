@@ -79,7 +79,6 @@ public class Kkrt16PsiClient<T> extends AbstractPsiClient<T> {
         super(Kkrt16PsiPtoDesc.getInstance(), clientRpc, serverParty, config);
         oprfReceiver = OprfFactory.createOprfReceiver(clientRpc, serverParty, config.getOprfConfig());
         addSubPtos(oprfReceiver);
-        addSecureSubPtos(oprfReceiver);
         cuckooHashBinType = config.getCuckooHashBinType();
         cuckooHashNum = CuckooHashBinFactory.getHashNum(cuckooHashBinType);
     }
@@ -90,15 +89,18 @@ public class Kkrt16PsiClient<T> extends AbstractPsiClient<T> {
         info("{}{} Client Init begin", ptoBeginLogPrefix, getPtoDesc().getPtoName());
 
         stopWatch.start();
-        int maxOprfBatchNum = CuckooHashBinFactory.getBinNum(cuckooHashBinType, maxClientElementSize)
+        // batchSize = n + s
+        int maxBatchSize = CuckooHashBinFactory.getBinNum(cuckooHashBinType, maxClientElementSize)
             + CuckooHashBinFactory.getStashSize(cuckooHashBinType, maxClientElementSize);
-        oprfReceiver.init(maxOprfBatchNum);
+        // m = (h + s) * n
+        int maxPrfNum = (CuckooHashBinFactory.getHashNum(cuckooHashBinType)
+            + CuckooHashBinFactory.getStashSize(cuckooHashBinType, maxServerElementSize)) * maxServerElementSize;
+        oprfReceiver.init(maxBatchSize, maxPrfNum);
         stopWatch.stop();
         long initTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
         stopWatch.reset();
         info("{}{} Client Init Step 1/1 ({}ms)", ptoStepLogPrefix, getPtoDesc().getPtoName(), initTime);
 
-        initialized = true;
         info("{}{} Client Init end", ptoEndLogPrefix, getPtoDesc().getPtoName());
     }
 

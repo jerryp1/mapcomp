@@ -53,7 +53,6 @@ public class Kos16ShZp64CoreVoleReceiver extends AbstractZp64CoreVoleReceiver {
         super(Kos16ShZp64CoreVolePtoDesc.getInstance(), receiverRpc, senderParty, config);
         baseOtReceiver = BaseOtFactory.createReceiver(receiverRpc, senderParty, config.getBaseOtConfig());
         addSubPtos(baseOtReceiver);
-        addSecureSubPtos(baseOtReceiver);
     }
 
     @Override
@@ -72,7 +71,6 @@ public class Kos16ShZp64CoreVoleReceiver extends AbstractZp64CoreVoleReceiver {
         stopWatch.reset();
         info("{}{} Recv. Init Step 1/1 ({}ms)", ptoStepLogPrefix, getPtoDesc().getPtoName(), initTime);
 
-        initialized = true;
         info("{}{} Recv. Init end", ptoEndLogPrefix, getPtoDesc().getPtoName());
     }
 

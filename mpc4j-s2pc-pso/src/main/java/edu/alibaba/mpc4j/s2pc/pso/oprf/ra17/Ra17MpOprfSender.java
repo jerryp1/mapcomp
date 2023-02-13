@@ -45,8 +45,8 @@ public class Ra17MpOprfSender extends AbstractMpOprfSender {
     }
 
     @Override
-    public void init(int maxBatchSize) throws MpcAbortException {
-        setInitInput(maxBatchSize);
+    public void init(int maxBatchSize, int maxPrfNum) {
+        setInitInput(maxBatchSize, maxPrfNum);
         info("{}{} Send. Init begin", ptoBeginLogPrefix, getPtoDesc().getPtoName());
 
         stopWatch.start();
@@ -57,7 +57,6 @@ public class Ra17MpOprfSender extends AbstractMpOprfSender {
         stopWatch.reset();
         info("{}{} Send Init Step 1/1 ({}ms)", ptoStepLogPrefix, getPtoDesc().getPtoName(), initTime);
 
-        initialized = true;
         info("{}{} Send. Init end", ptoEndLogPrefix, getPtoDesc().getPtoName());
     }
 

@@ -1,7 +1,6 @@
 package edu.alibaba.mpc4j.s2pc.pso.upsi;
 
 import edu.alibaba.mpc4j.common.rpc.MpcAbortException;
-import edu.alibaba.mpc4j.common.rpc.pto.SecurePto;
 import edu.alibaba.mpc4j.common.rpc.pto.TwoPartyPto;
 import edu.alibaba.mpc4j.s2pc.pso.upsi.UpsiFactory.UpsiType;
 
@@ -13,15 +12,7 @@ import java.util.Set;
  * @author Liqiang Peng
  * @date 2022/6/13
  */
-public interface UpsiClient<T> extends TwoPartyPto, SecurePto {
-    /**
-     * 返回协议类型。
-     *
-     * @return 协议类型。
-     */
-    @Override
-    UpsiType getPtoType();
-
+public interface UpsiClient<T> extends TwoPartyPto {
     /**
      * 初始化协议。
      *

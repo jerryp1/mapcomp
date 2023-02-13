@@ -76,13 +76,10 @@ public class Zcl22SkePsuClient extends AbstractPsuClient {
         super(Zcl22SkePsuPtoDesc.getInstance(), clientRpc, serverParty, config);
         bcReceiver = BcFactory.createReceiver(clientRpc, serverParty, config.getBcConfig());
         addSubPtos(bcReceiver);
-        addSecureSubPtos(bcReceiver);
         oprpSender = OprpFactory.createSender(clientRpc, serverParty, config.getOprpConfig());
         addSubPtos(oprpSender);
-        addSecureSubPtos(oprpSender);
         coreCotReceiver = CoreCotFactory.createReceiver(clientRpc, serverParty, config.getCoreCotConfig());
         addSubPtos(coreCotReceiver);
-        addSecureSubPtos(coreCotReceiver);
         gf2eOvdmType = config.getGf2eOvdmType();
     }
 
@@ -128,7 +125,6 @@ public class Zcl22SkePsuClient extends AbstractPsuClient {
         stopWatch.reset();
         info("{}{} Client Init Step 3/3 ({}ms)", ptoStepLogPrefix, getPtoDesc().getPtoName(), keyTime);
 
-        initialized = true;
         info("{}{} Client Init end", ptoEndLogPrefix, getPtoDesc().getPtoName());
     }
 

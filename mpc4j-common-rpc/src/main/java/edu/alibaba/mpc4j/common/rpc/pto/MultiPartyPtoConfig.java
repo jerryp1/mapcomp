@@ -1,6 +1,5 @@
 package edu.alibaba.mpc4j.common.rpc.pto;
 
-import edu.alibaba.mpc4j.common.rpc.desc.CollusionModel;
 import edu.alibaba.mpc4j.common.rpc.desc.SecurityModel;
 import edu.alibaba.mpc4j.common.tool.Config;
 import edu.alibaba.mpc4j.common.tool.EnvType;
@@ -11,7 +10,7 @@ import edu.alibaba.mpc4j.common.tool.EnvType;
  * @author Weiran Liu
  * @date 2022/01/24
  */
-public interface SecurePtoConfig extends Config {
+public interface MultiPartyPtoConfig extends Config {
     /**
      * 设置环境类型。
      *
@@ -32,13 +31,4 @@ public interface SecurePtoConfig extends Config {
      * @return 安全模型。
      */
     SecurityModel getSecurityModel();
-
-    /**
-     * 返回合谋模型。
-     *
-     * @return 合谋模型。
-     */
-    default CollusionModel getCollusionModel() {
-        return CollusionModel.DISHONEST_MAJORITY;
-    }
 }

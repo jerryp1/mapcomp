@@ -94,14 +94,6 @@ public class BspCotTest {
     }
 
     @Test
-    public void testPtoType() {
-        BspCotSender sender = BspCotFactory.createSender(senderRpc, receiverRpc.ownParty(), config);
-        BspCotReceiver receiver = BspCotFactory.createReceiver(receiverRpc, senderRpc.ownParty(), config);
-        Assert.assertEquals(config.getPtoType(), sender.getPtoType());
-        Assert.assertEquals(config.getPtoType(), receiver.getPtoType());
-    }
-
-    @Test
     public void testFirstAlpha() {
         BspCotSender sender = BspCotFactory.createSender(senderRpc, receiverRpc.ownParty(), config);
         BspCotReceiver receiver = BspCotFactory.createReceiver(receiverRpc, senderRpc.ownParty(), config);

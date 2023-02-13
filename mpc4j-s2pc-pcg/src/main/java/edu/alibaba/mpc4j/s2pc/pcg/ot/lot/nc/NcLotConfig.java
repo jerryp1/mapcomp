@@ -1,6 +1,6 @@
 package edu.alibaba.mpc4j.s2pc.pcg.ot.lot.nc;
 
-import edu.alibaba.mpc4j.common.rpc.pto.SecurePtoConfig;
+import edu.alibaba.mpc4j.common.rpc.pto.MultiPartyPtoConfig;
 import edu.alibaba.mpc4j.s2pc.pcg.ot.lot.nc.NcLotFactory.NcLotType;
 
 /**
@@ -9,7 +9,7 @@ import edu.alibaba.mpc4j.s2pc.pcg.ot.lot.nc.NcLotFactory.NcLotType;
  * @author Hanwen Feng
  * @date 2022/0816
  */
-public interface NcLotConfig extends SecurePtoConfig {
+public interface NcLotConfig extends MultiPartyPtoConfig {
     /**
      * 返回协议类型。
      *

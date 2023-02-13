@@ -12,8 +12,8 @@ import edu.alibaba.mpc4j.common.rpc.desc.PtoDesc;
  */
 public abstract class AbstractTwoPartyPto extends AbstractMultiPartyPto implements TwoPartyPto {
 
-    protected AbstractTwoPartyPto(PtoDesc ptoDesc, Rpc rpc, Party otherParty) {
-        super(ptoDesc, rpc, otherParty);
+    protected AbstractTwoPartyPto(PtoDesc ptoDesc, Rpc rpc, Party otherParty, MultiPartyPtoConfig config) {
+        super(ptoDesc, config, rpc, otherParty);
     }
 
     @Override

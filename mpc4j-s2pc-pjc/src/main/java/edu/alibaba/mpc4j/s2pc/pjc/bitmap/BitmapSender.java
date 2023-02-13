@@ -13,7 +13,6 @@ import edu.alibaba.mpc4j.s2pc.aby.basics.bc.BcParty;
 import edu.alibaba.mpc4j.s2pc.aby.basics.bc.SquareSbitVector;
 import edu.alibaba.mpc4j.s2pc.aby.hamming.HammingFactory;
 import edu.alibaba.mpc4j.s2pc.aby.hamming.HammingParty;
-import edu.alibaba.mpc4j.s2pc.pjc.bitmap.BitmapPtoDesc.BitmapType;
 import org.roaringbitmap.RoaringBitmap;
 
 import java.nio.ByteOrder;
@@ -42,10 +41,8 @@ public class BitmapSender extends AbstractBitmapParty {
         super(BitmapPtoDesc.getInstance(), senderRpc, receiverParty, bitmapConfig);
         bcSender = BcFactory.createSender(senderRpc, receiverParty, bitmapConfig.getBcConfig());
         addSubPtos(bcSender);
-        addSecureSubPtos(bcSender);
         hammingSender = HammingFactory.createSender(senderRpc, receiverParty, bitmapConfig.getHammingConfig());
         addSubPtos(hammingSender);
-        addSecureSubPtos(hammingSender);
     }
 
     @Override
@@ -82,11 +79,6 @@ public class BitmapSender extends AbstractBitmapParty {
     }
 
     @Override
-    public BitmapType getPtoType() {
-        return BitmapType.BITMAP;
-    }
-
-    @Override
     public void init(int maxRoundNum, int updateNum) throws MpcAbortException {
         info("{}{} Send. Init begin", ptoBeginLogPrefix, getPtoDesc().getPtoName());
 
@@ -98,7 +90,6 @@ public class BitmapSender extends AbstractBitmapParty {
         stopWatch.reset();
         info("{}{} Send. Init Step 1/1 ({}ms)", ptoStepLogPrefix, getPtoDesc().getPtoName(), initTime);
 
-        initialized = true;
         info("{}{} Send. Init end", ptoEndLogPrefix, getPtoDesc().getPtoName());
     }
 

@@ -38,7 +38,6 @@ public class OfflineZ2MtgSender extends AbstractZ2MtgParty {
         super(OfflineZ2MtgPtoDesc.getInstance(), senderRpc, receiverParty, config);
         z2CoreMtgSender = Z2CoreMtgFactory.createSender(senderRpc, receiverParty, config.getZ2CoreMtgConfig());
         addSubPtos(z2CoreMtgSender);
-        addSecureSubPtos(z2CoreMtgSender);
     }
 
     @Override
@@ -73,7 +72,7 @@ public class OfflineZ2MtgSender extends AbstractZ2MtgParty {
             stopWatch.reset();
             info("{}{} Send. Init Step 2.{}/2.{} ({}ms)", ptoStepLogPrefix, getPtoDesc().getPtoName(), round, updateRound, roundTime);
         }
-        initialized = true;
+
         info("{}{} Send. Init end", ptoEndLogPrefix, getPtoDesc().getPtoName());
     }
 

@@ -116,16 +116,12 @@ public class Gmr21PsuServer extends AbstractPsuServer {
         super(Gmr21PsuPtoDesc.getInstance(), serverRpc, clientParty, config);
         cuckooHashOprfReceiver = OprfFactory.createOprfReceiver(serverRpc, clientParty, config.getCuckooHashOprfConfig());
         addSubPtos(cuckooHashOprfReceiver);
-        addSecureSubPtos(cuckooHashOprfReceiver);
         osnReceiver = OsnFactory.createReceiver(serverRpc, clientParty, config.getOsnConfig());
         addSubPtos(osnReceiver);
-        addSecureSubPtos(osnReceiver);
         peqtOprfSender = OprfFactory.createOprfSender(serverRpc, clientParty, config.getPeqtOprfConfig());
         addSubPtos(peqtOprfSender);
-        addSecureSubPtos(peqtOprfSender);
         coreCotSender = CoreCotFactory.createSender(serverRpc, clientParty, config.getCoreCotConfig());
         addSubPtos(coreCotSender);
-        addSecureSubPtos(coreCotSender);
         okvsType = config.getOkvsType();
         cuckooHashBinType = config.getCuckooHashBinType();
         cuckooHashNum = CuckooHashBinFactory.getHashNum(cuckooHashBinType);
@@ -138,8 +134,10 @@ public class Gmr21PsuServer extends AbstractPsuServer {
 
         stopWatch.start();
         int maxBinNum = CuckooHashBinFactory.getBinNum(cuckooHashBinType, maxServerElementSize);
+        // note that in PSU, we must use no-stash cuckoo hash
+        int maxPrfNum = CuckooHashBinFactory.getHashNum(cuckooHashBinType) * maxClientElementSize;
         // 初始化各个子协议
-        cuckooHashOprfReceiver.init(maxBinNum);
+        cuckooHashOprfReceiver.init(maxBinNum, maxPrfNum);
         osnReceiver.init(maxBinNum);
         peqtOprfSender.init(maxBinNum);
         byte[] delta = new byte[CommonConstants.BLOCK_BYTE_LENGTH];
@@ -174,7 +172,6 @@ public class Gmr21PsuServer extends AbstractPsuServer {
         stopWatch.reset();
         info("{}{} Server Init Step 2/2 ({}ms)", ptoStepLogPrefix, getPtoDesc().getPtoName(), keyTime);
 
-        initialized = true;
         info("{}{} Server Init end", ptoEndLogPrefix, getPtoDesc().getPtoName());
     }
 

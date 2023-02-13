@@ -3,7 +3,8 @@ package edu.alibaba.mpc4j.s2pc.pcg.vole.gf2k.core;
 import edu.alibaba.mpc4j.common.rpc.Party;
 import edu.alibaba.mpc4j.common.rpc.Rpc;
 import edu.alibaba.mpc4j.common.rpc.desc.PtoDesc;
-import edu.alibaba.mpc4j.common.rpc.pto.AbstractSecureTwoPartyPto;
+import edu.alibaba.mpc4j.common.rpc.pto.AbstractTwoPartyPto;
+import edu.alibaba.mpc4j.common.tool.MathPreconditions;
 import edu.alibaba.mpc4j.common.tool.galoisfield.gf2k.Gf2k;
 import edu.alibaba.mpc4j.common.tool.galoisfield.gf2k.Gf2kFactory;
 import edu.alibaba.mpc4j.common.tool.galoisfield.gf2k.Gf2kGadget;
@@ -15,11 +16,7 @@ import edu.alibaba.mpc4j.common.tool.utils.BytesUtils;
  * @author Weiran Liu
  * @date 2022/9/22
  */
-public abstract class AbstractGf2kCoreVoleReceiver extends AbstractSecureTwoPartyPto implements Gf2kCoreVoleReceiver {
-    /**
-     * 配置项
-     */
-    private final Gf2kCoreVoleConfig config;
+public abstract class AbstractGf2kCoreVoleReceiver extends AbstractTwoPartyPto implements Gf2kCoreVoleReceiver {
     /**
      * GF2K算法
      */
@@ -55,33 +52,25 @@ public abstract class AbstractGf2kCoreVoleReceiver extends AbstractSecureTwoPart
 
     protected AbstractGf2kCoreVoleReceiver(PtoDesc ptoDesc, Rpc receiverRpc, Party senderParty, Gf2kCoreVoleConfig config) {
         super(ptoDesc, receiverRpc, senderParty, config);
-        this.config = config;
         gf2k = Gf2kFactory.createInstance(envType);
         l = gf2k.getL();
         byteL = gf2k.getByteL();
         gf2kGadget = new Gf2kGadget(gf2k);
     }
 
-    @Override
-    public Gf2kCoreVoleFactory.Gf2kCoreVoleType getPtoType() {
-        return config.getPtoType();
-    }
-
     protected void setInitInput(byte[] delta, int maxNum) {
-        assert delta.length == byteL : "Δ byte length must be " + byteL + ": " + delta.length;
+        MathPreconditions.checkEqual("Δ.length", "l(B)", delta.length, byteL);
         // 拷贝一份
         this.delta = BytesUtils.clone(delta);
         deltaBinary = gf2kGadget.bitDecomposition(delta);
-        assert maxNum > 0 : "max num must be greater than 0: " + maxNum;
+        MathPreconditions.checkPositive("maxNum", maxNum);
         this.maxNum = maxNum;
-        initialized = false;
+        initState();
     }
 
     protected void setPtoInput(int num) {
-        if (!initialized) {
-            throw new IllegalStateException("Need init ...");
-        }
-        assert num > 0 && num <= maxNum : "num must be in range (0, " + maxNum + "]: " + num;
+        checkReadyState();
+        MathPreconditions.checkPositiveInRangeClosed("num", num, maxNum);
         this.num = num;
         extraInfo++;
     }

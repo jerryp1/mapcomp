@@ -76,7 +76,6 @@ public class Kos15CoreCotReceiver extends AbstractCoreCotReceiver {
         super(Kos15CoreCotPtoDesc.getInstance(), receiverRpc, senderParty, config);
         baseOtSender = BaseOtFactory.createSender(receiverRpc, senderParty, config.getBaseOtConfig());
         addSubPtos(baseOtSender);
-        addSecureSubPtos(baseOtSender);
         gf2k = Gf2kFactory.createInstance(envType);
     }
 
@@ -108,7 +107,6 @@ public class Kos15CoreCotReceiver extends AbstractCoreCotReceiver {
         stopWatch.reset();
         info("{}{} Recv. Init Step 2/2 ({}ms)", ptoStepLogPrefix, getPtoDesc().getPtoName(), randomOracleTime);
 
-        initialized = true;
         info("{}{} Recv. Init end", ptoEndLogPrefix, getPtoDesc().getPtoName());
     }
 

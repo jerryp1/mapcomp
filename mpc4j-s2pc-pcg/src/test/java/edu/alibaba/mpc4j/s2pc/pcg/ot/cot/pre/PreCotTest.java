@@ -18,7 +18,6 @@ import edu.alibaba.mpc4j.s2pc.pcg.ot.cot.pre.PreCotFactory.PreCotType;
 import edu.alibaba.mpc4j.s2pc.pcg.ot.cot.pre.bea95.Bea95PreCotConfig;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.time.StopWatch;
-import org.junit.Assert;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
@@ -71,14 +70,6 @@ public class PreCotTest {
         senderRpc = rpcManager.getRpc(0);
         receiverRpc = rpcManager.getRpc(1);
         this.config = config;
-    }
-
-    @Test
-    public void testPtoType() {
-        PreCotSender sender = PreCotFactory.createSender(senderRpc, receiverRpc.ownParty(), config);
-        PreCotReceiver receiver = PreCotFactory.createReceiver(receiverRpc, senderRpc.ownParty(), config);
-        Assert.assertEquals(config.getPtoType(), sender.getPtoType());
-        Assert.assertEquals(config.getPtoType(), receiver.getPtoType());
     }
 
     @Test
