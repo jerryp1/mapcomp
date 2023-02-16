@@ -16,7 +16,7 @@ class BcUnarySenderThread extends Thread {
     /**
      * sender
      */
-    private final BcParty bcSender;
+    private final BcParty sender;
     /**
      * operator
      */
@@ -50,8 +50,8 @@ class BcUnarySenderThread extends Thread {
      */
     private BitVector z0Vector;
 
-    BcUnarySenderThread(BcParty bcSender, BcOperator bcOperator, BitVector xBitVector) {
-        this.bcSender = bcSender;
+    BcUnarySenderThread(BcParty sender, BcOperator bcOperator, BitVector xBitVector) {
+        this.sender = sender;
         this.bcOperator = bcOperator;
         this.xBitVector = xBitVector;
         bitNum = xBitVector.bitNum();
@@ -88,30 +88,28 @@ class BcUnarySenderThread extends Thread {
     @Override
     public void run() {
         try {
-            bcSender.getRpc().connect();
-            bcSender.init(bitNum, bitNum);
+            sender.init(bitNum, bitNum);
             // set inputs
             SquareSbitVector x = SquareSbitVector.create(xBitVector, true);
-            SquareSbitVector x0 = bcSender.shareOwn(xBitVector);
+            SquareSbitVector x0 = sender.shareOwn(xBitVector);
             shareX0 = x0.copy();
             SquareSbitVector z00, z10;
             //noinspection SwitchStatementWithTooFewBranches
             switch (bcOperator) {
                 case NOT:
                     // (plain, plain)
-                    z00 = bcSender.not(x);
-                    z0Vector = bcSender.revealOwn(z00);
-                    bcSender.revealOther(z00);
+                    z00 = sender.not(x);
+                    z0Vector = sender.revealOwn(z00);
+                    sender.revealOther(z00);
                     // (plain, secret)
-                    z10 = bcSender.not(x0);
+                    z10 = sender.not(x0);
                     finalX0 = x0.copy();
-                    z1Vector = bcSender.revealOwn(z10);
-                    bcSender.revealOther(z10);
+                    z1Vector = sender.revealOwn(z10);
+                    sender.revealOther(z10);
                     break;
                 default:
                     throw new IllegalStateException("Invalid unary boolean operator: " + bcOperator.name());
             }
-            bcSender.getRpc().disconnect();
         } catch (MpcAbortException e) {
             e.printStackTrace();
         }

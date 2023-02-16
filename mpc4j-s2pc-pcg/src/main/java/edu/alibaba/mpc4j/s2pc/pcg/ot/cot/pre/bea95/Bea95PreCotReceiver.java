@@ -7,6 +7,7 @@ import java.util.concurrent.TimeUnit;
 
 import edu.alibaba.mpc4j.common.rpc.MpcAbortException;
 import edu.alibaba.mpc4j.common.rpc.Party;
+import edu.alibaba.mpc4j.common.rpc.PtoState;
 import edu.alibaba.mpc4j.common.rpc.Rpc;
 import edu.alibaba.mpc4j.common.rpc.utils.DataPacket;
 import edu.alibaba.mpc4j.common.rpc.utils.DataPacketHeader;
@@ -31,14 +32,14 @@ public class Bea95PreCotReceiver extends AbstractPreCotReceiver {
     @Override
     public void init() throws MpcAbortException {
         setInitInput();
-        info("{}{} Recv. Init begin", ptoBeginLogPrefix, getPtoDesc().getPtoName());
+        logPhaseInfo(PtoState.INIT_BEGIN);
 
-        info("{}{} Recv. Init end", ptoEndLogPrefix, getPtoDesc().getPtoName());
+        logPhaseInfo(PtoState.INIT_END);
     }
 
     @Override
     public CotReceiverOutput receive(CotReceiverOutput preReceiverOutput, boolean[] choices) {
-        info("{}{} Recv. begin", ptoBeginLogPrefix, getPtoDesc().getPtoName());
+        logPhaseInfo(PtoState.PTO_BEGIN);
         setPtoInput(preReceiverOutput, choices);
 
         stopWatch.start();
@@ -55,9 +56,9 @@ public class Bea95PreCotReceiver extends AbstractPreCotReceiver {
         stopWatch.stop();
         long time = stopWatch.getTime(TimeUnit.MILLISECONDS);
         stopWatch.reset();
-        info("{}{} Recv. Step 1/1 ({}ms)", ptoStepLogPrefix, getPtoDesc().getPtoName(), time);
+        logStepInfo(PtoState.PTO_STEP, 1, 1, time);
 
-        info("{}{} Recv. end", ptoEndLogPrefix, getPtoDesc().getPtoName());
+        logPhaseInfo(PtoState.PTO_END);
         byte[][] rbArray = Arrays.copyOf(preReceiverOutput.getRbArray(), preReceiverOutput.getRbArray().length);
         return CotReceiverOutput.create(choices, rbArray);
     }

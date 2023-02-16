@@ -12,7 +12,9 @@ import edu.alibaba.mpc4j.s2pc.pso.psi.hfh99.Hfh99EccPsiConfig;
 import edu.alibaba.mpc4j.s2pc.pso.psi.kkrt16.Kkrt16PsiConfig;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.time.StopWatch;
+import org.junit.After;
 import org.junit.Assert;
+import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
@@ -104,80 +106,76 @@ public class PsiTest {
 
     public PsiTest(String name, PsiConfig config) {
         Preconditions.checkArgument(StringUtils.isNotBlank(name));
+        // We cannot use NettyRPC in the test case since it needs multi-thread connect / disconnect.
+        // In other word, we cannot connect / disconnect NettyRpc in @Before / @After, respectively.
         RpcManager rpcManager = new MemoryRpcManager(2);
         serverRpc = rpcManager.getRpc(0);
         clientRpc = rpcManager.getRpc(1);
         this.config = config;
     }
 
+    @Before
+    public void connect() {
+        serverRpc.connect();
+        clientRpc.connect();
+    }
+
+    @After
+    public void disconnect() {
+        serverRpc.disconnect();
+        clientRpc.disconnect();
+    }
+
     @Test
     public void test1() {
-        PsiServer<ByteBuffer> server = PsiFactory.createServer(serverRpc, clientRpc.ownParty(), config);
-        PsiClient<ByteBuffer> client = PsiFactory.createClient(clientRpc, serverRpc.ownParty(), config);
-        testPto(server, client, 1, 1);
+        testPto(1, 1, false);
     }
 
     @Test
     public void test2() {
-        PsiServer<ByteBuffer> server = PsiFactory.createServer(serverRpc, clientRpc.ownParty(), config);
-        PsiClient<ByteBuffer> client = PsiFactory.createClient(clientRpc, serverRpc.ownParty(), config);
-        testPto(server, client, 2, 2);
+        testPto(2, 2, false);
     }
 
     @Test
     public void test10() {
-        PsiServer<ByteBuffer> server = PsiFactory.createServer(serverRpc, clientRpc.ownParty(), config);
-        PsiClient<ByteBuffer> client = PsiFactory.createClient(clientRpc, serverRpc.ownParty(), config);
-        testPto(server, client, 10, 10);
+        testPto(10, 10, false);
     }
 
     @Test
     public void testLargeServerSize() {
-        PsiServer<ByteBuffer> server = PsiFactory.createServer(serverRpc, clientRpc.ownParty(), config);
-        PsiClient<ByteBuffer> client = PsiFactory.createClient(clientRpc, serverRpc.ownParty(), config);
-        testPto(server, client, DEFAULT_SIZE, 10);
+        testPto(DEFAULT_SIZE, 10, false);
     }
 
     @Test
     public void testLargeClientSize() {
-        PsiServer<ByteBuffer> server = PsiFactory.createServer(serverRpc, clientRpc.ownParty(), config);
-        PsiClient<ByteBuffer> client = PsiFactory.createClient(clientRpc, serverRpc.ownParty(), config);
-        testPto(server, client, 10, DEFAULT_SIZE);
+        testPto(10, DEFAULT_SIZE, false);
     }
 
     @Test
     public void testDefault() {
-        PsiServer<ByteBuffer> server = PsiFactory.createServer(serverRpc, clientRpc.ownParty(), config);
-        PsiClient<ByteBuffer> client = PsiFactory.createClient(clientRpc, serverRpc.ownParty(), config);
-        testPto(server, client, DEFAULT_SIZE, DEFAULT_SIZE);
+        testPto(DEFAULT_SIZE, DEFAULT_SIZE, false);
     }
 
     @Test
     public void testParallelDefault() {
-        PsiServer<ByteBuffer> server = PsiFactory.createServer(serverRpc, clientRpc.ownParty(), config);
-        PsiClient<ByteBuffer> client = PsiFactory.createClient(clientRpc, serverRpc.ownParty(), config);
-        server.setParallel(true);
-        client.setParallel(true);
-        testPto(server, client, DEFAULT_SIZE, DEFAULT_SIZE);
+        testPto(DEFAULT_SIZE, DEFAULT_SIZE, true);
     }
 
     @Test
     public void testLarge() {
-        PsiServer<ByteBuffer> server = PsiFactory.createServer(serverRpc, clientRpc.ownParty(), config);
-        PsiClient<ByteBuffer> client = PsiFactory.createClient(clientRpc, serverRpc.ownParty(), config);
-        testPto(server, client, LARGE_SIZE, LARGE_SIZE);
+        testPto(LARGE_SIZE, LARGE_SIZE, false);
     }
 
     @Test
     public void testParallelLarge() {
-        PsiServer<ByteBuffer> server = PsiFactory.createServer(serverRpc, clientRpc.ownParty(), config);
-        PsiClient<ByteBuffer> client = PsiFactory.createClient(clientRpc, serverRpc.ownParty(), config);
-        server.setParallel(true);
-        client.setParallel(true);
-        testPto(server, client, LARGE_SIZE, LARGE_SIZE);
+        testPto(LARGE_SIZE, LARGE_SIZE, true);
     }
 
-    private void testPto(PsiServer<ByteBuffer> server, PsiClient<ByteBuffer> client, int serverSize, int clientSize) {
+    private void testPto(int serverSize, int clientSize, boolean parallel) {
+        PsiServer<ByteBuffer> server = PsiFactory.createServer(serverRpc, clientRpc.ownParty(), config);
+        PsiClient<ByteBuffer> client = PsiFactory.createClient(clientRpc, serverRpc.ownParty(), config);
+        server.setParallel(parallel);
+        client.setParallel(parallel);
         int randomTaskId = Math.abs(SECURE_RANDOM.nextInt());
         server.setTaskId(randomTaskId);
         client.setTaskId(randomTaskId);
@@ -218,6 +216,8 @@ public class PsiTest {
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
+        server.destroy();
+        client.destroy();
     }
 
     private void assertOutput(Set<ByteBuffer> serverSet, Set<ByteBuffer> clientSet, Set<ByteBuffer> outputIntersectionSet) {

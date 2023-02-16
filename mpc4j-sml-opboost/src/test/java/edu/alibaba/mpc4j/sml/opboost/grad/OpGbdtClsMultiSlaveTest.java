@@ -15,7 +15,9 @@ import edu.alibaba.mpc4j.sml.opboost.OpBoostSlaveConfig;
 import edu.alibaba.mpc4j.sml.opboost.OpBoostSlaveThread;
 import edu.alibaba.mpc4j.sml.opboost.OpBoostTestUtils;
 import edu.alibaba.mpc4j.sml.smile.classification.GradientTreeBoost;
+import org.junit.After;
 import org.junit.Assert;
+import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
@@ -102,6 +104,26 @@ public class OpGbdtClsMultiSlaveTest {
         host = new ClsOpGradBoostHost(hostRpc, leftSlaveRpc.ownParty(), rightSlaveRpc.ownParty());
         leftSlave = new OpBoostSlave(leftSlaveRpc, hostRpc.ownParty());
         rightSlave = new OpBoostSlave(rightSlaveRpc, hostRpc.ownParty());
+    }
+
+    @Before
+    public void connect() {
+        host.getRpc().connect();
+        leftSlave.getRpc().connect();
+        rightSlave.getRpc().connect();
+        host.init();
+        leftSlave.init();
+        rightSlave.init();
+    }
+
+    @After
+    public void disconnect() {
+        host.destroy();
+        leftSlave.destroy();
+        rightSlave.destroy();
+        host.getRpc().disconnect();
+        leftSlave.getRpc().disconnect();
+        rightSlave.getRpc().disconnect();
     }
 
     @Test

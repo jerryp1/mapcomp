@@ -12,7 +12,7 @@ class OprfSenderThread extends Thread {
     /**
      * 发送方
      */
-    private final OprfSender oprfSender;
+    private final OprfSender sender;
     /**
      * 批处理数量
      */
@@ -22,8 +22,8 @@ class OprfSenderThread extends Thread {
      */
     private OprfSenderOutput senderOutput;
 
-    OprfSenderThread(OprfSender oprfSender, int batchSize) {
-        this.oprfSender = oprfSender;
+    OprfSenderThread(OprfSender sender, int batchSize) {
+        this.sender = sender;
         this.batchSize = batchSize;
     }
 
@@ -34,10 +34,9 @@ class OprfSenderThread extends Thread {
     @Override
     public void run() {
         try {
-            oprfSender.getRpc().connect();
-            oprfSender.init(batchSize);
-            senderOutput = oprfSender.oprf(batchSize);
-            oprfSender.getRpc().disconnect();
+            sender.init(batchSize);
+            senderOutput = sender.oprf(batchSize);
+            sender.destroy();
         } catch (MpcAbortException e) {
             e.printStackTrace();
         }

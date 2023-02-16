@@ -55,14 +55,11 @@ public class KwPirClientThread<T> extends Thread {
     @Override
     public void run() {
         try {
-            // 随机选取
-            client.getRpc().connect();
             client.init(kwPirParams, labelByteLength);
             client.getRpc().synchronize();
             for (int i = 0; i < repeatTime; i++) {
                 retrievalResults.add(client.pir(retrievalSets.get(i)));
             }
-            client.getRpc().disconnect();
         } catch (MpcAbortException e) {
             e.printStackTrace();
         }

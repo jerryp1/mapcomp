@@ -47,15 +47,15 @@ public class Mr19EccBaseOtSender extends AbstractBaseOtSender {
     @Override
     public void init() throws MpcAbortException {
         setInitInput();
-        logBeginEndInfo(PtoState.INIT_BEGIN);
+        logPhaseInfo(PtoState.INIT_BEGIN);
         // empty init step
-        logBeginEndInfo(PtoState.INIT_END);
+        logPhaseInfo(PtoState.INIT_END);
     }
 
     @Override
     public BaseOtSenderOutput send(int num) throws MpcAbortException {
         setPtoInput(num);
-        logBeginEndInfo(PtoState.PTO_BEGIN);
+        logPhaseInfo(PtoState.PTO_BEGIN);
 
         stopWatch.start();
         List<byte[]> betaPayload = generateBetaPayload();
@@ -81,7 +81,7 @@ public class Mr19EccBaseOtSender extends AbstractBaseOtSender {
         stopWatch.reset();
         logStepInfo(PtoState.PTO_STEP, 2, 2, pkTime);
 
-        logBeginEndInfo(PtoState.PTO_END);
+        logPhaseInfo(PtoState.PTO_END);
         return senderOutput;
     }
 

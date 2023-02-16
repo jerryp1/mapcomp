@@ -197,6 +197,7 @@ public class PmidMain {
         // 同步
         pmidServer.getRpc().synchronize();
         pmidServer.getRpc().reset();
+        pmidServer.destroy();
         LOGGER.info("(warmup) {} finish", pmidServer.ownParty().getPartyName());
     }
 
@@ -251,6 +252,7 @@ public class PmidMain {
         // 同步
         pmidServer.getRpc().synchronize();
         pmidServer.getRpc().reset();
+        pmidServer.destroy();
         LOGGER.info("{} finish", pmidServer.ownParty().getPartyName());
     }
 
@@ -379,6 +381,7 @@ public class PmidMain {
         // 同步
         pmidClient.getRpc().synchronize();
         pmidClient.getRpc().reset();
+        pmidClient.destroy();
         LOGGER.info("(warmup) {} finish", pmidClient.ownParty().getPartyName());
     }
 
@@ -433,6 +436,7 @@ public class PmidMain {
         // 同步
         pmidClient.getRpc().synchronize();
         pmidClient.getRpc().reset();
+        pmidClient.destroy();
         LOGGER.info("{} finish", pmidClient.ownParty().getPartyName());
     }
 }

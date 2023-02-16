@@ -45,13 +45,11 @@ public class IndexPirServerThread extends Thread {
     @Override
     public void run() {
         try {
-            server.getRpc().connect();
             server.init(indexPirParams, elementArrayList, elementByteLength);
             server.getRpc().synchronize();
             for (int i = 0; i < repeatTime; i++) {
                 server.pir();
             }
-            server.getRpc().disconnect();
         } catch (MpcAbortException e) {
             e.printStackTrace();
         }

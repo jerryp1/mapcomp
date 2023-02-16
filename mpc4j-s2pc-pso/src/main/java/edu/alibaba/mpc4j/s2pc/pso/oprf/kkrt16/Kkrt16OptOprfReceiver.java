@@ -2,6 +2,7 @@ package edu.alibaba.mpc4j.s2pc.pso.oprf.kkrt16;
 
 import edu.alibaba.mpc4j.common.rpc.MpcAbortException;
 import edu.alibaba.mpc4j.common.rpc.Party;
+import edu.alibaba.mpc4j.common.rpc.PtoState;
 import edu.alibaba.mpc4j.common.rpc.Rpc;
 import edu.alibaba.mpc4j.common.rpc.utils.DataPacket;
 import edu.alibaba.mpc4j.common.rpc.utils.DataPacketHeader;
@@ -67,7 +68,7 @@ public class Kkrt16OptOprfReceiver extends AbstractOprfReceiver {
     @Override
     public void init(int maxBatchSize, int maxPrfNum) throws MpcAbortException {
         setInitInput(maxBatchSize, maxPrfNum);
-        info("{}{} Recv. Init begin", ptoBeginLogPrefix, getPtoDesc().getPtoName());
+        logPhaseInfo(PtoState.INIT_BEGIN);
 
         stopWatch.start();
         // 设置伪随机编码码字比特长度
@@ -80,22 +81,22 @@ public class Kkrt16OptOprfReceiver extends AbstractOprfReceiver {
         stopWatch.stop();
         long initCotTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
         stopWatch.reset();
-        info("{}{} Recv. Init Step 1/2 ({}ms)", ptoStepLogPrefix, getPtoDesc().getPtoName(), initCotTime);
+        logStepInfo(PtoState.INIT_STEP, 1, 2, initCotTime);
 
         stopWatch.start();
         kdfOtSenderOutput = new KdfOtSenderOutput(envType, coreCotSender.send(codewordBitLength));
         stopWatch.stop();
         long cotTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
         stopWatch.reset();
-        info("{}{} Recv. Init Step 2/2 ({}ms)", ptoStepLogPrefix, getPtoDesc().getPtoName(), cotTime);
+        logStepInfo(PtoState.INIT_STEP, 2, 2, cotTime);
 
-        info("{}{} Recv. Init end", ptoEndLogPrefix, getPtoDesc().getPtoName());
+        logPhaseInfo(PtoState.INIT_END);
     }
 
     @Override
     public OprfReceiverOutput oprf(byte[][] inputs) throws MpcAbortException {
         setPtoInput(inputs);
-        info("{}{} Recv. begin", ptoBeginLogPrefix, getPtoDesc().getPtoName());
+        logPhaseInfo(PtoState.PTO_BEGIN);
 
         stopWatch.start();
         // 生成伪随机编码密钥
@@ -112,7 +113,7 @@ public class Kkrt16OptOprfReceiver extends AbstractOprfReceiver {
         stopWatch.stop();
         long initKeyTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
         stopWatch.reset();
-        info("{}{} Recv. Step 1/3 ({}ms)", ptoStepLogPrefix, getPtoDesc().getPtoName(), initKeyTime);
+        logStepInfo(PtoState.PTO_STEP, 1, 3, initKeyTime, "Receiver sends PRC key");
 
         stopWatch.start();
         // 生成矩阵
@@ -125,16 +126,16 @@ public class Kkrt16OptOprfReceiver extends AbstractOprfReceiver {
         stopWatch.stop();
         long matrixTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
         stopWatch.reset();
-        info("{}{} Recv. Step 2/3 ({}ms)", ptoStepLogPrefix, getPtoDesc().getPtoName(), matrixTime);
+        logStepInfo(PtoState.PTO_STEP, 2, 3, matrixTime, "Receiver generates matrix");
 
         stopWatch.start();
         OprfReceiverOutput receiverOutput = generateReceiverOutput();
         stopWatch.stop();
         long keyGenTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
         stopWatch.reset();
-        info("{}{} Recv. Step 3/3 ({}ms)", ptoStepLogPrefix, getPtoDesc().getPtoName(), keyGenTime);
+        logStepInfo(PtoState.PTO_STEP, 3, 3, keyGenTime, "Receiver generates OPRF");
 
-        info("{}{} Recv. end", ptoEndLogPrefix, getPtoDesc().getPtoName());
+        logPhaseInfo(PtoState.PTO_END);
         return receiverOutput;
     }
 

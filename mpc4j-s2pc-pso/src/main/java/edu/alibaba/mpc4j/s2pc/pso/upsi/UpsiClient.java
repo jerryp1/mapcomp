@@ -2,12 +2,12 @@ package edu.alibaba.mpc4j.s2pc.pso.upsi;
 
 import edu.alibaba.mpc4j.common.rpc.MpcAbortException;
 import edu.alibaba.mpc4j.common.rpc.pto.TwoPartyPto;
-import edu.alibaba.mpc4j.s2pc.pso.upsi.UpsiFactory.UpsiType;
 
 import java.util.Set;
 
 /**
  * 非平衡PSI协议客户端接口。
+ * TODO @庚序: add a new init function void init(int maxClientElementSize, int expectServerElementSize);
  *
  * @author Liqiang Peng
  * @date 2022/6/13

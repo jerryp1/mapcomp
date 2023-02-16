@@ -201,6 +201,8 @@ public class CoreLotTest {
                 senderByteLength, receiverByteLength, time
             );
             LOGGER.info("-----test {} end-----", sender.getPtoDesc().getPtoName());
+            sender.destroy();
+            receiver.destroy();
         } catch (InterruptedException e) {
             e.printStackTrace();
         }

@@ -39,10 +39,8 @@ class OprpSenderThread extends Thread {
     @Override
     public void run() {
         try {
-            sender.getRpc().connect();
             sender.init(batchSize);
             senderOutput = sender.oprp(key, batchSize);
-            sender.getRpc().disconnect();
         } catch (MpcAbortException e) {
             e.printStackTrace();
         }

@@ -49,7 +49,7 @@ public abstract class AbstractZ2MtgParty extends AbstractTwoPartyPto implements 
     }
 
     protected void setPtoInput(int num) {
-        checkReadyState();
+        checkInitialized();
         MathPreconditions.checkPositiveInRangeClosed("num", num, maxRoundNum);
         this.num = num;
         byteNum = CommonUtils.getByteLength(num);

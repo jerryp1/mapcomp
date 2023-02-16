@@ -36,12 +36,10 @@ class NcCotReceiverThread extends Thread {
     @Override
     public void run() {
         try {
-            receiver.getRpc().connect();
             receiver.init(num);
             for (int round = 0; round < receiverOutputs.length; round++) {
                 receiverOutputs[round] = receiver.receive();
             }
-            receiver.getRpc().disconnect();
         } catch (MpcAbortException e) {
             e.printStackTrace();
         }

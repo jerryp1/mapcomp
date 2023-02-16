@@ -50,7 +50,7 @@ public abstract class AbstractPidParty<T> extends AbstractTwoPartyPto implements
     }
 
     protected void setPtoInput(Set<T> ownElementSet, int otherElementSetSize) {
-        checkReadyState();
+        checkInitialized();
         MathPreconditions.checkGreater("ownElementSetSize", ownElementSet.size(), 1);
         MathPreconditions.checkLessOrEqual("ownElementSetSize", ownElementSet.size(), maxOwnElementSetSize);
         ownElementArrayList = new ArrayList<>(ownElementSet);

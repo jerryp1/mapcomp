@@ -53,7 +53,7 @@ public abstract class AbstractZp64CoreVoleSender extends AbstractTwoPartyPto imp
     }
 
     protected void setPtoInput(long[] x) {
-        checkReadyState();
+        checkInitialized();
         MathPreconditions.checkPositiveInRangeClosed("num", x.length, maxNum);
         num = x.length;
         this.x = Arrays.stream(x)

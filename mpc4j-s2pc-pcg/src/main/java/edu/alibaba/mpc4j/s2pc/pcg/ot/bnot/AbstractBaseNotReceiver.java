@@ -46,7 +46,7 @@ public abstract class AbstractBaseNotReceiver extends AbstractTwoPartyPto implem
     }
 
     protected void setPtoInput(int[] choices) {
-        checkReadyState();
+        checkInitialized();
         MathPreconditions.checkPositive("num", choices.length);
         num = choices.length;
         this.choices = Arrays.stream(choices)

@@ -1,9 +1,6 @@
 package edu.alibaba.mpc4j.s2pc.pso.psu.zcl22;
 
-import edu.alibaba.mpc4j.common.rpc.MpcAbortException;
-import edu.alibaba.mpc4j.common.rpc.MpcAbortPreconditions;
-import edu.alibaba.mpc4j.common.rpc.Party;
-import edu.alibaba.mpc4j.common.rpc.Rpc;
+import edu.alibaba.mpc4j.common.rpc.*;
 import edu.alibaba.mpc4j.common.rpc.utils.DataPacket;
 import edu.alibaba.mpc4j.common.rpc.utils.DataPacketHeader;
 import edu.alibaba.mpc4j.common.tool.CommonConstants;
@@ -26,6 +23,7 @@ import edu.alibaba.mpc4j.s2pc.pso.oprp.OprpFactory;
 import edu.alibaba.mpc4j.s2pc.pso.oprp.OprpReceiver;
 import edu.alibaba.mpc4j.s2pc.pso.oprp.OprpReceiverOutput;
 import edu.alibaba.mpc4j.s2pc.pso.psu.AbstractPsuServer;
+import edu.alibaba.mpc4j.s2pc.pso.psu.zcl22.Zcl22SkePsuPtoDesc.PtoStep;
 
 import java.nio.ByteBuffer;
 import java.util.LinkedList;
@@ -81,7 +79,7 @@ public class Zcl22SkePsuServer extends AbstractPsuServer {
     @Override
     public void init(int maxServerElementSize, int maxClientElementSize) throws MpcAbortException {
         setInitInput(maxServerElementSize, maxClientElementSize);
-        info("{}{} Server Init begin", ptoBeginLogPrefix, getPtoDesc().getPtoName());
+        logPhaseInfo(PtoState.INIT_BEGIN);
 
         stopWatch.start();
         // 涉及三元组部分的初始化
@@ -90,7 +88,7 @@ public class Zcl22SkePsuServer extends AbstractPsuServer {
         stopWatch.stop();
         long bcTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
         stopWatch.reset();
-        info("{}{} Server Init Step 1/3 ({}ms)", ptoStepLogPrefix, getPtoDesc().getPtoName(), bcTime);
+        logStepInfo(PtoState.INIT_STEP, 1, 3, bcTime);
 
         stopWatch.start();
         // 其他部分初始化
@@ -100,7 +98,7 @@ public class Zcl22SkePsuServer extends AbstractPsuServer {
         stopWatch.stop();
         long initTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
         stopWatch.reset();
-        info("{}{} Server Init Step 2/3 ({}ms)", ptoStepLogPrefix, getPtoDesc().getPtoName(), initTime);
+        logStepInfo(PtoState.INIT_STEP, 2, 3, initTime);
 
         stopWatch.start();
         List<byte[]> keysPayload = new LinkedList<>();
@@ -122,28 +120,29 @@ public class Zcl22SkePsuServer extends AbstractPsuServer {
         stopWatch.stop();
         long keyTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
         stopWatch.reset();
-        info("{}{} Server Init Step 3/3 ({}ms)", ptoStepLogPrefix, getPtoDesc().getPtoName(), keyTime);
+        logStepInfo(PtoState.INIT_STEP, 3, 3, keyTime);
 
-        info("{}{} Server Init end", ptoEndLogPrefix, getPtoDesc().getPtoName());
+        logPhaseInfo(PtoState.INIT_END);
     }
 
     @Override
     public void psu(Set<ByteBuffer> serverElementSet, int clientElementSize, int elementByteLength)
         throws MpcAbortException {
         setPtoInput(serverElementSet, clientElementSize, elementByteLength);
-        info("{}{} Server begin", ptoBeginLogPrefix, getPtoDesc().getPtoName());
+        logPhaseInfo(PtoState.PTO_BEGIN);
 
-        stopWatch.start();
         DataPacketHeader ovdmHeader = new DataPacketHeader(
-            encodeTaskId, getPtoDesc().getPtoId(), Zcl22SkePsuPtoDesc.PtoStep.CLIENT_SEND_OVDM.ordinal(), extraInfo,
+            encodeTaskId, getPtoDesc().getPtoId(), PtoStep.CLIENT_SEND_OVDM.ordinal(), extraInfo,
             otherParty().getPartyId(), ownParty().getPartyId()
         );
         List<byte[]> ovdmPayload = rpc.receive(ovdmHeader).getPayload();
+
+        stopWatch.start();
         handleOvdmPayload(ovdmPayload);
         stopWatch.stop();
         long ovdmTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
         stopWatch.reset();
-        info("{}{} Server Step 1/3 ({}ms)", ptoStepLogPrefix, getPtoDesc().getPtoName(), ovdmTime);
+        logStepInfo(PtoState.PTO_STEP, 1, 3, ovdmTime, "Server handles OVDM");
 
         stopWatch.start();
         OprpReceiverOutput oprpReceiverOutput = oprpReceiver.oprp(senderMessages);
@@ -159,7 +158,7 @@ public class Zcl22SkePsuServer extends AbstractPsuServer {
         stopWatch.stop();
         long peqtTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
         stopWatch.reset();
-        info("{}{} Server Step 2/3 ({}ms)", ptoStepLogPrefix, getPtoDesc().getPtoName(), peqtTime);
+        logStepInfo(PtoState.PTO_STEP, 2, 3, peqtTime, "Server runs PEQT with Boolean circuits");
 
         stopWatch.start();
         CotSenderOutput cotSenderOutput = coreCotSender.send(serverElementSize);
@@ -175,16 +174,16 @@ public class Zcl22SkePsuServer extends AbstractPsuServer {
             })
             .collect(Collectors.toList());
         DataPacketHeader encHeader = new DataPacketHeader(
-            encodeTaskId, getPtoDesc().getPtoId(), Zcl22SkePsuPtoDesc.PtoStep.SERVER_SEND_ENC_ELEMENTS.ordinal(), extraInfo,
+            encodeTaskId, getPtoDesc().getPtoId(), PtoStep.SERVER_SEND_ENC_ELEMENTS.ordinal(), extraInfo,
             ownParty().getPartyId(), otherParty().getPartyId()
         );
         rpc.send(DataPacket.fromByteArrayList(encHeader, encPayload));
         stopWatch.stop();
         long encTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
         stopWatch.reset();
-        info("{}{} Server Step 3/3 ({}ms)", ptoStepLogPrefix, getPtoDesc().getPtoName(), encTime);
+        logStepInfo(PtoState.PTO_STEP, 3, 3, encTime, "Server handles union");
 
-        info("{}{} Server end", ptoEndLogPrefix, getPtoDesc().getPtoName());
+        logPhaseInfo(PtoState.PTO_END);
     }
 
     private void handleOvdmPayload(List<byte[]> ovdmPayload) throws MpcAbortException {

@@ -29,7 +29,7 @@ public abstract class AbstractMpOprfSender extends AbstractOprfSender implements
 
     @Override
     protected void setPtoInput(int batchSize) {
-        checkReadyState();
+        checkInitialized();
         // multi-point OPRF requires batchSize > 0
         MathPreconditions.checkPositiveInRangeClosed("batchSize", batchSize, maxBatchSize);
         this.batchSize = batchSize;

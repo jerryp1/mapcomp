@@ -17,7 +17,9 @@ import ml.dmlc.xgboost4j.java.Booster;
 import ml.dmlc.xgboost4j.java.DMatrix;
 import ml.dmlc.xgboost4j.java.XGBoost;
 import ml.dmlc.xgboost4j.java.XGBoostError;
+import org.junit.After;
 import org.junit.Assert;
+import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
@@ -99,6 +101,22 @@ public class OpXgBoostRegSingleSlaveTest {
         Rpc slaveRpc = rpcManager.getRpc(1);
         host = new OpXgBoostHost(hostRpc, slaveRpc.ownParty());
         slave = new OpBoostSlave(slaveRpc, hostRpc.ownParty());
+    }
+
+    @Before
+    public void connect() {
+        host.getRpc().connect();
+        slave.getRpc().connect();
+        host.init();
+        slave.init();
+    }
+
+    @After
+    public void disconnect() {
+        host.destroy();
+        slave.destroy();
+        host.getRpc().disconnect();
+        slave.getRpc().disconnect();
     }
 
     @Test

@@ -53,7 +53,7 @@ public abstract class AbstractOprpSender extends AbstractTwoPartyPto implements 
     }
 
     protected void setPtoInput(byte[] key, int batchSize) throws MpcAbortException {
-        checkReadyState();
+        checkInitialized();
         MathPreconditions.checkEqual("key.length", "λ(B)", key.length, CommonConstants.BLOCK_BYTE_LENGTH);
         this.key = key;
         MathPreconditions.checkPositiveInRangeClosed("batchSize", batchSize, maxBatchSize);

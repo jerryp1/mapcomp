@@ -15,7 +15,7 @@ public class MqRpmtClientThread extends Thread {
     /**
      * mqRPMT客户端
      */
-    private final MqRpmtClient mqRpmtClient;
+    private final MqRpmtClient client;
     /**
      * 客户端集合
      */
@@ -29,8 +29,8 @@ public class MqRpmtClientThread extends Thread {
      */
     private boolean[] containVector;
 
-    MqRpmtClientThread(MqRpmtClient mqRpmtClient, Set<ByteBuffer> clientElementSet, int serverElementSize) {
-        this.mqRpmtClient = mqRpmtClient;
+    MqRpmtClientThread(MqRpmtClient client, Set<ByteBuffer> clientElementSet, int serverElementSize) {
+        this.client = client;
         this.clientElementSet = clientElementSet;
         this.serverElementSize = serverElementSize;
     }
@@ -42,10 +42,8 @@ public class MqRpmtClientThread extends Thread {
     @Override
     public void run() {
         try {
-            mqRpmtClient.getRpc().connect();
-            mqRpmtClient.init(clientElementSet.size(), serverElementSize);
-            containVector = mqRpmtClient.mqRpmt(clientElementSet, serverElementSize);
-            mqRpmtClient.getRpc().disconnect();
+            client.init(clientElementSet.size(), serverElementSize);
+            containVector = client.mqRpmt(clientElementSet, serverElementSize);
         } catch (MpcAbortException e) {
             e.printStackTrace();
         }

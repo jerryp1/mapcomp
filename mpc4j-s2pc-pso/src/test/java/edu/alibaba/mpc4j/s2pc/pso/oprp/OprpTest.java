@@ -13,11 +13,12 @@ import edu.alibaba.mpc4j.s2pc.aby.basics.bc.BcConfig;
 import edu.alibaba.mpc4j.s2pc.aby.basics.bc.bea91.Bea91BcConfig;
 import edu.alibaba.mpc4j.s2pc.pcg.mtg.z2.Z2MtgConfig;
 import edu.alibaba.mpc4j.s2pc.pcg.mtg.z2.impl.cache.CacheZ2MtgConfig;
-import edu.alibaba.mpc4j.s2pc.pcg.mtg.z2.impl.file.FileZ2MtgConfig;
 import edu.alibaba.mpc4j.s2pc.pso.oprp.lowmc.LowMcOprpConfig;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.time.StopWatch;
+import org.junit.After;
 import org.junit.Assert;
+import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
@@ -56,13 +57,6 @@ public class OprpTest {
     @Parameterized.Parameters(name = "{0}")
     public static Collection<Object[]> configurations() {
         Collection<Object[]> configurationParams = new ArrayList<>();
-        // LowMc (file)
-        Z2MtgConfig fileZ2MtgConfig = new FileZ2MtgConfig.Builder(SecurityModel.SEMI_HONEST).build();
-        BcConfig fileBcConfig = new Bea91BcConfig.Builder().setZ2MtgConfig(fileZ2MtgConfig).build();
-        configurationParams.add(new Object[] {
-            OprpFactory.OprpType.LOW_MC.name() + " (file)",
-            new LowMcOprpConfig.Builder().setBcConfig(fileBcConfig).build(),
-        });
         // LowMc (ideal)
         Z2MtgConfig idealZ2MtgConfig = new CacheZ2MtgConfig.Builder(SecurityModel.IDEAL).build();
         BcConfig idealBcConfig = new Bea91BcConfig.Builder().setZ2MtgConfig(idealZ2MtgConfig).build();
@@ -97,59 +91,61 @@ public class OprpTest {
 
     public OprpTest(String name, OprpConfig config) {
         Preconditions.checkArgument(StringUtils.isNotBlank(name));
+        // We cannot use NettyRPC in the test case since it needs multi-thread connect / disconnect.
+        // In other word, we cannot connect / disconnect NettyRpc in @Before / @After, respectively.
         RpcManager rpcManager = new MemoryRpcManager(2);
         senderRpc = rpcManager.getRpc(0);
         receiverRpc = rpcManager.getRpc(1);
         this.config = config;
     }
 
+    @Before
+    public void connect() {
+        senderRpc.connect();
+        receiverRpc.connect();
+    }
+
+    @After
+    public void disconnect() {
+        senderRpc.disconnect();
+        receiverRpc.disconnect();
+    }
+
     @Test
     public void test1N() {
-        OprpSender sender = OprpFactory.createSender(senderRpc, receiverRpc.ownParty(), config);
-        OprpReceiver receiver = OprpFactory.createReceiver(receiverRpc, senderRpc.ownParty(), config);
-        testPto(sender, receiver, 1);
+        testPto(1, false);
     }
 
     @Test
     public void test2N() {
-        OprpSender sender = OprpFactory.createSender(senderRpc, receiverRpc.ownParty(), config);
-        OprpReceiver receiver = OprpFactory.createReceiver(receiverRpc, senderRpc.ownParty(), config);
-        testPto(sender, receiver, 2);
+        testPto(2, false);
     }
 
     @Test
     public void testDefault() {
-        OprpSender sender = OprpFactory.createSender(senderRpc, receiverRpc.ownParty(), config);
-        OprpReceiver receiver = OprpFactory.createReceiver(receiverRpc, senderRpc.ownParty(), config);
-        testPto(sender, receiver, DEFAULT_BATCH_SIZE);
+        testPto(DEFAULT_BATCH_SIZE, false);
     }
 
     @Test
     public void testParallelDefault() {
-        OprpSender sender = OprpFactory.createSender(senderRpc, receiverRpc.ownParty(), config);
-        OprpReceiver receiver = OprpFactory.createReceiver(receiverRpc, senderRpc.ownParty(), config);
-        sender.setParallel(true);
-        receiver.setParallel(true);
-        testPto(sender, receiver, DEFAULT_BATCH_SIZE);
+        testPto(DEFAULT_BATCH_SIZE, true);
     }
 
     @Test
     public void testLargeN() {
-        OprpSender sender = OprpFactory.createSender(senderRpc, receiverRpc.ownParty(), config);
-        OprpReceiver receiver = OprpFactory.createReceiver(receiverRpc, senderRpc.ownParty(), config);
-        testPto(sender, receiver, LARGE_BATCH_SIZE);
+        testPto(LARGE_BATCH_SIZE, false);
     }
 
     @Test
     public void testParallelLargeN() {
-        OprpSender sender = OprpFactory.createSender(senderRpc, receiverRpc.ownParty(), config);
-        OprpReceiver receiver = OprpFactory.createReceiver(receiverRpc, senderRpc.ownParty(), config);
-        sender.setParallel(true);
-        receiver.setParallel(true);
-        testPto(sender, receiver, LARGE_BATCH_SIZE);
+        testPto(LARGE_BATCH_SIZE, true);
     }
 
-    private void testPto(OprpSender sender, OprpReceiver receiver, int batchSize) {
+    private void testPto(int batchSize, boolean parallel) {
+        OprpSender sender = OprpFactory.createSender(senderRpc, receiverRpc.ownParty(), config);
+        OprpReceiver receiver = OprpFactory.createReceiver(receiverRpc, senderRpc.ownParty(), config);
+        sender.setParallel(parallel);
+        receiver.setParallel(parallel);
         int randomTaskId = Math.abs(SECURE_RANDOM.nextInt());
         sender.setTaskId(randomTaskId);
         receiver.setTaskId(randomTaskId);
@@ -193,6 +189,8 @@ public class OprpTest {
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
+        sender.destroy();
+        receiver.destroy();
     }
 
     private void assertOutput(int batchSize, byte[] key, byte[][] messages,

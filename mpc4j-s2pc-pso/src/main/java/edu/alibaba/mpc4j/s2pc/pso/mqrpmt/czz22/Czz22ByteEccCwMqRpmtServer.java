@@ -1,9 +1,6 @@
 package edu.alibaba.mpc4j.s2pc.pso.mqrpmt.czz22;
 
-import edu.alibaba.mpc4j.common.rpc.MpcAbortException;
-import edu.alibaba.mpc4j.common.rpc.MpcAbortPreconditions;
-import edu.alibaba.mpc4j.common.rpc.Party;
-import edu.alibaba.mpc4j.common.rpc.Rpc;
+import edu.alibaba.mpc4j.common.rpc.*;
 import edu.alibaba.mpc4j.common.rpc.utils.DataPacket;
 import edu.alibaba.mpc4j.common.rpc.utils.DataPacketHeader;
 import edu.alibaba.mpc4j.common.tool.crypto.ecc.ByteEccFactory;
@@ -54,7 +51,7 @@ public class Czz22ByteEccCwMqRpmtServer extends AbstractMqRpmtServer {
     @Override
     public void init(int maxServerElementSize, int maxClientElementSize) {
         setInitInput(maxServerElementSize, maxClientElementSize);
-        info("{}{} Server Init begin", ptoBeginLogPrefix, getPtoDesc().getPtoName());
+        logPhaseInfo(PtoState.INIT_BEGIN);
 
         stopWatch.start();
         // 生成α
@@ -62,15 +59,15 @@ public class Czz22ByteEccCwMqRpmtServer extends AbstractMqRpmtServer {
         stopWatch.stop();
         long initTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
         stopWatch.reset();
-        info("{}{} Server Init Step 1/1 ({}ms)", ptoStepLogPrefix, getPtoDesc().getPtoName(), initTime);
+        logStepInfo(PtoState.INIT_STEP, 1, 1, initTime);
 
-        info("{}{} Server Init end", ptoEndLogPrefix, getPtoDesc().getPtoName());
+        logPhaseInfo(PtoState.INIT_END);
     }
 
     @Override
     public ByteBuffer[] mqRpmt(Set<ByteBuffer> serverElementSet, int clientElementSize) throws MpcAbortException {
         setPtoInput(serverElementSet, clientElementSize);
-        info("{}{} Server begin", ptoBeginLogPrefix, getPtoDesc().getPtoName());
+        logPhaseInfo(PtoState.PTO_BEGIN);
 
         stopWatch.start();
         int peqtByteLength = Czz22ByteEccCwMqRpmtPtoDesc.getPeqtByteLength(serverElementSize, clientElementSize);
@@ -85,15 +82,16 @@ public class Czz22ByteEccCwMqRpmtServer extends AbstractMqRpmtServer {
         stopWatch.stop();
         long hxAlphaTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
         stopWatch.reset();
-        info("{}{} Server Step 1/2 ({}ms)", ptoStepLogPrefix, getPtoDesc().getPtoName(), hxAlphaTime);
+        logStepInfo(PtoState.PTO_STEP, 1, 2, hxAlphaTime, "Server computes H(x)^α");
 
-        stopWatch.start();
         // 服务端接收H(y)^β
         DataPacketHeader hyBetaHeader = new DataPacketHeader(
             encodeTaskId, getPtoDesc().getPtoId(), PtoStep.CLIENT_SEND_HY_BETA.ordinal(), extraInfo,
             otherParty().getPartyId(), ownParty().getPartyId()
         );
         List<byte[]> hyBetaPayload = rpc.receive(hyBetaHeader).getPayload();
+
+        stopWatch.start();
         // 服务端计算并发送H(y)^βα
         List<byte[]> peqtPayload = handleHyBetaPayload(hyBetaPayload);
         DataPacketHeader peqtHeader = new DataPacketHeader(
@@ -104,9 +102,9 @@ public class Czz22ByteEccCwMqRpmtServer extends AbstractMqRpmtServer {
         stopWatch.stop();
         long peqtTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
         stopWatch.reset();
-        info("{}{} Server Step 2/2 ({}ms)", ptoStepLogPrefix, getPtoDesc().getPtoName(), peqtTime);
+        logStepInfo(PtoState.PTO_STEP, 2, 2, peqtTime, "Server computes H(y)^βα");
 
-        info("{}{} Server end", ptoEndLogPrefix, getPtoDesc().getPtoName());
+        logPhaseInfo(PtoState.PTO_END);
         return serverElementArrayList.toArray(new ByteBuffer[0]);
     }
 

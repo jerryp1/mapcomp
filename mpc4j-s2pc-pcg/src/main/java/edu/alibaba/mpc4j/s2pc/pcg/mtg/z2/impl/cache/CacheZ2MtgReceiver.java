@@ -2,6 +2,7 @@ package edu.alibaba.mpc4j.s2pc.pcg.mtg.z2.impl.cache;
 
 import edu.alibaba.mpc4j.common.rpc.MpcAbortException;
 import edu.alibaba.mpc4j.common.rpc.Party;
+import edu.alibaba.mpc4j.common.rpc.PtoState;
 import edu.alibaba.mpc4j.common.rpc.Rpc;
 import edu.alibaba.mpc4j.s2pc.pcg.mtg.z2.AbstractZ2MtgParty;
 import edu.alibaba.mpc4j.s2pc.pcg.mtg.z2.Z2Triple;
@@ -43,7 +44,7 @@ public class CacheZ2MtgReceiver extends AbstractZ2MtgParty {
     @Override
     public void init(int maxRoundNum, int updateNum) throws MpcAbortException {
         setInitInput(maxRoundNum, updateNum);
-        info("{}{} Recv. Init begin", ptoBeginLogPrefix, getPtoDesc().getPtoName());
+        logPhaseInfo(PtoState.INIT_BEGIN);
 
         stopWatch.start();
         if (updateNum <= config.maxBaseNum()) {
@@ -60,15 +61,15 @@ public class CacheZ2MtgReceiver extends AbstractZ2MtgParty {
         stopWatch.stop();
         long initTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
         stopWatch.reset();
-        info("{}{} Recv. Init Step 1/1 ({}ms)", ptoStepLogPrefix, getPtoDesc().getPtoName(), initTime);
+        logStepInfo(PtoState.INIT_STEP, 1, 1, initTime);
 
-        info("{}{} Recv. Init end", ptoEndLogPrefix, getPtoDesc().getPtoName());
+        logPhaseInfo(PtoState.INIT_END);
     }
 
     @Override
     public Z2Triple generate(int num) throws MpcAbortException {
         setPtoInput(num);
-        info("{}{} Recv. begin", ptoBeginLogPrefix, getPtoDesc().getPtoName());
+        logPhaseInfo(PtoState.PTO_BEGIN);
 
         while (num > z2TripleBuffer.getNum()) {
             // 如果所需的数量大于缓存区数量，则继续生成
@@ -79,7 +80,7 @@ public class CacheZ2MtgReceiver extends AbstractZ2MtgParty {
                 stopWatch.stop();
                 long roundTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
                 stopWatch.reset();
-                info("{}{} Recv. Step 0.{}/0.{} ({}ms)", ptoStepLogPrefix, getPtoDesc().getPtoName(), round, updateRound, roundTime);
+                logSubStepInfo(PtoState.PTO_STEP, 0, round, updateRound, roundTime);
             }
         }
 
@@ -88,9 +89,9 @@ public class CacheZ2MtgReceiver extends AbstractZ2MtgParty {
         stopWatch.stop();
         long splitTripleTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
         stopWatch.reset();
-        info("{}{} Recv. Step 1/1 ({}ms)", ptoStepLogPrefix, getPtoDesc().getPtoName(), splitTripleTime);
+        logStepInfo(PtoState.PTO_STEP, 1, 1, splitTripleTime);
 
-        info("{}{} Recv. end", ptoEndLogPrefix, getPtoDesc().getPtoName());
+        logPhaseInfo(PtoState.PTO_END);
         return receiverOutput;
     }
 }

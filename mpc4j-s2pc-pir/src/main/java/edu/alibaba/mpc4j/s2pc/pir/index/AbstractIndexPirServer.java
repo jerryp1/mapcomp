@@ -63,7 +63,7 @@ public abstract class AbstractIndexPirServer extends AbstractTwoPartyPto impleme
     }
 
     protected void setPtoInput() {
-        checkReadyState();
+        checkInitialized();
         extraInfo++;
     }
 

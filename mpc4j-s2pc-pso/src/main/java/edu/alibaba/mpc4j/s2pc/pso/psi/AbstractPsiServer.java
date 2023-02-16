@@ -50,7 +50,7 @@ public abstract class AbstractPsiServer<T> extends AbstractTwoPartyPto implement
     }
 
     protected void setPtoInput(Set<T> serverElementSet, int clientElementSize) {
-        checkReadyState();
+        checkInitialized();
         MathPreconditions.checkPositiveInRangeClosed("serverElementSize", serverElementSet.size(), maxServerElementSize);
         serverElementSize = serverElementSet.size();
         serverElementArrayList = new ArrayList<>(serverElementSet);

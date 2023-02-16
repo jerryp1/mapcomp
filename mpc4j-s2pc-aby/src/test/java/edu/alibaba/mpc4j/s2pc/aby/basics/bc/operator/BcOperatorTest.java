@@ -13,7 +13,9 @@ import edu.alibaba.mpc4j.s2pc.aby.basics.bc.BcParty;
 import edu.alibaba.mpc4j.s2pc.aby.basics.bc.bea91.Bea91BcConfig;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.time.StopWatch;
+import org.junit.After;
 import org.junit.Assert;
+import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
@@ -73,77 +75,77 @@ public class BcOperatorTest {
 
     public BcOperatorTest(String name, BcConfig config) {
         Preconditions.checkArgument(StringUtils.isNotBlank(name));
+        // We cannot use NettyRPC in the test case since it needs multi-thread connect / disconnect.
+        // In other word, we cannot connect / disconnect NettyRpc in @Before / @After, respectively.
         RpcManager rpcManager = new MemoryRpcManager(2);
         senderRpc = rpcManager.getRpc(0);
         receiverRpc = rpcManager.getRpc(1);
         this.config = config;
     }
 
+    @Before
+    public void connect() {
+        senderRpc.connect();
+        receiverRpc.connect();
+    }
+
+    @After
+    public void disconnect() {
+        senderRpc.disconnect();
+        receiverRpc.disconnect();
+    }
+
     @Test
     public void test1BitNum() {
-        BcParty sender = BcFactory.createSender(senderRpc, receiverRpc.ownParty(), config);
-        BcParty receiver = BcFactory.createReceiver(receiverRpc, senderRpc.ownParty(), config);
-        testPto(sender, receiver, 1);
+        testPto(1, false);
     }
 
     @Test
     public void test2BitNum() {
-        BcParty sender = BcFactory.createSender(senderRpc, receiverRpc.ownParty(), config);
-        BcParty receiver = BcFactory.createReceiver(receiverRpc, senderRpc.ownParty(), config);
-        testPto(sender, receiver, 2);
+        testPto(2, false);
     }
 
     @Test
     public void test8BitNum() {
-        BcParty sender = BcFactory.createSender(senderRpc, receiverRpc.ownParty(), config);
-        BcParty receiver = BcFactory.createReceiver(receiverRpc, senderRpc.ownParty(), config);
-        testPto(sender, receiver, 8);
+        testPto(8, false);
     }
 
     @Test
     public void test15BitNum() {
-        BcParty sender = BcFactory.createSender(senderRpc, receiverRpc.ownParty(), config);
-        BcParty receiver = BcFactory.createReceiver(receiverRpc, senderRpc.ownParty(), config);
-        testPto(sender, receiver, 8);
+        testPto(15, false);
     }
 
     @Test
     public void testDefaultBitNum() {
-        BcParty sender = BcFactory.createSender(senderRpc, receiverRpc.ownParty(), config);
-        BcParty receiver = BcFactory.createReceiver(receiverRpc, senderRpc.ownParty(), config);
-        testPto(sender, receiver, DEFAULT_BIT_NUM);
+        testPto(DEFAULT_BIT_NUM, false);
     }
 
     @Test
     public void testParallelDefaultBitNum() {
-        BcParty sender = BcFactory.createSender(senderRpc, receiverRpc.ownParty(), config);
-        BcParty receiver = BcFactory.createReceiver(receiverRpc, senderRpc.ownParty(), config);
-        sender.setParallel(true);
-        receiver.setParallel(true);
-        testPto(sender, receiver, DEFAULT_BIT_NUM);
+        testPto(DEFAULT_BIT_NUM, true);
     }
 
     @Test
     public void testLargeBitNum() {
-        BcParty sender = BcFactory.createSender(senderRpc, receiverRpc.ownParty(), config);
-        BcParty receiver = BcFactory.createReceiver(receiverRpc, senderRpc.ownParty(), config);
-        testPto(sender, receiver, LARGE_BIT_NUM);
+        testPto(LARGE_BIT_NUM, false);
     }
 
     @Test
     public void testParallelLargeBitNum() {
-        BcParty sender = BcFactory.createSender(senderRpc, receiverRpc.ownParty(), config);
-        BcParty receiver = BcFactory.createReceiver(receiverRpc, senderRpc.ownParty(), config);
-        sender.setParallel(true);
-        receiver.setParallel(true);
-        testPto(sender, receiver, LARGE_BIT_NUM);
+        testPto(LARGE_BIT_NUM, true);
     }
 
-    private void testPto(BcParty sender, BcParty receiver, int bitNum) {
+    private void testPto(int bitNum, boolean parallel) {
+        BcParty sender = BcFactory.createSender(senderRpc, receiverRpc.ownParty(), config);
+        BcParty receiver = BcFactory.createReceiver(receiverRpc, senderRpc.ownParty(), config);
+        sender.setParallel(parallel);
+        receiver.setParallel(parallel);
         testBinaryOperator(sender, receiver, BcOperator.XOR, bitNum);
         testBinaryOperator(sender, receiver, BcOperator.AND, bitNum);
         testBinaryOperator(sender, receiver, BcOperator.OR, bitNum);
         testUnaryOperator(sender, receiver, BcOperator.NOT, bitNum);
+        sender.destroy();
+        receiver.destroy();
     }
 
     private void testBinaryOperator(BcParty sender, BcParty receiver, BcOperator bcOperator, int bitNum) {

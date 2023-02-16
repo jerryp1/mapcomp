@@ -7,7 +7,6 @@ import edu.alibaba.mpc4j.common.rpc.pto.AbstractTwoPartyPto;
 import edu.alibaba.mpc4j.common.tool.CommonConstants;
 import edu.alibaba.mpc4j.common.tool.MathPreconditions;
 import edu.alibaba.mpc4j.common.tool.utils.BytesUtils;
-import edu.alibaba.mpc4j.s2pc.pcg.ot.cot.nc.NcCotFactory.NcCotType;
 
 /**
  * NC-COT协议发送方。
@@ -44,7 +43,7 @@ public abstract class AbstractNcCotSender extends AbstractTwoPartyPto implements
     }
 
     protected void setPtoInput() {
-        checkReadyState();
+        checkInitialized();
         extraInfo++;
     }
 }

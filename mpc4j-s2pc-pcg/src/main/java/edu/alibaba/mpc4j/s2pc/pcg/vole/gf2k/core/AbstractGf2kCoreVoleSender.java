@@ -62,7 +62,7 @@ public abstract class AbstractGf2kCoreVoleSender extends AbstractTwoPartyPto imp
     }
 
     protected void setPtoInput(byte[][] x) {
-        checkReadyState();
+        checkInitialized();
         MathPreconditions.checkPositiveInRangeClosed("num", x.length, maxNum);
         num = x.length;
         this.x = Arrays.stream(x)

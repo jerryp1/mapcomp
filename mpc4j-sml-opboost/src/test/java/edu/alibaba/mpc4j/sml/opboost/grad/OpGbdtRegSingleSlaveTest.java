@@ -12,7 +12,9 @@ import edu.alibaba.mpc4j.sml.opboost.OpBoostSlaveThread;
 import edu.alibaba.mpc4j.sml.opboost.OpBoostTestUtils;
 import edu.alibaba.mpc4j.sml.smile.regression.GradientTreeBoost;
 import edu.alibaba.mpc4j.common.data.regression.*;
+import org.junit.After;
 import org.junit.Assert;
+import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
@@ -95,6 +97,22 @@ public class OpGbdtRegSingleSlaveTest {
         Rpc slaveRpc = rpcManager.getRpc(1);
         host = new RegOpGradBoostHost(hostRpc, slaveRpc.ownParty());
         slave = new OpBoostSlave(slaveRpc, hostRpc.ownParty());
+    }
+
+    @Before
+    public void connect() {
+        host.getRpc().connect();
+        slave.getRpc().connect();
+        host.init();
+        slave.init();
+    }
+
+    @After
+    public void disconnect() {
+        host.destroy();
+        slave.destroy();
+        host.getRpc().disconnect();
+        slave.getRpc().disconnect();
     }
 
     @Test

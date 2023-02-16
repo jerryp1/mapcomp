@@ -67,7 +67,7 @@ public abstract class AbstractMqRpmtClient extends AbstractTwoPartyPto implement
     }
 
     protected void setPtoInput(Set<ByteBuffer> clientElementSet, int serverElementSize) {
-        checkReadyState();
+        checkInitialized();
         MathPreconditions.checkGreater("clientElementSize", clientElementSet.size(), 1);
         MathPreconditions.checkLessOrEqual("clientElementSize", clientElementSet.size(), maxClientElementSize);
         clientElementArrayList = clientElementSet.stream()

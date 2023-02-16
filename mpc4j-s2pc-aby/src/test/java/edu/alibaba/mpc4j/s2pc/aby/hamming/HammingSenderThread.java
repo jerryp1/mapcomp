@@ -13,7 +13,7 @@ class HammingSenderThread extends Thread {
     /**
      * 汉明距离协议发送方
      */
-    private final HammingParty hammingSender;
+    private final HammingParty sender;
     /**
      * xi
      */
@@ -27,8 +27,8 @@ class HammingSenderThread extends Thread {
      */
     private int hammingDistance;
 
-    HammingSenderThread(HammingParty hammingSender, SquareSbitVector x0) {
-        this.hammingSender = hammingSender;
+    HammingSenderThread(HammingParty sender, SquareSbitVector x0) {
+        this.sender = sender;
         this.x0 = x0;
         bitNum = x0.bitNum();
     }
@@ -40,12 +40,10 @@ class HammingSenderThread extends Thread {
     @Override
     public void run() {
         try {
-            hammingSender.getRpc().connect();
-            hammingSender.init(bitNum);
+            sender.init(bitNum);
             // 发送方先发送距离，再接收距离
-            hammingSender.sendHammingDistance(x0);
-            hammingDistance = hammingSender.receiveHammingDistance(x0);
-            hammingSender.getRpc().disconnect();
+            sender.sendHammingDistance(x0);
+            hammingDistance = sender.receiveHammingDistance(x0);
         } catch (MpcAbortException e) {
             e.printStackTrace();
         }

@@ -35,10 +35,8 @@ class PreCotSenderThread extends Thread {
     @Override
     public void run() {
         try {
-            sender.getRpc().connect();
             sender.init();
             senderOutput = sender.send(preSenderOutput);
-            sender.getRpc().disconnect();
         } catch (MpcAbortException e) {
             e.printStackTrace();
         }

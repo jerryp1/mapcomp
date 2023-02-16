@@ -18,7 +18,7 @@ class BcVectorUnaryReceiverThread extends Thread {
     /**
      * sender
      */
-    private final BcParty bcSender;
+    private final BcParty receiver;
     /**
      * operator
      */
@@ -48,8 +48,8 @@ class BcVectorUnaryReceiverThread extends Thread {
      */
     private BitVector[] z0Vectors;
 
-    BcVectorUnaryReceiverThread(BcParty bcSender, BcOperator bcOperator, BitVector[] xBitVectors) {
-        this.bcSender = bcSender;
+    BcVectorUnaryReceiverThread(BcParty receiver, BcOperator bcOperator, BitVector[] xBitVectors) {
+        this.receiver = receiver;
         this.bcOperator = bcOperator;
         this.xBitVectors = xBitVectors;
         totalBitNum = Arrays.stream(xBitVectors).mapToInt(BitVector::bitNum).sum();
@@ -74,33 +74,31 @@ class BcVectorUnaryReceiverThread extends Thread {
     @Override
     public void run() {
         try {
-            bcSender.getRpc().connect();
-            bcSender.init(totalBitNum, totalBitNum);
+            receiver.init(totalBitNum, totalBitNum);
             // set inputs
             SquareSbitVector[] xs = Arrays.stream(xBitVectors)
                 .map(xBitVector -> SquareSbitVector.create(xBitVector, true))
                 .toArray(SquareSbitVector[]::new);
             int[] xLengths = Arrays.stream(xBitVectors).mapToInt(BitVector::bitNum).toArray();
-            SquareSbitVector[] x1s = bcSender.shareOther(xLengths);
+            SquareSbitVector[] x1s = receiver.shareOther(xLengths);
             shareX1s = Arrays.stream(x1s).map(SquareSbitVector::copy).toArray(SquareSbitVector[]::new);
             SquareSbitVector[] z01s, z11s;
             //noinspection SwitchStatementWithTooFewBranches
             switch (bcOperator) {
                 case NOT:
                     // (plain, plain)
-                    z01s = bcSender.not(xs);
-                    bcSender.revealOther(z01s);
-                    z0Vectors = bcSender.revealOwn(z01s);
+                    z01s = receiver.not(xs);
+                    receiver.revealOther(z01s);
+                    z0Vectors = receiver.revealOwn(z01s);
                     // (plain, secret)
-                    z11s = bcSender.not(x1s);
+                    z11s = receiver.not(x1s);
                     finalX1s = Arrays.stream(x1s).map(SquareSbitVector::copy).toArray(SquareSbitVector[]::new);
-                    bcSender.revealOther(z11s);
-                    z1Vectors = bcSender.revealOwn(z11s);
+                    receiver.revealOther(z11s);
+                    z1Vectors = receiver.revealOwn(z11s);
                     break;
                 default:
                     throw new IllegalStateException("Invalid unary boolean operator: " + bcOperator.name());
             }
-            bcSender.getRpc().disconnect();
         } catch (MpcAbortException e) {
             e.printStackTrace();
         }

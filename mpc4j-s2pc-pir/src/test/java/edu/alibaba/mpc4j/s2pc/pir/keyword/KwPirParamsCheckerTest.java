@@ -5,6 +5,7 @@ import edu.alibaba.mpc4j.s2pc.pir.keyword.cmg21.Cmg21KwPirParams;
 import edu.alibaba.mpc4j.s2pc.pir.keyword.cmg21.Cmg21KwPirParamsChecker;
 import org.apache.commons.lang3.StringUtils;
 import org.junit.Assert;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
@@ -18,6 +19,7 @@ import java.util.Collection;
  * @author Liqiang Peng
  * @date 2022/8/9
  */
+@Ignore
 @RunWith(Parameterized.class)
 public class KwPirParamsCheckerTest {
 

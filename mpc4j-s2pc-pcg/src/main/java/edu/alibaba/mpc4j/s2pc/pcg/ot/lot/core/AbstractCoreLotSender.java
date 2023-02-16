@@ -98,7 +98,7 @@ public abstract class AbstractCoreLotSender extends AbstractTwoPartyPto implemen
     }
 
     protected void setPtoInput(int num) {
-        checkReadyState();
+        checkInitialized();
         MathPreconditions.checkPositiveInRangeClosed("num", num, maxNum);
         this.num = num;
         byteNum = CommonUtils.getByteLength(num);

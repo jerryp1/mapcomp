@@ -2,6 +2,7 @@ package edu.alibaba.mpc4j.s2pc.pso.psi.kkrt16;
 
 import edu.alibaba.mpc4j.common.rpc.MpcAbortException;
 import edu.alibaba.mpc4j.common.rpc.Party;
+import edu.alibaba.mpc4j.common.rpc.PtoState;
 import edu.alibaba.mpc4j.common.rpc.Rpc;
 import edu.alibaba.mpc4j.common.rpc.utils.DataPacket;
 import edu.alibaba.mpc4j.common.rpc.utils.DataPacketHeader;
@@ -86,7 +87,7 @@ public class Kkrt16PsiClient<T> extends AbstractPsiClient<T> {
     @Override
     public void init(int maxClientElementSize, int maxServerElementSize) throws MpcAbortException {
         setInitInput(maxClientElementSize, maxServerElementSize);
-        info("{}{} Client Init begin", ptoBeginLogPrefix, getPtoDesc().getPtoName());
+        logPhaseInfo(PtoState.INIT_BEGIN);
 
         stopWatch.start();
         // batchSize = n + s
@@ -99,15 +100,15 @@ public class Kkrt16PsiClient<T> extends AbstractPsiClient<T> {
         stopWatch.stop();
         long initTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
         stopWatch.reset();
-        info("{}{} Client Init Step 1/1 ({}ms)", ptoStepLogPrefix, getPtoDesc().getPtoName(), initTime);
+        logStepInfo(PtoState.INIT_STEP, 1, 1, initTime);
 
-        info("{}{} Client Init end", ptoEndLogPrefix, getPtoDesc().getPtoName());
+        logPhaseInfo(PtoState.INIT_END);
     }
 
     @Override
     public Set<T> psi(Set<T> clientElementSet, int serverSetSize) throws MpcAbortException {
         setPtoInput(clientElementSet, serverSetSize);
-        info("{}{} Client begin", ptoBeginLogPrefix, getPtoDesc().getPtoName());
+        logPhaseInfo(PtoState.PTO_BEGIN);
 
         stopWatch.start();
         int peqtByteLength = PsiUtils.getSemiHonestPeqtByteLength(serverElementSize, clientElementSize);
@@ -123,7 +124,7 @@ public class Kkrt16PsiClient<T> extends AbstractPsiClient<T> {
         stopWatch.stop();
         long keyTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
         stopWatch.reset();
-        info("{}{} Client Step 1/3 ({}ms)", ptoStepLogPrefix, getPtoDesc().getPtoName(), keyTime);
+        logStepInfo(PtoState.PTO_STEP, 1, 3, keyTime);
 
         stopWatch.start();
         byte[][] clientExtendByteArrays = generateExtendElementByteArrays();
@@ -136,7 +137,7 @@ public class Kkrt16PsiClient<T> extends AbstractPsiClient<T> {
         stopWatch.stop();
         long oprfTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
         stopWatch.reset();
-        info("{}{} Client Step 2/3 ({}ms)", ptoStepLogPrefix, getPtoDesc().getPtoName(), oprfTime);
+        logStepInfo(PtoState.PTO_STEP, 2, 3, oprfTime);
 
         stopWatch.start();
         // 接收服务端哈希桶PRF过滤器
@@ -168,9 +169,9 @@ public class Kkrt16PsiClient<T> extends AbstractPsiClient<T> {
         stopWatch.stop();
         long serverPrfTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
         stopWatch.reset();
-        info("{}{} Client Step 3/3 ({}ms)", ptoStepLogPrefix, getPtoDesc().getPtoName(), serverPrfTime);
+        logStepInfo(PtoState.PTO_STEP, 3, 3, serverPrfTime);
 
-        info("{}{} Client end", ptoEndLogPrefix, getPtoDesc().getPtoName());
+        logPhaseInfo(PtoState.PTO_END);
         return intersection;
     }
 

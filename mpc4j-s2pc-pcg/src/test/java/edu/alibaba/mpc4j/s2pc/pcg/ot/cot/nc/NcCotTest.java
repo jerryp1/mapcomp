@@ -26,7 +26,9 @@ import edu.alibaba.mpc4j.s2pc.pcg.ot.cot.msp.bcg19.Bcg19RegMspCotConfig;
 import edu.alibaba.mpc4j.s2pc.pcg.ot.cot.msp.ywl20.Ywl20UniMspCotConfig;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.time.StopWatch;
+import org.junit.After;
 import org.junit.Assert;
+import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
@@ -172,89 +174,81 @@ public class NcCotTest {
 
     public NcCotTest(String name, NcCotConfig config) {
         Preconditions.checkArgument(StringUtils.isNotBlank(name));
+        // We cannot use NettyRPC in the test case since it needs multi-thread connect / disconnect.
+        // In other word, we cannot connect / disconnect NettyRpc in @Before / @After, respectively.
         RpcManager rpcManager = new MemoryRpcManager(2);
         senderRpc = rpcManager.getRpc(0);
         receiverRpc = rpcManager.getRpc(1);
         this.config = config;
     }
 
+    @Before
+    public void connect() {
+        senderRpc.connect();
+        receiverRpc.connect();
+    }
+
+    @After
+    public void disconnect() {
+        senderRpc.disconnect();
+        receiverRpc.disconnect();
+    }
+
     @Test
     public void test1Round1Num() {
-        NcCotSender sender = NcCotFactory.createSender(senderRpc, receiverRpc.ownParty(), config);
-        NcCotReceiver receiver = NcCotFactory.createReceiver(receiverRpc, senderRpc.ownParty(), config);
-        testPto(sender, receiver, 1, 1);
+        testPto(1, 1, false);
     }
 
     @Test
     public void test2Round2Num() {
-        NcCotSender sender = NcCotFactory.createSender(senderRpc, receiverRpc.ownParty(), config);
-        NcCotReceiver receiver = NcCotFactory.createReceiver(receiverRpc, senderRpc.ownParty(), config);
-        testPto(sender, receiver, 2, 2);
+        testPto(2, 2, false);
     }
 
     @Test
     public void testDefaultRoundDefaultNum() {
-        NcCotSender sender = NcCotFactory.createSender(senderRpc, receiverRpc.ownParty(), config);
-        NcCotReceiver receiver = NcCotFactory.createReceiver(receiverRpc, senderRpc.ownParty(), config);
-        testPto(sender, receiver, DEFAULT_NUM, DEFAULT_ROUND);
+        testPto(DEFAULT_NUM, DEFAULT_ROUND, false);
     }
 
     @Test
     public void testParallelDefaultRoundDefaultNum() {
-        NcCotSender sender = NcCotFactory.createSender(senderRpc, receiverRpc.ownParty(), config);
-        NcCotReceiver receiver = NcCotFactory.createReceiver(receiverRpc, senderRpc.ownParty(), config);
-        sender.setParallel(true);
-        receiver.setParallel(true);
-        testPto(sender, receiver, DEFAULT_NUM, DEFAULT_ROUND);
+        testPto(DEFAULT_NUM, DEFAULT_ROUND, true);
     }
 
     @Test
     public void test12LogNum() {
-        NcCotSender sender = NcCotFactory.createSender(senderRpc, receiverRpc.ownParty(), config);
-        NcCotReceiver receiver = NcCotFactory.createReceiver(receiverRpc, senderRpc.ownParty(), config);
-        testPto(sender, receiver, 1 << 12, DEFAULT_ROUND);
+        testPto(1 << 12, DEFAULT_ROUND, false);
     }
 
     @Test
     public void test16LogNum() {
-        NcCotSender sender = NcCotFactory.createSender(senderRpc, receiverRpc.ownParty(), config);
-        NcCotReceiver receiver = NcCotFactory.createReceiver(receiverRpc, senderRpc.ownParty(), config);
-        testPto(sender, receiver, 1 << 16, DEFAULT_ROUND);
+        testPto(1 << 16, DEFAULT_ROUND, false);
     }
 
     @Test
     public void testLargeRoundDefaultNum() {
-        NcCotSender sender = NcCotFactory.createSender(senderRpc, receiverRpc.ownParty(), config);
-        NcCotReceiver receiver = NcCotFactory.createReceiver(receiverRpc, senderRpc.ownParty(), config);
-        testPto(sender, receiver, DEFAULT_NUM, LARGE_ROUND);
+        testPto(DEFAULT_NUM, LARGE_ROUND, false);
     }
 
     @Test
     public void testParallelLargeRoundDefaultNum() {
-        NcCotSender sender = NcCotFactory.createSender(senderRpc, receiverRpc.ownParty(), config);
-        NcCotReceiver receiver = NcCotFactory.createReceiver(receiverRpc, senderRpc.ownParty(), config);
-        sender.setParallel(true);
-        receiver.setParallel(true);
-        testPto(sender, receiver, DEFAULT_NUM, LARGE_ROUND);
+        testPto(DEFAULT_NUM, LARGE_ROUND, true);
     }
 
     @Test
     public void testDefaultRoundLargeNum() {
-        NcCotSender sender = NcCotFactory.createSender(senderRpc, receiverRpc.ownParty(), config);
-        NcCotReceiver receiver = NcCotFactory.createReceiver(receiverRpc, senderRpc.ownParty(), config);
-        testPto(sender, receiver, LARGE_NUM, DEFAULT_ROUND);
+        testPto(LARGE_NUM, DEFAULT_ROUND, false);
     }
 
     @Test
     public void testParallelDefaultRoundLargeNum() {
-        NcCotSender sender = NcCotFactory.createSender(senderRpc, receiverRpc.ownParty(), config);
-        NcCotReceiver receiver = NcCotFactory.createReceiver(receiverRpc, senderRpc.ownParty(), config);
-        sender.setParallel(true);
-        receiver.setParallel(true);
-        testPto(sender, receiver, LARGE_NUM, DEFAULT_ROUND);
+        testPto(LARGE_NUM, DEFAULT_ROUND, true);
     }
 
-    private void testPto(NcCotSender sender, NcCotReceiver receiver, int num, int round) {
+    private void testPto(int num, int round, boolean parallel) {
+        NcCotSender sender = NcCotFactory.createSender(senderRpc, receiverRpc.ownParty(), config);
+        NcCotReceiver receiver = NcCotFactory.createReceiver(receiverRpc, senderRpc.ownParty(), config);
+        sender.setParallel(parallel);
+        receiver.setParallel(parallel);
         int randomTaskId = Math.abs(SECURE_RANDOM.nextInt());
         sender.setTaskId(randomTaskId);
         receiver.setTaskId(randomTaskId);
@@ -291,6 +285,8 @@ public class NcCotTest {
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
+        sender.destroy();
+        receiver.destroy();
     }
 
     @Test
@@ -364,5 +360,7 @@ public class NcCotTest {
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
+        sender.destroy();
+        receiver.destroy();
     }
 }

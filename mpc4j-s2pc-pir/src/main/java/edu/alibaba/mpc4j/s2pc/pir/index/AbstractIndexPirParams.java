@@ -2,6 +2,7 @@ package edu.alibaba.mpc4j.s2pc.pir.index;
 
 /**
  * 索引PIR协议参数。
+ * TODO @庚序：create a new interface named IndexPirParams, and let AbstractIndexPirParams extends IndexPirParams.
  *
  * @author Liqiang Peng
  * @date 2022/8/24

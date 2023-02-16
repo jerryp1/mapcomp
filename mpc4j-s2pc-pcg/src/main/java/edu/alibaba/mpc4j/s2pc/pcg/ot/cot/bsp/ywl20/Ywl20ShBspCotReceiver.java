@@ -4,10 +4,7 @@ import java.util.List;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.IntStream;
 
-import edu.alibaba.mpc4j.common.rpc.MpcAbortException;
-import edu.alibaba.mpc4j.common.rpc.MpcAbortPreconditions;
-import edu.alibaba.mpc4j.common.rpc.Party;
-import edu.alibaba.mpc4j.common.rpc.Rpc;
+import edu.alibaba.mpc4j.common.rpc.*;
 import edu.alibaba.mpc4j.common.rpc.utils.DataPacketHeader;
 import edu.alibaba.mpc4j.common.tool.utils.BytesUtils;
 import edu.alibaba.mpc4j.s2pc.pcg.dpprf.DpprfConfig;
@@ -62,7 +59,7 @@ public class Ywl20ShBspCotReceiver extends AbstractBspCotReceiver {
     @Override
     public void init(int maxBatchNum, int maxNum) throws MpcAbortException {
         setInitInput(maxBatchNum, maxNum);
-        info("{}{} Recv. Init begin", ptoBeginLogPrefix, getPtoDesc().getPtoName());
+        logPhaseInfo(PtoState.INIT_BEGIN);
 
         stopWatch.start();
         int maxCotNum = DpprfFactory.getPrecomputeNum(dpprfConfig, maxBatchNum, maxNum);
@@ -71,9 +68,9 @@ public class Ywl20ShBspCotReceiver extends AbstractBspCotReceiver {
         stopWatch.stop();
         long initTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
         stopWatch.reset();
-        info("{}{} Recv. Init Step 1/1 ({}ms)", ptoStepLogPrefix, getPtoDesc().getPtoName(), initTime);
+        logStepInfo(PtoState.INIT_STEP, 1, 1, initTime);
 
-        info("{}{} Recv. Init end", ptoEndLogPrefix, getPtoDesc().getPtoName());
+        logPhaseInfo(PtoState.INIT_END);
     }
 
     @Override
@@ -91,7 +88,7 @@ public class Ywl20ShBspCotReceiver extends AbstractBspCotReceiver {
     }
 
     private BspCotReceiverOutput receive() throws MpcAbortException {
-        info("{}{} Recv. begin", ptoBeginLogPrefix, getPtoDesc().getPtoName());
+        logPhaseInfo(PtoState.PTO_BEGIN);
 
         stopWatch.start();
         int cotNum = DpprfFactory.getPrecomputeNum(dpprfConfig, batchNum, num);
@@ -106,7 +103,7 @@ public class Ywl20ShBspCotReceiver extends AbstractBspCotReceiver {
         stopWatch.stop();
         long cotTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
         stopWatch.reset();
-        info("{}{} Recv. Step 1/3 ({}ms)", ptoStepLogPrefix, getPtoDesc().getPtoName(), cotTime);
+        logStepInfo(PtoState.PTO_STEP, 1, 3, cotTime);
 
         stopWatch.start();
         dpprfReceiverOutput = dpprfReceiver.puncture(alphaArray, num, cotReceiverOutput);
@@ -114,7 +111,7 @@ public class Ywl20ShBspCotReceiver extends AbstractBspCotReceiver {
         stopWatch.stop();
         long dpprfTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
         stopWatch.reset();
-        info("{}{} Recv. Step 2/3 ({}ms)", ptoStepLogPrefix, getPtoDesc().getPtoName(), dpprfTime);
+        logStepInfo(PtoState.PTO_STEP, 2, 3, dpprfTime);
 
         stopWatch.start();
         DataPacketHeader correlateHeader = new DataPacketHeader(
@@ -126,9 +123,9 @@ public class Ywl20ShBspCotReceiver extends AbstractBspCotReceiver {
         dpprfReceiverOutput = null;
         long correlateTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
         stopWatch.reset();
-        info("{}{} Recv. Step 3/3 ({}ms)", ptoStepLogPrefix, getPtoDesc().getPtoName(), correlateTime);
+        logStepInfo(PtoState.PTO_STEP, 3, 3, correlateTime);
 
-        info("{}{} Recv. end", ptoEndLogPrefix, getPtoDesc().getPtoName());
+        logPhaseInfo(PtoState.PTO_END);
         return receiverOutput;
     }
 

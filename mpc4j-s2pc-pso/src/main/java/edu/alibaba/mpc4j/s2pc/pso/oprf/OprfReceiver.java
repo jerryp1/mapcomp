@@ -24,7 +24,7 @@ public interface OprfReceiver extends TwoPartyPto {
      * 初始化协议。
      *
      * @param maxBatchSize 最大批处理数量。
-     * @param maxPrfNum    PRF调用倍数。
+     * @param maxPrfNum    PRF最大调用次数。
      * @throws MpcAbortException 如果协议异常中止。
      */
     void init(int maxBatchSize, int maxPrfNum) throws MpcAbortException;

@@ -47,11 +47,7 @@ public class OpGbdtRegHostThread extends Thread {
     @Override
     public void run() {
         try {
-            host.getRpc().connect();
-            host.init();
             model = host.fit(formula, hostDataFrame, hostConfig);
-            host.destroy();
-            host.getRpc().disconnect();
         } catch (MpcAbortException e) {
             e.printStackTrace();
             System.exit(-1);

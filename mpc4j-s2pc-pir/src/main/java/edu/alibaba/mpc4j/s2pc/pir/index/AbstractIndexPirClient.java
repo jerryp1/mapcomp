@@ -41,7 +41,7 @@ public abstract class AbstractIndexPirClient extends AbstractTwoPartyPto impleme
     }
 
     protected void setPtoInput(int index) {
-        checkReadyState();
+        checkInitialized();
         MathPreconditions.checkNonNegativeInRange("index", index, num);
         this.index = index;
         extraInfo++;

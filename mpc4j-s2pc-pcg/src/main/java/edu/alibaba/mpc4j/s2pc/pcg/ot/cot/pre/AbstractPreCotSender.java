@@ -28,7 +28,7 @@ public abstract class AbstractPreCotSender extends AbstractTwoPartyPto implement
     }
 
     protected void setPtoInput(CotSenderOutput preSenderOutput) {
-        checkReadyState();
+        checkInitialized();
         MathPreconditions.checkPositive("preCotNum", preSenderOutput.getNum());
         this.preSenderOutput = preSenderOutput;
         extraInfo++;

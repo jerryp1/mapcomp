@@ -12,7 +12,7 @@ public class OsnReceiverThread extends Thread {
     /**
      * 接收方
      */
-    private final OsnReceiver osnReceiver;
+    private final OsnReceiver receiver;
     /**
      * 输入/分享字节长度
      */
@@ -26,8 +26,8 @@ public class OsnReceiverThread extends Thread {
      */
     private OsnPartyOutput receiverOutput;
 
-    OsnReceiverThread(OsnReceiver osnReceiver, int[] permutationMap, int byteLength) {
-        this.osnReceiver = osnReceiver;
+    OsnReceiverThread(OsnReceiver receiver, int[] permutationMap, int byteLength) {
+        this.receiver = receiver;
         this.byteLength = byteLength;
         this.permutationMap = permutationMap;
     }
@@ -39,10 +39,8 @@ public class OsnReceiverThread extends Thread {
     @Override
     public void run() {
         try {
-            osnReceiver.getRpc().connect();
-            osnReceiver.init(permutationMap.length);
-            receiverOutput = osnReceiver.osn(permutationMap, byteLength);
-            osnReceiver.getRpc().disconnect();
+            receiver.init(permutationMap.length);
+            receiverOutput = receiver.osn(permutationMap, byteLength);
         } catch (MpcAbortException e) {
             e.printStackTrace();
         }

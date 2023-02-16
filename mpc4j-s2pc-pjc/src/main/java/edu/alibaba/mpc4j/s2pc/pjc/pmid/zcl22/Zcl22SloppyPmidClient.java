@@ -1,9 +1,6 @@
 package edu.alibaba.mpc4j.s2pc.pjc.pmid.zcl22;
 
-import edu.alibaba.mpc4j.common.rpc.MpcAbortException;
-import edu.alibaba.mpc4j.common.rpc.MpcAbortPreconditions;
-import edu.alibaba.mpc4j.common.rpc.Party;
-import edu.alibaba.mpc4j.common.rpc.Rpc;
+import edu.alibaba.mpc4j.common.rpc.*;
 import edu.alibaba.mpc4j.common.rpc.utils.DataPacket;
 import edu.alibaba.mpc4j.common.rpc.utils.DataPacketHeader;
 import edu.alibaba.mpc4j.common.tool.CommonConstants;
@@ -174,7 +171,7 @@ public class Zcl22SloppyPmidClient<T> extends AbstractPmidClient<T> {
     @Override
     public void init(int maxClientSetSize, int maxClientU, int maxServerSetSize, int maxServerU) throws MpcAbortException {
         setInitInput(maxClientSetSize, maxClientU, maxServerSetSize, maxServerU);
-        info("{}{} Client Init begin", ptoBeginLogPrefix, getPtoDesc().getPtoName());
+        logPhaseInfo(PtoState.INIT_BEGIN);
 
         stopWatch.start();
         int maxServerBinNum = CuckooHashBinFactory.getBinNum(cuckooHashBinType, maxServerSetSize);
@@ -185,7 +182,7 @@ public class Zcl22SloppyPmidClient<T> extends AbstractPmidClient<T> {
         stopWatch.stop();
         long initTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
         stopWatch.reset();
-        info("{}{} Client Init Step 1/3 ({}ms)", ptoStepLogPrefix, getPtoDesc().getPtoName(), initTime);
+        logStepInfo(PtoState.INIT_STEP, 1, 3, initTime);
 
         stopWatch.start();
         // s^B
@@ -220,7 +217,7 @@ public class Zcl22SloppyPmidClient<T> extends AbstractPmidClient<T> {
         stopWatch.stop();
         long clientKeyTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
         stopWatch.reset();
-        info("{}{} Client Init Step 2/3 ({}ms)", ptoStepLogPrefix, getPtoDesc().getPtoName(), clientKeyTime);
+        logStepInfo(PtoState.INIT_STEP, 2, 3, clientKeyTime);
 
         stopWatch.start();
         // 接收服务端密钥
@@ -230,7 +227,7 @@ public class Zcl22SloppyPmidClient<T> extends AbstractPmidClient<T> {
         );
         List<byte[]> serverKeysPayload = rpc.receive(serverKeysHeader).getPayload();
         // 服务端PID的OKVS密钥、服务端σ的OKVS密钥
-        MpcAbortPreconditions.checkArgument(serverKeysPayload.size() == sloppyOkvsHashKeyNum +sigmaOkvsHashKeyNum);
+        MpcAbortPreconditions.checkArgument(serverKeysPayload.size() == sloppyOkvsHashKeyNum + sigmaOkvsHashKeyNum);
         serverSloppyOkvsHashKeys = IntStream.range(0, sloppyOkvsHashKeyNum)
             .mapToObj(hashIndex -> serverKeysPayload.remove(0))
             .toArray(byte[][]::new);
@@ -238,9 +235,9 @@ public class Zcl22SloppyPmidClient<T> extends AbstractPmidClient<T> {
         stopWatch.stop();
         long serverKeyTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
         stopWatch.reset();
-        info("{}{} Client Init Step 3/3 ({}ms)", ptoStepLogPrefix, getPtoDesc().getPtoName(), serverKeyTime);
+        logStepInfo(PtoState.INIT_STEP, 3, 3, serverKeyTime);
 
-        info("{}{} Client Init end", ptoEndLogPrefix, getPtoDesc().getPtoName());
+        logPhaseInfo(PtoState.INIT_END);
     }
 
     @Override
@@ -268,21 +265,21 @@ public class Zcl22SloppyPmidClient<T> extends AbstractPmidClient<T> {
     }
 
     private PmidPartyOutput<T> pmid() throws MpcAbortException {
-        info("{}{} Client begin", ptoBeginLogPrefix, getPtoDesc().getPtoName());
+        logPhaseInfo(PtoState.PTO_BEGIN);
 
         stopWatch.start();
         initVariables();
         stopWatch.stop();
         long initVariableTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
         stopWatch.reset();
-        info("{}{} Client Step 1/5 ({}ms)", ptoStepLogPrefix, getPtoDesc().getPtoName(), initVariableTime);
+        logStepInfo(PtoState.PTO_STEP, 1, 5, initVariableTime);
 
         stopWatch.start();
         generateClientPidMap();
         stopWatch.stop();
         long clientPidMapTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
         stopWatch.reset();
-        info("{}{} Client Step 2/5 ({}ms)", ptoStepLogPrefix, getPtoDesc().getPtoName(), clientPidMapTime);
+        logStepInfo(PtoState.PTO_STEP, 2, 5, clientPidMapTime);
 
         stopWatch.start();
         if (serverU == 1 && clientU == 1) {
@@ -301,7 +298,7 @@ public class Zcl22SloppyPmidClient<T> extends AbstractPmidClient<T> {
         }
         long sigmaOkvsTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
         stopWatch.reset();
-        info("{}{} Client Step 3/5 ({}ms)", ptoStepLogPrefix, getPtoDesc().getPtoName(), sigmaOkvsTime);
+        logStepInfo(PtoState.PTO_STEP, 3, 5, sigmaOkvsTime);
 
         stopWatch.start();
         // Bob computes id(y_i)
@@ -309,15 +306,16 @@ public class Zcl22SloppyPmidClient<T> extends AbstractPmidClient<T> {
         stopWatch.stop();
         long pmidMapTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
         stopWatch.reset();
-        info("{}{} Client Step 4/5 ({}ms)", ptoStepLogPrefix, getPtoDesc().getPtoName(), pmidMapTime);
+        logStepInfo(PtoState.PTO_STEP, 4, 5, pmidMapTime);
 
         stopWatch.start();
         Set<ByteBuffer> pmidSet = union(clientPmidMap);
         stopWatch.stop();
         long unionTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
         stopWatch.reset();
-        info("{}{} Client Step 5/5 ({}ms)", ptoStepLogPrefix, getPtoDesc().getPtoName(), unionTime);
+        logStepInfo(PtoState.PTO_STEP, 5, 5, unionTime);
 
+        logPhaseInfo(PtoState.PTO_END);
         return new PmidPartyOutput<>(pmidByteLength, pmidSet, clientPmidMap);
     }
 

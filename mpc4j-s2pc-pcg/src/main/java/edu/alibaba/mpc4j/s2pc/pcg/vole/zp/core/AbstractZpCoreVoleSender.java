@@ -58,7 +58,7 @@ public abstract class AbstractZpCoreVoleSender extends AbstractTwoPartyPto imple
     }
 
     protected void setPtoInput(BigInteger[] x) {
-        checkReadyState();
+        checkInitialized();
         MathPreconditions.checkPositiveInRangeClosed("num", x.length, maxNum);
         num = x.length;
         this.x = Arrays.stream(x)

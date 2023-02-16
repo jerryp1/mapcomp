@@ -55,7 +55,7 @@ public abstract class AbstractBspCotReceiver extends AbstractTwoPartyPto impleme
     }
 
     protected void setPtoInput(int[] alphaArray, int num) {
-        checkReadyState();
+        checkInitialized();
         MathPreconditions.checkPositiveInRangeClosed("num", num, maxNum);
         this.num = num;
         batchNum = alphaArray.length;

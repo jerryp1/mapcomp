@@ -1,9 +1,6 @@
 package edu.alibaba.mpc4j.s2pc.pso.mqrpmt.gmr21;
 
-import edu.alibaba.mpc4j.common.rpc.MpcAbortException;
-import edu.alibaba.mpc4j.common.rpc.MpcAbortPreconditions;
-import edu.alibaba.mpc4j.common.rpc.Party;
-import edu.alibaba.mpc4j.common.rpc.Rpc;
+import edu.alibaba.mpc4j.common.rpc.*;
 import edu.alibaba.mpc4j.common.rpc.utils.DataPacket;
 import edu.alibaba.mpc4j.common.rpc.utils.DataPacketHeader;
 import edu.alibaba.mpc4j.common.tool.CommonConstants;
@@ -119,7 +116,7 @@ public class Gmr21MqRpmtServer extends AbstractMqRpmtServer {
     @Override
     public void init(int maxServerElementSize, int maxClientElementSize) throws MpcAbortException {
         setInitInput(maxServerElementSize, maxClientElementSize);
-        info("{}{} Server Init begin", ptoBeginLogPrefix, getPtoDesc().getPtoName());
+        logPhaseInfo(PtoState.INIT_BEGIN);
 
         stopWatch.start();
         int maxBinNum = CuckooHashBinFactory.getBinNum(cuckooHashBinType, maxServerElementSize);
@@ -133,7 +130,7 @@ public class Gmr21MqRpmtServer extends AbstractMqRpmtServer {
         stopWatch.stop();
         long initTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
         stopWatch.reset();
-        info("{}{} Server Init Step 1/2 ({}ms)", ptoStepLogPrefix, getPtoDesc().getPtoName(), initTime);
+        logStepInfo(PtoState.INIT_STEP, 1, 2, initTime);
 
         stopWatch.start();
         List<byte[]> keysPayload = new LinkedList<>();
@@ -155,15 +152,15 @@ public class Gmr21MqRpmtServer extends AbstractMqRpmtServer {
         stopWatch.stop();
         long keyTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
         stopWatch.reset();
-        info("{}{} Server Init Step 2/2 ({}ms)", ptoStepLogPrefix, getPtoDesc().getPtoName(), keyTime);
+        logStepInfo(PtoState.INIT_STEP, 2, 2, keyTime);
 
-        info("{}{} Server Init end", ptoEndLogPrefix, getPtoDesc().getPtoName());
+        logPhaseInfo(PtoState.INIT_END);
     }
 
     @Override
     public ByteBuffer[] mqRpmt(Set<ByteBuffer> serverElementSet, int clientElementSize) throws MpcAbortException {
         setPtoInput(serverElementSet, clientElementSize);
-        info("{}{} Server begin", ptoBeginLogPrefix, getPtoDesc().getPtoName());
+        logPhaseInfo(PtoState.PTO_BEGIN);
 
         stopWatch.start();
         List<byte[]> cuckooHashKeyPayload = generateCuckooHashKeyPayload();
@@ -186,7 +183,7 @@ public class Gmr21MqRpmtServer extends AbstractMqRpmtServer {
         stopWatch.stop();
         long cuckooHashTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
         stopWatch.reset();
-        info("{}{} Server Step 1/5 ({}ms)", ptoStepLogPrefix, getPtoDesc().getPtoName(), cuckooHashTime);
+        logStepInfo(PtoState.PTO_STEP, 1, 5, cuckooHashTime, "Server generates cuckoo hash keys and data structure");
 
         stopWatch.start();
         // 生成服务端元素输入列表，即哈希桶中的元素 = 原始元素 || hashindex，贮存区中的元素 = 原始元素
@@ -201,19 +198,20 @@ public class Gmr21MqRpmtServer extends AbstractMqRpmtServer {
         stopWatch.stop();
         long cuckooHashOprfTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
         stopWatch.reset();
-        info("{}{} Server Step 2/5 ({}ms)", ptoStepLogPrefix, getPtoDesc().getPtoName(), cuckooHashOprfTime);
+        logStepInfo(PtoState.PTO_STEP, 2, 5, cuckooHashOprfTime, "Server runs OPRF for cuckoo hash bins");
 
-        stopWatch.start();
         DataPacketHeader okvsHeader = new DataPacketHeader(
             encodeTaskId, getPtoDesc().getPtoId(), PtoStep.CLIENT_SEND_OKVS.ordinal(), extraInfo,
             otherParty().getPartyId(), ownParty().getPartyId()
         );
         List<byte[]> okvsPayload = rpc.receive(okvsHeader).getPayload();
+
+        stopWatch.start();
         handleOkvsPayload(okvsPayload);
         stopWatch.stop();
         long okvsTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
         stopWatch.reset();
-        info("{}{} Server Step 3/5 ({}ms)", ptoStepLogPrefix, getPtoDesc().getPtoName(), okvsTime);
+        logStepInfo(PtoState.PTO_STEP, 3, 5, okvsTime, "Server handles OKVS");
 
         stopWatch.start();
         OsnPartyOutput osnReceiverOutput = osnReceiver.osn(permutationMap, Gmr21MqRpmtPtoDesc.FINITE_FIELD_BYTE_LENGTH);
@@ -221,7 +219,7 @@ public class Gmr21MqRpmtServer extends AbstractMqRpmtServer {
         stopWatch.stop();
         long osnTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
         stopWatch.reset();
-        info("{}{} Server Step 4/5 ({}ms)", ptoStepLogPrefix, getPtoDesc().getPtoName(), osnTime);
+        logStepInfo(PtoState.PTO_STEP, 4, 5, osnTime, "Server runs OSN");
 
         stopWatch.start();
         OprfSenderOutput peqtOprfSenderOutput = peqtOprfSender.oprf(binNum);
@@ -240,9 +238,9 @@ public class Gmr21MqRpmtServer extends AbstractMqRpmtServer {
         stopWatch.stop();
         long peqtTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
         stopWatch.reset();
-        info("{}{} Server Step 5/5 ({}ms)", ptoStepLogPrefix, getPtoDesc().getPtoName(), peqtTime);
+        logStepInfo(PtoState.PTO_STEP, 5, 5, peqtTime, "Server runs OPRF for PEQT");
 
-        info("{}{} Server end", ptoEndLogPrefix, getPtoDesc().getPtoName());
+        logPhaseInfo(PtoState.PTO_END);
         return serverVector;
     }
 

@@ -94,7 +94,7 @@ public abstract class AbstractPmidServer<T> extends AbstractTwoPartyPto implemen
     }
 
     protected void setPtoInput(Map<T, Integer> serverElementMap, int clientSetSize, int clientU) {
-        checkReadyState();
+        checkInitialized();
         Set<T> serverElementSet = serverElementMap.keySet();
         MathPreconditions.checkGreater("serverSetSize", serverElementSet.size(), 1);
         MathPreconditions.checkLessOrEqual("serverSetSize", serverElementSet.size(), maxServerSetSize);

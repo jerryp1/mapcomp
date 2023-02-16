@@ -80,7 +80,7 @@ public abstract class AbstractOsnReceiver extends AbstractTwoPartyPto implements
     }
 
     protected void setPtoInput(int[] permutationMap, int byteLength) {
-        checkReadyState();
+        checkInitialized();
         MathPreconditions.checkGreaterOrEqual("byteLength", byteLength, CommonConstants.STATS_BYTE_LENGTH);
         this.byteLength = byteLength;
         Preconditions.checkArgument(

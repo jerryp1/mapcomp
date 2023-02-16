@@ -13,6 +13,7 @@ import java.util.stream.IntStream;
 
 import edu.alibaba.mpc4j.common.rpc.MpcAbortException;
 import edu.alibaba.mpc4j.common.rpc.Party;
+import edu.alibaba.mpc4j.common.rpc.PtoState;
 import edu.alibaba.mpc4j.common.rpc.Rpc;
 import edu.alibaba.mpc4j.common.rpc.utils.DataPacket;
 import edu.alibaba.mpc4j.common.rpc.utils.DataPacketHeader;
@@ -83,7 +84,7 @@ public class Ywl20UniMspCotReceiver extends AbstractMspCotReceiver {
     @Override
     public void init(int maxT, int maxNum) throws MpcAbortException {
         setInitInput(maxT, maxNum);
-        info("{}{} Recv. Init begin", ptoBeginLogPrefix, getPtoDesc().getPtoName());
+        logPhaseInfo(PtoState.INIT_BEGIN);
 
         stopWatch.start();
         int maxBinNum = IntCuckooHashBinFactory.getBinNum(Ywl20UniMspCotUtils.INT_CUCKOO_HASH_BIN_TYPE, maxT);
@@ -92,9 +93,9 @@ public class Ywl20UniMspCotReceiver extends AbstractMspCotReceiver {
         stopWatch.stop();
         long initTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
         stopWatch.reset();
-        info("{}{} Recv. Init Step 1/1 ({}ms)", ptoStepLogPrefix, getPtoDesc().getPtoName(), initTime);
+        logStepInfo(PtoState.INIT_STEP, 1, 1, initTime);
 
-        info("{}{} Recv. Init end", ptoEndLogPrefix, getPtoDesc().getPtoName());
+        logPhaseInfo(PtoState.INIT_END);
     }
 
     @Override
@@ -111,7 +112,7 @@ public class Ywl20UniMspCotReceiver extends AbstractMspCotReceiver {
     }
 
     private MspCotReceiverOutput receive() throws MpcAbortException {
-        info("{}{} Recv. begin", ptoBeginLogPrefix, getPtoDesc().getPtoName());
+        logPhaseInfo(PtoState.PTO_BEGIN);
 
         stopWatch.start();
         List<byte[]> hashKeysPayload = generateHashKeysPayload();
@@ -124,7 +125,7 @@ public class Ywl20UniMspCotReceiver extends AbstractMspCotReceiver {
         stopWatch.stop();
         long cuckooHashBinTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
         stopWatch.reset();
-        info("{}{} Recv. Step 1/3 ({}ms)", ptoStepLogPrefix, getPtoDesc().getPtoName(), cuckooHashBinTime);
+        logStepInfo(PtoState.PTO_STEP, 1, 3, cuckooHashBinTime);
 
         stopWatch.start();
         // R sends (sp-extend, |B_j| + 1, p_j) to F_{SPCOT}
@@ -137,7 +138,7 @@ public class Ywl20UniMspCotReceiver extends AbstractMspCotReceiver {
         stopWatch.stop();
         long bspcotTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
         stopWatch.reset();
-        info("{}{} Recv. Step 2/3 ({}ms)", ptoStepLogPrefix, getPtoDesc().getPtoName(), bspcotTime);
+        logStepInfo(PtoState.PTO_STEP, 2, 3, bspcotTime);
 
         stopWatch.start();
         // 计算输出结果
@@ -145,9 +146,9 @@ public class Ywl20UniMspCotReceiver extends AbstractMspCotReceiver {
         stopWatch.stop();
         long outputTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
         stopWatch.reset();
-        info("{}{} Recv. Step 4/4 ({}ms)", ptoStepLogPrefix, getPtoDesc().getPtoName(), outputTime);
+        logStepInfo(PtoState.PTO_STEP, 3, 3, outputTime);
 
-        info("{}{} Recv. end", ptoEndLogPrefix, getPtoDesc().getPtoName());
+        logPhaseInfo(PtoState.PTO_END);
         return receiverOutput;
     }
 

@@ -8,6 +8,7 @@ import java.util.Map;
 
 /**
  * 关键词索引PIR协议服务端接口。
+ * TODO @庚序: Add a new init function void init(Map<T, ByteBuffer> keywordLabelMap, int labelByteLength, int maxClientBatchSize);
  *
  * @author Liqiang Peng
  * @date 2022/6/20

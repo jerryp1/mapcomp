@@ -15,7 +15,7 @@ class MqRpmtServerThread extends Thread {
     /**
      * mqRPMT服务端
      */
-    private final MqRpmtServer mqRpmtServer;
+    private final MqRpmtServer server;
     /**
      * 服务端集合
      */
@@ -29,8 +29,8 @@ class MqRpmtServerThread extends Thread {
      */
     private ByteBuffer[] serverVector;
 
-    MqRpmtServerThread(MqRpmtServer mqRpmtServer, Set<ByteBuffer> serverElementSet, int clientElementSize) {
-        this.mqRpmtServer = mqRpmtServer;
+    MqRpmtServerThread(MqRpmtServer server, Set<ByteBuffer> serverElementSet, int clientElementSize) {
+        this.server = server;
         this.serverElementSet = serverElementSet;
         this.clientElementSize = clientElementSize;
     }
@@ -42,10 +42,8 @@ class MqRpmtServerThread extends Thread {
     @Override
     public void run() {
         try {
-            mqRpmtServer.getRpc().connect();
-            mqRpmtServer.init(serverElementSet.size(), clientElementSize);
-            serverVector = mqRpmtServer.mqRpmt(serverElementSet, clientElementSize);
-            mqRpmtServer.getRpc().disconnect();
+            server.init(serverElementSet.size(), clientElementSize);
+            serverVector = server.mqRpmt(serverElementSet, clientElementSize);
         } catch (MpcAbortException e) {
             e.printStackTrace();
         }

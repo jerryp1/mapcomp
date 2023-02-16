@@ -1,13 +1,10 @@
 package edu.alibaba.mpc4j.s2pc.pcg.ot.bnot.mr19;
 
+import edu.alibaba.mpc4j.common.rpc.*;
 import edu.alibaba.mpc4j.common.tool.crypto.hash.Hash;
 import edu.alibaba.mpc4j.common.tool.crypto.hash.HashFactory;
 import edu.alibaba.mpc4j.common.tool.crypto.kyber.KyberEngine;
 import edu.alibaba.mpc4j.common.tool.crypto.kyber.KyberEngineFactory;
-import edu.alibaba.mpc4j.common.rpc.MpcAbortException;
-import edu.alibaba.mpc4j.common.rpc.MpcAbortPreconditions;
-import edu.alibaba.mpc4j.common.rpc.Party;
-import edu.alibaba.mpc4j.common.rpc.Rpc;
 import edu.alibaba.mpc4j.common.rpc.utils.DataPacket;
 import edu.alibaba.mpc4j.common.rpc.utils.DataPacketHeader;
 import edu.alibaba.mpc4j.common.tool.crypto.kyber.utils.Poly;
@@ -55,15 +52,15 @@ public class Mr19KyberBaseNotSender extends AbstractBaseNotSender {
     @Override
     public void init(int maxChoice) throws MpcAbortException {
         setInitInput(maxChoice);
-        info("{}{} Send. Init begin", ptoBeginLogPrefix, getPtoDesc().getPtoName());
+        logPhaseInfo(PtoState.INIT_BEGIN);
 
-        info("{}{} Send. Init end", ptoEndLogPrefix, getPtoDesc().getPtoName());
+        logPhaseInfo(PtoState.INIT_END);
     }
 
     @Override
     public BaseNotSenderOutput send(int num) throws MpcAbortException {
         setPtoInput(num);
-        info("{}{} Send. begin", ptoBeginLogPrefix, getPtoDesc().getPtoName());
+        logPhaseInfo(PtoState.PTO_BEGIN);
 
         stopWatch.start();
         DataPacketHeader pkHeader = new DataPacketHeader(
@@ -74,7 +71,7 @@ public class Mr19KyberBaseNotSender extends AbstractBaseNotSender {
         stopWatch.stop();
         long pkTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
         stopWatch.reset();
-        info("{}{} Send. Step 1/2 ({}ms)", ptoStepLogPrefix, getPtoDesc().getPtoName(), pkTime);
+        logStepInfo(PtoState.PTO_STEP, 1, 2, pkTime);
 
         stopWatch.start();
         List<byte[]> betaPayload = handlePkPayload(pkPayload);
@@ -86,9 +83,9 @@ public class Mr19KyberBaseNotSender extends AbstractBaseNotSender {
         stopWatch.stop();
         long betaTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
         stopWatch.reset();
-        info("{}{} Send. Step 2/2 ({}ms)", ptoStepLogPrefix, getPtoDesc().getPtoName(), betaTime);
+        logStepInfo(PtoState.PTO_STEP, 2, 2, betaTime);
 
-        info("{}{} Send. end", ptoEndLogPrefix, getPtoDesc().getPtoName());
+        logPhaseInfo(PtoState.PTO_END);
         return senderOutput;
     }
 

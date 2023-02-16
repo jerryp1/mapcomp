@@ -49,11 +49,9 @@ class DpprfReceiverThread extends Thread {
     @Override
     public void run() {
         try {
-            receiver.getRpc().connect();
             receiver.init(alphaArray.length, alphaBound);
             receiverOutput = preReceiverOutput == null ? receiver.puncture(alphaArray, alphaBound)
                 : receiver.puncture(alphaArray, alphaBound, preReceiverOutput);
-            receiver.getRpc().disconnect();
         } catch (MpcAbortException e) {
             e.printStackTrace();
         }

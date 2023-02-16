@@ -1,9 +1,6 @@
 package edu.alibaba.mpc4j.s2pc.pir.keyword.cmg21;
 
-import edu.alibaba.mpc4j.common.rpc.MpcAbortException;
-import edu.alibaba.mpc4j.common.rpc.MpcAbortPreconditions;
-import edu.alibaba.mpc4j.common.rpc.Party;
-import edu.alibaba.mpc4j.common.rpc.Rpc;
+import edu.alibaba.mpc4j.common.rpc.*;
 import edu.alibaba.mpc4j.common.rpc.utils.DataPacket;
 import edu.alibaba.mpc4j.common.rpc.utils.DataPacketHeader;
 import edu.alibaba.mpc4j.common.tool.CommonConstants;
@@ -93,7 +90,7 @@ public class Cmg21KwPirServer<T> extends AbstractKwPirServer<T> {
     @Override
     public void init(KwPirParams kwPirParams, Map<T, ByteBuffer> serverKeywordLabelMap, int labelByteLength) {
         setInitInput(serverKeywordLabelMap, labelByteLength);
-        info("{}{} Server Init begin", ptoBeginLogPrefix, getPtoDesc().getPtoName());
+        logPhaseInfo(PtoState.INIT_BEGIN);
 
         stopWatch.start();
         assert (kwPirParams instanceof Cmg21KwPirParams);
@@ -109,7 +106,7 @@ public class Cmg21KwPirServer<T> extends AbstractKwPirServer<T> {
         stopWatch.stop();
         long cuckooHashKeyTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
         stopWatch.reset();
-        info("{}{} Server Init Step 1/4 ({}ms)", ptoStepLogPrefix, getPtoDesc().getPtoName(), cuckooHashKeyTime);
+        logStepInfo(PtoState.INIT_STEP, 1, 4, cuckooHashKeyTime, "Server generates cuckoo hash keys");
 
         stopWatch.start();
         // 计算PRF
@@ -124,7 +121,7 @@ public class Cmg21KwPirServer<T> extends AbstractKwPirServer<T> {
         stopWatch.stop();
         long oprfTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
         stopWatch.reset();
-        info("{}{} Server Init Step 2/4 ({}ms)", ptoStepLogPrefix, getPtoDesc().getPtoName(), oprfTime);
+        logStepInfo(PtoState.INIT_STEP, 2, 4, oprfTime, "Server computes PRFs");
 
         stopWatch.start();
         // 计算完全哈希分桶
@@ -132,7 +129,7 @@ public class Cmg21KwPirServer<T> extends AbstractKwPirServer<T> {
         stopWatch.stop();
         long hashTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
         stopWatch.reset();
-        info("{}{} Server Init Step 3/4 ({}ms)", ptoStepLogPrefix, getPtoDesc().getPtoName(), hashTime);
+        logStepInfo(PtoState.INIT_STEP, 3, 4, hashTime, "Server bin-hashes key");
 
         stopWatch.start();
         // 计算多项式系数
@@ -140,15 +137,15 @@ public class Cmg21KwPirServer<T> extends AbstractKwPirServer<T> {
         stopWatch.stop();
         long encodeTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
         stopWatch.reset();
-        info("{}{} Server Init Step 4/4 ({}ms)", ptoStepLogPrefix, getPtoDesc().getPtoName(), encodeTime);
+        logStepInfo(PtoState.INIT_STEP, 4, 4, encodeTime, "Server encodes label");
 
-        info("{}{} Server Init end", ptoEndLogPrefix, getPtoDesc().getPtoName());
+        logPhaseInfo(PtoState.INIT_END);
     }
 
     @Override
     public void pir() throws MpcAbortException {
         setPtoInput();
-        info("{}{} Server begin", ptoBeginLogPrefix, getPtoDesc().getPtoName());
+        logPhaseInfo(PtoState.PTO_BEGIN);
 
         stopWatch.start();
         // 服务端执行OPRF协议
@@ -166,7 +163,7 @@ public class Cmg21KwPirServer<T> extends AbstractKwPirServer<T> {
         stopWatch.stop();
         long oprfTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
         stopWatch.reset();
-        info("{}{} Server Step 1/2 ({}ms)", ptoStepLogPrefix, getPtoDesc().getPtoName(), oprfTime);
+        logStepInfo(PtoState.PTO_STEP, 1, 2, oprfTime, "Server runs OPRFs");
 
         // 接收客户端布谷鸟哈希分桶结果
         DataPacketHeader cuckooHashResultHeader = new DataPacketHeader(
@@ -214,9 +211,9 @@ public class Cmg21KwPirServer<T> extends AbstractKwPirServer<T> {
         stopWatch.stop();
         long replyTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
         stopWatch.reset();
-        info("{}{} Server Step 2/2 ({}ms)", ptoStepLogPrefix, getPtoDesc().getPtoName(), replyTime);
+        logStepInfo(PtoState.PTO_STEP, 2, 2, replyTime, "Server generates reply");
 
-        info("{}{} Server end", ptoEndLogPrefix, getPtoDesc().getPtoName());
+        logPhaseInfo(PtoState.PTO_END);
     }
 
     /**

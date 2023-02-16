@@ -21,7 +21,9 @@ import edu.alibaba.mpc4j.s2pc.pcg.ot.cot.core.iknp03.Iknp03CoreCotConfig;
 import edu.alibaba.mpc4j.s2pc.pcg.ot.cot.core.kos15.Kos15CoreCotConfig;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.time.StopWatch;
+import org.junit.After;
 import org.junit.Assert;
+import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
@@ -84,59 +86,61 @@ public class CoreCotTest {
 
     public CoreCotTest(String name, CoreCotConfig config) {
         Preconditions.checkArgument(StringUtils.isNotBlank(name));
+        // We cannot use NettyRPC in the test case since it needs multi-thread connect / disconnect.
+        // In other word, we cannot connect / disconnect NettyRpc in @Before / @After, respectively.
         RpcManager rpcManager = new MemoryRpcManager(2);
         senderRpc = rpcManager.getRpc(0);
         receiverRpc = rpcManager.getRpc(1);
         this.config = config;
     }
 
+    @Before
+    public void connect() {
+        senderRpc.connect();
+        receiverRpc.connect();
+    }
+
+    @After
+    public void disconnect() {
+        senderRpc.disconnect();
+        receiverRpc.disconnect();
+    }
+
     @Test
     public void test1Num() {
-        CoreCotSender sender = CoreCotFactory.createSender(senderRpc, receiverRpc.ownParty(), config);
-        CoreCotReceiver receiver = CoreCotFactory.createReceiver(receiverRpc, senderRpc.ownParty(), config);
-        testPto(sender, receiver, 1);
+        testPto(1, false);
     }
 
     @Test
     public void test2Num() {
-        CoreCotSender sender = CoreCotFactory.createSender(senderRpc, receiverRpc.ownParty(), config);
-        CoreCotReceiver receiver = CoreCotFactory.createReceiver(receiverRpc, senderRpc.ownParty(), config);
-        testPto(sender, receiver, 2);
+        testPto(2, false);
     }
 
     @Test
     public void testDefaultNum() {
-        CoreCotSender sender = CoreCotFactory.createSender(senderRpc, receiverRpc.ownParty(), config);
-        CoreCotReceiver receiver = CoreCotFactory.createReceiver(receiverRpc, senderRpc.ownParty(), config);
-        testPto(sender, receiver, DEFAULT_NUM);
+        testPto(DEFAULT_NUM, false);
     }
 
     @Test
     public void testParallelDefaultNum() {
-        CoreCotSender sender = CoreCotFactory.createSender(senderRpc, receiverRpc.ownParty(), config);
-        CoreCotReceiver receiver = CoreCotFactory.createReceiver(receiverRpc, senderRpc.ownParty(), config);
-        sender.setParallel(true);
-        receiver.setParallel(true);
-        testPto(sender, receiver, DEFAULT_NUM);
+        testPto(DEFAULT_NUM, true);
     }
 
     @Test
     public void testLargeNum() {
-        CoreCotSender sender = CoreCotFactory.createSender(senderRpc, receiverRpc.ownParty(), config);
-        CoreCotReceiver receiver = CoreCotFactory.createReceiver(receiverRpc, senderRpc.ownParty(), config);
-        testPto(sender, receiver, LARGE_NUM);
+        testPto(LARGE_NUM, false);
     }
 
     @Test
     public void testParallelLargeNum() {
-        CoreCotSender sender = CoreCotFactory.createSender(senderRpc, receiverRpc.ownParty(), config);
-        CoreCotReceiver receiver = CoreCotFactory.createReceiver(receiverRpc, senderRpc.ownParty(), config);
-        sender.setParallel(true);
-        receiver.setParallel(true);
-        testPto(sender, receiver, LARGE_NUM);
+        testPto(LARGE_NUM, true);
     }
 
-    private void testPto(CoreCotSender sender, CoreCotReceiver receiver, int num) {
+    private void testPto(int num, boolean parallel) {
+        CoreCotSender sender = CoreCotFactory.createSender(senderRpc, receiverRpc.ownParty(), config);
+        CoreCotReceiver receiver = CoreCotFactory.createReceiver(receiverRpc, senderRpc.ownParty(), config);
+        sender.setParallel(parallel);
+        receiver.setParallel(parallel);
         int randomTaskId = Math.abs(SECURE_RANDOM.nextInt());
         sender.setTaskId(randomTaskId);
         receiver.setTaskId(randomTaskId);
@@ -173,6 +177,8 @@ public class CoreCotTest {
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
+        sender.destroy();
+        receiver.destroy();
     }
 
     @Test
@@ -244,5 +250,7 @@ public class CoreCotTest {
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
+        sender.destroy();
+        receiver.destroy();
     }
 }

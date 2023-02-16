@@ -34,7 +34,7 @@ public abstract class AbstractBaseOtSender extends AbstractTwoPartyPto implement
     }
 
     protected void setPtoInput(int num) {
-        checkReadyState();
+        checkInitialized();
         MathPreconditions.checkPositive("num", num);
         this.num = num;
         extraInfo++;

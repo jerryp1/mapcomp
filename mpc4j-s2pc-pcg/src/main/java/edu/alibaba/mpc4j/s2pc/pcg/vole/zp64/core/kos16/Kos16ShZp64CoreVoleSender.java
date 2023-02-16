@@ -2,6 +2,7 @@ package edu.alibaba.mpc4j.s2pc.pcg.vole.zp64.core.kos16;
 
 import edu.alibaba.mpc4j.common.rpc.MpcAbortException;
 import edu.alibaba.mpc4j.common.rpc.Party;
+import edu.alibaba.mpc4j.common.rpc.PtoState;
 import edu.alibaba.mpc4j.common.rpc.Rpc;
 import edu.alibaba.mpc4j.common.rpc.utils.DataPacket;
 import edu.alibaba.mpc4j.common.rpc.utils.DataPacketHeader;
@@ -57,7 +58,7 @@ public class Kos16ShZp64CoreVoleSender extends AbstractZp64CoreVoleSender {
     @Override
     public void init(long prime, int maxNum) throws MpcAbortException {
         setInitInput(prime, maxNum);
-        info("{}{} Send. Init begin", ptoBeginLogPrefix, getPtoDesc().getPtoName());
+        logPhaseInfo(PtoState.INIT_BEGIN);
 
         stopWatch.start();
         zp64Gadget = new Zp64Gadget(zp64);
@@ -67,15 +68,15 @@ public class Kos16ShZp64CoreVoleSender extends AbstractZp64CoreVoleSender {
         stopWatch.stop();
         long initTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
         stopWatch.reset();
-        info("{}{} Send. Init Step 1/1 ({}ms)", ptoStepLogPrefix, getPtoDesc().getPtoName(), initTime);
+        logStepInfo(PtoState.INIT_STEP, 1, 1, initTime);
 
-        info("{}{} Send. Init end", ptoEndLogPrefix, getPtoDesc().getPtoName());
+        logPhaseInfo(PtoState.INIT_END);
     }
 
     @Override
     public Zp64VoleSenderOutput send(long[] x) throws MpcAbortException {
         setPtoInput(x);
-        info("{}{} Send. begin", ptoBeginLogPrefix, getPtoDesc().getPtoName());
+        logPhaseInfo(PtoState.PTO_BEGIN);
 
         stopWatch.start();
         List<byte[]> matrixPayLoad = generateMatrixPayLoad();
@@ -89,9 +90,9 @@ public class Kos16ShZp64CoreVoleSender extends AbstractZp64CoreVoleSender {
         stopWatch.stop();
         long matrixTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
         stopWatch.reset();
-        info("{}{} Send. Step 1/1 ({}ms)", ptoStepLogPrefix, getPtoDesc().getPtoName(), matrixTime);
+        logStepInfo(PtoState.PTO_STEP, 1, 1, matrixTime);
 
-        info("{}{} Send. end", ptoEndLogPrefix, getPtoDesc().getPtoName());
+        logPhaseInfo(PtoState.PTO_END);
         return senderOutput;
     }
 

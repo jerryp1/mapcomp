@@ -67,6 +67,8 @@ class OrBitmapReceiverThread extends Thread {
             SecureBitmapContainer y0 = yPublic ? receiver.setPublicRoaringBitmap(y, maxNum) : receiver.setOwnRoaringBitmap(y, maxNum);
             SecureBitmapContainer z0 = receiver.or(x0, y0);
             z = receiver.toOwnRoaringBitmap(z0);
+            receiver.destroy();
+            receiver.getRpc().disconnect();
         } catch (MpcAbortException e) {
             e.printStackTrace();
         }

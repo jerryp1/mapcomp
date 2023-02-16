@@ -1,14 +1,12 @@
 package edu.alibaba.mpc4j.s2pc.pir.index.fastpir;
 
-import edu.alibaba.mpc4j.common.rpc.MpcAbortException;
-import edu.alibaba.mpc4j.common.rpc.MpcAbortPreconditions;
-import edu.alibaba.mpc4j.common.rpc.Party;
-import edu.alibaba.mpc4j.common.rpc.Rpc;
+import edu.alibaba.mpc4j.common.rpc.*;
 import edu.alibaba.mpc4j.common.rpc.utils.DataPacket;
 import edu.alibaba.mpc4j.common.rpc.utils.DataPacketHeader;
 import edu.alibaba.mpc4j.common.tool.CommonConstants;
 import edu.alibaba.mpc4j.s2pc.pir.index.AbstractIndexPirClient;
 import edu.alibaba.mpc4j.s2pc.pir.index.AbstractIndexPirParams;
+import edu.alibaba.mpc4j.s2pc.pir.index.fastpir.Ayaa21IndexPirPtoDesc.PtoStep;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -51,7 +49,7 @@ public class Ayaa21IndexPirClient extends AbstractIndexPirClient {
     @Override
     public void init(AbstractIndexPirParams indexPirParams, int serverElementSize, int elementByteLength) {
         setInitInput(serverElementSize, elementByteLength);
-        info("{}{} Client Init begin", ptoBeginLogPrefix, getPtoDesc().getPtoName());
+        logPhaseInfo(PtoState.INIT_BEGIN);
 
         assert (indexPirParams instanceof Ayaa21IndexPirParams);
         params = (Ayaa21IndexPirParams) indexPirParams;
@@ -62,15 +60,15 @@ public class Ayaa21IndexPirClient extends AbstractIndexPirClient {
         stopWatch.stop();
         long initTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
         stopWatch.reset();
-        info("{}{} Client Init Step 1/1 ({}ms)", ptoStepLogPrefix, getPtoDesc().getPtoName(), initTime);
+        logStepInfo(PtoState.INIT_STEP, 1, 1, initTime);
 
-        info("{}{} Client Init end", ptoEndLogPrefix, getPtoDesc().getPtoName());
+        logPhaseInfo(PtoState.INIT_END);
     }
 
     @Override
     public byte[] pir(int index) throws MpcAbortException {
         setPtoInput(index);
-        info("{}{} Client begin", ptoBeginLogPrefix, getPtoDesc().getPtoName());
+        logPhaseInfo(PtoState.PTO_BEGIN);
 
         stopWatch.start();
         // 客户端生成问询
@@ -81,18 +79,18 @@ public class Ayaa21IndexPirClient extends AbstractIndexPirClient {
         clientQueryPayload.add(galoisKeys);
         // 发送问询
         DataPacketHeader clientQueryHeader = new DataPacketHeader(
-            encodeTaskId, getPtoDesc().getPtoId(), Ayaa21IndexPirPtoDesc.PtoStep.CLIENT_SEND_QUERY.ordinal(), extraInfo,
+            encodeTaskId, getPtoDesc().getPtoId(), PtoStep.CLIENT_SEND_QUERY.ordinal(), extraInfo,
             rpc.ownParty().getPartyId(), otherParty().getPartyId()
         );
         rpc.send(DataPacket.fromByteArrayList(clientQueryHeader, clientQueryPayload));
         stopWatch.stop();
         long genQueryTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
         stopWatch.reset();
-        info("{}{} Client Step 1/2 ({}ms)", ptoStepLogPrefix, getPtoDesc().getPtoName(), genQueryTime);
+        logStepInfo(PtoState.PTO_STEP, 1, 2, genQueryTime, "Client generates query");
 
         // 客户端接收回复
         DataPacketHeader serverResponseHeader = new DataPacketHeader(
-            encodeTaskId, getPtoDesc().getPtoId(), Ayaa21IndexPirPtoDesc.PtoStep.SERVER_SEND_RESPONSE.ordinal(), extraInfo,
+            encodeTaskId, getPtoDesc().getPtoId(), PtoStep.SERVER_SEND_RESPONSE.ordinal(), extraInfo,
             otherParty().getPartyId(), rpc.ownParty().getPartyId()
         );
         List<byte[]> serverResponsePayload = rpc.receive(serverResponseHeader).getPayload();
@@ -103,9 +101,9 @@ public class Ayaa21IndexPirClient extends AbstractIndexPirClient {
         stopWatch.stop();
         long responseTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
         stopWatch.reset();
-        info("{}{} Client Step 2/2 ({}ms)", ptoStepLogPrefix, getPtoDesc().getPtoName(), responseTime);
+        logStepInfo(PtoState.PTO_STEP, 2, 2, responseTime, "Client handles reply");
 
-        info("{}{} Client end", ptoEndLogPrefix, getPtoDesc().getPtoName());
+        logPhaseInfo(PtoState.PTO_END);
         return result;
     }
 

@@ -1,9 +1,6 @@
 package edu.alibaba.mpc4j.s2pc.pcg.mtg.zl.core.ideal;
 
-import edu.alibaba.mpc4j.common.rpc.MpcAbortException;
-import edu.alibaba.mpc4j.common.rpc.MpcAbortPreconditions;
-import edu.alibaba.mpc4j.common.rpc.Party;
-import edu.alibaba.mpc4j.common.rpc.Rpc;
+import edu.alibaba.mpc4j.common.rpc.*;
 import edu.alibaba.mpc4j.common.rpc.utils.DataPacketHeader;
 import edu.alibaba.mpc4j.common.tool.crypto.kdf.Kdf;
 import edu.alibaba.mpc4j.common.tool.crypto.kdf.KdfFactory;
@@ -55,20 +52,20 @@ public class IdealZlCoreMtgReceiver extends AbstractZlCoreMtgParty {
     @Override
     public void init(int maxNum) throws MpcAbortException {
         setInitInput(maxNum);
-        info("{}{} Recv. Init begin", ptoBeginLogPrefix, getPtoDesc().getPtoName());
+        logPhaseInfo(PtoState.INIT_BEGIN);
 
-        stopWatch.start();
         DataPacketHeader rootKeyHeader = new DataPacketHeader(
             encodeTaskId, getPtoDesc().getPtoId(), PtoStep.SERVER_SEND_ROOT_KEY.ordinal(), extraInfo,
             otherParty().getPartyId(), ownParty().getPartyId()
         );
         List<byte[]> rootKeyPayload = rpc.receive(rootKeyHeader).getPayload();
         MpcAbortPreconditions.checkArgument(rootKeyPayload.size() == 1);
+        stopWatch.start();
         byte[] rootKey = rootKeyPayload.remove(0);
         stopWatch.stop();
         long rootKeyTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
         stopWatch.reset();
-        info("{}{} Recv. Init Step 1/2 ({}ms)", ptoStepLogPrefix, getPtoDesc().getPtoName(), rootKeyTime);
+        logStepInfo(PtoState.INIT_STEP, 1, 2, rootKeyTime);
 
         stopWatch.start();
         Kdf kdf = KdfFactory.createInstance(envType);
@@ -90,24 +87,24 @@ public class IdealZlCoreMtgReceiver extends AbstractZlCoreMtgParty {
         stopWatch.stop();
         long initTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
         stopWatch.reset();
-        info("{}{} Recv. Init Step 2/2 ({}ms)", ptoStepLogPrefix, getPtoDesc().getPtoName(), initTime);
+        logStepInfo(PtoState.INIT_STEP, 2, 2, initTime);
 
-        info("{}{} Recv. Init end", ptoEndLogPrefix, getPtoDesc().getPtoName());
+        logPhaseInfo(PtoState.INIT_END);
     }
 
     @Override
     public ZlTriple generate(int num) throws MpcAbortException {
         setPtoInput(num);
-        info("{}{} Recv. begin", ptoBeginLogPrefix, getPtoDesc().getPtoName());
+        logPhaseInfo(PtoState.PTO_BEGIN);
 
         stopWatch.start();
         ZlTriple receiverOutput = generateZlTriple();
         stopWatch.stop();
         long generateTripleTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
         stopWatch.reset();
-        info("{}{} Recv. Step 1/1 ({}ms)", ptoStepLogPrefix, getPtoDesc().getPtoName(), generateTripleTime);
+        logStepInfo(PtoState.PTO_STEP, 1, 1, generateTripleTime);
 
-        info("{}{} Recv. end", ptoEndLogPrefix, getPtoDesc().getPtoName());
+        logPhaseInfo(PtoState.PTO_END);
         return receiverOutput;
     }
 

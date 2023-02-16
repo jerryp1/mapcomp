@@ -1,9 +1,6 @@
 package edu.alibaba.mpc4j.s2pc.pso.oprp.lowmc;
 
-import edu.alibaba.mpc4j.common.rpc.MpcAbortException;
-import edu.alibaba.mpc4j.common.rpc.MpcAbortPreconditions;
-import edu.alibaba.mpc4j.common.rpc.Party;
-import edu.alibaba.mpc4j.common.rpc.Rpc;
+import edu.alibaba.mpc4j.common.rpc.*;
 import edu.alibaba.mpc4j.common.rpc.utils.DataPacket;
 import edu.alibaba.mpc4j.common.rpc.utils.DataPacketHeader;
 import edu.alibaba.mpc4j.common.tool.CommonConstants;
@@ -64,7 +61,7 @@ public class LowMcOprpReceiver extends AbstractOprpReceiver {
     @Override
     public void init(int maxBatchSize) throws MpcAbortException {
         setInitInput(maxBatchSize);
-        info("{}{} Recv. Init begin", ptoBeginLogPrefix, getPtoDesc().getPtoName());
+        logPhaseInfo(PtoState.INIT_BEGIN);
 
         stopWatch.start();
         // 初始化BC协议
@@ -75,15 +72,15 @@ public class LowMcOprpReceiver extends AbstractOprpReceiver {
         stopWatch.stop();
         long initBcTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
         stopWatch.reset();
-        info("{}{} Recv. Init Step 1/1 ({}ms)", ptoStepLogPrefix, getPtoDesc().getPtoName(), initBcTime);
+        logStepInfo(PtoState.INIT_STEP, 1, 1, initBcTime);
 
-        info("{}{} Recv. Init end", ptoEndLogPrefix, getPtoDesc().getPtoName());
+        logPhaseInfo(PtoState.INIT_END);
     }
 
     @Override
     public OprpReceiverOutput oprp(byte[][] messages) throws MpcAbortException {
         setPtoInput(messages);
-        info("{}{} Recv. begin", ptoBeginLogPrefix, getPtoDesc().getPtoName());
+        logPhaseInfo(PtoState.PTO_BEGIN);
 
         stopWatch.start();
         byte[][] receiverShareMessages = new byte[batchSize][CommonConstants.BLOCK_BYTE_LENGTH];
@@ -101,7 +98,7 @@ public class LowMcOprpReceiver extends AbstractOprpReceiver {
         stopWatch.stop();
         long shareMessageTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
         stopWatch.reset();
-        info("{}{} Recv. Step 1/4 ({}ms)", ptoStepLogPrefix, getPtoDesc().getPtoName(), shareMessageTime);
+        logStepInfo(PtoState.PTO_STEP, 1, 4, shareMessageTime);
 
         stopWatch.start();
         DataPacketHeader shareKeyHeader = new DataPacketHeader(
@@ -115,7 +112,7 @@ public class LowMcOprpReceiver extends AbstractOprpReceiver {
         stopWatch.stop();
         long extendKeyTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
         stopWatch.reset();
-        info("{}{} Recv. Step 2/4 ({}ms)", ptoStepLogPrefix, getPtoDesc().getPtoName(), extendKeyTime);
+        logStepInfo(PtoState.PTO_STEP, 2, 4, extendKeyTime);
 
         stopWatch.start();
         long[][] stateLongs = Arrays.stream(receiverShareMessages)
@@ -124,7 +121,7 @@ public class LowMcOprpReceiver extends AbstractOprpReceiver {
         stopWatch.stop();
         long convertMessageTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
         stopWatch.reset();
-        info("{}{} Send. Step 3/4 ({}ms)", ptoStepLogPrefix, getPtoDesc().getPtoName(), convertMessageTime);
+        logStepInfo(PtoState.PTO_STEP, 3, 4, convertMessageTime);
 
         stopWatch.start();
         // initial whitening
@@ -147,9 +144,9 @@ public class LowMcOprpReceiver extends AbstractOprpReceiver {
         stopWatch.stop();
         long oprpTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
         stopWatch.reset();
-        info("{}{} Recv. Step 4/4 ({}ms)", ptoStepLogPrefix, getPtoDesc().getPtoName(), oprpTime);
+        logStepInfo(PtoState.PTO_STEP, 4, 4, oprpTime);
 
-        info("{}{} Recv. end", ptoEndLogPrefix, getPtoDesc().getPtoName());
+        logPhaseInfo(PtoState.PTO_END);
         return receiverOutput;
     }
 

@@ -40,7 +40,7 @@ public abstract class AbstractZp64CoreMtgParty extends AbstractTwoPartyPto imple
     }
 
     protected void setPtoInput(int num) {
-        checkReadyState();
+        checkInitialized();
         MathPreconditions.checkPositiveInRangeClosed("num", num,  maxNum);
         this.num = num;
         extraInfo++;

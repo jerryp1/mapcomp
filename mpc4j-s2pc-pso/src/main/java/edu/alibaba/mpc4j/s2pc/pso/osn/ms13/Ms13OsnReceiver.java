@@ -1,9 +1,6 @@
 package edu.alibaba.mpc4j.s2pc.pso.osn.ms13;
 
-import edu.alibaba.mpc4j.common.rpc.MpcAbortException;
-import edu.alibaba.mpc4j.common.rpc.MpcAbortPreconditions;
-import edu.alibaba.mpc4j.common.rpc.Party;
-import edu.alibaba.mpc4j.common.rpc.Rpc;
+import edu.alibaba.mpc4j.common.rpc.*;
 import edu.alibaba.mpc4j.common.rpc.utils.DataPacketHeader;
 import edu.alibaba.mpc4j.common.tool.CommonConstants;
 import edu.alibaba.mpc4j.common.tool.crypto.crhf.Crhf;
@@ -16,6 +13,7 @@ import edu.alibaba.mpc4j.s2pc.pcg.ot.cot.CotFactory;
 import edu.alibaba.mpc4j.s2pc.pcg.ot.cot.CotReceiver;
 import edu.alibaba.mpc4j.s2pc.pcg.ot.cot.CotReceiverOutput;
 import edu.alibaba.mpc4j.s2pc.pso.osn.AbstractOsnReceiver;
+import edu.alibaba.mpc4j.s2pc.pso.osn.ms13.Ms13OsnPtoDesc.PtoStep;
 import edu.alibaba.mpc4j.s2pc.pso.osn.OsnPartyOutput;
 
 import java.util.Arrays;
@@ -59,34 +57,35 @@ public class Ms13OsnReceiver extends AbstractOsnReceiver {
     @Override
     public void init(int maxN) throws MpcAbortException {
         setInitInput(maxN);
-        info("{}{} Recv. Init begin", ptoBeginLogPrefix, getPtoDesc().getPtoName());
+        logPhaseInfo(PtoState.INIT_BEGIN);
 
         stopWatch.start();
         cotReceiver.init(maxWidth, maxSwitchNum);
         stopWatch.stop();
         long cotInitTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
         stopWatch.reset();
-        info("{}{} Recv. Step 1/1 ({}ms)", ptoStepLogPrefix, getPtoDesc().getPtoName(), cotInitTime);
+        logStepInfo(PtoState.INIT_STEP, 1, 1, cotInitTime);
 
-        info("{}{} Redv. Init end", ptoEndLogPrefix, getPtoDesc().getPtoName());
+        logPhaseInfo(PtoState.INIT_END);
     }
 
     @Override
     public OsnPartyOutput osn(int[] permutationMap, int byteLength) throws MpcAbortException {
         setPtoInput(permutationMap, byteLength);
-        info("{}{} Recv. begin", ptoBeginLogPrefix, getPtoDesc().getPtoName());
+        logPhaseInfo(PtoState.PTO_BEGIN);
 
-        stopWatch.start();
         DataPacketHeader inputCorrectionHeader = new DataPacketHeader(
-            encodeTaskId, getPtoDesc().getPtoId(), Ms13OsnPtoDesc.PtoStep.SENDER_SEND_INPUT_CORRECTIONS.ordinal(), extraInfo,
+            encodeTaskId, getPtoDesc().getPtoId(), PtoStep.SENDER_SEND_INPUT_CORRECTIONS.ordinal(), extraInfo,
             otherParty().getPartyId(), ownParty().getPartyId()
         );
         List<byte[]> inputCorrectionPayload = rpc.receive(inputCorrectionHeader).getPayload();
+
+        stopWatch.start();
         handleInputCorrectionPayload(inputCorrectionPayload);
         stopWatch.stop();
         long inputCorrectionTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
         stopWatch.reset();
-        info("{}{} Recv. Step 1/3 ({}ms)", ptoStepLogPrefix, getPtoDesc().getPtoName(), inputCorrectionTime);
+        logStepInfo(PtoState.PTO_STEP, 1, 3, inputCorrectionTime, "Receiver computes input correlation");
 
         stopWatch.start();
         CotReceiverOutput[] cotReceiverOutputs = new CotReceiverOutput[level];
@@ -97,11 +96,11 @@ public class Ms13OsnReceiver extends AbstractOsnReceiver {
         stopWatch.stop();
         long cotTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
         stopWatch.reset();
-        info("{}{} Send. Step 2/3 ({}ms)", ptoStepLogPrefix, getPtoDesc().getPtoName(), cotTime);
+        logStepInfo(PtoState.PTO_STEP, 2, 3, cotTime, "Receiver runs COTs");
 
         stopWatch.start();
         DataPacketHeader switchCorrectionHeader = new DataPacketHeader(
-            encodeTaskId, getPtoDesc().getPtoId(), Ms13OsnPtoDesc.PtoStep.SENDER_SEND_SWITCH_CORRECTIONS.ordinal(), extraInfo,
+            encodeTaskId, getPtoDesc().getPtoId(), PtoStep.SENDER_SEND_SWITCH_CORRECTIONS.ordinal(), extraInfo,
             otherParty().getPartyId(), ownParty().getPartyId()
         );
         List<byte[]> switchCorrectionPayload = rpc.receive(switchCorrectionHeader).getPayload();
@@ -113,9 +112,9 @@ public class Ms13OsnReceiver extends AbstractOsnReceiver {
         stopWatch.stop();
         long switchCorrectionTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
         stopWatch.reset();
-        info("{}{} Recv. Step 3/3 ({}ms)", ptoStepLogPrefix, getPtoDesc().getPtoName(), switchCorrectionTime);
+        logStepInfo(PtoState.PTO_STEP, 3, 3, switchCorrectionTime, "Receiver switches correlations");
 
-        info("{}{} Recv. end", ptoEndLogPrefix, getPtoDesc().getPtoName());
+        logPhaseInfo(PtoState.PTO_END);
         return receiverOutput;
     }
 

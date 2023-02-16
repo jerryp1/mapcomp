@@ -2,7 +2,6 @@ package edu.alibaba.mpc4j.s2pc.pjc.bitmap.count;
 
 import edu.alibaba.mpc4j.common.rpc.MpcAbortException;
 import edu.alibaba.mpc4j.s2pc.pjc.bitmap.BitmapParty;
-import edu.alibaba.mpc4j.s2pc.pjc.bitmap.BitmapUtils;
 import edu.alibaba.mpc4j.s2pc.pjc.bitmap.SecureBitmapContainer;
 import org.roaringbitmap.RoaringBitmap;
 
@@ -69,12 +68,11 @@ class CountBitmapReceiverThread extends Thread {
     @Override
     public void run() {
         try {
-            receiver.getRpc().connect();
             receiver.init(maxNum,  maxNum);
             SecureBitmapContainer x0 = xPublic ? receiver.setPublicRoaringBitmap(x, maxNum) : receiver.setOtherRoaringBitmap(maxNum);
             SecureBitmapContainer y0 = yPublic ? receiver.setPublicRoaringBitmap(y, maxNum) : receiver.setOwnRoaringBitmap(y, maxNum);
             SecureBitmapContainer z0 = receiver.and(x0, y0);
-            this.count = receiver.count(z0);
+            count = receiver.count(z0);
             z = receiver.toOwnRoaringBitmap(z0);
         } catch (MpcAbortException e) {
             e.printStackTrace();

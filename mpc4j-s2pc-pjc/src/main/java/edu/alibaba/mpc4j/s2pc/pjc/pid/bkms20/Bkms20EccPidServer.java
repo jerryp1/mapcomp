@@ -1,9 +1,6 @@
 package edu.alibaba.mpc4j.s2pc.pjc.pid.bkms20;
 
-import edu.alibaba.mpc4j.common.rpc.MpcAbortException;
-import edu.alibaba.mpc4j.common.rpc.MpcAbortPreconditions;
-import edu.alibaba.mpc4j.common.rpc.Party;
-import edu.alibaba.mpc4j.common.rpc.Rpc;
+import edu.alibaba.mpc4j.common.rpc.*;
 import edu.alibaba.mpc4j.common.rpc.utils.DataPacket;
 import edu.alibaba.mpc4j.common.rpc.utils.DataPacketHeader;
 import edu.alibaba.mpc4j.common.tool.crypto.ecc.Ecc;
@@ -91,7 +88,7 @@ public class Bkms20EccPidServer<T> extends AbstractPidParty<T> {
     @Override
     public void init(int maxOwnElementSetSize, int maxOtherElementSetSize) {
         setInitInput(maxOwnElementSetSize, maxOtherElementSetSize);
-        info("{}{} Server Init begin", ptoBeginLogPrefix, getPtoDesc().getPtoName());
+        logPhaseInfo(PtoState.INIT_BEGIN);
 
         stopWatch.start();
         // Let k_c, r_c ←_R Z_q
@@ -100,15 +97,15 @@ public class Bkms20EccPidServer<T> extends AbstractPidParty<T> {
         stopWatch.stop();
         long initTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
         stopWatch.reset();
-        info("{}{} Server Init Step 1/1 ({}ms)", ptoStepLogPrefix, getPtoDesc().getPtoName(), initTime);
+        logStepInfo(PtoState.INIT_STEP, 1, 1, initTime);
 
-        info("{}{} Server Init end", ptoEndLogPrefix, getPtoDesc().getPtoName());
+        logPhaseInfo(PtoState.INIT_END);
     }
 
     @Override
     public PidPartyOutput<T> pid(Set<T> ownElementSet, int otherElementSetSize) throws MpcAbortException {
         setPtoInput(ownElementSet, otherElementSetSize);
-        info("{}{} Server begin", ptoBeginLogPrefix, getPtoDesc().getPtoName());
+        logPhaseInfo(PtoState.PTO_BEGIN);
 
         stopWatch.start();
         int pidByteLength = PidUtils.GLOBAL_PID_BYTE_LENGTH;
@@ -123,7 +120,7 @@ public class Bkms20EccPidServer<T> extends AbstractPidParty<T> {
         stopWatch.stop();
         long ucGenTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
         stopWatch.reset();
-        info("{}{} Server Step 1/5 ({}ms)", ptoStepLogPrefix, getPtoDesc().getPtoName(), ucGenTime);
+        logStepInfo(PtoState.PTO_STEP, 1, 5, ucGenTime);
 
         stopWatch.start();
         // 接收U_p，根据U_p计算E_p和V_p，存储E_p并发送V_p
@@ -141,7 +138,7 @@ public class Bkms20EccPidServer<T> extends AbstractPidParty<T> {
         stopWatch.stop();
         long vpGenTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
         stopWatch.reset();
-        info("{}{} Server Step 2/5 ({}ms)", ptoStepLogPrefix, getPtoDesc().getPtoName(), vpGenTime);
+        logStepInfo(PtoState.PTO_STEP, 2, 5, vpGenTime);
 
         stopWatch.start();
         // 接收V_c，计算自己ID对应的PID
@@ -154,7 +151,7 @@ public class Bkms20EccPidServer<T> extends AbstractPidParty<T> {
         stopWatch.stop();
         long idMapGenTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
         stopWatch.reset();
-        info("{}{} Server Step 3/5 ({}ms)", ptoStepLogPrefix, getPtoDesc().getPtoName(), idMapGenTime);
+        logStepInfo(PtoState.PTO_STEP, 3, 5, idMapGenTime);
 
         stopWatch.start();
         // 接收E_c，先计算S_p、S_c并发送S_p
@@ -179,7 +176,7 @@ public class Bkms20EccPidServer<T> extends AbstractPidParty<T> {
         stopWatch.stop();
         long scpGenTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
         stopWatch.reset();
-        info("{}{} Server Step 4/5 ({}ms)", ptoStepLogPrefix, getPtoDesc().getPtoName(), scpGenTime);
+        logStepInfo(PtoState.PTO_STEP, 4, 5, scpGenTime);
 
         stopWatch.start();
         // 接收S_p'，得到非自己ID对应的PID
@@ -192,9 +189,9 @@ public class Bkms20EccPidServer<T> extends AbstractPidParty<T> {
         stopWatch.stop();
         long sppHandleTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
         stopWatch.reset();
-        info("{}{} Server Step 5/5 ({}ms)", ptoStepLogPrefix, getPtoDesc().getPtoName(), sppHandleTime);
+        logStepInfo(PtoState.PTO_STEP, 5, 5, sppHandleTime);
 
-        info("{}{} Server end", ptoEndLogPrefix, getPtoDesc().getPtoName());
+        logPhaseInfo(PtoState.PTO_END);
         return new PidPartyOutput<>(pidByteLength, new HashSet<>(serverPidSet), new HashMap<>(serverPidMap));
     }
 

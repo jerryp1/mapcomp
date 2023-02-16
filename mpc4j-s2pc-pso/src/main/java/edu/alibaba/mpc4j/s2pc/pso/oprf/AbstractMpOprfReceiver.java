@@ -29,7 +29,7 @@ public abstract class AbstractMpOprfReceiver extends AbstractOprfReceiver implem
 
     @Override
     protected void setPtoInput(byte[][] inputs) {
-        checkReadyState();
+        checkInitialized();
         // standard OPRF requires batchSize > 0
         MathPreconditions.checkPositiveInRangeClosed("batchSize", inputs.length, maxBatchSize);
         this.inputs = inputs;

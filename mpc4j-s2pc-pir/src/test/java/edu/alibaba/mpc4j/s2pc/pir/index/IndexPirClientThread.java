@@ -60,14 +60,11 @@ public class IndexPirClientThread extends Thread {
     @Override
     public void run() {
         try {
-            // 随机选取
-            client.getRpc().connect();
             client.init(indexPirParams, serverElementSize, elementByteLength);
             client.getRpc().synchronize();
             for (int i = 0; i < repeatTime; i++) {
                 indexPirResult.add(ByteBuffer.wrap(client.pir(retrievalIndexList.get(i))));
             }
-            client.getRpc().disconnect();
         } catch (MpcAbortException e) {
             e.printStackTrace();
         }

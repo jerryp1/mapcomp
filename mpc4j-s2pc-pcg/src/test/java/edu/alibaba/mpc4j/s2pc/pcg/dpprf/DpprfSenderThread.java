@@ -49,11 +49,9 @@ class DpprfSenderThread extends Thread {
     @Override
     public void run() {
         try {
-            sender.getRpc().connect();
             sender.init(batchNum, alphaBound);
             senderOutput = preSenderOutput == null ? sender.puncture(batchNum, alphaBound)
                 : sender.puncture(batchNum, alphaBound, preSenderOutput);
-            sender.getRpc().disconnect();
         } catch (MpcAbortException e) {
             e.printStackTrace();
         }

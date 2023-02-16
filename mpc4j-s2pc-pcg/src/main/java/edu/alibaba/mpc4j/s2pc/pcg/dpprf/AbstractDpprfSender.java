@@ -59,7 +59,7 @@ public abstract class AbstractDpprfSender extends AbstractTwoPartyPto implements
     }
 
     protected void setPtoInput(int batchNum, int alphaBound) {
-        checkReadyState();
+        checkInitialized();
         MathPreconditions.checkPositiveInRangeClosed("batchNum", batchNum, maxBatchNum);
         this.batchNum = batchNum;
         MathPreconditions.checkPositiveInRangeClosed("alphaBound", alphaBound, maxAlphaBound);

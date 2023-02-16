@@ -1,9 +1,6 @@
 package edu.alibaba.mpc4j.s2pc.pso.oprf.cm20;
 
-import edu.alibaba.mpc4j.common.rpc.MpcAbortException;
-import edu.alibaba.mpc4j.common.rpc.MpcAbortPreconditions;
-import edu.alibaba.mpc4j.common.rpc.Party;
-import edu.alibaba.mpc4j.common.rpc.Rpc;
+import edu.alibaba.mpc4j.common.rpc.*;
 import edu.alibaba.mpc4j.common.rpc.utils.DataPacketHeader;
 import edu.alibaba.mpc4j.common.tool.crypto.prg.Prg;
 import edu.alibaba.mpc4j.common.tool.crypto.prg.PrgFactory;
@@ -65,7 +62,7 @@ public class Cm20MpOprfSender extends AbstractMpOprfSender {
     @Override
     public void init(int maxBatchSize, int maxPrfNum) throws MpcAbortException {
         setInitInput(maxBatchSize, maxPrfNum);
-        info("{}{} Send. Init begin", ptoBeginLogPrefix, getPtoDesc().getPtoName());
+        logPhaseInfo(PtoState.INIT_BEGIN);
 
         stopWatch.start();
         // 计算maxW，初始化COT协议
@@ -74,15 +71,15 @@ public class Cm20MpOprfSender extends AbstractMpOprfSender {
         stopWatch.stop();
         long initCotTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
         stopWatch.reset();
-        info("{}{} Send. Init Step 1/1 ({}ms)", ptoStepLogPrefix, getPtoDesc().getPtoName(), initCotTime);
+        logStepInfo(PtoState.INIT_STEP, 1, 1, initCotTime);
 
-        info("{}{} Send. Init end", ptoEndLogPrefix, getPtoDesc().getPtoName());
+        logPhaseInfo(PtoState.INIT_END);
     }
 
     @Override
     public MpOprfSenderOutput oprf(int batchSize) throws MpcAbortException {
         setPtoInput(batchSize);
-        info("{}{} Send. begin", ptoBeginLogPrefix, getPtoDesc().getPtoName());
+        logPhaseInfo(PtoState.PTO_BEGIN);
 
         stopWatch.start();
         // 设置n
@@ -96,29 +93,30 @@ public class Cm20MpOprfSender extends AbstractMpOprfSender {
         stopWatch.stop();
         long cotTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
         stopWatch.reset();
-        info("{}{} Send. Step 1/3 ({}ms)", ptoStepLogPrefix, getPtoDesc().getPtoName(), cotTime);
+        logStepInfo(PtoState.PTO_STEP, 1, 4, cotTime, "COT");
 
-        stopWatch.start();
         // 发送方接收PRF密钥
         DataPacketHeader prfKeyHeader = new DataPacketHeader(
             encodeTaskId, getPtoDesc().getPtoId(), PtoStep.RECEIVER_SEND_KEY.ordinal(), extraInfo,
             otherParty().getPartyId(), ownParty().getPartyId()
         );
         List<byte[]> prfKeyPayload = rpc.receive(prfKeyHeader).getPayload();
-        // 读取密钥
+
+        stopWatch.start();
         MpcAbortPreconditions.checkArgument(prfKeyPayload.size() == 1);
         byte[] prfKey = prfKeyPayload.remove(0);
         stopWatch.stop();
         long prfKeyTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
         stopWatch.reset();
-        info("{}{} Send. Step 2/3 ({}ms)", ptoStepLogPrefix, getPtoDesc().getPtoName(), prfKeyTime);
+        logStepInfo(PtoState.PTO_STEP, 2, 4, prfKeyTime, "Sender receives PRF Key");
 
-        stopWatch.start();
         DataPacketHeader deltaHeader = new DataPacketHeader(
             encodeTaskId, ptoDesc.getPtoId(), PtoStep.RECEIVER_SEND_DELTA.ordinal(), extraInfo,
             otherParty().getPartyId(), ownParty().getPartyId()
         );
         List<byte[]> deltaPayload = rpc.receive(deltaHeader).getPayload();
+
+        stopWatch.start();
         // 读取矩阵
         handleDeltaPayload(deltaPayload);
         Cm20MpOprfSenderOutput senderOutput = new Cm20MpOprfSenderOutput(envType, batchSize, w, prfKey, matrixC);
@@ -126,9 +124,9 @@ public class Cm20MpOprfSender extends AbstractMpOprfSender {
         stopWatch.stop();
         long deltaTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
         stopWatch.reset();
-        info("{}{} Send. Step 3/3 ({}ms)", ptoStepLogPrefix, getPtoDesc().getPtoName(), deltaTime);
+        logStepInfo(PtoState.PTO_STEP, 3, 3, deltaTime, "Sender generates OPRF");
 
-        info("{}{} Send. end", ptoEndLogPrefix, getPtoDesc().getPtoName());
+        logPhaseInfo(PtoState.PTO_END);
         return senderOutput;
     }
 

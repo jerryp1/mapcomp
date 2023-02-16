@@ -40,7 +40,7 @@ public abstract class AbstractOprfSender extends AbstractTwoPartyPto implements 
     }
 
     protected void setPtoInput(int batchSize) {
-        checkReadyState();
+        checkInitialized();
         // standard OPRF requires batchSize > 1
         MathPreconditions.checkGreater("batchSize", batchSize, 1);
         MathPreconditions.checkLessOrEqual("batchSize", batchSize, maxBatchSize);

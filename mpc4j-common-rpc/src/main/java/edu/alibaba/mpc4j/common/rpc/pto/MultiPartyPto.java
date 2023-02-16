@@ -119,14 +119,16 @@ public interface MultiPartyPto {
     String getPtoName();
 
     /**
-     * Gets party state.
+     * Checks if the protocol (and its sub-protocols) is initialized.
      *
-     * @return party state.
+     * @throws IllegalStateException if the protocol (or its sub-protocols) is not initialized.
      */
-    PartyState getPartyState();
+    void checkInitialized();
 
     /**
      * Destroys the protocol.
+     *
+     * @throws IllegalStateException if the protocol (or its sub-protocols) is not in the correct state.
      */
     void destroy();
 }

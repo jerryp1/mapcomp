@@ -36,7 +36,7 @@ class RpcDataThread extends Thread {
     /**
      * 任务ID
      */
-    private final long taskId;
+    private final int taskId;
     /**
      * 发送的空数据包
      */
@@ -78,7 +78,7 @@ class RpcDataThread extends Thread {
      */
     private final Set<DataPacket> takeAnyReceivedDataPacketSet;
 
-    RpcDataThread(long taskId, Rpc rpc) {
+    RpcDataThread(int taskId, Rpc rpc) {
         this.taskId = taskId;
         this.rpc = rpc;
         emptySendDataPacketSet = new HashSet<>();
@@ -148,9 +148,9 @@ class RpcDataThread extends Thread {
         // 发送和接收包含额外信息的多条数据数据包
         extraInfoDataPacket();
         rpc.synchronize();
-        rpc.reset();
         // 发送多个单条数据发送包并接收
         takeAnyDataPacket();
+        rpc.synchronize();
         rpc.disconnect();
     }
 

@@ -1,9 +1,6 @@
 package edu.alibaba.mpc4j.s2pc.pir.keyword.cmg21;
 
-import edu.alibaba.mpc4j.common.rpc.MpcAbortException;
-import edu.alibaba.mpc4j.common.rpc.MpcAbortPreconditions;
-import edu.alibaba.mpc4j.common.rpc.Party;
-import edu.alibaba.mpc4j.common.rpc.Rpc;
+import edu.alibaba.mpc4j.common.rpc.*;
 import edu.alibaba.mpc4j.common.rpc.utils.DataPacket;
 import edu.alibaba.mpc4j.common.rpc.utils.DataPacketHeader;
 import edu.alibaba.mpc4j.common.tool.CommonConstants;
@@ -76,7 +73,7 @@ public class Cmg21KwPirClient<T> extends AbstractKwPirClient<T> {
     @Override
     public void init(KwPirParams kwPirParams, int labelByteLength) throws MpcAbortException {
         setInitInput(kwPirParams, labelByteLength);
-        info("{}{} Client Init begin", ptoBeginLogPrefix, getPtoDesc().getPtoName());
+        logPhaseInfo(PtoState.INIT_BEGIN);
 
         stopWatch.start();
         assert (kwPirParams instanceof Cmg21KwPirParams);
@@ -92,16 +89,16 @@ public class Cmg21KwPirClient<T> extends AbstractKwPirClient<T> {
         stopWatch.stop();
         long cuckooHashKeyTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
         stopWatch.reset();
-        info("{}{} Client Init Step 1/1 ({}ms)", ptoStepLogPrefix, getPtoDesc().getPtoName(), cuckooHashKeyTime);
+        logStepInfo(PtoState.INIT_STEP, 1, 1, cuckooHashKeyTime);
 
-        info("{}{} Client Init end", ptoEndLogPrefix, getPtoDesc().getPtoName());
+        logPhaseInfo(PtoState.INIT_END);
     }
 
     @Override
     public Map<T, ByteBuffer> pir(Set<T> retrievalSet) throws MpcAbortException {
         setPtoInput(retrievalSet);
 
-        info("{}{} Client begin", ptoBeginLogPrefix, getPtoDesc().getPtoName());
+        logPhaseInfo(PtoState.PTO_BEGIN);
         // 客户端执行OPRF协议
         stopWatch.start();
         List<byte[]> blindPayload = generateBlindPayload();
@@ -122,7 +119,7 @@ public class Cmg21KwPirClient<T> extends AbstractKwPirClient<T> {
         stopWatch.stop();
         long oprfTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
         stopWatch.reset();
-        info("{}{} Client Step 1/5 ({}ms)", ptoStepLogPrefix, getPtoDesc().getPtoName(), oprfTime);
+        logStepInfo(PtoState.PTO_STEP, 1, 5, oprfTime, "Client runs OPRF");
 
         // 客户端布谷鸟哈希分桶
         stopWatch.start();
@@ -138,7 +135,7 @@ public class Cmg21KwPirClient<T> extends AbstractKwPirClient<T> {
         stopWatch.stop();
         long cuckooHashTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
         stopWatch.reset();
-        info("{}{} Client Step 2/5 ({}ms)", ptoStepLogPrefix, getPtoDesc().getPtoName(), cuckooHashTime);
+        logStepInfo(PtoState.PTO_STEP, 2, 5, cuckooHashTime, "Client cuckoo hashes keys");
 
         stopWatch.start();
         // 客户端生成BFV算法密钥和参数
@@ -154,7 +151,7 @@ public class Cmg21KwPirClient<T> extends AbstractKwPirClient<T> {
         stopWatch.stop();
         long keyGenTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
         stopWatch.reset();
-        info("{}{} Client Step 3/5 ({}ms)", ptoStepLogPrefix, getPtoDesc().getPtoName(), keyGenTime);
+        logStepInfo(PtoState.PTO_STEP, 3, 5, keyGenTime, "Client generates FHE keys");
 
         stopWatch.start();
         // 客户端加密查询信息
@@ -173,9 +170,8 @@ public class Cmg21KwPirClient<T> extends AbstractKwPirClient<T> {
         stopWatch.stop();
         long genQueryTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
         stopWatch.reset();
-        info("{}{} Client Step 4/5 ({}ms)", ptoStepLogPrefix, getPtoDesc().getPtoName(), genQueryTime);
+        logStepInfo(PtoState.PTO_STEP, 4, 5, genQueryTime, "Client generates query");
 
-        stopWatch.start();
         int ciphertextNumber = params.getBinNum() / (params.getPolyModulusDegree() / params.getItemEncodedSlotSize());
         DataPacketHeader keywordResponseHeader = new DataPacketHeader(
             encodeTaskId, getPtoDesc().getPtoId(), PtoStep.SERVER_SEND_ITEM_RESPONSE.ordinal(), extraInfo,
@@ -183,12 +179,15 @@ public class Cmg21KwPirClient<T> extends AbstractKwPirClient<T> {
         );
         List<byte[]> keywordResponsePayload = rpc.receive(keywordResponseHeader).getPayload();
         MpcAbortPreconditions.checkArgument(keywordResponsePayload.size() % ciphertextNumber == 0);
+
         DataPacketHeader labelResponseHeader = new DataPacketHeader(
             encodeTaskId, getPtoDesc().getPtoId(), PtoStep.SERVER_SEND_LABEL_RESPONSE.ordinal(), extraInfo,
             otherParty().getPartyId(), rpc.ownParty().getPartyId()
         );
         List<byte[]> labelResponsePayload = rpc.receive(labelResponseHeader).getPayload();
         MpcAbortPreconditions.checkArgument(labelResponsePayload.size() % ciphertextNumber == 0);
+
+        stopWatch.start();
         // 客户端解密服务端回复
         Stream<byte[]> keywordResponseStream = keywordResponsePayload.stream();
         keywordResponseStream = parallel ? keywordResponseStream.parallel() : keywordResponseStream;
@@ -204,9 +203,9 @@ public class Cmg21KwPirClient<T> extends AbstractKwPirClient<T> {
         stopWatch.stop();
         long decodeResponseTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
         stopWatch.reset();
-        info("{}{} Client Step 5/5 ({}ms)", ptoStepLogPrefix, getPtoDesc().getPtoName(), decodeResponseTime);
+        logStepInfo(PtoState.PTO_STEP, 5, 5, decodeResponseTime, "Client handles reply");
 
-        info("{}{} Client end", ptoEndLogPrefix, getPtoDesc().getPtoName());
+        logPhaseInfo(PtoState.PTO_END);
         return pirResult;
     }
 

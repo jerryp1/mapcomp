@@ -79,7 +79,7 @@ public abstract class AbstractOsnSender extends AbstractTwoPartyPto implements O
     }
 
     protected void setPtoInput(Vector<byte[]> inputVector, int byteLength) throws MpcAbortException {
-        checkReadyState();
+        checkInitialized();
         MathPreconditions.checkGreaterOrEqual("byteLength", byteLength, CommonConstants.STATS_BYTE_LENGTH);
         this.byteLength = byteLength;
         MathPreconditions.checkLessOrEqual("n", inputVector.size(), maxN);

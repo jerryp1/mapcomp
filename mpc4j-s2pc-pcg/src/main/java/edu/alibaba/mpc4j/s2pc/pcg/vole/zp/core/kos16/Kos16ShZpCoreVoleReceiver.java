@@ -1,9 +1,6 @@
 package edu.alibaba.mpc4j.s2pc.pcg.vole.zp.core.kos16;
 
-import edu.alibaba.mpc4j.common.rpc.MpcAbortException;
-import edu.alibaba.mpc4j.common.rpc.MpcAbortPreconditions;
-import edu.alibaba.mpc4j.common.rpc.Party;
-import edu.alibaba.mpc4j.common.rpc.Rpc;
+import edu.alibaba.mpc4j.common.rpc.*;
 import edu.alibaba.mpc4j.common.rpc.utils.DataPacketHeader;
 import edu.alibaba.mpc4j.common.tool.CommonConstants;
 import edu.alibaba.mpc4j.common.tool.galoisfield.zp.ZpGadget;
@@ -56,7 +53,7 @@ public class Kos16ShZpCoreVoleReceiver extends AbstractZpCoreVoleReceiver {
     @Override
     public void init(BigInteger prime, BigInteger delta, int maxNum) throws MpcAbortException {
         setInitInput(prime, delta, maxNum);
-        info("{}{} Recv. Init begin", ptoBeginLogPrefix, getPtoDesc().getPtoName());
+        logPhaseInfo(PtoState.INIT_BEGIN);
 
         stopWatch.start();
         zpGadget = new ZpGadget(zp);
@@ -66,15 +63,15 @@ public class Kos16ShZpCoreVoleReceiver extends AbstractZpCoreVoleReceiver {
         stopWatch.stop();
         long initTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
         stopWatch.reset();
-        info("{}{} Recv. Init Step 1/1 ({}ms)", ptoStepLogPrefix, getPtoDesc().getPtoName(), initTime);
+        logStepInfo(PtoState.INIT_STEP, 1, 1, initTime);
 
-        info("{}{} Recv. Init end", ptoEndLogPrefix, getPtoDesc().getPtoName());
+        logPhaseInfo(PtoState.INIT_END);
     }
 
     @Override
     public ZpVoleReceiverOutput receive(int num) throws MpcAbortException {
         setPtoInput(num);
-        info("{}{} Recv. begin", ptoBeginLogPrefix, getPtoDesc().getPtoName());
+        logPhaseInfo(PtoState.PTO_BEGIN);
 
         stopWatch.start();
         DataPacketHeader matrixHeader = new DataPacketHeader(
@@ -86,9 +83,9 @@ public class Kos16ShZpCoreVoleReceiver extends AbstractZpCoreVoleReceiver {
         stopWatch.stop();
         long matrixTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
         stopWatch.reset();
-        info("{}{} Recv. Step 1/1 ({}ms)", ptoStepLogPrefix, getPtoDesc().getPtoName(), matrixTime);
+        logStepInfo(PtoState.PTO_STEP, 1, 1, matrixTime);
 
-        info("{}{} Recv. end", ptoEndLogPrefix, getPtoDesc().getPtoName());
+        logPhaseInfo(PtoState.PTO_END);
         return receiverOutput;
 
     }

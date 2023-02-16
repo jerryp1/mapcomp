@@ -2,6 +2,7 @@ package edu.alibaba.mpc4j.s2pc.pcg.ot.bnot.np99;
 
 import edu.alibaba.mpc4j.common.rpc.MpcAbortException;
 import edu.alibaba.mpc4j.common.rpc.Party;
+import edu.alibaba.mpc4j.common.rpc.PtoState;
 import edu.alibaba.mpc4j.common.rpc.Rpc;
 import edu.alibaba.mpc4j.common.tool.CommonConstants;
 import edu.alibaba.mpc4j.common.tool.utils.BinaryUtils;
@@ -42,7 +43,7 @@ public class Np99BaseNotSender extends AbstractBaseNotSender {
     @Override
     public void init(int maxChoice) throws MpcAbortException {
         setInitInput(maxChoice);
-        info("{}{} Send. Init begin", ptoBeginLogPrefix, getPtoDesc().getPtoName());
+        logPhaseInfo(PtoState.INIT_BEGIN);
 
         stopWatch.start();
         maxChoiceBitLength = LongUtils.ceilLog2(maxChoice);
@@ -50,18 +51,24 @@ public class Np99BaseNotSender extends AbstractBaseNotSender {
         stopWatch.stop();
         long initTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
         stopWatch.reset();
-        info("{}{} Send. Step 1/ ({}ms)", ptoStepLogPrefix, getPtoDesc().getPtoName(), initTime);
+        logStepInfo(PtoState.INIT_STEP, 1, 1, initTime);
 
-        info("{}{} Send. Init end", ptoEndLogPrefix, getPtoDesc().getPtoName());
+        logPhaseInfo(PtoState.INIT_END);
     }
 
     @Override
     public BaseNotSenderOutput send(int num) throws MpcAbortException {
         setPtoInput(num);
-        info("{}{} Send. begin", ptoBeginLogPrefix, getPtoDesc().getPtoName());
+        logPhaseInfo(PtoState.PTO_BEGIN);
 
         stopWatch.start();
         BaseOtSenderOutput baseOtSenderOutput = baseOtSender.send(num * maxChoiceBitLength);
+        stopWatch.stop();
+        long otTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
+        stopWatch.reset();
+        logStepInfo(PtoState.PTO_STEP, 1, 2, otTime);
+
+        stopWatch.start();
         boolean[][] binaryChoices = IntStream.range(0, maxChoice)
             .mapToObj(choice -> BinaryUtils.byteArrayToBinary(IntUtils.intToByteArray(choice), maxChoiceBitLength))
             .toArray(boolean[][]::new);
@@ -85,9 +92,9 @@ public class Np99BaseNotSender extends AbstractBaseNotSender {
         stopWatch.stop();
         long sTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
         stopWatch.reset();
-        info("{}{} Send. Step 1/1 ({}ms)", ptoStepLogPrefix, getPtoDesc().getPtoName(), sTime);
+        logStepInfo(PtoState.PTO_STEP, 2, 2, sTime);
 
-        info("{}{} Send. end", ptoEndLogPrefix, getPtoDesc().getPtoName());
+        logPhaseInfo(PtoState.PTO_END);
         return new BaseNotSenderOutput(maxChoice, rMatrix);
     }
 

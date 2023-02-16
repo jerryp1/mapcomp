@@ -89,7 +89,7 @@ public abstract class AbstractOpBoostHost extends AbstractMultiPartyPto {
     }
 
     protected void setPtoInput(Formula formula, DataFrame hostDataFrame, OpBoostHostConfig hostConfig) {
-        checkReadyState();
+        checkInitialized();
         // 验证DataFrame与配置参数中的schema相同
         assert hostDataFrame.schema().equals(hostConfig.getSchema());
         this.formula = formula;

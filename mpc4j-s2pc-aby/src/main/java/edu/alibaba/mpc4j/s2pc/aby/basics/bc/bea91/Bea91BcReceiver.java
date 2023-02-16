@@ -1,15 +1,13 @@
 package edu.alibaba.mpc4j.s2pc.aby.basics.bc.bea91;
 
-import edu.alibaba.mpc4j.common.rpc.MpcAbortException;
-import edu.alibaba.mpc4j.common.rpc.MpcAbortPreconditions;
-import edu.alibaba.mpc4j.common.rpc.Party;
-import edu.alibaba.mpc4j.common.rpc.Rpc;
+import edu.alibaba.mpc4j.common.rpc.*;
 import edu.alibaba.mpc4j.common.rpc.utils.DataPacket;
 import edu.alibaba.mpc4j.common.rpc.utils.DataPacketHeader;
 import edu.alibaba.mpc4j.common.tool.bitvector.BitVector;
 import edu.alibaba.mpc4j.common.tool.bitvector.BitVectorFactory;
 import edu.alibaba.mpc4j.common.tool.utils.BytesUtils;
 import edu.alibaba.mpc4j.s2pc.aby.basics.bc.AbstractBcParty;
+import edu.alibaba.mpc4j.s2pc.aby.basics.bc.bea91.Bea91BcPtoDesc.PtoStep;
 import edu.alibaba.mpc4j.s2pc.aby.basics.bc.SquareSbitVector;
 import edu.alibaba.mpc4j.s2pc.pcg.mtg.z2.Z2MtgFactory;
 import edu.alibaba.mpc4j.s2pc.pcg.mtg.z2.Z2MtgParty;
@@ -41,22 +39,22 @@ public class Bea91BcReceiver extends AbstractBcParty {
     @Override
     public void init(int maxRoundBitNum, int updateBitNum) throws MpcAbortException {
         setInitInput(maxRoundBitNum, updateBitNum);
-        info("{}{} Recv. Init begin", ptoBeginLogPrefix, getPtoDesc().getPtoName());
+        logPhaseInfo(PtoState.INIT_BEGIN);
 
         stopWatch.start();
         z2MtgReceiver.init(maxRoundBitNum, updateBitNum);
         stopWatch.stop();
         long initTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
         stopWatch.reset();
-        info("{}{} Recv. Init Step 1/1 ({}ms)", ptoStepLogPrefix, getPtoDesc().getPtoName(), initTime);
+        logStepInfo(PtoState.INIT_STEP, 1, 1, initTime);
 
-        info("{}{} Recv. Init end", ptoEndLogPrefix, getPtoDesc().getPtoName());
+        logPhaseInfo(PtoState.INIT_END);
     }
 
     @Override
     public SquareSbitVector shareOwn(BitVector x) {
         setShareOwnInput(x);
-        info("{}{} Recv. share (Recv.) begin", ptoBeginLogPrefix, getPtoDesc().getPtoName());
+        logPhaseInfo(PtoState.PTO_BEGIN, "send share");
 
         stopWatch.start();
         BitVector x1BitVector = BitVectorFactory.createRandom(bitNum, secureRandom);
@@ -70,20 +68,20 @@ public class Bea91BcReceiver extends AbstractBcParty {
         stopWatch.stop();
         long shareTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
         stopWatch.reset();
-        info("{}{} Recv. share (Recv.) Step 1/1 ({}ms)", ptoStepLogPrefix, getPtoDesc().getPtoName(), shareTime);
+        logStepInfo(PtoState.PTO_STEP, 1, 1, shareTime, "send share");
 
-        info("{}{} Recv. share (Recv.) end", ptoEndLogPrefix, getPtoDesc().getPtoName());
+        logPhaseInfo(PtoState.PTO_END, "send share");
         return SquareSbitVector.create(x1BitVector, false);
     }
 
     @Override
     public SquareSbitVector shareOther(int bitNum) throws MpcAbortException {
         setShareOtherInput(bitNum);
-        info("{}{} Recv. share (Send.) begin", ptoBeginLogPrefix, getPtoDesc().getPtoName());
+        logPhaseInfo(PtoState.PTO_BEGIN, "receive share");
 
         stopWatch.start();
         DataPacketHeader x1Header = new DataPacketHeader(
-            encodeTaskId, getPtoDesc().getPtoId(), Bea91BcPtoDesc.PtoStep.SENDER_SEND_INPUT_SHARE.ordinal(), inputBitNum,
+            encodeTaskId, getPtoDesc().getPtoId(), PtoStep.SENDER_SEND_INPUT_SHARE.ordinal(), inputBitNum,
             otherParty().getPartyId(), ownParty().getPartyId()
         );
         List<byte[]> x1Payload = rpc.receive(x1Header).getPayload();
@@ -92,9 +90,9 @@ public class Bea91BcReceiver extends AbstractBcParty {
         stopWatch.stop();
         long shareTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
         stopWatch.reset();
-        info("{}{} Recv. share (Send.) Step 1/1 ({}ms)", ptoStepLogPrefix, getPtoDesc().getPtoName(), shareTime);
+        logStepInfo(PtoState.PTO_STEP, 1, 1, shareTime, "receive share");
 
-        info("{}{} Recv. share (Send.) end", ptoEndLogPrefix, getPtoDesc().getPtoName());
+        logPhaseInfo(PtoState.PTO_END, "receive share");
         return SquareSbitVector.create(x1BitVector, false);
     }
 
@@ -111,14 +109,14 @@ public class Bea91BcReceiver extends AbstractBcParty {
         } else {
             // x1和y1为密文比特向量，执行AND协议
             andGateNum += bitNum;
-            info("{}{} Recv. AND begin", ptoBeginLogPrefix, getPtoDesc().getPtoName());
+            logPhaseInfo(PtoState.PTO_BEGIN, "and");
 
             stopWatch.start();
             Z2Triple z2Triple = z2MtgReceiver.generate(bitNum);
             stopWatch.stop();
             long z2MtgTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
             stopWatch.reset();
-            info("{}{} Recv. AND Step 1/3 ({}ms)", ptoStepLogPrefix, getPtoDesc().getPtoName(), z2MtgTime);
+            logStepInfo(PtoState.PTO_STEP, 1, 3, z2MtgTime, "and (gen. Boolean triples)");
 
             stopWatch.start();
             byte[] a1 = z2Triple.getA();
@@ -132,14 +130,14 @@ public class Bea91BcReceiver extends AbstractBcParty {
             e1f1Payload.add(e1);
             e1f1Payload.add(f1);
             DataPacketHeader e1f1Header = new DataPacketHeader(
-                encodeTaskId, getPtoDesc().getPtoId(), Bea91BcPtoDesc.PtoStep.RECEIVER_SEND_E1_F1.ordinal(), andGateNum,
+                encodeTaskId, getPtoDesc().getPtoId(), PtoStep.RECEIVER_SEND_E1_F1.ordinal(), andGateNum,
                 ownParty().getPartyId(), otherParty().getPartyId()
             );
             rpc.send(DataPacket.fromByteArrayList(e1f1Header, e1f1Payload));
             stopWatch.stop();
             long e1f1Time = stopWatch.getTime(TimeUnit.MILLISECONDS);
             stopWatch.reset();
-            info("{}{} Recv. AND Step 2/3 ({}ms)", ptoStepLogPrefix, getPtoDesc().getPtoName(), e1f1Time);
+            logStepInfo(PtoState.PTO_STEP, 2, 3, e1f1Time, "and (open e/f)");
 
             stopWatch.start();
             DataPacketHeader e0f0Header = new DataPacketHeader(
@@ -165,9 +163,9 @@ public class Bea91BcReceiver extends AbstractBcParty {
             stopWatch.stop();
             long z1Time = stopWatch.getTime(TimeUnit.MILLISECONDS);
             stopWatch.reset();
-            info("{}{} Recv. AND Step 3/3 ({}ms)", ptoStepLogPrefix, getPtoDesc().getPtoName(), z1Time);
+            logStepInfo(PtoState.PTO_STEP, 3, 3, z1Time, "and (gen. z)");
 
-            info("{}{} Recv. AND end", ptoEndLogPrefix, getPtoDesc().getPtoName());
+            logPhaseInfo(PtoState.PTO_END, "and");
             return z1ShareBitVector;
         }
     }
@@ -188,16 +186,16 @@ public class Bea91BcReceiver extends AbstractBcParty {
         } else {
             // x1和y1为密文比特向量，发送方和接收方都执行XOR运算
             xorGateNum += bitNum;
-            info("{}{} Recv. XOR begin", ptoBeginLogPrefix, getPtoDesc().getPtoName());
+            logPhaseInfo(PtoState.PTO_BEGIN, "xor");
 
             stopWatch.start();
             SquareSbitVector z1ShareBitVector = x1.xor(y1, false);
             stopWatch.stop();
             long z1Time = stopWatch.getTime(TimeUnit.MILLISECONDS);
             stopWatch.reset();
-            info("{}{} Recv. XOR Step 1/1 ({}ms)", ptoStepLogPrefix, getPtoDesc().getPtoName(), z1Time);
+            logStepInfo(PtoState.PTO_STEP, 1, 1, z1Time, "xor (gen. z)");
 
-            info("{}{} Recv. XOR end", ptoEndLogPrefix, getPtoDesc().getPtoName());
+            logPhaseInfo(PtoState.PTO_END, "xor");
             return z1ShareBitVector;
         }
     }
@@ -209,7 +207,7 @@ public class Bea91BcReceiver extends AbstractBcParty {
             return x1.getBitVector();
         } else {
             outputBitNum += bitNum;
-            info("{}{} Recv. reveal (Recv.) begin", ptoBeginLogPrefix, getPtoDesc().getPtoName());
+            logPhaseInfo(PtoState.PTO_BEGIN, "receive share");
 
             stopWatch.start();
             DataPacketHeader x0Header = new DataPacketHeader(
@@ -222,9 +220,9 @@ public class Bea91BcReceiver extends AbstractBcParty {
             stopWatch.stop();
             long revealTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
             stopWatch.reset();
-            info("{}{} Recv. reveal (Recv.) Step 1/1 ({}ms)", ptoStepLogPrefix, getPtoDesc().getPtoName(), revealTime);
+            logStepInfo(PtoState.PTO_STEP, 1, 1, revealTime, "receive share");
 
-            info("{}{} Recv. reveal (Recv.) end", ptoEndLogPrefix, getPtoDesc().getPtoName());
+            logPhaseInfo(PtoState.PTO_END, "receive share");
             return x0.xor(x1, false).getBitVector();
         }
     }
@@ -234,7 +232,7 @@ public class Bea91BcReceiver extends AbstractBcParty {
         setRevealOtherInput(x1);
         if (!x1.isPlain()) {
             outputBitNum += bitNum;
-            info("{}{} Recv. reveal (Send.) begin", ptoBeginLogPrefix, getPtoDesc().getPtoName());
+            logPhaseInfo(PtoState.PTO_BEGIN, "send share");
 
             stopWatch.start();
             List<byte[]> x1Payload = Collections.singletonList(x1.getBytes());
@@ -246,9 +244,9 @@ public class Bea91BcReceiver extends AbstractBcParty {
             stopWatch.stop();
             long revealTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
             stopWatch.reset();
-            info("{}{} Recv. reveal (Send.) Step 1/1 ({}ms)", ptoStepLogPrefix, getPtoDesc().getPtoName(), revealTime);
+            logStepInfo(PtoState.PTO_STEP, 1, 1, revealTime, "send share");
 
-            info("{}{} Recv. reveal (Send.) end", ptoEndLogPrefix, getPtoDesc().getPtoName());
+            logPhaseInfo(PtoState.PTO_END, "send share");
         }
     }
 }

@@ -80,7 +80,7 @@ public abstract class AbstractKwPirServer<T> extends AbstractTwoPartyPto impleme
     }
 
     protected void setPtoInput() {
-        checkReadyState();
+        checkInitialized();
         extraInfo++;
     }
 }

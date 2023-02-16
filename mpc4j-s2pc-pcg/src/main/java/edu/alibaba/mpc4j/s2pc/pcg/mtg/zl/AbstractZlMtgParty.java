@@ -50,7 +50,7 @@ public abstract class AbstractZlMtgParty extends AbstractTwoPartyPto implements 
     }
 
     protected void setPtoInput(int num) {
-        checkReadyState();
+        checkInitialized();
         MathPreconditions.checkPositiveInRangeClosed("num", num, maxRoundNum);
         this.num = num;
         extraInfo += num;

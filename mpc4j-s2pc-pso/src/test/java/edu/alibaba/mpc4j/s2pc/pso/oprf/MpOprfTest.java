@@ -9,7 +9,9 @@ import edu.alibaba.mpc4j.s2pc.pso.oprf.cm20.Cm20MpOprfConfig;
 import edu.alibaba.mpc4j.s2pc.pso.oprf.ra17.Ra17MpOprfConfig;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.time.StopWatch;
+import org.junit.After;
 import org.junit.Assert;
+import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
@@ -82,73 +84,71 @@ public class MpOprfTest {
 
     public MpOprfTest(String name, MpOprfConfig config) {
         Preconditions.checkArgument(StringUtils.isNotBlank(name));
+        // We cannot use NettyRPC in the test case since it needs multi-thread connect / disconnect.
+        // In other word, we cannot connect / disconnect NettyRpc in @Before / @After, respectively.
         RpcManager rpcManager = new MemoryRpcManager(2);
         senderRpc = rpcManager.getRpc(0);
         receiverRpc = rpcManager.getRpc(1);
         this.config = config;
     }
 
+    @Before
+    public void connect() {
+        senderRpc.connect();
+        receiverRpc.connect();
+    }
+
+    @After
+    public void disconnect() {
+        senderRpc.disconnect();
+        receiverRpc.disconnect();
+    }
+
     @Test
     public void test1N() {
-        MpOprfSender sender = OprfFactory.createMpOprfSender(senderRpc, receiverRpc.ownParty(), config);
-        MpOprfReceiver receiver = OprfFactory.createMpOprfReceiver(receiverRpc, senderRpc.ownParty(), config);
-        testPto(sender, receiver, 1);
+        testPto(1, false);
     }
 
     @Test
     public void test2N() {
-        MpOprfSender sender = OprfFactory.createMpOprfSender(senderRpc, receiverRpc.ownParty(), config);
-        MpOprfReceiver receiver = OprfFactory.createMpOprfReceiver(receiverRpc, senderRpc.ownParty(), config);
-        testPto(sender, receiver, 2);
+        testPto( 2, false);
     }
 
     @Test
     public void test3N() {
-        MpOprfSender sender = OprfFactory.createMpOprfSender(senderRpc, receiverRpc.ownParty(), config);
-        MpOprfReceiver receiver = OprfFactory.createMpOprfReceiver(receiverRpc, senderRpc.ownParty(), config);
-        testPto(sender, receiver, 3);
+        testPto(3, false);
     }
 
     @Test
     public void test8N() {
-        MpOprfSender sender = OprfFactory.createMpOprfSender(senderRpc, receiverRpc.ownParty(), config);
-        MpOprfReceiver receiver = OprfFactory.createMpOprfReceiver(receiverRpc, senderRpc.ownParty(), config);
-        testPto(sender, receiver, 8);
+        testPto(8, false);
     }
 
     @Test
     public void testDefault() {
-        MpOprfSender sender = OprfFactory.createMpOprfSender(senderRpc, receiverRpc.ownParty(), config);
-        MpOprfReceiver receiver = OprfFactory.createMpOprfReceiver(receiverRpc, senderRpc.ownParty(), config);
-        testPto(sender, receiver, DEFAULT_BATCH_SIZE);
+        testPto(DEFAULT_BATCH_SIZE, false);
     }
 
     @Test
     public void testParallelDefault() {
-        MpOprfSender sender = OprfFactory.createMpOprfSender(senderRpc, receiverRpc.ownParty(), config);
-        MpOprfReceiver receiver = OprfFactory.createMpOprfReceiver(receiverRpc, senderRpc.ownParty(), config);
-        sender.setParallel(true);
-        receiver.setParallel(true);
-        testPto(sender, receiver, DEFAULT_BATCH_SIZE);
+        testPto(DEFAULT_BATCH_SIZE, true);
     }
 
     @Test
     public void testLargeN() {
-        MpOprfSender sender = OprfFactory.createMpOprfSender(senderRpc, receiverRpc.ownParty(), config);
-        MpOprfReceiver receiver = OprfFactory.createMpOprfReceiver(receiverRpc, senderRpc.ownParty(), config);
-        testPto(sender, receiver, LARGE_BATCH_SIZE);
+        testPto(LARGE_BATCH_SIZE, false);
     }
 
     @Test
     public void testParallelLargeN() {
-        MpOprfSender sender = OprfFactory.createMpOprfSender(senderRpc, receiverRpc.ownParty(), config);
-        MpOprfReceiver receiver = OprfFactory.createMpOprfReceiver(receiverRpc, senderRpc.ownParty(), config);
-        sender.setParallel(true);
-        receiver.setParallel(true);
-        testPto(sender, receiver, LARGE_BATCH_SIZE);
+        testPto(LARGE_BATCH_SIZE, true);
     }
 
-    private void testPto(MpOprfSender sender, MpOprfReceiver receiver, int batchSize) {
+    private void testPto(int batchSize, boolean parallel) {
+        MpOprfSender sender = OprfFactory.createMpOprfSender(senderRpc, receiverRpc.ownParty(), config);
+        MpOprfReceiver receiver = OprfFactory.createMpOprfReceiver(receiverRpc, senderRpc.ownParty(), config);
+        sender.setParallel(parallel);
+        receiver.setParallel(parallel);
         int randomTaskId = Math.abs(SECURE_RANDOM.nextInt());
         sender.setTaskId(randomTaskId);
         receiver.setTaskId(randomTaskId);
@@ -190,6 +190,8 @@ public class MpOprfTest {
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
+        sender.destroy();
+        receiver.destroy();
     }
 
     private void assertOutput(int n, MpOprfSenderOutput senderOutput, MpOprfReceiverOutput receiverOutput) {

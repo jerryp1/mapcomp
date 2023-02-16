@@ -14,7 +14,9 @@ import edu.alibaba.mpc4j.s2pc.pso.osn.OsnConfig;
 import edu.alibaba.mpc4j.s2pc.pso.osn.gmr21.Gmr21OsnConfig;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.time.StopWatch;
+import org.junit.After;
 import org.junit.Assert;
+import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
@@ -63,12 +65,12 @@ public class MqRmptTest {
             .setCotConfig(new DirectCotConfig.Builder(SecurityModel.SEMI_HONEST).build())
             .build();
         // GMR21
-        configurationParams.add(new Object[] {
+        configurationParams.add(new Object[]{
             MqRpmtFactory.MqRpmtType.GMR21.name(),
             new Gmr21MqRpmtConfig.Builder().setOsnConfig(directCotOsnConfig).build(),
         });
         // CZZ22_BYTE_ECC_CW
-        configurationParams.add(new Object[] {
+        configurationParams.add(new Object[]{
             MqRpmtFactory.MqRpmtType.CZZ22_BYTE_ECC_CW.name(), new Czz22ByteEccCwMqRpmtConfig.Builder().build(),
         });
 
@@ -90,73 +92,71 @@ public class MqRmptTest {
 
     public MqRmptTest(String name, MqRpmtConfig config) {
         Preconditions.checkArgument(StringUtils.isNotBlank(name));
+        // We cannot use NettyRPC in the test case since it needs multi-thread connect / disconnect.
+        // In other word, we cannot connect / disconnect NettyRpc in @Before / @After, respectively.
         RpcManager rpcManager = new MemoryRpcManager(2);
         serverRpc = rpcManager.getRpc(0);
         clientRpc = rpcManager.getRpc(1);
         this.config = config;
     }
 
+    @Before
+    public void connect() {
+        serverRpc.connect();
+        clientRpc.connect();
+    }
+
+    @After
+    public void disconnect() {
+        serverRpc.disconnect();
+        clientRpc.disconnect();
+    }
+
     @Test
     public void test2() {
-        MqRpmtServer server = MqRpmtFactory.createServer(serverRpc, clientRpc.ownParty(), config);
-        MqRpmtClient client = MqRpmtFactory.createClient(clientRpc, serverRpc.ownParty(), config);
-        testPto(server, client, 2, 2);
+        testPto(2, 2, false);
     }
 
     @Test
     public void test10() {
-        MqRpmtServer server = MqRpmtFactory.createServer(serverRpc, clientRpc.ownParty(), config);
-        MqRpmtClient client = MqRpmtFactory.createClient(clientRpc, serverRpc.ownParty(), config);
-        testPto(server, client, 10, 10);
+        testPto(10, 10, false);
     }
 
     @Test
     public void testLargeServerSize() {
-        MqRpmtServer server = MqRpmtFactory.createServer(serverRpc, clientRpc.ownParty(), config);
-        MqRpmtClient client = MqRpmtFactory.createClient(clientRpc, serverRpc.ownParty(), config);
-        testPto(server, client, DEFAULT_SIZE, 10);
+        testPto(DEFAULT_SIZE, 10, false);
     }
 
     @Test
     public void testLargeClientSize() {
-        MqRpmtServer server = MqRpmtFactory.createServer(serverRpc, clientRpc.ownParty(), config);
-        MqRpmtClient client = MqRpmtFactory.createClient(clientRpc, serverRpc.ownParty(), config);
-        testPto(server, client, 10, DEFAULT_SIZE);
+        testPto(10, DEFAULT_SIZE, false);
     }
 
     @Test
     public void testDefault() {
-        MqRpmtServer server = MqRpmtFactory.createServer(serverRpc, clientRpc.ownParty(), config);
-        MqRpmtClient client = MqRpmtFactory.createClient(clientRpc, serverRpc.ownParty(), config);
-        testPto(server, client, DEFAULT_SIZE, DEFAULT_SIZE);
+        testPto(DEFAULT_SIZE, DEFAULT_SIZE, false);
     }
 
     @Test
     public void testParallelDefault() {
-        MqRpmtServer server = MqRpmtFactory.createServer(serverRpc, clientRpc.ownParty(), config);
-        MqRpmtClient client = MqRpmtFactory.createClient(clientRpc, serverRpc.ownParty(), config);
-        server.setParallel(true);
-        client.setParallel(true);
-        testPto(server, client, DEFAULT_SIZE, DEFAULT_SIZE);
+        testPto(DEFAULT_SIZE, DEFAULT_SIZE, true);
     }
 
     @Test
     public void testLarge() {
-        MqRpmtServer server = MqRpmtFactory.createServer(serverRpc, clientRpc.ownParty(), config);
-        MqRpmtClient client = MqRpmtFactory.createClient(clientRpc, serverRpc.ownParty(), config);
-        testPto(server, client, LARGE_SIZE, LARGE_SIZE);
+        testPto(LARGE_SIZE, LARGE_SIZE, false);
     }
 
     @Test
     public void testParallelLarge() {
-        MqRpmtServer server = MqRpmtFactory.createServer(serverRpc, clientRpc.ownParty(), config);
-        MqRpmtClient client = MqRpmtFactory.createClient(clientRpc, serverRpc.ownParty(), config);
-        server.setParallel(true);
-        client.setParallel(true);
-        testPto(server, client, LARGE_SIZE, LARGE_SIZE);
+        testPto(LARGE_SIZE, LARGE_SIZE, true);
     }
 
-    private void testPto(MqRpmtServer server, MqRpmtClient client, int serverSize, int clientSize) {
+    private void testPto(int serverSize, int clientSize, boolean parallel) {
+        MqRpmtServer server = MqRpmtFactory.createServer(serverRpc, clientRpc.ownParty(), config);
+        MqRpmtClient client = MqRpmtFactory.createClient(clientRpc, serverRpc.ownParty(), config);
+        server.setParallel(parallel);
+        client.setParallel(parallel);
         int randomTaskId = Math.abs(SECURE_RANDOM.nextInt());
         server.setTaskId(randomTaskId);
         client.setTaskId(randomTaskId);
@@ -199,6 +199,8 @@ public class MqRmptTest {
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
+        server.destroy();
+        client.destroy();
     }
 
     private void assertOutput(ByteBuffer[] serverVector, Set<ByteBuffer> clientSet, boolean[] containVector) {

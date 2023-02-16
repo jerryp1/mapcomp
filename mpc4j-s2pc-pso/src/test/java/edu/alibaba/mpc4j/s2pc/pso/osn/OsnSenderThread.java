@@ -14,7 +14,7 @@ public class OsnSenderThread extends Thread {
     /**
      * 发送方
      */
-    private final OsnSender osnSender;
+    private final OsnSender sender;
     /**
      * 输入/分享字节长度
      */
@@ -28,8 +28,8 @@ public class OsnSenderThread extends Thread {
      */
     private OsnPartyOutput senderOutput;
 
-    OsnSenderThread(OsnSender osnSender, Vector<byte[]> inputVector, int byteLength) {
-        this.osnSender = osnSender;
+    OsnSenderThread(OsnSender sender, Vector<byte[]> inputVector, int byteLength) {
+        this.sender = sender;
         this.byteLength = byteLength;
         this.inputVector = inputVector;
     }
@@ -41,10 +41,8 @@ public class OsnSenderThread extends Thread {
     @Override
     public void run() {
         try {
-            osnSender.getRpc().connect();
-            osnSender.init(inputVector.size());
-            senderOutput = osnSender.osn(inputVector, byteLength);
-            this.osnSender.getRpc().disconnect();
+            sender.init(inputVector.size());
+            senderOutput = sender.osn(inputVector, byteLength);
         } catch (MpcAbortException e) {
             e.printStackTrace();
         }

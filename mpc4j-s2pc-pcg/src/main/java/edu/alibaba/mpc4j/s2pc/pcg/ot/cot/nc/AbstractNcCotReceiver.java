@@ -34,7 +34,7 @@ public abstract class AbstractNcCotReceiver extends AbstractTwoPartyPto implemen
     }
 
     protected void setPtoInput() {
-        checkReadyState();
+        checkInitialized();
         extraInfo++;
     }
 }

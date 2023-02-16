@@ -41,12 +41,10 @@ class NcCotSenderThread extends Thread {
     @Override
     public void run() {
         try {
-            sender.getRpc().connect();
             sender.init(delta, num);
             for (int round = 0; round < senderOutputs.length; round++) {
                 senderOutputs[round] = sender.send();
             }
-            sender.getRpc().disconnect();
         } catch (MpcAbortException e) {
             e.printStackTrace();
         }

@@ -58,15 +58,15 @@ public class Csw20BaseOtSender extends AbstractBaseOtSender {
     @Override
     public void init() throws MpcAbortException {
         setInitInput();
-        logBeginEndInfo(PtoState.INIT_BEGIN);
+        logPhaseInfo(PtoState.INIT_BEGIN);
         // empty init step
-        logBeginEndInfo(PtoState.INIT_END);
+        logPhaseInfo(PtoState.INIT_END);
     }
 
     @Override
     public BaseOtSenderOutput send(int num) throws MpcAbortException {
         setPtoInput(num);
-        logBeginEndInfo(PtoState.PTO_BEGIN);
+        logPhaseInfo(PtoState.PTO_BEGIN);
 
         stopWatch.start();
         DataPacketHeader rChooseHeader = new DataPacketHeader(
@@ -103,7 +103,7 @@ public class Csw20BaseOtSender extends AbstractBaseOtSender {
         stopWatch.reset();
         logStepInfo(PtoState.PTO_STEP, 3, 3, rTime);
 
-        logBeginEndInfo(PtoState.PTO_END);
+        logPhaseInfo(PtoState.PTO_END);
         return senderOutput;
     }
 

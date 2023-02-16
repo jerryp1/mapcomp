@@ -1,9 +1,6 @@
 package edu.alibaba.mpc4j.s2pc.pso.oprf.kkrt16;
 
-import edu.alibaba.mpc4j.common.rpc.MpcAbortException;
-import edu.alibaba.mpc4j.common.rpc.MpcAbortPreconditions;
-import edu.alibaba.mpc4j.common.rpc.Party;
-import edu.alibaba.mpc4j.common.rpc.Rpc;
+import edu.alibaba.mpc4j.common.rpc.*;
 import edu.alibaba.mpc4j.common.rpc.utils.DataPacketHeader;
 import edu.alibaba.mpc4j.common.tool.bitmatrix.trans.TransBitMatrix;
 import edu.alibaba.mpc4j.common.tool.bitmatrix.trans.TransBitMatrixFactory;
@@ -69,7 +66,7 @@ public class Kkrt16OptOprfSender extends AbstractOprfSender {
     @Override
     public void init(int maxBatchSize, int maxPrfNum) throws MpcAbortException {
         setInitInput(maxBatchSize, maxPrfNum);
-        info("{}{} Send. Init begin", ptoBeginLogPrefix, getPtoDesc().getPtoName());
+        logPhaseInfo(PtoState.INIT_BEGIN);
 
         stopWatch.start();
         // 初始化码字字节长度
@@ -80,7 +77,7 @@ public class Kkrt16OptOprfSender extends AbstractOprfSender {
         stopWatch.stop();
         long initCotTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
         stopWatch.reset();
-        info("{}{} Send. Init Step 1/2 ({}ms)", ptoStepLogPrefix, getPtoDesc().getPtoName(), initCotTime);
+        logStepInfo(PtoState.INIT_STEP, 1, 2, initCotTime);
 
         stopWatch.start();
         // 生成关联值Δ
@@ -92,17 +89,16 @@ public class Kkrt16OptOprfSender extends AbstractOprfSender {
         stopWatch.stop();
         long cotTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
         stopWatch.reset();
-        info("{}{} Send. Init Step 2/2 ({}ms)", ptoStepLogPrefix, getPtoDesc().getPtoName(), cotTime);
+        logStepInfo(PtoState.INIT_STEP, 2, 2, cotTime);
 
-        info("{}{} Send. Init end", ptoEndLogPrefix, getPtoDesc().getPtoName());
+        logPhaseInfo(PtoState.INIT_END);
     }
 
     @Override
     public OprfSenderOutput oprf(int batchSize) throws MpcAbortException {
         setPtoInput(batchSize);
-        info("{}{} Send. begin", ptoBeginLogPrefix, getPtoDesc().getPtoName());
+        logPhaseInfo(PtoState.PTO_BEGIN);
 
-        stopWatch.start();
         // 初始化伪随机编码
         DataPacketHeader keyHeader = new DataPacketHeader(
             encodeTaskId, getPtoDesc().getPtoId(), Kkrt16OptOprfPtoDesc.PtoStep.RECEIVER_SEND_KEY.ordinal(), extraInfo,
@@ -110,25 +106,26 @@ public class Kkrt16OptOprfSender extends AbstractOprfSender {
         );
         List<byte[]> keyPayload = rpc.receive(keyHeader).getPayload();
         MpcAbortPreconditions.checkArgument(keyPayload.size() == 1);
+        stopWatch.start();
         randomCoderKey = keyPayload.remove(0);
         stopWatch.stop();
         long initKeyTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
         stopWatch.reset();
-        info("{}{} Send. Step 1/2 ({}ms)", ptoStepLogPrefix, getPtoDesc().getPtoName(), initKeyTime);
+        logStepInfo(PtoState.PTO_STEP, 1, 2, initKeyTime, "Sender receives PRC key");
 
-        stopWatch.start();
         DataPacketHeader matrixHeader = new DataPacketHeader(
             encodeTaskId, getPtoDesc().getPtoId(), Kkrt16OptOprfPtoDesc.PtoStep.RECEIVER_SEND_MATRIX.ordinal(), extraInfo,
             otherParty().getPartyId(), ownParty().getPartyId()
         );
         List<byte[]> matrixPayload = rpc.receive(matrixHeader).getPayload();
+        stopWatch.start();
         OprfSenderOutput senderOutput = handleMatrixPayload(matrixPayload);
         stopWatch.stop();
         long matrixTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
         stopWatch.reset();
-        info("{}{} Send. Step 2/2 ({}ms)", ptoStepLogPrefix, getPtoDesc().getPtoName(), matrixTime);
+        logStepInfo(PtoState.PTO_STEP, 2, 2, matrixTime, "Receiver generates OPRF");
 
-        info("{}{} Send. end", ptoEndLogPrefix, getPtoDesc().getPtoName());
+        logPhaseInfo(PtoState.PTO_END);
         return senderOutput;
     }
 

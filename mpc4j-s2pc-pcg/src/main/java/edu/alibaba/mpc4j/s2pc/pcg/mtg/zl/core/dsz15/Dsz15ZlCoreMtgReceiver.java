@@ -1,9 +1,6 @@
 package edu.alibaba.mpc4j.s2pc.pcg.mtg.zl.core.dsz15;
 
-import edu.alibaba.mpc4j.common.rpc.MpcAbortException;
-import edu.alibaba.mpc4j.common.rpc.MpcAbortPreconditions;
-import edu.alibaba.mpc4j.common.rpc.Party;
-import edu.alibaba.mpc4j.common.rpc.Rpc;
+import edu.alibaba.mpc4j.common.rpc.*;
 import edu.alibaba.mpc4j.common.rpc.utils.DataPacket;
 import edu.alibaba.mpc4j.common.rpc.utils.DataPacketHeader;
 import edu.alibaba.mpc4j.common.tool.CommonConstants;
@@ -81,7 +78,7 @@ public class Dsz15ZlCoreMtgReceiver extends AbstractZlCoreMtgParty {
     @Override
     public void init(int maxNum) throws MpcAbortException {
         setInitInput(maxNum);
-        info("{}{} Recv. Init begin", ptoBeginLogPrefix, getPtoDesc().getPtoName());
+        logPhaseInfo(PtoState.INIT_BEGIN);
 
         stopWatch.start();
         byte[] delta = new byte[CommonConstants.BLOCK_BYTE_LENGTH];
@@ -91,22 +88,22 @@ public class Dsz15ZlCoreMtgReceiver extends AbstractZlCoreMtgParty {
         stopWatch.stop();
         long initTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
         stopWatch.reset();
-        info("{}{} Recv. Init Step 1/1 ({}ms)", ptoStepLogPrefix, getPtoDesc().getPtoName(), initTime);
+        logStepInfo(PtoState.INIT_STEP, 1, 1, initTime);
 
-        info("{}{} Recv. Init end", ptoEndLogPrefix, getPtoDesc().getPtoName());
+        logPhaseInfo(PtoState.INIT_END);
     }
 
     @Override
     public ZlTriple generate(int num) throws MpcAbortException {
         setPtoInput(num);
-        info("{}{} Recv. begin", ptoBeginLogPrefix, getPtoDesc().getPtoName());
+        logPhaseInfo(PtoState.PTO_BEGIN);
 
         stopWatch.start();
         initParams();
         stopWatch.stop();
         long initParamTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
         stopWatch.reset();
-        info("{}{} Recv. Step 1/4 ({}ms)", ptoStepLogPrefix, getPtoDesc().getPtoName(), initParamTime);
+        logStepInfo(PtoState.PTO_STEP, 1, 4, initParamTime);
 
         stopWatch.start();
         // 第一轮OT协议
@@ -120,10 +117,10 @@ public class Dsz15ZlCoreMtgReceiver extends AbstractZlCoreMtgParty {
         stopWatch.stop();
         long sendTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
         stopWatch.reset();
-        info("{}{} Recv. Step 2/4 ({}ms)", ptoStepLogPrefix, getPtoDesc().getPtoName(), sendTime);
+        logStepInfo(PtoState.PTO_STEP, 2, 4, sendTime);
 
-        stopWatch.start();
         // 第二轮OT协议
+        stopWatch.start();
         CotReceiverOutput cotReceiverOutput = cotReceiver.receive(receiverChoices);
         DataPacketHeader senderMessagesHeader = new DataPacketHeader(
             encodeTaskId, getPtoDesc().getPtoId(), PtoStep.SENDER_SEND_MESSAGES.ordinal(), extraInfo,
@@ -134,16 +131,16 @@ public class Dsz15ZlCoreMtgReceiver extends AbstractZlCoreMtgParty {
         stopWatch.stop();
         long receiveTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
         stopWatch.reset();
-        info("{}{} Recv. Step 3/4 ({}ms)", ptoStepLogPrefix, getPtoDesc().getPtoName(), receiveTime);
+        logStepInfo(PtoState.PTO_STEP, 3, 4, receiveTime);
 
         stopWatch.start();
         ZlTriple receiverOutput = computeTriples();
         stopWatch.stop();
         long tripleTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
         stopWatch.reset();
-        info("{}{} Recv. Step 4/4 ({}ms)", ptoStepLogPrefix, getPtoDesc().getPtoName(), tripleTime);
+        logStepInfo(PtoState.PTO_STEP, 4, 4, tripleTime);
 
-        info("{}{} Recv. end", ptoEndLogPrefix, getPtoDesc().getPtoName());
+        logPhaseInfo(PtoState.PTO_END);
         return receiverOutput;
     }
 

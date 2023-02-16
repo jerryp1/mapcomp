@@ -4,10 +4,7 @@ import java.util.List;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.IntStream;
 
-import edu.alibaba.mpc4j.common.rpc.MpcAbortException;
-import edu.alibaba.mpc4j.common.rpc.MpcAbortPreconditions;
-import edu.alibaba.mpc4j.common.rpc.Party;
-import edu.alibaba.mpc4j.common.rpc.Rpc;
+import edu.alibaba.mpc4j.common.rpc.*;
 import edu.alibaba.mpc4j.common.rpc.utils.DataPacketHeader;
 import edu.alibaba.mpc4j.common.tool.utils.BinaryUtils;
 import edu.alibaba.mpc4j.common.tool.utils.BytesUtils;
@@ -31,15 +28,15 @@ public class Bea95PreCotSender extends AbstractPreCotSender {
     @Override
     public void init() throws MpcAbortException {
         setInitInput();
-        info("{}{} Send. Init begin", ptoBeginLogPrefix, getPtoDesc().getPtoName());
+        logPhaseInfo(PtoState.INIT_BEGIN);
 
-        info("{}{} Send. Init end", ptoEndLogPrefix, getPtoDesc().getPtoName());
+        logPhaseInfo(PtoState.INIT_END);
     }
 
     @Override
     public CotSenderOutput send(CotSenderOutput preSenderOutput) throws MpcAbortException {
-        info("{}{} Send. begin", ptoBeginLogPrefix, getPtoDesc().getPtoName());
         setPtoInput(preSenderOutput);
+        logPhaseInfo(PtoState.PTO_BEGIN);
 
         stopWatch.start();
         DataPacketHeader xorHeader = new DataPacketHeader(
@@ -58,9 +55,9 @@ public class Bea95PreCotSender extends AbstractPreCotSender {
         stopWatch.stop();
         long time = stopWatch.getTime(TimeUnit.MILLISECONDS);
         stopWatch.reset();
-        info("{}{} Send. Step 1/1 ({}ms)", ptoStepLogPrefix, getPtoDesc().getPtoName(), time);
+        logStepInfo(PtoState.PTO_STEP, 1, 1, time);
 
-        info("{}{} Send. end", ptoEndLogPrefix, getPtoDesc().getPtoName());
+        logPhaseInfo(PtoState.PTO_END);
         return CotSenderOutput.create(preSenderOutput.getDelta(), r0Array);
     }
 }

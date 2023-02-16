@@ -2,6 +2,7 @@ package edu.alibaba.mpc4j.s2pc.pcg.ot.cot.impl.cache;
 
 import edu.alibaba.mpc4j.common.rpc.MpcAbortException;
 import edu.alibaba.mpc4j.common.rpc.Party;
+import edu.alibaba.mpc4j.common.rpc.PtoState;
 import edu.alibaba.mpc4j.common.rpc.Rpc;
 import edu.alibaba.mpc4j.s2pc.pcg.ot.cot.AbstractCotReceiver;
 import edu.alibaba.mpc4j.s2pc.pcg.ot.cot.CotReceiverOutput;
@@ -47,7 +48,7 @@ public class CacheCotReceiver extends AbstractCotReceiver {
     @Override
     public void init(int maxRoundNum, int updateNum) throws MpcAbortException {
         setInitInput(maxRoundNum, updateNum);
-        info("{}{} Recv. Init begin", ptoBeginLogPrefix, getPtoDesc().getPtoName());
+        logPhaseInfo(PtoState.INIT_BEGIN);
 
         stopWatch.start();
         int updateRoundNum;
@@ -66,15 +67,15 @@ public class CacheCotReceiver extends AbstractCotReceiver {
         stopWatch.stop();
         long initTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
         stopWatch.reset();
-        info("{}{} Recv. Init Step 1/1 ({}ms)", ptoStepLogPrefix, getPtoDesc().getPtoName(), initTime);
+        logStepInfo(PtoState.INIT_STEP, 1, 1, initTime);
 
-        info("{}{} Recv. Init end", ptoEndLogPrefix, getPtoDesc().getPtoName());
+        logPhaseInfo(PtoState.INIT_END);
     }
 
     @Override
     public CotReceiverOutput receive(boolean[] choices) throws MpcAbortException {
         setPtoInput(choices);
-        info("{}{} Recv. begin", ptoBeginLogPrefix, getPtoDesc().getPtoName());
+        logPhaseInfo(PtoState.PTO_BEGIN);
 
         while (num > buffer.getNum()) {
             // 如果所需的数量大于缓存区数量，则继续生成
@@ -85,7 +86,7 @@ public class CacheCotReceiver extends AbstractCotReceiver {
                 stopWatch.stop();
                 long roundTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
                 stopWatch.reset();
-                info("{}{} Recv. Step 0.{}/0.{} ({}ms)", ptoStepLogPrefix, getPtoDesc().getPtoName(), round, updateRound, roundTime);
+                logSubStepInfo(PtoState.PTO_STEP, 0, round, updateRound, roundTime);
             }
         }
 
@@ -94,7 +95,7 @@ public class CacheCotReceiver extends AbstractCotReceiver {
         stopWatch.stop();
         long splitTripleTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
         stopWatch.reset();
-        info("{}{} Recv. Step 1/2 ({}ms)", ptoStepLogPrefix, getPtoDesc().getPtoName(), splitTripleTime);
+        logStepInfo(PtoState.PTO_STEP, 1, 2, splitTripleTime);
 
         stopWatch.start();
         // 应用预计算COT协议纠正选择比特
@@ -102,9 +103,9 @@ public class CacheCotReceiver extends AbstractCotReceiver {
         stopWatch.stop();
         long preCotTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
         stopWatch.reset();
-        info("{}{} Recv. Step 2/2 ({}ms)", ptoStepLogPrefix, getPtoDesc().getPtoName(), preCotTime);
+        logStepInfo(PtoState.PTO_STEP, 2, 2, preCotTime);
 
-        info("{}{} Recv. end", ptoEndLogPrefix, getPtoDesc().getPtoName());
+        logPhaseInfo(PtoState.PTO_END);
         return receiverOutput;
     }
 }

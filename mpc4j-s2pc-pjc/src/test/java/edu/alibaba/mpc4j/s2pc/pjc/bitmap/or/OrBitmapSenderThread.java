@@ -59,8 +59,9 @@ class OrBitmapSenderThread extends Thread {
             SecureBitmapContainer x0 = xPublic ? sender.setPublicRoaringBitmap(x, maxNum) : sender.setOwnRoaringBitmap(x, maxNum);
             SecureBitmapContainer y0 = yPublic ? sender.setPublicRoaringBitmap(y, maxNum) : sender.setOtherRoaringBitmap(maxNum);
             SecureBitmapContainer z0 = sender.or(x0, y0);
-
             sender.toOtherRoaringBitmap(z0);
+            sender.destroy();
+            sender.getRpc().disconnect();
         } catch (MpcAbortException e) {
             e.printStackTrace();
         }

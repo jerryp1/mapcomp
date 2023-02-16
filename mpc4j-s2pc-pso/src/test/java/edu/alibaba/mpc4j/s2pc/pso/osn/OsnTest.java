@@ -14,7 +14,9 @@ import edu.alibaba.mpc4j.s2pc.pso.osn.gmr21.Gmr21OsnConfig;
 import edu.alibaba.mpc4j.s2pc.pso.osn.ms13.Ms13OsnConfig;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.time.StopWatch;
+import org.junit.After;
 import org.junit.Assert;
+import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
@@ -112,87 +114,81 @@ public class OsnTest {
 
     public OsnTest(String name, OsnConfig config) {
         Preconditions.checkArgument(StringUtils.isNotBlank(name));
+        // We cannot use NettyRPC in the test case since it needs multi-thread connect / disconnect.
+        // In other word, we cannot connect / disconnect NettyRpc in @Before / @After, respectively.
         RpcManager rpcManager = new MemoryRpcManager(2);
         senderRpc = rpcManager.getRpc(0);
         receiverRpc = rpcManager.getRpc(1);
         this.config = config;
     }
 
+    @Before
+    public void connect() {
+        senderRpc.connect();
+        receiverRpc.connect();
+    }
+
+    @After
+    public void disconnect() {
+        senderRpc.disconnect();
+        receiverRpc.disconnect();
+    }
+
     @Test
     public void test2N() {
-        OsnSender sender = OsnFactory.createSender(senderRpc, receiverRpc.ownParty(), config);
-        OsnReceiver receiver = OsnFactory.createReceiver(receiverRpc, senderRpc.ownParty(), config);
-        testPto(sender, receiver, 2, DEFAULT_BYTE_LENGTH);
+        testPto(2, DEFAULT_BYTE_LENGTH, false);
     }
 
     @Test
     public void test3N() {
-        OsnSender sender = OsnFactory.createSender(senderRpc, receiverRpc.ownParty(), config);
-        OsnReceiver receiver = OsnFactory.createReceiver(receiverRpc, senderRpc.ownParty(), config);
-        testPto(sender, receiver, 3, DEFAULT_BYTE_LENGTH);
+        testPto(3, DEFAULT_BYTE_LENGTH, false);
     }
 
     @Test
     public void test4N() {
-        OsnSender sender = OsnFactory.createSender(senderRpc, receiverRpc.ownParty(), config);
-        OsnReceiver receiver = OsnFactory.createReceiver(receiverRpc, senderRpc.ownParty(), config);
-        testPto(sender, receiver, 4, DEFAULT_BYTE_LENGTH);
+        testPto(4, DEFAULT_BYTE_LENGTH, false);
     }
 
     @Test
     public void test5N() {
-        OsnSender sender = OsnFactory.createSender(senderRpc, receiverRpc.ownParty(), config);
-        OsnReceiver receiver = OsnFactory.createReceiver(receiverRpc, senderRpc.ownParty(), config);
-        testPto(sender, receiver, 5, DEFAULT_BYTE_LENGTH);
+        testPto(5, DEFAULT_BYTE_LENGTH, false);
     }
 
     @Test
     public void testStatsByteLength() {
-        OsnSender sender = OsnFactory.createSender(senderRpc, receiverRpc.ownParty(), config);
-        OsnReceiver receiver = OsnFactory.createReceiver(receiverRpc, senderRpc.ownParty(), config);
-        testPto(sender, receiver, DEFAULT_N, STATS_BYTE_LENGTH);
+        testPto(DEFAULT_N, STATS_BYTE_LENGTH, false);
     }
 
     @Test
     public void testLargeByteLength() {
-        OsnSender sender = OsnFactory.createSender(senderRpc, receiverRpc.ownParty(), config);
-        OsnReceiver receiver = OsnFactory.createReceiver(receiverRpc, senderRpc.ownParty(), config);
-        testPto(sender, receiver, DEFAULT_N, LARGE_BYTE_LENGTH);
+        testPto(DEFAULT_N, LARGE_BYTE_LENGTH, false);
     }
 
     @Test
     public void testDefault() {
-        OsnSender sender = OsnFactory.createSender(senderRpc, receiverRpc.ownParty(), config);
-        OsnReceiver receiver = OsnFactory.createReceiver(receiverRpc, senderRpc.ownParty(), config);
-        testPto(sender, receiver, DEFAULT_N, DEFAULT_BYTE_LENGTH);
+        testPto(DEFAULT_N, DEFAULT_BYTE_LENGTH, false);
     }
 
     @Test
     public void testParallelDefault() {
-        OsnSender sender = OsnFactory.createSender(senderRpc, receiverRpc.ownParty(), config);
-        OsnReceiver receiver = OsnFactory.createReceiver(receiverRpc, senderRpc.ownParty(), config);
-        sender.setParallel(true);
-        receiver.setParallel(true);
-        testPto(sender, receiver, DEFAULT_N, DEFAULT_BYTE_LENGTH);
+        testPto(DEFAULT_N, DEFAULT_BYTE_LENGTH, true);
     }
 
     @Test
     public void testLarge() {
-        OsnSender sender = OsnFactory.createSender(senderRpc, receiverRpc.ownParty(), config);
-        OsnReceiver receiver = OsnFactory.createReceiver(receiverRpc, senderRpc.ownParty(), config);
-        testPto(sender, receiver, LARGE_N, LARGE_BYTE_LENGTH);
+        testPto(LARGE_N, LARGE_BYTE_LENGTH, false);
     }
 
     @Test
     public void testParallelLarge() {
-        OsnSender sender = OsnFactory.createSender(senderRpc, receiverRpc.ownParty(), config);
-        OsnReceiver receiver = OsnFactory.createReceiver(receiverRpc, senderRpc.ownParty(), config);
-        sender.setParallel(true);
-        receiver.setParallel(true);
-        testPto(sender, receiver, LARGE_N, LARGE_BYTE_LENGTH);
+        testPto(LARGE_N, LARGE_BYTE_LENGTH, true);
     }
 
-    private void testPto(OsnSender sender, OsnReceiver receiver, int n, int byteLength) {
+    private void testPto(int n, int byteLength, boolean parallel) {
+        OsnSender sender = OsnFactory.createSender(senderRpc, receiverRpc.ownParty(), config);
+        OsnReceiver receiver = OsnFactory.createReceiver(receiverRpc, senderRpc.ownParty(), config);
+        sender.setParallel(parallel);
+        receiver.setParallel(parallel);
         int randomTaskId = Math.abs(SECURE_RANDOM.nextInt());
         sender.setTaskId(randomTaskId);
         receiver.setTaskId(randomTaskId);
@@ -239,6 +235,8 @@ public class OsnTest {
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
+        sender.destroy();
+        receiver.destroy();
     }
 
     private void assertOutput(Vector<byte[]> inputVector, int[] permutationMap,

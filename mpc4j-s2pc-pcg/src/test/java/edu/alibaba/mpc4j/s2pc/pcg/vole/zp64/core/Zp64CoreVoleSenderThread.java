@@ -40,10 +40,8 @@ class Zp64CoreVoleSenderThread extends Thread {
     @Override
     public void run() {
         try {
-            sender.getRpc().connect();
             sender.init(prime, x.length);
             senderOutput = sender.send(x);
-            sender.getRpc().disconnect();
         } catch (MpcAbortException e) {
             e.printStackTrace();
         }

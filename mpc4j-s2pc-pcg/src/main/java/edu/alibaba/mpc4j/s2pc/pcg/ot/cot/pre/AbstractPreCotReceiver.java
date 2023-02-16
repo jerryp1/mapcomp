@@ -32,7 +32,7 @@ public abstract class AbstractPreCotReceiver extends AbstractTwoPartyPto impleme
     }
 
     protected void setPtoInput(CotReceiverOutput preReceiverOutput, boolean[] choices) {
-        checkReadyState();
+        checkInitialized();
         MathPreconditions.checkPositive("preCotNum", preReceiverOutput.getNum());
         MathPreconditions.checkEqual("num", "preCotNum", choices.length, preReceiverOutput.getNum());
         this.preReceiverOutput = preReceiverOutput;

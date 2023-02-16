@@ -1,9 +1,6 @@
 package edu.alibaba.mpc4j.s2pc.pso.upsi.cmg21;
 
-import edu.alibaba.mpc4j.common.rpc.MpcAbortException;
-import edu.alibaba.mpc4j.common.rpc.MpcAbortPreconditions;
-import edu.alibaba.mpc4j.common.rpc.Party;
-import edu.alibaba.mpc4j.common.rpc.Rpc;
+import edu.alibaba.mpc4j.common.rpc.*;
 import edu.alibaba.mpc4j.common.rpc.utils.DataPacket;
 import edu.alibaba.mpc4j.common.rpc.utils.DataPacketHeader;
 import edu.alibaba.mpc4j.common.tool.CommonConstants;
@@ -56,7 +53,7 @@ public class Cmg21UpsiServer<T> extends AbstractUpsiServer<T> {
     @Override
     public void init(UpsiParams upsiParams) throws MpcAbortException {
         setInitInput(upsiParams);
-        info("{}{} Server Init begin", ptoBeginLogPrefix, getPtoDesc().getPtoName());
+        logPhaseInfo(PtoState.INIT_BEGIN);
 
         stopWatch.start();
         assert (upsiParams instanceof Cmg21UpsiParams);
@@ -65,15 +62,15 @@ public class Cmg21UpsiServer<T> extends AbstractUpsiServer<T> {
         stopWatch.stop();
         long initTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
         stopWatch.reset();
-        info("{}{} Server Init Step 1/1 ({}ms)", ptoStepLogPrefix, getPtoDesc().getPtoName(), initTime);
+        logStepInfo(PtoState.INIT_STEP, 1, 1, initTime);
 
-        info("{}{} Server Init end", ptoEndLogPrefix, getPtoDesc().getPtoName());
+        logPhaseInfo(PtoState.INIT_END);
     }
 
     @Override
     public void psi(Set<T> serverElementSet, int clientElementSize) throws MpcAbortException {
         setPtoInput(serverElementSet, clientElementSize);
-        info("{}{} Server begin", ptoBeginLogPrefix, getPtoDesc().getPtoName());
+        logPhaseInfo(PtoState.PTO_BEGIN);
 
         stopWatch.start();
         // 服务端执行OPRF协议
@@ -81,15 +78,16 @@ public class Cmg21UpsiServer<T> extends AbstractUpsiServer<T> {
         stopWatch.stop();
         long oprfTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
         stopWatch.reset();
-        info("{}{} Server Step 1/5 ({}ms)", ptoStepLogPrefix, getPtoDesc().getPtoName(), oprfTime);
+        logStepInfo(PtoState.PTO_STEP, 1, 4, oprfTime, "OPRF");
 
-        stopWatch.start();
         // 接收客户端发送的Cuckoo hash key
         DataPacketHeader cuckooHashKeyHeader = new DataPacketHeader(
             encodeTaskId, getPtoDesc().getPtoId(), PtoStep.CLIENT_SEND_CUCKOO_HASH_KEYS.ordinal(), extraInfo,
             otherParty().getPartyId(), rpc.ownParty().getPartyId()
         );
         List<byte[]> hashKeyPayload = rpc.receive(cuckooHashKeyHeader).getPayload();
+
+        stopWatch.start();
         MpcAbortPreconditions.checkArgument(
             hashKeyPayload.size() == params.getCuckooHashKeyNum(),
             "the size of hash keys " + "should be {}", params.getCuckooHashKeyNum()
@@ -98,7 +96,7 @@ public class Cmg21UpsiServer<T> extends AbstractUpsiServer<T> {
         stopWatch.stop();
         long cuckooHashKeyTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
         stopWatch.reset();
-        info("{}{} Server Step 2/5 ({}ms)", ptoStepLogPrefix, getPtoDesc().getPtoName(), cuckooHashKeyTime);
+        logStepInfo(PtoState.PTO_STEP, 2, 4, cuckooHashKeyTime, "Server receives cuckoo hash keys");
 
         stopWatch.start();
         // 服务端哈希分桶
@@ -109,9 +107,8 @@ public class Cmg21UpsiServer<T> extends AbstractUpsiServer<T> {
         stopWatch.stop();
         long encodedTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
         stopWatch.reset();
-        info("{}{} Server Step 3/5 ({}ms)", ptoStepLogPrefix, getPtoDesc().getPtoName(), encodedTime);
+        logStepInfo(PtoState.PTO_STEP, 3, 4, encodedTime, "Server encodes database");
 
-        stopWatch.start();
         // 接收客户端的加密密钥
         DataPacketHeader fheParamsHeader = new DataPacketHeader(
             encodeTaskId, getPtoDesc().getPtoId(), PtoStep.CLIENT_SEND_ENCRYPTION_PARAMS.ordinal(), extraInfo,
@@ -124,10 +121,6 @@ public class Cmg21UpsiServer<T> extends AbstractUpsiServer<T> {
             otherParty().getPartyId(), rpc.ownParty().getPartyId()
         );
         ArrayList<byte[]> queryPayload = new ArrayList<>(rpc.receive(queryHeader).getPayload());
-        stopWatch.stop();
-        long queryTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
-        stopWatch.reset();
-        info("{}{} Server Step 4/5 ({}ms)", ptoStepLogPrefix, getPtoDesc().getPtoName(), queryTime);
 
         stopWatch.start();
         // 服务端计算密文匹配结果
@@ -140,9 +133,9 @@ public class Cmg21UpsiServer<T> extends AbstractUpsiServer<T> {
             rpc.ownParty().getPartyId(), otherParty().getPartyId()
         );
         rpc.send(DataPacket.fromByteArrayList(responseHeader, responsePayload));
-        info("{}{} Server Step 5/5 ({}ms)", ptoStepLogPrefix, getPtoDesc().getPtoName(), replyTime);
+        logStepInfo(PtoState.PTO_STEP, 4, 4, replyTime, "Server generates reply");
 
-        info("{}{} Server end", ptoEndLogPrefix, getPtoDesc().getPtoName());
+        logPhaseInfo(PtoState.PTO_END);
     }
 
     /**

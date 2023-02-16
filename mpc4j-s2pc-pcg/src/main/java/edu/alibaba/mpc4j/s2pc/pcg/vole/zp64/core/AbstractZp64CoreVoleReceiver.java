@@ -50,7 +50,7 @@ public abstract class AbstractZp64CoreVoleReceiver extends AbstractTwoPartyPto i
     }
 
     protected void setPtoInput(int num) {
-        checkReadyState();
+        checkInitialized();
         MathPreconditions.checkPositiveInRangeClosed("num", num, maxNum);
         this.num = num;
         extraInfo++;

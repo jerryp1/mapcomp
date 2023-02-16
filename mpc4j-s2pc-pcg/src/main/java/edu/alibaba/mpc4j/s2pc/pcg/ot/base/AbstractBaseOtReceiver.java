@@ -38,7 +38,7 @@ public abstract class AbstractBaseOtReceiver extends AbstractTwoPartyPto impleme
     }
 
     protected void setPtoInput(boolean[] choices) {
-        checkReadyState();
+        checkInitialized();
         MathPreconditions.checkPositive("num", choices.length);
         num = choices.length;
         this.choices = choices;

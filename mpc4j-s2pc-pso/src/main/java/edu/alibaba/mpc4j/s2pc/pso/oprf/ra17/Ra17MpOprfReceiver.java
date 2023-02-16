@@ -1,9 +1,6 @@
 package edu.alibaba.mpc4j.s2pc.pso.oprf.ra17;
 
-import edu.alibaba.mpc4j.common.rpc.MpcAbortException;
-import edu.alibaba.mpc4j.common.rpc.MpcAbortPreconditions;
-import edu.alibaba.mpc4j.common.rpc.Party;
-import edu.alibaba.mpc4j.common.rpc.Rpc;
+import edu.alibaba.mpc4j.common.rpc.*;
 import edu.alibaba.mpc4j.common.rpc.utils.DataPacket;
 import edu.alibaba.mpc4j.common.rpc.utils.DataPacketHeader;
 import edu.alibaba.mpc4j.common.tool.crypto.ecc.Ecc;
@@ -53,15 +50,15 @@ public class Ra17MpOprfReceiver extends AbstractMpOprfReceiver {
     @Override
     public void init(int maxBatchSize, int maxPrfNum) {
         setInitInput(maxBatchSize, maxPrfNum);
-        info("{}{} Recv. Init begin", ptoBeginLogPrefix, getPtoDesc().getPtoName());
+        logPhaseInfo(PtoState.INIT_BEGIN);
 
-        info("{}{} Recv. Init end", ptoEndLogPrefix, getPtoDesc().getPtoName());
+        logPhaseInfo(PtoState.INIT_END);
     }
 
     @Override
     public MpOprfReceiverOutput oprf(byte[][] inputs) throws MpcAbortException {
         setPtoInput(inputs);
-        info("{}{} Recv. begin", ptoBeginLogPrefix, getPtoDesc().getPtoName());
+        logPhaseInfo(PtoState.PTO_BEGIN);
 
         stopWatch.start();
         List<byte[]> blindPayload = generateBlindPayload();
@@ -73,21 +70,22 @@ public class Ra17MpOprfReceiver extends AbstractMpOprfReceiver {
         stopWatch.stop();
         long blindTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
         stopWatch.reset();
-        info("{}{} Recv. Step 1/2 ({}ms)", ptoStepLogPrefix, getPtoDesc().getPtoName(), blindTime);
+        logStepInfo(PtoState.PTO_STEP, 1, 2, blindTime, "Receiver blinds");
 
-        stopWatch.start();
         DataPacketHeader blindPrfHeader = new DataPacketHeader(
             encodeTaskId, getPtoDesc().getPtoId(), PtoStep.SENDER_SEND_BLIND_PRF.ordinal(), extraInfo,
             otherParty().getPartyId(), ownParty().getPartyId()
         );
         List<byte[]> blindPrfPayload = rpc.receive(blindPrfHeader).getPayload();
+
+        stopWatch.start();
         MpOprfReceiverOutput receiverOutput = handleBlindPrfPayload(blindPrfPayload);
         stopWatch.stop();
         long deBlindTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
         stopWatch.reset();
-        info("{}{} Recv. Step 2/2 ({}ms)", ptoStepLogPrefix, getPtoDesc().getPtoName(), deBlindTime);
+        logStepInfo(PtoState.PTO_STEP, 2, 2, deBlindTime, "Receiver de-blinds");
 
-        info("{}{} Recv. end", ptoEndLogPrefix, getPtoDesc().getPtoName());
+        logPhaseInfo(PtoState.PTO_END);
         return receiverOutput;
     }
 

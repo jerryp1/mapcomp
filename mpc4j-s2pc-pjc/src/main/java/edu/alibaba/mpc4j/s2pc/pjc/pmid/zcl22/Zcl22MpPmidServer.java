@@ -1,9 +1,6 @@
 package edu.alibaba.mpc4j.s2pc.pjc.pmid.zcl22;
 
-import edu.alibaba.mpc4j.common.rpc.MpcAbortException;
-import edu.alibaba.mpc4j.common.rpc.MpcAbortPreconditions;
-import edu.alibaba.mpc4j.common.rpc.Party;
-import edu.alibaba.mpc4j.common.rpc.Rpc;
+import edu.alibaba.mpc4j.common.rpc.*;
 import edu.alibaba.mpc4j.common.rpc.utils.DataPacket;
 import edu.alibaba.mpc4j.common.rpc.utils.DataPacketHeader;
 import edu.alibaba.mpc4j.common.tool.CommonConstants;
@@ -108,7 +105,7 @@ public class Zcl22MpPmidServer<T> extends AbstractPmidServer<T> {
     @Override
     public void init(int maxServerSetSize, int maxServerU, int maxClientSetSize, int maxClientU) throws MpcAbortException {
         setInitInput(maxServerSetSize, maxServerU, maxClientSetSize, maxClientU);
-        info("{}{} Server Init begin", ptoBeginLogPrefix, getPtoDesc().getPtoName());
+        logPhaseInfo(PtoState.INIT_BEGIN);
 
         stopWatch.start();
         // P1作为发送方，P2作为接收方的mpOPRF
@@ -120,7 +117,7 @@ public class Zcl22MpPmidServer<T> extends AbstractPmidServer<T> {
         stopWatch.stop();
         long initTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
         stopWatch.reset();
-        info("{}{} Server Init Step 1/3 ({}ms)", ptoStepLogPrefix, getPtoDesc().getPtoName(), initTime);
+        logStepInfo(PtoState.INIT_STEP, 1, 3, initTime);
 
         stopWatch.start();
         List<byte[]> serverKeysPayload = new LinkedList<>();
@@ -142,7 +139,7 @@ public class Zcl22MpPmidServer<T> extends AbstractPmidServer<T> {
         stopWatch.stop();
         long serverKeyTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
         stopWatch.reset();
-        info("{}{} Server Init Step 2/3 ({}ms)", ptoStepLogPrefix, getPtoDesc().getPtoName(), serverKeyTime);
+        logStepInfo(PtoState.INIT_STEP, 2, 3, serverKeyTime);
 
         stopWatch.start();
         DataPacketHeader clientKeysHeader = new DataPacketHeader(
@@ -156,9 +153,9 @@ public class Zcl22MpPmidServer<T> extends AbstractPmidServer<T> {
         stopWatch.stop();
         long clientKeyTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
         stopWatch.reset();
-        info("{}{} Server Init Step 3/3 ({}ms)", ptoStepLogPrefix, getPtoDesc().getPtoName(), clientKeyTime);
+        logStepInfo(PtoState.INIT_STEP, 3, 3, clientKeyTime);
 
-        info("{}{} Server Init end", ptoEndLogPrefix, getPtoDesc().getPtoName());
+        logPhaseInfo(PtoState.INIT_END);
     }
 
     @Override
@@ -186,7 +183,7 @@ public class Zcl22MpPmidServer<T> extends AbstractPmidServer<T> {
     }
 
     private PmidPartyOutput<T> pmid() throws MpcAbortException {
-        info("{}{} Server begin", ptoBeginLogPrefix, getPtoDesc().getPtoName());
+        logPhaseInfo(PtoState.PTO_BEGIN);
 
         stopWatch.start();
         initVariables();
@@ -194,7 +191,7 @@ public class Zcl22MpPmidServer<T> extends AbstractPmidServer<T> {
         stopWatch.stop();
         long oprfTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
         stopWatch.reset();
-        info("{}{} Server Step 1/4 ({}ms)", ptoStepLogPrefix, getPtoDesc().getPtoName(), oprfTime);
+        logStepInfo(PtoState.PTO_STEP, 1, 4, oprfTime);
 
         stopWatch.start();
         if (serverU == 1 && clientU == 1) {
@@ -211,7 +208,7 @@ public class Zcl22MpPmidServer<T> extends AbstractPmidServer<T> {
         stopWatch.stop();
         long sigmaOkvsTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
         stopWatch.reset();
-        info("{}{} Server Step 2/4 ({}ms)", ptoStepLogPrefix, getPtoDesc().getPtoName(), sigmaOkvsTime);
+        logStepInfo(PtoState.PTO_STEP, 2, 4, sigmaOkvsTime);
 
         stopWatch.start();
         // Alice computes id_{x_i}^(j)
@@ -219,15 +216,16 @@ public class Zcl22MpPmidServer<T> extends AbstractPmidServer<T> {
         stopWatch.stop();
         long pmidMapTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
         stopWatch.reset();
-        info("{}{} Server Step 3/4 ({}ms)", ptoStepLogPrefix, getPtoDesc().getPtoName(), pmidMapTime);
+        logStepInfo(PtoState.PTO_STEP, 3, 4, pmidMapTime);
 
         stopWatch.start();
         Set<ByteBuffer> pmidSet = union(serverPmidMap);
         stopWatch.stop();
         long unionTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
         stopWatch.reset();
-        info("{}{} Server Step 4/4 ({}ms)", ptoStepLogPrefix, getPtoDesc().getPtoName(), unionTime);
+        logStepInfo(PtoState.PTO_STEP, 4, 4, unionTime);
 
+        logPhaseInfo(PtoState.PTO_END);
         return new PmidPartyOutput<>(pmidByteLength, pmidSet, serverPmidMap);
     }
 

@@ -63,7 +63,7 @@ public abstract class AbstractPsuServer extends AbstractTwoPartyPto implements P
     }
 
     protected void setPtoInput(Set<ByteBuffer> serverElementSet, int clientElementSize, int elementByteLength) {
-        checkReadyState();
+        checkInitialized();
         MathPreconditions.checkGreaterOrEqual("elementByteLength", elementByteLength, CommonConstants.STATS_BYTE_LENGTH);
         this.elementByteLength = elementByteLength;
         // 设置特殊空元素

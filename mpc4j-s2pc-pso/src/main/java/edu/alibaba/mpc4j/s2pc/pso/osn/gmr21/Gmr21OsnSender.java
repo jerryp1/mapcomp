@@ -2,6 +2,7 @@ package edu.alibaba.mpc4j.s2pc.pso.osn.gmr21;
 
 import edu.alibaba.mpc4j.common.rpc.MpcAbortException;
 import edu.alibaba.mpc4j.common.rpc.Party;
+import edu.alibaba.mpc4j.common.rpc.PtoState;
 import edu.alibaba.mpc4j.common.rpc.Rpc;
 import edu.alibaba.mpc4j.common.rpc.utils.DataPacket;
 import edu.alibaba.mpc4j.common.rpc.utils.DataPacketHeader;
@@ -65,7 +66,7 @@ public class Gmr21OsnSender extends AbstractOsnSender {
     @Override
     public void init(int maxN) throws MpcAbortException {
         setInitInput(maxN);
-        info("{}{} Send. Init begin", ptoBeginLogPrefix, getPtoDesc().getPtoName());
+        logPhaseInfo(PtoState.INIT_BEGIN);
 
         stopWatch.start();
         byte[] delta = new byte[CommonConstants.BLOCK_BYTE_LENGTH];
@@ -74,15 +75,15 @@ public class Gmr21OsnSender extends AbstractOsnSender {
         stopWatch.stop();
         long cotInitTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
         stopWatch.reset();
-        info("{}{} Send. Step 1/1 ({}ms)", ptoStepLogPrefix, getPtoDesc().getPtoName(), cotInitTime);
+        logStepInfo(PtoState.INIT_STEP, 1, 1, cotInitTime);
 
-        info("{}{} Send. Init end", ptoEndLogPrefix, getPtoDesc().getPtoName());
+        logPhaseInfo(PtoState.INIT_END);
     }
 
     @Override
     public OsnPartyOutput osn(Vector<byte[]> inputVector, int byteLength) throws MpcAbortException {
         setPtoInput(inputVector, byteLength);
-        info("{}{} Send. begin", ptoBeginLogPrefix, getPtoDesc().getPtoName());
+        logPhaseInfo(PtoState.PTO_BEGIN);
 
         stopWatch.start();
         List<byte[]> inputCorrectionPayload = generateInputCorrectionPayload();
@@ -94,7 +95,7 @@ public class Gmr21OsnSender extends AbstractOsnSender {
         stopWatch.stop();
         long inputCorrectionTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
         stopWatch.reset();
-        info("{}{} Send. Step 1/3 ({}ms)", ptoStepLogPrefix, getPtoDesc().getPtoName(), inputCorrectionTime);
+        logStepInfo(PtoState.PTO_STEP, 1, 3, inputCorrectionTime, "Sender computes input correlations");
 
         stopWatch.start();
         CotSenderOutput[] cotSenderOutputs = new CotSenderOutput[level];
@@ -105,7 +106,7 @@ public class Gmr21OsnSender extends AbstractOsnSender {
         stopWatch.stop();
         long cotTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
         stopWatch.reset();
-        info("{}{} Send. Step 2/3 ({}ms)", ptoStepLogPrefix, getPtoDesc().getPtoName(), cotTime);
+        logStepInfo(PtoState.PTO_STEP, 2, 3, cotTime, "Sender runs COTs");
 
         stopWatch.start();
         List<byte[]> switchCorrectionPayload = generateSwitchCorrectionPayload();
@@ -121,9 +122,9 @@ public class Gmr21OsnSender extends AbstractOsnSender {
         stopWatch.stop();
         long switchCorrectionTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
         stopWatch.reset();
-        info("{}{} Send. Step 3/3 ({}ms)", ptoStepLogPrefix, getPtoDesc().getPtoName(), switchCorrectionTime);
+        logStepInfo(PtoState.PTO_STEP, 3, 3, switchCorrectionTime, "Sender switches correlations");
 
-        info("{}{} Send. end", ptoEndLogPrefix, getPtoDesc().getPtoName());
+        logPhaseInfo(PtoState.PTO_END);
         return senderOutput;
     }
 

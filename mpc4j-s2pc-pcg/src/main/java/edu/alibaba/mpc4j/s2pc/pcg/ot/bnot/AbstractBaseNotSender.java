@@ -40,7 +40,7 @@ public abstract class AbstractBaseNotSender extends AbstractTwoPartyPto implemen
     }
 
     protected void setPtoInput(int num) {
-        checkReadyState();
+        checkInitialized();
         MathPreconditions.checkPositive("num", num);
         this.num = num;
         extraInfo++;

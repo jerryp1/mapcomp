@@ -7,9 +7,6 @@ import edu.alibaba.mpc4j.common.rpc.pto.PtoFactory;
 import edu.alibaba.mpc4j.s2pc.pcg.mtg.z2.impl.cache.CacheZ2MtgConfig;
 import edu.alibaba.mpc4j.s2pc.pcg.mtg.z2.impl.cache.CacheZ2MtgReceiver;
 import edu.alibaba.mpc4j.s2pc.pcg.mtg.z2.impl.cache.CacheZ2MtgSender;
-import edu.alibaba.mpc4j.s2pc.pcg.mtg.z2.impl.file.FileZ2MtgConfig;
-import edu.alibaba.mpc4j.s2pc.pcg.mtg.z2.impl.file.FileZ2MtgReceiver;
-import edu.alibaba.mpc4j.s2pc.pcg.mtg.z2.impl.file.FileZ2MtgSender;
 import edu.alibaba.mpc4j.s2pc.pcg.mtg.z2.impl.offline.OfflineZ2MtgConfig;
 import edu.alibaba.mpc4j.s2pc.pcg.mtg.z2.impl.offline.OfflineZ2MtgReceiver;
 import edu.alibaba.mpc4j.s2pc.pcg.mtg.z2.impl.offline.OfflineZ2MtgSender;
@@ -33,10 +30,6 @@ public class Z2MtgFactory implements PtoFactory {
      */
     public enum Z2MtgType {
         /**
-         * 文件
-         */
-        FILE,
-        /**
          * 离线
          */
         OFFLINE,
@@ -57,8 +50,6 @@ public class Z2MtgFactory implements PtoFactory {
     public static Z2MtgParty createSender(Rpc senderRpc, Party receiverParty, Z2MtgConfig config) {
         Z2MtgType type = config.getPtoType();
         switch (type) {
-            case FILE:
-                return new FileZ2MtgSender(senderRpc, receiverParty, (FileZ2MtgConfig) config);
             case OFFLINE:
                 return new OfflineZ2MtgSender(senderRpc, receiverParty, (OfflineZ2MtgConfig) config);
             case CACHE:
@@ -79,8 +70,6 @@ public class Z2MtgFactory implements PtoFactory {
     public static Z2MtgParty createReceiver(Rpc receiverRpc, Party senderParty, Z2MtgConfig config) {
         Z2MtgType type = config.getPtoType();
         switch (type) {
-            case FILE:
-                return new FileZ2MtgReceiver(receiverRpc, senderParty, (FileZ2MtgConfig) config);
             case OFFLINE:
                 return new OfflineZ2MtgReceiver(receiverRpc, senderParty, (OfflineZ2MtgConfig) config);
             case CACHE:

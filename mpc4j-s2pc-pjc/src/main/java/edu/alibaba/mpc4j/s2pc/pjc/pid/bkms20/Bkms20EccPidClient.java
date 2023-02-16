@@ -1,9 +1,6 @@
 package edu.alibaba.mpc4j.s2pc.pjc.pid.bkms20;
 
-import edu.alibaba.mpc4j.common.rpc.MpcAbortException;
-import edu.alibaba.mpc4j.common.rpc.MpcAbortPreconditions;
-import edu.alibaba.mpc4j.common.rpc.Party;
-import edu.alibaba.mpc4j.common.rpc.Rpc;
+import edu.alibaba.mpc4j.common.rpc.*;
 import edu.alibaba.mpc4j.common.rpc.utils.DataPacket;
 import edu.alibaba.mpc4j.common.rpc.utils.DataPacketHeader;
 import edu.alibaba.mpc4j.common.tool.crypto.ecc.Ecc;
@@ -79,7 +76,7 @@ public class Bkms20EccPidClient<T> extends AbstractPidParty<T> {
     @Override
     public void init(int maxOwnElementSetSize, int maxOtherElementSetSize) throws MpcAbortException {
         setInitInput(maxOwnElementSetSize, maxOtherElementSetSize);
-        info("{}{} Client Init begin", ptoBeginLogPrefix, getPtoDesc().getPtoName());
+        logPhaseInfo(PtoState.INIT_BEGIN);
 
         stopWatch.start();
         // Let k_c, r_c ←_R Z_q
@@ -88,15 +85,15 @@ public class Bkms20EccPidClient<T> extends AbstractPidParty<T> {
         stopWatch.stop();
         long initTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
         stopWatch.reset();
-        info("{}{} Client Init Step 1/1 ({}ms)", ptoStepLogPrefix, getPtoDesc().getPtoName(), initTime);
+        logStepInfo(PtoState.INIT_STEP, 1, 1, initTime);
 
-        info("{}{} Client Init end", ptoEndLogPrefix, getPtoDesc().getPtoName());
+        logPhaseInfo(PtoState.INIT_END);
     }
 
     @Override
     public PidPartyOutput<T> pid(Set<T> ownElementSet, int otherElementSetSize) throws MpcAbortException {
         setPtoInput(ownElementSet, otherElementSetSize);
-        info("{}{} Client begin", ptoBeginLogPrefix, getPtoDesc().getPtoName());
+        logPhaseInfo(PtoState.PTO_BEGIN);
 
         stopWatch.start();
         int pidByteLength = PidUtils.GLOBAL_PID_BYTE_LENGTH;
@@ -111,7 +108,7 @@ public class Bkms20EccPidClient<T> extends AbstractPidParty<T> {
         stopWatch.stop();
         long upGenTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
         stopWatch.reset();
-        info("{}{} Client Step 1/5 ({}ms)", ptoStepLogPrefix, getPtoDesc().getPtoName(), upGenTime);
+        logStepInfo(PtoState.PTO_STEP, 1, 5, upGenTime);
 
         stopWatch.start();
         // 接收U_c，根据U_c计算E_c和V_c，存储E_c，发送V_c
@@ -129,7 +126,7 @@ public class Bkms20EccPidClient<T> extends AbstractPidParty<T> {
         stopWatch.stop();
         long vcGenTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
         stopWatch.reset();
-        info("{}{} Client Step 2/5 ({}ms)", ptoStepLogPrefix, getPtoDesc().getPtoName(), vcGenTime);
+        logStepInfo(PtoState.PTO_STEP, 2, 5, vcGenTime);
 
         stopWatch.start();
         // 接收V_p，计算自己ID对应的PID
@@ -149,7 +146,7 @@ public class Bkms20EccPidClient<T> extends AbstractPidParty<T> {
         stopWatch.stop();
         long ecGenTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
         stopWatch.reset();
-        info("{}{} Client Step 3/5 ({}ms)", ptoStepLogPrefix, getPtoDesc().getPtoName(), ecGenTime);
+        logStepInfo(PtoState.PTO_STEP, 3, 5, ecGenTime);
 
         stopWatch.start();
         // 接收S_p，计算并发送S_p'
@@ -167,7 +164,7 @@ public class Bkms20EccPidClient<T> extends AbstractPidParty<T> {
         stopWatch.stop();
         long sppGenTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
         stopWatch.reset();
-        info("{}{} Client Step 4/5 ({}ms)", ptoStepLogPrefix, getPtoDesc().getPtoName(), sppGenTime);
+        logStepInfo(PtoState.PTO_STEP, 4, 5, sppGenTime);
 
         stopWatch.start();
         // 接收S_c'，得到非自己ID对应的PID
@@ -180,9 +177,9 @@ public class Bkms20EccPidClient<T> extends AbstractPidParty<T> {
         stopWatch.stop();
         long scpHandleTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
         stopWatch.reset();
-        info("{}{} Client Step 5/5 ({}ms)", ptoStepLogPrefix, getPtoDesc().getPtoName(), scpHandleTime);
+        logStepInfo(PtoState.PTO_STEP, 5, 5, scpHandleTime);
 
-        info("{}{} Client end", ptoEndLogPrefix, getPtoDesc().getPtoName());
+        logPhaseInfo(PtoState.PTO_END);
         return new PidPartyOutput<>(pidByteLength, new HashSet<>(clientPidSet), new HashMap<>(clientPidMap));
     }
 

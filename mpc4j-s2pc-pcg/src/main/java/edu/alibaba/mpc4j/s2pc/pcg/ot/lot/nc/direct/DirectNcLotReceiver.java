@@ -2,6 +2,7 @@ package edu.alibaba.mpc4j.s2pc.pcg.ot.lot.nc.direct;
 
 import edu.alibaba.mpc4j.common.rpc.MpcAbortException;
 import edu.alibaba.mpc4j.common.rpc.Party;
+import edu.alibaba.mpc4j.common.rpc.PtoState;
 import edu.alibaba.mpc4j.common.rpc.Rpc;
 import edu.alibaba.mpc4j.common.tool.utils.BytesUtils;
 import edu.alibaba.mpc4j.s2pc.pcg.ot.lot.LotReceiverOutput;
@@ -33,23 +34,22 @@ public class DirectNcLotReceiver extends AbstractNcLotReceiver {
     @Override
     public void init(int inputBitLength, int num) throws MpcAbortException {
         setInitInput(inputBitLength, num);
-        info("{}{} Recv. Init begin", ptoBeginLogPrefix, getPtoDesc().getPtoName());
+        logPhaseInfo(PtoState.INIT_BEGIN);
 
         stopWatch.start();
         coreLotReceiver.init(inputBitLength, num);
         stopWatch.stop();
         long initTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
         stopWatch.reset();
-        info("{}{} Recv. Init Step 1/1 ({}ms)", ptoStepLogPrefix, getPtoDesc().getPtoName(), initTime);
+        logStepInfo(PtoState.INIT_STEP, 1, 1, initTime);
 
-        info("{}{} Recv. Init end", ptoEndLogPrefix, getPtoDesc().getPtoName());
-
+        logPhaseInfo(PtoState.INIT_END);
     }
 
     @Override
     public LotReceiverOutput receive() throws MpcAbortException {
         setPtoInput();
-        info("{}{} Recv. begin", ptoBeginLogPrefix, getPtoDesc().getPtoName());
+        logPhaseInfo(PtoState.PTO_BEGIN);
 
         stopWatch.start();
         byte[][] choices = IntStream.range(0, num)
@@ -65,9 +65,9 @@ public class DirectNcLotReceiver extends AbstractNcLotReceiver {
         long coreLotTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
         receiverOutput.reduce(num);
         stopWatch.reset();
-        info("{}{} Recv. Step 1/1 ({}ms)", ptoStepLogPrefix, getPtoDesc().getPtoName(), coreLotTime);
+        logStepInfo(PtoState.PTO_STEP, 1, 1, coreLotTime);
 
-        info("{}{} Recv. end", ptoEndLogPrefix, getPtoDesc().getPtoName());
+        logPhaseInfo(PtoState.PTO_END);
         return receiverOutput;
     }
 }

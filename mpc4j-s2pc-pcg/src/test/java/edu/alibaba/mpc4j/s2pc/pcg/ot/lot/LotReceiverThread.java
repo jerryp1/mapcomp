@@ -39,10 +39,8 @@ class LotReceiverThread extends Thread {
     @Override
     public void run() {
         try {
-            receiver.getRpc().connect();
             receiver.init(inputBitLength, choices.length);
             receiverOutput = receiver.receive(choices);
-            receiver.getRpc().disconnect();
         } catch (MpcAbortException e) {
             e.printStackTrace();
         }

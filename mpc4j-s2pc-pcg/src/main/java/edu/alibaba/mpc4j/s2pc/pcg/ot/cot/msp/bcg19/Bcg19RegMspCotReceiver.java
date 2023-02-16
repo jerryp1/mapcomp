@@ -6,6 +6,7 @@ import java.util.stream.IntStream;
 
 import edu.alibaba.mpc4j.common.rpc.MpcAbortException;
 import edu.alibaba.mpc4j.common.rpc.Party;
+import edu.alibaba.mpc4j.common.rpc.PtoState;
 import edu.alibaba.mpc4j.common.rpc.Rpc;
 import edu.alibaba.mpc4j.s2pc.pcg.ot.cot.CotReceiverOutput;
 import edu.alibaba.mpc4j.s2pc.pcg.ot.cot.bsp.BspCotFactory;
@@ -44,7 +45,7 @@ public class Bcg19RegMspCotReceiver extends AbstractMspCotReceiver {
     @Override
     public void init(int maxT, int maxNum) throws MpcAbortException {
         setInitInput(maxT, maxNum);
-        info("{}{} Recv. Init begin", ptoBeginLogPrefix, getPtoDesc().getPtoName());
+        logPhaseInfo(PtoState.INIT_BEGIN);
 
         stopWatch.start();
         // 原本应该设置为maxN / maxT，但此值不与T成正比，最后考虑直接设置为maxN
@@ -52,9 +53,9 @@ public class Bcg19RegMspCotReceiver extends AbstractMspCotReceiver {
         stopWatch.stop();
         long initTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
         stopWatch.reset();
-        info("{}{} Recv. Init Step 1/1 ({}ms)", ptoStepLogPrefix, getPtoDesc().getPtoName(), initTime);
+        logStepInfo(PtoState.INIT_STEP, 1, 1, initTime);
 
-        info("{}{} Recv. Init end", ptoEndLogPrefix, getPtoDesc().getPtoName());
+        logPhaseInfo(PtoState.INIT_END);
     }
 
     @Override
@@ -71,7 +72,7 @@ public class Bcg19RegMspCotReceiver extends AbstractMspCotReceiver {
     }
 
     private MspCotReceiverOutput receive() throws MpcAbortException {
-        info("{}{} Recv. begin", ptoBeginLogPrefix, getPtoDesc().getPtoName());
+        logPhaseInfo(PtoState.PTO_BEGIN);
 
         stopWatch.start();
         // 生成稀疏数组
@@ -93,9 +94,9 @@ public class Bcg19RegMspCotReceiver extends AbstractMspCotReceiver {
             cotReceiverOutput = null;
         }
         stopWatch.stop();
-        long toSpbcotTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
+        long bspcotTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
         stopWatch.reset();
-        info("{}{} Recv. Step 1/2 ({}ms)", ptoStepLogPrefix, getPtoDesc().getPtoName(), toSpbcotTime);
+        logStepInfo(PtoState.PTO_STEP, 1, 2, bspcotTime);
 
         stopWatch.start();
         // 计算输出结果
@@ -103,9 +104,9 @@ public class Bcg19RegMspCotReceiver extends AbstractMspCotReceiver {
         stopWatch.stop();
         long outputTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
         stopWatch.reset();
-        info("{}{} Recv. Step 2/2 ({}ms)", ptoStepLogPrefix, getPtoDesc().getPtoName(), outputTime);
+        logStepInfo(PtoState.PTO_STEP, 2, 2, outputTime);
 
-        info("{}{} Recv. end", ptoEndLogPrefix, getPtoDesc().getPtoName());
+        logPhaseInfo(PtoState.PTO_END);
         return receiverOutput;
     }
 

@@ -45,13 +45,11 @@ public class KwPirServerThread<T> extends Thread {
     @Override
     public void run() {
         try {
-            server.getRpc().connect();
             server.init(kwPirParams, keywordLabelMap, labelByteLength);
             server.getRpc().synchronize();
             for (int i = 0; i < repeatTime; i++) {
                 server.pir();
             }
-            server.getRpc().disconnect();
         } catch (MpcAbortException e) {
             e.printStackTrace();
         }

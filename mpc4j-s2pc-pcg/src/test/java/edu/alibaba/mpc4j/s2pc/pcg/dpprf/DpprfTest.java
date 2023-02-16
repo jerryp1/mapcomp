@@ -14,7 +14,9 @@ import edu.alibaba.mpc4j.s2pc.pcg.ot.cot.CotSenderOutput;
 import edu.alibaba.mpc4j.s2pc.pcg.ot.cot.CotTestUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.time.StopWatch;
+import org.junit.After;
 import org.junit.Assert;
+import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
@@ -59,17 +61,17 @@ public class DpprfTest {
 
     @Parameterized.Parameters(name = "{0}")
     public static Collection<Object[]> configurations() {
-        Collection<Object[]> configurationParams = new ArrayList<>();
+        Collection<Object[]> configurations = new ArrayList<>();
         // YWL20 (semi-honest)
-        configurationParams.add(new Object[] {
+        configurations.add(new Object[] {
             DpprfType.YWL20_RANDOM.name() + " (semi-honest)", new Ywl20RdpprfConfig.Builder(SecurityModel.SEMI_HONEST).build(),
         });
         // YWL20 (malicious)
-        configurationParams.add(new Object[] {
+        configurations.add(new Object[] {
             DpprfType.YWL20_RANDOM.name() + " (malicious)", new Ywl20RdpprfConfig.Builder(SecurityModel.MALICIOUS).build(),
         });
 
-        return configurationParams;
+        return configurations;
     }
 
     /**
@@ -87,143 +89,131 @@ public class DpprfTest {
 
     public DpprfTest(String name, RdpprfConfig config) {
         Preconditions.checkArgument(StringUtils.isNotBlank(name));
+        // We cannot use NettyRPC in the test case since it needs multi-thread connect / disconnect.
+        // In other word, we cannot connect / disconnect NettyRpc in @Before / @After, respectively.
         RpcManager rpcManager = new MemoryRpcManager(2);
         senderRpc = rpcManager.getRpc(0);
         receiverRpc = rpcManager.getRpc(1);
         this.config = config;
     }
 
+    @Before
+    public void connect() {
+        senderRpc.connect();
+        receiverRpc.connect();
+    }
+
+    @After
+    public void disconnect() {
+        senderRpc.disconnect();
+        receiverRpc.disconnect();
+    }
+
     @Test
     public void testFirstAlpha() {
-        DpprfSender sender = DpprfFactory.createSender(senderRpc, receiverRpc.ownParty(), config);
-        DpprfReceiver receiver = DpprfFactory.createReceiver(receiverRpc, senderRpc.ownParty(), config);
         int[] alphaArray = IntStream.range(0, DEFAULT_BATCH_NUM)
             .map(mIndex -> 0)
             .toArray();
-        testPto(sender, receiver, alphaArray, DEFAULT_ALPHA_BOUND);
+        testPto(alphaArray, DEFAULT_ALPHA_BOUND, false);
     }
 
     @Test
     public void testLastAlpha() {
-        DpprfSender sender = DpprfFactory.createSender(senderRpc, receiverRpc.ownParty(), config);
-        DpprfReceiver receiver = DpprfFactory.createReceiver(receiverRpc, senderRpc.ownParty(), config);
         int[] alphaArray = IntStream.range(0, DEFAULT_BATCH_NUM)
             .map(mIndex -> DEFAULT_ALPHA_BOUND - 1)
             .toArray();
-        testPto(sender, receiver, alphaArray, DEFAULT_ALPHA_BOUND);
+        testPto(alphaArray, DEFAULT_ALPHA_BOUND, false);
     }
 
     @Test
     public void test1AlphaBound() {
-        DpprfSender sender = DpprfFactory.createSender(senderRpc, receiverRpc.ownParty(), config);
-        DpprfReceiver receiver = DpprfFactory.createReceiver(receiverRpc, senderRpc.ownParty(), config);
         int alphaBound = 1;
         int[] alphaArray = IntStream.range(0, DEFAULT_BATCH_NUM)
             .map(mIndex -> SECURE_RANDOM.nextInt(alphaBound))
             .toArray();
-        testPto(sender, receiver, alphaArray, alphaBound);
+        testPto(alphaArray, alphaBound, false);
     }
 
     @Test
     public void test2AlphaBound() {
-        DpprfSender sender = DpprfFactory.createSender(senderRpc, receiverRpc.ownParty(), config);
-        DpprfReceiver receiver = DpprfFactory.createReceiver(receiverRpc, senderRpc.ownParty(), config);
         int alphaBound = 2;
         int[] alphaArray = IntStream.range(0, DEFAULT_BATCH_NUM)
             .map(mIndex -> SECURE_RANDOM.nextInt(alphaBound))
             .toArray();
-        testPto(sender, receiver, alphaArray, alphaBound);
+        testPto(alphaArray, alphaBound, false);
     }
 
     @Test
     public void test1Batch() {
-        DpprfSender sender = DpprfFactory.createSender(senderRpc, receiverRpc.ownParty(), config);
-        DpprfReceiver receiver = DpprfFactory.createReceiver(receiverRpc, senderRpc.ownParty(), config);
         int batchNum = 1;
         int[] alphaArray = IntStream.range(0, batchNum)
             .map(mIndex -> SECURE_RANDOM.nextInt(DEFAULT_ALPHA_BOUND))
             .toArray();
-        testPto(sender, receiver, alphaArray, DEFAULT_ALPHA_BOUND);
+        testPto(alphaArray, DEFAULT_ALPHA_BOUND, false);
     }
 
     @Test
     public void test2Batch() {
-        DpprfSender sender = DpprfFactory.createSender(senderRpc, receiverRpc.ownParty(), config);
-        DpprfReceiver receiver = DpprfFactory.createReceiver(receiverRpc, senderRpc.ownParty(), config);
         int batchNum = 2;
         int[] alphaArray = IntStream.range(0, batchNum)
             .map(mIndex -> SECURE_RANDOM.nextInt(DEFAULT_ALPHA_BOUND))
             .toArray();
-        testPto(sender, receiver, alphaArray, DEFAULT_ALPHA_BOUND);
+        testPto(alphaArray, DEFAULT_ALPHA_BOUND, false);
     }
 
     @Test
     public void testDefault() {
-        DpprfSender sender = DpprfFactory.createSender(senderRpc, receiverRpc.ownParty(), config);
-        DpprfReceiver receiver = DpprfFactory.createReceiver(receiverRpc, senderRpc.ownParty(), config);
         int[] alphaArray = IntStream.range(0, DEFAULT_BATCH_NUM)
             .map(mIndex -> SECURE_RANDOM.nextInt(DEFAULT_ALPHA_BOUND))
             .toArray();
-        testPto(sender, receiver, alphaArray, DEFAULT_ALPHA_BOUND);
+        testPto(alphaArray, DEFAULT_ALPHA_BOUND, false);
     }
 
     @Test
     public void testParallelDefault() {
-        DpprfSender sender = DpprfFactory.createSender(senderRpc, receiverRpc.ownParty(), config);
-        DpprfReceiver receiver = DpprfFactory.createReceiver(receiverRpc, senderRpc.ownParty(), config);
-        sender.setParallel(true);
-        receiver.setParallel(true);
         int[] alphaArray = IntStream.range(0, DEFAULT_BATCH_NUM)
             .map(mIndex -> SECURE_RANDOM.nextInt(DEFAULT_ALPHA_BOUND))
             .toArray();
-        testPto(sender, receiver, alphaArray, DEFAULT_ALPHA_BOUND);
+        testPto(alphaArray, DEFAULT_ALPHA_BOUND, true);
     }
 
     @Test
     public void testLargeBatchNum() {
-        DpprfSender sender = DpprfFactory.createSender(senderRpc, receiverRpc.ownParty(), config);
-        DpprfReceiver receiver = DpprfFactory.createReceiver(receiverRpc, senderRpc.ownParty(), config);
         int[] alphaArray = IntStream.range(0, LARGE_BATCH_NUM)
             .map(mIndex -> SECURE_RANDOM.nextInt(DEFAULT_ALPHA_BOUND))
             .toArray();
-        testPto(sender, receiver, alphaArray, DEFAULT_ALPHA_BOUND);
+        testPto(alphaArray, DEFAULT_ALPHA_BOUND, false);
     }
 
     @Test
     public void testParallelLargeBatchNum() {
-        DpprfSender sender = DpprfFactory.createSender(senderRpc, receiverRpc.ownParty(), config);
-        DpprfReceiver receiver = DpprfFactory.createReceiver(receiverRpc, senderRpc.ownParty(), config);
-        sender.setParallel(true);
-        receiver.setParallel(true);
         int[] alphaArray = IntStream.range(0, LARGE_BATCH_NUM)
             .map(mIndex -> SECURE_RANDOM.nextInt(DEFAULT_ALPHA_BOUND))
             .toArray();
-        testPto(sender, receiver, alphaArray, DEFAULT_ALPHA_BOUND);
+        testPto(alphaArray, DEFAULT_ALPHA_BOUND, true);
     }
 
     @Test
     public void testLargeAlphaBound() {
-        DpprfSender sender = DpprfFactory.createSender(senderRpc, receiverRpc.ownParty(), config);
-        DpprfReceiver receiver = DpprfFactory.createReceiver(receiverRpc, senderRpc.ownParty(), config);
         int[] alphaArray = IntStream.range(0, DEFAULT_BATCH_NUM)
             .map(mIndex -> SECURE_RANDOM.nextInt(LARGE_ALPHA_BOUND))
             .toArray();
-        testPto(sender, receiver, alphaArray, LARGE_ALPHA_BOUND);
+        testPto(alphaArray, LARGE_ALPHA_BOUND, false);
     }
 
     @Test
     public void testParallelLargeAlphaBound() {
-        DpprfSender sender = DpprfFactory.createSender(senderRpc, receiverRpc.ownParty(), config);
-        DpprfReceiver receiver = DpprfFactory.createReceiver(receiverRpc, senderRpc.ownParty(), config);
-        sender.setParallel(true);
-        receiver.setParallel(true);
         int[] alphaArray = IntStream.range(0, DEFAULT_BATCH_NUM)
             .map(mIndex -> SECURE_RANDOM.nextInt(LARGE_ALPHA_BOUND))
             .toArray();
-        testPto(sender, receiver, alphaArray, LARGE_ALPHA_BOUND);
+        testPto(alphaArray, LARGE_ALPHA_BOUND, true);
     }
 
-    private void testPto(DpprfSender sender, DpprfReceiver receiver, int[] alphaArray, int alphaBound) {
+    private void testPto(int[] alphaArray, int alphaBound, boolean parallel) {
+        DpprfSender sender = DpprfFactory.createSender(senderRpc, receiverRpc.ownParty(), config);
+        DpprfReceiver receiver = DpprfFactory.createReceiver(receiverRpc, senderRpc.ownParty(), config);
+        sender.setParallel(parallel);
+        receiver.setParallel(parallel);
         int randomTaskId = Math.abs(SECURE_RANDOM.nextInt());
         sender.setTaskId(randomTaskId);
         receiver.setTaskId(randomTaskId);
@@ -257,6 +247,8 @@ public class DpprfTest {
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
+        sender.destroy();
+        receiver.destroy();
     }
 
     @Test
@@ -308,6 +300,8 @@ public class DpprfTest {
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
+        sender.destroy();
+        receiver.destroy();
     }
 
     private void assertOutput(int batchNum, int alphaBound,

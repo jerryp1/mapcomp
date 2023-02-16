@@ -86,15 +86,15 @@ public abstract class AbstractMultiPartyPto implements MultiPartyPto {
     /**
      * the log prefix for beginning a task
      */
-    protected String ptoBeginLogPrefix;
+    private String ptoBeginLogPrefix;
     /**
      * the log prefix for each step
      */
-    protected String ptoStepLogPrefix;
+    private String ptoStepLogPrefix;
     /**
      * the log prefix for ending a task
      */
-    protected String ptoEndLogPrefix;
+    private String ptoEndLogPrefix;
     /**
      * the extra information
      */
@@ -261,15 +261,11 @@ public abstract class AbstractMultiPartyPto implements MultiPartyPto {
         return envType;
     }
 
-    @Override
-    public PartyState getPartyState() {
-        return partyState;
-    }
-
     /**
      * init, check and update party state.
      */
     protected void initState() {
+        // we cannot automatically initialize sub-protocols, since each sub-protocol would have distinct initialize API.
         switch (partyState) {
             case NON_INITIALIZED:
             case INITIALIZED:
@@ -281,12 +277,14 @@ public abstract class AbstractMultiPartyPto implements MultiPartyPto {
         }
     }
 
-    /**
-     * check ready state.
-     */
-    protected void checkReadyState() {
+    @Override
+    public void checkInitialized() {
         switch (partyState) {
             case INITIALIZED:
+                // check sub-protocols
+                for (MultiPartyPto subPto : subPtos) {
+                    subPto.checkInitialized();
+                }
                 return;
             case NON_INITIALIZED:
             case DESTROYED:
@@ -301,6 +299,10 @@ public abstract class AbstractMultiPartyPto implements MultiPartyPto {
             case NON_INITIALIZED:
             case INITIALIZED:
                 partyState = PartyState.DESTROYED;
+                // destroy sub-protocols
+                for (MultiPartyPto subPto : subPtos) {
+                    subPto.destroy();
+                }
                 return;
             case DESTROYED:
             default:
@@ -308,7 +310,7 @@ public abstract class AbstractMultiPartyPto implements MultiPartyPto {
         }
     }
 
-    protected void logBeginEndInfo(PtoState ptoState) {
+    protected void logPhaseInfo(PtoState ptoState) {
         switch (ptoState) {
             case INIT_BEGIN:
                 info("{}{} {} Init begin", ptoBeginLogPrefix, getPtoDesc().getPtoName(), ownParty().getPartyName());
@@ -327,18 +329,118 @@ public abstract class AbstractMultiPartyPto implements MultiPartyPto {
         }
     }
 
-    protected void logStepInfo(PtoState ptoState, int currentStepIndex, int totalStepIndex, long time) {
-        assert currentStepIndex >= 0 && currentStepIndex <= totalStepIndex
-            : "current step index must be in range [0, " + totalStepIndex + "]: " + currentStepIndex;
+    protected void logPhaseInfo(PtoState ptoState, String description) {
+        switch (ptoState) {
+            case INIT_BEGIN:
+                info(
+                    "{}{} {} Init begin: {}",
+                    ptoBeginLogPrefix, getPtoDesc().getPtoName(), ownParty().getPartyName(), description
+                );
+                break;
+            case INIT_END:
+                info(
+                    "{}{} {} Init end: {}",
+                    ptoBeginLogPrefix, getPtoDesc().getPtoName(), ownParty().getPartyName(), description
+                );
+                break;
+            case PTO_BEGIN:
+                info(
+                    "{}{} {} Pto begin: {}",
+                    ptoBeginLogPrefix, getPtoDesc().getPtoName(), ownParty().getPartyName(), description
+                );
+                break;
+            case PTO_END:
+                info(
+                    "{}{} {} Pto end: {}",
+                    ptoBeginLogPrefix, getPtoDesc().getPtoName(), ownParty().getPartyName(), description
+                );
+                break;
+            default:
+                throw new IllegalStateException("Invalid " + PtoState.class.getSimpleName() + ": " + ptoState);
+        }
+    }
+
+    protected void logStepInfo(PtoState ptoState, int stepIndex, int totalStepIndex, long time) {
+        assert stepIndex >= 0 && stepIndex <= totalStepIndex
+            : "step index must be in range [0, " + totalStepIndex + "]: " + stepIndex;
         switch (ptoState) {
             case INIT_STEP:
                 info("{}{} {} init Step {}/{} ({}ms)",
                     ptoStepLogPrefix, getPtoDesc().getPtoName(), ownParty().getPartyName(),
-                    currentStepIndex, totalStepIndex, time);
+                    stepIndex, totalStepIndex, time
+                );
                 break;
             case PTO_STEP:
-                info("{}{} {} Step {}/{} ({}ms)", ptoStepLogPrefix, getPtoDesc().getPtoName(), ownParty().getPartyName(),
-                    currentStepIndex, totalStepIndex, time);
+                info("{}{} {} Step {}/{} ({}ms)",
+                    ptoStepLogPrefix, getPtoDesc().getPtoName(), ownParty().getPartyName(),
+                    stepIndex, totalStepIndex, time
+                );
+                break;
+            default:
+                throw new IllegalStateException("Invalid " + PtoState.class.getSimpleName() + ": " + ptoState);
+        }
+    }
+
+    protected void logStepInfo(PtoState ptoState, int stepIndex, int totalStepIndex, long time, String description) {
+        assert stepIndex >= 0 && stepIndex <= totalStepIndex
+            : "step index must be in range [0, " + totalStepIndex + "]: " + stepIndex;
+        switch (ptoState) {
+            case INIT_STEP:
+                info("{}{} {} init Step {}/{} ({}ms): {}",
+                    ptoStepLogPrefix, getPtoDesc().getPtoName(), ownParty().getPartyName(),
+                    stepIndex, totalStepIndex, time, description
+                );
+                break;
+            case PTO_STEP:
+                info("{}{} {} Step {}/{} ({}ms): {}",
+                    ptoStepLogPrefix, getPtoDesc().getPtoName(), ownParty().getPartyName(),
+                    stepIndex, totalStepIndex, time, description
+                );
+                break;
+            default:
+                throw new IllegalStateException("Invalid " + PtoState.class.getSimpleName() + ": " + ptoState);
+        }
+    }
+
+    protected void logSubStepInfo(PtoState ptoState, int stepIndex, int subStepIndex, int totalSubStepIndex, long time) {
+        assert stepIndex >= 0 : "step index must be non-negative: " + stepIndex;
+        assert subStepIndex >= 0 && subStepIndex <= totalSubStepIndex
+            : "current step index must be in range [0, " + totalSubStepIndex + "]: " + stepIndex;
+        switch (ptoState) {
+            case INIT_STEP:
+                info("{}{} {} init Step {}.{}/{}.{} ({}ms)",
+                    ptoStepLogPrefix, getPtoDesc().getPtoName(), ownParty().getPartyName(),
+                    stepIndex, stepIndex, subStepIndex, stepIndex, totalSubStepIndex, time
+                );
+                break;
+            case PTO_STEP:
+                info("{}{} {} Step {}.{}/{}.{} ({}ms)",
+                    ptoStepLogPrefix, getPtoDesc().getPtoName(), ownParty().getPartyName(),
+                    stepIndex, stepIndex, subStepIndex, stepIndex, totalSubStepIndex, time
+                );
+                break;
+            default:
+                throw new IllegalStateException("Invalid " + PtoState.class.getSimpleName() + ": " + ptoState);
+        }
+    }
+
+    protected void logSubStepInfo(PtoState ptoState, int stepIndex, int subStepIndex, int totalSubStepIndex, long time,
+                                  String description) {
+        assert stepIndex >= 0 : "step index must be non-negative: " + stepIndex;
+        assert subStepIndex >= 0 && subStepIndex <= totalSubStepIndex
+            : "current step index must be in range [0, " + totalSubStepIndex + "]: " + stepIndex;
+        switch (ptoState) {
+            case INIT_STEP:
+                info("{}{} {} init Step {}.{}/{}.{} ({}ms): {}",
+                    ptoStepLogPrefix, getPtoDesc().getPtoName(), ownParty().getPartyName(),
+                    stepIndex, stepIndex, subStepIndex, stepIndex, totalSubStepIndex, time, description
+                );
+                break;
+            case PTO_STEP:
+                info("{}{} {} Step {}.{}/{}.{} ({}ms): {}",
+                    ptoStepLogPrefix, getPtoDesc().getPtoName(), ownParty().getPartyName(),
+                    stepIndex, stepIndex, subStepIndex, stepIndex, totalSubStepIndex, time, description
+                );
                 break;
             default:
                 throw new IllegalStateException("Invalid " + PtoState.class.getSimpleName() + ": " + ptoState);

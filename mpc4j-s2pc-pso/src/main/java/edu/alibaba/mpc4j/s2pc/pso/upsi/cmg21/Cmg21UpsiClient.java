@@ -2,6 +2,7 @@ package edu.alibaba.mpc4j.s2pc.pso.upsi.cmg21;
 
 import edu.alibaba.mpc4j.common.rpc.MpcAbortException;
 import edu.alibaba.mpc4j.common.rpc.Party;
+import edu.alibaba.mpc4j.common.rpc.PtoState;
 import edu.alibaba.mpc4j.common.rpc.Rpc;
 import edu.alibaba.mpc4j.common.rpc.utils.DataPacket;
 import edu.alibaba.mpc4j.common.rpc.utils.DataPacketHeader;
@@ -58,7 +59,7 @@ public class Cmg21UpsiClient<T> extends AbstractUpsiClient<T> {
     @Override
     public void init(UpsiParams upsiParams) throws MpcAbortException {
         setInitInput(upsiParams);
-        info("{}{} Client Init begin", ptoBeginLogPrefix, getPtoDesc().getPtoName());
+        logPhaseInfo(PtoState.INIT_BEGIN);
 
         stopWatch.start();
         assert (upsiParams instanceof Cmg21UpsiParams);
@@ -67,15 +68,15 @@ public class Cmg21UpsiClient<T> extends AbstractUpsiClient<T> {
         stopWatch.stop();
         long initTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
         stopWatch.reset();
-        info("{}{} Client Init Step 1/1 ({}ms)", ptoStepLogPrefix, getPtoDesc().getPtoName(), initTime);
+        logStepInfo(PtoState.INIT_STEP, 1, 1, initTime);
 
-        info("{}{} Client Init end", ptoEndLogPrefix, getPtoDesc().getPtoName());
+        logPhaseInfo(PtoState.INIT_END);
     }
 
     @Override
     public Set<T> psi(Set<T> clientElementSet) throws MpcAbortException {
         setPtoInput(clientElementSet);
-        info("{}{} Client begin", ptoBeginLogPrefix, getPtoDesc().getPtoName());
+        logPhaseInfo(PtoState.PTO_BEGIN);
 
         stopWatch.start();
         // 客户端执行MP-OPRF协议
@@ -86,7 +87,7 @@ public class Cmg21UpsiClient<T> extends AbstractUpsiClient<T> {
         stopWatch.stop();
         long oprfTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
         stopWatch.reset();
-        info("{}{} Client Step 1/5 ({}ms)", ptoStepLogPrefix, getPtoDesc().getPtoName(), oprfTime);
+        logStepInfo(PtoState.PTO_STEP, 1, 5, oprfTime, "OPRF");
 
         stopWatch.start();
         // 客户端布谷鸟哈希分桶，并发送hash函数的key
@@ -113,7 +114,7 @@ public class Cmg21UpsiClient<T> extends AbstractUpsiClient<T> {
         stopWatch.stop();
         long cuckooHashKeyTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
         stopWatch.reset();
-        info("{}{} Client Step 2/5 ({}ms)", ptoStepLogPrefix, getPtoDesc().getPtoName(), cuckooHashKeyTime);
+        logStepInfo(PtoState.PTO_STEP, 2, 5, cuckooHashKeyTime, "Client generates cuckoo hash keys");
 
         stopWatch.start();
         // 客户端生成BFV算法密钥和参数
@@ -129,7 +130,7 @@ public class Cmg21UpsiClient<T> extends AbstractUpsiClient<T> {
         stopWatch.stop();
         long keyGenTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
         stopWatch.reset();
-        info("{}{} Client Step 3/5 ({}ms)", ptoStepLogPrefix, getPtoDesc().getPtoName(), keyGenTime);
+        logStepInfo(PtoState.PTO_STEP, 3, 5, keyGenTime, "Client generates FHE keys");
 
         stopWatch.start();
         // 客户端加密查询信息
@@ -148,15 +149,16 @@ public class Cmg21UpsiClient<T> extends AbstractUpsiClient<T> {
         stopWatch.stop();
         long genQueryTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
         stopWatch.reset();
-        info("{}{} Client Step 4/5 ({}ms)", ptoStepLogPrefix, getPtoDesc().getPtoName(), genQueryTime);
+        logStepInfo(PtoState.PTO_STEP, 4, 5, genQueryTime, "Client generates query");
 
-        stopWatch.start();
         // 客户端接收服务端的计算结果
         DataPacketHeader responseHeader = new DataPacketHeader(
             encodeTaskId, getPtoDesc().getPtoId(), PtoStep.SERVER_SEND_RESPONSE.ordinal(), extraInfo,
             otherParty().getPartyId(), rpc.ownParty().getPartyId()
         );
         List<byte[]> responsePayload = rpc.receive(responseHeader).getPayload();
+
+        stopWatch.start();
         // 客户端解密密文匹配结果
         Stream<byte[]> responseStream = parallel ? responsePayload.stream().parallel() : responsePayload.stream();
         ArrayList<long[]> decodedResponse = responseStream
@@ -166,10 +168,9 @@ public class Cmg21UpsiClient<T> extends AbstractUpsiClient<T> {
         stopWatch.stop();
         long decodeTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
         stopWatch.reset();
-        info("{}{} Client Step 5/5 ({}ms)", ptoStepLogPrefix, getPtoDesc().getPtoName(),
-            decodeTime);
+        logStepInfo(PtoState.PTO_STEP, 5, 5, decodeTime, "Client decodes response");
 
-        info("{}{} Client end", ptoEndLogPrefix, getPtoDesc().getPtoName());
+        logPhaseInfo(PtoState.PTO_END);
         return intersectionSet;
     }
 

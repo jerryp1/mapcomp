@@ -4,6 +4,7 @@ import java.util.concurrent.TimeUnit;
 
 import edu.alibaba.mpc4j.common.rpc.MpcAbortException;
 import edu.alibaba.mpc4j.common.rpc.Party;
+import edu.alibaba.mpc4j.common.rpc.PtoState;
 import edu.alibaba.mpc4j.common.rpc.Rpc;
 import edu.alibaba.mpc4j.common.tool.lpn.ldpc.LdpcCoder;
 import edu.alibaba.mpc4j.common.tool.lpn.LpnParams;
@@ -71,7 +72,7 @@ public class Crr21NcCotSender extends AbstractNcCotSender {
     @Override
     public void init(byte[] delta, int num) throws MpcAbortException {
         setInitInput(delta, num);
-        info("{}{} Send. Init begin", ptoBeginLogPrefix, getPtoDesc().getPtoName());
+        logPhaseInfo(PtoState.INIT_BEGIN);
         // 重新初始化时需要清空之前存留的输出
         sCotSenderOutput = null;
 
@@ -85,7 +86,7 @@ public class Crr21NcCotSender extends AbstractNcCotSender {
         stopWatch.stop();
         long encoderInitTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
         stopWatch.reset();
-        info("{}{} Send. Init Step 1/2 ({}ms)", ptoStepLogPrefix, getPtoDesc().getPtoName(), encoderInitTime);
+        logStepInfo(PtoState.INIT_STEP, 1, 2, encoderInitTime);
         // 初始化MSPCOT协议
         stopWatch.start();
         iterationN = lpnParams.getN();
@@ -95,15 +96,15 @@ public class Crr21NcCotSender extends AbstractNcCotSender {
         stopWatch.stop();
         long initTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
         stopWatch.reset();
-        info("{}{} Send. Init Step 2/2 ({}ms)", ptoStepLogPrefix, getPtoDesc().getPtoName(), initTime);
+        logStepInfo(PtoState.INIT_STEP, 2, 2, initTime);
 
-        info("{}{} Send. Init end", ptoBeginLogPrefix, getPtoDesc().getPtoName());
+        logPhaseInfo(PtoState.INIT_END);
     }
 
     @Override
     public CotSenderOutput send() throws MpcAbortException {
         setPtoInput();
-        info("{}{} Send. begin", ptoBeginLogPrefix, getPtoDesc().getPtoName());
+        logPhaseInfo(PtoState.PTO_BEGIN);
 
         stopWatch.start();
         // 执行MSPCOT
@@ -113,7 +114,7 @@ public class Crr21NcCotSender extends AbstractNcCotSender {
         stopWatch.stop();
         long sTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
         stopWatch.reset();
-        info("{}{} Send. Iter. Step 1/2 ({}ms)", ptoStepLogPrefix, getPtoDesc().getPtoName(), sTime);
+        logStepInfo(PtoState.PTO_STEP, 1, 2, sTime);
 
         stopWatch.start();
         // y = v * G^T。
@@ -125,9 +126,9 @@ public class Crr21NcCotSender extends AbstractNcCotSender {
         stopWatch.stop();
         long extendTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
         stopWatch.reset();
-        info("{}{} Send. Iter. Step 2/2 ({}ms)", ptoStepLogPrefix, getPtoDesc().getPtoName(), extendTime);
+        logStepInfo(PtoState.PTO_STEP, 2, 2, extendTime);
 
-        info("{}{} Send. end", ptoEndLogPrefix, getPtoDesc().getPtoName());
+        logPhaseInfo(PtoState.PTO_END);
         return senderOutput;
     }
 

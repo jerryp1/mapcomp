@@ -42,11 +42,8 @@ public class UpsiClientThread<T> extends Thread {
     @Override
     public void run() {
         try {
-            client.getRpc().connect();
             client.init(upsiParams);
-            client.getRpc().synchronize();
             intersectionSet = client.psi(clientElementSet);
-            client.getRpc().disconnect();
         } catch (MpcAbortException e) {
             e.printStackTrace();
         }

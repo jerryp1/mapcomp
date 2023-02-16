@@ -38,11 +38,8 @@ public class UpsiServerThread<T> extends Thread {
     @Override
     public void run() {
         try {
-            server.getRpc().connect();
             server.init(upsiParams);
-            server.getRpc().synchronize();
             server.psi(serverElementSet, clientElementSize);
-            server.getRpc().disconnect();
         } catch (MpcAbortException e) {
             e.printStackTrace();
         }

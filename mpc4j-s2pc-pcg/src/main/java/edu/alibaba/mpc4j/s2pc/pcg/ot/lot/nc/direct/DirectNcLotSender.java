@@ -2,6 +2,7 @@ package edu.alibaba.mpc4j.s2pc.pcg.ot.lot.nc.direct;
 
 import edu.alibaba.mpc4j.common.rpc.MpcAbortException;
 import edu.alibaba.mpc4j.common.rpc.Party;
+import edu.alibaba.mpc4j.common.rpc.PtoState;
 import edu.alibaba.mpc4j.common.rpc.Rpc;
 import edu.alibaba.mpc4j.s2pc.pcg.ot.lot.LotSenderOutput;
 import edu.alibaba.mpc4j.s2pc.pcg.ot.lot.core.CoreLotFactory;
@@ -31,22 +32,22 @@ public class DirectNcLotSender extends AbstractNcLotSender {
     @Override
     public void init(int inputBitLength, int num) throws MpcAbortException {
         setInitInput(inputBitLength, num);
-        info("{}{} Send. Init begin", ptoBeginLogPrefix, getPtoDesc().getPtoName());
+        logPhaseInfo(PtoState.INIT_BEGIN);
 
         stopWatch.start();
         coreLotSender.init(inputBitLength, num);
         stopWatch.stop();
         long initTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
         stopWatch.reset();
-        info("{}{} Send. Init Step 1/1 ({}ms)", ptoStepLogPrefix, getPtoDesc().getPtoName(), initTime);
+        logStepInfo(PtoState.INIT_STEP, 1, 1, initTime);
 
-        info("{}{} Send. Init end", ptoEndLogPrefix, getPtoDesc().getPtoName());
+        logPhaseInfo(PtoState.INIT_END);
     }
 
     @Override
     public LotSenderOutput send() throws MpcAbortException {
         setPtoInput();
-        info("{}{} Send. begin", ptoBeginLogPrefix, getPtoDesc().getPtoName());
+        logPhaseInfo(PtoState.PTO_BEGIN);
 
         stopWatch.start();
         LotSenderOutput senderOutput = coreLotSender.send(num);
@@ -54,9 +55,9 @@ public class DirectNcLotSender extends AbstractNcLotSender {
         long coreLotTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
         senderOutput.reduce(num);
         stopWatch.reset();
-        info("{}{} Send. Step 1/1 ({}ms)", ptoStepLogPrefix, getPtoDesc().getPtoName(), coreLotTime);
+        logStepInfo(PtoState.PTO_STEP, 1, 1, coreLotTime);
 
-        info("{}{} Send. end", ptoEndLogPrefix, getPtoDesc().getPtoName());
+        logPhaseInfo(PtoState.PTO_END);
         return senderOutput;
     }
 }

@@ -2,6 +2,7 @@ package edu.alibaba.mpc4j.s2pc.pcg.mtg.z2.impl.offline;
 
 import edu.alibaba.mpc4j.common.rpc.MpcAbortException;
 import edu.alibaba.mpc4j.common.rpc.Party;
+import edu.alibaba.mpc4j.common.rpc.PtoState;
 import edu.alibaba.mpc4j.common.rpc.Rpc;
 import edu.alibaba.mpc4j.s2pc.pcg.mtg.z2.AbstractZ2MtgParty;
 import edu.alibaba.mpc4j.s2pc.pcg.mtg.z2.Z2Triple;
@@ -43,43 +44,43 @@ public class OfflineZ2MtgSender extends AbstractZ2MtgParty {
     @Override
     public void init(int maxRoundNum, int updateNum) throws MpcAbortException {
         setInitInput(maxRoundNum, updateNum);
-        info("{}{} Send. Init begin", ptoBeginLogPrefix, getPtoDesc().getPtoName());
+        logPhaseInfo(PtoState.INIT_BEGIN);
 
         stopWatch.start();
         if (updateNum <= config.maxBaseNum()) {
             // 如果最大数量小于支持的单轮最大数量，则执行1轮最大数量即可
-            this.updateRoundNum = updateNum;
+            updateRoundNum = updateNum;
             updateRound = 1;
         } else {
             // 如果最大数量大于支持的单轮最大数量，则分批执行
-            this.updateRoundNum = config.maxBaseNum();
-            updateRound = (int)Math.ceil((double) updateNum / config.maxBaseNum());
+            updateRoundNum = config.maxBaseNum();
+            updateRound = (int) Math.ceil((double) updateNum / config.maxBaseNum());
         }
-        z2CoreMtgSender.init(this.updateRoundNum);
+        z2CoreMtgSender.init(updateRoundNum);
         z2TripleBuffer = Z2Triple.createEmpty();
         stopWatch.stop();
         long initTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
         stopWatch.reset();
-        info("{}{} Send. Init Step 1/2.{} ({}ms)", ptoStepLogPrefix, getPtoDesc().getPtoName(), updateRound, initTime);
+        logStepInfo(PtoState.INIT_STEP, 1, 2, initTime);
 
         // 生成所需的布尔三元组
         for (int round = 1; round <= updateRound; round++) {
             stopWatch.start();
-            Z2Triple booleanTriple = z2CoreMtgSender.generate(this.updateRoundNum);
+            Z2Triple booleanTriple = z2CoreMtgSender.generate(updateRoundNum);
             z2TripleBuffer.merge(booleanTriple);
             stopWatch.stop();
             long roundTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
             stopWatch.reset();
-            info("{}{} Send. Init Step 2.{}/2.{} ({}ms)", ptoStepLogPrefix, getPtoDesc().getPtoName(), round, updateRound, roundTime);
+            logSubStepInfo(PtoState.INIT_STEP, 2, round, updateRound, roundTime);
         }
 
-        info("{}{} Send. Init end", ptoEndLogPrefix, getPtoDesc().getPtoName());
+        logPhaseInfo(PtoState.INIT_END);
     }
 
     @Override
     public Z2Triple generate(int num) throws MpcAbortException {
         setPtoInput(num);
-        info("{}{} Send. begin", ptoBeginLogPrefix, getPtoDesc().getPtoName());
+        logPhaseInfo(PtoState.PTO_BEGIN);
 
         while (num > z2TripleBuffer.getNum()) {
             // 如果所需的数量大于缓存区数量，则继续生成
@@ -90,7 +91,7 @@ public class OfflineZ2MtgSender extends AbstractZ2MtgParty {
                 stopWatch.stop();
                 long roundTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
                 stopWatch.reset();
-                info("{}{} Send. Step 0.{}/0.{} ({}ms)", ptoStepLogPrefix, getPtoDesc().getPtoName(), round, updateRound, roundTime);
+                logSubStepInfo(PtoState.PTO_STEP, 0, round, updateRound, roundTime);
             }
         }
 
@@ -99,9 +100,9 @@ public class OfflineZ2MtgSender extends AbstractZ2MtgParty {
         stopWatch.stop();
         long splitTripleTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
         stopWatch.reset();
-        info("{}{} Send. Step 1/1 ({}ms)", ptoStepLogPrefix, getPtoDesc().getPtoName(), splitTripleTime);
+        logStepInfo(PtoState.PTO_STEP, 1, 1, splitTripleTime);
 
-        info("{}{} Send. end", ptoEndLogPrefix, getPtoDesc().getPtoName());
+        logPhaseInfo(PtoState.PTO_END);
         return senderOutput;
     }
 }

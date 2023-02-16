@@ -1,9 +1,6 @@
 package edu.alibaba.mpc4j.s2pc.aby.hamming.bcp13;
 
-import edu.alibaba.mpc4j.common.rpc.MpcAbortException;
-import edu.alibaba.mpc4j.common.rpc.MpcAbortPreconditions;
-import edu.alibaba.mpc4j.common.rpc.Party;
-import edu.alibaba.mpc4j.common.rpc.Rpc;
+import edu.alibaba.mpc4j.common.rpc.*;
 import edu.alibaba.mpc4j.common.rpc.utils.DataPacket;
 import edu.alibaba.mpc4j.common.rpc.utils.DataPacketHeader;
 import edu.alibaba.mpc4j.common.tool.CommonConstants;
@@ -48,7 +45,7 @@ public class Bcp13ShHammingSender extends AbstractHammingParty {
     @Override
     public void init(int maxBitNum) throws MpcAbortException {
         setInitInput(maxBitNum);
-        info("{}{} Send. Init begin", ptoBeginLogPrefix, getPtoDesc().getPtoName());
+        logPhaseInfo(PtoState.INIT_BEGIN);
 
         stopWatch.start();
         // init COT sender
@@ -58,15 +55,15 @@ public class Bcp13ShHammingSender extends AbstractHammingParty {
         stopWatch.stop();
         long initTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
         stopWatch.reset();
-        info("{}{} Send. Init Step 1/1 ({}ms)", ptoStepLogPrefix, getPtoDesc().getPtoName(), initTime);
+        logStepInfo(PtoState.INIT_STEP, 1, 1, initTime);
 
-        info("{}{} Send. Init end", ptoEndLogPrefix, getPtoDesc().getPtoName());
+        logPhaseInfo(PtoState.INIT_END);
     }
 
     @Override
     public void sendHammingDistance(SquareSbitVector x0) throws MpcAbortException {
         setPtoInput(x0);
-        info("{}{} Send. begin", ptoBeginLogPrefix, getPtoDesc().getPtoName());
+        logPhaseInfo(PtoState.PTO_BEGIN, "Sender sends hamming distance");
 
         int r = executeOtSteps(x0);
         stopWatch.start();
@@ -80,15 +77,15 @@ public class Bcp13ShHammingSender extends AbstractHammingParty {
         stopWatch.stop();
         long rTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
         stopWatch.reset();
-        info("{}{} Send. Step 3/3 ({}ms)", ptoStepLogPrefix, getPtoDesc().getPtoName(), rTime);
+        logStepInfo(PtoState.PTO_STEP, 3, 3, rTime);
 
-        info("{}{} Send. end", ptoEndLogPrefix, getPtoDesc().getPtoName());
+        logPhaseInfo(PtoState.PTO_END, "Sender sends hamming distance");
     }
 
     @Override
     public int receiveHammingDistance(SquareSbitVector x0) throws MpcAbortException {
         setPtoInput(x0);
-        info("{}{} Send. begin", ptoBeginLogPrefix, getPtoDesc().getPtoName());
+        logPhaseInfo(PtoState.PTO_BEGIN, "Sender receives hamming distance");
 
         int r = executeOtSteps(x0);
         stopWatch.start();
@@ -104,9 +101,9 @@ public class Bcp13ShHammingSender extends AbstractHammingParty {
         stopWatch.stop();
         long rTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
         stopWatch.reset();
-        info("{}{} Send. Step 3/3 ({}ms)", ptoStepLogPrefix, getPtoDesc().getPtoName(), rTime);
+        logStepInfo(PtoState.PTO_STEP, 3, 3, rTime);
 
-        info("{}{} Send. end", ptoEndLogPrefix, getPtoDesc().getPtoName());
+        logPhaseInfo(PtoState.PTO_END, "Sender receives hamming distance");
         return hammingDistance;
     }
 
@@ -123,7 +120,7 @@ public class Bcp13ShHammingSender extends AbstractHammingParty {
         stopWatch.stop();
         long rsTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
         stopWatch.reset();
-        info("{}{} Send. Step 1/3 ({}ms)", ptoStepLogPrefix, getPtoDesc().getPtoName(), rsTime);
+        logStepInfo(PtoState.PTO_STEP, 1, 3, rsTime);
 
         stopWatch.start();
         // P_1 and P_2 engage in a OT_1^2, where P_1 acts as the sender, P_1's input is (r_i + x_i, r_i + \neg x_i).
@@ -158,7 +155,7 @@ public class Bcp13ShHammingSender extends AbstractHammingParty {
         stopWatch.stop();
         long otTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
         stopWatch.reset();
-        info("{}{} Send. Step 2/3 ({}ms)", ptoStepLogPrefix, getPtoDesc().getPtoName(), otTime);
+        logStepInfo(PtoState.PTO_STEP, 2, 3, otTime);
 
         return r;
     }

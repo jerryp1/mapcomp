@@ -1,9 +1,6 @@
 package edu.alibaba.mpc4j.s2pc.pcg.dpprf.rdpprf.ywl20;
 
-import edu.alibaba.mpc4j.common.rpc.MpcAbortException;
-import edu.alibaba.mpc4j.common.rpc.MpcAbortPreconditions;
-import edu.alibaba.mpc4j.common.rpc.Party;
-import edu.alibaba.mpc4j.common.rpc.Rpc;
+import edu.alibaba.mpc4j.common.rpc.*;
 import edu.alibaba.mpc4j.common.rpc.utils.DataPacket;
 import edu.alibaba.mpc4j.common.rpc.utils.DataPacketHeader;
 import edu.alibaba.mpc4j.common.tool.CommonConstants;
@@ -56,16 +53,16 @@ public class Ywl20RdpprfReceiver extends AbstractDpprfReceiver {
     @Override
     public void init(int maxBatchNum, int maxAlphaBound) throws MpcAbortException {
         setInitInput(maxBatchNum, maxAlphaBound);
-        info("{}{} Recv. Init begin", ptoBeginLogPrefix, getPtoDesc().getPtoName());
+        logPhaseInfo(PtoState.INIT_BEGIN);
 
         stopWatch.start();
         coreCotReceiver.init(maxH * maxBatchNum);
         stopWatch.stop();
         long initTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
         stopWatch.reset();
-        info("{}{} Recv. Init Step 1/1 ({}ms)", ptoStepLogPrefix, getPtoDesc().getPtoName(), initTime);
+        logStepInfo(PtoState.INIT_STEP, 1, 1, initTime);
 
-        info("{}{} Recv. Init end", ptoEndLogPrefix, getPtoDesc().getPtoName());
+        logPhaseInfo(PtoState.INIT_END);
     }
 
     @Override
@@ -83,7 +80,7 @@ public class Ywl20RdpprfReceiver extends AbstractDpprfReceiver {
     }
 
     private DpprfReceiverOutput puncture() throws MpcAbortException {
-        info("{}{} Recv. begin", ptoBeginLogPrefix, getPtoDesc().getPtoName());
+        logPhaseInfo(PtoState.PTO_BEGIN);
 
         stopWatch.start();
         // R send (extend, h) to F_COT, which returns (r_i, t_i) ∈ {0,1} × {0,1}^κ to R
@@ -97,7 +94,7 @@ public class Ywl20RdpprfReceiver extends AbstractDpprfReceiver {
         stopWatch.stop();
         long cotTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
         stopWatch.reset();
-        info("{}{} Recv. Step 1/3 ({}ms)", ptoStepLogPrefix, getPtoDesc().getPtoName(), cotTime);
+        logStepInfo(PtoState.PTO_STEP, 1, 3, cotTime);
 
         stopWatch.start();
         List<byte[]> binaryPayload = generateBinaryPayload();
@@ -109,7 +106,7 @@ public class Ywl20RdpprfReceiver extends AbstractDpprfReceiver {
         stopWatch.stop();
         long binaryTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
         stopWatch.reset();
-        info("{}{} Recv. Step 2/3 ({}ms)", ptoStepLogPrefix, getPtoDesc().getPtoName(), binaryTime);
+        logStepInfo(PtoState.PTO_STEP, 2, 3, binaryTime);
 
         stopWatch.start();
         DataPacketHeader messageHeader = new DataPacketHeader(
@@ -121,9 +118,9 @@ public class Ywl20RdpprfReceiver extends AbstractDpprfReceiver {
         DpprfReceiverOutput receiverOutput = generateReceiverOutput();
         long messageTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
         stopWatch.reset();
-        info("{}{} Recv. Step 3/3 ({}ms)", ptoStepLogPrefix, getPtoDesc().getPtoName(), messageTime);
+        logStepInfo(PtoState.PTO_STEP, 3, 3, messageTime);
 
-        info("{}{} Recv. end", ptoEndLogPrefix, getPtoDesc().getPtoName());
+        logPhaseInfo(PtoState.PTO_END);
         return receiverOutput;
     }
 

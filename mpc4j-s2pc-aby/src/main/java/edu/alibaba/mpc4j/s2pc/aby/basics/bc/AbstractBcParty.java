@@ -67,21 +67,21 @@ public abstract class AbstractBcParty extends AbstractTwoPartyPto implements BcP
     }
 
     protected void setShareOwnInput(BitVector bitVector) {
-        checkReadyState();
+        checkInitialized();
         MathPreconditions.checkPositiveInRangeClosed("bitNum", bitVector.bitNum(), maxRoundBitNum);
         bitNum = bitVector.bitNum();
         inputBitNum += bitNum;
     }
 
     protected void setShareOtherInput(int bitNum) {
-        checkReadyState();
+        checkInitialized();
         MathPreconditions.checkPositiveInRangeClosed("bitNum", bitNum, maxRoundBitNum);
         this.bitNum = bitNum;
         inputBitNum += bitNum;
     }
 
     protected void setAndInput(SquareSbitVector xi, SquareSbitVector yi) {
-        checkReadyState();
+        checkInitialized();
         MathPreconditions.checkEqual("xi.bitNum", "yi.bitNum", xi.bitNum(), yi.bitNum());
         MathPreconditions.checkPositiveInRangeClosed("bitNum", xi.bitNum(), maxRoundBitNum);
         // the number of AND gates is added during the protocol execution.
@@ -89,7 +89,7 @@ public abstract class AbstractBcParty extends AbstractTwoPartyPto implements BcP
     }
 
     protected void setXorInput(SquareSbitVector xi, SquareSbitVector yi) {
-        checkReadyState();
+        checkInitialized();
         MathPreconditions.checkEqual("xi.bitNum", "yi.bitNum", xi.bitNum(), yi.bitNum());
         MathPreconditions.checkPositiveInRangeClosed("bitNum", xi.bitNum(), maxRoundBitNum);
         // the number of XOR gates is added during the protocol execution.
@@ -97,14 +97,14 @@ public abstract class AbstractBcParty extends AbstractTwoPartyPto implements BcP
     }
 
     protected void setRevealOwnInput(SquareSbitVector xi) {
-        checkReadyState();
+        checkInitialized();
         MathPreconditions.checkPositiveInRangeClosed("xi.bitNum", xi.bitNum(), maxRoundBitNum);
         // the number of output bits is added during the protocol execution.
         bitNum = xi.bitNum();
     }
 
     protected void setRevealOtherInput(SquareSbitVector xi) {
-        checkReadyState();
+        checkInitialized();
         MathPreconditions.checkPositiveInRangeClosed("xi.bitNum", xi.bitNum(), maxRoundBitNum);
         // the number of output bits is added during the protocol execution.
         bitNum = xi.bitNum();

@@ -53,7 +53,7 @@ public abstract class AbstractCotSender extends AbstractTwoPartyPto implements C
     }
 
     protected void setPtoInput(int num) {
-        checkReadyState();
+        checkInitialized();
         MathPreconditions.checkPositiveInRangeClosed("num", num, maxRoundNum);
         this.num = num;
         extraInfo ++;

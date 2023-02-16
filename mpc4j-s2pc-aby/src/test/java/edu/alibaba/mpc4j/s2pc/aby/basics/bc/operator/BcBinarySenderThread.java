@@ -16,7 +16,7 @@ class BcBinarySenderThread extends Thread {
     /**
      * sender
      */
-    private final BcParty bcSender;
+    private final BcParty sender;
     /**
      * operator
      */
@@ -66,8 +66,8 @@ class BcBinarySenderThread extends Thread {
      */
     private BitVector z00Vector;
 
-    BcBinarySenderThread(BcParty bcSender, BcOperator bcOperator, BitVector xBitVector, BitVector yBitVector) {
-        this.bcSender = bcSender;
+    BcBinarySenderThread(BcParty sender, BcOperator bcOperator, BitVector xBitVector, BitVector yBitVector) {
+        this.sender = sender;
         this.bcOperator = bcOperator;
         this.xBitVector = xBitVector;
         this.yBitVector = yBitVector;
@@ -122,80 +122,78 @@ class BcBinarySenderThread extends Thread {
     @Override
     public void run() {
         try {
-            bcSender.getRpc().connect();
-            bcSender.init(bitNum, bitNum);
+            sender.init(bitNum, bitNum);
             // generate x and y
             SquareSbitVector x = SquareSbitVector.create(xBitVector, true);
             SquareSbitVector y = SquareSbitVector.create(yBitVector, true);
-            SquareSbitVector x0 = bcSender.shareOwn(xBitVector);
+            SquareSbitVector x0 = sender.shareOwn(xBitVector);
             shareX0 = x0.copy();
-            SquareSbitVector y0 = bcSender.shareOther(bitNum);
+            SquareSbitVector y0 = sender.shareOther(bitNum);
             SquareSbitVector z110, z100, z010, z000;
             switch (bcOperator) {
                 case XOR:
                     // (plain, plain)
-                    z110 = bcSender.xor(x, y);
-                    z11Vector = bcSender.revealOwn(z110);
-                    bcSender.revealOther(z110);
+                    z110 = sender.xor(x, y);
+                    z11Vector = sender.revealOwn(z110);
+                    sender.revealOther(z110);
                     // (plain, secret)
-                    z100 = bcSender.xor(x, y0);
-                    z10Vector = bcSender.revealOwn(z100);
-                    bcSender.revealOther(z100);
+                    z100 = sender.xor(x, y0);
+                    z10Vector = sender.revealOwn(z100);
+                    sender.revealOther(z100);
                     // (secret, plain)
-                    z010 = bcSender.xor(x0, y);
+                    z010 = sender.xor(x0, y);
                     finalX010 = x0.copy();
-                    z01Vector = bcSender.revealOwn(z010);
-                    bcSender.revealOther(z010);
+                    z01Vector = sender.revealOwn(z010);
+                    sender.revealOther(z010);
                     // (secret, secret)
-                    z000 = bcSender.xor(x0, y0);
+                    z000 = sender.xor(x0, y0);
                     finalX000 = x0.copy();
-                    z00Vector = bcSender.revealOwn(z000);
-                    bcSender.revealOther(z000);
+                    z00Vector = sender.revealOwn(z000);
+                    sender.revealOther(z000);
                     break;
                 case AND:
                     // (plain, plain)
-                    z110 = bcSender.and(x, y);
-                    z11Vector = bcSender.revealOwn(z110);
-                    bcSender.revealOther(z110);
+                    z110 = sender.and(x, y);
+                    z11Vector = sender.revealOwn(z110);
+                    sender.revealOther(z110);
                     // (plain, secret)
-                    z100 = bcSender.and(x, y0);
-                    z10Vector = bcSender.revealOwn(z100);
-                    bcSender.revealOther(z100);
+                    z100 = sender.and(x, y0);
+                    z10Vector = sender.revealOwn(z100);
+                    sender.revealOther(z100);
                     // (secret, plain)
-                    z010 = bcSender.and(x0, y);
+                    z010 = sender.and(x0, y);
                     finalX010 = x0.copy();
-                    z01Vector = bcSender.revealOwn(z010);
-                    bcSender.revealOther(z010);
+                    z01Vector = sender.revealOwn(z010);
+                    sender.revealOther(z010);
                     // (secret, secret)
-                    z000 = bcSender.and(x0, y0);
+                    z000 = sender.and(x0, y0);
                     finalX000 = x0.copy();
-                    z00Vector = bcSender.revealOwn(z000);
-                    bcSender.revealOther(z000);
+                    z00Vector = sender.revealOwn(z000);
+                    sender.revealOther(z000);
                     break;
                 case OR:
                     // (plain, plain)
-                    z110 = bcSender.or(x, y);
-                    z11Vector = bcSender.revealOwn(z110);
-                    bcSender.revealOther(z110);
+                    z110 = sender.or(x, y);
+                    z11Vector = sender.revealOwn(z110);
+                    sender.revealOther(z110);
                     // (plain, secret)
-                    z100 = bcSender.or(x, y0);
-                    z10Vector = bcSender.revealOwn(z100);
-                    bcSender.revealOther(z100);
+                    z100 = sender.or(x, y0);
+                    z10Vector = sender.revealOwn(z100);
+                    sender.revealOther(z100);
                     // (secret, plain)
-                    z010 = bcSender.or(x0, y);
+                    z010 = sender.or(x0, y);
                     finalX010 = x0.copy();
-                    z01Vector = bcSender.revealOwn(z010);
-                    bcSender.revealOther(z010);
+                    z01Vector = sender.revealOwn(z010);
+                    sender.revealOther(z010);
                     // (secret, secret)
-                    z000 = bcSender.or(x0, y0);
+                    z000 = sender.or(x0, y0);
                     finalX000 = x0.copy();
-                    z00Vector = bcSender.revealOwn(z000);
-                    bcSender.revealOther(z000);
+                    z00Vector = sender.revealOwn(z000);
+                    sender.revealOther(z000);
                     break;
                 default:
                     throw new IllegalStateException("Invalid binary boolean operator: " + bcOperator.name());
             }
-            bcSender.getRpc().disconnect();
         } catch (MpcAbortException e) {
             e.printStackTrace();
         }

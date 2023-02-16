@@ -19,7 +19,7 @@ class BcVectorBinarySenderThread extends Thread {
     /**
      * sender
      */
-    private final BcParty bcSender;
+    private final BcParty sender;
     /**
      * operator
      */
@@ -69,9 +69,9 @@ class BcVectorBinarySenderThread extends Thread {
      */
     private BitVector[] z00Vectors;
 
-    BcVectorBinarySenderThread(BcParty bcSender, BcOperator bcOperator,
+    BcVectorBinarySenderThread(BcParty sender, BcOperator bcOperator,
                                BitVector[] xBitVectors, BitVector[] yBitVectors) {
-        this.bcSender = bcSender;
+        this.sender = sender;
         this.bcOperator = bcOperator;
         this.xBitVectors = xBitVectors;
         this.yBitVectors = yBitVectors;
@@ -133,8 +133,7 @@ class BcVectorBinarySenderThread extends Thread {
     @Override
     public void run() {
         try {
-            bcSender.getRpc().connect();
-            bcSender.init(totalBitNum, totalBitNum);
+            sender.init(totalBitNum, totalBitNum);
             // set inputs
             SquareSbitVector[] xs = Arrays.stream(xBitVectors)
                 .map(xBitVector -> SquareSbitVector.create(xBitVector, true))
@@ -142,76 +141,75 @@ class BcVectorBinarySenderThread extends Thread {
             SquareSbitVector[] ys = Arrays.stream(yBitVectors)
                 .map(yBitVector -> SquareSbitVector.create(yBitVector, true))
                 .toArray(SquareSbitVector[]::new);
-            SquareSbitVector[] x0s = bcSender.shareOwn(xBitVectors);
+            SquareSbitVector[] x0s = sender.shareOwn(xBitVectors);
             shareX0s = Arrays.stream(x0s).map(SquareSbitVector::copy).toArray(SquareSbitVector[]::new);
             int[] vectorBitLengths = Arrays.stream(yBitVectors).mapToInt(BitVector::bitNum).toArray();
-            SquareSbitVector[] y0s = bcSender.shareOther(vectorBitLengths);
+            SquareSbitVector[] y0s = sender.shareOther(vectorBitLengths);
             SquareSbitVector[] z110s, z100s, z010s, z000s;
             switch (bcOperator) {
                 case XOR:
                     // (plain, plain)
-                    z110s = bcSender.xor(xs, ys);
-                    z11Vectors = bcSender.revealOwn(z110s);
-                    bcSender.revealOther(z110s);
+                    z110s = sender.xor(xs, ys);
+                    z11Vectors = sender.revealOwn(z110s);
+                    sender.revealOther(z110s);
                     // (plain, secret)
-                    z100s = bcSender.xor(xs, y0s);
-                    z10Vectors = bcSender.revealOwn(z100s);
-                    bcSender.revealOther(z100s);
+                    z100s = sender.xor(xs, y0s);
+                    z10Vectors = sender.revealOwn(z100s);
+                    sender.revealOther(z100s);
                     // (secret, plain)
-                    z010s = bcSender.xor(x0s, ys);
+                    z010s = sender.xor(x0s, ys);
                     finalX010s = Arrays.stream(x0s).map(SquareSbitVector::copy).toArray(SquareSbitVector[]::new);
-                    z01Vectors = bcSender.revealOwn(z010s);
-                    bcSender.revealOther(z010s);
+                    z01Vectors = sender.revealOwn(z010s);
+                    sender.revealOther(z010s);
                     // (secret, secret)
-                    z000s = bcSender.xor(x0s, y0s);
+                    z000s = sender.xor(x0s, y0s);
                     finalX000s = Arrays.stream(x0s).map(SquareSbitVector::copy).toArray(SquareSbitVector[]::new);
-                    z00Vectors = bcSender.revealOwn(z000s);
-                    bcSender.revealOther(z000s);
+                    z00Vectors = sender.revealOwn(z000s);
+                    sender.revealOther(z000s);
                     break;
                 case AND:
                     // (plain, plain)
-                    z110s = bcSender.and(xs, ys);
-                    z11Vectors = bcSender.revealOwn(z110s);
-                    bcSender.revealOther(z110s);
+                    z110s = sender.and(xs, ys);
+                    z11Vectors = sender.revealOwn(z110s);
+                    sender.revealOther(z110s);
                     // (plain, secret)
-                    z100s = bcSender.and(xs, y0s);
-                    z10Vectors = bcSender.revealOwn(z100s);
-                    bcSender.revealOther(z100s);
+                    z100s = sender.and(xs, y0s);
+                    z10Vectors = sender.revealOwn(z100s);
+                    sender.revealOther(z100s);
                     // (secret, plain)
-                    z010s = bcSender.and(x0s, ys);
+                    z010s = sender.and(x0s, ys);
                     finalX010s = Arrays.stream(x0s).map(SquareSbitVector::copy).toArray(SquareSbitVector[]::new);
-                    z01Vectors = bcSender.revealOwn(z010s);
-                    bcSender.revealOther(z010s);
+                    z01Vectors = sender.revealOwn(z010s);
+                    sender.revealOther(z010s);
                     // (secret, secret)
-                    z000s = bcSender.and(x0s, y0s);
+                    z000s = sender.and(x0s, y0s);
                     finalX000s = Arrays.stream(x0s).map(SquareSbitVector::copy).toArray(SquareSbitVector[]::new);
-                    z00Vectors = bcSender.revealOwn(z000s);
-                    bcSender.revealOther(z000s);
+                    z00Vectors = sender.revealOwn(z000s);
+                    sender.revealOther(z000s);
                     break;
                 case OR:
                     // (plain, plain)
-                    z110s = bcSender.or(xs, ys);
-                    z11Vectors = bcSender.revealOwn(z110s);
-                    bcSender.revealOther(z110s);
+                    z110s = sender.or(xs, ys);
+                    z11Vectors = sender.revealOwn(z110s);
+                    sender.revealOther(z110s);
                     // (plain, secret)
-                    z100s = bcSender.or(xs, y0s);
-                    z10Vectors = bcSender.revealOwn(z100s);
-                    bcSender.revealOther(z100s);
+                    z100s = sender.or(xs, y0s);
+                    z10Vectors = sender.revealOwn(z100s);
+                    sender.revealOther(z100s);
                     // (secret, plain)
-                    z010s = bcSender.or(x0s, ys);
+                    z010s = sender.or(x0s, ys);
                     finalX010s = Arrays.stream(x0s).map(SquareSbitVector::copy).toArray(SquareSbitVector[]::new);
-                    z01Vectors = bcSender.revealOwn(z010s);
-                    bcSender.revealOther(z010s);
+                    z01Vectors = sender.revealOwn(z010s);
+                    sender.revealOther(z010s);
                     // (secret, secret)
-                    z000s = bcSender.or(x0s, y0s);
+                    z000s = sender.or(x0s, y0s);
                     finalX000s = Arrays.stream(x0s).map(SquareSbitVector::copy).toArray(SquareSbitVector[]::new);
-                    z00Vectors = bcSender.revealOwn(z000s);
-                    bcSender.revealOther(z000s);
+                    z00Vectors = sender.revealOwn(z000s);
+                    sender.revealOther(z000s);
                     break;
                 default:
                     throw new IllegalStateException("Invalid binary boolean operator: " + bcOperator.name());
             }
-            bcSender.getRpc().disconnect();
         } catch (MpcAbortException e) {
             e.printStackTrace();
         }

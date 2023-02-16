@@ -14,7 +14,9 @@ import edu.alibaba.mpc4j.s2pc.pir.index.sealpir.Acls18IndexPirParams;
 import edu.alibaba.mpc4j.s2pc.pir.index.xpir.Mbfk16IndexPirConfig;
 import edu.alibaba.mpc4j.s2pc.pir.index.xpir.Mbfk16IndexPirParams;
 import org.apache.commons.lang3.StringUtils;
+import org.junit.After;
 import org.junit.Assert;
+import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
@@ -54,7 +56,7 @@ public class IndexPirTest {
         // XPIR
         Mbfk16IndexPirConfig xpirConfig = new Mbfk16IndexPirConfig();
         // XPIR (1-dimension)
-        configurations.add(new Object[] {
+        configurations.add(new Object[]{
             IndexPirFactory.IndexPirType.XPIR.name() + " (1-dimension)",
             xpirConfig,
             new Mbfk16IndexPirParams(
@@ -66,7 +68,7 @@ public class IndexPirTest {
             )
         });
         // XPIR (2-dimension)
-        configurations.add(new Object[] {
+        configurations.add(new Object[]{
             IndexPirFactory.IndexPirType.XPIR.name() + " (2-dimension)",
             xpirConfig,
             new Mbfk16IndexPirParams(
@@ -81,7 +83,7 @@ public class IndexPirTest {
         // SEAL PIR
         Acls18IndexPirConfig sealpirConfig = new Acls18IndexPirConfig();
         // SEAL PIR (1-dimension)
-        configurations.add(new Object[] {
+        configurations.add(new Object[]{
             IndexPirFactory.IndexPirType.SEAL_PIR.name() + " (1-dimension)",
             sealpirConfig,
             new Acls18IndexPirParams(
@@ -93,7 +95,7 @@ public class IndexPirTest {
             )
         });
         // SEAL PIR (2-dimension)
-        configurations.add(new Object[] {
+        configurations.add(new Object[]{
             IndexPirFactory.IndexPirType.SEAL_PIR.name() + " (2-dimension)",
             sealpirConfig,
             new Acls18IndexPirParams(
@@ -108,7 +110,7 @@ public class IndexPirTest {
         // OnionPIR
         Mcr21IndexPirConfig onionpirConfig = new Mcr21IndexPirConfig();
         // first dimension is 32
-        configurations.add(new Object[] {
+        configurations.add(new Object[]{
             IndexPirFactory.IndexPirType.ONION_PIR.name() + " (first dimension 32)",
             onionpirConfig,
             new Mcr21IndexPirParams(
@@ -118,7 +120,7 @@ public class IndexPirTest {
             )
         });
         // first dimension is 128
-        configurations.add(new Object[] {
+        configurations.add(new Object[]{
             IndexPirFactory.IndexPirType.ONION_PIR.name() + " (first dimension 128)",
             onionpirConfig,
             new Mcr21IndexPirParams(
@@ -128,7 +130,7 @@ public class IndexPirTest {
             )
         });
         // first dimension is 256
-        configurations.add(new Object[] {
+        configurations.add(new Object[]{
             IndexPirFactory.IndexPirType.ONION_PIR.name() + " (first dimension 256)",
             onionpirConfig,
             new Mcr21IndexPirParams(
@@ -140,7 +142,7 @@ public class IndexPirTest {
 
         // FastPIR
         Ayaa21IndexPirConfig fastpirConfig = new Ayaa21IndexPirConfig();
-        configurations.add(new Object[] {
+        configurations.add(new Object[]{
             IndexPirFactory.IndexPirType.FAST_PIR.name(),
             fastpirConfig,
             new Ayaa21IndexPirParams(
@@ -174,6 +176,8 @@ public class IndexPirTest {
 
     public IndexPirTest(String name, IndexPirConfig indexPirConfig, AbstractIndexPirParams indexPirParams) {
         Preconditions.checkArgument(StringUtils.isNotBlank(name));
+        // We cannot use NettyRPC in the test case since it needs multi-thread connect / disconnect.
+        // In other word, we cannot connect / disconnect NettyRpc in @Before / @After, respectively.
         RpcManager rpcManager = new MemoryRpcManager(2);
         serverRpc = rpcManager.getRpc(0);
         clientRpc = rpcManager.getRpc(1);
@@ -181,11 +185,23 @@ public class IndexPirTest {
         this.indexPirParams = indexPirParams;
     }
 
+    @Before
+    public void connect() {
+        serverRpc.connect();
+        clientRpc.connect();
+    }
+
+    @After
+    public void disconnect() {
+        serverRpc.disconnect();
+        clientRpc.disconnect();
+    }
+
     @Test
     public void testIndexPir() {
         testIndexPir(indexPirConfig, indexPirParams, DEFAULT_ELEMENT_BYTE_LENGTH, false);
     }
-    
+
     @Test
     public void testParallelIndexPir() {
         testIndexPir(indexPirConfig, indexPirParams, DEFAULT_ELEMENT_BYTE_LENGTH, true);
@@ -214,20 +230,22 @@ public class IndexPirTest {
             // 等待线程停止
             serverThread.join();
             clientThread.join();
+            LOGGER.info("Server: The Communication costs {}MB", serverRpc.getSendByteLength() * 1.0 / (1024 * 1024));
+            serverRpc.reset();
+            LOGGER.info("Client: The Communication costs {}MB", clientRpc.getSendByteLength() * 1.0 / (1024 * 1024));
+            clientRpc.reset();
+            LOGGER.info("Parameters: \n {}", indexPirParams.toString());
+            // 验证结果
+            ArrayList<ByteBuffer> result = clientThread.getRetrievalResult();
+            for (int index = 0; index < REPEAT_TIME; index++) {
+                ByteBuffer retrievalElement = result.get(index);
+                Assert.assertEquals(retrievalElement, elementList.get(retrievalIndexList.get(index)));
+            }
+            LOGGER.info("Client: The Retrieval Set Size is {}", result.size());
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
-        LOGGER.info("Server: The Communication costs {}MB", serverRpc.getSendByteLength() * 1.0 / (1024 * 1024));
-        serverRpc.reset();
-        LOGGER.info("Client: The Communication costs {}MB", clientRpc.getSendByteLength() * 1.0 / (1024 * 1024));
-        clientRpc.reset();
-        LOGGER.info("Parameters: \n {}", indexPirParams.toString());
-        // 验证结果
-        ArrayList<ByteBuffer> result = clientThread.getRetrievalResult();
-        for (int index = 0; index < REPEAT_TIME; index++) {
-            ByteBuffer retrievalElement = result.get(index);
-            Assert.assertEquals(retrievalElement, elementList.get(retrievalIndexList.get(index)));
-        }
-        LOGGER.info("Client: The Retrieval Set Size is {}", result.size());
+        server.destroy();
+        client.destroy();
     }
 }

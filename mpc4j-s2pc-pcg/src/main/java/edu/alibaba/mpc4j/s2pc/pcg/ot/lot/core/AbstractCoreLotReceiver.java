@@ -74,7 +74,7 @@ public abstract class AbstractCoreLotReceiver extends AbstractTwoPartyPto implem
     }
 
     protected void setPtoInput(byte[][] choices) {
-        checkReadyState();
+        checkInitialized();
         MathPreconditions.checkPositiveInRangeClosed("num", choices.length, maxNum);
         num = choices.length;
         byteNum = CommonUtils.getByteLength(num);

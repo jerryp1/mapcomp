@@ -56,7 +56,7 @@ public abstract class AbstractUpsiServer<T> extends AbstractTwoPartyPto implemen
     }
 
     protected void setPtoInput(Set<T> serverElementSet, int clientElementSize) {
-        checkReadyState();
+        checkInitialized();
         // 设置特殊空元素
         byte[] botElementByteArray = new byte[CommonConstants.STATS_BYTE_LENGTH];
         Arrays.fill(botElementByteArray, (byte)0xFF);

@@ -39,7 +39,7 @@ public abstract class AbstractCoreCotReceiver extends AbstractTwoPartyPto implem
     }
 
     protected void setPtoInput(boolean[] choices) {
-        checkReadyState();
+        checkInitialized();
         MathPreconditions.checkPositiveInRangeClosed("num", choices.length, maxNum);
         // 拷贝一份
         this.choices = Arrays.copyOf(choices, choices.length);

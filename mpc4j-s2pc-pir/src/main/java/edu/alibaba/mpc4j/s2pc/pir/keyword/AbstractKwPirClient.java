@@ -61,7 +61,7 @@ public abstract class AbstractKwPirClient<T> extends AbstractTwoPartyPto impleme
     }
 
     protected void setPtoInput(Set<T> clientKeywordSet) {
-        checkReadyState();
+        checkInitialized();
         retrievalSize = clientKeywordSet.size();
         MathPreconditions.checkPositiveInRangeClosed("retrievalSize", retrievalSize, maxRetrievalSize);
         retrievalArrayList = clientKeywordSet.stream()

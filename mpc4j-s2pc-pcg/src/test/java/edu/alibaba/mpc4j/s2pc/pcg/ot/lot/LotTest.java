@@ -8,7 +8,9 @@ import edu.alibaba.mpc4j.common.tool.utils.BytesUtils;
 import edu.alibaba.mpc4j.common.tool.utils.CommonUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.time.StopWatch;
+import org.junit.After;
 import org.junit.Assert;
+import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
@@ -75,73 +77,71 @@ public class LotTest {
 
     public LotTest(String name, LotConfig config) {
         Preconditions.checkArgument(StringUtils.isNotBlank(name));
+        // We cannot use NettyRPC in the test case since it needs multi-thread connect / disconnect.
+        // In other word, we cannot connect / disconnect NettyRpc in @Before / @After, respectively.
         RpcManager rpcManager = new MemoryRpcManager(2);
         senderRpc = rpcManager.getRpc(0);
         receiverRpc = rpcManager.getRpc(1);
         this.config = config;
     }
 
+    @Before
+    public void connect() {
+        senderRpc.connect();
+        receiverRpc.connect();
+    }
+
+    @After
+    public void disconnect() {
+        senderRpc.disconnect();
+        receiverRpc.disconnect();
+    }
+
     @Test
     public void test1Num() {
-        LotSender sender = LotFactory.createSender(senderRpc, receiverRpc.ownParty(), config);
-        LotReceiver receiver = LotFactory.createReceiver(receiverRpc, senderRpc.ownParty(), config);
-        testPto(sender, receiver, DEFAULT_INPUT_BIT_LENGTH, 1);
+        testPto(DEFAULT_INPUT_BIT_LENGTH, 1, false);
     }
 
     @Test
     public void test2Num() {
-        LotSender sender = LotFactory.createSender(senderRpc, receiverRpc.ownParty(), config);
-        LotReceiver receiver = LotFactory.createReceiver(receiverRpc, senderRpc.ownParty(), config);
-        testPto(sender, receiver, DEFAULT_INPUT_BIT_LENGTH, 2);
+        testPto(DEFAULT_INPUT_BIT_LENGTH, 2, false);
     }
 
     @Test
     public void testDefault() {
-        LotSender sender = LotFactory.createSender(senderRpc, receiverRpc.ownParty(), config);
-        LotReceiver receiver = LotFactory.createReceiver(receiverRpc, senderRpc.ownParty(), config);
-        testPto(sender, receiver, DEFAULT_INPUT_BIT_LENGTH, DEFAULT_NUM);
+        testPto(DEFAULT_INPUT_BIT_LENGTH, DEFAULT_NUM, false);
     }
 
     @Test
     public void testParallelDefault() {
-        LotSender sender = LotFactory.createSender(senderRpc, receiverRpc.ownParty(), config);
-        LotReceiver receiver = LotFactory.createReceiver(receiverRpc, senderRpc.ownParty(), config);
-        sender.setParallel(true);
-        receiver.setParallel(true);
-        testPto(sender, receiver, DEFAULT_INPUT_BIT_LENGTH, DEFAULT_NUM);
+        testPto(DEFAULT_INPUT_BIT_LENGTH, DEFAULT_NUM, true);
     }
 
     @Test
     public void testSmallInputBitLength() {
-        LotSender sender = LotFactory.createSender(senderRpc, receiverRpc.ownParty(), config);
-        LotReceiver receiver = LotFactory.createReceiver(receiverRpc, senderRpc.ownParty(), config);
-        testPto(sender, receiver, SMALL_INPUT_BIT_LENGTH, DEFAULT_NUM);
+        testPto(SMALL_INPUT_BIT_LENGTH, DEFAULT_NUM, false);
     }
 
     @Test
     public void testLargeInputBitLength() {
-        LotSender sender = LotFactory.createSender(senderRpc, receiverRpc.ownParty(), config);
-        LotReceiver receiver = LotFactory.createReceiver(receiverRpc, senderRpc.ownParty(), config);
-        testPto(sender, receiver, LARGE_INPUT_BIT_LENGTH, DEFAULT_NUM);
+        testPto(LARGE_INPUT_BIT_LENGTH, DEFAULT_NUM, false);
     }
 
     @Test
     public void testLargeNum() {
-        LotSender sender = LotFactory.createSender(senderRpc, receiverRpc.ownParty(), config);
-        LotReceiver receiver = LotFactory.createReceiver(receiverRpc, senderRpc.ownParty(), config);
-        testPto(sender, receiver, DEFAULT_INPUT_BIT_LENGTH, LARGE_NUM);
+        testPto(DEFAULT_INPUT_BIT_LENGTH, LARGE_NUM, false);
     }
 
     @Test
     public void testParallelLargeNum() {
-        LotSender sender = LotFactory.createSender(senderRpc, receiverRpc.ownParty(), config);
-        LotReceiver receiver = LotFactory.createReceiver(receiverRpc, senderRpc.ownParty(), config);
-        sender.setParallel(true);
-        receiver.setParallel(true);
-        testPto(sender, receiver, DEFAULT_INPUT_BIT_LENGTH, LARGE_NUM);
+        testPto(DEFAULT_INPUT_BIT_LENGTH, LARGE_NUM, true);
     }
 
-    private void testPto(LotSender sender, LotReceiver receiver, int inputBitLength, int num) {
+    private void testPto(int inputBitLength, int num, boolean parallel) {
+        LotSender sender = LotFactory.createSender(senderRpc, receiverRpc.ownParty(), config);
+        LotReceiver receiver = LotFactory.createReceiver(receiverRpc, senderRpc.ownParty(), config);
+        sender.setParallel(parallel);
+        receiver.setParallel(parallel);
         int randomTaskId = Math.abs(SECURE_RANDOM.nextInt());
         sender.setTaskId(randomTaskId);
         receiver.setTaskId(randomTaskId);
@@ -183,6 +183,8 @@ public class LotTest {
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
+        sender.destroy();
+        receiver.destroy();
     }
 
     private void assertOutput(int inputBitLength, int num, LotSenderOutput senderOutput, LotReceiverOutput receiverOutput) {

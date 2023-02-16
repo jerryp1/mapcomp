@@ -44,6 +44,7 @@ class PidPartyThread extends Thread {
             pidParty.getRpc().connect();
             pidParty.init(ownElementSet.size(), otherSetSize);
             pidPartyOutput = pidParty.pid(ownElementSet, otherSetSize);
+            pidParty.destroy();
             pidParty.getRpc().disconnect();
         } catch (MpcAbortException e) {
             e.printStackTrace();

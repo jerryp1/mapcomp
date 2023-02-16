@@ -58,7 +58,7 @@ public abstract class AbstractBspCotSender extends AbstractTwoPartyPto implement
     }
 
     protected void setPtoInput(int batchNum, int num) {
-        checkReadyState();
+        checkInitialized();
         MathPreconditions.checkPositiveInRangeClosed("num", num, maxNum);
         this.num = num;
         MathPreconditions.checkPositiveInRangeClosed("batchNum", batchNum, maxBatchNum);

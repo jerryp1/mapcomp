@@ -45,10 +45,8 @@ class Zp64CoreVoleReceiverThread extends Thread {
     @Override
     public void run() {
         try {
-            receiver.getRpc().connect();
             receiver.init(prime, delta, num);
             receiverOutput = receiver.receive(num);
-            receiver.getRpc().disconnect();
         } catch (MpcAbortException e) {
             e.printStackTrace();
         }

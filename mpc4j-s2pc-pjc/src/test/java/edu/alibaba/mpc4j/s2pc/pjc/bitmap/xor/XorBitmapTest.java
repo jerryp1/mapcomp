@@ -179,14 +179,10 @@ public class XorBitmapTest {
         }
     }
 
-
     private void assertOutput(RoaringBitmap xPlain, RoaringBitmap yPlain, RoaringBitmap zResult) {
         RoaringBitmap zPlain = xPlain.clone();
         zPlain.xor(yPlain);
-        System.out.println("zResult(top100 elements):" + Arrays.toString(zResult.stream().limit(100).toArray()));
-        System.out.println("zPlain(top100 elements):" + Arrays.toString(zPlain.stream().limit(100).toArray()));
         Assert.assertEquals(zResult.toString(), zPlain.toString());
         Assert.assertEquals(zResult, zResult);
     }
-
 }

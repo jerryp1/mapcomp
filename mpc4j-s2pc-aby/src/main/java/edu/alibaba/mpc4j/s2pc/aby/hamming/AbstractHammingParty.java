@@ -41,7 +41,7 @@ public abstract class AbstractHammingParty extends AbstractTwoPartyPto implement
     }
 
     protected void setPtoInput(SquareSbitVector xi) {
-        checkReadyState();
+        checkInitialized();
         MathPreconditions.checkPositiveInRangeClosed("xi.bitNum", xi.bitNum(), maxBitNum);
         bitNum = xi.bitNum();
         extraInfo++;

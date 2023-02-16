@@ -49,7 +49,7 @@ public abstract class AbstractMspCotReceiver extends AbstractTwoPartyPto impleme
     }
 
     protected void setPtoInput(int t, int num) {
-        checkReadyState();
+        checkInitialized();
         MathPreconditions.checkPositiveInRangeClosed("num", num, maxNum);
         this.num = num;
         MathPreconditions.checkPositiveInRangeClosed("t", t, num);

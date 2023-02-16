@@ -7,6 +7,7 @@ import java.util.stream.IntStream;
 
 import edu.alibaba.mpc4j.common.rpc.MpcAbortException;
 import edu.alibaba.mpc4j.common.rpc.Party;
+import edu.alibaba.mpc4j.common.rpc.PtoState;
 import edu.alibaba.mpc4j.common.rpc.Rpc;
 import edu.alibaba.mpc4j.common.rpc.utils.DataPacket;
 import edu.alibaba.mpc4j.common.rpc.utils.DataPacketHeader;
@@ -80,7 +81,7 @@ public class Ywl20NcCotReceiver extends AbstractNcCotReceiver {
     @Override
     public void init(int num) throws MpcAbortException {
         setInitInput(num);
-        info("{}{} Recv. Init begin", ptoBeginLogPrefix, getPtoDesc().getPtoName());
+        logPhaseInfo(PtoState.INIT_BEGIN);
 
         stopWatch.start();
         LpnParams setupLpnParams = Ywl20NcCotPtoDesc.getSetupLpnParams(mspCotConfig, num);
@@ -97,7 +98,7 @@ public class Ywl20NcCotReceiver extends AbstractNcCotReceiver {
         stopWatch.stop();
         long initTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
         stopWatch.reset();
-        info("{}{} Recv. Init Step 1/5 ({}ms)", ptoStepLogPrefix, getPtoDesc().getPtoName(), initTime);
+        logStepInfo(PtoState.INIT_STEP, 1, 5, initTime);
 
         stopWatch.start();
         // 得到初始化阶段的k个COT
@@ -107,7 +108,7 @@ public class Ywl20NcCotReceiver extends AbstractNcCotReceiver {
         stopWatch.stop();
         long kInitCotTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
         stopWatch.reset();
-        info("{}{} Recv. Init Step 2/5 ({}ms)", ptoStepLogPrefix, getPtoDesc().getPtoName(), kInitCotTime);
+        logStepInfo(PtoState.INIT_STEP, 2, 5, kInitCotTime);
 
         stopWatch.start();
         // 初始化矩阵A的种子
@@ -124,7 +125,7 @@ public class Ywl20NcCotReceiver extends AbstractNcCotReceiver {
         stopWatch.stop();
         long keyInitTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
         stopWatch.reset();
-        info("{}{} Recv. Init Step 3/5 ({}ms)", ptoStepLogPrefix, getPtoDesc().getPtoName(), keyInitTime);
+        logStepInfo(PtoState.INIT_STEP, 3, 5, keyInitTime);
 
         stopWatch.start();
         // 执行MSP-COT
@@ -132,7 +133,7 @@ public class Ywl20NcCotReceiver extends AbstractNcCotReceiver {
         stopWatch.stop();
         long rInitTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
         stopWatch.reset();
-        info("{}{} Recv. Init Step 4/5 ({}ms)", ptoStepLogPrefix, getPtoDesc().getPtoName(), rInitTime);
+        logStepInfo(PtoState.INIT_STEP, 4, 5, rInitTime);
 
         stopWatch.start();
         // x = u * A + e
@@ -152,15 +153,15 @@ public class Ywl20NcCotReceiver extends AbstractNcCotReceiver {
         stopWatch.stop();
         long extendInitTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
         stopWatch.reset();
-        info("{}{} Recv. Init Step 5/5 ({}ms)", ptoStepLogPrefix, getPtoDesc().getPtoName(), extendInitTime);
+        logStepInfo(PtoState.INIT_STEP, 5, 5, extendInitTime);
 
-        info("{}{} Recv. Init end", ptoBeginLogPrefix, getPtoDesc().getPtoName());
+        logPhaseInfo(PtoState.INIT_END);
     }
 
     @Override
     public CotReceiverOutput receive() throws MpcAbortException {
         setPtoInput();
-        info("{}{} Recv. begin", ptoBeginLogPrefix, getPtoDesc().getPtoName());
+        logPhaseInfo(PtoState.PTO_BEGIN);
 
         stopWatch.start();
         // 生成迭代矩阵A的种子
@@ -177,7 +178,7 @@ public class Ywl20NcCotReceiver extends AbstractNcCotReceiver {
         stopWatch.stop();
         long keyTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
         stopWatch.reset();
-        info("{}{} Recv. Iter. Step 1/3 ({}ms)", ptoStepLogPrefix, getPtoDesc().getPtoName(), keyTime);
+        logStepInfo(PtoState.PTO_STEP, 1, 3, keyTime);
 
         stopWatch.start();
         // 执行MSP-COT
@@ -185,7 +186,7 @@ public class Ywl20NcCotReceiver extends AbstractNcCotReceiver {
         stopWatch.stop();
         long rTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
         stopWatch.reset();
-        info("{}{} Recv. Iter. Step 2/3 ({}ms)", ptoStepLogPrefix, getPtoDesc().getPtoName(), rTime);
+        logStepInfo(PtoState.PTO_STEP, 2, 3, rTime);
 
         stopWatch.start();
         // x = u * A + e
@@ -206,9 +207,9 @@ public class Ywl20NcCotReceiver extends AbstractNcCotReceiver {
         stopWatch.stop();
         long extendTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
         stopWatch.reset();
-        info("{}{} Recv. Iter. Step 3/3 ({}ms)", ptoStepLogPrefix, getPtoDesc().getPtoName(), extendTime);
+        logStepInfo(PtoState.PTO_STEP, 3, 3, extendTime);
 
-        info("{}{} Recv. end", ptoEndLogPrefix, getPtoDesc().getPtoName());
+        logPhaseInfo(PtoState.PTO_END);
         return receiverOutput;
     }
 }

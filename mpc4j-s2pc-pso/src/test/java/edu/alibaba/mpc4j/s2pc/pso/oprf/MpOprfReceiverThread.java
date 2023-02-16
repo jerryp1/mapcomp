@@ -12,7 +12,7 @@ class MpOprfReceiverThread extends Thread {
     /**
      * 接收方
      */
-    private final MpOprfReceiver mpOprfReceiver;
+    private final MpOprfReceiver receiver;
     /**
      * 输入
      */
@@ -22,8 +22,8 @@ class MpOprfReceiverThread extends Thread {
      */
     private MpOprfReceiverOutput receiverOutput;
 
-    MpOprfReceiverThread(MpOprfReceiver mpOprfReceiver, byte[][] inputs) {
-        this.mpOprfReceiver = mpOprfReceiver;
+    MpOprfReceiverThread(MpOprfReceiver receiver, byte[][] inputs) {
+        this.receiver = receiver;
         this.inputs = inputs;
     }
 
@@ -34,10 +34,8 @@ class MpOprfReceiverThread extends Thread {
     @Override
     public void run() {
         try {
-            mpOprfReceiver.getRpc().connect();
-            mpOprfReceiver.init(inputs.length);
-            receiverOutput = mpOprfReceiver.oprf(inputs);
-            mpOprfReceiver.getRpc().disconnect();
+            receiver.init(inputs.length);
+            receiverOutput = receiver.oprf(inputs);
         } catch (MpcAbortException e) {
             e.printStackTrace();
         }

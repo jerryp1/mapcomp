@@ -77,7 +77,7 @@ public abstract class AbstractDpprfReceiver extends AbstractTwoPartyPto implemen
     }
 
     protected void setPtoInput(int[] alphaArray, int alphaBound) {
-        checkReadyState();
+        checkInitialized();
         MathPreconditions.checkPositiveInRangeClosed("alphaBound", alphaBound, maxAlphaBound);
         this.alphaBound = alphaBound;
         h = LongUtils.ceilLog2(alphaBound, 1);
