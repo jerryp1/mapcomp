@@ -90,27 +90,6 @@ public class EccTest {
         } catch (AssertionError ignored) {
 
         }
-        // 尝试生成0个随机幂指数
-        try {
-            ecc.randomZn(0, SECURE_RANDOM);
-            throw new IllegalStateException("ERROR: successfully generate 0 random exponents");
-        } catch (AssertionError ignored) {
-
-        }
-        // 尝试乘以0个幂指数
-        try {
-            ecc.multiply(ecc.getG(), new BigInteger[0]);
-            throw new IllegalStateException("ERROR: successfully multiply 0 exponents");
-        } catch (AssertionError ignored) {
-
-        }
-        // 尝试对0个椭圆曲线相加
-        try {
-            ecc.add(new ECPoint[0]);
-            throw new IllegalStateException("ERROR: successfully add 0 points");
-        } catch (AssertionError ignored) {
-
-        }
         // 尝试对0个椭圆曲线求内积
         try {
             ecc.innerProduct(new boolean[0], new ECPoint[0]);
@@ -192,7 +171,9 @@ public class EccTest {
         ECPoint h = g.multiply(ecc.randomZn(SECURE_RANDOM));
         Assert.assertNotEquals(BigInteger.ONE, h.getZCoords()[0].toBigInteger());
         // 生成r和r^{-1}
-        BigInteger[] rs = ecc.randomZn(MAX_ARRAY_LENGTH, SECURE_RANDOM);
+        BigInteger[] rs = IntStream.range(0, MAX_ARRAY_LENGTH)
+            .mapToObj(index -> ecc.randomZn(SECURE_RANDOM))
+            .toArray(BigInteger[]::new);
         BigInteger[] rsInv = Arrays.stream(rs)
             .map(r -> r.modInverse(ecc.getN()))
             .toArray(BigInteger[]::new);
@@ -200,7 +181,9 @@ public class EccTest {
         ECPoint[] gs = IntStream.range(0, MAX_ARRAY_LENGTH)
             .mapToObj(index -> g)
             .toArray(ECPoint[]::new);
-        ECPoint[] grs = ecc.multiply(g, rs);
+        ECPoint[] grs = Arrays.stream(rs)
+            .map(r -> ecc.multiply(g, r))
+            .toArray(ECPoint[]::new);
         ECPoint[] grsInv = IntStream.range(0, MAX_ARRAY_LENGTH)
             .mapToObj(index -> ecc.multiply(grs[index], rsInv[index]))
             .toArray(ECPoint[]::new);
@@ -209,7 +192,9 @@ public class EccTest {
         ECPoint[] hs = IntStream.range(0, MAX_ARRAY_LENGTH)
             .mapToObj(index -> h)
             .toArray(ECPoint[]::new);
-        ECPoint[] hrs = ecc.multiply(h, rs);
+        ECPoint[] hrs = Arrays.stream(rs)
+            .map(r -> ecc.multiply(h, r))
+            .toArray(ECPoint[]::new);
         ECPoint[] hrsInv = IntStream.range(0, MAX_ARRAY_LENGTH)
             .mapToObj(index -> ecc.multiply(hrs[index], rsInv[index]))
             .toArray(ECPoint[]::new);
@@ -251,8 +236,11 @@ public class EccTest {
     private void testAddition(int num) {
         Ecc ecc = EccFactory.createInstance(eccType);
         ECPoint g = ecc.getG();
-        ECPoint[] gs = IntStream.range(0, num).mapToObj(index -> g).toArray(ECPoint[]::new);
-        Assert.assertEquals(ecc.multiply(g, BigInteger.valueOf(num)), ecc.add(gs));
+        ECPoint gs = IntStream.range(0, num)
+            .mapToObj(index -> g)
+            .reduce(ecc::add)
+            .orElse(ecc.getInfinity());
+        Assert.assertEquals(ecc.multiply(g, BigInteger.valueOf(num)), gs);
     }
 
     @Test

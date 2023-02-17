@@ -1,17 +1,16 @@
 package edu.alibaba.mpc4j.common.tool.galoisfield.gf2e;
 
+import edu.alibaba.mpc4j.common.tool.galoisfield.BytesField;
 import edu.alibaba.mpc4j.common.tool.galoisfield.gf2e.Gf2eFactory.Gf2eType;
 import edu.alibaba.mpc4j.common.tool.utils.BytesUtils;
 
-import java.security.SecureRandom;
-
 /**
- * GF(2^l)有限域运算接口。
+ * GF(2^l) interface.
  *
  * @author Weiran Liu
  * @date 2022/4/27
  */
-public interface Gf2e {
+public interface Gf2e extends BytesField {
     /**
      * 返回运算类型。
      *
@@ -20,195 +19,93 @@ public interface Gf2e {
     Gf2eType getGf2eType();
 
     /**
-     * 返回有限域比特长度。
+     * Gets the bit length that represents an element. In GF(2^l), the element bit length is exactly l.
      *
-     * @return 有限域比特长度。
+     * @return the bit length that represents an element.
      */
-    int getL();
-
-    /**
-     * 返回有限域字节长度。
-     *
-     * @return 有限域字节长度。
-     */
-    int getByteL();
-
-    /**
-     * 计算a + b。
-     *
-     * @param a 输入a。
-     * @param b 输入b。
-     * @return a + b。
-     */
-    default byte[] add(final byte[] a, final byte[] b) {
-        assert validateElement(a) && validateElement(b);
-        return BytesUtils.xor(a, b);
+    @Override
+    default int getElementBitLength() {
+        return getL();
     }
 
     /**
-     * 计算a + b，将结果置于a中。
+     * Gets the element byte length that represents an element. In GF(2^l), the element byte length is exactly l (in byte length).
      *
-     * @param a 输入a。
-     * @param b 输入b。
+     * @return the element byte length that represents an element.
      */
-    default void addi(byte[] a, final byte[] b) {
-        assert validateElement(a) && validateElement(b);
-        BytesUtils.xori(a, b);
+    @Override
+    default int getElementByteLength() {
+        return getByteL();
     }
 
     /**
-     * 计算-a。
+     * Computes p + q. In GF(2^l), p + q is bit-wise p ⊕ q.
      *
-     * @param a 输入a。
-     * @return -a。
+     * @param p the element p.
+     * @param q the element q.
+     * @return p + q.
      */
-    default byte[] neg(byte[] a) {
-        assert validateElement(a);
-        // GF(2^l)元素的负数就是其本身
-        return BytesUtils.clone(a);
+    @Override
+    default byte[] add(final byte[] p, final byte[] q) {
+        assert validateElement(p) && validateElement(q);
+        return BytesUtils.xor(p, q);
     }
 
     /**
-     * 计算-a，将结果置于a中。
+     * Computes p + q. The result is in-placed in p. In GF(2^l), p + q is bit-wise p ⊕ q.
      *
-     * @param a 输入a。
+     * @param p the element p.
+     * @param q the element q.
      */
-    default void negi(byte[] a) {
-        // GF(2^l)元素的负数就是其本身，所以不需要做任何操作
-        assert validateElement(a);
+    @Override
+    default void addi(byte[] p, final byte[] q) {
+        assert validateElement(p) && validateElement(q);
+        BytesUtils.xori(p, q);
     }
 
     /**
-     * 计算a - b。
+     * Computes -p. In GF(2^l), -p is p.
      *
-     * @param a 输入a。
-     * @param b 输入b。
-     * @return a - b。
+     * @param p the element p.
+     * @return -p.
      */
-    default byte[] sub(final byte[] a, final byte[] b) {
+    @Override
+    default byte[] neg(byte[] p) {
+        assert validateElement(p);
+        return BytesUtils.clone(p);
+    }
+
+    /**
+     * Computes -p. The result is in-placed in p. In GF(2^l), -p is p.
+     *
+     * @param p the element p.
+     */
+    @Override
+    default void negi(byte[] p) {
+        assert validateElement(p);
+    }
+
+    /**
+     * Computes p - q. In GF(2^l), p - q is p + (-q) = p + q.
+     *
+     * @param p the element p.
+     * @param q the element q.
+     * @return p - q.
+     */
+    @Override
+    default byte[] sub(final byte[] p, final byte[] q) {
         // GF(2^l)元素的负数就是其本身，减法等价于加法
-        return add(a, b);
+        return add(p, q);
     }
 
     /**
-     * 计算a - b，将结果置于a中。
+     * Computes p - q. The result is in-placed in p. In GF(2^l), p - q is p + (-q) = p + q.
      *
-     * @param a 输入a。
-     * @param b 输入b。
+     * @param p the element p.
+     * @param q the element q.
      */
-    default void subi(byte[] a, final byte[] b) {
-        // GF(2^l)元素的负数就是其本身，减法等价于加法
-        addi(a, b);
+    @Override
+    default void subi(byte[] p, final byte[] q) {
+        addi(p, q);
     }
-
-    /**
-     * 计算a * b。
-     *
-     * @param a 输入a。
-     * @param b 输入b。
-     * @return a * b。
-     */
-    byte[] mul(byte[] a, byte[] b);
-
-    /**
-     * 计算a * b，将结果置于a中。
-     *
-     * @param a 输入a。
-     * @param b 输入b。
-     */
-    void muli(byte[] a, byte[] b);
-
-    /**
-     * 计算a / b。
-     *
-     * @param a 输入a。
-     * @param b 输入b。
-     * @return a / b。
-     */
-    byte[] div(byte[] a, byte[] b);
-
-    /**
-     * 计算a / b，，将结果置于a中。
-     *
-     * @param a 输入a。
-     * @param b 输入b。
-     */
-    void divi(byte[] a, byte[] b);
-
-    /**
-     * 计算1 / a。
-     *
-     * @param a 输入a。
-     * @return 1 / a。
-     */
-    byte[] inv(byte[] a);
-
-    /**
-     * 计算1 / a，将结果置于a中。
-     *
-     * @param a 输入a。
-     */
-    void invi(byte[] a);
-
-    /**
-     * 创建0元。
-     *
-     * @return 0元。
-     */
-    byte[] createZero();
-
-    /**
-     * 创建1元。
-     *
-     * @return 1元。
-     */
-    byte[] createOne();
-
-    /**
-     * 创建随机群元素。
-     *
-     * @param secureRandom 随机状态。
-     * @return 随机群元素。
-     */
-    byte[] createRandom(SecureRandom secureRandom);
-
-    /**
-     * 创建随机域元素（非0随机群元素）。
-     *
-     * @param secureRandom 随机状态。
-     * @return 随机域元素。
-     */
-    byte[] createNonZeroRandom(SecureRandom secureRandom);
-
-    /**
-     * 判断a是否为0元。
-     *
-     * @param a 输入a。
-     * @return a是否为0元。
-     */
-    boolean isZero(byte[] a);
-
-    /**
-     * 判断a是否为1元。
-     *
-     * @param a 输入a。
-     * @return a是否为1元。
-     */
-    boolean isOne(byte[] a);
-
-    /**
-     * 判断a是否为有效的（加法）群元素。
-     *
-     * @param a 输入a。
-     * @return a是否为有效的群元素。
-     */
-    boolean validateElement(byte[] a);
-
-    /**
-     * 判断a是否为有效的（加法、乘法）域元素。
-     *
-     * @param a 输入a。
-     * @return a是否为有效的域元素。
-     */
-    boolean validateNonZeroElement(byte[] a);
 }

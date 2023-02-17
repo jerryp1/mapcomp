@@ -221,7 +221,9 @@ public class Zcl22PkePsuServer extends AbstractPsuServer {
 
     private void pipelineReRand() {
         // 生成随机量
-        BigInteger[] rs = ecc.randomZn(serverElementSize, secureRandom);
+        BigInteger[] rs = IntStream.range(0, serverElementSize)
+            .mapToObj(index -> ecc.randomZn(secureRandom))
+            .toArray(BigInteger[]::new);
         // Pipeline过程，先执行整除倍，最后再循环一遍
         int pipelineTime = serverElementSize / pipeSize;
         int round;

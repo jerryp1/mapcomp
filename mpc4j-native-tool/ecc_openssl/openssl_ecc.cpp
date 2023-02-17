@@ -22,25 +22,6 @@ void bnFromString(const std::string &bnString, BIGNUM *bn) {
     BN_hex2bn(&bn, bnString.c_str());
 }
 
-void stringSetToBnSet(std::vector<std::string> &stringSet, std::vector<BIGNUM*> &bnSet) {
-    for (BIGNUM* bn : bnSet) {
-        BN_free(bn);
-    }
-    bnSet.resize(stringSet.size());
-    for (std::vector<BIGNUM*>::size_type index = 0; index < stringSet.size(); index++) {
-        bnSet[index] = BN_new();
-        bnFromString(stringSet[index], bnSet[index]);
-    }
-}
-
-void pointSetToStringSet(std::vector<EC_POINT*> &pointSet, std::vector<std::string> &stringSet, BN_CTX *ctx) {
-    stringSet.resize(pointSet.size());
-    for (std::vector<std::string>::size_type index = 0; index < stringSet.size(); index++) {
-        stringSet[index] = pointToString(pointSet[index], ctx);
-        EC_POINT_free(pointSet[index]);
-    }
-}
-
 void CRYPTO_CHECK(bool condition) {
     if (!condition) {
         char buffer[256];
@@ -74,7 +55,7 @@ void openssl_destroy_precompute(JNIEnv *env, jobject jWindowHandler) {
     delete (WindowMethod *)(*env).GetDirectBufferAddress(jWindowHandler);
 }
 
-jstring openssl_single_fixed_point_multiply(JNIEnv *env, jobject jWindowHandler, jstring jBnString) {
+jstring openssl_precompute_multiply(JNIEnv *env, jobject jWindowHandler, jstring jBnString) {
     BN_CTX *ctx = BN_CTX_new();
     // 读取幂指数
     const char* jBnStringHandler = (*env).GetStringUTFChars(jBnString, JNI_FALSE);
@@ -94,36 +75,7 @@ jstring openssl_single_fixed_point_multiply(JNIEnv *env, jobject jWindowHandler,
     return (*env).NewStringUTF(pointString.data());
 }
 
-jobjectArray openssl_fixed_point_multiply(JNIEnv *env, jobject jWindowHandler, jobjectArray jBnStringArray) {
-    BN_CTX *ctx = BN_CTX_new();
-    // 读取幂指数集合
-    std::vector<std::string> bnStringSet;
-    jStringArrayToSet(env, jBnStringArray, bnStringSet);
-    std::vector<BIGNUM*> bnSet;
-    stringSetToBnSet(bnStringSet, bnSet);
-    bnStringSet.clear();
-    auto *windowHandler = (WindowMethod *) (*env).GetDirectBufferAddress(jWindowHandler);
-    // 定点计算
-    std::vector<EC_POINT*> pointSet(bnSet.size());
-    for (std::vector<EC_POINT*>::size_type index = 0; index < bnSet.size(); index++) {
-        pointSet[index] = EC_POINT_new(openssl_ec_group);
-        (*windowHandler).multiply(pointSet[index], bnSet[index]);
-        BN_free(bnSet[index]);
-    }
-    bnSet.clear();
-    // 返回结果
-    std::vector<std::string> pointStringSet;
-    pointSetToStringSet(pointSet, pointStringSet, ctx);
-    pointSet.clear();
-    jobjectArray jPointStringArray;
-    setTojStringArray(env, pointStringSet, jPointStringArray);
-    pointStringSet.clear();
-    BN_CTX_free(ctx);
-
-    return jPointStringArray;
-}
-
-jstring openssl_single_multiply(JNIEnv *env, jstring jPointString, jstring jBnString) {
+jstring openssl_multiply(JNIEnv *env, jstring jPointString, jstring jBnString) {
     BN_CTX *ctx = BN_CTX_new();
     // 读取幂指数
     const char* jBnStringHandler = (*env).GetStringUTFChars(jBnString, JNI_FALSE);
@@ -147,40 +99,6 @@ jstring openssl_single_multiply(JNIEnv *env, jstring jPointString, jstring jBnSt
     EC_POINT_free(mulPoint);
     BN_CTX_free(ctx);
     return (*env).NewStringUTF(mulPointString.data());
-}
-
-jobjectArray openssl_multiply(JNIEnv *env, jstring jPointString, jobjectArray jBnStringArray) {
-    BN_CTX *ctx = BN_CTX_new();
-    // 读取椭圆曲线点
-    const char* jPointStringHandler = (*env).GetStringUTFChars(jPointString, JNI_FALSE);
-    const std::string pointString = std::string(jPointStringHandler);
-    (*env).ReleaseStringUTFChars(jPointString, jPointStringHandler);
-    EC_POINT *point = EC_POINT_new(openssl_ec_group);
-    pointFromString(pointString, point, ctx);
-    // 读取幂指数集合
-    std::vector<std::string> bnStringSet;
-    jStringArrayToSet(env, jBnStringArray, bnStringSet);
-    std::vector<BIGNUM*> bnSet;
-    stringSetToBnSet(bnStringSet, bnSet);
-    bnStringSet.clear();
-    // 计算乘法
-    std::vector<EC_POINT*> pointMulSet(bnSet.size());
-    for (std::vector<EC_POINT*>::size_type index = 0; index < bnSet.size(); index++) {
-        pointMulSet[index] = EC_POINT_new(openssl_ec_group);
-        EC_POINT_mul(openssl_ec_group, pointMulSet[index], nullptr, point, bnSet[index], nullptr);
-        BN_free(bnSet[index]);
-    }
-    bnSet.clear();
-    // 返回结果
-    std::vector<std::string> mulPointStringSet;
-    pointSetToStringSet(pointMulSet, mulPointStringSet, ctx);
-    pointMulSet.clear();
-    jobjectArray jMulPointStringArray;
-    setTojStringArray(env, mulPointStringSet, jMulPointStringArray);
-    mulPointStringSet.clear();
-    BN_CTX_free(ctx);
-
-    return jMulPointStringArray;
 }
 
 void openssl_reset() {

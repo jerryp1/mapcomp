@@ -1,39 +1,30 @@
-package edu.alibaba.mpc4j.common.tool.galoisfield.gf2e;
+package edu.alibaba.mpc4j.common.tool.galoisfield.gf2k;
 
-import cc.redberry.rings.poly.FiniteField;
-import cc.redberry.rings.poly.univar.UnivariatePolynomialZp64;
+import edu.alibaba.mpc4j.common.tool.CommonConstants;
 import edu.alibaba.mpc4j.common.tool.EnvType;
 import edu.alibaba.mpc4j.common.tool.crypto.kdf.Kdf;
 import edu.alibaba.mpc4j.common.tool.crypto.kdf.KdfFactory;
 import edu.alibaba.mpc4j.common.tool.crypto.prg.Prg;
 import edu.alibaba.mpc4j.common.tool.crypto.prg.PrgFactory;
-import edu.alibaba.mpc4j.common.tool.galoisfield.gf2k.Gf2k;
-import edu.alibaba.mpc4j.common.tool.galoisfield.gf2k.Gf2kFactory;
 import edu.alibaba.mpc4j.common.tool.utils.BytesUtils;
-import edu.alibaba.mpc4j.common.tool.utils.CommonUtils;
 
 import java.security.SecureRandom;
-import java.util.Arrays;
 
 /**
- * abstract GF(2^l).
+ * Abstract GF(2^k) interface.
  *
  * @author Weiran Liu
- * @date 2022/8/7
+ * @date 2023/2/17
  */
-abstract class AbstractGf2e implements Gf2e {
+abstract class AbstractGf2k implements Gf2k {
     /**
-     * the element bit length
+     * l = λ (in bit length)
      */
-    protected final int l;
+    private static final int L = CommonConstants.BLOCK_BIT_LENGTH;
     /**
-     * the element byte length
+     * l = λ (in byte length)
      */
-    protected final int byteL;
-    /**
-     * the finite field
-     */
-    protected final FiniteField<UnivariatePolynomialZp64> finiteField;
+    private static final int BYTE_L = CommonConstants.BLOCK_BYTE_LENGTH;
     /**
      * the zero element
      */
@@ -50,63 +41,52 @@ abstract class AbstractGf2e implements Gf2e {
      * the pseudo-random generator
      */
     private final Prg prg;
-    /**
-     * special case for GF(2^k)
-     */
-    protected final Gf2k gf2k;
 
-    AbstractGf2e(EnvType envType, int l) {
-        assert l > 0;
-        this.l = l;
-        byteL = CommonUtils.getByteLength(l);
-        finiteField = Gf2eManager.getFiniteField(l);
+    public AbstractGf2k(EnvType envType) {
         zero = createZero();
         one = createOne();
         kdf = KdfFactory.createInstance(envType);
-        prg = PrgFactory.createInstance(envType, byteL);
-        gf2k = Gf2kFactory.createInstance(envType);
+        prg = PrgFactory.createInstance(envType, BYTE_L);
     }
 
     @Override
     public int getL() {
-        return l;
+        return L;
     }
 
     @Override
     public int getByteL() {
-        return byteL;
+        return BYTE_L;
     }
 
     @Override
-    public byte[] createZero() {
-        return new byte[byteL];
+    public int getElementBitLength() {
+        return L;
     }
 
     @Override
-    public byte[] createOne() {
-        byte[] one = new byte[byteL];
-        one[one.length - 1] = (byte) 0x01;
-        return one;
+    public int getElementByteLength() {
+        return BYTE_L;
     }
 
     @Override
     public byte[] createRandom(SecureRandom secureRandom) {
-        return BytesUtils.randomByteArray(byteL, l, secureRandom);
+        byte[] element = new byte[BYTE_L];
+        secureRandom.nextBytes(element);
+        return element;
     }
 
     @Override
     public byte[] createRandom(byte[] seed) {
         byte[] key = kdf.deriveKey(seed);
-        byte[] element = prg.extendToBytes(key);
-        BytesUtils.reduceByteArray(element, l);
-        return element;
+        return prg.extendToBytes(key);
     }
 
     @Override
     public byte[] createNonZeroRandom(SecureRandom secureRandom) {
-        byte[] element = new byte[byteL];
+        byte[] element = new byte[BYTE_L];
         while (isZero(element)) {
-            element = BytesUtils.randomByteArray(byteL, l, secureRandom);
+            secureRandom.nextBytes(element);
         }
         return element;
     }
@@ -115,11 +95,9 @@ abstract class AbstractGf2e implements Gf2e {
     public byte[] createNonZeroRandom(byte[] seed) {
         byte[] key = kdf.deriveKey(seed);
         byte[] element = prg.extendToBytes(key);
-        BytesUtils.reduceByteArray(element, l);
         while (isZero(element)) {
             key = kdf.deriveKey(key);
             element = prg.extendToBytes(key);
-            BytesUtils.reduceByteArray(element, l);
         }
         return element;
     }
@@ -136,24 +114,24 @@ abstract class AbstractGf2e implements Gf2e {
 
     @Override
     public boolean isZero(byte[] p) {
-        assert validateElement(p);
-        return Arrays.equals(p, zero);
+        validateElement(p);
+        return BytesUtils.equals(p, zero);
     }
 
     @Override
     public boolean isOne(byte[] p) {
-        assert validateElement(p);
-        return Arrays.equals(p, one);
+        validateElement(p);
+        return BytesUtils.equals(p, one);
     }
 
     @Override
     public boolean validateElement(byte[] p) {
-        return BytesUtils.isFixedReduceByteArray(p, byteL, l);
+        return p.length == BYTE_L;
     }
 
     @Override
     public boolean validateNonZeroElement(byte[] p) {
-        return BytesUtils.isFixedReduceByteArray(p, byteL, l) && !isZero(p);
+        return !isZero(p);
     }
 
     @Override

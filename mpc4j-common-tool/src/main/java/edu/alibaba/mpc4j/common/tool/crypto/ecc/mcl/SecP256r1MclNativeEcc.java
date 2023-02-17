@@ -37,16 +37,10 @@ public class SecP256r1MclNativeEcc implements NativeEcc {
     public synchronized native void destroyPrecompute(ByteBuffer windowHandler);
 
     @Override
-    public native String singleFixedPointMultiply(ByteBuffer windowHandler, String rString);
+    public native String precomputeMultiply(ByteBuffer windowHandler, String rString);
 
     @Override
-    public native String[] fixedPointMultiply(ByteBuffer windowHandler, String[] rStrings);
-
-    @Override
-    public native String singleMultiply(String pointString, String rString);
-
-    @Override
-    public native String[] multiply(String pointString, String[] rStrings);
+    public native String multiply(String pointString, String rString);
 
     @Override
     public synchronized native void reset();

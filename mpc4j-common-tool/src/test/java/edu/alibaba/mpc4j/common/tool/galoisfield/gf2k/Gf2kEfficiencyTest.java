@@ -1,5 +1,6 @@
 package edu.alibaba.mpc4j.common.tool.galoisfield.gf2k;
 
+import edu.alibaba.mpc4j.common.tool.EnvType;
 import edu.alibaba.mpc4j.common.tool.galoisfield.gf2k.Gf2kFactory.Gf2kType;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.time.StopWatch;
@@ -29,11 +30,11 @@ public class Gf2kEfficiencyTest {
     /**
      * 点数量输出格式
      */
-    private static final DecimalFormat LOG_N_DECIMAL_FORMAT = new DecimalFormat("00");
+    private static final DecimalFormat LOG_N_DECIMAL_FORMAT = new DecimalFormat("0");
     /**
      * 时间输出格式
      */
-    private static final DecimalFormat TIME_DECIMAL_FORMAT = new DecimalFormat("00.00");
+    private static final DecimalFormat TIME_DECIMAL_FORMAT = new DecimalFormat("0.00");
     /**
      * 随机状态
      */
@@ -57,7 +58,7 @@ public class Gf2kEfficiencyTest {
         LOGGER.info("{}\t{}\t{}\t{}", "      type", "    log(n)", "   mul(us)", "  muli(us)");
         int n = 1 << LOG_N;
         for (Gf2kType type : TYPES) {
-            Gf2k gf2k = Gf2kFactory.createInstance(type);
+            Gf2k gf2k = Gf2kFactory.createInstance(type, EnvType.STANDARD);
             // 创建数据
             byte[][] aArray = new byte[n][];
             byte[][] bArray = new byte[n][];

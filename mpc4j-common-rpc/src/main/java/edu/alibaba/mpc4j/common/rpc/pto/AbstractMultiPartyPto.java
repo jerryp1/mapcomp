@@ -340,7 +340,7 @@ public abstract class AbstractMultiPartyPto implements MultiPartyPto {
             case INIT_END:
                 info(
                     "{}{} {} Init end: {}",
-                    ptoBeginLogPrefix, getPtoDesc().getPtoName(), ownParty().getPartyName(), description
+                    ptoEndLogPrefix, getPtoDesc().getPtoName(), ownParty().getPartyName(), description
                 );
                 break;
             case PTO_BEGIN:
@@ -352,7 +352,7 @@ public abstract class AbstractMultiPartyPto implements MultiPartyPto {
             case PTO_END:
                 info(
                     "{}{} {} Pto end: {}",
-                    ptoBeginLogPrefix, getPtoDesc().getPtoName(), ownParty().getPartyName(), description
+                    ptoEndLogPrefix, getPtoDesc().getPtoName(), ownParty().getPartyName(), description
                 );
                 break;
             default:

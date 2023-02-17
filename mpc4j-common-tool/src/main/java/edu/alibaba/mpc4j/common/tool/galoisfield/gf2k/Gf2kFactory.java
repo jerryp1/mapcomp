@@ -44,16 +44,16 @@ public class Gf2kFactory {
      * @param type 类型。
      * @return GF(2 ^ 128)运算实例。
      */
-    public static Gf2k createInstance(Gf2kType type) {
+    public static Gf2k createInstance(Gf2kType type, EnvType envType) {
         switch (type) {
             case SSE:
-                return new SseGf2k();
+                return new SseGf2k(envType);
             case NTL:
-                return new NtlGf2k();
+                return new NtlGf2k(envType);
             case BC:
-                return new BcGf2k();
+                return new BcGf2k(envType);
             case RINGS:
-                return new RingsGf2k();
+                return new RingsGf2k(envType);
             default:
                 throw new IllegalArgumentException("Invalid " + Gf2kType.class.getSimpleName() + ": " + type.name());
         }
@@ -72,7 +72,7 @@ public class Gf2kFactory {
             case STANDARD_JDK:
             case INLAND:
             case INLAND_JDK:
-                return new BcGf2k();
+                return new BcGf2k(envType);
             default:
                 throw new IllegalArgumentException("Invalid " + EnvType.class.getSimpleName() + ": " + envType.name());
         }

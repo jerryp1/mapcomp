@@ -214,14 +214,14 @@ public class BytesUtils {
     }
 
     /**
-     * 生成指定比特长度的字节数组。
+     * Generates a random byte array.
      *
-     * @param bitLength    比特长度。
-     * @param byteLength   字节长度。
-     * @param secureRandom 随机状态。
-     * @return 指定比特长度的字节数组。
+     * @param byteLength   the byte length.
+     * @param bitLength    the bit length.
+     * @param secureRandom the random state.
+     * @return a random byte array.
      */
-    public static byte[] randomByteArray(final int bitLength, final int byteLength, SecureRandom secureRandom) {
+    public static byte[] randomByteArray(final int byteLength, final int bitLength, SecureRandom secureRandom) {
         assert byteLength * Byte.SIZE >= bitLength
             : "bitLength = " + bitLength + ", byteLength does not have enough room: " + byteLength;
         byte[] byteArray = new byte[byteLength];

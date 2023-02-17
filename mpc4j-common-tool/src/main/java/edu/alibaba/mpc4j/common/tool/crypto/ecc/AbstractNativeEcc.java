@@ -9,7 +9,6 @@ import org.bouncycastle.math.ec.ECPoint;
 
 import java.math.BigInteger;
 import java.nio.ByteBuffer;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -76,51 +75,35 @@ public abstract class AbstractNativeEcc extends AbstractEcc implements AutoClose
     }
 
     @Override
-    public void precompute(ECPoint ecPoint) {
+    public void precompute(ECPoint p) {
         // 预计算的时间很长，因此要先判断给定点是否已经进行了预计算，如果没有，再执行预计算操作
-        if (!windowHandlerMap.containsKey(ecPoint)) {
-            ByteBuffer windowHandler = nativeEcc.precompute(ecPointToNativePointString(ecPoint));
-            windowHandlerMap.put(ecPoint, windowHandler);
+        if (!windowHandlerMap.containsKey(p)) {
+            ByteBuffer windowHandler = nativeEcc.precompute(ecPointToNativePointString(p));
+            windowHandlerMap.put(p, windowHandler);
         }
     }
 
     @Override
-    public void destroyPrecompute(ECPoint point) {
-        if (windowHandlerMap.containsKey(point)) {
-            ByteBuffer windowHandler = windowHandlerMap.get(point);
+    public void destroyPrecompute(ECPoint p) {
+        if (windowHandlerMap.containsKey(p)) {
+            ByteBuffer windowHandler = windowHandlerMap.get(p);
             nativeEcc.destroyPrecompute(windowHandler);
-            windowHandlerMap.remove(point);
+            windowHandlerMap.remove(p);
         }
     }
 
     @Override
-    public ECPoint multiply(ECPoint ecPoint, BigInteger r) {
+    public ECPoint multiply(ECPoint p, BigInteger r) {
         String rString = r.toString(RADIX);
-        if (windowHandlerMap.containsKey(ecPoint)) {
+        if (windowHandlerMap.containsKey(p)) {
             // 先判断给定点是否已经进行了预计算，如果进行过预计算，则用预计算乘法处理
-            ByteBuffer windowHandler = windowHandlerMap.get(ecPoint);
-            String mulPointString = nativeEcc.singleFixedPointMultiply(windowHandler, rString);
+            ByteBuffer windowHandler = windowHandlerMap.get(p);
+            String mulPointString = nativeEcc.precomputeMultiply(windowHandler, rString);
             return nativePointStringToEcPoint(mulPointString);
         } else {
-            String pointString = ecPointToNativePointString(ecPoint);
-            String mulPointString = nativeEcc.singleMultiply(pointString, rString);
+            String pointString = ecPointToNativePointString(p);
+            String mulPointString = nativeEcc.multiply(pointString, rString);
             return nativePointStringToEcPoint(mulPointString);
-        }
-    }
-
-    @Override
-    public ECPoint[] multiply(ECPoint ecPoint, BigInteger[] rs) {
-        assert rs.length > 0;
-        String[] rStrings = Arrays.stream(rs).map(value -> value.toString(RADIX)).toArray(String[]::new);
-        if (windowHandlerMap.containsKey(ecPoint)) {
-            // 先判断给定点是否已经进行了预计算，如果进行过预计算，则用预计算乘法处理
-            ByteBuffer windowHandler = windowHandlerMap.get(ecPoint);
-            String[] mulPointStrings = nativeEcc.fixedPointMultiply(windowHandler, rStrings);
-            return Arrays.stream(mulPointStrings).map(this::nativePointStringToEcPoint).toArray(ECPoint[]::new);
-        } else {
-            String pointString = ecPointToNativePointString(ecPoint);
-            String[] mulPointStrings = nativeEcc.multiply(pointString, rStrings);
-            return Arrays.stream(mulPointStrings).map(this::nativePointStringToEcPoint).toArray(ECPoint[]::new);
         }
     }
 

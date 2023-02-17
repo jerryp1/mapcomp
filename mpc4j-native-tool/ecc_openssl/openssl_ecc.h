@@ -32,13 +32,9 @@ jobject openssl_precompute(JNIEnv *env, jstring jPointString);
 
 void openssl_destroy_precompute(JNIEnv *env, jobject jWindowHandler);
 
-jstring openssl_single_fixed_point_multiply(JNIEnv *env, jobject jWindowHandler, jstring jBnString);
+jstring openssl_precompute_multiply(JNIEnv *env, jobject jWindowHandler, jstring jBnString);
 
-jobjectArray openssl_fixed_point_multiply(JNIEnv *env, jobject jWindowHandler, jobjectArray jBnStringArray);
-
-jstring openssl_single_multiply(JNIEnv *env, jstring jPointString, jstring jBnString);
-
-jobjectArray openssl_multiply(JNIEnv *env, jstring jBnString, jobjectArray jBnStringArray);
+jstring openssl_multiply(JNIEnv *env, jstring jPointString, jstring jBnString);
 
 void openssl_reset();
 

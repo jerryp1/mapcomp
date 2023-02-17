@@ -216,7 +216,9 @@ public class Zcl22PkePsuClient extends AbstractPsuClient {
         ZpOvdm<ByteBuffer> zpOvdm = ZpOvdmFactory.createInstance(
             envType, zpOvdmType, ecc.getN(), clientElementSize, zpOvdmHashKeys
         );
-        BigInteger[] rs = ecc.randomZn(clientElementSize, secureRandom);
+        BigInteger[] rs = IntStream.range(0, clientElementSize)
+            .mapToObj(index -> ecc.randomZn(secureRandom))
+            .toArray(BigInteger[]::new);
         Map<ByteBuffer, BigInteger> headerMap = IntStream.range(0, clientElementSize)
             .boxed()
             .collect(Collectors.toMap(

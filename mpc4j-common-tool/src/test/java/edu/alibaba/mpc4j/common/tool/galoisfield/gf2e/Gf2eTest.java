@@ -1,6 +1,7 @@
 package edu.alibaba.mpc4j.common.tool.galoisfield.gf2e;
 
 import com.google.common.base.Preconditions;
+import edu.alibaba.mpc4j.common.tool.EnvType;
 import edu.alibaba.mpc4j.common.tool.galoisfield.gf2e.Gf2eFactory.Gf2eType;
 import edu.alibaba.mpc4j.common.tool.utils.BytesUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -84,7 +85,7 @@ public class Gf2eTest {
     public Gf2eTest(String name, Gf2eType type, int l) {
         Preconditions.checkArgument(StringUtils.isNotBlank(name));
         this.type = type;
-        gf2e = Gf2eFactory.createInstance(type, l);
+        gf2e = Gf2eFactory.createInstance(type, EnvType.STANDARD, l);
         byteL = gf2e.getByteL();
         constant = new byte[gf2e.getByteL()];
         Arrays.fill(constant, (byte)0xFF);
