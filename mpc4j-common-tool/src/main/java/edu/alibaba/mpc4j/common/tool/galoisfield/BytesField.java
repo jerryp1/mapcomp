@@ -1,9 +1,5 @@
 package edu.alibaba.mpc4j.common.tool.galoisfield;
 
-import edu.alibaba.mpc4j.common.tool.utils.BytesUtils;
-
-import java.security.SecureRandom;
-
 /**
  * BytesField interface. Elements in BytesField are represented as byte array.
  *

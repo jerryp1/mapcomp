@@ -50,13 +50,13 @@ public abstract class AbstractZpCoreVoleReceiver extends AbstractTwoPartyPto imp
     protected void setInitInput(BigInteger prime, BigInteger delta, int maxNum) {
         zp = ZpFactory.createInstance(envType, prime);
         l = zp.getL();
-        primeByteLength = zp.getPrimeByteLength();
+        primeByteLength = zp.getElementByteLength();
         Preconditions.checkArgument(
             zp.validateRangeElement(delta),
             "Δ must be in range [0, %s): %s", zp.getRangeBound(), delta
         );
         this.delta = delta;
-        assert maxNum > 0 : "max num must be greater than 0: " + maxNum;
+        MathPreconditions.checkPositive("maxNum", maxNum);
         this.maxNum = maxNum;
         initState();
     }

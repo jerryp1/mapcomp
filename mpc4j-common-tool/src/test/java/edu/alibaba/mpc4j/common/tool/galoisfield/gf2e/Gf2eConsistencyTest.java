@@ -61,8 +61,8 @@ public class Gf2eConsistencyTest {
 
     public Gf2eConsistencyTest(String name, Gf2eType thisType, Gf2eType thatType, int l) {
         Preconditions.checkArgument(StringUtils.isNotBlank(name));
-        thisGf2e = Gf2eFactory.createInstance(thisType, EnvType.STANDARD, l);
-        thatGf2e = Gf2eFactory.createInstance(thatType, EnvType.STANDARD, l);
+        thisGf2e = Gf2eFactory.createInstance(EnvType.STANDARD, thisType, l);
+        thatGf2e = Gf2eFactory.createInstance(EnvType.STANDARD, thatType, l);
         Assert.assertEquals(thisGf2e.getL(), thatGf2e.getL());
         Assert.assertEquals(thisGf2e.getByteL(), thatGf2e.getByteL());
     }

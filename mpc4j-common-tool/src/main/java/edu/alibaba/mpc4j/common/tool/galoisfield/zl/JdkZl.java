@@ -1,6 +1,5 @@
-package edu.alibaba.mpc4j.common.tool.galoisfield.zp;
+package edu.alibaba.mpc4j.common.tool.galoisfield.zl;
 
-import edu.alibaba.mpc4j.common.tool.CommonConstants;
 import edu.alibaba.mpc4j.common.tool.EnvType;
 import edu.alibaba.mpc4j.common.tool.crypto.kdf.Kdf;
 import edu.alibaba.mpc4j.common.tool.crypto.kdf.KdfFactory;
@@ -13,24 +12,12 @@ import java.math.BigInteger;
 import java.security.SecureRandom;
 
 /**
- * 应用JDK实现的Zp有限域。
+ * The Zl implemented by JDK.
  *
  * @author Weiran Liu
- * @date 2022/9/22
+ * @date 2023/2/17
  */
-class JdkZp implements Zp {
-    /**
-     * the prime
-     */
-    private final BigInteger prime;
-    /**
-     * the prime bit length
-     */
-    private final int primeBitLength;
-    /**
-     * the prime byte length
-     */
-    private final int primeByteLength;
+class JdkZl implements Zl {
     /**
      * the l bit length
      */
@@ -39,6 +26,10 @@ class JdkZp implements Zp {
      * the l byte length
      */
     private final int byteL;
+    /**
+     * module using AND operation
+     */
+    private final BigInteger andModule;
     /**
      * 2^l
      */
@@ -52,37 +43,24 @@ class JdkZp implements Zp {
      */
     private final Prg prg;
 
-    JdkZp(EnvType envType, BigInteger prime) {
-        assert prime.isProbablePrime(CommonConstants.STATS_BIT_LENGTH) : "input prime is not a prime: " + prime;
-        this.prime = prime;
-        primeBitLength = prime.bitLength();
-        primeByteLength = CommonUtils.getByteLength(primeBitLength);
-        l = primeBitLength - 1;
-        byteL = CommonUtils.getByteLength(l);
-        rangeBound = BigInteger.ONE.shiftLeft(l);
-        kdf = KdfFactory.createInstance(envType);
-        prg = PrgFactory.createInstance(envType, primeByteLength);
-    }
-
-    JdkZp(EnvType envType, int l) {
-        prime = ZpManager.getPrime(l);
-        primeBitLength = prime.bitLength();
-        primeByteLength = CommonUtils.getByteLength(primeBitLength);
+    JdkZl(EnvType envType, int l) {
+        assert l > 0 : "l must be greater than 0";
         this.l = l;
         byteL = CommonUtils.getByteLength(l);
         rangeBound = BigInteger.ONE.shiftLeft(l);
+        andModule = rangeBound.subtract(BigInteger.ONE);
         kdf = KdfFactory.createInstance(envType);
-        prg = PrgFactory.createInstance(envType, primeByteLength);
+        prg = PrgFactory.createInstance(envType, byteL);
     }
 
     @Override
-    public ZpFactory.ZpType getZpType() {
-        return ZpFactory.ZpType.JDK;
+    public ZlFactory.ZlType getZlType() {
+        return ZlFactory.ZlType.JDK;
     }
 
     @Override
-    public BigInteger getPrime() {
-        return prime;
+    public BigInteger module(BigInteger a) {
+        return a.and(andModule);
     }
 
     @Override
@@ -97,12 +75,12 @@ class JdkZp implements Zp {
 
     @Override
     public int getElementBitLength() {
-        return primeBitLength;
+        return l;
     }
 
     @Override
     public int getElementByteLength() {
-        return primeByteLength;
+        return byteL;
     }
 
     @Override
@@ -111,15 +89,10 @@ class JdkZp implements Zp {
     }
 
     @Override
-    public BigInteger module(final BigInteger a) {
-        return a.mod(prime);
-    }
-
-    @Override
     public BigInteger add(final BigInteger a, final BigInteger b) {
         assert validateElement(a);
         assert validateElement(b);
-        return a.add(b).mod(prime);
+        return a.add(b).and(andModule);
     }
 
     @Override
@@ -128,7 +101,7 @@ class JdkZp implements Zp {
         if (a.equals(BigInteger.ZERO)) {
             return BigInteger.ZERO;
         } else {
-            return prime.subtract(a);
+            return rangeBound.subtract(a);
         }
     }
 
@@ -136,34 +109,21 @@ class JdkZp implements Zp {
     public BigInteger sub(final BigInteger a, final BigInteger b) {
         assert validateElement(a);
         assert validateElement(b);
-        return a.subtract(b).mod(prime);
+        return a.subtract(b).and(andModule);
     }
 
     @Override
     public BigInteger mul(final BigInteger a, final BigInteger b) {
         assert validateElement(a);
         assert validateElement(b);
-        return a.multiply(b).mod(prime);
-    }
-
-    @Override
-    public BigInteger div(final BigInteger a, final BigInteger b) {
-        assert validateElement(a);
-        assert validateNonZeroElement(b);
-        return a.multiply(BigIntegerUtils.modInverse(b, prime)).mod(prime);
-    }
-
-    @Override
-    public BigInteger inv(final BigInteger a) {
-        assert validateNonZeroElement(a);
-        return BigIntegerUtils.modInverse(a, prime);
+        return a.multiply(b).and(andModule);
     }
 
     @Override
     public BigInteger pow(final BigInteger a, final BigInteger b) {
         assert validateElement(a);
         assert validateElement(b);
-        return BigIntegerUtils.modPow(a, b, prime);
+        return BigIntegerUtils.modPow(a, b, rangeBound);
     }
 
     @Override
@@ -205,21 +165,21 @@ class JdkZp implements Zp {
 
     @Override
     public BigInteger createRandom(SecureRandom secureRandom) {
-        return BigIntegerUtils.randomNonNegative(prime, secureRandom);
+        return new BigInteger(l, secureRandom);
     }
 
     @Override
     public BigInteger createRandom(byte[] seed) {
         byte[] key = kdf.deriveKey(seed);
         byte[] elementByteArray = prg.extendToBytes(key);
-        return BigIntegerUtils.byteArrayToNonNegBigInteger(elementByteArray).mod(prime);
+        return BigIntegerUtils.byteArrayToNonNegBigInteger(elementByteArray).and(andModule);
     }
 
     @Override
     public BigInteger createNonZeroRandom(SecureRandom secureRandom) {
         BigInteger random = BigInteger.ZERO;
         while (random.equals(BigInteger.ZERO)) {
-            random = BigIntegerUtils.randomPositive(prime, secureRandom);
+            random = new BigInteger(l, secureRandom);
         }
         return random;
     }
@@ -228,40 +188,40 @@ class JdkZp implements Zp {
     public BigInteger createNonZeroRandom(byte[] seed) {
         byte[] key = kdf.deriveKey(seed);
         byte[] elementByteArray = prg.extendToBytes(key);
-        BigInteger random = BigIntegerUtils.byteArrayToNonNegBigInteger(elementByteArray).mod(prime);
+        BigInteger random = BigIntegerUtils.byteArrayToNonNegBigInteger(elementByteArray).and(andModule);
         while (random.equals(BigInteger.ZERO)) {
             // 如果恰巧为0，则迭代种子
             key = kdf.deriveKey(key);
             elementByteArray = prg.extendToBytes(key);
-            random = BigIntegerUtils.byteArrayToNonNegBigInteger(elementByteArray).mod(prime);
+            random = BigIntegerUtils.byteArrayToNonNegBigInteger(elementByteArray).and(andModule);
         }
         return random;
     }
 
     @Override
     public BigInteger createRangeRandom(SecureRandom secureRandom) {
-        return BigIntegerUtils.randomNonNegative(rangeBound, secureRandom);
+        return new BigInteger(l, secureRandom);
     }
 
     @Override
     public BigInteger createRangeRandom(byte[] seed) {
         byte[] key = kdf.deriveKey(seed);
         byte[] elementByteArray = prg.extendToBytes(key);
-        return BigIntegerUtils.byteArrayToNonNegBigInteger(elementByteArray).mod(rangeBound);
+        return BigIntegerUtils.byteArrayToNonNegBigInteger(elementByteArray).and(andModule);
     }
 
     @Override
     public boolean validateElement(final BigInteger a) {
-        return BigIntegerUtils.greaterOrEqual(a, BigInteger.ZERO) && BigIntegerUtils.less(a, prime);
+        return a.signum() >= 0 && a.bitLength() <= l;
     }
 
     @Override
     public boolean validateNonZeroElement(final BigInteger a) {
-        return BigIntegerUtils.greater(a, BigInteger.ZERO) && BigIntegerUtils.less(a, prime);
+        return a.signum() > 0 && a.bitLength() <= l;
     }
 
     @Override
     public boolean validateRangeElement(final BigInteger a) {
-        return BigIntegerUtils.greaterOrEqual(a, BigInteger.ZERO) && BigIntegerUtils.less(a, rangeBound);
+        return a.signum() >= 0 && a.bitLength() <= l;
     }
 }

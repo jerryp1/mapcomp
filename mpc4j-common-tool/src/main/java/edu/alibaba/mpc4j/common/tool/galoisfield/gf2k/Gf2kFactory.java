@@ -41,10 +41,11 @@ public class Gf2kFactory {
     /**
      * 创建GF(2^128)运算实例。
      *
+     * @param envType the environment.
      * @param type 类型。
      * @return GF(2 ^ 128)运算实例。
      */
-    public static Gf2k createInstance(Gf2kType type, EnvType envType) {
+    public static Gf2k createInstance(EnvType envType, Gf2kType type) {
         switch (type) {
             case SSE:
                 return new SseGf2k(envType);

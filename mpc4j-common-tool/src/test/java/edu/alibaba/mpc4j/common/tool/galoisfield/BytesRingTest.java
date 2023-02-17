@@ -3,7 +3,10 @@ package edu.alibaba.mpc4j.common.tool.galoisfield;
 import com.google.common.base.Preconditions;
 import edu.alibaba.mpc4j.common.tool.CommonConstants;
 import edu.alibaba.mpc4j.common.tool.EnvType;
+import edu.alibaba.mpc4j.common.tool.galoisfield.gf2e.Gf2eFactory;
+import edu.alibaba.mpc4j.common.tool.galoisfield.gf2e.Gf2eFactory.Gf2eType;
 import edu.alibaba.mpc4j.common.tool.galoisfield.gf2k.Gf2kFactory;
+import edu.alibaba.mpc4j.common.tool.galoisfield.gf2k.Gf2kFactory.Gf2kType;
 import edu.alibaba.mpc4j.common.tool.utils.BytesUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.junit.Assert;
@@ -14,10 +17,7 @@ import org.junit.runners.Parameterized;
 import java.nio.ByteBuffer;
 import java.security.SecureRandom;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collection;
-import java.util.Set;
-import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
 /**
@@ -43,40 +43,39 @@ public class BytesRingTest {
 
     @Parameterized.Parameters(name = "{0}")
     public static Collection<Object[]> configurations() {
-        Collection<Object[]> configurationParams = new ArrayList<>();
+        Collection<Object[]> configurations = new ArrayList<>();
 
+        // GF2E
+        Gf2eType[] gf2eTypes = new Gf2eType[]{Gf2eType.NTL, Gf2eType.RINGS};
+        int[] ls = new int[]{1, 2, 3, 4, 39, 40, 41, 128, 256};
+        for (Gf2eType type : gf2eTypes) {
+            // add each l
+            for (int l : ls) {
+                configurations.add(new Object[]{
+                    Gf2eType.class.getSimpleName() + " (" + type.name() + ", l = " + l + ")",
+                    Gf2eFactory.createInstance(EnvType.STANDARD, type, l),
+                });
+            }
+        }
 
+        // GF2K
+        Gf2kType[] gf2kTypes = new Gf2kType[]{Gf2kType.SSE, Gf2kType.NTL, Gf2kType.BC, Gf2kType.RINGS};
+        for (Gf2kType type : gf2kTypes) {
+            configurations.add(new Object[]{
+                Gf2kType.class.getSimpleName() + " (" + type.name() + ")",
+                Gf2kFactory.createInstance(EnvType.STANDARD, type),
+            });
+        }
 
-        // GF2K (SSE)
-        configurationParams.add(new Object[]{
-            "GF2K(" + Gf2kFactory.Gf2kType.SSE.name() + ")",
-            Gf2kFactory.createInstance(Gf2kFactory.Gf2kType.SSE, EnvType.STANDARD),
-        });
-        // GF2K (NTL)
-        configurationParams.add(new Object[]{
-            "GF2K(" + Gf2kFactory.Gf2kType.NTL.name() + ")",
-            Gf2kFactory.createInstance(Gf2kFactory.Gf2kType.NTL, EnvType.STANDARD),
-        });
-        // GF2K (BC)
-        configurationParams.add(new Object[]{
-            "GF2K(" + Gf2kFactory.Gf2kType.BC.name() + ")",
-            Gf2kFactory.createInstance(Gf2kFactory.Gf2kType.BC, EnvType.STANDARD),
-        });
-        // RINGS
-        configurationParams.add(new Object[]{
-            "GF2K(" + Gf2kFactory.Gf2kType.RINGS.name() + ")",
-            Gf2kFactory.createInstance(Gf2kFactory.Gf2kType.RINGS, EnvType.STANDARD),
-        });
-
-        return configurationParams;
+        return configurations;
     }
 
     /**
-     * the BytesRings instance
+     * the BytesRing instance
      */
     private final BytesRing bytesRing;
     /**
-     * the l byte length
+     * the element byte length
      */
     private final int elementByteLength;
 
@@ -88,67 +87,216 @@ public class BytesRingTest {
 
     @Test
     public void testIllegalInputs() {
-        // try operating p and q when p has invalid byte length
+        // try operating p and q when p is invalid
         final byte[] invalidP = new byte[elementByteLength - 1];
-        final byte[] q = new byte[elementByteLength];
+        SECURE_RANDOM.nextBytes(invalidP);
+        final byte[] q = bytesRing.createNonZeroRandom(SECURE_RANDOM);
         // try adding
         Assert.assertThrows(AssertionError.class, () -> bytesRing.add(invalidP, q));
         Assert.assertThrows(AssertionError.class, () -> bytesRing.addi(invalidP, q));
+        // try subtracting
+        Assert.assertThrows(AssertionError.class, () -> bytesRing.sub(invalidP, q));
+        Assert.assertThrows(AssertionError.class, () -> bytesRing.subi(invalidP, q));
         // try multiplying
         Assert.assertThrows(AssertionError.class, () -> bytesRing.mul(invalidP, q));
         Assert.assertThrows(AssertionError.class, () -> bytesRing.muli(invalidP, q));
 
-        // try operating p and q when q has invalid byte length
-        final byte[] p = new byte[elementByteLength];
+        // try operating p and q when q is invalid
+        final byte[] p = bytesRing.createNonZeroRandom(SECURE_RANDOM);
         final byte[] invalidQ = new byte[elementByteLength - 1];
+        SECURE_RANDOM.nextBytes(invalidQ);
         // try adding
         Assert.assertThrows(AssertionError.class, () -> bytesRing.add(p, invalidQ));
         Assert.assertThrows(AssertionError.class, () -> bytesRing.addi(p, invalidQ));
+        // try subtracting
+        Assert.assertThrows(AssertionError.class, () -> bytesRing.sub(p, invalidQ));
+        Assert.assertThrows(AssertionError.class, () -> bytesRing.subi(p, invalidQ));
         // try multiplying
         Assert.assertThrows(AssertionError.class, () -> bytesRing.mul(p, invalidQ));
         Assert.assertThrows(AssertionError.class, () -> bytesRing.muli(p, invalidQ));
+
+        // try operating p when p is invalid
+        // try negating p
+        Assert.assertThrows(AssertionError.class, () -> bytesRing.neg(invalidP));
+        Assert.assertThrows(AssertionError.class, () -> bytesRing.negi(invalidP));
     }
 
     @Test
-    public void testRandomAddSub() {
+    public void testCreateZero() {
         byte[] zero = bytesRing.createZero();
+        Assert.assertTrue(bytesRing.isZero(zero));
+        Assert.assertFalse(bytesRing.isOne(zero));
+    }
+
+    @Test
+    public void testCreateOne() {
+        byte[] one = bytesRing.createOne();
+        Assert.assertTrue(bytesRing.isOne(one));
+        Assert.assertFalse(bytesRing.isZero(one));
+    }
+
+    @Test
+    public void testCreateRandom() {
+        byte[] seed = new byte[CommonConstants.BLOCK_BYTE_LENGTH];
+        SECURE_RANDOM.nextBytes(seed);
+        // create random
+        IntStream.range(0, MAX_RANDOM).forEach(index -> {
+            byte[] randomElement = bytesRing.createRandom(SECURE_RANDOM);
+            Assert.assertTrue(bytesRing.validateElement(randomElement));
+        });
+        // create random with seed
+        long randomNum = IntStream.range(0, MAX_RANDOM)
+            .mapToObj(index -> {
+                byte[] randomElement = bytesRing.createRandom(seed);
+                Assert.assertTrue(bytesRing.validateElement(randomElement));
+                return randomElement;
+            })
+            .map(ByteBuffer::wrap)
+            .distinct()
+            .count();
+        Assert.assertEquals(1, randomNum);
+    }
+
+    @Test
+    public void testCreateNonZeroRandom() {
+        byte[] seed = new byte[CommonConstants.BLOCK_BYTE_LENGTH];
+        SECURE_RANDOM.nextBytes(seed);
+        // create non-zero random
+        IntStream.range(0, MAX_RANDOM).forEach(index -> {
+            byte[] randomNonZeroElement = bytesRing.createNonZeroRandom(SECURE_RANDOM);
+            Assert.assertTrue(bytesRing.validateElement(randomNonZeroElement));
+            Assert.assertTrue(bytesRing.validateNonZeroElement(randomNonZeroElement));
+            Assert.assertFalse(bytesRing.isZero(randomNonZeroElement));
+        });
+        // create non-zero random with seed
+        long randomNum = IntStream.range(0, MAX_RANDOM)
+            .mapToObj(index -> {
+                byte[] randomNonZeroElement = bytesRing.createNonZeroRandom(seed);
+                Assert.assertTrue(bytesRing.validateElement(randomNonZeroElement));
+                Assert.assertTrue(bytesRing.validateNonZeroElement(randomNonZeroElement));
+                Assert.assertFalse(bytesRing.isZero(randomNonZeroElement));
+                return randomNonZeroElement;
+            })
+            .map(ByteBuffer::wrap)
+            .distinct()
+            .count();
+        Assert.assertEquals(1, randomNum);
+    }
+
+    @Test
+    public void testCreateRangeRandom() {
+        byte[] seed = new byte[CommonConstants.BLOCK_BYTE_LENGTH];
+        SECURE_RANDOM.nextBytes(seed);
+        // create range random
+        IntStream.range(0, MAX_RANDOM).forEach(index -> {
+            byte[] randomElement = bytesRing.createRangeRandom(SECURE_RANDOM);
+            Assert.assertTrue(bytesRing.validateElement(randomElement));
+            Assert.assertTrue(bytesRing.validateRangeElement(randomElement));
+        });
+        // create random with seed
+        long randomNum = IntStream.range(0, MAX_RANDOM)
+            .mapToObj(index -> {
+                byte[] randomRangeElement = bytesRing.createRangeRandom(seed);
+                Assert.assertTrue(bytesRing.validateElement(randomRangeElement));
+                Assert.assertTrue(bytesRing.validateRangeElement(randomRangeElement));
+                return randomRangeElement;
+            })
+            .map(ByteBuffer::wrap)
+            .distinct()
+            .count();
+        Assert.assertEquals(1, randomNum);
+    }
+
+    @Test
+    public void testConstantAddNegSub() {
+        byte[] zero = bytesRing.createZero();
+        byte[] p;
+        byte[] copyP;
+        byte[] t;
+        // 0 + 0 = 0
+        p = bytesRing.createZero();
+        t = bytesRing.add(p, zero);
+        Assert.assertArrayEquals(zero, t);
+        copyP = BytesUtils.clone(p);
+        bytesRing.addi(copyP, zero);
+        Assert.assertArrayEquals(zero, copyP);
+        // -0 = 0
+        p = bytesRing.createZero();
+        t = bytesRing.neg(p);
+        Assert.assertArrayEquals(zero, t);
+        copyP = BytesUtils.clone(p);
+        bytesRing.negi(copyP);
+        Assert.assertArrayEquals(zero, copyP);
+        // 0 - 0 = 0
+        p = bytesRing.createZero();
+        t = bytesRing.sub(p, zero);
+        Assert.assertArrayEquals(zero, t);
+        copyP = BytesUtils.clone(p);
+        bytesRing.subi(copyP, zero);
+        Assert.assertArrayEquals(zero, copyP);
+    }
+
+    @Test
+    public void testRandomAddNegSub() {
+        byte[] zero = bytesRing.createZero();
+        byte[] r;
+        byte[] copyR;
+        byte[] s;
+        byte[] t;
         for (int index = 0; index < MAX_RANDOM; index++) {
-            byte[] r = bytesRing.createRandom(SECURE_RANDOM);
-            byte[] copyR;
-            byte[] s = bytesRing.createRandom(SECURE_RANDOM);
+            r = bytesRing.createRandom(SECURE_RANDOM);
+            s = bytesRing.createRandom(SECURE_RANDOM);
             // r + 0 = r
-            Assert.assertArrayEquals(r, bytesRing.add(r, zero));
+            t = bytesRing.add(r, zero);
+            Assert.assertArrayEquals(r, t);
             copyR = BytesUtils.clone(r);
             bytesRing.addi(copyR, zero);
             Assert.assertArrayEquals(r, copyR);
             // r - 0 = r
-            Assert.assertArrayEquals(r, bytesRing.sub(r, zero));
+            t = bytesRing.sub(r, zero);
+            Assert.assertArrayEquals(r, t);
             copyR = BytesUtils.clone(r);
             bytesRing.subi(copyR, zero);
             Assert.assertArrayEquals(r, copyR);
             // -(-r) = r
-            Assert.assertArrayEquals(r, bytesRing.neg(bytesRing.neg(r)));
+            t = bytesRing.neg(bytesRing.neg(r));
+            Assert.assertArrayEquals(r, t);
             copyR = BytesUtils.clone(r);
             bytesRing.negi(copyR);
             bytesRing.negi(copyR);
             Assert.assertArrayEquals(r, copyR);
             // r + s - s = r
-            Assert.assertArrayEquals(r, bytesRing.sub(bytesRing.add(r, s), s));
+            t = bytesRing.sub(bytesRing.add(r, s), s);
+            Assert.assertArrayEquals(r, t);
             copyR = BytesUtils.clone(r);
             bytesRing.addi(copyR, s);
             bytesRing.subi(copyR, s);
             Assert.assertArrayEquals(r, copyR);
             // r - s + s = r
-            Assert.assertArrayEquals(r, bytesRing.add(bytesRing.sub(r, s), s));
+            t = bytesRing.add(bytesRing.sub(r, s), s);
+            Assert.assertArrayEquals(r, t);
             copyR = BytesUtils.clone(r);
             bytesRing.subi(copyR, s);
             bytesRing.addi(copyR, s);
             Assert.assertArrayEquals(r, copyR);
+            // (-r) + r = 0
+            t = bytesRing.add(r, bytesRing.neg(r));
+            Assert.assertArrayEquals(zero, t);
+            copyR = BytesUtils.clone(r);
+            bytesRing.negi(copyR);
+            bytesRing.addi(copyR, r);
+            Assert.assertArrayEquals(zero, copyR);
+            // r - r = 0
+            t = bytesRing.sub(r, r);
+            Assert.assertArrayEquals(zero, t);
+            copyR = BytesUtils.clone(r);
+            bytesRing.subi(copyR, r);
+            Assert.assertArrayEquals(zero, copyR);
         }
     }
 
     @Test
-    public void testConstantMultiply() {
+    public void testConstantMul() {
         byte[] zero = bytesRing.createZero();
         byte[] one = bytesRing.createOne();
         byte[] p;
@@ -156,6 +304,20 @@ public class BytesRingTest {
         byte[] t;
         // 0 * 0 = 0
         p = bytesRing.createZero();
+        t = bytesRing.mul(p, zero);
+        Assert.assertArrayEquals(zero, t);
+        copyP = BytesUtils.clone(p);
+        bytesRing.muli(copyP, zero);
+        Assert.assertArrayEquals(zero, copyP);
+        // 0 * 1 = 0
+        p = bytesRing.createZero();
+        t = bytesRing.mul(p, one);
+        Assert.assertArrayEquals(zero, t);
+        copyP = BytesUtils.clone(p);
+        bytesRing.muli(copyP, one);
+        Assert.assertArrayEquals(zero, copyP);
+        // 1 * 0 = 0
+        p = bytesRing.createOne();
         t = bytesRing.mul(p, zero);
         Assert.assertArrayEquals(zero, t);
         copyP = BytesUtils.clone(p);
@@ -174,7 +336,7 @@ public class BytesRingTest {
     }
 
     @Test
-    public void testRandomMultiply() {
+    public void testRandomMul() {
         byte[] zero = bytesRing.createZero();
         byte[] one = bytesRing.createOne();
         byte[] r;
@@ -199,28 +361,115 @@ public class BytesRingTest {
     }
 
     @Test
-    public void testParallel() {
-        Set<ByteBuffer> cArray = IntStream.range(0, MAX_PARALLEL)
+    public void testAddParallel() {
+        byte[] p = bytesRing.createNonZeroRandom(SECURE_RANDOM);
+        byte[] q = bytesRing.createNonZeroRandom(SECURE_RANDOM);
+        long addCount = IntStream.range(0, MAX_PARALLEL)
+            .parallel()
             .mapToObj(index -> {
-                byte[] a = new byte[CommonConstants.BLOCK_BYTE_LENGTH];
-                Arrays.fill(a, (byte) 0xFF);
-                byte[] b = new byte[CommonConstants.BLOCK_BYTE_LENGTH];
-                Arrays.fill(b, (byte) 0xFF);
-                return bytesRing.mul(a, b);
-            }).map(ByteBuffer::wrap)
-            .collect(Collectors.toSet());
-        Assert.assertEquals(1, cArray.size());
+                byte[] copyP = BytesUtils.clone(p);
+                byte[] copyQ = BytesUtils.clone(q);
+                return bytesRing.add(copyP, copyQ);
+            })
+            .map(ByteBuffer::wrap)
+            .distinct()
+            .count();
+        Assert.assertEquals(1L, addCount);
 
-        Set<ByteBuffer> aArray = IntStream.range(0, MAX_PARALLEL)
+        long addiCount = IntStream.range(0, MAX_PARALLEL)
+            .parallel()
             .mapToObj(index -> {
-                byte[] a = new byte[CommonConstants.BLOCK_BYTE_LENGTH];
-                Arrays.fill(a, (byte) 0xFF);
-                byte[] b = new byte[CommonConstants.BLOCK_BYTE_LENGTH];
-                Arrays.fill(b, (byte) 0xFF);
-                bytesRing.muli(a, b);
-                return a;
+                byte[] copyP = BytesUtils.clone(p);
+                byte[] copyQ = BytesUtils.clone(q);
+                bytesRing.addi(copyP, copyQ);
+                return copyP;
+            })
+            .map(ByteBuffer::wrap)
+            .distinct()
+            .count();
+        Assert.assertEquals(1L, addiCount);
+    }
+
+    @Test
+    public void testNegParallel() {
+        byte[] p = bytesRing.createNonZeroRandom(SECURE_RANDOM);
+        long negCount = IntStream.range(0, MAX_PARALLEL)
+            .parallel()
+            .mapToObj(index -> {
+                byte[] copyP = BytesUtils.clone(p);
+                return bytesRing.neg(copyP);
+            })
+            .map(ByteBuffer::wrap)
+            .distinct()
+            .count();
+        Assert.assertEquals(1L, negCount);
+
+        long addiCount = IntStream.range(0, MAX_PARALLEL)
+            .parallel()
+            .mapToObj(index -> {
+                byte[] copyP = BytesUtils.clone(p);
+                bytesRing.negi(copyP);
+                return copyP;
+            })
+            .map(ByteBuffer::wrap)
+            .distinct()
+            .count();
+        Assert.assertEquals(1L, addiCount);
+    }
+
+    @Test
+    public void testSubParallel() {
+        byte[] p = bytesRing.createNonZeroRandom(SECURE_RANDOM);
+        byte[] q = bytesRing.createNonZeroRandom(SECURE_RANDOM);
+        long subCount = IntStream.range(0, MAX_PARALLEL)
+            .parallel()
+            .mapToObj(index -> {
+                byte[] copyP = BytesUtils.clone(p);
+                byte[] copyQ = BytesUtils.clone(q);
+                return bytesRing.sub(copyP, copyQ);
+            })
+            .map(ByteBuffer::wrap)
+            .distinct()
+            .count();
+        Assert.assertEquals(1L, subCount);
+
+        long subiCount = IntStream.range(0, MAX_PARALLEL)
+            .parallel()
+            .mapToObj(index -> {
+                byte[] copyP = BytesUtils.clone(p);
+                byte[] copyQ = BytesUtils.clone(q);
+                bytesRing.subi(copyP, copyQ);
+                return copyP;
+            })
+            .map(ByteBuffer::wrap)
+            .distinct()
+            .count();
+        Assert.assertEquals(1L, subiCount);
+    }
+
+    @Test
+    public void testMulParallel() {
+        byte[] p = bytesRing.createNonZeroRandom(SECURE_RANDOM);
+        byte[] q = bytesRing.createNonZeroRandom(SECURE_RANDOM);
+        long mulCount = IntStream.range(0, MAX_PARALLEL)
+            .mapToObj(index -> {
+                byte[] copyP = BytesUtils.clone(p);
+                byte[] copyQ = BytesUtils.clone(q);
+                return bytesRing.mul(copyP, copyQ);
             }).map(ByteBuffer::wrap)
-            .collect(Collectors.toSet());
-        Assert.assertEquals(1, aArray.size());
+            .distinct()
+            .count();
+        Assert.assertEquals(1, mulCount);
+
+        long muliCount = IntStream.range(0, MAX_PARALLEL)
+            .mapToObj(index -> {
+                byte[] copyP = BytesUtils.clone(p);
+                byte[] copyQ = BytesUtils.clone(q);
+                bytesRing.muli(copyP, copyQ);
+                return copyP;
+            }).map(ByteBuffer::wrap)
+            .distinct()
+            .count();
+        Assert.assertEquals(1, muliCount);
     }
 }

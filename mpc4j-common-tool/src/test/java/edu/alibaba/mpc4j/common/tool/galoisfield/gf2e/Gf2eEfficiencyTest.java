@@ -71,7 +71,7 @@ public class Gf2eEfficiencyTest {
     private void testEfficiency(int l) {
         int n = 1 << LOG_N;
         for (Gf2eFactory.Gf2eType type : TYPES) {
-            Gf2e gf2e = Gf2eFactory.createInstance(type, EnvType.STANDARD, l);
+            Gf2e gf2e = Gf2eFactory.createInstance(EnvType.STANDARD, type, l);
             // 创建数据
             byte[][] arrayA = new byte[n][];
             byte[][] arrayB = new byte[n][];

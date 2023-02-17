@@ -57,8 +57,8 @@ public class Gf2kConsistencyTest {
 
     public Gf2kConsistencyTest(String name, Gf2kType thisType, Gf2kType thatType) {
         Preconditions.checkArgument(StringUtils.isNotBlank(name));
-        thisGf2k = Gf2kFactory.createInstance(thisType, EnvType.STANDARD);
-        thatGf2k = Gf2kFactory.createInstance(thatType, EnvType.STANDARD);
+        thisGf2k = Gf2kFactory.createInstance(EnvType.STANDARD, thisType);
+        thatGf2k = Gf2kFactory.createInstance(EnvType.STANDARD, thatType);
     }
 
     @Test

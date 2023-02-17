@@ -21,49 +21,43 @@ import java.security.SecureRandom;
  */
 class RingsZp64 implements Zp64 {
     /**
-     * 素数
+     * the prime
      */
     private final long prime;
     /**
-     * 素数比特长度
+     * the prime bit length
      */
     private final int primeBitLength;
     /**
-     * 素数字节长度
+     * the prime byte length
      */
     private final int primeByteLength;
     /**
-     * l比特长度
+     * the l bit length
      */
     private final int l;
     /**
-     * l字节长度
+     * the l byte length
      */
     private final int byteL;
     /**
-     * 最大有效元素：2^k
+     * 2^l
      */
     private final long rangeBound;
     /**
-     * Zp64素数域
+     * the finite field for the prime
      */
     private final IntegersZp64 finiteField;
     /**
-     * KDF
+     * the key derivation function
      */
     private final Kdf kdf;
     /**
-     * 伪随机数生成器
+     * the pseudo-random generator
      */
     private final Prg prg;
 
-    /**
-     * 素数为输入的构造函数。
-     *
-     * @param envType 环境类型。
-     * @param prime   素数。
-     */
-    public RingsZp64(EnvType envType, long prime) {
+    RingsZp64(EnvType envType, long prime) {
         assert BigInteger.valueOf(prime).isProbablePrime(CommonConstants.STATS_BIT_LENGTH)
             : "input prime is not a prime: " + prime;
         this.prime = prime;
@@ -77,12 +71,6 @@ class RingsZp64 implements Zp64 {
         prg = PrgFactory.createInstance(envType, Long.BYTES);
     }
 
-    /**
-     * 有效比特为输入的构造函数。
-     *
-     * @param envType 环境类型。
-     * @param l       有效比特长度。
-     */
     public RingsZp64(EnvType envType, int l) {
         prime = Zp64Manager.getPrime(l);
         primeBitLength = LongUtils.ceilLog2(prime);
@@ -116,12 +104,12 @@ class RingsZp64 implements Zp64 {
     }
 
     @Override
-    public int getPrimeBitLength() {
+    public int getElementBitLength() {
         return primeBitLength;
     }
 
     @Override
-    public int getPrimeByteLength() {
+    public int getElementByteLength() {
         return primeByteLength;
     }
 
@@ -176,9 +164,32 @@ class RingsZp64 implements Zp64 {
     }
 
     @Override
-    public long mulPow(final long a, final long b) {
-        assert validateElement(a) && validateElement(b);
+    public long pow(final long a, final long b) {
+        assert validateElement(a);
+        assert validateElement(b);
         return finiteField.powMod(a, b);
+    }
+
+    @Override
+    public long createZero() {
+        return 0L;
+    }
+
+    @Override
+    public long createOne() {
+        return 1L;
+    }
+
+    @Override
+    public boolean isZero(final long a) {
+        assert validateElement(a);
+        return a == 0L;
+    }
+
+    @Override
+    public boolean isOne(final long a) {
+        assert validateElement(a);
+        return a == 1L;
     }
 
     @Override

@@ -391,7 +391,7 @@ public class Cmg21KwPirClient<T> extends AbstractKwPirClient<T> {
         for (int i = 1; i < exponents.length; i++) {
             long[] temp = new long[base.length];
             for (int j = 0; j < base.length; j++) {
-                temp[j] = zp64.mulPow(base[j], exponents[i]);
+                temp[j] = zp64.pow(base[j], exponents[i]);
             }
             result[i] = temp;
         }

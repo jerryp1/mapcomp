@@ -58,7 +58,7 @@ public class Gf2kEfficiencyTest {
         LOGGER.info("{}\t{}\t{}\t{}", "      type", "    log(n)", "   mul(us)", "  muli(us)");
         int n = 1 << LOG_N;
         for (Gf2kType type : TYPES) {
-            Gf2k gf2k = Gf2kFactory.createInstance(type, EnvType.STANDARD);
+            Gf2k gf2k = Gf2kFactory.createInstance(EnvType.STANDARD, type);
             // 创建数据
             byte[][] aArray = new byte[n][];
             byte[][] bArray = new byte[n][];

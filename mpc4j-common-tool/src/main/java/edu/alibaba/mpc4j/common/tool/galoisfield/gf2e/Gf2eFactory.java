@@ -34,12 +34,12 @@ public class Gf2eFactory {
     /**
      * 创建GF2E运算实例。
      *
-     * @param type    类型。
      * @param envType the environment.
+     * @param type    类型。
      * @param l       l比特长度。
      * @return GF2E运算实例。
      */
-    public static Gf2e createInstance(Gf2eType type, EnvType envType, int l) {
+    public static Gf2e createInstance(EnvType envType, Gf2eType type, int l) {
         switch (type) {
             case RINGS:
                 return new RingsGf2e(envType, l);

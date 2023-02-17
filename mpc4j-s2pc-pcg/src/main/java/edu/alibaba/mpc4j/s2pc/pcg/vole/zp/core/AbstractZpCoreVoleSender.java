@@ -51,7 +51,7 @@ public abstract class AbstractZpCoreVoleSender extends AbstractTwoPartyPto imple
     protected void setInitInput(BigInteger prime, int maxNum) {
         zp = ZpFactory.createInstance(envType, prime);
         l = zp.getL();
-        primeByteLength = zp.getPrimeByteLength();
+        primeByteLength = zp.getElementByteLength();
         MathPreconditions.checkPositive("maxNum", maxNum);
         this.maxNum = maxNum;
         initState();
