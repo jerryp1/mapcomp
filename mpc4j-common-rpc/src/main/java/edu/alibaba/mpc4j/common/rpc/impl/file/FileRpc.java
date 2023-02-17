@@ -55,6 +55,10 @@ public class FileRpc implements Rpc {
      */
     private final FileParty ownParty;
     /**
+     * Own party's ID
+     */
+    private final int ownPartyId;
+    /**
      * 数据包数量
      */
     private long dataPacketNum;
@@ -79,6 +83,7 @@ public class FileRpc implements Rpc {
         // 参与方自身必须在所有参与方之中
         Preconditions.checkArgument(partySet.contains(ownParty), "Party set must contain own party");
         this.ownParty = ownParty;
+        ownPartyId = ownParty.getPartyId();
         // 按照参与方索引值，将参与方信息插入到ID映射中
         partyIdHashMap = new HashMap<>();
         partySet.forEach(partySpec -> partyIdHashMap.put(partySpec.getPartyId(), partySpec));
@@ -105,7 +110,6 @@ public class FileRpc implements Rpc {
 
     @Override
     public void connect() {
-        int ownPartyId = ownParty.getPartyId();
         partyIdHashMap.keySet().stream().sorted().forEach(otherPartyId -> {
             if (otherPartyId != ownPartyId) {
                 LOGGER.debug(
@@ -121,8 +125,7 @@ public class FileRpc implements Rpc {
     public void send(DataPacket dataPacket) {
         DataPacketHeader header = dataPacket.getHeader();
         Preconditions.checkArgument(
-            ownParty.getPartyId() == header.getSenderId(),
-            "Sender ID must be %s", ownParty.getPartyId()
+            ownPartyId == header.getSenderId(), "Sender ID must be %s", ownPartyId
         );
         Preconditions.checkArgument(
             partyIdHashMap.containsKey(header.getReceiverId()),
@@ -170,8 +173,7 @@ public class FileRpc implements Rpc {
     @Override
     public DataPacket receive(DataPacketHeader header) {
         Preconditions.checkArgument(
-            ownParty.getPartyId() == header.getReceiverId(),
-            "Receiver ID must be %s", ownParty.getPartyId()
+            ownPartyId == header.getReceiverId(), "Receiver ID must be %s", ownPartyId
         );
         Preconditions.checkArgument(
             partyIdHashMap.containsKey(header.getSenderId()),
@@ -223,9 +225,9 @@ public class FileRpc implements Rpc {
     }
 
     @Override
-    public DataPacket receiveAny(int senderId, int receiverId) {
+    public DataPacket receiveAny() {
         DataPacketHeader[] receivedDataPacketHeaders;
-        while ((receivedDataPacketHeaders = getReceivedDataPacketHeaders(senderId, receiverId)).length == 0) {
+        while ((receivedDataPacketHeaders = getReceivedDataPacketHeaders()).length == 0) {
             try {
                 //noinspection BusyWait
                 Thread.sleep(DEFAULT_READ_WAIT_MILLI_SECOND);
@@ -262,7 +264,6 @@ public class FileRpc implements Rpc {
     @Override
     public void synchronize() {
         // 对参与方进行排序，所有在自己之前的自己作为client、所有在自己之后的自己作为server
-        int ownPartyId = ownParty.getPartyId();
         partyIdHashMap.keySet().stream().sorted().forEach(otherPartyId -> {
             if (otherPartyId < ownPartyId) {
                 // 如果对方排序比自己小，则自己是client，需要给对方发送同步信息
@@ -316,7 +317,7 @@ public class FileRpc implements Rpc {
             + FILE_NAME_SEPARATOR + FILE_STATUS_SUFFIX;
     }
 
-    private DataPacketHeader[] getReceivedDataPacketHeaders(int senderId, int receiverId) {
+    private DataPacketHeader[] getReceivedDataPacketHeaders() {
         // read all status file
         File ownFilePath = new File(ownParty.getPartyFilePath());
         File[] files = ownFilePath.listFiles();
@@ -329,17 +330,17 @@ public class FileRpc implements Rpc {
             // given sender and receiver
             .filter(splitFileName ->
                 splitFileName[FILE_NAME_SPLIT_NUM - 1].equals(FILE_STATUS_SUFFIX)
-                && Integer.parseInt(splitFileName[4]) == senderId
-                && Integer.parseInt(splitFileName[5]) == receiverId
+                && Integer.parseInt(splitFileName[5]) == ownPartyId
             )
             .map(splitFileName -> {
                 long taskId = Long.parseLong(splitFileName[0]);
                 int ptoId = Integer.parseInt(splitFileName[1]);
                 int stepId = Integer.parseInt(splitFileName[2]);
+                int senderId = Integer.parseInt(splitFileName[4]);
                 long extraInfo = Long.parseLong(splitFileName[3]);
-                return new DataPacketHeader(taskId, ptoId, stepId, extraInfo, senderId, receiverId);
+                return new DataPacketHeader(taskId, ptoId, stepId, extraInfo, senderId, ownPartyId);
             })
-            .filter(header -> header.getReceiverId() == ownParty.getPartyId())
+            .filter(header -> header.getReceiverId() == ownPartyId)
             .toArray(DataPacketHeader[]::new);
     }
 

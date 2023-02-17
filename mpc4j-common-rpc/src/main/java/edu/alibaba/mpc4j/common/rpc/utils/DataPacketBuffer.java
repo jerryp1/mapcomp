@@ -52,18 +52,17 @@ public class DataPacketBuffer {
     }
 
     /**
-     * Takes any data packet that matches the sender ID and the receiver ID.
+     * Takes any data packet that matches the receiver ID.
      *
-     * @param senderId   the sender ID.
      * @param receiverId the receiver ID.
      * @return the data packet.
      */
-    public synchronized DataPacket takeAny(int senderId, int receiverId) throws InterruptedException {
+    public synchronized DataPacket takeAny(int receiverId) throws InterruptedException {
         DataPacketHeader targetHeader = null;
         while (targetHeader == null) {
             // we first try to find a candidate header
             for (DataPacketHeader dataPacketHeader : dataPacketBuffer.keySet()) {
-                if (dataPacketHeader.getSenderId() == senderId && dataPacketHeader.getReceiverId() == receiverId) {
+                if (dataPacketHeader.getReceiverId() == receiverId) {
                     targetHeader = dataPacketHeader;
                 }
             }

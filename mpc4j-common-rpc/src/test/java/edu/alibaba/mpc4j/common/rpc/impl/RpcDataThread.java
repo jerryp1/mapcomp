@@ -135,7 +135,6 @@ class RpcDataThread extends Thread {
 
     @Override
     public void run() {
-        rpc.connect();
         // 发送和接收空数据包
         emptyDataPacket();
         rpc.synchronize();
@@ -151,7 +150,6 @@ class RpcDataThread extends Thread {
         // 发送多个单条数据发送包并接收
         takeAnyDataPacket();
         rpc.synchronize();
-        rpc.disconnect();
     }
 
     private void emptyDataPacket() {
@@ -299,7 +297,7 @@ class RpcDataThread extends Thread {
             for (Party party : rpc.getPartySet()) {
                 // 不测试自己给自己发送数据包
                 if (!party.equals(rpc.ownParty())) {
-                    DataPacket dataPacket = rpc.receiveAny(party.getPartyId(), rpc.ownParty().getPartyId());
+                    DataPacket dataPacket = rpc.receiveAny();
                     takeAnyReceivedDataPacketSet.add(dataPacket);
                 }
             }
