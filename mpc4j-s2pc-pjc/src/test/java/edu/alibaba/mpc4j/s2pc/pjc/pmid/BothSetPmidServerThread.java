@@ -41,11 +41,8 @@ class BothSetPmidServerThread extends Thread {
     @Override
     public void run() {
         try {
-            server.getRpc().connect();
             server.init(serverElementSet.size(), 1, clientSetSize, 1);
             serverOutput = server.pmid(serverElementSet, clientSetSize);
-            server.destroy();
-            server.getRpc().disconnect();
         } catch (MpcAbortException e) {
             e.printStackTrace();
         }

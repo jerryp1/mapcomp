@@ -11,7 +11,9 @@ import edu.alibaba.mpc4j.s2pc.pjc.bitmap.BitmapSender;
 import edu.alibaba.mpc4j.s2pc.pjc.bitmap.SecureBitmapConfig;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.time.StopWatch;
+import org.junit.After;
 import org.junit.Assert;
+import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
@@ -49,12 +51,14 @@ public class CountBitmapTest {
 
     @Parameterized.Parameters(name = "{0}")
     public static Collection<Object[]> configurations() {
-        Collection<Object[]> configurationParams = new ArrayList<>();
-        configurationParams.add(new Object[]{"secret v. secret", false, false});
-        configurationParams.add(new Object[]{"public v. secret", true, false});
-        configurationParams.add(new Object[]{"secret v. public", false, true});
-        configurationParams.add(new Object[]{"public v. public", true, true});
-        return configurationParams;
+        Collection<Object[]> configurations = new ArrayList<>();
+
+        configurations.add(new Object[]{"secret v. secret", false, false});
+        configurations.add(new Object[]{"public v. secret", true, false});
+        configurations.add(new Object[]{"secret v. public", false, true});
+        configurations.add(new Object[]{"public v. public", true, true});
+
+        return configurations;
     }
 
     /**
@@ -88,6 +92,18 @@ public class CountBitmapTest {
         config = new SecureBitmapConfig.Builder().build();
         this.xPublic = xPublic;
         this.yPublic = yPublic;
+    }
+
+    @Before
+    public void connect() {
+        senderRpc.connect();
+        receiverRpc.connect();
+    }
+
+    @After
+    public void disconnect() {
+        senderRpc.disconnect();
+        receiverRpc.disconnect();
     }
 
     @Test

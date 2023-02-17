@@ -61,14 +61,11 @@ class XorBitmapReceiverThread extends Thread {
     @Override
     public void run() {
         try {
-            receiver.getRpc().connect();
             receiver.init(maxNum, maxNum);
             SecureBitmapContainer x0 = xPublic ? receiver.setPublicRoaringBitmap(x, maxNum) : receiver.setOtherRoaringBitmap(maxNum);
             SecureBitmapContainer y0 = yPublic ? receiver.setPublicRoaringBitmap(y, maxNum) : receiver.setOwnRoaringBitmap(y, maxNum);
             SecureBitmapContainer z0 = receiver.xor(x0, y0);
             z = receiver.toOwnRoaringBitmap(z0);
-            receiver.destroy();
-            receiver.getRpc().disconnect();
         } catch (MpcAbortException e) {
             e.printStackTrace();
         }

@@ -58,11 +58,8 @@ class PmidServerThread extends Thread {
     @Override
     public void run() {
         try {
-            server.getRpc().connect();
             server.init(serverElementMap.size(), maxServerU, clientSetSize, maxClientU);
             serverOutput = server.pmid(serverElementMap, clientSetSize, clientU);
-            server.destroy();
-            server.getRpc().disconnect();
         } catch (MpcAbortException e) {
             e.printStackTrace();
         }

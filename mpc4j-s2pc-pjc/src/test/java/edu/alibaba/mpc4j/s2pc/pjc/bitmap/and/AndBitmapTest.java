@@ -51,12 +51,14 @@ public class AndBitmapTest {
 
     @Parameterized.Parameters(name = "{0}")
     public static Collection<Object[]> configurations() {
-        Collection<Object[]> configurationParams = new ArrayList<>();
-        configurationParams.add(new Object[]{"secret v. secret", false, false});
-        configurationParams.add(new Object[]{"public v. secret", true, false});
-        configurationParams.add(new Object[]{"secret v. public", false, true});
-        configurationParams.add(new Object[]{"public v. public", true, true});
-        return configurationParams;
+        Collection<Object[]> configurations = new ArrayList<>();
+
+        configurations.add(new Object[]{"secret v. secret", false, false});
+        configurations.add(new Object[]{"public v. secret", true, false});
+        configurations.add(new Object[]{"secret v. public", false, true});
+        configurations.add(new Object[]{"public v. public", true, true});
+
+        return configurations;
     }
 
     /**

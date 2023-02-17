@@ -54,14 +54,11 @@ class OrBitmapSenderThread extends Thread {
     @Override
     public void run() {
         try {
-            sender.getRpc().connect();
             sender.init(maxNum, maxNum);
             SecureBitmapContainer x0 = xPublic ? sender.setPublicRoaringBitmap(x, maxNum) : sender.setOwnRoaringBitmap(x, maxNum);
             SecureBitmapContainer y0 = yPublic ? sender.setPublicRoaringBitmap(y, maxNum) : sender.setOtherRoaringBitmap(maxNum);
             SecureBitmapContainer z0 = sender.or(x0, y0);
             sender.toOtherRoaringBitmap(z0);
-            sender.destroy();
-            sender.getRpc().disconnect();
         } catch (MpcAbortException e) {
             e.printStackTrace();
         }

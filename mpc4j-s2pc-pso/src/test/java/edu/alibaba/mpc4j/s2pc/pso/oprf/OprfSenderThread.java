@@ -36,7 +36,6 @@ class OprfSenderThread extends Thread {
         try {
             sender.init(batchSize);
             senderOutput = sender.oprf(batchSize);
-            sender.destroy();
         } catch (MpcAbortException e) {
             e.printStackTrace();
         }

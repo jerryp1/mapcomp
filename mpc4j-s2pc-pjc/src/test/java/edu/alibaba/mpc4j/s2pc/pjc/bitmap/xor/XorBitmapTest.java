@@ -1,11 +1,15 @@
 package edu.alibaba.mpc4j.s2pc.pjc.bitmap.xor;
 
+import com.google.common.base.Preconditions;
 import edu.alibaba.mpc4j.common.rpc.Rpc;
 import edu.alibaba.mpc4j.common.rpc.RpcManager;
 import edu.alibaba.mpc4j.common.rpc.impl.memory.MemoryRpcManager;
 import edu.alibaba.mpc4j.s2pc.pjc.bitmap.*;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.time.StopWatch;
+import org.junit.After;
 import org.junit.Assert;
+import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
@@ -15,7 +19,6 @@ import org.slf4j.LoggerFactory;
 
 import java.security.SecureRandom;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.IntStream;
@@ -44,12 +47,14 @@ public class XorBitmapTest {
 
     @Parameterized.Parameters(name = "{0}")
     public static Collection<Object[]> configurations() {
-        Collection<Object[]> configurationParams = new ArrayList<>();
-        configurationParams.add(new Object[]{new SecureBitmapConfig.Builder().build(), false, false});
-        configurationParams.add(new Object[]{new SecureBitmapConfig.Builder().build(), true, false});
-        configurationParams.add(new Object[]{new SecureBitmapConfig.Builder().build(), false, true});
-        configurationParams.add(new Object[]{new SecureBitmapConfig.Builder().build(), true, true});
-        return configurationParams;
+        Collection<Object[]> configurations = new ArrayList<>();
+
+        configurations.add(new Object[]{"secret v. secret", false, false});
+        configurations.add(new Object[]{"public v. secret", true, false});
+        configurations.add(new Object[]{"secret v. public", false, true});
+        configurations.add(new Object[]{"public v. public", true, true});
+
+        return configurations;
     }
 
     /**
@@ -73,69 +78,70 @@ public class XorBitmapTest {
      */
     private final boolean yPublic;
 
-    public XorBitmapTest(BitmapConfig bitmapConfig, boolean xPublic, boolean yPublic) {
+    public XorBitmapTest(String name, boolean xPublic, boolean yPublic) {
+        Preconditions.checkArgument(StringUtils.isNotBlank(name));
+        // We cannot use NettyRPC in the test case since it needs multi-thread connect / disconnect.
+        // In other word, we cannot connect / disconnect NettyRpc in @Before / @After, respectively.
         RpcManager rpcManager = new MemoryRpcManager(2);
         senderRpc = rpcManager.getRpc(0);
         receiverRpc = rpcManager.getRpc(1);
-        this.config = bitmapConfig;
+        this.config = new SecureBitmapConfig.Builder().build();
         this.xPublic = xPublic;
         this.yPublic = yPublic;
     }
 
+    @Before
+    public void connect() {
+        senderRpc.connect();
+        receiverRpc.connect();
+    }
+
+    @After
+    public void disconnect() {
+        senderRpc.disconnect();
+        receiverRpc.disconnect();
+    }
+
     @Test
     public void test1() {
-        BitmapParty sender = new BitmapSender(senderRpc, receiverRpc.ownParty(), config);
-        BitmapParty receiver = new BitmapReceiver(receiverRpc, senderRpc.ownParty(), config);
-        testBitmap(sender, receiver, 1);
+        testBitmap(1, false);
     }
 
     @Test
     public void test2() {
-        BitmapParty sender = new BitmapSender(senderRpc, receiverRpc.ownParty(), config);
-        BitmapParty receiver = new BitmapReceiver(receiverRpc, senderRpc.ownParty(), config);
-        testBitmap(sender, receiver, 2);
+        testBitmap(2, false);
     }
 
     @Test
     public void test8() {
-        BitmapParty sender = new BitmapSender(senderRpc, receiverRpc.ownParty(), config);
-        BitmapParty receiver = new BitmapReceiver(receiverRpc, senderRpc.ownParty(), config);
-        testBitmap(sender, receiver, 8);
+        testBitmap(8, false);
     }
 
     @Test
     public void testDefaultNum() {
-        BitmapParty sender = new BitmapSender(senderRpc, receiverRpc.ownParty(), config);
-        BitmapParty receiver = new BitmapReceiver(receiverRpc, senderRpc.ownParty(), config);
-        testBitmap(sender, receiver, DEFAULT_NUM);
+        testBitmap(DEFAULT_NUM, false);
     }
 
     @Test
     public void testParallelDefaultNum() {
-        BitmapParty sender = new BitmapSender(senderRpc, receiverRpc.ownParty(), config);
-        BitmapParty receiver = new BitmapReceiver(receiverRpc, senderRpc.ownParty(), config);
-        sender.setParallel(true);
-        receiver.setParallel(true);
-        testBitmap(sender, receiver, DEFAULT_NUM);
+        testBitmap(DEFAULT_NUM, true);
     }
 
     @Test
     public void testLargeNum() {
-        BitmapParty sender = new BitmapSender(senderRpc, receiverRpc.ownParty(), config);
-        BitmapParty receiver = new BitmapReceiver(receiverRpc, senderRpc.ownParty(), config);
-        testBitmap(sender, receiver, LARGE_NUM);
+        testBitmap(LARGE_NUM, false);
     }
 
     @Test
     public void testParallelLargeNum() {
-        BitmapParty sender = new BitmapSender(senderRpc, receiverRpc.ownParty(), config);
-        BitmapParty receiver = new BitmapReceiver(receiverRpc, senderRpc.ownParty(), config);
-        sender.setParallel(true);
-        receiver.setParallel(true);
-        testBitmap(sender, receiver, LARGE_NUM);
+        testBitmap(LARGE_NUM, true);
     }
 
-    private void testBitmap(BitmapParty sender, BitmapParty receiver, int maxNum) {
+    private void testBitmap(int maxNum, boolean parallel) {
+        BitmapParty sender = new BitmapSender(senderRpc, receiverRpc.ownParty(), config);
+        BitmapParty receiver = new BitmapReceiver(receiverRpc, senderRpc.ownParty(), config);
+        sender.setParallel(parallel);
+        receiver.setParallel(parallel);
         int randomTaskId = Math.abs(SECURE_RANDOM.nextInt());
         sender.setTaskId(randomTaskId);
         receiver.setTaskId(randomTaskId);
@@ -177,6 +183,8 @@ public class XorBitmapTest {
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
+        sender.destroy();
+        receiver.destroy();
     }
 
     private void assertOutput(RoaringBitmap xPlain, RoaringBitmap yPlain, RoaringBitmap zResult) {

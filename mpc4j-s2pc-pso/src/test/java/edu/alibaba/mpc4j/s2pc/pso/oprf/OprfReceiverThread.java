@@ -36,7 +36,6 @@ class OprfReceiverThread extends Thread {
         try {
             receiver.init(inputs.length);
             receiverOutput = receiver.oprf(inputs);
-            receiver.destroy();
         } catch (MpcAbortException e) {
             e.printStackTrace();
         }

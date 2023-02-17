@@ -52,11 +52,8 @@ public class ClientSetPmidClientThread extends Thread {
     @Override
     public void run() {
         try {
-            client.getRpc().connect();
             client.init(clientElementSet.size(), 1, serverSetSize, maxServerU);
             clientOutput = client.pmid(clientElementSet, serverSetSize, serverU);
-            client.destroy();
-            client.getRpc().disconnect();
         } catch (MpcAbortException e) {
             e.printStackTrace();
         }
