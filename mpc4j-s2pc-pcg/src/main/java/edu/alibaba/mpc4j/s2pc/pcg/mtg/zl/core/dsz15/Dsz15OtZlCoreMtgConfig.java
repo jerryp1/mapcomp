@@ -8,29 +8,29 @@ import edu.alibaba.mpc4j.s2pc.pcg.ot.cot.CotConfig;
 import edu.alibaba.mpc4j.s2pc.pcg.ot.cot.CotFactory;
 
 /**
- * DSZ15核l比特三元组生成协议配置项。
+ * DSZ15 Zl core multiplication triple generation protocol configuration.
  *
  * @author Sheng Hu, Weiran Liu
- * @date 2022/9/8
+ * @date 2022/2/20
  */
-public class Dsz15ZlCoreMtgConfig implements ZlCoreMtgConfig {
+public class Dsz15OtZlCoreMtgConfig implements ZlCoreMtgConfig {
     /**
-     * 乘法三元组比特长度
+     * the l bit length
      */
     private final int l;
     /**
-     * COT协议配置项
+     * the COT configuration
      */
     private final CotConfig cotConfig;
 
-    private Dsz15ZlCoreMtgConfig(Builder builder) {
+    private Dsz15OtZlCoreMtgConfig(Builder builder) {
         l = builder.l;
         cotConfig = builder.cotConfig;
     }
 
     @Override
     public ZlCoreMtgFactory.ZlCoreMtgType getPtoType() {
-        return ZlCoreMtgFactory.ZlCoreMtgType.DSZ15;
+        return ZlCoreMtgFactory.ZlCoreMtgType.DSZ15_OT;
     }
 
     @Override
@@ -66,13 +66,13 @@ public class Dsz15ZlCoreMtgConfig implements ZlCoreMtgConfig {
         return cotConfig;
     }
 
-    public static class Builder implements org.apache.commons.lang3.builder.Builder<Dsz15ZlCoreMtgConfig> {
+    public static class Builder implements org.apache.commons.lang3.builder.Builder<Dsz15OtZlCoreMtgConfig> {
         /**
-         * 乘法三元组比特长度
+         * the l bit length
          */
         private final int l;
         /**
-         * COT协议配置项
+         * the COT configuration
          */
         private CotConfig cotConfig;
 
@@ -89,8 +89,8 @@ public class Dsz15ZlCoreMtgConfig implements ZlCoreMtgConfig {
         }
 
         @Override
-        public Dsz15ZlCoreMtgConfig build() {
-            return new Dsz15ZlCoreMtgConfig(this);
+        public Dsz15OtZlCoreMtgConfig build() {
+            return new Dsz15OtZlCoreMtgConfig(this);
         }
     }
 }

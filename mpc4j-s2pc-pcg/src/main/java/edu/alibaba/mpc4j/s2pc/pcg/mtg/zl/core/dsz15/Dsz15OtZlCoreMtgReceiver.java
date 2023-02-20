@@ -9,9 +9,10 @@ import edu.alibaba.mpc4j.common.tool.crypto.prg.PrgFactory;
 import edu.alibaba.mpc4j.common.tool.utils.BigIntegerUtils;
 import edu.alibaba.mpc4j.common.tool.utils.BinaryUtils;
 import edu.alibaba.mpc4j.common.tool.utils.BytesUtils;
+import edu.alibaba.mpc4j.common.tool.utils.CommonUtils;
 import edu.alibaba.mpc4j.s2pc.pcg.mtg.zl.ZlTriple;
 import edu.alibaba.mpc4j.s2pc.pcg.mtg.zl.core.AbstractZlCoreMtgParty;
-import edu.alibaba.mpc4j.s2pc.pcg.mtg.zl.core.dsz15.Dsz15ZlCoreMtgPtoDesc.PtoStep;
+import edu.alibaba.mpc4j.s2pc.pcg.mtg.zl.core.dsz15.Dsz15OtZlCoreMtgPtoDesc.PtoStep;
 import edu.alibaba.mpc4j.s2pc.pcg.ot.cot.*;
 
 import java.math.BigInteger;
@@ -23,56 +24,67 @@ import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
 /**
- * DSZ15核l比特三元组生成协议接收方。
+ * The receiver for DSZ15 Zl core multiplication triple generation protocol.
  *
- * @author Weiran Liu
- * @date 2022/9/8
+ * @author Sheng Hu, Weiran Liu
+ * @date 2023/2/20
  */
-public class Dsz15ZlCoreMtgReceiver extends AbstractZlCoreMtgParty {
+public class Dsz15OtZlCoreMtgReceiver extends AbstractZlCoreMtgParty {
     /**
-     * COT协议发送方
+     * the COT sender
      */
     private final CotSender cotSender;
     /**
-     * COT协议接收方
+     * the COT receiver
      */
     private final CotReceiver cotReceiver;
     /**
-     * 生成流密钥的伪随机数生成器
+     * the shift table
      */
-    private final Prg prg;
+    private final int[] shiftTable;
     /**
-     * 随机分量a1
+     * the pseudo-random generators
+     */
+    private final Prg[] prgs;
+    /**
+     * a1
      */
     private BigInteger[] a1;
     /**
-     * 随机分量b1
+     * b1
      */
     private BigInteger[] b1;
     /**
-     * 随机分量c1
+     * c1
      */
     private BigInteger[] c1;
     /**
-     * 接收方第一次OT消息对
+     * the receiver's correlation pairs (in the first COT round)
      */
-    private BigInteger[][] receiverMessagesArray;
+    private BigInteger[][] receiverCorrelationPairs;
     /**
-     * 接收方第二次COT的选择比特
+     * the receiver's choice (in the second COT round)
      */
     private boolean[] receiverChoices;
     /**
-     * 接收方第二次OT接收的消息
+     * the sender's corrections (in the second COT round)
      */
-    private BigInteger[] senderMessageArray;
+    private BigInteger[] senderCorrelations;
 
-    public Dsz15ZlCoreMtgReceiver(Rpc receiverRpc, Party senderParty, Dsz15ZlCoreMtgConfig config) {
-        super(Dsz15ZlCoreMtgPtoDesc.getInstance(), receiverRpc, senderParty, config);
+    public Dsz15OtZlCoreMtgReceiver(Rpc receiverRpc, Party senderParty, Dsz15OtZlCoreMtgConfig config) {
+        super(Dsz15OtZlCoreMtgPtoDesc.getInstance(), receiverRpc, senderParty, config);
         cotSender = CotFactory.createSender(receiverRpc, senderParty, config.getCotConfig());
         addSubPtos(cotSender);
         cotReceiver = CotFactory.createReceiver(receiverRpc, senderParty, config.getCotConfig());
         addSubPtos(cotReceiver);
-        prg = PrgFactory.createInstance(envType, byteL);
+        // each bit of a and b can be shifted to reduce the communication cost
+        shiftTable = IntStream.range(0, l).map(i -> l - 1 - i).toArray();
+        prgs = IntStream.range(0, l)
+            .mapToObj(i -> {
+                int shiftByteL = CommonUtils.getByteLength(i + 1);
+                return PrgFactory.createInstance(envType, shiftByteL);
+            })
+            .toArray(Prg[]::new);
     }
 
     @Override
@@ -103,89 +115,111 @@ public class Dsz15ZlCoreMtgReceiver extends AbstractZlCoreMtgParty {
         stopWatch.stop();
         long initParamTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
         stopWatch.reset();
-        logStepInfo(PtoState.PTO_STEP, 1, 4, initParamTime);
+        logStepInfo(PtoState.PTO_STEP, 1, 6, initParamTime);
 
         stopWatch.start();
-        // 第一轮OT协议
+        // the first COT round
         CotSenderOutput cotSenderOutput = cotSender.send(num * l);
-        List<byte[]> receiverMessagesPayload = generateReceiverMessagesPayload(cotSenderOutput);
-        DataPacketHeader receiverMessagesHeader = new DataPacketHeader(
-            encodeTaskId, getPtoDesc().getPtoId(), PtoStep.RECEIVER_SEND_MESSAGES.ordinal(), extraInfo,
+        stopWatch.stop();
+        long firstCotTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
+        stopWatch.reset();
+        logStepInfo(PtoState.PTO_STEP, 2, 6, firstCotTime);
+
+        stopWatch.start();
+        // generate receiver's correlations
+        List<byte[]> receiverCorrelationPayload = generateReceiverCorrelationPayload(cotSenderOutput);
+        DataPacketHeader receiverCorrelationHeader = new DataPacketHeader(
+            encodeTaskId, getPtoDesc().getPtoId(), PtoStep.RECEIVER_SEND_CORRELATION.ordinal(), extraInfo,
             ownParty().getPartyId(), otherParty().getPartyId()
         );
-        rpc.send(DataPacket.fromByteArrayList(receiverMessagesHeader, receiverMessagesPayload));
+        rpc.send(DataPacket.fromByteArrayList(receiverCorrelationHeader, receiverCorrelationPayload));
         stopWatch.stop();
         long sendTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
         stopWatch.reset();
-        logStepInfo(PtoState.PTO_STEP, 2, 4, sendTime);
+        logStepInfo(PtoState.PTO_STEP, 3, 6, sendTime);
 
-        // 第二轮OT协议
+        // the second COT round
         stopWatch.start();
         CotReceiverOutput cotReceiverOutput = cotReceiver.receive(receiverChoices);
-        DataPacketHeader senderMessagesHeader = new DataPacketHeader(
-            encodeTaskId, getPtoDesc().getPtoId(), PtoStep.SENDER_SEND_MESSAGES.ordinal(), extraInfo,
+        stopWatch.stop();
+        long secondCotTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
+        stopWatch.reset();
+        logStepInfo(PtoState.PTO_STEP, 4, 6, secondCotTime);
+
+        DataPacketHeader senderCorrelationHeader = new DataPacketHeader(
+            encodeTaskId, getPtoDesc().getPtoId(), PtoStep.SENDER_SEND_CORRELATION.ordinal(), extraInfo,
             otherParty().getPartyId(), ownParty().getPartyId()
         );
-        List<byte[]> senderMessagesPayload = rpc.receive(senderMessagesHeader).getPayload();
-        handleSenderMessagesPayload(cotReceiverOutput, senderMessagesPayload);
+        List<byte[]> senderCorrelationPayload = rpc.receive(senderCorrelationHeader).getPayload();
+
+        stopWatch.start();
+        // handle sender's correlations
+        handleSenderCorrelationPayload(cotReceiverOutput, senderCorrelationPayload);
         stopWatch.stop();
         long receiveTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
         stopWatch.reset();
-        logStepInfo(PtoState.PTO_STEP, 3, 4, receiveTime);
+        logStepInfo(PtoState.PTO_STEP, 5, 6, receiveTime);
 
         stopWatch.start();
         ZlTriple receiverOutput = computeTriples();
         stopWatch.stop();
         long tripleTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
         stopWatch.reset();
-        logStepInfo(PtoState.PTO_STEP, 4, 4, tripleTime);
+        logStepInfo(PtoState.PTO_STEP, 6, 6, tripleTime);
 
         logPhaseInfo(PtoState.PTO_END);
         return receiverOutput;
     }
 
     private void initParams() {
-        // 构建三元组缓存区
         a1 = new BigInteger[num];
         b1 = new BigInteger[num];
         c1 = new BigInteger[num];
-        // 构建接收方OT的选择比特和发送消息
         receiverChoices = new boolean[num * l];
-        receiverMessagesArray = new BigInteger[num * l][2];
+        receiverCorrelationPairs = new BigInteger[num * l][2];
         IntStream indexIntStream = IntStream.range(0, num);
         indexIntStream = parallel ? indexIntStream.parallel() : indexIntStream;
         indexIntStream.forEach(arrayIndex -> {
-            // 客户端生成num组随机的bitLength比特长大整数。
+            // Let P_1 randomly generate <a>_1, <b>_1
             a1[arrayIndex] = new BigInteger(l, secureRandom);
             b1[arrayIndex] = new BigInteger(l, secureRandom);
-            // 客户端为每组三元组生成l个随机大整数，并计算第一次OT时客户端的输入
+            // The terms <a>_1 * <b>_1 can be computed locally by P_1
+            c1[arrayIndex] = a1[arrayIndex].multiply(b1[arrayIndex]).and(mask);
             int offset = arrayIndex * l;
-            IntStream.range(0, l).forEach(bitIndex -> {
-                receiverMessagesArray[offset + bitIndex][0] = new BigInteger(l, this.secureRandom);
-                receiverMessagesArray[offset + bitIndex][1] = a1[arrayIndex]
-                    .shiftLeft(l - 1 - bitIndex).and(mask)
-                    .add(receiverMessagesArray[offset + bitIndex][0]).and(mask);
+            IntStream.range(0, l).forEach(i -> {
+                // in the i-th COT, P_1 inputs the correlation function <a>_1 * 2^i - y mod 2^l
+                BigInteger y = new BigInteger(i + 1, secureRandom);
+                // c_1 = c_1 - y * 2^{i}
+                c1[arrayIndex] = c1[arrayIndex].subtract(y.shiftLeft(shiftTable[i])).and(mask);
+                // s_{i, 0} = y
+                receiverCorrelationPairs[offset + i][0] = y;
+                // s_{i, 1} = ((a_1 + y) << 2^i)
+                receiverCorrelationPairs[offset + i][1] = a1[arrayIndex]
+                    .add(y).shiftLeft(shiftTable[i]).and(mask)
+                    .shiftRight(shiftTable[i]);
             });
+            // In the i-th COT, P_1 inputs <b>_1[i] as choice bit.
             byte[] byteChoices = BigIntegerUtils.nonNegBigIntegerToByteArray(b1[arrayIndex], byteL);
             boolean[] binaryChoices = BinaryUtils.byteArrayToBinary(byteChoices, l);
             System.arraycopy(binaryChoices, 0, receiverChoices, offset, l);
         });
     }
 
-    private List<byte[]> generateReceiverMessagesPayload(CotSenderOutput cotSenderOutput) {
+    private List<byte[]> generateReceiverCorrelationPayload(CotSenderOutput cotSenderOutput) {
         IntStream indexIntStream = IntStream.range(0, num);
         indexIntStream = parallel ? indexIntStream.parallel() : indexIntStream;
         return indexIntStream
             .mapToObj(arrayIndex ->
                 IntStream.range(0, l)
-                    .mapToObj(bitIndex -> {
-                        int offset = arrayIndex * l + bitIndex;
+                    .mapToObj(i -> {
+                        int offset = arrayIndex * l + i;
+                        int shiftByteL = prgs[i].getOutputByteLength();
                         byte[][] ciphertexts = new byte[2][];
-                        ciphertexts[0] = prg.extendToBytes(cotSenderOutput.getR0(offset));
-                        byte[] message0 = BigIntegerUtils.nonNegBigIntegerToByteArray(receiverMessagesArray[offset][0], byteL);
+                        ciphertexts[0] = prgs[i].extendToBytes(cotSenderOutput.getR0(offset));
+                        byte[] message0 = BigIntegerUtils.nonNegBigIntegerToByteArray(receiverCorrelationPairs[offset][0], shiftByteL);
                         BytesUtils.xori(ciphertexts[0], message0);
-                        ciphertexts[1] = prg.extendToBytes(cotSenderOutput.getR1(offset));
-                        byte[] message1 = BigIntegerUtils.nonNegBigIntegerToByteArray(receiverMessagesArray[offset][1], byteL);
+                        ciphertexts[1] = prgs[i].extendToBytes(cotSenderOutput.getR1(offset));
+                        byte[] message1 = BigIntegerUtils.nonNegBigIntegerToByteArray(receiverCorrelationPairs[offset][1], shiftByteL);
                         BytesUtils.xori(ciphertexts[1], message1);
                         return ciphertexts;
                     })
@@ -195,19 +229,19 @@ public class Dsz15ZlCoreMtgReceiver extends AbstractZlCoreMtgParty {
             .collect(Collectors.toList());
     }
 
-    private void handleSenderMessagesPayload(CotReceiverOutput cotReceiverOutput, List<byte[]> senderMessagesPayload)
+    private void handleSenderCorrelationPayload(CotReceiverOutput cotReceiverOutput, List<byte[]> senderMessagesPayload)
         throws MpcAbortException {
         MpcAbortPreconditions.checkArgument(senderMessagesPayload.size() == num * l * 2);
         byte[][] messagePairArray = senderMessagesPayload.toArray(new byte[0][]);
         IntStream indexIntStream = IntStream.range(0, num);
         indexIntStream = parallel ? indexIntStream.parallel() : indexIntStream;
-        senderMessageArray = indexIntStream
+        senderCorrelations = indexIntStream
             .mapToObj(arrayIndex ->
                 IntStream.range(0, l)
-                    .mapToObj(bitIndex -> {
-                        int offset = arrayIndex * l + bitIndex;
+                    .mapToObj(i -> {
+                        int offset = arrayIndex * l + i;
                         byte[] message = cotReceiverOutput.getRb(offset);
-                        message = prg.extendToBytes(message);
+                        message = prgs[i].extendToBytes(message);
                         if (cotReceiverOutput.getChoice(offset)) {
                             BytesUtils.xori(message, messagePairArray[2 * offset + 1]);
                         } else {
@@ -225,21 +259,19 @@ public class Dsz15ZlCoreMtgReceiver extends AbstractZlCoreMtgParty {
         IntStream indexIntStream = IntStream.range(0, num);
         indexIntStream = parallel ? indexIntStream.parallel() : indexIntStream;
         indexIntStream.forEach(arrayIndex -> {
-            // 先循环加上客户端生成的前两元的乘积，再减去第一次OTE中客户端的输入并加上第二次OTE中客户端选择的结果
             int offset = arrayIndex * l;
-            c1[arrayIndex] = a1[arrayIndex].multiply(b1[arrayIndex]).and(mask);
-            IntStream.range(0, l).forEach(bitIndex ->
-                c1[arrayIndex] = c1[arrayIndex]
-                    .subtract(receiverMessagesArray[offset + bitIndex][0])
-                    .add(senderMessageArray[offset + bitIndex]).and(mask)
+            IntStream.range(0, l).forEach(i -> {
+                    // c_1 = c_1 + (s_{i, b} ⊕ H(k_{i, b}))
+                    c1[arrayIndex] = c1[arrayIndex].add(senderCorrelations[offset + i].shiftLeft(shiftTable[i])).and(mask);
+                }
             );
         });
         ZlTriple zlTriple = ZlTriple.create(l, num, a1, b1, c1);
         a1 = null;
         b1 = null;
         c1 = null;
-        senderMessageArray = null;
-        receiverMessagesArray = null;
+        senderCorrelations = null;
+        receiverCorrelationPairs = null;
         return zlTriple;
     }
 }

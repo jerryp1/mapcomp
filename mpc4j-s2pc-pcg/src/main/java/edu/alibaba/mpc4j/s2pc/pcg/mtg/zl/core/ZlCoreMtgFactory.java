@@ -4,9 +4,9 @@ import edu.alibaba.mpc4j.common.rpc.Party;
 import edu.alibaba.mpc4j.common.rpc.Rpc;
 import edu.alibaba.mpc4j.common.rpc.desc.SecurityModel;
 import edu.alibaba.mpc4j.common.rpc.pto.PtoFactory;
-import edu.alibaba.mpc4j.s2pc.pcg.mtg.zl.core.dsz15.Dsz15ZlCoreMtgConfig;
-import edu.alibaba.mpc4j.s2pc.pcg.mtg.zl.core.dsz15.Dsz15ZlCoreMtgReceiver;
-import edu.alibaba.mpc4j.s2pc.pcg.mtg.zl.core.dsz15.Dsz15ZlCoreMtgSender;
+import edu.alibaba.mpc4j.s2pc.pcg.mtg.zl.core.dsz15.Dsz15OtZlCoreMtgConfig;
+import edu.alibaba.mpc4j.s2pc.pcg.mtg.zl.core.dsz15.Dsz15OtZlCoreMtgReceiver;
+import edu.alibaba.mpc4j.s2pc.pcg.mtg.zl.core.dsz15.Dsz15OtZlCoreMtgSender;
 import edu.alibaba.mpc4j.s2pc.pcg.mtg.zl.core.ideal.IdealZlCoreMtgConfig;
 import edu.alibaba.mpc4j.s2pc.pcg.mtg.zl.core.ideal.IdealZlCoreMtgReceiver;
 import edu.alibaba.mpc4j.s2pc.pcg.mtg.zl.core.ideal.IdealZlCoreMtgSender;
@@ -34,21 +34,9 @@ public class ZlCoreMtgFactory implements PtoFactory {
          */
         IDEAL,
         /**
-         * DSZ15协议
+         * DSZ15 based on OT
          */
-        DSZ15,
-        /**
-         * KOS16半诚实安全协议
-         */
-        KOS16_SEMI_HONEST,
-        /**
-         * KOS16恶意安全协议
-         */
-        KOS16_MALICIOUS,
-        /**
-         * MZ17协议
-         */
-        MZ17,
+        DSZ15_OT,
     }
 
     /**
@@ -64,11 +52,8 @@ public class ZlCoreMtgFactory implements PtoFactory {
         switch (type) {
             case IDEAL:
                 return new IdealZlCoreMtgSender(senderRpc, receiverParty, (IdealZlCoreMtgConfig) config);
-            case DSZ15:
-                return new Dsz15ZlCoreMtgSender(senderRpc, receiverParty, (Dsz15ZlCoreMtgConfig) config);
-            case KOS16_SEMI_HONEST:
-            case KOS16_MALICIOUS:
-            case MZ17:
+            case DSZ15_OT:
+                return new Dsz15OtZlCoreMtgSender(senderRpc, receiverParty, (Dsz15OtZlCoreMtgConfig) config);
             default:
                 throw new IllegalArgumentException("Invalid " + ZlCoreMtgType.class.getSimpleName() + ": " + type.name());
         }
@@ -87,11 +72,8 @@ public class ZlCoreMtgFactory implements PtoFactory {
         switch (type) {
             case IDEAL:
                 return new IdealZlCoreMtgReceiver(receiverRpc, senderParty, (IdealZlCoreMtgConfig) config);
-            case DSZ15:
-                return new Dsz15ZlCoreMtgReceiver(receiverRpc, senderParty, (Dsz15ZlCoreMtgConfig) config);
-            case KOS16_SEMI_HONEST:
-            case KOS16_MALICIOUS:
-            case MZ17:
+            case DSZ15_OT:
+                return new Dsz15OtZlCoreMtgReceiver(receiverRpc, senderParty, (Dsz15OtZlCoreMtgConfig) config);
             default:
                 throw new IllegalArgumentException("Invalid " + ZlCoreMtgType.class.getSimpleName() + ": " + type.name());
         }
@@ -109,7 +91,7 @@ public class ZlCoreMtgFactory implements PtoFactory {
             case IDEAL:
                 return new IdealZlCoreMtgConfig.Builder(l).build();
             case SEMI_HONEST:
-                return new Dsz15ZlCoreMtgConfig.Builder(l).build();
+                return new Dsz15OtZlCoreMtgConfig.Builder(l).build();
             case COVERT:
             case MALICIOUS:
             default:
