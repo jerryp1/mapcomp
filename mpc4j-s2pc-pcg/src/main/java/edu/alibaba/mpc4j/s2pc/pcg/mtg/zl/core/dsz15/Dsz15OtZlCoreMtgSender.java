@@ -24,7 +24,7 @@ import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
 /**
- * The sender for DSZ15 Zl core multiplication triple generation protocol.
+ * The sender for DSZ15 OT-based Zl core multiplication triple generation protocol.
  *
  * @author Sheng Hu, Weiran Liu
  * @date 2023/2/20
@@ -268,7 +268,7 @@ public class Dsz15OtZlCoreMtgSender extends AbstractZlCoreMtgParty {
                 }
             );
         });
-        ZlTriple zlTriple = ZlTriple.create(l, num, a0, b0, c0);
+        ZlTriple zlTriple = ZlTriple.create(envType, l, num, a0, b0, c0);
         a0 = null;
         b0 = null;
         c0 = null;

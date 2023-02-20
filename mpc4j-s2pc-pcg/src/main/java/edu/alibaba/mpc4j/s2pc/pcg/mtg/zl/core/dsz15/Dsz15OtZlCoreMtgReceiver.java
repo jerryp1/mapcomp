@@ -24,7 +24,7 @@ import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
 /**
- * The receiver for DSZ15 Zl core multiplication triple generation protocol.
+ * The receiver for DSZ15 OT-based Zl core multiplication triple generation protocol.
  *
  * @author Sheng Hu, Weiran Liu
  * @date 2023/2/20
@@ -266,7 +266,7 @@ public class Dsz15OtZlCoreMtgReceiver extends AbstractZlCoreMtgParty {
                 }
             );
         });
-        ZlTriple zlTriple = ZlTriple.create(l, num, a1, b1, c1);
+        ZlTriple zlTriple = ZlTriple.create(envType, l, num, a1, b1, c1);
         a1 = null;
         b1 = null;
         c1 = null;

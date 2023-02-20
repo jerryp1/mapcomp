@@ -1,27 +1,26 @@
-package edu.alibaba.mpc4j.s2pc.pcg.mtg.zl;
+package edu.alibaba.mpc4j.s2pc.pcg.mtg.zl64;
 
 import edu.alibaba.mpc4j.common.tool.EnvType;
-import edu.alibaba.mpc4j.common.tool.galoisfield.zl.Zl;
-import edu.alibaba.mpc4j.common.tool.galoisfield.zl.ZlFactory;
+import edu.alibaba.mpc4j.common.tool.galoisfield.zl64.Zl64;
+import edu.alibaba.mpc4j.common.tool.galoisfield.zl64.Zl64Factory;
 
-import java.math.BigInteger;
 import java.util.Arrays;
 
 /**
- * the ZL triples.
+ * the Zl64 triple.
  *
  * @author Weiran Liu
- * @date 2022/4/11
+ * @date 2023/2/20
  */
-public class ZlTriple {
+public class Zl64Triple {
     /**
      * the environment
      */
     private EnvType envType;
     /**
-     * the Zl operation
+     * the Zl64 operation
      */
-    private Zl zl;
+    private Zl64 zl64;
     /**
      * the l bit length
      */
@@ -33,15 +32,15 @@ public class ZlTriple {
     /**
      * a
      */
-    private BigInteger[] as;
+    private long[] as;
     /**
      * b
      */
-    private BigInteger[] bs;
+    private long[] bs;
     /**
      * c
      */
-    private BigInteger[] cs;
+    private long[] cs;
 
     /**
      * Creates Zl multiplication triples.
@@ -53,33 +52,33 @@ public class ZlTriple {
      * @param bs      b.
      * @param cs      c.
      */
-    public static ZlTriple create(EnvType envType, int l, int num, BigInteger[] as, BigInteger[] bs, BigInteger[] cs) {
+    public static Zl64Triple create(EnvType envType, int l, int num, long[] as, long[] bs, long[] cs) {
         assert num > 0 : "num must be greater than 0";
         assert as.length == num : "a.length must be equal to num = " + num;
         assert bs.length == num : "b.length must be equal to num = " + num;
         assert cs.length == num : "c.length must be equal to num = " + num;
 
-        ZlTriple triple = new ZlTriple();
+        Zl64Triple triple = new Zl64Triple();
         triple.envType = envType;
-        // Zl constructor would verify l
-        triple.zl = ZlFactory.createInstance(envType, l);
+        // Zl64 constructor would verify l
+        triple.zl64 = Zl64Factory.createInstance(envType, l);
         triple.l = l;
         triple.num = num;
         triple.as = Arrays.stream(as)
             .peek(a -> {
-                assert triple.zl.validateElement(a);
+                assert triple.zl64.validateElement(a);
             })
-            .toArray(BigInteger[]::new);
+            .toArray();
         triple.bs = Arrays.stream(bs)
             .peek(b -> {
-                assert triple.zl.validateElement(b);
+                assert triple.zl64.validateElement(b);
             })
-            .toArray(BigInteger[]::new);
+            .toArray();
         triple.cs = Arrays.stream(cs)
             .peek(c -> {
-                assert triple.zl.validateElement(c);
+                assert triple.zl64.validateElement(c);
             })
-            .toArray(BigInteger[]::new);
+            .toArray();
 
         return triple;
     }
@@ -90,15 +89,15 @@ public class ZlTriple {
      * @param l the l bit length.
      * @return an empty triple.
      */
-    public static ZlTriple createEmpty(int l) {
+    public static Zl64Triple createEmpty(int l) {
         assert l > 0 : "l must be greater than 0";
 
-        ZlTriple emptyTriple = new ZlTriple();
+        Zl64Triple emptyTriple = new Zl64Triple();
         emptyTriple.l = l;
         emptyTriple.num = 0;
-        emptyTriple.as = new BigInteger[0];
-        emptyTriple.bs = new BigInteger[0];
-        emptyTriple.cs = new BigInteger[0];
+        emptyTriple.as = new long[0];
+        emptyTriple.bs = new long[0];
+        emptyTriple.cs = new long[0];
 
         return emptyTriple;
     }
@@ -106,7 +105,7 @@ public class ZlTriple {
     /**
      * private constructor.
      */
-    private ZlTriple() {
+    private Zl64Triple() {
         // empty
     }
 
@@ -134,7 +133,7 @@ public class ZlTriple {
      * @param index the index.
      * @return a[i].
      */
-    public BigInteger getA(int index) {
+    public long getA(int index) {
         return as[index];
     }
 
@@ -143,7 +142,7 @@ public class ZlTriple {
      *
      * @return a.
      */
-    public BigInteger[] getA() {
+    public long[] getA() {
         return as;
     }
 
@@ -153,7 +152,7 @@ public class ZlTriple {
      * @param index the index.
      * @return b[i].
      */
-    public BigInteger getB(int index) {
+    public long getB(int index) {
         return bs[index];
     }
 
@@ -162,7 +161,7 @@ public class ZlTriple {
      *
      * @return b.
      */
-    public BigInteger[] getB() {
+    public long[] getB() {
         return bs;
     }
 
@@ -172,7 +171,7 @@ public class ZlTriple {
      * @param index the index.
      * @return c[i].
      */
-    public BigInteger getC(int index) {
+    public long getC(int index) {
         return cs[index];
     }
 
@@ -181,7 +180,7 @@ public class ZlTriple {
      *
      * @return c.
      */
-    public BigInteger[] getC() {
+    public long[] getC() {
         return cs;
     }
 
@@ -191,30 +190,30 @@ public class ZlTriple {
      * @param splitNum the assigned length.
      * @return a new Zl triple with split number of triple.
      */
-    public ZlTriple split(int splitNum) {
+    public Zl64Triple split(int splitNum) {
         assert splitNum > 0 && splitNum <= num : "split num must be in range (0, " + num + "]";
         // split a
-        BigInteger[] aSubs = new BigInteger[splitNum];
-        BigInteger[] aRemains = new BigInteger[num - splitNum];
+        long[] aSubs = new long[splitNum];
+        long[] aRemains = new long[num - splitNum];
         System.arraycopy(as, 0, aSubs, 0, splitNum);
         System.arraycopy(as, splitNum, aRemains, 0, num - splitNum);
         as = aRemains;
         // split b
-        BigInteger[] bSubs = new BigInteger[splitNum];
-        BigInteger[] bRemains = new BigInteger[num - splitNum];
+        long[] bSubs = new long[splitNum];
+        long[] bRemains = new long[num - splitNum];
         System.arraycopy(bs, 0, bSubs, 0, splitNum);
         System.arraycopy(bs, splitNum, bRemains, 0, num - splitNum);
         bs = bRemains;
         // split c
-        BigInteger[] cSubs = new BigInteger[splitNum];
-        BigInteger[] cRemains = new BigInteger[num - splitNum];
+        long[] cSubs = new long[splitNum];
+        long[] cRemains = new long[num - splitNum];
         System.arraycopy(cs, 0, cSubs, 0, splitNum);
         System.arraycopy(cs, splitNum, cRemains, 0, num - splitNum);
         cs = cRemains;
         // update the num
         num = num - splitNum;
 
-        return ZlTriple.create(envType, l, splitNum, aSubs, bSubs, cSubs);
+        return Zl64Triple.create(envType, l, splitNum, aSubs, bSubs, cSubs);
     }
 
     /**
@@ -227,15 +226,15 @@ public class ZlTriple {
         // if the reduced num is less than num, split the triple. If not, keep the current state.
         if (reduceNum < num) {
             // reduce a
-            BigInteger[] aRemains = new BigInteger[reduceNum];
+            long[] aRemains = new long[reduceNum];
             System.arraycopy(as, 0, aRemains, 0, reduceNum);
             as = aRemains;
             // reduce b
-            BigInteger[] bRemains = new BigInteger[reduceNum];
+            long[] bRemains = new long[reduceNum];
             System.arraycopy(bs, 0, bRemains, 0, reduceNum);
             bs = bRemains;
             // reduce c
-            BigInteger[] cRemains = new BigInteger[reduceNum];
+            long[] cRemains = new long[reduceNum];
             System.arraycopy(cs, 0, cRemains, 0, reduceNum);
             cs = cRemains;
             // reduce the num
@@ -248,20 +247,20 @@ public class ZlTriple {
      *
      * @param that the other triple.
      */
-    public void merge(ZlTriple that) {
-        assert this.l == that.l : "merged " + ZlTriple.class.getSimpleName() + " must have the same l";
+    public void merge(Zl64Triple that) {
+        assert this.l == that.l : "merged " + Zl64Triple.class.getSimpleName() + " must have the same l";
         // merge a
-        BigInteger[] mergeAs = new BigInteger[this.as.length + that.as.length];
+        long[] mergeAs = new long[this.as.length + that.as.length];
         System.arraycopy(this.as, 0, mergeAs, 0, this.as.length);
         System.arraycopy(that.as, 0, mergeAs, this.as.length, that.as.length);
         as = mergeAs;
         // merge b
-        BigInteger[] mergeBs = new BigInteger[this.bs.length + that.bs.length];
+        long[] mergeBs = new long[this.bs.length + that.bs.length];
         System.arraycopy(this.bs, 0, mergeBs, 0, this.bs.length);
         System.arraycopy(that.bs, 0, mergeBs, this.bs.length, that.bs.length);
         bs = mergeBs;
         // merge c
-        BigInteger[] mergeCs = new BigInteger[this.cs.length + that.cs.length];
+        long[] mergeCs = new long[this.cs.length + that.cs.length];
         System.arraycopy(this.cs, 0, mergeCs, 0, this.cs.length);
         System.arraycopy(that.cs, 0, mergeCs, this.cs.length, that.cs.length);
         cs = mergeCs;

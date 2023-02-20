@@ -44,7 +44,7 @@ class RingsZl64 implements Zl64 {
     private final IntegersZp64 integersZp64;
 
     public RingsZl64(EnvType envType, int l) {
-        assert l > 0 : "l must be greater than 0";
+        assert l > 0 && l <= LongUtils.MAX_L : "l must be in range (0, " + LongUtils.MAX_L + "]:" + l;
         this.l = l;
         byteL = CommonUtils.getByteLength(l);
         rangeBound = 1L << l;

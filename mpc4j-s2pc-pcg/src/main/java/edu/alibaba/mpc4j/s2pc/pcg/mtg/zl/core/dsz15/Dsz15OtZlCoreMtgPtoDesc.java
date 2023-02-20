@@ -4,9 +4,8 @@ import edu.alibaba.mpc4j.common.rpc.desc.PtoDesc;
 import edu.alibaba.mpc4j.common.rpc.desc.PtoDescManager;
 
 /**
- * DSZ15 Zl core multiplication triple generation protocol description. This is the scheme based on Oblivious Transfer.
- * The original scheme is described in Section
- * 3.A.5:
+ * DSZ15 OT-based Zl core multiplication triple generation protocol description. The original scheme is described in
+ * Section 3.A.5:
  * <p>
  * Daniel Demmler, Thomas Schneider, Michael Zohner: ABY - A Framework for Efficient Mixed-Protocol Secure Two-Party
  * Computation. NDSS 2015.
@@ -39,11 +38,11 @@ class Dsz15OtZlCoreMtgPtoDesc implements PtoDesc {
      */
     enum PtoStep {
         /**
-         * 接收方发送消息
+         * the receiver sends the correlation.
          */
         RECEIVER_SEND_CORRELATION,
         /**
-         * 发送方发送消息
+         * the sender sends the correlation.
          */
         SENDER_SEND_CORRELATION,
     }

@@ -4,9 +4,7 @@ import edu.alibaba.mpc4j.common.rpc.Party;
 import edu.alibaba.mpc4j.common.rpc.Rpc;
 import edu.alibaba.mpc4j.common.rpc.desc.SecurityModel;
 import edu.alibaba.mpc4j.common.rpc.pto.PtoFactory;
-import edu.alibaba.mpc4j.s2pc.pcg.mtg.zl.core.dsz15.Dsz15OtZlCoreMtgConfig;
-import edu.alibaba.mpc4j.s2pc.pcg.mtg.zl.core.dsz15.Dsz15OtZlCoreMtgReceiver;
-import edu.alibaba.mpc4j.s2pc.pcg.mtg.zl.core.dsz15.Dsz15OtZlCoreMtgSender;
+import edu.alibaba.mpc4j.s2pc.pcg.mtg.zl.core.dsz15.*;
 import edu.alibaba.mpc4j.s2pc.pcg.mtg.zl.core.ideal.IdealZlCoreMtgConfig;
 import edu.alibaba.mpc4j.s2pc.pcg.mtg.zl.core.ideal.IdealZlCoreMtgReceiver;
 import edu.alibaba.mpc4j.s2pc.pcg.mtg.zl.core.ideal.IdealZlCoreMtgSender;
@@ -34,9 +32,13 @@ public class ZlCoreMtgFactory implements PtoFactory {
          */
         IDEAL,
         /**
-         * DSZ15 based on OT
+         * OT-based DSZ15
          */
         DSZ15_OT,
+        /**
+         * HE-based DSZ15
+         */
+        DSZ15_HE,
     }
 
     /**
@@ -54,6 +56,8 @@ public class ZlCoreMtgFactory implements PtoFactory {
                 return new IdealZlCoreMtgSender(senderRpc, receiverParty, (IdealZlCoreMtgConfig) config);
             case DSZ15_OT:
                 return new Dsz15OtZlCoreMtgSender(senderRpc, receiverParty, (Dsz15OtZlCoreMtgConfig) config);
+            case DSZ15_HE:
+                return new Dsz15HeZlCoreMtgSender(senderRpc, receiverParty, (Dsz15HeZlCoreMtgConfig) config);
             default:
                 throw new IllegalArgumentException("Invalid " + ZlCoreMtgType.class.getSimpleName() + ": " + type.name());
         }
@@ -74,6 +78,8 @@ public class ZlCoreMtgFactory implements PtoFactory {
                 return new IdealZlCoreMtgReceiver(receiverRpc, senderParty, (IdealZlCoreMtgConfig) config);
             case DSZ15_OT:
                 return new Dsz15OtZlCoreMtgReceiver(receiverRpc, senderParty, (Dsz15OtZlCoreMtgConfig) config);
+            case DSZ15_HE:
+                return new Dsz15HeZlCoreMtgReceiver(receiverRpc, senderParty, (Dsz15HeZlCoreMtgConfig) config);
             default:
                 throw new IllegalArgumentException("Invalid " + ZlCoreMtgType.class.getSimpleName() + ": " + type.name());
         }

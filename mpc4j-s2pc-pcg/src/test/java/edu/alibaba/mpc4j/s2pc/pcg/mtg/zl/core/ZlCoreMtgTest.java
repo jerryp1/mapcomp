@@ -4,8 +4,11 @@ import com.google.common.base.Preconditions;
 import edu.alibaba.mpc4j.common.rpc.Rpc;
 import edu.alibaba.mpc4j.common.rpc.RpcManager;
 import edu.alibaba.mpc4j.common.rpc.impl.memory.MemoryRpcManager;
+import edu.alibaba.mpc4j.common.tool.CommonConstants;
+import edu.alibaba.mpc4j.common.tool.utils.LongUtils;
 import edu.alibaba.mpc4j.s2pc.pcg.mtg.zl.ZlMtgTestUtils;
 import edu.alibaba.mpc4j.s2pc.pcg.mtg.zl.ZlTriple;
+import edu.alibaba.mpc4j.s2pc.pcg.mtg.zl.core.dsz15.Dsz15HeZlCoreMtgConfig;
 import edu.alibaba.mpc4j.s2pc.pcg.mtg.zl.core.dsz15.Dsz15OtZlCoreMtgConfig;
 import edu.alibaba.mpc4j.s2pc.pcg.mtg.zl.core.ideal.IdealZlCoreMtgConfig;
 import edu.alibaba.mpc4j.s2pc.pcg.mtg.zl.core.ZlCoreMtgFactory.ZlCoreMtgType;
@@ -50,11 +53,18 @@ public class ZlCoreMtgTest {
     public static Collection<Object[]> configurations() {
         Collection<Object[]> configurations = new ArrayList<>();
 
-        int[] ls = new int[]{1, 62, 64, 128};
+        int[] ls = new int[]{
+            1, LongUtils.MAX_L - 1, LongUtils.MAX_L,
+            LongUtils.MAX_L + 1, LongUtils.MAX_L + 2, CommonConstants.BLOCK_BIT_LENGTH
+        };
         for (int l : ls) {
             // IDEAL
             configurations.add(new Object[]{
                 ZlCoreMtgType.IDEAL.name() + " (l = " + l + ")", new IdealZlCoreMtgConfig.Builder(l).build(),
+            });
+            // DSZ15_HE
+            configurations.add(new Object[]{
+                ZlCoreMtgType.DSZ15_HE.name() + " (l = " + l + ")", new Dsz15HeZlCoreMtgConfig.Builder(l).build(),
             });
             // DSZ15_OT
             configurations.add(new Object[]{

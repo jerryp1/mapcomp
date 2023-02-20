@@ -8,7 +8,7 @@ import edu.alibaba.mpc4j.s2pc.pcg.ot.cot.CotConfig;
 import edu.alibaba.mpc4j.s2pc.pcg.ot.cot.CotFactory;
 
 /**
- * DSZ15 Zl core multiplication triple generation protocol configuration.
+ * DSZ15 OT-based Zl core multiplication triple generation protocol configuration.
  *
  * @author Sheng Hu, Weiran Liu
  * @date 2022/2/20
