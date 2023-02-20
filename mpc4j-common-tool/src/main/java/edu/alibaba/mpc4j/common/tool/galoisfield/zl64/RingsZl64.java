@@ -1,7 +1,6 @@
-package edu.alibaba.mpc4j.common.tool.galoisfield.zp64;
+package edu.alibaba.mpc4j.common.tool.galoisfield.zl64;
 
 import cc.redberry.rings.IntegersZp64;
-import edu.alibaba.mpc4j.common.tool.CommonConstants;
 import edu.alibaba.mpc4j.common.tool.EnvType;
 import edu.alibaba.mpc4j.common.tool.crypto.kdf.Kdf;
 import edu.alibaba.mpc4j.common.tool.crypto.kdf.KdfFactory;
@@ -10,28 +9,15 @@ import edu.alibaba.mpc4j.common.tool.crypto.prg.PrgFactory;
 import edu.alibaba.mpc4j.common.tool.utils.CommonUtils;
 import edu.alibaba.mpc4j.common.tool.utils.LongUtils;
 
-import java.math.BigInteger;
 import java.security.SecureRandom;
 
 /**
- * 应用Rings实现的Zp64运算。
+ * Zl64 implemented by Rings library.
  *
  * @author Weiran Liu
- * @date 2022/7/7
+ * @date 2023/2/20
  */
-class RingsZp64 implements Zp64 {
-    /**
-     * the prime
-     */
-    private final long prime;
-    /**
-     * the prime bit length
-     */
-    private final int primeBitLength;
-    /**
-     * the prime byte length
-     */
-    private final int primeByteLength;
+class RingsZl64 implements Zl64 {
     /**
      * the l bit length
      */
@@ -45,10 +31,6 @@ class RingsZp64 implements Zp64 {
      */
     private final long rangeBound;
     /**
-     * the finite field
-     */
-    private final IntegersZp64 integersZp64;
-    /**
      * the key derivation function
      */
     private final Kdf kdf;
@@ -56,41 +38,24 @@ class RingsZp64 implements Zp64 {
      * the pseudo-random generator
      */
     private final Prg prg;
+    /**
+     * the finite ring
+     */
+    private final IntegersZp64 integersZp64;
 
-    RingsZp64(EnvType envType, long prime) {
-        assert BigInteger.valueOf(prime).isProbablePrime(CommonConstants.STATS_BIT_LENGTH)
-            : "input prime is not a prime: " + prime;
-        this.prime = prime;
-        primeBitLength = LongUtils.ceilLog2(prime);
-        primeByteLength = CommonUtils.getByteLength(primeBitLength);
-        integersZp64 = new IntegersZp64(prime);
-        l = primeBitLength - 1;
-        byteL = CommonUtils.getByteLength(l);
-        rangeBound = 1L << l;
-        kdf = KdfFactory.createInstance(envType);
-        prg = PrgFactory.createInstance(envType, Long.BYTES);
-    }
-
-    public RingsZp64(EnvType envType, int l) {
-        prime = Zp64Manager.getPrime(l);
-        primeBitLength = LongUtils.ceilLog2(prime);
-        primeByteLength = CommonUtils.getByteLength(primeBitLength);
+    public RingsZl64(EnvType envType, int l) {
+        assert l > 0 : "l must be greater than 0";
         this.l = l;
-        integersZp64 = new IntegersZp64(prime);
         byteL = CommonUtils.getByteLength(l);
         rangeBound = 1L << l;
+        integersZp64 = new IntegersZp64(rangeBound);
         kdf = KdfFactory.createInstance(envType);
         prg = PrgFactory.createInstance(envType, Long.BYTES);
     }
 
     @Override
-    public Zp64Factory.Zp64Type getZp64Type() {
-        return Zp64Factory.Zp64Type.RINGS;
-    }
-
-    @Override
-    public long getPrime() {
-        return prime;
+    public Zl64Factory.Zl64Type getZl64Type() {
+        return Zl64Factory.Zl64Type.RINGS;
     }
 
     @Override
@@ -105,12 +70,12 @@ class RingsZp64 implements Zp64 {
 
     @Override
     public int getElementBitLength() {
-        return primeBitLength;
+        return l;
     }
 
     @Override
     public int getElementByteLength() {
-        return primeByteLength;
+        return byteL;
     }
 
     @Override
@@ -151,19 +116,6 @@ class RingsZp64 implements Zp64 {
     }
 
     @Override
-    public long div(final long a, final long b) {
-        assert validateElement(a);
-        assert validateNonZeroElement(b);
-        return integersZp64.divide(a, b);
-    }
-
-    @Override
-    public long inv(final long a) {
-        assert validateNonZeroElement(a);
-        return integersZp64.divide(1L, a);
-    }
-
-    @Override
     public long pow(final long a, final long b) {
         assert validateElement(a);
         assert validateElement(b);
@@ -194,21 +146,21 @@ class RingsZp64 implements Zp64 {
 
     @Override
     public long createRandom(SecureRandom secureRandom) {
-        return LongUtils.randomNonNegative(prime, secureRandom);
+        return LongUtils.randomNonNegative(rangeBound, secureRandom);
     }
 
     @Override
     public long createRandom(byte[] seed) {
         byte[] key = kdf.deriveKey(seed);
         byte[] elementByteArray = prg.extendToBytes(key);
-        return Math.abs(LongUtils.byteArrayToLong(elementByteArray) % prime);
+        return Math.abs(LongUtils.byteArrayToLong(elementByteArray) % rangeBound);
     }
 
     @Override
     public long createNonZeroRandom(SecureRandom secureRandom) {
         long random = 0L;
         while (random == 0L) {
-            random = LongUtils.randomPositive(prime, secureRandom);
+            random = LongUtils.randomPositive(rangeBound, secureRandom);
         }
         return random;
     }
@@ -217,12 +169,12 @@ class RingsZp64 implements Zp64 {
     public long createNonZeroRandom(byte[] seed) {
         byte[] key = kdf.deriveKey(seed);
         byte[] elementByteArray = prg.extendToBytes(key);
-        long random = Math.abs(LongUtils.byteArrayToLong(elementByteArray) % prime);
+        long random = Math.abs(LongUtils.byteArrayToLong(elementByteArray) % rangeBound);
         while (random == 0L) {
             // 如果恰巧为0，则迭代种子
             key = kdf.deriveKey(key);
             elementByteArray = prg.extendToBytes(key);
-            random = Math.abs(LongUtils.byteArrayToLong(elementByteArray) % prime);
+            random = Math.abs(LongUtils.byteArrayToLong(elementByteArray) % rangeBound);
         }
         return random;
     }
@@ -241,12 +193,12 @@ class RingsZp64 implements Zp64 {
 
     @Override
     public boolean validateElement(final long a) {
-        return a >= 0 && a < prime;
+        return a >= 0 && a < rangeBound;
     }
 
     @Override
     public boolean validateNonZeroElement(final long a) {
-        return a > 0 && a < prime;
+        return a > 0 && a < rangeBound;
     }
 
     @Override

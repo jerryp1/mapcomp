@@ -17,6 +17,16 @@ public interface Zp64 extends LongField {
     Zp64Factory.Zp64Type getZp64Type();
 
     /**
+     * Gets the name.
+     *
+     * @return the name.
+     */
+    @Override
+    default String getName() {
+        return getZp64Type().name();
+    }
+
+    /**
      * Gets the prime.
      *
      * @return the prime.

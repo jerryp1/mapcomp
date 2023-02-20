@@ -10,6 +10,13 @@ import java.security.SecureRandom;
  */
 public interface BytesRing {
     /**
+     * Gets the name.
+     *
+     * @return the name.
+     */
+    String getName();
+
+    /**
      * Gets the maximal l (in bit length) so that all elements in {0, 1}^l is a valid element.
      *
      * @return the maximal l (in bit length).

@@ -1,9 +1,7 @@
 package edu.alibaba.mpc4j.common.tool.galoisfield.gf2k;
 
-import edu.alibaba.mpc4j.common.tool.CommonConstants;
 import edu.alibaba.mpc4j.common.tool.galoisfield.BytesRing;
 import edu.alibaba.mpc4j.common.tool.galoisfield.gf2k.Gf2kFactory.Gf2kType;
-import edu.alibaba.mpc4j.common.tool.utils.BytesUtils;
 
 /**
  * GF(2^128)有限域运算接口。
@@ -13,9 +11,19 @@ import edu.alibaba.mpc4j.common.tool.utils.BytesUtils;
  */
 public interface Gf2k extends BytesRing {
     /**
-     * Gets GF(2^λ) type.
+     * Gets Gf2k type.
      *
-     * @return GF(2^λ) type.
+     * @return the gf2k type.
      */
     Gf2kType getGf2kType();
+
+    /**
+     * Gets the name.
+     *
+     * @return the name.
+     */
+    @Override
+    default String getName() {
+        return getGf2kType().name();
+    }
 }
