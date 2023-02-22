@@ -237,11 +237,11 @@ public class HhLdpTest {
         HhLdpServer server = HhLdpFactory.createServer(config);
         HhLdpClient client = HhLdpFactory.createClient(config);
         // warmup with 0 items
-        exampleWarmupInsert(server, client, LdpTestDataUtils.EXAMPLE_WARMUP_NUM / 100);
+        exampleWarmupInsert(server, client, 1);
         // directly stop warmup
         server.stopWarmup();
         // randomize
-        exampleRandomizeInsert(server, client, LdpTestDataUtils.EXAMPLE_WARMUP_NUM / 100);
+        exampleRandomizeInsert(server, client, 1);
         // verify there are k heavy hitters
         Map<String, Double> heavyHitters = server.heavyHitters();
         Assert.assertEquals(heavyHitters.size(), DEFAULT_K);

@@ -20,6 +20,10 @@ public class HhLdpAggMetrics {
      */
     private final Double alpha;
     /**
+     * γ_h
+     */
+    private final Double gammaH;
+    /**
      * round
      */
     private int round;
@@ -56,10 +60,11 @@ public class HhLdpAggMetrics {
      */
     private double re;
 
-    public HhLdpAggMetrics(String typeString, Double windowEpsilon, Double alpha) {
+    public HhLdpAggMetrics(String typeString, Double windowEpsilon, Double alpha, Double gammaH) {
         this.typeString = typeString;
         this.windowEpsilon = windowEpsilon;
         this.alpha = alpha;
+        this.gammaH = gammaH;
     }
 
     public void addMetrics(HhLdpMetrics metrics) {
@@ -84,6 +89,10 @@ public class HhLdpAggMetrics {
 
     public String getAlphaString() {
         return alpha == null ? "-" : String.valueOf(alpha);
+    }
+
+    public String getGammaString() {
+        return gammaH == null ? "-" : String.valueOf(gammaH);
     }
 
     public double getServerTimeSecond() {
