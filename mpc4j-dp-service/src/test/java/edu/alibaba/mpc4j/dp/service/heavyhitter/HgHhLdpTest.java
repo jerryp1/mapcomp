@@ -300,10 +300,10 @@ public class HgHhLdpTest {
     private void testLargeEpsilon(HhLdpServer server, HhLdpClient client,
                                   List<Map.Entry<String, Integer>> correctOrderedList) throws IOException {
         // warmup
-        HhLdpTest.exampleWarmupInsert(server, client);
+        HhLdpTest.exampleWarmupInsert(server, client, LdpTestDataUtils.EXAMPLE_WARMUP_NUM);
         server.stopWarmup();
         // randomize
-        HhLdpTest.exampleRandomizeInsert(server, client);
+        HhLdpTest.exampleRandomizeInsert(server, client, LdpTestDataUtils.EXAMPLE_WARMUP_NUM);
         // get heavy hitters
         Map<String, Double> heavyHitters = server.heavyHitters();
         Assert.assertEquals(DEFAULT_K, heavyHitters.size());
