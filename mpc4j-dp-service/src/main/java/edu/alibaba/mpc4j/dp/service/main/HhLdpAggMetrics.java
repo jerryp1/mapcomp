@@ -102,7 +102,7 @@ public class HhLdpAggMetrics {
     }
 
     public String getGammaString() {
-        return gammaH == null ? "-" : String.valueOf(gammaH);
+        return gammaH == null ? "-" : HhLdpMain.DOUBLE_DECIMAL_FORMAT.format(gammaH);
     }
 
     public double getServerTimeSecond() {

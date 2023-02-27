@@ -14,6 +14,7 @@ import edu.alibaba.mpc4j.dp.service.heavyhitter.HhLdpFactory.HhLdpType;
 import edu.alibaba.mpc4j.dp.service.heavyhitter.config.FoHhLdpConfig;
 import edu.alibaba.mpc4j.dp.service.heavyhitter.config.HgHhLdpConfig;
 import edu.alibaba.mpc4j.dp.service.heavyhitter.config.HhLdpConfig;
+import edu.alibaba.mpc4j.dp.service.heavyhitter.hg.HhgHhLdpServer;
 import edu.alibaba.mpc4j.dp.service.structure.HeavyGuardian;
 import edu.alibaba.mpc4j.dp.service.structure.NaiveStreamCounter;
 import edu.alibaba.mpc4j.dp.service.tool.StreamDataUtils;
@@ -45,7 +46,7 @@ public class HhLdpMain {
     /**
      * double output format
      */
-    private static final DecimalFormat DOUBLE_DECIMAL_FORMAT = new DecimalFormat("0.000");
+    static final DecimalFormat DOUBLE_DECIMAL_FORMAT = new DecimalFormat("0.000");
     /**
      * time output format
      */
@@ -405,7 +406,17 @@ public class HhLdpMain {
 
     HhLdpAggMetrics runAdvHhgHeavyHitter(double windowEpsilon, double alpha) throws IOException {
         HhLdpType type = HhLdpType.ADV;
-        HhLdpAggMetrics aggMetrics = new HhLdpAggMetrics(type.name(), windowEpsilon, alpha, null);
+        double gammaH = 0;
+        for (int round = 0; round < testRound; round++) {
+            // get warmup gammaH
+            HgHhLdpConfig warmupConfig = new HgHhLdpConfig
+                .Builder(type, domainSet, k, windowEpsilon)
+                .setAlpha(alpha)
+                .build();
+            getWarmupHhgHeavyHitterGammaH(warmupConfig);
+        }
+        gammaH /= testRound;
+        HhLdpAggMetrics aggMetrics = new HhLdpAggMetrics(type.name() + " (auto γ_h)", windowEpsilon, alpha, gammaH);
         for (int round = 0; round < testRound; round++) {
             HgHhLdpConfig config = new HgHhLdpConfig
                 .Builder(type, domainSet, k, windowEpsilon)
@@ -421,7 +432,7 @@ public class HhLdpMain {
 
     HhLdpAggMetrics runAdvHhgHeavyHitter(double windowEpsilon, double alpha, double gammaH) throws IOException {
         HhLdpType type = HhLdpType.ADV;
-        HhLdpAggMetrics aggMetrics = new HhLdpAggMetrics(type.name(), windowEpsilon, alpha, gammaH);
+        HhLdpAggMetrics aggMetrics = new HhLdpAggMetrics(type.name() + " (pre γ_h)", windowEpsilon, alpha, gammaH);
         for (int round = 0; round < testRound; round++) {
             HgHhLdpConfig config = new HgHhLdpConfig
                 .Builder(type, domainSet, k, windowEpsilon)
@@ -438,7 +449,16 @@ public class HhLdpMain {
 
     HhLdpAggMetrics runRelaxHhgHeavyHitter(double windowEpsilon) throws IOException {
         HhLdpType type = HhLdpType.RELAX;
-        HhLdpAggMetrics aggMetrics = new HhLdpAggMetrics(type.name(), windowEpsilon, null, null);
+        double gammaH = 0;
+        for (int round = 0; round < testRound; round++) {
+            // get warmup gammaH
+            HgHhLdpConfig warmupConfig = new HgHhLdpConfig
+                .Builder(type, domainSet, k, windowEpsilon)
+                .build();
+            gammaH += getWarmupHhgHeavyHitterGammaH(warmupConfig);
+        }
+        gammaH /= testRound;
+        HhLdpAggMetrics aggMetrics = new HhLdpAggMetrics(type.name() + " (auto γ_h)", windowEpsilon, null, gammaH);
         for (int round = 0; round < testRound; round++) {
             HgHhLdpConfig config = new HgHhLdpConfig
                 .Builder(type, domainSet, k, windowEpsilon)
@@ -453,7 +473,7 @@ public class HhLdpMain {
 
     HhLdpAggMetrics runRelaxHhgHeavyHitter(double windowEpsilon, double gammaH) throws IOException {
         HhLdpType type = HhLdpType.RELAX;
-        HhLdpAggMetrics aggMetrics = new HhLdpAggMetrics(type.name(), windowEpsilon, null, gammaH);
+        HhLdpAggMetrics aggMetrics = new HhLdpAggMetrics(type.name() + " (pre γ_h)", windowEpsilon, null, gammaH);
         for (int round = 0; round < testRound; round++) {
             HgHhLdpConfig config = new HgHhLdpConfig
                 .Builder(type, domainSet, k, windowEpsilon)
@@ -465,6 +485,20 @@ public class HhLdpMain {
             aggMetrics.addMetrics(metrics);
         }
         return aggMetrics;
+    }
+
+    private double getWarmupHhgHeavyHitterGammaH(HgHhLdpConfig warmupConfig) throws IOException {
+        HhgHhLdpServer warmupServer = (HhgHhLdpServer) HhLdpFactory.createServer(warmupConfig);
+        HhLdpClient warmupClient = HhLdpFactory.createClient(warmupConfig);
+        // warmup
+        AtomicInteger warmupIndex = new AtomicInteger();
+        Stream<String> dataStream = StreamDataUtils.obtainItemStream(datasetPath);
+        dataStream.filter(item -> warmupIndex.getAndIncrement() <= warmupNum)
+            .map(warmupClient::warmup)
+            .forEach(warmupServer::warmupInsert);
+        dataStream.close();
+        warmupServer.stopWarmup();
+        return warmupServer.getGammaH();
     }
 
     HhLdpMetrics runLdpHeavyHitter(HhLdpServer server, HhLdpClient client) throws IOException {
