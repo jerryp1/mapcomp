@@ -44,6 +44,14 @@ public class HhLdpAggMetrics {
      */
     private long memoryBytes;
     /**
+     * warmup NDCG
+     */
+    private double warmupNdcg;
+    /**
+     * warmup precision
+     */
+    private double warmupPrecision;
+    /**
      * NDCG
      */
     private double ndcg;
@@ -73,6 +81,8 @@ public class HhLdpAggMetrics {
         clientTimeMs += metrics.getClientTimeMs();
         payloadBytes += metrics.getPayloadBytes();
         memoryBytes += metrics.getMemoryBytes();
+        warmupNdcg += metrics.getWarmupNdcg();
+        warmupPrecision += metrics.getWarmupPrecision();
         ndcg += metrics.getNdcg();
         precision += metrics.getPrecision();
         abe += metrics.getAbe();
@@ -111,6 +121,14 @@ public class HhLdpAggMetrics {
 
     public long getMemoryBytes() {
         return memoryBytes / round;
+    }
+
+    public double getWarmupNdcg() {
+        return (double) Math.round(warmupNdcg / round * 10000) / 10000;
+    }
+
+    public double getWarmupPrecision() {
+        return (double) Math.round(warmupPrecision / round * 10000) / 10000;
     }
 
     public double getNdcg() {

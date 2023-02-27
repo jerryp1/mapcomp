@@ -100,6 +100,11 @@ public class AdvHhgHhLdpServer extends AbstractHgHhLdpServer implements HhgHhLdp
     }
 
     @Override
+    public double getGammaH() {
+        return gammaH;
+    }
+
+    @Override
     public HgHhLdpServerContext getServerContext() {
         return new HgHhLdpServerContext(buckets);
     }

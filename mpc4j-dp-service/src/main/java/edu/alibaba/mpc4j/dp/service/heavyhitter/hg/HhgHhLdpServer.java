@@ -8,9 +8,16 @@ package edu.alibaba.mpc4j.dp.service.heavyhitter.hg;
  */
 public interface HhgHhLdpServer extends HgHhLdpServer {
     /**
-     * Get the value of α.
+     * Gets the value of α.
      *
      * @return the value of α.
      */
     double getAlpha();
+
+    /**
+     * Gets the value of γ_h.
+     *
+     * @return the value of γ_h.
+     */
+    double getGammaH();
 }
