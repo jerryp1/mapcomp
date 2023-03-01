@@ -21,7 +21,15 @@ public interface IndexPirServer extends TwoPartyPto {
      * @param elementArrayList  元素列表。
      * @param elementByteLength 元素字节长度。
      */
-    void init(AbstractIndexPirParams indexPirParams, ArrayList<ByteBuffer> elementArrayList, int elementByteLength);
+    void init(IndexPirParams indexPirParams, ArrayList<ByteBuffer> elementArrayList, int elementByteLength);
+
+    /**
+     * 初始化协议。
+     *
+     * @param elementArrayList  元素列表。
+     * @param elementByteLength 元素字节长度。
+     */
+    void init(ArrayList<ByteBuffer> elementArrayList, int elementByteLength);
 
     /**
      * 执行协议。

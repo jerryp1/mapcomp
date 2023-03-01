@@ -4,8 +4,9 @@ import edu.alibaba.mpc4j.common.rpc.*;
 import edu.alibaba.mpc4j.common.rpc.utils.DataPacket;
 import edu.alibaba.mpc4j.common.rpc.utils.DataPacketHeader;
 import edu.alibaba.mpc4j.common.tool.CommonConstants;
-import edu.alibaba.mpc4j.s2pc.pir.index.AbstractIndexPirParams;
 import edu.alibaba.mpc4j.s2pc.pir.index.AbstractIndexPirServer;
+import edu.alibaba.mpc4j.s2pc.pir.index.IndexPirParams;
+import edu.alibaba.mpc4j.s2pc.pir.index.IndexPirUtils;
 import edu.alibaba.mpc4j.s2pc.pir.index.sealpir.Acls18IndexPirPtoDesc.PtoStep;
 
 import java.nio.ByteBuffer;
@@ -43,15 +44,34 @@ public class Acls18IndexPirServer extends AbstractIndexPirServer {
     }
 
     @Override
-    public void init(AbstractIndexPirParams indexPirParams, ArrayList<ByteBuffer> elementArrayList,
-                     int elementByteLength) {
+    public void init(IndexPirParams indexPirParams, ArrayList<ByteBuffer> elementArrayList, int elementByteLength) {
         assert (indexPirParams instanceof Acls18IndexPirParams);
         params = (Acls18IndexPirParams) indexPirParams;
         logPhaseInfo(PtoState.INIT_BEGIN);
 
         stopWatch.start();
-        int binMaxByteLength = params.getPolyModulusDegree() * params.getPlainModulusBitLength() / Byte.SIZE;
-        setInitInput(elementArrayList, elementByteLength, binMaxByteLength, getPtoDesc().getPtoName());
+        params.initAcls18IndexPirParams(elementArrayList.size(), elementByteLength);
+        setInitInput(elementArrayList, elementByteLength, params.getBinMaxByteLength());
+        // 服务端对数据库进行编码
+        int binNum = params.getBinNum();
+        IntStream intStream = parallel ? IntStream.range(0, binNum).parallel() : IntStream.range(0, binNum);
+        encodedDatabase = intStream.mapToObj(this::preprocessDatabase).collect(Collectors.toList());
+        stopWatch.stop();
+        long initTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
+        stopWatch.reset();
+        logStepInfo(PtoState.INIT_STEP, 1, 1, initTime);
+
+        logPhaseInfo(PtoState.INIT_END);
+    }
+
+    @Override
+    public void init(ArrayList<ByteBuffer> elementArrayList, int elementByteLength) {
+        params = Acls18IndexPirParams.DEFAULT_PARAMS;
+        logPhaseInfo(PtoState.INIT_BEGIN);
+
+        stopWatch.start();
+        params.initAcls18IndexPirParams(elementArrayList.size(), elementByteLength);
+        setInitInput(elementArrayList, elementByteLength, params.getBinMaxByteLength());
         // 服务端对数据库进行编码
         int binNum = params.getBinNum();
         IntStream intStream = parallel ? IntStream.range(0, binNum).parallel() : IntStream.range(0, binNum);
@@ -108,6 +128,9 @@ public class Acls18IndexPirServer extends AbstractIndexPirServer {
         if ((binNum > 1) && (params.getPlaintextSize()[0] != params.getPlaintextSize()[binNum - 1])) {
             nvec = params.getDimensionsLength()[binNum - 1];
             expectSize2 = Arrays.stream(nvec).map(k -> (int) Math.ceil((k + 0.0) / params.getPolyModulusDegree())).sum();
+        }
+        MpcAbortPreconditions.checkArgument(totalSize == expectSize1 + expectSize2 + 1);
+        if ((binNum > 1) && (params.getPlaintextSize()[0] != params.getPlaintextSize()[binNum - 1])) {
             for (int i = 0; i < binNum - 1; i++) {
                 clientQuery.add(new ArrayList<>());
                 for (int j = 0; j < expectSize1; j++) {
@@ -126,7 +149,6 @@ public class Acls18IndexPirServer extends AbstractIndexPirServer {
                 }
             }
         }
-        MpcAbortPreconditions.checkArgument(totalSize == expectSize1 + expectSize2 + 1);
         byte[] galoisKeys = clientQueryPayload.get(expectSize1 + expectSize2);
         IntStream intStream = this.parallel ? IntStream.range(0, binNum).parallel() : IntStream.range(0, binNum);
         return intStream
@@ -134,7 +156,8 @@ public class Acls18IndexPirServer extends AbstractIndexPirServer {
                 params.getEncryptionParams(), galoisKeys, clientQuery.get(i), encodedDatabase.get(i),
                 params.getDimensionsLength()[i])
             )
-            .flatMap(Collection::stream).collect(Collectors.toCollection(ArrayList::new));
+            .flatMap(Collection::stream)
+            .collect(Collectors.toCollection(ArrayList::new));
     }
 
     /**
@@ -177,7 +200,7 @@ public class Acls18IndexPirServer extends AbstractIndexPirServer {
             }
             assert (processByteSize % byteLength == 0);
             // Get the coefficients of the elements that will be packed in plaintext i
-            long[] coeffs = convertBytesToCoeffs(params.getPlainModulusBitLength(), offset, processByteSize, combinedBytes);
+            long[] coeffs = IndexPirUtils.convertBytesToCoeffs(params.getPlainModulusBitLength(), offset, processByteSize, combinedBytes);
             assert (coeffs.length <= usedCoeffSize);
             offset += processByteSize;
             long[] paddingCoeffsArray = new long[params.getPolyModulusDegree()];

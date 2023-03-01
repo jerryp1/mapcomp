@@ -4,8 +4,9 @@ import edu.alibaba.mpc4j.common.rpc.*;
 import edu.alibaba.mpc4j.common.rpc.utils.DataPacket;
 import edu.alibaba.mpc4j.common.rpc.utils.DataPacketHeader;
 import edu.alibaba.mpc4j.common.tool.CommonConstants;
-import edu.alibaba.mpc4j.s2pc.pir.index.AbstractIndexPirParams;
 import edu.alibaba.mpc4j.s2pc.pir.index.AbstractIndexPirServer;
+import edu.alibaba.mpc4j.s2pc.pir.index.IndexPirParams;
+import edu.alibaba.mpc4j.s2pc.pir.index.IndexPirUtils;
 import edu.alibaba.mpc4j.s2pc.pir.index.onionpir.Mcr21IndexPirPtoDesc.PtoStep;
 
 import java.nio.ByteBuffer;
@@ -42,16 +43,34 @@ public class Mcr21IndexPirServer extends AbstractIndexPirServer {
     }
 
     @Override
-    public void init(AbstractIndexPirParams indexPirParams, ArrayList<ByteBuffer> elementArrayList,
-                     int elementByteLength) {
+    public void init(IndexPirParams indexPirParams, ArrayList<ByteBuffer> elementArrayList, int elementByteLength) {
         assert (indexPirParams instanceof Mcr21IndexPirParams);
         params = (Mcr21IndexPirParams) indexPirParams;
         logPhaseInfo(PtoState.INIT_BEGIN);
 
         stopWatch.start();
-        // 一个多项式可表示的字节长度
-        int binMaxByteLength = params.getPolyModulusDegree() * params.getPlainModulusBitLength() / Byte.SIZE;
-        setInitInput(elementArrayList, elementByteLength, binMaxByteLength, getPtoDesc().getPtoName());
+        params.initMcr21IndexPirParams(elementArrayList.size(), elementByteLength);
+        setInitInput(elementArrayList, elementByteLength, params.getBinMaxByteLength());
+        // 服务端对数据库进行编码
+        int binNum = params.getBinNum();
+        IntStream intStream = this.parallel ? IntStream.range(0, binNum).parallel() : IntStream.range(0, binNum);
+        encodedDatabase = intStream.mapToObj(this::preprocessDatabase).collect(Collectors.toList());
+        stopWatch.stop();
+        long initTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
+        stopWatch.reset();
+        logStepInfo(PtoState.INIT_STEP, 1, 1, initTime);
+
+        logPhaseInfo(PtoState.INIT_END);
+    }
+
+    @Override
+    public void init(ArrayList<ByteBuffer> elementArrayList, int elementByteLength) {
+        params = Mcr21IndexPirParams.DEFAULT_PARAMS;
+        logPhaseInfo(PtoState.INIT_BEGIN);
+
+        stopWatch.start();
+        params.initMcr21IndexPirParams(elementArrayList.size(), elementByteLength);
+        setInitInput(elementArrayList, elementByteLength, params.getBinMaxByteLength());
         // 服务端对数据库进行编码
         int binNum = params.getBinNum();
         IntStream intStream = this.parallel ? IntStream.range(0, binNum).parallel() : IntStream.range(0, binNum);
@@ -115,6 +134,11 @@ public class Mcr21IndexPirServer extends AbstractIndexPirServer {
             } else {
                 querySize2 = 3;
             }
+        }
+        int querySize = querySize1 + querySize2;
+        expectSize = querySize + 2 + params.getGswDecompSize() * 2;
+        MpcAbortPreconditions.checkArgument(totalSize == expectSize);
+        if ((binNum > 1) && (params.getPlaintextSize()[0] != params.getPlaintextSize()[binNum - 1])) {
             for (int i = 0; i < binNum - 1; i++) {
                 clientQuery.add(new ArrayList<>());
                 for (int j = 0; j < querySize1; j++) {
@@ -133,9 +157,6 @@ public class Mcr21IndexPirServer extends AbstractIndexPirServer {
                 }
             }
         }
-        int querySize = querySize1 + querySize2;
-        expectSize = querySize + 2 + params.getGswDecompSize() * 2;
-        MpcAbortPreconditions.checkArgument(totalSize == expectSize);
         byte[] publicKey = clientQueryPayload.get(querySize);
         byte[] galoisKeys = clientQueryPayload.get(querySize + 1);
         ArrayList<byte[]> encryptedSecretKey = new ArrayList<>(
@@ -196,7 +217,7 @@ public class Mcr21IndexPirServer extends AbstractIndexPirServer {
             }
             assert (processByteSize % byteLength == 0);
             // Get the coefficients of the elements that will be packed in plaintext i
-            long[] coeffs = convertBytesToCoeffs(params.getPlainModulusBitLength(), offset, processByteSize, combinedBytes);
+            long[] coeffs = IndexPirUtils.convertBytesToCoeffs(params.getPlainModulusBitLength(), offset, processByteSize, combinedBytes);
             assert (coeffs.length <= usedCoeffSize);
             offset += processByteSize;
             long[] paddingCoeffsArray = new long[params.getPolyModulusDegree()];

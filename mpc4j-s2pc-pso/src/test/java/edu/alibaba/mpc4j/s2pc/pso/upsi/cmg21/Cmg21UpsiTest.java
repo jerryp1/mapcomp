@@ -1,11 +1,11 @@
-package edu.alibaba.mpc4j.s2pc.pso.upsi;
+package edu.alibaba.mpc4j.s2pc.pso.upsi.cmg21;
 
 import com.google.common.base.Preconditions;
 import edu.alibaba.mpc4j.common.rpc.Rpc;
 import edu.alibaba.mpc4j.common.rpc.RpcManager;
 import edu.alibaba.mpc4j.common.rpc.impl.memory.MemoryRpcManager;
 import edu.alibaba.mpc4j.s2pc.pso.PsoUtils;
-import edu.alibaba.mpc4j.s2pc.pso.upsi.cmg21.Cmg21UpsiConfig;
+import edu.alibaba.mpc4j.s2pc.pso.upsi.*;
 import org.apache.commons.lang3.StringUtils;
 import org.junit.After;
 import org.junit.Assert;
@@ -29,20 +29,20 @@ import java.util.Set;
  * @date 2022/5/26
  */
 @RunWith(Parameterized.class)
-public class UpsiTest {
-    private static final Logger LOGGER = LoggerFactory.getLogger(UpsiTest.class);
-    /**
-     * 服务端元素数量
-     */
-    private static final int SERVER_ELEMENT_SIZE = 1 << 20;
-    /**
-     * 客户端元素数量
-     */
-    private static final int CLIENT_ELEMENT_SIZE = 1 << 12;
-    /**
-     * 客户端最大元素数量
-     */
-    private static final int MAX_CLIENT_ELEMENT_SIZE = 5535;
+public class Cmg21UpsiTest {
+    private static final Logger LOGGER = LoggerFactory.getLogger(Cmg21UpsiTest.class);
+
+    @Parameterized.Parameters(name = "{0}")
+    public static Collection<Object[]> configurations() {
+        Collection<Object[]> configurations = new ArrayList<>();
+
+        // CMG21
+        configurations.add(new Object[]{
+            UpsiFactory.UpsiType.CMG21.name(), new Cmg21UpsiConfig.Builder().build()
+        });
+
+        return configurations;
+    }
     /**
      * 服务端
      */
@@ -56,19 +56,7 @@ public class UpsiTest {
      */
     private final UpsiConfig config;
 
-    @Parameterized.Parameters(name = "{0}")
-    public static Collection<Object[]> configurations() {
-        Collection<Object[]> configurations = new ArrayList<>();
-
-        // CMG21
-        configurations.add(new Object[]{
-            UpsiFactory.UpsiType.CMG21.name(), new Cmg21UpsiConfig.Builder().build()
-        });
-
-        return configurations;
-    }
-
-    public UpsiTest(String name, UpsiConfig config) {
+    public Cmg21UpsiTest(String name, UpsiConfig config) {
         Preconditions.checkArgument(StringUtils.isNotBlank(name));
         // We cannot use NettyRPC in the test case since it needs multi-thread connect / disconnect.
         // In other word, we cannot connect / disconnect NettyRpc in @Before / @After, respectively.
@@ -91,17 +79,83 @@ public class UpsiTest {
     }
 
     @Test
-    public void testCmg21Parallel() {
-        testUpsi(SERVER_ELEMENT_SIZE, CLIENT_ELEMENT_SIZE, true);
+    public void test2K1() {
+        testUpsi(Cmg21UpsiParams.SERVER_2K_CLIENT_MAX_1, false);
     }
 
     @Test
-    public void testCmg21() {
-        testUpsi(SERVER_ELEMENT_SIZE, CLIENT_ELEMENT_SIZE, false);
+    public void test100K1() {
+        testUpsi(Cmg21UpsiParams.SERVER_100K_CLIENT_MAX_1, false);
     }
 
-    public void testUpsi(int serverSize, int clientSize, boolean parallel) {
-        assert clientSize <= MAX_CLIENT_ELEMENT_SIZE;
+    @Test
+    public void test1M1024Cmp() {
+        testUpsi(Cmg21UpsiParams.SERVER_1M_CLIENT_MAX_1K_CMP, false);
+    }
+
+    @Test
+    public void test1M1024CmpParallel() {
+        testUpsi(Cmg21UpsiParams.SERVER_1M_CLIENT_MAX_1K_CMP, true);
+    }
+
+    @Test
+    public void test1M1024Com() {
+        testUpsi(Cmg21UpsiParams.SERVER_1M_CLIENT_MAX_1K_COM, false);
+    }
+
+    @Test
+    public void test1M1024ComParallel() {
+        testUpsi(Cmg21UpsiParams.SERVER_1M_CLIENT_MAX_1K_COM, true);
+    }
+
+    @Test
+    public void test1M11041Parallel() {
+        testUpsi(Cmg21UpsiParams.SERVER_1M_CLIENT_MAX_11041, true);
+    }
+
+    @Test
+    public void test1M2048CmpParallel() {
+        testUpsi(Cmg21UpsiParams.SERVER_1M_CLIENT_MAX_2K_CMP, true);
+    }
+
+    @Test
+    public void test1M2048ComParallel() {
+        testUpsi(Cmg21UpsiParams.SERVER_1M_CLIENT_MAX_2K_COM, true);
+    }
+
+    @Test
+    public void test1M256Parallel() {
+        testUpsi(Cmg21UpsiParams.SERVER_1M_CLIENT_MAX_256, true);
+    }
+
+    @Test
+    public void test1M4096CmpParallel() {
+        testUpsi(Cmg21UpsiParams.SERVER_1M_CLIENT_MAX_4K_CMP, true);
+    }
+
+    @Test
+    public void test1M4096ComParallel() {
+        testUpsi(Cmg21UpsiParams.SERVER_1M_CLIENT_MAX_4K_COM, true);
+    }
+
+    @Test
+    public void test1M512CmpParallel() {
+        testUpsi(Cmg21UpsiParams.SERVER_1M_CLIENT_MAX_512_CMP, true);
+    }
+
+    @Test
+    public void test1M512ComParallel() {
+        testUpsi(Cmg21UpsiParams.SERVER_1M_CLIENT_MAX_512_COM, true);
+    }
+
+    @Test
+    public void test1M5535Parallel() {
+        testUpsi(Cmg21UpsiParams.SERVER_1M_CLIENT_MAX_5535, true);
+    }
+
+    public void testUpsi(UpsiParams upsiParams, boolean parallel) {
+        int serverSize = upsiParams.expectServerSize();
+        int clientSize = upsiParams.maxClientElementSize();
         List<Set<String>> sets = PsoUtils.generateStringSets("ID", serverSize, clientSize);
         Set<String> serverElementSet = sets.get(0);
         Set<String> clientElementSet = sets.get(1);
@@ -114,12 +168,10 @@ public class UpsiTest {
         // 设置并发
         server.setParallel(parallel);
         client.setParallel(parallel);
-        UpsiServerThread<String> serverThread = new UpsiServerThread<>(
-            server, MAX_CLIENT_ELEMENT_SIZE, serverElementSet, clientElementSet.size()
+        Cmg21UpsiServerThread<String> serverThread = new Cmg21UpsiServerThread<>(
+            server, upsiParams, serverElementSet, clientElementSet.size()
         );
-        UpsiClientThread<String> clientThread = new UpsiClientThread<>(
-            client, MAX_CLIENT_ELEMENT_SIZE, clientElementSet
-        );
+        Cmg21UpsiClientThread<String> clientThread = new Cmg21UpsiClientThread<>(client, upsiParams, clientElementSet);
         try {
             // 开始执行协议
             serverThread.start();

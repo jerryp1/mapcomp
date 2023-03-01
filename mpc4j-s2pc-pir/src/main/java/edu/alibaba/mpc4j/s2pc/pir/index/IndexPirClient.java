@@ -18,7 +18,15 @@ public interface IndexPirClient extends TwoPartyPto {
      * @param serverElementSize 服务端元素数量。
      * @param elementByteLength 元素字节长度。
      */
-    void init(AbstractIndexPirParams indexPirParams, int serverElementSize, int elementByteLength);
+    void init(IndexPirParams indexPirParams, int serverElementSize, int elementByteLength);
+
+    /**
+     * 初始化协议。
+     *
+     * @param serverElementSize 服务端元素数量。
+     * @param elementByteLength 元素字节长度。
+     */
+    void init(int serverElementSize, int elementByteLength);
 
     /**
      * 执行协议。

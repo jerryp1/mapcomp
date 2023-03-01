@@ -52,12 +52,28 @@ public class Cmg21UpsiServer<T> extends AbstractUpsiServer<T> {
 
     @Override
     public void init(UpsiParams upsiParams) throws MpcAbortException {
-        setInitInput(upsiParams);
+        setInitInput(upsiParams.maxClientElementSize());
         logPhaseInfo(PtoState.INIT_BEGIN);
 
         stopWatch.start();
         assert (upsiParams instanceof Cmg21UpsiParams);
         params = (Cmg21UpsiParams) upsiParams;
+        mpOprfSender.init(params.maxClientElementSize());
+        stopWatch.stop();
+        long initTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
+        stopWatch.reset();
+        logStepInfo(PtoState.INIT_STEP, 1, 1, initTime);
+
+        logPhaseInfo(PtoState.INIT_END);
+    }
+
+    @Override
+    public void init(int maxClientElementSize) throws MpcAbortException {
+        setInitInput(maxClientElementSize);
+        logPhaseInfo(PtoState.INIT_BEGIN);
+
+        stopWatch.start();
+        params = Cmg21UpsiParams.SERVER_1M_CLIENT_MAX_5535;
         mpOprfSender.init(params.maxClientElementSize());
         stopWatch.stop();
         long initTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
@@ -189,7 +205,7 @@ public class Cmg21UpsiServer<T> extends AbstractUpsiServer<T> {
             IntStream intStream = parallel ? IntStream.range(0, binSize).parallel() : IntStream.range(0, binSize);
             int finalI = i;
             intStream.forEach(j -> {
-                long[] item = params.getHashBinEntryEncodedArray(hashBins.get(finalI).get(j), false, secureRandom);
+                long[] item = params.getHashBinEntryEncodedArray(hashBins.get(finalI).get(j), false);
                 for (int l = 0; l < itemEncodedSlotSize; l++) {
                     encodedItemArray[finalI * itemEncodedSlotSize + l][j] = item[l];
                 }
@@ -202,14 +218,18 @@ public class Cmg21UpsiServer<T> extends AbstractUpsiServer<T> {
                 partitionSize = partition < bigPartitionIndex ?
                     params.getMaxPartitionSizePerBin() : binSize % params.getMaxPartitionSizePerBin();
                 partitionStart = params.getMaxPartitionSizePerBin() * partition;
-                IntStream intStream = parallel ?
-                    IntStream.range(0, itemPerCiphertext * itemEncodedSlotSize).parallel() :
-                    IntStream.range(0, itemPerCiphertext * itemEncodedSlotSize);
+                IntStream intStream = IntStream.range(0, itemPerCiphertext * itemEncodedSlotSize);
+                intStream = parallel ? intStream.parallel() : intStream;
                 int finalI = i;
                 intStream.forEach(j -> {
                     long[] tempVector = new long[partitionSize];
-                    System.arraycopy(encodedItemArray[finalI * itemPerCiphertext * itemEncodedSlotSize + j],
-                        partitionStart, tempVector, 0, partitionSize);
+                    System.arraycopy(
+                        encodedItemArray[finalI * itemPerCiphertext * itemEncodedSlotSize + j],
+                        partitionStart,
+                        tempVector,
+                        0,
+                        partitionSize
+                    );
                     coeffs[j] = zp64Poly.rootInterpolate(partitionSize, tempVector, 0L);
                 });
                 // 转换为列编码
@@ -292,9 +312,9 @@ public class Cmg21UpsiServer<T> extends AbstractUpsiServer<T> {
             PowerNode[] powerNodes = PowerUtils.computePowers(sourcePowersSet, params.getMaxPartitionSizePerBin());
             powerDegree = Arrays.stream(powerNodes).map(PowerNode::toIntArray).toArray(int[][]::new);
         }
-        IntStream queryIntStream = parallel ?
-            IntStream.range(0, ciphertextNum).parallel() : IntStream.range(0, ciphertextNum);
-        List<byte[]> queryPowers = queryIntStream
+        IntStream intStream = IntStream.range(0, ciphertextNum);
+        intStream = parallel ? intStream.parallel() : intStream;
+        List<byte[]> queryPowers = intStream
             .mapToObj(i -> Cmg21UpsiNativeUtils.computeEncryptedPowers(
                 encryptionParams.get(0),
                 encryptionParams.get(1),
@@ -306,7 +326,7 @@ public class Cmg21UpsiServer<T> extends AbstractUpsiServer<T> {
             .flatMap(Collection::stream)
             .collect(Collectors.toCollection(ArrayList::new));
         if (params.getPsLowDegree() > 0) {
-            return (parallel ? IntStream.range(0, ciphertextNum).parallel() : IntStream.range(0, ciphertextNum))
+            return IntStream.range(0, ciphertextNum)
                 .mapToObj(i ->
                     (parallel ? IntStream.range(0, partitionCount).parallel() : IntStream.range(0, partitionCount))
                         .mapToObj(j -> Cmg21UpsiNativeUtils.optComputeMatches(
@@ -320,7 +340,7 @@ public class Cmg21UpsiServer<T> extends AbstractUpsiServer<T> {
                 .flatMap(Arrays::stream)
                 .collect(Collectors.toList());
         } else if (params.getPsLowDegree() == 0) {
-            return (parallel ? IntStream.range(0, ciphertextNum).parallel() : IntStream.range(0, ciphertextNum))
+            return IntStream.range(0, ciphertextNum)
                 .mapToObj(i ->
                     (parallel ? IntStream.range(0, partitionCount).parallel() : IntStream.range(0, partitionCount))
                         .mapToObj(j -> Cmg21UpsiNativeUtils.naiveComputeMatches(

@@ -1,7 +1,8 @@
 package edu.alibaba.mpc4j.s2pc.pir.index.onionpir;
 
 import edu.alibaba.mpc4j.common.tool.CommonConstants;
-import edu.alibaba.mpc4j.s2pc.pir.index.AbstractIndexPirParams;
+import edu.alibaba.mpc4j.s2pc.pir.index.IndexPirParams;
+import edu.alibaba.mpc4j.s2pc.pir.index.IndexPirUtils;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -14,7 +15,7 @@ import java.util.stream.IntStream;
  * @author Liqiang Peng
  * @date 2022/11/11
  */
-public class Mcr21IndexPirParams extends AbstractIndexPirParams {
+public class Mcr21IndexPirParams implements IndexPirParams {
 
     static {
         System.loadLibrary(CommonConstants.MPC4J_NATIVE_FHE_NAME);
@@ -31,15 +32,15 @@ public class Mcr21IndexPirParams extends AbstractIndexPirParams {
     /**
      * 明文模数比特长度
      */
-    private final int plainModulusBitLength = 54;
+    private static final int PLAIN_MODULUS_BIT_LENGTH = 54;
     /**
      * 多项式阶
      */
-    private final int polyModulusDegree = 4096;
+    private static final int POLY_MODULUS_DEGREE = 4096;
     /**
      * 维数
      */
-    private final int[] dimension;
+    private int[] dimension;
     /**
      * 加密方案参数
      */
@@ -47,30 +48,49 @@ public class Mcr21IndexPirParams extends AbstractIndexPirParams {
     /**
      * 多项式里的元素数量
      */
-    private final int[] elementSizeOfPlaintext;
+    private int[] elementSizeOfPlaintext;
     /**
      * 多项式数量
      */
-    private final int[] plaintextSize;
+    private int[] plaintextSize;
     /**
      * 各维度的向量长度
      */
-    private final int[][] dimensionsLength;
+    private int[][] dimensionsLength;
     /**
      * 数据库分块数量
      */
-    private final int binNum;
+    private int binNum;
+    /**
+     * 分块的最长字节长度
+     */
+    private int binMaxByteLength;
+    /**
+     * 最后一个分块的字节长度
+     */
+    private int lastBinByteLength;
 
-    public Mcr21IndexPirParams(int serverElementSize, int elementByteLength, int firstDimensionSize) {
+    public Mcr21IndexPirParams(int firstDimensionSize) {
+        assert (firstDimensionSize <= 512) : "first dimension is too large";
         this.firstDimensionSize = firstDimensionSize;
         // 生成加密方案参数
-        this.encryptionParams = Mcr21IndexPirNativeUtils.generateSealContext(polyModulusDegree, plainModulusBitLength);
+        this.encryptionParams = Mcr21IndexPirNativeUtils.generateSealContext(
+            POLY_MODULUS_DEGREE, PLAIN_MODULUS_BIT_LENGTH
+        );
+    }
+
+    /**
+     * 初始化参数。
+     *
+     * @param serverElementSize 服务端元素数量。
+     * @param elementByteLength 元素字节长度。
+     */
+    public synchronized void initMcr21IndexPirParams(int serverElementSize, int elementByteLength) {
         // 一个多项式可表示的字节长度
-        int binMaxByteLength = polyModulusDegree * plainModulusBitLength / Byte.SIZE;
+        this.binMaxByteLength = POLY_MODULUS_DEGREE * PLAIN_MODULUS_BIT_LENGTH / Byte.SIZE;
         // 数据库分块数量
         this.binNum = (elementByteLength + binMaxByteLength - 1) / binMaxByteLength;
-        int lastBinByteLength = elementByteLength % binMaxByteLength == 0 ?
-            binMaxByteLength : elementByteLength % binMaxByteLength;
+        this.lastBinByteLength = elementByteLength - (binNum - 1) * binMaxByteLength;
         this.elementSizeOfPlaintext = new int[this.binNum];
         this.plaintextSize = new int[this.binNum];
         this.dimensionsLength = new int[this.binNum][];
@@ -78,23 +98,29 @@ public class Mcr21IndexPirParams extends AbstractIndexPirParams {
         IntStream.range(0, this.binNum).forEach(i -> {
             int byteLength = i == binNum - 1 ? lastBinByteLength : binMaxByteLength;
             // 一个多项式可以包含的元素数量
-            elementSizeOfPlaintext[i] = elementSizeOfPlaintext(byteLength, polyModulusDegree, plainModulusBitLength);
+            elementSizeOfPlaintext[i] =
+                IndexPirUtils.elementSizeOfPlaintext(byteLength, POLY_MODULUS_DEGREE, PLAIN_MODULUS_BIT_LENGTH);
             // 多项式数量
             plaintextSize[i] = (int) Math.ceil((double)serverElementSize / elementSizeOfPlaintext[i]);
             // 各维度的向量长度
             dimensionsLength[i] = computeDimensionLength(plaintextSize[i]);
-            assert (dimensionsLength[i][0] <= 512) : "first dimension is too large";
             dimension[i] = dimensionsLength[i].length;
         });
     }
+
+    /**
+     * 默认参数
+     */
+    public static Mcr21IndexPirParams DEFAULT_PARAMS = new Mcr21IndexPirParams(128);
 
     /**
      * 返回明文模数比特长度。
      *
      * @return 明文模数比特长度。
      */
+    @Override
     public int getPlainModulusBitLength() {
-        return plainModulusBitLength;
+        return PLAIN_MODULUS_BIT_LENGTH;
     }
 
     /**
@@ -102,8 +128,14 @@ public class Mcr21IndexPirParams extends AbstractIndexPirParams {
      *
      * @return 多项式阶。
      */
+    @Override
     public int getPolyModulusDegree() {
-        return polyModulusDegree;
+        return POLY_MODULUS_DEGREE;
+    }
+
+    @Override
+    public int getDimension() {
+        return dimension[0];
     }
 
     /**
@@ -154,10 +186,28 @@ public class Mcr21IndexPirParams extends AbstractIndexPirParams {
     /**
      * 返回分块数目。
      *
-     * @return RGSW密文参数。
+     * @return 分块数目。
      */
     public int getBinNum() {
         return this.binNum;
+    }
+
+    /**
+     * 返回分块的最大字节长度。
+     *
+     * @return 分块的最大字节长度。
+     */
+    public int getBinMaxByteLength() {
+        return binMaxByteLength;
+    }
+
+    /**
+     * 返回最后一个分块的字节长度。
+     *
+     * @return 最后一个分块的字节长度。
+     */
+    public int getLastBinByteLength() {
+        return lastBinByteLength;
     }
 
     /**
@@ -195,7 +245,7 @@ public class Mcr21IndexPirParams extends AbstractIndexPirParams {
             "  - number of BFV plaintexts (before padding) : " + Arrays.toString(plaintextSize) + "\n" +
             "\n" +
             "SEAL encryption parameters : " + "\n" +
-            " - degree of polynomial modulus : " + polyModulusDegree + "\n" +
-            " - size of plaintext modulus : " + plainModulusBitLength + "\n";
+            " - degree of polynomial modulus : " + POLY_MODULUS_DEGREE + "\n" +
+            " - size of plaintext modulus : " + PLAIN_MODULUS_BIT_LENGTH + "\n";
     }
 }

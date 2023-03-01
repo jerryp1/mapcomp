@@ -22,6 +22,14 @@ public interface UpsiClient<T> extends TwoPartyPto {
     void init(UpsiParams upsiParams) throws MpcAbortException;
 
     /**
+     * 初始化协议。
+     *
+     * @param maxClientElementSize 客户端最大元素数量。
+     * @throws MpcAbortException 如果协议异常中止。
+     */
+    void init(int maxClientElementSize) throws MpcAbortException;
+
+    /**
      * 执行协议。
      *
      * @param clientElementSet 客户端元素集合。

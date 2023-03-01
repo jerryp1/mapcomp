@@ -4,10 +4,14 @@ import edu.alibaba.mpc4j.common.rpc.*;
 import edu.alibaba.mpc4j.common.rpc.utils.DataPacket;
 import edu.alibaba.mpc4j.common.rpc.utils.DataPacketHeader;
 import edu.alibaba.mpc4j.common.tool.CommonConstants;
+import edu.alibaba.mpc4j.common.tool.MathPreconditions;
+import edu.alibaba.mpc4j.common.tool.utils.BytesUtils;
 import edu.alibaba.mpc4j.s2pc.pir.index.AbstractIndexPirClient;
-import edu.alibaba.mpc4j.s2pc.pir.index.AbstractIndexPirParams;
+import edu.alibaba.mpc4j.s2pc.pir.index.IndexPirParams;
+import edu.alibaba.mpc4j.s2pc.pir.index.IndexPirUtils;
 import edu.alibaba.mpc4j.s2pc.pir.index.fastpir.Ayaa21IndexPirPtoDesc.PtoStep;
 
+import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
@@ -47,14 +51,38 @@ public class Ayaa21IndexPirClient extends AbstractIndexPirClient {
     }
 
     @Override
-    public void init(AbstractIndexPirParams indexPirParams, int serverElementSize, int elementByteLength) {
-        setInitInput(serverElementSize, elementByteLength);
-        logPhaseInfo(PtoState.INIT_BEGIN);
-
+    public void init(IndexPirParams indexPirParams, int serverElementSize, int elementByteLength) {
         assert (indexPirParams instanceof Ayaa21IndexPirParams);
         params = (Ayaa21IndexPirParams) indexPirParams;
+        logPhaseInfo(PtoState.INIT_BEGIN);
 
         stopWatch.start();
+        if (elementByteLength % 2 == 1) {
+            elementByteLength++;
+        }
+        params.initAyaa21IndexPirParams(serverElementSize, elementByteLength);
+        setInitInput(serverElementSize, elementByteLength);
+        // 客户端生成密钥对
+        generateKeyPair();
+        stopWatch.stop();
+        long initTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
+        stopWatch.reset();
+        logStepInfo(PtoState.INIT_STEP, 1, 1, initTime);
+
+        logPhaseInfo(PtoState.INIT_END);
+    }
+
+    @Override
+    public void init(int serverElementSize, int elementByteLength) {
+        params = Ayaa21IndexPirParams.DEFAULT_PARAMS;
+        logPhaseInfo(PtoState.INIT_BEGIN);
+
+        stopWatch.start();
+        if (elementByteLength % 2 == 1) {
+            elementByteLength++;
+        }
+        params.initAyaa21IndexPirParams(serverElementSize, elementByteLength);
+        setInitInput(serverElementSize, elementByteLength);
         // 客户端生成密钥对
         generateKeyPair();
         stopWatch.stop();
@@ -118,12 +146,9 @@ public class Ayaa21IndexPirClient extends AbstractIndexPirClient {
         int binNum = params.getBinNum();
         MpcAbortPreconditions.checkArgument(response.size() == binNum);
         byte[] result = new byte[elementByteLength];
-        int binMaxByteLength = params.getPolyModulusDegree() * params.getPlainModulusBitLength() / Byte.SIZE;
-        int lastBinByteLength = elementByteLength % binMaxByteLength == 0 ?
-            binMaxByteLength : elementByteLength % binMaxByteLength;
         IntStream intStream = this.parallel ? IntStream.range(0, binNum).parallel() : IntStream.range(0, binNum);
         intStream.forEach(binIndex -> {
-            int byteLength = binIndex == binNum - 1 ? lastBinByteLength : binMaxByteLength;
+            int byteLength = binIndex == binNum - 1 ? params.getLastBinByteLength() : params.getBinMaxByteLength();
             long[] coeffs = Ayaa21IndexPirNativeUtils.decodeResponse(
                 params.getEncryptionParams(), secretKey, response.get(binIndex)
             );
@@ -133,10 +158,10 @@ public class Ayaa21IndexPirClient extends AbstractIndexPirClient {
                 rotatedCoeffs[0][i] = coeffs[(index + i) % rowCount];
                 rotatedCoeffs[1][i] = coeffs[rowCount + ((index + i) % rowCount)];
             });
-            byte[] upperBytes = convertCoeffsToBytes(rotatedCoeffs[0], params.getPlainModulusBitLength());
-            byte[] lowerBytes = convertCoeffsToBytes(rotatedCoeffs[1], params.getPlainModulusBitLength());
-            System.arraycopy(upperBytes, 0, result, binIndex * binMaxByteLength, byteLength / 2);
-            System.arraycopy(lowerBytes, 0, result, binIndex * binMaxByteLength + byteLength / 2, byteLength / 2);
+            byte[] upperBytes = IndexPirUtils.convertCoeffsToBytes(rotatedCoeffs[0], params.getPlainModulusBitLength());
+            byte[] lowerBytes = IndexPirUtils.convertCoeffsToBytes(rotatedCoeffs[1], params.getPlainModulusBitLength());
+            System.arraycopy(upperBytes, 0, result, binIndex * params.getBinMaxByteLength(), byteLength / 2);
+            System.arraycopy(lowerBytes, 0, result, binIndex * params.getBinMaxByteLength() + byteLength / 2, byteLength / 2);
         });
         return result;
     }

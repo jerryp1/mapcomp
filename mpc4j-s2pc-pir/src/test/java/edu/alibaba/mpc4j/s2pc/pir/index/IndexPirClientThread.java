@@ -19,7 +19,7 @@ public class IndexPirClientThread extends Thread {
     /**
      * 索引PIR参数
      */
-    private final AbstractIndexPirParams indexPirParams;
+    private final IndexPirParams indexPirParams;
     /**
      * 元素字节长度
      */
@@ -41,7 +41,7 @@ public class IndexPirClientThread extends Thread {
      */
     private final ArrayList<ByteBuffer> indexPirResult;
 
-    IndexPirClientThread(IndexPirClient client, AbstractIndexPirParams indexPirParams, ArrayList<Integer> retrievalIndexList,
+    IndexPirClientThread(IndexPirClient client, IndexPirParams indexPirParams, ArrayList<Integer> retrievalIndexList,
                          int serverElementSize, int elementByteLength, int repeatTime) {
         assert repeatTime == retrievalIndexList.size();
         this.client = client;

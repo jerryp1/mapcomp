@@ -58,12 +58,28 @@ public class Cmg21UpsiClient<T> extends AbstractUpsiClient<T> {
 
     @Override
     public void init(UpsiParams upsiParams) throws MpcAbortException {
-        setInitInput(upsiParams);
+        setInitInput(upsiParams.maxClientElementSize());
         logPhaseInfo(PtoState.INIT_BEGIN);
 
         stopWatch.start();
         assert (upsiParams instanceof Cmg21UpsiParams);
         params = (Cmg21UpsiParams) upsiParams;
+        mpOprfReceiver.init(params.maxClientElementSize());
+        stopWatch.stop();
+        long initTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
+        stopWatch.reset();
+        logStepInfo(PtoState.INIT_STEP, 1, 1, initTime);
+
+        logPhaseInfo(PtoState.INIT_END);
+    }
+
+    @Override
+    public void init(int maxClientElementSize) throws MpcAbortException {
+        setInitInput(maxClientElementSize);
+        logPhaseInfo(PtoState.INIT_BEGIN);
+
+        stopWatch.start();
+        params = Cmg21UpsiParams.SERVER_1M_CLIENT_MAX_5535;
         mpOprfReceiver.init(params.maxClientElementSize());
         stopWatch.stop();
         long initTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
@@ -117,7 +133,7 @@ public class Cmg21UpsiClient<T> extends AbstractUpsiClient<T> {
         logStepInfo(PtoState.PTO_STEP, 2, 5, cuckooHashKeyTime, "Client generates cuckoo hash keys");
 
         stopWatch.start();
-        // 客户端生成BFV算法密钥和参数
+        // 客户端生成BFV算法密钥
         List<byte[]> encryptionParams = Cmg21UpsiNativeUtils.genEncryptionParameters(
             params.getPolyModulusDegree(), params.getPlainModulus(), params.getCoeffModulusBits()
         );
@@ -185,9 +201,7 @@ public class Cmg21UpsiClient<T> extends AbstractUpsiClient<T> {
             .mapToObj(i -> clientElementArrayList.get(i).array())
             .toArray(byte[][]::new);
         OprfReceiverOutput oprfReceiverOutput = mpOprfReceiver.oprf(oprfReceiverInputs);
-        IntStream intStream = parallel ? IntStream.range(0, clientElementSize).parallel() :
-            IntStream.range(0, clientElementSize);
-        return intStream
+        return IntStream.range(0, clientElementSize)
             .mapToObj(i -> ByteBuffer.wrap(oprfReceiverOutput.getPrf(i)))
             .collect(Collectors.toCollection(ArrayList::new));
     }
@@ -239,7 +253,7 @@ public class Cmg21UpsiClient<T> extends AbstractUpsiClient<T> {
         for (int i = 0; i < ciphertextNum; i++) {
             for (int j = 0; j < itemPerCiphertext; j++) {
                 long[] item = params.getHashBinEntryEncodedArray(
-                    cuckooHashBin.getHashBinEntry(i * itemPerCiphertext + j), true, secureRandom
+                    cuckooHashBin.getHashBinEntry(i * itemPerCiphertext + j), true
                 );
                 System.arraycopy(item, 0, items[i], j * params.getItemEncodedSlotSize(), params.getItemEncodedSlotSize());
             }
@@ -247,32 +261,28 @@ public class Cmg21UpsiClient<T> extends AbstractUpsiClient<T> {
                 items[i][j] = 0;
             }
         }
-        IntStream intStream = parallel ? IntStream.range(0, ciphertextNum).parallel() : IntStream.range(0, ciphertextNum);
-        return intStream
-            .mapToObj(i -> computePowers(items[i], params.getPlainModulus(), params.getQueryPowers()))
+        return IntStream.range(0, ciphertextNum)
+            .mapToObj(i -> computePowers(items[i]))
             .collect(Collectors.toCollection(ArrayList::new));
     }
 
     /**
      * 计算幂次方。
      *
-     * @param base      底数。
-     * @param modulus   模数。
-     * @param exponents 指数。
+     * @param base 底数。
      * @return 幂次方。
      */
-    private long[][] computePowers(long[] base, long modulus, int[] exponents) {
-        Zp64 zp64 = Zp64Factory.createInstance(envType, modulus);
-        long[][] result = new long[exponents.length][];
+    private long[][] computePowers(long[] base) {
+        Zp64 zp64 = Zp64Factory.createInstance(envType, (long) params.getPlainModulus());
+        int[] exponents = params.getQueryPowers();
         assert exponents[0] == 1;
+        long[][] result = new long[exponents.length][base.length];
         result[0] = base;
-        for (int i = 1; i < exponents.length; i++) {
-            long[] temp = new long[base.length];
-            for (int j = 0; j < base.length; j++) {
-                temp[j] = zp64.pow(base[j], exponents[i]);
-            }
-            result[i] = temp;
-        }
+        IntStream intStream = IntStream.range(1, exponents.length);
+        intStream = parallel ? intStream.parallel() : intStream;
+        intStream.forEach(i ->
+                IntStream.range(0, base.length).forEach(j -> result[i][j] = zp64.pow(base[j], exponents[i]))
+        );
         return result;
     }
 }

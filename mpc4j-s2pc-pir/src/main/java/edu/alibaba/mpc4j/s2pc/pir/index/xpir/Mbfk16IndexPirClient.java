@@ -6,7 +6,8 @@ import edu.alibaba.mpc4j.common.rpc.utils.DataPacket;
 import edu.alibaba.mpc4j.common.rpc.utils.DataPacketHeader;
 import edu.alibaba.mpc4j.common.tool.CommonConstants;
 import edu.alibaba.mpc4j.s2pc.pir.index.AbstractIndexPirClient;
-import edu.alibaba.mpc4j.s2pc.pir.index.AbstractIndexPirParams;
+import edu.alibaba.mpc4j.s2pc.pir.index.IndexPirParams;
+import edu.alibaba.mpc4j.s2pc.pir.index.IndexPirUtils;
 import edu.alibaba.mpc4j.s2pc.pir.index.xpir.Mbfk16IndexPirPtoDesc.PtoStep;
 
 import java.util.*;
@@ -43,14 +44,32 @@ public class Mbfk16IndexPirClient extends AbstractIndexPirClient {
     }
 
     @Override
-    public void init(AbstractIndexPirParams indexPirParams, int serverElementSize, int elementByteLength) {
-        setInitInput(serverElementSize, elementByteLength);
-        logPhaseInfo(PtoState.INIT_BEGIN);
-
+    public void init(IndexPirParams indexPirParams, int serverElementSize, int elementByteLength) {
         assert (indexPirParams instanceof Mbfk16IndexPirParams);
         params = (Mbfk16IndexPirParams) indexPirParams;
+        logPhaseInfo(PtoState.INIT_BEGIN);
 
         stopWatch.start();
+        params.initMbfk16IndexPirParams(serverElementSize, elementByteLength);
+        setInitInput(serverElementSize, elementByteLength);
+        // 客户端生成密钥对
+        generateKeyPair();
+        stopWatch.stop();
+        long initTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
+        stopWatch.reset();
+        logStepInfo(PtoState.INIT_STEP, 1, 1, initTime);
+
+        logPhaseInfo(PtoState.INIT_END);
+    }
+
+    @Override
+    public void init(int serverElementSize, int elementByteLength) {
+        params = Mbfk16IndexPirParams.DEFAULT_PARAMS;
+        logPhaseInfo(PtoState.INIT_BEGIN);
+
+        stopWatch.start();
+        params.initMbfk16IndexPirParams(serverElementSize, elementByteLength);
+        setInitInput(serverElementSize, elementByteLength);
         // 客户端生成密钥对
         generateKeyPair();
         stopWatch.stop();
@@ -79,13 +98,14 @@ public class Mbfk16IndexPirClient extends AbstractIndexPirClient {
         stopWatch.reset();
         logStepInfo(PtoState.PTO_STEP, 1, 2, genQueryTime, "Client generates query");
 
-        stopWatch.start();
         // 客户端接收并解密回复
         DataPacketHeader serverResponseHeader = new DataPacketHeader(
             encodeTaskId, getPtoDesc().getPtoId(), PtoStep.SERVER_SEND_RESPONSE.ordinal(), extraInfo,
             otherParty().getPartyId(), rpc.ownParty().getPartyId()
         );
         List<byte[]> serverResponsePayload = rpc.receive(serverResponseHeader).getPayload();
+
+        stopWatch.start();
         byte[] element = handleServerResponsePayload(serverResponsePayload);
         stopWatch.stop();
         long responseTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
@@ -107,7 +127,7 @@ public class Mbfk16IndexPirClient extends AbstractIndexPirClient {
         int[] nvec = params.getDimensionsLength()[0];
         int indexOfPlaintext = index / params.getElementSizeOfPlaintext()[0];
         // 计算每个维度的坐标
-        int[] indices = computeIndices(indexOfPlaintext, nvec);
+        int[] indices = IndexPirUtils.computeIndices(indexOfPlaintext, nvec);
         ArrayList<byte[]> result = new ArrayList<>(
             Mbfk16IndexPirNativeUtils.generateQuery(params.getEncryptionParams(), publicKey, secretKey, indices, nvec)
         );
@@ -116,7 +136,7 @@ public class Mbfk16IndexPirClient extends AbstractIndexPirClient {
             int[] lastNvec = params.getDimensionsLength()[bundleNum - 1];
             int lastIndexOfPlaintext = index / params.getElementSizeOfPlaintext()[bundleNum - 1];
             // 计算每个维度的坐标
-            int[] lastIndices = computeIndices(lastIndexOfPlaintext, lastNvec);
+            int[] lastIndices = IndexPirUtils.computeIndices(lastIndexOfPlaintext, lastNvec);
             // 返回查询密文
             result.addAll(
                 Mbfk16IndexPirNativeUtils.generateQuery(
@@ -141,21 +161,18 @@ public class Mbfk16IndexPirClient extends AbstractIndexPirClient {
         int dimension = params.getDimension();
         int binResponseSize = IntStream.range(0, dimension - 1).map(i -> expansionRatio).reduce(1, (a, b) -> a * b);
         MpcAbortPreconditions.checkArgument(response.size() == binResponseSize * binNum);
-        int binMaxByteLength = params.getPolyModulusDegree() * params.getPlainModulusBitLength() / Byte.SIZE;
-        int lastBinByteLength = elementByteLength % binMaxByteLength == 0 ?
-            binMaxByteLength : elementByteLength % binMaxByteLength;
         IntStream intStream = this.parallel ? IntStream.range(0, binNum).parallel() : IntStream.range(0, binNum);
         intStream.forEach(binIndex -> {
-            int byteLength = binIndex == binNum - 1 ? lastBinByteLength : binMaxByteLength;
             long[] coeffs = Mbfk16IndexPirNativeUtils.decryptReply(
                 params.getEncryptionParams(),
                 secretKey,
                 Lists.newArrayList(response.subList(binIndex * binResponseSize, (binIndex + 1) * binResponseSize)),
                 params.getDimension()
             );
-            byte[] bytes = convertCoeffsToBytes(coeffs, params.getPlainModulusBitLength());
+            byte[] bytes = IndexPirUtils.convertCoeffsToBytes(coeffs, params.getPlainModulusBitLength());
             int offset = this.index % params.getElementSizeOfPlaintext()[binIndex];
-            System.arraycopy(bytes, offset * byteLength, elementBytes, binIndex * binMaxByteLength, byteLength);
+            int byteLength = binIndex == binNum - 1 ? params.getLastBinByteLength() : params.getBinMaxByteLength();
+            System.arraycopy(bytes, offset * byteLength, elementBytes, binIndex * params.getBinMaxByteLength(), byteLength);
         });
         return elementBytes;
     }

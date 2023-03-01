@@ -1,4 +1,4 @@
-package edu.alibaba.mpc4j.s2pc.pso.upsi;
+package edu.alibaba.mpc4j.s2pc.pso.upsi.cmg21;
 
 import com.google.common.base.Preconditions;
 import edu.alibaba.mpc4j.s2pc.pso.upsi.cmg21.Cmg21UpsiParams;

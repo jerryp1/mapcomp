@@ -1,7 +1,8 @@
 package edu.alibaba.mpc4j.s2pc.pir.index.xpir;
 
 import edu.alibaba.mpc4j.common.tool.CommonConstants;
-import edu.alibaba.mpc4j.s2pc.pir.index.AbstractIndexPirParams;
+import edu.alibaba.mpc4j.s2pc.pir.index.IndexPirParams;
+import edu.alibaba.mpc4j.s2pc.pir.index.IndexPirUtils;
 
 import java.util.Arrays;
 import java.util.stream.IntStream;
@@ -12,7 +13,7 @@ import java.util.stream.IntStream;
  * @author Liqiang Peng
  * @date 2022/8/24
  */
-public class Mbfk16IndexPirParams extends AbstractIndexPirParams {
+public class Mbfk16IndexPirParams implements IndexPirParams {
 
     static {
         System.loadLibrary(CommonConstants.MPC4J_NATIVE_FHE_NAME);
@@ -37,47 +38,63 @@ public class Mbfk16IndexPirParams extends AbstractIndexPirParams {
     /**
      * 多项式里的元素数量
      */
-    private final int[] elementSizeOfPlaintext;
+    private int[] elementSizeOfPlaintext;
     /**
      * 多项式数量
      */
-    private final int[] plaintextSize;
+    private int[] plaintextSize;
     /**
      * 各维度的向量长度
      */
-    private final int[][] dimensionsLength;
+    private int[][] dimensionsLength;
     /**
      * 数据库分块数量
      */
-    private final int binNum;
+    private int binNum;
     /**
      * 密文和明文的比例。
      */
     private final int expansionRatio;
+    /**
+     * 分块的最长字节长度
+     */
+    private int binMaxByteLength;
+    /**
+     * 最后一个分块的字节长度
+     */
+    private int lastBinByteLength;
 
-    public Mbfk16IndexPirParams(int serverElementSize, int elementByteLength, int polyModulusDegree,
-                                int plainModulusBitLength, int dimension) {
+    public Mbfk16IndexPirParams(int polyModulusDegree, int plainModulusBitLength, int dimension) {
         this.polyModulusDegree = polyModulusDegree;
         this.plainModulusBitLength = plainModulusBitLength;
         this.dimension = dimension;
-        // 一个多项式可表示的字节长度
-        int binMaxByteLength = polyModulusDegree * plainModulusBitLength / Byte.SIZE;
-        // 数据库分块数量
-        this.binNum = (elementByteLength + binMaxByteLength - 1) / binMaxByteLength;
-        int lastBinByteLength = elementByteLength % binMaxByteLength == 0 ?
-            binMaxByteLength : elementByteLength % binMaxByteLength;
-        this.elementSizeOfPlaintext = new int[this.binNum];
-        this.plaintextSize = new int[this.binNum];
-        this.dimensionsLength = new int[this.binNum][];
         // 生成加密方案参数
         this.encryptionParams = Mbfk16IndexPirNativeUtils.generateSealContext(
             polyModulusDegree, (1L << plainModulusBitLength) + 1
         );
         this.expansionRatio = Mbfk16IndexPirNativeUtils.expansionRatio(this.encryptionParams);
+    }
+
+    /**
+     * 初始化参数。
+     *
+     * @param serverElementSize 服务端元素数量。
+     * @param elementByteLength 元素字节长度。
+     */
+    public void initMbfk16IndexPirParams(int serverElementSize, int elementByteLength) {
+        // 一个多项式可表示的字节长度
+        this.binMaxByteLength = polyModulusDegree * plainModulusBitLength / Byte.SIZE;
+        // 数据库分块数量
+        this.binNum = (elementByteLength + binMaxByteLength - 1) / binMaxByteLength;
+        this.lastBinByteLength = elementByteLength - (binNum - 1) * binMaxByteLength;
+        this.elementSizeOfPlaintext = new int[this.binNum];
+        this.plaintextSize = new int[this.binNum];
+        this.dimensionsLength = new int[this.binNum][];
         IntStream.range(0, this.binNum).forEach(i -> {
             int byteLength = i == binNum - 1 ? lastBinByteLength : binMaxByteLength;
             // 一个多项式可以包含的元素数量
-            elementSizeOfPlaintext[i] = elementSizeOfPlaintext(byteLength, polyModulusDegree, plainModulusBitLength);
+            elementSizeOfPlaintext[i] =
+                IndexPirUtils.elementSizeOfPlaintext(byteLength, polyModulusDegree, plainModulusBitLength);
             // 多项式数量
             this.plaintextSize[i] = (int) Math.ceil((double) serverElementSize / this.elementSizeOfPlaintext[i]);
             // 各维度的向量长度
@@ -86,10 +103,16 @@ public class Mbfk16IndexPirParams extends AbstractIndexPirParams {
     }
 
     /**
+     * 默认参数
+     */
+    public static Mbfk16IndexPirParams DEFAULT_PARAMS = new Mbfk16IndexPirParams(4096, 20, 2);
+
+    /**
      * 返回明文模数比特长度。
      *
      * @return 明文模数比特长度。
      */
+    @Override
     public int getPlainModulusBitLength() {
         return plainModulusBitLength;
     }
@@ -99,6 +122,7 @@ public class Mbfk16IndexPirParams extends AbstractIndexPirParams {
      *
      * @return 多项式阶。
      */
+    @Override
     public int getPolyModulusDegree() {
         return polyModulusDegree;
     }
@@ -108,6 +132,7 @@ public class Mbfk16IndexPirParams extends AbstractIndexPirParams {
      *
      * @return 维数。
      */
+    @Override
     public int getDimension() {
         return dimension;
     }
@@ -164,6 +189,24 @@ public class Mbfk16IndexPirParams extends AbstractIndexPirParams {
      */
     public int getExpansionRatio() {
         return expansionRatio;
+    }
+
+    /**
+     * 返回分块的最大字节长度。
+     *
+     * @return 分块的最大字节长度。
+     */
+    public int getBinMaxByteLength() {
+        return binMaxByteLength;
+    }
+
+    /**
+     * 返回最后一个分块的字节长度。
+     *
+     * @return 最后一个分块的字节长度。
+     */
+    public int getLastBinByteLength() {
+        return lastBinByteLength;
     }
 
     /**

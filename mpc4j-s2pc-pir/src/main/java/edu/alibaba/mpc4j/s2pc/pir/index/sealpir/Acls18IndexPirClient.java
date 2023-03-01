@@ -6,7 +6,8 @@ import edu.alibaba.mpc4j.common.rpc.utils.DataPacket;
 import edu.alibaba.mpc4j.common.rpc.utils.DataPacketHeader;
 import edu.alibaba.mpc4j.common.tool.CommonConstants;
 import edu.alibaba.mpc4j.s2pc.pir.index.AbstractIndexPirClient;
-import edu.alibaba.mpc4j.s2pc.pir.index.AbstractIndexPirParams;
+import edu.alibaba.mpc4j.s2pc.pir.index.IndexPirParams;
+import edu.alibaba.mpc4j.s2pc.pir.index.IndexPirUtils;
 import edu.alibaba.mpc4j.s2pc.pir.index.sealpir.Acls18IndexPirPtoDesc.PtoStep;
 
 import java.util.ArrayList;
@@ -48,14 +49,32 @@ public class Acls18IndexPirClient extends AbstractIndexPirClient {
     }
 
     @Override
-    public void init(AbstractIndexPirParams indexPirParams, int serverElementSize, int elementByteLength) {
-        setInitInput(serverElementSize, elementByteLength);
-        logPhaseInfo(PtoState.INIT_BEGIN);
-
+    public void init(IndexPirParams indexPirParams, int serverElementSize, int elementByteLength) {
         assert (indexPirParams instanceof Acls18IndexPirParams);
         params = (Acls18IndexPirParams) indexPirParams;
+        logPhaseInfo(PtoState.INIT_BEGIN);
 
         stopWatch.start();
+        params.initAcls18IndexPirParams(serverElementSize, elementByteLength);
+        setInitInput(serverElementSize, elementByteLength);
+        // 客户端生成密钥对
+        generateKeyPair();
+        stopWatch.stop();
+        long initTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
+        stopWatch.reset();
+        logStepInfo(PtoState.INIT_STEP, 1, 1, initTime);
+
+        logPhaseInfo(PtoState.INIT_END);
+    }
+
+    @Override
+    public void init(int serverElementSize, int elementByteLength) {
+        params = Acls18IndexPirParams.DEFAULT_PARAMS;
+        logPhaseInfo(PtoState.INIT_BEGIN);
+
+        stopWatch.start();
+        params.initAcls18IndexPirParams(serverElementSize, elementByteLength);
+        setInitInput(serverElementSize, elementByteLength);
         // 客户端生成密钥对
         generateKeyPair();
         stopWatch.stop();
@@ -114,7 +133,7 @@ public class Acls18IndexPirClient extends AbstractIndexPirClient {
         int[] nvec = params.getDimensionsLength()[0];
         int indexOfPlaintext = index / params.getElementSizeOfPlaintext()[0];
         // 计算每个维度的坐标
-        int[] indices = computeIndices(indexOfPlaintext, nvec);
+        int[] indices = IndexPirUtils.computeIndices(indexOfPlaintext, nvec);
         ArrayList<byte[]> result = new ArrayList<>(
             Acls18IndexPirNativeUtils.generateQuery(params.getEncryptionParams(), publicKey, secretKey, indices, nvec)
         );
@@ -123,7 +142,7 @@ public class Acls18IndexPirClient extends AbstractIndexPirClient {
             int[] lastNvec = params.getDimensionsLength()[binNum - 1];
             int lastIndexOfPlaintext = index / params.getElementSizeOfPlaintext()[binNum - 1];
             // 计算每个维度的坐标
-            int[] lastIndices = computeIndices(lastIndexOfPlaintext, lastNvec);
+            int[] lastIndices = IndexPirUtils.computeIndices(lastIndexOfPlaintext, lastNvec);
             // 返回查询密文
             result.addAll(
                 Acls18IndexPirNativeUtils.generateQuery(
@@ -148,21 +167,18 @@ public class Acls18IndexPirClient extends AbstractIndexPirClient {
         int dimension = params.getDimension();
         int binResponseSize = IntStream.range(0, dimension - 1).map(i -> expansionRatio).reduce(1, (a, b) -> a * b);
         MpcAbortPreconditions.checkArgument(response.size() == binResponseSize * binNum);
-        int binMaxByteLength = params.getPolyModulusDegree() * params.getPlainModulusBitLength() / Byte.SIZE;
-        int lastBinByteLength = elementByteLength % binMaxByteLength == 0 ?
-            binMaxByteLength : elementByteLength % binMaxByteLength;
         IntStream intStream = this.parallel ? IntStream.range(0, binNum).parallel() : IntStream.range(0, binNum);
         intStream.forEach(i -> {
-            int byteLength = i == binNum - 1 ? lastBinByteLength : binMaxByteLength;
+            int byteLength = i == binNum - 1 ? params.getLastBinByteLength() : params.getBinMaxByteLength();
             long[] coeffs = Acls18IndexPirNativeUtils.decryptReply(
                 params.getEncryptionParams(),
                 secretKey,
                 Lists.newArrayList(response.subList(i * binResponseSize, (i + 1) * binResponseSize)),
                 params.getDimension()
             );
-            byte[] bytes = convertCoeffsToBytes(coeffs, params.getPlainModulusBitLength());
+            byte[] bytes = IndexPirUtils.convertCoeffsToBytes(coeffs, params.getPlainModulusBitLength());
             int offset = this.index % params.getElementSizeOfPlaintext()[i];
-            System.arraycopy(bytes, offset * byteLength, element, i * binMaxByteLength, byteLength);
+            System.arraycopy(bytes, offset * byteLength, element, i * params.getBinMaxByteLength(), byteLength);
         });
         return element;
     }

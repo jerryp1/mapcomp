@@ -1,7 +1,7 @@
 package edu.alibaba.mpc4j.s2pc.pir.index.fastpir;
 
 import edu.alibaba.mpc4j.common.tool.CommonConstants;
-import edu.alibaba.mpc4j.s2pc.pir.index.AbstractIndexPirParams;
+import edu.alibaba.mpc4j.s2pc.pir.index.IndexPirParams;
 
 import java.math.BigInteger;
 import java.util.Arrays;
@@ -13,7 +13,7 @@ import java.util.stream.IntStream;
  * @author Liqiang Peng
  * @date 2023/1/18
  */
-public class Ayaa21IndexPirParams extends AbstractIndexPirParams {
+public class Ayaa21IndexPirParams implements IndexPirParams {
 
     static {
         System.loadLibrary(CommonConstants.MPC4J_NATIVE_FHE_NAME);
@@ -34,33 +34,48 @@ public class Ayaa21IndexPirParams extends AbstractIndexPirParams {
     /**
      * 单个元素的列长度
      */
-    private final int[] elementColumnLength;
+    private int[] elementColumnLength;
     /**
      * 查询向量的密文个数
      */
-    private final int querySize;
+    private int querySize;
     /**
      * 数据库行数
      */
-    private final int[] databaseRowNum;
+    private int[] databaseRowNum;
     /**
      * 数据库分块数量
      */
-    private final int binNum;
+    private int binNum;
+    /**
+     * 分块的最长字节长度
+     */
+    private int binMaxByteLength;
+    /**
+     * 最后一个分块的字节长度
+     */
+    private int lastBinByteLength;
 
-    public Ayaa21IndexPirParams(int serverElementSize, int elementByteLength, int polyModulusDegree,
-                                long plainModulus, long[] coeffModulus) {
+    public Ayaa21IndexPirParams(int polyModulusDegree, long plainModulus, long[] coeffModulus) {
         this.polyModulusDegree = polyModulusDegree;
         this.plainModulusBitLength = BigInteger.valueOf(plainModulus).bitLength() - 1;
         this.encryptionParams = Ayaa21IndexPirNativeUtils.generateSealContext(
             polyModulusDegree, plainModulus, coeffModulus
         );
+    }
+
+    /**
+     * 初始化参数。
+     *
+     * @param serverElementSize 服务端元素数量。
+     * @param elementByteLength 元素字节长度。
+     */
+    public void initAyaa21IndexPirParams(int serverElementSize, int elementByteLength) {
         this.querySize = (int) Math.ceil(serverElementSize / (polyModulusDegree / 2.0));
-        int binMaxByteLength = plainModulusBitLength * polyModulusDegree / Byte.SIZE;
+        this.binMaxByteLength = plainModulusBitLength * polyModulusDegree / Byte.SIZE;
         // 数据库分块数量
         this.binNum = (elementByteLength + binMaxByteLength - 1) / binMaxByteLength;
-        int lastBinByteLength = elementByteLength % binMaxByteLength == 0 ?
-            binMaxByteLength : elementByteLength % binMaxByteLength;
+        this.lastBinByteLength = elementByteLength - (binNum - 1) * binMaxByteLength;
         this.elementColumnLength = new int[binNum];
         this.databaseRowNum = new int[binNum];
         IntStream.range(0, binNum).forEach(i -> {
@@ -69,6 +84,15 @@ public class Ayaa21IndexPirParams extends AbstractIndexPirParams {
             databaseRowNum[i] = querySize * elementColumnLength[i];
         });
     }
+
+    /**
+     * 默认参数
+     */
+    public static Ayaa21IndexPirParams DEFAULT_PARAMS = new Ayaa21IndexPirParams(
+        4096,
+        1073153L,
+        new long[]{1152921504606830593L, 562949953216513L}
+    );
 
     /**
      * 返回数据库行数。
@@ -84,8 +108,14 @@ public class Ayaa21IndexPirParams extends AbstractIndexPirParams {
      *
      * @return 多项式阶。
      */
+    @Override
     public int getPolyModulusDegree() {
         return polyModulusDegree;
+    }
+
+    @Override
+    public int getDimension() {
+        return 2;
     }
 
     /**
@@ -93,6 +123,7 @@ public class Ayaa21IndexPirParams extends AbstractIndexPirParams {
      *
      * @return 明文模数比特长度。
      */
+    @Override
     public int getPlainModulusBitLength() {
         return plainModulusBitLength;
     }
@@ -127,10 +158,28 @@ public class Ayaa21IndexPirParams extends AbstractIndexPirParams {
     /**
      * 返回分块数目。
      *
-     * @return RGSW密文参数。
+     * @return 分块数目。
      */
     public int getBinNum() {
         return this.binNum;
+    }
+
+    /**
+     * 返回分块的最大字节长度。
+     *
+     * @return 分块的最大字节长度。
+     */
+    public int getBinMaxByteLength() {
+        return binMaxByteLength;
+    }
+
+    /**
+     * 返回最后一个分块的字节长度。
+     *
+     * @return 最后一个分块的字节长度。
+     */
+    public int getLastBinByteLength() {
+        return lastBinByteLength;
     }
 
     @Override

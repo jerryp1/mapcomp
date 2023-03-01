@@ -1,6 +1,8 @@
-package edu.alibaba.mpc4j.s2pc.pso.upsi;
+package edu.alibaba.mpc4j.s2pc.pso.upsi.cmg21;
 
 import edu.alibaba.mpc4j.common.rpc.MpcAbortException;
+import edu.alibaba.mpc4j.s2pc.pso.upsi.UpsiParams;
+import edu.alibaba.mpc4j.s2pc.pso.upsi.UpsiServer;
 
 import java.util.Set;
 
@@ -10,11 +12,15 @@ import java.util.Set;
  * @author Liqiang Peng
  * @date 2022/5/26
  */
-public class UpsiServerThread<T> extends Thread {
+public class Cmg21UpsiServerThread<T> extends Thread {
     /**
      * 服务端
      */
     private final UpsiServer<T> server;
+    /**
+     * UPSI协议配置项
+     */
+    private final UpsiParams upsiParams;
     /**
      * 服务端集合
      */
@@ -23,14 +29,10 @@ public class UpsiServerThread<T> extends Thread {
      * 客户端元素数量
      */
     private final int clientElementSize;
-    /**
-     * 客户端最大元素数量
-     */
-    private final int maxClientElementSize;
 
-    UpsiServerThread(UpsiServer<T> server, int maxClientElementSize, Set<T> serverElementSet, int clientElementSize) {
+    Cmg21UpsiServerThread(UpsiServer<T> server, UpsiParams upsiParams, Set<T> serverElementSet, int clientElementSize) {
         this.server = server;
-        this.maxClientElementSize = maxClientElementSize;
+        this.upsiParams = upsiParams;
         this.serverElementSet = serverElementSet;
         this.clientElementSize = clientElementSize;
     }
@@ -38,7 +40,7 @@ public class UpsiServerThread<T> extends Thread {
     @Override
     public void run() {
         try {
-            server.init(maxClientElementSize);
+            server.init(upsiParams);
             server.psi(serverElementSet, clientElementSize);
         } catch (MpcAbortException e) {
             e.printStackTrace();

@@ -45,9 +45,9 @@ public abstract class AbstractUpsiClient<T> extends AbstractTwoPartyPto implemen
         super(ptoDesc, clientRpc, serverParty, config);
     }
 
-    protected void setInitInput(UpsiParams upsiParams) {
-        MathPreconditions.checkPositive("maxClientElementSize", upsiParams.maxClientElementSize());
-        maxClientElementSize = upsiParams.maxClientElementSize();
+    protected void setInitInput(int maxClientElementSize) {
+        MathPreconditions.checkPositive("maxClientElementSize", maxClientElementSize);
+        this.maxClientElementSize = maxClientElementSize;
         initState();
     }
 

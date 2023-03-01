@@ -4,8 +4,11 @@ import edu.alibaba.mpc4j.common.rpc.*;
 import edu.alibaba.mpc4j.common.rpc.utils.DataPacket;
 import edu.alibaba.mpc4j.common.rpc.utils.DataPacketHeader;
 import edu.alibaba.mpc4j.common.tool.CommonConstants;
-import edu.alibaba.mpc4j.s2pc.pir.index.AbstractIndexPirParams;
+import edu.alibaba.mpc4j.common.tool.MathPreconditions;
+import edu.alibaba.mpc4j.common.tool.utils.BytesUtils;
 import edu.alibaba.mpc4j.s2pc.pir.index.AbstractIndexPirServer;
+import edu.alibaba.mpc4j.s2pc.pir.index.IndexPirParams;
+import edu.alibaba.mpc4j.s2pc.pir.index.IndexPirUtils;
 import edu.alibaba.mpc4j.s2pc.pir.index.fastpir.Ayaa21IndexPirPtoDesc.PtoStep;
 
 import java.nio.ByteBuffer;
@@ -40,15 +43,50 @@ public class Ayaa21IndexPirServer extends AbstractIndexPirServer {
     }
 
     @Override
-    public void init(AbstractIndexPirParams indexPirParams, ArrayList<ByteBuffer> elementArrayList,
-                     int elementByteLength) {
+    public void init(IndexPirParams indexPirParams, ArrayList<ByteBuffer> elementArrayList, int elementByteLength) {
         assert (indexPirParams instanceof Ayaa21IndexPirParams);
         params = (Ayaa21IndexPirParams) indexPirParams;
         logPhaseInfo(PtoState.INIT_BEGIN);
 
         stopWatch.start();
-        int binMaxByteLength = params.getPolyModulusDegree() * params.getPlainModulusBitLength() / Byte.SIZE;
-        setInitInput(elementArrayList, elementByteLength, binMaxByteLength, getPtoDesc().getPtoName());
+        if (elementByteLength % 2 == 1) {
+            for (int i = 0; i < elementArrayList.size(); i++) {
+                byte[] element = elementArrayList.get(i).array();
+                MathPreconditions.checkEqual("element.length", "elementByteLength", element.length, elementByteLength);
+                elementArrayList.set(i, ByteBuffer.wrap(BytesUtils.paddingByteArray(element, elementByteLength + 1)));
+            }
+            elementByteLength++;
+        }
+        params.initAyaa21IndexPirParams(elementArrayList.size(), elementByteLength);
+        setInitInput(elementArrayList, elementByteLength, params.getBinMaxByteLength());
+        // 服务端对数据库进行编码
+        int binNum = params.getBinNum();
+        IntStream intStream = parallel ? IntStream.range(0, binNum).parallel() : IntStream.range(0, binNum);
+        encodedDatabase = intStream.mapToObj(this::preprocessDatabase).collect(Collectors.toList());
+        stopWatch.stop();
+        long initTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
+        stopWatch.reset();
+        logStepInfo(PtoState.INIT_STEP, 1, 1, initTime);
+
+        logPhaseInfo(PtoState.INIT_END);
+    }
+
+    @Override
+    public void init(ArrayList<ByteBuffer> elementArrayList, int elementByteLength) {
+        params = Ayaa21IndexPirParams.DEFAULT_PARAMS;
+        logPhaseInfo(PtoState.INIT_BEGIN);
+
+        stopWatch.start();
+        if (elementByteLength % 2 == 1) {
+            for (int i = 0; i < elementArrayList.size(); i++) {
+                byte[] element = elementArrayList.get(i).array();
+                MathPreconditions.checkEqual("element.length", "elementByteLength", element.length, elementByteLength);
+                elementArrayList.set(i, ByteBuffer.wrap(BytesUtils.paddingByteArray(element, elementByteLength + 1)));
+            }
+            elementByteLength++;
+        }
+        params.initAyaa21IndexPirParams(elementArrayList.size(), elementByteLength);
+        setInitInput(elementArrayList, elementByteLength, params.getBinMaxByteLength());
         // 服务端对数据库进行编码
         int binNum = params.getBinNum();
         IntStream intStream = parallel ? IntStream.range(0, binNum).parallel() : IntStream.range(0, binNum);
@@ -108,8 +146,8 @@ public class Ayaa21IndexPirServer extends AbstractIndexPirServer {
             System.arraycopy(element, 0, upperBytes, 0, length);
             byte[] lowerBytes = new byte[length];
             System.arraycopy(element, length, lowerBytes, 0, length);
-            long[] upperCoeffs = convertBytesToCoeffs(params.getPlainModulusBitLength(), 0, length, upperBytes);
-            long[] lowerCoeffs = convertBytesToCoeffs(params.getPlainModulusBitLength(), 0, length, lowerBytes);
+            long[] upperCoeffs = IndexPirUtils.convertBytesToCoeffs(params.getPlainModulusBitLength(), 0, length, upperBytes);
+            long[] lowerCoeffs = IndexPirUtils.convertBytesToCoeffs(params.getPlainModulusBitLength(), 0, length, lowerBytes);
             for (int j = 0; j < params.getElementColumnLength()[binIndex]; j++) {
                 encodedDatabase[rowIndex][colIndex] = upperCoeffs[j];
                 encodedDatabase[rowIndex][colIndex + rowSize] = lowerCoeffs[j];

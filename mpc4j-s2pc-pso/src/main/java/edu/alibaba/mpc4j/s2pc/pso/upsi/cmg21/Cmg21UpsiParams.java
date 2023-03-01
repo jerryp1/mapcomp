@@ -404,8 +404,7 @@ public class Cmg21UpsiParams implements UpsiParams {
      * @param isReceiver   是否为接收方。
      * @return 哈希桶条目中元素对应的编码数组。
      */
-    public long[] getHashBinEntryEncodedArray(HashBinEntry<ByteBuffer> hashBinEntry, boolean isReceiver,
-                                              SecureRandom secureRandom) {
+    public long[] getHashBinEntryEncodedArray(HashBinEntry<ByteBuffer> hashBinEntry, boolean isReceiver) {
         long[] encodedArray = new long[itemEncodedSlotSize];
         int bitLength = (BigInteger.valueOf(plainModulus).bitLength() - 1) * itemEncodedSlotSize;
         assert bitLength >= 80;
@@ -421,13 +420,7 @@ public class Cmg21UpsiParams implements UpsiParams {
                 input = input.shiftRight(shiftBits);
             }
         } else {
-            IntStream.range(0, itemEncodedSlotSize).forEach(i -> {
-                long random = Math.abs(secureRandom.nextLong()) % plainModulus / 4;
-                encodedArray[i] = random << 1 | (isReceiver ? 1L : 0L);
-            });
-        }
-        for (int i = 0; i < itemEncodedSlotSize; i++) {
-            assert encodedArray[i] < plainModulus : "encoded value must be smaller than plain modulus";
+            IntStream.range(0, itemEncodedSlotSize).forEach(i -> encodedArray[i] = isReceiver ? 2L : 1L);
         }
         return encodedArray;
     }
