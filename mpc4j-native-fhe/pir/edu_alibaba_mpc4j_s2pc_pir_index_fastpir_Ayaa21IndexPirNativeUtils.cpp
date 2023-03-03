@@ -107,7 +107,9 @@ JNIEXPORT jbyteArray JNICALL Java_edu_alibaba_mpc4j_s2pc_pir_index_fastpir_Ayaa2
             query, evaluator, galois_keys, database, 0, num_columns_per_obj - 1);
     auto time_end = std::chrono::high_resolution_clock::now();
     auto db_preprocess_time = (std::chrono::duration_cast<std::chrono::microseconds>(time_end - time_start)).count();
+#ifdef DEBUG
     cout << db_preprocess_time << "us" << endl;
+#endif
     return serialize_ciphertext(env, response);
 }
 

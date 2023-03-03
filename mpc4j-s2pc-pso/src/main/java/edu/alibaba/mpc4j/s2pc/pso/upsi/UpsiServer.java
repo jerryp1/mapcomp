@@ -7,7 +7,6 @@ import java.util.Set;
 
 /**
  * 非平衡PSI协议服务端接口。
- * TODO @庚序: add a new init function void init(int expectServerElementSize, int maxClientElementSize);
  *
  * @author Liqiang Peng
  * @date 2022/6/13
