@@ -1,19 +1,15 @@
-package edu.alibaba.mpc4j.s2pc.pir.index;
+package edu.alibaba.mpc4j.s2pc.pir.index.sealpir;
 
 import com.google.common.base.Preconditions;
 import edu.alibaba.mpc4j.common.rpc.Rpc;
 import edu.alibaba.mpc4j.common.rpc.RpcManager;
 import edu.alibaba.mpc4j.common.rpc.impl.memory.MemoryRpcManager;
-import edu.alibaba.mpc4j.common.tool.CommonConstants;
 import edu.alibaba.mpc4j.s2pc.pir.PirUtils;
-import edu.alibaba.mpc4j.s2pc.pir.index.fastpir.Ayaa21IndexPirConfig;
-import edu.alibaba.mpc4j.s2pc.pir.index.fastpir.Ayaa21IndexPirParams;
-import edu.alibaba.mpc4j.s2pc.pir.index.onionpir.Mcr21IndexPirConfig;
-import edu.alibaba.mpc4j.s2pc.pir.index.onionpir.Mcr21IndexPirParams;
-import edu.alibaba.mpc4j.s2pc.pir.index.sealpir.Acls18IndexPirConfig;
-import edu.alibaba.mpc4j.s2pc.pir.index.sealpir.Acls18IndexPirParams;
+import edu.alibaba.mpc4j.s2pc.pir.index.IndexPirFactory;
+import edu.alibaba.mpc4j.s2pc.pir.index.xpir.Mbfk16IndexPirClient;
 import edu.alibaba.mpc4j.s2pc.pir.index.xpir.Mbfk16IndexPirConfig;
 import edu.alibaba.mpc4j.s2pc.pir.index.xpir.Mbfk16IndexPirParams;
+import edu.alibaba.mpc4j.s2pc.pir.index.xpir.Mbfk16IndexPirServer;
 import org.apache.commons.lang3.StringUtils;
 import org.junit.After;
 import org.junit.Assert;
@@ -29,14 +25,14 @@ import java.util.ArrayList;
 import java.util.Collection;
 
 /**
- * 索引PIR测试类。
+ * SEAL PIR测试类。
  *
  * @author Liqiang Peng
  * @date 2022/8/26
  */
 @RunWith(Parameterized.class)
-public class IndexPirTest {
-    private static final Logger LOGGER = LoggerFactory.getLogger(IndexPirTest.class);
+public class SealPirTest {
+    private static final Logger LOGGER = LoggerFactory.getLogger(SealPirTest.class);
     /**
      * 重复检索次数
      */
@@ -44,35 +40,36 @@ public class IndexPirTest {
     /**
      * 默认元素字节长度
      */
-    private static final int DEFAULT_ELEMENT_BYTE_LENGTH = CommonConstants.BLOCK_BYTE_LENGTH;
-    /**
-     * 较小元素字节长度
-     */
-    private static final int SMALL_ELEMENT_BYTE_LENGTH = Long.BYTES;
-    /**
-     * 较大元素字节长度
-     */
-    private static final int LARGE_ELEMENT_BYTE_LENGTH = 1 << 16;
+    private static final int DEFAULT_ELEMENT_BYTE_LENGTH = 64;
     /**
      * 服务端元素数量
      */
     private static final int SERVER_ELEMENT_SIZE = 1 << 20;
-    /**
-     * 较小服务端元素数量
-     */
-    private static final int SMALL_SERVER_ELEMENT_SIZE = 1 << 10;
 
     @Parameterized.Parameters(name = "{0}")
     public static Collection<Object[]> configurations() {
         Collection<Object[]> configurations = new ArrayList<>();
-        // XPIR
-        configurations.add(new Object[]{IndexPirFactory.IndexPirType.XPIR.name(), new Mbfk16IndexPirConfig()});
-        // SEAL PIR
-        configurations.add(new Object[]{IndexPirFactory.IndexPirType.SEAL_PIR.name(), new Acls18IndexPirConfig()});
-        // OnionPIR
-        configurations.add(new Object[]{IndexPirFactory.IndexPirType.ONION_PIR.name(), new Mcr21IndexPirConfig()});
-        // FastPIR
-        configurations.add(new Object[]{IndexPirFactory.IndexPirType.FAST_PIR.name(), new Ayaa21IndexPirConfig()});
+        Acls18IndexPirConfig sealpirConfig = new Acls18IndexPirConfig();
+        // SEAL PIR (1-dimension)
+        configurations.add(new Object[]{
+            IndexPirFactory.IndexPirType.SEAL_PIR.name() + " (1-dimension)",
+            sealpirConfig,
+            new Acls18IndexPirParams(
+                4096,
+                20,
+                1
+            )
+        });
+        // SEAL PIR (2-dimension)
+        configurations.add(new Object[]{
+            IndexPirFactory.IndexPirType.SEAL_PIR.name() + " (2-dimension)",
+            sealpirConfig,
+            new Acls18IndexPirParams(
+                4096,
+                20,
+                2
+            )
+        });
         return configurations;
     }
 
@@ -85,11 +82,15 @@ public class IndexPirTest {
      */
     private final Rpc clientRpc;
     /**
-     * 索引PIR配置项
+     * SEAL PIR配置项
      */
-    private final IndexPirConfig indexPirConfig;
+    private final Acls18IndexPirConfig indexPirConfig;
+    /**
+     * SEAL PIR参数
+     */
+    private final Acls18IndexPirParams indexPirParams;
 
-    public IndexPirTest(String name, IndexPirConfig indexPirConfig) {
+    public SealPirTest(String name, Acls18IndexPirConfig indexPirConfig, Acls18IndexPirParams indexPirParams) {
         Preconditions.checkArgument(StringUtils.isNotBlank(name));
         // We cannot use NettyRPC in the test case since it needs multi-thread connect / disconnect.
         // In other word, we cannot connect / disconnect NettyRpc in @Before / @After, respectively.
@@ -97,6 +98,7 @@ public class IndexPirTest {
         serverRpc = rpcManager.getRpc(0);
         clientRpc = rpcManager.getRpc(1);
         this.indexPirConfig = indexPirConfig;
+        this.indexPirParams = indexPirParams;
     }
 
     @Before
@@ -112,37 +114,32 @@ public class IndexPirTest {
     }
 
     @Test
-    public void testParallelIndexPir() {
-        testIndexPir(indexPirConfig, DEFAULT_ELEMENT_BYTE_LENGTH, SERVER_ELEMENT_SIZE, true);
+    public void testSealPir() {
+        testSealPir(indexPirConfig, indexPirParams, DEFAULT_ELEMENT_BYTE_LENGTH, false);
     }
 
     @Test
-    public void testLargeElementByteLength() {
-        testIndexPir(indexPirConfig, LARGE_ELEMENT_BYTE_LENGTH, SMALL_SERVER_ELEMENT_SIZE, false);
+    public void testParallelSealPir() {
+        testSealPir(indexPirConfig, indexPirParams, DEFAULT_ELEMENT_BYTE_LENGTH, true);
     }
 
-    @Test
-    public void testDefaultElementByteLength() {
-        testIndexPir(indexPirConfig, DEFAULT_ELEMENT_BYTE_LENGTH, SERVER_ELEMENT_SIZE, false);
-    }
-
-    @Test
-    public void testSmallElementByteLength() {
-        testIndexPir(indexPirConfig, SMALL_ELEMENT_BYTE_LENGTH, SERVER_ELEMENT_SIZE, false);
-    }
-
-    public void testIndexPir(IndexPirConfig config, int elementByteLength, int serverElementSize, boolean parallel) {
-        ArrayList<Integer> retrievalIndexList = PirUtils.generateRetrievalIndexList(serverElementSize, REPEAT_TIME);
+    public void testSealPir(Acls18IndexPirConfig config, Acls18IndexPirParams indexPirParams, int elementByteLength,
+                         boolean parallel) {
+        ArrayList<Integer> retrievalIndexList = PirUtils.generateRetrievalIndexList(SERVER_ELEMENT_SIZE, REPEAT_TIME);
         // 生成元素数组
-        ArrayList<ByteBuffer> elementList = PirUtils.generateElementArrayList(serverElementSize, elementByteLength);
+        ArrayList<ByteBuffer> elementList = PirUtils.generateElementArrayList(SERVER_ELEMENT_SIZE, elementByteLength);
         // 创建参与方实例
-        IndexPirServer server = IndexPirFactory.createServer(serverRpc, clientRpc.ownParty(), config);
-        IndexPirClient client = IndexPirFactory.createClient(clientRpc, serverRpc.ownParty(), config);
+        Acls18IndexPirServer server = new Acls18IndexPirServer(serverRpc, clientRpc.ownParty(), config);
+        Acls18IndexPirClient client = new Acls18IndexPirClient(clientRpc, serverRpc.ownParty(), config);
         // 设置并发
         server.setParallel(parallel);
         client.setParallel(parallel);
-        IndexPirServerThread serverThread = new IndexPirServerThread(server, elementList, elementByteLength, REPEAT_TIME);
-        IndexPirClientThread clientThread = new IndexPirClientThread(client, retrievalIndexList, serverElementSize, elementByteLength, REPEAT_TIME);
+        SealPirServerThread serverThread = new SealPirServerThread(
+            server, indexPirParams, elementList, elementByteLength, REPEAT_TIME
+        );
+        SealPirClientThread clientThread = new SealPirClientThread(
+            client, indexPirParams, retrievalIndexList, SERVER_ELEMENT_SIZE, elementByteLength, REPEAT_TIME
+        );
         try {
             // 开始执行协议
             serverThread.start();
@@ -154,6 +151,7 @@ public class IndexPirTest {
             serverRpc.reset();
             LOGGER.info("Client: The Communication costs {}MB", clientRpc.getSendByteLength() * 1.0 / (1024 * 1024));
             clientRpc.reset();
+            LOGGER.info("Parameters: \n {}", indexPirParams.toString());
             // 验证结果
             ArrayList<ByteBuffer> result = clientThread.getRetrievalResult();
             for (int index = 0; index < REPEAT_TIME; index++) {

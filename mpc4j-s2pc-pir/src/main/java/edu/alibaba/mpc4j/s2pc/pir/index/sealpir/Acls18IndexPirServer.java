@@ -31,9 +31,13 @@ public class Acls18IndexPirServer extends AbstractIndexPirServer {
     }
 
     /**
-     * XPIR方案参数
+     * SEAL PIR方案参数
      */
     private Acls18IndexPirParams params;
+    /**
+     * SEAL PIR方案内部参数
+     */
+    private Acls18IndexPirInnerParams innerParams;
     /**
      * BFV明文（点值表示）
      */
@@ -50,10 +54,10 @@ public class Acls18IndexPirServer extends AbstractIndexPirServer {
         logPhaseInfo(PtoState.INIT_BEGIN);
 
         stopWatch.start();
-        params.initAcls18IndexPirParams(elementArrayList.size(), elementByteLength);
-        setInitInput(elementArrayList, elementByteLength, params.getBinMaxByteLength());
+        innerParams = new Acls18IndexPirInnerParams(params, elementArrayList.size(), elementByteLength);
+        setInitInput(elementArrayList, elementByteLength, innerParams.getBinMaxByteLength());
         // 服务端对数据库进行编码
-        int binNum = params.getBinNum();
+        int binNum = innerParams.getBinNum();
         IntStream intStream = parallel ? IntStream.range(0, binNum).parallel() : IntStream.range(0, binNum);
         encodedDatabase = intStream.mapToObj(this::preprocessDatabase).collect(Collectors.toList());
         stopWatch.stop();
@@ -70,10 +74,10 @@ public class Acls18IndexPirServer extends AbstractIndexPirServer {
         logPhaseInfo(PtoState.INIT_BEGIN);
 
         stopWatch.start();
-        params.initAcls18IndexPirParams(elementArrayList.size(), elementByteLength);
-        setInitInput(elementArrayList, elementByteLength, params.getBinMaxByteLength());
+        innerParams = new Acls18IndexPirInnerParams(params, elementArrayList.size(), elementByteLength);
+        setInitInput(elementArrayList, elementByteLength, innerParams.getBinMaxByteLength());
         // 服务端对数据库进行编码
-        int binNum = params.getBinNum();
+        int binNum = innerParams.getBinNum();
         IntStream intStream = parallel ? IntStream.range(0, binNum).parallel() : IntStream.range(0, binNum);
         encodedDatabase = intStream.mapToObj(this::preprocessDatabase).collect(Collectors.toList());
         stopWatch.stop();
@@ -120,17 +124,17 @@ public class Acls18IndexPirServer extends AbstractIndexPirServer {
      */
     private ArrayList<byte[]> handleClientQueryPayload(ArrayList<byte[]> clientQueryPayload) throws MpcAbortException {
         int totalSize = clientQueryPayload.size();
-        int binNum = params.getBinNum();
+        int binNum = innerParams.getBinNum();
         int expectSize2 = 0;
-        int[] nvec = params.getDimensionsLength()[0];
+        int[] nvec = innerParams.getDimensionsLength()[0];
         ArrayList<ArrayList<byte[]>> clientQuery = new ArrayList<>();
         int expectSize1 = Arrays.stream(nvec).map(k -> (int) Math.ceil((k + 0.0) / params.getPolyModulusDegree())).sum();
-        if ((binNum > 1) && (params.getPlaintextSize()[0] != params.getPlaintextSize()[binNum - 1])) {
-            nvec = params.getDimensionsLength()[binNum - 1];
+        if ((binNum > 1) && (innerParams.getPlaintextSize()[0] != innerParams.getPlaintextSize()[binNum - 1])) {
+            nvec = innerParams.getDimensionsLength()[binNum - 1];
             expectSize2 = Arrays.stream(nvec).map(k -> (int) Math.ceil((k + 0.0) / params.getPolyModulusDegree())).sum();
         }
         MpcAbortPreconditions.checkArgument(totalSize == expectSize1 + expectSize2 + 1);
-        if ((binNum > 1) && (params.getPlaintextSize()[0] != params.getPlaintextSize()[binNum - 1])) {
+        if ((binNum > 1) && (innerParams.getPlaintextSize()[0] != innerParams.getPlaintextSize()[binNum - 1])) {
             for (int i = 0; i < binNum - 1; i++) {
                 clientQuery.add(new ArrayList<>());
                 for (int j = 0; j < expectSize1; j++) {
@@ -154,7 +158,7 @@ public class Acls18IndexPirServer extends AbstractIndexPirServer {
         return intStream
             .mapToObj(i -> Acls18IndexPirNativeUtils.generateReply(
                 params.getEncryptionParams(), galoisKeys, clientQuery.get(i), encodedDatabase.get(i),
-                params.getDimensionsLength()[i])
+                innerParams.getDimensionsLength()[i])
             )
             .flatMap(Collection::stream)
             .collect(Collectors.toCollection(ArrayList::new));
@@ -174,22 +178,22 @@ public class Acls18IndexPirServer extends AbstractIndexPirServer {
             System.arraycopy(element, 0, combinedBytes, index * byteLength, byteLength);
         });
         // number of FV plaintexts needed to create the d-dimensional matrix
-        int prod = Arrays.stream(params.getDimensionsLength()[binIndex]).reduce(1, (a, b) -> a * b);
-        assert (params.getPlaintextSize()[binIndex] <= prod);
+        int prod = Arrays.stream(innerParams.getDimensionsLength()[binIndex]).reduce(1, (a, b) -> a * b);
+        assert (innerParams.getPlaintextSize()[binIndex] <= prod);
         ArrayList<long[]> coeffsList = new ArrayList<>();
         // 每个多项式包含的字节长度
-        int byteSizeOfPlaintext = params.getElementSizeOfPlaintext()[binIndex] * byteLength;
+        int byteSizeOfPlaintext = innerParams.getElementSizeOfPlaintext()[binIndex] * byteLength;
         // 数据库总字节长度
         int totalByteSize = num * byteLength;
         // 一个多项式中需要使用的系数个数
-        int usedCoeffSize = params.getElementSizeOfPlaintext()[binIndex] *
+        int usedCoeffSize = innerParams.getElementSizeOfPlaintext()[binIndex] *
             ((int) Math.ceil(Byte.SIZE * byteLength / (double) params.getPlainModulusBitLength()));
         // 系数个数不大于多项式阶数
         assert (usedCoeffSize <= params.getPolyModulusDegree())
             : "coefficient num must be less than or equal to polynomial degree";
         // 字节转换为多项式系数
         int offset = 0;
-        for (int i = 0; i < params.getPlaintextSize()[binIndex]; i++) {
+        for (int i = 0; i < innerParams.getPlaintextSize()[binIndex]; i++) {
             int processByteSize;
             if (totalByteSize <= offset) {
                 break;
@@ -211,7 +215,7 @@ public class Acls18IndexPirServer extends AbstractIndexPirServer {
         }
         // Add padding plaintext to make database a matrix
         int currentPlaintextSize = coeffsList.size();
-        assert (currentPlaintextSize <= params.getPlaintextSize()[binIndex]);
+        assert (currentPlaintextSize <= innerParams.getPlaintextSize()[binIndex]);
         IntStream.range(0, (prod - currentPlaintextSize))
             .mapToObj(i -> IntStream.range(0, params.getPolyModulusDegree()).mapToLong(i1 -> 1L).toArray())
             .forEach(coeffsList::add);

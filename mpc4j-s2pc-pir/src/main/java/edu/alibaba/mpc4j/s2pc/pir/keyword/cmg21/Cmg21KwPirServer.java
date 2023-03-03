@@ -4,6 +4,7 @@ import edu.alibaba.mpc4j.common.rpc.*;
 import edu.alibaba.mpc4j.common.rpc.utils.DataPacket;
 import edu.alibaba.mpc4j.common.rpc.utils.DataPacketHeader;
 import edu.alibaba.mpc4j.common.tool.CommonConstants;
+import edu.alibaba.mpc4j.common.tool.MathPreconditions;
 import edu.alibaba.mpc4j.common.tool.crypto.ecc.Ecc;
 import edu.alibaba.mpc4j.common.tool.crypto.ecc.EccFactory;
 import edu.alibaba.mpc4j.common.tool.crypto.kdf.Kdf;
@@ -49,7 +50,7 @@ public class Cmg21KwPirServer<T> extends AbstractKwPirServer<T> {
      */
     private final boolean compressEncode;
     /**
-     * 关键词索引PIR方案参数
+     * CMG21关键词索引PIR参数
      */
     private Cmg21KwPirParams params;
     /**
@@ -95,6 +96,66 @@ public class Cmg21KwPirServer<T> extends AbstractKwPirServer<T> {
         stopWatch.start();
         assert (kwPirParams instanceof Cmg21KwPirParams);
         params = (Cmg21KwPirParams) kwPirParams;
+        // 服务端生成并发送哈希密钥
+        hashKeys = CommonUtils.generateRandomKeys(params.getCuckooHashKeyNum(), secureRandom);
+        DataPacketHeader cuckooHashKeyHeader = new DataPacketHeader(
+            encodeTaskId, getPtoDesc().getPtoId(), PtoStep.SERVER_SEND_CUCKOO_HASH_KEYS.ordinal(), extraInfo,
+            rpc.ownParty().getPartyId(), otherParty().getPartyId()
+        );
+        List<byte[]> cuckooHashKeyPayload = Arrays.stream(hashKeys).collect(Collectors.toList());
+        rpc.send(DataPacket.fromByteArrayList(cuckooHashKeyHeader, cuckooHashKeyPayload));
+        stopWatch.stop();
+        long cuckooHashKeyTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
+        stopWatch.reset();
+        logStepInfo(PtoState.INIT_STEP, 1, 4, cuckooHashKeyTime, "Server generates cuckoo hash keys");
+
+        stopWatch.start();
+        // 计算PRF
+        ArrayList<ByteBuffer> keywordPrfs = computeKeywordPrf();
+        Map<ByteBuffer, ByteBuffer> prfLabelMap = IntStream.range(0, keywordSize)
+            .boxed()
+            .collect(Collectors.toMap(
+                keywordPrfs::get,
+                i -> serverKeywordLabelMap.get(byteArrayObjectMap.get(keywordArrayList.get(i))),
+                (a, b) -> b)
+            );
+        stopWatch.stop();
+        long oprfTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
+        stopWatch.reset();
+        logStepInfo(PtoState.INIT_STEP, 2, 4, oprfTime, "Server computes PRFs");
+
+        stopWatch.start();
+        // 计算完全哈希分桶
+        hashBins = generateCompleteHashBin(keywordPrfs, params.getBinNum());
+        stopWatch.stop();
+        long hashTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
+        stopWatch.reset();
+        logStepInfo(PtoState.INIT_STEP, 3, 4, hashTime, "Server bin-hashes key");
+
+        stopWatch.start();
+        // 计算多项式系数
+        encodeDatabase(prfLabelMap);
+        stopWatch.stop();
+        long encodeTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
+        stopWatch.reset();
+        logStepInfo(PtoState.INIT_STEP, 4, 4, encodeTime, "Server encodes label");
+
+        logPhaseInfo(PtoState.INIT_END);
+    }
+
+    @Override
+    public void init(Map<T, ByteBuffer> serverKeywordLabelMap, int maxRetrievalSize, int labelByteLength)
+        throws MpcAbortException {
+        MathPreconditions.checkPositive("maxRetrievalSize", maxRetrievalSize);
+        if (maxRetrievalSize > 1) {
+            params = Cmg21KwPirParams.SERVER_1M_CLIENT_MAX_4096;
+        } else {
+            params = Cmg21KwPirParams.SERVER_1M_CLIENT_MAX_1;
+        }
+        setInitInput(serverKeywordLabelMap, labelByteLength);
+        logPhaseInfo(PtoState.INIT_BEGIN);
+
+        stopWatch.start();
         // 服务端生成并发送哈希密钥
         hashKeys = CommonUtils.generateRandomKeys(params.getCuckooHashKeyNum(), secureRandom);
         DataPacketHeader cuckooHashKeyHeader = new DataPacketHeader(

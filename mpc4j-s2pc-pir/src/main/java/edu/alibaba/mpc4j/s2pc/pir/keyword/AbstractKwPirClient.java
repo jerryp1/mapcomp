@@ -49,10 +49,11 @@ public abstract class AbstractKwPirClient<T> extends AbstractTwoPartyPto impleme
         super(ptoDesc, clientRpc, serverParty, config);
     }
 
-    protected void setInitInput(KwPirParams kwPirParams, int labelByteLength) {
+    protected void setInitInput(int maxRetrievalSize, int labelByteLength) {
         MathPreconditions.checkPositive("labelByteLength", labelByteLength);
         this.labelByteLength = labelByteLength;
-        maxRetrievalSize = kwPirParams.maxRetrievalSize();
+        MathPreconditions.checkPositive("maxRetrievalSize", maxRetrievalSize);
+        this.maxRetrievalSize = maxRetrievalSize;
         // 设置特殊空元素
         byte[] botElementByteArray = new byte[CommonConstants.STATS_BYTE_LENGTH];
         Arrays.fill(botElementByteArray, (byte)0xFF);

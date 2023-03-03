@@ -1,21 +1,27 @@
-package edu.alibaba.mpc4j.s2pc.pir.index;
+package edu.alibaba.mpc4j.s2pc.pir.index.xpir;
 
 import edu.alibaba.mpc4j.common.rpc.MpcAbortException;
+import edu.alibaba.mpc4j.s2pc.pir.index.IndexPirClient;
+import edu.alibaba.mpc4j.s2pc.pir.index.IndexPirParams;
 
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
 
 /**
- * 索引PIR协议客户端线程。
+ * XPIR协议客户端线程。
  *
  * @author Liqiang Peng
  * @date 2022/8/26
  */
-public class IndexPirClientThread extends Thread {
+public class XPirClientThread extends Thread {
     /**
-     * 索引PIR协议客户端
+     * XPIR协议客户端
      */
-    private final IndexPirClient client;
+    private final Mbfk16IndexPirClient client;
+    /**
+     * XPIR参数
+     */
+    private final Mbfk16IndexPirParams indexPirParams;
     /**
      * 元素字节长度
      */
@@ -37,9 +43,11 @@ public class IndexPirClientThread extends Thread {
      */
     private final ArrayList<ByteBuffer> indexPirResult;
 
-    IndexPirClientThread(IndexPirClient client, ArrayList<Integer> retrievalIndexList, int serverElementSize, int elementByteLength, int repeatTime) {
+    XPirClientThread(Mbfk16IndexPirClient client, Mbfk16IndexPirParams indexPirParams,
+                     ArrayList<Integer> retrievalIndexList, int serverElementSize, int elementByteLength, int repeatTime) {
         assert repeatTime == retrievalIndexList.size();
         this.client = client;
+        this.indexPirParams = indexPirParams;
         this.retrievalIndexList = retrievalIndexList;
         this.serverElementSize = serverElementSize;
         this.elementByteLength = elementByteLength;
@@ -54,7 +62,7 @@ public class IndexPirClientThread extends Thread {
     @Override
     public void run() {
         try {
-            client.init(serverElementSize, elementByteLength);
+            client.init(indexPirParams, serverElementSize, elementByteLength);
             client.getRpc().synchronize();
             for (int i = 0; i < repeatTime; i++) {
                 indexPirResult.add(ByteBuffer.wrap(client.pir(retrievalIndexList.get(i))));

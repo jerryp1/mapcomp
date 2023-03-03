@@ -34,6 +34,10 @@ public class Ayaa21IndexPirServer extends AbstractIndexPirServer {
      */
     private Ayaa21IndexPirParams params;
     /**
+     * Fast PIR方案内部参数
+     */
+    private Ayaa21IndexPirInnerParams innerParams;
+    /**
      * BFV明文（点值表示）
      */
     private List<ArrayList<byte[]>> encodedDatabase;
@@ -50,17 +54,19 @@ public class Ayaa21IndexPirServer extends AbstractIndexPirServer {
 
         stopWatch.start();
         if (elementByteLength % 2 == 1) {
-            for (int i = 0; i < elementArrayList.size(); i++) {
-                byte[] element = elementArrayList.get(i).array();
+            ArrayList<ByteBuffer> paddingElementArrayList = new ArrayList<>();
+            elementArrayList.stream().map(ByteBuffer::array).forEach(element -> {
                 MathPreconditions.checkEqual("element.length", "elementByteLength", element.length, elementByteLength);
-                elementArrayList.set(i, ByteBuffer.wrap(BytesUtils.paddingByteArray(element, elementByteLength + 1)));
-            }
-            elementByteLength++;
+                paddingElementArrayList.add(ByteBuffer.wrap(BytesUtils.paddingByteArray(element, elementByteLength + 1)));
+            });
+            innerParams = new Ayaa21IndexPirInnerParams(params, paddingElementArrayList.size(), elementByteLength + 1);
+            setInitInput(paddingElementArrayList, elementByteLength + 1, innerParams.getBinMaxByteLength());
+        } else {
+            innerParams = new Ayaa21IndexPirInnerParams(params, elementArrayList.size(), elementByteLength);
+            setInitInput(elementArrayList, elementByteLength, innerParams.getBinMaxByteLength());
         }
-        params.initAyaa21IndexPirParams(elementArrayList.size(), elementByteLength);
-        setInitInput(elementArrayList, elementByteLength, params.getBinMaxByteLength());
         // 服务端对数据库进行编码
-        int binNum = params.getBinNum();
+        int binNum = innerParams.getBinNum();
         IntStream intStream = parallel ? IntStream.range(0, binNum).parallel() : IntStream.range(0, binNum);
         encodedDatabase = intStream.mapToObj(this::preprocessDatabase).collect(Collectors.toList());
         stopWatch.stop();
@@ -78,17 +84,19 @@ public class Ayaa21IndexPirServer extends AbstractIndexPirServer {
 
         stopWatch.start();
         if (elementByteLength % 2 == 1) {
-            for (int i = 0; i < elementArrayList.size(); i++) {
-                byte[] element = elementArrayList.get(i).array();
+            ArrayList<ByteBuffer> paddingElementArrayList = new ArrayList<>();
+            elementArrayList.stream().map(ByteBuffer::array).forEach(element -> {
                 MathPreconditions.checkEqual("element.length", "elementByteLength", element.length, elementByteLength);
-                elementArrayList.set(i, ByteBuffer.wrap(BytesUtils.paddingByteArray(element, elementByteLength + 1)));
-            }
-            elementByteLength++;
+                paddingElementArrayList.add(ByteBuffer.wrap(BytesUtils.paddingByteArray(element, elementByteLength + 1)));
+            });
+            innerParams = new Ayaa21IndexPirInnerParams(params, paddingElementArrayList.size(), elementByteLength + 1);
+            setInitInput(paddingElementArrayList, elementByteLength + 1, innerParams.getBinMaxByteLength());
+        } else {
+            innerParams = new Ayaa21IndexPirInnerParams(params, elementArrayList.size(), elementByteLength);
+            setInitInput(elementArrayList, elementByteLength, innerParams.getBinMaxByteLength());
         }
-        params.initAyaa21IndexPirParams(elementArrayList.size(), elementByteLength);
-        setInitInput(elementArrayList, elementByteLength, params.getBinMaxByteLength());
         // 服务端对数据库进行编码
-        int binNum = params.getBinNum();
+        int binNum = innerParams.getBinNum();
         IntStream intStream = parallel ? IntStream.range(0, binNum).parallel() : IntStream.range(0, binNum);
         encodedDatabase = intStream.mapToObj(this::preprocessDatabase).collect(Collectors.toList());
         stopWatch.stop();
@@ -135,7 +143,7 @@ public class Ayaa21IndexPirServer extends AbstractIndexPirServer {
      */
     private ArrayList<byte[]> preprocessDatabase(int binIndex) {
         int coeffCount = params.getPolyModulusDegree();
-        long[][] encodedDatabase = new long[params.getDatabaseRowNum()[binIndex]][coeffCount];
+        long[][] encodedDatabase = new long[innerParams.getDatabaseRowNum()[binIndex]][coeffCount];
         int rowSize = params.getPolyModulusDegree() / 2;
         for (int i = 0; i < num; i++) {
             int rowIndex = i / rowSize;
@@ -148,10 +156,10 @@ public class Ayaa21IndexPirServer extends AbstractIndexPirServer {
             System.arraycopy(element, length, lowerBytes, 0, length);
             long[] upperCoeffs = IndexPirUtils.convertBytesToCoeffs(params.getPlainModulusBitLength(), 0, length, upperBytes);
             long[] lowerCoeffs = IndexPirUtils.convertBytesToCoeffs(params.getPlainModulusBitLength(), 0, length, lowerBytes);
-            for (int j = 0; j < params.getElementColumnLength()[binIndex]; j++) {
+            for (int j = 0; j < innerParams.getElementColumnLength()[binIndex]; j++) {
                 encodedDatabase[rowIndex][colIndex] = upperCoeffs[j];
                 encodedDatabase[rowIndex][colIndex + rowSize] = lowerCoeffs[j];
-                rowIndex += params.getQuerySize();
+                rowIndex += innerParams.getQuerySize();
             }
         }
         return Ayaa21IndexPirNativeUtils.nttTransform(params.getEncryptionParams(), encodedDatabase);
@@ -165,12 +173,12 @@ public class Ayaa21IndexPirServer extends AbstractIndexPirServer {
      * @throws MpcAbortException 如果协议异常中止。
      */
     private ArrayList<byte[]> handleClientQueryPayload(ArrayList<byte[]> clientQueryPayload) throws MpcAbortException {
-        MpcAbortPreconditions.checkArgument(clientQueryPayload.size() == params.getQuerySize() + 1);
-        ArrayList<byte[]> clientQuery = IntStream.range(0, params.getQuerySize())
+        MpcAbortPreconditions.checkArgument(clientQueryPayload.size() == innerParams.getQuerySize() + 1);
+        ArrayList<byte[]> clientQuery = IntStream.range(0, innerParams.getQuerySize())
             .mapToObj(clientQueryPayload::get)
             .collect(Collectors.toCollection(ArrayList::new));
-        byte[] galoisKeys = clientQueryPayload.get(params.getQuerySize());
-        int binNum = params.getBinNum();
+        byte[] galoisKeys = clientQueryPayload.get(innerParams.getQuerySize());
+        int binNum = innerParams.getBinNum();
         IntStream intStream = this.parallel ? IntStream.range(0, binNum).parallel() : IntStream.range(0, binNum);
         return intStream
             .mapToObj(i -> Ayaa21IndexPirNativeUtils.generateResponse(
@@ -178,7 +186,7 @@ public class Ayaa21IndexPirServer extends AbstractIndexPirServer {
                 galoisKeys,
                 clientQuery,
                 encodedDatabase.get(i),
-                params.getElementColumnLength()[i]))
+                innerParams.getElementColumnLength()[i]))
             .collect(Collectors.toCollection(ArrayList::new));
     }
 }

@@ -4,6 +4,7 @@ import edu.alibaba.mpc4j.common.rpc.*;
 import edu.alibaba.mpc4j.common.rpc.utils.DataPacket;
 import edu.alibaba.mpc4j.common.rpc.utils.DataPacketHeader;
 import edu.alibaba.mpc4j.common.tool.CommonConstants;
+import edu.alibaba.mpc4j.common.tool.MathPreconditions;
 import edu.alibaba.mpc4j.common.tool.crypto.ecc.Ecc;
 import edu.alibaba.mpc4j.common.tool.crypto.ecc.EccFactory;
 import edu.alibaba.mpc4j.common.tool.crypto.kdf.Kdf;
@@ -48,7 +49,7 @@ public class Cmg21KwPirClient<T> extends AbstractKwPirClient<T> {
      */
     private final boolean compressEncode;
     /**
-     * 关键词索引PIR方案参数
+     * CMG21关键词索引PIR参数
      */
     private Cmg21KwPirParams params;
     /**
@@ -72,12 +73,40 @@ public class Cmg21KwPirClient<T> extends AbstractKwPirClient<T> {
 
     @Override
     public void init(KwPirParams kwPirParams, int labelByteLength) throws MpcAbortException {
-        setInitInput(kwPirParams, labelByteLength);
+        setInitInput(kwPirParams.maxRetrievalSize(), labelByteLength);
         logPhaseInfo(PtoState.INIT_BEGIN);
 
         stopWatch.start();
         assert (kwPirParams instanceof Cmg21KwPirParams);
         params = (Cmg21KwPirParams) kwPirParams;
+        // 客户端接收服务端哈希密钥
+        DataPacketHeader cuckooHashKeyHeader = new DataPacketHeader(
+            encodeTaskId, getPtoDesc().getPtoId(), PtoStep.SERVER_SEND_CUCKOO_HASH_KEYS.ordinal(), extraInfo,
+            otherParty().getPartyId(), rpc.ownParty().getPartyId()
+        );
+        List<byte[]> hashKeyPayload = rpc.receive(cuckooHashKeyHeader).getPayload();
+        MpcAbortPreconditions.checkArgument(hashKeyPayload.size() == params.getCuckooHashKeyNum());
+        hashKeys = hashKeyPayload.toArray(new byte[0][]);
+        stopWatch.stop();
+        long cuckooHashKeyTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
+        stopWatch.reset();
+        logStepInfo(PtoState.INIT_STEP, 1, 1, cuckooHashKeyTime);
+
+        logPhaseInfo(PtoState.INIT_END);
+    }
+
+    @Override
+    public void init(int maxRetrievalSize, int labelByteLength) throws MpcAbortException {
+        MathPreconditions.checkPositive("maxRetrievalSize", maxRetrievalSize);
+        if (maxRetrievalSize > 1) {
+            params = Cmg21KwPirParams.SERVER_1M_CLIENT_MAX_4096;
+        } else {
+            params = Cmg21KwPirParams.SERVER_1M_CLIENT_MAX_1;
+        }
+        setInitInput(params.maxRetrievalSize(), labelByteLength);
+        logPhaseInfo(PtoState.INIT_BEGIN);
+
+        stopWatch.start();
         // 客户端接收服务端哈希密钥
         DataPacketHeader cuckooHashKeyHeader = new DataPacketHeader(
             encodeTaskId, getPtoDesc().getPtoId(), PtoStep.SERVER_SEND_CUCKOO_HASH_KEYS.ordinal(), extraInfo,

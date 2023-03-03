@@ -8,7 +8,6 @@ import java.util.Map;
 
 /**
  * 关键词索引PIR协议服务端接口。
- * TODO @庚序: Add a new init function void init(Map<T, ByteBuffer> keywordLabelMap, int labelByteLength, int maxClientBatchSize);
  *
  * @author Liqiang Peng
  * @date 2022/6/20
@@ -23,6 +22,16 @@ public interface KwPirServer<T> extends TwoPartyPto {
      * @throws MpcAbortException 如果协议异常中止。
      */
     void init(KwPirParams kwPirParams, Map<T, ByteBuffer> keywordLabelMap, int labelByteLength) throws MpcAbortException;
+
+    /**
+     * 初始化协议。
+     *
+     * @param keywordLabelMap  关键字和标签映射。
+     * @param maxRetrievalSize 最大检索数量。
+     * @param labelByteLength  标签字节长度。
+     * @throws MpcAbortException 如果协议异常中止。
+     */
+    void init(Map<T, ByteBuffer> keywordLabelMap, int maxRetrievalSize, int labelByteLength) throws MpcAbortException;
 
     /**
      * 执行协议。

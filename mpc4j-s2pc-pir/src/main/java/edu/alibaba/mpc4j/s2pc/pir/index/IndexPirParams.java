@@ -28,4 +28,11 @@ public interface IndexPirParams {
      * @return 维数。
      */
     int getDimension();
+
+    /**
+     * 返回加密方案参数。
+     *
+     * @return 加密方案参数。
+     */
+    byte[] getEncryptionParams();
 }

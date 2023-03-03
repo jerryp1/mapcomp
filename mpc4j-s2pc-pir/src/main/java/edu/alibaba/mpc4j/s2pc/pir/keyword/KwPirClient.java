@@ -9,7 +9,6 @@ import java.util.Set;
 
 /**
  * 关键词索引PIR协议客户端接口。
- * TODO @庚序: Add a new init function void init(int serverElementSize, int labelByteLength, int maxClientBatchSize);
  *
  * @author Liqiang Peng
  * @date 2022/6/20
@@ -23,6 +22,15 @@ public interface KwPirClient<T> extends TwoPartyPto {
      * @throws MpcAbortException 如果协议异常中止。
      */
     void init(KwPirParams kwPirParams, int labelByteLength) throws MpcAbortException;
+
+    /**
+     * 初始化协议。
+     *
+     * @param maxRetrievalSize 最大检索数量。
+     * @param labelByteLength  标签字节长度。
+     * @throws MpcAbortException 如果协议异常中止。
+     */
+    void init(int maxRetrievalSize, int labelByteLength) throws MpcAbortException;
 
     /**
      * 执行协议。

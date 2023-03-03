@@ -31,6 +31,10 @@ public class Mcr21IndexPirClient extends AbstractIndexPirClient {
      */
     private Mcr21IndexPirParams params;
     /**
+     * OnionPIR方案内部参数
+     */
+    private Mcr21IndexPirInnerParams innerParams;
+    /**
      * 公钥
      */
     private byte[] publicKey;
@@ -58,7 +62,7 @@ public class Mcr21IndexPirClient extends AbstractIndexPirClient {
         logPhaseInfo(PtoState.INIT_BEGIN);
 
         stopWatch.start();
-        params.initMcr21IndexPirParams(serverElementSize, elementByteLength);
+        innerParams = new Mcr21IndexPirInnerParams(params, serverElementSize, elementByteLength);
         setInitInput(serverElementSize, elementByteLength);
         // 客户端生成密钥对
         generateKeyPair();
@@ -80,7 +84,7 @@ public class Mcr21IndexPirClient extends AbstractIndexPirClient {
         logPhaseInfo(PtoState.INIT_BEGIN);
 
         stopWatch.start();
-        params.initMcr21IndexPirParams(serverElementSize, elementByteLength);
+        innerParams = new Mcr21IndexPirInnerParams(params, serverElementSize, elementByteLength);
         setInitInput(serverElementSize, elementByteLength);
         // 客户端生成密钥对
         generateKeyPair();
@@ -143,19 +147,19 @@ public class Mcr21IndexPirClient extends AbstractIndexPirClient {
      * @return 查询密文。
      */
     public ArrayList<byte[]> generateQuery() {
-        int binNum = params.getBinNum();
+        int binNum = innerParams.getBinNum();
         // 前n-1个分块
-        int[] nvec = params.getDimensionsLength()[0];
-        int indexOfPlaintext = index / params.getElementSizeOfPlaintext()[0];
+        int[] nvec = innerParams.getDimensionsLength()[0];
+        int indexOfPlaintext = index / innerParams.getElementSizeOfPlaintext()[0];
         // 计算每个维度的坐标
         int[] indices = IndexPirUtils.computeIndices(indexOfPlaintext, nvec);
         ArrayList<byte[]> result = new ArrayList<>(
             Mcr21IndexPirNativeUtils.generateQuery(params.getEncryptionParams(), publicKey, secretKey, indices, nvec)
         );
-        if ((binNum > 1) && (params.getPlaintextSize()[0] != params.getPlaintextSize()[binNum - 1])) {
+        if ((binNum > 1) && (innerParams.getPlaintextSize()[0] != innerParams.getPlaintextSize()[binNum - 1])) {
             // 最后一个分块
-            int[] lastNvec = params.getDimensionsLength()[binNum - 1];
-            int lastIndexOfPlaintext = index / params.getElementSizeOfPlaintext()[binNum - 1];
+            int[] lastNvec = innerParams.getDimensionsLength()[binNum - 1];
+            int lastIndexOfPlaintext = index / innerParams.getElementSizeOfPlaintext()[binNum - 1];
             // 计算每个维度的坐标
             int[] lastIndices = IndexPirUtils.computeIndices(lastIndexOfPlaintext, lastNvec);
             // 返回查询密文
@@ -175,18 +179,18 @@ public class Mcr21IndexPirClient extends AbstractIndexPirClient {
      * @return 检索结果。
      */
     private byte[] handleServerResponsePayload(List<byte[]> response) throws MpcAbortException {
-        MpcAbortPreconditions.checkArgument(response.size() == params.getBinNum());
+        MpcAbortPreconditions.checkArgument(response.size() == innerParams.getBinNum());
         byte[] result = new byte[elementByteLength];
-        int binNum = params.getBinNum();
+        int binNum = innerParams.getBinNum();
         IntStream intStream = this.parallel ? IntStream.range(0, binNum).parallel() : IntStream.range(0, binNum);
         intStream.forEach(i -> {
-            int byteLength = i == binNum - 1 ? params.getLastBinByteLength() : params.getBinMaxByteLength();
+            int byteLength = i == binNum - 1 ? innerParams.getLastBinByteLength() : innerParams.getBinMaxByteLength();
             long[] coeffs = Mcr21IndexPirNativeUtils.decryptReply(
                 params.getEncryptionParams(), secretKey, response.get(i)
             );
             byte[] bytes = IndexPirUtils.convertCoeffsToBytes(coeffs, params.getPlainModulusBitLength());
-            int offset = this.index % params.getElementSizeOfPlaintext()[i];
-            System.arraycopy(bytes, offset * byteLength, result, i * params.getBinMaxByteLength(), byteLength);
+            int offset = this.index % innerParams.getElementSizeOfPlaintext()[i];
+            System.arraycopy(bytes, offset * byteLength, result, i * innerParams.getBinMaxByteLength(), byteLength);
         });
         return result;
     }

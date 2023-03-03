@@ -5,7 +5,6 @@ import edu.alibaba.mpc4j.common.rpc.pto.TwoPartyPto;
 
 /**
  * 索引PIR协议客户端接口。
- * TODO @庚序: Add a new init function void init(int serverElementSize, int elementByteLength);
  *
  * @author Liqiang Peng
  * @date 2022/8/10

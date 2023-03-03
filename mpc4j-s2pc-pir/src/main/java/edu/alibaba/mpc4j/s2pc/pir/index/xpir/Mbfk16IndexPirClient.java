@@ -31,6 +31,10 @@ public class Mbfk16IndexPirClient extends AbstractIndexPirClient {
      */
     private Mbfk16IndexPirParams params;
     /**
+     * XPIR方案内部参数
+     */
+    private Mbfk16IndexPirInnerParams innerParams;
+    /**
      * 公钥
      */
     private byte[] publicKey;
@@ -50,7 +54,7 @@ public class Mbfk16IndexPirClient extends AbstractIndexPirClient {
         logPhaseInfo(PtoState.INIT_BEGIN);
 
         stopWatch.start();
-        params.initMbfk16IndexPirParams(serverElementSize, elementByteLength);
+        innerParams = new Mbfk16IndexPirInnerParams(params, serverElementSize, elementByteLength);
         setInitInput(serverElementSize, elementByteLength);
         // 客户端生成密钥对
         generateKeyPair();
@@ -68,7 +72,7 @@ public class Mbfk16IndexPirClient extends AbstractIndexPirClient {
         logPhaseInfo(PtoState.INIT_BEGIN);
 
         stopWatch.start();
-        params.initMbfk16IndexPirParams(serverElementSize, elementByteLength);
+        innerParams = new Mbfk16IndexPirInnerParams(params, serverElementSize, elementByteLength);
         setInitInput(serverElementSize, elementByteLength);
         // 客户端生成密钥对
         generateKeyPair();
@@ -122,19 +126,19 @@ public class Mbfk16IndexPirClient extends AbstractIndexPirClient {
      * @return 查询密文。
      */
     public ArrayList<byte[]> generateQuery() {
-        int bundleNum = params.getBinNum();
+        int bundleNum = innerParams.getBinNum();
         // 前n-1个分块
-        int[] nvec = params.getDimensionsLength()[0];
-        int indexOfPlaintext = index / params.getElementSizeOfPlaintext()[0];
+        int[] nvec = innerParams.getDimensionsLength()[0];
+        int indexOfPlaintext = index / innerParams.getElementSizeOfPlaintext()[0];
         // 计算每个维度的坐标
         int[] indices = IndexPirUtils.computeIndices(indexOfPlaintext, nvec);
         ArrayList<byte[]> result = new ArrayList<>(
             Mbfk16IndexPirNativeUtils.generateQuery(params.getEncryptionParams(), publicKey, secretKey, indices, nvec)
         );
-        if ((bundleNum > 1) && (params.getPlaintextSize()[0] != params.getPlaintextSize()[bundleNum - 1])) {
+        if ((bundleNum > 1) && (innerParams.getPlaintextSize()[0] != innerParams.getPlaintextSize()[bundleNum - 1])) {
             // 最后一个分块
-            int[] lastNvec = params.getDimensionsLength()[bundleNum - 1];
-            int lastIndexOfPlaintext = index / params.getElementSizeOfPlaintext()[bundleNum - 1];
+            int[] lastNvec = innerParams.getDimensionsLength()[bundleNum - 1];
+            int lastIndexOfPlaintext = index / innerParams.getElementSizeOfPlaintext()[bundleNum - 1];
             // 计算每个维度的坐标
             int[] lastIndices = IndexPirUtils.computeIndices(lastIndexOfPlaintext, lastNvec);
             // 返回查询密文
@@ -157,7 +161,7 @@ public class Mbfk16IndexPirClient extends AbstractIndexPirClient {
     private byte[] handleServerResponsePayload(List<byte[]> response) throws MpcAbortException {
         byte[] elementBytes = new byte[elementByteLength];
         int expansionRatio = params.getExpansionRatio();
-        int binNum = params.getBinNum();
+        int binNum = innerParams.getBinNum();
         int dimension = params.getDimension();
         int binResponseSize = IntStream.range(0, dimension - 1).map(i -> expansionRatio).reduce(1, (a, b) -> a * b);
         MpcAbortPreconditions.checkArgument(response.size() == binResponseSize * binNum);
@@ -170,9 +174,9 @@ public class Mbfk16IndexPirClient extends AbstractIndexPirClient {
                 params.getDimension()
             );
             byte[] bytes = IndexPirUtils.convertCoeffsToBytes(coeffs, params.getPlainModulusBitLength());
-            int offset = this.index % params.getElementSizeOfPlaintext()[binIndex];
-            int byteLength = binIndex == binNum - 1 ? params.getLastBinByteLength() : params.getBinMaxByteLength();
-            System.arraycopy(bytes, offset * byteLength, elementBytes, binIndex * params.getBinMaxByteLength(), byteLength);
+            int offset = this.index % innerParams.getElementSizeOfPlaintext()[binIndex];
+            int byteLength = binIndex == binNum - 1 ? innerParams.getLastBinByteLength() : innerParams.getBinMaxByteLength();
+            System.arraycopy(bytes, offset * byteLength, elementBytes, binIndex * innerParams.getBinMaxByteLength(), byteLength);
         });
         return elementBytes;
     }

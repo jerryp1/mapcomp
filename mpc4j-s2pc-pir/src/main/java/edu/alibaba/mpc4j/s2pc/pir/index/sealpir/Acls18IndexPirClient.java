@@ -32,6 +32,10 @@ public class Acls18IndexPirClient extends AbstractIndexPirClient {
      */
     private Acls18IndexPirParams params;
     /**
+     * SEAL PIR方案内部参数
+     */
+    private Acls18IndexPirInnerParams innerParams;
+    /**
      * 公钥
      */
     private byte[] publicKey;
@@ -55,7 +59,7 @@ public class Acls18IndexPirClient extends AbstractIndexPirClient {
         logPhaseInfo(PtoState.INIT_BEGIN);
 
         stopWatch.start();
-        params.initAcls18IndexPirParams(serverElementSize, elementByteLength);
+        innerParams = new Acls18IndexPirInnerParams(params, serverElementSize, elementByteLength);
         setInitInput(serverElementSize, elementByteLength);
         // 客户端生成密钥对
         generateKeyPair();
@@ -73,7 +77,7 @@ public class Acls18IndexPirClient extends AbstractIndexPirClient {
         logPhaseInfo(PtoState.INIT_BEGIN);
 
         stopWatch.start();
-        params.initAcls18IndexPirParams(serverElementSize, elementByteLength);
+        innerParams = new Acls18IndexPirInnerParams(params, serverElementSize, elementByteLength);
         setInitInput(serverElementSize, elementByteLength);
         // 客户端生成密钥对
         generateKeyPair();
@@ -128,19 +132,19 @@ public class Acls18IndexPirClient extends AbstractIndexPirClient {
      * @return 查询密文。
      */
     public ArrayList<byte[]> generateQuery() {
-        int binNum = params.getBinNum();
+        int binNum = innerParams.getBinNum();
         // 前n-1个分块
-        int[] nvec = params.getDimensionsLength()[0];
-        int indexOfPlaintext = index / params.getElementSizeOfPlaintext()[0];
+        int[] nvec = innerParams.getDimensionsLength()[0];
+        int indexOfPlaintext = index / innerParams.getElementSizeOfPlaintext()[0];
         // 计算每个维度的坐标
         int[] indices = IndexPirUtils.computeIndices(indexOfPlaintext, nvec);
         ArrayList<byte[]> result = new ArrayList<>(
             Acls18IndexPirNativeUtils.generateQuery(params.getEncryptionParams(), publicKey, secretKey, indices, nvec)
         );
-        if ((binNum > 1) && (params.getPlaintextSize()[0] != params.getPlaintextSize()[binNum - 1])) {
+        if ((binNum > 1) && (innerParams.getPlaintextSize()[0] != innerParams.getPlaintextSize()[binNum - 1])) {
             // 最后一个分块
-            int[] lastNvec = params.getDimensionsLength()[binNum - 1];
-            int lastIndexOfPlaintext = index / params.getElementSizeOfPlaintext()[binNum - 1];
+            int[] lastNvec = innerParams.getDimensionsLength()[binNum - 1];
+            int lastIndexOfPlaintext = index / innerParams.getElementSizeOfPlaintext()[binNum - 1];
             // 计算每个维度的坐标
             int[] lastIndices = IndexPirUtils.computeIndices(lastIndexOfPlaintext, lastNvec);
             // 返回查询密文
@@ -163,13 +167,13 @@ public class Acls18IndexPirClient extends AbstractIndexPirClient {
     private byte[] handleServerResponsePayload(List<byte[]> response) throws MpcAbortException {
         byte[] element = new byte[elementByteLength];
         int expansionRatio = params.getExpansionRatio();
-        int binNum = params.getBinNum();
+        int binNum = innerParams.getBinNum();
         int dimension = params.getDimension();
         int binResponseSize = IntStream.range(0, dimension - 1).map(i -> expansionRatio).reduce(1, (a, b) -> a * b);
         MpcAbortPreconditions.checkArgument(response.size() == binResponseSize * binNum);
         IntStream intStream = this.parallel ? IntStream.range(0, binNum).parallel() : IntStream.range(0, binNum);
         intStream.forEach(i -> {
-            int byteLength = i == binNum - 1 ? params.getLastBinByteLength() : params.getBinMaxByteLength();
+            int byteLength = i == binNum - 1 ? innerParams.getLastBinByteLength() : innerParams.getBinMaxByteLength();
             long[] coeffs = Acls18IndexPirNativeUtils.decryptReply(
                 params.getEncryptionParams(),
                 secretKey,
@@ -177,8 +181,8 @@ public class Acls18IndexPirClient extends AbstractIndexPirClient {
                 params.getDimension()
             );
             byte[] bytes = IndexPirUtils.convertCoeffsToBytes(coeffs, params.getPlainModulusBitLength());
-            int offset = this.index % params.getElementSizeOfPlaintext()[i];
-            System.arraycopy(bytes, offset * byteLength, element, i * params.getBinMaxByteLength(), byteLength);
+            int offset = this.index % innerParams.getElementSizeOfPlaintext()[i];
+            System.arraycopy(bytes, offset * byteLength, element, i * innerParams.getBinMaxByteLength(), byteLength);
         });
         return element;
     }

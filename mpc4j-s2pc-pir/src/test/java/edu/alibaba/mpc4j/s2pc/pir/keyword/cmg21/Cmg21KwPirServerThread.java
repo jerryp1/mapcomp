@@ -1,4 +1,4 @@
-package edu.alibaba.mpc4j.s2pc.pir.keyword;
+package edu.alibaba.mpc4j.s2pc.pir.keyword.cmg21;
 
 import edu.alibaba.mpc4j.common.rpc.MpcAbortException;
 
@@ -6,24 +6,24 @@ import java.nio.ByteBuffer;
 import java.util.Map;
 
 /**
- * 关键词索引PIR协议服务端线程。
+ * CMG21关键词PIR协议服务端线程。
  *
  * @author Liqiang Peng
  * @date 2022/6/22
  */
-public class KwPirServerThread<T> extends Thread {
+public class Cmg21KwPirServerThread<T> extends Thread {
     /**
-     * 服务端
+     * CMG21关键词PIR协议服务端
      */
-    private final KwPirServer<T> server;
+    private final Cmg21KwPirServer<T> server;
+    /**
+     * CMG21关键词PIR协议配置项
+     */
+    private final Cmg21KwPirParams kwPirParams;
     /**
      * 关键词标签映射
      */
     private final Map<T, ByteBuffer> keywordLabelMap;
-    /**
-     * 客户端检索数量
-     */
-    private final int retrievalSize;
     /**
      * 标签字节长度
      */
@@ -33,10 +33,11 @@ public class KwPirServerThread<T> extends Thread {
      */
     private final int repeatTime;
 
-    KwPirServerThread(KwPirServer<T> server, Map<T, ByteBuffer> keywordLabelMap, int retrievalSize, int labelByteLength, int repeatTime) {
+    Cmg21KwPirServerThread(Cmg21KwPirServer<T> server, Cmg21KwPirParams kwPirParams, Map<T, ByteBuffer> keywordLabelMap,
+                           int labelByteLength, int repeatTime) {
         this.server = server;
+        this.kwPirParams = kwPirParams;
         this.keywordLabelMap = keywordLabelMap;
-        this.retrievalSize = retrievalSize;
         this.labelByteLength = labelByteLength;
         this.repeatTime = repeatTime;
     }
@@ -44,7 +45,7 @@ public class KwPirServerThread<T> extends Thread {
     @Override
     public void run() {
         try {
-            server.init(keywordLabelMap, retrievalSize, labelByteLength);
+            server.init(kwPirParams, keywordLabelMap, labelByteLength);
             server.getRpc().synchronize();
             for (int i = 0; i < repeatTime; i++) {
                 server.pir();

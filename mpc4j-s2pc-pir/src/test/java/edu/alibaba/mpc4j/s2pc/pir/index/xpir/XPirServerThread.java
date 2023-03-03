@@ -1,4 +1,4 @@
-package edu.alibaba.mpc4j.s2pc.pir.index;
+package edu.alibaba.mpc4j.s2pc.pir.index.xpir;
 
 import edu.alibaba.mpc4j.common.rpc.MpcAbortException;
 
@@ -6,16 +6,20 @@ import java.nio.ByteBuffer;
 import java.util.ArrayList;
 
 /**
- * 索引PIR协议服务端线程。
+ * XPIR协议服务端线程。
  *
  * @author Liqiang Peng
  * @date 2022/8/26
  */
-public class IndexPirServerThread extends Thread {
+public class XPirServerThread extends Thread {
     /**
-     * 索引PIR协议服务端
+     * XPIR协议服务端
      */
-    private final IndexPirServer server;
+    private final Mbfk16IndexPirServer server;
+    /**
+     * XPIR参数
+     */
+    private final Mbfk16IndexPirParams indexPirParams;
     /**
      * 服务端元素数组
      */
@@ -29,9 +33,10 @@ public class IndexPirServerThread extends Thread {
      */
     private final int repeatTime;
 
-    IndexPirServerThread(IndexPirServer server, ArrayList<ByteBuffer> elementArrayList, int elementByteLength,
-                         int repeatTime) {
+    XPirServerThread(Mbfk16IndexPirServer server, Mbfk16IndexPirParams indexPirParams,
+                     ArrayList<ByteBuffer> elementArrayList, int elementByteLength, int repeatTime) {
         this.server = server;
+        this.indexPirParams = indexPirParams;
         this.elementArrayList = elementArrayList;
         this.elementByteLength = elementByteLength;
         this.repeatTime = repeatTime;
@@ -40,7 +45,7 @@ public class IndexPirServerThread extends Thread {
     @Override
     public void run() {
         try {
-            server.init(elementArrayList, elementByteLength);
+            server.init(indexPirParams, elementArrayList, elementByteLength);
             server.getRpc().synchronize();
             for (int i = 0; i < repeatTime; i++) {
                 server.pir();

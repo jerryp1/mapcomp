@@ -4,14 +4,11 @@ import edu.alibaba.mpc4j.common.rpc.*;
 import edu.alibaba.mpc4j.common.rpc.utils.DataPacket;
 import edu.alibaba.mpc4j.common.rpc.utils.DataPacketHeader;
 import edu.alibaba.mpc4j.common.tool.CommonConstants;
-import edu.alibaba.mpc4j.common.tool.MathPreconditions;
-import edu.alibaba.mpc4j.common.tool.utils.BytesUtils;
 import edu.alibaba.mpc4j.s2pc.pir.index.AbstractIndexPirClient;
 import edu.alibaba.mpc4j.s2pc.pir.index.IndexPirParams;
 import edu.alibaba.mpc4j.s2pc.pir.index.IndexPirUtils;
 import edu.alibaba.mpc4j.s2pc.pir.index.fastpir.Ayaa21IndexPirPtoDesc.PtoStep;
 
-import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
@@ -34,6 +31,10 @@ public class Ayaa21IndexPirClient extends AbstractIndexPirClient {
      */
     private Ayaa21IndexPirParams params;
     /**
+     * Fast PIR方案内部参数
+     */
+    private Ayaa21IndexPirInnerParams innerParams;
+    /**
      * 公钥
      */
     private byte[] publicKey;
@@ -45,6 +46,10 @@ public class Ayaa21IndexPirClient extends AbstractIndexPirClient {
      * Galois密钥
      */
     private byte[] galoisKeys;
+    /**
+     * 是否填充
+     */
+    private boolean isPadding;
 
     public Ayaa21IndexPirClient(Rpc clientRpc, Party serverParty, Ayaa21IndexPirConfig config) {
         super(Ayaa21IndexPirPtoDesc.getInstance(), clientRpc, serverParty, config);
@@ -58,10 +63,14 @@ public class Ayaa21IndexPirClient extends AbstractIndexPirClient {
 
         stopWatch.start();
         if (elementByteLength % 2 == 1) {
-            elementByteLength++;
+            innerParams = new Ayaa21IndexPirInnerParams(params, serverElementSize, elementByteLength + 1);
+            setInitInput(serverElementSize, elementByteLength + 1);
+            isPadding = true;
+        } else {
+            innerParams = new Ayaa21IndexPirInnerParams(params, serverElementSize, elementByteLength);
+            setInitInput(serverElementSize, elementByteLength);
+            isPadding = false;
         }
-        params.initAyaa21IndexPirParams(serverElementSize, elementByteLength);
-        setInitInput(serverElementSize, elementByteLength);
         // 客户端生成密钥对
         generateKeyPair();
         stopWatch.stop();
@@ -79,10 +88,14 @@ public class Ayaa21IndexPirClient extends AbstractIndexPirClient {
 
         stopWatch.start();
         if (elementByteLength % 2 == 1) {
-            elementByteLength++;
+            innerParams = new Ayaa21IndexPirInnerParams(params, serverElementSize, elementByteLength + 1);
+            setInitInput(serverElementSize, elementByteLength + 1);
+            isPadding = true;
+        } else {
+            innerParams = new Ayaa21IndexPirInnerParams(params, serverElementSize, elementByteLength);
+            setInitInput(serverElementSize, elementByteLength);
+            isPadding = false;
         }
-        params.initAyaa21IndexPirParams(serverElementSize, elementByteLength);
-        setInitInput(serverElementSize, elementByteLength);
         // 客户端生成密钥对
         generateKeyPair();
         stopWatch.stop();
@@ -101,7 +114,7 @@ public class Ayaa21IndexPirClient extends AbstractIndexPirClient {
         stopWatch.start();
         // 客户端生成问询
         List<byte[]> clientQueryPayload = Ayaa21IndexPirNativeUtils.generateQuery(
-            params.getEncryptionParams(), publicKey, secretKey, index, params.getQuerySize()
+            params.getEncryptionParams(), publicKey, secretKey, index, innerParams.getQuerySize()
         );
         // 添加Galois密钥
         clientQueryPayload.add(galoisKeys);
@@ -126,13 +139,20 @@ public class Ayaa21IndexPirClient extends AbstractIndexPirClient {
         stopWatch.start();
         // 客户端解密
         byte[] result = handleServerResponsePayload(serverResponsePayload);
+        byte[] element;
+        if (isPadding) {
+            element = new byte[elementByteLength - 1];
+            System.arraycopy(result, 1, element, 0, elementByteLength - 1);
+        } else {
+            element = result;
+        }
         stopWatch.stop();
         long responseTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
         stopWatch.reset();
         logStepInfo(PtoState.PTO_STEP, 2, 2, responseTime, "Client handles reply");
 
         logPhaseInfo(PtoState.PTO_END);
-        return result;
+        return element;
     }
 
     /**
@@ -143,12 +163,12 @@ public class Ayaa21IndexPirClient extends AbstractIndexPirClient {
      * @throws MpcAbortException 如果协议异常中止。
      */
     private byte[] handleServerResponsePayload(List<byte[]> response) throws MpcAbortException {
-        int binNum = params.getBinNum();
+        int binNum = innerParams.getBinNum();
         MpcAbortPreconditions.checkArgument(response.size() == binNum);
         byte[] result = new byte[elementByteLength];
         IntStream intStream = this.parallel ? IntStream.range(0, binNum).parallel() : IntStream.range(0, binNum);
         intStream.forEach(binIndex -> {
-            int byteLength = binIndex == binNum - 1 ? params.getLastBinByteLength() : params.getBinMaxByteLength();
+            int byteLength = binIndex == binNum - 1 ? innerParams.getLastBinByteLength() : innerParams.getBinMaxByteLength();
             long[] coeffs = Ayaa21IndexPirNativeUtils.decodeResponse(
                 params.getEncryptionParams(), secretKey, response.get(binIndex)
             );
@@ -160,8 +180,8 @@ public class Ayaa21IndexPirClient extends AbstractIndexPirClient {
             });
             byte[] upperBytes = IndexPirUtils.convertCoeffsToBytes(rotatedCoeffs[0], params.getPlainModulusBitLength());
             byte[] lowerBytes = IndexPirUtils.convertCoeffsToBytes(rotatedCoeffs[1], params.getPlainModulusBitLength());
-            System.arraycopy(upperBytes, 0, result, binIndex * params.getBinMaxByteLength(), byteLength / 2);
-            System.arraycopy(lowerBytes, 0, result, binIndex * params.getBinMaxByteLength() + byteLength / 2, byteLength / 2);
+            System.arraycopy(upperBytes, 0, result, binIndex * innerParams.getBinMaxByteLength(), byteLength / 2);
+            System.arraycopy(lowerBytes, 0, result, binIndex * innerParams.getBinMaxByteLength() + byteLength / 2, byteLength / 2);
         });
         return result;
     }
@@ -171,7 +191,7 @@ public class Ayaa21IndexPirClient extends AbstractIndexPirClient {
      */
     private void generateKeyPair() {
         ArrayList<Integer> steps = new ArrayList<>();
-        for (int i = 1; i < params.getElementColumnLength()[0]; i <<= 1) {
+        for (int i = 1; i < innerParams.getElementColumnLength()[0]; i <<= 1) {
             steps.add(-i);
         }
         List<byte[]> keyPair = Ayaa21IndexPirNativeUtils.keyGen(
