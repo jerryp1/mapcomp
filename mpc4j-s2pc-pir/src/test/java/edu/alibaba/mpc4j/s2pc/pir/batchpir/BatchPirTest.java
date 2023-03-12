@@ -90,6 +90,11 @@ public class BatchPirTest {
 
     @Test
     public void testDefaultRetrievalSizeParallel() {
+        testPir(DEFAULT_CLIENT_SET_SIZE, config, true);
+    }
+
+    @Test
+    public void testDefaultRetrievalSize() {
         testPir(DEFAULT_CLIENT_SET_SIZE, config, false);
     }
 

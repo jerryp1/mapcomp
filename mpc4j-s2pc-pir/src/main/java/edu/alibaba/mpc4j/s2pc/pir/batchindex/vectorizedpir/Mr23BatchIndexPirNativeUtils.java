@@ -64,6 +64,11 @@ class Mr23BatchIndexPirNativeUtils {
     static native ArrayList<byte[]> generateQuery(byte[] sealContext, byte[] publicKey, byte[] secretKey, int[] indices,
                                                   int slotNum);
 
+    static native ArrayList<byte[]> generateBatchQuery(byte[] sealContext, byte[] a);
+
+    static native ArrayList<byte[]> setGaloisKey(byte[] sealContext, byte[] galoisKey);
+
+
     /**
      * 生成回复密文。
      *

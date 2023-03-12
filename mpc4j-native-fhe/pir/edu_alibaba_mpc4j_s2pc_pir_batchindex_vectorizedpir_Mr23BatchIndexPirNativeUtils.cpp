@@ -126,9 +126,6 @@ JNIEXPORT jobject JNICALL Java_edu_alibaba_mpc4j_s2pc_pir_batchindex_vectorizedp
     uint32_t g = (degree / 2) / n_slot;
     for (uint32_t i = 0; i < dimension; i++) {
         vector<uint64_t> vec(slot_count, 0ULL);
-        for (uint32_t j = 0; j < degree; j++) {
-            vec[j] = 0;
-        }
         vec[indices[i] * g] = 1;
         Plaintext pt(degree);
         batch_encoder.encode(vec, pt);
@@ -136,6 +133,7 @@ JNIEXPORT jobject JNICALL Java_edu_alibaba_mpc4j_s2pc_pir_batchindex_vectorizedp
     }
     return serialize_ciphertexts(env, query);
 }
+
 
 JNIEXPORT jbyteArray JNICALL Java_edu_alibaba_mpc4j_s2pc_pir_batchindex_vectorizedpir_Mr23BatchIndexPirNativeUtils_generateReply(
         JNIEnv *env, jclass, jbyteArray parms_bytes, jobject query_list, jobject db_list, jbyteArray pk_bytes,

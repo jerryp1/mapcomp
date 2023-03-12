@@ -28,7 +28,7 @@ public class Mr23BatchIndexPirParams implements IndexPirParams {
      */
     private final int dimension;
     /**
-     * 加密方案参数
+     * SEAL上下文参数
      */
     private final byte[] encryptionParams;
     /**
