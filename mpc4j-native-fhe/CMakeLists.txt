@@ -59,6 +59,11 @@ add_library(
         mtg/edu_alibaba_mpc4j_s2pc_pcg_mtg_zp64_core_rss19_Rss19Zp64CoreMtgNativeUtils.cpp
         pir/edu_alibaba_mpc4j_s2pc_pir_index_onionpir_Mcr21IndexPirNativeUtils.cpp
         tfhe/tfhe.cpp
-        pir/edu_alibaba_mpc4j_s2pc_pir_index_sealpir_Acls18IndexPirNativeUtils.cpp pir/edu_alibaba_mpc4j_s2pc_pir_index_fastpir_Ayaa21IndexPirNativeUtils.cpp tfhe/util.cpp tfhe/util.h)
+        pir/edu_alibaba_mpc4j_s2pc_pir_index_sealpir_Acls18IndexPirNativeUtils.cpp
+        pir/edu_alibaba_mpc4j_s2pc_pir_index_fastpir_Ayaa21IndexPirNativeUtils.cpp
+        tfhe/util.cpp
+        tfhe/util.h
+        pir/edu_alibaba_mpc4j_s2pc_pir_index_vectorizedpir_Mr23IndexPirNativeUtils.cpp
+        pir/edu_alibaba_mpc4j_s2pc_pir_batchindex_psipir_Lpzg24BatchIndexPirNativeUtils.cpp pir/edu_alibaba_mpc4j_s2pc_pir_batchindex_vectorizedpir_Mr23BatchIndexPirNativeUtils.cpp)
 # 链接SEAL库
 target_link_libraries(mpc4j-native-fhe PUBLIC SEAL::seal_shared)

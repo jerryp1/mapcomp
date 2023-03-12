@@ -12,6 +12,7 @@ import edu.alibaba.mpc4j.s2pc.pir.index.onionpir.Mcr21IndexPirConfig;
 import edu.alibaba.mpc4j.s2pc.pir.index.onionpir.Mcr21IndexPirParams;
 import edu.alibaba.mpc4j.s2pc.pir.index.sealpir.Acls18IndexPirConfig;
 import edu.alibaba.mpc4j.s2pc.pir.index.sealpir.Acls18IndexPirParams;
+import edu.alibaba.mpc4j.s2pc.pir.index.vectorizedpir.Mr23IndexPirConfig;
 import edu.alibaba.mpc4j.s2pc.pir.index.xpir.Mbfk16IndexPirConfig;
 import edu.alibaba.mpc4j.s2pc.pir.index.xpir.Mbfk16IndexPirParams;
 import org.apache.commons.lang3.StringUtils;
@@ -48,15 +49,15 @@ public class IndexPirTest {
     /**
      * 较小元素字节长度
      */
-    private static final int SMALL_ELEMENT_BYTE_LENGTH = Long.BYTES;
+    private static final int SMALL_ELEMENT_BYTE_LENGTH = 2;//CommonConstants.STATS_BYTE_LENGTH;
     /**
      * 较大元素字节长度
      */
-    private static final int LARGE_ELEMENT_BYTE_LENGTH = 1 << 16;
+    private static final int LARGE_ELEMENT_BYTE_LENGTH = 64;
     /**
      * 服务端元素数量
      */
-    private static final int SERVER_ELEMENT_SIZE = 1 << 20;
+    private static final int SERVER_ELEMENT_SIZE = 1 << 16;
     /**
      * 较小服务端元素数量
      */
@@ -73,6 +74,8 @@ public class IndexPirTest {
         configurations.add(new Object[]{IndexPirFactory.IndexPirType.ONION_PIR.name(), new Mcr21IndexPirConfig()});
         // FastPIR
         configurations.add(new Object[]{IndexPirFactory.IndexPirType.FAST_PIR.name(), new Ayaa21IndexPirConfig()});
+        // Vectorized PIR
+        configurations.add(new Object[]{IndexPirFactory.IndexPirType.VECTORIZED_PIR.name(), new Mr23IndexPirConfig()});
         return configurations;
     }
 

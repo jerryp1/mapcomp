@@ -126,4 +126,33 @@ public class IndexPirUtils {
         }
         return indices;
     }
+
+    /**
+     * 返回输入数据的比特长度。
+     *
+     * @param input 输入数据。
+     * @return 比特长度。
+     */
+    public static int getNumberOfBits(long input) {
+        int count = 0;
+        while (input != 0) {
+            count++;
+            input /= 2;
+        }
+        return count;
+    }
+
+    /**
+     * 返回与输入数据临近的2的次方。
+     *
+     * @param input 输入数据。
+     * @return 与输入数据临近的2的次方。
+     */
+    public static int getNextPowerOfTwo(int input) {
+        if ((input & (input - 1)) == 0) {
+            return input;
+        }
+        int numberOfBits = getNumberOfBits(input);
+        return (1 << numberOfBits);
+    }
 }

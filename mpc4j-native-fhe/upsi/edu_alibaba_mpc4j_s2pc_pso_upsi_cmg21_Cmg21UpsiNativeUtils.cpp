@@ -207,7 +207,6 @@ JNIEXPORT jobject JNICALL Java_edu_alibaba_mpc4j_s2pc_pso_upsi_cmg21_Cmg21UpsiNa
     PublicKey public_key = deserialize_public_key(env, pk_bytes, context);
     SecretKey secret_key = deserialize_secret_key(env, sk_bytes, context);
     vector<Plaintext> plain_query = deserialize_plaintexts_from_coeff(env, coeffs_array, context);
-    BatchEncoder encoder(context);
     Encryptor encryptor(context, public_key);
     encryptor.set_secret_key(secret_key);
     vector<Ciphertext> query;

@@ -113,6 +113,21 @@ public class PirUtils {
     }
 
     /**
+     * 生成随机元素数组。
+     *
+     * @param elementSize 元素数量。
+     * @return 关键词和标签映射。
+     */
+    public static ArrayList<ByteBuffer> generateBooleanElementArrayList(int elementSize) {
+        return IntStream.range(0, elementSize)
+            .mapToObj(i -> {
+                boolean element = SECURE_RANDOM.nextBoolean();
+                return ByteBuffer.wrap(element ? new byte[]{(byte) 0x1} : new byte[]{(byte) 0x0});
+            })
+            .collect(Collectors.toCollection(ArrayList::new));
+    }
+
+    /**
      * 生成索引值列表。
      *
      * @param elementSize   元素数量。
@@ -123,5 +138,22 @@ public class PirUtils {
         return IntStream.range(0, setSize)
             .mapToObj(i -> SECURE_RANDOM.nextInt(elementSize))
             .collect(Collectors.toCollection(ArrayList::new));
+    }
+
+    /**
+     * 生成索引值列表。
+     *
+     * @param elementSize   元素数量。
+     * @param setSize       集合数量。
+     * @return 索引值列表。
+     */
+    public static Set<Integer> generateRetrievalIndexSet(int elementSize, int setSize) {
+        Set<Integer> indexSet = new HashSet<>();
+        while (indexSet.size() < setSize) {
+            int index = SECURE_RANDOM.nextInt(elementSize);
+            indexSet.add(index);
+        }
+        assert indexSet.size() == setSize;
+        return indexSet;
     }
 }
