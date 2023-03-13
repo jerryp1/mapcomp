@@ -54,7 +54,7 @@ public class Mr23BatchIndexPirParams implements IndexPirParams {
     public static Mr23BatchIndexPirParams DEFAULT_PARAMS = new Mr23BatchIndexPirParams(
         8192,
         20,
-        new int[]{60, 50, 50, 50},
+        new int[]{60, 55, 55, 55},
         3,
         3
     );

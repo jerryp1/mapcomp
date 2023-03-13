@@ -18,7 +18,9 @@ JNIEXPORT jbyteArray JNICALL Java_edu_alibaba_mpc4j_s2pc_pir_batchindex_vectoriz
     EncryptionParameters parms = EncryptionParameters(scheme_type::bfv);
     parms.set_poly_modulus_degree(poly_modulus_degree);
     parms.set_plain_modulus(PlainModulus::Batching(poly_modulus_degree, plain_modulus_size + 1));
-    parms.set_coeff_modulus(CoeffModulus::Create(poly_modulus_degree, bit_sizes));
+    // parms.set_coeff_modulus(CoeffModulus::Create(poly_modulus_degree, bit_sizes));
+    parms.set_coeff_modulus(CoeffModulus::BFVDefault(poly_modulus_degree, sec_level_type::tc128));
+
     SEALContext context = SEALContext(parms);
     jclass exception = env->FindClass("java/lang/Exception");
     if (!context.parameters_set()) {
@@ -49,8 +51,14 @@ JNIEXPORT jobject JNICALL Java_edu_alibaba_mpc4j_s2pc_pir_batchindex_vectorizedp
     GaloisKeys galois_keys;
     vector<int32_t> steps;
     auto g = (int32_t) ((parms.poly_modulus_degree() / 2) / n_slot);
+    cerr << g << endl;
+    cerr << dimension_length << endl;
     for (int32_t i = 0; i < dimension_length; i++){
         steps.push_back(- i * g);
+    }
+    auto count = (uint32_t) log2((parms.poly_modulus_degree() / 2) / g);
+    for (int32_t i = 0; i < count; i++){
+        steps.push_back(- (1 << i) * g);
     }
     key_gen.create_galois_keys(steps, galois_keys);
     jclass list_jcs = env->FindClass("java/util/ArrayList");
@@ -108,6 +116,45 @@ JNIEXPORT jobject JNICALL Java_edu_alibaba_mpc4j_s2pc_pir_batchindex_vectorizedp
     return serialize_plaintexts(env, encoded_db);
 }
 
+JNIEXPORT jobject JNICALL Java_edu_alibaba_mpc4j_s2pc_pir_batchindex_vectorizedpir_Mr23BatchIndexPirNativeUtils_preprocessDatabase1(
+        JNIEnv *env, jclass, jbyteArray parms_bytes, jobjectArray coeffs_list, jint total_size) {
+    EncryptionParameters parms = deserialize_encryption_parms(env, parms_bytes);
+    SEALContext context(parms);
+    BatchEncoder batch_encoder(context);
+    Evaluator evaluator(context);
+    auto pid = context.first_parms_id();
+    vector<Plaintext> encoded_db = deserialize_plaintexts(env, coeffs_list, context);
+    for (auto & i : encoded_db){
+        evaluator.transform_to_ntt_inplace(i, pid);
+    }
+    uint32_t current_size = encoded_db.size();
+    Plaintext zero(parms.poly_modulus_degree());
+    vector<uint64_t> vec(parms.poly_modulus_degree(), 0ULL);
+    batch_encoder.encode(vec, zero);
+    evaluator.transform_to_ntt_inplace(zero, pid);
+    for (uint32_t i = current_size; i < total_size; i++) {
+        encoded_db.push_back(zero);
+    }
+    return serialize_plaintexts(env, encoded_db);
+}
+
+
+JNIEXPORT jobject JNICALL Java_edu_alibaba_mpc4j_s2pc_pir_batchindex_vectorizedpir_Mr23BatchIndexPirNativeUtils_generateQuery1(
+        JNIEnv *env, jclass, jbyteArray parms_bytes, jbyteArray pk_bytes, jbyteArray sk_bytes, jobjectArray query_array) {
+    EncryptionParameters parms = deserialize_encryption_parms(env, parms_bytes);
+    SEALContext context(parms);
+    PublicKey public_key = deserialize_public_key(env, pk_bytes, context);
+    SecretKey secret_key = deserialize_secret_key(env, sk_bytes, context);
+    Encryptor encryptor(context, public_key, secret_key);
+
+    vector<Plaintext> plaintexts = deserialize_plaintexts(env, query_array, context);
+    vector<Ciphertext> query(plaintexts.size());
+    for (uint32_t i = 0; i < plaintexts.size(); i++) {
+        encryptor.encrypt(plaintexts[i], query[i]);
+    }
+    return serialize_ciphertexts(env, query);
+}
+
 JNIEXPORT jobject JNICALL Java_edu_alibaba_mpc4j_s2pc_pir_batchindex_vectorizedpir_Mr23BatchIndexPirNativeUtils_generateQuery(
         JNIEnv *env, jclass, jbyteArray parms_bytes, jbyteArray pk_bytes, jbyteArray sk_bytes, jintArray indices_array,
         jint n_slot) {
@@ -133,6 +180,8 @@ JNIEXPORT jobject JNICALL Java_edu_alibaba_mpc4j_s2pc_pir_batchindex_vectorizedp
     }
     return serialize_ciphertexts(env, query);
 }
+
+
 
 
 JNIEXPORT jbyteArray JNICALL Java_edu_alibaba_mpc4j_s2pc_pir_batchindex_vectorizedpir_Mr23BatchIndexPirNativeUtils_generateReply(
@@ -190,15 +239,11 @@ JNIEXPORT jbyteArray JNICALL Java_edu_alibaba_mpc4j_s2pc_pir_batchindex_vectoriz
     }
     evaluator.multiply_inplace(db_prime[0], query[dimension - 1]);
     evaluator.relinearize_inplace(db_prime[0], relin_keys);
-    if (db_prime[0].parms_id() != context.last_parms_id()) {
-        evaluator.mod_switch_to_next_inplace(db_prime[0]);
-    }
     return serialize_ciphertext(env, db_prime[0]);
 }
 
-JNIEXPORT jlong JNICALL Java_edu_alibaba_mpc4j_s2pc_pir_batchindex_vectorizedpir_Mr23BatchIndexPirNativeUtils_decryptReply(
-        JNIEnv *env, jclass, jbyteArray parms_bytes, jbyteArray sk_bytes, jbyteArray response_bytes, jint offset,
-        jint n_slot) {
+JNIEXPORT jlongArray JNICALL Java_edu_alibaba_mpc4j_s2pc_pir_batchindex_vectorizedpir_Mr23BatchIndexPirNativeUtils_decryptReply(
+        JNIEnv *env, jclass, jbyteArray parms_bytes, jbyteArray sk_bytes, jbyteArray response_bytes) {
     EncryptionParameters parms = deserialize_encryption_parms(env, parms_bytes);
     SEALContext context(parms);
     SecretKey secret_key = deserialize_secret_key(env, sk_bytes, context);
@@ -210,6 +255,68 @@ JNIEXPORT jlong JNICALL Java_edu_alibaba_mpc4j_s2pc_pir_batchindex_vectorizedpir
     vector<uint64_t> vec;
     batch_encoder.decode(pt, vec);
     uint32_t degree = context.first_context_data()->parms().poly_modulus_degree();
-    uint32_t g = (degree / 2) / n_slot;
-    return (jlong) vec[offset * g];
+//    uint32_t g = (degree / 2) / n_slot;
+//    return (jlong) vec[offset * g];
+    cerr << decryptor.invariant_noise_budget(response) << endl;
+    jlongArray jarr = env->NewLongArray((jsize) degree / 2);
+    jlong *arr = env->GetLongArrayElements(jarr, JNI_FALSE);
+    for(uint32_t i = 0; i < degree / 2; i++){
+        arr[i] = (jlong) vec[i];
+    }
+    env->ReleaseLongArrayElements(jarr, arr, 0);
+    return jarr;
+}
+
+
+JNIEXPORT jbyteArray JNICALL Java_edu_alibaba_mpc4j_s2pc_pir_batchindex_vectorizedpir_Mr23BatchIndexPirNativeUtils_mergeResponse(
+        JNIEnv *env, jclass, jbyteArray parms_bytes, jbyteArray pk_bytes, jbyteArray relin_keys_bytes,
+        jbyteArray galois_keys_bytes, jobject response_list, jint g) {
+    EncryptionParameters parms = deserialize_encryption_parms(env, parms_bytes);
+    SEALContext context(parms);
+    PublicKey public_key = deserialize_public_key(env, pk_bytes, context);
+    RelinKeys relin_keys = deserialize_relin_keys(env, relin_keys_bytes, context);
+    GaloisKeys galois_keys = deserialize_galois_keys(env, galois_keys_bytes, context);
+    Evaluator evaluator(context);
+    Encryptor encryptor(context, public_key);
+    BatchEncoder batch_encoder(context);
+
+    Ciphertext merged_response, r_cipher;
+    encryptor.encrypt_zero(merged_response);
+    vector<Ciphertext> response = deserialize_ciphertexts(env, response_list, context);
+    evaluator.mod_switch_to_inplace(merged_response, response[0].parms_id());
+    uint32_t row_size = parms.poly_modulus_degree() / 2;
+    auto count = (uint32_t) log2(row_size / g);
+    cerr << g << endl;
+    cerr << count << endl;
+    cerr << response.size() << endl;
+    for (uint32_t i = 0; i < response.size(); i++) {
+        for (uint32_t j = 0; j < count; j++) {
+            evaluator.rotate_rows(response[i], - g * (1 << j), galois_keys, r_cipher);
+            evaluator.add_inplace(response[i], r_cipher);
+        }
+        cerr << "ok1" << endl;
+        Plaintext pt(parms.poly_modulus_degree());
+        pt.set_zero();
+        vector<uint64_t> vec(parms.poly_modulus_degree(), 0ULL);
+        uint32_t l = i * g;
+        for (uint32_t k = l; k < l + g; k++) {
+            vec[k] = 1;
+        }
+        cerr << "ok2" << endl;
+        batch_encoder.encode(vec, pt);
+        vector<uint64_t> tt;
+        batch_encoder.decode(pt, tt);
+        for (uint32_t k = 0; k < parms.poly_modulus_degree(); k++) {
+            cerr << tt[k] << " ";
+        }
+        cerr << endl;
+
+        evaluator.multiply_plain_inplace(response[i], pt);
+        cerr << "ok3" << endl;
+        evaluator.add_inplace(merged_response, response[i]);
+    }
+//    if (merged_response.parms_id() != context.last_parms_id()) {
+//        evaluator.mod_switch_to_next_inplace(merged_response);
+//    }
+    return serialize_ciphertext(env, merged_response);
 }

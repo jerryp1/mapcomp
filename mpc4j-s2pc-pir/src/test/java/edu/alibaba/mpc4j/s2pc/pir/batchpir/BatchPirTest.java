@@ -39,7 +39,7 @@ public class BatchPirTest {
     /**
      * 服务端元素数量
      */
-    private static final int SERVER_ELEMENT_SIZE = 1 << 12;
+    private static final int SERVER_ELEMENT_SIZE = 1 << 16;
     /**
      * 默认客户端元素数量
      */
@@ -101,7 +101,7 @@ public class BatchPirTest {
     public void testPir(int retrievalSize, BatchIndexPirConfig config, boolean parallel) {
         Set<Integer> retrievalIndexSet = PirUtils.generateRetrievalIndexSet(SERVER_ELEMENT_SIZE, retrievalSize);
         // 随机构建服务端关键词和标签映射
-        ArrayList<ByteBuffer> serverElementList = PirUtils.generateBooleanElementArrayList(SERVER_ELEMENT_SIZE);
+        ArrayList<ByteBuffer> serverElementList = PirUtils.generateElementArrayList(SERVER_ELEMENT_SIZE);
         // 创建参与方实例
         BatchIndexPirServer server = BatchIndexPirFactory.createServer(serverRpc, clientRpc.ownParty(), config);
         BatchIndexPirClient client = BatchIndexPirFactory.createClient(clientRpc, serverRpc.ownParty(), config);

@@ -44,8 +44,9 @@ public abstract class AbstractBatchIndexPirServer extends AbstractTwoPartyPto im
         serverElementSize = elementArrayList.size();
         for (int i = 0; i < serverElementSize; i++) {
             byte[] element = elementArrayList.get(i).array();
-            boolean value = BinaryUtils.getBoolean(element, element.length * Byte.SIZE - 1);
-            elementByteArray.add(value ? new byte[]{0x01} : new byte[]{0x00});
+            elementByteArray.add(element);
+//            boolean value = BinaryUtils.getBoolean(element, element.length * Byte.SIZE - 1);
+//            elementByteArray.add(value ? new byte[]{0x01} : new byte[]{0x00});
         }
         // 设置特殊空元素
         byte[] botElementByteArray = new byte[CommonConstants.STATS_BYTE_LENGTH];

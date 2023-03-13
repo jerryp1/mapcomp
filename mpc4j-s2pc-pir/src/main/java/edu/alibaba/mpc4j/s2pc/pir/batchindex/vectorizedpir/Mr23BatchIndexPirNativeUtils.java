@@ -51,6 +51,8 @@ class Mr23BatchIndexPirNativeUtils {
     static native ArrayList<byte[]> preprocessDatabase(byte[] sealContext, long[] db, int dimensionLength, int slotNum,
                                                        int totalSize);
 
+    static native ArrayList<byte[]> preprocessDatabase1(byte[] sealContext, long[][] coeffs, int totalSize);
+
     /**
      * 生成问询密文。
      *
@@ -64,9 +66,8 @@ class Mr23BatchIndexPirNativeUtils {
     static native ArrayList<byte[]> generateQuery(byte[] sealContext, byte[] publicKey, byte[] secretKey, int[] indices,
                                                   int slotNum);
 
-    static native ArrayList<byte[]> generateBatchQuery(byte[] sealContext, byte[] a);
 
-    static native ArrayList<byte[]> setGaloisKey(byte[] sealContext, byte[] galoisKey);
+    static native ArrayList<byte[]> generateQuery1(byte[] sealContext, byte[] publicKey, byte[] secretKey, long[][] queries);
 
 
     /**
@@ -93,9 +94,10 @@ class Mr23BatchIndexPirNativeUtils {
      * @param sealContext SEAL上下文参数。
      * @param secretKey   私钥。
      * @param response    回复密文。
-     * @param offset      移位。
-     * @param slotNum     卡槽数目。
+
      * @return 查询结果。
      */
-    static native long decryptReply(byte[] sealContext, byte[] secretKey, byte[] response, int offset, int slotNum);
+    static native long[] decryptReply(byte[] sealContext, byte[] secretKey, byte[] response);
+
+    static native byte[] mergeResponse(byte[] sealContext, byte[] publicKey, byte[] relinKeys, byte[] galoisKey, List<byte[]> responses, int g);
 }

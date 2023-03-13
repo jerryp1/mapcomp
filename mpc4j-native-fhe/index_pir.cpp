@@ -352,7 +352,6 @@ vector<uint64_t> rotate_plain(vector<uint64_t> original, int32_t index) {
     for (int32_t i = 0; i < row_count; i++)
     {
         result[i] = original[(row_count - index + i) % row_count];
-        result[row_count + i] = original[row_count + ((index + i) % row_count)];
     }
     return result;
 }
