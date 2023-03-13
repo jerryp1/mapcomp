@@ -14,5 +14,5 @@ public interface Gf2eCoreVoleConfig extends MultiPartyPtoConfig {
      *
      * @return 协议类型。
      */
-    Gf2kCoreVoleFactory.Gf2kCoreVoleType getPtoType();
+    Gf2eCoreVoleFactory.Gf2kCoreVoleType getPtoType();
 }

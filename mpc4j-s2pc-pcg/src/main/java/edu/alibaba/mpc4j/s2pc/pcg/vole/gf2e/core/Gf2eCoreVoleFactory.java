@@ -5,16 +5,16 @@ import edu.alibaba.mpc4j.common.rpc.Rpc;
 import edu.alibaba.mpc4j.common.rpc.pto.PtoFactory;
 
 /**
- * GF2K-核VOLE协议工厂。
+ * GF2E-core VOLE factory.
  *
  * @author Weiran Liu
  * @date 2022/9/22
  */
-public class Gf2kCoreVoleFactory implements PtoFactory {
+public class Gf2eCoreVoleFactory implements PtoFactory {
     /**
      * 私有构造函数。
      */
-    private Gf2kCoreVoleFactory() {
+    private Gf2eCoreVoleFactory() {
         // empty
     }
 

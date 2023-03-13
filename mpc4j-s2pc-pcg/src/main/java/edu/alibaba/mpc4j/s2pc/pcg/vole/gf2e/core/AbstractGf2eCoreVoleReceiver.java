@@ -1,13 +1,13 @@
 package edu.alibaba.mpc4j.s2pc.pcg.vole.gf2e.core;
 
+import com.google.common.base.Preconditions;
 import edu.alibaba.mpc4j.common.rpc.Party;
 import edu.alibaba.mpc4j.common.rpc.Rpc;
 import edu.alibaba.mpc4j.common.rpc.desc.PtoDesc;
 import edu.alibaba.mpc4j.common.rpc.pto.AbstractTwoPartyPto;
 import edu.alibaba.mpc4j.common.tool.MathPreconditions;
-import edu.alibaba.mpc4j.common.tool.galoisfield.gf2k.Gf2k;
-import edu.alibaba.mpc4j.common.tool.galoisfield.gf2k.Gf2kFactory;
-import edu.alibaba.mpc4j.common.tool.galoisfield.gf2k.Gf2kGadget;
+import edu.alibaba.mpc4j.common.tool.galoisfield.gf2e.Gf2e;
+import edu.alibaba.mpc4j.common.tool.galoisfield.gf2e.Gf2eGadget;
 import edu.alibaba.mpc4j.common.tool.utils.BytesUtils;
 
 /**
@@ -18,21 +18,21 @@ import edu.alibaba.mpc4j.common.tool.utils.BytesUtils;
  */
 public abstract class AbstractGf2eCoreVoleReceiver extends AbstractTwoPartyPto implements Gf2eCoreVoleReceiver {
     /**
-     * GF2K算法
+     * the GF2E instance
      */
-    protected final Gf2k gf2k;
+    protected Gf2e gf2e;
     /**
-     * 元素比特长度
+     * l
      */
-    protected final int l;
+    protected int l;
     /**
-     * 元素字节长度
+     * byteL
      */
-    protected final int byteL;
+    protected int byteL;
     /**
-     * GF2K小工具
+     * the GF2E gadget
      */
-    protected final Gf2kGadget gf2kGadget;
+    protected Gf2eGadget gf2eGadget;
     /**
      * 关联值Δ
      */
@@ -52,17 +52,15 @@ public abstract class AbstractGf2eCoreVoleReceiver extends AbstractTwoPartyPto i
 
     protected AbstractGf2eCoreVoleReceiver(PtoDesc ptoDesc, Rpc receiverRpc, Party senderParty, Gf2eCoreVoleConfig config) {
         super(ptoDesc, receiverRpc, senderParty, config);
-        gf2k = Gf2kFactory.createInstance(envType);
-        l = gf2k.getL();
-        byteL = gf2k.getByteL();
-        gf2kGadget = new Gf2kGadget(gf2k);
     }
 
-    protected void setInitInput(byte[] delta, int maxNum) {
-        MathPreconditions.checkEqual("Δ.length", "l(B)", delta.length, byteL);
-        // 拷贝一份
+    protected void setInitInput(Gf2e gf2e, byte[] delta, int maxNum) {
+        this.gf2e = gf2e;
+        l = gf2e.getL();
+        byteL = gf2e.getByteL();
+        Preconditions.checkArgument(gf2e.validateRangeElement(delta), "Δ must be in {0,1}^" + l);
         this.delta = BytesUtils.clone(delta);
-        deltaBinary = gf2kGadget.bitDecomposition(delta);
+        deltaBinary = gf2eGadget.bitDecomposition(delta);
         MathPreconditions.checkPositive("maxNum", maxNum);
         this.maxNum = maxNum;
         initState();

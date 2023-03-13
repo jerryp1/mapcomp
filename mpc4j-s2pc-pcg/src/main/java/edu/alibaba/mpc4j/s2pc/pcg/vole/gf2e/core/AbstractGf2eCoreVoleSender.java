@@ -5,9 +5,8 @@ import edu.alibaba.mpc4j.common.rpc.Rpc;
 import edu.alibaba.mpc4j.common.rpc.desc.PtoDesc;
 import edu.alibaba.mpc4j.common.rpc.pto.AbstractTwoPartyPto;
 import edu.alibaba.mpc4j.common.tool.MathPreconditions;
-import edu.alibaba.mpc4j.common.tool.galoisfield.gf2k.Gf2k;
-import edu.alibaba.mpc4j.common.tool.galoisfield.gf2k.Gf2kFactory;
-import edu.alibaba.mpc4j.common.tool.galoisfield.gf2k.Gf2kGadget;
+import edu.alibaba.mpc4j.common.tool.galoisfield.gf2e.Gf2e;
+import edu.alibaba.mpc4j.common.tool.galoisfield.gf2e.Gf2eGadget;
 
 import java.util.Arrays;
 
@@ -19,23 +18,23 @@ import java.util.Arrays;
  */
 public abstract class AbstractGf2eCoreVoleSender extends AbstractTwoPartyPto implements Gf2eCoreVoleSender {
     /**
-     * GF2K算法
+     * the GF2E instance
      */
-    protected final Gf2k gf2k;
+    protected Gf2e gf2e;
     /**
-     * 元素比特长度
+     * l
      */
-    protected final int l;
+    protected int l;
     /**
-     * 元素字节长度
+     * byteL
      */
-    protected final int byteL;
+    protected int byteL;
     /**
-     * GF2K小工具
+     * the GF2E gadget
      */
-    protected final Gf2kGadget gf2kGadget;
+    protected Gf2eGadget gf2eGadget;
     /**
-     * 最大数量
+     * max num
      */
     private int maxNum;
     /**
@@ -43,21 +42,21 @@ public abstract class AbstractGf2eCoreVoleSender extends AbstractTwoPartyPto imp
      */
     protected byte[][] x;
     /**
-     * 数量
+     * num
      */
     protected int num;
 
     protected AbstractGf2eCoreVoleSender(PtoDesc ptoDesc, Rpc senderRpc, Party receiverParty, Gf2eCoreVoleConfig config) {
         super(ptoDesc, senderRpc, receiverParty, config);
-        gf2k = Gf2kFactory.createInstance(envType);
-        l = gf2k.getL();
-        byteL = gf2k.getByteL();
-        gf2kGadget = new Gf2kGadget(gf2k);
     }
 
-    protected void setInitInput(int maxNum) {
+    protected void setInitInput(Gf2e gf2e, int maxNum) {
         MathPreconditions.checkPositive("maxNum", maxNum);
         this.maxNum = maxNum;
+        this.gf2e = gf2e;
+        gf2eGadget = new Gf2eGadget(gf2e);
+        l = gf2e.getL();
+        byteL = gf2e.getByteL();
         initState();
     }
 
