@@ -1,4 +1,4 @@
-package edu.alibaba.mpc4j.s2pc.pcg.vole.gf2k.core;
+package edu.alibaba.mpc4j.s2pc.pcg.vole.gf2e.core;
 
 import edu.alibaba.mpc4j.common.rpc.Party;
 import edu.alibaba.mpc4j.common.rpc.Rpc;
@@ -8,16 +8,15 @@ import edu.alibaba.mpc4j.common.tool.MathPreconditions;
 import edu.alibaba.mpc4j.common.tool.galoisfield.gf2k.Gf2k;
 import edu.alibaba.mpc4j.common.tool.galoisfield.gf2k.Gf2kFactory;
 import edu.alibaba.mpc4j.common.tool.galoisfield.gf2k.Gf2kGadget;
-
-import java.util.Arrays;
+import edu.alibaba.mpc4j.common.tool.utils.BytesUtils;
 
 /**
- * GF2K-核VOLE协议发送方抽象类。
+ * GF2K-核VOLE接收方抽象类。
  *
  * @author Weiran Liu
  * @date 2022/9/22
  */
-public abstract class AbstractGf2kCoreVoleSender extends AbstractTwoPartyPto implements Gf2kCoreVoleSender {
+public abstract class AbstractGf2eCoreVoleReceiver extends AbstractTwoPartyPto implements Gf2eCoreVoleReceiver {
     /**
      * GF2K算法
      */
@@ -35,39 +34,44 @@ public abstract class AbstractGf2kCoreVoleSender extends AbstractTwoPartyPto imp
      */
     protected final Gf2kGadget gf2kGadget;
     /**
+     * 关联值Δ
+     */
+    protected byte[] delta;
+    /**
+     * 关联值Δ的比特表示
+     */
+    protected boolean[] deltaBinary;
+    /**
      * 最大数量
      */
     private int maxNum;
-    /**
-     * x
-     */
-    protected byte[][] x;
     /**
      * 数量
      */
     protected int num;
 
-    protected AbstractGf2kCoreVoleSender(PtoDesc ptoDesc, Rpc senderRpc, Party receiverParty, Gf2kCoreVoleConfig config) {
-        super(ptoDesc, senderRpc, receiverParty, config);
+    protected AbstractGf2eCoreVoleReceiver(PtoDesc ptoDesc, Rpc receiverRpc, Party senderParty, Gf2eCoreVoleConfig config) {
+        super(ptoDesc, receiverRpc, senderParty, config);
         gf2k = Gf2kFactory.createInstance(envType);
         l = gf2k.getL();
         byteL = gf2k.getByteL();
         gf2kGadget = new Gf2kGadget(gf2k);
     }
 
-    protected void setInitInput(int maxNum) {
+    protected void setInitInput(byte[] delta, int maxNum) {
+        MathPreconditions.checkEqual("Δ.length", "l(B)", delta.length, byteL);
+        // 拷贝一份
+        this.delta = BytesUtils.clone(delta);
+        deltaBinary = gf2kGadget.bitDecomposition(delta);
         MathPreconditions.checkPositive("maxNum", maxNum);
         this.maxNum = maxNum;
         initState();
     }
 
-    protected void setPtoInput(byte[][] x) {
+    protected void setPtoInput(int num) {
         checkInitialized();
-        MathPreconditions.checkPositiveInRangeClosed("num", x.length, maxNum);
-        num = x.length;
-        this.x = Arrays.stream(x)
-            .peek(xi -> MathPreconditions.checkEqual("x.length", "l(B)", xi.length, byteL))
-            .toArray(byte[][]::new);
+        MathPreconditions.checkPositiveInRangeClosed("num", num, maxNum);
+        this.num = num;
         extraInfo++;
     }
 }

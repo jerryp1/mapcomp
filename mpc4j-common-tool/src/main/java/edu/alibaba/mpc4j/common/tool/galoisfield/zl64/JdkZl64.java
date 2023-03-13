@@ -220,4 +220,22 @@ class JdkZl64 implements Zl64 {
     public boolean validateRangeElement(final long a) {
         return a >= 0 && a < rangeBound;
     }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) {
+            return true;
+        }
+        if (o == null || getClass() != o.getClass()) {
+            return false;
+        }
+        JdkZl64 that = (JdkZl64) o;
+        // KDF and PRG can be different, all GF2K instance are the same
+        return this.getL() == that.getL();
+    }
+
+    @Override
+    public int hashCode() {
+        return "Zl64".hashCode();
+    }
 }

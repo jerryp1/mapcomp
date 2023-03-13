@@ -224,4 +224,22 @@ class JdkZl implements Zl {
     public boolean validateRangeElement(final BigInteger a) {
         return a.signum() >= 0 && a.bitLength() <= l;
     }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) {
+            return true;
+        }
+        if (o == null || getClass() != o.getClass()) {
+            return false;
+        }
+        JdkZl that = (JdkZl) o;
+        // KDF and PRG can be different
+        return this.l == that.l;
+    }
+
+    @Override
+    public int hashCode() {
+        return "Zl".hashCode();
+    }
 }

@@ -191,4 +191,22 @@ abstract class AbstractGf2k implements Gf2k {
     public boolean validateRangeElement(byte[] p) {
         return validateElement(p);
     }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) {
+            return true;
+        }
+        if (o == null || getClass() != o.getClass()) {
+            return false;
+        }
+        AbstractGf2k that = (AbstractGf2k) o;
+        // KDF and PRG can be different, all GF2K instance are the same
+        return this.getL() == that.getL();
+    }
+
+    @Override
+    public int hashCode() {
+        return "GF2K".hashCode();
+    }
 }

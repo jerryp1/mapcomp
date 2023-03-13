@@ -264,4 +264,22 @@ class JdkZp implements Zp {
     public boolean validateRangeElement(final BigInteger a) {
         return BigIntegerUtils.greaterOrEqual(a, BigInteger.ZERO) && BigIntegerUtils.less(a, rangeBound);
     }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) {
+            return true;
+        }
+        if (o == null || getClass() != o.getClass()) {
+            return false;
+        }
+        JdkZp that = (JdkZp) o;
+        // KDF and PRG can be different
+        return this.prime.equals(that.prime);
+    }
+
+    @Override
+    public int hashCode() {
+        return prime.hashCode();
+    }
 }

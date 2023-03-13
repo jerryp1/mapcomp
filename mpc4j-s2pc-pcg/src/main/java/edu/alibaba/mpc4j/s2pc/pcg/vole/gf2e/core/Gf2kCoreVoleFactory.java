@@ -1,4 +1,4 @@
-package edu.alibaba.mpc4j.s2pc.pcg.vole.gf2k.core;
+package edu.alibaba.mpc4j.s2pc.pcg.vole.gf2e.core;
 
 import edu.alibaba.mpc4j.common.rpc.Party;
 import edu.alibaba.mpc4j.common.rpc.Rpc;
@@ -40,7 +40,7 @@ public class Gf2kCoreVoleFactory implements PtoFactory {
      * @param config        配置项。
      * @return 发送方。
      */
-    public static Gf2kCoreVoleSender createSender(Rpc senderRpc, Party receiverParty, Gf2kCoreVoleConfig config) {
+    public static Gf2eCoreVoleSender createSender(Rpc senderRpc, Party receiverParty, Gf2eCoreVoleConfig config) {
         Gf2kCoreVoleType type = config.getPtoType();
         switch (type) {
             case KOS16_SEMI_HONEST:
@@ -58,7 +58,7 @@ public class Gf2kCoreVoleFactory implements PtoFactory {
      * @param config      配置项。
      * @return 接收方。
      */
-    public static Gf2kCoreVoleReceiver createReceiver(Rpc receiverRpc, Party senderParty, Gf2kCoreVoleConfig config) {
+    public static Gf2eCoreVoleReceiver createReceiver(Rpc receiverRpc, Party senderParty, Gf2eCoreVoleConfig config) {
         Gf2kCoreVoleType type = config.getPtoType();
         switch (type) {
             case KOS16_SEMI_HONEST:

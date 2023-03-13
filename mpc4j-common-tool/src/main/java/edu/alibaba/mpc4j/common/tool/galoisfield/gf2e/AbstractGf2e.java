@@ -211,4 +211,22 @@ abstract class AbstractGf2e implements Gf2e {
     public boolean validateRangeElement(byte[] p) {
         return validateElement(p);
     }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) {
+            return true;
+        }
+        if (o == null || getClass() != o.getClass()) {
+            return false;
+        }
+        AbstractGf2e that = (AbstractGf2e) o;
+        // KDF and PRG can be different
+        return this.finiteField.equals(that.finiteField);
+    }
+
+    @Override
+    public int hashCode() {
+        return finiteField.hashCode();
+    }
 }

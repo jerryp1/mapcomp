@@ -1,4 +1,4 @@
-package edu.alibaba.mpc4j.s2pc.pcg.vole.gf2k.core;
+package edu.alibaba.mpc4j.s2pc.pcg.vole.gf2e.core;
 
 import edu.alibaba.mpc4j.common.rpc.pto.MultiPartyPtoConfig;
 
@@ -8,7 +8,7 @@ import edu.alibaba.mpc4j.common.rpc.pto.MultiPartyPtoConfig;
  * @author Weiran Liu
  * @date 2022/9/22
  */
-public interface Gf2kCoreVoleConfig extends MultiPartyPtoConfig {
+public interface Gf2eCoreVoleConfig extends MultiPartyPtoConfig {
     /**
      * 返回协议类型。
      *

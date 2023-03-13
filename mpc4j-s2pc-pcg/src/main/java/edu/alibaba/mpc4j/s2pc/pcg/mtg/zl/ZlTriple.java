@@ -188,11 +188,11 @@ public class ZlTriple {
     /**
      * Splits the triple with the split num.
      *
-     * @param splitNum the assigned length.
-     * @return a new Zl triple with split number of triple.
+     * @param splitNum the split num.
+     * @return a new triple with the split num of triple.
      */
     public ZlTriple split(int splitNum) {
-        assert splitNum > 0 && splitNum <= num : "split num must be in range (0, " + num + "]";
+        assert splitNum > 0 && splitNum <= num : "splitNum must be in range (0, " + num + "]";
         // split a
         BigInteger[] aSubs = new BigInteger[splitNum];
         BigInteger[] aRemains = new BigInteger[num - splitNum];

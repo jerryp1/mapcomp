@@ -253,4 +253,22 @@ class RingsZp64 implements Zp64 {
     public boolean validateRangeElement(final long a) {
         return a >= 0 && a < rangeBound;
     }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) {
+            return true;
+        }
+        if (o == null || getClass() != o.getClass()) {
+            return false;
+        }
+        RingsZp64 that = (RingsZp64) o;
+        // KDF and PRG can be different
+        return this.prime == that.prime;
+    }
+
+    @Override
+    public int hashCode() {
+        return new Long(prime).hashCode();
+    }
 }
