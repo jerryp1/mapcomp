@@ -33,13 +33,20 @@ public class Mr23BatchIndexPirInnerParams {
      * 群分桶数目
      */
     private final int groupBinSize;
+    /**
+     * 分桶内的多项式数目
+     */
+    private final int totalSize;
 
     public Mr23BatchIndexPirInnerParams(Mr23BatchIndexPirParams params, int binNum, int binSize) {
         this.dimensionsLength = computeDimensionLength(binSize, params.getDimension());
         this.binNum = binNum;
         this.binSize = binSize;
         this.slotNum = IndexPirUtils.getNextPowerOfTwo(this.dimensionsLength);
-        this.groupBinSize = params.getPolyModulusDegree() / slotNum;
+        this.groupBinSize = (params.getPolyModulusDegree() / 2) / slotNum;
+        this.totalSize = IntStream.range(0, params.getDimension() - 1)
+            .map(j -> dimensionsLength)
+            .reduce(1, (a, b) -> a * b);
     }
 
     /**
@@ -86,15 +93,39 @@ public class Mr23BatchIndexPirInnerParams {
         return slotNum;
     }
 
+    /**
+     * 返回分桶数目。
+     *
+     * @return 分桶数目。
+     */
     public int getBinNum() {
         return binNum;
     }
 
+    /**
+     * 返回桶内元素数目。
+     *
+     * @return 桶内元素数目。
+     */
     public int getBinSize() {
         return binSize;
     }
 
+    /**
+     * 返回群分桶数目。
+     *
+     * @return 群分桶数目。
+     */
     public int getGroupBinSize() {
         return groupBinSize;
+    }
+
+    /**
+     * 返回分桶内的多项式数目。
+     *
+     * @return 分桶内的多项式数目。
+     */
+    public int getTotalSize() {
+        return totalSize;
     }
 }

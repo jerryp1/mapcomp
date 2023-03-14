@@ -41,17 +41,12 @@ class Mr23BatchIndexPirNativeUtils {
     /**
      * 数据库预处理。
      *
-     * @param sealContext     SEAL上下文参数。
-     * @param db              数据库数据。
-     * @param dimensionLength 维度长度。
-     * @param slotNum         卡槽数目。
-     * @param totalSize       多项式数量。
+     * @param sealContext SEAL上下文参数。
+     * @param coeffs      多项式系数。
+     * @param totalSize   多项式数目。
      * @return 明文多项式。
      */
-    static native ArrayList<byte[]> preprocessDatabase(byte[] sealContext, long[] db, int dimensionLength, int slotNum,
-                                                       int totalSize);
-
-    static native ArrayList<byte[]> preprocessDatabase1(byte[] sealContext, long[][] coeffs, int totalSize);
+    static native ArrayList<byte[]> preprocessDatabase(byte[] sealContext, long[][] coeffs, int totalSize);
 
     /**
      * 生成问询密文。
@@ -59,15 +54,10 @@ class Mr23BatchIndexPirNativeUtils {
      * @param sealContext SEAL上下文参数。
      * @param publicKey   公钥。
      * @param secretKey   私钥。
-     * @param indices     明文检索值。
-     * @param slotNum     卡槽数目。
+     * @param queries     明文检索信息。
      * @return 问询密文。
      */
-    static native ArrayList<byte[]> generateQuery(byte[] sealContext, byte[] publicKey, byte[] secretKey, int[] indices,
-                                                  int slotNum);
-
-
-    static native ArrayList<byte[]> generateQuery1(byte[] sealContext, byte[] publicKey, byte[] secretKey, long[][] queries);
+    static native ArrayList<byte[]> generateQuery(byte[] sealContext, byte[] publicKey, byte[] secretKey, long[][] queries);
 
 
     /**
@@ -94,10 +84,19 @@ class Mr23BatchIndexPirNativeUtils {
      * @param sealContext SEAL上下文参数。
      * @param secretKey   私钥。
      * @param response    回复密文。
-
      * @return 查询结果。
      */
     static native long[] decryptReply(byte[] sealContext, byte[] secretKey, byte[] response);
 
-    static native byte[] mergeResponse(byte[] sealContext, byte[] publicKey, byte[] relinKeys, byte[] galoisKey, List<byte[]> responses, int g);
+    /**
+     * 合并多个分桶的回复密文。
+     *
+     * @param sealContext SEAL上下文参数。
+     * @param publicKey   公钥。
+     * @param galoisKey   Galois密钥。
+     * @param responses   回复密文。
+     * @param g           vectorized batch pir 参数。
+     * @return 回复密文
+     */
+    static native byte[] mergeResponse(byte[] sealContext, byte[] publicKey, byte[] galoisKey, List<byte[]> responses, int g);
 }

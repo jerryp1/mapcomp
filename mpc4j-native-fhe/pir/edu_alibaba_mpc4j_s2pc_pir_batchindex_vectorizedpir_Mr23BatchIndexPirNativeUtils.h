@@ -26,33 +26,17 @@ JNIEXPORT jobject JNICALL Java_edu_alibaba_mpc4j_s2pc_pir_batchindex_vectorizedp
 /*
  * Class:     edu_alibaba_mpc4j_s2pc_pir_batchindex_vectorizedpir_Mr23BatchIndexPirNativeUtils
  * Method:    preprocessDatabase
- * Signature: ([B[JIII)Ljava/util/ArrayList;
- */
-JNIEXPORT jobject JNICALL Java_edu_alibaba_mpc4j_s2pc_pir_batchindex_vectorizedpir_Mr23BatchIndexPirNativeUtils_preprocessDatabase
-  (JNIEnv *, jclass, jbyteArray, jlongArray, jint, jint, jint);
-
-/*
- * Class:     edu_alibaba_mpc4j_s2pc_pir_batchindex_vectorizedpir_Mr23BatchIndexPirNativeUtils
- * Method:    preprocessDatabase1
  * Signature: ([B[[JI)Ljava/util/ArrayList;
  */
-JNIEXPORT jobject JNICALL Java_edu_alibaba_mpc4j_s2pc_pir_batchindex_vectorizedpir_Mr23BatchIndexPirNativeUtils_preprocessDatabase1
+JNIEXPORT jobject JNICALL Java_edu_alibaba_mpc4j_s2pc_pir_batchindex_vectorizedpir_Mr23BatchIndexPirNativeUtils_preprocessDatabase
   (JNIEnv *, jclass, jbyteArray, jobjectArray, jint);
 
 /*
  * Class:     edu_alibaba_mpc4j_s2pc_pir_batchindex_vectorizedpir_Mr23BatchIndexPirNativeUtils
  * Method:    generateQuery
- * Signature: ([B[B[B[II)Ljava/util/ArrayList;
- */
-JNIEXPORT jobject JNICALL Java_edu_alibaba_mpc4j_s2pc_pir_batchindex_vectorizedpir_Mr23BatchIndexPirNativeUtils_generateQuery
-  (JNIEnv *, jclass, jbyteArray, jbyteArray, jbyteArray, jintArray, jint);
-
-/*
- * Class:     edu_alibaba_mpc4j_s2pc_pir_batchindex_vectorizedpir_Mr23BatchIndexPirNativeUtils
- * Method:    generateQuery1
  * Signature: ([B[B[B[[J)Ljava/util/ArrayList;
  */
-JNIEXPORT jobject JNICALL Java_edu_alibaba_mpc4j_s2pc_pir_batchindex_vectorizedpir_Mr23BatchIndexPirNativeUtils_generateQuery1
+JNIEXPORT jobject JNICALL Java_edu_alibaba_mpc4j_s2pc_pir_batchindex_vectorizedpir_Mr23BatchIndexPirNativeUtils_generateQuery
   (JNIEnv *, jclass, jbyteArray, jbyteArray, jbyteArray, jobjectArray);
 
 /*
@@ -74,10 +58,10 @@ JNIEXPORT jlongArray JNICALL Java_edu_alibaba_mpc4j_s2pc_pir_batchindex_vectoriz
 /*
  * Class:     edu_alibaba_mpc4j_s2pc_pir_batchindex_vectorizedpir_Mr23BatchIndexPirNativeUtils
  * Method:    mergeResponse
- * Signature: ([B[B[B[BLjava/util/List;I)[B
+ * Signature: ([B[B[BLjava/util/List;I)[B
  */
 JNIEXPORT jbyteArray JNICALL Java_edu_alibaba_mpc4j_s2pc_pir_batchindex_vectorizedpir_Mr23BatchIndexPirNativeUtils_mergeResponse
-  (JNIEnv *, jclass, jbyteArray, jbyteArray, jbyteArray, jbyteArray, jobject, jint);
+  (JNIEnv *, jclass, jbyteArray, jbyteArray, jbyteArray, jobject, jint);
 
 #ifdef __cplusplus
 }

@@ -129,9 +129,10 @@ public class PirUtils {
             .collect(Collectors.toCollection(ArrayList::new));
     }
 
+
     public static ArrayList<ByteBuffer> generateElementArrayList(int elementSize) {
         return IntStream.range(0, elementSize)
-            .mapToObj(i -> ByteBuffer.wrap(new byte[]{(byte) ((i % 128))}))
+            .mapToObj(i -> ByteBuffer.wrap(new byte[]{(byte) (SECURE_RANDOM.nextInt(128))}))
             .collect(Collectors.toCollection(ArrayList::new));
     }
 
@@ -157,9 +158,8 @@ public class PirUtils {
      */
     public static Set<Integer> generateRetrievalIndexSet(int elementSize, int setSize) {
         Set<Integer> indexSet = new HashSet<>();
-        int i = 1;
         while (indexSet.size() < setSize) {
-            int index = i++;//SECURE_RANDOM.nextInt(elementSize);
+            int index = SECURE_RANDOM.nextInt(elementSize);
             indexSet.add(index);
         }
         assert indexSet.size() == setSize;
