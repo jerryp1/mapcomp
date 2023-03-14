@@ -12,7 +12,7 @@ import java.util.Arrays;
 import java.util.stream.IntStream;
 
 /**
- * GF2K-VOLE output tests.
+ * GF2E-VOLE output tests.
  *
  * @author Weiran Liu
  * @date 2022/6/9
@@ -46,7 +46,19 @@ public class Gf2eVoleOutputTest {
         Gf2e defaultGf2e = Gf2eFactory.createInstance(EnvType.STANDARD, CommonConstants.BLOCK_BIT_LENGTH);
         int defaultByteL = defaultGf2e.getByteL();
         // create a sender output with length 0
-        Assert.assertThrows(AssertionError.class, () -> Gf2eVoleSenderOutput.create(defaultGf2e, new byte[0][], new byte[0][]));
+        Assert.assertThrows(AssertionError.class, () ->
+            Gf2eVoleSenderOutput.create(defaultGf2e, new byte[0][], new byte[0][])
+        );
+        // create a sender output with mismatched length
+        Assert.assertThrows(AssertionError.class, () -> {
+            byte[][] x = IntStream.range(0, MIN_NUM)
+                .mapToObj(index -> defaultGf2e.createRandom(SECURE_RANDOM))
+                .toArray(byte[][]::new);
+            byte[][] t = IntStream.range(0, MAX_NUM)
+                .mapToObj(index -> defaultGf2e.createRandom(SECURE_RANDOM))
+                .toArray(byte[][]::new);
+            Gf2eVoleSenderOutput.create(defaultGf2e, x, t);
+        });
         // create a sender output with small length x
         Assert.assertThrows(AssertionError.class, () -> {
             byte[][] x = IntStream.range(0, MAX_NUM)
@@ -130,7 +142,7 @@ public class Gf2eVoleOutputTest {
         int defaultByteL = defaultGf2e.getByteL();
         // create a receiver output with length 0
         Assert.assertThrows(AssertionError.class, () -> {
-            byte[] delta = defaultGf2e.createRandom(SECURE_RANDOM);
+            byte[] delta = defaultGf2e.createRangeRandom(SECURE_RANDOM);
             Gf2eVoleReceiverOutput.create(defaultGf2e, delta, new byte[0][]);
         });
         // create a receiver output with small length Δ
@@ -153,7 +165,7 @@ public class Gf2eVoleOutputTest {
         });
         // create a receiver output with small length q
         Assert.assertThrows(AssertionError.class, () -> {
-            byte[] delta = defaultGf2e.createRandom(SECURE_RANDOM);
+            byte[] delta = defaultGf2e.createRangeRandom(SECURE_RANDOM);
             byte[][] q = IntStream.range(0, MAX_NUM)
                 .mapToObj(index -> {
                     byte[] qi = new byte[defaultByteL - 1];
@@ -165,7 +177,7 @@ public class Gf2eVoleOutputTest {
         });
         // create a receiver output large length q
         Assert.assertThrows(AssertionError.class, () -> {
-            byte[] delta = defaultGf2e.createRandom(SECURE_RANDOM);
+            byte[] delta = defaultGf2e.createRangeRandom(SECURE_RANDOM);
             byte[][] q = IntStream.range(0, MAX_NUM)
                 .mapToObj(index -> {
                     byte[] qi = new byte[defaultByteL + 1];
@@ -177,8 +189,8 @@ public class Gf2eVoleOutputTest {
         });
         // merge two receiver output with different Δ
         Assert.assertThrows(AssertionError.class, () -> {
-            byte[] delta0 = defaultGf2e.createRandom(SECURE_RANDOM);
-            byte[] delta1 = defaultGf2e.createRandom(SECURE_RANDOM);
+            byte[] delta0 = defaultGf2e.createRangeRandom(SECURE_RANDOM);
+            byte[] delta1 = defaultGf2e.createRangeRandom(SECURE_RANDOM);
             byte[][] q = IntStream.range(0, MAX_NUM)
                 .mapToObj(index -> defaultGf2e.createRandom(SECURE_RANDOM))
                 .toArray(byte[][]::new);
@@ -189,8 +201,8 @@ public class Gf2eVoleOutputTest {
         // merge two receiver outputs with different l
         Gf2e otherGf2e = Gf2eFactory.createInstance(EnvType.STANDARD, CommonConstants.BLOCK_BIT_LENGTH / 2);
         Assert.assertThrows(AssertionError.class, () -> {
-            byte[] delta0 = defaultGf2e.createRandom(SECURE_RANDOM);
-            byte[] delta1 = otherGf2e.createRandom(SECURE_RANDOM);
+            byte[] delta0 = defaultGf2e.createRangeRandom(SECURE_RANDOM);
+            byte[] delta1 = otherGf2e.createRangeRandom(SECURE_RANDOM);
             byte[][] q0 = IntStream.range(0, MAX_NUM)
                 .mapToObj(index -> defaultGf2e.createRandom(SECURE_RANDOM))
                 .toArray(byte[][]::new);
@@ -213,7 +225,7 @@ public class Gf2eVoleOutputTest {
     }
 
     private void testReduce(Gf2e gf2e, int num) {
-        byte[] delta = gf2e.createRandom(SECURE_RANDOM);
+        byte[] delta = gf2e.createRangeRandom(SECURE_RANDOM);
         // reduce to 1
         Gf2eVoleReceiverOutput receiverOutput1 = Gf2eVoleTestUtils.genReceiverOutput(gf2e, num, delta, SECURE_RANDOM);
         Gf2eVoleSenderOutput senderOutput1 = Gf2eVoleTestUtils.genSenderOutput(gf2e, receiverOutput1, SECURE_RANDOM);
@@ -250,7 +262,7 @@ public class Gf2eVoleOutputTest {
     }
 
     private void testAllEmptyMerge(Gf2e gf2e) {
-        byte[] delta = gf2e.createRandom(SECURE_RANDOM);
+        byte[] delta = gf2e.createRangeRandom(SECURE_RANDOM);
         Gf2eVoleSenderOutput senderOutput = Gf2eVoleSenderOutput.createEmpty(gf2e);
         Gf2eVoleSenderOutput mergeSenderOutput = Gf2eVoleSenderOutput.createEmpty(gf2e);
         Gf2eVoleReceiverOutput receiverOutput = Gf2eVoleReceiverOutput.createEmpty(gf2e, delta);
@@ -272,7 +284,7 @@ public class Gf2eVoleOutputTest {
     }
 
     private void testLeftEmptyMerge(Gf2e gf2e, int num) {
-        byte[] delta = gf2e.createRandom(SECURE_RANDOM);
+        byte[] delta = gf2e.createRangeRandom(SECURE_RANDOM);
         Gf2eVoleReceiverOutput receiverOutput = Gf2eVoleReceiverOutput.createEmpty(gf2e, delta);
         Gf2eVoleReceiverOutput mergeReceiverOutput = Gf2eVoleTestUtils.genReceiverOutput(gf2e, num, delta, SECURE_RANDOM);
         Gf2eVoleSenderOutput senderOutput = Gf2eVoleSenderOutput.createEmpty(gf2e);
@@ -294,7 +306,7 @@ public class Gf2eVoleOutputTest {
     }
 
     private void testRightEmptyMerge(Gf2e gf2e, int num) {
-        byte[] delta = gf2e.createRandom(SECURE_RANDOM);
+        byte[] delta = gf2e.createRangeRandom(SECURE_RANDOM);
         Gf2eVoleReceiverOutput receiverOutput = Gf2eVoleTestUtils.genReceiverOutput(gf2e, num, delta, SECURE_RANDOM);
         Gf2eVoleReceiverOutput mergeReceiverOutput = Gf2eVoleReceiverOutput.createEmpty(gf2e, delta);
         Gf2eVoleSenderOutput senderOutput = Gf2eVoleTestUtils.genSenderOutput(gf2e, receiverOutput, SECURE_RANDOM);
@@ -318,7 +330,7 @@ public class Gf2eVoleOutputTest {
     }
 
     private void testMerge(Gf2e gf2e, int num1, int num2) {
-        byte[] delta = gf2e.createRandom(SECURE_RANDOM);
+        byte[] delta = gf2e.createRangeRandom(SECURE_RANDOM);
         Gf2eVoleReceiverOutput receiverOutput = Gf2eVoleTestUtils.genReceiverOutput(gf2e, num1, delta, SECURE_RANDOM);
         Gf2eVoleReceiverOutput mergeReceiverOutput = Gf2eVoleTestUtils.genReceiverOutput(gf2e, num2, delta, SECURE_RANDOM);
         Gf2eVoleSenderOutput senderOutput = Gf2eVoleTestUtils.genSenderOutput(gf2e, receiverOutput, SECURE_RANDOM);
@@ -332,16 +344,15 @@ public class Gf2eVoleOutputTest {
 
     @Test
     public void testSplit() {
-        for (int l : LS) {
+        for (Gf2e gf2e : GF2ES) {
             for (int num = MIN_NUM; num < MAX_NUM; num++) {
-                testSplit(l, num);
+                testSplit(gf2e, num);
             }
         }
     }
 
-    private void testSplit(int l, int num) {
-        Gf2e gf2e = Gf2eFactory.createInstance(EnvType.STANDARD, l);
-        byte[] delta = gf2e.createRandom(SECURE_RANDOM);
+    private void testSplit(Gf2e gf2e, int num) {
+        byte[] delta = gf2e.createRangeRandom(SECURE_RANDOM);
         // split 1
         Gf2eVoleReceiverOutput receiverOutput1 = Gf2eVoleTestUtils.genReceiverOutput(gf2e, num, delta, SECURE_RANDOM);
         Gf2eVoleSenderOutput senderOutput1 = Gf2eVoleTestUtils.genSenderOutput(gf2e, receiverOutput1, SECURE_RANDOM);

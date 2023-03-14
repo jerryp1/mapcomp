@@ -4,8 +4,9 @@ import com.google.common.base.Preconditions;
 import edu.alibaba.mpc4j.common.rpc.Rpc;
 import edu.alibaba.mpc4j.common.rpc.RpcManager;
 import edu.alibaba.mpc4j.common.rpc.impl.memory.MemoryRpcManager;
-import edu.alibaba.mpc4j.common.tool.galoisfield.zp.ZpManager;
-import edu.alibaba.mpc4j.common.tool.utils.LongUtils;
+import edu.alibaba.mpc4j.common.tool.EnvType;
+import edu.alibaba.mpc4j.common.tool.galoisfield.zp64.Zp64;
+import edu.alibaba.mpc4j.common.tool.galoisfield.zp64.Zp64Factory;
 import edu.alibaba.mpc4j.s2pc.pcg.vole.zp64.Zp64VoleReceiverOutput;
 import edu.alibaba.mpc4j.s2pc.pcg.vole.zp64.Zp64VoleSenderOutput;
 import edu.alibaba.mpc4j.s2pc.pcg.vole.zp64.core.kos16.Kos16ShZp64CoreVoleConfig;
@@ -30,7 +31,7 @@ import java.util.stream.IntStream;
 
 
 /**
- * Zp64-Vole协议测试
+ * Zp64-core VOLE tests.
  *
  * @author Hanwen Feng
  * @date 2022/06/15
@@ -39,25 +40,25 @@ import java.util.stream.IntStream;
 public class Zp64CoreVoleTest {
     private static final Logger LOGGER = LoggerFactory.getLogger(Zp64CoreVoleTest.class);
     /**
-     * 随机状态
+     * the random state
      */
     private static final SecureRandom SECURE_RANDOM = new SecureRandom();
     /**
-     * 默认数量
+     * default num
      */
     private static final int DEFAULT_NUM = 1000;
     /**
-     * 较大数量
+     * large num
      */
     private static final int LARGE_NUM = 1 << 18;
     /**
-     * 默认素数域
+     * the default Zp64 instance
      */
-    private static final long DEFAULT_PRIME = ZpManager.getPrime(32).longValue();
+    private static final Zp64 DEFAULT_ZP64 = Zp64Factory.createInstance(EnvType.STANDARD, 32);
     /**
-     * 较大素数域
+     * the large Zp64 instance
      */
-    private static final long LARGE_PRIME = ZpManager.getPrime(62).longValue();
+    private static final Zp64 LARGE_ZP64 = Zp64Factory.createInstance(EnvType.STANDARD, 62);
 
     @Parameterized.Parameters(name = "{0}")
     public static Collection<Object[]> configurations() {
@@ -71,15 +72,15 @@ public class Zp64CoreVoleTest {
     }
 
     /**
-     * 发送方
+     * the sender rpc
      */
     private final Rpc senderRpc;
     /**
-     * 接收方
+     * the receiver rpc
      */
     private final Rpc receiverRpc;
     /**
-     * 协议类型
+     * the protocol config
      */
     private final Zp64CoreVoleConfig config;
 
@@ -107,40 +108,40 @@ public class Zp64CoreVoleTest {
 
     @Test
     public void test1Num() {
-        testPto(1, DEFAULT_PRIME, false);
+        testPto(1, DEFAULT_ZP64, false);
     }
 
     @Test
     public void test2Num() {
-        testPto(2, DEFAULT_PRIME, false);
+        testPto(2, DEFAULT_ZP64, false);
     }
 
     @Test
     public void testDefault() {
-        testPto(DEFAULT_NUM, DEFAULT_PRIME, false);
+        testPto(DEFAULT_NUM, DEFAULT_ZP64, false);
     }
 
     @Test
     public void testParallelDefault() {
-        testPto(DEFAULT_NUM, DEFAULT_PRIME, true);
+        testPto(DEFAULT_NUM, DEFAULT_ZP64, true);
     }
 
     @Test
     public void testLargeNum() {
-        testPto(LARGE_NUM, DEFAULT_PRIME, false);
+        testPto(LARGE_NUM, DEFAULT_ZP64, false);
     }
 
     @Test
     public void testLargePrime() {
-        testPto(DEFAULT_NUM, LARGE_PRIME, false);
+        testPto(DEFAULT_NUM, LARGE_ZP64, false);
     }
 
     @Test
     public void testParallelLargePrime() {
-        testPto(DEFAULT_NUM, LARGE_PRIME, true);
+        testPto(DEFAULT_NUM, LARGE_ZP64, true);
     }
 
-    private void testPto(int num, long prime, boolean parallel) {
+    private void testPto(int num, Zp64 zp64, boolean parallel) {
         Zp64CoreVoleSender sender = Zp64CoreVoleFactory.createSender(senderRpc, receiverRpc.ownParty(), config);
         Zp64CoreVoleReceiver receiver = Zp64CoreVoleFactory.createReceiver(receiverRpc, senderRpc.ownParty(), config);
         sender.setParallel(parallel);
@@ -150,15 +151,15 @@ public class Zp64CoreVoleTest {
         receiver.setTaskId(randomTaskId);
         try {
             LOGGER.info("-----test {} start-----", sender.getPtoDesc().getPtoName());
-            // Δ的取值范围是[0, 2^k)
-            long delta = LongUtils.randomNonNegative(1L << (LongUtils.ceilLog2(prime) - 1), SECURE_RANDOM);
+            // Δ is in [0, 2^l)
+            long delta = zp64.createRangeRandom(SECURE_RANDOM);
             long[] x = IntStream.range(0, num)
-                .mapToLong(index -> LongUtils.randomNonNegative(prime, SECURE_RANDOM))
+                .mapToLong(index -> zp64.createRandom(SECURE_RANDOM))
                 .toArray();
-            Zp64CoreVoleSenderThread senderThread = new Zp64CoreVoleSenderThread(sender, prime, x);
-            Zp64CoreVoleReceiverThread receiverThread = new Zp64CoreVoleReceiverThread(receiver, prime, delta, num);
+            Zp64CoreVoleSenderThread senderThread = new Zp64CoreVoleSenderThread(sender, zp64, x);
+            Zp64CoreVoleReceiverThread receiverThread = new Zp64CoreVoleReceiverThread(receiver, zp64, delta, num);
             StopWatch stopWatch = new StopWatch();
-            // 开始执行协议
+            // start
             stopWatch.start();
             senderThread.start();
             receiverThread.start();
@@ -173,7 +174,7 @@ public class Zp64CoreVoleTest {
             receiverRpc.reset();
             Zp64VoleSenderOutput senderOutput = senderThread.getSenderOutput();
             Zp64VoleReceiverOutput receiverOutput = receiverThread.getReceiverOutput();
-            // 验证结果
+            // verify
             Zp64VoleTestUtils.assertOutput(num, senderOutput, receiverOutput);
             LOGGER.info("Sender sends {}B, Receiver sends {}B, time = {}ms",
                 senderByteLength, receiverByteLength, time
@@ -188,6 +189,7 @@ public class Zp64CoreVoleTest {
 
     @Test
     public void testResetDelta() {
+        Zp64 zp64 = DEFAULT_ZP64;
         Zp64CoreVoleSender sender = Zp64CoreVoleFactory.createSender(senderRpc, receiverRpc.ownParty(), config);
         Zp64CoreVoleReceiver receiver = Zp64CoreVoleFactory.createReceiver(receiverRpc, senderRpc.ownParty(), config);
         int randomTaskId = Math.abs(SECURE_RANDOM.nextInt());
@@ -195,14 +197,14 @@ public class Zp64CoreVoleTest {
         receiver.setTaskId(randomTaskId);
         try {
             LOGGER.info("-----test {} (reset Δ) start-----", sender.getPtoDesc().getPtoName());
-            // Δ的取值范围是[0, 2^k)
-            long delta = LongUtils.randomNonNegative(1L << (LongUtils.ceilLog2(DEFAULT_PRIME) - 1), SECURE_RANDOM);
+            // Δ is in [0, 2^l)
+            long delta = zp64.createRangeRandom(SECURE_RANDOM);
             long[] x = IntStream.range(0, DEFAULT_NUM)
-                .mapToLong(index -> LongUtils.randomNonNegative(DEFAULT_PRIME, SECURE_RANDOM))
+                .mapToLong(index -> zp64.createRandom(SECURE_RANDOM))
                 .toArray();
-            // 第一次执行
-            Zp64CoreVoleSenderThread senderThread = new Zp64CoreVoleSenderThread(sender, DEFAULT_PRIME, x);
-            Zp64CoreVoleReceiverThread receiverThread = new Zp64CoreVoleReceiverThread(receiver, DEFAULT_PRIME, delta, DEFAULT_NUM);
+            // first round
+            Zp64CoreVoleSenderThread senderThread = new Zp64CoreVoleSenderThread(sender, zp64, x);
+            Zp64CoreVoleReceiverThread receiverThread = new Zp64CoreVoleReceiverThread(receiver, zp64, delta, DEFAULT_NUM);
             StopWatch stopWatch = new StopWatch();
             stopWatch.start();
             senderThread.start();
@@ -219,13 +221,13 @@ public class Zp64CoreVoleTest {
             Zp64VoleSenderOutput senderOutput = senderThread.getSenderOutput();
             Zp64VoleReceiverOutput receiverOutput = receiverThread.getReceiverOutput();
             Zp64VoleTestUtils.assertOutput(DEFAULT_NUM, senderOutput, receiverOutput);
-            // 第二次执行，重置Δ
-            delta = LongUtils.randomNonNegative(1L << (LongUtils.ceilLog2(DEFAULT_PRIME) - 1), SECURE_RANDOM);
+            // second round, reset Δ
+            delta = zp64.createRangeRandom(SECURE_RANDOM);
             x = IntStream.range(0, DEFAULT_NUM)
-                .mapToLong(index -> LongUtils.randomNonNegative(DEFAULT_PRIME, SECURE_RANDOM))
+                .mapToLong(index -> zp64.createRandom(SECURE_RANDOM))
                 .toArray();
-            senderThread = new Zp64CoreVoleSenderThread(sender, DEFAULT_PRIME, x);
-            receiverThread = new Zp64CoreVoleReceiverThread(receiver, DEFAULT_PRIME, delta, DEFAULT_NUM);
+            senderThread = new Zp64CoreVoleSenderThread(sender, zp64, x);
+            receiverThread = new Zp64CoreVoleReceiverThread(receiver, zp64, delta, DEFAULT_NUM);
             stopWatch.start();
             senderThread.start();
             receiverThread.start();
@@ -241,9 +243,9 @@ public class Zp64CoreVoleTest {
             Zp64VoleSenderOutput secondSenderOutput = senderThread.getSenderOutput();
             Zp64VoleReceiverOutput secondReceiverOutput = receiverThread.getReceiverOutput();
             Zp64VoleTestUtils.assertOutput(DEFAULT_NUM, secondSenderOutput, secondReceiverOutput);
-            // Δ应该不等
+            // Δ should be unequal
             Assert.assertNotEquals(secondReceiverOutput.getDelta(), receiverOutput.getDelta());
-            // 通信量应该相等
+            // communication should be equal
             Assert.assertEquals(firstReceiverByteLength, secondReceiverByteLength);
             Assert.assertEquals(firstSenderByteLength, secondSenderByteLength);
             LOGGER.info("1st round, Send. {}B, Recv. {}B, {}ms",

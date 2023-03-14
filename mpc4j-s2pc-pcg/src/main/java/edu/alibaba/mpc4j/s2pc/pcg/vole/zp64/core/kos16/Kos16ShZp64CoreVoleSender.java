@@ -7,6 +7,7 @@ import edu.alibaba.mpc4j.common.rpc.Rpc;
 import edu.alibaba.mpc4j.common.rpc.utils.DataPacket;
 import edu.alibaba.mpc4j.common.rpc.utils.DataPacketHeader;
 import edu.alibaba.mpc4j.common.tool.CommonConstants;
+import edu.alibaba.mpc4j.common.tool.galoisfield.zp64.Zp64;
 import edu.alibaba.mpc4j.common.tool.galoisfield.zp64.Zp64Gadget;
 import edu.alibaba.mpc4j.common.tool.utils.LongUtils;
 import edu.alibaba.mpc4j.s2pc.pcg.ot.base.BaseOtFactory;
@@ -29,19 +30,15 @@ import java.util.stream.IntStream;
  */
 public class Kos16ShZp64CoreVoleSender extends AbstractZp64CoreVoleSender {
     /**
-     * 基础OT协议发送方
+     * base OT sender
      */
     private final BaseOtSender baseOtSender;
     /**
-     * Zp64小工具
+     * Zp64 gadget
      */
     private Zp64Gadget zp64Gadget;
     /**
-     * 有限域比特长度
-     */
-    private int l;
-    /**
-     * 基础OT协议发送方输出
+     * base OT sender output
      */
     private BaseOtSenderOutput baseOtSenderOutput;
     /**
@@ -56,13 +53,12 @@ public class Kos16ShZp64CoreVoleSender extends AbstractZp64CoreVoleSender {
     }
 
     @Override
-    public void init(long prime, int maxNum) throws MpcAbortException {
-        setInitInput(prime, maxNum);
+    public void init(Zp64 zp64, int maxNum) throws MpcAbortException {
+        setInitInput(zp64, maxNum);
         logPhaseInfo(PtoState.INIT_BEGIN);
 
         stopWatch.start();
         zp64Gadget = new Zp64Gadget(zp64);
-        l = zp64.getL();
         baseOtSender.init();
         baseOtSenderOutput = baseOtSender.send(l);
         stopWatch.stop();
@@ -130,7 +126,7 @@ public class Kos16ShZp64CoreVoleSender extends AbstractZp64CoreVoleSender {
         long[] t = outputStream
             .mapToLong(index -> zp64Gadget.innerProduct(t0[index]))
             .toArray();
-        return Zp64VoleSenderOutput.create(zp64.getPrime(), x, t);
+        return Zp64VoleSenderOutput.create(zp64, x, t);
     }
 
 }

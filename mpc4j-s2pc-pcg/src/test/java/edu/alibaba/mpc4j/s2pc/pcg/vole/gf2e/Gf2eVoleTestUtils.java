@@ -7,7 +7,7 @@ import java.security.SecureRandom;
 import java.util.stream.IntStream;
 
 /**
- * GK2K-VOLE test utilities.
+ * GK2E-VOLE test utilities.
  *
  * @author Weiran Liu
  * @date 2022/6/9
@@ -31,7 +31,7 @@ public class Gf2eVoleTestUtils {
      */
     public static Gf2eVoleReceiverOutput genReceiverOutput(Gf2e gf2e, int num, byte[] delta, SecureRandom secureRandom) {
         assert gf2e.validateElement(delta);
-        assert num > 0 : "num must be greater than 0";
+        assert num > 0 : "num must be greater than 0: " + num;
         byte[][] q = IntStream.range(0, num)
             .mapToObj(index -> gf2e.createRandom(secureRandom))
             .toArray(byte[][]::new);

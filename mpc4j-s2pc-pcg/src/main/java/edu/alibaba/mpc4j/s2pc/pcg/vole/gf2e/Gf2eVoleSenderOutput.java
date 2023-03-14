@@ -2,6 +2,8 @@ package edu.alibaba.mpc4j.s2pc.pcg.vole.gf2e;
 
 import edu.alibaba.mpc4j.common.tool.galoisfield.gf2e.Gf2e;
 import edu.alibaba.mpc4j.common.tool.utils.BytesUtils;
+import edu.alibaba.mpc4j.s2pc.pcg.MergePartyOutput;
+import org.bouncycastle.util.encoders.Hex;
 
 import java.util.Arrays;
 
@@ -11,7 +13,7 @@ import java.util.Arrays;
  * @author Weiran Liu
  * @date 2022/6/9
  */
-public class Gf2eVoleSenderOutput {
+public class Gf2eVoleSenderOutput implements MergePartyOutput {
     /**
      * the GF2E instance
      */
@@ -36,17 +38,17 @@ public class Gf2eVoleSenderOutput {
     public static Gf2eVoleSenderOutput create(Gf2e gf2e, byte[][] x, byte[][] t) {
         Gf2eVoleSenderOutput senderOutput = new Gf2eVoleSenderOutput();
         senderOutput.gf2e = gf2e;
-        assert x.length > 0 : "# of x must be greater than 0";
-        assert x.length == t.length : "# of x must be equal to # of q";
+        assert x.length > 0 : "# of x must be greater than 0: " + x.length;
+        assert x.length == t.length : "# of x must be equal to # of t (" + x.length + " : " + t.length + ")";
         senderOutput.x = Arrays.stream(x)
             .peek(xi -> {
-                assert gf2e.validateElement(xi);
+                assert gf2e.validateElement(xi) : "xi must be in range [0, 2^" + gf2e.getL() + "): " + Hex.toHexString(xi);
             })
             .map(BytesUtils::clone)
             .toArray(byte[][]::new);
         senderOutput.t = Arrays.stream(t)
             .peek(ti -> {
-                assert gf2e.validateElement(ti);
+                assert gf2e.validateElement(ti) : "ti must be in range [0, 2^" + gf2e.getL() + "): " + Hex.toHexString(ti);
             })
             .map(BytesUtils::clone)
             .toArray(byte[][]::new);
@@ -76,15 +78,15 @@ public class Gf2eVoleSenderOutput {
         // empty
     }
 
-    /**
-     * Splits the sender output with the split num.
-     *
-     * @param splitNum the split num.
-     * @return a new sender output with the split num.
-     */
+    @Override
+    public int getNum() {
+        return x.length;
+    }
+
+    @Override
     public Gf2eVoleSenderOutput split(int splitNum) {
         int num = getNum();
-        assert splitNum > 0 && splitNum <= num : "splitNum must be in range (0, " + num + "]";
+        assert splitNum > 0 && splitNum <= num : "splitNum must be in range (0, " + num + "]: " + splitNum;
         // split x
         byte[][] subX = new byte[splitNum][];
         byte[][] remainX = new byte[num - splitNum][];
@@ -101,14 +103,10 @@ public class Gf2eVoleSenderOutput {
         return Gf2eVoleSenderOutput.create(gf2e, subX, subT);
     }
 
-    /**
-     * Reduces the sender output to the reduced num.
-     *
-     * @param reduceNum the reduced num.
-     */
+    @Override
     public void reduce(int reduceNum) {
         int num = getNum();
-        assert reduceNum > 0 && reduceNum <= num : "reduceNum must be in range (0, " + num + "]";
+        assert reduceNum > 0 && reduceNum <= num : "reduceNum must be in range (0, " + num + "]: " + reduceNum;
         if (reduceNum < num) {
             // if the reduced num is less than num, do split. If not, keep the current state.
             byte[][] remainX = new byte[reduceNum][];
@@ -120,12 +118,10 @@ public class Gf2eVoleSenderOutput {
         }
     }
 
-    /**
-     * Merges two sender outputs.
-     *
-     * @param that the other sender output.
-     */
-    public void merge(Gf2eVoleSenderOutput that) {
+    @Override
+    public void merge(MergePartyOutput other) {
+        assert other instanceof Gf2eVoleSenderOutput;
+        Gf2eVoleSenderOutput that = (Gf2eVoleSenderOutput) other;
         assert this.gf2e.equals(that.gf2e) : "merged sender output must have the same GF2E instance ("
             + this.gf2e + " : " + that.gf2e + ")";
         // merge x
@@ -138,6 +134,15 @@ public class Gf2eVoleSenderOutput {
         System.arraycopy(this.t, 0, mergeT, 0, this.t.length);
         System.arraycopy(that.t, 0, mergeT, this.t.length, that.t.length);
         t = mergeT;
+    }
+
+    /**
+     * Gets the GF2E instance.
+     *
+     * @return the GF2E instance.
+     */
+    public Gf2e getGf2e() {
+        return gf2e;
     }
 
     /**
@@ -176,23 +181,5 @@ public class Gf2eVoleSenderOutput {
      */
     public byte[][] getT() {
         return t;
-    }
-
-    /**
-     * Gets num.
-     *
-     * @return num.
-     */
-    public int getNum() {
-        return x.length;
-    }
-
-    /**
-     * Gets the GF2E instance.
-     *
-     * @return the GF2E instance.
-     */
-    public Gf2e getGf2e() {
-        return gf2e;
     }
 }

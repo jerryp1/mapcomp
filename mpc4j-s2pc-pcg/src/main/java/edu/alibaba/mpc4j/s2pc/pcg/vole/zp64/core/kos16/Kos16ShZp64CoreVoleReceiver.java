@@ -3,6 +3,7 @@ package edu.alibaba.mpc4j.s2pc.pcg.vole.zp64.core.kos16;
 import edu.alibaba.mpc4j.common.rpc.*;
 import edu.alibaba.mpc4j.common.rpc.utils.DataPacketHeader;
 import edu.alibaba.mpc4j.common.tool.CommonConstants;
+import edu.alibaba.mpc4j.common.tool.galoisfield.zp64.Zp64;
 import edu.alibaba.mpc4j.common.tool.galoisfield.zp64.Zp64Gadget;
 import edu.alibaba.mpc4j.common.tool.utils.LongUtils;
 import edu.alibaba.mpc4j.s2pc.pcg.ot.base.BaseOtFactory;
@@ -19,30 +20,26 @@ import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
 /**
- * KOS16-Zp64-核COPE协议接收方。
+ * KOS16-Zp64-core VOLE receiver.
  *
  * @author Hanwen Feng
  * @date 2022/06/09
  */
 public class Kos16ShZp64CoreVoleReceiver extends AbstractZp64CoreVoleReceiver {
     /**
-     * 基础OT协议接收方
+     * base OT receiver
      */
     private final BaseOtReceiver baseOtReceiver;
     /**
-     * Zp64小工具
+     * Zp64 gadget
      */
     private Zp64Gadget zp64Gadget;
     /**
-     * 有限域比特长度
-     */
-    private int l;
-    /**
-     * 基础OT协议接收方输出
+     * base OT receiver output
      */
     private BaseOtReceiverOutput baseOtReceiverOutput;
     /**
-     * delta的二进制表示
+     * Δ in binary format
      */
     boolean[] deltaBinary;
 
@@ -53,13 +50,12 @@ public class Kos16ShZp64CoreVoleReceiver extends AbstractZp64CoreVoleReceiver {
     }
 
     @Override
-    public void init(long prime, long delta, int maxNum) throws MpcAbortException {
-        setInitInput(prime, delta, maxNum);
+    public void init(Zp64 zp64, long delta, int maxNum) throws MpcAbortException {
+        setInitInput(zp64, delta, maxNum);
         logPhaseInfo(PtoState.INIT_BEGIN);
 
         stopWatch.start();
         zp64Gadget = new Zp64Gadget(zp64);
-        l = zp64.getL();
         baseOtReceiver.init();
         deltaBinary = zp64Gadget.bitDecomposition(delta);
         baseOtReceiverOutput = baseOtReceiver.receive(deltaBinary);
@@ -120,6 +116,6 @@ public class Kos16ShZp64CoreVoleReceiver extends AbstractZp64CoreVoleReceiver {
         long[] q = qMatrixStream
             .mapToLong(row -> zp64Gadget.innerProduct(row))
             .toArray();
-        return Zp64VoleReceiverOutput.create(zp64.getPrime(), delta, q);
+        return Zp64VoleReceiverOutput.create(zp64, delta, q);
     }
 }

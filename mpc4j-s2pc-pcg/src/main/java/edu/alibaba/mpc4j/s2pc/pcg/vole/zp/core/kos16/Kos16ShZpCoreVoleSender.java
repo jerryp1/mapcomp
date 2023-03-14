@@ -7,6 +7,7 @@ import edu.alibaba.mpc4j.common.rpc.Rpc;
 import edu.alibaba.mpc4j.common.rpc.utils.DataPacket;
 import edu.alibaba.mpc4j.common.rpc.utils.DataPacketHeader;
 import edu.alibaba.mpc4j.common.tool.CommonConstants;
+import edu.alibaba.mpc4j.common.tool.galoisfield.zp.Zp;
 import edu.alibaba.mpc4j.common.tool.galoisfield.zp.ZpGadget;
 import edu.alibaba.mpc4j.common.tool.utils.BigIntegerUtils;
 import edu.alibaba.mpc4j.s2pc.pcg.vole.zp.core.AbstractZpCoreVoleSender;
@@ -23,22 +24,22 @@ import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
 /**
- * KOS16-ZP-核VOLE协议发送方。
+ * KOS16-ZP-core VOLE sender.
  *
- * @author Hanwen Feng
+ * @author Hanwen Feng, Weiran Liu
  * @date 2022/06/09
  */
 public class Kos16ShZpCoreVoleSender extends AbstractZpCoreVoleSender {
     /**
-     * 基础OT协议发送方
+     * base OT sender
      */
     private final BaseOtSender baseOtSender;
     /**
-     * Zp的Gadget工具
+     * Zp gadget
      */
     private ZpGadget zpGadget;
     /**
-     * 基础OT协议发送方输出
+     * base OT sender output
      */
     private BaseOtSenderOutput baseOtSenderOutput;
     /**
@@ -53,8 +54,8 @@ public class Kos16ShZpCoreVoleSender extends AbstractZpCoreVoleSender {
     }
 
     @Override
-    public void init(BigInteger prime, int maxNum) throws MpcAbortException {
-        setInitInput(prime, maxNum);
+    public void init(Zp zp, int maxNum) throws MpcAbortException {
+        setInitInput(zp, maxNum);
         logPhaseInfo(PtoState.INIT_BEGIN);
 
         stopWatch.start();
@@ -126,7 +127,7 @@ public class Kos16ShZpCoreVoleSender extends AbstractZpCoreVoleSender {
         BigInteger[] t = outputStream
             .mapToObj(index -> zpGadget.innerProduct(t0[index]))
             .toArray(BigInteger[]::new);
-        return ZpVoleSenderOutput.create(zp.getPrime(), x, t);
+        return ZpVoleSenderOutput.create(zp, x, t);
     }
 
 }

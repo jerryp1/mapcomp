@@ -3,6 +3,7 @@ package edu.alibaba.mpc4j.s2pc.pcg.vole.zp.core.kos16;
 import edu.alibaba.mpc4j.common.rpc.*;
 import edu.alibaba.mpc4j.common.rpc.utils.DataPacketHeader;
 import edu.alibaba.mpc4j.common.tool.CommonConstants;
+import edu.alibaba.mpc4j.common.tool.galoisfield.zp.Zp;
 import edu.alibaba.mpc4j.common.tool.galoisfield.zp.ZpGadget;
 import edu.alibaba.mpc4j.common.tool.utils.BigIntegerUtils;
 import edu.alibaba.mpc4j.s2pc.pcg.ot.base.BaseOtFactory;
@@ -21,26 +22,26 @@ import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
 /**
- * KOS16-Zp-核VOLE协议接收方。
+ * KOS16-Zp-core VOLE receiver.
  *
- * @author Hanwen Feng
+ * @author Hanwen Feng, Weiran Liu
  * @date 2022/06/09
  */
 public class Kos16ShZpCoreVoleReceiver extends AbstractZpCoreVoleReceiver {
     /**
-     * 基础OT协议接收方
+     * base OT receiver
      */
     private final BaseOtReceiver baseOtReceiver;
     /**
-     * Zp的Gadget工具
+     * Zp gadget
      */
     private ZpGadget zpGadget;
     /**
-     * 基础OT协议接收方输出
+     * base OT receiver output
      */
     private BaseOtReceiverOutput baseOtReceiverOutput;
     /**
-     * delta的二进制表示
+     * Δ in binary format
      */
     boolean[] deltaBinary;
 
@@ -51,8 +52,8 @@ public class Kos16ShZpCoreVoleReceiver extends AbstractZpCoreVoleReceiver {
     }
 
     @Override
-    public void init(BigInteger prime, BigInteger delta, int maxNum) throws MpcAbortException {
-        setInitInput(prime, delta, maxNum);
+    public void init(Zp zp, BigInteger delta, int maxNum) throws MpcAbortException {
+        setInitInput(zp, delta, maxNum);
         logPhaseInfo(PtoState.INIT_BEGIN);
 
         stopWatch.start();
@@ -117,6 +118,6 @@ public class Kos16ShZpCoreVoleReceiver extends AbstractZpCoreVoleReceiver {
         BigInteger[] q = qMatrixStream
             .map(row -> zpGadget.innerProduct(row))
             .toArray(BigInteger[]::new);
-        return ZpVoleReceiverOutput.create(zp.getPrime(), delta, q);
+        return ZpVoleReceiverOutput.create(zp, delta, q);
     }
 }

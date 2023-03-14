@@ -7,11 +7,10 @@ import edu.alibaba.mpc4j.common.rpc.desc.PtoDesc;
 import edu.alibaba.mpc4j.common.rpc.pto.AbstractTwoPartyPto;
 import edu.alibaba.mpc4j.common.tool.MathPreconditions;
 import edu.alibaba.mpc4j.common.tool.galoisfield.gf2e.Gf2e;
-import edu.alibaba.mpc4j.common.tool.galoisfield.gf2e.Gf2eGadget;
 import edu.alibaba.mpc4j.common.tool.utils.BytesUtils;
 
 /**
- * GF2K-核VOLE接收方抽象类。
+ * Abstract GF2E-core VOLE receiver.
  *
  * @author Weiran Liu
  * @date 2022/9/22
@@ -30,23 +29,15 @@ public abstract class AbstractGf2eCoreVoleReceiver extends AbstractTwoPartyPto i
      */
     protected int byteL;
     /**
-     * the GF2E gadget
-     */
-    protected Gf2eGadget gf2eGadget;
-    /**
-     * 关联值Δ
+     * Δ
      */
     protected byte[] delta;
     /**
-     * 关联值Δ的比特表示
-     */
-    protected boolean[] deltaBinary;
-    /**
-     * 最大数量
+     * max num
      */
     private int maxNum;
     /**
-     * 数量
+     * num
      */
     protected int num;
 
@@ -58,9 +49,8 @@ public abstract class AbstractGf2eCoreVoleReceiver extends AbstractTwoPartyPto i
         this.gf2e = gf2e;
         l = gf2e.getL();
         byteL = gf2e.getByteL();
-        Preconditions.checkArgument(gf2e.validateRangeElement(delta), "Δ must be in {0,1}^" + l);
+        Preconditions.checkArgument(gf2e.validateRangeElement(delta), "Δ must be in range [0, 2^%s)", l);
         this.delta = BytesUtils.clone(delta);
-        deltaBinary = gf2eGadget.bitDecomposition(delta);
         MathPreconditions.checkPositive("maxNum", maxNum);
         this.maxNum = maxNum;
         initState();

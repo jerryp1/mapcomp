@@ -1,12 +1,12 @@
 package edu.alibaba.mpc4j.s2pc.pcg.vole.gf2e.core;
 
+import com.google.common.base.Preconditions;
 import edu.alibaba.mpc4j.common.rpc.Party;
 import edu.alibaba.mpc4j.common.rpc.Rpc;
 import edu.alibaba.mpc4j.common.rpc.desc.PtoDesc;
 import edu.alibaba.mpc4j.common.rpc.pto.AbstractTwoPartyPto;
 import edu.alibaba.mpc4j.common.tool.MathPreconditions;
 import edu.alibaba.mpc4j.common.tool.galoisfield.gf2e.Gf2e;
-import edu.alibaba.mpc4j.common.tool.galoisfield.gf2e.Gf2eGadget;
 
 import java.util.Arrays;
 
@@ -30,10 +30,6 @@ public abstract class AbstractGf2eCoreVoleSender extends AbstractTwoPartyPto imp
      */
     protected int byteL;
     /**
-     * the GF2E gadget
-     */
-    protected Gf2eGadget gf2eGadget;
-    /**
      * max num
      */
     private int maxNum;
@@ -51,12 +47,11 @@ public abstract class AbstractGf2eCoreVoleSender extends AbstractTwoPartyPto imp
     }
 
     protected void setInitInput(Gf2e gf2e, int maxNum) {
-        MathPreconditions.checkPositive("maxNum", maxNum);
-        this.maxNum = maxNum;
         this.gf2e = gf2e;
-        gf2eGadget = new Gf2eGadget(gf2e);
         l = gf2e.getL();
         byteL = gf2e.getByteL();
+        MathPreconditions.checkPositive("maxNum", maxNum);
+        this.maxNum = maxNum;
         initState();
     }
 
@@ -65,7 +60,9 @@ public abstract class AbstractGf2eCoreVoleSender extends AbstractTwoPartyPto imp
         MathPreconditions.checkPositiveInRangeClosed("num", x.length, maxNum);
         num = x.length;
         this.x = Arrays.stream(x)
-            .peek(xi -> MathPreconditions.checkEqual("x.length", "l(B)", xi.length, byteL))
+            .peek(xi -> Preconditions.checkArgument(
+                gf2e.validateElement(xi), "xi must be in range [0, 2^%s): %s", l, xi
+            ))
             .toArray(byte[][]::new);
         extraInfo++;
     }

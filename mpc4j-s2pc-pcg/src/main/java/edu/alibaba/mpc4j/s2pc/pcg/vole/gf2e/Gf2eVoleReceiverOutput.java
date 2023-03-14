@@ -2,16 +2,18 @@ package edu.alibaba.mpc4j.s2pc.pcg.vole.gf2e;
 
 import edu.alibaba.mpc4j.common.tool.galoisfield.gf2e.Gf2e;
 import edu.alibaba.mpc4j.common.tool.utils.BytesUtils;
+import edu.alibaba.mpc4j.s2pc.pcg.MergePartyOutput;
+import org.bouncycastle.util.encoders.Hex;
 
 import java.util.Arrays;
 
 /**
- * GF2E-VOLE receiver output. The receiver gets (Δ, q) with t = q + Δ·x, where x and t is owned by the sender.
+ * GF2E-VOLE receiver output. The receiver gets (Δ, q) with t = q + Δ · x, where x and t are owned by the sender.
  *
  * @author Weiran Liu
  * @date 2022/6/9
  */
-public class Gf2eVoleReceiverOutput {
+public class Gf2eVoleReceiverOutput implements MergePartyOutput {
     /**
      * the GF2E instance
      */
@@ -36,12 +38,12 @@ public class Gf2eVoleReceiverOutput {
     public static Gf2eVoleReceiverOutput create(Gf2e gf2e, byte[] delta, byte[][] q) {
         Gf2eVoleReceiverOutput receiverOutput = new Gf2eVoleReceiverOutput();
         receiverOutput.gf2e = gf2e;
-        assert gf2e.validateElement(delta);
+        assert gf2e.validateRangeElement(delta) : "Δ must be in range [0, 2^" + gf2e.getL() + "): " + Hex.toHexString(delta);
         receiverOutput.delta = BytesUtils.clone(delta);
-        assert q.length > 0 : "# of q must be greater than 0";
+        assert q.length > 0 : "# of q must be greater than 0: " + q.length;
         receiverOutput.q = Arrays.stream(q)
             .peek(qi -> {
-                assert gf2e.validateElement(qi);
+                assert gf2e.validateElement(qi) : "qi must be in range [0, 2^" + gf2e.getL() + "): " + Hex.toHexString(qi);
             })
             .map(BytesUtils::clone)
             .toArray(byte[][]::new);
@@ -59,7 +61,7 @@ public class Gf2eVoleReceiverOutput {
     public static Gf2eVoleReceiverOutput createEmpty(Gf2e gf2e, byte[] delta) {
         Gf2eVoleReceiverOutput receiverOutput = new Gf2eVoleReceiverOutput();
         receiverOutput.gf2e = gf2e;
-        assert gf2e.validateElement(delta);
+        assert gf2e.validateRangeElement(delta) : "Δ must be in range [0, 2^" + gf2e.getL() + "): " + Hex.toHexString(delta);
         receiverOutput.delta = BytesUtils.clone(delta);
         receiverOutput.q = new byte[0][];
 
@@ -67,18 +69,18 @@ public class Gf2eVoleReceiverOutput {
     }
 
     /**
-     * 私有构造函数。
+     * private constructor.
      */
     private Gf2eVoleReceiverOutput() {
         // empty
     }
 
-    /**
-     * Splits the receiver output with the split num.
-     *
-     * @param splitNum the split num.
-     * @return a new receiver output with the split num.
-     */
+    @Override
+    public int getNum() {
+        return q.length;
+    }
+
+    @Override
     public Gf2eVoleReceiverOutput split(int splitNum) {
         int num = getNum();
         assert splitNum > 0 && splitNum <= num : "splitNum must be in range (0, " + num + "]";
@@ -92,11 +94,7 @@ public class Gf2eVoleReceiverOutput {
         return Gf2eVoleReceiverOutput.create(gf2e, delta, subQ);
     }
 
-    /**
-     * Reduces the sender output to the reduced num.
-     *
-     * @param reduceNum the reduced num.
-     */
+    @Override
     public void reduce(int reduceNum) {
         int num = getNum();
         assert reduceNum > 0 && reduceNum <= num : "reduceNum must be in range (0, " + num + "]";
@@ -108,20 +106,27 @@ public class Gf2eVoleReceiverOutput {
         }
     }
 
-    /**
-     * Merges two receiver outputs.
-     *
-     * @param that the other receiver output.
-     */
-    public void merge(Gf2eVoleReceiverOutput that) {
+    @Override
+    public void merge(MergePartyOutput other) {
+        assert other instanceof Gf2eVoleReceiverOutput;
+        Gf2eVoleReceiverOutput that = (Gf2eVoleReceiverOutput) other;
         assert this.gf2e.equals(that.gf2e) : "merged sender output must have the same GF2E instance ("
             + this.gf2e + " : " + that.gf2e + ")";
-        // merged outputs must have the same Δ
         assert Arrays.equals(this.delta, that.delta) : "merged outputs must have the same Δ";
+        // merge q
         byte[][] mergeQ = new byte[this.q.length + that.q.length][];
         System.arraycopy(this.q, 0, mergeQ, 0, this.q.length);
         System.arraycopy(that.q, 0, mergeQ, this.q.length, that.q.length);
         q = mergeQ;
+    }
+
+    /**
+     * Gets the GF2E instance.
+     *
+     * @return the GF2E instance.
+     */
+    public Gf2e getGf2e() {
+        return gf2e;
     }
 
     /**
@@ -150,23 +155,5 @@ public class Gf2eVoleReceiverOutput {
      */
     public byte[][] getQ() {
         return q;
-    }
-
-    /**
-     * Gets num.
-     *
-     * @return num.
-     */
-    public int getNum() {
-        return q.length;
-    }
-
-    /**
-     * Gets the GF2E instance.
-     *
-     * @return the GF2E instance.
-     */
-    public Gf2e getGf2e() {
-        return gf2e;
     }
 }

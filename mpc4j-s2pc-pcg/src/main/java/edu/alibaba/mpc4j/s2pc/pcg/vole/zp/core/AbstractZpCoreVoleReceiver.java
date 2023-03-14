@@ -7,39 +7,34 @@ import edu.alibaba.mpc4j.common.rpc.desc.PtoDesc;
 import edu.alibaba.mpc4j.common.rpc.pto.AbstractTwoPartyPto;
 import edu.alibaba.mpc4j.common.tool.MathPreconditions;
 import edu.alibaba.mpc4j.common.tool.galoisfield.zp.Zp;
-import edu.alibaba.mpc4j.common.tool.galoisfield.zp.ZpFactory;
 
 import java.math.BigInteger;
 
 /**
- * Zp-核VOLE接收方抽象类。
+ * Abstract Zp-core VOLE receiver.
  *
  * @author Hanwen Feng
  * @date 2022/06/13
  */
 public abstract class AbstractZpCoreVoleReceiver extends AbstractTwoPartyPto implements ZpCoreVoleReceiver {
     /**
-     * 关联值Δ
+     * Δ
      */
     protected BigInteger delta;
     /**
-     * 素数域Zp
+     * the Zp instance
      */
     protected Zp zp;
     /**
-     * 有限域比特长度
+     * l
      */
     protected int l;
     /**
-     * 质数字节长度
-     */
-    protected int primeByteLength;
-    /**
-     * 最大数量
+     * max num
      */
     private int maxNum;
     /**
-     * 数量
+     * num
      */
     protected int num;
 
@@ -47,10 +42,9 @@ public abstract class AbstractZpCoreVoleReceiver extends AbstractTwoPartyPto imp
         super(ptoDesc, receiverRpc, senderParty, config);
     }
 
-    protected void setInitInput(BigInteger prime, BigInteger delta, int maxNum) {
-        zp = ZpFactory.createInstance(envType, prime);
+    protected void setInitInput(Zp zp, BigInteger delta, int maxNum) {
+        this.zp = zp;
         l = zp.getL();
-        primeByteLength = zp.getElementByteLength();
         Preconditions.checkArgument(
             zp.validateRangeElement(delta),
             "Δ must be in range [0, %s): %s", zp.getRangeBound(), delta

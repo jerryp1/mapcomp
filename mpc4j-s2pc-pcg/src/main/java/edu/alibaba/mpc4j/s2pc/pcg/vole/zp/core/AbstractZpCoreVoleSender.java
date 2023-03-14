@@ -7,32 +7,31 @@ import edu.alibaba.mpc4j.common.rpc.desc.PtoDesc;
 import edu.alibaba.mpc4j.common.rpc.pto.AbstractTwoPartyPto;
 import edu.alibaba.mpc4j.common.tool.MathPreconditions;
 import edu.alibaba.mpc4j.common.tool.galoisfield.zp.Zp;
-import edu.alibaba.mpc4j.common.tool.galoisfield.zp.ZpFactory;
 
 import java.math.BigInteger;
 import java.util.Arrays;
 
 /**
- * ZP-核VOLE协议发送方抽象类。
+ * Abstract ZP-core VOLE sender.
  *
  * @author Hanwen Feng
  * @date 2022/06/13
  */
 public abstract class AbstractZpCoreVoleSender extends AbstractTwoPartyPto implements ZpCoreVoleSender {
     /**
-     * 素数域Zp
+     * the Zp instance
      */
     protected Zp zp;
     /**
-     * 有限域比特长度
+     * l
      */
     protected int l;
     /**
-     * 质数字节长度
+     * prime byte length
      */
     protected int primeByteLength;
     /**
-     * 最大数量
+     * max num
      */
     private int maxNum;
     /**
@@ -40,7 +39,7 @@ public abstract class AbstractZpCoreVoleSender extends AbstractTwoPartyPto imple
      */
     protected BigInteger[] x;
     /**
-     * 数量
+     * num
      */
     protected int num;
 
@@ -48,8 +47,8 @@ public abstract class AbstractZpCoreVoleSender extends AbstractTwoPartyPto imple
         super(ptoDesc, senderRpc, receiverParty, config);
     }
 
-    protected void setInitInput(BigInteger prime, int maxNum) {
-        zp = ZpFactory.createInstance(envType, prime);
+    protected void setInitInput(Zp zp, int maxNum) {
+        this.zp = zp;
         l = zp.getL();
         primeByteLength = zp.getElementByteLength();
         MathPreconditions.checkPositive("maxNum", maxNum);
