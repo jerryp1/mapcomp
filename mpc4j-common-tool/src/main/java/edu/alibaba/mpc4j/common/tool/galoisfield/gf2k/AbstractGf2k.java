@@ -209,4 +209,9 @@ abstract class AbstractGf2k implements Gf2k {
     public int hashCode() {
         return "GF2K".hashCode();
     }
+
+    @Override
+    public String toString() {
+        return this.getClass().getSimpleName() + " (l = " + L + ")";
+    }
 }

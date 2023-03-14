@@ -104,10 +104,10 @@ public class Zp64VoleReceiverOutput implements MergePartyOutput {
 
     @Override
     public void merge(MergePartyOutput other) {
-        assert other instanceof Zp64VoleReceiverOutput;
         Zp64VoleReceiverOutput that = (Zp64VoleReceiverOutput) other;
-        assert this.zp64.equals(that.zp64) : "merged sender output must have the same Zp64 instance ("
-            + this.zp64 + " : " + that.zp64 + ")";
+        assert this.zp64.equals(that.zp64) : "merged " + this.getClass().getSimpleName()
+            + " must have the same " + zp64.getClass().getSimpleName() + " instance:"
+            + " (" + this.zp64 + " : " + that.zp64 + ")";
         assert this.delta == that.delta : "merged outputs must have the same Δ (" + this.delta + " : " + that.delta + ")";
         // merge q
         long[] mergeQ = new long[this.q.length + that.q.length];

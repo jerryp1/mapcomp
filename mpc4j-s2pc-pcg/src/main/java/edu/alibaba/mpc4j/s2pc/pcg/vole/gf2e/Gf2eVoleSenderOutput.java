@@ -120,10 +120,10 @@ public class Gf2eVoleSenderOutput implements MergePartyOutput {
 
     @Override
     public void merge(MergePartyOutput other) {
-        assert other instanceof Gf2eVoleSenderOutput;
         Gf2eVoleSenderOutput that = (Gf2eVoleSenderOutput) other;
-        assert this.gf2e.equals(that.gf2e) : "merged sender output must have the same GF2E instance ("
-            + this.gf2e + " : " + that.gf2e + ")";
+        assert this.gf2e.equals(that.gf2e) : "merged " + this.getClass().getSimpleName()
+            + " must have the same " + gf2e.getClass().getSimpleName() + " instance:"
+            + " (" + this.gf2e + " : " + that.gf2e + ")";
         // merge x
         byte[][] mergeX = new byte[this.x.length + that.x.length][];
         System.arraycopy(this.x, 0, mergeX, 0, this.x.length);

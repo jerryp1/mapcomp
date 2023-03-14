@@ -108,10 +108,10 @@ public class Gf2eVoleReceiverOutput implements MergePartyOutput {
 
     @Override
     public void merge(MergePartyOutput other) {
-        assert other instanceof Gf2eVoleReceiverOutput;
         Gf2eVoleReceiverOutput that = (Gf2eVoleReceiverOutput) other;
-        assert this.gf2e.equals(that.gf2e) : "merged sender output must have the same GF2E instance ("
-            + this.gf2e + " : " + that.gf2e + ")";
+        assert this.gf2e.equals(that.gf2e) : "merged " + this.getClass().getSimpleName()
+            + " must have the same " + gf2e.getClass().getSimpleName() + " instance:"
+            + " (" + this.gf2e + " : " + that.gf2e + ")";
         assert Arrays.equals(this.delta, that.delta) : "merged outputs must have the same Δ";
         // merge q
         byte[][] mergeQ = new byte[this.q.length + that.q.length][];

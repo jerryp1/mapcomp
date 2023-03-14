@@ -2,6 +2,7 @@ package edu.alibaba.mpc4j.s2pc.pcg.vole.zp;
 
 import edu.alibaba.mpc4j.common.tool.galoisfield.zp.Zp;
 import edu.alibaba.mpc4j.s2pc.pcg.MergePartyOutput;
+import edu.alibaba.mpc4j.s2pc.pcg.vole.gf2e.Gf2eVoleSenderOutput;
 
 import java.math.BigInteger;
 import java.util.Arrays;
@@ -115,10 +116,10 @@ public class ZpVoleSenderOutput implements MergePartyOutput {
 
     @Override
     public void merge(MergePartyOutput other) {
-        assert other instanceof ZpVoleSenderOutput;
         ZpVoleSenderOutput that = (ZpVoleSenderOutput) other;
-        assert this.zp.equals(that.zp) : "merged sender output must have the same Zp instance ("
-            + this.zp + " : " + that.zp + ")";
+        assert this.zp.equals(that.zp) : "merged " + this.getClass().getSimpleName()
+            + " must have the same " + zp.getClass().getSimpleName() + " instance:"
+            + " (" + this.zp + " : " + that.zp + ")";
         // merge x
         BigInteger[] mergeX = new BigInteger[this.x.length + that.x.length];
         System.arraycopy(this.x, 0, mergeX, 0, this.x.length);

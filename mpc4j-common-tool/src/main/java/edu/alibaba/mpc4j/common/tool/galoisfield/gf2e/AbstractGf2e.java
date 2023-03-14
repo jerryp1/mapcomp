@@ -229,4 +229,9 @@ abstract class AbstractGf2e implements Gf2e {
     public int hashCode() {
         return finiteField.hashCode();
     }
+
+    @Override
+    public String toString() {
+        return this.getClass().getSimpleName() + " (" + finiteField.toString() + ")";
+    }
 }
