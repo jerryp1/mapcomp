@@ -225,7 +225,7 @@ public class Dsz15HeZlCoreMtgReceiver extends AbstractZlCoreMtgParty {
 
     private ZlTriple computeTriples() {
         // create and reduce triple
-        ZlTriple zlTriple = ZlTriple.create(envType, l, batchNum, a1, b1, c1);
+        ZlTriple zlTriple = ZlTriple.create(zl, batchNum, a1, b1, c1);
         zlTriple.reduce(num);
         return zlTriple;
     }

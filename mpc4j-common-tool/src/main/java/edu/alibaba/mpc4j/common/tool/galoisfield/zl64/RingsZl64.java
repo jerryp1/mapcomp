@@ -60,7 +60,7 @@ class RingsZl64 extends AbstractZl64 {
     @Override
     public long pow(final long a, final long b) {
         assert validateElement(a);
-        assert validateElement(b);
+        assert b >= 0;
         return integersZp64.powMod(a, b);
     }
 }

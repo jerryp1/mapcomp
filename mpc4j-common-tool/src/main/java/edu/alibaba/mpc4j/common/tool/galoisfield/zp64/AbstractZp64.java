@@ -6,6 +6,7 @@ import edu.alibaba.mpc4j.common.tool.crypto.kdf.Kdf;
 import edu.alibaba.mpc4j.common.tool.crypto.kdf.KdfFactory;
 import edu.alibaba.mpc4j.common.tool.crypto.prg.Prg;
 import edu.alibaba.mpc4j.common.tool.crypto.prg.PrgFactory;
+import edu.alibaba.mpc4j.common.tool.utils.BytesUtils;
 import edu.alibaba.mpc4j.common.tool.utils.CommonUtils;
 import edu.alibaba.mpc4j.common.tool.utils.LongUtils;
 
@@ -142,24 +143,21 @@ abstract class AbstractZp64 implements Zp64 {
 
     @Override
     public long createNonZeroRandom(SecureRandom secureRandom) {
-        long random = 0L;
-        while (random == 0L) {
-            random = LongUtils.randomPositive(prime, secureRandom);
-        }
+        long random;
+        do {
+            random = createRandom(secureRandom);
+        } while (random == 0L);
         return random;
     }
 
     @Override
     public long createNonZeroRandom(byte[] seed) {
-        byte[] key = kdf.deriveKey(seed);
-        byte[] elementByteArray = prg.extendToBytes(key);
-        long random = Math.abs(LongUtils.byteArrayToLong(elementByteArray) % prime);
-        while (random == 0L) {
-            // 如果恰巧为0，则迭代种子
+        long random;
+        byte[] key = BytesUtils.clone(seed);
+        do {
             key = kdf.deriveKey(key);
-            elementByteArray = prg.extendToBytes(key);
-            random = Math.abs(LongUtils.byteArrayToLong(elementByteArray) % prime);
-        }
+            random = createRandom(key);
+        } while (random == 0L);
         return random;
     }
 
@@ -170,9 +168,7 @@ abstract class AbstractZp64 implements Zp64 {
 
     @Override
     public long createRangeRandom(byte[] seed) {
-        byte[] key = kdf.deriveKey(seed);
-        byte[] elementByteArray = prg.extendToBytes(key);
-        return Math.abs(LongUtils.byteArrayToLong(elementByteArray) % rangeBound);
+        return createRandom(seed) % rangeBound;
     }
 
     @Override

@@ -1,25 +1,25 @@
-package edu.alibaba.mpc4j.s2pc.pcg.dpprf.cdpprf.gyw22;
+package edu.alibaba.mpc4j.s2pc.pcg.dpprf.ywl20;
 
 import edu.alibaba.mpc4j.common.rpc.desc.SecurityModel;
 import edu.alibaba.mpc4j.common.tool.EnvType;
+import edu.alibaba.mpc4j.s2pc.pcg.dpprf.DpprfConfig;
 import edu.alibaba.mpc4j.s2pc.pcg.dpprf.DpprfFactory;
-import edu.alibaba.mpc4j.s2pc.pcg.dpprf.cdpprf.CdpprfConfig;
 import edu.alibaba.mpc4j.s2pc.pcg.ot.cot.core.CoreCotConfig;
 import edu.alibaba.mpc4j.s2pc.pcg.ot.cot.core.CoreCotFactory;
 
 /**
- * GYW22-CDPPRF config.
+ * YWL20-RDPPRF协议配置项。
  *
  * @author Weiran Liu
- * @date 2022/12/21
+ * @date 2022/8/16
  */
-public class Gyw22CdpprfConfig implements CdpprfConfig {
+public class Ywl20RdpprfConfig implements DpprfConfig {
     /**
-     * core COT config
+     * 核COT协议配置项
      */
     private final CoreCotConfig coreCotConfig;
 
-    private Gyw22CdpprfConfig(Builder builder) {
+    private Ywl20RdpprfConfig(Builder builder) {
         coreCotConfig = builder.coreCotConfig;
     }
 
@@ -29,7 +29,7 @@ public class Gyw22CdpprfConfig implements CdpprfConfig {
 
     @Override
     public DpprfFactory.DpprfType getPtoType() {
-        return DpprfFactory.DpprfType.GYW22_CORRELATED;
+        return DpprfFactory.DpprfType.YWL20_RANDOM;
     }
 
     @Override
@@ -51,9 +51,9 @@ public class Gyw22CdpprfConfig implements CdpprfConfig {
         return securityModel;
     }
 
-    public static class Builder implements org.apache.commons.lang3.builder.Builder<Gyw22CdpprfConfig> {
+    public static class Builder implements org.apache.commons.lang3.builder.Builder<Ywl20RdpprfConfig> {
         /**
-         * core COT config
+         * 核COT协议配置项
          */
         private CoreCotConfig coreCotConfig;
 
@@ -67,8 +67,8 @@ public class Gyw22CdpprfConfig implements CdpprfConfig {
         }
 
         @Override
-        public Gyw22CdpprfConfig build() {
-            return new Gyw22CdpprfConfig(this);
+        public Ywl20RdpprfConfig build() {
+            return new Ywl20RdpprfConfig(this);
         }
     }
 }

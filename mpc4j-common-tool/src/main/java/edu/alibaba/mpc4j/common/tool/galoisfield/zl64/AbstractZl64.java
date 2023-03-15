@@ -5,6 +5,7 @@ import edu.alibaba.mpc4j.common.tool.crypto.kdf.Kdf;
 import edu.alibaba.mpc4j.common.tool.crypto.kdf.KdfFactory;
 import edu.alibaba.mpc4j.common.tool.crypto.prg.Prg;
 import edu.alibaba.mpc4j.common.tool.crypto.prg.PrgFactory;
+import edu.alibaba.mpc4j.common.tool.utils.BytesUtils;
 import edu.alibaba.mpc4j.common.tool.utils.CommonUtils;
 import edu.alibaba.mpc4j.common.tool.utils.LongUtils;
 
@@ -103,42 +104,37 @@ abstract class AbstractZl64 implements Zl64 {
     public long createRandom(byte[] seed) {
         byte[] key = kdf.deriveKey(seed);
         byte[] elementByteArray = prg.extendToBytes(key);
-        return module(Math.abs(LongUtils.byteArrayToLong(elementByteArray)));
+        return Math.abs(LongUtils.byteArrayToLong(elementByteArray)) % rangeBound;
     }
 
     @Override
     public long createNonZeroRandom(SecureRandom secureRandom) {
-        long random = 0L;
-        while (random == 0L) {
-            random = LongUtils.randomPositive(rangeBound, secureRandom);
-        }
+        long random;
+        do {
+            random = createRandom(secureRandom);
+        } while (random == 0L);
         return random;
     }
 
     @Override
     public long createNonZeroRandom(byte[] seed) {
-        byte[] key = kdf.deriveKey(seed);
-        byte[] elementByteArray = prg.extendToBytes(key);
-        long random = module(Math.abs(LongUtils.byteArrayToLong(elementByteArray)));
-        while (random == 0L) {
-            // 如果恰巧为0，则迭代种子
+        long random;
+        byte[] key = BytesUtils.clone(seed);
+        do {
             key = kdf.deriveKey(key);
-            elementByteArray = prg.extendToBytes(key);
-            random = module(Math.abs(LongUtils.byteArrayToLong(elementByteArray)));
-        }
+            random = createRandom(key);
+        } while (random == 0L);
         return random;
     }
 
     @Override
     public long createRangeRandom(SecureRandom secureRandom) {
-        return LongUtils.randomNonNegative(rangeBound, secureRandom);
+        return createRandom(secureRandom);
     }
 
     @Override
     public long createRangeRandom(byte[] seed) {
-        byte[] key = kdf.deriveKey(seed);
-        byte[] elementByteArray = prg.extendToBytes(key);
-        return module(Math.abs(LongUtils.byteArrayToLong(elementByteArray)));
+        return createRandom(seed);
     }
 
     @Override

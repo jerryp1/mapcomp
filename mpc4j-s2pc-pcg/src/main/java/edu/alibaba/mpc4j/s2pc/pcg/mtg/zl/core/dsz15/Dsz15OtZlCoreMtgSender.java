@@ -268,7 +268,7 @@ public class Dsz15OtZlCoreMtgSender extends AbstractZlCoreMtgParty {
                 }
             );
         });
-        ZlTriple zlTriple = ZlTriple.create(envType, l, num, a0, b0, c0);
+        ZlTriple zlTriple = ZlTriple.create(zl, num, a0, b0, c0);
         a0 = null;
         b0 = null;
         c0 = null;

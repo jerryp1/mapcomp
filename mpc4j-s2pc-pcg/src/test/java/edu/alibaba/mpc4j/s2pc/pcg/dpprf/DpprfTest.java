@@ -7,8 +7,7 @@ import edu.alibaba.mpc4j.common.rpc.desc.SecurityModel;
 import edu.alibaba.mpc4j.common.rpc.impl.memory.MemoryRpcManager;
 import edu.alibaba.mpc4j.common.tool.CommonConstants;
 import edu.alibaba.mpc4j.s2pc.pcg.dpprf.DpprfFactory.DpprfType;
-import edu.alibaba.mpc4j.s2pc.pcg.dpprf.rdpprf.RdpprfConfig;
-import edu.alibaba.mpc4j.s2pc.pcg.dpprf.rdpprf.ywl20.Ywl20RdpprfConfig;
+import edu.alibaba.mpc4j.s2pc.pcg.dpprf.ywl20.Ywl20RdpprfConfig;
 import edu.alibaba.mpc4j.s2pc.pcg.ot.cot.CotReceiverOutput;
 import edu.alibaba.mpc4j.s2pc.pcg.ot.cot.CotSenderOutput;
 import edu.alibaba.mpc4j.s2pc.pcg.ot.cot.CotTestUtils;
@@ -85,9 +84,9 @@ public class DpprfTest {
     /**
      * 协议类型
      */
-    private final RdpprfConfig config;
+    private final DpprfConfig config;
 
-    public DpprfTest(String name, RdpprfConfig config) {
+    public DpprfTest(String name, DpprfConfig config) {
         Preconditions.checkArgument(StringUtils.isNotBlank(name));
         // We cannot use NettyRPC in the test case since it needs multi-thread connect / disconnect.
         // In other word, we cannot connect / disconnect NettyRpc in @Before / @After, respectively.

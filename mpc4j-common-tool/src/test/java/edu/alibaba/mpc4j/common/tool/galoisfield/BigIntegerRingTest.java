@@ -5,6 +5,8 @@ import edu.alibaba.mpc4j.common.tool.CommonConstants;
 import edu.alibaba.mpc4j.common.tool.EnvType;
 import edu.alibaba.mpc4j.common.tool.galoisfield.zl.ZlFactory;
 import edu.alibaba.mpc4j.common.tool.galoisfield.zl.ZlFactory.ZlType;
+import edu.alibaba.mpc4j.common.tool.galoisfield.zn.ZnFactory;
+import edu.alibaba.mpc4j.common.tool.galoisfield.zn.ZnFactory.ZnType;
 import edu.alibaba.mpc4j.common.tool.galoisfield.zp.ZpFactory;
 import edu.alibaba.mpc4j.common.tool.galoisfield.zp.ZpFactory.ZpType;
 import org.apache.commons.lang3.StringUtils;
@@ -43,6 +45,19 @@ public class BigIntegerRingTest {
     @Parameterized.Parameters(name = "{0}")
     public static Collection<Object[]> configurations() {
         Collection<Object[]> configurations = new ArrayList<>();
+
+        // Zn
+        ZnType[] types = new ZnType[]{ZnFactory.ZnType.JDK};
+        int[] ns = new int[]{2, 3, 4, 7, 8, 247, 350, 511, 512, 513, 701, 833, 991, 1023, 1024, 1025};
+        for (ZnType type : types) {
+            // add each n
+            for (int n : ns) {
+                configurations.add(new Object[]{
+                    ZnType.class.getSimpleName() + " (" + type.name() + " ,n = " + n,
+                    ZnFactory.createInstance(EnvType.STANDARD, type, BigInteger.valueOf(n)),
+                });
+            }
+        }
 
         int[] ls = new int[]{1, 2, 3, 4, 39, 40, 41, 61, 62, 63, 64, 65, 127, 128, 129};
         // Zl

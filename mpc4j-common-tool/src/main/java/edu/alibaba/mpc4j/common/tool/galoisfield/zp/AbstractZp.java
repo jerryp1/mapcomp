@@ -7,6 +7,7 @@ import edu.alibaba.mpc4j.common.tool.crypto.kdf.KdfFactory;
 import edu.alibaba.mpc4j.common.tool.crypto.prg.Prg;
 import edu.alibaba.mpc4j.common.tool.crypto.prg.PrgFactory;
 import edu.alibaba.mpc4j.common.tool.utils.BigIntegerUtils;
+import edu.alibaba.mpc4j.common.tool.utils.BytesUtils;
 import edu.alibaba.mpc4j.common.tool.utils.CommonUtils;
 
 import java.math.BigInteger;
@@ -44,6 +45,10 @@ abstract class AbstractZp implements Zp {
      */
     protected final BigInteger rangeBound;
     /**
+     * 2^l - 1
+     */
+    private final BigInteger andRangeBound;
+    /**
      * the key derivation function
      */
     private final Kdf kdf;
@@ -60,6 +65,7 @@ abstract class AbstractZp implements Zp {
         l = primeBitLength - 1;
         byteL = CommonUtils.getByteLength(l);
         rangeBound = BigInteger.ONE.shiftLeft(l);
+        andRangeBound = rangeBound.subtract(BigInteger.ONE);
         kdf = KdfFactory.createInstance(envType);
         prg = PrgFactory.createInstance(envType, primeByteLength);
     }
@@ -71,6 +77,7 @@ abstract class AbstractZp implements Zp {
         this.l = l;
         byteL = CommonUtils.getByteLength(l);
         rangeBound = BigInteger.ONE.shiftLeft(l);
+        andRangeBound = rangeBound.subtract(BigInteger.ONE);
         kdf = KdfFactory.createInstance(envType);
         prg = PrgFactory.createInstance(envType, primeByteLength);
     }
@@ -156,37 +163,32 @@ abstract class AbstractZp implements Zp {
 
     @Override
     public BigInteger createNonZeroRandom(SecureRandom secureRandom) {
-        BigInteger random = BigInteger.ZERO;
-        while (random.equals(BigInteger.ZERO)) {
-            random = BigIntegerUtils.randomPositive(prime, secureRandom);
-        }
+        BigInteger random;
+        do {
+            random = createRandom(secureRandom);
+        } while (random.equals(BigInteger.ZERO));
         return random;
     }
 
     @Override
     public BigInteger createNonZeroRandom(byte[] seed) {
-        byte[] key = kdf.deriveKey(seed);
-        byte[] elementByteArray = prg.extendToBytes(key);
-        BigInteger random = BigIntegerUtils.byteArrayToNonNegBigInteger(elementByteArray).mod(prime);
-        while (random.equals(BigInteger.ZERO)) {
-            // 如果恰巧为0，则迭代种子
+        BigInteger random;
+        byte[] key = BytesUtils.clone(seed);
+        do {
             key = kdf.deriveKey(key);
-            elementByteArray = prg.extendToBytes(key);
-            random = BigIntegerUtils.byteArrayToNonNegBigInteger(elementByteArray).mod(prime);
-        }
+            random = createRandom(key);
+        } while (random.equals(BigInteger.ZERO));
         return random;
     }
 
     @Override
     public BigInteger createRangeRandom(SecureRandom secureRandom) {
-        return BigIntegerUtils.randomNonNegative(rangeBound, secureRandom);
+        return new BigInteger(l, secureRandom);
     }
 
     @Override
     public BigInteger createRangeRandom(byte[] seed) {
-        byte[] key = kdf.deriveKey(seed);
-        byte[] elementByteArray = prg.extendToBytes(key);
-        return BigIntegerUtils.byteArrayToNonNegBigInteger(elementByteArray).mod(rangeBound);
+        return createRandom(seed).and(andRangeBound);
     }
 
     @Override

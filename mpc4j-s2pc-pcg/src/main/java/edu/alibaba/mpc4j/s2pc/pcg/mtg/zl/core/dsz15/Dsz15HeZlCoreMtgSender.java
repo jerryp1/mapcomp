@@ -195,7 +195,7 @@ public class Dsz15HeZlCoreMtgSender extends AbstractZlCoreMtgParty {
         // <C>_0 = <a>_0 * <b>_0 + d
         IntStream.range(0, batchNum).forEach(index -> c0[index] = a0[index].multiply(b0[index]).add(c0[index]).and(mask));
         // create and reduce triple
-        ZlTriple zlTriple = ZlTriple.create(envType, l, batchNum, a0, b0, c0);
+        ZlTriple zlTriple = ZlTriple.create(zl, batchNum, a0, b0, c0);
         zlTriple.reduce(num);
         return zlTriple;
     }

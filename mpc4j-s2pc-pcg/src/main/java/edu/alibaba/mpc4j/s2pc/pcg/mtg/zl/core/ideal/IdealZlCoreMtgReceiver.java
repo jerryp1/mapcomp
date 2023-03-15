@@ -135,6 +135,6 @@ public class IdealZlCoreMtgReceiver extends AbstractZlCoreMtgParty {
             c1s[index] = a0.add(a1s[index]).multiply(b0.add(b1s[index])).and(mask).subtract(c0).and(mask);
         });
 
-        return ZlTriple.create(envType, l, num, a1s, b1s, c1s);
+        return ZlTriple.create(zl, num, a1s, b1s, c1s);
     }
 }

@@ -18,10 +18,6 @@ public class ZlTriple implements MergePartyOutput {
      */
     private Zl zl;
     /**
-     * the l bit length
-     */
-    private int l;
-    /**
      * the number of triples
      */
     private int num;
@@ -55,7 +51,6 @@ public class ZlTriple implements MergePartyOutput {
 
         ZlTriple triple = new ZlTriple();
         triple.zl = zl;
-        triple.l = zl.getL();
         triple.num = num;
         triple.as = Arrays.stream(as)
             .peek(a -> {
@@ -79,14 +74,12 @@ public class ZlTriple implements MergePartyOutput {
     /**
      * Creates an empty triple.
      *
-     * @param l the l bit length.
+     * @param zl the Zl instance.
      * @return an empty triple.
      */
-    public static ZlTriple createEmpty(int l) {
-        assert l > 0 : "l must be greater than 0";
-
+    public static ZlTriple createEmpty(Zl zl) {
         ZlTriple emptyTriple = new ZlTriple();
-        emptyTriple.l = l;
+        emptyTriple.zl = zl;
         emptyTriple.num = 0;
         emptyTriple.as = new BigInteger[0];
         emptyTriple.bs = new BigInteger[0];
@@ -182,12 +175,12 @@ public class ZlTriple implements MergePartyOutput {
     }
 
     /**
-     * Gets the l bit length.
+     * Gets the Zl instance.
      *
-     * @return the l bit length.
+     * @return the Zl instance.
      */
-    public int getL() {
-        return l;
+    public Zl getZl() {
+        return zl;
     }
 
     /**

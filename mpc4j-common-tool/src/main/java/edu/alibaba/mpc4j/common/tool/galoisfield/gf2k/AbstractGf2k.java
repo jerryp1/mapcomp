@@ -146,13 +146,13 @@ abstract class AbstractGf2k implements Gf2k {
 
     @Override
     public byte[] createNonZeroRandom(byte[] seed) {
-        byte[] key = kdf.deriveKey(seed);
-        byte[] element = prg.extendToBytes(key);
-        while (isZero(element)) {
+        byte[] random;
+        byte[] key = BytesUtils.clone(seed);
+        do {
             key = kdf.deriveKey(key);
-            element = prg.extendToBytes(key);
-        }
-        return element;
+            random = createRandom(key);
+        } while (isZero(random));
+        return random;
     }
 
     @Override

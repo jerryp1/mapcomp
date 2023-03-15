@@ -8,7 +8,6 @@ import edu.alibaba.mpc4j.common.tool.MathPreconditions;
 import edu.alibaba.mpc4j.common.tool.utils.BinaryUtils;
 import edu.alibaba.mpc4j.common.tool.utils.IntUtils;
 import edu.alibaba.mpc4j.common.tool.utils.LongUtils;
-import edu.alibaba.mpc4j.s2pc.pcg.dpprf.rdpprf.RdpprfConfig;
 import edu.alibaba.mpc4j.s2pc.pcg.ot.cot.CotReceiverOutput;
 
 import java.util.Arrays;
@@ -62,7 +61,7 @@ public abstract class AbstractDpprfReceiver extends AbstractTwoPartyPto implemen
      */
     protected int batchNum;
 
-    protected AbstractDpprfReceiver(PtoDesc ptoDesc, Rpc receiverRpc, Party senderParty, RdpprfConfig config) {
+    protected AbstractDpprfReceiver(PtoDesc ptoDesc, Rpc receiverRpc, Party senderParty, DpprfConfig config) {
         super(ptoDesc, receiverRpc, senderParty, config);
         this.config = config;
     }

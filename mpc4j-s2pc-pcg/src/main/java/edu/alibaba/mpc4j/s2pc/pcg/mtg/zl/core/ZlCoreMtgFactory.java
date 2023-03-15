@@ -4,6 +4,7 @@ import edu.alibaba.mpc4j.common.rpc.Party;
 import edu.alibaba.mpc4j.common.rpc.Rpc;
 import edu.alibaba.mpc4j.common.rpc.desc.SecurityModel;
 import edu.alibaba.mpc4j.common.rpc.pto.PtoFactory;
+import edu.alibaba.mpc4j.common.tool.galoisfield.zl.Zl;
 import edu.alibaba.mpc4j.s2pc.pcg.mtg.zl.core.dsz15.*;
 import edu.alibaba.mpc4j.s2pc.pcg.mtg.zl.core.ideal.IdealZlCoreMtgConfig;
 import edu.alibaba.mpc4j.s2pc.pcg.mtg.zl.core.ideal.IdealZlCoreMtgReceiver;
@@ -88,16 +89,16 @@ public class ZlCoreMtgFactory implements PtoFactory {
     /**
      * 创建默认配置项。
      *
-     * @param l 乘法三元组比特长度。
      * @param securityModel 安全模型。
+     * @param zl            the Zl instance.
      * @return 默认配置项。
      */
-    public static ZlCoreMtgConfig createDefaultConfig(SecurityModel securityModel, int l) {
+    public static ZlCoreMtgConfig createDefaultConfig(SecurityModel securityModel, Zl zl) {
         switch (securityModel) {
             case IDEAL:
-                return new IdealZlCoreMtgConfig.Builder(l).build();
+                return new IdealZlCoreMtgConfig.Builder(zl).build();
             case SEMI_HONEST:
-                return new Dsz15OtZlCoreMtgConfig.Builder(l).build();
+                return new Dsz15OtZlCoreMtgConfig.Builder(zl).build();
             case COVERT:
             case MALICIOUS:
             default:

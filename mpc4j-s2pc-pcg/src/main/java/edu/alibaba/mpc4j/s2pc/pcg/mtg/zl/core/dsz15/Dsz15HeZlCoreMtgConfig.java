@@ -2,6 +2,7 @@ package edu.alibaba.mpc4j.s2pc.pcg.mtg.zl.core.dsz15;
 
 import edu.alibaba.mpc4j.common.rpc.desc.SecurityModel;
 import edu.alibaba.mpc4j.common.tool.EnvType;
+import edu.alibaba.mpc4j.common.tool.galoisfield.zl.Zl;
 import edu.alibaba.mpc4j.s2pc.pcg.mtg.zl.core.ZlCoreMtgConfig;
 import edu.alibaba.mpc4j.s2pc.pcg.mtg.zl.core.ZlCoreMtgFactory;
 
@@ -13,16 +14,16 @@ import edu.alibaba.mpc4j.s2pc.pcg.mtg.zl.core.ZlCoreMtgFactory;
  */
 public class Dsz15HeZlCoreMtgConfig implements ZlCoreMtgConfig {
     /**
-     * the l bit length
+     * the Zl instance
      */
-    private final int l;
+    private final Zl zl;
     /**
      * the environment
      */
     private EnvType envType;
 
     private Dsz15HeZlCoreMtgConfig(Builder builder) {
-        l = builder.l;
+        zl = builder.zl;
         envType = EnvType.STANDARD;
     }
 
@@ -32,8 +33,8 @@ public class Dsz15HeZlCoreMtgConfig implements ZlCoreMtgConfig {
     }
 
     @Override
-    public int getL() {
-        return l;
+    public Zl getZl() {
+        return zl;
     }
 
     @Override
@@ -58,14 +59,12 @@ public class Dsz15HeZlCoreMtgConfig implements ZlCoreMtgConfig {
 
     public static class Builder implements org.apache.commons.lang3.builder.Builder<Dsz15HeZlCoreMtgConfig> {
         /**
-         * the l bit length
+         * the Zl instance
          */
-        private final int l;
+        private final Zl zl;
 
-        public Builder(int l) {
-            super();
-            assert l > 0 : "l must be greater than 0: " + l;
-            this.l = l;
+        public Builder(Zl zl) {
+            this.zl = zl;
         }
 
         @Override

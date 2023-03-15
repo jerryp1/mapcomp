@@ -1,4 +1,4 @@
-package edu.alibaba.mpc4j.common.tool.galoisfield.zl;
+package edu.alibaba.mpc4j.common.tool.galoisfield.zn;
 
 import edu.alibaba.mpc4j.common.tool.EnvType;
 import edu.alibaba.mpc4j.common.tool.crypto.kdf.Kdf;
@@ -13,12 +13,24 @@ import java.math.BigInteger;
 import java.security.SecureRandom;
 
 /**
- * abstract Zl.
+ * abstract Zn.
  *
  * @author Weiran Liu
  * @date 2023/3/14
  */
-abstract class AbstractZl implements Zl {
+abstract class AbstractZn implements Zn {
+    /**
+     * module n
+     */
+    protected final BigInteger n;
+    /**
+     * n bit length
+     */
+    protected final int nBitLength;
+    /**
+     * n byte length
+     */
+    protected final int nByteLength;
     /**
      * the l bit length
      */
@@ -34,7 +46,7 @@ abstract class AbstractZl implements Zl {
     /**
      * 2^l - 1
      */
-    protected final BigInteger andRangeBound;
+    private final BigInteger andRangeBound;
     /**
      * the key derivation function
      */
@@ -44,14 +56,28 @@ abstract class AbstractZl implements Zl {
      */
     private final Prg prg;
 
-    AbstractZl(EnvType envType, int l) {
-        assert l > 0 : "l must be greater than 0";
-        this.l = l;
+    AbstractZn(EnvType envType, BigInteger n) {
+        assert BigIntegerUtils.greater(n, BigInteger.ONE) : "n must be greater than 1";
+        this.n = n;
+        nBitLength = n.bitLength();
+        nByteLength = CommonUtils.getByteLength(nBitLength);
+        BigInteger nPow2 = BigInteger.ONE.shiftLeft(nBitLength);
+        // if 2^nBitLength == n, then l = nBitLength, else l = nBitLength - 1
+        if (nPow2.equals(n)) {
+            l = nBitLength;
+        } else {
+            l = nBitLength - 1;
+        }
         byteL = CommonUtils.getByteLength(l);
         rangeBound = BigInteger.ONE.shiftLeft(l);
         andRangeBound = rangeBound.subtract(BigInteger.ONE);
         kdf = KdfFactory.createInstance(envType);
-        prg = PrgFactory.createInstance(envType, byteL);
+        prg = PrgFactory.createInstance(envType, nByteLength);
+    }
+
+    @Override
+    public BigInteger getN() {
+        return n;
     }
 
     @Override
@@ -66,12 +92,12 @@ abstract class AbstractZl implements Zl {
 
     @Override
     public int getElementBitLength() {
-        return l;
+        return nBitLength;
     }
 
     @Override
     public int getElementByteLength() {
-        return byteL;
+        return nByteLength;
     }
 
     @Override
@@ -118,14 +144,14 @@ abstract class AbstractZl implements Zl {
 
     @Override
     public BigInteger createRandom(SecureRandom secureRandom) {
-        return new BigInteger(l, secureRandom);
+        return BigIntegerUtils.randomNonNegative(n, secureRandom);
     }
 
     @Override
     public BigInteger createRandom(byte[] seed) {
         byte[] key = kdf.deriveKey(seed);
         byte[] elementByteArray = prg.extendToBytes(key);
-        return BigIntegerUtils.byteArrayToNonNegBigInteger(elementByteArray).and(andRangeBound);
+        return BigIntegerUtils.byteArrayToNonNegBigInteger(elementByteArray).mod(n);
     }
 
     @Override
@@ -150,27 +176,27 @@ abstract class AbstractZl implements Zl {
 
     @Override
     public BigInteger createRangeRandom(SecureRandom secureRandom) {
-        return createRandom(secureRandom);
+        return new BigInteger(l, secureRandom);
     }
 
     @Override
     public BigInteger createRangeRandom(byte[] seed) {
-        return createRandom(seed);
+        return createRandom(seed).and(andRangeBound);
     }
 
     @Override
     public boolean validateElement(final BigInteger a) {
-        return a.signum() >= 0 && a.bitLength() <= l;
+        return BigIntegerUtils.greaterOrEqual(a, BigInteger.ZERO) && BigIntegerUtils.less(a, n);
     }
 
     @Override
     public boolean validateNonZeroElement(final BigInteger a) {
-        return a.signum() > 0 && a.bitLength() <= l;
+        return BigIntegerUtils.greater(a, BigInteger.ZERO) && BigIntegerUtils.less(a, n);
     }
 
     @Override
     public boolean validateRangeElement(final BigInteger a) {
-        return a.signum() >= 0 && a.bitLength() <= l;
+        return BigIntegerUtils.greaterOrEqual(a, BigInteger.ZERO) && BigIntegerUtils.less(a, rangeBound);
     }
 
     @Override
@@ -181,18 +207,18 @@ abstract class AbstractZl implements Zl {
         if (o == null || getClass() != o.getClass()) {
             return false;
         }
-        AbstractZl that = (AbstractZl) o;
+        AbstractZn that = (AbstractZn) o;
         // KDF and PRG can be different
-        return this.l == that.l;
+        return this.n.equals(that.n);
     }
 
     @Override
     public int hashCode() {
-        return "Zl".hashCode();
+        return n.hashCode();
     }
 
     @Override
     public String toString() {
-        return this.getClass().getSimpleName() + " (l = " + l + ")";
+        return this.getClass().getSimpleName() + " (n = " + n + ")";
     }
 }

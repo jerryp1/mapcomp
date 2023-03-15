@@ -1,4 +1,4 @@
-package edu.alibaba.mpc4j.s2pc.pcg.dpprf.cdpprf;
+package edu.alibaba.mpc4j.s2pc.pcg.cdpprf;
 
 import edu.alibaba.mpc4j.common.tool.CommonConstants;
 import edu.alibaba.mpc4j.common.tool.utils.BytesUtils;

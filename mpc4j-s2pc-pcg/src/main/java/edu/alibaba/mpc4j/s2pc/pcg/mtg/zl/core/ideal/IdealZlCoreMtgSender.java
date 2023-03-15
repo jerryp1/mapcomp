@@ -122,6 +122,6 @@ public class IdealZlCoreMtgSender extends AbstractZlCoreMtgParty {
             c0s[index] = BigIntegerUtils.byteArrayToBigInteger(c0Bytes).and(mask);
         });
 
-        return ZlTriple.create(envType, l, num, a0s, b0s, c0s);
+        return ZlTriple.create(zl, num, a0s, b0s, c0s);
     }
 }

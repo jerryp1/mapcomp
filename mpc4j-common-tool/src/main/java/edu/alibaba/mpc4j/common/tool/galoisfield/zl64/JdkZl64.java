@@ -59,7 +59,7 @@ class JdkZl64 extends AbstractZl64 {
     @Override
     public long pow(final long a, final long b) {
         assert validateElement(a);
-        assert validateElement(b);
+        assert b >= 0;
         // this is exactly what Rings did. However, since the module is 2^l, we can use & instead of mod.
         if (b == 0) {
             return 1;

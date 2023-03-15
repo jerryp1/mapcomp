@@ -1,4 +1,4 @@
-package edu.alibaba.mpc4j.s2pc.pcg.dpprf.rdpprf.ywl20;
+package edu.alibaba.mpc4j.s2pc.pcg.dpprf.ywl20;
 
 import edu.alibaba.mpc4j.common.rpc.*;
 import edu.alibaba.mpc4j.common.rpc.utils.DataPacket;
@@ -13,7 +13,7 @@ import edu.alibaba.mpc4j.common.tool.utils.BytesUtils;
 import edu.alibaba.mpc4j.common.tool.utils.CommonUtils;
 import edu.alibaba.mpc4j.s2pc.pcg.dpprf.AbstractDpprfReceiver;
 import edu.alibaba.mpc4j.s2pc.pcg.dpprf.DpprfReceiverOutput;
-import edu.alibaba.mpc4j.s2pc.pcg.dpprf.rdpprf.ywl20.Ywl20RdpprfPtoDesc.PtoStep;
+import edu.alibaba.mpc4j.s2pc.pcg.dpprf.ywl20.Ywl20RdpprfPtoDesc.PtoStep;
 import edu.alibaba.mpc4j.s2pc.pcg.ot.cot.CotReceiverOutput;
 import edu.alibaba.mpc4j.s2pc.pcg.ot.cot.core.CoreCotFactory;
 import edu.alibaba.mpc4j.s2pc.pcg.ot.cot.core.CoreCotReceiver;

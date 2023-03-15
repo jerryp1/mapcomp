@@ -5,9 +5,9 @@ import edu.alibaba.mpc4j.common.rpc.Rpc;
 import edu.alibaba.mpc4j.common.rpc.desc.SecurityModel;
 import edu.alibaba.mpc4j.common.rpc.pto.PtoFactory;
 import edu.alibaba.mpc4j.common.tool.utils.LongUtils;
-import edu.alibaba.mpc4j.s2pc.pcg.dpprf.rdpprf.ywl20.Ywl20RdpprfConfig;
-import edu.alibaba.mpc4j.s2pc.pcg.dpprf.rdpprf.ywl20.Ywl20RdpprfReceiver;
-import edu.alibaba.mpc4j.s2pc.pcg.dpprf.rdpprf.ywl20.Ywl20RdpprfSender;
+import edu.alibaba.mpc4j.s2pc.pcg.dpprf.ywl20.Ywl20RdpprfConfig;
+import edu.alibaba.mpc4j.s2pc.pcg.dpprf.ywl20.Ywl20RdpprfReceiver;
+import edu.alibaba.mpc4j.s2pc.pcg.dpprf.ywl20.Ywl20RdpprfSender;
 
 /**
  * DPPRF factory.

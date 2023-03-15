@@ -5,6 +5,9 @@ import edu.alibaba.mpc4j.common.rpc.Rpc;
 import edu.alibaba.mpc4j.common.rpc.RpcManager;
 import edu.alibaba.mpc4j.common.rpc.impl.memory.MemoryRpcManager;
 import edu.alibaba.mpc4j.common.tool.CommonConstants;
+import edu.alibaba.mpc4j.common.tool.EnvType;
+import edu.alibaba.mpc4j.common.tool.galoisfield.zl.Zl;
+import edu.alibaba.mpc4j.common.tool.galoisfield.zl.ZlFactory;
 import edu.alibaba.mpc4j.common.tool.utils.LongUtils;
 import edu.alibaba.mpc4j.s2pc.pcg.mtg.zl.ZlMtgTestUtils;
 import edu.alibaba.mpc4j.s2pc.pcg.mtg.zl.ZlTriple;
@@ -53,22 +56,26 @@ public class ZlCoreMtgTest {
     public static Collection<Object[]> configurations() {
         Collection<Object[]> configurations = new ArrayList<>();
 
-        int[] ls = new int[]{
-            1, LongUtils.MAX_L - 1, LongUtils.MAX_L,
-            LongUtils.MAX_L + 1, LongUtils.MAX_L + 2, CommonConstants.BLOCK_BIT_LENGTH
+        Zl[] zls = new Zl[] {
+            ZlFactory.createInstance(EnvType.STANDARD, 1),
+            ZlFactory.createInstance(EnvType.STANDARD, LongUtils.MAX_L - 1),
+            ZlFactory.createInstance(EnvType.STANDARD, LongUtils.MAX_L),
+            ZlFactory.createInstance(EnvType.STANDARD, LongUtils.MAX_L + 1),
+            ZlFactory.createInstance(EnvType.STANDARD, CommonConstants.BLOCK_BIT_LENGTH),
         };
-        for (int l : ls) {
+        for (Zl zl : zls) {
+            int l = zl.getL();
             // IDEAL
             configurations.add(new Object[]{
-                ZlCoreMtgType.IDEAL.name() + " (l = " + l + ")", new IdealZlCoreMtgConfig.Builder(l).build(),
+                ZlCoreMtgType.IDEAL.name() + " (l = " + l + ")", new IdealZlCoreMtgConfig.Builder(zl).build(),
             });
             // DSZ15_HE
             configurations.add(new Object[]{
-                ZlCoreMtgType.DSZ15_HE.name() + " (l = " + l + ")", new Dsz15HeZlCoreMtgConfig.Builder(l).build(),
+                ZlCoreMtgType.DSZ15_HE.name() + " (l = " + l + ")", new Dsz15HeZlCoreMtgConfig.Builder(zl).build(),
             });
             // DSZ15_OT
             configurations.add(new Object[]{
-                ZlCoreMtgType.DSZ15_OT.name() + " (l = " + l + ")", new Dsz15OtZlCoreMtgConfig.Builder(l).build(),
+                ZlCoreMtgType.DSZ15_OT.name() + " (l = " + l + ")", new Dsz15OtZlCoreMtgConfig.Builder(zl).build(),
             });
         }
 
@@ -169,7 +176,7 @@ public class ZlCoreMtgTest {
             ZlTriple senderOutput = senderThread.getOutput();
             ZlTriple receiverOutput = receiverThread.getOutput();
             // 验证结果
-            ZlMtgTestUtils.assertOutput(config.getL(), num, senderOutput, receiverOutput);
+            ZlMtgTestUtils.assertOutput(config.getZl(), num, senderOutput, receiverOutput);
             LOGGER.info("Sender sends {}B, Receiver sends {}B, time = {}ms",
                 senderByteLength, receiverByteLength, time
             );

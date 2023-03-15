@@ -155,24 +155,22 @@ abstract class AbstractGf2e implements Gf2e {
 
     @Override
     public byte[] createNonZeroRandom(SecureRandom secureRandom) {
-        byte[] element = new byte[byteL];
-        while (isZero(element)) {
-            element = BytesUtils.randomByteArray(byteL, l, secureRandom);
-        }
+        byte[] element;
+        do {
+            element = createRandom(secureRandom);
+        } while (isZero(element));
         return element;
     }
 
     @Override
     public byte[] createNonZeroRandom(byte[] seed) {
-        byte[] key = kdf.deriveKey(seed);
-        byte[] element = prg.extendToBytes(key);
-        BytesUtils.reduceByteArray(element, l);
-        while (isZero(element)) {
+        byte[] random;
+        byte[] key = BytesUtils.clone(seed);
+        do {
             key = kdf.deriveKey(key);
-            element = prg.extendToBytes(key);
-            BytesUtils.reduceByteArray(element, l);
-        }
-        return element;
+            random = createRandom(key);
+        } while (isZero(random));
+        return random;
     }
 
     @Override

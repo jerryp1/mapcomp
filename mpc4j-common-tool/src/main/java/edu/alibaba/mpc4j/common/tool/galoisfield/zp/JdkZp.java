@@ -78,7 +78,7 @@ class JdkZp extends AbstractZp {
     @Override
     public BigInteger pow(final BigInteger a, final BigInteger b) {
         assert validateElement(a);
-        assert validateElement(b);
+        assert b.signum() >= 0;
         return BigIntegerUtils.modPow(a, b, prime);
     }
 }

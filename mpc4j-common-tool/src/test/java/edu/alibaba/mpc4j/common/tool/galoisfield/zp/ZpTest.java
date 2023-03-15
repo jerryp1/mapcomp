@@ -104,7 +104,7 @@ public class ZpTest {
         if (BigIntegerUtils.greater(prime, two)) {
             // 1 + 1 = 2
             Assert.assertEquals(two, zp.add(one, one));
-            // -1 = prime - 1
+            // -1 = p - 1
             Assert.assertEquals(prime.subtract(one), zp.neg(one));
             // 2 - 1 = 1
             Assert.assertEquals(one, zp.sub(two, one));
@@ -112,7 +112,7 @@ public class ZpTest {
         if (BigIntegerUtils.greater(prime, four)) {
             // 2 + 2 = 4
             Assert.assertEquals(four, zp.add(two, two));
-            // -2 = prime - 2
+            // -2 = p - 2
             Assert.assertEquals(prime.subtract(two), zp.neg(two));
             // 4 - 2 = 2
             Assert.assertEquals(two, zp.sub(four, two));
