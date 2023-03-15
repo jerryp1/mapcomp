@@ -8,10 +8,6 @@ import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.Arrays;
-import java.util.LinkedList;
-import java.util.List;
-
 /**
  * RSS19-Zp64 multiplication triple test.
  *
@@ -19,8 +15,8 @@ import java.util.List;
  * @date 2023/2/15
  */
 @Ignore
-public class Rss19Zp64MtgTest {
-    private static final Logger LOGGER = LoggerFactory.getLogger(Rss19Zp64MtgTest.class);
+public class Rss19Zp64CoreMtgConfigTest {
+    private static final Logger LOGGER = LoggerFactory.getLogger(Rss19Zp64CoreMtgConfigTest.class);
     /**
      * polynomial modulus degrees
      */
@@ -29,20 +25,19 @@ public class Rss19Zp64MtgTest {
     };
 
     @Test
-    public void testValidBitLength() {
+    public void testValidL() {
         for (int polyModulusDegree : POLY_MODULUS_DEGREES) {
-            List<Long> validBitLengthList = new LinkedList<>();
             for (int l = 1; l < LongUtils.MAX_L; l++) {
                 try {
-                    Rss19Zp64CoreMtgConfig config = new Rss19Zp64CoreMtgConfig.Builder(l).build();
+                    Rss19Zp64CoreMtgConfig config = new Rss19Zp64CoreMtgConfig.Builder(l)
+                        .setPolyModulusDegree(polyModulusDegree)
+                        .build();
                     Zp64 zp64 = config.getZp64();
-                    long primeBitLength = zp64.getElementBitLength();
-                    validBitLengthList.add(primeBitLength);
+                    LOGGER.info("modulus degree  = {}: l = {}: p = {}", polyModulusDegree, l, zp64.getPrime());
                 } catch (Exception ignored) {
 
                 }
             }
-            LOGGER.info("modulus degree = {}, l = {}", polyModulusDegree, Arrays.toString(validBitLengthList.toArray()));
         }
     }
 }

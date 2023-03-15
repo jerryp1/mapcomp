@@ -87,12 +87,17 @@ public class Rss19Zp64CoreMtgConfig implements Zp64CoreMtgConfig {
         /**
          * 模多项式阶
          */
-        private final int polyModulusDegree;
+        private int polyModulusDegree;
 
         public Builder(int l) {
             MathPreconditions.checkPositive("l", 1);
             primeBitLength = l + 1;
             polyModulusDegree = Rss19Zp64CoreMtgPtoDesc.defaultPolyModulusDegree(primeBitLength);
+        }
+
+        public Builder setPolyModulusDegree(int polyModulusDegree) {
+            this.polyModulusDegree = polyModulusDegree;
+            return this;
         }
 
         @Override
