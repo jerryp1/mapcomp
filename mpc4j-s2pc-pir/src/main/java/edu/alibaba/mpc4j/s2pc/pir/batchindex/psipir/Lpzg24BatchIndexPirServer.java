@@ -4,6 +4,7 @@ import edu.alibaba.mpc4j.common.rpc.*;
 import edu.alibaba.mpc4j.common.rpc.utils.DataPacket;
 import edu.alibaba.mpc4j.common.rpc.utils.DataPacketHeader;
 import edu.alibaba.mpc4j.common.tool.CommonConstants;
+import edu.alibaba.mpc4j.common.tool.MathPreconditions;
 import edu.alibaba.mpc4j.common.tool.crypto.ecc.Ecc;
 import edu.alibaba.mpc4j.common.tool.crypto.ecc.EccFactory;
 import edu.alibaba.mpc4j.common.tool.crypto.kdf.Kdf;
@@ -67,13 +68,9 @@ public class Lpzg24BatchIndexPirServer extends AbstractBatchIndexPirServer {
      */
     private BigInteger alpha;
     /**
-     * 多项式系数
-     */
-    private ArrayList<long[][]> coeffs = new ArrayList<>();
-    /**
      * 序列化的多项式
      */
-    private ArrayList<ArrayList<byte[]>> encodedPlaintexts = new ArrayList<>();
+    private final ArrayList<ArrayList<byte[]>> encodedPlaintexts = new ArrayList<>();
     /**
      * 哈希桶索引对应哈希桶的元素数量
      */
@@ -85,11 +82,11 @@ public class Lpzg24BatchIndexPirServer extends AbstractBatchIndexPirServer {
     }
 
     @Override
-    public void init(ArrayList<ByteBuffer> elementArrayList, int elementBitLength, int maxRetrievalSize) throws MpcAbortException {
-        setInitInput(elementArrayList, maxRetrievalSize);
+    public void init(byte[][] elementArrayList, int elementBitLength, int maxRetrievalSize) throws MpcAbortException {
+        params = Cmg21UpsiParams.SERVER_1M_CLIENT_MAX_1K_CMP;
+        assert maxRetrievalSize <= params.maxClientElementSize();
+        setInitInput(elementArrayList, elementBitLength, maxRetrievalSize, 1);
         logPhaseInfo(PtoState.INIT_BEGIN);
-
-        params = Cmg21UpsiParams.SERVER_1M_CLIENT_MAX_2K_CMP;
 
         DataPacketHeader bfvParamsHeader = new DataPacketHeader(
             encodeTaskId, getPtoDesc().getPtoId(), CLIENT_SEND_ENCRYPTION_PARAMS.ordinal(), extraInfo,
@@ -112,35 +109,28 @@ public class Lpzg24BatchIndexPirServer extends AbstractBatchIndexPirServer {
         stopWatch.stop();
         long cuckooHashKeyTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
         stopWatch.reset();
-        logStepInfo(PtoState.INIT_STEP, 1, 4, cuckooHashKeyTime, "Server generates cuckoo hash keys");
+        logStepInfo(PtoState.INIT_STEP, 1, 2, cuckooHashKeyTime, "Server generates cuckoo hash keys");
+
 
         stopWatch.start();
-        // 计算PRF
-        ArrayList<ByteBuffer> elementPrf = computeElementPrf();
-        stopWatch.stop();
-        long oprfTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
-        stopWatch.reset();
-        logStepInfo(PtoState.INIT_STEP, 2, 4, oprfTime, "Server computes PRFs");
-
-        stopWatch.start();
-        // 服务端哈希分桶
+        alpha = BigIntegerUtils.randomPositive(EccFactory.createInstance(envType).getN(), secureRandom);
         maxBinSize = getMaxBinSize();
-        ArrayList<ArrayList<HashBinEntry<ByteBuffer>>> hashBins = generateCompleteHashBin(elementPrf);
-        stopWatch.stop();
-        long hashTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
-        stopWatch.reset();
-        logStepInfo(PtoState.INIT_STEP, 3, 4, hashTime, "Server bin-hashes key");
-
-        stopWatch.start();
-        // 计算多项式系数
-        coeffs = encodeDatabase(hashBins);
-        IntStream intStream = IntStream.range(0, coeffs.size());
-        intStream = parallel ? intStream.parallel() : intStream;
-        encodedPlaintexts = intStream
-            .mapToObj(i ->
-                Lpzg24BatchIndexPirNativeUtils.processDatabase(sealContext, coeffs.get(i), params.getPsLowDegree())
-            )
-            .collect(Collectors.toCollection(ArrayList::new));
+        for (int partitionIndex = 0; partitionIndex < partitionCount; partitionIndex++) {
+            // 计算PRF
+            ArrayList<ByteBuffer> elementPrf = computeElementPrf(partitionIndex);
+            // 服务端哈希分桶
+            ArrayList<ArrayList<HashBinEntry<ByteBuffer>>> hashBins = generateCompleteHashBin(elementPrf);
+            // 计算多项式系数
+            ArrayList<long[][]> coeffs = encodeDatabase(hashBins);
+            IntStream intStream = IntStream.range(0, coeffs.size());
+            intStream = parallel ? intStream.parallel() : intStream;
+            encodedPlaintexts.addAll(intStream
+                .mapToObj(i ->
+                    Lpzg24BatchIndexPirNativeUtils.processDatabase(sealContext, coeffs.get(i), params.getPsLowDegree())
+                )
+                .collect(Collectors.toCollection(ArrayList::new))
+            );
+        }
         stopWatch.stop();
         long encodeTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
         stopWatch.reset();
@@ -186,7 +176,13 @@ public class Lpzg24BatchIndexPirServer extends AbstractBatchIndexPirServer {
 
         stopWatch.start();
         // 密文多项式运算
-        List<byte[]> response = computeResponse(queryPayload);
+        List<byte[]> response = new ArrayList<>();
+        int[][] powerDegree = computePowerDegree();
+        List<byte[]> ciphertextPowers = computeQueryPowers(queryPayload, powerDegree);
+        for (int i = 0; i < partitionCount; i++) {
+            response.addAll(computeResponse(ciphertextPowers, powerDegree, i));
+        }
+
         DataPacketHeader keywordResponseHeader = new DataPacketHeader(
             encodeTaskId, getPtoDesc().getPtoId(), SERVER_SEND_RESPONSE.ordinal(), extraInfo,
             rpc.ownParty().getPartyId(), otherParty().getPartyId()
@@ -198,21 +194,6 @@ public class Lpzg24BatchIndexPirServer extends AbstractBatchIndexPirServer {
         logStepInfo(PtoState.PTO_STEP, 2, 2, replyTime, "Server generates reply");
 
         logPhaseInfo(PtoState.PTO_END);
-    }
-
-    @Override
-    protected void setInitInput(ArrayList<ByteBuffer> elementArrayList, int maxRetrievalSize)
-        throws MpcAbortException {
-        this.serverElementSize = elementArrayList.size();
-        for (int i = 0; i < serverElementSize; i++) {
-            byte[] element = elementArrayList.get(i).array();
-            boolean value = BinaryUtils.getBoolean(element, element.length * Byte.SIZE - 1);
-            if (value) {
-                elementByteArray.add(IntUtils.intToByteArray(i));
-            }
-        }
-        this.maxRetrievalSize = maxRetrievalSize;
-        initState();
     }
 
     /**
@@ -284,15 +265,15 @@ public class Lpzg24BatchIndexPirServer extends AbstractBatchIndexPirServer {
      *
      * @return 元素PRF。
      */
-    private ArrayList<ByteBuffer> computeElementPrf() {
+    private ArrayList<ByteBuffer> computeElementPrf(int partitionIndex) {
         Ecc ecc = EccFactory.createInstance(envType);
         Kdf kdf = KdfFactory.createInstance(envType);
         Prg prg = PrgFactory.createInstance(envType, CommonConstants.BLOCK_BYTE_LENGTH * 2);
-        alpha = BigIntegerUtils.randomPositive(ecc.getN(), secureRandom);
-        Stream<byte[]> stream = elementByteArray.stream();
-        stream = parallel ? stream.parallel() : stream;
-        return stream
-            .map(ecc::hashToCurve)
+        int size = elementByteArray.get(partitionIndex).length;
+        IntStream intStream = IntStream.range(0, size);
+        intStream = parallel ? intStream.parallel() : intStream;
+        return intStream
+            .mapToObj(i -> ecc.hashToCurve(elementByteArray.get(partitionIndex)[i]))
             .map(hash -> ecc.multiply(hash, alpha))
             .map(prf -> ecc.encode(prf, false))
             .map(kdf::deriveKey)
@@ -376,17 +357,7 @@ public class Lpzg24BatchIndexPirServer extends AbstractBatchIndexPirServer {
             .collect(Collectors.toList());
     }
 
-    /**
-     * 服务端计算密文匹配结果。
-     *
-     * @param ciphertextPoly   密文多项式。
-     * @return 密文匹配结果。
-     * @throws MpcAbortException 如果协议异常中止。
-     */
-    private List<byte[]> computeResponse(ArrayList<byte[]> ciphertextPoly) throws MpcAbortException {
-        int ciphertextNum = params.getBinNum() / (params.getPolyModulusDegree() / params.getItemEncodedSlotSize());
-        int partitionCount = (maxBinSize + params.getMaxPartitionSizePerBin() - 1) / params.getMaxPartitionSizePerBin();
-        // 计算所有的密文次方
+    private int[][] computePowerDegree() {
         int[][] powerDegree;
         if (params.getPsLowDegree() > 0) {
             Set<Integer> innerPowersSet = new HashSet<>();
@@ -413,50 +384,101 @@ public class Lpzg24BatchIndexPirServer extends AbstractBatchIndexPirServer {
             PowerNode[] powerNodes = PowerUtils.computePowers(sourcePowersSet, params.getMaxPartitionSizePerBin());
             powerDegree = Arrays.stream(powerNodes).map(PowerNode::toIntArray).toArray(int[][]::new);
         }
+        return powerDegree;
+    }
+
+    /**
+     * 服务端计算密文的次方。
+     *
+     * @param query 密文多项式。
+     * @return 密文的次方。
+     */
+    private List<byte[]> computeQueryPowers(ArrayList<byte[]> query, int[][] powerDegree) {
+        int ciphertextNum = params.getBinNum() / (params.getPolyModulusDegree() / params.getItemEncodedSlotSize());
+        // 计算所有的密文次方
         IntStream intStream = IntStream.range(0, ciphertextNum);
         intStream = parallel ? intStream.parallel() : intStream;
-        List<byte[]> queryPowers = intStream
+        return intStream
             .mapToObj(i -> Lpzg24BatchIndexPirNativeUtils.computeEncryptedPowers(
                 sealContext,
                 relinKeys,
-                ciphertextPoly.subList(i * params.getQueryPowers().length, (i + 1) * params.getQueryPowers().length),
+                query.subList(i * params.getQueryPowers().length, (i + 1) * params.getQueryPowers().length),
                 powerDegree,
                 params.getQueryPowers(),
                 params.getPsLowDegree())
             )
             .flatMap(Collection::stream)
             .collect(Collectors.toCollection(ArrayList::new));
+    }
+
+    /**
+     * 服务端计算密文匹配结果。
+     *
+     * @param ciphertextPoly   密文多项式。
+     * @return 密文匹配结果。
+     * @throws MpcAbortException 如果协议异常中止。
+     */
+    private List<byte[]> computeResponse(List<byte[]> ciphertextPoly, int[][] powerDegree, int partitionIndex) throws MpcAbortException {
+        int ciphertextNum = params.getBinNum() / (params.getPolyModulusDegree() / params.getItemEncodedSlotSize());
+        int binSize = CommonUtils.getUnitNum(maxBinSize, params.getMaxPartitionSizePerBin());
+        int partitionSize = encodedPlaintexts.size() / partitionCount;
         if (params.getPsLowDegree() > 0) {
             return IntStream.range(0, ciphertextNum)
                 .mapToObj(i ->
-                    (parallel ? IntStream.range(0, partitionCount).parallel() : IntStream.range(0, partitionCount))
+                    (parallel ? IntStream.range(0, binSize).parallel() : IntStream.range(0, binSize))
                         .mapToObj(j -> Lpzg24BatchIndexPirNativeUtils.optComputeMatches(
                             sealContext,
                             relinKeys,
-                            encodedPlaintexts.get(i * partitionCount + j),
-                            // plaintextPoly.get(i * partitionCount + j),
-                            queryPowers.subList(i * powerDegree.length, (i + 1) * powerDegree.length),
-                            params.getPsLowDegree())
-                        )
+                            encodedPlaintexts.get(i * binSize + j + partitionIndex * partitionSize),
+                            ciphertextPoly.subList(i * powerDegree.length, (i + 1) * powerDegree.length),
+                            params.getPsLowDegree()
+                            ))
                         .toArray(byte[][]::new))
                 .flatMap(Arrays::stream)
                 .collect(Collectors.toList());
         } else if (params.getPsLowDegree() == 0) {
             return IntStream.range(0, ciphertextNum)
                 .mapToObj(i ->
-                    (parallel ? IntStream.range(0, partitionCount).parallel() : IntStream.range(0, partitionCount))
+                    (parallel ? IntStream.range(0, binSize).parallel() : IntStream.range(0, binSize))
                         .mapToObj(j -> Lpzg24BatchIndexPirNativeUtils.naiveComputeMatches(
-                                sealContext,
-                                encodedPlaintexts.get(i * partitionCount + j),
-                                // plaintextPoly.get(i * partitionCount + j),
-                                queryPowers.subList(i * powerDegree.length, (i + 1) * powerDegree.length)
-                            )
-                        )
+                            sealContext,
+                            encodedPlaintexts.get(i * binSize + j + partitionIndex * partitionSize),
+                            ciphertextPoly.subList(i * powerDegree.length, (i + 1) * powerDegree.length)
+                            ))
                         .toArray(byte[][]::new))
                 .flatMap(Arrays::stream)
                 .collect(Collectors.toList());
         } else {
             throw new MpcAbortException("ps_low_degree参数设置不正确");
         }
+    }
+
+    @Override
+    protected void setInitInput(byte[][] elementArray, int elementBitLength, int maxRetrievalSize, int partitionBitLength) {
+        MathPreconditions.checkPositive("serverElementSize", elementArray.length);
+        serverElementSize = elementArray.length;
+        MathPreconditions.checkPositive("maxRetrievalSize", maxRetrievalSize);
+        this.maxRetrievalSize = maxRetrievalSize;
+        MathPreconditions.checkPositive("elementBitLength", elementBitLength);
+        this.elementBitLength = elementBitLength;
+        MathPreconditions.checkPositiveInRangeClosed("partitionBitLength", partitionBitLength, Integer.SIZE);
+        this.partitionBitLength = partitionBitLength;
+        this.partitionCount = CommonUtils.getUnitNum(elementBitLength, partitionBitLength);
+        int byteLength = CommonUtils.getByteLength(elementBitLength);
+        for (int i = 0; i < partitionCount; i++) {
+            ArrayList<byte[]> temp = new ArrayList<>();
+            for (int j = 0; j < serverElementSize; j++) {
+                boolean value = BinaryUtils.getBoolean(elementArray[j], byteLength * Byte.SIZE - 1 - i);
+                if (value) {
+                    temp.add(IntUtils.intToByteArray(j));
+                }
+            }
+            elementByteArray.add(temp.toArray(new byte[0][]));
+        }
+        // 设置特殊空元素
+        byte[] botElementByteArray = new byte[Integer.BYTES];
+        Arrays.fill(botElementByteArray, (byte)0xFF);
+        botElementByteBuffer = ByteBuffer.wrap(botElementByteArray);
+        initState();
     }
 }

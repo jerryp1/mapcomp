@@ -47,7 +47,7 @@ public class Lpzg24BatchIndexPirConfig implements BatchIndexPirConfig {
 
     @Override
     public BatchIndexPirFactory.BatchIndexPirType getProType() {
-        return BatchIndexPirFactory.BatchIndexPirType.VECTORIZED_BATCH_PIR;
+        return BatchIndexPirFactory.BatchIndexPirType.PSI_PIR;
     }
 
     public static class Builder implements org.apache.commons.lang3.builder.Builder<Lpzg24BatchIndexPirConfig> {

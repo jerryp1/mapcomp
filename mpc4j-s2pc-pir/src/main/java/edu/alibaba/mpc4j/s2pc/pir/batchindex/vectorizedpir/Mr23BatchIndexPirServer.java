@@ -8,11 +8,11 @@ import edu.alibaba.mpc4j.common.tool.hashbin.object.HashBinEntry;
 import edu.alibaba.mpc4j.common.tool.hashbin.object.RandomPadHashBin;
 import edu.alibaba.mpc4j.common.tool.hashbin.primitive.cuckoo.IntCuckooHashBinFactory;
 import edu.alibaba.mpc4j.common.tool.hashbin.primitive.cuckoo.IntNoStashCuckooHashBin;
+import edu.alibaba.mpc4j.common.tool.utils.BigIntegerUtils;
 import edu.alibaba.mpc4j.common.tool.utils.CommonUtils;
 import edu.alibaba.mpc4j.s2pc.pir.batchindex.AbstractBatchIndexPirServer;
 import edu.alibaba.mpc4j.s2pc.pir.batchindex.BatchIndexPirUtils;
 
-import java.nio.ByteBuffer;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
@@ -59,7 +59,7 @@ public class Mr23BatchIndexPirServer extends AbstractBatchIndexPirServer {
     /**
      * BFV明文（点值表示）
      */
-    private List<byte[]> encodedDatabase = new ArrayList<>();
+    private List<List<byte[]>> encodedDatabase;
     /**
      * 哈希分桶
      */
@@ -70,12 +70,12 @@ public class Mr23BatchIndexPirServer extends AbstractBatchIndexPirServer {
     }
 
     @Override
-    public void init(ArrayList<ByteBuffer> elementArrayList, int elementBitLength, int maxRetrievalSize)
+    public void init(byte[][] elementArray, int elementBitLength, int maxRetrievalSize)
         throws MpcAbortException {
-        setInitInput(elementArrayList, maxRetrievalSize);
+        params = Mr23BatchIndexPirParams.DEFAULT_PARAMS;
+        setInitInput(elementArray, elementBitLength, maxRetrievalSize, params.getPlainModulusBitLength());
         logPhaseInfo(PtoState.INIT_BEGIN);
 
-        params = Mr23BatchIndexPirParams.DEFAULT_PARAMS;
         // 服务端分桶
         stopWatch.start();
         hashKeys = CommonUtils.generateRandomKeys(params.getHashNum(), secureRandom);
@@ -83,9 +83,9 @@ public class Mr23BatchIndexPirServer extends AbstractBatchIndexPirServer {
             envType, IntCuckooHashBinFactory.IntCuckooHashBinType.NO_STASH_NAIVE, maxRetrievalSize, hashKeys
         );
         int binNum = cuckooHashBin.binNum();
-        int max = maxBinSize(binNum);
+        int maxBinSize = getMaxBinSize(binNum);
         // 初始化batch pir参数
-        innerParams = new Mr23BatchIndexPirInnerParams(params, binNum, max);
+        innerParams = new Mr23BatchIndexPirInnerParams(params, binNum, maxBinSize);
         DataPacketHeader cuckooHashKeyHeader = new DataPacketHeader(
             encodeTaskId, getPtoDesc().getPtoId(), PtoStep.SERVER_SEND_CUCKOO_HASH_KEYS.ordinal(), extraInfo,
             rpc.ownParty().getPartyId(), otherParty().getPartyId()
@@ -107,29 +107,35 @@ public class Mr23BatchIndexPirServer extends AbstractBatchIndexPirServer {
 
         // 服务端对数据库进行编码
         stopWatch.start();
-        // 每个分桶内的元素vectorized PIR初始化
-        IntStream intStream = IntStream.range(0, binNum);
-        intStream = parallel ? intStream.parallel() : intStream;
-        List<long[][]> coeffs = intStream
-            .mapToObj(i -> {
-                try {
-                    return vectorizedPirSetup(completeHashBins.get(i));
-                } catch (MpcAbortException e) {
-                    e.printStackTrace();
-                    return new long[0][];
-                }
-            })
-            .collect(Collectors.toList());
-        // vectorized batch pir 初始化
-        List<long[][]> mergedCoeffs = batchPirSetup(coeffs);
-        encodedDatabase = mergedCoeffs.stream()
-            .map(mergedCoeff ->
-                Mr23BatchIndexPirNativeUtils.preprocessDatabase(
-                    params.getEncryptionParams(), mergedCoeff, innerParams.getTotalSize()
-                )
-            )
-            .flatMap(Collection::stream)
-            .collect(Collectors.toList());
+        encodedDatabase = new ArrayList<>();
+        for (int partitionIndex = 0; partitionIndex < partitionCount; partitionIndex++) {
+            // 每个分桶内的元素vectorized PIR初始化
+            IntStream intStream = IntStream.range(0, binNum);
+            intStream = parallel ? intStream.parallel() : intStream;
+            int finalPartitionIndex = partitionIndex;
+            List<long[][]> coeffs = intStream
+                .mapToObj(i -> {
+                    try {
+                        return vectorizedPirSetup(completeHashBins.get(i), finalPartitionIndex);
+                    } catch (MpcAbortException e) {
+                        e.printStackTrace();
+                        return new long[0][];
+                    }
+                })
+                .collect(Collectors.toList());
+            // vectorized batch pir 初始化
+            List<long[][]> mergedCoeffs = batchPirSetup(coeffs);
+            encodedDatabase.add(
+                mergedCoeffs.stream()
+                    .map(mergedCoeff ->
+                        Mr23BatchIndexPirNativeUtils.preprocessDatabase(
+                            params.getEncryptionParams(), mergedCoeff, innerParams.getTotalSize()
+                        )
+                    )
+                    .flatMap(Collection::stream)
+                    .collect(Collectors.toList())
+            );
+        }
         stopWatch.stop();
         long initTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
         stopWatch.reset();
@@ -153,22 +159,29 @@ public class Mr23BatchIndexPirServer extends AbstractBatchIndexPirServer {
         // 服务端计算回复信息
         stopWatch.start();
         int count = CommonUtils.getUnitNum(innerParams.getBinNum(), innerParams.getGroupBinSize());
-        IntStream intStream = IntStream.range(0, count);
-        intStream = parallel ? intStream.parallel() : intStream;
-        List<byte[]> response = intStream
-            .mapToObj(i -> handleClientQueryPayload(
-                clientQueryPayload.subList(i * params.getDimension(), (i + 1) * params.getDimension()),
-                encodedDatabase.subList(i * innerParams.getTotalSize(), (i + 1) * innerParams.getTotalSize()))
-            )
-            .collect(Collectors.toList());
-        // merge response ciphertexts
-        byte[] mergedResponse = Mr23BatchIndexPirNativeUtils.mergeResponse(params.getEncryptionParams(),
-            publicKey, galoisKeys, response, innerParams.getGroupBinSize());
+        int totalSize = innerParams.getTotalSize();
+        List<byte[]> serverResponsePayload = new ArrayList<>();
+        for (int partitionIndex = 0; partitionIndex < partitionCount; partitionIndex++) {
+            IntStream intStream = IntStream.range(0, count);
+            intStream = parallel ? intStream.parallel() : intStream;
+            int finalPartitionIndex = partitionIndex;
+            List<byte[]> response = intStream
+                .mapToObj(i -> handleClientQueryPayload(
+                    clientQueryPayload.subList(i * params.getDimension(), (i + 1) * params.getDimension()),
+                    encodedDatabase.get(finalPartitionIndex).subList(i * totalSize, (i + 1) * totalSize))
+                )
+                .collect(Collectors.toList());
+            // merge response ciphertexts
+            serverResponsePayload.add(Mr23BatchIndexPirNativeUtils.mergeResponse(
+                params.getEncryptionParams(), publicKey, galoisKeys, response, innerParams.getGroupBinSize()
+                )
+            );
+        }
         DataPacketHeader responseHeader = new DataPacketHeader(
             encodeTaskId, getPtoDesc().getPtoId(), PtoStep.SERVER_SEND_RESPONSE.ordinal(), extraInfo,
             rpc.ownParty().getPartyId(), otherParty().getPartyId()
         );
-        rpc.send(DataPacket.fromByteArrayList(responseHeader, Collections.singletonList(mergedResponse)));
+        rpc.send(DataPacket.fromByteArrayList(responseHeader, serverResponsePayload));
         stopWatch.stop();
         long genResponseTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
         stopWatch.reset();
@@ -182,7 +195,7 @@ public class Mr23BatchIndexPirServer extends AbstractBatchIndexPirServer {
      *
      * @return 最大桶内元素数目。
      */
-    private int maxBinSize(int binNum) {
+    private int getMaxBinSize(int binNum) {
         ArrayList<Integer> totalIndexList = IntStream.range(0, serverElementSize)
             .boxed()
             .collect(Collectors.toCollection(() -> new ArrayList<>(serverElementSize)));
@@ -208,18 +221,21 @@ public class Mr23BatchIndexPirServer extends AbstractBatchIndexPirServer {
     /**
      * vectorized PIR初始化。
      *
-     * @param binElements 分桶内的元素。
+     * @param binItems 分桶内的元素。
      * @return 分桶内的多项式编码
      * @throws MpcAbortException 如果协议异常终止。
      */
-    private long[][] vectorizedPirSetup(ArrayList<HashBinEntry<Integer>> binElements) throws MpcAbortException {
-        MpcAbortPreconditions.checkArgument(binElements.size() == innerParams.getBinSize());
-        long[] elementArray = new long[innerParams.getBinSize()];
+    private long[][] vectorizedPirSetup(ArrayList<HashBinEntry<Integer>> binItems, int partitionIndex)
+        throws MpcAbortException {
+        MpcAbortPreconditions.checkArgument(binItems.size() == innerParams.getBinSize());
+        long[] items = new long[innerParams.getBinSize()];
         IntStream.range(0, innerParams.getBinSize()).forEach(i -> {
-            if (binElements.get(i).getHashIndex() == -1) {
-                elementArray[i] = 0;
+            if (binItems.get(i).getHashIndex() == -1) {
+                items[i] = 0L;
             } else {
-                elementArray[i] = elementByteArray.get(binElements.get(i).getItem())[0];
+                items[i] = BigIntegerUtils.byteArrayToNonNegBigInteger(
+                    elementByteArray.get(partitionIndex)[binItems.get(i).getItem()])
+                    .intValue();
             }
         });
         int dimLength = innerParams.getDimensionsLength();
@@ -232,7 +248,7 @@ public class Mr23BatchIndexPirServer extends AbstractBatchIndexPirServer {
                 length = innerParams.getBinSize() - dimLength * i;
             }
             for (int j = 0; j < length; j++) {
-                temp[j * innerParams.getGroupBinSize()] = elementArray[i * dimLength + j];
+                temp[j * innerParams.getGroupBinSize()] = items[i * dimLength + j];
             }
             coeffs[i] = BatchIndexPirUtils.plaintextRotate(temp, (i % dimLength) * innerParams.getGroupBinSize());
         }
@@ -246,7 +262,7 @@ public class Mr23BatchIndexPirServer extends AbstractBatchIndexPirServer {
      * @return 合并后的多项式系数。
      */
     private List<long[][]> batchPirSetup(List<long[][]> binCoeffs) {
-        int g = (params.getPolyModulusDegree() / 2) / innerParams.getSlotNum();
+        int g = innerParams.getGroupBinSize();
         int count = CommonUtils.getUnitNum(innerParams.getBinNum(), g);
         int rowCount = params.getPolyModulusDegree() / 2;
         List<long[][]> mergedDatabase = new ArrayList<>(count);

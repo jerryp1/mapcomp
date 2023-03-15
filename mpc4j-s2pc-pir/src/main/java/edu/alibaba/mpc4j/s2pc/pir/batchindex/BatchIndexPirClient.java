@@ -3,7 +3,6 @@ package edu.alibaba.mpc4j.s2pc.pir.batchindex;
 import edu.alibaba.mpc4j.common.rpc.MpcAbortException;
 import edu.alibaba.mpc4j.common.rpc.pto.TwoPartyPto;
 
-import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.Map;
 
@@ -32,5 +31,5 @@ public interface BatchIndexPirClient extends TwoPartyPto {
      * @return 检索结果。
      * @throws MpcAbortException 如果协议异常中止。
      */
-    Map<Integer, ByteBuffer> pir(ArrayList<Integer> indices) throws MpcAbortException;
+    Map<Integer, byte[]> pir(ArrayList<Integer> indices) throws MpcAbortException;
 }

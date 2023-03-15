@@ -1,7 +1,10 @@
 package edu.alibaba.mpc4j.s2pc.pir;
 
-import edu.alibaba.mpc4j.common.tool.utils.IntUtils;
+import edu.alibaba.mpc4j.common.tool.utils.BinaryUtils;
+import edu.alibaba.mpc4j.common.tool.utils.BytesUtils;
+import edu.alibaba.mpc4j.common.tool.utils.CommonUtils;
 
+import java.math.BigInteger;
 import java.nio.ByteBuffer;
 import java.security.SecureRandom;
 import java.util.*;
@@ -102,7 +105,7 @@ public class PirUtils {
      *
      * @param elementSize       元素数量。
      * @param elementByteLength 元素字节长度。
-     * @return 关键词和标签映射。
+     * @return 随机元素数组。
      */
     public static ArrayList<ByteBuffer> generateElementArrayList(int elementSize, int elementByteLength) {
         return IntStream.range(0, elementSize)
@@ -117,8 +120,22 @@ public class PirUtils {
     /**
      * 生成随机元素数组。
      *
+     * @param elementSize      元素数量。
+     * @param elementBitLength 元素比特长度。
+     * @return 随机元素数组。
+     */
+    public static byte[][] generateElementByteArray(int elementSize, int elementBitLength) {
+        int elementByteLength = CommonUtils.getByteLength(elementBitLength);
+        return IntStream.range(0, elementSize)
+            .mapToObj(i -> BytesUtils.randomByteArray(elementByteLength, elementBitLength, SECURE_RANDOM))
+            .toArray(byte[][]::new);
+    }
+
+    /**
+     * 生成随机元素数组。
+     *
      * @param elementSize 元素数量。
-     * @return 关键词和标签映射。
+     * @return 随机元素数组。
      */
     public static ArrayList<ByteBuffer> generateBooleanElementArrayList(int elementSize) {
         return IntStream.range(0, elementSize)
@@ -139,8 +156,8 @@ public class PirUtils {
     /**
      * 生成索引值列表。
      *
-     * @param elementSize   元素数量。
-     * @param setSize       集合数量。
+     * @param elementSize 元素数量。
+     * @param setSize     集合数量。
      * @return 索引值列表。
      */
     public static ArrayList<Integer> generateRetrievalIndexList(int elementSize, int setSize) {
@@ -150,11 +167,11 @@ public class PirUtils {
     }
 
     /**
-     * 生成索引值列表。
+     * 生成索引值集合。
      *
-     * @param elementSize   元素数量。
-     * @param setSize       集合数量。
-     * @return 索引值列表。
+     * @param elementSize 元素数量。
+     * @param setSize     集合数量。
+     * @return 索引值集合。
      */
     public static Set<Integer> generateRetrievalIndexSet(int elementSize, int setSize) {
         Set<Integer> indexSet = new HashSet<>();

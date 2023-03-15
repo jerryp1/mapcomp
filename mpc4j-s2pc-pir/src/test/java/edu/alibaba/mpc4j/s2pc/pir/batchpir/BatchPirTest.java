@@ -4,7 +4,6 @@ import com.google.common.base.Preconditions;
 import edu.alibaba.mpc4j.common.rpc.Rpc;
 import edu.alibaba.mpc4j.common.rpc.RpcManager;
 import edu.alibaba.mpc4j.common.rpc.impl.memory.MemoryRpcManager;
-import edu.alibaba.mpc4j.common.tool.CommonConstants;
 import edu.alibaba.mpc4j.s2pc.pir.PirUtils;
 import edu.alibaba.mpc4j.s2pc.pir.batchindex.BatchIndexPirClient;
 import edu.alibaba.mpc4j.s2pc.pir.batchindex.BatchIndexPirConfig;
@@ -17,8 +16,6 @@ import org.junit.Assert;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.nio.ByteBuffer;
 import java.util.*;
@@ -31,11 +28,18 @@ import java.util.*;
  */
 @RunWith(Parameterized.class)
 public class BatchPirTest {
-    private static final Logger LOGGER = LoggerFactory.getLogger(BatchPirTest.class);
     /**
-     * 默认字节长度
+     * 默认比特长度
      */
-    private static final int DEFAULT_LABEL_BYTE_LENGTH = CommonConstants.BLOCK_BYTE_LENGTH;
+    private static final int DEFAULT_BIT_LENGTH = 32;
+    /**
+     * 较小比特长度
+     */
+    private static final int SMALL_BIT_LENGTH = 4;
+    /**
+     * 最大比特长度
+     */
+    private static final int LARGE_BIT_LENGTH = 128;
     /**
      * 服务端元素数量
      */
@@ -43,11 +47,7 @@ public class BatchPirTest {
     /**
      * 默认客户端元素数量
      */
-    private static final int DEFAULT_CLIENT_SET_SIZE = 1 << 8;
-    /**
-     * 较大客户端元素数量
-     */
-    private static final int LARGE_CLIENT_SET_SIZE = 1 << 12;
+    private static final int DEFAULT_CLIENT_SET_SIZE = 1 << 10;
 
 
     @Parameterized.Parameters(name = "{0}")
@@ -55,9 +55,9 @@ public class BatchPirTest {
         Collection<Object[]> configurations = new ArrayList<>();
 
         // PSI-PIR
-//        configurations.add(new Object[]{
-//            BatchIndexPirFactory.BatchIndexPirType.PSI_PIR.name(), new Lpzg24BatchIndexPirConfig.Builder().build()
-//        });
+        configurations.add(new Object[]{
+            BatchIndexPirFactory.BatchIndexPirType.PSI_PIR.name(), new Lpzg24BatchIndexPirConfig.Builder().build()
+        });
         // vectorized batch PIR
         configurations.add(new Object[]{
             BatchIndexPirFactory.BatchIndexPirType.VECTORIZED_BATCH_PIR.name(), new Mr23BatchIndexPirConfig.Builder().build()
@@ -89,19 +89,25 @@ public class BatchPirTest {
     }
 
     @Test
-    public void testDefaultRetrievalSizeParallel() {
-        testPir(DEFAULT_CLIENT_SET_SIZE, config, true);
+    public void testSmallBitLengthParallel() {
+        testPir(SMALL_BIT_LENGTH, config, true);
     }
 
     @Test
-    public void testDefaultRetrievalSize() {
-        testPir(DEFAULT_CLIENT_SET_SIZE, config, false);
+    public void testDefaultBitLengthParallel() {
+        testPir(DEFAULT_BIT_LENGTH, config, true);
     }
 
-    public void testPir(int retrievalSize, BatchIndexPirConfig config, boolean parallel) {
-        Set<Integer> retrievalIndexSet = PirUtils.generateRetrievalIndexSet(SERVER_ELEMENT_SIZE, retrievalSize);
+    @Test
+    public void testLargeBitLengthParallel() {
+        testPir(LARGE_BIT_LENGTH, config, true);
+    }
+
+
+    public void testPir(int elementBitLength, BatchIndexPirConfig config, boolean parallel) {
+        Set<Integer> retrievalIndexSet = PirUtils.generateRetrievalIndexSet(SERVER_ELEMENT_SIZE, DEFAULT_CLIENT_SET_SIZE);
         // 随机构建服务端关键词和标签映射
-        ArrayList<ByteBuffer> serverElementList = PirUtils.generateElementArrayList(SERVER_ELEMENT_SIZE);
+        byte[][] serverElementArray = PirUtils.generateElementByteArray(SERVER_ELEMENT_SIZE, elementBitLength);
         // 创建参与方实例
         BatchIndexPirServer server = BatchIndexPirFactory.createServer(serverRpc, clientRpc.ownParty(), config);
         BatchIndexPirClient client = BatchIndexPirFactory.createClient(clientRpc, serverRpc.ownParty(), config);
@@ -109,11 +115,11 @@ public class BatchPirTest {
         server.setParallel(parallel);
         client.setParallel(parallel);
         BatchPirServerThread serverThread = new BatchPirServerThread(
-            server, serverElementList, 8, DEFAULT_CLIENT_SET_SIZE
+            server, serverElementArray, elementBitLength, DEFAULT_CLIENT_SET_SIZE
         );
         ArrayList<Integer> retrievalIndexList = new ArrayList<>(retrievalIndexSet);
         BatchPirClientThread clientThread = new BatchPirClientThread(
-            client, retrievalIndexList, 8, SERVER_ELEMENT_SIZE, DEFAULT_CLIENT_SET_SIZE
+            client, retrievalIndexList, elementBitLength, SERVER_ELEMENT_SIZE, DEFAULT_CLIENT_SET_SIZE
         );
         try {
             // 开始执行协议
@@ -122,15 +128,12 @@ public class BatchPirTest {
             // 等待线程停止
             serverThread.join();
             clientThread.join();
-
-            LOGGER.info("Server: The Communication costs {}MB", serverRpc.getSendByteLength() * 1.0 / (1024 * 1024));
-            serverRpc.reset();
-            LOGGER.info("Client: The Communication costs {}MB", clientRpc.getSendByteLength() * 1.0 / (1024 * 1024));
-            clientRpc.reset();
             // 验证结果
-            Map<Integer, ByteBuffer> result = clientThread.getRetrievalResult();
-            Assert.assertEquals(retrievalSize, result.size());
-            result.forEach((key, value) -> Assert.assertEquals(serverElementList.get(key), value));
+            Map<Integer, byte[]> result = clientThread.getRetrievalResult();
+            Assert.assertEquals(DEFAULT_CLIENT_SET_SIZE, result.size());
+            result.forEach((key, value) ->
+                Assert.assertEquals(ByteBuffer.wrap(serverElementArray[key]), ByteBuffer.wrap(value))
+            );
         } catch (InterruptedException e) {
             e.printStackTrace();
         }

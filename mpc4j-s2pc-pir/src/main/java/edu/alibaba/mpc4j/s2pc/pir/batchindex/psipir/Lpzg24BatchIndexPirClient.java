@@ -14,6 +14,8 @@ import edu.alibaba.mpc4j.common.tool.galoisfield.zp64.Zp64;
 import edu.alibaba.mpc4j.common.tool.galoisfield.zp64.Zp64Factory;
 import edu.alibaba.mpc4j.common.tool.hashbin.object.cuckoo.CuckooHashBin;
 import edu.alibaba.mpc4j.common.tool.utils.BigIntegerUtils;
+import edu.alibaba.mpc4j.common.tool.utils.BinaryUtils;
+import edu.alibaba.mpc4j.common.tool.utils.CommonUtils;
 import edu.alibaba.mpc4j.s2pc.pir.batchindex.AbstractBatchIndexPirClient;
 import edu.alibaba.mpc4j.s2pc.pso.upsi.cmg21.Cmg21UpsiParams;
 import org.bouncycastle.math.ec.ECPoint;
@@ -85,8 +87,8 @@ public class Lpzg24BatchIndexPirClient extends AbstractBatchIndexPirClient {
         logPhaseInfo(PtoState.INIT_BEGIN);
 
         stopWatch.start();
-        params = Cmg21UpsiParams.SERVER_1M_CLIENT_MAX_2K_CMP;
-        setInitInput(serverElementSize, params.maxClientElementSize());
+        params = Cmg21UpsiParams.SERVER_1M_CLIENT_MAX_1K_CMP;
+        setInitInput(serverElementSize, elementBitLength, params.maxClientElementSize(), 1);
         // 客户端生成BFV算法密钥和参数
         List<byte[]> bfvKeyPair = generateKeyPair();
         DataPacketHeader bfvParamsHeader = new DataPacketHeader(
@@ -112,7 +114,7 @@ public class Lpzg24BatchIndexPirClient extends AbstractBatchIndexPirClient {
     }
 
     @Override
-    public Map<Integer, ByteBuffer> pir(ArrayList<Integer> indices) throws MpcAbortException {
+    public Map<Integer, byte[]> pir(ArrayList<Integer> indices) throws MpcAbortException {
         setPtoInput(indices);
         logPhaseInfo(PtoState.PTO_BEGIN);
 
@@ -175,11 +177,7 @@ public class Lpzg24BatchIndexPirClient extends AbstractBatchIndexPirClient {
 
         stopWatch.start();
         // 客户端解密密文匹配结果
-        Stream<byte[]> responseStream = parallel ? responsePayload.stream().parallel() : responsePayload.stream();
-        ArrayList<long[]> serverResponse = responseStream
-            .map(i -> Lpzg24BatchIndexPirNativeUtils.decodeReply(sealContext, secretKey, i))
-            .collect(Collectors.toCollection(ArrayList::new));
-        Map<Integer, ByteBuffer> intersectionSet = recoverPirResult(serverResponse, blindPrfMap);
+        Map<Integer, byte[]> intersectionSet = handleServerResponse(responsePayload, blindPrfMap);
         stopWatch.stop();
         long decodeTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
         stopWatch.reset();
@@ -189,6 +187,33 @@ public class Lpzg24BatchIndexPirClient extends AbstractBatchIndexPirClient {
         return intersectionSet;
     }
 
+    private Map<Integer, byte[]> handleServerResponse(List<byte[]> response, Map<ByteBuffer, ByteBuffer> oprfMap) throws MpcAbortException {
+        int ciphertextNum = params.getBinNum() / (params.getPolyModulusDegree() / params.getItemEncodedSlotSize());
+        MpcAbortPreconditions.checkArgument(response.size() % (ciphertextNum * partitionCount) == 0);
+        int partitionSize = response.size() / partitionCount;
+
+        Stream<byte[]> responseStream = parallel ? response.stream().parallel() : response.stream();
+        ArrayList<long[]> serverResponse = responseStream
+            .map(i -> Lpzg24BatchIndexPirNativeUtils.decodeReply(sealContext, secretKey, i))
+            .collect(Collectors.toCollection(ArrayList::new));
+
+        int byteLength = CommonUtils.getByteLength(elementBitLength);
+        byte[][] pirResult = new byte[retrievalSize][byteLength];
+
+        for (int i = 0; i < partitionCount; i++) {
+            Set<ByteBuffer> intersectionSet = recoverPirResult(serverResponse.subList(i * partitionSize, (i + 1) * partitionSize), oprfMap);
+            for (int j = 0; j < retrievalSize; j++) {
+                boolean temp = intersectionSet.contains(indicesByteBuffer.get(j));
+                BinaryUtils.setBoolean(pirResult[j], byteLength * Byte.SIZE - 1 - i, temp);
+            }
+        }
+        Map<Integer, byte[]> resultMap = new HashMap<>(retrievalSize);
+        for (int i = 0; i < retrievalSize; i++) {
+            resultMap.put(indicesByteBuffer.get(i).getInt(), pirResult[i]);
+        }
+        return resultMap;
+    }
+
     /**
      * 恢复隐私集合交集。
      *
@@ -196,10 +221,10 @@ public class Lpzg24BatchIndexPirClient extends AbstractBatchIndexPirClient {
      * @param oprfMap  OPRF映射。
      * @return 隐私集合交集。
      */
-    private Map<Integer, ByteBuffer> recoverPirResult(ArrayList<long[]> response, Map<ByteBuffer, ByteBuffer> oprfMap) {
+    private Set<ByteBuffer> recoverPirResult(List<long[]> response, Map<ByteBuffer, ByteBuffer> oprfMap) {
         int ciphertextNum = params.getBinNum() / (params.getPolyModulusDegree() / params.getItemEncodedSlotSize());
         int itemPerCiphertext = params.getPolyModulusDegree() / params.getItemEncodedSlotSize();
-        int partitionCount = response.size() / ciphertextNum;
+        int binSize = response.size() / ciphertextNum;
         Set<ByteBuffer> intersectionSet = new HashSet<>();
         for (int i = 0; i < response.size(); i++) {
             // 找到匹配元素的所在行
@@ -214,19 +239,14 @@ public class Lpzg24BatchIndexPirClient extends AbstractBatchIndexPirClient {
                     if (matchedItem.get(j + params.getItemEncodedSlotSize() - 1) - matchedItem.get(j)
                         == params.getItemEncodedSlotSize() - 1) {
                         int hashBinIndex = (matchedItem.get(j) / params.getItemEncodedSlotSize())
-                            + (i / partitionCount) * itemPerCiphertext;
+                            + (i / binSize) * itemPerCiphertext;
                         intersectionSet.add(oprfMap.get(cuckooHashBin.getHashBinEntry(hashBinIndex).getItem()));
                         j = j + params.getItemEncodedSlotSize() - 1;
                     }
                 }
             }
         }
-        Map<Integer, ByteBuffer> pirResult = new HashMap<>(retrievalSize);
-        for (ByteBuffer index : indicesByteBuffer) {
-            boolean temp = intersectionSet.contains(index);
-            pirResult.put(index.getInt(), ByteBuffer.wrap(temp ? new byte[]{(byte) 0x1} : new byte[]{(byte) 0x0}));
-        }
-        return pirResult;
+        return intersectionSet;
     }
 
     /**

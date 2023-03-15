@@ -4,8 +4,8 @@ import edu.alibaba.mpc4j.common.rpc.Party;
 import edu.alibaba.mpc4j.common.rpc.Rpc;
 import edu.alibaba.mpc4j.common.rpc.desc.PtoDesc;
 import edu.alibaba.mpc4j.common.rpc.pto.AbstractTwoPartyPto;
-import edu.alibaba.mpc4j.common.tool.CommonConstants;
 import edu.alibaba.mpc4j.common.tool.MathPreconditions;
+import edu.alibaba.mpc4j.common.tool.utils.CommonUtils;
 import edu.alibaba.mpc4j.common.tool.utils.IntUtils;
 
 import java.nio.ByteBuffer;
@@ -41,18 +41,36 @@ public abstract class AbstractBatchIndexPirClient extends AbstractTwoPartyPto im
      * 服务端元素数量
      */
     protected int serverElementSize;
+    /**
+     * 元素比特长度
+     */
+    protected int elementBitLength;
+    /**
+     * 分块的比特长度
+     */
+    protected int partitionBitLength;
+    /**
+     * 分块数目
+     */
+    protected int partitionCount;
 
     protected AbstractBatchIndexPirClient(PtoDesc ptoDesc, Rpc clientRpc, Party serverParty, BatchIndexPirConfig config) {
         super(ptoDesc, clientRpc, serverParty, config);
     }
 
-    protected void setInitInput(int serverElementSize, int maxRetrievalSize) {
+    protected void setInitInput(int serverElementSize, int elementBitLength, int maxRetrievalSize,
+                                int partitionBitLength) {
         MathPreconditions.checkPositive("serverElementSize", serverElementSize);
         this.serverElementSize = serverElementSize;
         MathPreconditions.checkPositive("maxClientElementSize", maxRetrievalSize);
         this.maxRetrievalSize = maxRetrievalSize;
+        MathPreconditions.checkPositive("elementBitLength", elementBitLength);
+        this.elementBitLength = elementBitLength;
+        MathPreconditions.checkPositiveInRangeClosed("partitionBitLength", partitionBitLength, Integer.SIZE);
+        this.partitionBitLength = partitionBitLength;
+        this.partitionCount = CommonUtils.getUnitNum(elementBitLength, partitionBitLength);
         // 设置特殊空元素
-        byte[] botElementByteArray = new byte[CommonConstants.STATS_BYTE_LENGTH];
+        byte[] botElementByteArray = new byte[Integer.BYTES];
         Arrays.fill(botElementByteArray, (byte)0xFF);
         botElementByteBuffer = ByteBuffer.wrap(botElementByteArray);
         initState();

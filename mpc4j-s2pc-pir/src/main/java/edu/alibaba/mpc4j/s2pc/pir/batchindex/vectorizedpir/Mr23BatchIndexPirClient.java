@@ -8,12 +8,13 @@ import edu.alibaba.mpc4j.common.tool.hashbin.object.HashBinEntry;
 import edu.alibaba.mpc4j.common.tool.hashbin.object.RandomPadHashBin;
 import edu.alibaba.mpc4j.common.tool.hashbin.primitive.cuckoo.IntCuckooHashBinFactory;
 import edu.alibaba.mpc4j.common.tool.hashbin.primitive.cuckoo.IntNoStashCuckooHashBin;
+import edu.alibaba.mpc4j.common.tool.utils.BigIntegerUtils;
 import edu.alibaba.mpc4j.common.tool.utils.CommonUtils;
 import edu.alibaba.mpc4j.s2pc.pir.batchindex.AbstractBatchIndexPirClient;
 import edu.alibaba.mpc4j.s2pc.pir.batchindex.BatchIndexPirUtils;
 import edu.alibaba.mpc4j.s2pc.pir.index.IndexPirUtils;
 
-import java.nio.ByteBuffer;
+import java.math.BigInteger;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
@@ -73,10 +74,10 @@ public class Mr23BatchIndexPirClient extends AbstractBatchIndexPirClient {
 
     @Override
     public void init(int serverElementSize, int elementBitLength, int maxRetrievalSize) throws MpcAbortException {
-        setInitInput(serverElementSize, maxRetrievalSize);
+        params = Mr23BatchIndexPirParams.DEFAULT_PARAMS;
+        setInitInput(serverElementSize, elementBitLength, maxRetrievalSize, params.getPlainModulusBitLength());
         logPhaseInfo(PtoState.INIT_BEGIN);
 
-        params = Mr23BatchIndexPirParams.DEFAULT_PARAMS;
         // 客户端接收服务端哈希密钥
         DataPacketHeader cuckooHashKeyHeader = new DataPacketHeader(
             encodeTaskId, getPtoDesc().getPtoId(), PtoStep.SERVER_SEND_CUCKOO_HASH_KEYS.ordinal(), extraInfo,
@@ -116,7 +117,7 @@ public class Mr23BatchIndexPirClient extends AbstractBatchIndexPirClient {
     }
 
     @Override
-    public Map<Integer, ByteBuffer> pir(ArrayList<Integer> indices) throws MpcAbortException {
+    public Map<Integer, byte[]> pir(ArrayList<Integer> indices) throws MpcAbortException {
         setPtoInput(indices);
         logPhaseInfo(PtoState.PTO_BEGIN);
 
@@ -129,7 +130,6 @@ public class Mr23BatchIndexPirClient extends AbstractBatchIndexPirClient {
         long cuckooHashKeyTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
         stopWatch.reset();
         logStepInfo(PtoState.PTO_STEP, 1, 3, cuckooHashKeyTime, "Client generates cuckoo hash bin");
-
 
         stopWatch.start();
         // client generate queries for each hash bin
@@ -167,7 +167,7 @@ public class Mr23BatchIndexPirClient extends AbstractBatchIndexPirClient {
 
         // 客户端解密检索结果
         stopWatch.start();
-        Map<Integer, ByteBuffer> resultMap = handleServerResponse(responsePayload, binRetrievalIndex);
+        Map<Integer, byte[]> resultMap = handleServerResponse(responsePayload, binRetrievalIndex);
         stopWatch.stop();
         long responseTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
         stopWatch.reset();
@@ -328,23 +328,36 @@ public class Mr23BatchIndexPirClient extends AbstractBatchIndexPirClient {
      * @return 查询结果映射。
      * @throws MpcAbortException 如果协议异常终止。
      */
-    private Map<Integer, ByteBuffer> handleServerResponse(List<byte[]> serverResponse, List<Integer> binIndex)
+    private Map<Integer, byte[]> handleServerResponse(List<byte[]> serverResponse, List<Integer> binIndex)
         throws MpcAbortException {
-        MpcAbortPreconditions.checkArgument(serverResponse.size() == 1);
-        long[] coeffs = Mr23BatchIndexPirNativeUtils.decryptReply(
-            params.getEncryptionParams(), secretKey, serverResponse.get(0)
-        );
-        // 建立检索结果映射
-        return IntStream.range(0, binIndex.size())
-            .filter(i -> binIndex.get(i) != -1)
-            .boxed()
-            .collect(
-                Collectors.toMap(
-                    binIndexRetrievalIndexMap::get,
-                    i -> ByteBuffer.wrap(new byte[]{(byte) coeffs[i]}),
-                    (a, b) -> b,
-                    () -> new HashMap<>(retrievalSize)
-                )
+        MpcAbortPreconditions.checkArgument(serverResponse.size() == partitionCount);
+        BigInteger[] retrievalResult = IntStream.range(0, binIndex.size())
+            .mapToObj(i -> BigInteger.ZERO)
+            .toArray(BigInteger[]::new);
+        IntStream intStream = IntStream.range(0, partitionCount);
+        intStream = parallel ? intStream.parallel() : intStream;
+        intStream.forEach(i -> {
+            long[] coeffs = Mr23BatchIndexPirNativeUtils.decryptReply(
+                params.getEncryptionParams(), secretKey, serverResponse.get(i)
             );
+            for (int j = 0; j < binIndex.size(); j++) {
+                if (binIndex.get(j) != -1) {
+                    BigInteger temp = BigInteger.valueOf(coeffs[j]).shiftLeft(partitionBitLength * i);
+                    retrievalResult[j] = retrievalResult[j].add(temp);
+                }
+            }
+        });
+        // 建立检索结果映射
+        int byteLength = CommonUtils.getByteLength(elementBitLength);
+        Map<Integer, Integer> integerIntegerMap = binIndexRetrievalIndexMap;
+        HashMap<Integer, byte[]> map = new HashMap<>(retrievalSize);
+        int bound = binIndex.size();
+        for (int i = 0; i < bound; i++) {
+            if (binIndex.get(i) != -1) {
+                Integer integer = i;
+                map.put(integerIntegerMap.get(integer), BigIntegerUtils.nonNegBigIntegerToByteArray(retrievalResult[integer], byteLength));
+            }
+        }
+        return map;
     }
 }
