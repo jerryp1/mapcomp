@@ -48,10 +48,10 @@ public class BigIntegerRingTest {
 
         // Zn
         ZnType[] types = new ZnType[]{ZnFactory.ZnType.JDK};
-        int[] ns = new int[]{2, 3, 4, 7, 8, 247, 350, 511, 512, 513, 701, 833, 991, 1023, 1024, 1025};
+        long[] ns = new long[]{2, 3, 4, 7, 8, 247, 350, 511, 512, 513, 701, 833, 991, 1023, 1024, 1025};
         for (ZnType type : types) {
             // add each n
-            for (int n : ns) {
+            for (long n : ns) {
                 configurations.add(new Object[]{
                     ZnType.class.getSimpleName() + " (" + type.name() + " ,n = " + n,
                     ZnFactory.createInstance(EnvType.STANDARD, type, BigInteger.valueOf(n)),

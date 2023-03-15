@@ -27,10 +27,9 @@ public class ZlTest {
     public static Collection<Object[]> configurations() {
         Collection<Object[]> configurations = new ArrayList<>();
 
-        // Zp
-        ZlType[] zlTypes = new ZlType[]{ZlType.JDK};
+        ZlType[] types = new ZlType[]{ZlType.JDK};
         int[] ls = new int[]{1, 2, 3, 4, 39, 40, 41, 61, 62, 63, 64, 65, 127, 128, 129};
-        for (ZlType type : zlTypes) {
+        for (ZlType type : types) {
             // add each l
             for (int l : ls) {
                 configurations.add(new Object[]{type.name() + ", l = " + l, type, l});
@@ -111,6 +110,17 @@ public class ZlTest {
             Assert.assertEquals(rangeBound.subtract(two), zl.neg(two));
             // 4 - 2 = 2
             Assert.assertEquals(two, zl.sub(four, two));
+        }
+    }
+
+    @Test
+    public void testConstantMul() {
+        BigInteger two = BigInteger.valueOf(2);
+        BigInteger four = BigInteger.valueOf(4);
+        BigInteger modulus = zl.getRangeBound();
+        if (BigIntegerUtils.greater(modulus, four)) {
+            // 2 * 2 = 4
+            Assert.assertEquals(four, zl.mul(two, two));
         }
     }
 }

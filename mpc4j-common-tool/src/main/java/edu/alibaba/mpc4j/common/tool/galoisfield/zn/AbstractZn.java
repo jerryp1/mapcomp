@@ -57,17 +57,11 @@ abstract class AbstractZn implements Zn {
     private final Prg prg;
 
     AbstractZn(EnvType envType, BigInteger n) {
-        assert BigIntegerUtils.greater(n, BigInteger.ONE) : "n must be greater than 1";
+        assert BigIntegerUtils.greater(n, BigInteger.ONE) : "n must be greater than 1: " + n;
         this.n = n;
         nBitLength = n.bitLength();
         nByteLength = CommonUtils.getByteLength(nBitLength);
-        BigInteger nPow2 = BigInteger.ONE.shiftLeft(nBitLength);
-        // if 2^nBitLength == n, then l = nBitLength, else l = nBitLength - 1
-        if (nPow2.equals(n)) {
-            l = nBitLength;
-        } else {
-            l = nBitLength - 1;
-        }
+        l = nBitLength - 1;
         byteL = CommonUtils.getByteLength(l);
         rangeBound = BigInteger.ONE.shiftLeft(l);
         andRangeBound = rangeBound.subtract(BigInteger.ONE);

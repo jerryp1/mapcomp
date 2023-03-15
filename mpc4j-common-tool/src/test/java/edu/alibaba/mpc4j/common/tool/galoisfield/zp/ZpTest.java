@@ -27,10 +27,9 @@ public class ZpTest {
     public static Collection<Object[]> configurations() {
         Collection<Object[]> configurations = new ArrayList<>();
 
-        // Zp
-        ZpType[] zpTypes = new ZpType[]{ZpType.JDK};
+        ZpType[] types = new ZpType[]{ZpType.JDK};
         int[] ls = new int[]{1, 2, 3, 4, 39, 40, 41, 61, 62, 63, 64, 65, 127, 128, 129};
-        for (ZpType type : zpTypes) {
+        for (ZpType type : types) {
             // add each l
             for (int l : ls) {
                 configurations.add(new Object[]{type.name() + ", l = " + l, type, l});

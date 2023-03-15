@@ -11,6 +11,13 @@ import java.security.SecureRandom;
  */
 public interface BigIntegerRing {
     /**
+     * Gets the name.
+     *
+     * @return the name.
+     */
+    String getName();
+
+    /**
      * Gets the maximal l (in bit length) so that all elements in {0, 1}^l is a valid element.
      *
      * @return the maximal l (in bit length).
@@ -82,6 +89,7 @@ public interface BigIntegerRing {
 
     /**
      * Computes p^q.
+     *
      * @param p the element p.
      * @param q the element q.
      * @return p^q.
@@ -92,7 +100,7 @@ public interface BigIntegerRing {
      * Computes the inner-product of zp vector and binary vector.
      *
      * @param elementVector the element vector.
-     * @param binaryVector the binary vector.
+     * @param binaryVector  the binary vector.
      * @return the inner product.
      */
     BigInteger innerProduct(final BigInteger[] elementVector, final boolean[] binaryVector);

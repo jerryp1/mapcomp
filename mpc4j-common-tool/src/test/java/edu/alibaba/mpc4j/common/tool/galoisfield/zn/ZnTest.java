@@ -27,12 +27,11 @@ public class ZnTest {
     public static Collection<Object[]> configurations() {
         Collection<Object[]> configurations = new ArrayList<>();
 
-        // Zn
         ZnType[] types = new ZnType[]{ZnType.JDK};
-        int[] ns = new int[]{2, 3, 4, 7, 8, 247, 350, 511, 512, 513, 701, 833, 991, 1023, 1024, 1025};
+        long[] ns = new long[]{2, 3, 4, 7, 8, 247, 350, 511, 512, 513, 701, 833, 991, 1023, 1024, 1025};
         for (ZnType type : types) {
             // add each n
-            for (int n : ns) {
+            for (long n : ns) {
                 configurations.add(new Object[]{type.name() + ", n = " + n, type, BigInteger.valueOf(n)});
             }
         }
@@ -64,12 +63,7 @@ public class ZnTest {
     public void testElementBitLength() {
         int elementBitLength = zn.getElementBitLength();
         int l = zn.getL();
-        if (zn.getN().add(BigInteger.ONE).equals(BigInteger.valueOf(1L << l))) {
-            // n = 2^l + 1
-            Assert.assertEquals(elementBitLength, l);
-        } else {
-            Assert.assertEquals(elementBitLength, l + 1);
-        }
+        Assert.assertEquals(elementBitLength, l + 1);
     }
 
     @Test
@@ -77,16 +71,11 @@ public class ZnTest {
         int elementByteLength = zn.getElementByteLength();
         int byteL = zn.getByteL();
         int l = zn.getL();
-        if (zn.getN().add(BigInteger.ONE).equals(BigInteger.valueOf(1L << l))) {
-            // n = 2^l + 1
-            Assert.assertEquals(elementByteLength, byteL);
+        if (l % Byte.SIZE == 0) {
+            // if l % Byte.SIZE == 0, then elementByteLength = byteL + 1
+            Assert.assertEquals(elementByteLength, byteL + 1);
         } else {
-            if (l % Byte.SIZE == 0) {
-                // if l % Byte.SIZE == 0, then elementByteLength = byteL + 1
-                Assert.assertEquals(elementByteLength, byteL + 1);
-            } else {
-                Assert.assertEquals(elementByteLength, byteL);
-            }
+            Assert.assertEquals(elementByteLength, byteL);
         }
     }
 
@@ -127,6 +116,17 @@ public class ZnTest {
             Assert.assertEquals(n.subtract(two), zn.neg(two));
             // 4 - 2 = 2
             Assert.assertEquals(two, zn.sub(four, two));
+        }
+    }
+
+    @Test
+    public void testConstantMul() {
+        BigInteger two = BigInteger.valueOf(2);
+        BigInteger four = BigInteger.valueOf(4);
+        BigInteger n = zn.getN();
+        if (BigIntegerUtils.greater(n ,four)) {
+            // 2 * 2 = 4
+            Assert.assertEquals(four, zn.mul(two, two));
         }
     }
 }

@@ -1,33 +1,28 @@
-package edu.alibaba.mpc4j.common.tool.galoisfield.zp64;
+package edu.alibaba.mpc4j.common.tool.galoisfield.zn64;
 
 import cc.redberry.rings.IntegersZp64;
 import edu.alibaba.mpc4j.common.tool.EnvType;
 
 /**
- * Zp64 implemented by Rings.
+ * Zn64 implemented by Rings.
  *
  * @author Weiran Liu
- * @date 2022/7/7
+ * @date 2023/3/15
  */
-class RingsZp64 extends AbstractZp64 {
+class RingsZn64 extends AbstractZn64 {
     /**
      * the finite field
      */
     private final IntegersZp64 integersZp64;
 
-    RingsZp64(EnvType envType, long prime) {
-        super(envType, prime);
-        integersZp64 = new IntegersZp64(prime);
-    }
-
-    RingsZp64(EnvType envType, int l) {
-        super(envType, l);
-        integersZp64 = new IntegersZp64(prime);
+    RingsZn64(EnvType envType, long n) {
+        super(envType, n);
+        integersZp64 = new IntegersZp64(n);
     }
 
     @Override
-    public Zp64Factory.Zp64Type getZp64Type() {
-        return Zp64Factory.Zp64Type.RINGS;
+    public Zn64Factory.Zn64Type getZn64Type() {
+        return Zn64Factory.Zn64Type.RINGS;
     }
 
     @Override
@@ -60,19 +55,6 @@ class RingsZp64 extends AbstractZp64 {
         assert validateElement(a);
         assert validateElement(b);
         return integersZp64.multiply(a, b);
-    }
-
-    @Override
-    public long div(final long a, final long b) {
-        assert validateElement(a);
-        assert validateNonZeroElement(b);
-        return integersZp64.divide(a, b);
-    }
-
-    @Override
-    public long inv(final long a) {
-        assert validateNonZeroElement(a);
-        return integersZp64.divide(1L, a);
     }
 
     @Override

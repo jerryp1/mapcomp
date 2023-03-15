@@ -19,6 +19,16 @@ public interface Zn extends BigIntegerRing {
     ZnFactory.ZnType getZnType();
 
     /**
+     * Gets the name.
+     *
+     * @return the name.
+     */
+    @Override
+    default String getName() {
+        return getZnType().name();
+    }
+
+    /**
      * Gets the modulus n.
      *
      * @return the modulus n.
