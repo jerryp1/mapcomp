@@ -4,8 +4,6 @@ import edu.alibaba.mpc4j.common.rpc.*;
 import edu.alibaba.mpc4j.common.rpc.utils.DataPacket;
 import edu.alibaba.mpc4j.common.rpc.utils.DataPacketHeader;
 import edu.alibaba.mpc4j.common.tool.CommonConstants;
-import edu.alibaba.mpc4j.common.tool.galoisfield.zp64.Zp64;
-import edu.alibaba.mpc4j.common.tool.galoisfield.zp64.Zp64Factory;
 import edu.alibaba.mpc4j.s2pc.pcg.mtg.zp64.core.AbstractZp64CoreMtgParty;
 import edu.alibaba.mpc4j.s2pc.pcg.mtg.zp64.core.rss19.Rss19Zp64CoreMtgPtoDesc.PtoStep;
 import edu.alibaba.mpc4j.s2pc.pcg.mtg.zp64.Zp64Triple;
@@ -36,13 +34,9 @@ public class Rss19Zp64CoreMtgReceiver extends AbstractZp64CoreMtgParty {
      */
     private final int polyModulusDegree;
     /**
-     * 明文模数
+     * the prime
      */
     private final long p;
-    /**
-     * zp64
-     */
-    private Zp64 zp64;
     /**
      * 缓存区
      */
@@ -50,8 +44,8 @@ public class Rss19Zp64CoreMtgReceiver extends AbstractZp64CoreMtgParty {
 
     public Rss19Zp64CoreMtgReceiver(Rpc receiverRpc, Party senderParty, Rss19Zp64CoreMtgConfig config) {
         super(Rss19Zp64CoreMtgPtoDesc.getInstance(), receiverRpc, senderParty, config);
-        this.polyModulusDegree = config.getPolyModulusDegree();
-        this.p = config.getZp();
+        polyModulusDegree = config.getPolyModulusDegree();
+        p = zp64.getPrime();
     }
 
     @Override
@@ -68,8 +62,7 @@ public class Rss19Zp64CoreMtgReceiver extends AbstractZp64CoreMtgParty {
         List<byte[]> fheParams = rpc.receive(fheParamsHeader).getPayload();
         MpcAbortPreconditions.checkArgument(fheParams.size() == 1);
         encryptionParams = fheParams.get(0);
-        zp64 = Zp64Factory.createInstance(envType, p);
-        zp64TripleBuffer = Zp64Triple.createEmpty(p);
+        zp64TripleBuffer = Zp64Triple.createEmpty(zp64);
         stopWatch.stop();
         long initTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
         stopWatch.reset();
@@ -105,7 +98,7 @@ public class Rss19Zp64CoreMtgReceiver extends AbstractZp64CoreMtgParty {
             responsePayload.add(Rss19Zp64CoreMtgNativeUtils.computeResponse(
                 encryptionParams, ciphertextPayload[2 * round], ciphertextPayload[2 * round + 1], a1, b1, mask
             ));
-            zp64TripleBuffer.merge(Zp64Triple.create(p, updateRoundNum, a1, b1, c1));
+            zp64TripleBuffer.merge(Zp64Triple.create(zp64, updateRoundNum, a1, b1, c1));
         }
         DataPacketHeader responseHeader = new DataPacketHeader(
             encodeTaskId, getPtoDesc().getPtoId(), PtoStep.RECEIVER_SEND_CT_D.ordinal(), extraInfo,

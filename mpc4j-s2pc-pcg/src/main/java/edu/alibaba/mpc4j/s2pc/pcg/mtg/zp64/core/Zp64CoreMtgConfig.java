@@ -1,6 +1,7 @@
 package edu.alibaba.mpc4j.s2pc.pcg.mtg.zp64.core;
 
 import edu.alibaba.mpc4j.common.rpc.pto.MultiPartyPtoConfig;
+import edu.alibaba.mpc4j.common.tool.galoisfield.zp64.Zp64;
 
 /**
  * 核zp64三元组生成协议配置项。
@@ -28,5 +29,5 @@ public interface Zp64CoreMtgConfig extends MultiPartyPtoConfig {
      *
      * @return 模数。
      */
-    long getZp();
+    Zp64 getZp64();
 }

@@ -47,11 +47,11 @@ public class Zp64CoreMtgTest {
     @Parameterized.Parameters(name = "{0}")
     public static Collection<Object[]> configurations() {
         Collection<Object[]> configurations = new ArrayList<>();
-        // RSS19 (20 bit)
+
+        // RSS19 (l = 19)
         configurations.add(new Object[] {
-            Zp64CoreMtgFactory.Zp64CoreMtgType.RSS19.name() + " (20 bit)",
-            new Rss19Zp64CoreMtgConfig.Builder()
-                .setPrimeBitLength(20)
+            Zp64CoreMtgFactory.Zp64CoreMtgType.RSS19.name() + " (l = 19)",
+            new Rss19Zp64CoreMtgConfig.Builder(19)
                 .build()
         });
 

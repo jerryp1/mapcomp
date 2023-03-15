@@ -1,5 +1,6 @@
 package edu.alibaba.mpc4j.s2pc.pcg.mtg.zp64.core;
 
+import edu.alibaba.mpc4j.common.tool.galoisfield.zp64.Zp64;
 import edu.alibaba.mpc4j.common.tool.utils.LongUtils;
 import edu.alibaba.mpc4j.s2pc.pcg.mtg.zp64.core.rss19.Rss19Zp64CoreMtgConfig;
 import org.junit.Ignore;
@@ -31,22 +32,17 @@ public class Rss19Zp64MtgTest {
     public void testValidBitLength() {
         for (int polyModulusDegree : POLY_MODULUS_DEGREES) {
             List<Long> validBitLengthList = new LinkedList<>();
-            for (int size = 1; size < Long.SIZE - 1; size++) {
+            for (int l = 1; l < LongUtils.MAX_L; l++) {
                 try {
-                    Rss19Zp64CoreMtgConfig config = new Rss19Zp64CoreMtgConfig.Builder()
-                        .setPolyModulusDegree(polyModulusDegree, size)
-                        .build();
-                    long prime = config.getZp();
-                    long primeBitLength = LongUtils.ceilLog2(prime);
+                    Rss19Zp64CoreMtgConfig config = new Rss19Zp64CoreMtgConfig.Builder(l).build();
+                    Zp64 zp64 = config.getZp64();
+                    long primeBitLength = zp64.getElementBitLength();
                     validBitLengthList.add(primeBitLength);
                 } catch (Exception ignored) {
 
                 }
             }
-            LOGGER.info(
-                "modulus degree = {}, valid bit length = {}",
-                polyModulusDegree, Arrays.toString(validBitLengthList.toArray())
-            );
+            LOGGER.info("modulus degree = {}, l = {}", polyModulusDegree, Arrays.toString(validBitLengthList.toArray()));
         }
     }
 }

@@ -12,18 +12,18 @@ import java.util.Arrays;
 import java.util.stream.IntStream;
 
 /**
- * l比特三元组测试。
+ * Zl triple tests.
  *
  * @author Weiran Liu
  * @date 2022/8/11
  */
 public class ZlTripleTest {
     /**
-     * 较小数量
+     * min num
      */
     private static final int MIN_NUM = 1;
     /**
-     * 较大数量
+     * max num
      */
     private static final int MAX_NUM = 64;
     /**
@@ -65,7 +65,7 @@ public class ZlTripleTest {
             Arrays.fill(cs, element);
             ZlTriple.create(DEFAULT_ZL, num, as, bs, cs);
         });
-        // create triples with mis-matched length
+        // create triples with mis-matched num
         Assert.assertThrows(AssertionError.class, () -> {
             BigInteger[] as = new BigInteger[num - 1];
             Arrays.fill(as, element);
@@ -254,18 +254,18 @@ public class ZlTripleTest {
         ZlTriple splitTriple1 = triple1.split(1);
         assertCorrectness(triple1, num - 1);
         assertCorrectness(splitTriple1, 1);
-        // 切分全部比特
+        // split all
         ZlTriple tripleAll = ZlTriple.create(zl, num, as, bs, cs);
         ZlTriple splitTripleAll = tripleAll.split(num);
         assertCorrectness(tripleAll, 0);
         assertCorrectness(splitTripleAll, num);
         if (num > 1) {
-            // 切分num - 1比特
+            // split num - 1
             ZlTriple tripleN = ZlTriple.create(zl, num, as, bs, cs);
             ZlTriple splitTripleN = tripleN.split(num - 1);
             assertCorrectness(tripleN, 1);
             assertCorrectness(splitTripleN, num - 1);
-            // 切分一半比特
+            // split half
             ZlTriple tripleHalf = ZlTriple.create(zl, num, as, bs, cs);
             ZlTriple splitTripleHalf = tripleHalf.split(num / 2);
             assertCorrectness(tripleHalf, num - num / 2);

@@ -18,7 +18,7 @@ public class ZlTriple implements MergePartyOutput {
      */
     private Zl zl;
     /**
-     * the number of triples
+     * num
      */
     private int num;
     /**
@@ -35,19 +35,20 @@ public class ZlTriple implements MergePartyOutput {
     private BigInteger[] cs;
 
     /**
-     * Creates Zl multiplication triples.
+     * Creates a triple.
      *
-     * @param zl      the Zl instance.
-     * @param num     the number of triples.
-     * @param as      a.
-     * @param bs      b.
-     * @param cs      c.
+     * @param zl  the Zl instance.
+     * @param num num.
+     * @param as  a.
+     * @param bs  b.
+     * @param cs  c.
+     * @return a triple.
      */
     public static ZlTriple create(Zl zl, int num, BigInteger[] as, BigInteger[] bs, BigInteger[] cs) {
-        assert num > 0 : "num must be greater than 0";
-        assert as.length == num : "a.length must be equal to num = " + num;
-        assert bs.length == num : "b.length must be equal to num = " + num;
-        assert cs.length == num : "c.length must be equal to num = " + num;
+        assert num > 0 : "num must be greater than 0: " + num;
+        assert as.length == num : "a.length must be equal to num = " + num + ": " + as.length;
+        assert bs.length == num : "b.length must be equal to num = " + num + ": " + bs.length;
+        assert cs.length == num : "c.length must be equal to num = " + num + ": " + cs.length;
 
         ZlTriple triple = new ZlTriple();
         triple.zl = zl;
