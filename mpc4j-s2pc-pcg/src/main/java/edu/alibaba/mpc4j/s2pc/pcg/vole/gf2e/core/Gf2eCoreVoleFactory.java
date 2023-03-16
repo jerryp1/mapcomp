@@ -12,59 +12,59 @@ import edu.alibaba.mpc4j.common.rpc.pto.PtoFactory;
  */
 public class Gf2eCoreVoleFactory implements PtoFactory {
     /**
-     * 私有构造函数。
+     * private constructor.
      */
     private Gf2eCoreVoleFactory() {
         // empty
     }
 
     /**
-     * 协议类型。
+     * the type.
      */
-    public enum Gf2kCoreVoleType {
+    public enum Gf2eCoreVoleType {
         /**
-         * KOS16半诚实安全协议
+         * KOS16 (semi-honest)
          */
-        KOS16_SEMI_HONEST,
+        KOS16,
         /**
-         * KOS16恶意安全协议
+         * WYKW21 (malicious)
          */
-        KOS16_MALICIOUS,
+        WYKW21,
     }
 
     /**
-     * 构建发送方。
+     * Creates a sender.
      *
-     * @param senderRpc     发送方通信接口。
-     * @param receiverParty 接收方信息。
-     * @param config        配置项。
-     * @return 发送方。
+     * @param senderRpc     sender RPC.
+     * @param receiverParty receiver party.
+     * @param config        config.
+     * @return a sender.
      */
     public static Gf2eCoreVoleSender createSender(Rpc senderRpc, Party receiverParty, Gf2eCoreVoleConfig config) {
-        Gf2kCoreVoleType type = config.getPtoType();
+        Gf2eCoreVoleType type = config.getPtoType();
         switch (type) {
-            case KOS16_SEMI_HONEST:
-            case KOS16_MALICIOUS:
+            case KOS16:
+            case WYKW21:
             default:
-                throw new IllegalArgumentException("Invalid " + Gf2kCoreVoleType.class.getSimpleName() + ": " + type.name());
+                throw new IllegalArgumentException("Invalid " + Gf2eCoreVoleType.class.getSimpleName() + ": " + type.name());
         }
     }
 
     /**
-     * 构建接收方。
+     * Creates a receiver.
      *
-     * @param receiverRpc 接收方通信接口。
-     * @param senderParty 发送方信息。
-     * @param config      配置项。
-     * @return 接收方。
+     * @param receiverRpc receiver RPC.
+     * @param senderParty sender party.
+     * @param config      config.
+     * @return a receiver.
      */
     public static Gf2eCoreVoleReceiver createReceiver(Rpc receiverRpc, Party senderParty, Gf2eCoreVoleConfig config) {
-        Gf2kCoreVoleType type = config.getPtoType();
+        Gf2eCoreVoleType type = config.getPtoType();
         switch (type) {
-            case KOS16_SEMI_HONEST:
-            case KOS16_MALICIOUS:
+            case KOS16:
+            case WYKW21:
             default:
-                throw new IllegalArgumentException("Invalid " + Gf2kCoreVoleType.class.getSimpleName() + ": " + type.name());
+                throw new IllegalArgumentException("Invalid " + Gf2eCoreVoleType.class.getSimpleName() + ": " + type.name());
         }
     }
 }

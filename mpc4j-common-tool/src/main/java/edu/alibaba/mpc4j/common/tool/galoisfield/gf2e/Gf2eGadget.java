@@ -74,7 +74,7 @@ public class Gf2eGadget {
      * @param binary the bit representation.
      * @return the composition result.
      */
-    public byte[] bitComposition(boolean[] binary) {
+    public byte[] composition(boolean[] binary) {
         assert binary.length == l : "binary length must equal to " + l + ": " + binary.length;
         byte[] result = new byte[byteL];
         for (int i = 0; i < l; i++) {
@@ -91,7 +91,7 @@ public class Gf2eGadget {
      * @param element a GF2E element.
      * @return the decomposition result.
      */
-    public boolean[] bitDecomposition(byte[] element) {
+    public boolean[] decomposition(byte[] element) {
         assert gf2e.validateRangeElement(element) : "element must be valid";
         return BinaryUtils.byteArrayToBinary(element, l);
     }

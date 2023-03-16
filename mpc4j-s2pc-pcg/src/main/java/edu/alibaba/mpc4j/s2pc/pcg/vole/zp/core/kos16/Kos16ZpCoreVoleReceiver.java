@@ -11,7 +11,7 @@ import edu.alibaba.mpc4j.s2pc.pcg.ot.base.BaseOtReceiver;
 import edu.alibaba.mpc4j.s2pc.pcg.ot.base.BaseOtReceiverOutput;
 import edu.alibaba.mpc4j.s2pc.pcg.vole.zp.core.AbstractZpCoreVoleReceiver;
 import edu.alibaba.mpc4j.s2pc.pcg.vole.zp.ZpVoleReceiverOutput;
-import edu.alibaba.mpc4j.s2pc.pcg.vole.zp.core.kos16.Kos16ShZpCoreVolePtoDesc.PtoStep;
+import edu.alibaba.mpc4j.s2pc.pcg.vole.zp.core.kos16.Kos16ZpCoreVolePtoDesc.PtoStep;
 
 import java.math.BigInteger;
 import java.nio.ByteBuffer;
@@ -27,7 +27,7 @@ import java.util.stream.Stream;
  * @author Hanwen Feng, Weiran Liu
  * @date 2022/06/09
  */
-public class Kos16ShZpCoreVoleReceiver extends AbstractZpCoreVoleReceiver {
+public class Kos16ZpCoreVoleReceiver extends AbstractZpCoreVoleReceiver {
     /**
      * base OT receiver
      */
@@ -45,8 +45,8 @@ public class Kos16ShZpCoreVoleReceiver extends AbstractZpCoreVoleReceiver {
      */
     boolean[] deltaBinary;
 
-    public Kos16ShZpCoreVoleReceiver(Rpc senderRpc, Party receiverParty, Kos16ShZpCoreVoleConfig config) {
-        super(Kos16ShZpCoreVolePtoDesc.getInstance(), senderRpc, receiverParty, config);
+    public Kos16ZpCoreVoleReceiver(Rpc senderRpc, Party receiverParty, Kos16ZpCoreVoleConfig config) {
+        super(Kos16ZpCoreVolePtoDesc.getInstance(), senderRpc, receiverParty, config);
         baseOtReceiver = BaseOtFactory.createReceiver(senderRpc, receiverParty, config.getBaseOtConfig());
         addSubPtos(baseOtReceiver);
     }

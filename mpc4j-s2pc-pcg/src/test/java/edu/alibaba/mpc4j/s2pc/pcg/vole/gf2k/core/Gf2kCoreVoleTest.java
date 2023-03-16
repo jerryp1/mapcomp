@@ -1,17 +1,18 @@
-package edu.alibaba.mpc4j.s2pc.pcg.vole.zp.core;
+package edu.alibaba.mpc4j.s2pc.pcg.vole.gf2k.core;
 
 import com.google.common.base.Preconditions;
 import edu.alibaba.mpc4j.common.rpc.Rpc;
 import edu.alibaba.mpc4j.common.rpc.RpcManager;
 import edu.alibaba.mpc4j.common.rpc.impl.memory.MemoryRpcManager;
+import edu.alibaba.mpc4j.common.tool.CommonConstants;
 import edu.alibaba.mpc4j.common.tool.EnvType;
-import edu.alibaba.mpc4j.common.tool.galoisfield.zp.Zp;
-import edu.alibaba.mpc4j.common.tool.galoisfield.zp.ZpFactory;
-import edu.alibaba.mpc4j.s2pc.pcg.vole.zp.ZpVoleReceiverOutput;
-import edu.alibaba.mpc4j.s2pc.pcg.vole.zp.ZpVoleSenderOutput;
-import edu.alibaba.mpc4j.s2pc.pcg.vole.zp.ZpVoleTestUtils;
-import edu.alibaba.mpc4j.s2pc.pcg.vole.zp.core.kos16.Kos16ZpCoreVoleConfig;
-import edu.alibaba.mpc4j.s2pc.pcg.vole.zp.core.ZpCoreVoleFactory.ZpCoreVoleType;
+import edu.alibaba.mpc4j.common.tool.galoisfield.gf2e.Gf2e;
+import edu.alibaba.mpc4j.common.tool.galoisfield.gf2e.Gf2eFactory;
+import edu.alibaba.mpc4j.s2pc.pcg.vole.gf2e.Gf2eVoleReceiverOutput;
+import edu.alibaba.mpc4j.s2pc.pcg.vole.gf2e.Gf2eVoleSenderOutput;
+import edu.alibaba.mpc4j.s2pc.pcg.vole.gf2e.Gf2eVoleTestUtils;
+import edu.alibaba.mpc4j.s2pc.pcg.vole.gf2k.core.Gf2kCoreVoleFactory.Gf2kCoreVoleType;
+import edu.alibaba.mpc4j.s2pc.pcg.vole.gf2k.core.kos16.Kos16Gf2kCoreVoleConfig;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.time.StopWatch;
 import org.junit.After;
@@ -23,7 +24,6 @@ import org.junit.runners.Parameterized;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.math.BigInteger;
 import java.security.SecureRandom;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -31,18 +31,22 @@ import java.util.concurrent.TimeUnit;
 import java.util.stream.IntStream;
 
 /**
- * Zp-core VOLE tests.
+ * GF2K-core VOLE tests.
  *
- * @author Hanwen Feng
- * @date 2022/06/10
+ * @author Weiran Liu
+ * @date 2023/3/16
  */
 @RunWith(Parameterized.class)
-public class ZpCoreVoleTest {
-    private static final Logger LOGGER = LoggerFactory.getLogger(ZpCoreVoleTest.class);
+public class Gf2kCoreVoleTest {
+    private static final Logger LOGGER = LoggerFactory.getLogger(Gf2kCoreVoleTest.class);
     /**
      * the random state
      */
     private static final SecureRandom SECURE_RANDOM = new SecureRandom();
+    /**
+     * GF2K
+     */
+    private static final Gf2e GF2K = Gf2eFactory.createInstance(EnvType.STANDARD, CommonConstants.BLOCK_BIT_LENGTH);
     /**
      * default num
      */
@@ -51,14 +55,6 @@ public class ZpCoreVoleTest {
      * large num
      */
     private static final int LARGE_NUM = 1 << 16;
-    /**
-     * the default Zp instance
-     */
-    private static final Zp DEFAULT_ZP = ZpFactory.createInstance(EnvType.STANDARD, 32);
-    /**
-     * the large Zp instance
-     */
-    private static final Zp LARGE_ZP = ZpFactory.createInstance(EnvType.STANDARD, 62);
 
     @Parameterized.Parameters(name = "{0}")
     public static Collection<Object[]> configurations() {
@@ -66,7 +62,7 @@ public class ZpCoreVoleTest {
 
         // KOS16
         configurations.add(
-            new Object[]{ZpCoreVoleType.KOS16.name(), new Kos16ZpCoreVoleConfig.Builder().build(),}
+            new Object[]{Gf2kCoreVoleType.KOS16.name(), new Kos16Gf2kCoreVoleConfig.Builder().build(),}
         );
 
         return configurations;
@@ -83,9 +79,9 @@ public class ZpCoreVoleTest {
     /**
      * the protocol config
      */
-    private final ZpCoreVoleConfig config;
+    private final Gf2kCoreVoleConfig config;
 
-    public ZpCoreVoleTest(String name, ZpCoreVoleConfig config) {
+    public Gf2kCoreVoleTest(String name, Gf2kCoreVoleConfig config) {
         Preconditions.checkArgument(StringUtils.isNotBlank(name));
         // We cannot use NettyRPC in the test case since it needs multi-thread connect / disconnect.
         // In other word, we cannot connect / disconnect NettyRpc in @Before / @After, respectively.
@@ -109,42 +105,42 @@ public class ZpCoreVoleTest {
 
     @Test
     public void test1Num() {
-        testPto(1, DEFAULT_ZP, false);
+        testPto(1, false);
     }
 
     @Test
     public void test2Num() {
-        testPto(2, DEFAULT_ZP, false);
+        testPto(2, false);
     }
 
     @Test
     public void testDefault() {
-        testPto(DEFAULT_NUM, DEFAULT_ZP, false);
+        testPto(DEFAULT_NUM, false);
     }
 
     @Test
     public void testParallelDefault() {
-        testPto(DEFAULT_NUM, DEFAULT_ZP, true);
+        testPto(DEFAULT_NUM, true);
     }
 
     @Test
     public void testLargeNum() {
-        testPto(LARGE_NUM, DEFAULT_ZP, false);
+        testPto(LARGE_NUM, false);
     }
 
     @Test
     public void testLargePrime() {
-        testPto(DEFAULT_NUM, LARGE_ZP, false);
+        testPto(DEFAULT_NUM, false);
     }
 
     @Test
     public void testParallelLargePrime() {
-        testPto(DEFAULT_NUM, LARGE_ZP, true);
+        testPto(DEFAULT_NUM, true);
     }
 
-    private void testPto(int num, Zp zp, boolean parallel) {
-        ZpCoreVoleSender sender = ZpCoreVoleFactory.createSender(senderRpc, receiverRpc.ownParty(), config);
-        ZpCoreVoleReceiver receiver = ZpCoreVoleFactory.createReceiver(receiverRpc, senderRpc.ownParty(), config);
+    private void testPto(int num, boolean parallel) {
+        Gf2kCoreVoleSender sender = Gf2kCoreVoleFactory.createSender(senderRpc, receiverRpc.ownParty(), config);
+        Gf2kCoreVoleReceiver receiver = Gf2kCoreVoleFactory.createReceiver(receiverRpc, senderRpc.ownParty(), config);
         sender.setParallel(parallel);
         receiver.setParallel(parallel);
         int randomTaskId = Math.abs(SECURE_RANDOM.nextInt());
@@ -153,12 +149,12 @@ public class ZpCoreVoleTest {
         try {
             LOGGER.info("-----test {} start-----", sender.getPtoDesc().getPtoName());
             // Δ is in [0, 2^k)
-            BigInteger delta = zp.createRangeRandom(SECURE_RANDOM);
-            BigInteger[] x = IntStream.range(0, num)
-                .mapToObj(index -> zp.createRandom(SECURE_RANDOM))
-                .toArray(BigInteger[]::new);
-            ZpCoreVoleSenderThread senderThread = new ZpCoreVoleSenderThread(sender, zp, x);
-            ZpCoreVoleReceiverThread receiverThread = new ZpCoreVoleReceiverThread(receiver, zp, delta, num);
+            byte[] delta = GF2K.createRangeRandom(SECURE_RANDOM);
+            byte[][] x = IntStream.range(0, num)
+                .mapToObj(index -> GF2K.createRandom(SECURE_RANDOM))
+                .toArray(byte[][]::new);
+            Gf2kCoreVoleSenderThread senderThread = new Gf2kCoreVoleSenderThread(sender, x);
+            Gf2kCoreVoleReceiverThread receiverThread = new Gf2kCoreVoleReceiverThread(receiver, delta, num);
             StopWatch stopWatch = new StopWatch();
             // start executing
             stopWatch.start();
@@ -173,10 +169,10 @@ public class ZpCoreVoleTest {
             long receiverByteLength = receiverRpc.getSendByteLength();
             senderRpc.reset();
             receiverRpc.reset();
-            ZpVoleSenderOutput senderOutput = senderThread.getSenderOutput();
-            ZpVoleReceiverOutput receiverOutput = receiverThread.getReceiverOutput();
+            Gf2eVoleSenderOutput senderOutput = senderThread.getSenderOutput();
+            Gf2eVoleReceiverOutput receiverOutput = receiverThread.getReceiverOutput();
             // verify results
-            ZpVoleTestUtils.assertOutput(num, senderOutput, receiverOutput);
+            Gf2eVoleTestUtils.assertOutput(GF2K, num, senderOutput, receiverOutput);
             LOGGER.info("Sender sends {}B, Receiver sends {}B, time = {}ms",
                 senderByteLength, receiverByteLength, time
             );
@@ -190,22 +186,21 @@ public class ZpCoreVoleTest {
 
     @Test
     public void testResetDelta() {
-        Zp zp = DEFAULT_ZP;
-        ZpCoreVoleSender sender = ZpCoreVoleFactory.createSender(senderRpc, receiverRpc.ownParty(), config);
-        ZpCoreVoleReceiver receiver = ZpCoreVoleFactory.createReceiver(receiverRpc, senderRpc.ownParty(), config);
+        Gf2kCoreVoleSender sender = Gf2kCoreVoleFactory.createSender(senderRpc, receiverRpc.ownParty(), config);
+        Gf2kCoreVoleReceiver receiver = Gf2kCoreVoleFactory.createReceiver(receiverRpc, senderRpc.ownParty(), config);
         int randomTaskId = Math.abs(SECURE_RANDOM.nextInt());
         sender.setTaskId(randomTaskId);
         receiver.setTaskId(randomTaskId);
         try {
             LOGGER.info("-----test {} (reset Δ) start-----", sender.getPtoDesc().getPtoName());
             // Δ is in [0, 2^k)
-            BigInteger delta = zp.createRangeRandom(SECURE_RANDOM);
-            BigInteger[] x = IntStream.range(0, DEFAULT_NUM)
-                .mapToObj(index -> zp.createRandom(SECURE_RANDOM))
-                .toArray(BigInteger[]::new);
+            byte[] delta = GF2K.createRangeRandom(SECURE_RANDOM);
+            byte[][] x = IntStream.range(0, DEFAULT_NUM)
+                .mapToObj(index -> GF2K.createRandom(SECURE_RANDOM))
+                .toArray(byte[][]::new);
             // first round
-            ZpCoreVoleSenderThread senderThread = new ZpCoreVoleSenderThread(sender, zp, x);
-            ZpCoreVoleReceiverThread receiverThread = new ZpCoreVoleReceiverThread(receiver, zp, delta, DEFAULT_NUM);
+            Gf2kCoreVoleSenderThread senderThread = new Gf2kCoreVoleSenderThread(sender, x);
+            Gf2kCoreVoleReceiverThread receiverThread = new Gf2kCoreVoleReceiverThread(receiver, delta, DEFAULT_NUM);
             StopWatch stopWatch = new StopWatch();
             stopWatch.start();
             senderThread.start();
@@ -219,16 +214,16 @@ public class ZpCoreVoleTest {
             long firstReceiverByteLength = receiverRpc.getSendByteLength();
             senderRpc.reset();
             receiverRpc.reset();
-            ZpVoleSenderOutput senderOutput = senderThread.getSenderOutput();
-            ZpVoleReceiverOutput receiverOutput = receiverThread.getReceiverOutput();
-            ZpVoleTestUtils.assertOutput(DEFAULT_NUM, senderOutput, receiverOutput);
+            Gf2eVoleSenderOutput senderOutput = senderThread.getSenderOutput();
+            Gf2eVoleReceiverOutput receiverOutput = receiverThread.getReceiverOutput();
+            Gf2eVoleTestUtils.assertOutput(GF2K, DEFAULT_NUM, senderOutput, receiverOutput);
             // second round, reset Δ
-            delta = zp.createRangeRandom(SECURE_RANDOM);
+            delta = GF2K.createRangeRandom(SECURE_RANDOM);
             x = IntStream.range(0, DEFAULT_NUM)
-                .mapToObj(index -> zp.createRandom(SECURE_RANDOM))
-                .toArray(BigInteger[]::new);
-            senderThread = new ZpCoreVoleSenderThread(sender, zp, x);
-            receiverThread = new ZpCoreVoleReceiverThread(receiver, zp, delta, DEFAULT_NUM);
+                .mapToObj(index -> GF2K.createRandom(SECURE_RANDOM))
+                .toArray(byte[][]::new);
+            senderThread = new Gf2kCoreVoleSenderThread(sender, x);
+            receiverThread = new Gf2kCoreVoleReceiverThread(receiver, delta, DEFAULT_NUM);
             stopWatch.start();
             senderThread.start();
             receiverThread.start();
@@ -241,9 +236,9 @@ public class ZpCoreVoleTest {
             long secondReceiverByteLength = receiverRpc.getSendByteLength();
             senderRpc.reset();
             receiverRpc.reset();
-            ZpVoleSenderOutput secondSenderOutput = senderThread.getSenderOutput();
-            ZpVoleReceiverOutput secondReceiverOutput = receiverThread.getReceiverOutput();
-            ZpVoleTestUtils.assertOutput(DEFAULT_NUM, secondSenderOutput, secondReceiverOutput);
+            Gf2eVoleSenderOutput secondSenderOutput = senderThread.getSenderOutput();
+            Gf2eVoleReceiverOutput secondReceiverOutput = receiverThread.getReceiverOutput();
+            Gf2eVoleTestUtils.assertOutput(GF2K, DEFAULT_NUM, secondSenderOutput, secondReceiverOutput);
             // Δ should be unequal
             Assert.assertNotEquals(secondReceiverOutput.getDelta(), receiverOutput.getDelta());
             // communication should be equal

@@ -13,13 +13,13 @@ import edu.alibaba.mpc4j.s2pc.pcg.vole.zp64.core.Zp64CoreVoleConfig;
  * @author Hanwen Feng
  * @date 2022/06/15
  */
-public class Kos16ShZp64CoreVoleConfig implements Zp64CoreVoleConfig {
+public class Kos16Zp64CoreVoleConfig implements Zp64CoreVoleConfig {
     /**
      * 基础OT协议
      */
     private final BaseOtConfig baseOtConfig;
 
-    private Kos16ShZp64CoreVoleConfig(Builder builder) {
+    private Kos16Zp64CoreVoleConfig(Builder builder) {
         baseOtConfig = builder.baseOtConfig;
     }
 
@@ -29,7 +29,7 @@ public class Kos16ShZp64CoreVoleConfig implements Zp64CoreVoleConfig {
 
     @Override
     public Zp64CoreVoleType getPtoType() {
-        return Zp64CoreVoleType.KOS16_SEMI_HONEST;
+        return Zp64CoreVoleType.KOS16;
     }
 
     @Override
@@ -51,7 +51,7 @@ public class Kos16ShZp64CoreVoleConfig implements Zp64CoreVoleConfig {
         return securityModel;
     }
 
-    public static class Builder implements org.apache.commons.lang3.builder.Builder<Kos16ShZp64CoreVoleConfig> {
+    public static class Builder implements org.apache.commons.lang3.builder.Builder<Kos16Zp64CoreVoleConfig> {
         /**
          * 基础OT协议配置项
          */
@@ -67,8 +67,8 @@ public class Kos16ShZp64CoreVoleConfig implements Zp64CoreVoleConfig {
         }
 
         @Override
-        public Kos16ShZp64CoreVoleConfig build() {
-            return new Kos16ShZp64CoreVoleConfig(this);
+        public Kos16Zp64CoreVoleConfig build() {
+            return new Kos16Zp64CoreVoleConfig(this);
         }
     }
 

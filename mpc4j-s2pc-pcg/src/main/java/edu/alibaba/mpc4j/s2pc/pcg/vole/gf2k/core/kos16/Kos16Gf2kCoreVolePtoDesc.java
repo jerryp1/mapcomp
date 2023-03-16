@@ -1,52 +1,54 @@
-package edu.alibaba.mpc4j.s2pc.pcg.vole.zp.core.kos16;
+package edu.alibaba.mpc4j.s2pc.pcg.vole.gf2k.core.kos16;
 
 import edu.alibaba.mpc4j.common.rpc.desc.PtoDesc;
 import edu.alibaba.mpc4j.common.rpc.desc.PtoDescManager;
 
 /**
- * KOS16-Zp-核VOLE协议信息。论文来源：
+ * KOS16-GF2K-core VOLE description. The protocol comes from:
  * <p>
  * Keller, Marcel, Emmanuela Orsini, and Peter Scholl. MASCOT: faster malicious arithmetic secure computation with
  * oblivious transfer. CCS 2016, pp. 830-842. 2016.
  * </p>
  *
- * @author Hanwen Feng
- * @date 2022/06/08
+ * @author Weiran Liu
+ * @date 2023/3/16
  */
-public class Kos16ShZpCoreVolePtoDesc implements PtoDesc {
+public class Kos16Gf2kCoreVolePtoDesc implements PtoDesc {
     /**
-     * 协议ID。
+     * protocol ID
      */
-    private static final int PTO_ID = Math.abs((int) 2047864806225283374L);
+    private static final int PTO_ID = Math.abs((int) 4846966591315685521L);
     /**
-     * 协议名称。
+     * protocol name
      */
-    private static final String PTO_NAME = "KOS16_SH_ZP_CORE_VOLE";
+    private static final String PTO_NAME = "KOS16_GF2K_CORE_VOLE";
 
     /**
-     * 协议步骤
+     * protocol step
      */
     enum PtoStep {
         /**
-         * 发送方发送矩阵
+         * sender sends the matrix
          */
         RECEIVER_SEND_MATRIX,
     }
 
     /**
-     * 单例模式。
+     * singleton mode
      */
-    private static final Kos16ShZpCoreVolePtoDesc INSTANCE = new Kos16ShZpCoreVolePtoDesc();
+    private static final Kos16Gf2kCoreVolePtoDesc INSTANCE = new Kos16Gf2kCoreVolePtoDesc();
 
     /**
-     * 私有构造函数。
+     * private constructor
      */
-    private Kos16ShZpCoreVolePtoDesc() {
+    private Kos16Gf2kCoreVolePtoDesc() {
         // empty
     }
 
     /**
-     * 获取静态实例。
+     * Gets the protocol description.
+     *
+     * @return the protocol description.
      */
     public static PtoDesc getInstance() {
         return INSTANCE;

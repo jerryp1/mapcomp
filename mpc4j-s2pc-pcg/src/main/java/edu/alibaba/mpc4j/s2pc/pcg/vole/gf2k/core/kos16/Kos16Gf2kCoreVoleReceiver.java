@@ -1,16 +1,15 @@
-package edu.alibaba.mpc4j.s2pc.pcg.vole.zp64.core.kos16;
+package edu.alibaba.mpc4j.s2pc.pcg.vole.gf2k.core.kos16;
 
 import edu.alibaba.mpc4j.common.rpc.*;
 import edu.alibaba.mpc4j.common.rpc.utils.DataPacketHeader;
 import edu.alibaba.mpc4j.common.tool.CommonConstants;
-import edu.alibaba.mpc4j.common.tool.galoisfield.zp64.Zp64;
-import edu.alibaba.mpc4j.common.tool.galoisfield.zp64.Zp64Gadget;
-import edu.alibaba.mpc4j.common.tool.utils.LongUtils;
+import edu.alibaba.mpc4j.common.tool.galoisfield.gf2e.Gf2eGadget;
 import edu.alibaba.mpc4j.s2pc.pcg.ot.base.BaseOtFactory;
 import edu.alibaba.mpc4j.s2pc.pcg.ot.base.BaseOtReceiver;
 import edu.alibaba.mpc4j.s2pc.pcg.ot.base.BaseOtReceiverOutput;
-import edu.alibaba.mpc4j.s2pc.pcg.vole.zp64.core.AbstractZp64CoreVoleReceiver;
-import edu.alibaba.mpc4j.s2pc.pcg.vole.zp64.Zp64VoleReceiverOutput;
+import edu.alibaba.mpc4j.s2pc.pcg.vole.gf2e.Gf2eVoleReceiverOutput;
+import edu.alibaba.mpc4j.s2pc.pcg.vole.gf2k.core.AbstractGf2kCoreVoleReceiver;
+import edu.alibaba.mpc4j.s2pc.pcg.vole.gf2k.core.kos16.Kos16Gf2kCoreVolePtoDesc.PtoStep;
 
 import java.nio.ByteBuffer;
 import java.util.Arrays;
@@ -20,20 +19,20 @@ import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
 /**
- * KOS16-Zp64-core VOLE receiver.
+ * KOS16-GF2K-core VOLE receiver.
  *
- * @author Hanwen Feng
- * @date 2022/06/09
+ * @author Weiran Liu
+ * @date 2023/3/15
  */
-public class Kos16ShZp64CoreVoleReceiver extends AbstractZp64CoreVoleReceiver {
+public class Kos16Gf2kCoreVoleReceiver extends AbstractGf2kCoreVoleReceiver {
     /**
      * base OT receiver
      */
     private final BaseOtReceiver baseOtReceiver;
     /**
-     * Zp64 gadget
+     * GF2E gadget
      */
-    private Zp64Gadget zp64Gadget;
+    private Gf2eGadget gf2eGadget;
     /**
      * base OT receiver output
      */
@@ -43,21 +42,21 @@ public class Kos16ShZp64CoreVoleReceiver extends AbstractZp64CoreVoleReceiver {
      */
     boolean[] deltaBinary;
 
-    public Kos16ShZp64CoreVoleReceiver(Rpc receiverRpc, Party senderParty, Kos16ShZp64CoreVoleConfig config) {
-        super(Kos16ShZp64CoreVolePtoDesc.getInstance(), receiverRpc, senderParty, config);
-        baseOtReceiver = BaseOtFactory.createReceiver(receiverRpc, senderParty, config.getBaseOtConfig());
+    public Kos16Gf2kCoreVoleReceiver(Rpc senderRpc, Party receiverParty, Kos16Gf2kCoreVoleConfig config) {
+        super(Kos16Gf2kCoreVolePtoDesc.getInstance(), senderRpc, receiverParty, config);
+        baseOtReceiver = BaseOtFactory.createReceiver(senderRpc, receiverParty, config.getBaseOtConfig());
         addSubPtos(baseOtReceiver);
     }
 
     @Override
-    public void init(Zp64 zp64, long delta, int maxNum) throws MpcAbortException {
-        setInitInput(zp64, delta, maxNum);
+    public void init(byte[] delta, int maxNum) throws MpcAbortException {
+        setInitInput(delta, maxNum);
         logPhaseInfo(PtoState.INIT_BEGIN);
 
         stopWatch.start();
-        zp64Gadget = new Zp64Gadget(zp64);
+        gf2eGadget = new Gf2eGadget(gf2e);
         baseOtReceiver.init();
-        deltaBinary = zp64Gadget.bitDecomposition(delta);
+        deltaBinary = gf2eGadget.decomposition(delta);
         baseOtReceiverOutput = baseOtReceiver.receive(deltaBinary);
         stopWatch.stop();
         long initTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
@@ -68,17 +67,17 @@ public class Kos16ShZp64CoreVoleReceiver extends AbstractZp64CoreVoleReceiver {
     }
 
     @Override
-    public Zp64VoleReceiverOutput receive(int num) throws MpcAbortException {
+    public Gf2eVoleReceiverOutput receive(int num) throws MpcAbortException {
         setPtoInput(num);
         logPhaseInfo(PtoState.PTO_BEGIN);
 
         stopWatch.start();
         DataPacketHeader matrixHeader = new DataPacketHeader(
-            encodeTaskId, getPtoDesc().getPtoId(), Kos16ShZp64CoreVolePtoDesc.PtoStep.RECEIVER_SEND_MATRIX.ordinal(), extraInfo,
+            encodeTaskId, getPtoDesc().getPtoId(), PtoStep.RECEIVER_SEND_MATRIX.ordinal(), extraInfo,
             otherParty().getPartyId(), ownParty().getPartyId()
         );
         List<byte[]> matrixPayload = rpc.receive(matrixHeader).getPayload();
-        Zp64VoleReceiverOutput receiverOutput = handleMatrixPayload(matrixPayload);
+        Gf2eVoleReceiverOutput receiverOutput = handleMatrixPayload(matrixPayload);
         stopWatch.stop();
         long matrixTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
         stopWatch.reset();
@@ -89,33 +88,33 @@ public class Kos16ShZp64CoreVoleReceiver extends AbstractZp64CoreVoleReceiver {
 
     }
 
-    private Zp64VoleReceiverOutput handleMatrixPayload(List<byte[]> matrixPayload) throws MpcAbortException {
+    private Gf2eVoleReceiverOutput handleMatrixPayload(List<byte[]> matrixPayload) throws MpcAbortException {
         MpcAbortPreconditions.checkArgument(matrixPayload.size() == num * l);
         byte[][] matrixPayloadArray = matrixPayload.toArray(new byte[0][]);
-        // 创建q矩阵
-        long[][] qMatrix = new long[num][l];
+        // create matrix Q
+        byte[][][] qMatrix = new byte[num][l][];
         IntStream matrixStream = IntStream.range(0, num * l);
         matrixStream = parallel ? matrixStream.parallel() : matrixStream;
         matrixStream.forEach(index -> {
-            // 计算当前处理q矩阵的位置(i,j)
+            // current position for matrix Q
             int rowIndex = index / l;
             int columnIndex = index % l;
-            // 从payload中读取Zp元素u
-            long u = LongUtils.byteArrayToLong(matrixPayloadArray[index]);
-            // 计算tb = PRF(kb, i), q(i,j) = tb + Δ_j * u,
+            // read u from the payload
+            byte[] u = matrixPayloadArray[index];
+            // compute t_b = PRF(kb, i), q(i,j) = u + Δ_j * t_b,
             byte[] tbSeed = ByteBuffer
                 .allocate(Long.BYTES + Integer.BYTES + CommonConstants.BLOCK_BYTE_LENGTH)
                 .putLong(extraInfo).putInt(rowIndex).put(baseOtReceiverOutput.getRb(columnIndex))
                 .array();
-            long tb = zp64.createRandom(tbSeed);
-            qMatrix[rowIndex][columnIndex] = deltaBinary[columnIndex] ? zp64.add(u, tb) : tb;
+            byte[] tb = gf2e.createRandom(tbSeed);
+            qMatrix[rowIndex][columnIndex] = deltaBinary[columnIndex] ? gf2e.add(u, tb) : tb;
         });
-        // 将矩阵q的每一行按照gadget组合为一个Zp元素，得到Zp数组q。
-        Stream<long[]> qMatrixStream = Arrays.stream(qMatrix);
+        // composite each row in q using gadget
+        Stream<byte[][]> qMatrixStream = Arrays.stream(qMatrix);
         qMatrixStream = parallel ? qMatrixStream.parallel() : qMatrixStream;
-        long[] q = qMatrixStream
-            .mapToLong(row -> zp64Gadget.innerProduct(row))
-            .toArray();
-        return Zp64VoleReceiverOutput.create(zp64, delta, q);
+        byte[][] q = qMatrixStream
+            .map(row -> gf2eGadget.innerProduct(row))
+            .toArray(byte[][]::new);
+        return Gf2eVoleReceiverOutput.create(gf2e, delta, q);
     }
 }

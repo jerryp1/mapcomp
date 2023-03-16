@@ -3,16 +3,16 @@ package edu.alibaba.mpc4j.s2pc.pcg.vole.gf2e.core;
 import edu.alibaba.mpc4j.common.rpc.pto.MultiPartyPtoConfig;
 
 /**
- * GF2K-核VOLE协议配置项。
+ * GF2E-core VOLE config.
  *
  * @author Weiran Liu
  * @date 2022/9/22
  */
 public interface Gf2eCoreVoleConfig extends MultiPartyPtoConfig {
     /**
-     * 返回协议类型。
+     * Gets the type.
      *
-     * @return 协议类型。
+     * @return the type.
      */
-    Gf2eCoreVoleFactory.Gf2kCoreVoleType getPtoType();
+    Gf2eCoreVoleFactory.Gf2eCoreVoleType getPtoType();
 }

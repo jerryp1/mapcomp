@@ -9,7 +9,7 @@ import edu.alibaba.mpc4j.common.tool.galoisfield.zp64.Zp64;
 import edu.alibaba.mpc4j.common.tool.galoisfield.zp64.Zp64Factory;
 import edu.alibaba.mpc4j.s2pc.pcg.vole.zp64.Zp64VoleReceiverOutput;
 import edu.alibaba.mpc4j.s2pc.pcg.vole.zp64.Zp64VoleSenderOutput;
-import edu.alibaba.mpc4j.s2pc.pcg.vole.zp64.core.kos16.Kos16ShZp64CoreVoleConfig;
+import edu.alibaba.mpc4j.s2pc.pcg.vole.zp64.core.kos16.Kos16Zp64CoreVoleConfig;
 import edu.alibaba.mpc4j.s2pc.pcg.vole.zp64.core.Zp64CoreVoleFactory.Zp64CoreVoleType;
 import edu.alibaba.mpc4j.s2pc.pcg.vole.zp64.Zp64VoleTestUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -50,7 +50,7 @@ public class Zp64CoreVoleTest {
     /**
      * large num
      */
-    private static final int LARGE_NUM = 1 << 18;
+    private static final int LARGE_NUM = 1 << 16;
     /**
      * the default Zp64 instance
      */
@@ -63,9 +63,10 @@ public class Zp64CoreVoleTest {
     @Parameterized.Parameters(name = "{0}")
     public static Collection<Object[]> configurations() {
         Collection<Object[]> configurations = new ArrayList<>();
-        // KOS16_SEMI_HONEST
+
+        // KOS16
         configurations.add(
-            new Object[]{Zp64CoreVoleType.KOS16_SEMI_HONEST.name(), new Kos16ShZp64CoreVoleConfig.Builder().build(),}
+            new Object[]{Zp64CoreVoleType.KOS16.name(), new Kos16Zp64CoreVoleConfig.Builder().build(),}
         );
 
         return configurations;

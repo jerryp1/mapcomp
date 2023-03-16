@@ -33,7 +33,7 @@ public class Gf2eVoleOutputTest {
     /**
      * ls
      */
-    private static final int[] LS = new int[]{1, 63, 64, 65, 128};
+    private static final int[] LS = new int[]{1, 63, 64, 65, 127, 128, 129};
     /**
      * GF2E instances
      */

@@ -13,13 +13,13 @@ import edu.alibaba.mpc4j.s2pc.pcg.vole.zp.core.ZpCoreVoleFactory;
  * @author Hanwen Feng
  * @date 2022/06/08
  */
-public class Kos16ShZpCoreVoleConfig implements ZpCoreVoleConfig {
+public class Kos16ZpCoreVoleConfig implements ZpCoreVoleConfig {
     /**
      * 基础OT协议
      */
     private final BaseOtConfig baseOtConfig;
 
-    private Kos16ShZpCoreVoleConfig(Builder builder) {
+    private Kos16ZpCoreVoleConfig(Builder builder) {
         baseOtConfig = builder.baseOtConfig;
     }
 
@@ -29,7 +29,7 @@ public class Kos16ShZpCoreVoleConfig implements ZpCoreVoleConfig {
 
     @Override
     public ZpCoreVoleFactory.ZpCoreVoleType getPtoType() {
-        return ZpCoreVoleFactory.ZpCoreVoleType.KOS16_SEMI_HONEST;
+        return ZpCoreVoleFactory.ZpCoreVoleType.KOS16;
     }
 
     @Override
@@ -51,7 +51,7 @@ public class Kos16ShZpCoreVoleConfig implements ZpCoreVoleConfig {
         return securityModel;
     }
 
-    public static class Builder implements org.apache.commons.lang3.builder.Builder<Kos16ShZpCoreVoleConfig> {
+    public static class Builder implements org.apache.commons.lang3.builder.Builder<Kos16ZpCoreVoleConfig> {
         /**
          * 基础OT协议配置项
          */
@@ -67,8 +67,8 @@ public class Kos16ShZpCoreVoleConfig implements ZpCoreVoleConfig {
         }
 
         @Override
-        public Kos16ShZpCoreVoleConfig build() {
-            return new Kos16ShZpCoreVoleConfig(this);
+        public Kos16ZpCoreVoleConfig build() {
+            return new Kos16ZpCoreVoleConfig(this);
         }
     }
 

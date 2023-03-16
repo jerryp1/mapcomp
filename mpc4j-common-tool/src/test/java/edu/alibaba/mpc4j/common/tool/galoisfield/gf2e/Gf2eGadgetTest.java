@@ -63,8 +63,8 @@ public class Gf2eGadgetTest {
     public void testBitComposition() {
         for (int i = 0; i < RANDOM_ROUND; i++) {
             byte[] element = gf2e.createRangeRandom(SECURE_RANDOM);
-            boolean[] decomposition = gf2eGadget.bitDecomposition(element);
-            byte[] compositeElement = gf2eGadget.bitComposition(decomposition);
+            boolean[] decomposition = gf2eGadget.decomposition(element);
+            byte[] compositeElement = gf2eGadget.composition(decomposition);
             Assert.assertArrayEquals(element, compositeElement);
         }
     }
