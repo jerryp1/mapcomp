@@ -23,7 +23,7 @@ public class BspCotSenderOutput implements PcgPartyOutput {
     /**
      * 每个SSPCOT协议发送方输出的数量
      */
-    private int sspCotNum;
+    private int eachNum;
 
     /**
      * 创建发送方输出。
@@ -36,13 +36,13 @@ public class BspCotSenderOutput implements PcgPartyOutput {
         assert sspCotSenderOutputs.length > 0;
         // 取第一个输出的参数
         senderOutput.delta = BytesUtils.clone(sspCotSenderOutputs[0].getDelta());
-        senderOutput.sspCotNum = sspCotSenderOutputs[0].getNum();
+        senderOutput.eachNum = sspCotSenderOutputs[0].getNum();
         // 设置其余输出
         senderOutput.senderOutputs = Arrays.stream(sspCotSenderOutputs)
             // 验证所有Δ相等，且数量均为num
             .peek(sspcotSenderOutput -> {
                 assert BytesUtils.equals(senderOutput.delta, sspcotSenderOutput.getDelta());
-                assert sspcotSenderOutput.getNum() == senderOutput.sspCotNum;
+                assert sspcotSenderOutput.getNum() == senderOutput.eachNum;
             })
             .toArray(SspCotSenderOutput[]::new);
         return senderOutput;
@@ -79,8 +79,8 @@ public class BspCotSenderOutput implements PcgPartyOutput {
      *
      * @return 数量。
      */
-    public int getSspCotNum() {
-        return sspCotNum;
+    public int getEachNum() {
+        return eachNum;
     }
 
     @Override

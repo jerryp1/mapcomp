@@ -12,10 +12,10 @@ import edu.alibaba.mpc4j.common.tool.galoisfield.gf2k.Gf2k;
 import edu.alibaba.mpc4j.common.tool.galoisfield.gf2k.Gf2kFactory;
 import edu.alibaba.mpc4j.common.tool.utils.BinaryUtils;
 import edu.alibaba.mpc4j.common.tool.utils.BytesUtils;
-import edu.alibaba.mpc4j.s2pc.pcg.dpprf.DpprfConfig;
-import edu.alibaba.mpc4j.s2pc.pcg.dpprf.DpprfFactory;
-import edu.alibaba.mpc4j.s2pc.pcg.dpprf.DpprfReceiver;
-import edu.alibaba.mpc4j.s2pc.pcg.dpprf.DpprfReceiverOutput;
+import edu.alibaba.mpc4j.s2pc.pcg.dpprf.bp.BpDpprfConfig;
+import edu.alibaba.mpc4j.s2pc.pcg.dpprf.bp.BpDpprfFactory;
+import edu.alibaba.mpc4j.s2pc.pcg.dpprf.bp.BpDpprfReceiver;
+import edu.alibaba.mpc4j.s2pc.pcg.dpprf.bp.BpDpprfReceiverOutput;
 import edu.alibaba.mpc4j.s2pc.pcg.ot.cot.bsp.AbstractBspCotReceiver;
 import edu.alibaba.mpc4j.s2pc.pcg.ot.cot.bsp.BspCotReceiverOutput;
 import edu.alibaba.mpc4j.s2pc.pcg.ot.cot.bsp.SspCotReceiverOutput;
@@ -41,7 +41,7 @@ public class Ywl20MaBspCotReceiver extends AbstractBspCotReceiver {
     /**
      * DPPRF协议配置项
      */
-    private final DpprfConfig dpprfConfig;
+    private final BpDpprfConfig bpDpprfConfig;
     /**
      * COT协议接收方
      */
@@ -49,7 +49,7 @@ public class Ywl20MaBspCotReceiver extends AbstractBspCotReceiver {
     /**
      * DPPRF协议发送方
      */
-    private final DpprfReceiver dpprfReceiver;
+    private final BpDpprfReceiver bpDpprfReceiver;
     /**
      * GF(2^128)运算接口
      */
@@ -69,7 +69,7 @@ public class Ywl20MaBspCotReceiver extends AbstractBspCotReceiver {
     /**
      * DPPRF接收方输出
      */
-    private DpprfReceiverOutput dpprfReceiverOutput;
+    private BpDpprfReceiverOutput bpDpprfReceiverOutput;
     /**
      * 随机预言机
      */
@@ -79,9 +79,9 @@ public class Ywl20MaBspCotReceiver extends AbstractBspCotReceiver {
         super(Ywl20MaBspCotPtoDesc.getInstance(), receiverRpc, senderParty, config);
         coreCotReceiver = CoreCotFactory.createReceiver(receiverRpc, senderParty, config.getCoreCotConfig());
         addSubPtos(coreCotReceiver);
-        dpprfConfig = config.getDpprfConfig();
-        dpprfReceiver = DpprfFactory.createReceiver(receiverRpc, senderParty, dpprfConfig);
-        addSubPtos(dpprfReceiver);
+        bpDpprfConfig = config.getBpDpprfConfig();
+        bpDpprfReceiver = BpDpprfFactory.createReceiver(receiverRpc, senderParty, bpDpprfConfig);
+        addSubPtos(bpDpprfReceiver);
         gf2k = Gf2kFactory.createInstance(envType);
         hash = HashFactory.createInstance(envType, 2 * CommonConstants.BLOCK_BYTE_LENGTH);
     }
@@ -93,10 +93,10 @@ public class Ywl20MaBspCotReceiver extends AbstractBspCotReceiver {
 
         stopWatch.start();
         // 协议执行过程要请求两次COT，一次用于DPPRF，一次是128个
-        int maxCotNum = DpprfFactory.getPrecomputeNum(dpprfConfig, maxBatchNum, maxNum)
+        int maxCotNum = BpDpprfFactory.getPrecomputeNum(bpDpprfConfig, maxBatchNum, maxNum)
             + CommonConstants.BLOCK_BIT_LENGTH;
         coreCotReceiver.init(maxCotNum);
-        dpprfReceiver.init(maxBatchNum, maxNum);
+        bpDpprfReceiver.init(maxBatchNum, maxNum);
         stopWatch.stop();
         long initTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
         stopWatch.reset();
@@ -141,7 +141,7 @@ public class Ywl20MaBspCotReceiver extends AbstractBspCotReceiver {
 
         stopWatch.start();
         // R send (extend, h) to F_COT, which returns (r_i, t_i) ∈ {0,1} × {0,1}^κ to R
-        int dpprfCotNum = DpprfFactory.getPrecomputeNum(dpprfConfig, batchNum, num);
+        int dpprfCotNum = BpDpprfFactory.getPrecomputeNum(bpDpprfConfig, batchNum, num);
         if (cotReceiverOutput == null) {
             boolean[] rs = new boolean[dpprfCotNum + CommonConstants.BLOCK_BIT_LENGTH];
             IntStream.range(0, dpprfCotNum + CommonConstants.BLOCK_BIT_LENGTH).forEach(index ->
@@ -160,7 +160,7 @@ public class Ywl20MaBspCotReceiver extends AbstractBspCotReceiver {
         logStepInfo(PtoState.PTO_STEP, 1, 4, cotTime);
 
         stopWatch.start();
-        dpprfReceiverOutput = dpprfReceiver.puncture(alphaArray, num, extendCotReceiverOutput);
+        bpDpprfReceiverOutput = bpDpprfReceiver.puncture(alphaArray, num, extendCotReceiverOutput);
         stopWatch.stop();
         long dpprfTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
         stopWatch.reset();
@@ -173,7 +173,7 @@ public class Ywl20MaBspCotReceiver extends AbstractBspCotReceiver {
         );
         List<byte[]> correlatePayload = rpc.receive(correlateHeader).getPayload();
         BspCotReceiverOutput receiverOutput = generateReceiverOutput(correlatePayload);
-        dpprfReceiverOutput = null;
+        bpDpprfReceiverOutput = null;
         stopWatch.stop();
         long outputTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
         stopWatch.reset();
@@ -212,7 +212,7 @@ public class Ywl20MaBspCotReceiver extends AbstractBspCotReceiver {
         batchIndexIntStream = parallel ? batchIndexIntStream.parallel() : batchIndexIntStream;
         SspCotReceiverOutput[] sspCotReceiverOutputs = batchIndexIntStream
             .mapToObj(batchIndex -> {
-                byte[][] rbArray = dpprfReceiverOutput.getPprfs(batchIndex);
+                byte[][] rbArray = bpDpprfReceiverOutput.getSpDpprfReceiverOutput(batchIndex).getPprfKeys();
                 // computes w[α]
                 for (int i = 0; i < num; i++) {
                     if (i != alphaArray[batchIndex]) {

@@ -1,48 +1,48 @@
-package edu.alibaba.mpc4j.s2pc.pcg.dpprf;
+package edu.alibaba.mpc4j.s2pc.pcg.dpprf.bp;
 
 import edu.alibaba.mpc4j.common.rpc.MpcAbortException;
 import edu.alibaba.mpc4j.s2pc.pcg.ot.cot.CotReceiverOutput;
 
 /**
- * RDPPRF接收方线程。
+ * batch-point DPPRF receiver thread.
  *
  * @author Weiran Liu
  * @date 2022/8/16
  */
-class DpprfReceiverThread extends Thread {
+class BpDpprfReceiverThread extends Thread {
     /**
-     * 接收方
+     * the receiver
      */
-    private final DpprfReceiver receiver;
+    private final BpDpprfReceiver receiver;
     /**
-     * α数组
+     * α array
      */
     private final int[] alphaArray;
     /**
-     * α上界
+     * α bound
      */
     private final int alphaBound;
     /**
-     * 预计算接收方输出
+     * pre-computed receiver output
      */
     private final CotReceiverOutput preReceiverOutput;
     /**
-     * 输出
+     * receiver output
      */
-    private DpprfReceiverOutput receiverOutput;
+    private BpDpprfReceiverOutput receiverOutput;
 
-    DpprfReceiverThread(DpprfReceiver receiver, int[] alphaArray, int alphaBound) {
+    BpDpprfReceiverThread(BpDpprfReceiver receiver, int[] alphaArray, int alphaBound) {
         this(receiver, alphaArray, alphaBound, null);
     }
 
-    DpprfReceiverThread(DpprfReceiver receiver, int[] alphaArray, int alphaBound, CotReceiverOutput preReceiverOutput) {
+    BpDpprfReceiverThread(BpDpprfReceiver receiver, int[] alphaArray, int alphaBound, CotReceiverOutput preReceiverOutput) {
         this.receiver = receiver;
         this.alphaArray = alphaArray;
         this.alphaBound = alphaBound;
         this.preReceiverOutput = preReceiverOutput;
     }
 
-    DpprfReceiverOutput getReceiverOutput() {
+    BpDpprfReceiverOutput getReceiverOutput() {
         return receiverOutput;
     }
 

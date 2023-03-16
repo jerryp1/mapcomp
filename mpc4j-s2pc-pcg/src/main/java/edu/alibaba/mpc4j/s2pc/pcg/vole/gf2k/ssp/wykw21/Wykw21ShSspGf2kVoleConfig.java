@@ -1,34 +1,41 @@
-package edu.alibaba.mpc4j.s2pc.pcg.ot.cot.bsp.ywl20;
+package edu.alibaba.mpc4j.s2pc.pcg.vole.gf2k.ssp.wykw21;
 
 import edu.alibaba.mpc4j.common.rpc.desc.SecurityModel;
 import edu.alibaba.mpc4j.common.tool.EnvType;
 import edu.alibaba.mpc4j.s2pc.pcg.dpprf.bp.BpDpprfConfig;
 import edu.alibaba.mpc4j.s2pc.pcg.dpprf.bp.BpDpprfFactory;
-import edu.alibaba.mpc4j.s2pc.pcg.ot.cot.bsp.BspCotConfig;
-import edu.alibaba.mpc4j.s2pc.pcg.ot.cot.bsp.BspCotFactory;
 import edu.alibaba.mpc4j.s2pc.pcg.ot.cot.core.CoreCotConfig;
 import edu.alibaba.mpc4j.s2pc.pcg.ot.cot.core.CoreCotFactory;
+import edu.alibaba.mpc4j.s2pc.pcg.vole.gf2k.core.Gf2kCoreVoleConfig;
+import edu.alibaba.mpc4j.s2pc.pcg.vole.gf2k.core.Gf2kCoreVoleFactory;
+import edu.alibaba.mpc4j.s2pc.pcg.vole.gf2k.ssp.SspGf2kVoleConfig;
+import edu.alibaba.mpc4j.s2pc.pcg.vole.gf2k.ssp.SspGf2kVoleFactory;
 
 /**
- * YWL20-BSP-COT半诚实安全协议配置项。
+ * WYKW21-SSP-GF2K-VOLE (semi-honest) config.
  *
  * @author Weiran Liu
- * @date 2022/01/24
+ * @date 2023/3/16
  */
-public class Ywl20ShBspCotConfig implements BspCotConfig {
+public class Wykw21ShSspGf2kVoleConfig implements SspGf2kVoleConfig {
     /**
-     * 核COT协议配置项
+     * core COT config
      */
     private final CoreCotConfig coreCotConfig;
     /**
-     * DPPRF协议配置项
+     * GF2K core VOLE config
+     */
+    private final Gf2kCoreVoleConfig gf2kCoreVoleConfig;
+    /**
+     * DPPRF config
      */
     private final BpDpprfConfig bpDpprfConfig;
 
-    private Ywl20ShBspCotConfig(Builder builder) {
-        // 两个协议的环境配型必须相同
+    private Wykw21ShSspGf2kVoleConfig(Builder builder) {
         assert builder.coreCotConfig.getEnvType().equals(builder.bpDpprfConfig.getEnvType());
+        assert builder.coreCotConfig.getEnvType().equals(builder.gf2kCoreVoleConfig.getEnvType());
         coreCotConfig = builder.coreCotConfig;
+        gf2kCoreVoleConfig = builder.gf2kCoreVoleConfig;
         bpDpprfConfig = builder.bpDpprfConfig;
     }
 
@@ -36,18 +43,23 @@ public class Ywl20ShBspCotConfig implements BspCotConfig {
         return coreCotConfig;
     }
 
-    public BpDpprfConfig getBpDpprfConfig() {
+    public Gf2kCoreVoleConfig getGf2kCoreVoleConfig() {
+        return gf2kCoreVoleConfig;
+    }
+
+    public BpDpprfConfig getDpprfConfig() {
         return bpDpprfConfig;
     }
 
     @Override
-    public BspCotFactory.BspCotType getPtoType() {
-        return BspCotFactory.BspCotType.YWL20_SEMI_HONEST;
+    public SspGf2kVoleFactory.SspGf2kVoleType getPtoType() {
+        return SspGf2kVoleFactory.SspGf2kVoleType.WYKW21_SEMI_HONEST;
     }
 
     @Override
     public void setEnvType(EnvType envType) {
         coreCotConfig.setEnvType(envType);
+        gf2kCoreVoleConfig.setEnvType(envType);
         bpDpprfConfig.setEnvType(envType);
     }
 
@@ -62,24 +74,32 @@ public class Ywl20ShBspCotConfig implements BspCotConfig {
         if (coreCotConfig.getSecurityModel().compareTo(securityModel) < 0) {
             securityModel = coreCotConfig.getSecurityModel();
         }
+        if (gf2kCoreVoleConfig.getSecurityModel().compareTo(securityModel) < 0) {
+            securityModel = gf2kCoreVoleConfig.getSecurityModel();
+        }
         if (bpDpprfConfig.getSecurityModel().compareTo(securityModel) < 0) {
             securityModel = bpDpprfConfig.getSecurityModel();
         }
         return securityModel;
     }
 
-    public static class Builder implements org.apache.commons.lang3.builder.Builder<Ywl20ShBspCotConfig> {
+    public static class Builder implements org.apache.commons.lang3.builder.Builder<Wykw21ShSspGf2kVoleConfig> {
         /**
-         * 核COT协议配置项
+         * core COT config
          */
         private CoreCotConfig coreCotConfig;
         /**
-         * DPPRF协议配置项
+         * GF2K core VOLE config
+         */
+        private Gf2kCoreVoleConfig gf2kCoreVoleConfig;
+        /**
+         * DPPRF config
          */
         private BpDpprfConfig bpDpprfConfig;
 
         public Builder() {
             coreCotConfig = CoreCotFactory.createDefaultConfig(SecurityModel.SEMI_HONEST);
+            gf2kCoreVoleConfig = Gf2kCoreVoleFactory.createDefaultConfig(SecurityModel.SEMI_HONEST);
             bpDpprfConfig = BpDpprfFactory.createDefaultConfig(SecurityModel.SEMI_HONEST);
         }
 
@@ -88,14 +108,19 @@ public class Ywl20ShBspCotConfig implements BspCotConfig {
             return this;
         }
 
-        public Builder setBpDpprfConfig(BpDpprfConfig bpDpprfConfig) {
+        public Builder setGf2kCoreVoleConfig(Gf2kCoreVoleConfig gf2kCoreVoleConfig) {
+            this.gf2kCoreVoleConfig = gf2kCoreVoleConfig;
+            return this;
+        }
+
+        public Builder setDpprfConfig(BpDpprfConfig bpDpprfConfig) {
             this.bpDpprfConfig = bpDpprfConfig;
             return this;
         }
 
         @Override
-        public Ywl20ShBspCotConfig build() {
-            return new Ywl20ShBspCotConfig(this);
+        public Wykw21ShSspGf2kVoleConfig build() {
+            return new Wykw21ShSspGf2kVoleConfig(this);
         }
     }
 }

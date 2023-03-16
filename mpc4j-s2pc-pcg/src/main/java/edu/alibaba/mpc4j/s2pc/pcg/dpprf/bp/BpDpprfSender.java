@@ -1,25 +1,24 @@
-package edu.alibaba.mpc4j.s2pc.pcg.cdpprf;
+package edu.alibaba.mpc4j.s2pc.pcg.dpprf.bp;
 
 import edu.alibaba.mpc4j.common.rpc.MpcAbortException;
-import edu.alibaba.mpc4j.s2pc.pcg.dpprf.DpprfSender;
+import edu.alibaba.mpc4j.common.rpc.pto.TwoPartyPto;
 import edu.alibaba.mpc4j.s2pc.pcg.ot.cot.CotSenderOutput;
 
 /**
- * Correlated DPPRF sender.
+ * batch-point DPPRF sender.
  *
  * @author Weiran Liu
- * @date 2022/12/21
+ * @date 2022/8/16
  */
-public interface CdpprfSender extends DpprfSender {
+public interface BpDpprfSender extends TwoPartyPto {
     /**
      * Init the protocol.
      *
-     * @param delta         Δ.
-     * @param maxBatchNum   maximal batch num.
-     * @param maxAlphaBound maximal α upper bound.
+     * @param maxBatchNum   max batch num.
+     * @param maxAlphaBound max α upper bound.
      * @throws MpcAbortException if the protocol aborts.
      */
-    void init(byte[] delta, int maxBatchNum, int maxAlphaBound) throws MpcAbortException;
+    void init(int maxBatchNum, int maxAlphaBound) throws MpcAbortException;
 
     /**
      * Execute the protocol.
@@ -29,8 +28,7 @@ public interface CdpprfSender extends DpprfSender {
      * @return sender output.
      * @throws MpcAbortException if the protocol aborts.
      */
-    @Override
-    CdpprfSenderOutput puncture(int batchNum, int alphaBound) throws MpcAbortException;
+    BpDpprfSenderOutput puncture(int batchNum, int alphaBound) throws MpcAbortException;
 
     /**
      * Execute the protocol.
@@ -41,6 +39,5 @@ public interface CdpprfSender extends DpprfSender {
      * @return sender output.
      * @throws MpcAbortException if the protocol aborts.
      */
-    @Override
-    CdpprfSenderOutput puncture(int batchNum, int alphaBound, CotSenderOutput preSenderOutput) throws MpcAbortException;
+    BpDpprfSenderOutput puncture(int batchNum, int alphaBound, CotSenderOutput preSenderOutput) throws MpcAbortException;
 }

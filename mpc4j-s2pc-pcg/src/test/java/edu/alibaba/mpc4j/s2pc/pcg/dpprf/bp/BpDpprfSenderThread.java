@@ -1,48 +1,48 @@
-package edu.alibaba.mpc4j.s2pc.pcg.dpprf;
+package edu.alibaba.mpc4j.s2pc.pcg.dpprf.bp;
 
 import edu.alibaba.mpc4j.common.rpc.MpcAbortException;
 import edu.alibaba.mpc4j.s2pc.pcg.ot.cot.CotSenderOutput;
 
 /**
- * RDPPRF发送方线程。
+ * batch-point DPPRF sender thread.
  *
  * @author Weiran Liu
  * @date 2022/8/16
  */
-class DpprfSenderThread extends Thread {
+class BpDpprfSenderThread extends Thread {
     /**
-     * 发送方
+     * the sender
      */
-    private final DpprfSender sender;
+    private final BpDpprfSender sender;
     /**
-     * 批处理数量
+     * batch num
      */
     private final int batchNum;
     /**
-     * α上界
+     * α bound
      */
     private final int alphaBound;
     /**
-     * 预计算发送方输出
+     * pre-computed sender output
      */
     private final CotSenderOutput preSenderOutput;
     /**
-     * 输出
+     * sender output
      */
-    private DpprfSenderOutput senderOutput;
+    private BpDpprfSenderOutput senderOutput;
 
-    DpprfSenderThread(DpprfSender sender, int batchNum, int alphaBound) {
+    BpDpprfSenderThread(BpDpprfSender sender, int batchNum, int alphaBound) {
         this(sender, batchNum, alphaBound, null);
     }
 
-    DpprfSenderThread(DpprfSender sender, int batchNum, int alphaBound, CotSenderOutput preSenderOutput) {
+    BpDpprfSenderThread(BpDpprfSender sender, int batchNum, int alphaBound, CotSenderOutput preSenderOutput) {
         this.sender = sender;
         this.batchNum = batchNum;
         this.alphaBound = alphaBound;
         this.preSenderOutput = preSenderOutput;
     }
 
-    DpprfSenderOutput getSenderOutput() {
+    BpDpprfSenderOutput getSenderOutput() {
         return senderOutput;
     }
 

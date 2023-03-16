@@ -1,4 +1,4 @@
-package edu.alibaba.mpc4j.s2pc.pcg.dpprf;
+package edu.alibaba.mpc4j.s2pc.pcg.dpprf.bp;
 
 import edu.alibaba.mpc4j.common.rpc.Party;
 import edu.alibaba.mpc4j.common.rpc.Rpc;
@@ -14,16 +14,16 @@ import java.util.Arrays;
 import java.util.stream.IntStream;
 
 /**
- * DPPRF abstract receiver.
+ * abstract batch-point DPPRF receiver.
  *
  * @author Weiran Liu
  * @date 2022/8/16
  */
-public abstract class AbstractDpprfReceiver extends AbstractTwoPartyPto implements DpprfReceiver {
+public abstract class AbstractBpDpprfReceiver extends AbstractTwoPartyPto implements BpDpprfReceiver {
     /**
      * config
      */
-    private final DpprfConfig config;
+    protected final BpDpprfConfig config;
     /**
      * max α upper bound
      */
@@ -61,7 +61,7 @@ public abstract class AbstractDpprfReceiver extends AbstractTwoPartyPto implemen
      */
     protected int batchNum;
 
-    protected AbstractDpprfReceiver(PtoDesc ptoDesc, Rpc receiverRpc, Party senderParty, DpprfConfig config) {
+    protected AbstractBpDpprfReceiver(PtoDesc ptoDesc, Rpc receiverRpc, Party senderParty, BpDpprfConfig config) {
         super(ptoDesc, receiverRpc, senderParty, config);
         this.config = config;
     }
@@ -103,7 +103,7 @@ public abstract class AbstractDpprfReceiver extends AbstractTwoPartyPto implemen
     protected void setPtoInput(int[] alphaArray, int alphaBound, CotReceiverOutput preReceiverOutput) {
         setPtoInput(alphaArray, alphaBound);
         MathPreconditions.checkGreaterOrEqual(
-            "preCotNum", preReceiverOutput.getNum(), DpprfFactory.getPrecomputeNum(config, batchNum, alphaBound)
+            "preCotNum", preReceiverOutput.getNum(), BpDpprfFactory.getPrecomputeNum(config, batchNum, alphaBound)
         );
     }
 }

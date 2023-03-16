@@ -18,18 +18,18 @@ public class BspCotReceiverOutput implements PcgPartyOutput {
     /**
      * num for each SSPCOT receiver output
      */
-    private int sspCotNum;
+    private int eachNum;
 
     public static BspCotReceiverOutput create(SspCotReceiverOutput[] sspCotReceiverOutputs) {
         BspCotReceiverOutput receiverOutput = new BspCotReceiverOutput();
         assert sspCotReceiverOutputs.length > 0;
         // 取第一个输出的参数
-        receiverOutput.sspCotNum = sspCotReceiverOutputs[0].getNum();
+        receiverOutput.eachNum = sspCotReceiverOutputs[0].getNum();
         // 设置其余输出
         receiverOutput.receiverOutputs = Arrays.stream(sspCotReceiverOutputs)
             // 验证数量均为num
             .peek(sspcotReceiverOutput -> {
-                assert sspcotReceiverOutput.getNum() == receiverOutput.sspCotNum;
+                assert sspcotReceiverOutput.getNum() == receiverOutput.eachNum;
             })
             .toArray(SspCotReceiverOutput[]::new);
         return receiverOutput;
@@ -57,8 +57,8 @@ public class BspCotReceiverOutput implements PcgPartyOutput {
      *
      * @return num for each single single-point COT.
      */
-    public int getSspCotNum() {
-        return sspCotNum;
+    public int getEachNum() {
+        return eachNum;
     }
 
     @Override

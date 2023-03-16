@@ -1,4 +1,4 @@
-package edu.alibaba.mpc4j.s2pc.pcg.dpprf;
+package edu.alibaba.mpc4j.s2pc.pcg.dpprf.bp;
 
 import com.google.common.base.Preconditions;
 import edu.alibaba.mpc4j.common.rpc.Rpc;
@@ -6,8 +6,10 @@ import edu.alibaba.mpc4j.common.rpc.RpcManager;
 import edu.alibaba.mpc4j.common.rpc.desc.SecurityModel;
 import edu.alibaba.mpc4j.common.rpc.impl.memory.MemoryRpcManager;
 import edu.alibaba.mpc4j.common.tool.CommonConstants;
-import edu.alibaba.mpc4j.s2pc.pcg.dpprf.DpprfFactory.DpprfType;
-import edu.alibaba.mpc4j.s2pc.pcg.dpprf.ywl20.Ywl20RdpprfConfig;
+import edu.alibaba.mpc4j.s2pc.pcg.dpprf.bp.BpDpprfFactory.BpDpprfType;
+import edu.alibaba.mpc4j.s2pc.pcg.dpprf.sp.SpDpprfReceiverOutput;
+import edu.alibaba.mpc4j.s2pc.pcg.dpprf.sp.SpDpprfSenderOutput;
+import edu.alibaba.mpc4j.s2pc.pcg.dpprf.bp.ywl20.Ywl20BpDpprfConfig;
 import edu.alibaba.mpc4j.s2pc.pcg.ot.cot.CotReceiverOutput;
 import edu.alibaba.mpc4j.s2pc.pcg.ot.cot.CotSenderOutput;
 import edu.alibaba.mpc4j.s2pc.pcg.ot.cot.CotTestUtils;
@@ -29,64 +31,65 @@ import java.util.concurrent.TimeUnit;
 import java.util.stream.IntStream;
 
 /**
- * DPPRF协议测试。
+ * batch-point DPPRF tests.
  *
  * @author Weiran Liu
  * @date 2022/8/16
  */
 @RunWith(Parameterized.class)
-public class DpprfTest {
-    private static final Logger LOGGER = LoggerFactory.getLogger(DpprfTest.class);
+public class BpDpprfTest {
+    private static final Logger LOGGER = LoggerFactory.getLogger(BpDpprfTest.class);
     /**
-     * 随机状态
+     * the random state
      */
     private static final SecureRandom SECURE_RANDOM = new SecureRandom();
     /**
-     * 默认α上界，设置为既不是偶数、也不是2^k格式的上界
+     * default α bound, the bound is not even, and not in format 2^k
      */
     private static final int DEFAULT_ALPHA_BOUND = 15;
     /**
-     * 较大α上界
+     * large α bound
      */
     private static final int LARGE_ALPHA_BOUND = 1 << 16;
     /**
-     * 默认批处理数量，设置为既不是偶数、也不是2^k格式的数量
+     * default batch num, the batch num is not even, and not in format 2^k
      */
     private static final int DEFAULT_BATCH_NUM = 9;
     /**
-     * 较大批处理数量
+     * large batch num
      */
     private static final int LARGE_BATCH_NUM = 1 << 16;
 
     @Parameterized.Parameters(name = "{0}")
     public static Collection<Object[]> configurations() {
         Collection<Object[]> configurations = new ArrayList<>();
+
         // YWL20 (semi-honest)
         configurations.add(new Object[] {
-            DpprfType.YWL20_RANDOM.name() + " (semi-honest)", new Ywl20RdpprfConfig.Builder(SecurityModel.SEMI_HONEST).build(),
+            BpDpprfType.YWL20.name() + " (semi-honest)", new Ywl20BpDpprfConfig.Builder(SecurityModel.SEMI_HONEST).build(),
         });
         // YWL20 (malicious)
         configurations.add(new Object[] {
-            DpprfType.YWL20_RANDOM.name() + " (malicious)", new Ywl20RdpprfConfig.Builder(SecurityModel.MALICIOUS).build(),
+            BpDpprfType.YWL20.name() + " (malicious)", new Ywl20BpDpprfConfig.Builder(SecurityModel.MALICIOUS).build(),
         });
 
         return configurations;
     }
 
     /**
-     * 发送方
+     * the sender
      */
     private final Rpc senderRpc;
     /**
-     * 接收方
+     * the receiver
      */
     private final Rpc receiverRpc;
     /**
-     * 协议类型
+     * config
      */
-    private final DpprfConfig config;
+    private final BpDpprfConfig config;
 
-    public DpprfTest(String name, DpprfConfig config) {
+    public BpDpprfTest(String name, BpDpprfConfig config) {
         Preconditions.checkArgument(StringUtils.isNotBlank(name));
         // We cannot use NettyRPC in the test case since it needs multi-thread connect / disconnect.
         // In other word, we cannot connect / disconnect NettyRpc in @Before / @After, respectively.
@@ -209,8 +212,8 @@ public class DpprfTest {
     }
 
     private void testPto(int[] alphaArray, int alphaBound, boolean parallel) {
-        DpprfSender sender = DpprfFactory.createSender(senderRpc, receiverRpc.ownParty(), config);
-        DpprfReceiver receiver = DpprfFactory.createReceiver(receiverRpc, senderRpc.ownParty(), config);
+        BpDpprfSender sender = BpDpprfFactory.createSender(senderRpc, receiverRpc.ownParty(), config);
+        BpDpprfReceiver receiver = BpDpprfFactory.createReceiver(receiverRpc, senderRpc.ownParty(), config);
         sender.setParallel(parallel);
         receiver.setParallel(parallel);
         int randomTaskId = Math.abs(SECURE_RANDOM.nextInt());
@@ -219,10 +222,10 @@ public class DpprfTest {
         try {
             LOGGER.info("-----test {} start-----", sender.getPtoDesc().getPtoName());
             int batchNum = alphaArray.length;
-            DpprfSenderThread senderThread = new DpprfSenderThread(sender, batchNum, alphaBound);
-            DpprfReceiverThread receiverThread = new DpprfReceiverThread(receiver, alphaArray, alphaBound);
+            BpDpprfSenderThread senderThread = new BpDpprfSenderThread(sender, batchNum, alphaBound);
+            BpDpprfReceiverThread receiverThread = new BpDpprfReceiverThread(receiver, alphaArray, alphaBound);
             StopWatch stopWatch = new StopWatch();
-            // 开始执行协议
+            // start
             stopWatch.start();
             senderThread.start();
             receiverThread.start();
@@ -235,9 +238,9 @@ public class DpprfTest {
             long receiverByteLength = receiverRpc.getSendByteLength();
             senderRpc.reset();
             receiverRpc.reset();
-            DpprfSenderOutput senderOutput = senderThread.getSenderOutput();
-            DpprfReceiverOutput receiverOutput = receiverThread.getReceiverOutput();
-            // 验证结果
+            // verify
+            BpDpprfSenderOutput senderOutput = senderThread.getSenderOutput();
+            BpDpprfReceiverOutput receiverOutput = receiverThread.getReceiverOutput();
             assertOutput(batchNum, alphaBound, senderOutput, receiverOutput);
             LOGGER.info("Sender sends {}B, Receiver sends {}B, time = {}ms",
                 senderByteLength, receiverByteLength, time
@@ -252,30 +255,30 @@ public class DpprfTest {
 
     @Test
     public void testPrecompute() {
-        DpprfSender sender = DpprfFactory.createSender(senderRpc, receiverRpc.ownParty(), config);
-        DpprfReceiver receiver = DpprfFactory.createReceiver(receiverRpc, senderRpc.ownParty(), config);
+        BpDpprfSender sender = BpDpprfFactory.createSender(senderRpc, receiverRpc.ownParty(), config);
+        BpDpprfReceiver receiver = BpDpprfFactory.createReceiver(receiverRpc, senderRpc.ownParty(), config);
         int randomTaskId = Math.abs(SECURE_RANDOM.nextInt());
         sender.setTaskId(randomTaskId);
         receiver.setTaskId(randomTaskId);
         int batchNum = DEFAULT_BATCH_NUM;
         int alphaBound = DEFAULT_ALPHA_BOUND;
+        byte[] delta = new byte[CommonConstants.BLOCK_BYTE_LENGTH];
+        SECURE_RANDOM.nextBytes(delta);
+        int[] alphaArray = IntStream.range(0, batchNum)
+            .map(mIndex -> SECURE_RANDOM.nextInt(batchNum))
+            .toArray();
+        CotSenderOutput preSenderOutput = CotTestUtils.genSenderOutput(
+            BpDpprfFactory.getPrecomputeNum(config, batchNum, alphaBound), delta, SECURE_RANDOM
+        );
+        CotReceiverOutput preReceiverOutput = CotTestUtils.genReceiverOutput(preSenderOutput, SECURE_RANDOM);
         try {
             LOGGER.info("-----test {} (precompute) start-----", sender.getPtoDesc().getPtoName());
-            byte[] delta = new byte[CommonConstants.BLOCK_BYTE_LENGTH];
-            SECURE_RANDOM.nextBytes(delta);
-            int[] alphaArray = IntStream.range(0, batchNum)
-                .map(mIndex -> SECURE_RANDOM.nextInt(batchNum))
-                .toArray();
-            CotSenderOutput preSenderOutput = CotTestUtils.genSenderOutput(
-                DpprfFactory.getPrecomputeNum(config, batchNum, alphaBound), delta, SECURE_RANDOM
-            );
-            CotReceiverOutput preReceiverOutput = CotTestUtils.genReceiverOutput(preSenderOutput, SECURE_RANDOM);
-            DpprfSenderThread senderThread = new DpprfSenderThread(sender, batchNum, alphaBound, preSenderOutput);
-            DpprfReceiverThread receiverThread = new DpprfReceiverThread(
+            BpDpprfSenderThread senderThread = new BpDpprfSenderThread(sender, batchNum, alphaBound, preSenderOutput);
+            BpDpprfReceiverThread receiverThread = new BpDpprfReceiverThread(
                 receiver, alphaArray, alphaBound, preReceiverOutput
             );
             StopWatch stopWatch = new StopWatch();
-            // 开始执行协议
+            // start
             stopWatch.start();
             senderThread.start();
             receiverThread.start();
@@ -288,9 +291,9 @@ public class DpprfTest {
             long receiverByteLength = receiverRpc.getSendByteLength();
             senderRpc.reset();
             receiverRpc.reset();
-            DpprfSenderOutput senderOutput = senderThread.getSenderOutput();
-            DpprfReceiverOutput receiverOutput = receiverThread.getReceiverOutput();
-            // 验证结果
+            // verify
+            BpDpprfSenderOutput senderOutput = senderThread.getSenderOutput();
+            BpDpprfReceiverOutput receiverOutput = receiverThread.getReceiverOutput();
             assertOutput(batchNum, alphaBound, senderOutput, receiverOutput);
             LOGGER.info("Sender sends {}B, Receiver sends {}B, time = {}ms",
                 senderByteLength, receiverByteLength, time
@@ -303,18 +306,19 @@ public class DpprfTest {
         receiver.destroy();
     }
 
-    private void assertOutput(int batchNum, int alphaBound,
-                              DpprfSenderOutput senderOutput, DpprfReceiverOutput receiverOutput) {
-        Assert.assertEquals(batchNum, senderOutput.getBatchNum());
-        Assert.assertEquals(batchNum, receiverOutput.getBatchNum());
+    private void assertOutput(int batchNum, int alphaBound, BpDpprfSenderOutput senderOutput, BpDpprfReceiverOutput receiverOutput) {
+        Assert.assertEquals(batchNum, senderOutput.getNum());
+        Assert.assertEquals(batchNum, receiverOutput.getNum());
         Assert.assertEquals(alphaBound, senderOutput.getAlphaBound());
         Assert.assertEquals(alphaBound, receiverOutput.getAlphaBound());
-        // 验证各个子结果
+        // verify each single-point DPPRF outputs
         IntStream.range(0, batchNum).forEach(batchIndex -> {
-            byte[][] prfKey = senderOutput.getPrfs(batchIndex);
-            byte[][] pprfKey = receiverOutput.getPprfs(batchIndex);
+            SpDpprfSenderOutput spDpprfSenderOutput = senderOutput.getSpDpprfSenderOutput(batchIndex);
+            SpDpprfReceiverOutput spDpprfReceiverOutput = receiverOutput.getSpDpprfReceiverOutput(batchIndex);
+            byte[][] prfKey = spDpprfSenderOutput.getPrfKeys();
+            byte[][] pprfKey = spDpprfReceiverOutput.getPprfKeys();
             IntStream.range(0, alphaBound).forEach(index -> {
-                if (index == receiverOutput.getAlpha(batchIndex)) {
+                if (index == spDpprfReceiverOutput.getAlpha()) {
                     Assert.assertNull(pprfKey[index]);
                 } else {
                     Assert.assertArrayEquals(prfKey[index], pprfKey[index]);

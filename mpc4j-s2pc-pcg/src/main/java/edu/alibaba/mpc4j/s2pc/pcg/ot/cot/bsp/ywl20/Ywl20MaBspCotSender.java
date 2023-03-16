@@ -12,10 +12,10 @@ import edu.alibaba.mpc4j.common.tool.galoisfield.gf2k.Gf2k;
 import edu.alibaba.mpc4j.common.tool.galoisfield.gf2k.Gf2kFactory;
 import edu.alibaba.mpc4j.common.tool.utils.BinaryUtils;
 import edu.alibaba.mpc4j.common.tool.utils.BytesUtils;
-import edu.alibaba.mpc4j.s2pc.pcg.dpprf.DpprfConfig;
-import edu.alibaba.mpc4j.s2pc.pcg.dpprf.DpprfSenderOutput;
-import edu.alibaba.mpc4j.s2pc.pcg.dpprf.DpprfFactory;
-import edu.alibaba.mpc4j.s2pc.pcg.dpprf.DpprfSender;
+import edu.alibaba.mpc4j.s2pc.pcg.dpprf.bp.BpDpprfConfig;
+import edu.alibaba.mpc4j.s2pc.pcg.dpprf.bp.BpDpprfSenderOutput;
+import edu.alibaba.mpc4j.s2pc.pcg.dpprf.bp.BpDpprfFactory;
+import edu.alibaba.mpc4j.s2pc.pcg.dpprf.bp.BpDpprfSender;
 import edu.alibaba.mpc4j.s2pc.pcg.ot.cot.bsp.AbstractBspCotSender;
 import edu.alibaba.mpc4j.s2pc.pcg.ot.cot.bsp.BspCotSenderOutput;
 import edu.alibaba.mpc4j.s2pc.pcg.ot.cot.core.CoreCotFactory;
@@ -40,7 +40,7 @@ public class Ywl20MaBspCotSender extends AbstractBspCotSender {
     /**
      * DPPRF协议配置项
      */
-    private final DpprfConfig dpprfConfig;
+    private final BpDpprfConfig bpDpprfConfig;
     /**
      * 核COT协议发送方
      */
@@ -48,7 +48,7 @@ public class Ywl20MaBspCotSender extends AbstractBspCotSender {
     /**
      * DPPRF协议发送方
      */
-    private final DpprfSender dpprfSender;
+    private final BpDpprfSender bpDpprfSender;
     /**
      * GF(2^128)运算接口
      */
@@ -74,9 +74,9 @@ public class Ywl20MaBspCotSender extends AbstractBspCotSender {
         super(Ywl20MaBspCotPtoDesc.getInstance(), senderRpc, receiverParty, config);
         coreCotSender = CoreCotFactory.createSender(senderRpc, receiverParty, config.getCoreCotConfig());
         addSubPtos(coreCotSender);
-        dpprfConfig = config.getDpprfConfig();
-        dpprfSender = DpprfFactory.createSender(senderRpc, receiverParty, dpprfConfig);
-        addSubPtos(dpprfSender);
+        bpDpprfConfig = config.getBpDpprfConfig();
+        bpDpprfSender = BpDpprfFactory.createSender(senderRpc, receiverParty, bpDpprfConfig);
+        addSubPtos(bpDpprfSender);
         gf2k = Gf2kFactory.createInstance(envType);
         hash = HashFactory.createInstance(envType, 2 * CommonConstants.BLOCK_BYTE_LENGTH);
     }
@@ -88,10 +88,10 @@ public class Ywl20MaBspCotSender extends AbstractBspCotSender {
 
         stopWatch.start();
         // 协议执行过程要请求两次COT，一次用于DPPRF，一次是128个
-        int maxCotNum = DpprfFactory.getPrecomputeNum(dpprfConfig, maxBatchNum, maxNum)
+        int maxCotNum = BpDpprfFactory.getPrecomputeNum(bpDpprfConfig, maxBatchNum, maxNum)
             + CommonConstants.BLOCK_BIT_LENGTH;
         coreCotSender.init(delta, maxCotNum);
-        dpprfSender.init(maxBatchNum, maxNum);
+        bpDpprfSender.init(maxBatchNum, maxNum);
         stopWatch.stop();
         long initTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
         stopWatch.reset();
@@ -132,7 +132,7 @@ public class Ywl20MaBspCotSender extends AbstractBspCotSender {
 
         stopWatch.start();
         // S send (extend, h) to F_COT, which returns q_i ∈ {0,1}^κ to S
-        int dpprfCotNum = DpprfFactory.getPrecomputeNum(dpprfConfig, batchNum, num);
+        int dpprfCotNum = BpDpprfFactory.getPrecomputeNum(bpDpprfConfig, batchNum, num);
         if (cotSenderOutput == null) {
             cotSenderOutput = coreCotSender.send(dpprfCotNum + CommonConstants.BLOCK_BIT_LENGTH);
         } else {
@@ -147,7 +147,7 @@ public class Ywl20MaBspCotSender extends AbstractBspCotSender {
         logStepInfo(PtoState.PTO_STEP, 1, 4, cotTime);
 
         stopWatch.start();
-        DpprfSenderOutput dpprfSenderOutput = dpprfSender.puncture(batchNum, num, extendCotSenderOutput);
+        BpDpprfSenderOutput bpDpprfSenderOutput = bpDpprfSender.puncture(batchNum, num, extendCotSenderOutput);
         stopWatch.stop();
         long dpprfTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
         stopWatch.reset();
@@ -159,7 +159,7 @@ public class Ywl20MaBspCotSender extends AbstractBspCotSender {
             .mapToObj(batchIndex -> {
                 correlateByteArrays[batchIndex] = BytesUtils.clone(delta);
                 // S sets v = (s_0^h,...,s_{n - 1}^h)
-                byte[][] vs = dpprfSenderOutput.getPrfs(batchIndex);
+                byte[][] vs = bpDpprfSenderOutput.getSpDpprfSenderOutput(batchIndex).getPrfKeys();
                 // and sends c = Δ + \sum_{i ∈ [n]} {v[i]}
                 for (int i = 0; i < num; i++) {
                     BytesUtils.xori(correlateByteArrays[batchIndex], vs[i]);

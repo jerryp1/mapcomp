@@ -1,4 +1,4 @@
-package edu.alibaba.mpc4j.s2pc.pcg.dpprf;
+package edu.alibaba.mpc4j.s2pc.pcg.dpprf.bp;
 
 import edu.alibaba.mpc4j.common.rpc.Party;
 import edu.alibaba.mpc4j.common.rpc.Rpc;
@@ -9,42 +9,42 @@ import edu.alibaba.mpc4j.common.tool.utils.LongUtils;
 import edu.alibaba.mpc4j.s2pc.pcg.ot.cot.CotSenderOutput;
 
 /**
- * DPPRF abstract sender.
+ * abstract batch-point DPPRF sender.
  *
  * @author Weiran Liu
  * @date 2022/8/16
  */
-public abstract class AbstractDpprfSender extends AbstractTwoPartyPto implements DpprfSender {
+public abstract class AbstractBpDpprfSender extends AbstractTwoPartyPto implements BpDpprfSender {
     /**
-     * 配置项
+     * config
      */
-    private final DpprfConfig config;
+    protected final BpDpprfConfig config;
     /**
-     * 最大α上界
+     * max α bound
      */
     protected int maxAlphaBound;
     /**
-     * 最大α比特长度
+     * max α bit length
      */
     protected int maxH;
     /**
-     * 最大批处理数量
+     * max batch num
      */
     protected int maxBatchNum;
     /**
-     * α上界
+     * α bound
      */
     protected int alphaBound;
     /**
-     * α比特长度
+     * α bit length
      */
     protected int h;
     /**
-     * 批处理数量
+     * batch num
      */
     protected int batchNum;
 
-    protected AbstractDpprfSender(PtoDesc ptoDesc, Rpc senderRpc, Party receiverParty, DpprfConfig config) {
+    protected AbstractBpDpprfSender(PtoDesc ptoDesc, Rpc senderRpc, Party receiverParty, BpDpprfConfig config) {
         super(ptoDesc, senderRpc, receiverParty, config);
         this.config = config;
     }
@@ -71,7 +71,7 @@ public abstract class AbstractDpprfSender extends AbstractTwoPartyPto implements
     protected void setPtoInput(int batchNum, int alphaBound, CotSenderOutput preSenderOutput) {
         setPtoInput(batchNum, alphaBound);
         MathPreconditions.checkGreaterOrEqual(
-            "preCotNum", preSenderOutput.getNum(), DpprfFactory.getPrecomputeNum(config, batchNum, alphaBound)
+            "preCotNum", preSenderOutput.getNum(), BpDpprfFactory.getPrecomputeNum(config, batchNum, alphaBound)
         );
     }
 }

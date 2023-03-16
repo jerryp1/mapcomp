@@ -2,6 +2,7 @@ package edu.alibaba.mpc4j.s2pc.pcg.vole.gf2k.core;
 
 import edu.alibaba.mpc4j.common.rpc.Party;
 import edu.alibaba.mpc4j.common.rpc.Rpc;
+import edu.alibaba.mpc4j.common.rpc.desc.SecurityModel;
 import edu.alibaba.mpc4j.common.rpc.pto.PtoFactory;
 import edu.alibaba.mpc4j.s2pc.pcg.vole.gf2k.core.kos16.Kos16Gf2kCoreVoleConfig;
 import edu.alibaba.mpc4j.s2pc.pcg.vole.gf2k.core.kos16.Kos16Gf2kCoreVoleReceiver;
@@ -70,6 +71,24 @@ public class Gf2kCoreVoleFactory implements PtoFactory {
             case WYKW21:
             default:
                 throw new IllegalArgumentException("Invalid " + Gf2kCoreVoleType.class.getSimpleName() + ": " + type.name());
+        }
+    }
+
+    /**
+     * Creates the default config.
+     *
+     * @param securityModel security model.
+     * @return the default config.
+     */
+    public static Gf2kCoreVoleConfig createDefaultConfig(SecurityModel securityModel) {
+        switch (securityModel) {
+            case IDEAL:
+            case SEMI_HONEST:
+                return new Kos16Gf2kCoreVoleConfig.Builder().build();
+            case COVERT:
+            case MALICIOUS:
+            default:
+                throw new IllegalArgumentException("Invalid " + SecurityModel.class.getSimpleName() + ": " + securityModel.name());
         }
     }
 }
