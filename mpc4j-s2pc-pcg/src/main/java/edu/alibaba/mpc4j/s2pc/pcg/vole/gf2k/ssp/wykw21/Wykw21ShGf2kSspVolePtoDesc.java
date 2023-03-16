@@ -14,7 +14,7 @@ import edu.alibaba.mpc4j.common.rpc.desc.PtoDescManager;
  * @author Weiran Liu
  * @date 2023/3/16
  */
-class Wykw21ShSspGf2kVolePtoDesc implements PtoDesc {
+class Wykw21ShGf2kSspVolePtoDesc implements PtoDesc {
     /**
      * protocol ID
      */
@@ -29,9 +29,9 @@ class Wykw21ShSspGf2kVolePtoDesc implements PtoDesc {
      */
     enum PtoStep {
         /**
-         * sender sends x' = β - x
+         * sender sends a' = β - a
          */
-        SENDER_SEND_X_PRIME,
+        SENDER_SEND_A_PRIME,
         /**
          * receiver sends d = γ - Σ_{i ∈ [0, n)} v[i]
          */
@@ -41,12 +41,12 @@ class Wykw21ShSspGf2kVolePtoDesc implements PtoDesc {
     /**
      * singleton mode
      */
-    private static final Wykw21ShSspGf2kVolePtoDesc INSTANCE = new Wykw21ShSspGf2kVolePtoDesc();
+    private static final Wykw21ShGf2kSspVolePtoDesc INSTANCE = new Wykw21ShGf2kSspVolePtoDesc();
 
     /**
      * private constructor
      */
-    private Wykw21ShSspGf2kVolePtoDesc() {
+    private Wykw21ShGf2kSspVolePtoDesc() {
         // empty
     }
 

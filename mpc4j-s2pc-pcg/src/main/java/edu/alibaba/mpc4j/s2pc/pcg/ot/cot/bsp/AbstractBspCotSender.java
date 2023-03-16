@@ -1,5 +1,6 @@
 package edu.alibaba.mpc4j.s2pc.pcg.ot.cot.bsp;
 
+import com.google.common.base.Preconditions;
 import edu.alibaba.mpc4j.common.rpc.Party;
 import edu.alibaba.mpc4j.common.rpc.Rpc;
 import edu.alibaba.mpc4j.common.rpc.desc.PtoDesc;
@@ -8,6 +9,8 @@ import edu.alibaba.mpc4j.common.tool.CommonConstants;
 import edu.alibaba.mpc4j.common.tool.MathPreconditions;
 import edu.alibaba.mpc4j.common.tool.utils.BytesUtils;
 import edu.alibaba.mpc4j.s2pc.pcg.ot.cot.CotSenderOutput;
+
+import java.util.Arrays;
 
 /**
  * BSP-COT协议发送方。
@@ -68,6 +71,7 @@ public abstract class AbstractBspCotSender extends AbstractTwoPartyPto implement
 
     protected void setPtoInput(int batchNum, int num, CotSenderOutput preSenderOutput) {
         setPtoInput(batchNum, num);
+        Preconditions.checkArgument(Arrays.equals(delta, preSenderOutput.getDelta()));
         MathPreconditions.checkGreaterOrEqual(
             "preCotNum", preSenderOutput.getNum(), BspCotFactory.getPrecomputeNum(config, batchNum, num)
         );

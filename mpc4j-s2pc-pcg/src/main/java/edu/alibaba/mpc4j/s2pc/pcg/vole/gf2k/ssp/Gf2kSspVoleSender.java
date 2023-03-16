@@ -2,7 +2,7 @@ package edu.alibaba.mpc4j.s2pc.pcg.vole.gf2k.ssp;
 
 import edu.alibaba.mpc4j.common.rpc.MpcAbortException;
 import edu.alibaba.mpc4j.common.rpc.pto.TwoPartyPto;
-import edu.alibaba.mpc4j.s2pc.pcg.vole.gf2e.ssp.SspGf2eVoleSenderOutput;
+import edu.alibaba.mpc4j.s2pc.pcg.vole.gf2k.Gf2kVoleSenderOutput;
 
 /**
  * Single single-point GF2K VOLE sender.
@@ -10,7 +10,7 @@ import edu.alibaba.mpc4j.s2pc.pcg.vole.gf2e.ssp.SspGf2eVoleSenderOutput;
  * @author Weiran Liu
  * @date 2023/3/16
  */
-public interface SspGf2kVoleSender extends TwoPartyPto {
+public interface Gf2kSspVoleSender extends TwoPartyPto {
     /**
      * Inits the protocol.
      *
@@ -27,7 +27,7 @@ public interface SspGf2kVoleSender extends TwoPartyPto {
      * @return the sender output.
      * @throws MpcAbortException the protocol failure aborts.
      */
-    SspGf2eVoleSenderOutput receive(int alpha, int num) throws MpcAbortException;
+    Gf2kSspVoleSenderOutput send(int alpha, int num) throws MpcAbortException;
 
     /**
      * Executes the protocol.
@@ -38,5 +38,5 @@ public interface SspGf2kVoleSender extends TwoPartyPto {
      * @return the sender output.
      * @throws MpcAbortException the protocol failure aborts.
      */
-    SspGf2eVoleSenderOutput receive(int alpha, int num, SspGf2eVoleSenderOutput preSenderOutput) throws MpcAbortException;
+    Gf2kSspVoleSenderOutput send(int alpha, int num, Gf2kVoleSenderOutput preSenderOutput) throws MpcAbortException;
 }

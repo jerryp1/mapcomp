@@ -15,7 +15,7 @@ import java.util.Arrays;
  * @author Weiran Liu
  * @date 2023/3/16
  */
-public class SspGf2kVoleReceiverOutput {
+public class Gf2kSspVoleReceiverOutput {
     /**
      * Δ
      */
@@ -32,8 +32,8 @@ public class SspGf2kVoleReceiverOutput {
      * @param qArray q array.
      * @return a sender output.
      */
-    public static SspGf2kVoleReceiverOutput create(byte[] delta, byte[][] qArray) {
-        SspGf2kVoleReceiverOutput senderOutput = new SspGf2kVoleReceiverOutput();
+    public static Gf2kSspVoleReceiverOutput create(byte[] delta, byte[][] qArray) {
+        Gf2kSspVoleReceiverOutput senderOutput = new Gf2kSspVoleReceiverOutput();
         assert delta.length == CommonConstants.BLOCK_BYTE_LENGTH
             : "Δ must be in range [0, 2^" + CommonConstants.BLOCK_BIT_LENGTH + "): " + Hex.toHexString(delta);
         senderOutput.delta = BytesUtils.clone(delta);
@@ -51,7 +51,7 @@ public class SspGf2kVoleReceiverOutput {
     /**
      * private constructor.
      */
-    private SspGf2kVoleReceiverOutput() {
+    private Gf2kSspVoleReceiverOutput() {
         // empty
     }
 

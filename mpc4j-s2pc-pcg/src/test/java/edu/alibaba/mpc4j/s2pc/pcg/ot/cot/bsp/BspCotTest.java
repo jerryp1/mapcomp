@@ -61,17 +61,18 @@ public class BspCotTest {
 
     @Parameterized.Parameters(name = "{0}")
     public static Collection<Object[]> configurations() {
-        Collection<Object[]> configurationParams = new ArrayList<>();
+        Collection<Object[]> configurations = new ArrayList<>();
+
         // YWL20_MALICIOUS
-        configurationParams.add(new Object[] {
+        configurations.add(new Object[] {
             BspCotType.YWL20_MALICIOUS.name(), new Ywl20MaBspCotConfig.Builder().build(),
         });
         // YWL20_SEMI_HONEST
-        configurationParams.add(new Object[] {
+        configurations.add(new Object[] {
             BspCotType.YWL20_SEMI_HONEST.name(), new Ywl20ShBspCotConfig.Builder().build(),
         });
 
-        return configurationParams;
+        return configurations;
     }
 
     /**

@@ -13,11 +13,11 @@ import edu.alibaba.mpc4j.s2pc.pcg.vole.gf2k.Gf2kVoleSenderOutput;
  * @author Weiran Liu
  * @date 2023/3/16
  */
-public abstract class AbstractSspGf2kVoleSender extends AbstractTwoPartyPto implements SspGf2kVoleSender {
+public abstract class AbstractGf2kSspVoleSender extends AbstractTwoPartyPto implements Gf2kSspVoleSender {
     /**
      * config
      */
-    private final SspGf2kVoleConfig config;
+    protected final Gf2kSspVoleConfig config;
     /**
      * max num
      */
@@ -31,7 +31,7 @@ public abstract class AbstractSspGf2kVoleSender extends AbstractTwoPartyPto impl
      */
     protected int num;
 
-    protected AbstractSspGf2kVoleSender(PtoDesc ptoDesc, Rpc receiverRpc, Party senderParty, SspGf2kVoleConfig config) {
+    protected AbstractGf2kSspVoleSender(PtoDesc ptoDesc, Rpc receiverRpc, Party senderParty, Gf2kSspVoleConfig config) {
         super(ptoDesc, receiverRpc, senderParty, config);
         this.config = config;
     }
@@ -54,7 +54,7 @@ public abstract class AbstractSspGf2kVoleSender extends AbstractTwoPartyPto impl
     protected void setPtoInput(int alpha, int num, Gf2kVoleSenderOutput preSenderOutput) {
         setPtoInput(alpha, num);
         MathPreconditions.checkGreaterOrEqual(
-            "preNum", preSenderOutput.getNum(), SspGf2kVoleFactory.getPrecomputeNum(config, num)
+            "preNum", preSenderOutput.getNum(), Gf2kSspVoleFactory.getPrecomputeNum(config, num)
         );
     }
 }

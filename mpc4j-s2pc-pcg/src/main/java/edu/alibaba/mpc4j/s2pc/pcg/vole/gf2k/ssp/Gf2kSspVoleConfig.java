@@ -8,11 +8,11 @@ import edu.alibaba.mpc4j.common.rpc.pto.MultiPartyPtoConfig;
  * @author Weiran Liu
  * @date 2023/3/16
  */
-public interface SspGf2kVoleConfig extends MultiPartyPtoConfig {
+public interface Gf2kSspVoleConfig extends MultiPartyPtoConfig {
     /**
      * Gets the type.
      *
      * @return the type.
      */
-    SspGf2kVoleFactory.SspGf2kVoleType getPtoType();
+    Gf2kSspVoleFactory.Gf2kSspVoleType getPtoType();
 }

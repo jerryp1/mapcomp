@@ -67,7 +67,7 @@ public class SpDpprfFactory implements PtoFactory {
             case YWL20:
                 return new Ywl20SpDpprfSender(senderRpc, receiverParty, (Ywl20SpDpprfConfig) config);
             default:
-                throw new IllegalArgumentException("Invalid " + type.getClass().getSimpleName() + ": " + type.name());
+                throw new IllegalArgumentException("Invalid " + SpDpprfType.class.getSimpleName() + ": " + type.name());
         }
     }
 
@@ -86,7 +86,7 @@ public class SpDpprfFactory implements PtoFactory {
             case YWL20:
                 return new Ywl20SpDpprfReceiver(receiverRpc, senderParty, (Ywl20SpDpprfConfig) config);
             default:
-                throw new IllegalArgumentException("Invalid " + type.getClass().getSimpleName() + ": " + type.name());
+                throw new IllegalArgumentException("Invalid " + SpDpprfType.class.getSimpleName() + ": " + type.name());
         }
     }
 

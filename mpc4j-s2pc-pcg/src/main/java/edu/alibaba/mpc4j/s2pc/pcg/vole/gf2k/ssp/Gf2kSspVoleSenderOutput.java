@@ -16,15 +16,15 @@ import java.util.Arrays;
  * @author Weiran Liu
  * @date 2023/3/16
  */
-public class SspGf2kVoleSenderOutput implements PcgPartyOutput {
+public class Gf2kSspVoleSenderOutput implements PcgPartyOutput {
     /**
      * α
      */
     private int alpha;
     /**
-     * x array
+     * single x
      */
-    private byte[][] xs;
+    private byte[] x;
     /**
      * t array
      */
@@ -34,24 +34,18 @@ public class SspGf2kVoleSenderOutput implements PcgPartyOutput {
      * Creates a sender output.
      *
      * @param alpha α.
-     * @param xs    x array.
+     * @param x     x.
      * @param ts    t array.
      * @return a sender output.
      */
-    public static SspGf2kVoleSenderOutput create(int alpha, byte[][] xs, byte[][] ts) {
-        SspGf2kVoleSenderOutput receiverOutput = new SspGf2kVoleSenderOutput();
-        assert xs.length > 0 : "# of x must be greater than 0: " + xs.length;
-        int num = xs.length;
-        assert ts.length == num : "# of t must be equal to " + num + ": " + ts.length;
-        assert alpha >= 0 && alpha < xs.length : "α must be in range [0, " + num + "): " + alpha;
+    public static Gf2kSspVoleSenderOutput create(int alpha, byte[] x, byte[][] ts) {
+        Gf2kSspVoleSenderOutput receiverOutput = new Gf2kSspVoleSenderOutput();
+        assert ts.length > 0 : "# of t must be greater than 0: " + ts.length;
+        assert alpha >= 0 && alpha < ts.length : "α must be in range [0, " + ts.length + "): " + alpha;
         receiverOutput.alpha = alpha;
-        receiverOutput.xs = Arrays.stream(xs)
-            .peek(x -> {
-                assert x.length == CommonConstants.BLOCK_BYTE_LENGTH
-                    : "x must be in range [0, 2^" + CommonConstants.BLOCK_BIT_LENGTH + "): " + Hex.toHexString(x);
-            })
-            .map(BytesUtils::clone)
-            .toArray(byte[][]::new);
+        assert x.length == CommonConstants.BLOCK_BYTE_LENGTH
+            : "x must be in range [0, 2^" + CommonConstants.BLOCK_BIT_LENGTH + "): " + Hex.toHexString(x);
+        receiverOutput.x = BytesUtils.clone(x);
         receiverOutput.ts = Arrays.stream(ts)
             .peek(t -> {
                 assert t.length == CommonConstants.BLOCK_BYTE_LENGTH
@@ -65,7 +59,7 @@ public class SspGf2kVoleSenderOutput implements PcgPartyOutput {
     /**
      * private constructor.
      */
-    private SspGf2kVoleSenderOutput() {
+    private Gf2kSspVoleSenderOutput() {
         // empty
     }
 
@@ -81,11 +75,10 @@ public class SspGf2kVoleSenderOutput implements PcgPartyOutput {
     /**
      * Gets x.
      *
-     * @param index the index.
      * @return x.
      */
-    public byte[] getX(int index) {
-        return xs[index];
+    public byte[] getX() {
+        return x;
     }
 
     /**
@@ -100,6 +93,6 @@ public class SspGf2kVoleSenderOutput implements PcgPartyOutput {
 
     @Override
     public int getNum() {
-        return xs.length;
+        return ts.length;
     }
 }
