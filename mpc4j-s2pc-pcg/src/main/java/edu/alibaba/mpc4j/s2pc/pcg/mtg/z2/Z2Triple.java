@@ -3,7 +3,7 @@ package edu.alibaba.mpc4j.s2pc.pcg.mtg.z2;
 import edu.alibaba.mpc4j.common.tool.bitvector.BitVector;
 import edu.alibaba.mpc4j.common.tool.bitvector.BitVectorFactory;
 import edu.alibaba.mpc4j.common.tool.utils.CommonUtils;
-import edu.alibaba.mpc4j.s2pc.pcg.MergePartyOutput;
+import edu.alibaba.mpc4j.s2pc.pcg.MergedPcgPartyOutput;
 
 import java.security.SecureRandom;
 
@@ -13,7 +13,7 @@ import java.security.SecureRandom;
  * @author Sheng Hu, Weiran Liu
  * @date 2022/02/07
  */
-public class Z2Triple implements MergePartyOutput {
+public class Z2Triple implements MergedPcgPartyOutput {
     /**
      * triple num
      */
@@ -168,7 +168,7 @@ public class Z2Triple implements MergePartyOutput {
     }
 
     @Override
-    public void merge(MergePartyOutput other) {
+    public void merge(MergedPcgPartyOutput other) {
         Z2Triple that = (Z2Triple) other;
         a.merge(that.a);
         b.merge(that.b);

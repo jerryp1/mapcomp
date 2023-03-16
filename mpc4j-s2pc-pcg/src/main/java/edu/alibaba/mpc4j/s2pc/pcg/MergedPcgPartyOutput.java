@@ -6,14 +6,14 @@ package edu.alibaba.mpc4j.s2pc.pcg;
  * @author Weiran Liu
  * @date 2023/3/13
  */
-public interface MergePartyOutput {
+public interface MergedPcgPartyOutput extends PcgPartyOutput {
     /**
      * Splits the output with the split num.
      *
      * @param splitNum the split num.
      * @return a new output with the split num.
      */
-    MergePartyOutput split(int splitNum);
+    MergedPcgPartyOutput split(int splitNum);
 
     /**
      * Reduces the output to the reduced num.
@@ -27,12 +27,5 @@ public interface MergePartyOutput {
      *
      * @param other the other output.
      */
-    void merge(MergePartyOutput other);
-
-    /**
-     * Gets num.
-     *
-     * @return num.
-     */
-    int getNum();
+    void merge(MergedPcgPartyOutput other);
 }

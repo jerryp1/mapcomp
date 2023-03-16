@@ -2,7 +2,7 @@ package edu.alibaba.mpc4j.s2pc.pcg.vole.gf2k.core;
 
 import edu.alibaba.mpc4j.common.rpc.MpcAbortException;
 import edu.alibaba.mpc4j.common.rpc.pto.TwoPartyPto;
-import edu.alibaba.mpc4j.s2pc.pcg.vole.gf2e.Gf2eVoleReceiverOutput;
+import edu.alibaba.mpc4j.s2pc.pcg.vole.gf2k.Gf2kVoleReceiverOutput;
 
 /**
  * GF2K-core-VOLE receiver.
@@ -27,5 +27,5 @@ public interface Gf2kCoreVoleReceiver extends TwoPartyPto {
      * @return the receiver output.
      * @throws MpcAbortException the protocol failure aborts.
      */
-    Gf2eVoleReceiverOutput receive(int num) throws MpcAbortException;
+    Gf2kVoleReceiverOutput receive(int num) throws MpcAbortException;
 }

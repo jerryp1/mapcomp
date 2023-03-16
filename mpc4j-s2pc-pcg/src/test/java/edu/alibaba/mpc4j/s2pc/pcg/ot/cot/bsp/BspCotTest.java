@@ -385,8 +385,8 @@ public class BspCotTest {
 
     private void assertOutput(int batchNum, int num,
                               BspCotSenderOutput senderOutput, BspCotReceiverOutput receiverOutput) {
-        Assert.assertEquals(batchNum, senderOutput.getBatch());
-        Assert.assertEquals(batchNum, receiverOutput.getBatch());
+        Assert.assertEquals(batchNum, senderOutput.getNum());
+        Assert.assertEquals(batchNum, receiverOutput.getNum());
         // 验证各个子结果
         IntStream.range(0, batchNum).forEach(batchIndex -> {
             SspCotSenderOutput sspcotSenderOutput = senderOutput.get(batchIndex);

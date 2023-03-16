@@ -5,10 +5,9 @@ import edu.alibaba.mpc4j.common.rpc.Party;
 import edu.alibaba.mpc4j.common.rpc.Rpc;
 import edu.alibaba.mpc4j.common.rpc.desc.PtoDesc;
 import edu.alibaba.mpc4j.common.rpc.pto.AbstractTwoPartyPto;
-import edu.alibaba.mpc4j.common.tool.CommonConstants;
 import edu.alibaba.mpc4j.common.tool.MathPreconditions;
-import edu.alibaba.mpc4j.common.tool.galoisfield.gf2e.Gf2e;
-import edu.alibaba.mpc4j.common.tool.galoisfield.gf2e.Gf2eFactory;
+import edu.alibaba.mpc4j.common.tool.galoisfield.gf2k.Gf2k;
+import edu.alibaba.mpc4j.common.tool.galoisfield.gf2k.Gf2kFactory;
 import edu.alibaba.mpc4j.common.tool.utils.BytesUtils;
 
 /**
@@ -19,9 +18,9 @@ import edu.alibaba.mpc4j.common.tool.utils.BytesUtils;
  */
 public abstract class AbstractGf2kCoreVoleReceiver extends AbstractTwoPartyPto implements Gf2kCoreVoleReceiver {
     /**
-     * the GF2E instance
+     * the GF2K instance
      */
-    protected Gf2e gf2e;
+    protected Gf2k gf2k;
     /**
      * l
      */
@@ -48,10 +47,10 @@ public abstract class AbstractGf2kCoreVoleReceiver extends AbstractTwoPartyPto i
     }
 
     protected void setInitInput(byte[] delta, int maxNum) {
-        gf2e = Gf2eFactory.createInstance(envType, CommonConstants.BLOCK_BIT_LENGTH);
-        l = gf2e.getL();
-        byteL = gf2e.getByteL();
-        Preconditions.checkArgument(gf2e.validateRangeElement(delta), "Δ must be in range [0, 2^%s)", l);
+        gf2k = Gf2kFactory.createInstance(envType);
+        l = gf2k.getL();
+        byteL = gf2k.getByteL();
+        Preconditions.checkArgument(gf2k.validateRangeElement(delta), "Δ must be in range [0, 2^%s)", l);
         this.delta = BytesUtils.clone(delta);
         MathPreconditions.checkPositive("maxNum", maxNum);
         this.maxNum = maxNum;

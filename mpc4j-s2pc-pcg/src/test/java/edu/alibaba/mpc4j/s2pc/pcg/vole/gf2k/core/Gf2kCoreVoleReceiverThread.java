@@ -1,7 +1,7 @@
 package edu.alibaba.mpc4j.s2pc.pcg.vole.gf2k.core;
 
 import edu.alibaba.mpc4j.common.rpc.MpcAbortException;
-import edu.alibaba.mpc4j.s2pc.pcg.vole.gf2e.Gf2eVoleReceiverOutput;
+import edu.alibaba.mpc4j.s2pc.pcg.vole.gf2k.Gf2kVoleReceiverOutput;
 
 /**
  * GF2K-core VOLE receiver thread.
@@ -25,7 +25,7 @@ class Gf2kCoreVoleReceiverThread extends Thread {
     /**
      * the receiver output
      */
-    private Gf2eVoleReceiverOutput receiverOutput;
+    private Gf2kVoleReceiverOutput receiverOutput;
 
     Gf2kCoreVoleReceiverThread(Gf2kCoreVoleReceiver receiver, byte[] delta, int num) {
         this.receiver = receiver;
@@ -33,7 +33,7 @@ class Gf2kCoreVoleReceiverThread extends Thread {
         this.num = num;
     }
 
-    Gf2eVoleReceiverOutput getReceiverOutput() {
+    Gf2kVoleReceiverOutput getReceiverOutput() {
         return receiverOutput;
     }
 

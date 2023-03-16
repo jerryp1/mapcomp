@@ -2,18 +2,18 @@ package edu.alibaba.mpc4j.s2pc.pcg.vole.gf2e;
 
 import edu.alibaba.mpc4j.common.tool.galoisfield.gf2e.Gf2e;
 import edu.alibaba.mpc4j.common.tool.utils.BytesUtils;
-import edu.alibaba.mpc4j.s2pc.pcg.MergePartyOutput;
+import edu.alibaba.mpc4j.s2pc.pcg.MergedPcgPartyOutput;
 import org.bouncycastle.util.encoders.Hex;
 
 import java.util.Arrays;
 
 /**
- * GF2E-VOLE receiver output. The receiver gets (Δ, q) with t = q + Δ · x, where x and t are owned by the sender.
+ * GF2E-VOLE GF2E receiver output. The receiver gets (Δ, q) with t = q + Δ · x, where x and t are owned by the sender.
  *
  * @author Weiran Liu
  * @date 2022/6/9
  */
-public class Gf2eVoleReceiverOutput implements MergePartyOutput {
+public class Gf2eVoleReceiverOutput implements MergedPcgPartyOutput {
     /**
      * the GF2E instance
      */
@@ -107,7 +107,7 @@ public class Gf2eVoleReceiverOutput implements MergePartyOutput {
     }
 
     @Override
-    public void merge(MergePartyOutput other) {
+    public void merge(MergedPcgPartyOutput other) {
         Gf2eVoleReceiverOutput that = (Gf2eVoleReceiverOutput) other;
         assert this.gf2e.equals(that.gf2e) : "merged " + this.getClass().getSimpleName()
             + " must have the same " + gf2e.getClass().getSimpleName() + " instance:"

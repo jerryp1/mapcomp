@@ -4,13 +4,12 @@ import com.google.common.base.Preconditions;
 import edu.alibaba.mpc4j.common.rpc.Rpc;
 import edu.alibaba.mpc4j.common.rpc.RpcManager;
 import edu.alibaba.mpc4j.common.rpc.impl.memory.MemoryRpcManager;
-import edu.alibaba.mpc4j.common.tool.CommonConstants;
 import edu.alibaba.mpc4j.common.tool.EnvType;
-import edu.alibaba.mpc4j.common.tool.galoisfield.gf2e.Gf2e;
-import edu.alibaba.mpc4j.common.tool.galoisfield.gf2e.Gf2eFactory;
-import edu.alibaba.mpc4j.s2pc.pcg.vole.gf2e.Gf2eVoleReceiverOutput;
-import edu.alibaba.mpc4j.s2pc.pcg.vole.gf2e.Gf2eVoleSenderOutput;
-import edu.alibaba.mpc4j.s2pc.pcg.vole.gf2e.Gf2eVoleTestUtils;
+import edu.alibaba.mpc4j.common.tool.galoisfield.gf2k.Gf2k;
+import edu.alibaba.mpc4j.common.tool.galoisfield.gf2k.Gf2kFactory;
+import edu.alibaba.mpc4j.s2pc.pcg.vole.gf2k.Gf2kVoleReceiverOutput;
+import edu.alibaba.mpc4j.s2pc.pcg.vole.gf2k.Gf2kVoleSenderOutput;
+import edu.alibaba.mpc4j.s2pc.pcg.vole.gf2k.Gf2kVoleTestUtils;
 import edu.alibaba.mpc4j.s2pc.pcg.vole.gf2k.core.Gf2kCoreVoleFactory.Gf2kCoreVoleType;
 import edu.alibaba.mpc4j.s2pc.pcg.vole.gf2k.core.kos16.Kos16Gf2kCoreVoleConfig;
 import org.apache.commons.lang3.StringUtils;
@@ -46,7 +45,7 @@ public class Gf2kCoreVoleTest {
     /**
      * GF2K
      */
-    private static final Gf2e GF2K = Gf2eFactory.createInstance(EnvType.STANDARD, CommonConstants.BLOCK_BIT_LENGTH);
+    private static final Gf2k GF2K = Gf2kFactory.createInstance(EnvType.STANDARD);
     /**
      * default num
      */
@@ -169,10 +168,10 @@ public class Gf2kCoreVoleTest {
             long receiverByteLength = receiverRpc.getSendByteLength();
             senderRpc.reset();
             receiverRpc.reset();
-            Gf2eVoleSenderOutput senderOutput = senderThread.getSenderOutput();
-            Gf2eVoleReceiverOutput receiverOutput = receiverThread.getReceiverOutput();
+            Gf2kVoleSenderOutput senderOutput = senderThread.getSenderOutput();
+            Gf2kVoleReceiverOutput receiverOutput = receiverThread.getReceiverOutput();
             // verify results
-            Gf2eVoleTestUtils.assertOutput(GF2K, num, senderOutput, receiverOutput);
+            Gf2kVoleTestUtils.assertOutput(num, senderOutput, receiverOutput);
             LOGGER.info("Sender sends {}B, Receiver sends {}B, time = {}ms",
                 senderByteLength, receiverByteLength, time
             );
@@ -214,9 +213,9 @@ public class Gf2kCoreVoleTest {
             long firstReceiverByteLength = receiverRpc.getSendByteLength();
             senderRpc.reset();
             receiverRpc.reset();
-            Gf2eVoleSenderOutput senderOutput = senderThread.getSenderOutput();
-            Gf2eVoleReceiverOutput receiverOutput = receiverThread.getReceiverOutput();
-            Gf2eVoleTestUtils.assertOutput(GF2K, DEFAULT_NUM, senderOutput, receiverOutput);
+            Gf2kVoleSenderOutput senderOutput = senderThread.getSenderOutput();
+            Gf2kVoleReceiverOutput receiverOutput = receiverThread.getReceiverOutput();
+            Gf2kVoleTestUtils.assertOutput(DEFAULT_NUM, senderOutput, receiverOutput);
             // second round, reset Δ
             delta = GF2K.createRangeRandom(SECURE_RANDOM);
             x = IntStream.range(0, DEFAULT_NUM)
@@ -236,9 +235,9 @@ public class Gf2kCoreVoleTest {
             long secondReceiverByteLength = receiverRpc.getSendByteLength();
             senderRpc.reset();
             receiverRpc.reset();
-            Gf2eVoleSenderOutput secondSenderOutput = senderThread.getSenderOutput();
-            Gf2eVoleReceiverOutput secondReceiverOutput = receiverThread.getReceiverOutput();
-            Gf2eVoleTestUtils.assertOutput(GF2K, DEFAULT_NUM, secondSenderOutput, secondReceiverOutput);
+            Gf2kVoleSenderOutput secondSenderOutput = senderThread.getSenderOutput();
+            Gf2kVoleReceiverOutput secondReceiverOutput = receiverThread.getReceiverOutput();
+            Gf2kVoleTestUtils.assertOutput(DEFAULT_NUM, secondSenderOutput, secondReceiverOutput);
             // Δ should be unequal
             Assert.assertNotEquals(secondReceiverOutput.getDelta(), receiverOutput.getDelta());
             // communication should be equal

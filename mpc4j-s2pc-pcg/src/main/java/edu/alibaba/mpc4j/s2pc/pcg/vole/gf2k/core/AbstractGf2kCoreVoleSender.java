@@ -5,10 +5,10 @@ import edu.alibaba.mpc4j.common.rpc.Party;
 import edu.alibaba.mpc4j.common.rpc.Rpc;
 import edu.alibaba.mpc4j.common.rpc.desc.PtoDesc;
 import edu.alibaba.mpc4j.common.rpc.pto.AbstractTwoPartyPto;
-import edu.alibaba.mpc4j.common.tool.CommonConstants;
 import edu.alibaba.mpc4j.common.tool.MathPreconditions;
-import edu.alibaba.mpc4j.common.tool.galoisfield.gf2e.Gf2e;
-import edu.alibaba.mpc4j.common.tool.galoisfield.gf2e.Gf2eFactory;
+import edu.alibaba.mpc4j.common.tool.galoisfield.gf2k.Gf2k;
+import edu.alibaba.mpc4j.common.tool.galoisfield.gf2k.Gf2kFactory;
+import org.bouncycastle.util.encoders.Hex;
 
 import java.util.Arrays;
 
@@ -22,7 +22,7 @@ public abstract class AbstractGf2kCoreVoleSender extends AbstractTwoPartyPto imp
     /**
      * the GF2K instance
      */
-    protected Gf2e gf2e;
+    protected Gf2k gf2k;
     /**
      * l
      */
@@ -38,7 +38,7 @@ public abstract class AbstractGf2kCoreVoleSender extends AbstractTwoPartyPto imp
     /**
      * x
      */
-    protected byte[][] x;
+    protected byte[][] xs;
     /**
      * num
      */
@@ -49,21 +49,21 @@ public abstract class AbstractGf2kCoreVoleSender extends AbstractTwoPartyPto imp
     }
 
     protected void setInitInput(int maxNum) {
-        gf2e = Gf2eFactory.createInstance(envType, CommonConstants.BLOCK_BIT_LENGTH);
-        l = gf2e.getL();
-        byteL = gf2e.getByteL();
+        gf2k = Gf2kFactory.createInstance(envType);
+        l = gf2k.getL();
+        byteL = gf2k.getByteL();
         MathPreconditions.checkPositive("maxNum", maxNum);
         this.maxNum = maxNum;
         initState();
     }
 
-    protected void setPtoInput(byte[][] x) {
+    protected void setPtoInput(byte[][] xs) {
         checkInitialized();
-        MathPreconditions.checkPositiveInRangeClosed("num", x.length, maxNum);
-        num = x.length;
-        this.x = Arrays.stream(x)
+        MathPreconditions.checkPositiveInRangeClosed("num", xs.length, maxNum);
+        num = xs.length;
+        this.xs = Arrays.stream(xs)
             .peek(xi -> Preconditions.checkArgument(
-                gf2e.validateElement(xi), "xi must be in range [0, 2^%s): %s", l, xi
+                gf2k.validateElement(xi), "xi must be in range [0, 2^%s): %s", l, Hex.toHexString(xi)
             ))
             .toArray(byte[][]::new);
         extraInfo++;

@@ -1,7 +1,7 @@
 package edu.alibaba.mpc4j.s2pc.pcg.mtg.zl;
 
 import edu.alibaba.mpc4j.common.tool.galoisfield.zl.Zl;
-import edu.alibaba.mpc4j.s2pc.pcg.MergePartyOutput;
+import edu.alibaba.mpc4j.s2pc.pcg.MergedPcgPartyOutput;
 
 import java.math.BigInteger;
 import java.util.Arrays;
@@ -12,7 +12,7 @@ import java.util.Arrays;
  * @author Weiran Liu
  * @date 2022/4/11
  */
-public class ZlTriple implements MergePartyOutput {
+public class ZlTriple implements MergedPcgPartyOutput {
     /**
      * the Zl instance
      */
@@ -151,7 +151,7 @@ public class ZlTriple implements MergePartyOutput {
     }
 
     @Override
-    public void merge(MergePartyOutput other) {
+    public void merge(MergedPcgPartyOutput other) {
         ZlTriple that = (ZlTriple) other;
         assert this.zl.equals(that.zl) : "merged " + this.getClass().getSimpleName()
             + " must have the same " + zl.getClass().getSimpleName() + " instance:"

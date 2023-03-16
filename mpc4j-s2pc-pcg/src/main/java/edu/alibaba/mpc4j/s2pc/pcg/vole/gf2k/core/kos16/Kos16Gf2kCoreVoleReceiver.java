@@ -3,11 +3,11 @@ package edu.alibaba.mpc4j.s2pc.pcg.vole.gf2k.core.kos16;
 import edu.alibaba.mpc4j.common.rpc.*;
 import edu.alibaba.mpc4j.common.rpc.utils.DataPacketHeader;
 import edu.alibaba.mpc4j.common.tool.CommonConstants;
-import edu.alibaba.mpc4j.common.tool.galoisfield.gf2e.Gf2eGadget;
+import edu.alibaba.mpc4j.common.tool.galoisfield.gf2k.Gf2kGadget;
 import edu.alibaba.mpc4j.s2pc.pcg.ot.base.BaseOtFactory;
 import edu.alibaba.mpc4j.s2pc.pcg.ot.base.BaseOtReceiver;
 import edu.alibaba.mpc4j.s2pc.pcg.ot.base.BaseOtReceiverOutput;
-import edu.alibaba.mpc4j.s2pc.pcg.vole.gf2e.Gf2eVoleReceiverOutput;
+import edu.alibaba.mpc4j.s2pc.pcg.vole.gf2k.Gf2kVoleReceiverOutput;
 import edu.alibaba.mpc4j.s2pc.pcg.vole.gf2k.core.AbstractGf2kCoreVoleReceiver;
 import edu.alibaba.mpc4j.s2pc.pcg.vole.gf2k.core.kos16.Kos16Gf2kCoreVolePtoDesc.PtoStep;
 
@@ -30,9 +30,9 @@ public class Kos16Gf2kCoreVoleReceiver extends AbstractGf2kCoreVoleReceiver {
      */
     private final BaseOtReceiver baseOtReceiver;
     /**
-     * GF2E gadget
+     * GF2K gadget
      */
-    private Gf2eGadget gf2eGadget;
+    private Gf2kGadget gf2kGadget;
     /**
      * base OT receiver output
      */
@@ -54,9 +54,9 @@ public class Kos16Gf2kCoreVoleReceiver extends AbstractGf2kCoreVoleReceiver {
         logPhaseInfo(PtoState.INIT_BEGIN);
 
         stopWatch.start();
-        gf2eGadget = new Gf2eGadget(gf2e);
+        gf2kGadget = new Gf2kGadget(envType);
         baseOtReceiver.init();
-        deltaBinary = gf2eGadget.decomposition(delta);
+        deltaBinary = gf2kGadget.decomposition(delta);
         baseOtReceiverOutput = baseOtReceiver.receive(deltaBinary);
         stopWatch.stop();
         long initTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
@@ -67,7 +67,7 @@ public class Kos16Gf2kCoreVoleReceiver extends AbstractGf2kCoreVoleReceiver {
     }
 
     @Override
-    public Gf2eVoleReceiverOutput receive(int num) throws MpcAbortException {
+    public Gf2kVoleReceiverOutput receive(int num) throws MpcAbortException {
         setPtoInput(num);
         logPhaseInfo(PtoState.PTO_BEGIN);
 
@@ -77,7 +77,7 @@ public class Kos16Gf2kCoreVoleReceiver extends AbstractGf2kCoreVoleReceiver {
             otherParty().getPartyId(), ownParty().getPartyId()
         );
         List<byte[]> matrixPayload = rpc.receive(matrixHeader).getPayload();
-        Gf2eVoleReceiverOutput receiverOutput = handleMatrixPayload(matrixPayload);
+        Gf2kVoleReceiverOutput receiverOutput = handleMatrixPayload(matrixPayload);
         stopWatch.stop();
         long matrixTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
         stopWatch.reset();
@@ -88,7 +88,7 @@ public class Kos16Gf2kCoreVoleReceiver extends AbstractGf2kCoreVoleReceiver {
 
     }
 
-    private Gf2eVoleReceiverOutput handleMatrixPayload(List<byte[]> matrixPayload) throws MpcAbortException {
+    private Gf2kVoleReceiverOutput handleMatrixPayload(List<byte[]> matrixPayload) throws MpcAbortException {
         MpcAbortPreconditions.checkArgument(matrixPayload.size() == num * l);
         byte[][] matrixPayloadArray = matrixPayload.toArray(new byte[0][]);
         // create matrix Q
@@ -106,15 +106,15 @@ public class Kos16Gf2kCoreVoleReceiver extends AbstractGf2kCoreVoleReceiver {
                 .allocate(Long.BYTES + Integer.BYTES + CommonConstants.BLOCK_BYTE_LENGTH)
                 .putLong(extraInfo).putInt(rowIndex).put(baseOtReceiverOutput.getRb(columnIndex))
                 .array();
-            byte[] tb = gf2e.createRandom(tbSeed);
-            qMatrix[rowIndex][columnIndex] = deltaBinary[columnIndex] ? gf2e.add(u, tb) : tb;
+            byte[] tb = gf2k.createRandom(tbSeed);
+            qMatrix[rowIndex][columnIndex] = deltaBinary[columnIndex] ? gf2k.add(u, tb) : tb;
         });
         // composite each row in q using gadget
         Stream<byte[][]> qMatrixStream = Arrays.stream(qMatrix);
         qMatrixStream = parallel ? qMatrixStream.parallel() : qMatrixStream;
         byte[][] q = qMatrixStream
-            .map(row -> gf2eGadget.innerProduct(row))
+            .map(row -> gf2kGadget.innerProduct(row))
             .toArray(byte[][]::new);
-        return Gf2eVoleReceiverOutput.create(gf2e, delta, q);
+        return Gf2kVoleReceiverOutput.create(delta, q);
     }
 }

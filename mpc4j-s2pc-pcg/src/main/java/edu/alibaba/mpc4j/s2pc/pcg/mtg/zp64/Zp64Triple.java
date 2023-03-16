@@ -1,7 +1,7 @@
 package edu.alibaba.mpc4j.s2pc.pcg.mtg.zp64;
 
 import edu.alibaba.mpc4j.common.tool.galoisfield.zp64.Zp64;
-import edu.alibaba.mpc4j.s2pc.pcg.MergePartyOutput;
+import edu.alibaba.mpc4j.s2pc.pcg.MergedPcgPartyOutput;
 
 import java.util.Arrays;
 
@@ -11,7 +11,7 @@ import java.util.Arrays;
  * @author Liqiang Peng
  * @date 2022/9/5
  */
-public class Zp64Triple implements MergePartyOutput {
+public class Zp64Triple implements MergedPcgPartyOutput {
     /**
      * the Zp64 instance
      */
@@ -149,7 +149,7 @@ public class Zp64Triple implements MergePartyOutput {
     }
 
     @Override
-    public void merge(MergePartyOutput other) {
+    public void merge(MergedPcgPartyOutput other) {
         Zp64Triple that = (Zp64Triple) other;
         assert this.zp64.equals(that.zp64) : "merged " + this.getClass().getSimpleName()
             + " must have the same " + zp64.getClass().getSimpleName() + " instance:"

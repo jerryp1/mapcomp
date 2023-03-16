@@ -1,8 +1,7 @@
 package edu.alibaba.mpc4j.s2pc.pcg.vole.zp64;
 
 import edu.alibaba.mpc4j.common.tool.galoisfield.zp64.Zp64;
-import edu.alibaba.mpc4j.s2pc.pcg.MergePartyOutput;
-import edu.alibaba.mpc4j.s2pc.pcg.vole.zp.ZpVoleSenderOutput;
+import edu.alibaba.mpc4j.s2pc.pcg.MergedPcgPartyOutput;
 
 import java.util.Arrays;
 
@@ -12,7 +11,7 @@ import java.util.Arrays;
  * @author Hanwen Feng
  * @date 2022/06/15
  */
-public class Zp64VoleSenderOutput implements MergePartyOutput {
+public class Zp64VoleSenderOutput implements MergedPcgPartyOutput {
     /**
      * the Zp64 instance
      */
@@ -114,7 +113,7 @@ public class Zp64VoleSenderOutput implements MergePartyOutput {
     }
 
     @Override
-    public void merge(MergePartyOutput other) {
+    public void merge(MergedPcgPartyOutput other) {
         Zp64VoleSenderOutput that = (Zp64VoleSenderOutput) other;
         assert this.zp64.equals(that.zp64) : "merged " + this.getClass().getSimpleName()
             + " must have the same " + zp64.getClass().getSimpleName() + " instance:"
