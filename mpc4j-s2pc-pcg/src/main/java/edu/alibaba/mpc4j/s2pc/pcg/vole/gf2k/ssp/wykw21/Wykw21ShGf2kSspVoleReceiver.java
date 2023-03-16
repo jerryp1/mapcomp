@@ -99,20 +99,9 @@ public class Wykw21ShGf2kSspVoleReceiver extends AbstractGf2kSspVoleReceiver {
         stopWatch.reset();
         logStepInfo(PtoState.PTO_STEP, 1, 4, voleTime);
 
-        DataPacketHeader aPrimeHeader = new DataPacketHeader(
-            encodeTaskId, getPtoDesc().getPtoId(), PtoStep.SENDER_SEND_A_PRIME.ordinal(), extraInfo,
-            otherParty().getPartyId(), ownParty().getPartyId()
-        );
-        List<byte[]> aPrimePayload = rpc.receive(aPrimeHeader).getPayload();
-
         stopWatch.start();
-        // R computes γ = b - Δ · a'.
-        MpcAbortPreconditions.checkArgument(aPrimePayload.size() == 1);
-        byte[] aPrime = aPrimePayload.get(0);
-        byte[] b = gf2kVoleReceiverOutput.getQ(0);
-        byte[] gamma = gf2k.mul(delta, aPrime);
-        gf2k.negi(gamma);
-        gf2k.addi(gamma, b);
+        // R computes γ = b - Δ · a'. Here we reuse γ = b
+        byte[] gamma = gf2kVoleReceiverOutput.getQ(0);
         gf2kVoleReceiverOutput = null;
         stopWatch.stop();
         long aPrimeTime = stopWatch.getTime(TimeUnit.MILLISECONDS);

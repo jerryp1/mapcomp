@@ -40,7 +40,7 @@ public class Kos16Gf2kCoreVoleReceiver extends AbstractGf2kCoreVoleReceiver {
     /**
      * Δ in binary format
      */
-    boolean[] deltaBinary;
+    private boolean[] deltaBinary;
 
     public Kos16Gf2kCoreVoleReceiver(Rpc senderRpc, Party receiverParty, Kos16Gf2kCoreVoleConfig config) {
         super(Kos16Gf2kCoreVolePtoDesc.getInstance(), senderRpc, receiverParty, config);

@@ -12,6 +12,7 @@ import edu.alibaba.mpc4j.s2pc.pcg.vole.gf2k.Gf2kVoleSenderOutput;
 import edu.alibaba.mpc4j.s2pc.pcg.vole.gf2k.Gf2kVoleTestUtils;
 import edu.alibaba.mpc4j.s2pc.pcg.vole.gf2k.core.Gf2kCoreVoleFactory.Gf2kCoreVoleType;
 import edu.alibaba.mpc4j.s2pc.pcg.vole.gf2k.core.kos16.Kos16Gf2kCoreVoleConfig;
+import edu.alibaba.mpc4j.s2pc.pcg.vole.gf2k.core.wykw21.Wykw21Gf2kCoreVoleConfig;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.time.StopWatch;
 import org.junit.After;
@@ -49,7 +50,7 @@ public class Gf2kCoreVoleTest {
     /**
      * default num
      */
-    private static final int DEFAULT_NUM = 1000;
+    private static final int DEFAULT_NUM = 1001;
     /**
      * large num
      */
@@ -59,6 +60,10 @@ public class Gf2kCoreVoleTest {
     public static Collection<Object[]> configurations() {
         Collection<Object[]> configurations = new ArrayList<>();
 
+        // WYKW21
+        configurations.add(
+            new Object[]{Gf2kCoreVoleType.WYKW21.name(), new Wykw21Gf2kCoreVoleConfig.Builder().build(),}
+        );
         // KOS16
         configurations.add(
             new Object[]{Gf2kCoreVoleType.KOS16.name(), new Kos16Gf2kCoreVoleConfig.Builder().build(),}

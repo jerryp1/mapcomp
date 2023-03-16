@@ -28,7 +28,7 @@ public class Kos16Gf2kCoreVolePtoDesc implements PtoDesc {
      */
     enum PtoStep {
         /**
-         * sender sends the matrix
+         * receiver sends the matrix
          */
         RECEIVER_SEND_MATRIX,
     }

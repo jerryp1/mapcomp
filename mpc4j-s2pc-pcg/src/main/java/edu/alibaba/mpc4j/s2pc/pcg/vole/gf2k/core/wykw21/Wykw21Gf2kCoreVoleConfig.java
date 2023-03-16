@@ -1,4 +1,4 @@
-package edu.alibaba.mpc4j.s2pc.pcg.vole.gf2k.core.kos16;
+package edu.alibaba.mpc4j.s2pc.pcg.vole.gf2k.core.wykw21;
 
 import edu.alibaba.mpc4j.common.rpc.desc.SecurityModel;
 import edu.alibaba.mpc4j.common.tool.EnvType;
@@ -8,18 +8,18 @@ import edu.alibaba.mpc4j.s2pc.pcg.vole.gf2k.core.Gf2kCoreVoleConfig;
 import edu.alibaba.mpc4j.s2pc.pcg.vole.gf2k.core.Gf2kCoreVoleFactory;
 
 /**
- * KOS16-GF2K-core VOLE config.
+ * WYKW21-GF2K-core VOLE config.
  *
  * @author Weiran Liu
  * @date 2023/3/16
  */
-public class Kos16Gf2kCoreVoleConfig implements Gf2kCoreVoleConfig {
+public class Wykw21Gf2kCoreVoleConfig implements Gf2kCoreVoleConfig {
     /**
      * the base OT config.
      */
     private final BaseOtConfig baseOtConfig;
 
-    private Kos16Gf2kCoreVoleConfig(Builder builder) {
+    private Wykw21Gf2kCoreVoleConfig(Builder builder) {
         baseOtConfig = builder.baseOtConfig;
     }
 
@@ -29,7 +29,7 @@ public class Kos16Gf2kCoreVoleConfig implements Gf2kCoreVoleConfig {
 
     @Override
     public Gf2kCoreVoleFactory.Gf2kCoreVoleType getPtoType() {
-        return Gf2kCoreVoleFactory.Gf2kCoreVoleType.KOS16;
+        return Gf2kCoreVoleFactory.Gf2kCoreVoleType.WYKW21;
     }
 
     @Override
@@ -44,21 +44,21 @@ public class Kos16Gf2kCoreVoleConfig implements Gf2kCoreVoleConfig {
 
     @Override
     public SecurityModel getSecurityModel() {
-        SecurityModel securityModel = SecurityModel.SEMI_HONEST;
+        SecurityModel securityModel = SecurityModel.MALICIOUS;
         if (baseOtConfig.getSecurityModel().compareTo(securityModel) < 0) {
             securityModel = baseOtConfig.getSecurityModel();
         }
         return securityModel;
     }
 
-    public static class Builder implements org.apache.commons.lang3.builder.Builder<Kos16Gf2kCoreVoleConfig> {
+    public static class Builder implements org.apache.commons.lang3.builder.Builder<Wykw21Gf2kCoreVoleConfig> {
         /**
          * the base OT config
          */
         private BaseOtConfig baseOtConfig;
 
         public Builder() {
-            baseOtConfig = BaseOtFactory.createDefaultConfig(SecurityModel.SEMI_HONEST);
+            baseOtConfig = BaseOtFactory.createDefaultConfig(SecurityModel.MALICIOUS);
         }
 
         public Builder setBaseOtConfig(BaseOtConfig baseOtConfig) {
@@ -67,8 +67,8 @@ public class Kos16Gf2kCoreVoleConfig implements Gf2kCoreVoleConfig {
         }
 
         @Override
-        public Kos16Gf2kCoreVoleConfig build() {
-            return new Kos16Gf2kCoreVoleConfig(this);
+        public Wykw21Gf2kCoreVoleConfig build() {
+            return new Wykw21Gf2kCoreVoleConfig(this);
         }
     }
 }

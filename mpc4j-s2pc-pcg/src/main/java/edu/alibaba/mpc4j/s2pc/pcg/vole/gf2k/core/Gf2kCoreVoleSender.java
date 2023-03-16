@@ -22,9 +22,9 @@ public interface Gf2kCoreVoleSender extends TwoPartyPto {
     /**
      * Executes the protocol.
      *
-     * @param x x.
+     * @param xs x array.
      * @return the sender output.
      * @throws MpcAbortException the protocol failure aborts.
      */
-    Gf2kVoleSenderOutput send(byte[][] x) throws MpcAbortException;
+    Gf2kVoleSenderOutput send(byte[][] xs) throws MpcAbortException;
 }

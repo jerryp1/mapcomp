@@ -7,6 +7,9 @@ import edu.alibaba.mpc4j.common.rpc.pto.PtoFactory;
 import edu.alibaba.mpc4j.s2pc.pcg.vole.gf2k.core.kos16.Kos16Gf2kCoreVoleConfig;
 import edu.alibaba.mpc4j.s2pc.pcg.vole.gf2k.core.kos16.Kos16Gf2kCoreVoleReceiver;
 import edu.alibaba.mpc4j.s2pc.pcg.vole.gf2k.core.kos16.Kos16Gf2kCoreVoleSender;
+import edu.alibaba.mpc4j.s2pc.pcg.vole.gf2k.core.wykw21.Wykw21Gf2kCoreVoleConfig;
+import edu.alibaba.mpc4j.s2pc.pcg.vole.gf2k.core.wykw21.Wykw21Gf2kCoreVoleReceiver;
+import edu.alibaba.mpc4j.s2pc.pcg.vole.gf2k.core.wykw21.Wykw21Gf2kCoreVoleSender;
 
 /**
  * GF2K-core VOLE factory.
@@ -50,6 +53,7 @@ public class Gf2kCoreVoleFactory implements PtoFactory {
             case KOS16:
                 return new Kos16Gf2kCoreVoleSender(senderRpc, receiverParty, (Kos16Gf2kCoreVoleConfig) config);
             case WYKW21:
+                return new Wykw21Gf2kCoreVoleSender(senderRpc, receiverParty, (Wykw21Gf2kCoreVoleConfig) config);
             default:
                 throw new IllegalArgumentException("Invalid " + Gf2kCoreVoleType.class.getSimpleName() + ": " + type.name());
         }
@@ -69,6 +73,7 @@ public class Gf2kCoreVoleFactory implements PtoFactory {
             case KOS16:
                 return new Kos16Gf2kCoreVoleReceiver(receiverRpc, senderParty, (Kos16Gf2kCoreVoleConfig) config);
             case WYKW21:
+                return new Wykw21Gf2kCoreVoleReceiver(receiverRpc, senderParty, (Wykw21Gf2kCoreVoleConfig) config);
             default:
                 throw new IllegalArgumentException("Invalid " + Gf2kCoreVoleType.class.getSimpleName() + ": " + type.name());
         }
@@ -87,6 +92,7 @@ public class Gf2kCoreVoleFactory implements PtoFactory {
                 return new Kos16Gf2kCoreVoleConfig.Builder().build();
             case COVERT:
             case MALICIOUS:
+                return new Wykw21Gf2kCoreVoleConfig.Builder().build();
             default:
                 throw new IllegalArgumentException("Invalid " + SecurityModel.class.getSimpleName() + ": " + securityModel.name());
         }

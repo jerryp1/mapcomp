@@ -1,7 +1,6 @@
 package edu.alibaba.mpc4j.s2pc.pcg.vole.gf2k.ssp.wykw21;
 
 import edu.alibaba.mpc4j.common.rpc.*;
-import edu.alibaba.mpc4j.common.rpc.utils.DataPacket;
 import edu.alibaba.mpc4j.common.rpc.utils.DataPacketHeader;
 import edu.alibaba.mpc4j.common.tool.galoisfield.gf2k.Gf2k;
 import edu.alibaba.mpc4j.common.tool.galoisfield.gf2k.Gf2kFactory;
@@ -16,7 +15,6 @@ import edu.alibaba.mpc4j.s2pc.pcg.vole.gf2k.ssp.Gf2kSspVoleFactory;
 import edu.alibaba.mpc4j.s2pc.pcg.vole.gf2k.ssp.Gf2kSspVoleSenderOutput;
 import edu.alibaba.mpc4j.s2pc.pcg.vole.gf2k.ssp.wykw21.Wykw21ShGf2kSspVolePtoDesc.PtoStep;
 
-import java.util.LinkedList;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.IntStream;
@@ -104,18 +102,10 @@ public class Wykw21ShGf2kSspVoleSender extends AbstractGf2kSspVoleSender {
         logStepInfo(PtoState.PTO_STEP, 1, 4, voleTime);
 
         stopWatch.start();
-        // S sample β ∈ {0,1}^κ, sets δ = c, and sends a' = β - a to R.
-        byte[] beta = gf2k.createRandom(secureRandom);
+        // S sample β ∈ {0,1}^κ, sets δ = c, and sends a' = β - a to R. Here we reuse β = a, δ = c.
+        byte[] beta = gf2kVoleSenderOutput.getX(0);
+        assert !gf2k.isZero(beta);
         byte[] littleDelta = gf2kVoleSenderOutput.getT(0);
-        byte[] a = gf2kVoleSenderOutput.getX(0);
-        byte[] aPrime = gf2k.sub(beta, a);
-        List<byte[]> aPrimePayload = new LinkedList<>();
-        aPrimePayload.add(aPrime);
-        DataPacketHeader aPrimeHeader = new DataPacketHeader(
-            encodeTaskId, getPtoDesc().getPtoId(), PtoStep.SENDER_SEND_A_PRIME.ordinal(), extraInfo,
-            ownParty().getPartyId(), otherParty().getPartyId()
-        );
-        rpc.send(DataPacket.fromByteArrayList(aPrimeHeader, aPrimePayload));
         gf2kVoleSenderOutput = null;
         stopWatch.stop();
         long aPrimeTime = stopWatch.getTime(TimeUnit.MILLISECONDS);

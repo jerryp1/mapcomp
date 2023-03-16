@@ -29,10 +29,6 @@ class Wykw21ShGf2kSspVolePtoDesc implements PtoDesc {
      */
     enum PtoStep {
         /**
-         * sender sends a' = β - a
-         */
-        SENDER_SEND_A_PRIME,
-        /**
          * receiver sends d = γ - Σ_{i ∈ [0, n)} v[i]
          */
         RECEIVER_SEND_D,
