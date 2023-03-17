@@ -9,6 +9,15 @@ import edu.alibaba.mpc4j.common.rpc.desc.PtoDescManager;
  * Yang, Kang, Chenkai Weng, Xiao Lan, Jiang Zhang, and Xiao Wang. Ferret: Fast extension for correlated OT with small
  * communication. CCS 2020, pp. 1607-1626. 2020.
  * </p>
+ * We note that the following paper:
+ * <p>
+ * Guo, Xiaojie, Kang Yang, Xiao Wang, Wenhao Zhang, Xiang Xie, Jiang Zhang, and Zheli Liu. Half-Tree: Halving the Cost
+ * of Tree Expansion in COT and DPF. EUROCRYPT 2023.
+ * </p>
+ * implicitly states that one can have a random-α scheme by treating choice bits of
+ * pre-computed COTs to be !α, saving one round. However, this optimization requires that n = 2^h. The reason is that
+ * choice bits of pre-computed COTs are random, combing these to get α means α ∈ {0, 1}^h. If n != 2^h, α can possibly
+ * be out of range in [0, n). Therefore, we do not provide random-α interfaces.
  *
  * @author Weiran Liu
  * @date 2022/8/16
