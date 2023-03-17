@@ -10,7 +10,6 @@ import edu.alibaba.mpc4j.common.tool.crypto.prg.Prg;
 import edu.alibaba.mpc4j.common.tool.crypto.prg.PrgFactory;
 import edu.alibaba.mpc4j.common.tool.utils.BytesUtils;
 import edu.alibaba.mpc4j.s2pc.pcg.dpprf.bp.AbstractBpDpprfSender;
-import edu.alibaba.mpc4j.s2pc.pcg.dpprf.bp.BpDpprfFactory;
 import edu.alibaba.mpc4j.s2pc.pcg.dpprf.bp.BpDpprfSenderOutput;
 import edu.alibaba.mpc4j.s2pc.pcg.dpprf.sp.SpDpprfSenderOutput;
 import edu.alibaba.mpc4j.s2pc.pcg.dpprf.bp.ywl20.Ywl20BpDpprfPtoDesc.PtoStep;
@@ -76,7 +75,7 @@ public class Ywl20BpDpprfSender extends AbstractBpDpprfSender {
         stopWatch.start();
         byte[] delta = new byte[CommonConstants.BLOCK_BYTE_LENGTH];
         secureRandom.nextBytes(delta);
-        int maxPreCotNum = BpDpprfFactory.getPrecomputeNum(config, maxBatchNum, maxAlphaBound);
+        int maxPreCotNum = maxH * maxBatchNum;
         coreCotSender.init(delta, maxPreCotNum);
         preCotSender.init();
         stopWatch.stop();
@@ -105,7 +104,7 @@ public class Ywl20BpDpprfSender extends AbstractBpDpprfSender {
 
         stopWatch.start();
         // S send (extend, h) to F_COT, which returns q_i ∈ {0,1}^κ to S
-        int preCotNum = BpDpprfFactory.getPrecomputeNum(config, batchNum, alphaBound);
+        int preCotNum = h * batchNum;
         if (cotSenderOutput == null) {
             cotSenderOutput = coreCotSender.send(preCotNum);
         } else {

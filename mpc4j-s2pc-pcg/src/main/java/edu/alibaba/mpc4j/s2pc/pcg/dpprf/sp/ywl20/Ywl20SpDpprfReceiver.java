@@ -9,7 +9,6 @@ import edu.alibaba.mpc4j.common.tool.crypto.prg.Prg;
 import edu.alibaba.mpc4j.common.tool.crypto.prg.PrgFactory;
 import edu.alibaba.mpc4j.common.tool.utils.BytesUtils;
 import edu.alibaba.mpc4j.s2pc.pcg.dpprf.sp.AbstractSpDpprfReceiver;
-import edu.alibaba.mpc4j.s2pc.pcg.dpprf.sp.SpDpprfFactory;
 import edu.alibaba.mpc4j.s2pc.pcg.dpprf.sp.SpDpprfReceiverOutput;
 import edu.alibaba.mpc4j.s2pc.pcg.dpprf.sp.ywl20.Ywl20SpDpprfPtoDesc.PtoStep;
 import edu.alibaba.mpc4j.s2pc.pcg.ot.cot.CotReceiverOutput;
@@ -60,8 +59,7 @@ public class Ywl20SpDpprfReceiver extends AbstractSpDpprfReceiver {
         logPhaseInfo(PtoState.INIT_BEGIN);
 
         stopWatch.start();
-        int maxPreCotNum = SpDpprfFactory.getPrecomputeNum(config, maxAlphaBound);
-        coreCotReceiver.init(maxPreCotNum);
+        coreCotReceiver.init(maxH);
         preCotReceiver.init();
         stopWatch.stop();
         long initTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
@@ -90,13 +88,12 @@ public class Ywl20SpDpprfReceiver extends AbstractSpDpprfReceiver {
 
         stopWatch.start();
         // R send (extend, h) to F_COT, which returns (r_i, t_i) ∈ {0,1} × {0,1}^κ to R
-        int preCotNum = SpDpprfFactory.getPrecomputeNum(config, alphaBound);
         if (cotReceiverOutput == null) {
             // For each i ∈ {1,...,h}, R sends a bit b_i = r_i ⊕ α_i ⊕ 1 to S.
             // This is identical to choose the choice bits as !α_i.
             cotReceiverOutput = coreCotReceiver.receive(notBinaryAlpha);
         } else {
-            cotReceiverOutput.reduce(preCotNum);
+            cotReceiverOutput.reduce(h);
             // use pre-computed COT to correct the choice bits
             cotReceiverOutput = preCotReceiver.receive(cotReceiverOutput, notBinaryAlpha);
         }

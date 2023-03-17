@@ -10,7 +10,6 @@ import edu.alibaba.mpc4j.common.tool.crypto.prg.Prg;
 import edu.alibaba.mpc4j.common.tool.crypto.prg.PrgFactory;
 import edu.alibaba.mpc4j.common.tool.utils.BytesUtils;
 import edu.alibaba.mpc4j.s2pc.pcg.dpprf.sp.AbstractSpDpprfSender;
-import edu.alibaba.mpc4j.s2pc.pcg.dpprf.sp.SpDpprfFactory;
 import edu.alibaba.mpc4j.s2pc.pcg.dpprf.sp.SpDpprfSenderOutput;
 import edu.alibaba.mpc4j.s2pc.pcg.ot.cot.CotSenderOutput;
 import edu.alibaba.mpc4j.s2pc.pcg.ot.cot.core.CoreCotFactory;
@@ -73,8 +72,7 @@ public class Ywl20SpDpprfSender extends AbstractSpDpprfSender {
         // randomly choose Δ
         byte[] delta = new byte[CommonConstants.BLOCK_BYTE_LENGTH];
         secureRandom.nextBytes(delta);
-        int maxPreCotNum = SpDpprfFactory.getPrecomputeNum(config, maxAlphaBound);
-        coreCotSender.init(delta, maxPreCotNum);
+        coreCotSender.init(delta, maxH);
         preCotSender.init();
         stopWatch.stop();
         long initTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
@@ -102,11 +100,10 @@ public class Ywl20SpDpprfSender extends AbstractSpDpprfSender {
 
         stopWatch.start();
         // S send (extend, h) to F_COT, which returns q_i ∈ {0,1}^κ to S
-        int preCotNum = SpDpprfFactory.getPrecomputeNum(config, alphaBound);
         if (cotSenderOutput == null) {
-            cotSenderOutput = coreCotSender.send(preCotNum);
+            cotSenderOutput = coreCotSender.send(h);
         } else {
-            cotSenderOutput.reduce(preCotNum);
+            cotSenderOutput.reduce(h);
             // use pre-computed COT to correct the choice bits
             cotSenderOutput = preCotSender.send(cotSenderOutput);
         }

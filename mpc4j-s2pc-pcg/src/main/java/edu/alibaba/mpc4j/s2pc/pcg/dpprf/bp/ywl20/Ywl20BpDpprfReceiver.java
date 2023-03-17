@@ -9,7 +9,6 @@ import edu.alibaba.mpc4j.common.tool.crypto.prg.Prg;
 import edu.alibaba.mpc4j.common.tool.crypto.prg.PrgFactory;
 import edu.alibaba.mpc4j.common.tool.utils.BytesUtils;
 import edu.alibaba.mpc4j.s2pc.pcg.dpprf.bp.AbstractBpDpprfReceiver;
-import edu.alibaba.mpc4j.s2pc.pcg.dpprf.bp.BpDpprfFactory;
 import edu.alibaba.mpc4j.s2pc.pcg.dpprf.bp.BpDpprfReceiverOutput;
 import edu.alibaba.mpc4j.s2pc.pcg.dpprf.sp.SpDpprfReceiverOutput;
 import edu.alibaba.mpc4j.s2pc.pcg.dpprf.bp.ywl20.Ywl20BpDpprfPtoDesc.PtoStep;
@@ -63,7 +62,7 @@ public class Ywl20BpDpprfReceiver extends AbstractBpDpprfReceiver {
         logPhaseInfo(PtoState.INIT_BEGIN);
 
         stopWatch.start();
-        int maxPreCotNum = BpDpprfFactory.getPrecomputeNum(config, maxBatchNum, maxAlphaBound);
+        int maxPreCotNum = maxH * maxBatchNum;
         coreCotReceiver.init(maxPreCotNum);
         preCotReceiver.init();
         stopWatch.stop();
@@ -93,7 +92,7 @@ public class Ywl20BpDpprfReceiver extends AbstractBpDpprfReceiver {
 
         stopWatch.start();
         // R send (extend, h) to F_COT, which returns (r_i, t_i) ∈ {0,1} × {0,1}^κ to R
-        int preCotNum = BpDpprfFactory.getPrecomputeNum(config, batchNum, alphaBound);
+        int preCotNum = h * batchNum;
         boolean[] rs = new boolean[preCotNum];
         for (int batchIndex = 0; batchIndex < batchNum; batchIndex++) {
             System.arraycopy(notAlphaBinaryArray[batchIndex], 0, rs, batchIndex * h, h);
