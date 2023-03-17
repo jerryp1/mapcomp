@@ -4,25 +4,25 @@ import edu.alibaba.mpc4j.common.rpc.desc.PtoDesc;
 import edu.alibaba.mpc4j.common.rpc.desc.PtoDescManager;
 
 /**
- * WYKW21-SSP-GF2K-VOLE (semi-honest) description. The protocol comes from:
+ * WYKW21-SSP-GF2K-VOLE (malicious) description. The protocol comes from:
  * <p>
  * Weng, Chenkai, Kang Yang, Jonathan Katz, and Xiao Wang. Wolverine: fast, scalable, and communication-efficient
  * zero-knowledge proofs for boolean and arithmetic circuits. S&P 2021, pp. 1074-1091. IEEE, 2021.
  * </p>
- * The semi-honest version does not require Consistency check shown in Figure 7.
+ * The malicious version requires Consistency check shown in Figure 7.
  *
  * @author Weiran Liu
- * @date 2023/3/16
+ * @date 2023/3/18
  */
-class Wykw21ShGf2kSspVolePtoDesc implements PtoDesc {
+class Wykw21Gf2kMaSspVolePtoDesc implements PtoDesc {
     /**
      * protocol ID
      */
-    private static final int PTO_ID = Math.abs((int) 9135789737278442424L);
+    private static final int PTO_ID = Math.abs((int) 3760537957677120267L);
     /**
      * protocol name
      */
-    private static final String PTO_NAME = "WYKW21_SH_SSP_GF2K_VOLE";
+    private static final String PTO_NAME = "WYKW21_GF2K_MA_SSP_VOLE";
 
     /**
      * protocol step
@@ -32,17 +32,33 @@ class Wykw21ShGf2kSspVolePtoDesc implements PtoDesc {
          * receiver sends d = γ - Σ_{i ∈ [0, n)} v[i]
          */
         RECEIVER_SEND_D,
+        /**
+         * sender sends x* = β · χ_α - x
+         */
+        SENDER_SEND_X_STAR,
+        /**
+         * receiver sends the commitment of V_B
+         */
+        RECEIVER_SEND_COMMITMENT,
+        /**
+         * sender sends V_A
+         */
+        SENDER_SEND_VA,
+        /**
+         * receiver sends the secret for opening the commitment of V_B
+         */
+        RECEIVER_SEND_OPEN_SECRET,
     }
 
     /**
      * singleton mode
      */
-    private static final Wykw21ShGf2kSspVolePtoDesc INSTANCE = new Wykw21ShGf2kSspVolePtoDesc();
+    private static final Wykw21Gf2kMaSspVolePtoDesc INSTANCE = new Wykw21Gf2kMaSspVolePtoDesc();
 
     /**
      * private constructor
      */
-    private Wykw21ShGf2kSspVolePtoDesc() {
+    private Wykw21Gf2kMaSspVolePtoDesc() {
         // empty
     }
 

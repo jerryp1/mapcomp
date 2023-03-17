@@ -10,12 +10,12 @@ import edu.alibaba.mpc4j.s2pc.pcg.vole.gf2k.ssp.Gf2kSspVoleConfig;
 import edu.alibaba.mpc4j.s2pc.pcg.vole.gf2k.ssp.Gf2kSspVoleFactory;
 
 /**
- * WYKW21-SSP-GF2K-VOLE (semi-honest) config.
+ * WYKW21-SSP-GF2K-VOLE (malicious) config.
  *
  * @author Weiran Liu
- * @date 2023/3/16
+ * @date 2023/3/18
  */
-public class Wykw21ShGf2kSspVoleConfig implements Gf2kSspVoleConfig {
+public class Wykw21Gf2kMaSspVoleConfig implements Gf2kSspVoleConfig {
     /**
      * GF2K core VOLE config
      */
@@ -25,7 +25,7 @@ public class Wykw21ShGf2kSspVoleConfig implements Gf2kSspVoleConfig {
      */
     private final SpDpprfConfig spDpprfConfig;
 
-    private Wykw21ShGf2kSspVoleConfig(Builder builder) {
+    private Wykw21Gf2kMaSspVoleConfig(Builder builder) {
         assert builder.spDpprfConfig.getEnvType().equals(builder.gf2kCoreVoleConfig.getEnvType());
         gf2kCoreVoleConfig = builder.gf2kCoreVoleConfig;
         spDpprfConfig = builder.spDpprfConfig;
@@ -41,7 +41,7 @@ public class Wykw21ShGf2kSspVoleConfig implements Gf2kSspVoleConfig {
 
     @Override
     public Gf2kSspVoleFactory.Gf2kSspVoleType getPtoType() {
-        return Gf2kSspVoleFactory.Gf2kSspVoleType.WYKW21_SEMI_HONEST;
+        return Gf2kSspVoleFactory.Gf2kSspVoleType.WYKW21_MALICIOUS;
     }
 
     @Override
@@ -57,7 +57,7 @@ public class Wykw21ShGf2kSspVoleConfig implements Gf2kSspVoleConfig {
 
     @Override
     public SecurityModel getSecurityModel() {
-        SecurityModel securityModel = SecurityModel.SEMI_HONEST;
+        SecurityModel securityModel = SecurityModel.MALICIOUS;
         if (gf2kCoreVoleConfig.getSecurityModel().compareTo(securityModel) < 0) {
             securityModel = gf2kCoreVoleConfig.getSecurityModel();
         }
@@ -67,7 +67,7 @@ public class Wykw21ShGf2kSspVoleConfig implements Gf2kSspVoleConfig {
         return securityModel;
     }
 
-    public static class Builder implements org.apache.commons.lang3.builder.Builder<Wykw21ShGf2kSspVoleConfig> {
+    public static class Builder implements org.apache.commons.lang3.builder.Builder<Wykw21Gf2kMaSspVoleConfig> {
         /**
          * GF2K core VOLE config
          */
@@ -78,8 +78,8 @@ public class Wykw21ShGf2kSspVoleConfig implements Gf2kSspVoleConfig {
         private SpDpprfConfig spDpprfConfig;
 
         public Builder() {
-            gf2kCoreVoleConfig = Gf2kCoreVoleFactory.createDefaultConfig(SecurityModel.SEMI_HONEST);
-            spDpprfConfig = SpDpprfFactory.createDefaultConfig(SecurityModel.SEMI_HONEST);
+            gf2kCoreVoleConfig = Gf2kCoreVoleFactory.createDefaultConfig(SecurityModel.MALICIOUS);
+            spDpprfConfig = SpDpprfFactory.createDefaultConfig(SecurityModel.MALICIOUS);
         }
 
         public Builder setGf2kCoreVoleConfig(Gf2kCoreVoleConfig gf2kCoreVoleConfig) {
@@ -93,8 +93,8 @@ public class Wykw21ShGf2kSspVoleConfig implements Gf2kSspVoleConfig {
         }
 
         @Override
-        public Wykw21ShGf2kSspVoleConfig build() {
-            return new Wykw21ShGf2kSspVoleConfig(this);
+        public Wykw21Gf2kMaSspVoleConfig build() {
+            return new Wykw21Gf2kMaSspVoleConfig(this);
         }
     }
 }

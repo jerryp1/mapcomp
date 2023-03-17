@@ -14,7 +14,7 @@ import edu.alibaba.mpc4j.s2pc.pcg.vole.gf2k.core.Gf2kCoreVoleReceiver;
 import edu.alibaba.mpc4j.s2pc.pcg.vole.gf2k.ssp.AbstractGf2kSspVoleReceiver;
 import edu.alibaba.mpc4j.s2pc.pcg.vole.gf2k.ssp.Gf2kSspVoleFactory;
 import edu.alibaba.mpc4j.s2pc.pcg.vole.gf2k.ssp.Gf2kSspVoleReceiverOutput;
-import edu.alibaba.mpc4j.s2pc.pcg.vole.gf2k.ssp.wykw21.Wykw21ShGf2kSspVolePtoDesc.PtoStep;
+import edu.alibaba.mpc4j.s2pc.pcg.vole.gf2k.ssp.wykw21.Wykw21Gf2kShSspVolePtoDesc.PtoStep;
 
 import java.util.LinkedList;
 import java.util.List;
@@ -26,7 +26,7 @@ import java.util.concurrent.TimeUnit;
  * @author Weiran Liu
  * @date 2023/3/16
  */
-public class Wykw21ShGf2kSspVoleReceiver extends AbstractGf2kSspVoleReceiver {
+public class Wykw21Gf2kShSspVoleReceiver extends AbstractGf2kSspVoleReceiver {
     /**
      * the GF2K instance
      */
@@ -44,8 +44,8 @@ public class Wykw21ShGf2kSspVoleReceiver extends AbstractGf2kSspVoleReceiver {
      */
     private Gf2kVoleReceiverOutput gf2kVoleReceiverOutput;
 
-    public Wykw21ShGf2kSspVoleReceiver(Rpc receiverRpc, Party senderParty, Wykw21ShGf2kSspVoleConfig config) {
-        super(Wykw21ShGf2kSspVolePtoDesc.getInstance(), receiverRpc, senderParty, config);
+    public Wykw21Gf2kShSspVoleReceiver(Rpc receiverRpc, Party senderParty, Wykw21Gf2kShSspVoleConfig config) {
+        super(Wykw21Gf2kShSspVolePtoDesc.getInstance(), receiverRpc, senderParty, config);
         gf2kCoreVoleReceiver = Gf2kCoreVoleFactory.createReceiver(receiverRpc, senderParty, config.getGf2kCoreVoleConfig());
         addSubPtos(gf2kCoreVoleReceiver);
         spDpprfSender = SpDpprfFactory.createSender(receiverRpc, senderParty, config.getSpDpprfConfig());
