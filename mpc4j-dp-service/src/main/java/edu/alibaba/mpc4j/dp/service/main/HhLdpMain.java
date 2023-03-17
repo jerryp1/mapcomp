@@ -14,6 +14,7 @@ import edu.alibaba.mpc4j.dp.service.heavyhitter.HhLdpFactory.HhLdpType;
 import edu.alibaba.mpc4j.dp.service.heavyhitter.config.FoHhLdpConfig;
 import edu.alibaba.mpc4j.dp.service.heavyhitter.config.HgHhLdpConfig;
 import edu.alibaba.mpc4j.dp.service.heavyhitter.config.HhLdpConfig;
+import edu.alibaba.mpc4j.dp.service.heavyhitter.hg.HhgHhLdpServer;
 import edu.alibaba.mpc4j.dp.service.structure.HeavyGuardian;
 import edu.alibaba.mpc4j.dp.service.structure.NaiveStreamCounter;
 import edu.alibaba.mpc4j.dp.service.tool.StreamDataUtils;
@@ -45,7 +46,7 @@ public class HhLdpMain {
     /**
      * double output format
      */
-    private static final DecimalFormat DOUBLE_DECIMAL_FORMAT = new DecimalFormat("0.000");
+    static final DecimalFormat DOUBLE_DECIMAL_FORMAT = new DecimalFormat("0.000");
     /**
      * time output format
      */
@@ -98,6 +99,10 @@ public class HhLdpMain {
      * α
      */
     private final double[] alphas;
+    /**
+     * γ_h
+     */
+    private final double[] gammaHs;
     /**
      * test round
      */
@@ -162,9 +167,11 @@ public class HhLdpMain {
         MathPreconditions.checkLessOrEqual("k", k, d);
         // set privacy parameters
         double warmupPercentage = PropertiesUtils.readDouble(properties, "warmup_percentage");
-        MathPreconditions.checkPositiveInRange("warmup_percentage", warmupPercentage, 1.0);
+        MathPreconditions.checkNonNegativeInRangeClosed("warmup_percentage", warmupPercentage, 1.0);
         windowEpsilons = PropertiesUtils.readDoubleArray(properties, "window_epsilon");
         alphas = PropertiesUtils.readDoubleArrayWithDefault(properties, "alpha");
+        gammaHs = PropertiesUtils.readDoubleArrayWithDefault(properties, "gamma_h");
+        Arrays.stream(gammaHs).forEach(gammaH -> MathPreconditions.checkNonNegativeInRangeClosed("γ_h", gammaH, 1.0));
         // set test round
         testRound = PropertiesUtils.readInt(properties, "test_round");
         // num and warmup num
@@ -223,6 +230,14 @@ public class HhLdpMain {
         return alphas;
     }
 
+    double[] getGammaHs() {
+        return gammaHs;
+    }
+
+    int getWarmupNum() {
+        return warmupNum;
+    }
+
     public void run() throws IOException {
         // create report file
         LOGGER.info("Create report file");
@@ -232,11 +247,14 @@ public class HhLdpMain {
         FileWriter fileWriter = new FileWriter(filePath);
         PrintWriter printWriter = new PrintWriter(fileWriter, true);
         // write tab
-        String tab = "type\tε_w\tα\ts_time(s)\tc_time(s)\tcomm.(B)\tmem.(B)\tMemory(B)\tndcg\tprecision\tabe\tre";
+        String tab = "type\tε_w\tα\tγ_h\ts_time(s)\tc_time(s)\tcomm.(B)\tmem.(B)\t" +
+            "warmup_ndcg\twarmup_precision\tndcg\tprecision\tabe\tre";
         printWriter.println(tab);
-        LOGGER.info("{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}", "                name", "         ε", "         α",
+        LOGGER.info("{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}",
+            "                name", "         ε", "         α", "       γ_h",
             "           s_time(s)", "           c_time(s)",
             "            comm.(B)", "             mem.(B)",
+            "         warmup_ndcg", "    warmup_precision",
             "                ndcg", "           precision", "                 abe", "                  re"
         );
         if (plain) {
@@ -256,17 +274,45 @@ public class HhLdpMain {
             }
         }
         if (hgTypeList.contains(HhLdpType.ADV)) {
-            for (double alpha : alphas) {
-                for (double windowEpsilon : windowEpsilons) {
-                    HhLdpAggMetrics advHgLdpAggMetrics = runAdvHhgHeavyHitter(windowEpsilon, alpha);
-                    printInfo(printWriter, advHgLdpAggMetrics);
+            if (gammaHs.length > 0) {
+                // manually set γ_h, do not need to run automatically setting
+                for (double gammaH : gammaHs) {
+                    for (double alpha : alphas) {
+                        for (double windowEpsilon : windowEpsilons) {
+                            HhLdpAggMetrics advHgLdpAggMetrics = runAdvHhgHeavyHitter(windowEpsilon, alpha, gammaH);
+                            printInfo(printWriter, advHgLdpAggMetrics);
+                        }
+                    }
+                }
+            } else {
+                // automatically set γ_h, we need warmupNum > 0
+                if (warmupNum > 0) {
+                    for (double alpha : alphas) {
+                        for (double windowEpsilon : windowEpsilons) {
+                            HhLdpAggMetrics advHgLdpAggMetrics = runAdvHhgHeavyHitter(windowEpsilon, alpha);
+                            printInfo(printWriter, advHgLdpAggMetrics);
+                        }
+                    }
                 }
             }
         }
         if (hgTypeList.contains(HhLdpType.RELAX)) {
-            for (double windowEpsilon : windowEpsilons) {
-                HhLdpAggMetrics relaxHgLdpAggMetrics = runRelaxHhgHeavyHitter(windowEpsilon);
-                printInfo(printWriter, relaxHgLdpAggMetrics);
+            if (gammaHs.length > 0) {
+                // manually set γ_h, do not need to run automatically setting
+                for (double gammaH : gammaHs) {
+                    for (double windowEpsilon : windowEpsilons) {
+                        HhLdpAggMetrics advHgLdpAggMetrics = runRelaxHhgHeavyHitter(windowEpsilon, gammaH);
+                        printInfo(printWriter, advHgLdpAggMetrics);
+                    }
+                }
+            } else {
+                // automatically set γ_h, we need warmupNum > 0
+                if (warmupNum > 0) {
+                    for (double windowEpsilon : windowEpsilons) {
+                        HhLdpAggMetrics relaxHgLdpAggMetrics = runRelaxHhgHeavyHitter(windowEpsilon);
+                        printInfo(printWriter, relaxHgLdpAggMetrics);
+                    }
+                }
             }
         }
         printWriter.close();
@@ -274,8 +320,8 @@ public class HhLdpMain {
     }
 
     private HhLdpAggMetrics runHeavyGuardian() throws IOException {
-        String typeName = " PURE_HG";
-        HhLdpAggMetrics aggMetrics = new HhLdpAggMetrics(typeName, null, null);
+        String typeName = "PURE_HG";
+        HhLdpAggMetrics aggMetrics = new HhLdpAggMetrics(typeName, null, null, null);
         for (int round = 0; round < testRound; round++) {
             HeavyGuardian heavyGuardian = new HeavyGuardian(1, k, 0);
             Stream<String> dataStream = StreamDataUtils.obtainItemStream(datasetPath);
@@ -329,7 +375,7 @@ public class HhLdpMain {
     }
 
     private HhLdpAggMetrics runFoHeavyHitter(FoLdpType foLdpType, double windowEpsilon) throws IOException {
-        HhLdpAggMetrics aggMetrics = new HhLdpAggMetrics("FO (" + foLdpType.name() + ")", windowEpsilon, null);
+        HhLdpAggMetrics aggMetrics = new HhLdpAggMetrics("FO (" + foLdpType.name() + ")", windowEpsilon, null, null);
         for (int round = 0; round < testRound; round++) {
             FoLdpConfig foLdpConfig = FoLdpFactory.createDefaultConfig(foLdpType, domainSet, windowEpsilon);
             HhLdpConfig hhLdpConfig = new FoHhLdpConfig
@@ -345,7 +391,7 @@ public class HhLdpMain {
 
     HhLdpAggMetrics runBasicHgHeavyHitter(double windowEpsilon) throws IOException {
         HhLdpType type = HhLdpType.BASIC;
-        HhLdpAggMetrics aggMetrics = new HhLdpAggMetrics(HhLdpType.BASIC.name(), windowEpsilon, null);
+        HhLdpAggMetrics aggMetrics = new HhLdpAggMetrics(HhLdpType.BASIC.name(), windowEpsilon, null, null);
         for (int round = 0; round < testRound; round++) {
             HgHhLdpConfig config = new HgHhLdpConfig
                 .Builder(type, domainSet, k, windowEpsilon)
@@ -360,7 +406,17 @@ public class HhLdpMain {
 
     HhLdpAggMetrics runAdvHhgHeavyHitter(double windowEpsilon, double alpha) throws IOException {
         HhLdpType type = HhLdpType.ADV;
-        HhLdpAggMetrics aggMetrics = new HhLdpAggMetrics(type.name(), windowEpsilon, alpha);
+        double gammaH = 0;
+        for (int round = 0; round < testRound; round++) {
+            // get warmup gammaH
+            HgHhLdpConfig warmupConfig = new HgHhLdpConfig
+                .Builder(type, domainSet, k, windowEpsilon)
+                .setAlpha(alpha)
+                .build();
+            getWarmupHhgHeavyHitterGammaH(warmupConfig);
+        }
+        gammaH /= testRound;
+        HhLdpAggMetrics aggMetrics = new HhLdpAggMetrics(type.name() + " (auto γ_h)", windowEpsilon, alpha, gammaH);
         for (int round = 0; round < testRound; round++) {
             HgHhLdpConfig config = new HgHhLdpConfig
                 .Builder(type, domainSet, k, windowEpsilon)
@@ -374,9 +430,35 @@ public class HhLdpMain {
         return aggMetrics;
     }
 
+    HhLdpAggMetrics runAdvHhgHeavyHitter(double windowEpsilon, double alpha, double gammaH) throws IOException {
+        HhLdpType type = HhLdpType.ADV;
+        HhLdpAggMetrics aggMetrics = new HhLdpAggMetrics(type.name() + " (pre γ_h)", windowEpsilon, alpha, gammaH);
+        for (int round = 0; round < testRound; round++) {
+            HgHhLdpConfig config = new HgHhLdpConfig
+                .Builder(type, domainSet, k, windowEpsilon)
+                .setAlpha(alpha)
+                .setGammaH(gammaH)
+                .build();
+            HhLdpServer server = HhLdpFactory.createServer(config);
+            HhLdpClient client = HhLdpFactory.createClient(config);
+            HhLdpMetrics metrics = runLdpHeavyHitter(server, client);
+            aggMetrics.addMetrics(metrics);
+        }
+        return aggMetrics;
+    }
+
     HhLdpAggMetrics runRelaxHhgHeavyHitter(double windowEpsilon) throws IOException {
         HhLdpType type = HhLdpType.RELAX;
-        HhLdpAggMetrics aggMetrics = new HhLdpAggMetrics(type.name(), windowEpsilon, null);
+        double gammaH = 0;
+        for (int round = 0; round < testRound; round++) {
+            // get warmup gammaH
+            HgHhLdpConfig warmupConfig = new HgHhLdpConfig
+                .Builder(type, domainSet, k, windowEpsilon)
+                .build();
+            gammaH += getWarmupHhgHeavyHitterGammaH(warmupConfig);
+        }
+        gammaH /= testRound;
+        HhLdpAggMetrics aggMetrics = new HhLdpAggMetrics(type.name() + " (auto γ_h)", windowEpsilon, null, gammaH);
         for (int round = 0; round < testRound; round++) {
             HgHhLdpConfig config = new HgHhLdpConfig
                 .Builder(type, domainSet, k, windowEpsilon)
@@ -389,7 +471,39 @@ public class HhLdpMain {
         return aggMetrics;
     }
 
+    HhLdpAggMetrics runRelaxHhgHeavyHitter(double windowEpsilon, double gammaH) throws IOException {
+        HhLdpType type = HhLdpType.RELAX;
+        HhLdpAggMetrics aggMetrics = new HhLdpAggMetrics(type.name() + " (pre γ_h)", windowEpsilon, null, gammaH);
+        for (int round = 0; round < testRound; round++) {
+            HgHhLdpConfig config = new HgHhLdpConfig
+                .Builder(type, domainSet, k, windowEpsilon)
+                .setGammaH(gammaH)
+                .build();
+            HhLdpServer server = HhLdpFactory.createServer(config);
+            HhLdpClient client = HhLdpFactory.createClient(config);
+            HhLdpMetrics metrics = runLdpHeavyHitter(server, client);
+            aggMetrics.addMetrics(metrics);
+        }
+        return aggMetrics;
+    }
+
+    private double getWarmupHhgHeavyHitterGammaH(HgHhLdpConfig warmupConfig) throws IOException {
+        HhgHhLdpServer warmupServer = (HhgHhLdpServer) HhLdpFactory.createServer(warmupConfig);
+        HhLdpClient warmupClient = HhLdpFactory.createClient(warmupConfig);
+        // warmup
+        AtomicInteger warmupIndex = new AtomicInteger();
+        Stream<String> dataStream = StreamDataUtils.obtainItemStream(datasetPath);
+        dataStream.filter(item -> warmupIndex.getAndIncrement() <= warmupNum)
+            .map(warmupClient::warmup)
+            .forEach(warmupServer::warmupInsert);
+        dataStream.close();
+        warmupServer.stopWarmup();
+        return warmupServer.getGammaH();
+    }
+
     HhLdpMetrics runLdpHeavyHitter(HhLdpServer server, HhLdpClient client) throws IOException {
+        // metrics
+        HhLdpMetrics metrics = new HhLdpMetrics();
         // warmup
         AtomicInteger warmupIndex = new AtomicInteger();
         Stream<String> dataStream = StreamDataUtils.obtainItemStream(datasetPath);
@@ -398,6 +512,14 @@ public class HhLdpMain {
             .forEach(server::warmupInsert);
         dataStream.close();
         server.stopWarmup();
+        // warmup information
+        List<String> warmupHeavyHitters = server.orderedHeavyHitters().stream()
+            .map(Map.Entry::getKey)
+            .collect(Collectors.toList());
+        if (warmupHeavyHitters.size() == k) {
+            metrics.setWarmupNdcg(HeavyHitterMetrics.ndcg(warmupHeavyHitters, correctHeavyHitters));
+            metrics.setWarmupPrecision(HeavyHitterMetrics.precision(warmupHeavyHitters, correctHeavyHitters));
+        }
         // randomize
         serverStopWatch.start();
         serverStopWatch.suspend();
@@ -426,15 +548,13 @@ public class HhLdpMain {
         long clientTimeMs = clientStopWatch.getTime(TimeUnit.MILLISECONDS);
         clientStopWatch.reset();
         long memoryBytes = GraphLayout.parseInstance(server).totalSize();
-        // heavy hitter map
+        // final information
         Map<String, Double> heavyHitterMap = server.heavyHitters();
         Preconditions.checkArgument(heavyHitterMap.size() == k);
         // ordered heavy hitter
         List<String> heavyHitters = server.orderedHeavyHitters().stream()
             .map(Map.Entry::getKey)
             .collect(Collectors.toList());
-        // metrics
-        HhLdpMetrics metrics = new HhLdpMetrics();
         metrics.setServerTimeMs(serverTimeMs);
         metrics.setClientTimeMs(clientTimeMs);
         metrics.setPayloadBytes(payloadBytes);
@@ -450,29 +570,35 @@ public class HhLdpMain {
         String typeString = aggMetrics.getTypeString();
         String windowEpsilonString = aggMetrics.getWindowEpsilonString();
         String alphaString = aggMetrics.getAlphaString();
+        String gammaString = aggMetrics.getGammaString();
         double serverTime = aggMetrics.getServerTimeSecond();
         double clientTime = aggMetrics.getClientTimeSecond();
         long payloadBytes = aggMetrics.getPayloadBytes();
         long memoryBytes = aggMetrics.getMemoryBytes();
+        double warmupNdcg = aggMetrics.getWarmupNdcg();
+        double warmupPrecision = aggMetrics.getWarmupPrecision();
         double ndcg = aggMetrics.getNdcg();
         double precision = aggMetrics.getPrecision();
         double abe = aggMetrics.getAbe();
         double re = aggMetrics.getRe();
-        LOGGER.info("{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}",
+        LOGGER.info("{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}",
             StringUtils.leftPad(typeString, 20),
             StringUtils.leftPad(windowEpsilonString, 10),
             StringUtils.leftPad(alphaString, 10),
+            StringUtils.leftPad(gammaString, 10),
             StringUtils.leftPad(TIME_DECIMAL_FORMAT.format(serverTime), 20),
             StringUtils.leftPad(TIME_DECIMAL_FORMAT.format(clientTime), 20),
             StringUtils.leftPad(INTEGER_DECIMAL_FORMAT.format(payloadBytes), 20),
             StringUtils.leftPad(INTEGER_DECIMAL_FORMAT.format(memoryBytes), 20),
+            StringUtils.leftPad(DOUBLE_DECIMAL_FORMAT.format(warmupNdcg), 20),
+            StringUtils.leftPad(DOUBLE_DECIMAL_FORMAT.format(warmupPrecision), 20),
             StringUtils.leftPad(DOUBLE_DECIMAL_FORMAT.format(ndcg), 20),
             StringUtils.leftPad(DOUBLE_DECIMAL_FORMAT.format(precision), 20),
             StringUtils.leftPad(DOUBLE_DECIMAL_FORMAT.format(abe), 20),
             StringUtils.leftPad(DOUBLE_DECIMAL_FORMAT.format(re), 20)
         );
-        printWriter.println(typeString + "\t" + windowEpsilonString + "\t" + alphaString + "\t"
+        printWriter.println(typeString + "\t" + windowEpsilonString + "\t" + alphaString + "\t" + gammaString + "\t"
             + serverTime + "\t" + clientTime + "\t" + payloadBytes + "\t" + memoryBytes + "\t"
-            + ndcg + "\t" + precision + "\t" + abe + "\t" + re);
+            + warmupNdcg + "\t" + warmupPrecision + "\t" + ndcg + "\t" + precision + "\t" + abe + "\t" + re);
     }
 }

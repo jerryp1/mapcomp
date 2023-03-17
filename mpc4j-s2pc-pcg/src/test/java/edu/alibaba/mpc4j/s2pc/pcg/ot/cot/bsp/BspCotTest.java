@@ -61,17 +61,18 @@ public class BspCotTest {
 
     @Parameterized.Parameters(name = "{0}")
     public static Collection<Object[]> configurations() {
-        Collection<Object[]> configurationParams = new ArrayList<>();
+        Collection<Object[]> configurations = new ArrayList<>();
+
         // YWL20_MALICIOUS
-        configurationParams.add(new Object[] {
+        configurations.add(new Object[] {
             BspCotType.YWL20_MALICIOUS.name(), new Ywl20MaBspCotConfig.Builder().build(),
         });
         // YWL20_SEMI_HONEST
-        configurationParams.add(new Object[] {
+        configurations.add(new Object[] {
             BspCotType.YWL20_SEMI_HONEST.name(), new Ywl20ShBspCotConfig.Builder().build(),
         });
 
-        return configurationParams;
+        return configurations;
     }
 
     /**
@@ -385,8 +386,8 @@ public class BspCotTest {
 
     private void assertOutput(int batchNum, int num,
                               BspCotSenderOutput senderOutput, BspCotReceiverOutput receiverOutput) {
-        Assert.assertEquals(batchNum, senderOutput.getBatch());
-        Assert.assertEquals(batchNum, receiverOutput.getBatch());
+        Assert.assertEquals(batchNum, senderOutput.getNum());
+        Assert.assertEquals(batchNum, receiverOutput.getNum());
         // 验证各个子结果
         IntStream.range(0, batchNum).forEach(batchIndex -> {
             SspCotSenderOutput sspcotSenderOutput = senderOutput.get(batchIndex);

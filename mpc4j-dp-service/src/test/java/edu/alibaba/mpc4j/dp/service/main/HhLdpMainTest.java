@@ -98,6 +98,29 @@ public class HhLdpMainTest {
         hhLdpMain.run();
     }
 
+    @Test
+    public void testNoWarmup() throws IOException {
+        HhLdpMain hhLdpMain = createHhLdpMain("test_config/hh_ldp_test_config_no_warmup.conf");
+        Assert.assertEquals(0, hhLdpMain.getWarmupNum());
+        hhLdpMain.run();
+    }
+
+    @Test
+    public void testGammaH() throws IOException {
+        HhLdpMain hhLdpMain = createHhLdpMain("test_config/hh_ldp_test_config_gammah.conf");
+        Assert.assertTrue(hhLdpMain.getWarmupNum() > 0);
+        Assert.assertTrue(hhLdpMain.getGammaHs().length > 0);
+        hhLdpMain.run();
+    }
+
+    @Test
+    public void testGammaNoWarmup() throws IOException {
+        HhLdpMain hhLdpMain = createHhLdpMain("test_config/hh_ldp_test_config_gammah_no_warmup.conf");
+        Assert.assertEquals(0, hhLdpMain.getWarmupNum());
+        Assert.assertTrue(hhLdpMain.getGammaHs().length > 0);
+        hhLdpMain.run();
+    }
+
     private HhLdpMain createHhLdpMain(String path) throws IOException {
         String configPath = Objects.requireNonNull(
             HhLdpMainTest.class.getClassLoader().getResource(path)

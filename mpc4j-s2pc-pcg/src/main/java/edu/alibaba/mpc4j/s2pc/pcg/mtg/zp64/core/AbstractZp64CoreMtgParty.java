@@ -5,6 +5,7 @@ import edu.alibaba.mpc4j.common.rpc.Rpc;
 import edu.alibaba.mpc4j.common.rpc.desc.PtoDesc;
 import edu.alibaba.mpc4j.common.rpc.pto.AbstractTwoPartyPto;
 import edu.alibaba.mpc4j.common.tool.MathPreconditions;
+import edu.alibaba.mpc4j.common.tool.galoisfield.zp64.Zp64;
 
 import java.util.stream.IntStream;
 
@@ -20,6 +21,10 @@ public abstract class AbstractZp64CoreMtgParty extends AbstractTwoPartyPto imple
      */
     protected final Zp64CoreMtgConfig config;
     /**
+     * the Zp64 instance
+     */
+    protected final Zp64 zp64;
+    /**
      * 最大数量
      */
     protected int maxNum;
@@ -31,6 +36,7 @@ public abstract class AbstractZp64CoreMtgParty extends AbstractTwoPartyPto imple
     public AbstractZp64CoreMtgParty(PtoDesc ptoDesc, Rpc ownRpc, Party otherParty, Zp64CoreMtgConfig config) {
         super(ptoDesc, ownRpc, otherParty, config);
         this.config = config;
+        zp64 = config.getZp64();
     }
 
     protected void setInitInput(int maxNum) {

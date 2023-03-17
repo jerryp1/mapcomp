@@ -2,6 +2,7 @@ package edu.alibaba.mpc4j.s2pc.pcg.mtg.zl.core.ideal;
 
 import edu.alibaba.mpc4j.common.rpc.desc.SecurityModel;
 import edu.alibaba.mpc4j.common.tool.EnvType;
+import edu.alibaba.mpc4j.common.tool.galoisfield.zl.Zl;
 import edu.alibaba.mpc4j.s2pc.pcg.mtg.zl.core.ZlCoreMtgConfig;
 import edu.alibaba.mpc4j.s2pc.pcg.mtg.zl.core.ZlCoreMtgFactory;
 
@@ -13,16 +14,16 @@ import edu.alibaba.mpc4j.s2pc.pcg.mtg.zl.core.ZlCoreMtgFactory;
  */
 public class IdealZlCoreMtgConfig implements ZlCoreMtgConfig {
     /**
-     * 乘法三元组比特长度
+     * the Zl instance
      */
-    private final int l;
+    private final Zl zl;
     /**
      * 环境类型
      */
     private EnvType envType;
 
     private IdealZlCoreMtgConfig(Builder builder) {
-        l = builder.l;
+        zl = builder.zl;
         envType = EnvType.STANDARD;
     }
 
@@ -32,8 +33,8 @@ public class IdealZlCoreMtgConfig implements ZlCoreMtgConfig {
     }
 
     @Override
-    public int getL() {
-        return l;
+    public Zl getZl() {
+        return zl;
     }
 
     @Override
@@ -58,13 +59,12 @@ public class IdealZlCoreMtgConfig implements ZlCoreMtgConfig {
 
     public static class Builder implements org.apache.commons.lang3.builder.Builder<IdealZlCoreMtgConfig> {
         /**
-         * 乘法三元组比特长度
+         * the Zl instance
          */
-        private final int l;
+        private final Zl zl;
 
-        public Builder(int l) {
-            assert l > 0 : "l must be greater than 0: " + l;
-            this.l = l;
+        public Builder(Zl zl) {
+            this.zl = zl;
         }
 
         @Override

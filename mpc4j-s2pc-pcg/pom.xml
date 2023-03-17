@@ -36,6 +36,11 @@
         </dependency>
         <dependency>
             <groupId>edu.alibaba</groupId>
+            <artifactId>mpc4j-crypto-phe</artifactId>
+            <version>1.0.7-SNAPSHOT</version>
+        </dependency>
+        <dependency>
+            <groupId>edu.alibaba</groupId>
             <artifactId>mpc4j-common-rpc</artifactId>
             <version>1.0.7-SNAPSHOT</version>
         </dependency>

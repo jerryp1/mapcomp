@@ -5,27 +5,27 @@ import edu.alibaba.mpc4j.common.rpc.pto.TwoPartyPto;
 import edu.alibaba.mpc4j.s2pc.pcg.vole.gf2k.Gf2kVoleReceiverOutput;
 
 /**
- * GF2K-核VOLE协议接收方。
+ * GF2K-core-VOLE receiver.
  *
  * @author Weiran Liu
- * @date 2022/9/22
+ * @date 2023/3/15
  */
 public interface Gf2kCoreVoleReceiver extends TwoPartyPto {
     /**
-     * 初始化协议。
+     * Inits the protocol.
      *
-     * @param delta  关联值Δ。
-     * @param maxNum 最大数量。
-     * @throws MpcAbortException 如果协议异常中止。
+     * @param delta  Δ.
+     * @param maxNum max num.
+     * @throws MpcAbortException the protocol failure aborts.
      */
     void init(byte[] delta, int maxNum) throws MpcAbortException;
 
     /**
-     * 执行协议。
+     * Executes the protocol.
      *
-     * @param num 数量。
-     * @return 接收方输出。
-     * @throws MpcAbortException 如果协议异常中止。
+     * @param num num.
+     * @return the receiver output.
+     * @throws MpcAbortException the protocol failure aborts.
      */
     Gf2kVoleReceiverOutput receive(int num) throws MpcAbortException;
 }

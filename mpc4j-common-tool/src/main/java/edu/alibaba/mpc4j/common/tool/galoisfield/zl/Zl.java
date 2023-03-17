@@ -19,6 +19,16 @@ public interface Zl extends BigIntegerRing {
     ZlFactory.ZlType getZlType();
 
     /**
+     * Gets the name.
+     *
+     * @return the name.
+     */
+    @Override
+    default String getName() {
+        return getZlType().name();
+    }
+
+    /**
      * Computes a mod p.
      *
      * @param a the input a.

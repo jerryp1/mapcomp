@@ -300,10 +300,70 @@ public class HgHhLdpTest {
     private void testLargeEpsilon(HhLdpServer server, HhLdpClient client,
                                   List<Map.Entry<String, Integer>> correctOrderedList) throws IOException {
         // warmup
-        HhLdpTest.exampleWarmupInsert(server, client);
+        HhLdpTest.exampleWarmupInsert(server, client, LdpTestDataUtils.EXAMPLE_WARMUP_NUM);
         server.stopWarmup();
         // randomize
-        HhLdpTest.exampleRandomizeInsert(server, client);
+        HhLdpTest.exampleRandomizeInsert(server, client, LdpTestDataUtils.EXAMPLE_WARMUP_NUM);
+        // get heavy hitters
+        Map<String, Double> heavyHitters = server.heavyHitters();
+        Assert.assertEquals(DEFAULT_K, heavyHitters.size());
+        List<Map.Entry<String, Double>> orderedHeavyHitters = server.orderedHeavyHitters();
+        Assert.assertEquals(DEFAULT_K, orderedHeavyHitters.size());
+        // verify no-error count
+        for (int index = 0; index < DEFAULT_K; index++) {
+            Assert.assertEquals(correctOrderedList.get(index).getKey(), orderedHeavyHitters.get(index).getKey());
+        }
+    }
+
+    @Test
+    public void testW1LargeEpsilonWithoutWarmup() throws IOException {
+        Random hgRandom = new Random(HEAVY_GUARDIAN_SEED);
+        HgHhLdpConfig config = new HgHhLdpConfig
+            .Builder(type, LdpTestDataUtils.EXAMPLE_DATA_DOMAIN, DEFAULT_K, LARGE_EPSILON)
+            .setBucketParams(W1, W1_LAMBDA_H)
+            .setHgRandom(hgRandom)
+            .setGammaH(0.1)
+            .build();
+        HhLdpServer server = HhLdpFactory.createServer(config);
+        HhLdpClient client = HhLdpFactory.createClient(config);
+        testLargeEpsilonWithoutWarmup(server, client, CORRECT_W1_HG_EXAMPLE_COUNT_ORDERED_LIST);
+    }
+
+    @Test
+    public void testW2LargeEpsilonWithoutWarmup() throws IOException {
+        Random hgRandom = new Random(HEAVY_GUARDIAN_SEED);
+        HgHhLdpConfig config = new HgHhLdpConfig
+            .Builder(type, LdpTestDataUtils.EXAMPLE_DATA_DOMAIN, DEFAULT_K, LARGE_EPSILON)
+            .setBucketParams(W2, W2_LAMBDA_H)
+            .setHgRandom(hgRandom)
+            .setGammaH(0.1)
+            .build();
+        HhLdpServer server = HhLdpFactory.createServer(config);
+        HhLdpClient client = HhLdpFactory.createClient(config);
+        testLargeEpsilonWithoutWarmup(server, client, CORRECT_W2_HG_EXAMPLE_COUNT_ORDERED_LIST);
+    }
+
+    @Test
+    public void testW3LargeEpsilonWithoutWarmup() throws IOException {
+        Random hgRandom = new Random(HEAVY_GUARDIAN_SEED);
+        HgHhLdpConfig config = new HgHhLdpConfig
+            .Builder(type, LdpTestDataUtils.EXAMPLE_DATA_DOMAIN, DEFAULT_K, LARGE_EPSILON)
+            .setBucketParams(W3, W3_LAMBDA_H)
+            .setHgRandom(hgRandom)
+            .setGammaH(0.1)
+            .build();
+        HhLdpServer server = HhLdpFactory.createServer(config);
+        HhLdpClient client = HhLdpFactory.createClient(config);
+        testLargeEpsilonWithoutWarmup(server, client, CORRECT_W3_HG_EXAMPLE_COUNT_ORDERED_LIST);
+    }
+
+    private void testLargeEpsilonWithoutWarmup(HhLdpServer server, HhLdpClient client,
+                                  List<Map.Entry<String, Integer>> correctOrderedList) throws IOException {
+        // warmup
+        HhLdpTest.exampleWarmupInsert(server, client, 0);
+        server.stopWarmup();
+        // randomize
+        HhLdpTest.exampleRandomizeInsert(server, client, 0);
         // get heavy hitters
         Map<String, Double> heavyHitters = server.heavyHitters();
         Assert.assertEquals(DEFAULT_K, heavyHitters.size());

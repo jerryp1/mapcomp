@@ -5,27 +5,28 @@ import edu.alibaba.mpc4j.common.rpc.Party;
 import edu.alibaba.mpc4j.common.rpc.Rpc;
 import edu.alibaba.mpc4j.common.rpc.desc.PtoDesc;
 import edu.alibaba.mpc4j.common.rpc.pto.AbstractTwoPartyPto;
-import edu.alibaba.mpc4j.common.tool.CommonConstants;
 import edu.alibaba.mpc4j.common.tool.MathPreconditions;
 import edu.alibaba.mpc4j.common.tool.galoisfield.zp64.Zp64;
-import edu.alibaba.mpc4j.common.tool.galoisfield.zp64.Zp64Factory;
 
-import java.math.BigInteger;
 import java.util.Arrays;
 
 /**
- * ZP64-核VOLE协议发送方抽象类。
+ * Abstract ZP64-core VOLE sender.
  *
  * @author Hanwen Feng
  * @date 2022/06/15
  */
 public abstract class AbstractZp64CoreVoleSender extends AbstractTwoPartyPto implements Zp64CoreVoleSender {
     /**
-     * Zp64
+     * the Zp64 instance
      */
     protected Zp64 zp64;
     /**
-     * 最大数量
+     * l
+     */
+    protected int l;
+    /**
+     * max num
      */
     private int maxNum;
     /**
@@ -33,7 +34,7 @@ public abstract class AbstractZp64CoreVoleSender extends AbstractTwoPartyPto imp
      */
     protected long[] x;
     /**
-     * 数量
+     * num
      */
     protected int num;
 
@@ -41,12 +42,9 @@ public abstract class AbstractZp64CoreVoleSender extends AbstractTwoPartyPto imp
         super(ptoDesc, senderRpc, receiverParty, config);
     }
 
-    protected void setInitInput(long prime, int maxNum) {
-        Preconditions.checkArgument(
-            BigInteger.valueOf(prime).isProbablePrime(CommonConstants.STATS_BIT_LENGTH),
-            "input prime is not a prime: %s", prime
-        );
-        zp64 = Zp64Factory.createInstance(envType, prime);
+    protected void setInitInput(Zp64 zp64, int maxNum) {
+        this.zp64 = zp64;
+        l = zp64.getL();
         MathPreconditions.checkPositive("maxNum", maxNum);
         this.maxNum = maxNum;
         initState();

@@ -19,6 +19,16 @@ public interface Zp extends BigIntegerField {
     ZpFactory.ZpType getZpType();
 
     /**
+     * Gets the name.
+     *
+     * @return the name.
+     */
+    @Override
+    default String getName() {
+        return getZpType().name();
+    }
+
+    /**
      * Gets the prime.
      *
      * @return the prime.

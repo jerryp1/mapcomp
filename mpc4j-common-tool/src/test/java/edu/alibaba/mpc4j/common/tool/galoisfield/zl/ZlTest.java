@@ -27,10 +27,9 @@ public class ZlTest {
     public static Collection<Object[]> configurations() {
         Collection<Object[]> configurations = new ArrayList<>();
 
-        // Zp
-        ZlType[] zlTypes = new ZlType[]{ZlType.JDK};
+        ZlType[] types = new ZlType[]{ZlType.JDK};
         int[] ls = new int[]{1, 2, 3, 4, 39, 40, 41, 61, 62, 63, 64, 65, 127, 128, 129};
-        for (ZlType type : zlTypes) {
+        for (ZlType type : types) {
             // add each l
             for (int l : ls) {
                 configurations.add(new Object[]{type.name() + ", l = " + l, type, l});
@@ -76,17 +75,17 @@ public class ZlTest {
 
     @Test
     public void testModulus() {
-        // 0 mod p = 0
+        // 0 mod 2^l = 0
         Assert.assertEquals(BigInteger.ZERO, zl.module(BigInteger.ZERO));
-        // 1 mod p = 1
+        // 1 mod 2^l = 1
         Assert.assertEquals(BigInteger.ONE, zl.module(BigInteger.ONE));
-        // p + 0 mod p = 0
+        // 2^l + 0 mod 2^l = 0
         Assert.assertEquals(BigInteger.ZERO, zl.module(zl.getRangeBound()));
-        // p + 1 mod p = 1
+        // 2^l + 1 mod 2^l = 1
         Assert.assertEquals(BigInteger.ONE, zl.module(zl.getRangeBound().add(BigInteger.ONE)));
-        // -1 mod p = p - 1
+        // -1 mod 2^l = 2^l - 1
         Assert.assertEquals(zl.getRangeBound().subtract(BigInteger.ONE), zl.module(BigInteger.ONE.negate()));
-        // 1 - p mod p = 1
+        // 1 - 2^l mod 2^l = 1
         Assert.assertEquals(BigInteger.ONE, zl.module(BigInteger.ONE.subtract(zl.getRangeBound())));
     }
 
@@ -99,7 +98,7 @@ public class ZlTest {
         if (BigIntegerUtils.greater(rangeBound, two)) {
             // 1 + 1 = 2
             Assert.assertEquals(two, zl.add(one, one));
-            // -1 = prime - 1
+            // -1 = 2^l - 1
             Assert.assertEquals(rangeBound.subtract(one), zl.neg(one));
             // 2 - 1 = 1
             Assert.assertEquals(one, zl.sub(two, one));
@@ -107,10 +106,21 @@ public class ZlTest {
         if (BigIntegerUtils.greater(rangeBound, four)) {
             // 2 + 2 = 4
             Assert.assertEquals(four, zl.add(two, two));
-            // -2 = prime - 2
+            // -2 = 2^l - 2
             Assert.assertEquals(rangeBound.subtract(two), zl.neg(two));
             // 4 - 2 = 2
             Assert.assertEquals(two, zl.sub(four, two));
+        }
+    }
+
+    @Test
+    public void testConstantMul() {
+        BigInteger two = BigInteger.valueOf(2);
+        BigInteger four = BigInteger.valueOf(4);
+        BigInteger modulus = zl.getRangeBound();
+        if (BigIntegerUtils.greater(modulus, four)) {
+            // 2 * 2 = 4
+            Assert.assertEquals(four, zl.mul(two, two));
         }
     }
 }

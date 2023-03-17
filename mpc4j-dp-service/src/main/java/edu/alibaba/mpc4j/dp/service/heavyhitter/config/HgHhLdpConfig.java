@@ -29,6 +29,10 @@ public class HgHhLdpConfig extends BasicHhLdpConfig {
      * the privacy allocation parameter α
      */
     private final double alpha;
+    /**
+     * γ_h, set to negative if we do not manually set
+     */
+    private final double gammaH;
 
     protected HgHhLdpConfig(Builder builder) {
         super(builder);
@@ -36,6 +40,7 @@ public class HgHhLdpConfig extends BasicHhLdpConfig {
         lambdaH = builder.lambdaH;
         hgRandom = builder.hgRandom;
         alpha = builder.alpha;
+        gammaH = builder.gammaH;
     }
 
     /**
@@ -56,6 +61,11 @@ public class HgHhLdpConfig extends BasicHhLdpConfig {
         return lambdaH;
     }
 
+    /**
+     * Gets the random state used in HeavyGuardian.
+     *
+     * @return the random state used in HeavyGuardian.
+     */
     public Random getHgRandom() {
         return hgRandom;
     }
@@ -67,6 +77,15 @@ public class HgHhLdpConfig extends BasicHhLdpConfig {
      */
     public double getAlpha() {
         return alpha;
+    }
+
+    /**
+     * Gets γ_h. It can be negative if we do not manually set
+     *
+     * @return γ_h.
+     */
+    public double getGammaH() {
+        return gammaH;
     }
 
     public static class Builder extends BasicHhLdpConfig.Builder {
@@ -86,6 +105,10 @@ public class HgHhLdpConfig extends BasicHhLdpConfig {
          * the privacy allocation parameter α
          */
         private double alpha;
+        /**
+         * γ_h, set to negative if we do not manually set
+         */
+        private double gammaH;
 
         public Builder(HhLdpType type, Set<String> domainSet, int k, double windowEpsilon) {
             super(type, domainSet, k, windowEpsilon);
@@ -104,6 +127,7 @@ public class HgHhLdpConfig extends BasicHhLdpConfig {
             // set default values
             w = 1;
             lambdaH = k;
+            gammaH = -1;
             hgRandom = new Random();
         }
 
@@ -135,6 +159,12 @@ public class HgHhLdpConfig extends BasicHhLdpConfig {
         public Builder setAlpha(double alpha) {
             MathPreconditions.checkPositiveInRange("α", alpha, 1);
             this.alpha = alpha;
+            return this;
+        }
+
+        public Builder setGammaH(double gammaH) {
+            MathPreconditions.checkNonNegativeInRangeClosed("γ_h", gammaH, 1);
+            this.gammaH = gammaH;
             return this;
         }
 

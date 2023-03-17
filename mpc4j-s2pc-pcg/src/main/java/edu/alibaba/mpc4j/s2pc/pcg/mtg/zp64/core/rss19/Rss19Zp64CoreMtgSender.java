@@ -4,8 +4,6 @@ import edu.alibaba.mpc4j.common.rpc.*;
 import edu.alibaba.mpc4j.common.rpc.utils.DataPacket;
 import edu.alibaba.mpc4j.common.rpc.utils.DataPacketHeader;
 import edu.alibaba.mpc4j.common.tool.CommonConstants;
-import edu.alibaba.mpc4j.common.tool.galoisfield.zp64.Zp64;
-import edu.alibaba.mpc4j.common.tool.galoisfield.zp64.Zp64Factory;
 import edu.alibaba.mpc4j.s2pc.pcg.mtg.zp64.core.AbstractZp64CoreMtgParty;
 import edu.alibaba.mpc4j.s2pc.pcg.mtg.zp64.core.rss19.Rss19Zp64CoreMtgPtoDesc.PtoStep;
 import edu.alibaba.mpc4j.s2pc.pcg.mtg.zp64.Zp64Triple;
@@ -42,13 +40,9 @@ public class Rss19Zp64CoreMtgSender extends AbstractZp64CoreMtgParty {
      */
     private final int polyModulusDegree;
     /**
-     * 明文模数
+     * the prime
      */
     private final long p;
-    /**
-     * zp64
-     */
-    private Zp64 zp64;
     /**
      * 缓存区
      */
@@ -56,8 +50,8 @@ public class Rss19Zp64CoreMtgSender extends AbstractZp64CoreMtgParty {
 
     public Rss19Zp64CoreMtgSender(Rpc senderRpc, Party receiverParty, Rss19Zp64CoreMtgConfig config) {
         super(Rss19Zp64CoreMtgPtoDesc.getInstance(), senderRpc, receiverParty, config);
-        this.polyModulusDegree = config.getPolyModulusDegree();
-        this.p = config.getZp();
+        polyModulusDegree = config.getPolyModulusDegree();
+        p = zp64.getPrime();
     }
 
     @Override
@@ -69,8 +63,7 @@ public class Rss19Zp64CoreMtgSender extends AbstractZp64CoreMtgParty {
         stopWatch.start();
         ArrayList<byte[]> fheParams = Rss19Zp64CoreMtgNativeUtils.keyGen(polyModulusDegree, p);
         handleFheParams(fheParams);
-        zp64 = Zp64Factory.createInstance(envType, p);
-        zp64TripleBuffer = Zp64Triple.createEmpty(p);
+        zp64TripleBuffer = Zp64Triple.createEmpty(zp64);
         DataPacketHeader fheParamsHeader = new DataPacketHeader(
             encodeTaskId, getPtoDesc().getPtoId(), PtoStep.SENDER_SEND_ENCRYPTION_PARAMS.ordinal(), extraInfo,
             rpc.ownParty().getPartyId(), otherParty().getPartyId()
@@ -129,7 +122,7 @@ public class Rss19Zp64CoreMtgSender extends AbstractZp64CoreMtgParty {
             c0[round] = IntStream.range(0, updateRoundNum)
                 .mapToLong(i -> zp64.add(zp64.mul(a0[round][i], b0[round][i]), d[i]))
                 .toArray();
-            zp64TripleBuffer.merge(Zp64Triple.create(p, updateRoundNum, a0[round], b0[round], c0[round]));
+            zp64TripleBuffer.merge(Zp64Triple.create(zp64, updateRoundNum, a0[round], b0[round], c0[round]));
         });
         stopWatch.stop();
         long decTime = stopWatch.getTime(TimeUnit.MILLISECONDS);

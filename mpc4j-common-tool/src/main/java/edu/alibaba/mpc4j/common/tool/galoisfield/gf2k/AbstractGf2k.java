@@ -146,13 +146,13 @@ abstract class AbstractGf2k implements Gf2k {
 
     @Override
     public byte[] createNonZeroRandom(byte[] seed) {
-        byte[] key = kdf.deriveKey(seed);
-        byte[] element = prg.extendToBytes(key);
-        while (isZero(element)) {
+        byte[] random;
+        byte[] key = BytesUtils.clone(seed);
+        do {
             key = kdf.deriveKey(key);
-            element = prg.extendToBytes(key);
-        }
-        return element;
+            random = createRandom(key);
+        } while (isZero(random));
+        return random;
     }
 
     @Override
@@ -190,5 +190,28 @@ abstract class AbstractGf2k implements Gf2k {
     @Override
     public boolean validateRangeElement(byte[] p) {
         return validateElement(p);
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) {
+            return true;
+        }
+        if (o == null || getClass() != o.getClass()) {
+            return false;
+        }
+        AbstractGf2k that = (AbstractGf2k) o;
+        // KDF and PRG can be different, all GF2K instance are the same
+        return this.getL() == that.getL();
+    }
+
+    @Override
+    public int hashCode() {
+        return "GF2K".hashCode();
+    }
+
+    @Override
+    public String toString() {
+        return this.getClass().getSimpleName() + " (l = " + L + ")";
     }
 }

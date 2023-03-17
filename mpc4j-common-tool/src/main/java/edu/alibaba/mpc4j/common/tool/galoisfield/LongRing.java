@@ -10,6 +10,13 @@ import java.security.SecureRandom;
  */
 public interface LongRing {
     /**
+     * Gets the name.
+     *
+     * @return the name.
+     */
+    String getName();
+
+    /**
      * Gets the maximal l (in bit length) so that all elements in {0, 1}^l is a valid element.
      *
      * @return the maximal l (in bit length).
@@ -81,6 +88,7 @@ public interface LongRing {
 
     /**
      * Computes p^q.
+     *
      * @param p the element p.
      * @param q the element q.
      * @return p^q.

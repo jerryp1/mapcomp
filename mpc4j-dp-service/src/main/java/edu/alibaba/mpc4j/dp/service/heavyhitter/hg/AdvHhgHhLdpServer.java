@@ -1,5 +1,6 @@
 package edu.alibaba.mpc4j.dp.service.heavyhitter.hg;
 
+import com.google.common.base.Preconditions;
 import edu.alibaba.mpc4j.dp.service.heavyhitter.config.HgHhLdpConfig;
 import edu.alibaba.mpc4j.dp.service.heavyhitter.config.HhLdpConfig;
 import edu.alibaba.mpc4j.dp.service.heavyhitter.utils.HgHhLdpServerContext;
@@ -54,7 +55,7 @@ public class AdvHhgHhLdpServer extends AbstractHgHhLdpServer implements HhgHhLdp
         p2 = expRemainedWindowEpsilon / (expRemainedWindowEpsilon + lambdaH - 1);
         q2 = 1 / (expRemainedWindowEpsilon + lambdaH - 1);
         hhLdpServerState = HhLdpServerState.WARMUP;
-        gammaH = 0;
+        gammaH = hgHhLdpConfig.getGammaH();
     }
 
     @Override
@@ -73,8 +74,13 @@ public class AdvHhgHhLdpServer extends AbstractHgHhLdpServer implements HhgHhLdp
             }
             // note that here the bucket may contain # of elements that is less than lambdaH
         }
-        gammaH = hotNum / num;
-        assert gammaH >= 0 && gammaH <= 1 : "γ_h must be in range [0, 1]: " + gammaH;
+        // There are two ways of setting γ_H: (1) based on the priori knowledge; (2) warm-up setting.
+        // If we manually set γ_H, it must be in range [0, 1], we do not need to update it. Otherwise, we compute it.
+        if (gammaH < 0) {
+            Preconditions.checkArgument(num > 0, "need warmup without manually set γ_H");
+            gammaH = hotNum / num;
+            assert gammaH >= 0 && gammaH <= 1 : "γ_h must be in range [0, 1]: " + gammaH;
+        }
         hhLdpServerState = HhLdpServerState.STATISTICS;
     }
 
@@ -91,6 +97,11 @@ public class AdvHhgHhLdpServer extends AbstractHgHhLdpServer implements HhgHhLdp
     @Override
     public double getAlpha() {
         return alpha;
+    }
+
+    @Override
+    public double getGammaH() {
+        return gammaH;
     }
 
     @Override

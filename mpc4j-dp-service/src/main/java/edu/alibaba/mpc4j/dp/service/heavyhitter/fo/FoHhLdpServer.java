@@ -99,6 +99,10 @@ public class FoHhLdpServer implements HhLdpServer {
 
     @Override
     public Map<String, Double> heavyHitters() {
+        if (num < k) {
+            // if the submitted num is less than k, return an empty heavy hitter
+            return new HashMap<>(0);
+        }
         Map<String, Double> frequencyEstimates = foLdpServer.estimate();
         // add warmups
         for (String item : domain.getDomainSet()) {

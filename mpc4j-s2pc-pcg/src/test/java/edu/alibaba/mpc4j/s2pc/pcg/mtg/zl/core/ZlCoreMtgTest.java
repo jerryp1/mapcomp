@@ -4,10 +4,17 @@ import com.google.common.base.Preconditions;
 import edu.alibaba.mpc4j.common.rpc.Rpc;
 import edu.alibaba.mpc4j.common.rpc.RpcManager;
 import edu.alibaba.mpc4j.common.rpc.impl.memory.MemoryRpcManager;
+import edu.alibaba.mpc4j.common.tool.CommonConstants;
+import edu.alibaba.mpc4j.common.tool.EnvType;
+import edu.alibaba.mpc4j.common.tool.galoisfield.zl.Zl;
+import edu.alibaba.mpc4j.common.tool.galoisfield.zl.ZlFactory;
+import edu.alibaba.mpc4j.common.tool.utils.LongUtils;
 import edu.alibaba.mpc4j.s2pc.pcg.mtg.zl.ZlMtgTestUtils;
 import edu.alibaba.mpc4j.s2pc.pcg.mtg.zl.ZlTriple;
-import edu.alibaba.mpc4j.s2pc.pcg.mtg.zl.core.dsz15.Dsz15ZlCoreMtgConfig;
+import edu.alibaba.mpc4j.s2pc.pcg.mtg.zl.core.dsz15.Dsz15HeZlCoreMtgConfig;
+import edu.alibaba.mpc4j.s2pc.pcg.mtg.zl.core.dsz15.Dsz15OtZlCoreMtgConfig;
 import edu.alibaba.mpc4j.s2pc.pcg.mtg.zl.core.ideal.IdealZlCoreMtgConfig;
+import edu.alibaba.mpc4j.s2pc.pcg.mtg.zl.core.ZlCoreMtgFactory.ZlCoreMtgType;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.time.StopWatch;
 import org.junit.After;
@@ -48,31 +55,29 @@ public class ZlCoreMtgTest {
     @Parameterized.Parameters(name = "{0}")
     public static Collection<Object[]> configurations() {
         Collection<Object[]> configurations = new ArrayList<>();
-        // IDEAL (l = 1)
-        configurations.add(new Object[]{
-            ZlCoreMtgFactory.ZlCoreMtgType.IDEAL.name() + " (l = 1)", new IdealZlCoreMtgConfig.Builder(1).build(),
-        });
-        // IDEAL (l = 63)
-        configurations.add(new Object[]{
-            ZlCoreMtgFactory.ZlCoreMtgType.IDEAL.name() + " (l = 9)", new IdealZlCoreMtgConfig.Builder(63).build(),
-        });
-        // IDEAL (l = 128)
-        configurations.add(new Object[]{
-            ZlCoreMtgFactory.ZlCoreMtgType.IDEAL.name() + " (l = 32)", new IdealZlCoreMtgConfig.Builder(128).build(),
-        });
 
-        // DSZ15 (l = 1)
-        configurations.add(new Object[]{
-            ZlCoreMtgFactory.ZlCoreMtgType.DSZ15.name() + " (l = 1)", new Dsz15ZlCoreMtgConfig.Builder(1).build(),
-        });
-        // DSZ15 (l = 63)
-        configurations.add(new Object[]{
-            ZlCoreMtgFactory.ZlCoreMtgType.DSZ15.name() + " (l = 9)", new Dsz15ZlCoreMtgConfig.Builder(63).build(),
-        });
-        // DSZ15 (l = 128)
-        configurations.add(new Object[]{
-            ZlCoreMtgFactory.ZlCoreMtgType.DSZ15.name() + " (l = 32)", new Dsz15ZlCoreMtgConfig.Builder(128).build(),
-        });
+        Zl[] zls = new Zl[] {
+            ZlFactory.createInstance(EnvType.STANDARD, 1),
+            ZlFactory.createInstance(EnvType.STANDARD, LongUtils.MAX_L - 1),
+            ZlFactory.createInstance(EnvType.STANDARD, LongUtils.MAX_L),
+            ZlFactory.createInstance(EnvType.STANDARD, LongUtils.MAX_L + 1),
+            ZlFactory.createInstance(EnvType.STANDARD, CommonConstants.BLOCK_BIT_LENGTH),
+        };
+        for (Zl zl : zls) {
+            int l = zl.getL();
+            // IDEAL
+            configurations.add(new Object[]{
+                ZlCoreMtgType.IDEAL.name() + " (l = " + l + ")", new IdealZlCoreMtgConfig.Builder(zl).build(),
+            });
+            // DSZ15_HE
+            configurations.add(new Object[]{
+                ZlCoreMtgType.DSZ15_HE.name() + " (l = " + l + ")", new Dsz15HeZlCoreMtgConfig.Builder(zl).build(),
+            });
+            // DSZ15_OT
+            configurations.add(new Object[]{
+                ZlCoreMtgType.DSZ15_OT.name() + " (l = " + l + ")", new Dsz15OtZlCoreMtgConfig.Builder(zl).build(),
+            });
+        }
 
         return configurations;
     }
@@ -171,7 +176,7 @@ public class ZlCoreMtgTest {
             ZlTriple senderOutput = senderThread.getOutput();
             ZlTriple receiverOutput = receiverThread.getOutput();
             // 验证结果
-            ZlMtgTestUtils.assertOutput(config.getL(), num, senderOutput, receiverOutput);
+            ZlMtgTestUtils.assertOutput(config.getZl(), num, senderOutput, receiverOutput);
             LOGGER.info("Sender sends {}B, Receiver sends {}B, time = {}ms",
                 senderByteLength, receiverByteLength, time
             );

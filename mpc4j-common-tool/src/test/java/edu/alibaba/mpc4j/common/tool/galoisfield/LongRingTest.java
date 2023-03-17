@@ -3,6 +3,10 @@ package edu.alibaba.mpc4j.common.tool.galoisfield;
 import com.google.common.base.Preconditions;
 import edu.alibaba.mpc4j.common.tool.CommonConstants;
 import edu.alibaba.mpc4j.common.tool.EnvType;
+import edu.alibaba.mpc4j.common.tool.galoisfield.zl64.Zl64Factory;
+import edu.alibaba.mpc4j.common.tool.galoisfield.zl64.Zl64Factory.Zl64Type;
+import edu.alibaba.mpc4j.common.tool.galoisfield.zn64.Zn64Factory;
+import edu.alibaba.mpc4j.common.tool.galoisfield.zn64.Zn64Factory.Zn64Type;
 import edu.alibaba.mpc4j.common.tool.galoisfield.zp64.Zp64Factory;
 import edu.alibaba.mpc4j.common.tool.galoisfield.zp64.Zp64Factory.Zp64Type;
 import org.apache.commons.lang3.StringUtils;
@@ -41,9 +45,32 @@ public class LongRingTest {
     public static Collection<Object[]> configurations() {
         Collection<Object[]> configurations = new ArrayList<>();
 
+        // Zn64
+        long[] ns = new long[]{2, 3, 4, 7, 8, 247, 350, 511, 512, 513, 701, 833, 991, 1023, 1024, 1025};
+        Zn64Type[] zn64Types = new Zn64Type[]{Zn64Type.RINGS};
+        for (Zn64Type type : zn64Types) {
+            // add each l
+            for (long n : ns) {
+                configurations.add(new Object[]{
+                    Zn64Type.class.getSimpleName() + " (" + type.name() + ", n = " + n + ")",
+                    Zn64Factory.createInstance(EnvType.STANDARD, type, n),
+                });
+            }
+        }
+        int[] ls = new int[]{1, 2, 3, 4, 39, 40, 41, 61, 62};
+        // Zl64
+        Zl64Type[] zl64Types = new Zl64Type[]{Zl64Type.JDK, Zl64Type.RINGS};
+        for (Zl64Type type : zl64Types) {
+            // add each l
+            for (int l : ls) {
+                configurations.add(new Object[]{
+                    Zl64Type.class.getSimpleName() + " (" + type.name() + ", l = " + l + ")",
+                    Zl64Factory.createInstance(EnvType.STANDARD, type, l),
+                });
+            }
+        }
         // Zp64
         Zp64Type[] zp64Types = new Zp64Type[]{Zp64Type.RINGS};
-        int[] ls = new int[]{1, 2, 3, 4, 39, 40, 41, 61, 62};
         for (Zp64Type type : zp64Types) {
             // add each l
             for (int l : ls) {

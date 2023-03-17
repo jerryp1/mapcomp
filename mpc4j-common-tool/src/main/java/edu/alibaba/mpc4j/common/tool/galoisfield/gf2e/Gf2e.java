@@ -2,7 +2,6 @@ package edu.alibaba.mpc4j.common.tool.galoisfield.gf2e;
 
 import edu.alibaba.mpc4j.common.tool.galoisfield.BytesField;
 import edu.alibaba.mpc4j.common.tool.galoisfield.gf2e.Gf2eFactory.Gf2eType;
-import edu.alibaba.mpc4j.common.tool.utils.BytesUtils;
 
 /**
  * GF(2^l) interface.
@@ -12,9 +11,19 @@ import edu.alibaba.mpc4j.common.tool.utils.BytesUtils;
  */
 public interface Gf2e extends BytesField {
     /**
-     * 返回运算类型。
+     * Gets the Gf2e type.
      *
-     * @return 运算类型。
+     * @return the Gf2e type.
      */
     Gf2eType getGf2eType();
+
+    /**
+     * Gets the name.
+     *
+     * @return the name.
+     */
+    @Override
+    default String getName() {
+        return getGf2eType().name();
+    }
 }
