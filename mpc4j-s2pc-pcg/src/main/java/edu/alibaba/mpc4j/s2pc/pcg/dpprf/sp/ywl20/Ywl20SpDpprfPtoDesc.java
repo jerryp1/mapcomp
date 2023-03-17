@@ -28,10 +28,6 @@ class Ywl20SpDpprfPtoDesc implements PtoDesc {
      */
     enum PtoStep {
         /**
-         * i ∈ {1,...,h}, R sends a bit b_i = r_i ⊕ α_i ⊕ 1.
-         */
-        RECEIVER_SEND_BINARY,
-        /**
          * i ∈ {1,...,h}, S sends M_0^i = K_0^i ⊕ H(q_i ⊕ b_i ∆, i || l), M_1^i = K_1^i ⊕ H(q_i ⊕ \not b_i ∆, i || l)
          */
         SENDER_SEND_MESSAGE,
