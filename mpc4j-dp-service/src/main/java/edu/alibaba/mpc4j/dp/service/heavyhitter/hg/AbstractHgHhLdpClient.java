@@ -14,9 +14,9 @@ import edu.alibaba.mpc4j.dp.service.tool.BucketDomain;
  */
 public abstract class AbstractHgHhLdpClient implements HgHhLdpClient {
     /**
-     * the type
+     * the config
      */
-    private final HhLdpFactory.HhLdpType type;
+    private final HgHhLdpConfig hgHhLdpConfig;
     /**
      * the bucket domain
      */
@@ -41,13 +41,17 @@ public abstract class AbstractHgHhLdpClient implements HgHhLdpClient {
      * the private parameter ε / w
      */
     protected final double windowEpsilon;
+    /**
+     * the window size (w)
+     */
+    protected final int windowSize;
 
     AbstractHgHhLdpClient(HhLdpConfig config) {
-        HgHhLdpConfig hgHhLdpConfig = (HgHhLdpConfig) config;
-        type = hgHhLdpConfig.getType();
+        hgHhLdpConfig = (HgHhLdpConfig) config;
         d = hgHhLdpConfig.getD();
         k = hgHhLdpConfig.getK();
         windowEpsilon = config.getWindowEpsilon();
+        windowSize = config.getWindowSize();
         w = hgHhLdpConfig.getW();
         lambdaH = hgHhLdpConfig.getLambdaH();
         // init bucket domain
@@ -66,12 +70,17 @@ public abstract class AbstractHgHhLdpClient implements HgHhLdpClient {
 
     @Override
     public HhLdpFactory.HhLdpType getType() {
-        return type;
+        return hgHhLdpConfig.getType();
     }
 
     @Override
     public double getWindowEpsilon() {
         return windowEpsilon;
+    }
+
+    @Override
+    public int getWindowSize() {
+        return windowSize;
     }
 
     @Override

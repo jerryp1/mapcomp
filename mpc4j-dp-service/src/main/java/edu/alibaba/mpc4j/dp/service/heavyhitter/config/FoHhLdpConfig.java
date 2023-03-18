@@ -44,15 +44,15 @@ public class FoHhLdpConfig extends BasicHhLdpConfig {
          */
         private final FoLdpConfig foLdpConfig;
 
-        public Builder(HhLdpFactory.HhLdpType type, Set<String> domainSet, int k, double windowEpsilon) {
-            super(type, domainSet, k, windowEpsilon);
+        public Builder(HhLdpFactory.HhLdpType type, Set<String> domainSet, int k, double windowEpsilon, int windowSize) {
+            super(type, domainSet, k, windowEpsilon, windowSize);
             foLdpConfig = new BasicFoLdpConfig
                 .Builder(FoLdpFactory.FoLdpType.DE_INDEX, domainSet, windowEpsilon)
                 .build();
         }
 
-        public Builder(FoLdpConfig foLdpConfig, int k) {
-            super(HhLdpFactory.HhLdpType.FO, foLdpConfig.getDomainSet(), k, foLdpConfig.getEpsilon());
+        public Builder(FoLdpConfig foLdpConfig, int k, int windowSize) {
+            super(HhLdpFactory.HhLdpType.FO, foLdpConfig.getDomainSet(), k, foLdpConfig.getEpsilon(), windowSize);
             this.foLdpConfig = foLdpConfig;
         }
 

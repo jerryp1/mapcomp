@@ -96,6 +96,10 @@ public class HhLdpMain {
      */
     private final double[] windowEpsilons;
     /**
+     * window size (w)
+     */
+    private final int windowSize;
+    /**
      * α
      */
     private final double[] alphas;
@@ -169,6 +173,7 @@ public class HhLdpMain {
         double warmupPercentage = PropertiesUtils.readDouble(properties, "warmup_percentage");
         MathPreconditions.checkNonNegativeInRangeClosed("warmup_percentage", warmupPercentage, 1.0);
         windowEpsilons = PropertiesUtils.readDoubleArray(properties, "window_epsilon");
+        windowSize = PropertiesUtils.readInt(properties, "window_size");
         alphas = PropertiesUtils.readDoubleArrayWithDefault(properties, "alpha");
         gammaHs = PropertiesUtils.readDoubleArrayWithDefault(properties, "gamma_h");
         Arrays.stream(gammaHs).forEach(gammaH -> MathPreconditions.checkNonNegativeInRangeClosed("γ_h", gammaH, 1.0));
@@ -296,25 +301,6 @@ public class HhLdpMain {
                 }
             }
         }
-        if (hgTypeList.contains(HhLdpType.RELAX)) {
-            if (gammaHs.length > 0) {
-                // manually set γ_h, do not need to run automatically setting
-                for (double gammaH : gammaHs) {
-                    for (double windowEpsilon : windowEpsilons) {
-                        HhLdpAggMetrics advHgLdpAggMetrics = runRelaxHhgHeavyHitter(windowEpsilon, gammaH);
-                        printInfo(printWriter, advHgLdpAggMetrics);
-                    }
-                }
-            } else {
-                // automatically set γ_h, we need warmupNum > 0
-                if (warmupNum > 0) {
-                    for (double windowEpsilon : windowEpsilons) {
-                        HhLdpAggMetrics relaxHgLdpAggMetrics = runRelaxHhgHeavyHitter(windowEpsilon);
-                        printInfo(printWriter, relaxHgLdpAggMetrics);
-                    }
-                }
-            }
-        }
         printWriter.close();
         fileWriter.close();
     }
@@ -379,7 +365,7 @@ public class HhLdpMain {
         for (int round = 0; round < testRound; round++) {
             FoLdpConfig foLdpConfig = FoLdpFactory.createDefaultConfig(foLdpType, domainSet, windowEpsilon);
             HhLdpConfig hhLdpConfig = new FoHhLdpConfig
-                .Builder(foLdpConfig, k)
+                .Builder(foLdpConfig, k, windowSize)
                 .build();
             HhLdpServer server = HhLdpFactory.createServer(hhLdpConfig);
             HhLdpClient client = HhLdpFactory.createClient(hhLdpConfig);
@@ -394,7 +380,7 @@ public class HhLdpMain {
         HhLdpAggMetrics aggMetrics = new HhLdpAggMetrics(HhLdpType.BASIC.name(), windowEpsilon, null, null);
         for (int round = 0; round < testRound; round++) {
             HgHhLdpConfig config = new HgHhLdpConfig
-                .Builder(type, domainSet, k, windowEpsilon)
+                .Builder(type, domainSet, k, windowEpsilon, windowSize)
                 .build();
             HhLdpServer server = HhLdpFactory.createServer(config);
             HhLdpClient client = HhLdpFactory.createClient(config);
@@ -410,16 +396,16 @@ public class HhLdpMain {
         for (int round = 0; round < testRound; round++) {
             // get warmup gammaH
             HgHhLdpConfig warmupConfig = new HgHhLdpConfig
-                .Builder(type, domainSet, k, windowEpsilon)
+                .Builder(type, domainSet, k, windowEpsilon, windowSize)
                 .setAlpha(alpha)
                 .build();
-            getWarmupHhgHeavyHitterGammaH(warmupConfig);
+            gammaH += getWarmupHhgHeavyHitterGammaH(warmupConfig);
         }
         gammaH /= testRound;
         HhLdpAggMetrics aggMetrics = new HhLdpAggMetrics(type.name() + " (auto γ_h)", windowEpsilon, alpha, gammaH);
         for (int round = 0; round < testRound; round++) {
             HgHhLdpConfig config = new HgHhLdpConfig
-                .Builder(type, domainSet, k, windowEpsilon)
+                .Builder(type, domainSet, k, windowEpsilon, windowSize)
                 .setAlpha(alpha)
                 .build();
             HhLdpServer server = HhLdpFactory.createServer(config);
@@ -435,48 +421,8 @@ public class HhLdpMain {
         HhLdpAggMetrics aggMetrics = new HhLdpAggMetrics(type.name() + " (pre γ_h)", windowEpsilon, alpha, gammaH);
         for (int round = 0; round < testRound; round++) {
             HgHhLdpConfig config = new HgHhLdpConfig
-                .Builder(type, domainSet, k, windowEpsilon)
+                .Builder(type, domainSet, k, windowEpsilon, windowSize)
                 .setAlpha(alpha)
-                .setGammaH(gammaH)
-                .build();
-            HhLdpServer server = HhLdpFactory.createServer(config);
-            HhLdpClient client = HhLdpFactory.createClient(config);
-            HhLdpMetrics metrics = runLdpHeavyHitter(server, client);
-            aggMetrics.addMetrics(metrics);
-        }
-        return aggMetrics;
-    }
-
-    HhLdpAggMetrics runRelaxHhgHeavyHitter(double windowEpsilon) throws IOException {
-        HhLdpType type = HhLdpType.RELAX;
-        double gammaH = 0;
-        for (int round = 0; round < testRound; round++) {
-            // get warmup gammaH
-            HgHhLdpConfig warmupConfig = new HgHhLdpConfig
-                .Builder(type, domainSet, k, windowEpsilon)
-                .build();
-            gammaH += getWarmupHhgHeavyHitterGammaH(warmupConfig);
-        }
-        gammaH /= testRound;
-        HhLdpAggMetrics aggMetrics = new HhLdpAggMetrics(type.name() + " (auto γ_h)", windowEpsilon, null, gammaH);
-        for (int round = 0; round < testRound; round++) {
-            HgHhLdpConfig config = new HgHhLdpConfig
-                .Builder(type, domainSet, k, windowEpsilon)
-                .build();
-            HhLdpServer server = HhLdpFactory.createServer(config);
-            HhLdpClient client = HhLdpFactory.createClient(config);
-            HhLdpMetrics metrics = runLdpHeavyHitter(server, client);
-            aggMetrics.addMetrics(metrics);
-        }
-        return aggMetrics;
-    }
-
-    HhLdpAggMetrics runRelaxHhgHeavyHitter(double windowEpsilon, double gammaH) throws IOException {
-        HhLdpType type = HhLdpType.RELAX;
-        HhLdpAggMetrics aggMetrics = new HhLdpAggMetrics(type.name() + " (pre γ_h)", windowEpsilon, null, gammaH);
-        for (int round = 0; round < testRound; round++) {
-            HgHhLdpConfig config = new HgHhLdpConfig
-                .Builder(type, domainSet, k, windowEpsilon)
                 .setGammaH(gammaH)
                 .build();
             HhLdpServer server = HhLdpFactory.createServer(config);

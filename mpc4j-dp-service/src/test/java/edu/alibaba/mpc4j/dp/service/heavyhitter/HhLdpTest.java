@@ -37,6 +37,10 @@ public class HhLdpTest {
      */
     private static final double DEFAULT_EPSILON = 16;
     /**
+     * default window size (w)
+     */
+    private static final int DEFAULT_WINDOW_SIZE = 5;
+    /**
      * default k
      */
     private static final int DEFAULT_K = 20;
@@ -45,14 +49,12 @@ public class HhLdpTest {
     public static Collection<Object[]> configurations() {
         Collection<Object[]> configurations = new ArrayList<>();
 
-        // Frequency Oracle
-        configurations.add(new Object[]{HhLdpType.FO.name(), HhLdpType.FO,});
-        // relaxed heavy guardian
-        configurations.add(new Object[]{HhLdpType.RELAX.name(), HhLdpType.RELAX,});
         // advanced heavy guardian
         configurations.add(new Object[]{HhLdpType.ADV.name(), HhLdpType.ADV,});
         // basic heavy guardian
         configurations.add(new Object[]{HhLdpType.BASIC.name(), HhLdpType.BASIC,});
+        // Frequency Oracle
+        configurations.add(new Object[]{HhLdpType.FO.name(), HhLdpType.FO,});
 
         return configurations;
     }
@@ -70,7 +72,7 @@ public class HhLdpTest {
     @Test
     public void testType() {
         HhLdpConfig config = HhLdpFactory.createDefaultConfig(
-            type, LdpTestDataUtils.EXAMPLE_DATA_DOMAIN, LdpTestDataUtils.EXAMPLE_DATA_D, DEFAULT_EPSILON
+            type, LdpTestDataUtils.EXAMPLE_DATA_DOMAIN, LdpTestDataUtils.EXAMPLE_DATA_D, DEFAULT_EPSILON, DEFAULT_WINDOW_SIZE
         );
         // create server
         HhLdpServer server = HhLdpFactory.createServer(config);
@@ -84,7 +86,7 @@ public class HhLdpTest {
     public void testWarmup() throws IOException {
         int k = LdpTestDataUtils.EXAMPLE_DATA_D;
         HhLdpConfig config = HhLdpFactory.createDefaultConfig(
-            type, LdpTestDataUtils.EXAMPLE_DATA_DOMAIN, k, DEFAULT_EPSILON
+            type, LdpTestDataUtils.EXAMPLE_DATA_DOMAIN, k, DEFAULT_EPSILON, DEFAULT_WINDOW_SIZE
         );
         // create server and client
         HhLdpServer server = HhLdpFactory.createServer(config);
@@ -110,7 +112,7 @@ public class HhLdpTest {
     public void testStopWarmup() throws IOException {
         int k = LdpTestDataUtils.EXAMPLE_DATA_D;
         HhLdpConfig config = HhLdpFactory.createDefaultConfig(
-            type, LdpTestDataUtils.EXAMPLE_DATA_DOMAIN, k, DEFAULT_EPSILON
+            type, LdpTestDataUtils.EXAMPLE_DATA_DOMAIN, k, DEFAULT_EPSILON, DEFAULT_WINDOW_SIZE
         );
         // create server and client
         HhLdpServer server = HhLdpFactory.createServer(config);
@@ -137,7 +139,7 @@ public class HhLdpTest {
     public void testLargeEpsilonFullK() throws IOException {
         int k = LdpTestDataUtils.EXAMPLE_DATA_D;
         HhLdpConfig config = HhLdpFactory.createDefaultConfig(
-            type, LdpTestDataUtils.EXAMPLE_DATA_DOMAIN, k, LARGE_EPSILON
+            type, LdpTestDataUtils.EXAMPLE_DATA_DOMAIN, k, LARGE_EPSILON, DEFAULT_WINDOW_SIZE
         );
         // create server and client
         HhLdpServer server = HhLdpFactory.createServer(config);
@@ -185,7 +187,7 @@ public class HhLdpTest {
     public void testFullK() throws IOException {
         int k = LdpTestDataUtils.EXAMPLE_DATA_D;
         HhLdpConfig config = HhLdpFactory.createDefaultConfig(
-            type, LdpTestDataUtils.EXAMPLE_DATA_DOMAIN, k, DEFAULT_EPSILON
+            type, LdpTestDataUtils.EXAMPLE_DATA_DOMAIN, k, DEFAULT_EPSILON, DEFAULT_WINDOW_SIZE
         );
         // create server and client
         HhLdpServer server = HhLdpFactory.createServer(config);
@@ -205,7 +207,7 @@ public class HhLdpTest {
     @Test
     public void testDefault() throws IOException {
         HhLdpConfig config = HhLdpFactory.createDefaultConfig(
-            type, LdpTestDataUtils.EXAMPLE_DATA_DOMAIN, DEFAULT_K, DEFAULT_EPSILON
+            type, LdpTestDataUtils.EXAMPLE_DATA_DOMAIN, DEFAULT_K, DEFAULT_EPSILON, DEFAULT_WINDOW_SIZE
         );
         // create server and client
         HhLdpServer server = HhLdpFactory.createServer(config);
@@ -231,7 +233,7 @@ public class HhLdpTest {
     @Test
     public void testDefaultSmallWarmup() throws IOException {
         HhLdpConfig config = HhLdpFactory.createDefaultConfig(
-            type, LdpTestDataUtils.EXAMPLE_DATA_DOMAIN, DEFAULT_K, DEFAULT_EPSILON
+            type, LdpTestDataUtils.EXAMPLE_DATA_DOMAIN, DEFAULT_K, DEFAULT_EPSILON, DEFAULT_WINDOW_SIZE
         );
         // create server and client
         HhLdpServer server = HhLdpFactory.createServer(config);

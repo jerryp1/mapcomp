@@ -81,6 +81,13 @@ public interface HhLdpServer {
     double getWindowEpsilon();
 
     /**
+     * Gets the window size (w).
+     *
+     * @return the window size (w).
+     */
+    int getWindowSize();
+
+    /**
      * Gets the domain size d, i.e., |Ω|.
      *
      * @return the domain size d.

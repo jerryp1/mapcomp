@@ -110,16 +110,13 @@ public class HgHhLdpConfig extends BasicHhLdpConfig {
          */
         private double gammaH;
 
-        public Builder(HhLdpType type, Set<String> domainSet, int k, double windowEpsilon) {
-            super(type, domainSet, k, windowEpsilon);
+        public Builder(HhLdpType type, Set<String> domainSet, int k, double windowEpsilon, int windowSize) {
+            super(type, domainSet, k, windowEpsilon, windowSize);
             switch (type) {
                 case BASIC:
                     break;
                 case ADV:
                     alpha = 1.0 / 3;
-                    break;
-                case RELAX:
-                    alpha = 1.0 / 2;
                     break;
                 default:
                     throw new IllegalArgumentException("Invalid " + HhLdpType.class.getSimpleName() + ": " + type);

@@ -5,7 +5,6 @@ import edu.alibaba.mpc4j.dp.service.fo.FoLdpFactory;
 import edu.alibaba.mpc4j.dp.service.fo.FoLdpServer;
 import edu.alibaba.mpc4j.dp.service.fo.config.FoLdpConfig;
 import edu.alibaba.mpc4j.dp.service.heavyhitter.HhLdpFactory;
-import edu.alibaba.mpc4j.dp.service.heavyhitter.HhLdpServer;
 import edu.alibaba.mpc4j.dp.service.heavyhitter.HhLdpServerState;
 import edu.alibaba.mpc4j.dp.service.heavyhitter.config.FoHhLdpConfig;
 import edu.alibaba.mpc4j.dp.service.heavyhitter.config.HhLdpConfig;
@@ -22,11 +21,7 @@ import java.util.stream.Collectors;
  * @author Weiran Liu
  * @date 2023/1/4
  */
-public class FoHhLdpServer implements HhLdpServer {
-    /**
-     * the type
-     */
-    private final HhLdpFactory.HhLdpType type;
+public class FoHhLdpServer extends AbstractFoHhLdpServer {
     /**
      * the domain
      */
@@ -53,8 +48,8 @@ public class FoHhLdpServer implements HhLdpServer {
     protected HhLdpServerState hhLdpServerState;
 
     public FoHhLdpServer(HhLdpConfig config) {
+        super(config);
         FoHhLdpConfig foHhLdpConfig = (FoHhLdpConfig) config;
-        type = foHhLdpConfig.getType();
         k = foHhLdpConfig.getK();
         FoLdpConfig foLdpConfig = foHhLdpConfig.getFoLdpConfig();
         domain = foLdpConfig.getDomain();
@@ -122,26 +117,6 @@ public class FoHhLdpServer implements HhLdpServer {
                 .stream()
                 .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
         }
-    }
-
-    @Override
-    public HhLdpFactory.HhLdpType getType() {
-        return type;
-    }
-
-    @Override
-    public double getWindowEpsilon() {
-        return foLdpServer.getEpsilon();
-    }
-
-    @Override
-    public int getD() {
-        return foLdpServer.getD();
-    }
-
-    @Override
-    public int getK() {
-        return k;
     }
 
     @Override

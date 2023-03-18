@@ -38,6 +38,10 @@ public class HgHhLdpTest {
      */
     private static final double DEFAULT_EPSILON = 16;
     /**
+     * default window size (w)
+     */
+    private static final int DEFAULT_WINDOW_SIZE = 5;
+    /**
      * default k
      */
     private static final int DEFAULT_K = 20;
@@ -125,8 +129,6 @@ public class HgHhLdpTest {
     public static Collection<Object[]> configurations() {
         Collection<Object[]> configurations = new ArrayList<>();
 
-        // related heavy guardian
-        configurations.add(new Object[]{HhLdpType.RELAX.name(), HhLdpType.RELAX,});
         // advanced heavy guardian
         configurations.add(new Object[]{HhLdpType.ADV.name(), HhLdpType.ADV,});
         // basic heavy guardian
@@ -149,7 +151,7 @@ public class HgHhLdpTest {
     public void testW1Warmup() throws IOException {
         Random hgRandom = new Random(HEAVY_GUARDIAN_SEED);
         HgHhLdpConfig config = new HgHhLdpConfig
-            .Builder(type, LdpTestDataUtils.EXAMPLE_DATA_DOMAIN, DEFAULT_K, DEFAULT_EPSILON)
+            .Builder(type, LdpTestDataUtils.EXAMPLE_DATA_DOMAIN, DEFAULT_K, DEFAULT_EPSILON, DEFAULT_WINDOW_SIZE)
             .setBucketParams(W1, W1_LAMBDA_H)
             .setHgRandom(hgRandom)
             .build();
@@ -162,7 +164,7 @@ public class HgHhLdpTest {
     public void testW2Warmup() throws IOException {
         Random hgRandom = new Random(HEAVY_GUARDIAN_SEED);
         HgHhLdpConfig config = new HgHhLdpConfig
-            .Builder(type, LdpTestDataUtils.EXAMPLE_DATA_DOMAIN, DEFAULT_K, DEFAULT_EPSILON)
+            .Builder(type, LdpTestDataUtils.EXAMPLE_DATA_DOMAIN, DEFAULT_K, DEFAULT_EPSILON, DEFAULT_WINDOW_SIZE)
             .setBucketParams(W2, W2_LAMBDA_H)
             .setHgRandom(hgRandom)
             .build();
@@ -175,7 +177,7 @@ public class HgHhLdpTest {
     public void testW3Warmup() throws IOException {
         Random hgRandom = new Random(HEAVY_GUARDIAN_SEED);
         HgHhLdpConfig config = new HgHhLdpConfig
-            .Builder(type, LdpTestDataUtils.EXAMPLE_DATA_DOMAIN, DEFAULT_K, DEFAULT_EPSILON)
+            .Builder(type, LdpTestDataUtils.EXAMPLE_DATA_DOMAIN, DEFAULT_K, DEFAULT_EPSILON, DEFAULT_WINDOW_SIZE)
             .setBucketParams(W3, W3_LAMBDA_H)
             .setHgRandom(hgRandom)
             .build();
@@ -205,7 +207,7 @@ public class HgHhLdpTest {
     public void testW1StopWarmup() throws IOException {
         Random hgRandom = new Random(HEAVY_GUARDIAN_SEED);
         HgHhLdpConfig config = new HgHhLdpConfig
-            .Builder(type, LdpTestDataUtils.EXAMPLE_DATA_DOMAIN, DEFAULT_K, DEFAULT_EPSILON)
+            .Builder(type, LdpTestDataUtils.EXAMPLE_DATA_DOMAIN, DEFAULT_K, DEFAULT_EPSILON, DEFAULT_WINDOW_SIZE)
             .setBucketParams(W1, W1_LAMBDA_H)
             .setHgRandom(hgRandom)
             .build();
@@ -218,7 +220,7 @@ public class HgHhLdpTest {
     public void testW2StopWarmup() throws IOException {
         Random hgRandom = new Random(HEAVY_GUARDIAN_SEED);
         HgHhLdpConfig config = new HgHhLdpConfig
-            .Builder(type, LdpTestDataUtils.EXAMPLE_DATA_DOMAIN, DEFAULT_K, DEFAULT_EPSILON)
+            .Builder(type, LdpTestDataUtils.EXAMPLE_DATA_DOMAIN, DEFAULT_K, DEFAULT_EPSILON, DEFAULT_WINDOW_SIZE)
             .setBucketParams(W2, W2_LAMBDA_H)
             .setHgRandom(hgRandom)
             .build();
@@ -231,7 +233,7 @@ public class HgHhLdpTest {
     public void testW3StopWarmup() throws IOException {
         Random hgRandom = new Random(HEAVY_GUARDIAN_SEED);
         HgHhLdpConfig config = new HgHhLdpConfig
-            .Builder(type, LdpTestDataUtils.EXAMPLE_DATA_DOMAIN, DEFAULT_K, DEFAULT_EPSILON)
+            .Builder(type, LdpTestDataUtils.EXAMPLE_DATA_DOMAIN, DEFAULT_K, DEFAULT_EPSILON, DEFAULT_WINDOW_SIZE)
             .setBucketParams(W3, W3_LAMBDA_H)
             .setHgRandom(hgRandom)
             .build();
@@ -262,7 +264,7 @@ public class HgHhLdpTest {
     public void testW1LargeEpsilon() throws IOException {
         Random hgRandom = new Random(HEAVY_GUARDIAN_SEED);
         HgHhLdpConfig config = new HgHhLdpConfig
-            .Builder(type, LdpTestDataUtils.EXAMPLE_DATA_DOMAIN, DEFAULT_K, LARGE_EPSILON)
+            .Builder(type, LdpTestDataUtils.EXAMPLE_DATA_DOMAIN, DEFAULT_K, LARGE_EPSILON, DEFAULT_WINDOW_SIZE)
             .setBucketParams(W1, W1_LAMBDA_H)
             .setHgRandom(hgRandom)
             .build();
@@ -275,7 +277,7 @@ public class HgHhLdpTest {
     public void testW2LargeEpsilon() throws IOException {
         Random hgRandom = new Random(HEAVY_GUARDIAN_SEED);
         HgHhLdpConfig config = new HgHhLdpConfig
-            .Builder(type, LdpTestDataUtils.EXAMPLE_DATA_DOMAIN, DEFAULT_K, LARGE_EPSILON)
+            .Builder(type, LdpTestDataUtils.EXAMPLE_DATA_DOMAIN, DEFAULT_K, LARGE_EPSILON, DEFAULT_WINDOW_SIZE)
             .setBucketParams(W2, W2_LAMBDA_H)
             .setHgRandom(hgRandom)
             .build();
@@ -288,7 +290,7 @@ public class HgHhLdpTest {
     public void testW3LargeEpsilon() throws IOException {
         Random hgRandom = new Random(HEAVY_GUARDIAN_SEED);
         HgHhLdpConfig config = new HgHhLdpConfig
-            .Builder(type, LdpTestDataUtils.EXAMPLE_DATA_DOMAIN, DEFAULT_K, LARGE_EPSILON)
+            .Builder(type, LdpTestDataUtils.EXAMPLE_DATA_DOMAIN, DEFAULT_K, LARGE_EPSILON, DEFAULT_WINDOW_SIZE)
             .setBucketParams(W3, W3_LAMBDA_H)
             .setHgRandom(hgRandom)
             .build();
@@ -319,7 +321,7 @@ public class HgHhLdpTest {
     public void testW1LargeEpsilonWithoutWarmup() throws IOException {
         Random hgRandom = new Random(HEAVY_GUARDIAN_SEED);
         HgHhLdpConfig config = new HgHhLdpConfig
-            .Builder(type, LdpTestDataUtils.EXAMPLE_DATA_DOMAIN, DEFAULT_K, LARGE_EPSILON)
+            .Builder(type, LdpTestDataUtils.EXAMPLE_DATA_DOMAIN, DEFAULT_K, LARGE_EPSILON, DEFAULT_WINDOW_SIZE)
             .setBucketParams(W1, W1_LAMBDA_H)
             .setHgRandom(hgRandom)
             .setGammaH(0.1)
@@ -333,7 +335,7 @@ public class HgHhLdpTest {
     public void testW2LargeEpsilonWithoutWarmup() throws IOException {
         Random hgRandom = new Random(HEAVY_GUARDIAN_SEED);
         HgHhLdpConfig config = new HgHhLdpConfig
-            .Builder(type, LdpTestDataUtils.EXAMPLE_DATA_DOMAIN, DEFAULT_K, LARGE_EPSILON)
+            .Builder(type, LdpTestDataUtils.EXAMPLE_DATA_DOMAIN, DEFAULT_K, LARGE_EPSILON, DEFAULT_WINDOW_SIZE)
             .setBucketParams(W2, W2_LAMBDA_H)
             .setHgRandom(hgRandom)
             .setGammaH(0.1)
@@ -347,7 +349,7 @@ public class HgHhLdpTest {
     public void testW3LargeEpsilonWithoutWarmup() throws IOException {
         Random hgRandom = new Random(HEAVY_GUARDIAN_SEED);
         HgHhLdpConfig config = new HgHhLdpConfig
-            .Builder(type, LdpTestDataUtils.EXAMPLE_DATA_DOMAIN, DEFAULT_K, LARGE_EPSILON)
+            .Builder(type, LdpTestDataUtils.EXAMPLE_DATA_DOMAIN, DEFAULT_K, LARGE_EPSILON, DEFAULT_WINDOW_SIZE)
             .setBucketParams(W3, W3_LAMBDA_H)
             .setHgRandom(hgRandom)
             .setGammaH(0.1)

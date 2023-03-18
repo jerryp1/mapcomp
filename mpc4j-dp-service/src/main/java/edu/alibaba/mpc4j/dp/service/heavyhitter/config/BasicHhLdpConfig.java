@@ -32,6 +32,10 @@ public class BasicHhLdpConfig implements HhLdpConfig {
      * the privacy parameter ε / w
      */
     private final double windowEpsilon;
+    /**
+     * the window size (w)
+     */
+    private final int windowSize;
 
     protected BasicHhLdpConfig(Builder builder) {
         type = builder.type;
@@ -39,6 +43,7 @@ public class BasicHhLdpConfig implements HhLdpConfig {
         d = builder.d;
         k = builder.k;
         windowEpsilon = builder.windowEpsilon;
+        windowSize = builder.windowSize;
     }
 
     @Override
@@ -67,6 +72,11 @@ public class BasicHhLdpConfig implements HhLdpConfig {
     }
 
     @Override
+    public int getWindowSize() {
+        return windowSize;
+    }
+
+    @Override
     public boolean isConverge() {
         return true;
     }
@@ -75,11 +85,11 @@ public class BasicHhLdpConfig implements HhLdpConfig {
         /**
          * the type
          */
-        protected final HhLdpType type;
+        private final HhLdpType type;
         /**
          * the domain set
          */
-        protected final Set<String> domainSet;
+        private final Set<String> domainSet;
         /**
          * the domain size d
          */
@@ -91,9 +101,13 @@ public class BasicHhLdpConfig implements HhLdpConfig {
         /**
          * the privacy parameter ε / w
          */
-        protected final double windowEpsilon;
+        private final double windowEpsilon;
+        /**
+         * the window size (w)
+         */
+        private final int windowSize;
 
-        public Builder(HhLdpType type, Set<String> domainSet, int k, double windowEpsilon) {
+        public Builder(HhLdpType type, Set<String> domainSet, int k, double windowEpsilon, int windowSize) {
             this.type = type;
             d = domainSet.size();
             MathPreconditions.checkGreater("|Ω|", d, 1);
@@ -102,6 +116,8 @@ public class BasicHhLdpConfig implements HhLdpConfig {
             this.k = k;
             MathPreconditions.checkPositive("ε / w", windowEpsilon);
             this.windowEpsilon = windowEpsilon;
+            MathPreconditions.checkPositive("w", windowSize);
+            this.windowSize = windowSize;
         }
 
         @Override

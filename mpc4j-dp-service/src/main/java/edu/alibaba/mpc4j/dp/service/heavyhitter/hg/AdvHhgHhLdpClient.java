@@ -25,19 +25,15 @@ public class AdvHhgHhLdpClient extends AbstractHgHhLdpClient implements HhgHhLdp
     /**
      * p1 = e^ε_1 / (e^ε_1 + 1)
      */
-    protected double p1;
-    /**
-     * q1 = 1 / (e^ε_1 + 1)
-     */
-    protected double q1;
+    private final double p1;
     /**
      * p2 = e^ε_2 / (e^ε_2 + λ_h - 1)
      */
-    protected double p2;
+    protected final double p2;
     /**
      * q2 = 1 / (e^ε_2 + λ_h - 1)
      */
-    protected double q2;
+    protected final double q2;
     /**
      * p3 = e^ε_3 / (e^ε_3 + d - λ_h - 1)
      */
@@ -53,10 +49,9 @@ public class AdvHhgHhLdpClient extends AbstractHgHhLdpClient implements HhgHhLdp
         alpha = hgHhLdpConfig.getAlpha();
         double alphaWindowEpsilon = windowEpsilon * alpha;
         double remainedWindowEpsilon = windowEpsilon - alphaWindowEpsilon;
-        // compute p1 and p1
+        // compute p1
         double expAlphaWindowEpsilon = Math.exp(alphaWindowEpsilon);
         p1 = expAlphaWindowEpsilon / (expAlphaWindowEpsilon + 1);
-        q1 = 1 / (expAlphaWindowEpsilon + 1);
         // compute p2 and q2
         double expRemainedWindowEpsilon = Math.exp(remainedWindowEpsilon);
         p2 = expRemainedWindowEpsilon / (expRemainedWindowEpsilon + lambdaH - 1);

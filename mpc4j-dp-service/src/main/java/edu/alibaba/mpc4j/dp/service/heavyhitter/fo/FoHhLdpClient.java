@@ -4,7 +4,6 @@ import com.google.common.base.Preconditions;
 import edu.alibaba.mpc4j.dp.service.fo.FoLdpClient;
 import edu.alibaba.mpc4j.dp.service.fo.FoLdpFactory;
 import edu.alibaba.mpc4j.dp.service.fo.config.FoLdpConfig;
-import edu.alibaba.mpc4j.dp.service.heavyhitter.HhLdpClient;
 import edu.alibaba.mpc4j.dp.service.heavyhitter.HhLdpFactory;
 import edu.alibaba.mpc4j.dp.service.heavyhitter.config.FoHhLdpConfig;
 import edu.alibaba.mpc4j.dp.service.heavyhitter.config.HhLdpConfig;
@@ -20,28 +19,19 @@ import java.util.Random;
  * @author Weiran Liu
  * @date 2023/1/5
  */
-public class FoHhLdpClient implements HhLdpClient {
-    /**
-     * the type
-     */
-    private final HhLdpFactory.HhLdpType type;
+public class FoHhLdpClient extends AbstractFoHhLdpClient {
     /**
      * the domain
      */
     protected final Domain domain;
-    /**
-     * the number of heavy hitters k
-     */
-    protected final int k;
     /**
      * Frequency Oracle LDP client
      */
     private final FoLdpClient foLdpClient;
 
     public FoHhLdpClient(HhLdpConfig config) {
+        super(config);
         FoHhLdpConfig foHhLdpConfig = (FoHhLdpConfig) config;
-        type = foHhLdpConfig.getType();
-        k = foHhLdpConfig.getK();
         FoLdpConfig foLdpConfig = foHhLdpConfig.getFoLdpConfig();
         domain = foLdpConfig.getDomain();
         foLdpClient = FoLdpFactory.createClient(foLdpConfig);
@@ -57,25 +47,5 @@ public class FoHhLdpClient implements HhLdpClient {
     public byte[] randomize(HhLdpServerContext serverContext, String item, Random random) {
         Preconditions.checkArgument(serverContext instanceof EmptyHhLdpServerContext);
         return foLdpClient.randomize(item, random);
-    }
-
-    @Override
-    public HhLdpFactory.HhLdpType getType() {
-        return type;
-    }
-
-    @Override
-    public int getD() {
-        return foLdpClient.getD();
-    }
-
-    @Override
-    public int getK() {
-        return k;
-    }
-
-    @Override
-    public double getWindowEpsilon() {
-        return foLdpClient.getEpsilon();
     }
 }

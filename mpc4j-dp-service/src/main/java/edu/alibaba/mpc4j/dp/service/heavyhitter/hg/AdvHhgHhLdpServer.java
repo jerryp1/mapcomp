@@ -22,23 +22,23 @@ public class AdvHhgHhLdpServer extends AbstractHgHhLdpServer implements HhgHhLdp
     /**
      * p1 = e^ε_1 / (e^ε_1 + 1)
      */
-    protected double p1;
+    private final double p1;
     /**
      * q1 = 1 / (e^ε_1 + 1)
      */
-    protected double q1;
+    private final double q1;
     /**
      * p2 = e^ε_2 / (e^ε_2 + λ_h - 1)
      */
-    protected double p2;
+    private final double p2;
     /**
      * q2 = 1 / (e^ε_2 + λ_h - 1)
      */
-    protected double q2;
+    private final double q2;
     /**
      * γ_h, proportion of hot items
      */
-    protected double gammaH;
+    private double gammaH;
 
     public AdvHhgHhLdpServer(HhLdpConfig config) {
         super(config);

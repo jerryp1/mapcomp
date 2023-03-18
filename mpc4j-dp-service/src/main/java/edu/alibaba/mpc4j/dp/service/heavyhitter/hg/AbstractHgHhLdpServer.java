@@ -30,9 +30,9 @@ abstract class AbstractHgHhLdpServer implements HgHhLdpServer {
      */
     private static final double LN_B = Math.log(B);
     /**
-     * the type
+     * the config
      */
-    private final HhLdpFactory.HhLdpType type;
+    private final HgHhLdpConfig hgHhLdpConfig;
     /**
      * d = |Ω|
      */
@@ -62,6 +62,10 @@ abstract class AbstractHgHhLdpServer implements HgHhLdpServer {
      */
     protected final double windowEpsilon;
     /**
+     * the window size (w)
+     */
+    protected final int windowSize;
+    /**
      * the HeavyGuardian random state
      */
     protected final Random hgRandom;
@@ -79,13 +83,13 @@ abstract class AbstractHgHhLdpServer implements HgHhLdpServer {
     protected int[] currentNums;
 
     AbstractHgHhLdpServer(HhLdpConfig config) {
-        HgHhLdpConfig hgHhLdpConfig = (HgHhLdpConfig) config;
-        type = hgHhLdpConfig.getType();
+        hgHhLdpConfig = (HgHhLdpConfig) config;
         d = hgHhLdpConfig.getD();
         k = hgHhLdpConfig.getK();
         w = hgHhLdpConfig.getW();
         lambdaH = hgHhLdpConfig.getLambdaH();
         windowEpsilon = hgHhLdpConfig.getWindowEpsilon();
+        windowSize = hgHhLdpConfig.getWindowSize();
         hgRandom = hgHhLdpConfig.getHgRandom();
         // init buckets
         buckets = IntStream.range(0, w)
@@ -252,12 +256,17 @@ abstract class AbstractHgHhLdpServer implements HgHhLdpServer {
 
     @Override
     public HhLdpFactory.HhLdpType getType() {
-        return type;
+        return hgHhLdpConfig.getType();
     }
 
     @Override
     public double getWindowEpsilon() {
         return windowEpsilon;
+    }
+
+    @Override
+    public int getWindowSize() {
+        return windowSize;
     }
 
     @Override
