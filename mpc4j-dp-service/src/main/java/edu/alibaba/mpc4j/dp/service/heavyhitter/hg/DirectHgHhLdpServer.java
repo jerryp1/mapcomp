@@ -54,23 +54,6 @@ public class DirectHgHhLdpServer extends AbstractHgHhLdpServer {
     }
 
     @Override
-    protected double insertCount(int bucketIndex, Map.Entry<String, Double> weakestCell) {
-        switch (hhLdpServerState) {
-            case WARMUP:
-                return 1.0;
-            case STATISTICS:
-                if (weakestCell.getValue() <= 1.0) {
-                    return (1.0 - qs[bucketIndex]) / (ps[bucketIndex] - qs[bucketIndex]) * (p - q);
-                } else {
-                    return 1.0;
-                }
-            default:
-                throw new IllegalStateException("Invalid state: " + hhLdpServerState.name());
-        }
-
-    }
-
-    @Override
     public void stopWarmup() {
         checkState(HhLdpServerState.WARMUP);
         for (int budgetIndex = 0; budgetIndex < w; budgetIndex++) {
@@ -88,8 +71,26 @@ public class DirectHgHhLdpServer extends AbstractHgHhLdpServer {
     }
 
     @Override
+    protected double insertCount(int bucketIndex, Map.Entry<String, Double> weakestCell) {
+        switch (hhLdpServerState) {
+            case WARMUP:
+                return 1.0;
+            case STATISTICS:
+                if (weakestCell.getValue() <= 1.0) {
+                    return 1.0 / (ps[bucketIndex] - qs[bucketIndex]) * (p - q);
+                } else {
+                    return 1.0;
+                }
+            default:
+                throw new IllegalStateException("Invalid state: " + hhLdpServerState.name());
+        }
+    }
+
+    @Override
     protected double updateCount(int bucketIndex, double count) {
-        return count - currentNums[bucketIndex] * q;
+        double debiasWeakCount = currentWeakNums[bucketIndex] * qs[bucketIndex]
+            / (ps[bucketIndex] - qs[bucketIndex]) * (p - q);
+        return count - debiasWeakCount - currentStrongNums[bucketIndex] * q;
     }
 
     @Override

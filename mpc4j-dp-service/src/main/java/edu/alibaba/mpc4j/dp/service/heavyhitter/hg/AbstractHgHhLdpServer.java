@@ -83,9 +83,13 @@ abstract class AbstractHgHhLdpServer implements HgHhLdpServer {
      */
     protected HhLdpServerState hhLdpServerState;
     /**
-     * current de-bias num for each budget
+     * current de-bias weak nums for each budget
      */
-    protected int[] currentNums;
+    protected int[] currentWeakNums;
+    /**
+     * current de-bias strong num for each budget
+     */
+    protected int[] currentStrongNums;
 
     AbstractHgHhLdpServer(HhLdpConfig config) {
         hgHhLdpConfig = (HgHhLdpConfig) config;
@@ -117,8 +121,10 @@ abstract class AbstractHgHhLdpServer implements HgHhLdpServer {
         intHash = IntHashFactory.fastestInstance();
         // init variables
         num = 0;
-        currentNums = new int[w];
-        Arrays.fill(currentNums, 0);
+        currentWeakNums = new int[w];
+        Arrays.fill(currentWeakNums, 0);
+        currentStrongNums = new int[w];
+        Arrays.fill(currentStrongNums, 0);
         hhLdpServerState = HhLdpServerState.WARMUP;
     }
 
@@ -169,7 +175,11 @@ abstract class AbstractHgHhLdpServer implements HgHhLdpServer {
             itemCount += insertCount(bucketIndex, weakestCell);
             bucket.put(item, itemCount);
             if (hhLdpServerState.equals(HhLdpServerState.STATISTICS)) {
-                currentNums[bucketIndex]++;
+                if (weakestCount <= 1.0) {
+                    currentWeakNums[bucketIndex]++;
+                } else {
+                    currentStrongNums[bucketIndex]++;
+                }
             }
             return true;
         }
@@ -179,7 +189,11 @@ abstract class AbstractHgHhLdpServer implements HgHhLdpServer {
             // It inserts e into an empty cell, i.e., sets the ID field to e and sets the count field to 1.
             bucket.put(item, insertCount(bucketIndex, weakestCell));
             if (hhLdpServerState.equals(HhLdpServerState.STATISTICS)) {
-                currentNums[bucketIndex]++;
+                if (weakestCount <= 1.0) {
+                    currentWeakNums[bucketIndex]++;
+                } else {
+                    currentStrongNums[bucketIndex]++;
+                }
             }
             return true;
         }
@@ -208,7 +222,8 @@ abstract class AbstractHgHhLdpServer implements HgHhLdpServer {
                 for (Map.Entry<String, Double> bucketEntry : bucket.entrySet()) {
                     bucketEntry.setValue(updateCount(bucketIndex, bucketEntry.getValue()));
                 }
-                currentNums[bucketIndex] = 1;
+                currentWeakNums[bucketIndex] = 1;
+                currentStrongNums[bucketIndex] = 0;
             }
             assert !item.startsWith(HhLdpFactory.BOT_PREFIX) : "the item must not be ⊥: " + item;
             bucket.put(item, insertCount(bucketIndex, weakestCell));
@@ -216,7 +231,11 @@ abstract class AbstractHgHhLdpServer implements HgHhLdpServer {
         } else {
             bucket.put(weakestItem, weakestCount);
             if (hhLdpServerState.equals(HhLdpServerState.STATISTICS)) {
-                currentNums[bucketIndex]++;
+                if (weakestCount <= 1.0) {
+                    currentWeakNums[bucketIndex]++;
+                } else {
+                    currentStrongNums[bucketIndex]++;
+                }
             }
             return false;
         }
