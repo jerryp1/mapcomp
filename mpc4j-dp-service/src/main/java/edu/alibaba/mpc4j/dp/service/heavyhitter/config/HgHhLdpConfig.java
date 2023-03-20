@@ -114,7 +114,6 @@ public class HgHhLdpConfig extends BasicHhLdpConfig {
             super(type, domainSet, k, windowEpsilon, windowSize);
             switch (type) {
                 case BASIC:
-                case DIRECT:
                     break;
                 case ADV:
                     alpha = 1.0 / 3;

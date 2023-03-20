@@ -47,12 +47,8 @@ public class BasicHgHhLdpServer extends AbstractHgHhLdpServer {
 
     @Override
     protected double updateCount(int bucketIndex, double count) {
-        if (count > 0) {
-            int currentNum = currentWeakNums[bucketIndex] + currentStrongNums[bucketIndex];
-            return count - currentNum * q;
-        } else {
-            return count;
-        }
+        int currentNum = currentWeakNums[bucketIndex] + currentStrongNums[bucketIndex];
+        return count - currentNum * q;
     }
 
     @Override

@@ -131,8 +131,6 @@ public class HgHhLdpTest {
 
         // Advanced HeavyGuardian
         configurations.add(new Object[]{HhLdpType.ADV.name(), HhLdpType.ADV,});
-        // Direct HeavyGuardian
-        configurations.add(new Object[]{HhLdpType.DIRECT.name(), HhLdpType.DIRECT,});
         // basic heavy guardian
         configurations.add(new Object[]{HhLdpType.BASIC.name(), HhLdpType.BASIC,});
 

@@ -141,12 +141,6 @@ public class HhLdpEfficiencyTest {
                     .Builder(HhLdpType.BASIC, LdpTestDataUtils.CONNECT_DATA_DOMAIN, DEFAULT_K, epsilon, DEFAULT_WINDOW_SIZE)
                     .build()
             );
-            // Direct HeavyGuardian
-            CONFIGS.add(
-                new HgHhLdpConfig
-                    .Builder(HhLdpType.DIRECT, LdpTestDataUtils.CONNECT_DATA_DOMAIN, DEFAULT_K, epsilon, DEFAULT_WINDOW_SIZE)
-                    .build()
-            );
             // Advanced HeavyGuardian
             CONFIGS.add(
                 new HgHhLdpConfig
