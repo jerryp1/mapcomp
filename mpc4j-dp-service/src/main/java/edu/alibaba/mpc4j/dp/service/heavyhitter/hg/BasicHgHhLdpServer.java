@@ -46,17 +46,18 @@ public class BasicHgHhLdpServer extends AbstractHgHhLdpServer {
     }
 
     @Override
-    public HhLdpServerContext getServerContext() {
-        return new EmptyHhLdpServerContext();
-    }
-
-    @Override
     protected double updateCount(int bucketIndex, double count) {
-        return count - currentNums[bucketIndex] * q;
+        int currentNum = currentWeakNums[bucketIndex] + currentStrongNums[bucketIndex];
+        return count - currentNum * q;
     }
 
     @Override
     protected double debiasCount(int bucketIndex, double count) {
         return updateCount(bucketIndex, count) / (p - q);
+    }
+
+    @Override
+    public HhLdpServerContext getServerContext() {
+        return new EmptyHhLdpServerContext();
     }
 }

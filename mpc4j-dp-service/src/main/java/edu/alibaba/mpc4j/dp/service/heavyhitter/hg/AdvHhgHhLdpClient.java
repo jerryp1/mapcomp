@@ -29,11 +29,11 @@ public class AdvHhgHhLdpClient extends AbstractHgHhLdpClient implements HhgHhLdp
     /**
      * p2 = e^ε_2 / (e^ε_2 + λ_h - 1)
      */
-    protected final double p2;
+    private final double p2;
     /**
      * q2 = 1 / (e^ε_2 + λ_h - 1)
      */
-    protected final double q2;
+    private final double q2;
     /**
      * p3 = e^ε_3 / (e^ε_3 + d - λ_h - 1)
      */
@@ -93,21 +93,21 @@ public class AdvHhgHhLdpClient extends AbstractHgHhLdpClient implements HhgHhLdp
         }
         if (bucketDomain.getD(bucketIndex) == lambdaH) {
             // if the domain size equals to λ_h, then there is no cold item, use M2
-            return userMechanism2(copyCurrentBucket.keySet(), item, random).getBytes(HhLdpFactory.DEFAULT_CHARSET);
+            return mechanism2(copyCurrentBucket.keySet(), item, random).getBytes(HhLdpFactory.DEFAULT_CHARSET);
         }
         // M1
-        boolean flag = userMechanism1(copyCurrentBucket.keySet(), item, random);
+        boolean flag = mechanism1(copyCurrentBucket.keySet(), item, random);
         // M2
         if (flag) {
             // v is determined as hot
-            return userMechanism2(copyCurrentBucket.keySet(), item, random).getBytes(HhLdpFactory.DEFAULT_CHARSET);
+            return mechanism2(copyCurrentBucket.keySet(), item, random).getBytes(HhLdpFactory.DEFAULT_CHARSET);
         } else {
             // v is determined as cold
-            return userMechanism3(bucketIndex, copyCurrentBucket, item, random).getBytes(HhLdpFactory.DEFAULT_CHARSET);
+            return mechanism3(bucketIndex, copyCurrentBucket, item, random).getBytes(HhLdpFactory.DEFAULT_CHARSET);
         }
     }
 
-    protected boolean userMechanism1(Set<String> currentBucketItemSet, String item, Random random) {
+    private boolean mechanism1(Set<String> currentBucketItemSet, String item, Random random) {
         // Let b = Ber(e^ε_1 / (e^ε_1 + 1))
         SecureBernoulliSampler bernoulliSampler = new SecureBernoulliSampler(random, p1);
         boolean b = bernoulliSampler.sample();
@@ -116,7 +116,7 @@ public class AdvHhgHhLdpClient extends AbstractHgHhLdpClient implements HhgHhLdp
         return b == currentBucketItemSet.contains(item);
     }
 
-    protected String userMechanism2(Set<String> currentBucketItemSet, String item, Random random) {
+    private String mechanism2(Set<String> currentBucketItemSet, String item, Random random) {
         ArrayList<String> currentBudgetItemArrayList = new ArrayList<>(currentBucketItemSet);
         double randomSample = random.nextDouble();
         // Randomly sample an integer in [0, λ_h)
@@ -136,7 +136,7 @@ public class AdvHhgHhLdpClient extends AbstractHgHhLdpClient implements HhgHhLdp
         }
     }
 
-    protected String userMechanism3(int bucketIndex, Map<String, Double> currentBudget, String item, Random random) {
+    private String mechanism3(int bucketIndex, Map<String, Double> currentBudget, String item, Random random) {
         int bucketD = bucketDomain.getD(bucketIndex);
         // find the weakest guardian
         List<Map.Entry<String, Double>> currentBucketList = new ArrayList<>(currentBudget.entrySet());
@@ -173,7 +173,7 @@ public class AdvHhgHhLdpClient extends AbstractHgHhLdpClient implements HhgHhLdp
                 }
             }
         } else {
-            // return BOT
+            // return ⊥
             return HhLdpFactory.BOT_PREFIX + bucketIndex;
         }
     }

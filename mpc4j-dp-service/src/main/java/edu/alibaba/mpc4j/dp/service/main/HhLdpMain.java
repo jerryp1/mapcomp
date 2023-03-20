@@ -266,8 +266,8 @@ public class HhLdpMain {
             HhLdpAggMetrics heavyGuardianAggMetrics = runHeavyGuardian();
             printInfo(printWriter, heavyGuardianAggMetrics);
         }
-        for (double windowEpsilon : windowEpsilons) {
-            for (FoLdpType type : foTypeList) {
+        for (FoLdpType type : foTypeList) {
+            for (double windowEpsilon : windowEpsilons) {
                 HhLdpAggMetrics foLdpAggMetrics = runFoHeavyHitter(type, windowEpsilon);
                 printInfo(printWriter, foLdpAggMetrics);
             }
@@ -275,6 +275,12 @@ public class HhLdpMain {
         if (hgTypeList.contains(HhLdpType.BASIC)) {
             for (double windowEpsilon : windowEpsilons) {
                 HhLdpAggMetrics basicHgLdpAggMetrics = runBasicHgHeavyHitter(windowEpsilon);
+                printInfo(printWriter, basicHgLdpAggMetrics);
+            }
+        }
+        if (hgTypeList.contains(HhLdpType.BASIC)) {
+            for (double windowEpsilon : windowEpsilons) {
+                HhLdpAggMetrics basicHgLdpAggMetrics = runDirectHgHeavyHitter(windowEpsilon);
                 printInfo(printWriter, basicHgLdpAggMetrics);
             }
         }
@@ -378,6 +384,21 @@ public class HhLdpMain {
     HhLdpAggMetrics runBasicHgHeavyHitter(double windowEpsilon) throws IOException {
         HhLdpType type = HhLdpType.BASIC;
         HhLdpAggMetrics aggMetrics = new HhLdpAggMetrics(HhLdpType.BASIC.name(), windowEpsilon, null, null);
+        for (int round = 0; round < testRound; round++) {
+            HgHhLdpConfig config = new HgHhLdpConfig
+                .Builder(type, domainSet, k, windowEpsilon, windowSize)
+                .build();
+            HhLdpServer server = HhLdpFactory.createServer(config);
+            HhLdpClient client = HhLdpFactory.createClient(config);
+            HhLdpMetrics metrics = runLdpHeavyHitter(server, client);
+            aggMetrics.addMetrics(metrics);
+        }
+        return aggMetrics;
+    }
+
+    HhLdpAggMetrics runDirectHgHeavyHitter(double windowEpsilon) throws IOException {
+        HhLdpType type = HhLdpType.DIRECT;
+        HhLdpAggMetrics aggMetrics = new HhLdpAggMetrics(HhLdpType.DIRECT.name(), windowEpsilon, null, null);
         for (int round = 0; round < testRound; round++) {
             HgHhLdpConfig config = new HgHhLdpConfig
                 .Builder(type, domainSet, k, windowEpsilon, windowSize)

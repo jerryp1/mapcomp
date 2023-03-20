@@ -135,13 +135,19 @@ public class HhLdpEfficiencyTest {
                 FoLdpType.DE_STRING, LdpTestDataUtils.CONNECT_DATA_DOMAIN, epsilon
             );
             CONFIGS.add(new FoHhLdpConfig.Builder(deStringFoLdpConfig, DEFAULT_K, DEFAULT_WINDOW_SIZE).build());
-            // basic heavy guardian
+            // Basic HeavyGuardian
             CONFIGS.add(
                 new HgHhLdpConfig
                     .Builder(HhLdpType.BASIC, LdpTestDataUtils.CONNECT_DATA_DOMAIN, DEFAULT_K, epsilon, DEFAULT_WINDOW_SIZE)
                     .build()
             );
-            // advanced heavy guardian
+            // Direct HeavyGuardian
+            CONFIGS.add(
+                new HgHhLdpConfig
+                    .Builder(HhLdpType.DIRECT, LdpTestDataUtils.CONNECT_DATA_DOMAIN, DEFAULT_K, epsilon, DEFAULT_WINDOW_SIZE)
+                    .build()
+            );
+            // Advanced HeavyGuardian
             CONFIGS.add(
                 new HgHhLdpConfig
                     .Builder(HhLdpType.ADV, LdpTestDataUtils.CONNECT_DATA_DOMAIN, DEFAULT_K, epsilon, DEFAULT_WINDOW_SIZE)

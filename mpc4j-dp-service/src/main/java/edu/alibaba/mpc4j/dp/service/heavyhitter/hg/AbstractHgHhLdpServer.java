@@ -9,6 +9,7 @@ import edu.alibaba.mpc4j.dp.service.heavyhitter.HhLdpFactory;
 import edu.alibaba.mpc4j.dp.service.heavyhitter.HhLdpServerState;
 import edu.alibaba.mpc4j.dp.service.heavyhitter.config.HgHhLdpConfig;
 import edu.alibaba.mpc4j.dp.service.heavyhitter.config.HhLdpConfig;
+import edu.alibaba.mpc4j.dp.service.tool.BucketDomain;
 
 import java.util.*;
 import java.util.stream.Collectors;
@@ -50,6 +51,10 @@ abstract class AbstractHgHhLdpServer implements HgHhLdpServer {
      */
     protected final int w;
     /**
+     * d in each bucket
+     */
+    protected final int[] bucketDs;
+    /**
      * λ_h, i.e., the cell num in each bucket
      */
     protected final int lambdaH;
@@ -78,9 +83,13 @@ abstract class AbstractHgHhLdpServer implements HgHhLdpServer {
      */
     protected HhLdpServerState hhLdpServerState;
     /**
-     * current de-bias num for each budget
+     * current de-bias weak num for each budget
      */
-    protected int[] currentNums;
+    protected int[] currentWeakNums;
+    /**
+     * current de-bias strong num for each budget
+     */
+    protected int[] currentStrongNums;
 
     AbstractHgHhLdpServer(HhLdpConfig config) {
         hgHhLdpConfig = (HgHhLdpConfig) config;
@@ -88,6 +97,10 @@ abstract class AbstractHgHhLdpServer implements HgHhLdpServer {
         k = hgHhLdpConfig.getK();
         w = hgHhLdpConfig.getW();
         lambdaH = hgHhLdpConfig.getLambdaH();
+        BucketDomain bucketDomain = new BucketDomain(hgHhLdpConfig.getDomainSet(), w, lambdaH);
+        bucketDs = IntStream.range(0, w)
+            .map(bucketDomain::getD)
+            .toArray();
         windowEpsilon = hgHhLdpConfig.getWindowEpsilon();
         windowSize = hgHhLdpConfig.getWindowSize();
         hgRandom = hgHhLdpConfig.getHgRandom();
@@ -99,8 +112,10 @@ abstract class AbstractHgHhLdpServer implements HgHhLdpServer {
         intHash = IntHashFactory.fastestInstance();
         // init variables
         num = 0;
-        currentNums = new int[w];
-        Arrays.fill(currentNums, 0);
+        currentWeakNums = new int[w];
+        Arrays.fill(currentWeakNums, 0);
+        currentStrongNums = new int[w];
+        Arrays.fill(currentStrongNums, 0);
         hhLdpServerState = HhLdpServerState.WARMUP;
     }
 
@@ -122,6 +137,18 @@ abstract class AbstractHgHhLdpServer implements HgHhLdpServer {
         return insert(item);
     }
 
+    private boolean isWeak(int bucketIndex) {
+        Map<String, Double> bucket = buckets.get(bucketIndex);
+        if (bucket.size() == 0) {
+            return true;
+        } else {
+            List<Map.Entry<String, Double>> currentBucketList = new ArrayList<>(bucket.entrySet());
+            currentBucketList.sort(Comparator.comparingDouble(Map.Entry::getValue));
+            Map.Entry<String, Double> weakestCurrentCell = currentBucketList.get(0);
+            return weakestCurrentCell.getValue() <= 1;
+        }
+    }
+
     private boolean insert(String item) {
         num++;
         // it first computes the hash function h(e) (1 ⩽ h(e) ⩽ w) to map e to bucket A[h(e)].
@@ -133,14 +160,19 @@ abstract class AbstractHgHhLdpServer implements HgHhLdpServer {
             bucketIndex = Math.abs(intHash.hash(itemByteArray) % w);
         }
         Map<String, Double> bucket = buckets.get(bucketIndex);
+        boolean isWeak = isWeak(bucketIndex);
         // Case 1: e is in one cell in the heavy part of A[h(e)] (being a king or a guardian).
         if (bucket.containsKey(item)) {
             // HeavyGuardian just increments the corresponding frequency (the count field) in the cell by 1.
             double itemCount = bucket.get(item);
-            itemCount += 1;
+            itemCount += 1.0;
             bucket.put(item, itemCount);
             if (hhLdpServerState.equals(HhLdpServerState.STATISTICS)) {
-                currentNums[bucketIndex]++;
+                if (isWeak) {
+                    currentWeakNums[bucketIndex]++;
+                } else {
+                    currentStrongNums[bucketIndex]++;
+                }
             }
             return true;
         }
@@ -150,7 +182,11 @@ abstract class AbstractHgHhLdpServer implements HgHhLdpServer {
             // It inserts e into an empty cell, i.e., sets the ID field to e and sets the count field to 1.
             bucket.put(item, 1.0);
             if (hhLdpServerState.equals(HhLdpServerState.STATISTICS)) {
-                currentNums[bucketIndex]++;
+                if (isWeak) {
+                    currentWeakNums[bucketIndex]++;
+                } else {
+                    currentStrongNums[bucketIndex]++;
+                }
             }
             return true;
         }
@@ -185,7 +221,13 @@ abstract class AbstractHgHhLdpServer implements HgHhLdpServer {
                 for (Map.Entry<String, Double> bucketEntry : bucket.entrySet()) {
                     bucketEntry.setValue(updateCount(bucketIndex, bucketEntry.getValue()));
                 }
-                currentNums[bucketIndex] = 1;
+                if (isWeak) {
+                    currentWeakNums[bucketIndex] = 1;
+                    currentStrongNums[bucketIndex] = 0;
+                } else {
+                    currentWeakNums[bucketIndex] = 0;
+                    currentStrongNums[bucketIndex] = 1;
+                }
             }
             assert !item.startsWith(HhLdpFactory.BOT_PREFIX) : "the item must not be ⊥: " + item;
             bucket.put(item, 1.0);
@@ -193,7 +235,11 @@ abstract class AbstractHgHhLdpServer implements HgHhLdpServer {
         } else {
             bucket.put(weakestItem, weakestCount);
             if (hhLdpServerState.equals(HhLdpServerState.STATISTICS)) {
-                currentNums[bucketIndex]++;
+                if (isWeak) {
+                    currentWeakNums[bucketIndex]++;
+                } else {
+                    currentStrongNums[bucketIndex]++;
+                }
             }
             return false;
         }
