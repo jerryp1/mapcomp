@@ -83,13 +83,9 @@ abstract class AbstractHgHhLdpServer implements HgHhLdpServer {
      */
     protected HhLdpServerState hhLdpServerState;
     /**
-     * current de-bias weak num for each budget
+     * current de-bias num for each budget
      */
-    protected int[] currentWeakNums;
-    /**
-     * current de-bias strong num for each budget
-     */
-    protected int[] currentStrongNums;
+    protected int[] currentNums;
 
     AbstractHgHhLdpServer(HhLdpConfig config) {
         hgHhLdpConfig = (HgHhLdpConfig) config;
@@ -121,10 +117,8 @@ abstract class AbstractHgHhLdpServer implements HgHhLdpServer {
         intHash = IntHashFactory.fastestInstance();
         // init variables
         num = 0;
-        currentWeakNums = new int[w];
-        Arrays.fill(currentWeakNums, 0);
-        currentStrongNums = new int[w];
-        Arrays.fill(currentStrongNums, 0);
+        currentNums = new int[w];
+        Arrays.fill(currentNums, 0);
         hhLdpServerState = HhLdpServerState.WARMUP;
     }
 
@@ -146,16 +140,11 @@ abstract class AbstractHgHhLdpServer implements HgHhLdpServer {
         return insert(item);
     }
 
-    private boolean isWeak(int bucketIndex) {
+    private Map.Entry<String, Double> weakestCell(int bucketIndex) {
         Map<String, Double> bucket = buckets.get(bucketIndex);
-        if (bucket.size() == 0) {
-            return true;
-        } else {
-            List<Map.Entry<String, Double>> currentBucketList = new ArrayList<>(bucket.entrySet());
-            currentBucketList.sort(Comparator.comparingDouble(Map.Entry::getValue));
-            Map.Entry<String, Double> weakestCurrentCell = currentBucketList.get(0);
-            return weakestCurrentCell.getValue() <= 1;
-        }
+        List<Map.Entry<String, Double>> currentBucketList = new ArrayList<>(bucket.entrySet());
+        currentBucketList.sort(Comparator.comparingDouble(Map.Entry::getValue));
+        return currentBucketList.get(0);
     }
 
     private boolean insert(String item) {
@@ -168,20 +157,19 @@ abstract class AbstractHgHhLdpServer implements HgHhLdpServer {
             byte[] itemByteArray = ObjectUtils.objectToByteArray(item);
             bucketIndex = Math.abs(intHash.hash(itemByteArray) % w);
         }
+        // find the weakest guardian
         Map<String, Double> bucket = buckets.get(bucketIndex);
-        boolean isWeak = isWeak(bucketIndex);
+        Map.Entry<String, Double> weakestCell = weakestCell(bucketIndex);
+        String weakestItem = weakestCell.getKey();
+        double weakestCount = weakestCell.getValue();
         // Case 1: e is in one cell in the heavy part of A[h(e)] (being a king or a guardian).
         if (bucket.containsKey(item)) {
             // HeavyGuardian just increments the corresponding frequency (the count field) in the cell by 1.
             double itemCount = bucket.get(item);
-            itemCount += 1.0;
+            itemCount += insertCount(bucketIndex, weakestCell);
             bucket.put(item, itemCount);
             if (hhLdpServerState.equals(HhLdpServerState.STATISTICS)) {
-                if (isWeak) {
-                    currentWeakNums[bucketIndex]++;
-                } else {
-                    currentStrongNums[bucketIndex]++;
-                }
+                currentNums[bucketIndex]++;
             }
             return true;
         }
@@ -189,13 +177,9 @@ abstract class AbstractHgHhLdpServer implements HgHhLdpServer {
         if (bucket.size() < lambdaH) {
             assert !item.startsWith(HhLdpFactory.BOT_PREFIX) : "the item must not be ⊥: " + item;
             // It inserts e into an empty cell, i.e., sets the ID field to e and sets the count field to 1.
-            bucket.put(item, 1.0);
+            bucket.put(item, insertCount(bucketIndex, weakestCell));
             if (hhLdpServerState.equals(HhLdpServerState.STATISTICS)) {
-                if (isWeak) {
-                    currentWeakNums[bucketIndex]++;
-                } else {
-                    currentStrongNums[bucketIndex]++;
-                }
+                currentNums[bucketIndex]++;
             }
             return true;
         }
@@ -204,12 +188,6 @@ abstract class AbstractHgHhLdpServer implements HgHhLdpServer {
         // guardian by 1 with probability P = b^{−C}, where b is a predefined constant number (e.g., b = 1.08), and C
         // is the value of the Count field of the weakest guardian.
         assert bucket.size() == lambdaH;
-        // find the weakest guardian
-        List<Map.Entry<String, Double>> bucketList = new ArrayList<>(bucket.entrySet());
-        bucketList.sort(Comparator.comparingDouble(Map.Entry::getValue));
-        Map.Entry<String, Double> weakestCell = bucketList.get(0);
-        String weakestItem = weakestCell.getKey();
-        double weakestCount = weakestCell.getValue();
         // Sample a boolean value, with probability P = b^{−C}, the boolean value is 1
         // In LDP, the weakest count may be non-positive, if so, we do not need to sample, since it must be evicted.
         if (weakestCount > 0) {
@@ -230,29 +208,27 @@ abstract class AbstractHgHhLdpServer implements HgHhLdpServer {
                 for (Map.Entry<String, Double> bucketEntry : bucket.entrySet()) {
                     bucketEntry.setValue(updateCount(bucketIndex, bucketEntry.getValue()));
                 }
-                if (isWeak) {
-                    currentWeakNums[bucketIndex] = 1;
-                    currentStrongNums[bucketIndex] = 0;
-                } else {
-                    currentWeakNums[bucketIndex] = 0;
-                    currentStrongNums[bucketIndex] = 1;
-                }
+                currentNums[bucketIndex] = 1;
             }
             assert !item.startsWith(HhLdpFactory.BOT_PREFIX) : "the item must not be ⊥: " + item;
-            bucket.put(item, 1.0);
+            bucket.put(item, insertCount(bucketIndex, weakestCell));
             return true;
         } else {
             bucket.put(weakestItem, weakestCount);
             if (hhLdpServerState.equals(HhLdpServerState.STATISTICS)) {
-                if (isWeak) {
-                    currentWeakNums[bucketIndex]++;
-                } else {
-                    currentStrongNums[bucketIndex]++;
-                }
+                currentNums[bucketIndex]++;
             }
             return false;
         }
     }
+
+    /**
+     * Gets insert count.
+     * @param bucketIndex the bucket index.
+     * @param weakestCell the weakest cell.
+     * @return the insert count.
+     */
+    protected abstract double insertCount(int bucketIndex, Map.Entry<String, Double> weakestCell);
 
     /**
      * update count when an item is evicted in the bucket while we are not in the warmup state.

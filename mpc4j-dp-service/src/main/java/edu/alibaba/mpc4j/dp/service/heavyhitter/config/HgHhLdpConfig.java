@@ -132,6 +132,7 @@ public class HgHhLdpConfig extends BasicHhLdpConfig {
             super(type, domainSet, k, windowEpsilon, windowSize);
             switch (type) {
                 case BASIC:
+                case DIRECT:
                     alpha = 0;
                     lambdaL = 0;
                     break;
@@ -142,7 +143,7 @@ public class HgHhLdpConfig extends BasicHhLdpConfig {
                 case BUFFER:
                 case RELAX_BUFFER:
                     alpha = 1.0 / 3;
-                    lambdaL = windowSize;
+                    lambdaL = k;
                     break;
                 default:
                     throw new IllegalArgumentException("Invalid " + HhLdpType.class.getSimpleName() + ": " + type);

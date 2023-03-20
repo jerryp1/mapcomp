@@ -278,6 +278,12 @@ public class HhLdpMain {
                 printInfo(printWriter, basicHgLdpAggMetrics);
             }
         }
+        if (hgTypeList.contains(HhLdpType.DIRECT)) {
+            for (double windowEpsilon : windowEpsilons) {
+                HhLdpAggMetrics directHgLdpAggMetrics = runDirectHgHeavyHitter(windowEpsilon);
+                printInfo(printWriter, directHgLdpAggMetrics);
+            }
+        }
         if (hgTypeList.contains(HhLdpType.ADV)) {
             if (gammaHs.length > 0) {
                 // manually set γ_h, do not need to run automatically setting
@@ -378,6 +384,21 @@ public class HhLdpMain {
     HhLdpAggMetrics runBasicHgHeavyHitter(double windowEpsilon) throws IOException {
         HhLdpType type = HhLdpType.BASIC;
         HhLdpAggMetrics aggMetrics = new HhLdpAggMetrics(HhLdpType.BASIC.name(), windowEpsilon, null, null);
+        for (int round = 0; round < testRound; round++) {
+            HgHhLdpConfig config = new HgHhLdpConfig
+                .Builder(type, domainSet, k, windowEpsilon, windowSize)
+                .build();
+            HhLdpServer server = HhLdpFactory.createServer(config);
+            HhLdpClient client = HhLdpFactory.createClient(config);
+            HhLdpMetrics metrics = runLdpHeavyHitter(server, client);
+            aggMetrics.addMetrics(metrics);
+        }
+        return aggMetrics;
+    }
+
+    HhLdpAggMetrics runDirectHgHeavyHitter(double windowEpsilon) throws IOException {
+        HhLdpType type = HhLdpType.DIRECT;
+        HhLdpAggMetrics aggMetrics = new HhLdpAggMetrics(HhLdpType.DIRECT.name(), windowEpsilon, null, null);
         for (int round = 0; round < testRound; round++) {
             HgHhLdpConfig config = new HgHhLdpConfig
                 .Builder(type, domainSet, k, windowEpsilon, windowSize)

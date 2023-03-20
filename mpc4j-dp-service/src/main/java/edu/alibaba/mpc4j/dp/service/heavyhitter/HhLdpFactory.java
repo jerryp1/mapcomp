@@ -41,6 +41,10 @@ public class HhLdpFactory {
          */
         BASIC,
         /**
+         * Direct HeavyGuardian
+         */
+        DIRECT,
+        /**
          * Advanced HeavyGuardian
          */
         ADV,
@@ -70,6 +74,7 @@ public class HhLdpFactory {
             case FO:
                 return new FoHhLdpConfig.Builder(type, domainSet, k, windowEpsilon, windowSize).build();
             case BASIC:
+            case DIRECT:
             case ADV:
                 return new HgHhLdpConfig.Builder(type, domainSet, k, windowEpsilon, windowSize).build();
             default:
@@ -90,6 +95,8 @@ public class HhLdpFactory {
                 return new FoHhLdpServer(config);
             case BASIC:
                 return new BasicHgHhLdpServer(config);
+            case DIRECT:
+                return new DirectHgHhLdpServer(config);
             case ADV:
                 return new AdvHhgHhLdpServer(config);
             default:
@@ -110,6 +117,8 @@ public class HhLdpFactory {
                 return new FoHhLdpClient(config);
             case BASIC:
                 return new BasicHgHhLdpClient(config);
+            case DIRECT:
+                return new DirectHgHhLdpClient(config);
             case ADV:
                 return new AdvHhgHhLdpClient(config);
             default:

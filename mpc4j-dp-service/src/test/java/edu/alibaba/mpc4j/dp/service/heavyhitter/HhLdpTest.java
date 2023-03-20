@@ -51,6 +51,8 @@ public class HhLdpTest {
 
         // Advanced HeavyGuardian
         configurations.add(new Object[]{HhLdpType.ADV.name(), HhLdpType.ADV,});
+        // Direct HeavyGuardian
+        configurations.add(new Object[]{HhLdpType.DIRECT.name(), HhLdpType.DIRECT,});
         // Basic HeavyGuardian
         configurations.add(new Object[]{HhLdpType.BASIC.name(), HhLdpType.BASIC,});
         // Frequency Oracle

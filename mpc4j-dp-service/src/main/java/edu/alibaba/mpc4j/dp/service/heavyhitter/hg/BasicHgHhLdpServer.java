@@ -31,6 +31,11 @@ public class BasicHgHhLdpServer extends AbstractHgHhLdpServer {
     }
 
     @Override
+    protected double insertCount(int bucketIndex, Map.Entry<String, Double> weakestCell) {
+        return 1.0;
+    }
+
+    @Override
     public void stopWarmup() {
         checkState(HhLdpServerState.WARMUP);
         // bias all counts
@@ -47,8 +52,7 @@ public class BasicHgHhLdpServer extends AbstractHgHhLdpServer {
 
     @Override
     protected double updateCount(int bucketIndex, double count) {
-        int currentNum = currentWeakNums[bucketIndex] + currentStrongNums[bucketIndex];
-        return count - currentNum * q;
+        return count - currentNums[bucketIndex] * q;
     }
 
     @Override
