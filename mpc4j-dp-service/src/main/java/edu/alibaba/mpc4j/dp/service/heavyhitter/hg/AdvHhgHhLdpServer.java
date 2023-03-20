@@ -106,6 +106,11 @@ public class AdvHhgHhLdpServer extends AbstractHgHhLdpServer implements HhgHhLdp
     }
 
     @Override
+    public int getLambdaL() {
+        return 0;
+    }
+
+    @Override
     public HgHhLdpServerContext getServerContext() {
         return new HgHhLdpServerContext(buckets);
     }

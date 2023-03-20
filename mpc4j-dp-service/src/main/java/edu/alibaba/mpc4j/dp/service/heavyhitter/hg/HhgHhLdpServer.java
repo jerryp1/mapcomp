@@ -20,4 +20,11 @@ public interface HhgHhLdpServer extends HgHhLdpServer {
      * @return the value of γ_h.
      */
     double getGammaH();
+
+    /**
+     * Gets λ_l, i.e., the buffer num in each bucket.
+     *
+     * @return λ_l.
+     */
+    int getLambdaL();
 }

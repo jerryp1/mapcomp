@@ -2,22 +2,22 @@ package edu.alibaba.mpc4j.dp.service.heavyhitter.hg;
 
 import com.google.common.base.Preconditions;
 import edu.alibaba.mpc4j.common.sampler.binary.bernoulli.SecureBernoulliSampler;
+import edu.alibaba.mpc4j.dp.service.heavyhitter.HhLdpFactory;
 import edu.alibaba.mpc4j.dp.service.heavyhitter.config.HgHhLdpConfig;
 import edu.alibaba.mpc4j.dp.service.heavyhitter.config.HhLdpConfig;
 import edu.alibaba.mpc4j.dp.service.heavyhitter.utils.HgHhLdpServerContext;
 import edu.alibaba.mpc4j.dp.service.heavyhitter.utils.HhLdpServerContext;
-import edu.alibaba.mpc4j.dp.service.heavyhitter.HhLdpFactory;
 
 import java.util.*;
 import java.util.stream.IntStream;
 
 /**
- * Advanced Hot HeavyGuardian-based Heavy Hitter LDP client.
+ * Buffered Hot HeavyGuardian-based LDP client.
  *
  * @author Weiran Liu
- * @date 2023/1/5
+ * @date 2023/3/20
  */
-public class AdvHhgHhLdpClient extends AbstractHgHhLdpClient implements HhgHhLdpClient {
+public class BufferHhgHhLdpClient extends AbstractHgHhLdpClient implements HhgHhLdpClient {
     /**
      * the privacy parameter allocation parameter α
      */
@@ -43,10 +43,11 @@ public class AdvHhgHhLdpClient extends AbstractHgHhLdpClient implements HhgHhLdp
      */
     private final double[] q3s;
 
-    public AdvHhgHhLdpClient(HhLdpConfig config) {
+    public BufferHhgHhLdpClient(HhLdpConfig config) {
         super(config);
-        HgHhLdpConfig hgHhLdpConfig = (HgHhLdpConfig) config;
-        alpha = hgHhLdpConfig.getAlpha();
+        HgHhLdpConfig hgHhldpConfig = (HgHhLdpConfig) config;
+        // init privacy parameters
+        alpha = hgHhldpConfig.getAlpha();
         double alphaWindowEpsilon = windowEpsilon * alpha;
         double remainedWindowEpsilon = windowEpsilon - alphaWindowEpsilon;
         // compute p1

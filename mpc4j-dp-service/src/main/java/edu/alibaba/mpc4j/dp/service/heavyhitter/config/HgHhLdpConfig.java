@@ -22,6 +22,10 @@ public class HgHhLdpConfig extends BasicHhLdpConfig {
      */
     private final int lambdaH;
     /**
+     * λ_l, i.e., the buffer num in each bucket
+     */
+    private final int lambdaL;
+    /**
      * HeavyGuardian random state, used only for the server
      */
     private final Random hgRandom;
@@ -38,6 +42,7 @@ public class HgHhLdpConfig extends BasicHhLdpConfig {
         super(builder);
         w = builder.w;
         lambdaH = builder.lambdaH;
+        lambdaL = builder.lambdaL;
         hgRandom = builder.hgRandom;
         alpha = builder.alpha;
         gammaH = builder.gammaH;
@@ -59,6 +64,15 @@ public class HgHhLdpConfig extends BasicHhLdpConfig {
      */
     public int getLambdaH() {
         return lambdaH;
+    }
+
+    /**
+     * Gets λ_l, i.e., the buffer num in each bucket.
+     *
+     * @return λ_l.
+     */
+    public int getLambdaL() {
+        return lambdaL;
     }
 
     /**
@@ -92,15 +106,19 @@ public class HgHhLdpConfig extends BasicHhLdpConfig {
         /**
          * budget num
          */
-        protected int w;
+        private int w;
         /**
          * λ_h, i.e., the cell num in each bucket
          */
-        protected int lambdaH;
+        private int lambdaH;
+        /**
+         * λ_h, i.e., the buffer num in each bucket
+         */
+        private int lambdaL;
         /**
          * HeavyGuardian random state, used only for the server
          */
-        protected Random hgRandom;
+        private Random hgRandom;
         /**
          * the privacy allocation parameter α
          */
@@ -114,9 +132,17 @@ public class HgHhLdpConfig extends BasicHhLdpConfig {
             super(type, domainSet, k, windowEpsilon, windowSize);
             switch (type) {
                 case BASIC:
+                    alpha = 0;
+                    lambdaL = 0;
                     break;
                 case ADV:
                     alpha = 1.0 / 3;
+                    lambdaL = 0;
+                    break;
+                case BUFFER:
+                case RELAX_BUFFER:
+                    alpha = 1.0 / 3;
+                    lambdaL = windowSize;
                     break;
                 default:
                     throw new IllegalArgumentException("Invalid " + HhLdpType.class.getSimpleName() + ": " + type);
@@ -148,21 +174,47 @@ public class HgHhLdpConfig extends BasicHhLdpConfig {
             return this;
         }
 
-        /**
-         * Sets the privacy allocation parameter α.
-         *
-         * @param alpha the privacy allocation parameter α.
-         */
-        public Builder setAlpha(double alpha) {
-            MathPreconditions.checkPositiveInRange("α", alpha, 1);
-            this.alpha = alpha;
-            return this;
-        }
-
         public Builder setGammaH(double gammaH) {
             MathPreconditions.checkNonNegativeInRangeClosed("γ_h", gammaH, 1);
             this.gammaH = gammaH;
             return this;
+        }
+
+        /**
+         * Sets the privacy allocation parameter α.
+         *
+         * @param alpha the privacy allocation parameter α.
+         * @return the builder.
+         */
+        public Builder setAlpha(double alpha) {
+            switch (type) {
+                case ADV:
+                case BUFFER:
+                case RELAX_BUFFER:
+                    MathPreconditions.checkPositiveInRange("α", alpha, 1);
+                    this.alpha = alpha;
+                    return this;
+                default:
+                    throw new IllegalArgumentException(type.name() + " does not allow to set α.");
+            }
+        }
+
+        /**
+         * Sets λ_h, i.e., the buffer num in each bucket.
+         *
+         * @param lambdaL λ_l.
+         * @return the builder.
+         */
+        public Builder setLambdaL(int lambdaL) {
+            switch (type) {
+                case BUFFER:
+                case RELAX_BUFFER:
+                    MathPreconditions.checkPositive("λ_l", lambdaL);
+                    this.lambdaL = lambdaL;
+                    return this;
+                default:
+                    throw new IllegalArgumentException(type.name() + " does not allow to set λ_l.");
+            }
         }
 
         @Override

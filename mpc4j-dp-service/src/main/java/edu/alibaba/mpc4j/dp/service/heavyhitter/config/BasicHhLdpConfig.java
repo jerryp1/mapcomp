@@ -85,7 +85,7 @@ public class BasicHhLdpConfig implements HhLdpConfig {
         /**
          * the type
          */
-        private final HhLdpType type;
+        protected final HhLdpType type;
         /**
          * the domain set
          */
