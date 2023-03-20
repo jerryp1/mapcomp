@@ -97,6 +97,7 @@ abstract class AbstractHgHhLdpServer implements HgHhLdpServer {
         k = hgHhLdpConfig.getK();
         w = hgHhLdpConfig.getW();
         lambdaH = hgHhLdpConfig.getLambdaH();
+        // set |Ω| in each bucket, and insert empty elements in the bucket
         BucketDomain bucketDomain = new BucketDomain(hgHhLdpConfig.getDomainSet(), w, lambdaH);
         bucketDs = IntStream.range(0, w)
             .map(bucketDomain::getD)
@@ -104,9 +105,17 @@ abstract class AbstractHgHhLdpServer implements HgHhLdpServer {
         windowEpsilon = hgHhLdpConfig.getWindowEpsilon();
         windowSize = hgHhLdpConfig.getWindowSize();
         hgRandom = hgHhLdpConfig.getHgRandom();
-        // init buckets
+        // init buckets, full the budget with 0-count dummy items
         buckets = IntStream.range(0, w)
-            .mapToObj(bucketIndex -> new HashMap<String, Double>(lambdaH))
+            .mapToObj(bucketIndex -> {
+                ArrayList<String> bucketDomainArrayList = new ArrayList<>(bucketDomain.getBucketDomainSet(bucketIndex));
+                Map<String, Double> bucket = new HashMap<>(lambdaH);
+                assert bucketDomainArrayList.size() >= lambdaH;
+                for (int i = 0; i < lambdaH; i++) {
+                    bucket.put(bucketDomainArrayList.get(i), 0.0);
+                }
+                return bucket;
+            })
             .collect(Collectors.toCollection(ArrayList::new));
         // init hash function
         intHash = IntHashFactory.fastestInstance();

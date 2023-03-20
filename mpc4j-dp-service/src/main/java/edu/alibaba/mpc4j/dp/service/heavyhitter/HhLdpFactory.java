@@ -88,7 +88,7 @@ public class HhLdpFactory {
             case BASIC:
                 return new BasicHgHhLdpServer(config);
             case DIRECT:
-                return new DirectHhgHhLdpServer(config);
+                return new DirectHgHhLdpServer(config);
             case ADV:
                 return new AdvHhgHhLdpServer(config);
             default:
@@ -110,7 +110,7 @@ public class HhLdpFactory {
             case BASIC:
                 return new BasicHgHhLdpClient(config);
             case DIRECT:
-                return new DirectHhgHhLdpClient(config);
+                return new DirectHgHhLdpClient(config);
             case ADV:
                 return new AdvHhgHhLdpClient(config);
             default:

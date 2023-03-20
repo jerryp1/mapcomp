@@ -86,8 +86,12 @@ public class AdvHhgHhLdpServer extends AbstractHgHhLdpServer implements HhgHhLdp
 
     @Override
     protected double updateCount(int bucketIndex, double count) {
-        int currentNum = currentWeakNums[bucketIndex] + currentStrongNums[bucketIndex];
-        return count - currentNum * (gammaH * p1 * q2 + (1 - gammaH) * q1 / k);
+        if (count > 0) {
+            int currentNum = currentWeakNums[bucketIndex] + currentStrongNums[bucketIndex];
+            return count - currentNum * (gammaH * p1 * q2 + (1 - gammaH) * q1 / k);
+        } else {
+            return count;
+        }
     }
 
     @Override

@@ -80,17 +80,7 @@ public class AdvHhgHhLdpClient extends AbstractHgHhLdpClient implements HhgHhLdp
         assert bucketDomain.getBucketDomainSet(bucketIndex).contains(item);
         Map<String, Double> currentBucket = hgServerContext.getBudget(bucketIndex);
         Map<String, Double> copyCurrentBucket = new HashMap<>(currentBucket);
-        // fill the budget with 0-count dummy items
-        if (copyCurrentBucket.size() < lambdaH) {
-            Set<String> remainedBudgetDomainSet = new HashSet<>(bucketDomain.getBucketDomainSet(bucketIndex));
-            remainedBudgetDomainSet.removeAll(currentBucket.keySet());
-            for (String remainedBudgetDomainItem : remainedBudgetDomainSet) {
-                if (copyCurrentBucket.size() == lambdaH) {
-                    break;
-                }
-                copyCurrentBucket.put(remainedBudgetDomainItem, 0.0);
-            }
-        }
+        assert copyCurrentBucket.size() == lambdaH;
         if (bucketDomain.getD(bucketIndex) == lambdaH) {
             // if the domain size equals to λ_h, then there is no cold item, use M2
             return mechanism2(copyCurrentBucket.keySet(), item, random).getBytes(HhLdpFactory.DEFAULT_CHARSET);

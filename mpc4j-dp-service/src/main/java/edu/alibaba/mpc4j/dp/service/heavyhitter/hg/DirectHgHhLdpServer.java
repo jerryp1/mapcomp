@@ -13,7 +13,7 @@ import java.util.stream.IntStream;
  * @author Weiran Liu
  * @date 2023/3/20
  */
-public class DirectHhgHhLdpServer extends AbstractHgHhLdpServer {
+public class DirectHgHhLdpServer extends AbstractHgHhLdpServer {
     /**
      * p= e^ε / (e^ε + (λ_h + 1) - 1)
      */
@@ -31,7 +31,7 @@ public class DirectHhgHhLdpServer extends AbstractHgHhLdpServer {
      */
     private final double[] qs;
 
-    public DirectHhgHhLdpServer(HhLdpConfig config) {
+    public DirectHgHhLdpServer(HhLdpConfig config) {
         super(config);
         // compute p = e^ε / (e^ε + ( + 1) - 1)
         double expWindowEpsilon = Math.exp(windowEpsilon);
@@ -72,9 +72,13 @@ public class DirectHhgHhLdpServer extends AbstractHgHhLdpServer {
 
     @Override
     protected double updateCount(int bucketIndex, double count) {
-        double debiasWeakCount = (currentWeakNums[bucketIndex]- qs[bucketIndex] * currentWeakNums[bucketIndex])
-            / (ps[bucketIndex] - qs[bucketIndex]) * (p - q);
-        return count - currentWeakNums[bucketIndex] + debiasWeakCount - currentStrongNums[bucketIndex] * q;
+        if (count > 0) {
+            double debiasWeakCount = (currentWeakNums[bucketIndex]- qs[bucketIndex] * currentWeakNums[bucketIndex])
+                / (ps[bucketIndex] - qs[bucketIndex]) * (p - q);
+            return count - currentWeakNums[bucketIndex] + debiasWeakCount - currentStrongNums[bucketIndex] * q;
+        } else {
+            return count;
+        }
     }
 
     @Override
