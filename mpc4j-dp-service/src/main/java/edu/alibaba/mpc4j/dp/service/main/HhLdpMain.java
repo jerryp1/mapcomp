@@ -11,9 +11,7 @@ import edu.alibaba.mpc4j.dp.service.heavyhitter.HhLdpClient;
 import edu.alibaba.mpc4j.dp.service.heavyhitter.HhLdpServer;
 import edu.alibaba.mpc4j.dp.service.heavyhitter.HhLdpFactory;
 import edu.alibaba.mpc4j.dp.service.heavyhitter.HhLdpFactory.HhLdpType;
-import edu.alibaba.mpc4j.dp.service.heavyhitter.config.FoHhLdpConfig;
-import edu.alibaba.mpc4j.dp.service.heavyhitter.config.HgHhLdpConfig;
-import edu.alibaba.mpc4j.dp.service.heavyhitter.config.HhLdpConfig;
+import edu.alibaba.mpc4j.dp.service.heavyhitter.config.*;
 import edu.alibaba.mpc4j.dp.service.heavyhitter.hg.HhgHhLdpServer;
 import edu.alibaba.mpc4j.dp.service.structure.HeavyGuardian;
 import edu.alibaba.mpc4j.dp.service.structure.NaiveStreamCounter;
@@ -382,11 +380,10 @@ public class HhLdpMain {
     }
 
     HhLdpAggMetrics runBasicHgHeavyHitter(double windowEpsilon) throws IOException {
-        HhLdpType type = HhLdpType.BASIC;
         HhLdpAggMetrics aggMetrics = new HhLdpAggMetrics(HhLdpType.BASIC.name(), windowEpsilon, null, null);
         for (int round = 0; round < testRound; round++) {
-            HgHhLdpConfig config = new HgHhLdpConfig
-                .Builder(type, domainSet, k, windowEpsilon, windowSize)
+            BasicHgHhLdpConfig config = new BasicHgHhLdpConfig
+                .Builder(domainSet, k, windowEpsilon, windowSize)
                 .build();
             HhLdpServer server = HhLdpFactory.createServer(config);
             HhLdpClient client = HhLdpFactory.createClient(config);
@@ -397,11 +394,10 @@ public class HhLdpMain {
     }
 
     HhLdpAggMetrics runDirectHgHeavyHitter(double windowEpsilon) throws IOException {
-        HhLdpType type = HhLdpType.DIRECT;
         HhLdpAggMetrics aggMetrics = new HhLdpAggMetrics(HhLdpType.DIRECT.name(), windowEpsilon, null, null);
         for (int round = 0; round < testRound; round++) {
-            HgHhLdpConfig config = new HgHhLdpConfig
-                .Builder(type, domainSet, k, windowEpsilon, windowSize)
+            DirectHgHhLdpConfig config = new DirectHgHhLdpConfig
+                .Builder(domainSet, k, windowEpsilon, windowSize)
                 .build();
             HhLdpServer server = HhLdpFactory.createServer(config);
             HhLdpClient client = HhLdpFactory.createClient(config);
@@ -412,21 +408,20 @@ public class HhLdpMain {
     }
 
     HhLdpAggMetrics runAdvHhgHeavyHitter(double windowEpsilon, double alpha) throws IOException {
-        HhLdpType type = HhLdpType.ADV;
         double gammaH = 0;
         for (int round = 0; round < testRound; round++) {
             // get warmup gammaH
-            HgHhLdpConfig warmupConfig = new HgHhLdpConfig
-                .Builder(type, domainSet, k, windowEpsilon, windowSize)
+            AdvHhgHhLdpConfig warmupConfig = new AdvHhgHhLdpConfig
+                .Builder(domainSet, k, windowEpsilon, windowSize)
                 .setAlpha(alpha)
                 .build();
             gammaH += getWarmupHhgHeavyHitterGammaH(warmupConfig);
         }
         gammaH /= testRound;
-        HhLdpAggMetrics aggMetrics = new HhLdpAggMetrics(type.name() + " (auto γ_h)", windowEpsilon, alpha, gammaH);
+        HhLdpAggMetrics aggMetrics = new HhLdpAggMetrics(HhLdpType.ADV.name() + " (auto γ_h)", windowEpsilon, alpha, gammaH);
         for (int round = 0; round < testRound; round++) {
-            HgHhLdpConfig config = new HgHhLdpConfig
-                .Builder(type, domainSet, k, windowEpsilon, windowSize)
+            AdvHhgHhLdpConfig config = new AdvHhgHhLdpConfig
+                .Builder(domainSet, k, windowEpsilon, windowSize)
                 .setAlpha(alpha)
                 .build();
             HhLdpServer server = HhLdpFactory.createServer(config);
@@ -438,11 +433,10 @@ public class HhLdpMain {
     }
 
     HhLdpAggMetrics runAdvHhgHeavyHitter(double windowEpsilon, double alpha, double gammaH) throws IOException {
-        HhLdpType type = HhLdpType.ADV;
-        HhLdpAggMetrics aggMetrics = new HhLdpAggMetrics(type.name() + " (pre γ_h)", windowEpsilon, alpha, gammaH);
+        HhLdpAggMetrics aggMetrics = new HhLdpAggMetrics(HhLdpType.ADV.name() + " (pre γ_h)", windowEpsilon, alpha, gammaH);
         for (int round = 0; round < testRound; round++) {
-            HgHhLdpConfig config = new HgHhLdpConfig
-                .Builder(type, domainSet, k, windowEpsilon, windowSize)
+            AdvHhgHhLdpConfig config = new AdvHhgHhLdpConfig
+                .Builder(domainSet, k, windowEpsilon, windowSize)
                 .setAlpha(alpha)
                 .setGammaH(gammaH)
                 .build();

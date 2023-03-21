@@ -2,11 +2,12 @@ package edu.alibaba.mpc4j.dp.service.heavyhitter.hg;
 
 import com.google.common.base.Preconditions;
 import edu.alibaba.mpc4j.common.sampler.binary.bernoulli.SecureBernoulliSampler;
-import edu.alibaba.mpc4j.dp.service.heavyhitter.config.HgHhLdpConfig;
-import edu.alibaba.mpc4j.dp.service.heavyhitter.config.HhLdpConfig;
+import edu.alibaba.mpc4j.dp.service.heavyhitter.AbstractHhLdpClient;
+import edu.alibaba.mpc4j.dp.service.heavyhitter.config.AdvHhgHhLdpConfig;
 import edu.alibaba.mpc4j.dp.service.heavyhitter.utils.HgHhLdpServerContext;
 import edu.alibaba.mpc4j.dp.service.heavyhitter.utils.HhLdpServerContext;
 import edu.alibaba.mpc4j.dp.service.heavyhitter.HhLdpFactory;
+import edu.alibaba.mpc4j.dp.service.tool.BucketDomain;
 
 import java.util.*;
 import java.util.stream.IntStream;
@@ -17,11 +18,15 @@ import java.util.stream.IntStream;
  * @author Weiran Liu
  * @date 2023/1/5
  */
-public class AdvHhgHhLdpClient extends AbstractHgHhLdpClient implements HhgHhLdpClient {
+public class AdvHhgHhLdpClient extends AbstractHhLdpClient {
     /**
-     * the privacy parameter allocation parameter α
+     * the bucket domain
      */
-    private final double alpha;
+    private final BucketDomain bucketDomain;
+    /**
+     * λ_h, i.e., the cell num in each bucket
+     */
+    private final int lambdaH;
     /**
      * p1 = e^ε_1 / (e^ε_1 + 1)
      */
@@ -43,10 +48,12 @@ public class AdvHhgHhLdpClient extends AbstractHgHhLdpClient implements HhgHhLdp
      */
     private final double[] q3s;
 
-    public AdvHhgHhLdpClient(HhLdpConfig config) {
+    public AdvHhgHhLdpClient(AdvHhgHhLdpConfig config) {
         super(config);
-        HgHhLdpConfig hgHhLdpConfig = (HgHhLdpConfig) config;
-        alpha = hgHhLdpConfig.getAlpha();
+        int w = config.getW();
+        lambdaH = config.getLambdaH();
+        bucketDomain = new BucketDomain(config.getDomainSet(), w, lambdaH);
+        double alpha = config.getAlpha();
         double alphaWindowEpsilon = windowEpsilon * alpha;
         double remainedWindowEpsilon = windowEpsilon - alphaWindowEpsilon;
         // compute p1
@@ -165,10 +172,5 @@ public class AdvHhgHhLdpClient extends AbstractHgHhLdpClient implements HhgHhLdp
             // return ⊥
             return HhLdpFactory.BOT_PREFIX + bucketIndex;
         }
-    }
-
-    @Override
-    public double getAlpha() {
-        return alpha;
     }
 }

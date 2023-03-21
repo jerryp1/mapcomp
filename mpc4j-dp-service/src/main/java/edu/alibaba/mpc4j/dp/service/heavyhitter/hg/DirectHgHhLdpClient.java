@@ -1,10 +1,12 @@
 package edu.alibaba.mpc4j.dp.service.heavyhitter.hg;
 
 import com.google.common.base.Preconditions;
+import edu.alibaba.mpc4j.dp.service.heavyhitter.AbstractHhLdpClient;
 import edu.alibaba.mpc4j.dp.service.heavyhitter.HhLdpFactory;
-import edu.alibaba.mpc4j.dp.service.heavyhitter.config.HhLdpConfig;
+import edu.alibaba.mpc4j.dp.service.heavyhitter.config.DirectHgHhLdpConfig;
 import edu.alibaba.mpc4j.dp.service.heavyhitter.utils.HgHhLdpServerContext;
 import edu.alibaba.mpc4j.dp.service.heavyhitter.utils.HhLdpServerContext;
+import edu.alibaba.mpc4j.dp.service.tool.BucketDomain;
 
 import java.util.*;
 import java.util.stream.IntStream;
@@ -15,7 +17,15 @@ import java.util.stream.IntStream;
  * @author Weiran Liu
  * @date 2023/3/20
  */
-public class DirectHgHhLdpClient extends AbstractHgHhLdpClient implements HgHhLdpClient {
+public class DirectHgHhLdpClient extends AbstractHhLdpClient {
+    /**
+     * the bucket domain
+     */
+    private final BucketDomain bucketDomain;
+    /**
+     * λ_h, i.e., the cell num in each bucket
+     */
+    private final int lambdaH;
     /**
      * p= e^ε / (e^ε + (λ_h + 1) - 1)
      */
@@ -33,8 +43,11 @@ public class DirectHgHhLdpClient extends AbstractHgHhLdpClient implements HgHhLd
      */
     private final double[] qs;
 
-    public DirectHgHhLdpClient(HhLdpConfig config) {
+    public DirectHgHhLdpClient(DirectHgHhLdpConfig config) {
         super(config);
+        int w = config.getW();
+        lambdaH = config.getLambdaH();
+        bucketDomain = new BucketDomain(config.getDomainSet(), w, lambdaH);
         // compute p = e^ε / (e^ε + ( + 1) - 1)
         double expWindowEpsilon = Math.exp(windowEpsilon);
         p = expWindowEpsilon / (expWindowEpsilon + (lambdaH + 1) - 1);
@@ -63,7 +76,7 @@ public class DirectHgHhLdpClient extends AbstractHgHhLdpClient implements HgHhLd
         assert bucketDomain.getBucketDomainSet(bucketIndex).contains(item);
         Map<String, Double> currentBucket = hgServerContext.getBudget(bucketIndex);
         assert currentBucket.size() == lambdaH;
-        // now there are λ_h elements in the budget, randomize the item
+        // there must be λ_h elements in the budget, randomize the item
         return mechanism(bucketIndex, currentBucket, item, random).getBytes(HhLdpFactory.DEFAULT_CHARSET);
     }
 

@@ -5,10 +5,7 @@ import edu.alibaba.mpc4j.dp.service.LdpTestDataUtils;
 import edu.alibaba.mpc4j.dp.service.fo.FoLdpFactory;
 import edu.alibaba.mpc4j.dp.service.fo.FoLdpFactory.FoLdpType;
 import edu.alibaba.mpc4j.dp.service.fo.config.FoLdpConfig;
-import edu.alibaba.mpc4j.dp.service.heavyhitter.config.FoHhLdpConfig;
-import edu.alibaba.mpc4j.dp.service.heavyhitter.config.HgHhLdpConfig;
-import edu.alibaba.mpc4j.dp.service.heavyhitter.config.HhLdpConfig;
-import edu.alibaba.mpc4j.dp.service.heavyhitter.HhLdpFactory.HhLdpType;
+import edu.alibaba.mpc4j.dp.service.heavyhitter.config.*;
 import edu.alibaba.mpc4j.dp.service.tool.StreamDataUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.time.StopWatch;
@@ -137,14 +134,20 @@ public class HhLdpEfficiencyTest {
             CONFIGS.add(new FoHhLdpConfig.Builder(deStringFoLdpConfig, DEFAULT_K, DEFAULT_WINDOW_SIZE).build());
             // Basic HeavyGuardian
             CONFIGS.add(
-                new HgHhLdpConfig
-                    .Builder(HhLdpType.BASIC, LdpTestDataUtils.CONNECT_DATA_DOMAIN, DEFAULT_K, epsilon, DEFAULT_WINDOW_SIZE)
+                new BasicHgHhLdpConfig
+                    .Builder(LdpTestDataUtils.CONNECT_DATA_DOMAIN, DEFAULT_K, epsilon, DEFAULT_WINDOW_SIZE)
+                    .build()
+            );
+            // Direct HeavyGuardian
+            CONFIGS.add(
+                new DirectHgHhLdpConfig
+                    .Builder(LdpTestDataUtils.CONNECT_DATA_DOMAIN, DEFAULT_K, epsilon, DEFAULT_WINDOW_SIZE)
                     .build()
             );
             // Advanced HeavyGuardian
             CONFIGS.add(
-                new HgHhLdpConfig
-                    .Builder(HhLdpType.ADV, LdpTestDataUtils.CONNECT_DATA_DOMAIN, DEFAULT_K, epsilon, DEFAULT_WINDOW_SIZE)
+                new AdvHhgHhLdpConfig
+                    .Builder(LdpTestDataUtils.CONNECT_DATA_DOMAIN, DEFAULT_K, epsilon, DEFAULT_WINDOW_SIZE)
                     .build()
             );
         }

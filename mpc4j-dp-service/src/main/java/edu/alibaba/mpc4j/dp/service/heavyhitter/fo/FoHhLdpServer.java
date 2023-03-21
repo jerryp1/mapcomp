@@ -1,13 +1,12 @@
 package edu.alibaba.mpc4j.dp.service.heavyhitter.fo;
 
-import com.google.common.base.Preconditions;
 import edu.alibaba.mpc4j.dp.service.fo.FoLdpFactory;
 import edu.alibaba.mpc4j.dp.service.fo.FoLdpServer;
 import edu.alibaba.mpc4j.dp.service.fo.config.FoLdpConfig;
+import edu.alibaba.mpc4j.dp.service.heavyhitter.AbstractHhLdpServer;
 import edu.alibaba.mpc4j.dp.service.heavyhitter.HhLdpFactory;
 import edu.alibaba.mpc4j.dp.service.heavyhitter.HhLdpServerState;
 import edu.alibaba.mpc4j.dp.service.heavyhitter.config.FoHhLdpConfig;
-import edu.alibaba.mpc4j.dp.service.heavyhitter.config.HhLdpConfig;
 import edu.alibaba.mpc4j.dp.service.heavyhitter.utils.EmptyHhLdpServerContext;
 import edu.alibaba.mpc4j.dp.service.heavyhitter.utils.HhLdpServerContext;
 import edu.alibaba.mpc4j.dp.service.tool.Domain;
@@ -21,15 +20,11 @@ import java.util.stream.Collectors;
  * @author Weiran Liu
  * @date 2023/1/4
  */
-public class FoHhLdpServer extends AbstractFoHhLdpServer {
+public class FoHhLdpServer extends AbstractHhLdpServer {
     /**
      * the domain
      */
     private final Domain domain;
-    /**
-     * the number of heavy hitters k, which is equal to the cell num in the heavy part λ_h
-     */
-    private final int k;
     /**
      * frequencies in the warmup state
      */
@@ -41,26 +36,16 @@ public class FoHhLdpServer extends AbstractFoHhLdpServer {
     /**
      * the number of inserted items
      */
-    protected int num;
-    /**
-     * the state
-     */
-    protected HhLdpServerState hhLdpServerState;
+    private int num;
 
-    public FoHhLdpServer(HhLdpConfig config) {
+    public FoHhLdpServer(FoHhLdpConfig config) {
         super(config);
-        FoHhLdpConfig foHhLdpConfig = (FoHhLdpConfig) config;
-        k = foHhLdpConfig.getK();
-        FoLdpConfig foLdpConfig = foHhLdpConfig.getFoLdpConfig();
+        FoLdpConfig foLdpConfig = config.getFoLdpConfig();
         domain = foLdpConfig.getDomain();
-        foLdpServer = FoLdpFactory.createServer(foHhLdpConfig.getFoLdpConfig());
-        warmupFrequencies = new int[foHhLdpConfig.getD()];
+        foLdpServer = FoLdpFactory.createServer(config.getFoLdpConfig());
+        warmupFrequencies = new int[config.getD()];
         num = 0;
         hhLdpServerState = HhLdpServerState.WARMUP;
-    }
-
-    private void checkState(HhLdpServerState expect) {
-        Preconditions.checkArgument(hhLdpServerState.equals(expect), "The state must be %s: %s", expect, hhLdpServerState);
     }
 
     @Override

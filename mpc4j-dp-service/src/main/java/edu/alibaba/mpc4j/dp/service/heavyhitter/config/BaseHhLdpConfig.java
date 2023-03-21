@@ -11,7 +11,7 @@ import java.util.Set;
  * @author Weiran Liu
  * @date 2023/1/5
  */
-public class BasicHhLdpConfig implements HhLdpConfig {
+class BaseHhLdpConfig implements HhLdpConfig {
     /**
      * the type
      */
@@ -37,7 +37,7 @@ public class BasicHhLdpConfig implements HhLdpConfig {
      */
     private final int windowSize;
 
-    protected BasicHhLdpConfig(Builder builder) {
+    protected BaseHhLdpConfig(Builder builder) {
         type = builder.type;
         domainSet = builder.domainSet;
         d = builder.d;
@@ -81,7 +81,7 @@ public class BasicHhLdpConfig implements HhLdpConfig {
         return true;
     }
 
-    public static class Builder implements org.apache.commons.lang3.builder.Builder<BasicHhLdpConfig> {
+    public static class Builder implements org.apache.commons.lang3.builder.Builder<BaseHhLdpConfig> {
         /**
          * the type
          */
@@ -121,8 +121,8 @@ public class BasicHhLdpConfig implements HhLdpConfig {
         }
 
         @Override
-        public BasicHhLdpConfig build() {
-            return new BasicHhLdpConfig(this);
+        public BaseHhLdpConfig build() {
+            return new BaseHhLdpConfig(this);
         }
     }
 }

@@ -4,6 +4,7 @@ import com.google.common.base.Preconditions;
 import edu.alibaba.mpc4j.dp.service.LdpTestDataUtils;
 import edu.alibaba.mpc4j.dp.service.heavyhitter.HhLdpFactory.HhLdpType;
 import edu.alibaba.mpc4j.dp.service.heavyhitter.config.HgHhLdpConfig;
+import edu.alibaba.mpc4j.dp.service.heavyhitter.config.HhgHhLdpConfig;
 import edu.alibaba.mpc4j.dp.service.structure.HeavyGuardian;
 import edu.alibaba.mpc4j.dp.service.tool.StreamDataUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -152,11 +153,10 @@ public class HgHhLdpTest {
     @Test
     public void testW1Warmup() throws IOException {
         Random hgRandom = new Random(HEAVY_GUARDIAN_SEED);
-        HgHhLdpConfig config = new HgHhLdpConfig
-            .Builder(type, LdpTestDataUtils.EXAMPLE_DATA_DOMAIN, DEFAULT_K, DEFAULT_EPSILON, DEFAULT_WINDOW_SIZE)
-            .setBucketParams(W1, W1_LAMBDA_H)
-            .setHgRandom(hgRandom)
-            .build();
+        HgHhLdpConfig config = HhLdpFactory.createDefaultHgHhLdpConfig(
+            type, LdpTestDataUtils.EXAMPLE_DATA_DOMAIN, DEFAULT_K, DEFAULT_EPSILON, DEFAULT_WINDOW_SIZE,
+            W1, W1_LAMBDA_H, hgRandom
+        );
         HhLdpServer server = HhLdpFactory.createServer(config);
         HhLdpClient client = HhLdpFactory.createClient(config);
         testWarmup(server, client, CORRECT_W1_HG_EXAMPLE_COUNT_ORDERED_LIST);
@@ -165,11 +165,10 @@ public class HgHhLdpTest {
     @Test
     public void testW2Warmup() throws IOException {
         Random hgRandom = new Random(HEAVY_GUARDIAN_SEED);
-        HgHhLdpConfig config = new HgHhLdpConfig
-            .Builder(type, LdpTestDataUtils.EXAMPLE_DATA_DOMAIN, DEFAULT_K, DEFAULT_EPSILON, DEFAULT_WINDOW_SIZE)
-            .setBucketParams(W2, W2_LAMBDA_H)
-            .setHgRandom(hgRandom)
-            .build();
+        HgHhLdpConfig config = HhLdpFactory.createDefaultHgHhLdpConfig(
+            type, LdpTestDataUtils.EXAMPLE_DATA_DOMAIN, DEFAULT_K, DEFAULT_EPSILON, DEFAULT_WINDOW_SIZE,
+            W2, W2_LAMBDA_H, hgRandom
+        );
         HhLdpServer server = HhLdpFactory.createServer(config);
         HhLdpClient client = HhLdpFactory.createClient(config);
         testWarmup(server, client, CORRECT_W2_HG_EXAMPLE_COUNT_ORDERED_LIST);
@@ -178,11 +177,10 @@ public class HgHhLdpTest {
     @Test
     public void testW3Warmup() throws IOException {
         Random hgRandom = new Random(HEAVY_GUARDIAN_SEED);
-        HgHhLdpConfig config = new HgHhLdpConfig
-            .Builder(type, LdpTestDataUtils.EXAMPLE_DATA_DOMAIN, DEFAULT_K, DEFAULT_EPSILON, DEFAULT_WINDOW_SIZE)
-            .setBucketParams(W3, W3_LAMBDA_H)
-            .setHgRandom(hgRandom)
-            .build();
+        HgHhLdpConfig config = HhLdpFactory.createDefaultHgHhLdpConfig(
+            type, LdpTestDataUtils.EXAMPLE_DATA_DOMAIN, DEFAULT_K, DEFAULT_EPSILON, DEFAULT_WINDOW_SIZE,
+            W3, W3_LAMBDA_H, hgRandom
+        );
         HhLdpServer server = HhLdpFactory.createServer(config);
         HhLdpClient client = HhLdpFactory.createClient(config);
         testWarmup(server, client, CORRECT_W3_HG_EXAMPLE_COUNT_ORDERED_LIST);
@@ -208,11 +206,10 @@ public class HgHhLdpTest {
     @Test
     public void testW1StopWarmup() throws IOException {
         Random hgRandom = new Random(HEAVY_GUARDIAN_SEED);
-        HgHhLdpConfig config = new HgHhLdpConfig
-            .Builder(type, LdpTestDataUtils.EXAMPLE_DATA_DOMAIN, DEFAULT_K, DEFAULT_EPSILON, DEFAULT_WINDOW_SIZE)
-            .setBucketParams(W1, W1_LAMBDA_H)
-            .setHgRandom(hgRandom)
-            .build();
+        HgHhLdpConfig config = HhLdpFactory.createDefaultHgHhLdpConfig(
+            type, LdpTestDataUtils.EXAMPLE_DATA_DOMAIN, DEFAULT_K, DEFAULT_EPSILON, DEFAULT_WINDOW_SIZE,
+            W1, W1_LAMBDA_H, hgRandom
+        );
         HhLdpServer server = HhLdpFactory.createServer(config);
         HhLdpClient client = HhLdpFactory.createClient(config);
         testStopWarmup(server, client, CORRECT_W1_HG_EXAMPLE_COUNT_ORDERED_LIST);
@@ -221,11 +218,10 @@ public class HgHhLdpTest {
     @Test
     public void testW2StopWarmup() throws IOException {
         Random hgRandom = new Random(HEAVY_GUARDIAN_SEED);
-        HgHhLdpConfig config = new HgHhLdpConfig
-            .Builder(type, LdpTestDataUtils.EXAMPLE_DATA_DOMAIN, DEFAULT_K, DEFAULT_EPSILON, DEFAULT_WINDOW_SIZE)
-            .setBucketParams(W2, W2_LAMBDA_H)
-            .setHgRandom(hgRandom)
-            .build();
+        HgHhLdpConfig config = HhLdpFactory.createDefaultHgHhLdpConfig(
+            type, LdpTestDataUtils.EXAMPLE_DATA_DOMAIN, DEFAULT_K, DEFAULT_EPSILON, DEFAULT_WINDOW_SIZE,
+            W2, W2_LAMBDA_H, hgRandom
+        );
         HhLdpServer server = HhLdpFactory.createServer(config);
         HhLdpClient client = HhLdpFactory.createClient(config);
         testStopWarmup(server, client, CORRECT_W2_HG_EXAMPLE_COUNT_ORDERED_LIST);
@@ -234,11 +230,10 @@ public class HgHhLdpTest {
     @Test
     public void testW3StopWarmup() throws IOException {
         Random hgRandom = new Random(HEAVY_GUARDIAN_SEED);
-        HgHhLdpConfig config = new HgHhLdpConfig
-            .Builder(type, LdpTestDataUtils.EXAMPLE_DATA_DOMAIN, DEFAULT_K, DEFAULT_EPSILON, DEFAULT_WINDOW_SIZE)
-            .setBucketParams(W3, W3_LAMBDA_H)
-            .setHgRandom(hgRandom)
-            .build();
+        HgHhLdpConfig config = HhLdpFactory.createDefaultHgHhLdpConfig(
+            type, LdpTestDataUtils.EXAMPLE_DATA_DOMAIN, DEFAULT_K, DEFAULT_EPSILON, DEFAULT_WINDOW_SIZE,
+            W3, W3_LAMBDA_H, hgRandom
+        );
         HhLdpServer server = HhLdpFactory.createServer(config);
         HhLdpClient client = HhLdpFactory.createClient(config);
         testStopWarmup(server, client, CORRECT_W3_HG_EXAMPLE_COUNT_ORDERED_LIST);
@@ -265,11 +260,10 @@ public class HgHhLdpTest {
     @Test
     public void testW1LargeEpsilon() throws IOException {
         Random hgRandom = new Random(HEAVY_GUARDIAN_SEED);
-        HgHhLdpConfig config = new HgHhLdpConfig
-            .Builder(type, LdpTestDataUtils.EXAMPLE_DATA_DOMAIN, DEFAULT_K, LARGE_EPSILON, DEFAULT_WINDOW_SIZE)
-            .setBucketParams(W1, W1_LAMBDA_H)
-            .setHgRandom(hgRandom)
-            .build();
+        HgHhLdpConfig config = HhLdpFactory.createDefaultHgHhLdpConfig(
+            type, LdpTestDataUtils.EXAMPLE_DATA_DOMAIN, DEFAULT_K, LARGE_EPSILON, DEFAULT_WINDOW_SIZE,
+            W1, W1_LAMBDA_H, hgRandom
+        );
         HhLdpServer server = HhLdpFactory.createServer(config);
         HhLdpClient client = HhLdpFactory.createClient(config);
         testLargeEpsilon(server, client, CORRECT_W1_HG_EXAMPLE_COUNT_ORDERED_LIST);
@@ -278,11 +272,10 @@ public class HgHhLdpTest {
     @Test
     public void testW2LargeEpsilon() throws IOException {
         Random hgRandom = new Random(HEAVY_GUARDIAN_SEED);
-        HgHhLdpConfig config = new HgHhLdpConfig
-            .Builder(type, LdpTestDataUtils.EXAMPLE_DATA_DOMAIN, DEFAULT_K, LARGE_EPSILON, DEFAULT_WINDOW_SIZE)
-            .setBucketParams(W2, W2_LAMBDA_H)
-            .setHgRandom(hgRandom)
-            .build();
+        HgHhLdpConfig config = HhLdpFactory.createDefaultHgHhLdpConfig(
+            type, LdpTestDataUtils.EXAMPLE_DATA_DOMAIN, DEFAULT_K, LARGE_EPSILON, DEFAULT_WINDOW_SIZE,
+            W2, W2_LAMBDA_H, hgRandom
+        );
         HhLdpServer server = HhLdpFactory.createServer(config);
         HhLdpClient client = HhLdpFactory.createClient(config);
         testLargeEpsilon(server, client, CORRECT_W2_HG_EXAMPLE_COUNT_ORDERED_LIST);
@@ -291,11 +284,10 @@ public class HgHhLdpTest {
     @Test
     public void testW3LargeEpsilon() throws IOException {
         Random hgRandom = new Random(HEAVY_GUARDIAN_SEED);
-        HgHhLdpConfig config = new HgHhLdpConfig
-            .Builder(type, LdpTestDataUtils.EXAMPLE_DATA_DOMAIN, DEFAULT_K, LARGE_EPSILON, DEFAULT_WINDOW_SIZE)
-            .setBucketParams(W3, W3_LAMBDA_H)
-            .setHgRandom(hgRandom)
-            .build();
+        HgHhLdpConfig config = HhLdpFactory.createDefaultHgHhLdpConfig(
+            type, LdpTestDataUtils.EXAMPLE_DATA_DOMAIN, DEFAULT_K, LARGE_EPSILON, DEFAULT_WINDOW_SIZE,
+            W3, W3_LAMBDA_H, hgRandom
+        );
         HhLdpServer server = HhLdpFactory.createServer(config);
         HhLdpClient client = HhLdpFactory.createClient(config);
         testLargeEpsilon(server, client, CORRECT_W3_HG_EXAMPLE_COUNT_ORDERED_LIST);
@@ -322,43 +314,43 @@ public class HgHhLdpTest {
     @Test
     public void testW1LargeEpsilonWithoutWarmup() throws IOException {
         Random hgRandom = new Random(HEAVY_GUARDIAN_SEED);
-        HgHhLdpConfig config = new HgHhLdpConfig
-            .Builder(type, LdpTestDataUtils.EXAMPLE_DATA_DOMAIN, DEFAULT_K, LARGE_EPSILON, DEFAULT_WINDOW_SIZE)
-            .setBucketParams(W1, W1_LAMBDA_H)
-            .setHgRandom(hgRandom)
-            .setGammaH(0.1)
-            .build();
-        HhLdpServer server = HhLdpFactory.createServer(config);
-        HhLdpClient client = HhLdpFactory.createClient(config);
-        testLargeEpsilonWithoutWarmup(server, client, CORRECT_W1_HG_EXAMPLE_COUNT_ORDERED_LIST);
+        HgHhLdpConfig config = HhLdpFactory.createDefaultHgHhLdpConfig(
+            type, LdpTestDataUtils.EXAMPLE_DATA_DOMAIN, DEFAULT_K, LARGE_EPSILON, DEFAULT_WINDOW_SIZE,
+            W1, W1_LAMBDA_H, hgRandom
+        );
+        if (!(config instanceof HhgHhLdpConfig)) {
+            HhLdpServer server = HhLdpFactory.createServer(config);
+            HhLdpClient client = HhLdpFactory.createClient(config);
+            testLargeEpsilonWithoutWarmup(server, client, CORRECT_W1_HG_EXAMPLE_COUNT_ORDERED_LIST);
+        }
     }
 
     @Test
     public void testW2LargeEpsilonWithoutWarmup() throws IOException {
         Random hgRandom = new Random(HEAVY_GUARDIAN_SEED);
-        HgHhLdpConfig config = new HgHhLdpConfig
-            .Builder(type, LdpTestDataUtils.EXAMPLE_DATA_DOMAIN, DEFAULT_K, LARGE_EPSILON, DEFAULT_WINDOW_SIZE)
-            .setBucketParams(W2, W2_LAMBDA_H)
-            .setHgRandom(hgRandom)
-            .setGammaH(0.1)
-            .build();
-        HhLdpServer server = HhLdpFactory.createServer(config);
-        HhLdpClient client = HhLdpFactory.createClient(config);
-        testLargeEpsilonWithoutWarmup(server, client, CORRECT_W2_HG_EXAMPLE_COUNT_ORDERED_LIST);
+        HgHhLdpConfig config = HhLdpFactory.createDefaultHgHhLdpConfig(
+            type, LdpTestDataUtils.EXAMPLE_DATA_DOMAIN, DEFAULT_K, LARGE_EPSILON, DEFAULT_WINDOW_SIZE,
+            W2, W2_LAMBDA_H, hgRandom
+        );
+        if (!(config instanceof HhgHhLdpConfig)) {
+            HhLdpServer server = HhLdpFactory.createServer(config);
+            HhLdpClient client = HhLdpFactory.createClient(config);
+            testLargeEpsilonWithoutWarmup(server, client, CORRECT_W2_HG_EXAMPLE_COUNT_ORDERED_LIST);
+        }
     }
 
     @Test
     public void testW3LargeEpsilonWithoutWarmup() throws IOException {
         Random hgRandom = new Random(HEAVY_GUARDIAN_SEED);
-        HgHhLdpConfig config = new HgHhLdpConfig
-            .Builder(type, LdpTestDataUtils.EXAMPLE_DATA_DOMAIN, DEFAULT_K, LARGE_EPSILON, DEFAULT_WINDOW_SIZE)
-            .setBucketParams(W3, W3_LAMBDA_H)
-            .setHgRandom(hgRandom)
-            .setGammaH(0.1)
-            .build();
-        HhLdpServer server = HhLdpFactory.createServer(config);
-        HhLdpClient client = HhLdpFactory.createClient(config);
-        testLargeEpsilonWithoutWarmup(server, client, CORRECT_W3_HG_EXAMPLE_COUNT_ORDERED_LIST);
+        HgHhLdpConfig config = HhLdpFactory.createDefaultHgHhLdpConfig(
+            type, LdpTestDataUtils.EXAMPLE_DATA_DOMAIN, DEFAULT_K, LARGE_EPSILON, DEFAULT_WINDOW_SIZE,
+            W3, W3_LAMBDA_H, hgRandom
+        );
+        if (!(config instanceof HhgHhLdpConfig)) {
+            HhLdpServer server = HhLdpFactory.createServer(config);
+            HhLdpClient client = HhLdpFactory.createClient(config);
+            testLargeEpsilonWithoutWarmup(server, client, CORRECT_W3_HG_EXAMPLE_COUNT_ORDERED_LIST);
+        }
     }
 
     private void testLargeEpsilonWithoutWarmup(HhLdpServer server, HhLdpClient client,
