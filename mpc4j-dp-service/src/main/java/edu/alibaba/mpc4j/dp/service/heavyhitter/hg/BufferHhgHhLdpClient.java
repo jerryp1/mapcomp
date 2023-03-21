@@ -3,22 +3,22 @@ package edu.alibaba.mpc4j.dp.service.heavyhitter.hg;
 import com.google.common.base.Preconditions;
 import edu.alibaba.mpc4j.common.sampler.binary.bernoulli.SecureBernoulliSampler;
 import edu.alibaba.mpc4j.dp.service.heavyhitter.AbstractHhLdpClient;
-import edu.alibaba.mpc4j.dp.service.heavyhitter.config.AdvHhgHhLdpConfig;
+import edu.alibaba.mpc4j.dp.service.heavyhitter.HhLdpFactory;
+import edu.alibaba.mpc4j.dp.service.heavyhitter.config.BufferHhgHhLdpConfig;
 import edu.alibaba.mpc4j.dp.service.heavyhitter.utils.HgHhLdpServerContext;
 import edu.alibaba.mpc4j.dp.service.heavyhitter.utils.HhLdpServerContext;
-import edu.alibaba.mpc4j.dp.service.heavyhitter.HhLdpFactory;
 import edu.alibaba.mpc4j.dp.service.tool.BucketDomain;
 
 import java.util.*;
 import java.util.stream.IntStream;
 
 /**
- * Advanced Hot HeavyGuardian-based Heavy Hitter LDP client.
+ * Buffer Hot HeavyGuardian-based Heavy Hitter LDP client.
  *
  * @author Weiran Liu
- * @date 2023/1/5
+ * @date 2023/3/21
  */
-public class AdvHhgHhLdpClient extends AbstractHhLdpClient {
+public class BufferHhgHhLdpClient extends AbstractHhLdpClient {
     /**
      * the bucket domain
      */
@@ -48,7 +48,7 @@ public class AdvHhgHhLdpClient extends AbstractHhLdpClient {
      */
     private final double[] q3s;
 
-    public AdvHhgHhLdpClient(AdvHhgHhLdpConfig config) {
+    public BufferHhgHhLdpClient(BufferHhgHhLdpConfig config) {
         super(config);
         int w = config.getW();
         lambdaH = config.getLambdaH();
@@ -113,7 +113,6 @@ public class AdvHhgHhLdpClient extends AbstractHhLdpClient {
     }
 
     private String mechanism2(Set<String> currentBucketItemSet, String item, Random random) {
-        // note that we must return hot items in mechanism 2
         ArrayList<String> currentBudgetItemArrayList = new ArrayList<>(currentBucketItemSet);
         double randomSample = random.nextDouble();
         // Randomly sample an integer in [0, λ_h)

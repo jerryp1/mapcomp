@@ -30,8 +30,6 @@ public interface HhLdpServer {
 
     /**
      * Stops warming up.
-     *
-     * @throws IllegalStateException If warming up is not enough.
      */
     void stopWarmup();
 

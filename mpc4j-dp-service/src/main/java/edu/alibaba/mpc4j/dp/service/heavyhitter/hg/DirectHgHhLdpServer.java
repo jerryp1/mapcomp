@@ -89,22 +89,21 @@ public class DirectHgHhLdpServer extends AbstractHhLdpServer {
         lambdaH = config.getLambdaH();
         // set |Ω| in each bucket, and insert empty elements in the bucket
         BucketDomain bucketDomain = new BucketDomain(config.getDomainSet(), w, lambdaH);
-        bucketDs = IntStream.range(0, w)
-            .map(bucketDomain::getD)
-            .toArray();
         hgRandom = config.getHgRandom();
         // init buckets, full the budget with 0-count dummy items
-        buckets = IntStream.range(0, w)
-            .mapToObj(bucketIndex -> {
-                ArrayList<String> bucketDomainArrayList = new ArrayList<>(bucketDomain.getBucketDomainSet(bucketIndex));
-                Map<String, Double> bucket = new HashMap<>(lambdaH);
-                assert bucketDomainArrayList.size() >= lambdaH;
-                for (int i = 0; i < lambdaH; i++) {
-                    bucket.put(bucketDomainArrayList.get(i), 0.0);
-                }
-                return bucket;
-            })
-            .collect(Collectors.toCollection(ArrayList::new));
+        bucketDs = new int[w];
+        buckets = new ArrayList<>(w);
+        IntStream.range(0, w).forEach(bucketIndex -> {
+            ArrayList<String> bucketDomainArrayList = new ArrayList<>(bucketDomain.getBucketDomainSet(bucketIndex));
+            int bucketD = bucketDomainArrayList.size();
+            assert bucketD >= lambdaH;
+            Map<String, Double> bucket = new HashMap<>(lambdaH);
+            for (int i = 0; i < lambdaH; i++) {
+                bucket.put(bucketDomainArrayList.get(i), 0.0);
+            }
+            buckets.add(bucket);
+            bucketDs[bucketIndex] = bucketD;
+        });
         // init hash function
         intHash = IntHashFactory.fastestInstance();
         // init variables
@@ -163,13 +162,6 @@ public class DirectHgHhLdpServer extends AbstractHhLdpServer {
         return insert(item);
     }
 
-    private Map.Entry<String, Double> weakestCell(int bucketIndex) {
-        Map<String, Double> bucket = buckets.get(bucketIndex);
-        List<Map.Entry<String, Double>> currentBucketList = new ArrayList<>(bucket.entrySet());
-        currentBucketList.sort(Comparator.comparingDouble(Map.Entry::getValue));
-        return currentBucketList.get(0);
-    }
-
     private boolean insert(String item) {
         num++;
         // it first computes the hash function h(e) (1 ⩽ h(e) ⩽ w) to map e to bucket A[h(e)].
@@ -182,7 +174,9 @@ public class DirectHgHhLdpServer extends AbstractHhLdpServer {
         }
         // find the weakest guardian
         Map<String, Double> bucket = buckets.get(bucketIndex);
-        Map.Entry<String, Double> weakestCell = weakestCell(bucketIndex);
+        List<Map.Entry<String, Double>> bucketList = new ArrayList<>(bucket.entrySet());
+        bucketList.sort(Comparator.comparingDouble(Map.Entry::getValue));
+        Map.Entry<String, Double> weakestCell = bucketList.get(0);
         String weakestItem = weakestCell.getKey();
         double weakestCount = weakestCell.getValue();
         // Case 1: e is in one cell in the heavy part of A[h(e)] (being a king or a guardian).

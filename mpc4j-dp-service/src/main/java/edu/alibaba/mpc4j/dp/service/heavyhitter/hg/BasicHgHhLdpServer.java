@@ -79,8 +79,8 @@ public class BasicHgHhLdpServer extends AbstractHhLdpServer {
         buckets = IntStream.range(0, w)
             .mapToObj(bucketIndex -> {
                 ArrayList<String> bucketDomainArrayList = new ArrayList<>(bucketDomain.getBucketDomainSet(bucketIndex));
-                Map<String, Double> bucket = new HashMap<>(lambdaH);
                 assert bucketDomainArrayList.size() >= lambdaH;
+                Map<String, Double> bucket = new HashMap<>(lambdaH);
                 for (int i = 0; i < lambdaH; i++) {
                     bucket.put(bucketDomainArrayList.get(i), 0.0);
                 }
@@ -128,26 +128,38 @@ public class BasicHgHhLdpServer extends AbstractHhLdpServer {
         return insert(item);
     }
 
-    private Map.Entry<String, Double> weakestCell(int bucketIndex) {
+    private void debias(int bucketIndex) {
         Map<String, Double> bucket = buckets.get(bucketIndex);
-        List<Map.Entry<String, Double>> currentBucketList = new ArrayList<>(bucket.entrySet());
-        currentBucketList.sort(Comparator.comparingDouble(Map.Entry::getValue));
-        return currentBucketList.get(0);
+        // de-bias the count for all items
+        for (Map.Entry<String, Double> bucketEntry : bucket.entrySet()) {
+            bucketEntry.setValue(updateCount(bucketIndex, bucketEntry.getValue()));
+        }
+        currentNums[bucketIndex] = 0;
+    }
+
+    private double updateCount(int bucketIndex, double count) {
+        return count - currentNums[bucketIndex] * q;
+    }
+
+    private double getDebiasFactor() {
+        return p - q;
+    }
+
+
+    private double debiasCount(int bucketIndex, double count) {
+        return updateCount(bucketIndex, count) / getDebiasFactor();
     }
 
     private boolean insert(String item) {
         num++;
         // it first computes the hash function h(e) (1 ⩽ h(e) ⩽ w) to map e to bucket A[h(e)].
-        int bucketIndex;
-        if (item.startsWith(HhLdpFactory.BOT_PREFIX)) {
-            bucketIndex = Integer.parseInt(item.substring(HhLdpFactory.BOT_PREFIX.length()));
-        } else {
-            byte[] itemByteArray = ObjectUtils.objectToByteArray(item);
-            bucketIndex = Math.abs(intHash.hash(itemByteArray) % w);
-        }
+        byte[] itemByteArray = ObjectUtils.objectToByteArray(item);
+        int bucketIndex = Math.abs(intHash.hash(itemByteArray) % w);
         // find the weakest guardian
         Map<String, Double> bucket = buckets.get(bucketIndex);
-        Map.Entry<String, Double> weakestCell = weakestCell(bucketIndex);
+        List<Map.Entry<String, Double>> bucketList = new ArrayList<>(bucket.entrySet());
+        bucketList.sort(Comparator.comparingDouble(Map.Entry::getValue));
+        Map.Entry<String, Double> weakestCell = bucketList.get(0);
         String weakestItem = weakestCell.getKey();
         double weakestCount = weakestCell.getValue();
         // Case 1: e is in one cell in the heavy part of A[h(e)] (being a king or a guardian).
@@ -163,7 +175,6 @@ public class BasicHgHhLdpServer extends AbstractHhLdpServer {
         }
         // Case 2: e is not in the heavy part of A[h(e)], and there are still empty cells.
         if (bucket.size() < lambdaH) {
-            assert !item.startsWith(HhLdpFactory.BOT_PREFIX) : "the item must not be ⊥: " + item;
             // It inserts e into an empty cell, i.e., sets the ID field to e and sets the count field to 1.
             bucket.put(item, 1.0);
             if (hhLdpServerState.equals(HhLdpServerState.STATISTICS)) {
@@ -193,12 +204,9 @@ public class BasicHgHhLdpServer extends AbstractHhLdpServer {
             bucket.remove(weakestItem);
             if (hhLdpServerState.equals(HhLdpServerState.STATISTICS)) {
                 // we partially de-bias the count for all items
-                for (Map.Entry<String, Double> bucketEntry : bucket.entrySet()) {
-                    bucketEntry.setValue(updateCount(bucketIndex, bucketEntry.getValue()));
-                }
+                debias(bucketIndex);
                 currentNums[bucketIndex] = 1;
             }
-            assert !item.startsWith(HhLdpFactory.BOT_PREFIX) : "the item must not be ⊥: " + item;
             bucket.put(item, 1.0);
             return true;
         } else {
@@ -208,10 +216,6 @@ public class BasicHgHhLdpServer extends AbstractHhLdpServer {
             }
             return false;
         }
-    }
-
-    private double updateCount(int bucketIndex, double count) {
-        return count - currentNums[bucketIndex] * q;
     }
 
     @Override
@@ -249,10 +253,6 @@ public class BasicHgHhLdpServer extends AbstractHhLdpServer {
             default:
                 throw new IllegalStateException("Invalid " + HhLdpServerState.class.getSimpleName() + ": " + hhLdpServerState);
         }
-    }
-
-    private double debiasCount(int bucketIndex, double count) {
-        return updateCount(bucketIndex, count) / (p - q);
     }
 
     @Override

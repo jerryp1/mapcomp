@@ -180,6 +180,20 @@ public class PropertiesUtils {
     }
 
     /**
+     * Reads the int array from the properties. If the keyword is not set, return int[0].
+     *
+     * @param properties the properties.
+     * @param keyword    the keyword.
+     * @return the int array from the properties.
+     */
+    public static int[] readIntArrayWithDefault(Properties properties, String keyword) {
+        String[] intStringArray = readTrimStringArrayWithDefault(properties, keyword);
+        return Arrays.stream(intStringArray)
+            .mapToInt(Integer::parseInt)
+            .toArray();
+    }
+
+    /**
      * Reads the log int array from the properties.
      *
      * @param properties the properties.
