@@ -51,10 +51,6 @@ public class HhLdpFactory {
          * Buffered HeavyGuardian
          */
         BUFFER,
-        /**
-         * Relax Buffered HeavyGuardian
-         */
-        RELAX_BUFFER,
     }
 
     /**
