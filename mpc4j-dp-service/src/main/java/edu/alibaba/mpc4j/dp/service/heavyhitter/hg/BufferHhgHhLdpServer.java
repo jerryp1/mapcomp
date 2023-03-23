@@ -54,11 +54,11 @@ public class BufferHhgHhLdpServer extends AbstractHhLdpServer implements HhgHhLd
     /**
      * w heavy buckets, each bucket has λ_h cells
      */
-    private final ArrayList<Map<String, Double>> heavyBuckets;
+    private final ArrayList<Map<String, Double>> buckets;
     /**
-     * w light buckets, each bucket has λ_l cells
+     * w buffers, each bucket has λ_l cells
      */
-    private final ArrayList<Map<String, Double>> lightBuckets;
+    private final ArrayList<Map<String, Double>> buffers;
     /**
      * the HeavyGuardian random state
      */
@@ -66,11 +66,11 @@ public class BufferHhgHhLdpServer extends AbstractHhLdpServer implements HhgHhLd
     /**
      * current de-bias heavy nums for each budget
      */
-    private final int[] currentHeavyNums;
+    private final int[] currentBucketNums;
     /**
      * current de-bias light nums for each budget
      */
-    private final int[] currentLightNums;
+    private final int[] currentBufferNums;
     /**
      * p1 = e^ε_1 / (e^ε_1 + 1)
      */
@@ -114,32 +114,32 @@ public class BufferHhgHhLdpServer extends AbstractHhLdpServer implements HhgHhLd
         hgRandom = config.getHgRandom();
         // init heavy and light buckets
         bucketDs = new int[w];
-        heavyBuckets = new ArrayList<>(w);
-        lightBuckets = new ArrayList<>(w);
+        buckets = new ArrayList<>(w);
+        buffers = new ArrayList<>(w);
         IntStream.range(0, w).forEach(bucketIndex -> {
             ArrayList<String> bucketDomainArrayList = new ArrayList<>(bucketDomain.getBucketDomainSet(bucketIndex));
             int bucketD = bucketDomainArrayList.size();
             assert bucketD >= lambdaH;
             // init the bucket domain
             bucketDs[bucketIndex] = bucketD;
-            // init the heavy bucket, full the budget with 0-count dummy items
-            Map<String, Double> heavyBucket = new HashMap<>(lambdaH);
+            // init the bucket, full the budget with 0-count dummy items
+            Map<String, Double> bucket = new HashMap<>(lambdaH);
             for (int i = 0; i < lambdaH; i++) {
-                heavyBucket.put(bucketDomainArrayList.get(i), 0.0);
+                bucket.put(bucketDomainArrayList.get(i), 0.0);
             }
-            heavyBuckets.add(heavyBucket);
-            // init the light bucket
-            Map<String, Double> lightBucket = new HashMap<>(lambdaL);
-            lightBuckets.add(lightBucket);
+            buckets.add(bucket);
+            // init the buffer
+            Map<String, Double> buffer = new HashMap<>(lambdaL);
+            buffers.add(buffer);
         });
         // init hash function
         intHash = IntHashFactory.fastestInstance();
         // init variables
         num = 0;
-        currentHeavyNums = new int[w];
-        Arrays.fill(currentHeavyNums, 0);
-        currentLightNums = new int[w];
-        Arrays.fill(currentLightNums, 0);
+        currentBucketNums = new int[w];
+        Arrays.fill(currentBucketNums, 0);
+        currentBufferNums = new int[w];
+        Arrays.fill(currentBufferNums, 0);
         // set privacy parameters
         double alpha = config.getAlpha();
         double alphaWindowEpsilon = windowEpsilon * alpha;
@@ -172,7 +172,7 @@ public class BufferHhgHhLdpServer extends AbstractHhLdpServer implements HhgHhLd
     public boolean warmupInsert(byte[] itemBytes) {
         checkState(HhLdpServerState.WARMUP);
         String item = new String(itemBytes, HhLdpFactory.DEFAULT_CHARSET);
-        return heavyInsert(item);
+        return bucketInsert(item);
     }
 
     @Override
@@ -180,13 +180,13 @@ public class BufferHhgHhLdpServer extends AbstractHhLdpServer implements HhgHhLd
         checkState(HhLdpServerState.WARMUP);
         double hotNum = 0;
         for (int budgetIndex = 0; budgetIndex < w; budgetIndex++) {
-            Map<String, Double> budget = heavyBuckets.get(budgetIndex);
+            Map<String, Double> budget = buckets.get(budgetIndex);
             // bias all counts and calculate λ
             for (Map.Entry<String, Double> entry : budget.entrySet()) {
                 String item = entry.getKey();
                 double value = entry.getValue();
                 hotNum += value;
-                value = value * getHeavyDebiasFactor();
+                value = value * getBucketDebiasFactor();
                 budget.put(item, value);
             }
         }
@@ -207,12 +207,12 @@ public class BufferHhgHhLdpServer extends AbstractHhLdpServer implements HhgHhLd
         byte[] itemByteArray = ObjectUtils.objectToByteArray(item);
         int bucketIndex = Math.abs(intHash.hash(itemByteArray) % w);
 
-        if (heavyBuckets.get(bucketIndex).containsKey(item)) {
+        if (buckets.get(bucketIndex).containsKey(item)) {
             // a hot item, insert heavy part
-            return heavyInsert(item);
+            return bucketInsert(item);
         } else {
             // a cold item, insert cold part
-            boolean success = lightInsert(item);
+            boolean success = bufferInsert(item);
             if (success) {
                 trySwitch(bucketIndex);
             }
@@ -220,44 +220,39 @@ public class BufferHhgHhLdpServer extends AbstractHhLdpServer implements HhgHhLd
         }
     }
 
-    private void debias(int bucketIndex) {
-        Map<String, Double> heavyBucket = heavyBuckets.get(bucketIndex);
-        // we partially de-bias the count for all items
-        for (Map.Entry<String, Double> heavyBucketEntry : heavyBucket.entrySet()) {
-            heavyBucketEntry.setValue(updateHeavyCount(bucketIndex, heavyBucketEntry.getValue()));
+    private void bucketDebias(int bucketIndex) {
+        Map<String, Double> bucket = buckets.get(bucketIndex);
+        for (Map.Entry<String, Double> bucketEntry : bucket.entrySet()) {
+            bucketEntry.setValue(updateBucketCount(bucketIndex, bucketEntry.getValue()));
         }
-        Map<String, Double> lightBucket = lightBuckets.get(bucketIndex);
-        for (Map.Entry<String, Double> bucketEntry : lightBucket.entrySet()) {
-            bucketEntry.setValue(updateLightCount(bucketIndex, bucketEntry.getValue()));
-        }
-        currentHeavyNums[bucketIndex] = 0;
-        currentLightNums[bucketIndex] = 0;
+        currentBucketNums[bucketIndex] = 0;
     }
 
-    private double updateHeavyCount(int bucketIndex, double count) {
-        int n = currentHeavyNums[bucketIndex] + currentLightNums[bucketIndex];
+    private double updateBucketCount(int bucketIndex, double count) {
+        int n = currentBucketNums[bucketIndex];
         double nh = n * gammaH;
         // count = (count + Nh * (q1 / k - p1 * q2) - (q1 * n / k)) / (p1 * (p2 - q2))
         return count + nh * (q1 / k - p1 * q2) - n * q1 / lambdaH;
     }
 
-    private double getHeavyDebiasFactor() {
+    private double getBucketDebiasFactor() {
         return p1 * (p2 - q2);
     }
 
-    private double debiasHeavyCount(int bucketIndex, double count) {
-        // count = (count + Nh * (q1 / k - p1 * q2) - (q1 * n / k)) / (p1 * (p2 - q2))
-        return updateHeavyCount(bucketIndex, count) / getHeavyDebiasFactor();
+    private double debiasBucketCount(int bucketIndex, double count) {
+        return updateBucketCount(bucketIndex, count) / getBucketDebiasFactor();
     }
 
-    private double getLightDebiasFactor(int bucketIndex) {
-        double p3 = p3s[bucketIndex];
-        double q3 = q3s[bucketIndex];
-        return p1 * (p3 - q3);
+    private void bufferDebias(int bucketIndex) {
+        Map<String, Double> buffer = buffers.get(bucketIndex);
+        for (Map.Entry<String, Double> bufferEntry : buffer.entrySet()) {
+            bufferEntry.setValue(updateBufferCount(bucketIndex, bufferEntry.getValue()));
+        }
+        currentBufferNums[bucketIndex] = 0;
     }
 
-    private double updateLightCount(int bucketIndex, double count) {
-        int n = currentHeavyNums[bucketIndex] + currentLightNums[bucketIndex];
+    private double updateBufferCount(int bucketIndex, double count) {
+        int n = currentBufferNums[bucketIndex];
         double nh = n * gammaH;
         double q3 = q3s[bucketIndex];
         int d = bucketDs[bucketIndex];
@@ -265,29 +260,39 @@ public class BufferHhgHhLdpServer extends AbstractHhLdpServer implements HhgHhLd
         return count - q3 * p1 * (n - nh) - q1 * nh / (d - lambdaH);
     }
 
-    private boolean heavyInsert(String item) {
+    private double getBufferDebiasFactor(int bucketIndex) {
+        double p3 = p3s[bucketIndex];
+        double q3 = q3s[bucketIndex];
+        return p1 * (p3 - q3);
+    }
+
+    private double debiasBufferCount(int bucketIndex, double count) {
+        return updateBufferCount(bucketIndex, count) / getBufferDebiasFactor(bucketIndex);
+    }
+
+    private boolean bucketInsert(String item) {
         num++;
         // it first computes the hash function h(e) (1 ⩽ h(e) ⩽ w) to map e to bucket A[h(e)].
         byte[] itemByteArray = ObjectUtils.objectToByteArray(item);
         int bucketIndex = Math.abs(intHash.hash(itemByteArray) % w);
-        Map<String, Double> heavyBucket = heavyBuckets.get(bucketIndex);
+        Map<String, Double> bucket = buckets.get(bucketIndex);
         // Case 1: e is in one cell in the heavy part of A[h(e)] (being a king or a guardian).
-        if (heavyBucket.containsKey(item)) {
+        if (bucket.containsKey(item)) {
             // HeavyGuardian just increments the corresponding frequency (the count field) in the cell by 1.
-            double itemCount = heavyBucket.get(item);
+            double itemCount = bucket.get(item);
             itemCount += 1.0;
-            heavyBucket.put(item, itemCount);
+            bucket.put(item, itemCount);
             if (hhLdpServerState.equals(HhLdpServerState.STATISTICS)) {
-                currentHeavyNums[bucketIndex]++;
+                currentBucketNums[bucketIndex]++;
             }
             return true;
         }
         // Case 2: e is not in the heavy part of A[h(e)], and there are still empty cells.
-        if (heavyBucket.size() < lambdaH) {
+        if (bucket.size() < lambdaH) {
             // It inserts e into an empty cell, i.e., sets the ID field to e and sets the count field to 1.
-            heavyBucket.put(item, 1.0);
+            bucket.put(item, 1.0);
             if (hhLdpServerState.equals(HhLdpServerState.STATISTICS)) {
-                currentHeavyNums[bucketIndex]++;
+                currentBucketNums[bucketIndex]++;
             }
             return true;
         }
@@ -295,67 +300,67 @@ public class BufferHhgHhLdpServer extends AbstractHhLdpServer implements HhgHhLd
         // We propose a novel technique named Exponential Decay: it decays (decrements) the count field of the weakest
         // guardian by 1 with probability P = b^{−C}, where b is a predefined constant number (e.g., b = 1.08), and C
         // is the value of the Count field of the weakest guardian.
-        assert heavyBucket.size() == lambdaH;
+        assert bucket.size() == lambdaH;
         // find the weakest guardian
-        List<Map.Entry<String, Double>> heavyBucketList = new ArrayList<>(heavyBucket.entrySet());
-        heavyBucketList.sort(Comparator.comparingDouble(Map.Entry::getValue));
-        Map.Entry<String, Double> weakestHeavyCell = heavyBucketList.get(0);
-        String weakestHeavyItem = weakestHeavyCell.getKey();
-        double weakestHeavyCount = weakestHeavyCell.getValue();
+        List<Map.Entry<String, Double>> bucketList = new ArrayList<>(bucket.entrySet());
+        bucketList.sort(Comparator.comparingDouble(Map.Entry::getValue));
+        Map.Entry<String, Double> weakestBucketCell = bucketList.get(0);
+        String weakestBucketItem = weakestBucketCell.getKey();
+        double weakestBucketCount = weakestBucketCell.getValue();
         // Sample a boolean value, with probability P = b^{−C}, the boolean value is 1
         // In LDP, the weakest count may be non-positive, if so, we do not need to sample, since it must be evicted.
-        if (weakestHeavyCount > 0) {
+        if (weakestBucketCount > 0) {
             // Here we use the advanced Bernoulli(exp(−γ)) with γ = C * ln(b), and reverse the sample
-            ExpBernoulliSampler expBernoulliSampler = new ExpBernoulliSampler(hgRandom, weakestHeavyCount * LN_B);
+            ExpBernoulliSampler expBernoulliSampler = new ExpBernoulliSampler(hgRandom, weakestBucketCount * LN_B);
             // decay (decrement) the count field of the weakest guardian by 1 with probability P = b^{−C}
             boolean sample = expBernoulliSampler.sample();
             if (!sample) {
-                weakestHeavyCount--;
+                weakestBucketCount--;
             }
         }
         // After decay, if the count field becomes 0, it replaces the ID field of the weakest guardian with e,
         // and sets the count field to 1
-        if (weakestHeavyCount <= 0) {
+        if (weakestBucketCount <= 0) {
             if (hhLdpServerState.equals(HhLdpServerState.STATISTICS)) {
                 // we partially de-bias the count for all items
-                debias(bucketIndex);
-                currentHeavyNums[bucketIndex] = 1;
+                bucketDebias(bucketIndex);
+                currentBucketNums[bucketIndex] = 1;
             }
-            heavyBucket.remove(weakestHeavyItem);
-            heavyBucket.put(item, 1.0);
+            bucket.remove(weakestBucketItem);
+            bucket.put(item, 1.0);
             return true;
         } else {
-            heavyBucket.put(weakestHeavyItem, weakestHeavyCount);
+            bucket.put(weakestBucketItem, weakestBucketCount);
             if (hhLdpServerState.equals(HhLdpServerState.STATISTICS)) {
-                currentHeavyNums[bucketIndex]++;
+                currentBucketNums[bucketIndex]++;
             }
             return false;
         }
     }
 
-    private boolean lightInsert(String item) {
+    private boolean bufferInsert(String item) {
         num++;
         // it first computes the hash function h(e) (1 ⩽ h(e) ⩽ w) to map e to bucket A[h(e)].
         byte[] itemByteArray = ObjectUtils.objectToByteArray(item);
         int bucketIndex = Math.abs(intHash.hash(itemByteArray) % w);
-        Map<String, Double> lightBucket = lightBuckets.get(bucketIndex);
+        Map<String, Double> buffer = buffers.get(bucketIndex);
         // Case 1: e is in one cell in the heavy part of A[h(e)] (being a king or a guardian).
-        if (lightBucket.containsKey(item)) {
+        if (buffer.containsKey(item)) {
             // HeavyGuardian just increments the corresponding frequency (the count field) in the cell by 1.
-            double itemCount = lightBucket.get(item);
+            double itemCount = buffer.get(item);
             itemCount += 1.0;
-            lightBucket.put(item, itemCount);
+            buffer.put(item, itemCount);
             if (hhLdpServerState.equals(HhLdpServerState.STATISTICS)) {
-                currentLightNums[bucketIndex]++;
+                currentBufferNums[bucketIndex]++;
             }
             return true;
         }
         // Case 2: e is not in the heavy part of A[h(e)], and there are still empty cells.
-        if (lightBucket.size() < lambdaL) {
+        if (buffer.size() < lambdaL) {
             // It inserts e into an empty cell, i.e., sets the ID field to e and sets the count field to 1.
-            lightBucket.put(item, 1.0);
+            buffer.put(item, 1.0);
             if (hhLdpServerState.equals(HhLdpServerState.STATISTICS)) {
-                currentLightNums[bucketIndex]++;
+                currentBufferNums[bucketIndex]++;
             }
             return true;
         }
@@ -363,38 +368,38 @@ public class BufferHhgHhLdpServer extends AbstractHhLdpServer implements HhgHhLd
         // We propose a novel technique named Exponential Decay: it decays (decrements) the count field of the weakest
         // guardian by 1 with probability P = b^{−C}, where b is a predefined constant number (e.g., b = 1.08), and C
         // is the value of the Count field of the weakest guardian.
-        assert lightBucket.size() == lambdaL;
+        assert buffer.size() == lambdaL;
         // find the weakest guardian
-        List<Map.Entry<String, Double>> listBucketList = new ArrayList<>(lightBucket.entrySet());
-        listBucketList.sort(Comparator.comparingDouble(Map.Entry::getValue));
-        Map.Entry<String, Double> weakestLightCell = listBucketList.get(0);
-        String weakestLightItem = weakestLightCell.getKey();
-        double weakestLightCount = weakestLightCell.getValue();
+        List<Map.Entry<String, Double>> bufferList = new ArrayList<>(buffer.entrySet());
+        bufferList.sort(Comparator.comparingDouble(Map.Entry::getValue));
+        Map.Entry<String, Double> weakestBufferCell = bufferList.get(0);
+        String weakestBufferItem = weakestBufferCell.getKey();
+        double weakestBufferCount = weakestBufferCell.getValue();
         // Sample a boolean value, with probability P = b^{−C}, the boolean value is 1
         // In LDP, the weakest count may be non-positive, if so, we do not need to sample, since it must be evicted.
-        if (weakestLightCount > 0) {
+        if (weakestBufferCount > 0) {
             // Here we use the advanced Bernoulli(exp(−γ)) with γ = C * ln(b), and reverse the sample
-            ExpBernoulliSampler expBernoulliSampler = new ExpBernoulliSampler(hgRandom, weakestLightCount * LN_B);
+            ExpBernoulliSampler expBernoulliSampler = new ExpBernoulliSampler(hgRandom, weakestBufferCount * LN_B);
             // decay (decrement) the count field of the weakest guardian by 1 with probability P = b^{−C}
             boolean sample = expBernoulliSampler.sample();
             if (!sample) {
-                weakestLightCount--;
+                weakestBufferCount--;
             }
         }
         // After decay, if the count field becomes 0, it replaces the ID field of the weakest guardian with e,
         // and sets the count field to 1
-        if (weakestLightCount <= 0) {
+        if (weakestBufferCount <= 0) {
             if (hhLdpServerState.equals(HhLdpServerState.STATISTICS)) {
-                debias(bucketIndex);
-                currentLightNums[bucketIndex] = 1;
+                bufferDebias(bucketIndex);
+                currentBufferNums[bucketIndex] = 1;
             }
-            lightBucket.remove(weakestLightItem);
-            lightBucket.put(item, 1.0);
+            buffer.remove(weakestBufferItem);
+            buffer.put(item, 1.0);
             return true;
         } else {
-            lightBucket.put(weakestLightItem, weakestLightCount);
+            buffer.put(weakestBufferItem, weakestBufferCount);
             if (hhLdpServerState.equals(HhLdpServerState.STATISTICS)) {
-                currentLightNums[bucketIndex]++;
+                currentBufferNums[bucketIndex]++;
             }
             return false;
         }
@@ -402,43 +407,48 @@ public class BufferHhgHhLdpServer extends AbstractHhLdpServer implements HhgHhLd
 
     private void trySwitch(int bucketIndex) {
         // debias
-        debias(bucketIndex);
-        Map<String, Double> heavyBucket = heavyBuckets.get(bucketIndex);
-        Map<String, Double> lightBucket = lightBuckets.get(bucketIndex);
+        bucketDebias(bucketIndex);
+        bufferDebias(bucketIndex);
+        Map<String, Double> bucket = buckets.get(bucketIndex);
+        Map<String, Double> buffer = buffers.get(bucketIndex);
         // find the weakest heavy cell
-        List<Map.Entry<String, Double>> heavyBucketList = new ArrayList<>(heavyBucket.entrySet());
-        heavyBucketList.sort(Comparator.comparingDouble(Map.Entry::getValue));
-        Map.Entry<String, Double> weakestHeavyCell = heavyBucketList.get(0);
-        double heavyDebiasFactor = getHeavyDebiasFactor();
-        double weakestHeavyCount = weakestHeavyCell.getValue();
+        List<Map.Entry<String, Double>> bucketList = new ArrayList<>(bucket.entrySet());
+        bucketList.sort(Comparator.comparingDouble(Map.Entry::getValue));
+        Map.Entry<String, Double> weakestBucketCell = bucketList.get(0);
+        double bucketDebiasFactor = getBucketDebiasFactor();
+        double weakestBucketCount = weakestBucketCell.getValue();
         // find the strongest light cell
-        List<Map.Entry<String, Double>> lightBucketList = new ArrayList<>(lightBucket.entrySet());
-        lightBucketList.sort(Comparator.comparingDouble(Map.Entry::getValue));
-        Map.Entry<String, Double> strongestLightCell = lightBucketList.get(lightBucketList.size() - 1);
-        double lightDebiasFactor = getLightDebiasFactor(bucketIndex);
-        double strongestLightCount = strongestLightCell.getValue();
-        if (weakestHeavyCount < strongestLightCount) {
+        List<Map.Entry<String, Double>> bufferList = new ArrayList<>(buffer.entrySet());
+        bufferList.sort(Comparator.comparingDouble(Map.Entry::getValue));
+        Map.Entry<String, Double> strongestBufferCell = bufferList.get(bufferList.size() - 1);
+        double bufferDebiasFactor = getBufferDebiasFactor(bucketIndex);
+        double strongestBufferCount = strongestBufferCell.getValue();
+        if (weakestBucketCount < strongestBufferCount) {
             // switch
-            heavyBucket.remove(weakestHeavyCell.getKey());
-            heavyBucket.put(strongestLightCell.getKey(), strongestLightCount / lightDebiasFactor * heavyDebiasFactor);
-            lightBucket.remove(strongestLightCell.getKey());
-            lightBucket.put(weakestHeavyCell.getKey(), weakestHeavyCount / heavyDebiasFactor * lightDebiasFactor);
+            bucket.remove(weakestBucketCell.getKey());
+            bucket.put(strongestBufferCell.getKey(), strongestBufferCount / bufferDebiasFactor * bucketDebiasFactor);
+            buffer.remove(strongestBufferCell.getKey());
+            buffer.put(weakestBucketCell.getKey(), weakestBucketCount / bucketDebiasFactor * bufferDebiasFactor);
         }
     }
 
     @Override
     public Map<String, Double> heavyHitters() {
-        Set<String> flatKeySet = heavyBuckets.stream()
+        Set<String> bucketItemSet = buckets.stream()
             .map(Map::keySet)
             .flatMap(Set::stream)
             .collect(Collectors.toSet());
+        Set<String> itemSet = buffers.stream()
+            .map(Map::keySet)
+            .flatMap(Set::stream).collect(Collectors.toSet());
+        itemSet.addAll(bucketItemSet);
         // we first iterate items in each budget
-        Map<String, Double> countMap = flatKeySet.stream()
+        Map<String, Double> countMap = bucketItemSet.stream()
             .collect(Collectors.toMap(item -> item, this::response));
         List<Map.Entry<String, Double>> countList = new ArrayList<>(countMap.entrySet());
         countList.sort(Comparator.comparingDouble(Map.Entry::getValue));
         Collections.reverse(countList);
-        if (flatKeySet.size() <= k) {
+        if (bucketItemSet.size() <= k) {
             // the current key set is less than k, return all items
             return countList.stream().collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
         } else {
@@ -450,14 +460,21 @@ public class BufferHhgHhLdpServer extends AbstractHhLdpServer implements HhgHhLd
         byte[] itemByteArray = ObjectUtils.objectToByteArray(item);
         int bucketIndex = Math.abs(intHash.hash(itemByteArray) % w);
         // first, it checks the heavy part in bucket A[h(e)].
-        Map<String, Double> heavyBucket = heavyBuckets.get(bucketIndex);
+        Map<String, Double> heavyBucket = buckets.get(bucketIndex);
+        Map<String, Double> lightBucket = buffers.get(bucketIndex);
         switch (hhLdpServerState) {
             case WARMUP:
                 // return C
                 return heavyBucket.getOrDefault(item, 0.0);
             case STATISTICS:
                 // return de-biased C
-                return debiasHeavyCount(bucketIndex, heavyBucket.getOrDefault(item, 0.0));
+                if (heavyBucket.containsKey(item)) {
+                    return debiasBucketCount(bucketIndex, heavyBucket.get(item));
+                } else if (lightBucket.containsKey(item)) {
+                    return debiasBufferCount(bucketIndex, lightBucket.get(item));
+                } else {
+                    return 0.0;
+                }
             default:
                 throw new IllegalStateException("Invalid " + HhLdpServerState.class.getSimpleName() + ": " + hhLdpServerState);
         }
@@ -475,6 +492,6 @@ public class BufferHhgHhLdpServer extends AbstractHhLdpServer implements HhgHhLd
 
     @Override
     public HgHhLdpServerContext getServerContext() {
-        return new HgHhLdpServerContext(heavyBuckets);
+        return new HgHhLdpServerContext(buckets);
     }
 }
