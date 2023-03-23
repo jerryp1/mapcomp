@@ -162,6 +162,29 @@ public class DirectHgHhLdpServer extends AbstractHhLdpServer {
         return insert(item);
     }
 
+    private void debias(int bucketIndex) {
+        Map<String, Double> bucket = buckets.get(bucketIndex);
+        for (Map.Entry<String, Double> bucketEntry : bucket.entrySet()) {
+            bucketEntry.setValue(updateCount(bucketIndex, bucketEntry.getValue()));
+        }
+        currentWeakNums[bucketIndex] = 1;
+        currentStrongNums[bucketIndex] = 0;
+    }
+
+    private double updateCount(int bucketIndex, double count) {
+        double debiasWeakCount = currentWeakNums[bucketIndex] * qs[bucketIndex]
+            / (ps[bucketIndex] - qs[bucketIndex]) * getDebiasFactor();
+        return count - debiasWeakCount - currentStrongNums[bucketIndex] * q;
+    }
+
+    private double getDebiasFactor() {
+        return p - q;
+    }
+
+    private double debiasCount(int bucketIndex, double count) {
+        return updateCount(bucketIndex, count) / getDebiasFactor();
+    }
+
     private boolean insert(String item) {
         num++;
         // it first computes the hash function h(e) (1 ⩽ h(e) ⩽ w) to map e to bucket A[h(e)].
@@ -227,15 +250,10 @@ public class DirectHgHhLdpServer extends AbstractHhLdpServer {
         // After decay, if the count field becomes 0, it replaces the ID field of the weakest guardian with e,
         // and sets the count field to 1
         if (weakestCount <= 0) {
-            bucket.remove(weakestItem);
             if (hhLdpServerState.equals(HhLdpServerState.STATISTICS)) {
-                // we partially de-bias the count for all items
-                for (Map.Entry<String, Double> bucketEntry : bucket.entrySet()) {
-                    bucketEntry.setValue(updateCount(bucketIndex, bucketEntry.getValue()));
-                }
-                currentWeakNums[bucketIndex] = 1;
-                currentStrongNums[bucketIndex] = 0;
+                debias(bucketIndex);
             }
+            bucket.remove(weakestItem);
             assert !item.startsWith(HhLdpFactory.BOT_PREFIX) : "the item must not be ⊥: " + item;
             bucket.put(item, insertCount(bucketIndex, weakestCell));
             return true;
@@ -265,12 +283,6 @@ public class DirectHgHhLdpServer extends AbstractHhLdpServer {
             default:
                 throw new IllegalStateException("Invalid state: " + hhLdpServerState.name());
         }
-    }
-
-    private double updateCount(int bucketIndex, double count) {
-        double debiasWeakCount = currentWeakNums[bucketIndex] * qs[bucketIndex]
-            / (ps[bucketIndex] - qs[bucketIndex]) * (p - q);
-        return count - debiasWeakCount - currentStrongNums[bucketIndex] * q;
     }
 
     @Override
@@ -308,10 +320,6 @@ public class DirectHgHhLdpServer extends AbstractHhLdpServer {
             default:
                 throw new IllegalStateException("Invalid " + HhLdpServerState.class.getSimpleName() + ": " + hhLdpServerState);
         }
-    }
-
-    private double debiasCount(int bucketIndex, double count) {
-        return updateCount(bucketIndex, count) / (p - q);
     }
 
     @Override
