@@ -1,15 +1,15 @@
-package edu.alibaba.mpc4j.s2pc.pso.opprf.bopprf;
+package edu.alibaba.mpc4j.s2pc.pso.opprf.blopprf;
 
 import edu.alibaba.mpc4j.common.rpc.MpcAbortException;
 import edu.alibaba.mpc4j.common.rpc.pto.TwoPartyPto;
 
 /**
- * Batched OPRRF receiver.
+ * Batched l-bit-input OPPRF sender.
  *
  * @author Weiran Liu
  * @date 2023/3/26
  */
-public interface BopprfReceiver extends TwoPartyPto {
+public interface BlopprfSender extends TwoPartyPto {
     /**
      * Inits the protocol.
      *
@@ -19,14 +19,14 @@ public interface BopprfReceiver extends TwoPartyPto {
      */
     void init(int maxBatchSize, int maxPointNum) throws MpcAbortException;
 
+
     /**
      * Executes the protocol.
      *
-     * @param l          the input / output bit length.
-     * @param inputArray the batched input array.
-     * @param targetNum  the number of programmed points.
-     * @return the receiver outputs.
+     * @param l            the input / output bit length.
+     * @param inputArrays  the batched input arrays.
+     * @param targetArrays the batched target programmed arrays.
      * @throws MpcAbortException the protocol failure aborts.
      */
-    byte[][] opprf(int l, byte[][] inputArray, int targetNum) throws MpcAbortException;
+    void opprf(int l, byte[][][] inputArrays, byte[][][] targetArrays) throws MpcAbortException;
 }

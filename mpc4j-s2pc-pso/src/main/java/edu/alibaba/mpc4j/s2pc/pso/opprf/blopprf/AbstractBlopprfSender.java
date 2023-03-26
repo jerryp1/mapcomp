@@ -1,4 +1,4 @@
-package edu.alibaba.mpc4j.s2pc.pso.opprf.bopprf;
+package edu.alibaba.mpc4j.s2pc.pso.opprf.blopprf;
 
 import edu.alibaba.mpc4j.common.rpc.Party;
 import edu.alibaba.mpc4j.common.rpc.Rpc;
@@ -13,12 +13,12 @@ import java.util.Arrays;
 import java.util.stream.IntStream;
 
 /**
- * abstract Batched OPPRF sender.
+ * abstract Batched l-bit-input OPPRF sender.
  *
  * @author Weiran Liu
  * @date 2023/3/26
  */
-public abstract class AbstractBopprfSender extends AbstractTwoPartyPto implements BopprfSender {
+public abstract class AbstractBlopprfSender extends AbstractTwoPartyPto implements BlopprfSender {
     /**
      * max batch size
      */
@@ -53,7 +53,7 @@ public abstract class AbstractBopprfSender extends AbstractTwoPartyPto implement
     protected byte[][][] targetArrays;
 
 
-    protected AbstractBopprfSender(PtoDesc ptoDesc, Rpc senderRpc, Party receiverParty, BopprfConfig config) {
+    protected AbstractBlopprfSender(PtoDesc ptoDesc, Rpc senderRpc, Party receiverParty, BlopprfConfig config) {
         super(ptoDesc, senderRpc, receiverParty, config);
     }
 

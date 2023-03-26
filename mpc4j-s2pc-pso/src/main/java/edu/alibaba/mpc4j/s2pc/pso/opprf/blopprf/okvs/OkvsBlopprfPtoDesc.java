@@ -1,11 +1,11 @@
-package edu.alibaba.mpc4j.s2pc.pso.opprf.bopprf.okvs;
+package edu.alibaba.mpc4j.s2pc.pso.opprf.blopprf.okvs;
 
 import edu.alibaba.mpc4j.common.rpc.desc.PtoDesc;
 import edu.alibaba.mpc4j.common.rpc.desc.PtoDescManager;
 
 /**
- * OKVS Batched OPRRF protocol description. The original scheme is described by instantiating OKVS as a polynomial or
- * MegaBin in the following paper:
+ * OKVS Batched l-bit-input OPRRF protocol description. l-bit-input OPRRF requires that the input / output are all l-bit
+ * length. The original scheme is described by instantiating OKVS as a polynomial or MegaBin in the following paper:
  * <p>
  * Pinkas, Benny, Thomas Schneider, Oleksandr Tkachenko, and Avishay Yanai. Efficient circuit-based PSI with linear
  * communication. EUROCRYPT 2019, pp. 122-153. Springer International Publishing, 2019.
@@ -19,7 +19,7 @@ import edu.alibaba.mpc4j.common.rpc.desc.PtoDescManager;
  * @author Weiran Liu
  * @date 2023/3/26
  */
-public class OkvsBopprfPtoDesc implements PtoDesc {
+public class OkvsBlopprfPtoDesc implements PtoDesc {
     /**
      * the protocol ID
      */
@@ -46,12 +46,12 @@ public class OkvsBopprfPtoDesc implements PtoDesc {
     /**
      * the singleton mode
      */
-    private static final OkvsBopprfPtoDesc INSTANCE = new OkvsBopprfPtoDesc();
+    private static final OkvsBlopprfPtoDesc INSTANCE = new OkvsBlopprfPtoDesc();
 
     /**
      * private constructor.
      */
-    private OkvsBopprfPtoDesc() {
+    private OkvsBlopprfPtoDesc() {
         // empty
     }
 

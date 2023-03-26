@@ -1,4 +1,4 @@
-package edu.alibaba.mpc4j.s2pc.pso.opprf.bopprf;
+package edu.alibaba.mpc4j.s2pc.pso.opprf.blopprf;
 
 import com.google.common.base.Preconditions;
 import edu.alibaba.mpc4j.common.rpc.Rpc;
@@ -8,8 +8,8 @@ import edu.alibaba.mpc4j.common.tool.CommonConstants;
 import edu.alibaba.mpc4j.common.tool.okve.okvs.OkvsFactory;
 import edu.alibaba.mpc4j.common.tool.utils.BytesUtils;
 import edu.alibaba.mpc4j.common.tool.utils.CommonUtils;
-import edu.alibaba.mpc4j.s2pc.pso.opprf.bopprf.BopprfFactory.BopprfType;
-import edu.alibaba.mpc4j.s2pc.pso.opprf.bopprf.okvs.OkvsBopprfConfig;
+import edu.alibaba.mpc4j.s2pc.pso.opprf.blopprf.BlopprfFactory.BlopprfType;
+import edu.alibaba.mpc4j.s2pc.pso.opprf.blopprf.okvs.OkvsBlopprfConfig;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.time.StopWatch;
 import org.junit.After;
@@ -29,14 +29,14 @@ import java.util.concurrent.TimeUnit;
 import java.util.stream.IntStream;
 
 /**
- * Batched OPPRF test.
+ * Batched l-bit-input OPPRF test.
  *
  * @author Weiran Liu
  * @date 2023/3/26
  */
 @RunWith(Parameterized.class)
-public class BopprfTest {
-    private static final Logger LOGGER = LoggerFactory.getLogger(BopprfTest.class);
+public class BlopprfTest {
+    private static final Logger LOGGER = LoggerFactory.getLogger(BlopprfTest.class);
     /**
      * the random state
      */
@@ -71,21 +71,21 @@ public class BopprfTest {
         Collection<Object[]> configurations = new ArrayList<>();
 
         configurations.add(new Object[]{
-            BopprfType.OKVS.name() + "(H3_SINGLETON_GCT)",
-            new OkvsBopprfConfig.Builder().setOkvsType(OkvsFactory.OkvsType.H3_SINGLETON_GCT).build(),
+            BlopprfType.OKVS.name() + "(H3_SINGLETON_GCT)",
+            new OkvsBlopprfConfig.Builder().setOkvsType(OkvsFactory.OkvsType.H3_SINGLETON_GCT).build(),
         });
         configurations.add(new Object[]{
-            BopprfType.OKVS.name() + "(H2_SINGLETON_GCT)",
-            new OkvsBopprfConfig.Builder().setOkvsType(OkvsFactory.OkvsType.H2_SINGLETON_GCT).build(),
+            BlopprfType.OKVS.name() + "(H2_SINGLETON_GCT)",
+            new OkvsBlopprfConfig.Builder().setOkvsType(OkvsFactory.OkvsType.H2_SINGLETON_GCT).build(),
         });
         configurations.add(new Object[]{
-            BopprfType.OKVS.name() + "(GBF)",
-            new OkvsBopprfConfig.Builder().setOkvsType(OkvsFactory.OkvsType.GBF).build(),
+            BlopprfType.OKVS.name() + "(GBF)",
+            new OkvsBlopprfConfig.Builder().setOkvsType(OkvsFactory.OkvsType.GBF).build(),
         });
         // MegaBin
         configurations.add(new Object[]{
-            BopprfType.OKVS.name() + "(MegaBin)",
-            new OkvsBopprfConfig.Builder().setOkvsType(OkvsFactory.OkvsType.MEGA_BIN).build(),
+            BlopprfType.OKVS.name() + "(MegaBin)",
+            new OkvsBlopprfConfig.Builder().setOkvsType(OkvsFactory.OkvsType.MEGA_BIN).build(),
         });
 
         return configurations;
@@ -102,9 +102,9 @@ public class BopprfTest {
     /**
      * the config
      */
-    private final BopprfConfig config;
+    private final BlopprfConfig config;
 
-    public BopprfTest(String name, BopprfConfig config) {
+    public BlopprfTest(String name, BlopprfConfig config) {
         Preconditions.checkArgument(StringUtils.isNotBlank(name));
         // We cannot use NettyRPC in the test case since it needs multi-thread connect / disconnect.
         // In other word, we cannot connect / disconnect NettyRpc in @Before / @After, respectively.
@@ -158,8 +158,8 @@ public class BopprfTest {
 
     private void testPto(int l, int batchNum, int pointNum, boolean parallel) {
         // create the sender and the receiver
-        BopprfSender sender = BopprfFactory.createBopprfSender(senderRpc, receiverRpc.ownParty(), config);
-        BopprfReceiver receiver = BopprfFactory.createBopprfReceiver(receiverRpc, senderRpc.ownParty(), config);
+        BlopprfSender sender = BlopprfFactory.createBopprfSender(senderRpc, receiverRpc.ownParty(), config);
+        BlopprfReceiver receiver = BlopprfFactory.createBopprfReceiver(receiverRpc, senderRpc.ownParty(), config);
         sender.setParallel(parallel);
         receiver.setParallel(parallel);
         int randomTaskId = Math.abs(SECURE_RANDOM.nextInt());
@@ -171,12 +171,12 @@ public class BopprfTest {
                 sender.getPtoDesc().getPtoName(), l, batchNum, pointNum, parallel
             );
             // generate the sender input
-            byte[][][] senderInputArrays = BopprfTestUtils.generateSenderInputArrays(l, batchNum, pointNum, SECURE_RANDOM);
-            byte[][][] senderTargetArrays = BopprfTestUtils.generateSenderTargetArrays(l, senderInputArrays, SECURE_RANDOM);
+            byte[][][] senderInputArrays = BlopprfTestUtils.generateSenderInputArrays(l, batchNum, pointNum, SECURE_RANDOM);
+            byte[][][] senderTargetArrays = BlopprfTestUtils.generateSenderTargetArrays(l, senderInputArrays, SECURE_RANDOM);
             // generate the receiver input
-            byte[][] receiverInputArray = BopprfTestUtils.generateReceiverInputArray(l, senderInputArrays, SECURE_RANDOM);
-            BopprfSenderThread senderThread = new BopprfSenderThread(sender, l, senderInputArrays, senderTargetArrays);
-            BopprfReceiverThread receiverThread = new BopprfReceiverThread(receiver, l, receiverInputArray, pointNum);
+            byte[][] receiverInputArray = BlopprfTestUtils.generateReceiverInputArray(l, senderInputArrays, SECURE_RANDOM);
+            BlopprfSenderThread senderThread = new BlopprfSenderThread(sender, l, senderInputArrays, senderTargetArrays);
+            BlopprfReceiverThread receiverThread = new BlopprfReceiverThread(receiver, l, receiverInputArray, pointNum);
             StopWatch stopWatch = new StopWatch();
             // start
             stopWatch.start();

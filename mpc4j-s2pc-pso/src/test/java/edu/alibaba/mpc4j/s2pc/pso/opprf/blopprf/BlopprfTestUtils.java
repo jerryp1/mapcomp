@@ -1,4 +1,4 @@
-package edu.alibaba.mpc4j.s2pc.pso.opprf.bopprf;
+package edu.alibaba.mpc4j.s2pc.pso.opprf.blopprf;
 
 import edu.alibaba.mpc4j.common.tool.EnvType;
 import edu.alibaba.mpc4j.common.tool.hashbin.primitive.SimpleIntHashBin;
@@ -9,16 +9,16 @@ import java.security.SecureRandom;
 import java.util.stream.IntStream;
 
 /**
- * Batched OPPRF test utilities.
+ * Batched l-bit-input OPPRF test utilities.
  *
  * @author Weiran Liu
  * @date 2023/3/26
  */
-class BopprfTestUtils {
+class BlopprfTestUtils {
     /**
      * private constructor.
      */
-    private BopprfTestUtils() {
+    private BlopprfTestUtils() {
         // empty
     }
 
