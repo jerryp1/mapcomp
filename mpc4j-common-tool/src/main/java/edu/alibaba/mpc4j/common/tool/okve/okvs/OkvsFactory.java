@@ -3,6 +3,7 @@ package edu.alibaba.mpc4j.common.tool.okve.okvs;
 import edu.alibaba.mpc4j.common.tool.EnvType;
 import edu.alibaba.mpc4j.common.tool.okve.cuckootable.CuckooTableSingletonTcFinder;
 import edu.alibaba.mpc4j.common.tool.okve.cuckootable.H2CuckooTableTcFinder;
+import edu.alibaba.mpc4j.common.tool.okve.okvs.field.FieldOkvsFactory;
 
 import java.nio.ByteBuffer;
 
@@ -69,7 +70,7 @@ public class OkvsFactory {
             case H3_SINGLETON_GCT:
                 return true;
             default:
-                throw new IllegalArgumentException("Invalid OkvsType: " + okvsType.name());
+                throw new IllegalArgumentException("Invalid " + OkvsType.class.getSimpleName() + ": " + okvsType.name());
         }
     }
 
@@ -101,7 +102,7 @@ public class OkvsFactory {
             case H2_DFS_GCT:
                 return new H2DfsGctBinaryOkvs<>(envType, n, l, keys);
             default:
-                throw new IllegalArgumentException("Invalid OkvsType：" + okvsType.name());
+                throw new IllegalArgumentException("Invalid " + OkvsType.class.getSimpleName() + ": " + okvsType.name());
         }
     }
 
@@ -131,7 +132,7 @@ public class OkvsFactory {
             case GBF:
                 return new GbfBinaryOkvs<>(envType, n, l, keys);
             default:
-                throw new IllegalArgumentException("Invalid OkvsType：" + okvsType.name());
+                throw new IllegalArgumentException("Invalid " + OkvsType.class.getSimpleName() + ": " + okvsType.name());
         }
     }
 
@@ -144,9 +145,9 @@ public class OkvsFactory {
     public static int getHashNum(OkvsType okvsType) {
         switch (okvsType) {
             case POLYNOMIAL:
-                return 0;
+                return FieldOkvsFactory.getHashNum(FieldOkvsFactory.FieldOkvsType.POLYNOMIAL);
             case MEGA_BIN:
-                return 1;
+                return FieldOkvsFactory.getHashNum(FieldOkvsFactory.FieldOkvsType.MEGA_BIN);
             case H3_SINGLETON_GCT:
                 return H3TcGctBinaryOkvs.HASH_NUM;
             case H2_SINGLETON_GCT:
@@ -157,7 +158,7 @@ public class OkvsFactory {
             case GBF:
                 return GbfBinaryOkvs.HASH_NUM;
             default:
-                throw new IllegalArgumentException("Invalid OkvsType" + okvsType.name());
+                throw new IllegalArgumentException("Invalid " + OkvsType.class.getSimpleName() + ": " + okvsType.name());
         }
     }
 
@@ -171,12 +172,9 @@ public class OkvsFactory {
     public static int getM(OkvsType okvsType, int n) {
         switch (okvsType) {
             case POLYNOMIAL:
-                assert n > 1;
-                return n;
+                return FieldOkvsFactory.getM(FieldOkvsFactory.FieldOkvsType.POLYNOMIAL, n);
             case MEGA_BIN:
-                int binNum = MegaBinOkvs.getBinNum(n);
-                int binSize = MegaBinOkvs.getBinSize(n);
-                return binNum * binSize;
+                return FieldOkvsFactory.getM(FieldOkvsFactory.FieldOkvsType.MEGA_BIN, n);
             case GBF:
                 return GbfBinaryOkvs.getM(n);
             case H3_SINGLETON_GCT:
@@ -186,9 +184,8 @@ public class OkvsFactory {
                 return H2TcGctBinaryOkvs.getLm(n) + H2TcGctBinaryOkvs.getRm(n);
             case H2_DFS_GCT:
                 return H2DfsGctBinaryOkvs.getLm(n) + H2DfsGctBinaryOkvs.getRm(n);
-
             default:
-                throw new IllegalArgumentException("Invalid OkvsType" + okvsType.name());
+                throw new IllegalArgumentException("Invalid " + OkvsType.class.getSimpleName() + ": " + okvsType.name());
         }
     }
 }
