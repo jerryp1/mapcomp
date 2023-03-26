@@ -25,6 +25,7 @@ class BopprfTestUtils {
     static byte[][][] generateSenderInputArrays(int l, int batchNum, int pointNum, SecureRandom secureRandom) {
         int byteL = CommonUtils.getByteLength(l);
         byte[][] keys = CommonUtils.generateRandomKeys(1, secureRandom);
+        // use simple hash to place int into batched queries.
         SimpleIntHashBin simpleIntHashBin = new SimpleIntHashBin(EnvType.STANDARD, batchNum, pointNum, keys);
         simpleIntHashBin.insertItems(IntStream.range(0, pointNum).toArray());
         byte[][][] inputArrays = new byte[batchNum][][];
@@ -59,6 +60,7 @@ class BopprfTestUtils {
         for (int batchIndex = 0; batchIndex < batchNum; batchIndex++) {
             int batchPointNum = inputArrays[batchIndex].length;
             if (batchPointNum > 0) {
+                // batch point num is not zero, randomly select a point to be the target
                 int pointIndex = secureRandom.nextInt(batchPointNum);
                 inputArray[batchIndex] = BytesUtils.clone(inputArrays[batchIndex][pointIndex]);
             } else {

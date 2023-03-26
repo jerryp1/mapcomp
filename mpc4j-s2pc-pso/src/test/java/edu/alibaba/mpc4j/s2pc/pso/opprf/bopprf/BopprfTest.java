@@ -127,6 +127,16 @@ public class BopprfTest {
     }
 
     @Test
+    public void test2Batch() {
+        testPto(DEFAULT_L, 2, DEFAULT_POINT_NUM, false);
+    }
+
+    @Test
+    public void test2Point() {
+        testPto(DEFAULT_L, DEFAULT_BATCH_NUM, 2, false);
+    }
+
+    @Test
     public void testDefault() {
         testPto(DEFAULT_L, DEFAULT_BATCH_NUM, DEFAULT_POINT_NUM, false);
     }
