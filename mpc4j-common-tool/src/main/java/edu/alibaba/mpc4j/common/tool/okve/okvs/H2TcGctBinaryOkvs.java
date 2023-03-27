@@ -95,7 +95,7 @@ public class H2TcGctBinaryOkvs<T> extends AbstractBinaryOkvs<T> {
         int h2Value = h2.getInteger(keyBytes, lm);
         byte[] rxBytes = hr.getBytes(keyBytes);
         boolean[] rxBinary = BinaryUtils.byteArrayToBinary(rxBytes);
-        byte[] valueBytes = new byte[lByteLength];
+        byte[] valueBytes = new byte[byteL];
         if (h1Value != h2Value) {
             BytesUtils.xori(valueBytes, storage[h1Value]);
             BytesUtils.xori(valueBytes, storage[h2Value]);
@@ -162,7 +162,7 @@ public class H2TcGctBinaryOkvs<T> extends AbstractBinaryOkvs<T> {
             int source = removedDataVertices[0];
             int target = removedDataVertices[1];
             boolean[] rx = dataHrMap.get(removedData);
-            byte[] innerProduct = BytesUtils.innerProduct(rightStorage, lByteLength, rx);
+            byte[] innerProduct = BytesUtils.innerProduct(rightStorage, byteL, rx);
             byte[] valueBytes = keyValueMap.get(removedData);
             BytesUtils.xori(innerProduct, valueBytes);
             if (source == target) {
@@ -177,7 +177,7 @@ public class H2TcGctBinaryOkvs<T> extends AbstractBinaryOkvs<T> {
                 // 起点和终点不一致，有4种情况
                 if (leftStorage[source] == null && leftStorage[target] == null) {
                     // 情况1：左右都为空
-                    leftStorage[source] = new byte[lByteLength];
+                    leftStorage[source] = new byte[byteL];
                     secureRandom.nextBytes(leftStorage[source]);
                     BytesUtils.xori(innerProduct, leftStorage[source]);
                     leftStorage[target] = innerProduct;
@@ -198,7 +198,7 @@ public class H2TcGctBinaryOkvs<T> extends AbstractBinaryOkvs<T> {
         // 左侧矩阵补充随机数
         for (int vertex = 0; vertex < lm; vertex++) {
             if (leftStorage[vertex] == null) {
-                leftStorage[vertex] = new byte[lByteLength];
+                leftStorage[vertex] = new byte[byteL];
                 secureRandom.nextBytes(leftStorage[vertex]);
             }
         }

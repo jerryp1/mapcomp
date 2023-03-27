@@ -316,8 +316,6 @@ public class Krtw19OriPsuClient extends AbstractPsuClient {
                 .map(HashBinEntry::getItem)
                 .distinct()
                 .map(ByteBuffer::array)
-                // 哈希到有限域中
-                .map(x -> finiteFieldHash.digestToBytes(x))
                 .map(ByteBuffer::wrap)
                 .toArray(ByteBuffer[]::new);
             // s XOR q_i

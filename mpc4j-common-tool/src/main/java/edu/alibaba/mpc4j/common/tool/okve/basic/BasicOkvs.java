@@ -1,26 +1,26 @@
-package edu.alibaba.mpc4j.common.tool.okve.okvs.field;
+package edu.alibaba.mpc4j.common.tool.okve.basic;
 
 import java.nio.ByteBuffer;
 import java.util.Map;
 
 /**
- * Field OKVS. The OKVS definition comes from:
+ * Basic OKVS. The OKVS definition comes from:
  * <p>
  * Garimella G, Pinkas B, Rosulek M, et al. Oblivious Key-Value Stores and Amplification for Private Set Intersection.
  * CRYPTO 2021, Springer, Cham, 2021, pp. 395-425.
  * </p>
- * The field OKVS has the property that keys and values must be in the same field, i.e, they must have the same bit length.
+ * Basic OKVS has the property that keys and values must be in the same field, i.e, they must have the same bit length.
  *
  * @author Weiran Liu
  * @date 2023/3/27
  */
-public interface FieldOkvs {
+public interface BasicOkvs {
     /**
      * Gets the type.
      *
      * @return the type.
      */
-    FieldOkvsFactory.FieldOkvsType getType();
+    BasicOkvsFactory.BasicOkvsType getType();
 
     /**
      * Sets using parallel encode.
@@ -28,6 +28,12 @@ public interface FieldOkvs {
      * @param parallelEncode parallel encode or not.
      */
     void setParallelEncode(boolean parallelEncode);
+
+    /**
+     * Gets using  parallel encode.
+     * @return parallel encode or not.
+     */
+    boolean getParallelEncode();
 
     /**
      * Encodes the key-value map.

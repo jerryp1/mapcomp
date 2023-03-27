@@ -1,11 +1,17 @@
 package edu.alibaba.mpc4j.common.tool.okve.okvs;
 
 import edu.alibaba.mpc4j.common.tool.EnvType;
-import edu.alibaba.mpc4j.common.tool.okve.okvs.field.PolyFieldOkvs;
+import edu.alibaba.mpc4j.common.tool.crypto.prf.Prf;
+import edu.alibaba.mpc4j.common.tool.crypto.prf.PrfFactory;
+import edu.alibaba.mpc4j.common.tool.okve.basic.PolyBasicOkvs;
 import edu.alibaba.mpc4j.common.tool.okve.okvs.OkvsFactory.OkvsType;
+import edu.alibaba.mpc4j.common.tool.utils.BytesUtils;
+import edu.alibaba.mpc4j.common.tool.utils.ObjectUtils;
 
 import java.nio.ByteBuffer;
 import java.util.Map;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 /**
  * Polynomial OKVS.
@@ -13,14 +19,21 @@ import java.util.Map;
  * @author Weiran Liu
  * @date 2021/09/13
  */
-class PolynomialOkvs implements Okvs<ByteBuffer> {
+class PolynomialOkvs<T> implements Okvs<T> {
     /**
      * polynomial field OKVS
      */
-    private final PolyFieldOkvs polyFieldOkvs;
+    private final PolyBasicOkvs polyFieldOkvs;
+    /**
+     * the prf used to hash the input to {0, 1}^l
+     */
+    private final Prf prf;
 
-    PolynomialOkvs(EnvType envType, int n, int l) {
-        polyFieldOkvs = new PolyFieldOkvs(envType, n, l);
+    PolynomialOkvs(EnvType envType, int n, int l, byte[] key) {
+        polyFieldOkvs = new PolyBasicOkvs(envType, n, l);
+        int byteL = polyFieldOkvs.getByteL();
+        prf = PrfFactory.createInstance(envType, byteL);
+        prf.setKey(key);
     }
 
     @Override
@@ -29,13 +42,35 @@ class PolynomialOkvs implements Okvs<ByteBuffer> {
     }
 
     @Override
-    public byte[][] encode(Map<ByteBuffer, byte[]> keyValueMap) throws ArithmeticException {
-        return polyFieldOkvs.encode(keyValueMap);
+    public boolean getParallelEncode() {
+        return polyFieldOkvs.getParallelEncode();
     }
 
     @Override
-    public byte[] decode(byte[][] storage, ByteBuffer key) {
-        return polyFieldOkvs.decode(storage, key);
+    public byte[][] encode(Map<T, byte[]> keyValueMap) throws ArithmeticException {
+        boolean parallelEncode = polyFieldOkvs.getParallelEncode();
+        int l = polyFieldOkvs.getL();
+        Stream<Map.Entry<T, byte[]>> entryStream = keyValueMap.entrySet().stream();
+        entryStream = parallelEncode ? entryStream.parallel() : entryStream;
+        Map<ByteBuffer, byte[]> encodeKeyValueMap = entryStream
+            .collect(Collectors.toMap(
+                entry -> {
+                    T key = entry.getKey();
+                    byte[] mapKey = prf.getBytes(ObjectUtils.objectToByteArray(key));
+                    BytesUtils.reduceByteArray(mapKey, l);
+                    return ByteBuffer.wrap(mapKey);
+                },
+                Map.Entry::getValue
+            ));
+        return polyFieldOkvs.encode(encodeKeyValueMap);
+    }
+
+    @Override
+    public byte[] decode(byte[][] storage, T key) {
+        int l = polyFieldOkvs.getL();
+        byte[] mapKey = prf.getBytes(ObjectUtils.objectToByteArray(key));
+        BytesUtils.reduceByteArray(mapKey, l);
+        return polyFieldOkvs.decode(storage, ByteBuffer.wrap(mapKey));
     }
 
     @Override
@@ -46,6 +81,11 @@ class PolynomialOkvs implements Okvs<ByteBuffer> {
     @Override
     public int getL() {
         return polyFieldOkvs.getL();
+    }
+
+    @Override
+    public int getByteL() {
+        return polyFieldOkvs.getByteL();
     }
 
     @Override

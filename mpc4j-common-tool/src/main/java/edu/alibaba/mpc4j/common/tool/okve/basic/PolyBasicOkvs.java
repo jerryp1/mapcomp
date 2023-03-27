@@ -1,4 +1,4 @@
-package edu.alibaba.mpc4j.common.tool.okve.okvs.field;
+package edu.alibaba.mpc4j.common.tool.okve.basic;
 
 import edu.alibaba.mpc4j.common.tool.CommonConstants;
 import edu.alibaba.mpc4j.common.tool.EnvType;
@@ -11,12 +11,12 @@ import java.nio.ByteBuffer;
 import java.util.Map;
 
 /**
- * Polynomial field OKVS.
+ * Polynomial basic OKVS.
  *
  * @author Weiran Liu
  * @date 2023/3/27
  */
-public class PolyFieldOkvs implements FieldOkvs {
+public class PolyBasicOkvs implements BasicOkvs {
     /**
      * the polynomial interpolation interface.
      */
@@ -33,20 +33,30 @@ public class PolyFieldOkvs implements FieldOkvs {
      * the key / value byte length.
      */
     private final int byteL;
+    /**
+     * parallel encode
+     */
+    private boolean parallelEncode;
 
-    public PolyFieldOkvs(EnvType envType, int n, int l) {
-        assert n > 1 : "n must be greater than 1: " + n;
+    public PolyBasicOkvs(EnvType envType, int n, int l) {
+        assert n > 0 : "n must be greater than 0: " + n;
         this.n = n;
         // l >= σ (40 bits) and l % Byte.SIZE == 0
         assert l >= CommonConstants.STATS_BIT_LENGTH && l % Byte.SIZE == 0;
         this.l = l;
         byteL = CommonUtils.getByteLength(l);
         gf2ePoly = Gf2ePolyFactory.createInstance(envType, l);
+        parallelEncode = false;
     }
 
     @Override
     public void setParallelEncode(boolean parallelEncode) {
-        // polynomial OKVS does not support parallel encode
+        this.parallelEncode = parallelEncode;
+    }
+
+    @Override
+    public boolean getParallelEncode() {
+        return parallelEncode;
     }
 
     @Override
@@ -67,7 +77,12 @@ public class PolyFieldOkvs implements FieldOkvs {
             })
             .toArray(byte[][]::new);
         // we use dummy interpolate technique to obtain n points interpolation.
-        return gf2ePoly.interpolate(n, xArray, yArray);
+        if (n == 1) {
+            // if we only allow one key-value pair, we need to return a polynomial with one dummy point.
+            return gf2ePoly.interpolate(2, xArray, yArray);
+        } else {
+            return gf2ePoly.interpolate(n, xArray, yArray);
+        }
     }
 
     @Override
@@ -95,7 +110,7 @@ public class PolyFieldOkvs implements FieldOkvs {
     @Override
     public int getM() {
         // m equals the number of coefficients for the interpolated polynomial.
-        return gf2ePoly.coefficientNum(n);
+        return gf2ePoly.coefficientNum(Math.max(2, n));
     }
 
     @Override
@@ -104,7 +119,7 @@ public class PolyFieldOkvs implements FieldOkvs {
     }
 
     @Override
-    public FieldOkvsFactory.FieldOkvsType getType() {
-        return FieldOkvsFactory.FieldOkvsType.POLYNOMIAL;
+    public BasicOkvsFactory.BasicOkvsType getType() {
+        return BasicOkvsFactory.BasicOkvsType.POLYNOMIAL;
     }
 }

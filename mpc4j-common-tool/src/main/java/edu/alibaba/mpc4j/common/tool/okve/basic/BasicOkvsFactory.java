@@ -1,22 +1,22 @@
-package edu.alibaba.mpc4j.common.tool.okve.okvs.field;
+package edu.alibaba.mpc4j.common.tool.okve.basic;
 
 import edu.alibaba.mpc4j.common.tool.EnvType;
 
 /**
- * Field OKVS factory.
+ * Basic OKVS factory.
  *
  * @author Weiran Liu
  * @date 2023/3/27
  */
-public class FieldOkvsFactory {
+public class BasicOkvsFactory {
     /**
      * private constructor.
      */
-    private FieldOkvsFactory() {
+    private BasicOkvsFactory() {
         // empty
     }
 
-    public enum FieldOkvsType {
+    public enum BasicOkvsType {
         /**
          * polynomial interpolation
          */
@@ -37,15 +37,15 @@ public class FieldOkvsFactory {
      * @param keys    the hash keys.
      * @return a field OKVS.
      */
-    public static FieldOkvs createInstance(EnvType envType, FieldOkvsType type, int n, int l, byte[][] keys) {
+    public static BasicOkvs createInstance(EnvType envType, BasicOkvsType type, int n, int l, byte[][] keys) {
         assert keys.length == getHashNum(type);
         switch (type) {
             case POLYNOMIAL:
-                return new PolyFieldOkvs(envType, n, l);
+                return new PolyBasicOkvs(envType, n, l);
             case MEGA_BIN:
-                return new MegaBinFieldOkvs(envType, n, l, keys[0]);
+                return new MegaBinBasicOkvs(envType, n, l, keys[0]);
             default:
-                throw new IllegalArgumentException("Invalid " + FieldOkvsType.class.getSimpleName() + ": " + type.name());
+                throw new IllegalArgumentException("Invalid " + BasicOkvsType.class.getSimpleName() + ": " + type.name());
         }
     }
 
@@ -55,14 +55,14 @@ public class FieldOkvsFactory {
      * @param type the type.
      * @return the number of hashes.
      */
-    public static int getHashNum(FieldOkvsType type) {
+    public static int getHashNum(BasicOkvsType type) {
         switch (type) {
             case POLYNOMIAL:
                 return 0;
             case MEGA_BIN:
                 return 1;
             default:
-                throw new IllegalArgumentException("Invalid " + FieldOkvsType.class.getSimpleName() + ": " + type.name());
+                throw new IllegalArgumentException("Invalid " + BasicOkvsType.class.getSimpleName() + ": " + type.name());
         }
     }
 
@@ -73,17 +73,17 @@ public class FieldOkvsFactory {
      * @param n    the number of key-value pairs.
      * @return m.
      */
-    public static int getM(FieldOkvsType type, int n) {
-        assert n > 1 : "n must be greater than 1: " + n;
+    public static int getM(BasicOkvsType type, int n) {
+        assert n > 0 : "n must be greater than 0: " + n;
         switch (type) {
             case POLYNOMIAL:
                 return n;
             case MEGA_BIN:
-                int binNum = MegaBinFieldOkvs.getBinNum(n);
-                int binSize = MegaBinFieldOkvs.getBinSize(n);
+                int binNum = MegaBinBasicOkvs.getBinNum(n);
+                int binSize = MegaBinBasicOkvs.getBinSize(n);
                 return binNum * binSize;
             default:
-                throw new IllegalArgumentException("Invalid " + FieldOkvsType.class.getSimpleName() + ": " + type.name());
+                throw new IllegalArgumentException("Invalid " + BasicOkvsType.class.getSimpleName() + ": " + type.name());
         }
     }
 }

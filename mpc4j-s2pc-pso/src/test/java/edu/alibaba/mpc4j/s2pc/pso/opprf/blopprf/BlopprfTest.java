@@ -132,6 +132,11 @@ public class BlopprfTest {
     }
 
     @Test
+    public void test1Point() {
+        testPto(DEFAULT_L, DEFAULT_BATCH_NUM, 1, false);
+    }
+
+    @Test
     public void test2Point() {
         testPto(DEFAULT_L, DEFAULT_BATCH_NUM, 2, false);
     }

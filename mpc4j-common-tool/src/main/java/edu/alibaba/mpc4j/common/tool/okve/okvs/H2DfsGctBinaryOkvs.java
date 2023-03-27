@@ -86,7 +86,7 @@ class H2DfsGctBinaryOkvs<T> extends AbstractBinaryOkvs<T> {
         int h1Value = h1.getInteger(keyBytes, lm);
         int h2Value = h2.getInteger(keyBytes, lm);
         boolean[] rxBinary = BinaryUtils.byteArrayToBinary(hr.getBytes(keyBytes));
-        byte[] value = new byte[lByteLength];
+        byte[] value = new byte[byteL];
         if (h1Value != h2Value) {
             // 如果hash1 != hash2，则正常运算，如果相等，则两个都为0，不用xor
             BytesUtils.xori(value, storage[h1Value]);
@@ -136,7 +136,7 @@ class H2DfsGctBinaryOkvs<T> extends AbstractBinaryOkvs<T> {
                 throw new IllegalStateException("重新调用DFS更新节点值时，根节点不可能已被设置，算法实现有误");
             }
             // set variable lv arbitrarily, where v is the root vertex of the traversal.
-            leftMatrix[root] = new byte[this.lByteLength];
+            leftMatrix[root] = new byte[this.byteL];
             secureRandom.nextBytes(leftMatrix[root]);
             ArrayList<T> traversalEdgeDataList = rootEdgeMap.get(root);
             for (T traversalEdgeData : traversalEdgeDataList) {
@@ -145,7 +145,7 @@ class H2DfsGctBinaryOkvs<T> extends AbstractBinaryOkvs<T> {
                 Integer[] vertices = h2CuckooTable.getVertices(traversalEdgeData);
                 Integer source = vertices[0];
                 Integer target = vertices[1];
-                byte[] innerProduct = BytesUtils.innerProduct(rightMatrix, lByteLength, rx);
+                byte[] innerProduct = BytesUtils.innerProduct(rightMatrix, byteL, rx);
                 byte[] valueBytes = keyValueMap.get(traversalEdgeData);
                 BytesUtils.xori(innerProduct, valueBytes);
                 // 这里不用考虑自环问题，因为自环一定是back edge
@@ -163,7 +163,7 @@ class H2DfsGctBinaryOkvs<T> extends AbstractBinaryOkvs<T> {
         // 左侧矩阵补充随机数
         for (int vertex = 0; vertex < lm; vertex++) {
             if (leftMatrix[vertex] == null) {
-                leftMatrix[vertex] = new byte[lByteLength];
+                leftMatrix[vertex] = new byte[byteL];
                 secureRandom.nextBytes(leftMatrix[vertex]);
             }
         }

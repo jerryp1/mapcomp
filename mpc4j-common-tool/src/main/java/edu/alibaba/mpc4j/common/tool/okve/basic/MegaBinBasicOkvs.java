@@ -1,4 +1,4 @@
-package edu.alibaba.mpc4j.common.tool.okve.okvs.field;
+package edu.alibaba.mpc4j.common.tool.okve.basic;
 
 import edu.alibaba.mpc4j.common.tool.CommonConstants;
 import edu.alibaba.mpc4j.common.tool.EnvType;
@@ -19,7 +19,7 @@ import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
 /**
- * Mega-Bin field OKVS. The detailed construction comes from the following paper:
+ * Mega-Bin basic OKVS. The detailed construction comes from the following paper:
  * <p>
  * Pinkas B, Schneider T, Tkachenko O, et al. Efficient circuit-based PSI with linear communication. EUROCRYPT 2019.
  * Springer, Cham, pp. 122-153.
@@ -41,7 +41,7 @@ import java.util.stream.IntStream;
  * @author Weiran Liu
  * @date 2023/3/27
  */
-public class MegaBinFieldOkvs implements FieldOkvs {
+public class MegaBinBasicOkvs implements BasicOkvs {
     /**
      * the polynomial interpolation interface.
      */
@@ -75,8 +75,8 @@ public class MegaBinFieldOkvs implements FieldOkvs {
      */
     private boolean parallelEncode;
 
-    public MegaBinFieldOkvs(EnvType envType, int n, int l, byte[] key) {
-        assert n > 1 : "n must be greater than 1: " + n;
+    public MegaBinBasicOkvs(EnvType envType, int n, int l, byte[] key) {
+        assert n > 0 : "n must be greater than 0: " + n;
         this.n = n;
         // set the bin hash
         binHash = PrfFactory.createInstance(envType, Integer.BYTES);
@@ -95,6 +95,11 @@ public class MegaBinFieldOkvs implements FieldOkvs {
     @Override
     public void setParallelEncode(boolean parallelEncode) {
         this.parallelEncode = parallelEncode;
+    }
+
+    @Override
+    public boolean getParallelEncode() {
+        return parallelEncode;
     }
 
     @Override
@@ -169,8 +174,8 @@ public class MegaBinFieldOkvs implements FieldOkvs {
     }
 
     @Override
-    public FieldOkvsFactory.FieldOkvsType getType() {
-        return FieldOkvsFactory.FieldOkvsType.MEGA_BIN;
+    public BasicOkvsFactory.BasicOkvsType getType() {
+        return BasicOkvsFactory.BasicOkvsType.MEGA_BIN;
     }
 
     @Override
@@ -185,9 +190,14 @@ public class MegaBinFieldOkvs implements FieldOkvs {
      * @return the number of bins.
      */
     static int getBinNum(int n) {
-        assert n > 1 : "n must be greater than 1: " + 1;
-        // there are at least 1 bin.
-        return Math.max(1, (int)Math.ceil(n / Math.log(n)));
+        assert n > 0 : "n must be greater than 0: " + n;
+        if (n == 1) {
+            // if n = 1, log(1) = 0 so that we may have Integer.MAX_VALUE bins.
+            return 1;
+        } else {
+            // there are at least 1 bin.
+            return Math.max(1, (int)Math.ceil(n / Math.log(n)));
+        }
     }
 
     /**

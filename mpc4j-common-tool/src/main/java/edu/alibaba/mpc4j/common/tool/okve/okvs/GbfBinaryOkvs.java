@@ -53,7 +53,7 @@ public class GbfBinaryOkvs<T> extends AbstractBinaryOkvs<T> {
         byte[][] storage = new byte[m][];
         for (T key : keySet) {
             byte[] finalShare = BytesUtils.clone(keyValueMap.get(key));
-            assert finalShare.length == lByteLength;
+            assert finalShare.length == byteL;
             byte[] keyBytes = ObjectUtils.objectToByteArray(key);
             int[] positions = Arrays.stream(prfs)
                 .mapToInt(prf -> prf.getInteger(keyBytes, m))
@@ -66,7 +66,7 @@ public class GbfBinaryOkvs<T> extends AbstractBinaryOkvs<T> {
                     emptySlot = position;
                 } else if (storage[position] == null) {
                     // 如果当前位置为空，则随机选择一个分享值（generate a new share）
-                    storage[position] = new byte[lByteLength];
+                    storage[position] = new byte[byteL];
                     secureRandom.nextBytes(storage[position]);
                     BytesUtils.xori(finalShare, storage[position]);
                 } else {
@@ -83,7 +83,7 @@ public class GbfBinaryOkvs<T> extends AbstractBinaryOkvs<T> {
         // 把剩余的空位置都填充上随机元素
         for (int i = 0; i < m; i++) {
             if (storage[i] == null) {
-                storage[i] = new byte[lByteLength];
+                storage[i] = new byte[byteL];
                 secureRandom.nextBytes(storage[i]);
             }
         }
@@ -102,7 +102,7 @@ public class GbfBinaryOkvs<T> extends AbstractBinaryOkvs<T> {
             .distinct()
             .toArray();
         // 计算输出值
-        byte[] value = new byte[lByteLength];
+        byte[] value = new byte[byteL];
         for (int position : positions) {
             BytesUtils.xori(value, storage[position]);
         }

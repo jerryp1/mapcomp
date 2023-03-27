@@ -60,7 +60,7 @@ public abstract class AbstractBlopprfSender extends AbstractTwoPartyPto implemen
     protected void setInitInput(int maxBatchSize, int maxPointNum) {
         MathPreconditions.checkGreater("max batch size", maxBatchSize, 1);
         this.maxBatchSize = maxBatchSize;
-        MathPreconditions.checkGreater("max point num", maxPointNum, 1);
+        MathPreconditions.checkPositive("max point num", maxPointNum);
         this.maxPointNum = maxPointNum;
         initState();
     }
@@ -81,7 +81,7 @@ public abstract class AbstractBlopprfSender extends AbstractTwoPartyPto implemen
         pointNum = Arrays.stream(inputArrays)
             .mapToInt(inputArray -> inputArray.length)
             .sum();
-        MathPreconditions.checkGreater("point num", pointNum, 1);
+        MathPreconditions.checkPositive("point num", pointNum);
         MathPreconditions.checkLessOrEqual("point num", pointNum, maxPointNum);
         int targetNum = Arrays.stream(targetArrays)
             .mapToInt(targetArray -> targetArray.length)

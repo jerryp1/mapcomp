@@ -52,9 +52,9 @@ public abstract class AbstractBlopprfReceiver extends AbstractTwoPartyPto implem
     }
 
     protected void setInitInput(int maxBatchSize, int maxPointNum) {
-        MathPreconditions.checkGreater("maxBatchSize", maxBatchSize, 1);
+        MathPreconditions.checkGreater("max batch size", maxBatchSize, 1);
         this.maxBatchSize = maxBatchSize;
-        MathPreconditions.checkGreater("max point num", maxPointNum, 1);
+        MathPreconditions.checkPositive("max point num", maxPointNum);
         this.maxPointNum = maxPointNum;
         initState();
     }
@@ -78,7 +78,7 @@ public abstract class AbstractBlopprfReceiver extends AbstractTwoPartyPto implem
             })
             .toArray(byte[][]::new);
         // check point num
-        MathPreconditions.checkGreater("point num", pointNum, 1);
+        MathPreconditions.checkPositive("point num", pointNum);
         MathPreconditions.checkLessOrEqual("point num", pointNum, maxPointNum);
         this.pointNum = pointNum;
         extraInfo++;

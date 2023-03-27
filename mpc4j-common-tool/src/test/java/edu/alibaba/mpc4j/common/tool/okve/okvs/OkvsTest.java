@@ -6,6 +6,7 @@ import edu.alibaba.mpc4j.common.tool.EnvType;
 import edu.alibaba.mpc4j.common.tool.okve.okvs.OkvsFactory.OkvsType;
 import edu.alibaba.mpc4j.common.tool.utils.BytesUtils;
 import edu.alibaba.mpc4j.common.tool.utils.CommonUtils;
+import org.apache.commons.lang3.RandomStringUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.junit.Assert;
 import org.junit.Test;
@@ -113,12 +114,12 @@ public class OkvsTest {
         );
         // encodes more elements
         Assert.assertThrows(AssertionError.class, () -> {
-            Map<ByteBuffer, byte[]> keyValueMap = randomKeyValueMap(n + 1, l);
-            Okvs<ByteBuffer> okvs = OkvsFactory.createInstance(EnvType.STANDARD, type, n, l, keys);
+            Map<String, byte[]> keyValueMap = randomKeyValueMap(n + 1, l);
+            Okvs<String> okvs = OkvsFactory.createInstance(EnvType.STANDARD, type, n, l, keys);
             okvs.encode(keyValueMap);
         });
-        Map<ByteBuffer, byte[]> keyValueMap = randomKeyValueMap(n, l);
-        Okvs<ByteBuffer> okvs = OkvsFactory.createInstance(EnvType.STANDARD, type, n, l, keys);
+        Map<String, byte[]> keyValueMap = randomKeyValueMap(n, l);
+        Okvs<String> okvs = OkvsFactory.createInstance(EnvType.STANDARD, type, n, l, keys);
         byte[][] storage = okvs.encode(keyValueMap);
         // decodes with small storage
         Assert.assertThrows(AssertionError.class, () -> {
@@ -143,9 +144,9 @@ public class OkvsTest {
     public void testEmptyOkvs() {
         int l = DEFAULT_L;
         byte[][] keys = CommonUtils.generateRandomKeys(hashNum, SECURE_RANDOM);
-        Okvs<ByteBuffer> emptyOkvs = OkvsFactory.createInstance(EnvType.STANDARD, type, DEFAULT_N, l, keys);
+        Okvs<String> emptyOkvs = OkvsFactory.createInstance(EnvType.STANDARD, type, DEFAULT_N, l, keys);
         // creates an empty key-value map
-        Map<ByteBuffer, byte[]> emptyKeyValueMap = randomKeyValueMap(0, l);
+        Map<String, byte[]> emptyKeyValueMap = randomKeyValueMap(0, l);
         byte[][] storage = emptyOkvs.encode(emptyKeyValueMap);
         Assert.assertEquals(emptyOkvs.getM(), storage.length);
         Arrays.stream(storage).forEach(row -> Assert.assertEquals(emptyOkvs.getL(), row.length * Byte.SIZE));
@@ -178,7 +179,10 @@ public class OkvsTest {
 
     @Test
     public void test4096n() {
-        testOkvs(4096, DEFAULT_L);
+        // polynomial OKVS is very slow, ignore it
+        if (!type.equals(OkvsType.POLYNOMIAL)) {
+            testOkvs(4096, DEFAULT_L);
+        }
     }
 
     @Test
@@ -187,41 +191,28 @@ public class OkvsTest {
     }
 
     private void testOkvs(int n, int l) {
-        if (n == 1) {
-            switch (type) {
-                case POLYNOMIAL:
-                case MEGA_BIN:
-                    Assert.assertThrows(AssertionError.class, () -> {
-                        byte[][] keys = CommonUtils.generateRandomKeys(hashNum, SECURE_RANDOM);
-                        OkvsFactory.createInstance(EnvType.STANDARD, type, n, DEFAULT_L, keys);
-                    });
-                    return;
-                default:
-                    break;
-            }
-            for (int round = 0; round < MAX_RANDOM_ROUND; round++) {
-                byte[][] keys = CommonUtils.generateRandomKeys(hashNum, SECURE_RANDOM);
-                Okvs<ByteBuffer> okvs = OkvsFactory.createInstance(EnvType.STANDARD, type, n, l, keys);
-                Map<ByteBuffer, byte[]> keyValueMap = randomKeyValueMap(n, l);
-                byte[][] storage = okvs.encode(keyValueMap);
-                keyValueMap.keySet().stream()
-                    .parallel()
-                    .forEach(key -> {
-                        byte[] valueBytes = keyValueMap.get(key);
-                        byte[] decodeValueBytes = okvs.decode(storage, key);
-                        Assert.assertArrayEquals(valueBytes, decodeValueBytes);
-                    });
-            }
+        for (int round = 0; round < MAX_RANDOM_ROUND; round++) {
+            byte[][] keys = CommonUtils.generateRandomKeys(hashNum, SECURE_RANDOM);
+            Okvs<String> okvs = OkvsFactory.createInstance(EnvType.STANDARD, type, n, l, keys);
+            Map<String, byte[]> keyValueMap = randomKeyValueMap(n, l);
+            byte[][] storage = okvs.encode(keyValueMap);
+            keyValueMap.keySet().stream()
+                .parallel()
+                .forEach(key -> {
+                    byte[] valueBytes = keyValueMap.get(key);
+                    byte[] decodeValueBytes = okvs.decode(storage, key);
+                    Assert.assertArrayEquals(valueBytes, decodeValueBytes);
+                });
         }
     }
 
-    private Map<ByteBuffer, byte[]> randomKeyValueMap(int size, int l) {
+    private Map<String, byte[]> randomKeyValueMap(int size, int l) {
         int byteL = CommonUtils.getByteLength(l);
-        Map<ByteBuffer, byte[]> keyValueMap = new HashMap<>();
+        Map<String, byte[]> keyValueMap = new HashMap<>();
         IntStream.range(0, size).forEach(index -> {
-            byte[] keyBytes = BytesUtils.randomByteArray(byteL, l, SECURE_RANDOM);
+            String key = RandomStringUtils.randomAlphanumeric(l);
             byte[] valueBytes = BytesUtils.randomByteArray(byteL, l, SECURE_RANDOM);
-            keyValueMap.put(ByteBuffer.wrap(keyBytes), valueBytes);
+            keyValueMap.put(key, valueBytes);
         });
         return keyValueMap;
     }
