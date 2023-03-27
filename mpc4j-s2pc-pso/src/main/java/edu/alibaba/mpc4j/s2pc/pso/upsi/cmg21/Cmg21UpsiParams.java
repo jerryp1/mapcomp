@@ -8,7 +8,6 @@ import edu.alibaba.mpc4j.s2pc.pso.upsi.UpsiParams;
 
 import java.math.BigInteger;
 import java.nio.ByteBuffer;
-import java.security.SecureRandom;
 import java.util.Arrays;
 import java.util.stream.IntStream;
 
@@ -63,6 +62,14 @@ public class Cmg21UpsiParams implements UpsiParams {
      * 客户端最大数量
      */
     private final int maxClientSize;
+    /**
+     * 每个密文中的元素数目
+     */
+    private final int itemPerCiphertext;
+    /**
+     * 密文总数
+     */
+    private final int ciphertextNum;
 
     private Cmg21UpsiParams(CuckooHashBinType cuckooHashBinType, int binNum,
                             int maxPartitionSizePerBin, int itemEncodedSlotSize, int psLowDegree,
@@ -79,6 +86,8 @@ public class Cmg21UpsiParams implements UpsiParams {
         this.coeffModulusBits = coeffModulusBits;
         this.expectServerSize = expectServerSize;
         this.maxClientSize = maxClientSize;
+        this.itemPerCiphertext = polyModulusDegree / itemEncodedSlotSize;
+        this.ciphertextNum = binNum / itemPerCiphertext;
     }
 
     /**
@@ -167,20 +176,14 @@ public class Cmg21UpsiParams implements UpsiParams {
     /**
      * 服务端1M，客户端最大元素数量1K，计算量最优
      */
-//    public static final Cmg21UpsiParams SERVER_1M_CLIENT_MAX_1K_CMP = Cmg21UpsiParams.uncheckCreate(
-//        CuckooHashBinType.NAIVE_3_HASH, 2046, 101,
-//        6,
-//        0, new int[]{1, 3, 4, 5, 8, 14, 20, 26, 32, 38, 44, 47, 48, 49, 51, 52},
-//        40961, 4096, new int[]{40, 32, 32},
-//        1000000, 1024
-//    );
     public static final Cmg21UpsiParams SERVER_1M_CLIENT_MAX_1K_CMP = Cmg21UpsiParams.uncheckCreate(
-        CuckooHashBinType.NAIVE_3_HASH, 2046, 50,
+        CuckooHashBinType.NAIVE_3_HASH, 2046, 101,
         6,
-        0, new int[]{1, 3, 4, 5, 8, 14, 20, 26, 32, 38, 44, 47, 48, 49},
+        0, new int[]{1, 3, 4, 5, 8, 14, 20, 26, 32, 38, 44, 47, 48, 49, 51, 52},
         40961, 4096, new int[]{40, 32, 32},
         1000000, 1024
     );
+
     /**
      * 服务端1M，客户端最大元素数量1K，通信量最优
      */
@@ -292,6 +295,17 @@ public class Cmg21UpsiParams implements UpsiParams {
     );
 
     /**
+     * 服务端16M，客户端最大元素数量5535
+     */
+    public static final Cmg21UpsiParams SERVER_16M_CLIENT_MAX_1024 = Cmg21UpsiParams.uncheckCreate(
+        CuckooHashBinType.NAIVE_3_HASH, 1638, 1304,
+        5,
+        44, new int[]{1, 3, 11, 18, 45, 225},
+        4079617, 8192, new int[]{56, 56, 56, 50},
+        16000000, 1024
+    );
+
+    /**
      * 返回布谷鸟哈希类型。
      *
      * @return 布谷鸟哈希类型。
@@ -379,6 +393,24 @@ public class Cmg21UpsiParams implements UpsiParams {
      */
     public int[] getCoeffModulusBits() {
         return coeffModulusBits;
+    }
+
+    /**
+     * 返回密文数目。
+     *
+     * @return 密文数目。
+     */
+    public int getCiphertextNum() {
+        return ciphertextNum;
+    }
+
+    /**
+     * 返回每个密文中的元素数目。
+     *
+     * @return 每个密文中的元素数目。
+     */
+    public int getItemPerCiphertext() {
+        return itemPerCiphertext;
     }
 
     @Override

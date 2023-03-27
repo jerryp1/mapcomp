@@ -1,6 +1,6 @@
 package edu.alibaba.mpc4j.s2pc.pir.index.xpir;
 
-import edu.alibaba.mpc4j.s2pc.pir.index.IndexPirUtils;
+import edu.alibaba.mpc4j.s2pc.pir.PirUtils;
 
 import java.util.Arrays;
 import java.util.stream.IntStream;
@@ -50,8 +50,9 @@ public class Mbfk16IndexPirInnerParams {
         IntStream.range(0, this.binNum).forEach(i -> {
             int byteLength = i == binNum - 1 ? lastBinByteLength : binMaxByteLength;
             // 一个多项式可以包含的元素数量
-            elementSizeOfPlaintext[i] =
-                IndexPirUtils.elementSizeOfPlaintext(byteLength, params.getPolyModulusDegree(), params.getPlainModulusBitLength());
+            elementSizeOfPlaintext[i] = PirUtils.elementSizeOfPlaintext(
+                byteLength, params.getPolyModulusDegree(), params.getPlainModulusBitLength()
+            );
             // 多项式数量
             this.plaintextSize[i] = (int) Math.ceil((double) serverElementSize / this.elementSizeOfPlaintext[i]);
             // 各维度的向量长度

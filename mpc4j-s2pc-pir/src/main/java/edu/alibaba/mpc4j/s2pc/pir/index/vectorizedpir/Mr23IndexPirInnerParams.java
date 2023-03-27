@@ -1,6 +1,9 @@
 package edu.alibaba.mpc4j.s2pc.pir.index.vectorizedpir;
 
-import edu.alibaba.mpc4j.s2pc.pir.index.IndexPirUtils;
+import com.google.common.base.Preconditions;
+import edu.alibaba.mpc4j.common.tool.MathPreconditions;
+import edu.alibaba.mpc4j.common.tool.utils.CommonUtils;
+import edu.alibaba.mpc4j.s2pc.pir.PirUtils;
 
 import java.util.Arrays;
 import java.util.stream.IntStream;
@@ -14,17 +17,9 @@ import java.util.stream.IntStream;
 public class Mr23IndexPirInnerParams {
 
     /**
-     * 各维度的向量长度
-     */
-    private final int dimensionsLength;
-    /**
      * 数据库分块数量
      */
     private final int binNum;
-    /**
-     * 卡槽数目
-     */
-    private final int slotNum;
     /**
      * 分块的最长字节长度
      */
@@ -33,23 +28,23 @@ public class Mr23IndexPirInnerParams {
      * 最后一个分块的字节长度
      */
     private final int lastBinByteLength;
+    /**
+     * 各维度长度
+     */
+    private final int[] dimensionsSize;
 
     public Mr23IndexPirInnerParams(Mr23IndexPirParams params, int serverElementSize, int elementByteLength) {
         this.binMaxByteLength = params.getPlainModulusBitLength()/ Byte.SIZE;
         // 数据库分块数量
-        this.binNum = (elementByteLength + binMaxByteLength - 1) / binMaxByteLength;
+        this.binNum = CommonUtils.getUnitNum(elementByteLength, binMaxByteLength);
         this.lastBinByteLength = elementByteLength - (binNum - 1) * binMaxByteLength;
-        this.dimensionsLength = computeDimensionLength(serverElementSize, params.getDimension());
-        this.slotNum = IndexPirUtils.getNextPowerOfTwo(this.dimensionsLength);
-    }
-
-    /**
-     * 返回各维度的向量长度。
-     *
-     * @return 各维度的向量长度。
-     */
-    public int getDimensionsLength() {
-        return dimensionsLength;
+        assert params.getDimension() == 3;
+        checkDimensionLength(
+            serverElementSize, params.getFirstTwoDimensionSize(), params.getThirdDimensionSize()
+        );
+        this.dimensionsSize = new int[] {
+            params.getThirdDimensionSize(), params.getFirstTwoDimensionSize(), params.getFirstTwoDimensionSize()
+        };
     }
 
     /**
@@ -80,37 +75,31 @@ public class Mr23IndexPirInnerParams {
     }
 
     /**
-     * 返回数据库编码后每个维度的长度。
+     * 返回各维度长度。
      *
-     * @param elementSize 元素数量。
-     * @return 数据库编码后每个维度的长度。
+     * @return 各维度长度。
      */
-    private int computeDimensionLength(int elementSize, int dimension) {
-        int[] dimensionLength = IntStream.range(0, dimension)
-            .map(i -> (int) Math.max(2, Math.floor(Math.pow(elementSize, 1.0 / dimension))))
-            .toArray();
-        int product = Arrays.stream(dimensionLength, 0, dimension).reduce(1, (a, b) -> a * b);
-        if (product < elementSize) {
-            IntStream.range(0, dimension).forEach(i -> dimensionLength[i] = dimensionLength[i] + 1);
-        }
-        product = Arrays.stream(dimensionLength, 0, dimension).reduce(1, (a, b) -> a * b);
-        assert (product >= elementSize);
-        return dimensionLength[0];
+    public int[] getDimensionsSize() {
+        return dimensionsSize;
+    }
+
+    /**
+     * 检查数据库的维度长度是否合理。
+     *
+     * @param elementSize           元素数量。
+     * @param firstTwoDimensionSize 前两维长度。
+     * @param thirdDimensionSize    第三维长度。
+     */
+    private void checkDimensionLength(int elementSize, int firstTwoDimensionSize, int thirdDimensionSize) {
+        int product = firstTwoDimensionSize * firstTwoDimensionSize * thirdDimensionSize;
+        assert product >= elementSize;
     }
 
     @Override
     public String toString() {
         return
             "Vectorized PIR Parameters :" + "\n" +
-            "  - dimensions for d-dimensional hyperrectangle : " + dimensionsLength;
+            "  - dimensions for 3-dimensional hyperrectangle : " + Arrays.toString(dimensionsSize);
     }
 
-    /**
-     * 返回卡槽数目。
-     *
-     * @return 卡槽数目。
-     */
-    public int getSlotNum() {
-        return slotNum;
-    }
 }

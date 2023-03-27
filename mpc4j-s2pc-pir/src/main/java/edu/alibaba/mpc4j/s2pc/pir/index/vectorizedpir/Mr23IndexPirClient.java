@@ -4,9 +4,9 @@ import edu.alibaba.mpc4j.common.rpc.*;
 import edu.alibaba.mpc4j.common.rpc.utils.DataPacket;
 import edu.alibaba.mpc4j.common.rpc.utils.DataPacketHeader;
 import edu.alibaba.mpc4j.common.tool.CommonConstants;
+import edu.alibaba.mpc4j.s2pc.pir.PirUtils;
 import edu.alibaba.mpc4j.s2pc.pir.index.AbstractIndexPirClient;
 import edu.alibaba.mpc4j.s2pc.pir.index.IndexPirParams;
-import edu.alibaba.mpc4j.s2pc.pir.index.IndexPirUtils;
 import edu.alibaba.mpc4j.s2pc.pir.index.vectorizedpir.Mr23IndexPirPtoDesc.PtoStep;
 
 import java.util.ArrayList;
@@ -141,11 +141,7 @@ public class Mr23IndexPirClient extends AbstractIndexPirClient {
      * @return 查询密文。
      */
     public ArrayList<byte[]> generateQuery() {
-        int slotNum = innerParams.getSlotNum();
-        int[] dimensionLength = IntStream.range(0, params.getDimension())
-            .map(i -> innerParams.getDimensionsLength())
-            .toArray();
-        int[] temp = IndexPirUtils.computeIndices(index, dimensionLength);
+        int[] temp = PirUtils.computeIndices(index, innerParams.getDimensionsSize());
         int[] permutedIndices = IntStream.range(0, params.getDimension())
             .map(i -> temp[params.getDimension() - 1 - i])
             .toArray();
@@ -153,12 +149,12 @@ public class Mr23IndexPirClient extends AbstractIndexPirClient {
         for (int i = 0; i < params.getDimension(); i++) {
             indices[i] = permutedIndices[i];
             for (int j = 0; j < i; j++) {
-                indices[i] = (indices[i] + permutedIndices[j]) % slotNum;
+                indices[i] = (indices[i] + permutedIndices[j]) % params.getFirstTwoDimensionSize();
             }
         }
         this.offset = indices[params.getDimension() - 1];
         return Mr23IndexPirNativeUtils.generateQuery(
-            params.getEncryptionParams(), publicKey, secretKey, indices, slotNum
+            params.getEncryptionParams(), publicKey, secretKey, indices, params.getFirstTwoDimensionSize()
         );
     }
 
@@ -180,9 +176,9 @@ public class Mr23IndexPirClient extends AbstractIndexPirClient {
                 secretKey,
                 response.get(binIndex),
                 offset,
-                innerParams.getSlotNum()
+                params.getFirstTwoDimensionSize()
             );
-            byte[] bytes = IndexPirUtils.convertCoeffsToBytes(new long[]{coeffs}, params.getPlainModulusBitLength());
+            byte[] bytes = PirUtils.convertCoeffsToBytes(new long[]{coeffs}, params.getPlainModulusBitLength());
             int byteLength = binIndex == binNum - 1 ? innerParams.getLastBinByteLength() : innerParams.getBinMaxByteLength();
             System.arraycopy(bytes, 0, elementBytes, binIndex * innerParams.getBinMaxByteLength(), byteLength);
         });
@@ -194,7 +190,7 @@ public class Mr23IndexPirClient extends AbstractIndexPirClient {
      */
     private void generateKeyPair() {
         List<byte[]> keyPair = Mr23IndexPirNativeUtils.keyGen(
-            params.getEncryptionParams(), innerParams.getDimensionsLength(), innerParams.getSlotNum()
+            params.getEncryptionParams(), params.getFirstTwoDimensionSize()
         );
         assert (keyPair.size() == 4);
         this.publicKey = keyPair.remove(0);

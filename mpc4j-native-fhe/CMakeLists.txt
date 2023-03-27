@@ -67,3 +67,5 @@ add_library(
         pir/edu_alibaba_mpc4j_s2pc_pir_batchindex_psipir_Lpzg24BatchIndexPirNativeUtils.cpp pir/edu_alibaba_mpc4j_s2pc_pir_batchindex_vectorizedpir_Mr23BatchIndexPirNativeUtils.cpp)
 # 链接SEAL库
 target_link_libraries(mpc4j-native-fhe PUBLIC SEAL::seal_shared)
+#target_link_libraries(mpc4j-native-fhe PUBLIC SEAL::seal)
+

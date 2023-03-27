@@ -47,7 +47,7 @@ public class BatchIndexPirFactory implements PtoFactory {
      * @return 服务端。
      */
     public static BatchIndexPirServer createServer(Rpc serverRpc, Party clientParty, BatchIndexPirConfig config) {
-        BatchIndexPirType type = config.getProType();
+        BatchIndexPirType type = config.getPtoType();
         switch (type) {
             case PSI_PIR:
                 return new Lpzg24BatchIndexPirServer(serverRpc, clientParty, (Lpzg24BatchIndexPirConfig) config);
@@ -67,7 +67,7 @@ public class BatchIndexPirFactory implements PtoFactory {
      * @return 客户端。
      */
     public static BatchIndexPirClient createClient(Rpc clientRpc, Party serverParty, BatchIndexPirConfig config) {
-        BatchIndexPirType type = config.getProType();
+        BatchIndexPirType type = config.getPtoType();
         switch (type) {
             case PSI_PIR:
                 return new Lpzg24BatchIndexPirClient(clientRpc, serverParty, (Lpzg24BatchIndexPirConfig) config);

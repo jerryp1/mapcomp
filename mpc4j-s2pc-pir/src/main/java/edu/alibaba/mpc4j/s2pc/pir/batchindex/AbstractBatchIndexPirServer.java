@@ -8,6 +8,7 @@ import edu.alibaba.mpc4j.common.rpc.pto.AbstractTwoPartyPto;
 import edu.alibaba.mpc4j.common.tool.MathPreconditions;
 import edu.alibaba.mpc4j.common.tool.utils.BigIntegerUtils;
 import edu.alibaba.mpc4j.common.tool.utils.CommonUtils;
+import edu.alibaba.mpc4j.common.tool.utils.LongUtils;
 
 import java.math.BigInteger;
 import java.nio.ByteBuffer;
@@ -22,7 +23,7 @@ import java.util.Arrays;
  */
 public abstract class AbstractBatchIndexPirServer extends AbstractTwoPartyPto implements BatchIndexPirServer {
     /**
-     * 服务端元素数组
+     * 服务端元素列表
      */
     protected ArrayList<byte[][]> elementByteArray = new ArrayList<>();
     /**
@@ -64,15 +65,15 @@ public abstract class AbstractBatchIndexPirServer extends AbstractTwoPartyPto im
         MathPreconditions.checkPositiveInRangeClosed("partitionBitLength", partitionBitLength, Integer.SIZE);
         this.partitionBitLength = partitionBitLength;
         this.partitionCount = CommonUtils.getUnitNum(elementBitLength, partitionBitLength);
-        BigInteger mod = BigInteger.ONE.shiftLeft(partitionBitLength);
+        BigInteger modulus = BigInteger.ONE.shiftLeft(partitionBitLength);
         int byteLength = CommonUtils.getByteLength(partitionBitLength);
         for (int i = 0; i < partitionCount; i++) {
             byte[][] temp = new byte[serverElementSize][byteLength];
+            int shiftBits = i * partitionBitLength;
             for (int j = 0; j < serverElementSize; j++) {
                 BigInteger element = BigIntegerUtils.byteArrayToNonNegBigInteger(elementArray[j]);
-                element = element.shiftRight(i * partitionBitLength);
-                element = element.mod(mod);
-                temp[j] = BigIntegerUtils.nonNegBigIntegerToByteArray(element, byteLength);
+                element = element.shiftRight(shiftBits).mod(modulus);
+                temp[j] = LongUtils.longToByteArray(element.longValue());
             }
             elementByteArray.add(temp);
         }

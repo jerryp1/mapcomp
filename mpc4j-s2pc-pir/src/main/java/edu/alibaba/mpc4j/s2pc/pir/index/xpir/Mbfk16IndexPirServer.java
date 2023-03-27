@@ -4,9 +4,9 @@ import edu.alibaba.mpc4j.common.rpc.*;
 import edu.alibaba.mpc4j.common.rpc.utils.DataPacket;
 import edu.alibaba.mpc4j.common.rpc.utils.DataPacketHeader;
 import edu.alibaba.mpc4j.common.tool.CommonConstants;
+import edu.alibaba.mpc4j.s2pc.pir.PirUtils;
 import edu.alibaba.mpc4j.s2pc.pir.index.AbstractIndexPirServer;
 import edu.alibaba.mpc4j.s2pc.pir.index.IndexPirParams;
-import edu.alibaba.mpc4j.s2pc.pir.index.IndexPirUtils;
 import edu.alibaba.mpc4j.s2pc.pir.index.xpir.Mbfk16IndexPirPtoDesc.PtoStep;
 
 import java.nio.ByteBuffer;
@@ -196,7 +196,7 @@ public class Mbfk16IndexPirServer extends AbstractIndexPirServer {
             }
             assert (processByteSize % byteLength == 0);
             // Get the coefficients of the elements that will be packed in plaintext i
-            long[] coeffs = IndexPirUtils.convertBytesToCoeffs(
+            long[] coeffs = PirUtils.convertBytesToCoeffs(
                 params.getPlainModulusBitLength(), offset, processByteSize, combinedBytes
             );
             assert (coeffs.length <= usedCoeffSize);

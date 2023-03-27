@@ -29,6 +29,15 @@ jbyteArray serialize_public_key(JNIEnv *env, const PublicKey& public_key) {
     return byte_array;
 }
 
+jbyteArray serialize_public_key(JNIEnv *env, const Serializable<PublicKey>& public_key) {
+    std::ostringstream output;
+    public_key.save(output, Serialization::compr_mode_default);
+    jint len = (jint) output.str().size();
+    jbyteArray byte_array = env->NewByteArray(len);
+    env->SetByteArrayRegion(byte_array, 0, len, reinterpret_cast<const jbyte *>(output.str().c_str()));
+    return byte_array;
+}
+
 PublicKey deserialize_public_key(JNIEnv *env, jbyteArray pk_bytes, const SEALContext& context) {
     jbyte* byte_array = env->GetByteArrayElements(pk_bytes, JNI_FALSE);
     std::string str((char*) byte_array, env->GetArrayLength(pk_bytes));
@@ -77,6 +86,15 @@ jbyteArray serialize_relin_keys(JNIEnv *env, const RelinKeys& relin_keys) {
     return byte_array;
 }
 
+jbyteArray serialize_relin_keys(JNIEnv *env, const Serializable<RelinKeys>& relin_keys) {
+    std::ostringstream output;
+    relin_keys.save(output, Serialization::compr_mode_default);
+    jint len = (jint) output.str().size();
+    jbyteArray byte_array = env->NewByteArray(len);
+    env->SetByteArrayRegion(byte_array, 0, len, reinterpret_cast<const jbyte *>(output.str().c_str()));
+    return byte_array;
+}
+
 RelinKeys deserialize_relin_keys(JNIEnv *env, jbyteArray relin_keys_bytes, const SEALContext& context) {
     jbyte* byte_array = env->GetByteArrayElements(relin_keys_bytes, JNI_FALSE);
     string str((char*) byte_array, env->GetArrayLength(relin_keys_bytes));
@@ -93,6 +111,15 @@ RelinKeys deserialize_relin_keys(JNIEnv *env, jbyteArray relin_keys_bytes, const
 }
 
 jbyteArray serialize_galois_keys(JNIEnv *env, const GaloisKeys& galois_keys) {
+    std::ostringstream output;
+    galois_keys.save(output, Serialization::compr_mode_default);
+    jint len = (jint) output.str().size();
+    jbyteArray byte_array = env->NewByteArray(len);
+    env->SetByteArrayRegion(byte_array, 0, len, reinterpret_cast<const jbyte *>(output.str().c_str()));
+    return byte_array;
+}
+
+jbyteArray serialize_galois_keys(JNIEnv *env, const Serializable<GaloisKeys>& galois_keys) {
     std::ostringstream output;
     galois_keys.save(output, Serialization::compr_mode_default);
     jint len = (jint) output.str().size();
@@ -125,6 +152,15 @@ jbyteArray serialize_ciphertext(JNIEnv *env, const Ciphertext& ciphertext) {
     return byte_array;
 }
 
+jbyteArray serialize_ciphertext(JNIEnv *env, const Serializable<Ciphertext>& ciphertext) {
+    std::ostringstream output;
+    ciphertext.save(output, Serialization::compr_mode_default);
+    jint len = (jint) output.str().size();
+    jbyteArray byte_array = env->NewByteArray(len);
+    env->SetByteArrayRegion(byte_array, 0, len, reinterpret_cast<const jbyte *>(output.str().c_str()));
+    return byte_array;
+}
+
 Ciphertext deserialize_ciphertext(JNIEnv *env, jbyteArray ciphertext_bytes, const SEALContext& context) {
     jbyte* byte_array = env->GetByteArrayElements(ciphertext_bytes, JNI_FALSE);
     std::string str((char*) byte_array, env->GetArrayLength(ciphertext_bytes));
@@ -141,6 +177,21 @@ Ciphertext deserialize_ciphertext(JNIEnv *env, jbyteArray ciphertext_bytes, cons
 }
 
 jobject serialize_ciphertexts(JNIEnv *env, const vector<Ciphertext>& ciphertexts) {
+    jclass list_jcs = env->FindClass("java/util/ArrayList");
+    jmethodID list_init = env->GetMethodID(list_jcs, "<init>", "()V");
+    jobject list_obj = env->NewObject(list_jcs, list_init, "");
+    jmethodID list_add = env->GetMethodID(list_jcs, "add", "(Ljava/lang/Object;)Z");
+    for (auto & ciphertext : ciphertexts) {
+        jbyteArray byte_array = serialize_ciphertext(env, ciphertext);
+        env->CallBooleanMethod(list_obj, list_add, byte_array);
+        env->DeleteLocalRef(byte_array);
+    }
+    // free
+    env->DeleteLocalRef(list_jcs);
+    return list_obj;
+}
+
+jobject serialize_ciphertexts(JNIEnv *env, const vector<Serializable<Ciphertext>>& ciphertexts) {
     jclass list_jcs = env->FindClass("java/util/ArrayList");
     jmethodID list_init = env->GetMethodID(list_jcs, "<init>", "()V");
     jobject list_obj = env->NewObject(list_jcs, list_init, "");

@@ -1,10 +1,11 @@
 package edu.alibaba.mpc4j.s2pc.pir.batchindex.vectorizedpir;
 
 import edu.alibaba.mpc4j.common.tool.CommonConstants;
+import edu.alibaba.mpc4j.s2pc.pir.PirUtils;
 import edu.alibaba.mpc4j.s2pc.pir.index.IndexPirParams;
 
 /**
- * Vectorized PIR协议参数。
+ * Vectorized Batch PIR协议参数。
  *
  * @author Liqiang Peng
  * @date 2023/3/6
@@ -24,23 +25,29 @@ public class Mr23BatchIndexPirParams implements IndexPirParams {
      */
     private final int polyModulusDegree;
     /**
-     * 维数
-     */
-    private final int dimension;
-    /**
      * SEAL上下文参数
      */
     private final byte[] encryptionParams;
     /**
-     * 哈希个数
+     * 哈希数目
      */
     private final int hashNum;
+    /**
+     * 前两维长度
+     */
+    private final int firstTwoDimensionSize;
+    /**
+     * 第三维长度
+     */
+    private final int thirdDimensionSize;
 
     public Mr23BatchIndexPirParams(int polyModulusDegree, int plainModulusBitLength, int[] coeffModulusBitLength,
-                                   int dimension, int hashNum) {
+                                   int firstTwoDimensionSize, int thirdDimensionSize, int hashNum) {
         this.polyModulusDegree = polyModulusDegree;
         this.plainModulusBitLength = plainModulusBitLength;
-        this.dimension = dimension;
+        assert firstTwoDimensionSize == PirUtils.getNextPowerOfTwo(firstTwoDimensionSize);
+        this.firstTwoDimensionSize = firstTwoDimensionSize;
+        this.thirdDimensionSize = thirdDimensionSize;
         // 生成加密方案参数
         this.encryptionParams = Mr23BatchIndexPirNativeUtils.generateSealContext(
             polyModulusDegree, plainModulusBitLength, coeffModulusBitLength
@@ -49,14 +56,43 @@ public class Mr23BatchIndexPirParams implements IndexPirParams {
     }
 
     /**
-     * 默认参数
+     * 默认参数，适合分桶数目256
      */
-    public static Mr23BatchIndexPirParams DEFAULT_PARAMS = new Mr23BatchIndexPirParams(
+    public static Mr23BatchIndexPirParams DEFAULT_PARAMS_BIN_SIZE_256 = new Mr23BatchIndexPirParams(
         8192,
         20,
-        new int[]{60, 55, 55, 55},
-        3,
-        3
+        new int[]{50, 55, 55, 50},
+        32, 9, 3
+    );
+
+    /**
+     * 默认参数，适合分桶数目512
+     */
+    public static Mr23BatchIndexPirParams DEFAULT_PARAMS_BIN_SIZE_512 = new Mr23BatchIndexPirParams(
+        8192,
+        20,
+        new int[]{50, 55, 55, 50},
+        32, 5, 3
+    );
+
+    /**
+     * 默认参数，适合分桶数目1024
+     */
+    public static Mr23BatchIndexPirParams DEFAULT_PARAMS_BIN_SIZE_1024 = new Mr23BatchIndexPirParams(
+        8192,
+        20,
+        new int[]{50, 55, 55, 50},
+        16, 9, 3
+    );
+
+    /**
+     * 默认参数，适合分桶数目1024
+     */
+    public static Mr23BatchIndexPirParams DEFAULT_PARAMS_BIN_SIZE_2048 = new Mr23BatchIndexPirParams(
+        8192,
+        20,
+        new int[]{50, 55, 55, 50},
+        16, 5, 3
     );
 
     @Override
@@ -71,7 +107,7 @@ public class Mr23BatchIndexPirParams implements IndexPirParams {
 
     @Override
     public int getDimension() {
-        return dimension;
+        return 3;
     }
 
     @Override
@@ -87,6 +123,19 @@ public class Mr23BatchIndexPirParams implements IndexPirParams {
             " - size of plaintext modulus : " + plainModulusBitLength;
     }
 
+    public int getFirstTwoDimensionSize() {
+        return firstTwoDimensionSize;
+    }
+
+    public int getThirdDimensionSize() {
+        return thirdDimensionSize;
+    }
+
+    /**
+     * 返回哈希数目。
+     *
+     * @return 哈希数目。
+     */
     public int getHashNum() {
         return hashNum;
     }

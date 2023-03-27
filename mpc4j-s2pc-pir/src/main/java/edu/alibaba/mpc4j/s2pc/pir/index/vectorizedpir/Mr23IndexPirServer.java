@@ -4,13 +4,14 @@ import edu.alibaba.mpc4j.common.rpc.*;
 import edu.alibaba.mpc4j.common.rpc.utils.DataPacket;
 import edu.alibaba.mpc4j.common.rpc.utils.DataPacketHeader;
 import edu.alibaba.mpc4j.common.tool.CommonConstants;
+import edu.alibaba.mpc4j.s2pc.pir.PirUtils;
 import edu.alibaba.mpc4j.s2pc.pir.index.AbstractIndexPirServer;
 import edu.alibaba.mpc4j.s2pc.pir.index.IndexPirParams;
-import edu.alibaba.mpc4j.s2pc.pir.index.IndexPirUtils;
 import edu.alibaba.mpc4j.s2pc.pir.index.vectorizedpir.Mr23IndexPirPtoDesc.PtoStep;
 
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
@@ -58,8 +59,7 @@ public class Mr23IndexPirServer extends AbstractIndexPirServer {
         setInitInput(elementArrayList, elementByteLength, innerParams.getBinMaxByteLength());
         // 服务端对数据库进行编码
         int binNum = innerParams.getBinNum();
-        int totalSize = IntStream.range(0, params.getDimension() - 1)
-            .map(i -> innerParams.getDimensionsLength()).reduce(1, (a, b) -> a * b);
+        int totalSize = params.getFirstTwoDimensionSize() * params.getThirdDimensionSize();
         IntStream intStream = this.parallel ? IntStream.range(0, binNum).parallel() : IntStream.range(0, binNum);
         encodedDatabase = intStream.mapToObj(i -> preprocessDatabase(i, totalSize)).collect(Collectors.toList());
         stopWatch.stop();
@@ -80,8 +80,7 @@ public class Mr23IndexPirServer extends AbstractIndexPirServer {
         setInitInput(elementArrayList, elementByteLength, innerParams.getBinMaxByteLength());
         // 服务端对数据库进行编码
         int binNum = innerParams.getBinNum();
-        int totalSize = IntStream.range(0, params.getDimension() - 1)
-            .map(i -> innerParams.getDimensionsLength()).reduce(1, (a, b) -> a * b);
+        int totalSize = params.getFirstTwoDimensionSize() * params.getThirdDimensionSize();
         IntStream intStream = this.parallel ? IntStream.range(0, binNum).parallel() : IntStream.range(0, binNum);
         encodedDatabase = intStream.mapToObj(i -> preprocessDatabase(i, totalSize)).collect(Collectors.toList());
         stopWatch.stop();
@@ -139,7 +138,7 @@ public class Mr23IndexPirServer extends AbstractIndexPirServer {
         return intStream
             .mapToObj(i -> Mr23IndexPirNativeUtils.generateReply(
                 params.getEncryptionParams(), clientQuery, encodedDatabase.get(i), publicKey, relinKeys, galoisKeys,
-                innerParams.getDimensionsLength(), innerParams.getSlotNum(), params.getDimension()
+                params.getFirstTwoDimensionSize(), params.getThirdDimensionSize()
             )).collect(toCollection(ArrayList::new));
     }
 
@@ -154,14 +153,14 @@ public class Mr23IndexPirServer extends AbstractIndexPirServer {
         long[] coeffs = new long[num];
         int byteLength = elementByteArray.get(binIndex)[0].length;
         IntStream.range(0, num).forEach(i -> {
-            long[] temp = IndexPirUtils.convertBytesToCoeffs(
+            long[] temp = PirUtils.convertBytesToCoeffs(
                 params.getPlainModulusBitLength(), 0, byteLength, elementByteArray.get(binIndex)[i]
             );
             assert temp.length == 1;
             coeffs[i] = temp[0];
         });
         return Mr23IndexPirNativeUtils.preprocessDatabase(
-            params.getEncryptionParams(), coeffs, innerParams.getDimensionsLength(), innerParams.getSlotNum(), totalSize
+            params.getEncryptionParams(), coeffs, innerParams.getDimensionsSize(), totalSize
         );
     }
 }

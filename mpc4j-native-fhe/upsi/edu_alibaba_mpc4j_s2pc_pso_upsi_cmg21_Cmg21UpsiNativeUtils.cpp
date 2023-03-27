@@ -21,10 +21,8 @@ JNIEXPORT jobject JNICALL Java_edu_alibaba_mpc4j_s2pc_pso_upsi_cmg21_Cmg21UpsiNa
     SEALContext context = SEALContext(parms);
     KeyGenerator key_gen = KeyGenerator(context);
     const SecretKey &secret_key = key_gen.secret_key();
-    PublicKey public_key;
-    key_gen.create_public_key(public_key);
-    RelinKeys relin_keys;
-    key_gen.create_relin_keys(relin_keys);
+    Serializable<PublicKey> public_key = key_gen.create_public_key();
+    Serializable<RelinKeys> relin_keys = key_gen.create_relin_keys();
     jclass list_jcs = env->FindClass("java/util/ArrayList");
     jmethodID list_init = env->GetMethodID(list_jcs, "<init>", "()V");
     jobject list_obj = env->NewObject(list_jcs, list_init, "");
@@ -209,12 +207,9 @@ JNIEXPORT jobject JNICALL Java_edu_alibaba_mpc4j_s2pc_pso_upsi_cmg21_Cmg21UpsiNa
     vector<Plaintext> plain_query = deserialize_plaintexts_from_coeff(env, coeffs_array, context);
     Encryptor encryptor(context, public_key);
     encryptor.set_secret_key(secret_key);
-    vector<Ciphertext> query;
-    query.reserve(plain_query.size());
-    for (auto & i : plain_query) {
-        Ciphertext ciphertext;
-        encryptor.encrypt_symmetric(i, ciphertext);
-        query.push_back(ciphertext);
+    vector<Serializable<Ciphertext>> query;
+    for (auto & plaintext : plain_query) {
+        query.push_back(encryptor.encrypt_symmetric(plaintext));
     }
     return serialize_ciphertexts(env, query);
 }

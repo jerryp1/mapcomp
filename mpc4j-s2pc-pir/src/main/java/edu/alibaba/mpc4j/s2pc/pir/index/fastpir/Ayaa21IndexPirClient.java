@@ -4,9 +4,9 @@ import edu.alibaba.mpc4j.common.rpc.*;
 import edu.alibaba.mpc4j.common.rpc.utils.DataPacket;
 import edu.alibaba.mpc4j.common.rpc.utils.DataPacketHeader;
 import edu.alibaba.mpc4j.common.tool.CommonConstants;
+import edu.alibaba.mpc4j.s2pc.pir.PirUtils;
 import edu.alibaba.mpc4j.s2pc.pir.index.AbstractIndexPirClient;
 import edu.alibaba.mpc4j.s2pc.pir.index.IndexPirParams;
-import edu.alibaba.mpc4j.s2pc.pir.index.IndexPirUtils;
 import edu.alibaba.mpc4j.s2pc.pir.index.fastpir.Ayaa21IndexPirPtoDesc.PtoStep;
 
 import java.util.ArrayList;
@@ -178,8 +178,8 @@ public class Ayaa21IndexPirClient extends AbstractIndexPirClient {
                 rotatedCoeffs[0][i] = coeffs[(index + i) % rowCount];
                 rotatedCoeffs[1][i] = coeffs[rowCount + ((index + i) % rowCount)];
             });
-            byte[] upperBytes = IndexPirUtils.convertCoeffsToBytes(rotatedCoeffs[0], params.getPlainModulusBitLength());
-            byte[] lowerBytes = IndexPirUtils.convertCoeffsToBytes(rotatedCoeffs[1], params.getPlainModulusBitLength());
+            byte[] upperBytes = PirUtils.convertCoeffsToBytes(rotatedCoeffs[0], params.getPlainModulusBitLength());
+            byte[] lowerBytes = PirUtils.convertCoeffsToBytes(rotatedCoeffs[1], params.getPlainModulusBitLength());
             System.arraycopy(upperBytes, 0, result, binIndex * innerParams.getBinMaxByteLength(), byteLength / 2);
             System.arraycopy(lowerBytes, 0, result, binIndex * innerParams.getBinMaxByteLength() + byteLength / 2, byteLength / 2);
         });

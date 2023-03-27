@@ -1,6 +1,6 @@
 package edu.alibaba.mpc4j.s2pc.pir.batchindex.vectorizedpir;
 
-import edu.alibaba.mpc4j.s2pc.pir.index.IndexPirUtils;
+import edu.alibaba.mpc4j.s2pc.pir.PirUtils;
 
 import java.util.Arrays;
 import java.util.stream.IntStream;
@@ -14,13 +14,9 @@ import java.util.stream.IntStream;
 public class Mr23BatchIndexPirInnerParams {
 
     /**
-     * 各维度的向量长度
+     * 各维度长度
      */
-    private final int dimensionsLength;
-    /**
-     * 卡槽数目
-     */
-    private final int slotNum;
+    private final int[] dimensionsSize;
     /**
      * 分桶数目
      */
@@ -39,14 +35,16 @@ public class Mr23BatchIndexPirInnerParams {
     private final int totalSize;
 
     public Mr23BatchIndexPirInnerParams(Mr23BatchIndexPirParams params, int binNum, int binSize) {
-        this.dimensionsLength = computeDimensionLength(binSize, params.getDimension());
+        checkDimensionLength(
+            binSize, params.getFirstTwoDimensionSize(), params.getThirdDimensionSize()
+        );
+        this.dimensionsSize = new int[] {
+            params.getThirdDimensionSize(), params.getFirstTwoDimensionSize(), params.getFirstTwoDimensionSize()
+        };
         this.binNum = binNum;
         this.binSize = binSize;
-        this.slotNum = IndexPirUtils.getNextPowerOfTwo(this.dimensionsLength);
-        this.groupBinSize = (params.getPolyModulusDegree() / 2) / slotNum;
-        this.totalSize = IntStream.range(0, params.getDimension() - 1)
-            .map(j -> dimensionsLength)
-            .reduce(1, (a, b) -> a * b);
+        this.groupBinSize = (params.getPolyModulusDegree() / 2) / params.getFirstTwoDimensionSize();
+        this.totalSize = params.getFirstTwoDimensionSize() * params.getThirdDimensionSize();
     }
 
     /**
@@ -54,43 +52,27 @@ public class Mr23BatchIndexPirInnerParams {
      *
      * @return 各维度的向量长度。
      */
-    public int getDimensionsLength() {
-        return dimensionsLength;
+    public int[] getDimensionsSize() {
+        return dimensionsSize;
     }
 
     /**
-     * 返回数据库编码后每个维度的长度。
+     * 检查数据库的维度长度是否合理。
      *
-     * @param elementSize 元素数量。
-     * @return 数据库编码后每个维度的长度。
+     * @param elementSize           元素数量。
+     * @param firstTwoDimensionSize 前两维长度。
+     * @param thirdDimensionSize    第三维长度。
      */
-    private int computeDimensionLength(int elementSize, int dimension) {
-        int[] dimensionLength = IntStream.range(0, dimension)
-            .map(i -> (int) Math.max(2, Math.floor(Math.pow(elementSize, 1.0 / dimension))))
-            .toArray();
-        int product = Arrays.stream(dimensionLength, 0, dimension).reduce(1, (a, b) -> a * b);
-        if (product < elementSize) {
-            IntStream.range(0, dimension).forEach(i -> dimensionLength[i] = dimensionLength[i] + 1);
-        }
-        product = Arrays.stream(dimensionLength, 0, dimension).reduce(1, (a, b) -> a * b);
-        assert (product >= elementSize);
-        return dimensionLength[0];
+    private void checkDimensionLength(int elementSize, int firstTwoDimensionSize, int thirdDimensionSize) {
+        int product = firstTwoDimensionSize * firstTwoDimensionSize * thirdDimensionSize;
+        assert product >= elementSize;
     }
 
     @Override
     public String toString() {
         return
             "Vectorized PIR Parameters :" + "\n" +
-            "  - dimensions for d-dimensional hyperrectangle : " + dimensionsLength;
-    }
-
-    /**
-     * 返回卡槽数目。
-     *
-     * @return 卡槽数目。
-     */
-    public int getSlotNum() {
-        return slotNum;
+            "  - dimensions for d-dimensional hyperrectangle : " + Arrays.toString(dimensionsSize);
     }
 
     /**

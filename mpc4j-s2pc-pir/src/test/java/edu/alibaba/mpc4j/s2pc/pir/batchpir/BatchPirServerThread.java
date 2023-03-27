@@ -5,9 +5,6 @@ import edu.alibaba.mpc4j.s2pc.pir.batchindex.BatchIndexPirServer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.nio.ByteBuffer;
-import java.util.ArrayList;
-
 /**
  * 批量索引PIR协议服务端线程。
  *
@@ -21,7 +18,7 @@ public class BatchPirServerThread extends Thread {
      */
     private final BatchIndexPirServer server;
     /**
-     * 服务端元素列表
+     * 服务端元素数组
      */
     private final byte[][] serverElementArray;
     /**
@@ -45,11 +42,15 @@ public class BatchPirServerThread extends Thread {
     public void run() {
         try {
             server.init(serverElementArray, elementBitLength, maxRetrievalSize);
-            LOGGER.info("Server: Offline Communication costs {}MB", server.getRpc().getSendByteLength() * 1.0 / (1024 * 1024));
+            LOGGER.info(
+                "Server: Offline Communication costs {}MB", server.getRpc().getSendByteLength() * 1.0 / (1 << 20)
+            );
             server.getRpc().synchronize();
             server.getRpc().reset();
             server.pir();
-            LOGGER.info("Server: Online Communication costs {}MB", server.getRpc().getSendByteLength() * 1.0 / (1024 * 1024));
+            LOGGER.info(
+                "Server: Online Communication costs {}MB", server.getRpc().getSendByteLength() * 1.0 / (1 << 20)
+            );
             server.getRpc().synchronize();
             server.getRpc().reset();
         } catch (MpcAbortException e) {

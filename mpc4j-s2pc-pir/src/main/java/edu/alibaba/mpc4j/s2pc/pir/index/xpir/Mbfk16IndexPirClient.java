@@ -5,9 +5,9 @@ import edu.alibaba.mpc4j.common.rpc.*;
 import edu.alibaba.mpc4j.common.rpc.utils.DataPacket;
 import edu.alibaba.mpc4j.common.rpc.utils.DataPacketHeader;
 import edu.alibaba.mpc4j.common.tool.CommonConstants;
+import edu.alibaba.mpc4j.s2pc.pir.PirUtils;
 import edu.alibaba.mpc4j.s2pc.pir.index.AbstractIndexPirClient;
 import edu.alibaba.mpc4j.s2pc.pir.index.IndexPirParams;
-import edu.alibaba.mpc4j.s2pc.pir.index.IndexPirUtils;
 import edu.alibaba.mpc4j.s2pc.pir.index.xpir.Mbfk16IndexPirPtoDesc.PtoStep;
 
 import java.util.*;
@@ -131,7 +131,7 @@ public class Mbfk16IndexPirClient extends AbstractIndexPirClient {
         int[] nvec = innerParams.getDimensionsLength()[0];
         int indexOfPlaintext = index / innerParams.getElementSizeOfPlaintext()[0];
         // 计算每个维度的坐标
-        int[] indices = IndexPirUtils.computeIndices(indexOfPlaintext, nvec);
+        int[] indices = PirUtils.computeIndices(indexOfPlaintext, nvec);
         ArrayList<byte[]> result = new ArrayList<>(
             Mbfk16IndexPirNativeUtils.generateQuery(params.getEncryptionParams(), publicKey, secretKey, indices, nvec)
         );
@@ -140,7 +140,7 @@ public class Mbfk16IndexPirClient extends AbstractIndexPirClient {
             int[] lastNvec = innerParams.getDimensionsLength()[bundleNum - 1];
             int lastIndexOfPlaintext = index / innerParams.getElementSizeOfPlaintext()[bundleNum - 1];
             // 计算每个维度的坐标
-            int[] lastIndices = IndexPirUtils.computeIndices(lastIndexOfPlaintext, lastNvec);
+            int[] lastIndices = PirUtils.computeIndices(lastIndexOfPlaintext, lastNvec);
             // 返回查询密文
             result.addAll(
                 Mbfk16IndexPirNativeUtils.generateQuery(
@@ -173,7 +173,7 @@ public class Mbfk16IndexPirClient extends AbstractIndexPirClient {
                 Lists.newArrayList(response.subList(binIndex * binResponseSize, (binIndex + 1) * binResponseSize)),
                 params.getDimension()
             );
-            byte[] bytes = IndexPirUtils.convertCoeffsToBytes(coeffs, params.getPlainModulusBitLength());
+            byte[] bytes = PirUtils.convertCoeffsToBytes(coeffs, params.getPlainModulusBitLength());
             int offset = this.index % innerParams.getElementSizeOfPlaintext()[binIndex];
             int byteLength = binIndex == binNum - 1 ? innerParams.getLastBinByteLength() : innerParams.getBinMaxByteLength();
             System.arraycopy(bytes, offset * byteLength, elementBytes, binIndex * innerParams.getBinMaxByteLength(), byteLength);

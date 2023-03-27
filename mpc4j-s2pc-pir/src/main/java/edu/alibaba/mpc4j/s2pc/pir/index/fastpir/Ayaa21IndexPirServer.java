@@ -6,9 +6,9 @@ import edu.alibaba.mpc4j.common.rpc.utils.DataPacketHeader;
 import edu.alibaba.mpc4j.common.tool.CommonConstants;
 import edu.alibaba.mpc4j.common.tool.MathPreconditions;
 import edu.alibaba.mpc4j.common.tool.utils.BytesUtils;
+import edu.alibaba.mpc4j.s2pc.pir.PirUtils;
 import edu.alibaba.mpc4j.s2pc.pir.index.AbstractIndexPirServer;
 import edu.alibaba.mpc4j.s2pc.pir.index.IndexPirParams;
-import edu.alibaba.mpc4j.s2pc.pir.index.IndexPirUtils;
 import edu.alibaba.mpc4j.s2pc.pir.index.fastpir.Ayaa21IndexPirPtoDesc.PtoStep;
 
 import java.nio.ByteBuffer;
@@ -154,8 +154,8 @@ public class Ayaa21IndexPirServer extends AbstractIndexPirServer {
             System.arraycopy(element, 0, upperBytes, 0, length);
             byte[] lowerBytes = new byte[length];
             System.arraycopy(element, length, lowerBytes, 0, length);
-            long[] upperCoeffs = IndexPirUtils.convertBytesToCoeffs(params.getPlainModulusBitLength(), 0, length, upperBytes);
-            long[] lowerCoeffs = IndexPirUtils.convertBytesToCoeffs(params.getPlainModulusBitLength(), 0, length, lowerBytes);
+            long[] upperCoeffs = PirUtils.convertBytesToCoeffs(params.getPlainModulusBitLength(), 0, length, upperBytes);
+            long[] lowerCoeffs = PirUtils.convertBytesToCoeffs(params.getPlainModulusBitLength(), 0, length, lowerBytes);
             for (int j = 0; j < innerParams.getElementColumnLength()[binIndex]; j++) {
                 encodedDatabase[rowIndex][colIndex] = upperCoeffs[j];
                 encodedDatabase[rowIndex][colIndex + rowSize] = lowerCoeffs[j];
