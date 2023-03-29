@@ -1,20 +1,20 @@
-package edu.alibaba.mpc4j.s2pc.pso.opprf.blopprf.okvs;
+package edu.alibaba.mpc4j.s2pc.pso.opprf.bopprf.okvs;
 
 import edu.alibaba.mpc4j.common.rpc.desc.SecurityModel;
 import edu.alibaba.mpc4j.common.tool.EnvType;
 import edu.alibaba.mpc4j.common.tool.okve.okvs.OkvsFactory;
-import edu.alibaba.mpc4j.s2pc.pso.opprf.blopprf.BlopprfConfig;
-import edu.alibaba.mpc4j.s2pc.pso.opprf.blopprf.BlopprfFactory;
+import edu.alibaba.mpc4j.s2pc.pso.opprf.bopprf.BopprfConfig;
+import edu.alibaba.mpc4j.s2pc.pso.opprf.bopprf.BopprfFactory;
 import edu.alibaba.mpc4j.s2pc.pso.oprf.OprfConfig;
 import edu.alibaba.mpc4j.s2pc.pso.oprf.OprfFactory;
 
 /**
- * OKVS Batched l-bit-input OPPRF config.
+ * OKVS batched OPPRF config.
  *
  * @author Weiran Liu
  * @date 2023/3/26
  */
-public class OkvsBlopprfConfig implements BlopprfConfig {
+public class OkvsBopprfConfig implements BopprfConfig {
     /**
      * oprf config
      */
@@ -24,14 +24,14 @@ public class OkvsBlopprfConfig implements BlopprfConfig {
      */
     private final OkvsFactory.OkvsType okvsType;
 
-    private OkvsBlopprfConfig(Builder builder) {
+    private OkvsBopprfConfig(Builder builder) {
         oprfConfig = builder.oprfConfig;
         okvsType = builder.okvsType;
     }
 
     @Override
-    public BlopprfFactory.BlopprfType getPtoType() {
-        return BlopprfFactory.BlopprfType.OKVS;
+    public BopprfFactory.BlopprfType getPtoType() {
+        return BopprfFactory.BlopprfType.OKVS;
     }
 
     @Override
@@ -57,7 +57,7 @@ public class OkvsBlopprfConfig implements BlopprfConfig {
         return okvsType;
     }
 
-    public static class Builder implements org.apache.commons.lang3.builder.Builder<OkvsBlopprfConfig> {
+    public static class Builder implements org.apache.commons.lang3.builder.Builder<OkvsBopprfConfig> {
         /**
          * oprf config
          */
@@ -83,8 +83,8 @@ public class OkvsBlopprfConfig implements BlopprfConfig {
         }
 
         @Override
-        public OkvsBlopprfConfig build() {
-            return new OkvsBlopprfConfig(this);
+        public OkvsBopprfConfig build() {
+            return new OkvsBopprfConfig(this);
         }
     }
 }

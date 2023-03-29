@@ -1,4 +1,4 @@
-package edu.alibaba.mpc4j.s2pc.pso.opprf.blopprf;
+package edu.alibaba.mpc4j.s2pc.pso.opprf.bopprf;
 
 import edu.alibaba.mpc4j.common.rpc.Party;
 import edu.alibaba.mpc4j.common.rpc.Rpc;
@@ -9,16 +9,17 @@ import edu.alibaba.mpc4j.common.tool.MathPreconditions;
 import edu.alibaba.mpc4j.common.tool.utils.BytesUtils;
 import edu.alibaba.mpc4j.common.tool.utils.CommonUtils;
 
+import java.nio.ByteBuffer;
 import java.util.Arrays;
 import java.util.stream.IntStream;
 
 /**
- * abstract Batched l-bit-input OPPRF sender.
+ * abstract Batched OPPRF sender.
  *
  * @author Weiran Liu
  * @date 2023/3/26
  */
-public abstract class AbstractBlopprfSender extends AbstractTwoPartyPto implements BlopprfSender {
+public abstract class AbstractBopprfSender extends AbstractTwoPartyPto implements BopprfSender {
     /**
      * max batch size
      */
@@ -53,7 +54,7 @@ public abstract class AbstractBlopprfSender extends AbstractTwoPartyPto implemen
     protected byte[][][] targetArrays;
 
 
-    protected AbstractBlopprfSender(PtoDesc ptoDesc, Rpc senderRpc, Party receiverParty, BlopprfConfig config) {
+    protected AbstractBopprfSender(PtoDesc ptoDesc, Rpc senderRpc, Party receiverParty, BopprfConfig config) {
         super(ptoDesc, senderRpc, receiverParty, config);
     }
 
@@ -93,9 +94,9 @@ public abstract class AbstractBlopprfSender extends AbstractTwoPartyPto implemen
                 byte[][] inputArray = inputArrays[batchIndex];
                 byte[][] targetArray = targetArrays[batchIndex];
                 assert inputArray.length == targetArray.length;
-                for (byte[] input : inputArray) {
-                    assert BytesUtils.isFixedReduceByteArray(input, byteL, l);
-                }
+                // all inputs should be distinct
+                assert Arrays.stream(inputArray).map(ByteBuffer::wrap).distinct().count() == inputArray.length;
+                // all targets should have l-bit length
                 for (byte[] target : targetArray) {
                     assert BytesUtils.isFixedReduceByteArray(target, byteL, l);
                 }

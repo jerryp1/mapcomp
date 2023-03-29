@@ -1,4 +1,4 @@
-package edu.alibaba.mpc4j.s2pc.pso.opprf.blopprf.okvs;
+package edu.alibaba.mpc4j.s2pc.pso.opprf.bopprf.okvs;
 
 import edu.alibaba.mpc4j.common.rpc.MpcAbortException;
 import edu.alibaba.mpc4j.common.rpc.Party;
@@ -12,8 +12,8 @@ import edu.alibaba.mpc4j.common.tool.okve.okvs.Okvs;
 import edu.alibaba.mpc4j.common.tool.okve.okvs.OkvsFactory;
 import edu.alibaba.mpc4j.common.tool.utils.BytesUtils;
 import edu.alibaba.mpc4j.common.tool.utils.CommonUtils;
-import edu.alibaba.mpc4j.s2pc.pso.opprf.blopprf.AbstractBlopprfSender;
-import edu.alibaba.mpc4j.s2pc.pso.opprf.blopprf.okvs.OkvsBlopprfPtoDesc.PtoStep;
+import edu.alibaba.mpc4j.s2pc.pso.opprf.bopprf.AbstractBopprfSender;
+import edu.alibaba.mpc4j.s2pc.pso.opprf.bopprf.okvs.OkvsBopprfPtoDesc.PtoStep;
 import edu.alibaba.mpc4j.s2pc.pso.oprf.OprfFactory;
 import edu.alibaba.mpc4j.s2pc.pso.oprf.OprfSender;
 import edu.alibaba.mpc4j.s2pc.pso.oprf.OprfSenderOutput;
@@ -29,12 +29,12 @@ import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
 /**
- * OKVS Batched l-bit-input OPPRF sender.
+ * OKVS batched OPPRF sender.
  *
  * @author Weiran Liu
  * @date 2023/3/26
  */
-public class OkvsBlopprfSender extends AbstractBlopprfSender {
+public class OkvsBopprfSender extends AbstractBopprfSender {
     /**
      * the OPRF sender
      */
@@ -44,11 +44,11 @@ public class OkvsBlopprfSender extends AbstractBlopprfSender {
      */
     private final OkvsFactory.OkvsType okvsType;
 
-    public OkvsBlopprfSender(Rpc senderRpc, Party receiverParty, OkvsBlopprfConfig config) {
-        super(OkvsBlopprfPtoDesc.getInstance(), senderRpc, receiverParty, config);
-       oprfSender = OprfFactory.createOprfSender(senderRpc, receiverParty, config.getOprfConfig());
-       addSubPtos(oprfSender);
-       okvsType = config.getOkvsType();
+    public OkvsBopprfSender(Rpc senderRpc, Party receiverParty, OkvsBopprfConfig config) {
+        super(OkvsBopprfPtoDesc.getInstance(), senderRpc, receiverParty, config);
+        oprfSender = OprfFactory.createOprfSender(senderRpc, receiverParty, config.getOprfConfig());
+        addSubPtos(oprfSender);
+        okvsType = config.getOkvsType();
     }
 
     @Override

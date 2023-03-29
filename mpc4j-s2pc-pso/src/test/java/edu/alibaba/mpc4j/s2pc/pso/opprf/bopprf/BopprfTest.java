@@ -1,4 +1,4 @@
-package edu.alibaba.mpc4j.s2pc.pso.opprf.blopprf;
+package edu.alibaba.mpc4j.s2pc.pso.opprf.bopprf;
 
 import com.google.common.base.Preconditions;
 import edu.alibaba.mpc4j.common.rpc.Rpc;
@@ -8,8 +8,8 @@ import edu.alibaba.mpc4j.common.tool.CommonConstants;
 import edu.alibaba.mpc4j.common.tool.okve.okvs.OkvsFactory;
 import edu.alibaba.mpc4j.common.tool.utils.BytesUtils;
 import edu.alibaba.mpc4j.common.tool.utils.CommonUtils;
-import edu.alibaba.mpc4j.s2pc.pso.opprf.blopprf.BlopprfFactory.BlopprfType;
-import edu.alibaba.mpc4j.s2pc.pso.opprf.blopprf.okvs.OkvsBlopprfConfig;
+import edu.alibaba.mpc4j.s2pc.pso.opprf.bopprf.BopprfFactory.BlopprfType;
+import edu.alibaba.mpc4j.s2pc.pso.opprf.bopprf.okvs.OkvsBopprfConfig;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.time.StopWatch;
 import org.junit.After;
@@ -29,14 +29,14 @@ import java.util.concurrent.TimeUnit;
 import java.util.stream.IntStream;
 
 /**
- * Batched l-bit-input OPPRF test.
+ * Batched OPPRF test.
  *
  * @author Weiran Liu
  * @date 2023/3/26
  */
 @RunWith(Parameterized.class)
-public class BlopprfTest {
-    private static final Logger LOGGER = LoggerFactory.getLogger(BlopprfTest.class);
+public class BopprfTest {
+    private static final Logger LOGGER = LoggerFactory.getLogger(BopprfTest.class);
     /**
      * the random state
      */
@@ -72,20 +72,20 @@ public class BlopprfTest {
 
         configurations.add(new Object[]{
             BlopprfType.OKVS.name() + "(H3_SINGLETON_GCT)",
-            new OkvsBlopprfConfig.Builder().setOkvsType(OkvsFactory.OkvsType.H3_SINGLETON_GCT).build(),
+            new OkvsBopprfConfig.Builder().setOkvsType(OkvsFactory.OkvsType.H3_SINGLETON_GCT).build(),
         });
         configurations.add(new Object[]{
             BlopprfType.OKVS.name() + "(H2_SINGLETON_GCT)",
-            new OkvsBlopprfConfig.Builder().setOkvsType(OkvsFactory.OkvsType.H2_SINGLETON_GCT).build(),
+            new OkvsBopprfConfig.Builder().setOkvsType(OkvsFactory.OkvsType.H2_SINGLETON_GCT).build(),
         });
         configurations.add(new Object[]{
             BlopprfType.OKVS.name() + "(GBF)",
-            new OkvsBlopprfConfig.Builder().setOkvsType(OkvsFactory.OkvsType.GBF).build(),
+            new OkvsBopprfConfig.Builder().setOkvsType(OkvsFactory.OkvsType.GBF).build(),
         });
         // MegaBin
         configurations.add(new Object[]{
             BlopprfType.OKVS.name() + "(MegaBin)",
-            new OkvsBlopprfConfig.Builder().setOkvsType(OkvsFactory.OkvsType.MEGA_BIN).build(),
+            new OkvsBopprfConfig.Builder().setOkvsType(OkvsFactory.OkvsType.MEGA_BIN).build(),
         });
 
         return configurations;
@@ -102,9 +102,9 @@ public class BlopprfTest {
     /**
      * the config
      */
-    private final BlopprfConfig config;
+    private final BopprfConfig config;
 
-    public BlopprfTest(String name, BlopprfConfig config) {
+    public BopprfTest(String name, BopprfConfig config) {
         Preconditions.checkArgument(StringUtils.isNotBlank(name));
         // We cannot use NettyRPC in the test case since it needs multi-thread connect / disconnect.
         // In other word, we cannot connect / disconnect NettyRpc in @Before / @After, respectively.
@@ -163,8 +163,8 @@ public class BlopprfTest {
 
     private void testPto(int l, int batchNum, int pointNum, boolean parallel) {
         // create the sender and the receiver
-        BlopprfSender sender = BlopprfFactory.createBopprfSender(senderRpc, receiverRpc.ownParty(), config);
-        BlopprfReceiver receiver = BlopprfFactory.createBopprfReceiver(receiverRpc, senderRpc.ownParty(), config);
+        BopprfSender sender = BopprfFactory.createBopprfSender(senderRpc, receiverRpc.ownParty(), config);
+        BopprfReceiver receiver = BopprfFactory.createBopprfReceiver(receiverRpc, senderRpc.ownParty(), config);
         sender.setParallel(parallel);
         receiver.setParallel(parallel);
         int randomTaskId = Math.abs(SECURE_RANDOM.nextInt());
@@ -176,12 +176,12 @@ public class BlopprfTest {
                 sender.getPtoDesc().getPtoName(), l, batchNum, pointNum, parallel
             );
             // generate the sender input
-            byte[][][] senderInputArrays = BlopprfTestUtils.generateSenderInputArrays(l, batchNum, pointNum, SECURE_RANDOM);
-            byte[][][] senderTargetArrays = BlopprfTestUtils.generateSenderTargetArrays(l, senderInputArrays, SECURE_RANDOM);
+            byte[][][] senderInputArrays = BopprfTestUtils.generateSenderInputArrays(batchNum, pointNum, SECURE_RANDOM);
+            byte[][][] senderTargetArrays = BopprfTestUtils.generateSenderTargetArrays(l, senderInputArrays, SECURE_RANDOM);
             // generate the receiver input
-            byte[][] receiverInputArray = BlopprfTestUtils.generateReceiverInputArray(l, senderInputArrays, SECURE_RANDOM);
-            BlopprfSenderThread senderThread = new BlopprfSenderThread(sender, l, senderInputArrays, senderTargetArrays);
-            BlopprfReceiverThread receiverThread = new BlopprfReceiverThread(receiver, l, receiverInputArray, pointNum);
+            byte[][] receiverInputArray = BopprfTestUtils.generateReceiverInputArray(senderInputArrays, SECURE_RANDOM);
+            BopprfSenderThread senderThread = new BopprfSenderThread(sender, l, senderInputArrays, senderTargetArrays);
+            BopprfReceiverThread receiverThread = new BopprfReceiverThread(receiver, l, receiverInputArray, pointNum);
             StopWatch stopWatch = new StopWatch();
             // start
             stopWatch.start();
@@ -226,13 +226,13 @@ public class BlopprfTest {
             byte[][] senderInputArray = senderInputArrays[batchIndex];
             byte[][] senderTargetArray = senderTargetArrays[batchIndex];
             byte[] receiverInput = receiverInputArray[batchIndex];
-            Assert.assertTrue(BytesUtils.isFixedReduceByteArray(receiverInput, byteL, l));
+            // the receiver output must have l-bit length
             byte[] receiverTarget = receiverTargetArray[batchIndex];
             Assert.assertTrue(BytesUtils.isFixedReduceByteArray(receiverTarget, byteL, l));
             for (int pointIndex = 0; pointIndex < batchPointNum; pointIndex++) {
                 byte[] senderInput = senderInputArray[pointIndex];
-                Assert.assertTrue(BytesUtils.isFixedReduceByteArray(senderInput, byteL, l));
                 byte[] senderTarget = senderTargetArray[pointIndex];
+                // the sender target must have l-bit length
                 Assert.assertTrue(BytesUtils.isFixedReduceByteArray(senderTarget, byteL, l));
                 if (Arrays.equals(senderInput, receiverInput)) {
                     Assert.assertArrayEquals(senderTarget, receiverTarget);

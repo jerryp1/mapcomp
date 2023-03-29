@@ -1,5 +1,6 @@
-package edu.alibaba.mpc4j.s2pc.pso.opprf.blopprf;
+package edu.alibaba.mpc4j.s2pc.pso.opprf.bopprf;
 
+import edu.alibaba.mpc4j.common.tool.CommonConstants;
 import edu.alibaba.mpc4j.common.tool.EnvType;
 import edu.alibaba.mpc4j.common.tool.hashbin.primitive.SimpleIntHashBin;
 import edu.alibaba.mpc4j.common.tool.utils.BytesUtils;
@@ -9,21 +10,24 @@ import java.security.SecureRandom;
 import java.util.stream.IntStream;
 
 /**
- * Batched l-bit-input OPPRF test utilities.
+ * Batched OPPRF test utilities.
  *
  * @author Weiran Liu
  * @date 2023/3/26
  */
-class BlopprfTestUtils {
+class BopprfTestUtils {
+    /**
+     * input byte length
+     */
+    private static final int INPUT_BYTE_LENGTH = CommonConstants.BLOCK_BYTE_LENGTH;
     /**
      * private constructor.
      */
-    private BlopprfTestUtils() {
+    private BopprfTestUtils() {
         // empty
     }
 
-    static byte[][][] generateSenderInputArrays(int l, int batchNum, int pointNum, SecureRandom secureRandom) {
-        int byteL = CommonUtils.getByteLength(l);
+    static byte[][][] generateSenderInputArrays(int batchNum, int pointNum, SecureRandom secureRandom) {
         byte[][] keys = CommonUtils.generateRandomKeys(1, secureRandom);
         // use simple hash to place int into batched queries.
         SimpleIntHashBin simpleIntHashBin = new SimpleIntHashBin(EnvType.STANDARD, batchNum, pointNum, keys);
@@ -33,7 +37,8 @@ class BlopprfTestUtils {
             int batchPointNum = simpleIntHashBin.binSize(batchIndex);
             inputArrays[batchIndex] = new byte[batchPointNum][];
             for (int pointIndex = 0; pointIndex < batchPointNum; pointIndex++) {
-                inputArrays[batchIndex][pointIndex] = BytesUtils.randomByteArray(byteL, l, secureRandom);
+                inputArrays[batchIndex][pointIndex] = new byte[INPUT_BYTE_LENGTH];
+                secureRandom.nextBytes(inputArrays[batchIndex][pointIndex]);
             }
         }
         return inputArrays;
@@ -53,8 +58,7 @@ class BlopprfTestUtils {
         return targetArrays;
     }
 
-    static byte[][] generateReceiverInputArray(int l, byte[][][] inputArrays, SecureRandom secureRandom) {
-        int byteL = CommonUtils.getByteLength(l);
+    static byte[][] generateReceiverInputArray(byte[][][] inputArrays, SecureRandom secureRandom) {
         int batchNum = inputArrays.length;
         byte[][] inputArray = new byte[batchNum][];
         for (int batchIndex = 0; batchIndex < batchNum; batchIndex++) {
@@ -65,7 +69,8 @@ class BlopprfTestUtils {
                 inputArray[batchIndex] = BytesUtils.clone(inputArrays[batchIndex][pointIndex]);
             } else {
                 // batch point num is zero, create a random input
-                inputArray[batchIndex] = BytesUtils.randomByteArray(byteL, l, secureRandom);
+                inputArray[batchIndex] = new byte[INPUT_BYTE_LENGTH];
+                secureRandom.nextBytes(inputArray[batchIndex]);
             }
         }
         return inputArray;

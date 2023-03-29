@@ -215,7 +215,10 @@ public class HhLdpMain {
         correctHeavyHitters = correctOrderedList.subList(0, k).stream()
             .map(Map.Entry::getKey)
             .collect(Collectors.toList());
-        LOGGER.info("Correct heavy hitters: {}", correctHeavyHitters);
+        String correctHeavyHitterString = correctOrderedList.subList(0, k).stream()
+            .map(entry -> entry.getKey() + ": " + entry.getValue())
+            .collect(Collectors.toList()).toString();
+        LOGGER.info("Correct heavy hitters: {}", correctHeavyHitterString);
     }
 
     String getReportFilePostfix() {

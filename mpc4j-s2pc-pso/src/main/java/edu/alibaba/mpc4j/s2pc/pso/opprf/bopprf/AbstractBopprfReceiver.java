@@ -1,4 +1,4 @@
-package edu.alibaba.mpc4j.s2pc.pso.opprf.blopprf;
+package edu.alibaba.mpc4j.s2pc.pso.opprf.bopprf;
 
 import edu.alibaba.mpc4j.common.rpc.Party;
 import edu.alibaba.mpc4j.common.rpc.Rpc;
@@ -6,18 +6,15 @@ import edu.alibaba.mpc4j.common.rpc.desc.PtoDesc;
 import edu.alibaba.mpc4j.common.rpc.pto.AbstractTwoPartyPto;
 import edu.alibaba.mpc4j.common.tool.CommonConstants;
 import edu.alibaba.mpc4j.common.tool.MathPreconditions;
-import edu.alibaba.mpc4j.common.tool.utils.BytesUtils;
 import edu.alibaba.mpc4j.common.tool.utils.CommonUtils;
 
-import java.util.Arrays;
-
 /**
- * abstract Batched l-bit-input OPPRF receiver
+ * abstract Batched OPPRF receiver.
  *
  * @author Weiran Liu
  * @date 2023/3/26
  */
-public abstract class AbstractBlopprfReceiver extends AbstractTwoPartyPto implements BlopprfReceiver {
+public abstract class AbstractBopprfReceiver extends AbstractTwoPartyPto implements BopprfReceiver {
     /**
      * max batch size
      */
@@ -47,7 +44,7 @@ public abstract class AbstractBlopprfReceiver extends AbstractTwoPartyPto implem
      */
     protected int pointNum;
 
-    protected AbstractBlopprfReceiver(PtoDesc ptoDesc, Rpc receiverRpc, Party senderParty, BlopprfConfig config) {
+    protected AbstractBopprfReceiver(PtoDesc ptoDesc, Rpc receiverRpc, Party senderParty, BopprfConfig config) {
         super(ptoDesc, receiverRpc, senderParty, config);
     }
 
@@ -70,13 +67,8 @@ public abstract class AbstractBlopprfReceiver extends AbstractTwoPartyPto implem
         batchSize = inputArray.length;
         MathPreconditions.checkGreater("batch size", batchSize, 1);
         MathPreconditions.checkLessOrEqual("batch size", batchSize, maxBatchSize);
-
-        // check input bit length
-        this.inputArray = Arrays.stream(inputArray)
-            .peek(input -> {
-                assert BytesUtils.isFixedReduceByteArray(input, byteL, l);
-            })
-            .toArray(byte[][]::new);
+        // we do not even require that input array are distinct.
+        this.inputArray = inputArray;
         // check point num
         MathPreconditions.checkPositive("point num", pointNum);
         MathPreconditions.checkLessOrEqual("point num", pointNum, maxPointNum);

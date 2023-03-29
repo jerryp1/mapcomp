@@ -1,4 +1,4 @@
-package edu.alibaba.mpc4j.s2pc.pso.opprf.blopprf.okvs;
+package edu.alibaba.mpc4j.s2pc.pso.opprf.bopprf.okvs;
 
 import edu.alibaba.mpc4j.common.rpc.*;
 import edu.alibaba.mpc4j.common.rpc.utils.DataPacketHeader;
@@ -7,8 +7,8 @@ import edu.alibaba.mpc4j.common.tool.crypto.prf.PrfFactory;
 import edu.alibaba.mpc4j.common.tool.okve.okvs.Okvs;
 import edu.alibaba.mpc4j.common.tool.okve.okvs.OkvsFactory;
 import edu.alibaba.mpc4j.common.tool.utils.BytesUtils;
-import edu.alibaba.mpc4j.s2pc.pso.opprf.blopprf.AbstractBlopprfReceiver;
-import edu.alibaba.mpc4j.s2pc.pso.opprf.blopprf.okvs.OkvsBlopprfPtoDesc.PtoStep;
+import edu.alibaba.mpc4j.s2pc.pso.opprf.bopprf.AbstractBopprfReceiver;
+import edu.alibaba.mpc4j.s2pc.pso.opprf.bopprf.okvs.OkvsBopprfPtoDesc.PtoStep;
 import edu.alibaba.mpc4j.s2pc.pso.oprf.OprfFactory;
 import edu.alibaba.mpc4j.s2pc.pso.oprf.OprfReceiver;
 import edu.alibaba.mpc4j.s2pc.pso.oprf.OprfReceiverOutput;
@@ -19,12 +19,12 @@ import java.util.concurrent.TimeUnit;
 import java.util.stream.IntStream;
 
 /**
- * OKVS Batched l-bit-input OPPRF receiver.
+ * OKVS batched OPPRF receiver.
  *
  * @author Weiran Liu
  * @date 2023/3/26
  */
-public class OkvsBlopprfReceiver extends AbstractBlopprfReceiver {
+public class OkvsBopprfReceiver extends AbstractBopprfReceiver {
     /**
      * the OPRF receiver
      */
@@ -34,8 +34,8 @@ public class OkvsBlopprfReceiver extends AbstractBlopprfReceiver {
      */
     private final OkvsFactory.OkvsType okvsType;
 
-    public OkvsBlopprfReceiver(Rpc receiverRpc, Party senderParty, OkvsBlopprfConfig config) {
-        super(OkvsBlopprfPtoDesc.getInstance(), receiverRpc, senderParty, config);
+    public OkvsBopprfReceiver(Rpc receiverRpc, Party senderParty, OkvsBopprfConfig config) {
+        super(OkvsBopprfPtoDesc.getInstance(), receiverRpc, senderParty, config);
         oprfReceiver = OprfFactory.createOprfReceiver(receiverRpc, senderParty, config.getOprfConfig());
         addSubPtos(oprfReceiver);
         okvsType = config.getOkvsType();

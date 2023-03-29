@@ -1,18 +1,18 @@
-package edu.alibaba.mpc4j.s2pc.pso.opprf.blopprf;
+package edu.alibaba.mpc4j.s2pc.pso.opprf.bopprf;
 
 import edu.alibaba.mpc4j.common.rpc.MpcAbortException;
 
 /**
- * Batched l-bit-input OPPRF receiver thread.
+ * Batched OPPRF receiver thread.
  *
  * @author Weiran Liu
  * @date 2023/3/26
  */
-class BlopprfReceiverThread extends Thread {
+class BopprfReceiverThread extends Thread {
     /**
      * the receiver
      */
-    private final BlopprfReceiver receiver;
+    private final BopprfReceiver receiver;
     /**
      * the input / output bit length
      */
@@ -30,7 +30,7 @@ class BlopprfReceiverThread extends Thread {
      */
     private byte[][] receiverTargetArray;
 
-    BlopprfReceiverThread(BlopprfReceiver receiver, int l, byte[][] receiverInputArray, int pointNum) {
+    BopprfReceiverThread(BopprfReceiver receiver, int l, byte[][] receiverInputArray, int pointNum) {
         this.receiver = receiver;
         this.l = l;
         this.receiverInputArray = receiverInputArray;
