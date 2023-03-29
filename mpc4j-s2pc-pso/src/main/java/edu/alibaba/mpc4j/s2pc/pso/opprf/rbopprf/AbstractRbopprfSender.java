@@ -1,4 +1,4 @@
-package edu.alibaba.mpc4j.s2pc.pso.opprf.bopprf;
+package edu.alibaba.mpc4j.s2pc.pso.opprf.rbopprf;
 
 import edu.alibaba.mpc4j.common.rpc.Party;
 import edu.alibaba.mpc4j.common.rpc.Rpc;
@@ -6,7 +6,6 @@ import edu.alibaba.mpc4j.common.rpc.desc.PtoDesc;
 import edu.alibaba.mpc4j.common.rpc.pto.AbstractTwoPartyPto;
 import edu.alibaba.mpc4j.common.tool.CommonConstants;
 import edu.alibaba.mpc4j.common.tool.MathPreconditions;
-import edu.alibaba.mpc4j.common.tool.hashbin.MaxBinSizeUtils;
 import edu.alibaba.mpc4j.common.tool.utils.BytesUtils;
 import edu.alibaba.mpc4j.common.tool.utils.CommonUtils;
 
@@ -15,12 +14,12 @@ import java.util.Arrays;
 import java.util.stream.IntStream;
 
 /**
- * abstract Batch OPPRF sender.
+ * abstract Related-Batch OPPRF sender.
  *
  * @author Weiran Liu
- * @date 2023/3/26
+ * @date 2023/3/29
  */
-public abstract class AbstractBopprfSender extends AbstractTwoPartyPto implements BopprfSender {
+public abstract class AbstractRbopprfSender extends AbstractTwoPartyPto implements RbopprfSender {
     /**
      * max batch size
      */
@@ -55,7 +54,7 @@ public abstract class AbstractBopprfSender extends AbstractTwoPartyPto implement
     protected byte[][][] targetArrays;
 
 
-    protected AbstractBopprfSender(PtoDesc ptoDesc, Rpc senderRpc, Party receiverParty, BopprfConfig config) {
+    protected AbstractRbopprfSender(PtoDesc ptoDesc, Rpc senderRpc, Party receiverParty, RbopprfConfig config) {
         super(ptoDesc, senderRpc, receiverParty, config);
     }
 
@@ -89,17 +88,14 @@ public abstract class AbstractBopprfSender extends AbstractTwoPartyPto implement
             .mapToInt(targetArray -> targetArray.length)
             .sum();
         MathPreconditions.checkEqual("target num", "point num", targetNum, pointNum);
-        int maxBatchPointNum = MaxBinSizeUtils.expectMaxBinSize(pointNum, batchSize);
         // check input / target arrays
         IntStream.range(0, batchSize)
             .forEach(batchIndex -> {
                 byte[][] inputArray = inputArrays[batchIndex];
                 byte[][] targetArray = targetArrays[batchIndex];
-                int batchPointNum = inputArray.length;
-                MathPreconditions.checkNonNegativeInRangeClosed("batch point num", batchPointNum, maxBatchPointNum);
-                assert targetArray.length == batchPointNum;
+                assert inputArray.length == targetArray.length;
                 // all inputs should be distinct
-                assert Arrays.stream(inputArray).map(ByteBuffer::wrap).distinct().count() == batchPointNum;
+                assert Arrays.stream(inputArray).map(ByteBuffer::wrap).distinct().count() == inputArray.length;
                 // all targets should have l-bit length
                 for (byte[] target : targetArray) {
                     assert BytesUtils.isFixedReduceByteArray(target, byteL, l);

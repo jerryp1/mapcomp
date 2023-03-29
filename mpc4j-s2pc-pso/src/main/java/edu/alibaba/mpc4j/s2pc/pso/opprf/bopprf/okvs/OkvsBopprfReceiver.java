@@ -2,6 +2,7 @@ package edu.alibaba.mpc4j.s2pc.pso.opprf.bopprf.okvs;
 
 import edu.alibaba.mpc4j.common.rpc.*;
 import edu.alibaba.mpc4j.common.rpc.utils.DataPacketHeader;
+import edu.alibaba.mpc4j.common.tool.CommonConstants;
 import edu.alibaba.mpc4j.common.tool.crypto.prf.Prf;
 import edu.alibaba.mpc4j.common.tool.crypto.prf.PrfFactory;
 import edu.alibaba.mpc4j.common.tool.okve.okvs.Okvs;
@@ -19,7 +20,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.stream.IntStream;
 
 /**
- * OKVS batched OPPRF receiver.
+ * OKVS Batch OPPRF receiver.
  *
  * @author Weiran Liu
  * @date 2023/3/26
@@ -69,12 +70,12 @@ public class OkvsBopprfReceiver extends AbstractBopprfReceiver {
         stopWatch.reset();
         logStepInfo(PtoState.PTO_STEP, 1, 2, oprfTime, "Receiver runs OPRF");
 
-        // receive keys
-        DataPacketHeader keysHeader = new DataPacketHeader(
-            encodeTaskId, ptoDesc.getPtoId(), PtoStep.SENDER_SEND_KEYS.ordinal(), extraInfo,
+        // receive OKVS keys
+        DataPacketHeader okvsKeysHeader = new DataPacketHeader(
+            encodeTaskId, ptoDesc.getPtoId(), PtoStep.SENDER_SEND_OKVS_KEYS.ordinal(), extraInfo,
             otherParty().getPartyId(), ownParty().getPartyId()
         );
-        List<byte[]> keysPayload = rpc.receive(keysHeader).getPayload();
+        List<byte[]> okvsKeysPayload = rpc.receive(okvsKeysHeader).getPayload();
         // receive OKVS
         DataPacketHeader okvsHeader = new DataPacketHeader(
             encodeTaskId, ptoDesc.getPtoId(), PtoStep.SENDER_SEND_OKVS.ordinal(), extraInfo,
@@ -83,7 +84,7 @@ public class OkvsBopprfReceiver extends AbstractBopprfReceiver {
         List<byte[]> okvsPayload = rpc.receive(okvsHeader).getPayload();
 
         stopWatch.start();
-        byte[][] outputArray = handleOkvsPayload(oprfReceiverOutput, keysPayload, okvsPayload);
+        byte[][] outputArray = handleOkvsPayload(oprfReceiverOutput, okvsKeysPayload, okvsPayload);
         stopWatch.stop();
         long okvsTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
         stopWatch.reset();
@@ -94,18 +95,18 @@ public class OkvsBopprfReceiver extends AbstractBopprfReceiver {
     }
 
     private byte[][] handleOkvsPayload(OprfReceiverOutput oprfReceiverOutput,
-                                       List<byte[]> keysPayload, List<byte[]> okvsPayload) throws MpcAbortException {
+                                       List<byte[]> okvsKeysPayload, List<byte[]> okvsPayload) throws MpcAbortException {
         // parse keys
-        MpcAbortPreconditions.checkArgument(keysPayload.size() == OkvsFactory.getHashNum(okvsType) + 1);
-        byte[] prfKey = keysPayload.remove(0);
-        byte[][] okvsKeys = keysPayload.toArray(new byte[0][]);
+        MpcAbortPreconditions.checkArgument(okvsKeysPayload.size() == OkvsFactory.getHashNum(okvsType));
+        byte[][] okvsKeys = okvsKeysPayload.toArray(new byte[0][]);
+        // The PRF maps (random) inputs to {0, 1}^l, we only need to set an empty key
+        Prf prf = PrfFactory.createInstance(envType, byteL);
+        prf.setKey(new byte[CommonConstants.BLOCK_BYTE_LENGTH]);
         // parse OKVS storage
         MpcAbortPreconditions.checkArgument(okvsPayload.size() == OkvsFactory.getM(okvsType, pointNum));
         byte[][] okvsStorage = okvsPayload.toArray(new byte[0][]);
         // compute PRF output
         Okvs<ByteBuffer> okvs = OkvsFactory.createInstance(envType, okvsType, pointNum, l, okvsKeys);
-        Prf prf = PrfFactory.createInstance(envType, byteL);
-        prf.setKey(prfKey);
         IntStream batchIntStream = IntStream.range(0, batchSize);
         batchIntStream = parallel ? batchIntStream.parallel() : batchIntStream;
         return batchIntStream

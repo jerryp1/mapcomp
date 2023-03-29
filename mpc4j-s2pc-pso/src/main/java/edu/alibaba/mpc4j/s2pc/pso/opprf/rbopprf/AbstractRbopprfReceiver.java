@@ -1,4 +1,4 @@
-package edu.alibaba.mpc4j.s2pc.pso.opprf.bopprf;
+package edu.alibaba.mpc4j.s2pc.pso.opprf.rbopprf;
 
 import edu.alibaba.mpc4j.common.rpc.Party;
 import edu.alibaba.mpc4j.common.rpc.Rpc;
@@ -9,12 +9,12 @@ import edu.alibaba.mpc4j.common.tool.MathPreconditions;
 import edu.alibaba.mpc4j.common.tool.utils.CommonUtils;
 
 /**
- * abstract Batch OPPRF receiver.
+ * abstract Related-Batch OPPRF receiver.
  *
  * @author Weiran Liu
- * @date 2023/3/26
+ * @date 2023/3/29
  */
-public abstract class AbstractBopprfReceiver extends AbstractTwoPartyPto implements BopprfReceiver {
+public abstract class AbstractRbopprfReceiver extends AbstractTwoPartyPto implements RbopprfReceiver {
     /**
      * max batch size
      */
@@ -44,7 +44,7 @@ public abstract class AbstractBopprfReceiver extends AbstractTwoPartyPto impleme
      */
     protected int pointNum;
 
-    protected AbstractBopprfReceiver(PtoDesc ptoDesc, Rpc receiverRpc, Party senderParty, BopprfConfig config) {
+    protected AbstractRbopprfReceiver(PtoDesc ptoDesc, Rpc receiverRpc, Party senderParty, RbopprfConfig config) {
         super(ptoDesc, receiverRpc, senderParty, config);
     }
 

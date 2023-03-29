@@ -4,7 +4,7 @@ import edu.alibaba.mpc4j.common.rpc.MpcAbortException;
 import edu.alibaba.mpc4j.common.rpc.pto.TwoPartyPto;
 
 /**
- * Batched OPPRF sender.
+ * Batch OPPRF sender.
  *
  * @author Weiran Liu
  * @date 2023/3/26

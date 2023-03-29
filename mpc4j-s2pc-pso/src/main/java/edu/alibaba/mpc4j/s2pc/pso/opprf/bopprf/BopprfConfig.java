@@ -3,7 +3,7 @@ package edu.alibaba.mpc4j.s2pc.pso.opprf.bopprf;
 import edu.alibaba.mpc4j.common.rpc.pto.MultiPartyPtoConfig;
 
 /**
- * Batched OPPRF config.
+ * Batch OPPRF config.
  *
  * @author Weiran Liu
  * @date 2023/3/26
@@ -14,5 +14,5 @@ public interface BopprfConfig extends MultiPartyPtoConfig {
      *
      * @return tye type.
      */
-    BopprfFactory.BlopprfType getPtoType();
+    BopprfFactory.BopprfType getPtoType();
 }

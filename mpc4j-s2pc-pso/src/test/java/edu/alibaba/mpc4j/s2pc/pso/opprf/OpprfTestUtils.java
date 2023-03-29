@@ -1,4 +1,4 @@
-package edu.alibaba.mpc4j.s2pc.pso.opprf.bopprf;
+package edu.alibaba.mpc4j.s2pc.pso.opprf;
 
 import edu.alibaba.mpc4j.common.tool.CommonConstants;
 import edu.alibaba.mpc4j.common.tool.EnvType;
@@ -10,12 +10,12 @@ import java.security.SecureRandom;
 import java.util.stream.IntStream;
 
 /**
- * Batched OPPRF test utilities.
+ * Batch OPPRF test utilities.
  *
  * @author Weiran Liu
  * @date 2023/3/26
  */
-class BopprfTestUtils {
+public class OpprfTestUtils {
     /**
      * input byte length
      */
@@ -23,11 +23,11 @@ class BopprfTestUtils {
     /**
      * private constructor.
      */
-    private BopprfTestUtils() {
+    private OpprfTestUtils() {
         // empty
     }
 
-    static byte[][][] generateSenderInputArrays(int batchNum, int pointNum, SecureRandom secureRandom) {
+    public static byte[][][] generateSenderInputArrays(int batchNum, int pointNum, SecureRandom secureRandom) {
         byte[][] keys = CommonUtils.generateRandomKeys(1, secureRandom);
         // use simple hash to place int into batched queries.
         SimpleIntHashBin simpleIntHashBin = new SimpleIntHashBin(EnvType.STANDARD, batchNum, pointNum, keys);
@@ -44,7 +44,7 @@ class BopprfTestUtils {
         return inputArrays;
     }
 
-    static byte[][][] generateSenderTargetArrays(int l, byte[][][] inputArrays, SecureRandom secureRandom) {
+    public static byte[][][] generateSenderTargetArrays(int l, byte[][][] inputArrays, SecureRandom secureRandom) {
         int byteL = CommonUtils.getByteLength(l);
         int batchNum = inputArrays.length;
         byte[][][] targetArrays = new byte[batchNum][][];
@@ -58,7 +58,7 @@ class BopprfTestUtils {
         return targetArrays;
     }
 
-    static byte[][] generateReceiverInputArray(byte[][][] inputArrays, SecureRandom secureRandom) {
+    public static byte[][] generateReceiverInputArray(byte[][][] inputArrays, SecureRandom secureRandom) {
         int batchNum = inputArrays.length;
         byte[][] inputArray = new byte[batchNum][];
         for (int batchIndex = 0; batchIndex < batchNum; batchIndex++) {

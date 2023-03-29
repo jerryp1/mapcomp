@@ -1,15 +1,15 @@
-package edu.alibaba.mpc4j.s2pc.pso.opprf.bopprf;
+package edu.alibaba.mpc4j.s2pc.pso.opprf.rbopprf;
 
 import edu.alibaba.mpc4j.common.rpc.MpcAbortException;
 import edu.alibaba.mpc4j.common.rpc.pto.TwoPartyPto;
 
 /**
- * Batch OPPRF receiver.
+ * Related-Batch OPPRF receiver.
  *
  * @author Weiran Liu
- * @date 2023/3/26
+ * @date 2023/3/29
  */
-public interface BopprfReceiver extends TwoPartyPto {
+public interface RbopprfReceiver extends TwoPartyPto {
     /**
      * Inits the protocol.
      *
@@ -28,5 +28,5 @@ public interface BopprfReceiver extends TwoPartyPto {
      * @return the receiver outputs.
      * @throws MpcAbortException the protocol failure aborts.
      */
-    byte[][] opprf(int l, byte[][] inputArray, int targetNum) throws MpcAbortException;
+    byte[][][] opprf(int l, byte[][] inputArray, int targetNum) throws MpcAbortException;
 }

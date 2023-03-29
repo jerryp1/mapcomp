@@ -6,6 +6,7 @@ import edu.alibaba.mpc4j.common.rpc.PtoState;
 import edu.alibaba.mpc4j.common.rpc.Rpc;
 import edu.alibaba.mpc4j.common.rpc.utils.DataPacket;
 import edu.alibaba.mpc4j.common.rpc.utils.DataPacketHeader;
+import edu.alibaba.mpc4j.common.tool.CommonConstants;
 import edu.alibaba.mpc4j.common.tool.crypto.prf.Prf;
 import edu.alibaba.mpc4j.common.tool.crypto.prf.PrfFactory;
 import edu.alibaba.mpc4j.common.tool.okve.okvs.Okvs;
@@ -20,7 +21,6 @@ import edu.alibaba.mpc4j.s2pc.pso.oprf.OprfSenderOutput;
 
 import java.nio.ByteBuffer;
 import java.util.Arrays;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -29,7 +29,7 @@ import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
 /**
- * OKVS batched OPPRF sender.
+ * OKVS Batch OPPRF sender.
  *
  * @author Weiran Liu
  * @date 2023/3/26
@@ -80,25 +80,21 @@ public class OkvsBopprfSender extends AbstractBopprfSender {
         logStepInfo(PtoState.PTO_STEP, 1, 2, oprfTime, "Sender runs OPRF");
 
         stopWatch.start();
-        List<byte[]> keysPayload = new LinkedList<>();
-        // generate PRF key
-        byte[] prfKey = CommonUtils.generateRandomKey(secureRandom);
-        keysPayload.add(prfKey);
         // generate OKVS keys
         byte[][] okvsKeys = CommonUtils.generateRandomKeys(OkvsFactory.getHashNum(okvsType), secureRandom);
-        keysPayload.addAll(Arrays.asList(okvsKeys));
-        DataPacketHeader keysHeader = new DataPacketHeader(
-            encodeTaskId, ptoDesc.getPtoId(), PtoStep.SENDER_SEND_KEYS.ordinal(), extraInfo,
+        List<byte[]> okvsKeysPayload = Arrays.stream(okvsKeys).collect(Collectors.toList());
+        DataPacketHeader okvsKeysHeader = new DataPacketHeader(
+            encodeTaskId, ptoDesc.getPtoId(), PtoStep.SENDER_SEND_OKVS_KEYS.ordinal(), extraInfo,
             ownParty().getPartyId(), otherParty().getPartyId()
         );
-        rpc.send(DataPacket.fromByteArrayList(keysHeader, keysPayload));
+        rpc.send(DataPacket.fromByteArrayList(okvsKeysHeader, okvsKeysPayload));
         stopWatch.stop();
-        long keysTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
+        long okvsKeysTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
         stopWatch.reset();
-        logStepInfo(PtoState.PTO_STEP, 2, 3, keysTime, "Sender sends keys");
+        logStepInfo(PtoState.PTO_STEP, 2, 3, okvsKeysTime, "Sender sends OKVS keys");
 
         stopWatch.start();
-        List<byte[]> okvsPayload = generateOkvsPayload(oprfSenderOutput, prfKey, okvsKeys);
+        List<byte[]> okvsPayload = generateOkvsPayload(oprfSenderOutput, okvsKeys);
         DataPacketHeader okvsHeader = new DataPacketHeader(
             encodeTaskId, ptoDesc.getPtoId(), PtoStep.SENDER_SEND_OKVS.ordinal(), extraInfo,
             ownParty().getPartyId(), otherParty().getPartyId()
@@ -112,13 +108,14 @@ public class OkvsBopprfSender extends AbstractBopprfSender {
         logPhaseInfo(PtoState.PTO_END);
     }
 
-    private List<byte[]> generateOkvsPayload(OprfSenderOutput oprfSenderOutput, byte[] prfKey, byte[][] okvsKeys) {
+    private List<byte[]> generateOkvsPayload(OprfSenderOutput oprfSenderOutput, byte[][] okvsKeys) {
         Okvs<ByteBuffer> okvs = OkvsFactory.createInstance(envType, okvsType, pointNum, l, okvsKeys);
         okvs.setParallelEncode(parallel);
         // construct key-value map
         Map<ByteBuffer, byte[]> keyValueMap = new ConcurrentHashMap<>(pointNum);
+        // The PRF maps (random) inputs to {0, 1}^l, we only need to set an empty key
         Prf prf = PrfFactory.createInstance(envType, byteL);
-        prf.setKey(prfKey);
+        prf.setKey(new byte[CommonConstants.BLOCK_BYTE_LENGTH]);
         IntStream batchIntStream = IntStream.range(0, batchSize);
         batchIntStream = parallel ? batchIntStream.parallel() : batchIntStream;
         batchIntStream.forEach(batchIndex -> {

@@ -9,18 +9,18 @@ import edu.alibaba.mpc4j.s2pc.pso.oprf.OprfConfig;
 import edu.alibaba.mpc4j.s2pc.pso.oprf.OprfFactory;
 
 /**
- * OKVS batched OPPRF config.
+ * OKVS Batch OPPRF config.
  *
  * @author Weiran Liu
  * @date 2023/3/26
  */
 public class OkvsBopprfConfig implements BopprfConfig {
     /**
-     * oprf config
+     * OPRF config
      */
     private final OprfConfig oprfConfig;
     /**
-     * the OKVS type
+     * OKVS type
      */
     private final OkvsFactory.OkvsType okvsType;
 
@@ -30,8 +30,8 @@ public class OkvsBopprfConfig implements BopprfConfig {
     }
 
     @Override
-    public BopprfFactory.BlopprfType getPtoType() {
-        return BopprfFactory.BlopprfType.OKVS;
+    public BopprfFactory.BopprfType getPtoType() {
+        return BopprfFactory.BopprfType.OKVS;
     }
 
     @Override
@@ -59,11 +59,11 @@ public class OkvsBopprfConfig implements BopprfConfig {
 
     public static class Builder implements org.apache.commons.lang3.builder.Builder<OkvsBopprfConfig> {
         /**
-         * oprf config
+         * OPRF config
          */
         private OprfConfig oprfConfig;
         /**
-         * the OKVS type
+         * OKVS type
          */
         private OkvsFactory.OkvsType okvsType;
 

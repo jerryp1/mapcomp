@@ -4,7 +4,7 @@ import edu.alibaba.mpc4j.common.rpc.desc.PtoDesc;
 import edu.alibaba.mpc4j.common.rpc.desc.PtoDescManager;
 
 /**
- * OKVS batched OPRRF protocol description. The original scheme is described by instantiating OKVS as a
+ * OKVS Batch OPRRF protocol description. The original scheme is described by instantiating OKVS as a
  * polynomial or MegaBin in the following paper:
  * <p>
  * Pinkas, Benny, Thomas Schneider, Oleksandr Tkachenko, and Avishay Yanai. Efficient circuit-based PSI with linear
@@ -34,9 +34,9 @@ class OkvsBopprfPtoDesc implements PtoDesc {
      */
     enum PtoStep {
         /**
-         * the sender sends keys
+         * the sender sends OKVS keys
          */
-        SENDER_SEND_KEYS,
+        SENDER_SEND_OKVS_KEYS,
         /**
          * the sender sends OKVS
          */

@@ -1,20 +1,20 @@
-package edu.alibaba.mpc4j.s2pc.pso.opprf.bopprf;
+package edu.alibaba.mpc4j.s2pc.pso.opprf.rbopprf;
 
 import edu.alibaba.mpc4j.common.rpc.MpcAbortException;
 
 import java.util.Arrays;
 
 /**
- * Batch OPPRF sender thread.
+ * Related-Batch OPPRF sender thread.
  *
  * @author Weiran Liu
- * @date 2023/3/26
+ * @date 2023/3/29
  */
-class BopprfSenderThread extends Thread {
+class RbopprfSenderThread extends Thread {
     /**
      * the sender
      */
-    private final BopprfSender sender;
+    private final RbopprfSender sender;
     /**
      * the input / output bit length
      */
@@ -36,7 +36,7 @@ class BopprfSenderThread extends Thread {
      */
     private final byte[][][] senderTargetArrays;
 
-    BopprfSenderThread(BopprfSender sender, int l, byte[][][] senderInputArrays, byte[][][] senderTargetArrays) {
+    RbopprfSenderThread(RbopprfSender sender, int l, byte[][][] senderInputArrays, byte[][][] senderTargetArrays) {
         this.sender = sender;
         this.l = l;
         batchSize = senderInputArrays.length;

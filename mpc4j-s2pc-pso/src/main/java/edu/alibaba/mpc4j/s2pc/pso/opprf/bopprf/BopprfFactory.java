@@ -7,7 +7,7 @@ import edu.alibaba.mpc4j.s2pc.pso.opprf.bopprf.okvs.OkvsBopprfReceiver;
 import edu.alibaba.mpc4j.s2pc.pso.opprf.bopprf.okvs.OkvsBopprfSender;
 
 /**
- * Batched OPRRF factory.
+ * Batch OPRRF factory.
  *
  * @author Weiran Liu
  * @date 2023/3/26
@@ -23,11 +23,15 @@ public class BopprfFactory {
     /**
      * the type
      */
-    public enum BlopprfType {
+    public enum BopprfType {
         /**
-         * OKVS
+         * OKVS-based Batch OPPRF
          */
         OKVS,
+        /**
+         * Table-based Batch OPPRF
+         */
+        TABLE,
     }
 
     /**
@@ -39,13 +43,13 @@ public class BopprfFactory {
      * @return a sender.
      */
     public static BopprfSender createBopprfSender(Rpc senderRpc, Party receiverParty, BopprfConfig config) {
-        BlopprfType type = config.getPtoType();
-        //noinspection SwitchStatementWithTooFewBranches
+        BopprfType type = config.getPtoType();
         switch (type) {
             case OKVS:
                 return new OkvsBopprfSender(senderRpc, receiverParty, (OkvsBopprfConfig) config);
+            case TABLE:
             default:
-                throw new IllegalArgumentException("Invalid " + BlopprfType.class.getSimpleName() + ": " + type.name());
+                throw new IllegalArgumentException("Invalid " + BopprfType.class.getSimpleName() + ": " + type.name());
         }
     }
 
@@ -58,13 +62,13 @@ public class BopprfFactory {
      * @return a receiver.
      */
     public static BopprfReceiver createBopprfReceiver(Rpc receiverRpc, Party senderParty, BopprfConfig config) {
-        BlopprfType type = config.getPtoType();
-        //noinspection SwitchStatementWithTooFewBranches
+        BopprfType type = config.getPtoType();
         switch (type) {
             case OKVS:
                 return new OkvsBopprfReceiver(receiverRpc, senderParty, (OkvsBopprfConfig) config);
+            case TABLE:
             default:
-                throw new IllegalArgumentException("Invalid " + BlopprfType.class.getSimpleName() + ": " + type.name());
+                throw new IllegalArgumentException("Invalid " + BopprfType.class.getSimpleName() + ": " + type.name());
         }
     }
 }
