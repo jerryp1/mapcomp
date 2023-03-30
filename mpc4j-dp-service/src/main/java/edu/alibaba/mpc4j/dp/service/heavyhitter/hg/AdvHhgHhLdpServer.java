@@ -54,7 +54,7 @@ public class AdvHhgHhLdpServer extends AbstractHhLdpServer implements HhgHhLdpSe
     /**
      * current de-bias nums for each budget
      */
-    private final int[] currentNums;
+    private final int[] ldpNums;
     /**
      * p1 = e^ε_1 / (e^ε_1 + 1)
      */
@@ -103,8 +103,8 @@ public class AdvHhgHhLdpServer extends AbstractHhLdpServer implements HhgHhLdpSe
         intHash = IntHashFactory.fastestInstance();
         // init variables
         num = 0;
-        currentNums = new int[w];
-        Arrays.fill(currentNums, 0);
+        ldpNums = new int[w];
+        Arrays.fill(ldpNums, 0);
         // set privacy parameters
         double alpha = config.getAlpha();
         double alphaWindowEpsilon = windowEpsilon * alpha;
@@ -159,25 +159,38 @@ public class AdvHhgHhLdpServer extends AbstractHhLdpServer implements HhgHhLdpSe
         return insert(item);
     }
 
-    private void debias(int bucketIndex) {
-        Map<String, Double> bucket = buckets.get(bucketIndex);
-        // de-bias the count for all items
-        for (Map.Entry<String, Double> bucketEntry : bucket.entrySet()) {
-            bucketEntry.setValue(updateCount(bucketIndex, bucketEntry.getValue()));
-        }
-        currentNums[bucketIndex] = 0;
+    private double insertCount() {
+        return 1.0;
     }
 
-    private double updateCount(int bucketIndex, double count) {
-        return count - currentNums[bucketIndex] * (gammaH * p1 * q2 + (1 - gammaH) * q1 / k);
+    private double debiasCount() {
+        return -gammaH * p1 * q2 + (1 - gammaH) * q1 / k;
+    }
+
+    private void debiasBucket(int bucketIndex) {
+        switch (hhLdpServerState) {
+            case WARMUP:
+                return;
+            case STATISTICS:
+                Map<String, Double> bucket = buckets.get(bucketIndex);
+                for (Map.Entry<String, Double> itemEntry : bucket.entrySet()) {
+                    String item = itemEntry.getKey();
+                    double value = itemEntry.getValue();
+                    value += debiasCount();
+                    bucket.put(item, value);
+                }
+                break;
+            default:
+                throw new IllegalStateException();
+        }
     }
 
     private double getDebiasFactor() {
         return p1 * (p2 - q2);
     }
 
-    private double debiasCount(int bucketIndex, double count) {
-        return updateCount(bucketIndex, count) / getDebiasFactor();
+    private double defaultDebiasCount(int bucketIndex) {
+        return ldpNums[bucketIndex] * debiasCount();
     }
 
     private boolean insert(String item) {
@@ -185,6 +198,10 @@ public class AdvHhgHhLdpServer extends AbstractHhLdpServer implements HhgHhLdpSe
         // it first computes the hash function h(e) (1 ⩽ h(e) ⩽ w) to map e to bucket A[h(e)].
         byte[] itemByteArray = ObjectUtils.objectToByteArray(item);
         int bucketIndex = Math.abs(intHash.hash(itemByteArray) % w);
+        if (hhLdpServerState.equals(HhLdpServerState.STATISTICS)) {
+            ldpNums[bucketIndex]++;
+            debiasBucket(bucketIndex);
+        }
         // find the weakest guardian
         Map<String, Double> bucket = buckets.get(bucketIndex);
         List<Map.Entry<String, Double>> bucketList = new ArrayList<>(bucket.entrySet());
@@ -196,20 +213,14 @@ public class AdvHhgHhLdpServer extends AbstractHhLdpServer implements HhgHhLdpSe
         if (bucket.containsKey(item)) {
             // HeavyGuardian just increments the corresponding frequency (the count field) in the cell by 1.
             double itemCount = bucket.get(item);
-            itemCount += 1.0;
+            itemCount += insertCount();
             bucket.put(item, itemCount);
-            if (hhLdpServerState.equals(HhLdpServerState.STATISTICS)) {
-                currentNums[bucketIndex]++;
-            }
             return true;
         }
         // Case 2: e is not in the heavy part of A[h(e)], and there are still empty cells.
         if (bucket.size() < lambdaH) {
             // It inserts e into an empty cell, i.e., sets the ID field to e and sets the count field to 1.
-            bucket.put(item, 1.0);
-            if (hhLdpServerState.equals(HhLdpServerState.STATISTICS)) {
-                currentNums[bucketIndex]++;
-            }
+            bucket.put(item, insertCount() + defaultDebiasCount(bucketIndex));
             return true;
         }
         // Case 3: e is not in any cell in the heavy part of A[h(e)], and there is no empty cell.
@@ -231,17 +242,11 @@ public class AdvHhgHhLdpServer extends AbstractHhLdpServer implements HhgHhLdpSe
         // After decay, if the count field becomes 0, it replaces the ID field of the weakest guardian with e,
         // and sets the count field to 1
         if (weakestCount <= 0) {
-            if (hhLdpServerState.equals(HhLdpServerState.STATISTICS)) {
-                debias(bucketIndex);
-            }
             bucket.remove(weakestItem);
-            bucket.put(item, 1.0);
+            bucket.put(item, insertCount() + defaultDebiasCount(bucketIndex));
             return true;
         } else {
             bucket.put(weakestItem, weakestCount);
-            if (hhLdpServerState.equals(HhLdpServerState.STATISTICS)) {
-                currentNums[bucketIndex]++;
-            }
             return false;
         }
     }
@@ -277,7 +282,7 @@ public class AdvHhgHhLdpServer extends AbstractHhLdpServer implements HhgHhLdpSe
                 return bucket.getOrDefault(item, 0.0);
             case STATISTICS:
                 // return de-biased C
-                return debiasCount(bucketIndex, bucket.getOrDefault(item, 0.0));
+                return bucket.getOrDefault(item, defaultDebiasCount(bucketIndex)) / getDebiasFactor();
             default:
                 throw new IllegalStateException("Invalid " + HhLdpServerState.class.getSimpleName() + ": " + hhLdpServerState);
         }

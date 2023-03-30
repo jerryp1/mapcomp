@@ -86,6 +86,10 @@ public class HhLdpMain {
      */
     private final int k;
     /**
+     * warmup percentage
+     */
+    private final double warmupPercentage;
+    /**
      * warmup num
      */
     private final int warmupNum;
@@ -168,7 +172,7 @@ public class HhLdpMain {
         k = PropertiesUtils.readInt(properties, "k");
         MathPreconditions.checkLessOrEqual("k", k, d);
         // set privacy parameters
-        double warmupPercentage = PropertiesUtils.readDouble(properties, "warmup_percentage");
+        warmupPercentage = PropertiesUtils.readDouble(properties, "warmup_percentage");
         MathPreconditions.checkNonNegativeInRangeClosed("warmup_percentage", warmupPercentage, 1.0);
         windowEpsilons = PropertiesUtils.readDoubleArray(properties, "window_epsilon");
         windowSize = PropertiesUtils.readInt(properties, "window_size");
@@ -252,6 +256,8 @@ public class HhLdpMain {
             : TASK_TYPE_NAME + "_" + datasetName + "_" + testRound + "_" + reportFilePostfix + ".txt";
         FileWriter fileWriter = new FileWriter(filePath);
         PrintWriter printWriter = new PrintWriter(fileWriter, true);
+        // write warmup_precentage
+        printWriter.println("warmup_precentage = " + warmupPercentage);
         // write tab
         String tab = "type\tε_w\tα\tγ_h\ts_time(s)\tc_time(s)\tcomm.(B)\tmem.(B)\t" +
             "warmup_ndcg\twarmup_precision\tndcg\tprecision\tabe\tre";
