@@ -164,7 +164,7 @@ public class AdvHhgHhLdpServer extends AbstractHhLdpServer implements HhgHhLdpSe
     }
 
     private double debiasCount() {
-        return -gammaH * p1 * q2 + (1 - gammaH) * q1 / k;
+        return -(gammaH * p1 * q2 + (1 - gammaH) * q1 / k);
     }
 
     private void debiasBucket(int bucketIndex) {
