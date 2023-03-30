@@ -2,6 +2,7 @@ package edu.alibaba.mpc4j.s2pc.pso.opprf.bopprf;
 
 import edu.alibaba.mpc4j.common.rpc.Party;
 import edu.alibaba.mpc4j.common.rpc.Rpc;
+import edu.alibaba.mpc4j.common.rpc.desc.SecurityModel;
 import edu.alibaba.mpc4j.s2pc.pso.opprf.bopprf.okvs.OkvsBopprfConfig;
 import edu.alibaba.mpc4j.s2pc.pso.opprf.bopprf.okvs.OkvsBopprfReceiver;
 import edu.alibaba.mpc4j.s2pc.pso.opprf.bopprf.okvs.OkvsBopprfSender;
@@ -69,6 +70,24 @@ public class BopprfFactory {
             case TABLE:
             default:
                 throw new IllegalArgumentException("Invalid " + BopprfType.class.getSimpleName() + ": " + type.name());
+        }
+    }
+
+    /**
+     * Creates a default config.
+     *
+     * @param securityModel the security model.
+     * @return a default config.
+     */
+    public static BopprfConfig createDefaultConfig(SecurityModel securityModel) {
+        switch (securityModel) {
+            case IDEAL:
+            case SEMI_HONEST:
+                return new OkvsBopprfConfig.Builder().build();
+            case COVERT:
+            case MALICIOUS:
+            default:
+                throw new IllegalArgumentException("Invalid " + SecurityModel.class.getSimpleName() + ": " + securityModel.name());
         }
     }
 }

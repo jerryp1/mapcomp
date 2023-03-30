@@ -28,7 +28,7 @@ class Cgs22RbopprfPtoDesc implements PtoDesc {
      */
     enum PtoStep {
         /**
-         * the sender sends cuckoo hash keys
+         * the sender sends garbled table keys
          */
         SENDER_SEND_GARBLED_TABLE_KEYS,
         /**
