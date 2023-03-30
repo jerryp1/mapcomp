@@ -150,12 +150,6 @@ public class HhLdpEfficiencyTest {
                     .Builder(LdpTestDataUtils.CONNECT_DATA_DOMAIN, DEFAULT_K, epsilon, DEFAULT_WINDOW_SIZE)
                     .build()
             );
-            // Buffer HeavyGuardian
-            CONFIGS.add(
-                new BufferHhgHhLdpConfig
-                    .Builder(LdpTestDataUtils.CONNECT_DATA_DOMAIN, DEFAULT_K, epsilon, DEFAULT_WINDOW_SIZE)
-                    .build()
-            );
         }
     }
 

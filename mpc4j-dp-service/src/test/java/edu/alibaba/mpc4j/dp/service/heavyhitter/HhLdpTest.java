@@ -49,8 +49,6 @@ public class HhLdpTest {
     public static Collection<Object[]> configurations() {
         Collection<Object[]> configurations = new ArrayList<>();
 
-        // Buffered HeavyGuardian
-        configurations.add(new Object[]{HhLdpType.BUFFER.name(), HhLdpType.BUFFER,});
         // Advanced HeavyGuardian
         configurations.add(new Object[]{HhLdpType.ADV.name(), HhLdpType.ADV,});
         // Direct HeavyGuardian

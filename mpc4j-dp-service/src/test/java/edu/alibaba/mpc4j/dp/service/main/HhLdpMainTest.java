@@ -99,20 +99,6 @@ public class HhLdpMainTest {
         hhLdpMain.run();
     }
 
-    @Test
-    public void testLambdaL() throws IOException {
-        HhLdpMain hhLdpMain = createHhLdpMain("test_config/hh_ldp_test_config_lambdal.conf");
-        Assert.assertTrue(hhLdpMain.getLambdaLs().length > 0);
-        hhLdpMain.run();
-    }
-
-    @Test
-    public void testNoLambdaL() throws IOException {
-        HhLdpMain hhLdpMain = createHhLdpMain("test_config/hh_ldp_test_config_no_lambdal.conf");
-        Assert.assertEquals(0, hhLdpMain.getLambdaLs().length);
-        hhLdpMain.run();
-    }
-
     private HhLdpMain createHhLdpMain(String path) throws IOException {
         String configPath = Objects.requireNonNull(
             HhLdpMainTest.class.getClassLoader().getResource(path)

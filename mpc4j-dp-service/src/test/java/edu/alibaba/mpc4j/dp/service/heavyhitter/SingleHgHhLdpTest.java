@@ -26,7 +26,7 @@ import java.util.stream.Stream;
  * @date 2022/11/18
  */
 @RunWith(Parameterized.class)
-public class FixedHgHhLdpTest {
+public class SingleHgHhLdpTest {
     /**
      * HeavyGuardian seed
      */
@@ -146,7 +146,7 @@ public class FixedHgHhLdpTest {
      */
     private final HhLdpType type;
 
-    public FixedHgHhLdpTest(String name, HhLdpType type) {
+    public SingleHgHhLdpTest(String name, HhLdpType type) {
         Preconditions.checkArgument(StringUtils.isNotBlank(name));
         this.type = type;
     }

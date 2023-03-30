@@ -47,10 +47,6 @@ public class HhLdpFactory {
          * Advanced HeavyGuardian
          */
         ADV,
-        /**
-         * Buffered HeavyGuardian
-         */
-        BUFFER,
     }
 
     /**
@@ -74,8 +70,6 @@ public class HhLdpFactory {
                 return new DirectHgHhLdpConfig.Builder(domainSet, k, windowEpsilon, windowSize).build();
             case ADV:
                 return new AdvHhgHhLdpConfig.Builder(domainSet, k, windowEpsilon, windowSize).build();
-            case BUFFER:
-                return new BufferHhgHhLdpConfig.Builder(domainSet, k, windowEpsilon, windowSize).build();
             default:
                 throw new IllegalArgumentException("Invalid " + HhLdpType.class.getSimpleName() + ": " + type);
         }
@@ -116,12 +110,6 @@ public class HhLdpFactory {
                     .setBucketParams(w, lambdaH)
                     .setHgRandom(hgRandom)
                     .build();
-            case BUFFER:
-                return new BufferHhgHhLdpConfig
-                    .Builder(domainSet, k, windowEpsilon, windowSize)
-                    .setBucketParams(w, lambdaH)
-                    .setHgRandom(hgRandom)
-                    .build();
             default:
                 throw new IllegalArgumentException("Invalid " + HhLdpType.class.getSimpleName() + ": " + type);
         }
@@ -144,8 +132,6 @@ public class HhLdpFactory {
                 return new DirectHgHhLdpServer((DirectHgHhLdpConfig) config);
             case ADV:
                 return new AdvHhgHhLdpServer((AdvHhgHhLdpConfig) config);
-            case BUFFER:
-                return new BufferHhgHhLdpServer((BufferHhgHhLdpConfig) config);
             default:
                 throw new IllegalArgumentException("Invalid " + HhLdpType.class.getSimpleName() + ": " + type);
         }
@@ -168,8 +154,6 @@ public class HhLdpFactory {
                 return new DirectHgHhLdpClient((DirectHgHhLdpConfig) config);
             case ADV:
                 return new AdvHhgHhLdpClient((AdvHhgHhLdpConfig) config);
-            case BUFFER:
-                return new BufferHhgHhLdpClient((BufferHhgHhLdpConfig) config);
             default:
                 throw new IllegalArgumentException("Invalid " + HhLdpType.class.getSimpleName() + ": " + type);
         }
