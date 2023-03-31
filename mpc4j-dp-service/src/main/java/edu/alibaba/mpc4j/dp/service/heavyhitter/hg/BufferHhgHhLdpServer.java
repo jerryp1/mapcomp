@@ -424,21 +424,17 @@ public class BufferHhgHhLdpServer extends AbstractHhLdpServer implements HhgHhLd
 
     @Override
     public Map<String, Double> heavyHitters() {
-        Set<String> bucketItemSet = buckets.stream()
+        Set<String> itemSet = buckets.stream()
             .map(Map::keySet)
             .flatMap(Set::stream)
             .collect(Collectors.toSet());
-        Set<String> itemSet = buffers.stream()
-            .map(Map::keySet)
-            .flatMap(Set::stream).collect(Collectors.toSet());
-        itemSet.addAll(bucketItemSet);
         // we first iterate items in each budget
-        Map<String, Double> countMap = bucketItemSet.stream()
+        Map<String, Double> countMap = itemSet.stream()
             .collect(Collectors.toMap(item -> item, this::response));
         List<Map.Entry<String, Double>> countList = new ArrayList<>(countMap.entrySet());
         countList.sort(Comparator.comparingDouble(Map.Entry::getValue));
         Collections.reverse(countList);
-        if (bucketItemSet.size() <= k) {
+        if (itemSet.size() <= k) {
             // the current key set is less than k, return all items
             return countList.stream().collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
         } else {

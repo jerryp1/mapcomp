@@ -9,7 +9,7 @@
     </parent>
     <modelVersion>4.0.0</modelVersion>
 
-    <artifactId>mpc4j-s2pc-pcg</artifactId>
+    <artifactId>mpc4j-common-matrix</artifactId>
 
     <properties>
         <maven.compiler.source>8</maven.compiler.source>
@@ -17,6 +17,14 @@
     </properties>
 
     <dependencies>
+        <dependency>
+            <groupId>com.google.guava</groupId>
+            <artifactId>guava</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.commons</groupId>
+            <artifactId>commons-lang3</artifactId>
+        </dependency>
         <dependency>
             <groupId>junit</groupId>
             <artifactId>junit</artifactId>
@@ -31,31 +39,10 @@
             <artifactId>slf4j-log4j12</artifactId>
         </dependency>
         <dependency>
-            <groupId>cc.redberry</groupId>
-            <artifactId>rings</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>edu.alibaba</groupId>
-            <artifactId>mpc4j-crypto-phe</artifactId>
-            <version>1.0.7-SNAPSHOT</version>
-        </dependency>
-        <dependency>
-            <groupId>edu.alibaba</groupId>
-            <artifactId>mpc4j-common-rpc</artifactId>
-            <version>1.0.7-SNAPSHOT</version>
-            <scope>compile</scope>
-        </dependency>
-        <dependency>
-            <groupId>edu.alibaba</groupId>
-            <artifactId>mpc4j-common-matrix</artifactId>
-            <version>1.0.7-SNAPSHOT</version>
-            <scope>compile</scope>
-        </dependency>
-        <dependency>
             <groupId>edu.alibaba</groupId>
             <artifactId>mpc4j-common-tool</artifactId>
             <version>1.0.7-SNAPSHOT</version>
-            <scope>compile</scope>
         </dependency>
     </dependencies>
+
 </project>

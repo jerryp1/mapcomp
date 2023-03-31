@@ -2,7 +2,7 @@ package edu.alibaba.mpc4j.s2pc.aby.sbitmap;
 
 import com.google.common.base.Preconditions;
 import edu.alibaba.mpc4j.common.tool.MathPreconditions;
-import edu.alibaba.mpc4j.common.tool.bitvector.BitVector;
+import edu.alibaba.mpc4j.common.matrix.bitvector.BitVector;
 import edu.alibaba.mpc4j.s2pc.aby.basics.bc.SquareSbitVector;
 import edu.alibaba.mpc4j.s2pc.aby.sbitmap.utils.RoaringBitmapUtils;
 import org.roaringbitmap.RoaringBitmap;
