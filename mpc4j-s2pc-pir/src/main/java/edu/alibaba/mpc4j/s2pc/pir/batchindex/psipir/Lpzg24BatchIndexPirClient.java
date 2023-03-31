@@ -89,27 +89,37 @@ public class Lpzg24BatchIndexPirClient extends AbstractBatchIndexPirClient {
     public void init(int serverElementSize, int elementBitLength, int maxRetrievalSize) throws MpcAbortException {
         logPhaseInfo(PtoState.INIT_BEGIN);
 
-        stopWatch.start();
-
-        if (maxRetrievalSize <= 256) {
-            params = Cmg21UpsiParams.SERVER_1M_CLIENT_MAX_256;
-        } else if (maxRetrievalSize <= 512) {
-            params = Cmg21UpsiParams.SERVER_1M_CLIENT_MAX_512_CMP;
-        } else if (maxRetrievalSize <= 1024) {
-            params = Cmg21UpsiParams.SERVER_1M_CLIENT_MAX_1K_CMP;
-        } else if (maxRetrievalSize <= 2048) {
-            params = Cmg21UpsiParams.SERVER_1M_CLIENT_MAX_2K_CMP;
-        } else if (maxRetrievalSize <= 4096) {
-            params = Cmg21UpsiParams.SERVER_1M_CLIENT_MAX_4K_CMP;
-        } else if (maxRetrievalSize <= 5535) {
-            params = Cmg21UpsiParams.SERVER_1M_CLIENT_MAX_5535;
-        } else if (maxRetrievalSize <= 11041) {
-            params = Cmg21UpsiParams.SERVER_1M_CLIENT_MAX_11041;
-        } else {
-            MpcAbortPreconditions.checkArgument(false, "retrieval size is larger than the upper bound.");
+        if (serverElementSize <= (1 << 22)) {
+            if (maxRetrievalSize <= 256) {
+                params = Cmg21UpsiParams.SERVER_1M_CLIENT_MAX_256;
+            } else if (maxRetrievalSize <= 512) {
+                params = Cmg21UpsiParams.SERVER_1M_CLIENT_MAX_512_CMP;
+            } else if (maxRetrievalSize <= 1024) {
+                params = Cmg21UpsiParams.SERVER_1M_CLIENT_MAX_1K_CMP;
+            } else if (maxRetrievalSize <= 2048) {
+                params = Cmg21UpsiParams.SERVER_1M_CLIENT_MAX_2K_CMP;
+            } else if (maxRetrievalSize <= 4096) {
+                params = Cmg21UpsiParams.SERVER_1M_CLIENT_MAX_4K_CMP;
+            } else if (maxRetrievalSize <= 5535) {
+                params = Cmg21UpsiParams.SERVER_1M_CLIENT_MAX_5535;
+            } else if (maxRetrievalSize <= 11041) {
+                params = Cmg21UpsiParams.SERVER_1M_CLIENT_MAX_11041;
+            } else {
+                MpcAbortPreconditions.checkArgument(false, "retrieval size is larger than the upper bound.");
+            }
+        } else if (serverElementSize <= (1 << 24)) {
+            if (maxRetrievalSize <= 1024) {
+                params = Cmg21UpsiParams.SERVER_16M_CLIENT_MAX_1024;
+            } else if (maxRetrievalSize <= 2048) {
+                params = Cmg21UpsiParams.SERVER_16M_CLIENT_MAX_2048;
+            } else {
+                MpcAbortPreconditions.checkArgument(false, "retrieval size is larger than the upper bound.");
+            }
         }
         zp64 = Zp64Factory.createInstance(envType, (long) params.getPlainModulus());
         setInitInput(serverElementSize, elementBitLength, params.maxClientElementSize(), 1);
+
+        stopWatch.start();
         // 客户端生成BFV算法密钥和参数
         List<byte[]> bfvKeyPair = generateKeyPair();
         DataPacketHeader bfvParamsHeader = new DataPacketHeader(

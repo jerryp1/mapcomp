@@ -1,9 +1,6 @@
 package edu.alibaba.mpc4j.s2pc.pir.batchindex.vectorizedpir;
 
-import edu.alibaba.mpc4j.s2pc.pir.PirUtils;
-
 import java.util.Arrays;
-import java.util.stream.IntStream;
 
 /**
  * Vectorized Batch PIR协议内部参数。

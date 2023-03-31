@@ -73,20 +73,45 @@ public class Mr23BatchIndexPirClient extends AbstractBatchIndexPirClient {
 
     @Override
     public void init(int serverElementSize, int elementBitLength, int maxRetrievalSize) throws MpcAbortException {
-        if (maxRetrievalSize <= 256) {
-            params = Mr23BatchIndexPirParams.DEFAULT_PARAMS_BIN_SIZE_256;
-        } else if (maxRetrievalSize <= 512) {
-            params = Mr23BatchIndexPirParams.DEFAULT_PARAMS_BIN_SIZE_512;
-        } else if (maxRetrievalSize <= 1024) {
-            params = Mr23BatchIndexPirParams.DEFAULT_PARAMS_BIN_SIZE_1024;
-        } else if (maxRetrievalSize <= 2048) {
-            params = Mr23BatchIndexPirParams.DEFAULT_PARAMS_BIN_SIZE_2048;
-        } else {
-            MpcAbortPreconditions.checkArgument(false, "retrieval size is larger than the upper bound.");
+        if (serverElementSize <= (1 << 20)) {
+            if (maxRetrievalSize <= 256) {
+                params = Mr23BatchIndexPirParams.ELEMENT_LOG_SIZE_20_RETRIEVAL_SIZE_256;
+            } else if (maxRetrievalSize <= 512) {
+                params = Mr23BatchIndexPirParams.ELEMENT_LOG_SIZE_20_RETRIEVAL_SIZE_512;
+            } else if (maxRetrievalSize <= 1024) {
+                params = Mr23BatchIndexPirParams.ELEMENT_LOG_SIZE_20_RETRIEVAL_SIZE_1024;
+            } else if (maxRetrievalSize <= 2048) {
+                params = Mr23BatchIndexPirParams.ELEMENT_LOG_SIZE_20_RETRIEVAL_SIZE_2048;
+            } else {
+                MpcAbortPreconditions.checkArgument(false, "retrieval size is larger than the upper bound.");
+            }
+        } else if (serverElementSize <= (1 << 22)) {
+            if (maxRetrievalSize <= 256) {
+                params = Mr23BatchIndexPirParams.ELEMENT_LOG_SIZE_22_RETRIEVAL_SIZE_256;
+            } else if (maxRetrievalSize <= 512) {
+                params = Mr23BatchIndexPirParams.ELEMENT_LOG_SIZE_22_RETRIEVAL_SIZE_512;
+            } else if (maxRetrievalSize <= 1024) {
+                params = Mr23BatchIndexPirParams.ELEMENT_LOG_SIZE_22_RETRIEVAL_SIZE_1024;
+            } else if (maxRetrievalSize <= 2048) {
+                params = Mr23BatchIndexPirParams.ELEMENT_LOG_SIZE_22_RETRIEVAL_SIZE_2048;
+            } else {
+                MpcAbortPreconditions.checkArgument(false, "retrieval size is larger than the upper bound.");
+            }
+        } else if (serverElementSize <= (1 << 24)) {
+            if (maxRetrievalSize <= 256) {
+                params = Mr23BatchIndexPirParams.ELEMENT_LOG_SIZE_24_RETRIEVAL_SIZE_256;
+            } else if (maxRetrievalSize <= 512) {
+                params = Mr23BatchIndexPirParams.ELEMENT_LOG_SIZE_24_RETRIEVAL_SIZE_512;
+            } else if (maxRetrievalSize <= 1024) {
+                params = Mr23BatchIndexPirParams.ELEMENT_LOG_SIZE_24_RETRIEVAL_SIZE_1024;
+            } else if (maxRetrievalSize <= 2048) {
+                params = Mr23BatchIndexPirParams.ELEMENT_LOG_SIZE_24_RETRIEVAL_SIZE_2048;
+            } else {
+                MpcAbortPreconditions.checkArgument(false, "retrieval size is larger than the upper bound.");
+            }
         }
-        setInitInput(serverElementSize, elementBitLength, maxRetrievalSize, params.getPlainModulusBitLength());
+        setInitInput(serverElementSize, elementBitLength, maxRetrievalSize, params.getPlainModulusBitLength() - 1);
         logPhaseInfo(PtoState.INIT_BEGIN);
-
         // 客户端接收服务端哈希密钥
         DataPacketHeader cuckooHashKeyHeader = new DataPacketHeader(
             encodeTaskId, getPtoDesc().getPtoId(), PtoStep.SERVER_SEND_CUCKOO_HASH_KEYS.ordinal(), extraInfo,
@@ -103,6 +128,7 @@ public class Mr23BatchIndexPirClient extends AbstractBatchIndexPirClient {
         );
         int maxBinSize = maxBinSize(cuckooHashBin.binNum());
         innerParams = new Mr23BatchIndexPirInnerParams(params, cuckooHashBin.binNum(), maxBinSize);
+        System.out.println(innerParams);
         assert (params.getPolyModulusDegree() / 2) >= cuckooHashBin.binNum();
         stopWatch.stop();
         long hashTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
@@ -141,6 +167,7 @@ public class Mr23BatchIndexPirClient extends AbstractBatchIndexPirClient {
         logStepInfo(PtoState.PTO_STEP, 1, 3, cuckooHashKeyTime, "Client generates cuckoo hash bin");
 
         stopWatch.start();
+        System.out.println(parallel);
         // client generate queries for each hash bin
         IntStream intStream = IntStream.range(0, innerParams.getBinNum());
         intStream = parallel ? intStream.parallel() : intStream;

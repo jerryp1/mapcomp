@@ -73,20 +73,32 @@ public class Mr23BatchIndexPirServer extends AbstractBatchIndexPirServer {
     @Override
     public void init(byte[][] elementArray, int elementBitLength, int maxRetrievalSize)
         throws MpcAbortException {
-        if (maxRetrievalSize <= 256) {
-            params = Mr23BatchIndexPirParams.DEFAULT_PARAMS_BIN_SIZE_256;
-        } else if (maxRetrievalSize <= 512) {
-            params = Mr23BatchIndexPirParams.DEFAULT_PARAMS_BIN_SIZE_512;
-        } else if (maxRetrievalSize <= 1024) {
-            params = Mr23BatchIndexPirParams.DEFAULT_PARAMS_BIN_SIZE_1024;
-        } else if (maxRetrievalSize <= 2048) {
-            params = Mr23BatchIndexPirParams.DEFAULT_PARAMS_BIN_SIZE_2048;
-        } else {
+        if (maxRetrievalSize > 2048) {
             MpcAbortPreconditions.checkArgument(false, "retrieval size is larger than the upper bound.");
         }
-        setInitInput(elementArray, elementBitLength, maxRetrievalSize, params.getPlainModulusBitLength());
+        if (elementArray.length <= (1 << 20)) {
+            if (maxRetrievalSize <= 256) {
+                params = Mr23BatchIndexPirParams.ELEMENT_LOG_SIZE_20_RETRIEVAL_SIZE_256;
+            } else if (maxRetrievalSize <= 512) {
+                params = Mr23BatchIndexPirParams.ELEMENT_LOG_SIZE_20_RETRIEVAL_SIZE_512;
+            } else if (maxRetrievalSize <= 1024) {
+                params = Mr23BatchIndexPirParams.ELEMENT_LOG_SIZE_20_RETRIEVAL_SIZE_1024;
+            } else {
+                params = Mr23BatchIndexPirParams.ELEMENT_LOG_SIZE_20_RETRIEVAL_SIZE_2048;
+            }
+        } else if (elementArray.length <= (1 << 24)) {
+            if (maxRetrievalSize <= 256) {
+                params = Mr23BatchIndexPirParams.ELEMENT_LOG_SIZE_24_RETRIEVAL_SIZE_256;
+            } else if (maxRetrievalSize <= 512) {
+                params = Mr23BatchIndexPirParams.ELEMENT_LOG_SIZE_24_RETRIEVAL_SIZE_512;
+            } else if (maxRetrievalSize <= 1024) {
+                params = Mr23BatchIndexPirParams.ELEMENT_LOG_SIZE_24_RETRIEVAL_SIZE_1024;
+            } else {
+                params = Mr23BatchIndexPirParams.ELEMENT_LOG_SIZE_24_RETRIEVAL_SIZE_2048;
+            }
+        }
+        setInitInput(elementArray, elementBitLength, maxRetrievalSize, params.getPlainModulusBitLength() - 1);
         logPhaseInfo(PtoState.INIT_BEGIN);
-
         // 服务端分桶
         stopWatch.start();
         hashKeys = CommonUtils.generateRandomKeys(params.getHashNum(), secureRandom);
@@ -96,6 +108,7 @@ public class Mr23BatchIndexPirServer extends AbstractBatchIndexPirServer {
         int maxBinSize = getMaxBinSize(cuckooHashBin.binNum());
         // 初始化参数
         innerParams = new Mr23BatchIndexPirInnerParams(params, cuckooHashBin.binNum(), maxBinSize);
+        System.out.println(innerParams);
         assert (params.getPolyModulusDegree() / 2) >= cuckooHashBin.binNum();
         DataPacketHeader cuckooHashKeyHeader = new DataPacketHeader(
             encodeTaskId, getPtoDesc().getPtoId(), PtoStep.SERVER_SEND_CUCKOO_HASH_KEYS.ordinal(), extraInfo,
@@ -107,7 +120,6 @@ public class Mr23BatchIndexPirServer extends AbstractBatchIndexPirServer {
         long hashTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
         stopWatch.reset();
         logStepInfo(PtoState.INIT_STEP, 1, 2, hashTime);
-
         // 服务端接收客户端生成的密钥对
         DataPacketHeader keyPairHeader = new DataPacketHeader(
             encodeTaskId, getPtoDesc().getPtoId(), PtoStep.CLIENT_SEND_PUBLIC_KEYS.ordinal(), extraInfo,
@@ -115,7 +127,6 @@ public class Mr23BatchIndexPirServer extends AbstractBatchIndexPirServer {
         );
         ArrayList<byte[]> keyPairPayload = new ArrayList<>(rpc.receive(keyPairHeader).getPayload());
         handleKeyPairPayload(keyPairPayload);
-
         // 服务端对数据库进行编码
         stopWatch.start();
         encodedDatabase = new ArrayList<>();
@@ -144,7 +155,6 @@ public class Mr23BatchIndexPirServer extends AbstractBatchIndexPirServer {
         long initTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
         stopWatch.reset();
         logStepInfo(PtoState.INIT_STEP, 2, 2, initTime);
-
         logPhaseInfo(PtoState.INIT_END);
     }
 

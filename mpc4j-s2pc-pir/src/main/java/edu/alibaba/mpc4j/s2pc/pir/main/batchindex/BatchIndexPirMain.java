@@ -19,6 +19,7 @@ import org.slf4j.LoggerFactory;
 
 import java.io.*;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Properties;
 import java.util.concurrent.ForkJoinPool;
 import java.util.concurrent.TimeUnit;
@@ -81,9 +82,10 @@ public class BatchIndexPirMain {
         // 读取服务端集合大小
         int serverLogElementSize = PropertiesUtils.readInt(properties, "server_log_element_size");
         // 读取客户端批查询数目
-        int clientLogRetrievalSize = PropertiesUtils.readInt(properties, "client_log_retrieval_size");
+        int[] clientLogRetrievalSize = PropertiesUtils.readLogIntArray(properties, "client_log_retrieval_size");
+        int setSizeNum = clientLogRetrievalSize.length;
         int serverElementSize = 1 << serverLogElementSize;
-        int clientRetrievalSize = 1 << clientLogRetrievalSize;
+        int[] clientRetrievalSize = Arrays.stream(clientLogRetrievalSize).map(logSize -> 1 << logSize).toArray();
         // 读取特殊参数
         LOGGER.info("{} read PTO config", serverRpc.ownParty().getPartyName());
         BatchIndexPirConfig config = BatchIndexPirConfigUtils.createBatchIndexPirConfig(properties);
@@ -114,10 +116,12 @@ public class BatchIndexPirMain {
         int taskId = 0;
         // 预热
         warmupServer(serverRpc, clientParty, config, taskId++);
-        // 正式测试
-        byte[][] serverElementArray = readServerElementArray(serverElementSize, elementBitLength);
-        runServer(serverRpc, clientParty, config, taskId++, serverElementArray, clientRetrievalSize, elementBitLength, printWriter);
-        runServer(serverRpc, clientParty, config, taskId, serverElementArray, clientRetrievalSize, elementBitLength, printWriter);
+        for (int setSizeIndex = 0; setSizeIndex < setSizeNum; setSizeIndex++) {
+            // 正式测试
+            byte[][] serverElementArray = readServerElementArray(serverElementSize, elementBitLength);
+            runServer(serverRpc, clientParty, config, taskId++, serverElementArray,
+                clientRetrievalSize[setSizeIndex], elementBitLength, printWriter);
+        }
         // 断开连接
         serverRpc.disconnect();
         printWriter.close();
@@ -197,12 +201,12 @@ public class BatchIndexPirMain {
         long ptoSendByteLength = server.getRpc().getSendByteLength();
         // 写入统计结果
         String info = server.ownParty().getPartyId()
-            + "\t\t" + serverElementSize
-            + "\t\t" + maxRetrievalSize
-            + "\t\t" + server.getParallel()
-            + "\t\t" + ForkJoinPool.getCommonPoolParallelism()
-            + "\t\t" + initTime + "\t\t" + initDataPacketNum + "\t\t" + initPayloadByteLength + "\t\t" + initSendByteLength
-            + "\t\t" + ptoTime + "\t\t" + ptoDataPacketNum + "\t\t" + ptoPayloadByteLength + "\t\t" + ptoSendByteLength;
+            + "\t" + serverElementSize
+            + "\t" + maxRetrievalSize
+            + "\t" + server.getParallel()
+            + "\t" + ForkJoinPool.getCommonPoolParallelism()
+            + "\t" + initTime + "\t" + initDataPacketNum + "\t" + initPayloadByteLength + "\t" + initSendByteLength
+            + "\t" + ptoTime + "\t" + ptoDataPacketNum + "\t" + ptoPayloadByteLength + "\t" + ptoSendByteLength;
         printWriter.println(info);
         // 同步
         server.getRpc().synchronize();
@@ -219,9 +223,10 @@ public class BatchIndexPirMain {
         // 读取服务端集合大小
         int serverLogElementSize = PropertiesUtils.readInt(properties, "server_log_element_size");
         // 读取客户端批查询数目
-        int clientLogRetrievalSize = PropertiesUtils.readInt(properties, "client_log_retrieval_size");
+        int[] clientLogRetrievalSize = PropertiesUtils.readLogIntArray(properties, "client_log_retrieval_size");
+        int setSizeNum = clientLogRetrievalSize.length;
         int serverElementSize = 1 << serverLogElementSize;
-        int clientRetrievalSize = 1 << clientLogRetrievalSize;
+        int[] clientRetrievalSize = Arrays.stream(clientLogRetrievalSize).map(logSize -> 1 << logSize).toArray();
         // 读取特殊参数
         LOGGER.info("{} read PTO config", clientRpc.ownParty().getPartyName());
         BatchIndexPirConfig config = BatchIndexPirConfigUtils.createBatchIndexPirConfig(properties);
@@ -229,7 +234,9 @@ public class BatchIndexPirMain {
         LOGGER.info("{} generate warm-up element files", clientRpc.ownParty().getPartyName());
         PirUtils.generateIndexInputFiles(WARMUP_SERVER_ELEMENT_SIZE, WARMUP_RETRIEVAL_SIZE);
         LOGGER.info("{} generate element files", clientRpc.ownParty().getPartyName());
-        PirUtils.generateIndexInputFiles(serverElementSize, clientRetrievalSize);
+        for (int setSizeIndex = 0; setSizeIndex < setSizeNum; setSizeIndex++) {
+            PirUtils.generateIndexInputFiles(serverElementSize, clientRetrievalSize[setSizeIndex]);
+        }
         // 创建统计结果文件
         LOGGER.info("{} create result file", clientRpc.ownParty().getPartyName());
         String filePath = PTO_TYPE_NAME
@@ -252,12 +259,13 @@ public class BatchIndexPirMain {
         int taskId = 0;
         // 预热
         warmupClient(clientRpc, serverParty, config, taskId++);
-        // 读取输入文件
-        ArrayList<Integer> indexList = readClientRetrievalIndexList(clientRetrievalSize);
-        // 多线程
-        runClient(clientRpc, serverParty, config, taskId++, indexList, serverElementSize, elementBitLength, printWriter);
-        // 单线程
-        runClient(clientRpc, serverParty, config, taskId, indexList, serverElementSize, elementBitLength, printWriter);
+        for (int setSizeIndex = 0; setSizeIndex < setSizeNum; setSizeIndex++) {
+            // 读取输入文件
+            ArrayList<Integer> indexList = readClientRetrievalIndexList(clientRetrievalSize[setSizeIndex]);
+            // 多线程
+            runClient(clientRpc, serverParty, config, taskId++, indexList, serverElementSize, elementBitLength,
+                printWriter);
+        }
         // 断开连接
         clientRpc.disconnect();
         printWriter.close();
@@ -338,12 +346,12 @@ public class BatchIndexPirMain {
         long ptoSendByteLength = client.getRpc().getSendByteLength();
         // 写入统计结果
         String info = client.ownParty().getPartyId()
-            + "\t\t" + serverElementSize
-            + "\t\t" + retrievalSize
-            + "\t\t" + client.getParallel()
-            + "\t\t" + ForkJoinPool.getCommonPoolParallelism()
-            + "\t\t" + initTime + "\t\t" + initDataPacketNum + "\t\t" + initPayloadByteLength + "\t\t" + initSendByteLength
-            + "\t\t" + ptoTime + "\t\t" + ptoDataPacketNum + "\t\t" + ptoPayloadByteLength + "\t\t" + ptoSendByteLength;
+            + "\t" + serverElementSize
+            + "\t" + retrievalSize
+            + "\t" + client.getParallel()
+            + "\t" + ForkJoinPool.getCommonPoolParallelism()
+            + "\t" + initTime + "\t" + initDataPacketNum + "\t" + initPayloadByteLength + "\t" + initSendByteLength
+            + "\t" + ptoTime + "\t" + ptoDataPacketNum + "\t" + ptoPayloadByteLength + "\t" + ptoSendByteLength;
         printWriter.println(info);
         client.getRpc().synchronize();
         client.getRpc().reset();
