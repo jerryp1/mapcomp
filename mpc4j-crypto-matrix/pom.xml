@@ -9,7 +9,7 @@
     </parent>
     <modelVersion>4.0.0</modelVersion>
 
-    <artifactId>mpc4j-common-matrix</artifactId>
+    <artifactId>mpc4j-crypto-matrix</artifactId>
 
     <properties>
         <maven.compiler.source>8</maven.compiler.source>
