@@ -8,17 +8,16 @@ import edu.alibaba.mpc4j.common.tool.crypto.crhf.Crhf;
 import edu.alibaba.mpc4j.common.tool.crypto.crhf.CrhfFactory;
 import edu.alibaba.mpc4j.common.tool.crypto.prg.Prg;
 import edu.alibaba.mpc4j.common.tool.crypto.prg.PrgFactory;
-import edu.alibaba.mpc4j.common.tool.utils.BinaryUtils;
 import edu.alibaba.mpc4j.common.tool.utils.BytesUtils;
-import edu.alibaba.mpc4j.common.tool.utils.CommonUtils;
 import edu.alibaba.mpc4j.s2pc.pcg.dpprf.bp.AbstractBpDpprfSender;
-import edu.alibaba.mpc4j.s2pc.pcg.dpprf.bp.BpDpprfFactory;
 import edu.alibaba.mpc4j.s2pc.pcg.dpprf.bp.BpDpprfSenderOutput;
 import edu.alibaba.mpc4j.s2pc.pcg.dpprf.sp.SpDpprfSenderOutput;
 import edu.alibaba.mpc4j.s2pc.pcg.dpprf.bp.ywl20.Ywl20BpDpprfPtoDesc.PtoStep;
 import edu.alibaba.mpc4j.s2pc.pcg.ot.cot.CotSenderOutput;
 import edu.alibaba.mpc4j.s2pc.pcg.ot.cot.core.CoreCotFactory;
 import edu.alibaba.mpc4j.s2pc.pcg.ot.cot.core.CoreCotSender;
+import edu.alibaba.mpc4j.s2pc.pcg.ot.cot.pre.PreCotFactory;
+import edu.alibaba.mpc4j.s2pc.pcg.ot.cot.pre.PreCotSender;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -40,6 +39,10 @@ public class Ywl20BpDpprfSender extends AbstractBpDpprfSender {
      */
     private final CoreCotSender coreCotSender;
     /**
+     * pre-compute COT sender
+     */
+    private final PreCotSender preCotSender;
+    /**
      * COT sender output
      */
     private CotSenderOutput cotSenderOutput;
@@ -60,6 +63,8 @@ public class Ywl20BpDpprfSender extends AbstractBpDpprfSender {
         super(Ywl20BpDpprfPtoDesc.getInstance(), senderRpc, receiverParty, config);
         coreCotSender = CoreCotFactory.createSender(senderRpc, receiverParty, config.getCoreCotConfig());
         addSubPtos(coreCotSender);
+        preCotSender = PreCotFactory.createSender(senderRpc, receiverParty, config.getPreCotConfig());
+        addSubPtos(preCotSender);
     }
 
     @Override
@@ -70,8 +75,9 @@ public class Ywl20BpDpprfSender extends AbstractBpDpprfSender {
         stopWatch.start();
         byte[] delta = new byte[CommonConstants.BLOCK_BYTE_LENGTH];
         secureRandom.nextBytes(delta);
-        int maxPreCotNum = BpDpprfFactory.getPrecomputeNum(config, maxBatchNum, maxAlphaBound);
+        int maxPreCotNum = maxH * maxBatchNum;
         coreCotSender.init(delta, maxPreCotNum);
+        preCotSender.init();
         stopWatch.stop();
         long initTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
         stopWatch.reset();
@@ -98,11 +104,13 @@ public class Ywl20BpDpprfSender extends AbstractBpDpprfSender {
 
         stopWatch.start();
         // S send (extend, h) to F_COT, which returns q_i ∈ {0,1}^κ to S
-        int preCotNum = BpDpprfFactory.getPrecomputeNum(config, batchNum, alphaBound);
+        int preCotNum = h * batchNum;
         if (cotSenderOutput == null) {
             cotSenderOutput = coreCotSender.send(preCotNum);
         } else {
             cotSenderOutput.reduce(preCotNum);
+            // use pre-computed COT to correct the choice bits
+            cotSenderOutput = preCotSender.send(cotSenderOutput);
         }
         stopWatch.stop();
         long cotTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
@@ -117,12 +125,7 @@ public class Ywl20BpDpprfSender extends AbstractBpDpprfSender {
         logStepInfo(PtoState.PTO_STEP, 2, 3, keyGenTime);
 
         stopWatch.start();
-        DataPacketHeader binaryHeader = new DataPacketHeader(
-            encodeTaskId, getPtoDesc().getPtoId(), PtoStep.RECEIVER_SEND_BINARY_ARRAY.ordinal(), extraInfo,
-            otherParty().getPartyId(), ownParty().getPartyId()
-        );
-        List<byte[]> binaryPayload = rpc.receive(binaryHeader).getPayload();
-        List<byte[]> messagePayload = generateMessagePayload(binaryPayload);
+        List<byte[]> messagePayload = generateMessagePayload();
         DataPacketHeader messageHeader = new DataPacketHeader(
             encodeTaskId, getPtoDesc().getPtoId(), PtoStep.SENDER_SEND_MESSAGE_ARRAY.ordinal(), extraInfo,
             ownParty().getPartyId(), otherParty().getPartyId()
@@ -193,37 +196,26 @@ public class Ywl20BpDpprfSender extends AbstractBpDpprfSender {
             .collect(Collectors.toCollection(ArrayList::new));
     }
 
-    private List<byte[]> generateMessagePayload(List<byte[]> binaryPayload) throws MpcAbortException {
-        MpcAbortPreconditions.checkArgument(binaryPayload.size() == batchNum);
-        byte[][] bBytesArray = binaryPayload.toArray(new byte[0][]);
-        int offset = CommonUtils.getByteLength(h) * Byte.SIZE - h;
+    private List<byte[]> generateMessagePayload() {
         Crhf crhf = CrhfFactory.createInstance(envType, CrhfFactory.CrhfType.MMO);
         IntStream batchIndexIntStream = IntStream.range(0, batchNum);
         batchIndexIntStream = parallel ? batchIndexIntStream.parallel() : batchIndexIntStream;
         List<byte[]> messagePayload = batchIndexIntStream
-            .mapToObj(batchIndex -> {
-                byte[] bByteArray = bBytesArray[batchIndex];
-                return IntStream.range(0, h)
+            .mapToObj(batchIndex ->
+                IntStream.range(0, h)
                     .mapToObj(lIndex -> {
-                        // S sends M_0^i = K_0^i ⊕ H(q_i ⊕ b_i ∆, i || l)
+                        // S sends M_0^i = K_0^i ⊕ H(q_i, i || l)
                         byte[] message0 = BytesUtils.clone(cotSenderOutput.getR0(batchIndex * h + lIndex));
-                        if (BinaryUtils.getBoolean(bByteArray, offset + lIndex)) {
-                            BytesUtils.xori(message0, cotSenderOutput.getDelta());
-                        }
                         message0 = crhf.hash(message0);
                         BytesUtils.xori(message0, k0sArray[batchIndex][lIndex]);
-                        // and M_1^i = K_1^i ⊕ H(q_i ⊕ \not b_i ∆, i || l)
-                        byte[] message1 = BytesUtils.clone(cotSenderOutput.getR0(batchIndex * h + lIndex));
-                        if (!BinaryUtils.getBoolean(bByteArray, offset + lIndex)) {
-                            BytesUtils.xori(message1, cotSenderOutput.getDelta());
-                        }
+                        // and M_1^i = K_1^i ⊕ H(q_i ⊕ ∆, i || l)
+                        byte[] message1 = BytesUtils.clone(cotSenderOutput.getR1(batchIndex * h + lIndex));
                         message1 = crhf.hash(message1);
                         BytesUtils.xori(message1, k1sArray[batchIndex][lIndex]);
-                        return new byte[][] {message0, message1};
+                        return new byte[][]{message0, message1};
                     })
                     .flatMap(Arrays::stream)
-                    .collect(Collectors.toList());
-            })
+                    .collect(Collectors.toList()))
             .flatMap(Collection::stream)
             .collect(Collectors.toList());
         k0sArray = null;

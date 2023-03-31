@@ -1,10 +1,12 @@
 package edu.alibaba.mpc4j.dp.service.heavyhitter.hg;
 
 import com.google.common.base.Preconditions;
-import edu.alibaba.mpc4j.dp.service.heavyhitter.config.HhLdpConfig;
+import edu.alibaba.mpc4j.dp.service.heavyhitter.AbstractHhLdpClient;
+import edu.alibaba.mpc4j.dp.service.heavyhitter.config.BasicHgHhLdpConfig;
 import edu.alibaba.mpc4j.dp.service.heavyhitter.utils.HhLdpServerContext;
 import edu.alibaba.mpc4j.dp.service.heavyhitter.HhLdpFactory;
 import edu.alibaba.mpc4j.dp.service.heavyhitter.utils.EmptyHhLdpServerContext;
+import edu.alibaba.mpc4j.dp.service.tool.BucketDomain;
 
 import java.util.Random;
 
@@ -14,11 +16,11 @@ import java.util.Random;
  * @author Weiran Liu
  * @date 2023/1/5
  */
-public class BasicHgHhLdpClient extends AbstractHgHhLdpClient {
+public class BasicHgHhLdpClient extends AbstractHhLdpClient {
     /**
-     * the universal domain size d, i.e., |Ω|.
+     * the bucket domain
      */
-    private final int d;
+    private final BucketDomain bucketDomain;
     /**
      * p = e^ε / (e^ε + d - 1)
      */
@@ -28,10 +30,12 @@ public class BasicHgHhLdpClient extends AbstractHgHhLdpClient {
      */
     private final double q;
 
-    public BasicHgHhLdpClient(HhLdpConfig config) {
-        super(config);
+    public BasicHgHhLdpClient(BasicHgHhLdpConfig basicHgHhLdpConfig) {
+        super(basicHgHhLdpConfig);
+        int w = basicHgHhLdpConfig.getW();
+        int lambdaH = basicHgHhLdpConfig.getLambdaH();
+        bucketDomain = new BucketDomain(basicHgHhLdpConfig.getDomainSet(), w, lambdaH);
         double expWindowEpsilon = Math.exp(windowEpsilon);
-        d = bucketDomain.getUniversalD();
         p = expWindowEpsilon / (expWindowEpsilon + d - 1);
         q = 1 / (expWindowEpsilon + d - 1);
     }

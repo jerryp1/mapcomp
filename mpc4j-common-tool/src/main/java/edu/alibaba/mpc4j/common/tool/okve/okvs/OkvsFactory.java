@@ -3,8 +3,7 @@ package edu.alibaba.mpc4j.common.tool.okve.okvs;
 import edu.alibaba.mpc4j.common.tool.EnvType;
 import edu.alibaba.mpc4j.common.tool.okve.cuckootable.CuckooTableSingletonTcFinder;
 import edu.alibaba.mpc4j.common.tool.okve.cuckootable.H2CuckooTableTcFinder;
-
-import java.nio.ByteBuffer;
+import edu.alibaba.mpc4j.common.tool.okve.basic.BasicOkvsFactory;
 
 /**
  * 不经意键值存储器（OKVS）工厂类。
@@ -69,7 +68,7 @@ public class OkvsFactory {
             case H3_SINGLETON_GCT:
                 return true;
             default:
-                throw new IllegalArgumentException("Invalid OkvsType: " + okvsType.name());
+                throw new IllegalArgumentException("Invalid " + OkvsType.class.getSimpleName() + ": " + okvsType.name());
         }
     }
 
@@ -83,13 +82,13 @@ public class OkvsFactory {
      * @param keys     哈希密钥。
      * @return OKVS。
      */
-    public static Okvs<ByteBuffer> createInstance(EnvType envType, OkvsType okvsType, int n, int l, byte[][] keys) {
+    public static <X> Okvs<X> createInstance(EnvType envType, OkvsType okvsType, int n, int l, byte[][] keys) {
         assert keys.length == getHashNum(okvsType);
         switch (okvsType) {
             case POLYNOMIAL:
-                return new PolynomialOkvs(envType, n, l);
+                return new PolynomialOkvs<>(envType, n, l, keys[0]);
             case MEGA_BIN:
-                return new MegaBinOkvs(envType, n, l, keys[0]);
+                return new MegaBinOkvs<>(envType, n, l, keys);
             case GBF:
                 return new GbfBinaryOkvs<>(envType, n, l, keys);
             case H3_SINGLETON_GCT:
@@ -101,7 +100,7 @@ public class OkvsFactory {
             case H2_DFS_GCT:
                 return new H2DfsGctBinaryOkvs<>(envType, n, l, keys);
             default:
-                throw new IllegalArgumentException("Invalid OkvsType：" + okvsType.name());
+                throw new IllegalArgumentException("Invalid " + OkvsType.class.getSimpleName() + ": " + okvsType.name());
         }
     }
 
@@ -131,7 +130,7 @@ public class OkvsFactory {
             case GBF:
                 return new GbfBinaryOkvs<>(envType, n, l, keys);
             default:
-                throw new IllegalArgumentException("Invalid OkvsType：" + okvsType.name());
+                throw new IllegalArgumentException("Invalid " + OkvsType.class.getSimpleName() + ": " + okvsType.name());
         }
     }
 
@@ -144,9 +143,11 @@ public class OkvsFactory {
     public static int getHashNum(OkvsType okvsType) {
         switch (okvsType) {
             case POLYNOMIAL:
-                return 0;
+                // one additional hash num for map key to byte[]
+                return BasicOkvsFactory.getHashNum(BasicOkvsFactory.BasicOkvsType.POLYNOMIAL) + 1;
             case MEGA_BIN:
-                return 1;
+                // one additional hash num for map key to byte[]
+                return BasicOkvsFactory.getHashNum(BasicOkvsFactory.BasicOkvsType.MEGA_BIN) + 1;
             case H3_SINGLETON_GCT:
                 return H3TcGctBinaryOkvs.HASH_NUM;
             case H2_SINGLETON_GCT:
@@ -157,7 +158,7 @@ public class OkvsFactory {
             case GBF:
                 return GbfBinaryOkvs.HASH_NUM;
             default:
-                throw new IllegalArgumentException("Invalid OkvsType" + okvsType.name());
+                throw new IllegalArgumentException("Invalid " + OkvsType.class.getSimpleName() + ": " + okvsType.name());
         }
     }
 
@@ -171,12 +172,9 @@ public class OkvsFactory {
     public static int getM(OkvsType okvsType, int n) {
         switch (okvsType) {
             case POLYNOMIAL:
-                assert n > 1;
-                return n;
+                return BasicOkvsFactory.getM(BasicOkvsFactory.BasicOkvsType.POLYNOMIAL, n);
             case MEGA_BIN:
-                int binNum = MegaBinOkvs.getBinNum(n);
-                int binSize = MegaBinOkvs.getBinSize(n);
-                return binNum * binSize;
+                return BasicOkvsFactory.getM(BasicOkvsFactory.BasicOkvsType.MEGA_BIN, n);
             case GBF:
                 return GbfBinaryOkvs.getM(n);
             case H3_SINGLETON_GCT:
@@ -186,9 +184,8 @@ public class OkvsFactory {
                 return H2TcGctBinaryOkvs.getLm(n) + H2TcGctBinaryOkvs.getRm(n);
             case H2_DFS_GCT:
                 return H2DfsGctBinaryOkvs.getLm(n) + H2DfsGctBinaryOkvs.getRm(n);
-
             default:
-                throw new IllegalArgumentException("Invalid OkvsType" + okvsType.name());
+                throw new IllegalArgumentException("Invalid " + OkvsType.class.getSimpleName() + ": " + okvsType.name());
         }
     }
 }

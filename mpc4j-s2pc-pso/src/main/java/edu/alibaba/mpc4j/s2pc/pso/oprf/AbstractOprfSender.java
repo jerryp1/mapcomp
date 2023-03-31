@@ -16,7 +16,7 @@ public abstract class AbstractOprfSender extends AbstractTwoPartyPto implements 
     /**
      * 最大批处理数量
      */
-    protected long maxBatchSize;
+    protected int maxBatchSize;
     /**
      * scale num
      */

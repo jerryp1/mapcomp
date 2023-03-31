@@ -1,29 +1,25 @@
 package edu.alibaba.mpc4j.s2pc.pcg.dpprf.sp.ywl20;
 
 import edu.alibaba.mpc4j.common.rpc.*;
-import edu.alibaba.mpc4j.common.rpc.utils.DataPacket;
 import edu.alibaba.mpc4j.common.rpc.utils.DataPacketHeader;
 import edu.alibaba.mpc4j.common.tool.CommonConstants;
 import edu.alibaba.mpc4j.common.tool.crypto.crhf.Crhf;
 import edu.alibaba.mpc4j.common.tool.crypto.crhf.CrhfFactory;
 import edu.alibaba.mpc4j.common.tool.crypto.prg.Prg;
 import edu.alibaba.mpc4j.common.tool.crypto.prg.PrgFactory;
-import edu.alibaba.mpc4j.common.tool.utils.BinaryUtils;
 import edu.alibaba.mpc4j.common.tool.utils.BytesUtils;
-import edu.alibaba.mpc4j.common.tool.utils.CommonUtils;
 import edu.alibaba.mpc4j.s2pc.pcg.dpprf.sp.AbstractSpDpprfReceiver;
-import edu.alibaba.mpc4j.s2pc.pcg.dpprf.sp.SpDpprfFactory;
 import edu.alibaba.mpc4j.s2pc.pcg.dpprf.sp.SpDpprfReceiverOutput;
 import edu.alibaba.mpc4j.s2pc.pcg.dpprf.sp.ywl20.Ywl20SpDpprfPtoDesc.PtoStep;
 import edu.alibaba.mpc4j.s2pc.pcg.ot.cot.CotReceiverOutput;
 import edu.alibaba.mpc4j.s2pc.pcg.ot.cot.core.CoreCotFactory;
 import edu.alibaba.mpc4j.s2pc.pcg.ot.cot.core.CoreCotReceiver;
+import edu.alibaba.mpc4j.s2pc.pcg.ot.cot.pre.PreCotFactory;
+import edu.alibaba.mpc4j.s2pc.pcg.ot.cot.pre.PreCotReceiver;
 
 import java.util.ArrayList;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
-import java.util.stream.IntStream;
 
 /**
  * YWL20-SP-DPPRF receiver.
@@ -37,6 +33,10 @@ public class Ywl20SpDpprfReceiver extends AbstractSpDpprfReceiver {
      */
     private final CoreCotReceiver coreCotReceiver;
     /**
+     * pre-compute COT receiver
+     */
+    private final PreCotReceiver preCotReceiver;
+    /**
      * core COT receiver output
      */
     private CotReceiverOutput cotReceiverOutput;
@@ -49,6 +49,8 @@ public class Ywl20SpDpprfReceiver extends AbstractSpDpprfReceiver {
         super(Ywl20SpDpprfPtoDesc.getInstance(), receiverRpc, senderParty, config);
         coreCotReceiver = CoreCotFactory.createReceiver(receiverRpc, senderParty, config.getCoreCotConfig());
         addSubPtos(coreCotReceiver);
+        preCotReceiver = PreCotFactory.createReceiver(receiverRpc, senderParty, config.getPreCotConfig());
+        addSubPtos(preCotReceiver);
     }
 
     @Override
@@ -57,8 +59,8 @@ public class Ywl20SpDpprfReceiver extends AbstractSpDpprfReceiver {
         logPhaseInfo(PtoState.INIT_BEGIN);
 
         stopWatch.start();
-        int maxPreCotNum = SpDpprfFactory.getPrecomputeNum(config, maxAlphaBound);
-        coreCotReceiver.init(maxPreCotNum);
+        coreCotReceiver.init(maxH);
+        preCotReceiver.init();
         stopWatch.stop();
         long initTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
         stopWatch.reset();
@@ -86,30 +88,19 @@ public class Ywl20SpDpprfReceiver extends AbstractSpDpprfReceiver {
 
         stopWatch.start();
         // R send (extend, h) to F_COT, which returns (r_i, t_i) ∈ {0,1} × {0,1}^κ to R
-        int preCotNum = SpDpprfFactory.getPrecomputeNum(config, alphaBound);
         if (cotReceiverOutput == null) {
-            boolean[] rs = new boolean[preCotNum];
-            IntStream.range(0, preCotNum).forEach(index -> rs[index] = secureRandom.nextBoolean());
-            cotReceiverOutput = coreCotReceiver.receive(rs);
+            // For each i ∈ {1,...,h}, R sends a bit b_i = r_i ⊕ α_i ⊕ 1 to S.
+            // This is identical to choose the choice bits as !α_i.
+            cotReceiverOutput = coreCotReceiver.receive(notBinaryAlpha);
         } else {
-            cotReceiverOutput.reduce(preCotNum);
+            cotReceiverOutput.reduce(h);
+            // use pre-computed COT to correct the choice bits
+            cotReceiverOutput = preCotReceiver.receive(cotReceiverOutput, notBinaryAlpha);
         }
         stopWatch.stop();
         long cotTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
         stopWatch.reset();
-        logStepInfo(PtoState.PTO_STEP, 1, 3, cotTime);
-
-        stopWatch.start();
-        List<byte[]> binaryPayload = generateBinaryPayload();
-        DataPacketHeader binaryHeader = new DataPacketHeader(
-            encodeTaskId, getPtoDesc().getPtoId(), PtoStep.RECEIVER_SEND_BINARY.ordinal(), extraInfo,
-            ownParty().getPartyId(), otherParty().getPartyId()
-        );
-        rpc.send(DataPacket.fromByteArrayList(binaryHeader, binaryPayload));
-        stopWatch.stop();
-        long binaryTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
-        stopWatch.reset();
-        logStepInfo(PtoState.PTO_STEP, 2, 3, binaryTime);
+        logStepInfo(PtoState.PTO_STEP, 1, 2, cotTime);
 
         stopWatch.start();
         DataPacketHeader messageHeader = new DataPacketHeader(
@@ -121,24 +112,10 @@ public class Ywl20SpDpprfReceiver extends AbstractSpDpprfReceiver {
         SpDpprfReceiverOutput receiverOutput = generateReceiverOutput();
         long messageTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
         stopWatch.reset();
-        logStepInfo(PtoState.PTO_STEP, 3, 3, messageTime);
+        logStepInfo(PtoState.PTO_STEP, 2, 2, messageTime);
 
         logPhaseInfo(PtoState.PTO_END);
         return receiverOutput;
-    }
-
-    private List<byte[]> generateBinaryPayload() {
-        int bByteLength = CommonUtils.getByteLength(h);
-        int offset = bByteLength * Byte.SIZE - h;
-        byte[] bByteArray = new byte[bByteLength];
-        // For each i ∈ {1,...,h}
-        for (int hIndex = 0; hIndex < h; hIndex++) {
-            // R sends a bit b_i = r_i ⊕ α_i ⊕ 1 to S
-            BinaryUtils.setBoolean(bByteArray, offset + hIndex, binaryAlpha[hIndex] == cotReceiverOutput.getChoice(hIndex));
-        }
-        List<byte[]> binaryPayload = new LinkedList<>();
-        binaryPayload.add(bByteArray);
-        return binaryPayload;
     }
 
     private void handleMessagePayload(List<byte[]> messagePayload) throws MpcAbortException {

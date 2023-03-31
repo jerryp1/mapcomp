@@ -51,34 +51,34 @@ public class OprfTest {
 
     @Parameterized.Parameters(name = "{0}")
     public static Collection<Object[]> configurations() {
-        Collection<Object[]> configurationParams = new ArrayList<>();
+        Collection<Object[]> configurations = new ArrayList<>();
         // CM20
-        configurationParams.add(new Object[]{
+        configurations.add(new Object[]{
             OprfFactory.OprfType.CM20.name(),
             new Cm20MpOprfConfig.Builder().build(),
         });
         // RA17，压缩编码
-        configurationParams.add(new Object[]{
+        configurations.add(new Object[]{
             OprfFactory.OprfType.RA17.name() + " (compress)",
             new Ra17MpOprfConfig.Builder().setCompressEncode(true).build(),
         });
         // RA17，非压缩编码
-        configurationParams.add(new Object[]{
+        configurations.add(new Object[]{
             OprfFactory.OprfType.RA17.name() + " (uncompress)",
             new Ra17MpOprfConfig.Builder().setCompressEncode(false).build(),
         });
         // KKRT16_ORI
-        configurationParams.add(new Object[]{
+        configurations.add(new Object[]{
             OprfFactory.OprfType.KKRT16_ORI.name(),
             new Kkrt16OriOprfConfig.Builder().build(),
         });
         // KKRT16_OPT
-        configurationParams.add(new Object[]{
+        configurations.add(new Object[]{
             OprfFactory.OprfType.KKRT16_OPT.name(),
             new Kkrt16OptOprfConfig.Builder().build(),
         });
 
-        return configurationParams;
+        return configurations;
     }
 
     /**

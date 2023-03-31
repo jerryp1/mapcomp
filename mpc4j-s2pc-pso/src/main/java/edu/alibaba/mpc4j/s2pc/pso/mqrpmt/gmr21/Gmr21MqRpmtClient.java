@@ -268,16 +268,13 @@ public class Gmr21MqRpmtClient extends AbstractMqRpmtClient {
             })
             .flatMap(Arrays::stream)
             .toArray(byte[][]::new);
-        ByteBuffer[] hashKeyArray = IntStream.range(0, cuckooHashNum)
+        ByteBuffer[] keyArray = IntStream.range(0, cuckooHashNum)
             .mapToObj(hashIndex -> {
                 // 计算OPRF有密码学运算，并发处理
                 IntStream clientElementIntStream = IntStream.range(0, clientElementSize);
                 clientElementIntStream = parallel ? clientElementIntStream.parallel() : clientElementIntStream;
                 return clientElementIntStream
-                    .mapToObj(clientElementIndex -> {
-                        byte[] extendBytes = keyArrayVector.elementAt(hashIndex)[clientElementIndex];
-                        return finiteFieldHash.digestToBytes(extendBytes);
-                    })
+                    .mapToObj(clientElementIndex -> keyArrayVector.elementAt(hashIndex)[clientElementIndex])
                     .toArray(byte[][]::new);
             })
             .flatMap(Arrays::stream)
@@ -286,7 +283,7 @@ public class Gmr21MqRpmtClient extends AbstractMqRpmtClient {
         Map<ByteBuffer, byte[]> keyValueMap = IntStream.range(0, cuckooHashNum * clientElementSize)
             .boxed()
             .collect(Collectors.toMap(
-                index -> hashKeyArray[index],
+                index -> keyArray[index],
                 index -> valueArray[index]
             ));
         Okvs<ByteBuffer> okvs = OkvsFactory.createInstance(

@@ -16,7 +16,7 @@ public abstract class AbstractOprfReceiver extends AbstractTwoPartyPto implement
     /**
      * 最大批处理数量
      */
-    protected long maxBatchSize;
+    protected int maxBatchSize;
     /**
      * scale num
      */

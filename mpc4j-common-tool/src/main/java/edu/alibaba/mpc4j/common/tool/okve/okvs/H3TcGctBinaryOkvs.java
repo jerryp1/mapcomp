@@ -123,7 +123,7 @@ class H3TcGctBinaryOkvs<T> extends AbstractBinaryOkvs<T> {
         byte[] keyBytes = ObjectUtils.objectToByteArray(key);
         int[] hValues = hashDistinctValues(keyBytes);
         boolean[] rxBinary = BinaryUtils.byteArrayToBinary(hr.getBytes(keyBytes));
-        byte[] valueBytes = new byte[lByteLength];
+        byte[] valueBytes = new byte[byteL];
         // 3个哈希值一定各不相同，3次异或
         BytesUtils.xori(valueBytes, storage[hValues[0]]);
         BytesUtils.xori(valueBytes, storage[hValues[1]]);
@@ -186,7 +186,7 @@ class H3TcGctBinaryOkvs<T> extends AbstractBinaryOkvs<T> {
             int vertex1 = removedDataVertices[1];
             int vertex2 = removedDataVertices[2];
             boolean[] rx = dataHrMap.get(removedData);
-            byte[] innerProduct = BytesUtils.innerProduct(rightStorage, lByteLength, rx);
+            byte[] innerProduct = BytesUtils.innerProduct(rightStorage, byteL, rx);
             byte[] valueBytes = keyValueMap.get(removedData);
             BytesUtils.xori(innerProduct, valueBytes);
             // 三个顶点必然各不相同，三次异或
@@ -195,7 +195,7 @@ class H3TcGctBinaryOkvs<T> extends AbstractBinaryOkvs<T> {
         // 左侧矩阵补充随机数
         for (int vertex = 0; vertex < lm; vertex++) {
             if (leftStorage[vertex] == null) {
-                leftStorage[vertex] = new byte[lByteLength];
+                leftStorage[vertex] = new byte[byteL];
                 secureRandom.nextBytes(leftStorage[vertex]);
             }
         }
@@ -213,30 +213,30 @@ class H3TcGctBinaryOkvs<T> extends AbstractBinaryOkvs<T> {
                                       int vertex0, int vertex1, int vertex2, Object data) {
         if (leftMatrix[vertex0] == null && leftMatrix[vertex1] == null && leftMatrix[vertex2] == null) {
             // 0、1、2都为空
-            leftMatrix[vertex0] = new byte[lByteLength];
+            leftMatrix[vertex0] = new byte[byteL];
             secureRandom.nextBytes(leftMatrix[vertex0]);
-            leftMatrix[vertex1] = new byte[lByteLength];
+            leftMatrix[vertex1] = new byte[byteL];
             secureRandom.nextBytes(leftMatrix[vertex1]);
             BytesUtils.xori(innerProduct, leftMatrix[vertex0]);
             BytesUtils.xori(innerProduct, leftMatrix[vertex1]);
             leftMatrix[vertex2] = innerProduct;
         } else if (leftMatrix[vertex0] == null && leftMatrix[vertex1] == null) {
             // 0、1为空
-            leftMatrix[vertex0] = new byte[lByteLength];
+            leftMatrix[vertex0] = new byte[byteL];
             secureRandom.nextBytes(leftMatrix[vertex0]);
             BytesUtils.xori(innerProduct, leftMatrix[vertex0]);
             BytesUtils.xori(innerProduct, leftMatrix[vertex2]);
             leftMatrix[vertex1] = innerProduct;
         } else if (leftMatrix[vertex0] == null && leftMatrix[vertex2] == null) {
             // 0、2为空
-            leftMatrix[vertex0] = new byte[lByteLength];
+            leftMatrix[vertex0] = new byte[byteL];
             secureRandom.nextBytes(leftMatrix[vertex0]);
             BytesUtils.xori(innerProduct, leftMatrix[vertex0]);
             BytesUtils.xori(innerProduct, leftMatrix[vertex1]);
             leftMatrix[vertex2] = innerProduct;
         } else if (leftMatrix[vertex1] == null && leftMatrix[vertex2] == null) {
             // 1、2为空
-            leftMatrix[vertex1] = new byte[lByteLength];
+            leftMatrix[vertex1] = new byte[byteL];
             secureRandom.nextBytes(leftMatrix[vertex1]);
             BytesUtils.xori(innerProduct, leftMatrix[vertex0]);
             BytesUtils.xori(innerProduct, leftMatrix[vertex1]);

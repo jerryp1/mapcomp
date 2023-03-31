@@ -303,7 +303,7 @@ public class Krtw19OriPsuServer extends AbstractPsuServer {
             int okvsStart = index - start;
             int okvsEnd = (index + 1) - start;
             byte[][] okvsStorage = Arrays.copyOfRange(flatStorageArray, okvsStart * okvsM, okvsEnd * okvsM);
-            ByteBuffer xStar = ByteBuffer.wrap(finiteFieldHash.digestToBytes(xs[index]));
+            ByteBuffer xStar = ByteBuffer.wrap(xs[index]);
             Okvs<ByteBuffer> okvs = OkvsFactory.createInstance(
                 envType, okvsType, maxBinSize - 1, fieldBitLength, okvsHashKeys
             );

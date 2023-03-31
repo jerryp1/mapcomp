@@ -12,7 +12,7 @@ import edu.alibaba.mpc4j.s2pc.pcg.vole.gf2k.Gf2kVoleReceiverOutput;
 import edu.alibaba.mpc4j.s2pc.pcg.vole.gf2k.Gf2kVoleSenderOutput;
 import edu.alibaba.mpc4j.s2pc.pcg.vole.gf2k.Gf2kVoleTestUtils;
 import edu.alibaba.mpc4j.s2pc.pcg.vole.gf2k.ssp.Gf2kSspVoleFactory.Gf2kSspVoleType;
-import edu.alibaba.mpc4j.s2pc.pcg.vole.gf2k.ssp.wykw21.Wykw21ShGf2kSspVoleConfig;
+import edu.alibaba.mpc4j.s2pc.pcg.vole.gf2k.ssp.wykw21.Wykw21Gf2kShSspVoleConfig;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.time.StopWatch;
 import org.junit.After;
@@ -61,9 +61,9 @@ public class Gf2kSspVoleTest {
     public static Collection<Object[]> configurations() {
         Collection<Object[]> configurations = new ArrayList<>();
 
-        // YWL20_SEMI_HONEST
+        // WYKW21_SEMI_HONEST
         configurations.add(new Object[]{
-            Gf2kSspVoleType.WYKW21_SEMI_HONEST.name(), new Wykw21ShGf2kSspVoleConfig.Builder().build(),
+            Gf2kSspVoleType.WYKW21_SEMI_HONEST.name(), new Wykw21Gf2kShSspVoleConfig.Builder().build(),
         });
 
         return configurations;

@@ -344,9 +344,8 @@ public class Gmr21PsuServer extends AbstractPsuServer {
         tVector = okvsDecodeIntStream
             .mapToObj(index -> {
                 // 扩展输入
-                byte[] extendBytes = extendEntryBytes[index];
-                ByteBuffer valueBytes = ByteBuffer.wrap(finiteFieldHash.digestToBytes(extendBytes));
-                byte[] pi = okvs.decode(storage, valueBytes);
+                ByteBuffer key = ByteBuffer.wrap(extendEntryBytes[index]);
+                byte[] pi = okvs.decode(storage, key);
                 byte[] fi = fArray[index];
                 BytesUtils.xori(pi, fi);
                 return pi;

@@ -29,9 +29,9 @@ public class HhLdpMainTest {
     }
 
     @Test
-    public void testNoFoTypes() throws IOException {
-        HhLdpMain hhLdpMain = createHhLdpMain("test_config/hh_ldp_test_config_no_fo_types.conf");
-        Assert.assertEquals(0, hhLdpMain.getFoLdpList().size());
+    public void testZeroWarmup() throws IOException {
+        HhLdpMain hhLdpMain = createHhLdpMain("test_config/hh_ldp_test_config_zero_warmup.conf");
+        Assert.assertEquals(0, hhLdpMain.getWarmupNum());
         hhLdpMain.run();
     }
 
@@ -43,23 +43,9 @@ public class HhLdpMainTest {
     }
 
     @Test
-    public void testNoHgTypes() throws IOException {
-        HhLdpMain hhLdpMain = createHhLdpMain("test_config/hh_ldp_test_config_no_hg_types.conf");
-        Assert.assertEquals(0, hhLdpMain.getHgTypeList().size());
-        hhLdpMain.run();
-    }
-
-    @Test
     public void testEmptyHgTypes() throws IOException {
         HhLdpMain hhLdpMain = createHhLdpMain("test_config/hh_ldp_test_config_empty_hg_types.conf");
         Assert.assertEquals(0, hhLdpMain.getHgTypeList().size());
-        hhLdpMain.run();
-    }
-
-    @Test
-    public void testNoReportPostfix() throws IOException {
-        HhLdpMain hhLdpMain = createHhLdpMain("test_config/hh_ldp_test_config_no_report_postfix.conf");
-        Assert.assertEquals("", hhLdpMain.getReportFilePostfix());
         hhLdpMain.run();
     }
 
@@ -71,27 +57,6 @@ public class HhLdpMainTest {
     }
 
     @Test
-    public void testNoAlpha() throws IOException {
-        HhLdpMain hhLdpMain = createHhLdpMain("test_config/hh_ldp_test_config_no_alpha.conf");
-        Assert.assertEquals(0, hhLdpMain.getAlphas().length);
-        hhLdpMain.run();
-    }
-
-    @Test
-    public void testEmptyAlpha() throws IOException {
-        HhLdpMain hhLdpMain = createHhLdpMain("test_config/hh_ldp_test_config_empty_alpha.conf");
-        Assert.assertEquals(0, hhLdpMain.getAlphas().length);
-        hhLdpMain.run();
-    }
-
-    @Test
-    public void testNoPlain() throws IOException {
-        HhLdpMain hhLdpMain = createHhLdpMain("test_config/hh_ldp_test_config_no_plain.conf");
-        Assert.assertFalse(hhLdpMain.getPlain());
-        hhLdpMain.run();
-    }
-
-    @Test
     public void testEmptyPlain() throws IOException {
         HhLdpMain hhLdpMain = createHhLdpMain("test_config/hh_ldp_test_config_empty_plain.conf");
         Assert.assertFalse(hhLdpMain.getPlain());
@@ -99,16 +64,29 @@ public class HhLdpMainTest {
     }
 
     @Test
-    public void testNoWarmup() throws IOException {
-        HhLdpMain hhLdpMain = createHhLdpMain("test_config/hh_ldp_test_config_no_warmup.conf");
-        Assert.assertEquals(0, hhLdpMain.getWarmupNum());
+    public void testNoAlpha() throws IOException {
+        HhLdpMain hhLdpMain = createHhLdpMain("test_config/hh_ldp_test_config_no_alpha.conf");
+        Assert.assertEquals(0, hhLdpMain.getAlphas().length);
+        hhLdpMain.run();
+    }
+
+    @Test
+    public void testAlpha() throws IOException {
+        HhLdpMain hhLdpMain = createHhLdpMain("test_config/hh_ldp_test_config_alpha.conf");
+        Assert.assertTrue(hhLdpMain.getAlphas().length > 0);
+        hhLdpMain.run();
+    }
+
+    @Test
+    public void testNoGammaH() throws IOException {
+        HhLdpMain hhLdpMain = createHhLdpMain("test_config/hh_ldp_test_config_no_gammah.conf");
+        Assert.assertEquals(0, hhLdpMain.getGammaHs().length);
         hhLdpMain.run();
     }
 
     @Test
     public void testGammaH() throws IOException {
         HhLdpMain hhLdpMain = createHhLdpMain("test_config/hh_ldp_test_config_gammah.conf");
-        Assert.assertTrue(hhLdpMain.getWarmupNum() > 0);
         Assert.assertTrue(hhLdpMain.getGammaHs().length > 0);
         hhLdpMain.run();
     }
