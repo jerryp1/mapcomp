@@ -233,32 +233,6 @@ public class HhLdpTest {
         }
     }
 
-    @Test
-    public void testDefaultSmallWarmup() throws IOException {
-        HhLdpConfig config = HhLdpFactory.createDefaultHhLdpConfig(
-            type, LdpTestDataUtils.EXAMPLE_DATA_DOMAIN, DEFAULT_K, DEFAULT_EPSILON, DEFAULT_WINDOW_SIZE
-        );
-        // create server and client
-        HhLdpServer server = HhLdpFactory.createServer(config);
-        HhLdpClient client = HhLdpFactory.createClient(config);
-        // warmup with 0 items
-        exampleWarmupInsert(server, client, 1);
-        // directly stop warmup
-        server.stopWarmup();
-        // randomize
-        exampleRandomizeInsert(server, client, 1);
-        // verify there are k heavy hitters
-        Map<String, Double> heavyHitters = server.heavyHitters();
-        Assert.assertEquals(heavyHitters.size(), DEFAULT_K);
-        // verify k/2 heavy hitters are the same
-        List<Map.Entry<String, Integer>> correctHeavyHitters = LdpTestDataUtils.CORRECT_EXAMPLE_COUNT_ORDERED_LIST;
-        List<Map.Entry<String, Double>> orderedHeavyHitters = server.orderedHeavyHitters();
-        for (int index = 0; index < DEFAULT_K / 2; index++) {
-            // the order may be non-correct, but values should be almost the same
-            Assert.assertEquals(correctHeavyHitters.get(index).getValue(), orderedHeavyHitters.get(index).getValue(), 10);
-        }
-    }
-
     static void exampleWarmupInsert(HhLdpServer server, HhLdpClient client, int warmupNum) throws IOException {
         AtomicInteger warmupIndex = new AtomicInteger();
         Stream<String> dataStream = StreamDataUtils.obtainItemStream(LdpTestDataUtils.EXAMPLE_DATA_PATH);

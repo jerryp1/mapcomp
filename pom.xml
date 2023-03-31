@@ -11,6 +11,7 @@
     <modules>
         <module>mpc4j-common-data</module>
         <module>mpc4j-common-jnagmp</module>
+        <module>mpc4j-common-matrix</module>
         <module>mpc4j-common-rpc</module>
         <module>mpc4j-common-sampler</module>
         <module>mpc4j-common-tool</module>
