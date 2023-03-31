@@ -1,9 +1,9 @@
 package edu.alibaba.mpc4j.dp.service.fo.hadamard;
 
 import edu.alibaba.mpc4j.common.tool.MathPreconditions;
-import edu.alibaba.mpc4j.common.matrix.bitvector.BitVector;
-import edu.alibaba.mpc4j.common.matrix.bitvector.BitVectorFactory;
-import edu.alibaba.mpc4j.common.matrix.bitvector.BitVectorFactory.BitVectorType;
+import edu.alibaba.mpc4j.common.tool.bitvector.BitVector;
+import edu.alibaba.mpc4j.common.tool.bitvector.BitVectorFactory;
+import edu.alibaba.mpc4j.common.tool.bitvector.BitVectorFactory.BitVectorType;
 import edu.alibaba.mpc4j.common.tool.coder.linear.HadamardCoder;
 import edu.alibaba.mpc4j.common.tool.utils.CommonUtils;
 import edu.alibaba.mpc4j.common.tool.utils.DoubleUtils;

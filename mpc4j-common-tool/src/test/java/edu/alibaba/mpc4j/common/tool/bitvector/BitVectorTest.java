@@ -1,7 +1,7 @@
-package edu.alibaba.mpc4j.common.matrix.bitvector;
+package edu.alibaba.mpc4j.common.tool.bitvector;
 
 import com.google.common.base.Preconditions;
-import edu.alibaba.mpc4j.common.matrix.bitvector.BitVectorFactory.BitVectorType;
+import edu.alibaba.mpc4j.common.tool.bitvector.BitVectorFactory.BitVectorType;
 import edu.alibaba.mpc4j.common.tool.utils.BytesUtils;
 import edu.alibaba.mpc4j.common.tool.utils.CommonUtils;
 import org.apache.commons.lang3.StringUtils;

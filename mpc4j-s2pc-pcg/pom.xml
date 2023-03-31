@@ -43,13 +43,6 @@
             <groupId>edu.alibaba</groupId>
             <artifactId>mpc4j-common-rpc</artifactId>
             <version>1.0.7-SNAPSHOT</version>
-            <scope>compile</scope>
-        </dependency>
-        <dependency>
-            <groupId>edu.alibaba</groupId>
-            <artifactId>mpc4j-common-matrix</artifactId>
-            <version>1.0.7-SNAPSHOT</version>
-            <scope>compile</scope>
         </dependency>
         <dependency>
             <groupId>edu.alibaba</groupId>

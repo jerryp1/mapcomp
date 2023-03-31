@@ -1,6 +1,6 @@
 package edu.alibaba.mpc4j.s2pc.aby.sbitmap.utils;
 
-import edu.alibaba.mpc4j.common.matrix.bitvector.BitVector;
+import edu.alibaba.mpc4j.common.tool.bitvector.BitVector;
 import edu.alibaba.mpc4j.s2pc.aby.sbitmap.RoaringBitmapTestUtils;
 import org.junit.Assert;
 import org.junit.Test;

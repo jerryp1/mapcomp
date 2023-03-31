@@ -1,4 +1,4 @@
-package edu.alibaba.mpc4j.common.matrix.bitvector;
+package edu.alibaba.mpc4j.common.tool.bitvector;
 
 import java.math.BigInteger;
 

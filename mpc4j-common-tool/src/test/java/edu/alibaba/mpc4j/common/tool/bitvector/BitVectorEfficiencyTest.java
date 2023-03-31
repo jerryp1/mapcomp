@@ -1,6 +1,6 @@
-package edu.alibaba.mpc4j.common.matrix.bitvector;
+package edu.alibaba.mpc4j.common.tool.bitvector;
 
-import edu.alibaba.mpc4j.common.matrix.bitvector.BitVectorFactory.BitVectorType;
+import edu.alibaba.mpc4j.common.tool.bitvector.BitVectorFactory.BitVectorType;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.time.StopWatch;
 import org.junit.Ignore;

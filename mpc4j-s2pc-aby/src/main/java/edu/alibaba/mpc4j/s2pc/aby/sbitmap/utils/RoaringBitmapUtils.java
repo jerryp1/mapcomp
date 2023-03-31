@@ -2,8 +2,8 @@ package edu.alibaba.mpc4j.s2pc.aby.sbitmap.utils;
 
 import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import edu.alibaba.mpc4j.common.tool.MathPreconditions;
-import edu.alibaba.mpc4j.common.matrix.bitvector.BitVector;
-import edu.alibaba.mpc4j.common.matrix.bitvector.BitVectorFactory;
+import edu.alibaba.mpc4j.common.tool.bitvector.BitVector;
+import edu.alibaba.mpc4j.common.tool.bitvector.BitVectorFactory;
 import edu.alibaba.mpc4j.common.tool.utils.CommonUtils;
 import edu.alibaba.mpc4j.common.tool.utils.LongUtils;
 import org.roaringbitmap.*;

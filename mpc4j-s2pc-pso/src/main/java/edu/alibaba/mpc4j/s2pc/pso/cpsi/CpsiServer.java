@@ -2,7 +2,7 @@ package edu.alibaba.mpc4j.s2pc.pso.cpsi;
 
 import edu.alibaba.mpc4j.common.rpc.MpcAbortException;
 import edu.alibaba.mpc4j.common.rpc.pto.TwoPartyPto;
-import edu.alibaba.mpc4j.common.matrix.bitvector.BitVector;
+import edu.alibaba.mpc4j.common.tool.bitvector.BitVector;
 
 import java.util.Set;
 

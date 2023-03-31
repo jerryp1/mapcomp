@@ -1,6 +1,6 @@
 package edu.alibaba.mpc4j.s2pc.aby.basics.bc;
 
-import edu.alibaba.mpc4j.common.matrix.bitvector.BitVector;
+import edu.alibaba.mpc4j.common.tool.bitvector.BitVector;
 
 /**
  * Secret-shared bit vector.
