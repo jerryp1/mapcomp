@@ -126,9 +126,9 @@ public class HhLdpMain {
      */
     private final List<HhLdpType> hgTypeList;
     /**
-     * correct count map
+     * correct heavy hitter map
      */
-    private final Map<String, Integer> correctCountMap;
+    private final Map<String, Integer> correctHeavyHitterMap;
     /**
      * correct heavy hitter
      */
@@ -205,15 +205,15 @@ public class HhLdpMain {
         dataStream = StreamDataUtils.obtainItemStream(datasetPath);
         dataStream.forEach(streamCounter::insert);
         dataStream.close();
-        correctCountMap = domainSet.stream()
+        Map<String, Integer> correctCountMap = domainSet.stream()
             .collect(Collectors.toMap(item -> item, streamCounter::query));
         // correct heavy hitter
         List<Map.Entry<String, Integer>> correctOrderedList = new ArrayList<>(correctCountMap.entrySet());
         correctOrderedList.sort(Comparator.comparingInt(Map.Entry::getValue));
         Collections.reverse(correctOrderedList);
-        correctHeavyHitters = correctOrderedList.subList(0, k).stream()
-            .map(Map.Entry::getKey)
-            .collect(Collectors.toList());
+        correctHeavyHitterMap = correctOrderedList.subList(0, k).stream()
+            .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
+        correctHeavyHitters = new ArrayList<>(correctHeavyHitterMap.keySet());
         String correctHeavyHitterString = correctOrderedList.subList(0, k).stream()
             .map(entry -> entry.getKey() + ": " + entry.getValue())
             .collect(Collectors.toList()).toString();
@@ -256,7 +256,7 @@ public class HhLdpMain {
             : TASK_TYPE_NAME + "_" + datasetName + "_" + testRound + "_" + reportFilePostfix + ".txt";
         FileWriter fileWriter = new FileWriter(filePath);
         PrintWriter printWriter = new PrintWriter(fileWriter, true);
-        // write warmup_precentage
+        // write warmup_percentage
         printWriter.println("warmup_percentage = " + warmupPercentage);
         // write tab
         String tab = "type\tε_w\tα\tγ_h\ts_time(s)\tc_time(s)\tcomm.(B)\tmem.(B)\t" +
@@ -391,8 +391,8 @@ public class HhLdpMain {
             metrics.setMemoryBytes(memoryBytes);
             metrics.setNdcg(HeavyHitterMetrics.ndcg(heavyHitters, correctHeavyHitters));
             metrics.setPrecision(HeavyHitterMetrics.precision(heavyHitters, correctHeavyHitters));
-            metrics.setAbe(HeavyHitterMetrics.absoluteError(heavyHitterMap, correctCountMap));
-            metrics.setRe(HeavyHitterMetrics.relativeError(heavyHitterMap, correctCountMap));
+            metrics.setAbe(HeavyHitterMetrics.absoluteError(heavyHitterMap, correctHeavyHitterMap));
+            metrics.setRe(HeavyHitterMetrics.relativeError(heavyHitterMap, correctHeavyHitterMap));
             aggMetrics.addMetrics(metrics);
         }
         return aggMetrics;
@@ -610,8 +610,8 @@ public class HhLdpMain {
         metrics.setMemoryBytes(memoryBytes);
         metrics.setNdcg(HeavyHitterMetrics.ndcg(heavyHitters, correctHeavyHitters));
         metrics.setPrecision(HeavyHitterMetrics.precision(heavyHitters, correctHeavyHitters));
-        metrics.setAbe(HeavyHitterMetrics.absoluteError(heavyHitterMap, correctCountMap));
-        metrics.setRe(HeavyHitterMetrics.relativeError(heavyHitterMap, correctCountMap));
+        metrics.setAbe(HeavyHitterMetrics.absoluteError(heavyHitterMap, correctHeavyHitterMap));
+        metrics.setRe(HeavyHitterMetrics.relativeError(heavyHitterMap, correctHeavyHitterMap));
         return metrics;
     }
 
