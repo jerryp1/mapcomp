@@ -1,4 +1,4 @@
-package edu.alibaba.mpc4j.crypto.matrix.vector;
+package edu.alibaba.mpc4j.crypto.matrix.database;
 
 import com.google.common.base.Preconditions;
 import edu.alibaba.mpc4j.common.tool.EnvType;
@@ -21,24 +21,28 @@ import java.util.Arrays;
 import java.util.stream.IntStream;
 
 /**
- * bytes vector.
+ * Zl byte array database. Each data is an element in Z_{2^l} represented by byte[] where l > 0.
  *
  * @author Weiran Liu
  * @date 2023/3/31
  */
-public class BytesVector {
+public class ZlByteArrayDatabase {
     /**
-     * bit length
+     * display data rows
      */
-    private int bitLength;
+    private static final int DISPLAY_DATA_ROWS = 256;
     /**
-     * byte length
+     * the data columns (in bit)
      */
-    private int byteLength;
+    private int l;
     /**
-     * bytes vector
+     * the data columns (in byte)
      */
-    private byte[][] bytesArray;
+    private int byteL;
+    /**
+     * data
+     */
+    private byte[][] data;
 
     /**
      * Creates a bytes vector.
@@ -47,19 +51,19 @@ public class BytesVector {
      * @param bytesArray bytes array.
      * @return a bytes vector.
      */
-    public static BytesVector create(int bitLength, byte[][] bytesArray) {
-        BytesVector bytesVector = new BytesVector();
+    public static ZlByteArrayDatabase create(int bitLength, byte[][] bytesArray) {
+        ZlByteArrayDatabase zlByteArrayDatabase = new ZlByteArrayDatabase();
         MathPreconditions.checkPositive("bit length", bitLength);
-        bytesVector.bitLength = bitLength;
-        bytesVector.byteLength = CommonUtils.getByteLength(bitLength);
-        bytesVector.bytesArray = Arrays.stream(bytesArray)
+        zlByteArrayDatabase.l = bitLength;
+        zlByteArrayDatabase.byteL = CommonUtils.getByteLength(bitLength);
+        zlByteArrayDatabase.data = Arrays.stream(bytesArray)
             .peek(bytes ->
                 Preconditions.checkArgument(BytesUtils.isFixedReduceByteArray(
-                    bytes, bytesVector.byteLength, bytesVector.bitLength
+                    bytes, zlByteArrayDatabase.byteL, zlByteArrayDatabase.l
                 ))
             )
             .toArray(byte[][]::new);
-        return bytesVector;
+        return zlByteArrayDatabase;
     }
 
     /**
@@ -69,43 +73,43 @@ public class BytesVector {
      * @param secureRandom the random state.
      * @return a random bytes vector.
      */
-    public static BytesVector createRandom(int bitLength, int vectorLength, SecureRandom secureRandom) {
-        BytesVector bytesVector = new BytesVector();
+    public static ZlByteArrayDatabase createRandom(int bitLength, int vectorLength, SecureRandom secureRandom) {
+        ZlByteArrayDatabase zlByteArrayDatabase = new ZlByteArrayDatabase();
         MathPreconditions.checkPositive("bit length", bitLength);
-        bytesVector.bitLength = bitLength;
-        bytesVector.byteLength = CommonUtils.getByteLength(bitLength);
+        zlByteArrayDatabase.l = bitLength;
+        zlByteArrayDatabase.byteL = CommonUtils.getByteLength(bitLength);
         MathPreconditions.checkPositive("vector length", vectorLength);
-        bytesVector.bytesArray = IntStream.range(0, vectorLength)
-            .mapToObj(index -> BytesUtils.randomByteArray(bytesVector.byteLength, bytesVector.bitLength, secureRandom))
+        zlByteArrayDatabase.data = IntStream.range(0, vectorLength)
+            .mapToObj(index -> BytesUtils.randomByteArray(zlByteArrayDatabase.byteL, zlByteArrayDatabase.l, secureRandom))
             .toArray(byte[][]::new);
-        return bytesVector;
+        return zlByteArrayDatabase;
     }
 
     /**
      * Creates a bytes vector by combining bytes vectors.
      *
      * @param bitLength    the bit length of the combined bytes vector.
-     * @param bytesVectors the combining bytes vectors.
+     * @param zlByteArrayDatabases the combining bytes vectors.
      * @return a bytes vector.
      */
-    public static BytesVector create(int bitLength, BytesVector... bytesVectors) {
-        MathPreconditions.checkPositive("# of bytes vectors", bytesVectors.length);
-        int vectorLength = bytesVectors[0].getVectorLength();
+    public static ZlByteArrayDatabase create(int bitLength, ZlByteArrayDatabase... zlByteArrayDatabases) {
+        MathPreconditions.checkPositive("# of bytes vectors", zlByteArrayDatabases.length);
+        int vectorLength = zlByteArrayDatabases[0].getVectorLength();
         // check all bytes vectors have the same vector length
-        Arrays.stream(bytesVectors).forEach(bytesVector ->
+        Arrays.stream(zlByteArrayDatabases).forEach(zlByteArrayDatabase ->
             MathPreconditions.checkEqual(
                 "vector.length", "vector_length",
-                bytesVector.getVectorLength(), vectorLength
+                zlByteArrayDatabase.getVectorLength(), vectorLength
             )
         );
         // combine each bytes vector
         BigInteger[] bigIntegerVector = new BigInteger[vectorLength];
         Arrays.fill(bigIntegerVector, BigInteger.ZERO);
-        for (BytesVector bytesVector : bytesVectors) {
-            int partitionBitLength = bytesVector.bitLength;
+        for (ZlByteArrayDatabase zlByteArrayDatabase : zlByteArrayDatabases) {
+            int partitionBitLength = zlByteArrayDatabase.l;
             for (int index = 0; index < vectorLength; index++) {
                 BigInteger partitionBigInteger = BigIntegerUtils.byteArrayToNonNegBigInteger(
-                    bytesVector.bytesArray[index]
+                    zlByteArrayDatabase.data[index]
                 );
                 bigIntegerVector[index] = bigIntegerVector[index]
                     .shiftLeft(partitionBitLength)
@@ -120,7 +124,7 @@ public class BytesVector {
             .map(bigInteger -> BigIntegerUtils.nonNegBigIntegerToByteArray(bigInteger, byteLength))
             .toArray(byte[][]::new);
         // create the combined bytes vector
-        return BytesVector.create(bitLength, bytesArray);
+        return ZlByteArrayDatabase.create(bitLength, bytesArray);
     }
 
     /**
@@ -131,7 +135,7 @@ public class BytesVector {
      * @param bitVectors the combining bit vectors.
      * @return a bytes vector.
      */
-    public static BytesVector create(EnvType envType, boolean parallel, BitVector... bitVectors) {
+    public static ZlByteArrayDatabase create(EnvType envType, boolean parallel, BitVector... bitVectors) {
         MathPreconditions.checkPositive("# of bit vectors", bitVectors.length);
         int bitLength = bitVectors.length;
         int vectorLength = bitVectors[0].bitNum();
@@ -157,17 +161,17 @@ public class BytesVector {
      * @param bitLength bit length.
      * @return a bytes vector.
      */
-    public static BytesVector createEmpty(int bitLength) {
-        BytesVector bytesVector = new BytesVector();
+    public static ZlByteArrayDatabase createEmpty(int bitLength) {
+        ZlByteArrayDatabase zlByteArrayDatabase = new ZlByteArrayDatabase();
         MathPreconditions.checkPositive("bit length", bitLength);
-        bytesVector.bitLength = bitLength;
-        bytesVector.byteLength = CommonUtils.getByteLength(bitLength);
-        bytesVector.bytesArray = new byte[0][bytesVector.byteLength];
+        zlByteArrayDatabase.l = bitLength;
+        zlByteArrayDatabase.byteL = CommonUtils.getByteLength(bitLength);
+        zlByteArrayDatabase.data = new byte[0][zlByteArrayDatabase.byteL];
 
-        return bytesVector;
+        return zlByteArrayDatabase;
     }
 
-    private BytesVector() {
+    private ZlByteArrayDatabase() {
         // empty
     }
 
@@ -180,15 +184,15 @@ public class BytesVector {
      * @param partitionBitLength the partition bit length.
      * @return the partition result.
      */
-    public BytesVector[] partition(int partitionBitLength) {
+    public ZlByteArrayDatabase[] partition(int partitionBitLength) {
         MathPreconditions.checkPositive("partitionBitLength", partitionBitLength);
-        int partitionNum = CommonUtils.getUnitNum(bitLength, partitionBitLength);
-        BytesVector[] partitionBytesVectorArray = new BytesVector[partitionNum];
+        int partitionNum = CommonUtils.getUnitNum(l, partitionBitLength);
+        ZlByteArrayDatabase[] partitionZlByteArrayDatabaseArray = new ZlByteArrayDatabase[partitionNum];
         // mod = 2^l, where l is the partition bit length.
         BigInteger mod = BigInteger.ONE.shiftLeft(partitionBitLength);
         int partitionByteLength = CommonUtils.getByteLength(partitionBitLength);
         int vectorLength = getVectorLength();
-        BigInteger[] bigIntegerVector = Arrays.stream(bytesArray)
+        BigInteger[] bigIntegerVector = Arrays.stream(data)
             .map(BigIntegerUtils::byteArrayToNonNegBigInteger)
             .toArray(BigInteger[]::new);
         // we need to partition in reverse order so that we can then combine
@@ -199,9 +203,9 @@ public class BytesVector {
                 bigIntegerVector[index] = bigIntegerVector[index].shiftRight(partitionBitLength);
                 partitionBytesArray[index] = BigIntegerUtils.nonNegBigIntegerToByteArray(partitionBigInteger, partitionByteLength);
             }
-            partitionBytesVectorArray[partitionIndex] = BytesVector.create(partitionBitLength, partitionBytesArray);
+            partitionZlByteArrayDatabaseArray[partitionIndex] = ZlByteArrayDatabase.create(partitionBitLength, partitionBytesArray);
         }
-        return partitionBytesVectorArray;
+        return partitionZlByteArrayDatabaseArray;
     }
 
     /**
@@ -213,9 +217,9 @@ public class BytesVector {
      */
     public BitVector[] bitPartition(EnvType envType, boolean parallel) {
         int vectorLength = getVectorLength();
-        DenseBitMatrix byteDenseBitMatrix = ByteDenseBitMatrix.fromDense(bitLength, bytesArray);
+        DenseBitMatrix byteDenseBitMatrix = ByteDenseBitMatrix.fromDense(l, data);
         DenseBitMatrix transByteDenseBitMatrix = byteDenseBitMatrix.transpose(envType, parallel);
-        return IntStream.range(0, bitLength)
+        return IntStream.range(0, l)
             .mapToObj(index -> BitVectorFactory.create(vectorLength, transByteDenseBitMatrix.getRow(index)))
             .toArray(BitVector[]::new);
     }
@@ -227,7 +231,7 @@ public class BytesVector {
      * @return the byte array.
      */
     public byte[] getBytes(int index) {
-        return bytesArray[index];
+        return data[index];
     }
 
     /**
@@ -235,8 +239,8 @@ public class BytesVector {
      *
      * @return the bytes array.
      */
-    public byte[][] getBytesArray() {
-        return bytesArray;
+    public byte[][] getData() {
+        return data;
     }
 
     /**
@@ -244,8 +248,8 @@ public class BytesVector {
      *
      * @return the byte length.
      */
-    public int getByteLength() {
-        return byteLength;
+    public int getByteL() {
+        return byteL;
     }
 
     /**
@@ -253,8 +257,8 @@ public class BytesVector {
      *
      * @return the bit length.
      */
-    public int getBitLength() {
-        return bitLength;
+    public int getL() {
+        return l;
     }
 
     /**
@@ -263,13 +267,13 @@ public class BytesVector {
      * @return the vector length.
      */
     public int getVectorLength() {
-        return bytesArray.length;
+        return data.length;
     }
 
     @Override
     public int hashCode() {
         HashCodeBuilder hashCodeBuilder = new HashCodeBuilder();
-        Arrays.stream(bytesArray).forEach(hashCodeBuilder::append);
+        Arrays.stream(data).forEach(hashCodeBuilder::append);
         return hashCodeBuilder.hashCode();
     }
 
@@ -278,15 +282,15 @@ public class BytesVector {
         if (this == obj) {
             return true;
         }
-        if (obj instanceof BytesVector) {
-            BytesVector that = (BytesVector) obj;
+        if (obj instanceof ZlByteArrayDatabase) {
+            ZlByteArrayDatabase that = (ZlByteArrayDatabase) obj;
             if (this.getVectorLength() != that.getVectorLength()) {
                 return false;
             }
             int vectorLength = getVectorLength();
             EqualsBuilder equalsBuilder = new EqualsBuilder();
             IntStream.range(0, vectorLength)
-                .forEach(index -> equalsBuilder.append(this.bytesArray[index], that.bytesArray[index]));
+                .forEach(index -> equalsBuilder.append(this.data[index], that.data[index]));
             return equalsBuilder.isEquals();
         }
         return false;

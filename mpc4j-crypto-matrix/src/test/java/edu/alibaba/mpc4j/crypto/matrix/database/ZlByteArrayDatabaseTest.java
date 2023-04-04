@@ -1,4 +1,4 @@
-package edu.alibaba.mpc4j.crypto.matrix.vector;
+package edu.alibaba.mpc4j.crypto.matrix.database;
 
 import edu.alibaba.mpc4j.common.tool.EnvType;
 import edu.alibaba.mpc4j.common.tool.bitvector.BitVector;
@@ -13,7 +13,7 @@ import java.security.SecureRandom;
  * @author Weiran Liu
  * @date 2023/3/31
  */
-public class BytesVectorTest {
+public class ZlByteArrayDatabaseTest {
     /**
      * default vector length
      */
@@ -37,10 +37,10 @@ public class BytesVectorTest {
     }
 
     private void testPartition(int bitLength, int partitionBitLength) {
-        BytesVector bytesVector = BytesVector.createRandom(bitLength, DEFAULT_VECTOR_LENGTH, SECURE_RANDOM);
-        BytesVector[] partitionBytesVectors = bytesVector.partition(partitionBitLength);
-        BytesVector combinedBytesVector = BytesVector.create(bitLength, partitionBytesVectors);
-        Assert.assertEquals(bytesVector, combinedBytesVector);
+        ZlByteArrayDatabase zlByteArrayDatabase = ZlByteArrayDatabase.createRandom(bitLength, DEFAULT_VECTOR_LENGTH, SECURE_RANDOM);
+        ZlByteArrayDatabase[] partitionZlByteArrayDatabases = zlByteArrayDatabase.partition(partitionBitLength);
+        ZlByteArrayDatabase combinedZlByteArrayDatabase = ZlByteArrayDatabase.create(bitLength, partitionZlByteArrayDatabases);
+        Assert.assertEquals(zlByteArrayDatabase, combinedZlByteArrayDatabase);
     }
 
     @Test
@@ -51,9 +51,9 @@ public class BytesVectorTest {
     }
 
     private void testBitPartition(int bitLength) {
-        BytesVector bytesVector = BytesVector.createRandom(bitLength, DEFAULT_VECTOR_LENGTH, SECURE_RANDOM);
-        BitVector[] partitionBitVectors = bytesVector.bitPartition(EnvType.STANDARD, true);
-        BytesVector combinedBytesVector = BytesVector.create(EnvType.STANDARD, true, partitionBitVectors);
-        Assert.assertEquals(bytesVector, combinedBytesVector);
+        ZlByteArrayDatabase zlByteArrayDatabase = ZlByteArrayDatabase.createRandom(bitLength, DEFAULT_VECTOR_LENGTH, SECURE_RANDOM);
+        BitVector[] partitionBitVectors = zlByteArrayDatabase.bitPartition(EnvType.STANDARD, true);
+        ZlByteArrayDatabase combinedZlByteArrayDatabase = ZlByteArrayDatabase.create(EnvType.STANDARD, true, partitionBitVectors);
+        Assert.assertEquals(zlByteArrayDatabase, combinedZlByteArrayDatabase);
     }
 }
