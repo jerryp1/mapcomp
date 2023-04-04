@@ -14,6 +14,7 @@ import edu.alibaba.mpc4j.common.tool.utils.BytesUtils;
 import edu.alibaba.mpc4j.common.tool.utils.CommonUtils;
 import org.apache.commons.lang3.builder.EqualsBuilder;
 import org.apache.commons.lang3.builder.HashCodeBuilder;
+import org.bouncycastle.util.encoders.Hex;
 
 import java.math.BigInteger;
 import java.security.SecureRandom;
@@ -26,153 +27,154 @@ import java.util.stream.IntStream;
  * @author Weiran Liu
  * @date 2023/3/31
  */
-public class ZlByteArrayDatabase {
+public class ZlByteArrayDatabase implements Database {
     /**
      * display data rows
      */
     private static final int DISPLAY_DATA_ROWS = 256;
     /**
-     * the data columns (in bit)
+     * number of columns (in bit)
      */
-    private int l;
+    private final int l;
     /**
-     * the data columns (in byte)
+     * number of columns (in byte)
      */
-    private int byteL;
+    private final int byteL;
     /**
      * data
      */
     private byte[][] data;
 
     /**
-     * Creates a bytes vector.
+     * Creates a database.
      *
-     * @param bitLength  the bit length.
-     * @param bytesArray bytes array.
-     * @return a bytes vector.
+     * @param l    number of columns.
+     * @param data data.
+     * @return a database.
      */
-    public static ZlByteArrayDatabase create(int bitLength, byte[][] bytesArray) {
-        ZlByteArrayDatabase zlByteArrayDatabase = new ZlByteArrayDatabase();
-        MathPreconditions.checkPositive("bit length", bitLength);
-        zlByteArrayDatabase.l = bitLength;
-        zlByteArrayDatabase.byteL = CommonUtils.getByteLength(bitLength);
-        zlByteArrayDatabase.data = Arrays.stream(bytesArray)
-            .peek(bytes ->
-                Preconditions.checkArgument(BytesUtils.isFixedReduceByteArray(
-                    bytes, zlByteArrayDatabase.byteL, zlByteArrayDatabase.l
-                ))
-            )
+    public static ZlByteArrayDatabase create(int l, byte[][] data) {
+        ZlByteArrayDatabase database = new ZlByteArrayDatabase(l);
+        database.data = Arrays.stream(data)
+            .peek(bytes -> Preconditions.checkArgument(
+                BytesUtils.isFixedReduceByteArray(bytes, database.byteL, database.l)
+            ))
             .toArray(byte[][]::new);
-        return zlByteArrayDatabase;
+        return database;
     }
 
     /**
-     * Creates a random bytes vector.
+     * Creates a random database.
      *
-     * @param bitLength    the bit length.
+     * @param l            number of columns.
+     * @param rows         number of rows.
      * @param secureRandom the random state.
-     * @return a random bytes vector.
+     * @return a database.
      */
-    public static ZlByteArrayDatabase createRandom(int bitLength, int vectorLength, SecureRandom secureRandom) {
-        ZlByteArrayDatabase zlByteArrayDatabase = new ZlByteArrayDatabase();
-        MathPreconditions.checkPositive("bit length", bitLength);
-        zlByteArrayDatabase.l = bitLength;
-        zlByteArrayDatabase.byteL = CommonUtils.getByteLength(bitLength);
-        MathPreconditions.checkPositive("vector length", vectorLength);
-        zlByteArrayDatabase.data = IntStream.range(0, vectorLength)
-            .mapToObj(index -> BytesUtils.randomByteArray(zlByteArrayDatabase.byteL, zlByteArrayDatabase.l, secureRandom))
+    public static ZlByteArrayDatabase createRandom(int l, int rows, SecureRandom secureRandom) {
+        ZlByteArrayDatabase database = new ZlByteArrayDatabase(l);
+        MathPreconditions.checkPositive("rows", rows);
+        database.data = IntStream.range(0, rows)
+            .mapToObj(index -> BytesUtils.randomByteArray(database.byteL, database.l, secureRandom))
             .toArray(byte[][]::new);
-        return zlByteArrayDatabase;
+        return database;
     }
 
     /**
-     * Creates a bytes vector by combining bytes vectors.
+     * Creates a database by combining databases.
      *
-     * @param bitLength    the bit length of the combined bytes vector.
-     * @param zlByteArrayDatabases the combining bytes vectors.
+     * @param l         number of columns.
+     * @param databases the combining databases.
      * @return a bytes vector.
      */
-    public static ZlByteArrayDatabase create(int bitLength, ZlByteArrayDatabase... zlByteArrayDatabases) {
-        MathPreconditions.checkPositive("# of bytes vectors", zlByteArrayDatabases.length);
-        int vectorLength = zlByteArrayDatabases[0].getVectorLength();
-        // check all bytes vectors have the same vector length
-        Arrays.stream(zlByteArrayDatabases).forEach(zlByteArrayDatabase ->
-            MathPreconditions.checkEqual(
-                "vector.length", "vector_length",
-                zlByteArrayDatabase.getVectorLength(), vectorLength
-            )
+    public static ZlByteArrayDatabase create(int l, ZlByteArrayDatabase... databases) {
+        // check BitVectors.length > 0
+        MathPreconditions.checkPositive("databases.length", databases.length);
+        int rows = databases[0].rows();
+        // check all databases have the same rows
+        Arrays.stream(databases).forEach(database ->
+            MathPreconditions.checkEqual("rows", "database.rows", rows, database.rows())
         );
-        // combine each bytes vector
-        BigInteger[] bigIntegerVector = new BigInteger[vectorLength];
-        Arrays.fill(bigIntegerVector, BigInteger.ZERO);
-        for (ZlByteArrayDatabase zlByteArrayDatabase : zlByteArrayDatabases) {
-            int partitionBitLength = zlByteArrayDatabase.l;
-            for (int index = 0; index < vectorLength; index++) {
-                BigInteger partitionBigInteger = BigIntegerUtils.byteArrayToNonNegBigInteger(
-                    zlByteArrayDatabase.data[index]
-                );
-                bigIntegerVector[index] = bigIntegerVector[index]
-                    .shiftLeft(partitionBitLength)
+        // combine each database
+        BigInteger[] bigIntegerData = new BigInteger[rows];
+        Arrays.fill(bigIntegerData, BigInteger.ZERO);
+        for (ZlByteArrayDatabase database : databases) {
+            for (int rowIndex = 0; rowIndex < rows; rowIndex++) {
+                BigInteger partitionBigInteger = BigIntegerUtils.byteArrayToNonNegBigInteger(database.data[rowIndex]);
+                bigIntegerData[rowIndex] = bigIntegerData[rowIndex]
+                    .shiftLeft(database.l)
                     .add(partitionBigInteger);
             }
         }
         // verify that all combined vectors has at most upper-bound bit length
-        Arrays.stream(bigIntegerVector)
-            .forEach(bigInteger -> Preconditions.checkArgument(bigInteger.bitLength() <= bitLength));
-        int byteLength = CommonUtils.getByteLength(bitLength);
-        byte[][] bytesArray = Arrays.stream(bigIntegerVector)
-            .map(bigInteger -> BigIntegerUtils.nonNegBigIntegerToByteArray(bigInteger, byteLength))
+        Arrays.stream(bigIntegerData).forEach(bigInteger -> Preconditions.checkArgument(bigInteger.bitLength() <= l));
+        int byteL = CommonUtils.getByteLength(l);
+        byte[][] data = Arrays.stream(bigIntegerData)
+            .map(bigIntegerElement -> BigIntegerUtils.nonNegBigIntegerToByteArray(bigIntegerElement, byteL))
             .toArray(byte[][]::new);
-        // create the combined bytes vector
-        return ZlByteArrayDatabase.create(bitLength, bytesArray);
+
+        return ZlByteArrayDatabase.create(l, data);
     }
 
     /**
-     * Creates a bytes vector by combining bit vectors.
+     * Creates a database by combining bit vectors.
      *
      * @param envType    the environment.
      * @param parallel   parallel combination.
      * @param bitVectors the combining bit vectors.
-     * @return a bytes vector.
+     * @return a database.
      */
     public static ZlByteArrayDatabase create(EnvType envType, boolean parallel, BitVector... bitVectors) {
-        MathPreconditions.checkPositive("# of bit vectors", bitVectors.length);
-        int bitLength = bitVectors.length;
-        int vectorLength = bitVectors[0].bitNum();
+        MathPreconditions.checkPositive("BitVectors.length", bitVectors.length);
+        int l = bitVectors.length;
+        int rows = bitVectors[0].bitNum();
         // check all bit vectors has the same bit num
         Arrays.stream(bitVectors).forEach(bitVector ->
-            MathPreconditions.checkEqual("vectorLength", "bitVector.bitNum", vectorLength, bitVector.bitNum())
+            MathPreconditions.checkEqual("rows", "BitVector.bitNum", rows, bitVector.bitNum())
         );
-        TransBitMatrix bitMatrix = TransBitMatrixFactory.createInstance(envType, vectorLength, bitLength, parallel);
-        for (int columnIndex = 0; columnIndex < bitLength; columnIndex++) {
+        TransBitMatrix bitMatrix = TransBitMatrixFactory.createInstance(envType, rows, l, parallel);
+        for (int columnIndex = 0; columnIndex < l; columnIndex++) {
             bitMatrix.setColumn(columnIndex, bitVectors[columnIndex].getBytes());
         }
         TransBitMatrix transBitMatrix = bitMatrix.transpose();
-        byte[][] bytesArray = IntStream.range(0, vectorLength)
+        byte[][] data = IntStream.range(0, rows)
             .mapToObj(transBitMatrix::getColumn)
             .toArray(byte[][]::new);
-        // create the result
-        return create(bitLength, bytesArray);
+
+        return create(l, data);
     }
 
     /**
-     * Creates an empty bytes vector.
+     * Creates an empty database.
      *
-     * @param bitLength bit length.
-     * @return a bytes vector.
+     * @param l number of columns.
+     * @return a database.
      */
-    public static ZlByteArrayDatabase createEmpty(int bitLength) {
-        ZlByteArrayDatabase zlByteArrayDatabase = new ZlByteArrayDatabase();
-        MathPreconditions.checkPositive("bit length", bitLength);
-        zlByteArrayDatabase.l = bitLength;
-        zlByteArrayDatabase.byteL = CommonUtils.getByteLength(bitLength);
-        zlByteArrayDatabase.data = new byte[0][zlByteArrayDatabase.byteL];
+    public static ZlByteArrayDatabase createEmpty(int l) {
+        ZlByteArrayDatabase database = new ZlByteArrayDatabase(l);
+        database.data = new byte[0][];
 
-        return zlByteArrayDatabase;
+        return database;
     }
 
-    private ZlByteArrayDatabase() {
-        // empty
+    private ZlByteArrayDatabase(int l) {
+        MathPreconditions.checkPositive("l", l);
+        this.l = l;
+        byteL = CommonUtils.getByteLength(l);
+    }
+
+    @Override
+    public int rows() {
+        return data.length;
+    }
+
+    @Override
+    public int getL() {
+        return l;
+    }
+
+    @Override
+    public int getByteL() {
+        return byteL;
     }
 
     /**
@@ -181,98 +183,100 @@ public class ZlByteArrayDatabase {
      * partition bit length is 9, then we create 1 partition bytes vector with bit length 9 (byte length 2), but all
      * first byte in the partitioned bytes vector are 0.
      *
-     * @param partitionBitLength the partition bit length.
+     * @param partitionL the partition bit length.
      * @return the partition result.
      */
-    public ZlByteArrayDatabase[] partition(int partitionBitLength) {
-        MathPreconditions.checkPositive("partitionBitLength", partitionBitLength);
-        int partitionNum = CommonUtils.getUnitNum(l, partitionBitLength);
-        ZlByteArrayDatabase[] partitionZlByteArrayDatabaseArray = new ZlByteArrayDatabase[partitionNum];
+    public ZlByteArrayDatabase[] partition(int partitionL) {
+        MathPreconditions.checkPositive("partitionL", partitionL);
+        int partitionNum = CommonUtils.getUnitNum(l, partitionL);
+        ZlByteArrayDatabase[] partitionDatabases = new ZlByteArrayDatabase[partitionNum];
         // mod = 2^l, where l is the partition bit length.
-        BigInteger mod = BigInteger.ONE.shiftLeft(partitionBitLength);
-        int partitionByteLength = CommonUtils.getByteLength(partitionBitLength);
-        int vectorLength = getVectorLength();
+        BigInteger mod = BigInteger.ONE.shiftLeft(partitionL);
+        int partitionByteL = CommonUtils.getByteLength(partitionL);
+        int rows = rows();
         BigInteger[] bigIntegerVector = Arrays.stream(data)
             .map(BigIntegerUtils::byteArrayToNonNegBigInteger)
             .toArray(BigInteger[]::new);
         // we need to partition in reverse order so that we can then combine
         for (int partitionIndex = partitionNum - 1; partitionIndex >= 0; partitionIndex--) {
-            byte[][] partitionBytesArray = new byte[vectorLength][partitionByteLength];
-            for (int index = 0; index < vectorLength; index++) {
+            byte[][] partitionBytesArray = new byte[rows][partitionByteL];
+            for (int index = 0; index < rows; index++) {
                 BigInteger partitionBigInteger = bigIntegerVector[index].mod(mod);
-                bigIntegerVector[index] = bigIntegerVector[index].shiftRight(partitionBitLength);
-                partitionBytesArray[index] = BigIntegerUtils.nonNegBigIntegerToByteArray(partitionBigInteger, partitionByteLength);
+                bigIntegerVector[index] = bigIntegerVector[index].shiftRight(partitionL);
+                partitionBytesArray[index] = BigIntegerUtils.nonNegBigIntegerToByteArray(partitionBigInteger, partitionByteL);
             }
-            partitionZlByteArrayDatabaseArray[partitionIndex] = ZlByteArrayDatabase.create(partitionBitLength, partitionBytesArray);
+            partitionDatabases[partitionIndex] = ZlByteArrayDatabase.create(partitionL, partitionBytesArray);
         }
-        return partitionZlByteArrayDatabaseArray;
+        return partitionDatabases;
     }
 
-    /**
-     * Partitions the bytes vector by 1 bit.
-     *
-     * @param envType  the environment.
-     * @param parallel parallel operation.
-     * @return the partition result.
-     */
-    public BitVector[] bitPartition(EnvType envType, boolean parallel) {
-        int vectorLength = getVectorLength();
+    @Override
+    public BitVector[] partition(EnvType envType, boolean parallel) {
+        int rows = rows();
         DenseBitMatrix byteDenseBitMatrix = ByteDenseBitMatrix.fromDense(l, data);
         DenseBitMatrix transByteDenseBitMatrix = byteDenseBitMatrix.transpose(envType, parallel);
         return IntStream.range(0, l)
-            .mapToObj(index -> BitVectorFactory.create(vectorLength, transByteDenseBitMatrix.getRow(index)))
+            .mapToObj(index -> BitVectorFactory.create(rows, transByteDenseBitMatrix.getRow(index)))
             .toArray(BitVector[]::new);
     }
 
-    /**
-     * Gets the byte array.
-     *
-     * @param index the index.
-     * @return the byte array.
-     */
-    public byte[] getBytes(int index) {
-        return data[index];
+    @Override
+    public Database split(int splitRows) {
+        int rows = rows();
+        MathPreconditions.checkPositiveInRangeClosed("split rows", splitRows, rows);
+        byte[][] subData = new byte[splitRows][];
+        byte[][] remainData = new byte[rows - splitRows][];
+        System.arraycopy(data, 0, subData, 0, splitRows);
+        System.arraycopy(data, splitRows, remainData, 0, rows - splitRows);
+        data = remainData;
+        return ZlByteArrayDatabase.create(l, subData);
+    }
+
+    @Override
+    public void reduce(int reduceRows) {
+        int rows = rows();
+        MathPreconditions.checkPositiveInRangeClosed("reduce rows", reduceRows, rows);
+        if (reduceRows < rows) {
+            // reduce if the reduced rows is less than rows.
+            byte[][] remainData = new byte[reduceRows][];
+            System.arraycopy(data, 0, remainData, 0, reduceRows);
+            data = remainData;
+        }
+    }
+
+    @Override
+    public void merge(Database other) {
+        ZlByteArrayDatabase that = (ZlByteArrayDatabase) other;
+        MathPreconditions.checkEqual("this.l", "that.l", this.l, that.l);
+        byte[][] mergeData = new byte[this.data.length + that.data.length][];
+        System.arraycopy(this.data, 0, mergeData, 0, this.data.length);
+        System.arraycopy(that.data, 0, mergeData, this.data.length, that.data.length);
+        data = mergeData;
     }
 
     /**
-     * Gets the bytes array.
+     * Gets the data.
      *
-     * @return the bytes array.
+     * @return the data.
      */
     public byte[][] getData() {
         return data;
     }
 
     /**
-     * Gets the byte length.
+     * Gets the data.
      *
-     * @return the byte length.
+     * @param index the index.
+     * @return the data.
      */
-    public int getByteL() {
-        return byteL;
-    }
-
-    /**
-     * Gets the bit length.
-     *
-     * @return the bit length.
-     */
-    public int getL() {
-        return l;
-    }
-
-    /**
-     * Gets the vector length.
-     *
-     * @return the vector length.
-     */
-    public int getVectorLength() {
-        return data.length;
+    public byte[] getData(int index) {
+        return data[index];
     }
 
     @Override
     public int hashCode() {
         HashCodeBuilder hashCodeBuilder = new HashCodeBuilder();
+        hashCodeBuilder.append(l);
         Arrays.stream(data).forEach(hashCodeBuilder::append);
         return hashCodeBuilder.hashCode();
     }
@@ -284,15 +288,23 @@ public class ZlByteArrayDatabase {
         }
         if (obj instanceof ZlByteArrayDatabase) {
             ZlByteArrayDatabase that = (ZlByteArrayDatabase) obj;
-            if (this.getVectorLength() != that.getVectorLength()) {
+            if (this.rows() != that.rows()) {
                 return false;
             }
-            int vectorLength = getVectorLength();
+            int rows = rows();
             EqualsBuilder equalsBuilder = new EqualsBuilder();
-            IntStream.range(0, vectorLength)
-                .forEach(index -> equalsBuilder.append(this.data[index], that.data[index]));
+            equalsBuilder.append(this.l, that.l);
+            IntStream.range(0, rows).forEach(index -> equalsBuilder.append(this.data[index], that.data[index]));
             return equalsBuilder.isEquals();
         }
         return false;
+    }
+
+    @Override
+    public String toString() {
+        String[] stringData = Arrays.stream(Arrays.copyOf(data, DISPLAY_DATA_ROWS))
+            .map(Hex::toHexString)
+            .toArray(String[]::new);
+        return this.getClass().getSimpleName() + " (l = " + l + "): " + Arrays.toString(stringData);
     }
 }

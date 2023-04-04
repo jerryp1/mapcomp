@@ -9,7 +9,7 @@ import org.junit.Test;
 import java.security.SecureRandom;
 
 /**
- * Zl64 database test.
+ * Zl64 long database test.
  *
  * @author Weiran Liu
  * @date 2023/4/4

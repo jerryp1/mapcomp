@@ -29,11 +29,11 @@ public class Zl64LongDatabase implements Database {
      */
     private static final int DISPLAY_DATA_ROWS = 256;
     /**
-     * the data columns (in bit)
+     * number of columns (in bit)
      */
     private final int l;
     /**
-     * the data columns (in byte)
+     * number of columns (in byte)
      */
     private final int byteL;
     /**
@@ -48,7 +48,7 @@ public class Zl64LongDatabase implements Database {
     /**
      * Creates a database.
      *
-     * @param l    the data columns.
+     * @param l    number of columns.
      * @param data data.
      * @return a database.
      */
@@ -65,7 +65,7 @@ public class Zl64LongDatabase implements Database {
     /**
      * Creates a random database.
      *
-     * @param l            the data columns.
+     * @param l            number of columns.
      * @param rows         number of rows.
      * @param secureRandom the random state.
      * @return a database.
@@ -112,7 +112,7 @@ public class Zl64LongDatabase implements Database {
     /**
      * Creates an empty database.
      *
-     * @param l the data columns.
+     * @param l number of columns.
      * @return a database.
      */
     public static Zl64LongDatabase createEmpty(int l) {
@@ -123,7 +123,7 @@ public class Zl64LongDatabase implements Database {
     }
 
     private Zl64LongDatabase(int l) {
-        MathPreconditions.checkPositiveInRangeClosed("columns", l, LongUtils.MAX_L);
+        MathPreconditions.checkPositiveInRangeClosed("l", l, LongUtils.MAX_L);
         this.l = l;
         byteL = CommonUtils.getByteLength(l);
         rangeBound = 1L << l;
