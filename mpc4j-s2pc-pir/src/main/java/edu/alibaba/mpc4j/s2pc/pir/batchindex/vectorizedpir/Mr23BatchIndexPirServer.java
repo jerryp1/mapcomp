@@ -86,6 +86,16 @@ public class Mr23BatchIndexPirServer extends AbstractBatchIndexPirServer {
             } else {
                 params = Mr23BatchIndexPirParams.ELEMENT_LOG_SIZE_20_RETRIEVAL_SIZE_2048;
             }
+        } else if (elementArray.length <= (1 << 22)) {
+            if (maxRetrievalSize <= 256) {
+                params = Mr23BatchIndexPirParams.ELEMENT_LOG_SIZE_22_RETRIEVAL_SIZE_256;
+            } else if (maxRetrievalSize <= 512) {
+                params = Mr23BatchIndexPirParams.ELEMENT_LOG_SIZE_22_RETRIEVAL_SIZE_512;
+            } else if (maxRetrievalSize <= 1024) {
+                params = Mr23BatchIndexPirParams.ELEMENT_LOG_SIZE_22_RETRIEVAL_SIZE_1024;
+            } else {
+                params = Mr23BatchIndexPirParams.ELEMENT_LOG_SIZE_22_RETRIEVAL_SIZE_2048;
+            }
         } else if (elementArray.length <= (1 << 24)) {
             if (maxRetrievalSize <= 256) {
                 params = Mr23BatchIndexPirParams.ELEMENT_LOG_SIZE_24_RETRIEVAL_SIZE_256;
@@ -93,10 +103,21 @@ public class Mr23BatchIndexPirServer extends AbstractBatchIndexPirServer {
                 params = Mr23BatchIndexPirParams.ELEMENT_LOG_SIZE_24_RETRIEVAL_SIZE_512;
             } else if (maxRetrievalSize <= 1024) {
                 params = Mr23BatchIndexPirParams.ELEMENT_LOG_SIZE_24_RETRIEVAL_SIZE_1024;
-            } else {
+            } else if (maxRetrievalSize <= 2048) {
                 params = Mr23BatchIndexPirParams.ELEMENT_LOG_SIZE_24_RETRIEVAL_SIZE_2048;
             }
+        } else if (elementArray.length <= (1 << 26)) {
+            if (maxRetrievalSize <= 256) {
+                params = Mr23BatchIndexPirParams.ELEMENT_LOG_SIZE_26_RETRIEVAL_SIZE_256;
+            } else if (maxRetrievalSize <= 512) {
+                params = Mr23BatchIndexPirParams.ELEMENT_LOG_SIZE_26_RETRIEVAL_SIZE_512;
+            } else if (maxRetrievalSize <= 1024) {
+                params = Mr23BatchIndexPirParams.ELEMENT_LOG_SIZE_26_RETRIEVAL_SIZE_1024;
+            } else if (maxRetrievalSize <= 2048) {
+                params = Mr23BatchIndexPirParams.ELEMENT_LOG_SIZE_26_RETRIEVAL_SIZE_2048;
+            }
         }
+
         setInitInput(elementArray, elementBitLength, maxRetrievalSize, params.getPlainModulusBitLength() - 1);
         logPhaseInfo(PtoState.INIT_BEGIN);
         // 服务端分桶
@@ -169,21 +190,39 @@ public class Mr23BatchIndexPirServer extends AbstractBatchIndexPirServer {
             otherParty().getPartyId(), rpc.ownParty().getPartyId()
         );
         List<byte[]> clientQueryPayload = rpc.receive(clientQueryHeader).getPayload();
+        int count = CommonUtils.getUnitNum(innerParams.getBinNum() / 2, innerParams.getGroupBinSize());
+        MpcAbortPreconditions.checkArgument(clientQueryPayload.size() == count * params.getDimension());
 
         // 服务端计算回复信息
         stopWatch.start();
-        int count = CommonUtils.getUnitNum(innerParams.getBinNum() / 2, innerParams.getGroupBinSize());
         int totalSize = innerParams.getTotalSize();
         List<byte[]> serverResponsePayload = new ArrayList<>();
+        List<List<byte[]>> rotatedQuery = IntStream.range(0, count)
+            .mapToObj(i ->
+                Mr23BatchIndexPirNativeUtils.rotateQuery(
+                    params.getEncryptionParams(),
+                    galoisKeys,
+                    clientQueryPayload.get(i * params.getDimension()),
+                    params.getFirstTwoDimensionSize()
+                ))
+            .collect(Collectors.toCollection(() -> new ArrayList<>(count)));
         for (int partitionIndex = 0; partitionIndex < partitionCount; partitionIndex++) {
             IntStream intStream = IntStream.range(0, count);
             intStream = parallel ? intStream.parallel() : intStream;
             int finalPartitionIndex = partitionIndex;
             List<byte[]> response = intStream
-                .mapToObj(i -> handleClientQueryPayload(
-                    clientQueryPayload.subList(i * params.getDimension(), (i + 1) * params.getDimension()),
-                    encodedDatabase.get(finalPartitionIndex).subList(i * totalSize, (i + 1) * totalSize))
-                )
+                .mapToObj(i ->
+                    Mr23BatchIndexPirNativeUtils.generateReply(
+                        params.getEncryptionParams(),
+                        clientQueryPayload.subList(i * params.getDimension(), (i + 1) * params.getDimension()),
+                        rotatedQuery.get(i),
+                        encodedDatabase.get(finalPartitionIndex).subList(i * totalSize, (i + 1) * totalSize),
+                        publicKey,
+                        relinKeys,
+                        galoisKeys,
+                        params.getFirstTwoDimensionSize(),
+                        params.getThirdDimensionSize()
+                    ))
                 .collect(Collectors.toList());
             // merge response ciphertexts
             serverResponsePayload.add(
@@ -303,26 +342,6 @@ public class Mr23BatchIndexPirServer extends AbstractBatchIndexPirServer {
             mergedDatabase.add(vec);
         }
         return mergedDatabase;
-    }
-
-    /**
-     * 服务端处理客户端查询信息。
-     *
-     * @param clientQuery      客户端查询信息。
-     * @param encodedPlaintext 编码后的多项式。
-     * @return 检索结果密文。
-     */
-    private byte[] handleClientQueryPayload(List<byte[]> clientQuery, List<byte[]> encodedPlaintext) {
-        return Mr23BatchIndexPirNativeUtils.generateReply(
-            params.getEncryptionParams(),
-            clientQuery,
-            encodedPlaintext,
-            publicKey,
-            relinKeys,
-            galoisKeys,
-            params.getFirstTwoDimensionSize(),
-            params.getThirdDimensionSize()
-        );
     }
 
     /**

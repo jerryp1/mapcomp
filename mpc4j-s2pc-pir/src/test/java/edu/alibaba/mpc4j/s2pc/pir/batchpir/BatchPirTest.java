@@ -55,10 +55,10 @@ public class BatchPirTest {
         Collection<Object[]> configurations = new ArrayList<>();
 
         // PSI-PIR
-//        configurations.add(new Object[]{
-//            BatchIndexPirFactory.BatchIndexPirType.PSI_PIR.name(),
-//            new Lpzg24BatchIndexPirConfig.Builder().build()
-//        });
+        configurations.add(new Object[]{
+            BatchIndexPirFactory.BatchIndexPirType.PSI_PIR.name(),
+            new Lpzg24BatchIndexPirConfig.Builder().build()
+        });
         // vectorized batch PIR
         configurations.add(new Object[]{
             BatchIndexPirFactory.BatchIndexPirType.VECTORIZED_BATCH_PIR.name(),

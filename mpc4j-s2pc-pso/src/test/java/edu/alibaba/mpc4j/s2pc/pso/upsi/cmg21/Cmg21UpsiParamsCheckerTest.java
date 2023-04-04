@@ -65,7 +65,18 @@ public class Cmg21UpsiParamsCheckerTest {
         configurations.add(new Object[] {
             "SERVER_1M_CLIENT_MAX_5535", Cmg21UpsiParams.SERVER_1M_CLIENT_MAX_5535
         });
-
+        configurations.add(new Object[] {
+            "SERVER_16M_CLIENT_MAX_256", Cmg21UpsiParams.SERVER_16M_CLIENT_MAX_256
+        });
+        configurations.add(new Object[] {
+            "SERVER_16M_CLIENT_MAX_512", Cmg21UpsiParams.SERVER_16M_CLIENT_MAX_512
+        });
+        configurations.add(new Object[] {
+            "SERVER_16M_CLIENT_MAX_1024", Cmg21UpsiParams.SERVER_16M_CLIENT_MAX_1024
+        });
+        configurations.add(new Object[] {
+            "SERVER_16M_CLIENT_MAX_2048", Cmg21UpsiParams.SERVER_16M_CLIENT_MAX_2048
+        });
         return configurations;
     }
 

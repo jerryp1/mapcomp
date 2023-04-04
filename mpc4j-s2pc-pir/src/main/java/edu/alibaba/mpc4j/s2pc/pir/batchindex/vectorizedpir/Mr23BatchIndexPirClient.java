@@ -109,6 +109,18 @@ public class Mr23BatchIndexPirClient extends AbstractBatchIndexPirClient {
             } else {
                 MpcAbortPreconditions.checkArgument(false, "retrieval size is larger than the upper bound.");
             }
+        } else if (serverElementSize <= (1 << 26)) {
+            if (maxRetrievalSize <= 256) {
+                params = Mr23BatchIndexPirParams.ELEMENT_LOG_SIZE_26_RETRIEVAL_SIZE_256;
+            } else if (maxRetrievalSize <= 512) {
+                params = Mr23BatchIndexPirParams.ELEMENT_LOG_SIZE_26_RETRIEVAL_SIZE_512;
+            } else if (maxRetrievalSize <= 1024) {
+                params = Mr23BatchIndexPirParams.ELEMENT_LOG_SIZE_26_RETRIEVAL_SIZE_1024;
+            } else if (maxRetrievalSize <= 2048) {
+                params = Mr23BatchIndexPirParams.ELEMENT_LOG_SIZE_26_RETRIEVAL_SIZE_2048;
+            } else {
+                MpcAbortPreconditions.checkArgument(false, "retrieval size is larger than the upper bound.");
+            }
         }
         setInitInput(serverElementSize, elementBitLength, maxRetrievalSize, params.getPlainModulusBitLength() - 1);
         logPhaseInfo(PtoState.INIT_BEGIN);

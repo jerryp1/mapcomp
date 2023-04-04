@@ -119,7 +119,11 @@ public class BatchIndexPirMain {
         for (int setSizeIndex = 0; setSizeIndex < setSizeNum; setSizeIndex++) {
             // 正式测试
             byte[][] serverElementArray = readServerElementArray(serverElementSize, elementBitLength);
-            runServer(serverRpc, clientParty, config, taskId++, serverElementArray,
+            // 单线程
+//            runServer(serverRpc, clientParty, config, taskId++, false, serverElementArray,
+//                clientRetrievalSize[setSizeIndex], elementBitLength, printWriter);
+            // 多线程
+            runServer(serverRpc, clientParty, config, taskId++, true, serverElementArray,
                 clientRetrievalSize[setSizeIndex], elementBitLength, printWriter);
         }
         // 断开连接
@@ -163,17 +167,17 @@ public class BatchIndexPirMain {
         LOGGER.info("(warmup) {} finish", server.ownParty().getPartyName());
     }
 
-    private void runServer(Rpc serverRpc, Party clientParty, BatchIndexPirConfig config, int taskId,
+    private void runServer(Rpc serverRpc, Party clientParty, BatchIndexPirConfig config, int taskId, boolean parallel,
                            byte[][] serverElementArray, int maxRetrievalSize, int elementBitLength,
                            PrintWriter printWriter) throws MpcAbortException {
         int serverElementSize = serverElementArray.length;
         LOGGER.info(
             "{}: serverElementSize = {}, maxRetrievalSize = {}, parallel = {}",
-            serverRpc.ownParty().getPartyName(), serverElementSize, maxRetrievalSize, true
+            serverRpc.ownParty().getPartyName(), serverElementSize, maxRetrievalSize, parallel
         );
         BatchIndexPirServer server = BatchIndexPirFactory.createServer(serverRpc, clientParty, config);
         server.setTaskId(taskId);
-        server.setParallel(true);
+        server.setParallel(parallel);
         // 启动测试
         server.getRpc().synchronize();
         server.getRpc().reset();
@@ -262,8 +266,11 @@ public class BatchIndexPirMain {
         for (int setSizeIndex = 0; setSizeIndex < setSizeNum; setSizeIndex++) {
             // 读取输入文件
             ArrayList<Integer> indexList = readClientRetrievalIndexList(clientRetrievalSize[setSizeIndex]);
+            // 单线程
+//            runClient(clientRpc, serverParty, config, taskId++, false, indexList, serverElementSize, elementBitLength,
+//                printWriter);
             // 多线程
-            runClient(clientRpc, serverParty, config, taskId++, indexList, serverElementSize, elementBitLength,
+            runClient(clientRpc, serverParty, config, taskId++, true, indexList, serverElementSize, elementBitLength,
                 printWriter);
         }
         // 断开连接
@@ -308,17 +315,17 @@ public class BatchIndexPirMain {
         LOGGER.info("(warmup) {} finish", client.ownParty().getPartyName());
     }
 
-    private void runClient(Rpc clientRpc, Party serverParty, BatchIndexPirConfig config, int taskId,
+    private void runClient(Rpc clientRpc, Party serverParty, BatchIndexPirConfig config, int taskId, boolean parallel,
                            ArrayList<Integer> clientIndexList, int serverElementSize, int elementBitLength,
                            PrintWriter printWriter) throws MpcAbortException {
         int retrievalSize = clientIndexList.size();
         LOGGER.info(
             "{}: serverElementSize = {}, retrievalSize = {}, parallel = {}",
-            clientRpc.ownParty().getPartyName(), serverElementSize, retrievalSize, true
+            clientRpc.ownParty().getPartyName(), serverElementSize, retrievalSize, parallel
         );
         BatchIndexPirClient client = BatchIndexPirFactory.createClient(clientRpc, serverParty, config);
         client.setTaskId(taskId);
-        client.setParallel(true);
+        client.setParallel(parallel);
         // 启动测试
         client.getRpc().synchronize();
         client.getRpc().reset();

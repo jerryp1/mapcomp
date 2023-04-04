@@ -52,8 +52,8 @@ public class Cmg21UpsiParamsChecker {
         assert params.getPlainModulus() % (2 * params.getPolyModulusDegree()) == 1 : "plainModulus should be a specific prime number to " +
             "supports batching ";
         int encodedBitLength = params.getItemEncodedSlotSize() * (int) Math.floor(Math.log(params.getPlainModulus()) / Math.log(2));
-        assert encodedBitLength >= 80 && encodedBitLength <= 128 : "encoded bits should greater than or equal 80 " +
-            "and smaller than or equal 128";
+        assert encodedBitLength >= 80 && encodedBitLength <= 256 : "encoded bits should greater than or equal 80 " +
+            "and smaller than or equal 256";
         assert params.getBinNum() % (params.getPolyModulusDegree() / params.getItemEncodedSlotSize()) == 0 : "binNum should be a multiple of " +
             "polyModulusDegree / itemEncodedSlotSize";
         assert params.expectServerSize() > 0 : "ExpectServerSize must be greater than 0: " + params.expectServerSize();

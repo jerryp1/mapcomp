@@ -73,9 +73,9 @@ class Mr23BatchIndexPirNativeUtils {
      * @param thirdDimensionSize    第三维向量长度。
      * @return 检索结果密文。
      */
-    static native byte[] generateReply(byte[] sealContext, List<byte[]> queryList, List<byte[]> dbPlaintexts,
-                                       byte[] publicKey, byte[] relinKeys, byte[] galoisKeys, int firstTwoDimensionSize,
-                                       int thirdDimensionSize);
+    static native byte[] generateReply(byte[] sealContext, List<byte[]> queryList, List<byte[]> rotatedQuery,
+                                       List<byte[]> dbPlaintexts, byte[] publicKey, byte[] relinKeys, byte[] galoisKeys,
+                                       int firstTwoDimensionSize, int thirdDimensionSize);
 
     /**
      * 解密回复密文。
@@ -88,6 +88,17 @@ class Mr23BatchIndexPirNativeUtils {
     static native long[] decryptReply(byte[] sealContext, byte[] secretKey, byte[] response);
 
     /**
+     * 密文移位。
+     *
+     * @param sealContext           SEAL上下文参数。
+     * @param galoisKey             Galois密钥。
+     * @param query                 检索值密文。
+     * @param firstTwoDimensionSize 前两维向量长度。
+     * @return 回复移位后的密文。
+     */
+    static native List<byte[]> rotateQuery(byte[] sealContext, byte[] galoisKey, byte[] query, int firstTwoDimensionSize);
+
+    /**
      * 合并多个分桶的回复密文。
      *
      * @param sealContext SEAL上下文参数。
@@ -95,7 +106,7 @@ class Mr23BatchIndexPirNativeUtils {
      * @param galoisKey   Galois密钥。
      * @param responses   回复密文。
      * @param g           vectorized batch pir 参数。
-     * @return 回复密文
+     * @return 回复密文。
      */
     static native byte[] mergeResponse(byte[] sealContext, byte[] publicKey, byte[] galoisKey, List<byte[]> responses, int g);
 }

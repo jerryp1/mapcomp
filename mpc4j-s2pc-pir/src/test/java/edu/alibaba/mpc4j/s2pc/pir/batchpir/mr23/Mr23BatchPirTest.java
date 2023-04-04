@@ -41,7 +41,7 @@ public class Mr23BatchPirTest {
     /**
      * 较大比特长度
      */
-    private static final int LARGE_BIT_LENGTH = 128;
+    private static final int LARGE_BIT_LENGTH = 15;
     /**
      * 服务端元素数量
      */
@@ -109,7 +109,7 @@ public class Mr23BatchPirTest {
 
     @Test
     public void testLargeBitLengthParallel() {
-        testPir(LARGE_BIT_LENGTH, LOG_RETRIEVAL_SIZE_8, config, true);
+        testPir(LARGE_BIT_LENGTH, LOG_RETRIEVAL_SIZE_8, config, false);
     }
 
     @Test

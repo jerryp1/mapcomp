@@ -100,18 +100,28 @@ public class Lpzg24BatchIndexPirClient extends AbstractBatchIndexPirClient {
                 params = Cmg21UpsiParams.SERVER_1M_CLIENT_MAX_2K_CMP;
             } else if (maxRetrievalSize <= 4096) {
                 params = Cmg21UpsiParams.SERVER_1M_CLIENT_MAX_4K_CMP;
-            } else if (maxRetrievalSize <= 5535) {
-                params = Cmg21UpsiParams.SERVER_1M_CLIENT_MAX_5535;
-            } else if (maxRetrievalSize <= 11041) {
-                params = Cmg21UpsiParams.SERVER_1M_CLIENT_MAX_11041;
             } else {
                 MpcAbortPreconditions.checkArgument(false, "retrieval size is larger than the upper bound.");
             }
-        } else if (serverElementSize <= (1 << 24)) {
-            if (maxRetrievalSize <= 1024) {
+        } else if (serverElementSize <= (1 << 26)) {
+            if (maxRetrievalSize <= 256) {
+                params = Cmg21UpsiParams.SERVER_16M_CLIENT_MAX_256;
+            } else if (maxRetrievalSize <= 512) {
+                params = Cmg21UpsiParams.SERVER_16M_CLIENT_MAX_512;
+            } else if (maxRetrievalSize <= 1024) {
                 params = Cmg21UpsiParams.SERVER_16M_CLIENT_MAX_1024;
             } else if (maxRetrievalSize <= 2048) {
                 params = Cmg21UpsiParams.SERVER_16M_CLIENT_MAX_2048;
+            } else {
+                MpcAbortPreconditions.checkArgument(false, "retrieval size is larger than the upper bound.");
+            }
+        } else if (serverElementSize <= (1 << 28)) {
+            if (maxRetrievalSize <= 1024) {
+                params = Cmg21UpsiParams.SERVER_256M_CLIENT_MAX_1024;
+            } else if (maxRetrievalSize <= 2048) {
+                params = Cmg21UpsiParams.SERVER_256M_CLIENT_MAX_2048;
+            } else if (maxRetrievalSize <= 4096) {
+                params = Cmg21UpsiParams.SERVER_256M_CLIENT_MAX_4096;
             } else {
                 MpcAbortPreconditions.checkArgument(false, "retrieval size is larger than the upper bound.");
             }
