@@ -150,6 +150,11 @@ public class HhLdpEfficiencyTest {
                     .Builder(LdpTestDataUtils.CONNECT_DATA_DOMAIN, DEFAULT_K, epsilon, DEFAULT_WINDOW_SIZE)
                     .build()
             );
+            CONFIGS.add(
+                new BufferHhgHhLdpConfig
+                    .Builder(LdpTestDataUtils.CONNECT_DATA_DOMAIN, DEFAULT_K, epsilon, DEFAULT_WINDOW_SIZE)
+                    .build()
+            );
         }
     }
 
@@ -208,11 +213,11 @@ public class HhLdpEfficiencyTest {
             long memory = GraphLayout.parseInstance(server).totalSize();
             // result
             int k = config.getK();
-            List<String> expectHeavyHitter = LdpTestDataUtils.CORRECT_CONNECT_COUNT_ORDER_LIST
+            Map<String, Integer> expectHeavyHitterMap = LdpTestDataUtils.CORRECT_CONNECT_COUNT_ORDER_LIST
                 .subList(0, k)
                 .stream()
-                .map(Map.Entry::getKey)
-                .collect(Collectors.toList());
+                .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
+            List<String> expectHeavyHitter = new ArrayList<>(expectHeavyHitterMap.keySet());
             Map<String, Double> actualHeavyHitterMap = server.heavyHitters();
             List<String> actualHeavyHitter = server.orderedHeavyHitters()
                 .stream()
@@ -220,8 +225,8 @@ public class HhLdpEfficiencyTest {
                 .collect(Collectors.toList());
             double ndcg = HeavyHitterMetrics.ndcg(actualHeavyHitter, expectHeavyHitter);
             double precision = HeavyHitterMetrics.precision(actualHeavyHitter, expectHeavyHitter);
-            double abe = HeavyHitterMetrics.absoluteError(actualHeavyHitterMap, LdpTestDataUtils.CORRECT_CONNECT_COUNT_MAP);
-            double re = HeavyHitterMetrics.relativeError(actualHeavyHitterMap, LdpTestDataUtils.CORRECT_CONNECT_COUNT_MAP);
+            double abe = HeavyHitterMetrics.absoluteError(actualHeavyHitterMap, expectHeavyHitterMap);
+            double re = HeavyHitterMetrics.relativeError(actualHeavyHitterMap, expectHeavyHitterMap);
             LOGGER.info("{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}",
                 StringUtils.leftPad(name, 20),
                 StringUtils.leftPad(DOUBLE_DECIMAL_FORMAT.format(config.getWindowEpsilon()), 10),
