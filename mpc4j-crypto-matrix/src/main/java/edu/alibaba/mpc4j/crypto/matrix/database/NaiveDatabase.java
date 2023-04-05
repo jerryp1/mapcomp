@@ -1,6 +1,7 @@
 package edu.alibaba.mpc4j.crypto.matrix.database;
 
 import com.google.common.base.Preconditions;
+import edu.alibaba.mpc4j.crypto.matrix.database.DatabaseFactory.DatabaseType;
 import edu.alibaba.mpc4j.common.tool.EnvType;
 import edu.alibaba.mpc4j.common.tool.MathPreconditions;
 import edu.alibaba.mpc4j.common.tool.bitmatrix.dense.ByteDenseBitMatrix;
@@ -98,38 +99,6 @@ public class NaiveDatabase implements Database {
             .mapToObj(index -> new BigInteger(l, secureRandom))
             .toArray(BigInteger[]::new);
         return database;
-    }
-
-    /**
-     * Creates a database by combining databases.
-     *
-     * @param l         number of columns.
-     * @param databases the combining databases.
-     * @return a bytes vector.
-     */
-    public static NaiveDatabase create(int l, ZlDatabase... databases) {
-        // check databases.length > 0
-        MathPreconditions.checkPositive("databases.length", databases.length);
-        int rows = databases[0].rows();
-        // check all databases have the same rows
-        Arrays.stream(databases).forEach(database ->
-            MathPreconditions.checkEqual("rows", "database.rows", rows, database.rows())
-        );
-        // combine each database
-        BigInteger[] data = new BigInteger[rows];
-        Arrays.fill(data, BigInteger.ZERO);
-        for (ZlDatabase database : databases) {
-            for (int rowIndex = 0; rowIndex < rows; rowIndex++) {
-                BigInteger partitionData = database.getBigIntegerData(rowIndex);
-                data[rowIndex] = data[rowIndex]
-                    .shiftLeft(database.getL())
-                    .add(partitionData);
-            }
-        }
-        // verify that all combined vectors has at most upper-bound bit length
-        Arrays.stream(data).forEach(element -> Preconditions.checkArgument(element.bitLength() <= l));
-
-        return NaiveDatabase.create(l, data);
     }
 
     /**
@@ -269,25 +238,6 @@ public class NaiveDatabase implements Database {
         return data[index];
     }
 
-    /**
-     * Gets the data.
-     *
-     * @return the data.
-     */
-    public BigInteger[] getData() {
-        return data;
-    }
-
-    /**
-     * Gets the data.
-     *
-     * @param index the index.
-     * @return the data.
-     */
-    public BigInteger getData(int index) {
-        return data[index];
-    }
-
     @Override
     public int hashCode() {
         return new HashCodeBuilder()
@@ -321,19 +271,50 @@ public class NaiveDatabase implements Database {
     }
 
     /**
-     * Partitions the bytes vector by the assigned partition bit length. Note that each bit length of the partitioned
-     * bytes vector is the assigned partition bit length. For example, when the current bit length is 3, and the
-     * partition bit length is 9, then we create 1 partition bytes vector with bit length 9 (byte length 2), but all
-     * first byte in the partitioned bytes vector are 0.
+     * Creates a database by combining databases.
      *
-     * @param partitionL the partition bit length.
+     * @param l         number of columns.
+     * @param databases the combining databases.
+     * @return a bytes vector.
+     */
+    public static NaiveDatabase create(int l, Database... databases) {
+        // check databases.length > 0
+        MathPreconditions.checkPositive("databases.length", databases.length);
+        int rows = databases[0].rows();
+        // check all databases have the same rows
+        Arrays.stream(databases).forEach(database ->
+            MathPreconditions.checkEqual("rows", "database.rows", rows, database.rows())
+        );
+        // combine each database
+        BigInteger[] data = new BigInteger[rows];
+        Arrays.fill(data, BigInteger.ZERO);
+        for (Database database : databases) {
+            for (int rowIndex = 0; rowIndex < rows; rowIndex++) {
+                BigInteger partitionData = database.getBigIntegerData(rowIndex);
+                data[rowIndex] = data[rowIndex]
+                    .shiftLeft(database.getL())
+                    .add(partitionData);
+            }
+        }
+        // verify that all combined vectors has at most upper-bound bit length
+        Arrays.stream(data).forEach(element -> Preconditions.checkArgument(element.bitLength() <= l));
+
+        return NaiveDatabase.create(l, data);
+    }
+
+    /**
+     * Partitions the database by the assigned partition L. Note that each L of the partitioned database is the
+     * assigned partition L. For example, when the current L is 3, and the partition L is 9, then we create 1 partition
+     * database with L = 9 (byteL = 2), but all first byte in the partitioned database are 0.
+     *
+     * @param partitionL the partition L.
      * @return the partition result.
      */
-    public ZlDatabase[] partition(int partitionL) {
+    public ZlDatabase[] partitionZl(int partitionL) {
         MathPreconditions.checkPositive("partitionL", partitionL);
         int partitionNum = CommonUtils.getUnitNum(l, partitionL);
         ZlDatabase[] partitionDatabases = new ZlDatabase[partitionNum];
-        // mod = 2^l, where l is the partition bit length.
+        // mod = 2^l, where l is the partition L.
         BigInteger mod = BigInteger.ONE.shiftLeft(partitionL);
         int partitionByteL = CommonUtils.getByteLength(partitionL);
         int rows = rows();
@@ -349,6 +330,37 @@ public class NaiveDatabase implements Database {
                 partitionData[index] = BigIntegerUtils.nonNegBigIntegerToByteArray(element, partitionByteL);
             }
             partitionDatabases[partitionIndex] = ZlDatabase.create(partitionL, partitionData);
+        }
+        return partitionDatabases;
+    }
+
+    /**
+     * Partitions the database by the assigned partition L. Note that each L of the partitioned database is the
+     * assigned partition L. For example, when the current L is 3, and the partition L is 9, then we create 1 partition
+     * database with L = 9 (byteL = 2), but all first byte in the partitioned database are 0.
+     *
+     * @param partitionL the partition L.
+     * @return the partition result.
+     */
+    public Zl64Database[] partitionZl64(int partitionL) {
+        MathPreconditions.checkPositiveInRangeClosed("partitionL", partitionL, DatabaseFactory.maxL(DatabaseType.ZL64));
+        int partitionNum = CommonUtils.getUnitNum(l, partitionL);
+        Zl64Database[] partitionDatabases = new Zl64Database[partitionNum];
+        // mod = 2^l, where l is the partition L.
+        BigInteger mod = BigInteger.ONE.shiftLeft(partitionL);
+        int rows = rows();
+        // copy the data
+        BigInteger[] tempData = new BigInteger[rows];
+        System.arraycopy(data, 0, tempData, 0, rows);
+        // we need to partition in reverse order so that we can then combine
+        for (int partitionIndex = partitionNum - 1; partitionIndex >= 0; partitionIndex--) {
+            long[] partitionData = new long[rows];
+            for (int index = 0; index < rows; index++) {
+                BigInteger element = tempData[index].mod(mod);
+                tempData[index] = tempData[index].shiftRight(partitionL);
+                partitionData[index] = element.longValue();
+            }
+            partitionDatabases[partitionIndex] = Zl64Database.create(partitionL, partitionData);
         }
         return partitionDatabases;
     }

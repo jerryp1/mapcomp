@@ -55,6 +55,27 @@ public class DatabaseFactory {
     }
 
     /**
+     * Creates a database.
+     *
+     * @param type the type.
+     * @param l    number of columns.
+     * @param data data.
+     * @return a database.
+     */
+    public static Database create(DatabaseType type, int l, byte[][] data) {
+        switch (type) {
+            case ZL64:
+                return Zl64Database.create(l, data);
+            case ZL:
+                return ZlDatabase.create(l, data);
+            case NAIVE:
+                return NaiveDatabase.create(l, data);
+            default:
+                throw new IllegalArgumentException("Invalid " + type.getClass().getSimpleName() + ": " + type.name());
+        }
+    }
+
+    /**
      * Creates a random database.
      *
      * @param type         the type.
@@ -71,6 +92,26 @@ public class DatabaseFactory {
                 return ZlDatabase.createRandom(l, rows, secureRandom);
             case NAIVE:
                 return NaiveDatabase.createRandom(l, rows, secureRandom);
+            default:
+                throw new IllegalArgumentException("Invalid " + type.getClass().getSimpleName() + ": " + type.name());
+        }
+    }
+
+    /**
+     * Creates an empty database.
+     *
+     * @param type the type.
+     * @param l number of rows.
+     * @return a database.
+     */
+    public static Database createEmpty(DatabaseType type, int l) {
+        switch (type) {
+            case ZL64:
+                return Zl64Database.createEmpty(l);
+            case ZL:
+                return ZlDatabase.createEmpty(l);
+            case NAIVE:
+                return NaiveDatabase.createEmpty(l);
             default:
                 throw new IllegalArgumentException("Invalid " + type.getClass().getSimpleName() + ": " + type.name());
         }
