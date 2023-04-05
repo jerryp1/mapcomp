@@ -27,16 +27,16 @@ public interface Database {
     int rows();
 
     /**
-     * Gets number of columns (in bits).
+     * Gets the maximal l (in bits) so that all elements in {0, 1}^l is a valid element.
      *
-     * @return number of columns (in bits).
+     * @return the maximal l (in bits).
      */
     int getL();
 
     /**
-     * Gets number of columns (in bytes).
+     * Gets the maximal l (in bytes) so that all elements in {0, 1}^l is a valid element.
      *
-     * @return number of columns (in bytes).
+     * @return the maximal l (in bytes).
      */
     int getByteL();
 

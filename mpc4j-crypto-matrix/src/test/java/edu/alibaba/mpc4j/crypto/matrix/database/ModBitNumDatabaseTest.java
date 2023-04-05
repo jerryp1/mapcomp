@@ -22,13 +22,13 @@ import java.util.Collection;
 import java.util.stream.IntStream;
 
 /**
- * database test.
+ * bit database tests.
  *
  * @author Weiran Liu
  * @date 2023/3/31
  */
 @RunWith(Parameterized.class)
-public class DatabaseTest {
+public class ModBitNumDatabaseTest {
     /**
      * default rows
      */
@@ -42,7 +42,7 @@ public class DatabaseTest {
      */
     private static final int MAX_ROWS = 64;
     /**
-     * l array
+     * element bit length array
      */
     private static final int[] L_ARRAY = new int[]{
         1, 5, 7, 9, 15, 16, 17, LongUtils.MAX_L - 1, LongUtils.MAX_L, Long.SIZE, CommonConstants.BLOCK_BIT_LENGTH,
@@ -74,10 +74,10 @@ public class DatabaseTest {
      */
     private final int maxL;
 
-    public DatabaseTest(String name, DatabaseType type) {
+    public ModBitNumDatabaseTest(String name, DatabaseType type) {
         Preconditions.checkArgument(StringUtils.isNotBlank(name));
         this.type = type;
-        maxL = DatabaseFactory.maxL(type);
+        maxL = DatabaseFactory.maxBitDatabaseL(type);
     }
 
     @Test
@@ -134,7 +134,7 @@ public class DatabaseTest {
                 .toArray(byte[][]::new);
             DatabaseFactory.create(type, l, data);
         });
-        Database database = DatabaseFactory.createRandom(type, l, DEFAULT_ROWS, SECURE_RANDOM);
+        ModBitNumDatabase database = DatabaseFactory.createRandom(type, l, DEFAULT_ROWS, SECURE_RANDOM);
         // split database with split row = 0
         Assert.assertThrows(IllegalArgumentException.class, () -> database.split(0));
         // split database with split row > row
@@ -145,7 +145,7 @@ public class DatabaseTest {
         Assert.assertThrows(IllegalArgumentException.class, () -> database.reduce(DEFAULT_ROWS + 1));
         // merge two database with different l
         Assert.assertThrows(IllegalArgumentException.class, () -> {
-            Database mergeDatabase = DatabaseFactory.createRandom(type, l + 1, DEFAULT_ROWS, SECURE_RANDOM);
+            ModBitNumDatabase mergeDatabase = DatabaseFactory.createRandom(type, l + 1, DEFAULT_ROWS, SECURE_RANDOM);
             database.merge(mergeDatabase);
         });
     }
@@ -165,13 +165,13 @@ public class DatabaseTest {
         byte[][] data = IntStream.range(0, DEFAULT_ROWS)
             .mapToObj(index -> BytesUtils.randomByteArray(byteL, l, SECURE_RANDOM))
             .toArray(byte[][]::new);
-        Database database = DatabaseFactory.create(type, l, data);
+        ModBitNumDatabase database = DatabaseFactory.create(type, l, data);
         Assert.assertEquals(type, database.getType());
         // random database
-        Database randomDatabase = DatabaseFactory.createRandom(type, l, DEFAULT_ROWS, SECURE_RANDOM);
+        ModBitNumDatabase randomDatabase = DatabaseFactory.createRandom(type, l, DEFAULT_ROWS, SECURE_RANDOM);
         Assert.assertEquals(type, randomDatabase.getType());
         // empty database
-        Database emptyDatabase = DatabaseFactory.createEmpty(type, l);
+        ModBitNumDatabase emptyDatabase = DatabaseFactory.createEmpty(type, l);
         Assert.assertEquals(type, emptyDatabase.getType());
     }
 
@@ -180,7 +180,7 @@ public class DatabaseTest {
         for (int l : L_ARRAY) {
             if (l <= maxL) {
                 // empty database
-                Database emptyDatabase = DatabaseFactory.createEmpty(type, l);
+                ModBitNumDatabase emptyDatabase = DatabaseFactory.createEmpty(type, l);
                 assertDatabase(l, 0, emptyDatabase);
                 // database and random database
                 for (int rows = MIN_ROWS; rows < MAX_ROWS; rows++) {
@@ -196,14 +196,14 @@ public class DatabaseTest {
         byte[][] data = IntStream.range(0, rows)
             .mapToObj(index -> BytesUtils.randomByteArray(byteL, l, SECURE_RANDOM))
             .toArray(byte[][]::new);
-        Database database = DatabaseFactory.create(type, l, data);
+        ModBitNumDatabase database = DatabaseFactory.create(type, l, data);
         assertDatabase(l, rows, database);
         // random database
-        Database randomDatabase = DatabaseFactory.createRandom(type, l, rows, SECURE_RANDOM);
+        ModBitNumDatabase randomDatabase = DatabaseFactory.createRandom(type, l, rows, SECURE_RANDOM);
         assertDatabase(l, rows, randomDatabase);
     }
 
-    private void assertDatabase(int l, int rows, Database database) {
+    private void assertDatabase(int l, int rows, ModBitNumDatabase database) {
         // test rows
         Assert.assertEquals(rows, database.rows());
         // test l
@@ -233,20 +233,20 @@ public class DatabaseTest {
 
     private void testReduce(int l, int rows) {
         // reduce 1
-        Database database1 = DatabaseFactory.createRandom(type, l, rows, SECURE_RANDOM);
+        ModBitNumDatabase database1 = DatabaseFactory.createRandom(type, l, rows, SECURE_RANDOM);
         database1.reduce(1);
         Assert.assertEquals(1, database1.rows());
         // reduce all
-        Database databaseAll = DatabaseFactory.createRandom(type, l, rows, SECURE_RANDOM);
+        ModBitNumDatabase databaseAll = DatabaseFactory.createRandom(type, l, rows, SECURE_RANDOM);
         databaseAll.reduce(rows);
         Assert.assertEquals(rows, databaseAll.rows());
         if (rows > 1) {
             // reduce rows - 1
-            Database databaseRows = DatabaseFactory.createRandom(type, l, rows, SECURE_RANDOM);
+            ModBitNumDatabase databaseRows = DatabaseFactory.createRandom(type, l, rows, SECURE_RANDOM);
             databaseRows.reduce(rows - 1);
             Assert.assertEquals(rows - 1, databaseRows.rows());
             // reduce half
-            Database databaseHalf = DatabaseFactory.createRandom(type, l, rows, SECURE_RANDOM);
+            ModBitNumDatabase databaseHalf = DatabaseFactory.createRandom(type, l, rows, SECURE_RANDOM);
             databaseHalf.reduce(rows / 2);
             Assert.assertEquals(rows / 2, databaseHalf.rows());
         }
@@ -262,8 +262,8 @@ public class DatabaseTest {
     }
 
     private void testAllEmptyMerge(int l) {
-        Database database = DatabaseFactory.createEmpty(type, l);
-        Database mergeDatabase = DatabaseFactory.createEmpty(type, l);
+        ModBitNumDatabase database = DatabaseFactory.createEmpty(type, l);
+        ModBitNumDatabase mergeDatabase = DatabaseFactory.createEmpty(type, l);
         database.merge(mergeDatabase);
         Assert.assertEquals(0, database.rows());
     }
@@ -280,8 +280,8 @@ public class DatabaseTest {
     }
 
     private void testLeftEmptyMerge(int l, int rows) {
-        Database database = DatabaseFactory.createEmpty(type, l);
-        Database mergeDatabase = DatabaseFactory.createRandom(type, l, rows, SECURE_RANDOM);
+        ModBitNumDatabase database = DatabaseFactory.createEmpty(type, l);
+        ModBitNumDatabase mergeDatabase = DatabaseFactory.createRandom(type, l, rows, SECURE_RANDOM);
         database.merge(mergeDatabase);
         Assert.assertEquals(rows, database.rows());
     }
@@ -298,8 +298,8 @@ public class DatabaseTest {
     }
 
     private void testRightEmptyMerge(int l, int rows) {
-        Database database = DatabaseFactory.createRandom(type, l, rows, SECURE_RANDOM);
-        Database mergeDatabase = DatabaseFactory.createEmpty(type, l);
+        ModBitNumDatabase database = DatabaseFactory.createRandom(type, l, rows, SECURE_RANDOM);
+        ModBitNumDatabase mergeDatabase = DatabaseFactory.createEmpty(type, l);
         database.merge(mergeDatabase);
         Assert.assertEquals(rows, database.rows());
     }
@@ -318,8 +318,8 @@ public class DatabaseTest {
     }
 
     private void testMerge(int l, int rows1, int rows2) {
-        Database database = DatabaseFactory.createRandom(type, l, rows1, SECURE_RANDOM);
-        Database mergeDatabase = DatabaseFactory.createRandom(type, l, rows2, SECURE_RANDOM);
+        ModBitNumDatabase database = DatabaseFactory.createRandom(type, l, rows1, SECURE_RANDOM);
+        ModBitNumDatabase mergeDatabase = DatabaseFactory.createRandom(type, l, rows2, SECURE_RANDOM);
         database.merge(mergeDatabase);
         Assert.assertEquals(rows1 + rows2, database.rows());
     }
@@ -337,24 +337,24 @@ public class DatabaseTest {
 
     private void testSplit(int l, int rows) {
         // split 1
-        Database database1 = DatabaseFactory.createRandom(type, l, rows, SECURE_RANDOM);
-        Database splitDatabase1 = database1.split(1);
+        ModBitNumDatabase database1 = DatabaseFactory.createRandom(type, l, rows, SECURE_RANDOM);
+        ModBitNumDatabase splitDatabase1 = database1.split(1);
         Assert.assertEquals(rows - 1, database1.rows());
         Assert.assertEquals(1, splitDatabase1.rows());
         // split all
-        Database databaseAll = DatabaseFactory.createRandom(type, l, rows, SECURE_RANDOM);
-        Database splitDatabaseAll = databaseAll.split(rows);
+        ModBitNumDatabase databaseAll = DatabaseFactory.createRandom(type, l, rows, SECURE_RANDOM);
+        ModBitNumDatabase splitDatabaseAll = databaseAll.split(rows);
         Assert.assertEquals(0, databaseAll.rows());
         Assert.assertEquals(rows, splitDatabaseAll.rows());
         if (rows > 1) {
             // split rows - 1
-            Database databaseRows = DatabaseFactory.createRandom(type, l, rows, SECURE_RANDOM);
-            Database splitDatabaseRows = databaseRows.split(rows - 1);
+            ModBitNumDatabase databaseRows = DatabaseFactory.createRandom(type, l, rows, SECURE_RANDOM);
+            ModBitNumDatabase splitDatabaseRows = databaseRows.split(rows - 1);
             Assert.assertEquals(1, databaseRows.rows());
             Assert.assertEquals(rows - 1, splitDatabaseRows.rows());
             // split half
-            Database databaseHalf = DatabaseFactory.createRandom(type, l, rows, SECURE_RANDOM);
-            Database splitDatabaseHalf = databaseHalf.split(rows / 2);
+            ModBitNumDatabase databaseHalf = DatabaseFactory.createRandom(type, l, rows, SECURE_RANDOM);
+            ModBitNumDatabase splitDatabaseHalf = databaseHalf.split(rows / 2);
             Assert.assertEquals(rows - rows / 2, databaseHalf.rows());
             Assert.assertEquals(rows / 2, splitDatabaseHalf.rows());
         }
@@ -370,9 +370,9 @@ public class DatabaseTest {
     }
 
     private void testBitPartition(int l) {
-        Database database = DatabaseFactory.createRandom(type, l, DEFAULT_ROWS, SECURE_RANDOM);
+        ModBitNumDatabase database = DatabaseFactory.createRandom(type, l, DEFAULT_ROWS, SECURE_RANDOM);
         BitVector[] bitVectors = database.bitPartition(EnvType.STANDARD, true);
-        Database combinedDatabase = DatabaseFactory.create(type, EnvType.STANDARD, true, bitVectors);
+        ModBitNumDatabase combinedDatabase = DatabaseFactory.create(type, EnvType.STANDARD, true, bitVectors);
         Assert.assertEquals(database, combinedDatabase);
     }
 }

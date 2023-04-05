@@ -22,22 +22,22 @@ import java.util.Arrays;
 import java.util.stream.IntStream;
 
 /**
- * Zl byte array database. Each data is an element in Z_{2^l} represented by byte[] where l > 0.
+ * Zl database. Each data is an element in Z_{2^l} represented by byte[] where l > 0.
  *
  * @author Weiran Liu
  * @date 2023/3/31
  */
-public class ZlDatabase implements Database {
+public class ZlDatabase implements ModBitNumDatabase {
     /**
      * display data rows
      */
     private static final int DISPLAY_DATA_ROWS = 256;
     /**
-     * number of columns (in bit)
+     * element bit length
      */
     private final int l;
     /**
-     * number of columns (in byte)
+     * element byte length
      */
     private final int byteL;
     /**
@@ -48,7 +48,7 @@ public class ZlDatabase implements Database {
     /**
      * Creates a database.
      *
-     * @param l    number of columns.
+     * @param l    element bit length.
      * @param data data.
      * @return a database.
      */
@@ -66,7 +66,7 @@ public class ZlDatabase implements Database {
     /**
      * Creates a random database.
      *
-     * @param l            number of columns.
+     * @param l            element bit length.
      * @param rows         number of rows.
      * @param secureRandom the random state.
      * @return a database.
@@ -111,7 +111,7 @@ public class ZlDatabase implements Database {
     /**
      * Creates an empty database.
      *
-     * @param l number of columns.
+     * @param l element bit length.
      * @return a database.
      */
     public static ZlDatabase createEmpty(int l) {
@@ -158,7 +158,7 @@ public class ZlDatabase implements Database {
     }
 
     @Override
-    public Database split(int splitRows) {
+    public ModBitNumDatabase split(int splitRows) {
         int rows = rows();
         MathPreconditions.checkPositiveInRangeClosed("split rows", splitRows, rows);
         byte[][] subData = new byte[splitRows][];

@@ -34,7 +34,7 @@ public class NaiveDatabaseTest {
     public void testZlPartition() {
         for (int l : L_ARRAY) {
             for (int partitionL : L_ARRAY) {
-                if (partitionL <= DatabaseFactory.maxL(DatabaseFactory.DatabaseType.ZL)) {
+                if (partitionL <= DatabaseFactory.maxBitDatabaseL(DatabaseFactory.DatabaseType.ZL)) {
                     testZlPartition(l, partitionL);
                 }
             }
@@ -47,7 +47,7 @@ public class NaiveDatabaseTest {
         // each Zl database has assigned l
         Arrays.stream(partitionZlDatabases).forEach(zlDatabase -> Assert.assertEquals(partitionL, zlDatabase.getL()));
         // combine databases
-        NaiveDatabase combinedDatabase = NaiveDatabase.create(l, partitionZlDatabases);
+        NaiveDatabase combinedDatabase = NaiveDatabase.createFromZl(l, partitionZlDatabases);
         Assert.assertEquals(database, combinedDatabase);
     }
 
@@ -55,7 +55,7 @@ public class NaiveDatabaseTest {
     public void testZl64Partition() {
         for (int l : L_ARRAY) {
             for (int partitionL : L_ARRAY) {
-                if (partitionL <= DatabaseFactory.maxL(DatabaseFactory.DatabaseType.ZL64)) {
+                if (partitionL <= DatabaseFactory.maxBitDatabaseL(DatabaseFactory.DatabaseType.ZL64)) {
                     testZl64Partition(l, partitionL);
                 }
             }
@@ -68,7 +68,7 @@ public class NaiveDatabaseTest {
         // each Zl64 database has assigned l
         Arrays.stream(partitionZl64Databases).forEach(zl64Database -> Assert.assertEquals(partitionL, zl64Database.getL()));
         // combine databases
-        NaiveDatabase combinedDatabase = NaiveDatabase.create(l, partitionZl64Databases);
+        NaiveDatabase combinedDatabase = NaiveDatabase.createFromZl64(l, partitionZl64Databases);
         Assert.assertEquals(database, combinedDatabase);
     }
 }

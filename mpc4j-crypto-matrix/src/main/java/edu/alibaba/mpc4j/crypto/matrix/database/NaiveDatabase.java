@@ -28,17 +28,17 @@ import java.util.stream.IntStream;
  * @author Weiran Liu
  * @date 2023/4/5
  */
-public class NaiveDatabase implements Database {
+public class NaiveDatabase implements ModBitNumDatabase {
     /**
      * display data rows
      */
     private static final int DISPLAY_DATA_ROWS = 256;
     /**
-     * number of columns (in bit)
+     * element bit length
      */
     private final int l;
     /**
-     * number of columns (in byte)
+     * element byte length
      */
     private final int byteL;
     /**
@@ -49,7 +49,7 @@ public class NaiveDatabase implements Database {
     /**
      * Creates a database.
      *
-     * @param l    number of columns.
+     * @param l    element bit length.
      * @param data data.
      * @return a database.
      */
@@ -68,7 +68,7 @@ public class NaiveDatabase implements Database {
     /**
      * Creates a database.
      *
-     * @param l    number of columns.
+     * @param l    element bit length.
      * @param data data.
      * @return a database.
      */
@@ -87,7 +87,7 @@ public class NaiveDatabase implements Database {
     /**
      * Creates a random database.
      *
-     * @param l            number of columns.
+     * @param l            element bit length.
      * @param rows         number of rows.
      * @param secureRandom the random state.
      * @return a database.
@@ -133,7 +133,7 @@ public class NaiveDatabase implements Database {
     /**
      * Creates an empty database.
      *
-     * @param l number of columns.
+     * @param l element bit length.
      * @return a database.
      */
     public static NaiveDatabase createEmpty(int l) {
@@ -183,7 +183,7 @@ public class NaiveDatabase implements Database {
     }
 
     @Override
-    public Database split(int splitRows) {
+    public ModBitNumDatabase split(int splitRows) {
         int rows = rows();
         MathPreconditions.checkPositiveInRangeClosed("split rows", splitRows, rows);
         BigInteger[] subData = new BigInteger[splitRows];
@@ -271,38 +271,6 @@ public class NaiveDatabase implements Database {
     }
 
     /**
-     * Creates a database by combining databases.
-     *
-     * @param l         number of columns.
-     * @param databases the combining databases.
-     * @return a bytes vector.
-     */
-    public static NaiveDatabase create(int l, Database... databases) {
-        // check databases.length > 0
-        MathPreconditions.checkPositive("databases.length", databases.length);
-        int rows = databases[0].rows();
-        // check all databases have the same rows
-        Arrays.stream(databases).forEach(database ->
-            MathPreconditions.checkEqual("rows", "database.rows", rows, database.rows())
-        );
-        // combine each database
-        BigInteger[] data = new BigInteger[rows];
-        Arrays.fill(data, BigInteger.ZERO);
-        for (Database database : databases) {
-            for (int rowIndex = 0; rowIndex < rows; rowIndex++) {
-                BigInteger partitionData = database.getBigIntegerData(rowIndex);
-                data[rowIndex] = data[rowIndex]
-                    .shiftLeft(database.getL())
-                    .add(partitionData);
-            }
-        }
-        // verify that all combined vectors has at most upper-bound bit length
-        Arrays.stream(data).forEach(element -> Preconditions.checkArgument(element.bitLength() <= l));
-
-        return NaiveDatabase.create(l, data);
-    }
-
-    /**
      * Partitions the database by the assigned partition L. Note that each L of the partitioned database is the
      * assigned partition L. For example, when the current L is 3, and the partition L is 9, then we create 1 partition
      * database with L = 9 (byteL = 2), but all first byte in the partitioned database are 0.
@@ -335,6 +303,38 @@ public class NaiveDatabase implements Database {
     }
 
     /**
+     * Creates a database by combining Zl databases.
+     *
+     * @param l         element bit length.
+     * @param databases the combining databases.
+     * @return a bytes vector.
+     */
+    public static NaiveDatabase createFromZl(int l, ZlDatabase... databases) {
+        // check databases.length > 0
+        MathPreconditions.checkPositive("databases.length", databases.length);
+        int rows = databases[0].rows();
+        // check all databases have the same rows
+        Arrays.stream(databases).forEach(database ->
+            MathPreconditions.checkEqual("rows", "database.rows", rows, database.rows())
+        );
+        // combine each database
+        BigInteger[] data = new BigInteger[rows];
+        Arrays.fill(data, BigInteger.ZERO);
+        for (Database database : databases) {
+            for (int rowIndex = 0; rowIndex < rows; rowIndex++) {
+                BigInteger partitionData = database.getBigIntegerData(rowIndex);
+                data[rowIndex] = data[rowIndex]
+                    .shiftLeft(database.getL())
+                    .add(partitionData);
+            }
+        }
+        // verify that all combined vectors has at most upper-bound bit length
+        Arrays.stream(data).forEach(element -> Preconditions.checkArgument(element.bitLength() <= l));
+
+        return NaiveDatabase.create(l, data);
+    }
+
+    /**
      * Partitions the database by the assigned partition L. Note that each L of the partitioned database is the
      * assigned partition L. For example, when the current L is 3, and the partition L is 9, then we create 1 partition
      * database with L = 9 (byteL = 2), but all first byte in the partitioned database are 0.
@@ -343,7 +343,7 @@ public class NaiveDatabase implements Database {
      * @return the partition result.
      */
     public Zl64Database[] partitionZl64(int partitionL) {
-        MathPreconditions.checkPositiveInRangeClosed("partitionL", partitionL, DatabaseFactory.maxL(DatabaseType.ZL64));
+        MathPreconditions.checkPositiveInRangeClosed("partitionL", partitionL, DatabaseFactory.maxBitDatabaseL(DatabaseType.ZL64));
         int partitionNum = CommonUtils.getUnitNum(l, partitionL);
         Zl64Database[] partitionDatabases = new Zl64Database[partitionNum];
         // mod = 2^l, where l is the partition L.
@@ -363,5 +363,37 @@ public class NaiveDatabase implements Database {
             partitionDatabases[partitionIndex] = Zl64Database.create(partitionL, partitionData);
         }
         return partitionDatabases;
+    }
+
+    /**
+     * Creates a database by combining Zl64 databases.
+     *
+     * @param l         element bit length.
+     * @param databases the combining databases.
+     * @return a bytes vector.
+     */
+    public static NaiveDatabase createFromZl64(int l, Zl64Database... databases) {
+        // check databases.length > 0
+        MathPreconditions.checkPositive("databases.length", databases.length);
+        int rows = databases[0].rows();
+        // check all databases have the same rows
+        Arrays.stream(databases).forEach(database ->
+            MathPreconditions.checkEqual("rows", "database.rows", rows, database.rows())
+        );
+        // combine each database
+        BigInteger[] data = new BigInteger[rows];
+        Arrays.fill(data, BigInteger.ZERO);
+        for (Database database : databases) {
+            for (int rowIndex = 0; rowIndex < rows; rowIndex++) {
+                BigInteger partitionData = database.getBigIntegerData(rowIndex);
+                data[rowIndex] = data[rowIndex]
+                    .shiftLeft(database.getL())
+                    .add(partitionData);
+            }
+        }
+        // verify that all combined vectors has at most upper-bound bit length
+        Arrays.stream(data).forEach(element -> Preconditions.checkArgument(element.bitLength() <= l));
+
+        return NaiveDatabase.create(l, data);
     }
 }

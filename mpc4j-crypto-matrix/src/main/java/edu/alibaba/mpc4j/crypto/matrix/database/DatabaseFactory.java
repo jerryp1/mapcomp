@@ -42,7 +42,7 @@ public class DatabaseFactory {
      * @param type the type.
      * @return supported max l.
      */
-    public static int maxL(DatabaseType type) {
+    public static int maxBitDatabaseL(DatabaseType type) {
         switch (type) {
             case ZL64:
                 return LongUtils.MAX_L;
@@ -62,7 +62,7 @@ public class DatabaseFactory {
      * @param data data.
      * @return a database.
      */
-    public static Database create(DatabaseType type, int l, byte[][] data) {
+    public static ModBitNumDatabase create(DatabaseType type, int l, byte[][] data) {
         switch (type) {
             case ZL64:
                 return Zl64Database.create(l, data);
@@ -84,7 +84,7 @@ public class DatabaseFactory {
      * @param secureRandom the random state.
      * @return a database.
      */
-    public static Database createRandom(DatabaseType type, int l, int rows, SecureRandom secureRandom) {
+    public static ModBitNumDatabase createRandom(DatabaseType type, int l, int rows, SecureRandom secureRandom) {
         switch (type) {
             case ZL64:
                 return Zl64Database.createRandom(l, rows, secureRandom);
@@ -104,7 +104,7 @@ public class DatabaseFactory {
      * @param l number of rows.
      * @return a database.
      */
-    public static Database createEmpty(DatabaseType type, int l) {
+    public static ModBitNumDatabase createEmpty(DatabaseType type, int l) {
         switch (type) {
             case ZL64:
                 return Zl64Database.createEmpty(l);
@@ -126,7 +126,7 @@ public class DatabaseFactory {
      * @param bitVectors the combining bit vectors.
      * @return a database.
      */
-    public static Database create(DatabaseType type, EnvType envType, boolean parallel, BitVector... bitVectors) {
+    public static ModBitNumDatabase create(DatabaseType type, EnvType envType, boolean parallel, BitVector... bitVectors) {
         switch (type) {
             case ZL64:
                 return Zl64Database.create(envType, parallel, bitVectors);

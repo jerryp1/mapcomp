@@ -26,17 +26,17 @@ import java.util.stream.IntStream;
  * @author Weiran Liu
  * @date 2023/4/4
  */
-public class Zl64Database implements Database {
+public class Zl64Database implements ModBitNumDatabase {
     /**
      * display data rows
      */
     private static final int DISPLAY_DATA_ROWS = 256;
     /**
-     * number of columns (in bit)
+     * element bit length
      */
     private final int l;
     /**
-     * number of columns (in byte)
+     * element byte length
      */
     private final int byteL;
     /**
@@ -59,7 +59,7 @@ public class Zl64Database implements Database {
     /**
      * Creates a database.
      *
-     * @param l    number of columns.
+     * @param l    element bit length.
      * @param data data.
      * @return a database.
      */
@@ -83,7 +83,7 @@ public class Zl64Database implements Database {
     /**
      * Creates a database.
      *
-     * @param l    number of columns.
+     * @param l    element bit length.
      * @param data data.
      * @return a database.
      */
@@ -99,7 +99,7 @@ public class Zl64Database implements Database {
     /**
      * Creates a random database.
      *
-     * @param l            number of columns.
+     * @param l            element bit length.
      * @param rows         number of rows.
      * @param secureRandom the random state.
      * @return a database.
@@ -146,7 +146,7 @@ public class Zl64Database implements Database {
     /**
      * Creates an empty database.
      *
-     * @param l number of columns.
+     * @param l element bit length.
      * @return a database.
      */
     public static Zl64Database createEmpty(int l) {
@@ -198,7 +198,7 @@ public class Zl64Database implements Database {
     }
 
     @Override
-    public Database split(int splitRows) {
+    public ModBitNumDatabase split(int splitRows) {
         int rows = rows();
         MathPreconditions.checkPositiveInRangeClosed("split rows", splitRows, rows);
         long[] subData = new long[splitRows];
