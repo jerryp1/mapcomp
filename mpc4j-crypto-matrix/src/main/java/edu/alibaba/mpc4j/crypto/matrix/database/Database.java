@@ -3,6 +3,8 @@ package edu.alibaba.mpc4j.crypto.matrix.database;
 import edu.alibaba.mpc4j.common.tool.EnvType;
 import edu.alibaba.mpc4j.common.tool.bitvector.BitVector;
 
+import java.math.BigInteger;
+
 /**
  * database interface.
  *
@@ -10,6 +12,13 @@ import edu.alibaba.mpc4j.common.tool.bitvector.BitVector;
  * @date 2023/4/4
  */
 public interface Database {
+    /**
+     * Gets the type.
+     *
+     * @return the type.
+     */
+    DatabaseFactory.DatabaseType getType();
+
     /**
      * Gets number of rows.
      *
@@ -38,7 +47,7 @@ public interface Database {
      * @param parallel parallel operation.
      * @return the partition result.
      */
-    BitVector[] partition(EnvType envType, boolean parallel);
+    BitVector[] bitPartition(EnvType envType, boolean parallel);
 
     /**
      * Splits the database with the split rows.
@@ -61,4 +70,34 @@ public interface Database {
      * @param other the other database.
      */
     void merge(Database other);
+
+    /**
+     * Gets the data in byte[].
+     *
+     * @return the data in byte[].
+     */
+    byte[][] getBytesData();
+
+    /**
+     * Gets the data in byte[].
+     *
+     * @param index the index.
+     * @return the data in byte[].
+     */
+    byte[] getBytesData(int index);
+
+    /**
+     * Gets the data in BigInteger.
+     *
+     * @return the data in BigInteger.
+     */
+    BigInteger[] getBigIntegerData();
+
+    /**
+     * Gets the data in BigInteger.
+     *
+     * @param index the index.
+     * @return the data in BigInteger.
+     */
+    BigInteger getBigIntegerData(int index);
 }
