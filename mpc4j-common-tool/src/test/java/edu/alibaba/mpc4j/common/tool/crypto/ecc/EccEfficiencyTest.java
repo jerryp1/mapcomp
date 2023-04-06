@@ -71,6 +71,7 @@ public class EccEfficiencyTest {
         ByteEccFactory.ByteEccType.X25519_BC,
         ByteEccFactory.ByteEccType.ED25519_SODIUM,
         ByteEccFactory.ByteEccType.ED25519_BC,
+        ByteEccFactory.ByteEccType.FOUR_Q,
     };
 
     @Test

@@ -41,7 +41,8 @@ public class ByteFullEccTest {
     @Parameterized.Parameters(name = "{0}")
     public static Collection<Object[]> configurations() {
         Collection<Object[]> configurations = new ArrayList<>();
-
+        // FourQ
+        configurations.add(new Object[]{ByteEccType.FOUR_Q.name(), ByteEccType.FOUR_Q,});
         // ED25519_SODIUM
         configurations.add(new Object[]{ByteEccType.ED25519_SODIUM.name(), ByteEccType.ED25519_SODIUM,});
         // ED25519_BC
