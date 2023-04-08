@@ -10,17 +10,15 @@
 #include "FourQ_internal.h"
 
 #include <cstring>
-#include "edu_alibaba_mpc4j_common_tool_crypto_ecc_fourqlib_FourQByteFullEcc.h"
-
+#include "edu_alibaba_mpc4j_common_tool_crypto_ecc_fourq_FourqByteFullEcc.h"
 
 /*
- * Class:     edu_alibaba_mpc4j_common_tool_crypto_ecc_fourqlib_FourQByteFullEcc
+ * Class:     edu_alibaba_mpc4j_common_tool_crypto_ecc_fourq_FourqByteFullEcc
  * Method:    nativeMul
  * Signature: ([B[B)[B
  */
-JNIEXPORT jbyteArray JNICALL Java_edu_alibaba_mpc4j_common_tool_crypto_ecc_fourqlib_FourQByteFullEcc_nativeMul
+JNIEXPORT jbyteArray JNICALL Java_edu_alibaba_mpc4j_common_tool_crypto_ecc_fourq_FourqByteFullEcc_nativeMul
   (JNIEnv *env, jobject context, jbyteArray jEcByteArray, jbyteArray jZnByteArray) {
-
     // 处理 point 
     jbyte* ecBuffer = (*env).GetByteArrayElements(jEcByteArray, nullptr);
     uint8_t p[32];
@@ -31,7 +29,8 @@ JNIEXPORT jbyteArray JNICALL Java_edu_alibaba_mpc4j_common_tool_crypto_ecc_fourq
     ECCRYPTO_STATUS status = ECCRYPTO_ERROR_UNKNOWN;
     status = decode(p, A);
     if (status != ECCRYPTO_SUCCESS) {
-        throw "Decode error, invalid point.";
+        auto exception = env->FindClass("java/lang/IllegalArgumentException");
+        env->ThrowNew(exception, "decode failed, invalid point.");
     }
     
     // 处理 Scalar
@@ -44,7 +43,8 @@ JNIEXPORT jbyteArray JNICALL Java_edu_alibaba_mpc4j_common_tool_crypto_ecc_fourq
     point_t R; 
     bool mul_status = ecc_mul(A, (digit_t *)k, R, false); // 核心方法
     if (!mul_status) {
-        throw "ecc_mul failed.";
+        auto exception = env->FindClass("java/lang/IllegalArgumentException");
+        env->ThrowNew(exception, "ecc_mul failed, invalid point.");
     }
     // encode and return 
     uint8_t res[32]; 
@@ -57,13 +57,12 @@ JNIEXPORT jbyteArray JNICALL Java_edu_alibaba_mpc4j_common_tool_crypto_ecc_fourq
 
 
 /*
- * Class:     edu_alibaba_mpc4j_common_tool_crypto_ecc_fourqlib_FourQByteFullEcc
+ * Class:     edu_alibaba_mpc4j_common_tool_crypto_ecc_fourq_FourqByteFullEcc
  * Method:    nativeBaseMul
  * Signature: ([B[B)[B
  */
-JNIEXPORT jbyteArray JNICALL Java_edu_alibaba_mpc4j_common_tool_crypto_ecc_fourqlib_FourQByteFullEcc_nativeBaseMul
+JNIEXPORT jbyteArray JNICALL Java_edu_alibaba_mpc4j_common_tool_crypto_ecc_fourq_FourqByteFullEcc_nativeBaseMul
   (JNIEnv *env, jobject context, jbyteArray jZnByteArray) {
-
     // 处理 Scalar
     jbyte* znBuffer = (*env).GetByteArrayElements(jZnByteArray, nullptr);
     uint8_t k[32];
@@ -74,7 +73,8 @@ JNIEXPORT jbyteArray JNICALL Java_edu_alibaba_mpc4j_common_tool_crypto_ecc_fourq
     point_t R; 
     bool mul_status = ecc_mul_fixed((digit_t *)k, R); // 核心方法
     if (!mul_status) {
-        throw "ecc_mul failed.";
+        auto exception = env->FindClass("java/lang/IllegalArgumentException");
+        env->ThrowNew(exception, "ecc_base_mul failed, invalid point.");
     }
     // encode and return 
     uint8_t res[32]; 
@@ -86,14 +86,12 @@ JNIEXPORT jbyteArray JNICALL Java_edu_alibaba_mpc4j_common_tool_crypto_ecc_fourq
 }
 
 /*
- * Class:     edu_alibaba_mpc4j_common_tool_crypto_ecc_fourqlib_FourQByteFullEcc
+ * Class:     edu_alibaba_mpc4j_common_tool_crypto_ecc_fourq_FourqByteFullEcc
  * Method:    nativeIsValidPoint
  * Signature: ([B[B)[B
  */
-JNIEXPORT jboolean JNICALL Java_edu_alibaba_mpc4j_common_tool_crypto_ecc_fourqlib_FourQByteFullEcc_nativeIsValidPoint
+JNIEXPORT jboolean JNICALL Java_edu_alibaba_mpc4j_common_tool_crypto_ecc_fourq_FourqByteFullEcc_nativeIsValidPoint
   (JNIEnv *env, jobject context, jbyteArray jEcByteArray) {
-
-
      // 处理 point 
     jbyte* ecBuffer = (*env).GetByteArrayElements(jEcByteArray, nullptr);
     uint8_t p[32];
@@ -114,13 +112,12 @@ JNIEXPORT jboolean JNICALL Java_edu_alibaba_mpc4j_common_tool_crypto_ecc_fourqli
 
 }
 /*
- * Class:     edu_alibaba_mpc4j_common_tool_crypto_ecc_fourqlib_FourQByteFullEcc
+ * Class:     edu_alibaba_mpc4j_common_tool_crypto_ecc_fourq_FourqByteFullEcc
  * Method:    nativeNeg
  * Signature: ([B)[B
  */
-JNIEXPORT jbyteArray JNICALL Java_edu_alibaba_mpc4j_common_tool_crypto_ecc_fourqlib_FourQByteFullEcc_nativeNeg
+JNIEXPORT jbyteArray JNICALL Java_edu_alibaba_mpc4j_common_tool_crypto_ecc_fourq_FourqByteFullEcc_nativeNeg
   (JNIEnv *env, jobject context, jbyteArray jEcByteArray) {
-
     // 处理 point 
     jbyte* ecBuffer = (*env).GetByteArrayElements(jEcByteArray, nullptr);
     uint8_t p[32];
@@ -131,7 +128,8 @@ JNIEXPORT jbyteArray JNICALL Java_edu_alibaba_mpc4j_common_tool_crypto_ecc_fourq
     ECCRYPTO_STATUS status = ECCRYPTO_ERROR_UNKNOWN;
     status = decode(p, A);
     if (status != ECCRYPTO_SUCCESS) {
-        throw "Decode error, invalid point.";
+        auto exception = env->FindClass("java/lang/IllegalArgumentException");
+        env->ThrowNew(exception, "decode failed, invalid point.");
     }
     // 对 A.x 取反 
     fp2neg1271(A->x); // 核心
@@ -147,14 +145,12 @@ JNIEXPORT jbyteArray JNICALL Java_edu_alibaba_mpc4j_common_tool_crypto_ecc_fourq
 }
 
 /*
- * Class:     edu_alibaba_mpc4j_common_tool_crypto_ecc_fourqlib_FourQByteFullEcc
+ * Class:     edu_alibaba_mpc4j_common_tool_crypto_ecc_fourq_FourqByteFullEcc
  * Method:    nativeAdd
  * Signature: ([B[B)[B
  */
-JNIEXPORT jbyteArray JNICALL Java_edu_alibaba_mpc4j_common_tool_crypto_ecc_fourqlib_FourQByteFullEcc_nativeAdd
+JNIEXPORT jbyteArray JNICALL Java_edu_alibaba_mpc4j_common_tool_crypto_ecc_fourq_FourqByteFullEcc_nativeAdd
   (JNIEnv *env, jobject context, jbyteArray jEcByteArray_p, jbyteArray jEcByteArray_q) {
-
-
      // 处理 point p
     jbyte* ecBuffer_p = (*env).GetByteArrayElements(jEcByteArray_p, nullptr);
     uint8_t p[32];
@@ -165,7 +161,8 @@ JNIEXPORT jbyteArray JNICALL Java_edu_alibaba_mpc4j_common_tool_crypto_ecc_fourq
     ECCRYPTO_STATUS status = ECCRYPTO_ERROR_UNKNOWN;
     status = decode(p, A);
     if (status != ECCRYPTO_SUCCESS) {
-        throw "Decode error, invalid point.";
+        auto exception = env->FindClass("java/lang/IllegalArgumentException");
+        env->ThrowNew(exception, "decode failed, invalid point.");
     }
 
     // 处理 point q
@@ -178,7 +175,8 @@ JNIEXPORT jbyteArray JNICALL Java_edu_alibaba_mpc4j_common_tool_crypto_ecc_fourq
     ECCRYPTO_STATUS status_q = ECCRYPTO_ERROR_UNKNOWN;
     status_q = decode(q, B);
     if (status_q != ECCRYPTO_SUCCESS) {
-        throw "Decode error, invalid point.";
+        auto exception = env->FindClass("java/lang/IllegalArgumentException");
+        env->ThrowNew(exception, "decode failed, invalid point.");
     }
 
     // R = A + B
@@ -214,14 +212,12 @@ JNIEXPORT jbyteArray JNICALL Java_edu_alibaba_mpc4j_common_tool_crypto_ecc_fourq
 
 }
 
-
-
 /*
- * Class:     edu_alibaba_mpc4j_common_tool_crypto_ecc_fourqlib_FourQByteFullEcc
+ * Class:     edu_alibaba_mpc4j_common_tool_crypto_ecc_fourq_FourqByteFullEcc
  * Method:    nativeHashToCurve
  * Signature: ([B)[B
  */
-JNIEXPORT jbyteArray JNICALL Java_edu_alibaba_mpc4j_common_tool_crypto_ecc_fourqlib_FourQByteFullEcc_nativeHashToCurve
+JNIEXPORT jbyteArray JNICALL Java_edu_alibaba_mpc4j_common_tool_crypto_ecc_fourq_FourqByteFullEcc_nativeHashToCurve
   (JNIEnv *env, jobject context, jbyteArray message_hashed) {
 
     // 处理 message_hashed

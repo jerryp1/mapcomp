@@ -39,7 +39,8 @@ public class ByteMulEccTest {
     @Parameterized.Parameters(name = "{0}")
     public static Collection<Object[]> configurations() {
         Collection<Object[]> configurations = new ArrayList<>();
-        // X25519_SODIUM
+
+        // FourQ
         configurations.add(new Object[]{ByteEccType.FOUR_Q.name(), ByteEccType.FOUR_Q,});
         // X25519_SODIUM
         configurations.add(new Object[]{ByteEccType.X25519_SODIUM.name(), ByteEccType.X25519_SODIUM,});
@@ -70,13 +71,8 @@ public class ByteMulEccTest {
     @Test
     public void testIllegalInputs() {
         ByteMulEcc byteMulEcc = ByteEccFactory.createMulInstance(byteEccType);
-        // 尝试将长度为0的字节数组映射到椭圆曲线上
-        try {
-            byteMulEcc.hashToCurve(new byte[0]);
-            throw new IllegalStateException("ERROR: successfully HashToCurve with 0-byte length message");
-        } catch (AssertionError ignored) {
-
-        }
+        // try hash byte[0] to curve.
+        Assert.assertThrows(AssertionError.class, () -> byteMulEcc.hashToCurve(new byte[0]));
     }
 
     @Test

@@ -41,6 +41,7 @@ public class ByteFullEccTest {
     @Parameterized.Parameters(name = "{0}")
     public static Collection<Object[]> configurations() {
         Collection<Object[]> configurations = new ArrayList<>();
+
         // FourQ
         configurations.add(new Object[]{ByteEccType.FOUR_Q.name(), ByteEccType.FOUR_Q,});
         // ED25519_SODIUM
@@ -64,19 +65,6 @@ public class ByteFullEccTest {
         Preconditions.checkArgument(StringUtils.isNotBlank(name));
         this.byteEccType = byteEccType;
     }
-
-    @Test
-    public void testIllegalInputs() {
-        ByteFullEcc byteFullEcc = ByteEccFactory.createFullInstance(byteEccType);
-        // 尝试将长度为0的字节数组映射到椭圆曲线上
-        try {
-            byteFullEcc.hashToCurve(new byte[0]);
-            throw new IllegalStateException("ERROR: successfully HashToCurve with 0-byte length message");
-        } catch (AssertionError ignored) {
-
-        }
-    }
-
     @Test
     public void testType() {
         ByteFullEcc byteFullEcc = ByteEccFactory.createFullInstance(byteEccType);

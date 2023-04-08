@@ -1,10 +1,9 @@
-package edu.alibaba.mpc4j.common.tool.crypto.ecc.fourqlib;
-
+package edu.alibaba.mpc4j.common.tool.crypto.ecc.fourq;
 
 import edu.alibaba.mpc4j.common.tool.CommonConstants;
 import edu.alibaba.mpc4j.common.tool.crypto.ecc.ByteEccFactory;
 import edu.alibaba.mpc4j.common.tool.crypto.ecc.ByteFullEcc;
-import edu.alibaba.mpc4j.common.tool.crypto.ecc.utils.FourQByteEccUtils;
+import edu.alibaba.mpc4j.common.tool.crypto.ecc.utils.FourqByteEccUtils;
 import edu.alibaba.mpc4j.common.tool.crypto.hash.Hash;
 import edu.alibaba.mpc4j.common.tool.crypto.hash.HashFactory;
 import edu.alibaba.mpc4j.common.tool.utils.BigIntegerUtils;
@@ -12,41 +11,41 @@ import edu.alibaba.mpc4j.common.tool.utils.BytesUtils;
 
 import java.math.BigInteger;
 import java.security.SecureRandom;
+
 /**
- * FourQlib实现的FourQ全功能字节椭圆曲线。
+ * FourQ fully-functional byte ecc.
+ *
  * @author Qixian Zhou
  * @date 2023/4/6
  */
-public class FourQByteFullEcc implements ByteFullEcc {
-
+public class FourqByteFullEcc implements ByteFullEcc {
 
     static {
         System.loadLibrary(CommonConstants.MPC4J_NATIVE_TOOL_NAME);
     }
 
     /**
-     * 哈希函数
+     * the hash function
      */
     private final Hash hash;
 
-    public FourQByteFullEcc() {
-        hash = HashFactory.createInstance(HashFactory.HashType.JDK_SHA256, FourQByteEccUtils.POINT_BYTES);
+    public FourqByteFullEcc() {
+        hash = HashFactory.createInstance(HashFactory.HashType.JDK_SHA256, FourqByteEccUtils.POINT_BYTES);
     }
 
     @Override
     public BigInteger getN() {
-        return FourQByteEccUtils.N;
+        return FourqByteEccUtils.N;
     }
 
     @Override
     public BigInteger randomZn(SecureRandom secureRandom) {
-        return BigIntegerUtils.randomPositive(FourQByteEccUtils.N, secureRandom);
+        return BigIntegerUtils.randomPositive(FourqByteEccUtils.N, secureRandom);
     }
 
     @Override
     public byte[] add(byte[] p, byte[] q) {
-
-        assert p.length == FourQByteEccUtils.POINT_BYTES && q.length == FourQByteEccUtils.POINT_BYTES;
+        assert p.length == FourqByteEccUtils.POINT_BYTES && q.length == FourqByteEccUtils.POINT_BYTES;
         assert isValidPoint(p) && isValidPoint(q);
 
         return nativeAdd(p, q);
@@ -54,17 +53,17 @@ public class FourQByteFullEcc implements ByteFullEcc {
 
     @Override
     public void addi(byte[] p, byte[] q) {
-        assert p.length == FourQByteEccUtils.POINT_BYTES && q.length == FourQByteEccUtils.POINT_BYTES;
+        assert p.length == FourqByteEccUtils.POINT_BYTES && q.length == FourqByteEccUtils.POINT_BYTES;
         assert isValidPoint(p) && isValidPoint(q);
 
         byte[] r = nativeAdd(p, q);
         // reset p
-        System.arraycopy(r, 0, p, 0, FourQByteEccUtils.POINT_BYTES);
+        System.arraycopy(r, 0, p, 0, FourqByteEccUtils.POINT_BYTES);
     }
 
     @Override
     public byte[] neg(byte[] p) {
-        assert p.length == FourQByteEccUtils.POINT_BYTES;
+        assert p.length == FourqByteEccUtils.POINT_BYTES;
         assert isValidPoint(p);
 
         return nativeNeg(p);
@@ -73,89 +72,77 @@ public class FourQByteFullEcc implements ByteFullEcc {
 
     @Override
     public void negi(byte[] p) {
-        assert p.length == FourQByteEccUtils.POINT_BYTES;
+        assert p.length == FourqByteEccUtils.POINT_BYTES;
         assert isValidPoint(p);
 
         byte[] r = nativeNeg(p);
         // reset p
-        System.arraycopy(r, 0, p, 0, FourQByteEccUtils.POINT_BYTES);
+        System.arraycopy(r, 0, p, 0, FourqByteEccUtils.POINT_BYTES);
     }
 
     @Override
     public byte[] sub(byte[] p, byte[] q) {
-        assert p.length == FourQByteEccUtils.POINT_BYTES && q.length == FourQByteEccUtils.POINT_BYTES;
+        assert p.length == FourqByteEccUtils.POINT_BYTES && q.length == FourqByteEccUtils.POINT_BYTES;
         assert isValidPoint(p) && isValidPoint(q);
         // p + (-q)
-        byte[] q_neg = nativeNeg(q);
-        return nativeAdd(p, q_neg);
+        byte[] negQ = nativeNeg(q);
+        return nativeAdd(p, negQ);
     }
 
     @Override
     public void subi(byte[] p, byte[] q) {
-
-        assert p.length == FourQByteEccUtils.POINT_BYTES && q.length == FourQByteEccUtils.POINT_BYTES;
+        assert p.length == FourqByteEccUtils.POINT_BYTES && q.length == FourqByteEccUtils.POINT_BYTES;
         assert isValidPoint(p) && isValidPoint(q);
         // p + (-q)
-        byte[] q_neg = nativeNeg(q);
+        byte[] negQ = nativeNeg(q);
 
-        byte[] r = nativeAdd(p, q_neg);
+        byte[] r = nativeAdd(p, negQ);
         // reset p
-        System.arraycopy(r, 0, p, 0, FourQByteEccUtils.POINT_BYTES);
+        System.arraycopy(r, 0, p, 0, FourqByteEccUtils.POINT_BYTES);
     }
 
 
     @Override
     public byte[] mul(byte[] p, BigInteger k) {
-
-        assert p.length == FourQByteEccUtils.POINT_BYTES;
+        assert p.length == FourqByteEccUtils.POINT_BYTES;
         assert isValidPoint(p);
 
-        byte[] byteK = FourQByteEccUtils.toByteK(k);
+        byte[] byteK = FourqByteEccUtils.toByteK(k);
         return nativeMul(p, byteK);
     }
 
     @Override
     public byte[] baseMul(BigInteger k) {
-        byte[] byteK = FourQByteEccUtils.toByteK(k);
+        byte[] byteK = FourqByteEccUtils.toByteK(k);
         return nativeBaseMul(byteK);
     }
 
     @Override
     public byte[] randomScalar(SecureRandom secureRandom) {
-
         BigInteger zn = randomZn(secureRandom);
-        byte[] k = BigIntegerUtils.nonNegBigIntegerToByteArray(zn, FourQByteEccUtils.SCALAR_BYTES);
+        byte[] k = BigIntegerUtils.nonNegBigIntegerToByteArray(zn, FourqByteEccUtils.SCALAR_BYTES);
         BytesUtils.innerReverseByteArray(k);
         return k;
     }
 
     @Override
     public boolean isValidPoint(byte[] p) {
-
         return nativeIsValidPoint(p);
     }
 
     @Override
     public byte[] getInfinity() {
-        // 注意一定要 deep copy
-        return BytesUtils.clone(FourQByteEccUtils.POINT_INFINITY);
+        return BytesUtils.clone(FourqByteEccUtils.POINT_INFINITY);
     }
 
     @Override
     public byte[] getG() {
-        // must be deep copy
-        return BytesUtils.clone(FourQByteEccUtils.POINT_B);
+        return BytesUtils.clone(FourqByteEccUtils.POINT_B);
     }
 
-    /**
-     * 通过生成随机字节数组的方式来生成 随机点，无法稳定的通过test
-     * 改成随机生成 scalar * BasePoint 来生成随机点
-     * @param secureRandom 随机状态。
-     * @return
-     */
     @Override
     public byte[] randomPoint(SecureRandom secureRandom) {
-
+        // Directly generating random byte array may fail the test. We generate a random scalar and do multiplication.
         byte[] r = randomScalar(secureRandom);
         return nativeBaseMul(r);
     }
@@ -170,17 +157,16 @@ public class FourQByteFullEcc implements ByteFullEcc {
 
     @Override
     public byte[] mul(byte[] p, byte[] k) {
-
-        assert p.length == FourQByteEccUtils.POINT_BYTES;
+        assert p.length == FourqByteEccUtils.POINT_BYTES;
         assert isValidPoint(p);
-        assert k.length == FourQByteEccUtils.SCALAR_BYTES;
+        assert k.length == FourqByteEccUtils.SCALAR_BYTES;
 
         return nativeMul(p, k);
     }
 
     @Override
     public byte[] baseMul(byte[] k) {
-        assert k.length == FourQByteEccUtils.SCALAR_BYTES;
+        assert k.length == FourqByteEccUtils.SCALAR_BYTES;
         return nativeBaseMul(k);
     }
 
@@ -191,12 +177,12 @@ public class FourQByteFullEcc implements ByteFullEcc {
 
     @Override
     public int pointByteLength() {
-        return FourQByteEccUtils.POINT_BYTES;
+        return FourqByteEccUtils.POINT_BYTES;
     }
 
     @Override
     public int scalarByteLength() {
-        return FourQByteEccUtils.SCALAR_BYTES;
+        return FourqByteEccUtils.SCALAR_BYTES;
     }
 
 

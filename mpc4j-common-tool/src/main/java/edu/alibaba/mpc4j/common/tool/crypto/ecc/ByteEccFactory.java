@@ -5,7 +5,7 @@ import edu.alibaba.mpc4j.common.tool.crypto.ecc.bc.*;
 import edu.alibaba.mpc4j.common.tool.crypto.ecc.cafe.Ed25519CafeByteFullEcc;
 import edu.alibaba.mpc4j.common.tool.crypto.ecc.bc.X25519BcByteMulElligatorEcc;
 import edu.alibaba.mpc4j.common.tool.crypto.ecc.cafe.RistrettoCafeByteFullEcc;
-import edu.alibaba.mpc4j.common.tool.crypto.ecc.fourqlib.FourQByteFullEcc;
+import edu.alibaba.mpc4j.common.tool.crypto.ecc.fourq.FourqByteFullEcc;
 import edu.alibaba.mpc4j.common.tool.crypto.ecc.sodium.Ed25519SodiumByteFullEcc;
 import edu.alibaba.mpc4j.common.tool.crypto.ecc.sodium.X25519SodiumByteMulEcc;
 
@@ -79,7 +79,7 @@ public class ByteEccFactory {
             case RISTRETTO_CAFE:
                 return new RistrettoCafeByteFullEcc();
             case FOUR_Q:
-                return new FourQByteFullEcc();
+                return new FourqByteFullEcc();
             default:
                 throw new IllegalArgumentException(
                     "Invalid " + ByteEccType.class.getSimpleName() + ": " + byteEccType.name()
@@ -127,7 +127,7 @@ public class ByteEccFactory {
             case RISTRETTO_CAFE:
                 return new RistrettoCafeByteFullEcc();
             case FOUR_Q:
-                return new FourQByteFullEcc();
+                return new FourqByteFullEcc();
             default:
                 throw new IllegalArgumentException(
                     "Invalid " + ByteEccType.class.getSimpleName() + ": " + byteEccType.name()
