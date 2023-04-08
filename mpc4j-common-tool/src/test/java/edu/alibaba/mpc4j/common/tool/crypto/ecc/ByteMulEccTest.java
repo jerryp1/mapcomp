@@ -40,6 +40,8 @@ public class ByteMulEccTest {
     public static Collection<Object[]> configurations() {
         Collection<Object[]> configurations = new ArrayList<>();
         // X25519_SODIUM
+        configurations.add(new Object[]{ByteEccType.FOUR_Q.name(), ByteEccType.FOUR_Q,});
+        // X25519_SODIUM
         configurations.add(new Object[]{ByteEccType.X25519_SODIUM.name(), ByteEccType.X25519_SODIUM,});
         // X25519_BC
         configurations.add(new Object[]{ByteEccType.X25519_BC.name(), ByteEccType.X25519_BC,});

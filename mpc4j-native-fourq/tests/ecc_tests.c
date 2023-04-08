@@ -30,9 +30,9 @@ bool ecc_test()
     unsigned int n;
     int passed;
     point_t A;
-    point_extproj_t P;
-    point_extproj_precomp_t Q;
-    f2elm_t t1;
+    point_extproj_t P; // 真正运算的坐标类型
+    point_extproj_precomp_t Q; // 在上面的基础上进行预计算的类型
+    f2elm_t t1; // 有限域元素
     uint64_t scalar[4], res_x[4], res_y[4];
 
 
@@ -41,18 +41,23 @@ bool ecc_test()
 
     // Point doubling
     passed = 1;
-    eccset(A);
-    point_setup(A, P);
+    eccset(A); // A = G
+    point_setup(A, P); // convert point_t to point_extproj_t
 
     for (n=0; n<TEST_LOOPS; n++)
     {
         eccdouble(P);                      // 2*P
-    }
+    } // double 的计算都是在 point_extproj_t 这个坐标系下进行的
+
+    // 把 point_extproj_t 变换回 point_t
+    // 并 处理到有限域中
     eccnorm(P, A);
     mod1271(A->x[0]); mod1271(A->x[1]);    // Fully reduced P
     mod1271(A->y[0]); mod1271(A->y[1]);
 
     // Result
+    // 坐标x,y 本质上就是 uint64_t[4] , 表示 a + bi 
+    // 前2个值表示 a, 后两个值表示 b
     res_x[0] = 0xC9099C54855859D6; res_x[1] = 0x2C3FD8822C82270F; res_x[2] = 0xA7B3F6E2043E8E68; res_x[3] = 0x4DA5B9E83AA7A1B2;
     res_y[0] = 0x3EE089F0EB49AA14; res_y[1] = 0x2001EB3A57688396; res_y[2] = 0x1FEE5617A7E954CD; res_y[3] = 0x0FFDB0D761421F50;
 
@@ -62,12 +67,17 @@ bool ecc_test()
     printf("\n");
 
     // Point addition
-    eccset(A);
-    point_setup(A, P);
+    eccset(A); // G
+    point_setup(A, P); // convert point_t (x, y) to point_extproj_t (X, Y, Z, Ta, Tb)
+    // 可以发现 真正运算的坐标系都是 point_extproj_t
 
+    // 没看太懂 前面的每一行都在做什么计算呢？
+    // 难道说 eccadd 需要完成前面的步骤，才能够正确的调用？
     for (n=0; n<TEST_LOOPS; n++)
-    {
-        fp2copy1271((felm_t*)&PARAMETER_d, t1);
+    {   
+        // -x^2 + y^2 = 1 + dx^2y^2
+        // t1 = d
+        fp2copy1271((felm_t*)&PARAMETER_d, t1); 
         fp2mul1271(t1, P->ta, t1);         // d*ta
         fp2add1271(t1, t1, t1);            // 2*d*ta
         fp2mul1271(t1, P->tb, Q->t2);      // 2*d*t
@@ -75,8 +85,10 @@ bool ecc_test()
         fp2sub1271(P->y, P->x, Q->yx);     // y-x
         fp2copy1271(P->z, Q->z2);
         fp2add1271(Q->z2, Q->z2, Q->z2);   // 2*z
+        // 前面的每一行都在干什么呢？
         eccadd(Q, P);                      // 2*P
     }
+    // 转换回 point_t 并 验证计算正确性
     eccnorm(P, A);
     mod1271(A->x[0]); mod1271(A->x[1]);    // Fully reduced P
     mod1271(A->y[0]); mod1271(A->y[1]);
