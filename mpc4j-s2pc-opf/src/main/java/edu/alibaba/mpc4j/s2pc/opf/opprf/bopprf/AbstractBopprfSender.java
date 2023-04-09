@@ -46,6 +46,10 @@ public abstract class AbstractBopprfSender extends AbstractTwoPartyPto implement
      */
     protected int pointNum;
     /**
+     * max batch point num
+     */
+    protected int maxBatchPointNum;
+    /**
      * the batched input arrays.
      */
     protected byte[][][] inputArrays;
@@ -89,7 +93,7 @@ public abstract class AbstractBopprfSender extends AbstractTwoPartyPto implement
             .mapToInt(targetArray -> targetArray.length)
             .sum();
         MathPreconditions.checkEqual("target num", "point num", targetNum, pointNum);
-        int maxBatchPointNum = MaxBinSizeUtils.expectMaxBinSize(pointNum, batchSize);
+        maxBatchPointNum = MaxBinSizeUtils.expectMaxBinSize(pointNum, batchSize);
         // check input / target arrays
         IntStream.range(0, batchSize)
             .forEach(batchIndex -> {

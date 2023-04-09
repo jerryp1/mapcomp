@@ -114,6 +114,7 @@ public class OkvsBopprfReceiver extends AbstractBopprfReceiver {
                 byte[] input = inputArray[batchIndex];
                 byte[] programOutput = oprfReceiverOutput.getPrf(batchIndex);
                 programOutput = prf.getBytes(programOutput);
+                BytesUtils.reduceByteArray(programOutput, l);
                 byte[] okvsOutput = okvs.decode(okvsStorage, ByteBuffer.wrap(input));
                 BytesUtils.xori(programOutput, okvsOutput);
                 return programOutput;

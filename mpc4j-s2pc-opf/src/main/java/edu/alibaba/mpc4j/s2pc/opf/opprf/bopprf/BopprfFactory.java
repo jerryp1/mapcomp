@@ -6,6 +6,9 @@ import edu.alibaba.mpc4j.common.rpc.desc.SecurityModel;
 import edu.alibaba.mpc4j.s2pc.opf.opprf.bopprf.okvs.OkvsBopprfReceiver;
 import edu.alibaba.mpc4j.s2pc.opf.opprf.bopprf.okvs.OkvsBopprfSender;
 import edu.alibaba.mpc4j.s2pc.opf.opprf.bopprf.okvs.OkvsBopprfConfig;
+import edu.alibaba.mpc4j.s2pc.opf.opprf.bopprf.table.TableBopprfConfig;
+import edu.alibaba.mpc4j.s2pc.opf.opprf.bopprf.table.TableBopprfReceiver;
+import edu.alibaba.mpc4j.s2pc.opf.opprf.bopprf.table.TableBopprfSender;
 
 /**
  * Batch OPRRF factory.
@@ -49,6 +52,7 @@ public class BopprfFactory {
             case OKVS:
                 return new OkvsBopprfSender(senderRpc, receiverParty, (OkvsBopprfConfig) config);
             case TABLE:
+                return new TableBopprfSender(senderRpc, receiverParty, (TableBopprfConfig) config);
             default:
                 throw new IllegalArgumentException("Invalid " + BopprfType.class.getSimpleName() + ": " + type.name());
         }
@@ -68,6 +72,7 @@ public class BopprfFactory {
             case OKVS:
                 return new OkvsBopprfReceiver(receiverRpc, senderParty, (OkvsBopprfConfig) config);
             case TABLE:
+                return new TableBopprfReceiver(receiverRpc, senderParty, (TableBopprfConfig) config);
             default:
                 throw new IllegalArgumentException("Invalid " + BopprfType.class.getSimpleName() + ": " + type.name());
         }

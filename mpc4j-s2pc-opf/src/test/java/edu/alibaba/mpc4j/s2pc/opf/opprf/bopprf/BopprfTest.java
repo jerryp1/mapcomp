@@ -11,6 +11,7 @@ import edu.alibaba.mpc4j.common.tool.utils.CommonUtils;
 import edu.alibaba.mpc4j.s2pc.opf.opprf.OpprfTestUtils;
 import edu.alibaba.mpc4j.s2pc.opf.opprf.bopprf.BopprfFactory.BopprfType;
 import edu.alibaba.mpc4j.s2pc.opf.opprf.bopprf.okvs.OkvsBopprfConfig;
+import edu.alibaba.mpc4j.s2pc.opf.opprf.bopprf.table.TableBopprfConfig;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.time.StopWatch;
 import org.junit.After;
@@ -72,6 +73,10 @@ public class BopprfTest {
         Collection<Object[]> configurations = new ArrayList<>();
 
         configurations.add(new Object[]{
+            BopprfType.TABLE.name(),
+            new TableBopprfConfig.Builder().build(),
+        });
+        configurations.add(new Object[]{
             BopprfType.OKVS.name() + "(H3_SINGLETON_GCT)",
             new OkvsBopprfConfig.Builder().setOkvsType(OkvsFactory.OkvsType.H3_SINGLETON_GCT).build(),
         });
@@ -128,8 +133,9 @@ public class BopprfTest {
     }
 
     @Test
-    public void test2Batch() {
-        testPto(DEFAULT_L, 2, DEFAULT_POINT_NUM, false);
+    public void testHalfBatch() {
+        // note that the batch num should not be too small, otherwise Table BOPPRF would never find a valid solution.
+        testPto(DEFAULT_L, DEFAULT_BATCH_NUM / 10, DEFAULT_POINT_NUM, false);
     }
 
     @Test
