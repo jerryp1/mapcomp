@@ -24,7 +24,7 @@ class LcotReceiverThread extends Thread {
     /**
      * 输出
      */
-    private LotReceiverOutput receiverOutput;
+    private LcotReceiverOutput receiverOutput;
 
     LcotReceiverThread(LcotReceiver receiver, int inputBitLength, byte[][] choices) {
         this.receiver = receiver;
@@ -32,7 +32,7 @@ class LcotReceiverThread extends Thread {
         this.choices = choices;
     }
 
-    LotReceiverOutput getReceiverOutput() {
+    LcotReceiverOutput getReceiverOutput() {
         return receiverOutput;
     }
 

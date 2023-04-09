@@ -25,23 +25,23 @@ public class LcotSenderOutput implements MergedPcgPartyOutput {
     /**
      * 输入比特长度
      */
-    private int inputBitLength;
+    private final int inputBitLength;
     /**
      * 输入字节长度
      */
-    private int inputByteLength;
+    private final int inputByteLength;
     /**
      * 输出比特长度
      */
-    private int outputBitLength;
+    private final int outputBitLength;
     /**
      * 输出字节长度
      */
-    private int outputByteLength;
+    private final int outputByteLength;
     /**
      * 线性编码器
      */
-    private LinearCoder linearCoder;
+    private final LinearCoder linearCoder;
     /**
      * 关联值Δ
      */
@@ -60,13 +60,7 @@ public class LcotSenderOutput implements MergedPcgPartyOutput {
      * @return 发送方输出。
      */
     public static LcotSenderOutput create(int inputBitLength, byte[] delta, byte[][] qsArray) {
-        LcotSenderOutput senderOutput = new LcotSenderOutput();
-        assert inputBitLength > 0 : "InputBitLength must be greater than 0: " + inputBitLength;
-        senderOutput.inputBitLength = inputBitLength;
-        senderOutput.inputByteLength = CommonUtils.getByteLength(inputBitLength);
-        senderOutput.linearCoder = LinearCoderFactory.getInstance(inputBitLength);
-        senderOutput.outputBitLength = senderOutput.linearCoder.getCodewordBitLength();
-        senderOutput.outputByteLength = senderOutput.linearCoder.getCodewordByteLength();
+        LcotSenderOutput senderOutput = new LcotSenderOutput(inputBitLength);
         assert delta.length == senderOutput.outputByteLength
             && BytesUtils.isReduceByteArray(delta, senderOutput.outputBitLength);
         senderOutput.delta = BytesUtils.clone(delta);
@@ -90,13 +84,7 @@ public class LcotSenderOutput implements MergedPcgPartyOutput {
      * @return 数量为0的发送方输出。
      */
     public static LcotSenderOutput createEmpty(int inputBitLength, byte[] delta) {
-        LcotSenderOutput senderOutput = new LcotSenderOutput();
-        assert inputBitLength > 0 : "InputBitLength must be greater than 0: " + inputBitLength;
-        senderOutput.inputBitLength = inputBitLength;
-        senderOutput.inputByteLength = CommonUtils.getByteLength(inputBitLength);
-        senderOutput.linearCoder = LinearCoderFactory.getInstance(inputBitLength);
-        senderOutput.outputBitLength = senderOutput.linearCoder.getCodewordBitLength();
-        senderOutput.outputByteLength = senderOutput.linearCoder.getCodewordByteLength();
+        LcotSenderOutput senderOutput = new LcotSenderOutput(inputBitLength);
         assert delta.length == senderOutput.outputByteLength
             && BytesUtils.isReduceByteArray(delta, senderOutput.outputBitLength);
         senderOutput.delta = BytesUtils.clone(delta);
@@ -106,10 +94,15 @@ public class LcotSenderOutput implements MergedPcgPartyOutput {
     }
 
     /**
-     * 私有构造函数。
+     * private constructor.
      */
-    private LcotSenderOutput() {
-        // empty
+    private LcotSenderOutput(int inputBitLength) {
+        assert inputBitLength > 0 : "InputBitLength must be greater than 0: " + inputBitLength;
+        this.inputBitLength = inputBitLength;
+        inputByteLength = CommonUtils.getByteLength(inputBitLength);
+        linearCoder = LinearCoderFactory.getInstance(inputBitLength);
+        outputBitLength = linearCoder.getCodewordBitLength();
+        outputByteLength = linearCoder.getCodewordByteLength();
     }
 
     @Override

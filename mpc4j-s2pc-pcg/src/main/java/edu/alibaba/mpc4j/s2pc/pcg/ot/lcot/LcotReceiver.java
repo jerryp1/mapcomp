@@ -26,5 +26,5 @@ public interface LcotReceiver extends TwoPartyPto {
      * @return 接收方输出。
      * @throws MpcAbortException 如果协议异常中止。
      */
-    LotReceiverOutput receive(byte[][] choices) throws MpcAbortException;
+    LcotReceiverOutput receive(byte[][] choices) throws MpcAbortException;
 }

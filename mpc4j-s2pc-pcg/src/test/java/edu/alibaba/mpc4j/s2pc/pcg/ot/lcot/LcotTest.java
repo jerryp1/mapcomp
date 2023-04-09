@@ -192,7 +192,7 @@ public class LcotTest {
             senderRpc.reset();
             receiverRpc.reset();
             LcotSenderOutput senderOutput = senderThread.getSenderOutput();
-            LotReceiverOutput receiverOutput = receiverThread.getReceiverOutput();
+            LcotReceiverOutput receiverOutput = receiverThread.getReceiverOutput();
             // 验证结果
             assertOutput(inputBitLength, num, senderOutput, receiverOutput);
             LOGGER.info("Sender sends {}B, Receiver sends {}B, time = {}ms",
@@ -207,7 +207,7 @@ public class LcotTest {
     }
 
     private void assertOutput(int inputBitLength, int num,
-                              LcotSenderOutput senderOutput, LotReceiverOutput receiverOutput) {
+                              LcotSenderOutput senderOutput, LcotReceiverOutput receiverOutput) {
         // 验证输入长度
         Assert.assertEquals(inputBitLength, senderOutput.getInputBitLength());
         Assert.assertEquals(inputBitLength, receiverOutput.getInputBitLength());

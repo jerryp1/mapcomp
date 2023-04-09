@@ -14,7 +14,7 @@ import edu.alibaba.mpc4j.common.tool.utils.BinaryUtils;
 import edu.alibaba.mpc4j.common.tool.utils.BytesUtils;
 import edu.alibaba.mpc4j.common.tool.utils.CommonUtils;
 import edu.alibaba.mpc4j.s2pc.pcg.ot.KdfOtSenderOutput;
-import edu.alibaba.mpc4j.s2pc.pcg.ot.lcot.LotReceiverOutput;
+import edu.alibaba.mpc4j.s2pc.pcg.ot.lcot.LcotReceiverOutput;
 import edu.alibaba.mpc4j.s2pc.pcg.ot.lcot.AbstractLcotReceiver;
 import edu.alibaba.mpc4j.s2pc.pcg.ot.cot.core.CoreCotFactory;
 import edu.alibaba.mpc4j.s2pc.pcg.ot.cot.core.CoreCotSender;
@@ -100,7 +100,7 @@ public class Oos17LcotReceiver extends AbstractLcotReceiver {
     }
 
     @Override
-    public LotReceiverOutput receive(byte[][] choices) throws MpcAbortException {
+    public LcotReceiverOutput receive(byte[][] choices) throws MpcAbortException {
         setPtoInput(choices);
         logPhaseInfo(PtoState.PTO_BEGIN);
 
@@ -123,7 +123,7 @@ public class Oos17LcotReceiver extends AbstractLcotReceiver {
             ownParty().getPartyId(), otherParty().getPartyId()
         );
         rpc.send(DataPacket.fromByteArrayList(correlateCheckHeader, correlateCheckPayload));
-        LotReceiverOutput receiverOutput = generateReceiverOutput();
+        LcotReceiverOutput receiverOutput = generateReceiverOutput();
         tTransposeMatrix = null;
         stopWatch.stop();
         long checkTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
@@ -220,10 +220,10 @@ public class Oos17LcotReceiver extends AbstractLcotReceiver {
             .collect(Collectors.toList());
     }
 
-    private LotReceiverOutput generateReceiverOutput() {
+    private LcotReceiverOutput generateReceiverOutput() {
         byte[][] qsArray = IntStream.range(0, num)
             .mapToObj(tTransposeMatrix::getColumn)
             .toArray(byte[][]::new);
-        return LotReceiverOutput.create(inputBitLength, outputBitLength, choices, qsArray);
+        return LcotReceiverOutput.create(inputBitLength, outputBitLength, choices, qsArray);
     }
 }

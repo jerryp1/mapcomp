@@ -13,7 +13,7 @@ import edu.alibaba.mpc4j.common.tool.crypto.prg.Prg;
 import edu.alibaba.mpc4j.common.tool.crypto.prg.PrgFactory;
 import edu.alibaba.mpc4j.common.tool.utils.BytesUtils;
 import edu.alibaba.mpc4j.s2pc.pcg.ot.KdfOtSenderOutput;
-import edu.alibaba.mpc4j.s2pc.pcg.ot.lcot.LotReceiverOutput;
+import edu.alibaba.mpc4j.s2pc.pcg.ot.lcot.LcotReceiverOutput;
 import edu.alibaba.mpc4j.s2pc.pcg.ot.lcot.AbstractLcotReceiver;
 import edu.alibaba.mpc4j.s2pc.pcg.ot.cot.core.CoreCotFactory;
 import edu.alibaba.mpc4j.s2pc.pcg.ot.cot.core.CoreCotSender;
@@ -70,7 +70,7 @@ public class Kk13OriLcotReceiver extends AbstractLcotReceiver {
     }
 
     @Override
-    public LotReceiverOutput receive(byte[][] choices) throws MpcAbortException {
+    public LcotReceiverOutput receive(byte[][] choices) throws MpcAbortException {
         setPtoInput(choices);
         logPhaseInfo(PtoState.PTO_BEGIN);
 
@@ -81,7 +81,7 @@ public class Kk13OriLcotReceiver extends AbstractLcotReceiver {
             ownParty().getPartyId(), otherParty().getPartyId()
         );
         rpc.send(DataPacket.fromByteArrayList(matrixHeader, matrixPayload));
-        LotReceiverOutput receiverOutput = generateReceiverOutput();
+        LcotReceiverOutput receiverOutput = generateReceiverOutput();
         stopWatch.stop();
         long keyGenTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
         stopWatch.reset();
@@ -129,7 +129,7 @@ public class Kk13OriLcotReceiver extends AbstractLcotReceiver {
             .collect(Collectors.toList());
     }
 
-    private LotReceiverOutput generateReceiverOutput() {
+    private LcotReceiverOutput generateReceiverOutput() {
         // 生成密钥数组，将矩阵T转置，按行获取
         TransBitMatrix tMatrixTranspose = tMatrix.transpose();
         tMatrix = null;
@@ -137,6 +137,6 @@ public class Kk13OriLcotReceiver extends AbstractLcotReceiver {
             .mapToObj(tMatrixTranspose::getColumn)
             .toArray(byte[][]::new);
 
-        return LotReceiverOutput.create(inputBitLength, outputBitLength, choices, rbArray);
+        return LcotReceiverOutput.create(inputBitLength, outputBitLength, choices, rbArray);
     }
 }

@@ -51,6 +51,7 @@ public class CotTest {
     @Parameterized.Parameters(name = "{0}")
     public static Collection<Object[]> configurations() {
         Collection<Object[]> configurations = new ArrayList<>();
+
         // DIRECT (Semi-honest)
         configurations.add(new Object[] {
             CotFactory.CotType.DIRECT.name() + " (Semi-honest)",

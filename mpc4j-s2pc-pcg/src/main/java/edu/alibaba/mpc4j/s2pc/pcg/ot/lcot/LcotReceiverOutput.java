@@ -13,23 +13,23 @@ import java.util.Arrays;
  * @author Weiran Liu
  * @date 2022/5/23
  */
-public class LotReceiverOutput implements MergedPcgPartyOutput {
+public class LcotReceiverOutput implements MergedPcgPartyOutput {
     /**
      * 输入比特长度
      */
-    private int inputBitLength;
+    private final int inputBitLength;
     /**
      * 输入字节长度
      */
-    private int inputByteLength;
+    private final int inputByteLength;
     /**
      * 输出比特长度
      */
-    private int outputBitLength;
+    private final int outputBitLength;
     /**
      * 输出字节长度
      */
-    private int outputByteLength;
+    private final int outputByteLength;
     /**
      * 选择值数组
      */
@@ -48,15 +48,8 @@ public class LotReceiverOutput implements MergedPcgPartyOutput {
      * @param rbArray         Rb数组。
      * @return 接收方输出。
      */
-    public static LotReceiverOutput create(int inputBitLength, int outputBitLength, byte[][] choices, byte[][] rbArray) {
-        LotReceiverOutput receiverOutput = new LotReceiverOutput();
-        assert inputBitLength > 0 : "InputBitLength must be greater than 0";
-        receiverOutput.inputBitLength = inputBitLength;
-        receiverOutput.inputByteLength = CommonUtils.getByteLength(inputBitLength);
-        assert outputBitLength >= CommonConstants.BLOCK_BIT_LENGTH
-            : "OutputBitLength must be greater than " + CommonConstants.BLOCK_BIT_LENGTH;
-        receiverOutput.outputBitLength = outputBitLength;
-        receiverOutput.outputByteLength = CommonUtils.getByteLength(outputBitLength);
+    public static LcotReceiverOutput create(int inputBitLength, int outputBitLength, byte[][] choices, byte[][] rbArray) {
+        LcotReceiverOutput receiverOutput = new LcotReceiverOutput(inputBitLength, outputBitLength);
         assert choices.length > 0 : "# of NOT must be greater than 0";
         assert choices.length == rbArray.length : "# of choices must match # of randomness";
         receiverOutput.choices = Arrays.stream(choices)
@@ -83,15 +76,8 @@ public class LotReceiverOutput implements MergedPcgPartyOutput {
      * @param outputBitLength 输出比特长度。
      * @return 数量为0的NOT接收方输出。
      */
-    public static LotReceiverOutput createEmpty(int inputBitLength, int outputBitLength) {
-        LotReceiverOutput receiverOutput = new LotReceiverOutput();
-        assert inputBitLength > 0 : "InputBitLength must be greater than 0: " + inputBitLength;
-        receiverOutput.inputBitLength = inputBitLength;
-        receiverOutput.inputByteLength = CommonUtils.getByteLength(inputBitLength);
-        assert outputBitLength >= CommonConstants.BLOCK_BIT_LENGTH
-            : "OutputBitLength must be greater than " + CommonConstants.BLOCK_BIT_LENGTH + ": " + outputBitLength;
-        receiverOutput.outputBitLength = outputBitLength;
-        receiverOutput.outputByteLength = CommonUtils.getByteLength(outputBitLength);
+    public static LcotReceiverOutput createEmpty(int inputBitLength, int outputBitLength) {
+        LcotReceiverOutput receiverOutput = new LcotReceiverOutput(inputBitLength, outputBitLength);
         receiverOutput.choices = new byte[0][receiverOutput.inputByteLength];
         receiverOutput.rbArray = new byte[0][receiverOutput.outputByteLength];
 
@@ -99,14 +85,20 @@ public class LotReceiverOutput implements MergedPcgPartyOutput {
     }
 
     /**
-     * 私有构造函数。
+     * private constructor.
      */
-    private LotReceiverOutput() {
-        // empty
+    private LcotReceiverOutput(int inputBitLength, int outputBitLength) {
+        assert inputBitLength > 0 : "InputBitLength must be greater than 0";
+        this.inputBitLength = inputBitLength;
+        inputByteLength = CommonUtils.getByteLength(inputBitLength);
+        assert outputBitLength >= CommonConstants.BLOCK_BIT_LENGTH
+            : "OutputBitLength must be greater than " + CommonConstants.BLOCK_BIT_LENGTH;
+        this.outputBitLength = outputBitLength;
+        outputByteLength = CommonUtils.getByteLength(outputBitLength);
     }
 
     @Override
-    public LotReceiverOutput split(int splitNum) {
+    public LcotReceiverOutput split(int splitNum) {
         int num = getNum();
         assert splitNum > 0 && splitNum <= num : "splitNum must be in range (0, " + num + "]: " + splitNum;
         // 拆分选择比特
@@ -122,7 +114,7 @@ public class LotReceiverOutput implements MergedPcgPartyOutput {
         System.arraycopy(rbArray, splitNum, rbRemainArray, 0, num - splitNum);
         rbArray = rbRemainArray;
 
-        return LotReceiverOutput.create(inputBitLength, outputBitLength, subChoices, rbSubArray);
+        return LcotReceiverOutput.create(inputBitLength, outputBitLength, subChoices, rbSubArray);
     }
 
     @Override
@@ -142,7 +134,7 @@ public class LotReceiverOutput implements MergedPcgPartyOutput {
 
     @Override
     public void merge(MergedPcgPartyOutput other) {
-        LotReceiverOutput that = (LotReceiverOutput) other;
+        LcotReceiverOutput that = (LcotReceiverOutput) other;
         assert this.inputBitLength == that.inputBitLength : "InputBitLength mismatch";
         assert this.outputBitLength == that.outputBitLength : "OutputBitLength mismatch";
         // 拷贝选择比特数组
