@@ -275,8 +275,7 @@ add_library(
         ntl_poly/ntl_tree_zp.cpp
         ntl_poly/edu_alibaba_mpc4j_common_tool_polynomial_zp_NtlTreeZpPoly.cpp
         ntl_poly/ntl_zp_util.cpp
-        ecc_fourq/edu_alibaba_mpc4j_common_tool_crypto_ecc_fourqlib_FourQByteFullEcc.cpp
-        ecc_fourq/edu_alibaba_mpc4j_common_tool_crypto_ecc_fourqlib_FourQByteFullEcc.h
+        ecc_fourq/edu_alibaba_mpc4j_common_tool_crypto_ecc_fourq_FourqByteFullEcc.cpp
 )
 
 target_include_directories(

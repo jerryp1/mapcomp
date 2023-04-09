@@ -15,12 +15,12 @@ import edu.alibaba.mpc4j.common.tool.utils.BytesUtils;
 import edu.alibaba.mpc4j.s2pc.pcg.ot.cot.CotReceiverOutput;
 import edu.alibaba.mpc4j.s2pc.pcg.ot.cot.core.CoreCotFactory;
 import edu.alibaba.mpc4j.s2pc.pcg.ot.cot.core.CoreCotReceiver;
-import edu.alibaba.mpc4j.s2pc.pso.oprf.OprfFactory;
-import edu.alibaba.mpc4j.s2pc.pso.oprf.OprfReceiver;
-import edu.alibaba.mpc4j.s2pc.pso.oprf.OprfReceiverOutput;
-import edu.alibaba.mpc4j.s2pc.pso.osn.OsnFactory;
-import edu.alibaba.mpc4j.s2pc.pso.osn.OsnPartyOutput;
-import edu.alibaba.mpc4j.s2pc.pso.osn.OsnSender;
+import edu.alibaba.mpc4j.s2pc.opf.oprf.OprfFactory;
+import edu.alibaba.mpc4j.s2pc.opf.oprf.OprfReceiver;
+import edu.alibaba.mpc4j.s2pc.opf.oprf.OprfReceiverOutput;
+import edu.alibaba.mpc4j.s2pc.opf.osn.OsnFactory;
+import edu.alibaba.mpc4j.s2pc.opf.osn.OsnPartyOutput;
+import edu.alibaba.mpc4j.s2pc.opf.osn.OsnSender;
 import edu.alibaba.mpc4j.s2pc.pso.psu.AbstractPsuClient;
 import edu.alibaba.mpc4j.s2pc.pso.psu.jsz22.Jsz22SfcPsuPtoDesc.PtoStep;
 

@@ -3,8 +3,8 @@ package edu.alibaba.mpc4j.s2pc.pso.upsi.cmg21;
 import edu.alibaba.mpc4j.common.rpc.desc.SecurityModel;
 import edu.alibaba.mpc4j.common.tool.CommonConstants;
 import edu.alibaba.mpc4j.common.tool.EnvType;
-import edu.alibaba.mpc4j.s2pc.pso.oprf.MpOprfConfig;
-import edu.alibaba.mpc4j.s2pc.pso.oprf.OprfFactory;
+import edu.alibaba.mpc4j.s2pc.opf.oprf.MpOprfConfig;
+import edu.alibaba.mpc4j.s2pc.opf.oprf.OprfFactory;
 import edu.alibaba.mpc4j.s2pc.pso.upsi.UpsiConfig;
 import edu.alibaba.mpc4j.s2pc.pso.upsi.UpsiFactory.UpsiType;
 

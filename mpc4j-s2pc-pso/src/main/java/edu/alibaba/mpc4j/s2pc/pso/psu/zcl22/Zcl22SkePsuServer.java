@@ -19,9 +19,9 @@ import edu.alibaba.mpc4j.s2pc.aby.basics.bc.BcParty;
 import edu.alibaba.mpc4j.s2pc.pcg.ot.cot.CotSenderOutput;
 import edu.alibaba.mpc4j.s2pc.pcg.ot.cot.core.CoreCotFactory;
 import edu.alibaba.mpc4j.s2pc.pcg.ot.cot.core.CoreCotSender;
-import edu.alibaba.mpc4j.s2pc.pso.oprp.OprpFactory;
-import edu.alibaba.mpc4j.s2pc.pso.oprp.OprpReceiver;
-import edu.alibaba.mpc4j.s2pc.pso.oprp.OprpReceiverOutput;
+import edu.alibaba.mpc4j.s2pc.opf.oprp.OprpFactory;
+import edu.alibaba.mpc4j.s2pc.opf.oprp.OprpReceiver;
+import edu.alibaba.mpc4j.s2pc.opf.oprp.OprpReceiverOutput;
 import edu.alibaba.mpc4j.s2pc.pso.psu.AbstractPsuServer;
 import edu.alibaba.mpc4j.s2pc.pso.psu.zcl22.Zcl22SkePsuPtoDesc.PtoStep;
 

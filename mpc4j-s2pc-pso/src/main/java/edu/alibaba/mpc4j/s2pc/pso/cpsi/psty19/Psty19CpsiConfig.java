@@ -6,8 +6,8 @@ import edu.alibaba.mpc4j.s2pc.aby.basics.bc.BcConfig;
 import edu.alibaba.mpc4j.s2pc.aby.basics.bc.BcFactory;
 import edu.alibaba.mpc4j.s2pc.pso.cpsi.CpsiConfig;
 import edu.alibaba.mpc4j.s2pc.pso.cpsi.CpsiFactory;
-import edu.alibaba.mpc4j.s2pc.pso.opprf.bopprf.BopprfConfig;
-import edu.alibaba.mpc4j.s2pc.pso.opprf.bopprf.BopprfFactory;
+import edu.alibaba.mpc4j.s2pc.opf.opprf.bopprf.BopprfConfig;
+import edu.alibaba.mpc4j.s2pc.opf.opprf.bopprf.BopprfFactory;
 
 /**
  * PSTY19 circuit PSI config.

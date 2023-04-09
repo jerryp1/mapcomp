@@ -17,13 +17,13 @@ import edu.alibaba.mpc4j.common.tool.okve.okvs.OkvsFactory;
 import edu.alibaba.mpc4j.common.tool.okve.okvs.OkvsFactory.OkvsType;
 import edu.alibaba.mpc4j.common.tool.utils.BytesUtils;
 import edu.alibaba.mpc4j.common.tool.utils.ObjectUtils;
+import edu.alibaba.mpc4j.s2pc.opf.oprf.*;
 import edu.alibaba.mpc4j.s2pc.pjc.pid.AbstractPidParty;
 import edu.alibaba.mpc4j.s2pc.pjc.pid.PidPartyOutput;
 import edu.alibaba.mpc4j.s2pc.pjc.pid.PidUtils;
 import edu.alibaba.mpc4j.s2pc.pjc.pid.gmr21.Gmr21SloppyPidPtoDesc.PtoStep;
 import edu.alibaba.mpc4j.s2pc.pso.psu.PsuClient;
 import edu.alibaba.mpc4j.s2pc.pso.psu.PsuFactory;
-import edu.alibaba.mpc4j.s2pc.pso.oprf.*;
 
 import java.nio.ByteBuffer;
 import java.util.*;

@@ -45,6 +45,20 @@ public class GbfBinaryOkvs<T> extends AbstractBinaryOkvs<T> {
     }
 
     @Override
+    public int[] positions(T key) {
+        byte[] keyBytes = ObjectUtils.objectToByteArray(key);
+        return Arrays.stream(prfs)
+            .mapToInt(prf -> prf.getInteger(keyBytes, m))
+            .distinct()
+            .toArray();
+    }
+
+    @Override
+    public int maxPositionNum() {
+        return HASH_NUM;
+    }
+
+    @Override
     public byte[][] encode(Map<T, byte[]> keyValueMap) throws ArithmeticException {
         // 键值对的总数量小于等于n，之所以不写为等于n，是因为后续PSI方案中两边的数量可能不相等。不验证映射值的长度，提高性能。
         assert keyValueMap.size() <= n;
@@ -54,11 +68,7 @@ public class GbfBinaryOkvs<T> extends AbstractBinaryOkvs<T> {
         for (T key : keySet) {
             byte[] finalShare = BytesUtils.clone(keyValueMap.get(key));
             assert finalShare.length == byteL;
-            byte[] keyBytes = ObjectUtils.objectToByteArray(key);
-            int[] positions = Arrays.stream(prfs)
-                .mapToInt(prf -> prf.getInteger(keyBytes, m))
-                .distinct()
-                .toArray();
+            int[] positions = positions(key);
             int emptySlot = -1;
             for (int position : positions) {
                 if (storage[position] == null && emptySlot == -1) {
@@ -95,12 +105,7 @@ public class GbfBinaryOkvs<T> extends AbstractBinaryOkvs<T> {
     public byte[] decode(byte[][] storage, T key) {
         // 这里不能验证storage每一行的长度，否则整体算法复杂度会变为O(n^2)
         assert storage.length == getM();
-        byte[] keyBytes = ObjectUtils.objectToByteArray(key);
-        // 先计算所有可能的位置，位置可能有重复，因此要去重
-        int[] positions = Arrays.stream(prfs)
-            .mapToInt(prf -> prf.getInteger(keyBytes, m))
-            .distinct()
-            .toArray();
+        int[] positions = positions(key);
         // 计算输出值
         byte[] value = new byte[byteL];
         for (int position : positions) {
