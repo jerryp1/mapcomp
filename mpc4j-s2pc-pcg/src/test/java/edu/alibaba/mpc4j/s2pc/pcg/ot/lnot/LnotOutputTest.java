@@ -1,4 +1,4 @@
-package edu.alibaba.mpc4j.s2pc.pcg.ot.not;
+package edu.alibaba.mpc4j.s2pc.pcg.ot.lnot;
 
 import edu.alibaba.mpc4j.common.tool.CommonConstants;
 import org.junit.Assert;
@@ -8,12 +8,12 @@ import java.security.SecureRandom;
 import java.util.stream.IntStream;
 
 /**
- * 1-out-of-n OT test.
+ * 1-out-of-n OT test, where n = 2^l.
  *
  * @author Weiran Liu
  * @date 2023/4/9
  */
-public class NotOutputTest {
+public class LnotOutputTest {
     /**
      * minimal num
      */
@@ -27,14 +27,18 @@ public class NotOutputTest {
      */
     private static final SecureRandom SECURE_RANDOM = new SecureRandom();
     /**
+     * default l
+     */
+    private static final int DEFAULT_L = 3;
+    /**
      * default n
      */
-    private static final int DEFAULT_N = 9;
+    private static final int DEFAULT_N = 1 << DEFAULT_L;
 
     @Test
     public void testIllegalSenderOutputs() {
         // create a sender output with num = 0
-        Assert.assertThrows(AssertionError.class, () -> NotSenderOutput.create(DEFAULT_N, new byte[0][][]));
+        Assert.assertThrows(AssertionError.class, () -> LnotSenderOutput.create(DEFAULT_L, new byte[0][][]));
         // create a sender output with short rs length
         Assert.assertThrows(AssertionError.class, () -> {
             byte[][][] rsArray = IntStream.range(0, MAX_NUM)
@@ -47,7 +51,7 @@ public class NotOutputTest {
                         })
                         .toArray(byte[][]::new))
                 .toArray(byte[][][]::new);
-            NotSenderOutput.create(DEFAULT_N, rsArray);
+            LnotSenderOutput.create(DEFAULT_L, rsArray);
         });
         // create a sender output with large rs length
         Assert.assertThrows(AssertionError.class, () -> {
@@ -61,7 +65,7 @@ public class NotOutputTest {
                         })
                         .toArray(byte[][]::new))
                 .toArray(byte[][][]::new);
-            NotSenderOutput.create(DEFAULT_N, rsArray);
+            LnotSenderOutput.create(DEFAULT_L, rsArray);
         });
         // create a sender output with less rs
         Assert.assertThrows(AssertionError.class, () -> {
@@ -75,7 +79,7 @@ public class NotOutputTest {
                         })
                         .toArray(byte[][]::new))
                 .toArray(byte[][][]::new);
-            NotSenderOutput.create(DEFAULT_N, rsArray);
+            LnotSenderOutput.create(DEFAULT_L, rsArray);
         });
         // create a sender output with more rs
         Assert.assertThrows(AssertionError.class, () -> {
@@ -89,9 +93,9 @@ public class NotOutputTest {
                         })
                         .toArray(byte[][]::new))
                 .toArray(byte[][][]::new);
-            NotSenderOutput.create(DEFAULT_N, rsArray);
+            LnotSenderOutput.create(DEFAULT_L, rsArray);
         });
-        // merge two sender output with different n
+        // merge two sender output with different l
         Assert.assertThrows(AssertionError.class, () -> {
             byte[][][] rsArray0 = IntStream.range(0, MAX_NUM)
                 .mapToObj(index ->
@@ -103,10 +107,10 @@ public class NotOutputTest {
                         })
                         .toArray(byte[][]::new))
                 .toArray(byte[][][]::new);
-            NotSenderOutput senderOutput0 = NotSenderOutput.create(DEFAULT_N, rsArray0);
+            LnotSenderOutput senderOutput0 = LnotSenderOutput.create(DEFAULT_L, rsArray0);
             byte[][][] rsArray1 = IntStream.range(0, MAX_NUM)
                 .mapToObj(index ->
-                    IntStream.range(0, DEFAULT_N + 1)
+                    IntStream.range(0, 1 << (DEFAULT_L + 1))
                         .mapToObj(choice -> {
                             byte[] ri = new byte[CommonConstants.BLOCK_BYTE_LENGTH];
                             SECURE_RANDOM.nextBytes(ri);
@@ -114,7 +118,7 @@ public class NotOutputTest {
                         })
                         .toArray(byte[][]::new))
                 .toArray(byte[][][]::new);
-            NotSenderOutput senderOutput1 = NotSenderOutput.create(DEFAULT_N + 1, rsArray1);
+            LnotSenderOutput senderOutput1 = LnotSenderOutput.create(DEFAULT_L + 1, rsArray1);
             senderOutput0.merge(senderOutput1);
         });
     }
@@ -122,7 +126,7 @@ public class NotOutputTest {
     @Test
     public void testIllegalReceiverOutputs() {
         // create a receiver output with num = 0
-        Assert.assertThrows(AssertionError.class, () -> NotReceiverOutput.create(DEFAULT_N, new int[0], new byte[0][]));
+        Assert.assertThrows(AssertionError.class, () -> LnotReceiverOutput.create(DEFAULT_L, new int[0], new byte[0][]));
         // create a receiver output with mismatched num
         Assert.assertThrows(AssertionError.class, () -> {
             int[] choices = IntStream.range(0, MIN_NUM)
@@ -135,7 +139,7 @@ public class NotOutputTest {
                     return rb;
                 })
                 .toArray(byte[][]::new);
-            NotReceiverOutput.create(DEFAULT_N, choices, rbArray);
+            LnotReceiverOutput.create(DEFAULT_L, choices, rbArray);
         });
         // create a receiver with negative choice
         Assert.assertThrows(AssertionError.class, () -> {
@@ -149,7 +153,7 @@ public class NotOutputTest {
                     return rb;
                 })
                 .toArray(byte[][]::new);
-            NotReceiverOutput.create(DEFAULT_N, choices, rbArray);
+            LnotReceiverOutput.create(DEFAULT_L, choices, rbArray);
         });
         // create a receiver with large choice
         Assert.assertThrows(AssertionError.class, () -> {
@@ -163,7 +167,7 @@ public class NotOutputTest {
                     return rb;
                 })
                 .toArray(byte[][]::new);
-            NotReceiverOutput.create(DEFAULT_N, choices, rbArray);
+            LnotReceiverOutput.create(DEFAULT_L, choices, rbArray);
         });
         // create a receiver output with less rb
         Assert.assertThrows(AssertionError.class, () -> {
@@ -177,7 +181,7 @@ public class NotOutputTest {
                     return rb;
                 })
                 .toArray(byte[][]::new);
-            NotReceiverOutput.create(DEFAULT_N, choices, rbArray);
+            LnotReceiverOutput.create(DEFAULT_L, choices, rbArray);
         });
         // create a receiver output with more rb
         Assert.assertThrows(AssertionError.class, () -> {
@@ -191,9 +195,9 @@ public class NotOutputTest {
                     return rb;
                 })
                 .toArray(byte[][]::new);
-            NotReceiverOutput.create(DEFAULT_N, choices, rbArray);
+            LnotReceiverOutput.create(DEFAULT_L, choices, rbArray);
         });
-        // merge two receiver output with different n
+        // merge two receiver output with different l
         Assert.assertThrows(AssertionError.class, () -> {
             int[] choices0 = IntStream.range(0, MAX_NUM)
                 .map(index -> SECURE_RANDOM.nextInt(DEFAULT_N))
@@ -205,9 +209,9 @@ public class NotOutputTest {
                     return rb;
                 })
                 .toArray(byte[][]::new);
-            NotReceiverOutput receiverOutput0 = NotReceiverOutput.create(DEFAULT_N, choices0, rbArray0);
+            LnotReceiverOutput receiverOutput0 = LnotReceiverOutput.create(DEFAULT_L, choices0, rbArray0);
             int[] choices1 = IntStream.range(0, MAX_NUM)
-                .map(index -> SECURE_RANDOM.nextInt(DEFAULT_N + 1))
+                .map(index -> SECURE_RANDOM.nextInt(1 << (DEFAULT_L + 1)))
                 .toArray();
             byte[][] rbArray1 = IntStream.range(0, MAX_NUM)
                 .mapToObj(index -> {
@@ -216,7 +220,7 @@ public class NotOutputTest {
                     return rb;
                 })
                 .toArray(byte[][]::new);
-            NotReceiverOutput receiverOutput1 = NotReceiverOutput.create(DEFAULT_N + 1, choices1, rbArray1);
+            LnotReceiverOutput receiverOutput1 = LnotReceiverOutput.create(DEFAULT_L + 1, choices1, rbArray1);
             receiverOutput0.merge(receiverOutput1);
         });
     }
@@ -230,44 +234,44 @@ public class NotOutputTest {
 
     private void testReduce(int num) {
         // reduce 1
-        NotSenderOutput senderOutput1 = NotTestUtils.genSenderOutput(num, DEFAULT_N, SECURE_RANDOM);
-        NotReceiverOutput receiverOutput1 = NotTestUtils.genReceiverOutput(senderOutput1, SECURE_RANDOM);
+        LnotSenderOutput senderOutput1 = LnotTestUtils.genSenderOutput(num, DEFAULT_L, SECURE_RANDOM);
+        LnotReceiverOutput receiverOutput1 = LnotTestUtils.genReceiverOutput(senderOutput1, SECURE_RANDOM);
         senderOutput1.reduce(1);
         receiverOutput1.reduce(1);
-        NotTestUtils.assertOutput(1, DEFAULT_N, senderOutput1, receiverOutput1);
+        LnotTestUtils.assertOutput(1, DEFAULT_L, senderOutput1, receiverOutput1);
         // reduce all
-        NotSenderOutput senderOutputAll = NotTestUtils.genSenderOutput(num, DEFAULT_N, SECURE_RANDOM);
-        NotReceiverOutput receiverOutputAll = NotTestUtils.genReceiverOutput(senderOutputAll, SECURE_RANDOM);
+        LnotSenderOutput senderOutputAll = LnotTestUtils.genSenderOutput(num, DEFAULT_L, SECURE_RANDOM);
+        LnotReceiverOutput receiverOutputAll = LnotTestUtils.genReceiverOutput(senderOutputAll, SECURE_RANDOM);
         senderOutputAll.reduce(num);
         receiverOutputAll.reduce(num);
-        NotTestUtils.assertOutput(num, DEFAULT_N, senderOutputAll, receiverOutputAll);
+        LnotTestUtils.assertOutput(num, DEFAULT_L, senderOutputAll, receiverOutputAll);
         if (num > 1) {
             // reduce num - 1
-            NotSenderOutput senderOutputNum = NotTestUtils.genSenderOutput(num, DEFAULT_N, SECURE_RANDOM);
-            NotReceiverOutput receiverOutputNum = NotTestUtils.genReceiverOutput(senderOutputNum, SECURE_RANDOM);
+            LnotSenderOutput senderOutputNum = LnotTestUtils.genSenderOutput(num, DEFAULT_L, SECURE_RANDOM);
+            LnotReceiverOutput receiverOutputNum = LnotTestUtils.genReceiverOutput(senderOutputNum, SECURE_RANDOM);
             senderOutputNum.reduce(num - 1);
             receiverOutputNum.reduce(num - 1);
-            NotTestUtils.assertOutput(num - 1, DEFAULT_N, senderOutputNum, receiverOutputNum);
+            LnotTestUtils.assertOutput(num - 1, DEFAULT_L, senderOutputNum, receiverOutputNum);
             // reduce half
-            NotSenderOutput senderOutputHalf = NotTestUtils.genSenderOutput(num, DEFAULT_N, SECURE_RANDOM);
-            NotReceiverOutput receiverOutputHalf = NotTestUtils.genReceiverOutput(senderOutputHalf, SECURE_RANDOM);
+            LnotSenderOutput senderOutputHalf = LnotTestUtils.genSenderOutput(num, DEFAULT_L, SECURE_RANDOM);
+            LnotReceiverOutput receiverOutputHalf = LnotTestUtils.genReceiverOutput(senderOutputHalf, SECURE_RANDOM);
             senderOutputHalf.reduce(num / 2);
             receiverOutputHalf.reduce(num / 2);
-            NotTestUtils.assertOutput(num / 2, DEFAULT_N, senderOutputHalf, receiverOutputHalf);
+            LnotTestUtils.assertOutput(num / 2, DEFAULT_L, senderOutputHalf, receiverOutputHalf);
         }
     }
 
     @Test
     public void testAllEmptyMerge() {
-        NotSenderOutput senderOutput = NotSenderOutput.createEmpty(DEFAULT_N);
-        NotSenderOutput mergeSenderOutput = NotSenderOutput.createEmpty(DEFAULT_N);
-        NotReceiverOutput receiverOutput = NotReceiverOutput.createEmpty(DEFAULT_N);
-        NotReceiverOutput mergeReceiverOutput = NotReceiverOutput.createEmpty(DEFAULT_N);
+        LnotSenderOutput senderOutput = LnotSenderOutput.createEmpty(DEFAULT_L);
+        LnotSenderOutput mergeSenderOutput = LnotSenderOutput.createEmpty(DEFAULT_L);
+        LnotReceiverOutput receiverOutput = LnotReceiverOutput.createEmpty(DEFAULT_L);
+        LnotReceiverOutput mergeReceiverOutput = LnotReceiverOutput.createEmpty(DEFAULT_L);
         // merge
         senderOutput.merge(mergeSenderOutput);
         receiverOutput.merge(mergeReceiverOutput);
         // verify
-        NotTestUtils.assertOutput(0, DEFAULT_N, senderOutput, receiverOutput);
+        LnotTestUtils.assertOutput(0, DEFAULT_L, senderOutput, receiverOutput);
     }
 
     @Test
@@ -278,15 +282,15 @@ public class NotOutputTest {
     }
 
     private void testLeftEmptyMerge(int num) {
-        NotSenderOutput senderOutput = NotSenderOutput.createEmpty(DEFAULT_N);
-        NotSenderOutput mergeSenderOutput = NotTestUtils.genSenderOutput(num, DEFAULT_N, SECURE_RANDOM);
-        NotReceiverOutput receiverOutput = NotReceiverOutput.createEmpty(DEFAULT_N);
-        NotReceiverOutput mergeReceiverOutput = NotTestUtils.genReceiverOutput(mergeSenderOutput, SECURE_RANDOM);
+        LnotSenderOutput senderOutput = LnotSenderOutput.createEmpty(DEFAULT_L);
+        LnotSenderOutput mergeSenderOutput = LnotTestUtils.genSenderOutput(num, DEFAULT_L, SECURE_RANDOM);
+        LnotReceiverOutput receiverOutput = LnotReceiverOutput.createEmpty(DEFAULT_L);
+        LnotReceiverOutput mergeReceiverOutput = LnotTestUtils.genReceiverOutput(mergeSenderOutput, SECURE_RANDOM);
         // merge
         senderOutput.merge(mergeSenderOutput);
         receiverOutput.merge(mergeReceiverOutput);
         // verify
-        NotTestUtils.assertOutput(num, DEFAULT_N, senderOutput, receiverOutput);
+        LnotTestUtils.assertOutput(num, DEFAULT_L, senderOutput, receiverOutput);
     }
 
     @Test
@@ -297,15 +301,15 @@ public class NotOutputTest {
     }
 
     private void testRightEmptyMerge(int num) {
-        NotSenderOutput senderOutput = NotTestUtils.genSenderOutput(num, DEFAULT_N, SECURE_RANDOM);
-        NotSenderOutput mergeSenderOutput = NotSenderOutput.createEmpty(DEFAULT_N);
-        NotReceiverOutput receiverOutput = NotTestUtils.genReceiverOutput(senderOutput, SECURE_RANDOM);
-        NotReceiverOutput mergeReceiverOutput = NotReceiverOutput.createEmpty(DEFAULT_N);
+        LnotSenderOutput senderOutput = LnotTestUtils.genSenderOutput(num, DEFAULT_L, SECURE_RANDOM);
+        LnotSenderOutput mergeSenderOutput = LnotSenderOutput.createEmpty(DEFAULT_L);
+        LnotReceiverOutput receiverOutput = LnotTestUtils.genReceiverOutput(senderOutput, SECURE_RANDOM);
+        LnotReceiverOutput mergeReceiverOutput = LnotReceiverOutput.createEmpty(DEFAULT_L);
         // merge
         senderOutput.merge(mergeSenderOutput);
         receiverOutput.merge(mergeReceiverOutput);
         // verify
-        NotTestUtils.assertOutput(num, DEFAULT_N, senderOutput, receiverOutput);
+        LnotTestUtils.assertOutput(num, DEFAULT_L, senderOutput, receiverOutput);
     }
 
     @Test
@@ -318,15 +322,15 @@ public class NotOutputTest {
     }
 
     private void testMerge(int num1, int num2) {
-        NotSenderOutput senderOutput = NotTestUtils.genSenderOutput(num1, DEFAULT_N, SECURE_RANDOM);
-        NotSenderOutput mergeSenderOutput = NotTestUtils.genSenderOutput(num2, DEFAULT_N, SECURE_RANDOM);
-        NotReceiverOutput receiverOutput = NotTestUtils.genReceiverOutput(senderOutput, SECURE_RANDOM);
-        NotReceiverOutput mergeReceiverOutput = NotTestUtils.genReceiverOutput(mergeSenderOutput, SECURE_RANDOM);
+        LnotSenderOutput senderOutput = LnotTestUtils.genSenderOutput(num1, DEFAULT_L, SECURE_RANDOM);
+        LnotSenderOutput mergeSenderOutput = LnotTestUtils.genSenderOutput(num2, DEFAULT_L, SECURE_RANDOM);
+        LnotReceiverOutput receiverOutput = LnotTestUtils.genReceiverOutput(senderOutput, SECURE_RANDOM);
+        LnotReceiverOutput mergeReceiverOutput = LnotTestUtils.genReceiverOutput(mergeSenderOutput, SECURE_RANDOM);
         // merge
         senderOutput.merge(mergeSenderOutput);
         receiverOutput.merge(mergeReceiverOutput);
         // verify
-        NotTestUtils.assertOutput(num1 + num2, DEFAULT_N, senderOutput, receiverOutput);
+        LnotTestUtils.assertOutput(num1 + num2, DEFAULT_L, senderOutput, receiverOutput);
     }
 
     @Test
@@ -338,34 +342,34 @@ public class NotOutputTest {
 
     private void testSplit(int num) {
         // split 1
-        NotSenderOutput senderOutput1 = NotTestUtils.genSenderOutput(num, DEFAULT_N, SECURE_RANDOM);
-        NotReceiverOutput receiverOutput1 = NotTestUtils.genReceiverOutput(senderOutput1, SECURE_RANDOM);
-        NotSenderOutput splitSenderOutput1 = senderOutput1.split(1);
-        NotReceiverOutput splitReceiverOutput1 = receiverOutput1.split(1);
-        NotTestUtils.assertOutput(num - 1, DEFAULT_N, senderOutput1, receiverOutput1);
-        NotTestUtils.assertOutput(1, DEFAULT_N, splitSenderOutput1, splitReceiverOutput1);
+        LnotSenderOutput senderOutput1 = LnotTestUtils.genSenderOutput(num, DEFAULT_L, SECURE_RANDOM);
+        LnotReceiverOutput receiverOutput1 = LnotTestUtils.genReceiverOutput(senderOutput1, SECURE_RANDOM);
+        LnotSenderOutput splitSenderOutput1 = senderOutput1.split(1);
+        LnotReceiverOutput splitReceiverOutput1 = receiverOutput1.split(1);
+        LnotTestUtils.assertOutput(num - 1, DEFAULT_L, senderOutput1, receiverOutput1);
+        LnotTestUtils.assertOutput(1, DEFAULT_L, splitSenderOutput1, splitReceiverOutput1);
         // split all
-        NotSenderOutput senderOutputAll = NotTestUtils.genSenderOutput(num, DEFAULT_N, SECURE_RANDOM);
-        NotReceiverOutput receiverOutputAll = NotTestUtils.genReceiverOutput(senderOutputAll, SECURE_RANDOM);
-        NotSenderOutput splitSenderOutputAll = senderOutputAll.split(num);
-        NotReceiverOutput splitReceiverOutputAll = receiverOutputAll.split(num);
-        NotTestUtils.assertOutput(0, DEFAULT_N, senderOutputAll, receiverOutputAll);
-        NotTestUtils.assertOutput(num, DEFAULT_N, splitSenderOutputAll, splitReceiverOutputAll);
+        LnotSenderOutput senderOutputAll = LnotTestUtils.genSenderOutput(num, DEFAULT_L, SECURE_RANDOM);
+        LnotReceiverOutput receiverOutputAll = LnotTestUtils.genReceiverOutput(senderOutputAll, SECURE_RANDOM);
+        LnotSenderOutput splitSenderOutputAll = senderOutputAll.split(num);
+        LnotReceiverOutput splitReceiverOutputAll = receiverOutputAll.split(num);
+        LnotTestUtils.assertOutput(0, DEFAULT_L, senderOutputAll, receiverOutputAll);
+        LnotTestUtils.assertOutput(num, DEFAULT_L, splitSenderOutputAll, splitReceiverOutputAll);
         if (num > 1) {
             // split num - 1
-            NotSenderOutput senderOutputNum = NotTestUtils.genSenderOutput(num, DEFAULT_N, SECURE_RANDOM);
-            NotReceiverOutput receiverOutputNum = NotTestUtils.genReceiverOutput(senderOutputNum, SECURE_RANDOM);
-            NotSenderOutput splitSenderOutputNum = senderOutputNum.split(num - 1);
-            NotReceiverOutput splitReceiverOutputNum = receiverOutputNum.split(num - 1);
-            NotTestUtils.assertOutput(1, DEFAULT_N, senderOutputNum, receiverOutputNum);
-            NotTestUtils.assertOutput(num - 1, DEFAULT_N, splitSenderOutputNum, splitReceiverOutputNum);
+            LnotSenderOutput senderOutputNum = LnotTestUtils.genSenderOutput(num, DEFAULT_L, SECURE_RANDOM);
+            LnotReceiverOutput receiverOutputNum = LnotTestUtils.genReceiverOutput(senderOutputNum, SECURE_RANDOM);
+            LnotSenderOutput splitSenderOutputNum = senderOutputNum.split(num - 1);
+            LnotReceiverOutput splitReceiverOutputNum = receiverOutputNum.split(num - 1);
+            LnotTestUtils.assertOutput(1, DEFAULT_L, senderOutputNum, receiverOutputNum);
+            LnotTestUtils.assertOutput(num - 1, DEFAULT_L, splitSenderOutputNum, splitReceiverOutputNum);
             // split half
-            NotSenderOutput senderOutputHalf = NotTestUtils.genSenderOutput(num, DEFAULT_N, SECURE_RANDOM);
-            NotReceiverOutput receiverOutputHalf = NotTestUtils.genReceiverOutput(senderOutputHalf, SECURE_RANDOM);
-            NotSenderOutput splitSenderOutputHalf = senderOutputHalf.split(num / 2);
-            NotReceiverOutput splitReceiverOutputHalf = receiverOutputHalf.split(num / 2);
-            NotTestUtils.assertOutput(num - num / 2, DEFAULT_N, senderOutputHalf, receiverOutputHalf);
-            NotTestUtils.assertOutput(num / 2, DEFAULT_N, splitSenderOutputHalf, splitReceiverOutputHalf);
+            LnotSenderOutput senderOutputHalf = LnotTestUtils.genSenderOutput(num, DEFAULT_L, SECURE_RANDOM);
+            LnotReceiverOutput receiverOutputHalf = LnotTestUtils.genReceiverOutput(senderOutputHalf, SECURE_RANDOM);
+            LnotSenderOutput splitSenderOutputHalf = senderOutputHalf.split(num / 2);
+            LnotReceiverOutput splitReceiverOutputHalf = receiverOutputHalf.split(num / 2);
+            LnotTestUtils.assertOutput(num - num / 2, DEFAULT_L, senderOutputHalf, receiverOutputHalf);
+            LnotTestUtils.assertOutput(num / 2, DEFAULT_L, splitSenderOutputHalf, splitReceiverOutputHalf);
         }
     }
 }

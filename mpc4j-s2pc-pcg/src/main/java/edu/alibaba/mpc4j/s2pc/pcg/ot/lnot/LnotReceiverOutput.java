@@ -1,7 +1,8 @@
-package edu.alibaba.mpc4j.s2pc.pcg.ot.not;
+package edu.alibaba.mpc4j.s2pc.pcg.ot.lnot;
 
 import edu.alibaba.mpc4j.common.tool.CommonConstants;
 import edu.alibaba.mpc4j.common.tool.utils.BytesUtils;
+import edu.alibaba.mpc4j.common.tool.utils.IntUtils;
 import edu.alibaba.mpc4j.s2pc.pcg.MergedPcgPartyOutput;
 
 import java.util.Arrays;
@@ -12,7 +13,11 @@ import java.util.Arrays;
  * @author Weiran Liu
  * @date 2023/4/9
  */
-public class NotReceiverOutput implements MergedPcgPartyOutput {
+public class LnotReceiverOutput implements MergedPcgPartyOutput {
+    /**
+     * the choice bit length
+     */
+    private final int l;
     /**
      * the maximal choice
      */
@@ -29,18 +34,18 @@ public class NotReceiverOutput implements MergedPcgPartyOutput {
     /**
      * Creates a receiver output.
      *
-     * @param n           the maximal choice.
+     * @param l           the choice bit length.
      * @param choiceArray the choice array.
      * @param rbArray     the rb array.
      * @return a receiver output.
      */
-    public static NotReceiverOutput create(int n, int[] choiceArray, byte[][] rbArray) {
-        NotReceiverOutput receiverOutput = new NotReceiverOutput(n);
+    public static LnotReceiverOutput create(int l, int[] choiceArray, byte[][] rbArray) {
+        LnotReceiverOutput receiverOutput = new LnotReceiverOutput(l);
         assert choiceArray.length > 0 : "# of choices must be greater than 0: " + choiceArray.length;
         assert choiceArray.length == rbArray.length : "# of choices must match # of rbs";
         receiverOutput.choiceArray = Arrays.stream(choiceArray)
             .peek(choice -> {
-                assert choice >= 0 && choice < n : "choice must be in range [0, " + n + "): " + choice;
+                assert choice >= 0 && choice < receiverOutput.n : "choice must be in range [0, " + receiverOutput.n + "): " + choice;
             })
             .toArray();
         receiverOutput.rbArray = Arrays.stream(rbArray)
@@ -55,11 +60,11 @@ public class NotReceiverOutput implements MergedPcgPartyOutput {
     /**
      * Creates an empty receiver output.
      *
-     * @param n the maximal choice.
+     * @param l the choice bit length.
      * @return an empty receiver output.
      */
-    public static NotReceiverOutput createEmpty(int n) {
-        NotReceiverOutput receiverOutput = new NotReceiverOutput(n);
+    public static LnotReceiverOutput createEmpty(int l) {
+        LnotReceiverOutput receiverOutput = new LnotReceiverOutput(l);
         receiverOutput.choiceArray = new int[0];
         receiverOutput.rbArray = new byte[0][];
 
@@ -69,13 +74,14 @@ public class NotReceiverOutput implements MergedPcgPartyOutput {
     /**
      * private constructor.
      */
-    private NotReceiverOutput(int n) {
-        assert n > 1 : "n must be greater than 1: " + n;
-        this.n = n;
+    private LnotReceiverOutput(int l) {
+        assert l > 0 && l <= IntUtils.MAX_L : "l must be in range (0, " + IntUtils.MAX_L + "]: " + l;
+        this.l = l;
+        this.n = (1 << l);
     }
 
     @Override
-    public NotReceiverOutput split(int splitNum) {
+    public LnotReceiverOutput split(int splitNum) {
         int num = getNum();
         assert splitNum > 0 && splitNum <= num : "splitNum must be in range (0, " + num + "]: " + splitNum;
         // split choice array
@@ -91,7 +97,7 @@ public class NotReceiverOutput implements MergedPcgPartyOutput {
         System.arraycopy(rbArray, splitNum, remainRbArray, 0, num - splitNum);
         rbArray = remainRbArray;
 
-        return NotReceiverOutput.create(n, subChoiceArray, subRbArray);
+        return LnotReceiverOutput.create(l, subChoiceArray, subRbArray);
     }
 
     @Override
@@ -111,8 +117,8 @@ public class NotReceiverOutput implements MergedPcgPartyOutput {
 
     @Override
     public void merge(MergedPcgPartyOutput other) {
-        NotReceiverOutput that = (NotReceiverOutput) other;
-        assert this.n == that.n : "n mismatch";
+        LnotReceiverOutput that = (LnotReceiverOutput) other;
+        assert this.l == that.l : "l mismatch";
         // copy choice array
         int[] mergeChoiceArray = new int[this.choiceArray.length + that.choiceArray.length];
         System.arraycopy(this.choiceArray, 0, mergeChoiceArray, 0, this.choiceArray.length);
@@ -148,6 +154,15 @@ public class NotReceiverOutput implements MergedPcgPartyOutput {
      */
     public byte[] getRb(int index) {
         return rbArray[index];
+    }
+
+    /**
+     * Gets the choice bit length.
+     *
+     * @return the choice bit length.
+     */
+    public int getL() {
+        return l;
     }
 
     /**

@@ -1,4 +1,4 @@
-package edu.alibaba.mpc4j.s2pc.pcg.ot.not;
+package edu.alibaba.mpc4j.s2pc.pcg.ot.lnot;
 
 import edu.alibaba.mpc4j.common.tool.CommonConstants;
 import org.junit.Assert;
@@ -13,11 +13,11 @@ import java.util.stream.IntStream;
  * @author Weiran Liu
  * @date 2023/4/9
  */
-public class NotTestUtils {
+public class LnotTestUtils {
     /**
      * private constructor.
      */
-    private NotTestUtils() {
+    private LnotTestUtils() {
         // empty
     }
 
@@ -25,15 +25,16 @@ public class NotTestUtils {
      * Generates a sender output.
      *
      * @param num          the num.
-     * @param n            the maximal choice.
+     * @param l            the choice bit length.
      * @param secureRandom the random state.
      * @return a sender output.
      */
-    public static NotSenderOutput genSenderOutput(int num, int n, SecureRandom secureRandom) {
+    public static LnotSenderOutput genSenderOutput(int num, int l, SecureRandom secureRandom) {
         assert num >= 0 : "num must be greater than or equal to 0: " + num;
         if (num == 0) {
-            return NotSenderOutput.createEmpty(n);
+            return LnotSenderOutput.createEmpty(l);
         }
+        int n = 1 << l;
         byte[][][] rsArray = IntStream.range(0, num)
             .mapToObj(index ->
                 IntStream.range(0, n)
@@ -44,7 +45,7 @@ public class NotTestUtils {
                     })
                     .toArray(byte[][]::new))
             .toArray(byte[][][]::new);
-        return NotSenderOutput.create(n, rsArray);
+        return LnotSenderOutput.create(l, rsArray);
     }
 
     /**
@@ -54,11 +55,12 @@ public class NotTestUtils {
      * @param secureRandom the random state.
      * @return a receiver output.
      */
-    public static NotReceiverOutput genReceiverOutput(NotSenderOutput senderOutput, SecureRandom secureRandom) {
+    public static LnotReceiverOutput genReceiverOutput(LnotSenderOutput senderOutput, SecureRandom secureRandom) {
+        int l = senderOutput.getL();
         int n = senderOutput.getN();
         int num = senderOutput.getNum();
         if (num == 0) {
-            return NotReceiverOutput.createEmpty(n);
+            return LnotReceiverOutput.createEmpty(l);
         }
         int[] choices = IntStream.range(0, num)
             .map(index -> secureRandom.nextInt(n))
@@ -66,18 +68,21 @@ public class NotTestUtils {
         byte[][] rbArray = IntStream.range(0, num)
             .mapToObj(index -> senderOutput.getRb(index, choices[index]))
             .toArray(byte[][]::new);
-        return NotReceiverOutput.create(n, choices, rbArray);
+        return LnotReceiverOutput.create(l, choices, rbArray);
     }
 
     /**
      * asserts the output.
      *
-     * @param n              the maximal choice.
+     * @param l            the choice bit length.
      * @param num            the num.
      * @param senderOutput   the sender output.
      * @param receiverOutput the receiver output.
      */
-    public static void assertOutput(int num, int n, NotSenderOutput senderOutput, NotReceiverOutput receiverOutput) {
+    public static void assertOutput(int num, int l, LnotSenderOutput senderOutput, LnotReceiverOutput receiverOutput) {
+        Assert.assertEquals(l, senderOutput.getL());
+        Assert.assertEquals(l, receiverOutput.getL());
+        int n = 1 << l;
         Assert.assertEquals(n, senderOutput.getN());
         Assert.assertEquals(n, receiverOutput.getN());
         if (num == 0) {

@@ -282,8 +282,8 @@ public class NaiveDatabase implements ModBitNumDatabase {
         MathPreconditions.checkPositive("partitionL", partitionL);
         int partitionNum = CommonUtils.getUnitNum(l, partitionL);
         ZlDatabase[] partitionDatabases = new ZlDatabase[partitionNum];
-        // mod = 2^l, where l is the partition L.
-        BigInteger mod = BigInteger.ONE.shiftLeft(partitionL);
+        // and = 2^l - 1, where l is the partition L.
+        BigInteger and = BigInteger.ONE.shiftLeft(partitionL).subtract(BigInteger.ONE);
         int partitionByteL = CommonUtils.getByteLength(partitionL);
         int rows = rows();
         // copy the data
@@ -293,7 +293,7 @@ public class NaiveDatabase implements ModBitNumDatabase {
         for (int partitionIndex = partitionNum - 1; partitionIndex >= 0; partitionIndex--) {
             byte[][] partitionData = new byte[rows][partitionByteL];
             for (int index = 0; index < rows; index++) {
-                BigInteger element = tempData[index].mod(mod);
+                BigInteger element = tempData[index].and(and);
                 tempData[index] = tempData[index].shiftRight(partitionL);
                 partitionData[index] = BigIntegerUtils.nonNegBigIntegerToByteArray(element, partitionByteL);
             }
@@ -325,7 +325,7 @@ public class NaiveDatabase implements ModBitNumDatabase {
                 BigInteger partitionData = database.getBigIntegerData(rowIndex);
                 data[rowIndex] = data[rowIndex]
                     .shiftLeft(database.getL())
-                    .add(partitionData);
+                    .or(partitionData);
             }
         }
         // verify that all combined vectors has at most upper-bound bit length
@@ -346,8 +346,8 @@ public class NaiveDatabase implements ModBitNumDatabase {
         MathPreconditions.checkPositiveInRangeClosed("partitionL", partitionL, DatabaseFactory.maxBitDatabaseL(DatabaseType.ZL64));
         int partitionNum = CommonUtils.getUnitNum(l, partitionL);
         Zl64Database[] partitionDatabases = new Zl64Database[partitionNum];
-        // mod = 2^l, where l is the partition L.
-        BigInteger mod = BigInteger.ONE.shiftLeft(partitionL);
+        // and = 2^l - 1, where l is the partition L.
+        BigInteger and = BigInteger.ONE.shiftLeft(partitionL).subtract(BigInteger.ONE);
         int rows = rows();
         // copy the data
         BigInteger[] tempData = new BigInteger[rows];
@@ -356,7 +356,7 @@ public class NaiveDatabase implements ModBitNumDatabase {
         for (int partitionIndex = partitionNum - 1; partitionIndex >= 0; partitionIndex--) {
             long[] partitionData = new long[rows];
             for (int index = 0; index < rows; index++) {
-                BigInteger element = tempData[index].mod(mod);
+                BigInteger element = tempData[index].and(and);
                 tempData[index] = tempData[index].shiftRight(partitionL);
                 partitionData[index] = element.longValue();
             }
@@ -388,7 +388,7 @@ public class NaiveDatabase implements ModBitNumDatabase {
                 BigInteger partitionData = database.getBigIntegerData(rowIndex);
                 data[rowIndex] = data[rowIndex]
                     .shiftLeft(database.getL())
-                    .add(partitionData);
+                    .or(partitionData);
             }
         }
         // verify that all combined vectors has at most upper-bound bit length

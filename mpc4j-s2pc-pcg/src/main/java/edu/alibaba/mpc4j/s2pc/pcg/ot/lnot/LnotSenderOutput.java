@@ -1,18 +1,23 @@
-package edu.alibaba.mpc4j.s2pc.pcg.ot.not;
+package edu.alibaba.mpc4j.s2pc.pcg.ot.lnot;
 
 import edu.alibaba.mpc4j.common.tool.CommonConstants;
 import edu.alibaba.mpc4j.common.tool.utils.BytesUtils;
+import edu.alibaba.mpc4j.common.tool.utils.IntUtils;
 import edu.alibaba.mpc4j.s2pc.pcg.MergedPcgPartyOutput;
 
 import java.util.Arrays;
 
 /**
- * 1-out-of-n OT sender output. The sender gets r_0, r_1, ..., r_{n - 1}.
+ * 1-out-of-n OT sender output, where n = 2^l. The sender gets r_0, r_1, ..., r_{n - 1}.
  *
  * @author Weiran Liu
  * @date 2023/4/9
  */
-public class NotSenderOutput implements MergedPcgPartyOutput {
+public class LnotSenderOutput implements MergedPcgPartyOutput {
+    /**
+     * the choice bit length
+     */
+    private final int l;
     /**
      * the maximal choice
      */
@@ -25,16 +30,16 @@ public class NotSenderOutput implements MergedPcgPartyOutput {
     /**
      * Creates a sender output.
      *
-     * @param n       the maximal choice.
+     * @param l       the choice bit length.
      * @param rsArray the rs array.
      * @return a sender output.
      */
-    public static NotSenderOutput create(int n, byte[][][] rsArray) {
-        NotSenderOutput senderOutput = new NotSenderOutput(n);
+    public static LnotSenderOutput create(int l, byte[][][] rsArray) {
+        LnotSenderOutput senderOutput = new LnotSenderOutput(l);
         assert rsArray.length > 0 : "# of rs must be greater than 0: " + rsArray.length;
         senderOutput.rsArray = Arrays.stream(rsArray)
             .peek(rs -> {
-                assert rs.length == n : "# of r must be equal to " + n + ": " + rs.length;
+                assert rs.length == senderOutput.n : "# of r must be equal to " + senderOutput.n + ": " + rs.length;
                 Arrays.stream(rs).forEach(r -> {
                     assert r.length == CommonConstants.BLOCK_BYTE_LENGTH;
                 });
@@ -48,11 +53,11 @@ public class NotSenderOutput implements MergedPcgPartyOutput {
     /**
      * Creates an empty sender output.
      *
-     * @param n the maximal choice.
+     * @param l the choice bit length.
      * @return an empty sender output.
      */
-    public static NotSenderOutput createEmpty(int n) {
-        NotSenderOutput senderOutput = new NotSenderOutput(n);
+    public static LnotSenderOutput createEmpty(int l) {
+        LnotSenderOutput senderOutput = new LnotSenderOutput(l);
         senderOutput.rsArray = new byte[0][][];
 
         return senderOutput;
@@ -61,13 +66,14 @@ public class NotSenderOutput implements MergedPcgPartyOutput {
     /**
      * private constructor.
      */
-    private NotSenderOutput(int n) {
-        assert n > 1 : "n must be greater than 1: " + n;
-        this.n = n;
+    private LnotSenderOutput(int l) {
+        assert l > 0 && l <= IntUtils.MAX_L : "l must be in range (0, " + IntUtils.MAX_L + "]: " + l;
+        this.l = l;
+        this.n = (1 << l);
     }
 
     @Override
-    public NotSenderOutput split(int splitNum) {
+    public LnotSenderOutput split(int splitNum) {
         int num = getNum();
         assert splitNum > 0 && splitNum <= num : "splitNum must be in range (0, " + num + "]: " + splitNum;
         byte[][][] rsSubArray = new byte[splitNum][][];
@@ -76,7 +82,7 @@ public class NotSenderOutput implements MergedPcgPartyOutput {
         System.arraycopy(rsArray, splitNum, rsRemainArray, 0, num - splitNum);
         rsArray = rsRemainArray;
 
-        return NotSenderOutput.create(n, rsSubArray);
+        return LnotSenderOutput.create(l, rsSubArray);
     }
 
     @Override
@@ -93,8 +99,8 @@ public class NotSenderOutput implements MergedPcgPartyOutput {
 
     @Override
     public void merge(MergedPcgPartyOutput other) {
-        NotSenderOutput that = (NotSenderOutput) other;
-        assert this.n == that.n : "n mismatch";
+        LnotSenderOutput that = (LnotSenderOutput) other;
+        assert this.l == that.l : "l mismatch";
         byte[][][] mergeRsArray = new byte[this.rsArray.length + that.rsArray.length][][];
         System.arraycopy(this.rsArray, 0, mergeRsArray, 0, this.rsArray.length);
         System.arraycopy(that.rsArray, 0, mergeRsArray, this.rsArray.length, that.rsArray.length);
@@ -125,6 +131,15 @@ public class NotSenderOutput implements MergedPcgPartyOutput {
      */
     public byte[][] getRs(int index) {
         return rsArray[index];
+    }
+
+    /**
+     * Gets the choice bit length.
+     *
+     * @return the choice bit length.
+     */
+    public int getL() {
+        return l;
     }
 
     /**
