@@ -6,7 +6,6 @@ import edu.alibaba.mpc4j.crypto.matrix.vector.RingVector;
 import edu.alibaba.mpc4j.crypto.matrix.vector.ZlVector;
 import edu.alibaba.mpc4j.s2pc.aby.basics.ShareVector;
 import edu.alibaba.mpc4j.s2pc.aby.basics.ac.ShareRingVector;
-import edu.alibaba.mpc4j.s2pc.aby.basics.bc.SquareShareZ2Vector;
 import org.apache.commons.lang3.builder.EqualsBuilder;
 import org.apache.commons.lang3.builder.HashCodeBuilder;
 
@@ -161,7 +160,7 @@ public class SquareShareZlVector implements ShareRingVector {
     }
 
     @Override
-    public ShareRingVector add(ShareRingVector other, boolean plain) {
+    public SquareShareZlVector add(ShareRingVector other, boolean plain) {
         SquareShareZlVector that = (SquareShareZlVector) other;
         ZlVector resultVector = vector.add(that.vector);
         return SquareShareZlVector.create(resultVector, plain);
@@ -175,7 +174,7 @@ public class SquareShareZlVector implements ShareRingVector {
     }
 
     @Override
-    public ShareRingVector neg(boolean plain) {
+    public SquareShareZlVector neg(boolean plain) {
         ZlVector resultVector = vector.neg();
         return SquareShareZlVector.create(resultVector, plain);
     }
@@ -187,7 +186,7 @@ public class SquareShareZlVector implements ShareRingVector {
     }
 
     @Override
-    public ShareRingVector sub(ShareRingVector other, boolean plain) {
+    public SquareShareZlVector sub(ShareRingVector other, boolean plain) {
         SquareShareZlVector that = (SquareShareZlVector) other;
         ZlVector resultVector = vector.sub(that.vector);
         return SquareShareZlVector.create(resultVector, plain);
@@ -201,7 +200,7 @@ public class SquareShareZlVector implements ShareRingVector {
     }
 
     @Override
-    public ShareRingVector mul(ShareRingVector other) {
+    public SquareShareZlVector mul(ShareRingVector other) {
         SquareShareZlVector that = (SquareShareZlVector) other;
         ZlVector resultVector = vector.mul(that.vector);
         return SquareShareZlVector.create(resultVector, plain && that.plain);

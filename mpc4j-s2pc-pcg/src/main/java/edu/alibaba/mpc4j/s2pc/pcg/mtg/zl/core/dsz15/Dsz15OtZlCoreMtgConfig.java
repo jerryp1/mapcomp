@@ -80,7 +80,7 @@ public class Dsz15OtZlCoreMtgConfig implements ZlCoreMtgConfig {
         public Builder(Zl zl) {
             super();
             this.zl = zl;
-            cotConfig = CotFactory.createDefaultConfig(SecurityModel.SEMI_HONEST);
+            cotConfig = CotFactory.createCacheConfig(SecurityModel.SEMI_HONEST);
         }
 
         public Builder setCotConfig(CotConfig cotConfig) {

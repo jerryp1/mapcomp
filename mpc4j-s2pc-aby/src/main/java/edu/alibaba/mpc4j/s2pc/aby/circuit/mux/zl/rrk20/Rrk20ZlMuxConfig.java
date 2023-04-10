@@ -1,25 +1,25 @@
-package edu.alibaba.mpc4j.s2pc.aby.hamming.bcp13;
+package edu.alibaba.mpc4j.s2pc.aby.circuit.mux.zl.rrk20;
 
 import edu.alibaba.mpc4j.common.rpc.desc.SecurityModel;
 import edu.alibaba.mpc4j.common.tool.EnvType;
-import edu.alibaba.mpc4j.s2pc.aby.hamming.HammingConfig;
-import edu.alibaba.mpc4j.s2pc.aby.hamming.HammingFactory;
+import edu.alibaba.mpc4j.s2pc.aby.circuit.mux.zl.ZlMuxConfig;
+import edu.alibaba.mpc4j.s2pc.aby.circuit.mux.zl.ZlMuxFactory;
 import edu.alibaba.mpc4j.s2pc.pcg.ot.cot.CotConfig;
 import edu.alibaba.mpc4j.s2pc.pcg.ot.cot.CotFactory;
 
 /**
- * BCP13半诚实安全汉明距离协议配置项。
+ * RRK+20 Zl mux config.
  *
  * @author Weiran Liu
- * @date 2022/11/22
+ * @date 2023/4/10
  */
-public class Bcp13ShHammingConfig implements HammingConfig {
+public class Rrk20ZlMuxConfig implements ZlMuxConfig {
     /**
-     * COT协议配置项
+     * COT config
      */
     private final CotConfig cotConfig;
 
-    private Bcp13ShHammingConfig(Builder builder) {
+    private Rrk20ZlMuxConfig(Builder builder) {
         cotConfig = builder.cotConfig;
     }
 
@@ -28,13 +28,8 @@ public class Bcp13ShHammingConfig implements HammingConfig {
     }
 
     @Override
-    public HammingFactory.HammingType getPtoType() {
-        return HammingFactory.HammingType.BCP13_SEMI_HONEST;
-    }
-
-    @Override
-    public int maxAllowBitNum() {
-        return cotConfig.maxBaseNum();
+    public ZlMuxFactory.ZlMuxType getPtoType() {
+        return ZlMuxFactory.ZlMuxType.RRK20;
     }
 
     @Override
@@ -56,9 +51,9 @@ public class Bcp13ShHammingConfig implements HammingConfig {
         return securityModel;
     }
 
-    public static class Builder implements org.apache.commons.lang3.builder.Builder<Bcp13ShHammingConfig> {
+    public static class Builder implements org.apache.commons.lang3.builder.Builder<Rrk20ZlMuxConfig> {
         /**
-         * COT协议配置项
+         * COT config
          */
         private CotConfig cotConfig;
 
@@ -72,8 +67,8 @@ public class Bcp13ShHammingConfig implements HammingConfig {
         }
 
         @Override
-        public Bcp13ShHammingConfig build() {
-            return new Bcp13ShHammingConfig(this);
+        public Rrk20ZlMuxConfig build() {
+            return new Rrk20ZlMuxConfig(this);
         }
     }
 }
