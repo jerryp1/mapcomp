@@ -94,9 +94,10 @@ set_property(TEST fp_tests PROPERTY WILL_FAIL true)
 
 # Set the include directories
 # target_include_directories(fourq_shared PUBLIC ${CMAKE_CURRENT_BINARY_DIR}/include)
-
+include(GNUInstallDirs)
 # 安装动态库文件和头文件 到系统目录
 # 执行 make install 会默认安装到 /usr/local/ 下对应的目录
 install(TARGETS fourq DESTINATION ${CMAKE_INSTALL_LIBDIR})
-install(FILES ${FOURQ_HEADERS} DESTINATION CMAKE_INSTALL_INCLUDEDIR)
+# note that you must include(GNUInstallDirs) , then you can use this ${CMAKE_INSTALL_INCLUDEDIR}.
+install(FILES ${FOURQ_HEADERS} DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}) 
 

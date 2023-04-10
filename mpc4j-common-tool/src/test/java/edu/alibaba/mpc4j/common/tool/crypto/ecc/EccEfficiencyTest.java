@@ -71,6 +71,7 @@ public class EccEfficiencyTest {
         ByteEccFactory.ByteEccType.X25519_BC,
         ByteEccFactory.ByteEccType.ED25519_SODIUM,
         ByteEccFactory.ByteEccType.ED25519_BC,
+        ByteEccFactory.ByteEccType.FOUR_Q,
     };
 
     @Test
@@ -179,14 +180,12 @@ public class EccEfficiencyTest {
             double mulTime = (double) STOP_WATCH.getTime(TimeUnit.MILLISECONDS) / n;
             STOP_WATCH.reset();
             LOGGER.info(
-                "{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}",
+                "{}\t{}\t{}\t{}\t{}\t{}",
                 StringUtils.leftPad("(B) " + type.name(), 20),
                 StringUtils.leftPad(LOG_N_DECIMAL_FORMAT.format(LOG_N), 10),
                 StringUtils.leftPad(TIME_DECIMAL_FORMAT.format(hashToCurveTime), 10),
                 StringUtils.leftPad(TIME_DECIMAL_FORMAT.format(randomPointTime), 10),
                 StringUtils.leftPad(TIME_DECIMAL_FORMAT.format(mulTime), 10),
-                StringUtils.leftPad("    --    ", 10),
-                StringUtils.leftPad("    --    ", 10),
                 StringUtils.leftPad("    --    ", 10)
             );
         }

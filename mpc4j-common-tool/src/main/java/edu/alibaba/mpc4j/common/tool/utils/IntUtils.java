@@ -12,6 +12,10 @@ import java.util.stream.IntStream;
  */
 public class IntUtils {
     /**
+     * max l
+     */
+    public static final int MAX_L = Integer.SIZE - 2;
+    /**
      * private constructor.
      */
     private IntUtils() {

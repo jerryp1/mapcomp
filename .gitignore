@@ -1,4 +1,6 @@
 target/
+cmake-build-release/
+cmake-build-debug/
 !.mvn/wrapper/maven-wrapper.jar
 
 ### STS ###

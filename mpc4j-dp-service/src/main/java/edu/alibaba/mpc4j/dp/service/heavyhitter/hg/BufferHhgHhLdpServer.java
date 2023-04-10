@@ -457,7 +457,8 @@ public class BufferHhgHhLdpServer extends AbstractHhLdpServer implements HhgHhLd
                 return bucket.getOrDefault(item, 0.0);
             case STATISTICS:
                 // return de-biased C
-                return bucket.getOrDefault(item, defaultDebiasBucketCount(bucketIndex)) / getBucketDebiasFactor();
+                double value = bucket.getOrDefault(item, defaultDebiasBucketCount(bucketIndex)) / getBucketDebiasFactor();
+                return value < 0 ? 0 : value;
             default:
                 throw new IllegalStateException("Invalid " + HhLdpServerState.class.getSimpleName() + ": " + hhLdpServerState);
         }

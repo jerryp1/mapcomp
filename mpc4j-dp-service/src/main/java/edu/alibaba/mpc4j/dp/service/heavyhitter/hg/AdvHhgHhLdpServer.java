@@ -282,7 +282,8 @@ public class AdvHhgHhLdpServer extends AbstractHhLdpServer implements HhgHhLdpSe
                 return bucket.getOrDefault(item, 0.0);
             case STATISTICS:
                 // return de-biased C
-                return bucket.getOrDefault(item, defaultDebiasCount(bucketIndex)) / getDebiasFactor();
+                double value = bucket.getOrDefault(item, defaultDebiasCount(bucketIndex)) / getDebiasFactor();
+                return value < 0 ? 0 : value;
             default:
                 throw new IllegalStateException("Invalid " + HhLdpServerState.class.getSimpleName() + ": " + hhLdpServerState);
         }

@@ -8,9 +8,9 @@ ENABLE_LANGUAGE(ASM)
 set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wfatal-errors -fPIC -Wno-ignored-attributes -pthread -Wall -funroll-loops")
 message("Platform: ${CMAKE_SYSTEM_PROCESSOR}")
 IF(${CMAKE_SYSTEM_PROCESSOR} MATCHES "(aarch64)|(arm64)")
-    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -march=armv8-a+simd+crypto+crc")
+    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -march=armv8-a+simd+crypto+crc -D _ARM64_")
 ELSE()
-    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -march=native -mrdseed -maes -msse2 -msse4.1 -mpclmul")
+    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -march=native -mrdseed -maes -msse2 -msse4.1 -mpclmul -D _AMD64_")
 ENDIF()
 # 默认为Release编译
 if(NOT CMAKE_BUILD_TYPE)
@@ -23,7 +23,7 @@ if (CMAKE_BUILD_TYPE MATCHES Debug)
 endif()
 # 如果为release模式，则使用优化
 if (CMAKE_BUILD_TYPE MATCHES Release)
-    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -O3")
+    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -O3  -D __LINUX__")
 endif()
 # 设置C++编译指令
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${CMAKE_C_FLAGS}")
@@ -189,6 +189,35 @@ else()
         message(FATAL_ERROR "Could not find MCL")
     endif()
 endif()
+# 引入 FouQlib
+if(NOT DEFINED FOURQ_ROOT_DIR)
+    set(FOURQ_ROOT_DIR ${DEFAULT_DIR})
+endif()
+find_path(FOURQ_INCLUDE_DIR
+        NAMES FourQ.h
+        HINTS ENV FOURQ_ROOT_DIR
+        PATH_SUFFIXES include
+        DOC "The directory containing the FourQ include files"
+        )
+find_library(FOURQ_LIBRARY
+        NAMES fourq          # 库的完整名字虽然是 libfourq 但是这里不需要写完整的名字
+        HINTS ENV FOURQ_ROOT_DIR
+        PATH_SUFFIXES lib
+        DOC "Path to the FourQ library"
+        REQUIRED
+        )
+if(FOURQ_INCLUDE_DIR AND FOURQ_LIBRARY)
+    set(FOURQ_FOUND TRUE)
+endif()
+if(FOURQ_FOUND)
+    include_directories(${FOURQ_INCLUDE_DIR})
+    message(STATUS "FOURQ_INCLUDE_DIR_PATH: ${FOURQ_INCLUDE_DIR}")
+    message(STATUS "FOURQ_LIBRARY_PATH: ${FOURQ_LIBRARY}")
+else(FOURQ_FOUND)
+    # if(GMP_FIND_REQUIRED)
+    message(FATAL_ERROR "Could not find FOUQ")
+    # endif()
+endif()
 
 # 构建libent库
 add_library(
@@ -246,6 +275,7 @@ add_library(
         ntl_poly/ntl_tree_zp.cpp
         ntl_poly/edu_alibaba_mpc4j_common_tool_polynomial_zp_NtlTreeZpPoly.cpp
         ntl_poly/ntl_zp_util.cpp
+        ecc_fourq/edu_alibaba_mpc4j_common_tool_crypto_ecc_fourq_FourqByteFullEcc.cpp
 )
 
 target_include_directories(
@@ -263,4 +293,5 @@ target_link_libraries(
         ${OPENSSL_CRYPTO_LIBRARY}
         ${LIBSODIUM_LIBRARY}
         ${MCL_LIBRARY}
+        ${FOURQ_LIBRARY}
 )

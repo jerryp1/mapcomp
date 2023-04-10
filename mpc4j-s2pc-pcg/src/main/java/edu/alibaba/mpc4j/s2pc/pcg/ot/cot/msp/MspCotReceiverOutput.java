@@ -4,6 +4,7 @@ import java.util.Arrays;
 
 import edu.alibaba.mpc4j.common.tool.CommonConstants;
 import edu.alibaba.mpc4j.common.tool.utils.BytesUtils;
+import edu.alibaba.mpc4j.s2pc.pcg.PcgPartyOutput;
 
 /**
  * MSP-COT协议接收方输出。
@@ -11,7 +12,7 @@ import edu.alibaba.mpc4j.common.tool.utils.BytesUtils;
  * @author Weiran Liu
  * @date 2022/01/22
  */
-public class MspCotReceiverOutput {
+public class MspCotReceiverOutput implements PcgPartyOutput {
     /**
      * α数组
      */
@@ -88,11 +89,7 @@ public class MspCotReceiverOutput {
         return rbArray;
     }
 
-    /**
-     * 返回数量。
-     *
-     * @return 数量。
-     */
+    @Override
     public int getNum() {
         return rbArray.length;
     }

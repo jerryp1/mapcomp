@@ -20,6 +20,7 @@
         <module>mpc4j-dp-ldp</module>
         <module>mpc4j-dp-service</module>
         <module>mpc4j-s2pc-aby</module>
+        <module>mpc4j-s2pc-opf</module>
         <module>mpc4j-s2pc-pcg</module>
         <module>mpc4j-s2pc-pir</module>
         <module>mpc4j-s2pc-pso</module>
