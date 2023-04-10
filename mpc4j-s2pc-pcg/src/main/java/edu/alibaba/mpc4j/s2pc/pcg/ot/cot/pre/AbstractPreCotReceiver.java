@@ -8,20 +8,24 @@ import edu.alibaba.mpc4j.common.tool.MathPreconditions;
 import edu.alibaba.mpc4j.s2pc.pcg.ot.cot.CotReceiverOutput;
 
 /**
- * 预计算COT协议接收方。
+ * abstract pre-compute COT receiver.
  *
  * @author Weiran Liu
  * @date 2022/01/14
  */
 public abstract class AbstractPreCotReceiver extends AbstractTwoPartyPto implements PreCotReceiver {
     /**
-     * 预计算接收方输出
+     * pre-compute receiver output
      */
     protected CotReceiverOutput preReceiverOutput;
     /**
-     * 接收方真实选择比特
+     * the choices
      */
     protected boolean[] choices;
+    /**
+     * num
+     */
+    protected int num;
 
     protected AbstractPreCotReceiver(PtoDesc ptoDesc, Rpc receiverRpc, Party senderParty, PreCotConfig config) {
         super(ptoDesc, receiverRpc, senderParty, config);
@@ -33,9 +37,10 @@ public abstract class AbstractPreCotReceiver extends AbstractTwoPartyPto impleme
 
     protected void setPtoInput(CotReceiverOutput preReceiverOutput, boolean[] choices) {
         checkInitialized();
-        MathPreconditions.checkPositive("preCotNum", preReceiverOutput.getNum());
-        MathPreconditions.checkEqual("num", "preCotNum", choices.length, preReceiverOutput.getNum());
+        MathPreconditions.checkPositive("num", preReceiverOutput.getNum());
         this.preReceiverOutput = preReceiverOutput;
+        num = preReceiverOutput.getNum();
+        MathPreconditions.checkEqual("choices.length", "num", choices.length, num);
         this.choices = choices;
         extraInfo++;
     }

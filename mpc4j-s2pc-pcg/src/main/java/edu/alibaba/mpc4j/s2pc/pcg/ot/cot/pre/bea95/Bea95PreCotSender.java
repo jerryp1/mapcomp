@@ -14,7 +14,7 @@ import edu.alibaba.mpc4j.s2pc.pcg.ot.cot.pre.AbstractPreCotSender;
 import edu.alibaba.mpc4j.s2pc.pcg.ot.cot.pre.bea95.Bea95PreCotPtoDesc.PtoStep;
 
 /**
- * Bea95-预计算COT协议发送方。
+ * Bea95 pre-compute COT sender.
  *
  * @author Weiran Liu
  * @date 2022/01/14
@@ -46,8 +46,8 @@ public class Bea95PreCotSender extends AbstractPreCotSender {
         List<byte[]> xorPayload = rpc.receive(xorHeader).getPayload();
         MpcAbortPreconditions.checkArgument(xorPayload.size() == 1);
         byte[] xors = xorPayload.remove(0);
-        int offset = CommonUtils.getByteLength(preSenderOutput.getNum()) * Byte.SIZE - preSenderOutput.getNum();
-        byte[][] r0Array = IntStream.range(0, preSenderOutput.getNum())
+        int offset = CommonUtils.getByteLength(num) * Byte.SIZE - num;
+        byte[][] r0Array = IntStream.range(0, num)
             // 如果纠正比特值，则更换一下位置
             .mapToObj(index -> BinaryUtils.getBoolean(xors, index + offset) ?
                 preSenderOutput.getR1(index) : BytesUtils.clone(preSenderOutput.getR0(index)))

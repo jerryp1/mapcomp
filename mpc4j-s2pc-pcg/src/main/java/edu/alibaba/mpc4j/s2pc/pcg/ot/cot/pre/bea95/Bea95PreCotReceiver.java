@@ -18,7 +18,7 @@ import edu.alibaba.mpc4j.s2pc.pcg.ot.cot.pre.AbstractPreCotReceiver;
 import edu.alibaba.mpc4j.s2pc.pcg.ot.cot.pre.bea95.Bea95PreCotPtoDesc.PtoStep;
 
 /**
- * Bea95-预计算COT协议接收方。
+ * Bea95 pre-compute COT receiver.
  *
  * @author Weiran Liu
  * @date 2022/01/14
