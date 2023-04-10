@@ -46,7 +46,7 @@ public interface ShareVector {
     /**
      * Merge the other share vector.
      *
-     * @param that the other share vector.
+     * @param other the other share vector.
      */
-    void merge(ShareVector that);
+    void merge(ShareVector other);
 }

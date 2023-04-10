@@ -2,22 +2,21 @@ package edu.alibaba.mpc4j.crypto.matrix.vector;
 
 import com.google.common.base.Preconditions;
 import edu.alibaba.mpc4j.common.tool.MathPreconditions;
-import edu.alibaba.mpc4j.common.tool.galoisfield.zl.Zl;
+import edu.alibaba.mpc4j.common.tool.galoisfield.zl64.Zl64;
 import org.apache.commons.lang3.builder.EqualsBuilder;
 import org.apache.commons.lang3.builder.HashCodeBuilder;
 
-import java.math.BigInteger;
 import java.security.SecureRandom;
 import java.util.Arrays;
 import java.util.stream.IntStream;
 
 /**
- * the Zl vector.
+ * the Zl64 vector.
  *
  * @author Weiran Liu
  * @date 2023/4/10
  */
-public class ZlVector implements RingVector {
+public class Zl64Vector implements RingVector {
     /**
      * display data rows
      */
@@ -25,11 +24,11 @@ public class ZlVector implements RingVector {
     /**
      * Zl instance
      */
-    private final Zl zl;
+    private final Zl64 zl64;
     /**
      * elements
      */
-    private BigInteger[] elements;
+    private long[] elements;
     /**
      * parallel operation.
      */
@@ -38,83 +37,83 @@ public class ZlVector implements RingVector {
     /**
      * Creates a vector.
      *
-     * @param zl       Zl instance.
+     * @param zl64     Zl64 instance.
      * @param elements elements.
      * @return a vector.
      */
-    public static ZlVector create(Zl zl, BigInteger[] elements) {
-        ZlVector vector = new ZlVector(zl);
+    public static Zl64Vector create(Zl64 zl64, long[] elements) {
+        Zl64Vector vector = new Zl64Vector(zl64);
         MathPreconditions.checkPositive("num", elements.length);
         vector.elements = Arrays.stream(elements)
-            .peek(element -> Preconditions.checkArgument(zl.validateElement(element)))
-            .toArray(BigInteger[]::new);
+            .peek(element -> Preconditions.checkArgument(zl64.validateElement(element)))
+            .toArray();
         return vector;
     }
 
     /**
      * Creates a random vector.
      *
-     * @param zl           Zl instance.
+     * @param zl64         Zl64 instance.
      * @param num          the num.
      * @param secureRandom the random state.
      * @return a vector.
      */
-    public static ZlVector createRandom(Zl zl, int num, SecureRandom secureRandom) {
-        ZlVector vector = new ZlVector(zl);
+    public static Zl64Vector createRandom(Zl64 zl64, int num, SecureRandom secureRandom) {
+        Zl64Vector vector = new Zl64Vector(zl64);
         MathPreconditions.checkPositive("num", num);
         vector.elements = IntStream.range(0, num)
-            .mapToObj(index -> zl.createRandom(secureRandom))
-            .toArray(BigInteger[]::new);
+            .mapToLong(index -> zl64.createRandom(secureRandom))
+            .toArray();
         return vector;
     }
 
     /**
      * Creates an all-one vector.
      *
-     * @param zl Zl instance.
-     * @param num the num.
+     * @param zl64 Zl64 instance.
+     * @param num  the num.
      * @return a vector.
      */
-    public static ZlVector createOnes(Zl zl, int num) {
-        ZlVector vector = new ZlVector(zl);
+    public static Zl64Vector createOnes(Zl64 zl64, int num) {
+        Zl64Vector vector = new Zl64Vector(zl64);
         MathPreconditions.checkPositive("num", num);
         vector.elements = IntStream.range(0, num)
-            .mapToObj(index -> zl.createOne())
-            .toArray(BigInteger[]::new);
+            .mapToLong(index -> zl64.createOne())
+            .toArray();
         return vector;
     }
 
     /**
      * Creates an all-zero vector.
      *
-     * @param zl Zl instance.
-     * @param num the num.
+     * @param zl64 Zl64 instance.
+     * @param num  the num.
      * @return a vector.
      */
-    public static ZlVector createZeros(Zl zl, int num) {
-        ZlVector vector = new ZlVector(zl);
+    public static Zl64Vector createZeros(Zl64 zl64, int num) {
+        Zl64Vector vector = new Zl64Vector(zl64);
         MathPreconditions.checkPositive("num", num);
         vector.elements = IntStream.range(0, num)
-            .mapToObj(index -> zl.createZero())
-            .toArray(BigInteger[]::new);
+            .mapToLong(index -> zl64.createZero())
+            .toArray();
         return vector;
     }
 
     /**
      * Creates an empty vector.
      *
-     * @param zl Zl instance.
+     * @param zl64 Zl64 instance.
      * @return a vector.
      */
-    public static ZlVector createEmpty(Zl zl) {
-        ZlVector vector = new ZlVector(zl);
-        vector.elements = new BigInteger[0];
+    public static Zl64Vector createEmpty(Zl64 zl64) {
+        Zl64Vector vector = new Zl64Vector(zl64);
+        vector.elements = new long[0];
 
         return vector;
     }
 
-    private ZlVector(Zl zl) {
-        this.zl = zl;
+    private Zl64Vector(Zl64 zl64) {
+        this.zl64 = zl64;
     }
 
     @Override
@@ -123,14 +122,14 @@ public class ZlVector implements RingVector {
     }
 
     @Override
-    public ZlVector copy() {
-        BigInteger[] copyElements = Arrays.copyOf(elements, elements.length);
-        return ZlVector.create(zl, copyElements);
+    public Zl64Vector copy() {
+        long[] copyElements = Arrays.copyOf(elements, elements.length);
+        return Zl64Vector.create(zl64, copyElements);
     }
 
     @Override
     public void replaceCopy(Vector other) {
-        ZlVector that = (ZlVector) other;
+        Zl64Vector that = (Zl64Vector) other;
         MathPreconditions.checkEqual("this.num", "that.num", this.getNum(), that.getNum());
         int num = getNum();
         System.arraycopy(that.elements, 0, this.elements, 0, num);
@@ -142,15 +141,15 @@ public class ZlVector implements RingVector {
     }
 
     @Override
-    public ZlVector split(int splitNum) {
+    public Zl64Vector split(int splitNum) {
         int num = getNum();
         MathPreconditions.checkPositiveInRangeClosed("splitNum", splitNum, num);
-        BigInteger[] subElements = new BigInteger[splitNum];
-        BigInteger[] remainElements = new BigInteger[num - splitNum];
+        long[] subElements = new long[splitNum];
+        long[] remainElements = new long[num - splitNum];
         System.arraycopy(elements, 0, subElements, 0, splitNum);
         System.arraycopy(elements, splitNum, remainElements, 0, num - splitNum);
         elements = remainElements;
-        return ZlVector.create(zl, subElements);
+        return Zl64Vector.create(zl64, subElements);
     }
 
     @Override
@@ -159,7 +158,7 @@ public class ZlVector implements RingVector {
         MathPreconditions.checkPositiveInRangeClosed("reduceNum", reduceNum, num);
         if (reduceNum < num) {
             // reduce if the reduced rows is less than rows.
-            BigInteger[] remainElements = new BigInteger[reduceNum];
+            long[] remainElements = new long[reduceNum];
             System.arraycopy(elements, 0, remainElements, 0, reduceNum);
             elements = remainElements;
         }
@@ -167,46 +166,46 @@ public class ZlVector implements RingVector {
 
     @Override
     public void merge(Vector other) {
-        ZlVector that = (ZlVector) other;
-        Preconditions.checkArgument(this.zl.equals(that.zl));
-        BigInteger[] mergeElements = new BigInteger[this.elements.length + that.elements.length];
+        Zl64Vector that = (Zl64Vector) other;
+        Preconditions.checkArgument(this.zl64.equals(that.zl64));
+        long[] mergeElements = new long[this.elements.length + that.elements.length];
         System.arraycopy(this.elements, 0, mergeElements, 0, this.elements.length);
         System.arraycopy(that.elements, 0, mergeElements, this.elements.length, that.elements.length);
         elements = mergeElements;
     }
 
     @Override
-    public ZlVector add(RingVector other) {
-        ZlVector that = (ZlVector) other;
+    public Zl64Vector add(RingVector other) {
+        Zl64Vector that = (Zl64Vector) other;
         checkInputs(that);
         int num = getNum();
         IntStream indexIntStream = IntStream.range(0, num);
         indexIntStream = parallel ? indexIntStream.parallel() : indexIntStream;
-        BigInteger[] results = indexIntStream
-            .mapToObj(index -> zl.add(this.elements[index], that.elements[index]))
-            .toArray(BigInteger[]::new);
-        return ZlVector.create(zl, results);
+        long[] results = indexIntStream
+            .mapToLong(index -> zl64.add(this.elements[index], that.elements[index]))
+            .toArray();
+        return Zl64Vector.create(zl64, results);
     }
 
     @Override
     public void addi(RingVector other) {
-        ZlVector that = (ZlVector) other;
+        Zl64Vector that = (Zl64Vector) other;
         checkInputs(that);
         int num = getNum();
         IntStream indexIntStream = IntStream.range(0, num);
         indexIntStream = parallel ? indexIntStream.parallel() : indexIntStream;
-        indexIntStream.forEach(index -> this.elements[index] = zl.add(this.elements[index], that.elements[index]));
+        indexIntStream.forEach(index -> this.elements[index] = zl64.add(this.elements[index], that.elements[index]));
     }
 
     @Override
-    public ZlVector neg() {
+    public Zl64Vector neg() {
         int num = getNum();
         IntStream indexIntStream = IntStream.range(0, num);
         indexIntStream = parallel ? indexIntStream.parallel() : indexIntStream;
-        BigInteger[] results = indexIntStream
-            .mapToObj(index -> zl.neg(elements[index]))
-            .toArray(BigInteger[]::new);
-        return ZlVector.create(zl, results);
+        long[] results = indexIntStream
+            .mapToLong(index -> zl64.neg(elements[index]))
+            .toArray();
+        return Zl64Vector.create(zl64, results);
     }
 
     @Override
@@ -214,67 +213,67 @@ public class ZlVector implements RingVector {
         int num = getNum();
         IntStream indexIntStream = IntStream.range(0, num);
         indexIntStream = parallel ? indexIntStream.parallel() : indexIntStream;
-        indexIntStream.forEach(index -> elements[index] = zl.neg(elements[index]));
+        indexIntStream.forEach(index -> elements[index] = zl64.neg(elements[index]));
     }
 
     @Override
-    public ZlVector sub(RingVector other) {
-        ZlVector that = (ZlVector) other;
+    public Zl64Vector sub(RingVector other) {
+        Zl64Vector that = (Zl64Vector) other;
         checkInputs(that);
         int num = getNum();
         IntStream indexIntStream = IntStream.range(0, num);
         indexIntStream = parallel ? indexIntStream.parallel() : indexIntStream;
-        BigInteger[] results = indexIntStream
-            .mapToObj(index -> zl.sub(this.elements[index], that.elements[index]))
-            .toArray(BigInteger[]::new);
-        return ZlVector.create(zl, results);
+        long[] results = indexIntStream
+            .mapToLong(index -> zl64.sub(this.elements[index], that.elements[index]))
+            .toArray();
+        return Zl64Vector.create(zl64, results);
     }
 
     @Override
     public void subi(RingVector other) {
-        ZlVector that = (ZlVector) other;
+        Zl64Vector that = (Zl64Vector) other;
         checkInputs(that);
         int num = getNum();
         IntStream indexIntStream = IntStream.range(0, num);
         indexIntStream = parallel ? indexIntStream.parallel() : indexIntStream;
-        indexIntStream.forEach(index -> this.elements[index] = zl.sub(this.elements[index], that.elements[index]));
+        indexIntStream.forEach(index -> this.elements[index] = zl64.sub(this.elements[index], that.elements[index]));
     }
 
     @Override
-    public ZlVector mul(RingVector other) {
-        ZlVector that = (ZlVector) other;
+    public Zl64Vector mul(RingVector other) {
+        Zl64Vector that = (Zl64Vector) other;
         checkInputs(that);
         int num = getNum();
         IntStream indexIntStream = IntStream.range(0, num);
         indexIntStream = parallel ? indexIntStream.parallel() : indexIntStream;
-        BigInteger[] results = indexIntStream
-            .mapToObj(index -> zl.mul(this.elements[index], that.elements[index]))
-            .toArray(BigInteger[]::new);
-        return ZlVector.create(zl, results);
+        long[] results = indexIntStream
+            .mapToLong(index -> zl64.mul(this.elements[index], that.elements[index]))
+            .toArray();
+        return Zl64Vector.create(zl64, results);
     }
 
     @Override
     public void muli(RingVector other) {
-        ZlVector that = (ZlVector) other;
+        Zl64Vector that = (Zl64Vector) other;
         checkInputs(that);
         int num = getNum();
         IntStream indexIntStream = IntStream.range(0, num);
         indexIntStream = parallel ? indexIntStream.parallel() : indexIntStream;
-        indexIntStream.forEach(index -> this.elements[index] = zl.mul(this.elements[index], that.elements[index]));
+        indexIntStream.forEach(index -> this.elements[index] = zl64.mul(this.elements[index], that.elements[index]));
     }
 
-    private void checkInputs(ZlVector that) {
-        Preconditions.checkArgument(this.zl.equals(that.zl));
+    private void checkInputs(Zl64Vector that) {
+        Preconditions.checkArgument(this.zl64.equals(that.zl64));
         MathPreconditions.checkEqual("this.num", "that.num", this.getNum(), that.getNum());
     }
 
     /**
-     * Gets Zl instance.
+     * Gets Zl64 instance.
      *
-     * @return Zl instance.
+     * @return Zl64 instance.
      */
-    public Zl getZl() {
-        return zl;
+    public Zl64 getZl64() {
+        return zl64;
     }
 
     /**
@@ -283,7 +282,7 @@ public class ZlVector implements RingVector {
      * @param index the index.
      * @return the element.
      */
-    public BigInteger getElement(int index) {
+    public long getElement(int index) {
         return elements[index];
     }
 
@@ -292,14 +291,14 @@ public class ZlVector implements RingVector {
      *
      * @return the elements.
      */
-    public BigInteger[] getElements() {
+    public long[] getElements() {
         return elements;
     }
 
     @Override
     public int hashCode() {
         return new HashCodeBuilder()
-            .append(zl)
+            .append(zl64)
             .append(elements)
             .hashCode();
     }
@@ -309,13 +308,13 @@ public class ZlVector implements RingVector {
         if (this == obj) {
             return true;
         }
-        if (obj instanceof ZlVector) {
-            ZlVector that = (ZlVector) obj;
+        if (obj instanceof Zl64Vector) {
+            Zl64Vector that = (Zl64Vector) obj;
             if (this.getNum() != that.getNum()) {
                 return false;
             }
             return new EqualsBuilder()
-                .append(this.zl, that.zl)
+                .append(this.zl64, that.zl64)
                 .append(this.elements, that.elements)
                 .isEquals();
         }
@@ -325,8 +324,8 @@ public class ZlVector implements RingVector {
     @Override
     public String toString() {
         String[] stringData = Arrays.stream(Arrays.copyOf(elements, DISPLAY_DATA_ROWS))
-            .map(BigInteger::toString)
+            .mapToObj(String::valueOf)
             .toArray(String[]::new);
-        return this.getClass().getSimpleName() + " (l = " + zl.getL() + "): " + Arrays.toString(stringData);
+        return this.getClass().getSimpleName() + " (l = " + zl64.getL() + "): " + Arrays.toString(stringData);
     }
 }

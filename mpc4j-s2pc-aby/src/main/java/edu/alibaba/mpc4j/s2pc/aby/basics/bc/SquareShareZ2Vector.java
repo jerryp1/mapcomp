@@ -9,7 +9,7 @@ import org.apache.commons.lang3.builder.HashCodeBuilder;
 import java.security.SecureRandom;
 
 /**
- * Square secret-share bit vector ([x]). The share is of the form: x = x_0 ⊕ x_1.
+ * Square share bit vector ([x]). The share is of the form: x = x_0 ⊕ x_1.
  *
  * @author Weiran Liu
  * @date 2022/02/11
@@ -20,17 +20,17 @@ public class SquareShareZ2Vector implements ShareZ2Vector {
      */
     private BitVector bitVector;
     /**
-     * whether the share bit vector is in plain state.
+     * the plain state.
      */
     private boolean plain;
 
     /**
-     * Create a square-share bit vector.
+     * Create a share bit vector.
      *
-     * @param bitNum the number of bits.
+     * @param bitNum the bit num.
      * @param bytes  the assigned bits represented by bytes.
-     * @param plain  whether the bit vector is in plain state.
-     * @return the created square-share bit vector.
+     * @param plain  the plain state.
+     * @return a share bit vector.
      */
     public static SquareShareZ2Vector create(int bitNum, byte[] bytes, boolean plain) {
         SquareShareZ2Vector shareBitVector = new SquareShareZ2Vector();
@@ -41,11 +41,11 @@ public class SquareShareZ2Vector implements ShareZ2Vector {
     }
 
     /**
-     * Create a square-share bit vector.
+     * Create a share bit vector.
      *
      * @param bitVector the bit vector.
-     * @param plain     whether the bit vector is in plain state.
-     * @return the created square-share bit vector.
+     * @param plain     the plain state.
+     * @return a share bit vector.
      */
     public static SquareShareZ2Vector create(BitVector bitVector, boolean plain) {
         SquareShareZ2Vector shareBitVector = new SquareShareZ2Vector();
@@ -56,11 +56,11 @@ public class SquareShareZ2Vector implements ShareZ2Vector {
     }
 
     /**
-     * Create a square-share bit vector, the given bit vector is copied.
+     * Create a share bit vector, the given bit vector is copied.
      *
      * @param bitVector the bit vector.
-     * @param plain     whether the bit vector is in plain state.
-     * @return the created square-share bit vector.
+     * @param plain     the plain state.
+     * @return a share bit vector.
      */
     public static SquareShareZ2Vector createCopy(BitVector bitVector, boolean plain) {
         SquareShareZ2Vector shareBitVector = new SquareShareZ2Vector();
@@ -71,25 +71,25 @@ public class SquareShareZ2Vector implements ShareZ2Vector {
     }
 
     /**
-     * Create a (secret) random square-share bit vector.
+     * Create a (plain) random share bit vector.
      *
-     * @param bitNum       number of bits.
+     * @param bitNum       the bit num.
      * @param secureRandom the random states.
-     * @return the created square-share bit vector.
+     * @return a share bit vector.
      */
     public static SquareShareZ2Vector createRandom(int bitNum, SecureRandom secureRandom) {
         SquareShareZ2Vector shareBitVector = new SquareShareZ2Vector();
         shareBitVector.bitVector = BitVectorFactory.createRandom(bitNum, secureRandom);
-        shareBitVector.plain = false;
+        shareBitVector.plain = true;
 
         return shareBitVector;
     }
 
     /**
-     * Create a (plain) square-share bit vector with all bits are 1.
+     * Create a (plain) all-one share bit vector.
      *
-     * @param bitNum number of bits.
-     * @return the created square-share bit vector.
+     * @param bitNum the bit num.
+     * @return a share bit vector.
      */
     public static SquareShareZ2Vector createOnes(int bitNum) {
         SquareShareZ2Vector squareShareBitVector = new SquareShareZ2Vector();
@@ -100,10 +100,10 @@ public class SquareShareZ2Vector implements ShareZ2Vector {
     }
 
     /**
-     * Create a (plain) square-share bit vector with all bits are 0.
+     * Create a (plain) all-zero bit vector.
      *
-     * @param bitNum number of bits.
-     * @return the created square-share bit vector.
+     * @param bitNum the bit num.
+     * @return a share bit vector.
      */
     public static SquareShareZ2Vector createZeros(int bitNum) {
         SquareShareZ2Vector squareShareBitVector = new SquareShareZ2Vector();
@@ -114,10 +114,10 @@ public class SquareShareZ2Vector implements ShareZ2Vector {
     }
 
     /**
-     * Create an empty square-share bit vector.
+     * Create an empty share bit vector.
      *
-     * @param plain whether the bit vector is in plain state.
-     * @return the created square-share bit vector.
+     * @param plain the plain state.
+     * @return a share bit vector.
      */
     public static SquareShareZ2Vector createEmpty(boolean plain) {
         SquareShareZ2Vector squareShareBitVector = new SquareShareZ2Vector();

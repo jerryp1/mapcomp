@@ -4,24 +4,24 @@ import edu.alibaba.mpc4j.common.tool.bitvector.BitVector;
 import edu.alibaba.mpc4j.s2pc.aby.basics.ShareVector;
 
 /**
- * Secret-shared bit vector.
+ * share Z2 vector.
  *
  * @author Weiran Liu
  * @date 2022/12/16
  */
 public interface ShareZ2Vector extends ShareVector {
     /**
-     * Get the number of bytes in the share bit vector.
+     * Gets the num in bytes.
      *
-     * @return the number of bytes in the share bit vector.
+     * @return the num in bytes.
      */
     int getByteNum();
 
     /**
-     * Replace the bit vector.
+     * Replaces the Z2 vector.
      *
-     * @param bitVector the bit vector.
-     * @param plain if the share bit vector is in plain state.
+     * @param bitVector the Z2 vector.
+     * @param plain     the plain state.
      */
     void replaceCopy(BitVector bitVector, boolean plain);
 
@@ -41,70 +41,70 @@ public interface ShareZ2Vector extends ShareVector {
     boolean get(int index);
 
     /**
-     * Get the share bit vector represented by bytes.
+     * Get the share Z2 vector represented by bytes.
      *
-     * @return the share bit vector represented by bytes.
+     * @return the share Z2 vector represented by bytes.
      */
     default byte[] getBytes() {
         return getBitVector().getBytes();
     }
 
     /**
-     * XOR operation.
+     * XOR.
      *
-     * @param that the other share bit vector.
+     * @param that  the other share Z2 vector.
      * @param plain the result plain state.
-     * @return the XOR result.
+     * @return the result.
      */
     ShareZ2Vector xor(ShareZ2Vector that, boolean plain);
 
     /**
-     * Inner XOR operation.
+     * In-place XOR.
      *
-     * @param that the other share bit vector.
+     * @param that  the other share Z2 vector.
      * @param plain the result plain state.
      */
     void xori(ShareZ2Vector that, boolean plain);
 
     /**
-     * AND operation.
+     * AND.
      *
-     * @param that the other share bit vector.
-     * @return the AND result.
+     * @param that the other share Z2 vector.
+     * @return the result.
      */
     ShareZ2Vector and(ShareZ2Vector that);
 
     /**
-     * Inner AND operation.
+     * In-place AND.
      *
-     * @param that the other share bit vector.
+     * @param that the other share Z2 vector.
      */
     void andi(ShareZ2Vector that);
 
     /**
-     * OR operation.
+     * OR.
      *
-     * @param that the other share bit vector.
-     * @return the OR result.
+     * @param that the other share Z2 vector.
+     * @return the result.
      */
     ShareZ2Vector or(ShareZ2Vector that);
 
     /**
-     * Inner OR operation.
+     * In-place OR.
      *
-     * @param that the other share bit vector.
+     * @param that the other share Z2 vector.
      */
     void ori(ShareZ2Vector that);
 
     /**
-     * NOT operation.
+     * NOT.
      *
-     * @return the NOT result.
+     * @return the result.
      */
     ShareZ2Vector not();
 
     /**
-     * Inner NOT operation.
+     * In-place NOT.
      */
     void noti();
 }
