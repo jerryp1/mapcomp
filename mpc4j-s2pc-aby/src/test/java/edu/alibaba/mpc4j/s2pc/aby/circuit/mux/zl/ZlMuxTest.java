@@ -13,6 +13,7 @@ import edu.alibaba.mpc4j.crypto.matrix.vector.ZlVector;
 import edu.alibaba.mpc4j.s2pc.aby.basics.ac.zl.SquareShareZlVector;
 import edu.alibaba.mpc4j.s2pc.aby.basics.bc.SquareShareZ2Vector;
 import edu.alibaba.mpc4j.s2pc.aby.circuit.mux.zl.ZlMuxFactory.ZlMuxType;
+import edu.alibaba.mpc4j.s2pc.aby.circuit.mux.zl.rrg21.Rrg21ZlMuxConfig;
 import edu.alibaba.mpc4j.s2pc.aby.circuit.mux.zl.rrk20.Rrk20ZlMuxConfig;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.time.StopWatch;
@@ -64,6 +65,10 @@ public class ZlMuxTest {
     public static Collection<Object[]> configurations() {
         Collection<Object[]> configurations = new ArrayList<>();
 
+        // RRG+21
+        configurations.add(new Object[]{
+            ZlMuxType.RRG21.name(), new Rrg21ZlMuxConfig.Builder().build()
+        });
         // RRK+20
         configurations.add(new Object[]{
             ZlMuxType.RRK20.name(), new Rrk20ZlMuxConfig.Builder().build()

@@ -21,7 +21,7 @@ class Rrk20ZlMuxPtoDesc implements PtoDesc {
     /**
      * protocol name
      */
-    private static final String PTO_NAME = "RRK+20";
+    private static final String PTO_NAME = "RRK+20_ZL_MUX";
 
     /**
      * protocol step
