@@ -2,6 +2,7 @@ package edu.alibaba.mpc4j.s2pc.aby.basics.bc;
 
 import edu.alibaba.mpc4j.common.tool.bitvector.BitVector;
 import edu.alibaba.mpc4j.common.tool.bitvector.BitVectorFactory;
+import edu.alibaba.mpc4j.s2pc.aby.basics.ShareVector;
 import org.apache.commons.lang3.builder.EqualsBuilder;
 import org.apache.commons.lang3.builder.HashCodeBuilder;
 
@@ -13,7 +14,7 @@ import java.security.SecureRandom;
  * @author Weiran Liu
  * @date 2022/02/11
  */
-public class SquareSbitVector implements SbitVector {
+public class SquareShareZ2Vector implements ShareZ2Vector {
     /**
      * the bit vector
      */
@@ -31,8 +32,8 @@ public class SquareSbitVector implements SbitVector {
      * @param plain  whether the bit vector is in plain state.
      * @return the created square-share bit vector.
      */
-    public static SquareSbitVector create(int bitNum, byte[] bytes, boolean plain) {
-        SquareSbitVector shareBitVector = new SquareSbitVector();
+    public static SquareShareZ2Vector create(int bitNum, byte[] bytes, boolean plain) {
+        SquareShareZ2Vector shareBitVector = new SquareShareZ2Vector();
         shareBitVector.bitVector = BitVectorFactory.create(bitNum, bytes);
         shareBitVector.plain = plain;
 
@@ -46,8 +47,8 @@ public class SquareSbitVector implements SbitVector {
      * @param plain     whether the bit vector is in plain state.
      * @return the created square-share bit vector.
      */
-    public static SquareSbitVector create(BitVector bitVector, boolean plain) {
-        SquareSbitVector shareBitVector = new SquareSbitVector();
+    public static SquareShareZ2Vector create(BitVector bitVector, boolean plain) {
+        SquareShareZ2Vector shareBitVector = new SquareShareZ2Vector();
         shareBitVector.bitVector = bitVector;
         shareBitVector.plain = plain;
 
@@ -61,8 +62,8 @@ public class SquareSbitVector implements SbitVector {
      * @param plain     whether the bit vector is in plain state.
      * @return the created square-share bit vector.
      */
-    public static SquareSbitVector createCopy(BitVector bitVector, boolean plain) {
-        SquareSbitVector shareBitVector = new SquareSbitVector();
+    public static SquareShareZ2Vector createCopy(BitVector bitVector, boolean plain) {
+        SquareShareZ2Vector shareBitVector = new SquareShareZ2Vector();
         shareBitVector.bitVector = bitVector.copy();
         shareBitVector.plain = plain;
 
@@ -76,8 +77,8 @@ public class SquareSbitVector implements SbitVector {
      * @param secureRandom the random states.
      * @return the created square-share bit vector.
      */
-    public static SquareSbitVector createRandom(int bitNum, SecureRandom secureRandom) {
-        SquareSbitVector shareBitVector = new SquareSbitVector();
+    public static SquareShareZ2Vector createRandom(int bitNum, SecureRandom secureRandom) {
+        SquareShareZ2Vector shareBitVector = new SquareShareZ2Vector();
         shareBitVector.bitVector = BitVectorFactory.createRandom(bitNum, secureRandom);
         shareBitVector.plain = false;
 
@@ -90,8 +91,8 @@ public class SquareSbitVector implements SbitVector {
      * @param bitNum number of bits.
      * @return the created square-share bit vector.
      */
-    public static SquareSbitVector createOnes(int bitNum) {
-        SquareSbitVector squareShareBitVector = new SquareSbitVector();
+    public static SquareShareZ2Vector createOnes(int bitNum) {
+        SquareShareZ2Vector squareShareBitVector = new SquareShareZ2Vector();
         squareShareBitVector.bitVector = BitVectorFactory.createOnes(bitNum);
         squareShareBitVector.plain = true;
 
@@ -104,8 +105,8 @@ public class SquareSbitVector implements SbitVector {
      * @param bitNum number of bits.
      * @return the created square-share bit vector.
      */
-    public static SquareSbitVector createZeros(int bitNum) {
-        SquareSbitVector squareShareBitVector = new SquareSbitVector();
+    public static SquareShareZ2Vector createZeros(int bitNum) {
+        SquareShareZ2Vector squareShareBitVector = new SquareShareZ2Vector();
         squareShareBitVector.bitVector = BitVectorFactory.createZeros(bitNum);
         squareShareBitVector.plain = true;
 
@@ -118,21 +119,21 @@ public class SquareSbitVector implements SbitVector {
      * @param plain whether the bit vector is in plain state.
      * @return the created square-share bit vector.
      */
-    public static SquareSbitVector createEmpty(boolean plain) {
-        SquareSbitVector squareShareBitVector = new SquareSbitVector();
+    public static SquareShareZ2Vector createEmpty(boolean plain) {
+        SquareShareZ2Vector squareShareBitVector = new SquareShareZ2Vector();
         squareShareBitVector.bitVector = BitVectorFactory.createEmpty();
         squareShareBitVector.plain = plain;
 
         return squareShareBitVector;
     }
 
-    private SquareSbitVector() {
+    private SquareShareZ2Vector() {
         // empty
     }
 
     @Override
-    public SquareSbitVector copy() {
-        SquareSbitVector clone = new SquareSbitVector();
+    public SquareShareZ2Vector copy() {
+        SquareShareZ2Vector clone = new SquareShareZ2Vector();
         clone.bitVector = bitVector.copy();
         clone.plain = plain;
 
@@ -140,12 +141,12 @@ public class SquareSbitVector implements SbitVector {
     }
 
     @Override
-    public int bitNum() {
+    public int getNum() {
         return bitVector.bitNum();
     }
 
     @Override
-    public int byteNum() {
+    public int getByteNum() {
         return bitVector.byteNum();
     }
 
@@ -161,14 +162,19 @@ public class SquareSbitVector implements SbitVector {
     }
 
     @Override
+    public boolean get(int index) {
+        return bitVector.get(index);
+    }
+
+    @Override
     public boolean isPlain() {
         return plain;
     }
 
     @Override
-    public SquareSbitVector split(int bitNum) {
+    public SquareShareZ2Vector split(int bitNum) {
         BitVector splitBitVector = bitVector.split(bitNum);
-        return SquareSbitVector.create(splitBitVector, plain);
+        return SquareShareZ2Vector.create(splitBitVector, plain);
     }
 
     @Override
@@ -177,51 +183,52 @@ public class SquareSbitVector implements SbitVector {
     }
 
     @Override
-    public void merge(SbitVector that) {
+    public void merge(ShareVector other) {
+        SquareShareZ2Vector that = (SquareShareZ2Vector) other;
         assert this.plain == that.isPlain() : "merged ones must have the same public state";
         bitVector.merge(that.getBitVector());
     }
 
     @Override
-    public SquareSbitVector xor(SbitVector that, boolean plain) {
+    public SquareShareZ2Vector xor(ShareZ2Vector that, boolean plain) {
         BitVector resultBitVector = bitVector.xor(that.getBitVector());
-        return SquareSbitVector.create(resultBitVector, plain);
+        return SquareShareZ2Vector.create(resultBitVector, plain);
     }
 
     @Override
-    public void xori(SbitVector that, boolean plain) {
+    public void xori(ShareZ2Vector that, boolean plain) {
         bitVector.xori(that.getBitVector());
         this.plain = plain;
     }
 
     @Override
-    public SquareSbitVector and(SbitVector that) {
+    public SquareShareZ2Vector and(ShareZ2Vector that) {
         BitVector resultBitVector = bitVector.and(that.getBitVector());
-        return SquareSbitVector.create(resultBitVector, plain && that.isPlain());
+        return SquareShareZ2Vector.create(resultBitVector, plain && that.isPlain());
     }
 
     @Override
-    public void andi(SbitVector that) {
+    public void andi(ShareZ2Vector that) {
         bitVector.andi(that.getBitVector());
         plain = plain && that.isPlain();
     }
 
     @Override
-    public SquareSbitVector or(SbitVector that) {
+    public SquareShareZ2Vector or(ShareZ2Vector that) {
         BitVector resultBitVector = bitVector.or(that.getBitVector());
-        return SquareSbitVector.create(resultBitVector, plain && that.isPlain());
+        return SquareShareZ2Vector.create(resultBitVector, plain && that.isPlain());
     }
 
     @Override
-    public void ori(SbitVector that) {
+    public void ori(ShareZ2Vector that) {
         bitVector.ori(that.getBitVector());
         plain = plain && that.isPlain();
     }
 
     @Override
-    public SquareSbitVector not() {
+    public SquareShareZ2Vector not() {
         BitVector resultBitVector = bitVector.not();
-        return SquareSbitVector.create(resultBitVector, plain);
+        return SquareShareZ2Vector.create(resultBitVector, plain);
     }
 
     @Override
@@ -242,8 +249,8 @@ public class SquareSbitVector implements SbitVector {
         if (this == obj) {
             return true;
         }
-        if (obj instanceof SquareSbitVector) {
-            SquareSbitVector that = (SquareSbitVector) obj;
+        if (obj instanceof SquareShareZ2Vector) {
+            SquareShareZ2Vector that = (SquareShareZ2Vector) obj;
             return new EqualsBuilder()
                 .append(this.bitVector, that.bitVector)
                 .append(this.plain, that.plain)

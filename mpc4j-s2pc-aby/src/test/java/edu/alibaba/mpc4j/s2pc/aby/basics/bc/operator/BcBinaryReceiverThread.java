@@ -4,7 +4,7 @@ import edu.alibaba.mpc4j.common.rpc.MpcAbortException;
 import edu.alibaba.mpc4j.common.tool.bitvector.BitVector;
 import edu.alibaba.mpc4j.s2pc.aby.basics.bc.BcOperator;
 import edu.alibaba.mpc4j.s2pc.aby.basics.bc.BcParty;
-import edu.alibaba.mpc4j.s2pc.aby.basics.bc.SquareSbitVector;
+import edu.alibaba.mpc4j.s2pc.aby.basics.bc.SquareShareZ2Vector;
 
 /**
  * Receiver test thread for Boolean circuit binary operator.
@@ -36,15 +36,15 @@ class BcBinaryReceiverThread extends Thread {
     /**
      * share x1
      */
-    private SquareSbitVector shareX1;
+    private SquareShareZ2Vector shareX1;
     /**
      * final x101
      */
-    private SquareSbitVector finalX011;
+    private SquareShareZ2Vector finalX011;
     /**
      * final x001
      */
-    private SquareSbitVector finalX001;
+    private SquareShareZ2Vector finalX001;
     /**
      * z (plain, plain)
      */
@@ -86,15 +86,15 @@ class BcBinaryReceiverThread extends Thread {
         return z00Vector;
     }
 
-    SquareSbitVector getShareX1() {
+    SquareShareZ2Vector getShareX1() {
         return shareX1;
     }
 
-    SquareSbitVector getFinalX011() {
+    SquareShareZ2Vector getFinalX011() {
         return finalX011;
     }
 
-    SquareSbitVector getFinalX001() {
+    SquareShareZ2Vector getFinalX001() {
         return finalX001;
     }
 
@@ -103,12 +103,12 @@ class BcBinaryReceiverThread extends Thread {
         try {
             receiver.init(bitNum, bitNum);
             // generate x and y
-            SquareSbitVector x = SquareSbitVector.create(xBitVector, true);
-            SquareSbitVector y = SquareSbitVector.create(yBitVector, true);
-            SquareSbitVector x1 = receiver.shareOther(bitNum);
+            SquareShareZ2Vector x = SquareShareZ2Vector.create(xBitVector, true);
+            SquareShareZ2Vector y = SquareShareZ2Vector.create(yBitVector, true);
+            SquareShareZ2Vector x1 = receiver.shareOther(bitNum);
             shareX1 = x1.copy();
-            SquareSbitVector y1 = receiver.shareOwn(yBitVector);
-            SquareSbitVector z111, z101, z011, z001;
+            SquareShareZ2Vector y1 = receiver.shareOwn(yBitVector);
+            SquareShareZ2Vector z111, z101, z011, z001;
             switch (bcOperator) {
                 case XOR:
                     // (plain, plain)

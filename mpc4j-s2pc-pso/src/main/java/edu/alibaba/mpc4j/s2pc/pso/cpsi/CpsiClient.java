@@ -2,8 +2,7 @@ package edu.alibaba.mpc4j.s2pc.pso.cpsi;
 
 import edu.alibaba.mpc4j.common.rpc.MpcAbortException;
 import edu.alibaba.mpc4j.common.rpc.pto.TwoPartyPto;
-import edu.alibaba.mpc4j.common.tool.bitvector.BitVector;
-import edu.alibaba.mpc4j.s2pc.aby.basics.bc.SquareSbitVector;
+import edu.alibaba.mpc4j.s2pc.aby.basics.bc.SquareShareZ2Vector;
 
 import java.util.Set;
 
@@ -31,5 +30,5 @@ public interface CpsiClient<T> extends TwoPartyPto {
      * @return 协议输出结果。
      * @throws MpcAbortException 如果协议异常中止。
      */
-    SquareSbitVector psi(Set<T> clientElementSet, int serverElementSize) throws MpcAbortException;
+    SquareShareZ2Vector psi(Set<T> clientElementSet, int serverElementSize) throws MpcAbortException;
 }
