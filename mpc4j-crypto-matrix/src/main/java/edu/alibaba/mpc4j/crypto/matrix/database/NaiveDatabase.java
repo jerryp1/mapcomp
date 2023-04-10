@@ -1,6 +1,7 @@
 package edu.alibaba.mpc4j.crypto.matrix.database;
 
 import com.google.common.base.Preconditions;
+import edu.alibaba.mpc4j.crypto.matrix.MatrixUtils;
 import edu.alibaba.mpc4j.crypto.matrix.database.DatabaseFactory.DatabaseType;
 import edu.alibaba.mpc4j.common.tool.EnvType;
 import edu.alibaba.mpc4j.common.tool.MathPreconditions;
@@ -29,10 +30,6 @@ import java.util.stream.IntStream;
  * @date 2023/4/5
  */
 public class NaiveDatabase implements ModBitNumDatabase {
-    /**
-     * display data rows
-     */
-    private static final int DISPLAY_DATA_ROWS = 256;
     /**
      * element bit length
      */
@@ -263,7 +260,7 @@ public class NaiveDatabase implements ModBitNumDatabase {
 
     @Override
     public String toString() {
-        String[] stringData = Arrays.stream(Arrays.copyOf(data, DISPLAY_DATA_ROWS))
+        String[] stringData = Arrays.stream(Arrays.copyOf(data, MatrixUtils.DISPLAY_NUM))
             .map(element -> element.toString(16))
             .map(element -> element.toUpperCase(Locale.ROOT))
             .toArray(String[]::new);
@@ -373,6 +370,69 @@ public class NaiveDatabase implements ModBitNumDatabase {
      * @return a bytes vector.
      */
     public static NaiveDatabase createFromZl64(int l, Zl64Database... databases) {
+        // check databases.length > 0
+        MathPreconditions.checkPositive("databases.length", databases.length);
+        int rows = databases[0].rows();
+        // check all databases have the same rows
+        Arrays.stream(databases).forEach(database ->
+            MathPreconditions.checkEqual("rows", "database.rows", rows, database.rows())
+        );
+        // combine each database
+        BigInteger[] data = new BigInteger[rows];
+        Arrays.fill(data, BigInteger.ZERO);
+        for (Database database : databases) {
+            for (int rowIndex = 0; rowIndex < rows; rowIndex++) {
+                BigInteger partitionData = database.getBigIntegerData(rowIndex);
+                data[rowIndex] = data[rowIndex]
+                    .shiftLeft(database.getL())
+                    .or(partitionData);
+            }
+        }
+        // verify that all combined vectors has at most upper-bound bit length
+        Arrays.stream(data).forEach(element -> Preconditions.checkArgument(element.bitLength() <= l));
+
+        return NaiveDatabase.create(l, data);
+    }
+
+    /**
+     * Partitions the database by the assigned partition L. Note that each L of the partitioned database is the
+     * assigned partition L. For example, when the current L is 3, and the partition L is 9, then we create 1 partition
+     * database with L = 9 (byteL = 2), but all first byte in the partitioned database are 0.
+     *
+     * @param partitionL the partition L.
+     * @return the partition result.
+     */
+    public Zl32Database[] partitionZl32(int partitionL) {
+        MathPreconditions.checkPositiveInRangeClosed("partitionL", partitionL, DatabaseFactory.maxBitDatabaseL(DatabaseType.ZL32));
+        int partitionNum = CommonUtils.getUnitNum(l, partitionL);
+        Zl32Database[] partitionDatabases = new Zl32Database[partitionNum];
+        // and = 2^l - 1, where l is the partition L.
+        BigInteger and = BigInteger.ONE.shiftLeft(partitionL).subtract(BigInteger.ONE);
+        int rows = rows();
+        // copy the data
+        BigInteger[] tempData = new BigInteger[rows];
+        System.arraycopy(data, 0, tempData, 0, rows);
+        // we need to partition in reverse order so that we can then combine
+        for (int partitionIndex = partitionNum - 1; partitionIndex >= 0; partitionIndex--) {
+            int[] partitionData = new int[rows];
+            for (int index = 0; index < rows; index++) {
+                BigInteger element = tempData[index].and(and);
+                tempData[index] = tempData[index].shiftRight(partitionL);
+                partitionData[index] = element.intValue();
+            }
+            partitionDatabases[partitionIndex] = Zl32Database.create(partitionL, partitionData);
+        }
+        return partitionDatabases;
+    }
+
+    /**
+     * Creates a database by combining Zl32 databases.
+     *
+     * @param l         element bit length.
+     * @param databases the combining databases.
+     * @return a bytes vector.
+     */
+    public static NaiveDatabase createFromZl32(int l, Zl32Database... databases) {
         // check databases.length > 0
         MathPreconditions.checkPositive("databases.length", databases.length);
         int rows = databases[0].rows();

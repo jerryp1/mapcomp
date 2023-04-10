@@ -11,7 +11,7 @@ import edu.alibaba.mpc4j.common.tool.bitvector.BitVector;
 import edu.alibaba.mpc4j.common.tool.bitvector.BitVectorFactory;
 import edu.alibaba.mpc4j.common.tool.utils.BytesUtils;
 import edu.alibaba.mpc4j.common.tool.utils.CommonUtils;
-import edu.alibaba.mpc4j.common.tool.utils.LongUtils;
+import edu.alibaba.mpc4j.common.tool.utils.IntUtils;
 import edu.alibaba.mpc4j.crypto.matrix.MatrixUtils;
 import org.apache.commons.lang3.builder.EqualsBuilder;
 import org.apache.commons.lang3.builder.HashCodeBuilder;
@@ -22,12 +22,12 @@ import java.util.Arrays;
 import java.util.stream.IntStream;
 
 /**
- * Zl64 database. Each data is an element in Z_{2^l} represented by long where l ∈ (0, LongUtil.MAX_L].
+ * Zl32 database. Each data is an element in Z_{2^l} represented by int where l ∈ (0, IntUtil.MAX_L].
  *
  * @author Weiran Liu
- * @date 2023/4/4
+ * @date 2023/4/10
  */
-public class Zl64Database implements ModBitNumDatabase {
+public class Zl32Database implements ModBitNumDatabase {
     /**
      * element bit length
      */
@@ -39,7 +39,7 @@ public class Zl64Database implements ModBitNumDatabase {
     /**
      * 2^l
      */
-    private final long rangeBound;
+    private final int rangeBound;
     /**
      * offset (in bit)
      */
@@ -51,7 +51,7 @@ public class Zl64Database implements ModBitNumDatabase {
     /**
      * data
      */
-    private long[] data;
+    private int[] data;
 
     /**
      * Creates a database.
@@ -60,18 +60,18 @@ public class Zl64Database implements ModBitNumDatabase {
      * @param data data.
      * @return a database.
      */
-    public static Zl64Database create(int l, byte[][] data) {
-        Zl64Database database = new Zl64Database(l);
+    public static Zl32Database create(int l, byte[][] data) {
+        Zl32Database database = new Zl32Database(l);
         MathPreconditions.checkPositive("rows", data.length);
         database.data = Arrays.stream(data)
             .peek(element ->
                 Preconditions.checkArgument(BytesUtils.isFixedReduceByteArray(element, database.byteL, database.l))
             )
-            .mapToLong(reducedBytesData -> {
-                int byteOffset = Long.BYTES - reducedBytesData.length;
-                byte[] bytesData = new byte[Long.BYTES];
+            .mapToInt(reducedBytesData -> {
+                int byteOffset = Integer.BYTES - reducedBytesData.length;
+                byte[] bytesData = new byte[Integer.BYTES];
                 System.arraycopy(reducedBytesData, 0, bytesData, byteOffset, reducedBytesData.length);
-                return LongUtils.byteArrayToLong(bytesData);
+                return IntUtils.byteArrayToInt(bytesData);
             })
             .toArray();
         return database;
@@ -84,8 +84,8 @@ public class Zl64Database implements ModBitNumDatabase {
      * @param data data.
      * @return a database.
      */
-    public static Zl64Database create(int l, long[] data) {
-        Zl64Database database = new Zl64Database(l);
+    public static Zl32Database create(int l, int[] data) {
+        Zl32Database database = new Zl32Database(l);
         MathPreconditions.checkPositive("rows", data.length);
         database.data = Arrays.stream(data)
             .peek(element -> MathPreconditions.checkNonNegativeInRange("element", element, database.rangeBound))
@@ -101,11 +101,11 @@ public class Zl64Database implements ModBitNumDatabase {
      * @param secureRandom the random state.
      * @return a database.
      */
-    public static Zl64Database createRandom(int l, int rows, SecureRandom secureRandom) {
-        Zl64Database database = new Zl64Database(l);
+    public static Zl32Database createRandom(int l, int rows, SecureRandom secureRandom) {
+        Zl32Database database = new Zl32Database(l);
         MathPreconditions.checkPositive("rows", rows);
         database.data = IntStream.range(0, rows)
-            .mapToLong(index -> LongUtils.randomNonNegative(database.rangeBound, secureRandom))
+            .map(index -> IntUtils.randomNonNegative(database.rangeBound, secureRandom))
             .toArray();
         return database;
     }
@@ -116,9 +116,9 @@ public class Zl64Database implements ModBitNumDatabase {
      * @param bitVectors the bit vectors.
      * @return a database.
      */
-    public static Zl64Database create(EnvType envType, boolean parallel, BitVector... bitVectors) {
+    public static Zl32Database create(EnvType envType, boolean parallel, BitVector... bitVectors) {
         // check BitVectors.length is in range (0, MAX_L]
-        MathPreconditions.checkPositiveInRangeClosed("BitVectors.length", bitVectors.length, LongUtils.MAX_L);
+        MathPreconditions.checkPositiveInRangeClosed("BitVectors.length", bitVectors.length, IntUtils.MAX_L);
         int l = bitVectors.length;
         // check all bit vectors has the same bit num
         int rows = bitVectors[0].bitNum();
@@ -126,18 +126,18 @@ public class Zl64Database implements ModBitNumDatabase {
         Arrays.stream(bitVectors).forEach(bitVector ->
             MathPreconditions.checkEqual("rows", "BitVector.bitNum", rows, bitVector.bitNum())
         );
-        int offset = Long.SIZE - l;
-        TransBitMatrix bitMatrix = TransBitMatrixFactory.createInstance(envType, rows, Long.SIZE, parallel);
+        int offset = Integer.SIZE - l;
+        TransBitMatrix bitMatrix = TransBitMatrixFactory.createInstance(envType, rows, Integer.SIZE, parallel);
         for (int columnIndex = 0; columnIndex < l; columnIndex++) {
             bitMatrix.setColumn(columnIndex + offset, bitVectors[columnIndex].getBytes());
         }
         TransBitMatrix transBitMatrix = bitMatrix.transpose();
-        long[] data = IntStream.range(0, rows)
+        int[] data = IntStream.range(0, rows)
             .mapToObj(transBitMatrix::getColumn)
-            .mapToLong(LongUtils::byteArrayToLong)
+            .mapToInt(IntUtils::byteArrayToInt)
             .toArray();
         // create the result
-        return Zl64Database.create(l, data);
+        return Zl32Database.create(l, data);
     }
 
     /**
@@ -146,26 +146,26 @@ public class Zl64Database implements ModBitNumDatabase {
      * @param l element bit length.
      * @return a database.
      */
-    public static Zl64Database createEmpty(int l) {
-        Zl64Database database = new Zl64Database(l);
-        database.data = new long[0];
+    public static Zl32Database createEmpty(int l) {
+        Zl32Database database = new Zl32Database(l);
+        database.data = new int[0];
 
         return database;
     }
 
-    private Zl64Database(int l) {
-        MathPreconditions.checkPositiveInRangeClosed("l", l, LongUtils.MAX_L);
+    private Zl32Database(int l) {
+        MathPreconditions.checkPositiveInRangeClosed("l", l, IntUtils.MAX_L);
         this.l = l;
         byteL = CommonUtils.getByteLength(l);
-        rangeBound = 1L << l;
-        offset = Long.SIZE - l;
-        byteOffset = Long.BYTES - byteL;
+        rangeBound = 1 << l;
+        offset = Integer.SIZE - l;
+        byteOffset = Integer.BYTES - byteL;
     }
 
 
     @Override
     public DatabaseFactory.DatabaseType getType() {
-        return DatabaseFactory.DatabaseType.ZL64;
+        return DatabaseFactory.DatabaseType.ZL32;
     }
 
     @Override
@@ -186,24 +186,24 @@ public class Zl64Database implements ModBitNumDatabase {
     @Override
     public BitVector[] bitPartition(EnvType envType, boolean parallel) {
         int rows = rows();
-        byte[][] bytesData = Arrays.stream(data).mapToObj(LongUtils::longToByteArray).toArray(byte[][]::new);
-        DenseBitMatrix byteDenseBitMatrix = ByteDenseBitMatrix.fromDense(Long.SIZE, bytesData);
+        byte[][] bytesData = Arrays.stream(data).mapToObj(IntUtils::intToByteArray).toArray(byte[][]::new);
+        DenseBitMatrix byteDenseBitMatrix = ByteDenseBitMatrix.fromDense(Integer.SIZE, bytesData);
         DenseBitMatrix transByteDenseBitMatrix = byteDenseBitMatrix.transpose(envType, parallel);
-        return IntStream.range(offset, Long.SIZE)
+        return IntStream.range(offset, Integer.SIZE)
             .mapToObj(index -> BitVectorFactory.create(rows, transByteDenseBitMatrix.getRow(index)))
             .toArray(BitVector[]::new);
     }
 
     @Override
-    public ModBitNumDatabase split(int splitRows) {
+    public Zl32Database split(int splitRows) {
         int rows = rows();
         MathPreconditions.checkPositiveInRangeClosed("split rows", splitRows, rows);
-        long[] subData = new long[splitRows];
-        long[] remainData = new long[rows - splitRows];
+        int[] subData = new int[splitRows];
+        int[] remainData = new int[rows - splitRows];
         System.arraycopy(data, 0, subData, 0, splitRows);
         System.arraycopy(data, splitRows, remainData, 0, rows - splitRows);
         data = remainData;
-        return Zl64Database.create(l, subData);
+        return Zl32Database.create(l, subData);
     }
 
     @Override
@@ -212,7 +212,7 @@ public class Zl64Database implements ModBitNumDatabase {
         MathPreconditions.checkPositiveInRangeClosed("reduce rows", reduceRows, rows);
         if (reduceRows < rows) {
             // reduce if the reduced rows is less than rows.
-            long[] remainData = new long[reduceRows];
+            int[] remainData = new int[reduceRows];
             System.arraycopy(data, 0, remainData, 0, reduceRows);
             data = remainData;
         }
@@ -220,9 +220,9 @@ public class Zl64Database implements ModBitNumDatabase {
 
     @Override
     public void merge(Database other) {
-        Zl64Database that = (Zl64Database) other;
+        Zl32Database that = (Zl32Database) other;
         MathPreconditions.checkEqual("this.l", "that.l", this.l, that.l);
-        long[] mergeData = new long[this.data.length + that.data.length];
+        int[] mergeData = new int[this.data.length + that.data.length];
         System.arraycopy(this.data, 0, mergeData, 0, this.data.length);
         System.arraycopy(that.data, 0, mergeData, this.data.length, that.data.length);
         data = mergeData;
@@ -231,7 +231,7 @@ public class Zl64Database implements ModBitNumDatabase {
     @Override
     public byte[][] getBytesData() {
         return Arrays.stream(data)
-            .mapToObj(LongUtils::longToByteArray)
+            .mapToObj(IntUtils::intToByteArray)
             .map(element -> {
                 byte[] reducedBytesData = new byte[byteL];
                 System.arraycopy(element, byteOffset, reducedBytesData, 0, byteL);
@@ -242,7 +242,7 @@ public class Zl64Database implements ModBitNumDatabase {
 
     @Override
     public byte[] getBytesData(int index) {
-        byte[] bytesData = LongUtils.longToByteArray(data[index]);
+        byte[] bytesData = IntUtils.intToByteArray(data[index]);
         byte[] reducedBytesData = new byte[byteL];
         System.arraycopy(bytesData, byteOffset, reducedBytesData, 0, byteL);
         return reducedBytesData;
@@ -265,7 +265,7 @@ public class Zl64Database implements ModBitNumDatabase {
      *
      * @return the data.
      */
-    public long[] getData() {
+    public int[] getData() {
         return data;
     }
 
@@ -275,7 +275,7 @@ public class Zl64Database implements ModBitNumDatabase {
      * @param index the index.
      * @return the element.
      */
-    public long getData(int index) {
+    public int getData(int index) {
         return data[index];
     }
 
@@ -292,8 +292,8 @@ public class Zl64Database implements ModBitNumDatabase {
         if (this == obj) {
             return true;
         }
-        if (obj instanceof Zl64Database) {
-            Zl64Database that = (Zl64Database) obj;
+        if (obj instanceof Zl32Database) {
+            Zl32Database that = (Zl32Database) obj;
             return new EqualsBuilder()
                 .append(this.l, that.l)
                 .append(this.data, that.data)

@@ -2,6 +2,7 @@ package edu.alibaba.mpc4j.crypto.matrix.database;
 
 import edu.alibaba.mpc4j.common.tool.EnvType;
 import edu.alibaba.mpc4j.common.tool.bitvector.BitVector;
+import edu.alibaba.mpc4j.common.tool.utils.IntUtils;
 import edu.alibaba.mpc4j.common.tool.utils.LongUtils;
 
 import java.security.SecureRandom;
@@ -27,6 +28,10 @@ public class DatabaseFactory {
          */
         NAIVE,
         /**
+         * Zl32 database
+         */
+        ZL32,
+        /**
          * Zl64 database
          */
         ZL64,
@@ -44,6 +49,8 @@ public class DatabaseFactory {
      */
     public static int maxBitDatabaseL(DatabaseType type) {
         switch (type) {
+            case ZL32:
+                return IntUtils.MAX_L;
             case ZL64:
                 return LongUtils.MAX_L;
             case ZL:
@@ -64,6 +71,8 @@ public class DatabaseFactory {
      */
     public static ModBitNumDatabase create(DatabaseType type, int l, byte[][] data) {
         switch (type) {
+            case ZL32:
+                return Zl32Database.create(l, data);
             case ZL64:
                 return Zl64Database.create(l, data);
             case ZL:
@@ -86,6 +95,8 @@ public class DatabaseFactory {
      */
     public static ModBitNumDatabase createRandom(DatabaseType type, int l, int rows, SecureRandom secureRandom) {
         switch (type) {
+            case ZL32:
+                return Zl32Database.createRandom(l, rows, secureRandom);
             case ZL64:
                 return Zl64Database.createRandom(l, rows, secureRandom);
             case ZL:
@@ -106,6 +117,8 @@ public class DatabaseFactory {
      */
     public static ModBitNumDatabase createEmpty(DatabaseType type, int l) {
         switch (type) {
+            case ZL32:
+                return Zl32Database.createEmpty(l);
             case ZL64:
                 return Zl64Database.createEmpty(l);
             case ZL:
@@ -128,6 +141,8 @@ public class DatabaseFactory {
      */
     public static ModBitNumDatabase create(DatabaseType type, EnvType envType, boolean parallel, BitVector... bitVectors) {
         switch (type) {
+            case ZL32:
+                return Zl32Database.create(envType, parallel, bitVectors);
             case ZL64:
                 return Zl64Database.create(envType, parallel, bitVectors);
             case ZL:

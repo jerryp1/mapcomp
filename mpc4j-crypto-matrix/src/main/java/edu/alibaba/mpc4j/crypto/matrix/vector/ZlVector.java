@@ -3,6 +3,7 @@ package edu.alibaba.mpc4j.crypto.matrix.vector;
 import com.google.common.base.Preconditions;
 import edu.alibaba.mpc4j.common.tool.MathPreconditions;
 import edu.alibaba.mpc4j.common.tool.galoisfield.zl.Zl;
+import edu.alibaba.mpc4j.crypto.matrix.MatrixUtils;
 import org.apache.commons.lang3.builder.EqualsBuilder;
 import org.apache.commons.lang3.builder.HashCodeBuilder;
 
@@ -18,10 +19,6 @@ import java.util.stream.IntStream;
  * @date 2023/4/10
  */
 public class ZlVector implements RingVector {
-    /**
-     * display data rows
-     */
-    private static final int DISPLAY_DATA_ROWS = 256;
     /**
      * Zl instance
      */
@@ -324,7 +321,7 @@ public class ZlVector implements RingVector {
 
     @Override
     public String toString() {
-        String[] stringData = Arrays.stream(Arrays.copyOf(elements, DISPLAY_DATA_ROWS))
+        String[] stringData = Arrays.stream(Arrays.copyOf(elements, MatrixUtils.DISPLAY_NUM))
             .map(BigInteger::toString)
             .toArray(String[]::new);
         return this.getClass().getSimpleName() + " (l = " + zl.getL() + "): " + Arrays.toString(stringData);
