@@ -4,29 +4,65 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="12bfa9ef-4b22-4a1f-9814-578dbb4c4694" name="Changes" comment="" />
+    <list default="true" id="12bfa9ef-4b22-4a1f-9814-578dbb4c4694" name="Changes" comment="">
+      <change afterPath="$PROJECT_DIR$/mpc4j-s2pc-opf/src/main/java/edu/alibaba/mpc4j/s2pc/opf/sqoprf/AbstractSqOprfReceiver.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/mpc4j-s2pc-opf/src/main/java/edu/alibaba/mpc4j/s2pc/opf/sqoprf/AbstractSqOprfSender.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/mpc4j-s2pc-opf/src/main/java/edu/alibaba/mpc4j/s2pc/opf/sqoprf/SqOprfConfig.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/mpc4j-s2pc-opf/src/main/java/edu/alibaba/mpc4j/s2pc/opf/sqoprf/SqOprfFactory.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/mpc4j-s2pc-opf/src/main/java/edu/alibaba/mpc4j/s2pc/opf/sqoprf/SqOprfReceiver.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/mpc4j-s2pc-opf/src/main/java/edu/alibaba/mpc4j/s2pc/opf/sqoprf/SqOprfReceiverOutput.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/mpc4j-s2pc-opf/src/main/java/edu/alibaba/mpc4j/s2pc/opf/sqoprf/SqOprfSender.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/mpc4j-s2pc-opf/src/main/java/edu/alibaba/mpc4j/s2pc/opf/sqoprf/SqOprfSenderKey.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/mpc4j-s2pc-opf/src/main/java/edu/alibaba/mpc4j/s2pc/opf/sqoprf/SqOprfSenderOutput.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/mpc4j-s2pc-opf/src/main/java/edu/alibaba/mpc4j/s2pc/opf/sqoprf/ecdh/EcdhEccSqOprfConfig.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/mpc4j-s2pc-opf/src/main/java/edu/alibaba/mpc4j/s2pc/opf/sqoprf/ecdh/EcdhEccSqOprfPtoDesc.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/mpc4j-s2pc-opf/src/main/java/edu/alibaba/mpc4j/s2pc/opf/sqoprf/ecdh/EcdhEccSqOprfReceiver.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/mpc4j-s2pc-opf/src/main/java/edu/alibaba/mpc4j/s2pc/opf/sqoprf/ecdh/EcdhEccSqOprfSender.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/mpc4j-s2pc-opf/src/main/java/edu/alibaba/mpc4j/s2pc/opf/sqoprf/ecdh/EcdhSqOprfSenderKey.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/mpc4j-s2pc-opf/src/main/java/edu/alibaba/mpc4j/s2pc/opf/sqoprf/ecdh/EcdhSqOprfSenderOutput.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/mpc4j-s2pc-opf/src/test/java/edu/alibaba/mpc4j/s2pc/opf/sqoprf/SqOprfReceiverThread.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/mpc4j-s2pc-opf/src/test/java/edu/alibaba/mpc4j/s2pc/opf/sqoprf/SqOprfSenderThread.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/mpc4j-s2pc-opf/src/test/java/edu/alibaba/mpc4j/s2pc/opf/sqoprf/SqOprfTest.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/compiler.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/compiler.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/encodings.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/encodings.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/misc.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/misc.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/pom.xml" beforeDir="false" afterPath="$PROJECT_DIR$/pom.xml" afterDir="false" />
+    </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
     <option name="LAST_RESOLUTION" value="IGNORE" />
   </component>
+  <component name="FileTemplateManagerImpl">
+    <option name="RECENT_TEMPLATES">
+      <list>
+        <option value="Interface" />
+        <option value="Class" />
+      </list>
+    </option>
+  </component>
   <component name="Git.Settings">
     <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
   </component>
   <component name="ProjectId" id="2O2ZPwPAlEAQDrVozvECqmhnvCK" />
-  <component name="ProjectLevelVcsManager" settingsEditedManually="true" />
+  <component name="ProjectLevelVcsManager" settingsEditedManually="true">
+    <ConfirmationsSetting value="2" id="Add" />
+  </component>
   <component name="ProjectViewState">
     <option name="hideEmptyMiddlePackages" value="true" />
     <option name="showLibraryContents" value="true" />
   </component>
   <component name="PropertiesComponent">
+    <property name="Git.Branch.Popup.ShowAllRemotes" value="true" />
     <property name="RunOnceActivity.OpenProjectViewOnStart" value="true" />
     <property name="RunOnceActivity.ShowReadmeOnStart" value="true" />
     <property name="WebServerToolWindowFactoryState" value="false" />
     <property name="last_opened_file_path" value="$PROJECT_DIR$/mpc4j-native-tool/ecc_fourq" />
     <property name="project.structure.last.edited" value="Modules" />
-    <property name="project.structure.proportion" value="0.0" />
-    <property name="project.structure.side.proportion" value="0.0" />
+    <property name="project.structure.proportion" value="0.15" />
+    <property name="project.structure.side.proportion" value="0.3034483" />
+    <property name="settings.editor.selected.configurable" value="fileTemplates" />
   </component>
   <component name="RecentsManager">
     <key name="CopyFile.RECENT_KEYS">
@@ -37,6 +73,111 @@
       <recent name="edu.alibaba.mpc4j.common.tool.crypto.ecc.fourqlib" />
     </key>
   </component>
+  <component name="RunManager" selected="JUnit.SqOprfTest">
+    <configuration name="ByteMulEccTest" type="JUnit" factoryName="JUnit" temporary="true" nameIsGenerated="true">
+      <module name="mpc4j-common-tool" />
+      <extension name="coverage">
+        <pattern>
+          <option name="PATTERN" value="edu.alibaba.mpc4j.common.tool.crypto.ecc.*" />
+          <option name="ENABLED" value="true" />
+        </pattern>
+      </extension>
+      <option name="PACKAGE_NAME" value="edu.alibaba.mpc4j.common.tool.crypto.ecc" />
+      <option name="MAIN_CLASS_NAME" value="edu.alibaba.mpc4j.common.tool.crypto.ecc.ByteMulEccTest" />
+      <option name="METHOD_NAME" value="" />
+      <option name="TEST_OBJECT" value="class" />
+      <option name="VM_PARAMETERS" value="-Djava.library.path=$PROJECT_DIR$/mpc4j-native-tool/cmake-build-release:$PROJECT_DIR$/mpc4j-native-fhe/cmake-build-release" />
+      <method v="2">
+        <option name="Make" enabled="true" />
+      </method>
+    </configuration>
+    <configuration name="EccEfficiencyTest" type="JUnit" factoryName="JUnit" temporary="true" nameIsGenerated="true">
+      <module name="mpc4j-common-tool" />
+      <extension name="coverage">
+        <pattern>
+          <option name="PATTERN" value="edu.alibaba.mpc4j.common.tool.crypto.ecc.*" />
+          <option name="ENABLED" value="true" />
+        </pattern>
+      </extension>
+      <option name="PACKAGE_NAME" value="edu.alibaba.mpc4j.common.tool.crypto.ecc" />
+      <option name="MAIN_CLASS_NAME" value="edu.alibaba.mpc4j.common.tool.crypto.ecc.EccEfficiencyTest" />
+      <option name="METHOD_NAME" value="" />
+      <option name="TEST_OBJECT" value="class" />
+      <option name="VM_PARAMETERS" value="-Djava.library.path=$PROJECT_DIR$/mpc4j-native-tool/cmake-build-release:$PROJECT_DIR$/mpc4j-native-fhe/cmake-build-release" />
+      <method v="2">
+        <option name="Make" enabled="true" />
+      </method>
+    </configuration>
+    <configuration name="MpOprfTest (1)" type="JUnit" factoryName="JUnit" temporary="true" nameIsGenerated="true">
+      <module name="mpc4j-s2pc-opf" />
+      <extension name="coverage">
+        <pattern>
+          <option name="PATTERN" value="edu.alibaba.mpc4j.s2pc.opf.oprf.*" />
+          <option name="ENABLED" value="true" />
+        </pattern>
+      </extension>
+      <option name="PACKAGE_NAME" value="edu.alibaba.mpc4j.s2pc.opf.oprf" />
+      <option name="MAIN_CLASS_NAME" value="edu.alibaba.mpc4j.s2pc.opf.oprf.MpOprfTest" />
+      <option name="METHOD_NAME" value="" />
+      <option name="TEST_OBJECT" value="class" />
+      <option name="VM_PARAMETERS" value="-Djava.library.path=$PROJECT_DIR$/mpc4j-native-tool/cmake-build-release:$PROJECT_DIR$/mpc4j-native-fhe/cmake-build-release" />
+      <method v="2">
+        <option name="Make" enabled="true" />
+      </method>
+    </configuration>
+    <configuration name="MpOprfTest" type="JUnit" factoryName="JUnit" temporary="true" nameIsGenerated="true">
+      <module name="test" />
+      <extension name="coverage">
+        <pattern>
+          <option name="PATTERN" value="edu.alibaba.mpc4j.s2pc.opf.oprf.*" />
+          <option name="ENABLED" value="true" />
+        </pattern>
+      </extension>
+      <option name="PACKAGE_NAME" value="edu.alibaba.mpc4j.s2pc.opf.oprf" />
+      <option name="MAIN_CLASS_NAME" value="edu.alibaba.mpc4j.s2pc.opf.oprf.MpOprfTest" />
+      <option name="METHOD_NAME" value="" />
+      <option name="TEST_OBJECT" value="class" />
+      <option name="VM_PARAMETERS" value="-Djava.library.path=$PROJECT_DIR$/mpc4j-native-tool/cmake-build-release:$PROJECT_DIR$/mpc4j-native-fhe/cmake-build-release" />
+      <method v="2">
+        <option name="Make" enabled="true" />
+      </method>
+    </configuration>
+    <configuration name="SqOprfTest" type="JUnit" factoryName="JUnit" temporary="true" nameIsGenerated="true">
+      <module name="mpc4j-s2pc-opf" />
+      <extension name="coverage">
+        <pattern>
+          <option name="PATTERN" value="edu.alibaba.mpc4j.s2pc.opf.sqoprf.*" />
+          <option name="ENABLED" value="true" />
+        </pattern>
+      </extension>
+      <option name="PACKAGE_NAME" value="edu.alibaba.mpc4j.s2pc.opf.sqoprf" />
+      <option name="MAIN_CLASS_NAME" value="edu.alibaba.mpc4j.s2pc.opf.sqoprf.SqOprfTest" />
+      <option name="METHOD_NAME" value="" />
+      <option name="TEST_OBJECT" value="class" />
+      <option name="VM_PARAMETERS" value="-Djava.library.path=$PROJECT_DIR$/mpc4j-native-tool/cmake-build-release:$PROJECT_DIR$/mpc4j-native-fhe/cmake-build-release" />
+      <method v="2">
+        <option name="Make" enabled="true" />
+      </method>
+    </configuration>
+    <configuration default="true" type="JUnit" factoryName="JUnit">
+      <option name="MAIN_CLASS_NAME" value="" />
+      <option name="METHOD_NAME" value="" />
+      <option name="TEST_OBJECT" value="class" />
+      <option name="VM_PARAMETERS" value="-Djava.library.path=$PROJECT_DIR$/mpc4j-native-tool/cmake-build-release:$PROJECT_DIR$/mpc4j-native-fhe/cmake-build-release" />
+      <method v="2">
+        <option name="Make" enabled="true" />
+      </method>
+    </configuration>
+    <recent_temporary>
+      <list>
+        <item itemvalue="JUnit.SqOprfTest" />
+        <item itemvalue="JUnit.MpOprfTest (1)" />
+        <item itemvalue="JUnit.MpOprfTest" />
+        <item itemvalue="JUnit.EccEfficiencyTest" />
+        <item itemvalue="JUnit.ByteMulEccTest" />
+      </list>
+    </recent_temporary>
+  </component>
   <component name="SpellCheckerSettings" RuntimeDictionaries="0" Folders="0" CustomDictionaries="0" DefaultDictionary="application-level" UseSingleDictionary="true" transferred="true" />
   <component name="TaskManager">
     <task active="true" id="Default" summary="Default task">
@@ -46,7 +187,11 @@
       <option name="presentableId" value="Default" />
       <updated>1680760618463</updated>
       <workItem from="1680760622186" duration="1937000" />
-      <workItem from="1681033856714" duration="5154000" />
+      <workItem from="1681033856714" duration="5763000" />
+      <workItem from="1681041606439" duration="13586000" />
+      <workItem from="1681193769385" duration="88000" />
+      <workItem from="1681193862099" duration="145000" />
+      <workItem from="1681194013860" duration="11243000" />
     </task>
     <servers />
   </component>
@@ -83,7 +228,19 @@
         </entry>
         <entry key="MAIN">
           <value>
-            <State />
+            <State>
+              <option name="FILTERS">
+                <map>
+                  <entry key="branch">
+                    <value>
+                      <list>
+                        <option value="HEAD" />
+                      </list>
+                    </value>
+                  </entry>
+                </map>
+              </option>
+            </State>
           </value>
         </entry>
       </map>
@@ -93,5 +250,6 @@
         <entry key="0aaf17db-f870-496a-aca7-86f263e23bb2" value="TOOL_WINDOW" />
       </map>
     </option>
+    <option name="oldMeFiltersMigrated" value="true" />
   </component>
 </project>
