@@ -192,12 +192,12 @@ public class ZlMuxTest {
             LOGGER.info("Sender sends {}B, Receiver sends {}B, time = {}ms",
                 senderByteLength, receiverByteLength, time
             );
-            sender.destroy();
-            receiver.destroy();
             LOGGER.info("-----test {} end-----", sender.getPtoDesc().getPtoName());
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
+        sender.destroy();
+        receiver.destroy();
     }
 
     private void assertOutput(BitVector x0, BitVector x1, ZlVector y0, ZlVector y1,

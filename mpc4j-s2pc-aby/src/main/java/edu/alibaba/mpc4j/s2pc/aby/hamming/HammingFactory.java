@@ -84,11 +84,11 @@ public class HammingFactory {
         switch (securityModel) {
             case IDEAL:
                 return new Bcp13ShHammingConfig.Builder()
-                    .setCotConfig(CotFactory.createDirectConfig(SecurityModel.IDEAL))
+                    .setCotConfig(CotFactory.createCacheConfig(SecurityModel.IDEAL))
                     .build();
             case SEMI_HONEST:
                 return new Bcp13ShHammingConfig.Builder()
-                    .setCotConfig(CotFactory.createDirectConfig(SecurityModel.SEMI_HONEST))
+                    .setCotConfig(CotFactory.createCacheConfig(SecurityModel.SEMI_HONEST))
                     .build();
             case COVERT:
             case MALICIOUS:

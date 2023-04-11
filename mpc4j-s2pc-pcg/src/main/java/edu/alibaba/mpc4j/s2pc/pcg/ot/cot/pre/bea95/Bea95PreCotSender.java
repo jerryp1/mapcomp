@@ -48,16 +48,17 @@ public class Bea95PreCotSender extends AbstractPreCotSender {
         byte[] xors = xorPayload.remove(0);
         int offset = CommonUtils.getByteLength(num) * Byte.SIZE - num;
         byte[][] r0Array = IntStream.range(0, num)
-            // 如果纠正比特值，则更换一下位置
+            // switch the position if xor = 1
             .mapToObj(index -> BinaryUtils.getBoolean(xors, index + offset) ?
                 preSenderOutput.getR1(index) : BytesUtils.clone(preSenderOutput.getR0(index)))
             .toArray(byte[][]::new);
+        CotSenderOutput senderOutput = CotSenderOutput.create(preSenderOutput.getDelta(), r0Array);
         stopWatch.stop();
         long time = stopWatch.getTime(TimeUnit.MILLISECONDS);
         stopWatch.reset();
         logStepInfo(PtoState.PTO_STEP, 1, 1, time);
 
         logPhaseInfo(PtoState.PTO_END);
-        return CotSenderOutput.create(preSenderOutput.getDelta(), r0Array);
+        return senderOutput;
     }
 }

@@ -1,46 +1,46 @@
-package edu.alibaba.mpc4j.s2pc.pcg.ot.cot.pre.bea95;
+package edu.alibaba.mpc4j.s2pc.pcg.ot.lnot.pre.bea95;
 
 import edu.alibaba.mpc4j.common.rpc.desc.PtoDesc;
 import edu.alibaba.mpc4j.common.rpc.desc.PtoDescManager;
 
 /**
- * Bea95 pre-compute COT protocol description. The protocol comes from Figure 3 of the following paper:
+ * Bea95 pre-compute 1-out-of-n (with n = 2^l) OT protocol description. The protocol generalizes from the following paper:
  * <p>
  * Beaver, Donald. Precomputing oblivious transfer. CRYPTO 1995, pp. 97-109. Springer, Berlin, Heidelberg, 1995.
  * </p>
  *
  * @author Weiran Liu
- * @date 2022/01/13
+ * @date 2023/4/11
  */
-class Bea95PreCotPtoDesc implements PtoDesc {
+class Bea95PreLnotPtoDesc implements PtoDesc {
     /**
-     * 协议ID
+     * protocol ID
      */
-    private static final int PTO_ID = Math.abs((int) 3370327442911780279L);
+    private static final int PTO_ID = Math.abs((int) 7962834820617161749L);
     /**
-     * 协议名称
+     * protocol name
      */
-    private static final String PTO_NAME = "BEA95_PRE_COT";
+    private static final String PTO_NAME = "BEA95_PRE_LNOT";
 
     /**
-     * 协议步骤
+     * protocol step
      */
     enum PtoStep {
         /**
-         * 接收方发送纠正比特
+         * the receiver sends Δ
          */
-        RECEIVER_SEND_XOR,
+        RECEIVER_SEND_DELTA,
     }
 
     /**
-     * 单例模式
+     * singleton mode
      */
-    private static final Bea95PreCotPtoDesc INSTANCE = new Bea95PreCotPtoDesc();
+    private static final Bea95PreLnotPtoDesc INSTANCE = new Bea95PreLnotPtoDesc();
 
     /**
-     * 私有构造函数
+     * private constructor
      */
-    private Bea95PreCotPtoDesc() {
+    private Bea95PreLnotPtoDesc() {
         // empty
     }
 

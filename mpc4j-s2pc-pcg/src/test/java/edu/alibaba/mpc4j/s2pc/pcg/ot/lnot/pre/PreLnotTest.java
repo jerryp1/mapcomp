@@ -1,21 +1,15 @@
-package edu.alibaba.mpc4j.s2pc.pcg.ot.cot.pre;
-
-import java.security.SecureRandom;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.concurrent.TimeUnit;
-import java.util.stream.IntStream;
+package edu.alibaba.mpc4j.s2pc.pcg.ot.lnot.pre;
 
 import com.google.common.base.Preconditions;
 import edu.alibaba.mpc4j.common.rpc.Rpc;
 import edu.alibaba.mpc4j.common.rpc.RpcManager;
 import edu.alibaba.mpc4j.common.rpc.impl.memory.MemoryRpcManager;
 import edu.alibaba.mpc4j.common.tool.CommonConstants;
-import edu.alibaba.mpc4j.s2pc.pcg.ot.cot.CotTestUtils;
-import edu.alibaba.mpc4j.s2pc.pcg.ot.cot.CotReceiverOutput;
-import edu.alibaba.mpc4j.s2pc.pcg.ot.cot.CotSenderOutput;
-import edu.alibaba.mpc4j.s2pc.pcg.ot.cot.pre.PreCotFactory.PreCotType;
-import edu.alibaba.mpc4j.s2pc.pcg.ot.cot.pre.bea95.Bea95PreCotConfig;
+import edu.alibaba.mpc4j.s2pc.pcg.ot.lnot.LnotReceiverOutput;
+import edu.alibaba.mpc4j.s2pc.pcg.ot.lnot.LnotSenderOutput;
+import edu.alibaba.mpc4j.s2pc.pcg.ot.lnot.LnotTestUtils;
+import edu.alibaba.mpc4j.s2pc.pcg.ot.lnot.pre.bea95.Bea95PreLnotConfig;
+import edu.alibaba.mpc4j.s2pc.pcg.ot.lnot.pre.PreLnotFactory.PreLnotType;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.time.StopWatch;
 import org.junit.After;
@@ -26,15 +20,21 @@ import org.junit.runners.Parameterized;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.security.SecureRandom;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.concurrent.TimeUnit;
+import java.util.stream.IntStream;
+
 /**
- * pre-compute 1-out-of-n (with n = 2^l) test.
+ * pre-compute 1-out-of-n (with n = 2^l) OT test.
  *
  * @author Weiran Liu
- * @date 2022/01/14
+ * @date 2023/4/11
  */
 @RunWith(Parameterized.class)
-public class PreCotTest {
-    private static final Logger LOGGER = LoggerFactory.getLogger(PreCotTest.class);
+public class PreLnotTest {
+    private static final Logger LOGGER = LoggerFactory.getLogger(PreLnotTest.class);
     /**
      * the random state
      */
@@ -43,13 +43,17 @@ public class PreCotTest {
      * the default num
      */
     private static final int DEFAULT_NUM = 1000;
+    /**
+     * default l
+     */
+    private static final int DEFAULT_L = 5;
 
     @Parameterized.Parameters(name = "{0}")
     public static Collection<Object[]> configurations() {
         Collection<Object[]> configurations = new ArrayList<>();
 
         // Bea95
-        configurations.add(new Object[] {PreCotType.Bea95.name(), new Bea95PreCotConfig.Builder().build(),});
+        configurations.add(new Object[] {PreLnotType.Bea95.name(), new Bea95PreLnotConfig.Builder().build(),});
 
         return configurations;
     }
@@ -65,9 +69,9 @@ public class PreCotTest {
     /**
      * the config
      */
-    private final PreCotConfig config;
+    private final PreLnotConfig config;
 
-    public PreCotTest(String name, PreCotConfig config) {
+    public PreLnotTest(String name, PreLnotConfig config) {
         Preconditions.checkArgument(StringUtils.isNotBlank(name));
         // We cannot use NettyRPC in the test case since it needs multi-thread connect / disconnect.
         // In other word, we cannot connect / disconnect NettyRpc in @Before / @After, respectively.
@@ -91,27 +95,33 @@ public class PreCotTest {
 
     @Test
     public void test1Num() {
-        testPto(1, false);
+        testPto(1, DEFAULT_L, false);
     }
 
     @Test
     public void test2Num() {
-        testPto(2, false);
+        testPto(2, DEFAULT_L, false);
     }
 
     @Test
     public void testDefaultNum() {
-        testPto(DEFAULT_NUM, false);
+        testPto(DEFAULT_NUM, DEFAULT_L, false);
+    }
+
+    @Test
+    public void testSmallL() {
+        testPto(DEFAULT_NUM, 1, false);
     }
 
     @Test
     public void testParallelDefaultNum() {
-        testPto(DEFAULT_NUM, true);
+        testPto(DEFAULT_NUM, DEFAULT_L, true);
     }
 
-    private void testPto(int num, boolean parallel) {
-        PreCotSender sender = PreCotFactory.createSender(senderRpc, receiverRpc.ownParty(), config);
-        PreCotReceiver receiver = PreCotFactory.createReceiver(receiverRpc, senderRpc.ownParty(), config);
+    private void testPto(int num, int l, boolean parallel) {
+        int n = (1 << l);
+        PreLnotSender sender = PreLnotFactory.createSender(senderRpc, receiverRpc.ownParty(), config);
+        PreLnotReceiver receiver = PreLnotFactory.createReceiver(receiverRpc, senderRpc.ownParty(), config);
         sender.setParallel(parallel);
         receiver.setParallel(parallel);
         int randomTaskId = Math.abs(SECURE_RANDOM.nextInt());
@@ -122,13 +132,14 @@ public class PreCotTest {
             // pre-compute sender / receiver output
             byte[] delta = new byte[CommonConstants.BLOCK_BYTE_LENGTH];
             SECURE_RANDOM.nextBytes(delta);
-            CotSenderOutput preSenderOutput = CotTestUtils.genSenderOutput(num, delta, SECURE_RANDOM);
-            CotReceiverOutput preReceiverOutput = CotTestUtils.genReceiverOutput(preSenderOutput, SECURE_RANDOM);
+            LnotSenderOutput preSenderOutput = LnotTestUtils.genSenderOutput(num, l, SECURE_RANDOM);
+            LnotReceiverOutput preReceiverOutput = LnotTestUtils.genReceiverOutput(preSenderOutput, SECURE_RANDOM);
             // receiver actual choices
-            boolean[] choices = new boolean[num];
-            IntStream.range(0, num).forEach(index -> choices[index] = SECURE_RANDOM.nextBoolean());
-            PreCotSenderThread senderThread = new PreCotSenderThread(sender, preSenderOutput);
-            PreCotReceiverThread receiverThread = new PreCotReceiverThread(receiver, preReceiverOutput, choices);
+            int[] choiceArray = IntStream.range(0, num)
+                .map(index -> SECURE_RANDOM.nextInt(n))
+                .toArray();
+            PreLnotSenderThread senderThread = new PreLnotSenderThread(sender, preSenderOutput);
+            PreLnotReceiverThread receiverThread = new PreLnotReceiverThread(receiver, preReceiverOutput, choiceArray);
             StopWatch stopWatch = new StopWatch();
             // execute the protocol
             stopWatch.start();
@@ -143,10 +154,10 @@ public class PreCotTest {
             long receiverByteLength = receiverRpc.getSendByteLength();
             senderRpc.reset();
             receiverRpc.reset();
-            CotSenderOutput senderOutput = senderThread.getSenderOutput();
-            CotReceiverOutput receiverOutput = receiverThread.getReceiverOutput();
+            LnotSenderOutput senderOutput = senderThread.getSenderOutput();
+            LnotReceiverOutput receiverOutput = receiverThread.getReceiverOutput();
             // verify
-            CotTestUtils.assertOutput(num, senderOutput, receiverOutput);
+            LnotTestUtils.assertOutput(num, l, senderOutput, receiverOutput);
             LOGGER.info("Sender sends {}B, Receiver sends {}B, time = {}ms",
                 senderByteLength, receiverByteLength, time
             );

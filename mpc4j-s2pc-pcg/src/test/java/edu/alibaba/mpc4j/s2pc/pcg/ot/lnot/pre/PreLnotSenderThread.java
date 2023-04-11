@@ -1,34 +1,34 @@
-package edu.alibaba.mpc4j.s2pc.pcg.ot.cot.pre;
+package edu.alibaba.mpc4j.s2pc.pcg.ot.lnot.pre;
 
 import edu.alibaba.mpc4j.common.rpc.MpcAbortException;
-import edu.alibaba.mpc4j.s2pc.pcg.ot.cot.CotSenderOutput;
+import edu.alibaba.mpc4j.s2pc.pcg.ot.lnot.LnotSenderOutput;
 
 /**
- * pre-compute COT sender thread.
+ * pre-compute 1-out-of-n (with n = 2^l) OT sender thread.
  *
  * @author Weiran Liu
- * @date 2022/01/14
+ * @date 2023/4/11
  */
-class PreCotSenderThread extends Thread {
+class PreLnotSenderThread extends Thread {
     /**
      * the sender
      */
-    private final PreCotSender sender;
+    private final PreLnotSender sender;
     /**
      * pre-compute sender output
      */
-    private final CotSenderOutput preSenderOutput;
+    private final LnotSenderOutput preSenderOutput;
     /**
      * the output
      */
-    private CotSenderOutput senderOutput;
+    private LnotSenderOutput senderOutput;
 
-    PreCotSenderThread(PreCotSender sender, CotSenderOutput preSenderOutput) {
+    PreLnotSenderThread(PreLnotSender sender, LnotSenderOutput preSenderOutput) {
         this.sender = sender;
         this.preSenderOutput = preSenderOutput;
     }
 
-    CotSenderOutput getSenderOutput() {
+    LnotSenderOutput getSenderOutput() {
         return senderOutput;
     }
 

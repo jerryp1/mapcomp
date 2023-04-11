@@ -22,6 +22,14 @@ public abstract class AbstractPreLnotSender extends AbstractTwoPartyPto implemen
      * num
      */
     protected int num;
+    /**
+     * choice bit length
+     */
+    protected int l;
+    /**
+     * the maximal choice
+     */
+    protected int n;
 
     protected AbstractPreLnotSender(PtoDesc ptoDesc, Rpc senderRpc, Party receiverParty, PreLnotConfig config) {
         super(ptoDesc, senderRpc, receiverParty, config);
@@ -36,6 +44,8 @@ public abstract class AbstractPreLnotSender extends AbstractTwoPartyPto implemen
         MathPreconditions.checkPositive("num", preSenderOutput.getNum());
         this.preSenderOutput = preSenderOutput;
         num = preSenderOutput.getNum();
+        l = preSenderOutput.getL();
+        n = preSenderOutput.getN();
         extraInfo++;
     }
 }

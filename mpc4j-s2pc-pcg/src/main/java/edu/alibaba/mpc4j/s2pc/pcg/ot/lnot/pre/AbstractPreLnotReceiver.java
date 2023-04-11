@@ -5,7 +5,6 @@ import edu.alibaba.mpc4j.common.rpc.Rpc;
 import edu.alibaba.mpc4j.common.rpc.desc.PtoDesc;
 import edu.alibaba.mpc4j.common.rpc.pto.AbstractTwoPartyPto;
 import edu.alibaba.mpc4j.common.tool.MathPreconditions;
-import edu.alibaba.mpc4j.s2pc.pcg.ot.cot.pre.PreCotReceiver;
 import edu.alibaba.mpc4j.s2pc.pcg.ot.lnot.LnotReceiverOutput;
 
 /**
@@ -14,7 +13,7 @@ import edu.alibaba.mpc4j.s2pc.pcg.ot.lnot.LnotReceiverOutput;
  * @author Weiran Liu
  * @date 2023/4/10
  */
-public abstract class AbstractPreLnotReceiver extends AbstractTwoPartyPto implements PreCotReceiver {
+public abstract class AbstractPreLnotReceiver extends AbstractTwoPartyPto implements PreLnotReceiver {
     /**
      * pre-compute receiver output
      */
@@ -27,6 +26,14 @@ public abstract class AbstractPreLnotReceiver extends AbstractTwoPartyPto implem
      * num
      */
     protected int num;
+    /**
+     * choice bit length
+     */
+    protected int l;
+    /**
+     * the maximal choice
+     */
+    protected int n;
 
     protected AbstractPreLnotReceiver(PtoDesc ptoDesc, Rpc receiverRpc, Party senderParty, PreLnotConfig config) {
         super(ptoDesc, receiverRpc, senderParty, config);
@@ -41,6 +48,8 @@ public abstract class AbstractPreLnotReceiver extends AbstractTwoPartyPto implem
         MathPreconditions.checkPositive("num", preReceiverOutput.getNum());
         this.preReceiverOutput = preReceiverOutput;
         num = preReceiverOutput.getNum();
+        l = preReceiverOutput.getL();
+        n = preReceiverOutput.getN();
         MathPreconditions.checkEqual("choices.length", "num", choiceArray.length, num);
         this.choiceArray = choiceArray;
         extraInfo++;

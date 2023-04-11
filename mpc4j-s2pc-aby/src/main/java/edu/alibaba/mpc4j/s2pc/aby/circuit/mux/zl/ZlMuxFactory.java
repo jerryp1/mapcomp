@@ -90,11 +90,11 @@ public class ZlMuxFactory implements PtoFactory {
         switch (securityModel) {
             case IDEAL:
                 return new Rrg21ZlMuxConfig.Builder()
-                    .setCotConfig(CotFactory.createDirectConfig(SecurityModel.IDEAL))
+                    .setCotConfig(CotFactory.createCacheConfig(SecurityModel.IDEAL))
                     .build();
             case SEMI_HONEST:
                 return new Rrg21ZlMuxConfig.Builder()
-                    .setCotConfig(CotFactory.createDirectConfig(SecurityModel.SEMI_HONEST))
+                    .setCotConfig(CotFactory.createCacheConfig(SecurityModel.SEMI_HONEST))
                     .build();
             case COVERT:
             case MALICIOUS:

@@ -29,7 +29,7 @@ public class LnotOutputTest {
     /**
      * default l
      */
-    private static final int DEFAULT_L = 3;
+    private static final int DEFAULT_L = 5;
     /**
      * default n
      */

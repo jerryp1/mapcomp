@@ -1,9 +1,9 @@
 package edu.alibaba.mpc4j.s2pc.pcg.ot.cot.pre.bea95;
 
-import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.IntStream;
 
 import edu.alibaba.mpc4j.common.rpc.MpcAbortException;
 import edu.alibaba.mpc4j.common.rpc.Party;
@@ -53,13 +53,17 @@ public class Bea95PreCotReceiver extends AbstractPreCotReceiver {
             ownParty().getPartyId(), otherParty().getPartyId()
         );
         rpc.send(DataPacket.fromByteArrayList(xorHeader, xorPayload));
+        byte[][] rbArray = IntStream.range(0, num)
+            .mapToObj(preReceiverOutput::getRb)
+            .map(BytesUtils::clone)
+            .toArray(byte[][]::new);
+        CotReceiverOutput receiverOutput = CotReceiverOutput.create(choices, rbArray);
         stopWatch.stop();
         long time = stopWatch.getTime(TimeUnit.MILLISECONDS);
         stopWatch.reset();
         logStepInfo(PtoState.PTO_STEP, 1, 1, time);
 
         logPhaseInfo(PtoState.PTO_END);
-        byte[][] rbArray = Arrays.copyOf(preReceiverOutput.getRbArray(), preReceiverOutput.getRbArray().length);
-        return CotReceiverOutput.create(choices, rbArray);
+        return receiverOutput;
     }
 }

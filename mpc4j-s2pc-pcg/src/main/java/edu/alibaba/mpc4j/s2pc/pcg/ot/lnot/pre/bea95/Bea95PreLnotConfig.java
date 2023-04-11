@@ -1,29 +1,27 @@
-package edu.alibaba.mpc4j.s2pc.pcg.ot.cot.pre.bea95;
+package edu.alibaba.mpc4j.s2pc.pcg.ot.lnot.pre.bea95;
 
 import edu.alibaba.mpc4j.common.rpc.desc.SecurityModel;
 import edu.alibaba.mpc4j.common.tool.EnvType;
-import edu.alibaba.mpc4j.s2pc.pcg.ot.cot.pre.PreCotConfig;
-import edu.alibaba.mpc4j.s2pc.pcg.ot.cot.pre.PreCotFactory;
+import edu.alibaba.mpc4j.s2pc.pcg.ot.lnot.pre.PreLnotConfig;
+import edu.alibaba.mpc4j.s2pc.pcg.ot.lnot.pre.PreLnotFactory;
 
 /**
- * Bea95 pre-compute COT config.
- *
  * @author Weiran Liu
- * @date 2022/01/14
+ * @date 2023/4/11
  */
-public class Bea95PreCotConfig implements PreCotConfig {
+public class Bea95PreLnotConfig implements PreLnotConfig {
     /**
      * the environment
      */
     private EnvType envType;
 
-    private Bea95PreCotConfig(Builder builder) {
+    private Bea95PreLnotConfig(Builder builder) {
         envType = EnvType.STANDARD;
     }
 
     @Override
-    public PreCotFactory.PreCotType getPtoType() {
-        return PreCotFactory.PreCotType.Bea95;
+    public PreLnotFactory.PreLnotType getPtoType() {
+        return PreLnotFactory.PreLnotType.Bea95;
     }
 
     @Override
@@ -41,15 +39,15 @@ public class Bea95PreCotConfig implements PreCotConfig {
         return SecurityModel.MALICIOUS;
     }
 
-    public static class Builder implements org.apache.commons.lang3.builder.Builder<Bea95PreCotConfig> {
+    public static class Builder implements org.apache.commons.lang3.builder.Builder<Bea95PreLnotConfig> {
 
         public Builder() {
             // empty
         }
 
         @Override
-        public Bea95PreCotConfig build() {
-            return new Bea95PreCotConfig(this);
+        public Bea95PreLnotConfig build() {
+            return new Bea95PreLnotConfig(this);
         }
     }
 }
