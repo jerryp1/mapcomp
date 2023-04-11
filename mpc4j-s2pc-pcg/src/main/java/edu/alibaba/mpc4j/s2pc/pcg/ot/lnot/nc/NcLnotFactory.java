@@ -3,6 +3,9 @@ package edu.alibaba.mpc4j.s2pc.pcg.ot.lnot.nc;
 import edu.alibaba.mpc4j.common.rpc.Party;
 import edu.alibaba.mpc4j.common.rpc.Rpc;
 import edu.alibaba.mpc4j.common.rpc.pto.PtoFactory;
+import edu.alibaba.mpc4j.s2pc.pcg.ot.lnot.nc.cot.CotNcLnotConfig;
+import edu.alibaba.mpc4j.s2pc.pcg.ot.lnot.nc.cot.CotNcLnotReceiver;
+import edu.alibaba.mpc4j.s2pc.pcg.ot.lnot.nc.cot.CotNcLnotSender;
 import edu.alibaba.mpc4j.s2pc.pcg.ot.lnot.nc.direct.DirectNcLnotConfig;
 import edu.alibaba.mpc4j.s2pc.pcg.ot.lnot.nc.direct.DirectNcLnotReceiver;
 import edu.alibaba.mpc4j.s2pc.pcg.ot.lnot.nc.direct.DirectNcLnotSender;
@@ -26,13 +29,13 @@ public class NcLnotFactory implements PtoFactory {
      */
     public enum NcLnotType {
         /**
-         * direct 1-out-of-2^l COT
+         * direct
          */
         DIRECT,
         /**
-         * silent no-choice COT
+         * COT
          */
-        SILENT,
+        COT,
     }
 
     /**
@@ -48,7 +51,8 @@ public class NcLnotFactory implements PtoFactory {
         switch (type) {
             case DIRECT:
                 return new DirectNcLnotSender(senderRpc, receiverParty, (DirectNcLnotConfig) config);
-            case SILENT:
+            case COT:
+                return new CotNcLnotSender(senderRpc, receiverParty, (CotNcLnotConfig) config);
             default:
                 throw new IllegalArgumentException("Invalid " + NcLnotType.class.getSimpleName() + ": " + type.name());
         }
@@ -67,7 +71,8 @@ public class NcLnotFactory implements PtoFactory {
         switch (type) {
             case DIRECT:
                 return new DirectNcLnotReceiver(receiverRpc, senderParty, (DirectNcLnotConfig) config);
-            case SILENT:
+            case COT:
+                return new CotNcLnotReceiver(receiverRpc, senderParty, (CotNcLnotConfig) config);
             default:
                 throw new IllegalArgumentException("Invalid " + NcLnotType.class.getSimpleName() + ": " + type.name());
         }

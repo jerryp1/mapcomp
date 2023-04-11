@@ -6,7 +6,6 @@ import edu.alibaba.mpc4j.common.rpc.PtoState;
 import edu.alibaba.mpc4j.common.rpc.Rpc;
 import edu.alibaba.mpc4j.common.tool.crypto.kdf.Kdf;
 import edu.alibaba.mpc4j.common.tool.crypto.kdf.KdfFactory;
-import edu.alibaba.mpc4j.common.tool.utils.CommonUtils;
 import edu.alibaba.mpc4j.common.tool.utils.IntUtils;
 import edu.alibaba.mpc4j.s2pc.pcg.ot.lcot.LcotFactory;
 import edu.alibaba.mpc4j.s2pc.pcg.ot.lcot.LcotSender;
@@ -25,7 +24,7 @@ import java.util.stream.IntStream;
  */
 public class DirectNcLnotSender extends AbstractNcLnotSender {
     /**
-     * cor eCOT sender
+     * LCOT sender
      */
     private final LcotSender lcotSender;
     /**

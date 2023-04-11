@@ -6,6 +6,7 @@ import edu.alibaba.mpc4j.common.rpc.desc.PtoDesc;
 import edu.alibaba.mpc4j.common.rpc.pto.AbstractTwoPartyPto;
 import edu.alibaba.mpc4j.common.tool.MathPreconditions;
 import edu.alibaba.mpc4j.common.tool.utils.CommonUtils;
+import edu.alibaba.mpc4j.common.tool.utils.IntUtils;
 
 /**
  * abstract no-choice 1-out-of-n (with n = 2^l) OT receiver.
@@ -41,7 +42,7 @@ public abstract class AbstractNcLnotReceiver extends AbstractTwoPartyPto impleme
     }
 
     protected void setInitInput(int l, int num) {
-        MathPreconditions.checkPositive("l", l);
+        MathPreconditions.checkPositiveInRangeClosed("l", l, IntUtils.MAX_L);
         this.l = l;
         byteL = CommonUtils.getByteLength(l);
         this.n = 1 << l;

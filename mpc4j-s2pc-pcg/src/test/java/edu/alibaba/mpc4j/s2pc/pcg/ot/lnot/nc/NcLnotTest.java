@@ -10,6 +10,7 @@ import edu.alibaba.mpc4j.s2pc.pcg.ot.lnot.LnotReceiverOutput;
 import edu.alibaba.mpc4j.s2pc.pcg.ot.lnot.LnotSenderOutput;
 import edu.alibaba.mpc4j.s2pc.pcg.ot.lnot.LnotTestUtils;
 import edu.alibaba.mpc4j.s2pc.pcg.ot.lnot.nc.NcLnotFactory.NcLnotType;
+import edu.alibaba.mpc4j.s2pc.pcg.ot.lnot.nc.cot.CotNcLnotConfig;
 import edu.alibaba.mpc4j.s2pc.pcg.ot.lnot.nc.direct.DirectNcLnotConfig;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.time.StopWatch;
@@ -69,6 +70,16 @@ public class NcLnotTest {
     public static Collection<Object[]> configurations() {
         Collection<Object[]> configurations = new ArrayList<>();
 
+        // COT (Malicious)
+        configurations.add(new Object[] {
+            NcLnotType.COT.name() + " (" + SecurityModel.MALICIOUS + ")",
+            new CotNcLnotConfig.Builder(SecurityModel.MALICIOUS).build(),
+        });
+        // COT (Semi-honest)
+        configurations.add(new Object[] {
+            NcLnotType.COT.name() + " (" + SecurityModel.SEMI_HONEST + ")",
+            new CotNcLnotConfig.Builder(SecurityModel.SEMI_HONEST).build(),
+        });
         // DIRECT (Malicious)
         configurations.add(new Object[] {
             NcLnotType.DIRECT.name() + " (" + SecurityModel.MALICIOUS + ")",
