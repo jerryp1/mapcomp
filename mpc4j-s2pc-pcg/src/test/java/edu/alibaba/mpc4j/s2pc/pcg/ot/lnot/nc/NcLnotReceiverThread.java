@@ -1,19 +1,23 @@
-package edu.alibaba.mpc4j.s2pc.pcg.ot.cot.nc;
+package edu.alibaba.mpc4j.s2pc.pcg.ot.lnot.nc;
 
 import edu.alibaba.mpc4j.common.rpc.MpcAbortException;
-import edu.alibaba.mpc4j.s2pc.pcg.ot.cot.CotReceiverOutput;
+import edu.alibaba.mpc4j.s2pc.pcg.ot.lnot.LnotReceiverOutput;
 
 /**
- * no-choice COT receiver thread.
+ * no-choice 1-out-of-n (with n = 2^l) receiver thread.
  *
  * @author Weiran Liu
- * @date 2021/01/26
+ * @date 2023/4/11
  */
-class NcCotReceiverThread extends Thread {
+class NcLnotReceiverThread extends Thread {
     /**
      * receiver
      */
-    private final NcCotReceiver receiver;
+    private final NcLnotReceiver receiver;
+    /**
+     * l
+     */
+    private final int l;
     /**
      * num
      */
@@ -25,23 +29,24 @@ class NcCotReceiverThread extends Thread {
     /**
      * the receiver output
      */
-    private final CotReceiverOutput receiverOutput;
+    private final LnotReceiverOutput receiverOutput;
 
-    NcCotReceiverThread(NcCotReceiver receiver, int num, int round) {
+    NcLnotReceiverThread(NcLnotReceiver receiver, int l, int num, int round) {
         this.receiver = receiver;
+        this.l = l;
         this.num = num;
         this.round = round;
-        receiverOutput = CotReceiverOutput.createEmpty();
+        receiverOutput = LnotReceiverOutput.createEmpty(l);
     }
 
-    CotReceiverOutput getReceiverOutput() {
+    LnotReceiverOutput getReceiverOutput() {
         return receiverOutput;
     }
 
     @Override
     public void run() {
         try {
-            receiver.init(num);
+            receiver.init(l, num);
             for (int index = 0; index < round; index++) {
                 receiverOutput.merge(receiver.receive());
             }

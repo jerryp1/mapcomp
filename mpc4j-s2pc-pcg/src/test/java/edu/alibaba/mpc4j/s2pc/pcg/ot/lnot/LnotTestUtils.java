@@ -24,12 +24,12 @@ public class LnotTestUtils {
     /**
      * Generates a sender output.
      *
-     * @param num          the num.
      * @param l            the choice bit length.
+     * @param num          the num.
      * @param secureRandom the random state.
      * @return a sender output.
      */
-    public static LnotSenderOutput genSenderOutput(int num, int l, SecureRandom secureRandom) {
+    public static LnotSenderOutput genSenderOutput(int l, int num, SecureRandom secureRandom) {
         assert num >= 0 : "num must be greater than or equal to 0: " + num;
         if (num == 0) {
             return LnotSenderOutput.createEmpty(l);
@@ -79,7 +79,7 @@ public class LnotTestUtils {
      * @param senderOutput   the sender output.
      * @param receiverOutput the receiver output.
      */
-    public static void assertOutput(int num, int l, LnotSenderOutput senderOutput, LnotReceiverOutput receiverOutput) {
+    public static void assertOutput(int l, int num, LnotSenderOutput senderOutput, LnotReceiverOutput receiverOutput) {
         Assert.assertEquals(l, senderOutput.getL());
         Assert.assertEquals(l, receiverOutput.getL());
         int n = 1 << l;

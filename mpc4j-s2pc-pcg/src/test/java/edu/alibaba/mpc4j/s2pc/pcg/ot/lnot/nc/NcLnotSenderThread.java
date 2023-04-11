@@ -1,23 +1,23 @@
-package edu.alibaba.mpc4j.s2pc.pcg.ot.cot.nc;
+package edu.alibaba.mpc4j.s2pc.pcg.ot.lnot.nc;
 
 import edu.alibaba.mpc4j.common.rpc.MpcAbortException;
-import edu.alibaba.mpc4j.s2pc.pcg.ot.cot.CotSenderOutput;
+import edu.alibaba.mpc4j.s2pc.pcg.ot.lnot.LnotSenderOutput;
 
 /**
- * no-choice COT sender thread.
+ * no-choice 1-out-of-n (with n = 2^l) sender thread.
  *
  * @author Weiran Liu
- * @date 2021/01/26
+ * @date 2023/4/11
  */
-class NcCotSenderThread extends Thread {
+class NcLnotSenderThread extends Thread {
     /**
      * sender
      */
-    private final NcCotSender sender;
+    private final NcLnotSender sender;
     /**
-     * Δ
+     * l
      */
-    private final byte[] delta;
+    private final int l;
     /**
      * num
      */
@@ -29,24 +29,24 @@ class NcCotSenderThread extends Thread {
     /**
      * the sender output
      */
-    private final CotSenderOutput senderOutput;
+    private final LnotSenderOutput senderOutput;
 
-    NcCotSenderThread(NcCotSender sender, byte[] delta, int num, int round) {
+    NcLnotSenderThread(NcLnotSender sender, int l, int num, int round) {
         this.sender = sender;
-        this.delta = delta;
+        this.l = l;
         this.num = num;
         this.round = round;
-        senderOutput = CotSenderOutput.createEmpty(delta);
+        senderOutput = LnotSenderOutput.createEmpty(l);
     }
 
-    CotSenderOutput getSenderOutput() {
+    LnotSenderOutput getSenderOutput() {
         return senderOutput;
     }
 
     @Override
     public void run() {
         try {
-            sender.init(delta, num);
+            sender.init(l, num);
             for (int index = 0; index < round; index++) {
                 senderOutput.merge(sender.send());
             }

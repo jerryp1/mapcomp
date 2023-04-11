@@ -1,33 +1,33 @@
-package edu.alibaba.mpc4j.s2pc.pcg.ot.cot.nc.direct;
+package edu.alibaba.mpc4j.s2pc.pcg.ot.lnot.nc.direct;
 
 import edu.alibaba.mpc4j.common.rpc.desc.PtoDesc;
 import edu.alibaba.mpc4j.common.rpc.desc.PtoDescManager;
 
 /**
- * direct no-choice COT protocol description. This protocol directly invoke OT extensions.
+ * direct no-choice 1-out-of-n (with n = 2^l) OT protocol description. This protocol directly invokes 1-out-of-2^l COT.
  *
  * @author Weiran Liu
- * @date 2022/7/13
+ * @date 2023/4/11
  */
-class DirectNcCotPtoDesc implements PtoDesc {
+class DirectNcLnotPtoDesc implements PtoDesc {
     /**
      * protocol ID
      */
-    private static final int PTO_ID = Math.abs((int) 6192153866874601909L);
+    private static final int PTO_ID = Math.abs((int) 6416466057413996131L);
     /**
      * protocol name
      */
-    private static final String PTO_NAME = "DIRECT_NC_COT";
+    private static final String PTO_NAME = "DIRECT_NC_LNOT";
 
     /**
      * singleton mode
      */
-    private static final DirectNcCotPtoDesc INSTANCE = new DirectNcCotPtoDesc();
+    private static final DirectNcLnotPtoDesc INSTANCE = new DirectNcLnotPtoDesc();
 
     /**
      * private constructor
      */
-    private DirectNcCotPtoDesc() {
+    private DirectNcLnotPtoDesc() {
         // empty
     }
 

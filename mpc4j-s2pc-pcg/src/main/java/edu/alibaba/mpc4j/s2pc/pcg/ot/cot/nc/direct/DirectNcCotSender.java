@@ -12,14 +12,14 @@ import edu.alibaba.mpc4j.s2pc.pcg.ot.cot.core.CoreCotSender;
 import java.util.concurrent.TimeUnit;
 
 /**
- * 直接NC-COT协议发送方。
+ * direct no-choice COT sender.
  *
  * @author Weiran Liu
  * @date 2022/7/14
  */
 public class DirectNcCotSender extends AbstractNcCotSender {
     /**
-     * 核COT协议发送方
+     * core COT sender
      */
     private final CoreCotSender coreCotSender;
 
@@ -50,7 +50,6 @@ public class DirectNcCotSender extends AbstractNcCotSender {
         logPhaseInfo(PtoState.PTO_BEGIN);
 
         stopWatch.start();
-        // 应用核COT协议生成指定数量的COT
         CotSenderOutput senderOutput = coreCotSender.send(num);
         stopWatch.stop();
         long coreCotTime = stopWatch.getTime(TimeUnit.MILLISECONDS);

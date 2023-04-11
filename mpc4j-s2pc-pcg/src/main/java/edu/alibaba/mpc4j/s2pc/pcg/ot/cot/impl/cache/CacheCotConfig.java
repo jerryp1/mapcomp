@@ -47,7 +47,7 @@ public class CacheCotConfig implements CotConfig {
 
     @Override
     public int maxBaseNum() {
-        return ncCotConfig.maxAllowNum();
+        return ncCotConfig.maxNum();
     }
 
     @Override

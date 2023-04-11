@@ -37,7 +37,7 @@ public abstract class AbstractNcCotSender extends AbstractTwoPartyPto implements
         MathPreconditions.checkEqual("Δ.length", "λ(B)", delta.length, CommonConstants.BLOCK_BYTE_LENGTH);
         // 拷贝一份
         this.delta = BytesUtils.clone(delta);
-        MathPreconditions.checkPositiveInRangeClosed("num", num, config.maxAllowNum());
+        MathPreconditions.checkPositiveInRangeClosed("num", num, config.maxNum());
         this.num = num;
         initState();
     }

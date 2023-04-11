@@ -1,24 +1,24 @@
-package edu.alibaba.mpc4j.s2pc.pcg.ot.cot.nc;
+package edu.alibaba.mpc4j.s2pc.pcg.ot.lnot.nc;
 
 import edu.alibaba.mpc4j.common.rpc.MpcAbortException;
 import edu.alibaba.mpc4j.common.rpc.pto.TwoPartyPto;
-import edu.alibaba.mpc4j.s2pc.pcg.ot.cot.CotSenderOutput;
+import edu.alibaba.mpc4j.s2pc.pcg.ot.lnot.LnotSenderOutput;
 
 /**
- * no-choice COT sender.
+ * no-choice 1-out-of-n (with n = 2^l) OT sender.
  *
  * @author Weiran Liu
- * @date 2022/02/03
+ * @date 2023/4/11
  */
-public interface NcCotSender extends TwoPartyPto {
+public interface NcLnotSender extends TwoPartyPto {
     /**
      * Inits the protocol.
      *
-     * @param delta Δ.
-     * @param num   num.
+     * @param l   choice bit length.
+     * @param num num.
      * @throws MpcAbortException the protocol failure aborts.
      */
-    void init(byte[] delta, int num) throws MpcAbortException;
+    void init(int l, int num) throws MpcAbortException;
 
     /**
      * Executes the protocol.
@@ -26,5 +26,5 @@ public interface NcCotSender extends TwoPartyPto {
      * @return the sender output.
      * @throws MpcAbortException the protocol failure aborts.
      */
-    CotSenderOutput send() throws MpcAbortException;
+    LnotSenderOutput send() throws MpcAbortException;
 }
