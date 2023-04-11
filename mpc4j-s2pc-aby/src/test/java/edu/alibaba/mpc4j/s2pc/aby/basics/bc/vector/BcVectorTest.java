@@ -50,16 +50,21 @@ public class BcVectorTest {
      */
     private static final int LARGE_BIT_NUM = 1 << 16;
     /**
-     * default vector lengtg
+     * default vector length
      */
     private static final int MAX_VECTOR_LENGTH = 13;
 
     @Parameterized.Parameters(name = "{0}")
     public static Collection<Object[]> configurations() {
         Collection<Object[]> configurations = new ArrayList<>();
-        // Beaver91
+
+        // RRG+21
         configurations.add(new Object[]{
-            BcFactory.BcType.BEA91.name(), new Bea91BcConfig.Builder().build()
+            BcFactory.BcType.RRG21.name(), new Bea91BcConfig.Builder().build()
+        });
+        // Bea91
+        configurations.add(new Object[]{
+            BcFactory.BcType.Bea91.name(), new Bea91BcConfig.Builder().build()
         });
 
         return configurations;

@@ -1,28 +1,28 @@
-package edu.alibaba.mpc4j.s2pc.aby.basics.bc.bea91;
+package edu.alibaba.mpc4j.s2pc.aby.basics.bc.rrg21;
 
 import edu.alibaba.mpc4j.common.rpc.desc.PtoDesc;
 import edu.alibaba.mpc4j.common.rpc.desc.PtoDescManager;
 
 /**
- * Bea91 Boolean circuit protocol description. The protocol implements AND using Boolean triple presented in the
- * following paper:
+ * RRG+21 Boolean circuit protocol description. This protocol implements AND using the mux technique presented in
+ * Appendix A of the following paper:
  * <p>
- * Beaver, Donald. Efficient multiparty protocols using circuit randomization. CRYPTO 1991, pp. 420-432. Springer,
- * Berlin, Heidelberg, 1991.
+ * Rathee, Deevashwer, Mayank Rathee, Rahul Kranti Kiran Goli, Divya Gupta, Rahul Sharma, Nishanth Chandran, and
+ * Aseem Rastogi. Sirnn: A math library for secure rnn inference. S&P 2021, pp. 1003-1020. IEEE, 2021.
  * </p>
  *
  * @author Weiran Liu
- * @date 2022/02/13
+ * @date 2023/4/11
  */
-class Bea91BcPtoDesc implements PtoDesc {
+class Rrg21BcPtoDesc implements PtoDesc {
     /**
      * protocol ID
      */
-    private static final int PTO_ID = Math.abs((int) 139609527980746823L);
+    private static final int PTO_ID = Math.abs((int) 7737390913072031268L);
     /**
      * protocol name
      */
-    private static final String PTO_NAME = "BEA91_BC";
+    private static final String PTO_NAME = "RRG21_BC";
 
     /**
      * protocol step
@@ -37,13 +37,13 @@ class Bea91BcPtoDesc implements PtoDesc {
          */
         RECEIVER_SEND_INPUT_SHARE,
         /**
-         * the sender sends e0 and f0
+         * the sender sends the correlation
          */
-        SENDER_SEND_E0_F0,
+        SENDER_SEND_DELTA0,
         /**
-         * the receiver sends e1 and f1
+         * the receiver sends the correlation
          */
-        RECEIVER_SEND_E1_F1,
+        RECEIVER_SEND_DELTA1,
         /**
          * the sender sends the output share
          */
@@ -57,12 +57,12 @@ class Bea91BcPtoDesc implements PtoDesc {
     /**
      * singleton mode
      */
-    private static final Bea91BcPtoDesc INSTANCE = new Bea91BcPtoDesc();
+    private static final Rrg21BcPtoDesc INSTANCE = new Rrg21BcPtoDesc();
 
     /**
      * private constructor
      */
-    private Bea91BcPtoDesc() {
+    private Rrg21BcPtoDesc() {
         // empty
     }
 

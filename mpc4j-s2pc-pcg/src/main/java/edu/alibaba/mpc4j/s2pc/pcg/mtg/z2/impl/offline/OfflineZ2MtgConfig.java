@@ -34,7 +34,7 @@ public class OfflineZ2MtgConfig implements Z2MtgConfig {
 
     @Override
     public int maxBaseNum() {
-        return z2CoreMtgConfig.maxAllowNum();
+        return z2CoreMtgConfig.maxNum();
     }
 
     @Override

@@ -44,11 +44,11 @@ public class Rrg21ZlMuxSender extends AbstractZlMuxParty {
      */
     private ZlVector t0ZlVector;
 
-    public Rrg21ZlMuxSender(Rpc senderPrc, Party receiverParty, Rrg21ZlMuxConfig config) {
-        super(Rrg21ZlMuxPtoDesc.getInstance(), senderPrc, receiverParty, config);
-        cotSender = CotFactory.createSender(senderPrc, receiverParty, config.getCotConfig());
+    public Rrg21ZlMuxSender(Rpc senderRpc, Party receiverParty, Rrg21ZlMuxConfig config) {
+        super(Rrg21ZlMuxPtoDesc.getInstance(), senderRpc, receiverParty, config);
+        cotSender = CotFactory.createSender(senderRpc, receiverParty, config.getCotConfig());
         addSubPtos(cotSender);
-        cotReceiver = CotFactory.createReceiver(senderPrc, receiverParty, config.getCotConfig());
+        cotReceiver = CotFactory.createReceiver(senderRpc, receiverParty, config.getCotConfig());
         addSubPtos(cotReceiver);
     }
 

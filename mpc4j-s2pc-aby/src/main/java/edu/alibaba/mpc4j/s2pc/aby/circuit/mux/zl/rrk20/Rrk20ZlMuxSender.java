@@ -51,11 +51,11 @@ public class Rrk20ZlMuxSender extends AbstractZlMuxParty {
      */
     private byte[][] s1s;
 
-    public Rrk20ZlMuxSender(Rpc senderPrc, Party receiverParty, Rrk20ZlMuxConfig config) {
-        super(Rrk20ZlMuxPtoDesc.getInstance(), senderPrc, receiverParty, config);
-        cotSender = CotFactory.createSender(senderPrc, receiverParty, config.getCotConfig());
+    public Rrk20ZlMuxSender(Rpc senderRpc, Party receiverParty, Rrk20ZlMuxConfig config) {
+        super(Rrk20ZlMuxPtoDesc.getInstance(), senderRpc, receiverParty, config);
+        cotSender = CotFactory.createSender(senderRpc, receiverParty, config.getCotConfig());
         addSubPtos(cotSender);
-        cotReceiver = CotFactory.createReceiver(senderPrc, receiverParty, config.getCotConfig());
+        cotReceiver = CotFactory.createReceiver(senderRpc, receiverParty, config.getCotConfig());
         addSubPtos(cotReceiver);
     }
 

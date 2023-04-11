@@ -40,15 +40,15 @@ public class Rrg21ZlMuxReceiver extends AbstractZlMuxParty {
      */
     private ZlVector negT1ZlVector;
     /**
-     * -s1 vector
+     * s1 vector
      */
     private ZlVector s1ZlVector;
 
-    public Rrg21ZlMuxReceiver(Rpc receiverPrc, Party senderParty, Rrg21ZlMuxConfig config) {
-        super(Rrg21ZlMuxPtoDesc.getInstance(), receiverPrc, senderParty, config);
-        cotReceiver = CotFactory.createReceiver(receiverPrc, senderParty, config.getCotConfig());
+    public Rrg21ZlMuxReceiver(Rpc receiverRpc, Party senderParty, Rrg21ZlMuxConfig config) {
+        super(Rrg21ZlMuxPtoDesc.getInstance(), receiverRpc, senderParty, config);
+        cotReceiver = CotFactory.createReceiver(receiverRpc, senderParty, config.getCotConfig());
         addSubPtos(cotReceiver);
-        cotSender = CotFactory.createSender(receiverPrc, senderParty, config.getCotConfig());
+        cotSender = CotFactory.createSender(receiverRpc, senderParty, config.getCotConfig());
         addSubPtos(cotSender);
     }
 

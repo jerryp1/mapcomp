@@ -50,11 +50,11 @@ public class Rrk20ZlMuxReceiver extends AbstractZlMuxParty {
      */
     private byte[][] t1s;
 
-    public Rrk20ZlMuxReceiver(Rpc receiverPrc, Party senderParty, Rrk20ZlMuxConfig config) {
-        super(Rrk20ZlMuxPtoDesc.getInstance(), receiverPrc, senderParty, config);
-        cotReceiver = CotFactory.createReceiver(receiverPrc, senderParty, config.getCotConfig());
+    public Rrk20ZlMuxReceiver(Rpc receiverRpc, Party senderParty, Rrk20ZlMuxConfig config) {
+        super(Rrk20ZlMuxPtoDesc.getInstance(), receiverRpc, senderParty, config);
+        cotReceiver = CotFactory.createReceiver(receiverRpc, senderParty, config.getCotConfig());
         addSubPtos(cotReceiver);
-        cotSender = CotFactory.createSender(receiverPrc, senderParty, config.getCotConfig());
+        cotSender = CotFactory.createSender(receiverRpc, senderParty, config.getCotConfig());
         addSubPtos(cotSender);
     }
 
