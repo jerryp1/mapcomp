@@ -20,7 +20,10 @@
         <module>mpc4j-dp-ldp</module>
         <module>mpc4j-dp-service</module>
         <module>mpc4j-s2pc-aby</module>
+<!--<<<<<<< HEAD-->
+<!--=======-->
         <module>mpc4j-s2pc-opf</module>
+<!--&gt;>>>>>> 9f19834548727e50c72d8f7eb41ab572d55c9973-->
         <module>mpc4j-s2pc-pcg</module>
         <module>mpc4j-s2pc-pir</module>
         <module>mpc4j-s2pc-pso</module>
