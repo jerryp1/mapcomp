@@ -1,28 +1,36 @@
-package edu.alibaba.mpc4j.s2pc.pcg.ot.cot;
+package edu.alibaba.mpc4j.s2pc.pcg.ot.lnot;
 
 import edu.alibaba.mpc4j.common.rpc.Party;
 import edu.alibaba.mpc4j.common.rpc.Rpc;
 import edu.alibaba.mpc4j.common.rpc.desc.PtoDesc;
 import edu.alibaba.mpc4j.common.rpc.pto.AbstractTwoPartyPto;
-import edu.alibaba.mpc4j.common.tool.CommonConstants;
 import edu.alibaba.mpc4j.common.tool.MathPreconditions;
-import edu.alibaba.mpc4j.common.tool.utils.BytesUtils;
+import edu.alibaba.mpc4j.common.tool.utils.CommonUtils;
+import edu.alibaba.mpc4j.common.tool.utils.IntUtils;
 
 /**
- * abstract COT sender.
+ * abstract 1-out-of-n (with n = 2^l) sender.
  *
  * @author Weiran Liu
- * @date 2022/7/13
+ * @date 2023/4/13
  */
-public abstract class AbstractCotSender extends AbstractTwoPartyPto implements CotSender {
+public abstract class AbstractLnotSender extends AbstractTwoPartyPto implements LnotSender {
     /**
      * the config
      */
-    protected final CotConfig config;
+    protected final LnotConfig config;
     /**
-     * Δ
+     * choice bit length
      */
-    protected byte[] delta;
+    protected int l;
+    /**
+     * choice byte length
+     */
+    protected int byteL;
+    /**
+     * maximal choice
+     */
+    protected int n;
     /**
      * max round num
      */
@@ -36,15 +44,17 @@ public abstract class AbstractCotSender extends AbstractTwoPartyPto implements C
      */
     protected int num;
 
-    public AbstractCotSender(PtoDesc ptoDesc, Rpc ownRpc, Party otherParty, CotConfig config) {
+    public AbstractLnotSender(PtoDesc ptoDesc, Rpc ownRpc, Party otherParty, LnotConfig config) {
         super(ptoDesc, ownRpc, otherParty, config);
         this.config = config;
     }
 
-    protected void setInitInput(byte[] delta, int maxRoundNum, int updateNum) {
-        MathPreconditions.checkEqual("Δ.length", "λ(B)", delta.length, CommonConstants.BLOCK_BYTE_LENGTH);
-        this.delta = BytesUtils.clone(delta);
-        MathPreconditions.checkPositiveInRangeClosed("maxRoundNum", maxRoundNum, config.maxBaseNum());
+    protected void setInitInput(int l, int maxRoundNum, int updateNum) {
+        MathPreconditions.checkPositiveInRangeClosed("l", l, IntUtils.MAX_L);
+        this.l = l;
+        byteL = CommonUtils.getByteLength(l);
+        n = 1 << l;
+        MathPreconditions.checkPositiveInRangeClosed("maxRoundNum", maxRoundNum, config.maxBaseNum(l));
         this.maxRoundNum = maxRoundNum;
         MathPreconditions.checkGreaterOrEqual("updateNum", updateNum, maxRoundNum);
         this.updateNum = updateNum;

@@ -1,32 +1,32 @@
-package edu.alibaba.mpc4j.s2pc.pcg.ot.cot.impl.direct;
+package edu.alibaba.mpc4j.s2pc.pcg.ot.lnot.impl.direct;
 
 import edu.alibaba.mpc4j.common.rpc.desc.PtoDesc;
 import edu.alibaba.mpc4j.common.rpc.desc.PtoDescManager;
 
 /**
- * direct COT protocol description. This protocol directly invoke core COT.
+ * direct 1-out-of-n (with n = 2^l) OT protocol description. This protocol directly invoke 1-out-of-2^l COT.
  *
  * @author Weiran Liu
- * @date 2022/7/13
+ * @date 2023/4/13
  */
-class DirectCotPtoDesc implements PtoDesc {
+class DirectLnotPtoDesc implements PtoDesc {
     /**
      * protocol ID
      */
-    private static final int PTO_ID = Math.abs((int) 9072724171080530799L);
+    private static final int PTO_ID = Math.abs((int) 2400323698523644978L);
     /**
      * protocol name
      */
-    private static final String PTO_NAME = "DIRECT_COT";
+    private static final String PTO_NAME = "DIRECT_LNOT";
     /**
      * singleton mode
      */
-    private static final DirectCotPtoDesc INSTANCE = new DirectCotPtoDesc();
+    private static final DirectLnotPtoDesc INSTANCE = new DirectLnotPtoDesc();
 
     /**
      * private constructor
      */
-    private DirectCotPtoDesc() {
+    private DirectLnotPtoDesc() {
         // empty
     }
 

@@ -1,22 +1,22 @@
-package edu.alibaba.mpc4j.s2pc.pcg.ot.cot;
+package edu.alibaba.mpc4j.s2pc.pcg.ot.lnot;
 
 import edu.alibaba.mpc4j.common.rpc.MpcAbortException;
 
 /**
- * COT sender thread.
+ * 1-out-of-n (with n = 2^l) sender thread.
  *
  * @author Weiran Liu
- * @date 2022/7/13
+ * @date 2023/4/13
  */
-class CotSenderThread extends Thread {
+class LnotSenderThread extends Thread {
     /**
      * the sender
      */
-    private final CotSender sender;
+    private final LnotSender sender;
     /**
-     * Δ
+     * l
      */
-    private final byte[] delta;
+    private final int l;
     /**
      * num
      */
@@ -24,22 +24,22 @@ class CotSenderThread extends Thread {
     /**
      * the sender output
      */
-    private CotSenderOutput senderOutput;
+    private LnotSenderOutput senderOutput;
 
-    CotSenderThread(CotSender sender, byte[] delta, int num) {
+    LnotSenderThread(LnotSender sender, int l, int num) {
         this.sender = sender;
-        this.delta = delta;
+        this.l = l;
         this.num = num;
     }
 
-    CotSenderOutput getSenderOutput() {
+    LnotSenderOutput getSenderOutput() {
         return senderOutput;
     }
 
     @Override
     public void run() {
         try {
-            sender.init(delta, num, num);
+            sender.init(l, num, num);
             senderOutput = sender.send(num);
         } catch (MpcAbortException e) {
             e.printStackTrace();

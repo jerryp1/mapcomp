@@ -45,7 +45,7 @@ public abstract class AbstractNcLnotReceiver extends AbstractTwoPartyPto impleme
         MathPreconditions.checkPositiveInRangeClosed("l", l, IntUtils.MAX_L);
         this.l = l;
         byteL = CommonUtils.getByteLength(l);
-        this.n = 1 << l;
+        n = 1 << l;
         int maxNum = config.maxNum(l);
         MathPreconditions.checkPositiveInRangeClosed("num", num, maxNum);
         this.num = num;

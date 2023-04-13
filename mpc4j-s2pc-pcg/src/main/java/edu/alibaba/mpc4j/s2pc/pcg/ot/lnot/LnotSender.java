@@ -1,31 +1,31 @@
-package edu.alibaba.mpc4j.s2pc.pcg.ot.cot;
+package edu.alibaba.mpc4j.s2pc.pcg.ot.lnot;
 
 import edu.alibaba.mpc4j.common.rpc.MpcAbortException;
 import edu.alibaba.mpc4j.common.rpc.pto.TwoPartyPto;
 
 /**
- * COT sender.
+ * 1-out-of-n (with n = 2^l) OT sender.
  *
  * @author Weiran Liu
- * @date 2022/7/13
+ * @date 2023/4/13
  */
-public interface CotSender extends TwoPartyPto {
+public interface LnotSender extends TwoPartyPto {
     /**
      * Inits the protocol.
      *
-     * @param delta       Δ.
+     * @param l           choice bit length.
      * @param maxRoundNum max round num.
      * @param updateNum   update num.
      * @throws MpcAbortException the protocol failure aborts.
      */
-    void init(byte[] delta, int maxRoundNum, int updateNum) throws MpcAbortException;
+    void init(int l, int maxRoundNum, int updateNum) throws MpcAbortException;
 
     /**
      * Executes the protocol.
      *
      * @param num num.
-     * @return the sender output.
+     * @return sender output.
      * @throws MpcAbortException the protocol failure aborts.
      */
-    CotSenderOutput send(int num) throws MpcAbortException;
+    LnotSenderOutput send(int num) throws MpcAbortException;
 }
