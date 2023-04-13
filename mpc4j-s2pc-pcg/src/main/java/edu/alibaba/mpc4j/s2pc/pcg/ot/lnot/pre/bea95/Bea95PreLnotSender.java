@@ -46,7 +46,9 @@ public class Bea95PreLnotSender extends AbstractPreLnotSender {
         );
         List<byte[]> deltaPayload = rpc.receive(deltaHeader).getPayload();
         int[] deltas = handleDeltaPayload(deltaPayload);
-        byte[][][] shiftRsArray = IntStream.range(0, num)
+        IntStream indexIntStream = IntStream.range(0, num);
+        indexIntStream = parallel ? indexIntStream.parallel() : indexIntStream;
+        byte[][][] shiftRsArray = indexIntStream
             .mapToObj(index -> {
                 byte[][] rs = preSenderOutput.getRs(index);
                 int delta = deltas[index];

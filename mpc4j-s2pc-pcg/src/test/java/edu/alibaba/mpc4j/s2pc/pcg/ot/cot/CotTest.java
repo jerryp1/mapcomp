@@ -43,10 +43,6 @@ public class CotTest {
      * 默认数量
      */
     private static final int DEFAULT_NUM = 1000;
-    /**
-     * 较大数量
-     */
-    private static final int LARGE_NUM = 1 << 20;
 
     @Parameterized.Parameters(name = "{0}")
     public static Collection<Object[]> configurations() {
@@ -133,12 +129,12 @@ public class CotTest {
 
     @Test
     public void testLargeNum() {
-        testPto(LARGE_NUM, false);
+        testPto(1 << 20, false);
     }
 
     @Test
     public void testParallelLargeNum() {
-        testPto(LARGE_NUM, true);
+        testPto(1 << 20, true);
     }
 
     private void testPto(int num, boolean parallel) {

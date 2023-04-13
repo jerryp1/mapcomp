@@ -9,7 +9,6 @@ import edu.alibaba.mpc4j.common.rpc.utils.DataPacketHeader;
 import edu.alibaba.mpc4j.common.tool.utils.BigIntegerUtils;
 import edu.alibaba.mpc4j.common.tool.utils.BytesUtils;
 import edu.alibaba.mpc4j.common.tool.utils.CommonUtils;
-import edu.alibaba.mpc4j.common.tool.utils.IntUtils;
 import edu.alibaba.mpc4j.s2pc.pcg.ot.lnot.LnotReceiverOutput;
 import edu.alibaba.mpc4j.s2pc.pcg.ot.lnot.pre.AbstractPreLnotReceiver;
 import edu.alibaba.mpc4j.s2pc.pcg.ot.lnot.pre.bea95.Bea95PreLnotPtoDesc.PtoStep;

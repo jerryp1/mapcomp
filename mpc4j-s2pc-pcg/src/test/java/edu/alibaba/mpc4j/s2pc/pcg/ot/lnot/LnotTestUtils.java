@@ -36,6 +36,7 @@ public class LnotTestUtils {
         }
         int n = 1 << l;
         byte[][][] rsArray = IntStream.range(0, num)
+            .parallel()
             .mapToObj(index ->
                 IntStream.range(0, n)
                     .mapToObj(choice -> {
@@ -66,6 +67,7 @@ public class LnotTestUtils {
             .map(index -> secureRandom.nextInt(n))
             .toArray();
         byte[][] rbArray = IntStream.range(0, num)
+            .parallel()
             .mapToObj(index -> senderOutput.getRb(index, choices[index]))
             .toArray(byte[][]::new);
         return LnotReceiverOutput.create(l, choices, rbArray);
@@ -91,7 +93,7 @@ public class LnotTestUtils {
         } else {
             Assert.assertEquals(num, senderOutput.getNum());
             Assert.assertEquals(num, receiverOutput.getNum());
-            IntStream.range(0, num).forEach(index -> {
+            IntStream.range(0, num).parallel().forEach(index -> {
                 int correctChoice = receiverOutput.getChoice(index);
                 ByteBuffer rb = ByteBuffer.wrap(receiverOutput.getRb(index));
                 for (int choice = 0; choice < n; choice++) {

@@ -109,6 +109,11 @@ public class PreLnotTest {
     }
 
     @Test
+    public void testParallelDefaultNum() {
+        testPto(DEFAULT_NUM, DEFAULT_L, true);
+    }
+
+    @Test
     public void testSmallL() {
         testPto(DEFAULT_NUM, 1, false);
     }
@@ -119,8 +124,13 @@ public class PreLnotTest {
     }
 
     @Test
-    public void testParallelDefaultNum() {
-        testPto(DEFAULT_NUM, DEFAULT_L, true);
+    public void testLargeNum() {
+        testPto(1 << 18, DEFAULT_L, false);
+    }
+
+    @Test
+    public void testParallelLargeNum() {
+        testPto(1 << 18, DEFAULT_L, true);
     }
 
     private void testPto(int num, int l, boolean parallel) {
