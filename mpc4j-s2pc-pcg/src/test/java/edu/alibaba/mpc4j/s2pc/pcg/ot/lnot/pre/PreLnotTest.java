@@ -114,6 +114,11 @@ public class PreLnotTest {
     }
 
     @Test
+    public void testLargeL() {
+        testPto(DEFAULT_NUM, 10, false);
+    }
+
+    @Test
     public void testParallelDefaultNum() {
         testPto(DEFAULT_NUM, DEFAULT_L, true);
     }

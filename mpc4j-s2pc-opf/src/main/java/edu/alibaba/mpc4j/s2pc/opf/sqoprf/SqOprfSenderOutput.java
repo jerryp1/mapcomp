@@ -1,22 +1,25 @@
 package edu.alibaba.mpc4j.s2pc.opf.sqoprf;
 
 /**
+ * single-query OPRF sender output.
+ *
  * @author Qixian Zhou
  * @date 2023/4/11
  */
 public interface SqOprfSenderOutput {
 
     /**
-     * 返回伪随机函数输出
+     * Gets the prf.
      *
-     * @param input 输入
-     * @return
+     * @param input the input.
+     * @return the prf output.
      */
     byte[] getPrf(byte[] input);
+
     /**
      * 返回伪随机函数输出。
      *
-     * @param index  索引值。
+     * @param index 索引值。
      * @param input 伪随机函数输入。
      * @return 伪随机函数输出。
      */
@@ -27,7 +30,7 @@ public interface SqOprfSenderOutput {
      *
      * @return 码字字节长度。
      */
-    int getPrfByteLength() ;
+    int getPrfByteLength();
 
     /**
      * 返回索引值总数量。
