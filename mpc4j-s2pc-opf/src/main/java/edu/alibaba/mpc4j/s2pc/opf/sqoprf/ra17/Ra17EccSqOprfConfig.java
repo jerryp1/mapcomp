@@ -1,35 +1,34 @@
-package edu.alibaba.mpc4j.s2pc.opf.sqoprf.ecdh;
+package edu.alibaba.mpc4j.s2pc.opf.sqoprf.ra17;
 
 import edu.alibaba.mpc4j.common.rpc.desc.SecurityModel;
 import edu.alibaba.mpc4j.common.tool.EnvType;
-import edu.alibaba.mpc4j.s2pc.opf.oprf.OprfFactory;
-import edu.alibaba.mpc4j.s2pc.opf.oprf.ra17.Ra17MpOprfConfig;
 import edu.alibaba.mpc4j.s2pc.opf.sqoprf.SqOprfConfig;
 import edu.alibaba.mpc4j.s2pc.opf.sqoprf.SqOprfFactory;
 
 /**
+ * RA17 ECC single-query OPRF config.
+ *
  * @author Qixian Zhou
  * @date 2023/4/11
  */
-public class EcdhEccSqOprfConfig implements SqOprfConfig {
-
+public class Ra17EccSqOprfConfig implements SqOprfConfig {
     /**
-     * 是否使用压缩椭圆曲线编码
+     * compress encode
      */
     private final boolean compressEncode;
     /**
-     * 环境类型
+     * environment
      */
     private EnvType envType;
 
-    private EcdhEccSqOprfConfig(EcdhEccSqOprfConfig.Builder builder) {
+    private Ra17EccSqOprfConfig(Ra17EccSqOprfConfig.Builder builder) {
         compressEncode = builder.compressEncode;
         envType = EnvType.STANDARD;
     }
 
     @Override
     public SqOprfFactory.SqOprfType getPtoType() {
-        return SqOprfFactory.SqOprfType.ECDH_ECC;
+        return SqOprfFactory.SqOprfType.RA17_ECC;
     }
 
     @Override
@@ -51,9 +50,9 @@ public class EcdhEccSqOprfConfig implements SqOprfConfig {
         return compressEncode;
     }
 
-    public static class Builder implements org.apache.commons.lang3.builder.Builder<EcdhEccSqOprfConfig> {
+    public static class Builder implements org.apache.commons.lang3.builder.Builder<Ra17EccSqOprfConfig> {
         /**
-         * 是否使用压缩椭圆曲线编码
+         * compress encode
          */
         private boolean compressEncode;
 
@@ -61,14 +60,14 @@ public class EcdhEccSqOprfConfig implements SqOprfConfig {
             compressEncode = true;
         }
 
-        public EcdhEccSqOprfConfig.Builder setCompressEncode(boolean compressEncode) {
+        public Ra17EccSqOprfConfig.Builder setCompressEncode(boolean compressEncode) {
             this.compressEncode = compressEncode;
             return this;
         }
 
         @Override
-        public EcdhEccSqOprfConfig build() {
-            return new EcdhEccSqOprfConfig(this);
+        public Ra17EccSqOprfConfig build() {
+            return new Ra17EccSqOprfConfig(this);
         }
     }
 }

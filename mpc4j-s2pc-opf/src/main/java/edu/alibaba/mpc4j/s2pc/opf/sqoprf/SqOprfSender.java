@@ -2,30 +2,35 @@ package edu.alibaba.mpc4j.s2pc.opf.sqoprf;
 
 import edu.alibaba.mpc4j.common.rpc.MpcAbortException;
 import edu.alibaba.mpc4j.common.rpc.pto.TwoPartyPto;
-import edu.alibaba.mpc4j.s2pc.opf.oprf.OprfSenderOutput;
 
 /**
+ * single-query OPRF sender.
+ *
  * @author Qixian Zhou
  * @date 2023/4/11
  */
 public interface SqOprfSender extends TwoPartyPto {
     /**
-     * 初始化协议。
+     * Generates a sing-query OPRF key.
      *
-     * @param maxBatchSize 最大批处理数量。
-     * @throws MpcAbortException 如果协议异常中止。
+     * @return a single-query OPRF key.
      */
-    void init(int maxBatchSize) throws MpcAbortException;
-
-
-    void init(int maxBatchSize, SqOprfSenderKey key) throws MpcAbortException;
+    SqOprfKey keyGen();
 
     /**
-     * 执行协议。
+     * Inits the protocol.
      *
-     * @param batchSize 批处理数量。
-     * @return 发送方输出。
-     * @throws MpcAbortException 如果协议异常中止。
+     * @param maxBatchSize max batch size.
+     * @param key          the single-query OPRF key.
+     * @throws MpcAbortException the protocol failure aborts.
      */
-    SqOprfSenderOutput oprf(int batchSize) throws MpcAbortException;
+    void init(int maxBatchSize, SqOprfKey key) throws MpcAbortException;
+
+    /**
+     * Executes the protocol.
+     *
+     * @param batchSize the batch size.
+     * @throws MpcAbortException the protocol failure aborts.
+     */
+    void oprf(int batchSize) throws MpcAbortException;
 }

@@ -5,20 +5,22 @@ import edu.alibaba.mpc4j.s2pc.opf.oprf.OprfReceiver;
 import edu.alibaba.mpc4j.s2pc.opf.oprf.OprfReceiverOutput;
 
 /**
+ * single-query OPRF receiver
+ *
  * @author Qixian Zhou
  * @date 2023/4/11
  */
-public class SqOprfReceiverThread  extends Thread {
+public class SqOprfReceiverThread extends Thread {
     /**
-     * 接收方
+     * the receiver
      */
     private final SqOprfReceiver receiver;
     /**
-     * 输入
+     * the inputs
      */
     private final byte[][] inputs;
     /**
-     * 输出
+     * the receiver output
      */
     private SqOprfReceiverOutput receiverOutput;
 

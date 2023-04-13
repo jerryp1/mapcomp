@@ -1,19 +1,12 @@
 package edu.alibaba.mpc4j.s2pc.opf.sqoprf;
 
 /**
- * single-query OPRF sender output.
+ * single-query OPRF key.
  *
  * @author Qixian Zhou
  * @date 2023/4/11
  */
-public interface SqOprfSenderOutput {
-    /**
-     * Gets the sing-query OPRF key.
-     *
-     * @return the sing-query OPRF key.
-     */
-    SqOprfKey getKey();
-
+public interface SqOprfKey {
     /**
      * Gets the prf output.
      *

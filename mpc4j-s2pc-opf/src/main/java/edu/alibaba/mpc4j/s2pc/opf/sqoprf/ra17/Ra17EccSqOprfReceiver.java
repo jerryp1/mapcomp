@@ -1,15 +1,15 @@
-package edu.alibaba.mpc4j.s2pc.opf.sqoprf.ecdh;
+package edu.alibaba.mpc4j.s2pc.opf.sqoprf.ra17;
 
 import edu.alibaba.mpc4j.common.rpc.*;
 import edu.alibaba.mpc4j.common.rpc.utils.DataPacket;
 import edu.alibaba.mpc4j.common.rpc.utils.DataPacketHeader;
 import edu.alibaba.mpc4j.common.tool.crypto.ecc.Ecc;
 import edu.alibaba.mpc4j.common.tool.crypto.ecc.EccFactory;
-import edu.alibaba.mpc4j.s2pc.opf.oprf.MpOprfReceiverOutput;
-import edu.alibaba.mpc4j.s2pc.opf.oprf.OprfReceiverOutput;
-
+import edu.alibaba.mpc4j.common.tool.crypto.kdf.Kdf;
+import edu.alibaba.mpc4j.common.tool.crypto.kdf.KdfFactory;
 import edu.alibaba.mpc4j.s2pc.opf.sqoprf.AbstractSqOprfReceiver;
 import edu.alibaba.mpc4j.s2pc.opf.sqoprf.SqOprfReceiverOutput;
+import edu.alibaba.mpc4j.s2pc.opf.sqoprf.ra17.Ra17EccSqOprfPtoDesc.PtoStep;
 import org.bouncycastle.math.ec.ECPoint;
 
 import java.math.BigInteger;
@@ -19,35 +19,35 @@ import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
 /**
+ * RA17 ECC single-query OPRF receiver.
+ *
  * @author Qixian Zhou
  * @date 2023/4/11
  */
-public class EcdhEccSqOprfReceiver extends AbstractSqOprfReceiver {
+public class Ra17EccSqOprfReceiver extends AbstractSqOprfReceiver {
     /**
-     * 椭圆曲线
+     * ECC
      */
     private final Ecc ecc;
     /**
-     * 是否压缩编码
+     * key derivation function
+     */
+    private final Kdf kdf;
+    /**
+     * compress encode
      */
     private final boolean compressEncode;
-    /**
-     * 伪随机函数输出字节长度
-     */
-    private final int prfByteLength;
     /**
      * β^{-1}
      */
     private BigInteger[] inverseBetas;
 
-    public EcdhEccSqOprfReceiver(Rpc receiverRpc, Party senderParty, EcdhEccSqOprfConfig config) {
-        super(EcdhEccSqOprfPtoDesc.getInstance(), receiverRpc, senderParty, config);
+    public Ra17EccSqOprfReceiver(Rpc receiverRpc, Party senderParty, Ra17EccSqOprfConfig config) {
+        super(Ra17EccSqOprfPtoDesc.getInstance(), receiverRpc, senderParty, config);
         ecc = EccFactory.createInstance(envType);
+        kdf = KdfFactory.createInstance(envType);
         compressEncode = config.getCompressEncode();
-        prfByteLength = ecc.encode(ecc.getG(), false).length;
     }
-
-
 
     @Override
     public void init(int maxBatchSize) throws MpcAbortException {
@@ -65,8 +65,8 @@ public class EcdhEccSqOprfReceiver extends AbstractSqOprfReceiver {
         stopWatch.start();
         List<byte[]> blindPayload = generateBlindPayload();
         DataPacketHeader blindHeader = new DataPacketHeader(
-                encodeTaskId, getPtoDesc().getPtoId(), EcdhEccSqOprfPtoDesc.PtoStep.RECEIVER_SEND_BLIND.ordinal(), extraInfo,
-                ownParty().getPartyId(), otherParty().getPartyId()
+            encodeTaskId, getPtoDesc().getPtoId(), PtoStep.RECEIVER_SEND_BLIND.ordinal(), extraInfo,
+            ownParty().getPartyId(), otherParty().getPartyId()
         );
         rpc.send(DataPacket.fromByteArrayList(blindHeader, blindPayload));
         stopWatch.stop();
@@ -75,8 +75,8 @@ public class EcdhEccSqOprfReceiver extends AbstractSqOprfReceiver {
         logStepInfo(PtoState.PTO_STEP, 1, 2, blindTime, "Receiver blinds");
 
         DataPacketHeader blindPrfHeader = new DataPacketHeader(
-                encodeTaskId, getPtoDesc().getPtoId(), EcdhEccSqOprfPtoDesc.PtoStep.SENDER_SEND_BLIND_PRF.ordinal(), extraInfo,
-                otherParty().getPartyId(), ownParty().getPartyId()
+            encodeTaskId, getPtoDesc().getPtoId(), PtoStep.SENDER_SEND_BLIND_PRF.ordinal(), extraInfo,
+            otherParty().getPartyId(), ownParty().getPartyId()
         );
         List<byte[]> blindPrfPayload = rpc.receive(blindPrfHeader).getPayload();
 
@@ -91,24 +91,24 @@ public class EcdhEccSqOprfReceiver extends AbstractSqOprfReceiver {
         return receiverOutput;
 
     }
+
     private List<byte[]> generateBlindPayload() {
         BigInteger n = ecc.getN();
         inverseBetas = new BigInteger[batchSize];
         IntStream batchIntStream = IntStream.range(0, batchSize);
         batchIntStream = parallel ? batchIntStream.parallel() : batchIntStream;
-
         return batchIntStream
-                .mapToObj(index -> {
-                    // 生成盲化因子
-                    BigInteger beta = ecc.randomZn(secureRandom);
-                    inverseBetas[index] = beta.modInverse(n);
-                    // hash to point
-                    ECPoint element = ecc.hashToCurve(inputs[index]);
-                    // 盲化
-                    return ecc.multiply(element, beta);
-                })
-                .map(element -> ecc.encode(element, compressEncode))
-                .collect(Collectors.toList());
+            .mapToObj(index -> {
+                // generate β
+                BigInteger beta = ecc.randomZn(secureRandom);
+                inverseBetas[index] = beta.modInverse(n);
+                // hash to point
+                ECPoint element = ecc.hashToCurve(inputs[index]);
+                // blind
+                return ecc.multiply(element, beta);
+            })
+            .map(element -> ecc.encode(element, compressEncode))
+            .collect(Collectors.toList());
     }
 
     private SqOprfReceiverOutput handleBlindPrfPayload(List<byte[]> blindPrfPayload) throws MpcAbortException {
@@ -117,16 +117,15 @@ public class EcdhEccSqOprfReceiver extends AbstractSqOprfReceiver {
         IntStream batchIntStream = IntStream.range(0, batchSize);
         batchIntStream = parallel ? batchIntStream.parallel() : batchIntStream;
         byte[][] prfs = batchIntStream
-                .mapToObj(index -> {
-                    // 解码
-                    ECPoint element = ecc.decode(blindPrfArray[index]);
-                    // 去盲化
-                    return ecc.multiply(element, inverseBetas[index]);
-                })
-                .map(element -> ecc.encode(element, false))
-                .toArray(byte[][]::new);
-        return new SqOprfReceiverOutput(prfByteLength, inputs, prfs);
+            .mapToObj(index -> {
+                // decode
+                ECPoint element = ecc.decode(blindPrfArray[index]);
+                // de-blind
+                return ecc.multiply(element, inverseBetas[index]);
+            })
+            .map(element -> ecc.encode(element, false))
+            .map(kdf::deriveKey)
+            .toArray(byte[][]::new);
+        return new SqOprfReceiverOutput(inputs, prfs);
     }
-
-
 }

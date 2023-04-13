@@ -1,80 +1,68 @@
 package edu.alibaba.mpc4j.s2pc.opf.sqoprf;
 
 import edu.alibaba.mpc4j.common.tool.CommonConstants;
+import edu.alibaba.mpc4j.common.tool.MathPreconditions;
 import edu.alibaba.mpc4j.common.tool.utils.BytesUtils;
 
 import java.util.Arrays;
 
 /**
+ * single-query OPRF receiver output.
+ *
  * @author Qixian Zhou
  * @date 2023/4/11
  */
 public class SqOprfReceiverOutput {
     /**
-     * 伪随机函数输出字节长度
-     */
-    private final int prfByteLength;
-    /**
-     * 输入
+     * the inputs.
      */
     private final byte[][] inputs;
     /**
-     * 伪随机函数输出
+     * the prfs.
      */
     private final byte[][] prfs;
 
-    public SqOprfReceiverOutput(int prfByteLength, byte[][] inputs, byte[][] prfs) {
-        assert prfByteLength >= CommonConstants.BLOCK_BYTE_LENGTH;
-        this.prfByteLength = prfByteLength;
-        assert inputs.length > 0;
+    public SqOprfReceiverOutput(byte[][] inputs, byte[][] prfs) {
+        MathPreconditions.checkPositive("inputs.length", inputs.length);
+        MathPreconditions.checkEqual("inputs.length", "prfs.length", inputs.length, prfs.length);
         this.inputs = Arrays.stream(inputs)
-                .peek(input -> {
-                    assert input != null;
-                })
-                .map(BytesUtils::clone)
-                .toArray(byte[][]::new);
-        assert prfs.length == inputs.length;
+            .peek(input -> {
+                assert input != null;
+            })
+            .map(BytesUtils::clone)
+            .toArray(byte[][]::new);
         this.prfs = Arrays.stream(prfs)
-                .peek(prf -> {
-                    assert prf.length == prfByteLength;
-                })
-                .map(BytesUtils::clone)
-                .toArray(byte[][]::new);
+            .peek(prf -> {
+                assert prf.length == CommonConstants.BLOCK_BYTE_LENGTH;
+            })
+            .map(BytesUtils::clone)
+            .toArray(byte[][]::new);
     }
 
     /**
-     * 返回伪随机函数输入。
+     * Gets the input.
      *
-     * @param index 索引值。
-     * @return 伪随机函数输入。
+     * @param index the index.
+     * @return the input.
      */
     public byte[] getInput(int index) {
         return inputs[index];
     }
 
     /**
-     * 返回伪随机函数输出。
+     * Gets the output.
      *
-     * @param index 索引值。
-     * @return 伪随机函数输出。
+     * @param index the index.
+     * @return the PRF output.
      */
     public byte[] getPrf(int index) {
         return prfs[index];
     }
 
     /**
-     * 返回伪随机函数输出比特长度。
+     * Gets the batch size.
      *
-     * @return 伪随机函数输出比特长度。
-     */
-    public int getPrfByteLength() {
-        return prfByteLength;
-    }
-
-    /**
-     * 返回索引值总数量。
-     *
-     * @return 索引值总数量。
+     * @return the batch size.
      */
     public int getBatchSize() {
         return inputs.length;

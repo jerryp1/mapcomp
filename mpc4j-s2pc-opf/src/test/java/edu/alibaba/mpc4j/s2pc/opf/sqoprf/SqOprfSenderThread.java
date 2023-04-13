@@ -1,43 +1,42 @@
 package edu.alibaba.mpc4j.s2pc.opf.sqoprf;
 
 import edu.alibaba.mpc4j.common.rpc.MpcAbortException;
-import edu.alibaba.mpc4j.s2pc.opf.oprf.OprfSender;
-import edu.alibaba.mpc4j.s2pc.opf.oprf.OprfSenderOutput;
 
 /**
+ * single-query OPRF sender thread.
+ *
  * @author Qixian Zhou
  * @date 2023/4/11
  */
-public class SqOprfSenderThread extends Thread{
-
-
+public class SqOprfSenderThread extends Thread {
     /**
-     * 发送方
+     * the sender
      */
     private final SqOprfSender sender;
     /**
-     * 批处理数量
+     * the batch size
      */
     private final int batchSize;
     /**
-     * 输出
+     * the key
      */
-    private SqOprfSenderOutput senderOutput;
+    private SqOprfKey key;
 
     SqOprfSenderThread(SqOprfSender sender, int batchSize) {
         this.sender = sender;
         this.batchSize = batchSize;
     }
 
-    SqOprfSenderOutput getSenderOutput() {
-        return senderOutput;
+    SqOprfKey getKey() {
+        return key;
     }
 
     @Override
     public void run() {
         try {
-            sender.init(batchSize);
-            senderOutput = sender.oprf(batchSize);
+            key = sender.keyGen();
+            sender.init(batchSize, key);
+            sender.oprf(batchSize);
         } catch (MpcAbortException e) {
             e.printStackTrace();
         }
