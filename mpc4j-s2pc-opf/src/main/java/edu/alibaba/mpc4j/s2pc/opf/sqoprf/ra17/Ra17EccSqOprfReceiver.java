@@ -7,6 +7,7 @@ import edu.alibaba.mpc4j.common.tool.crypto.ecc.Ecc;
 import edu.alibaba.mpc4j.common.tool.crypto.ecc.EccFactory;
 import edu.alibaba.mpc4j.common.tool.crypto.kdf.Kdf;
 import edu.alibaba.mpc4j.common.tool.crypto.kdf.KdfFactory;
+import edu.alibaba.mpc4j.common.tool.utils.BigIntegerUtils;
 import edu.alibaba.mpc4j.s2pc.opf.sqoprf.AbstractSqOprfReceiver;
 import edu.alibaba.mpc4j.s2pc.opf.sqoprf.SqOprfReceiverOutput;
 import edu.alibaba.mpc4j.s2pc.opf.sqoprf.ra17.Ra17EccSqOprfPtoDesc.PtoStep;
@@ -101,7 +102,7 @@ public class Ra17EccSqOprfReceiver extends AbstractSqOprfReceiver {
             .mapToObj(index -> {
                 // generate β
                 BigInteger beta = ecc.randomZn(secureRandom);
-                inverseBetas[index] = beta.modInverse(n);
+                inverseBetas[index] = BigIntegerUtils.modInverse(beta, n);
                 // hash to point
                 ECPoint element = ecc.hashToCurve(inputs[index]);
                 // blind

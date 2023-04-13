@@ -4,9 +4,7 @@ import edu.alibaba.mpc4j.common.rpc.Party;
 import edu.alibaba.mpc4j.common.rpc.Rpc;
 import edu.alibaba.mpc4j.common.rpc.desc.SecurityModel;
 import edu.alibaba.mpc4j.common.rpc.pto.PtoFactory;
-import edu.alibaba.mpc4j.s2pc.opf.sqoprf.ra17.Ra17EccSqOprfConfig;
-import edu.alibaba.mpc4j.s2pc.opf.sqoprf.ra17.Ra17EccSqOprfReceiver;
-import edu.alibaba.mpc4j.s2pc.opf.sqoprf.ra17.Ra17EccSqOprfSender;
+import edu.alibaba.mpc4j.s2pc.opf.sqoprf.ra17.*;
 
 /**
  * single-query OPRF factory.
@@ -52,12 +50,13 @@ public class SqOprfFactory implements PtoFactory {
      * @param config        the config.
      * @return the sender.
      */
-    public static SqOprfSender createSqOprfSender(Rpc senderRpc, Party receiverParty, SqOprfConfig config) {
+    public static SqOprfSender createSender(Rpc senderRpc, Party receiverParty, SqOprfConfig config) {
         SqOprfType type = config.getPtoType();
         switch (type) {
             case RA17_ECC:
                 return new Ra17EccSqOprfSender(senderRpc, receiverParty, (Ra17EccSqOprfConfig) config);
             case RA17_BYTE_ECC:
+                return new Ra17ByteEccSqOprfSender(senderRpc, receiverParty, (Ra17ByteEccSqOprfConfig) config);
             case NR04:
             case LOW_MC:
             default:
@@ -73,12 +72,13 @@ public class SqOprfFactory implements PtoFactory {
      * @param config      the config.
      * @return the receiver.
      */
-    public static SqOprfReceiver createSqOprfReceiver(Rpc receiverRpc, Party senderParty, SqOprfConfig config) {
+    public static SqOprfReceiver createReceiver(Rpc receiverRpc, Party senderParty, SqOprfConfig config) {
         SqOprfType type = config.getPtoType();
         switch (type) {
             case RA17_ECC:
                 return new Ra17EccSqOprfReceiver(receiverRpc, senderParty, (Ra17EccSqOprfConfig) config);
             case RA17_BYTE_ECC:
+                return new Ra17ByteEccSqOprfReceiver(receiverRpc, senderParty, (Ra17ByteEccSqOprfConfig) config);
             case NR04:
             case LOW_MC:
             default:
@@ -92,17 +92,15 @@ public class SqOprfFactory implements PtoFactory {
      * @param securityModel the security model.
      * @return 默认协议配置项。
      */
-    public static SqOprfConfig createOprfDefaultConfig(SecurityModel securityModel) {
+    public static SqOprfConfig createDefaultConfig(SecurityModel securityModel) {
         switch (securityModel) {
             case IDEAL:
             case SEMI_HONEST:
-                return new Ra17EccSqOprfConfig.Builder().build();
+                return new Ra17ByteEccSqOprfConfig.Builder().build();
             case COVERT:
             case MALICIOUS:
             default:
                 throw new IllegalArgumentException("Invalid " + SecurityModel.class.getSimpleName() + ": " + securityModel.name());
         }
     }
-
-
 }

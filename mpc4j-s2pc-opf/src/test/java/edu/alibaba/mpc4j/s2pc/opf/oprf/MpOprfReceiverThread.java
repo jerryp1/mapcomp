@@ -1,26 +1,24 @@
 package edu.alibaba.mpc4j.s2pc.opf.oprf;
 
 import edu.alibaba.mpc4j.common.rpc.MpcAbortException;
-import edu.alibaba.mpc4j.s2pc.opf.oprf.MpOprfReceiver;
-import edu.alibaba.mpc4j.s2pc.opf.oprf.MpOprfReceiverOutput;
 
 /**
- * MPOPRF协议接收方线程。
+ * multi-query OPRF receiver thread.
  *
  * @author Weiran Liu
  * @date 2022/4/9
  */
 class MpOprfReceiverThread extends Thread {
     /**
-     * 接收方
+     * the receiver
      */
     private final MpOprfReceiver receiver;
     /**
-     * 输入
+     * the inputs
      */
     private final byte[][] inputs;
     /**
-     * 输出
+     * the receiver output
      */
     private MpOprfReceiverOutput receiverOutput;
 

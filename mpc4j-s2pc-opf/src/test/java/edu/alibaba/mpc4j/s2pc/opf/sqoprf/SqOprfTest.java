@@ -6,6 +6,7 @@ import edu.alibaba.mpc4j.common.rpc.RpcManager;
 import edu.alibaba.mpc4j.common.rpc.impl.memory.MemoryRpcManager;
 import edu.alibaba.mpc4j.common.tool.CommonConstants;
 import edu.alibaba.mpc4j.s2pc.opf.sqoprf.SqOprfFactory.SqOprfType;
+import edu.alibaba.mpc4j.s2pc.opf.sqoprf.ra17.Ra17ByteEccSqOprfConfig;
 import edu.alibaba.mpc4j.s2pc.opf.sqoprf.ra17.Ra17EccSqOprfConfig;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.time.StopWatch;
@@ -45,12 +46,17 @@ public class SqOprfTest {
     /**
      * the large batch size
      */
-    private static final int LARGE_BATCH_SIZE = 1 << 12;
+    private static final int LARGE_BATCH_SIZE = 1 << 14;
 
     @Parameterized.Parameters(name = "{0}")
     public static Collection<Object[]> configurations() {
         Collection<Object[]> configurations = new ArrayList<>();
 
+        // RA17_BYTE_ECC (compress)
+        configurations.add(new Object[]{
+            SqOprfType.RA17_BYTE_ECC.name(),
+            new Ra17ByteEccSqOprfConfig.Builder().build(),
+        });
         // RA17_ECC (compress)
         configurations.add(new Object[]{
             SqOprfType.RA17_ECC.name() + " (compress)",
@@ -141,8 +147,8 @@ public class SqOprfTest {
     }
 
     private void testPto(int batchSize, boolean parallel) {
-        SqOprfSender sender = SqOprfFactory.createSqOprfSender(senderRpc, receiverRpc.ownParty(), config);
-        SqOprfReceiver receiver = SqOprfFactory.createSqOprfReceiver(receiverRpc, senderRpc.ownParty(), config);
+        SqOprfSender sender = SqOprfFactory.createSender(senderRpc, receiverRpc.ownParty(), config);
+        SqOprfReceiver receiver = SqOprfFactory.createReceiver(receiverRpc, senderRpc.ownParty(), config);
         sender.setParallel(parallel);
         receiver.setParallel(parallel);
         int randomTaskId = Math.abs(SECURE_RANDOM.nextInt());
@@ -192,10 +198,14 @@ public class SqOprfTest {
 
     private void assertOutput(int batchSize, SqOprfKey key, SqOprfReceiverOutput receiverOutput) {
         Assert.assertEquals(batchSize, receiverOutput.getBatchSize());
+        Assert.assertEquals(key.getPrfByteLength(), receiverOutput.getPrfByteLength());
+        int prfByteLength = key.getPrfByteLength();
         IntStream.range(0, batchSize).forEach(index -> {
             byte[] input = receiverOutput.getInput(index);
             ByteBuffer receiverPrf = ByteBuffer.wrap(receiverOutput.getPrf(index));
+            Assert.assertEquals(prfByteLength, receiverPrf.array().length);
             ByteBuffer senderPrf = ByteBuffer.wrap(key.getPrf(input));
+            Assert.assertEquals(prfByteLength, senderPrf.array().length);
             Assert.assertEquals(senderPrf, receiverPrf);
         });
         // all results should be distinct

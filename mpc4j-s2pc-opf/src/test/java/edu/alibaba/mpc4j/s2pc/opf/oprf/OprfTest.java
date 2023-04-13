@@ -6,9 +6,9 @@ import edu.alibaba.mpc4j.common.rpc.RpcManager;
 import edu.alibaba.mpc4j.common.rpc.impl.memory.MemoryRpcManager;
 import edu.alibaba.mpc4j.common.tool.CommonConstants;
 import edu.alibaba.mpc4j.s2pc.opf.oprf.cm20.Cm20MpOprfConfig;
+import edu.alibaba.mpc4j.s2pc.opf.oprf.fipr05.Fipr05MpOprfConfig;
 import edu.alibaba.mpc4j.s2pc.opf.oprf.kkrt16.Kkrt16OptOprfConfig;
 import edu.alibaba.mpc4j.s2pc.opf.oprf.kkrt16.Kkrt16OriOprfConfig;
-import edu.alibaba.mpc4j.s2pc.opf.oprf.ra17.Ra17MpOprfConfig;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.time.StopWatch;
 import org.junit.After;
@@ -28,7 +28,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.stream.IntStream;
 
 /**
- * OPRF协议测试。
+ * OPRF test.
  *
  * @author Weiran Liu
  * @date 2019/07/12
@@ -37,60 +37,52 @@ import java.util.stream.IntStream;
 public class OprfTest {
     private static final Logger LOGGER = LoggerFactory.getLogger(OprfTest.class);
     /**
-     * 随机状态
+     * the random state
      */
     private static final SecureRandom SECURE_RANDOM = new SecureRandom();
     /**
-     * 默认批处理数量
+     * the default batch size
      */
     private static final int DEFAULT_BATCH_SIZE = 1000;
     /**
-     * 较大批处理数量
+     * the large batch size
      */
     private static final int LARGE_BATCH_SIZE = 1 << 12;
 
     @Parameterized.Parameters(name = "{0}")
     public static Collection<Object[]> configurations() {
         Collection<Object[]> configurations = new ArrayList<>();
+
         // CM20
         configurations.add(new Object[]{
-            OprfFactory.OprfType.CM20.name(),
-            new Cm20MpOprfConfig.Builder().build(),
-        });
-        // RA17，压缩编码
-        configurations.add(new Object[]{
-            OprfFactory.OprfType.RA17.name() + " (compress)",
-            new Ra17MpOprfConfig.Builder().setCompressEncode(true).build(),
-        });
-        // RA17，非压缩编码
-        configurations.add(new Object[]{
-            OprfFactory.OprfType.RA17.name() + " (uncompress)",
-            new Ra17MpOprfConfig.Builder().setCompressEncode(false).build(),
+            OprfFactory.OprfType.CM20.name(), new Cm20MpOprfConfig.Builder().build(),
         });
         // KKRT16_ORI
         configurations.add(new Object[]{
-            OprfFactory.OprfType.KKRT16_ORI.name(),
-            new Kkrt16OriOprfConfig.Builder().build(),
+            OprfFactory.OprfType.KKRT16_ORI.name(), new Kkrt16OriOprfConfig.Builder().build(),
         });
         // KKRT16_OPT
         configurations.add(new Object[]{
-            OprfFactory.OprfType.KKRT16_OPT.name(),
-            new Kkrt16OptOprfConfig.Builder().build(),
+            OprfFactory.OprfType.KKRT16_OPT.name(), new Kkrt16OptOprfConfig.Builder().build(),
+        });
+        // FIPR05
+        configurations.add(new Object[]{
+            OprfFactory.OprfType.FIPR05.name(), new Fipr05MpOprfConfig.Builder().build(),
         });
 
         return configurations;
     }
 
     /**
-     * 发送方
+     * the sender RPC
      */
     private final Rpc senderRpc;
     /**
-     * 接收方
+     * the receiver RPC
      */
     private final Rpc receiverRpc;
     /**
-     * 协议类型
+     * the config
      */
     private final OprfConfig config;
 
@@ -171,7 +163,7 @@ public class OprfTest {
             OprfSenderThread senderThread = new OprfSenderThread(sender, batchSize);
             OprfReceiverThread receiverThread = new OprfReceiverThread(receiver, inputs);
             StopWatch stopWatch = new StopWatch();
-            // 开始执行协议
+            // execute the protocol
             stopWatch.start();
             senderThread.start();
             receiverThread.start();
@@ -182,7 +174,7 @@ public class OprfTest {
             stopWatch.reset();
             OprfSenderOutput senderOutput = senderThread.getSenderOutput();
             OprfReceiverOutput receiverOutput = receiverThread.getReceiverOutput();
-            // 验证结果
+            // verify
             assertOutput(batchSize, senderOutput, receiverOutput);
             LOGGER.info("Sender data_packet_num = {}, payload_bytes = {}B, send_bytes = {}B, time = {}ms",
                 senderRpc.getSendDataPacketNum(), senderRpc.getPayloadByteLength(), senderRpc.getSendByteLength(),
@@ -211,8 +203,12 @@ public class OprfTest {
             byte[] senderPrf = senderOutput.getPrf(index, input);
             Assert.assertArrayEquals(senderPrf, receiverPrf);
         });
-        // 所有结果都应不相同
-        long distinctCount = IntStream.range(0, n).mapToObj(receiverOutput::getPrf).map(ByteBuffer::wrap).distinct().count();
-        Assert.assertEquals(receiverOutput.getBatchSize(),  distinctCount);
+        // all PRFs should be distinct
+        long distinctCount = IntStream.range(0, n)
+            .mapToObj(receiverOutput::getPrf)
+            .map(ByteBuffer::wrap)
+            .distinct()
+            .count();
+        Assert.assertEquals(receiverOutput.getBatchSize(), distinctCount);
     }
 }

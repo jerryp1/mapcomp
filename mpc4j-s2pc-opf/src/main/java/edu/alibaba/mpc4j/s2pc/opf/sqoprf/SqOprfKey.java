@@ -1,5 +1,7 @@
 package edu.alibaba.mpc4j.s2pc.opf.sqoprf;
 
+import edu.alibaba.mpc4j.common.tool.CommonConstants;
+
 /**
  * single-query OPRF key.
  *
@@ -14,4 +16,13 @@ public interface SqOprfKey {
      * @return the prf output.
      */
     byte[] getPrf(byte[] input);
+
+    /**
+     * Gets PRF byte length.
+     *
+     * @return PRF byte length.
+     */
+    default int getPrfByteLength() {
+        return CommonConstants.BLOCK_BYTE_LENGTH;
+    }
 }

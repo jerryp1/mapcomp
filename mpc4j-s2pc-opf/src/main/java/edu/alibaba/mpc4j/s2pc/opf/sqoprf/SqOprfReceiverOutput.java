@@ -67,4 +67,13 @@ public class SqOprfReceiverOutput {
     public int getBatchSize() {
         return inputs.length;
     }
+
+    /**
+     * Gets PRF byte length.
+     *
+     * @return PRF byte length.
+     */
+    public int getPrfByteLength() {
+        return CommonConstants.BLOCK_BYTE_LENGTH;
+    }
 }

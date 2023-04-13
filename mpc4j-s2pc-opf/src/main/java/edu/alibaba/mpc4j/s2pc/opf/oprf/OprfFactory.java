@@ -7,100 +7,104 @@ import edu.alibaba.mpc4j.common.rpc.pto.PtoFactory;
 import edu.alibaba.mpc4j.s2pc.opf.oprf.cm20.Cm20MpOprfConfig;
 import edu.alibaba.mpc4j.s2pc.opf.oprf.cm20.Cm20MpOprfReceiver;
 import edu.alibaba.mpc4j.s2pc.opf.oprf.cm20.Cm20MpOprfSender;
+import edu.alibaba.mpc4j.s2pc.opf.oprf.fipr05.Fipr05MpOprfConfig;
+import edu.alibaba.mpc4j.s2pc.opf.oprf.fipr05.Fipr05MpOprfReceiver;
+import edu.alibaba.mpc4j.s2pc.opf.oprf.fipr05.Fipr05MpOprfSender;
 import edu.alibaba.mpc4j.s2pc.opf.oprf.kkrt16.*;
-import edu.alibaba.mpc4j.s2pc.opf.oprf.ra17.Ra17MpOprfConfig;
-import edu.alibaba.mpc4j.s2pc.opf.oprf.ra17.Ra17MpOprfReceiver;
-import edu.alibaba.mpc4j.s2pc.opf.oprf.ra17.Ra17MpOprfSender;
 
 /**
- * OPRF协议工厂。
+ * OPRF factory.
  *
  * @author Weiran Liu
  * @date 2022/02/06
  */
 public class OprfFactory implements PtoFactory {
     /**
-     * 私有构造函数
+     * private constructor
      */
     private OprfFactory() {
         // empty
     }
 
     /**
-     * 协议类型
+     * type
      */
     public enum OprfType {
         /**
-         * 优化KKRT16协议
+         * FIPR05
+         */
+        FIPR05,
+        /**
+         * optimized KKRT16
          */
         KKRT16_OPT,
         /**
-         * 原始KKRT16协议
+         * original KKRT16
          */
         KKRT16_ORI,
         /**
-         * RA17协议
-         */
-        RA17,
-        /**
-         * CM20协议
+         * CM20
          */
         CM20,
+        /**
+         * RS21
+         */
+        RS21,
     }
 
     /**
-     * 构建发送方。
+     * Creates a OPRF sender.
      *
-     * @param senderRpc     发送方通信接口。
-     * @param receiverParty 接收方信息。
-     * @param config        配置项。
-     * @return 发送方。
+     * @param senderRpc     the sender RPC.
+     * @param receiverParty the receiver party.
+     * @param config        the config.
+     * @return a sender.
      */
     public static OprfSender createOprfSender(Rpc senderRpc, Party receiverParty, OprfConfig config) {
         OprfType type = config.getPtoType();
         switch (type) {
-            case RA17:
-                return new Ra17MpOprfSender(senderRpc, receiverParty, (Ra17MpOprfConfig)config);
+            case FIPR05:
+                return new Fipr05MpOprfSender(senderRpc, receiverParty, (Fipr05MpOprfConfig) config);
             case KKRT16_ORI:
-                return new Kkrt16OriOprfSender(senderRpc, receiverParty, (Kkrt16OriOprfConfig)config);
+                return new Kkrt16OriOprfSender(senderRpc, receiverParty, (Kkrt16OriOprfConfig) config);
             case KKRT16_OPT:
-                return new Kkrt16OptOprfSender(senderRpc, receiverParty, (Kkrt16OptOprfConfig)config);
+                return new Kkrt16OptOprfSender(senderRpc, receiverParty, (Kkrt16OptOprfConfig) config);
             case CM20:
-                return new Cm20MpOprfSender(senderRpc, receiverParty, (Cm20MpOprfConfig)config);
+                return new Cm20MpOprfSender(senderRpc, receiverParty, (Cm20MpOprfConfig) config);
             default:
                 throw new IllegalArgumentException("Invalid " + OprfType.class.getSimpleName() + ": " + type.name());
         }
     }
 
     /**
-     * 构建接收方。
+     * Creates a OPRF receiver.
      *
-     * @param receiverRpc 接收方通信接口。
-     * @param senderParty 发送方信息。
-     * @param config      配置项。
-     * @return 接收方。
+     * @param receiverRpc the receiver RPC.
+     * @param senderParty the sender party.
+     * @param config      the config.
+     * @return a receiver.
      */
     public static OprfReceiver createOprfReceiver(Rpc receiverRpc, Party senderParty, OprfConfig config) {
         OprfType type = config.getPtoType();
         switch (type) {
-            case RA17:
-                return new Ra17MpOprfReceiver(receiverRpc, senderParty, (Ra17MpOprfConfig)config);
+            case FIPR05:
+                return new Fipr05MpOprfReceiver(receiverRpc, senderParty, (Fipr05MpOprfConfig) config);
             case KKRT16_ORI:
-                return new Kkrt16OriOprfReceiver(receiverRpc, senderParty, (Kkrt16OriOprfConfig)config);
+                return new Kkrt16OriOprfReceiver(receiverRpc, senderParty, (Kkrt16OriOprfConfig) config);
             case KKRT16_OPT:
-                return new Kkrt16OptOprfReceiver(receiverRpc, senderParty, (Kkrt16OptOprfConfig)config);
+                return new Kkrt16OptOprfReceiver(receiverRpc, senderParty, (Kkrt16OptOprfConfig) config);
             case CM20:
-                return new Cm20MpOprfReceiver(receiverRpc, senderParty, (Cm20MpOprfConfig)config);
+                return new Cm20MpOprfReceiver(receiverRpc, senderParty, (Cm20MpOprfConfig) config);
             default:
                 throw new IllegalArgumentException("Invalid " + OprfType.class.getSimpleName() + ": " + type.name());
         }
     }
 
     /**
-     * 创建默认协议配置项。
+     * Creates a default OPRF config.
      *
-     * @param securityModel 安全模型。
-     * @return 默认协议配置项。
+     * @param securityModel the security model.
+     * @return a default OPRF config.
      */
     public static OprfConfig createOprfDefaultConfig(SecurityModel securityModel) {
         switch (securityModel) {
@@ -115,50 +119,52 @@ public class OprfFactory implements PtoFactory {
     }
 
     /**
-     * 构建发送方。
+     * Creates a multi-query OPRF sender.
      *
-     * @param senderRpc     发送方通信接口。
-     * @param receiverParty 接收方信息。
-     * @param config        配置项。
-     * @return 发送方。
+     * @param senderRpc     the sender RPC.
+     * @param receiverParty the receiver party.
+     * @param config        the config.
+     * @return a sender.
      */
     public static MpOprfSender createMpOprfSender(Rpc senderRpc, Party receiverParty, MpOprfConfig config) {
         OprfType type = config.getPtoType();
         switch (type) {
-            case RA17:
-                return new Ra17MpOprfSender(senderRpc, receiverParty, (Ra17MpOprfConfig)config);
+            case FIPR05:
+                return new Fipr05MpOprfSender(senderRpc, receiverParty, (Fipr05MpOprfConfig) config);
             case CM20:
-                return new Cm20MpOprfSender(senderRpc, receiverParty, (Cm20MpOprfConfig)config);
+                return new Cm20MpOprfSender(senderRpc, receiverParty, (Cm20MpOprfConfig) config);
+            case RS21:
             default:
                 throw new IllegalArgumentException("Invalid " + OprfType.class.getSimpleName() + ": " + type.name());
         }
     }
 
     /**
-     * 构建接收方。
+     * Creates a multi-query OPRF receiver.
      *
-     * @param receiverRpc 接收方通信接口。
-     * @param senderParty 发送方信息。
-     * @param config      配置项。
-     * @return 接收方。
+     * @param receiverRpc the receiver RPC.
+     * @param senderParty the sender party.
+     * @param config      the config.
+     * @return a receiver.
      */
     public static MpOprfReceiver createMpOprfReceiver(Rpc receiverRpc, Party senderParty, MpOprfConfig config) {
         OprfType type = config.getPtoType();
         switch (type) {
-            case RA17:
-                return new Ra17MpOprfReceiver(receiverRpc, senderParty, (Ra17MpOprfConfig)config);
+            case FIPR05:
+                return new Fipr05MpOprfReceiver(receiverRpc, senderParty, (Fipr05MpOprfConfig) config);
             case CM20:
-                return new Cm20MpOprfReceiver(receiverRpc, senderParty, (Cm20MpOprfConfig)config);
+                return new Cm20MpOprfReceiver(receiverRpc, senderParty, (Cm20MpOprfConfig) config);
+            case RS21:
             default:
                 throw new IllegalArgumentException("Invalid " + OprfType.class.getSimpleName() + ": " + type.name());
         }
     }
 
     /**
-     * 创建默认协议配置项。
+     * Creates a default multi-query OPRF config.
      *
-     * @param securityModel 安全模型。
-     * @return 默认协议配置项。
+     * @param securityModel the security model.
+     * @return a default multi-query OPRF config.
      */
     public static MpOprfConfig createMpOprfDefaultConfig(SecurityModel securityModel) {
         switch (securityModel) {
