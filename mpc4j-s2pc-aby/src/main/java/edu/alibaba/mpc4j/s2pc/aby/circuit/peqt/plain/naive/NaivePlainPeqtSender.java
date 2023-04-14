@@ -5,6 +5,7 @@ import edu.alibaba.mpc4j.common.rpc.Party;
 import edu.alibaba.mpc4j.common.rpc.PtoState;
 import edu.alibaba.mpc4j.common.rpc.Rpc;
 import edu.alibaba.mpc4j.common.tool.bitvector.BitVector;
+import edu.alibaba.mpc4j.common.tool.utils.LongUtils;
 import edu.alibaba.mpc4j.crypto.matrix.database.ZlDatabase;
 import edu.alibaba.mpc4j.s2pc.aby.basics.bc.BcFactory;
 import edu.alibaba.mpc4j.s2pc.aby.basics.bc.BcParty;
@@ -73,13 +74,25 @@ public class NaivePlainPeqtSender extends AbstractPlainPeqtParty {
         logStepInfo(PtoState.PTO_STEP, 2, 3, shareTime);
 
         stopWatch.start();
-        SquareShareZ2Vector z0 = SquareShareZ2Vector.createOnes(num);
         // bit-wise XOR and NOT
-        SquareShareZ2Vector[] bitwise0 = bcSender.xor(x0, y0);
-        bitwise0 = bcSender.not(bitwise0);
-        // AND all results
-        for (int i = 0; i < l; i++) {
-            z0 = bcSender.and(z0, bitwise0[i]);
+        SquareShareZ2Vector[] eqs0 = bcSender.xor(x0, y0);
+        eqs0 = bcSender.not(eqs0);
+        // tree-based AND
+        int logL = LongUtils.ceilLog2(l);
+        for (int h = 1; h <= logL; h++) {
+            int nodeNum = eqs0.length / 2;
+            SquareShareZ2Vector[] eqsx0 = new SquareShareZ2Vector[nodeNum];
+            SquareShareZ2Vector[] eqsy0 = new SquareShareZ2Vector[nodeNum];
+            for (int i = 0; i < nodeNum; i++) {
+                eqsx0[i] = eqs0[i * 2];
+                eqsy0[i] = eqs0[i * 2 + 1];
+            }
+            SquareShareZ2Vector[] eqsz0 = bcSender.and(eqsx0, eqsy0);
+            if (eqs0.length % 2 == 1) {
+                eqsz0 = Arrays.copyOf(eqsz0, nodeNum + 1);
+                eqsz0[nodeNum] = eqs0[eqs0.length - 1];
+            }
+            eqs0 = eqsz0;
         }
         stopWatch.stop();
         long bitwiseTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
@@ -87,6 +100,6 @@ public class NaivePlainPeqtSender extends AbstractPlainPeqtParty {
         logStepInfo(PtoState.PTO_STEP, 3, 3, bitwiseTime);
 
         logPhaseInfo(PtoState.PTO_END);
-        return z0;
+        return eqs0[0];
     }
 }

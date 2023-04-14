@@ -5,6 +5,7 @@ import edu.alibaba.mpc4j.common.rpc.utils.DataPacketHeader;
 import edu.alibaba.mpc4j.common.tool.bitvector.BitVector;
 import edu.alibaba.mpc4j.common.tool.bitvector.BitVectorFactory;
 import edu.alibaba.mpc4j.common.tool.utils.CommonUtils;
+import edu.alibaba.mpc4j.common.tool.utils.LongUtils;
 import edu.alibaba.mpc4j.s2pc.aby.basics.bc.BcFactory;
 import edu.alibaba.mpc4j.s2pc.aby.basics.bc.BcParty;
 import edu.alibaba.mpc4j.s2pc.aby.basics.bc.SquareShareZ2Vector;
@@ -14,6 +15,7 @@ import edu.alibaba.mpc4j.s2pc.pcg.ot.lnot.LnotFactory;
 import edu.alibaba.mpc4j.s2pc.pcg.ot.lnot.LnotReceiver;
 import edu.alibaba.mpc4j.s2pc.pcg.ot.lnot.LnotReceiverOutput;
 
+import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.IntStream;
@@ -51,7 +53,7 @@ public class Cgs22PlainPeqtReceiver extends AbstractPlainPeqtParty {
         // q = l / m, where m = 4
         int maxByteL = CommonUtils.getByteLength(maxL);
         int maxQ = maxByteL * 2;
-        bcReceiver.init(maxNum, maxNum * (maxQ - 1));
+        bcReceiver.init(maxNum * (maxQ - 1), maxNum * (maxQ - 1));
         lnotReceiver.init(4, maxNum, maxNum * maxQ);
         stopWatch.stop();
         long initTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
@@ -117,13 +119,25 @@ public class Cgs22PlainPeqtReceiver extends AbstractPlainPeqtParty {
         logStepInfo(PtoState.PTO_STEP, 2, 3, lnotTime);
 
         stopWatch.start();
-        SquareShareZ2Vector z1 = SquareShareZ2Vector.createOnes(num);
         SquareShareZ2Vector[] eqs1 = IntStream.range(0, q)
             .mapToObj(j -> SquareShareZ2Vector.create(eqs[j], false))
             .toArray(SquareShareZ2Vector[]::new);
-        // bit-wise AND
-        for (int i = 0; i < q; i++) {
-            z1 = bcReceiver.and(z1, eqs1[i]);
+        // tree-based AND
+        int logQ = LongUtils.ceilLog2(q);
+        for (int h = 1; h <= logQ; h++) {
+            int nodeNum = eqs1.length / 2;
+            SquareShareZ2Vector[] eqsx0 = new SquareShareZ2Vector[nodeNum];
+            SquareShareZ2Vector[] eqsy0 = new SquareShareZ2Vector[nodeNum];
+            for (int i = 0; i < nodeNum; i++) {
+                eqsx0[i] = eqs1[i * 2];
+                eqsy0[i] = eqs1[i * 2 + 1];
+            }
+            SquareShareZ2Vector[] eqsz1 = bcReceiver.and(eqsx0, eqsy0);
+            if (eqs1.length % 2 == 1) {
+                eqsz1 = Arrays.copyOf(eqsz1, nodeNum + 1);
+                eqsz1[nodeNum] = eqs1[eqs1.length - 1];
+            }
+            eqs1 = eqsz1;
         }
         stopWatch.stop();
         long bitwiseTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
@@ -131,6 +145,6 @@ public class Cgs22PlainPeqtReceiver extends AbstractPlainPeqtParty {
         logStepInfo(PtoState.PTO_STEP, 3, 3, bitwiseTime);
 
         logPhaseInfo(PtoState.PTO_END);
-        return z1;
+        return eqs1[0];
     }
 }

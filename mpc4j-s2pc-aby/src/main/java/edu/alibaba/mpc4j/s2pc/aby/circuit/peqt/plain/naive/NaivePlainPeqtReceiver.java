@@ -5,6 +5,7 @@ import edu.alibaba.mpc4j.common.rpc.Party;
 import edu.alibaba.mpc4j.common.rpc.PtoState;
 import edu.alibaba.mpc4j.common.rpc.Rpc;
 import edu.alibaba.mpc4j.common.tool.bitvector.BitVector;
+import edu.alibaba.mpc4j.common.tool.utils.LongUtils;
 import edu.alibaba.mpc4j.crypto.matrix.database.ZlDatabase;
 import edu.alibaba.mpc4j.s2pc.aby.basics.bc.BcFactory;
 import edu.alibaba.mpc4j.s2pc.aby.basics.bc.BcParty;
@@ -73,13 +74,25 @@ public class NaivePlainPeqtReceiver extends AbstractPlainPeqtParty {
         logStepInfo(PtoState.PTO_STEP, 2, 3, shareTime);
 
         stopWatch.start();
-        SquareShareZ2Vector z1 = SquareShareZ2Vector.createOnes(num);
         // bit-wise XOR and NOT
-        SquareShareZ2Vector[] bitwise1 = bcReceiver.xor(x1, y1);
-        bitwise1 = bcReceiver.not(bitwise1);
-        // AND all results
-        for (int i = 0; i < l; i++) {
-            z1 = bcReceiver.and(z1, bitwise1[i]);
+        SquareShareZ2Vector[] eqs1 = bcReceiver.xor(x1, y1);
+        eqs1 = bcReceiver.not(eqs1);
+        // tree-based AND
+        int logL = LongUtils.ceilLog2(l);
+        for (int h = 1; h <= logL; h++) {
+            int nodeNum = eqs1.length / 2;
+            SquareShareZ2Vector[] eqsx1 = new SquareShareZ2Vector[nodeNum];
+            SquareShareZ2Vector[] eqsy1 = new SquareShareZ2Vector[nodeNum];
+            for (int i = 0; i < nodeNum; i++) {
+                eqsx1[i] = eqs1[i * 2];
+                eqsy1[i] = eqs1[i * 2 + 1];
+            }
+            SquareShareZ2Vector[] eqsz1 = bcReceiver.and(eqsx1, eqsy1);
+            if (eqs1.length % 2 == 1) {
+                eqsz1 = Arrays.copyOf(eqsz1, nodeNum + 1);
+                eqsz1[nodeNum] = eqs1[eqs1.length - 1];
+            }
+            eqs1 = eqsz1;
         }
         stopWatch.stop();
         long bitwiseTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
@@ -87,6 +100,6 @@ public class NaivePlainPeqtReceiver extends AbstractPlainPeqtParty {
         logStepInfo(PtoState.PTO_STEP, 3, 3, bitwiseTime);
 
         logPhaseInfo(PtoState.PTO_END);
-        return z1;
+        return eqs1[0];
     }
 }

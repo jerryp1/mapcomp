@@ -129,6 +129,16 @@ public class PlainPeqtTest {
     }
 
     @Test
+    public void test7Num() {
+        testPto(DEFAULT_L, 7, false);
+    }
+
+    @Test
+    public void test9Num() {
+        testPto(DEFAULT_L, 9, false);
+    }
+
+    @Test
     public void testDefaultNum() {
         testPto(DEFAULT_L, DEFAULT_NUM, false);
     }
@@ -139,8 +149,18 @@ public class PlainPeqtTest {
     }
 
     @Test
-    public void testSmallZl() {
+    public void testSmallL() {
         testPto(SMALL_L, DEFAULT_NUM, false);
+    }
+
+    @Test
+    public void test7L() {
+        testPto(7, DEFAULT_NUM, false);
+    }
+
+    @Test
+    public void test9L() {
+        testPto(9, DEFAULT_NUM, false);
     }
 
     @Test
