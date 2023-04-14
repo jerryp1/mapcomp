@@ -76,7 +76,7 @@ public class Z2ArithmeticTest {
         Collection<Object[]> configurations = new ArrayList<>();
         // Beaver91
         configurations.add(new Object[]{
-                BcFactory.BcType.BEA91.name(), new Bea91BcConfig.Builder().build()
+                BcFactory.BcType.Bea91.name(), new Bea91BcConfig.Builder().build()
         });
 
         return configurations;
