@@ -4,6 +4,9 @@ import edu.alibaba.mpc4j.common.rpc.Party;
 import edu.alibaba.mpc4j.common.rpc.Rpc;
 import edu.alibaba.mpc4j.common.rpc.desc.SecurityModel;
 import edu.alibaba.mpc4j.common.rpc.pto.PtoFactory;
+import edu.alibaba.mpc4j.s2pc.pcg.ot.lnot.impl.cache.CacheLnotConfig;
+import edu.alibaba.mpc4j.s2pc.pcg.ot.lnot.impl.cache.CacheLnotReceiver;
+import edu.alibaba.mpc4j.s2pc.pcg.ot.lnot.impl.cache.CacheLnotSender;
 import edu.alibaba.mpc4j.s2pc.pcg.ot.lnot.impl.direct.DirectLnotConfig;
 import edu.alibaba.mpc4j.s2pc.pcg.ot.lnot.impl.direct.DirectLnotReceiver;
 import edu.alibaba.mpc4j.s2pc.pcg.ot.lnot.impl.direct.DirectLnotSender;
@@ -27,7 +30,7 @@ public class LnotFactory implements PtoFactory {
      */
     public enum LnotType {
         /**
-         * directly invoke 1-out-of-n OT
+         * directly invoke 1-out-of-2^l COT
          */
         DIRECT,
         /**
@@ -50,6 +53,7 @@ public class LnotFactory implements PtoFactory {
             case DIRECT:
                 return new DirectLnotSender(senderRpc, receiverParty, (DirectLnotConfig) config);
             case CACHE:
+                return new CacheLnotSender(senderRpc, receiverParty, (CacheLnotConfig) config);
             default:
                 throw new IllegalArgumentException("Invalid " + LnotType.class.getSimpleName() + ": " + type.name());
         }
@@ -69,6 +73,7 @@ public class LnotFactory implements PtoFactory {
             case DIRECT:
                 return new DirectLnotReceiver(receiverRpc, senderParty, (DirectLnotConfig) config);
             case CACHE:
+                return new CacheLnotReceiver(receiverRpc, senderParty, (CacheLnotConfig) config);
             default:
                 throw new IllegalArgumentException("Invalid " + LnotType.class.getSimpleName() + ": " + type.name());
         }
@@ -78,9 +83,19 @@ public class LnotFactory implements PtoFactory {
      * Creates direct config. This is suitable for generating relatively small number of COTs.
      *
      * @param securityModel the security model.
-     * @return the COT config.
+     * @return the config.
      */
     public static LnotConfig createDirectConfig(SecurityModel securityModel) {
         return new DirectLnotConfig.Builder(securityModel).build();
+    }
+
+    /**
+     * Creates cache config.
+     *
+     * @param securityModel the security model.
+     * @return the config.
+     */
+    public static LnotConfig createCacheConfig(SecurityModel securityModel) {
+        return new CacheLnotConfig.Builder(securityModel).build();
     }
 }

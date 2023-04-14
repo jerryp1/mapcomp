@@ -1,33 +1,33 @@
-package edu.alibaba.mpc4j.s2pc.pcg.ot.cot.impl.cache;
+package edu.alibaba.mpc4j.s2pc.pcg.ot.lnot.impl.cache;
 
 import edu.alibaba.mpc4j.common.rpc.MpcAbortException;
 import edu.alibaba.mpc4j.common.rpc.Party;
 import edu.alibaba.mpc4j.common.rpc.PtoState;
 import edu.alibaba.mpc4j.common.rpc.Rpc;
-import edu.alibaba.mpc4j.s2pc.pcg.ot.cot.AbstractCotSender;
-import edu.alibaba.mpc4j.s2pc.pcg.ot.cot.CotSenderOutput;
-import edu.alibaba.mpc4j.s2pc.pcg.ot.cot.nc.NcCotFactory;
-import edu.alibaba.mpc4j.s2pc.pcg.ot.cot.nc.NcCotSender;
-import edu.alibaba.mpc4j.s2pc.pcg.ot.cot.pre.PreCotFactory;
-import edu.alibaba.mpc4j.s2pc.pcg.ot.cot.pre.PreCotSender;
+import edu.alibaba.mpc4j.s2pc.pcg.ot.lnot.AbstractLnotSender;
+import edu.alibaba.mpc4j.s2pc.pcg.ot.lnot.LnotSenderOutput;
+import edu.alibaba.mpc4j.s2pc.pcg.ot.lnot.nc.NcLnotFactory;
+import edu.alibaba.mpc4j.s2pc.pcg.ot.lnot.nc.NcLnotSender;
+import edu.alibaba.mpc4j.s2pc.pcg.ot.lnot.pre.PreLnotFactory;
+import edu.alibaba.mpc4j.s2pc.pcg.ot.lnot.pre.PreLnotSender;
 
 import java.util.concurrent.TimeUnit;
 
 /**
- * cache COT sender.
+ * cache 1-out-of-n (with n = 2^l) OT sender.
  *
  * @author Weiran Liu
- * @date 2022/7/13
+ * @date 2023/4/14
  */
-public class CacheCotSender extends AbstractCotSender {
+public class CacheLnotSender extends AbstractLnotSender {
     /**
-     * no-choice COT sender
+     * no-choice LNOT sender
      */
-    private final NcCotSender ncCotSender;
+    private final NcLnotSender ncLnotSender;
     /**
-     * precompute COT sender
+     * precompute LNOT sender
      */
-    private final PreCotSender preCotSender;
+    private final PreLnotSender preLnotSender;
     /**
      * update round
      */
@@ -35,19 +35,19 @@ public class CacheCotSender extends AbstractCotSender {
     /**
      * buffer
      */
-    private CotSenderOutput buffer;
+    private LnotSenderOutput buffer;
 
-    public CacheCotSender(Rpc senderRpc, Party receiverParty, CacheCotConfig config) {
-        super(CacheCotPtoDesc.getInstance(), senderRpc, receiverParty, config);
-        ncCotSender = NcCotFactory.createSender(senderRpc, receiverParty, config.getNcCotConfig());
-        addSubPtos(ncCotSender);
-        preCotSender = PreCotFactory.createSender(senderRpc, receiverParty, config.getPreCotConfig());
-        addSubPtos(preCotSender);
+    public CacheLnotSender(Rpc senderRpc, Party receiverParty, CacheLnotConfig config) {
+        super(CacheLnotPtoDesc.getInstance(), senderRpc, receiverParty, config);
+        ncLnotSender = NcLnotFactory.createSender(senderRpc, receiverParty, config.getNcLnotConfig());
+        addSubPtos(ncLnotSender);
+        preLnotSender = PreLnotFactory.createSender(senderRpc, receiverParty, config.getPreLnotConfig());
+        addSubPtos(preLnotSender);
     }
 
     @Override
-    public void init(byte[] delta, int maxRoundNum, int updateNum) throws MpcAbortException {
-        setInitInput(delta, maxRoundNum, updateNum);
+    public void init(int l, int maxRoundNum, int updateNum) throws MpcAbortException {
+        setInitInput(l, maxRoundNum, updateNum);
         logPhaseInfo(PtoState.INIT_BEGIN);
 
         stopWatch.start();
@@ -61,9 +61,9 @@ public class CacheCotSender extends AbstractCotSender {
             perRoundNum = config.maxBaseNum();
             updateRound = (int) Math.ceil((double) updateNum / config.maxBaseNum());
         }
-        ncCotSender.init(delta, perRoundNum);
-        preCotSender.init();
-        buffer = CotSenderOutput.createEmpty(delta);
+        ncLnotSender.init(l, perRoundNum);
+        preLnotSender.init();
+        buffer = LnotSenderOutput.createEmpty(l);
         stopWatch.stop();
         long initTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
         stopWatch.reset();
@@ -73,7 +73,7 @@ public class CacheCotSender extends AbstractCotSender {
     }
 
     @Override
-    public CotSenderOutput send(int num) throws MpcAbortException {
+    public LnotSenderOutput send(int num) throws MpcAbortException {
         setPtoInput(num);
         logPhaseInfo(PtoState.PTO_BEGIN);
 
@@ -81,8 +81,8 @@ public class CacheCotSender extends AbstractCotSender {
             // generate COT when we do not have enough ones
             for (int round = 1; round <= updateRound; round++) {
                 stopWatch.start();
-                CotSenderOutput cotSenderOutput = ncCotSender.send();
-                buffer.merge(cotSenderOutput);
+                LnotSenderOutput lnotSenderOutput = ncLnotSender.send();
+                buffer.merge(lnotSenderOutput);
                 stopWatch.stop();
                 long roundTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
                 stopWatch.reset();
@@ -91,19 +91,19 @@ public class CacheCotSender extends AbstractCotSender {
         }
 
         stopWatch.start();
-        CotSenderOutput senderOutput = buffer.split(num);
+        LnotSenderOutput senderOutput = buffer.split(num);
         stopWatch.stop();
         long splitTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
         stopWatch.reset();
         logStepInfo(PtoState.PTO_STEP, 1, 2, splitTime);
 
         stopWatch.start();
-        // correct choices using precompute COT
-        senderOutput = preCotSender.send(senderOutput);
+        // correct the choice array using precompute LNOT
+        senderOutput = preLnotSender.send(senderOutput);
         stopWatch.stop();
-        long preCotTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
+        long preLnotTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
         stopWatch.reset();
-        logStepInfo(PtoState.PTO_STEP, 2, 2, preCotTime);
+        logStepInfo(PtoState.PTO_STEP, 2, 2, preLnotTime);
 
         logPhaseInfo(PtoState.PTO_END);
         return senderOutput;

@@ -19,8 +19,7 @@ public interface LnotConfig extends MultiPartyPtoConfig {
     /**
      * Gets the maximal base num.
      *
-     * @param l choice bit length.
      * @return the maximal base num.
      */
-    int maxBaseNum(int l);
+    int maxBaseNum();
 }

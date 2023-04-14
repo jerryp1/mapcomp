@@ -1,32 +1,32 @@
-package edu.alibaba.mpc4j.s2pc.pcg.ot.cot.impl.cache;
+package edu.alibaba.mpc4j.s2pc.pcg.ot.lnot.impl.cache;
 
 import edu.alibaba.mpc4j.common.rpc.desc.PtoDesc;
 import edu.alibaba.mpc4j.common.rpc.desc.PtoDescManager;
 
 /**
- * cache COT protocol description.
+ * cache 1-out-of-n (with n = 2^l) OT protocol description.
  *
  * @author Weiran Liu
- * @date 2022/7/13
+ * @date 2023/4/14
  */
-class CacheCotPtoDesc implements PtoDesc {
+class CacheLnotPtoDesc implements PtoDesc {
     /**
      * protocol ID
      */
-    private static final int PTO_ID = Math.abs((int) 6300464192699515574L);
+    private static final int PTO_ID = Math.abs((int) 1351248120450099866L);
     /**
      * protocol name
      */
-    private static final String PTO_NAME = "CACHE_COT";
+    private static final String PTO_NAME = "CACHE_LNOT";
     /**
      * singleton mode
      */
-    private static final CacheCotPtoDesc INSTANCE = new CacheCotPtoDesc();
+    private static final CacheLnotPtoDesc INSTANCE = new CacheLnotPtoDesc();
 
     /**
      * private constructor.
      */
-    private CacheCotPtoDesc() {
+    private CacheLnotPtoDesc() {
         // empty
     }
 

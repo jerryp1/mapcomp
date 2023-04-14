@@ -54,7 +54,7 @@ public abstract class AbstractLnotSender extends AbstractTwoPartyPto implements 
         this.l = l;
         byteL = CommonUtils.getByteLength(l);
         n = 1 << l;
-        MathPreconditions.checkPositiveInRangeClosed("maxRoundNum", maxRoundNum, config.maxBaseNum(l));
+        MathPreconditions.checkPositiveInRangeClosed("maxRoundNum", maxRoundNum, config.maxBaseNum());
         this.maxRoundNum = maxRoundNum;
         MathPreconditions.checkGreaterOrEqual("updateNum", updateNum, maxRoundNum);
         this.updateNum = updateNum;

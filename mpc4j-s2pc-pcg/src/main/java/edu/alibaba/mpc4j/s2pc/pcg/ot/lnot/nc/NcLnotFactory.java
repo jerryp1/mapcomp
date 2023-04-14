@@ -2,6 +2,7 @@ package edu.alibaba.mpc4j.s2pc.pcg.ot.lnot.nc;
 
 import edu.alibaba.mpc4j.common.rpc.Party;
 import edu.alibaba.mpc4j.common.rpc.Rpc;
+import edu.alibaba.mpc4j.common.rpc.desc.SecurityModel;
 import edu.alibaba.mpc4j.common.rpc.pto.PtoFactory;
 import edu.alibaba.mpc4j.s2pc.pcg.ot.lnot.nc.cot.CotNcLnotConfig;
 import edu.alibaba.mpc4j.s2pc.pcg.ot.lnot.nc.cot.CotNcLnotReceiver;
@@ -75,6 +76,25 @@ public class NcLnotFactory implements PtoFactory {
                 return new CotNcLnotReceiver(receiverRpc, senderParty, (CotNcLnotConfig) config);
             default:
                 throw new IllegalArgumentException("Invalid " + NcLnotType.class.getSimpleName() + ": " + type.name());
+        }
+    }
+
+    /**
+     * Creates a default config.
+     *
+     * @param securityModel the security model.
+     * @return a default config.
+     */
+    public static NcLnotConfig createDefaultConfig(SecurityModel securityModel) {
+        switch (securityModel) {
+            case IDEAL:
+            case SEMI_HONEST:
+                return new CotNcLnotConfig.Builder(SecurityModel.SEMI_HONEST).build();
+            case COVERT:
+            case MALICIOUS:
+                return new CotNcLnotConfig.Builder(SecurityModel.MALICIOUS).build();
+            default:
+                throw new IllegalArgumentException("Invalid " + SecurityModel.class.getSimpleName() + ": " + securityModel.name());
         }
     }
 }
