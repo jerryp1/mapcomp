@@ -27,7 +27,7 @@ public class IdealZ2CoreMtgConfig implements Z2CoreMtgConfig {
     }
 
     @Override
-    public int maxAllowNum() {
+    public int maxNum() {
         return Integer.MAX_VALUE;
     }
 

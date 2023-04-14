@@ -24,18 +24,19 @@ public class LnotTestUtils {
     /**
      * Generates a sender output.
      *
-     * @param num          the num.
      * @param l            the choice bit length.
+     * @param num          the num.
      * @param secureRandom the random state.
      * @return a sender output.
      */
-    public static LnotSenderOutput genSenderOutput(int num, int l, SecureRandom secureRandom) {
+    public static LnotSenderOutput genSenderOutput(int l, int num, SecureRandom secureRandom) {
         assert num >= 0 : "num must be greater than or equal to 0: " + num;
         if (num == 0) {
             return LnotSenderOutput.createEmpty(l);
         }
         int n = 1 << l;
         byte[][][] rsArray = IntStream.range(0, num)
+            .parallel()
             .mapToObj(index ->
                 IntStream.range(0, n)
                     .mapToObj(choice -> {
@@ -66,6 +67,7 @@ public class LnotTestUtils {
             .map(index -> secureRandom.nextInt(n))
             .toArray();
         byte[][] rbArray = IntStream.range(0, num)
+            .parallel()
             .mapToObj(index -> senderOutput.getRb(index, choices[index]))
             .toArray(byte[][]::new);
         return LnotReceiverOutput.create(l, choices, rbArray);
@@ -79,7 +81,7 @@ public class LnotTestUtils {
      * @param senderOutput   the sender output.
      * @param receiverOutput the receiver output.
      */
-    public static void assertOutput(int num, int l, LnotSenderOutput senderOutput, LnotReceiverOutput receiverOutput) {
+    public static void assertOutput(int l, int num, LnotSenderOutput senderOutput, LnotReceiverOutput receiverOutput) {
         Assert.assertEquals(l, senderOutput.getL());
         Assert.assertEquals(l, receiverOutput.getL());
         int n = 1 << l;
@@ -91,7 +93,7 @@ public class LnotTestUtils {
         } else {
             Assert.assertEquals(num, senderOutput.getNum());
             Assert.assertEquals(num, receiverOutput.getNum());
-            IntStream.range(0, num).forEach(index -> {
+            IntStream.range(0, num).parallel().forEach(index -> {
                 int correctChoice = receiverOutput.getChoice(index);
                 ByteBuffer rb = ByteBuffer.wrap(receiverOutput.getRb(index));
                 for (int choice = 0; choice < n; choice++) {

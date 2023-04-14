@@ -18,14 +18,14 @@ import java.util.List;
 import java.util.concurrent.TimeUnit;
 
 /**
- * Beaver91-BC协议发送方。
+ * Bea91 Boolean circuit sender.
  *
  * @author Weiran Liu
  * @date 2022/02/14
  */
 public class Bea91BcSender extends AbstractBcParty {
     /**
-     * 布尔三元组生成协议发送方
+     * Boolean triple generation sender
      */
     private final Z2MtgParty z2MtgSender;
 
@@ -99,13 +99,13 @@ public class Bea91BcSender extends AbstractBcParty {
     public SquareShareZ2Vector and(SquareShareZ2Vector x0, SquareShareZ2Vector y0) throws MpcAbortException {
         setAndInput(x0, y0);
         if (x0.isPlain() && y0.isPlain()) {
-            // x0和y0为明文比特向量，发送方和接收方都执行AND运算
+            // x0 and y0 are plain bit vector, using plain AND.
             return x0.and(y0);
         } else if (x0.isPlain() || y0.isPlain()) {
-            // x0或y0为明文比特向量，发送方和接收方都执行AND运算
+            // x0 or y0 is plain bit vector, using plain AND.
             return x0.and(y0);
         } else {
-            // x0和y0为密文比特向量，执行AND协议
+            // x0 and y0 are secret bit vector, using secret AND.
             andGateNum += bitNum;
             logPhaseInfo(PtoState.PTO_BEGIN, "and");
 
@@ -116,7 +116,7 @@ public class Bea91BcSender extends AbstractBcParty {
             stopWatch.reset();
             logStepInfo(PtoState.PTO_STEP, 1, 3, z2MtgTime, "and (gen. Boolean triples)");
 
-            // 计算e0和f0
+            // compute e0 and f0
             stopWatch.start();
             byte[] a0 = z2Triple.getA();
             byte[] b0 = z2Triple.getB();
@@ -171,13 +171,13 @@ public class Bea91BcSender extends AbstractBcParty {
     public SquareShareZ2Vector xor(SquareShareZ2Vector x0, SquareShareZ2Vector y0) {
         setXorInput(x0, y0);
         if (x0.isPlain() && y0.isPlain()) {
-            // x0和y0为明文比特向量，发送方和接收方都执行XOR运算
+            // x0 and y0 are plain bit vector, using plain XOR.
             return x0.xor(y0, true);
         } else if (x0.isPlain() || y0.isPlain()) {
-            // x0或y0为明文比特向量，发送方进行XOR运算，接收方不执行XOR运算
+            // x0 or y0 is plain bit vector, the sender does plain XOR.
             return x0.xor(y0, false);
         } else {
-            // x0和y0为密文比特向量，发送方和接收方都执行XOR运算
+            // x0 and y0 are secret bit vector, using secret XOR.
             xorGateNum += bitNum;
             logPhaseInfo(PtoState.PTO_BEGIN, "xor");
 

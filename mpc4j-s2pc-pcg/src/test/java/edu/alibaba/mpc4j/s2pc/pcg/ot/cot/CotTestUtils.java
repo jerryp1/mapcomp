@@ -37,6 +37,7 @@ public class CotTestUtils {
             return CotSenderOutput.createEmpty(delta);
         }
         byte[][] r0Array = IntStream.range(0, num)
+            .parallel()
             .mapToObj(index -> {
                 byte[] r0 = new byte[CommonConstants.BLOCK_BYTE_LENGTH];
                 secureRandom.nextBytes(r0);
@@ -61,6 +62,7 @@ public class CotTestUtils {
         boolean[] choices = new boolean[num];
         IntStream.range(0, num).forEach(index -> choices[index] = secureRandom.nextBoolean());
         byte[][] rbArray = IntStream.range(0, num)
+            .parallel()
             .mapToObj(index -> {
                 if (choices[index]) {
                     return BytesUtils.clone(senderOutput.getR1(index));
@@ -86,7 +88,7 @@ public class CotTestUtils {
         } else {
             Assert.assertEquals(num, senderOutput.getNum());
             Assert.assertEquals(num, receiverOutput.getNum());
-            IntStream.range(0, num).forEach(index -> {
+            IntStream.range(0, num).parallel().forEach(index -> {
                 ByteBuffer rb = ByteBuffer.wrap(receiverOutput.getRb(index));
                 ByteBuffer r0 = ByteBuffer.wrap(senderOutput.getR0(index));
                 ByteBuffer r1 = ByteBuffer.wrap(senderOutput.getR1(index));

@@ -19,14 +19,14 @@ import java.util.List;
 import java.util.concurrent.TimeUnit;
 
 /**
- * Beaver91-BC协议接收方。
+ * Bea91 Boolean circuit receiver.
  *
  * @author Weiran Liu
  * @date 2022/02/14
  */
 public class Bea91BcReceiver extends AbstractBcParty {
     /**
-     * 布尔三元组生成协议接收方
+     * Boolean triple generation receiver
      */
     private final Z2MtgParty z2MtgReceiver;
 
@@ -101,13 +101,13 @@ public class Bea91BcReceiver extends AbstractBcParty {
         setAndInput(x1, y1);
 
         if (x1.isPlain() && y1.isPlain()) {
-            // x1和y1为明文比特向量，发送方和接收方都执行AND运算
+            // x1 and y1 are plain bit vectors, using plain AND.
             return x1.and(y1);
         } else if (x1.isPlain() || y1.isPlain()) {
-            // x1或y1为明文比特向量，发送方和接收方都执行AND运算
+            // x1 or y1 is plain bit vector, using plain AND.
             return x1.and(y1);
         } else {
-            // x1和y1为密文比特向量，执行AND协议
+            // x1 and y1 are secret bit vectors, using secret AND.
             andGateNum += bitNum;
             logPhaseInfo(PtoState.PTO_BEGIN, "and");
 
@@ -175,16 +175,16 @@ public class Bea91BcReceiver extends AbstractBcParty {
         setXorInput(x1, y1);
 
         if (x1.isPlain() && y1.isPlain()) {
-            // x1和y1为明文比特向量，发送方和接收方都执行XOR运算
+            // x1 and y1 are plain bit vector, using plain XOR.
             return x1.xor(y1, true);
         } else if (x1.isPlain()) {
-            // x1为明文比特向量，y1为密文比特向量，接收方不执行XOR运算，复制y1
+            // x1 is plain bit vector, y1 is secret bit vector, the receiver copies y1
             return y1.copy();
         } else if (y1.isPlain()) {
-            // x1为密文比特向量，y1为明文比特向量，接收方不执行XOR运算，克隆x1
+            // x1 is secret bit vector, y1 is plain bit vector, the receiver copies x1
             return x1.copy();
         } else {
-            // x1和y1为密文比特向量，发送方和接收方都执行XOR运算
+            // x1 and y1 are secret bit vectors, using secret XOR.
             xorGateNum += bitNum;
             logPhaseInfo(PtoState.PTO_BEGIN, "xor");
 

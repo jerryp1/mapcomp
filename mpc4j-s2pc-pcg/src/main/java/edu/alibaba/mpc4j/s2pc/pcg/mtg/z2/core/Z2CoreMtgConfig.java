@@ -21,5 +21,5 @@ public interface Z2CoreMtgConfig extends MultiPartyPtoConfig {
      *
      * @return 最大支持数量。
      */
-    int maxAllowNum();
+    int maxNum();
 }

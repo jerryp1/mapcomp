@@ -5,7 +5,6 @@ import java.security.SecureRandom;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.concurrent.TimeUnit;
-import java.util.stream.IntStream;
 
 import com.google.common.base.Preconditions;
 import edu.alibaba.mpc4j.common.rpc.Rpc;
@@ -36,7 +35,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * NC-COT协议测试。
+ * no-choice COT test.
  *
  * @author Weiran Liu
  * @date 2022/01/13
@@ -45,29 +44,30 @@ import org.slf4j.LoggerFactory;
 public class NcCotTest {
     private static final Logger LOGGER = LoggerFactory.getLogger(NcCotTest.class);
     /**
-     * 随机状态
+     * the random state
      */
     private static final SecureRandom SECURE_RANDOM = new SecureRandom();
     /**
-     * 默认数量
+     * default num
      */
     private static final int DEFAULT_NUM = 1000;
     /**
-     * 默认轮数
+     * default round
      */
     private static final int DEFAULT_ROUND = 2;
     /**
-     * 较大数量
+     * large num
      */
     private static final int LARGE_NUM = 1 << 18;
     /**
-     * 较大轮数
+     * large round
      */
     private static final int LARGE_ROUND = 5;
 
     @Parameterized.Parameters(name = "{0}")
     public static Collection<Object[]> configurations() {
         Collection<Object[]> configurations = new ArrayList<>();
+
         // DIRECT (Malicious)
         configurations.add(new Object[] {
             NcCotType.DIRECT.name() + " (" + SecurityModel.MALICIOUS + ")",
@@ -160,15 +160,15 @@ public class NcCotTest {
     }
 
     /**
-     * 发送方
+     * sender RPC
      */
     private final Rpc senderRpc;
     /**
-     * 接收方
+     * receiver RPC
      */
     private final Rpc receiverRpc;
     /**
-     * 协议类型
+     * config
      */
     private final NcCotConfig config;
 
@@ -259,7 +259,7 @@ public class NcCotTest {
             NcCotSenderThread senderThread = new NcCotSenderThread(sender, delta, num, round);
             NcCotReceiverThread receiverThread = new NcCotReceiverThread(receiver, num, round);
             StopWatch stopWatch = new StopWatch();
-            // 开始执行协议
+            // execute the protocol
             stopWatch.start();
             senderThread.start();
             receiverThread.start();
@@ -272,12 +272,10 @@ public class NcCotTest {
             senderRpc.reset();
             long receiverByteLength = receiverRpc.getSendByteLength();
             receiverRpc.reset();
-            CotSenderOutput[] senderOutputs = senderThread.getSenderOutputs();
-            CotReceiverOutput[] receiverOutputs = receiverThread.getReceiverOutputs();
-            // 验证结果
-            IntStream.range(0, round).forEach(index ->
-                CotTestUtils.assertOutput(num, senderOutputs[index], receiverOutputs[index])
-            );
+            CotSenderOutput senderOutput = senderThread.getSenderOutput();
+            CotReceiverOutput receiverOutput = receiverThread.getReceiverOutput();
+            // verify
+            CotTestUtils.assertOutput(num * round, senderOutput, receiverOutput);
             LOGGER.info("Sender sends {}B, Receiver sends {}B, time = {}ms",
                 senderByteLength, receiverByteLength, time
             );
@@ -294,15 +292,17 @@ public class NcCotTest {
         NcCotSender sender = NcCotFactory.createSender(senderRpc, receiverRpc.ownParty(), config);
         NcCotReceiver receiver = NcCotFactory.createReceiver(receiverRpc, senderRpc.ownParty(), config);
         int randomTaskId = Math.abs(SECURE_RANDOM.nextInt());
+        int round = DEFAULT_ROUND;
+        int num = DEFAULT_NUM;
         sender.setTaskId(randomTaskId);
         receiver.setTaskId(randomTaskId);
         try {
             LOGGER.info("-----test {} (reset Δ) start-----", sender.getPtoDesc().getPtoName());
             byte[] delta = new byte[CommonConstants.BLOCK_BYTE_LENGTH];
             SECURE_RANDOM.nextBytes(delta);
-            // 第一次执行
-            NcCotSenderThread senderThread = new NcCotSenderThread(sender, delta, DEFAULT_NUM, DEFAULT_ROUND);
-            NcCotReceiverThread receiverThread = new NcCotReceiverThread(receiver, DEFAULT_NUM, DEFAULT_ROUND);
+            // first time
+            NcCotSenderThread senderThread = new NcCotSenderThread(sender, delta, num, round);
+            NcCotReceiverThread receiverThread = new NcCotReceiverThread(receiver, num, round);
             StopWatch stopWatch = new StopWatch();
             stopWatch.start();
             senderThread.start();
@@ -316,15 +316,13 @@ public class NcCotTest {
             senderRpc.reset();
             long firstReceiverByteLength = receiverRpc.getSendByteLength();
             receiverRpc.reset();
-            CotSenderOutput[] senderOutputs = senderThread.getSenderOutputs();
-            CotReceiverOutput[] receiverOutputs = receiverThread.getReceiverOutputs();
-            IntStream.range(0, DEFAULT_ROUND).forEach(index ->
-                CotTestUtils.assertOutput(DEFAULT_NUM, senderOutputs[index], receiverOutputs[index])
-            );
-            // 第二次执行，重置Δ
+            CotSenderOutput firstSenderOutput = senderThread.getSenderOutput();
+            CotReceiverOutput firstReceiverOutput = receiverThread.getReceiverOutput();
+            CotTestUtils.assertOutput(num * round, firstSenderOutput, firstReceiverOutput);
+            // second time, reset delta
             SECURE_RANDOM.nextBytes(delta);
-            senderThread = new NcCotSenderThread(sender, delta, DEFAULT_NUM, DEFAULT_ROUND);
-            receiverThread = new NcCotReceiverThread(receiver, DEFAULT_NUM, DEFAULT_ROUND);
+            senderThread = new NcCotSenderThread(sender, delta, num, round);
+            receiverThread = new NcCotReceiverThread(receiver, num, round);
             stopWatch.start();
             senderThread.start();
             receiverThread.start();
@@ -337,19 +335,16 @@ public class NcCotTest {
             long secondReceiverByteLength = receiverRpc.getSendByteLength();
             senderRpc.reset();
             receiverRpc.reset();
-            CotSenderOutput[] secondSenderOutputs = senderThread.getSenderOutputs();
-            CotReceiverOutput[] secondReceiverOutputs = receiverThread.getReceiverOutputs();
-            // 通信量应该相等
+            CotSenderOutput secondSenderOutput = senderThread.getSenderOutput();
+            CotReceiverOutput secondReceiverOutput = receiverThread.getReceiverOutput();
+            CotTestUtils.assertOutput(num * round, secondSenderOutput, secondReceiverOutput);
+            // the communication should be equal
             Assert.assertEquals(secondSenderByteLength, firstSenderByteLength);
             Assert.assertEquals(secondReceiverByteLength, firstReceiverByteLength);
-            // Δ应该不等，但结果满足要求你
-            IntStream.range(0, DEFAULT_ROUND).forEach(index -> {
-                Assert.assertNotEquals(
-                    ByteBuffer.wrap(secondSenderOutputs[index].getDelta()),
-                    ByteBuffer.wrap(senderOutputs[index].getDelta())
-                );
-                CotTestUtils.assertOutput(DEFAULT_NUM, secondSenderOutputs[index], secondReceiverOutputs[index]);
-            });
+            // Δ should be not equal
+            Assert.assertNotEquals(
+                ByteBuffer.wrap(secondSenderOutput.getDelta()), ByteBuffer.wrap(firstSenderOutput.getDelta())
+            );
             LOGGER.info("1st round, Send. {}B, Recv. {}B, {}ms",
                 firstSenderByteLength, firstReceiverByteLength, firstTime
             );

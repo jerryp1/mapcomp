@@ -78,15 +78,15 @@ public class ZlMuxTest {
     }
 
     /**
-     * 发送方
+     * the sender RPC
      */
     private final Rpc senderRpc;
     /**
-     * 接收方
+     * the receiver RPC
      */
     private final Rpc receiverRpc;
     /**
-     * 协议类型
+     * the config
      */
     private final ZlMuxConfig config;
 

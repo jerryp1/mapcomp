@@ -109,13 +109,28 @@ public class PreLnotTest {
     }
 
     @Test
+    public void testParallelDefaultNum() {
+        testPto(DEFAULT_NUM, DEFAULT_L, true);
+    }
+
+    @Test
     public void testSmallL() {
         testPto(DEFAULT_NUM, 1, false);
     }
 
     @Test
-    public void testParallelDefaultNum() {
-        testPto(DEFAULT_NUM, DEFAULT_L, true);
+    public void testLargeL() {
+        testPto(DEFAULT_NUM, 10, false);
+    }
+
+    @Test
+    public void testLargeNum() {
+        testPto(1 << 18, DEFAULT_L, false);
+    }
+
+    @Test
+    public void testParallelLargeNum() {
+        testPto(1 << 18, DEFAULT_L, true);
     }
 
     private void testPto(int num, int l, boolean parallel) {
@@ -132,7 +147,7 @@ public class PreLnotTest {
             // pre-compute sender / receiver output
             byte[] delta = new byte[CommonConstants.BLOCK_BYTE_LENGTH];
             SECURE_RANDOM.nextBytes(delta);
-            LnotSenderOutput preSenderOutput = LnotTestUtils.genSenderOutput(num, l, SECURE_RANDOM);
+            LnotSenderOutput preSenderOutput = LnotTestUtils.genSenderOutput(l, num, SECURE_RANDOM);
             LnotReceiverOutput preReceiverOutput = LnotTestUtils.genReceiverOutput(preSenderOutput, SECURE_RANDOM);
             // receiver actual choices
             int[] choiceArray = IntStream.range(0, num)
@@ -157,7 +172,7 @@ public class PreLnotTest {
             LnotSenderOutput senderOutput = senderThread.getSenderOutput();
             LnotReceiverOutput receiverOutput = receiverThread.getReceiverOutput();
             // verify
-            LnotTestUtils.assertOutput(num, l, senderOutput, receiverOutput);
+            LnotTestUtils.assertOutput(l, num, senderOutput, receiverOutput);
             LOGGER.info("Sender sends {}B, Receiver sends {}B, time = {}ms",
                 senderByteLength, receiverByteLength, time
             );

@@ -5,26 +5,26 @@ import edu.alibaba.mpc4j.common.rpc.pto.TwoPartyPto;
 import edu.alibaba.mpc4j.s2pc.pcg.ot.cot.CotSenderOutput;
 
 /**
- * NC-COT协议发送方接口。
+ * no-choice COT sender.
  *
  * @author Weiran Liu
  * @date 2022/02/03
  */
 public interface NcCotSender extends TwoPartyPto {
     /**
-     * 初始化协议。
+     * Inits the protocol.
      *
-     * @param delta 关联值Δ。
-     * @param num   数量。
-     * @throws MpcAbortException 如果协议异常中止。
+     * @param delta Δ.
+     * @param num   num.
+     * @throws MpcAbortException the protocol failure aborts.
      */
     void init(byte[] delta, int num) throws MpcAbortException;
 
     /**
-     * 执行协议。
+     * Executes the protocol.
      *
-     * @return 发送方输出。
-     * @throws MpcAbortException 如果协议异常中止。
+     * @return the sender output.
+     * @throws MpcAbortException the protocol failure aborts.
      */
     CotSenderOutput send() throws MpcAbortException;
 }

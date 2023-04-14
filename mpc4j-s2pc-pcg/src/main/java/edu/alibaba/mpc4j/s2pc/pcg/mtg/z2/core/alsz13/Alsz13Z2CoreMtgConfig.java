@@ -33,8 +33,8 @@ public class Alsz13Z2CoreMtgConfig implements Z2CoreMtgConfig {
     }
 
     @Override
-    public int maxAllowNum() {
-        return ncCotConfig.maxAllowNum();
+    public int maxNum() {
+        return ncCotConfig.maxNum();
     }
 
     @Override

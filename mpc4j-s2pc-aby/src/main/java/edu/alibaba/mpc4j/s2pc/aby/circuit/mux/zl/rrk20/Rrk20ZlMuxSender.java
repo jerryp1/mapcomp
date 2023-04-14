@@ -51,11 +51,11 @@ public class Rrk20ZlMuxSender extends AbstractZlMuxParty {
      */
     private byte[][] s1s;
 
-    public Rrk20ZlMuxSender(Rpc senderPrc, Party receiverParty, Rrk20ZlMuxConfig config) {
-        super(Rrk20ZlMuxPtoDesc.getInstance(), senderPrc, receiverParty, config);
-        cotSender = CotFactory.createSender(senderPrc, receiverParty, config.getCotConfig());
+    public Rrk20ZlMuxSender(Rpc senderRpc, Party receiverParty, Rrk20ZlMuxConfig config) {
+        super(Rrk20ZlMuxPtoDesc.getInstance(), senderRpc, receiverParty, config);
+        cotSender = CotFactory.createSender(senderRpc, receiverParty, config.getCotConfig());
         addSubPtos(cotSender);
-        cotReceiver = CotFactory.createReceiver(senderPrc, receiverParty, config.getCotConfig());
+        cotReceiver = CotFactory.createReceiver(senderRpc, receiverParty, config.getCotConfig());
         addSubPtos(cotReceiver);
     }
 
@@ -110,19 +110,14 @@ public class Rrk20ZlMuxSender extends AbstractZlMuxParty {
         stopWatch.reset();
         logStepInfo(PtoState.PTO_STEP, 3, 4, s0s1Time);
 
-        DataPacketHeader t0Header = new DataPacketHeader(
-            encodeTaskId, getPtoDesc().getPtoId(), PtoStep.RECEIVER_SEND_T0.ordinal(), extraInfo,
+        DataPacketHeader t0t1Header = new DataPacketHeader(
+            encodeTaskId, getPtoDesc().getPtoId(), PtoStep.RECEIVER_SEND_T0_T1.ordinal(), extraInfo,
             otherParty().getPartyId(), ownParty().getPartyId()
         );
-        List<byte[]> t0Payload = rpc.receive(t0Header).getPayload();
-        DataPacketHeader t1Header = new DataPacketHeader(
-            encodeTaskId, getPtoDesc().getPtoId(), PtoStep.RECEIVER_SEND_T1.ordinal(), extraInfo,
-            otherParty().getPartyId(), ownParty().getPartyId()
-        );
-        List<byte[]> t1Payload = rpc.receive(t1Header).getPayload();
+        List<byte[]> t0t1Payload = rpc.receive(t0t1Header).getPayload();
 
         stopWatch.start();
-        SquareShareZlVector z0 = t0t1(cotReceiverOutput, t0Payload, t1Payload);
+        SquareShareZlVector z0 = t0t1(cotReceiverOutput, t0t1Payload);
         r0ZlVector = null;
         stopWatch.stop();
         long t0t1Time = stopWatch.getTime(TimeUnit.MILLISECONDS);
@@ -166,22 +161,17 @@ public class Rrk20ZlMuxSender extends AbstractZlMuxParty {
 
     private void s0s1(CotSenderOutput cotSenderOutput) {
         Prg prg = PrgFactory.createInstance(envType, byteL);
-        // P0 sends s0
+        // P0 creates s0
         IntStream s0IntStream = IntStream.range(0, num);
         s0IntStream = parallel ? s0IntStream.parallel() : s0IntStream;
-        List<byte[]> s0Payload = s0IntStream
+        List<byte[]> s0s1Payload = s0IntStream
             .mapToObj(index -> {
                 byte[] s0 = prg.extendToBytes(cotSenderOutput.getR0(index));
                 BytesUtils.xori(s0, s0s[index]);
                 return s0;
             })
             .collect(Collectors.toList());
-        DataPacketHeader s0Header = new DataPacketHeader(
-            encodeTaskId, getPtoDesc().getPtoId(), PtoStep.SENDER_SEND_S0.ordinal(), extraInfo,
-            ownParty().getPartyId(), otherParty().getPartyId()
-        );
-        rpc.send(DataPacket.fromByteArrayList(s0Header, s0Payload));
-        // P0 sends s1
+        // P0 creates s1
         IntStream s1IntStream = IntStream.range(0, num);
         s1IntStream = parallel ? s1IntStream.parallel() : s1IntStream;
         List<byte[]> s1Payload = s1IntStream
@@ -191,19 +181,20 @@ public class Rrk20ZlMuxSender extends AbstractZlMuxParty {
                 return s1;
             })
             .collect(Collectors.toList());
-        DataPacketHeader s1Header = new DataPacketHeader(
-            encodeTaskId, getPtoDesc().getPtoId(), PtoStep.SENDER_SEND_S1.ordinal(), extraInfo,
+        // merge s0 and s1
+        s0s1Payload.addAll(s1Payload);
+        // sends s0 and s1
+        DataPacketHeader s0s1Header = new DataPacketHeader(
+            encodeTaskId, getPtoDesc().getPtoId(), PtoStep.SENDER_SEND_S0_S1.ordinal(), extraInfo,
             ownParty().getPartyId(), otherParty().getPartyId()
         );
-        rpc.send(DataPacket.fromByteArrayList(s1Header, s1Payload));
+        rpc.send(DataPacket.fromByteArrayList(s0s1Header, s0s1Payload));
     }
 
-    private SquareShareZlVector t0t1(CotReceiverOutput cotReceiverOutput, List<byte[]> t0Payload, List<byte[]> t1Payload)
-        throws MpcAbortException {
-        MpcAbortPreconditions.checkArgument(t0Payload.size() == num);
-        MpcAbortPreconditions.checkArgument(t1Payload.size() == num);
-        byte[][] t0s = t0Payload.toArray(new byte[0][]);
-        byte[][] t1s = t1Payload.toArray(new byte[0][]);
+    private SquareShareZlVector t0t1(CotReceiverOutput cotReceiverOutput, List<byte[]> t0t1Payload) throws MpcAbortException {
+        MpcAbortPreconditions.checkArgument(t0t1Payload.size() == num * 2);
+        byte[][] t0s = t0t1Payload.subList(0, num).toArray(new byte[0][]);
+        byte[][] t1s = t0t1Payload.subList(num, num * 2).toArray(new byte[0][]);
         Prg prg = PrgFactory.createInstance(envType, byteL);
         // Let P0's output be a0
         IntStream t0IntStream = IntStream.range(0, num);

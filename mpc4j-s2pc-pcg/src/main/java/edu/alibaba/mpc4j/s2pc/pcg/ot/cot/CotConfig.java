@@ -3,23 +3,23 @@ package edu.alibaba.mpc4j.s2pc.pcg.ot.cot;
 import edu.alibaba.mpc4j.common.rpc.pto.MultiPartyPtoConfig;
 
 /**
- * 关联不经意传输（Correlated Oblivious Transfer，COT）协议配置项。
+ * COT config.
  *
  * @author Weiran Liu
  * @date 2022/7/13
  */
 public interface CotConfig extends MultiPartyPtoConfig {
     /**
-     * 返回协议类型。
+     * Gets the protocol type.
      *
-     * @return 协议类型。
+     * @return the protocol type.
      */
     CotFactory.CotType getPtoType();
 
     /**
-     * 返回底层协议最大数量。
+     * Gets the maximal base num.
      *
-     * @return 底层协议最大数量。
+     * @return the maximal base num.
      */
     int maxBaseNum();
 }

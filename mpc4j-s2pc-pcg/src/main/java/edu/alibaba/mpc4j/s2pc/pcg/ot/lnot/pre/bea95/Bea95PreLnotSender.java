@@ -43,11 +43,10 @@ public class Bea95PreLnotSender extends AbstractPreLnotSender {
             otherParty().getPartyId(), ownParty().getPartyId()
         );
         List<byte[]> deltaPayload = rpc.receive(deltaHeader).getPayload();
-        MpcAbortPreconditions.checkArgument(deltaPayload.size() == num);
-        int[] deltas = deltaPayload.stream()
-            .mapToInt(deltaBytes -> IntUtils.byteArrayToBoundedNonNegInt(deltaBytes, n))
-            .toArray();
-        byte[][][] shiftRsArray = IntStream.range(0, num)
+        int[] deltas = handleDeltaPayload(deltaPayload);
+        IntStream indexIntStream = IntStream.range(0, num);
+        indexIntStream = parallel ? indexIntStream.parallel() : indexIntStream;
+        byte[][][] shiftRsArray = indexIntStream
             .mapToObj(index -> {
                 byte[][] rs = preSenderOutput.getRs(index);
                 int delta = deltas[index];
@@ -69,5 +68,18 @@ public class Bea95PreLnotSender extends AbstractPreLnotSender {
 
         logPhaseInfo(PtoState.PTO_END);
         return senderOutput;
+    }
+
+    private int[] handleDeltaPayload(List<byte[]> deltaPayload) throws MpcAbortException {
+        MpcAbortPreconditions.checkArgument(deltaPayload.size() == 1);
+        byte[] flatDeltas = deltaPayload.remove(0);
+        int deltaLength = IntUtils.boundedNonNegIntByteLength(n);
+        return IntStream.range(0, num)
+            .map(index -> {
+                byte[] deltaBytes = new byte[deltaLength];
+                System.arraycopy(flatDeltas, index * deltaLength, deltaBytes, 0, deltaLength);
+                return IntUtils.byteArrayToBoundedNonNegInt(deltaBytes, n);
+            })
+            .toArray();
     }
 }

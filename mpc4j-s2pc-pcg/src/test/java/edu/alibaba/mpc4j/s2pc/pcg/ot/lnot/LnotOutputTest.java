@@ -234,30 +234,30 @@ public class LnotOutputTest {
 
     private void testReduce(int num) {
         // reduce 1
-        LnotSenderOutput senderOutput1 = LnotTestUtils.genSenderOutput(num, DEFAULT_L, SECURE_RANDOM);
+        LnotSenderOutput senderOutput1 = LnotTestUtils.genSenderOutput(DEFAULT_L, num, SECURE_RANDOM);
         LnotReceiverOutput receiverOutput1 = LnotTestUtils.genReceiverOutput(senderOutput1, SECURE_RANDOM);
         senderOutput1.reduce(1);
         receiverOutput1.reduce(1);
-        LnotTestUtils.assertOutput(1, DEFAULT_L, senderOutput1, receiverOutput1);
+        LnotTestUtils.assertOutput(DEFAULT_L, 1, senderOutput1, receiverOutput1);
         // reduce all
-        LnotSenderOutput senderOutputAll = LnotTestUtils.genSenderOutput(num, DEFAULT_L, SECURE_RANDOM);
+        LnotSenderOutput senderOutputAll = LnotTestUtils.genSenderOutput(DEFAULT_L, num, SECURE_RANDOM);
         LnotReceiverOutput receiverOutputAll = LnotTestUtils.genReceiverOutput(senderOutputAll, SECURE_RANDOM);
         senderOutputAll.reduce(num);
         receiverOutputAll.reduce(num);
-        LnotTestUtils.assertOutput(num, DEFAULT_L, senderOutputAll, receiverOutputAll);
+        LnotTestUtils.assertOutput(DEFAULT_L, num, senderOutputAll, receiverOutputAll);
         if (num > 1) {
             // reduce num - 1
-            LnotSenderOutput senderOutputNum = LnotTestUtils.genSenderOutput(num, DEFAULT_L, SECURE_RANDOM);
+            LnotSenderOutput senderOutputNum = LnotTestUtils.genSenderOutput(DEFAULT_L, num, SECURE_RANDOM);
             LnotReceiverOutput receiverOutputNum = LnotTestUtils.genReceiverOutput(senderOutputNum, SECURE_RANDOM);
             senderOutputNum.reduce(num - 1);
             receiverOutputNum.reduce(num - 1);
-            LnotTestUtils.assertOutput(num - 1, DEFAULT_L, senderOutputNum, receiverOutputNum);
+            LnotTestUtils.assertOutput(DEFAULT_L, num - 1, senderOutputNum, receiverOutputNum);
             // reduce half
-            LnotSenderOutput senderOutputHalf = LnotTestUtils.genSenderOutput(num, DEFAULT_L, SECURE_RANDOM);
+            LnotSenderOutput senderOutputHalf = LnotTestUtils.genSenderOutput(DEFAULT_L, num, SECURE_RANDOM);
             LnotReceiverOutput receiverOutputHalf = LnotTestUtils.genReceiverOutput(senderOutputHalf, SECURE_RANDOM);
             senderOutputHalf.reduce(num / 2);
             receiverOutputHalf.reduce(num / 2);
-            LnotTestUtils.assertOutput(num / 2, DEFAULT_L, senderOutputHalf, receiverOutputHalf);
+            LnotTestUtils.assertOutput(DEFAULT_L, num / 2, senderOutputHalf, receiverOutputHalf);
         }
     }
 
@@ -271,7 +271,7 @@ public class LnotOutputTest {
         senderOutput.merge(mergeSenderOutput);
         receiverOutput.merge(mergeReceiverOutput);
         // verify
-        LnotTestUtils.assertOutput(0, DEFAULT_L, senderOutput, receiverOutput);
+        LnotTestUtils.assertOutput(DEFAULT_L, 0, senderOutput, receiverOutput);
     }
 
     @Test
@@ -283,14 +283,14 @@ public class LnotOutputTest {
 
     private void testLeftEmptyMerge(int num) {
         LnotSenderOutput senderOutput = LnotSenderOutput.createEmpty(DEFAULT_L);
-        LnotSenderOutput mergeSenderOutput = LnotTestUtils.genSenderOutput(num, DEFAULT_L, SECURE_RANDOM);
+        LnotSenderOutput mergeSenderOutput = LnotTestUtils.genSenderOutput(DEFAULT_L, num, SECURE_RANDOM);
         LnotReceiverOutput receiverOutput = LnotReceiverOutput.createEmpty(DEFAULT_L);
         LnotReceiverOutput mergeReceiverOutput = LnotTestUtils.genReceiverOutput(mergeSenderOutput, SECURE_RANDOM);
         // merge
         senderOutput.merge(mergeSenderOutput);
         receiverOutput.merge(mergeReceiverOutput);
         // verify
-        LnotTestUtils.assertOutput(num, DEFAULT_L, senderOutput, receiverOutput);
+        LnotTestUtils.assertOutput(DEFAULT_L, num, senderOutput, receiverOutput);
     }
 
     @Test
@@ -301,7 +301,7 @@ public class LnotOutputTest {
     }
 
     private void testRightEmptyMerge(int num) {
-        LnotSenderOutput senderOutput = LnotTestUtils.genSenderOutput(num, DEFAULT_L, SECURE_RANDOM);
+        LnotSenderOutput senderOutput = LnotTestUtils.genSenderOutput(DEFAULT_L, num, SECURE_RANDOM);
         LnotSenderOutput mergeSenderOutput = LnotSenderOutput.createEmpty(DEFAULT_L);
         LnotReceiverOutput receiverOutput = LnotTestUtils.genReceiverOutput(senderOutput, SECURE_RANDOM);
         LnotReceiverOutput mergeReceiverOutput = LnotReceiverOutput.createEmpty(DEFAULT_L);
@@ -309,7 +309,7 @@ public class LnotOutputTest {
         senderOutput.merge(mergeSenderOutput);
         receiverOutput.merge(mergeReceiverOutput);
         // verify
-        LnotTestUtils.assertOutput(num, DEFAULT_L, senderOutput, receiverOutput);
+        LnotTestUtils.assertOutput(DEFAULT_L, num, senderOutput, receiverOutput);
     }
 
     @Test
@@ -322,15 +322,15 @@ public class LnotOutputTest {
     }
 
     private void testMerge(int num1, int num2) {
-        LnotSenderOutput senderOutput = LnotTestUtils.genSenderOutput(num1, DEFAULT_L, SECURE_RANDOM);
-        LnotSenderOutput mergeSenderOutput = LnotTestUtils.genSenderOutput(num2, DEFAULT_L, SECURE_RANDOM);
+        LnotSenderOutput senderOutput = LnotTestUtils.genSenderOutput(DEFAULT_L, num1, SECURE_RANDOM);
+        LnotSenderOutput mergeSenderOutput = LnotTestUtils.genSenderOutput(DEFAULT_L, num2, SECURE_RANDOM);
         LnotReceiverOutput receiverOutput = LnotTestUtils.genReceiverOutput(senderOutput, SECURE_RANDOM);
         LnotReceiverOutput mergeReceiverOutput = LnotTestUtils.genReceiverOutput(mergeSenderOutput, SECURE_RANDOM);
         // merge
         senderOutput.merge(mergeSenderOutput);
         receiverOutput.merge(mergeReceiverOutput);
         // verify
-        LnotTestUtils.assertOutput(num1 + num2, DEFAULT_L, senderOutput, receiverOutput);
+        LnotTestUtils.assertOutput(DEFAULT_L, num1 + num2, senderOutput, receiverOutput);
     }
 
     @Test
@@ -342,34 +342,34 @@ public class LnotOutputTest {
 
     private void testSplit(int num) {
         // split 1
-        LnotSenderOutput senderOutput1 = LnotTestUtils.genSenderOutput(num, DEFAULT_L, SECURE_RANDOM);
+        LnotSenderOutput senderOutput1 = LnotTestUtils.genSenderOutput(DEFAULT_L, num, SECURE_RANDOM);
         LnotReceiverOutput receiverOutput1 = LnotTestUtils.genReceiverOutput(senderOutput1, SECURE_RANDOM);
         LnotSenderOutput splitSenderOutput1 = senderOutput1.split(1);
         LnotReceiverOutput splitReceiverOutput1 = receiverOutput1.split(1);
-        LnotTestUtils.assertOutput(num - 1, DEFAULT_L, senderOutput1, receiverOutput1);
-        LnotTestUtils.assertOutput(1, DEFAULT_L, splitSenderOutput1, splitReceiverOutput1);
+        LnotTestUtils.assertOutput(DEFAULT_L, num - 1, senderOutput1, receiverOutput1);
+        LnotTestUtils.assertOutput(DEFAULT_L, 1, splitSenderOutput1, splitReceiverOutput1);
         // split all
-        LnotSenderOutput senderOutputAll = LnotTestUtils.genSenderOutput(num, DEFAULT_L, SECURE_RANDOM);
+        LnotSenderOutput senderOutputAll = LnotTestUtils.genSenderOutput(DEFAULT_L, num, SECURE_RANDOM);
         LnotReceiverOutput receiverOutputAll = LnotTestUtils.genReceiverOutput(senderOutputAll, SECURE_RANDOM);
         LnotSenderOutput splitSenderOutputAll = senderOutputAll.split(num);
         LnotReceiverOutput splitReceiverOutputAll = receiverOutputAll.split(num);
-        LnotTestUtils.assertOutput(0, DEFAULT_L, senderOutputAll, receiverOutputAll);
-        LnotTestUtils.assertOutput(num, DEFAULT_L, splitSenderOutputAll, splitReceiverOutputAll);
+        LnotTestUtils.assertOutput(DEFAULT_L, 0, senderOutputAll, receiverOutputAll);
+        LnotTestUtils.assertOutput(DEFAULT_L, num, splitSenderOutputAll, splitReceiverOutputAll);
         if (num > 1) {
             // split num - 1
-            LnotSenderOutput senderOutputNum = LnotTestUtils.genSenderOutput(num, DEFAULT_L, SECURE_RANDOM);
+            LnotSenderOutput senderOutputNum = LnotTestUtils.genSenderOutput(DEFAULT_L, num, SECURE_RANDOM);
             LnotReceiverOutput receiverOutputNum = LnotTestUtils.genReceiverOutput(senderOutputNum, SECURE_RANDOM);
             LnotSenderOutput splitSenderOutputNum = senderOutputNum.split(num - 1);
             LnotReceiverOutput splitReceiverOutputNum = receiverOutputNum.split(num - 1);
-            LnotTestUtils.assertOutput(1, DEFAULT_L, senderOutputNum, receiverOutputNum);
-            LnotTestUtils.assertOutput(num - 1, DEFAULT_L, splitSenderOutputNum, splitReceiverOutputNum);
+            LnotTestUtils.assertOutput(DEFAULT_L, 1, senderOutputNum, receiverOutputNum);
+            LnotTestUtils.assertOutput(DEFAULT_L, num - 1, splitSenderOutputNum, splitReceiverOutputNum);
             // split half
-            LnotSenderOutput senderOutputHalf = LnotTestUtils.genSenderOutput(num, DEFAULT_L, SECURE_RANDOM);
+            LnotSenderOutput senderOutputHalf = LnotTestUtils.genSenderOutput(DEFAULT_L, num, SECURE_RANDOM);
             LnotReceiverOutput receiverOutputHalf = LnotTestUtils.genReceiverOutput(senderOutputHalf, SECURE_RANDOM);
             LnotSenderOutput splitSenderOutputHalf = senderOutputHalf.split(num / 2);
             LnotReceiverOutput splitReceiverOutputHalf = receiverOutputHalf.split(num / 2);
-            LnotTestUtils.assertOutput(num - num / 2, DEFAULT_L, senderOutputHalf, receiverOutputHalf);
-            LnotTestUtils.assertOutput(num / 2, DEFAULT_L, splitSenderOutputHalf, splitReceiverOutputHalf);
+            LnotTestUtils.assertOutput(DEFAULT_L, num - num / 2, senderOutputHalf, receiverOutputHalf);
+            LnotTestUtils.assertOutput(DEFAULT_L, num / 2, splitSenderOutputHalf, splitReceiverOutputHalf);
         }
     }
 }

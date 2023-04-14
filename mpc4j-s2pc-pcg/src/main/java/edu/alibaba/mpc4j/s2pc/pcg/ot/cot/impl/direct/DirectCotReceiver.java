@@ -12,14 +12,14 @@ import edu.alibaba.mpc4j.s2pc.pcg.ot.cot.core.CoreCotReceiver;
 import java.util.concurrent.TimeUnit;
 
 /**
- * 直接COT协议接收方。
+ * direct COT receiver.
  *
  * @author Weiran Liu
  * @date 2022/7/13
  */
 public class DirectCotReceiver extends AbstractCotReceiver {
     /**
-     * 核COT协议接收方
+     * core COT receiver
      */
     private final CoreCotReceiver coreCotReceiver;
 
@@ -50,7 +50,7 @@ public class DirectCotReceiver extends AbstractCotReceiver {
         logPhaseInfo(PtoState.PTO_BEGIN);
 
         stopWatch.start();
-        // 应用核COT协议生成指定数量的COT
+        // directly invoke core COT
         CotReceiverOutput receiverOutput = coreCotReceiver.receive(choices);
         receiverOutput.reduce(num);
         stopWatch.stop();

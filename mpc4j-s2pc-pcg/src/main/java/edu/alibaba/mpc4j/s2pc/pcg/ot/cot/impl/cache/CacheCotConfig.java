@@ -10,23 +10,23 @@ import edu.alibaba.mpc4j.s2pc.pcg.ot.cot.pre.PreCotConfig;
 import edu.alibaba.mpc4j.s2pc.pcg.ot.cot.pre.PreCotFactory;
 
 /**
- * 缓存COT协议配置项。
+ * cache COT config.
  *
  * @author Weiran Liu
  * @date 2022/7/13
  */
 public class CacheCotConfig implements CotConfig {
     /**
-     * NC-COT协议配置项
+     * no-choice COT config
      */
     private final NcCotConfig ncCotConfig;
     /**
-     * 预计算COT协议配置项
+     * pre-compute COT config
      */
     private final PreCotConfig preCotConfig;
 
     private CacheCotConfig(Builder builder) {
-        // 两个协议的环境类型必须相同
+        // two environments must be the same
         assert builder.ncCotConfig.getEnvType().equals(builder.preCotConfig.getEnvType());
         ncCotConfig = builder.ncCotConfig;
         preCotConfig = builder.preCotConfig;
@@ -47,7 +47,7 @@ public class CacheCotConfig implements CotConfig {
 
     @Override
     public int maxBaseNum() {
-        return ncCotConfig.maxAllowNum();
+        return ncCotConfig.maxNum();
     }
 
     @Override
@@ -75,11 +75,11 @@ public class CacheCotConfig implements CotConfig {
 
     public static class Builder implements org.apache.commons.lang3.builder.Builder<CacheCotConfig> {
         /**
-         * NC-COT协议配置项
+         * no-choice COT config
          */
         private NcCotConfig ncCotConfig;
         /**
-         * 预计算COT协议配置项
+         * precompute COT config
          */
         private PreCotConfig preCotConfig;
 

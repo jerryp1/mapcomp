@@ -7,18 +7,18 @@ import edu.alibaba.mpc4j.common.rpc.pto.AbstractTwoPartyPto;
 import edu.alibaba.mpc4j.common.tool.MathPreconditions;
 
 /**
- * NC-COT协议接收方。
+ * abstract no-choice COT receiver.
  *
  * @author Weiran Liu
  * @date 2022/01/26
  */
 public abstract class AbstractNcCotReceiver extends AbstractTwoPartyPto implements NcCotReceiver {
     /**
-     * 配置项
+     * config
      */
     private final NcCotConfig config;
     /**
-     * 数量
+     * num
      */
     protected int num;
 
@@ -28,7 +28,7 @@ public abstract class AbstractNcCotReceiver extends AbstractTwoPartyPto implemen
     }
 
     protected void setInitInput(int num) {
-        MathPreconditions.checkPositiveInRangeClosed("num", num, config.maxAllowNum());
+        MathPreconditions.checkPositiveInRangeClosed("num", num, config.maxNum());
         this.num = num;
         initState();
     }

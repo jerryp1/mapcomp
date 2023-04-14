@@ -28,21 +28,13 @@ class Rrk20ZlMuxPtoDesc implements PtoDesc {
      */
     enum PtoStep {
         /**
-         * the sender sends s0
+         * the sender sends s0 and s1
          */
-        SENDER_SEND_S0,
+        SENDER_SEND_S0_S1,
         /**
-         * the sender sends s1
+         * the receiver sends t0 and t1
          */
-        SENDER_SEND_S1,
-        /**
-         * the receiver sends t0
-         */
-        RECEIVER_SEND_T0,
-        /**
-         * the receiver sends t1
-         */
-        RECEIVER_SEND_T1,
+        RECEIVER_SEND_T0_T1,
     }
 
     /**
@@ -51,7 +43,7 @@ class Rrk20ZlMuxPtoDesc implements PtoDesc {
     private static final Rrk20ZlMuxPtoDesc INSTANCE = new Rrk20ZlMuxPtoDesc();
 
     /**
-     * 私有构造函数
+     * private constructor.
      */
     private Rrk20ZlMuxPtoDesc() {
         // empty

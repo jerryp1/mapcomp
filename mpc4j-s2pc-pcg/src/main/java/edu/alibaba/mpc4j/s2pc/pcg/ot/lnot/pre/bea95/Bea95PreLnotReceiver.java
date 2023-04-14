@@ -12,9 +12,9 @@ import edu.alibaba.mpc4j.s2pc.pcg.ot.lnot.LnotReceiverOutput;
 import edu.alibaba.mpc4j.s2pc.pcg.ot.lnot.pre.AbstractPreLnotReceiver;
 import edu.alibaba.mpc4j.s2pc.pcg.ot.lnot.pre.bea95.Bea95PreLnotPtoDesc.PtoStep;
 
+import java.util.LinkedList;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
-import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
 /**
@@ -43,14 +43,7 @@ public class Bea95PreLnotReceiver extends AbstractPreLnotReceiver {
         setPtoInput(preReceiverOutput, choiceArray);
 
         stopWatch.start();
-        List<byte[]> deltaPayload = IntStream.range(0, num)
-            .mapToObj(index -> {
-                int randomChoice = preReceiverOutput.getChoice(index);
-                int delta = choiceArray[index] - randomChoice;
-                delta = delta < 0 ? delta + n : delta;
-                return IntUtils.boundedNonNegIntToByteArray(delta, n);
-            })
-            .collect(Collectors.toList());
+        List<byte[]> deltaPayload = generateDeltaPayload();
         DataPacketHeader deltaHeader = new DataPacketHeader(
             encodeTaskId, getPtoDesc().getPtoId(), PtoStep.RECEIVER_SEND_DELTA.ordinal(), extraInfo,
             ownParty().getPartyId(), otherParty().getPartyId()
@@ -68,5 +61,23 @@ public class Bea95PreLnotReceiver extends AbstractPreLnotReceiver {
 
         logPhaseInfo(PtoState.PTO_END);
         return receiverOutput;
+    }
+
+    private List<byte[]> generateDeltaPayload() {
+        byte[][] deltas = IntStream.range(0, num)
+            .mapToObj(index -> {
+                int randomChoice = preReceiverOutput.getChoice(index);
+                int delta = choiceArray[index] - randomChoice;
+                delta = delta < 0 ? delta + n : delta;
+                return IntUtils.boundedNonNegIntToByteArray(delta, n);
+            }).toArray(byte[][]::new);
+        int deltaLength = IntUtils.boundedNonNegIntByteLength(n);
+        byte[] flatDeltas = new byte[num * deltaLength];
+        IntStream.range(0, num).forEach(index ->
+            System.arraycopy(deltas[index], 0, flatDeltas, index * deltaLength, deltaLength)
+        );
+        List<byte[]> deltaPayload = new LinkedList<>();
+        deltaPayload.add(flatDeltas);
+        return deltaPayload;
     }
 }
