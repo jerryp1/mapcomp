@@ -1,20 +1,16 @@
-package edu.alibaba.mpc4j.s2pc.aby.circuit.mux.zl;
+package edu.alibaba.mpc4j.s2pc.aby.circuit.peqt.plain;
 
 import com.google.common.base.Preconditions;
 import edu.alibaba.mpc4j.common.rpc.Rpc;
 import edu.alibaba.mpc4j.common.rpc.RpcManager;
+import edu.alibaba.mpc4j.common.rpc.desc.SecurityModel;
 import edu.alibaba.mpc4j.common.rpc.impl.memory.MemoryRpcManager;
-import edu.alibaba.mpc4j.common.tool.EnvType;
 import edu.alibaba.mpc4j.common.tool.bitvector.BitVector;
-import edu.alibaba.mpc4j.common.tool.bitvector.BitVectorFactory;
-import edu.alibaba.mpc4j.common.tool.galoisfield.zl.Zl;
-import edu.alibaba.mpc4j.common.tool.galoisfield.zl.ZlFactory;
-import edu.alibaba.mpc4j.crypto.matrix.vector.ZlVector;
-import edu.alibaba.mpc4j.s2pc.aby.basics.ac.zl.SquareShareZlVector;
+import edu.alibaba.mpc4j.common.tool.utils.BytesUtils;
+import edu.alibaba.mpc4j.common.tool.utils.CommonUtils;
 import edu.alibaba.mpc4j.s2pc.aby.basics.bc.SquareShareZ2Vector;
-import edu.alibaba.mpc4j.s2pc.aby.circuit.mux.zl.ZlMuxFactory.ZlMuxType;
-import edu.alibaba.mpc4j.s2pc.aby.circuit.mux.zl.rrg21.Rrg21ZlMuxConfig;
-import edu.alibaba.mpc4j.s2pc.aby.circuit.mux.zl.rrk20.Rrk20ZlMuxConfig;
+import edu.alibaba.mpc4j.s2pc.aby.circuit.peqt.plain.PlainPeqtFactory.PlainPeqtType;
+import edu.alibaba.mpc4j.s2pc.aby.circuit.peqt.plain.naive.NaivePlainPeqtConfig;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.time.StopWatch;
 import org.junit.After;
@@ -28,18 +24,20 @@ import org.slf4j.LoggerFactory;
 
 import java.security.SecureRandom;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.IntStream;
 
 /**
- * Zl mux test.
+ * plain private equality test.
  *
  * @author Weiran Liu
- * @date 2023/4/10
+ * @date 2023/4/14
  */
 @RunWith(Parameterized.class)
-public class ZlMuxTest {
-    private static final Logger LOGGER = LoggerFactory.getLogger(ZlMuxTest.class);
+public class PlainPeqtTest {
+    private static final Logger LOGGER = LoggerFactory.getLogger(PlainPeqtTest.class);
     /**
      * the random state
      */
@@ -53,25 +51,22 @@ public class ZlMuxTest {
      */
     private static final int LARGE_NUM = 1 << 18;
     /**
-     * small Zl
+     * small l
      */
-    private static final Zl SMALL_ZL = ZlFactory.createInstance(EnvType.STANDARD, 1);
+    private static final int SMALL_L = 1;
     /**
-     * default Zl
+     * default l
      */
-    private static final Zl DEFAULT_ZL = ZlFactory.createInstance(EnvType.STANDARD, Integer.SIZE);
+    private static final int DEFAULT_L = Integer.SIZE;
 
     @Parameterized.Parameters(name = "{0}")
     public static Collection<Object[]> configurations() {
         Collection<Object[]> configurations = new ArrayList<>();
 
-        // RRG+21
+        // NAIVE (semi-honest)
         configurations.add(new Object[]{
-            ZlMuxType.RRG21.name(), new Rrg21ZlMuxConfig.Builder().build()
-        });
-        // RRK+20
-        configurations.add(new Object[]{
-            ZlMuxType.RRK20.name(), new Rrk20ZlMuxConfig.Builder().build()
+            PlainPeqtType.NAIVE.name() + " (semi-honest)",
+            new NaivePlainPeqtConfig.Builder(SecurityModel.SEMI_HONEST).build()
         });
 
         return configurations;
@@ -88,9 +83,9 @@ public class ZlMuxTest {
     /**
      * the config
      */
-    private final ZlMuxConfig config;
+    private final PlainPeqtConfig config;
 
-    public ZlMuxTest(String name, ZlMuxConfig config) {
+    public PlainPeqtTest(String name, PlainPeqtConfig config) {
         Preconditions.checkArgument(StringUtils.isNotBlank(name));
         // We cannot use NettyRPC in the test case since it needs multi-thread connect / disconnect.
         // In other word, we cannot connect / disconnect NettyRpc in @Before / @After, respectively.
@@ -114,63 +109,71 @@ public class ZlMuxTest {
 
     @Test
     public void test1Num() {
-        testPto(DEFAULT_ZL, 1, false);
+        testPto(DEFAULT_L, 1, false);
     }
 
     @Test
     public void test2Num() {
-        testPto(DEFAULT_ZL, 2, false);
+        testPto(DEFAULT_L, 2, false);
     }
 
     @Test
     public void test8Num() {
-        testPto(DEFAULT_ZL, 8, false);
+        testPto(DEFAULT_L, 8, false);
     }
 
     @Test
     public void testDefaultNum() {
-        testPto(DEFAULT_ZL, DEFAULT_NUM, false);
+        testPto(DEFAULT_L, DEFAULT_NUM, false);
     }
 
     @Test
     public void testParallelDefaultNum() {
-        testPto(DEFAULT_ZL, DEFAULT_NUM, true);
+        testPto(DEFAULT_L, DEFAULT_NUM, true);
     }
 
     @Test
     public void testSmallZl() {
-        testPto(SMALL_ZL, DEFAULT_NUM, false);
+        testPto(SMALL_L, DEFAULT_NUM, false);
     }
 
     @Test
     public void testLargeNum() {
-        testPto(DEFAULT_ZL, LARGE_NUM, false);
+        testPto(DEFAULT_L, LARGE_NUM, false);
     }
 
     @Test
     public void testParallelLargeNum() {
-        testPto(DEFAULT_ZL, LARGE_NUM, false);
+        testPto(DEFAULT_L, LARGE_NUM, false);
     }
 
-    private void testPto(Zl zl, int num, boolean parallel) {
+    private void testPto(int l, int num, boolean parallel) {
+        int byteL = CommonUtils.getByteLength(l);
         // create inputs
-        BitVector x0 = BitVectorFactory.createRandom(num, SECURE_RANDOM);
-        BitVector x1 = BitVectorFactory.createRandom(num, SECURE_RANDOM);
-        SquareShareZ2Vector shareX0 = SquareShareZ2Vector.create(x0, false);
-        SquareShareZ2Vector shareX1 = SquareShareZ2Vector.create(x1, false);
-        ZlVector y0 = ZlVector.createRandom(zl, num, SECURE_RANDOM);
-        ZlVector y1 = ZlVector.createRandom(zl, num, SECURE_RANDOM);
-        SquareShareZlVector shareY0 = SquareShareZlVector.create(y0, false);
-        SquareShareZlVector shareY1 = SquareShareZlVector.create(y1, false);
+        byte[][] xs = IntStream.range(0, num)
+            .parallel()
+            .mapToObj(index -> BytesUtils.randomByteArray(byteL, l, SECURE_RANDOM))
+            .toArray(byte[][]::new);
+        byte[][] ys = IntStream.range(0, num)
+            .parallel()
+            .mapToObj(index -> {
+                boolean equal = SECURE_RANDOM.nextBoolean();
+                if (equal) {
+                    return BytesUtils.clone(xs[index]);
+                } else {
+                    return BytesUtils.randomByteArray(byteL, l, SECURE_RANDOM);
+                }
+            })
+            .toArray(byte[][]::new);
         // init the protocol
-        ZlMuxParty sender = ZlMuxFactory.createSender(senderRpc, receiverRpc.ownParty(), config);
-        ZlMuxParty receiver = ZlMuxFactory.createReceiver(receiverRpc, senderRpc.ownParty(), config);
+        PlainPeqtParty sender = PlainPeqtFactory.createSender(senderRpc, receiverRpc.ownParty(), config);
+        PlainPeqtParty receiver = PlainPeqtFactory.createReceiver(receiverRpc, senderRpc.ownParty(), config);
         sender.setParallel(parallel);
         receiver.setParallel(parallel);
         try {
             LOGGER.info("-----test {} start-----", sender.getPtoDesc().getPtoName());
-            ZlMuxSenderThread senderThread = new ZlMuxSenderThread(sender, shareX0, shareY0);
-            ZlMuxReceiverThread receiverThread = new ZlMuxReceiverThread(receiver, shareX1, shareY1);
+            PlainPeqtPartyThread senderThread = new PlainPeqtPartyThread(sender, l, xs);
+            PlainPeqtPartyThread receiverThread = new PlainPeqtPartyThread(receiver, l, ys);
             StopWatch stopWatch = new StopWatch();
             // execute the protocol
             stopWatch.start();
@@ -182,15 +185,18 @@ public class ZlMuxTest {
             long time = stopWatch.getTime(TimeUnit.MILLISECONDS);
             stopWatch.reset();
             long senderByteLength = senderRpc.getSendByteLength();
+            long senderRound = senderRpc.getSendDataPacketNum();
             long receiverByteLength = receiverRpc.getSendByteLength();
+            long receiverRound = receiverRpc.getSendDataPacketNum();
             senderRpc.reset();
             receiverRpc.reset();
-            SquareShareZlVector shareZ0 = senderThread.getShareZ0();
-            SquareShareZlVector shareZ1 = receiverThread.getShareZ1();
+            SquareShareZ2Vector z0 = senderThread.getZi();
+            SquareShareZ2Vector z1 = receiverThread.getZi();
+            BitVector z = z0.xor(z1, true).getBitVector();
             // verify
-            assertOutput(x0, x1, y0, y1, shareZ0, shareZ1);
-            LOGGER.info("Sender sends {}B, Receiver sends {}B, time = {}ms",
-                senderByteLength, receiverByteLength, time
+            assertOutput(num, xs, ys, z);
+            LOGGER.info("Sender sends {}B / {} rounds, Receiver sends {}B / {} rounds, time = {}ms",
+                senderByteLength, senderRound, receiverByteLength, receiverRound, time
             );
             LOGGER.info("-----test {} end-----", sender.getPtoDesc().getPtoName());
         } catch (InterruptedException e) {
@@ -200,23 +206,16 @@ public class ZlMuxTest {
         receiver.destroy();
     }
 
-    private void assertOutput(BitVector x0, BitVector x1, ZlVector y0, ZlVector y1,
-                              SquareShareZlVector shareZ0, SquareShareZlVector shareZ1) {
-        int num = x0.bitNum();
-        Assert.assertEquals(num, shareZ0.getNum());
-        Assert.assertEquals(num, shareZ1.getNum());
-        Zl zl = y0.getZl();
-        BitVector x = x0.xor(x1);
-        ZlVector y = y0.add(y1);
-        ZlVector z = shareZ0.add(shareZ1, true).getVector();
+    private void assertOutput(int num, byte[][] xs, byte[][] ys, BitVector z) {
+        Assert.assertEquals(num, z.bitNum());
         for (int index = 0; index < num; index++) {
-            boolean xi = x.get(index);
+            boolean xi = Arrays.equals(xs[index], ys[index]);
             if (!xi) {
-                // xi = 0
-                Assert.assertEquals(zl.createZero(), z.getElement(index));
+                // not equal
+                Assert.assertFalse(z.get(index));
             } else {
-                // x1 = 1
-                Assert.assertEquals(y.getElement(index), z.getElement(index));
+                // equal
+                Assert.assertTrue(z.get(index));
             }
         }
     }

@@ -43,7 +43,7 @@ class Rrk20ZlMuxPtoDesc implements PtoDesc {
     private static final Rrk20ZlMuxPtoDesc INSTANCE = new Rrk20ZlMuxPtoDesc();
 
     /**
-     * 私有构造函数
+     * private constructor.
      */
     private Rrk20ZlMuxPtoDesc() {
         // empty
