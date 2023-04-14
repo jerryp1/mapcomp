@@ -4,6 +4,9 @@ import edu.alibaba.mpc4j.common.rpc.Party;
 import edu.alibaba.mpc4j.common.rpc.Rpc;
 import edu.alibaba.mpc4j.common.rpc.desc.SecurityModel;
 import edu.alibaba.mpc4j.common.rpc.pto.PtoFactory;
+import edu.alibaba.mpc4j.s2pc.aby.circuit.peqt.plain.cgs22.Cgs22PlainPeqtConfig;
+import edu.alibaba.mpc4j.s2pc.aby.circuit.peqt.plain.cgs22.Cgs22PlainPeqtReceiver;
+import edu.alibaba.mpc4j.s2pc.aby.circuit.peqt.plain.cgs22.Cgs22PlainPeqtSender;
 import edu.alibaba.mpc4j.s2pc.aby.circuit.peqt.plain.naive.NaivePlainPeqtConfig;
 import edu.alibaba.mpc4j.s2pc.aby.circuit.peqt.plain.naive.NaivePlainPeqtReceiver;
 import edu.alibaba.mpc4j.s2pc.aby.circuit.peqt.plain.naive.NaivePlainPeqtSender;
@@ -50,6 +53,7 @@ public class PlainPeqtFactory implements PtoFactory {
             case NAIVE:
                 return new NaivePlainPeqtSender(senderRpc, receiverParty, (NaivePlainPeqtConfig) config);
             case CGS22:
+                return new Cgs22PlainPeqtSender(senderRpc, receiverParty, (Cgs22PlainPeqtConfig) config);
             default:
                 throw new IllegalArgumentException("Invalid " + PlainPeqtType.class.getSimpleName() + ": " + type.name());
         }
@@ -69,6 +73,7 @@ public class PlainPeqtFactory implements PtoFactory {
             case NAIVE:
                 return new NaivePlainPeqtReceiver(receiverRpc, senderParty, (NaivePlainPeqtConfig) config);
             case CGS22:
+                return new Cgs22PlainPeqtReceiver(receiverRpc, senderParty, (Cgs22PlainPeqtConfig) config);
             default:
                 throw new IllegalArgumentException("Invalid " + PlainPeqtType.class.getSimpleName() + ": " + type.name());
         }

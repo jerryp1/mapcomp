@@ -10,6 +10,7 @@ import edu.alibaba.mpc4j.common.tool.utils.BytesUtils;
 import edu.alibaba.mpc4j.common.tool.utils.CommonUtils;
 import edu.alibaba.mpc4j.s2pc.aby.basics.bc.SquareShareZ2Vector;
 import edu.alibaba.mpc4j.s2pc.aby.circuit.peqt.plain.PlainPeqtFactory.PlainPeqtType;
+import edu.alibaba.mpc4j.s2pc.aby.circuit.peqt.plain.cgs22.Cgs22PlainPeqtConfig;
 import edu.alibaba.mpc4j.s2pc.aby.circuit.peqt.plain.naive.NaivePlainPeqtConfig;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.time.StopWatch;
@@ -63,6 +64,11 @@ public class PlainPeqtTest {
     public static Collection<Object[]> configurations() {
         Collection<Object[]> configurations = new ArrayList<>();
 
+        // CGS22 (semi-honest)
+        configurations.add(new Object[]{
+            PlainPeqtType.CGS22.name() + " (semi-honest)",
+            new Cgs22PlainPeqtConfig.Builder(SecurityModel.SEMI_HONEST).build()
+        });
         // NAIVE (semi-honest)
         configurations.add(new Object[]{
             PlainPeqtType.NAIVE.name() + " (semi-honest)",
@@ -157,7 +163,7 @@ public class PlainPeqtTest {
         byte[][] ys = IntStream.range(0, num)
             .parallel()
             .mapToObj(index -> {
-                boolean equal = SECURE_RANDOM.nextBoolean();
+                boolean equal = (index % 2 == 0);
                 if (equal) {
                     return BytesUtils.clone(xs[index]);
                 } else {
