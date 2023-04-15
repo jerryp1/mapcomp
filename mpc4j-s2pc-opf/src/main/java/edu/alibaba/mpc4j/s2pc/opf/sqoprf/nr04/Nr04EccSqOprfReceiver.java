@@ -37,6 +37,7 @@ import java.util.stream.Stream;
 
 /**
  * NR04 ECC single-query OPRF receiver.
+ *
  * @author Qixian Zhou
  * @date 2023/4/12
  */
@@ -163,7 +164,7 @@ public class Nr04EccSqOprfReceiver extends AbstractSqOprfReceiver {
 
 	private SqOprfReceiverOutput generateReceiverOutput(BigInteger[] rArray) throws MpcAbortException {
 
-		MpcAbortPreconditions.checkArgument(rArray.length ==  batchSize * CommonConstants.BLOCK_BIT_LENGTH);
+		MpcAbortPreconditions.checkArgument(rArray.length == batchSize * CommonConstants.BLOCK_BIT_LENGTH);
 		IntStream batchStream = IntStream.range(0, batchSize);
 		batchStream = parallel ? batchStream.parallel() : batchStream;
 
@@ -205,13 +206,12 @@ public class Nr04EccSqOprfReceiver extends AbstractSqOprfReceiver {
 			key = prg.extendToBytes(key);
 			// choose right message, which can be successfully decrypted
 			// y_i as choices bit
-			boolean yi = BinaryUtils.getBoolean(inputs[index/CommonConstants.BLOCK_BIT_LENGTH], index % CommonConstants.BLOCK_BIT_LENGTH);
+			boolean yi = BinaryUtils.getBoolean(inputs[index / CommonConstants.BLOCK_BIT_LENGTH], index % CommonConstants.BLOCK_BIT_LENGTH);
 			byte[] message = yi ? messageArray[2 * index + 1] : messageArray[2 * index];
 			BytesUtils.xori(message, key);
 			return BigIntegerUtils.byteArrayToNonNegBigInteger(message);
 		}).toArray(BigInteger[]::new);
 	}
-
 
 
 	private List<ECPoint> handleGrInvPayload(List<byte[]> grInvPayload) throws MpcAbortException {

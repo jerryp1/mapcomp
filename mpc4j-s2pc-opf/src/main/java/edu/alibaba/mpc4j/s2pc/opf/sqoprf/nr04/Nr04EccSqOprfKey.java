@@ -24,78 +24,78 @@ import java.util.Arrays;
 public class Nr04EccSqOprfKey implements SqOprfKey {
 
 
-    /**
-     * ECC
-     */
-    private final Ecc ecc;
-    /**
-     * key derivation function
-     */
-    private final Kdf kdf;
-    /**
-     * a0 = (a_1^0, a_2^0, ..., a_n^0)
-     * a_i^0 is n-bit random number, n is the bit-length of input
-     * The default value of n is 128.
-     */
-    private BigInteger[] a0Array;
+	/**
+	 * ECC
+	 */
+	private final Ecc ecc;
+	/**
+	 * key derivation function
+	 */
+	private final Kdf kdf;
+	/**
+	 * a0 = (a_1^0, a_2^0, ..., a_n^0)
+	 * a_i^0 is n-bit random number, n is the bit-length of input
+	 * The default value of n is 128.
+	 */
+	private BigInteger[] a0Array;
 
-    /**
-     * a1 = (a_1^1, a_2^1, ..., a_n^1)
-     * a_i^1 is n-bit random number, n is the bit-length of input
-     * The default value of n is 128.
-     */
-    private BigInteger[] a1Array;
+	/**
+	 * a1 = (a_1^1, a_2^1, ..., a_n^1)
+	 * a_i^1 is n-bit random number, n is the bit-length of input
+	 * The default value of n is 128.
+	 */
+	private BigInteger[] a1Array;
 
-    public BigInteger getA0Array(int index) {
-        return a0Array[index];
-    }
+	public BigInteger getA0Array(int index) {
+		return a0Array[index];
+	}
 
-    public BigInteger getA1Array(int index) {
-        return a1Array[index];
-    }
+	public BigInteger getA1Array(int index) {
+		return a1Array[index];
+	}
 
-    /**
-     * @param envType EnvType
-     * @param a0Array
-     * @param a1Array
-     */
-    public Nr04EccSqOprfKey(EnvType envType, BigInteger[] a0Array, BigInteger[] a1Array) {
-        // require the length of a0Array and a1Array is n
-        assert a0Array.length == CommonConstants.BLOCK_BIT_LENGTH && a1Array.length == CommonConstants.BLOCK_BIT_LENGTH;
-        ecc = EccFactory.createInstance(envType);
-        kdf = KdfFactory.createInstance(envType);
+	/**
+	 * @param envType EnvType
+	 * @param a0Array
+	 * @param a1Array
+	 */
+	public Nr04EccSqOprfKey(EnvType envType, BigInteger[] a0Array, BigInteger[] a1Array) {
+		// require the length of a0Array and a1Array is n
+		assert a0Array.length == CommonConstants.BLOCK_BIT_LENGTH && a1Array.length == CommonConstants.BLOCK_BIT_LENGTH;
+		ecc = EccFactory.createInstance(envType);
+		kdf = KdfFactory.createInstance(envType);
 
-        this.a0Array = Arrays.stream(a0Array)
-                .peek(a0 -> {
-                    assert a0.bitLength() == CommonConstants.BLOCK_BIT_LENGTH
-                            : "a0 bit length must be equal to " + CommonConstants.BLOCK_BIT_LENGTH + ": " + a0.bitLength();
-                })
-                .toArray(BigInteger[]::new);
-        this.a1Array = Arrays.stream(a1Array)
-                .peek(a1 -> {
-                    assert a1.bitLength() == CommonConstants.BLOCK_BIT_LENGTH
-                            : "a0 bit length must be equal to " + CommonConstants.BLOCK_BIT_LENGTH + ": " + a1.bitLength();
-                })
-                .toArray(BigInteger[]::new);
-    }
+		this.a0Array = Arrays.stream(a0Array)
+				.peek(a0 -> {
+					assert a0.bitLength() == CommonConstants.BLOCK_BIT_LENGTH
+							: "a0 bit length must be equal to " + CommonConstants.BLOCK_BIT_LENGTH + ": " + a0.bitLength();
+				})
+				.toArray(BigInteger[]::new);
+		this.a1Array = Arrays.stream(a1Array)
+				.peek(a1 -> {
+					assert a1.bitLength() == CommonConstants.BLOCK_BIT_LENGTH
+							: "a0 bit length must be equal to " + CommonConstants.BLOCK_BIT_LENGTH + ": " + a1.bitLength();
+				})
+				.toArray(BigInteger[]::new);
+	}
 
-    @Override
-    public byte[] getPrf(byte[] input) {
+	@Override
+	public byte[] getPrf(byte[] input) {
 
-        assert input.length == CommonConstants.BLOCK_BYTE_LENGTH;
-        // C = a_0^{x[0]} * a_1^{x[1]} * .... * a_n^{x[n]} mod q
-        // x[i] represents the i-th bit of input
-        BigInteger c = BigInteger.ONE;
-        for (int i = 0; i < CommonConstants.BLOCK_BIT_LENGTH; i++) {
-            if (BinaryUtils.getBoolean(input, i)) {
-                c = c.multiply(a1Array[i]).mod(ecc.getN());
-            } else {
-                c = c.multiply(a0Array[i]).mod(ecc.getN());
-            }
-        }
-        // C * BasePoint
-        return kdf.deriveKey(ecc.encode(ecc.multiply(ecc.getG(), c), false));
-    }
+		assert input.length == CommonConstants.BLOCK_BYTE_LENGTH;
+		// C = a_0^{x[0]} * a_1^{x[1]} * .... * a_n^{x[n]} mod q
+		// x[i] represents the i-th bit of input
+		BigInteger c = BigInteger.ONE;
+		for (int i = 0; i < CommonConstants.BLOCK_BIT_LENGTH; i++) {
+			if (BinaryUtils.getBoolean(input, i)) {
+				c = c.multiply(a1Array[i]).mod(ecc.getN());
+			} else {
+				c = c.multiply(a0Array[i]).mod(ecc.getN());
+			}
+		}
+		// C * BasePoint
+		return kdf.deriveKey(ecc.encode(ecc.multiply(ecc.getG(), c), false));
+	}
 
 
 }

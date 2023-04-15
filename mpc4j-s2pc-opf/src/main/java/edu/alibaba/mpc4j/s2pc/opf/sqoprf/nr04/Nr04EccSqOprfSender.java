@@ -37,6 +37,7 @@ import javax.swing.*;
 
 /**
  * NR04 ECC single-query OPRF secner.
+ *
  * @author Qixian Zhou
  * @date 2023/4/12
  */
@@ -170,7 +171,7 @@ public class Nr04EccSqOprfSender extends AbstractSqOprfSender {
 					// Bit-by-bit processing
 					for (int bitPos = 0; bitPos < CommonConstants.BLOCK_BIT_LENGTH; bitPos++) {
 						// H(r0 \oplus bi \Delta)
-						boolean bi = BinaryUtils.getBoolean( binaryPayload.get(index), bitPos);
+						boolean bi = BinaryUtils.getBoolean(binaryPayload.get(index), bitPos);
 						// key0 = r0 \oplus bi \Delta
 						// if bi = true, then key0 = r1, else key0 = r0
 						byte[] key0 = bi ? BytesUtils.clone(cotSenderOutput.getR1(index * CommonConstants.BLOCK_BIT_LENGTH + bitPos)) : BytesUtils.clone(cotSenderOutput.getR0(index * CommonConstants.BLOCK_BIT_LENGTH + bitPos));
@@ -186,7 +187,7 @@ public class Nr04EccSqOprfSender extends AbstractSqOprfSender {
 						// note that key0 mask R0, key1 mask R1
 						byte[] message0 = BigIntegerUtils.nonNegBigIntegerToByteArray(r0Array[index][bitPos], 2 * CommonConstants.BLOCK_BYTE_LENGTH);
 						BytesUtils.xori(message0, key0);
-						byte[] message1 = BigIntegerUtils.nonNegBigIntegerToByteArray(r1Array[index][bitPos], 2* CommonConstants.BLOCK_BYTE_LENGTH);
+						byte[] message1 = BigIntegerUtils.nonNegBigIntegerToByteArray(r1Array[index][bitPos], 2 * CommonConstants.BLOCK_BYTE_LENGTH);
 						BytesUtils.xori(message1, key1);
 
 						result.add(message0);
