@@ -6,8 +6,11 @@ import edu.alibaba.mpc4j.common.rpc.RpcManager;
 import edu.alibaba.mpc4j.common.rpc.impl.memory.MemoryRpcManager;
 import edu.alibaba.mpc4j.common.tool.CommonConstants;
 import edu.alibaba.mpc4j.s2pc.opf.sqoprf.SqOprfFactory.SqOprfType;
+import edu.alibaba.mpc4j.s2pc.opf.sqoprf.nr04.Nr04EccSqOprfConfig;
+import edu.alibaba.mpc4j.s2pc.opf.sqoprf.nr04.Nr04EccSqOprfKey;
 import edu.alibaba.mpc4j.s2pc.opf.sqoprf.ra17.Ra17ByteEccSqOprfConfig;
 import edu.alibaba.mpc4j.s2pc.opf.sqoprf.ra17.Ra17EccSqOprfConfig;
+import edu.alibaba.mpc4j.s2pc.opf.sqoprf.ra17.Ra17EccSqOprfKey;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.time.StopWatch;
 import org.junit.After;
@@ -52,20 +55,31 @@ public class SqOprfTest {
     public static Collection<Object[]> configurations() {
         Collection<Object[]> configurations = new ArrayList<>();
 
-        // RA17_BYTE_ECC (compress)
+//        // RA17_BYTE_ECC (compress)
+//        configurations.add(new Object[]{
+//            SqOprfType.RA17_BYTE_ECC.name(),
+//            new Ra17ByteEccSqOprfConfig.Builder().build(),
+//        });
+//        // RA17_ECC (compress)
+//        configurations.add(new Object[]{
+//            SqOprfType.RA17_ECC.name() + " (compress)",
+//            new Ra17EccSqOprfConfig.Builder().setCompressEncode(true).build(),
+//        });
+//        // RA17_ECC (uncompress)
+//        configurations.add(new Object[]{
+//            SqOprfType.RA17_ECC.name() + " (uncompress)",
+//            new Ra17EccSqOprfConfig.Builder().build(),
+//        });
+
+        // NR04_ECC (uncompress)
         configurations.add(new Object[]{
-            SqOprfType.RA17_BYTE_ECC.name(),
-            new Ra17ByteEccSqOprfConfig.Builder().build(),
+                SqOprfType.NR04_ECC.name() + " (uncompress)",
+                new Nr04EccSqOprfConfig.Builder().build(),
         });
-        // RA17_ECC (compress)
+
         configurations.add(new Object[]{
-            SqOprfType.RA17_ECC.name() + " (compress)",
-            new Ra17EccSqOprfConfig.Builder().setCompressEncode(true).build(),
-        });
-        // RA17_ECC (uncompress)
-        configurations.add(new Object[]{
-            SqOprfType.RA17_ECC.name() + " (uncompress)",
-            new Ra17EccSqOprfConfig.Builder().build(),
+                SqOprfType.NR04_ECC.name() + " (compress)",
+                new Nr04EccSqOprfConfig.Builder().setCompressEncode(true).build(),
         });
 
         return configurations;
@@ -198,13 +212,16 @@ public class SqOprfTest {
 
     private void assertOutput(int batchSize, SqOprfKey key, SqOprfReceiverOutput receiverOutput) {
         Assert.assertEquals(batchSize, receiverOutput.getBatchSize());
+
         Assert.assertEquals(key.getPrfByteLength(), receiverOutput.getPrfByteLength());
         int prfByteLength = key.getPrfByteLength();
         IntStream.range(0, batchSize).forEach(index -> {
             byte[] input = receiverOutput.getInput(index);
             ByteBuffer receiverPrf = ByteBuffer.wrap(receiverOutput.getPrf(index));
             Assert.assertEquals(prfByteLength, receiverPrf.array().length);
+
             ByteBuffer senderPrf = ByteBuffer.wrap(key.getPrf(input));
+
             Assert.assertEquals(prfByteLength, senderPrf.array().length);
             Assert.assertEquals(senderPrf, receiverPrf);
         });
@@ -216,4 +233,6 @@ public class SqOprfTest {
             .count();
         Assert.assertEquals(receiverOutput.getBatchSize(), distinctCount);
     }
+
+
 }

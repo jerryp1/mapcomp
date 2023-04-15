@@ -4,6 +4,9 @@ import edu.alibaba.mpc4j.common.rpc.Party;
 import edu.alibaba.mpc4j.common.rpc.Rpc;
 import edu.alibaba.mpc4j.common.rpc.desc.SecurityModel;
 import edu.alibaba.mpc4j.common.rpc.pto.PtoFactory;
+import edu.alibaba.mpc4j.s2pc.opf.sqoprf.nr04.Nr04EccSqOprfConfig;
+import edu.alibaba.mpc4j.s2pc.opf.sqoprf.nr04.Nr04EccSqOprfReceiver;
+import edu.alibaba.mpc4j.s2pc.opf.sqoprf.nr04.Nr04EccSqOprfSender;
 import edu.alibaba.mpc4j.s2pc.opf.sqoprf.ra17.*;
 
 /**
@@ -33,13 +36,14 @@ public class SqOprfFactory implements PtoFactory {
          */
         RA17_BYTE_ECC,
         /**
-         * Naor-Reingold OPRF
-         */
-        NR04,
-        /**
          * LowMC-based OPRF
          */
         LOW_MC,
+
+        /**
+         * Naor-Reingold OPRF based ECC
+         */
+        NR04_ECC
     }
 
     /**
@@ -57,7 +61,8 @@ public class SqOprfFactory implements PtoFactory {
                 return new Ra17EccSqOprfSender(senderRpc, receiverParty, (Ra17EccSqOprfConfig) config);
             case RA17_BYTE_ECC:
                 return new Ra17ByteEccSqOprfSender(senderRpc, receiverParty, (Ra17ByteEccSqOprfConfig) config);
-            case NR04:
+            case NR04_ECC:
+                return new Nr04EccSqOprfSender(senderRpc, receiverParty, (Nr04EccSqOprfConfig) config);
             case LOW_MC:
             default:
                 throw new IllegalArgumentException("Invalid " + SqOprfType.class.getSimpleName() + ": " + type.name());
@@ -79,7 +84,8 @@ public class SqOprfFactory implements PtoFactory {
                 return new Ra17EccSqOprfReceiver(receiverRpc, senderParty, (Ra17EccSqOprfConfig) config);
             case RA17_BYTE_ECC:
                 return new Ra17ByteEccSqOprfReceiver(receiverRpc, senderParty, (Ra17ByteEccSqOprfConfig) config);
-            case NR04:
+            case NR04_ECC:
+                return new Nr04EccSqOprfReceiver(receiverRpc, senderParty, (Nr04EccSqOprfConfig) config);
             case LOW_MC:
             default:
                 throw new IllegalArgumentException("Invalid " + SqOprfType.class.getSimpleName() + ": " + type.name());
