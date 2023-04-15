@@ -54,23 +54,21 @@ public class SqOprfTest {
     @Parameterized.Parameters(name = "{0}")
     public static Collection<Object[]> configurations() {
         Collection<Object[]> configurations = new ArrayList<>();
-
-//        // RA17_BYTE_ECC (compress)
-//        configurations.add(new Object[]{
-//            SqOprfType.RA17_BYTE_ECC.name(),
-//            new Ra17ByteEccSqOprfConfig.Builder().build(),
-//        });
-//        // RA17_ECC (compress)
-//        configurations.add(new Object[]{
-//            SqOprfType.RA17_ECC.name() + " (compress)",
-//            new Ra17EccSqOprfConfig.Builder().setCompressEncode(true).build(),
-//        });
-//        // RA17_ECC (uncompress)
-//        configurations.add(new Object[]{
-//            SqOprfType.RA17_ECC.name() + " (uncompress)",
-//            new Ra17EccSqOprfConfig.Builder().build(),
-//        });
-
+        // RA17_BYTE_ECC (compress)
+        configurations.add(new Object[]{
+            SqOprfType.RA17_BYTE_ECC.name(),
+            new Ra17ByteEccSqOprfConfig.Builder().build(),
+        });
+        // RA17_ECC (compress)
+        configurations.add(new Object[]{
+            SqOprfType.RA17_ECC.name() + " (compress)",
+            new Ra17EccSqOprfConfig.Builder().setCompressEncode(true).build(),
+        });
+        // RA17_ECC (uncompress)
+        configurations.add(new Object[]{
+            SqOprfType.RA17_ECC.name() + " (uncompress)",
+            new Ra17EccSqOprfConfig.Builder().build(),
+        });
         // NR04_ECC (uncompress)
         configurations.add(new Object[]{
                 SqOprfType.NR04_ECC.name() + " (uncompress)",
