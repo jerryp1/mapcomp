@@ -81,15 +81,12 @@ public class OprpFactory implements PtoFactory {
      * @param securityModel 安全模型。
      * @return 默认协议配置项。
      */
-    public static OprpConfig createDefaultConfig(SecurityModel securityModel) {
+    public static OprpConfig createDefaultConfig(SecurityModel securityModel, boolean silent) {
         switch (securityModel) {
             case IDEAL:
-                return new LowMcOprpConfig.Builder()
-                    .setBcConfig(BcFactory.createDefaultConfig(SecurityModel.IDEAL))
-                    .build();
             case SEMI_HONEST:
                 return new LowMcOprpConfig.Builder()
-                    .setBcConfig(BcFactory.createDefaultConfig(SecurityModel.SEMI_HONEST))
+                    .setBcConfig(BcFactory.createDefaultConfig(SecurityModel.SEMI_HONEST, silent))
                     .build();
             case COVERT:
             case MALICIOUS:

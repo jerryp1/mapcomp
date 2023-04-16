@@ -74,9 +74,13 @@ public class Cgs22PeqtConfig implements PeqtConfig {
          */
         private LnotConfig lnotConfig;
 
-        public Builder(SecurityModel securityModel) {
-            bcConfig = BcFactory.createDefaultConfig(securityModel);
-            lnotConfig = LnotFactory.createCacheConfig(securityModel);
+        public Builder(SecurityModel securityModel, boolean silent) {
+            bcConfig = BcFactory.createDefaultConfig(securityModel, silent);
+            if (silent) {
+                lnotConfig = LnotFactory.createCacheConfig(securityModel);
+            } else {
+                lnotConfig = LnotFactory.createDirectConfig(securityModel);
+            }
         }
 
         public Builder setBcConfig(BcConfig bcConfig) {

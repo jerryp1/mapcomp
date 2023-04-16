@@ -57,8 +57,8 @@ public class NaivePeqtConfig implements PeqtConfig {
          */
         private BcConfig bcConfig;
 
-        public Builder(SecurityModel securityModel) {
-            bcConfig = BcFactory.createDefaultConfig(securityModel);
+        public Builder(SecurityModel securityModel, boolean silent) {
+            bcConfig = BcFactory.createDefaultConfig(securityModel, silent);
         }
 
         public Builder setBcConfig(BcConfig bcConfig) {

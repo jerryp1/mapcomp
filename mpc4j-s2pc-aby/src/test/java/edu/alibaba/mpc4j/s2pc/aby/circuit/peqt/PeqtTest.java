@@ -67,12 +67,12 @@ public class PeqtTest {
         // CGS22 (semi-honest)
         configurations.add(new Object[]{
             PeqtType.CGS22.name() + " (semi-honest)",
-            new Cgs22PeqtConfig.Builder(SecurityModel.SEMI_HONEST).build()
+            new Cgs22PeqtConfig.Builder(SecurityModel.SEMI_HONEST, true).build()
         });
         // NAIVE (semi-honest)
         configurations.add(new Object[]{
             PeqtType.NAIVE.name() + " (semi-honest)",
-            new NaivePeqtConfig.Builder(SecurityModel.SEMI_HONEST).build()
+            new NaivePeqtConfig.Builder(SecurityModel.SEMI_HONEST, true).build()
         });
 
         return configurations;

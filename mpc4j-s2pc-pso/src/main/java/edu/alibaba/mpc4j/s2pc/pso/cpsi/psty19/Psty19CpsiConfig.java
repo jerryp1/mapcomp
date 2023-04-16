@@ -72,7 +72,7 @@ public class Psty19CpsiConfig implements CpsiConfig {
 
         public Builder() {
             bopprfConfig = BopprfFactory.createDefaultConfig(SecurityModel.SEMI_HONEST);
-            bcConfig = BcFactory.createDefaultConfig(SecurityModel.SEMI_HONEST);
+            bcConfig = BcFactory.createDefaultConfig(SecurityModel.SEMI_HONEST, true);
         }
 
         public Builder setBopprfConfig(BopprfConfig bopprfConfig) {

@@ -80,12 +80,13 @@ public class PeqtFactory implements PtoFactory {
     }
 
     /**
-     * Creates the default config.
+     * Creates a default config.
      *
      * @param securityModel the security model.
-     * @return the default config.
+     * @param silent        if using a silent protocol.
+     * @return a default config.
      */
-    public static PeqtConfig createDefaultConfig(SecurityModel securityModel) {
-        return new NaivePeqtConfig.Builder(securityModel).build();
+    public static PeqtConfig createDefaultConfig(SecurityModel securityModel, boolean silent) {
+        return new NaivePeqtConfig.Builder(securityModel, silent).build();
     }
 }
