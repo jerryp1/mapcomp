@@ -46,7 +46,6 @@ class PeqtPartyThread extends Thread {
     public void run() {
         try {
             party.init(l, num);
-            party.getRpc().reset();
             zi = party.peqt(l, inputs);
         } catch (MpcAbortException e) {
             e.printStackTrace();

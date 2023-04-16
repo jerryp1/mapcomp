@@ -1,4 +1,4 @@
-package edu.alibaba.mpc4j.s2pc.aby.circuit.peqt.cgs22;
+package edu.alibaba.mpc4j.s2pc.aby.circuit.psm.cgs22;
 
 import edu.alibaba.mpc4j.common.rpc.*;
 import edu.alibaba.mpc4j.common.rpc.utils.DataPacketHeader;
@@ -9,8 +9,8 @@ import edu.alibaba.mpc4j.common.tool.utils.LongUtils;
 import edu.alibaba.mpc4j.s2pc.aby.basics.bc.BcFactory;
 import edu.alibaba.mpc4j.s2pc.aby.basics.bc.BcParty;
 import edu.alibaba.mpc4j.s2pc.aby.basics.bc.SquareShareZ2Vector;
-import edu.alibaba.mpc4j.s2pc.aby.circuit.peqt.AbstractPeqtParty;
-import edu.alibaba.mpc4j.s2pc.aby.circuit.peqt.cgs22.Cgs22PeqtPtoDesc.PtoStep;
+import edu.alibaba.mpc4j.s2pc.aby.circuit.psm.cgs22.Cgs22LnotPsmPtoDesc.PtoStep;
+import edu.alibaba.mpc4j.s2pc.aby.circuit.psm.AbstractPsmReceiver;
 import edu.alibaba.mpc4j.s2pc.pcg.ot.lnot.LnotFactory;
 import edu.alibaba.mpc4j.s2pc.pcg.ot.lnot.LnotReceiver;
 import edu.alibaba.mpc4j.s2pc.pcg.ot.lnot.LnotReceiverOutput;
@@ -21,12 +21,12 @@ import java.util.concurrent.TimeUnit;
 import java.util.stream.IntStream;
 
 /**
- * CGS22 private equality test receiver.
+ * CGS22 1-out-of-n (with n = 2^l) PSM receiver.
  *
  * @author Weiran Liu
- * @date 2023/4/14
+ * @date 2023/4/16
  */
-public class Cgs22PeqtReceiver extends AbstractPeqtParty {
+public class Cgs22LnotPsmReceiver extends AbstractPsmReceiver {
     /**
      * Boolean circuit receiver
      */
@@ -36,8 +36,8 @@ public class Cgs22PeqtReceiver extends AbstractPeqtParty {
      */
     private final LnotReceiver lnotReceiver;
 
-    public Cgs22PeqtReceiver(Rpc senderRpc, Party receiverParty, Cgs22PeqtConfig config) {
-        super(Cgs22PeqtPtoDesc.getInstance(), senderRpc, receiverParty, config);
+    public Cgs22LnotPsmReceiver(Rpc senderRpc, Party receiverParty, Cgs22LnotPsmConfig config) {
+        super(Cgs22LnotPsmPtoDesc.getInstance(), senderRpc, receiverParty, config);
         bcReceiver = BcFactory.createReceiver(senderRpc, receiverParty, config.getBcConfig());
         addSubPtos(bcReceiver);
         lnotReceiver = LnotFactory.createReceiver(senderRpc, receiverParty, config.getLnotConfig());
@@ -45,15 +45,15 @@ public class Cgs22PeqtReceiver extends AbstractPeqtParty {
     }
 
     @Override
-    public void init(int maxL, int maxNum) throws MpcAbortException {
-        setInitInput(maxL, maxNum);
+    public void init(int maxL, int d, int maxNum) throws MpcAbortException {
+        setInitInput(maxL, d, maxNum);
         logPhaseInfo(PtoState.INIT_BEGIN);
 
         stopWatch.start();
         // q = l / m, where m = 4
         int maxByteL = CommonUtils.getByteLength(maxL);
         int maxQ = maxByteL * 2;
-        bcReceiver.init(maxNum * (maxQ - 1), maxNum * (maxQ - 1));
+        bcReceiver.init(maxNum * (maxQ - 1) * d, maxNum * (maxQ - 1) * d);
         lnotReceiver.init(4, maxNum, maxNum * maxQ);
         stopWatch.stop();
         long initTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
@@ -64,12 +64,12 @@ public class Cgs22PeqtReceiver extends AbstractPeqtParty {
     }
 
     @Override
-    public SquareShareZ2Vector peqt(int l, byte[][] ys) throws MpcAbortException {
-        setPtoInput(l, ys);
+    public SquareShareZ2Vector psm(int l, byte[][] inputArray) throws MpcAbortException {
+        setPtoInput(l, inputArray);
         logPhaseInfo(PtoState.PTO_BEGIN);
 
         stopWatch.start();
-        // q = l/4
+        // q = l/4.
         int q = byteL * 2;
         int[][] partitionInputArray = partitionInputArray(q);
         stopWatch.stop();
@@ -78,30 +78,35 @@ public class Cgs22PeqtReceiver extends AbstractPeqtParty {
         logStepInfo(PtoState.PTO_STEP, 1, 3, prepareTime);
 
         stopWatch.start();
-        // P1 creates all-zero eq_{0,j} for all j ∈ [0,q)
-        BitVector[] eqs = new BitVector[q];
-        for (int j = 0; j < q; j++) {
-            eqs[j] = BitVectorFactory.createZeros(BitVectorFactory.BitVectorType.BYTES_BIT_VECTOR, num);
+        // P1 creates all-zero eq_{0,1,j} || ... || eq_{0,d,j} for all j ∈ [0,q)
+        BitVector[][] eqArrays = new BitVector[d][q];
+        for (int i = 0; i < d; i++) {
+            for (int j = 0; j < q; j++) {
+                eqArrays[i][j] = BitVectorFactory.createZeros(BitVectorFactory.BitVectorType.BYTES_BIT_VECTOR, num);
+            }
         }
-        // for j ∈ [0, q) do
+        // for j ∈ [0,q) do
         for (int j = 0; j < q; j++) {
             // P0 & P1 invoke 1-out-of-2^4 OT with P1 as receiver.
             LnotReceiverOutput lnotReceiverOutput = lnotReceiver.receive(partitionInputArray[j]);
             DataPacketHeader evsHeader = new DataPacketHeader(
-                encodeTaskId, getPtoDesc().getPtoId(), PtoStep.SENDER_SEND_EVS.ordinal(), extraInfo,
+                encodeTaskId, getPtoDesc().getPtoId(), PtoStep.SENDER_SEND_EV_ARRAYS.ordinal(), extraInfo,
                 otherParty().getPartyId(), ownParty().getPartyId()
             );
-            // for v ∈ [2^4], P1 receives e_{0,j}_1
+            // for v ∈ [2^4], P1 receives e_{0,1,j}_1 || ... || e_{0,d,j}_1
             List<byte[]> evsPayload = rpc.receive(evsHeader).getPayload();
             extraInfo++;
-            MpcAbortPreconditions.checkArgument(evsPayload.size() == 1 << 4);
-            BitVector[] evs = evsPayload.stream()
+            MpcAbortPreconditions.checkArgument(evsPayload.size() == (1 << 4) * d);
+            BitVector[] evArrays = evsPayload.stream()
                 .map(ev -> BitVectorFactory.create(BitVectorFactory.BitVectorType.BYTES_BIT_VECTOR, num, ev))
                 .toArray(BitVector[]::new);
             for (int index = 0; index < num; index++) {
                 int v = lnotReceiverOutput.getChoice(index);
                 byte[] rv = lnotReceiverOutput.getRb(index);
-                eqs[j].set(index, evs[v].get(index) ^ ((rv[0] % 2) != 0));
+                for (int i = 0; i < d; i++) {
+                    eqArrays[i][j].set(index, evArrays[v * d + i].get(index) ^ ((rv[0] % 2) != 0));
+                }
+
             }
         }
         stopWatch.stop();
@@ -110,7 +115,7 @@ public class Cgs22PeqtReceiver extends AbstractPeqtParty {
         logStepInfo(PtoState.PTO_STEP, 2, 3, lnotTime);
 
         stopWatch.start();
-        SquareShareZ2Vector z1 = combine(eqs, q);
+        SquareShareZ2Vector z1 = combine(eqArrays, q);
         stopWatch.stop();
         long bitwiseTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
         stopWatch.reset();
@@ -124,7 +129,7 @@ public class Cgs22PeqtReceiver extends AbstractPeqtParty {
         // P1 parses each of its input element as y_{q-1} || ... || y_{0}, where y_j ∈ {0,1}^4 for all j ∈ [0,q).
         int[][] partitionInputArray = new int[q][num];
         IntStream.range(0, num).forEach(index -> {
-            byte[] y = inputs[index];
+            byte[] y = inputArray[index];
             for (int lIndex = 0; lIndex < byteL; lIndex++) {
                 byte lIndexByte = y[lIndex];
                 // the left part
@@ -136,29 +141,39 @@ public class Cgs22PeqtReceiver extends AbstractPeqtParty {
         return partitionInputArray;
     }
 
-    private SquareShareZ2Vector combine(BitVector[] eqs, int q) throws MpcAbortException {
-        SquareShareZ2Vector[] eqs1 = new SquareShareZ2Vector[q];
-        for (int j = 0; j < q; j++) {
-            eqs1[j] = SquareShareZ2Vector.create(eqs[j], false);
+    private SquareShareZ2Vector combine(BitVector[][] eqArrays, int q) throws MpcAbortException {
+        SquareShareZ2Vector[][] eqArrays1 = new SquareShareZ2Vector[d][q];
+        for (int i = 0; i < d; i++) {
+            for (int j = 0; j < q; j++) {
+                eqArrays1[i][j] = SquareShareZ2Vector.create(eqArrays[i][j], false);
+            }
         }
         int logQ = LongUtils.ceilLog2(q);
-        // for t = 1 to log(q) do
-        for (int t = 1; t <= logQ; t++) {
-            // P1 invokes F_AND with inputs <eq_{t-1,2j}_1 and <eq_{t-1,2j+1}_1 to learn output <eq_{t,j}>_1
-            int nodeNum = eqs1.length / 2;
-            SquareShareZ2Vector[] eqsx1 = new SquareShareZ2Vector[nodeNum];
-            SquareShareZ2Vector[] eqsy1 = new SquareShareZ2Vector[nodeNum];
-            for (int i = 0; i < nodeNum; i++) {
-                eqsx1[i] = eqs1[i * 2];
-                eqsy1[i] = eqs1[i * 2 + 1];
+        // for i ∈ [d] do
+        for (int i = 0; i < d; i++) {
+            // for t = 1 to log(q) do
+            for (int t = 1; t <= logQ; t++) {
+                // P1 invokes F_AND with inputs <eq_{t-1,i,2j}_1 and <eq_{t-1,i,2j+1}_1 to learn output <eq_{t,i,j}>_1
+                int nodeNum = eqArrays1[i].length / 2;
+                SquareShareZ2Vector[] eqsx1 = new SquareShareZ2Vector[nodeNum];
+                SquareShareZ2Vector[] eqsy1 = new SquareShareZ2Vector[nodeNum];
+                for (int k = 0; k < nodeNum; k++) {
+                    eqsx1[k] = eqArrays1[i][k * 2];
+                    eqsy1[k] = eqArrays1[i][k * 2 + 1];
+                }
+                SquareShareZ2Vector[] eqsz1 = bcReceiver.and(eqsx1, eqsy1);
+                if (eqArrays1.length % 2 == 1) {
+                    eqsz1 = Arrays.copyOf(eqsz1, nodeNum + 1);
+                    eqsz1[nodeNum] = eqArrays1[i][eqArrays1[i].length - 1];
+                }
+                eqArrays1[i] = eqsz1;
             }
-            SquareShareZ2Vector[] eqsz1 = bcReceiver.and(eqsx1, eqsy1);
-            if (eqs1.length % 2 == 1) {
-                eqsz1 = Arrays.copyOf(eqsz1, nodeNum + 1);
-                eqsz1[nodeNum] = eqs1[eqs1.length - 1];
-            }
-            eqs1 = eqsz1;
         }
-        return eqs1[0];
+        // P1 computes eq_{log(q),1,0}_1 ⊕ ... ⊕ eq_{log(q),d,0}_1
+        SquareShareZ2Vector z1 = SquareShareZ2Vector.createZeros(num);
+        for (int i = 0; i < d; i++) {
+            z1 = bcReceiver.xor(z1, eqArrays1[i][0]);
+        }
+        return z1;
     }
 }

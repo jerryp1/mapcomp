@@ -11,6 +11,7 @@ import edu.alibaba.mpc4j.common.rpc.RpcManager;
 import edu.alibaba.mpc4j.common.rpc.desc.SecurityModel;
 import edu.alibaba.mpc4j.common.rpc.impl.memory.MemoryRpcManager;
 import edu.alibaba.mpc4j.s2pc.pcg.mtg.z2.Z2MtgFactory.Z2MtgType;
+import edu.alibaba.mpc4j.s2pc.pcg.mtg.z2.impl.direct.DirectZ2MtgConfig;
 import edu.alibaba.mpc4j.s2pc.pcg.mtg.z2.impl.offline.OfflineZ2MtgConfig;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.time.StopWatch;
@@ -47,20 +48,16 @@ public class Z2MtgTest {
     @Parameterized.Parameters(name = "{0}")
     public static Collection<Object[]> configurations() {
         Collection<Object[]> configurations = new ArrayList<>();
-        // OFFLINE (Ideal)
+
+        // DIRECT (Semi-honest)
         configurations.add(new Object[]{
-            Z2MtgType.OFFLINE.name() + " (" + SecurityModel.IDEAL + ")",
-            new OfflineZ2MtgConfig.Builder(SecurityModel.IDEAL).build(),
+            Z2MtgType.DIRECT.name() + " (" + SecurityModel.SEMI_HONEST + ")",
+            new DirectZ2MtgConfig.Builder(SecurityModel.SEMI_HONEST).build(),
         });
         // OFFLINE (Semi-honest)
         configurations.add(new Object[]{
             Z2MtgType.OFFLINE.name() + " (" + SecurityModel.SEMI_HONEST + ")",
             new OfflineZ2MtgConfig.Builder(SecurityModel.SEMI_HONEST).build(),
-        });
-        // CACHE (Ideal)
-        configurations.add(new Object[]{
-            Z2MtgType.CACHE.name() + " (" + SecurityModel.IDEAL + ")",
-            new OfflineZ2MtgConfig.Builder(SecurityModel.IDEAL).build(),
         });
         // CACHE (Semi-honest)
         configurations.add(new Object[]{

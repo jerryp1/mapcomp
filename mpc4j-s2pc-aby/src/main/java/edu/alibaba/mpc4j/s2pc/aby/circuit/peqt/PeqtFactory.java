@@ -87,6 +87,6 @@ public class PeqtFactory implements PtoFactory {
      * @return a default config.
      */
     public static PeqtConfig createDefaultConfig(SecurityModel securityModel, boolean silent) {
-        return new NaivePeqtConfig.Builder(securityModel, silent).build();
+        return new Cgs22PeqtConfig.Builder(securityModel, silent).build();
     }
 }

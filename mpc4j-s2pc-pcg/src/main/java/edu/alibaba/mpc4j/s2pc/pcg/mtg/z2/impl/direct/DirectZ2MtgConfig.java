@@ -1,25 +1,25 @@
-package edu.alibaba.mpc4j.s2pc.pcg.mtg.z2.impl.offline;
+package edu.alibaba.mpc4j.s2pc.pcg.mtg.z2.impl.direct;
 
 import edu.alibaba.mpc4j.common.rpc.desc.SecurityModel;
 import edu.alibaba.mpc4j.common.tool.EnvType;
 import edu.alibaba.mpc4j.s2pc.pcg.mtg.z2.Z2MtgConfig;
+import edu.alibaba.mpc4j.s2pc.pcg.mtg.z2.Z2MtgFactory;
 import edu.alibaba.mpc4j.s2pc.pcg.mtg.z2.core.Z2CoreMtgConfig;
 import edu.alibaba.mpc4j.s2pc.pcg.mtg.z2.core.Z2CoreMtgFactory;
-import edu.alibaba.mpc4j.s2pc.pcg.mtg.z2.Z2MtgFactory;
 
 /**
- * 离线布尔三元组生成协议配置项。
+ * direct Boolean triple generation config.
  *
  * @author Weiran Liu
- * @date 2022/4/8
+ * @date 2023/4/16
  */
-public class OfflineZ2MtgConfig implements Z2MtgConfig {
+public class DirectZ2MtgConfig implements Z2MtgConfig {
     /**
-     * 核布尔三元组生成协议配置项
+     * core Boolean triple generation config
      */
     private final Z2CoreMtgConfig z2CoreMtgConfig;
 
-    private OfflineZ2MtgConfig(Builder builder) {
+    private DirectZ2MtgConfig(Builder builder) {
         z2CoreMtgConfig = builder.z2CoreMtgConfig;
     }
 
@@ -29,7 +29,7 @@ public class OfflineZ2MtgConfig implements Z2MtgConfig {
 
     @Override
     public Z2MtgFactory.Z2MtgType getPtoType() {
-        return Z2MtgFactory.Z2MtgType.OFFLINE;
+        return Z2MtgFactory.Z2MtgType.DIRECT;
     }
 
     @Override
@@ -52,14 +52,14 @@ public class OfflineZ2MtgConfig implements Z2MtgConfig {
         return z2CoreMtgConfig.getSecurityModel();
     }
 
-    public static class Builder implements org.apache.commons.lang3.builder.Builder<OfflineZ2MtgConfig> {
+    public static class Builder implements org.apache.commons.lang3.builder.Builder<DirectZ2MtgConfig> {
         /**
-         * 核布尔三元组生成协议配置项
+         * core Boolean triple generation config
          */
         private Z2CoreMtgConfig z2CoreMtgConfig;
 
         public Builder(SecurityModel securityModel) {
-            z2CoreMtgConfig = Z2CoreMtgFactory.createDefaultConfig(securityModel, true);
+            z2CoreMtgConfig = Z2CoreMtgFactory.createDefaultConfig(securityModel, false);
         }
 
         public Builder setZ2CoreMtgConfig(Z2CoreMtgConfig z2CoreMtgConfig) {
@@ -68,8 +68,8 @@ public class OfflineZ2MtgConfig implements Z2MtgConfig {
         }
 
         @Override
-        public OfflineZ2MtgConfig build() {
-            return new OfflineZ2MtgConfig(this);
+        public DirectZ2MtgConfig build() {
+            return new DirectZ2MtgConfig(this);
         }
     }
 }

@@ -95,7 +95,7 @@ public class LcotFactory implements PtoFactory {
         switch (securityModel) {
             case IDEAL:
             case SEMI_HONEST:
-                return new Kk13OriLcotConfig.Builder().build();
+                return new Kk13OptLcotConfig.Builder().build();
             case COVERT:
             case MALICIOUS:
                 return new Oos17LcotConfig.Builder().build();

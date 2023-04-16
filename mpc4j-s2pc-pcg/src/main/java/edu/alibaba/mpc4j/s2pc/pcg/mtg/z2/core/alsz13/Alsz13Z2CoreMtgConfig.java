@@ -63,7 +63,7 @@ public class Alsz13Z2CoreMtgConfig implements Z2CoreMtgConfig {
         private NcCotConfig ncCotConfig;
 
         public Builder() {
-            ncCotConfig = NcCotFactory.createDefaultConfig(SecurityModel.SEMI_HONEST);
+            ncCotConfig = NcCotFactory.createDefaultConfig(SecurityModel.SEMI_HONEST, true);
         }
 
         public Builder setNcCotConfig(NcCotConfig ncCotConfig) {

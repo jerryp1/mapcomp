@@ -63,7 +63,7 @@ public class Rrg21BcConfig implements BcConfig {
         private CotConfig cotConfig;
 
         public Builder() {
-            cotConfig = CotFactory.createCacheConfig(SecurityModel.SEMI_HONEST);
+            cotConfig = CotFactory.createDirectConfig(SecurityModel.SEMI_HONEST);
         }
 
         public Builder setCotConfig(CotConfig cotConfig) {

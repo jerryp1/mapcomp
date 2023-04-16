@@ -74,30 +74,21 @@ public class Cgs22PeqtSender extends AbstractPeqtParty {
         logPhaseInfo(PtoState.PTO_BEGIN);
 
         stopWatch.start();
-        // q = l/4. P0 parses each of its input element as x_{q-1}||...||x_{0}, where x_j ∈ {0,1}^4 for all j ∈ [0,q).
+        // q = l/4
         int q = byteL * 2;
-        int[][] partitionXs = new int[num][q];
-        IntStream.range(0, num).forEach(index -> {
-            byte[] x = xs[index];
-            for (int lIndex = 0; lIndex < byteL; lIndex++) {
-                byte lIndexByte = x[lIndex];
-                // the left part
-                partitionXs[index][lIndex * 2] = ((lIndexByte & 0xFF) >> 4);
-                // the right part
-                partitionXs[index][lIndex * 2 + 1] = (lIndexByte & 0x0F);
-            }
-        });
+        int[][] partitionInputArray = partitionInputArray(q);
         stopWatch.stop();
         long prepareTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
         stopWatch.reset();
         logStepInfo(PtoState.PTO_STEP, 1, 3, prepareTime);
 
         stopWatch.start();
-        // P0 samples eq_{0, j} for all j ∈ [0,q)
-        BitVector[] eqs = IntStream.range(0, q)
-            .mapToObj(j -> BitVectorFactory.createZeros(BitVectorFactory.BitVectorType.BYTES_BIT_VECTOR, num))
-            .toArray(BitVector[]::new);
-        // for j ∈ [0, q) do
+        // P0 samples eq_{0,j} for all j ∈ [0,q)
+        BitVector[] eqs = new BitVector[q];
+        for (int j = 0; j < q; j++) {
+            eqs[j] = BitVectorFactory.createZeros(BitVectorFactory.BitVectorType.BYTES_BIT_VECTOR, num);
+        }
+        // for j ∈ [0,q) do
         for (int j = 0; j < q; j++) {
             final int jFinal = j;
             // P0 & P1 invoke 1-out-of-2^4 OT with P0 as sender.
@@ -110,7 +101,7 @@ public class Cgs22PeqtSender extends AbstractPeqtParty {
                     BitVector ev = BitVectorFactory.createRandom(BitVectorFactory.BitVectorType.BYTES_BIT_VECTOR, num, secureRandom);
                     for (int index = 0; index < num; index++) {
                         byte[] ri = lnotSenderOutput.getRb(index, v);
-                        if (v == partitionXs[index][jFinal]) {
+                        if (v == partitionInputArray[index][jFinal]) {
                             // x_j == v, e_{j,v} = Rb ⊕ 1
                             ev.set(index, (ri[0] % 2) == 0);
                         } else {
@@ -136,12 +127,41 @@ public class Cgs22PeqtSender extends AbstractPeqtParty {
         logStepInfo(PtoState.PTO_STEP, 2, 3, lnotTime);
 
         stopWatch.start();
-        // tree-based AND
-        SquareShareZ2Vector[] eqs0 = IntStream.range(0, q)
-            .mapToObj(j -> SquareShareZ2Vector.create(eqs[j], false))
-            .toArray(SquareShareZ2Vector[]::new);
+        SquareShareZ2Vector z0 = combine(eqs, q);
+        stopWatch.stop();
+        long bitwiseTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
+        stopWatch.reset();
+        logStepInfo(PtoState.PTO_STEP, 3, 3, bitwiseTime);
+
+        logPhaseInfo(PtoState.PTO_END);
+        return z0;
+    }
+
+    private int[][] partitionInputArray(int q) {
+        // P0 parses each of its input element as x_{q-1} || ... || x_{0}, where x_j ∈ {0,1}^4 for all j ∈ [0,q).
+        int[][] partitionInputArray = new int[num][q];
+        IntStream.range(0, num).forEach(index -> {
+            byte[] x = inputs[index];
+            for (int lIndex = 0; lIndex < byteL; lIndex++) {
+                byte lIndexByte = x[lIndex];
+                // the left part
+                partitionInputArray[index][lIndex * 2] = ((lIndexByte & 0xFF) >> 4);
+                // the right part
+                partitionInputArray[index][lIndex * 2 + 1] = (lIndexByte & 0x0F);
+            }
+        });
+        return partitionInputArray;
+    }
+
+    private SquareShareZ2Vector combine(BitVector[] eqs, int q) throws MpcAbortException {
+        SquareShareZ2Vector[] eqs0 = new SquareShareZ2Vector[q];
+        for (int j = 0; j < q; j++) {
+            eqs0[j] = SquareShareZ2Vector.create(eqs[j], false);
+        }
         int logQ = LongUtils.ceilLog2(q);
-        for (int h = 1; h <= logQ; h++) {
+        // for t = 1 to log(q) do
+        for (int t = 1; t <= logQ; t++) {
+            // P0 invokes F_AND with inputs <eq_{t-1,2j}_0 and <eq_{t-1,2j+1}_0 to learn output <eq_{t,j}>_0
             int nodeNum = eqs0.length / 2;
             SquareShareZ2Vector[] eqsx0 = new SquareShareZ2Vector[nodeNum];
             SquareShareZ2Vector[] eqsy0 = new SquareShareZ2Vector[nodeNum];
@@ -156,12 +176,6 @@ public class Cgs22PeqtSender extends AbstractPeqtParty {
             }
             eqs0 = eqsz0;
         }
-        stopWatch.stop();
-        long bitwiseTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
-        stopWatch.reset();
-        logStepInfo(PtoState.PTO_STEP, 3, 3, bitwiseTime);
-
-        logPhaseInfo(PtoState.PTO_END);
         return eqs0[0];
     }
 }

@@ -1,4 +1,4 @@
-package edu.alibaba.mpc4j.s2pc.aby.circuit.peqt;
+package edu.alibaba.mpc4j.s2pc.aby.circuit.psm;
 
 import com.google.common.base.Preconditions;
 import edu.alibaba.mpc4j.common.rpc.Rpc;
@@ -7,9 +7,8 @@ import edu.alibaba.mpc4j.common.rpc.desc.SecurityModel;
 import edu.alibaba.mpc4j.common.rpc.impl.memory.MemoryRpcManager;
 import edu.alibaba.mpc4j.common.tool.bitvector.BitVector;
 import edu.alibaba.mpc4j.s2pc.aby.basics.bc.SquareShareZ2Vector;
-import edu.alibaba.mpc4j.s2pc.aby.circuit.peqt.PeqtFactory.PeqtType;
-import edu.alibaba.mpc4j.s2pc.aby.circuit.peqt.cgs22.Cgs22PeqtConfig;
-import edu.alibaba.mpc4j.s2pc.aby.circuit.peqt.naive.NaivePeqtConfig;
+import edu.alibaba.mpc4j.s2pc.aby.circuit.psm.PsmFactory.PsmType;
+import edu.alibaba.mpc4j.s2pc.aby.circuit.psm.cgs22.Cgs22LnotPsmConfig;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.time.StopWatch;
 import org.junit.After;
@@ -28,14 +27,14 @@ import java.util.Collection;
 import java.util.concurrent.TimeUnit;
 
 /**
- * private equality test.
+ * private set membership test.
  *
  * @author Weiran Liu
- * @date 2023/4/14
+ * @date 2023/4/16
  */
 @RunWith(Parameterized.class)
-public class PeqtTest {
-    private static final Logger LOGGER = LoggerFactory.getLogger(PeqtTest.class);
+public class PsmTest {
+    private static final Logger LOGGER = LoggerFactory.getLogger(PsmTest.class);
     /**
      * the random state
      */
@@ -51,7 +50,11 @@ public class PeqtTest {
     /**
      * default l
      */
-    private static final int DEFAULT_L = Integer.SIZE;
+    private static final int DEFAULT_L = 64;
+    /**
+     * default d
+     */
+    private static final int DEFAULT_D = 3;
 
     @Parameterized.Parameters(name = "{0}")
     public static Collection<Object[]> configurations() {
@@ -59,23 +62,13 @@ public class PeqtTest {
 
         // CGS22 (direct, semi-honest)
         configurations.add(new Object[]{
-            PeqtType.CGS22.name() + " (direct, semi-honest)",
-            new Cgs22PeqtConfig.Builder(SecurityModel.SEMI_HONEST, false).build()
+            PsmType.CGS22_LNOT.name() + " (direct, semi-honest)",
+            new Cgs22LnotPsmConfig.Builder(SecurityModel.SEMI_HONEST, false).build()
         });
         // CGS22 (silent, semi-honest)
         configurations.add(new Object[]{
-            PeqtType.CGS22.name() + " (silent, semi-honest)",
-            new Cgs22PeqtConfig.Builder(SecurityModel.SEMI_HONEST, true).build()
-        });
-        // NAIVE (direct, semi-honest)
-        configurations.add(new Object[]{
-            PeqtType.NAIVE.name() + " (direct, semi-honest)",
-            new NaivePeqtConfig.Builder(SecurityModel.SEMI_HONEST, false).build()
-        });
-        // NAIVE (semi-honest)
-        configurations.add(new Object[]{
-            PeqtType.NAIVE.name() + " (silent, semi-honest)",
-            new NaivePeqtConfig.Builder(SecurityModel.SEMI_HONEST, false).build()
+            PsmType.CGS22_LNOT.name() + " (silent, semi-honest)",
+            new Cgs22LnotPsmConfig.Builder(SecurityModel.SEMI_HONEST, true).build()
         });
 
         return configurations;
@@ -92,9 +85,9 @@ public class PeqtTest {
     /**
      * the config
      */
-    private final PeqtConfig config;
+    private final PsmConfig config;
 
-    public PeqtTest(String name, PeqtConfig config) {
+    public PsmTest(String name, PsmConfig config) {
         Preconditions.checkArgument(StringUtils.isNotBlank(name));
         // We cannot use NettyRPC in the test case since it needs multi-thread connect / disconnect.
         // In other word, we cannot connect / disconnect NettyRpc in @Before / @After, respectively.
@@ -118,77 +111,82 @@ public class PeqtTest {
 
     @Test
     public void test1Num() {
-        testPto(DEFAULT_L, 1, false);
+        testPto(DEFAULT_L, DEFAULT_D, 1, false);
     }
 
     @Test
     public void test2Num() {
-        testPto(DEFAULT_L, 2, false);
+        testPto(DEFAULT_L, DEFAULT_D, 2, false);
     }
 
     @Test
     public void test8Num() {
-        testPto(DEFAULT_L, 8, false);
+        testPto(DEFAULT_L, DEFAULT_D, 8, false);
     }
 
     @Test
     public void test7Num() {
-        testPto(DEFAULT_L, 7, false);
+        testPto(DEFAULT_L, DEFAULT_D, 7, false);
     }
 
     @Test
     public void test9Num() {
-        testPto(DEFAULT_L, 9, false);
+        testPto(DEFAULT_L, DEFAULT_D, 9, false);
     }
 
     @Test
     public void testDefaultNum() {
-        testPto(DEFAULT_L, DEFAULT_NUM, false);
+        testPto(DEFAULT_L, DEFAULT_D, DEFAULT_NUM, false);
     }
 
     @Test
     public void testParallelDefaultNum() {
-        testPto(DEFAULT_L, DEFAULT_NUM, true);
-    }
-
-    @Test
-    public void test1L() {
-        testPto(1, DEFAULT_NUM, false);
+        testPto(DEFAULT_L, DEFAULT_D, DEFAULT_NUM, true);
     }
 
     @Test
     public void test7L() {
-        testPto(7, DEFAULT_NUM, false);
+        testPto(7, DEFAULT_D, DEFAULT_NUM, false);
     }
 
     @Test
     public void test9L() {
-        testPto(9, DEFAULT_NUM, false);
+        testPto(9, DEFAULT_D, DEFAULT_NUM, false);
+    }
+
+    @Test
+    public void test1D() {
+        testPto(9, 1, DEFAULT_NUM, false);
+    }
+
+    @Test
+    public void test2D() {
+        testPto(9, 2, DEFAULT_NUM, false);
     }
 
     @Test
     public void testLargeNum() {
-        testPto(DEFAULT_L, LARGE_NUM, false);
+        testPto(DEFAULT_L, DEFAULT_D, LARGE_NUM, false);
     }
 
     @Test
     public void testParallelLargeNum() {
-        testPto(DEFAULT_L, LARGE_NUM, false);
+        testPto(DEFAULT_L, DEFAULT_D, LARGE_NUM, false);
     }
 
-    private void testPto(int l, int num, boolean parallel) {
+    private void testPto(int l, int d, int num, boolean parallel) {
         // create inputs
-        byte[][] xs = PeqtTestUtils.genSenderInputArray(l, num, SECURE_RANDOM);
-        byte[][] ys = PeqtTestUtils.genReceiverInputArray(l, xs, SECURE_RANDOM);
+        byte[][][] senderInputArrays = PsmTestUtils.genSenderInputArrays(l, d, num, SECURE_RANDOM);
+        byte[][] receiverInputArray = PsmTestUtils.genReceiverInputArray(l, d, senderInputArrays, SECURE_RANDOM);
         // init the protocol
-        PeqtParty sender = PeqtFactory.createSender(senderRpc, receiverRpc.ownParty(), config);
-        PeqtParty receiver = PeqtFactory.createReceiver(receiverRpc, senderRpc.ownParty(), config);
+        PsmSender sender = PsmFactory.createSender(senderRpc, receiverRpc.ownParty(), config);
+        PsmReceiver receiver = PsmFactory.createReceiver(receiverRpc, senderRpc.ownParty(), config);
         sender.setParallel(parallel);
         receiver.setParallel(parallel);
         try {
             LOGGER.info("-----test {} start-----", sender.getPtoDesc().getPtoName());
-            PeqtPartyThread senderThread = new PeqtPartyThread(sender, l, xs);
-            PeqtPartyThread receiverThread = new PeqtPartyThread(receiver, l, ys);
+            PsmSenderThread senderThread = new PsmSenderThread(sender, l, d, senderInputArrays);
+            PsmReceiverThread receiverThread = new PsmReceiverThread(receiver, l, d, receiverInputArray);
             StopWatch stopWatch = new StopWatch();
             // execute the protocol
             stopWatch.start();
@@ -205,11 +203,11 @@ public class PeqtTest {
             long receiverRound = receiverRpc.getSendDataPacketNum();
             senderRpc.reset();
             receiverRpc.reset();
-            SquareShareZ2Vector z0 = senderThread.getZi();
-            SquareShareZ2Vector z1 = receiverThread.getZi();
+            SquareShareZ2Vector z0 = senderThread.getZ0();
+            SquareShareZ2Vector z1 = receiverThread.getZ1();
             BitVector z = z0.xor(z1, true).getBitVector();
             // verify
-            assertOutput(num, xs, ys, z);
+            assertOutput(num, senderInputArrays, receiverInputArray, z);
             LOGGER.info("Sender sends {}B / {} rounds, Receiver sends {}B / {} rounds, time = {}ms",
                 senderByteLength, senderRound, receiverByteLength, receiverRound, time
             );
@@ -221,11 +219,14 @@ public class PeqtTest {
         receiver.destroy();
     }
 
-    private void assertOutput(int num, byte[][] xs, byte[][] ys, BitVector z) {
+    private void assertOutput(int num, byte[][][] senderInputArrays, byte[][] receiverInputArray, BitVector z) {
         Assert.assertEquals(num, z.bitNum());
         for (int index = 0; index < num; index++) {
-            boolean xi = Arrays.equals(xs[index], ys[index]);
-            if (!xi) {
+            boolean equal = false;
+            for (int i = 0; i < senderInputArrays[index].length; i++) {
+                equal |= Arrays.equals(senderInputArrays[index][i], receiverInputArray[index]);
+            }
+            if (!equal) {
                 // not equal
                 Assert.assertFalse(z.get(index));
             } else {
