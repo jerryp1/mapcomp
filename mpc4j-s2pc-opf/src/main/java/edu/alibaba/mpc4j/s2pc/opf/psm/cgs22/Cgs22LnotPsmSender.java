@@ -190,7 +190,7 @@ public class Cgs22LnotPsmSender extends AbstractPsmSender {
                     eqsy0[k] = eqArrays0[i][k * 2 + 1];
                 }
                 SquareShareZ2Vector[] eqsz0 = bcSender.and(eqsx0, eqsy0);
-                if (eqArrays0.length % 2 == 1) {
+                if (eqArrays0[i].length % 2 == 1) {
                     eqsz0 = Arrays.copyOf(eqsz0, nodeNum + 1);
                     eqsz0[nodeNum] = eqArrays0[i][eqArrays0[i].length - 1];
                 }

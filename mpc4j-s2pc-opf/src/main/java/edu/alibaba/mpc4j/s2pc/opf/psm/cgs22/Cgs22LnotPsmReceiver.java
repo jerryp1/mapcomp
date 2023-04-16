@@ -162,7 +162,7 @@ public class Cgs22LnotPsmReceiver extends AbstractPsmReceiver {
                     eqsy1[k] = eqArrays1[i][k * 2 + 1];
                 }
                 SquareShareZ2Vector[] eqsz1 = bcReceiver.and(eqsx1, eqsy1);
-                if (eqArrays1.length % 2 == 1) {
+                if (eqArrays1[i].length % 2 == 1) {
                     eqsz1 = Arrays.copyOf(eqsz1, nodeNum + 1);
                     eqsz1[nodeNum] = eqArrays1[i][eqArrays1[i].length - 1];
                 }
