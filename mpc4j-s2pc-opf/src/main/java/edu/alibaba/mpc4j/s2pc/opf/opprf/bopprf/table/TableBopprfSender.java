@@ -134,6 +134,7 @@ public class TableBopprfSender extends AbstractBopprfSender {
             // F(k, x_i) mapped to {0, 1}^l
             byte[][] lx = Arrays.stream(fx)
                 .map(prf::getBytes)
+                .peek(prfOutput -> BytesUtils.reduceByteArray(prfOutput, l))
                 .toArray(byte[][]::new);
             vs[batchIndex] = new byte[CommonConstants.BLOCK_BYTE_LENGTH];
             boolean distinct = false;

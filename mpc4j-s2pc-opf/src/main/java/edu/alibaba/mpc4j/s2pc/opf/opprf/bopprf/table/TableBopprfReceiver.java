@@ -123,6 +123,7 @@ public class TableBopprfReceiver extends AbstractBopprfReceiver {
                 int hi = h.getInteger(fqv, m);
                 return BytesUtils.xor(tables[batchIndex][hi], lq);
             })
+            .peek(prfOutput -> BytesUtils.reduceByteArray(prfOutput, l))
             .toArray(byte[][]::new);
     }
 }

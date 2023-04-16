@@ -1,4 +1,4 @@
-package edu.alibaba.mpc4j.s2pc.aby.circuit.psm;
+package edu.alibaba.mpc4j.s2pc.opf.psm;
 
 import com.google.common.base.Preconditions;
 import edu.alibaba.mpc4j.common.rpc.Rpc;
@@ -7,8 +7,9 @@ import edu.alibaba.mpc4j.common.rpc.desc.SecurityModel;
 import edu.alibaba.mpc4j.common.rpc.impl.memory.MemoryRpcManager;
 import edu.alibaba.mpc4j.common.tool.bitvector.BitVector;
 import edu.alibaba.mpc4j.s2pc.aby.basics.bc.SquareShareZ2Vector;
-import edu.alibaba.mpc4j.s2pc.aby.circuit.psm.PsmFactory.PsmType;
-import edu.alibaba.mpc4j.s2pc.aby.circuit.psm.cgs22.Cgs22LnotPsmConfig;
+import edu.alibaba.mpc4j.s2pc.opf.psm.PsmFactory.PsmType;
+import edu.alibaba.mpc4j.s2pc.opf.psm.cgs22.Cgs22LnotPsmConfig;
+import edu.alibaba.mpc4j.s2pc.opf.psm.cgs22.Cgs22OpprfPsmConfig;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.time.StopWatch;
 import org.junit.After;
@@ -46,11 +47,11 @@ public class PsmTest {
     /**
      * large num
      */
-    private static final int LARGE_NUM = 1 << 18;
+    private static final int LARGE_NUM = 1 << 16;
     /**
      * default l
      */
-    private static final int DEFAULT_L = 64;
+    private static final int DEFAULT_L = 40;
     /**
      * default d
      */
@@ -60,12 +61,22 @@ public class PsmTest {
     public static Collection<Object[]> configurations() {
         Collection<Object[]> configurations = new ArrayList<>();
 
-        // CGS22 (direct, semi-honest)
+        // CGS22_OPPRF (direct, semi-honest)
+        configurations.add(new Object[]{
+            PsmType.CGS22_OPPRF.name() + " (direct, semi-honest)",
+            new Cgs22OpprfPsmConfig.Builder(SecurityModel.SEMI_HONEST, false).build()
+        });
+        // CGS22_OPPRF (silent, semi-honest)
+        configurations.add(new Object[]{
+            PsmType.CGS22_OPPRF.name() + " (silent, semi-honest)",
+            new Cgs22OpprfPsmConfig.Builder(SecurityModel.SEMI_HONEST, true).build()
+        });
+        // CGS22_LNOT (direct, semi-honest)
         configurations.add(new Object[]{
             PsmType.CGS22_LNOT.name() + " (direct, semi-honest)",
             new Cgs22LnotPsmConfig.Builder(SecurityModel.SEMI_HONEST, false).build()
         });
-        // CGS22 (silent, semi-honest)
+        // CGS22_LNOT (silent, semi-honest)
         configurations.add(new Object[]{
             PsmType.CGS22_LNOT.name() + " (silent, semi-honest)",
             new Cgs22LnotPsmConfig.Builder(SecurityModel.SEMI_HONEST, true).build()
@@ -110,11 +121,6 @@ public class PsmTest {
     }
 
     @Test
-    public void test1Num() {
-        testPto(DEFAULT_L, DEFAULT_D, 1, false);
-    }
-
-    @Test
     public void test2Num() {
         testPto(DEFAULT_L, DEFAULT_D, 2, false);
     }
@@ -145,23 +151,18 @@ public class PsmTest {
     }
 
     @Test
-    public void test7L() {
-        testPto(7, DEFAULT_D, DEFAULT_NUM, false);
-    }
-
-    @Test
-    public void test9L() {
-        testPto(9, DEFAULT_D, DEFAULT_NUM, false);
+    public void testSpecialL() {
+        testPto(DEFAULT_L + 5, DEFAULT_D, DEFAULT_NUM, false);
     }
 
     @Test
     public void test1D() {
-        testPto(9, 1, DEFAULT_NUM, false);
+        testPto(DEFAULT_L, 1, DEFAULT_NUM, false);
     }
 
     @Test
     public void test2D() {
-        testPto(9, 2, DEFAULT_NUM, false);
+        testPto(DEFAULT_L, 2, DEFAULT_NUM, false);
     }
 
     @Test

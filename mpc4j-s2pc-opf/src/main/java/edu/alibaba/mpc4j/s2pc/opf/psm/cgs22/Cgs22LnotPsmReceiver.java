@@ -1,4 +1,4 @@
-package edu.alibaba.mpc4j.s2pc.aby.circuit.psm.cgs22;
+package edu.alibaba.mpc4j.s2pc.opf.psm.cgs22;
 
 import edu.alibaba.mpc4j.common.rpc.*;
 import edu.alibaba.mpc4j.common.rpc.utils.DataPacketHeader;
@@ -9,8 +9,8 @@ import edu.alibaba.mpc4j.common.tool.utils.LongUtils;
 import edu.alibaba.mpc4j.s2pc.aby.basics.bc.BcFactory;
 import edu.alibaba.mpc4j.s2pc.aby.basics.bc.BcParty;
 import edu.alibaba.mpc4j.s2pc.aby.basics.bc.SquareShareZ2Vector;
-import edu.alibaba.mpc4j.s2pc.aby.circuit.psm.cgs22.Cgs22LnotPsmPtoDesc.PtoStep;
-import edu.alibaba.mpc4j.s2pc.aby.circuit.psm.AbstractPsmReceiver;
+import edu.alibaba.mpc4j.s2pc.opf.psm.cgs22.Cgs22LnotPsmPtoDesc.PtoStep;
+import edu.alibaba.mpc4j.s2pc.opf.psm.AbstractPsmReceiver;
 import edu.alibaba.mpc4j.s2pc.pcg.ot.lnot.LnotFactory;
 import edu.alibaba.mpc4j.s2pc.pcg.ot.lnot.LnotReceiver;
 import edu.alibaba.mpc4j.s2pc.pcg.ot.lnot.LnotReceiverOutput;
@@ -21,7 +21,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.stream.IntStream;
 
 /**
- * CGS22 1-out-of-n (with n = 2^l) PSM receiver.
+ * CGS22 1-out-of-n (with n = 2^l) OT based PSM receiver.
  *
  * @author Weiran Liu
  * @date 2023/4/16

@@ -1,10 +1,11 @@
-package edu.alibaba.mpc4j.s2pc.aby.circuit.psm;
+package edu.alibaba.mpc4j.s2pc.opf.psm;
 
 import com.google.common.base.Preconditions;
 import edu.alibaba.mpc4j.common.rpc.Party;
 import edu.alibaba.mpc4j.common.rpc.Rpc;
 import edu.alibaba.mpc4j.common.rpc.desc.PtoDesc;
 import edu.alibaba.mpc4j.common.rpc.pto.AbstractTwoPartyPto;
+import edu.alibaba.mpc4j.common.tool.CommonConstants;
 import edu.alibaba.mpc4j.common.tool.MathPreconditions;
 import edu.alibaba.mpc4j.common.tool.utils.BytesUtils;
 import edu.alibaba.mpc4j.common.tool.utils.CommonUtils;
@@ -53,19 +54,21 @@ public abstract class AbstractPsmSender extends AbstractTwoPartyPto implements P
     }
 
     protected void setInitInput(int maxL, int d, int maxNum) {
-        MathPreconditions.checkPositive("maxL", maxL);
+        MathPreconditions.checkGreaterOrEqual("maxL", maxL, CommonConstants.STATS_BIT_LENGTH);
         this.maxL = maxL;
         MathPreconditions.checkPositive("d", d);
         this.d = d;
-        MathPreconditions.checkPositive("maxNum", maxNum);
+        MathPreconditions.checkGreater("maxNum", maxNum, 1);
         this.maxNum = maxNum;
         initState();
     }
 
     protected void setPtoInput(int l, byte[][][] inputArrays) {
-        MathPreconditions.checkPositiveInRangeClosed("l", l, maxL);
+        MathPreconditions.checkGreaterOrEqual("l", l, CommonConstants.STATS_BIT_LENGTH);
+        MathPreconditions.checkLessOrEqual("l", l, maxL);
         this.l = l;
         byteL = CommonUtils.getByteLength(l);
+        MathPreconditions.checkGreater("inputArrays.num", inputArrays.length, 1);
         MathPreconditions.checkPositiveInRangeClosed("inputArrays.num", inputArrays.length, maxNum);
         num = inputArrays.length;
         this.inputArrays = Arrays.stream(inputArrays)

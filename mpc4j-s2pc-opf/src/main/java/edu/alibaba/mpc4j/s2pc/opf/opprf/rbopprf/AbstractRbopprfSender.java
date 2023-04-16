@@ -70,7 +70,6 @@ public abstract class AbstractRbopprfSender extends AbstractTwoPartyPto implemen
         checkInitialized();
         // check l
         MathPreconditions.checkGreaterOrEqual("l", l, CommonConstants.STATS_BIT_LENGTH);
-        MathPreconditions.checkEqual("l % Byte.SIZE", "0", l % Byte.SIZE, 0);
         this.l = l;
         byteL = CommonUtils.getByteLength(l);
         // check batch size

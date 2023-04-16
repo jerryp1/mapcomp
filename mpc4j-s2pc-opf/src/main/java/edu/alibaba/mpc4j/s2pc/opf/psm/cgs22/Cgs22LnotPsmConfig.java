@@ -1,16 +1,16 @@
-package edu.alibaba.mpc4j.s2pc.aby.circuit.psm.cgs22;
+package edu.alibaba.mpc4j.s2pc.opf.psm.cgs22;
 
 import edu.alibaba.mpc4j.common.rpc.desc.SecurityModel;
 import edu.alibaba.mpc4j.common.tool.EnvType;
 import edu.alibaba.mpc4j.s2pc.aby.basics.bc.BcConfig;
 import edu.alibaba.mpc4j.s2pc.aby.basics.bc.BcFactory;
-import edu.alibaba.mpc4j.s2pc.aby.circuit.psm.PsmConfig;
-import edu.alibaba.mpc4j.s2pc.aby.circuit.psm.PsmFactory;
+import edu.alibaba.mpc4j.s2pc.opf.psm.PsmConfig;
+import edu.alibaba.mpc4j.s2pc.opf.psm.PsmFactory;
 import edu.alibaba.mpc4j.s2pc.pcg.ot.lnot.LnotConfig;
 import edu.alibaba.mpc4j.s2pc.pcg.ot.lnot.LnotFactory;
 
 /**
- * CGS22 1-out-of-n (with n = 2^l) PSM config.
+ * CGS22 1-out-of-n (with n = 2^l) OT based PSM config.
  *
  * @author Weiran Liu
  * @date 2023/4/16

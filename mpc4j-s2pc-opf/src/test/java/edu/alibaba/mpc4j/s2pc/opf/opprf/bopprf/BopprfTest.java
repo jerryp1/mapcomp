@@ -48,10 +48,6 @@ public class BopprfTest {
      */
     private static final int DEFAULT_L = CommonConstants.STATS_BIT_LENGTH;
     /**
-     * large l
-     */
-    private static final int LARGE_L = CommonConstants.BLOCK_BIT_LENGTH;
-    /**
      * default batch size
      */
     private static final int DEFAULT_BATCH_NUM = 1000;
@@ -154,24 +150,29 @@ public class BopprfTest {
     }
 
     @Test
+    public void testSpecialL() {
+        testPto(DEFAULT_L + 1, DEFAULT_BATCH_NUM, DEFAULT_POINT_NUM, false);
+    }
+
+    @Test
     public void testParallelDefault() {
         testPto(DEFAULT_L, DEFAULT_BATCH_NUM, DEFAULT_POINT_NUM, true);
     }
 
     @Test
     public void testLarge() {
-        testPto(LARGE_L, LARGE_BATCH_NUM, LARGE_POINT_NUM, false);
+        testPto(DEFAULT_L, LARGE_BATCH_NUM, LARGE_POINT_NUM, false);
     }
 
     @Test
     public void testParallelLarge() {
-        testPto(LARGE_L, LARGE_BATCH_NUM, LARGE_POINT_NUM, true);
+        testPto(DEFAULT_L, LARGE_BATCH_NUM, LARGE_POINT_NUM, true);
     }
 
     private void testPto(int l, int batchNum, int pointNum, boolean parallel) {
         // create the sender and the receiver
-        BopprfSender sender = BopprfFactory.createBopprfSender(senderRpc, receiverRpc.ownParty(), config);
-        BopprfReceiver receiver = BopprfFactory.createBopprfReceiver(receiverRpc, senderRpc.ownParty(), config);
+        BopprfSender sender = BopprfFactory.createSender(senderRpc, receiverRpc.ownParty(), config);
+        BopprfReceiver receiver = BopprfFactory.createReceiver(receiverRpc, senderRpc.ownParty(), config);
         sender.setParallel(parallel);
         receiver.setParallel(parallel);
         int randomTaskId = Math.abs(SECURE_RANDOM.nextInt());

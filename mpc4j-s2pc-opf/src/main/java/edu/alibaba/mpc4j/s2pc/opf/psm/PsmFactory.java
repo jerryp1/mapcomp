@@ -1,12 +1,10 @@
-package edu.alibaba.mpc4j.s2pc.aby.circuit.psm;
+package edu.alibaba.mpc4j.s2pc.opf.psm;
 
 import edu.alibaba.mpc4j.common.rpc.Party;
 import edu.alibaba.mpc4j.common.rpc.Rpc;
 import edu.alibaba.mpc4j.common.rpc.desc.SecurityModel;
 import edu.alibaba.mpc4j.common.rpc.pto.PtoFactory;
-import edu.alibaba.mpc4j.s2pc.aby.circuit.psm.cgs22.Cgs22LnotPsmConfig;
-import edu.alibaba.mpc4j.s2pc.aby.circuit.psm.cgs22.Cgs22LnotPsmReceiver;
-import edu.alibaba.mpc4j.s2pc.aby.circuit.psm.cgs22.Cgs22LnotPsmSender;
+import edu.alibaba.mpc4j.s2pc.opf.psm.cgs22.*;
 
 /**
  * private set membership factory.
@@ -50,6 +48,7 @@ public class PsmFactory implements PtoFactory {
             case CGS22_LNOT:
                 return new Cgs22LnotPsmSender(senderRpc, receiverParty, (Cgs22LnotPsmConfig) config);
             case CGS22_OPPRF:
+                return new Cgs22OpprfPsmSender(senderRpc, receiverParty, (Cgs22OpprfPsmConfig) config);
             default:
                 throw new IllegalArgumentException("Invalid " + PsmType.class.getSimpleName() + ": " + type.name());
         }
@@ -69,6 +68,7 @@ public class PsmFactory implements PtoFactory {
             case CGS22_LNOT:
                 return new Cgs22LnotPsmReceiver(receiverRpc, senderParty, (Cgs22LnotPsmConfig) config);
             case CGS22_OPPRF:
+                return new Cgs22OpprfPsmReceiver(receiverRpc, senderParty, (Cgs22OpprfPsmConfig) config);
             default:
                 throw new IllegalArgumentException("Invalid " + PsmType.class.getSimpleName() + ": " + type.name());
         }
@@ -82,6 +82,6 @@ public class PsmFactory implements PtoFactory {
      * @return a default config.
      */
     public static PsmConfig createDefaultConfig(SecurityModel securityModel, boolean silent) {
-        return new Cgs22LnotPsmConfig.Builder(securityModel, silent).build();
+        return new Cgs22OpprfPsmConfig.Builder(securityModel, silent).build();
     }
 }

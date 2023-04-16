@@ -47,7 +47,7 @@ public class PeqtTest {
     /**
      * large num
      */
-    private static final int LARGE_NUM = 1 << 18;
+    private static final int LARGE_NUM = 1 << 16;
     /**
      * default l
      */

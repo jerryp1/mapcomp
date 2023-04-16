@@ -65,7 +65,6 @@ public abstract class AbstractBopprfReceiver extends AbstractTwoPartyPto impleme
         checkInitialized();
         // check l
         MathPreconditions.checkGreaterOrEqual("l", l, CommonConstants.STATS_BIT_LENGTH);
-        MathPreconditions.checkEqual("l % Byte.SIZE", "0", l % Byte.SIZE, 0);
         this.l = l;
         byteL = CommonUtils.getByteLength(l);
         // check batch size

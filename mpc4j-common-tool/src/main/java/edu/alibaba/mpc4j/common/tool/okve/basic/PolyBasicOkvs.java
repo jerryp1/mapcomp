@@ -42,7 +42,7 @@ public class PolyBasicOkvs implements BasicOkvs {
         assert n > 0 : "n must be greater than 0: " + n;
         this.n = n;
         // l >= σ (40 bits) and l % Byte.SIZE == 0
-        assert l >= CommonConstants.STATS_BIT_LENGTH && l % Byte.SIZE == 0;
+        assert l >= CommonConstants.STATS_BIT_LENGTH;
         this.l = l;
         byteL = CommonUtils.getByteLength(l);
         gf2ePoly = Gf2ePolyFactory.createInstance(envType, l);

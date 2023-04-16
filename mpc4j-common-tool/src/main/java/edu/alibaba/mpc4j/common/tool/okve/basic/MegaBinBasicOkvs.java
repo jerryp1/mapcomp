@@ -81,8 +81,8 @@ public class MegaBinBasicOkvs implements BasicOkvs {
         // set the bin hash
         binHash = PrfFactory.createInstance(envType, Integer.BYTES);
         binHash.setKey(key);
-        // l >= σ (40 bits) and l % Byte.SIZE == 0.
-        assert l >= CommonConstants.STATS_BIT_LENGTH && l % Byte.SIZE == 0;
+        // l >= σ (40 bits)
+        assert l >= CommonConstants.STATS_BIT_LENGTH;
         this.l = l;
         byteL = CommonUtils.getByteLength(l);
         // set bin num and bin size.

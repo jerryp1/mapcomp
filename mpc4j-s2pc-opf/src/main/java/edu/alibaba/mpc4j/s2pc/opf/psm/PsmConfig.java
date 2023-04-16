@@ -1,4 +1,4 @@
-package edu.alibaba.mpc4j.s2pc.aby.circuit.psm;
+package edu.alibaba.mpc4j.s2pc.opf.psm;
 
 import edu.alibaba.mpc4j.common.rpc.pto.MultiPartyPtoConfig;
 

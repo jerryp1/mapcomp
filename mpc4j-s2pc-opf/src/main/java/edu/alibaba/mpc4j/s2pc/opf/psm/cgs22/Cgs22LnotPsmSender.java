@@ -1,4 +1,4 @@
-package edu.alibaba.mpc4j.s2pc.aby.circuit.psm.cgs22;
+package edu.alibaba.mpc4j.s2pc.opf.psm.cgs22;
 
 import edu.alibaba.mpc4j.common.rpc.MpcAbortException;
 import edu.alibaba.mpc4j.common.rpc.Party;
@@ -13,8 +13,7 @@ import edu.alibaba.mpc4j.common.tool.utils.LongUtils;
 import edu.alibaba.mpc4j.s2pc.aby.basics.bc.BcFactory;
 import edu.alibaba.mpc4j.s2pc.aby.basics.bc.BcParty;
 import edu.alibaba.mpc4j.s2pc.aby.basics.bc.SquareShareZ2Vector;
-import edu.alibaba.mpc4j.s2pc.aby.circuit.psm.AbstractPsmSender;
-import edu.alibaba.mpc4j.s2pc.aby.circuit.psm.cgs22.Cgs22LnotPsmPtoDesc.PtoStep;
+import edu.alibaba.mpc4j.s2pc.opf.psm.AbstractPsmSender;
 import edu.alibaba.mpc4j.s2pc.pcg.ot.lnot.LnotFactory;
 import edu.alibaba.mpc4j.s2pc.pcg.ot.lnot.LnotSender;
 import edu.alibaba.mpc4j.s2pc.pcg.ot.lnot.LnotSenderOutput;
@@ -128,7 +127,7 @@ public class Cgs22LnotPsmSender extends AbstractPsmSender {
                 .map(BitVector::getBytes)
                 .collect(Collectors.toList());
             DataPacketHeader evArraysHeader = new DataPacketHeader(
-                encodeTaskId, getPtoDesc().getPtoId(), PtoStep.SENDER_SEND_EV_ARRAYS.ordinal(), extraInfo,
+                encodeTaskId, getPtoDesc().getPtoId(), Cgs22LnotPsmPtoDesc.PtoStep.SENDER_SEND_EV_ARRAYS.ordinal(), extraInfo,
                 ownParty().getPartyId(), otherParty().getPartyId()
             );
             extraInfo++;

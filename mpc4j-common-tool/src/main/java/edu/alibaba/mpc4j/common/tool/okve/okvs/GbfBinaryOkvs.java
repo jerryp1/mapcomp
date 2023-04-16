@@ -62,6 +62,9 @@ public class GbfBinaryOkvs<T> extends AbstractBinaryOkvs<T> {
     public byte[][] encode(Map<T, byte[]> keyValueMap) throws ArithmeticException {
         // 键值对的总数量小于等于n，之所以不写为等于n，是因为后续PSI方案中两边的数量可能不相等。不验证映射值的长度，提高性能。
         assert keyValueMap.size() <= n;
+        keyValueMap.values().forEach(x -> {
+            assert BytesUtils.isFixedReduceByteArray(x, byteL, l);
+        });
         Set<T> keySet = keyValueMap.keySet();
         // 依次计算每个键值的映射结果，并根据计算结果将真实值秘密分享给存储器
         byte[][] storage = new byte[m][];
@@ -76,8 +79,7 @@ public class GbfBinaryOkvs<T> extends AbstractBinaryOkvs<T> {
                     emptySlot = position;
                 } else if (storage[position] == null) {
                     // 如果当前位置为空，则随机选择一个分享值（generate a new share）
-                    storage[position] = new byte[byteL];
-                    secureRandom.nextBytes(storage[position]);
+                    storage[position] = BytesUtils.randomByteArray(byteL, l, secureRandom);
                     BytesUtils.xori(finalShare, storage[position]);
                 } else {
                     // 如果当前位置已经有分享值，则更新最终分享值（reuse a share）
@@ -93,8 +95,7 @@ public class GbfBinaryOkvs<T> extends AbstractBinaryOkvs<T> {
         // 把剩余的空位置都填充上随机元素
         for (int i = 0; i < m; i++) {
             if (storage[i] == null) {
-                storage[i] = new byte[byteL];
-                secureRandom.nextBytes(storage[i]);
+                storage[i] = BytesUtils.randomByteArray(byteL, l, secureRandom);
             }
         }
 
@@ -111,6 +112,7 @@ public class GbfBinaryOkvs<T> extends AbstractBinaryOkvs<T> {
         for (int position : positions) {
             BytesUtils.xori(value, storage[position]);
         }
+        assert BytesUtils.isFixedReduceByteArray(value, byteL, l);
         return value;
     }
 

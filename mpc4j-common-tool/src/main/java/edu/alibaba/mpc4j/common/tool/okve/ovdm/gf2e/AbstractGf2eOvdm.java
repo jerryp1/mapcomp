@@ -5,6 +5,7 @@ import edu.alibaba.mpc4j.common.tool.EnvType;
 import edu.alibaba.mpc4j.common.tool.galoisfield.gf2e.Gf2e;
 import edu.alibaba.mpc4j.common.tool.galoisfield.gf2e.Gf2eFactory;
 import edu.alibaba.mpc4j.common.tool.galoisfield.gf2e.Gf2eLinearSolver;
+import edu.alibaba.mpc4j.common.tool.utils.CommonUtils;
 
 import java.security.SecureRandom;
 
@@ -34,7 +35,7 @@ abstract class AbstractGf2eOvdm<T> implements Gf2eOvdm<T> {
     /**
      * l的字节长度
      */
-    protected final int lByteLength;
+    protected final int byteL;
     /**
      * 编码过程所用到的随机状态
      */
@@ -52,10 +53,10 @@ abstract class AbstractGf2eOvdm<T> implements Gf2eOvdm<T> {
         // 要求n > 0
         assert n > 0;
         this.n = n;
-        // 要求l > 统计安全常数，且l可以被Byte.SIZE整除
-        assert l >= CommonConstants.STATS_BIT_LENGTH && l % Byte.SIZE == 0;
+        // l >= σ
+        assert l >= CommonConstants.STATS_BIT_LENGTH;
         this.l = l;
-        lByteLength = l / Byte.SIZE;
+        byteL = CommonUtils.getByteLength(l);
         // 要求m >= n，且m可以被Byte.SIZE整除
         assert m >= n && m % Byte.SIZE == 0;
         this.m = m;

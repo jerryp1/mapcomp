@@ -46,7 +46,7 @@ public class BopprfFactory {
      * @param config        the config.
      * @return a sender.
      */
-    public static BopprfSender createBopprfSender(Rpc senderRpc, Party receiverParty, BopprfConfig config) {
+    public static BopprfSender createSender(Rpc senderRpc, Party receiverParty, BopprfConfig config) {
         BopprfType type = config.getPtoType();
         switch (type) {
             case OKVS:
@@ -66,7 +66,7 @@ public class BopprfFactory {
      * @param config      the config.
      * @return a receiver.
      */
-    public static BopprfReceiver createBopprfReceiver(Rpc receiverRpc, Party senderParty, BopprfConfig config) {
+    public static BopprfReceiver createReceiver(Rpc receiverRpc, Party senderParty, BopprfConfig config) {
         BopprfType type = config.getPtoType();
         switch (type) {
             case OKVS:

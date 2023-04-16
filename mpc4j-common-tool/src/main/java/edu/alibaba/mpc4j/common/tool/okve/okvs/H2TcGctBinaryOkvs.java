@@ -125,16 +125,17 @@ public class H2TcGctBinaryOkvs<T> extends AbstractBinaryOkvs<T> implements Spars
         assert storage.length == getM();
         int[] sparsePositions = sparsePosition(key);
         boolean[] rxBinary = densePositions(key);
-        byte[] valueBytes = new byte[byteL];
+        byte[] value = new byte[byteL];
         // h1 and h2 must be distinct
-        BytesUtils.xori(valueBytes, storage[sparsePositions[0]]);
-        BytesUtils.xori(valueBytes, storage[sparsePositions[1]]);
+        BytesUtils.xori(value, storage[sparsePositions[0]]);
+        BytesUtils.xori(value, storage[sparsePositions[1]]);
         for (int rmIndex = 0; rmIndex < rm; rmIndex++) {
             if (rxBinary[rmIndex]) {
-                BytesUtils.xori(valueBytes, storage[lm + rmIndex]);
+                BytesUtils.xori(value, storage[lm + rmIndex]);
             }
         }
-        return valueBytes;
+        assert BytesUtils.isFixedReduceByteArray(value, byteL, l);
+        return value;
     }
 
     @Override
@@ -151,6 +152,9 @@ public class H2TcGctBinaryOkvs<T> extends AbstractBinaryOkvs<T> implements Spars
     @Override
     public byte[][] encode(Map<T, byte[]> keyValueMap) throws ArithmeticException {
         assert keyValueMap.size() <= n;
+        keyValueMap.values().forEach(x -> {
+            assert BytesUtils.isFixedReduceByteArray(x, byteL, l);
+        });
         // 构造数据到哈希值的查找表
         Set<T> keySet = keyValueMap.keySet();
         dataH1Map = new HashMap<>(keySet.size());
@@ -204,8 +208,7 @@ public class H2TcGctBinaryOkvs<T> extends AbstractBinaryOkvs<T> implements Spars
                 // 起点和终点不一致，有4种情况
                 if (leftStorage[source] == null && leftStorage[target] == null) {
                     // 情况1：左右都为空
-                    leftStorage[source] = new byte[byteL];
-                    secureRandom.nextBytes(leftStorage[source]);
+                    leftStorage[source] = BytesUtils.randomByteArray(byteL, l, secureRandom);
                     BytesUtils.xori(innerProduct, leftStorage[source]);
                     leftStorage[target] = innerProduct;
                 } else if (leftStorage[source] == null) {
@@ -225,8 +228,7 @@ public class H2TcGctBinaryOkvs<T> extends AbstractBinaryOkvs<T> implements Spars
         // 左侧矩阵补充随机数
         for (int vertex = 0; vertex < lm; vertex++) {
             if (leftStorage[vertex] == null) {
-                leftStorage[vertex] = new byte[byteL];
-                secureRandom.nextBytes(leftStorage[vertex]);
+                leftStorage[vertex] = BytesUtils.randomByteArray(byteL, l, secureRandom);
             }
         }
         // 更新矩阵
