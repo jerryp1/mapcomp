@@ -1,16 +1,16 @@
-package edu.alibaba.mpc4j.s2pc.aby.circuit.peqt.plain;
+package edu.alibaba.mpc4j.s2pc.aby.circuit.peqt;
 
 import edu.alibaba.mpc4j.common.rpc.MpcAbortException;
 import edu.alibaba.mpc4j.common.rpc.pto.TwoPartyPto;
 import edu.alibaba.mpc4j.s2pc.aby.basics.bc.SquareShareZ2Vector;
 
 /**
- * plain private equality test party.
+ * private equality test party.
  *
  * @author Weiran Liu
  * @date 2023/4/14
  */
-public interface PlainPeqtParty extends TwoPartyPto {
+public interface PeqtParty extends TwoPartyPto {
     /**
      * inits the protocol.
      *

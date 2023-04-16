@@ -1,10 +1,10 @@
-package edu.alibaba.mpc4j.s2pc.aby.circuit.peqt.plain.cgs22;
+package edu.alibaba.mpc4j.s2pc.aby.circuit.peqt.cgs22;
 
 import edu.alibaba.mpc4j.common.rpc.desc.PtoDesc;
 import edu.alibaba.mpc4j.common.rpc.desc.PtoDescManager;
 
 /**
- * CGS22 plain private equality test protocol description. The protocol is described in Fig. 6 of the following paper:
+ * CGS22 private equality test protocol description. The protocol is described in Fig. 6 of the following paper:
  * <p>
  * Chandran, Nishanth, Divya Gupta, and Akash Shah. Circuit-PSI With Linear Complexity via Relaxed Batch OPPRF.
  * PETS 2022, pp. 353-372.
@@ -13,7 +13,7 @@ import edu.alibaba.mpc4j.common.rpc.desc.PtoDescManager;
  * @author Weiran Liu
  * @date 2023/4/14
  */
-class Cgs22PlainPeqtPtoDesc implements PtoDesc {
+class Cgs22PeqtPtoDesc implements PtoDesc {
     /**
      * protocol ID
      */
@@ -21,7 +21,7 @@ class Cgs22PlainPeqtPtoDesc implements PtoDesc {
     /**
      * protocol name
      */
-    private static final String PTO_NAME = "CGS22_PLAIN_PEQT";
+    private static final String PTO_NAME = "CGS22_PEQT";
 
     /**
      * protocol step
@@ -36,12 +36,12 @@ class Cgs22PlainPeqtPtoDesc implements PtoDesc {
     /**
      * singleton mode
      */
-    private static final Cgs22PlainPeqtPtoDesc INSTANCE = new Cgs22PlainPeqtPtoDesc();
+    private static final Cgs22PeqtPtoDesc INSTANCE = new Cgs22PeqtPtoDesc();
 
     /**
      * private constructor.
      */
-    private Cgs22PlainPeqtPtoDesc() {
+    private Cgs22PeqtPtoDesc() {
         // empty
     }
 

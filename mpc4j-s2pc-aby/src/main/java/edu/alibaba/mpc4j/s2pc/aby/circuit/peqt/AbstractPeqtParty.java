@@ -1,4 +1,4 @@
-package edu.alibaba.mpc4j.s2pc.aby.circuit.peqt.plain;
+package edu.alibaba.mpc4j.s2pc.aby.circuit.peqt;
 
 import com.google.common.base.Preconditions;
 import edu.alibaba.mpc4j.common.rpc.Party;
@@ -12,12 +12,12 @@ import edu.alibaba.mpc4j.common.tool.utils.CommonUtils;
 import java.util.Arrays;
 
 /**
- * abstract plain private equality test party.
+ * abstract private equality test party.
  *
  * @author Weiran Liu
  * @date 2023/4/14
  */
-public abstract class AbstractPlainPeqtParty extends AbstractTwoPartyPto implements PlainPeqtParty {
+public abstract class AbstractPeqtParty extends AbstractTwoPartyPto implements PeqtParty {
     /**
      * max num
      */
@@ -43,7 +43,7 @@ public abstract class AbstractPlainPeqtParty extends AbstractTwoPartyPto impleme
      */
     protected byte[][] inputs;
 
-    public AbstractPlainPeqtParty(PtoDesc ptoDesc, Rpc ownRpc, Party otherParty, PlainPeqtConfig config) {
+    public AbstractPeqtParty(PtoDesc ptoDesc, Rpc ownRpc, Party otherParty, PeqtConfig config) {
         super(ptoDesc, ownRpc, otherParty, config);
     }
 

@@ -1,15 +1,15 @@
-package edu.alibaba.mpc4j.s2pc.aby.circuit.peqt.plain.naive;
+package edu.alibaba.mpc4j.s2pc.aby.circuit.peqt.naive;
 
 import edu.alibaba.mpc4j.common.rpc.desc.PtoDesc;
 import edu.alibaba.mpc4j.common.rpc.desc.PtoDescManager;
 
 /**
- * naive plain private equality test protocol description. This protocol does bit-wise AND / OR for PEQT.
+ * naive private equality test protocol description. This protocol does bit-wise AND / OR for PEQT.
  *
  * @author Weiran Liu
  * @date 2023/4/14
  */
-class NaivePlainPeqtPtoDesc implements PtoDesc {
+class NaivePeqtPtoDesc implements PtoDesc {
     /**
      * protocol ID
      */
@@ -17,16 +17,16 @@ class NaivePlainPeqtPtoDesc implements PtoDesc {
     /**
      * protocol name
      */
-    private static final String PTO_NAME = "NAIVE_PLAIN_PEQT";
+    private static final String PTO_NAME = "NAIVE_PEQT";
     /**
      * singleton mode
      */
-    private static final NaivePlainPeqtPtoDesc INSTANCE = new NaivePlainPeqtPtoDesc();
+    private static final NaivePeqtPtoDesc INSTANCE = new NaivePeqtPtoDesc();
 
     /**
      * private constructor.
      */
-    private NaivePlainPeqtPtoDesc() {
+    private NaivePeqtPtoDesc() {
         // empty
     }
 

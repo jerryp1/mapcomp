@@ -1,4 +1,4 @@
-package edu.alibaba.mpc4j.s2pc.aby.circuit.peqt.plain;
+package edu.alibaba.mpc4j.s2pc.aby.circuit.peqt;
 
 import com.google.common.base.Preconditions;
 import edu.alibaba.mpc4j.common.rpc.Rpc;
@@ -9,9 +9,9 @@ import edu.alibaba.mpc4j.common.tool.bitvector.BitVector;
 import edu.alibaba.mpc4j.common.tool.utils.BytesUtils;
 import edu.alibaba.mpc4j.common.tool.utils.CommonUtils;
 import edu.alibaba.mpc4j.s2pc.aby.basics.bc.SquareShareZ2Vector;
-import edu.alibaba.mpc4j.s2pc.aby.circuit.peqt.plain.PlainPeqtFactory.PlainPeqtType;
-import edu.alibaba.mpc4j.s2pc.aby.circuit.peqt.plain.cgs22.Cgs22PlainPeqtConfig;
-import edu.alibaba.mpc4j.s2pc.aby.circuit.peqt.plain.naive.NaivePlainPeqtConfig;
+import edu.alibaba.mpc4j.s2pc.aby.circuit.peqt.PeqtFactory.PeqtType;
+import edu.alibaba.mpc4j.s2pc.aby.circuit.peqt.cgs22.Cgs22PeqtConfig;
+import edu.alibaba.mpc4j.s2pc.aby.circuit.peqt.naive.NaivePeqtConfig;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.time.StopWatch;
 import org.junit.After;
@@ -31,14 +31,14 @@ import java.util.concurrent.TimeUnit;
 import java.util.stream.IntStream;
 
 /**
- * plain private equality test.
+ * private equality test.
  *
  * @author Weiran Liu
  * @date 2023/4/14
  */
 @RunWith(Parameterized.class)
-public class PlainPeqtTest {
-    private static final Logger LOGGER = LoggerFactory.getLogger(PlainPeqtTest.class);
+public class PeqtTest {
+    private static final Logger LOGGER = LoggerFactory.getLogger(PeqtTest.class);
     /**
      * the random state
      */
@@ -66,13 +66,13 @@ public class PlainPeqtTest {
 
         // CGS22 (semi-honest)
         configurations.add(new Object[]{
-            PlainPeqtType.CGS22.name() + " (semi-honest)",
-            new Cgs22PlainPeqtConfig.Builder(SecurityModel.SEMI_HONEST).build()
+            PeqtType.CGS22.name() + " (semi-honest)",
+            new Cgs22PeqtConfig.Builder(SecurityModel.SEMI_HONEST).build()
         });
         // NAIVE (semi-honest)
         configurations.add(new Object[]{
-            PlainPeqtType.NAIVE.name() + " (semi-honest)",
-            new NaivePlainPeqtConfig.Builder(SecurityModel.SEMI_HONEST).build()
+            PeqtType.NAIVE.name() + " (semi-honest)",
+            new NaivePeqtConfig.Builder(SecurityModel.SEMI_HONEST).build()
         });
 
         return configurations;
@@ -89,9 +89,9 @@ public class PlainPeqtTest {
     /**
      * the config
      */
-    private final PlainPeqtConfig config;
+    private final PeqtConfig config;
 
-    public PlainPeqtTest(String name, PlainPeqtConfig config) {
+    public PeqtTest(String name, PeqtConfig config) {
         Preconditions.checkArgument(StringUtils.isNotBlank(name));
         // We cannot use NettyRPC in the test case since it needs multi-thread connect / disconnect.
         // In other word, we cannot connect / disconnect NettyRpc in @Before / @After, respectively.
@@ -192,14 +192,14 @@ public class PlainPeqtTest {
             })
             .toArray(byte[][]::new);
         // init the protocol
-        PlainPeqtParty sender = PlainPeqtFactory.createSender(senderRpc, receiverRpc.ownParty(), config);
-        PlainPeqtParty receiver = PlainPeqtFactory.createReceiver(receiverRpc, senderRpc.ownParty(), config);
+        PeqtParty sender = PeqtFactory.createSender(senderRpc, receiverRpc.ownParty(), config);
+        PeqtParty receiver = PeqtFactory.createReceiver(receiverRpc, senderRpc.ownParty(), config);
         sender.setParallel(parallel);
         receiver.setParallel(parallel);
         try {
             LOGGER.info("-----test {} start-----", sender.getPtoDesc().getPtoName());
-            PlainPeqtPartyThread senderThread = new PlainPeqtPartyThread(sender, l, xs);
-            PlainPeqtPartyThread receiverThread = new PlainPeqtPartyThread(receiver, l, ys);
+            PeqtPartyThread senderThread = new PeqtPartyThread(sender, l, xs);
+            PeqtPartyThread receiverThread = new PeqtPartyThread(receiver, l, ys);
             StopWatch stopWatch = new StopWatch();
             // execute the protocol
             stopWatch.start();

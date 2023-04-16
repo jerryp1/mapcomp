@@ -1,25 +1,25 @@
-package edu.alibaba.mpc4j.s2pc.aby.circuit.peqt.plain.naive;
+package edu.alibaba.mpc4j.s2pc.aby.circuit.peqt.naive;
 
 import edu.alibaba.mpc4j.common.rpc.desc.SecurityModel;
 import edu.alibaba.mpc4j.common.tool.EnvType;
 import edu.alibaba.mpc4j.s2pc.aby.basics.bc.BcConfig;
 import edu.alibaba.mpc4j.s2pc.aby.basics.bc.BcFactory;
-import edu.alibaba.mpc4j.s2pc.aby.circuit.peqt.plain.PlainPeqtConfig;
-import edu.alibaba.mpc4j.s2pc.aby.circuit.peqt.plain.PlainPeqtFactory;
+import edu.alibaba.mpc4j.s2pc.aby.circuit.peqt.PeqtConfig;
+import edu.alibaba.mpc4j.s2pc.aby.circuit.peqt.PeqtFactory;
 
 /**
- * naive plain private equality test config.
+ * naive private equality test config.
  *
  * @author Weiran Liu
  * @date 2023/4/14
  */
-public class NaivePlainPeqtConfig implements PlainPeqtConfig {
+public class NaivePeqtConfig implements PeqtConfig {
     /**
      * Boolean circuit config
      */
     private final BcConfig bcConfig;
 
-    private NaivePlainPeqtConfig(Builder builder) {
+    private NaivePeqtConfig(Builder builder) {
         bcConfig = builder.bcConfig;
     }
 
@@ -28,8 +28,8 @@ public class NaivePlainPeqtConfig implements PlainPeqtConfig {
     }
 
     @Override
-    public PlainPeqtFactory.PlainPeqtType getPtoType() {
-        return PlainPeqtFactory.PlainPeqtType.NAIVE;
+    public PeqtFactory.PeqtType getPtoType() {
+        return PeqtFactory.PeqtType.NAIVE;
     }
 
     @Override
@@ -51,7 +51,7 @@ public class NaivePlainPeqtConfig implements PlainPeqtConfig {
         return securityModel;
     }
 
-    public static class Builder implements org.apache.commons.lang3.builder.Builder<NaivePlainPeqtConfig> {
+    public static class Builder implements org.apache.commons.lang3.builder.Builder<NaivePeqtConfig> {
         /**
          * Boolean circuit config
          */
@@ -67,8 +67,8 @@ public class NaivePlainPeqtConfig implements PlainPeqtConfig {
         }
 
         @Override
-        public NaivePlainPeqtConfig build() {
-            return new NaivePlainPeqtConfig(this);
+        public NaivePeqtConfig build() {
+            return new NaivePeqtConfig(this);
         }
     }
 }

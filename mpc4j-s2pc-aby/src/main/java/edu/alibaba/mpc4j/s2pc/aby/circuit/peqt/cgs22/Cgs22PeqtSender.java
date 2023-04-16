@@ -1,4 +1,4 @@
-package edu.alibaba.mpc4j.s2pc.aby.circuit.peqt.plain.cgs22;
+package edu.alibaba.mpc4j.s2pc.aby.circuit.peqt.cgs22;
 
 import edu.alibaba.mpc4j.common.rpc.MpcAbortException;
 import edu.alibaba.mpc4j.common.rpc.Party;
@@ -13,8 +13,8 @@ import edu.alibaba.mpc4j.common.tool.utils.LongUtils;
 import edu.alibaba.mpc4j.s2pc.aby.basics.bc.BcFactory;
 import edu.alibaba.mpc4j.s2pc.aby.basics.bc.BcParty;
 import edu.alibaba.mpc4j.s2pc.aby.basics.bc.SquareShareZ2Vector;
-import edu.alibaba.mpc4j.s2pc.aby.circuit.peqt.plain.AbstractPlainPeqtParty;
-import edu.alibaba.mpc4j.s2pc.aby.circuit.peqt.plain.cgs22.Cgs22PlainPeqtPtoDesc.PtoStep;
+import edu.alibaba.mpc4j.s2pc.aby.circuit.peqt.AbstractPeqtParty;
+import edu.alibaba.mpc4j.s2pc.aby.circuit.peqt.cgs22.Cgs22PeqtPtoDesc.PtoStep;
 import edu.alibaba.mpc4j.s2pc.pcg.ot.lnot.LnotFactory;
 import edu.alibaba.mpc4j.s2pc.pcg.ot.lnot.LnotSender;
 import edu.alibaba.mpc4j.s2pc.pcg.ot.lnot.LnotSenderOutput;
@@ -26,12 +26,12 @@ import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
 /**
- * CGS22 plain private equality test sender.
+ * CGS22 private equality test sender.
  *
  * @author Weiran Liu
  * @date 2023/4/14
  */
-public class Cgs22PlainPeqtSender extends AbstractPlainPeqtParty {
+public class Cgs22PeqtSender extends AbstractPeqtParty {
     /**
      * Boolean circuit sender
      */
@@ -41,8 +41,8 @@ public class Cgs22PlainPeqtSender extends AbstractPlainPeqtParty {
      */
     private final LnotSender lnotSender;
 
-    public Cgs22PlainPeqtSender(Rpc senderRpc, Party receiverParty, Cgs22PlainPeqtConfig config) {
-        super(Cgs22PlainPeqtPtoDesc.getInstance(), senderRpc, receiverParty, config);
+    public Cgs22PeqtSender(Rpc senderRpc, Party receiverParty, Cgs22PeqtConfig config) {
+        super(Cgs22PeqtPtoDesc.getInstance(), senderRpc, receiverParty, config);
         bcSender = BcFactory.createSender(senderRpc, receiverParty, config.getBcConfig());
         addSubPtos(bcSender);
         lnotSender = LnotFactory.createSender(senderRpc, receiverParty, config.getLnotConfig());

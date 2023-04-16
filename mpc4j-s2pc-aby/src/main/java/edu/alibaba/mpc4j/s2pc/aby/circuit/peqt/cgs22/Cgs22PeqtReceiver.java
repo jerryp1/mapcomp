@@ -1,4 +1,4 @@
-package edu.alibaba.mpc4j.s2pc.aby.circuit.peqt.plain.cgs22;
+package edu.alibaba.mpc4j.s2pc.aby.circuit.peqt.cgs22;
 
 import edu.alibaba.mpc4j.common.rpc.*;
 import edu.alibaba.mpc4j.common.rpc.utils.DataPacketHeader;
@@ -9,8 +9,8 @@ import edu.alibaba.mpc4j.common.tool.utils.LongUtils;
 import edu.alibaba.mpc4j.s2pc.aby.basics.bc.BcFactory;
 import edu.alibaba.mpc4j.s2pc.aby.basics.bc.BcParty;
 import edu.alibaba.mpc4j.s2pc.aby.basics.bc.SquareShareZ2Vector;
-import edu.alibaba.mpc4j.s2pc.aby.circuit.peqt.plain.AbstractPlainPeqtParty;
-import edu.alibaba.mpc4j.s2pc.aby.circuit.peqt.plain.cgs22.Cgs22PlainPeqtPtoDesc.PtoStep;
+import edu.alibaba.mpc4j.s2pc.aby.circuit.peqt.AbstractPeqtParty;
+import edu.alibaba.mpc4j.s2pc.aby.circuit.peqt.cgs22.Cgs22PeqtPtoDesc.PtoStep;
 import edu.alibaba.mpc4j.s2pc.pcg.ot.lnot.LnotFactory;
 import edu.alibaba.mpc4j.s2pc.pcg.ot.lnot.LnotReceiver;
 import edu.alibaba.mpc4j.s2pc.pcg.ot.lnot.LnotReceiverOutput;
@@ -21,12 +21,12 @@ import java.util.concurrent.TimeUnit;
 import java.util.stream.IntStream;
 
 /**
- * CGS22 plain private equality test receiver.
+ * CGS22 private equality test receiver.
  *
  * @author Weiran Liu
  * @date 2023/4/14
  */
-public class Cgs22PlainPeqtReceiver extends AbstractPlainPeqtParty {
+public class Cgs22PeqtReceiver extends AbstractPeqtParty {
     /**
      * Boolean circuit receiver
      */
@@ -36,8 +36,8 @@ public class Cgs22PlainPeqtReceiver extends AbstractPlainPeqtParty {
      */
     private final LnotReceiver lnotReceiver;
 
-    public Cgs22PlainPeqtReceiver(Rpc senderRpc, Party receiverParty, Cgs22PlainPeqtConfig config) {
-        super(Cgs22PlainPeqtPtoDesc.getInstance(), senderRpc, receiverParty, config);
+    public Cgs22PeqtReceiver(Rpc senderRpc, Party receiverParty, Cgs22PeqtConfig config) {
+        super(Cgs22PeqtPtoDesc.getInstance(), senderRpc, receiverParty, config);
         bcReceiver = BcFactory.createReceiver(senderRpc, receiverParty, config.getBcConfig());
         addSubPtos(bcReceiver);
         lnotReceiver = LnotFactory.createReceiver(senderRpc, receiverParty, config.getLnotConfig());

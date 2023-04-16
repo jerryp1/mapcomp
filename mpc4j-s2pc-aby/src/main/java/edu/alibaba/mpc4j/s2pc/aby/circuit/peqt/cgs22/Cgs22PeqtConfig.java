@@ -1,21 +1,21 @@
-package edu.alibaba.mpc4j.s2pc.aby.circuit.peqt.plain.cgs22;
+package edu.alibaba.mpc4j.s2pc.aby.circuit.peqt.cgs22;
 
 import edu.alibaba.mpc4j.common.rpc.desc.SecurityModel;
 import edu.alibaba.mpc4j.common.tool.EnvType;
 import edu.alibaba.mpc4j.s2pc.aby.basics.bc.BcConfig;
 import edu.alibaba.mpc4j.s2pc.aby.basics.bc.BcFactory;
-import edu.alibaba.mpc4j.s2pc.aby.circuit.peqt.plain.PlainPeqtConfig;
-import edu.alibaba.mpc4j.s2pc.aby.circuit.peqt.plain.PlainPeqtFactory;
+import edu.alibaba.mpc4j.s2pc.aby.circuit.peqt.PeqtConfig;
+import edu.alibaba.mpc4j.s2pc.aby.circuit.peqt.PeqtFactory;
 import edu.alibaba.mpc4j.s2pc.pcg.ot.lnot.LnotConfig;
 import edu.alibaba.mpc4j.s2pc.pcg.ot.lnot.LnotFactory;
 
 /**
- * CGS22 plain private equality test config.
+ * CGS22 private equality test config.
  *
  * @author Weiran Liu
  * @date 2023/4/14
  */
-public class Cgs22PlainPeqtConfig implements PlainPeqtConfig {
+public class Cgs22PeqtConfig implements PeqtConfig {
     /**
      * Boolean circuit config
      */
@@ -25,7 +25,7 @@ public class Cgs22PlainPeqtConfig implements PlainPeqtConfig {
      */
     private final LnotConfig lnotConfig;
 
-    private Cgs22PlainPeqtConfig(Builder builder) {
+    private Cgs22PeqtConfig(Builder builder) {
         assert builder.bcConfig.getEnvType().equals(builder.lnotConfig.getEnvType());
         bcConfig = builder.bcConfig;
         lnotConfig = builder.lnotConfig;
@@ -40,8 +40,8 @@ public class Cgs22PlainPeqtConfig implements PlainPeqtConfig {
     }
 
     @Override
-    public PlainPeqtFactory.PlainPeqtType getPtoType() {
-        return PlainPeqtFactory.PlainPeqtType.CGS22;
+    public PeqtFactory.PeqtType getPtoType() {
+        return PeqtFactory.PeqtType.CGS22;
     }
 
     @Override
@@ -64,7 +64,7 @@ public class Cgs22PlainPeqtConfig implements PlainPeqtConfig {
         return securityModel;
     }
 
-    public static class Builder implements org.apache.commons.lang3.builder.Builder<Cgs22PlainPeqtConfig> {
+    public static class Builder implements org.apache.commons.lang3.builder.Builder<Cgs22PeqtConfig> {
         /**
          * Boolean circuit config
          */
@@ -90,8 +90,8 @@ public class Cgs22PlainPeqtConfig implements PlainPeqtConfig {
         }
 
         @Override
-        public Cgs22PlainPeqtConfig build() {
-            return new Cgs22PlainPeqtConfig(this);
+        public Cgs22PeqtConfig build() {
+            return new Cgs22PeqtConfig(this);
         }
     }
 }

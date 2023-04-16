@@ -1,19 +1,19 @@
-package edu.alibaba.mpc4j.s2pc.aby.circuit.peqt.plain;
+package edu.alibaba.mpc4j.s2pc.aby.circuit.peqt;
 
 import edu.alibaba.mpc4j.common.rpc.MpcAbortException;
 import edu.alibaba.mpc4j.s2pc.aby.basics.bc.SquareShareZ2Vector;
 
 /**
- * plain private equality test sender thread.
+ * private equality test sender thread.
  *
  * @author Weiran Liu
  * @date 2023/4/14
  */
-class PlainPeqtPartyThread extends Thread {
+class PeqtPartyThread extends Thread {
     /**
      * the party
      */
-    private final PlainPeqtParty party;
+    private final PeqtParty party;
     /**
      * l
      */
@@ -31,7 +31,7 @@ class PlainPeqtPartyThread extends Thread {
      */
     private SquareShareZ2Vector zi;
 
-    PlainPeqtPartyThread(PlainPeqtParty party, int l, byte[][] inputs) {
+    PeqtPartyThread(PeqtParty party, int l, byte[][] inputs) {
         this.party = party;
         this.l = l;
         this.inputs = inputs;
