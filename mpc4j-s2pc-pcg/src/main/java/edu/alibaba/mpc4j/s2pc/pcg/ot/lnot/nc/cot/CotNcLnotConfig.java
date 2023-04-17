@@ -64,7 +64,7 @@ public class CotNcLnotConfig implements NcLnotConfig {
         private NcCotConfig ncCotConfig;
 
         public Builder(SecurityModel securityModel) {
-            ncCotConfig = NcCotFactory.createDefaultConfig(securityModel);
+            ncCotConfig = NcCotFactory.createDefaultConfig(securityModel, true);
         }
 
         public Builder setNcCotConfig(NcCotConfig ncCotConfig) {

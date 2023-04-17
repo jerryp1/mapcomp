@@ -58,7 +58,7 @@ public class LowMcOprpConfig implements OprpConfig {
         private BcConfig bcConfig;
 
         public Builder() {
-            bcConfig = BcFactory.createDefaultConfig(SecurityModel.SEMI_HONEST);
+            bcConfig = BcFactory.createDefaultConfig(SecurityModel.SEMI_HONEST, true);
         }
 
         public Builder setBcConfig(BcConfig bcConfig) {

@@ -84,7 +84,7 @@ public class CacheCotConfig implements CotConfig {
         private PreCotConfig preCotConfig;
 
         public Builder(SecurityModel securityModel) {
-            ncCotConfig = NcCotFactory.createDefaultConfig(securityModel);
+            ncCotConfig = NcCotFactory.createDefaultConfig(securityModel, true);
             preCotConfig = PreCotFactory.createDefaultConfig(securityModel);
         }
 

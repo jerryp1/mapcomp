@@ -126,6 +126,7 @@ class H2DfsGctBinaryOkvs<T> extends AbstractBinaryOkvs<T> implements SparseOkvs<
                 BytesUtils.xori(value, storage[lm + rmIndex]);
             }
         }
+        assert BytesUtils.isFixedReduceByteArray(value, byteL, l);
 
         return value;
     }
@@ -138,6 +139,9 @@ class H2DfsGctBinaryOkvs<T> extends AbstractBinaryOkvs<T> implements SparseOkvs<
     @Override
     public byte[][] encode(Map<T, byte[]> keyValueMap) throws ArithmeticException {
         assert keyValueMap.size() <= n;
+        keyValueMap.values().forEach(x -> {
+            assert BytesUtils.isFixedReduceByteArray(x, byteL, l);
+        });
         // 构造数据到哈希值的查找表
         Set<T> keySet = keyValueMap.keySet();
         dataH1Map = new HashMap<>(keySet.size());
@@ -166,8 +170,7 @@ class H2DfsGctBinaryOkvs<T> extends AbstractBinaryOkvs<T> implements SparseOkvs<
                 throw new IllegalStateException("重新调用DFS更新节点值时，根节点不可能已被设置，算法实现有误");
             }
             // set variable lv arbitrarily, where v is the root vertex of the traversal.
-            leftMatrix[root] = new byte[this.byteL];
-            secureRandom.nextBytes(leftMatrix[root]);
+            leftMatrix[root] = BytesUtils.randomByteArray(byteL, l, secureRandom);
             ArrayList<T> traversalEdgeDataList = rootEdgeMap.get(root);
             for (T traversalEdgeData : traversalEdgeDataList) {
                 // set lv = lu XOR <r(x_i), R> XOR y_i
@@ -193,8 +196,7 @@ class H2DfsGctBinaryOkvs<T> extends AbstractBinaryOkvs<T> implements SparseOkvs<
         // 左侧矩阵补充随机数
         for (int vertex = 0; vertex < lm; vertex++) {
             if (leftMatrix[vertex] == null) {
-                leftMatrix[vertex] = new byte[byteL];
-                secureRandom.nextBytes(leftMatrix[vertex]);
+                leftMatrix[vertex] = BytesUtils.randomByteArray(byteL, l, secureRandom);
             }
         }
         byte[][] matrix = new byte[lm + rm][];
