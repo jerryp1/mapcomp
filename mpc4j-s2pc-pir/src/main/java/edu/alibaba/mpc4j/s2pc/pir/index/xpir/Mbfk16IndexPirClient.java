@@ -1,10 +1,12 @@
 package edu.alibaba.mpc4j.s2pc.pir.index.xpir;
 
-import com.google.common.collect.Lists;
 import edu.alibaba.mpc4j.common.rpc.*;
 import edu.alibaba.mpc4j.common.rpc.utils.DataPacket;
 import edu.alibaba.mpc4j.common.rpc.utils.DataPacketHeader;
 import edu.alibaba.mpc4j.common.tool.CommonConstants;
+import edu.alibaba.mpc4j.common.tool.utils.CommonUtils;
+import edu.alibaba.mpc4j.crypto.matrix.database.NaiveDatabase;
+import edu.alibaba.mpc4j.crypto.matrix.database.ZlDatabase;
 import edu.alibaba.mpc4j.s2pc.pir.PirUtils;
 import edu.alibaba.mpc4j.s2pc.pir.index.AbstractIndexPirClient;
 import edu.alibaba.mpc4j.s2pc.pir.index.IndexPirParams;
@@ -15,7 +17,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.stream.IntStream;
 
 /**
- * XPIR协议客户端。
+ * XPIR client.
  *
  * @author Liqiang Peng
  * @date 2022/8/24
@@ -27,21 +29,33 @@ public class Mbfk16IndexPirClient extends AbstractIndexPirClient {
     }
 
     /**
-     * XPIR方案参数
+     * XPIR params
      */
     private Mbfk16IndexPirParams params;
     /**
-     * XPIR方案内部参数
+     * element size per BFV plaintext
      */
-    private Mbfk16IndexPirInnerParams innerParams;
+    private int elementSizeOfPlaintext;
     /**
-     * 公钥
+     * dimension size
+     */
+    private int[] dimensionSize;
+    /**
+     * partition byte length
+     */
+    private int partitionByteLength;
+    /**
+     * public key
      */
     private byte[] publicKey;
     /**
-     * 私钥
+     * private key
      */
     private byte[] secretKey;
+    /**
+     * partition size
+     */
+    private int partitionSize;
 
     public Mbfk16IndexPirClient(Rpc clientRpc, Party serverParty, Mbfk16IndexPirConfig config) {
         super(Mbfk16IndexPirPtoDesc.getInstance(), clientRpc, serverParty, config);
@@ -54,10 +68,8 @@ public class Mbfk16IndexPirClient extends AbstractIndexPirClient {
         logPhaseInfo(PtoState.INIT_BEGIN);
 
         stopWatch.start();
-        innerParams = new Mbfk16IndexPirInnerParams(params, serverElementSize, elementByteLength);
         setInitInput(serverElementSize, elementByteLength);
-        // 客户端生成密钥对
-        generateKeyPair();
+        clientSetup();
         stopWatch.stop();
         long initTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
         stopWatch.reset();
@@ -72,10 +84,8 @@ public class Mbfk16IndexPirClient extends AbstractIndexPirClient {
         logPhaseInfo(PtoState.INIT_BEGIN);
 
         stopWatch.start();
-        innerParams = new Mbfk16IndexPirInnerParams(params, serverElementSize, elementByteLength);
         setInitInput(serverElementSize, elementByteLength);
-        // 客户端生成密钥对
-        generateKeyPair();
+        clientSetup();
         stopWatch.stop();
         long initTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
         stopWatch.reset();
@@ -90,7 +100,7 @@ public class Mbfk16IndexPirClient extends AbstractIndexPirClient {
         logPhaseInfo(PtoState.PTO_BEGIN);
 
         stopWatch.start();
-        // 客户端生成并发送问询
+        // client generates query
         List<byte[]> clientQueryPayload = generateQuery();
         DataPacketHeader clientQueryHeader = new DataPacketHeader(
             encodeTaskId, getPtoDesc().getPtoId(), PtoStep.CLIENT_SEND_QUERY.ordinal(), extraInfo,
@@ -102,7 +112,7 @@ public class Mbfk16IndexPirClient extends AbstractIndexPirClient {
         stopWatch.reset();
         logStepInfo(PtoState.PTO_STEP, 1, 2, genQueryTime, "Client generates query");
 
-        // 客户端接收并解密回复
+        // client decodes server response
         DataPacketHeader serverResponseHeader = new DataPacketHeader(
             encodeTaskId, getPtoDesc().getPtoId(), PtoStep.SERVER_SEND_RESPONSE.ordinal(), extraInfo,
             otherParty().getPartyId(), rpc.ownParty().getPartyId()
@@ -121,68 +131,67 @@ public class Mbfk16IndexPirClient extends AbstractIndexPirClient {
     }
 
     /**
-     * 返回查询密文。
-     *
-     * @return 查询密文。
+     * client setup.
      */
-    public ArrayList<byte[]> generateQuery() {
-        int bundleNum = innerParams.getBinNum();
-        // 前n-1个分块
-        int[] nvec = innerParams.getDimensionsLength()[0];
-        int indexOfPlaintext = index / innerParams.getElementSizeOfPlaintext()[0];
-        // 计算每个维度的坐标
-        int[] indices = PirUtils.computeIndices(indexOfPlaintext, nvec);
-        ArrayList<byte[]> result = new ArrayList<>(
-            Mbfk16IndexPirNativeUtils.generateQuery(params.getEncryptionParams(), publicKey, secretKey, indices, nvec)
+    public void clientSetup() {
+        int maxPartitionByteLength = params.getPolyModulusDegree() * params.getPlainModulusBitLength() / Byte.SIZE;
+        partitionByteLength = Math.min(maxPartitionByteLength, elementByteLength);
+        partitionSize = CommonUtils.getUnitNum(elementByteLength, partitionByteLength);
+        elementSizeOfPlaintext = PirUtils.elementSizeOfPlaintext(
+            partitionByteLength, params.getPolyModulusDegree(), params.getPlainModulusBitLength()
         );
-        if ((bundleNum > 1) && (innerParams.getPlaintextSize()[0] != innerParams.getPlaintextSize()[bundleNum - 1])) {
-            // 最后一个分块
-            int[] lastNvec = innerParams.getDimensionsLength()[bundleNum - 1];
-            int lastIndexOfPlaintext = index / innerParams.getElementSizeOfPlaintext()[bundleNum - 1];
-            // 计算每个维度的坐标
-            int[] lastIndices = PirUtils.computeIndices(lastIndexOfPlaintext, lastNvec);
-            // 返回查询密文
-            result.addAll(
-                Mbfk16IndexPirNativeUtils.generateQuery(
-                    params.getEncryptionParams(), publicKey, secretKey, lastIndices, lastNvec
-                )
-            );
-        }
-        return result;
+        int plaintextSize = (int) Math.ceil((double) this.num / elementSizeOfPlaintext);
+        dimensionSize = PirUtils.computeDimensionLength(plaintextSize, params.getDimension());
+        generateKeyPair();
     }
 
     /**
-     * 解码回复得到检索结果。
+     * client generate query.
      *
-     * @param response 回复。
-     * @return 检索结果。
-     * @throws MpcAbortException 如果协议异常中止。
+     * @return client query.
      */
-    private byte[] handleServerResponsePayload(List<byte[]> response) throws MpcAbortException {
-        byte[] elementBytes = new byte[elementByteLength];
-        int expansionRatio = params.getExpansionRatio();
-        int binNum = innerParams.getBinNum();
-        int dimension = params.getDimension();
-        int binResponseSize = IntStream.range(0, dimension - 1).map(i -> expansionRatio).reduce(1, (a, b) -> a * b);
-        MpcAbortPreconditions.checkArgument(response.size() == binResponseSize * binNum);
-        IntStream intStream = this.parallel ? IntStream.range(0, binNum).parallel() : IntStream.range(0, binNum);
-        intStream.forEach(binIndex -> {
+    public List<byte[]> generateQuery() {
+        int indexOfPlaintext = index / elementSizeOfPlaintext;
+        // compute indices for each dimension
+        int[] indices = PirUtils.computeIndices(indexOfPlaintext, dimensionSize);
+        return Mbfk16IndexPirNativeUtils.generateQuery(
+            params.getEncryptionParams(), publicKey, secretKey, indices, dimensionSize
+        );
+    }
+
+    /**
+     * client decodes server response.
+     *
+     * @param response server response.
+     * @return retrieval result.
+     * @throws MpcAbortException the protocol failure aborts.
+     */
+    public byte[] handleServerResponsePayload(List<byte[]> response) throws MpcAbortException {
+        int partitionResponseSize = IntStream.range(0, params.getDimension() - 1)
+            .map(i -> params.getExpansionRatio())
+            .reduce(1, (a, b) -> a * b);
+        MpcAbortPreconditions.checkArgument(response.size() == partitionResponseSize * partitionSize);
+        ZlDatabase[] databases = new ZlDatabase[partitionSize];
+        IntStream intStream = IntStream.range(0, partitionSize);
+        intStream = parallel ? intStream.parallel() : intStream;
+        intStream.forEach(partitionIndex -> {
             long[] coeffs = Mbfk16IndexPirNativeUtils.decryptReply(
                 params.getEncryptionParams(),
                 secretKey,
-                Lists.newArrayList(response.subList(binIndex * binResponseSize, (binIndex + 1) * binResponseSize)),
+                response.subList(partitionIndex * partitionResponseSize, (partitionIndex + 1) * partitionResponseSize),
                 params.getDimension()
             );
             byte[] bytes = PirUtils.convertCoeffsToBytes(coeffs, params.getPlainModulusBitLength());
-            int offset = this.index % innerParams.getElementSizeOfPlaintext()[binIndex];
-            int byteLength = binIndex == binNum - 1 ? innerParams.getLastBinByteLength() : innerParams.getBinMaxByteLength();
-            System.arraycopy(bytes, offset * byteLength, elementBytes, binIndex * innerParams.getBinMaxByteLength(), byteLength);
+            int offset = index % elementSizeOfPlaintext;
+            byte[] partitionBytes = new byte[partitionByteLength];
+            System.arraycopy(bytes, offset * partitionByteLength, partitionBytes, 0, partitionByteLength);
+            databases[partitionIndex] = ZlDatabase.create(partitionByteLength * Byte.SIZE, new byte[][]{partitionBytes});
         });
-        return elementBytes;
+        return NaiveDatabase.createFromZl(elementByteLength * Byte.SIZE, databases).getBytesData(0);
     }
 
     /**
-     * 客户端生成密钥对。
+     * client generates key pair.
      */
     private void generateKeyPair() {
         List<byte[]> keyPair = Mbfk16IndexPirNativeUtils.keyGen(params.getEncryptionParams());

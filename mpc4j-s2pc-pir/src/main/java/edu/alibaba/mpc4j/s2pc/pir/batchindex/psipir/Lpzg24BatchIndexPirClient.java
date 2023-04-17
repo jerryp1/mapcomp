@@ -104,11 +104,7 @@ public class Lpzg24BatchIndexPirClient extends AbstractBatchIndexPirClient {
                 MpcAbortPreconditions.checkArgument(false, "retrieval size is larger than the upper bound.");
             }
         } else if (serverElementSize <= (1 << 26)) {
-            if (maxRetrievalSize <= 256) {
-                params = Cmg21UpsiParams.SERVER_16M_CLIENT_MAX_256;
-            } else if (maxRetrievalSize <= 512) {
-                params = Cmg21UpsiParams.SERVER_16M_CLIENT_MAX_512;
-            } else if (maxRetrievalSize <= 1024) {
+            if (maxRetrievalSize <= 1024) {
                 params = Cmg21UpsiParams.SERVER_16M_CLIENT_MAX_1024;
             } else if (maxRetrievalSize <= 2048) {
                 params = Cmg21UpsiParams.SERVER_16M_CLIENT_MAX_2048;

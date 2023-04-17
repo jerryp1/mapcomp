@@ -61,7 +61,7 @@ public class Mr23BatchIndexPirParams implements IndexPirParams {
     public static Mr23BatchIndexPirParams ELEMENT_LOG_SIZE_20_RETRIEVAL_SIZE_256 = new Mr23BatchIndexPirParams(
         8192,
         20,
-        new int[]{50, 50, 50, 50},
+        new int[]{30, 40, 40, 40, 50},
         32, 9, 3
     );
 
@@ -71,7 +71,7 @@ public class Mr23BatchIndexPirParams implements IndexPirParams {
     public static Mr23BatchIndexPirParams ELEMENT_LOG_SIZE_20_RETRIEVAL_SIZE_512 = new Mr23BatchIndexPirParams(
         8192,
         20,
-        new int[]{30, 40, 40, 40, 50},
+        new int[]{52, 52, 52, 52},
         32, 5, 3
     );
 
@@ -81,17 +81,17 @@ public class Mr23BatchIndexPirParams implements IndexPirParams {
     public static Mr23BatchIndexPirParams ELEMENT_LOG_SIZE_20_RETRIEVAL_SIZE_1024 = new Mr23BatchIndexPirParams(
         8192,
         20,
-        new int[]{30, 40, 40, 40, 50},
+        new int[]{52, 52, 52, 52},
         16, 9, 3
     );
 
     /**
-     * 2^20，适合分桶数目1024
+     * 2^20，适合分桶数目2048
      */
     public static Mr23BatchIndexPirParams ELEMENT_LOG_SIZE_20_RETRIEVAL_SIZE_2048 = new Mr23BatchIndexPirParams(
         8192,
         20,
-        new int[]{30, 40, 40, 40, 50},
+        new int[]{52, 52, 52, 52},
         16, 5, 3
     );
 
@@ -101,7 +101,7 @@ public class Mr23BatchIndexPirParams implements IndexPirParams {
     public static Mr23BatchIndexPirParams ELEMENT_LOG_SIZE_22_RETRIEVAL_SIZE_256 = new Mr23BatchIndexPirParams(
         8192,
         20,
-        new int[]{30, 40, 40, 40, 50},
+        new int[]{52, 52, 52, 52},
         64, 9, 3
     );
 
@@ -111,7 +111,7 @@ public class Mr23BatchIndexPirParams implements IndexPirParams {
     public static Mr23BatchIndexPirParams ELEMENT_LOG_SIZE_22_RETRIEVAL_SIZE_512 = new Mr23BatchIndexPirParams(
         8192,
         20,
-        new int[]{30, 40, 40, 40, 50},
+        new int[]{52, 52, 52, 52},
         64, 5, 3
     );
 
@@ -121,7 +121,7 @@ public class Mr23BatchIndexPirParams implements IndexPirParams {
     public static Mr23BatchIndexPirParams ELEMENT_LOG_SIZE_22_RETRIEVAL_SIZE_1024 = new Mr23BatchIndexPirParams(
         8192,
         20,
-        new int[]{30, 40, 40, 40, 50},
+        new int[]{52, 52, 52, 52},
         32, 9, 3
     );
 
@@ -131,7 +131,7 @@ public class Mr23BatchIndexPirParams implements IndexPirParams {
     public static Mr23BatchIndexPirParams ELEMENT_LOG_SIZE_22_RETRIEVAL_SIZE_2048 = new Mr23BatchIndexPirParams(
         8192,
         20,
-        new int[]{30, 40, 40, 40, 50},
+        new int[]{52, 52, 52, 52},
         32, 5, 3
     );
 
@@ -141,7 +141,7 @@ public class Mr23BatchIndexPirParams implements IndexPirParams {
     public static Mr23BatchIndexPirParams ELEMENT_LOG_SIZE_24_RETRIEVAL_SIZE_256 = new Mr23BatchIndexPirParams(
         8192,
         20,
-        new int[]{30, 40, 40, 40, 50},
+        new int[]{52, 52, 52, 52},
         128, 9, 3
     );
 
@@ -151,7 +151,7 @@ public class Mr23BatchIndexPirParams implements IndexPirParams {
     public static Mr23BatchIndexPirParams ELEMENT_LOG_SIZE_24_RETRIEVAL_SIZE_512 = new Mr23BatchIndexPirParams(
         8192,
         20,
-        new int[]{30, 40, 40, 40, 50},
+        new int[]{52, 52, 52, 52},
         128, 5, 3
     );
 
@@ -161,7 +161,7 @@ public class Mr23BatchIndexPirParams implements IndexPirParams {
     public static Mr23BatchIndexPirParams ELEMENT_LOG_SIZE_24_RETRIEVAL_SIZE_1024 = new Mr23BatchIndexPirParams(
         8192,
         20,
-        new int[]{30, 40, 40, 40, 50},
+        new int[]{52, 52, 52, 52},
         64, 9, 3
     );
 
@@ -171,7 +171,7 @@ public class Mr23BatchIndexPirParams implements IndexPirParams {
     public static Mr23BatchIndexPirParams ELEMENT_LOG_SIZE_24_RETRIEVAL_SIZE_2048 = new Mr23BatchIndexPirParams(
         8192,
         20,
-        new int[]{30, 40, 40, 40, 50},
+        new int[]{52, 52, 52, 52},
         64, 5, 3
     );
 
@@ -181,7 +181,7 @@ public class Mr23BatchIndexPirParams implements IndexPirParams {
     public static Mr23BatchIndexPirParams ELEMENT_LOG_SIZE_26_RETRIEVAL_SIZE_256 = new Mr23BatchIndexPirParams(
         8192,
         20,
-        new int[]{30, 42, 42, 42, 50},
+        new int[]{52, 52, 52, 52},
         256, 9, 3
     );
 
@@ -191,7 +191,7 @@ public class Mr23BatchIndexPirParams implements IndexPirParams {
     public static Mr23BatchIndexPirParams ELEMENT_LOG_SIZE_26_RETRIEVAL_SIZE_512 = new Mr23BatchIndexPirParams(
         8192,
         20,
-        new int[]{30, 42, 42, 42, 50},
+        new int[]{52, 52, 52, 52},
         256, 5, 3
     );
 
@@ -201,7 +201,7 @@ public class Mr23BatchIndexPirParams implements IndexPirParams {
     public static Mr23BatchIndexPirParams ELEMENT_LOG_SIZE_26_RETRIEVAL_SIZE_1024 = new Mr23BatchIndexPirParams(
         8192,
         20,
-        new int[]{30, 42, 42, 42, 50},
+        new int[]{52, 52, 52, 52},
         128, 9, 3
     );
 
@@ -211,7 +211,7 @@ public class Mr23BatchIndexPirParams implements IndexPirParams {
     public static Mr23BatchIndexPirParams ELEMENT_LOG_SIZE_26_RETRIEVAL_SIZE_2048 = new Mr23BatchIndexPirParams(
         8192,
         20,
-        new int[]{30, 42, 42, 42, 50},
+        new int[]{52, 52, 52, 52},
         128, 5, 3
     );
 

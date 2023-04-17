@@ -1,24 +1,24 @@
-package edu.alibaba.mpc4j.s2pc.pir.index.sealpir;
+package edu.alibaba.mpc4j.s2pc.pir.index.vectorizedpir;
 
 import edu.alibaba.mpc4j.common.rpc.MpcAbortException;
 
 import java.nio.ByteBuffer;
 
 /**
- * SEAL PIR client thread.
+ * Vectorized PIR client thread.
  *
  * @author Liqiang Peng
  * @date 2022/8/26
  */
-public class SealPirClientThread extends Thread {
+public class VectorizedPirClientThread extends Thread {
     /**
-     * SEAL PIR client
+     * Vectorized PIR client
      */
-    private final Acls18IndexPirClient client;
+    private final Mr23IndexPirClient client;
     /**
-     * SEAL PIR params
+     * Vectorized PIR params
      */
-    private final Acls18IndexPirParams indexPirParams;
+    private final Mr23IndexPirParams indexPirParams;
     /**
      * element byte length
      */
@@ -36,8 +36,8 @@ public class SealPirClientThread extends Thread {
      */
     private ByteBuffer indexPirResult;
 
-    SealPirClientThread(Acls18IndexPirClient client, Acls18IndexPirParams indexPirParams, int retrievalIndex,
-                        int serverElementSize, int elementByteLength) {
+    VectorizedPirClientThread(Mr23IndexPirClient client, Mr23IndexPirParams indexPirParams, int retrievalIndex,
+                              int serverElementSize, int elementByteLength) {
         this.client = client;
         this.indexPirParams = indexPirParams;
         this.retrievalIndex = retrievalIndex;

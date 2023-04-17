@@ -295,28 +295,6 @@ public class Cmg21UpsiParams implements UpsiParams {
     );
 
     /**
-     * 服务端16M，客户端最大元素数量256
-     */
-    public static final Cmg21UpsiParams SERVER_16M_CLIENT_MAX_256 = Cmg21UpsiParams.uncheckCreate(
-        CuckooHashBinType.NAIVE_3_HASH, 744, 1304,
-        11,
-        44, new int[]{1, 3, 11, 18, 45, 225},
-        4079617, 8192, new int[]{56, 56, 56, 50},
-        16000000, 256
-    );
-
-    /**
-     * 服务端16M，客户端最大元素数量512
-     */
-    public static final Cmg21UpsiParams SERVER_16M_CLIENT_MAX_512 = Cmg21UpsiParams.uncheckCreate(
-        CuckooHashBinType.NAIVE_3_HASH, 1365, 1304,
-        6,
-        44, new int[]{1, 3, 11, 18, 45, 225},
-        4079617, 8192, new int[]{56, 56, 56, 50},
-        16000000, 512
-    );
-
-    /**
      * 服务端16M，客户端最大元素数量1024
      */
     public static final Cmg21UpsiParams SERVER_16M_CLIENT_MAX_1024 = Cmg21UpsiParams.uncheckCreate(

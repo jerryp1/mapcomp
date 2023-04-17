@@ -120,8 +120,8 @@ public class BatchIndexPirMain {
             // 正式测试
             byte[][] serverElementArray = readServerElementArray(serverElementSize, elementBitLength);
             // 单线程
-//            runServer(serverRpc, clientParty, config, taskId++, false, serverElementArray,
-//                clientRetrievalSize[setSizeIndex], elementBitLength, printWriter);
+            runServer(serverRpc, clientParty, config, taskId++, false, serverElementArray,
+                clientRetrievalSize[setSizeIndex], elementBitLength, printWriter);
             // 多线程
             runServer(serverRpc, clientParty, config, taskId++, true, serverElementArray,
                 clientRetrievalSize[setSizeIndex], elementBitLength, printWriter);
@@ -267,8 +267,8 @@ public class BatchIndexPirMain {
             // 读取输入文件
             ArrayList<Integer> indexList = readClientRetrievalIndexList(clientRetrievalSize[setSizeIndex]);
             // 单线程
-//            runClient(clientRpc, serverParty, config, taskId++, false, indexList, serverElementSize, elementBitLength,
-//                printWriter);
+            runClient(clientRpc, serverParty, config, taskId++, false, indexList, serverElementSize, elementBitLength,
+                printWriter);
             // 多线程
             runClient(clientRpc, serverParty, config, taskId++, true, indexList, serverElementSize, elementBitLength,
                 printWriter);

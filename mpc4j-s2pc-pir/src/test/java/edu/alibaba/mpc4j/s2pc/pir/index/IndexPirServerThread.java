@@ -1,50 +1,35 @@
 package edu.alibaba.mpc4j.s2pc.pir.index;
 
 import edu.alibaba.mpc4j.common.rpc.MpcAbortException;
-
-import java.nio.ByteBuffer;
-import java.util.ArrayList;
+import edu.alibaba.mpc4j.crypto.matrix.database.NaiveDatabase;
 
 /**
- * 索引PIR协议服务端线程。
+ * Index PIR server thread.
  *
  * @author Liqiang Peng
  * @date 2022/8/26
  */
 public class IndexPirServerThread extends Thread {
     /**
-     * 索引PIR协议服务端
+     * index PIR server
      */
     private final IndexPirServer server;
     /**
-     * 服务端元素数组
+     * database
      */
-    private final ArrayList<ByteBuffer> elementArrayList;
-    /**
-     * 元素字节长度
-     */
-    private final int elementByteLength;
-    /**
-     * 重复次数
-     */
-    private final int repeatTime;
+    private final NaiveDatabase database;
 
-    IndexPirServerThread(IndexPirServer server, ArrayList<ByteBuffer> elementArrayList, int elementByteLength,
-                         int repeatTime) {
+    IndexPirServerThread(IndexPirServer server, NaiveDatabase database) {
         this.server = server;
-        this.elementArrayList = elementArrayList;
-        this.elementByteLength = elementByteLength;
-        this.repeatTime = repeatTime;
+        this.database = database;
     }
 
     @Override
     public void run() {
         try {
-            server.init(elementArrayList, elementByteLength);
+            server.init(database);
             server.getRpc().synchronize();
-            for (int i = 0; i < repeatTime; i++) {
-                server.pir();
-            }
+            server.pir();
         } catch (MpcAbortException e) {
             e.printStackTrace();
         }

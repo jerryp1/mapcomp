@@ -62,6 +62,10 @@ public class Mr23BatchIndexPirServer extends AbstractBatchIndexPirServer {
      */
     private List<List<byte[]>> encodedDatabase;
     /**
+     * 旋转的明文
+     */
+    private List<byte[]> rotatePlain;
+    /**
      * 哈希分桶
      */
     ArrayList<ArrayList<HashBinEntry<Integer>>> completeHashBins;
@@ -151,6 +155,10 @@ public class Mr23BatchIndexPirServer extends AbstractBatchIndexPirServer {
         // 服务端对数据库进行编码
         stopWatch.start();
         encodedDatabase = new ArrayList<>();
+        int count = CommonUtils.getUnitNum(innerParams.getBinNum() / 2, innerParams.getGroupBinSize());
+        rotatePlain = Mr23BatchIndexPirNativeUtils.preprocessRotatePlain(
+            params.getEncryptionParams(), innerParams.getGroupBinSize(), count
+        );
         for (int partitionIndex = 0; partitionIndex < partitionCount; partitionIndex++) {
             // 每个分桶内的元素vectorized PIR初始化
             IntStream intStream = IntStream.range(0, cuckooHashBin.binNum());
@@ -161,16 +169,12 @@ public class Mr23BatchIndexPirServer extends AbstractBatchIndexPirServer {
                 .collect(Collectors.toList());
             // vectorized batch pir 初始化
             List<long[][]> mergedCoeffs = batchPirSetup(coeffs);
-            Stream<long[][]> stream = mergedCoeffs.stream();
+            IntStream stream = IntStream.range(0, mergedCoeffs.size());
             stream = parallel ? stream.parallel() : stream;
-            encodedDatabase.add(
-                stream
-                    .map(mergedCoeff -> Mr23BatchIndexPirNativeUtils.preprocessDatabase(
-                        params.getEncryptionParams(), mergedCoeff, innerParams.getTotalSize()
-                        ))
-                    .flatMap(Collection::stream)
-                    .collect(Collectors.toList())
-            );
+            encodedDatabase.addAll(stream
+                .mapToObj(i -> Mr23BatchIndexPirNativeUtils.preprocessDatabase(
+                    params.getEncryptionParams(), mergedCoeffs.get(i), params.getFirstTwoDimensionSize()))
+                .collect(Collectors.toList()));
         }
         stopWatch.stop();
         long initTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
@@ -195,39 +199,26 @@ public class Mr23BatchIndexPirServer extends AbstractBatchIndexPirServer {
 
         // 服务端计算回复信息
         stopWatch.start();
-        int totalSize = innerParams.getTotalSize();
         List<byte[]> serverResponsePayload = new ArrayList<>();
-        List<List<byte[]>> rotatedQuery = IntStream.range(0, count)
-            .mapToObj(i ->
-                Mr23BatchIndexPirNativeUtils.rotateQuery(
-                    params.getEncryptionParams(),
-                    galoisKeys,
-                    clientQueryPayload.get(i * params.getDimension()),
-                    params.getFirstTwoDimensionSize()
-                ))
-            .collect(Collectors.toCollection(() -> new ArrayList<>(count)));
         for (int partitionIndex = 0; partitionIndex < partitionCount; partitionIndex++) {
             IntStream intStream = IntStream.range(0, count);
             intStream = parallel ? intStream.parallel() : intStream;
-            int finalPartitionIndex = partitionIndex;
+            int finalPartitionIndex = partitionIndex * count;
             List<byte[]> response = intStream
                 .mapToObj(i ->
                     Mr23BatchIndexPirNativeUtils.generateReply(
                         params.getEncryptionParams(),
                         clientQueryPayload.subList(i * params.getDimension(), (i + 1) * params.getDimension()),
-                        rotatedQuery.get(i),
-                        encodedDatabase.get(finalPartitionIndex).subList(i * totalSize, (i + 1) * totalSize),
+                        encodedDatabase.get(finalPartitionIndex + i),
                         publicKey,
                         relinKeys,
                         galoisKeys,
-                        params.getFirstTwoDimensionSize(),
-                        params.getThirdDimensionSize()
+                        params.getFirstTwoDimensionSize()
                     ))
                 .collect(Collectors.toList());
             // merge response ciphertexts
-            serverResponsePayload.add(
-                Mr23BatchIndexPirNativeUtils.mergeResponse(
-                    params.getEncryptionParams(), publicKey, galoisKeys, response, innerParams.getGroupBinSize()
+            serverResponsePayload.add(Mr23BatchIndexPirNativeUtils.mergeResponse(
+                params.getEncryptionParams(), publicKey, galoisKeys, response, innerParams.getGroupBinSize(), rotatePlain
                 )
             );
         }

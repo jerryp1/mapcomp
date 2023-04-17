@@ -33,6 +33,12 @@
             <version>1.0.7-SNAPSHOT</version>
             <scope>compile</scope>
         </dependency>
+        <dependency>
+            <groupId>edu.alibaba</groupId>
+            <artifactId>mpc4j-crypto-matrix</artifactId>
+            <version>1.0.7-SNAPSHOT</version>
+            <scope>compile</scope>
+        </dependency>
     </dependencies>
 
     <!-- 下面是用于打包的插件，如果不用这个插件导出jar可能会出现问题 -->

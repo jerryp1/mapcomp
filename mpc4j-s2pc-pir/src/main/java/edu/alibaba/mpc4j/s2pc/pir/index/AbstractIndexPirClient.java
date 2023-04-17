@@ -9,22 +9,22 @@ import edu.alibaba.mpc4j.common.tool.MathPreconditions;
 import java.util.Arrays;
 
 /**
- * 索引PIR协议客户端抽象类。
+ * Abstract Index PIR client.
  *
  * @author Liqiang Peng
  * @date 2022/8/24
  */
 public abstract class AbstractIndexPirClient extends AbstractTwoPartyPto implements IndexPirClient {
     /**
-     * 元素字节长度
+     * element byte length
      */
     protected int elementByteLength;
     /**
-     * 客户端检索值
+     * retrieval index
      */
     protected int index;
     /**
-     * 服务端元素数量
+     * database size
      */
     protected int num;
 

@@ -5,6 +5,10 @@ import edu.alibaba.mpc4j.common.tool.MathPreconditions;
 import edu.alibaba.mpc4j.common.tool.utils.BytesUtils;
 import edu.alibaba.mpc4j.common.tool.utils.CommonUtils;
 import edu.alibaba.mpc4j.common.tool.utils.IntUtils;
+import edu.alibaba.mpc4j.crypto.matrix.database.Database;
+import edu.alibaba.mpc4j.crypto.matrix.database.DatabaseFactory;
+import edu.alibaba.mpc4j.crypto.matrix.database.NaiveDatabase;
+import edu.alibaba.mpc4j.crypto.matrix.database.ZlDatabase;
 import org.bouncycastle.util.encoders.Hex;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -128,6 +132,17 @@ public class PirUtils {
     }
 
     /**
+     * Creates a random database.
+     *
+     * @param elementSize      database size.
+     * @param elementBitLength element bit length.
+     * @return random database.
+     */
+    public static NaiveDatabase generateDataBase(int elementSize, int elementBitLength) {
+        return NaiveDatabase.createRandom(elementBitLength, elementSize, SECURE_RANDOM);
+    }
+
+    /**
      * 生成随机元素数组。
      *
      * @param elementSize      元素数量。
@@ -152,6 +167,16 @@ public class PirUtils {
         return IntStream.range(0, setSize)
             .mapToObj(i -> SECURE_RANDOM.nextInt(elementSize))
             .collect(Collectors.toCollection(ArrayList::new));
+    }
+
+    /**
+     * 生成索引值。
+     *
+     * @param elementSize 元素数量。
+     * @return 索引值。
+     */
+    public static int generateRetrievalIndex(int elementSize) {
+        return SECURE_RANDOM.nextInt(elementSize);
     }
 
     /**
@@ -372,6 +397,8 @@ public class PirUtils {
         return indices;
     }
 
+
+
     /**
      * 返回输入数据的比特长度。
      *
@@ -426,5 +453,57 @@ public class PirUtils {
         IntStream.range(0, rowCount)
             .forEach(j -> rotatedCoeffs[j + rowCount] = coeffs[(rowCount - offset + j) % rowCount + rowCount]);
         return rotatedCoeffs;
+    }
+
+    /**
+     * 返回数据库编码后每个维度的长度。
+     *
+     * @param elementSize 元素数量。
+     * @return 数据库编码后每个维度的长度。
+     */
+    public static int[] computeDimensionLength(int elementSize, int dimension) {
+        int[] dimensionLength = IntStream.range(0, dimension)
+            .map(i -> (int) Math.max(2, Math.floor(Math.pow(elementSize, 1.0 / dimension))))
+            .toArray();
+        int product = 1;
+        int j = 0;
+        // if plaintext_num is not a d-power
+        if (dimensionLength[0] != Math.pow(elementSize, 1.0 / dimension)) {
+            while (product < elementSize && j < dimension) {
+                product = 1;
+                dimensionLength[j++]++;
+                for (int i = 0; i < dimension; i++) {
+                    product *= dimensionLength[i];
+                }
+            }
+        }
+        return dimensionLength;
+    }
+
+    /**
+     * 返回数据库编码后每个维度的长度。
+     *
+     * @param elementSize 元素数量。
+     * @return 数据库编码后每个维度的长度。
+     */
+    public static int[] computeDimensionLength(int elementSize, int firstDimensionSize, int subsequentDimensionSize) {
+        ArrayList<Integer> dimensionLength = new ArrayList<>();
+        dimensionLength.add(firstDimensionSize);
+        int product = firstDimensionSize;
+        for (int i = elementSize / firstDimensionSize; i >= subsequentDimensionSize; i /= subsequentDimensionSize) {
+            dimensionLength.add(subsequentDimensionSize);
+            product *= subsequentDimensionSize;
+        }
+        int dimensionSize = dimensionLength.size();
+        int[] dimensionArray = IntStream.range(0, dimensionSize).map(dimensionLength::get).toArray();
+        while (product < elementSize) {
+            dimensionArray[dimensionSize - 1]++;
+            product = 1;
+            product *= Arrays.stream(dimensionArray, 0, dimensionSize).reduce(1, (a, b) -> a * b);
+        }
+        if (dimensionSize == 1 && dimensionArray[0] > firstDimensionSize) {
+            dimensionArray = new int[] {firstDimensionSize, subsequentDimensionSize};
+        }
+        return dimensionArray;
     }
 }

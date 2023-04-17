@@ -4,10 +4,9 @@ import com.google.common.base.Preconditions;
 import edu.alibaba.mpc4j.common.rpc.Rpc;
 import edu.alibaba.mpc4j.common.rpc.RpcManager;
 import edu.alibaba.mpc4j.common.rpc.impl.memory.MemoryRpcManager;
+import edu.alibaba.mpc4j.crypto.matrix.database.NaiveDatabase;
 import edu.alibaba.mpc4j.s2pc.pir.PirUtils;
 import edu.alibaba.mpc4j.s2pc.pir.index.IndexPirFactory;
-import edu.alibaba.mpc4j.s2pc.pir.index.fastpir.Ayaa21IndexPirClient;
-import edu.alibaba.mpc4j.s2pc.pir.index.fastpir.Ayaa21IndexPirServer;
 import org.apache.commons.lang3.StringUtils;
 import org.junit.After;
 import org.junit.Assert;
@@ -32,17 +31,21 @@ import java.util.Collection;
 public class VectorizedPirTest {
     private static final Logger LOGGER = LoggerFactory.getLogger(VectorizedPirTest.class);
     /**
-     * 重复检索次数
+     * default element byte length
      */
-    private static final int REPEAT_TIME = 1;
+    private static final int DEFAULT_ELEMENT_BYTE_LENGTH = 16;
     /**
-     * 默认元素字节长度
+     * large element byte length
      */
-    private static final int DEFAULT_ELEMENT_BYTE_LENGTH = 8;
+    private static final int LARGE_ELEMENT_BYTE_LENGTH = 64;
     /**
-     * 服务端元素数量
+     * small element byte length
      */
-    private static final int SERVER_ELEMENT_SIZE = 1 << 16;
+    private static final int SMALL_ELEMENT_BYTE_LENGTH = 2;
+    /**
+     * database size
+     */
+    private static final int SERVER_ELEMENT_SIZE = 1 << 12;
 
     @Parameterized.Parameters(name = "{0}")
     public static Collection<Object[]> configurations() {
@@ -63,19 +66,19 @@ public class VectorizedPirTest {
     }
 
     /**
-     * 服务端
+     * server rpc
      */
     private final Rpc serverRpc;
     /**
-     * 客户端
+     * client rpc
      */
     private final Rpc clientRpc;
     /**
-     * Vectorized PIR配置项
+     * Vectorized PIR config
      */
     private final Mr23IndexPirConfig indexPirConfig;
     /**
-     * Vectorized PIR参数
+     * Vectorized PIR params
      */
     private final Mr23IndexPirParams indexPirParams;
 
@@ -112,28 +115,32 @@ public class VectorizedPirTest {
         testVectorizedPir(indexPirConfig, indexPirParams, DEFAULT_ELEMENT_BYTE_LENGTH, true);
     }
 
+    @Test
+    public void testLargeElementVectorizedPir() {
+        testVectorizedPir(indexPirConfig, indexPirParams, LARGE_ELEMENT_BYTE_LENGTH, true);
+    }
+
+    @Test
+    public void testSmallElementVectorizedPir() {
+        testVectorizedPir(indexPirConfig, indexPirParams, SMALL_ELEMENT_BYTE_LENGTH, true);
+    }
+
     public void testVectorizedPir(Mr23IndexPirConfig config, Mr23IndexPirParams indexPirParams, int elementByteLength,
                                   boolean parallel) {
-        ArrayList<Integer> retrievalIndexList = PirUtils.generateRetrievalIndexList(SERVER_ELEMENT_SIZE, REPEAT_TIME);
-        // 生成元素数组
-        ArrayList<ByteBuffer> elementList = PirUtils.generateElementArrayList(SERVER_ELEMENT_SIZE, elementByteLength);
-        // 创建参与方实例
+        int retrievalIndex = PirUtils.generateRetrievalIndex(SERVER_ELEMENT_SIZE);
+        NaiveDatabase database = PirUtils.generateDataBase(SERVER_ELEMENT_SIZE, elementByteLength * Byte.SIZE);
         Mr23IndexPirServer server = new Mr23IndexPirServer(serverRpc, clientRpc.ownParty(), config);
         Mr23IndexPirClient client = new Mr23IndexPirClient(clientRpc, serverRpc.ownParty(), config);
-        // 设置并发
+        // set parallel
         server.setParallel(parallel);
         client.setParallel(parallel);
-        VectorizedPirServerThread serverThread = new VectorizedPirServerThread(
-            server, indexPirParams, elementList, elementByteLength, REPEAT_TIME
-        );
-        FastPirClientThread clientThread = new FastPirClientThread(
-            client, indexPirParams, retrievalIndexList, SERVER_ELEMENT_SIZE, elementByteLength, REPEAT_TIME
+        VectorizedPirServerThread serverThread = new VectorizedPirServerThread(server, indexPirParams, database);
+        VectorizedPirClientThread clientThread = new VectorizedPirClientThread(
+            client, indexPirParams, retrievalIndex, SERVER_ELEMENT_SIZE, elementByteLength
         );
         try {
-            // 开始执行协议
             serverThread.start();
             clientThread.start();
-            // 等待线程停止
             serverThread.join();
             clientThread.join();
             LOGGER.info("Server: The Communication costs {}MB", serverRpc.getSendByteLength() * 1.0 / (1024 * 1024));
@@ -141,13 +148,12 @@ public class VectorizedPirTest {
             LOGGER.info("Client: The Communication costs {}MB", clientRpc.getSendByteLength() * 1.0 / (1024 * 1024));
             clientRpc.reset();
             LOGGER.info("Parameters: \n {}", indexPirParams.toString());
-            // 验证结果
-            ArrayList<ByteBuffer> result = clientThread.getRetrievalResult();
-            for (int index = 0; index < REPEAT_TIME; index++) {
-                ByteBuffer retrievalElement = result.get(index);
-                Assert.assertEquals(retrievalElement, elementList.get(retrievalIndexList.get(index)));
-            }
-            LOGGER.info("Client: The Retrieval Set Size is {}", result.size());
+            // verify result
+            ByteBuffer result = clientThread.getRetrievalResult();
+            Assert.assertEquals(
+                result, ByteBuffer.wrap(database.getBytesData(retrievalIndex))
+            );
+            LOGGER.info("Client: The Retrieval Result is Correct");
         } catch (InterruptedException e) {
             e.printStackTrace();
         }

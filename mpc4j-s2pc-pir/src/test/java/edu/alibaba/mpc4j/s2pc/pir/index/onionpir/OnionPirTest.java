@@ -4,6 +4,7 @@ import com.google.common.base.Preconditions;
 import edu.alibaba.mpc4j.common.rpc.Rpc;
 import edu.alibaba.mpc4j.common.rpc.RpcManager;
 import edu.alibaba.mpc4j.common.rpc.impl.memory.MemoryRpcManager;
+import edu.alibaba.mpc4j.crypto.matrix.database.NaiveDatabase;
 import edu.alibaba.mpc4j.s2pc.pir.PirUtils;
 import edu.alibaba.mpc4j.s2pc.pir.index.IndexPirFactory;
 import org.apache.commons.lang3.StringUtils;
@@ -21,7 +22,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 
 /**
- * OnionPIR测试类。
+ * OnionPIR test.
  *
  * @author Liqiang Peng
  * @date 2022/8/26
@@ -30,17 +31,21 @@ import java.util.Collection;
 public class OnionPirTest {
     private static final Logger LOGGER = LoggerFactory.getLogger(OnionPirTest.class);
     /**
-     * 重复检索次数
-     */
-    private static final int REPEAT_TIME = 1;
-    /**
-     * 默认元素字节长度
+     * default element byte length
      */
     private static final int DEFAULT_ELEMENT_BYTE_LENGTH = 64;
     /**
-     * 服务端元素数量
+     * large element byte length
      */
-    private static final int SERVER_ELEMENT_SIZE = 1 << 20;
+    private static final int LARGE_ELEMENT_BYTE_LENGTH = 30000;
+    /**
+     * small element byte length
+     */
+    private static final int SMALL_ELEMENT_BYTE_LENGTH = 8;
+    /**
+     * database size
+     */
+    private static final int SERVER_ELEMENT_SIZE = 1 << 12;
 
     @Parameterized.Parameters(name = "{0}")
     public static Collection<Object[]> configurations() {
@@ -74,19 +79,19 @@ public class OnionPirTest {
     }
 
     /**
-     * 服务端
+     * server rpc
      */
     private final Rpc serverRpc;
     /**
-     * 客户端
+     * client rpc
      */
     private final Rpc clientRpc;
     /**
-     * OnionPIR配置项
+     * OnionPIR config
      */
     private final Mcr21IndexPirConfig indexPirConfig;
     /**
-     * OnionPIR参数
+     * OnionPIR params
      */
     private final Mcr21IndexPirParams indexPirParams;
 
@@ -123,28 +128,31 @@ public class OnionPirTest {
         testOnionPir(indexPirConfig, indexPirParams, DEFAULT_ELEMENT_BYTE_LENGTH, true);
     }
 
+    @Test
+    public void testLargeElementOnionPir() {
+        testOnionPir(indexPirConfig, indexPirParams, LARGE_ELEMENT_BYTE_LENGTH, true);
+    }
+
+    @Test
+    public void testSmallElementOnionPir() {
+        testOnionPir(indexPirConfig, indexPirParams, SMALL_ELEMENT_BYTE_LENGTH, true);
+    }
+
     public void testOnionPir(Mcr21IndexPirConfig config, Mcr21IndexPirParams indexPirParams, int elementByteLength,
-                         boolean parallel) {
-        ArrayList<Integer> retrievalIndexList = PirUtils.generateRetrievalIndexList(SERVER_ELEMENT_SIZE, REPEAT_TIME);
-        // 生成元素数组
-        ArrayList<ByteBuffer> elementList = PirUtils.generateElementArrayList(SERVER_ELEMENT_SIZE, elementByteLength);
-        // 创建参与方实例
+                             boolean parallel) {
+        int retrievalIndex = PirUtils.generateRetrievalIndex(SERVER_ELEMENT_SIZE);
+        NaiveDatabase database = PirUtils.generateDataBase(SERVER_ELEMENT_SIZE, elementByteLength * Byte.SIZE);
         Mcr21IndexPirServer server = new Mcr21IndexPirServer(serverRpc, clientRpc.ownParty(), config);
         Mcr21IndexPirClient client = new Mcr21IndexPirClient(clientRpc, serverRpc.ownParty(), config);
-        // 设置并发
         server.setParallel(parallel);
         client.setParallel(parallel);
-        OnionPirServerThread serverThread = new OnionPirServerThread(
-            server, indexPirParams, elementList, elementByteLength, REPEAT_TIME
-        );
+        OnionPirServerThread serverThread = new OnionPirServerThread(server, indexPirParams, database);
         OnionPirClientThread clientThread = new OnionPirClientThread(
-            client, indexPirParams, retrievalIndexList, SERVER_ELEMENT_SIZE, elementByteLength, REPEAT_TIME
+            client, indexPirParams, retrievalIndex, SERVER_ELEMENT_SIZE, elementByteLength
         );
         try {
-            // 开始执行协议
             serverThread.start();
             clientThread.start();
-            // 等待线程停止
             serverThread.join();
             clientThread.join();
             LOGGER.info("Server: The Communication costs {}MB", serverRpc.getSendByteLength() * 1.0 / (1024 * 1024));
@@ -152,13 +160,12 @@ public class OnionPirTest {
             LOGGER.info("Client: The Communication costs {}MB", clientRpc.getSendByteLength() * 1.0 / (1024 * 1024));
             clientRpc.reset();
             LOGGER.info("Parameters: \n {}", indexPirParams.toString());
-            // 验证结果
-            ArrayList<ByteBuffer> result = clientThread.getRetrievalResult();
-            for (int index = 0; index < REPEAT_TIME; index++) {
-                ByteBuffer retrievalElement = result.get(index);
-                Assert.assertEquals(retrievalElement, elementList.get(retrievalIndexList.get(index)));
-            }
-            LOGGER.info("Client: The Retrieval Set Size is {}", result.size());
+            // verify result
+            ByteBuffer result = clientThread.getRetrievalResult();
+            Assert.assertEquals(
+                result, ByteBuffer.wrap(database.getBytesData(retrievalIndex))
+            );
+            LOGGER.info("Client: The Retrieval Result is Correct");
         } catch (InterruptedException e) {
             e.printStackTrace();
         }

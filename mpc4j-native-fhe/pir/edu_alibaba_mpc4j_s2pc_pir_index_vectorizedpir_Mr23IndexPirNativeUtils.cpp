@@ -148,7 +148,7 @@ JNIEXPORT jbyteArray JNICALL Java_edu_alibaba_mpc4j_s2pc_pir_index_vectorizedpir
     SEALContext context(parms);
     PublicKey public_key = deserialize_public_key(env, pk_bytes, context);
     RelinKeys relin_keys = deserialize_relin_keys(env, relin_keys_bytes, context);
-    GaloisKeys galois_keys = deserialize_galois_keys(env, galois_keys_bytes, context);
+    GaloisKeys* galois_keys = deserialize_galois_keys(env, galois_keys_bytes, context);
     Evaluator evaluator(context);
     Encryptor encryptor(context, public_key);
     vector<Ciphertext> query = deserialize_ciphertexts(env, query_list, context);
@@ -158,7 +158,7 @@ JNIEXPORT jbyteArray JNICALL Java_edu_alibaba_mpc4j_s2pc_pir_index_vectorizedpir
     auto g = (int32_t) ((degree / 2) / first_two_dimension_size);
     vector<Ciphertext> rotated_ciphertexts(first_two_dimension_size);
     for (int32_t i = 0; i < first_two_dimension_size; i++) {
-        evaluator.rotate_rows(query[0], - (i * g), galois_keys, rotated_ciphertexts[i]);
+        evaluator.rotate_rows(query[0], - (i * g), *galois_keys, rotated_ciphertexts[i]);
         evaluator.transform_to_ntt_inplace(rotated_ciphertexts[i]);
     }
     Ciphertext zero;
@@ -186,7 +186,7 @@ JNIEXPORT jbyteArray JNICALL Java_edu_alibaba_mpc4j_s2pc_pir_index_vectorizedpir
         Ciphertext t;
         evaluator.multiply(query[1], first_dimension_ciphers[k], t);
         evaluator.relinearize_inplace(t, relin_keys);
-        evaluator.rotate_rows_inplace(t, -k * g, galois_keys);
+        evaluator.rotate_rows_inplace(t, -k * g, *galois_keys);
         evaluator.add_inplace(second_dimension_cipher, t);
     }
     // third dimension

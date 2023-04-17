@@ -29,7 +29,7 @@ RelinKeys deserialize_relin_keys(JNIEnv *env, jbyteArray relin_key_bytes, const 
 jbyteArray serialize_galois_keys(JNIEnv *env, const GaloisKeys& galois_keys);
 jbyteArray serialize_galois_keys(JNIEnv *env, const Serializable<GaloisKeys>& galois_keys);
 // deserialize galois keys
-GaloisKeys deserialize_galois_keys(JNIEnv *env, jbyteArray galois_key_bytes, const SEALContext& context);
+GaloisKeys* deserialize_galois_keys(JNIEnv *env, jbyteArray galois_key_bytes, const SEALContext& context);
 // serialize ciphertext
 jbyteArray serialize_ciphertext(JNIEnv *env, const Ciphertext& ciphertext);
 jbyteArray serialize_ciphertext(JNIEnv *env, const Serializable<Ciphertext>& ciphertext);
