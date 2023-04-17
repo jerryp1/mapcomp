@@ -1,4 +1,4 @@
-package edu.alibaba.mpc4j.s2pc.aby.circuit.arithmetic.z2;
+package edu.alibaba.mpc4j.s2pc.aby.circuit.z2;
 
 /**
  * @author Li Peng (jerry.pl@alibaba-inc.com)

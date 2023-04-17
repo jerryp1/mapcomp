@@ -1,4 +1,4 @@
-package edu.alibaba.mpc4j.s2pc.aby.circuit.arithmetic.z2;
+package edu.alibaba.mpc4j.s2pc.aby.circuit.z2.arithmetic;
 
 /**
  * @author Li Peng (jerry.pl@alibaba-inc.com)
@@ -9,11 +9,12 @@ import edu.alibaba.mpc4j.common.rpc.MpcAbortException;
 import edu.alibaba.mpc4j.common.tool.bitvector.BitVector;
 import edu.alibaba.mpc4j.s2pc.aby.basics.bc.BcParty;
 import edu.alibaba.mpc4j.s2pc.aby.basics.bc.SquareShareZ2Vector;
+import edu.alibaba.mpc4j.s2pc.aby.circuit.z2.Z2IntegerCircuit;
 
 import java.util.Arrays;
 
 /**
- * Zl mux sender thread.
+ * Z2 arithmetic sender thread.
  *
  * @author Weiran Liu
  * @date 2023/4/10
@@ -39,7 +40,10 @@ class Z2ArithmeticSenderThread extends Thread {
      * z0
      */
     private SquareShareZ2Vector[] shareZ0;
-    private ArithmeticOperator operator;
+    /**
+     * operator
+     */
+    private final ArithmeticOperator operator;
 
 
     Z2ArithmeticSenderThread(BcParty sender, ArithmeticOperator arithmeticOperator, SquareShareZ2Vector[] shareX0, SquareShareZ2Vector[] shareY0) {
@@ -61,11 +65,20 @@ class Z2ArithmeticSenderThread extends Thread {
             Z2IntegerCircuit circuit = new Z2IntegerCircuit(sender);
             switch (operator) {
                 case LEQ:
-                    shareZ0 = new SquareShareZ2Vector[] {circuit.leq(shareX0, shareY0)};
+                    shareZ0 = new SquareShareZ2Vector[]{circuit.leq(shareX0, shareY0)};
                     break;
                 case BIT_ADD:
                     SquareShareZ2Vector cin = SquareShareZ2Vector.createZeros(shareX0[0].getNum());
-                    shareZ0 = circuit.bitAdd(shareX0[0], shareY0[0] ,cin);
+                    shareZ0 = circuit.bitAdd(shareX0[0], shareY0[0], cin);
+                    break;
+                case ADD:
+                    shareZ0 = circuit.add(shareX0, shareY0);
+                    break;
+                case SUB:
+                    shareZ0 = circuit.sub(shareX0, shareY0);
+                    break;
+                case NOT:
+                    shareZ0 = circuit.not(shareX0);
                     break;
                 default:
                     throw new IllegalStateException("Invalid arithmetic operator: " + operator.name());
