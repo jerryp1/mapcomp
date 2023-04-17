@@ -8,16 +8,20 @@ import edu.alibaba.mpc4j.common.tool.MathPreconditions;
 import edu.alibaba.mpc4j.s2pc.pcg.ot.cot.CotSenderOutput;
 
 /**
- * 预计算COT协议发送方。
+ * abstract pre-compute COT sender.
  *
  * @author Weiran Liu
  * @date 2022/01/14
  */
 public abstract class AbstractPreCotSender extends AbstractTwoPartyPto implements PreCotSender {
     /**
-     * 预计算发送方输出
+     * pre-compute sender output
      */
     protected CotSenderOutput preSenderOutput;
+    /**
+     * num
+     */
+    protected int num;
 
     protected AbstractPreCotSender(PtoDesc ptoDesc, Rpc senderRpc, Party receiverParty, PreCotConfig config) {
         super(ptoDesc, senderRpc, receiverParty, config);
@@ -29,8 +33,9 @@ public abstract class AbstractPreCotSender extends AbstractTwoPartyPto implement
 
     protected void setPtoInput(CotSenderOutput preSenderOutput) {
         checkInitialized();
-        MathPreconditions.checkPositive("preCotNum", preSenderOutput.getNum());
+        MathPreconditions.checkPositive("num", preSenderOutput.getNum());
         this.preSenderOutput = preSenderOutput;
+        num = preSenderOutput.getNum();
         extraInfo++;
     }
 }

@@ -58,7 +58,7 @@ public class Gmr21OsnConfig implements OsnConfig {
         private CotConfig cotConfig;
 
         public Builder() {
-            cotConfig = CotFactory.createDefaultConfig(SecurityModel.SEMI_HONEST);
+            cotConfig = CotFactory.createCacheConfig(SecurityModel.SEMI_HONEST);
         }
 
         public Builder setCotConfig(CotConfig cotConfig) {

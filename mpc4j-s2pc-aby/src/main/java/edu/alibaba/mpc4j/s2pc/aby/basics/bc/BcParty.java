@@ -28,7 +28,7 @@ public interface BcParty extends TwoPartyPto {
      * @param x the BitVector to be shared.
      * @return the shared BitVector.
      */
-    SquareSbitVector shareOwn(BitVector x);
+    SquareShareZ2Vector shareOwn(BitVector x);
 
     /**
      * Share its own BitVectors。
@@ -36,7 +36,7 @@ public interface BcParty extends TwoPartyPto {
      * @param xArray the BitVectors to be shared.
      * @return the shared BitVectors.
      */
-    SquareSbitVector[] shareOwn(BitVector[] xArray);
+    SquareShareZ2Vector[] shareOwn(BitVector[] xArray);
 
     /**
      * Share other's BitVector.
@@ -45,7 +45,7 @@ public interface BcParty extends TwoPartyPto {
      * @return the shared BitVector.
      * @throws MpcAbortException if the protocol is abort.
      */
-    SquareSbitVector shareOther(int bitNum) throws MpcAbortException;
+    SquareShareZ2Vector shareOther(int bitNum) throws MpcAbortException;
 
     /**
      * Share other's BitVectors.
@@ -54,7 +54,7 @@ public interface BcParty extends TwoPartyPto {
      * @return the shared BitVectors.
      * @throws MpcAbortException if the protocol is abort.
      */
-    SquareSbitVector[] shareOther(int[] bitNums) throws MpcAbortException;
+    SquareShareZ2Vector[] shareOther(int[] bitNums) throws MpcAbortException;
 
     /**
      * AND operation.
@@ -64,7 +64,7 @@ public interface BcParty extends TwoPartyPto {
      * @return zi, such that z0 ⊕ z1 = z = x & y = (x0 ⊕ x1) & (y0 ⊕ y1).
      * @throws MpcAbortException if the protocol is abort.
      */
-    SquareSbitVector and(SquareSbitVector xi, SquareSbitVector yi) throws MpcAbortException;
+    SquareShareZ2Vector and(SquareShareZ2Vector xi, SquareShareZ2Vector yi) throws MpcAbortException;
 
     /**
      * Vector AND operations.
@@ -74,7 +74,7 @@ public interface BcParty extends TwoPartyPto {
      * @return zi array, such that for each j, z0[j] ⊕ z1[j] = z[j] = x[j] & y[j] = (x0[j] ⊕ x1[j]) & (y0[j] ⊕ y1[j]).
      * @throws MpcAbortException if the protocol is abort.
      */
-    SquareSbitVector[] and(SquareSbitVector[] xiArray, SquareSbitVector[] yiArray) throws MpcAbortException;
+    SquareShareZ2Vector[] and(SquareShareZ2Vector[] xiArray, SquareShareZ2Vector[] yiArray) throws MpcAbortException;
 
     /**
      * XOR operation.
@@ -84,7 +84,7 @@ public interface BcParty extends TwoPartyPto {
      * @return zi, such that z0 ⊕ z1 = z = x ^ y = (x0 ⊕ x1) ^ (y0 ⊕ y1).
      * @throws MpcAbortException if the protocol is abort.
      */
-    SquareSbitVector xor(SquareSbitVector xi, SquareSbitVector yi) throws MpcAbortException;
+    SquareShareZ2Vector xor(SquareShareZ2Vector xi, SquareShareZ2Vector yi) throws MpcAbortException;
 
     /**
      * Vector XOR operation.
@@ -94,7 +94,7 @@ public interface BcParty extends TwoPartyPto {
      * @return zi array, such that for each j, z0[j] ⊕ z1[j] = z[j] = x[j] ^ y[j] = (x0[j] ⊕ x1[j]) ^ (y0[j] ⊕ y1[j]).
      * @throws MpcAbortException if the protocol is abort.
      */
-    SquareSbitVector[] xor(SquareSbitVector[] xiArray, SquareSbitVector[] yiArray) throws MpcAbortException;
+    SquareShareZ2Vector[] xor(SquareShareZ2Vector[] xiArray, SquareShareZ2Vector[] yiArray) throws MpcAbortException;
 
     /**
      * OR operation.
@@ -104,7 +104,7 @@ public interface BcParty extends TwoPartyPto {
      * @return zi, such that z0 ⊕ z1 = z = x | y = (x0 ⊕ x1) | (y0 ⊕ y1).
      * @throws MpcAbortException if the protocol is abort.
      */
-    default SquareSbitVector or(SquareSbitVector xi, SquareSbitVector yi) throws MpcAbortException {
+    default SquareShareZ2Vector or(SquareShareZ2Vector xi, SquareShareZ2Vector yi) throws MpcAbortException {
         return xor(xor(xi, yi), and(xi, yi));
     }
 
@@ -116,7 +116,7 @@ public interface BcParty extends TwoPartyPto {
      * @return zi array, such that for each j, z0[j] ⊕ z1[j] = z[j] = x[j] | y[j] = (x0[j] ⊕ x1[j]) | (y0[j] ⊕ y1[j]).
      * @throws MpcAbortException if the protocol is abort.
      */
-    default SquareSbitVector[] or(SquareSbitVector[] xiArray, SquareSbitVector[] yiArray) throws MpcAbortException {
+    default SquareShareZ2Vector[] or(SquareShareZ2Vector[] xiArray, SquareShareZ2Vector[] yiArray) throws MpcAbortException {
         return xor(xor(xiArray, yiArray), and(xiArray, yiArray));
     }
 
@@ -127,8 +127,8 @@ public interface BcParty extends TwoPartyPto {
      * @return zi, such that z0 ⊕ z1 = z = !x = !(x0 ⊕ x1).
      * @throws MpcAbortException if the protocol is abort.
      */
-    default SquareSbitVector not(SquareSbitVector xi) throws MpcAbortException {
-        return xor(xi, SquareSbitVector.createOnes(xi.bitNum()));
+    default SquareShareZ2Vector not(SquareShareZ2Vector xi) throws MpcAbortException {
+        return xor(xi, SquareShareZ2Vector.createOnes(xi.getNum()));
     }
 
     /**
@@ -138,10 +138,10 @@ public interface BcParty extends TwoPartyPto {
      * @return zi array, such that for each j, z0[j] ⊕ z1[j] = z[j] = !x[j] = !(x0[j] ⊕ x1[j]).
      * @throws MpcAbortException if the protocol is abort.
      */
-    default SquareSbitVector[] not(SquareSbitVector[] xiArray) throws MpcAbortException {
-        SquareSbitVector[] onesArray = Arrays.stream(xiArray)
-            .map(xi -> SquareSbitVector.createOnes(xi.bitNum()))
-            .toArray(SquareSbitVector[]::new);
+    default SquareShareZ2Vector[] not(SquareShareZ2Vector[] xiArray) throws MpcAbortException {
+        SquareShareZ2Vector[] onesArray = Arrays.stream(xiArray)
+            .map(xi -> SquareShareZ2Vector.createOnes(xi.getNum()))
+            .toArray(SquareShareZ2Vector[]::new);
         return xor(xiArray, onesArray);
     }
 
@@ -152,7 +152,7 @@ public interface BcParty extends TwoPartyPto {
      * @return the reconstructed BitVector.
      * @throws MpcAbortException if the protocol is abort.
      */
-    BitVector revealOwn(SquareSbitVector xi) throws MpcAbortException;
+    BitVector revealOwn(SquareShareZ2Vector xi) throws MpcAbortException;
 
     /**
      * Reveal its own BitVectors.
@@ -161,21 +161,21 @@ public interface BcParty extends TwoPartyPto {
      * @return the reconstructed BitVectors.
      * @throws MpcAbortException if the protocol is abort.
      */
-    BitVector[] revealOwn(SquareSbitVector[] xiArray) throws MpcAbortException;
+    BitVector[] revealOwn(SquareShareZ2Vector[] xiArray) throws MpcAbortException;
 
     /**
      * Reconstruct other's BitVector.
      *
      * @param xi the shared BitVector.
      */
-    void revealOther(SquareSbitVector xi);
+    void revealOther(SquareShareZ2Vector xi);
 
     /**
      * Reconstruct other's BitVectors.
      *
      * @param xiArray the shared BitVectors.
      */
-    void revealOther(SquareSbitVector[] xiArray);
+    void revealOther(SquareShareZ2Vector[] xiArray);
 
     /**
      * Get the number of input bits for secure boolean circuit computation.

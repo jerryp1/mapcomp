@@ -37,7 +37,7 @@ public abstract class AbstractZ2CoreMtgParty extends AbstractTwoPartyPto impleme
     }
 
     protected void setInitInput(int maxNum) {
-        MathPreconditions.checkPositiveInRangeClosed("maxNum", maxNum, config.maxAllowNum());
+        MathPreconditions.checkPositiveInRangeClosed("maxNum", maxNum, config.maxNum());
         this.maxNum = maxNum;
         initState();
     }

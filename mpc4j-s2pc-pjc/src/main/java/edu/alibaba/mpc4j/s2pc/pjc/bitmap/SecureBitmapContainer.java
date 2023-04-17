@@ -1,6 +1,6 @@
 package edu.alibaba.mpc4j.s2pc.pjc.bitmap;
 
-import edu.alibaba.mpc4j.s2pc.aby.basics.bc.SquareSbitVector;
+import edu.alibaba.mpc4j.s2pc.aby.basics.bc.SquareShareZ2Vector;
 import org.roaringbitmap.BitmapContainer;
 
 /**
@@ -21,14 +21,14 @@ public class SecureBitmapContainer {
     /**
      * 秘密分享值
      */
-    final SquareSbitVector vector;
+    final SquareShareZ2Vector vector;
 
-    public SecureBitmapContainer(SquareSbitVector vector) {
-        this.containerNum = BitmapUtils.getContainerNum(vector.bitNum());
+    public SecureBitmapContainer(SquareShareZ2Vector vector) {
+        this.containerNum = BitmapUtils.getContainerNum(vector.getNum());
         this.vector = vector;
     }
 
-    public SquareSbitVector getVector() {
+    public SquareShareZ2Vector getVector() {
         return vector;
     }
 
@@ -37,7 +37,7 @@ public class SecureBitmapContainer {
     }
 
     public int getCapacity() {
-        return vector.bitNum();
+        return vector.getNum();
     }
 
     public boolean isPublic() {

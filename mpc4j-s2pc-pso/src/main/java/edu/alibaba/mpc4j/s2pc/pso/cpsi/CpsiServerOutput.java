@@ -1,7 +1,7 @@
 package edu.alibaba.mpc4j.s2pc.pso.cpsi;
 
 import edu.alibaba.mpc4j.common.tool.MathPreconditions;
-import edu.alibaba.mpc4j.s2pc.aby.basics.bc.SquareSbitVector;
+import edu.alibaba.mpc4j.s2pc.aby.basics.bc.SquareShareZ2Vector;
 
 import java.util.ArrayList;
 
@@ -19,17 +19,17 @@ public class CpsiServerOutput<T> {
     /**
      * the server share bits
      */
-    private final SquareSbitVector z0;
+    private final SquareShareZ2Vector z0;
     /**
      * β
      */
     private final int beta;
 
-    public CpsiServerOutput(ArrayList<T> table, SquareSbitVector z0) {
+    public CpsiServerOutput(ArrayList<T> table, SquareShareZ2Vector z0) {
         MathPreconditions.checkPositive("β", table.size());
         this.table = table;
         beta = table.size();
-        MathPreconditions.checkEqual("share bit length", "β", z0.bitNum(), beta);
+        MathPreconditions.checkEqual("share bit length", "β", z0.getNum(), beta);
         this.z0 = z0;
     }
 
@@ -41,7 +41,7 @@ public class CpsiServerOutput<T> {
         return table;
     }
 
-    public SquareSbitVector getZ0() {
+    public SquareShareZ2Vector getZ0() {
         return z0;
     }
 }

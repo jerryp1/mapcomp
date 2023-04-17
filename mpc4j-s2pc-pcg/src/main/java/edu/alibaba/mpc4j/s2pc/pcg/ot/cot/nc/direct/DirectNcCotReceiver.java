@@ -13,14 +13,14 @@ import java.util.concurrent.TimeUnit;
 import java.util.stream.IntStream;
 
 /**
- * 直接NC-COT接收方。
+ * direct no-choice COT receiver.
  *
  * @author Weiran Liu
  * @date 2022/7/14
  */
 public class DirectNcCotReceiver extends AbstractNcCotReceiver {
     /**
-     * 核COT协议接收方
+     * core COT receiver
      */
     private final CoreCotReceiver coreCotReceiver;
 
@@ -51,11 +51,10 @@ public class DirectNcCotReceiver extends AbstractNcCotReceiver {
         logPhaseInfo(PtoState.PTO_BEGIN);
 
         stopWatch.start();
-        // 随机生成选择比特，应用核COT协议生成指定数量的COT
+        // randomly generate choice bits.
         boolean[] choices = new boolean[num];
         IntStream.range(0, num).forEach(index -> choices[index] = secureRandom.nextBoolean());
         CotReceiverOutput receiverOutput = coreCotReceiver.receive(choices);
-        receiverOutput.reduce(num);
         stopWatch.stop();
         long coreCotTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
         stopWatch.reset();

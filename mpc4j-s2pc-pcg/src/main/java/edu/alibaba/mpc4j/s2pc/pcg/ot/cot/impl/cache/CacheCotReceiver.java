@@ -14,26 +14,26 @@ import edu.alibaba.mpc4j.s2pc.pcg.ot.cot.pre.PreCotReceiver;
 import java.util.concurrent.TimeUnit;
 
 /**
- * 缓存COT接收方。
+ * cache COT receiver.
  *
  * @author Weiran Liu
  * @date 2022/7/13
  */
 public class CacheCotReceiver extends AbstractCotReceiver {
     /**
-     * NC-COT接收方
+     * no-choice COT receiver
      */
     private final NcCotReceiver ncCotReceiver;
     /**
-     * 预计算COT协议接收方
+     * precompute COT receiver
      */
     private final PreCotReceiver preCotReceiver;
     /**
-     * 更新时的执行轮数
+     * update round
      */
     private int updateRound;
     /**
-     * 缓存区
+     * buffer
      */
     private CotReceiverOutput buffer;
 
@@ -51,17 +51,17 @@ public class CacheCotReceiver extends AbstractCotReceiver {
         logPhaseInfo(PtoState.INIT_BEGIN);
 
         stopWatch.start();
-        int updateRoundNum;
+        int perRoundNum;
         if (updateNum <= config.maxBaseNum()) {
-            // 如果最大数量小于基础最大数量，则执行1轮最大数量即可
-            updateRoundNum = updateNum;
+            // we only need to run single round
+            perRoundNum = updateNum;
             updateRound = 1;
         } else {
-            // 如果最大数量大于基础最大数量，则分批执行
-            updateRoundNum = config.maxBaseNum();
+            // we need to run multiple round
+            perRoundNum = config.maxBaseNum();
             updateRound = (int) Math.ceil((double) updateNum / config.maxBaseNum());
         }
-        ncCotReceiver.init(updateRoundNum);
+        ncCotReceiver.init(perRoundNum);
         buffer = CotReceiverOutput.createEmpty();
         preCotReceiver.init();
         stopWatch.stop();
@@ -78,7 +78,7 @@ public class CacheCotReceiver extends AbstractCotReceiver {
         logPhaseInfo(PtoState.PTO_BEGIN);
 
         while (num > buffer.getNum()) {
-            // 如果所需的数量大于缓存区数量，则继续生成
+            // generate COT when we do not have enough ones
             for (int round = 1; round <= updateRound; round++) {
                 stopWatch.start();
                 CotReceiverOutput cotReceiverOutput = ncCotReceiver.receive();
@@ -93,12 +93,12 @@ public class CacheCotReceiver extends AbstractCotReceiver {
         stopWatch.start();
         CotReceiverOutput receiverOutput = buffer.split(num);
         stopWatch.stop();
-        long splitTripleTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
+        long splitTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
         stopWatch.reset();
-        logStepInfo(PtoState.PTO_STEP, 1, 2, splitTripleTime);
+        logStepInfo(PtoState.PTO_STEP, 1, 2, splitTime);
 
         stopWatch.start();
-        // 应用预计算COT协议纠正选择比特
+        // correct choices using precompute COT
         receiverOutput = preCotReceiver.receive(receiverOutput, choices);
         stopWatch.stop();
         long preCotTime = stopWatch.getTime(TimeUnit.MILLISECONDS);

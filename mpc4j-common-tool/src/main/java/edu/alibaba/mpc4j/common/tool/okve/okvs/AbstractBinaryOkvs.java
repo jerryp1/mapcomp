@@ -57,8 +57,8 @@ abstract class AbstractBinaryOkvs<T> implements BinaryOkvs<T> {
         // 二进制OKVS可以编码1个元素
         assert n > 0;
         this.n = n;
-        // 要求l > 统计安全常数，且l可以被Byte.SIZE整除
-        assert l >= CommonConstants.STATS_BIT_LENGTH && l % Byte.SIZE == 0;
+        // l >= σ
+        assert l >= CommonConstants.STATS_BIT_LENGTH;
         this.l = l;
         byteL = CommonUtils.getByteLength(l);
         // 要求m >= n，且m可以被Byte.SIZE整除

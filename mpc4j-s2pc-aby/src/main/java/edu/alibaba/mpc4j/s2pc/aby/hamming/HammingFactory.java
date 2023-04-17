@@ -67,7 +67,7 @@ public class HammingFactory {
         HammingType type = config.getPtoType();
         switch (type) {
             case BCP13_SEMI_HONEST:
-                return new Bcp13ShHammingReceiver(receiverRpc, senderParty, (Bcp13ShHammingConfig)config);
+                return new Bcp13ShHammingReceiver(receiverRpc, senderParty, (Bcp13ShHammingConfig) config);
             case BCP13_MALICIOUS:
             default:
                 throw new IllegalArgumentException("Invalid " + HammingType.class.getSimpleName() + ": " + type.name());
@@ -84,11 +84,11 @@ public class HammingFactory {
         switch (securityModel) {
             case IDEAL:
                 return new Bcp13ShHammingConfig.Builder()
-                    .setCotConfig(CotFactory.createDefaultConfig(SecurityModel.IDEAL))
+                    .setCotConfig(CotFactory.createCacheConfig(SecurityModel.IDEAL))
                     .build();
             case SEMI_HONEST:
                 return new Bcp13ShHammingConfig.Builder()
-                    .setCotConfig(CotFactory.createDefaultConfig(SecurityModel.SEMI_HONEST))
+                    .setCotConfig(CotFactory.createCacheConfig(SecurityModel.SEMI_HONEST))
                     .build();
             case COVERT:
             case MALICIOUS:

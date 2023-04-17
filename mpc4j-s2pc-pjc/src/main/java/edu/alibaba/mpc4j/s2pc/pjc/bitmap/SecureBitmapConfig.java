@@ -80,7 +80,7 @@ public class SecureBitmapConfig implements BitmapConfig {
         private HammingConfig hammingConfig;
 
         public Builder() {
-            bcConfig = BcFactory.createDefaultConfig(SecurityModel.SEMI_HONEST);
+            bcConfig = BcFactory.createDefaultConfig(SecurityModel.SEMI_HONEST, true);
             hammingConfig = HammingFactory.createDefaultConfig(SecurityModel.SEMI_HONEST);
         }
 

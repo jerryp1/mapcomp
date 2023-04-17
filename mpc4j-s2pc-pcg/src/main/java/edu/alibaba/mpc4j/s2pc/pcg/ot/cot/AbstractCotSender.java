@@ -9,30 +9,30 @@ import edu.alibaba.mpc4j.common.tool.MathPreconditions;
 import edu.alibaba.mpc4j.common.tool.utils.BytesUtils;
 
 /**
- * COT协议发送方。
+ * abstract COT sender.
  *
  * @author Weiran Liu
  * @date 2022/7/13
  */
 public abstract class AbstractCotSender extends AbstractTwoPartyPto implements CotSender {
     /**
-     * 配置项
+     * the config
      */
     protected final CotConfig config;
     /**
-     * 关联值Δ
+     * Δ
      */
     protected byte[] delta;
     /**
-     * 最大单轮数量
+     * max round num
      */
     protected int maxRoundNum;
     /**
-     * 更新数量
+     * update num
      */
     protected long updateNum;
     /**
-     * 单次数量
+     * num
      */
     protected int num;
 
@@ -43,7 +43,6 @@ public abstract class AbstractCotSender extends AbstractTwoPartyPto implements C
 
     protected void setInitInput(byte[] delta, int maxRoundNum, int updateNum) {
         MathPreconditions.checkEqual("Δ.length", "λ(B)", delta.length, CommonConstants.BLOCK_BYTE_LENGTH);
-        // 拷贝一份
         this.delta = BytesUtils.clone(delta);
         MathPreconditions.checkPositiveInRangeClosed("maxRoundNum", maxRoundNum, config.maxBaseNum());
         this.maxRoundNum = maxRoundNum;
@@ -56,6 +55,6 @@ public abstract class AbstractCotSender extends AbstractTwoPartyPto implements C
         checkInitialized();
         MathPreconditions.checkPositiveInRangeClosed("num", num, maxRoundNum);
         this.num = num;
-        extraInfo ++;
+        extraInfo++;
     }
 }

@@ -3,7 +3,7 @@ package edu.alibaba.mpc4j.s2pc.aby.sbitmap;
 import com.google.common.base.Preconditions;
 import edu.alibaba.mpc4j.common.tool.MathPreconditions;
 import edu.alibaba.mpc4j.common.tool.bitvector.BitVector;
-import edu.alibaba.mpc4j.s2pc.aby.basics.bc.SquareSbitVector;
+import edu.alibaba.mpc4j.s2pc.aby.basics.bc.SquareShareZ2Vector;
 import edu.alibaba.mpc4j.s2pc.aby.sbitmap.utils.RoaringBitmapUtils;
 import org.roaringbitmap.RoaringBitmap;
 
@@ -43,7 +43,7 @@ public class RoaringSecureBitmap implements SecureBitmap {
     /**
      * the non-plain bitmap
      */
-    private SquareSbitVector[] sbitVectors;
+    private SquareShareZ2Vector[] sbitVectors;
 
     /**
      * Create a roaring secure bitmap in plain state.
@@ -107,7 +107,7 @@ public class RoaringSecureBitmap implements SecureBitmap {
      * @param vectors     the secure bit vectors.
      * @return the created secure bitmap.
      */
-    public static RoaringSecureBitmap fromSbitVectors(int totalBitNum, char[] keys, SquareSbitVector[] vectors) {
+    public static RoaringSecureBitmap fromSbitVectors(int totalBitNum, char[] keys, SquareShareZ2Vector[] vectors) {
         RoaringSecureBitmap secureBitmap = new RoaringSecureBitmap();
         secureBitmap.setTotalBitNum(totalBitNum);
         MathPreconditions.checkEqual("keys.length", "vectors.length", keys.length, vectors.length);
@@ -148,13 +148,13 @@ public class RoaringSecureBitmap implements SecureBitmap {
      *
      * @return the secure bit vectors.
      */
-    public SquareSbitVector[] getSbitVectors() {
+    public SquareShareZ2Vector[] getSbitVectors() {
         if (plain) {
             // convert the bitmap to be a bit vector array, then create its corresponding secure bit vector array.
             BitVector[] bitVectors = RoaringBitmapUtils.toRoaringBitVectors(totalBitNum, bitmap);
             return Arrays.stream(bitVectors)
-                .map(bitVector -> SquareSbitVector.create(bitVector, plain))
-                .toArray(SquareSbitVector[]::new);
+                .map(bitVector -> SquareShareZ2Vector.create(bitVector, plain))
+                .toArray(SquareShareZ2Vector[]::new);
         } else {
             // directly return the secure bit vector array.
             return sbitVectors;

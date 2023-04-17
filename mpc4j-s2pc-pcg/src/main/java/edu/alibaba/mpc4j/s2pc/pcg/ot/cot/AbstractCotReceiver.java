@@ -6,33 +6,31 @@ import edu.alibaba.mpc4j.common.rpc.desc.PtoDesc;
 import edu.alibaba.mpc4j.common.rpc.pto.AbstractTwoPartyPto;
 import edu.alibaba.mpc4j.common.tool.MathPreconditions;
 
-import java.util.Arrays;
-
 /**
- * COT协议接收方。
+ * abstract COT receiver.
  *
  * @author Weiran Liu
  * @date 2022/7/13
  */
 public abstract class AbstractCotReceiver extends AbstractTwoPartyPto implements CotReceiver {
     /**
-     * 配置项
+     * the config
      */
     protected final CotConfig config;
     /**
-     * 最大单轮数量
+     * max round num
      */
     protected int maxRoundNum;
     /**
-     * 更新数量
+     * update num
      */
     protected long updateNum;
     /**
-     * 选择比特
+     * choices
      */
     protected boolean[] choices;
     /**
-     * 选择比特数量
+     * num
      */
     protected int num;
 
@@ -52,8 +50,7 @@ public abstract class AbstractCotReceiver extends AbstractTwoPartyPto implements
     protected void setPtoInput(boolean[] choices) {
         checkInitialized();
         MathPreconditions.checkPositiveInRangeClosed("num", choices.length, maxRoundNum);
-        // 拷贝一份
-        this.choices = Arrays.copyOf(choices, choices.length);
+        this.choices = choices;
         num = choices.length;
         extraInfo++;
     }

@@ -12,6 +12,7 @@ import edu.alibaba.mpc4j.common.tool.bitvector.BitVectorFactory;
 import edu.alibaba.mpc4j.common.tool.utils.BigIntegerUtils;
 import edu.alibaba.mpc4j.common.tool.utils.BytesUtils;
 import edu.alibaba.mpc4j.common.tool.utils.CommonUtils;
+import edu.alibaba.mpc4j.crypto.matrix.MatrixUtils;
 import org.apache.commons.lang3.builder.EqualsBuilder;
 import org.apache.commons.lang3.builder.HashCodeBuilder;
 import org.bouncycastle.util.encoders.Hex;
@@ -28,10 +29,6 @@ import java.util.stream.IntStream;
  * @date 2023/3/31
  */
 public class ZlDatabase implements ModBitNumDatabase {
-    /**
-     * display data rows
-     */
-    private static final int DISPLAY_DATA_ROWS = 256;
     /**
      * element bit length
      */
@@ -242,7 +239,7 @@ public class ZlDatabase implements ModBitNumDatabase {
 
     @Override
     public String toString() {
-        String[] stringData = Arrays.stream(Arrays.copyOf(data, DISPLAY_DATA_ROWS))
+        String[] stringData = Arrays.stream(Arrays.copyOf(data, MatrixUtils.DISPLAY_NUM))
             .map(Hex::toHexString)
             .toArray(String[]::new);
         return this.getClass().getSimpleName() + " (l = " + l + "): " + Arrays.toString(stringData);

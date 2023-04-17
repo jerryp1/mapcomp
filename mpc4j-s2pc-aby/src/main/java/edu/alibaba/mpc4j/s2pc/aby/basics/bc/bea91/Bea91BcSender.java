@@ -7,7 +7,7 @@ import edu.alibaba.mpc4j.common.tool.bitvector.BitVector;
 import edu.alibaba.mpc4j.common.tool.bitvector.BitVectorFactory;
 import edu.alibaba.mpc4j.common.tool.utils.BytesUtils;
 import edu.alibaba.mpc4j.s2pc.aby.basics.bc.AbstractBcParty;
-import edu.alibaba.mpc4j.s2pc.aby.basics.bc.SquareSbitVector;
+import edu.alibaba.mpc4j.s2pc.aby.basics.bc.SquareShareZ2Vector;
 import edu.alibaba.mpc4j.s2pc.pcg.mtg.z2.Z2MtgFactory;
 import edu.alibaba.mpc4j.s2pc.pcg.mtg.z2.Z2MtgParty;
 import edu.alibaba.mpc4j.s2pc.pcg.mtg.z2.Z2Triple;
@@ -18,14 +18,14 @@ import java.util.List;
 import java.util.concurrent.TimeUnit;
 
 /**
- * Beaver91-BC协议发送方。
+ * Bea91 Boolean circuit sender.
  *
  * @author Weiran Liu
  * @date 2022/02/14
  */
 public class Bea91BcSender extends AbstractBcParty {
     /**
-     * 布尔三元组生成协议发送方
+     * Boolean triple generation sender
      */
     private final Z2MtgParty z2MtgSender;
 
@@ -51,7 +51,7 @@ public class Bea91BcSender extends AbstractBcParty {
     }
 
     @Override
-    public SquareSbitVector shareOwn(BitVector x) {
+    public SquareShareZ2Vector shareOwn(BitVector x) {
         setShareOwnInput(x);
         logPhaseInfo(PtoState.PTO_BEGIN, "send share");
 
@@ -70,11 +70,11 @@ public class Bea91BcSender extends AbstractBcParty {
         logStepInfo(PtoState.PTO_STEP, 1, 1, shareTime, "send share");
 
         logPhaseInfo(PtoState.PTO_END, "send share");
-        return SquareSbitVector.create(x0BitVector, false);
+        return SquareShareZ2Vector.create(x0BitVector, false);
     }
 
     @Override
-    public SquareSbitVector shareOther(int bitNum) throws MpcAbortException {
+    public SquareShareZ2Vector shareOther(int bitNum) throws MpcAbortException {
         setShareOtherInput(bitNum);
         logPhaseInfo(PtoState.PTO_BEGIN, "receive share");
 
@@ -92,20 +92,20 @@ public class Bea91BcSender extends AbstractBcParty {
         logStepInfo(PtoState.PTO_STEP, 1, 1, shareTime, "receive share");
 
         logPhaseInfo(PtoState.PTO_END, "receive share");
-        return SquareSbitVector.create(x0BitVector, false);
+        return SquareShareZ2Vector.create(x0BitVector, false);
     }
 
     @Override
-    public SquareSbitVector and(SquareSbitVector x0, SquareSbitVector y0) throws MpcAbortException {
+    public SquareShareZ2Vector and(SquareShareZ2Vector x0, SquareShareZ2Vector y0) throws MpcAbortException {
         setAndInput(x0, y0);
         if (x0.isPlain() && y0.isPlain()) {
-            // x0和y0为明文比特向量，发送方和接收方都执行AND运算
+            // x0 and y0 are plain bit vector, using plain AND.
             return x0.and(y0);
         } else if (x0.isPlain() || y0.isPlain()) {
-            // x0或y0为明文比特向量，发送方和接收方都执行AND运算
+            // x0 or y0 is plain bit vector, using plain AND.
             return x0.and(y0);
         } else {
-            // x0和y0为密文比特向量，执行AND协议
+            // x0 and y0 are secret bit vector, using secret AND.
             andGateNum += bitNum;
             logPhaseInfo(PtoState.PTO_BEGIN, "and");
 
@@ -116,7 +116,7 @@ public class Bea91BcSender extends AbstractBcParty {
             stopWatch.reset();
             logStepInfo(PtoState.PTO_STEP, 1, 3, z2MtgTime, "and (gen. Boolean triples)");
 
-            // 计算e0和f0
+            // compute e0 and f0
             stopWatch.start();
             byte[] a0 = z2Triple.getA();
             byte[] b0 = z2Triple.getB();
@@ -156,7 +156,7 @@ public class Bea91BcSender extends AbstractBcParty {
             BytesUtils.andi(f, a0);
             BytesUtils.xori(z0, f);
             BytesUtils.xori(z0, c0);
-            SquareSbitVector z0ShareBitVector = SquareSbitVector.create(bitNum, z0, false);
+            SquareShareZ2Vector z0ShareBitVector = SquareShareZ2Vector.create(bitNum, z0, false);
             stopWatch.stop();
             long z0Time = stopWatch.getTime(TimeUnit.MILLISECONDS);
             stopWatch.reset();
@@ -168,21 +168,21 @@ public class Bea91BcSender extends AbstractBcParty {
     }
 
     @Override
-    public SquareSbitVector xor(SquareSbitVector x0, SquareSbitVector y0) {
+    public SquareShareZ2Vector xor(SquareShareZ2Vector x0, SquareShareZ2Vector y0) {
         setXorInput(x0, y0);
         if (x0.isPlain() && y0.isPlain()) {
-            // x0和y0为明文比特向量，发送方和接收方都执行XOR运算
+            // x0 and y0 are plain bit vector, using plain XOR.
             return x0.xor(y0, true);
         } else if (x0.isPlain() || y0.isPlain()) {
-            // x0或y0为明文比特向量，发送方进行XOR运算，接收方不执行XOR运算
+            // x0 or y0 is plain bit vector, the sender does plain XOR.
             return x0.xor(y0, false);
         } else {
-            // x0和y0为密文比特向量，发送方和接收方都执行XOR运算
+            // x0 and y0 are secret bit vector, using secret XOR.
             xorGateNum += bitNum;
             logPhaseInfo(PtoState.PTO_BEGIN, "xor");
 
             stopWatch.start();
-            SquareSbitVector z0ShareBitVector = x0.xor(y0, false);
+            SquareShareZ2Vector z0ShareBitVector = x0.xor(y0, false);
             stopWatch.stop();
             long z0Time = stopWatch.getTime(TimeUnit.MILLISECONDS);
             stopWatch.reset();
@@ -194,7 +194,7 @@ public class Bea91BcSender extends AbstractBcParty {
     }
 
     @Override
-    public BitVector revealOwn(SquareSbitVector x0) throws MpcAbortException {
+    public BitVector revealOwn(SquareShareZ2Vector x0) throws MpcAbortException {
         setRevealOwnInput(x0);
         if (x0.isPlain()) {
             return x0.getBitVector();
@@ -209,7 +209,7 @@ public class Bea91BcSender extends AbstractBcParty {
             );
             List<byte[]> x1Payload = rpc.receive(x1Header).getPayload();
             MpcAbortPreconditions.checkArgument(x1Payload.size() == 1);
-            SquareSbitVector x1 = SquareSbitVector.create(bitNum, x1Payload.get(0), true);
+            SquareShareZ2Vector x1 = SquareShareZ2Vector.create(bitNum, x1Payload.get(0), true);
             stopWatch.stop();
             long revealTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
             stopWatch.reset();
@@ -221,7 +221,7 @@ public class Bea91BcSender extends AbstractBcParty {
     }
 
     @Override
-    public void revealOther(SquareSbitVector x0) {
+    public void revealOther(SquareShareZ2Vector x0) {
         setRevealOtherInput(x0);
         if (!x0.isPlain()) {
             outputBitNum += bitNum;

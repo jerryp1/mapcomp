@@ -12,6 +12,7 @@ import edu.alibaba.mpc4j.common.tool.bitvector.BitVectorFactory;
 import edu.alibaba.mpc4j.common.tool.utils.BytesUtils;
 import edu.alibaba.mpc4j.common.tool.utils.CommonUtils;
 import edu.alibaba.mpc4j.common.tool.utils.LongUtils;
+import edu.alibaba.mpc4j.crypto.matrix.MatrixUtils;
 import org.apache.commons.lang3.builder.EqualsBuilder;
 import org.apache.commons.lang3.builder.HashCodeBuilder;
 
@@ -21,16 +22,12 @@ import java.util.Arrays;
 import java.util.stream.IntStream;
 
 /**
- * Zl64 database. Each data is an element in Z_{2^l} represented by byte[] where l ∈ (0, LongUtil.MAX_L].
+ * Zl64 database. Each data is an element in Z_{2^l} represented by long where l ∈ (0, LongUtil.MAX_L].
  *
  * @author Weiran Liu
  * @date 2023/4/4
  */
 public class Zl64Database implements ModBitNumDatabase {
-    /**
-     * display data rows
-     */
-    private static final int DISPLAY_DATA_ROWS = 256;
     /**
      * element bit length
      */
@@ -140,7 +137,7 @@ public class Zl64Database implements ModBitNumDatabase {
             .mapToLong(LongUtils::byteArrayToLong)
             .toArray();
         // create the result
-        return create(l, data);
+        return Zl64Database.create(l, data);
     }
 
     /**
@@ -307,6 +304,7 @@ public class Zl64Database implements ModBitNumDatabase {
 
     @Override
     public String toString() {
-        return this.getClass().getSimpleName() + " (l = " + l + "): " + Arrays.toString(Arrays.copyOf(data, DISPLAY_DATA_ROWS));
+        return this.getClass().getSimpleName() + " (l = " + l + "): "
+            + Arrays.toString(Arrays.copyOf(data, MatrixUtils.DISPLAY_NUM));
     }
 }

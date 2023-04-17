@@ -8,8 +8,7 @@ import edu.alibaba.mpc4j.common.rpc.impl.memory.MemoryRpcManager;
 import edu.alibaba.mpc4j.common.tool.CommonConstants;
 import edu.alibaba.mpc4j.common.tool.benes.BenesNetworkUtils;
 import edu.alibaba.mpc4j.common.tool.utils.BytesUtils;
-import edu.alibaba.mpc4j.s2pc.pcg.ot.cot.impl.cache.CacheCotConfig;
-import edu.alibaba.mpc4j.s2pc.pcg.ot.cot.impl.direct.DirectCotConfig;
+import edu.alibaba.mpc4j.s2pc.pcg.ot.cot.CotFactory;
 import edu.alibaba.mpc4j.s2pc.opf.osn.gmr21.Gmr21OsnConfig;
 import edu.alibaba.mpc4j.s2pc.opf.osn.ms13.Ms13OsnConfig;
 import org.apache.commons.lang3.StringUtils;
@@ -66,37 +65,38 @@ public class OsnTest {
 
     @Parameterized.Parameters(name = "{0}")
     public static Collection<Object[]> configurations() {
-        Collection<Object[]> configurationParams = new ArrayList<>();
+        Collection<Object[]> configurations = new ArrayList<>();
+
         // GMR21 (silent COT)
-        configurationParams.add(new Object[] {
+        configurations.add(new Object[] {
             OsnFactory.OsnType.GMR21.name() + " (silent COT)",
             new Gmr21OsnConfig.Builder()
-                .setCotConfig(new CacheCotConfig.Builder(SecurityModel.SEMI_HONEST).build())
+                .setCotConfig(CotFactory.createCacheConfig(SecurityModel.SEMI_HONEST))
                 .build(),
         });
         // GMR21 with direct COT
-        configurationParams.add(new Object[] {
+        configurations.add(new Object[] {
             OsnFactory.OsnType.GMR21.name() + " (direct COT)",
             new Gmr21OsnConfig.Builder()
-                .setCotConfig(new DirectCotConfig.Builder(SecurityModel.SEMI_HONEST).build())
+                .setCotConfig(CotFactory.createDirectConfig(SecurityModel.SEMI_HONEST))
                 .build(),
         });
         // MS13 with silent COT
-        configurationParams.add(new Object[] {
+        configurations.add(new Object[] {
             OsnFactory.OsnType.MS13.name() + " (silent COT)",
             new Ms13OsnConfig.Builder()
-                .setCotConfig(new CacheCotConfig.Builder(SecurityModel.SEMI_HONEST).build())
+                .setCotConfig(CotFactory.createCacheConfig(SecurityModel.SEMI_HONEST))
                 .build(),
         });
         // MS13 with direct COT
-        configurationParams.add(new Object[] {
+        configurations.add(new Object[] {
             OsnFactory.OsnType.MS13.name() + " (direct COT)",
             new Ms13OsnConfig.Builder()
-                .setCotConfig(new DirectCotConfig.Builder(SecurityModel.SEMI_HONEST).build())
+                .setCotConfig(CotFactory.createDirectConfig(SecurityModel.SEMI_HONEST))
                 .build(),
         });
 
-        return configurationParams;
+        return configurations;
     }
 
     /**

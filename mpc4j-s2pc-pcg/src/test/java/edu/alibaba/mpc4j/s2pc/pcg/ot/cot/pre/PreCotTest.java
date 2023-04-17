@@ -27,7 +27,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * 预计算COT协议测试。
+ * pre-compute 1-out-of-n (with n = 2^l) test.
  *
  * @author Weiran Liu
  * @date 2022/01/14
@@ -36,33 +36,34 @@ import org.slf4j.LoggerFactory;
 public class PreCotTest {
     private static final Logger LOGGER = LoggerFactory.getLogger(PreCotTest.class);
     /**
-     * 随机状态
+     * the random state
      */
     private static final SecureRandom SECURE_RANDOM = new SecureRandom();
     /**
-     * 默认数量
+     * the default num
      */
     private static final int DEFAULT_NUM = 1000;
 
     @Parameterized.Parameters(name = "{0}")
     public static Collection<Object[]> configurations() {
-        Collection<Object[]> configurationParams = new ArrayList<>();
-        // Bea95
-        configurationParams.add(new Object[] {PreCotType.Bea95.name(), new Bea95PreCotConfig.Builder().build(),});
+        Collection<Object[]> configurations = new ArrayList<>();
 
-        return configurationParams;
+        // Bea95
+        configurations.add(new Object[] {PreCotType.Bea95.name(), new Bea95PreCotConfig.Builder().build(),});
+
+        return configurations;
     }
 
     /**
-     * 发送方
+     * the sender RPC
      */
     private final Rpc senderRpc;
     /**
-     * 接收方
+     * the receiver RPC
      */
     private final Rpc receiverRpc;
     /**
-     * 协议类型
+     * the config
      */
     private final PreCotConfig config;
 
@@ -118,18 +119,18 @@ public class PreCotTest {
         receiver.setTaskId(randomTaskId);
         try {
             LOGGER.info("-----test {} start-----", sender.getPtoDesc().getPtoName());
-            // 生成输入
+            // pre-compute sender / receiver output
             byte[] delta = new byte[CommonConstants.BLOCK_BYTE_LENGTH];
             SECURE_RANDOM.nextBytes(delta);
             CotSenderOutput preSenderOutput = CotTestUtils.genSenderOutput(num, delta, SECURE_RANDOM);
             CotReceiverOutput preReceiverOutput = CotTestUtils.genReceiverOutput(preSenderOutput, SECURE_RANDOM);
-            // 实际选择比特
+            // receiver actual choices
             boolean[] choices = new boolean[num];
             IntStream.range(0, num).forEach(index -> choices[index] = SECURE_RANDOM.nextBoolean());
             PreCotSenderThread senderThread = new PreCotSenderThread(sender, preSenderOutput);
             PreCotReceiverThread receiverThread = new PreCotReceiverThread(receiver, preReceiverOutput, choices);
             StopWatch stopWatch = new StopWatch();
-            // 开始执行协议
+            // execute the protocol
             stopWatch.start();
             senderThread.start();
             receiverThread.start();
@@ -144,7 +145,7 @@ public class PreCotTest {
             receiverRpc.reset();
             CotSenderOutput senderOutput = senderThread.getSenderOutput();
             CotReceiverOutput receiverOutput = receiverThread.getReceiverOutput();
-            // 验证结果
+            // verify
             CotTestUtils.assertOutput(num, senderOutput, receiverOutput);
             LOGGER.info("Sender sends {}B, Receiver sends {}B, time = {}ms",
                 senderByteLength, receiverByteLength, time

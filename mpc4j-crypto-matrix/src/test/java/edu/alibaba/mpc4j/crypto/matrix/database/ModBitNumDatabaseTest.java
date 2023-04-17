@@ -55,12 +55,15 @@ public class ModBitNumDatabaseTest {
     @Parameterized.Parameters(name = "{0}")
     public static Collection<Object[]> configurations() {
         Collection<Object[]> configurations = new ArrayList<>();
-        // naive database
-        configurations.add(new Object[]{DatabaseType.NAIVE.name(), DatabaseType.NAIVE});
-        // Zl database
-        configurations.add(new Object[]{DatabaseType.ZL.name(), DatabaseType.ZL});
+
+        // Zl32 database
+        configurations.add(new Object[]{DatabaseType.ZL32.name(), DatabaseType.ZL32});
         // Zl64 database
         configurations.add(new Object[]{DatabaseType.ZL64.name(), DatabaseType.ZL64});
+        // Zl database
+        configurations.add(new Object[]{DatabaseType.ZL.name(), DatabaseType.ZL});
+        // naive database
+        configurations.add(new Object[]{DatabaseType.NAIVE.name(), DatabaseType.NAIVE});
 
         return configurations;
     }

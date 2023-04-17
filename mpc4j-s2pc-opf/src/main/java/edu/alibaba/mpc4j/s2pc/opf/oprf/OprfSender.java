@@ -37,4 +37,6 @@ public interface OprfSender extends TwoPartyPto {
      * @throws MpcAbortException 如果协议异常中止。
      */
     OprfSenderOutput oprf(int batchSize) throws MpcAbortException;
+
+
 }

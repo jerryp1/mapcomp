@@ -11,6 +11,7 @@ import edu.alibaba.mpc4j.s2pc.aby.basics.bc.BcFactory;
 import edu.alibaba.mpc4j.s2pc.aby.basics.bc.BcOperator;
 import edu.alibaba.mpc4j.s2pc.aby.basics.bc.BcParty;
 import edu.alibaba.mpc4j.s2pc.aby.basics.bc.bea91.Bea91BcConfig;
+import edu.alibaba.mpc4j.s2pc.aby.basics.bc.rrg21.Rrg21BcConfig;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.time.StopWatch;
 import org.junit.After;
@@ -52,9 +53,14 @@ public class BcOperatorTest {
     @Parameterized.Parameters(name = "{0}")
     public static Collection<Object[]> configurations() {
         Collection<Object[]> configurations = new ArrayList<>();
-        // Beaver91
+
+        // RRG+21
         configurations.add(new Object[] {
-            BcFactory.BcType.BEA91.name(), new Bea91BcConfig.Builder().build()
+            BcFactory.BcType.RRG21.name(), new Rrg21BcConfig.Builder().build()
+        });
+        // Bea91
+        configurations.add(new Object[] {
+            BcFactory.BcType.Bea91.name(), new Bea91BcConfig.Builder().build()
         });
 
         return configurations;

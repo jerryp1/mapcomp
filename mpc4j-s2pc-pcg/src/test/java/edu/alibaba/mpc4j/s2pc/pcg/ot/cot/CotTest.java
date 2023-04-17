@@ -27,7 +27,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.stream.IntStream;
 
 /**
- * COT协议测试。
+ * COT test.
  *
  * @author Weiran Liu
  * @date 2022/7/13
@@ -36,17 +36,13 @@ import java.util.stream.IntStream;
 public class CotTest {
     private static final Logger LOGGER = LoggerFactory.getLogger(CotTest.class);
     /**
-     * 随机状态
+     * the random state
      */
     private static final SecureRandom SECURE_RANDOM = new SecureRandom();
     /**
-     * 默认数量
+     * default num
      */
     private static final int DEFAULT_NUM = 1000;
-    /**
-     * 较大数量
-     */
-    private static final int LARGE_NUM = 1 << 20;
 
     @Parameterized.Parameters(name = "{0}")
     public static Collection<Object[]> configurations() {
@@ -77,11 +73,11 @@ public class CotTest {
     }
 
     /**
-     * 发送方
+     * the sender RPC
      */
     private final Rpc senderRpc;
     /**
-     * 接收方
+     * the receiver RPC
      */
     private final Rpc receiverRpc;
     /**
@@ -133,12 +129,12 @@ public class CotTest {
 
     @Test
     public void testLargeNum() {
-        testPto(LARGE_NUM, false);
+        testPto(1 << 20, false);
     }
 
     @Test
     public void testParallelLargeNum() {
-        testPto(LARGE_NUM, true);
+        testPto(1 << 20, true);
     }
 
     private void testPto(int num, boolean parallel) {
@@ -158,7 +154,7 @@ public class CotTest {
             CotSenderThread senderThread = new CotSenderThread(sender, delta, num);
             CotReceiverThread receiverThread = new CotReceiverThread(receiver, choices);
             StopWatch stopWatch = new StopWatch();
-            // 开始执行协议
+            // execute the protocol
             stopWatch.start();
             senderThread.start();
             receiverThread.start();
@@ -173,8 +169,10 @@ public class CotTest {
             receiverRpc.reset();
             CotSenderOutput senderOutput = senderThread.getSenderOutput();
             CotReceiverOutput receiverOutput = receiverThread.getReceiverOutput();
-            // 验证结果
+            // verify
             CotTestUtils.assertOutput(num, senderOutput, receiverOutput);
+            Assert.assertArrayEquals(delta, senderOutput.getDelta());
+            Assert.assertArrayEquals(choices, receiverOutput.getChoices());
             LOGGER.info("Sender sends {}B, Receiver sends {}B, time = {}ms",
                 senderByteLength, receiverByteLength, time
             );
@@ -199,7 +197,7 @@ public class CotTest {
             SECURE_RANDOM.nextBytes(delta);
             boolean[] choices = new boolean[DEFAULT_NUM];
             IntStream.range(0, DEFAULT_NUM).forEach(index -> choices[index] = SECURE_RANDOM.nextBoolean());
-            // 第一次执行
+            // first time
             CotSenderThread senderThread = new CotSenderThread(sender, delta, DEFAULT_NUM);
             CotReceiverThread receiverThread = new CotReceiverThread(receiver, choices);
             StopWatch stopWatch = new StopWatch();
@@ -218,7 +216,7 @@ public class CotTest {
             CotSenderOutput senderOutput = senderThread.getSenderOutput();
             CotReceiverOutput receiverOutput = receiverThread.getReceiverOutput();
             CotTestUtils.assertOutput(DEFAULT_NUM, senderOutput, receiverOutput);
-            // 第二次执行，重置Δ
+            // second time, reset Δ
             SECURE_RANDOM.nextBytes(delta);
             IntStream.range(0, DEFAULT_NUM).forEach(index -> choices[index] = SECURE_RANDOM.nextBoolean());
             senderThread = new CotSenderThread(sender, delta, DEFAULT_NUM);
@@ -237,11 +235,11 @@ public class CotTest {
             receiverRpc.reset();
             CotSenderOutput secondSenderOutput = senderThread.getSenderOutput();
             CotReceiverOutput secondReceiverOutput = receiverThread.getReceiverOutput();
-            // Δ应该不等
+            // Δ should be different
             Assert.assertNotEquals(
                 ByteBuffer.wrap(secondSenderOutput.getDelta()), ByteBuffer.wrap(senderOutput.getDelta())
             );
-            // 通信量应该相等
+            // communication should be same
             Assert.assertEquals(secondSenderByteLength, firstSenderByteLength);
             Assert.assertEquals(secondReceiverByteLength, firstReceiverByteLength);
             CotTestUtils.assertOutput(DEFAULT_NUM, secondSenderOutput, secondReceiverOutput);

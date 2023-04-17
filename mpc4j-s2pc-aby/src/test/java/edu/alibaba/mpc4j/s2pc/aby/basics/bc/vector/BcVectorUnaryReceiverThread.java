@@ -4,7 +4,7 @@ import edu.alibaba.mpc4j.common.rpc.MpcAbortException;
 import edu.alibaba.mpc4j.common.tool.bitvector.BitVector;
 import edu.alibaba.mpc4j.s2pc.aby.basics.bc.BcOperator;
 import edu.alibaba.mpc4j.s2pc.aby.basics.bc.BcParty;
-import edu.alibaba.mpc4j.s2pc.aby.basics.bc.SquareSbitVector;
+import edu.alibaba.mpc4j.s2pc.aby.basics.bc.SquareShareZ2Vector;
 
 import java.util.Arrays;
 
@@ -34,11 +34,11 @@ class BcVectorUnaryReceiverThread extends Thread {
     /**
      * share x1 array
      */
-    private SquareSbitVector[] shareX1s;
+    private SquareShareZ2Vector[] shareX1s;
     /**
      * final x1 array
      */
-    private SquareSbitVector[] finalX1s;
+    private SquareShareZ2Vector[] finalX1s;
     /**
      * z (plain)
      */
@@ -63,11 +63,11 @@ class BcVectorUnaryReceiverThread extends Thread {
         return z0Vectors;
     }
 
-    SquareSbitVector[] getShareX1s() {
+    SquareShareZ2Vector[] getShareX1s() {
         return shareX1s;
     }
 
-    SquareSbitVector[] getFinalX1s() {
+    SquareShareZ2Vector[] getFinalX1s() {
         return finalX1s;
     }
 
@@ -76,13 +76,13 @@ class BcVectorUnaryReceiverThread extends Thread {
         try {
             receiver.init(totalBitNum, totalBitNum);
             // set inputs
-            SquareSbitVector[] xs = Arrays.stream(xBitVectors)
-                .map(xBitVector -> SquareSbitVector.create(xBitVector, true))
-                .toArray(SquareSbitVector[]::new);
+            SquareShareZ2Vector[] xs = Arrays.stream(xBitVectors)
+                .map(xBitVector -> SquareShareZ2Vector.create(xBitVector, true))
+                .toArray(SquareShareZ2Vector[]::new);
             int[] xLengths = Arrays.stream(xBitVectors).mapToInt(BitVector::bitNum).toArray();
-            SquareSbitVector[] x1s = receiver.shareOther(xLengths);
-            shareX1s = Arrays.stream(x1s).map(SquareSbitVector::copy).toArray(SquareSbitVector[]::new);
-            SquareSbitVector[] z01s, z11s;
+            SquareShareZ2Vector[] x1s = receiver.shareOther(xLengths);
+            shareX1s = Arrays.stream(x1s).map(SquareShareZ2Vector::copy).toArray(SquareShareZ2Vector[]::new);
+            SquareShareZ2Vector[] z01s, z11s;
             //noinspection SwitchStatementWithTooFewBranches
             switch (bcOperator) {
                 case NOT:
@@ -92,7 +92,7 @@ class BcVectorUnaryReceiverThread extends Thread {
                     z0Vectors = receiver.revealOwn(z01s);
                     // (plain, secret)
                     z11s = receiver.not(x1s);
-                    finalX1s = Arrays.stream(x1s).map(SquareSbitVector::copy).toArray(SquareSbitVector[]::new);
+                    finalX1s = Arrays.stream(x1s).map(SquareShareZ2Vector::copy).toArray(SquareShareZ2Vector[]::new);
                     receiver.revealOther(z11s);
                     z1Vectors = receiver.revealOwn(z11s);
                     break;

@@ -5,22 +5,22 @@ import edu.alibaba.mpc4j.s2pc.opf.oprf.OprfReceiver;
 import edu.alibaba.mpc4j.s2pc.opf.oprf.OprfReceiverOutput;
 
 /**
- * OPRF协议接收方线程。
+ * OPRF receiver thread
  *
  * @author Weiran Liu
  * @date 2019/07/12
  */
 class OprfReceiverThread extends Thread {
     /**
-     * 接收方
+     * the receiver
      */
     private final OprfReceiver receiver;
     /**
-     * 输入
+     * the inputs
      */
     private final byte[][] inputs;
     /**
-     * 输出
+     * the receiver output
      */
     private OprfReceiverOutput receiverOutput;
 

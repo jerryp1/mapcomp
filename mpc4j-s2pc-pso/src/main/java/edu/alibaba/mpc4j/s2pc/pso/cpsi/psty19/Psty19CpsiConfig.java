@@ -6,8 +6,8 @@ import edu.alibaba.mpc4j.s2pc.aby.basics.bc.BcConfig;
 import edu.alibaba.mpc4j.s2pc.aby.basics.bc.BcFactory;
 import edu.alibaba.mpc4j.s2pc.pso.cpsi.CpsiConfig;
 import edu.alibaba.mpc4j.s2pc.pso.cpsi.CpsiFactory;
-import edu.alibaba.mpc4j.s2pc.opf.opprf.bopprf.BopprfConfig;
-import edu.alibaba.mpc4j.s2pc.opf.opprf.bopprf.BopprfFactory;
+import edu.alibaba.mpc4j.s2pc.opf.opprf.batch.BopprfConfig;
+import edu.alibaba.mpc4j.s2pc.opf.opprf.batch.BopprfFactory;
 
 /**
  * PSTY19 circuit PSI config.
@@ -72,7 +72,7 @@ public class Psty19CpsiConfig implements CpsiConfig {
 
         public Builder() {
             bopprfConfig = BopprfFactory.createDefaultConfig(SecurityModel.SEMI_HONEST);
-            bcConfig = BcFactory.createDefaultConfig(SecurityModel.SEMI_HONEST);
+            bcConfig = BcFactory.createDefaultConfig(SecurityModel.SEMI_HONEST, true);
         }
 
         public Builder setBopprfConfig(BopprfConfig bopprfConfig) {

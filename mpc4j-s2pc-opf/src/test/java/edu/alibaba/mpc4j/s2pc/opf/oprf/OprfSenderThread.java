@@ -5,22 +5,22 @@ import edu.alibaba.mpc4j.s2pc.opf.oprf.OprfSender;
 import edu.alibaba.mpc4j.s2pc.opf.oprf.OprfSenderOutput;
 
 /**
- * OPRF协议发送方线程。
+ * OPRF sender thread.
  *
  * @author Weiran Liu
  * @date 2019/07/12
  */
 class OprfSenderThread extends Thread {
     /**
-     * 发送方
+     * the sender
      */
     private final OprfSender sender;
     /**
-     * 批处理数量
+     * the batch size
      */
     private final int batchSize;
     /**
-     * 输出
+     * the sender output
      */
     private OprfSenderOutput senderOutput;
 
