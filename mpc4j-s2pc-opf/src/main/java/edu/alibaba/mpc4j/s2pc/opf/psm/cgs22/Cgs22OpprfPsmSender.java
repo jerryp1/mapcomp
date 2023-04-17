@@ -8,8 +8,8 @@ import edu.alibaba.mpc4j.common.tool.utils.BytesUtils;
 import edu.alibaba.mpc4j.s2pc.aby.basics.bc.SquareShareZ2Vector;
 import edu.alibaba.mpc4j.s2pc.aby.circuit.peqt.PeqtFactory;
 import edu.alibaba.mpc4j.s2pc.aby.circuit.peqt.PeqtParty;
-import edu.alibaba.mpc4j.s2pc.opf.opprf.bopprf.BopprfFactory;
-import edu.alibaba.mpc4j.s2pc.opf.opprf.bopprf.BopprfSender;
+import edu.alibaba.mpc4j.s2pc.opf.opprf.batch.BopprfFactory;
+import edu.alibaba.mpc4j.s2pc.opf.opprf.batch.BopprfSender;
 import edu.alibaba.mpc4j.s2pc.opf.psm.AbstractPsmSender;
 
 import java.util.concurrent.TimeUnit;

@@ -4,8 +4,8 @@ import edu.alibaba.mpc4j.common.rpc.desc.SecurityModel;
 import edu.alibaba.mpc4j.common.tool.EnvType;
 import edu.alibaba.mpc4j.s2pc.aby.circuit.peqt.PeqtConfig;
 import edu.alibaba.mpc4j.s2pc.aby.circuit.peqt.PeqtFactory;
-import edu.alibaba.mpc4j.s2pc.opf.opprf.bopprf.BopprfConfig;
-import edu.alibaba.mpc4j.s2pc.opf.opprf.bopprf.table.TableBopprfConfig;
+import edu.alibaba.mpc4j.s2pc.opf.opprf.batch.BopprfConfig;
+import edu.alibaba.mpc4j.s2pc.opf.opprf.batch.BopprfFactory;
 import edu.alibaba.mpc4j.s2pc.opf.psm.PsmConfig;
 import edu.alibaba.mpc4j.s2pc.opf.psm.PsmFactory;
 
@@ -78,7 +78,7 @@ public class Cgs22OpprfPsmConfig implements PsmConfig {
         private PeqtConfig peqtConfig;
 
         public Builder(SecurityModel securityModel, boolean silent) {
-            bopprfConfig = new TableBopprfConfig.Builder().build();
+            bopprfConfig = BopprfFactory.createDefaultConfig(securityModel);
             peqtConfig = PeqtFactory.createDefaultConfig(securityModel, silent);
         }
 
