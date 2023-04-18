@@ -101,7 +101,7 @@ public class OkvsUbopprfReceiver extends AbstractUbopprfReceiver {
             stopWatch.stop();
             long okvsTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
             stopWatch.reset();
-            logStepInfo(PtoState.PTO_STEP, 1, 3, okvsTime, "Receiver receives OKVS");
+            logStepInfo(PtoState.PTO_STEP, 0, 2, okvsTime, "Receiver receives OKVS");
         }
 
         stopWatch.start();
@@ -110,7 +110,7 @@ public class OkvsUbopprfReceiver extends AbstractUbopprfReceiver {
         stopWatch.stop();
         long oprfTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
         stopWatch.reset();
-        logStepInfo(PtoState.PTO_STEP, 2, 3, oprfTime, "Receiver runs OPRF");
+        logStepInfo(PtoState.PTO_STEP, 1, 2, oprfTime, "Receiver runs OPRF");
 
         stopWatch.start();
         byte[][] outputArray = handleOprfOutput(sqOprfReceiverOutput);

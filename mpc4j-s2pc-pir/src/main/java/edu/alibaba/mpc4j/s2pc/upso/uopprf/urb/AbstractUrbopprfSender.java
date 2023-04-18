@@ -1,4 +1,4 @@
-package edu.alibaba.mpc4j.s2pc.opf.opprf.rb;
+package edu.alibaba.mpc4j.s2pc.upso.uopprf.urb;
 
 import edu.alibaba.mpc4j.common.rpc.Party;
 import edu.alibaba.mpc4j.common.rpc.Rpc;
@@ -14,20 +14,12 @@ import java.util.Arrays;
 import java.util.stream.IntStream;
 
 /**
- * abstract Related-Batch OPPRF sender.
+ * abstract unbalanced related-batch OPPRF sender.
  *
  * @author Weiran Liu
- * @date 2023/3/29
+ * @date 2023/4/18
  */
-public abstract class AbstractRbopprfSender extends AbstractTwoPartyPto implements RbopprfSender {
-    /**
-     * max batch size
-     */
-    protected int maxBatchSize;
-    /**
-     * max point num
-     */
-    protected int maxPointNum;
+public abstract class AbstractUrbopprfSender extends AbstractTwoPartyPto implements UrbopprfSender {
     /**
      * the input / output bit length
      */
@@ -54,20 +46,11 @@ public abstract class AbstractRbopprfSender extends AbstractTwoPartyPto implemen
     protected byte[][][] targetArrays;
 
 
-    protected AbstractRbopprfSender(PtoDesc ptoDesc, Rpc senderRpc, Party receiverParty, RbopprfConfig config) {
+    protected AbstractUrbopprfSender(PtoDesc ptoDesc, Rpc senderRpc, Party receiverParty, UrbopprfConfig config) {
         super(ptoDesc, senderRpc, receiverParty, config);
     }
 
-    protected void setInitInput(int maxBatchSize, int maxPointNum) {
-        MathPreconditions.checkGreater("max batch size", maxBatchSize, 1);
-        this.maxBatchSize = maxBatchSize;
-        MathPreconditions.checkPositive("max point num", maxPointNum);
-        this.maxPointNum = maxPointNum;
-        initState();
-    }
-
-    protected void setPtoInput(int l, byte[][][] inputArrays, byte[][][] targetArrays) {
-        checkInitialized();
+    protected void setInitInput(int l, byte[][][] inputArrays, byte[][][] targetArrays) {
         // check l
         MathPreconditions.checkGreaterOrEqual("l", l, CommonConstants.STATS_BIT_LENGTH);
         this.l = l;
@@ -75,14 +58,12 @@ public abstract class AbstractRbopprfSender extends AbstractTwoPartyPto implemen
         // check batch size
         batchSize = inputArrays.length;
         MathPreconditions.checkGreater("batch size", batchSize, 1);
-        MathPreconditions.checkLessOrEqual("batch size", batchSize, maxBatchSize);
         MathPreconditions.checkEqual("target batch size", "batch size", targetArrays.length, batchSize);
         // check point num
         pointNum = Arrays.stream(inputArrays)
             .mapToInt(inputArray -> inputArray.length)
             .sum();
         MathPreconditions.checkPositive("point num", pointNum);
-        MathPreconditions.checkLessOrEqual("point num", pointNum, maxPointNum);
         int targetNum = Arrays.stream(targetArrays)
             .mapToInt(targetArray -> targetArray.length)
             .sum();
@@ -93,20 +74,20 @@ public abstract class AbstractRbopprfSender extends AbstractTwoPartyPto implemen
                 byte[][] inputArray = inputArrays[batchIndex];
                 byte[][] targetArray = targetArrays[batchIndex];
                 assert inputArray.length == targetArray.length;
+                // all inputs should be distinct
+                assert Arrays.stream(inputArray).map(ByteBuffer::wrap).distinct().count() == inputArray.length;
                 // all targets should have l-bit length
                 for (byte[] target : targetArray) {
                     assert BytesUtils.isFixedReduceByteArray(target, byteL, l);
                 }
             });
-        // check all inputs are distinct
-        long distinctCount = Arrays.stream(inputArrays)
-            .flatMap(Arrays::stream)
-            .map(ByteBuffer::wrap)
-            .distinct()
-            .count();
-        MathPreconditions.checkEqual("distinct inputs", "point num", distinctCount, pointNum);
         this.inputArrays = inputArrays;
         this.targetArrays = targetArrays;
+        initState();
+    }
+
+    protected void setPtoInput() {
+        checkInitialized();
         extraInfo++;
     }
 }

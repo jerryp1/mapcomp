@@ -1,4 +1,4 @@
-package edu.alibaba.mpc4j.s2pc.opf.opprf.rb.cgs22;
+package edu.alibaba.mpc4j.s2pc.upso.uopprf.urb.cgs22;
 
 import edu.alibaba.mpc4j.common.rpc.MpcAbortException;
 import edu.alibaba.mpc4j.common.rpc.Party;
@@ -14,29 +14,32 @@ import edu.alibaba.mpc4j.common.tool.hashbin.object.cuckoo.CuckooHashBin;
 import edu.alibaba.mpc4j.common.tool.hashbin.object.cuckoo.CuckooHashBinFactory;
 import edu.alibaba.mpc4j.common.tool.hashbin.object.cuckoo.CuckooHashBinFactory.CuckooHashBinType;
 import edu.alibaba.mpc4j.common.tool.utils.BytesUtils;
-import edu.alibaba.mpc4j.s2pc.opf.opprf.rb.AbstractRbopprfSender;
-import edu.alibaba.mpc4j.s2pc.opf.opprf.rb.cgs22.Cgs22RbopprfPtoDesc.PtoStep;
-import edu.alibaba.mpc4j.s2pc.opf.oprf.OprfFactory;
-import edu.alibaba.mpc4j.s2pc.opf.oprf.OprfSender;
-import edu.alibaba.mpc4j.s2pc.opf.oprf.OprfSenderOutput;
+import edu.alibaba.mpc4j.s2pc.opf.sqoprf.SqOprfFactory;
+import edu.alibaba.mpc4j.s2pc.opf.sqoprf.SqOprfKey;
+import edu.alibaba.mpc4j.s2pc.opf.sqoprf.SqOprfSender;
+import edu.alibaba.mpc4j.s2pc.upso.uopprf.urb.AbstractUrbopprfSender;
+import edu.alibaba.mpc4j.s2pc.upso.uopprf.urb.cgs22.Cgs22UrbopprfPtoDesc.PtoStep;
 
 import java.nio.ByteBuffer;
-import java.util.*;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
 /**
- * CGS22 Related-Batch OPPRF sender.
+ * CGS22 unbalanced related-Batch OPPRF sender.
  *
  * @author Weiran Liu
  * @date 2023/3/29
  */
-public class Cgs22RbopprfSender extends AbstractRbopprfSender {
+public class Cgs22UrbopprfSender extends AbstractUrbopprfSender {
     /**
-     * the OPRF sender
+     * single-quer OPRF sender
      */
-    private final OprfSender oprfSender;
+    private final SqOprfSender sqOprfSender;
     /**
      * cuckoo hash bin type
      */
@@ -46,29 +49,46 @@ public class Cgs22RbopprfSender extends AbstractRbopprfSender {
      */
     private final int d;
     /**
+     * single-query OPRF key
+     */
+    private SqOprfKey sqOprfKey;
+    /**
      * the cuckoo hash table HT
      */
     private CuckooHashBin<byte[]> cuckooHashTable;
     /**
-     * h_1, ... h_d
+     * garbled table keys
      */
-    private Prf[] binHashes;
+    private byte[][] garbledTableKeys;
+    /**
+     * garbled table
+     */
+    private byte[][] garbledTable;
+    /**
+     * sent garbled table
+     */
+    private boolean sent;
 
-    public Cgs22RbopprfSender(Rpc senderRpc, Party receiverParty, Cgs22RbopprfConfig config) {
-        super(Cgs22RbopprfPtoDesc.getInstance(), senderRpc, receiverParty, config);
-        oprfSender = OprfFactory.createOprfSender(senderRpc, receiverParty, config.getOprfConfig());
-        addSubPtos(oprfSender);
+    public Cgs22UrbopprfSender(Rpc senderRpc, Party receiverParty, Cgs22UrbopprfConfig config) {
+        super(Cgs22UrbopprfPtoDesc.getInstance(), senderRpc, receiverParty, config);
+        sqOprfSender = SqOprfFactory.createSender(senderRpc, receiverParty, config.getSqOprfConfig());
+        addSubPtos(sqOprfSender);
         cuckooHashBinType = config.getCuckooHashBinType();
         d = config.getD();
+        sent = false;
     }
 
     @Override
-    public void init(int maxBatchSize, int maxPointNum) throws MpcAbortException {
-        setInitInput(maxBatchSize, maxPointNum);
+    public void init(int l, byte[][][] inputArrays, byte[][][] targetArrays) throws MpcAbortException {
+        setInitInput(l, inputArrays, targetArrays);
         logPhaseInfo(PtoState.INIT_BEGIN);
 
         stopWatch.start();
-        oprfSender.init(maxBatchSize, maxPointNum);
+        sent = false;
+        sqOprfKey = sqOprfSender.keyGen();
+        generateGarbledTable();
+        // init oprf
+        sqOprfSender.init(batchSize, sqOprfKey);
         stopWatch.stop();
         long initTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
         stopWatch.reset();
@@ -78,54 +98,55 @@ public class Cgs22RbopprfSender extends AbstractRbopprfSender {
     }
 
     @Override
-    public void opprf(int l, byte[][][] inputArrays, byte[][][] targetArrays) throws MpcAbortException {
-        setPtoInput(l, inputArrays, targetArrays);
+    public void opprf() throws MpcAbortException {
+        setPtoInput();
         logPhaseInfo(PtoState.PTO_BEGIN);
 
+
         stopWatch.start();
-        // OPRF
-        OprfSenderOutput oprfSenderOutput = oprfSender.oprf(batchSize);
+        if (!sent) {
+            stopWatch.start();
+            // send garbled table keys
+            List<byte[]> garbledHashTableKeysPayload = Arrays.stream(garbledTableKeys).collect(Collectors.toList());
+            DataPacketHeader garbledHashTableKeysHeader = new DataPacketHeader(
+                encodeTaskId, ptoDesc.getPtoId(), PtoStep.SENDER_SEND_GARBLED_TABLE_KEYS.ordinal(), extraInfo,
+                ownParty().getPartyId(), otherParty().getPartyId()
+            );
+            rpc.send(DataPacket.fromByteArrayList(garbledHashTableKeysHeader, garbledHashTableKeysPayload));
+            garbledTableKeys = null;
+            // send garbled table
+            List<byte[]> garbledTablePayload = Arrays.stream(garbledTable).collect(Collectors.toList());
+            DataPacketHeader garbledTableHeader = new DataPacketHeader(
+                encodeTaskId, ptoDesc.getPtoId(), PtoStep.SENDER_SEND_GARBLED_TABLE.ordinal(), extraInfo,
+                ownParty().getPartyId(), otherParty().getPartyId()
+            );
+            rpc.send(DataPacket.fromByteArrayList(garbledTableHeader, garbledTablePayload));
+            garbledTable = null;
+            sent = true;
+            stopWatch.stop();
+            long garbledTableTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
+            stopWatch.reset();
+            logStepInfo(PtoState.PTO_STEP, 0, 1, garbledTableTime, "Sender sends GT");
+        }
+
+        stopWatch.start();
+        sqOprfSender.oprf(batchSize);
         stopWatch.stop();
         long oprfTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
         stopWatch.reset();
-        logStepInfo(PtoState.PTO_STEP, 1, 2, oprfTime, "Sender runs OPRF");
-
-        stopWatch.start();
-        // generate garbled table keys
-        List<byte[]> garbledHashTableKeysPayload = generateGarbledTableKeyPayload();
-        DataPacketHeader garbledHashTableKeysHeader = new DataPacketHeader(
-            encodeTaskId, ptoDesc.getPtoId(), PtoStep.SENDER_SEND_GARBLED_TABLE_KEYS.ordinal(), extraInfo,
-            ownParty().getPartyId(), otherParty().getPartyId()
-        );
-        rpc.send(DataPacket.fromByteArrayList(garbledHashTableKeysHeader, garbledHashTableKeysPayload));
-        stopWatch.stop();
-        long garbledHashTableKeysTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
-        stopWatch.reset();
-        logStepInfo(PtoState.PTO_STEP, 2, 3, garbledHashTableKeysTime, "Sender sends GT keys");
-
-        stopWatch.start();
-        // generate garbled table
-        List<byte[]> garbledTablePayload = generateGarbledTablePayload(oprfSenderOutput);
-        DataPacketHeader garbledTableHeader = new DataPacketHeader(
-            encodeTaskId, ptoDesc.getPtoId(), PtoStep.SENDER_SEND_GARBLED_TABLE.ordinal(), extraInfo,
-            ownParty().getPartyId(), otherParty().getPartyId()
-        );
-        rpc.send(DataPacket.fromByteArrayList(garbledTableHeader, garbledTablePayload));
-        stopWatch.stop();
-        long garbledTableTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
-        stopWatch.reset();
-        logStepInfo(PtoState.PTO_STEP, 3, 3, garbledTableTime, "Sender sends GT");
+        logStepInfo(PtoState.PTO_STEP, 1, 1, oprfTime, "Sender runs OPRF");
 
         logPhaseInfo(PtoState.PTO_END);
     }
 
-    private List<byte[]> generateGarbledTableKeyPayload() {
+    private void generateGarbledTable() {
         // set the target points
         List<byte[]> inputs = Arrays.stream(inputArrays)
             .flatMap(Arrays::stream)
             .collect(Collectors.toList());
+        // generate garbled table keys
         boolean success = false;
-        byte[][] garbledTableKeys = null;
+        garbledTableKeys = null;
         while (!success) {
             try {
                 garbledTableKeys = IntStream.range(0, d)
@@ -142,21 +163,19 @@ public class Cgs22RbopprfSender extends AbstractRbopprfSender {
                 cuckooHashTable.insertItems(inputs);
                 success = true;
                 // if success, init bin hashes
-                binHashes = Arrays.stream(garbledTableKeys)
-                    .map(key -> {
-                        Prf prf = PrfFactory.createInstance(envType, Integer.BYTES);
-                        prf.setKey(key);
-                        return prf;
-                    })
-                    .toArray(Prf[]::new);
             } catch (ArithmeticException ignored) {
                 // retry if failed.
             }
         }
-        return Arrays.stream(garbledTableKeys).collect(Collectors.toList());
-    }
-
-    private List<byte[]> generateGarbledTablePayload(OprfSenderOutput oprfSenderOutput) {
+        // set hashes
+        Prf[] binHashes = Arrays.stream(garbledTableKeys)
+            .map(key -> {
+                Prf prf = PrfFactory.createInstance(envType, Integer.BYTES);
+                prf.setKey(key);
+                return prf;
+            })
+            .toArray(Prf[]::new);
+        // generate garbled table
         int binNum = cuckooHashTable.binNum();
         // Let E be a mapping that maps elements to the index of the hash function that was eventually used to
         // insert that element into HT, i.e., E(X_j(i)) = idx such that HT[h_{idx}(X_j(i))] = X_j(i).
@@ -168,7 +187,7 @@ public class Cgs22RbopprfSender extends AbstractRbopprfSender {
             }
         });
         cuckooHashTable = null;
-        byte[][] garbledTable = new byte[binNum][];
+        garbledTable = new byte[binNum][];
         // The PRF maps (random) inputs to {0, 1}^l, we only need to set an empty key
         Prf prf = PrfFactory.createInstance(envType, byteL * d);
         prf.setKey(new byte[CommonConstants.BLOCK_BYTE_LENGTH]);
@@ -183,7 +202,7 @@ public class Cgs22RbopprfSender extends AbstractRbopprfSender {
                 byte[] input = inputArray[i];
                 byte[] target = targetArray[i];
                 // Compute f_1 || f_2 || f_3 ← F(k_j, X_j(i)), where f_b ∈ {0,1}^l for all b ∈ [d].
-                byte[] inputPrf = oprfSenderOutput.getPrf(j, input);
+                byte[] inputPrf = sqOprfKey.getPrf(input);
                 inputPrf = prf.getBytes(inputPrf);
                 // For idx ← E(X_j(i)), and pos ← h_{idx}(X_j(i)), set GT[pos] ← f_{idx} ⊕ T_j(i).
                 int idx = eMap.get(ByteBuffer.wrap(input));
@@ -194,13 +213,11 @@ public class Cgs22RbopprfSender extends AbstractRbopprfSender {
                 BytesUtils.xori(garbledTable[pos], target);
             }
         });
-        binHashes = null;
         // For every empty bin i in GT, pick r_i ← {0,1}^l and set GT[i] ← r_i.
         for (int i = 0; i < garbledTable.length; i++) {
             if (garbledTable[i] == null) {
                 garbledTable[i] = BytesUtils.randomByteArray(byteL, l, secureRandom);
             }
         }
-        return Arrays.stream(garbledTable).collect(Collectors.toList());
     }
 }

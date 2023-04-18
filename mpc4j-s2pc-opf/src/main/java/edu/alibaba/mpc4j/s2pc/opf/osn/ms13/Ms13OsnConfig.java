@@ -58,7 +58,7 @@ public class Ms13OsnConfig implements OsnConfig {
         private CotConfig cotConfig;
 
         public Builder() {
-            cotConfig = CotFactory.createCacheConfig(SecurityModel.SEMI_HONEST);
+            cotConfig = CotFactory.createDefaultConfig(SecurityModel.SEMI_HONEST, true);
         }
 
         public Builder setCotConfig(CotConfig cotConfig) {

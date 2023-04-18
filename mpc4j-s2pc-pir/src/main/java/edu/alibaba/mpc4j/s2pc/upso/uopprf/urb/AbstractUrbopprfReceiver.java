@@ -1,4 +1,4 @@
-package edu.alibaba.mpc4j.s2pc.upso.uopprf.ub;
+package edu.alibaba.mpc4j.s2pc.upso.uopprf.urb;
 
 import edu.alibaba.mpc4j.common.rpc.Party;
 import edu.alibaba.mpc4j.common.rpc.Rpc;
@@ -9,12 +9,12 @@ import edu.alibaba.mpc4j.common.tool.MathPreconditions;
 import edu.alibaba.mpc4j.common.tool.utils.CommonUtils;
 
 /**
- * abstract unbalanced OPPRF receiver.
+ * abstract unbalanced related-batch OPPRF receiver.
  *
  * @author Weiran Liu
- * @date 2023/4/17
+ * @date 2023/3/29
  */
-public abstract class AbstractUbopprfReceiver extends AbstractTwoPartyPto implements UbopprfReceiver {
+public abstract class AbstractUrbopprfReceiver extends AbstractTwoPartyPto implements UrbopprfReceiver {
     /**
      * batch size
      */
@@ -27,6 +27,7 @@ public abstract class AbstractUbopprfReceiver extends AbstractTwoPartyPto implem
      * the input / output byte length
      */
     protected int byteL;
+
     /**
      * the batched input array.
      */
@@ -36,7 +37,7 @@ public abstract class AbstractUbopprfReceiver extends AbstractTwoPartyPto implem
      */
     protected int pointNum;
 
-    protected AbstractUbopprfReceiver(PtoDesc ptoDesc, Rpc receiverRpc, Party senderParty, UbopprfConfig config) {
+    protected AbstractUrbopprfReceiver(PtoDesc ptoDesc, Rpc receiverRpc, Party senderParty, UrbopprfConfig config) {
         super(ptoDesc, receiverRpc, senderParty, config);
     }
 
@@ -52,6 +53,7 @@ public abstract class AbstractUbopprfReceiver extends AbstractTwoPartyPto implem
         MathPreconditions.checkGreaterOrEqual("l", l, CommonConstants.STATS_BIT_LENGTH);
         this.l = l;
         byteL = CommonUtils.getByteLength(l);
+        // check batch size
         // check batch size
         MathPreconditions.checkEqual("inputArray.length", "batchSize", inputArray.length, batchSize);
         // we do not even require that input array are distinct.

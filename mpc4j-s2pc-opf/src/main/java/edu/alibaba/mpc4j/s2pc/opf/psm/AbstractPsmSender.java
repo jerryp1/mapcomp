@@ -12,6 +12,7 @@ import edu.alibaba.mpc4j.common.tool.utils.CommonUtils;
 
 import java.nio.ByteBuffer;
 import java.util.Arrays;
+import java.util.stream.IntStream;
 
 /**
  * abstract private set membership sender.
@@ -71,18 +72,20 @@ public abstract class AbstractPsmSender extends AbstractTwoPartyPto implements P
         MathPreconditions.checkGreater("inputArrays.num", inputArrays.length, 1);
         MathPreconditions.checkPositiveInRangeClosed("inputArrays.num", inputArrays.length, maxNum);
         num = inputArrays.length;
+        // check all inputs are distinct
+        long distinctCount = Arrays.stream(inputArrays)
+            .flatMap(Arrays::stream)
+            .map(ByteBuffer::wrap)
+            .distinct()
+            .count();
+        MathPreconditions.checkEqual("distinct inputs", "d * num", distinctCount, (long) d * num);
         this.inputArrays = Arrays.stream(inputArrays)
             .peek(inputArray -> {
                 // check point num
                 MathPreconditions.checkEqual("d", "inputArray.length", d, inputArray.length);
-                // check all inputs are distinct
-                long distinctCount = Arrays.stream(inputArray)
-                    // check each input as assigned bit length
-                    .peek(input -> Preconditions.checkArgument(BytesUtils.isFixedReduceByteArray(input, byteL, l)))
-                    .map(ByteBuffer::wrap)
-                    .distinct()
-                    .count();
-                MathPreconditions.checkEqual("d", "distinct inputs", d, distinctCount);
+                for (byte[] input : inputArray) {
+                    Preconditions.checkArgument(BytesUtils.isFixedReduceByteArray(input, byteL, l));
+                }
             })
             .toArray(byte[][][]::new);
     }

@@ -4,7 +4,6 @@ import com.google.common.base.Preconditions;
 import edu.alibaba.mpc4j.common.rpc.Rpc;
 import edu.alibaba.mpc4j.common.rpc.RpcManager;
 import edu.alibaba.mpc4j.common.rpc.impl.memory.MemoryRpcManager;
-import edu.alibaba.mpc4j.common.tool.CommonConstants;
 import edu.alibaba.mpc4j.common.tool.okve.okvs.OkvsFactory;
 import edu.alibaba.mpc4j.common.tool.utils.BytesUtils;
 import edu.alibaba.mpc4j.common.tool.utils.CommonUtils;
@@ -45,7 +44,7 @@ public class BopprfTest {
     /**
      * default l
      */
-    private static final int DEFAULT_L = CommonConstants.STATS_BIT_LENGTH;
+    private static final int DEFAULT_L = 64;
     /**
      * default batch size
      */
@@ -146,7 +145,7 @@ public class BopprfTest {
 
     @Test
     public void testSpecialL() {
-        testPto(DEFAULT_L + 1, DEFAULT_BATCH_NUM, DEFAULT_POINT_NUM, false);
+        testPto(DEFAULT_L + 5, DEFAULT_BATCH_NUM, DEFAULT_POINT_NUM, false);
     }
 
     @Test

@@ -27,21 +27,24 @@ class PsmTestUtils {
         assert LongUtils.ceilLog2(d) <= l
             : "log(d) must be less than or equal to " + l + ", or we cannot generate distinct inputs: " + d;
         int byteL = CommonUtils.getByteLength(l);
-        return IntStream.range(0, num)
-            .parallel()
-            .mapToObj(index -> {
-                byte[][] inputArray = new byte[d][byteL];
-                boolean success = false;
-                while (!success) {
-                    for (int i = 0; i < d; i++) {
-                        inputArray[i] = BytesUtils.randomByteArray(byteL, l, secureRandom);
-                    }
-                    long distinctCount = Arrays.stream(inputArray).map(ByteBuffer::wrap).distinct().count();
-                    success = (distinctCount == d);
+        byte[][][] inputArrays = new byte[num][d][byteL];
+        boolean success = false;
+        while (!success) {
+            for (int index = 0; index < num; index++) {
+                for (int i = 0; i < d; i++) {
+                    inputArrays[index][i] = BytesUtils.randomByteArray(byteL, l, secureRandom);
                 }
-                return inputArray;
-            })
-            .toArray(byte[][][]::new);
+            }
+            long distinctCount = Arrays.stream(inputArrays)
+                .flatMap(Arrays::stream)
+                .map(ByteBuffer::wrap)
+                .distinct()
+                .count();
+            if (distinctCount == (long) d * num) {
+                success = true;
+            }
+        }
+        return inputArrays;
     }
 
     static byte[][] genReceiverInputArray(int l, int d, byte[][][] inputArrays, SecureRandom secureRandom) {

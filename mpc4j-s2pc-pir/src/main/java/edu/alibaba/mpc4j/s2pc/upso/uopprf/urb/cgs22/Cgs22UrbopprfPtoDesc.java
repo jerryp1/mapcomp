@@ -1,27 +1,28 @@
-package edu.alibaba.mpc4j.s2pc.opf.opprf.rb.cgs22;
+package edu.alibaba.mpc4j.s2pc.upso.uopprf.urb.cgs22;
 
 import edu.alibaba.mpc4j.common.rpc.desc.PtoDesc;
 import edu.alibaba.mpc4j.common.rpc.desc.PtoDescManager;
 
 /**
- * CGS22 Related-Batch OPPRF protocol description. The construction comes from the following paper:
+ * CGS22 unbalanced related-batch OPPRF protocol description. The construction comes from the following paper:
  * <p>
  * Chandran, Nishanth, Divya Gupta, and Akash Shah. Circuit-PSI With Linear Complexity via Relaxed Batch OPPRF.
  * PETS 2022, pp. 353-372.
  * </p>
+ * Here we leverage single-query OPRF so that we can generate the hint in the init phase.
  *
  * @author Weiran Liu
- * @date 2023/3/29
+ * @date 2023/4/18
  */
-class Cgs22RbopprfPtoDesc implements PtoDesc {
+class Cgs22UrbopprfPtoDesc implements PtoDesc {
     /**
      * the protocol ID
      */
-    private static final int PTO_ID = Math.abs((int) 2515868939383425460L);
+    private static final int PTO_ID = Math.abs((int) 6029438306680255544L);
     /**
      * the protocol name
      */
-    private static final String PTO_NAME = "CGS22_RBOPPRF";
+    private static final String PTO_NAME = "CGS22_URBOPPRF";
 
     /**
      * the protocol step
@@ -40,12 +41,12 @@ class Cgs22RbopprfPtoDesc implements PtoDesc {
     /**
      * the singleton mode
      */
-    private static final Cgs22RbopprfPtoDesc INSTANCE = new Cgs22RbopprfPtoDesc();
+    private static final Cgs22UrbopprfPtoDesc INSTANCE = new Cgs22UrbopprfPtoDesc();
 
     /**
      * private constructor.
      */
-    private Cgs22RbopprfPtoDesc() {
+    private Cgs22UrbopprfPtoDesc() {
         // empty
     }
 

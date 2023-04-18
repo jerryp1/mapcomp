@@ -10,6 +10,8 @@ import edu.alibaba.mpc4j.s2pc.aby.basics.bc.bea91.Bea91BcSender;
 import edu.alibaba.mpc4j.s2pc.aby.basics.bc.rrg21.Rrg21BcConfig;
 import edu.alibaba.mpc4j.s2pc.aby.basics.bc.rrg21.Rrg21BcReceiver;
 import edu.alibaba.mpc4j.s2pc.aby.basics.bc.rrg21.Rrg21BcSender;
+import edu.alibaba.mpc4j.s2pc.pcg.mtg.z2.Z2MtgFactory;
+import edu.alibaba.mpc4j.s2pc.pcg.ot.cot.CotFactory;
 
 /**
  * Boolean circuit factory.
@@ -91,9 +93,13 @@ public class BcFactory implements PtoFactory {
             case IDEAL:
             case SEMI_HONEST:
                 if (silent) {
-                    return new Bea91BcConfig.Builder().build();
+                    return new Bea91BcConfig.Builder()
+                        .setZ2MtgConfig(Z2MtgFactory.createDefaultConfig(securityModel, true))
+                        .build();
                 } else {
-                    return new Rrg21BcConfig.Builder().build();
+                    return new Rrg21BcConfig.Builder()
+                        .setCotConfig(CotFactory.createDefaultConfig(securityModel, false))
+                        .build();
                 }
             case COVERT:
             case MALICIOUS:

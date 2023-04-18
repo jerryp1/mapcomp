@@ -6,6 +6,7 @@ import edu.alibaba.mpc4j.common.tool.CommonConstants;
 import edu.alibaba.mpc4j.common.tool.crypto.prf.Prf;
 import edu.alibaba.mpc4j.common.tool.crypto.prf.PrfFactory;
 import edu.alibaba.mpc4j.common.tool.hashbin.object.cuckoo.CuckooHashBinFactory;
+import edu.alibaba.mpc4j.common.tool.hashbin.object.cuckoo.CuckooHashBinFactory.CuckooHashBinType;
 import edu.alibaba.mpc4j.common.tool.utils.BytesUtils;
 import edu.alibaba.mpc4j.s2pc.opf.opprf.rb.AbstractRbopprfReceiver;
 import edu.alibaba.mpc4j.s2pc.opf.opprf.rb.cgs22.Cgs22RbopprfPtoDesc.PtoStep;
@@ -30,6 +31,10 @@ public class Cgs22RbopprfReceiver extends AbstractRbopprfReceiver {
      */
     private final OprfReceiver oprfReceiver;
     /**
+     * cuckoo hash bin type
+     */
+    private final CuckooHashBinType cuckooHashBinType;
+    /**
      * d
      */
     private final int d;
@@ -42,6 +47,7 @@ public class Cgs22RbopprfReceiver extends AbstractRbopprfReceiver {
         super(Cgs22RbopprfPtoDesc.getInstance(), receiverRpc, senderParty, config);
         oprfReceiver = OprfFactory.createOprfReceiver(receiverRpc, senderParty, config.getOprfConfig());
         addSubPtos(oprfReceiver);
+        cuckooHashBinType = config.getCuckooHashBinType();
         d = config.getD();
     }
 
@@ -123,7 +129,7 @@ public class Cgs22RbopprfReceiver extends AbstractRbopprfReceiver {
         // The PRF maps (random) inputs to {0, 1}^l, we only need to set an empty key
         Prf prf = PrfFactory.createInstance(envType, byteL * d);
         prf.setKey(new byte[CommonConstants.BLOCK_BYTE_LENGTH]);
-        int binNum = CuckooHashBinFactory.getBinNum(CuckooHashBinFactory.CuckooHashBinType.NO_STASH_PSZ18_3_HASH, pointNum);
+        int binNum = CuckooHashBinFactory.getBinNum(cuckooHashBinType, pointNum);
         // Interpret hint as a garbled hash table GT.
         MpcAbortPreconditions.checkArgument(garbledTablePayload.size() == binNum);
         byte[][] garbledTable = garbledTablePayload.toArray(new byte[0][]);
