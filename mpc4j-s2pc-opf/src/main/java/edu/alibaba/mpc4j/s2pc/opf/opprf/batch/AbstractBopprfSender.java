@@ -30,11 +30,11 @@ public abstract class AbstractBopprfSender extends AbstractTwoPartyPto implement
      */
     protected int maxPointNum;
     /**
-     * the input / output bit length
+     * l bit length
      */
     protected int l;
     /**
-     * the input / output byte length
+     * l byte length
      */
     protected int byteL;
     /**

@@ -16,7 +16,7 @@ class BopprfSenderThread extends Thread {
      */
     private final BopprfSender sender;
     /**
-     * the input / output bit length
+     * l bit length
      */
     private final int l;
     /**

@@ -1,24 +1,24 @@
-package edu.alibaba.mpc4j.s2pc.opf.opprf.batch;
+package edu.alibaba.mpc4j.s2pc.upso.uopprf.urb;
 
 import edu.alibaba.mpc4j.common.rpc.MpcAbortException;
 
 /**
- * Batch OPPRF receiver thread.
+ * unbalanced related-batch OPPRF receiver thread.
  *
  * @author Weiran Liu
- * @date 2023/3/26
+ * @date 2023/4/18
  */
-class BopprfReceiverThread extends Thread {
+class UrbopprfReceiverThread extends Thread {
     /**
      * the receiver
      */
-    private final BopprfReceiver receiver;
+    private final UrbopprfReceiver receiver;
     /**
      * l bit length
      */
     private final int l;
     /**
-     * the batched receiver input array
+     * input array
      */
     private final byte[][] inputArray;
     /**
@@ -28,23 +28,23 @@ class BopprfReceiverThread extends Thread {
     /**
      * the PRF outputs
      */
-    private byte[][] targetArray;
+    private byte[][][] targetArray;
 
-    BopprfReceiverThread(BopprfReceiver receiver, int l, byte[][] inputArray, int pointNum) {
+    UrbopprfReceiverThread(UrbopprfReceiver receiver, int l, byte[][] inputArray, int pointNum) {
         this.receiver = receiver;
         this.l = l;
         this.inputArray = inputArray;
         this.pointNum = pointNum;
     }
 
-    byte[][] getTargetArray() {
+    byte[][][] getTargetArray() {
         return targetArray;
     }
 
     @Override
     public void run() {
         try {
-            receiver.init(inputArray.length, pointNum);
+            receiver.init(inputArray.length);
             targetArray = receiver.opprf(l, inputArray, pointNum);
         } catch (MpcAbortException e) {
             e.printStackTrace();

@@ -102,8 +102,6 @@ public class Cgs22UrbopprfSender extends AbstractUrbopprfSender {
         setPtoInput();
         logPhaseInfo(PtoState.PTO_BEGIN);
 
-
-        stopWatch.start();
         if (!sent) {
             stopWatch.start();
             // send garbled table keys

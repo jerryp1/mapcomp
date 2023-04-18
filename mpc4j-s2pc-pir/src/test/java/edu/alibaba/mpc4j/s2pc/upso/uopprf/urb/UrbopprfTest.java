@@ -1,4 +1,4 @@
-package edu.alibaba.mpc4j.s2pc.opf.opprf.rb;
+package edu.alibaba.mpc4j.s2pc.upso.uopprf.urb;
 
 import com.google.common.base.Preconditions;
 import edu.alibaba.mpc4j.common.rpc.Rpc;
@@ -6,9 +6,9 @@ import edu.alibaba.mpc4j.common.rpc.RpcManager;
 import edu.alibaba.mpc4j.common.rpc.impl.memory.MemoryRpcManager;
 import edu.alibaba.mpc4j.common.tool.utils.BytesUtils;
 import edu.alibaba.mpc4j.common.tool.utils.CommonUtils;
-import edu.alibaba.mpc4j.s2pc.opf.opprf.OpprfTestUtils;
-import edu.alibaba.mpc4j.s2pc.opf.opprf.rb.RbopprfFactory.RbopprfType;
-import edu.alibaba.mpc4j.s2pc.opf.opprf.rb.cgs22.Cgs22RbopprfConfig;
+import edu.alibaba.mpc4j.s2pc.upso.uopprf.UopprfTestUtils;
+import edu.alibaba.mpc4j.s2pc.upso.uopprf.urb.UrbopprfFactory.UrbopprfType;
+import edu.alibaba.mpc4j.s2pc.upso.uopprf.urb.cgs22.Cgs22UrbopprfConfig;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.time.StopWatch;
 import org.junit.After;
@@ -28,14 +28,14 @@ import java.util.concurrent.TimeUnit;
 import java.util.stream.IntStream;
 
 /**
- * Related-Batch OPPRF test.
+ * unbalanced related-batch OPPRF test.
  *
  * @author Weiran Liu
- * @date 2023/3/26
+ * @date 2023/4/18
  */
 @RunWith(Parameterized.class)
-public class RbopprfTest {
-    private static final Logger LOGGER = LoggerFactory.getLogger(RbopprfTest.class);
+public class UrbopprfTest {
+    private static final Logger LOGGER = LoggerFactory.getLogger(UrbopprfTest.class);
     /**
      * the random state
      */
@@ -66,7 +66,7 @@ public class RbopprfTest {
         Collection<Object[]> configurations = new ArrayList<>();
 
         configurations.add(new Object[]{
-            RbopprfType.CGS22.name(), new Cgs22RbopprfConfig.Builder().build(),
+            UrbopprfType.CGS22.name(), new Cgs22UrbopprfConfig.Builder().build(),
         });
 
         return configurations;
@@ -83,9 +83,9 @@ public class RbopprfTest {
     /**
      * the config
      */
-    private final RbopprfConfig config;
+    private final UrbopprfConfig config;
 
-    public RbopprfTest(String name, RbopprfConfig config) {
+    public UrbopprfTest(String name, UrbopprfConfig config) {
         Preconditions.checkArgument(StringUtils.isNotBlank(name));
         // We cannot use NettyRPC in the test case since it needs multi-thread connect / disconnect.
         // In other word, we cannot connect / disconnect NettyRpc in @Before / @After, respectively.
@@ -149,8 +149,8 @@ public class RbopprfTest {
 
     private void testPto(int l, int batchNum, int pointNum, boolean parallel) {
         // create the sender and the receiver
-        RbopprfSender sender = RbopprfFactory.createSender(senderRpc, receiverRpc.ownParty(), config);
-        RbopprfReceiver receiver = RbopprfFactory.createReceiver(receiverRpc, senderRpc.ownParty(), config);
+        UrbopprfSender sender = UrbopprfFactory.createSender(senderRpc, receiverRpc.ownParty(), config);
+        UrbopprfReceiver receiver = UrbopprfFactory.createReceiver(receiverRpc, senderRpc.ownParty(), config);
         sender.setParallel(parallel);
         receiver.setParallel(parallel);
         int randomTaskId = Math.abs(SECURE_RANDOM.nextInt());
@@ -162,12 +162,12 @@ public class RbopprfTest {
                 sender.getPtoDesc().getPtoName(), l, batchNum, pointNum, parallel
             );
             // generate the sender input
-            byte[][][] senderInputArrays = OpprfTestUtils.generateSenderInputArrays(batchNum, pointNum, SECURE_RANDOM);
-            byte[][][] senderTargetArrays = OpprfTestUtils.generateSenderTargetArrays(l, senderInputArrays, SECURE_RANDOM);
+            byte[][][] senderInputArrays = UopprfTestUtils.generateSenderInputArrays(batchNum, pointNum, SECURE_RANDOM);
+            byte[][][] senderTargetArrays = UopprfTestUtils.generateSenderTargetArrays(l, senderInputArrays, SECURE_RANDOM);
             // generate the receiver input
-            byte[][] receiverInputArray = OpprfTestUtils.generateReceiverInputArray(senderInputArrays, SECURE_RANDOM);
-            RbopprfSenderThread senderThread = new RbopprfSenderThread(sender, l, senderInputArrays, senderTargetArrays);
-            RbopprfReceiverThread receiverThread = new RbopprfReceiverThread(receiver, l, receiverInputArray, pointNum);
+            byte[][] receiverInputArray = UopprfTestUtils.generateReceiverInputArray(senderInputArrays, SECURE_RANDOM);
+            UrbopprfSenderThread senderThread = new UrbopprfSenderThread(sender, l, senderInputArrays, senderTargetArrays);
+            UrbopprfReceiverThread receiverThread = new UrbopprfReceiverThread(receiver, l, receiverInputArray, pointNum);
             StopWatch stopWatch = new StopWatch();
             // start
             stopWatch.start();

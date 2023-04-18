@@ -14,13 +14,13 @@ class RbopprfReceiverThread extends Thread {
      */
     private final RbopprfReceiver receiver;
     /**
-     * the input / output bit length
+     * l bit length
      */
     private final int l;
     /**
-     * the batched receiver input array
+     * input array
      */
-    private final byte[][] receiverInputArray;
+    private final byte[][] inputArray;
     /**
      * point num
      */
@@ -28,24 +28,24 @@ class RbopprfReceiverThread extends Thread {
     /**
      * the PRF outputs
      */
-    private byte[][][] receiverTargetArray;
+    private byte[][][] targetArray;
 
-    RbopprfReceiverThread(RbopprfReceiver receiver, int l, byte[][] receiverInputArray, int pointNum) {
+    RbopprfReceiverThread(RbopprfReceiver receiver, int l, byte[][] inputArray, int pointNum) {
         this.receiver = receiver;
         this.l = l;
-        this.receiverInputArray = receiverInputArray;
+        this.inputArray = inputArray;
         this.pointNum = pointNum;
     }
 
-    byte[][][] getReceiverTargetArray() {
-        return receiverTargetArray;
+    byte[][][] getTargetArray() {
+        return targetArray;
     }
 
     @Override
     public void run() {
         try {
-            receiver.init(receiverInputArray.length, pointNum);
-            receiverTargetArray = receiver.opprf(l, receiverInputArray, pointNum);
+            receiver.init(inputArray.length, pointNum);
+            targetArray = receiver.opprf(l, inputArray, pointNum);
         } catch (MpcAbortException e) {
             e.printStackTrace();
         }

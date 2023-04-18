@@ -16,7 +16,7 @@ class RbopprfSenderThread extends Thread {
      */
     private final RbopprfSender sender;
     /**
-     * the input / output bit length
+     * l bit length
      */
     private final int l;
     /**
@@ -28,30 +28,30 @@ class RbopprfSenderThread extends Thread {
      */
     private final int pointNum;
     /**
-     * sender input arrays
+     * input arrays
      */
-    private final byte[][][] senderInputArrays;
+    private final byte[][][] inputArrays;
     /**
-     * sender target arrays
+     * target arrays
      */
-    private final byte[][][] senderTargetArrays;
+    private final byte[][][] targetArrays;
 
-    RbopprfSenderThread(RbopprfSender sender, int l, byte[][][] senderInputArrays, byte[][][] senderTargetArrays) {
+    RbopprfSenderThread(RbopprfSender sender, int l, byte[][][] inputArrays, byte[][][] targetArrays) {
         this.sender = sender;
         this.l = l;
-        batchSize = senderInputArrays.length;
-        pointNum = Arrays.stream(senderInputArrays)
+        batchSize = inputArrays.length;
+        pointNum = Arrays.stream(inputArrays)
             .mapToInt(inputArray -> inputArray.length)
             .sum();
-        this.senderInputArrays = senderInputArrays;
-        this.senderTargetArrays = senderTargetArrays;
+        this.inputArrays = inputArrays;
+        this.targetArrays = targetArrays;
     }
 
     @Override
     public void run() {
         try {
             sender.init(batchSize, pointNum);
-            sender.opprf(l, senderInputArrays, senderTargetArrays);
+            sender.opprf(l, inputArrays, targetArrays);
         } catch (MpcAbortException e) {
             e.printStackTrace();
         }
