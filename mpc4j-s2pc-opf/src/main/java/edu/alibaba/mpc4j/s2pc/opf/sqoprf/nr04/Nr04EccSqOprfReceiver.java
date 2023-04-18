@@ -119,11 +119,8 @@ public class Nr04EccSqOprfReceiver extends AbstractSqOprfReceiver {
 				encodeTaskId, getPtoDesc().getPtoId(), Nr04EccSqOprfPtoDesc.PtoStep.SENDER_SEND_GR_INV.ordinal(), extraInfo,
 				otherParty().getPartyId(), ownParty().getPartyId()
 		);
-
 		List<byte[]> grInvPayload = rpc.receive(grInvHeader).getPayload();
 		grInvPoints = handleGrInvPayload(grInvPayload).toArray(new ECPoint[0]);
-
-
 		stopWatch.stop();
 		long receiveGrInvTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
 		stopWatch.reset();
@@ -151,13 +148,13 @@ public class Nr04EccSqOprfReceiver extends AbstractSqOprfReceiver {
 		List<byte[]> messagePayload = rpc.receive(messageHeader).getPayload();
 		// get R^{y_i[j]}
 		BigInteger[] rArray = handleMessagePayload(messagePayload);
-
-
 		SqOprfReceiverOutput receiverOutput = generateReceiverOutput(rArray);
 		stopWatch.stop();
 		long oprfTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
 		stopWatch.reset();
-		logStepInfo(PtoState.PTO_STEP, 1, 3, oprfTime, "Receiver receives message payload and generate oprfs.");
+		logStepInfo(PtoState.PTO_STEP, 3, 3, oprfTime, "Receiver receives message payload and generate oprfs.");
+
+		logPhaseInfo(PtoState.PTO_END);
 
 		return receiverOutput;
 	}
@@ -170,7 +167,6 @@ public class Nr04EccSqOprfReceiver extends AbstractSqOprfReceiver {
 
 		Kdf kdf = KdfFactory.createInstance(envType);
 		byte[][] prfs = new byte[batchSize][];
-//		List<byte[]> prfs = new ArrayList<>(batchSize);
 		batchStream.forEach(index -> {
 			// One index corresponds to 128 bits
 			// C = R^{y_i[j]}

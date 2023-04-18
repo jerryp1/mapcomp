@@ -109,7 +109,7 @@ public class Nr04EccSqOprfSender extends AbstractSqOprfSender {
 		stopWatch.stop();
 		long generateCotTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
 		stopWatch.reset();
-		logStepInfo(PtoState.INIT_STEP, 1, 2, generateCotTime);
+		logStepInfo(PtoState.INIT_STEP, 2, 2, generateCotTime);
 
 		logPhaseInfo(PtoState.INIT_END);
 	}
@@ -149,7 +149,6 @@ public class Nr04EccSqOprfSender extends AbstractSqOprfSender {
 		long messageTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
 		stopWatch.reset();
 		logStepInfo(PtoState.PTO_STEP, 2, 2, messageTime, "Sender sends messages");
-
 
 		logPhaseInfo(PtoState.PTO_END);
 	}

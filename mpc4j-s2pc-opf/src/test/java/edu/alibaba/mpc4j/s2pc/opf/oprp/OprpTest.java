@@ -52,7 +52,7 @@ public class OprpTest {
     /**
      * 较大批处理数量
      */
-    private static final int LARGE_BATCH_SIZE = 1 << 12;
+    private static final int LARGE_BATCH_SIZE = 1 << 14;
 
     @Parameterized.Parameters(name = "{0}")
     public static Collection<Object[]> configurations() {

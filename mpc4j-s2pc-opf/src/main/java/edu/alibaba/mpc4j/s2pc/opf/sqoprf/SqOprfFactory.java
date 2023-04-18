@@ -4,6 +4,9 @@ import edu.alibaba.mpc4j.common.rpc.Party;
 import edu.alibaba.mpc4j.common.rpc.Rpc;
 import edu.alibaba.mpc4j.common.rpc.desc.SecurityModel;
 import edu.alibaba.mpc4j.common.rpc.pto.PtoFactory;
+import edu.alibaba.mpc4j.s2pc.opf.sqoprf.lowmc.LowMcSqOprfConfig;
+import edu.alibaba.mpc4j.s2pc.opf.sqoprf.lowmc.LowMcSqOprfReceiver;
+import edu.alibaba.mpc4j.s2pc.opf.sqoprf.lowmc.LowMcSqOprfSender;
 import edu.alibaba.mpc4j.s2pc.opf.sqoprf.nr04.Nr04EccSqOprfConfig;
 import edu.alibaba.mpc4j.s2pc.opf.sqoprf.nr04.Nr04EccSqOprfReceiver;
 import edu.alibaba.mpc4j.s2pc.opf.sqoprf.nr04.Nr04EccSqOprfSender;
@@ -39,7 +42,6 @@ public class SqOprfFactory implements PtoFactory {
          * LowMC-based OPRF
          */
         LOW_MC,
-
         /**
          * Naor-Reingold OPRF based ECC
          */
@@ -64,6 +66,7 @@ public class SqOprfFactory implements PtoFactory {
             case NR04_ECC:
                 return new Nr04EccSqOprfSender(senderRpc, receiverParty, (Nr04EccSqOprfConfig) config);
             case LOW_MC:
+                return new LowMcSqOprfSender(senderRpc, receiverParty, (LowMcSqOprfConfig) config);
             default:
                 throw new IllegalArgumentException("Invalid " + SqOprfType.class.getSimpleName() + ": " + type.name());
         }
@@ -87,6 +90,7 @@ public class SqOprfFactory implements PtoFactory {
             case NR04_ECC:
                 return new Nr04EccSqOprfReceiver(receiverRpc, senderParty, (Nr04EccSqOprfConfig) config);
             case LOW_MC:
+                return new LowMcSqOprfReceiver(receiverRpc, senderParty, (LowMcSqOprfConfig) config);
             default:
                 throw new IllegalArgumentException("Invalid " + SqOprfType.class.getSimpleName() + ": " + type.name());
         }
