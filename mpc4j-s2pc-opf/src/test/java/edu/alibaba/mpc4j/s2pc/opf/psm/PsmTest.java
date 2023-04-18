@@ -51,7 +51,7 @@ public class PsmTest {
     /**
      * default l
      */
-    private static final int DEFAULT_L = 40;
+    private static final int DEFAULT_L = 64;
     /**
      * default d
      */

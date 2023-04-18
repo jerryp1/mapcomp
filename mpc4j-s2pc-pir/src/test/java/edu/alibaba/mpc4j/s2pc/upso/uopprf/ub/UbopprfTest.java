@@ -45,7 +45,7 @@ public class UbopprfTest {
     /**
      * default l
      */
-    private static final int DEFAULT_L = CommonConstants.STATS_BIT_LENGTH;
+    private static final int DEFAULT_L = 64;
     /**
      * default batch size
      */
