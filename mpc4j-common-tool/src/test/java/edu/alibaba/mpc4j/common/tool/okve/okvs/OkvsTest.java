@@ -29,7 +29,7 @@ public class OkvsTest {
     /**
      * default L
      */
-    private static final int DEFAULT_L = CommonConstants.STATS_BIT_LENGTH;
+    private static final int DEFAULT_L = 64;
     /**
      * the random state
      */

@@ -101,6 +101,7 @@ public class OkvsUbopprfSender extends AbstractUbopprfSender {
                 ownParty().getPartyId(), otherParty().getPartyId()
             );
             rpc.send(DataPacket.fromByteArrayList(okvsKeysHeader, okvsKeysPayload));
+            okvsKeys = null;
             // send OKVS storage
             List<byte[]> okvsPayload = Arrays.stream(okvsStorage).collect(Collectors.toList());
             DataPacketHeader okvsHeader = new DataPacketHeader(
@@ -108,6 +109,7 @@ public class OkvsUbopprfSender extends AbstractUbopprfSender {
                 ownParty().getPartyId(), otherParty().getPartyId()
             );
             rpc.send(DataPacket.fromByteArrayList(okvsHeader, okvsPayload));
+            okvsStorage = null;
             sent = true;
             stopWatch.stop();
             long okvsTime = stopWatch.getTime(TimeUnit.MILLISECONDS);

@@ -6,7 +6,6 @@ import edu.alibaba.mpc4j.common.rpc.desc.PtoDesc;
 import edu.alibaba.mpc4j.common.rpc.pto.AbstractTwoPartyPto;
 import edu.alibaba.mpc4j.common.tool.CommonConstants;
 import edu.alibaba.mpc4j.common.tool.MathPreconditions;
-import edu.alibaba.mpc4j.common.tool.hashbin.MaxBinSizeUtils;
 import edu.alibaba.mpc4j.common.tool.utils.CommonUtils;
 
 /**
@@ -17,6 +16,10 @@ import edu.alibaba.mpc4j.common.tool.utils.CommonUtils;
  */
 public abstract class AbstractUbopprfReceiver extends AbstractTwoPartyPto implements UbopprfReceiver {
     /**
+     * batch size
+     */
+    protected int batchSize;
+    /**
      * the input / output bit length
      */
     protected int l;
@@ -25,10 +28,6 @@ public abstract class AbstractUbopprfReceiver extends AbstractTwoPartyPto implem
      */
     protected int byteL;
     /**
-     * batch size
-     */
-    protected int batchSize;
-    /**
      * the batched input array.
      */
     protected byte[][] inputArray;
@@ -36,10 +35,6 @@ public abstract class AbstractUbopprfReceiver extends AbstractTwoPartyPto implem
      * the number of target programmed points
      */
     protected int pointNum;
-    /**
-     * max batch point num
-     */
-    protected int maxBatchPointNum;
 
     protected AbstractUbopprfReceiver(PtoDesc ptoDesc, Rpc receiverRpc, Party senderParty, UbopprfConfig config) {
         super(ptoDesc, receiverRpc, senderParty, config);
@@ -64,7 +59,6 @@ public abstract class AbstractUbopprfReceiver extends AbstractTwoPartyPto implem
         // check point num
         MathPreconditions.checkPositive("point num", pointNum);
         this.pointNum = pointNum;
-        maxBatchPointNum = MaxBinSizeUtils.expectMaxBinSize(pointNum, batchSize);
         extraInfo++;
     }
 }

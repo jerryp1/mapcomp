@@ -4,7 +4,6 @@ import com.google.common.base.Preconditions;
 import edu.alibaba.mpc4j.common.rpc.Rpc;
 import edu.alibaba.mpc4j.common.rpc.RpcManager;
 import edu.alibaba.mpc4j.common.rpc.impl.memory.MemoryRpcManager;
-import edu.alibaba.mpc4j.common.tool.CommonConstants;
 import edu.alibaba.mpc4j.common.tool.utils.BytesUtils;
 import edu.alibaba.mpc4j.common.tool.utils.CommonUtils;
 import edu.alibaba.mpc4j.s2pc.opf.opprf.OpprfTestUtils;
@@ -44,11 +43,7 @@ public class RbopprfTest {
     /**
      * default l
      */
-    private static final int DEFAULT_L = CommonConstants.STATS_BIT_LENGTH;
-    /**
-     * large l
-     */
-    private static final int LARGE_L = CommonConstants.BLOCK_BIT_LENGTH;
+    private static final int DEFAULT_L = 64;
     /**
      * default batch size
      */
@@ -138,13 +133,18 @@ public class RbopprfTest {
     }
 
     @Test
+    public void testSpecialL() {
+        testPto(DEFAULT_L + 5, DEFAULT_BATCH_NUM, DEFAULT_POINT_NUM, true);
+    }
+
+    @Test
     public void testLarge() {
-        testPto(LARGE_L, LARGE_BATCH_NUM, LARGE_POINT_NUM, false);
+        testPto(DEFAULT_L, LARGE_BATCH_NUM, LARGE_POINT_NUM, false);
     }
 
     @Test
     public void testParallelLarge() {
-        testPto(LARGE_L, LARGE_BATCH_NUM, LARGE_POINT_NUM, true);
+        testPto(DEFAULT_L, LARGE_BATCH_NUM, LARGE_POINT_NUM, true);
     }
 
     private void testPto(int l, int batchNum, int pointNum, boolean parallel) {
@@ -178,7 +178,7 @@ public class RbopprfTest {
             stopWatch.stop();
             long time = stopWatch.getTime(TimeUnit.MILLISECONDS);
             stopWatch.reset();
-            byte[][][] receiverTargetArray = receiverThread.getReceiverTargetArray();
+            byte[][][] receiverTargetArray = receiverThread.getTargetArray();
             // verify the correctness
             assertOutput(l, senderInputArrays, senderTargetArrays, receiverInputArray, receiverTargetArray);
             LOGGER.info("Sender data_packet_num = {}, payload_bytes = {}B, send_bytes = {}B, time = {}ms",

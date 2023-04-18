@@ -127,7 +127,7 @@ public class Gmr21MqRpmtConfig implements MqRpmtConfig {
         public Builder() {
             cuckooHashOprfConfig = OprfFactory.createOprfDefaultConfig(SecurityModel.SEMI_HONEST);
             peqtOprfConfig = OprfFactory.createOprfDefaultConfig(SecurityModel.SEMI_HONEST);
-            osnConfig = OsnFactory.createDefaultConfig(SecurityModel.SEMI_HONEST);
+            osnConfig = OsnFactory.createDefaultConfig(SecurityModel.SEMI_HONEST, true);
             okvsType = OkvsType.MEGA_BIN;
             // GMR21源代码使用普通布谷鸟哈希实现无贮存区布谷鸟哈希的功能，这样通信量可以更小一点
             cuckooHashBinType = CuckooHashBinType.NAIVE_3_HASH;

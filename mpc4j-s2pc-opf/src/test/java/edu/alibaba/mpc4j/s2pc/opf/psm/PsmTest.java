@@ -47,11 +47,11 @@ public class PsmTest {
     /**
      * large num
      */
-    private static final int LARGE_NUM = 1 << 18;
+    private static final int LARGE_NUM = 1 << 16;
     /**
      * default l
      */
-    private static final int DEFAULT_L = 40;
+    private static final int DEFAULT_L = 64;
     /**
      * default d
      */
@@ -66,21 +66,21 @@ public class PsmTest {
             PsmType.CGS22_OPPRF.name() + " (direct, semi-honest)",
             new Cgs22OpprfPsmConfig.Builder(SecurityModel.SEMI_HONEST, false).build()
         });
-//        // CGS22_OPPRF (silent, semi-honest)
-//        configurations.add(new Object[]{
-//            PsmType.CGS22_OPPRF.name() + " (silent, semi-honest)",
-//            new Cgs22OpprfPsmConfig.Builder(SecurityModel.SEMI_HONEST, true).build()
-//        });
+        // CGS22_OPPRF (silent, semi-honest)
+        configurations.add(new Object[]{
+            PsmType.CGS22_OPPRF.name() + " (silent, semi-honest)",
+            new Cgs22OpprfPsmConfig.Builder(SecurityModel.SEMI_HONEST, true).build()
+        });
         // CGS22_LNOT (direct, semi-honest)
         configurations.add(new Object[]{
             PsmType.CGS22_LNOT.name() + " (direct, semi-honest)",
             new Cgs22LnotPsmConfig.Builder(SecurityModel.SEMI_HONEST, false).build()
         });
-//        // CGS22_LNOT (silent, semi-honest)
-//        configurations.add(new Object[]{
-//            PsmType.CGS22_LNOT.name() + " (silent, semi-honest)",
-//            new Cgs22LnotPsmConfig.Builder(SecurityModel.SEMI_HONEST, true).build()
-//        });
+        // CGS22_LNOT (silent, semi-honest)
+        configurations.add(new Object[]{
+            PsmType.CGS22_LNOT.name() + " (silent, semi-honest)",
+            new Cgs22LnotPsmConfig.Builder(SecurityModel.SEMI_HONEST, true).build()
+        });
 
         return configurations;
     }

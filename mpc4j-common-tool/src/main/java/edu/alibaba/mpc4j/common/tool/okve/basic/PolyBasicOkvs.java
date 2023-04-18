@@ -6,6 +6,7 @@ import edu.alibaba.mpc4j.common.tool.polynomial.gf2e.Gf2ePoly;
 import edu.alibaba.mpc4j.common.tool.polynomial.gf2e.Gf2ePolyFactory;
 import edu.alibaba.mpc4j.common.tool.utils.BytesUtils;
 import edu.alibaba.mpc4j.common.tool.utils.CommonUtils;
+import edu.alibaba.mpc4j.common.tool.utils.LongUtils;
 
 import java.nio.ByteBuffer;
 import java.util.Map;
@@ -41,8 +42,8 @@ public class PolyBasicOkvs implements BasicOkvs {
     public PolyBasicOkvs(EnvType envType, int n, int l) {
         assert n > 0 : "n must be greater than 0: " + n;
         this.n = n;
-        // l >= σ (40 bits) and l % Byte.SIZE == 0
-        assert l >= CommonConstants.STATS_BIT_LENGTH;
+        int minL = LongUtils.ceilLog2(n) + CommonConstants.STATS_BIT_LENGTH;
+        assert l >= minL : "l must be greater than or equal to " + minL + ": " + l;
         this.l = l;
         byteL = CommonUtils.getByteLength(l);
         gf2ePoly = Gf2ePolyFactory.createInstance(envType, l);

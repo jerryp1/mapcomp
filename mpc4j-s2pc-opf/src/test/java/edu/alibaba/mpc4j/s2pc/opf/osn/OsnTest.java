@@ -67,32 +67,32 @@ public class OsnTest {
     public static Collection<Object[]> configurations() {
         Collection<Object[]> configurations = new ArrayList<>();
 
-        // GMR21 (silent COT)
+        // GMR21 (silent)
         configurations.add(new Object[] {
-            OsnFactory.OsnType.GMR21.name() + " (silent COT)",
+            OsnFactory.OsnType.GMR21.name() + " (silent)",
             new Gmr21OsnConfig.Builder()
-                .setCotConfig(CotFactory.createCacheConfig(SecurityModel.SEMI_HONEST))
+                .setCotConfig(CotFactory.createDefaultConfig(SecurityModel.SEMI_HONEST, true))
                 .build(),
         });
         // GMR21 with direct COT
         configurations.add(new Object[] {
-            OsnFactory.OsnType.GMR21.name() + " (direct COT)",
+            OsnFactory.OsnType.GMR21.name() + " (direct)",
             new Gmr21OsnConfig.Builder()
-                .setCotConfig(CotFactory.createDirectConfig(SecurityModel.SEMI_HONEST))
+                .setCotConfig(CotFactory.createDefaultConfig(SecurityModel.SEMI_HONEST, false))
                 .build(),
         });
         // MS13 with silent COT
         configurations.add(new Object[] {
-            OsnFactory.OsnType.MS13.name() + " (silent COT)",
+            OsnFactory.OsnType.MS13.name() + " (silent)",
             new Ms13OsnConfig.Builder()
-                .setCotConfig(CotFactory.createCacheConfig(SecurityModel.SEMI_HONEST))
+                .setCotConfig(CotFactory.createDefaultConfig(SecurityModel.SEMI_HONEST, true))
                 .build(),
         });
         // MS13 with direct COT
         configurations.add(new Object[] {
-            OsnFactory.OsnType.MS13.name() + " (direct COT)",
+            OsnFactory.OsnType.MS13.name() + " (direct)",
             new Ms13OsnConfig.Builder()
-                .setCotConfig(CotFactory.createDirectConfig(SecurityModel.SEMI_HONEST))
+                .setCotConfig(CotFactory.createDefaultConfig(SecurityModel.SEMI_HONEST, false))
                 .build(),
         });
 

@@ -1,4 +1,4 @@
-package edu.alibaba.mpc4j.s2pc.opf.opprf.rb;
+package edu.alibaba.mpc4j.s2pc.upso.uopprf.urb;
 
 import edu.alibaba.mpc4j.common.rpc.Party;
 import edu.alibaba.mpc4j.common.rpc.Rpc;
@@ -9,32 +9,25 @@ import edu.alibaba.mpc4j.common.tool.MathPreconditions;
 import edu.alibaba.mpc4j.common.tool.utils.CommonUtils;
 
 /**
- * abstract Related-Batch OPPRF receiver.
+ * abstract unbalanced related-batch OPPRF receiver.
  *
  * @author Weiran Liu
  * @date 2023/3/29
  */
-public abstract class AbstractRbopprfReceiver extends AbstractTwoPartyPto implements RbopprfReceiver {
-    /**
-     * max batch size
-     */
-    protected int maxBatchSize;
-    /**
-     * max point num
-     */
-    protected int maxPointNum;
-    /**
-     * l bit length
-     */
-    protected int l;
-    /**
-     * l byte length
-     */
-    protected int byteL;
+public abstract class AbstractUrbopprfReceiver extends AbstractTwoPartyPto implements UrbopprfReceiver {
     /**
      * batch size
      */
     protected int batchSize;
+    /**
+     * the input / output bit length
+     */
+    protected int l;
+    /**
+     * the input / output byte length
+     */
+    protected int byteL;
+
     /**
      * the batched input array.
      */
@@ -44,15 +37,13 @@ public abstract class AbstractRbopprfReceiver extends AbstractTwoPartyPto implem
      */
     protected int pointNum;
 
-    protected AbstractRbopprfReceiver(PtoDesc ptoDesc, Rpc receiverRpc, Party senderParty, RbopprfConfig config) {
+    protected AbstractUrbopprfReceiver(PtoDesc ptoDesc, Rpc receiverRpc, Party senderParty, UrbopprfConfig config) {
         super(ptoDesc, receiverRpc, senderParty, config);
     }
 
-    protected void setInitInput(int maxBatchSize, int maxPointNum) {
-        MathPreconditions.checkGreater("max batch size", maxBatchSize, 1);
-        this.maxBatchSize = maxBatchSize;
-        MathPreconditions.checkPositive("max point num", maxPointNum);
-        this.maxPointNum = maxPointNum;
+    protected void setInitInput(int batchSize) {
+        MathPreconditions.checkPositive("batch size", batchSize);
+        this.batchSize = batchSize;
         initState();
     }
 
@@ -63,14 +54,12 @@ public abstract class AbstractRbopprfReceiver extends AbstractTwoPartyPto implem
         this.l = l;
         byteL = CommonUtils.getByteLength(l);
         // check batch size
-        batchSize = inputArray.length;
-        MathPreconditions.checkGreater("batch size", batchSize, 1);
-        MathPreconditions.checkLessOrEqual("batch size", batchSize, maxBatchSize);
+        // check batch size
+        MathPreconditions.checkEqual("inputArray.length", "batchSize", inputArray.length, batchSize);
         // we do not even require that input array are distinct.
         this.inputArray = inputArray;
         // check point num
         MathPreconditions.checkPositive("point num", pointNum);
-        MathPreconditions.checkLessOrEqual("point num", pointNum, maxPointNum);
         this.pointNum = pointNum;
         extraInfo++;
     }

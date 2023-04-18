@@ -69,7 +69,7 @@ public class OkvsBopprfConfig implements BopprfConfig {
 
         public Builder() {
             oprfConfig = OprfFactory.createOprfDefaultConfig(SecurityModel.SEMI_HONEST);
-            okvsType = OkvsFactory.OkvsType.MEGA_BIN;
+            okvsType = OkvsFactory.OkvsType.H3_SINGLETON_GCT;
         }
 
         public Builder setOprfConfig(OprfConfig oprfConfig) {

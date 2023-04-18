@@ -4,7 +4,18 @@ import edu.alibaba.mpc4j.common.rpc.desc.PtoDesc;
 import edu.alibaba.mpc4j.common.rpc.desc.PtoDescManager;
 
 /**
- * OKVS unbalanced batched OPRRF protocol description.
+ * OKVS unbalanced batched OPRRF protocol description. The original scheme is described by instantiating OKVS as a
+ * polynomial or MegaBin in the following paper:
+ * <p>
+ * Pinkas, Benny, Thomas Schneider, Oleksandr Tkachenko, and Avishay Yanai. Efficient circuit-based PSI with linear
+ * communication. EUROCRYPT 2019, pp. 122-153. Springer International Publishing, 2019.
+ * </p>
+ * Then, the following paper shows that the general OKVS can be used to replace polynomial / MegaBin:
+ * <p>
+ * Garimella, Gayathri, Benny Pinkas, Mike Rosulek, Ni Trieu, and Avishay Yanai. Oblivious key-value stores and
+ * amplification for private set intersection. CRYPTO 2021, pp. 395-425. Springer International Publishing, 2021.
+ * </p>
+ * Here we leverage single-query OPRF so that we can generate the hint in the init phase.
  *
  * @author Weiran Liu
  * @date 2023/4/17

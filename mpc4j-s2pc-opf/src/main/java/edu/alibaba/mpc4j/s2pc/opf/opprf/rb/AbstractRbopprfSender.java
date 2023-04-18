@@ -29,11 +29,11 @@ public abstract class AbstractRbopprfSender extends AbstractTwoPartyPto implemen
      */
     protected int maxPointNum;
     /**
-     * the input / output bit length
+     * l bit length
      */
     protected int l;
     /**
-     * the input / output byte length
+     * l byte length
      */
     protected int byteL;
     /**
@@ -93,13 +93,18 @@ public abstract class AbstractRbopprfSender extends AbstractTwoPartyPto implemen
                 byte[][] inputArray = inputArrays[batchIndex];
                 byte[][] targetArray = targetArrays[batchIndex];
                 assert inputArray.length == targetArray.length;
-                // all inputs should be distinct
-                assert Arrays.stream(inputArray).map(ByteBuffer::wrap).distinct().count() == inputArray.length;
                 // all targets should have l-bit length
                 for (byte[] target : targetArray) {
                     assert BytesUtils.isFixedReduceByteArray(target, byteL, l);
                 }
             });
+        // check all inputs are distinct
+        long distinctCount = Arrays.stream(inputArrays)
+            .flatMap(Arrays::stream)
+            .map(ByteBuffer::wrap)
+            .distinct()
+            .count();
+        MathPreconditions.checkEqual("distinct inputs", "point num", distinctCount, pointNum);
         this.inputArrays = inputArrays;
         this.targetArrays = targetArrays;
         extraInfo++;

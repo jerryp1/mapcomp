@@ -58,7 +58,7 @@ public class Rrg21ZlMuxConfig implements ZlMuxConfig {
         private CotConfig cotConfig;
 
         public Builder() {
-            cotConfig = CotFactory.createCacheConfig(SecurityModel.SEMI_HONEST);
+            cotConfig = CotFactory.createDefaultConfig(SecurityModel.SEMI_HONEST, true);
         }
 
         public Builder setCotConfig(CotConfig cotConfig) {

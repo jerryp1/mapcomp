@@ -80,22 +80,17 @@ public class CotFactory implements PtoFactory {
     }
 
     /**
-     * Creates direct config. This is suitable for generating relatively small number of COTs.
+     * Creates a default config.
      *
      * @param securityModel the security model.
-     * @return the COT config.
+     * @param silent        if using a silent protocol.
+     * @return a default config.
      */
-    public static CotConfig createDirectConfig(SecurityModel securityModel) {
-        return new DirectCotConfig.Builder(securityModel).build();
-    }
-
-    /**
-     * Creates cache config. This is suitable for generating extremely large number of COTs.
-     *
-     * @param securityModel the security model.
-     * @return the COT config.
-     */
-    public static CotConfig createCacheConfig(SecurityModel securityModel) {
-        return new CacheCotConfig.Builder(securityModel).build();
+    public static CotConfig createDefaultConfig(SecurityModel securityModel, boolean silent) {
+        if (silent) {
+            return new CacheCotConfig.Builder(securityModel).build();
+        } else {
+            return new DirectCotConfig.Builder(securityModel).build();
+        }
     }
 }
