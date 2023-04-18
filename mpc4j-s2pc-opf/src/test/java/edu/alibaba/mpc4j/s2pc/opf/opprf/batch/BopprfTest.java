@@ -21,6 +21,7 @@ import org.junit.runners.Parameterized;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.nio.ByteBuffer;
 import java.security.SecureRandom;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -164,6 +165,11 @@ public class BopprfTest {
     }
 
     private void testPto(int l, int batchNum, int pointNum, boolean parallel) {
+        testPto(l, batchNum, pointNum, parallel, true);
+        testPto(l, batchNum, pointNum, parallel, false);
+    }
+
+    private void testPto(int l, int batchNum, int pointNum, boolean parallel, boolean equalTarget) {
         // create the sender and the receiver
         BopprfSender sender = BopprfFactory.createSender(senderRpc, receiverRpc.ownParty(), config);
         BopprfReceiver receiver = BopprfFactory.createReceiver(receiverRpc, senderRpc.ownParty(), config);
@@ -179,9 +185,11 @@ public class BopprfTest {
             );
             // generate the sender input
             byte[][][] senderInputArrays = OpprfTestUtils.generateSenderInputArrays(batchNum, pointNum, SECURE_RANDOM);
-            byte[][][] senderTargetArrays = OpprfTestUtils.generateSenderTargetArrays(l, senderInputArrays, SECURE_RANDOM);
+            byte[][][] senderTargetArrays = equalTarget
+                ? OpprfTestUtils.generateEqualSenderTargetArrays(l, senderInputArrays, SECURE_RANDOM)
+                : OpprfTestUtils.generateDistinctSenderTargetArrays(l, senderInputArrays, SECURE_RANDOM);
             // generate the receiver input
-            byte[][] receiverInputArray = OpprfTestUtils.generateReceiverInputArray(senderInputArrays, SECURE_RANDOM);
+            byte[][] receiverInputArray = OpprfTestUtils.generateReceiverInputArray(l, senderInputArrays, SECURE_RANDOM);
             BopprfSenderThread senderThread = new BopprfSenderThread(sender, l, senderInputArrays, senderTargetArrays);
             BopprfReceiverThread receiverThread = new BopprfReceiverThread(receiver, l, receiverInputArray, pointNum);
             StopWatch stopWatch = new StopWatch();
@@ -230,15 +238,26 @@ public class BopprfTest {
             // the receiver output must have l-bit length
             byte[] receiverTarget = receiverTargetArray[batchIndex];
             Assert.assertTrue(BytesUtils.isFixedReduceByteArray(receiverTarget, byteL, l));
-            for (int pointIndex = 0; pointIndex < batchPointNum; pointIndex++) {
-                byte[] senderInput = senderInputArray[pointIndex];
-                byte[] senderTarget = senderTargetArray[pointIndex];
+            for (int index = 0; index < batchPointNum; index++) {
                 // the sender target must have l-bit length
+                byte[] senderTarget = senderTargetArray[index];
                 Assert.assertTrue(BytesUtils.isFixedReduceByteArray(senderTarget, byteL, l));
+            }
+            // if receiver input belongs to one of the sender input, then check equal target
+            boolean contain = false;
+            int containIndex = -1;
+            for (int index = 0; index < batchPointNum; index++) {
+                byte[] senderInput = senderInputArray[index];
                 if (Arrays.equals(senderInput, receiverInput)) {
-                    Assert.assertArrayEquals(senderTarget, receiverTarget);
-                } else {
-                    Assert.assertFalse(Arrays.equals(senderTarget, receiverTarget));
+                    contain = true;
+                    containIndex = index;
+                }
+            }
+            if (contain) {
+                Assert.assertEquals(ByteBuffer.wrap(receiverTarget), ByteBuffer.wrap(senderTargetArray[containIndex]));
+            } else {
+                for (int index = 0; index < batchPointNum; index++) {
+                    Assert.assertNotEquals(ByteBuffer.wrap(receiverTarget), ByteBuffer.wrap(senderTargetArray[index]));
                 }
             }
         });
