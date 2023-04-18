@@ -20,7 +20,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.stream.IntStream;
 
 /**
- * CGS22 unbalanced related-Batch OPPRF receiver.
+ * CGS22 unbalanced related-batch OPPRF receiver.
  *
  * @author Weiran Liu
  * @date 2023/4/18

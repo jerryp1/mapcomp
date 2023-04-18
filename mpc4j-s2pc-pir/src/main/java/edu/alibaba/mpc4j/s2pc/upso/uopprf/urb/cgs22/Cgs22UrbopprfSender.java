@@ -30,14 +30,14 @@ import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
 /**
- * CGS22 unbalanced related-Batch OPPRF sender.
+ * CGS22 unbalanced related-batch OPPRF sender.
  *
  * @author Weiran Liu
  * @date 2023/3/29
  */
 public class Cgs22UrbopprfSender extends AbstractUrbopprfSender {
     /**
-     * single-quer OPRF sender
+     * single-query OPRF sender
      */
     private final SqOprfSender sqOprfSender;
     /**
