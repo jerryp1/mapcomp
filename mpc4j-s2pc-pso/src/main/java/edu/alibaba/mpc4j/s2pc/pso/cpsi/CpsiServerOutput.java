@@ -3,7 +3,7 @@ package edu.alibaba.mpc4j.s2pc.pso.cpsi;
 import edu.alibaba.mpc4j.common.tool.MathPreconditions;
 import edu.alibaba.mpc4j.s2pc.aby.basics.bc.SquareShareZ2Vector;
 
-import java.util.ArrayList;
+import java.nio.ByteBuffer;
 
 /**
  * Circuit PSI server output.
@@ -11,33 +11,28 @@ import java.util.ArrayList;
  * @author Weiran Liu
  * @date 2023/3/29
  */
-public class CpsiServerOutput<T> {
+public class CpsiServerOutput {
     /**
      * the server table
      */
-    private final ArrayList<T> table;
+    private final ByteBuffer[] table;
     /**
      * the server share bits
      */
     private final SquareShareZ2Vector z0;
-    /**
-     * β
-     */
-    private final int beta;
 
-    public CpsiServerOutput(ArrayList<T> table, SquareShareZ2Vector z0) {
-        MathPreconditions.checkPositive("β", table.size());
+    public CpsiServerOutput(ByteBuffer[] table, SquareShareZ2Vector z0) {
+        MathPreconditions.checkPositive("β", table.length);
         this.table = table;
-        beta = table.size();
-        MathPreconditions.checkEqual("share bit length", "β", z0.getNum(), beta);
+        MathPreconditions.checkEqual("z0.bitNum", "β", z0.getNum(), table.length);
         this.z0 = z0;
     }
 
     public int getBeta() {
-        return beta;
+        return table.length;
     }
 
-    public ArrayList<T> getTable() {
+    public ByteBuffer[] getTable() {
         return table;
     }
 

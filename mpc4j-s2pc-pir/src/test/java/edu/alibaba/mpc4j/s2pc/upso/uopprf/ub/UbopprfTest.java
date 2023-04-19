@@ -124,9 +124,8 @@ public class UbopprfTest {
     }
 
     @Test
-    public void testHalfBatch() {
-        // note that the batch num should not be too small, otherwise Table BOPPRF would never find a valid solution.
-        testPto(DEFAULT_L, DEFAULT_BATCH_NUM / 10, DEFAULT_POINT_NUM, false);
+    public void test2Batch() {
+        testPto(DEFAULT_L, 2, DEFAULT_POINT_NUM, false);
     }
 
     @Test

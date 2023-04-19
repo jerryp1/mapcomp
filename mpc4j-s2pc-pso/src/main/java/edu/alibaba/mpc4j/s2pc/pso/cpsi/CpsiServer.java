@@ -4,6 +4,7 @@ import edu.alibaba.mpc4j.common.rpc.MpcAbortException;
 import edu.alibaba.mpc4j.common.rpc.pto.TwoPartyPto;
 import edu.alibaba.mpc4j.common.tool.bitvector.BitVector;
 
+import java.nio.ByteBuffer;
 import java.util.Set;
 
 /**
@@ -12,7 +13,7 @@ import java.util.Set;
  * @author Weiran Liu
  * @date 2023/3/29
  */
-public interface CpsiServer<T> extends TwoPartyPto {
+public interface CpsiServer extends TwoPartyPto {
     /**
      * Inits the protocol.
      *
@@ -30,5 +31,5 @@ public interface CpsiServer<T> extends TwoPartyPto {
      * @return the server output.
      * @throws MpcAbortException the protocol failure aborts.
      */
-    CpsiServerOutput<T> psi(Set<T> serverElementSet, int clientElementSize) throws MpcAbortException;
+    CpsiServerOutput psi(Set<ByteBuffer> serverElementSet, int clientElementSize) throws MpcAbortException;
 }

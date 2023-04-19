@@ -2,8 +2,9 @@ package edu.alibaba.mpc4j.s2pc.pso.cpsi.psty19;
 
 import edu.alibaba.mpc4j.common.rpc.desc.SecurityModel;
 import edu.alibaba.mpc4j.common.tool.EnvType;
-import edu.alibaba.mpc4j.s2pc.aby.basics.bc.BcConfig;
-import edu.alibaba.mpc4j.s2pc.aby.basics.bc.BcFactory;
+import edu.alibaba.mpc4j.common.tool.hashbin.object.cuckoo.CuckooHashBinFactory.CuckooHashBinType;
+import edu.alibaba.mpc4j.s2pc.aby.circuit.peqt.PeqtConfig;
+import edu.alibaba.mpc4j.s2pc.aby.circuit.peqt.PeqtFactory;
 import edu.alibaba.mpc4j.s2pc.pso.cpsi.CpsiConfig;
 import edu.alibaba.mpc4j.s2pc.pso.cpsi.CpsiFactory;
 import edu.alibaba.mpc4j.s2pc.opf.opprf.batch.BopprfConfig;
@@ -21,14 +22,19 @@ public class Psty19CpsiConfig implements CpsiConfig {
      */
     private final BopprfConfig bopprfConfig;
     /**
-     * Boolean Circuit config
+     * private equality test config
      */
-    private final BcConfig bcConfig;
+    private final PeqtConfig peqtConfig;
+    /**
+     * cuckoo hash bin type
+     */
+    private final CuckooHashBinType cuckooHashBinType;
 
     private Psty19CpsiConfig(Builder builder) {
-        assert builder.bopprfConfig.getEnvType().equals(builder.bcConfig.getEnvType());
+        assert builder.bopprfConfig.getEnvType().equals(builder.peqtConfig.getEnvType());
         bopprfConfig = builder.bopprfConfig;
-        bcConfig = builder.bcConfig;
+        peqtConfig = builder.peqtConfig;
+        cuckooHashBinType = builder.cuckooHashBinType;
     }
 
     @Override
@@ -39,7 +45,7 @@ public class Psty19CpsiConfig implements CpsiConfig {
     @Override
     public void setEnvType(EnvType envType) {
         bopprfConfig.setEnvType(envType);
-        bcConfig.setEnvType(envType);
+        peqtConfig.setEnvType(envType);
     }
 
     @Override
@@ -56,8 +62,12 @@ public class Psty19CpsiConfig implements CpsiConfig {
         return bopprfConfig;
     }
 
-    public BcConfig getBcConfig() {
-        return bcConfig;
+    public PeqtConfig getPeqtConfig() {
+        return peqtConfig;
+    }
+
+    public CuckooHashBinType getCuckooHashBinType() {
+        return cuckooHashBinType;
     }
 
     public static class Builder implements org.apache.commons.lang3.builder.Builder<Psty19CpsiConfig> {
@@ -66,13 +76,18 @@ public class Psty19CpsiConfig implements CpsiConfig {
          */
         private BopprfConfig bopprfConfig;
         /**
-         * Boolean Circuit config
+         * private equality test config
          */
-        private BcConfig bcConfig;
+        private PeqtConfig peqtConfig;
+        /**
+         * cuckoo hash bin type
+         */
+        private CuckooHashBinType cuckooHashBinType;
 
         public Builder() {
             bopprfConfig = BopprfFactory.createDefaultConfig(SecurityModel.SEMI_HONEST);
-            bcConfig = BcFactory.createDefaultConfig(SecurityModel.SEMI_HONEST, true);
+            peqtConfig = PeqtFactory.createDefaultConfig(SecurityModel.SEMI_HONEST, true);
+            cuckooHashBinType = CuckooHashBinType.NO_STASH_PSZ18_3_HASH;
         }
 
         public Builder setBopprfConfig(BopprfConfig bopprfConfig) {
@@ -80,8 +95,13 @@ public class Psty19CpsiConfig implements CpsiConfig {
             return this;
         }
 
-        public Builder setBcConfig(BcConfig bcConfig) {
-            this.bcConfig = bcConfig;
+        public Builder setPeqtConfig(PeqtConfig peqtConfig) {
+            this.peqtConfig = peqtConfig;
+            return this;
+        }
+
+        public Builder setCuckooHashBinType(CuckooHashBinType cuckooHashBinType) {
+            this.cuckooHashBinType = cuckooHashBinType;
             return this;
         }
 
