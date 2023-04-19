@@ -56,8 +56,8 @@ public class OkvsUbopprfReceiver extends AbstractUbopprfReceiver {
     }
 
     @Override
-    public void init(int batchSize) throws MpcAbortException {
-        setInitInput(batchSize);
+    public void init(int l, int batchSize, int pointNum) throws MpcAbortException {
+        setInitInput(l, batchSize, pointNum);
         logPhaseInfo(PtoState.INIT_BEGIN);
 
         stopWatch.start();
@@ -73,8 +73,8 @@ public class OkvsUbopprfReceiver extends AbstractUbopprfReceiver {
     }
 
     @Override
-    public byte[][] opprf(int l, byte[][] inputArray, int targetNum) throws MpcAbortException {
-        setPtoInput(l, inputArray, targetNum);
+    public byte[][] opprf(byte[][] inputArray) throws MpcAbortException {
+        setPtoInput(inputArray);
         logPhaseInfo(PtoState.PTO_BEGIN);
 
         if (!sent) {

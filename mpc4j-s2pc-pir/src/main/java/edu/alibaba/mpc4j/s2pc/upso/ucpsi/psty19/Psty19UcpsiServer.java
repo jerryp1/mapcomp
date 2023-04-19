@@ -1,6 +1,5 @@
 package edu.alibaba.mpc4j.s2pc.upso.ucpsi.psty19;
 
-import com.google.common.primitives.Bytes;
 import edu.alibaba.mpc4j.common.rpc.MpcAbortException;
 import edu.alibaba.mpc4j.common.rpc.Party;
 import edu.alibaba.mpc4j.common.rpc.PtoState;
@@ -13,7 +12,7 @@ import edu.alibaba.mpc4j.common.tool.hashbin.object.RandomPadHashBin;
 import edu.alibaba.mpc4j.common.tool.hashbin.object.cuckoo.CuckooHashBinFactory.CuckooHashBinType;
 import edu.alibaba.mpc4j.common.tool.utils.BytesUtils;
 import edu.alibaba.mpc4j.common.tool.utils.CommonUtils;
-import edu.alibaba.mpc4j.common.tool.utils.IntUtils;
+import edu.alibaba.mpc4j.common.tool.utils.LongUtils;
 import edu.alibaba.mpc4j.s2pc.aby.basics.bc.SquareShareZ2Vector;
 import edu.alibaba.mpc4j.s2pc.aby.circuit.peqt.PeqtFactory;
 import edu.alibaba.mpc4j.s2pc.aby.circuit.peqt.PeqtParty;
@@ -26,6 +25,7 @@ import java.nio.ByteBuffer;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 
 import static edu.alibaba.mpc4j.common.tool.hashbin.object.cuckoo.CuckooHashBinFactory.getBinNum;
 import static edu.alibaba.mpc4j.common.tool.hashbin.object.cuckoo.CuckooHashBinFactory.getHashNum;
@@ -47,21 +47,47 @@ public class Psty19UcpsiServer extends AbstractUcpsiServer {
      */
     private final PeqtParty peqtParty;
     /**
+     * cuckoo hash bin type
+     */
+    private final CuckooHashBinType hashBinType;
+    /**
+     * hash num
+     */
+    private final int hashNum;
+    /**
+     * bin num
+     */
+    private int beta;
+    /**
+     * l
+     */
+    private int l;
+    /**
      * hash keys
      */
     private byte[][] hashKeys;
     /**
+     * input arrays
+     */
+    private byte[][][] inputArrays;
+    /**
+     * target array
+     */
+    private byte[][] targetArray;
+    /**
      * target arrays
      */
-    private byte[][] targetArrays;
+    private byte[][][] targetArrays;
 
     public Psty19UcpsiServer(Rpc serverRpc, Party clientParty, UcpsiConfig config) {
         super(Psty19UcpsiPtoDesc.getInstance(), serverRpc, clientParty, config);
         Psty19UcpsiConfig psty19UcpsiConfig = (Psty19UcpsiConfig) config;
         ubopprfSender = UbopprfFactory.createSender(serverRpc, clientParty, psty19UcpsiConfig.getUbopprfConfig());
-        peqtParty = PeqtFactory.createSender(serverRpc, clientParty, psty19UcpsiConfig.getPeqtConfig());
         addSubPtos(ubopprfSender);
+        peqtParty = PeqtFactory.createSender(serverRpc, clientParty, psty19UcpsiConfig.getPeqtConfig());
         addSubPtos(peqtParty);
+        hashBinType = CuckooHashBinType.NO_STASH_PSZ18_3_HASH;
+        hashNum = getHashNum(hashBinType);
     }
 
     @Override
@@ -69,30 +95,34 @@ public class Psty19UcpsiServer extends AbstractUcpsiServer {
         setInitInput(serverElementSet, maxClientElementSize);
         logPhaseInfo(PtoState.INIT_BEGIN);
 
-        // simple hash
         stopWatch.start();
-        CuckooHashBinType hashBinType = CuckooHashBinType.NO_STASH_PSZ18_3_HASH;
-        int hashNum = getHashNum(hashBinType);
-        int binNum = getBinNum(hashBinType, this.maxClientElementSize);
+        // β = (1 + ε) * n_c
+        beta = getBinNum(hashBinType, maxClientElementSize);
+        // point_num = hash_num * n_s
+        int pointNum = hashNum * serverElementSize;
+        // l = σ + log_2(β) + log_2(point_num)
+        l = CommonConstants.STATS_BIT_LENGTH + LongUtils.ceilLog2(beta) + LongUtils.ceilLog2(pointNum);
+        // simple hash
         hashKeys = CommonUtils.generateRandomKeys(hashNum, secureRandom);
-        byte[][][] ubopprfInputArrays = senderComputingHashing(binNum);
+        generateBopprfInputs(l);
         stopWatch.stop();
         long senderHashTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
         stopWatch.reset();
         logStepInfo(PtoState.INIT_STEP, 1, 3, senderHashTime, "Sender hash elements");
 
-        // initialize unbalanced batch opprf
         stopWatch.start();
-        byte[][][] targetInputArrays = computeTargetInputArrays(ubopprfInputArrays, binNum);
-        ubopprfSender.init(CommonConstants.BLOCK_BIT_LENGTH, ubopprfInputArrays, targetInputArrays);
+        // initialize unbalanced batch opprf
+        ubopprfSender.init(l, inputArrays, targetArrays);
+        inputArrays = null;
+        targetArrays = null;
         stopWatch.stop();
         long senderBopprfTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
         stopWatch.reset();
         logStepInfo(PtoState.INIT_STEP, 2, 3, senderBopprfTime, "Sender init unbalanced batch opprf");
 
-        // initialize peqt
         stopWatch.start();
-        peqtParty.init(CommonConstants.BLOCK_BIT_LENGTH, binNum);
+        // initialize peqt
+        peqtParty.init(l, beta);
         stopWatch.stop();
         long initTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
         stopWatch.reset();
@@ -107,16 +137,15 @@ public class Psty19UcpsiServer extends AbstractUcpsiServer {
         logPhaseInfo(PtoState.PTO_BEGIN);
 
         // send hash keys
+        List<byte[]> cuckooHashKeyPayload = Arrays.stream(hashKeys).collect(Collectors.toList());
         DataPacketHeader cuckooHashKeyHeader = new DataPacketHeader(
             encodeTaskId, getPtoDesc().getPtoId(), PtoStep.SENDER_SEND_CUCKOO_HASH_KEYS.ordinal(), extraInfo,
             rpc.ownParty().getPartyId(), otherParty().getPartyId()
         );
-        rpc.send(DataPacket.fromByteArrayList(
-            cuckooHashKeyHeader, Arrays.stream(hashKeys).collect(Collectors.toCollection(ArrayList::new)))
-        );
+        rpc.send(DataPacket.fromByteArrayList(cuckooHashKeyHeader, cuckooHashKeyPayload));
 
-        // unbalanced batch opprf
         stopWatch.start();
+        // unbalanced batch opprf
         ubopprfSender.opprf();
         stopWatch.stop();
         long senderBopprfTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
@@ -125,7 +154,7 @@ public class Psty19UcpsiServer extends AbstractUcpsiServer {
 
         // membership test
         stopWatch.start();
-        SquareShareZ2Vector z2Vector = peqtParty.peqt(CommonConstants.BLOCK_BIT_LENGTH, targetArrays);
+        SquareShareZ2Vector z2Vector = peqtParty.peqt(l, targetArray);
         stopWatch.stop();
         long membershipTestTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
         stopWatch.reset();
@@ -135,50 +164,37 @@ public class Psty19UcpsiServer extends AbstractUcpsiServer {
         return z2Vector;
     }
 
-    /**
-     * sender init target input arrays.
-     *
-     * @param ubopprfInputArrays input arrays.
-     * @param binNum             bin num.
-     * @return target input arrays.
-     */
-    private byte[][][] computeTargetInputArrays(byte[][][] ubopprfInputArrays, int binNum) {
-        int byteL = CommonUtils.getByteLength(CommonConstants.BLOCK_BIT_LENGTH);
-        // random target values
-        byte[][][] targetInputArrays = new byte[binNum][][];
-        targetArrays = new byte[binNum][];
-        for (int binIndex = 0; binIndex < binNum; binIndex++) {
-            int batchPointNum = ubopprfInputArrays[binIndex].length;
-            targetInputArrays[binIndex] = new byte[batchPointNum][];
-            byte[] target = BytesUtils.randomByteArray(byteL, CommonConstants.BLOCK_BIT_LENGTH, secureRandom);
-            for (int pointIndex = 0; pointIndex < batchPointNum; pointIndex++) {
-                targetInputArrays[binIndex][pointIndex] = BytesUtils.clone(target);
-            }
-            targetArrays[binIndex] = BytesUtils.clone(target);
-        }
-        return targetInputArrays;
-    }
-
-    /**
-     * sender compute simple hash.
-     *
-     * @param binNum bin num.
-     * @return hash bin items.
-     */
-    private byte[][][] senderComputingHashing(int binNum) {
-        RandomPadHashBin<ByteBuffer> completeHash = new RandomPadHashBin<>(envType, binNum, serverElementSize, hashKeys);
-        completeHash.insertItems(serverElementArrayList);
-        byte[][][] completeHashBins = new byte[binNum][][];
-        for (int i = 0; i < binNum; i++) {
-            List<HashBinEntry<ByteBuffer>> binItems = new ArrayList<>(completeHash.getBin(i));
-            int batchPointNum = binItems.size();
-            completeHashBins[i] = new byte[batchPointNum][];
-            for (int j = 0; j < batchPointNum; j++) {
-                completeHashBins[i][j] = Bytes.concat(
-                    binItems.get(j).getItemByteArray(), IntUtils.intToByteArray(binItems.get(j).getHashIndex())
-                );
-            }
-        }
-        return completeHashBins;
+    private void generateBopprfInputs(int l) {
+        int byteL = CommonUtils.getByteLength(l);
+        RandomPadHashBin<ByteBuffer> simpleHashBin = new RandomPadHashBin<>(envType, beta, serverElementSize, hashKeys);
+        simpleHashBin.insertItems(serverElementArrayList);
+        // P2 generates the input arrays
+        inputArrays = IntStream.range(0, beta)
+            .mapToObj(batchIndex -> {
+                ArrayList<HashBinEntry<ByteBuffer>> bin = new ArrayList<>(simpleHashBin.getBin(batchIndex));
+                return bin.stream()
+                    .map(entry -> {
+                        byte[] itemBytes = entry.getItemByteArray();
+                        return ByteBuffer.allocate(itemBytes.length + Integer.BYTES)
+                            .put(itemBytes)
+                            .putInt(entry.getHashIndex())
+                            .array();
+                    })
+                    .toArray(byte[][]::new);
+            })
+            .toArray(byte[][][]::new);
+        // P1 samples uniformly random and independent target values t_1, ..., t_β ∈ {0,1}^κ
+        targetArray = IntStream.range(0, beta)
+            .mapToObj(batchIndex -> BytesUtils.randomByteArray(byteL, l, secureRandom)).toArray(byte[][]::new);
+        targetArrays = IntStream.range(0, beta)
+            .mapToObj(batchIndex -> {
+                int batchPointNum = inputArrays[batchIndex].length;
+                byte[][] copyTargetArray = new byte[batchPointNum][byteL];
+                for (int i = 0; i < batchPointNum; i++) {
+                    copyTargetArray[i] = BytesUtils.clone(targetArray[batchIndex]);
+                }
+                return copyTargetArray;
+            })
+            .toArray(byte[][][]::new);
     }
 }

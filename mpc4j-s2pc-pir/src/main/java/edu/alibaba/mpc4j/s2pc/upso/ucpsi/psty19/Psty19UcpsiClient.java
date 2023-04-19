@@ -1,12 +1,12 @@
 package edu.alibaba.mpc4j.s2pc.upso.ucpsi.psty19;
 
-import com.google.common.primitives.Bytes;
 import edu.alibaba.mpc4j.common.rpc.*;
 import edu.alibaba.mpc4j.common.rpc.utils.DataPacketHeader;
 import edu.alibaba.mpc4j.common.tool.CommonConstants;
+import edu.alibaba.mpc4j.common.tool.hashbin.object.HashBinEntry;
 import edu.alibaba.mpc4j.common.tool.hashbin.object.cuckoo.CuckooHashBin;
 import edu.alibaba.mpc4j.common.tool.hashbin.object.cuckoo.CuckooHashBinFactory;
-import edu.alibaba.mpc4j.common.tool.utils.IntUtils;
+import edu.alibaba.mpc4j.common.tool.utils.LongUtils;
 import edu.alibaba.mpc4j.s2pc.aby.basics.bc.SquareShareZ2Vector;
 import edu.alibaba.mpc4j.s2pc.aby.circuit.peqt.PeqtFactory;
 import edu.alibaba.mpc4j.s2pc.aby.circuit.peqt.PeqtParty;
@@ -17,10 +17,9 @@ import edu.alibaba.mpc4j.s2pc.upso.uopprf.ub.UbopprfFactory;
 import edu.alibaba.mpc4j.s2pc.upso.uopprf.ub.UbopprfReceiver;
 
 import java.nio.ByteBuffer;
-import java.util.ArrayList;
+import java.util.List;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
-import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
 import static edu.alibaba.mpc4j.common.tool.hashbin.object.cuckoo.CuckooHashBinFactory.*;
@@ -42,17 +41,21 @@ public class Psty19UcpsiClient extends AbstractUcpsiClient {
      */
     private final PeqtParty peqtParty;
     /**
+     * cuckoo hash bin type
+     */
+    private final CuckooHashBinType hashBinType;
+    /**
      * hash num
      */
-    private int hashNum;
+    private final int hashNum;
     /**
      * bin num
      */
-    private int binNum;
+    private int beta;
     /**
-     * cuckoo hash bin type
+     * l
      */
-    private CuckooHashBinType hashBinType;
+    private int l;
     /**
      * cuckoo hash bin
      */
@@ -62,22 +65,27 @@ public class Psty19UcpsiClient extends AbstractUcpsiClient {
         super(Psty19UcpsiPtoDesc.getInstance(), clientRpc, serverParty, config);
         Psty19UcpsiConfig psty19UcpsiConfig = (Psty19UcpsiConfig) config;
         ubopprfReceiver = UbopprfFactory.createReceiver(clientRpc, serverParty, psty19UcpsiConfig.getUbopprfConfig());
-        peqtParty = PeqtFactory.createReceiver(clientRpc, serverParty, psty19UcpsiConfig.getPeqtConfig());
         addSubPtos(ubopprfReceiver);
+        peqtParty = PeqtFactory.createReceiver(clientRpc, serverParty, psty19UcpsiConfig.getPeqtConfig());
         addSubPtos(peqtParty);
+        hashBinType = CuckooHashBinType.NO_STASH_PSZ18_3_HASH;
+        hashNum = getHashNum(hashBinType);
     }
 
     @Override
-    public void init(int maxClientElementSize, int maxServerElementSize) throws MpcAbortException {
-        setInitInput(maxServerElementSize, maxClientElementSize);
+    public void init(int maxClientElementSize, int serverElementSize) throws MpcAbortException {
+        setInitInput(maxClientElementSize, serverElementSize);
         logPhaseInfo(PtoState.INIT_BEGIN);
 
         stopWatch.start();
-        hashBinType = CuckooHashBinType.NO_STASH_PSZ18_3_HASH;
-        hashNum = getHashNum(hashBinType);
-        binNum = getBinNum(hashBinType, maxClientElementSize);
-        peqtParty.init(CommonConstants.BLOCK_BIT_LENGTH, binNum);
-        ubopprfReceiver.init(binNum);
+        // β = (1 + ε) * n_c
+        beta = getBinNum(hashBinType, maxClientElementSize);
+        // point_num = hash_num * n_s
+        int pointNum = hashNum * serverElementSize;
+        // l = σ + log_2(β) + log_2(point_num)
+        l = CommonConstants.STATS_BIT_LENGTH + LongUtils.ceilLog2(beta) + LongUtils.ceilLog2(pointNum);
+        peqtParty.init(l, beta);
+        ubopprfReceiver.init(l, beta, pointNum);
         stopWatch.stop();
         long initTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
         stopWatch.reset();
@@ -87,9 +95,8 @@ public class Psty19UcpsiClient extends AbstractUcpsiClient {
     }
 
     @Override
-    public UcpsiClientOutput psi(Set<ByteBuffer> clientElementSet, int serverElementSize)
-        throws MpcAbortException {
-        setPtoInput(clientElementSet, serverElementSize);
+    public UcpsiClientOutput psi(Set<ByteBuffer> clientElementSet) throws MpcAbortException {
+        setPtoInput(clientElementSet);
         logPhaseInfo(PtoState.PTO_BEGIN);
 
         // receive hash keys
@@ -97,54 +104,61 @@ public class Psty19UcpsiClient extends AbstractUcpsiClient {
             encodeTaskId, getPtoDesc().getPtoId(), PtoStep.SENDER_SEND_CUCKOO_HASH_KEYS.ordinal(), extraInfo,
             otherParty().getPartyId(), rpc.ownParty().getPartyId()
         );
-        byte[][] hashKeys = rpc.receive(cuckooHashKeyHeader).getPayload().toArray(new byte[0][]);
+        List<byte[]> cuckooHashKeyPayload = rpc.receive(cuckooHashKeyHeader).getPayload();
 
-        // hash
         stopWatch.start();
-        byte[][] hashBinItems = cuckooHash(hashKeys);
+        handleCuckooHashKeyPayload(cuckooHashKeyPayload);
         stopWatch.stop();
         long receiverCuckooHashTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
         stopWatch.reset();
         logStepInfo(PtoState.PTO_STEP, 1, 3, receiverCuckooHashTime, "Receiver hash elements");
 
-        // batch opprf
         stopWatch.start();
-        byte[][] oprfOutputs = ubopprfReceiver.opprf(
-            CommonConstants.BLOCK_BIT_LENGTH, hashBinItems, hashNum * serverElementSize
-        );
+        // unbalanced batch opprf
+        byte[][] inputArray = IntStream.range(0, beta)
+            .mapToObj(batchIndex -> {
+                HashBinEntry<ByteBuffer> item = cuckooHashBin.getHashBinEntry(batchIndex);
+                byte[] itemBytes = cuckooHashBin.getHashBinEntry(batchIndex).getItemByteArray();
+                return ByteBuffer.allocate(itemBytes.length + Integer.BYTES)
+                    .put(itemBytes)
+                    .putInt(item.getHashIndex())
+                    .array();
+            })
+            .toArray(byte[][]::new);
+        byte[][] targetArray = ubopprfReceiver.opprf(inputArray);
         stopWatch.stop();
         long bopprfTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
         stopWatch.reset();
         logStepInfo(PtoState.PTO_STEP, 2, 3, bopprfTime, "Receiver batch opprf");
 
-        // membership test
         stopWatch.start();
-        SquareShareZ2Vector z2Vector = peqtParty.peqt(CommonConstants.BLOCK_BIT_LENGTH, oprfOutputs);
-        ArrayList<ByteBuffer> arrayList = IntStream.range(0, binNum)
-            .mapToObj(i -> cuckooHashBin.getHashBinEntry(i).getItem())
-            .collect(Collectors.toCollection(() -> new ArrayList<>(binNum)));
+        // membership test
+        SquareShareZ2Vector z1 = peqtParty.peqt(l, targetArray);
+        ByteBuffer[] table = IntStream.range(0, beta)
+            .mapToObj(batchIndex -> {
+                HashBinEntry<ByteBuffer> item = cuckooHashBin.getHashBinEntry(batchIndex);
+                if (item.getHashIndex() == HashBinEntry.DUMMY_ITEM_HASH_INDEX) {
+                    return ByteBuffer.wrap(new byte[0]);
+                } else {
+                    return item.getItem();
+                }
+            })
+            .toArray(ByteBuffer[]::new);
         cuckooHashBin = null;
-        UcpsiClientOutput output = new UcpsiClientOutput(arrayList, z2Vector);
+        UcpsiClientOutput clientOutput = new UcpsiClientOutput(table, z1);
         stopWatch.stop();
         long membershipTestTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
         stopWatch.reset();
         logStepInfo(PtoState.PTO_STEP, 3, 3, membershipTestTime, "Receiver membership test");
 
-        return output;
+        return clientOutput;
     }
 
-    private byte[][] cuckooHash(byte[][] hashKeys) throws MpcAbortException {
+    private void handleCuckooHashKeyPayload(List<byte[]> cuckooHashKeyPayload) throws MpcAbortException {
+        MpcAbortPreconditions.checkArgument(cuckooHashKeyPayload.size() == hashNum);
+        byte[][] hashKeys = cuckooHashKeyPayload.toArray(new byte[0][]);
         cuckooHashBin = CuckooHashBinFactory.createCuckooHashBin(envType, hashBinType, clientElementSize, hashKeys);
         cuckooHashBin.insertItems(clientElementArrayList);
-        if (cuckooHashBin.stashSize() != 0) {
-            MpcAbortPreconditions.checkArgument(false);
-        }
-        cuckooHashBin.insertPaddingItems(botElementByteBuffer);
-        return IntStream.range(0, cuckooHashBin.binNum())
-            .mapToObj(i -> Bytes.concat(
-                cuckooHashBin.getHashBinEntry(i).getItemByteArray(),
-                IntUtils.intToByteArray(cuckooHashBin.getHashBinEntry(i).getHashIndex()))
-            )
-            .toArray(byte[][]::new);
+        cuckooHashBin.insertPaddingItems(secureRandom);
     }
 }

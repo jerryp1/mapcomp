@@ -7,44 +7,44 @@ import java.nio.ByteBuffer;
 import java.util.Set;
 
 /**
- * unbalanced circuit PSI receiver thread.
+ * unbalanced circuit PSI server thread.
  *
  * @author Liqiang Peng
  * @date 2023/4/18
  */
 public class UcpsiServerThread extends Thread {
     /**
-     * the sender
+     * the server
      */
-    private final UcpsiServer sender;
+    private final UcpsiServer server;
     /**
-     * the sender set
+     * the server element set
      */
     private final Set<ByteBuffer> serverElementSet;
-    /**
-     * the sender outputs
-     */
-    private SquareShareZ2Vector z2Vector;
     /**
      * client element size
      */
     private final int clientElementSize;
+    /**
+     * the server output
+     */
+    private SquareShareZ2Vector serverOutput;
 
-    UcpsiServerThread(UcpsiServer sender, Set<ByteBuffer> serverElementSet, int clientElementSize) {
-        this.sender = sender;
+    UcpsiServerThread(UcpsiServer server, Set<ByteBuffer> serverElementSet, int clientElementSize) {
+        this.server = server;
         this.serverElementSet = serverElementSet;
         this.clientElementSize = clientElementSize;
     }
 
-    SquareShareZ2Vector getOutputs() {
-        return z2Vector;
+    SquareShareZ2Vector getServerOutput() {
+        return serverOutput;
     }
 
     @Override
     public void run() {
         try {
-            sender.init(serverElementSet, clientElementSize);
-            z2Vector = sender.psi();
+            server.init(serverElementSet, clientElementSize);
+            serverOutput = server.psi();
         } catch (MpcAbortException e) {
             e.printStackTrace();
         }

@@ -40,25 +40,26 @@ public abstract class AbstractUbopprfReceiver extends AbstractTwoPartyPto implem
         super(ptoDesc, receiverRpc, senderParty, config);
     }
 
-    protected void setInitInput(int batchSize) {
-        MathPreconditions.checkPositive("batch size", batchSize);
-        this.batchSize = batchSize;
-        initState();
-    }
-
-    protected void setPtoInput(int l, byte[][] inputArray, int pointNum) {
-        checkInitialized();
+    protected void setInitInput(int l, int batchSize, int pointNum) {
         // check l
         MathPreconditions.checkGreaterOrEqual("l", l, CommonConstants.STATS_BIT_LENGTH);
         this.l = l;
         byteL = CommonUtils.getByteLength(l);
         // check batch size
-        MathPreconditions.checkEqual("inputArray.length", "batchSize", inputArray.length, batchSize);
-        // we do not even require that input array are distinct.
-        this.inputArray = inputArray;
+        MathPreconditions.checkPositive("batch size", batchSize);
+        this.batchSize = batchSize;
         // check point num
         MathPreconditions.checkPositive("point num", pointNum);
         this.pointNum = pointNum;
+        initState();
+    }
+
+    protected void setPtoInput(byte[][] inputArray) {
+        checkInitialized();
+        // check batch size
+        MathPreconditions.checkEqual("inputArray.length", "batchSize", inputArray.length, batchSize);
+        // we do not even require that input array are distinct.
+        this.inputArray = inputArray;
         extraInfo++;
     }
 }

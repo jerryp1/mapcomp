@@ -4,45 +4,39 @@ import edu.alibaba.mpc4j.common.tool.MathPreconditions;
 import edu.alibaba.mpc4j.s2pc.aby.basics.bc.SquareShareZ2Vector;
 
 import java.nio.ByteBuffer;
-import java.util.ArrayList;
 
 /**
- * Unbalanced Circuit PSI server output.
+ * Unbalanced Circuit PSI client output.
  *
  * @author Liqiang Peng
  * @date 2023/4/17
  */
 public class UcpsiClientOutput {
     /**
-     * the server table
+     * the table
      */
-    private final ArrayList<ByteBuffer> table;
+    private final ByteBuffer[] table;
     /**
-     * the server share bits
+     * z1
      */
-    private final SquareShareZ2Vector z0;
-    /**
-     * β
-     */
-    private final int beta;
+    private final SquareShareZ2Vector z1;
 
-    public UcpsiClientOutput(ArrayList<ByteBuffer> table, SquareShareZ2Vector z0) {
-        MathPreconditions.checkPositive("β", table.size());
+    public UcpsiClientOutput(ByteBuffer[] table, SquareShareZ2Vector z1) {
+        MathPreconditions.checkPositive("β", table.length);
         this.table = table;
-        beta = table.size();
-        MathPreconditions.checkEqual("share bit length", "β", z0.getNum(), beta);
-        this.z0 = z0;
+        MathPreconditions.checkEqual("share bit length", "β", z1.getNum(), table.length);
+        this.z1 = z1;
     }
 
     public int getBeta() {
-        return beta;
+        return table.length;
     }
 
-    public ArrayList<ByteBuffer> getTable() {
+    public ByteBuffer[] getTable() {
         return table;
     }
 
-    public SquareShareZ2Vector getZ0() {
-        return z0;
+    public SquareShareZ2Vector getZ1() {
+        return z1;
     }
 }

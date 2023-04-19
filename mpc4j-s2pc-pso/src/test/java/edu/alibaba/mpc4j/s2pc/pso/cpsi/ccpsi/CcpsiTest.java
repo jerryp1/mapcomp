@@ -164,7 +164,7 @@ public class CcpsiTest {
         testPto(LARGE_SIZE, LARGE_SIZE, true);
     }
 
-    public void testPto(int serverSetSize, int clientSetSize, boolean parallel) {
+    private void testPto(int serverSetSize, int clientSetSize, boolean parallel) {
         CcpsiServer server = CcpsiFactory.createServer(serverRpc, clientRpc.ownParty(), config);
         CcpsiClient client = CcpsiFactory.createClient(clientRpc, serverRpc.ownParty(), config);
         server.setParallel(parallel);

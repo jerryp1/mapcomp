@@ -17,18 +17,17 @@ public interface UcpsiClient extends TwoPartyPto {
      * Inits the protocol.
      *
      * @param maxClientElementSize max client element size.
-     * @param maxServerElementSize max server element size.
+     * @param serverElementSize    server element size.
      * @throws MpcAbortException the protocol failure aborts.
      */
-    void init(int maxClientElementSize, int maxServerElementSize) throws MpcAbortException;
+    void init(int maxClientElementSize, int serverElementSize) throws MpcAbortException;
 
     /**
      * Executes the protocol.
      *
-     * @param clientElementSet  client element set.
-     * @param serverElementSize server element size.
+     * @param clientElementSet client element set.
      * @return the client output.
      * @throws MpcAbortException the protocol failure aborts.
      */
-    UcpsiClientOutput psi(Set<ByteBuffer> clientElementSet, int serverElementSize) throws MpcAbortException;
+    UcpsiClientOutput psi(Set<ByteBuffer> clientElementSet) throws MpcAbortException;
 }
