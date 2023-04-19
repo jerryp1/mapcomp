@@ -6,6 +6,7 @@ import edu.alibaba.mpc4j.common.rpc.RpcManager;
 import edu.alibaba.mpc4j.common.rpc.impl.memory.MemoryRpcManager;
 import edu.alibaba.mpc4j.common.tool.CommonConstants;
 import edu.alibaba.mpc4j.common.tool.bitvector.BitVector;
+import edu.alibaba.mpc4j.common.tool.utils.CommonUtils;
 import edu.alibaba.mpc4j.s2pc.aby.basics.bc.SquareShareZ2Vector;
 import edu.alibaba.mpc4j.s2pc.pso.PsoUtils;
 import edu.alibaba.mpc4j.s2pc.upso.ucpsi.psty19.Psty19UcpsiConfig;
@@ -24,9 +25,11 @@ import java.nio.ByteBuffer;
 import java.security.SecureRandom;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 
 /**
- * unbalanced circuit PSI test
+ * unbalanced circuit PSI test.
  *
  * @author Liqiang Peng
  * @date 2023/4/18
@@ -34,15 +37,26 @@ import java.util.concurrent.TimeUnit;
 @RunWith(Parameterized.class)
 public class UcpsiTest {
     private static final Logger LOGGER = LoggerFactory.getLogger(UcpsiTest.class);
-
     /**
-     * server element size
+     * default server element size
      */
-    private static final int SERVER_ELEMENT_SIZE = 1 << 12;
+    private static final int DEFAULT_SERVER_ELEMENT_SIZE = 1 << 16;
     /**
-     * client element size
+     * small server element size
      */
-    private static final int CLIENT_ELEMENT_SIZE = 1 << 6;
+    private static final int SMALL_SERVER_ELEMENT_SIZE = 1 << 14;
+    /**
+     * default client element size
+     */
+    private static final int DEFAULT_CLIENT_ELEMENT_SIZE = 1 << 8;
+    /**
+     * element bit length
+     */
+    private static final int ELEMENT_BIT_LENGTH = CommonConstants.BLOCK_BIT_LENGTH;
+    /**
+     * element byte length
+     */
+    private static final int ELEMENT_BYTE_LENGTH = CommonUtils.getByteLength(ELEMENT_BIT_LENGTH);
 
     @Parameterized.Parameters(name = "{0}")
     public static Collection<Object[]> configurations() {
@@ -64,7 +78,7 @@ public class UcpsiTest {
      */
     private final Rpc clientRpc;
     /**
-     * the unbalanced PSI config
+     * unbalanced PSI config
      */
     private final UcpsiConfig config;
 
@@ -91,12 +105,37 @@ public class UcpsiTest {
     }
 
     @Test
-    public void testUcpsiParallel() {
-        testUcpsi(SERVER_ELEMENT_SIZE, CLIENT_ELEMENT_SIZE, true);
+    public void test1() {
+        testPto(DEFAULT_SERVER_ELEMENT_SIZE, 1, false);
     }
 
-    public void testUcpsi(int serverSize, int clientSize, boolean parallel) {
-        List<Set<ByteBuffer>> sets = PsoUtils.generateBytesSets(serverSize, clientSize, CommonConstants.BLOCK_BYTE_LENGTH);
+    @Test
+    public void test2() {
+        testPto(DEFAULT_SERVER_ELEMENT_SIZE, 2, false);
+    }
+
+    @Test
+    public void test10() {
+        testPto(DEFAULT_SERVER_ELEMENT_SIZE, 10, false);
+    }
+
+    @Test
+    public void testDefaultParallel() {
+        testPto(DEFAULT_SERVER_ELEMENT_SIZE, DEFAULT_CLIENT_ELEMENT_SIZE, true);
+    }
+
+    @Test
+    public void testDefault() {
+        testPto(DEFAULT_SERVER_ELEMENT_SIZE, DEFAULT_CLIENT_ELEMENT_SIZE, false);
+    }
+
+    @Test
+    public void testSmallServer() {
+        testPto(SMALL_SERVER_ELEMENT_SIZE, DEFAULT_CLIENT_ELEMENT_SIZE, false);
+    }
+
+    public void testPto(int serverSize, int clientSize, boolean parallel) {
+        List<Set<ByteBuffer>> sets = PsoUtils.generateBytesSets(serverSize, clientSize, ELEMENT_BYTE_LENGTH);
         Set<ByteBuffer> serverElementSet = sets.get(0);
         Set<ByteBuffer> clientElementSet = sets.get(1);
         // create instance
@@ -128,19 +167,9 @@ public class UcpsiTest {
             serverRpc.reset();
             clientRpc.reset();
             // verify
-            UcpsiClientOutput cpsiClientOutput = clientThread.getOutputs();
+            UcpsiClientOutput clientOutput = clientThread.getOutputs();
             SquareShareZ2Vector serverOutput = serverThread.getOutputs();
-            Set<ByteBuffer> intersection = new HashSet<>();
-            Assert.assertEquals(cpsiClientOutput.getZ0().getNum(), serverOutput.getNum());
-            BitVector z = cpsiClientOutput.getZ0().xor(serverOutput, true).getBitVector();
-            for (int i = 0; i < z.bitNum(); i++) {
-                if (z.get(i)) {
-                    intersection.add(cpsiClientOutput.getTable().get(i));
-                }
-            }
-            sets.get(0).retainAll(sets.get(1));
-            Assert.assertTrue(sets.get(0).containsAll(intersection));
-            Assert.assertTrue(intersection.containsAll(sets.get(0)));
+            assertOutput(clientOutput, serverOutput, sets);
             LOGGER.info("Sender sends {}B / {} rounds, Receiver sends {}B / {} rounds, time = {}ms",
                 senderByteLength, senderRound, receiverByteLength, receiverRound, time
             );
@@ -150,5 +179,18 @@ public class UcpsiTest {
         }
         server.destroy();
         client.destroy();
+    }
+
+    private void assertOutput(UcpsiClientOutput clientOutput, SquareShareZ2Vector serverOutput,
+                              List<Set<ByteBuffer>> sets) {
+        Assert.assertEquals(clientOutput.getZ0().getNum(), serverOutput.getNum());
+        BitVector z = clientOutput.getZ0().xor(serverOutput, true).getBitVector();
+        Set<ByteBuffer> intersection = IntStream.range(0, z.bitNum())
+            .filter(z::get)
+            .mapToObj(i -> clientOutput.getTable().get(i))
+            .collect(Collectors.toSet());
+        sets.get(0).retainAll(sets.get(1));
+        Assert.assertTrue(sets.get(0).containsAll(intersection));
+        Assert.assertTrue(intersection.containsAll(sets.get(0)));
     }
 }
