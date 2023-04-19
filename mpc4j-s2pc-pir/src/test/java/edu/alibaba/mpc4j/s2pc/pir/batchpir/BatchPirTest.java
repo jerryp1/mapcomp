@@ -35,9 +35,9 @@ public class BatchPirTest {
     /**
      * 较小比特长度
      */
-    private static final int SMALL_BIT_LENGTH = 4;
+    private static final int SMALL_BIT_LENGTH = 1;
     /**
-     * 最大比特长度
+     * 较大比特长度
      */
     private static final int LARGE_BIT_LENGTH = 128;
     /**
@@ -45,9 +45,9 @@ public class BatchPirTest {
      */
     private static final int SERVER_ELEMENT_SIZE = 1 << 16;
     /**
-     * 默认客户端元素数量
+     * 默认检索数目
      */
-    private static final int DEFAULT_CLIENT_SET_SIZE = 1 << 10;
+    private static final int DEFAULT_RETRIEVAL_SIZE = 1 << 8;
 
 
     @Parameterized.Parameters(name = "{0}")
@@ -56,11 +56,13 @@ public class BatchPirTest {
 
         // PSI-PIR
         configurations.add(new Object[]{
-            BatchIndexPirFactory.BatchIndexPirType.PSI_PIR.name(), new Lpzg24BatchIndexPirConfig.Builder().build()
+            BatchIndexPirFactory.BatchIndexPirType.PSI_PIR.name(),
+            new Lpzg24BatchIndexPirConfig.Builder().build()
         });
         // vectorized batch PIR
         configurations.add(new Object[]{
-            BatchIndexPirFactory.BatchIndexPirType.VECTORIZED_BATCH_PIR.name(), new Mr23BatchIndexPirConfig.Builder().build()
+            BatchIndexPirFactory.BatchIndexPirType.VECTORIZED_BATCH_PIR.name(),
+            new Mr23BatchIndexPirConfig.Builder().build()
         });
         return configurations;
     }
@@ -105,9 +107,9 @@ public class BatchPirTest {
 
 
     public void testPir(int elementBitLength, BatchIndexPirConfig config, boolean parallel) {
-        Set<Integer> retrievalIndexSet = PirUtils.generateRetrievalIndexSet(SERVER_ELEMENT_SIZE, DEFAULT_CLIENT_SET_SIZE);
+        Set<Integer> retrievalIndexSet = PirUtils.generateRetrievalIndexSet(SERVER_ELEMENT_SIZE, DEFAULT_RETRIEVAL_SIZE);
         // 随机构建服务端关键词和标签映射
-        byte[][] serverElementArray = PirUtils.generateElementByteArray(SERVER_ELEMENT_SIZE, elementBitLength);
+        byte[][] serverElementArray = PirUtils.generateElementArray(SERVER_ELEMENT_SIZE, elementBitLength);
         // 创建参与方实例
         BatchIndexPirServer server = BatchIndexPirFactory.createServer(serverRpc, clientRpc.ownParty(), config);
         BatchIndexPirClient client = BatchIndexPirFactory.createClient(clientRpc, serverRpc.ownParty(), config);
@@ -115,11 +117,11 @@ public class BatchPirTest {
         server.setParallel(parallel);
         client.setParallel(parallel);
         BatchPirServerThread serverThread = new BatchPirServerThread(
-            server, serverElementArray, elementBitLength, DEFAULT_CLIENT_SET_SIZE
+            server, serverElementArray, elementBitLength, DEFAULT_RETRIEVAL_SIZE
         );
         ArrayList<Integer> retrievalIndexList = new ArrayList<>(retrievalIndexSet);
         BatchPirClientThread clientThread = new BatchPirClientThread(
-            client, retrievalIndexList, elementBitLength, SERVER_ELEMENT_SIZE, DEFAULT_CLIENT_SET_SIZE
+            client, retrievalIndexList, elementBitLength, SERVER_ELEMENT_SIZE, DEFAULT_RETRIEVAL_SIZE
         );
         try {
             // 开始执行协议
@@ -130,7 +132,7 @@ public class BatchPirTest {
             clientThread.join();
             // 验证结果
             Map<Integer, byte[]> result = clientThread.getRetrievalResult();
-            Assert.assertEquals(DEFAULT_CLIENT_SET_SIZE, result.size());
+            Assert.assertEquals(DEFAULT_RETRIEVAL_SIZE, result.size());
             result.forEach((key, value) ->
                 Assert.assertEquals(ByteBuffer.wrap(serverElementArray[key]), ByteBuffer.wrap(value))
             );

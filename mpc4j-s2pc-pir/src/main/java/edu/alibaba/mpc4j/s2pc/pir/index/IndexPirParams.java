@@ -1,7 +1,7 @@
 package edu.alibaba.mpc4j.s2pc.pir.index;
 
 /**
- * 索引PIR协议参数接口。
+ * Index PIR params interface.
  *
  * @author Liqiang Peng
  * @date 2023/3/1
@@ -9,30 +9,30 @@ package edu.alibaba.mpc4j.s2pc.pir.index;
 public interface IndexPirParams {
 
     /**
-     * 返回明文模数比特长度。
+     * plain modulus size.
      *
-     * @return 明文模数比特长度。
+     * @return plain modulus size.
      */
     int getPlainModulusBitLength();
 
     /**
-     * 返回多项式阶。
+     * poly modulus degree.
      *
-     * @return 多项式阶。
+     * @return poly modulus degree.
      */
     int getPolyModulusDegree();
 
     /**
-     * 返回维数。
+     * dimension.
      *
-     * @return 维数。
+     * @return dimension.
      */
     int getDimension();
 
     /**
-     * 返回加密方案参数。
+     * encryption params.
      *
-     * @return 加密方案参数。
+     * @return encryption params.
      */
     byte[] getEncryptionParams();
 }

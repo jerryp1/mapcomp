@@ -4,7 +4,7 @@ import edu.alibaba.mpc4j.common.tool.CommonConstants;
 import edu.alibaba.mpc4j.s2pc.pir.index.IndexPirParams;
 
 /**
- * SEAL PIR协议参数。
+ * SEAL PIR params.
  *
  * @author Liqiang Peng
  * @date 2023/1/17
@@ -15,40 +15,38 @@ public class Acls18IndexPirParams implements IndexPirParams {
     }
 
     /**
-     * 明文模数比特长度
+     * plain modulus size
      */
     private final int plainModulusBitLength;
     /**
-     * 多项式阶
+     * poly modulus degree
      */
     private final int polyModulusDegree;
     /**
-     * 维数
+     * dimension
      */
     private final int dimension;
     /**
-     * 加密方案参数
+     * SEAL encryption params
      */
     private final byte[] encryptionParams;
     /**
-     * 密文和明文的比例。
+     * expansion ratio
      */
     private final int expansionRatio;
-
 
     public Acls18IndexPirParams(int polyModulusDegree, int plainModulusBitLength, int dimension) {
         this.polyModulusDegree = polyModulusDegree;
         this.plainModulusBitLength = plainModulusBitLength;
         this.dimension = dimension;
-        // 生成加密方案参数
-        this.encryptionParams = Acls18IndexPirNativeUtils.generateSealContext(
+        this.encryptionParams = Acls18IndexPirNativeUtils.generateEncryptionParams(
             polyModulusDegree, (1L << plainModulusBitLength) + 1
         );
         this.expansionRatio = Acls18IndexPirNativeUtils.expansionRatio(this.encryptionParams);
     }
 
     /**
-     * 默认参数
+     * default params
      */
     public static Acls18IndexPirParams DEFAULT_PARAMS = new Acls18IndexPirParams(4096, 20, 2);
 
@@ -72,11 +70,6 @@ public class Acls18IndexPirParams implements IndexPirParams {
         return encryptionParams;
     }
 
-    /**
-     * 返回密文和明文的比例。
-     *
-     * @return 密文和明文的比例。
-     */
     public int getExpansionRatio() {
         return expansionRatio;
     }
@@ -86,6 +79,7 @@ public class Acls18IndexPirParams implements IndexPirParams {
         return
             "SEAL encryption parameters : " + "\n" +
             " - degree of polynomial modulus : " + polyModulusDegree + "\n" +
-            " - size of plaintext modulus : " + plainModulusBitLength;
+            " - size of plaintext modulus : " + plainModulusBitLength + "\n" +
+            " - dimension : " + dimension;
     }
 }

@@ -14,5 +14,5 @@ public interface BatchIndexPirConfig extends MultiPartyPtoConfig {
      *
      * @return 协议类型。
      */
-    BatchIndexPirFactory.BatchIndexPirType getProType();
+    BatchIndexPirFactory.BatchIndexPirType getPtoType();
 }

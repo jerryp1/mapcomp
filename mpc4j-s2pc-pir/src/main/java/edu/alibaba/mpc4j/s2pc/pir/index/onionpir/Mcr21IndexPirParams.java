@@ -4,7 +4,7 @@ import edu.alibaba.mpc4j.common.tool.CommonConstants;
 import edu.alibaba.mpc4j.s2pc.pir.index.IndexPirParams;
 
 /**
- * OnionPIR协议参数。
+ * OnionPIR params.
  *
  * @author Liqiang Peng
  * @date 2022/11/11
@@ -16,37 +16,36 @@ public class Mcr21IndexPirParams implements IndexPirParams {
     }
 
     /**
-     * 第一维度向量长度
+     * first dimension size
      */
     private final int firstDimensionSize;
     /**
-     * 其余维度向量长度
+     * subsequent dimension size
      */
     public final int SUBSEQUENT_DIMENSION_SIZE = 4;
     /**
-     * 明文模数比特长度
+     * plain modulus size
      */
     private static final int PLAIN_MODULUS_BIT_LENGTH = 54;
     /**
-     * 多项式阶
+     * poly modulus degree
      */
     private static final int POLY_MODULUS_DEGREE = 4096;
     /**
-     * 加密方案参数
+     * SEAL encryption params
      */
     private final byte[] encryptionParams;
 
     public Mcr21IndexPirParams(int firstDimensionSize) {
         assert (firstDimensionSize <= 512) : "first dimension is too large";
         this.firstDimensionSize = firstDimensionSize;
-        // 生成加密方案参数
-        this.encryptionParams = Mcr21IndexPirNativeUtils.generateSealContext(
+        this.encryptionParams = Mcr21IndexPirNativeUtils.generateEncryptionParams(
             POLY_MODULUS_DEGREE, PLAIN_MODULUS_BIT_LENGTH
         );
     }
 
     /**
-     * 默认参数
+     * default params
      */
     public static Mcr21IndexPirParams DEFAULT_PARAMS = new Mcr21IndexPirParams(128);
 
@@ -79,9 +78,9 @@ public class Mcr21IndexPirParams implements IndexPirParams {
     }
 
     /**
-     * 返回GSW密文参数。
+     * GSW scheme decomposition size.
      *
-     * @return RGSW密文参数。
+     * @return decomposition size.
      */
     public int getGswDecompSize() {
         return 7;
@@ -92,6 +91,7 @@ public class Mcr21IndexPirParams implements IndexPirParams {
         return
             "SEAL encryption parameters : " + "\n" +
             " - degree of polynomial modulus : " + POLY_MODULUS_DEGREE + "\n" +
-            " - size of plaintext modulus : " + PLAIN_MODULUS_BIT_LENGTH;
+            " - size of plaintext modulus : " + PLAIN_MODULUS_BIT_LENGTH  + "\n" +
+                " - first dimension size : " + firstDimensionSize;
     }
 }

@@ -1,61 +1,51 @@
 package edu.alibaba.mpc4j.s2pc.pir.index.xpir;
 
 import edu.alibaba.mpc4j.common.rpc.MpcAbortException;
-import edu.alibaba.mpc4j.s2pc.pir.index.IndexPirClient;
-import edu.alibaba.mpc4j.s2pc.pir.index.IndexPirParams;
 
 import java.nio.ByteBuffer;
-import java.util.ArrayList;
 
 /**
- * XPIR协议客户端线程。
+ * XPIR client thread.
  *
  * @author Liqiang Peng
  * @date 2022/8/26
  */
 public class XPirClientThread extends Thread {
     /**
-     * XPIR协议客户端
+     * XPIR client
      */
     private final Mbfk16IndexPirClient client;
     /**
-     * XPIR参数
+     * XPIR params
      */
     private final Mbfk16IndexPirParams indexPirParams;
     /**
-     * 元素字节长度
+     * element byte length
      */
     private final int elementByteLength;
     /**
-     * 检索值列表
+     * retrieval index
      */
-    private final ArrayList<Integer> retrievalIndexList;
+    private final int retrievalIndex;
     /**
-     * 服务端元素数量
+     * database size
      */
     private final int serverElementSize;
     /**
-     * 检索次数
+     * retrieval result
      */
-    private final int repeatTime;
-    /**
-     * 索引结果
-     */
-    private final ArrayList<ByteBuffer> indexPirResult;
+    private ByteBuffer indexPirResult;
 
-    XPirClientThread(Mbfk16IndexPirClient client, Mbfk16IndexPirParams indexPirParams,
-                     ArrayList<Integer> retrievalIndexList, int serverElementSize, int elementByteLength, int repeatTime) {
-        assert repeatTime == retrievalIndexList.size();
+    XPirClientThread(Mbfk16IndexPirClient client, Mbfk16IndexPirParams indexPirParams, int retrievalIndex,
+                     int serverElementSize, int elementByteLength) {
         this.client = client;
         this.indexPirParams = indexPirParams;
-        this.retrievalIndexList = retrievalIndexList;
+        this.retrievalIndex = retrievalIndex;
         this.serverElementSize = serverElementSize;
         this.elementByteLength = elementByteLength;
-        this.repeatTime = repeatTime;
-        indexPirResult = new ArrayList<>(repeatTime);
     }
 
-    public ArrayList<ByteBuffer> getRetrievalResult() {
+    public ByteBuffer getRetrievalResult() {
         return indexPirResult;
     }
 
@@ -64,9 +54,7 @@ public class XPirClientThread extends Thread {
         try {
             client.init(indexPirParams, serverElementSize, elementByteLength);
             client.getRpc().synchronize();
-            for (int i = 0; i < repeatTime; i++) {
-                indexPirResult.add(ByteBuffer.wrap(client.pir(retrievalIndexList.get(i))));
-            }
+            indexPirResult = ByteBuffer.wrap(client.pir(retrievalIndex));
         } catch (MpcAbortException e) {
             e.printStackTrace();
         }

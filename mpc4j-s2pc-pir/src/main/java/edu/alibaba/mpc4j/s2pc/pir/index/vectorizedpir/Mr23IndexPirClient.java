@@ -4,9 +4,12 @@ import edu.alibaba.mpc4j.common.rpc.*;
 import edu.alibaba.mpc4j.common.rpc.utils.DataPacket;
 import edu.alibaba.mpc4j.common.rpc.utils.DataPacketHeader;
 import edu.alibaba.mpc4j.common.tool.CommonConstants;
+import edu.alibaba.mpc4j.common.tool.utils.CommonUtils;
+import edu.alibaba.mpc4j.crypto.matrix.database.NaiveDatabase;
+import edu.alibaba.mpc4j.crypto.matrix.database.ZlDatabase;
+import edu.alibaba.mpc4j.s2pc.pir.PirUtils;
 import edu.alibaba.mpc4j.s2pc.pir.index.AbstractIndexPirClient;
 import edu.alibaba.mpc4j.s2pc.pir.index.IndexPirParams;
-import edu.alibaba.mpc4j.s2pc.pir.index.IndexPirUtils;
 import edu.alibaba.mpc4j.s2pc.pir.index.vectorizedpir.Mr23IndexPirPtoDesc.PtoStep;
 
 import java.util.ArrayList;
@@ -15,7 +18,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.stream.IntStream;
 
 /**
- * Vectorized PIR协议客户端。
+ * Vectorized PIR client.
  *
  * @author Liqiang Peng
  * @date 2023/3/6
@@ -27,33 +30,33 @@ public class Mr23IndexPirClient extends AbstractIndexPirClient {
     }
 
     /**
-     * Vectorized PIR方案参数
+     * Vectorized PIR params
      */
     private Mr23IndexPirParams params;
     /**
-     * Vectorized PIR方案内部参数
-     */
-    private Mr23IndexPirInnerParams innerParams;
-    /**
-     * 公钥
+     * public key
      */
     private byte[] publicKey;
     /**
-     * 私钥
+     * secret key
      */
     private byte[] secretKey;
     /**
-     * Galois密钥
-     */
-    private byte[] galoisKeys;
-    /**
-     * Relin Keys密钥
-     */
-    private byte[] relinKeys;
-    /**
-     * 移位
+     * offset
      */
     private int offset;
+    /**
+     * dimension size
+     */
+    private int[] dimensionSize;
+    /**
+     * partition size
+     */
+    private int partitionSize;
+    /**
+     * partition byte length
+     */
+    private int partitionByteLength;
 
     public Mr23IndexPirClient(Rpc clientRpc, Party serverParty, Mr23IndexPirConfig config) {
         super(Mr23IndexPirPtoDesc.getInstance(), clientRpc, serverParty, config);
@@ -66,10 +69,14 @@ public class Mr23IndexPirClient extends AbstractIndexPirClient {
         logPhaseInfo(PtoState.INIT_BEGIN);
 
         stopWatch.start();
-        innerParams = new Mr23IndexPirInnerParams(params, serverElementSize, elementByteLength);
         setInitInput(serverElementSize, elementByteLength);
-        // 客户端生成密钥对
-        generateKeyPair();
+        List<byte[]> publicKeysPayload = clientSetup();
+        // client sends public keys
+        DataPacketHeader clientPublicKeysHeader = new DataPacketHeader(
+            encodeTaskId, getPtoDesc().getPtoId(), PtoStep.CLIENT_SEND_PUBLIC_KEYS.ordinal(), extraInfo,
+            rpc.ownParty().getPartyId(), otherParty().getPartyId()
+        );
+        rpc.send(DataPacket.fromByteArrayList(clientPublicKeysHeader, publicKeysPayload));
         stopWatch.stop();
         long initTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
         stopWatch.reset();
@@ -84,10 +91,14 @@ public class Mr23IndexPirClient extends AbstractIndexPirClient {
         logPhaseInfo(PtoState.INIT_BEGIN);
 
         stopWatch.start();
-        innerParams = new Mr23IndexPirInnerParams(params, serverElementSize, elementByteLength);
         setInitInput(serverElementSize, elementByteLength);
-        // 客户端生成密钥对
-        generateKeyPair();
+        List<byte[]> publicKeysPayload = clientSetup();
+        // client sends public keys
+        DataPacketHeader clientPublicKeysHeader = new DataPacketHeader(
+            encodeTaskId, getPtoDesc().getPtoId(), PtoStep.CLIENT_SEND_PUBLIC_KEYS.ordinal(), extraInfo,
+            rpc.ownParty().getPartyId(), otherParty().getPartyId()
+        );
+        rpc.send(DataPacket.fromByteArrayList(clientPublicKeysHeader, publicKeysPayload));
         stopWatch.stop();
         long initTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
         stopWatch.reset();
@@ -102,15 +113,12 @@ public class Mr23IndexPirClient extends AbstractIndexPirClient {
         logPhaseInfo(PtoState.PTO_BEGIN);
 
         stopWatch.start();
-        // 客户端生成并发送问询
+        // client generates query
         List<byte[]> clientQueryPayload = generateQuery();
         DataPacketHeader clientQueryHeader = new DataPacketHeader(
             encodeTaskId, getPtoDesc().getPtoId(), PtoStep.CLIENT_SEND_QUERY.ordinal(), extraInfo,
             rpc.ownParty().getPartyId(), otherParty().getPartyId()
         );
-        clientQueryPayload.add(publicKey);
-        clientQueryPayload.add(relinKeys);
-        clientQueryPayload.add(galoisKeys);
         rpc.send(DataPacket.fromByteArrayList(clientQueryHeader, clientQueryPayload));
         stopWatch.stop();
         long genQueryTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
@@ -136,16 +144,12 @@ public class Mr23IndexPirClient extends AbstractIndexPirClient {
     }
 
     /**
-     * 返回查询密文。
+     * client generate query.
      *
-     * @return 查询密文。
+     * @return client query.
      */
-    public ArrayList<byte[]> generateQuery() {
-        int slotNum = innerParams.getSlotNum();
-        int[] dimensionLength = IntStream.range(0, params.getDimension())
-            .map(i -> innerParams.getDimensionsLength())
-            .toArray();
-        int[] temp = IndexPirUtils.computeIndices(index, dimensionLength);
+    public List<byte[]> generateQuery() {
+        int[] temp = PirUtils.computeIndices(index, dimensionSize);
         int[] permutedIndices = IntStream.range(0, params.getDimension())
             .map(i -> temp[params.getDimension() - 1 - i])
             .toArray();
@@ -153,53 +157,80 @@ public class Mr23IndexPirClient extends AbstractIndexPirClient {
         for (int i = 0; i < params.getDimension(); i++) {
             indices[i] = permutedIndices[i];
             for (int j = 0; j < i; j++) {
-                indices[i] = (indices[i] + permutedIndices[j]) % slotNum;
+                indices[i] = (indices[i] + permutedIndices[j]) % params.getFirstTwoDimensionSize();
             }
         }
         this.offset = indices[params.getDimension() - 1];
         return Mr23IndexPirNativeUtils.generateQuery(
-            params.getEncryptionParams(), publicKey, secretKey, indices, slotNum
+            params.getEncryptionParams(), publicKey, secretKey, indices, params.getFirstTwoDimensionSize()
         );
     }
 
     /**
-     * 解码回复得到检索结果。
+     * client setup.
      *
-     * @param response 回复。
-     * @return 检索结果。
-     * @throws MpcAbortException 如果协议异常中止。
+     * @return public keys.
      */
-    private byte[] handleServerResponsePayload(List<byte[]> response) throws MpcAbortException {
-        byte[] elementBytes = new byte[elementByteLength];
-        int binNum = innerParams.getBinNum();
-        MpcAbortPreconditions.checkArgument(response.size() == binNum);
-        IntStream intStream = this.parallel ? IntStream.range(0, binNum).parallel() : IntStream.range(0, binNum);
-        intStream.forEach(binIndex -> {
-            long coeffs = Mr23IndexPirNativeUtils.decryptReply(
-                params.getEncryptionParams(),
-                secretKey,
-                response.get(binIndex),
-                offset,
-                innerParams.getSlotNum()
-            );
-            byte[] bytes = IndexPirUtils.convertCoeffsToBytes(new long[]{coeffs}, params.getPlainModulusBitLength());
-            int byteLength = binIndex == binNum - 1 ? innerParams.getLastBinByteLength() : innerParams.getBinMaxByteLength();
-            System.arraycopy(bytes, 0, elementBytes, binIndex * innerParams.getBinMaxByteLength(), byteLength);
-        });
-        return elementBytes;
+    public List<byte[]> clientSetup() {
+        int maxPartitionByteLength = params.getPlainModulusBitLength()/ Byte.SIZE;
+        partitionByteLength = Math.min(maxPartitionByteLength, elementByteLength);
+        partitionSize = CommonUtils.getUnitNum(elementByteLength, partitionByteLength);
+        assert params.getDimension() == 3;
+        int product = params.getFirstTwoDimensionSize() * params.getFirstTwoDimensionSize() * params.getThirdDimensionSize();
+        assert product >= num;
+        this.dimensionSize = new int[] {
+            params.getThirdDimensionSize(), params.getFirstTwoDimensionSize(), params.getFirstTwoDimensionSize()
+        };
+        return generateKeyPair();
     }
 
     /**
-     * 客户端生成密钥对。
+     * client decodes server response.
+     *
+     * @param response server response.
+     * @return retrieval result.
+     * @throws MpcAbortException the protocol failure aborts.
      */
-    private void generateKeyPair() {
+    private byte[] handleServerResponsePayload(List<byte[]> response) throws MpcAbortException {
+        MpcAbortPreconditions.checkArgument(response.size() == partitionSize);
+        ZlDatabase[] databases = new ZlDatabase[partitionSize];
+        IntStream intStream = IntStream.range(0, partitionSize);
+        intStream = parallel ? intStream.parallel() : intStream;
+        intStream.forEach(partitionIndex -> {
+            long coeffs = Mr23IndexPirNativeUtils.decryptReply(
+                params.getEncryptionParams(),
+                secretKey,
+                response.get(partitionIndex),
+                offset,
+                params.getFirstTwoDimensionSize()
+            );
+            byte[] bytes = PirUtils.convertCoeffsToBytes(new long[]{coeffs}, params.getPlainModulusBitLength());
+            byte[] partitionBytes = new byte[partitionByteLength];
+            System.arraycopy(bytes, 0, partitionBytes, 0, partitionByteLength);
+            databases[partitionIndex] = ZlDatabase.create(partitionByteLength * Byte.SIZE, new byte[][]{partitionBytes});
+        });
+        return NaiveDatabase.createFromZl(elementByteLength * Byte.SIZE, databases).getBytesData(0);
+    }
+
+    /**
+     * client generates key pair.
+     *
+     * @return public keys.
+     */
+    private List<byte[]> generateKeyPair() {
         List<byte[]> keyPair = Mr23IndexPirNativeUtils.keyGen(
-            params.getEncryptionParams(), innerParams.getDimensionsLength(), innerParams.getSlotNum()
+            params.getEncryptionParams(), params.getFirstTwoDimensionSize()
         );
         assert (keyPair.size() == 4);
         this.publicKey = keyPair.remove(0);
         this.secretKey = keyPair.remove(0);
-        this.relinKeys = keyPair.remove(0);
-        this.galoisKeys = keyPair.remove(0);
+        List<byte[]> publicKeys = new ArrayList<>();
+        // add public key
+        publicKeys.add(publicKey);
+        // add Relin keys
+        publicKeys.add(keyPair.remove(0));
+        // add Galois keys
+        publicKeys.add(keyPair.remove(0));
+        return publicKeys;
     }
 }

@@ -31,24 +31,22 @@ class Mr23IndexPirNativeUtils {
     /**
      * 生成全同态加密公私钥对。
      *
-     * @param sealContext     SEAL上下文参数。
-     * @param dimensionLength 维度长度。
-     * @param slotNum         卡槽数目。
+     * @param sealContext SEAL上下文参数。
+     * @param slotNum     卡槽数目。
      * @return 公私钥对。
      */
-    static native List<byte[]> keyGen(byte[] sealContext, int dimensionLength, int slotNum);
+    static native List<byte[]> keyGen(byte[] sealContext, int slotNum);
 
     /**
      * 数据库预处理。
      *
-     * @param sealContext     SEAL上下文参数。
-     * @param db              数据库数据。
-     * @param dimensionLength 维度长度。
-     * @param slotNum         卡槽数目。
-     * @param totalSize       多项式数量。
+     * @param sealContext    SEAL上下文参数。
+     * @param db             数据库数据。
+     * @param dimensionsSize 维度长度。
+     * @param totalSize      多项式数量。
      * @return 明文多项式。
      */
-    static native ArrayList<byte[]> preprocessDatabase(byte[] sealContext, long[] db, int dimensionLength, int slotNum,
+    static native ArrayList<byte[]> preprocessDatabase(byte[] sealContext, long[] db, int[] dimensionsSize,
                                                        int totalSize);
 
     /**
@@ -67,20 +65,19 @@ class Mr23IndexPirNativeUtils {
     /**
      * 生成回复密文。
      *
-     * @param sealContext     SEAL上下文参数。
-     * @param queryList       检索值密文。
-     * @param dbPlaintexts    数据库明文。
-     * @param publicKey       公钥。
-     * @param relinKeys       重线性化密钥。
-     * @param galoisKeys      Galois密钥。
-     * @param dimensionLength 维度长度。
-     * @param slotNum         卡槽数目。
-     * @param dimension       维度。
+     * @param sealContext           SEAL上下文参数。
+     * @param queryList             检索值密文。
+     * @param dbPlaintexts          数据库明文。
+     * @param publicKey             公钥。
+     * @param relinKeys             重线性化密钥。
+     * @param galoisKeys            Galois密钥。
+     * @param firstTwoDimensionSize 前两维向量长度。
+     * @param thirdDimensionSize    第三维向量长度。
      * @return 检索结果密文。
      */
     static native byte[] generateReply(byte[] sealContext, List<byte[]> queryList, List<byte[]> dbPlaintexts,
-                                       byte[] publicKey, byte[] relinKeys, byte[] galoisKeys, int dimensionLength,
-                                       int slotNum, int dimension);
+                                       byte[] publicKey, byte[] relinKeys, byte[] galoisKeys, int firstTwoDimensionSize,
+                                       int thirdDimensionSize);
 
     /**
      * 解密回复密文。

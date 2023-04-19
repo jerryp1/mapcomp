@@ -4,12 +4,12 @@ import edu.alibaba.mpc4j.common.rpc.*;
 import edu.alibaba.mpc4j.common.rpc.utils.DataPacket;
 import edu.alibaba.mpc4j.common.rpc.utils.DataPacketHeader;
 import edu.alibaba.mpc4j.common.tool.CommonConstants;
+import edu.alibaba.mpc4j.crypto.matrix.database.NaiveDatabase;
+import edu.alibaba.mpc4j.s2pc.pir.PirUtils;
 import edu.alibaba.mpc4j.s2pc.pir.index.AbstractIndexPirServer;
 import edu.alibaba.mpc4j.s2pc.pir.index.IndexPirParams;
-import edu.alibaba.mpc4j.s2pc.pir.index.IndexPirUtils;
 import edu.alibaba.mpc4j.s2pc.pir.index.vectorizedpir.Mr23IndexPirPtoDesc.PtoStep;
 
-import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
@@ -19,7 +19,7 @@ import java.util.stream.IntStream;
 import static java.util.stream.Collectors.toCollection;
 
 /**
- * Vectorized PIR协议服务端。
+ * Vectorized PIR server.
  *
  * @author Liqiang Peng
  * @date 2023/3/6
@@ -31,37 +31,57 @@ public class Mr23IndexPirServer extends AbstractIndexPirServer {
     }
 
     /**
-     * Vectorized PIR方案参数
+     * Vectorized PIR params
      */
     private Mr23IndexPirParams params;
     /**
-     * Vectorized PIR方案内部参数
+     * BFV plaintext in NTT form
      */
-    private Mr23IndexPirInnerParams innerParams;
+    private List<List<byte[]>> encodedDatabase;
     /**
-     * BFV明文（点值表示）
+     * partition byte length
      */
-    private List<ArrayList<byte[]>> encodedDatabase = new ArrayList<>();
+    private int partitionByteLength;
+    /**
+     * dimension size
+     */
+    private int[] dimensionSize;
+    /**
+     * public key
+     */
+    private byte[] publicKey;
+    /**
+     * relin keys
+     */
+    private byte[] relinKeys;
+    /**
+     * Galois keys
+     */
+    private byte[] galoisKeys;
 
     public Mr23IndexPirServer(Rpc serverRpc, Party clientParty, Mr23IndexPirConfig config) {
         super(Mr23IndexPirPtoDesc.getInstance(), serverRpc, clientParty, config);
     }
 
     @Override
-    public void init(IndexPirParams indexPirParams, ArrayList<ByteBuffer> elementArrayList, int elementByteLength) {
+    public void init(IndexPirParams indexPirParams, NaiveDatabase database) throws MpcAbortException {
         assert (indexPirParams instanceof Mr23IndexPirParams);
         params = (Mr23IndexPirParams) indexPirParams;
         logPhaseInfo(PtoState.INIT_BEGIN);
 
+        // receive public keys
+        DataPacketHeader clientPublicKeysHeader = new DataPacketHeader(
+            encodeTaskId, getPtoDesc().getPtoId(), PtoStep.CLIENT_SEND_PUBLIC_KEYS.ordinal(), extraInfo,
+            otherParty().getPartyId(), rpc.ownParty().getPartyId()
+        );
+        List<byte[]> publicKeyPayload = rpc.receive(clientPublicKeysHeader).getPayload();
+
         stopWatch.start();
-        innerParams = new Mr23IndexPirInnerParams(params, elementArrayList.size(), elementByteLength);
-        setInitInput(elementArrayList, elementByteLength, innerParams.getBinMaxByteLength());
-        // 服务端对数据库进行编码
-        int binNum = innerParams.getBinNum();
-        int totalSize = IntStream.range(0, params.getDimension() - 1)
-            .map(i -> innerParams.getDimensionsLength()).reduce(1, (a, b) -> a * b);
-        IntStream intStream = this.parallel ? IntStream.range(0, binNum).parallel() : IntStream.range(0, binNum);
-        encodedDatabase = intStream.mapToObj(i -> preprocessDatabase(i, totalSize)).collect(Collectors.toList());
+        handleClientPublicKeysPayload(publicKeyPayload);
+        int maxPartitionByteLength = params.getPlainModulusBitLength()/ Byte.SIZE;
+        partitionByteLength = Math.min(maxPartitionByteLength, database.getByteL());
+        setInitInput(database, partitionByteLength);
+        encodedDatabase = serverSetup();
         stopWatch.stop();
         long initTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
         stopWatch.reset();
@@ -71,19 +91,23 @@ public class Mr23IndexPirServer extends AbstractIndexPirServer {
     }
 
     @Override
-    public void init(ArrayList<ByteBuffer> elementArrayList, int elementByteLength) {
+    public void init(NaiveDatabase database) throws MpcAbortException {
         params = Mr23IndexPirParams.DEFAULT_PARAMS;
         logPhaseInfo(PtoState.INIT_BEGIN);
 
+        // receive public keys
+        DataPacketHeader clientPublicKeysHeader = new DataPacketHeader(
+            encodeTaskId, getPtoDesc().getPtoId(), PtoStep.CLIENT_SEND_PUBLIC_KEYS.ordinal(), extraInfo,
+            otherParty().getPartyId(), rpc.ownParty().getPartyId()
+        );
+        List<byte[]> publicKeyPayload = rpc.receive(clientPublicKeysHeader).getPayload();
+
         stopWatch.start();
-        innerParams = new Mr23IndexPirInnerParams(params, elementArrayList.size(), elementByteLength);
-        setInitInput(elementArrayList, elementByteLength, innerParams.getBinMaxByteLength());
-        // 服务端对数据库进行编码
-        int binNum = innerParams.getBinNum();
-        int totalSize = IntStream.range(0, params.getDimension() - 1)
-            .map(i -> innerParams.getDimensionsLength()).reduce(1, (a, b) -> a * b);
-        IntStream intStream = this.parallel ? IntStream.range(0, binNum).parallel() : IntStream.range(0, binNum);
-        encodedDatabase = intStream.mapToObj(i -> preprocessDatabase(i, totalSize)).collect(Collectors.toList());
+        handleClientPublicKeysPayload(publicKeyPayload);
+        int maxPartitionByteLength = params.getPlainModulusBitLength()/ Byte.SIZE;
+        partitionByteLength = Math.min(maxPartitionByteLength, database.getByteL());
+        setInitInput(database, partitionByteLength);
+        encodedDatabase = serverSetup();
         stopWatch.stop();
         long initTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
         stopWatch.reset();
@@ -101,11 +125,10 @@ public class Mr23IndexPirServer extends AbstractIndexPirServer {
             encodeTaskId, getPtoDesc().getPtoId(), PtoStep.CLIENT_SEND_QUERY.ordinal(), extraInfo,
             otherParty().getPartyId(), rpc.ownParty().getPartyId()
         );
-        ArrayList<byte[]> clientQueryPayload = new ArrayList<>(rpc.receive(clientQueryHeader).getPayload());
+        List<byte[]> clientQueryPayload = rpc.receive(clientQueryHeader).getPayload();
 
-        // 服务端接收并处理问询
         stopWatch.start();
-        ArrayList<byte[]> serverResponsePayload = handleClientQueryPayload(clientQueryPayload);
+        List<byte[]> serverResponsePayload = handleClientQueryPayload(clientQueryPayload);
         DataPacketHeader serverResponseHeader = new DataPacketHeader(
             encodeTaskId, getPtoDesc().getPtoId(), PtoStep.SERVER_SEND_RESPONSE.ordinal(), extraInfo,
             rpc.ownParty().getPartyId(), otherParty().getPartyId()
@@ -120,48 +143,79 @@ public class Mr23IndexPirServer extends AbstractIndexPirServer {
     }
 
     /**
-     * 服务端处理客户端查询信息。
+     * server handle client query.
      *
-     * @param clientQueryPayload 客户端查询信息。
-     * @return 检索结果密文。
-     * @throws MpcAbortException 如果协议异常中止。
+     * @param clientQueryPayload client query.
+     * @return server response.
+     * @throws MpcAbortException the protocol failure aborts.
      */
-    private ArrayList<byte[]> handleClientQueryPayload(ArrayList<byte[]> clientQueryPayload) throws MpcAbortException {
-        MpcAbortPreconditions.checkArgument(clientQueryPayload.size() == params.getDimension() + 3);
-        int binNum = innerParams.getBinNum();
-        ArrayList<byte[]> clientQuery = IntStream.range(0, params.getDimension())
-            .mapToObj(clientQueryPayload::get)
-            .collect(toCollection(ArrayList::new));
-        byte[] publicKey = clientQueryPayload.get(params.getDimension());
-        byte[] relinKeys = clientQueryPayload.get(params.getDimension() + 1);
-        byte[] galoisKeys = clientQueryPayload.get(params.getDimension() + 2);
-        IntStream intStream = this.parallel ? IntStream.range(0, binNum).parallel() : IntStream.range(0, binNum);
+    private List<byte[]> handleClientQueryPayload(List<byte[]> clientQueryPayload) throws MpcAbortException {
+        MpcAbortPreconditions.checkArgument(clientQueryPayload.size() == params.getDimension());
+        IntStream intStream = IntStream.range(0, databases.length);
+        intStream = parallel ? intStream.parallel() : intStream;
         return intStream
             .mapToObj(i -> Mr23IndexPirNativeUtils.generateReply(
-                params.getEncryptionParams(), clientQuery, encodedDatabase.get(i), publicKey, relinKeys, galoisKeys,
-                innerParams.getDimensionsLength(), innerParams.getSlotNum(), params.getDimension()
-            )).collect(toCollection(ArrayList::new));
+                params.getEncryptionParams(),
+                clientQueryPayload,
+                encodedDatabase.get(i),
+                publicKey,
+                relinKeys,
+                galoisKeys,
+                params.getFirstTwoDimensionSize(),
+                params.getThirdDimensionSize())
+            )
+            .collect(toCollection(ArrayList::new));
     }
 
     /**
-     * 返回数据库编码后的多项式。
+     * database preprocess.
      *
-     * @param binIndex  分块索引。
-     * @param totalSize 多项式数量。
-     * @return 数据库编码后的多项式。
+     * @param partitionIndex partition index.
+     * @return BFV plaintexts in NTT form.
      */
-    private ArrayList<byte[]> preprocessDatabase(int binIndex, int totalSize) {
+    private List<byte[]> preprocessDatabase(int partitionIndex) {
         long[] coeffs = new long[num];
-        int byteLength = elementByteArray.get(binIndex)[0].length;
         IntStream.range(0, num).forEach(i -> {
-            long[] temp = IndexPirUtils.convertBytesToCoeffs(
-                params.getPlainModulusBitLength(), 0, byteLength, elementByteArray.get(binIndex)[i]
+            long[] temp = PirUtils.convertBytesToCoeffs(
+                params.getPlainModulusBitLength(), 0, partitionByteLength, databases[partitionIndex].getBytesData(i)
             );
             assert temp.length == 1;
             coeffs[i] = temp[0];
         });
+        int totalSize = params.getFirstTwoDimensionSize() * params.getThirdDimensionSize();
         return Mr23IndexPirNativeUtils.preprocessDatabase(
-            params.getEncryptionParams(), coeffs, innerParams.getDimensionsLength(), innerParams.getSlotNum(), totalSize
+            params.getEncryptionParams(), coeffs, dimensionSize, totalSize
         );
+    }
+
+    /**
+     * server setup.
+     *
+     * @return encoded database.
+     */
+    public List<List<byte[]>> serverSetup() {
+        assert params.getDimension() == 3;
+        int product = params.getFirstTwoDimensionSize() * params.getFirstTwoDimensionSize() * params.getThirdDimensionSize();
+        assert product >= num;
+        this.dimensionSize = new int[] {
+            params.getThirdDimensionSize(), params.getFirstTwoDimensionSize(), params.getFirstTwoDimensionSize()
+        };
+        // encode database
+        IntStream intStream = IntStream.range(0, databases.length);
+        intStream = parallel ? intStream.parallel() : intStream;
+        return intStream.mapToObj(this::preprocessDatabase).collect(Collectors.toList());
+    }
+
+    /**
+     * server handle client public keys.
+     *
+     * @param clientPublicKeysPayload public keys.
+     * @throws MpcAbortException the protocol failure aborts.
+     */
+    public void handleClientPublicKeysPayload(List<byte[]> clientPublicKeysPayload) throws MpcAbortException {
+        MpcAbortPreconditions.checkArgument(clientPublicKeysPayload.size() == 3);
+        this.publicKey = clientPublicKeysPayload.remove(0);
+        this.relinKeys = clientPublicKeysPayload.remove(0);
+        this.galoisKeys = clientPublicKeysPayload.remove(0);
     }
 }

@@ -46,7 +46,7 @@ public class Lpzg24BatchIndexPirConfig implements BatchIndexPirConfig {
     }
 
     @Override
-    public BatchIndexPirFactory.BatchIndexPirType getProType() {
+    public BatchIndexPirFactory.BatchIndexPirType getPtoType() {
         return BatchIndexPirFactory.BatchIndexPirType.PSI_PIR;
     }
 

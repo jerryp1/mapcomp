@@ -42,7 +42,7 @@ public class Cmg21KwPirTest {
     /**
      * 长标签字节长度
      */
-    private static final int LONG_LABEL_BYTE_LENGTH = 65;
+    private static final int LONG_LABEL_BYTE_LENGTH = 128;
     /**
      * 服务端元素数量
      */

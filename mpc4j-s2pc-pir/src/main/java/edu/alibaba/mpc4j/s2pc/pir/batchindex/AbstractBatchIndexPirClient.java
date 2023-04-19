@@ -76,15 +76,15 @@ public abstract class AbstractBatchIndexPirClient extends AbstractTwoPartyPto im
         initState();
     }
 
-    protected void setPtoInput(ArrayList<Integer> indices) {
+    protected void setPtoInput(ArrayList<Integer> indexList) {
         checkInitialized();
-        MathPreconditions.checkPositiveInRangeClosed("maxRetrievalSize", indices.size(), maxRetrievalSize);
-        for (Integer index : indices) {
+        MathPreconditions.checkPositiveInRangeClosed("maxRetrievalSize", indexList.size(), maxRetrievalSize);
+        for (Integer index : indexList) {
             MathPreconditions.checkNonNegativeInRange("index", index, serverElementSize);
         }
-        this.retrievalSize = indices.size();
+        this.retrievalSize = indexList.size();
         this.indicesByteBuffer = IntStream.range(0, retrievalSize)
-            .mapToObj(i -> ByteBuffer.wrap(IntUtils.intToByteArray(indices.get(i))))
+            .mapToObj(i -> ByteBuffer.wrap(IntUtils.intToByteArray(indexList.get(i))))
             .collect(Collectors.toCollection(ArrayList::new));
         extraInfo++;
     }
