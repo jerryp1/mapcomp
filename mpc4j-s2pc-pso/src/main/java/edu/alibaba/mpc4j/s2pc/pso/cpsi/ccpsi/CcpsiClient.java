@@ -1,4 +1,4 @@
-package edu.alibaba.mpc4j.s2pc.pso.cpsi.scpsi;
+package edu.alibaba.mpc4j.s2pc.pso.cpsi.ccpsi;
 
 import edu.alibaba.mpc4j.common.rpc.MpcAbortException;
 import edu.alibaba.mpc4j.common.rpc.pto.TwoPartyPto;
@@ -8,12 +8,12 @@ import java.nio.ByteBuffer;
 import java.util.Set;
 
 /**
- * server-payload circuit PSI client.
+ * client-payload circuit PSI client.
  *
  * @author Weiran Liu
- * @date 2023/3/29
+ * @date 2023/4/19
  */
-public interface ScpsiClient extends TwoPartyPto {
+public interface CcpsiClient extends TwoPartyPto {
     /**
      * Inits the protocol.
      *
@@ -31,5 +31,5 @@ public interface ScpsiClient extends TwoPartyPto {
      * @return the client output.
      * @throws MpcAbortException the protocol failure aborts.
      */
-    SquareShareZ2Vector psi(Set<ByteBuffer> clientElementSet, int serverElementSize) throws MpcAbortException;
+    CcpsiClientOutput psi(Set<ByteBuffer> clientElementSet, int serverElementSize) throws MpcAbortException;
 }

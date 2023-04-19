@@ -1,4 +1,4 @@
-package edu.alibaba.mpc4j.s2pc.pso.cpsi.scpsi;
+package edu.alibaba.mpc4j.s2pc.pso.cpsi.ccpsi;
 
 import edu.alibaba.mpc4j.common.rpc.Party;
 import edu.alibaba.mpc4j.common.rpc.Rpc;
@@ -11,12 +11,12 @@ import java.util.ArrayList;
 import java.util.Set;
 
 /**
- * abstract server-payload circuit PSI client.
+ * abstract client-payload circuit PSI client.
  *
  * @author Weiran Liu
- * @date 2023/4/18
+ * @date 2023/4/19
  */
-public abstract class AbstractScpsiClient extends AbstractTwoPartyPto implements ScpsiClient {
+public abstract class AbstractCcpsiClient extends AbstractTwoPartyPto implements CcpsiClient {
     /**
      * max client element size
      */
@@ -30,15 +30,15 @@ public abstract class AbstractScpsiClient extends AbstractTwoPartyPto implements
      */
     protected ArrayList<ByteBuffer> clientElementArrayList;
     /**
-     * client element sie
+     * client element size
      */
     protected int clientElementSize;
     /**
-     * server element size
+     * sever element size
      */
     protected int serverElementSize;
 
-    protected AbstractScpsiClient(PtoDesc ptoDesc, Rpc clientRpc, Party serverParty, ScpsiConfig config) {
+    protected AbstractCcpsiClient(PtoDesc ptoDesc, Rpc clientRpc, Party serverParty, CcpsiConfig config) {
         super(ptoDesc, clientRpc, serverParty, config);
     }
 

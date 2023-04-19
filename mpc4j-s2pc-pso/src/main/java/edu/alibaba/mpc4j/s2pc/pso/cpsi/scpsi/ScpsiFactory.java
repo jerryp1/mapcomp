@@ -24,7 +24,7 @@ public class ScpsiFactory implements PtoFactory {
     /**
      * the type
      */
-    public enum CpsiType {
+    public enum ScpsiType {
         /**
          * PSTY19 circuit PSI
          */
@@ -48,14 +48,14 @@ public class ScpsiFactory implements PtoFactory {
      * @return a server.
      */
     public static ScpsiServer createServer(Rpc serverRpc, Party clientParty, ScpsiConfig config) {
-        CpsiType type = config.getPtoType();
+        ScpsiType type = config.getPtoType();
         switch (type) {
             case PSTY19:
                 return new Psty19ScpsiServer(serverRpc, clientParty, (Psty19ScpsiConfig) config);
             case RS21:
             case CGS22:
             default:
-                throw new IllegalArgumentException("Invalid " + CpsiType.class.getSimpleName() + ": " + type.name());
+                throw new IllegalArgumentException("Invalid " + ScpsiType.class.getSimpleName() + ": " + type.name());
         }
     }
 
@@ -68,14 +68,14 @@ public class ScpsiFactory implements PtoFactory {
      * @return a client.
      */
     public static ScpsiClient createClient(Rpc clientRpc, Party serverParty, ScpsiConfig config) {
-        CpsiType type = config.getPtoType();
+        ScpsiType type = config.getPtoType();
         switch (type) {
             case PSTY19:
                 return new Psty19ScpsiClient(clientRpc, serverParty, (Psty19ScpsiConfig) config);
             case RS21:
             case CGS22:
             default:
-                throw new IllegalArgumentException("Invalid " + CpsiType.class.getSimpleName() + ": " + type.name());
+                throw new IllegalArgumentException("Invalid " + ScpsiType.class.getSimpleName() + ": " + type.name());
         }
     }
 }
