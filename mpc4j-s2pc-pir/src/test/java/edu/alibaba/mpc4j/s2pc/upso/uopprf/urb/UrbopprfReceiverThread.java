@@ -44,8 +44,8 @@ class UrbopprfReceiverThread extends Thread {
     @Override
     public void run() {
         try {
-            receiver.init(inputArray.length);
-            targetArray = receiver.opprf(l, inputArray, pointNum);
+            receiver.init(l, inputArray.length, pointNum);
+            targetArray = receiver.opprf(inputArray);
         } catch (MpcAbortException e) {
             e.printStackTrace();
         }

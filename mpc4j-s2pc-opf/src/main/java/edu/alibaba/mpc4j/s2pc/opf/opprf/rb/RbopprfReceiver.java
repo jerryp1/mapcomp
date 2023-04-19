@@ -24,9 +24,9 @@ public interface RbopprfReceiver extends TwoPartyPto {
      *
      * @param l          the output bit length.
      * @param inputArray the batched input array.
-     * @param targetNum  the number of programmed points.
+     * @param pointNum   the number of programmed points.
      * @return the receiver outputs.
      * @throws MpcAbortException the protocol failure aborts.
      */
-    byte[][][] opprf(int l, byte[][] inputArray, int targetNum) throws MpcAbortException;
+    byte[][][] opprf(int l, byte[][] inputArray, int pointNum) throws MpcAbortException;
 }

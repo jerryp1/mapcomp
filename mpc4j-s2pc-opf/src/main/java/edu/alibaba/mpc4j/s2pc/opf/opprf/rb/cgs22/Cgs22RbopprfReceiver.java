@@ -67,8 +67,8 @@ public class Cgs22RbopprfReceiver extends AbstractRbopprfReceiver {
     }
 
     @Override
-    public byte[][][] opprf(int l, byte[][] inputArray, int targetNum) throws MpcAbortException {
-        setPtoInput(l, inputArray, targetNum);
+    public byte[][][] opprf(int l, byte[][] inputArray, int pointNum) throws MpcAbortException {
+        setPtoInput(l, inputArray, pointNum);
         logPhaseInfo(PtoState.PTO_BEGIN);
 
         stopWatch.start();

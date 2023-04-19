@@ -53,7 +53,7 @@ public class UbopprfTest {
     /**
      * large batch size
      */
-    private static final int LARGE_BATCH_NUM = 1 << 16;
+    private static final int LARGE_BATCH_NUM = 1 << 14;
     /**
      * default point num
      */

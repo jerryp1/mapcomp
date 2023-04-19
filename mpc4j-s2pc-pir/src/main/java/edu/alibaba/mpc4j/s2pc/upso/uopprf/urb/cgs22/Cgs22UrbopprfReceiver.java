@@ -65,8 +65,8 @@ public class Cgs22UrbopprfReceiver extends AbstractUrbopprfReceiver {
     }
 
     @Override
-    public void init(int batchSize) throws MpcAbortException {
-        setInitInput(batchSize);
+    public void init(int l, int batchSize, int pointNum) throws MpcAbortException {
+        setInitInput(l, batchSize, pointNum);
         logPhaseInfo(PtoState.INIT_BEGIN);
 
         stopWatch.start();
@@ -82,8 +82,8 @@ public class Cgs22UrbopprfReceiver extends AbstractUrbopprfReceiver {
     }
 
     @Override
-    public byte[][][] opprf(int l, byte[][] inputArray, int targetNum) throws MpcAbortException {
-        setPtoInput(l, inputArray, targetNum);
+    public byte[][][] opprf(byte[][] inputArray) throws MpcAbortException {
+        setPtoInput(inputArray);
         logPhaseInfo(PtoState.PTO_BEGIN);
 
         if (!sent) {
@@ -112,7 +112,7 @@ public class Cgs22UrbopprfReceiver extends AbstractUrbopprfReceiver {
                 })
                 .toArray(Prf[]::new);
             // Interpret hint as a garbled hash table GT.
-            binNum = CuckooHashBinFactory.getBinNum(cuckooHashBinType, pointNum);
+            binNum = CuckooHashBinFactory.getBinNum(cuckooHashBinType, this.pointNum);
             MpcAbortPreconditions.checkArgument(garbledTablePayload.size() == binNum);
             garbledTable = garbledTablePayload.toArray(new byte[0][]);
             sent = true;

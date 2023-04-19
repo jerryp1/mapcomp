@@ -13,19 +13,19 @@ public interface UrbopprfReceiver extends TwoPartyPto {
     /**
      * Inits the protocol.
      *
+     * @param l         the output bit length.
      * @param batchSize batch size.
+     * @param pointNum  the number of programmed points.
      * @throws MpcAbortException the protocol failure aborts.
      */
-    void init(int batchSize) throws MpcAbortException;
+    void init(int l, int batchSize, int pointNum) throws MpcAbortException;
 
     /**
      * Executes the protocol.
      *
-     * @param l          the output bit length.
      * @param inputArray the batched input array.
-     * @param targetNum  the number of programmed points.
      * @return the receiver outputs.
      * @throws MpcAbortException the protocol failure aborts.
      */
-    byte[][][] opprf(int l, byte[][] inputArray, int targetNum) throws MpcAbortException;
+    byte[][][] opprf(byte[][] inputArray) throws MpcAbortException;
 }
