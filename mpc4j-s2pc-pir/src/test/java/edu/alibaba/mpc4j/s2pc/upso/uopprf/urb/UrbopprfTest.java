@@ -20,6 +20,7 @@ import org.junit.runners.Parameterized;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.nio.ByteBuffer;
 import java.security.SecureRandom;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -148,6 +149,11 @@ public class UrbopprfTest {
     }
 
     private void testPto(int l, int batchNum, int pointNum, boolean parallel) {
+        testPto(l, batchNum, pointNum, parallel, false);
+        testPto(l, batchNum, pointNum, parallel, true);
+    }
+
+    private void testPto(int l, int batchNum, int pointNum, boolean parallel, boolean equalTarget) {
         // create the sender and the receiver
         UrbopprfSender sender = UrbopprfFactory.createSender(senderRpc, receiverRpc.ownParty(), config);
         UrbopprfReceiver receiver = UrbopprfFactory.createReceiver(receiverRpc, senderRpc.ownParty(), config);
@@ -163,9 +169,11 @@ public class UrbopprfTest {
             );
             // generate the sender input
             byte[][][] senderInputArrays = UopprfTestUtils.generateSenderInputArrays(batchNum, pointNum, SECURE_RANDOM);
-            byte[][][] senderTargetArrays = UopprfTestUtils.generateSenderTargetArrays(l, senderInputArrays, SECURE_RANDOM);
+            byte[][][] senderTargetArrays = equalTarget
+                ? UopprfTestUtils.generateEqualSenderTargetArrays(l, senderInputArrays, SECURE_RANDOM)
+                : UopprfTestUtils.generateDistinctSenderTargetArrays(l, senderInputArrays, SECURE_RANDOM);
             // generate the receiver input
-            byte[][] receiverInputArray = UopprfTestUtils.generateReceiverInputArray(senderInputArrays, SECURE_RANDOM);
+            byte[][] receiverInputArray = UopprfTestUtils.generateReceiverInputArray(l, senderInputArrays, SECURE_RANDOM);
             UrbopprfSenderThread senderThread = new UrbopprfSenderThread(sender, l, senderInputArrays, senderTargetArrays);
             UrbopprfReceiverThread receiverThread = new UrbopprfReceiverThread(receiver, l, receiverInputArray, pointNum);
             StopWatch stopWatch = new StopWatch();
@@ -219,21 +227,34 @@ public class UrbopprfTest {
                 Assert.assertTrue(BytesUtils.isFixedReduceByteArray(receiverTarget, byteL, l));
             }
             for (int pointIndex = 0; pointIndex < batchPointNum; pointIndex++) {
-                byte[] senderInput = senderInputArray[pointIndex];
                 byte[] senderTarget = senderTargetArray[pointIndex];
                 // the sender target must have l-bit length
                 Assert.assertTrue(BytesUtils.isFixedReduceByteArray(senderTarget, byteL, l));
+            }
+            // if receiver input belongs to one of the sender input, then check at most one equal target
+            boolean contain = false;
+            int containIndex = -1;
+            for (int index = 0; index < batchPointNum; index++) {
+                byte[] senderInput = senderInputArray[index];
                 if (Arrays.equals(senderInput, receiverInput)) {
-                    int targetEqualNum = 0;
-                    for (int b = 0; b < d; b++) {
-                        if (Arrays.equals(receiverTargets[b], senderTarget)) {
-                            targetEqualNum++;
-                        }
+                    contain = true;
+                    containIndex = index;
+                }
+            }
+            if (contain) {
+                byte[] senderTarget = senderTargetArray[containIndex];
+                int targetEqualNum = 0;
+                for (int b = 0; b < d; b++) {
+                    if (Arrays.equals(receiverTargets[b], senderTarget)) {
+                        targetEqualNum++;
                     }
-                    Assert.assertEquals(1, targetEqualNum);
-                } else {
+                }
+                Assert.assertEquals(1, targetEqualNum);
+            } else {
+                for (int index = 0; index < batchPointNum; index++) {
+                    byte[] senderTarget = senderTargetArray[index];
                     for (int b = 0; b < d; b++) {
-                        Assert.assertFalse(Arrays.equals(receiverTargets[b], senderTarget));
+                        Assert.assertNotEquals(ByteBuffer.wrap(receiverTargets[b]), ByteBuffer.wrap(senderTarget));
                     }
                 }
             }

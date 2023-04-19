@@ -1,15 +1,17 @@
-package edu.alibaba.mpc4j.s2pc.pso.psi;
+package edu.alibaba.mpc4j.s2pc.pso.cpsi.scpsi;
 
 import com.google.common.base.Preconditions;
 import edu.alibaba.mpc4j.common.rpc.Rpc;
 import edu.alibaba.mpc4j.common.rpc.RpcManager;
 import edu.alibaba.mpc4j.common.rpc.impl.memory.MemoryRpcManager;
 import edu.alibaba.mpc4j.common.tool.CommonConstants;
-import edu.alibaba.mpc4j.common.tool.hashbin.object.cuckoo.CuckooHashBinFactory.CuckooHashBinType;
+import edu.alibaba.mpc4j.common.tool.bitvector.BitVector;
+import edu.alibaba.mpc4j.common.tool.hashbin.object.cuckoo.CuckooHashBinFactory;
+import edu.alibaba.mpc4j.common.tool.utils.CommonUtils;
+import edu.alibaba.mpc4j.s2pc.aby.basics.bc.SquareShareZ2Vector;
 import edu.alibaba.mpc4j.s2pc.pso.PsoUtils;
-import edu.alibaba.mpc4j.s2pc.pso.psi.hfh99.Hfh99ByteEccPsiConfig;
-import edu.alibaba.mpc4j.s2pc.pso.psi.hfh99.Hfh99EccPsiConfig;
-import edu.alibaba.mpc4j.s2pc.pso.psi.kkrt16.Kkrt16PsiConfig;
+import edu.alibaba.mpc4j.s2pc.pso.cpsi.scpsi.psty19.Psty19ScpsiConfig;
+import edu.alibaba.mpc4j.s2pc.pso.cpsi.scpsi.ScpsiFactory.CpsiType;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.time.StopWatch;
 import org.junit.After;
@@ -30,81 +32,71 @@ import java.util.Set;
 import java.util.concurrent.TimeUnit;
 
 /**
- * PSI协议测试。
+ * server-payload circuit PSI test.
  *
- * @author Weiran Liu
- * @date 2022/9/19
+ * @author Liqiang Peng
+ * @date 2023/1/30
  */
 @RunWith(Parameterized.class)
-public class PsiTest {
-    private static final Logger LOGGER = LoggerFactory.getLogger(PsiTest.class);
+public class ScpsiTest {
+    private static final Logger LOGGER = LoggerFactory.getLogger(ScpsiTest.class);
     /**
-     * 随机状态
+     * the random state
      */
     private static final SecureRandom SECURE_RANDOM = new SecureRandom();
     /**
-     * 默认数量
+     * default size
      */
     private static final int DEFAULT_SIZE = 99;
-    /**
-     * 元素字节长度
-     */
-    private static final int ELEMENT_BYTE_LENGTH = CommonConstants.BLOCK_BYTE_LENGTH;
     /**
      * 较大数量
      */
     private static final int LARGE_SIZE = 1 << 14;
+    /**
+     * element byte length
+     */
+    private static final int ELEMENT_BIT_LENGTH = CommonConstants.BLOCK_BIT_LENGTH;
+    /**
+     * element byte length
+     */
+    private static final int ELEMENT_BYTE_LENGTH = CommonUtils.getByteLength(ELEMENT_BIT_LENGTH);
 
     @Parameterized.Parameters(name = "{0}")
     public static Collection<Object[]> configurations() {
         Collection<Object[]> configurations = new ArrayList<>();
 
-        // KKRT16 (no-stash)
+        // PSTY19 (default)
         configurations.add(new Object[] {
-            PsiFactory.PsiType.KKRT16.name() + " (no-stash)",
-            new Kkrt16PsiConfig.Builder().setCuckooHashBinType(CuckooHashBinType.NO_STASH_NAIVE).build(),
+            CpsiType.PSTY19.name() + " (default)",
+            new Psty19ScpsiConfig.Builder().build(),
         });
-        // KKRT16 (4 hash)
+        // PSTY19 (2 hash)
         configurations.add(new Object[] {
-            PsiFactory.PsiType.KKRT16.name() + " (4 hash)",
-            new Kkrt16PsiConfig.Builder().setCuckooHashBinType(CuckooHashBinType.NAIVE_4_HASH).build(),
+            CpsiType.PSTY19.name() + " (2 hash)",
+            new Psty19ScpsiConfig.Builder().setCuckooHashBinType(CuckooHashBinFactory.CuckooHashBinType.NAIVE_2_HASH).build(),
         });
-        // KKRT16
+        // PSTY19 (4 hash)
         configurations.add(new Object[] {
-            PsiFactory.PsiType.KKRT16.name(), new Kkrt16PsiConfig.Builder().build(),
-        });
-        // HFH99_BYTE_ECC
-        configurations.add(new Object[] {
-            PsiFactory.PsiType.HFH99_BYTE_ECC.name(), new Hfh99ByteEccPsiConfig.Builder().build(),
-        });
-        // HFH99_ECC (compress)
-        configurations.add(new Object[] {
-            PsiFactory.PsiType.HFH99_ECC.name() + " (compress)",
-            new Hfh99EccPsiConfig.Builder().setCompressEncode(true).build(),
-        });
-        // HFH99_ECC (uncompress)
-        configurations.add(new Object[] {
-            PsiFactory.PsiType.HFH99_ECC.name() + " (uncompress)",
-            new Hfh99EccPsiConfig.Builder().setCompressEncode(false).build(),
+            CpsiType.PSTY19.name() + " (4 hash)",
+            new Psty19ScpsiConfig.Builder().setCuckooHashBinType(CuckooHashBinFactory.CuckooHashBinType.NAIVE_4_HASH).build(),
         });
 
         return configurations;
     }
-
     /**
-     * 服务端
+     * server RPC
      */
     private final Rpc serverRpc;
     /**
-     * 客户端
+     * client RPC
      */
     private final Rpc clientRpc;
     /**
-     * 协议类型
+     * the config
      */
-    private final PsiConfig config;
+    private final ScpsiConfig config;
 
-    public PsiTest(String name, PsiConfig config) {
+    public ScpsiTest(String name, ScpsiConfig config) {
         Preconditions.checkArgument(StringUtils.isNotBlank(name));
         // We cannot use NettyRPC in the test case since it needs multi-thread connect / disconnect.
         // In other word, we cannot connect / disconnect NettyRpc in @Before / @After, respectively.
@@ -142,23 +134,23 @@ public class PsiTest {
     }
 
     @Test
-    public void testLargeServerSize() {
-        testPto(DEFAULT_SIZE, 10, false);
-    }
-
-    @Test
-    public void testLargeClientSize() {
-        testPto(10, DEFAULT_SIZE, false);
-    }
-
-    @Test
     public void testDefault() {
-        testPto(DEFAULT_SIZE, DEFAULT_SIZE, false);
+        testPto(DEFAULT_SIZE, DEFAULT_SIZE, true);
     }
 
     @Test
     public void testParallelDefault() {
         testPto(DEFAULT_SIZE, DEFAULT_SIZE, true);
+    }
+
+    @Test
+    public void testLargeServerSize() {
+        testPto(LARGE_SIZE, DEFAULT_SIZE, false);
+    }
+
+    @Test
+    public void testLargeClientSize() {
+        testPto(DEFAULT_SIZE, LARGE_SIZE, false);
     }
 
     @Test
@@ -171,38 +163,38 @@ public class PsiTest {
         testPto(LARGE_SIZE, LARGE_SIZE, true);
     }
 
-    private void testPto(int serverSetSize, int clientSetSize, boolean parallel) {
-        PsiServer<ByteBuffer> server = PsiFactory.createServer(serverRpc, clientRpc.ownParty(), config);
-        PsiClient<ByteBuffer> client = PsiFactory.createClient(clientRpc, serverRpc.ownParty(), config);
+    public void testPto(int serverSetSize, int clientSetSize, boolean parallel) {
+        ScpsiServer server = ScpsiFactory.createServer(serverRpc, clientRpc.ownParty(), config);
+        ScpsiClient client = ScpsiFactory.createClient(clientRpc, serverRpc.ownParty(), config);
         server.setParallel(parallel);
         client.setParallel(parallel);
         int randomTaskId = Math.abs(SECURE_RANDOM.nextInt());
         server.setTaskId(randomTaskId);
         client.setTaskId(randomTaskId);
         try {
-            LOGGER.info("-----test {}，server_size = {}，client_size = {}-----",
+            LOGGER.info("-----test {}，server_set_size = {}，client_set_size = {}-----",
                 server.getPtoDesc().getPtoName(), serverSetSize, clientSetSize
             );
-            // 生成集合
+            // generate the inputs
             ArrayList<Set<ByteBuffer>> sets = PsoUtils.generateBytesSets(serverSetSize, clientSetSize, ELEMENT_BYTE_LENGTH);
-            Set<ByteBuffer> serverSet = sets.get(0);
-            Set<ByteBuffer> clientSet = sets.get(1);
-            // 构建线程
-            PsiServerThread serverThread = new PsiServerThread(server, serverSet, clientSet.size());
-            PsiClientThread clientThread = new PsiClientThread(client, clientSet, serverSet.size());
+            Set<ByteBuffer> serverElementSet = sets.get(0);
+            Set<ByteBuffer> clientElementSet = sets.get(1);
+            ScpsiServerThread serverThread = new ScpsiServerThread(server, serverElementSet, clientSetSize);
+            ScpsiClientThread clientThread = new ScpsiClientThread(client, clientElementSet, serverSetSize);
             StopWatch stopWatch = new StopWatch();
-            // 开始执行协议
+            // execute the protocol
             stopWatch.start();
             serverThread.start();
             clientThread.start();
-            // 等待线程停止
             serverThread.join();
             clientThread.join();
             stopWatch.stop();
             long time = stopWatch.getTime(TimeUnit.MILLISECONDS);
             stopWatch.reset();
-            // 验证结果
-            assertOutput(serverSet, clientSet, clientThread.getIntersectionSet());
+            // verify
+            ScpsiServerOutput serverOutput = serverThread.getServerOutput();
+            SquareShareZ2Vector clientOutput = clientThread.getClientOutput();
+            assertOutput(serverElementSet, clientElementSet, serverOutput, clientOutput);
             LOGGER.info("Server data_packet_num = {}, payload_bytes = {}B, send_bytes = {}B, time = {}ms",
                 serverRpc.getSendDataPacketNum(), serverRpc.getPayloadByteLength(), serverRpc.getSendByteLength(),
                 time
@@ -220,10 +212,19 @@ public class PsiTest {
         client.destroy();
     }
 
-    private void assertOutput(Set<ByteBuffer> serverSet, Set<ByteBuffer> clientSet, Set<ByteBuffer> outputIntersectionSet) {
-        Set<ByteBuffer> expectIntersectionSet = new HashSet<>(serverSet);
-        expectIntersectionSet.retainAll(clientSet);
-        Assert.assertTrue(outputIntersectionSet.containsAll(expectIntersectionSet));
-        Assert.assertTrue(expectIntersectionSet.containsAll(outputIntersectionSet));
+    private void assertOutput(Set<ByteBuffer> serverElementSet, Set<ByteBuffer> clientElementSet,
+                              ScpsiServerOutput serverOutput, SquareShareZ2Vector clientOutput) {
+        Set<ByteBuffer> expectIntersectionSet = new HashSet<>(serverElementSet);
+        expectIntersectionSet.retainAll(clientElementSet);
+        ByteBuffer[] table = serverOutput.getTable();
+        BitVector z = serverOutput.getZ0().getBitVector().xor(clientOutput.getBitVector());
+        int beta = serverOutput.getBeta();
+        for (int i = 0; i < beta; i++) {
+            if (expectIntersectionSet.contains(table[i])) {
+                Assert.assertTrue(z.get(i));
+            } else {
+                Assert.assertFalse(z.get(i));
+            }
+        }
     }
 }

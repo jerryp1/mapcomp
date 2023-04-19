@@ -1,10 +1,10 @@
-package edu.alibaba.mpc4j.s2pc.pso.cpsi.psty19;
+package edu.alibaba.mpc4j.s2pc.pso.cpsi.scpsi.psty19;
 
 import edu.alibaba.mpc4j.common.rpc.desc.PtoDesc;
 import edu.alibaba.mpc4j.common.rpc.desc.PtoDescManager;
 
 /**
- * PSTY19 circuit PSI protocol description. The protocol comes from the following paper:
+ * PSTY19 server-payload circuit PSI protocol description. The protocol comes from the following paper:
  * <p>
  * Pinkas, Benny, Thomas Schneider, Oleksandr Tkachenko, and Avishay Yanai. Efficient circuit-based PSI with linear
  * communication. EUROCRYPT 2019, Part III, pp. 122-153. Springer International Publishing, 2019.
@@ -14,7 +14,7 @@ import edu.alibaba.mpc4j.common.rpc.desc.PtoDescManager;
  * @author Weiran Liu
  * @date 2023/3/29
  */
-class Psty19CpsiPtoDesc implements PtoDesc {
+class Psty19ScpsiPtoDesc implements PtoDesc {
     /**
      * the protocol ID
      */
@@ -22,7 +22,7 @@ class Psty19CpsiPtoDesc implements PtoDesc {
     /**
      * the protocol name
      */
-    private static final String PTO_NAME = "PRTY19-CPSI";
+    private static final String PTO_NAME = "PRTY19-SCPSI";
 
     /**
      * the protocol step
@@ -37,12 +37,12 @@ class Psty19CpsiPtoDesc implements PtoDesc {
     /**
      * the singleton mode
      */
-    private static final Psty19CpsiPtoDesc INSTANCE = new Psty19CpsiPtoDesc();
+    private static final Psty19ScpsiPtoDesc INSTANCE = new Psty19ScpsiPtoDesc();
 
     /**
      * private constructor.
      */
-    private Psty19CpsiPtoDesc() {
+    private Psty19ScpsiPtoDesc() {
         // empty
     }
 

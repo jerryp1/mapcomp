@@ -44,7 +44,7 @@ public class OpprfTestUtils {
         return inputArrays;
     }
 
-    public static byte[][][] generateSenderTargetArrays(int l, byte[][][] inputArrays, SecureRandom secureRandom) {
+    public static byte[][][] generateDistinctSenderTargetArrays(int l, byte[][][] inputArrays, SecureRandom secureRandom) {
         int byteL = CommonUtils.getByteLength(l);
         int batchNum = inputArrays.length;
         byte[][][] targetArrays = new byte[batchNum][][];
@@ -58,19 +58,40 @@ public class OpprfTestUtils {
         return targetArrays;
     }
 
-    public static byte[][] generateReceiverInputArray(byte[][][] inputArrays, SecureRandom secureRandom) {
+    public static byte[][][] generateEqualSenderTargetArrays(int l, byte[][][] inputArrays, SecureRandom secureRandom) {
+        int byteL = CommonUtils.getByteLength(l);
+        int batchNum = inputArrays.length;
+        byte[][][] targetArrays = new byte[batchNum][][];
+        for (int batchIndex = 0; batchIndex < batchNum; batchIndex++) {
+            int batchPointNum = inputArrays[batchIndex].length;
+            targetArrays[batchIndex] = new byte[batchPointNum][];
+            byte[] target = BytesUtils.randomByteArray(byteL, l, secureRandom);
+            for (int pointIndex = 0; pointIndex < batchPointNum; pointIndex++) {
+                targetArrays[batchIndex][pointIndex] = BytesUtils.clone(target);
+            }
+        }
+        return targetArrays;
+    }
+
+    public static byte[][] generateReceiverInputArray(int l, byte[][][] inputArrays, SecureRandom secureRandom) {
+        int byteL = CommonUtils.getByteLength(l);
         int batchNum = inputArrays.length;
         byte[][] inputArray = new byte[batchNum][];
         for (int batchIndex = 0; batchIndex < batchNum; batchIndex++) {
             int batchPointNum = inputArrays[batchIndex].length;
             if (batchPointNum > 0) {
-                // batch point num is not zero, randomly select a point to be the target
-                int pointIndex = secureRandom.nextInt(batchPointNum);
-                inputArray[batchIndex] = BytesUtils.clone(inputArrays[batchIndex][pointIndex]);
+                // batch point num is not zero
+                if (batchIndex % 2 == 0) {
+                    // randomly select a point to be the input
+                    int pointIndex = secureRandom.nextInt(batchPointNum);
+                    inputArray[batchIndex] = BytesUtils.clone(inputArrays[batchIndex][pointIndex]);
+                } else {
+                    // randomly generate a input
+                    inputArray[batchIndex] = BytesUtils.randomByteArray(byteL, l, secureRandom);
+                }
             } else {
                 // batch point num is zero, create a random input
-                inputArray[batchIndex] = new byte[INPUT_BYTE_LENGTH];
-                secureRandom.nextBytes(inputArray[batchIndex]);
+                inputArray[batchIndex] = BytesUtils.randomByteArray(byteL, l, secureRandom);
             }
         }
         return inputArray;

@@ -128,8 +128,8 @@ public class OkvsBopprfSender extends AbstractBopprfSender {
                 byte[] target = targetArray[index];
                 byte[] programOutput = oprfSenderOutput.getPrf(batchIndex, input);
                 programOutput = prf.getBytes(programOutput);
-                BytesUtils.xori(programOutput, target);
                 BytesUtils.reduceByteArray(programOutput, l);
+                BytesUtils.xori(programOutput, target);
                 keyValueMap.put(ByteBuffer.wrap(input), programOutput);
             }
         });
