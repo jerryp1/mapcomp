@@ -1,4 +1,4 @@
-package edu.alibaba.mpc4j.s2pc.pso.cpsi;
+package edu.alibaba.mpc4j.s2pc.pso.cpsi.scpsi;
 
 import com.google.common.base.Preconditions;
 import edu.alibaba.mpc4j.common.rpc.Rpc;
@@ -10,8 +10,8 @@ import edu.alibaba.mpc4j.common.tool.hashbin.object.cuckoo.CuckooHashBinFactory;
 import edu.alibaba.mpc4j.common.tool.utils.CommonUtils;
 import edu.alibaba.mpc4j.s2pc.aby.basics.bc.SquareShareZ2Vector;
 import edu.alibaba.mpc4j.s2pc.pso.PsoUtils;
-import edu.alibaba.mpc4j.s2pc.pso.cpsi.psty19.Psty19CpsiConfig;
-import edu.alibaba.mpc4j.s2pc.pso.cpsi.CpsiFactory.CpsiType;
+import edu.alibaba.mpc4j.s2pc.pso.cpsi.scpsi.psty19.Psty19ScpsiConfig;
+import edu.alibaba.mpc4j.s2pc.pso.cpsi.scpsi.ScpsiFactory.CpsiType;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.time.StopWatch;
 import org.junit.After;
@@ -32,14 +32,14 @@ import java.util.Set;
 import java.util.concurrent.TimeUnit;
 
 /**
- * circuit PSI test.
+ * server-payload circuit PSI test.
  *
  * @author Liqiang Peng
  * @date 2023/1/30
  */
 @RunWith(Parameterized.class)
-public class CpsiTest {
-    private static final Logger LOGGER = LoggerFactory.getLogger(CpsiTest.class);
+public class ScpsiTest {
+    private static final Logger LOGGER = LoggerFactory.getLogger(ScpsiTest.class);
     /**
      * the random state
      */
@@ -68,17 +68,17 @@ public class CpsiTest {
         // PSTY19 (default)
         configurations.add(new Object[] {
             CpsiType.PSTY19.name() + " (default)",
-            new Psty19CpsiConfig.Builder().build(),
+            new Psty19ScpsiConfig.Builder().build(),
         });
         // PSTY19 (2 hash)
         configurations.add(new Object[] {
             CpsiType.PSTY19.name() + " (2 hash)",
-            new Psty19CpsiConfig.Builder().setCuckooHashBinType(CuckooHashBinFactory.CuckooHashBinType.NAIVE_2_HASH).build(),
+            new Psty19ScpsiConfig.Builder().setCuckooHashBinType(CuckooHashBinFactory.CuckooHashBinType.NAIVE_2_HASH).build(),
         });
         // PSTY19 (4 hash)
         configurations.add(new Object[] {
             CpsiType.PSTY19.name() + " (4 hash)",
-            new Psty19CpsiConfig.Builder().setCuckooHashBinType(CuckooHashBinFactory.CuckooHashBinType.NAIVE_4_HASH).build(),
+            new Psty19ScpsiConfig.Builder().setCuckooHashBinType(CuckooHashBinFactory.CuckooHashBinType.NAIVE_4_HASH).build(),
         });
 
         return configurations;
@@ -94,9 +94,9 @@ public class CpsiTest {
     /**
      * the config
      */
-    private final CpsiConfig config;
+    private final ScpsiConfig config;
 
-    public CpsiTest(String name, CpsiConfig config) {
+    public ScpsiTest(String name, ScpsiConfig config) {
         Preconditions.checkArgument(StringUtils.isNotBlank(name));
         // We cannot use NettyRPC in the test case since it needs multi-thread connect / disconnect.
         // In other word, we cannot connect / disconnect NettyRpc in @Before / @After, respectively.
@@ -164,8 +164,8 @@ public class CpsiTest {
     }
 
     public void testPto(int serverSetSize, int clientSetSize, boolean parallel) {
-        CpsiServer server = CpsiFactory.createServer(serverRpc, clientRpc.ownParty(), config);
-        CpsiClient client = CpsiFactory.createClient(clientRpc, serverRpc.ownParty(), config);
+        ScpsiServer server = ScpsiFactory.createServer(serverRpc, clientRpc.ownParty(), config);
+        ScpsiClient client = ScpsiFactory.createClient(clientRpc, serverRpc.ownParty(), config);
         server.setParallel(parallel);
         client.setParallel(parallel);
         int randomTaskId = Math.abs(SECURE_RANDOM.nextInt());
@@ -179,8 +179,8 @@ public class CpsiTest {
             ArrayList<Set<ByteBuffer>> sets = PsoUtils.generateBytesSets(serverSetSize, clientSetSize, ELEMENT_BYTE_LENGTH);
             Set<ByteBuffer> serverElementSet = sets.get(0);
             Set<ByteBuffer> clientElementSet = sets.get(1);
-            CpsiServerThread serverThread = new CpsiServerThread(server, serverElementSet, clientSetSize);
-            CpsiClientThread clientThread = new CpsiClientThread(client, clientElementSet, serverSetSize);
+            ScpsiServerThread serverThread = new ScpsiServerThread(server, serverElementSet, clientSetSize);
+            ScpsiClientThread clientThread = new ScpsiClientThread(client, clientElementSet, serverSetSize);
             StopWatch stopWatch = new StopWatch();
             // execute the protocol
             stopWatch.start();
@@ -192,7 +192,7 @@ public class CpsiTest {
             long time = stopWatch.getTime(TimeUnit.MILLISECONDS);
             stopWatch.reset();
             // verify
-            CpsiServerOutput serverOutput = serverThread.getServerOutput();
+            ScpsiServerOutput serverOutput = serverThread.getServerOutput();
             SquareShareZ2Vector clientOutput = clientThread.getClientOutput();
             assertOutput(serverElementSet, clientElementSet, serverOutput, clientOutput);
             LOGGER.info("Server data_packet_num = {}, payload_bytes = {}B, send_bytes = {}B, time = {}ms",
@@ -213,7 +213,7 @@ public class CpsiTest {
     }
 
     private void assertOutput(Set<ByteBuffer> serverElementSet, Set<ByteBuffer> clientElementSet,
-                              CpsiServerOutput serverOutput, SquareShareZ2Vector clientOutput) {
+                              ScpsiServerOutput serverOutput, SquareShareZ2Vector clientOutput) {
         Set<ByteBuffer> expectIntersectionSet = new HashSet<>(serverElementSet);
         expectIntersectionSet.retainAll(clientElementSet);
         ByteBuffer[] table = serverOutput.getTable();

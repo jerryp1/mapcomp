@@ -1,4 +1,4 @@
-package edu.alibaba.mpc4j.s2pc.pso.cpsi;
+package edu.alibaba.mpc4j.s2pc.pso.cpsi.scpsi;
 
 import edu.alibaba.mpc4j.common.rpc.MpcAbortException;
 
@@ -6,16 +6,16 @@ import java.nio.ByteBuffer;
 import java.util.Set;
 
 /**
- * Circuit PSI server thread.
+ * server-payload circuit PSI server thread.
  *
  * @author Liqiang Peng
  * @date 2023/2/1
  */
-public class CpsiServerThread extends Thread {
+public class ScpsiServerThread extends Thread {
     /**
      * server
      */
-    private final CpsiServer server;
+    private final ScpsiServer server;
     /**
      * server element set
      */
@@ -27,15 +27,15 @@ public class CpsiServerThread extends Thread {
     /**
      * server output
      */
-    private CpsiServerOutput serverOutput;
+    private ScpsiServerOutput serverOutput;
 
-    CpsiServerThread(CpsiServer server, Set<ByteBuffer> serverElementSet, int clientElementSize) {
+    ScpsiServerThread(ScpsiServer server, Set<ByteBuffer> serverElementSet, int clientElementSize) {
         this.server = server;
         this.serverElementSet = serverElementSet;
         this.clientElementSize = clientElementSize;
     }
 
-    CpsiServerOutput getServerOutput() {
+    ScpsiServerOutput getServerOutput() {
         return serverOutput;
     }
 

@@ -1,22 +1,22 @@
-package edu.alibaba.mpc4j.s2pc.pso.cpsi.psty19;
+package edu.alibaba.mpc4j.s2pc.pso.cpsi.scpsi.psty19;
 
 import edu.alibaba.mpc4j.common.rpc.desc.SecurityModel;
 import edu.alibaba.mpc4j.common.tool.EnvType;
 import edu.alibaba.mpc4j.common.tool.hashbin.object.cuckoo.CuckooHashBinFactory.CuckooHashBinType;
 import edu.alibaba.mpc4j.s2pc.aby.circuit.peqt.PeqtConfig;
 import edu.alibaba.mpc4j.s2pc.aby.circuit.peqt.PeqtFactory;
-import edu.alibaba.mpc4j.s2pc.pso.cpsi.CpsiConfig;
-import edu.alibaba.mpc4j.s2pc.pso.cpsi.CpsiFactory;
+import edu.alibaba.mpc4j.s2pc.pso.cpsi.scpsi.ScpsiConfig;
+import edu.alibaba.mpc4j.s2pc.pso.cpsi.scpsi.ScpsiFactory;
 import edu.alibaba.mpc4j.s2pc.opf.opprf.batch.BopprfConfig;
 import edu.alibaba.mpc4j.s2pc.opf.opprf.batch.BopprfFactory;
 
 /**
- * PSTY19 circuit PSI config.
+ * PSTY19 server-payload circuit PSI config.
  *
  * @author Weiran Liu
  * @date 2023/3/29
  */
-public class Psty19CpsiConfig implements CpsiConfig {
+public class Psty19ScpsiConfig implements ScpsiConfig {
     /**
      * Batch OPPRF config
      */
@@ -30,7 +30,7 @@ public class Psty19CpsiConfig implements CpsiConfig {
      */
     private final CuckooHashBinType cuckooHashBinType;
 
-    private Psty19CpsiConfig(Builder builder) {
+    private Psty19ScpsiConfig(Builder builder) {
         assert builder.bopprfConfig.getEnvType().equals(builder.peqtConfig.getEnvType());
         bopprfConfig = builder.bopprfConfig;
         peqtConfig = builder.peqtConfig;
@@ -38,8 +38,8 @@ public class Psty19CpsiConfig implements CpsiConfig {
     }
 
     @Override
-    public CpsiFactory.CpsiType getPtoType() {
-        return CpsiFactory.CpsiType.PSTY19;
+    public ScpsiFactory.CpsiType getPtoType() {
+        return ScpsiFactory.CpsiType.PSTY19;
     }
 
     @Override
@@ -70,7 +70,7 @@ public class Psty19CpsiConfig implements CpsiConfig {
         return cuckooHashBinType;
     }
 
-    public static class Builder implements org.apache.commons.lang3.builder.Builder<Psty19CpsiConfig> {
+    public static class Builder implements org.apache.commons.lang3.builder.Builder<Psty19ScpsiConfig> {
         /**
          * Batch OPPRF config
          */
@@ -106,8 +106,8 @@ public class Psty19CpsiConfig implements CpsiConfig {
         }
 
         @Override
-        public Psty19CpsiConfig build() {
-            return new Psty19CpsiConfig(this);
+        public Psty19ScpsiConfig build() {
+            return new Psty19ScpsiConfig(this);
         }
     }
 }

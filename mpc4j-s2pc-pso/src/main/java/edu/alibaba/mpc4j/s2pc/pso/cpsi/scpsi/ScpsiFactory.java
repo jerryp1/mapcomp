@@ -1,23 +1,23 @@
-package edu.alibaba.mpc4j.s2pc.pso.cpsi;
+package edu.alibaba.mpc4j.s2pc.pso.cpsi.scpsi;
 
 import edu.alibaba.mpc4j.common.rpc.Party;
 import edu.alibaba.mpc4j.common.rpc.Rpc;
 import edu.alibaba.mpc4j.common.rpc.pto.PtoFactory;
-import edu.alibaba.mpc4j.s2pc.pso.cpsi.psty19.Psty19CpsiClient;
-import edu.alibaba.mpc4j.s2pc.pso.cpsi.psty19.Psty19CpsiConfig;
-import edu.alibaba.mpc4j.s2pc.pso.cpsi.psty19.Psty19CpsiServer;
+import edu.alibaba.mpc4j.s2pc.pso.cpsi.scpsi.psty19.Psty19ScpsiClient;
+import edu.alibaba.mpc4j.s2pc.pso.cpsi.scpsi.psty19.Psty19ScpsiConfig;
+import edu.alibaba.mpc4j.s2pc.pso.cpsi.scpsi.psty19.Psty19ScpsiServer;
 
 /**
- * Circuit PSI factory.
+ * server-payload circuit PSI factory.
  *
  * @author Weiran Liu
  * @date 2023/3/29
  */
-public class CpsiFactory implements PtoFactory {
+public class ScpsiFactory implements PtoFactory {
     /**
      * private constructor.
      */
-    private CpsiFactory() {
+    private ScpsiFactory() {
         // empty
     }
 
@@ -47,11 +47,11 @@ public class CpsiFactory implements PtoFactory {
      * @param config      the config.
      * @return a server.
      */
-    public static CpsiServer createServer(Rpc serverRpc, Party clientParty, CpsiConfig config) {
+    public static ScpsiServer createServer(Rpc serverRpc, Party clientParty, ScpsiConfig config) {
         CpsiType type = config.getPtoType();
         switch (type) {
             case PSTY19:
-                return new Psty19CpsiServer(serverRpc, clientParty, (Psty19CpsiConfig) config);
+                return new Psty19ScpsiServer(serverRpc, clientParty, (Psty19ScpsiConfig) config);
             case RS21:
             case CGS22:
             default:
@@ -67,11 +67,11 @@ public class CpsiFactory implements PtoFactory {
      * @param config      the config.
      * @return a client.
      */
-    public static CpsiClient createClient(Rpc clientRpc, Party serverParty, CpsiConfig config) {
+    public static ScpsiClient createClient(Rpc clientRpc, Party serverParty, ScpsiConfig config) {
         CpsiType type = config.getPtoType();
         switch (type) {
             case PSTY19:
-                return new Psty19CpsiClient(clientRpc, serverParty, (Psty19CpsiConfig) config);
+                return new Psty19ScpsiClient(clientRpc, serverParty, (Psty19ScpsiConfig) config);
             case RS21:
             case CGS22:
             default:

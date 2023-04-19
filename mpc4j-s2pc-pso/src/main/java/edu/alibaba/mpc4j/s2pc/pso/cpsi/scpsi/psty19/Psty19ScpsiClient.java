@@ -1,4 +1,4 @@
-package edu.alibaba.mpc4j.s2pc.pso.cpsi.psty19;
+package edu.alibaba.mpc4j.s2pc.pso.cpsi.scpsi.psty19;
 
 import edu.alibaba.mpc4j.common.rpc.*;
 import edu.alibaba.mpc4j.common.rpc.utils.DataPacketHeader;
@@ -15,8 +15,8 @@ import edu.alibaba.mpc4j.s2pc.aby.circuit.peqt.PeqtFactory;
 import edu.alibaba.mpc4j.s2pc.aby.circuit.peqt.PeqtParty;
 import edu.alibaba.mpc4j.s2pc.opf.opprf.batch.BopprfFactory;
 import edu.alibaba.mpc4j.s2pc.opf.opprf.batch.BopprfSender;
-import edu.alibaba.mpc4j.s2pc.pso.cpsi.AbstractCpsiClient;
-import edu.alibaba.mpc4j.s2pc.pso.cpsi.psty19.Psty19CpsiPtoDesc.PtoStep;
+import edu.alibaba.mpc4j.s2pc.pso.cpsi.scpsi.AbstractScpsiClient;
+import edu.alibaba.mpc4j.s2pc.pso.cpsi.scpsi.psty19.Psty19ScpsiPtoDesc.PtoStep;
 
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
@@ -26,12 +26,12 @@ import java.util.concurrent.TimeUnit;
 import java.util.stream.IntStream;
 
 /**
- * PSTY19 circuit PSI client.
+ * PSTY19 server-payload circuit PSI client.
  *
  * @author Weiran Liu
  * @date 2023/4/19
  */
-public class Psty19CpsiClient extends AbstractCpsiClient {
+public class Psty19ScpsiClient extends AbstractScpsiClient {
     /**
      * batched OPPRF sender
      */
@@ -69,8 +69,8 @@ public class Psty19CpsiClient extends AbstractCpsiClient {
      */
     private byte[][][] targetArrays;
 
-    public Psty19CpsiClient(Rpc clientRpc, Party senderParty, Psty19CpsiConfig config) {
-        super(Psty19CpsiPtoDesc.getInstance(), clientRpc, senderParty, config);
+    public Psty19ScpsiClient(Rpc clientRpc, Party senderParty, Psty19ScpsiConfig config) {
+        super(Psty19ScpsiPtoDesc.getInstance(), clientRpc, senderParty, config);
         bopprfSender = BopprfFactory.createSender(clientRpc, senderParty, config.getBopprfConfig());
         addSubPtos(bopprfSender);
         peqtReceiver = PeqtFactory.createReceiver(clientRpc, senderParty, config.getPeqtConfig());

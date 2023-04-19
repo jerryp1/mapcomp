@@ -1,4 +1,4 @@
-package edu.alibaba.mpc4j.s2pc.pso.cpsi;
+package edu.alibaba.mpc4j.s2pc.pso.cpsi.scpsi;
 
 import edu.alibaba.mpc4j.common.rpc.MpcAbortException;
 import edu.alibaba.mpc4j.common.rpc.pto.TwoPartyPto;
@@ -8,12 +8,12 @@ import java.nio.ByteBuffer;
 import java.util.Set;
 
 /**
- * Circuit PSI client.
+ * server-payload circuit PSI client.
  *
  * @author Weiran Liu
  * @date 2023/3/29
  */
-public interface CpsiClient extends TwoPartyPto {
+public interface ScpsiClient extends TwoPartyPto {
     /**
      * Inits the protocol.
      *

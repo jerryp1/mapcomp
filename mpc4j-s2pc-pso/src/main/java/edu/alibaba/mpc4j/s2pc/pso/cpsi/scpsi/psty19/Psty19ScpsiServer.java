@@ -1,4 +1,4 @@
-package edu.alibaba.mpc4j.s2pc.pso.cpsi.psty19;
+package edu.alibaba.mpc4j.s2pc.pso.cpsi.scpsi.psty19;
 
 import edu.alibaba.mpc4j.common.rpc.MpcAbortException;
 import edu.alibaba.mpc4j.common.rpc.Party;
@@ -19,9 +19,9 @@ import edu.alibaba.mpc4j.s2pc.aby.circuit.peqt.PeqtFactory;
 import edu.alibaba.mpc4j.s2pc.aby.circuit.peqt.PeqtParty;
 import edu.alibaba.mpc4j.s2pc.opf.opprf.batch.BopprfFactory;
 import edu.alibaba.mpc4j.s2pc.opf.opprf.batch.BopprfReceiver;
-import edu.alibaba.mpc4j.s2pc.pso.cpsi.AbstractCpsiServer;
-import edu.alibaba.mpc4j.s2pc.pso.cpsi.CpsiServerOutput;
-import edu.alibaba.mpc4j.s2pc.pso.cpsi.psty19.Psty19CpsiPtoDesc.PtoStep;
+import edu.alibaba.mpc4j.s2pc.pso.cpsi.scpsi.AbstractScpsiServer;
+import edu.alibaba.mpc4j.s2pc.pso.cpsi.scpsi.ScpsiServerOutput;
+import edu.alibaba.mpc4j.s2pc.pso.cpsi.scpsi.psty19.Psty19ScpsiPtoDesc.PtoStep;
 
 import java.nio.ByteBuffer;
 import java.util.Arrays;
@@ -32,12 +32,12 @@ import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
 /**
- * PSTY19 circuit PSI server.
+ * PSTY19 server-payload circuit PSI server.
  *
  * @author Weiran Liu
  * @date 2023/3/29
  */
-public class Psty19CpsiServer extends AbstractCpsiServer {
+public class Psty19ScpsiServer extends AbstractScpsiServer {
     /**
      * batched OPPRF receiver
      */
@@ -59,8 +59,8 @@ public class Psty19CpsiServer extends AbstractCpsiServer {
      */
     private CuckooHashBin<ByteBuffer> cuckooHashBin;
 
-    public Psty19CpsiServer(Rpc serverRpc, Party clientParty, Psty19CpsiConfig config) {
-        super(Psty19CpsiPtoDesc.getInstance(), serverRpc, clientParty, config);
+    public Psty19ScpsiServer(Rpc serverRpc, Party clientParty, Psty19ScpsiConfig config) {
+        super(Psty19ScpsiPtoDesc.getInstance(), serverRpc, clientParty, config);
         bopprfReceiver = BopprfFactory.createReceiver(serverRpc, clientParty, config.getBopprfConfig());
         addSubPtos(bopprfReceiver);
         peqtSender = PeqtFactory.createSender(serverRpc, clientParty, config.getPeqtConfig());
@@ -91,7 +91,7 @@ public class Psty19CpsiServer extends AbstractCpsiServer {
     }
 
     @Override
-    public CpsiServerOutput psi(Set<ByteBuffer> serverElementSet, int clientElementSize) throws MpcAbortException {
+    public ScpsiServerOutput psi(Set<ByteBuffer> serverElementSet, int clientElementSize) throws MpcAbortException {
         setPtoInput(serverElementSet, clientElementSize);
         logPhaseInfo(PtoState.PTO_BEGIN);
 
@@ -159,7 +159,7 @@ public class Psty19CpsiServer extends AbstractCpsiServer {
                 }
             })
             .toArray(ByteBuffer[]::new);
-        CpsiServerOutput serverOutput = new CpsiServerOutput(table, z0);
+        ScpsiServerOutput serverOutput = new ScpsiServerOutput(table, z0);
         cuckooHashBin = null;
         stopWatch.stop();
         long peqtTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
