@@ -1,22 +1,21 @@
-package edu.alibaba.mpc4j.s2pc.pso.cpsi.scpsi;
+package edu.alibaba.mpc4j.s2pc.pso.cpsi.ccpsi;
 
 import edu.alibaba.mpc4j.common.rpc.MpcAbortException;
-import edu.alibaba.mpc4j.s2pc.aby.basics.bc.SquareShareZ2Vector;
 
 import java.nio.ByteBuffer;
 import java.util.Set;
 
 /**
- * server-payload circuit PSI client thread.
+ * client-payload circuit PSI client thread.
  *
  * @author Liqiang Peng
  * @date 2023/2/1
  */
-class ScpsiClientThread extends Thread {
+class CcpsiClientThread extends Thread {
     /**
      * client
      */
-    private final ScpsiClient client;
+    private final CcpsiClient client;
     /**
      * client element set
      */
@@ -28,15 +27,15 @@ class ScpsiClientThread extends Thread {
     /**
      * client output
      */
-    private SquareShareZ2Vector clientOutput;
+    private CcpsiClientOutput clientOutput;
 
-    ScpsiClientThread(ScpsiClient client, Set<ByteBuffer> clientElementSet, int serverElementSize) {
+    CcpsiClientThread(CcpsiClient client, Set<ByteBuffer> clientElementSet, int serverElementSize) {
         this.client = client;
         this.clientElementSet = clientElementSet;
         this.serverElementSize = serverElementSize;
     }
 
-    SquareShareZ2Vector getClientOutput() {
+    CcpsiClientOutput getClientOutput() {
         return clientOutput;
     }
 
