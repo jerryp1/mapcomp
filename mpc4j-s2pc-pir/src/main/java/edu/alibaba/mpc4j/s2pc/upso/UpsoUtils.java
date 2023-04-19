@@ -1,4 +1,4 @@
-package edu.alibaba.mpc4j.s2pc.pso;
+package edu.alibaba.mpc4j.s2pc.upso;
 
 import com.google.common.base.Preconditions;
 import edu.alibaba.mpc4j.common.tool.CommonConstants;
@@ -19,30 +19,13 @@ import java.util.Set;
 import java.util.stream.IntStream;
 
 /**
- * PSO协议工具类。
- *
- * 半诚实模型下相等性验证所需字节长度来自于下述论文第4.4节：
- * Pinkas, Benny, Thomas Schneider, and Michael Zohner. Scalable private set intersection based on OT extension. ACM
- * Transactions on Privacy and Security (TOPS) 21.2 (2018): 1-35.
- *
- * P1 can perform a plaintext AES evaluation on his elements and only needs to send n1 collision-resistant strings
- * length of l = λ + log(n1) + log(n2) bit.
- *
- * 恶意安全模型下相等性验证所需字节长度来自于下述论文第3.3节：
- * Chase, Melissa, and Peihan Miao. Private set intersection in the internet setting from lightweight oblivious PRF.
- * CRYPTO 2020, Springer, Cham, 2020.
- *
- * Choice of l_2. The parameter l_2 is the output length of the hash function H_2, which controls the collision
- * probability of the PSI protocol. For security against malicious P_2, it can be computed similarly as
- * l_2 = σ + log_2(Q_2·n_2) where Q_2 is the maximum number of queries the adversary can make to H_2.
- *
- * 本实现令Q_2 = 2^128，上述公式变为：l_2 = σ + 128 + log_2(n_2)。
+ * UPSO协议工具类。
  *
  * @author Weiran Liu
  * @date 2022/01/21
  */
-public class PsoUtils {
-    private static final Logger LOGGER = LoggerFactory.getLogger(PsoUtils.class);
+public class UpsoUtils {
+    private static final Logger LOGGER = LoggerFactory.getLogger(UpsoUtils.class);
     /**
      * 将总集合大小切分成4份
      */
@@ -58,23 +41,8 @@ public class PsoUtils {
     /**
      * 私有构造函数
      */
-    private PsoUtils() {
+    private UpsoUtils() {
         // empty
-    }
-
-    /**
-     * 生成参与方的测试集合，各个集合的大小相等。
-     *
-     * @param prefix    前缀。
-     * @param partyNum  参与方数量。
-     * @param partySize 参与方集合大小。
-     * @return 各个参与方的集合。
-     */
-    public static ArrayList<Set<String>> generateEqualStringSets(String prefix, int partyNum, int partySize) {
-        int[] partySizes = new int[partyNum];
-        Arrays.fill(partySizes, partySize);
-
-        return generateStringSets(prefix, partySizes);
     }
 
     /**
@@ -118,17 +86,6 @@ public class PsoUtils {
             }
         });
         return stringSetArrayList;
-    }
-
-    /**
-     * 生成参与方的测试集合，各个集合的大小相等。
-     *
-     * @param setSize 参与方集合大小。
-     * @param elementByteLength 元素字节长度。
-     * @return 各个参与方的集合
-     */
-    public static ArrayList<Set<ByteBuffer>> generateBytesSets(int setSize, int elementByteLength) {
-        return generateBytesSets(setSize, setSize, elementByteLength);
     }
 
     /**

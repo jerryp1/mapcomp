@@ -1,44 +1,47 @@
 package edu.alibaba.mpc4j.s2pc.upso.ucpsi;
 
 import edu.alibaba.mpc4j.common.rpc.MpcAbortException;
-import edu.alibaba.mpc4j.s2pc.aby.basics.bc.SquareShareZ2Vector;
 
+import java.nio.ByteBuffer;
 import java.util.Set;
 
 /**
  * @author Liqiang Peng
  * @date 2023/4/18
  */
-public class UcpsiClientThread<T> extends Thread {
+public class UcpsiClientThread extends Thread {
     /**
      * the receiver
      */
-    private final UnbalancedCpsiClient<T> receiver;
+    private final UcpsiClient receiver;
     /**
      * the receiver set
      */
-    private final Set<T> clientElementSet;
+    private final Set<ByteBuffer> clientElementSet;
     /**
-     * the PRF outputs
+     * the receiver outputs
      */
-    private SquareShareZ2Vector targetArray;
-    private int serverElementSize;
+    private UcpsiClientOutput outputs;
+    /**
+     * server element size
+     */
+    private final int serverElementSize;
 
-    UcpsiClientThread(UnbalancedCpsiClient<T> receiver, Set<T> clientElementSet, int serverElementSize) {
+    UcpsiClientThread(UcpsiClient receiver, Set<ByteBuffer> clientElementSet, int serverElementSize) {
         this.receiver = receiver;
         this.clientElementSet = clientElementSet;
         this.serverElementSize = serverElementSize;
     }
 
-    SquareShareZ2Vector getTargetArray() {
-        return targetArray;
+    UcpsiClientOutput getOutputs() {
+        return outputs;
     }
 
     @Override
     public void run() {
         try {
             receiver.init(clientElementSet.size(), serverElementSize);
-            targetArray = receiver.psi(clientElementSet, serverElementSize);
+            outputs = receiver.psi(clientElementSet, serverElementSize);
         } catch (MpcAbortException e) {
             e.printStackTrace();
         }
