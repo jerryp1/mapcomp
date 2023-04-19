@@ -8,7 +8,7 @@ import edu.alibaba.mpc4j.common.tool.CommonConstants;
 import edu.alibaba.mpc4j.common.tool.bitvector.BitVector;
 import edu.alibaba.mpc4j.common.tool.utils.CommonUtils;
 import edu.alibaba.mpc4j.s2pc.aby.basics.bc.SquareShareZ2Vector;
-import edu.alibaba.mpc4j.s2pc.pso.PsoUtils;
+import edu.alibaba.mpc4j.s2pc.upso.UpsoUtils;
 import edu.alibaba.mpc4j.s2pc.upso.ucpsi.psty19.Psty19UcpsiConfig;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.time.StopWatch;
@@ -135,7 +135,7 @@ public class UcpsiTest {
     }
 
     public void testPto(int serverSize, int clientSize, boolean parallel) {
-        List<Set<ByteBuffer>> sets = PsoUtils.generateBytesSets(serverSize, clientSize, ELEMENT_BYTE_LENGTH);
+        List<Set<ByteBuffer>> sets = UpsoUtils.generateBytesSets(serverSize, clientSize, ELEMENT_BYTE_LENGTH);
         Set<ByteBuffer> serverElementSet = sets.get(0);
         Set<ByteBuffer> clientElementSet = sets.get(1);
         // create instance

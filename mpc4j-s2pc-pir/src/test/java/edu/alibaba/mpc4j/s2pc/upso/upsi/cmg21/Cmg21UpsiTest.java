@@ -4,7 +4,7 @@ import com.google.common.base.Preconditions;
 import edu.alibaba.mpc4j.common.rpc.Rpc;
 import edu.alibaba.mpc4j.common.rpc.RpcManager;
 import edu.alibaba.mpc4j.common.rpc.impl.memory.MemoryRpcManager;
-import edu.alibaba.mpc4j.s2pc.pso.PsoUtils;
+import edu.alibaba.mpc4j.s2pc.upso.UpsoUtils;
 import edu.alibaba.mpc4j.s2pc.upso.upsi.*;
 import org.apache.commons.lang3.StringUtils;
 import org.junit.After;
@@ -156,7 +156,7 @@ public class Cmg21UpsiTest {
     public void testUpsi(UpsiParams upsiParams, boolean parallel) {
         int serverSize = upsiParams.expectServerSize();
         int clientSize = upsiParams.maxClientElementSize();
-        List<Set<String>> sets = PsoUtils.generateStringSets("ID", serverSize, clientSize);
+        List<Set<String>> sets = UpsoUtils.generateStringSets("ID", serverSize, clientSize);
         Set<String> serverElementSet = sets.get(0);
         Set<String> clientElementSet = sets.get(1);
         // 创建参与方实例
