@@ -1,4 +1,4 @@
-package edu.alibaba.mpc4j.s2pc.pso.cpsi.scpsi.psty19;
+package edu.alibaba.mpc4j.s2pc.pso.cpsi.scpsi.cgs22;
 
 import edu.alibaba.mpc4j.common.rpc.MpcAbortException;
 import edu.alibaba.mpc4j.common.rpc.Party;
@@ -13,13 +13,14 @@ import edu.alibaba.mpc4j.common.tool.hashbin.object.cuckoo.CuckooHashBinFactory;
 import edu.alibaba.mpc4j.common.tool.hashbin.object.cuckoo.CuckooHashBinFactory.CuckooHashBinType;
 import edu.alibaba.mpc4j.common.tool.utils.LongUtils;
 import edu.alibaba.mpc4j.s2pc.aby.basics.bc.SquareShareZ2Vector;
-import edu.alibaba.mpc4j.s2pc.aby.circuit.peqt.PeqtFactory;
-import edu.alibaba.mpc4j.s2pc.aby.circuit.peqt.PeqtParty;
-import edu.alibaba.mpc4j.s2pc.opf.opprf.batch.BopprfFactory;
-import edu.alibaba.mpc4j.s2pc.opf.opprf.batch.BopprfReceiver;
+import edu.alibaba.mpc4j.s2pc.opf.opprf.rb.RbopprfConfig;
+import edu.alibaba.mpc4j.s2pc.opf.opprf.rb.RbopprfFactory;
+import edu.alibaba.mpc4j.s2pc.opf.opprf.rb.RbopprfReceiver;
+import edu.alibaba.mpc4j.s2pc.opf.psm.PsmFactory;
+import edu.alibaba.mpc4j.s2pc.opf.psm.PsmSender;
 import edu.alibaba.mpc4j.s2pc.pso.cpsi.scpsi.AbstractScpsiServer;
 import edu.alibaba.mpc4j.s2pc.pso.cpsi.scpsi.ScpsiServerOutput;
-import edu.alibaba.mpc4j.s2pc.pso.cpsi.scpsi.psty19.Psty19ScpsiPtoDesc.PtoStep;
+import edu.alibaba.mpc4j.s2pc.pso.cpsi.scpsi.cgs22.Cgs22ScpsiPtoDesc.PtoStep;
 
 import java.nio.ByteBuffer;
 import java.util.Arrays;
@@ -30,20 +31,24 @@ import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
 /**
- * PSTY19 server-payload circuit PSI server.
+ * CGS22 server-payload circuit PSI server.
  *
  * @author Weiran Liu
- * @date 2023/3/29
+ * @date 2023/4/19
  */
-public class Psty19ScpsiServer extends AbstractScpsiServer {
+public class Cgs22ScpsiServer extends AbstractScpsiServer {
     /**
-     * batched OPPRF receiver
+     * related batched OPPRF receiver
      */
-    private final BopprfReceiver bopprfReceiver;
+    private final RbopprfReceiver rbopprfReceiver;
     /**
-     * private equality test sender
+     * private set membership sender
      */
-    private final PeqtParty peqtSender;
+    private final PsmSender psmSender;
+    /**
+     * d
+     */
+    private final int d;
     /**
      * cuckoo hash bin type
      */
@@ -57,12 +62,14 @@ public class Psty19ScpsiServer extends AbstractScpsiServer {
      */
     private CuckooHashBin<ByteBuffer> cuckooHashBin;
 
-    public Psty19ScpsiServer(Rpc serverRpc, Party clientParty, Psty19ScpsiConfig config) {
-        super(Psty19ScpsiPtoDesc.getInstance(), serverRpc, clientParty, config);
-        bopprfReceiver = BopprfFactory.createReceiver(serverRpc, clientParty, config.getBopprfConfig());
-        addSubPtos(bopprfReceiver);
-        peqtSender = PeqtFactory.createSender(serverRpc, clientParty, config.getPeqtConfig());
-        addSubPtos(peqtSender);
+    public Cgs22ScpsiServer(Rpc serverRpc, Party clientParty, Cgs22ScpsiConfig config) {
+        super(Cgs22ScpsiPtoDesc.getInstance(), serverRpc, clientParty, config);
+        RbopprfConfig rbopprfConfig = config.getRbopprfConfig();
+        rbopprfReceiver = RbopprfFactory.createReceiver(serverRpc, clientParty, rbopprfConfig);
+        addSubPtos(rbopprfReceiver);
+        d = rbopprfConfig.getD();
+        psmSender = PsmFactory.createSender(serverRpc, clientParty, config.getPsmConfig());
+        addSubPtos(psmSender);
         cuckooHashBinType = config.getCuckooHashBinType();
         cuckooHashNum = CuckooHashBinFactory.getHashNum(cuckooHashBinType);
     }
@@ -73,13 +80,13 @@ public class Psty19ScpsiServer extends AbstractScpsiServer {
         logPhaseInfo(PtoState.INIT_BEGIN);
 
         stopWatch.start();
-        // init batched OPPRF, where β_max = (1 + ε) * n_s, max_point_num = hash_num * n_c
+        // init related batched OPPRF, where β_max = (1 + ε) * n_s, max_point_num = hash_num * n_c
         int maxBeta = CuckooHashBinFactory.getBinNum(cuckooHashBinType, maxServerElementSize);
         int maxPointNum = cuckooHashNum * maxClientElementSize;
-        bopprfReceiver.init(maxBeta, maxPointNum);
-        // init private equality test, where maxL = σ + log_2(β_max) + log_2(max_point_num)
-        int maxL = CommonConstants.STATS_BIT_LENGTH + LongUtils.ceilLog2(maxBeta) + LongUtils.ceilLog2(maxPointNum);
-        peqtSender.init(maxL, maxBeta);
+        rbopprfReceiver.init(maxBeta, maxPointNum);
+        // init private set membership, where maxL = σ + log_2(d * β_max) + log_2(max_point_num)
+        int maxL = CommonConstants.STATS_BIT_LENGTH + LongUtils.ceilLog2((long) d * maxBeta) + LongUtils.ceilLog2(maxPointNum);
+        psmSender.init(maxL, d, maxBeta);
         stopWatch.stop();
         long initTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
         stopWatch.reset();
@@ -98,8 +105,8 @@ public class Psty19ScpsiServer extends AbstractScpsiServer {
         int beta = CuckooHashBinFactory.getBinNum(cuckooHashBinType, serverElementSize);
         // point_num = hash_num * n_c
         int pointNum = cuckooHashNum * clientElementSize;
-        // l = σ + log_2(β) + log_2(point_num)
-        int l = CommonConstants.STATS_BIT_LENGTH + LongUtils.ceilLog2(beta) + LongUtils.ceilLog2(pointNum);
+        // l = σ + log_2(d * β) + log_2(point_num)
+        int l = CommonConstants.STATS_BIT_LENGTH + LongUtils.ceilLog2((long) d * beta) + LongUtils.ceilLog2(pointNum);
         // P1 inserts items into cuckoo hash bin Table_1 with β bins and 0 stash size.
         List<byte[]> cuckooHashKeyPayload = generateCuckooHashKeyPayload();
         // P1 sends the cuckoo hash bin keys
@@ -114,7 +121,7 @@ public class Psty19ScpsiServer extends AbstractScpsiServer {
         logStepInfo(PtoState.PTO_STEP, 1, 3, binTime, "Server inserts cuckoo hash");
 
         stopWatch.start();
-        // The parties invoke a batched OPPRF.
+        // The parties invoke a related batched OPPRF.
         // P1 inputs Table_1[1], . . . , Table_1[β] and receives y_1^*, ..., y_β^*
         byte[][] inputArray = IntStream.range(0, beta)
             .mapToObj(batchIndex -> {
@@ -126,16 +133,16 @@ public class Psty19ScpsiServer extends AbstractScpsiServer {
                     .array();
             })
             .toArray(byte[][]::new);
-        byte[][] targetArray = bopprfReceiver.opprf(l, inputArray, pointNum);
+        byte[][][] targetArrays = rbopprfReceiver.opprf(l, inputArray, pointNum);
         stopWatch.stop();
         long opprfTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
         stopWatch.reset();
         logStepInfo(PtoState.PTO_STEP, 2, 3, opprfTime);
 
         stopWatch.start();
-        // The parties invoke a private equality test with l = σ + log_2(point_num).
+        // The parties invoke a private set membership with l = σ + log_2(d * β).
         // P1 inputs y_1^*, ..., y_β^* and outputs z0.
-        SquareShareZ2Vector z0 = peqtSender.peqt(l, targetArray);
+        SquareShareZ2Vector z0 = psmSender.psm(l, targetArrays);
         // create the table
         ByteBuffer[] table = IntStream.range(0, beta)
             .mapToObj(batchIndex -> {
@@ -150,9 +157,9 @@ public class Psty19ScpsiServer extends AbstractScpsiServer {
         ScpsiServerOutput serverOutput = new ScpsiServerOutput(table, z0);
         cuckooHashBin = null;
         stopWatch.stop();
-        long peqtTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
+        long psmTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
         stopWatch.reset();
-        logStepInfo(PtoState.PTO_STEP, 3, 3, peqtTime);
+        logStepInfo(PtoState.PTO_STEP, 3, 3, psmTime);
 
         logPhaseInfo(PtoState.PTO_END);
         return serverOutput;

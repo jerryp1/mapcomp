@@ -10,6 +10,7 @@ import edu.alibaba.mpc4j.common.tool.hashbin.object.cuckoo.CuckooHashBinFactory;
 import edu.alibaba.mpc4j.common.tool.utils.CommonUtils;
 import edu.alibaba.mpc4j.s2pc.aby.basics.bc.SquareShareZ2Vector;
 import edu.alibaba.mpc4j.s2pc.pso.PsoUtils;
+import edu.alibaba.mpc4j.s2pc.pso.cpsi.scpsi.cgs22.Cgs22ScpsiConfig;
 import edu.alibaba.mpc4j.s2pc.pso.cpsi.scpsi.psty19.Psty19ScpsiConfig;
 import edu.alibaba.mpc4j.s2pc.pso.cpsi.scpsi.ScpsiFactory.ScpsiType;
 import org.apache.commons.lang3.StringUtils;
@@ -64,6 +65,22 @@ public class ScpsiTest {
     @Parameterized.Parameters(name = "{0}")
     public static Collection<Object[]> configurations() {
         Collection<Object[]> configurations = new ArrayList<>();
+
+        // CGS22 (default)
+        configurations.add(new Object[]{
+            ScpsiType.CGS22.name() + " (default)",
+            new Cgs22ScpsiConfig.Builder().build(),
+        });
+        // PSTY19 (2 hash)
+        configurations.add(new Object[]{
+            ScpsiType.CGS22.name() + " (2 hash)",
+            new Cgs22ScpsiConfig.Builder().setCuckooHashBinType(CuckooHashBinFactory.CuckooHashBinType.NAIVE_2_HASH).build(),
+        });
+        // PSTY19 (4 hash)
+        configurations.add(new Object[]{
+            ScpsiType.CGS22.name() + " (4 hash)",
+            new Cgs22ScpsiConfig.Builder().setCuckooHashBinType(CuckooHashBinFactory.CuckooHashBinType.NAIVE_4_HASH).build(),
+        });
 
         // PSTY19 (default)
         configurations.add(new Object[]{

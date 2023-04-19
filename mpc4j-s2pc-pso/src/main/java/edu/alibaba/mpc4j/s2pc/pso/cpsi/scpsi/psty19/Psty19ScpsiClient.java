@@ -89,8 +89,8 @@ public class Psty19ScpsiClient extends AbstractScpsiClient {
         int maxBeta = CuckooHashBinFactory.getBinNum(cuckooHashBinType, maxServerElementSize);
         int maxPointNum = cuckooHashNum * maxClientElementSize;
         bopprfSender.init(maxBeta, maxPointNum);
-        // init private equality test, where maxL = σ + log_2(max_point_num)
-        int maxL = CommonConstants.STATS_BIT_LENGTH + LongUtils.ceilLog2(maxPointNum);
+        // init private equality test, where maxL = σ + log_2(β_max) + log_2(max_point_num)
+        int maxL = CommonConstants.STATS_BIT_LENGTH + LongUtils.ceilLog2(maxBeta) + LongUtils.ceilLog2(maxPointNum);
         peqtReceiver.init(maxL, maxBeta);
         stopWatch.stop();
         long initTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
@@ -117,9 +117,8 @@ public class Psty19ScpsiClient extends AbstractScpsiClient {
         beta = CuckooHashBinFactory.getBinNum(cuckooHashBinType, serverElementSize);
         // point_num = hash_num * n_c
         int pointNum = cuckooHashNum * clientElementSize;
-        // l = σ + log_2(max_point_num)
-        int l = CommonConstants.STATS_BIT_LENGTH + LongUtils.ceilLog2(pointNum);
-        int byteL = CommonUtils.getByteLength(l);
+        // l = σ + log_2(β) + log_2(point_num)
+        int l = CommonConstants.STATS_BIT_LENGTH + LongUtils.ceilLog2(beta) + LongUtils.ceilLog2(pointNum);
         // P2 inserts items into simple hash bin Table_2 with β bins
         handleCuckooHashKeyPayload(cuckooHashKeyPayload);
         stopWatch.stop();
@@ -130,8 +129,8 @@ public class Psty19ScpsiClient extends AbstractScpsiClient {
         stopWatch.start();
         // The parties invoke a batched OPPRF.
         // P2 inputs Table_2[1], . . . , Table_2[β] and receives T[1], ..., T[β]
-        generateBopprfInputs();
-        bopprfSender.opprf(CommonConstants.BLOCK_BIT_LENGTH, inputArrays, targetArrays);
+        generateBopprfInputs(l);
+        bopprfSender.opprf(l, inputArrays, targetArrays);
         inputArrays = null;
         targetArrays = null;
         stopWatch.stop();
@@ -142,17 +141,8 @@ public class Psty19ScpsiClient extends AbstractScpsiClient {
         stopWatch.start();
         // The parties invoke a private equality test with l = σ + log_2(point_num).
         // P1 inputs y_1^*, ..., y_β^* and outputs z0.
-        byte[][] peqtInputArray = IntStream.range(0, beta)
-            .mapToObj(batchIndex -> {
-                byte[] target = targetArray[batchIndex];
-                byte[] truncateTarget = new byte[byteL];
-                System.arraycopy(target, CommonConstants.BLOCK_BYTE_LENGTH - byteL, truncateTarget, 0, byteL);
-                BytesUtils.reduceByteArray(truncateTarget, l);
-                return truncateTarget;
-            })
-            .toArray(byte[][]::new);
+        SquareShareZ2Vector z1 = peqtReceiver.peqt(l, targetArray);
         targetArray = null;
-        SquareShareZ2Vector z1 = peqtReceiver.peqt(l, peqtInputArray);
         stopWatch.stop();
         long peqtTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
         stopWatch.reset();
@@ -169,7 +159,8 @@ public class Psty19ScpsiClient extends AbstractScpsiClient {
         simpleHashBin.insertItems(clientElementArrayList);
     }
 
-    private void generateBopprfInputs() {
+    private void generateBopprfInputs(int l) {
+        int byteL = CommonUtils.getByteLength(l);
         // P2 generates the input arrays
         inputArrays = IntStream.range(0, beta)
             .mapToObj(batchIndex -> {
@@ -188,15 +179,11 @@ public class Psty19ScpsiClient extends AbstractScpsiClient {
         simpleHashBin = null;
         // P2 samples uniformly random and independent target values t_1, ..., t_β ∈ {0,1}^κ
         targetArray = IntStream.range(0, beta)
-            .mapToObj(batchIndex -> {
-                byte[] target = new byte[CommonConstants.BLOCK_BYTE_LENGTH];
-                secureRandom.nextBytes(target);
-                return target;
-            }).toArray(byte[][]::new);
+            .mapToObj(batchIndex -> BytesUtils.randomByteArray(byteL, l, secureRandom)).toArray(byte[][]::new);
         targetArrays = IntStream.range(0, beta)
             .mapToObj(batchIndex -> {
                 int batchPointNum = inputArrays[batchIndex].length;
-                byte[][] copyTargetArray = new byte[batchPointNum][CommonConstants.BLOCK_BYTE_LENGTH];
+                byte[][] copyTargetArray = new byte[batchPointNum][byteL];
                 for (int i = 0; i < batchPointNum; i++) {
                     copyTargetArray[i] = BytesUtils.clone(targetArray[batchIndex]);
                 }
