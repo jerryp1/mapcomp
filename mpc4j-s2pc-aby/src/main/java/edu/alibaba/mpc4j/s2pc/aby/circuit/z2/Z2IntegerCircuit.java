@@ -8,8 +8,6 @@ import edu.alibaba.mpc4j.s2pc.aby.basics.bc.BcParty;
 import edu.alibaba.mpc4j.s2pc.aby.basics.bc.SquareShareZ2Vector;
 
 import java.util.Arrays;
-import java.util.Collections;
-import java.util.stream.IntStream;
 
 /**
  * Z2 Integer Circuit.
@@ -105,7 +103,6 @@ public class Z2IntegerCircuit extends AbstractZ2ArithmeticCircuit implements Z2A
         return add(x, not(y), true);
     }
 
-    // 以下的所有逻辑能否写到接口的默认实现方法中
     @Override
     public SquareShareZ2Vector leq(SquareShareZ2Vector[] x, SquareShareZ2Vector[] y) throws MpcAbortException {
         checkInputs(x, y);

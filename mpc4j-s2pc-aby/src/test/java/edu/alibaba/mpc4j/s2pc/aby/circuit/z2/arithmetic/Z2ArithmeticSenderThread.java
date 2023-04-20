@@ -1,6 +1,8 @@
 package edu.alibaba.mpc4j.s2pc.aby.circuit.z2.arithmetic;
 
 /**
+ * Z2 Arithmetic Sender Thread.
+ *
  * @author Li Peng (jerry.pl@alibaba-inc.com)
  * @date 2023/4/13
  */
