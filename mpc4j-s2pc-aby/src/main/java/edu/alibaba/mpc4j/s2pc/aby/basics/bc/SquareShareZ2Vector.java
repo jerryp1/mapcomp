@@ -2,6 +2,8 @@ package edu.alibaba.mpc4j.s2pc.aby.basics.bc;
 
 import edu.alibaba.mpc4j.common.tool.bitvector.BitVector;
 import edu.alibaba.mpc4j.common.tool.bitvector.BitVectorFactory;
+import edu.alibaba.mpc4j.common.tool.utils.BytesUtils;
+import edu.alibaba.mpc4j.common.tool.utils.CommonUtils;
 import edu.alibaba.mpc4j.s2pc.aby.basics.ShareVector;
 import org.apache.commons.lang3.builder.EqualsBuilder;
 import org.apache.commons.lang3.builder.HashCodeBuilder;
@@ -53,6 +55,21 @@ public class SquareShareZ2Vector implements ShareZ2Vector {
         shareBitVector.plain = plain;
 
         return shareBitVector;
+    }
+
+
+    /**
+     * Create a (plain) share bit vector with all bits equal assigned boolean.
+     *
+     * @param bitNum the bit num.
+     * @param value assigned value.
+     * @return a share bit vector.
+     */
+    public static SquareShareZ2Vector create(int bitNum, boolean value) {
+        int byteLen = CommonUtils.getByteLength(bitNum);
+
+        return SquareShareZ2Vector.create(BitVectorFactory.create(bitNum, value ?
+                BytesUtils.not(new byte[byteLen], bitNum) : new byte[byteLen]), true);
     }
 
     /**
