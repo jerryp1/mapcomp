@@ -47,7 +47,7 @@ public class Psty19CcpsiServer extends AbstractCcpsiServer {
     /**
      * cuckoo hash num
      */
-    private final int cuckooHashNum;
+    private final int hashNum;
     /**
      * β
      */
@@ -76,7 +76,7 @@ public class Psty19CcpsiServer extends AbstractCcpsiServer {
         peqtSender = PeqtFactory.createReceiver(clientRpc, senderParty, config.getPeqtConfig());
         addSubPtos(peqtSender);
         cuckooHashBinType = config.getCuckooHashBinType();
-        cuckooHashNum = CuckooHashBinFactory.getHashNum(cuckooHashBinType);
+        hashNum = CuckooHashBinFactory.getHashNum(cuckooHashBinType);
     }
 
     @Override
@@ -87,7 +87,7 @@ public class Psty19CcpsiServer extends AbstractCcpsiServer {
         stopWatch.start();
         // init batched OPPRF, where β_max = (1 + ε) * n_c, max_point_num = hash_num * n_s
         int maxBeta = CuckooHashBinFactory.getBinNum(cuckooHashBinType, maxClientElementSize);
-        int maxPointNum = cuckooHashNum * maxServerElementSize;
+        int maxPointNum = hashNum * maxServerElementSize;
         bopprfSender.init(maxBeta, maxPointNum);
         // init private equality test sender, where maxL = σ + log_2(β_max) + log_2(max_point_num)
         int maxL = CommonConstants.STATS_BIT_LENGTH + LongUtils.ceilLog2(maxBeta) + LongUtils.ceilLog2(maxPointNum);
@@ -116,7 +116,7 @@ public class Psty19CcpsiServer extends AbstractCcpsiServer {
         // β = (1 + ε) * n_s
         beta = CuckooHashBinFactory.getBinNum(cuckooHashBinType, clientElementSize);
         // point_num = hash_num * n_s
-        int pointNum = cuckooHashNum * serverElementSize;
+        int pointNum = hashNum * serverElementSize;
         // l = σ + log_2(β) + log_2(point_num)
         int l = CommonConstants.STATS_BIT_LENGTH + LongUtils.ceilLog2(beta) + LongUtils.ceilLog2(pointNum);
         // P1 inserts items into simple hash bin Table_2 with β bins
@@ -153,7 +153,7 @@ public class Psty19CcpsiServer extends AbstractCcpsiServer {
     }
 
     private void handleCuckooHashKeyPayload(List<byte[]> cuckooHashKeyPayload) throws MpcAbortException {
-        MpcAbortPreconditions.checkArgument(cuckooHashKeyPayload.size() == cuckooHashNum);
+        MpcAbortPreconditions.checkArgument(cuckooHashKeyPayload.size() == hashNum);
         byte[][] cuckooHashKeys = cuckooHashKeyPayload.toArray(new byte[0][]);
         simpleHashBin = new RandomPadHashBin<>(envType, beta, serverElementSize, cuckooHashKeys);
         simpleHashBin.insertItems(serverElementArrayList);

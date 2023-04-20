@@ -9,6 +9,7 @@ import edu.alibaba.mpc4j.common.tool.bitvector.BitVector;
 import edu.alibaba.mpc4j.common.tool.utils.CommonUtils;
 import edu.alibaba.mpc4j.s2pc.aby.basics.bc.SquareShareZ2Vector;
 import edu.alibaba.mpc4j.s2pc.pso.PsoUtils;
+import edu.alibaba.mpc4j.s2pc.upso.ucpsi.cgs22.Cgs22UcpsiConfig;
 import edu.alibaba.mpc4j.s2pc.upso.ucpsi.psty19.Psty19UcpsiConfig;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.time.StopWatch;
@@ -64,6 +65,10 @@ public class UcpsiTest {
     public static Collection<Object[]> configurations() {
         Collection<Object[]> configurations = new ArrayList<>();
 
+        // Cgs22
+        configurations.add(new Object[]{
+            UcpsiFactory.UcpsiType.CGS22.name(), new Cgs22UcpsiConfig.Builder().build()
+        });
         // PSTY19
         configurations.add(new Object[]{
             UcpsiFactory.UcpsiType.PSTY19.name(), new Psty19UcpsiConfig.Builder().build()
@@ -71,6 +76,7 @@ public class UcpsiTest {
 
         return configurations;
     }
+
     /**
      * server rpc
      */

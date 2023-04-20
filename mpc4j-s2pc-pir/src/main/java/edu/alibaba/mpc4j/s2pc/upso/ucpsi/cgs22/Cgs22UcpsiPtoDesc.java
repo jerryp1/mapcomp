@@ -1,10 +1,10 @@
-package edu.alibaba.mpc4j.s2pc.upso.ucpsi.psty19;
+package edu.alibaba.mpc4j.s2pc.upso.ucpsi.cgs22;
 
 import edu.alibaba.mpc4j.common.rpc.desc.PtoDesc;
 import edu.alibaba.mpc4j.common.rpc.desc.PtoDescManager;
 
 /**
- * PSTY19 unbalanced circuit PSI protocol description. The protocol comes from the following paper:
+ * CGS22 unbalanced circuit PSI protocol description. The protocol comes from the following paper:
  * <p>
  * Pinkas, Benny, Thomas Schneider, Oleksandr Tkachenko, and Avishay Yanai. Efficient circuit-based PSI with linear
  * communication. EUROCRYPT 2019, Part III, pp. 122-153. Springer International Publishing, 2019.
@@ -12,17 +12,17 @@ import edu.alibaba.mpc4j.common.rpc.desc.PtoDescManager;
  * The implementation has linear communication with stash-less cuckoo hashing.
  *
  * @author Weiran Liu
- * @date 2023/3/29
+ * @date 2023/4/20
  */
-class Psty19UcpsiPtoDesc implements PtoDesc {
+class Cgs22UcpsiPtoDesc implements PtoDesc {
     /**
      * the protocol ID
      */
-    private static final int PTO_ID = Math.abs((int) 6547825468874236541L);
+    private static final int PTO_ID = Math.abs((int) 482602283261307239L);
     /**
      * the protocol name
      */
-    private static final String PTO_NAME = "PRTY19-UCPSI";
+    private static final String PTO_NAME = "CGS22-UCPSI";
 
     /**
      * the protocol step
@@ -37,12 +37,12 @@ class Psty19UcpsiPtoDesc implements PtoDesc {
     /**
      * the singleton mode
      */
-    private static final Psty19UcpsiPtoDesc INSTANCE = new Psty19UcpsiPtoDesc();
+    private static final Cgs22UcpsiPtoDesc INSTANCE = new Cgs22UcpsiPtoDesc();
 
     /**
      * private constructor.
      */
-    private Psty19UcpsiPtoDesc() {
+    private Cgs22UcpsiPtoDesc() {
         // empty
     }
 

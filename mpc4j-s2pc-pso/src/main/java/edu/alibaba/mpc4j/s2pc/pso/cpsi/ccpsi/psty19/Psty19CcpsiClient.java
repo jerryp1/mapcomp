@@ -51,7 +51,7 @@ public class Psty19CcpsiClient extends AbstractCcpsiClient {
     /**
      * cuckoo hash num
      */
-    private final int cuckooHashNum;
+    private final int hashNum;
     /**
      * cuckoo hash bin
      */
@@ -64,7 +64,7 @@ public class Psty19CcpsiClient extends AbstractCcpsiClient {
         peqtReceiver = PeqtFactory.createSender(serverRpc, clientParty, config.getPeqtConfig());
         addSubPtos(peqtReceiver);
         cuckooHashBinType = config.getCuckooHashBinType();
-        cuckooHashNum = CuckooHashBinFactory.getHashNum(cuckooHashBinType);
+        hashNum = CuckooHashBinFactory.getHashNum(cuckooHashBinType);
     }
 
     @Override
@@ -75,7 +75,7 @@ public class Psty19CcpsiClient extends AbstractCcpsiClient {
         stopWatch.start();
         // init batched OPPRF, where β_max = (1 + ε) * n_c, max_point_num = hash_num * n_s
         int maxBeta = CuckooHashBinFactory.getBinNum(cuckooHashBinType, maxClientElementSize);
-        int maxPointNum = cuckooHashNum * maxServerElementSize;
+        int maxPointNum = hashNum * maxServerElementSize;
         bopprfReceiver.init(maxBeta, maxPointNum);
         // init private equality test, where maxL = σ + log_2(β_max) + log_2(max_point_num)
         int maxL = CommonConstants.STATS_BIT_LENGTH + LongUtils.ceilLog2(maxBeta) + LongUtils.ceilLog2(maxPointNum);
@@ -97,7 +97,7 @@ public class Psty19CcpsiClient extends AbstractCcpsiClient {
         // β = (1 + ε) * n_c
         int beta = CuckooHashBinFactory.getBinNum(cuckooHashBinType, clientElementSize);
         // point_num = hash_num * n_s
-        int pointNum = cuckooHashNum * serverElementSize;
+        int pointNum = hashNum * serverElementSize;
         // l = σ + log_2(β) + log_2(point_num)
         int l = CommonConstants.STATS_BIT_LENGTH + LongUtils.ceilLog2(beta) + LongUtils.ceilLog2(pointNum);
         // P2 inserts items into no-stash cuckoo hash bin Table_1 with β bins.

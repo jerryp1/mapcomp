@@ -27,7 +27,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.stream.IntStream;
 
 /**
- * CGS22 client-payload circuit PSI client.
+ * CGS22 client-payload circuit PSI server.
  *
  * @author Weiran Liu
  * @date 2023/4/19
@@ -52,7 +52,7 @@ public class Cgs22CcpsiServer extends AbstractCcpsiServer {
     /**
      * cuckoo hash num
      */
-    private final int cuckooHashNum;
+    private final int hashNum;
     /**
      * β
      */
@@ -83,7 +83,7 @@ public class Cgs22CcpsiServer extends AbstractCcpsiServer {
         psmReceiver = PsmFactory.createReceiver(clientRpc, senderParty, config.getPsmConfig());
         addSubPtos(psmReceiver);
         cuckooHashBinType = config.getCuckooHashBinType();
-        cuckooHashNum = CuckooHashBinFactory.getHashNum(cuckooHashBinType);
+        hashNum = CuckooHashBinFactory.getHashNum(cuckooHashBinType);
     }
 
     @Override
@@ -94,7 +94,7 @@ public class Cgs22CcpsiServer extends AbstractCcpsiServer {
         stopWatch.start();
         // init batched OPPRF, where β_max = (1 + ε) * n_c, max_point_num = hash_num * n_s
         int maxBeta = CuckooHashBinFactory.getBinNum(cuckooHashBinType, maxClientElementSize);
-        int maxPointNum = cuckooHashNum * maxServerElementSize;
+        int maxPointNum = hashNum * maxServerElementSize;
         rbopprfSender.init(maxBeta, maxPointNum);
         // init private set membership, where maxL = σ + log_2(d * β_max) + log_2(max_point_num)
         int maxL = CommonConstants.STATS_BIT_LENGTH + LongUtils.ceilLog2((long) d * maxBeta) + LongUtils.ceilLog2(maxPointNum);
@@ -123,7 +123,7 @@ public class Cgs22CcpsiServer extends AbstractCcpsiServer {
         // β = (1 + ε) * n_c
         beta = CuckooHashBinFactory.getBinNum(cuckooHashBinType, clientElementSize);
         // point_num = hash_num * n_s
-        int pointNum = cuckooHashNum * serverElementSize;
+        int pointNum = hashNum * serverElementSize;
         // l = σ + log_2(d * β) + log_2(point_num)
         int l = CommonConstants.STATS_BIT_LENGTH + LongUtils.ceilLog2((long) d * beta) + LongUtils.ceilLog2(pointNum);
         // P2 inserts items into simple hash bin Table_2 with β bins
@@ -160,7 +160,7 @@ public class Cgs22CcpsiServer extends AbstractCcpsiServer {
     }
 
     private void handleCuckooHashKeyPayload(List<byte[]> cuckooHashKeyPayload) throws MpcAbortException {
-        MpcAbortPreconditions.checkArgument(cuckooHashKeyPayload.size() == cuckooHashNum);
+        MpcAbortPreconditions.checkArgument(cuckooHashKeyPayload.size() == hashNum);
         byte[][] cuckooHashKeys = cuckooHashKeyPayload.toArray(new byte[0][]);
         simpleHashBin = new RandomPadHashBin<>(envType, beta, serverElementSize, cuckooHashKeys);
         simpleHashBin.insertItems(serverElementArrayList);

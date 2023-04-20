@@ -1,9 +1,6 @@
-package edu.alibaba.mpc4j.s2pc.upso.ucpsi.psty19;
+package edu.alibaba.mpc4j.s2pc.upso.ucpsi.cgs22;
 
-import edu.alibaba.mpc4j.common.rpc.MpcAbortException;
-import edu.alibaba.mpc4j.common.rpc.Party;
-import edu.alibaba.mpc4j.common.rpc.PtoState;
-import edu.alibaba.mpc4j.common.rpc.Rpc;
+import edu.alibaba.mpc4j.common.rpc.*;
 import edu.alibaba.mpc4j.common.rpc.utils.DataPacket;
 import edu.alibaba.mpc4j.common.rpc.utils.DataPacketHeader;
 import edu.alibaba.mpc4j.common.tool.CommonConstants;
@@ -15,40 +12,48 @@ import edu.alibaba.mpc4j.common.tool.utils.BytesUtils;
 import edu.alibaba.mpc4j.common.tool.utils.CommonUtils;
 import edu.alibaba.mpc4j.common.tool.utils.LongUtils;
 import edu.alibaba.mpc4j.s2pc.aby.basics.bc.SquareShareZ2Vector;
-import edu.alibaba.mpc4j.s2pc.aby.circuit.peqt.PeqtFactory;
-import edu.alibaba.mpc4j.s2pc.aby.circuit.peqt.PeqtParty;
+import edu.alibaba.mpc4j.s2pc.opf.psm.PsmFactory;
+import edu.alibaba.mpc4j.s2pc.opf.psm.PsmReceiver;
 import edu.alibaba.mpc4j.s2pc.upso.ucpsi.AbstractUcpsiServer;
-import edu.alibaba.mpc4j.s2pc.upso.uopprf.ub.UbopprfFactory;
-import edu.alibaba.mpc4j.s2pc.upso.uopprf.ub.UbopprfSender;
-import edu.alibaba.mpc4j.s2pc.upso.ucpsi.psty19.Psty19UcpsiPtoDesc.PtoStep;
+import edu.alibaba.mpc4j.s2pc.upso.ucpsi.cgs22.Cgs22UcpsiPtoDesc.PtoStep;
+import edu.alibaba.mpc4j.s2pc.upso.uopprf.urb.UrbopprfConfig;
+import edu.alibaba.mpc4j.s2pc.upso.uopprf.urb.UrbopprfFactory;
+import edu.alibaba.mpc4j.s2pc.upso.uopprf.urb.UrbopprfSender;
 
 import java.nio.ByteBuffer;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Set;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
 /**
- * PSTY19 unbalanced circuit PSI server.
+ * CGS22 unbalanced circuit PSI server.
  *
- * @author Liqiang Peng
- * @date 2023/4/17
+ * @author Weiran Liu
+ * @date 2023/4/20
  */
-public class Psty19UcpsiServer extends AbstractUcpsiServer {
+public class Cgs22UcpsiServer extends AbstractUcpsiServer {
     /**
-     * unbalanced batch OPPRF sender
+     * unbalanced related batch OPPRF sender
      */
-    private final UbopprfSender ubopprfSender;
+    private final UrbopprfSender urbopprfSender;
     /**
-     * peqt sender
+     * private set membership receiver
      */
-    private final PeqtParty peqtParty;
+    private final PsmReceiver psmReceiver;
+    /**
+     * d
+     */
+    private final int d;
     /**
      * cuckoo hash bin type
      */
     private final CuckooHashBinType cuckooHashBinType;
     /**
-     * hash num
+     * cuckoo hash num
      */
     private final int hashNum;
     /**
@@ -64,24 +69,30 @@ public class Psty19UcpsiServer extends AbstractUcpsiServer {
      */
     private byte[][] hashKeys;
     /**
-     * input arrays
+     * simple hash bin
      */
-    private byte[][][] inputArrays;
+    private RandomPadHashBin<ByteBuffer> simpleHashBin;
     /**
      * target array
      */
     private byte[][] targetArray;
     /**
+     * input arrays
+     */
+    private byte[][][] inputArrays;
+    /**
      * target arrays
      */
     private byte[][][] targetArrays;
 
-    public Psty19UcpsiServer(Rpc serverRpc, Party clientParty, Psty19UcpsiConfig config) {
-        super(Psty19UcpsiPtoDesc.getInstance(), serverRpc, clientParty, config);
-        ubopprfSender = UbopprfFactory.createSender(serverRpc, clientParty, config.getUbopprfConfig());
-        addSubPtos(ubopprfSender);
-        peqtParty = PeqtFactory.createSender(serverRpc, clientParty, config.getPeqtConfig());
-        addSubPtos(peqtParty);
+    public Cgs22UcpsiServer(Rpc clientRpc, Party senderParty, Cgs22UcpsiConfig config) {
+        super(Cgs22UcpsiPtoDesc.getInstance(), clientRpc, senderParty, config);
+        UrbopprfConfig urbopprfConfig = config.getUrbopprfConfig();
+        urbopprfSender = UrbopprfFactory.createSender(clientRpc, senderParty, urbopprfConfig);
+        d = urbopprfConfig.getD();
+        addSubPtos(urbopprfSender);
+        psmReceiver = PsmFactory.createReceiver(clientRpc, senderParty, config.getPsmConfig());
+        addSubPtos(psmReceiver);
         cuckooHashBinType = CuckooHashBinType.NO_STASH_PSZ18_3_HASH;
         hashNum = CuckooHashBinFactory.getHashNum(cuckooHashBinType);
     }
@@ -92,37 +103,36 @@ public class Psty19UcpsiServer extends AbstractUcpsiServer {
         logPhaseInfo(PtoState.INIT_BEGIN);
 
         stopWatch.start();
-        // β = (1 + ε) * n_c
+        // init batched OPPRF, where β_max = (1 + ε) * n_c, max_point_num = hash_num * n_s
         beta = CuckooHashBinFactory.getBinNum(cuckooHashBinType, maxClientElementSize);
-        // point_num = hash_num * n_s
         int pointNum = hashNum * serverElementSize;
-        // l = σ + log_2(β) + log_2(point_num)
-        l = CommonConstants.STATS_BIT_LENGTH + LongUtils.ceilLog2(beta) + LongUtils.ceilLog2(pointNum);
+        // l = σ + log_2(d * β_max) + log_2(max_point_num)
+        l = CommonConstants.STATS_BIT_LENGTH + LongUtils.ceilLog2((long) d * beta) + LongUtils.ceilLog2(pointNum);
         // simple hash
         hashKeys = CommonUtils.generateRandomKeys(hashNum, secureRandom);
-        generateBopprfInputs(l);
+        generateRbopprfInputs(l);
         stopWatch.stop();
         long binTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
         stopWatch.reset();
         logStepInfo(PtoState.INIT_STEP, 1, 3, binTime, "Sender hash elements");
 
         stopWatch.start();
-        // initialize unbalanced batch opprf
-        ubopprfSender.init(l, inputArrays, targetArrays);
+        // initialize unbalanced related batch opprf
+        urbopprfSender.init(l, inputArrays, targetArrays);
         inputArrays = null;
         targetArrays = null;
         stopWatch.stop();
-        long ubopprfTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
+        long urbopprfTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
         stopWatch.reset();
-        logStepInfo(PtoState.INIT_STEP, 2, 3, ubopprfTime, "Sender init unbalanced batch opprf");
+        logStepInfo(PtoState.INIT_STEP, 2, 3, urbopprfTime);
 
         stopWatch.start();
-        // initialize peqt
-        peqtParty.init(l, beta);
+        // initialize private set membership
+        psmReceiver.init(l, d, beta);
         stopWatch.stop();
-        long peqtTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
+        long psmTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
         stopWatch.reset();
-        logStepInfo(PtoState.INIT_STEP, 3, 3, peqtTime);
+        logStepInfo(PtoState.INIT_STEP, 3, 3, psmTime);
 
         logPhaseInfo(PtoState.INIT_END);
     }
@@ -141,28 +151,29 @@ public class Psty19UcpsiServer extends AbstractUcpsiServer {
         rpc.send(DataPacket.fromByteArrayList(cuckooHashKeyHeader, cuckooHashKeyPayload));
 
         stopWatch.start();
-        // unbalanced batch opprf
-        ubopprfSender.opprf();
+        // unbalanced related batch opprf
+        urbopprfSender.opprf();
         stopWatch.stop();
-        long senderBopprfTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
+        long opprfTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
         stopWatch.reset();
-        logStepInfo(PtoState.PTO_STEP, 1, 2, senderBopprfTime, "Sender execute unbalanced batch opprf");
+        logStepInfo(PtoState.PTO_STEP, 2, 3, opprfTime);
 
         stopWatch.start();
-        // private equality test
-        SquareShareZ2Vector z2Vector = peqtParty.peqt(l, targetArray);
+        // private set membership
+        SquareShareZ2Vector z0 = psmReceiver.psm(l, targetArray);
+        targetArray = null;
         stopWatch.stop();
-        long membershipTestTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
+        long psmTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
         stopWatch.reset();
-        logStepInfo(PtoState.PTO_STEP, 2, 2, membershipTestTime, "Sender membership test");
+        logStepInfo(PtoState.PTO_STEP, 3, 3, psmTime);
 
         logPhaseInfo(PtoState.PTO_END);
-        return z2Vector;
+        return z0;
     }
 
-    private void generateBopprfInputs(int l) {
+    private void generateRbopprfInputs(int l) {
         int byteL = CommonUtils.getByteLength(l);
-        RandomPadHashBin<ByteBuffer> simpleHashBin = new RandomPadHashBin<>(envType, beta, serverElementSize, hashKeys);
+        simpleHashBin = new RandomPadHashBin<>(envType, beta, serverElementSize, hashKeys);
         simpleHashBin.insertItems(serverElementArrayList);
         // P1 generates the input arrays
         inputArrays = IntStream.range(0, beta)
@@ -179,6 +190,7 @@ public class Psty19UcpsiServer extends AbstractUcpsiServer {
                     .toArray(byte[][]::new);
             })
             .toArray(byte[][][]::new);
+        simpleHashBin = null;
         // P1 samples uniformly random and independent target values t_1, ..., t_β ∈ {0,1}^κ
         targetArray = IntStream.range(0, beta)
             .mapToObj(batchIndex -> BytesUtils.randomByteArray(byteL, l, secureRandom)).toArray(byte[][]::new);
