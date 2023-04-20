@@ -9,9 +9,11 @@ import edu.alibaba.mpc4j.s2pc.aby.basics.bc.SquareShareZ2Vector;
 
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.stream.IntStream;
 
 /**
  * Z2 Integer Circuit.
+ * // 名字改成party
  *
  * @author Li Peng (jerry.pl@alibaba-inc.com)
  * @date 2023/4/12
@@ -21,6 +23,7 @@ public class Z2IntegerCircuit extends AbstractZ2ArithmeticCircuit implements Z2A
     static final int S = 0;
     static final int COUT = 1;
 
+    // 传入sender/receiver
     public Z2IntegerCircuit(BcParty e) {
         super(e);
     }
@@ -32,16 +35,8 @@ public class Z2IntegerCircuit extends AbstractZ2ArithmeticCircuit implements Z2A
 
     public SquareShareZ2Vector[] add(SquareShareZ2Vector[] x, SquareShareZ2Vector[] y, boolean cin) throws MpcAbortException {
         checkInputs(x, y);
-        // 处理大小端序
-        SquareShareZ2Vector[] xCopy = Arrays.copyOf(x, x.length);
-        SquareShareZ2Vector[] yCopy = Arrays.copyOf(y, y.length);
-        // 变为小端序
-        Collections.reverse(Arrays.asList(xCopy));
-        Collections.reverse(Arrays.asList(yCopy));
-        SquareShareZ2Vector[] result = Arrays.copyOf(addFull(xCopy, yCopy, cin), x.length);
-        // 变为大端序
-        Collections.reverse(Arrays.asList(result));
-        return result;
+
+        return Arrays.copyOfRange(addFull(x, y, cin), 1, x.length + 1);
     }
 
     // full 1-bit adder
@@ -59,20 +54,24 @@ public class Z2IntegerCircuit extends AbstractZ2ArithmeticCircuit implements Z2A
     // full n-bit adder
     public SquareShareZ2Vector[] addFull(SquareShareZ2Vector[] x, SquareShareZ2Vector[] y, boolean cin) throws MpcAbortException {
         checkInputs(x, y);
+        int bitLen = x[0].getBytes().length * Byte.SIZE;
+
+        SquareShareZ2Vector cinVector = SquareShareZ2Vector.create(bitLen, cin);
+        return addFull(x, y, cinVector);
+    }
+
+    // full n-bit adders
+    public SquareShareZ2Vector[] addFull(SquareShareZ2Vector[] x, SquareShareZ2Vector[] y, SquareShareZ2Vector cin) throws MpcAbortException {
+        checkInputs(x, y);
 
         SquareShareZ2Vector[] res = new SquareShareZ2Vector[x.length + 1];
-        // 这里假设刚好是length长度
-        byte[] cinBytes = cin ? BytesUtils.not(new byte[x[0].getBytes().length], x[0].getNum()) : new byte[x[0].getBytes().length];
-
-        SquareShareZ2Vector cinVector = SquareShareZ2Vector.create(
-                BitVectorFactory.create(x[0].getNum(), cinBytes), true);
-        SquareShareZ2Vector[] t = add(x[0], y[0], cinVector);
-        res[0] = t[S];
-        for (int i = 0; i < x.length - 1; i++) {
-            t = add(x[i + 1], y[i + 1], t[COUT]);
-            res[i + 1] = t[S];
+        SquareShareZ2Vector[] t = add(x[x.length - 1], y[y.length - 1], cin);
+        res[res.length - 1] = t[S];
+        for (int i = res.length - 1; i > 1; i--) {
+            t = add(x[i - 2], y[i - 2], t[COUT]);
+            res[i - 1] = t[S];
         }
-        res[res.length - 1] = t[COUT];
+        res[0] = t[COUT];
         return res;
     }
 

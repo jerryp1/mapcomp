@@ -40,6 +40,7 @@ import static edu.alibaba.mpc4j.common.tool.EnvType.STANDARD_JDK;
 
 /**
  * Z2 arithmetic test.
+ * https://www.doc.ic.ac.uk/~eedwards/compsys/arithmetic/index.html
  *
  * @author Li Peng (jerry.pl@alibaba-inc.com)
  * @date 2023/4/13
@@ -170,7 +171,7 @@ public class Z2ArithmeticTest {
     }
 
     private void testPto(ArithmeticOperator operator, int arithLength, int num, boolean parallel) {
-        // create inputs in [0, 2^(arithLength-1)) to avoid overflow in subtraction. https://www.doc.ic.ac.uk/~eedwards/compsys/arithmetic/index.html
+        // create inputs in [0, 2^(arithLength-1)) to avoid overflow in subtraction.
         byte[][] xBytes = IntStream.range(0, num)
                 .mapToObj(i -> new BigInteger(arithLength - 1, SECURE_RANDOM))
                 .map(BigIntegerUtils::bigIntegerToByteArray).toArray(byte[][]::new);
