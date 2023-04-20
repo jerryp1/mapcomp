@@ -65,13 +65,19 @@ public class UcpsiTest {
     public static Collection<Object[]> configurations() {
         Collection<Object[]> configurations = new ArrayList<>();
 
-        // Cgs22
+        // CGS22
         configurations.add(new Object[]{
-            UcpsiFactory.UcpsiType.CGS22.name(), new Cgs22UcpsiConfig.Builder().build()
+            UcpsiFactory.UcpsiType.CGS22.name() + " (silent)", new Cgs22UcpsiConfig.Builder(true).build()
+        });
+        configurations.add(new Object[]{
+            UcpsiFactory.UcpsiType.CGS22.name() + " (direct)", new Cgs22UcpsiConfig.Builder(false).build()
         });
         // PSTY19
         configurations.add(new Object[]{
-            UcpsiFactory.UcpsiType.PSTY19.name(), new Psty19UcpsiConfig.Builder().build()
+            UcpsiFactory.UcpsiType.PSTY19.name() + " (silent)", new Psty19UcpsiConfig.Builder(true).build()
+        });
+        configurations.add(new Object[]{
+            UcpsiFactory.UcpsiType.PSTY19.name() + " (direct)", new Psty19UcpsiConfig.Builder(false).build()
         });
 
         return configurations;
@@ -120,11 +126,6 @@ public class UcpsiTest {
     @Test
     public void test2() {
         testPto(2, 2, false);
-    }
-
-    @Test
-    public void test10() {
-        testPto(10, 10, false);
     }
 
     @Test

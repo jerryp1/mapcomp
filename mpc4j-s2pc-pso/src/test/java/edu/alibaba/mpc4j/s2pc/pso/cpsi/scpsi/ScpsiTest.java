@@ -6,7 +6,7 @@ import edu.alibaba.mpc4j.common.rpc.RpcManager;
 import edu.alibaba.mpc4j.common.rpc.impl.memory.MemoryRpcManager;
 import edu.alibaba.mpc4j.common.tool.CommonConstants;
 import edu.alibaba.mpc4j.common.tool.bitvector.BitVector;
-import edu.alibaba.mpc4j.common.tool.hashbin.object.cuckoo.CuckooHashBinFactory;
+import edu.alibaba.mpc4j.common.tool.hashbin.object.cuckoo.CuckooHashBinFactory.CuckooHashBinType;
 import edu.alibaba.mpc4j.common.tool.utils.CommonUtils;
 import edu.alibaba.mpc4j.s2pc.aby.basics.bc.SquareShareZ2Vector;
 import edu.alibaba.mpc4j.s2pc.pso.PsoUtils;
@@ -66,36 +66,56 @@ public class ScpsiTest {
     public static Collection<Object[]> configurations() {
         Collection<Object[]> configurations = new ArrayList<>();
 
-        // CGS22 (default)
+        // CGS22
         configurations.add(new Object[]{
-            ScpsiType.CGS22.name() + " (default)",
-            new Cgs22ScpsiConfig.Builder().build(),
+            ScpsiType.CGS22.name() + " (silent)",
+            new Cgs22ScpsiConfig.Builder(true).build(),
         });
-        // PSTY19 (2 hash)
         configurations.add(new Object[]{
-            ScpsiType.CGS22.name() + " (2 hash)",
-            new Cgs22ScpsiConfig.Builder().setCuckooHashBinType(CuckooHashBinFactory.CuckooHashBinType.NAIVE_2_HASH).build(),
+            ScpsiType.CGS22.name() + " (direct)",
+            new Cgs22ScpsiConfig.Builder(false).build(),
         });
-        // PSTY19 (4 hash)
         configurations.add(new Object[]{
-            ScpsiType.CGS22.name() + " (4 hash)",
-            new Cgs22ScpsiConfig.Builder().setCuckooHashBinType(CuckooHashBinFactory.CuckooHashBinType.NAIVE_4_HASH).build(),
+            ScpsiType.CGS22.name() + " (2 hash, silent)",
+            new Cgs22ScpsiConfig.Builder(true).setCuckooHashBinType(CuckooHashBinType.NAIVE_2_HASH).build(),
+        });
+        configurations.add(new Object[]{
+            ScpsiType.CGS22.name() + " (2 hash, direct)",
+            new Cgs22ScpsiConfig.Builder(false).setCuckooHashBinType(CuckooHashBinType.NAIVE_2_HASH).build(),
+        });
+        configurations.add(new Object[]{
+            ScpsiType.CGS22.name() + " (4 hash, silent)",
+            new Cgs22ScpsiConfig.Builder(true).setCuckooHashBinType(CuckooHashBinType.NAIVE_4_HASH).build(),
+        });
+        configurations.add(new Object[]{
+            ScpsiType.CGS22.name() + " (4 hash, direct)",
+            new Cgs22ScpsiConfig.Builder(false).setCuckooHashBinType(CuckooHashBinType.NAIVE_4_HASH).build(),
         });
 
-        // PSTY19 (default)
+        // PSTY19
         configurations.add(new Object[]{
-            ScpsiType.PSTY19.name() + " (default)",
-            new Psty19ScpsiConfig.Builder().build(),
+            ScpsiType.PSTY19.name() + " (silent)",
+            new Psty19ScpsiConfig.Builder(true).build(),
         });
-        // PSTY19 (2 hash)
         configurations.add(new Object[]{
-            ScpsiType.PSTY19.name() + " (2 hash)",
-            new Psty19ScpsiConfig.Builder().setCuckooHashBinType(CuckooHashBinFactory.CuckooHashBinType.NAIVE_2_HASH).build(),
+            ScpsiType.PSTY19.name() + " (direct)",
+            new Psty19ScpsiConfig.Builder(false).build(),
         });
-        // PSTY19 (4 hash)
         configurations.add(new Object[]{
-            ScpsiType.PSTY19.name() + " (4 hash)",
-            new Psty19ScpsiConfig.Builder().setCuckooHashBinType(CuckooHashBinFactory.CuckooHashBinType.NAIVE_4_HASH).build(),
+            ScpsiType.PSTY19.name() + " (2 hash, silent)",
+            new Psty19ScpsiConfig.Builder(true).setCuckooHashBinType(CuckooHashBinType.NAIVE_2_HASH).build(),
+        });
+        configurations.add(new Object[]{
+            ScpsiType.PSTY19.name() + " (2 hash, direct)",
+            new Psty19ScpsiConfig.Builder(false).setCuckooHashBinType(CuckooHashBinType.NAIVE_2_HASH).build(),
+        });
+        configurations.add(new Object[]{
+            ScpsiType.PSTY19.name() + " (4 hash, silent)",
+            new Psty19ScpsiConfig.Builder(true).setCuckooHashBinType(CuckooHashBinType.NAIVE_4_HASH).build(),
+        });
+        configurations.add(new Object[]{
+            ScpsiType.PSTY19.name() + " (4 hash, direct)",
+            new Psty19ScpsiConfig.Builder(false).setCuckooHashBinType(CuckooHashBinType.NAIVE_4_HASH).build(),
         });
 
         return configurations;

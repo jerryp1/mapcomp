@@ -84,9 +84,9 @@ public class Psty19ScpsiConfig implements ScpsiConfig {
          */
         private CuckooHashBinType cuckooHashBinType;
 
-        public Builder() {
+        public Builder(boolean silent) {
             bopprfConfig = BopprfFactory.createDefaultConfig(SecurityModel.SEMI_HONEST);
-            peqtConfig = PeqtFactory.createDefaultConfig(SecurityModel.SEMI_HONEST, true);
+            peqtConfig = PeqtFactory.createDefaultConfig(SecurityModel.SEMI_HONEST, silent);
             cuckooHashBinType = CuckooHashBinType.NO_STASH_PSZ18_3_HASH;
         }
 

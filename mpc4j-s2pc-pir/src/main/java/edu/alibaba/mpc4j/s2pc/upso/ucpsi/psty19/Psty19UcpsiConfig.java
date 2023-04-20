@@ -71,9 +71,9 @@ public class Psty19UcpsiConfig implements UcpsiConfig {
          */
         private PeqtConfig peqtConfig;
 
-        public Builder() {
+        public Builder(boolean silent) {
             ubopprfConfig = UbopprfFactory.createDefaultConfig(SecurityModel.SEMI_HONEST);
-            peqtConfig = PeqtFactory.createDefaultConfig(SecurityModel.SEMI_HONEST, true);
+            peqtConfig = PeqtFactory.createDefaultConfig(SecurityModel.SEMI_HONEST, silent);
         }
 
         public Builder setUbopprfConfig(UbopprfConfig ubopprfConfig) {
