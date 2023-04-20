@@ -11,6 +11,7 @@ import edu.alibaba.mpc4j.common.tool.utils.CommonUtils;
 import edu.alibaba.mpc4j.s2pc.aby.basics.bc.SquareShareZ2Vector;
 import edu.alibaba.mpc4j.s2pc.pso.PsoUtils;
 import edu.alibaba.mpc4j.s2pc.pso.cpsi.ccpsi.CcpsiFactory.CcpsiType;
+import edu.alibaba.mpc4j.s2pc.pso.cpsi.ccpsi.cgs22.Cgs22CcpsiConfig;
 import edu.alibaba.mpc4j.s2pc.pso.cpsi.ccpsi.psty19.Psty19CcpsiConfig;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.time.StopWatch;
@@ -65,6 +66,21 @@ public class CcpsiTest {
     public static Collection<Object[]> configurations() {
         Collection<Object[]> configurations = new ArrayList<>();
 
+        // CGS22 (default)
+        configurations.add(new Object[]{
+            CcpsiType.CGS22.name() + " (default)",
+            new Cgs22CcpsiConfig.Builder().build(),
+        });
+        // CGS22 (2 hash)
+        configurations.add(new Object[]{
+            CcpsiType.CGS22.name() + " (2 hash)",
+            new Cgs22CcpsiConfig.Builder().setCuckooHashBinType(CuckooHashBinFactory.CuckooHashBinType.NAIVE_2_HASH).build(),
+        });
+        // CGS22 (4 hash)
+        configurations.add(new Object[]{
+            CcpsiType.CGS22.name() + " (4 hash)",
+            new Cgs22CcpsiConfig.Builder().setCuckooHashBinType(CuckooHashBinFactory.CuckooHashBinType.NAIVE_4_HASH).build(),
+        });
         // PSTY19 (default)
         configurations.add(new Object[]{
             CcpsiType.PSTY19.name() + " (default)",

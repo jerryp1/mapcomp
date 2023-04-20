@@ -2,6 +2,10 @@ package edu.alibaba.mpc4j.common.tool.hashbin.object.cuckoo;
 
 import com.google.common.base.Preconditions;
 import edu.alibaba.mpc4j.common.tool.EnvType;
+import edu.alibaba.mpc4j.common.tool.utils.CommonUtils;
+
+import java.security.SecureRandom;
+import java.util.Collection;
 
 /**
  * cuckoo hash bin factory.
@@ -103,6 +107,74 @@ public class CuckooHashBinFactory {
             default:
                 throw new IllegalArgumentException("Invalid " + CuckooHashBinType.class.getSimpleName() + ": " + type.name());
         }
+    }
+
+    /**
+     * Creates a cuckoo hash bin.
+     *
+     * @param envType      environment.
+     * @param type         type.
+     * @param maxItemSize  max item size.
+     * @param items        items.
+     * @param secureRandom the random state to generate keys.
+     * @param <T>          type of data that will be inserted into the cuckoo hash bin.
+     * @return a cuckoo hash bin.
+     */
+    public static <T> CuckooHashBin<T> createCuckooHashBin(EnvType envType, CuckooHashBinType type,
+                                                           int maxItemSize, Collection<T> items,
+                                                           SecureRandom secureRandom) {
+        boolean success = false;
+        int hashNum = getHashNum(type);
+        byte[][] hashKeys;
+        CuckooHashBin<T> cuckooHashBin = null;
+        while (!success) {
+            try {
+                // construct the cuckoo hash bin iteratively and test if the stash is empty
+                hashKeys = CommonUtils.generateRandomKeys(hashNum, secureRandom);
+                cuckooHashBin = CuckooHashBinFactory.createCuckooHashBin(envType, type, maxItemSize, hashKeys);
+                cuckooHashBin.insertItems(items);
+                success = true;
+            } catch (ArithmeticException ignored) {
+                // retry if failed
+            }
+        }
+        Preconditions.checkNotNull(cuckooHashBin);
+        return cuckooHashBin;
+    }
+
+    /**
+     * Creates a cuckoo hash bin that enforce empty stash.
+     *
+     * @param envType      environment.
+     * @param type         type.
+     * @param maxItemSize  max item size.
+     * @param items        items.
+     * @param secureRandom the random state to generate keys.
+     * @param <T>          type of data that will be inserted into the cuckoo hash bin.
+     * @return a cuckoo hash bin.
+     */
+    public static <T> CuckooHashBin<T> createEnforceNoStashCuckooHashBin(EnvType envType, CuckooHashBinType type,
+                                                                         int maxItemSize, Collection<T> items,
+                                                                         SecureRandom secureRandom) {
+        boolean success = false;
+        int hashNum = getHashNum(type);
+        byte[][] hashKeys;
+        CuckooHashBin<T> cuckooHashBin = null;
+        while (!success) {
+            try {
+                // construct the cuckoo hash bin iteratively and test if the stash is empty
+                hashKeys = CommonUtils.generateRandomKeys(hashNum, secureRandom);
+                cuckooHashBin = CuckooHashBinFactory.createCuckooHashBin(envType, type, maxItemSize, hashKeys);
+                cuckooHashBin.insertItems(items);
+                if (cuckooHashBin.itemNumInStash() == 0) {
+                    success = true;
+                }
+            } catch (ArithmeticException ignored) {
+                // retry if failed
+            }
+        }
+        Preconditions.checkNotNull(cuckooHashBin);
+        return cuckooHashBin;
     }
 
     /**

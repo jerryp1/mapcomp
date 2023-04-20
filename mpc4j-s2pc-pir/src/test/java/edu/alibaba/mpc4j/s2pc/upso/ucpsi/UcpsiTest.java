@@ -8,7 +8,7 @@ import edu.alibaba.mpc4j.common.tool.CommonConstants;
 import edu.alibaba.mpc4j.common.tool.bitvector.BitVector;
 import edu.alibaba.mpc4j.common.tool.utils.CommonUtils;
 import edu.alibaba.mpc4j.s2pc.aby.basics.bc.SquareShareZ2Vector;
-import edu.alibaba.mpc4j.s2pc.upso.UpsoUtils;
+import edu.alibaba.mpc4j.s2pc.pso.PsoUtils;
 import edu.alibaba.mpc4j.s2pc.upso.ucpsi.psty19.Psty19UcpsiConfig;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.time.StopWatch;
@@ -149,7 +149,7 @@ public class UcpsiTest {
                 server.getPtoDesc().getPtoName(), serverSetSize, clientSetSize
             );
             // generate the inputs
-            ArrayList<Set<ByteBuffer>> sets = UpsoUtils.generateBytesSets(serverSetSize, clientSetSize, ELEMENT_BYTE_LENGTH);
+            ArrayList<Set<ByteBuffer>> sets = PsoUtils.generateBytesSets(serverSetSize, clientSetSize, ELEMENT_BYTE_LENGTH);
             Set<ByteBuffer> serverElementSet = sets.get(0);
             Set<ByteBuffer> clientElementSet = sets.get(1);
             UcpsiServerThread serverThread = new UcpsiServerThread(server, serverElementSet, clientSetSize);

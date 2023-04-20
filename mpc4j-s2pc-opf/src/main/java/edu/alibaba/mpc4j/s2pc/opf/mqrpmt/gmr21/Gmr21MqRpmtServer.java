@@ -245,33 +245,11 @@ public class Gmr21MqRpmtServer extends AbstractMqRpmtServer {
     }
 
     private List<byte[]> generateCuckooHashKeyPayload() {
-        // 设置布谷鸟哈希，如果发现不能构造成功，则可以重复构造
-        boolean success = false;
-        byte[][] cuckooHashKeys = null;
-        while (!success) {
-            try {
-                cuckooHashKeys = IntStream.range(0, cuckooHashNum)
-                    .mapToObj(hashIndex -> {
-                        byte[] key = new byte[CommonConstants.BLOCK_BYTE_LENGTH];
-                        secureRandom.nextBytes(key);
-                        return key;
-                    })
-                    .toArray(byte[][]::new);
-                cuckooHashBin = CuckooHashBinFactory.createCuckooHashBin(
-                    envType, cuckooHashBinType, serverElementSize, cuckooHashKeys
-                );
-                // 将客户端消息插入到CuckooHash中
-                cuckooHashBin.insertItems(serverElementArrayList);
-                if (cuckooHashBin.itemNumInStash() == 0) {
-                    success = true;
-                }
-            } catch (ArithmeticException ignored) {
-                // 如果插入不成功，就重新插入
-            }
-        }
-        // 如果成功，则向布谷鸟哈希的空余位置插入空元素
+        cuckooHashBin = CuckooHashBinFactory.createEnforceNoStashCuckooHashBin(
+            envType, cuckooHashBinType, serverElementSize, serverElementArrayList, secureRandom
+        );
         cuckooHashBin.insertPaddingItems(BOT_ELEMENT_BYTE_BUFFER);
-        return Arrays.stream(cuckooHashKeys).collect(Collectors.toList());
+        return Arrays.stream(cuckooHashBin.getHashKeys()).collect(Collectors.toList());
     }
 
     private void generateCuckooHashOprfInput() {

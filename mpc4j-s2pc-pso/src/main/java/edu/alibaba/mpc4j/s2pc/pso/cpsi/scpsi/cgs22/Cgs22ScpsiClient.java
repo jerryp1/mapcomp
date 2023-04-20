@@ -126,7 +126,7 @@ public class Cgs22ScpsiClient extends AbstractScpsiClient {
         int pointNum = cuckooHashNum * clientElementSize;
         // l = σ + log_2(d * β) + log_2(point_num)
         int l = CommonConstants.STATS_BIT_LENGTH + LongUtils.ceilLog2((long) d * beta) + LongUtils.ceilLog2(pointNum);
-        // P2 inserts items into simple hash bin Table_2 with β bins
+        // P2 inserts items into simple hash bin Table_2 with β bins.
         handleCuckooHashKeyPayload(cuckooHashKeyPayload);
         stopWatch.stop();
         long binTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
@@ -146,7 +146,7 @@ public class Cgs22ScpsiClient extends AbstractScpsiClient {
         logStepInfo(PtoState.PTO_STEP, 2, 3, opprfTime);
 
         stopWatch.start();
-        // The parties invoke a private equality test with l = σ + log_2(point_num).
+        // The parties invoke a private set membership with l = σ + log_2(d * β) + log_2(point_num).
         // P1 inputs y_1^*, ..., y_β^* and outputs z0.
         SquareShareZ2Vector z1 = psmReceiver.psm(l, targetArray);
         targetArray = null;

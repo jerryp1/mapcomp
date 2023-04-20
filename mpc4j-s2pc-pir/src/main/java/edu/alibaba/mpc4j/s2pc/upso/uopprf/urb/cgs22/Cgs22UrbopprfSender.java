@@ -142,29 +142,10 @@ public class Cgs22UrbopprfSender extends AbstractUrbopprfSender {
         List<byte[]> inputs = Arrays.stream(inputArrays)
             .flatMap(Arrays::stream)
             .collect(Collectors.toList());
-        // generate garbled table keys
-        boolean success = false;
-        garbledTableKeys = null;
-        while (!success) {
-            try {
-                garbledTableKeys = IntStream.range(0, d)
-                    .mapToObj(hashIndex -> {
-                        byte[] key = new byte[CommonConstants.BLOCK_BYTE_LENGTH];
-                        secureRandom.nextBytes(key);
-                        return key;
-                    })
-                    .toArray(byte[][]::new);
-                cuckooHashTable = CuckooHashBinFactory.createCuckooHashBin(
-                    envType, cuckooHashBinType, pointNum, garbledTableKeys
-                );
-                // insert target points
-                cuckooHashTable.insertItems(inputs);
-                success = true;
-                // if success, init bin hashes
-            } catch (ArithmeticException ignored) {
-                // retry if failed.
-            }
-        }
+        cuckooHashTable = CuckooHashBinFactory.createEnforceNoStashCuckooHashBin(
+            envType, cuckooHashBinType, pointNum, inputs, secureRandom
+        );
+        garbledTableKeys = cuckooHashTable.getHashKeys();
         // set hashes
         Prf[] binHashes = Arrays.stream(garbledTableKeys)
             .map(key -> {

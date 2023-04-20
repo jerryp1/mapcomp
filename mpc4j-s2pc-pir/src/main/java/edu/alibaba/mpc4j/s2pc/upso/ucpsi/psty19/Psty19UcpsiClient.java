@@ -4,8 +4,8 @@ import edu.alibaba.mpc4j.common.rpc.*;
 import edu.alibaba.mpc4j.common.rpc.utils.DataPacketHeader;
 import edu.alibaba.mpc4j.common.tool.CommonConstants;
 import edu.alibaba.mpc4j.common.tool.hashbin.object.HashBinEntry;
-import edu.alibaba.mpc4j.common.tool.hashbin.object.cuckoo.CuckooHashBin;
 import edu.alibaba.mpc4j.common.tool.hashbin.object.cuckoo.CuckooHashBinFactory;
+import edu.alibaba.mpc4j.common.tool.hashbin.object.cuckoo.NoStashCuckooHashBin;
 import edu.alibaba.mpc4j.common.tool.utils.LongUtils;
 import edu.alibaba.mpc4j.s2pc.aby.basics.bc.SquareShareZ2Vector;
 import edu.alibaba.mpc4j.s2pc.aby.circuit.peqt.PeqtFactory;
@@ -59,7 +59,7 @@ public class Psty19UcpsiClient extends AbstractUcpsiClient {
     /**
      * cuckoo hash bin
      */
-    private CuckooHashBin<ByteBuffer> cuckooHashBin;
+    private NoStashCuckooHashBin<ByteBuffer> cuckooHashBin;
 
     public Psty19UcpsiClient(Rpc clientRpc, Party serverParty, UcpsiConfig config) {
         super(Psty19UcpsiPtoDesc.getInstance(), clientRpc, serverParty, config);
@@ -132,7 +132,7 @@ public class Psty19UcpsiClient extends AbstractUcpsiClient {
         logStepInfo(PtoState.PTO_STEP, 2, 3, bopprfTime, "Receiver batch opprf");
 
         stopWatch.start();
-        // membership test
+        // private equality test
         SquareShareZ2Vector z1 = peqtParty.peqt(l, targetArray);
         ByteBuffer[] table = IntStream.range(0, beta)
             .mapToObj(batchIndex -> {
@@ -149,7 +149,7 @@ public class Psty19UcpsiClient extends AbstractUcpsiClient {
         stopWatch.stop();
         long membershipTestTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
         stopWatch.reset();
-        logStepInfo(PtoState.PTO_STEP, 3, 3, membershipTestTime, "Receiver membership test");
+        logStepInfo(PtoState.PTO_STEP, 3, 3, membershipTestTime, "Receiver PEQT");
 
         return clientOutput;
     }
@@ -157,7 +157,7 @@ public class Psty19UcpsiClient extends AbstractUcpsiClient {
     private void handleCuckooHashKeyPayload(List<byte[]> cuckooHashKeyPayload) throws MpcAbortException {
         MpcAbortPreconditions.checkArgument(cuckooHashKeyPayload.size() == hashNum);
         byte[][] hashKeys = cuckooHashKeyPayload.toArray(new byte[0][]);
-        cuckooHashBin = CuckooHashBinFactory.createCuckooHashBin(envType, hashBinType, clientElementSize, hashKeys);
+        cuckooHashBin = CuckooHashBinFactory.createNoStashCuckooHashBin(envType, hashBinType, clientElementSize, hashKeys);
         cuckooHashBin.insertItems(clientElementArrayList);
         cuckooHashBin.insertPaddingItems(secureRandom);
     }

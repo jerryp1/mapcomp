@@ -3,7 +3,6 @@ package edu.alibaba.mpc4j.s2pc.pso.psu.jsz22;
 import edu.alibaba.mpc4j.common.rpc.*;
 import edu.alibaba.mpc4j.common.rpc.utils.DataPacket;
 import edu.alibaba.mpc4j.common.rpc.utils.DataPacketHeader;
-import edu.alibaba.mpc4j.common.tool.CommonConstants;
 import edu.alibaba.mpc4j.common.tool.crypto.hash.Hash;
 import edu.alibaba.mpc4j.common.tool.crypto.hash.HashFactory;
 import edu.alibaba.mpc4j.common.tool.hashbin.MaxBinSizeUtils;
@@ -51,10 +50,6 @@ public class Jsz22SfsPsuServer extends AbstractPsuServer {
      */
     private final CuckooHashBinType cuckooHashBinType;
     /**
-     * 布谷鸟哈希函数数量
-     */
-    private final int cuckooHashNum;
-    /**
      * 布谷鸟哈希
      */
     private CuckooHashBin<ByteBuffer> cuckooHashBin;
@@ -100,7 +95,6 @@ public class Jsz22SfsPsuServer extends AbstractPsuServer {
         secondOsnReceiver = OsnFactory.createReceiver(serverRpc, clientParty, config.getOsnConfig());
         addSubPtos(secondOsnReceiver);
         cuckooHashBinType = config.getCuckooHashBinType();
-        cuckooHashNum = CuckooHashBinFactory.getHashNum(cuckooHashBinType);
     }
 
     @Override
@@ -224,33 +218,11 @@ public class Jsz22SfsPsuServer extends AbstractPsuServer {
     }
 
     private List<byte[]> generateCuckooHashKeyPayload() {
-        // 设置布谷鸟哈希，如果发现不能构造成功，则可以重复构造
-        boolean success = false;
-        byte[][] cuckooHashKeys = null;
-        while (!success) {
-            try {
-                cuckooHashKeys = IntStream.range(0, cuckooHashNum)
-                    .mapToObj(hashIndex -> {
-                        byte[] key = new byte[CommonConstants.BLOCK_BYTE_LENGTH];
-                        secureRandom.nextBytes(key);
-                        return key;
-                    })
-                    .toArray(byte[][]::new);
-                cuckooHashBin = CuckooHashBinFactory.createCuckooHashBin(
-                    envType, cuckooHashBinType, serverElementSize, cuckooHashKeys
-                );
-                // 将客户端消息插入到CuckooHash中
-                cuckooHashBin.insertItems(serverElementArrayList);
-                if (cuckooHashBin.itemNumInStash() == 0) {
-                    success = true;
-                }
-            } catch (ArithmeticException ignored) {
-                // 如果插入不成功，就重新插入
-            }
-        }
-        // 如果成功，则向布谷鸟哈希的空余位置插入空元素
+        cuckooHashBin = CuckooHashBinFactory.createEnforceNoStashCuckooHashBin(
+            envType, cuckooHashBinType, serverElementSize, serverElementArrayList, secureRandom
+        );
         cuckooHashBin.insertPaddingItems(botElementByteBuffer);
-        return Arrays.stream(cuckooHashKeys).collect(Collectors.toList());
+        return Arrays.stream(cuckooHashBin.getHashKeys()).collect(Collectors.toList());
     }
 
     private void handleClientOprfPayload(List<byte[]> clientOprfPayload) throws MpcAbortException {

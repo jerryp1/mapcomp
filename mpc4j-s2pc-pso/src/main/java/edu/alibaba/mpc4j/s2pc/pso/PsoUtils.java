@@ -142,7 +142,7 @@ public class PsoUtils {
     public static ArrayList<Set<ByteBuffer>> generateBytesSets(int serverSize, int clientSize, int elementByteLength) {
         assert serverSize >= 1 : "server must have at least 2 elements";
         assert clientSize >= 1 : "client must have at least 2 elements";
-        assert elementByteLength >= CommonConstants.BLOCK_BYTE_LENGTH;
+        assert elementByteLength >= CommonConstants.STATS_BYTE_LENGTH;
         // 放置各个参与方的集合
         Set<ByteBuffer> serverSet = new HashSet<>(serverSize);
         Set<ByteBuffer> clientSet = new HashSet<>(clientSize);

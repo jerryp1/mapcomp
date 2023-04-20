@@ -49,9 +49,8 @@ public abstract class AbstractUcpsiClient extends AbstractTwoPartyPto implements
 
     protected void setPtoInput(Set<ByteBuffer> clientElementSet) {
         checkInitialized();
-        MathPreconditions.checkPositiveInRangeClosed("clientElementSet", clientElementSet.size(), maxClientElementSize);
-        clientElementArrayList = new ArrayList<>(clientElementSet);
         MathPreconditions.checkPositiveInRangeClosed("clientElementSize", clientElementSet.size(), maxClientElementSize);
+        clientElementArrayList = new ArrayList<>(clientElementSet);
         clientElementSize = clientElementSet.size();
         extraInfo++;
     }

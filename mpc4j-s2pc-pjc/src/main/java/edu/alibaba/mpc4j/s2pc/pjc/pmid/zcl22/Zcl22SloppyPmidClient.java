@@ -359,33 +359,11 @@ public class Zcl22SloppyPmidClient<T> extends AbstractPmidClient<T> {
 
     private List<byte[]> generateClientCuckooHashKeyPayload() {
         clientBinNum = CuckooHashBinFactory.getBinNum(cuckooHashBinType, clientSetSize);
-        // 设置布谷鸟哈希，如果发现不能构造成功，则可以重复构造
-        boolean success = false;
-        byte[][] clientCuckooHashKeys = null;
-        while (!success) {
-            try {
-                clientCuckooHashKeys = IntStream.range(0, cuckooHashNum)
-                    .mapToObj(hashIndex -> {
-                        byte[] key = new byte[CommonConstants.BLOCK_BYTE_LENGTH];
-                        secureRandom.nextBytes(key);
-                        return key;
-                    })
-                    .toArray(byte[][]::new);
-                clientCuckooHashBin = CuckooHashBinFactory.createCuckooHashBin(
-                    envType, cuckooHashBinType, clientSetSize, clientCuckooHashKeys
-                );
-                // 将客户端消息插入到CuckooHash中
-                clientCuckooHashBin.insertItems(clientElementArrayList);
-                if (clientCuckooHashBin.itemNumInStash() == 0) {
-                    success = true;
-                }
-            } catch (ArithmeticException ignored) {
-                // 如果插入不成功，就重新插入
-            }
-        }
-        // 如果成功，则向布谷鸟哈希的空余位置插入随机元素
+        clientCuckooHashBin = CuckooHashBinFactory.createEnforceNoStashCuckooHashBin(
+            envType, cuckooHashBinType, clientSetSize, clientElementArrayList, secureRandom
+        );
         clientCuckooHashBin.insertPaddingItems(secureRandom);
-        return Arrays.stream(clientCuckooHashKeys).collect(Collectors.toList());
+        return Arrays.stream(clientCuckooHashBin.getHashKeys()).collect(Collectors.toList());
     }
 
     private void generateClientPidMap() throws MpcAbortException {

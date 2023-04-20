@@ -278,33 +278,11 @@ public class Gmr21SloppyPidServer<T> extends AbstractPidParty<T> {
 
     private List<byte[]> generateServerCuckooHashKeyPayload() {
         serverBinNum = CuckooHashBinFactory.getBinNum(cuckooHashBinType, ownElementSetSize);
-        // 设置布谷鸟哈希，如果发现不能构造成功，则可以重复构造
-        boolean success = false;
-        byte[][] serverCuckooHashKeys = null;
-        while (!success) {
-            try {
-                serverCuckooHashKeys = IntStream.range(0, cuckooHashNum)
-                    .mapToObj(hashIndex -> {
-                        byte[] key = new byte[CommonConstants.BLOCK_BYTE_LENGTH];
-                        secureRandom.nextBytes(key);
-                        return key;
-                    })
-                    .toArray(byte[][]::new);
-                serverCuckooHashBin = CuckooHashBinFactory.createCuckooHashBin(
-                    envType, cuckooHashBinType, ownElementSetSize, serverCuckooHashKeys
-                );
-                // 将服务端消息插入到CuckooHash中
-                serverCuckooHashBin.insertItems(ownElementArrayList);
-                if (serverCuckooHashBin.itemNumInStash() == 0) {
-                    success = true;
-                }
-            } catch (ArithmeticException ignored) {
-                // 如果插入不成功，就重新插入
-            }
-        }
-        // 如果成功，则向布谷鸟哈希的空余位置插入随机元素
+        serverCuckooHashBin = CuckooHashBinFactory.createEnforceNoStashCuckooHashBin(
+            envType, cuckooHashBinType, ownElementSetSize, ownElementArrayList, secureRandom
+        );
         serverCuckooHashBin.insertPaddingItems(secureRandom);
-        return Arrays.stream(serverCuckooHashKeys).collect(Collectors.toList());
+        return Arrays.stream(serverCuckooHashBin.getHashKeys()).collect(Collectors.toList());
     }
 
     private Map<ByteBuffer, T> handleClientOkvsPayload(List<byte[]> clientOkvsPayload) throws MpcAbortException {

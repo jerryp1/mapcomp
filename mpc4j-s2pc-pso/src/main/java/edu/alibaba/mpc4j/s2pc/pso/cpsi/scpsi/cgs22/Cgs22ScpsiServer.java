@@ -107,7 +107,7 @@ public class Cgs22ScpsiServer extends AbstractScpsiServer {
         int pointNum = cuckooHashNum * clientElementSize;
         // l = σ + log_2(d * β) + log_2(point_num)
         int l = CommonConstants.STATS_BIT_LENGTH + LongUtils.ceilLog2((long) d * beta) + LongUtils.ceilLog2(pointNum);
-        // P1 inserts items into cuckoo hash bin Table_1 with β bins and 0 stash size.
+        // P1 inserts items into no-stash cuckoo hash bin Table_1 with β bins.
         List<byte[]> cuckooHashKeyPayload = generateCuckooHashKeyPayload();
         // P1 sends the cuckoo hash bin keys
         DataPacketHeader cuckooHashKeyHeader = new DataPacketHeader(
@@ -140,7 +140,7 @@ public class Cgs22ScpsiServer extends AbstractScpsiServer {
         logStepInfo(PtoState.PTO_STEP, 2, 3, opprfTime);
 
         stopWatch.start();
-        // The parties invoke a private set membership with l = σ + log_2(d * β).
+        // The parties invoke a private set membership with l = σ + log_2(d * β) + log_2(point_num).
         // P1 inputs y_1^*, ..., y_β^* and outputs z0.
         SquareShareZ2Vector z0 = psmSender.psm(l, targetArrays);
         // create the table
@@ -166,29 +166,11 @@ public class Cgs22ScpsiServer extends AbstractScpsiServer {
     }
 
     private List<byte[]> generateCuckooHashKeyPayload() {
-        // construct the cuckoo hash bin iteratively
-        boolean success = false;
-        byte[][] cuckooHashKeys = null;
-        while (!success) {
-            try {
-                cuckooHashKeys = IntStream.range(0, cuckooHashNum)
-                    .mapToObj(hashIndex -> {
-                        byte[] key = new byte[CommonConstants.BLOCK_BYTE_LENGTH];
-                        secureRandom.nextBytes(key);
-                        return key;
-                    })
-                    .toArray(byte[][]::new);
-                cuckooHashBin = CuckooHashBinFactory.createCuckooHashBin(
-                    envType, cuckooHashBinType, serverElementSize, cuckooHashKeys
-                );
-                cuckooHashBin.insertItems(serverElementArrayList);
-                success = true;
-            } catch (ArithmeticException ignored) {
-                // retry if failed
-            }
-        }
+        cuckooHashBin = CuckooHashBinFactory.createEnforceNoStashCuckooHashBin(
+            envType, cuckooHashBinType, serverElementSize, serverElementArrayList, secureRandom
+        );
         // pad random elements into the cuckoo hash
         cuckooHashBin.insertPaddingItems(secureRandom);
-        return Arrays.stream(cuckooHashKeys).collect(Collectors.toList());
+        return Arrays.stream(cuckooHashBin.getHashKeys()).collect(Collectors.toList());
     }
 }

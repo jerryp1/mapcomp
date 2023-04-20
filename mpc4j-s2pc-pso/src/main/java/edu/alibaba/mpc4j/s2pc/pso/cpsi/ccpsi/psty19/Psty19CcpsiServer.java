@@ -89,7 +89,7 @@ public class Psty19CcpsiServer extends AbstractCcpsiServer {
         int maxBeta = CuckooHashBinFactory.getBinNum(cuckooHashBinType, maxClientElementSize);
         int maxPointNum = cuckooHashNum * maxServerElementSize;
         bopprfSender.init(maxBeta, maxPointNum);
-        // init private equality test sender, where maxL = σ + log_2(max_point_num)
+        // init private equality test sender, where maxL = σ + log_2(β_max) + log_2(max_point_num)
         int maxL = CommonConstants.STATS_BIT_LENGTH + LongUtils.ceilLog2(maxBeta) + LongUtils.ceilLog2(maxPointNum);
         peqtSender.init(maxL, maxBeta);
         stopWatch.stop();
@@ -117,7 +117,7 @@ public class Psty19CcpsiServer extends AbstractCcpsiServer {
         beta = CuckooHashBinFactory.getBinNum(cuckooHashBinType, clientElementSize);
         // point_num = hash_num * n_s
         int pointNum = cuckooHashNum * serverElementSize;
-        // l = σ + log_2(max_point_num)
+        // l = σ + log_2(β) + log_2(point_num)
         int l = CommonConstants.STATS_BIT_LENGTH + LongUtils.ceilLog2(beta) + LongUtils.ceilLog2(pointNum);
         // P1 inserts items into simple hash bin Table_2 with β bins
         handleCuckooHashKeyPayload(cuckooHashKeyPayload);
@@ -139,7 +139,7 @@ public class Psty19CcpsiServer extends AbstractCcpsiServer {
         logStepInfo(PtoState.PTO_STEP, 2, 3, opprfTime);
 
         stopWatch.start();
-        // The parties invoke a private equality test with l = σ + log_2(point_num).
+        // The parties invoke a private equality test with l = σ + log_2(β) + log_2(point_num).
         // P1 inputs y_1^*, ..., y_β^* and outputs z0.
         SquareShareZ2Vector z0 = peqtSender.peqt(l, targetArray);
         targetArray = null;

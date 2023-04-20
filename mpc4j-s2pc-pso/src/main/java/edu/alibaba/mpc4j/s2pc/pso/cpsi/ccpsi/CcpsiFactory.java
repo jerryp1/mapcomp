@@ -3,6 +3,9 @@ package edu.alibaba.mpc4j.s2pc.pso.cpsi.ccpsi;
 import edu.alibaba.mpc4j.common.rpc.Party;
 import edu.alibaba.mpc4j.common.rpc.Rpc;
 import edu.alibaba.mpc4j.common.rpc.pto.PtoFactory;
+import edu.alibaba.mpc4j.s2pc.pso.cpsi.ccpsi.cgs22.Cgs22CcpsiClient;
+import edu.alibaba.mpc4j.s2pc.pso.cpsi.ccpsi.cgs22.Cgs22CcpsiConfig;
+import edu.alibaba.mpc4j.s2pc.pso.cpsi.ccpsi.cgs22.Cgs22CcpsiServer;
 import edu.alibaba.mpc4j.s2pc.pso.cpsi.ccpsi.psty19.Psty19CcpsiClient;
 import edu.alibaba.mpc4j.s2pc.pso.cpsi.ccpsi.psty19.Psty19CcpsiConfig;
 import edu.alibaba.mpc4j.s2pc.pso.cpsi.ccpsi.psty19.Psty19CcpsiServer;
@@ -52,8 +55,9 @@ public class CcpsiFactory implements PtoFactory {
         switch (type) {
             case PSTY19:
                 return new Psty19CcpsiServer(serverRpc, clientParty, (Psty19CcpsiConfig) config);
-            case RS21:
             case CGS22:
+                return new Cgs22CcpsiServer(serverRpc, clientParty, (Cgs22CcpsiConfig) config);
+            case RS21:
             default:
                 throw new IllegalArgumentException("Invalid " + CcpsiType.class.getSimpleName() + ": " + type.name());
         }
@@ -72,8 +76,9 @@ public class CcpsiFactory implements PtoFactory {
         switch (type) {
             case PSTY19:
                 return new Psty19CcpsiClient(clientRpc, serverParty, (Psty19CcpsiConfig) config);
-            case RS21:
             case CGS22:
+                return new Cgs22CcpsiClient(clientRpc, serverParty, (Cgs22CcpsiConfig) config);
+            case RS21:
             default:
                 throw new IllegalArgumentException("Invalid " + CcpsiType.class.getSimpleName() + ": " + type.name());
         }

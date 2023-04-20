@@ -124,36 +124,19 @@ public class Cgs22RbopprfSender extends AbstractRbopprfSender {
         List<byte[]> inputs = Arrays.stream(inputArrays)
             .flatMap(Arrays::stream)
             .collect(Collectors.toList());
-        boolean success = false;
-        byte[][] garbledTableKeys = null;
-        while (!success) {
-            try {
-                garbledTableKeys = IntStream.range(0, d)
-                    .mapToObj(hashIndex -> {
-                        byte[] key = new byte[CommonConstants.BLOCK_BYTE_LENGTH];
-                        secureRandom.nextBytes(key);
-                        return key;
-                    })
-                    .toArray(byte[][]::new);
-                cuckooHashTable = CuckooHashBinFactory.createCuckooHashBin(
-                    envType, cuckooHashBinType, pointNum, garbledTableKeys
-                );
-                // insert target points
-                cuckooHashTable.insertItems(inputs);
-                success = true;
-                // if success, init bin hashes
-                binHashes = Arrays.stream(garbledTableKeys)
-                    .map(key -> {
-                        Prf prf = PrfFactory.createInstance(envType, Integer.BYTES);
-                        prf.setKey(key);
-                        return prf;
-                    })
-                    .toArray(Prf[]::new);
-            } catch (ArithmeticException ignored) {
-                // retry if failed.
-            }
-        }
-        return Arrays.stream(garbledTableKeys).collect(Collectors.toList());
+        cuckooHashTable = CuckooHashBinFactory.createEnforceNoStashCuckooHashBin(
+            envType, cuckooHashBinType, pointNum, inputs, secureRandom
+        );
+        // init bin hashes
+        byte[][] hashKeys = cuckooHashTable.getHashKeys();
+        binHashes = Arrays.stream(cuckooHashTable.getHashKeys())
+            .map(key -> {
+                Prf prf = PrfFactory.createInstance(envType, Integer.BYTES);
+                prf.setKey(key);
+                return prf;
+            })
+            .toArray(Prf[]::new);
+        return Arrays.stream(hashKeys).collect(Collectors.toList());
     }
 
     private List<byte[]> generateGarbledTablePayload(OprfSenderOutput oprfSenderOutput) {

@@ -106,9 +106,9 @@ public class Psty19UcpsiServer extends AbstractUcpsiServer {
         hashKeys = CommonUtils.generateRandomKeys(hashNum, secureRandom);
         generateBopprfInputs(l);
         stopWatch.stop();
-        long senderHashTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
+        long binTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
         stopWatch.reset();
-        logStepInfo(PtoState.INIT_STEP, 1, 3, senderHashTime, "Sender hash elements");
+        logStepInfo(PtoState.INIT_STEP, 1, 3, binTime, "Sender hash elements");
 
         stopWatch.start();
         // initialize unbalanced batch opprf
@@ -116,9 +116,9 @@ public class Psty19UcpsiServer extends AbstractUcpsiServer {
         inputArrays = null;
         targetArrays = null;
         stopWatch.stop();
-        long senderBopprfTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
+        long ubopprfTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
         stopWatch.reset();
-        logStepInfo(PtoState.INIT_STEP, 2, 3, senderBopprfTime, "Sender init unbalanced batch opprf");
+        logStepInfo(PtoState.INIT_STEP, 2, 3, ubopprfTime, "Sender init unbalanced batch opprf");
 
         stopWatch.start();
         // initialize peqt
@@ -152,8 +152,8 @@ public class Psty19UcpsiServer extends AbstractUcpsiServer {
         stopWatch.reset();
         logStepInfo(PtoState.PTO_STEP, 1, 2, senderBopprfTime, "Sender execute unbalanced batch opprf");
 
-        // membership test
         stopWatch.start();
+        // private equality test
         SquareShareZ2Vector z2Vector = peqtParty.peqt(l, targetArray);
         stopWatch.stop();
         long membershipTestTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
@@ -168,7 +168,7 @@ public class Psty19UcpsiServer extends AbstractUcpsiServer {
         int byteL = CommonUtils.getByteLength(l);
         RandomPadHashBin<ByteBuffer> simpleHashBin = new RandomPadHashBin<>(envType, beta, serverElementSize, hashKeys);
         simpleHashBin.insertItems(serverElementArrayList);
-        // P2 generates the input arrays
+        // P1 generates the input arrays
         inputArrays = IntStream.range(0, beta)
             .mapToObj(batchIndex -> {
                 ArrayList<HashBinEntry<ByteBuffer>> bin = new ArrayList<>(simpleHashBin.getBin(batchIndex));
