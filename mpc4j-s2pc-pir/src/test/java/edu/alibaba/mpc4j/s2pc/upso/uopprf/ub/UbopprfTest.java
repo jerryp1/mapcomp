@@ -10,6 +10,7 @@ import edu.alibaba.mpc4j.common.tool.utils.CommonUtils;
 import edu.alibaba.mpc4j.s2pc.upso.uopprf.UopprfTestUtils;
 import edu.alibaba.mpc4j.s2pc.upso.uopprf.ub.UbopprfFactory.UbopprfType;
 import edu.alibaba.mpc4j.s2pc.upso.uopprf.ub.okvs.OkvsUbopprfConfig;
+import edu.alibaba.mpc4j.s2pc.upso.uopprf.ub.pir.PirUbopprfConfig;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.time.StopWatch;
 import org.junit.After;
@@ -49,15 +50,15 @@ public class UbopprfTest {
     /**
      * default batch size
      */
-    private static final int DEFAULT_BATCH_NUM = 1000;
+    private static final int DEFAULT_BATCH_NUM = 64;
     /**
      * large batch size
      */
-    private static final int LARGE_BATCH_NUM = 1 << 14;
+    private static final int LARGE_BATCH_NUM = 512;
     /**
      * default point num
      */
-    private static final int DEFAULT_POINT_NUM = DEFAULT_BATCH_NUM * 3;
+    private static final int DEFAULT_POINT_NUM = 1 << 10;
     /**
      * large point num
      */
@@ -67,6 +68,10 @@ public class UbopprfTest {
     public static Collection<Object[]> configurations() {
         Collection<Object[]> configurations = new ArrayList<>();
 
+        configurations.add(new Object[]{
+            UbopprfType.PIR.name() + "(H3_SINGLETON_GCT)",
+            new PirUbopprfConfig.Builder().setOkvsType(OkvsFactory.OkvsType.H3_SINGLETON_GCT).build(),
+        });
         configurations.add(new Object[]{
             UbopprfType.OKVS.name() + "(H3_SINGLETON_GCT)",
             new OkvsUbopprfConfig.Builder().setOkvsType(OkvsFactory.OkvsType.H3_SINGLETON_GCT).build(),
@@ -179,8 +184,8 @@ public class UbopprfTest {
         receiver.setTaskId(randomTaskId);
         try {
             LOGGER.info(
-                "-----test {}, l = {}, batch_num = {}, point_num = {}, parallel = {}-----",
-                sender.getPtoDesc().getPtoName(), l, batchNum, pointNum, parallel
+                "-----test {}, l = {}, batch_num = {}, point_num = {}, parallel = {}, equal_target = {}-----",
+                sender.getPtoDesc().getPtoName(), l, batchNum, pointNum, parallel, equalTarget
             );
             // generate the sender input
             byte[][][] senderInputArrays = UopprfTestUtils.generateSenderInputArrays(batchNum, pointNum, SECURE_RANDOM);

@@ -5,10 +5,7 @@ import edu.alibaba.mpc4j.common.tool.MathPreconditions;
 import edu.alibaba.mpc4j.common.tool.utils.BytesUtils;
 import edu.alibaba.mpc4j.common.tool.utils.CommonUtils;
 import edu.alibaba.mpc4j.common.tool.utils.IntUtils;
-import edu.alibaba.mpc4j.crypto.matrix.database.Database;
-import edu.alibaba.mpc4j.crypto.matrix.database.DatabaseFactory;
 import edu.alibaba.mpc4j.crypto.matrix.database.NaiveDatabase;
-import edu.alibaba.mpc4j.crypto.matrix.database.ZlDatabase;
 import org.bouncycastle.util.encoders.Hex;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -405,7 +402,7 @@ public class PirUtils {
      * @param input 输入数据。
      * @return 比特长度。
      */
-    public static int getNumberOfBits(long input) {
+    public static int getBitLength(int input) {
         int count = 0;
         while (input != 0) {
             count++;
@@ -424,7 +421,7 @@ public class PirUtils {
         if ((input & (input - 1)) == 0) {
             return input;
         }
-        int numberOfBits = getNumberOfBits(input);
+        int numberOfBits = getBitLength(input);
         return (1 << numberOfBits);
     }
 

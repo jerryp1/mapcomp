@@ -9,6 +9,7 @@ import edu.alibaba.mpc4j.common.tool.utils.CommonUtils;
 import edu.alibaba.mpc4j.s2pc.upso.uopprf.UopprfTestUtils;
 import edu.alibaba.mpc4j.s2pc.upso.uopprf.urb.UrbopprfFactory.UrbopprfType;
 import edu.alibaba.mpc4j.s2pc.upso.uopprf.urb.cgs22.Cgs22UrbopprfConfig;
+import edu.alibaba.mpc4j.s2pc.upso.uopprf.urb.pir.PirUrbopprfConfig;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.time.StopWatch;
 import org.junit.After;
@@ -48,15 +49,15 @@ public class UrbopprfTest {
     /**
      * default batch size
      */
-    private static final int DEFAULT_BATCH_NUM = 1000;
+    private static final int DEFAULT_BATCH_NUM = 64;
     /**
      * large batch size
      */
-    private static final int LARGE_BATCH_NUM = 1 << 14;
+    private static final int LARGE_BATCH_NUM = 512;
     /**
      * default point num
      */
-    private static final int DEFAULT_POINT_NUM = DEFAULT_BATCH_NUM * 3;
+    private static final int DEFAULT_POINT_NUM = 1 << 10;
     /**
      * large point num
      */
@@ -66,8 +67,13 @@ public class UrbopprfTest {
     public static Collection<Object[]> configurations() {
         Collection<Object[]> configurations = new ArrayList<>();
 
+        // CGS22 config
         configurations.add(new Object[]{
             UrbopprfType.CGS22.name(), new Cgs22UrbopprfConfig.Builder().build(),
+        });
+        // PIR config
+        configurations.add(new Object[]{
+            UrbopprfType.PIR.name(), new PirUrbopprfConfig.Builder().build(),
         });
 
         return configurations;

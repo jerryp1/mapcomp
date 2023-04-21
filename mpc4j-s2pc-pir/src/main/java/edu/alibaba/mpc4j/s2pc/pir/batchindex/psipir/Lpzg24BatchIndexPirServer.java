@@ -18,6 +18,8 @@ import edu.alibaba.mpc4j.common.tool.polynomial.power.PowerUtils;
 import edu.alibaba.mpc4j.common.tool.polynomial.zp64.Zp64Poly;
 import edu.alibaba.mpc4j.common.tool.polynomial.zp64.Zp64PolyFactory;
 import edu.alibaba.mpc4j.common.tool.utils.*;
+import edu.alibaba.mpc4j.crypto.matrix.database.NaiveDatabase;
+import edu.alibaba.mpc4j.crypto.matrix.database.ZlDatabase;
 import edu.alibaba.mpc4j.s2pc.pir.batchindex.AbstractBatchIndexPirServer;
 import edu.alibaba.mpc4j.s2pc.upso.upsi.cmg21.Cmg21UpsiParams;
 
@@ -82,10 +84,10 @@ public class Lpzg24BatchIndexPirServer extends AbstractBatchIndexPirServer {
     }
 
     @Override
-    public void init(byte[][] elementArrayList, int elementBitLength, int maxRetrievalSize) throws MpcAbortException {
+    public void init(NaiveDatabase database, int maxRetrievalSize) throws MpcAbortException {
         logPhaseInfo(PtoState.INIT_BEGIN);
 
-        if (elementArrayList.length <= (1 << 22)) {
+        if (database.rows() <= (1 << 22)) {
             if (maxRetrievalSize <= 256) {
                 params = Cmg21UpsiParams.SERVER_1M_CLIENT_MAX_256;
             } else if (maxRetrievalSize <= 512) {
@@ -99,7 +101,7 @@ public class Lpzg24BatchIndexPirServer extends AbstractBatchIndexPirServer {
             } else {
                 MpcAbortPreconditions.checkArgument(false, "retrieval size is larger than the upper bound.");
             }
-        } else if (elementArrayList.length <= (1 << 26)) {
+        } else if (database.rows() <= (1 << 26)) {
             if (maxRetrievalSize <= 1024) {
                 params = Cmg21UpsiParams.SERVER_16M_CLIENT_MAX_1024;
             } else if (maxRetrievalSize <= 2048) {
@@ -109,7 +111,7 @@ public class Lpzg24BatchIndexPirServer extends AbstractBatchIndexPirServer {
             }
         }
 
-        setInitInput(elementArrayList, elementBitLength, maxRetrievalSize, 1);
+        setInitInput(database, maxRetrievalSize, 1);
         // 接收公钥
         DataPacketHeader bfvParamsHeader = new DataPacketHeader(
             encodeTaskId, getPtoDesc().getPtoId(), PtoStep.CLIENT_SEND_PUBLIC_KEYS.ordinal(), extraInfo,
@@ -130,15 +132,15 @@ public class Lpzg24BatchIndexPirServer extends AbstractBatchIndexPirServer {
         List<byte[]> cuckooHashKeyPayload = Arrays.stream(hashKeys).collect(Collectors.toList());
         rpc.send(DataPacket.fromByteArrayList(cuckooHashKeyHeader, cuckooHashKeyPayload));
         alpha = BigIntegerUtils.randomPositive(EccFactory.createInstance(envType).getN(), secureRandom);
-        maxBinSize = new int[partitionCount];
-        dbPlaintexts = IntStream.range(0, partitionCount)
+        maxBinSize = new int[partitionSize];
+        dbPlaintexts = IntStream.range(0, partitionSize)
             .mapToObj(i -> {
                 // 计算PRF
-                ArrayList<ByteBuffer> elementPrf = computeElementPrf(i);
+                List<ByteBuffer> elementPrf = computeElementPrf(i);
                 // 服务端哈希分桶
-                ArrayList<ArrayList<HashBinEntry<ByteBuffer>>> hashBins = generateCompleteHashBin(elementPrf, i);
+                List<List<HashBinEntry<ByteBuffer>>> hashBins = generateCompleteHashBin(elementPrf, i);
                 // 计算多项式系数
-                ArrayList<long[][]> coeffs = encodeDatabase(hashBins);
+                List<long[][]> coeffs = encodeDatabase(hashBins);
                 IntStream intStream = IntStream.range(0, coeffs.size());
                 intStream = parallel ? intStream.parallel() : intStream;
                 return intStream
@@ -197,7 +199,7 @@ public class Lpzg24BatchIndexPirServer extends AbstractBatchIndexPirServer {
         MathPreconditions.checkNonNegative("ps_low_degree", params.getPsLowDegree());
         int[][] powerDegree = computePowerDegree();
         List<byte[]> ciphertextPowers = computeQueryPowers(queryPayload, powerDegree);
-        IntStream intStream = IntStream.range(0, partitionCount);
+        IntStream intStream = IntStream.range(0, partitionSize);
         intStream = parallel ? intStream.parallel() : intStream;
         List<byte[]> response = intStream
             .mapToObj(i -> computeResponse(ciphertextPowers, powerDegree, i))
@@ -222,14 +224,14 @@ public class Lpzg24BatchIndexPirServer extends AbstractBatchIndexPirServer {
      * @param hashBins 哈希分桶。
      * @return 编码后的数据库（明文多项式的系数）。
      */
-    private ArrayList<long[][]> encodeDatabase(ArrayList<ArrayList<HashBinEntry<ByteBuffer>>> hashBins) {
+    private List<long[][]> encodeDatabase(List<List<HashBinEntry<ByteBuffer>>> hashBins) {
         Zp64Poly zp64Poly = Zp64PolyFactory.createInstance(envType, (long) params.getPlainModulus());
         // we will split the hash table into partitions
         int binSize = hashBins.get(0).size();
         int partitionNum = CommonUtils.getUnitNum(binSize, params.getMaxPartitionSizePerBin());
         int bigPartitionIndex = binSize / params.getMaxPartitionSizePerBin();
         long[][] coeffs = new long[params.getItemEncodedSlotSize() * params.getItemPerCiphertext()][];
-        ArrayList<long[][]> coeffsPolys = new ArrayList<>();
+        List<long[][]> coeffsPolys = new ArrayList<>();
         long[][] encodedItemArray = new long[params.getBinNum() * params.getItemEncodedSlotSize()][binSize];
         for (int i = 0; i < params.getBinNum(); i++) {
             IntStream intStream = parallel ? IntStream.range(0, binSize).parallel() : IntStream.range(0, binSize);
@@ -244,27 +246,27 @@ public class Lpzg24BatchIndexPirServer extends AbstractBatchIndexPirServer {
         // for each bucket, compute the coefficients of the polynomial f(x) = \prod_{y in bucket} (x - y)
         for (int i = 0; i < params.getCiphertextNum(); i++) {
             for (int partition = 0; partition < partitionNum; partition++) {
-                int partitionSize, partitionStart;
-                partitionSize = partition < bigPartitionIndex ?
+                int partitionCount, partitionStart;
+                partitionCount = partition < bigPartitionIndex ?
                     params.getMaxPartitionSizePerBin() : binSize % params.getMaxPartitionSizePerBin();
                 partitionStart = params.getMaxPartitionSizePerBin() * partition;
                 IntStream intStream = IntStream.range(0, params.getItemPerCiphertext() * params.getItemEncodedSlotSize());
                 intStream = parallel ? intStream.parallel() : intStream;
                 int finalI = i;
                 intStream.forEach(j -> {
-                    long[] tempVector = new long[partitionSize];
+                    long[] tempVector = new long[partitionCount];
                     System.arraycopy(
                         encodedItemArray[finalI * params.getItemPerCiphertext() * params.getItemEncodedSlotSize() + j],
                         partitionStart,
                         tempVector,
                         0,
-                        partitionSize
+                        partitionCount
                     );
-                    coeffs[j] = zp64Poly.rootInterpolate(partitionSize, tempVector, 0L);
+                    coeffs[j] = zp64Poly.rootInterpolate(partitionCount, tempVector, 0L);
                 });
                 // 转换为列编码
-                long[][] temp = new long[partitionSize + 1][params.getPolyModulusDegree()];
-                for (int j = 0; j < partitionSize + 1; j++) {
+                long[][] temp = new long[partitionCount + 1][params.getPolyModulusDegree()];
+                for (int j = 0; j < partitionCount + 1; j++) {
                     for (int l = 0; l < params.getItemPerCiphertext() * params.getItemEncodedSlotSize(); l++) {
                         temp[j][l] = coeffs[l][j];
                     }
@@ -287,11 +289,10 @@ public class Lpzg24BatchIndexPirServer extends AbstractBatchIndexPirServer {
         Ecc ecc = EccFactory.createInstance(envType);
         Kdf kdf = KdfFactory.createInstance(envType);
         Prg prg = PrgFactory.createInstance(envType, CommonConstants.BLOCK_BYTE_LENGTH * 2);
-        int elementSize = elementByteArray.get(partitionIndex).length;
-        IntStream intStream = IntStream.range(0, elementSize);
+        IntStream intStream = IntStream.range(0, databases[partitionIndex].rows());
         intStream = parallel ? intStream.parallel() : intStream;
         return intStream
-            .mapToObj(i -> ecc.hashToCurve(elementByteArray.get(partitionIndex)[i]))
+            .mapToObj(i -> ecc.hashToCurve(databases[partitionIndex].getBytesData(i)))
             .map(hash -> ecc.multiply(hash, alpha))
             .map(prf -> ecc.encode(prf, false))
             .map(kdf::deriveKey)
@@ -307,10 +308,10 @@ public class Lpzg24BatchIndexPirServer extends AbstractBatchIndexPirServer {
      * @param partitionIndex 分块索引。
      * @return 完全哈希分桶。
      */
-    private ArrayList<ArrayList<HashBinEntry<ByteBuffer>>> generateCompleteHashBin(ArrayList<ByteBuffer> elementList,
-                                                                                   int partitionIndex) {
+    private List<List<HashBinEntry<ByteBuffer>>> generateCompleteHashBin(List<ByteBuffer> elementList,
+                                                                         int partitionIndex) {
         RandomPadHashBin<ByteBuffer> completeHash = new RandomPadHashBin<>(
-            envType, params.getBinNum(), serverElementSize, hashKeys
+            envType, params.getBinNum(), num, hashKeys
         );
         completeHash.insertItems(elementList);
         maxBinSize[partitionIndex] = completeHash.binSize(0);
@@ -319,10 +320,12 @@ public class Lpzg24BatchIndexPirServer extends AbstractBatchIndexPirServer {
                 maxBinSize[partitionIndex] = completeHash.binSize(i);
             }
         }
-        ArrayList<ArrayList<HashBinEntry<ByteBuffer>>> completeHashBins = new ArrayList<>();
-        HashBinEntry<ByteBuffer> paddingEntry = HashBinEntry.fromEmptyItem(botElementByteBuffer);
+        List<List<HashBinEntry<ByteBuffer>>> completeHashBins = new ArrayList<>();
+        byte[] randomBytes = new byte[CommonConstants.BLOCK_BYTE_LENGTH];
+        secureRandom.nextBytes(randomBytes);
+        HashBinEntry<ByteBuffer> paddingEntry = HashBinEntry.fromEmptyItem(ByteBuffer.wrap(randomBytes));
         for (int i = 0; i < completeHash.binNum(); i++) {
-            ArrayList<HashBinEntry<ByteBuffer>> binItems = new ArrayList<>(completeHash.getBin(i));
+            List<HashBinEntry<ByteBuffer>> binItems = new ArrayList<>(completeHash.getBin(i));
             int paddingNum = maxBinSize[partitionIndex] - completeHash.binSize(i);
             IntStream.range(0, paddingNum).mapToObj(j -> paddingEntry).forEach(binItems::add);
             completeHashBins.add(binItems);
@@ -425,7 +428,7 @@ public class Lpzg24BatchIndexPirServer extends AbstractBatchIndexPirServer {
      */
     private List<byte[]> computeResponse(List<byte[]> clientQuery, int[][] powerDegree, int partitionIndex) {
         int binSize = CommonUtils.getUnitNum(maxBinSize[partitionIndex], params.getMaxPartitionSizePerBin());
-        int partitionSize = dbPlaintexts.size() / partitionCount;
+        int partitionCount = dbPlaintexts.size() / partitionSize;
         IntStream intStream = IntStream.range(0, params.getCiphertextNum());
         if (params.getPsLowDegree() > 0) {
             return intStream
@@ -434,7 +437,7 @@ public class Lpzg24BatchIndexPirServer extends AbstractBatchIndexPirServer {
                         .mapToObj(j -> Lpzg24BatchIndexPirNativeUtils.optComputeMatches(
                             sealContext,
                             relinKeys,
-                            dbPlaintexts.get(i * binSize + j + partitionIndex * partitionSize),
+                            dbPlaintexts.get(i * binSize + j + partitionIndex * partitionCount),
                             clientQuery.subList(i * powerDegree.length, (i + 1) * powerDegree.length),
                             params.getPsLowDegree()
                             ))
@@ -447,7 +450,7 @@ public class Lpzg24BatchIndexPirServer extends AbstractBatchIndexPirServer {
                     (parallel ? IntStream.range(0, binSize).parallel() : IntStream.range(0, binSize))
                         .mapToObj(j -> Lpzg24BatchIndexPirNativeUtils.naiveComputeMatches(
                             sealContext,
-                            dbPlaintexts.get(i * binSize + j + partitionIndex * partitionSize),
+                            dbPlaintexts.get(i * binSize + j + partitionIndex * partitionCount),
                             clientQuery.subList(i * powerDegree.length, (i + 1) * powerDegree.length)
                             ))
                         .toArray(byte[][]::new))
@@ -457,32 +460,27 @@ public class Lpzg24BatchIndexPirServer extends AbstractBatchIndexPirServer {
     }
 
     @Override
-    protected void setInitInput(byte[][] elementArray, int elementBitLength, int maxRetrievalSize,
-                                int partitionBitLength) {
-        MathPreconditions.checkPositive("serverElementSize", elementArray.length);
-        serverElementSize = elementArray.length;
+    protected void setInitInput(NaiveDatabase database, int maxRetrievalSize, int partitionBitLength) {
+        MathPreconditions.checkPositive("serverElementSize", database.rows());
+        num = database.rows();
         MathPreconditions.checkPositive("maxRetrievalSize", maxRetrievalSize);
         this.maxRetrievalSize = maxRetrievalSize;
-        MathPreconditions.checkPositive("elementBitLength", elementBitLength);
-        this.elementBitLength = elementBitLength;
-        MathPreconditions.checkPositiveInRangeClosed("partitionBitLength", partitionBitLength, Integer.SIZE);
-        this.partitionBitLength = partitionBitLength;
-        this.partitionCount = CommonUtils.getUnitNum(elementBitLength, partitionBitLength);
+        MathPreconditions.checkPositive("elementBitLength", database.getL());
+        this.elementBitLength = database.getL();
+        MathPreconditions.checkEqual("partitionBitLength", "1", partitionBitLength, 1);
+        this.partitionSize = CommonUtils.getUnitNum(elementBitLength, partitionBitLength);
+        databases = new ZlDatabase[partitionSize];
         int byteLength = CommonUtils.getByteLength(elementBitLength);
-        for (int i = 0; i < partitionCount; i++) {
-            ArrayList<byte[]> temp = new ArrayList<>();
-            for (int j = 0; j < serverElementSize; j++) {
-                boolean value = BinaryUtils.getBoolean(elementArray[j], byteLength * Byte.SIZE - 1 - i);
+        for (int i = 0; i < partitionSize; i++) {
+            List<byte[]> temp = new ArrayList<>();
+            for (int j = 0; j < num; j++) {
+                boolean value = BinaryUtils.getBoolean(database.getBytesData(j), byteLength * Byte.SIZE - 1 - i);
                 if (value) {
                     temp.add(IntUtils.intToByteArray(j));
                 }
             }
-            elementByteArray.add(temp.toArray(new byte[0][]));
+            databases[i] = ZlDatabase.create(Integer.BYTES * Byte.SIZE, temp.toArray(new byte[0][]));
         }
-        // 设置特殊空元素
-        byte[] botElementByteArray = new byte[Integer.BYTES];
-        Arrays.fill(botElementByteArray, (byte)0xFF);
-        botElementByteBuffer = ByteBuffer.wrap(botElementByteArray);
         initState();
     }
 }

@@ -151,7 +151,7 @@ public class Lpzg24BatchIndexPirClient extends AbstractBatchIndexPirClient {
     }
 
     @Override
-    public Map<Integer, byte[]> pir(ArrayList<Integer> indexList) throws MpcAbortException {
+    public Map<Integer, byte[]> pir(List<Integer> indexList) throws MpcAbortException {
         setPtoInput(indexList);
         logPhaseInfo(PtoState.PTO_BEGIN);
         System.out.println(params);
@@ -169,7 +169,7 @@ public class Lpzg24BatchIndexPirClient extends AbstractBatchIndexPirClient {
             otherParty().getPartyId(), ownParty().getPartyId()
         );
         List<byte[]> blindPrfPayload = rpc.receive(blindPrfHeader).getPayload();
-        ArrayList<ByteBuffer> blindPrf = handleBlindPrf(blindPrfPayload);
+        List<ByteBuffer> blindPrf = handleBlindPrf(blindPrfPayload);
         Map<ByteBuffer, ByteBuffer> blindPrfMap = IntStream.range(0, retrievalSize)
             .boxed()
             .collect(Collectors.toMap(blindPrf::get, indicesByteBuffer::get, (a, b) -> b));
@@ -235,15 +235,15 @@ public class Lpzg24BatchIndexPirClient extends AbstractBatchIndexPirClient {
      */
     private Map<Integer, byte[]> handleServerResponse(List<byte[]> serverResponse, Map<ByteBuffer, ByteBuffer> oprfMap)
         throws MpcAbortException {
-        MpcAbortPreconditions.checkArgument(serverResponse.size() % (params.getCiphertextNum() * partitionCount) == 0);
-        int partitionSize = serverResponse.size() / partitionCount;
+        MpcAbortPreconditions.checkArgument(serverResponse.size() % (params.getCiphertextNum() * partitionSize) == 0);
+        int partitionSize = serverResponse.size() / this.partitionSize;
         Stream<byte[]> responseStream = parallel ? serverResponse.stream().parallel() : serverResponse.stream();
         ArrayList<long[]> coeffs = responseStream
             .map(i -> Lpzg24BatchIndexPirNativeUtils.decodeReply(sealContext, secretKey, i))
             .collect(Collectors.toCollection(ArrayList::new));
         int byteLength = CommonUtils.getByteLength(elementBitLength);
         byte[][] pirResult = new byte[retrievalSize][byteLength];
-        for (int i = 0; i < partitionCount; i++) {
+        for (int i = 0; i < this.partitionSize; i++) {
             Set<ByteBuffer> intersectionSet = recoverIntersection(
                 coeffs.subList(i * partitionSize, (i + 1) * partitionSize), oprfMap
             );
@@ -386,7 +386,7 @@ public class Lpzg24BatchIndexPirClient extends AbstractBatchIndexPirClient {
      * @return 元素PRF。
      * @throws MpcAbortException 如果协议异常中止。
      */
-    private ArrayList<ByteBuffer> handleBlindPrf(List<byte[]> blindPrf) throws MpcAbortException {
+    private List<ByteBuffer> handleBlindPrf(List<byte[]> blindPrf) throws MpcAbortException {
         MpcAbortPreconditions.checkArgument(blindPrf.size() == retrievalSize);
         Kdf kdf = KdfFactory.createInstance(envType);
         Prg prg = PrgFactory.createInstance(envType, CommonConstants.BLOCK_BYTE_LENGTH * 2);
@@ -414,7 +414,7 @@ public class Lpzg24BatchIndexPirClient extends AbstractBatchIndexPirClient {
      * @param itemList 元素列表。
      * @return 布谷鸟哈希分桶是否成功。
      */
-    private boolean generateCuckooHashBin(ArrayList<ByteBuffer> itemList) {
+    private boolean generateCuckooHashBin(List<ByteBuffer> itemList) {
         // 初始化布谷鸟哈希
         cuckooHashBin = createCuckooHashBin(
             envType, params.getCuckooHashBinType(), retrievalSize, params.getBinNum(), hashKeys
@@ -426,7 +426,9 @@ public class Lpzg24BatchIndexPirClient extends AbstractBatchIndexPirClient {
             success = true;
         }
         // 如果成功，则向布谷鸟哈希的空余位置插入空元素
-        cuckooHashBin.insertPaddingItems(botElementByteBuffer);
+        byte[] randomBytes = new byte[CommonConstants.BLOCK_BYTE_LENGTH];
+        secureRandom.nextBytes(randomBytes);
+        cuckooHashBin.insertPaddingItems(ByteBuffer.wrap(randomBytes));
         return success;
     }
 }

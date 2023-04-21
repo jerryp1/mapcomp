@@ -7,6 +7,7 @@ import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -24,7 +25,7 @@ public class BatchPirClientThread extends Thread {
     /**
      * 客户端索引值列表
      */
-    private final ArrayList<Integer> retrievalIndexList;
+    private final List<Integer> retrievalIndexList;
     /**
      * 检索结果映射
      */
@@ -42,7 +43,7 @@ public class BatchPirClientThread extends Thread {
      */
     private final int maxRetrievalSize;
 
-    BatchPirClientThread(BatchIndexPirClient client, ArrayList<Integer> retrievalIndexList, int elementBitLength,
+    BatchPirClientThread(BatchIndexPirClient client, List<Integer> retrievalIndexList, int elementBitLength,
                          int serverElementSize, int maxRetrievalSize) {
         this.client = client;
         this.retrievalIndexList = retrievalIndexList;

@@ -3,11 +3,11 @@ package edu.alibaba.mpc4j.s2pc.pir.batchindex;
 import edu.alibaba.mpc4j.common.rpc.MpcAbortException;
 import edu.alibaba.mpc4j.common.rpc.pto.TwoPartyPto;
 
-import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 
 /**
- * 批量索引PIR协议客户端接口。
+ * batch index PIR client interface.
  *
  * @author Liqiang Peng
  * @date 2023/3/7
@@ -15,21 +15,21 @@ import java.util.Map;
 public interface BatchIndexPirClient extends TwoPartyPto {
 
     /**
-     * 初始化协议。
+     * Client initializes the protocol.
      *
-     * @param serverElementSize 服务端元素数量。
-     * @param elementBitLength  元素比特长度。
-     * @param maxRetrievalSize  最大查询数量。
-     * @throws MpcAbortException 如果协议异常中止。
+     * @param serverElementSize server element size.
+     * @param elementBitLength  element bit length.
+     * @param maxRetrievalSize  max retrieval size.
+     * @throws MpcAbortException the protocol failure aborts.
      */
     void init(int serverElementSize, int elementBitLength, int maxRetrievalSize) throws MpcAbortException;
 
     /**
-     * 执行协议。
+     * Client executes the protocol.
      *
-     * @param indices 检索值。
-     * @return 检索结果。
-     * @throws MpcAbortException 如果协议异常中止。
+     * @param retrievalIndexList retrieval index list。
+     * @return retrieval result.
+     * @throws MpcAbortException the protocol failure aborts.
      */
-    Map<Integer, byte[]> pir(ArrayList<Integer> indices) throws MpcAbortException;
+    Map<Integer, byte[]> pir(List<Integer> retrievalIndexList) throws MpcAbortException;
 }

@@ -2,12 +2,10 @@ package edu.alibaba.mpc4j.s2pc.pir.batchindex;
 
 import edu.alibaba.mpc4j.common.rpc.MpcAbortException;
 import edu.alibaba.mpc4j.common.rpc.pto.TwoPartyPto;
-
-import java.math.BigInteger;
-import java.util.ArrayList;
+import edu.alibaba.mpc4j.crypto.matrix.database.NaiveDatabase;
 
 /**
- * 批量索引PIR协议服务端接口。
+ * batch index PIR server interface.
  *
  * @author Liqiang Peng
  * @date 2023/3/7
@@ -15,19 +13,18 @@ import java.util.ArrayList;
 public interface BatchIndexPirServer extends TwoPartyPto {
 
     /**
-     * 初始化协议。
+     * Server initializes the protocol.
      *
-     * @param elementArray     元素数组。
-     * @param elementBitLength 元素比特长度。
-     * @param maxRetrievalSize 最大查询数量。
-     * @throws MpcAbortException 如果协议异常中止。
+     * @param database         database.
+     * @param maxRetrievalSize max retrieval size.
+     * @throws MpcAbortException the protocol failure aborts.
      */
-    void init(byte[][] elementArray, int elementBitLength, int maxRetrievalSize) throws MpcAbortException;
+    void init(NaiveDatabase database, int maxRetrievalSize) throws MpcAbortException;
 
     /**
-     * 执行协议。
+     * Server executes the protocol.
      *
-     * @throws MpcAbortException 如果协议异常中止。
+     * @throws MpcAbortException the protocol failure aborts.
      */
     void pir() throws MpcAbortException;
 }

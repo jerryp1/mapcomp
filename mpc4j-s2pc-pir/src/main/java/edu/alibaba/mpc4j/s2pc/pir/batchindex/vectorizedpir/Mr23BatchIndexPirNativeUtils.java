@@ -1,6 +1,5 @@
 package edu.alibaba.mpc4j.s2pc.pir.batchindex.vectorizedpir;
 
-import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -48,16 +47,6 @@ class Mr23BatchIndexPirNativeUtils {
     static native List<byte[]> preprocessDatabase(byte[] sealContext, long[][] coeffs, int totalSize);
 
     /**
-     * 计算旋转后的明文多项式。
-     *
-     * @param sealContext  SEAL上下文参数。
-     * @param g            vectorized batch pir 参数。。
-     * @param responseSize 回复消息数目。
-     * @return 旋转后的明文多项式。
-     */
-    static native List<byte[]> preprocessRotatePlain(byte[] sealContext, int g, int responseSize);
-
-    /**
      * 生成问询密文。
      *
      * @param sealContext SEAL上下文参数。
@@ -66,8 +55,7 @@ class Mr23BatchIndexPirNativeUtils {
      * @param queries     明文检索信息。
      * @return 问询密文。
      */
-    static native ArrayList<byte[]> generateQuery(byte[] sealContext, byte[] publicKey, byte[] secretKey,
-                                                  long[][] queries);
+    static native List<byte[]> generateQuery(byte[] sealContext, byte[] publicKey, byte[] secretKey, long[][] queries);
 
 
     /**
@@ -106,5 +94,5 @@ class Mr23BatchIndexPirNativeUtils {
      * @return 回复密文。
      */
     static native byte[] mergeResponse(byte[] sealContext, byte[] publicKey, byte[] galoisKey, List<byte[]> responses,
-                                       int g, List<byte[]> rotatePlain);
+                                       int g);
 }
