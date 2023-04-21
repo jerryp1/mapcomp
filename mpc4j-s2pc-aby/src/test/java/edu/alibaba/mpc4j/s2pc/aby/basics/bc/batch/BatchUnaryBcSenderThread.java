@@ -1,4 +1,4 @@
-package edu.alibaba.mpc4j.s2pc.aby.basics.bc.vector;
+package edu.alibaba.mpc4j.s2pc.aby.basics.bc.batch;
 
 import edu.alibaba.mpc4j.common.rpc.MpcAbortException;
 import edu.alibaba.mpc4j.common.tool.bitvector.BitVector;
@@ -9,12 +9,12 @@ import edu.alibaba.mpc4j.s2pc.aby.basics.bc.SquareShareZ2Vector;
 import java.util.Arrays;
 
 /**
- * Sender test thread for vector Boolean circuit unary operator.
+ * batch Boolean circuit sender thread for unary operator.
  *
  * @author Weiran Liu
  * @date 2022/12/27
  */
-class BcVectorUnarySenderThread extends Thread {
+class BatchUnaryBcSenderThread extends Thread {
     /**
      * sender
      */
@@ -52,7 +52,7 @@ class BcVectorUnarySenderThread extends Thread {
      */
     private BitVector[] z0Vectors;
 
-    BcVectorUnarySenderThread(BcParty sender, BcOperator bcOperator, BitVector[] xBitVectors) {
+    BatchUnaryBcSenderThread(BcParty sender, BcOperator bcOperator, BitVector[] xBitVectors) {
         this.sender = sender;
         this.bcOperator = bcOperator;
         this.xBitVectors = xBitVectors;

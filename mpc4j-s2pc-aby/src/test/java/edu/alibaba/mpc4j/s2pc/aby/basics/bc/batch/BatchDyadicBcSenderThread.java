@@ -1,4 +1,4 @@
-package edu.alibaba.mpc4j.s2pc.aby.basics.bc.vector;
+package edu.alibaba.mpc4j.s2pc.aby.basics.bc.batch;
 
 import edu.alibaba.mpc4j.common.rpc.MpcAbortException;
 import edu.alibaba.mpc4j.common.tool.bitvector.BitVector;
@@ -10,12 +10,12 @@ import java.util.Arrays;
 import java.util.stream.IntStream;
 
 /**
- * Sender test thread for vector Boolean circuit binary operator.
+ * batch Boolean circuit sender thread for dyadic (binary) operator.
  *
  * @author Weiran Liu
  * @date 2022/12/27
  */
-class BcVectorBinarySenderThread extends Thread {
+class BatchDyadicBcSenderThread extends Thread {
     /**
      * sender
      */
@@ -69,8 +69,8 @@ class BcVectorBinarySenderThread extends Thread {
      */
     private BitVector[] z00Vectors;
 
-    BcVectorBinarySenderThread(BcParty sender, BcOperator bcOperator,
-                               BitVector[] xBitVectors, BitVector[] yBitVectors) {
+    BatchDyadicBcSenderThread(BcParty sender, BcOperator bcOperator,
+                              BitVector[] xBitVectors, BitVector[] yBitVectors) {
         this.sender = sender;
         this.bcOperator = bcOperator;
         this.xBitVectors = xBitVectors;

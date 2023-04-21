@@ -1,4 +1,4 @@
-package edu.alibaba.mpc4j.s2pc.aby.basics.bc.vector;
+package edu.alibaba.mpc4j.s2pc.aby.basics.bc.batch;
 
 import edu.alibaba.mpc4j.common.rpc.MpcAbortException;
 import edu.alibaba.mpc4j.common.tool.bitvector.BitVector;
@@ -9,12 +9,12 @@ import edu.alibaba.mpc4j.s2pc.aby.basics.bc.SquareShareZ2Vector;
 import java.util.Arrays;
 
 /**
- * Receiver test thread for vector Boolean circuit binary operator.
+ * batch Boolean circuit receiver thread for dyadic (binary) operator.
  *
  * @author Weiran Liu
  * @date 2022/12/27
  */
-class BcVectorBinaryReceiverThread extends Thread {
+class BatchDyadicBcReceiverThread extends Thread {
     /**
      * receiver
      */
@@ -64,8 +64,8 @@ class BcVectorBinaryReceiverThread extends Thread {
      */
     private BitVector[] z00Vectors;
 
-    BcVectorBinaryReceiverThread(BcParty receiver, BcOperator bcOperator,
-                                 BitVector[] xBitVectors, BitVector[] yBitVectors) {
+    BatchDyadicBcReceiverThread(BcParty receiver, BcOperator bcOperator,
+                                BitVector[] xBitVectors, BitVector[] yBitVectors) {
         this.receiver = receiver;
         this.bcOperator = bcOperator;
         this.xBitVectors = xBitVectors;

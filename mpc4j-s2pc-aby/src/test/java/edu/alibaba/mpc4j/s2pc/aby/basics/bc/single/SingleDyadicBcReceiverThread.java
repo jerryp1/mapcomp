@@ -1,4 +1,4 @@
-package edu.alibaba.mpc4j.s2pc.aby.basics.bc.operator;
+package edu.alibaba.mpc4j.s2pc.aby.basics.bc.single;
 
 import edu.alibaba.mpc4j.common.rpc.MpcAbortException;
 import edu.alibaba.mpc4j.common.tool.bitvector.BitVector;
@@ -7,12 +7,12 @@ import edu.alibaba.mpc4j.s2pc.aby.basics.bc.BcParty;
 import edu.alibaba.mpc4j.s2pc.aby.basics.bc.SquareShareZ2Vector;
 
 /**
- * Receiver test thread for Boolean circuit binary operator.
+ * single Boolean circuit receiver thread for dyadic (binary) operator.
  *
  * @author Weiran Liu
  * @date 2022/02/14
  */
-class BcBinaryReceiverThread extends Thread {
+class SingleDyadicBcReceiverThread extends Thread {
     /**
      * receiver
      */
@@ -62,7 +62,7 @@ class BcBinaryReceiverThread extends Thread {
      */
     private BitVector z00Vector;
 
-    BcBinaryReceiverThread(BcParty receiver, BcOperator bcOperator, BitVector xBitVector, BitVector yBitVector) {
+    SingleDyadicBcReceiverThread(BcParty receiver, BcOperator bcOperator, BitVector xBitVector, BitVector yBitVector) {
         this.receiver = receiver;
         this.bcOperator = bcOperator;
         this.xBitVector = xBitVector;
@@ -171,7 +171,7 @@ class BcBinaryReceiverThread extends Thread {
                     z00Vector = receiver.revealOwn(z001);
                     break;
                 default:
-                    throw new IllegalStateException("Invalid binary boolean operator: " + bcOperator.name());
+                    throw new IllegalStateException("Invalid " + BcOperator.class.getSimpleName() + ": " + bcOperator.name());
             }
         } catch (MpcAbortException e) {
             e.printStackTrace();

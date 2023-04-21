@@ -1,4 +1,4 @@
-package edu.alibaba.mpc4j.s2pc.aby.basics.bc.operator;
+package edu.alibaba.mpc4j.s2pc.aby.basics.bc.single;
 
 import edu.alibaba.mpc4j.common.rpc.MpcAbortException;
 import edu.alibaba.mpc4j.common.tool.bitvector.BitVector;
@@ -7,12 +7,12 @@ import edu.alibaba.mpc4j.s2pc.aby.basics.bc.BcParty;
 import edu.alibaba.mpc4j.s2pc.aby.basics.bc.SquareShareZ2Vector;
 
 /**
- * Receiver test thread for Boolean circuit unary operator.
+ * single Boolean circuit receiver thread for unary operator.
  *
  * @author Weiran Liu
  * @date 2022/02/14
  */
-class BcUnaryReceiverThread extends Thread {
+class SingleUnaryBcReceiverThread extends Thread {
     /**
      * sender
      */
@@ -46,7 +46,7 @@ class BcUnaryReceiverThread extends Thread {
      */
     private BitVector z0Vector;
 
-    BcUnaryReceiverThread(BcParty receiver, BcOperator bcOperator, BitVector xBitVector) {
+    SingleUnaryBcReceiverThread(BcParty receiver, BcOperator bcOperator, BitVector xBitVector) {
         this.receiver = receiver;
         this.bcOperator = bcOperator;
         this.xBitVector = xBitVector;
@@ -91,7 +91,7 @@ class BcUnaryReceiverThread extends Thread {
                     z1Vector = receiver.revealOwn(z11);
                     break;
                 default:
-                    throw new IllegalStateException("Invalid unary boolean operator: " + bcOperator.name());
+                    throw new IllegalStateException("Invalid " + BcOperator.class.getSimpleName() + ": " + bcOperator.name());
             }
         } catch (MpcAbortException e) {
             e.printStackTrace();
