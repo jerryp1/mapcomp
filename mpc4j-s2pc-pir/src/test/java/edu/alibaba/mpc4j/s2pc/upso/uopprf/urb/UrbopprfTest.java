@@ -61,7 +61,7 @@ public class UrbopprfTest {
     /**
      * large point num
      */
-    private static final int LARGE_POINT_NUM = LARGE_BATCH_NUM * 3;
+    private static final int LARGE_POINT_NUM = 1 << 17;
 
     @Parameterized.Parameters(name = "{0}")
     public static Collection<Object[]> configurations() {

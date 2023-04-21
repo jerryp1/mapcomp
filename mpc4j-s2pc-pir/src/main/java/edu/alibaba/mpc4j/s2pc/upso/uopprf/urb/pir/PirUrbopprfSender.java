@@ -93,7 +93,6 @@ public class PirUrbopprfSender extends AbstractUrbopprfSender {
         // init oprf
         sqOprfSender.init(batchSize, sqOprfKey);
         // init batch index PIR
-        int binNum = CuckooHashBinFactory.getBinNum(cuckooHashBinType, pointNum);
         batchIndexPirServer.init(NaiveDatabase.create(l, garbledTable), batchSize * d);
         garbledTable = null;
         stopWatch.stop();
