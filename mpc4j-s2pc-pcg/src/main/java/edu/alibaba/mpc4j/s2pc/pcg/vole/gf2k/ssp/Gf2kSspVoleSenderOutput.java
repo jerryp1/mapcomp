@@ -51,7 +51,6 @@ public class Gf2kSspVoleSenderOutput implements PcgPartyOutput {
                 assert t.length == CommonConstants.BLOCK_BYTE_LENGTH
                     : "t must be in range [0, 2^" + CommonConstants.BLOCK_BIT_LENGTH + "): " + Hex.toHexString(t);
             })
-            .map(BytesUtils::clone)
             .toArray(byte[][]::new);
         return receiverOutput;
     }

@@ -38,7 +38,6 @@ public class SspCotSenderOutput implements PcgPartyOutput {
             .peek(r0 -> {
                 assert r0.length == CommonConstants.BLOCK_BYTE_LENGTH;
             })
-            .map(BytesUtils::clone)
             .toArray(byte[][]::new);
         return senderOutput;
     }

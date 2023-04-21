@@ -13,7 +13,6 @@ import edu.alibaba.mpc4j.s2pc.pcg.mtg.zl.ZlMtgTestUtils;
 import edu.alibaba.mpc4j.s2pc.pcg.mtg.zl.ZlTriple;
 import edu.alibaba.mpc4j.s2pc.pcg.mtg.zl.core.dsz15.Dsz15HeZlCoreMtgConfig;
 import edu.alibaba.mpc4j.s2pc.pcg.mtg.zl.core.dsz15.Dsz15OtZlCoreMtgConfig;
-import edu.alibaba.mpc4j.s2pc.pcg.mtg.zl.core.ideal.IdealZlCoreMtgConfig;
 import edu.alibaba.mpc4j.s2pc.pcg.mtg.zl.core.ZlCoreMtgFactory.ZlCoreMtgType;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.time.StopWatch;
@@ -65,10 +64,6 @@ public class ZlCoreMtgTest {
         };
         for (Zl zl : zls) {
             int l = zl.getL();
-            // IDEAL
-            configurations.add(new Object[]{
-                ZlCoreMtgType.IDEAL.name() + " (l = " + l + ")", new IdealZlCoreMtgConfig.Builder(zl).build(),
-            });
             // DSZ15_HE
             configurations.add(new Object[]{
                 ZlCoreMtgType.DSZ15_HE.name() + " (l = " + l + ")", new Dsz15HeZlCoreMtgConfig.Builder(zl).build(),

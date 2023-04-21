@@ -3,7 +3,6 @@ package edu.alibaba.mpc4j.s2pc.pcg.ot.cot.bsp;
 import java.util.Arrays;
 
 import edu.alibaba.mpc4j.common.tool.CommonConstants;
-import edu.alibaba.mpc4j.common.tool.utils.BytesUtils;
 import edu.alibaba.mpc4j.s2pc.pcg.PcgPartyOutput;
 
 /**
@@ -37,7 +36,6 @@ public class SspCotReceiverOutput implements PcgPartyOutput {
             .peek(rb -> {
                 assert rb.length == CommonConstants.BLOCK_BYTE_LENGTH;
             })
-            .map(BytesUtils::clone)
             .toArray(byte[][]::new);
         return receiverOutput;
     }

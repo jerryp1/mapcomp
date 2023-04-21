@@ -6,9 +6,6 @@ import edu.alibaba.mpc4j.common.rpc.desc.SecurityModel;
 import edu.alibaba.mpc4j.common.rpc.pto.PtoFactory;
 import edu.alibaba.mpc4j.common.tool.galoisfield.zl.Zl;
 import edu.alibaba.mpc4j.s2pc.pcg.mtg.zl.core.dsz15.*;
-import edu.alibaba.mpc4j.s2pc.pcg.mtg.zl.core.ideal.IdealZlCoreMtgConfig;
-import edu.alibaba.mpc4j.s2pc.pcg.mtg.zl.core.ideal.IdealZlCoreMtgReceiver;
-import edu.alibaba.mpc4j.s2pc.pcg.mtg.zl.core.ideal.IdealZlCoreMtgSender;
 
 /**
  * 核l比特三元组生成协议工厂。
@@ -28,10 +25,6 @@ public class ZlCoreMtgFactory implements PtoFactory {
      * 协议类型
      */
     public enum ZlCoreMtgType {
-        /**
-         * 理想协议
-         */
-        IDEAL,
         /**
          * OT-based DSZ15
          */
@@ -53,8 +46,6 @@ public class ZlCoreMtgFactory implements PtoFactory {
     public static ZlCoreMtgParty createSender(Rpc senderRpc, Party receiverParty, ZlCoreMtgConfig config) {
         ZlCoreMtgType type = config.getPtoType();
         switch (type) {
-            case IDEAL:
-                return new IdealZlCoreMtgSender(senderRpc, receiverParty, (IdealZlCoreMtgConfig) config);
             case DSZ15_OT:
                 return new Dsz15OtZlCoreMtgSender(senderRpc, receiverParty, (Dsz15OtZlCoreMtgConfig) config);
             case DSZ15_HE:
@@ -75,8 +66,6 @@ public class ZlCoreMtgFactory implements PtoFactory {
     public static ZlCoreMtgParty createReceiver(Rpc receiverRpc, Party senderParty, ZlCoreMtgConfig config) {
         ZlCoreMtgType type = config.getPtoType();
         switch (type) {
-            case IDEAL:
-                return new IdealZlCoreMtgReceiver(receiverRpc, senderParty, (IdealZlCoreMtgConfig) config);
             case DSZ15_OT:
                 return new Dsz15OtZlCoreMtgReceiver(receiverRpc, senderParty, (Dsz15OtZlCoreMtgConfig) config);
             case DSZ15_HE:
@@ -95,8 +84,6 @@ public class ZlCoreMtgFactory implements PtoFactory {
      */
     public static ZlCoreMtgConfig createDefaultConfig(SecurityModel securityModel, Zl zl) {
         switch (securityModel) {
-            case IDEAL:
-                return new IdealZlCoreMtgConfig.Builder(zl).build();
             case SEMI_HONEST:
                 return new Dsz15OtZlCoreMtgConfig.Builder(zl).build();
             case COVERT:

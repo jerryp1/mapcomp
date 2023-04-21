@@ -43,7 +43,6 @@ public class Gf2kSspVoleReceiverOutput {
                 assert q.length == CommonConstants.BLOCK_BYTE_LENGTH
                     : "q must be in range [0, 2^" + CommonConstants.BLOCK_BIT_LENGTH + "): " + Hex.toHexString(q);
             })
-            .map(BytesUtils::clone)
             .toArray(byte[][]::new);
         return senderOutput;
     }

@@ -39,14 +39,12 @@ public class Gf2kVoleSenderOutput implements MergedPcgPartyOutput {
                 assert x.length == CommonConstants.BLOCK_BYTE_LENGTH
                     : "x must be in range [0, 2^" + CommonConstants.BLOCK_BIT_LENGTH + "): " + Hex.toHexString(x);
             })
-            .map(BytesUtils::clone)
             .toArray(byte[][]::new);
         senderOutput.ts = Arrays.stream(ts)
             .peek(t -> {
                 assert t.length == CommonConstants.BLOCK_BYTE_LENGTH
                     : "t must be in range [0, 2^" + CommonConstants.BLOCK_BIT_LENGTH + "): " + Hex.toHexString(t);
             })
-            .map(BytesUtils::clone)
             .toArray(byte[][]::new);
 
         return senderOutput;
