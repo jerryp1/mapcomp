@@ -7,6 +7,7 @@ import edu.alibaba.mpc4j.common.rpc.RpcPropertiesUtils;
 import edu.alibaba.mpc4j.common.tool.CommonConstants;
 import edu.alibaba.mpc4j.common.tool.utils.IntUtils;
 import edu.alibaba.mpc4j.common.tool.utils.PropertiesUtils;
+import edu.alibaba.mpc4j.crypto.matrix.database.NaiveDatabase;
 import edu.alibaba.mpc4j.s2pc.pir.PirUtils;
 import edu.alibaba.mpc4j.s2pc.pir.batchindex.BatchIndexPirClient;
 import edu.alibaba.mpc4j.s2pc.pir.batchindex.BatchIndexPirConfig;
@@ -150,13 +151,14 @@ public class BatchIndexPirMain {
     private void warmupServer(Rpc serverRpc, Party clientParty, BatchIndexPirConfig config, int taskId)
         throws Exception {
         byte[][] serverElementArray = readServerElementArray(WARMUP_SERVER_ELEMENT_SIZE, WARMUP_ELEMENT_BIT_LENGTH);
+        NaiveDatabase database = NaiveDatabase.create(WARMUP_ELEMENT_BIT_LENGTH, serverElementArray);
         BatchIndexPirServer server = BatchIndexPirFactory.createServer(serverRpc, clientParty, config);
         server.setTaskId(taskId);
         server.setParallel(false);
         server.getRpc().synchronize();
         // 初始化协议
         LOGGER.info("(warmup) {} init", server.ownParty().getPartyName());
-        server.init(serverElementArray, WARMUP_ELEMENT_BIT_LENGTH, WARMUP_RETRIEVAL_SIZE);
+        server.init(database, WARMUP_RETRIEVAL_SIZE);
         server.getRpc().synchronize();
         // 执行协议
         LOGGER.info("(warmup) {} execute", server.ownParty().getPartyName());
@@ -178,13 +180,14 @@ public class BatchIndexPirMain {
         BatchIndexPirServer server = BatchIndexPirFactory.createServer(serverRpc, clientParty, config);
         server.setTaskId(taskId);
         server.setParallel(parallel);
+        NaiveDatabase database = NaiveDatabase.create(elementBitLength, serverElementArray);
         // 启动测试
         server.getRpc().synchronize();
         server.getRpc().reset();
         // 初始化协议
         LOGGER.info("{} init", server.ownParty().getPartyName());
         stopWatch.start();
-        server.init(serverElementArray, elementBitLength, maxRetrievalSize);
+        server.init(database, maxRetrievalSize);
         stopWatch.stop();
         long initTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
         stopWatch.reset();

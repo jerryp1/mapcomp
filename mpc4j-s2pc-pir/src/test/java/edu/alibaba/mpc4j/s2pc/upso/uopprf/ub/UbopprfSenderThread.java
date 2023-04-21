@@ -37,6 +37,8 @@ class UbopprfSenderThread extends Thread {
     public void run() {
         try {
             sender.init(l, inputArrays, targetArrays);
+            sender.getRpc().synchronize();
+            sender.getRpc().reset();
             sender.opprf();
         } catch (MpcAbortException e) {
             e.printStackTrace();

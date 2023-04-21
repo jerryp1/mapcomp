@@ -6,6 +6,9 @@ import edu.alibaba.mpc4j.common.rpc.desc.SecurityModel;
 import edu.alibaba.mpc4j.s2pc.upso.uopprf.urb.cgs22.Cgs22UrbopprfConfig;
 import edu.alibaba.mpc4j.s2pc.upso.uopprf.urb.cgs22.Cgs22UrbopprfReceiver;
 import edu.alibaba.mpc4j.s2pc.upso.uopprf.urb.cgs22.Cgs22UrbopprfSender;
+import edu.alibaba.mpc4j.s2pc.upso.uopprf.urb.pir.PirUrbopprfConfig;
+import edu.alibaba.mpc4j.s2pc.upso.uopprf.urb.pir.PirUrbopprfReceiver;
+import edu.alibaba.mpc4j.s2pc.upso.uopprf.urb.pir.PirUrbopprfSender;
 
 /**
  * unbalanced related-Batch OPRRF factory.
@@ -29,6 +32,10 @@ public class UrbopprfFactory {
          * CGS22, hash num = 3
          */
         CGS22,
+        /**
+         * PIR
+         */
+        PIR,
     }
 
     /**
@@ -41,10 +48,11 @@ public class UrbopprfFactory {
      */
     public static UrbopprfSender createSender(Rpc senderRpc, Party receiverParty, UrbopprfConfig config) {
         UrbopprfType type = config.getPtoType();
-        //noinspection SwitchStatementWithTooFewBranches
         switch (type) {
             case CGS22:
                 return new Cgs22UrbopprfSender(senderRpc, receiverParty, (Cgs22UrbopprfConfig) config);
+            case PIR:
+                return new PirUrbopprfSender(senderRpc, receiverParty, (PirUrbopprfConfig) config);
             default:
                 throw new IllegalArgumentException("Invalid " + UrbopprfType.class.getSimpleName() + ": " + type.name());
         }
@@ -60,10 +68,11 @@ public class UrbopprfFactory {
      */
     public static UrbopprfReceiver createReceiver(Rpc receiverRpc, Party senderParty, UrbopprfConfig config) {
         UrbopprfType type = config.getPtoType();
-        //noinspection SwitchStatementWithTooFewBranches
         switch (type) {
             case CGS22:
                 return new Cgs22UrbopprfReceiver(receiverRpc, senderParty, (Cgs22UrbopprfConfig) config);
+            case PIR:
+                return new PirUrbopprfReceiver(receiverRpc, senderParty, (PirUrbopprfConfig) config);
             default:
                 throw new IllegalArgumentException("Invalid " + UrbopprfType.class.getSimpleName() + ": " + type.name());
         }

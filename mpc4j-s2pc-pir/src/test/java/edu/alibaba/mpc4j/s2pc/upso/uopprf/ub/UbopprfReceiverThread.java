@@ -45,6 +45,8 @@ class UbopprfReceiverThread extends Thread {
     public void run() {
         try {
             receiver.init(l, inputArray.length, pointNum);
+            receiver.getRpc().synchronize();
+            receiver.getRpc().reset();
             targetArray = receiver.opprf(inputArray);
         } catch (MpcAbortException e) {
             e.printStackTrace();

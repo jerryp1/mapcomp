@@ -6,6 +6,9 @@ import edu.alibaba.mpc4j.common.rpc.desc.SecurityModel;
 import edu.alibaba.mpc4j.s2pc.upso.uopprf.ub.okvs.OkvsUbopprfConfig;
 import edu.alibaba.mpc4j.s2pc.upso.uopprf.ub.okvs.OkvsUbopprfReceiver;
 import edu.alibaba.mpc4j.s2pc.upso.uopprf.ub.okvs.OkvsUbopprfSender;
+import edu.alibaba.mpc4j.s2pc.upso.uopprf.ub.pir.PirUbopprfConfig;
+import edu.alibaba.mpc4j.s2pc.upso.uopprf.ub.pir.PirUbopprfReceiver;
+import edu.alibaba.mpc4j.s2pc.upso.uopprf.ub.pir.PirUbopprfSender;
 
 /**
  * unbalanced batched OPRRF factory.
@@ -30,9 +33,9 @@ public class UbopprfFactory {
          */
         OKVS,
         /**
-         * TABLE
+         * PIR
          */
-        TABLE,
+        PIR,
     }
 
     /**
@@ -48,7 +51,8 @@ public class UbopprfFactory {
         switch (type) {
             case OKVS:
                 return new OkvsUbopprfSender(senderRpc, receiverParty, (OkvsUbopprfConfig) config);
-            case TABLE:
+            case PIR:
+                return new PirUbopprfSender(senderRpc, receiverParty, (PirUbopprfConfig) config);
             default:
                 throw new IllegalArgumentException("Invalid " + UbopprfType.class.getSimpleName() + ": " + type.name());
         }
@@ -67,7 +71,8 @@ public class UbopprfFactory {
         switch (type) {
             case OKVS:
                 return new OkvsUbopprfReceiver(receiverRpc, senderParty, (OkvsUbopprfConfig) config);
-            case TABLE:
+            case PIR:
+                return new PirUbopprfReceiver(receiverRpc, senderParty, (PirUbopprfConfig) config);
             default:
                 throw new IllegalArgumentException("Invalid " + UbopprfType.class.getSimpleName() + ": " + type.name());
         }
