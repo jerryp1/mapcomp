@@ -3,7 +3,7 @@ package com.alibaba.mpc4j.common.circuit.z2;
 import edu.alibaba.mpc4j.common.tool.EnvType;
 import edu.alibaba.mpc4j.common.tool.bitvector.BitVector;
 import edu.alibaba.mpc4j.common.tool.utils.BigIntegerUtils;
-import edu.alibaba.mpc4j.common.tool.utils.BinaryUtils;
+import edu.alibaba.mpc4j.common.tool.utils.CommonUtils;
 import edu.alibaba.mpc4j.crypto.matrix.database.ZlDatabase;
 import org.apache.commons.lang3.time.StopWatch;
 import org.junit.Assert;
@@ -21,7 +21,7 @@ import static edu.alibaba.mpc4j.common.tool.EnvType.STANDARD_JDK;
 /**
  * Z2 Plain Arithmetic Test.
  * Plain inputs are created in [0, 2^(arithLength-1)) to avoid overflow in subtraction, which is suggested in
- * https://www.doc.ic.ac.uk/~eedwards/compsys/arithmetic/index.html
+ * https://www.doc.ic.ac.uk/~eedwards/compsys/arithmetic/index.html.
  *
  * @author Li Peng (jerry.pl@alibaba-inc.com)
  * @date 2023/4/21
@@ -39,15 +39,15 @@ public class Z2ArithmeticTest {
     /**
      * large num
      */
-    private static final int LARGE_NUM = 1 << 18;
+    private static final int LARGE_NUM = 1 << 16;
     /**
      * default arithmetic length
      */
-    private static final int DEFAULT_ARITH_LENGTH = 64;
+    private static final int DEFAULT_ARITH_BIT_LENGTH = 32;
     /**
      * large arithmetic length
      */
-    private static final int LARGE_ARITH_LENGTH = 128;
+    private static final int LARGE_ARITH_BIT_LENGTH = 64;
     /**
      * environment type
      */
@@ -55,63 +55,64 @@ public class Z2ArithmeticTest {
 
     @Test
     public void test1Num() {
-        testAllOperators(DEFAULT_ARITH_LENGTH, 1);
+        testDefaultArithBitLength(1);
+        testLargeArithBitLength(1);
     }
 
     @Test
     public void test2Num() {
-        testAllOperators(DEFAULT_ARITH_LENGTH, 2);
+        testDefaultArithBitLength(2);
+        testLargeArithBitLength(2);
     }
 
     @Test
     public void test8Num() {
-        testAllOperators(DEFAULT_ARITH_LENGTH, 8);
+        testDefaultArithBitLength(8);
+        testLargeArithBitLength(8);
     }
 
     @Test
     public void testDefaultNum() {
-        testAllOperators(DEFAULT_ARITH_LENGTH, DEFAULT_NUM);
-    }
-
-    @Test
-    public void testParallelDefaultNum() {
-        testAllOperators(DEFAULT_ARITH_LENGTH, DEFAULT_NUM);
-    }
-
-    @Test
-    public void testSmallZl() {
-        testAllOperators(DEFAULT_ARITH_LENGTH, DEFAULT_NUM);
+        testDefaultArithBitLength(DEFAULT_NUM);
+        testLargeArithBitLength(DEFAULT_NUM);
     }
 
     @Test
     public void testLargeNum() {
-        testAllOperators(DEFAULT_ARITH_LENGTH, LARGE_NUM);
+        testDefaultArithBitLength(LARGE_NUM);
+        testLargeArithBitLength(LARGE_NUM);
     }
 
-    @Test
-    public void testParallelLargeNum() {
-        testAllOperators(DEFAULT_ARITH_LENGTH, LARGE_NUM);
+    public void testDefaultArithBitLength(int num) {
+        testAllOperators(DEFAULT_ARITH_BIT_LENGTH, num);
     }
 
-    public void testAllOperators(int arithLength, int num) {
+    public void testLargeArithBitLength(int num) {
+        testAllOperators(LARGE_ARITH_BIT_LENGTH, num);
+    }
+
+    public void testAllOperators(int arithBitLength, int num) {
         // all the operator to be tested
-        testCircuit(ArithmeticOperator.LEQ, arithLength, num);
-        testCircuit(ArithmeticOperator.BIT_ADD, arithLength, num);
-        testCircuit(ArithmeticOperator.ADD, arithLength, num);
-        testCircuit(ArithmeticOperator.SUB, arithLength, num);
-        testCircuit(ArithmeticOperator.NOT, arithLength, num);
+        testCircuit(ArithmeticOperator.LEQ, arithBitLength, num);
+        testCircuit(ArithmeticOperator.BIT_ADD, arithBitLength, num);
+        testCircuit(ArithmeticOperator.ADD, arithBitLength, num);
+        testCircuit(ArithmeticOperator.SUB, arithBitLength, num);
+        testCircuit(ArithmeticOperator.NOT, arithBitLength, num);
     }
 
-    private void testCircuit(ArithmeticOperator operator, int arithLength, int num) {
+    private void testCircuit(ArithmeticOperator operator, int arithBitLength, int num) {
+        int arithByteLength = CommonUtils.getByteLength(arithBitLength);
         byte[][] xBytes = IntStream.range(0, num)
-                .mapToObj(i -> new BigInteger(arithLength - 1, SECURE_RANDOM))
-                .map(BigIntegerUtils::bigIntegerToByteArray).toArray(byte[][]::new);
+                .mapToObj(i -> new BigInteger(arithBitLength - 1, SECURE_RANDOM))
+                .map(v -> BigIntegerUtils.nonNegBigIntegerToByteArray(v, arithByteLength))
+                .toArray(byte[][]::new);
         byte[][] yBytes = IntStream.range(0, num)
-                .mapToObj(i -> new BigInteger(arithLength - 1, SECURE_RANDOM))
-                .map(BigIntegerUtils::bigIntegerToByteArray).toArray(byte[][]::new);
+                .mapToObj(i -> new BigInteger(arithBitLength - 1, SECURE_RANDOM))
+                .map(v -> BigIntegerUtils.nonNegBigIntegerToByteArray(v, arithByteLength))
+                .toArray(byte[][]::new);
 
-        ZlDatabase zlDatabaseX = ZlDatabase.create(arithLength, xBytes);
-        ZlDatabase zlDatabaseY = ZlDatabase.create(arithLength, yBytes);
+        ZlDatabase zlDatabaseX = ZlDatabase.create(arithBitLength, xBytes);
+        ZlDatabase zlDatabaseY = ZlDatabase.create(arithBitLength, yBytes);
 
         BitVector[] xBitVector = zlDatabaseX.bitPartition(envType, false);
         BitVector[] yBitVector = zlDatabaseY.bitPartition(envType, false);
@@ -132,7 +133,7 @@ public class Z2ArithmeticTest {
             stopWatch.reset();
 
             PlainZ2Vector[] z = partyThread.getZ();
-            assertOutput(operator, zlDatabaseX, zlDatabaseY, z);
+            assertOutput(operator, zlDatabaseX, zlDatabaseY, z, arithBitLength);
 
             LOGGER.info("-----test {} end-----", party.getType());
         } catch (InterruptedException e) {
@@ -141,7 +142,7 @@ public class Z2ArithmeticTest {
     }
 
     private void assertOutput(ArithmeticOperator operator, ZlDatabase zlDatabaseX, ZlDatabase zlDatabaseY,
-                              PlainZ2Vector[] z) {
+                              PlainZ2Vector[] z, int arithBitLength) {
         switch (operator) {
             case LEQ:
                 assertLeq(zlDatabaseX, zlDatabaseY, z[0]);
@@ -150,13 +151,13 @@ public class Z2ArithmeticTest {
                 assertBitAdd(zlDatabaseX, zlDatabaseY, z[0]);
                 break;
             case ADD:
-                assertAdd(zlDatabaseX, zlDatabaseY, z);
+                assertAdd(zlDatabaseX, zlDatabaseY, z, arithBitLength);
                 break;
             case SUB:
-                assertSub(zlDatabaseX, zlDatabaseY, z);
+                assertSub(zlDatabaseX, zlDatabaseY, z, arithBitLength);
                 break;
             case NOT:
-                assertNot(zlDatabaseX, z);
+                assertNot(zlDatabaseX, z, arithBitLength);
                 break;
             default:
                 throw new IllegalStateException("Invalid arithmetic operator: " + operator.name());
@@ -170,32 +171,30 @@ public class Z2ArithmeticTest {
         BitVector zBitVector = z.getBitVector();
 
         BigInteger[] xData = Arrays.stream(zlDatabaseX.getBigIntegerData())
-                .map(v -> v.compareTo(BigInteger.ONE.shiftLeft(DEFAULT_ARITH_LENGTH - 1)) >= 0
-                        ? v.subtract(BigInteger.ONE.shiftLeft(DEFAULT_ARITH_LENGTH)) : v)
                 .toArray(BigInteger[]::new);
         BigInteger[] yData = Arrays.stream(zlDatabaseY.getBigIntegerData())
-                .map(v -> v.compareTo(BigInteger.ONE.shiftLeft(DEFAULT_ARITH_LENGTH - 1)) >= 0
-                        ? v.subtract(BigInteger.ONE.shiftLeft(DEFAULT_ARITH_LENGTH)) : v)
                 .toArray(BigInteger[]::new);
 
-        byte[] zBytes = zBitVector.getBytes();
         for (int i = 0; i < rowNum; i++) {
-            boolean result = BinaryUtils.getBoolean(zBytes, i);
+            boolean result = zBitVector.get(i);
             boolean plainResult = xData[i].compareTo(yData[i]) < 0;
             Assert.assertEquals(result, plainResult);
         }
     }
 
     private void assertAdd(ZlDatabase zlDatabaseX, ZlDatabase zlDatabaseY,
-                           PlainZ2Vector[] z) {
+                           PlainZ2Vector[] z, int arithBitLength) {
 
-        BitVector[] zBitVector = IntStream.range(0, zlDatabaseX.getL()).mapToObj(i -> z[i].getBitVector()).toArray(BitVector[]::new);
+        BitVector[] zBitVector = IntStream.range(0, zlDatabaseX.getL())
+                .mapToObj(i -> z[i].getBitVector()).toArray(BitVector[]::new);
 
         ZlDatabase zlDatabaseZ = ZlDatabase.create(envType, false, zBitVector);
 
         BigInteger[] xData = zlDatabaseX.getBigIntegerData();
         BigInteger[] yData = zlDatabaseY.getBigIntegerData();
-        BigInteger[] xAddYData = IntStream.range(0, xData.length).mapToObj(i -> xData[i].add(yData[i]).mod(BigInteger.ONE.shiftLeft(DEFAULT_ARITH_LENGTH))).toArray(BigInteger[]::new);
+        BigInteger[] xAddYData = IntStream.range(0, xData.length)
+                .mapToObj(i -> xData[i].add(yData[i]).mod(BigInteger.ONE.shiftLeft(arithBitLength)))
+                .toArray(BigInteger[]::new);
         BigInteger[] zData = zlDatabaseZ.getBigIntegerData();
 
         for (int i = 0; i < zlDatabaseX.rows(); i++) {
@@ -204,22 +203,20 @@ public class Z2ArithmeticTest {
     }
 
     private void assertSub(ZlDatabase zlDatabaseX, ZlDatabase zlDatabaseY,
-                           PlainZ2Vector[] z) {
+                           PlainZ2Vector[] z, int arithBitLength) {
 
-        BitVector[] zBitVector = IntStream.range(0, zlDatabaseX.getL()).mapToObj(i -> z[i].getBitVector()).toArray(BitVector[]::new);
+        BitVector[] zBitVector = IntStream.range(0, zlDatabaseX.getL())
+                .mapToObj(i -> z[i].getBitVector()).toArray(BitVector[]::new);
         ZlDatabase zlDatabaseZ = ZlDatabase.create(envType, false, zBitVector);
 
         BigInteger[] xData = Arrays.stream(zlDatabaseX.getBigIntegerData())
-                .map(v -> v.compareTo(BigInteger.ONE.shiftLeft(DEFAULT_ARITH_LENGTH - 1)) >= 0
-                        ? v.subtract(BigInteger.ONE.shiftLeft(DEFAULT_ARITH_LENGTH)) : v)
                 .toArray(BigInteger[]::new);
         BigInteger[] yData = Arrays.stream(zlDatabaseY.getBigIntegerData())
-                .map(v -> v.compareTo(BigInteger.ONE.shiftLeft(DEFAULT_ARITH_LENGTH - 1)) >= 0
-                        ? v.subtract(BigInteger.ONE.shiftLeft(DEFAULT_ARITH_LENGTH)) : v)
                 .toArray(BigInteger[]::new);
         BigInteger[] xSubYData = IntStream.range(0, xData.length)
-                .mapToObj(i -> xData[i].subtract(yData[i]).mod(BigInteger.ONE.shiftLeft(DEFAULT_ARITH_LENGTH)))
-                .map(v -> v.compareTo(BigInteger.ZERO) < 0 ? v.add(BigInteger.ONE.shiftLeft(DEFAULT_ARITH_LENGTH)) : v).toArray(BigInteger[]::new);
+                .mapToObj(i -> xData[i].subtract(yData[i]).mod(BigInteger.ONE.shiftLeft(arithBitLength)))
+                .map(v -> v.compareTo(BigInteger.ZERO) < 0 ? v.add(BigInteger.ONE.shiftLeft(arithBitLength)) : v)
+                .toArray(BigInteger[]::new);
         BigInteger[] zData = zlDatabaseZ.getBigIntegerData();
 
         for (int i = 0; i < zlDatabaseX.rows(); i++) {
@@ -228,15 +225,15 @@ public class Z2ArithmeticTest {
     }
 
     private void assertNot(ZlDatabase zlDatabaseX,
-                           PlainZ2Vector[] z) {
+                           PlainZ2Vector[] z, int arithBitLength) {
         BitVector[] zBitVector = IntStream.range(0, zlDatabaseX.getL())
                 .mapToObj(i -> z[i].getBitVector()).toArray(BitVector[]::new);
 
         ZlDatabase zlDatabaseZ = ZlDatabase.create(envType, false, zBitVector);
 
         BigInteger[] notXData = Arrays.stream(zlDatabaseX.getBigIntegerData())
-                .map(xDatum -> xDatum.negate().subtract(BigInteger.ONE).mod(BigInteger.ONE.shiftLeft(DEFAULT_ARITH_LENGTH)))
-                .map(v -> v.compareTo(BigInteger.ZERO) < 0 ? v.add(BigInteger.ONE.shiftLeft(DEFAULT_ARITH_LENGTH)) : v)
+                .map(xDatum -> xDatum.negate().subtract(BigInteger.ONE).mod(BigInteger.ONE.shiftLeft(arithBitLength)))
+                .map(v -> v.compareTo(BigInteger.ZERO) < 0 ? v.add(BigInteger.ONE.shiftLeft(arithBitLength)) : v)
                 .toArray(BigInteger[]::new);
         BigInteger[] zData = zlDatabaseZ.getBigIntegerData();
 
