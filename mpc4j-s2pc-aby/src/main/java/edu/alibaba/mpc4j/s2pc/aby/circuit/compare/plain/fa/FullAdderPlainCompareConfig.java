@@ -63,7 +63,7 @@ public class FullAdderPlainCompareConfig implements PlainCompareConfig {
         private CotConfig cotConfig;
 
         public Builder() {
-            cotConfig = CotFactory.createCacheConfig(SecurityModel.SEMI_HONEST);
+            cotConfig = CotFactory.createDefaultConfig(SecurityModel.SEMI_HONEST, false);
         }
 
         public Builder setCotConfig(CotConfig cotConfig) {

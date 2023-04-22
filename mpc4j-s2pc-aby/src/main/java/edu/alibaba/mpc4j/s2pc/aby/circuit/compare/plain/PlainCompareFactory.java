@@ -78,11 +78,11 @@ public class PlainCompareFactory {
         switch (securityModel) {
             case IDEAL:
                 return new FullAdderPlainCompareConfig.Builder()
-                        .setCotConfig(CotFactory.createCacheConfig(SecurityModel.IDEAL))
+                        .setCotConfig(CotFactory.createDefaultConfig(SecurityModel.IDEAL, false))
                         .build();
             case SEMI_HONEST:
                 return new FullAdderPlainCompareConfig.Builder()
-                        .setCotConfig(CotFactory.createCacheConfig(SecurityModel.SEMI_HONEST))
+                        .setCotConfig(CotFactory.createDefaultConfig(SecurityModel.SEMI_HONEST, false))
                         .build();
             case COVERT:
             case MALICIOUS:

@@ -52,7 +52,7 @@ public class Z2IntegerCircuit extends AbstractZ2ArithmeticCircuit implements Z2A
     // full n-bit adder
     public SquareShareZ2Vector[] addFull(SquareShareZ2Vector[] x, SquareShareZ2Vector[] y, boolean cin) throws MpcAbortException {
         checkInputs(x, y);
-        int bitLen = x[0].getBytes().length * Byte.SIZE;
+        int bitLen = x[0].getNum();
 
         SquareShareZ2Vector cinVector = SquareShareZ2Vector.create(bitLen, cin);
         return addFull(x, y, cinVector);

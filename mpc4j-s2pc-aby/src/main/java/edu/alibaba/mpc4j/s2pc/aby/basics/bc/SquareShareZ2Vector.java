@@ -66,10 +66,7 @@ public class SquareShareZ2Vector implements ShareZ2Vector {
      * @return a share bit vector.
      */
     public static SquareShareZ2Vector create(int bitNum, boolean value) {
-        int byteLen = CommonUtils.getByteLength(bitNum);
-
-        return SquareShareZ2Vector.create(BitVectorFactory.create(bitNum, value ?
-                BytesUtils.not(new byte[byteLen], bitNum) : new byte[byteLen]), true);
+        return value ? SquareShareZ2Vector.createOnes(bitNum) : SquareShareZ2Vector.createZeros(bitNum);
     }
 
     /**

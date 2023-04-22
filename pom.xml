@@ -26,6 +26,7 @@
         <module>mpc4j-s2pc-pso</module>
         <module>mpc4j-s2pc-pjc</module>
         <module>mpc4j-sml-opboost</module>
+        <module>mpc4j-common-circuit</module>
     </modules>
 
     <properties>
