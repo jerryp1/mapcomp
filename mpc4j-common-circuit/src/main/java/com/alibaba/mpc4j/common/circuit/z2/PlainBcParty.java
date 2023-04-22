@@ -1,7 +1,5 @@
 package com.alibaba.mpc4j.common.circuit.z2;
 
-import edu.alibaba.mpc4j.common.rpc.MpcAbortException;
-
 import java.util.Arrays;
 
 /**
@@ -13,7 +11,7 @@ import java.util.Arrays;
 public class PlainBcParty implements MpcBcParty {
 
     @Override
-    public MpcZ2Vector and(MpcZ2Vector xi, MpcZ2Vector yi)  {
+    public MpcZ2Vector and(MpcZ2Vector xi, MpcZ2Vector yi) {
         return xi.and(yi);
     }
 
@@ -35,7 +33,7 @@ public class PlainBcParty implements MpcBcParty {
     }
 
     @Override
-    public MpcZ2Vector xor(MpcZ2Vector xi, MpcZ2Vector yi)  {
+    public MpcZ2Vector xor(MpcZ2Vector xi, MpcZ2Vector yi) {
         return xi.xor(yi, true);
     }
 
