@@ -4,7 +4,7 @@ import edu.alibaba.mpc4j.common.rpc.MpcAbortException;
 import edu.alibaba.mpc4j.common.tool.bitvector.BitVector;
 import edu.alibaba.mpc4j.s2pc.aby.basics.bc.BcOperator;
 import edu.alibaba.mpc4j.s2pc.aby.basics.bc.BcParty;
-import edu.alibaba.mpc4j.s2pc.aby.basics.bc.SquareShareZ2Vector;
+import edu.alibaba.mpc4j.s2pc.aby.basics.bc.SquareZ2Vector;
 
 import java.util.Arrays;
 
@@ -38,15 +38,15 @@ class BatchDyadicBcReceiverThread extends Thread {
     /**
      * share x1 array
      */
-    private SquareShareZ2Vector[] shareX1s;
+    private SquareZ2Vector[] shareX1s;
     /**
      * final x101 array
      */
-    private SquareShareZ2Vector[] finalX011s;
+    private SquareZ2Vector[] finalX011s;
     /**
      * final x001 array
      */
-    private SquareShareZ2Vector[] finalX001s;
+    private SquareZ2Vector[] finalX001s;
     /**
      * z array (plain, plain)
      */
@@ -89,15 +89,15 @@ class BatchDyadicBcReceiverThread extends Thread {
         return z00Vectors;
     }
 
-    SquareShareZ2Vector[] getShareX1s() {
+    SquareZ2Vector[] getShareX1s() {
         return shareX1s;
     }
 
-    SquareShareZ2Vector[] getFinalX011s() {
+    SquareZ2Vector[] getFinalX011s() {
         return finalX011s;
     }
 
-    SquareShareZ2Vector[] getFinalX001s() {
+    SquareZ2Vector[] getFinalX001s() {
         return finalX001s;
     }
 
@@ -106,17 +106,17 @@ class BatchDyadicBcReceiverThread extends Thread {
         try {
             receiver.init(totalBitNum, totalBitNum);
             // set inputs
-            SquareShareZ2Vector[] xs = Arrays.stream(xBitVectors)
-                .map(xBitVector -> SquareShareZ2Vector.create(xBitVector, true))
-                .toArray(SquareShareZ2Vector[]::new);
-            SquareShareZ2Vector[] ys = Arrays.stream(yBitVectors)
-                .map(yBitVector -> SquareShareZ2Vector.create(yBitVector, true))
-                .toArray(SquareShareZ2Vector[]::new);
+            SquareZ2Vector[] xs = Arrays.stream(xBitVectors)
+                .map(xBitVector -> SquareZ2Vector.create(xBitVector, true))
+                .toArray(SquareZ2Vector[]::new);
+            SquareZ2Vector[] ys = Arrays.stream(yBitVectors)
+                .map(yBitVector -> SquareZ2Vector.create(yBitVector, true))
+                .toArray(SquareZ2Vector[]::new);
             int[] vectorBitLengths = Arrays.stream(xBitVectors).mapToInt(BitVector::bitNum).toArray();
-            SquareShareZ2Vector[] x1s = receiver.shareOther(vectorBitLengths);
-            shareX1s = Arrays.stream(x1s).map(SquareShareZ2Vector::copy).toArray(SquareShareZ2Vector[]::new);
-            SquareShareZ2Vector[] y1s = receiver.shareOwn(yBitVectors);
-            SquareShareZ2Vector[] z111s, z101s, z011s, z001s;
+            SquareZ2Vector[] x1s = receiver.shareOther(vectorBitLengths);
+            shareX1s = Arrays.stream(x1s).map(SquareZ2Vector::copy).toArray(SquareZ2Vector[]::new);
+            SquareZ2Vector[] y1s = receiver.shareOwn(yBitVectors);
+            SquareZ2Vector[] z111s, z101s, z011s, z001s;
             switch (bcOperator) {
                 case XOR:
                     // (plain, plain)
@@ -129,12 +129,12 @@ class BatchDyadicBcReceiverThread extends Thread {
                     z10Vectors = receiver.revealOwn(z101s);
                     // (secret, plain)
                     z011s = receiver.xor(x1s, ys);
-                    finalX011s = Arrays.stream(x1s).map(SquareShareZ2Vector::copy).toArray(SquareShareZ2Vector[]::new);
+                    finalX011s = Arrays.stream(x1s).map(SquareZ2Vector::copy).toArray(SquareZ2Vector[]::new);
                     receiver.revealOther(z011s);
                     z01Vectors = receiver.revealOwn(z011s);
                     // (secret, secret)
                     z001s = receiver.xor(x1s, y1s);
-                    finalX001s = Arrays.stream(x1s).map(SquareShareZ2Vector::copy).toArray(SquareShareZ2Vector[]::new);
+                    finalX001s = Arrays.stream(x1s).map(SquareZ2Vector::copy).toArray(SquareZ2Vector[]::new);
                     receiver.revealOther(z001s);
                     z00Vectors = receiver.revealOwn(z001s);
                     break;
@@ -149,12 +149,12 @@ class BatchDyadicBcReceiverThread extends Thread {
                     z10Vectors = receiver.revealOwn(z101s);
                     // (secret, plain)
                     z011s = receiver.and(x1s, ys);
-                    finalX011s = Arrays.stream(x1s).map(SquareShareZ2Vector::copy).toArray(SquareShareZ2Vector[]::new);
+                    finalX011s = Arrays.stream(x1s).map(SquareZ2Vector::copy).toArray(SquareZ2Vector[]::new);
                     receiver.revealOther(z011s);
                     z01Vectors = receiver.revealOwn(z011s);
                     // (secret, secret)
                     z001s = receiver.and(x1s, y1s);
-                    finalX001s = Arrays.stream(x1s).map(SquareShareZ2Vector::copy).toArray(SquareShareZ2Vector[]::new);
+                    finalX001s = Arrays.stream(x1s).map(SquareZ2Vector::copy).toArray(SquareZ2Vector[]::new);
                     receiver.revealOther(z001s);
                     z00Vectors = receiver.revealOwn(z001s);
                     break;
@@ -169,12 +169,12 @@ class BatchDyadicBcReceiverThread extends Thread {
                     z10Vectors = receiver.revealOwn(z101s);
                     // (secret, plain)
                     z011s = receiver.or(x1s, ys);
-                    finalX011s = Arrays.stream(x1s).map(SquareShareZ2Vector::copy).toArray(SquareShareZ2Vector[]::new);
+                    finalX011s = Arrays.stream(x1s).map(SquareZ2Vector::copy).toArray(SquareZ2Vector[]::new);
                     receiver.revealOther(z011s);
                     z01Vectors = receiver.revealOwn(z011s);
                     // (secret, secret)
                     z001s = receiver.or(x1s, y1s);
-                    finalX001s = Arrays.stream(x1s).map(SquareShareZ2Vector::copy).toArray(SquareShareZ2Vector[]::new);
+                    finalX001s = Arrays.stream(x1s).map(SquareZ2Vector::copy).toArray(SquareZ2Vector[]::new);
                     receiver.revealOther(z001s);
                     z00Vectors = receiver.revealOwn(z001s);
                     break;

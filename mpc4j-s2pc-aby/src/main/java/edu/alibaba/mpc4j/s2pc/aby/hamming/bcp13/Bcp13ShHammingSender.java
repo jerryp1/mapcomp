@@ -9,7 +9,7 @@ import edu.alibaba.mpc4j.common.tool.utils.BinaryUtils;
 import edu.alibaba.mpc4j.common.tool.utils.BytesUtils;
 import edu.alibaba.mpc4j.common.tool.utils.CommonUtils;
 import edu.alibaba.mpc4j.common.tool.utils.IntUtils;
-import edu.alibaba.mpc4j.s2pc.aby.basics.bc.SquareShareZ2Vector;
+import edu.alibaba.mpc4j.s2pc.aby.basics.bc.SquareZ2Vector;
 import edu.alibaba.mpc4j.s2pc.aby.hamming.AbstractHammingParty;
 import edu.alibaba.mpc4j.s2pc.aby.hamming.bcp13.Bcp13ShHammingPtoDesc.PtoStep;
 import edu.alibaba.mpc4j.s2pc.pcg.ot.cot.CotFactory;
@@ -61,7 +61,7 @@ public class Bcp13ShHammingSender extends AbstractHammingParty {
     }
 
     @Override
-    public void sendHammingDistance(SquareShareZ2Vector x0) throws MpcAbortException {
+    public void sendHammingDistance(SquareZ2Vector x0) throws MpcAbortException {
         setPtoInput(x0);
         logPhaseInfo(PtoState.PTO_BEGIN, "Sender sends hamming distance");
 
@@ -83,7 +83,7 @@ public class Bcp13ShHammingSender extends AbstractHammingParty {
     }
 
     @Override
-    public int receiveHammingDistance(SquareShareZ2Vector x0) throws MpcAbortException {
+    public int receiveHammingDistance(SquareZ2Vector x0) throws MpcAbortException {
         setPtoInput(x0);
         logPhaseInfo(PtoState.PTO_BEGIN, "Sender receives hamming distance");
 
@@ -107,7 +107,7 @@ public class Bcp13ShHammingSender extends AbstractHammingParty {
         return hammingDistance;
     }
 
-    private int executeOtSteps(SquareShareZ2Vector x0) throws MpcAbortException {
+    private int executeOtSteps(SquareZ2Vector x0) throws MpcAbortException {
         stopWatch.start();
         // P_1 generates n random values r_1, ... r_n \in Z_{n + 1} and computes r = Σ_{i = 1}^n t_i
         int[] rs = new int[bitNum];
@@ -132,7 +132,7 @@ public class Bcp13ShHammingSender extends AbstractHammingParty {
             .mapToObj(index -> {
                 byte[] key0 = Arrays.copyOf(rotSenderOutput.getR0(index), messageByteLength);
                 byte[] key1 = Arrays.copyOf(rotSenderOutput.getR1(index), messageByteLength);
-                int rxi = BinaryUtils.getBoolean(x0.getBytes(), index + offset) ? 1 : 0;
+                int rxi = BinaryUtils.getBoolean(x0.getBitVector().getBytes(), index + offset) ? 1 : 0;
                 int negRxi = rxi ^ 1;
                 rxi = (rxi +  rs[index]) % (bitNum + 1);
                 rxi = rxi < 0 ? rxi + bitNum + 1 : rxi;

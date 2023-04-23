@@ -8,7 +8,7 @@ import edu.alibaba.mpc4j.common.tool.hashbin.object.cuckoo.CuckooHashBinFactory;
 import edu.alibaba.mpc4j.common.tool.hashbin.object.cuckoo.CuckooHashBinFactory.CuckooHashBinType;
 import edu.alibaba.mpc4j.common.tool.hashbin.object.cuckoo.NoStashCuckooHashBin;
 import edu.alibaba.mpc4j.common.tool.utils.LongUtils;
-import edu.alibaba.mpc4j.s2pc.aby.basics.bc.SquareShareZ2Vector;
+import edu.alibaba.mpc4j.s2pc.aby.basics.bc.SquareZ2Vector;
 import edu.alibaba.mpc4j.s2pc.aby.circuit.peqt.PeqtFactory;
 import edu.alibaba.mpc4j.s2pc.aby.circuit.peqt.PeqtParty;
 import edu.alibaba.mpc4j.s2pc.upso.ucpsi.AbstractUcpsiClient;
@@ -130,7 +130,7 @@ public class Psty19UcpsiClient extends AbstractUcpsiClient {
 
         stopWatch.start();
         // private equality test
-        SquareShareZ2Vector z1 = peqtParty.peqt(l, targetArray);
+        SquareZ2Vector z1 = peqtParty.peqt(l, targetArray);
         ByteBuffer[] table = IntStream.range(0, beta)
             .mapToObj(batchIndex -> {
                 HashBinEntry<ByteBuffer> item = cuckooHashBin.getHashBinEntry(batchIndex);

@@ -1,5 +1,6 @@
 package edu.alibaba.mpc4j.s2pc.aby.basics.bc;
 
+import com.alibaba.mpc4j.common.circuit.z2.MpcZ2Vector;
 import edu.alibaba.mpc4j.common.rpc.MpcAbortException;
 import edu.alibaba.mpc4j.common.rpc.Party;
 import edu.alibaba.mpc4j.common.rpc.Rpc;
@@ -81,7 +82,7 @@ public abstract class AbstractBcParty extends AbstractTwoPartyPto implements BcP
         inputBitNum += bitNum;
     }
 
-    protected void setAndInput(SquareShareZ2Vector xi, SquareShareZ2Vector yi) {
+    protected void setAndInput(SquareZ2Vector xi, SquareZ2Vector yi) {
         checkInitialized();
         MathPreconditions.checkEqual("xi.bitNum", "yi.bitNum", xi.getNum(), yi.getNum());
         MathPreconditions.checkPositiveInRangeClosed("bitNum", xi.getNum(), maxRoundBitNum);
@@ -89,7 +90,7 @@ public abstract class AbstractBcParty extends AbstractTwoPartyPto implements BcP
         bitNum = xi.getNum();
     }
 
-    protected void setXorInput(SquareShareZ2Vector xi, SquareShareZ2Vector yi) {
+    protected void setXorInput(SquareZ2Vector xi, SquareZ2Vector yi) {
         checkInitialized();
         MathPreconditions.checkEqual("xi.bitNum", "yi.bitNum", xi.getNum(), yi.getNum());
         MathPreconditions.checkPositiveInRangeClosed("bitNum", xi.getNum(), maxRoundBitNum);
@@ -97,14 +98,14 @@ public abstract class AbstractBcParty extends AbstractTwoPartyPto implements BcP
         bitNum = xi.getNum();
     }
 
-    protected void setRevealOwnInput(SquareShareZ2Vector xi) {
+    protected void setRevealOwnInput(SquareZ2Vector xi) {
         checkInitialized();
         MathPreconditions.checkPositiveInRangeClosed("xi.bitNum", xi.getNum(), maxRoundBitNum);
         // the number of output bits is added during the protocol execution.
         bitNum = xi.getNum();
     }
 
-    protected void setRevealOtherInput(SquareShareZ2Vector xi) {
+    protected void setRevealOtherInput(SquareZ2Vector xi) {
         checkInitialized();
         MathPreconditions.checkPositiveInRangeClosed("xi.bitNum", xi.getNum(), maxRoundBitNum);
         // the number of output bits is added during the protocol execution.
@@ -112,226 +113,214 @@ public abstract class AbstractBcParty extends AbstractTwoPartyPto implements BcP
     }
 
     @Override
-    public long inputBitNum(boolean reset) {
-        long result = inputBitNum;
-        inputBitNum = reset ? 0L : inputBitNum;
-        return result;
+    public SquareZ2Vector createOnes(int bitNum) {
+        return SquareZ2Vector.createOnes(bitNum);
     }
 
     @Override
-    public long andGateNum(boolean reset) {
-        long result = andGateNum;
-        andGateNum = reset ? 0L : andGateNum;
-        return result;
+    public SquareZ2Vector createZeros(int bitNum) {
+        return SquareZ2Vector.createZeros(bitNum);
     }
 
     @Override
-    public long xorGateNum(boolean reset) {
-        long result = xorGateNum;
-        xorGateNum = reset ? 0L : xorGateNum;
-        return result;
-    }
-    @Override
-    public long outputBitNum(boolean reset) {
-        long result = outputBitNum;
-        outputBitNum = reset ? 0L : outputBitNum;
-        return result;
+    public SquareZ2Vector create(int bitNum, boolean value) {
+        return SquareZ2Vector.create(bitNum, value);
     }
 
     @Override
-    public SquareShareZ2Vector[] shareOwn(BitVector[] xArray) {
+    public SquareZ2Vector createEmpty(boolean plain) {
+        return SquareZ2Vector.createEmpty(plain);
+    }
+
+    @Override
+    public SquareZ2Vector[] shareOwn(BitVector[] xArray) {
         if (xArray.length == 0) {
-            return new SquareShareZ2Vector[0];
+            return new SquareZ2Vector[0];
         }
         // merge
-        BitVector mergeX = mergeBitVectors(xArray);
+        BitVector mergeX = BitVectorFactory.merge(xArray);
         // share
-        SquareShareZ2Vector mergeShareXi = shareOwn(mergeX);
+        SquareZ2Vector mergeShareXi = shareOwn(mergeX);
         // split
-        int[] lengths = Arrays.stream(xArray).mapToInt(BitVector::bitNum).toArray();
-        return splitShareVectors(mergeShareXi, lengths);
+        int[] bitNums = Arrays.stream(xArray).mapToInt(BitVector::bitNum).toArray();
+        return Arrays.stream(split(mergeShareXi, bitNums))
+            .map(vector -> (SquareZ2Vector) vector)
+            .toArray(SquareZ2Vector[]::new);
     }
 
     @Override
-    public SquareShareZ2Vector[] shareOther(int[] bitNums) throws MpcAbortException {
+    public SquareZ2Vector[] shareOther(int[] bitNums) throws MpcAbortException {
         if (bitNums.length == 0) {
-            return new SquareShareZ2Vector[0];
+            return new SquareZ2Vector[0];
         }
         // share
         int bitNum = Arrays.stream(bitNums).sum();
-        SquareShareZ2Vector mergeShareXi = shareOther(bitNum);
+        SquareZ2Vector mergeShareXi = shareOther(bitNum);
         // split
-        return splitShareVectors(mergeShareXi, bitNums);
+        return Arrays.stream(split(mergeShareXi, bitNums))
+            .map(vector -> (SquareZ2Vector) vector)
+            .toArray(SquareZ2Vector[]::new);
     }
 
     @Override
-    public SquareShareZ2Vector[] and(SquareShareZ2Vector[] xiArray, SquareShareZ2Vector[] yiArray) throws MpcAbortException {
+    public SquareZ2Vector[] and(MpcZ2Vector[] xiArray, MpcZ2Vector[] yiArray) throws MpcAbortException {
         assert xiArray.length == yiArray.length
             : String.format("xiArray.length (%s) must be equal to yiArray.length (%s)", xiArray.length, yiArray.length);
         if (xiArray.length == 0) {
-            return new SquareShareZ2Vector[0];
+            return new SquareZ2Vector[0];
         }
         int length = xiArray.length;
-        SquareShareZ2Vector[] ziArray = new SquareShareZ2Vector[length];
+        SquareZ2Vector[] square2pcZ2XiArray = Arrays.stream(xiArray)
+            .map(vector -> (SquareZ2Vector) vector)
+            .toArray(SquareZ2Vector[]::new);
+        SquareZ2Vector[] square2pcZ2YiArray = Arrays.stream(yiArray)
+            .map(vector -> (SquareZ2Vector) vector)
+            .toArray(SquareZ2Vector[]::new);
+        SquareZ2Vector[] square2pcZ2ZiArray = new SquareZ2Vector[length];
         // plain v.s. plain
-        and(xiArray, yiArray, length, ziArray, true, true);
+        and(square2pcZ2XiArray, square2pcZ2YiArray, length, square2pcZ2ZiArray, true, true);
         // plain v.s. secret
-        and(xiArray, yiArray, length, ziArray, true, false);
+        and(square2pcZ2XiArray, square2pcZ2YiArray, length, square2pcZ2ZiArray, true, false);
         // secret v.s. plain
-        and(xiArray, yiArray, length, ziArray, false, true);
+        and(square2pcZ2XiArray, square2pcZ2YiArray, length, square2pcZ2ZiArray, false, true);
         // secret v.s. secret
-        and(xiArray, yiArray, length, ziArray, false, false);
+        and(square2pcZ2XiArray, square2pcZ2YiArray, length, square2pcZ2ZiArray, false, false);
 
-        return ziArray;
+        return square2pcZ2ZiArray;
     }
 
-    private void and(SquareShareZ2Vector[] xiArray, SquareShareZ2Vector[] yiArray, int length,
-                     SquareShareZ2Vector[] ziArray, boolean is0Plain, boolean is1Plain) throws MpcAbortException {
+    private void and(SquareZ2Vector[] xiArray, SquareZ2Vector[] yiArray, int length,
+                     SquareZ2Vector[] ziArray, boolean is0Plain, boolean is1Plain) throws MpcAbortException {
         int[] selectIndexes = IntStream.range(0, length)
             .filter(index -> (xiArray[index].isPlain() == is0Plain) && (yiArray[index].isPlain() == is1Plain))
             .toArray();
         if (selectIndexes.length == 0) {
             return;
         }
-        SquareShareZ2Vector[] selectXs = Arrays.stream(selectIndexes)
+        SquareZ2Vector[] selectXs = Arrays.stream(selectIndexes)
             .mapToObj(selectIndex -> xiArray[selectIndex])
-            .toArray(SquareShareZ2Vector[]::new);
-        SquareShareZ2Vector[] selectYs = Arrays.stream(selectIndexes)
+            .toArray(SquareZ2Vector[]::new);
+        SquareZ2Vector[] selectYs = Arrays.stream(selectIndexes)
             .mapToObj(selectIndex -> yiArray[selectIndex])
-            .toArray(SquareShareZ2Vector[]::new);
-        int[] selectBitNums = Arrays.stream(selectIndexes)
+            .toArray(SquareZ2Vector[]::new);
+        int[] bitNums = Arrays.stream(selectIndexes)
             .map(selectIndex -> {
                 int bitNum = xiArray[selectIndex].getNum();
                 assert yiArray[selectIndex].getNum() == bitNum;
                 return bitNum;
             })
             .toArray();
-        SquareShareZ2Vector mergeSelectXs = mergeShareVectors(selectXs);
-        SquareShareZ2Vector mergeSelectYs = mergeShareVectors(selectYs);
-        SquareShareZ2Vector mergeSelectZs = and(mergeSelectXs, mergeSelectYs);
-        SquareShareZ2Vector[] selectZs = splitShareVectors(mergeSelectZs, selectBitNums);
+        SquareZ2Vector mergeSelectXs = (SquareZ2Vector) merge(selectXs);
+        SquareZ2Vector mergeSelectYs = (SquareZ2Vector) merge(selectYs);
+        SquareZ2Vector mergeSelectZs = and(mergeSelectXs, mergeSelectYs);
+        SquareZ2Vector[] selectZs = Arrays.stream(split(mergeSelectZs, bitNums))
+            .map(vector -> (SquareZ2Vector) vector)
+            .toArray(SquareZ2Vector[]::new);
         assert selectZs.length == selectIndexes.length;
         IntStream.range(0, selectIndexes.length).forEach(index -> ziArray[selectIndexes[index]] = selectZs[index]);
     }
 
     @Override
-    public SquareShareZ2Vector[] xor(SquareShareZ2Vector[] xiArray, SquareShareZ2Vector[] yiArray) throws MpcAbortException {
+    public SquareZ2Vector[] xor(MpcZ2Vector[] xiArray, MpcZ2Vector[] yiArray) throws MpcAbortException {
         assert xiArray.length == yiArray.length
             : String.format("xiArray.length (%s) must be equal to yiArray.length (%s)", xiArray.length, yiArray.length);
         if (xiArray.length == 0) {
-            return new SquareShareZ2Vector[0];
+            return new SquareZ2Vector[0];
         }
         int length = xiArray.length;
-        SquareShareZ2Vector[] ziArray = new SquareShareZ2Vector[length];
+        SquareZ2Vector[] square2pcZ2XiArray = Arrays.stream(xiArray)
+            .map(vector -> (SquareZ2Vector) vector)
+            .toArray(SquareZ2Vector[]::new);
+        SquareZ2Vector[] square2pcZ2YiArray = Arrays.stream(yiArray)
+            .map(vector -> (SquareZ2Vector) vector)
+            .toArray(SquareZ2Vector[]::new);
+        SquareZ2Vector[] square2pcZ2ZiArray = new SquareZ2Vector[length];
         // plain v.s. plain
-        xor(xiArray, yiArray, length, ziArray, true, true);
+        xor(square2pcZ2XiArray, square2pcZ2YiArray, length, square2pcZ2ZiArray, true, true);
         // plain v.s. secret
-        xor(xiArray, yiArray, length, ziArray, true, false);
+        xor(square2pcZ2XiArray, square2pcZ2YiArray, length, square2pcZ2ZiArray, true, false);
         // secret v.s. plain
-        xor(xiArray, yiArray, length, ziArray, false, true);
+        xor(square2pcZ2XiArray, square2pcZ2YiArray, length, square2pcZ2ZiArray, false, true);
         // secret v.s. secret
-        xor(xiArray, yiArray, length, ziArray, false, false);
+        xor(square2pcZ2XiArray, square2pcZ2YiArray, length, square2pcZ2ZiArray, false, false);
 
-        return ziArray;
+        return square2pcZ2ZiArray;
     }
 
-    private void xor(SquareShareZ2Vector[] xiArray, SquareShareZ2Vector[] yiArray, int length,
-                     SquareShareZ2Vector[] ziArray, boolean is0Plain, boolean is1Plain) throws MpcAbortException {
+    private void xor(SquareZ2Vector[] xiArray, SquareZ2Vector[] yiArray, int length,
+                     SquareZ2Vector[] ziArray, boolean is0Plain, boolean is1Plain) throws MpcAbortException {
         int[] selectIndexes = IntStream.range(0, length)
             .filter(index -> (xiArray[index].isPlain() == is0Plain) && (yiArray[index].isPlain() == is1Plain))
             .toArray();
         if (selectIndexes.length == 0) {
             return;
         }
-        SquareShareZ2Vector[] selectXs = Arrays.stream(selectIndexes)
+        SquareZ2Vector[] selectXs = Arrays.stream(selectIndexes)
             .mapToObj(selectIndex -> xiArray[selectIndex])
-            .toArray(SquareShareZ2Vector[]::new);
-        SquareShareZ2Vector[] selectYs = Arrays.stream(selectIndexes)
+            .toArray(SquareZ2Vector[]::new);
+        SquareZ2Vector[] selectYs = Arrays.stream(selectIndexes)
             .mapToObj(selectIndex -> yiArray[selectIndex])
-            .toArray(SquareShareZ2Vector[]::new);
-        int[] selectBitNums = Arrays.stream(selectIndexes)
+            .toArray(SquareZ2Vector[]::new);
+        int[] bitNums = Arrays.stream(selectIndexes)
             .map(selectIndex -> {
                 int bitNum = xiArray[selectIndex].getNum();
                 assert yiArray[selectIndex].getNum() == bitNum;
                 return bitNum;
             })
             .toArray();
-        SquareShareZ2Vector mergeSelectXs = mergeShareVectors(selectXs);
-        SquareShareZ2Vector mergeSelectYs = mergeShareVectors(selectYs);
-        SquareShareZ2Vector mergeSelectZs = xor(mergeSelectXs, mergeSelectYs);
-        SquareShareZ2Vector[] selectZs = splitShareVectors(mergeSelectZs, selectBitNums);
+        SquareZ2Vector mergeSelectXs = (SquareZ2Vector) merge(selectXs);
+        SquareZ2Vector mergeSelectYs = (SquareZ2Vector) merge(selectYs);
+        SquareZ2Vector mergeSelectZs = xor(mergeSelectXs, mergeSelectYs);
+        SquareZ2Vector[] selectZs = Arrays.stream(split(mergeSelectZs, bitNums))
+            .map(vector -> (SquareZ2Vector) vector)
+            .toArray(SquareZ2Vector[]::new);
         assert selectZs.length == selectIndexes.length;
         IntStream.range(0, selectIndexes.length).forEach(index -> ziArray[selectIndexes[index]] = selectZs[index]);
     }
 
     @Override
-    public BitVector[] revealOwn(SquareShareZ2Vector[] xiArray) throws MpcAbortException {
+    public SquareZ2Vector not(MpcZ2Vector xi) throws MpcAbortException {
+        return xor(xi, createOnes(xi.getNum()));
+    }
+
+    @Override
+    public SquareZ2Vector[] not(MpcZ2Vector[] xiArray) throws MpcAbortException {
+        if (xiArray.length == 0) {
+            return new SquareZ2Vector[0];
+        }
+        // merge xi
+        SquareZ2Vector mergeXiArray = (SquareZ2Vector) merge(xiArray);
+        // not operation
+        SquareZ2Vector mergeZiArray = not(mergeXiArray);
+        // split
+        int[] bitNums = Arrays.stream(xiArray).mapToInt(MpcZ2Vector::getNum).toArray();
+        return Arrays.stream(split(mergeZiArray, bitNums))
+            .map(vector -> (SquareZ2Vector) vector)
+            .toArray(SquareZ2Vector[]::new);
+    }
+
+    @Override
+    public BitVector[] revealOwn(SquareZ2Vector[] xiArray) throws MpcAbortException {
         if (xiArray.length == 0) {
             return new BitVector[0];
         }
         // merge
-        SquareShareZ2Vector mergeXiArray = mergeShareVectors(xiArray);
+        SquareZ2Vector mergeXiArray = (SquareZ2Vector) merge(xiArray);
         // reveal
         BitVector mergeX = revealOwn(mergeXiArray);
         // split
-        int[] lengths = Arrays.stream(xiArray).mapToInt(ShareZ2Vector::getNum).toArray();
-        return splitBitVector(mergeX, lengths);
+        int[] bitNums = Arrays.stream(xiArray).mapToInt(SquareZ2Vector::getNum).toArray();
+        return BitVectorFactory.split(mergeX, bitNums);
     }
 
     @Override
-    public void revealOther(SquareShareZ2Vector[] xiArray) {
+    public void revealOther(SquareZ2Vector[] xiArray) {
         if (xiArray.length == 0) {
             // do nothing for 0 length
         }
         // merge
-        SquareShareZ2Vector mergeXiArray = mergeShareVectors(xiArray);
+        SquareZ2Vector mergeXiArray = (SquareZ2Vector) merge(xiArray);
         // reveal
         revealOther(mergeXiArray);
-    }
-
-    @Override
-    public SquareShareZ2Vector[] createEmptyShares(int len, int bitNum) {
-        assert len > 0 : "length of shares must be greater than 0";
-        return IntStream.range(0, len).mapToObj(i -> SquareShareZ2Vector.createEmpty(true)).toArray(SquareShareZ2Vector[]::new);
-    }
-
-    private BitVector mergeBitVectors(BitVector[] bitVectors) {
-        assert bitVectors.length > 0 : "merged vector length must be greater than 0";
-        BitVector mergeBitVector = BitVectorFactory.createEmpty();
-        for (BitVector bitVector : bitVectors) {
-            assert bitVector.bitNum() > 0 : "the number of bits must be greater than 0";
-            mergeBitVector.merge(bitVector);
-        }
-        return mergeBitVector;
-    }
-
-    private SquareShareZ2Vector mergeShareVectors(SquareShareZ2Vector[] sbitVectors) {
-        assert sbitVectors.length > 0 : "merged vector length must be greater than 0";
-        boolean plain = sbitVectors[0].isPlain();
-        SquareShareZ2Vector mergeSbitVector = SquareShareZ2Vector.createEmpty(plain);
-        // we must merge the bit vector in the reverse order
-        for (SquareShareZ2Vector sbitVector : sbitVectors) {
-            assert sbitVector.getNum() > 0 : "the number of bits must be greater than 0";
-            mergeSbitVector.merge(sbitVector);
-        }
-        return mergeSbitVector;
-    }
-
-    private BitVector[] splitBitVector(BitVector mergeBitVector, int[] lengths) {
-        BitVector[] bitVectors = new BitVector[lengths.length];
-        for (int index = 0; index < lengths.length; index++) {
-            bitVectors[index] = mergeBitVector.split(lengths[index]);
-        }
-        assert mergeBitVector.bitNum() == 0 : "merged vector must remain 0 bits: " + mergeBitVector.bitNum();
-        return bitVectors;
-    }
-
-    private SquareShareZ2Vector[] splitShareVectors(SquareShareZ2Vector mergeSbitVector, int[] lengths) {
-        SquareShareZ2Vector[] sbitVectors = new SquareShareZ2Vector[lengths.length];
-        for (int index = 0; index < lengths.length; index++) {
-            sbitVectors[index] = mergeSbitVector.split(lengths[index]);
-        }
-        assert mergeSbitVector.getNum() == 0 : "merged vector must remain 0 bits: " + mergeSbitVector.getNum();
-        return sbitVectors;
     }
 }

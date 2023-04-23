@@ -8,7 +8,7 @@ import edu.alibaba.mpc4j.common.tool.CommonConstants;
 import edu.alibaba.mpc4j.common.tool.bitvector.BitVector;
 import edu.alibaba.mpc4j.common.tool.hashbin.object.cuckoo.CuckooHashBinFactory.CuckooHashBinType;
 import edu.alibaba.mpc4j.common.tool.utils.CommonUtils;
-import edu.alibaba.mpc4j.s2pc.aby.basics.bc.SquareShareZ2Vector;
+import edu.alibaba.mpc4j.s2pc.aby.basics.bc.SquareZ2Vector;
 import edu.alibaba.mpc4j.s2pc.pso.PsoUtils;
 import edu.alibaba.mpc4j.s2pc.pso.cpsi.ccpsi.CcpsiFactory.CcpsiType;
 import edu.alibaba.mpc4j.s2pc.pso.cpsi.ccpsi.cgs22.Cgs22CcpsiConfig;
@@ -229,7 +229,7 @@ public class CcpsiTest {
             long time = stopWatch.getTime(TimeUnit.MILLISECONDS);
             stopWatch.reset();
             // verify
-            SquareShareZ2Vector serverOutput = serverThread.getServerOutput();
+            SquareZ2Vector serverOutput = serverThread.getServerOutput();
             CcpsiClientOutput clientOutput = clientThread.getClientOutput();
             assertOutput(serverElementSet, clientElementSet, serverOutput, clientOutput);
             LOGGER.info("Server data_packet_num = {}, payload_bytes = {}B, send_bytes = {}B, time = {}ms",
@@ -250,7 +250,7 @@ public class CcpsiTest {
     }
 
     private void assertOutput(Set<ByteBuffer> serverElementSet, Set<ByteBuffer> clientElementSet,
-                              SquareShareZ2Vector serverOutput, CcpsiClientOutput clientOutput) {
+                              SquareZ2Vector serverOutput, CcpsiClientOutput clientOutput) {
         Set<ByteBuffer> expectIntersectionSet = new HashSet<>(serverElementSet);
         expectIntersectionSet.retainAll(clientElementSet);
         ByteBuffer[] table = clientOutput.getTable();

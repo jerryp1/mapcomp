@@ -1,7 +1,7 @@
 package edu.alibaba.mpc4j.s2pc.opf.psm;
 
 import edu.alibaba.mpc4j.common.rpc.MpcAbortException;
-import edu.alibaba.mpc4j.s2pc.aby.basics.bc.SquareShareZ2Vector;
+import edu.alibaba.mpc4j.s2pc.aby.basics.bc.SquareZ2Vector;
 
 /**
  * private set membership sender thread.
@@ -33,7 +33,7 @@ class PsmSenderThread extends Thread {
     /**
      * z0
      */
-    private SquareShareZ2Vector z0;
+    private SquareZ2Vector z0;
 
     PsmSenderThread(PsmSender sender, int l, int d, byte[][][] inputArray) {
         this.sender = sender;
@@ -43,7 +43,7 @@ class PsmSenderThread extends Thread {
         num = inputArray.length;
     }
 
-    SquareShareZ2Vector getZ0() {
+    SquareZ2Vector getZ0() {
         return z0;
     }
 

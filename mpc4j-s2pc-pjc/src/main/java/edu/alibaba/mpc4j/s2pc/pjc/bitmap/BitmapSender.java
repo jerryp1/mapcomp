@@ -11,7 +11,7 @@ import edu.alibaba.mpc4j.common.tool.utils.BytesUtils;
 import edu.alibaba.mpc4j.common.tool.utils.LongUtils;
 import edu.alibaba.mpc4j.s2pc.aby.basics.bc.BcFactory;
 import edu.alibaba.mpc4j.s2pc.aby.basics.bc.BcParty;
-import edu.alibaba.mpc4j.s2pc.aby.basics.bc.SquareShareZ2Vector;
+import edu.alibaba.mpc4j.s2pc.aby.basics.bc.SquareZ2Vector;
 import edu.alibaba.mpc4j.s2pc.aby.hamming.HammingFactory;
 import edu.alibaba.mpc4j.s2pc.aby.hamming.HammingParty;
 import org.roaringbitmap.RoaringBitmap;
@@ -48,32 +48,32 @@ public class BitmapSender extends AbstractBitmapParty {
 
     @Override
     public SecureBitmapContainer and(SecureBitmapContainer x, SecureBitmapContainer y) throws MpcAbortException {
-        SquareShareZ2Vector vector = bcSender.and(x.getVector(), y.getVector());
+        SquareZ2Vector vector = bcSender.and(x.getVector(), y.getVector());
         return new SecureBitmapContainer(vector);
     }
 
     @Override
     public SecureBitmapContainer xor(SecureBitmapContainer x, SecureBitmapContainer y) throws MpcAbortException {
-        SquareShareZ2Vector vector = bcSender.xor(x.getVector(), y.getVector());
+        SquareZ2Vector vector = bcSender.xor(x.getVector(), y.getVector());
         return new SecureBitmapContainer(vector);
     }
 
     @Override
     public SecureBitmapContainer or(SecureBitmapContainer x, SecureBitmapContainer y) throws MpcAbortException {
-        SquareShareZ2Vector vector = bcSender.or(x.getVector(), y.getVector());
+        SquareZ2Vector vector = bcSender.or(x.getVector(), y.getVector());
         return new SecureBitmapContainer(vector);
     }
 
     @Override
     public SecureBitmapContainer not(SecureBitmapContainer x) throws MpcAbortException {
-        SquareShareZ2Vector vector = bcSender.not(x.getVector());
+        SquareZ2Vector vector = bcSender.not(x.getVector());
         return new SecureBitmapContainer(vector);
     }
 
     @Override
     public int count(SecureBitmapContainer x) throws MpcAbortException {
         if (x.isPublic()) {
-            return BytesUtils.bitCount(x.getVector().getBytes());
+            return BytesUtils.bitCount(x.getVector().getBitVector().getBytes());
         }
         hammingSender.sendHammingDistance(x.getVector());
         return hammingSender.receiveHammingDistance(x.getVector());
@@ -98,13 +98,13 @@ public class BitmapSender extends AbstractBitmapParty {
     public SecureBitmapContainer setOwnRoaringBitmap(RoaringBitmap roaringBitmap, int maxNum) {
         byte[] x = BitmapUtils.roaringBitmapToBytes(roaringBitmap, maxNum);
         BitVector xBitVector = BitVectorFactory.create(maxNum, x);
-        SquareShareZ2Vector x0 = bcSender.shareOwn(xBitVector);
+        SquareZ2Vector x0 = bcSender.shareOwn(xBitVector);
         return new SecureBitmapContainer(x0);
     }
 
     @Override
     public SecureBitmapContainer setOtherRoaringBitmap(int maxNum) throws MpcAbortException {
-        SquareShareZ2Vector y0 = bcSender.shareOther(maxNum);
+        SquareZ2Vector y0 = bcSender.shareOther(maxNum);
         return new SecureBitmapContainer(y0);
     }
 

@@ -37,9 +37,44 @@ public interface MpcBcParty {
     /**
      * Creates an empty vector.
      *
+     * @param plain the plain state.
      * @return a vector.
      */
-    MpcZ2Vector createEmpty();
+    MpcZ2Vector createEmpty(boolean plain);
+
+    /**
+     * merges the vector.
+     *
+     * @param vectors vectors.
+     * @return the merged vector.
+     */
+    default MpcZ2Vector merge(MpcZ2Vector[] vectors) {
+        assert vectors.length > 0 : "merged vector length must be greater than 0";
+        boolean plain = vectors[0].isPlain();
+        MpcZ2Vector mergeVector = createEmpty(plain);
+        // we must merge the bit vector in the reverse order
+        for (MpcZ2Vector vector : vectors) {
+            assert vector.getNum() > 0 : "the number of bits must be greater than 0";
+            mergeVector.merge(vector);
+        }
+        return mergeVector;
+    }
+
+    /**
+     * splits the vector.
+     *
+     * @param mergeVector the merged vector.
+     * @param bitNums     bits for each of the split vector.
+     * @return the split vector.
+     */
+    default MpcZ2Vector[] split(MpcZ2Vector mergeVector, int[] bitNums) {
+        MpcZ2Vector[] splitVectors = new MpcZ2Vector[bitNums.length];
+        for (int index = 0; index < bitNums.length; index++) {
+            splitVectors[index] = (MpcZ2Vector) mergeVector.split(bitNums[index]);
+        }
+        assert mergeVector.getNum() == 0 : "merged vector must remain 0 bits: " + mergeVector.getNum();
+        return splitVectors;
+    }
 
     /**
      * AND operation.
@@ -89,9 +124,7 @@ public interface MpcBcParty {
      * @return zi, such that z = x | y.
      * @throws MpcAbortException if the protocol is abort.
      */
-    default MpcZ2Vector or(MpcZ2Vector xi, MpcZ2Vector yi) throws MpcAbortException {
-        return xor(xor(xi, yi), and(xi, yi));
-    }
+    MpcZ2Vector or(MpcZ2Vector xi, MpcZ2Vector yi) throws MpcAbortException;
 
 
     /**
@@ -102,9 +135,7 @@ public interface MpcBcParty {
      * @return zi array, such that for each j, z[i] = z[i] | y[i].
      * @throws MpcAbortException if the protocol is abort.
      */
-    default MpcZ2Vector[] or(MpcZ2Vector[] xiArray, MpcZ2Vector[] yiArray) throws MpcAbortException {
-        return xor(xor(xiArray, yiArray), and(xiArray, yiArray));
-    }
+    MpcZ2Vector[] or(MpcZ2Vector[] xiArray, MpcZ2Vector[] yiArray) throws MpcAbortException;
 
     /**
      * NOT operation.

@@ -8,7 +8,7 @@ import edu.alibaba.mpc4j.common.tool.hashbin.object.cuckoo.CuckooHashBinFactory;
 import edu.alibaba.mpc4j.common.tool.hashbin.object.cuckoo.CuckooHashBinFactory.CuckooHashBinType;
 import edu.alibaba.mpc4j.common.tool.hashbin.object.cuckoo.NoStashCuckooHashBin;
 import edu.alibaba.mpc4j.common.tool.utils.LongUtils;
-import edu.alibaba.mpc4j.s2pc.aby.basics.bc.SquareShareZ2Vector;
+import edu.alibaba.mpc4j.s2pc.aby.basics.bc.SquareZ2Vector;
 import edu.alibaba.mpc4j.s2pc.opf.psm.PsmFactory;
 import edu.alibaba.mpc4j.s2pc.opf.psm.PsmSender;
 import edu.alibaba.mpc4j.s2pc.upso.ucpsi.AbstractUcpsiClient;
@@ -137,7 +137,7 @@ public class Cgs22UcpsiClient extends AbstractUcpsiClient {
 
         stopWatch.start();
         // private set membership
-        SquareShareZ2Vector z1 = psmSender.psm(l, targetArrays);
+        SquareZ2Vector z1 = psmSender.psm(l, targetArrays);
         // create the table
         ByteBuffer[] table = IntStream.range(0, beta)
             .mapToObj(batchIndex -> {

@@ -11,8 +11,8 @@ import edu.alibaba.mpc4j.common.tool.utils.BigIntegerUtils;
 import edu.alibaba.mpc4j.common.tool.utils.BinaryUtils;
 import edu.alibaba.mpc4j.common.tool.utils.BytesUtils;
 import edu.alibaba.mpc4j.crypto.matrix.vector.ZlVector;
-import edu.alibaba.mpc4j.s2pc.aby.basics.ac.zl.SquareShareZlVector;
-import edu.alibaba.mpc4j.s2pc.aby.basics.bc.SquareShareZ2Vector;
+import edu.alibaba.mpc4j.s2pc.aby.basics.ac.zl.SquareZlVector;
+import edu.alibaba.mpc4j.s2pc.aby.basics.bc.SquareZ2Vector;
 import edu.alibaba.mpc4j.s2pc.aby.circuit.mux.zl.AbstractZlMuxParty;
 import edu.alibaba.mpc4j.s2pc.aby.circuit.mux.zl.rrk20.Rrk20ZlMuxPtoDesc.PtoStep;
 import edu.alibaba.mpc4j.s2pc.pcg.ot.cot.*;
@@ -78,7 +78,7 @@ public class Rrk20ZlMuxReceiver extends AbstractZlMuxParty {
     }
 
     @Override
-    public SquareShareZlVector mux(SquareShareZ2Vector x1, SquareShareZlVector y1) throws MpcAbortException {
+    public SquareZlVector mux(SquareZ2Vector x1, SquareZlVector y1) throws MpcAbortException {
         setPtoInput(x1, y1);
         logPhaseInfo(PtoState.PTO_BEGIN);
 
@@ -91,7 +91,7 @@ public class Rrk20ZlMuxReceiver extends AbstractZlMuxParty {
 
         stopWatch.start();
         // P1 invokes an instance of COT, where P1 is the receiver with inputs x1.
-        byte[] x1Bytes = x1.getBytes();
+        byte[] x1Bytes = x1.getBitVector().getBytes();
         boolean[] x1Binary = BinaryUtils.byteArrayToBinary(x1Bytes, num);
         CotReceiverOutput cotReceiverOutput = cotReceiver.receive(x1Binary);
         // P1 invokes an instance of COT, where P1 is the sender with inputs (t0, t1).
@@ -117,7 +117,7 @@ public class Rrk20ZlMuxReceiver extends AbstractZlMuxParty {
         List<byte[]> s0s1Payload = rpc.receive(s0s1Header).getPayload();
 
         stopWatch.start();
-        SquareShareZlVector z1 = s0s1(cotReceiverOutput, s0s1Payload);
+        SquareZlVector z1 = s0s1(cotReceiverOutput, s0s1Payload);
         r1ZlVector = null;
         stopWatch.stop();
         long t0t1Time = stopWatch.getTime(TimeUnit.MILLISECONDS);
@@ -128,7 +128,7 @@ public class Rrk20ZlMuxReceiver extends AbstractZlMuxParty {
         return z1;
     }
 
-    private void prepare(SquareShareZ2Vector x1, SquareShareZlVector y1) {
+    private void prepare(SquareZ2Vector x1, SquareZlVector y1) {
         // P1 picks r1 ∈ Zn
         r1ZlVector = ZlVector.createRandom(zl, num, secureRandom);
         ZlVector negR1ZlVector = r1ZlVector.neg();
@@ -191,7 +191,7 @@ public class Rrk20ZlMuxReceiver extends AbstractZlMuxParty {
         rpc.send(DataPacket.fromByteArrayList(t0t1Header, t0t1Payload));
     }
 
-    private SquareShareZlVector s0s1(CotReceiverOutput cotReceiverOutput, List<byte[]> s0s1Payload) throws MpcAbortException {
+    private SquareZlVector s0s1(CotReceiverOutput cotReceiverOutput, List<byte[]> s0s1Payload) throws MpcAbortException {
         MpcAbortPreconditions.checkArgument(s0s1Payload.size() == num * 2);
         byte[][] s0s = s0s1Payload.subList(0, num).toArray(new byte[0][]);
         byte[][] s1s = s0s1Payload.subList(num, num * 2).toArray(new byte[0][]);
@@ -214,6 +214,6 @@ public class Rrk20ZlMuxReceiver extends AbstractZlMuxParty {
             .toArray(BigInteger[]::new);
         ZlVector z1ZlVector = ZlVector.create(zl, a1s);
         z1ZlVector.addi(r1ZlVector);
-        return SquareShareZlVector.create(z1ZlVector, false);
+        return SquareZlVector.create(z1ZlVector, false);
     }
 }

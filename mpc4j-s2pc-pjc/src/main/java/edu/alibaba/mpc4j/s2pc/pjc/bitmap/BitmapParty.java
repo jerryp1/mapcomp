@@ -2,7 +2,7 @@ package edu.alibaba.mpc4j.s2pc.pjc.bitmap;
 
 import edu.alibaba.mpc4j.common.rpc.MpcAbortException;
 import edu.alibaba.mpc4j.common.rpc.pto.TwoPartyPto;
-import edu.alibaba.mpc4j.s2pc.aby.basics.bc.SquareShareZ2Vector;
+import edu.alibaba.mpc4j.s2pc.aby.basics.bc.SquareZ2Vector;
 import org.roaringbitmap.BitmapContainer;
 import org.roaringbitmap.Container;
 import org.roaringbitmap.RoaringBitmap;
@@ -92,7 +92,7 @@ public interface BitmapParty extends TwoPartyPto {
 
     default SecureBitmapContainer setPublicRoaringBitmap(RoaringBitmap roaringBitmap, int maxNum) {
         byte[] bytes = BitmapUtils.roaringBitmapToBytes(roaringBitmap, maxNum);
-        SquareShareZ2Vector vector = SquareShareZ2Vector.create(maxNum, bytes, true);
+        SquareZ2Vector vector = SquareZ2Vector.create(maxNum, bytes, true);
         return new SecureBitmapContainer(vector);
     }
 

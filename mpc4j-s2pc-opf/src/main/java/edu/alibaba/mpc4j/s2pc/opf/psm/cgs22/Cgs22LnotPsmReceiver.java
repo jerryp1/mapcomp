@@ -8,7 +8,7 @@ import edu.alibaba.mpc4j.common.tool.utils.CommonUtils;
 import edu.alibaba.mpc4j.common.tool.utils.LongUtils;
 import edu.alibaba.mpc4j.s2pc.aby.basics.bc.BcFactory;
 import edu.alibaba.mpc4j.s2pc.aby.basics.bc.BcParty;
-import edu.alibaba.mpc4j.s2pc.aby.basics.bc.SquareShareZ2Vector;
+import edu.alibaba.mpc4j.s2pc.aby.basics.bc.SquareZ2Vector;
 import edu.alibaba.mpc4j.s2pc.opf.psm.cgs22.Cgs22LnotPsmPtoDesc.PtoStep;
 import edu.alibaba.mpc4j.s2pc.opf.psm.AbstractPsmReceiver;
 import edu.alibaba.mpc4j.s2pc.pcg.ot.lnot.LnotFactory;
@@ -64,7 +64,7 @@ public class Cgs22LnotPsmReceiver extends AbstractPsmReceiver {
     }
 
     @Override
-    public SquareShareZ2Vector psm(int l, byte[][] inputArray) throws MpcAbortException {
+    public SquareZ2Vector psm(int l, byte[][] inputArray) throws MpcAbortException {
         setPtoInput(l, inputArray);
         logPhaseInfo(PtoState.PTO_BEGIN);
 
@@ -115,7 +115,7 @@ public class Cgs22LnotPsmReceiver extends AbstractPsmReceiver {
         logStepInfo(PtoState.PTO_STEP, 2, 3, lnotTime);
 
         stopWatch.start();
-        SquareShareZ2Vector z1 = combine(eqArrays, q);
+        SquareZ2Vector z1 = combine(eqArrays, q);
         stopWatch.stop();
         long bitwiseTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
         stopWatch.reset();
@@ -141,11 +141,11 @@ public class Cgs22LnotPsmReceiver extends AbstractPsmReceiver {
         return partitionInputArray;
     }
 
-    private SquareShareZ2Vector combine(BitVector[][] eqArrays, int q) throws MpcAbortException {
-        SquareShareZ2Vector[][] eqArrays1 = new SquareShareZ2Vector[d][q];
+    private SquareZ2Vector combine(BitVector[][] eqArrays, int q) throws MpcAbortException {
+        SquareZ2Vector[][] eqArrays1 = new SquareZ2Vector[d][q];
         for (int i = 0; i < d; i++) {
             for (int j = 0; j < q; j++) {
-                eqArrays1[i][j] = SquareShareZ2Vector.create(eqArrays[i][j], false);
+                eqArrays1[i][j] = SquareZ2Vector.create(eqArrays[i][j], false);
             }
         }
         int logQ = LongUtils.ceilLog2(q);
@@ -155,13 +155,13 @@ public class Cgs22LnotPsmReceiver extends AbstractPsmReceiver {
             for (int t = 1; t <= logQ; t++) {
                 // P1 invokes F_AND with inputs <eq_{t-1,i,2j}_1 and <eq_{t-1,i,2j+1}_1 to learn output <eq_{t,i,j}>_1
                 int nodeNum = eqArrays1[i].length / 2;
-                SquareShareZ2Vector[] eqsx1 = new SquareShareZ2Vector[nodeNum];
-                SquareShareZ2Vector[] eqsy1 = new SquareShareZ2Vector[nodeNum];
+                SquareZ2Vector[] eqsx1 = new SquareZ2Vector[nodeNum];
+                SquareZ2Vector[] eqsy1 = new SquareZ2Vector[nodeNum];
                 for (int k = 0; k < nodeNum; k++) {
                     eqsx1[k] = eqArrays1[i][k * 2];
                     eqsy1[k] = eqArrays1[i][k * 2 + 1];
                 }
-                SquareShareZ2Vector[] eqsz1 = bcReceiver.and(eqsx1, eqsy1);
+                SquareZ2Vector[] eqsz1 = bcReceiver.and(eqsx1, eqsy1);
                 if (eqArrays1[i].length % 2 == 1) {
                     eqsz1 = Arrays.copyOf(eqsz1, nodeNum + 1);
                     eqsz1[nodeNum] = eqArrays1[i][eqArrays1[i].length - 1];
@@ -170,7 +170,7 @@ public class Cgs22LnotPsmReceiver extends AbstractPsmReceiver {
             }
         }
         // P1 computes eq_{log(q),1,0}_1 ⊕ ... ⊕ eq_{log(q),d,0}_1
-        SquareShareZ2Vector z1 = SquareShareZ2Vector.createZeros(num);
+        SquareZ2Vector z1 = SquareZ2Vector.createZeros(num);
         for (int i = 0; i < d; i++) {
             z1 = bcReceiver.xor(z1, eqArrays1[i][0]);
         }

@@ -11,7 +11,7 @@ import edu.alibaba.mpc4j.common.tool.hashbin.object.cuckoo.CuckooHashBinFactory.
 import edu.alibaba.mpc4j.common.tool.utils.BytesUtils;
 import edu.alibaba.mpc4j.common.tool.utils.CommonUtils;
 import edu.alibaba.mpc4j.common.tool.utils.LongUtils;
-import edu.alibaba.mpc4j.s2pc.aby.basics.bc.SquareShareZ2Vector;
+import edu.alibaba.mpc4j.s2pc.aby.basics.bc.SquareZ2Vector;
 import edu.alibaba.mpc4j.s2pc.opf.psm.PsmFactory;
 import edu.alibaba.mpc4j.s2pc.opf.psm.PsmReceiver;
 import edu.alibaba.mpc4j.s2pc.upso.ucpsi.AbstractUcpsiServer;
@@ -138,7 +138,7 @@ public class Cgs22UcpsiServer extends AbstractUcpsiServer {
     }
 
     @Override
-    public SquareShareZ2Vector psi() throws MpcAbortException {
+    public SquareZ2Vector psi() throws MpcAbortException {
         setPtoInput();
         logPhaseInfo(PtoState.PTO_BEGIN);
 
@@ -160,7 +160,7 @@ public class Cgs22UcpsiServer extends AbstractUcpsiServer {
 
         stopWatch.start();
         // private set membership
-        SquareShareZ2Vector z0 = psmReceiver.psm(l, targetArray);
+        SquareZ2Vector z0 = psmReceiver.psm(l, targetArray);
         targetArray = null;
         stopWatch.stop();
         long psmTime = stopWatch.getTime(TimeUnit.MILLISECONDS);

@@ -30,13 +30,12 @@
         </dependency>
         <dependency>
             <groupId>edu.alibaba</groupId>
-            <artifactId>mpc4j-s2pc-aby</artifactId>
+            <artifactId>mpc4j-common-rpc</artifactId>
             <version>1.0.7-SNAPSHOT</version>
-            <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>edu.alibaba</groupId>
-            <artifactId>mpc4j-common-rpc</artifactId>
+            <artifactId>mpc4j-crypto-matrix</artifactId>
             <version>1.0.7-SNAPSHOT</version>
         </dependency>
     </dependencies>

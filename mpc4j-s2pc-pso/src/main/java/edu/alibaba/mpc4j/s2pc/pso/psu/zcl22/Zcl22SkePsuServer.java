@@ -13,7 +13,7 @@ import edu.alibaba.mpc4j.common.tool.okve.ovdm.gf2e.Gf2eOvdmFactory;
 import edu.alibaba.mpc4j.common.tool.okve.ovdm.gf2e.Gf2eOvdmFactory.Gf2eOvdmType;
 import edu.alibaba.mpc4j.common.tool.utils.BytesUtils;
 import edu.alibaba.mpc4j.common.tool.utils.LongUtils;
-import edu.alibaba.mpc4j.s2pc.aby.basics.bc.SquareShareZ2Vector;
+import edu.alibaba.mpc4j.s2pc.aby.basics.bc.SquareZ2Vector;
 import edu.alibaba.mpc4j.s2pc.aby.basics.bc.BcFactory;
 import edu.alibaba.mpc4j.s2pc.aby.basics.bc.BcParty;
 import edu.alibaba.mpc4j.s2pc.pcg.ot.cot.CotSenderOutput;
@@ -211,12 +211,12 @@ public class Zcl22SkePsuServer extends AbstractPsuServer {
         TransBitMatrix transposeTransBitMatrix = transBitMatrix.transpose();
         int logSize = LongUtils.ceilLog2(serverElementSize);
         // 服务端结构初始化全为1
-        SquareShareZ2Vector serverPeqtShares = SquareShareZ2Vector.createOnes(serverElementSize);
+        SquareZ2Vector serverPeqtShares = SquareZ2Vector.createOnes(serverElementSize);
         for (int index = 0; index < CommonConstants.BLOCK_BIT_LENGTH - logSize; index++) {
             byte[] bits = transposeTransBitMatrix.getColumn(index);
-            SquareShareZ2Vector notBits = bcSender.not(SquareShareZ2Vector.create(serverElementSize, bits, false));
+            SquareZ2Vector notBits = bcSender.not(SquareZ2Vector.create(serverElementSize, bits, false));
             serverPeqtShares = bcSender.and(serverPeqtShares, notBits);
         }
-        return serverPeqtShares.getBytes();
+        return serverPeqtShares.getBitVector().getBytes();
     }
 }

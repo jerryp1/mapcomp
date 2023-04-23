@@ -12,7 +12,7 @@ import edu.alibaba.mpc4j.common.tool.utils.CommonUtils;
 import edu.alibaba.mpc4j.common.tool.utils.LongUtils;
 import edu.alibaba.mpc4j.s2pc.aby.basics.bc.BcFactory;
 import edu.alibaba.mpc4j.s2pc.aby.basics.bc.BcParty;
-import edu.alibaba.mpc4j.s2pc.aby.basics.bc.SquareShareZ2Vector;
+import edu.alibaba.mpc4j.s2pc.aby.basics.bc.SquareZ2Vector;
 import edu.alibaba.mpc4j.s2pc.aby.circuit.peqt.AbstractPeqtParty;
 import edu.alibaba.mpc4j.s2pc.aby.circuit.peqt.cgs22.Cgs22PeqtPtoDesc.PtoStep;
 import edu.alibaba.mpc4j.s2pc.pcg.ot.lnot.LnotFactory;
@@ -69,7 +69,7 @@ public class Cgs22PeqtSender extends AbstractPeqtParty {
     }
 
     @Override
-    public SquareShareZ2Vector peqt(int l, byte[][] xs) throws MpcAbortException {
+    public SquareZ2Vector peqt(int l, byte[][] xs) throws MpcAbortException {
         setPtoInput(l, xs);
         logPhaseInfo(PtoState.PTO_BEGIN);
 
@@ -127,7 +127,7 @@ public class Cgs22PeqtSender extends AbstractPeqtParty {
         logStepInfo(PtoState.PTO_STEP, 2, 3, lnotTime);
 
         stopWatch.start();
-        SquareShareZ2Vector z0 = combine(eqs, q);
+        SquareZ2Vector z0 = combine(eqs, q);
         stopWatch.stop();
         long bitwiseTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
         stopWatch.reset();
@@ -153,23 +153,23 @@ public class Cgs22PeqtSender extends AbstractPeqtParty {
         return partitionInputArray;
     }
 
-    private SquareShareZ2Vector combine(BitVector[] eqs, int q) throws MpcAbortException {
-        SquareShareZ2Vector[] eqs0 = new SquareShareZ2Vector[q];
+    private SquareZ2Vector combine(BitVector[] eqs, int q) throws MpcAbortException {
+        SquareZ2Vector[] eqs0 = new SquareZ2Vector[q];
         for (int j = 0; j < q; j++) {
-            eqs0[j] = SquareShareZ2Vector.create(eqs[j], false);
+            eqs0[j] = SquareZ2Vector.create(eqs[j], false);
         }
         int logQ = LongUtils.ceilLog2(q);
         // for t = 1 to log(q) do
         for (int t = 1; t <= logQ; t++) {
             // P0 invokes F_AND with inputs <eq_{t-1,2j}_0 and <eq_{t-1,2j+1}_0 to learn output <eq_{t,j}>_0
             int nodeNum = eqs0.length / 2;
-            SquareShareZ2Vector[] eqsx0 = new SquareShareZ2Vector[nodeNum];
-            SquareShareZ2Vector[] eqsy0 = new SquareShareZ2Vector[nodeNum];
+            SquareZ2Vector[] eqsx0 = new SquareZ2Vector[nodeNum];
+            SquareZ2Vector[] eqsy0 = new SquareZ2Vector[nodeNum];
             for (int i = 0; i < nodeNum; i++) {
                 eqsx0[i] = eqs0[i * 2];
                 eqsy0[i] = eqs0[i * 2 + 1];
             }
-            SquareShareZ2Vector[] eqsz0 = bcSender.and(eqsx0, eqsy0);
+            SquareZ2Vector[] eqsz0 = bcSender.and(eqsx0, eqsy0);
             if (eqs0.length % 2 == 1) {
                 eqsz0 = Arrays.copyOf(eqsz0, nodeNum + 1);
                 eqsz0[nodeNum] = eqs0[eqs0.length - 1];

@@ -2,7 +2,7 @@ package edu.alibaba.mpc4j.s2pc.opf.psm;
 
 import edu.alibaba.mpc4j.common.rpc.MpcAbortException;
 import edu.alibaba.mpc4j.common.rpc.pto.TwoPartyPto;
-import edu.alibaba.mpc4j.s2pc.aby.basics.bc.SquareShareZ2Vector;
+import edu.alibaba.mpc4j.s2pc.aby.basics.bc.SquareZ2Vector;
 
 /**
  * private set membership sender.
@@ -29,5 +29,5 @@ public interface PsmSender extends TwoPartyPto {
      * @return the party's output.
      * @throws MpcAbortException the protocol failure aborts.
      */
-    SquareShareZ2Vector psm(int l, byte[][][] inputArrays) throws MpcAbortException;
+    SquareZ2Vector psm(int l, byte[][][] inputArrays) throws MpcAbortException;
 }

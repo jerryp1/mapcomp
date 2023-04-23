@@ -12,7 +12,7 @@ import edu.alibaba.mpc4j.common.tool.hashbin.object.cuckoo.CuckooHashBin;
 import edu.alibaba.mpc4j.common.tool.hashbin.object.cuckoo.CuckooHashBinFactory;
 import edu.alibaba.mpc4j.common.tool.hashbin.object.cuckoo.CuckooHashBinFactory.CuckooHashBinType;
 import edu.alibaba.mpc4j.common.tool.utils.LongUtils;
-import edu.alibaba.mpc4j.s2pc.aby.basics.bc.SquareShareZ2Vector;
+import edu.alibaba.mpc4j.s2pc.aby.basics.bc.SquareZ2Vector;
 import edu.alibaba.mpc4j.s2pc.opf.opprf.rb.RbopprfConfig;
 import edu.alibaba.mpc4j.s2pc.opf.opprf.rb.RbopprfFactory;
 import edu.alibaba.mpc4j.s2pc.opf.opprf.rb.RbopprfReceiver;
@@ -142,7 +142,7 @@ public class Cgs22CcpsiClient extends AbstractCcpsiClient {
         stopWatch.start();
         // The parties invoke a private set membership with l = σ + log_2(d * β) + log_2(point_num).
         // P2 inputs y_1^*, ..., y_β^* and outputs z1.
-        SquareShareZ2Vector z1 = psmSender.psm(l, targetArrays);
+        SquareZ2Vector z1 = psmSender.psm(l, targetArrays);
         // create the table
         ByteBuffer[] table = IntStream.range(0, beta)
             .mapToObj(batchIndex -> {

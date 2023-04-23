@@ -1,7 +1,7 @@
 package edu.alibaba.mpc4j.s2pc.pso.cpsi.scpsi;
 
 import edu.alibaba.mpc4j.common.rpc.MpcAbortException;
-import edu.alibaba.mpc4j.s2pc.aby.basics.bc.SquareShareZ2Vector;
+import edu.alibaba.mpc4j.s2pc.aby.basics.bc.SquareZ2Vector;
 
 import java.nio.ByteBuffer;
 import java.util.Set;
@@ -28,7 +28,7 @@ class ScpsiClientThread extends Thread {
     /**
      * client output
      */
-    private SquareShareZ2Vector clientOutput;
+    private SquareZ2Vector clientOutput;
 
     ScpsiClientThread(ScpsiClient client, Set<ByteBuffer> clientElementSet, int serverElementSize) {
         this.client = client;
@@ -36,7 +36,7 @@ class ScpsiClientThread extends Thread {
         this.serverElementSize = serverElementSize;
     }
 
-    SquareShareZ2Vector getClientOutput() {
+    SquareZ2Vector getClientOutput() {
         return clientOutput;
     }
 

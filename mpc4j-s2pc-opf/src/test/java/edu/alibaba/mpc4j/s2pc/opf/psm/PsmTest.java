@@ -6,7 +6,7 @@ import edu.alibaba.mpc4j.common.rpc.RpcManager;
 import edu.alibaba.mpc4j.common.rpc.desc.SecurityModel;
 import edu.alibaba.mpc4j.common.rpc.impl.memory.MemoryRpcManager;
 import edu.alibaba.mpc4j.common.tool.bitvector.BitVector;
-import edu.alibaba.mpc4j.s2pc.aby.basics.bc.SquareShareZ2Vector;
+import edu.alibaba.mpc4j.s2pc.aby.basics.bc.SquareZ2Vector;
 import edu.alibaba.mpc4j.s2pc.opf.psm.PsmFactory.PsmType;
 import edu.alibaba.mpc4j.s2pc.opf.psm.cgs22.Cgs22LnotPsmConfig;
 import edu.alibaba.mpc4j.s2pc.opf.psm.cgs22.Cgs22OpprfPsmConfig;
@@ -204,9 +204,9 @@ public class PsmTest {
             long receiverRound = receiverRpc.getSendDataPacketNum();
             senderRpc.reset();
             receiverRpc.reset();
-            SquareShareZ2Vector z0 = senderThread.getZ0();
-            SquareShareZ2Vector z1 = receiverThread.getZ1();
-            BitVector z = z0.xor(z1, true).getBitVector();
+            SquareZ2Vector z0 = senderThread.getZ0();
+            SquareZ2Vector z1 = receiverThread.getZ1();
+            BitVector z = z0.getBitVector().xor(z1.getBitVector());
             // verify
             assertOutput(num, senderInputArrays, receiverInputArray, z);
             LOGGER.info("Sender sends {}B / {} rounds, Receiver sends {}B / {} rounds, time = {}ms",

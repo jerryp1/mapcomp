@@ -1,7 +1,7 @@
 package edu.alibaba.mpc4j.s2pc.pso.cpsi.scpsi;
 
 import edu.alibaba.mpc4j.common.tool.MathPreconditions;
-import edu.alibaba.mpc4j.s2pc.aby.basics.bc.SquareShareZ2Vector;
+import edu.alibaba.mpc4j.s2pc.aby.basics.bc.SquareZ2Vector;
 
 import java.nio.ByteBuffer;
 
@@ -19,9 +19,9 @@ public class ScpsiServerOutput {
     /**
      * the server share bits
      */
-    private final SquareShareZ2Vector z0;
+    private final SquareZ2Vector z0;
 
-    public ScpsiServerOutput(ByteBuffer[] table, SquareShareZ2Vector z0) {
+    public ScpsiServerOutput(ByteBuffer[] table, SquareZ2Vector z0) {
         MathPreconditions.checkPositive("β", table.length);
         this.table = table;
         MathPreconditions.checkEqual("z0.bitNum", "β", z0.getNum(), table.length);
@@ -36,7 +36,7 @@ public class ScpsiServerOutput {
         return table;
     }
 
-    public SquareShareZ2Vector getZ0() {
+    public SquareZ2Vector getZ0() {
         return z0;
     }
 }

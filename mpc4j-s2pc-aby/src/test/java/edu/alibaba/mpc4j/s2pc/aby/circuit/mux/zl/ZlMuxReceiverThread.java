@@ -1,8 +1,8 @@
 package edu.alibaba.mpc4j.s2pc.aby.circuit.mux.zl;
 
 import edu.alibaba.mpc4j.common.rpc.MpcAbortException;
-import edu.alibaba.mpc4j.s2pc.aby.basics.ac.zl.SquareShareZlVector;
-import edu.alibaba.mpc4j.s2pc.aby.basics.bc.SquareShareZ2Vector;
+import edu.alibaba.mpc4j.s2pc.aby.basics.ac.zl.SquareZlVector;
+import edu.alibaba.mpc4j.s2pc.aby.basics.bc.SquareZ2Vector;
 
 /**
  * Zl mux receiver thread.
@@ -18,11 +18,11 @@ class ZlMuxReceiverThread extends Thread {
     /**
      * x1
      */
-    private final SquareShareZ2Vector shareX1;
+    private final SquareZ2Vector shareX1;
     /**
      * y1
      */
-    private final SquareShareZlVector shareY1;
+    private final SquareZlVector shareY1;
     /**
      * the num
      */
@@ -30,16 +30,16 @@ class ZlMuxReceiverThread extends Thread {
     /**
      * z1
      */
-    private SquareShareZlVector shareZ1;
+    private SquareZlVector shareZ1;
 
-    ZlMuxReceiverThread(ZlMuxParty receiver, SquareShareZ2Vector shareX1, SquareShareZlVector shareY1) {
+    ZlMuxReceiverThread(ZlMuxParty receiver, SquareZ2Vector shareX1, SquareZlVector shareY1) {
         this.receiver = receiver;
         this.shareX1 = shareX1;
         this.shareY1 = shareY1;
         num = shareX1.getNum();
     }
 
-    SquareShareZlVector getShareZ1() {
+    SquareZlVector getShareZ1() {
         return shareZ1;
     }
 

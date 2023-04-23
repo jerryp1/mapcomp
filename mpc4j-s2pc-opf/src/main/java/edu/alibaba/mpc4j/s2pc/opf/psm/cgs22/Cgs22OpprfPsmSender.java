@@ -5,7 +5,7 @@ import edu.alibaba.mpc4j.common.rpc.Party;
 import edu.alibaba.mpc4j.common.rpc.PtoState;
 import edu.alibaba.mpc4j.common.rpc.Rpc;
 import edu.alibaba.mpc4j.common.tool.utils.BytesUtils;
-import edu.alibaba.mpc4j.s2pc.aby.basics.bc.SquareShareZ2Vector;
+import edu.alibaba.mpc4j.s2pc.aby.basics.bc.SquareZ2Vector;
 import edu.alibaba.mpc4j.s2pc.aby.circuit.peqt.PeqtFactory;
 import edu.alibaba.mpc4j.s2pc.aby.circuit.peqt.PeqtParty;
 import edu.alibaba.mpc4j.s2pc.opf.opprf.batch.BopprfFactory;
@@ -55,7 +55,7 @@ public class Cgs22OpprfPsmSender extends AbstractPsmSender {
     }
 
     @Override
-    public SquareShareZ2Vector psm(int l, byte[][][] inputArrays) throws MpcAbortException {
+    public SquareZ2Vector psm(int l, byte[][][] inputArrays) throws MpcAbortException {
         setPtoInput(l, inputArrays);
         logPhaseInfo(PtoState.PTO_BEGIN);
 
@@ -87,7 +87,7 @@ public class Cgs22OpprfPsmSender extends AbstractPsmSender {
         stopWatch.start();
         // P0 and P1 call Feq with inputs t and w and receive bits y0 and y1 respectively
 
-        SquareShareZ2Vector z0 = peqtSender.peqt(l, targetArray);
+        SquareZ2Vector z0 = peqtSender.peqt(l, targetArray);
         stopWatch.stop();
         long peqtTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
         stopWatch.reset();

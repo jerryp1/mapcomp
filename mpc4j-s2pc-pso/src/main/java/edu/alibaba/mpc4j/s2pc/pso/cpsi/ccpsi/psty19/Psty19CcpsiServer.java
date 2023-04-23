@@ -10,7 +10,7 @@ import edu.alibaba.mpc4j.common.tool.hashbin.object.cuckoo.CuckooHashBinFactory.
 import edu.alibaba.mpc4j.common.tool.utils.BytesUtils;
 import edu.alibaba.mpc4j.common.tool.utils.CommonUtils;
 import edu.alibaba.mpc4j.common.tool.utils.LongUtils;
-import edu.alibaba.mpc4j.s2pc.aby.basics.bc.SquareShareZ2Vector;
+import edu.alibaba.mpc4j.s2pc.aby.basics.bc.SquareZ2Vector;
 import edu.alibaba.mpc4j.s2pc.aby.circuit.peqt.PeqtFactory;
 import edu.alibaba.mpc4j.s2pc.aby.circuit.peqt.PeqtParty;
 import edu.alibaba.mpc4j.s2pc.opf.opprf.batch.BopprfFactory;
@@ -101,7 +101,7 @@ public class Psty19CcpsiServer extends AbstractCcpsiServer {
     }
 
     @Override
-    public SquareShareZ2Vector psi(Set<ByteBuffer> serverElementSet, int clientElementSize) throws MpcAbortException {
+    public SquareZ2Vector psi(Set<ByteBuffer> serverElementSet, int clientElementSize) throws MpcAbortException {
         setPtoInput(serverElementSet, clientElementSize);
         logPhaseInfo(PtoState.PTO_BEGIN);
 
@@ -141,7 +141,7 @@ public class Psty19CcpsiServer extends AbstractCcpsiServer {
         stopWatch.start();
         // The parties invoke a private equality test with l = σ + log_2(β) + log_2(point_num).
         // P1 inputs y_1^*, ..., y_β^* and outputs z0.
-        SquareShareZ2Vector z0 = peqtSender.peqt(l, targetArray);
+        SquareZ2Vector z0 = peqtSender.peqt(l, targetArray);
         targetArray = null;
         stopWatch.stop();
         long peqtTime = stopWatch.getTime(TimeUnit.MILLISECONDS);

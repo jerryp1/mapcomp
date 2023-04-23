@@ -4,7 +4,7 @@ import edu.alibaba.mpc4j.common.rpc.MpcAbortException;
 import edu.alibaba.mpc4j.common.tool.bitvector.BitVector;
 import edu.alibaba.mpc4j.s2pc.aby.basics.bc.BcOperator;
 import edu.alibaba.mpc4j.s2pc.aby.basics.bc.BcParty;
-import edu.alibaba.mpc4j.s2pc.aby.basics.bc.SquareShareZ2Vector;
+import edu.alibaba.mpc4j.s2pc.aby.basics.bc.SquareZ2Vector;
 
 /**
  * single Boolean circuit sender thread for dyadic (binary) operator.
@@ -40,15 +40,15 @@ class SingleDyadicBcSenderThread extends Thread {
     /**
      * share x0
      */
-    private SquareShareZ2Vector shareX0;
+    private SquareZ2Vector shareX0;
     /**
      * final x100
      */
-    private SquareShareZ2Vector finalX010;
+    private SquareZ2Vector finalX010;
     /**
      * final x000
      */
-    private SquareShareZ2Vector finalX000;
+    private SquareZ2Vector finalX000;
     /**
      * z (plain, plain)
      */
@@ -107,15 +107,15 @@ class SingleDyadicBcSenderThread extends Thread {
         return z00Vector;
     }
 
-    SquareShareZ2Vector getShareX0() {
+    SquareZ2Vector getShareX0() {
         return shareX0;
     }
 
-    SquareShareZ2Vector getFinalX010() {
+    SquareZ2Vector getFinalX010() {
         return finalX010;
     }
 
-    SquareShareZ2Vector getFinalX000() {
+    SquareZ2Vector getFinalX000() {
         return finalX000;
     }
 
@@ -124,12 +124,12 @@ class SingleDyadicBcSenderThread extends Thread {
         try {
             sender.init(bitNum, bitNum);
             // generate x and y
-            SquareShareZ2Vector x = SquareShareZ2Vector.create(xBitVector, true);
-            SquareShareZ2Vector y = SquareShareZ2Vector.create(yBitVector, true);
-            SquareShareZ2Vector x0 = sender.shareOwn(xBitVector);
+            SquareZ2Vector x = SquareZ2Vector.create(xBitVector, true);
+            SquareZ2Vector y = SquareZ2Vector.create(yBitVector, true);
+            SquareZ2Vector x0 = sender.shareOwn(xBitVector);
             shareX0 = x0.copy();
-            SquareShareZ2Vector y0 = sender.shareOther(bitNum);
-            SquareShareZ2Vector z110, z100, z010, z000;
+            SquareZ2Vector y0 = sender.shareOther(bitNum);
+            SquareZ2Vector z110, z100, z010, z000;
             switch (bcOperator) {
                 case XOR:
                     // (plain, plain)

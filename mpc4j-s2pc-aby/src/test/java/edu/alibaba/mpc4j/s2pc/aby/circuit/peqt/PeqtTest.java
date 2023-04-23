@@ -6,7 +6,7 @@ import edu.alibaba.mpc4j.common.rpc.RpcManager;
 import edu.alibaba.mpc4j.common.rpc.desc.SecurityModel;
 import edu.alibaba.mpc4j.common.rpc.impl.memory.MemoryRpcManager;
 import edu.alibaba.mpc4j.common.tool.bitvector.BitVector;
-import edu.alibaba.mpc4j.s2pc.aby.basics.bc.SquareShareZ2Vector;
+import edu.alibaba.mpc4j.s2pc.aby.basics.bc.SquareZ2Vector;
 import edu.alibaba.mpc4j.s2pc.aby.circuit.peqt.PeqtFactory.PeqtType;
 import edu.alibaba.mpc4j.s2pc.aby.circuit.peqt.cgs22.Cgs22PeqtConfig;
 import edu.alibaba.mpc4j.s2pc.aby.circuit.peqt.naive.NaivePeqtConfig;
@@ -205,9 +205,9 @@ public class PeqtTest {
             long receiverRound = receiverRpc.getSendDataPacketNum();
             senderRpc.reset();
             receiverRpc.reset();
-            SquareShareZ2Vector z0 = senderThread.getZi();
-            SquareShareZ2Vector z1 = receiverThread.getZi();
-            BitVector z = z0.xor(z1, true).getBitVector();
+            SquareZ2Vector z0 = senderThread.getZi();
+            SquareZ2Vector z1 = receiverThread.getZi();
+            BitVector z = z0.getBitVector().xor(z1.getBitVector());
             // verify
             assertOutput(num, xs, ys, z);
             LOGGER.info("Sender sends {}B / {} rounds, Receiver sends {}B / {} rounds, time = {}ms",

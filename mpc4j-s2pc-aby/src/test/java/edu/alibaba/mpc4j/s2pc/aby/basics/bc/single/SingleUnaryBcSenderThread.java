@@ -4,7 +4,7 @@ import edu.alibaba.mpc4j.common.rpc.MpcAbortException;
 import edu.alibaba.mpc4j.common.tool.bitvector.BitVector;
 import edu.alibaba.mpc4j.s2pc.aby.basics.bc.BcOperator;
 import edu.alibaba.mpc4j.s2pc.aby.basics.bc.BcParty;
-import edu.alibaba.mpc4j.s2pc.aby.basics.bc.SquareShareZ2Vector;
+import edu.alibaba.mpc4j.s2pc.aby.basics.bc.SquareZ2Vector;
 
 /**
  * single Boolean circuit sender thread for unary operator.
@@ -36,11 +36,11 @@ class SingleUnaryBcSenderThread extends Thread {
     /**
      * share x0
      */
-    private SquareShareZ2Vector shareX0;
+    private SquareZ2Vector shareX0;
     /**
      * final x0
      */
-    private SquareShareZ2Vector finalX0;
+    private SquareZ2Vector finalX0;
     /**
      * z (plain)
      */
@@ -77,11 +77,11 @@ class SingleUnaryBcSenderThread extends Thread {
         return z0Vector;
     }
 
-    SquareShareZ2Vector getShareX0() {
+    SquareZ2Vector getShareX0() {
         return shareX0;
     }
 
-    SquareShareZ2Vector getFinalX0() {
+    SquareZ2Vector getFinalX0() {
         return finalX0;
     }
 
@@ -90,10 +90,10 @@ class SingleUnaryBcSenderThread extends Thread {
         try {
             sender.init(bitNum, bitNum);
             // set inputs
-            SquareShareZ2Vector x = SquareShareZ2Vector.create(xBitVector, true);
-            SquareShareZ2Vector x0 = sender.shareOwn(xBitVector);
+            SquareZ2Vector x = SquareZ2Vector.create(xBitVector, true);
+            SquareZ2Vector x0 = sender.shareOwn(xBitVector);
             shareX0 = x0.copy();
-            SquareShareZ2Vector z00, z10;
+            SquareZ2Vector z00, z10;
             //noinspection SwitchStatementWithTooFewBranches
             switch (bcOperator) {
                 case NOT:

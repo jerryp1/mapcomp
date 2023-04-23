@@ -2,7 +2,7 @@ package edu.alibaba.mpc4j.s2pc.aby.circuit.peqt;
 
 import edu.alibaba.mpc4j.common.rpc.MpcAbortException;
 import edu.alibaba.mpc4j.common.rpc.pto.TwoPartyPto;
-import edu.alibaba.mpc4j.s2pc.aby.basics.bc.SquareShareZ2Vector;
+import edu.alibaba.mpc4j.s2pc.aby.basics.bc.SquareZ2Vector;
 
 /**
  * private equality test party.
@@ -28,5 +28,5 @@ public interface PeqtParty extends TwoPartyPto {
      * @return the party's output.
      * @throws MpcAbortException the protocol failure aborts.
      */
-    SquareShareZ2Vector peqt(int l, byte[][] inputs) throws MpcAbortException;
+    SquareZ2Vector peqt(int l, byte[][] inputs) throws MpcAbortException;
 }

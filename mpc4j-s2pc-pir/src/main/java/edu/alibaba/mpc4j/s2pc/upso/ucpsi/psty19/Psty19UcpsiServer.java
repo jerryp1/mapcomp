@@ -14,7 +14,7 @@ import edu.alibaba.mpc4j.common.tool.hashbin.object.cuckoo.CuckooHashBinFactory.
 import edu.alibaba.mpc4j.common.tool.utils.BytesUtils;
 import edu.alibaba.mpc4j.common.tool.utils.CommonUtils;
 import edu.alibaba.mpc4j.common.tool.utils.LongUtils;
-import edu.alibaba.mpc4j.s2pc.aby.basics.bc.SquareShareZ2Vector;
+import edu.alibaba.mpc4j.s2pc.aby.basics.bc.SquareZ2Vector;
 import edu.alibaba.mpc4j.s2pc.aby.circuit.peqt.PeqtFactory;
 import edu.alibaba.mpc4j.s2pc.aby.circuit.peqt.PeqtParty;
 import edu.alibaba.mpc4j.s2pc.upso.ucpsi.AbstractUcpsiServer;
@@ -128,7 +128,7 @@ public class Psty19UcpsiServer extends AbstractUcpsiServer {
     }
 
     @Override
-    public SquareShareZ2Vector psi() throws MpcAbortException {
+    public SquareZ2Vector psi() throws MpcAbortException {
         setPtoInput();
         logPhaseInfo(PtoState.PTO_BEGIN);
 
@@ -150,7 +150,7 @@ public class Psty19UcpsiServer extends AbstractUcpsiServer {
 
         stopWatch.start();
         // private equality test
-        SquareShareZ2Vector z2Vector = peqtParty.peqt(l, targetArray);
+        SquareZ2Vector z2Vector = peqtParty.peqt(l, targetArray);
         stopWatch.stop();
         long membershipTestTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
         stopWatch.reset();

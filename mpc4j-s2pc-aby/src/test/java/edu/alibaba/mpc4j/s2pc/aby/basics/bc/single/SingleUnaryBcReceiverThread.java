@@ -4,7 +4,7 @@ import edu.alibaba.mpc4j.common.rpc.MpcAbortException;
 import edu.alibaba.mpc4j.common.tool.bitvector.BitVector;
 import edu.alibaba.mpc4j.s2pc.aby.basics.bc.BcOperator;
 import edu.alibaba.mpc4j.s2pc.aby.basics.bc.BcParty;
-import edu.alibaba.mpc4j.s2pc.aby.basics.bc.SquareShareZ2Vector;
+import edu.alibaba.mpc4j.s2pc.aby.basics.bc.SquareZ2Vector;
 
 /**
  * single Boolean circuit receiver thread for unary operator.
@@ -32,11 +32,11 @@ class SingleUnaryBcReceiverThread extends Thread {
     /**
      * share x1
      */
-    private SquareShareZ2Vector shareX1;
+    private SquareZ2Vector shareX1;
     /**
      * final x1
      */
-    private SquareShareZ2Vector finalX1;
+    private SquareZ2Vector finalX1;
     /**
      * z (plain)
      */
@@ -61,11 +61,11 @@ class SingleUnaryBcReceiverThread extends Thread {
         return z0Vector;
     }
 
-    SquareShareZ2Vector getShareX1() {
+    SquareZ2Vector getShareX1() {
         return shareX1;
     }
 
-    SquareShareZ2Vector getFinalX1() {
+    SquareZ2Vector getFinalX1() {
         return finalX1;
     }
 
@@ -74,18 +74,18 @@ class SingleUnaryBcReceiverThread extends Thread {
         try {
             receiver.init(bitNum, bitNum);
             // set inputs
-            SquareShareZ2Vector x = SquareShareZ2Vector.create(xBitVector, true);
-            SquareShareZ2Vector x1 = receiver.shareOther(bitNum);
+            SquareZ2Vector x = SquareZ2Vector.create(xBitVector, true);
+            SquareZ2Vector x1 = receiver.shareOther(bitNum);
             shareX1 = x1.copy();
             //noinspection SwitchStatementWithTooFewBranches
             switch (bcOperator) {
                 case NOT:
                     // (plain, plain)
-                    SquareShareZ2Vector z01 = receiver.not(x);
+                    SquareZ2Vector z01 = receiver.not(x);
                     receiver.revealOther(z01);
                     z0Vector = receiver.revealOwn(z01);
                     // (plain, secret)
-                    SquareShareZ2Vector z11 = receiver.not(x1);
+                    SquareZ2Vector z11 = receiver.not(x1);
                     finalX1 = x1.copy();
                     receiver.revealOther(z11);
                     z1Vector = receiver.revealOwn(z11);

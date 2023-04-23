@@ -1,8 +1,7 @@
 package edu.alibaba.mpc4j.s2pc.aby.basics.ac;
 
+import com.alibaba.mpc4j.common.circuit.MpcVector;
 import edu.alibaba.mpc4j.crypto.matrix.vector.RingVector;
-import edu.alibaba.mpc4j.crypto.matrix.vector.ZlVector;
-import edu.alibaba.mpc4j.s2pc.aby.basics.ShareVector;
 
 /**
  * Secret-shared ring vector.
@@ -10,15 +9,7 @@ import edu.alibaba.mpc4j.s2pc.aby.basics.ShareVector;
  * @author Weiran Liu
  * @date 2023/4/10
  */
-public interface ShareRingVector extends ShareVector {
-    /**
-     * Replace the vector.
-     *
-     * @param vector the vector.
-     * @param plain  the plain state.
-     */
-    void replaceCopy(RingVector vector, boolean plain);
-
+public interface SquareRingVector extends MpcVector {
     /**
      * Addition.
      *
@@ -26,7 +17,7 @@ public interface ShareRingVector extends ShareVector {
      * @param plain the result plain state.
      * @return the result.
      */
-    ShareRingVector add(ShareRingVector other, boolean plain);
+    SquareRingVector add(SquareRingVector other, boolean plain);
 
     /**
      * In-place addition.
@@ -34,7 +25,7 @@ public interface ShareRingVector extends ShareVector {
      * @param other the other vector.
      * @param plain the result plain state.
      */
-    void addi(ShareRingVector other, boolean plain);
+    void addi(SquareRingVector other, boolean plain);
 
     /**
      * Negation.
@@ -42,7 +33,7 @@ public interface ShareRingVector extends ShareVector {
      * @param plain the result plain state.
      * @return the result.
      */
-    ShareRingVector neg(boolean plain);
+    SquareRingVector neg(boolean plain);
 
     /**
      * In-place negation.
@@ -58,7 +49,7 @@ public interface ShareRingVector extends ShareVector {
      * @param plain the result plain state.
      * @return the result.
      */
-    ShareRingVector sub(ShareRingVector other, boolean plain);
+    SquareRingVector sub(SquareRingVector other, boolean plain);
 
     /**
      * In-place subtraction.
@@ -66,7 +57,7 @@ public interface ShareRingVector extends ShareVector {
      * @param other the other vector.
      * @param plain the result plain state.
      */
-    void subi(ShareRingVector other, boolean plain);
+    void subi(SquareRingVector other, boolean plain);
 
     /**
      * Multiplication.
@@ -74,14 +65,14 @@ public interface ShareRingVector extends ShareVector {
      * @param other the other vector.
      * @return the result.
      */
-    ShareRingVector mul(ShareRingVector other);
+    SquareRingVector mul(SquareRingVector other);
 
     /**
      * In-place multiplication.
      *
      * @param other the other vector.
      */
-    void muli(ShareRingVector other);
+    void muli(SquareRingVector other);
 
     /**
      * Gets the vector.

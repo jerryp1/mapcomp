@@ -4,7 +4,7 @@ import edu.alibaba.mpc4j.common.rpc.MpcAbortException;
 import edu.alibaba.mpc4j.common.tool.bitvector.BitVector;
 import edu.alibaba.mpc4j.s2pc.aby.basics.bc.BcOperator;
 import edu.alibaba.mpc4j.s2pc.aby.basics.bc.BcParty;
-import edu.alibaba.mpc4j.s2pc.aby.basics.bc.SquareShareZ2Vector;
+import edu.alibaba.mpc4j.s2pc.aby.basics.bc.SquareZ2Vector;
 
 import java.util.Arrays;
 import java.util.stream.IntStream;
@@ -43,15 +43,15 @@ class BatchDyadicBcSenderThread extends Thread {
     /**
      * share x0 array
      */
-    private SquareShareZ2Vector[] shareX0s;
+    private SquareZ2Vector[] shareX0s;
     /**
      * final x100 array
      */
-    private SquareShareZ2Vector[] finalX010s;
+    private SquareZ2Vector[] finalX010s;
     /**
      * final x000 array
      */
-    private SquareShareZ2Vector[] finalX000s;
+    private SquareZ2Vector[] finalX000s;
     /**
      * z array (plain, plain)
      */
@@ -118,15 +118,15 @@ class BatchDyadicBcSenderThread extends Thread {
         return z00Vectors;
     }
 
-    SquareShareZ2Vector[] getShareX0s() {
+    SquareZ2Vector[] getShareX0s() {
         return shareX0s;
     }
 
-    SquareShareZ2Vector[] getFinalX010s() {
+    SquareZ2Vector[] getFinalX010s() {
         return finalX010s;
     }
 
-    SquareShareZ2Vector[] getFinalX000s() {
+    SquareZ2Vector[] getFinalX000s() {
         return finalX000s;
     }
 
@@ -135,17 +135,17 @@ class BatchDyadicBcSenderThread extends Thread {
         try {
             sender.init(totalBitNum, totalBitNum);
             // set inputs
-            SquareShareZ2Vector[] xs = Arrays.stream(xBitVectors)
-                .map(xBitVector -> SquareShareZ2Vector.create(xBitVector, true))
-                .toArray(SquareShareZ2Vector[]::new);
-            SquareShareZ2Vector[] ys = Arrays.stream(yBitVectors)
-                .map(yBitVector -> SquareShareZ2Vector.create(yBitVector, true))
-                .toArray(SquareShareZ2Vector[]::new);
-            SquareShareZ2Vector[] x0s = sender.shareOwn(xBitVectors);
-            shareX0s = Arrays.stream(x0s).map(SquareShareZ2Vector::copy).toArray(SquareShareZ2Vector[]::new);
+            SquareZ2Vector[] xs = Arrays.stream(xBitVectors)
+                .map(xBitVector -> SquareZ2Vector.create(xBitVector, true))
+                .toArray(SquareZ2Vector[]::new);
+            SquareZ2Vector[] ys = Arrays.stream(yBitVectors)
+                .map(yBitVector -> SquareZ2Vector.create(yBitVector, true))
+                .toArray(SquareZ2Vector[]::new);
+            SquareZ2Vector[] x0s = sender.shareOwn(xBitVectors);
+            shareX0s = Arrays.stream(x0s).map(SquareZ2Vector::copy).toArray(SquareZ2Vector[]::new);
             int[] vectorBitLengths = Arrays.stream(yBitVectors).mapToInt(BitVector::bitNum).toArray();
-            SquareShareZ2Vector[] y0s = sender.shareOther(vectorBitLengths);
-            SquareShareZ2Vector[] z110s, z100s, z010s, z000s;
+            SquareZ2Vector[] y0s = sender.shareOther(vectorBitLengths);
+            SquareZ2Vector[] z110s, z100s, z010s, z000s;
             switch (bcOperator) {
                 case XOR:
                     // (plain, plain)
@@ -158,12 +158,12 @@ class BatchDyadicBcSenderThread extends Thread {
                     sender.revealOther(z100s);
                     // (secret, plain)
                     z010s = sender.xor(x0s, ys);
-                    finalX010s = Arrays.stream(x0s).map(SquareShareZ2Vector::copy).toArray(SquareShareZ2Vector[]::new);
+                    finalX010s = Arrays.stream(x0s).map(SquareZ2Vector::copy).toArray(SquareZ2Vector[]::new);
                     z01Vectors = sender.revealOwn(z010s);
                     sender.revealOther(z010s);
                     // (secret, secret)
                     z000s = sender.xor(x0s, y0s);
-                    finalX000s = Arrays.stream(x0s).map(SquareShareZ2Vector::copy).toArray(SquareShareZ2Vector[]::new);
+                    finalX000s = Arrays.stream(x0s).map(SquareZ2Vector::copy).toArray(SquareZ2Vector[]::new);
                     z00Vectors = sender.revealOwn(z000s);
                     sender.revealOther(z000s);
                     break;
@@ -178,12 +178,12 @@ class BatchDyadicBcSenderThread extends Thread {
                     sender.revealOther(z100s);
                     // (secret, plain)
                     z010s = sender.and(x0s, ys);
-                    finalX010s = Arrays.stream(x0s).map(SquareShareZ2Vector::copy).toArray(SquareShareZ2Vector[]::new);
+                    finalX010s = Arrays.stream(x0s).map(SquareZ2Vector::copy).toArray(SquareZ2Vector[]::new);
                     z01Vectors = sender.revealOwn(z010s);
                     sender.revealOther(z010s);
                     // (secret, secret)
                     z000s = sender.and(x0s, y0s);
-                    finalX000s = Arrays.stream(x0s).map(SquareShareZ2Vector::copy).toArray(SquareShareZ2Vector[]::new);
+                    finalX000s = Arrays.stream(x0s).map(SquareZ2Vector::copy).toArray(SquareZ2Vector[]::new);
                     z00Vectors = sender.revealOwn(z000s);
                     sender.revealOther(z000s);
                     break;
@@ -198,12 +198,12 @@ class BatchDyadicBcSenderThread extends Thread {
                     sender.revealOther(z100s);
                     // (secret, plain)
                     z010s = sender.or(x0s, ys);
-                    finalX010s = Arrays.stream(x0s).map(SquareShareZ2Vector::copy).toArray(SquareShareZ2Vector[]::new);
+                    finalX010s = Arrays.stream(x0s).map(SquareZ2Vector::copy).toArray(SquareZ2Vector[]::new);
                     z01Vectors = sender.revealOwn(z010s);
                     sender.revealOther(z010s);
                     // (secret, secret)
                     z000s = sender.or(x0s, y0s);
-                    finalX000s = Arrays.stream(x0s).map(SquareShareZ2Vector::copy).toArray(SquareShareZ2Vector[]::new);
+                    finalX000s = Arrays.stream(x0s).map(SquareZ2Vector::copy).toArray(SquareZ2Vector[]::new);
                     z00Vectors = sender.revealOwn(z000s);
                     sender.revealOther(z000s);
                     break;

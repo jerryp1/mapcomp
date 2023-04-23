@@ -15,7 +15,7 @@ import java.util.Arrays;
  * @author Weiran Liu
  * @date 2022/12/13
  */
-public class SquareShareZ2VectorTest {
+public class SquareZ2VectorTest {
     /**
      * 最小比特长度
      */
@@ -32,20 +32,20 @@ public class SquareShareZ2VectorTest {
     @Test
     public void testIllegalInputs() {
         // create vector with 0 length
-        Assert.assertThrows(AssertionError.class, () -> SquareShareZ2Vector.create(0, new byte[0], true));
-        Assert.assertThrows(AssertionError.class, () -> SquareShareZ2Vector.create(0, new byte[0], false));
+        Assert.assertThrows(AssertionError.class, () -> SquareZ2Vector.create(0, new byte[0], true));
+        Assert.assertThrows(AssertionError.class, () -> SquareZ2Vector.create(0, new byte[0], false));
         // create vector with mismatch bit num
-        Assert.assertThrows(AssertionError.class, () -> SquareShareZ2Vector.create(1, new byte[] { (byte)0x0F, }, true));
-        Assert.assertThrows(AssertionError.class, () -> SquareShareZ2Vector.create(1, new byte[] { (byte)0x0F, }, false));
+        Assert.assertThrows(AssertionError.class, () -> SquareZ2Vector.create(1, new byte[] { (byte)0x0F, }, true));
+        Assert.assertThrows(AssertionError.class, () -> SquareZ2Vector.create(1, new byte[] { (byte)0x0F, }, false));
         // create vector with mismatch byte num
-        Assert.assertThrows(AssertionError.class, () -> SquareShareZ2Vector.create(1, new byte[2], true));
-        Assert.assertThrows(AssertionError.class, () -> SquareShareZ2Vector.create(1, new byte[2], false));
-        Assert.assertThrows(AssertionError.class, () -> SquareShareZ2Vector.create(9, new byte[1], true));
-        Assert.assertThrows(AssertionError.class, () -> SquareShareZ2Vector.create(9, new byte[1], false));
+        Assert.assertThrows(AssertionError.class, () -> SquareZ2Vector.create(1, new byte[2], true));
+        Assert.assertThrows(AssertionError.class, () -> SquareZ2Vector.create(1, new byte[2], false));
+        Assert.assertThrows(AssertionError.class, () -> SquareZ2Vector.create(9, new byte[1], true));
+        Assert.assertThrows(AssertionError.class, () -> SquareZ2Vector.create(9, new byte[1], false));
         // merge vector with mismatch byte plain state
         Assert.assertThrows(AssertionError.class, () -> {
-            SquareShareZ2Vector vector0 = SquareShareZ2Vector.create(4, new byte[] {(byte) 0x0F, }, true);
-            SquareShareZ2Vector vector1 = SquareShareZ2Vector.create(4, new byte[] {(byte) 0x0F, }, false);
+            SquareZ2Vector vector0 = SquareZ2Vector.create(4, new byte[] {(byte) 0x0F, }, true);
+            SquareZ2Vector vector1 = SquareZ2Vector.create(4, new byte[] {(byte) 0x0F, }, false);
             vector0.merge(vector1);
         });
     }
@@ -60,8 +60,8 @@ public class SquareShareZ2VectorTest {
     }
 
     private void testOnesMerge(int num1, int num2) {
-        SquareShareZ2Vector vector1 = SquareShareZ2Vector.createOnes(num1);
-        SquareShareZ2Vector vector2 = SquareShareZ2Vector.createOnes(num2);
+        SquareZ2Vector vector1 = SquareZ2Vector.createOnes(num1);
+        SquareZ2Vector vector2 = SquareZ2Vector.createOnes(num2);
         // manually merge
         int expectMergeByteLength = CommonUtils.getByteLength(num1 + num2);
         byte[] expectMerge = new byte[expectMergeByteLength];
@@ -71,7 +71,7 @@ public class SquareShareZ2VectorTest {
         vector1.merge(vector2);
         Assert.assertTrue(vector1.isPlain());
         Assert.assertEquals(num1 + num2, vector1.getNum());
-        Assert.assertArrayEquals(expectMerge, vector1.getBytes());
+        Assert.assertArrayEquals(expectMerge, vector1.getBitVector().getBytes());
     }
 
     @Test
@@ -86,11 +86,11 @@ public class SquareShareZ2VectorTest {
     private void testRandomMerge(int num1, int num2) {
         int num1Offset = CommonUtils.getByteLength(num1) * Byte.SIZE - num1;
         int num2Offset = CommonUtils.getByteLength(num2) * Byte.SIZE - num2;
-        SquareShareZ2Vector vector1 = SquareShareZ2Vector.createRandom(num1, SECURE_RANDOM);
-        SquareShareZ2Vector vector2 = SquareShareZ2Vector.createRandom(num2, SECURE_RANDOM);
+        SquareZ2Vector vector1 = SquareZ2Vector.createRandom(num1, SECURE_RANDOM);
+        SquareZ2Vector vector2 = SquareZ2Vector.createRandom(num2, SECURE_RANDOM);
         // manually merge
-        byte[] vector1Bytes = vector1.getBytes();
-        byte[] vector2Bytes = vector2.getBytes();
+        byte[] vector1Bytes = vector1.getBitVector().getBytes();
+        byte[] vector2Bytes = vector2.getBitVector().getBytes();
         int expectMergeByteLength = CommonUtils.getByteLength(num1 + num2);
         int expectMergeOffset = expectMergeByteLength * Byte.SIZE - (num1 + num2);
         byte[] expectMerge = new byte[expectMergeByteLength];
@@ -107,6 +107,6 @@ public class SquareShareZ2VectorTest {
         // merge and verify
         vector1.merge(vector2);
         Assert.assertEquals(num1 + num2, vector1.getNum());
-        Assert.assertArrayEquals(expectMerge, vector1.getBytes());
+        Assert.assertArrayEquals(expectMerge, vector1.getBitVector().getBytes());
     }
 }

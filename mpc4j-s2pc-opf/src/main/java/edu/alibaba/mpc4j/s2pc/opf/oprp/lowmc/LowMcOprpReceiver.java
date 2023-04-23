@@ -9,7 +9,7 @@ import edu.alibaba.mpc4j.common.tool.bitmatrix.trans.TransBitMatrixFactory;
 import edu.alibaba.mpc4j.common.tool.crypto.prp.PrpFactory.PrpType;
 import edu.alibaba.mpc4j.common.tool.utils.BytesUtils;
 import edu.alibaba.mpc4j.common.tool.utils.LongUtils;
-import edu.alibaba.mpc4j.s2pc.aby.basics.bc.SquareShareZ2Vector;
+import edu.alibaba.mpc4j.s2pc.aby.basics.bc.SquareZ2Vector;
 import edu.alibaba.mpc4j.s2pc.aby.basics.bc.BcFactory;
 import edu.alibaba.mpc4j.s2pc.aby.basics.bc.BcParty;
 import edu.alibaba.mpc4j.s2pc.opf.oprp.AbstractOprpReceiver;
@@ -199,9 +199,9 @@ public class LowMcOprpReceiver extends AbstractOprpReceiver {
         }
         // 一轮AND运算
         byte[] sbox1 = bcReceiver.and(
-            SquareShareZ2Vector.create(LowMcUtils.SBOX_NUM * 3 * roundBatchSize, baa1, false),
-            SquareShareZ2Vector.create(LowMcUtils.SBOX_NUM * 3 * roundBatchSize, ccb1, false)
-        ).getBytes();
+            SquareZ2Vector.create(LowMcUtils.SBOX_NUM * 3 * roundBatchSize, baa1, false),
+            SquareZ2Vector.create(LowMcUtils.SBOX_NUM * 3 * roundBatchSize, ccb1, false)
+        ).getBitVector().getBytes();
         for (int sboxIndex = 0; sboxIndex < LowMcUtils.SBOX_NUM; sboxIndex++) {
             int offset = 3 * batchByteSize * sboxIndex;
             byte[] a1 = stateBytesTransMatrix.getColumn(sboxIndex * 3);
@@ -211,32 +211,32 @@ public class LowMcOprpReceiver extends AbstractOprpReceiver {
             byte[] bc1 = new byte[batchByteSize];
             System.arraycopy(sbox1, offset, bc1, 0, batchByteSize);
             BytesUtils.reduceByteArray(bc1, batchSize);
-            SquareShareZ2Vector a1Sbox = bcReceiver.xor(
-                SquareShareZ2Vector.create(batchSize, a1, false),
-                SquareShareZ2Vector.create(batchSize, bc1, false)
+            SquareZ2Vector a1Sbox = bcReceiver.xor(
+                SquareZ2Vector.create(batchSize, a1, false),
+                SquareZ2Vector.create(batchSize, bc1, false)
             );
-            byte[] a1SboxBytes = a1Sbox.getBytes();
+            byte[] a1SboxBytes = a1Sbox.getBitVector().getBytes();
             // b = a ⊕ b ⊕ (a ☉ c)
             byte[] ac1 = new byte[batchByteSize];
             System.arraycopy(sbox1, offset + batchByteSize, ac1, 0, batchByteSize);
             BytesUtils.reduceByteArray(ac1, batchSize);
-            SquareShareZ2Vector b1Sbox = bcReceiver.xor(
-                SquareShareZ2Vector.create(batchSize, a1, false),
-                SquareShareZ2Vector.create(batchSize, b1, false)
+            SquareZ2Vector b1Sbox = bcReceiver.xor(
+                SquareZ2Vector.create(batchSize, a1, false),
+                SquareZ2Vector.create(batchSize, b1, false)
             );
-            b1Sbox = bcReceiver.xor(b1Sbox, SquareShareZ2Vector.create(batchSize, ac1, false));
-            byte[] b1SboxBytes = b1Sbox.getBytes();
+            b1Sbox = bcReceiver.xor(b1Sbox, SquareZ2Vector.create(batchSize, ac1, false));
+            byte[] b1SboxBytes = b1Sbox.getBitVector().getBytes();
             // c = a ⊕ b ⊕ c ⊕ (a ☉ b)
             byte[] ab1 = new byte[batchByteSize];
             System.arraycopy(sbox1, offset + 2 * batchByteSize, ab1, 0, batchByteSize);
             BytesUtils.reduceByteArray(ab1, batchSize);
-            SquareShareZ2Vector c1Sbox = bcReceiver.xor(
-                SquareShareZ2Vector.create(batchSize, a1, false),
-                SquareShareZ2Vector.create(batchSize, b1, false)
+            SquareZ2Vector c1Sbox = bcReceiver.xor(
+                SquareZ2Vector.create(batchSize, a1, false),
+                SquareZ2Vector.create(batchSize, b1, false)
             );
-            c1Sbox = bcReceiver.xor(c1Sbox, SquareShareZ2Vector.create(batchSize, c1, false));
-            c1Sbox = bcReceiver.xor(c1Sbox, SquareShareZ2Vector.create(batchSize, ab1, false));
-            byte[] c1SboxBytes = c1Sbox.getBytes();
+            c1Sbox = bcReceiver.xor(c1Sbox, SquareZ2Vector.create(batchSize, c1, false));
+            c1Sbox = bcReceiver.xor(c1Sbox, SquareZ2Vector.create(batchSize, ab1, false));
+            byte[] c1SboxBytes = c1Sbox.getBitVector().getBytes();
             stateBytesTransMatrix.setColumn(sboxIndex * 3, a1SboxBytes);
             stateBytesTransMatrix.setColumn(sboxIndex * 3 + 1, b1SboxBytes);
             stateBytesTransMatrix.setColumn(sboxIndex * 3 + 2, c1SboxBytes);
