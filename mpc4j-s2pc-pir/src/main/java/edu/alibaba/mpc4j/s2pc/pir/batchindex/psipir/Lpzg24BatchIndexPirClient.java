@@ -238,7 +238,7 @@ public class Lpzg24BatchIndexPirClient extends AbstractBatchIndexPirClient {
         MpcAbortPreconditions.checkArgument(serverResponse.size() % (params.getCiphertextNum() * partitionSize) == 0);
         int partitionSize = serverResponse.size() / this.partitionSize;
         Stream<byte[]> responseStream = parallel ? serverResponse.stream().parallel() : serverResponse.stream();
-        ArrayList<long[]> coeffs = responseStream
+        List<long[]> coeffs = responseStream
             .map(i -> Lpzg24BatchIndexPirNativeUtils.decodeReply(sealContext, secretKey, i))
             .collect(Collectors.toCollection(ArrayList::new));
         int byteLength = CommonUtils.getByteLength(elementBitLength);

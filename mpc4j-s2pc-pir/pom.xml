@@ -71,7 +71,7 @@
                     </descriptorRefs>
                     <archive>
                         <manifest>
-                            <mainClass>edu.alibaba.mpc4j.s2pc.pir.main.PirMain</mainClass>
+                            <mainClass>edu.alibaba.mpc4j.s2pc.main.PirMain</mainClass>
                         </manifest>
                     </archive>
                 </configuration>

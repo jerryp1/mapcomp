@@ -2,7 +2,6 @@ package edu.alibaba.mpc4j.s2pc.pir.batchindex.psipir;
 
 import edu.alibaba.mpc4j.common.tool.CommonConstants;
 
-import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -39,7 +38,7 @@ public class Lpzg24BatchIndexPirNativeUtils {
      * @param psLowDegree Paterson-Stockmeyer方法的低阶值。
      * @return 序列化后的多项式。
      */
-    static native ArrayList<byte[]> processDatabase(byte[] sealContext, long[][] coeffs, int psLowDegree);
+    static native List<byte[]> processDatabase(byte[] sealContext, long[][] coeffs, int psLowDegree);
 
     /**
      * 计算密文的幂次方。
@@ -65,7 +64,7 @@ public class Lpzg24BatchIndexPirNativeUtils {
      * @param psLowDegree     Paterson-Stockmeyer方法的低阶值。
      * @return 密文匹配结果。
      */
-    static native byte[] optComputeMatches(byte[] sealContext, byte[] relinKeys, ArrayList<byte[]> plaintextPolys,
+    static native byte[] optComputeMatches(byte[] sealContext, byte[] relinKeys, List<byte[]> plaintextPolys,
                                            List<byte[]> ciphertextPolys, int psLowDegree);
 
     /**
@@ -76,7 +75,7 @@ public class Lpzg24BatchIndexPirNativeUtils {
      * @param ciphertextPolys 密文查询信息。
      * @return 密文匹配结果。
      */
-    static native byte[] naiveComputeMatches(byte[] sealContext, ArrayList<byte[]> plaintextPolys, List<byte[]> ciphertextPolys);
+    static native byte[] naiveComputeMatches(byte[] sealContext, List<byte[]> plaintextPolys, List<byte[]> ciphertextPolys);
 
     /**
      * 生成索引信息。

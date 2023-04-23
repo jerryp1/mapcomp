@@ -18,7 +18,7 @@ JNIEXPORT jobject JNICALL Java_edu_alibaba_mpc4j_s2pc_pir_batchindex_psipir_Lpzg
 /*
  * Class:     edu_alibaba_mpc4j_s2pc_pir_batchindex_psipir_Lpzg24BatchIndexPirNativeUtils
  * Method:    processDatabase
- * Signature: ([B[[JI)Ljava/util/ArrayList;
+ * Signature: ([B[[JI)Ljava/util/List;
  */
 JNIEXPORT jobject JNICALL Java_edu_alibaba_mpc4j_s2pc_pir_batchindex_psipir_Lpzg24BatchIndexPirNativeUtils_processDatabase
   (JNIEnv *, jclass, jbyteArray, jobjectArray, jint);
@@ -34,7 +34,7 @@ JNIEXPORT jobject JNICALL Java_edu_alibaba_mpc4j_s2pc_pir_batchindex_psipir_Lpzg
 /*
  * Class:     edu_alibaba_mpc4j_s2pc_pir_batchindex_psipir_Lpzg24BatchIndexPirNativeUtils
  * Method:    optComputeMatches
- * Signature: ([B[BLjava/util/ArrayList;Ljava/util/List;I)[B
+ * Signature: ([B[BLjava/util/List;Ljava/util/List;I)[B
  */
 JNIEXPORT jbyteArray JNICALL Java_edu_alibaba_mpc4j_s2pc_pir_batchindex_psipir_Lpzg24BatchIndexPirNativeUtils_optComputeMatches
   (JNIEnv *, jclass, jbyteArray, jbyteArray, jobject, jobject, jint);
@@ -42,7 +42,7 @@ JNIEXPORT jbyteArray JNICALL Java_edu_alibaba_mpc4j_s2pc_pir_batchindex_psipir_L
 /*
  * Class:     edu_alibaba_mpc4j_s2pc_pir_batchindex_psipir_Lpzg24BatchIndexPirNativeUtils
  * Method:    naiveComputeMatches
- * Signature: ([BLjava/util/ArrayList;Ljava/util/List;)[B
+ * Signature: ([BLjava/util/List;Ljava/util/List;)[B
  */
 JNIEXPORT jbyteArray JNICALL Java_edu_alibaba_mpc4j_s2pc_pir_batchindex_psipir_Lpzg24BatchIndexPirNativeUtils_naiveComputeMatches
   (JNIEnv *, jclass, jbyteArray, jobject, jobject);
