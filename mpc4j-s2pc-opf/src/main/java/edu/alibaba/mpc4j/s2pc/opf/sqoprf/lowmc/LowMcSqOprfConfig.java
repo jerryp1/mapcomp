@@ -64,7 +64,7 @@ public class LowMcSqOprfConfig implements SqOprfConfig {
 		private OprpConfig oprpConfig;
 
 		public Builder() {
-			oprpConfig = OprpFactory.createDefaultConfig(SecurityModel.SEMI_HONEST);
+			oprpConfig = OprpFactory.createDefaultConfig(SecurityModel.SEMI_HONEST, false);
 		}
 
 		public LowMcSqOprfConfig.Builder setOprpConfig(OprpConfig oprpConfig) {

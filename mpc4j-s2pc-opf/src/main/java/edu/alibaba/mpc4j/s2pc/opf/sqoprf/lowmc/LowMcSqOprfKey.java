@@ -34,7 +34,8 @@ public class LowMcSqOprfKey implements SqOprfKey {
 	private boolean isInvPrp;
 
 	/**
-	 * key for OprpSender.oprp, because we cannot get the key from Prp object, so I define a key here.
+	 * key for OprpSender.oprp(key, batchSize),
+	 * because we cannot get the key from Prp object, so I define a key here.
 	 */
 	private byte[] oprpKey;
 
