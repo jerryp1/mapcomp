@@ -44,7 +44,7 @@ public class LongUtils {
      */
     public static long byteArrayToLong(byte[] value) {
         assert value.length == Long.BYTES;
-        return ByteBuffer.wrap(value).order(ByteOrder.LITTLE_ENDIAN).getLong();
+        return ByteBuffer.wrap(value).getLong();
     }
 
     /**

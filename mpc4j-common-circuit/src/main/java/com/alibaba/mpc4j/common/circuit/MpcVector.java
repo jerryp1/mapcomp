@@ -3,7 +3,7 @@ package com.alibaba.mpc4j.common.circuit;
 /**
  * Mpc Vector.
  *
- * @author Li Peng (jerry.pl@alibaba-inc.com)
+ * @author Li Peng
  * @date 2023/4/21
  */
 public interface MpcVector {

@@ -9,72 +9,10 @@ import java.util.Random;
 /**
  * Plain Z2 Vector.
  *
- * @author Li Peng (jerry.pl@alibaba-inc.com)
+ * @author Li Peng
  * @date 2023/4/20
  */
 public class PlainZ2Vector implements MpcZ2Vector {
-    /**
-     * the bit vector
-     */
-    private BitVector bitVector;
-
-    @Override
-    public int getByteNum() {
-        return bitVector.byteNum();
-    }
-
-    @Override
-    public boolean get(int index) {
-        return bitVector.get(index);
-    }
-
-    @Override
-    public MpcZ2Vector xor(MpcZ2Vector that, boolean plain) {
-        assert plain : "PlainZ2Vector must be plain";
-        return PlainZ2Vector.create(bitVector.xor(((PlainZ2Vector) that).getBitVector()));
-    }
-
-    @Override
-    public void xori(MpcZ2Vector that, boolean plain) {
-        assert plain : "PlainZ2Vector must be plain";
-        this.bitVector = this.bitVector.xor(((PlainZ2Vector) that).getBitVector());
-    }
-
-    @Override
-    public MpcZ2Vector and(MpcZ2Vector that) {
-        return PlainZ2Vector.create(bitVector.and(((PlainZ2Vector) that).getBitVector()));
-    }
-
-    @Override
-    public void andi(MpcZ2Vector that) {
-        this.bitVector = this.bitVector.and(((PlainZ2Vector) that).getBitVector());
-    }
-
-    @Override
-    public MpcZ2Vector or(MpcZ2Vector that) {
-        return PlainZ2Vector.create(bitVector.or(((PlainZ2Vector) that).getBitVector()));
-    }
-
-    @Override
-    public void ori(MpcZ2Vector that) {
-        this.bitVector = this.bitVector.or(((PlainZ2Vector) that).getBitVector());
-    }
-
-    @Override
-    public MpcZ2Vector not() {
-        return PlainZ2Vector.create(bitVector.not());
-    }
-
-    @Override
-    public void noti() {
-        this.bitVector.noti();
-    }
-
-    @Override
-    public MpcZ2Type getType() {
-        return MpcZ2Type.PLAIN;
-    }
-
     /**
      * Create a random plain z2 vector.
      *
@@ -135,10 +73,29 @@ public class PlainZ2Vector implements MpcZ2Vector {
     }
 
     /**
-     * Get the inner bit vector.
-     *
-     * @return the inner bit vector.
+     * the bit vector
      */
+    private BitVector bitVector;
+
+    /**
+     * private constructor.
+     */
+    private PlainZ2Vector() {
+        // empty
+    }
+
+    @Override
+    public int getByteNum() {
+        return bitVector.byteNum();
+    }
+
+    @Override
+    public boolean get(int index) {
+        return bitVector.get(index);
+    }
+
+
+    @Override
     public BitVector getBitVector() {
         return bitVector;
     }
@@ -155,7 +112,7 @@ public class PlainZ2Vector implements MpcZ2Vector {
     }
 
     @Override
-    public MpcVector copy() {
+    public PlainZ2Vector copy() {
         PlainZ2Vector clone = new PlainZ2Vector();
         clone.bitVector = bitVector.copy();
 
@@ -168,7 +125,7 @@ public class PlainZ2Vector implements MpcZ2Vector {
     }
 
     @Override
-    public MpcVector split(int splitNum) {
+    public PlainZ2Vector split(int splitNum) {
         BitVector splitBitVector = bitVector.split(splitNum);
         return PlainZ2Vector.create(splitBitVector);
     }
