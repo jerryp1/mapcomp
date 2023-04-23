@@ -128,5 +128,6 @@ public abstract class AbstractNativeEcc extends AbstractEcc implements AutoClose
         for (ByteBuffer windowHandler : windowHandlerMap.values()) {
             nativeEcc.destroyPrecompute(windowHandler);
         }
+        nativeEcc.reset();
     }
 }

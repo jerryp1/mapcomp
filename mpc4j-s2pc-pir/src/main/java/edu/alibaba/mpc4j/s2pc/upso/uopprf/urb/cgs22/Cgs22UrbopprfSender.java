@@ -90,9 +90,9 @@ public class Cgs22UrbopprfSender extends AbstractUrbopprfSender {
         // init oprf
         sqOprfSender.init(batchSize, sqOprfKey);
         stopWatch.stop();
-        long initTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
+        long gtTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
         stopWatch.reset();
-        logStepInfo(PtoState.INIT_STEP, 1, 1, initTime);
+        logStepInfo(PtoState.INIT_STEP, 1, 2, gtTime, "Sender runs OPRF + GT");
 
         logPhaseInfo(PtoState.INIT_END);
     }

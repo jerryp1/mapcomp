@@ -93,12 +93,18 @@ public class PirUbopprfSender extends AbstractUbopprfSender {
         generateOkvs();
         // init oprf
         sqOprfSender.init(batchSize, sqOprfKey);
+        stopWatch.stop();
+        long okvsTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
+        stopWatch.reset();
+        logStepInfo(PtoState.INIT_STEP, 1, 2, okvsTime, "Sender runs OPRF + OKVS");
+
+        stopWatch.start();
         // init batch index PIR
         batchIndexPirServer.init(NaiveDatabase.create(l, okvsSparseStorage), batchSize * okvs.sparsePositionNum());
         stopWatch.stop();
-        long initTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
+        long pirTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
         stopWatch.reset();
-        logStepInfo(PtoState.INIT_STEP, 1, 1, initTime, "Sender generates OKVS");
+        logStepInfo(PtoState.INIT_STEP, 2, 2, pirTime, "Sender inits PIR");
 
         logPhaseInfo(PtoState.INIT_END);
     }

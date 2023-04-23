@@ -133,9 +133,7 @@ public class ScpsiMain {
             int serverSetSize = serverSetSizes[setSizeIndex];
             int clientSetSize = clientSetSizes[setSizeIndex];
             Set<ByteBuffer> serverElementSet = readServerElementSet(serverSetSize, elementByteLength);
-            runServer(serverRpc, clientParty, config, taskId, true, serverElementSet, clientSetSize, printWriter);
-            taskId++;
-            runServer(serverRpc, clientParty, config, taskId, false, serverElementSet, clientSetSize, printWriter);
+            runServer(serverRpc, clientParty, config, taskId, serverElementSet, clientSetSize, printWriter);
             taskId++;
         }
         // 断开连接
@@ -179,18 +177,18 @@ public class ScpsiMain {
         LOGGER.info("(warmup) {} finish", scpsiServer.ownParty().getPartyName());
     }
 
-    private void runServer(Rpc serverRpc, Party clientParty, ScpsiConfig config, int taskId, boolean parallel,
+    private void runServer(Rpc serverRpc, Party clientParty, ScpsiConfig config, int taskId,
                            Set<ByteBuffer> serverElementSet, int clientSetSize, PrintWriter printWriter)
         throws MpcAbortException {
         int serverSetSize = serverElementSet.size();
         boolean silent = PropertiesUtils.readBoolean(properties, "silent");
         LOGGER.info(
             "{}: serverSetSize = {}, clientSetSize = {}, parallel = {}",
-            serverRpc.ownParty().getPartyName(), serverSetSize, clientSetSize, parallel
+            serverRpc.ownParty().getPartyName(), serverSetSize, clientSetSize, true
         );
         ScpsiServer scpsiServer = ScpsiFactory.createServer(serverRpc, clientParty, config);
         scpsiServer.setTaskId(taskId);
-        scpsiServer.setParallel(parallel);
+        scpsiServer.setParallel(true);
         // 启动测试
         scpsiServer.getRpc().synchronize();
         scpsiServer.getRpc().reset();
@@ -287,11 +285,7 @@ public class ScpsiMain {
             int clientSetSize = clientSetSizes[setSizeIndex];
             // 读取输入文件
             Set<ByteBuffer> clientElementSet = readClientElementSet(clientSetSize, elementByteLength);
-            // 多线程
-            runClient(clientRpc, serverParty, config, taskId, true, clientElementSet, serverSetSize, printWriter);
-            taskId++;
-            // 单线程
-            runClient(clientRpc, serverParty, config, taskId, false, clientElementSet, serverSetSize, printWriter);
+            runClient(clientRpc, serverParty, config, taskId, clientElementSet, serverSetSize, printWriter);
             taskId++;
         }
         // 断开连接
@@ -336,18 +330,18 @@ public class ScpsiMain {
         LOGGER.info("(warmup) {} finish", scpsiClient.ownParty().getPartyName());
     }
 
-    private void runClient(Rpc clientRpc, Party serverParty, ScpsiConfig config, int taskId, boolean parallel,
+    private void runClient(Rpc clientRpc, Party serverParty, ScpsiConfig config, int taskId,
                            Set<ByteBuffer> clientElementSet, int serverSetSize, PrintWriter printWriter)
         throws MpcAbortException {
         int clientSetSize = clientElementSet.size();
         boolean silent = PropertiesUtils.readBoolean(properties, "silent");
         LOGGER.info(
             "{}: serverSetSize = {}, clientSetSize = {}, parallel = {}",
-            clientRpc.ownParty().getPartyName(), serverSetSize, clientSetSize, parallel
+            clientRpc.ownParty().getPartyName(), serverSetSize, clientSetSize, true
         );
         ScpsiClient scpsiClient = ScpsiFactory.createClient(clientRpc, serverParty, config);
         scpsiClient.setTaskId(taskId);
-        scpsiClient.setParallel(parallel);
+        scpsiClient.setParallel(true);
         // 启动测试
         scpsiClient.getRpc().synchronize();
         scpsiClient.getRpc().reset();

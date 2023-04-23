@@ -124,7 +124,7 @@ public class BaseOtFactory implements PtoFactory {
             case SEMI_HONEST:
             case COVERT:
             case MALICIOUS:
-                return new Co15BaseOtConfig.Builder().build();
+                return new Np01BaseOtConfig.Builder().build();
             default:
                 throw new IllegalArgumentException("Invalid " + SecurityModel.class.getSimpleName() + ": " + securityModel.name());
         }

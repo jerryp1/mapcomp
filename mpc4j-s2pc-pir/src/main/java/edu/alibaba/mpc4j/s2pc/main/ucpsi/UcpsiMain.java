@@ -131,9 +131,7 @@ public class UcpsiMain {
             int serverSetSize = serverSetSizes[setSizeIndex];
             int clientSetSize = clientSetSizes[setSizeIndex];
             Set<ByteBuffer> serverElementSet = readServerElementSet(serverSetSize, elementByteLength);
-            runServer(serverRpc, clientParty, config, taskId, true, serverElementSet, clientSetSize, printWriter);
-            taskId++;
-            runServer(serverRpc, clientParty, config, taskId, false, serverElementSet, clientSetSize, printWriter);
+            runServer(serverRpc, clientParty, config, taskId, serverElementSet, clientSetSize, printWriter);
             taskId++;
         }
         // 断开连接
@@ -177,18 +175,18 @@ public class UcpsiMain {
         LOGGER.info("(warmup) {} finish", ucpsiServer.ownParty().getPartyName());
     }
 
-    private void runServer(Rpc serverRpc, Party clientParty, UcpsiConfig config, int taskId, boolean parallel,
+    private void runServer(Rpc serverRpc, Party clientParty, UcpsiConfig config, int taskId,
                            Set<ByteBuffer> serverElementSet, int clientSetSize, PrintWriter printWriter)
         throws MpcAbortException {
         boolean silent = PropertiesUtils.readBoolean(properties, "silent");
         int serverSetSize = serverElementSet.size();
         LOGGER.info(
             "{}: serverSetSize = {}, clientSetSize = {}, parallel = {}",
-            serverRpc.ownParty().getPartyName(), serverSetSize, clientSetSize, parallel
+            serverRpc.ownParty().getPartyName(), serverSetSize, clientSetSize, true
         );
         UcpsiServer ucpsiServer = UcpsiFactory.createServer(serverRpc, clientParty, config);
         ucpsiServer.setTaskId(taskId);
-        ucpsiServer.setParallel(parallel);
+        ucpsiServer.setParallel(true);
         // 启动测试
         ucpsiServer.getRpc().synchronize();
         ucpsiServer.getRpc().reset();
@@ -280,11 +278,7 @@ public class UcpsiMain {
             int clientSetSize = clientSetSizes[setSizeIndex];
             // 读取输入文件
             Set<ByteBuffer> clientElementSet = readClientElementSet(clientSetSize, elementByteLength);
-            // 多线程
-            runClient(clientRpc, serverParty, config, taskId, true, clientElementSet, serverSetSize, printWriter);
-            taskId++;
-            // 单线程
-            runClient(clientRpc, serverParty, config, taskId, false, clientElementSet, serverSetSize, printWriter);
+            runClient(clientRpc, serverParty, config, taskId, clientElementSet, serverSetSize, printWriter);
             taskId++;
         }
         // 断开连接
@@ -329,18 +323,18 @@ public class UcpsiMain {
         LOGGER.info("(warmup) {} finish", ucpsiClient.ownParty().getPartyName());
     }
 
-    private void runClient(Rpc clientRpc, Party serverParty, UcpsiConfig config, int taskId, boolean parallel,
+    private void runClient(Rpc clientRpc, Party serverParty, UcpsiConfig config, int taskId,
                            Set<ByteBuffer> clientElementSet, int serverSetSize, PrintWriter printWriter)
         throws MpcAbortException {
         boolean silent = PropertiesUtils.readBoolean(properties, "silent");
         int clientSetSize = clientElementSet.size();
         LOGGER.info(
             "{}: serverSetSize = {}, clientSetSize = {}, parallel = {}",
-            clientRpc.ownParty().getPartyName(), serverSetSize, clientSetSize, parallel
+            clientRpc.ownParty().getPartyName(), serverSetSize, clientSetSize, true
         );
         UcpsiClient ucpsiClient = UcpsiFactory.createClient(clientRpc, serverParty, config);
         ucpsiClient.setTaskId(taskId);
-        ucpsiClient.setParallel(parallel);
+        ucpsiClient.setParallel(true);
         // 启动测试
         ucpsiClient.getRpc().synchronize();
         ucpsiClient.getRpc().reset();
