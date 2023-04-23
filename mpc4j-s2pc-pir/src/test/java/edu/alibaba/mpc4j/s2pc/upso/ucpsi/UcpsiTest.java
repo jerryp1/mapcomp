@@ -11,6 +11,8 @@ import edu.alibaba.mpc4j.s2pc.aby.basics.bc.SquareZ2Vector;
 import edu.alibaba.mpc4j.s2pc.pso.PsoUtils;
 import edu.alibaba.mpc4j.s2pc.upso.ucpsi.cgs22.Cgs22UcpsiConfig;
 import edu.alibaba.mpc4j.s2pc.upso.ucpsi.psty19.Psty19UcpsiConfig;
+import edu.alibaba.mpc4j.s2pc.upso.uopprf.ub.pir.PirUbopprfConfig;
+import edu.alibaba.mpc4j.s2pc.upso.uopprf.urb.pir.PirUrbopprfConfig;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.time.StopWatch;
 import org.junit.After;
@@ -43,11 +45,11 @@ public class UcpsiTest {
     /**
      * default server element size
      */
-    private static final int DEFAULT_SERVER_ELEMENT_SIZE = 1 << 16;
+    private static final int DEFAULT_SERVER_ELEMENT_SIZE = 1 << 15;
     /**
      * small server element size
      */
-    private static final int SMALL_SERVER_ELEMENT_SIZE = 1 << 14;
+    private static final int SMALL_SERVER_ELEMENT_SIZE = 1 << 12;
     /**
      * default client element size
      */
@@ -67,6 +69,12 @@ public class UcpsiTest {
 
         // CGS22
         configurations.add(new Object[]{
+            UcpsiFactory.UcpsiType.CGS22.name() + " (direct + pir)",
+            new Cgs22UcpsiConfig.Builder(false)
+                .setUrbopprfConfig(new PirUrbopprfConfig.Builder().build())
+                .build()
+        });
+        configurations.add(new Object[]{
             UcpsiFactory.UcpsiType.CGS22.name() + " (silent)", new Cgs22UcpsiConfig.Builder(true).build()
         });
         configurations.add(new Object[]{
@@ -74,12 +82,17 @@ public class UcpsiTest {
         });
         // PSTY19
         configurations.add(new Object[]{
+            UcpsiFactory.UcpsiType.PSTY19.name() + " (direct + pir)",
+            new Psty19UcpsiConfig.Builder(false)
+                .setUbopprfConfig(new PirUbopprfConfig.Builder().build())
+                .build()
+        });
+        configurations.add(new Object[]{
             UcpsiFactory.UcpsiType.PSTY19.name() + " (silent)", new Psty19UcpsiConfig.Builder(true).build()
         });
         configurations.add(new Object[]{
             UcpsiFactory.UcpsiType.PSTY19.name() + " (direct)", new Psty19UcpsiConfig.Builder(false).build()
         });
-
         return configurations;
     }
 

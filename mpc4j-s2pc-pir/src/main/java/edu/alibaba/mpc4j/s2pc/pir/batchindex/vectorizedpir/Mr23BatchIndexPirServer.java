@@ -142,7 +142,7 @@ public class Mr23BatchIndexPirServer extends AbstractBatchIndexPirServer {
 
         // generate response
         stopWatch.start();
-        List<byte[]> serverResponsePayload = new ArrayList<>();
+        List<byte[]> mergedResponse = new ArrayList<>();
         for (int partitionIndex = 0; partitionIndex < partitionSize; partitionIndex++) {
             IntStream intStream = IntStream.range(0, count);
             intStream = parallel ? intStream.parallel() : intStream;
@@ -160,8 +160,8 @@ public class Mr23BatchIndexPirServer extends AbstractBatchIndexPirServer {
                     ))
                 .collect(Collectors.toList());
             // merge response ciphertexts
-            serverResponsePayload.add(Mr23BatchIndexPirNativeUtils.mergeResponse(
-                params.getEncryptionParams(), publicKey, galoisKeys, response, groupBinSize
+            mergedResponse.add(Mr23BatchIndexPirNativeUtils.mergeResponse(
+                params.getEncryptionParams(), galoisKeys, response, groupBinSize
                 )
             );
         }
@@ -169,7 +169,7 @@ public class Mr23BatchIndexPirServer extends AbstractBatchIndexPirServer {
             encodeTaskId, getPtoDesc().getPtoId(), PtoStep.SERVER_SEND_RESPONSE.ordinal(), extraInfo,
             rpc.ownParty().getPartyId(), otherParty().getPartyId()
         );
-        rpc.send(DataPacket.fromByteArrayList(responseHeader, serverResponsePayload));
+        rpc.send(DataPacket.fromByteArrayList(responseHeader, mergedResponse));
         stopWatch.stop();
         long genResponseTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
         stopWatch.reset();
@@ -191,7 +191,7 @@ public class Mr23BatchIndexPirServer extends AbstractBatchIndexPirServer {
         if (binNum % 2 == 1) {
             binNum = binNum + 1;
         }
-        MpcAbortPreconditions.checkArgument((params.getPolyModulusDegree() / 2) >= binNum);
+        MpcAbortPreconditions.checkArgument(params.getPolyModulusDegree() >= binNum);
         List<Integer> totalIndexList = IntStream.range(0, num)
             .boxed()
             .collect(Collectors.toCollection(() -> new ArrayList<>(num)));

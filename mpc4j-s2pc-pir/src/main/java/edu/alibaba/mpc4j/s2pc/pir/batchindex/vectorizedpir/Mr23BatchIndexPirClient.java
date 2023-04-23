@@ -321,7 +321,7 @@ public class Mr23BatchIndexPirClient extends AbstractBatchIndexPirClient {
         cuckooHashBin = IntCuckooHashBinFactory.createInstance(
             envType, IntCuckooHashBinType.NO_STASH_NAIVE, params.getMaxRetrievalSize(), binNum, hashKeys
         );
-        MpcAbortPreconditions.checkArgument((params.getPolyModulusDegree() / 2) >= binNum);
+        MpcAbortPreconditions.checkArgument(params.getPolyModulusDegree() >= binNum);
         List<Integer> totalIndexList = IntStream.range(0, serverElementSize)
             .boxed()
             .collect(Collectors.toCollection(() -> new ArrayList<>(serverElementSize)));
