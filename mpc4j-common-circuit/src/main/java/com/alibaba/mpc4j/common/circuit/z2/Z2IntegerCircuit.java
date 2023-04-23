@@ -2,6 +2,7 @@ package com.alibaba.mpc4j.common.circuit.z2;
 
 import edu.alibaba.mpc4j.common.rpc.MpcAbortException;
 import edu.alibaba.mpc4j.common.tool.MathPreconditions;
+import edu.alibaba.mpc4j.common.tool.utils.LongUtils;
 
 import java.util.Arrays;
 import java.util.stream.IntStream;
@@ -23,30 +24,92 @@ public class Z2IntegerCircuit {
     }
 
     /**
-     * addition.
+     * x + y.
      *
-     * @param xs x array.
-     * @param ys y array.
-     * @return z = x + y, where z = x + y.
+     * @param xiArray xi array.
+     * @param yiArray yi array.
+     * @return zi array, where z = x + y.
      * @throws MpcAbortException the protocol failure aborts.
      */
-    public MpcZ2Vector[] add(MpcZ2Vector[] xs, MpcZ2Vector[] ys) throws MpcAbortException {
-        checkInputs(xs, ys);
-        return add(xs, ys, false);
+    public MpcZ2Vector[] add(MpcZ2Vector[] xiArray, MpcZ2Vector[] yiArray) throws MpcAbortException {
+        checkInputs(xiArray, yiArray);
+        return add(xiArray, yiArray, false);
     }
 
     /**
-     * increase 1.
+     * x - y.
      *
-     * @param xs x array.
-     * @return x + 1.
+     * @param xiArray xi array.
+     * @param yiArray yi array.
+     * @return zi array, where z = x - y.
+     * @throws MpcAbortException the protocol failure aborts.
      */
-    public MpcZ2Vector[] increaseOne(MpcZ2Vector[] xs) throws MpcAbortException {
-        checkInputs(xs);
-        int l = xs.length;
-        int bitNum = xs[0].getNum();
+    public MpcZ2Vector[] sub(MpcZ2Vector[] xiArray, MpcZ2Vector[] yiArray) throws MpcAbortException {
+        checkInputs(xiArray, yiArray);
+        // x - y = x + (complement y) + 1
+        return add(xiArray, party.not(yiArray), true);
+    }
+
+    /**
+     * x++.
+     *
+     * @param xiArray xi array.
+     * @return zi array, where x + 1.
+     * @throws MpcAbortException the protocol failure aborts.
+     */
+    public MpcZ2Vector[] increaseOne(MpcZ2Vector[] xiArray) throws MpcAbortException {
+        checkInputs(xiArray);
+        int l = xiArray.length;
+        int bitNum = xiArray[0].getNum();
         MpcZ2Vector[] ys = IntStream.range(0, l).mapToObj(i -> party.createZeros(bitNum)).toArray(MpcZ2Vector[]::new);
-        return add(xs, ys, true);
+        return add(xiArray, ys, true);
+    }
+
+    /**
+     * x == y.
+     *
+     * @param xiArray xi array.
+     * @param yiArray yi array.
+     * @return zi array, where z = (x == y).
+     * @throws MpcAbortException the protocol failure aborts.
+     */
+    public MpcZ2Vector eq(MpcZ2Vector[] xiArray, MpcZ2Vector[] yiArray) throws MpcAbortException {
+        checkInputs(xiArray, yiArray);
+        int l = xiArray.length;
+        // bit-wise XOR and NOT
+        MpcZ2Vector[] eqiArray = party.xor(xiArray, yiArray);
+        eqiArray = party.not(eqiArray);
+        // tree-based AND
+        int logL = LongUtils.ceilLog2(l);
+        for (int h = 1; h <= logL; h++) {
+            int nodeNum = eqiArray.length / 2;
+            MpcZ2Vector[] eqXiArray = new MpcZ2Vector[nodeNum];
+            MpcZ2Vector[] eqYiArray = new MpcZ2Vector[nodeNum];
+            for (int i = 0; i < nodeNum; i++) {
+                eqXiArray[i] = eqiArray[i * 2];
+                eqYiArray[i] = eqiArray[i * 2 + 1];
+            }
+            MpcZ2Vector[] eqZiArray = party.and(eqXiArray, eqYiArray);
+            if (eqiArray.length % 2 == 1) {
+                eqZiArray = Arrays.copyOf(eqZiArray, nodeNum + 1);
+                eqZiArray[nodeNum] = eqiArray[eqiArray.length - 1];
+            }
+            eqiArray = eqZiArray;
+        }
+        return eqiArray[0];
+    }
+
+    /**
+     * x ≤ y.
+     * @param xiArray xi array.
+     * @param yiArray yi array.
+     * @return zi array, where z = (x ≤ y).
+     * @throws MpcAbortException the protocol failure aborts.
+     */
+    public MpcZ2Vector leq(MpcZ2Vector[] xiArray, MpcZ2Vector[] yiArray) throws MpcAbortException {
+        checkInputs(xiArray, yiArray);
+        MpcZ2Vector[] result = sub(xiArray, yiArray);
+        return result[0];
     }
 
     private MpcZ2Vector[] add(MpcZ2Vector[] xs, MpcZ2Vector[] ys, boolean cin) throws MpcAbortException {

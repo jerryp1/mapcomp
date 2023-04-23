@@ -26,6 +26,11 @@ public class PlainBcParty implements MpcBcParty {
     }
 
     @Override
+    public PlainZ2Vector createEmpty() {
+        return PlainZ2Vector.createEmpty();
+    }
+
+    @Override
     public PlainZ2Vector and(MpcZ2Vector xi, MpcZ2Vector yi) {
         PlainZ2Vector plainXi = (PlainZ2Vector) xi;
         PlainZ2Vector plainYi = (PlainZ2Vector) yi;
@@ -118,8 +123,10 @@ public class PlainBcParty implements MpcBcParty {
 
     private PlainZ2Vector mergePlainZ2Vectors(MpcZ2Vector[] mpcZ2Vectors) {
         assert mpcZ2Vectors.length > 0 : "merged vector length must be greater than 0";
-        PlainZ2Vector[] plainZ2Vectors = (PlainZ2Vector[]) mpcZ2Vectors;
-        PlainZ2Vector mergePlainZ2Vector = PlainZ2Vector.createEmpty();
+        PlainZ2Vector[] plainZ2Vectors = Arrays.stream(mpcZ2Vectors)
+            .map(vector -> (PlainZ2Vector) vector)
+            .toArray(PlainZ2Vector[]::new);
+        PlainZ2Vector mergePlainZ2Vector = createEmpty();
         // we must merge the bit vector in the reverse order
         for (PlainZ2Vector plainZ2Vector : plainZ2Vectors) {
             assert plainZ2Vector.getNum() > 0 : "the number of bits must be greater than 0";

@@ -58,7 +58,7 @@ public class Z2IntegerCircuitTest {
             .mapToLong(i -> i)
             .toArray();
         long[] longYs = IntStream.range(0, DEFAULT_NUM)
-            .mapToLong(i -> i)
+            .mapToLong(i -> DEFAULT_NUM / 2 + i)
             .toArray();
         testPto(true, l, longXs, longYs);
         LOGGER.info("------------------------------");
@@ -101,8 +101,11 @@ public class Z2IntegerCircuitTest {
     }
 
     private void testPto(boolean constant, int l, long[] longXs, long[] longYs) {
+        testPto(constant, IntegerOperator.SUB, l, longXs, longYs);
         testPto(constant, IntegerOperator.INCREASE_ONE, l, longXs, longYs);
         testPto(constant, IntegerOperator.ADD, l, longXs, longYs);
+        testPto(constant, IntegerOperator.LEQ, l, longXs, longYs);
+        testPto(constant, IntegerOperator.EQ, l, longXs, longYs);
     }
 
     private void testPto(boolean constant, IntegerOperator operator, int l, long[] longXs, long[] longYs) {
@@ -131,29 +134,51 @@ public class Z2IntegerCircuitTest {
             stopWatch.stop();
             stopWatch.reset();
             // verify
-            PlainZ2Vector[] zPlainZ2Vectors = partyThread.getZ();
-            BitVector[] z = Arrays.stream(zPlainZ2Vectors).map(PlainZ2Vector::getBitVector).toArray(BitVector[]::new);
+            MpcZ2Vector[] zPlainZ2Vectors = partyThread.getZ();
+            BitVector[] z = Arrays.stream(zPlainZ2Vectors).map(MpcZ2Vector::getBitVector).toArray(BitVector[]::new);
             long[] longZs = Zl64Database.create(EnvType.STANDARD, false, z).getData();
-            assertOutput(operator, longXs, longYs, longZs);
+            assertOutput(operator, l, longXs, longYs, longZs);
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
     }
 
-    private void assertOutput(IntegerOperator operator, long[] longXs, long[] longYs, long[] longZs) {
+    private void assertOutput(IntegerOperator operator, int l, long[] longXs, long[] longYs, long[] longZs) {
         int num = longXs.length;
+        long andMod = (1L << l) - 1;
         switch (operator) {
+            case SUB:
+                IntStream.range(0, num).forEach(i -> {
+                    long expectZ = (longXs[i] - longYs[i]) & andMod;
+                    long actualZ = longZs[i];
+                    Assert.assertEquals(expectZ, actualZ);
+                });
+                break;
             case INCREASE_ONE:
                 IntStream.range(0, num).forEach(i -> {
-                    long expectZ = longXs[i] + 1;
+                    long expectZ = (longXs[i] + 1) & andMod;
                     long actualZ = longZs[i];
                     Assert.assertEquals(expectZ, actualZ);
                 });
                 break;
             case ADD:
                 IntStream.range(0, num).forEach(i -> {
-                    long expectZ = longXs[i] + longYs[i];
+                    long expectZ = (longXs[i] + longYs[i]) & andMod;
                     long actualZ = longZs[i];
+                    Assert.assertEquals(expectZ, actualZ);
+                });
+                break;
+            case LEQ:
+                IntStream.range(0, num).forEach(i -> {
+                    boolean expectZ = (longXs[i] <= longYs[i]);
+                    boolean actualZ = (longZs[i] % 2) == 1;
+                    Assert.assertEquals(expectZ, actualZ);
+                });
+                break;
+            case EQ:
+                IntStream.range(0, num).forEach(i -> {
+                    boolean expectZ = (longXs[i] == longYs[i]);
+                    boolean actualZ = (longZs[i] % 2) == 1;
                     Assert.assertEquals(expectZ, actualZ);
                 });
                 break;

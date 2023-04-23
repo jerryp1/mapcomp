@@ -10,7 +10,7 @@ import edu.alibaba.mpc4j.common.rpc.MpcAbortException;
  */
 public interface MpcBcParty {
     /**
-     * Create a (plain) all-one vector.
+     * Creates a (plain) all-one vector.
      *
      * @param bitNum the bit num.
      * @return a vector.
@@ -18,7 +18,7 @@ public interface MpcBcParty {
     MpcZ2Vector createOnes(int bitNum);
 
     /**
-     * Create a (plain) all-zero vector.
+     * Creates a (plain) all-zero vector.
      *
      * @param bitNum the bit num.
      * @return a vector.
@@ -26,13 +26,20 @@ public interface MpcBcParty {
     MpcZ2Vector createZeros(int bitNum);
 
     /**
-     * Create a (plain) vector with all bits equal to the assigned value.
+     * Creates a (plain) vector with all bits equal to the assigned value.
      *
      * @param bitNum the bit num.
      * @param value  the assigned value.
      * @return a vector.
      */
     MpcZ2Vector create(int bitNum, boolean value);
+
+    /**
+     * Creates an empty vector.
+     *
+     * @return a vector.
+     */
+    MpcZ2Vector createEmpty();
 
     /**
      * AND operation.

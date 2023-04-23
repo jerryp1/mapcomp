@@ -8,20 +8,23 @@ package com.alibaba.mpc4j.common.circuit.z2;
  */
 public enum IntegerOperator {
     /**
-     * less than or equal to
+     * ≤
      */
     LEQ,
     /**
-     * subtraction
+     * -
      */
     SUB,
     /**
-     * increase one
+     * ++
      */
     INCREASE_ONE,
     /**
-     * addition
+     * +
      */
     ADD,
-
+    /**
+     * ==
+     */
+    EQ,
 }

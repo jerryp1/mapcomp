@@ -26,7 +26,7 @@ class Z2IntegerCircuitPartyThread extends Thread {
     /**
      * z0
      */
-    private PlainZ2Vector[] z;
+    private MpcZ2Vector[] z;
     /**
      * operator
      */
@@ -39,7 +39,7 @@ class Z2IntegerCircuitPartyThread extends Thread {
         this.y = y;
     }
 
-    PlainZ2Vector[] getZ() {
+    MpcZ2Vector[] getZ() {
         return z;
     }
 
@@ -48,11 +48,20 @@ class Z2IntegerCircuitPartyThread extends Thread {
         try {
             Z2IntegerCircuit circuit = new Z2IntegerCircuit(party);
             switch (operator) {
+                case LEQ:
+                    z = new PlainZ2Vector[]{(PlainZ2Vector) circuit.leq(x, y)};
+                    break;
+                case EQ:
+                    z = new PlainZ2Vector[]{(PlainZ2Vector) circuit.eq(x, y)};
+                    break;
                 case ADD:
-                    z = Arrays.stream(circuit.add(x, y)).map(v -> (PlainZ2Vector) v).toArray(PlainZ2Vector[]::new);
+                    z = Arrays.stream(circuit.add(x, y)).toArray(MpcZ2Vector[]::new);
                     break;
                 case INCREASE_ONE:
-                    z = Arrays.stream(circuit.increaseOne(x)).map(v -> (PlainZ2Vector) v).toArray(PlainZ2Vector[]::new);
+                    z = Arrays.stream(circuit.increaseOne(x)).toArray(MpcZ2Vector[]::new);
+                    break;
+                case SUB:
+                    z = Arrays.stream(circuit.sub(x, y)).toArray(MpcZ2Vector[]::new);
                     break;
                 default:
                     throw new IllegalStateException("Invalid " + operator.name() + ": " + operator.name());
