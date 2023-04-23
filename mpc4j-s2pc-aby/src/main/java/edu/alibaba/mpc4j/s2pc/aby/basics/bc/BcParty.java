@@ -178,6 +178,15 @@ public interface BcParty extends TwoPartyPto {
     void revealOther(SquareShareZ2Vector[] xiArray);
 
     /**
+     * Create empty new shares.
+     *
+     * @param len    num of shares.
+     * @param bitNum num of bit.
+     * @return new shares.
+     */
+    SquareShareZ2Vector[] createEmptyShares(int len, int bitNum);
+
+    /**
      * Get the number of input bits for secure boolean circuit computation.
      *
      * @param reset whether to reset the counter.

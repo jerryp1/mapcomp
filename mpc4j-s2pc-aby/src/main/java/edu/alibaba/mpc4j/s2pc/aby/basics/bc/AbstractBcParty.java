@@ -289,6 +289,12 @@ public abstract class AbstractBcParty extends AbstractTwoPartyPto implements BcP
         revealOther(mergeXiArray);
     }
 
+    @Override
+    public SquareShareZ2Vector[] createEmptyShares(int len, int bitNum) {
+        assert len > 0 : "length of shares must be greater than 0";
+        return IntStream.range(0, len).mapToObj(i -> SquareShareZ2Vector.createEmpty(true)).toArray(SquareShareZ2Vector[]::new);
+    }
+
     private BitVector mergeBitVectors(BitVector[] bitVectors) {
         assert bitVectors.length > 0 : "merged vector length must be greater than 0";
         BitVector mergeBitVector = BitVectorFactory.createEmpty();
