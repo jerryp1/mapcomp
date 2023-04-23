@@ -94,18 +94,14 @@ public class NcCotFactory implements PtoFactory {
      * Creates a default config.
      *
      * @param securityModel the security model.
+     * @param silent if using a silent protocol.
      * @return a default config.
      */
-    public static NcCotConfig createDefaultConfig(SecurityModel securityModel) {
-        switch (securityModel) {
-            case IDEAL:
-            case SEMI_HONEST:
-                return new Ywl20NcCotConfig.Builder(SecurityModel.SEMI_HONEST).build();
-            case COVERT:
-            case MALICIOUS:
-                return new Ywl20NcCotConfig.Builder(SecurityModel.MALICIOUS).build();
-            default:
-                throw new IllegalArgumentException("Invalid " + SecurityModel.class.getSimpleName() + ": " + securityModel.name());
+    public static NcCotConfig createDefaultConfig(SecurityModel securityModel, boolean silent) {
+        if (silent) {
+            return new Ywl20NcCotConfig.Builder(securityModel).build();
+        } else {
+            return new DirectNcCotConfig.Builder(securityModel).build();
         }
     }
 }

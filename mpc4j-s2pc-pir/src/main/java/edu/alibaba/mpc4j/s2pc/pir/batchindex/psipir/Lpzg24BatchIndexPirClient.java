@@ -17,7 +17,7 @@ import edu.alibaba.mpc4j.common.tool.utils.BigIntegerUtils;
 import edu.alibaba.mpc4j.common.tool.utils.BinaryUtils;
 import edu.alibaba.mpc4j.common.tool.utils.CommonUtils;
 import edu.alibaba.mpc4j.s2pc.pir.batchindex.AbstractBatchIndexPirClient;
-import edu.alibaba.mpc4j.s2pc.pso.upsi.cmg21.Cmg21UpsiParams;
+import edu.alibaba.mpc4j.s2pc.upso.upsi.cmg21.Cmg21UpsiParams;
 import org.bouncycastle.math.ec.ECPoint;
 
 import java.math.BigInteger;
@@ -30,7 +30,6 @@ import java.util.stream.Stream;
 
 import static edu.alibaba.mpc4j.common.tool.hashbin.object.cuckoo.CuckooHashBinFactory.createCuckooHashBin;
 import static edu.alibaba.mpc4j.s2pc.pir.batchindex.psipir.Lpzg24BatchIndexPirPtoDesc.*;
-import static edu.alibaba.mpc4j.s2pc.pir.batchindex.psipir.Lpzg24BatchIndexPirPtoDesc.PtoStep.*;
 
 /**
  * PSI-PIR协议客户端。
@@ -76,6 +75,10 @@ public class Lpzg24BatchIndexPirClient extends AbstractBatchIndexPirClient {
      * 私钥
      */
     private byte[] secretKey;
+    /**
+     * 模p有限域
+     */
+    private Zp64 zp64;
 
     public Lpzg24BatchIndexPirClient(Rpc clientRpc, Party serverParty, Lpzg24BatchIndexPirConfig config) {
         super(getInstance(), clientRpc, serverParty, config);
@@ -86,13 +89,47 @@ public class Lpzg24BatchIndexPirClient extends AbstractBatchIndexPirClient {
     public void init(int serverElementSize, int elementBitLength, int maxRetrievalSize) throws MpcAbortException {
         logPhaseInfo(PtoState.INIT_BEGIN);
 
-        stopWatch.start();
-        params = Cmg21UpsiParams.SERVER_1M_CLIENT_MAX_1K_CMP;
+        if (serverElementSize <= (1 << 22)) {
+            if (maxRetrievalSize <= 256) {
+                params = Cmg21UpsiParams.SERVER_1M_CLIENT_MAX_256;
+            } else if (maxRetrievalSize <= 512) {
+                params = Cmg21UpsiParams.SERVER_1M_CLIENT_MAX_512_CMP;
+            } else if (maxRetrievalSize <= 1024) {
+                params = Cmg21UpsiParams.SERVER_1M_CLIENT_MAX_1K_CMP;
+            } else if (maxRetrievalSize <= 2048) {
+                params = Cmg21UpsiParams.SERVER_1M_CLIENT_MAX_2K_CMP;
+            } else if (maxRetrievalSize <= 4096) {
+                params = Cmg21UpsiParams.SERVER_1M_CLIENT_MAX_4K_CMP;
+            } else {
+                MpcAbortPreconditions.checkArgument(false, "retrieval size is larger than the upper bound.");
+            }
+        } else if (serverElementSize <= (1 << 26)) {
+            if (maxRetrievalSize <= 1024) {
+                params = Cmg21UpsiParams.SERVER_16M_CLIENT_MAX_1024;
+            } else if (maxRetrievalSize <= 2048) {
+                params = Cmg21UpsiParams.SERVER_16M_CLIENT_MAX_2048;
+            } else {
+                MpcAbortPreconditions.checkArgument(false, "retrieval size is larger than the upper bound.");
+            }
+        } else if (serverElementSize <= (1 << 28)) {
+            if (maxRetrievalSize <= 1024) {
+                params = Cmg21UpsiParams.SERVER_256M_CLIENT_MAX_1024;
+            } else if (maxRetrievalSize <= 2048) {
+                params = Cmg21UpsiParams.SERVER_256M_CLIENT_MAX_2048;
+            } else if (maxRetrievalSize <= 4096) {
+                params = Cmg21UpsiParams.SERVER_256M_CLIENT_MAX_4096;
+            } else {
+                MpcAbortPreconditions.checkArgument(false, "retrieval size is larger than the upper bound.");
+            }
+        }
+        zp64 = Zp64Factory.createInstance(envType, (long) params.getPlainModulus());
         setInitInput(serverElementSize, elementBitLength, params.maxClientElementSize(), 1);
+
+        stopWatch.start();
         // 客户端生成BFV算法密钥和参数
         List<byte[]> bfvKeyPair = generateKeyPair();
         DataPacketHeader bfvParamsHeader = new DataPacketHeader(
-            encodeTaskId, getPtoDesc().getPtoId(), CLIENT_SEND_ENCRYPTION_PARAMS.ordinal(), extraInfo,
+            encodeTaskId, getPtoDesc().getPtoId(), PtoStep.CLIENT_SEND_PUBLIC_KEYS.ordinal(), extraInfo,
             rpc.ownParty().getPartyId(), otherParty().getPartyId()
         );
         rpc.send(DataPacket.fromByteArrayList(bfvParamsHeader, bfvKeyPair));
@@ -103,7 +140,7 @@ public class Lpzg24BatchIndexPirClient extends AbstractBatchIndexPirClient {
 
         // 客户端接收服务端哈希密钥
         DataPacketHeader cuckooHashKeyHeader = new DataPacketHeader(
-            encodeTaskId, getPtoDesc().getPtoId(), SERVER_SEND_CUCKOO_HASH_KEYS.ordinal(), extraInfo,
+            encodeTaskId, getPtoDesc().getPtoId(), PtoStep.SERVER_SEND_CUCKOO_HASH_KEYS.ordinal(), extraInfo,
             otherParty().getPartyId(), rpc.ownParty().getPartyId()
         );
         List<byte[]> hashKeyPayload = rpc.receive(cuckooHashKeyHeader).getPayload();
@@ -114,40 +151,41 @@ public class Lpzg24BatchIndexPirClient extends AbstractBatchIndexPirClient {
     }
 
     @Override
-    public Map<Integer, byte[]> pir(ArrayList<Integer> indices) throws MpcAbortException {
-        setPtoInput(indices);
+    public Map<Integer, byte[]> pir(List<Integer> indexList) throws MpcAbortException {
+        setPtoInput(indexList);
         logPhaseInfo(PtoState.PTO_BEGIN);
+        System.out.println(params);
 
-        // 客户端执行OPRF协议
+        // 执行OPRF协议
         stopWatch.start();
         List<byte[]> blindPayload = generateBlindPayload();
         DataPacketHeader blindHeader = new DataPacketHeader(
-            encodeTaskId, getPtoDesc().getPtoId(), CLIENT_SEND_BLIND.ordinal(), extraInfo,
+            encodeTaskId, getPtoDesc().getPtoId(), PtoStep.CLIENT_SEND_BLIND.ordinal(), extraInfo,
             ownParty().getPartyId(), otherParty().getPartyId()
         );
         rpc.send(DataPacket.fromByteArrayList(blindHeader, blindPayload));
         DataPacketHeader blindPrfHeader = new DataPacketHeader(
-            encodeTaskId, getPtoDesc().getPtoId(), SERVER_SEND_BLIND_PRF.ordinal(), extraInfo,
+            encodeTaskId, getPtoDesc().getPtoId(), PtoStep.SERVER_SEND_BLIND_PRF.ordinal(), extraInfo,
             otherParty().getPartyId(), ownParty().getPartyId()
         );
         List<byte[]> blindPrfPayload = rpc.receive(blindPrfHeader).getPayload();
-        ArrayList<ByteBuffer> blindPrf = handleBlindPrf(blindPrfPayload);
+        List<ByteBuffer> blindPrf = handleBlindPrf(blindPrfPayload);
         Map<ByteBuffer, ByteBuffer> blindPrfMap = IntStream.range(0, retrievalSize)
             .boxed()
-            .collect(Collectors.toMap(blindPrf::get, this.indicesByteBuffer::get, (a, b) -> b));
+            .collect(Collectors.toMap(blindPrf::get, indicesByteBuffer::get, (a, b) -> b));
         stopWatch.stop();
         long oprfTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
         stopWatch.reset();
-        logStepInfo(PtoState.PTO_STEP, 1, 5, oprfTime, "Client runs OPRF");
+        logStepInfo(PtoState.PTO_STEP, 1, 4, oprfTime, "Client runs OPRF");
 
         stopWatch.start();
-        // 客户端布谷鸟哈希分桶，并发送hash函数的key
+        // 客户端布谷鸟哈希分桶
         boolean succeed = generateCuckooHashBin(blindPrf);
         MpcAbortPreconditions.checkArgument(succeed, "cuckoo hash failed.");
         stopWatch.stop();
         long cuckooHashKeyTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
         stopWatch.reset();
-        logStepInfo(PtoState.PTO_STEP, 2, 5, cuckooHashKeyTime, "Client generates cuckoo hash keys");
+        logStepInfo(PtoState.PTO_STEP, 2, 4, cuckooHashKeyTime, "Client generates cuckoo hash bin");
 
         stopWatch.start();
         // 客户端加密查询信息
@@ -159,59 +197,67 @@ public class Lpzg24BatchIndexPirClient extends AbstractBatchIndexPirClient {
             .flatMap(Collection::stream)
             .collect(Collectors.toList());
         DataPacketHeader clientQueryDataPacketHeader = new DataPacketHeader(
-            encodeTaskId, getPtoDesc().getPtoId(), CLIENT_SEND_QUERY.ordinal(), extraInfo,
+            encodeTaskId, getPtoDesc().getPtoId(), PtoStep.CLIENT_SEND_QUERY.ordinal(), extraInfo,
             rpc.ownParty().getPartyId(), otherParty().getPartyId()
         );
         rpc.send(DataPacket.fromByteArrayList(clientQueryDataPacketHeader, encryptedQuery));
         stopWatch.stop();
         long genQueryTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
         stopWatch.reset();
-        logStepInfo(PtoState.PTO_STEP, 4, 5, genQueryTime, "Client generates query");
+        logStepInfo(PtoState.PTO_STEP, 3, 4, genQueryTime, "Client generates query");
 
         // 客户端接收回复
         DataPacketHeader responseHeader = new DataPacketHeader(
-            encodeTaskId, getPtoDesc().getPtoId(), SERVER_SEND_RESPONSE.ordinal(), extraInfo,
+            encodeTaskId, getPtoDesc().getPtoId(), PtoStep.SERVER_SEND_RESPONSE.ordinal(), extraInfo,
             otherParty().getPartyId(), rpc.ownParty().getPartyId()
         );
         List<byte[]> responsePayload = rpc.receive(responseHeader).getPayload();
 
         stopWatch.start();
         // 客户端解密密文匹配结果
-        Map<Integer, byte[]> intersectionSet = handleServerResponse(responsePayload, blindPrfMap);
+        Map<Integer, byte[]> pirResult = handleServerResponse(responsePayload, blindPrfMap);
         stopWatch.stop();
         long decodeTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
         stopWatch.reset();
-        logStepInfo(PtoState.PTO_STEP, 5, 5, decodeTime, "Client decodes response");
+        logStepInfo(PtoState.PTO_STEP, 4, 4, decodeTime, "Client decodes response");
 
         logPhaseInfo(PtoState.PTO_END);
-        return intersectionSet;
+        return pirResult;
     }
 
-    private Map<Integer, byte[]> handleServerResponse(List<byte[]> response, Map<ByteBuffer, ByteBuffer> oprfMap) throws MpcAbortException {
-        int ciphertextNum = params.getBinNum() / (params.getPolyModulusDegree() / params.getItemEncodedSlotSize());
-        MpcAbortPreconditions.checkArgument(response.size() % (ciphertextNum * partitionCount) == 0);
-        int partitionSize = response.size() / partitionCount;
-
-        Stream<byte[]> responseStream = parallel ? response.stream().parallel() : response.stream();
-        ArrayList<long[]> serverResponse = responseStream
+    /**
+     * 客户端处理服务端回复信息。
+     *
+     * @param serverResponse 服务端回复信息。
+     * @param oprfMap        OPRF映射。
+     * @return 检索结果。
+     * @throws MpcAbortException 如果协议异常终止。
+     */
+    private Map<Integer, byte[]> handleServerResponse(List<byte[]> serverResponse, Map<ByteBuffer, ByteBuffer> oprfMap)
+        throws MpcAbortException {
+        MpcAbortPreconditions.checkArgument(serverResponse.size() % (params.getCiphertextNum() * partitionSize) == 0);
+        int partitionSize = serverResponse.size() / this.partitionSize;
+        Stream<byte[]> responseStream = parallel ? serverResponse.stream().parallel() : serverResponse.stream();
+        ArrayList<long[]> coeffs = responseStream
             .map(i -> Lpzg24BatchIndexPirNativeUtils.decodeReply(sealContext, secretKey, i))
             .collect(Collectors.toCollection(ArrayList::new));
-
         int byteLength = CommonUtils.getByteLength(elementBitLength);
         byte[][] pirResult = new byte[retrievalSize][byteLength];
-
-        for (int i = 0; i < partitionCount; i++) {
-            Set<ByteBuffer> intersectionSet = recoverPirResult(serverResponse.subList(i * partitionSize, (i + 1) * partitionSize), oprfMap);
+        for (int i = 0; i < this.partitionSize; i++) {
+            Set<ByteBuffer> intersectionSet = recoverIntersection(
+                coeffs.subList(i * partitionSize, (i + 1) * partitionSize), oprfMap
+            );
             for (int j = 0; j < retrievalSize; j++) {
                 boolean temp = intersectionSet.contains(indicesByteBuffer.get(j));
                 BinaryUtils.setBoolean(pirResult[j], byteLength * Byte.SIZE - 1 - i, temp);
             }
         }
-        Map<Integer, byte[]> resultMap = new HashMap<>(retrievalSize);
-        for (int i = 0; i < retrievalSize; i++) {
-            resultMap.put(indicesByteBuffer.get(i).getInt(), pirResult[i]);
-        }
-        return resultMap;
+        return IntStream.range(0, retrievalSize)
+            .boxed()
+            .collect(Collectors.toMap(
+                i -> indicesByteBuffer.get(i).getInt(), i -> pirResult[i], (a, b) -> b,
+                () -> new HashMap<>(retrievalSize)
+                ));
     }
 
     /**
@@ -221,15 +267,13 @@ public class Lpzg24BatchIndexPirClient extends AbstractBatchIndexPirClient {
      * @param oprfMap  OPRF映射。
      * @return 隐私集合交集。
      */
-    private Set<ByteBuffer> recoverPirResult(List<long[]> response, Map<ByteBuffer, ByteBuffer> oprfMap) {
-        int ciphertextNum = params.getBinNum() / (params.getPolyModulusDegree() / params.getItemEncodedSlotSize());
-        int itemPerCiphertext = params.getPolyModulusDegree() / params.getItemEncodedSlotSize();
-        int binSize = response.size() / ciphertextNum;
+    private Set<ByteBuffer> recoverIntersection(List<long[]> response, Map<ByteBuffer, ByteBuffer> oprfMap) {
+        int binSize = response.size() / params.getCiphertextNum();
         Set<ByteBuffer> intersectionSet = new HashSet<>();
         for (int i = 0; i < response.size(); i++) {
             // 找到匹配元素的所在行
             List<Integer> matchedItem = new ArrayList<>();
-            for (int j = 0; j < params.getItemEncodedSlotSize() * itemPerCiphertext; j++) {
+            for (int j = 0; j < params.getItemEncodedSlotSize() * params.getItemPerCiphertext(); j++) {
                 if (response.get(i)[j] == 0) {
                     matchedItem.add(j);
                 }
@@ -239,7 +283,7 @@ public class Lpzg24BatchIndexPirClient extends AbstractBatchIndexPirClient {
                     if (matchedItem.get(j + params.getItemEncodedSlotSize() - 1) - matchedItem.get(j)
                         == params.getItemEncodedSlotSize() - 1) {
                         int hashBinIndex = (matchedItem.get(j) / params.getItemEncodedSlotSize())
-                            + (i / binSize) * itemPerCiphertext;
+                            + (i / binSize) * params.getItemPerCiphertext();
                         intersectionSet.add(oprfMap.get(cuckooHashBin.getHashBinEntry(hashBinIndex).getItem()));
                         j = j + params.getItemEncodedSlotSize() - 1;
                     }
@@ -255,21 +299,22 @@ public class Lpzg24BatchIndexPirClient extends AbstractBatchIndexPirClient {
      * @return 查询信息的编码。
      */
     public List<long[][]> encodeQuery() {
-        int itemPerCiphertext = params.getPolyModulusDegree() / params.getItemEncodedSlotSize();
-        int ciphertextNum = params.getBinNum() / itemPerCiphertext;
-        long[][] items = new long[ciphertextNum][params.getPolyModulusDegree()];
-        for (int i = 0; i < ciphertextNum; i++) {
-            for (int j = 0; j < itemPerCiphertext; j++) {
+        long[][] items = new long[params.getCiphertextNum()][params.getPolyModulusDegree()];
+        for (int i = 0; i < params.getCiphertextNum(); i++) {
+            for (int j = 0; j < params.getItemPerCiphertext(); j++) {
                 long[] item = params.getHashBinEntryEncodedArray(
-                    cuckooHashBin.getHashBinEntry(i * itemPerCiphertext + j), true
+                    cuckooHashBin.getHashBinEntry(i * params.getItemPerCiphertext() + j), true
                 );
-                System.arraycopy(item, 0, items[i], j * params.getItemEncodedSlotSize(), params.getItemEncodedSlotSize());
+                System.arraycopy(
+                    item, 0, items[i], j * params.getItemEncodedSlotSize(), params.getItemEncodedSlotSize()
+                );
             }
-            for (int j = itemPerCiphertext * params.getItemEncodedSlotSize(); j < params.getPolyModulusDegree(); j++) {
+            for (int j = params.getItemPerCiphertext() * params.getItemEncodedSlotSize();
+                 j < params.getPolyModulusDegree(); j++) {
                 items[i][j] = 0;
             }
         }
-        return IntStream.range(0, ciphertextNum)
+        return IntStream.range(0, params.getCiphertextNum())
             .mapToObj(i -> computePowers(items[i]))
             .collect(Collectors.toCollection(ArrayList::new));
     }
@@ -281,7 +326,6 @@ public class Lpzg24BatchIndexPirClient extends AbstractBatchIndexPirClient {
      * @return 幂次方。
      */
     private long[][] computePowers(long[] base) {
-        Zp64 zp64 = Zp64Factory.createInstance(envType, (long) params.getPlainModulus());
         int[] exponents = params.getQueryPowers();
         assert exponents[0] == 1;
         long[][] result = new long[exponents.length][base.length];
@@ -342,7 +386,7 @@ public class Lpzg24BatchIndexPirClient extends AbstractBatchIndexPirClient {
      * @return 元素PRF。
      * @throws MpcAbortException 如果协议异常中止。
      */
-    private ArrayList<ByteBuffer> handleBlindPrf(List<byte[]> blindPrf) throws MpcAbortException {
+    private List<ByteBuffer> handleBlindPrf(List<byte[]> blindPrf) throws MpcAbortException {
         MpcAbortPreconditions.checkArgument(blindPrf.size() == retrievalSize);
         Kdf kdf = KdfFactory.createInstance(envType);
         Prg prg = PrgFactory.createInstance(envType, CommonConstants.BLOCK_BYTE_LENGTH * 2);
@@ -370,7 +414,7 @@ public class Lpzg24BatchIndexPirClient extends AbstractBatchIndexPirClient {
      * @param itemList 元素列表。
      * @return 布谷鸟哈希分桶是否成功。
      */
-    private boolean generateCuckooHashBin(ArrayList<ByteBuffer> itemList) {
+    private boolean generateCuckooHashBin(List<ByteBuffer> itemList) {
         // 初始化布谷鸟哈希
         cuckooHashBin = createCuckooHashBin(
             envType, params.getCuckooHashBinType(), retrievalSize, params.getBinNum(), hashKeys
@@ -382,7 +426,9 @@ public class Lpzg24BatchIndexPirClient extends AbstractBatchIndexPirClient {
             success = true;
         }
         // 如果成功，则向布谷鸟哈希的空余位置插入空元素
-        cuckooHashBin.insertPaddingItems(botElementByteBuffer);
+        byte[] randomBytes = new byte[CommonConstants.BLOCK_BYTE_LENGTH];
+        secureRandom.nextBytes(randomBytes);
+        cuckooHashBin.insertPaddingItems(ByteBuffer.wrap(randomBytes));
         return success;
     }
 }

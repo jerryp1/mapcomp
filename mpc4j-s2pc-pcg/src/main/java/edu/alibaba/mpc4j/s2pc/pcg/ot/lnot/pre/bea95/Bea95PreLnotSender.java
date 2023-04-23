@@ -2,14 +2,12 @@ package edu.alibaba.mpc4j.s2pc.pcg.ot.lnot.pre.bea95;
 
 import edu.alibaba.mpc4j.common.rpc.*;
 import edu.alibaba.mpc4j.common.rpc.utils.DataPacketHeader;
-import edu.alibaba.mpc4j.common.tool.utils.BigIntegerUtils;
 import edu.alibaba.mpc4j.common.tool.utils.BytesUtils;
-import edu.alibaba.mpc4j.common.tool.utils.CommonUtils;
+import edu.alibaba.mpc4j.common.tool.utils.IntUtils;
 import edu.alibaba.mpc4j.s2pc.pcg.ot.lnot.LnotSenderOutput;
 import edu.alibaba.mpc4j.s2pc.pcg.ot.lnot.pre.AbstractPreLnotSender;
 import edu.alibaba.mpc4j.s2pc.pcg.ot.lnot.pre.bea95.Bea95PreLnotPtoDesc.PtoStep;
 
-import java.math.BigInteger;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.IntStream;
@@ -73,23 +71,15 @@ public class Bea95PreLnotSender extends AbstractPreLnotSender {
     }
 
     private int[] handleDeltaPayload(List<byte[]> deltaPayload) throws MpcAbortException {
-        // each row can contain Integer.MAX_VALUE * Byte.BYTES / l number of Δ. Here we ignore Byte.BYTES.
-        // When l = 1, rows = (num + maxPerNum - 1) / maxPerNum would exceed Integer.MAX_VALUE, we divide 2.
-        int maxPerNum = Integer.MAX_VALUE / 2 / l;
-        // number of rows
-        int rows = CommonUtils.getUnitNum(num, maxPerNum);
-        MpcAbortPreconditions.checkArgument(deltaPayload.size() == rows);
-        // parse row
-        BigInteger[] rowArray = deltaPayload.stream()
-            .map(BigIntegerUtils::byteArrayToNonNegBigInteger)
-            .toArray(BigInteger[]::new);
-        int[] deltas = new int[num];
-        BigInteger mod = BigInteger.valueOf((1L << l) - 1);
-        for (int index = num - 1; index >= 0; index--) {
-            int rowIndex = index % rows;
-            deltas[index] = rowArray[rowIndex].and(mod).intValue();
-            rowArray[rowIndex] = rowArray[rowIndex].shiftRight(l);
-        }
-        return deltas;
+        MpcAbortPreconditions.checkArgument(deltaPayload.size() == 1);
+        byte[] flatDeltas = deltaPayload.remove(0);
+        int deltaLength = IntUtils.boundedNonNegIntByteLength(n);
+        return IntStream.range(0, num)
+            .map(index -> {
+                byte[] deltaBytes = new byte[deltaLength];
+                System.arraycopy(flatDeltas, index * deltaLength, deltaBytes, 0, deltaLength);
+                return IntUtils.byteArrayToBoundedNonNegInt(deltaBytes, n);
+            })
+            .toArray();
     }
 }

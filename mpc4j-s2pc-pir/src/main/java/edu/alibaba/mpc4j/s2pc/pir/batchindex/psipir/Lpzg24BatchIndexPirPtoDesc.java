@@ -36,15 +36,17 @@ public class Lpzg24BatchIndexPirPtoDesc implements PtoDesc {
          */
         SERVER_SEND_RESPONSE,
         /**
-         *
+         * 客户端发送盲化元素
          */
         CLIENT_SEND_BLIND,
         /**
-         *
+         * 服务端返回客户端盲化元素PRF
          */
         SERVER_SEND_BLIND_PRF,
-
-        CLIENT_SEND_ENCRYPTION_PARAMS,
+        /**
+         * 客户端发送公钥
+         */
+        CLIENT_SEND_PUBLIC_KEYS,
     }
 
     /**

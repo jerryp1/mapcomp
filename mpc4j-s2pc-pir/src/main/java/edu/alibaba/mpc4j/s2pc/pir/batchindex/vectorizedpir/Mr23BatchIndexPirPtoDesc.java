@@ -4,7 +4,11 @@ import edu.alibaba.mpc4j.common.rpc.desc.PtoDesc;
 import edu.alibaba.mpc4j.common.rpc.desc.PtoDescManager;
 
 /**
- * VECTORIZED_BATCH_PIR协议信息。
+ * VECTORIZED_BATCH_PIR协议信息。论文来源：
+ * <p>
+ * Muhammad Haris Mughees and Ling Ren. Vectorized Batch Private Information Retrieval.
+ * To appear in 44th IEEE Symposium on Security and Privacy, 2023.
+ * </p>
  *
  * @author Liqiang Peng
  * @date 2023/3/7
@@ -36,15 +40,9 @@ public class Mr23BatchIndexPirPtoDesc implements PtoDesc {
          */
         SERVER_SEND_RESPONSE,
         /**
-         *
+         * 客户端发送公钥
          */
-        CLIENT_SEND_BLIND,
-        /**
-         *
-         */
-        SERVER_SEND_BLIND_PRF,
-
-        CLIENT_SEND_ENCRYPTION_PARAMS,
+        CLIENT_SEND_PUBLIC_KEYS,
     }
 
     /**

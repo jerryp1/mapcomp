@@ -19,8 +19,7 @@ public interface NcLnotConfig extends MultiPartyPtoConfig {
     /**
      * Gets the max num.
      *
-     * @param l choice bit length.
      * @return the max num.
      */
-    int maxNum(int l);
+    int maxNum();
 }

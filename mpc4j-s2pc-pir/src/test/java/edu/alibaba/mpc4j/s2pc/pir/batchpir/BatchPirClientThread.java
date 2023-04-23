@@ -5,9 +5,9 @@ import edu.alibaba.mpc4j.s2pc.pir.batchindex.BatchIndexPirClient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -19,15 +19,15 @@ import java.util.Map;
 public class BatchPirClientThread extends Thread {
     private static final Logger LOGGER = LoggerFactory.getLogger(BatchPirClientThread.class);
     /**
-     * 批量索引PIR协议客户端
+     * 客户端
      */
     private final BatchIndexPirClient client;
     /**
-     * 客户端集合
+     * 客户端索引值列表
      */
-    private final ArrayList<Integer> retrievalIndicesArray;
+    private final List<Integer> retrievalIndexList;
     /**
-     * PIR结果
+     * 检索结果映射
      */
     private Map<Integer, byte[]> retrievalResults;
     /**
@@ -38,14 +38,16 @@ public class BatchPirClientThread extends Thread {
      * 服务端元素数量
      */
     private final int serverElementSize;
-
+    /**
+     * 支持的最大查询数目
+     */
     private final int maxRetrievalSize;
 
-    BatchPirClientThread(BatchIndexPirClient client, ArrayList<Integer> retrievalIndicesArray, int elementBitLength,
+    BatchPirClientThread(BatchIndexPirClient client, List<Integer> retrievalIndexList, int elementBitLength,
                          int serverElementSize, int maxRetrievalSize) {
         this.client = client;
-        this.retrievalIndicesArray = retrievalIndicesArray;
-        retrievalResults = new HashMap<>(retrievalIndicesArray.size());
+        this.retrievalIndexList = retrievalIndexList;
+        this.retrievalResults = new HashMap<>(retrievalIndexList.size());
         this.elementBitLength = elementBitLength;
         this.serverElementSize = serverElementSize;
         this.maxRetrievalSize = maxRetrievalSize;
@@ -59,11 +61,15 @@ public class BatchPirClientThread extends Thread {
     public void run() {
         try {
             client.init(serverElementSize, elementBitLength, maxRetrievalSize);
-            LOGGER.info("Client: Offline Communication costs {}MB", client.getRpc().getSendByteLength() * 1.0 / (1024 * 1024));
+            LOGGER.info(
+                "Client: Offline Communication costs {}MB", client.getRpc().getSendByteLength() * 1.0 / (1 << 20)
+            );
             client.getRpc().synchronize();
             client.getRpc().reset();
-            retrievalResults = client.pir(retrievalIndicesArray);
-            LOGGER.info("Client: Online Communication costs {}MB", client.getRpc().getSendByteLength() * 1.0 / (1024 * 1024));
+            retrievalResults = client.pir(retrievalIndexList);
+            LOGGER.info(
+                "Client: Online Communication costs {}MB", client.getRpc().getSendByteLength() * 1.0 / (1 << 20)
+            );
             client.getRpc().synchronize();
             client.getRpc().reset();
         } catch (MpcAbortException e) {

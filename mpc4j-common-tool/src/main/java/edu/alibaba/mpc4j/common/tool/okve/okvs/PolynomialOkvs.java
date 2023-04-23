@@ -21,35 +21,35 @@ import java.util.stream.Stream;
  */
 class PolynomialOkvs<T> implements Okvs<T> {
     /**
-     * polynomial field OKVS
+     * polynomial basic OKVS
      */
-    private final PolyBasicOkvs polyFieldOkvs;
+    private final PolyBasicOkvs polyBasicOkvs;
     /**
      * the prf used to hash the input to {0, 1}^l
      */
     private final Prf prf;
 
     PolynomialOkvs(EnvType envType, int n, int l, byte[] key) {
-        polyFieldOkvs = new PolyBasicOkvs(envType, n, l);
-        int byteL = polyFieldOkvs.getByteL();
+        polyBasicOkvs = new PolyBasicOkvs(envType, n, l);
+        int byteL = polyBasicOkvs.getByteL();
         prf = PrfFactory.createInstance(envType, byteL);
         prf.setKey(key);
     }
 
     @Override
     public void setParallelEncode(boolean parallelEncode) {
-        polyFieldOkvs.setParallelEncode(parallelEncode);
+        polyBasicOkvs.setParallelEncode(parallelEncode);
     }
 
     @Override
     public boolean getParallelEncode() {
-        return polyFieldOkvs.getParallelEncode();
+        return polyBasicOkvs.getParallelEncode();
     }
 
     @Override
     public byte[][] encode(Map<T, byte[]> keyValueMap) throws ArithmeticException {
-        boolean parallelEncode = polyFieldOkvs.getParallelEncode();
-        int l = polyFieldOkvs.getL();
+        boolean parallelEncode = polyBasicOkvs.getParallelEncode();
+        int l = polyBasicOkvs.getL();
         Stream<Map.Entry<T, byte[]>> entryStream = keyValueMap.entrySet().stream();
         entryStream = parallelEncode ? entryStream.parallel() : entryStream;
         Map<ByteBuffer, byte[]> encodeKeyValueMap = entryStream
@@ -62,35 +62,35 @@ class PolynomialOkvs<T> implements Okvs<T> {
                 },
                 Map.Entry::getValue
             ));
-        return polyFieldOkvs.encode(encodeKeyValueMap);
+        return polyBasicOkvs.encode(encodeKeyValueMap);
     }
 
     @Override
     public byte[] decode(byte[][] storage, T key) {
-        int l = polyFieldOkvs.getL();
+        int l = polyBasicOkvs.getL();
         byte[] mapKey = prf.getBytes(ObjectUtils.objectToByteArray(key));
         BytesUtils.reduceByteArray(mapKey, l);
-        return polyFieldOkvs.decode(storage, ByteBuffer.wrap(mapKey));
+        return polyBasicOkvs.decode(storage, ByteBuffer.wrap(mapKey));
     }
 
     @Override
     public int getN() {
-        return polyFieldOkvs.getN();
+        return polyBasicOkvs.getN();
     }
 
     @Override
     public int getL() {
-        return polyFieldOkvs.getL();
+        return polyBasicOkvs.getL();
     }
 
     @Override
     public int getByteL() {
-        return polyFieldOkvs.getByteL();
+        return polyBasicOkvs.getByteL();
     }
 
     @Override
     public int getM() {
-        return polyFieldOkvs.getM();
+        return polyBasicOkvs.getM();
     }
 
     @Override
@@ -100,6 +100,6 @@ class PolynomialOkvs<T> implements Okvs<T> {
 
     @Override
     public int getNegLogFailureProbability() {
-        return polyFieldOkvs.getNegLogFailureProbability();
+        return polyBasicOkvs.getNegLogFailureProbability();
     }
 }

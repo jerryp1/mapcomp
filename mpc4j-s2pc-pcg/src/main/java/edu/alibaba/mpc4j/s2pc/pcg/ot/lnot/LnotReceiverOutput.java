@@ -52,7 +52,6 @@ public class LnotReceiverOutput implements MergedPcgPartyOutput {
             .peek(rb -> {
                 assert rb.length == CommonConstants.BLOCK_BYTE_LENGTH;
             })
-            .map(BytesUtils::clone)
             .toArray(byte[][]::new);
         return receiverOutput;
     }

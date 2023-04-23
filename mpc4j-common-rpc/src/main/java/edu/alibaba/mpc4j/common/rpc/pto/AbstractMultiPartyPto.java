@@ -34,7 +34,7 @@ public abstract class AbstractMultiPartyPto implements MultiPartyPto {
     /**
      * maximal number of sub-protocols. Note that some protocols would have many levels (e.g., PSU based on SKE).
      */
-    protected static final int MAX_SUB_PROTOCOL_NUM = 5;
+    protected static final int MAX_SUB_PROTOCOL_NUM = 4;
     /**
      * maximal tree level
      */

@@ -33,9 +33,9 @@ public class DirectLnotConfig implements LnotConfig {
     }
 
     @Override
-    public int maxBaseNum(int l) {
+    public int maxBaseNum() {
         // in theory, 1-out-of-2^l COT can support arbitrary number of COTs. Here we also provide some limitations.
-        return (int) Math.floor((double) (1 << 24) / l);
+        return 1 << 24;
     }
 
     @Override

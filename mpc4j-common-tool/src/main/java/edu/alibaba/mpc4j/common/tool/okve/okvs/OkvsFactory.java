@@ -51,34 +51,12 @@ public class OkvsFactory {
     }
 
     /**
-     * 返回给定OKVS类型是否为二进制OKVS。
-     *
-     * @param okvsType 给定OKVS类型。
-     * @return 此OKVS类型是否为二进制OKVS。
-     */
-    public static boolean isBinaryOkvsType(OkvsType okvsType) {
-        switch (okvsType) {
-            case POLYNOMIAL:
-            case MEGA_BIN:
-                return false;
-            case GBF:
-            case H2_DFS_GCT:
-            case H2_TWO_CORE_GCT:
-            case H2_SINGLETON_GCT:
-            case H3_SINGLETON_GCT:
-                return true;
-            default:
-                throw new IllegalArgumentException("Invalid " + OkvsType.class.getSimpleName() + ": " + okvsType.name());
-        }
-    }
-
-    /**
      * 构建OKVS。
      *
      * @param envType  环境类型。
      * @param okvsType OKVS类型。
      * @param n        待编码的键值对数量。
-     * @param l        输出比特长度，必须为Byte.SIZE的整数倍。
+     * @param l        输出比特长度。
      * @param keys     哈希密钥。
      * @return OKVS。
      */
@@ -110,7 +88,7 @@ public class OkvsFactory {
      * @param envType  环境类型。
      * @param okvsType OKVS类型。
      * @param n        待编码的键值对数量。
-     * @param l        输出比特长度，必须为Byte.SIZE的整数倍。
+     * @param l        输出比特长度。
      * @param keys     哈希密钥。
      * @param <X>      键值类型。
      * @return 二进制OKVS。
@@ -129,6 +107,56 @@ public class OkvsFactory {
                 return new H2DfsGctBinaryOkvs<>(envType, n, l, keys);
             case GBF:
                 return new GbfBinaryOkvs<>(envType, n, l, keys);
+            default:
+                throw new IllegalArgumentException("Invalid " + OkvsType.class.getSimpleName() + ": " + okvsType.name());
+        }
+    }
+
+    /**
+     * 返回给定OKVS类型是否为稀疏OKVS。
+     *
+     * @param okvsType 给定OKVS类型。
+     * @return 此OKVS类型是否为稀疏OKVS。
+     */
+    public static boolean isSparseOkvsType(OkvsType okvsType) {
+        switch (okvsType) {
+            case POLYNOMIAL:
+            case MEGA_BIN:
+            case GBF:
+                return false;
+            case H2_DFS_GCT:
+            case H2_TWO_CORE_GCT:
+            case H2_SINGLETON_GCT:
+            case H3_SINGLETON_GCT:
+                return true;
+            default:
+                throw new IllegalArgumentException("Invalid " + OkvsType.class.getSimpleName() + ": " + okvsType.name());
+        }
+    }
+
+    /**
+     * 构建稀疏OKVS。
+     *
+     * @param envType  环境类型。
+     * @param okvsType OKVS类型。
+     * @param n        待编码的键值对数量。
+     * @param l        输出比特长度。
+     * @param keys     哈希密钥。
+     * @param <X>      键值类型。
+     * @return 二进制OKVS。
+     */
+    public static <X> SparseOkvs<X> createSparseInstance(EnvType envType, OkvsType okvsType, int n, int l,
+                                                         byte[][] keys) {
+        assert keys.length == getHashNum(okvsType);
+        switch (okvsType) {
+            case H3_SINGLETON_GCT:
+                return new H3TcGctBinaryOkvs<>(envType, n, l, keys);
+            case H2_SINGLETON_GCT:
+                return new H2TcGctBinaryOkvs<>(envType, n, l, keys, new CuckooTableSingletonTcFinder<>());
+            case H2_TWO_CORE_GCT:
+                return new H2TcGctBinaryOkvs<>(envType, n, l, keys, new H2CuckooTableTcFinder<>());
+            case H2_DFS_GCT:
+                return new H2DfsGctBinaryOkvs<>(envType, n, l, keys);
             default:
                 throw new IllegalArgumentException("Invalid " + OkvsType.class.getSimpleName() + ": " + okvsType.name());
         }

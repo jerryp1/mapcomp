@@ -57,14 +57,12 @@ public class LcotReceiverOutput implements MergedPcgPartyOutput {
                 assert choice.length == receiverOutput.inputByteLength
                     && BytesUtils.isReduceByteArray(choice, inputBitLength);
             })
-            .map(BytesUtils::clone)
             .toArray(byte[][]::new);
         receiverOutput.rbArray = Arrays.stream(rbArray)
             .peek(rb -> {
                 assert rb.length == receiverOutput.outputByteLength
                     && BytesUtils.isReduceByteArray(rb, outputBitLength);
             })
-            .map(BytesUtils::clone)
             .toArray(byte[][]::new);
         return receiverOutput;
     }

@@ -5,7 +5,7 @@
 #include "edu_alibaba_mpc4j_s2pc_pir_batchindex_vectorizedpir_Mr23BatchIndexPirNativeUtils.h"
 #include "seal/seal.h"
 #include "../serialize.h"
-#include "../index_pir.h"
+#include "../utils.h"
 
 using namespace std;
 using namespace seal;
@@ -17,9 +17,8 @@ JNIEXPORT jbyteArray JNICALL Java_edu_alibaba_mpc4j_s2pc_pir_batchindex_vectoriz
     vector<int32_t> bit_sizes(coeff_ptr, coeff_ptr + coeff_size);
     EncryptionParameters parms = EncryptionParameters(scheme_type::bfv);
     parms.set_poly_modulus_degree(poly_modulus_degree);
-    parms.set_plain_modulus(PlainModulus::Batching(poly_modulus_degree, plain_modulus_size + 1));
-    // parms.set_coeff_modulus(CoeffModulus::Create(poly_modulus_degree, bit_sizes));
-    parms.set_coeff_modulus(CoeffModulus::BFVDefault(poly_modulus_degree, sec_level_type::tc128));
+    parms.set_plain_modulus(PlainModulus::Batching(poly_modulus_degree, plain_modulus_size));
+    parms.set_coeff_modulus(CoeffModulus::Create(poly_modulus_degree, bit_sizes));
     SEALContext context = SEALContext(parms);
     jclass exception = env->FindClass("java/lang/Exception");
     if (!context.parameters_set()) {
@@ -38,26 +37,14 @@ JNIEXPORT jbyteArray JNICALL Java_edu_alibaba_mpc4j_s2pc_pir_batchindex_vectoriz
 }
 
 JNIEXPORT jobject JNICALL Java_edu_alibaba_mpc4j_s2pc_pir_batchindex_vectorizedpir_Mr23BatchIndexPirNativeUtils_keyGen(
-        JNIEnv *env, jclass, jbyteArray parms_bytes, jint dimension_length, jint n_slot) {
+        JNIEnv *env, jclass, jbyteArray parms_bytes, jint dimension_size) {
     EncryptionParameters parms = deserialize_encryption_parms(env, parms_bytes);
     SEALContext context = SEALContext(parms);
     KeyGenerator key_gen = KeyGenerator(context);
     const SecretKey &secret_key = key_gen.secret_key();
-    PublicKey public_key;
-    key_gen.create_public_key(public_key);
-    RelinKeys relin_keys;
-    key_gen.create_relin_keys(relin_keys);
-    GaloisKeys galois_keys;
-    vector<int32_t> steps;
-    auto g = (int32_t) ((parms.poly_modulus_degree() / 2) / n_slot);
-    for (int32_t i = 0; i < dimension_length; i++){
-        steps.push_back(- i * g);
-    }
-    auto count = (uint32_t) log2((parms.poly_modulus_degree() / 2) / g);
-    for (int32_t i = 0; i < count; i++){
-        steps.push_back(- (1 << i) * g);
-    }
-    key_gen.create_galois_keys(steps, galois_keys);
+    Serializable<PublicKey> public_key = key_gen.create_public_key();
+    Serializable<RelinKeys> relin_keys = key_gen.create_relin_keys();
+    Serializable<GaloisKeys> galois_keys = key_gen.create_galois_keys();
     jclass list_jcs = env->FindClass("java/util/ArrayList");
     jmethodID list_init = env->GetMethodID(list_jcs, "<init>", "()V");
     jobject list_obj = env->NewObject(list_jcs, list_init, "");
@@ -74,7 +61,7 @@ JNIEXPORT jobject JNICALL Java_edu_alibaba_mpc4j_s2pc_pir_batchindex_vectorizedp
 }
 
 JNIEXPORT jobject JNICALL Java_edu_alibaba_mpc4j_s2pc_pir_batchindex_vectorizedpir_Mr23BatchIndexPirNativeUtils_preprocessDatabase(
-        JNIEnv *env, jclass, jbyteArray parms_bytes, jobjectArray coeffs_list, jint total_size) {
+        JNIEnv *env, jclass, jbyteArray parms_bytes, jobjectArray coeffs_list, jint first_dimension_size) {
     EncryptionParameters parms = deserialize_encryption_parms(env, parms_bytes);
     SEALContext context(parms);
     BatchEncoder batch_encoder(context);
@@ -85,11 +72,12 @@ JNIEXPORT jobject JNICALL Java_edu_alibaba_mpc4j_s2pc_pir_batchindex_vectorizedp
         evaluator.transform_to_ntt_inplace(i, pid);
     }
     uint32_t current_size = encoded_db.size();
+    uint32_t cols = (current_size + first_dimension_size - 1) / first_dimension_size;
     Plaintext zero(parms.poly_modulus_degree());
     vector<uint64_t> vec(parms.poly_modulus_degree(), 0ULL);
     batch_encoder.encode(vec, zero);
     evaluator.transform_to_ntt_inplace(zero, pid);
-    for (uint32_t i = current_size; i < total_size; i++) {
+    for (uint32_t i = current_size; i < cols * first_dimension_size; i++) {
         encoded_db.push_back(zero);
     }
     return serialize_plaintexts(env, encoded_db);
@@ -101,71 +89,76 @@ JNIEXPORT jobject JNICALL Java_edu_alibaba_mpc4j_s2pc_pir_batchindex_vectorizedp
     SEALContext context(parms);
     PublicKey public_key = deserialize_public_key(env, pk_bytes, context);
     SecretKey secret_key = deserialize_secret_key(env, sk_bytes, context);
-    Encryptor encryptor(context, public_key, secret_key);
+    Encryptor encryptor(context, public_key);
+    encryptor.set_secret_key(secret_key);
     vector<Plaintext> plaintexts = deserialize_plaintexts(env, query_array, context);
-    vector<Ciphertext> query(plaintexts.size());
-    for (uint32_t i = 0; i < plaintexts.size(); i++) {
-        encryptor.encrypt(plaintexts[i], query[i]);
+    vector<Serializable<Ciphertext>> query;
+    for (auto & plaintext : plaintexts) {
+        query.push_back(encryptor.encrypt_symmetric(plaintext));
     }
     return serialize_ciphertexts(env, query);
 }
 
 JNIEXPORT jbyteArray JNICALL Java_edu_alibaba_mpc4j_s2pc_pir_batchindex_vectorizedpir_Mr23BatchIndexPirNativeUtils_generateReply(
         JNIEnv *env, jclass, jbyteArray parms_bytes, jobject query_list, jobject db_list, jbyteArray pk_bytes,
-        jbyteArray relin_keys_bytes, jbyteArray galois_keys_bytes, jint dim_length, jint n_slot, jint dimension) {
+        jbyteArray relin_keys_bytes, jbyteArray galois_keys_bytes, jint first_two_dimension_size) {
     EncryptionParameters parms = deserialize_encryption_parms(env, parms_bytes);
     SEALContext context(parms);
     PublicKey public_key = deserialize_public_key(env, pk_bytes, context);
     RelinKeys relin_keys = deserialize_relin_keys(env, relin_keys_bytes, context);
-    GaloisKeys galois_keys = deserialize_galois_keys(env, galois_keys_bytes, context);
+    GaloisKeys* galois_keys = deserialize_galois_keys(env, galois_keys_bytes, context);
     Evaluator evaluator(context);
     Encryptor encryptor(context, public_key);
     vector<Ciphertext> query = deserialize_ciphertexts(env, query_list, context);
     vector<Plaintext> encoded_db = deserialize_plaintexts(env, db_list, context);
     BatchEncoder batch_encoder(context);
     uint32_t degree = context.first_context_data()->parms().poly_modulus_degree();
-    auto g = (int32_t) ((degree / 2) / n_slot);
-    vector<Ciphertext> rotated_ciphertexts(n_slot);
-    for (int32_t i = 0; i < dim_length; i++) {
-        evaluator.rotate_rows(query[0], - (i * g), galois_keys, rotated_ciphertexts[i]);
+    auto g = (int32_t) ((degree / 2) / first_two_dimension_size);
+    vector<Ciphertext> rotated_ciphertexts(first_two_dimension_size);
+    for (int32_t i = 0; i < first_two_dimension_size; i++) {
+        evaluator.rotate_rows(query[0], - (i * g), *galois_keys, rotated_ciphertexts[i]);
         evaluator.transform_to_ntt_inplace(rotated_ciphertexts[i]);
     }
+    auto low_parms_id = get_parms_id_for_chain_idx(context, 1);
+    // first dimension
     Ciphertext zero;
     encryptor.encrypt_zero(zero);
     evaluator.transform_to_ntt_inplace(zero);
-    vector<Ciphertext> db_prime(encoded_db.size() / dim_length);
-    for (int i = 0; i < ceil(encoded_db.size() / dim_length); i++) {
+    uint32_t cols = encoded_db.size() / first_two_dimension_size;
+    vector<Ciphertext> db_prime(cols);
+    for (int i = 0; i < cols; i++) {
         db_prime[i] = zero;
-        for (int j = 0; j < dim_length; j++) {
-            Ciphertext temp;
-            if (!encoded_db[i * dim_length + j].is_zero()) {
-                evaluator.multiply_plain(rotated_ciphertexts[j], encoded_db[i * dim_length + j], temp);
+        for (int j = 0; j < first_two_dimension_size; j++) {
+            if (encoded_db[i * first_two_dimension_size + j].is_zero()) {
+                continue;
             } else {
-                temp = zero;
+                Ciphertext temp;
+                evaluator.multiply_plain(rotated_ciphertexts[j], encoded_db[i * first_two_dimension_size + j], temp);
+                evaluator.add_inplace(db_prime[i], temp);
             }
-            evaluator.add_inplace(db_prime[i], temp);
         }
         evaluator.transform_from_ntt_inplace(db_prime[i]);
     }
-    vector<Ciphertext> cipher_temp;
-    encryptor.encrypt_zero(zero);
-    for (int i = 1; i < dimension - 1; i++) {
-        cipher_temp.resize(ceil((double) db_prime.size() * 1.0 / (double) dim_length));
-        for (int j = 0; j < ceil((double) db_prime.size() * 1.0 / (double) dim_length); j++) {
-            cipher_temp[j] = zero;
-            for (int k = 0; k < dim_length; k++) {
-                Ciphertext t;
-                evaluator.multiply(query[i], db_prime[j * dim_length + k], t);
-                evaluator.relinearize_inplace(t, relin_keys);
-                evaluator.rotate_rows_inplace(t, -k * g, galois_keys);
-                evaluator.add_inplace(cipher_temp[j], t);
-            }
-        }
-        db_prime = cipher_temp;
+
+    // second dimension
+    Ciphertext second_dimension_cipher;
+    evaluator.multiply(query[1], db_prime[0], second_dimension_cipher);
+    evaluator.relinearize_inplace(second_dimension_cipher, relin_keys);
+    for (int k = 1; k < db_prime.size(); k++) {
+        Ciphertext t;
+        evaluator.multiply(query[1], db_prime[k], t);
+        evaluator.relinearize_inplace(t, relin_keys);
+        evaluator.rotate_rows_inplace(t, -k * g, *galois_keys);
+        evaluator.add_inplace(second_dimension_cipher, t);
     }
-    evaluator.multiply_inplace(db_prime[0], query[dimension - 1]);
-    evaluator.relinearize_inplace(db_prime[0], relin_keys);
-    return serialize_ciphertext(env, db_prime[0]);
+
+    // third dimension
+    evaluator.multiply_inplace(second_dimension_cipher, query[2]);
+    evaluator.relinearize_inplace(second_dimension_cipher, relin_keys);
+    while (second_dimension_cipher.parms_id() != low_parms_id) {
+        evaluator.mod_switch_to_next_inplace(second_dimension_cipher);
+    }
+    return serialize_ciphertext(env, second_dimension_cipher);
 }
 
 JNIEXPORT jlongArray JNICALL Java_edu_alibaba_mpc4j_s2pc_pir_batchindex_vectorizedpir_Mr23BatchIndexPirNativeUtils_decryptReply(
@@ -181,15 +174,14 @@ JNIEXPORT jlongArray JNICALL Java_edu_alibaba_mpc4j_s2pc_pir_batchindex_vectoriz
     vector<uint64_t> vec;
     batch_encoder.decode(pt, vec);
     uint32_t degree = context.first_context_data()->parms().poly_modulus_degree();
-    jlongArray jarr = env->NewLongArray((jsize) degree / 2);
+    jlongArray jarr = env->NewLongArray((jsize) degree);
     jlong *arr = env->GetLongArrayElements(jarr, JNI_FALSE);
-    for(uint32_t i = 0; i < degree / 2; i++){
+    for(uint32_t i = 0; i < degree; i++){
         arr[i] = (jlong) vec[i];
     }
     env->ReleaseLongArrayElements(jarr, arr, 0);
     return jarr;
 }
-
 
 JNIEXPORT jbyteArray JNICALL Java_edu_alibaba_mpc4j_s2pc_pir_batchindex_vectorizedpir_Mr23BatchIndexPirNativeUtils_mergeResponse(
         JNIEnv *env, jclass, jbyteArray parms_bytes, jbyteArray pk_bytes, jbyteArray galois_keys_bytes,
@@ -197,36 +189,47 @@ JNIEXPORT jbyteArray JNICALL Java_edu_alibaba_mpc4j_s2pc_pir_batchindex_vectoriz
     EncryptionParameters parms = deserialize_encryption_parms(env, parms_bytes);
     SEALContext context(parms);
     PublicKey public_key = deserialize_public_key(env, pk_bytes, context);
-    GaloisKeys galois_keys = deserialize_galois_keys(env, galois_keys_bytes, context);
+    GaloisKeys* galois_keys = deserialize_galois_keys(env, galois_keys_bytes, context);
     Evaluator evaluator(context);
     Encryptor encryptor(context, public_key);
     BatchEncoder batch_encoder(context);
     Ciphertext merged_response, r_cipher;
-    encryptor.encrypt_zero(merged_response);
     vector<Ciphertext> response = deserialize_ciphertexts(env, response_list, context);
-    evaluator.mod_switch_to_inplace(merged_response, response[0].parms_id());
     uint32_t row_size = parms.poly_modulus_degree() / 2;
     auto count = (uint32_t) log2(row_size / g);
+    vector<Plaintext> rotate_plain(response.size());
+    auto low_parms_id = get_parms_id_for_chain_idx(context, 1);
     for (uint32_t i = 0; i < response.size(); i++) {
-        for (uint32_t j = 0; j < count; j++) {
-            evaluator.rotate_rows(response[i], - g * (1 << j), galois_keys, r_cipher);
-            evaluator.add_inplace(response[i], r_cipher);
-        }
-        Plaintext pt(parms.poly_modulus_degree());
-        pt.set_zero();
+        rotate_plain[i].resize(parms.poly_modulus_degree());
+        rotate_plain[i].set_zero();
         vector<uint64_t> vec(parms.poly_modulus_degree(), 0ULL);
         uint32_t l = i * g;
         for (uint32_t k = l; k < l + g; k++) {
             vec[k] = 1;
+            vec[k + row_size] = 1;
         }
-        batch_encoder.encode(vec, pt);
-        vector<uint64_t> tt;
-        batch_encoder.decode(pt, tt);
-        evaluator.multiply_plain_inplace(response[i], pt);
+        batch_encoder.encode(vec, rotate_plain[i]);
+        evaluator.transform_to_ntt_inplace(rotate_plain[i], low_parms_id);
+    }
+    for (uint32_t j = 0; j < count; j++) {
+        evaluator.rotate_rows(response[0], - g * (1 << j), *galois_keys, r_cipher);
+        evaluator.add_inplace(response[0], r_cipher);
+    }
+    evaluator.transform_to_ntt_inplace(response[0]);
+    evaluator.multiply_plain(response[0], rotate_plain[0], merged_response);
+    for (uint32_t i = 1; i < response.size(); i++) {
+        for (uint32_t j = 0; j < count; j++) {
+            evaluator.rotate_rows(response[i], - g * (1 << j), *galois_keys, r_cipher);
+            evaluator.add_inplace(response[i], r_cipher);
+        }
+        evaluator.transform_to_ntt_inplace(response[i]);
+        evaluator.multiply_plain_inplace(response[i], rotate_plain[i]);
         evaluator.add_inplace(merged_response, response[i]);
     }
-    if (merged_response.parms_id() != context.last_parms_id()) {
+    evaluator.transform_from_ntt_inplace(merged_response);
+    while (merged_response.parms_id() != context.last_parms_id()) {
         evaluator.mod_switch_to_next_inplace(merged_response);
     }
+    try_clear_irrelevant_bits(context.last_context_data()->parms(), merged_response);
     return serialize_ciphertext(env, merged_response);
 }

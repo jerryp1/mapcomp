@@ -1,6 +1,7 @@
 package edu.alibaba.mpc4j.s2pc.pir.index.vectorizedpir;
 
 import edu.alibaba.mpc4j.common.tool.CommonConstants;
+import edu.alibaba.mpc4j.s2pc.pir.PirUtils;
 import edu.alibaba.mpc4j.s2pc.pir.index.IndexPirParams;
 
 /**
@@ -24,19 +25,25 @@ public class Mr23IndexPirParams implements IndexPirParams {
      */
     private final int polyModulusDegree;
     /**
-     * 维数
-     */
-    private final int dimension;
-    /**
      * 加密方案参数
      */
     private final byte[] encryptionParams;
+    /**
+     * 前两维长度
+     */
+    private final int firstTwoDimensionSize;
+    /**
+     * 第三维长度
+     */
+    private final int thirdDimensionSize;
 
     public Mr23IndexPirParams(int polyModulusDegree, int plainModulusBitLength, int[] coeffModulusBitLength,
-                              int dimension) {
+                              int firstTwoDimensionSize, int thirdDimensionSize) {
         this.polyModulusDegree = polyModulusDegree;
         this.plainModulusBitLength = plainModulusBitLength;
-        this.dimension = dimension;
+        assert firstTwoDimensionSize == PirUtils.getNextPowerOfTwo(firstTwoDimensionSize);
+        this.firstTwoDimensionSize = firstTwoDimensionSize;
+        this.thirdDimensionSize = thirdDimensionSize;
         // 生成加密方案参数
         this.encryptionParams = Mr23IndexPirNativeUtils.generateSealContext(
             polyModulusDegree, plainModulusBitLength, coeffModulusBitLength
@@ -49,8 +56,8 @@ public class Mr23IndexPirParams implements IndexPirParams {
     public static Mr23IndexPirParams DEFAULT_PARAMS = new Mr23IndexPirParams(
         8192,
         20,
-        new int[]{60, 50, 50, 50},
-        3
+        new int[]{50, 50, 50, 50},
+        128, 64
     );
 
     @Override
@@ -65,12 +72,20 @@ public class Mr23IndexPirParams implements IndexPirParams {
 
     @Override
     public int getDimension() {
-        return dimension;
+        return 3;
     }
 
     @Override
     public byte[] getEncryptionParams() {
         return encryptionParams;
+    }
+
+    public int getFirstTwoDimensionSize() {
+        return firstTwoDimensionSize;
+    }
+
+    public int getThirdDimensionSize() {
+        return thirdDimensionSize;
     }
 
     @Override

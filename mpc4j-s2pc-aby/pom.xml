@@ -40,17 +40,22 @@
         </dependency>
         <dependency>
             <groupId>edu.alibaba</groupId>
+            <artifactId>mpc4j-common-tool</artifactId>
+            <version>1.0.7-SNAPSHOT</version>
+        </dependency>
+        <dependency>
+            <groupId>edu.alibaba</groupId>
             <artifactId>mpc4j-common-rpc</artifactId>
             <version>1.0.7-SNAPSHOT</version>
         </dependency>
         <dependency>
             <groupId>edu.alibaba</groupId>
-            <artifactId>mpc4j-crypto-matrix</artifactId>
+            <artifactId>mpc4j-common-circuit</artifactId>
             <version>1.0.7-SNAPSHOT</version>
         </dependency>
         <dependency>
             <groupId>edu.alibaba</groupId>
-            <artifactId>mpc4j-common-tool</artifactId>
+            <artifactId>mpc4j-crypto-matrix</artifactId>
             <version>1.0.7-SNAPSHOT</version>
         </dependency>
         <dependency>

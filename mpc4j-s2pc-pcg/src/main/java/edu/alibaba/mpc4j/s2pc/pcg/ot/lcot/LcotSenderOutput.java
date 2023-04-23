@@ -70,7 +70,6 @@ public class LcotSenderOutput implements MergedPcgPartyOutput {
                 assert q.length == senderOutput.outputByteLength
                     && BytesUtils.isReduceByteArray(q, senderOutput.outputBitLength);
             })
-            .map(BytesUtils::clone)
             .toArray(byte[][]::new);
 
         return senderOutput;

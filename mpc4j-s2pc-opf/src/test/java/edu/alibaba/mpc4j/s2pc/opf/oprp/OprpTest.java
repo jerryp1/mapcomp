@@ -9,10 +9,7 @@ import edu.alibaba.mpc4j.common.tool.CommonConstants;
 import edu.alibaba.mpc4j.common.tool.crypto.prp.Prp;
 import edu.alibaba.mpc4j.common.tool.crypto.prp.PrpFactory;
 import edu.alibaba.mpc4j.common.tool.utils.BytesUtils;
-import edu.alibaba.mpc4j.s2pc.aby.basics.bc.BcConfig;
-import edu.alibaba.mpc4j.s2pc.aby.basics.bc.bea91.Bea91BcConfig;
-import edu.alibaba.mpc4j.s2pc.pcg.mtg.z2.Z2MtgConfig;
-import edu.alibaba.mpc4j.s2pc.pcg.mtg.z2.impl.cache.CacheZ2MtgConfig;
+import edu.alibaba.mpc4j.s2pc.aby.basics.bc.BcFactory;
 import edu.alibaba.mpc4j.s2pc.opf.oprp.lowmc.LowMcOprpConfig;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.time.StopWatch;
@@ -56,24 +53,24 @@ public class OprpTest {
 
     @Parameterized.Parameters(name = "{0}")
     public static Collection<Object[]> configurations() {
-        Collection<Object[]> configurationParams = new ArrayList<>();
-        // LowMc (ideal)
-        Z2MtgConfig idealZ2MtgConfig = new CacheZ2MtgConfig.Builder(SecurityModel.IDEAL).build();
-        BcConfig idealBcConfig = new Bea91BcConfig.Builder().setZ2MtgConfig(idealZ2MtgConfig).build();
-        configurationParams.add(new Object[] {
-            OprpFactory.OprpType.LOW_MC.name() + " (ideal)",
-            new LowMcOprpConfig.Builder().setBcConfig(idealBcConfig).build(),
+        Collection<Object[]> configurations = new ArrayList<>();
+
+        // LowMc (direct)
+        configurations.add(new Object[] {
+            OprpFactory.OprpType.LOW_MC.name() + " (direct)",
+            new LowMcOprpConfig.Builder()
+                .setBcConfig(BcFactory.createDefaultConfig(SecurityModel.SEMI_HONEST, false))
+                .build(),
         });
-        // LowMc (default)
-        Z2MtgConfig defaultZ2MtgConfig = new CacheZ2MtgConfig.Builder(SecurityModel.SEMI_HONEST).build();
-        BcConfig defaultBcConfig = new Bea91BcConfig.Builder().setZ2MtgConfig(defaultZ2MtgConfig).build();
-        configurationParams.add(new Object[] {
-            OprpFactory.OprpType.LOW_MC.name() + " (default)",
-            new LowMcOprpConfig.Builder().setBcConfig(defaultBcConfig).build(),
+        // LowMc (silent)
+        configurations.add(new Object[] {
+            OprpFactory.OprpType.LOW_MC.name() + " (silent)",
+            new LowMcOprpConfig.Builder()
+                .setBcConfig(BcFactory.createDefaultConfig(SecurityModel.SEMI_HONEST, true))
+                .build(),
         });
 
-
-        return configurationParams;
+        return configurations;
     }
 
     /**

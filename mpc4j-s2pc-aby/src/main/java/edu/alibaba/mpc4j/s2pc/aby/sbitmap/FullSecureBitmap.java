@@ -3,7 +3,7 @@ package edu.alibaba.mpc4j.s2pc.aby.sbitmap;
 import com.google.common.base.Preconditions;
 import edu.alibaba.mpc4j.common.tool.MathPreconditions;
 import edu.alibaba.mpc4j.common.tool.bitvector.BitVector;
-import edu.alibaba.mpc4j.s2pc.aby.basics.bc.SquareShareZ2Vector;
+import edu.alibaba.mpc4j.s2pc.aby.basics.bc.SquareZ2Vector;
 import edu.alibaba.mpc4j.s2pc.aby.sbitmap.utils.RoaringBitmapUtils;
 import org.roaringbitmap.RoaringBitmap;
 
@@ -37,7 +37,7 @@ public class FullSecureBitmap implements SecureBitmap {
     /**
      * the non-plain bitmap
      */
-    private SquareShareZ2Vector sbitVector;
+    private SquareZ2Vector sbitVector;
 
     /**
      * Create a full secure bitmap in plain state.
@@ -99,7 +99,7 @@ public class FullSecureBitmap implements SecureBitmap {
      * @return the created secure bitmap.
      * @throws IllegalArgumentException if the number of bits in the secure bit vector is invalid.
      */
-    public static FullSecureBitmap fromSbitVectors(SquareShareZ2Vector vector) {
+    public static FullSecureBitmap fromSbitVectors(SquareZ2Vector vector) {
         FullSecureBitmap secureBitmap = new FullSecureBitmap();
         int totalBitNum = vector.getNum();
         secureBitmap.setTotalBitNum(totalBitNum);
@@ -124,11 +124,11 @@ public class FullSecureBitmap implements SecureBitmap {
      *
      * @return the secure bit vector.
      */
-    public SquareShareZ2Vector getSbitVector() {
+    public SquareZ2Vector getSbitVector() {
         if (plain) {
             // convert the bitmap to be a bit vector, then create its corresponding secure bit vector.
             BitVector bitVector = RoaringBitmapUtils.toBitVector(totalBitNum, bitmap);
-            return SquareShareZ2Vector.create(bitVector, plain);
+            return SquareZ2Vector.create(bitVector, plain);
         } else {
             // directly return the secure bit vector.
             return sbitVector;

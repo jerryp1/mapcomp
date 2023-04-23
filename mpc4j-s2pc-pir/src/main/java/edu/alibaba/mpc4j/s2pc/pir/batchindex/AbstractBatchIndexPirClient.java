@@ -10,12 +10,12 @@ import edu.alibaba.mpc4j.common.tool.utils.IntUtils;
 
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
-import java.util.Arrays;
+import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
 /**
- * 批量索引PIR协议客户端抽象类。
+ * abstract batch Index PIR client.
  *
  * @author Liqiang Peng
  * @date 2023/3/7
@@ -30,13 +30,9 @@ public abstract class AbstractBatchIndexPirClient extends AbstractTwoPartyPto im
      */
     protected int retrievalSize;
     /**
-     * 特殊空元素字节缓存区
-     */
-    protected ByteBuffer botElementByteBuffer;
-    /**
      * 客户端检索值
      */
-    protected ArrayList<ByteBuffer> indicesByteBuffer;
+    protected List<ByteBuffer> indicesByteBuffer;
     /**
      * 服务端元素数量
      */
@@ -52,7 +48,7 @@ public abstract class AbstractBatchIndexPirClient extends AbstractTwoPartyPto im
     /**
      * 分块数目
      */
-    protected int partitionCount;
+    protected int partitionSize;
 
     protected AbstractBatchIndexPirClient(PtoDesc ptoDesc, Rpc clientRpc, Party serverParty, BatchIndexPirConfig config) {
         super(ptoDesc, clientRpc, serverParty, config);
@@ -68,23 +64,19 @@ public abstract class AbstractBatchIndexPirClient extends AbstractTwoPartyPto im
         this.elementBitLength = elementBitLength;
         MathPreconditions.checkPositiveInRangeClosed("partitionBitLength", partitionBitLength, Integer.SIZE);
         this.partitionBitLength = partitionBitLength;
-        this.partitionCount = CommonUtils.getUnitNum(elementBitLength, partitionBitLength);
-        // 设置特殊空元素
-        byte[] botElementByteArray = new byte[Integer.BYTES];
-        Arrays.fill(botElementByteArray, (byte)0xFF);
-        botElementByteBuffer = ByteBuffer.wrap(botElementByteArray);
+        this.partitionSize = CommonUtils.getUnitNum(elementBitLength, partitionBitLength);
         initState();
     }
 
-    protected void setPtoInput(ArrayList<Integer> indices) {
+    protected void setPtoInput(List<Integer> indexList) {
         checkInitialized();
-        MathPreconditions.checkPositiveInRangeClosed("maxRetrievalSize", indices.size(), maxRetrievalSize);
-        for (Integer index : indices) {
+        MathPreconditions.checkPositiveInRangeClosed("maxRetrievalSize", indexList.size(), maxRetrievalSize);
+        for (Integer index : indexList) {
             MathPreconditions.checkNonNegativeInRange("index", index, serverElementSize);
         }
-        this.retrievalSize = indices.size();
+        this.retrievalSize = indexList.size();
         this.indicesByteBuffer = IntStream.range(0, retrievalSize)
-            .mapToObj(i -> ByteBuffer.wrap(IntUtils.intToByteArray(indices.get(i))))
+            .mapToObj(i -> ByteBuffer.wrap(IntUtils.intToByteArray(indexList.get(i))))
             .collect(Collectors.toCollection(ArrayList::new));
         extraInfo++;
     }

@@ -9,6 +9,7 @@ import edu.alibaba.mpc4j.common.tool.polynomial.gf2e.Gf2ePoly;
 import edu.alibaba.mpc4j.common.tool.polynomial.gf2e.Gf2ePolyFactory;
 import edu.alibaba.mpc4j.common.tool.utils.BytesUtils;
 import edu.alibaba.mpc4j.common.tool.utils.CommonUtils;
+import edu.alibaba.mpc4j.common.tool.utils.LongUtils;
 
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
@@ -81,8 +82,9 @@ public class MegaBinBasicOkvs implements BasicOkvs {
         // set the bin hash
         binHash = PrfFactory.createInstance(envType, Integer.BYTES);
         binHash.setKey(key);
-        // l >= σ (40 bits) and l % Byte.SIZE == 0.
-        assert l >= CommonConstants.STATS_BIT_LENGTH && l % Byte.SIZE == 0;
+        // l >= σ (40 bits)
+        int minL = LongUtils.ceilLog2(n) + CommonConstants.STATS_BIT_LENGTH;
+        assert l >= minL : "l must be greater than or equal to " + minL + ": " + l;
         this.l = l;
         byteL = CommonUtils.getByteLength(l);
         // set bin num and bin size.

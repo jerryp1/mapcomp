@@ -33,9 +33,9 @@ public class CotNcLnotConfig implements NcLnotConfig {
     }
 
     @Override
-    public int maxNum(int l) {
+    public int maxNum() {
         // In theory, LCOT can support arbitrary num. Here we limit the max num in case of memory exception.
-        return (int) Math.floor((double) ncCotConfig.maxNum() / l);
+        return 1 << 24;
     }
 
     @Override
@@ -64,7 +64,7 @@ public class CotNcLnotConfig implements NcLnotConfig {
         private NcCotConfig ncCotConfig;
 
         public Builder(SecurityModel securityModel) {
-            ncCotConfig = NcCotFactory.createDefaultConfig(securityModel);
+            ncCotConfig = NcCotFactory.createDefaultConfig(securityModel, true);
         }
 
         public Builder setNcCotConfig(NcCotConfig ncCotConfig) {

@@ -18,15 +18,15 @@ JNIEXPORT jbyteArray JNICALL Java_edu_alibaba_mpc4j_s2pc_pir_batchindex_vectoriz
 /*
  * Class:     edu_alibaba_mpc4j_s2pc_pir_batchindex_vectorizedpir_Mr23BatchIndexPirNativeUtils
  * Method:    keyGen
- * Signature: ([BII)Ljava/util/List;
+ * Signature: ([BI)Ljava/util/List;
  */
 JNIEXPORT jobject JNICALL Java_edu_alibaba_mpc4j_s2pc_pir_batchindex_vectorizedpir_Mr23BatchIndexPirNativeUtils_keyGen
-  (JNIEnv *, jclass, jbyteArray, jint, jint);
+  (JNIEnv *, jclass, jbyteArray, jint);
 
 /*
  * Class:     edu_alibaba_mpc4j_s2pc_pir_batchindex_vectorizedpir_Mr23BatchIndexPirNativeUtils
  * Method:    preprocessDatabase
- * Signature: ([B[[JI)Ljava/util/ArrayList;
+ * Signature: ([B[[JI)Ljava/util/List;
  */
 JNIEXPORT jobject JNICALL Java_edu_alibaba_mpc4j_s2pc_pir_batchindex_vectorizedpir_Mr23BatchIndexPirNativeUtils_preprocessDatabase
   (JNIEnv *, jclass, jbyteArray, jobjectArray, jint);
@@ -34,7 +34,7 @@ JNIEXPORT jobject JNICALL Java_edu_alibaba_mpc4j_s2pc_pir_batchindex_vectorizedp
 /*
  * Class:     edu_alibaba_mpc4j_s2pc_pir_batchindex_vectorizedpir_Mr23BatchIndexPirNativeUtils
  * Method:    generateQuery
- * Signature: ([B[B[B[[J)Ljava/util/ArrayList;
+ * Signature: ([B[B[B[[J)Ljava/util/List;
  */
 JNIEXPORT jobject JNICALL Java_edu_alibaba_mpc4j_s2pc_pir_batchindex_vectorizedpir_Mr23BatchIndexPirNativeUtils_generateQuery
   (JNIEnv *, jclass, jbyteArray, jbyteArray, jbyteArray, jobjectArray);
@@ -42,10 +42,10 @@ JNIEXPORT jobject JNICALL Java_edu_alibaba_mpc4j_s2pc_pir_batchindex_vectorizedp
 /*
  * Class:     edu_alibaba_mpc4j_s2pc_pir_batchindex_vectorizedpir_Mr23BatchIndexPirNativeUtils
  * Method:    generateReply
- * Signature: ([BLjava/util/List;Ljava/util/List;[B[B[BIII)[B
+ * Signature: ([BLjava/util/List;Ljava/util/List;[B[B[BI)[B
  */
 JNIEXPORT jbyteArray JNICALL Java_edu_alibaba_mpc4j_s2pc_pir_batchindex_vectorizedpir_Mr23BatchIndexPirNativeUtils_generateReply
-  (JNIEnv *, jclass, jbyteArray, jobject, jobject, jbyteArray, jbyteArray, jbyteArray, jint, jint, jint);
+  (JNIEnv *, jclass, jbyteArray, jobject, jobject, jbyteArray, jbyteArray, jbyteArray, jint);
 
 /*
  * Class:     edu_alibaba_mpc4j_s2pc_pir_batchindex_vectorizedpir_Mr23BatchIndexPirNativeUtils

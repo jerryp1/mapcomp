@@ -9,6 +9,7 @@ import edu.alibaba.mpc4j.common.tool.crypto.crhf.CrhfFactory;
 import edu.alibaba.mpc4j.common.tool.utils.BytesUtils;
 import edu.alibaba.mpc4j.s2pc.pcg.ot.cot.CotReceiverOutput;
 import edu.alibaba.mpc4j.s2pc.pcg.ot.cot.RotReceiverOutput;
+import edu.alibaba.mpc4j.s2pc.pcg.ot.cot.nc.NcCotConfig;
 import edu.alibaba.mpc4j.s2pc.pcg.ot.cot.nc.NcCotFactory;
 import edu.alibaba.mpc4j.s2pc.pcg.ot.cot.nc.NcCotReceiver;
 import edu.alibaba.mpc4j.s2pc.pcg.ot.lnot.LnotReceiverOutput;
@@ -28,11 +29,21 @@ public class CotNcLnotReceiver extends AbstractNcLnotReceiver {
      * no-choice COT receiver
      */
     private final NcCotReceiver ncCotReceiver;
+    /**
+     * the maximal COT num
+     */
+    private final int maxCotBaseNum;
+    /**
+     * update round
+     */
+    private int updateRound;
 
     public CotNcLnotReceiver(Rpc receiverRpc, Party senderParty, CotNcLnotConfig config) {
         super(CotNcLnotPtoDesc.getInstance(), receiverRpc, senderParty, config);
-        ncCotReceiver = NcCotFactory.createReceiver(receiverRpc, senderParty, config.getNcCotConfig());
+        NcCotConfig ncCotConfig = config.getNcCotConfig();
+        ncCotReceiver = NcCotFactory.createReceiver(receiverRpc, senderParty, ncCotConfig);
         addSubPtos(ncCotReceiver);
+        maxCotBaseNum = ncCotConfig.maxNum();
     }
 
     @Override
@@ -41,7 +52,18 @@ public class CotNcLnotReceiver extends AbstractNcLnotReceiver {
         logPhaseInfo(PtoState.INIT_BEGIN);
 
         stopWatch.start();
-        ncCotReceiver.init(l * num);
+        int cotNum = l * num;
+        int perRoundNum;
+        if (cotNum <= maxCotBaseNum) {
+            // we need to run single round
+            perRoundNum = cotNum;
+            updateRound = 1;
+        } else {
+            // we need to run multiple round
+            perRoundNum = maxCotBaseNum;
+            updateRound = (int) Math.ceil((double) cotNum / maxCotBaseNum);
+        }
+        ncCotReceiver.init(perRoundNum);
         stopWatch.stop();
         long initTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
         stopWatch.reset();
@@ -55,18 +77,23 @@ public class CotNcLnotReceiver extends AbstractNcLnotReceiver {
         setPtoInput();
         logPhaseInfo(PtoState.PTO_BEGIN);
 
-        stopWatch.start();
-        CotReceiverOutput cotReceiverOutput = ncCotReceiver.receive();
-        RotReceiverOutput rotReceiverOutput = new RotReceiverOutput(envType, CrhfFactory.CrhfType.MMO, cotReceiverOutput);
-        stopWatch.stop();
-        long cotTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
-        stopWatch.reset();
-        logStepInfo(PtoState.PTO_STEP, 1, 2, cotTime);
+        CotReceiverOutput cotReceiverOutput = CotReceiverOutput.createEmpty();
+        for (int round = 1; round <= updateRound; round++) {
+            stopWatch.start();
+            CotReceiverOutput roundCotReceiverOutput = ncCotReceiver.receive();
+            cotReceiverOutput.merge(roundCotReceiverOutput);
+            stopWatch.stop();
+            long roundTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
+            stopWatch.reset();
+            logSubStepInfo(PtoState.PTO_STEP, 1, round, updateRound, roundTime);
+        }
 
         stopWatch.start();
+        cotReceiverOutput.reduce(l * num);
+        RotReceiverOutput rotReceiverOutput = new RotReceiverOutput(envType, CrhfFactory.CrhfType.MMO, cotReceiverOutput);
+        // convert COT receiver output to be LNOT receiver output
         int[] choiceArray = new int[num];
         byte[][] rbArray = new byte[num][];
-        // convert COT receiver output to be LNOT receiver output
         IntStream indexIntStream = IntStream.range(0, num);
         indexIntStream = parallel ? indexIntStream.parallel() : indexIntStream;
         indexIntStream

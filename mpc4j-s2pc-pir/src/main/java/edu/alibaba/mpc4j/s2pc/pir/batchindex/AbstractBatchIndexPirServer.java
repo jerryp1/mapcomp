@@ -6,80 +6,49 @@ import edu.alibaba.mpc4j.common.rpc.desc.PtoDesc;
 import edu.alibaba.mpc4j.common.rpc.pto.AbstractTwoPartyPto;
 
 import edu.alibaba.mpc4j.common.tool.MathPreconditions;
-import edu.alibaba.mpc4j.common.tool.utils.BigIntegerUtils;
 import edu.alibaba.mpc4j.common.tool.utils.CommonUtils;
-
-import java.math.BigInteger;
-import java.nio.ByteBuffer;
-import java.util.ArrayList;
-import java.util.Arrays;
+import edu.alibaba.mpc4j.crypto.matrix.database.NaiveDatabase;
+import edu.alibaba.mpc4j.crypto.matrix.database.ZlDatabase;
 
 /**
- * 批量索引PIR协议服务端抽象类。
+ * abstract batch index PIR server.
  *
  * @author Liqiang Peng
  * @date 2023/3/7
  */
 public abstract class AbstractBatchIndexPirServer extends AbstractTwoPartyPto implements BatchIndexPirServer {
     /**
-     * 服务端元素数组
+     * partition database
      */
-    protected ArrayList<byte[][]> elementByteArray = new ArrayList<>();
+    protected ZlDatabase[] databases;
     /**
-     * 服务端元素数量
+     * database size
      */
-    protected int serverElementSize;
+    protected int num;
     /**
-     * 特殊空元素字节缓存区
-     */
-    protected ByteBuffer botElementByteBuffer;
-    /**
-     * 支持的最大批检索数目
-     */
-    protected int maxRetrievalSize;
-    /**
-     * 元素比特长度
+     * element bit length
      */
     protected int elementBitLength;
     /**
-     * 分块的比特长度
+     * max retrieval size
      */
-    protected int partitionBitLength;
+    protected int maxRetrievalSize;
     /**
-     * 分块数目
+     * partition size
      */
-    protected int partitionCount;
+    protected int partitionSize;
 
     protected AbstractBatchIndexPirServer(PtoDesc ptoDesc, Rpc serverRpc, Party clientParty, BatchIndexPirConfig config) {
         super(ptoDesc, serverRpc, clientParty, config);
     }
 
-    protected void setInitInput(byte[][] elementArray, int elementBitLength, int maxRetrievalSize, int partitionBitLength) {
-        MathPreconditions.checkPositive("serverElementSize", elementArray.length);
-        serverElementSize = elementArray.length;
-        MathPreconditions.checkPositive("maxRetrievalSize", maxRetrievalSize);
-        this.maxRetrievalSize = maxRetrievalSize;
-        MathPreconditions.checkPositive("elementBitLength", elementBitLength);
-        this.elementBitLength = elementBitLength;
+    protected void setInitInput(NaiveDatabase database, int maxRetrievalSize, int partitionBitLength) {
+        num = database.rows();
+        elementBitLength = database.getL();
         MathPreconditions.checkPositiveInRangeClosed("partitionBitLength", partitionBitLength, Integer.SIZE);
-        this.partitionBitLength = partitionBitLength;
-        this.partitionCount = CommonUtils.getUnitNum(elementBitLength, partitionBitLength);
-        BigInteger mod = BigInteger.ONE.shiftLeft(partitionBitLength);
-        int byteLength = CommonUtils.getByteLength(partitionBitLength);
-        for (int i = 0; i < partitionCount; i++) {
-            byte[][] temp = new byte[serverElementSize][byteLength];
-            for (int j = 0; j < serverElementSize; j++) {
-                BigInteger element = BigIntegerUtils.byteArrayToNonNegBigInteger(elementArray[j]);
-                element = element.shiftRight(i * partitionBitLength);
-                element = element.mod(mod);
-                temp[j] = BigIntegerUtils.nonNegBigIntegerToByteArray(element, byteLength);
-            }
-            elementByteArray.add(temp);
-        }
-        // 设置特殊空元素
-        byte[] botElementByteArray = new byte[Integer.BYTES];
-        Arrays.fill(botElementByteArray, (byte)0xFF);
-        botElementByteBuffer = ByteBuffer.wrap(botElementByteArray);
+        databases = database.partitionZl(partitionBitLength);
+        this.maxRetrievalSize = maxRetrievalSize;
+        this.partitionSize = CommonUtils.getUnitNum(elementBitLength, partitionBitLength);
         initState();
     }
 

@@ -11,21 +11,21 @@ import edu.alibaba.mpc4j.s2pc.pir.batchindex.vectorizedpir.Mr23BatchIndexPirConf
 import edu.alibaba.mpc4j.s2pc.pir.batchindex.vectorizedpir.Mr23BatchIndexPirServer;
 
 /**
- * 批量索引PIR协议工厂。
+ * batch index PIR factory.
  *
  * @author Liqiang Peng
  * @date 2023/3/7
  */
 public class BatchIndexPirFactory implements PtoFactory {
     /**
-     * 私有构造函数
+     * private constructor.
      */
     private BatchIndexPirFactory() {
         // empty
     }
 
     /**
-     * 批量索引PIR协议类型。
+     * batch index PIR type
      */
     public enum BatchIndexPirType {
         /**
@@ -39,15 +39,15 @@ public class BatchIndexPirFactory implements PtoFactory {
     }
 
     /**
-     * 构建服务端。
+     * create server.
      *
-     * @param serverRpc   服务端通信接口。
-     * @param clientParty 客户端信息。
-     * @param config      配置项。
-     * @return 服务端。
+     * @param serverRpc   server rpc.
+     * @param clientParty client party.
+     * @param config      config.
+     * @return server.
      */
     public static BatchIndexPirServer createServer(Rpc serverRpc, Party clientParty, BatchIndexPirConfig config) {
-        BatchIndexPirType type = config.getProType();
+        BatchIndexPirType type = config.getPtoType();
         switch (type) {
             case PSI_PIR:
                 return new Lpzg24BatchIndexPirServer(serverRpc, clientParty, (Lpzg24BatchIndexPirConfig) config);
@@ -59,15 +59,15 @@ public class BatchIndexPirFactory implements PtoFactory {
     }
 
     /**
-     * 构建客户端。
+     * create client.
      *
-     * @param clientRpc   客户端通信接口。
-     * @param serverParty 服务端信息。
-     * @param config      配置项。
-     * @return 客户端。
+     * @param clientRpc   client rpc.
+     * @param serverParty server party.
+     * @param config      config.
+     * @return client.
      */
     public static BatchIndexPirClient createClient(Rpc clientRpc, Party serverParty, BatchIndexPirConfig config) {
-        BatchIndexPirType type = config.getProType();
+        BatchIndexPirType type = config.getPtoType();
         switch (type) {
             case PSI_PIR:
                 return new Lpzg24BatchIndexPirClient(clientRpc, serverParty, (Lpzg24BatchIndexPirConfig) config);

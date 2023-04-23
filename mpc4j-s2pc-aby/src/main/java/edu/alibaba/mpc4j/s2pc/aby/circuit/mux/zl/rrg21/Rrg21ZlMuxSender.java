@@ -8,8 +8,8 @@ import edu.alibaba.mpc4j.common.tool.bitvector.BitVector;
 import edu.alibaba.mpc4j.common.tool.utils.BigIntegerUtils;
 import edu.alibaba.mpc4j.common.tool.utils.BinaryUtils;
 import edu.alibaba.mpc4j.crypto.matrix.vector.ZlVector;
-import edu.alibaba.mpc4j.s2pc.aby.basics.ac.zl.SquareShareZlVector;
-import edu.alibaba.mpc4j.s2pc.aby.basics.bc.SquareShareZ2Vector;
+import edu.alibaba.mpc4j.s2pc.aby.basics.ac.zl.SquareZlVector;
+import edu.alibaba.mpc4j.s2pc.aby.basics.bc.SquareZ2Vector;
 import edu.alibaba.mpc4j.s2pc.aby.circuit.mux.zl.AbstractZlMuxParty;
 import edu.alibaba.mpc4j.s2pc.aby.circuit.mux.zl.rrg21.Rrg21ZlMuxPtoDesc.PtoStep;
 import edu.alibaba.mpc4j.s2pc.pcg.ot.cot.*;
@@ -71,7 +71,7 @@ public class Rrg21ZlMuxSender extends AbstractZlMuxParty {
     }
 
     @Override
-    public SquareShareZlVector mux(SquareShareZ2Vector x0, SquareShareZlVector y0) throws MpcAbortException {
+    public SquareZlVector mux(SquareZ2Vector x0, SquareZlVector y0) throws MpcAbortException {
         setPtoInput(x0, y0);
         logPhaseInfo(PtoState.PTO_BEGIN);
 
@@ -79,7 +79,7 @@ public class Rrg21ZlMuxSender extends AbstractZlMuxParty {
         // P0 invokes an instance of COT, where P0 is the sender.
         CotSenderOutput cotSenderOutput = cotSender.send(num);
         // P0 invokes an instance of COT, where P0 is the receiver with inputs x0.
-        byte[] x0Bytes = x0.getBytes();
+        byte[] x0Bytes = x0.getBitVector().getBytes();
         boolean[] x0Binary = BinaryUtils.byteArrayToBinary(x0Bytes, num);
         CotReceiverOutput cotReceiverOutput = cotReceiver.receive(x0Binary);
         stopWatch.stop();
@@ -113,7 +113,7 @@ public class Rrg21ZlMuxSender extends AbstractZlMuxParty {
         logStepInfo(PtoState.PTO_STEP, 3, 4, delta1Time);
 
         stopWatch.start();
-        SquareShareZlVector z0 = generateZ0(x0, y0);
+        SquareZlVector z0 = generateZ0(x0, y0);
         negS0ZlVector = null;
         t0ZlVector = null;
         stopWatch.stop();
@@ -125,7 +125,7 @@ public class Rrg21ZlMuxSender extends AbstractZlMuxParty {
         return z0;
     }
 
-    private List<byte[]> generateDelta0(CotSenderOutput cotSenderOutput, SquareShareZ2Vector x0, SquareShareZlVector y0) {
+    private List<byte[]> generateDelta0(CotSenderOutput cotSenderOutput, SquareZ2Vector x0, SquareZlVector y0) {
         BitVector x = x0.getBitVector();
         ZlVector y = y0.getVector();
         BigInteger[] s0s = new BigInteger[num];
@@ -178,7 +178,7 @@ public class Rrg21ZlMuxSender extends AbstractZlMuxParty {
         t0ZlVector = ZlVector.create(zl, t0s);
     }
 
-    private SquareShareZlVector generateZ0(SquareShareZ2Vector x0, SquareShareZlVector y0) {
+    private SquareZlVector generateZ0(SquareZ2Vector x0, SquareZlVector y0) {
         BitVector x = x0.getBitVector();
         ZlVector y = y0.getVector();
         IntStream z0IntStream = IntStream.range(0, num);
@@ -195,6 +195,6 @@ public class Rrg21ZlMuxSender extends AbstractZlMuxParty {
             })
             .toArray(BigInteger[]::new);
         ZlVector z0ZlVector = ZlVector.create(zl, z0s);
-        return SquareShareZlVector.create(z0ZlVector, false);
+        return SquareZlVector.create(z0ZlVector, false);
     }
 }

@@ -14,33 +14,33 @@ import edu.alibaba.mpc4j.s2pc.pcg.ot.cot.pre.PreCotSender;
 import java.util.concurrent.TimeUnit;
 
 /**
- * 缓存COT协议发送方。
+ * cache COT sender.
  *
  * @author Weiran Liu
  * @date 2022/7/13
  */
 public class CacheCotSender extends AbstractCotSender {
     /**
-     * NC-COT发送方
+     * no-choice COT sender
      */
-    private final NcCotSender nccotSender;
+    private final NcCotSender ncCotSender;
     /**
-     * 预计算COT协议发送方
+     * precompute COT sender
      */
     private final PreCotSender preCotSender;
     /**
-     * 更新时的执行轮数
+     * update round
      */
     private int updateRound;
     /**
-     * 缓存区
+     * buffer
      */
     private CotSenderOutput buffer;
 
     public CacheCotSender(Rpc senderRpc, Party receiverParty, CacheCotConfig config) {
         super(CacheCotPtoDesc.getInstance(), senderRpc, receiverParty, config);
-        nccotSender = NcCotFactory.createSender(senderRpc, receiverParty, config.getNcCotConfig());
-        addSubPtos(nccotSender);
+        ncCotSender = NcCotFactory.createSender(senderRpc, receiverParty, config.getNcCotConfig());
+        addSubPtos(ncCotSender);
         preCotSender = PreCotFactory.createSender(senderRpc, receiverParty, config.getPreCotConfig());
         addSubPtos(preCotSender);
     }
@@ -51,17 +51,17 @@ public class CacheCotSender extends AbstractCotSender {
         logPhaseInfo(PtoState.INIT_BEGIN);
 
         stopWatch.start();
-        int updateRoundNum;
+        int perRoundNum;
         if (updateNum <= config.maxBaseNum()) {
-            // 如果最大数量小于基础最大数量，则执行1轮最大数量即可
-            updateRoundNum = updateNum;
+            // we only need to run single round
+            perRoundNum = updateNum;
             updateRound = 1;
         } else {
-            // 如果最大数量大于基础最大数量，则分批执行
-            updateRoundNum = config.maxBaseNum();
+            // we need to run multiple round
+            perRoundNum = config.maxBaseNum();
             updateRound = (int) Math.ceil((double) updateNum / config.maxBaseNum());
         }
-        nccotSender.init(delta, updateRoundNum);
+        ncCotSender.init(delta, perRoundNum);
         preCotSender.init();
         buffer = CotSenderOutput.createEmpty(delta);
         stopWatch.stop();
@@ -78,10 +78,10 @@ public class CacheCotSender extends AbstractCotSender {
         logPhaseInfo(PtoState.PTO_BEGIN);
 
         while (num > buffer.getNum()) {
-            // 如果所需的数量大于缓存区数量，则继续生成
+            // generate COT when we do not have enough ones
             for (int round = 1; round <= updateRound; round++) {
                 stopWatch.start();
-                CotSenderOutput cotSenderOutput = nccotSender.send();
+                CotSenderOutput cotSenderOutput = ncCotSender.send();
                 buffer.merge(cotSenderOutput);
                 stopWatch.stop();
                 long roundTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
@@ -93,12 +93,12 @@ public class CacheCotSender extends AbstractCotSender {
         stopWatch.start();
         CotSenderOutput senderOutput = buffer.split(num);
         stopWatch.stop();
-        long splitTripleTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
+        long splitTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
         stopWatch.reset();
-        logStepInfo(PtoState.PTO_STEP, 1, 2, splitTripleTime);
+        logStepInfo(PtoState.PTO_STEP, 1, 2, splitTime);
 
         stopWatch.start();
-        // 应用预计算COT协议纠正选择比特
+        // correct choices using precompute COT
         senderOutput = preCotSender.send(senderOutput);
         stopWatch.stop();
         long preCotTime = stopWatch.getTime(TimeUnit.MILLISECONDS);

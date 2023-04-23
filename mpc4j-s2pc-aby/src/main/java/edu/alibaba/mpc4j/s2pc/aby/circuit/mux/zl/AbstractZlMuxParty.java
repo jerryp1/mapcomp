@@ -6,8 +6,8 @@ import edu.alibaba.mpc4j.common.rpc.desc.PtoDesc;
 import edu.alibaba.mpc4j.common.rpc.pto.AbstractTwoPartyPto;
 import edu.alibaba.mpc4j.common.tool.MathPreconditions;
 import edu.alibaba.mpc4j.common.tool.galoisfield.zl.Zl;
-import edu.alibaba.mpc4j.s2pc.aby.basics.ac.zl.SquareShareZlVector;
-import edu.alibaba.mpc4j.s2pc.aby.basics.bc.SquareShareZ2Vector;
+import edu.alibaba.mpc4j.s2pc.aby.basics.ac.zl.SquareZlVector;
+import edu.alibaba.mpc4j.s2pc.aby.basics.bc.SquareZ2Vector;
 
 /**
  * abstract Zl mux party.
@@ -43,7 +43,7 @@ public abstract class AbstractZlMuxParty extends AbstractTwoPartyPto implements 
         initState();
     }
 
-    protected void setPtoInput(SquareShareZ2Vector xi, SquareShareZlVector yi) {
+    protected void setPtoInput(SquareZ2Vector xi, SquareZlVector yi) {
         MathPreconditions.checkEqual("xi.num", "yi.num", xi.getNum(), yi.getNum());
         num = xi.getNum();
         MathPreconditions.checkPositiveInRangeClosed("num", num, maxNum);

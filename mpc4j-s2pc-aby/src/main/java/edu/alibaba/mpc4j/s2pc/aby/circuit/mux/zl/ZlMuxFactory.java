@@ -81,20 +81,18 @@ public class ZlMuxFactory implements PtoFactory {
     }
 
     /**
-     * Creates the default config.
+     * Creates a default config.
      *
      * @param securityModel the security model.
-     * @return the default config.
+     * @param silent        if using a silent protocol.
+     * @return a default config.
      */
-    public static ZlMuxConfig createDefaultConfig(SecurityModel securityModel) {
+    public static ZlMuxConfig createDefaultConfig(SecurityModel securityModel, boolean silent) {
         switch (securityModel) {
             case IDEAL:
-                return new Rrg21ZlMuxConfig.Builder()
-                    .setCotConfig(CotFactory.createCacheConfig(SecurityModel.IDEAL))
-                    .build();
             case SEMI_HONEST:
                 return new Rrg21ZlMuxConfig.Builder()
-                    .setCotConfig(CotFactory.createCacheConfig(SecurityModel.SEMI_HONEST))
+                    .setCotConfig(CotFactory.createDefaultConfig(SecurityModel.SEMI_HONEST, silent))
                     .build();
             case COVERT:
             case MALICIOUS:

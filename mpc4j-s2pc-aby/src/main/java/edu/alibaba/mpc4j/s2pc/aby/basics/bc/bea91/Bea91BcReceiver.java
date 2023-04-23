@@ -1,5 +1,6 @@
 package edu.alibaba.mpc4j.s2pc.aby.basics.bc.bea91;
 
+import com.alibaba.mpc4j.common.circuit.z2.MpcZ2Vector;
 import edu.alibaba.mpc4j.common.rpc.*;
 import edu.alibaba.mpc4j.common.rpc.utils.DataPacket;
 import edu.alibaba.mpc4j.common.rpc.utils.DataPacketHeader;
@@ -8,7 +9,7 @@ import edu.alibaba.mpc4j.common.tool.bitvector.BitVectorFactory;
 import edu.alibaba.mpc4j.common.tool.utils.BytesUtils;
 import edu.alibaba.mpc4j.s2pc.aby.basics.bc.AbstractBcParty;
 import edu.alibaba.mpc4j.s2pc.aby.basics.bc.bea91.Bea91BcPtoDesc.PtoStep;
-import edu.alibaba.mpc4j.s2pc.aby.basics.bc.SquareShareZ2Vector;
+import edu.alibaba.mpc4j.s2pc.aby.basics.bc.SquareZ2Vector;
 import edu.alibaba.mpc4j.s2pc.pcg.mtg.z2.Z2MtgFactory;
 import edu.alibaba.mpc4j.s2pc.pcg.mtg.z2.Z2MtgParty;
 import edu.alibaba.mpc4j.s2pc.pcg.mtg.z2.Z2Triple;
@@ -52,7 +53,7 @@ public class Bea91BcReceiver extends AbstractBcParty {
     }
 
     @Override
-    public SquareShareZ2Vector shareOwn(BitVector x) {
+    public SquareZ2Vector shareOwn(BitVector x) {
         setShareOwnInput(x);
         logPhaseInfo(PtoState.PTO_BEGIN, "send share");
 
@@ -71,11 +72,11 @@ public class Bea91BcReceiver extends AbstractBcParty {
         logStepInfo(PtoState.PTO_STEP, 1, 1, shareTime, "send share");
 
         logPhaseInfo(PtoState.PTO_END, "send share");
-        return SquareShareZ2Vector.create(x1BitVector, false);
+        return SquareZ2Vector.create(x1BitVector, false);
     }
 
     @Override
-    public SquareShareZ2Vector shareOther(int bitNum) throws MpcAbortException {
+    public SquareZ2Vector shareOther(int bitNum) throws MpcAbortException {
         setShareOtherInput(bitNum);
         logPhaseInfo(PtoState.PTO_BEGIN, "receive share");
 
@@ -93,19 +94,23 @@ public class Bea91BcReceiver extends AbstractBcParty {
         logStepInfo(PtoState.PTO_STEP, 1, 1, shareTime, "receive share");
 
         logPhaseInfo(PtoState.PTO_END, "receive share");
-        return SquareShareZ2Vector.create(x1BitVector, false);
+        return SquareZ2Vector.create(x1BitVector, false);
     }
 
     @Override
-    public SquareShareZ2Vector and(SquareShareZ2Vector x1, SquareShareZ2Vector y1) throws MpcAbortException {
-        setAndInput(x1, y1);
+    public SquareZ2Vector and(MpcZ2Vector x1, MpcZ2Vector y1) throws MpcAbortException {
+        SquareZ2Vector squareX1 = (SquareZ2Vector) x1;
+        SquareZ2Vector squareY1 = (SquareZ2Vector) y1;
+        setAndInput(squareX1, squareY1);
 
         if (x1.isPlain() && y1.isPlain()) {
             // x1 and y1 are plain bit vectors, using plain AND.
-            return x1.and(y1);
+            BitVector z1BitVector = x1.getBitVector().and(y1.getBitVector());
+            return SquareZ2Vector.create(z1BitVector, true);
         } else if (x1.isPlain() || y1.isPlain()) {
             // x1 or y1 is plain bit vector, using plain AND.
-            return x1.and(y1);
+            BitVector z1BitVector = x1.getBitVector().and(y1.getBitVector());
+            return SquareZ2Vector.create(z1BitVector, false);
         } else {
             // x1 and y1 are secret bit vectors, using secret AND.
             andGateNum += bitNum;
@@ -123,9 +128,9 @@ public class Bea91BcReceiver extends AbstractBcParty {
             byte[] b1 = z2Triple.getB();
             byte[] c1 = z2Triple.getC();
             // e1 = x1 ⊕ a1
-            byte[] e1 = BytesUtils.xor(x1.getBytes(), a1);
+            byte[] e1 = BytesUtils.xor(x1.getBitVector().getBytes(), a1);
             // f1 = y1 ⊕ b1
-            byte[] f1 = BytesUtils.xor(y1.getBytes(), b1);
+            byte[] f1 = BytesUtils.xor(y1.getBitVector().getBytes(), b1);
             List<byte[]> e1f1Payload = new LinkedList<>();
             e1f1Payload.add(e1);
             e1f1Payload.add(f1);
@@ -159,49 +164,53 @@ public class Bea91BcReceiver extends AbstractBcParty {
             BytesUtils.xori(z1, f);
             BytesUtils.xori(z1, c1);
             BytesUtils.xori(z1, ef);
-            SquareShareZ2Vector z1ShareBitVector = SquareShareZ2Vector.create(bitNum, z1, false);
+            SquareZ2Vector squareZ1 = SquareZ2Vector.create(bitNum, z1, false);
             stopWatch.stop();
             long z1Time = stopWatch.getTime(TimeUnit.MILLISECONDS);
             stopWatch.reset();
             logStepInfo(PtoState.PTO_STEP, 3, 3, z1Time, "and (gen. z)");
 
             logPhaseInfo(PtoState.PTO_END, "and");
-            return z1ShareBitVector;
+            return squareZ1;
         }
     }
 
     @Override
-    public SquareShareZ2Vector xor(SquareShareZ2Vector x1, SquareShareZ2Vector y1) {
-        setXorInput(x1, y1);
+    public SquareZ2Vector xor(MpcZ2Vector x1, MpcZ2Vector y1) {
+        SquareZ2Vector squareX1 = (SquareZ2Vector) x1;
+        SquareZ2Vector squareY1 = (SquareZ2Vector) y1;
+        setXorInput(squareX1, squareY1);
 
         if (x1.isPlain() && y1.isPlain()) {
             // x1 and y1 are plain bit vector, using plain XOR.
-            return x1.xor(y1, true);
+            BitVector z1BitVector = x1.getBitVector().xor(y1.getBitVector());
+            return SquareZ2Vector.create(z1BitVector, true);
         } else if (x1.isPlain()) {
             // x1 is plain bit vector, y1 is secret bit vector, the receiver copies y1
-            return y1.copy();
+            return squareY1.copy();
         } else if (y1.isPlain()) {
             // x1 is secret bit vector, y1 is plain bit vector, the receiver copies x1
-            return x1.copy();
+            return squareX1.copy();
         } else {
             // x1 and y1 are secret bit vectors, using secret XOR.
             xorGateNum += bitNum;
             logPhaseInfo(PtoState.PTO_BEGIN, "xor");
 
             stopWatch.start();
-            SquareShareZ2Vector z1ShareBitVector = x1.xor(y1, false);
+            BitVector z1BitVector = x1.getBitVector().xor(y1.getBitVector());
+            SquareZ2Vector squareZ1 = SquareZ2Vector.create(z1BitVector, false);
             stopWatch.stop();
             long z1Time = stopWatch.getTime(TimeUnit.MILLISECONDS);
             stopWatch.reset();
             logStepInfo(PtoState.PTO_STEP, 1, 1, z1Time, "xor (gen. z)");
 
             logPhaseInfo(PtoState.PTO_END, "xor");
-            return z1ShareBitVector;
+            return squareZ1;
         }
     }
 
     @Override
-    public BitVector revealOwn(SquareShareZ2Vector x1) throws MpcAbortException {
+    public BitVector revealOwn(SquareZ2Vector x1) throws MpcAbortException {
         setRevealOwnInput(x1);
         if (x1.isPlain()) {
             return x1.getBitVector();
@@ -216,26 +225,27 @@ public class Bea91BcReceiver extends AbstractBcParty {
             );
             List<byte[]> x0Payload = rpc.receive(x0Header).getPayload();
             MpcAbortPreconditions.checkArgument(x0Payload.size() == 1);
-            SquareShareZ2Vector x0 = SquareShareZ2Vector.create(bitNum, x0Payload.get(0), true);
+            BitVector x0BitVector = BitVectorFactory.create(bitNum, x0Payload.get(0));
+            BitVector x1BitVector = x1.getBitVector();
             stopWatch.stop();
             long revealTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
             stopWatch.reset();
             logStepInfo(PtoState.PTO_STEP, 1, 1, revealTime, "receive share");
 
             logPhaseInfo(PtoState.PTO_END, "receive share");
-            return x0.xor(x1, false).getBitVector();
+            return x0BitVector.xor(x1BitVector);
         }
     }
 
     @Override
-    public void revealOther(SquareShareZ2Vector x1) {
+    public void revealOther(SquareZ2Vector x1) {
         setRevealOtherInput(x1);
         if (!x1.isPlain()) {
             outputBitNum += bitNum;
             logPhaseInfo(PtoState.PTO_BEGIN, "send share");
 
             stopWatch.start();
-            List<byte[]> x1Payload = Collections.singletonList(x1.getBytes());
+            List<byte[]> x1Payload = Collections.singletonList(x1.getBitVector().getBytes());
             DataPacketHeader x1Header = new DataPacketHeader(
                 encodeTaskId, getPtoDesc().getPtoId(), Bea91BcPtoDesc.PtoStep.RECEIVER_SEND_SHARE_OUTPUT.ordinal(), outputBitNum,
                 ownParty().getPartyId(), otherParty().getPartyId()

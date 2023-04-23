@@ -44,7 +44,6 @@ public class LnotSenderOutput implements MergedPcgPartyOutput {
                     assert r.length == CommonConstants.BLOCK_BYTE_LENGTH;
                 });
             })
-            .map(BytesUtils::clone)
             .toArray(byte[][][]::new);
 
         return senderOutput;

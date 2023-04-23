@@ -94,7 +94,7 @@ public class Jsz22SfsPsuConfig implements PsuConfig {
 
         public Builder() {
             oprfConfig = OprfFactory.createOprfDefaultConfig(SecurityModel.SEMI_HONEST);
-            osnConfig = OsnFactory.createDefaultConfig(SecurityModel.SEMI_HONEST);
+            osnConfig = OsnFactory.createDefaultConfig(SecurityModel.SEMI_HONEST, true);
             // 论文建议平衡场景下使用PSZ18的3哈希协议，非平衡场景下使用PSZ18的4哈希协议
             cuckooHashBinType = CuckooHashBinType.NAIVE_3_HASH;
         }

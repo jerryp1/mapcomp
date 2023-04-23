@@ -4,7 +4,6 @@ import java.util.Arrays;
 
 import edu.alibaba.mpc4j.common.tool.CommonConstants;
 import edu.alibaba.mpc4j.common.tool.utils.BinaryUtils;
-import edu.alibaba.mpc4j.common.tool.utils.BytesUtils;
 import edu.alibaba.mpc4j.s2pc.pcg.MergedPcgPartyOutput;
 import edu.alibaba.mpc4j.s2pc.pcg.ot.OtReceiverOutput;
 
@@ -42,7 +41,6 @@ public class CotReceiverOutput implements OtReceiverOutput, MergedPcgPartyOutput
                 assert rb.length == CommonConstants.BLOCK_BYTE_LENGTH
                     : "rb byte length must be equal to " + CommonConstants.BLOCK_BYTE_LENGTH + ": " + rb.length;
             })
-            .map(BytesUtils::clone)
             .toArray(byte[][]::new);
 
         return receiverOutput;

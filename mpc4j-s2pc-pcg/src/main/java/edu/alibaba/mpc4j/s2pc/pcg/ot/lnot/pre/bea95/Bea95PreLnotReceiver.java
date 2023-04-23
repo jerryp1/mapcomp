@@ -6,18 +6,15 @@ import edu.alibaba.mpc4j.common.rpc.PtoState;
 import edu.alibaba.mpc4j.common.rpc.Rpc;
 import edu.alibaba.mpc4j.common.rpc.utils.DataPacket;
 import edu.alibaba.mpc4j.common.rpc.utils.DataPacketHeader;
-import edu.alibaba.mpc4j.common.tool.utils.BigIntegerUtils;
 import edu.alibaba.mpc4j.common.tool.utils.BytesUtils;
-import edu.alibaba.mpc4j.common.tool.utils.CommonUtils;
+import edu.alibaba.mpc4j.common.tool.utils.IntUtils;
 import edu.alibaba.mpc4j.s2pc.pcg.ot.lnot.LnotReceiverOutput;
 import edu.alibaba.mpc4j.s2pc.pcg.ot.lnot.pre.AbstractPreLnotReceiver;
 import edu.alibaba.mpc4j.s2pc.pcg.ot.lnot.pre.bea95.Bea95PreLnotPtoDesc.PtoStep;
 
-import java.math.BigInteger;
-import java.util.Arrays;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
-import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
 /**
@@ -67,24 +64,20 @@ public class Bea95PreLnotReceiver extends AbstractPreLnotReceiver {
     }
 
     private List<byte[]> generateDeltaPayload() {
-        // each row can contain Integer.MAX_VALUE * Byte.BYTES / l number of Δ. Here we ignore Byte.BYTES.
-        // When l = 1, rows = (num + maxPerNum - 1) / maxPerNum would exceed Integer.MAX_VALUE, we divide 2.
-        int maxPerNum = Integer.MAX_VALUE / 2 / l;
-        // number of rows
-        int rows = CommonUtils.getUnitNum(num, maxPerNum);
-        BigInteger[] rowArray = IntStream.range(0, rows).mapToObj(index -> BigInteger.ZERO).toArray(BigInteger[]::new);
-        for (int index = 0; index < num; index++) {
-            int rowIndex = index % rows;
-            int randomChoice = preReceiverOutput.getChoice(index);
-            int delta = choiceArray[index] - randomChoice;
-            delta = delta < 0 ? delta + n : delta;
-            rowArray[rowIndex] = rowArray[rowIndex].shiftLeft(l).add(BigInteger.valueOf(delta));
-        }
-        return Arrays.stream(rowArray)
-            .map(row -> {
-                int byteLength = CommonUtils.getByteLength(row.bitLength());
-                return BigIntegerUtils.nonNegBigIntegerToByteArray(row, byteLength);
-            })
-            .collect(Collectors.toList());
+        byte[][] deltas = IntStream.range(0, num)
+            .mapToObj(index -> {
+                int randomChoice = preReceiverOutput.getChoice(index);
+                int delta = choiceArray[index] - randomChoice;
+                delta = delta < 0 ? delta + n : delta;
+                return IntUtils.boundedNonNegIntToByteArray(delta, n);
+            }).toArray(byte[][]::new);
+        int deltaLength = IntUtils.boundedNonNegIntByteLength(n);
+        byte[] flatDeltas = new byte[num * deltaLength];
+        IntStream.range(0, num).forEach(index ->
+            System.arraycopy(deltas[index], 0, flatDeltas, index * deltaLength, deltaLength)
+        );
+        List<byte[]> deltaPayload = new LinkedList<>();
+        deltaPayload.add(flatDeltas);
+        return deltaPayload;
     }
 }

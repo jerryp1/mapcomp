@@ -59,6 +59,16 @@ public class LnotTest {
     public static Collection<Object[]> configurations() {
         Collection<Object[]> configurations = new ArrayList<>();
 
+        // CACHE (Malicious)
+        configurations.add(new Object[]{
+            LnotType.CACHE.name() + " (" + SecurityModel.MALICIOUS + ")",
+            new DirectLnotConfig.Builder(SecurityModel.MALICIOUS).build(),
+        });
+        // CACHE (Semi-honest)
+        configurations.add(new Object[]{
+            LnotType.CACHE.name() + " (" + SecurityModel.SEMI_HONEST + ")",
+            new DirectLnotConfig.Builder(SecurityModel.SEMI_HONEST).build(),
+        });
         // DIRECT (Malicious)
         configurations.add(new Object[]{
             LnotType.DIRECT.name() + " (" + SecurityModel.MALICIOUS + ")",

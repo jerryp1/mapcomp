@@ -63,7 +63,7 @@ public class Bea91BcConfig implements BcConfig {
         private Z2MtgConfig z2MtgConfig;
 
         public Builder() {
-            z2MtgConfig = Z2MtgFactory.createDefaultConfig(SecurityModel.SEMI_HONEST);
+            z2MtgConfig = Z2MtgFactory.createDefaultConfig(SecurityModel.SEMI_HONEST, true);
         }
 
         public Builder setZ2MtgConfig(Z2MtgConfig z2MtgConfig) {

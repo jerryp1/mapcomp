@@ -4,9 +4,13 @@ import edu.alibaba.mpc4j.common.rpc.Party;
 import edu.alibaba.mpc4j.common.rpc.Rpc;
 import edu.alibaba.mpc4j.common.rpc.desc.SecurityModel;
 import edu.alibaba.mpc4j.common.rpc.pto.PtoFactory;
+import edu.alibaba.mpc4j.s2pc.pcg.mtg.z2.core.Z2CoreMtgFactory;
 import edu.alibaba.mpc4j.s2pc.pcg.mtg.z2.impl.cache.CacheZ2MtgConfig;
 import edu.alibaba.mpc4j.s2pc.pcg.mtg.z2.impl.cache.CacheZ2MtgReceiver;
 import edu.alibaba.mpc4j.s2pc.pcg.mtg.z2.impl.cache.CacheZ2MtgSender;
+import edu.alibaba.mpc4j.s2pc.pcg.mtg.z2.impl.direct.DirectZ2MtgConfig;
+import edu.alibaba.mpc4j.s2pc.pcg.mtg.z2.impl.direct.DirectZ2MtgReceiver;
+import edu.alibaba.mpc4j.s2pc.pcg.mtg.z2.impl.direct.DirectZ2MtgSender;
 import edu.alibaba.mpc4j.s2pc.pcg.mtg.z2.impl.offline.OfflineZ2MtgConfig;
 import edu.alibaba.mpc4j.s2pc.pcg.mtg.z2.impl.offline.OfflineZ2MtgReceiver;
 import edu.alibaba.mpc4j.s2pc.pcg.mtg.z2.impl.offline.OfflineZ2MtgSender;
@@ -30,11 +34,15 @@ public class Z2MtgFactory implements PtoFactory {
      */
     public enum Z2MtgType {
         /**
-         * 离线
+         * direct
+         */
+        DIRECT,
+        /**
+         * offline
          */
         OFFLINE,
         /**
-         * 缓存
+         * cache
          */
         CACHE,
     }
@@ -50,6 +58,8 @@ public class Z2MtgFactory implements PtoFactory {
     public static Z2MtgParty createSender(Rpc senderRpc, Party receiverParty, Z2MtgConfig config) {
         Z2MtgType type = config.getPtoType();
         switch (type) {
+            case DIRECT:
+                return new DirectZ2MtgSender(senderRpc, receiverParty, (DirectZ2MtgConfig) config);
             case OFFLINE:
                 return new OfflineZ2MtgSender(senderRpc, receiverParty, (OfflineZ2MtgConfig) config);
             case CACHE:
@@ -70,6 +80,8 @@ public class Z2MtgFactory implements PtoFactory {
     public static Z2MtgParty createReceiver(Rpc receiverRpc, Party senderParty, Z2MtgConfig config) {
         Z2MtgType type = config.getPtoType();
         switch (type) {
+            case DIRECT:
+                return new DirectZ2MtgReceiver(receiverRpc, senderParty, (DirectZ2MtgConfig) config);
             case OFFLINE:
                 return new OfflineZ2MtgReceiver(receiverRpc, senderParty, (OfflineZ2MtgConfig) config);
             case CACHE:
@@ -80,12 +92,15 @@ public class Z2MtgFactory implements PtoFactory {
     }
 
     /**
-     * 创建默认协议配置项。
+     * Creates a default config.
      *
-     * @param securityModel 安全模型。
-     * @return 默认协议配置项。
+     * @param securityModel the security model.
+     * @param silent if using a silent protocol.
+     * @return a default config.
      */
-    public static Z2MtgConfig createDefaultConfig(SecurityModel securityModel) {
-        return new CacheZ2MtgConfig.Builder(securityModel).build();
+    public static Z2MtgConfig createDefaultConfig(SecurityModel securityModel, boolean silent) {
+        return new CacheZ2MtgConfig.Builder(securityModel)
+            .setZ2CoreMtgConfig(Z2CoreMtgFactory.createDefaultConfig(securityModel, silent))
+            .build();
     }
 }

@@ -41,7 +41,6 @@ public class CotSenderOutput implements OtSenderOutput, MergedPcgPartyOutput {
                 assert r0.length == CommonConstants.BLOCK_BYTE_LENGTH
                     : "r0 byte length must be equal to " + CommonConstants.BLOCK_BYTE_LENGTH + ": " + r0.length;
             })
-            .map(BytesUtils::clone)
             .toArray(byte[][]::new);
 
         return senderOutput;

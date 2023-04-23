@@ -46,7 +46,7 @@ public class Mr23BatchIndexPirConfig implements BatchIndexPirConfig {
     }
 
     @Override
-    public BatchIndexPirFactory.BatchIndexPirType getProType() {
+    public BatchIndexPirFactory.BatchIndexPirType getPtoType() {
         return BatchIndexPirFactory.BatchIndexPirType.VECTORIZED_BATCH_PIR;
     }
 

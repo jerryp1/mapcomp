@@ -6,6 +6,7 @@ import edu.alibaba.mpc4j.common.tool.galoisfield.gf2e.Gf2e;
 import edu.alibaba.mpc4j.common.tool.galoisfield.gf2e.Gf2eFactory;
 import edu.alibaba.mpc4j.common.tool.galoisfield.gf2e.Gf2eLinearSolver;
 import edu.alibaba.mpc4j.common.tool.utils.CommonUtils;
+import edu.alibaba.mpc4j.common.tool.utils.LongUtils;
 
 import java.security.SecureRandom;
 
@@ -29,7 +30,7 @@ abstract class AbstractBinaryOkvs<T> implements BinaryOkvs<T> {
      */
     final int mByteLength;
     /**
-     * OKVS映射值最大比特长度，满足{l % Byte.SIZE == 0}。
+     * OKVS映射值比特长度
      */
     protected final int l;
     /**
@@ -57,8 +58,9 @@ abstract class AbstractBinaryOkvs<T> implements BinaryOkvs<T> {
         // 二进制OKVS可以编码1个元素
         assert n > 0;
         this.n = n;
-        // 要求l > 统计安全常数，且l可以被Byte.SIZE整除
-        assert l >= CommonConstants.STATS_BIT_LENGTH && l % Byte.SIZE == 0;
+        // l >= σ
+        int minL = LongUtils.ceilLog2(n) + CommonConstants.STATS_BIT_LENGTH;
+        assert l >= minL : "l must be greater than or equal to " + minL + ": " + l;
         this.l = l;
         byteL = CommonUtils.getByteLength(l);
         // 要求m >= n，且m可以被Byte.SIZE整除

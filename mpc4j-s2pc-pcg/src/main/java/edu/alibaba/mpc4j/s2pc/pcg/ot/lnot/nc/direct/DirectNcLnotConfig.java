@@ -33,9 +33,9 @@ public class DirectNcLnotConfig implements NcLnotConfig {
     }
 
     @Override
-    public int maxNum(int l) {
+    public int maxNum() {
         // In theory, LCOT can support arbitrary num. Here we limit the max num in case of memory exception.
-        return (int) Math.floor((double) (1 << 24) / l);
+        return 1 << 24;
     }
 
     @Override

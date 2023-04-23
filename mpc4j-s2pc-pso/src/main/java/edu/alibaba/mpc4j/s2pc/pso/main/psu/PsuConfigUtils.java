@@ -129,8 +129,8 @@ public class PsuConfigUtils {
         } else {
             return new Zcl22SkePsuConfig.Builder()
                 .setCoreCotConfig(CoreCotFactory.createDefaultConfig(SecurityModel.SEMI_HONEST))
-                .setOprpConfig(OprpFactory.createDefaultConfig(SecurityModel.SEMI_HONEST))
-                .setBcConfig(BcFactory.createDefaultConfig(SecurityModel.SEMI_HONEST))
+                .setOprpConfig(OprpFactory.createDefaultConfig(SecurityModel.SEMI_HONEST, true))
+                .setBcConfig(BcFactory.createDefaultConfig(SecurityModel.SEMI_HONEST, true))
                 .setGf2eOvdmType(Gf2eOvdmType.H3_SINGLETON_GCT)
                 .build();
         }

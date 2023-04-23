@@ -10,8 +10,8 @@ import edu.alibaba.mpc4j.common.tool.bitvector.BitVectorFactory;
 import edu.alibaba.mpc4j.common.tool.galoisfield.zl.Zl;
 import edu.alibaba.mpc4j.common.tool.galoisfield.zl.ZlFactory;
 import edu.alibaba.mpc4j.crypto.matrix.vector.ZlVector;
-import edu.alibaba.mpc4j.s2pc.aby.basics.ac.zl.SquareShareZlVector;
-import edu.alibaba.mpc4j.s2pc.aby.basics.bc.SquareShareZ2Vector;
+import edu.alibaba.mpc4j.s2pc.aby.basics.ac.zl.SquareZlVector;
+import edu.alibaba.mpc4j.s2pc.aby.basics.bc.SquareZ2Vector;
 import edu.alibaba.mpc4j.s2pc.aby.circuit.mux.zl.ZlMuxFactory.ZlMuxType;
 import edu.alibaba.mpc4j.s2pc.aby.circuit.mux.zl.rrg21.Rrg21ZlMuxConfig;
 import edu.alibaba.mpc4j.s2pc.aby.circuit.mux.zl.rrk20.Rrk20ZlMuxConfig;
@@ -78,15 +78,15 @@ public class ZlMuxTest {
     }
 
     /**
-     * 发送方
+     * the sender RPC
      */
     private final Rpc senderRpc;
     /**
-     * 接收方
+     * the receiver RPC
      */
     private final Rpc receiverRpc;
     /**
-     * 协议类型
+     * the config
      */
     private final ZlMuxConfig config;
 
@@ -156,12 +156,12 @@ public class ZlMuxTest {
         // create inputs
         BitVector x0 = BitVectorFactory.createRandom(num, SECURE_RANDOM);
         BitVector x1 = BitVectorFactory.createRandom(num, SECURE_RANDOM);
-        SquareShareZ2Vector shareX0 = SquareShareZ2Vector.create(x0, false);
-        SquareShareZ2Vector shareX1 = SquareShareZ2Vector.create(x1, false);
+        SquareZ2Vector shareX0 = SquareZ2Vector.create(x0, false);
+        SquareZ2Vector shareX1 = SquareZ2Vector.create(x1, false);
         ZlVector y0 = ZlVector.createRandom(zl, num, SECURE_RANDOM);
         ZlVector y1 = ZlVector.createRandom(zl, num, SECURE_RANDOM);
-        SquareShareZlVector shareY0 = SquareShareZlVector.create(y0, false);
-        SquareShareZlVector shareY1 = SquareShareZlVector.create(y1, false);
+        SquareZlVector shareY0 = SquareZlVector.create(y0, false);
+        SquareZlVector shareY1 = SquareZlVector.create(y1, false);
         // init the protocol
         ZlMuxParty sender = ZlMuxFactory.createSender(senderRpc, receiverRpc.ownParty(), config);
         ZlMuxParty receiver = ZlMuxFactory.createReceiver(receiverRpc, senderRpc.ownParty(), config);
@@ -185,8 +185,8 @@ public class ZlMuxTest {
             long receiverByteLength = receiverRpc.getSendByteLength();
             senderRpc.reset();
             receiverRpc.reset();
-            SquareShareZlVector shareZ0 = senderThread.getShareZ0();
-            SquareShareZlVector shareZ1 = receiverThread.getShareZ1();
+            SquareZlVector shareZ0 = senderThread.getShareZ0();
+            SquareZlVector shareZ1 = receiverThread.getShareZ1();
             // verify
             assertOutput(x0, x1, y0, y1, shareZ0, shareZ1);
             LOGGER.info("Sender sends {}B, Receiver sends {}B, time = {}ms",
@@ -201,7 +201,7 @@ public class ZlMuxTest {
     }
 
     private void assertOutput(BitVector x0, BitVector x1, ZlVector y0, ZlVector y1,
-                              SquareShareZlVector shareZ0, SquareShareZlVector shareZ1) {
+                              SquareZlVector shareZ0, SquareZlVector shareZ1) {
         int num = x0.bitNum();
         Assert.assertEquals(num, shareZ0.getNum());
         Assert.assertEquals(num, shareZ1.getNum());

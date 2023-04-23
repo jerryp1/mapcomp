@@ -7,7 +7,7 @@ import edu.alibaba.mpc4j.common.tool.crypto.crhf.CrhfFactory.CrhfType;
 import edu.alibaba.mpc4j.common.tool.utils.BinaryUtils;
 import edu.alibaba.mpc4j.common.tool.utils.BytesUtils;
 import edu.alibaba.mpc4j.common.tool.utils.IntUtils;
-import edu.alibaba.mpc4j.s2pc.aby.basics.bc.SquareShareZ2Vector;
+import edu.alibaba.mpc4j.s2pc.aby.basics.bc.SquareZ2Vector;
 import edu.alibaba.mpc4j.s2pc.aby.hamming.AbstractHammingParty;
 import edu.alibaba.mpc4j.s2pc.aby.hamming.bcp13.Bcp13ShHammingPtoDesc.PtoStep;
 import edu.alibaba.mpc4j.s2pc.pcg.ot.cot.*;
@@ -53,7 +53,7 @@ public class Bcp13ShHammingReceiver extends AbstractHammingParty {
     }
 
     @Override
-    public void sendHammingDistance(SquareShareZ2Vector x1) throws MpcAbortException {
+    public void sendHammingDistance(SquareZ2Vector x1) throws MpcAbortException {
         setPtoInput(x1);
         logPhaseInfo(PtoState.PTO_BEGIN, "Receiver sends hamming distance");
 
@@ -75,7 +75,7 @@ public class Bcp13ShHammingReceiver extends AbstractHammingParty {
     }
 
     @Override
-    public int receiveHammingDistance(SquareShareZ2Vector x1) throws MpcAbortException {
+    public int receiveHammingDistance(SquareZ2Vector x1) throws MpcAbortException {
         setPtoInput(x1);
         logPhaseInfo(PtoState.PTO_BEGIN, "Receiver receives hamming distance");
 
@@ -99,9 +99,9 @@ public class Bcp13ShHammingReceiver extends AbstractHammingParty {
         return hammingDistance;
     }
 
-    private int executeOtSteps(SquareShareZ2Vector x0) throws MpcAbortException {
+    private int executeOtSteps(SquareZ2Vector x0) throws MpcAbortException {
         stopWatch.start();
-        boolean[] ys = BinaryUtils.byteArrayToBinary(x0.getBytes(), bitNum);
+        boolean[] ys = BinaryUtils.byteArrayToBinary(x0.getBitVector().getBytes(), bitNum);
         stopWatch.stop();
         long ysTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
         stopWatch.reset();

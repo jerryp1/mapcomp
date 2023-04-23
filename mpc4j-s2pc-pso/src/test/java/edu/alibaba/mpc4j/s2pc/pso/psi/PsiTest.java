@@ -171,7 +171,7 @@ public class PsiTest {
         testPto(LARGE_SIZE, LARGE_SIZE, true);
     }
 
-    private void testPto(int serverSize, int clientSize, boolean parallel) {
+    private void testPto(int serverSetSize, int clientSetSize, boolean parallel) {
         PsiServer<ByteBuffer> server = PsiFactory.createServer(serverRpc, clientRpc.ownParty(), config);
         PsiClient<ByteBuffer> client = PsiFactory.createClient(clientRpc, serverRpc.ownParty(), config);
         server.setParallel(parallel);
@@ -181,10 +181,10 @@ public class PsiTest {
         client.setTaskId(randomTaskId);
         try {
             LOGGER.info("-----test {}，server_size = {}，client_size = {}-----",
-                server.getPtoDesc().getPtoName(), serverSize, clientSize
+                server.getPtoDesc().getPtoName(), serverSetSize, clientSetSize
             );
             // 生成集合
-            ArrayList<Set<ByteBuffer>> sets = PsoUtils.generateBytesSets(serverSize, clientSize, ELEMENT_BYTE_LENGTH);
+            ArrayList<Set<ByteBuffer>> sets = PsoUtils.generateBytesSets(serverSetSize, clientSetSize, ELEMENT_BYTE_LENGTH);
             Set<ByteBuffer> serverSet = sets.get(0);
             Set<ByteBuffer> clientSet = sets.get(1);
             // 构建线程

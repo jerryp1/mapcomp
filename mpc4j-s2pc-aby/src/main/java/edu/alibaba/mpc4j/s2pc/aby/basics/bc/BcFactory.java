@@ -11,6 +11,7 @@ import edu.alibaba.mpc4j.s2pc.aby.basics.bc.rrg21.Rrg21BcConfig;
 import edu.alibaba.mpc4j.s2pc.aby.basics.bc.rrg21.Rrg21BcReceiver;
 import edu.alibaba.mpc4j.s2pc.aby.basics.bc.rrg21.Rrg21BcSender;
 import edu.alibaba.mpc4j.s2pc.pcg.mtg.z2.Z2MtgFactory;
+import edu.alibaba.mpc4j.s2pc.pcg.ot.cot.CotFactory;
 
 /**
  * Boolean circuit factory.
@@ -81,21 +82,25 @@ public class BcFactory implements PtoFactory {
     }
 
     /**
-     * 创建默认协议配置项。
+     * Creates a default config.
      *
-     * @param securityModel 安全模型。
-     * @return 默认协议配置项。
+     * @param securityModel the security model.
+     * @param silent if using a silent protocol.
+     * @return a default config.
      */
-    public static BcConfig createDefaultConfig(SecurityModel securityModel) {
+    public static BcConfig createDefaultConfig(SecurityModel securityModel, boolean silent) {
         switch (securityModel) {
             case IDEAL:
-                return new Bea91BcConfig.Builder()
-                    .setZ2MtgConfig(Z2MtgFactory.createDefaultConfig(SecurityModel.IDEAL))
-                    .build();
             case SEMI_HONEST:
-                return new Bea91BcConfig.Builder()
-                    .setZ2MtgConfig(Z2MtgFactory.createDefaultConfig(SecurityModel.SEMI_HONEST))
-                    .build();
+                if (silent) {
+                    return new Bea91BcConfig.Builder()
+                        .setZ2MtgConfig(Z2MtgFactory.createDefaultConfig(securityModel, true))
+                        .build();
+                } else {
+                    return new Rrg21BcConfig.Builder()
+                        .setCotConfig(CotFactory.createDefaultConfig(securityModel, false))
+                        .build();
+                }
             case COVERT:
             case MALICIOUS:
             default:

@@ -1,10 +1,17 @@
 package edu.alibaba.mpc4j.s2pc.pir.batchindex.vectorizedpir;
 
 import edu.alibaba.mpc4j.common.tool.CommonConstants;
+import edu.alibaba.mpc4j.common.tool.MathPreconditions;
+import edu.alibaba.mpc4j.common.tool.utils.IntUtils;
+import edu.alibaba.mpc4j.s2pc.pir.PirUtils;
 import edu.alibaba.mpc4j.s2pc.pir.index.IndexPirParams;
 
+import java.nio.ByteBuffer;
+import java.util.HashMap;
+import java.util.Map;
+
 /**
- * Vectorized PIR协议参数。
+ * Vectorized Batch PIR协议参数。
  *
  * @author Liqiang Peng
  * @date 2023/3/6
@@ -24,39 +31,326 @@ public class Mr23BatchIndexPirParams implements IndexPirParams {
      */
     private final int polyModulusDegree;
     /**
-     * 维数
-     */
-    private final int dimension;
-    /**
      * SEAL上下文参数
      */
     private final byte[] encryptionParams;
     /**
-     * 哈希个数
+     * 哈希数目
      */
     private final int hashNum;
+    /**
+     * 前两维长度
+     */
+    private final int firstTwoDimensionSize;
+    /**
+     * 第三维长度
+     */
+    private final int thirdDimensionSize;
+    /**
+     * max retrieval size
+     */
+    private final int maxRetrievalSize;
 
     public Mr23BatchIndexPirParams(int polyModulusDegree, int plainModulusBitLength, int[] coeffModulusBitLength,
-                                   int dimension, int hashNum) {
+                                   int firstTwoDimensionSize, int thirdDimensionSize, int hashNum, int maxRetrievalSize) {
         this.polyModulusDegree = polyModulusDegree;
         this.plainModulusBitLength = plainModulusBitLength;
-        this.dimension = dimension;
+        assert firstTwoDimensionSize == PirUtils.getNextPowerOfTwo(firstTwoDimensionSize);
+        this.firstTwoDimensionSize = firstTwoDimensionSize;
+        this.thirdDimensionSize = thirdDimensionSize;
         // 生成加密方案参数
         this.encryptionParams = Mr23BatchIndexPirNativeUtils.generateSealContext(
             polyModulusDegree, plainModulusBitLength, coeffModulusBitLength
         );
         this.hashNum = hashNum;
+        this.maxRetrievalSize = maxRetrievalSize;
+    }
+
+    public static Mr23BatchIndexPirParams getParams(int elementSize, int retrievalSize) {
+        MathPreconditions.checkPositive("elementSize", elementSize);
+        MathPreconditions.checkPositive("retrievalSize", retrievalSize);
+        int logElementSize = PirUtils.getBitLength(elementSize - 1);
+        if (logElementSize <= 20) {
+            logElementSize = 20;
+        } else if (logElementSize <= 22) {
+            logElementSize = 22;
+        } else if (logElementSize <= 24) {
+            logElementSize = 24;
+        } else {
+            return null;
+        }
+        int logRetrievalSize = PirUtils.getBitLength(retrievalSize - 1);
+        if (logRetrievalSize < 4) {
+            logRetrievalSize = 4;
+        } else if (logRetrievalSize > 11) {
+            return null;
+        }
+        Map<ByteBuffer, Mr23BatchIndexPirParams> paramsMap = new HashMap<>();
+        paramsMap.put(ByteBuffer.wrap(IntUtils.intArrayToByteArray(new int[]{20, 4})), ELEMENT_LOG_SIZE_20_RETRIEVAL_SIZE_16);
+        paramsMap.put(ByteBuffer.wrap(IntUtils.intArrayToByteArray(new int[]{20, 5})), ELEMENT_LOG_SIZE_20_RETRIEVAL_SIZE_32);
+        paramsMap.put(ByteBuffer.wrap(IntUtils.intArrayToByteArray(new int[]{20, 6})), ELEMENT_LOG_SIZE_20_RETRIEVAL_SIZE_64);
+        paramsMap.put(ByteBuffer.wrap(IntUtils.intArrayToByteArray(new int[]{20, 7})), ELEMENT_LOG_SIZE_20_RETRIEVAL_SIZE_128);
+        paramsMap.put(ByteBuffer.wrap(IntUtils.intArrayToByteArray(new int[]{20, 8})), ELEMENT_LOG_SIZE_20_RETRIEVAL_SIZE_256);
+        paramsMap.put(ByteBuffer.wrap(IntUtils.intArrayToByteArray(new int[]{20, 9})), ELEMENT_LOG_SIZE_20_RETRIEVAL_SIZE_512);
+        paramsMap.put(ByteBuffer.wrap(IntUtils.intArrayToByteArray(new int[]{20, 10})), ELEMENT_LOG_SIZE_20_RETRIEVAL_SIZE_1024);
+        paramsMap.put(ByteBuffer.wrap(IntUtils.intArrayToByteArray(new int[]{20, 11})), ELEMENT_LOG_SIZE_20_RETRIEVAL_SIZE_2048);
+        paramsMap.put(ByteBuffer.wrap(IntUtils.intArrayToByteArray(new int[]{22, 4})), ELEMENT_LOG_SIZE_22_RETRIEVAL_SIZE_16);
+        paramsMap.put(ByteBuffer.wrap(IntUtils.intArrayToByteArray(new int[]{22, 5})), ELEMENT_LOG_SIZE_22_RETRIEVAL_SIZE_32);
+        paramsMap.put(ByteBuffer.wrap(IntUtils.intArrayToByteArray(new int[]{22, 6})), ELEMENT_LOG_SIZE_22_RETRIEVAL_SIZE_64);
+        paramsMap.put(ByteBuffer.wrap(IntUtils.intArrayToByteArray(new int[]{22, 7})), ELEMENT_LOG_SIZE_22_RETRIEVAL_SIZE_128);
+        paramsMap.put(ByteBuffer.wrap(IntUtils.intArrayToByteArray(new int[]{22, 8})), ELEMENT_LOG_SIZE_22_RETRIEVAL_SIZE_256);
+        paramsMap.put(ByteBuffer.wrap(IntUtils.intArrayToByteArray(new int[]{22, 9})), ELEMENT_LOG_SIZE_22_RETRIEVAL_SIZE_512);
+        paramsMap.put(ByteBuffer.wrap(IntUtils.intArrayToByteArray(new int[]{22, 10})), ELEMENT_LOG_SIZE_22_RETRIEVAL_SIZE_1024);
+        paramsMap.put(ByteBuffer.wrap(IntUtils.intArrayToByteArray(new int[]{22, 11})), ELEMENT_LOG_SIZE_22_RETRIEVAL_SIZE_2048);
+        paramsMap.put(ByteBuffer.wrap(IntUtils.intArrayToByteArray(new int[]{24, 4})), ELEMENT_LOG_SIZE_24_RETRIEVAL_SIZE_16);
+        paramsMap.put(ByteBuffer.wrap(IntUtils.intArrayToByteArray(new int[]{24, 5})), ELEMENT_LOG_SIZE_24_RETRIEVAL_SIZE_32);
+        paramsMap.put(ByteBuffer.wrap(IntUtils.intArrayToByteArray(new int[]{24, 6})), ELEMENT_LOG_SIZE_24_RETRIEVAL_SIZE_64);
+        paramsMap.put(ByteBuffer.wrap(IntUtils.intArrayToByteArray(new int[]{24, 7})), ELEMENT_LOG_SIZE_24_RETRIEVAL_SIZE_128);
+        paramsMap.put(ByteBuffer.wrap(IntUtils.intArrayToByteArray(new int[]{24, 8})), ELEMENT_LOG_SIZE_24_RETRIEVAL_SIZE_256);
+        paramsMap.put(ByteBuffer.wrap(IntUtils.intArrayToByteArray(new int[]{24, 9})), ELEMENT_LOG_SIZE_24_RETRIEVAL_SIZE_512);
+        paramsMap.put(ByteBuffer.wrap(IntUtils.intArrayToByteArray(new int[]{24, 10})), ELEMENT_LOG_SIZE_24_RETRIEVAL_SIZE_1024);
+        paramsMap.put(ByteBuffer.wrap(IntUtils.intArrayToByteArray(new int[]{24, 11})), ELEMENT_LOG_SIZE_24_RETRIEVAL_SIZE_2048);
+        return paramsMap.get(ByteBuffer.wrap(IntUtils.intArrayToByteArray(new int[]{logElementSize, logRetrievalSize})));
     }
 
     /**
-     * 默认参数
+     * 2^20，适合分桶数目16
      */
-    public static Mr23BatchIndexPirParams DEFAULT_PARAMS = new Mr23BatchIndexPirParams(
+    public static Mr23BatchIndexPirParams ELEMENT_LOG_SIZE_20_RETRIEVAL_SIZE_16 = new Mr23BatchIndexPirParams(
         8192,
         20,
-        new int[]{60, 55, 55, 55},
-        3,
-        3
+        new int[]{30, 40, 40, 40, 50},
+        128, 9, 3, 16
+    );
+
+    /**
+     * 2^20，适合分桶数目32
+     */
+    public static Mr23BatchIndexPirParams ELEMENT_LOG_SIZE_20_RETRIEVAL_SIZE_32 = new Mr23BatchIndexPirParams(
+        8192,
+        20,
+        new int[]{30, 40, 40, 40, 50},
+        128, 5, 3, 32
+    );
+
+    /**
+     * 2^20，适合分桶数目64
+     */
+    public static Mr23BatchIndexPirParams ELEMENT_LOG_SIZE_20_RETRIEVAL_SIZE_64 = new Mr23BatchIndexPirParams(
+        8192,
+        20,
+        new int[]{30, 40, 40, 40, 50},
+        64, 9, 3, 64
+    );
+
+    /**
+     * 2^20，适合分桶数目128
+     */
+    public static Mr23BatchIndexPirParams ELEMENT_LOG_SIZE_20_RETRIEVAL_SIZE_128 = new Mr23BatchIndexPirParams(
+        8192,
+        20,
+        new int[]{30, 40, 40, 40, 50},
+        64, 5, 3, 128
+    );
+
+    /**
+     * 2^20，适合分桶数目256
+     */
+    public static Mr23BatchIndexPirParams ELEMENT_LOG_SIZE_20_RETRIEVAL_SIZE_256 = new Mr23BatchIndexPirParams(
+        8192,
+        20,
+        new int[]{30, 40, 40, 40, 50},
+        32, 9, 3, 256
+    );
+
+    /**
+     * 2^20，适合分桶数目512
+     */
+    public static Mr23BatchIndexPirParams ELEMENT_LOG_SIZE_20_RETRIEVAL_SIZE_512 = new Mr23BatchIndexPirParams(
+        8192,
+        20,
+        new int[]{52, 52, 52, 52},
+        32, 5, 3, 512
+    );
+
+    /**
+     * 2^20，适合分桶数目1024
+     */
+    public static Mr23BatchIndexPirParams ELEMENT_LOG_SIZE_20_RETRIEVAL_SIZE_1024 = new Mr23BatchIndexPirParams(
+        8192,
+        20,
+        new int[]{52, 52, 52, 52},
+        16, 9, 3, 1024
+    );
+
+    /**
+     * 2^20，适合分桶数目2048
+     */
+    public static Mr23BatchIndexPirParams ELEMENT_LOG_SIZE_20_RETRIEVAL_SIZE_2048 = new Mr23BatchIndexPirParams(
+        8192,
+        20,
+        new int[]{52, 52, 52, 52},
+        16, 5, 3, 2048
+    );
+
+    /**
+     * 2^22，适合分桶数目16
+     */
+    public static Mr23BatchIndexPirParams ELEMENT_LOG_SIZE_22_RETRIEVAL_SIZE_16 = new Mr23BatchIndexPirParams(
+        8192,
+        20,
+        new int[]{52, 52, 52, 52},
+        256, 9, 3, 16
+    );
+
+    /**
+     * 2^22，适合分桶数目32
+     */
+    public static Mr23BatchIndexPirParams ELEMENT_LOG_SIZE_22_RETRIEVAL_SIZE_32 = new Mr23BatchIndexPirParams(
+        8192,
+        20,
+        new int[]{52, 52, 52, 52},
+        256, 5, 3, 32
+    );
+
+    /**
+     * 2^22，适合分桶数目64
+     */
+    public static Mr23BatchIndexPirParams ELEMENT_LOG_SIZE_22_RETRIEVAL_SIZE_64 = new Mr23BatchIndexPirParams(
+        8192,
+        20,
+        new int[]{52, 52, 52, 52},
+        128, 9, 3, 64
+    );
+
+    /**
+     * 2^22，适合分桶数目128
+     */
+    public static Mr23BatchIndexPirParams ELEMENT_LOG_SIZE_22_RETRIEVAL_SIZE_128 = new Mr23BatchIndexPirParams(
+        8192,
+        20,
+        new int[]{52, 52, 52, 52},
+        128, 5, 3, 128
+    );
+
+    /**
+     * 2^22，适合分桶数目256
+     */
+    public static Mr23BatchIndexPirParams ELEMENT_LOG_SIZE_22_RETRIEVAL_SIZE_256 = new Mr23BatchIndexPirParams(
+        8192,
+        20,
+        new int[]{52, 52, 52, 52},
+        64, 9, 3, 256
+    );
+
+    /**
+     * 2^22，适合分桶数目512
+     */
+    public static Mr23BatchIndexPirParams ELEMENT_LOG_SIZE_22_RETRIEVAL_SIZE_512 = new Mr23BatchIndexPirParams(
+        8192,
+        20,
+        new int[]{52, 52, 52, 52},
+        64, 5, 3, 512
+    );
+
+    /**
+     * 2^22，适合分桶数目1024
+     */
+    public static Mr23BatchIndexPirParams ELEMENT_LOG_SIZE_22_RETRIEVAL_SIZE_1024 = new Mr23BatchIndexPirParams(
+        8192,
+        20,
+        new int[]{52, 52, 52, 52},
+        32, 9, 3, 1024
+    );
+
+    /**
+     * 2^22，适合分桶数目2048
+     */
+    public static Mr23BatchIndexPirParams ELEMENT_LOG_SIZE_22_RETRIEVAL_SIZE_2048 = new Mr23BatchIndexPirParams(
+        8192,
+        20,
+        new int[]{52, 52, 52, 52},
+        32, 5, 3, 2048
+    );
+
+    /**
+     * 2^24，适合分桶数目16
+     */
+    public static Mr23BatchIndexPirParams ELEMENT_LOG_SIZE_24_RETRIEVAL_SIZE_16 = new Mr23BatchIndexPirParams(
+        8192,
+        20,
+        new int[]{52, 52, 52, 52},
+        512, 9, 3, 16
+    );
+
+    /**
+     * 2^24，适合分桶数目32
+     */
+    public static Mr23BatchIndexPirParams ELEMENT_LOG_SIZE_24_RETRIEVAL_SIZE_32 = new Mr23BatchIndexPirParams(
+        8192,
+        20,
+        new int[]{52, 52, 52, 52},
+        512, 5, 3, 32
+    );
+
+    /**
+     * 2^24，适合分桶数目64
+     */
+    public static Mr23BatchIndexPirParams ELEMENT_LOG_SIZE_24_RETRIEVAL_SIZE_64 = new Mr23BatchIndexPirParams(
+        8192,
+        20,
+        new int[]{52, 52, 52, 52},
+        256, 9, 3, 64
+    );
+
+    /**
+     * 2^24，适合分桶数目128
+     */
+    public static Mr23BatchIndexPirParams ELEMENT_LOG_SIZE_24_RETRIEVAL_SIZE_128 = new Mr23BatchIndexPirParams(
+        8192,
+        20,
+        new int[]{52, 52, 52, 52},
+        256, 5, 3, 128
+    );
+
+    /**
+     * 2^24，适合分桶数目256
+     */
+    public static Mr23BatchIndexPirParams ELEMENT_LOG_SIZE_24_RETRIEVAL_SIZE_256 = new Mr23BatchIndexPirParams(
+        8192,
+        20,
+        new int[]{52, 52, 52, 52},
+        128, 9, 3, 256
+    );
+
+    /**
+     * 2^24，适合分桶数目512
+     */
+    public static Mr23BatchIndexPirParams ELEMENT_LOG_SIZE_24_RETRIEVAL_SIZE_512 = new Mr23BatchIndexPirParams(
+        8192,
+        20,
+        new int[]{52, 52, 52, 52},
+        128, 5, 3, 512
+    );
+
+    /**
+     * 2^24，适合分桶数目1024
+     */
+    public static Mr23BatchIndexPirParams ELEMENT_LOG_SIZE_24_RETRIEVAL_SIZE_1024 = new Mr23BatchIndexPirParams(
+        8192,
+        20,
+        new int[]{52, 52, 52, 52},
+        64, 9, 3, 1024
+    );
+
+    /**
+     * 2^24，适合分桶数目2048
+     */
+    public static Mr23BatchIndexPirParams ELEMENT_LOG_SIZE_24_RETRIEVAL_SIZE_2048 = new Mr23BatchIndexPirParams(
+        8192,
+        20,
+        new int[]{52, 52, 52, 52},
+        64, 5, 3, 2048
     );
 
     @Override
@@ -71,7 +365,7 @@ public class Mr23BatchIndexPirParams implements IndexPirParams {
 
     @Override
     public int getDimension() {
-        return dimension;
+        return 3;
     }
 
     @Override
@@ -87,7 +381,24 @@ public class Mr23BatchIndexPirParams implements IndexPirParams {
             " - size of plaintext modulus : " + plainModulusBitLength;
     }
 
+    public int getFirstTwoDimensionSize() {
+        return firstTwoDimensionSize;
+    }
+
+    public int getThirdDimensionSize() {
+        return thirdDimensionSize;
+    }
+
+    /**
+     * 返回哈希数目。
+     *
+     * @return 哈希数目。
+     */
     public int getHashNum() {
         return hashNum;
+    }
+
+    public int getMaxRetrievalSize() {
+        return maxRetrievalSize;
     }
 }

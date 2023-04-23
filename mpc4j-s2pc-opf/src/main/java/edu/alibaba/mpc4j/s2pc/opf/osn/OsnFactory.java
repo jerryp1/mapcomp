@@ -10,14 +10,15 @@ import edu.alibaba.mpc4j.s2pc.opf.osn.ms13.Ms13OsnConfig;
 import edu.alibaba.mpc4j.s2pc.opf.osn.ms13.Ms13OsnReceiver;
 import edu.alibaba.mpc4j.s2pc.opf.osn.ms13.Ms13OsnSender;
 import edu.alibaba.mpc4j.s2pc.opf.osn.gmr21.Gmr21OsnSender;
+import edu.alibaba.mpc4j.s2pc.pcg.ot.cot.CotFactory;
 
 /**
  * OSN协议工厂。
- *
+ * <p>
  * 不经意交换网络（Oblivious Switching Network）协议定义来自于下述论文附录A.3：
  * Garimella G, Mohassel P, Rosulek M, et al. Private Set Operations from Oblivious Switching. PKC 2021, Springer,
  * Cham, pp. 591-617.
- *
+ * <p>
  * 不经意交换网络协议：
  * - 发送方输入：待交换位置的原数据；接收方输入：交换网络S。
  * - 发送方输出：秘密分享的交换结果。接收方输出：秘密分享的交换结果。
@@ -59,9 +60,9 @@ public class OsnFactory implements PtoFactory {
         OsnType type = config.getPtoType();
         switch (type) {
             case MS13:
-                return new Ms13OsnSender(senderRpc, receiverParty, (Ms13OsnConfig)config);
+                return new Ms13OsnSender(senderRpc, receiverParty, (Ms13OsnConfig) config);
             case GMR21:
-                return new Gmr21OsnSender(senderRpc, receiverParty,(Gmr21OsnConfig)config);
+                return new Gmr21OsnSender(senderRpc, receiverParty, (Gmr21OsnConfig) config);
             default:
                 throw new IllegalArgumentException("Invalid " + OsnType.class.getSimpleName() + ": " + type.name());
         }
@@ -79,25 +80,28 @@ public class OsnFactory implements PtoFactory {
         OsnType type = config.getPtoType();
         switch (type) {
             case MS13:
-                return new Ms13OsnReceiver(receiverRpc, senderParty, (Ms13OsnConfig)config);
+                return new Ms13OsnReceiver(receiverRpc, senderParty, (Ms13OsnConfig) config);
             case GMR21:
-                return new Gmr21OsnReceiver(receiverRpc, senderParty, (Gmr21OsnConfig)config);
+                return new Gmr21OsnReceiver(receiverRpc, senderParty, (Gmr21OsnConfig) config);
             default:
                 throw new IllegalArgumentException("Invalid " + OsnType.class.getSimpleName() + ": " + type.name());
         }
     }
 
     /**
-     * 创建默认协议配置项。
+     * Creates a default config.
      *
-     * @param securityModel 安全模型。
-     * @return 默认协议配置项。
+     * @param securityModel the security model.
+     * @param silent        if using a silent config.
+     * @return a default config.
      */
-    public static OsnConfig createDefaultConfig(SecurityModel securityModel) {
+    public static OsnConfig createDefaultConfig(SecurityModel securityModel, boolean silent) {
         switch (securityModel) {
             case IDEAL:
             case SEMI_HONEST:
-                return new Gmr21OsnConfig.Builder().build();
+                return new Gmr21OsnConfig.Builder()
+                    .setCotConfig(CotFactory.createDefaultConfig(securityModel, silent))
+                    .build();
             case COVERT:
             case MALICIOUS:
             default:

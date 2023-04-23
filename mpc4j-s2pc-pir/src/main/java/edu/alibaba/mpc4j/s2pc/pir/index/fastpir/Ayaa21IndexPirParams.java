@@ -30,7 +30,6 @@ public class Ayaa21IndexPirParams implements IndexPirParams {
      */
     private final byte[] encryptionParams;
 
-
     public Ayaa21IndexPirParams(int polyModulusDegree, long plainModulus, long[] coeffModulus) {
         this.polyModulusDegree = polyModulusDegree;
         this.plainModulusBitLength = BigInteger.valueOf(plainModulus).bitLength() - 1;

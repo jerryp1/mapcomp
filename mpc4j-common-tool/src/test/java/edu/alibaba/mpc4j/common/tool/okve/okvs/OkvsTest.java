@@ -29,7 +29,7 @@ public class OkvsTest {
     /**
      * default L
      */
-    private static final int DEFAULT_L = CommonConstants.STATS_BIT_LENGTH;
+    private static final int DEFAULT_L = 64;
     /**
      * the random state
      */
@@ -100,13 +100,6 @@ public class OkvsTest {
         // creates OKVS with l < σ
         Assert.assertThrows(AssertionError.class, () ->
             OkvsFactory.createInstance(EnvType.STANDARD, type, n, CommonConstants.STATS_BIT_LENGTH - 1, keys)
-        );
-        // create OKVS with l % Byte.SIZE != 0
-        Assert.assertThrows(AssertionError.class, () ->
-            OkvsFactory.createInstance(EnvType.STANDARD, type, n, DEFAULT_L - 1, keys)
-        );
-        Assert.assertThrows(AssertionError.class, () ->
-            OkvsFactory.createInstance(EnvType.STANDARD, type, n, DEFAULT_L + 1, keys)
         );
         // creates OKVS with n = 0
         Assert.assertThrows(AssertionError.class, () ->
@@ -183,6 +176,11 @@ public class OkvsTest {
         if (!type.equals(OkvsType.POLYNOMIAL)) {
             testOkvs(4096, DEFAULT_L);
         }
+    }
+
+    @Test
+    public void testSpecialL() {
+        testOkvs(DEFAULT_N, DEFAULT_L + 5);
     }
 
     @Test
