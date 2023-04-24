@@ -7,11 +7,14 @@ import edu.alibaba.mpc4j.common.rpc.impl.memory.MemoryRpcManager;
 import edu.alibaba.mpc4j.common.tool.CommonConstants;
 import edu.alibaba.mpc4j.common.tool.hashbin.object.cuckoo.CuckooHashBinFactory;
 import edu.alibaba.mpc4j.s2pc.pso.PsoUtils;
+import edu.alibaba.mpc4j.s2pc.pso.cpsi.ccpsi.CcpsiConfig;
+import edu.alibaba.mpc4j.s2pc.pso.cpsi.ccpsi.cgs22.Cgs22CcpsiConfig;
 import edu.alibaba.mpc4j.s2pc.pso.psi.*;
 import edu.alibaba.mpc4j.s2pc.pso.psi.hfh99.Hfh99ByteEccPsiConfig;
 import edu.alibaba.mpc4j.s2pc.pso.psi.hfh99.Hfh99EccPsiConfig;
 import edu.alibaba.mpc4j.s2pc.pso.psi.kkrt16.Kkrt16PsiConfig;
 import edu.alibaba.mpc4j.s2pc.pso.psic.cgt12.Cgt12EccPsicConfig;
+import edu.alibaba.mpc4j.s2pc.pso.psic.cpsic.CpsicConfig;
 import edu.alibaba.mpc4j.s2pc.pso.psic.hfh99.Hfh99EccPsicConfig;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.time.StopWatch;
@@ -83,6 +86,34 @@ public class PsicTest {
 				PsicFactory.PsicType.CGT12_ECC.name() + " (uncompress)",
 				new Cgt12EccPsicConfig.Builder().setCompressEncode(false).build(),
 		});
+
+		// CPSIC (PSTY19 + direct)
+		configurations.add(new Object[]{
+				PsicFactory.PsicType.CIRCUIT_PSIC.name() + " (PSTY19 + direct)",
+				new CpsicConfig.Builder(false).build(),
+		});
+
+		// CPSIC (PSTY19 + silent)
+		configurations.add(new Object[]{
+				PsicFactory.PsicType.CIRCUIT_PSIC.name() + " (PSTY19 + silent)",
+				new CpsicConfig.Builder(true).build(),
+		});
+
+		// CPSIC (CGS22 + silent)
+		configurations.add(new Object[]{
+				PsicFactory.PsicType.CIRCUIT_PSIC.name() + " (CGS22 + silent)",
+				new CpsicConfig.Builder(true).setCcpsiConfig(
+						new Cgs22CcpsiConfig.Builder(true).build()
+				).build(),
+		});
+		// CPSIC (CGS22 + direct)
+		configurations.add(new Object[]{
+				PsicFactory.PsicType.CIRCUIT_PSIC.name() + " (CGS22 + direct)",
+				new CpsicConfig.Builder(false).setCcpsiConfig(
+						new Cgs22CcpsiConfig.Builder(false).build()
+				).build(),
+		});
+
 
 		return configurations;
 	}

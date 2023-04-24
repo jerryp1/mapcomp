@@ -7,6 +7,9 @@ import edu.alibaba.mpc4j.s2pc.pso.psi.PsiFactory;
 import edu.alibaba.mpc4j.s2pc.pso.psic.cgt12.Cgt12EccPsicClient;
 import edu.alibaba.mpc4j.s2pc.pso.psic.cgt12.Cgt12EccPsicConfig;
 import edu.alibaba.mpc4j.s2pc.pso.psic.cgt12.Cgt12EccPsicServer;
+import edu.alibaba.mpc4j.s2pc.pso.psic.cpsic.CpsicClient;
+import edu.alibaba.mpc4j.s2pc.pso.psic.cpsic.CpsicConfig;
+import edu.alibaba.mpc4j.s2pc.pso.psic.cpsic.CpsicServer;
 import edu.alibaba.mpc4j.s2pc.pso.psic.hfh99.Hfh99EccPsicClient;
 import edu.alibaba.mpc4j.s2pc.pso.psic.hfh99.Hfh99EccPsicConfig;
 import edu.alibaba.mpc4j.s2pc.pso.psic.hfh99.Hfh99EccPsicServer;
@@ -38,14 +41,6 @@ public class PsicFactory implements PtoFactory {
 		 */
 		HFH99_BYTE_ECC,
 		/**
-		 * AES03 based on ECC
-		 */
-		AES03_ECC,
-		/**
-		 * AES03 based on Byte ECC
-		 */
-		AES03_BYTE_ECC,
-		/**
 		 * CGT12 based on ECC
 		 */
 		CGT12_ECC,
@@ -53,6 +48,11 @@ public class PsicFactory implements PtoFactory {
 		 * CGR12 based on Byte ECC
 		 */
 		CGR12_BYTE_ECC,
+
+		/**
+		 * Circuit PSI Cardinality
+		 */
+		CIRCUIT_PSIC
 	}
 
 	/**
@@ -70,8 +70,10 @@ public class PsicFactory implements PtoFactory {
 				return new Hfh99EccPsicServer<>(serverRpc, clientParty, (Hfh99EccPsicConfig) config);
 			case CGT12_ECC:
 				return new Cgt12EccPsicServer<>(serverRpc, clientParty, (Cgt12EccPsicConfig) config);
-			case HFH99_BYTE_ECC:
+			case CIRCUIT_PSIC:
+				return new CpsicServer<>(serverRpc, clientParty, (CpsicConfig) config);
 
+			case HFH99_BYTE_ECC:
 			default:
 				throw new IllegalArgumentException("Invalid " + PsiFactory.PsiType.class.getSimpleName() + ": " + type.name());
 		}
@@ -92,6 +94,8 @@ public class PsicFactory implements PtoFactory {
 				return new Hfh99EccPsicClient<>(clientRpc, serverParty, (Hfh99EccPsicConfig) config);
 			case CGT12_ECC:
 				return new Cgt12EccPsicClient<>(clientRpc, serverParty, (Cgt12EccPsicConfig) config);
+			case CIRCUIT_PSIC:
+				return new CpsicClient<>(clientRpc, serverParty, (CpsicConfig) config);
 			case HFH99_BYTE_ECC:
 			default:
 				throw new IllegalArgumentException("Invalid " + PsiFactory.PsiType.class.getSimpleName() + ": " + type.name());
