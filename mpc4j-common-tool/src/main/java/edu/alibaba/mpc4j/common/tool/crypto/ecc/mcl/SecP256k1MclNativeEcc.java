@@ -20,7 +20,7 @@ public class SecP256k1MclNativeEcc implements NativeEcc {
      * 单例模式
      */
     private SecP256k1MclNativeEcc() {
-        // empty
+        init();
     }
 
     public static SecP256k1MclNativeEcc getInstance() {

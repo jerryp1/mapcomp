@@ -38,7 +38,6 @@ public abstract class AbstractNativeEcc extends AbstractEcc implements AutoClose
         // 初始化窗口指针映射表
         windowHandlerMap = new HashMap<>();
         this.nativeEcc = nativeEcc;
-        nativeEcc.init();
     }
 
     @Override

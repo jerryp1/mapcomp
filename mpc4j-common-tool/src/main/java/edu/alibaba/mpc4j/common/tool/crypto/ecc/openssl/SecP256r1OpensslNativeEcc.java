@@ -20,7 +20,7 @@ public class SecP256r1OpensslNativeEcc implements NativeEcc {
      * 单例模式
      */
     private SecP256r1OpensslNativeEcc() {
-        // empty
+        init();
     }
 
     public static SecP256r1OpensslNativeEcc getInstance() {
