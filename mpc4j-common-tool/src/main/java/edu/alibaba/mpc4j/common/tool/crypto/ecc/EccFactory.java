@@ -90,7 +90,7 @@ public class EccFactory {
     public static Ecc createInstance(EnvType envType) {
         switch (envType) {
             case STANDARD:
-                return createInstance(EccType.SEC_P256_K1_MCL);
+                return createInstance(EccType.SEC_P256_R1_OPENSSL);
             case STANDARD_JDK:
                 return createInstance(EccType.SEC_P256_K1_BC);
             case INLAND:

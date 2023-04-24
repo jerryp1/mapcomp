@@ -1,5 +1,14 @@
 package edu.alibaba.mpc4j.s2pc.pcg.ot.base.np01;
 
+import edu.alibaba.mpc4j.common.rpc.*;
+import edu.alibaba.mpc4j.common.rpc.utils.DataPacket;
+import edu.alibaba.mpc4j.common.rpc.utils.DataPacketHeader;
+import edu.alibaba.mpc4j.common.tool.crypto.ecc.ByteEccFactory;
+import edu.alibaba.mpc4j.common.tool.crypto.ecc.ByteFullEcc;
+import edu.alibaba.mpc4j.s2pc.pcg.ot.base.AbstractBaseOtReceiver;
+import edu.alibaba.mpc4j.s2pc.pcg.ot.base.BaseOtReceiverOutput;
+import edu.alibaba.mpc4j.s2pc.pcg.ot.base.np01.Np01ByteBaseOtPtoDesc.PtoStep;
+
 import java.math.BigInteger;
 import java.nio.ByteBuffer;
 import java.util.List;
@@ -7,48 +16,33 @@ import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
-import edu.alibaba.mpc4j.common.rpc.*;
-import edu.alibaba.mpc4j.common.rpc.utils.DataPacket;
-import edu.alibaba.mpc4j.common.rpc.utils.DataPacketHeader;
-import edu.alibaba.mpc4j.common.tool.crypto.ecc.Ecc;
-import edu.alibaba.mpc4j.common.tool.crypto.ecc.EccFactory;
-import edu.alibaba.mpc4j.s2pc.pcg.ot.base.AbstractBaseOtReceiver;
-import edu.alibaba.mpc4j.s2pc.pcg.ot.base.BaseOtReceiverOutput;
-import edu.alibaba.mpc4j.s2pc.pcg.ot.base.np01.Np01BaseOtPtoDesc.PtoStep;
-import org.bouncycastle.math.ec.ECPoint;
-
 /**
- * NP01-基础OT协议接收方。
+ * NP01-字节基础OT协议接收方。
  *
  * @author Weiran Liu, Hanwen Feng
  * @date 2019/06/17
  */
-public class Np01BaseOtReceiver extends AbstractBaseOtReceiver {
+public class Np01ByteBaseOtReceiver extends AbstractBaseOtReceiver {
     /**
-     * 是否压缩表示
+     * byte full ECC
      */
-    private final boolean compressEncode;
-    /**
-     * 椭圆曲线
-     */
-    private final Ecc ecc;
+    private final ByteFullEcc byteFullEcc;
     /**
      * C
      */
-    private ECPoint c;
+    private byte[] c;
     /**
      * g^r
      */
-    private ECPoint g2r;
+    private byte[] g2r;
     /**
-     * 选择比特对应的消息
+     * random choice message
      */
     private byte[][] rbArray;
 
-    public Np01BaseOtReceiver(Rpc receiverRpc, Party senderParty, Np01BaseOtConfig config) {
-        super(Np01BaseOtPtoDesc.getInstance(), receiverRpc, senderParty, config);
-        compressEncode = config.getCompressEncode();
-        ecc = EccFactory.createInstance(envType);
+    public Np01ByteBaseOtReceiver(Rpc receiverRpc, Party senderParty, Np01ByteBaseOtConfig config) {
+        super(Np01ByteBaseOtPtoDesc.getInstance(), receiverRpc, senderParty, config);
+        byteFullEcc = ByteEccFactory.createFullInstance(envType);
     }
 
     @Override
@@ -97,8 +91,8 @@ public class Np01BaseOtReceiver extends AbstractBaseOtReceiver {
     private void handleInitPayload(List<byte[]> initPayload) throws MpcAbortException {
         MpcAbortPreconditions.checkArgument(initPayload.size() == 2);
         // 解包g^r、C
-        g2r = ecc.decode(initPayload.remove(0));
-        c = ecc.decode(initPayload.remove(0));
+        g2r = initPayload.remove(0);
+        c = initPayload.remove(0);
     }
 
     private List<byte[]> generatePkPayload() {
@@ -109,13 +103,13 @@ public class Np01BaseOtReceiver extends AbstractBaseOtReceiver {
         List<byte[]> receiverPayload = publicKeyIntStream
             .mapToObj(index -> {
                 // The receiver picks a random k
-                BigInteger k = ecc.randomZn(secureRandom);
+                BigInteger k = byteFullEcc.randomZn(secureRandom);
                 // The receiver sets public keys PK_{\sigma} = g^k
-                ECPoint pkSigma = ecc.multiply(ecc.getG(), k);
+                byte[] pkSigma = byteFullEcc.mul(byteFullEcc.getG(), k);
                 // and PK_{1 - \sigma} = C / PK_{\sigma}
-                ECPoint pkOneMinusSigma = ecc.add(c, ecc.negate(pkSigma));
+                byte[] pkOneMinusSigma = byteFullEcc.add(c, byteFullEcc.neg(pkSigma));
                 // 存储OT的密钥key=H(index,g^rk)
-                byte[] kInputByteArray = ecc.encode(ecc.multiply(g2r, k), false);
+                byte[] kInputByteArray = byteFullEcc.mul(g2r, k);
                 rbArray[index] = kdf.deriveKey(ByteBuffer
                     .allocate(Integer.BYTES + kInputByteArray.length)
                     .putInt(index).put(kInputByteArray)
@@ -123,7 +117,6 @@ public class Np01BaseOtReceiver extends AbstractBaseOtReceiver {
                 // 返回密钥
                 return choices[index] ? pkOneMinusSigma : pkSigma;
             })
-            .map(pk -> ecc.encode(pk, compressEncode))
             .collect(Collectors.toList());
         c = null;
         g2r = null;

@@ -11,6 +11,7 @@ import edu.alibaba.mpc4j.s2pc.pcg.ot.base.csw20.Csw20BaseOtConfig;
 import edu.alibaba.mpc4j.s2pc.pcg.ot.base.mr19.Mr19EccBaseOtConfig;
 import edu.alibaba.mpc4j.s2pc.pcg.ot.base.mr19.Mr19KyberBaseOtConfig;
 import edu.alibaba.mpc4j.s2pc.pcg.ot.base.np01.Np01BaseOtConfig;
+import edu.alibaba.mpc4j.s2pc.pcg.ot.base.np01.Np01ByteBaseOtConfig;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.time.StopWatch;
 import org.junit.After;
@@ -49,79 +50,85 @@ public class BaseOtTest {
 
     @Parameterized.Parameters(name = "{0}")
     public static Collection<Object[]> configurations() {
-        Collection<Object[]> configurationParams = new ArrayList<>();
+        Collection<Object[]> configurations = new ArrayList<>();
+
+        // NP01_BYTE
+        configurations.add(new Object[]{
+            BaseOtType.NP01_BYTE.name(),
+            new Np01ByteBaseOtConfig.Builder().build(),
+        });
         // MR19_ECC (compress)
-        configurationParams.add(new Object[]{
+        configurations.add(new Object[]{
             BaseOtType.MR19_ECC.name() + " (compress)",
             new Mr19EccBaseOtConfig.Builder().setCompressEncode(true).build(),
         });
         // MR19_ECC (uncompress)
-        configurationParams.add(new Object[]{
+        configurations.add(new Object[]{
             BaseOtType.MR19_ECC.name() + " (uncompress)",
             new Mr19EccBaseOtConfig.Builder().setCompressEncode(false).build(),
         });
         // MR19_KYBER (CCA, k = 2)
-        configurationParams.add(new Object[]{
+        configurations.add(new Object[]{
             BaseOtType.MR19_KYBER.name() + "(CCA, k = 2)",
             new Mr19KyberBaseOtConfig.Builder().setParamsK(2).setKyberType(KyberEngineFactory.KyberType.KYBER_CCA).build(),
         });
         // MR19_KYBER (CCA, K = 3)
-        configurationParams.add(new Object[]{
+        configurations.add(new Object[]{
             BaseOtType.MR19_KYBER.name() + "(CCA, k = 3)",
             new Mr19KyberBaseOtConfig.Builder().setParamsK(3).setKyberType(KyberEngineFactory.KyberType.KYBER_CCA).build(),
         });
         // MR19_KYBER (CCA, K = 4)
-        configurationParams.add(new Object[]{
+        configurations.add(new Object[]{
             BaseOtType.MR19_KYBER.name() + "(CCA, k = 4)",
             new Mr19KyberBaseOtConfig.Builder().setParamsK(4).setKyberType(KyberEngineFactory.KyberType.KYBER_CCA).build(),
         });
         // MR19_KYBER (CPA, K = 2)
-        configurationParams.add(new Object[]{
+        configurations.add(new Object[]{
             BaseOtType.MR19_KYBER.name() + "(CPA, k = 2)",
             new Mr19KyberBaseOtConfig.Builder().setParamsK(2).setKyberType(KyberEngineFactory.KyberType.KYBER_CPA).build(),
         });
         // MR19_KYBER (CPA, K = 3)
-        configurationParams.add(new Object[]{
+        configurations.add(new Object[]{
             BaseOtType.MR19_KYBER.name() + "(CPA, k = 3)",
             new Mr19KyberBaseOtConfig.Builder().setParamsK(3).setKyberType(KyberEngineFactory.KyberType.KYBER_CPA).build(),
         });
         // MR19_KYBER (CPA, K = 4)
-        configurationParams.add(new Object[]{
+        configurations.add(new Object[]{
             BaseOtType.MR19_KYBER.name() + "(CPA, k = 4)",
             new Mr19KyberBaseOtConfig.Builder().setParamsK(4).setKyberType(KyberEngineFactory.KyberType.KYBER_CPA).build(),
         });
         // CO15 (compress)
-        configurationParams.add(new Object[]{
+        configurations.add(new Object[]{
             BaseOtType.CO15.name() + " (compress)",
             new Co15BaseOtConfig.Builder().setCompressEncode(true).build(),
         });
         // CO15 (uncompress)
-        configurationParams.add(new Object[]{
+        configurations.add(new Object[]{
             BaseOtType.CO15.name() + " (uncompress)",
             new Co15BaseOtConfig.Builder().setCompressEncode(false).build(),
         });
         // NP01 (compress)
-        configurationParams.add(new Object[]{
+        configurations.add(new Object[]{
             BaseOtType.NP01.name() + " (compress)",
             new Np01BaseOtConfig.Builder().setCompressEncode(true).build(),
         });
         // NP01 (uncompress)
-        configurationParams.add(new Object[]{
+        configurations.add(new Object[]{
             BaseOtType.NP01.name() + " (uncompress)",
             new Np01BaseOtConfig.Builder().setCompressEncode(false).build(),
         });
         // CSW20 (compress)
-        configurationParams.add(new Object[]{
+        configurations.add(new Object[]{
             BaseOtType.CSW20.name() + " (compress)",
             new Csw20BaseOtConfig.Builder().setCompressEncode(true).build(),
         });
         // CSW20 (uncompress)
-        configurationParams.add(new Object[]{
+        configurations.add(new Object[]{
             BaseOtType.CSW20.name() + " (uncompress)",
             new Csw20BaseOtConfig.Builder().setCompressEncode(false).build(),
         });
 
-        return configurationParams;
+        return configurations;
     }
 
     /**

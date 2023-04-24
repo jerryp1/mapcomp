@@ -97,7 +97,7 @@ public class ByteEccFactory {
         switch (envType) {
             case STANDARD:
             case INLAND:
-                return createFullInstance(ByteEccType.ED25519_SODIUM);
+                return createFullInstance(ByteEccType.FOUR_Q);
             case STANDARD_JDK:
             case INLAND_JDK:
                 return createFullInstance(ByteEccType.ED25519_BC);
