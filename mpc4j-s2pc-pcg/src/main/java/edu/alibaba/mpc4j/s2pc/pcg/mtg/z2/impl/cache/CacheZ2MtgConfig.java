@@ -33,11 +33,6 @@ public class CacheZ2MtgConfig implements Z2MtgConfig {
     }
 
     @Override
-    public int maxBaseNum() {
-        return z2CoreMtgConfig.maxNum();
-    }
-
-    @Override
     public void setEnvType(EnvType envType) {
         z2CoreMtgConfig.setEnvType(envType);
     }

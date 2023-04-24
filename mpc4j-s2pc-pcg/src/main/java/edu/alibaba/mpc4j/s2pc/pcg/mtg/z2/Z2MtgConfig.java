@@ -16,11 +16,4 @@ public interface Z2MtgConfig extends MultiPartyPtoConfig {
      * @return 协议类型。
      */
     Z2MtgType getPtoType();
-
-    /**
-     * 返回底层协议最大数量。
-     *
-     * @return 底层协议最大数量。
-     */
-    int maxBaseNum();
 }

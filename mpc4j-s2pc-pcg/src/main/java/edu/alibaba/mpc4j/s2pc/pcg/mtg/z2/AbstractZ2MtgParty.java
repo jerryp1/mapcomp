@@ -41,9 +41,8 @@ public abstract class AbstractZ2MtgParty extends AbstractTwoPartyPto implements 
     }
 
     protected void setInitInput(int maxRoundNum, int updateNum) {
-        MathPreconditions.checkPositiveInRangeClosed("maxRoundNum", maxRoundNum, config.maxBaseNum());
+        MathPreconditions.checkPositiveInRangeClosed("maxRoundNum", maxRoundNum, updateNum);
         this.maxRoundNum = maxRoundNum;
-        MathPreconditions.checkGreaterOrEqual("updateNum", updateNum, maxRoundNum);
         this.updateNum = updateNum;
         initState();
     }

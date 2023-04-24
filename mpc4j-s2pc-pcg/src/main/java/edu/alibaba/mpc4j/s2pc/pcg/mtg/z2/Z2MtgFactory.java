@@ -8,9 +8,6 @@ import edu.alibaba.mpc4j.s2pc.pcg.mtg.z2.core.Z2CoreMtgFactory;
 import edu.alibaba.mpc4j.s2pc.pcg.mtg.z2.impl.cache.CacheZ2MtgConfig;
 import edu.alibaba.mpc4j.s2pc.pcg.mtg.z2.impl.cache.CacheZ2MtgReceiver;
 import edu.alibaba.mpc4j.s2pc.pcg.mtg.z2.impl.cache.CacheZ2MtgSender;
-import edu.alibaba.mpc4j.s2pc.pcg.mtg.z2.impl.direct.DirectZ2MtgConfig;
-import edu.alibaba.mpc4j.s2pc.pcg.mtg.z2.impl.direct.DirectZ2MtgReceiver;
-import edu.alibaba.mpc4j.s2pc.pcg.mtg.z2.impl.direct.DirectZ2MtgSender;
 import edu.alibaba.mpc4j.s2pc.pcg.mtg.z2.impl.offline.OfflineZ2MtgConfig;
 import edu.alibaba.mpc4j.s2pc.pcg.mtg.z2.impl.offline.OfflineZ2MtgReceiver;
 import edu.alibaba.mpc4j.s2pc.pcg.mtg.z2.impl.offline.OfflineZ2MtgSender;
@@ -34,10 +31,6 @@ public class Z2MtgFactory implements PtoFactory {
      */
     public enum Z2MtgType {
         /**
-         * direct
-         */
-        DIRECT,
-        /**
          * offline
          */
         OFFLINE,
@@ -58,8 +51,6 @@ public class Z2MtgFactory implements PtoFactory {
     public static Z2MtgParty createSender(Rpc senderRpc, Party receiverParty, Z2MtgConfig config) {
         Z2MtgType type = config.getPtoType();
         switch (type) {
-            case DIRECT:
-                return new DirectZ2MtgSender(senderRpc, receiverParty, (DirectZ2MtgConfig) config);
             case OFFLINE:
                 return new OfflineZ2MtgSender(senderRpc, receiverParty, (OfflineZ2MtgConfig) config);
             case CACHE:
@@ -80,8 +71,6 @@ public class Z2MtgFactory implements PtoFactory {
     public static Z2MtgParty createReceiver(Rpc receiverRpc, Party senderParty, Z2MtgConfig config) {
         Z2MtgType type = config.getPtoType();
         switch (type) {
-            case DIRECT:
-                return new DirectZ2MtgReceiver(receiverRpc, senderParty, (DirectZ2MtgConfig) config);
             case OFFLINE:
                 return new OfflineZ2MtgReceiver(receiverRpc, senderParty, (OfflineZ2MtgConfig) config);
             case CACHE:

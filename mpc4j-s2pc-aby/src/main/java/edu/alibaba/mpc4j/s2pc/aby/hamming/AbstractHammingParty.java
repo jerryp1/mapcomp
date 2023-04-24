@@ -15,10 +15,6 @@ import edu.alibaba.mpc4j.s2pc.aby.basics.bc.SquareZ2Vector;
  */
 public abstract class AbstractHammingParty extends AbstractTwoPartyPto implements HammingParty {
     /**
-     * 配置项
-     */
-    private final HammingConfig config;
-    /**
      * 最大比特数量
      */
     protected int maxBitNum;
@@ -29,13 +25,12 @@ public abstract class AbstractHammingParty extends AbstractTwoPartyPto implement
 
     public AbstractHammingParty(PtoDesc ptoDesc, Rpc ownRpc, Party otherParty, HammingConfig config) {
         super(ptoDesc, ownRpc, otherParty, config);
-        this.config = config;
         maxBitNum = 0;
         bitNum = 0;
     }
 
     protected void setInitInput(int maxBitNum) {
-        MathPreconditions.checkPositiveInRangeClosed("maxBitNum", maxBitNum, config.maxAllowBitNum());
+        MathPreconditions.checkPositive("maxBitNum", maxBitNum);
         this.maxBitNum = maxBitNum;
         initState();
     }

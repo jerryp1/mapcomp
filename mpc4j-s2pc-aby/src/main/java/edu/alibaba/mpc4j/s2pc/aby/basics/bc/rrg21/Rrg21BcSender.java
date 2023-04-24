@@ -36,10 +36,6 @@ public class Rrg21BcSender extends AbstractBcParty {
      */
     private final CotReceiver cotReceiver;
     /**
-     * max COT num
-     */
-    private final int maxCotNum;
-    /**
      * -s0 vector
      */
     private BitVector negS0BitVector;
@@ -55,7 +51,6 @@ public class Rrg21BcSender extends AbstractBcParty {
         addSubPtos(cotSender);
         cotReceiver = CotFactory.createReceiver(senderRpc, receiverParty, cotConfig);
         addSubPtos(cotReceiver);
-        maxCotNum = cotConfig.maxBaseNum();
     }
 
     @Override
@@ -67,8 +62,8 @@ public class Rrg21BcSender extends AbstractBcParty {
         byte[] delta = new byte[CommonConstants.BLOCK_BYTE_LENGTH];
         secureRandom.nextBytes(delta);
         // since storing many COT outputs would lead to memory exception, here we generate COT when necessary
-        cotSender.init(delta, maxRoundBitNum, Math.min(updateBitNum, maxCotNum));
-        cotReceiver.init(maxRoundBitNum, Math.min(updateBitNum, maxCotNum));
+        cotSender.init(delta, maxRoundBitNum, updateBitNum);
+        cotReceiver.init(maxRoundBitNum, updateBitNum);
         stopWatch.stop();
         long initTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
         stopWatch.reset();

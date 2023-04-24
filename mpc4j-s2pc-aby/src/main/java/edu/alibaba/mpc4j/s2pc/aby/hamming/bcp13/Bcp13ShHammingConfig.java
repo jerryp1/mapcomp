@@ -33,11 +33,6 @@ public class Bcp13ShHammingConfig implements HammingConfig {
     }
 
     @Override
-    public int maxAllowBitNum() {
-        return cotConfig.maxBaseNum();
-    }
-
-    @Override
     public void setEnvType(EnvType envType) {
         cotConfig.setEnvType(envType);
     }

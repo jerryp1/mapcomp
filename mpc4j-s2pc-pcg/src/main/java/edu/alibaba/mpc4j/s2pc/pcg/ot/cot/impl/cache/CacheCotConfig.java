@@ -46,11 +46,6 @@ public class CacheCotConfig implements CotConfig {
     }
 
     @Override
-    public int maxBaseNum() {
-        return ncCotConfig.maxNum();
-    }
-
-    @Override
     public void setEnvType(EnvType envType) {
         ncCotConfig.setEnvType(envType);
         preCotConfig.setEnvType(envType);

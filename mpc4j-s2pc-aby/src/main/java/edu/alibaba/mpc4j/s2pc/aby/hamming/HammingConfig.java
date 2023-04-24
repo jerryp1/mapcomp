@@ -15,10 +15,4 @@ public interface HammingConfig extends MultiPartyPtoConfig {
      * @return 协议类型。
      */
     HammingFactory.HammingType getPtoType();
-    /**
-     * 返回底层协议支持的最大比特数量。
-     *
-     * @return 底层协议支持的最大比特数量。
-     */
-    int maxAllowBitNum();
 }

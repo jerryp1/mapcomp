@@ -5,6 +5,7 @@ import edu.alibaba.mpc4j.common.rpc.utils.DataPacketHeader;
 import edu.alibaba.mpc4j.common.tool.bitvector.BitVector;
 import edu.alibaba.mpc4j.common.tool.bitvector.BitVectorFactory;
 import edu.alibaba.mpc4j.common.tool.utils.CommonUtils;
+import edu.alibaba.mpc4j.common.tool.utils.LongUtils;
 import edu.alibaba.mpc4j.s2pc.aby.basics.bc.BcFactory;
 import edu.alibaba.mpc4j.s2pc.aby.basics.bc.BcParty;
 import edu.alibaba.mpc4j.s2pc.aby.basics.bc.SquareZ2Vector;
@@ -14,6 +15,7 @@ import edu.alibaba.mpc4j.s2pc.pcg.ot.lnot.LnotFactory;
 import edu.alibaba.mpc4j.s2pc.pcg.ot.lnot.LnotReceiver;
 import edu.alibaba.mpc4j.s2pc.pcg.ot.lnot.LnotReceiverOutput;
 
+import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.IntStream;
@@ -51,7 +53,7 @@ public class Cgs22LnotPsmReceiver extends AbstractPsmReceiver {
         // q = l / m, where m = 4
         int maxByteL = CommonUtils.getByteLength(maxL);
         int maxQ = maxByteL * 2;
-        bcReceiver.init(maxNum, maxNum * (maxQ - 1) * d);
+        bcReceiver.init(maxNum * (maxQ - 1) * d, maxNum * (maxQ - 1) * d);
         lnotReceiver.init(4, maxNum, maxNum * maxQ);
         stopWatch.stop();
         long initTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
@@ -146,22 +148,31 @@ public class Cgs22LnotPsmReceiver extends AbstractPsmReceiver {
                 eqArrays1[i][j] = SquareZ2Vector.create(eqArrays[i][j], false);
             }
         }
-        SquareZ2Vector[] eq1s = IntStream.range(0, d)
-            .mapToObj(index -> (SquareZ2Vector) bcReceiver.createOnes(num))
-            .toArray(SquareZ2Vector[]::new);
+        int logQ = LongUtils.ceilLog2(q);
         // for i ∈ [d] do
         for (int i = 0; i < d; i++) {
             // for t = 1 to log(q) do
-            for (int j = 0; j < q; j++) {
+            for (int t = 1; t <= logQ; t++) {
                 // P1 invokes F_AND with inputs <eq_{t-1,i,2j}_1 and <eq_{t-1,i,2j+1}_1 to learn output <eq_{t,i,j}>_1
-                eq1s[i] = bcReceiver.and(eq1s[i], eqArrays1[i][j]);
-                eqArrays1[i][j] = null;
+                int nodeNum = eqArrays1[i].length / 2;
+                SquareZ2Vector[] eqsx1 = new SquareZ2Vector[nodeNum];
+                SquareZ2Vector[] eqsy1 = new SquareZ2Vector[nodeNum];
+                for (int k = 0; k < nodeNum; k++) {
+                    eqsx1[k] = eqArrays1[i][k * 2];
+                    eqsy1[k] = eqArrays1[i][k * 2 + 1];
+                }
+                SquareZ2Vector[] eqsz1 = bcReceiver.and(eqsx1, eqsy1);
+                if (eqArrays1[i].length % 2 == 1) {
+                    eqsz1 = Arrays.copyOf(eqsz1, nodeNum + 1);
+                    eqsz1[nodeNum] = eqArrays1[i][eqArrays1[i].length - 1];
+                }
+                eqArrays1[i] = eqsz1;
             }
         }
         // P1 computes eq_{log(q),1,0}_1 ⊕ ... ⊕ eq_{log(q),d,0}_1
         SquareZ2Vector z1 = SquareZ2Vector.createZeros(num);
         for (int i = 0; i < d; i++) {
-            z1 = bcReceiver.xor(z1, eq1s[i]);
+            z1 = bcReceiver.xor(z1, eqArrays1[i][0]);
         }
         return z1;
     }
