@@ -217,8 +217,8 @@ public class UcpsiMain {
             + "\t" + serverSetSize
             + "\t" + clientSetSize
             + "\t" + ucpsiServer.getParallel()
-            + "\t" + silent
             + "\t" + ForkJoinPool.getCommonPoolParallelism()
+            + "\t" + silent
             + "\t" + initTime + "\t" + initDataPacketNum + "\t" + initPayloadByteLength + "\t" + initSendByteLength
             + "\t" + ptoTime + "\t" + ptoDataPacketNum + "\t" + ptoPayloadByteLength + "\t" + ptoSendByteLength;
         printWriter.println(info);
@@ -365,8 +365,8 @@ public class UcpsiMain {
             + "\t" + clientSetSize
             + "\t" + serverSetSize
             + "\t" + ucpsiClient.getParallel()
-            + "\t" + silent
             + "\t" + ForkJoinPool.getCommonPoolParallelism()
+            + "\t" + silent
             + "\t" + initTime + "\t" + initDataPacketNum + "\t" + initPayloadByteLength + "\t" + initSendByteLength
             + "\t" + ptoTime + "\t" + ptoDataPacketNum + "\t" + ptoPayloadByteLength + "\t" + ptoSendByteLength;
         printWriter.println(info);

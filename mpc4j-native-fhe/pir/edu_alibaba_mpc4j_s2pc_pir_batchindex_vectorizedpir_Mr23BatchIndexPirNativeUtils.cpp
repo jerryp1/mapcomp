@@ -165,7 +165,12 @@ JNIEXPORT jlongArray JNICALL Java_edu_alibaba_mpc4j_s2pc_pir_batchindex_vectoriz
     Decryptor decryptor(context, secret_key);
     BatchEncoder batch_encoder(context);
     Plaintext pt;
-    cerr << "noise budget : " << decryptor.invariant_noise_budget(response) << endl;
+    int32_t noise_budget = decryptor.invariant_noise_budget(response);
+    jclass exception = env->FindClass("java/lang/Exception");
+    if (noise_budget == 0) {
+        env->ThrowNew(exception, "noise budget is 0.");
+        return nullptr;
+    }
     decryptor.decrypt(response, pt);
     vector<uint64_t> vec;
     batch_encoder.decode(pt, vec);
