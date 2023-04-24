@@ -11,6 +11,8 @@ import edu.alibaba.mpc4j.common.tool.hashbin.object.HashBinEntry;
 import edu.alibaba.mpc4j.common.tool.hashbin.object.cuckoo.CuckooHashBin;
 import edu.alibaba.mpc4j.common.tool.hashbin.object.cuckoo.CuckooHashBinFactory;
 import edu.alibaba.mpc4j.common.tool.hashbin.object.cuckoo.CuckooHashBinFactory.CuckooHashBinType;
+import edu.alibaba.mpc4j.common.tool.utils.BytesUtils;
+import edu.alibaba.mpc4j.common.tool.utils.CommonUtils;
 import edu.alibaba.mpc4j.common.tool.utils.LongUtils;
 import edu.alibaba.mpc4j.s2pc.aby.basics.bc.SquareZ2Vector;
 import edu.alibaba.mpc4j.s2pc.opf.opprf.rb.RbopprfConfig;
@@ -84,9 +86,9 @@ public class Cgs22ScpsiServer extends AbstractScpsiServer {
         int maxBeta = CuckooHashBinFactory.getBinNum(cuckooHashBinType, maxServerElementSize);
         int maxPointNum = cuckooHashNum * maxClientElementSize;
         rbopprfReceiver.init(maxBeta, maxPointNum);
-        // init private set membership, where maxL = σ + log_2(d * β_max) + log_2(max_point_num)
-        int maxL = CommonConstants.STATS_BIT_LENGTH + LongUtils.ceilLog2((long) d * maxBeta) + LongUtils.ceilLog2(maxPointNum);
-        psmSender.init(maxL, d, maxBeta);
+        // init private set membership, where max(l_psm) = σ + log_2(d * β_max)
+        int maxPsmL = CommonConstants.STATS_BIT_LENGTH + LongUtils.ceilLog2((long) d * maxBeta);
+        psmSender.init(maxPsmL, d, maxBeta);
         stopWatch.stop();
         long initTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
         stopWatch.reset();
@@ -105,8 +107,12 @@ public class Cgs22ScpsiServer extends AbstractScpsiServer {
         int beta = CuckooHashBinFactory.getBinNum(cuckooHashBinType, serverElementSize);
         // point_num = hash_num * n_c
         int pointNum = cuckooHashNum * clientElementSize;
-        // l = σ + log_2(d * β) + log_2(point_num)
-        int l = CommonConstants.STATS_BIT_LENGTH + LongUtils.ceilLog2((long) d * beta) + LongUtils.ceilLog2(pointNum);
+        // l_psm = σ + log_2(d * β)
+        int psmL = CommonConstants.STATS_BIT_LENGTH + LongUtils.ceilLog2((long) d * beta);
+        int psmByteL = CommonUtils.getByteLength(psmL);
+        // l_opprf = σ + log_2(point_num)
+        int opprfL = Math.max(CommonConstants.STATS_BIT_LENGTH + LongUtils.ceilLog2(pointNum), psmL);
+        int opprfByteL = CommonUtils.getByteLength(opprfL);
         // P1 inserts items into no-stash cuckoo hash bin Table_1 with β bins.
         List<byte[]> cuckooHashKeyPayload = generateCuckooHashKeyPayload();
         // P1 sends the cuckoo hash bin keys
@@ -121,7 +127,7 @@ public class Cgs22ScpsiServer extends AbstractScpsiServer {
         logStepInfo(PtoState.PTO_STEP, 1, 3, binTime, "Server inserts cuckoo hash");
 
         stopWatch.start();
-        // The parties invoke a related batched OPPRF.
+        // The parties invoke a related batched OPPRF
         // P1 inputs Table_1[1], . . . , Table_1[β] and receives y_1^*, ..., y_β^*
         byte[][] inputArray = IntStream.range(0, beta)
             .mapToObj(batchIndex -> {
@@ -133,16 +139,27 @@ public class Cgs22ScpsiServer extends AbstractScpsiServer {
                     .array();
             })
             .toArray(byte[][]::new);
-        byte[][][] targetArrays = rbopprfReceiver.opprf(l, inputArray, pointNum);
+        byte[][][] targetArrays = rbopprfReceiver.opprf(opprfL, inputArray, pointNum);
         stopWatch.stop();
         long opprfTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
         stopWatch.reset();
         logStepInfo(PtoState.PTO_STEP, 2, 3, opprfTime);
 
         stopWatch.start();
-        // The parties invoke a private set membership with l = σ + log_2(d * β) + log_2(point_num).
+        // The parties invoke a private set membership
+        targetArrays = Arrays.stream(targetArrays)
+            .map(targetArray ->
+                Arrays.stream(targetArray)
+                    .map(target -> {
+                        byte[] truncatedTarget = new byte[psmByteL];
+                        System.arraycopy(target, opprfByteL - psmByteL, truncatedTarget, 0, psmByteL);
+                        BytesUtils.reduceByteArray(truncatedTarget, psmL);
+                        return truncatedTarget;
+                    })
+                    .toArray(byte[][]::new))
+            .toArray(byte[][][]::new);
         // P1 inputs y_1^*, ..., y_β^* and outputs z0.
-        SquareZ2Vector z0 = psmSender.psm(l, targetArrays);
+        SquareZ2Vector z0 = psmSender.psm(psmL, targetArrays);
         // create the table
         ByteBuffer[] table = IntStream.range(0, beta)
             .mapToObj(batchIndex -> {
