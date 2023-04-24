@@ -9,7 +9,6 @@ import edu.alibaba.mpc4j.common.rpc.utils.DataPacketHeader;
 import edu.alibaba.mpc4j.common.tool.bitvector.BitVector;
 import edu.alibaba.mpc4j.common.tool.bitvector.BitVectorFactory;
 import edu.alibaba.mpc4j.common.tool.utils.CommonUtils;
-import edu.alibaba.mpc4j.common.tool.utils.LongUtils;
 import edu.alibaba.mpc4j.s2pc.aby.basics.bc.BcFactory;
 import edu.alibaba.mpc4j.s2pc.aby.basics.bc.BcParty;
 import edu.alibaba.mpc4j.s2pc.aby.basics.bc.SquareZ2Vector;
@@ -19,7 +18,6 @@ import edu.alibaba.mpc4j.s2pc.pcg.ot.lnot.LnotFactory;
 import edu.alibaba.mpc4j.s2pc.pcg.ot.lnot.LnotSender;
 import edu.alibaba.mpc4j.s2pc.pcg.ot.lnot.LnotSenderOutput;
 
-import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
@@ -58,7 +56,7 @@ public class Cgs22PeqtSender extends AbstractPeqtParty {
         // q = l / m, where m = 4
         int maxByteL = CommonUtils.getByteLength(maxL);
         int maxQ = maxByteL * 2;
-        bcSender.init(maxNum * (maxQ - 1), maxNum * (maxQ - 1));
+        bcSender.init(maxNum, maxNum * (maxQ - 1));
         lnotSender.init(4, maxNum, maxNum * maxQ);
         stopWatch.stop();
         long initTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
@@ -158,24 +156,11 @@ public class Cgs22PeqtSender extends AbstractPeqtParty {
         for (int j = 0; j < q; j++) {
             eqs0[j] = SquareZ2Vector.create(eqs[j], false);
         }
-        int logQ = LongUtils.ceilLog2(q);
-        // for t = 1 to log(q) do
-        for (int t = 1; t <= logQ; t++) {
-            // P0 invokes F_AND with inputs <eq_{t-1,2j}_0 and <eq_{t-1,2j+1}_0 to learn output <eq_{t,j}>_0
-            int nodeNum = eqs0.length / 2;
-            SquareZ2Vector[] eqsx0 = new SquareZ2Vector[nodeNum];
-            SquareZ2Vector[] eqsy0 = new SquareZ2Vector[nodeNum];
-            for (int i = 0; i < nodeNum; i++) {
-                eqsx0[i] = eqs0[i * 2];
-                eqsy0[i] = eqs0[i * 2 + 1];
-            }
-            SquareZ2Vector[] eqsz0 = bcSender.and(eqsx0, eqsy0);
-            if (eqs0.length % 2 == 1) {
-                eqsz0 = Arrays.copyOf(eqsz0, nodeNum + 1);
-                eqsz0[nodeNum] = eqs0[eqs0.length - 1];
-            }
-            eqs0 = eqsz0;
+        SquareZ2Vector eq0 = (SquareZ2Vector) bcSender.createOnes(num);
+        for (int t = 0; t < q; t++) {
+            eq0 = bcSender.and(eq0, eqs0[t]);
+            eqs0[t] = null;
         }
-        return eqs0[0];
+        return eq0;
     }
 }

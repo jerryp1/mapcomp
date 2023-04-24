@@ -76,27 +76,16 @@ public class Z2IntegerCircuit {
     public MpcZ2Vector eq(MpcZ2Vector[] xiArray, MpcZ2Vector[] yiArray) throws MpcAbortException {
         checkInputs(xiArray, yiArray);
         int l = xiArray.length;
+        int bitNum = xiArray[0].getNum();
         // bit-wise XOR and NOT
         MpcZ2Vector[] eqiArray = party.xor(xiArray, yiArray);
         eqiArray = party.not(eqiArray);
-        // tree-based AND
-        int logL = LongUtils.ceilLog2(l);
-        for (int h = 1; h <= logL; h++) {
-            int nodeNum = eqiArray.length / 2;
-            MpcZ2Vector[] eqXiArray = new MpcZ2Vector[nodeNum];
-            MpcZ2Vector[] eqYiArray = new MpcZ2Vector[nodeNum];
-            for (int i = 0; i < nodeNum; i++) {
-                eqXiArray[i] = eqiArray[i * 2];
-                eqYiArray[i] = eqiArray[i * 2 + 1];
-            }
-            MpcZ2Vector[] eqZiArray = party.and(eqXiArray, eqYiArray);
-            if (eqiArray.length % 2 == 1) {
-                eqZiArray = Arrays.copyOf(eqZiArray, nodeNum + 1);
-                eqZiArray[nodeNum] = eqiArray[eqiArray.length - 1];
-            }
-            eqiArray = eqZiArray;
+        MpcZ2Vector eq0 = party.createOnes(bitNum);
+        for (int t = 0; t < l; t++) {
+            eq0 = party.and(eq0, eqiArray[t]);
+            eqiArray[t] = null;
         }
-        return eqiArray[0];
+        return eq0;
     }
 
     /**
