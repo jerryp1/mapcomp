@@ -1,4 +1,4 @@
-package edu.alibaba.mpc4j.s2pc.pir.main.batchindex;
+package edu.alibaba.mpc4j.s2pc.main.batchindex;
 
 import edu.alibaba.mpc4j.common.tool.utils.PropertiesUtils;
 import edu.alibaba.mpc4j.s2pc.pir.batchindex.BatchIndexPirConfig;

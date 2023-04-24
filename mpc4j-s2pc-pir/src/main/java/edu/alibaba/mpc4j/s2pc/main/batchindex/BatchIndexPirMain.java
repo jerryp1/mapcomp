@@ -1,4 +1,4 @@
-package edu.alibaba.mpc4j.s2pc.pir.main.batchindex;
+package edu.alibaba.mpc4j.s2pc.main.batchindex;
 
 import edu.alibaba.mpc4j.common.rpc.MpcAbortException;
 import edu.alibaba.mpc4j.common.rpc.Party;
@@ -34,6 +34,10 @@ import java.util.stream.Collectors;
  */
 public class BatchIndexPirMain {
     private static final Logger LOGGER = LoggerFactory.getLogger(BatchIndexPirMain.class);
+    /**
+     * 任务名称
+     */
+    public static final String TASK_NAME = "BATCH_INDEX_PIR_TASK";
     /**
      * 协议类型名称
      */
