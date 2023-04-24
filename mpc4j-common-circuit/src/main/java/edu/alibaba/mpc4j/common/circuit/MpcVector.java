@@ -1,4 +1,4 @@
-package com.alibaba.mpc4j.common.circuit;
+package edu.alibaba.mpc4j.common.circuit;
 
 /**
  * Mpc Vector.

@@ -1,6 +1,6 @@
 package edu.alibaba.mpc4j.s2pc.aby.circuit.peqt.naive;
 
-import com.alibaba.mpc4j.common.circuit.z2.Z2IntegerCircuit;
+import edu.alibaba.mpc4j.common.circuit.z2.Z2IntegerCircuit;
 import edu.alibaba.mpc4j.common.rpc.MpcAbortException;
 import edu.alibaba.mpc4j.common.rpc.Party;
 import edu.alibaba.mpc4j.common.rpc.PtoState;

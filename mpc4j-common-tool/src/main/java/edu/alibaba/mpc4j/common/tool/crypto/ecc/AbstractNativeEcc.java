@@ -14,7 +14,7 @@ import java.util.Map;
  * @author Weiran Liu
  * @date 2022/8/24
  */
-public abstract class AbstractNativeEcc extends AbstractEcc implements AutoCloseable {
+public abstract class AbstractNativeEcc extends AbstractEcc {
 
     static {
         System.loadLibrary(CommonConstants.MPC4J_NATIVE_TOOL_NAME);
@@ -91,7 +91,7 @@ public abstract class AbstractNativeEcc extends AbstractEcc implements AutoClose
     protected abstract String ecPointToNativePointString(ECPoint ecPoint);
 
     @Override
-    public void close() {
+    protected void finalize() {
         for (ByteBuffer windowHandler : windowHandlerMap.values()) {
             nativeEcc.destroyPrecompute(windowHandler);
         }

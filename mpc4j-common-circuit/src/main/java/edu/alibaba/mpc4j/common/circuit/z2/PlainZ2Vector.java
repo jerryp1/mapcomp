@@ -1,6 +1,6 @@
-package com.alibaba.mpc4j.common.circuit.z2;
+package edu.alibaba.mpc4j.common.circuit.z2;
 
-import com.alibaba.mpc4j.common.circuit.MpcVector;
+import edu.alibaba.mpc4j.common.circuit.MpcVector;
 import edu.alibaba.mpc4j.common.tool.bitvector.BitVector;
 import edu.alibaba.mpc4j.common.tool.bitvector.BitVectorFactory;
 

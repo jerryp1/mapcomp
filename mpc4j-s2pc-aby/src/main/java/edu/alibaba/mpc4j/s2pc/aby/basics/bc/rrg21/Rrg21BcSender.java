@@ -1,6 +1,6 @@
 package edu.alibaba.mpc4j.s2pc.aby.basics.bc.rrg21;
 
-import com.alibaba.mpc4j.common.circuit.z2.MpcZ2Vector;
+import edu.alibaba.mpc4j.common.circuit.z2.MpcZ2Vector;
 import edu.alibaba.mpc4j.common.rpc.*;
 import edu.alibaba.mpc4j.common.rpc.utils.DataPacket;
 import edu.alibaba.mpc4j.common.rpc.utils.DataPacketHeader;

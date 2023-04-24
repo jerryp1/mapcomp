@@ -1,4 +1,4 @@
-package com.alibaba.mpc4j.common.circuit.z2;
+package edu.alibaba.mpc4j.common.circuit.z2;
 
 import edu.alibaba.mpc4j.common.rpc.MpcAbortException;
 

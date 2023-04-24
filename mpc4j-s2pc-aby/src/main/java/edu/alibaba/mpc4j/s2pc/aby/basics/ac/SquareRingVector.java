@@ -1,6 +1,6 @@
 package edu.alibaba.mpc4j.s2pc.aby.basics.ac;
 
-import com.alibaba.mpc4j.common.circuit.MpcVector;
+import edu.alibaba.mpc4j.common.circuit.MpcVector;
 import edu.alibaba.mpc4j.crypto.matrix.vector.RingVector;
 
 /**

@@ -1,6 +1,6 @@
 package edu.alibaba.mpc4j.s2pc.aby.basics.ac.zl;
 
-import com.alibaba.mpc4j.common.circuit.MpcVector;
+import edu.alibaba.mpc4j.common.circuit.MpcVector;
 import com.google.common.base.Preconditions;
 import edu.alibaba.mpc4j.common.tool.galoisfield.zl.Zl;
 import edu.alibaba.mpc4j.crypto.matrix.vector.ZlVector;
