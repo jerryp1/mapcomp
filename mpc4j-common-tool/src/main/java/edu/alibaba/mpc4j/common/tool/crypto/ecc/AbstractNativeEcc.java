@@ -1,10 +1,6 @@
 package edu.alibaba.mpc4j.common.tool.crypto.ecc;
 
 import edu.alibaba.mpc4j.common.tool.CommonConstants;
-import edu.alibaba.mpc4j.common.tool.crypto.ecc.mcl.SecP256k1MclNativeEcc;
-import edu.alibaba.mpc4j.common.tool.crypto.ecc.mcl.SecP256r1MclNativeEcc;
-import edu.alibaba.mpc4j.common.tool.crypto.ecc.openssl.SecP256k1OpensslNativeEcc;
-import edu.alibaba.mpc4j.common.tool.crypto.ecc.openssl.Sm2P256v1OpensslNativeEcc;
 import org.bouncycastle.math.ec.ECPoint;
 
 import java.math.BigInteger;
@@ -19,10 +15,6 @@ import java.util.Map;
  * @date 2022/8/24
  */
 public abstract class AbstractNativeEcc extends AbstractEcc implements AutoCloseable {
-    /**
-     * 当前椭圆曲线类型
-     */
-    static EccFactory.EccType currentEccType;
 
     static {
         System.loadLibrary(CommonConstants.MPC4J_NATIVE_TOOL_NAME);
@@ -46,32 +38,7 @@ public abstract class AbstractNativeEcc extends AbstractEcc implements AutoClose
         // 初始化窗口指针映射表
         windowHandlerMap = new HashMap<>();
         this.nativeEcc = nativeEcc;
-        if (currentEccType == null) {
-            // 设置当前类型并初始化
-            nativeEcc.init();
-            currentEccType = eccType;
-        } else if (!currentEccType.equals(eccType)) {
-            // 如果当前本地类型不为我们的类型，则重置
-            switch (currentEccType) {
-                case SM2_P256_V1_OPENSSL:
-                    Sm2P256v1OpensslNativeEcc.getInstance().reset();
-                    break;
-                case SEC_P256_K1_OPENSSL:
-                    SecP256k1OpensslNativeEcc.getInstance().reset();
-                    break;
-                case SEC_P256_K1_MCL:
-                    SecP256k1MclNativeEcc.getInstance().reset();
-                    break;
-                case SEC_P256_R1_MCL:
-                    SecP256r1MclNativeEcc.getInstance().reset();
-                    break;
-                default:
-                    break;
-            }
-            // 设置当前类型并初始化
-            nativeEcc.init();
-            currentEccType = eccType;
-        }
+        nativeEcc.init();
     }
 
     @Override

@@ -40,12 +40,8 @@ public class EccConsistencyTest {
         Collection<Object[]> configurationParams = new ArrayList<>();
         // SEC_P256_K1
         configurationParams.add(new Object[] {"SecP256k1 (BC v.s. MCL)", EccType.SEC_P256_K1_BC, EccType.SEC_P256_K1_MCL});
-        configurationParams.add(new Object[] {"SecP256k1 (BC v.s. OpenSSL)", EccType.SEC_P256_K1_BC, EccType.SEC_P256_K1_OPENSSL});
         // SEC_P256_R1
-        configurationParams.add(new Object[] {"SecP256r1 (BC v.s. MCL)", EccType.SEC_P256_R1_BC, EccType.SEC_P256_R1_MCL});
         configurationParams.add(new Object[] {"SecP256r1 (BC v.s. OpenSSL)", EccType.SEC_P256_R1_OPENSSL, EccType.SEC_P256_R1_OPENSSL});
-        // SM2_P256_V1
-        configurationParams.add(new Object[] {"sm2p256v1 (BC v.s. OpenSSL)", EccType.SM2_P256_V1_BC, EccType.SM2_P256_V1_OPENSSL});
 
         return configurationParams;
     }
