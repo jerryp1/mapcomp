@@ -19,7 +19,6 @@ JNIEXPORT jbyteArray JNICALL Java_edu_alibaba_mpc4j_s2pc_pir_batchindex_vectoriz
     parms.set_poly_modulus_degree(poly_modulus_degree);
     parms.set_plain_modulus(PlainModulus::Batching(poly_modulus_degree, plain_modulus_size));
     parms.set_coeff_modulus(CoeffModulus::Create(poly_modulus_degree, bit_sizes));
-    //parms.set_coeff_modulus(CoeffModulus::BFVDefault(poly_modulus_degree, sec_level_type::tc128));
     SEALContext context = SEALContext(parms);
     jclass exception = env->FindClass("java/lang/Exception");
     if (!context.parameters_set()) {
@@ -221,9 +220,9 @@ JNIEXPORT jbyteArray JNICALL Java_edu_alibaba_mpc4j_s2pc_pir_batchindex_vectoriz
         evaluator.add_inplace(merged_response, response[i]);
     }
     evaluator.transform_from_ntt_inplace(merged_response);
-//    while (merged_response.parms_id() != context.last_parms_id()) {
-//        evaluator.mod_switch_to_next_inplace(merged_response);
-//    }
-//    try_clear_irrelevant_bits(context.last_context_data()->parms(), merged_response);
+    while (merged_response.parms_id() != context.last_parms_id()) {
+        evaluator.mod_switch_to_next_inplace(merged_response);
+    }
+    try_clear_irrelevant_bits(context.last_context_data()->parms(), merged_response);
     return serialize_ciphertext(env, merged_response);
 }
