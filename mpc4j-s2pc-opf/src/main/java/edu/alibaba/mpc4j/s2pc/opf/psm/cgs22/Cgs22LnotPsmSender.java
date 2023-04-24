@@ -9,7 +9,6 @@ import edu.alibaba.mpc4j.common.rpc.utils.DataPacketHeader;
 import edu.alibaba.mpc4j.common.tool.bitvector.BitVector;
 import edu.alibaba.mpc4j.common.tool.bitvector.BitVectorFactory;
 import edu.alibaba.mpc4j.common.tool.utils.CommonUtils;
-import edu.alibaba.mpc4j.common.tool.utils.LongUtils;
 import edu.alibaba.mpc4j.s2pc.aby.basics.bc.BcFactory;
 import edu.alibaba.mpc4j.s2pc.aby.basics.bc.BcParty;
 import edu.alibaba.mpc4j.s2pc.aby.basics.bc.SquareZ2Vector;
@@ -57,7 +56,7 @@ public class Cgs22LnotPsmSender extends AbstractPsmSender {
         // q = l / m, where m = 4
         int maxByteL = CommonUtils.getByteLength(maxL);
         int maxQ = maxByteL * 2;
-        bcSender.init(maxNum * (maxQ - 1) * d, maxNum * (maxQ - 1) * d);
+        bcSender.init(maxNum, maxNum * (maxQ - 1) * d);
         lnotSender.init(4, maxNum, maxNum * maxQ);
         stopWatch.stop();
         long initTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
@@ -176,31 +175,22 @@ public class Cgs22LnotPsmSender extends AbstractPsmSender {
                 eqArrays0[i][j] = SquareZ2Vector.create(eqArrays[i][j], false);
             }
         }
-        int logQ = LongUtils.ceilLog2(q);
+        SquareZ2Vector[] eq0s = IntStream.range(0, d)
+            .mapToObj(index -> (SquareZ2Vector) bcSender.createOnes(num))
+            .toArray(SquareZ2Vector[]::new);
         // for i ∈ [d] do
         for (int i = 0; i < d; i++) {
             // for t = 1 to log(q) do
-            for (int t = 1; t <= logQ; t++) {
+            for (int j = 0; j < q; j++) {
                 // P0 invokes F_AND with inputs <eq_{t-1,i,2j}_0 and <eq_{t-1,i,2j+1}_0 to learn output <eq_{t,i,j}>_0
-                int nodeNum = eqArrays0[i].length / 2;
-                SquareZ2Vector[] eqsx0 = new SquareZ2Vector[nodeNum];
-                SquareZ2Vector[] eqsy0 = new SquareZ2Vector[nodeNum];
-                for (int k = 0; k < nodeNum; k++) {
-                    eqsx0[k] = eqArrays0[i][k * 2];
-                    eqsy0[k] = eqArrays0[i][k * 2 + 1];
-                }
-                SquareZ2Vector[] eqsz0 = bcSender.and(eqsx0, eqsy0);
-                if (eqArrays0[i].length % 2 == 1) {
-                    eqsz0 = Arrays.copyOf(eqsz0, nodeNum + 1);
-                    eqsz0[nodeNum] = eqArrays0[i][eqArrays0[i].length - 1];
-                }
-                eqArrays0[i] = eqsz0;
+                eq0s[i] = bcSender.and(eq0s[i], eqArrays0[i][j]);
+                eqArrays0[i][j] = null;
             }
         }
         // P1 computes eq_{log(q),1,0}_0 ⊕ ... ⊕ eq_{log(q),d,0}_0
-        SquareZ2Vector z0 = SquareZ2Vector.createZeros(num);
+        SquareZ2Vector z0 = (SquareZ2Vector) bcSender.createZeros(num);
         for (int i = 0; i < d; i++) {
-            z0 = bcSender.xor(z0, eqArrays0[i][0]);
+            z0 = bcSender.xor(z0, eq0s[i]);
         }
         return z0;
     }
