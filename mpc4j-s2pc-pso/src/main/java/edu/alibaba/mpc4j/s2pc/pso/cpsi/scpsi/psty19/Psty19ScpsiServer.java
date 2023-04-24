@@ -79,7 +79,7 @@ public class Psty19ScpsiServer extends AbstractScpsiServer {
         int maxBeta = CuckooHashBinFactory.getBinNum(cuckooHashBinType, maxServerElementSize);
         int maxPointNum = cuckooHashNum * maxClientElementSize;
         bopprfReceiver.init(maxBeta, maxPointNum);
-        // init private equality test, where max(l_okvs) = σ + log_2(β_max)
+        // init private equality test, where max(l_peqt) = σ + log_2(β_max)
         int maxPeqtL = CommonConstants.STATS_BIT_LENGTH + LongUtils.ceilLog2(maxBeta);
         peqtSender.init(maxPeqtL, maxBeta);
         stopWatch.stop();

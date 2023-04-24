@@ -11,6 +11,8 @@ import edu.alibaba.mpc4j.common.tool.hashbin.object.HashBinEntry;
 import edu.alibaba.mpc4j.common.tool.hashbin.object.cuckoo.CuckooHashBin;
 import edu.alibaba.mpc4j.common.tool.hashbin.object.cuckoo.CuckooHashBinFactory;
 import edu.alibaba.mpc4j.common.tool.hashbin.object.cuckoo.CuckooHashBinFactory.CuckooHashBinType;
+import edu.alibaba.mpc4j.common.tool.utils.BytesUtils;
+import edu.alibaba.mpc4j.common.tool.utils.CommonUtils;
 import edu.alibaba.mpc4j.common.tool.utils.LongUtils;
 import edu.alibaba.mpc4j.s2pc.aby.basics.bc.SquareZ2Vector;
 import edu.alibaba.mpc4j.s2pc.aby.circuit.peqt.PeqtFactory;
@@ -77,9 +79,9 @@ public class Psty19CcpsiClient extends AbstractCcpsiClient {
         int maxBeta = CuckooHashBinFactory.getBinNum(cuckooHashBinType, maxClientElementSize);
         int maxPointNum = hashNum * maxServerElementSize;
         bopprfReceiver.init(maxBeta, maxPointNum);
-        // init private equality test, where maxL = σ + log_2(β_max) + log_2(max_point_num)
-        int maxL = CommonConstants.STATS_BIT_LENGTH + LongUtils.ceilLog2(maxBeta) + LongUtils.ceilLog2(maxPointNum);
-        peqtReceiver.init(maxL, maxBeta);
+        // init private equality test, where max(l_peqt) = σ + log_2(β_max)
+        int maxPeqtL = CommonConstants.STATS_BIT_LENGTH + LongUtils.ceilLog2(maxBeta);
+        peqtReceiver.init(maxPeqtL, maxBeta);
         stopWatch.stop();
         long initTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
         stopWatch.reset();
@@ -98,8 +100,12 @@ public class Psty19CcpsiClient extends AbstractCcpsiClient {
         int beta = CuckooHashBinFactory.getBinNum(cuckooHashBinType, clientElementSize);
         // point_num = hash_num * n_s
         int pointNum = hashNum * serverElementSize;
-        // l = σ + log_2(β) + log_2(point_num)
-        int l = CommonConstants.STATS_BIT_LENGTH + LongUtils.ceilLog2(beta) + LongUtils.ceilLog2(pointNum);
+        // l_peqt = σ + log_2(β)
+        int peqtL = CommonConstants.STATS_BIT_LENGTH + LongUtils.ceilLog2(beta);
+        int peqtByteL = CommonUtils.getByteLength(peqtL);
+        // l_opprf = σ + log_2(point_num)
+        int opprfL = Math.max(CommonConstants.STATS_BIT_LENGTH + LongUtils.ceilLog2(pointNum), peqtL);
+        int opprfByteL = CommonUtils.getByteLength(opprfL);
         // P2 inserts items into no-stash cuckoo hash bin Table_1 with β bins.
         List<byte[]> cuckooHashKeyPayload = generateCuckooHashKeyPayload();
         // P2 sends the cuckoo hash bin keys
@@ -126,16 +132,24 @@ public class Psty19CcpsiClient extends AbstractCcpsiClient {
                     .array();
             })
             .toArray(byte[][]::new);
-        byte[][] targetArray = bopprfReceiver.opprf(l, inputArray, pointNum);
+        byte[][] targetArray = bopprfReceiver.opprf(opprfL, inputArray, pointNum);
         stopWatch.stop();
         long opprfTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
         stopWatch.reset();
         logStepInfo(PtoState.PTO_STEP, 2, 3, opprfTime);
 
         stopWatch.start();
-        // The parties invoke a private equality test with l = σ + log_2(β) + log_2(point_num).
+        // The parties invoke a private equality test
+        targetArray = Arrays.stream(targetArray)
+            .map(target -> {
+                byte[] truncatedTarget = new byte[peqtByteL];
+                System.arraycopy(target, opprfByteL - peqtByteL, truncatedTarget, 0, peqtByteL);
+                BytesUtils.reduceByteArray(truncatedTarget, peqtL);
+                return truncatedTarget;
+            })
+            .toArray(byte[][]::new);
         // P2 inputs y_1^*, ..., y_β^* and outputs z1.
-        SquareZ2Vector z1 = peqtReceiver.peqt(l, targetArray);
+        SquareZ2Vector z1 = peqtReceiver.peqt(peqtL, targetArray);
         // create the table
         ByteBuffer[] table = IntStream.range(0, beta)
             .mapToObj(batchIndex -> {

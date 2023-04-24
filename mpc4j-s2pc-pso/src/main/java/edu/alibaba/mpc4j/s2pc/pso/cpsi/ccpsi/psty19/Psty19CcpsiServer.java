@@ -20,6 +20,7 @@ import edu.alibaba.mpc4j.s2pc.pso.cpsi.ccpsi.psty19.Psty19CcpsiPtoDesc.PtoStep;
 
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
@@ -89,9 +90,9 @@ public class Psty19CcpsiServer extends AbstractCcpsiServer {
         int maxBeta = CuckooHashBinFactory.getBinNum(cuckooHashBinType, maxClientElementSize);
         int maxPointNum = hashNum * maxServerElementSize;
         bopprfSender.init(maxBeta, maxPointNum);
-        // init private equality test sender, where maxL = σ + log_2(β_max) + log_2(max_point_num)
-        int maxL = CommonConstants.STATS_BIT_LENGTH + LongUtils.ceilLog2(maxBeta) + LongUtils.ceilLog2(maxPointNum);
-        peqtSender.init(maxL, maxBeta);
+        // init private equality test sender, where max(l_peqt) = σ + log_2(β_max)
+        int maxPeqtL = CommonConstants.STATS_BIT_LENGTH + LongUtils.ceilLog2(maxBeta);
+        peqtSender.init(maxPeqtL, maxBeta);
         stopWatch.stop();
         long initTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
         stopWatch.reset();
@@ -117,8 +118,12 @@ public class Psty19CcpsiServer extends AbstractCcpsiServer {
         beta = CuckooHashBinFactory.getBinNum(cuckooHashBinType, clientElementSize);
         // point_num = hash_num * n_s
         int pointNum = hashNum * serverElementSize;
-        // l = σ + log_2(β) + log_2(point_num)
-        int l = CommonConstants.STATS_BIT_LENGTH + LongUtils.ceilLog2(beta) + LongUtils.ceilLog2(pointNum);
+        // l_peqt = σ + log_2(β)
+        int peqtL = CommonConstants.STATS_BIT_LENGTH + LongUtils.ceilLog2(beta);
+        int peqtByteL = CommonUtils.getByteLength(peqtL);
+        // l_opprf = σ + log_2(point_num)
+        int opprfL = Math.max(CommonConstants.STATS_BIT_LENGTH + LongUtils.ceilLog2(pointNum), peqtL);
+        int opprfByteL = CommonUtils.getByteLength(opprfL);
         // P1 inserts items into simple hash bin Table_2 with β bins
         handleCuckooHashKeyPayload(cuckooHashKeyPayload);
         stopWatch.stop();
@@ -129,8 +134,8 @@ public class Psty19CcpsiServer extends AbstractCcpsiServer {
         stopWatch.start();
         // The parties invoke a batched OPPRF.
         // P1 inputs Table_2[1], . . . , Table_2[β] and receives T[1], ..., T[β]
-        generateBopprfInputs(l);
-        bopprfSender.opprf(l, inputArrays, targetArrays);
+        generateBopprfInputs(opprfL);
+        bopprfSender.opprf(opprfL, inputArrays, targetArrays);
         inputArrays = null;
         targetArrays = null;
         stopWatch.stop();
@@ -139,9 +144,17 @@ public class Psty19CcpsiServer extends AbstractCcpsiServer {
         logStepInfo(PtoState.PTO_STEP, 2, 3, opprfTime);
 
         stopWatch.start();
-        // The parties invoke a private equality test with l = σ + log_2(β) + log_2(point_num).
+        // The parties invoke a private equality test
+        targetArray = Arrays.stream(targetArray)
+            .map(target -> {
+                byte[] truncatedTarget = new byte[peqtByteL];
+                System.arraycopy(target, opprfByteL - peqtByteL, truncatedTarget, 0, peqtByteL);
+                BytesUtils.reduceByteArray(truncatedTarget, peqtL);
+                return truncatedTarget;
+            })
+            .toArray(byte[][]::new);
         // P1 inputs y_1^*, ..., y_β^* and outputs z0.
-        SquareZ2Vector z0 = peqtSender.peqt(l, targetArray);
+        SquareZ2Vector z0 = peqtSender.peqt(peqtL, targetArray);
         targetArray = null;
         stopWatch.stop();
         long peqtTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
