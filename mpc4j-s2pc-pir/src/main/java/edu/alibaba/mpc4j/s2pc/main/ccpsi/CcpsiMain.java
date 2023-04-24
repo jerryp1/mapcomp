@@ -219,8 +219,8 @@ public class CcpsiMain {
             + "\t" + serverSetSize
             + "\t" + clientSetSize
             + "\t" + ccpsiServer.getParallel()
-            + "\t" + silent
             + "\t" + ForkJoinPool.getCommonPoolParallelism()
+            + "\t" + silent
             + "\t" + initTime + "\t" + initDataPacketNum + "\t" + initPayloadByteLength + "\t" + initSendByteLength
             + "\t" + ptoTime + "\t" + ptoDataPacketNum + "\t" + ptoPayloadByteLength + "\t" + ptoSendByteLength;
         printWriter.println(info);
@@ -372,8 +372,8 @@ public class CcpsiMain {
             + "\t" + clientSetSize
             + "\t" + serverSetSize
             + "\t" + ccpsiClient.getParallel()
-            + "\t" + silent
             + "\t" + ForkJoinPool.getCommonPoolParallelism()
+            + "\t" + silent
             + "\t" + initTime + "\t" + initDataPacketNum + "\t" + initPayloadByteLength + "\t" + initSendByteLength
             + "\t" + ptoTime + "\t" + ptoDataPacketNum + "\t" + ptoPayloadByteLength + "\t" + ptoSendByteLength;
         printWriter.println(info);
