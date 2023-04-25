@@ -44,6 +44,8 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Fixed
 
+- `mpc4j-common-tool`
+  - Fix a bug when switching the elliptic curve. In [Missing docs for c++ interface? #72](https://github.com/herumi/mcl/issues/72), the MCL author said "The current version does not support multi parameters. At first, I had developed the features, but I gave up it because a class dependency was very complicated." It brings some problems when we want to switch from an elliptic curve to another one that both use MCL. Now, we only allow users to use SEC_P256_K1 with MCL. 
 - `mpc4j-dp-service`
   - Fix a bug for AppleHcmsFoLdp, we note that in Java, a % b (for b > 0) can have negative value. Therefore, we need to write Math.abs(a % b) instead of directly a % b to ensure a % b must be in \[0, b). Thank Xiaochen Li for the report.
   - Fix a bug for OLH and FLH, we note that $g$ in OLH and FLH must be an integer. Therefore, we cannot directly use the optimized frequency estimation formula to estimate the count. Instead, we use the original formula.

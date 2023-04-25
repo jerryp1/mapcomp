@@ -89,20 +89,7 @@ public class Zcl22PkePsuClient extends AbstractPsuClient {
         zpOvdmType = config.getZpOvdmType();
         compressEncode = config.getCompressEncode();
         pipeSize = config.getPipeSize();
-        EccFactory.EccType eccType;
-        switch (envType) {
-            case STANDARD:
-            case INLAND:
-                eccType = EccFactory.EccType.SEC_P256_K1_MCL;
-                break;
-            case STANDARD_JDK:
-            case INLAND_JDK:
-                eccType = EccFactory.EccType.SM2_P256_V1_BC;
-                break;
-            default:
-                throw new IllegalArgumentException("Invalid " + EccFactory.EccType.class.getSimpleName() + ": " + envType);
-        }
-        ecc = EccFactory.createInstance(eccType);
+        ecc = EccFactory.createInstance(envType);
     }
 
     @Override
