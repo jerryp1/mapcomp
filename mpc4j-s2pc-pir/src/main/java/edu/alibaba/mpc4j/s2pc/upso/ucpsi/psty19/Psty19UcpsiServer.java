@@ -56,9 +56,9 @@ public class Psty19UcpsiServer extends AbstractUcpsiServer {
      */
     private int beta;
     /**
-     * l
+     * l_peqt
      */
-    private int l;
+    private int peqtL;
     /**
      * hash keys
      */
@@ -96,11 +96,15 @@ public class Psty19UcpsiServer extends AbstractUcpsiServer {
         beta = CuckooHashBinFactory.getBinNum(cuckooHashBinType, maxClientElementSize);
         // point_num = hash_num * n_s
         int pointNum = hashNum * serverElementSize;
-        // l = σ + log_2(β) + log_2(point_num)
-        l = CommonConstants.STATS_BIT_LENGTH + LongUtils.ceilLog2(beta) + LongUtils.ceilLog2(pointNum);
+        // l_peqt = σ + log_2(β)
+        peqtL = CommonConstants.STATS_BIT_LENGTH + LongUtils.ceilLog2(beta);
+        int peqtByteL = CommonUtils.getByteLength(peqtL);
+        // l_opprf = σ + log_2(point_num)
+        int opprfL = Math.max(CommonConstants.STATS_BIT_LENGTH + LongUtils.ceilLog2(pointNum), peqtL);
+        int opprfByteL = CommonUtils.getByteLength(opprfL);
         // simple hash
         hashKeys = CommonUtils.generateRandomKeys(hashNum, secureRandom);
-        generateBopprfInputs(l);
+        generateBopprfInputs(opprfL);
         stopWatch.stop();
         long binTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
         stopWatch.reset();
@@ -108,17 +112,25 @@ public class Psty19UcpsiServer extends AbstractUcpsiServer {
 
         stopWatch.start();
         // initialize unbalanced batch opprf
-        ubopprfSender.init(l, inputArrays, targetArrays);
+        ubopprfSender.init(opprfL, inputArrays, targetArrays);
         inputArrays = null;
         targetArrays = null;
         stopWatch.stop();
-        long ubopprfTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
+        long opprfTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
         stopWatch.reset();
-        logStepInfo(PtoState.INIT_STEP, 2, 3, ubopprfTime, "Sender init unbalanced batch opprf");
+        logStepInfo(PtoState.INIT_STEP, 2, 3, opprfTime, "Sender init unbalanced batch opprf");
 
         stopWatch.start();
         // initialize peqt
-        peqtParty.init(l, beta);
+        targetArray = Arrays.stream(targetArray)
+            .map(target -> {
+                byte[] truncatedTarget = new byte[peqtByteL];
+                System.arraycopy(target, opprfByteL - peqtByteL, truncatedTarget, 0, peqtByteL);
+                BytesUtils.reduceByteArray(truncatedTarget, peqtL);
+                return truncatedTarget;
+            })
+            .toArray(byte[][]::new);
+        peqtParty.init(peqtL, beta);
         stopWatch.stop();
         long peqtTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
         stopWatch.reset();
@@ -150,7 +162,7 @@ public class Psty19UcpsiServer extends AbstractUcpsiServer {
 
         stopWatch.start();
         // private equality test
-        SquareZ2Vector z2Vector = peqtParty.peqt(l, targetArray);
+        SquareZ2Vector z2Vector = peqtParty.peqt(peqtL, targetArray);
         stopWatch.stop();
         long membershipTestTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
         stopWatch.reset();

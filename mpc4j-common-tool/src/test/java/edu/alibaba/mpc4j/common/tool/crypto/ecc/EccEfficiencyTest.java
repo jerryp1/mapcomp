@@ -52,9 +52,11 @@ public class EccEfficiencyTest {
      */
     private static final EccType[] ECC_TYPES = new EccType[] {
         EccType.SEC_P256_K1_MCL,
+        EccType.SEC_P256_K1_OPENSSL,
         EccType.SEC_P256_K1_BC,
         EccType.SEC_P256_R1_OPENSSL,
         EccType.SEC_P256_R1_BC,
+        EccType.SM2_P256_V1_OPENSSL,
         EccType.SM2_P256_V1_BC,
         EccType.CURVE25519_BC,
         EccType.ED25519_BC

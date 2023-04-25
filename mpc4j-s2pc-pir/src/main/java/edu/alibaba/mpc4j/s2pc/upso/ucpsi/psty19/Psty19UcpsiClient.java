@@ -7,6 +7,8 @@ import edu.alibaba.mpc4j.common.tool.hashbin.object.HashBinEntry;
 import edu.alibaba.mpc4j.common.tool.hashbin.object.cuckoo.CuckooHashBinFactory;
 import edu.alibaba.mpc4j.common.tool.hashbin.object.cuckoo.CuckooHashBinFactory.CuckooHashBinType;
 import edu.alibaba.mpc4j.common.tool.hashbin.object.cuckoo.NoStashCuckooHashBin;
+import edu.alibaba.mpc4j.common.tool.utils.BytesUtils;
+import edu.alibaba.mpc4j.common.tool.utils.CommonUtils;
 import edu.alibaba.mpc4j.common.tool.utils.LongUtils;
 import edu.alibaba.mpc4j.s2pc.aby.basics.bc.SquareZ2Vector;
 import edu.alibaba.mpc4j.s2pc.aby.circuit.peqt.PeqtFactory;
@@ -18,6 +20,7 @@ import edu.alibaba.mpc4j.s2pc.upso.uopprf.ub.UbopprfReceiver;
 import edu.alibaba.mpc4j.s2pc.upso.ucpsi.psty19.Psty19UcpsiPtoDesc.PtoStep;
 
 import java.nio.ByteBuffer;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
@@ -51,9 +54,17 @@ public class Psty19UcpsiClient extends AbstractUcpsiClient {
      */
     private int beta;
     /**
-     * l
+     * l_peqt
      */
-    private int l;
+    private int peqtL;
+    /**
+     * l_peqt in byte
+     */
+    private int peqtByteL;
+    /**
+     * l_opprf in byte
+     */
+    private int opprfByteL;
     /**
      * cuckoo hash bin
      */
@@ -79,14 +90,30 @@ public class Psty19UcpsiClient extends AbstractUcpsiClient {
         beta = CuckooHashBinFactory.getBinNum(cuckooHashBinType, maxClientElementSize);
         // point_num = hash_num * n_s
         int pointNum = hashNum * serverElementSize;
-        // l = σ + log_2(β) + log_2(point_num)
-        l = CommonConstants.STATS_BIT_LENGTH + LongUtils.ceilLog2(beta) + LongUtils.ceilLog2(pointNum);
-        ubopprfReceiver.init(l, beta, pointNum);
-        peqtParty.init(l, beta);
+        // l_peqt = σ + log_2(β) + log_2(point_num)
+        peqtL = CommonConstants.STATS_BIT_LENGTH + LongUtils.ceilLog2(beta);
+        peqtByteL = CommonUtils.getByteLength(peqtL);
+        // l_opprf = σ + log_2(point_num)
+        int opprfL = Math.max(CommonConstants.STATS_BIT_LENGTH + LongUtils.ceilLog2(pointNum), peqtL);
+        opprfByteL = CommonUtils.getByteLength(opprfL);
         stopWatch.stop();
-        long initTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
+        long paramTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
         stopWatch.reset();
-        logStepInfo(PtoState.INIT_STEP, 1, 1, initTime);
+        logStepInfo(PtoState.INIT_STEP, 1, 3, paramTime);
+
+        stopWatch.start();
+        ubopprfReceiver.init(opprfL, beta, pointNum);
+        stopWatch.stop();
+        long opprfTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
+        stopWatch.reset();
+        logStepInfo(PtoState.INIT_STEP, 2, 3, opprfTime);
+
+        stopWatch.start();
+        peqtParty.init(peqtL, beta);
+        stopWatch.stop();
+        long peqtTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
+        stopWatch.reset();
+        logStepInfo(PtoState.INIT_STEP, 3, 3, peqtTime);
 
         logPhaseInfo(PtoState.INIT_END);
     }
@@ -129,8 +156,16 @@ public class Psty19UcpsiClient extends AbstractUcpsiClient {
         logStepInfo(PtoState.PTO_STEP, 2, 3, bopprfTime, "Receiver batch opprf");
 
         stopWatch.start();
+        targetArray = Arrays.stream(targetArray)
+            .map(target -> {
+                byte[] truncatedTarget = new byte[peqtByteL];
+                System.arraycopy(target, opprfByteL - peqtByteL, truncatedTarget, 0, peqtByteL);
+                BytesUtils.reduceByteArray(truncatedTarget, peqtL);
+                return truncatedTarget;
+            })
+            .toArray(byte[][]::new);
         // private equality test
-        SquareZ2Vector z1 = peqtParty.peqt(l, targetArray);
+        SquareZ2Vector z1 = peqtParty.peqt(peqtL, targetArray);
         ByteBuffer[] table = IntStream.range(0, beta)
             .mapToObj(batchIndex -> {
                 HashBinEntry<ByteBuffer> item = cuckooHashBin.getHashBinEntry(batchIndex);
