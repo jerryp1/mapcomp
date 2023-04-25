@@ -28,13 +28,13 @@ public class SecP256k1MclNativeEcc implements NativeEcc {
     }
 
     @Override
-    public synchronized native void init();
+    public native void init();
 
     @Override
-    public synchronized native ByteBuffer precompute(String pointString);
+    public native ByteBuffer precompute(String pointString);
 
     @Override
-    public synchronized native void destroyPrecompute(ByteBuffer windowHandler);
+    public native void destroyPrecompute(ByteBuffer windowHandler);
 
     @Override
     public native String precomputeMultiply(ByteBuffer windowHandler, String rString);
@@ -43,5 +43,5 @@ public class SecP256k1MclNativeEcc implements NativeEcc {
     public native String multiply(String pointString, String rString);
 
     @Override
-    public synchronized native void reset();
+    public native void reset();
 }
