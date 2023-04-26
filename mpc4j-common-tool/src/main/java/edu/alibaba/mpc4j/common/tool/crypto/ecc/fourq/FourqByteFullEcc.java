@@ -185,7 +185,6 @@ public class FourqByteFullEcc implements ByteFullEcc {
         return FourqByteEccUtils.SCALAR_BYTES;
     }
 
-
     private native byte[] nativeMul(byte[] p, byte[] k);
 
     private native byte[] nativeBaseMul(byte[] k);
