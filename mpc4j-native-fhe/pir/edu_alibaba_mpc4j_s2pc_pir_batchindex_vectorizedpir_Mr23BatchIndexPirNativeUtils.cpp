@@ -119,8 +119,15 @@ JNIEXPORT jbyteArray JNICALL Java_edu_alibaba_mpc4j_s2pc_pir_batchindex_vectoriz
     // first dimension
     uint32_t cols = encoded_db.size() / first_two_dimension_size;
     vector<Ciphertext> db_prime(cols);
+    Ciphertext zero;
+    encryptor.encrypt_zero(zero);
+    evaluator.transform_to_ntt_inplace(zero);
     for (int i = 0; i < cols; i++) {
-        evaluator.multiply_plain(rotated_ciphertexts[0], encoded_db[i * first_two_dimension_size], db_prime[i]);
+        if (encoded_db[i * first_two_dimension_size].is_zero()) {
+            db_prime[i] = zero;
+        } else {
+            evaluator.multiply_plain(rotated_ciphertexts[0], encoded_db[i * first_two_dimension_size], db_prime[i]);
+        }
         for (int j = 1; j < first_two_dimension_size; j++) {
             if (encoded_db[i * first_two_dimension_size + j].is_zero()) {
                 continue;
