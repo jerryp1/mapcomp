@@ -37,8 +37,8 @@ public class Mr23IndexPirParams implements IndexPirParams {
      */
     private final int thirdDimensionSize;
 
-    public Mr23IndexPirParams(int polyModulusDegree, int plainModulusBitLength, int[] coeffModulusBitLength,
-                              int firstTwoDimensionSize, int thirdDimensionSize) {
+    public Mr23IndexPirParams(int polyModulusDegree, int plainModulusBitLength, int firstTwoDimensionSize,
+                              int thirdDimensionSize) {
         this.polyModulusDegree = polyModulusDegree;
         this.plainModulusBitLength = plainModulusBitLength;
         assert firstTwoDimensionSize == PirUtils.getNextPowerOfTwo(firstTwoDimensionSize);
@@ -46,7 +46,7 @@ public class Mr23IndexPirParams implements IndexPirParams {
         this.thirdDimensionSize = thirdDimensionSize;
         // 生成加密方案参数
         this.encryptionParams = Mr23IndexPirNativeUtils.generateSealContext(
-            polyModulusDegree, plainModulusBitLength, coeffModulusBitLength
+            polyModulusDegree, plainModulusBitLength
         );
     }
 
@@ -54,10 +54,7 @@ public class Mr23IndexPirParams implements IndexPirParams {
      * 默认参数
      */
     public static Mr23IndexPirParams DEFAULT_PARAMS = new Mr23IndexPirParams(
-        8192,
-        20,
-        new int[]{50, 50, 50, 50},
-        128, 64
+        8192, 20, 128, 64
     );
 
     @Override

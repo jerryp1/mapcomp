@@ -11,14 +11,11 @@ using namespace std;
 using namespace seal;
 
 JNIEXPORT jbyteArray JNICALL Java_edu_alibaba_mpc4j_s2pc_pir_batchindex_vectorizedpir_Mr23BatchIndexPirNativeUtils_generateSealContext(
-        JNIEnv *env, jclass, jint poly_modulus_degree, jint plain_modulus_size, jintArray coeff_modulus_bits) {
-    uint32_t coeff_size = env->GetArrayLength(coeff_modulus_bits);
-    jint* coeff_ptr = env->GetIntArrayElements(coeff_modulus_bits, JNI_FALSE);
-    vector<int32_t> bit_sizes(coeff_ptr, coeff_ptr + coeff_size);
+        JNIEnv *env, jclass, jint poly_modulus_degree, jint plain_modulus_size) {
     EncryptionParameters parms = EncryptionParameters(scheme_type::bfv);
     parms.set_poly_modulus_degree(poly_modulus_degree);
     parms.set_plain_modulus(PlainModulus::Batching(poly_modulus_degree, plain_modulus_size));
-    parms.set_coeff_modulus(CoeffModulus::Create(poly_modulus_degree, bit_sizes));
+    parms.set_coeff_modulus(CoeffModulus::BFVDefault(poly_modulus_degree, sec_level_type::tc128));
     SEALContext context = SEALContext(parms);
     jclass exception = env->FindClass("java/lang/Exception");
     if (!context.parameters_set()) {
@@ -122,8 +119,15 @@ JNIEXPORT jbyteArray JNICALL Java_edu_alibaba_mpc4j_s2pc_pir_batchindex_vectoriz
     // first dimension
     uint32_t cols = encoded_db.size() / first_two_dimension_size;
     vector<Ciphertext> db_prime(cols);
+    Ciphertext zero;
+    encryptor.encrypt_zero(zero);
+    evaluator.transform_to_ntt_inplace(zero);
     for (int i = 0; i < cols; i++) {
-        evaluator.multiply_plain(rotated_ciphertexts[0], encoded_db[i * first_two_dimension_size], db_prime[i]);
+        if (encoded_db[i * first_two_dimension_size].is_zero()) {
+            db_prime[i] = zero;
+        } else {
+            evaluator.multiply_plain(rotated_ciphertexts[0], encoded_db[i * first_two_dimension_size], db_prime[i]);
+        }
         for (int j = 1; j < first_two_dimension_size; j++) {
             if (encoded_db[i * first_two_dimension_size + j].is_zero()) {
                 continue;

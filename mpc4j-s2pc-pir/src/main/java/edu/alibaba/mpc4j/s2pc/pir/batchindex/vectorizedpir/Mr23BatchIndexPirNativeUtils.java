@@ -19,10 +19,9 @@ class Mr23BatchIndexPirNativeUtils {
      *
      * @param modulusDegree         多项式阶。
      * @param plainModulusBitLength 明文模数比特长度。
-     * @param coeffModulusBitLength 密文模数比特长度。
      * @return SEAL上下文参数。
      */
-    static native byte[] generateSealContext(int modulusDegree, int plainModulusBitLength, int[] coeffModulusBitLength);
+    static native byte[] generateSealContext(int modulusDegree, int plainModulusBitLength);
 
     /**
      * 生成全同态加密公私钥对。

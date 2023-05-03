@@ -57,7 +57,6 @@ public class VectorizedPirTest {
             new Mr23IndexPirParams(
                 8192,
                 20,
-                new int[]{50, 50, 50, 50},
                 64,
                 20
             )
