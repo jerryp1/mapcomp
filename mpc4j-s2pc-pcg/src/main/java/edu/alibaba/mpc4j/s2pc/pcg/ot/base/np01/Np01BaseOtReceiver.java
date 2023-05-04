@@ -113,7 +113,7 @@ public class Np01BaseOtReceiver extends AbstractBaseOtReceiver {
                 // The receiver sets public keys PK_{\sigma} = g^k
                 ECPoint pkSigma = ecc.multiply(ecc.getG(), k);
                 // and PK_{1 - \sigma} = C / PK_{\sigma}
-                ECPoint pkOneMinusSigma = c.add(pkSigma.negate());
+                ECPoint pkOneMinusSigma = ecc.add(c, ecc.negate(pkSigma));
                 // 存储OT的密钥key=H(index,g^rk)
                 byte[] kInputByteArray = ecc.encode(ecc.multiply(g2r, k), false);
                 rbArray[index] = kdf.deriveKey(ByteBuffer

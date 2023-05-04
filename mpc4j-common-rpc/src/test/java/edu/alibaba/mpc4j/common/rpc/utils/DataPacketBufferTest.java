@@ -9,6 +9,8 @@ import java.util.stream.Collectors;
 import java.util.stream.LongStream;
 
 /**
+ * data packet buffer test.
+ *
  * @author Weiran Liu
  * @date 2023/2/9
  */

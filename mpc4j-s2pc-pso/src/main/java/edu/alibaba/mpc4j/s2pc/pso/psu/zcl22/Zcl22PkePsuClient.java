@@ -89,7 +89,7 @@ public class Zcl22PkePsuClient extends AbstractPsuClient {
         zpOvdmType = config.getZpOvdmType();
         compressEncode = config.getCompressEncode();
         pipeSize = config.getPipeSize();
-        ecc = EccFactory.createInstance(getEnvType());
+        ecc = EccFactory.createInstance(envType);
     }
 
     @Override

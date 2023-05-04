@@ -33,12 +33,6 @@ public class DirectCotConfig implements CotConfig {
     }
 
     @Override
-    public int maxBaseNum() {
-        // in theory, core COT can support arbitrary number of COTs. Here we also provide some limitations.
-        return 1 << 24;
-    }
-
-    @Override
     public void setEnvType(EnvType envType) {
         coreCotConfig.setEnvType(envType);
     }

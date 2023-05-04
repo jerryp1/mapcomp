@@ -6,6 +6,7 @@ import edu.alibaba.mpc4j.common.rpc.PtoState;
 import edu.alibaba.mpc4j.common.rpc.Rpc;
 import edu.alibaba.mpc4j.s2pc.pcg.ot.cot.AbstractCotReceiver;
 import edu.alibaba.mpc4j.s2pc.pcg.ot.cot.CotReceiverOutput;
+import edu.alibaba.mpc4j.s2pc.pcg.ot.cot.nc.NcCotConfig;
 import edu.alibaba.mpc4j.s2pc.pcg.ot.cot.nc.NcCotFactory;
 import edu.alibaba.mpc4j.s2pc.pcg.ot.cot.nc.NcCotReceiver;
 import edu.alibaba.mpc4j.s2pc.pcg.ot.cot.pre.PreCotFactory;
@@ -29,6 +30,10 @@ public class CacheCotReceiver extends AbstractCotReceiver {
      */
     private final PreCotReceiver preCotReceiver;
     /**
+     * max base num
+     */
+    private final int maxBaseNum;
+    /**
      * update round
      */
     private int updateRound;
@@ -39,8 +44,10 @@ public class CacheCotReceiver extends AbstractCotReceiver {
 
     public CacheCotReceiver(Rpc receiverRpc, Party senderParty, CacheCotConfig config) {
         super(CacheCotPtoDesc.getInstance(), receiverRpc, senderParty, config);
-        ncCotReceiver = NcCotFactory.createReceiver(receiverRpc, senderParty, config.getNcCotConfig());
+        NcCotConfig ncCotConfig = config.getNcCotConfig();
+        ncCotReceiver = NcCotFactory.createReceiver(receiverRpc, senderParty, ncCotConfig);
         addSubPtos(ncCotReceiver);
+        maxBaseNum = ncCotConfig.maxNum();
         preCotReceiver = PreCotFactory.createReceiver(receiverRpc, senderParty, config.getPreCotConfig());
         addSubPtos(preCotReceiver);
     }
@@ -52,14 +59,14 @@ public class CacheCotReceiver extends AbstractCotReceiver {
 
         stopWatch.start();
         int perRoundNum;
-        if (updateNum <= config.maxBaseNum()) {
+        if (updateNum <= maxBaseNum) {
             // we only need to run single round
             perRoundNum = updateNum;
             updateRound = 1;
         } else {
             // we need to run multiple round
-            perRoundNum = config.maxBaseNum();
-            updateRound = (int) Math.ceil((double) updateNum / config.maxBaseNum());
+            perRoundNum = maxBaseNum;
+            updateRound = (int) Math.ceil((double) updateNum / maxBaseNum);
         }
         ncCotReceiver.init(perRoundNum);
         buffer = CotReceiverOutput.createEmpty();

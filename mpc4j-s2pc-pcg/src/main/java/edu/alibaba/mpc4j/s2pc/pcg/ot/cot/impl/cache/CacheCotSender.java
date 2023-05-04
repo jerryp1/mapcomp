@@ -6,6 +6,7 @@ import edu.alibaba.mpc4j.common.rpc.PtoState;
 import edu.alibaba.mpc4j.common.rpc.Rpc;
 import edu.alibaba.mpc4j.s2pc.pcg.ot.cot.AbstractCotSender;
 import edu.alibaba.mpc4j.s2pc.pcg.ot.cot.CotSenderOutput;
+import edu.alibaba.mpc4j.s2pc.pcg.ot.cot.nc.NcCotConfig;
 import edu.alibaba.mpc4j.s2pc.pcg.ot.cot.nc.NcCotFactory;
 import edu.alibaba.mpc4j.s2pc.pcg.ot.cot.nc.NcCotSender;
 import edu.alibaba.mpc4j.s2pc.pcg.ot.cot.pre.PreCotFactory;
@@ -29,6 +30,10 @@ public class CacheCotSender extends AbstractCotSender {
      */
     private final PreCotSender preCotSender;
     /**
+     * max base num
+     */
+    private final int maxBaseNum;
+    /**
      * update round
      */
     private int updateRound;
@@ -39,8 +44,10 @@ public class CacheCotSender extends AbstractCotSender {
 
     public CacheCotSender(Rpc senderRpc, Party receiverParty, CacheCotConfig config) {
         super(CacheCotPtoDesc.getInstance(), senderRpc, receiverParty, config);
-        ncCotSender = NcCotFactory.createSender(senderRpc, receiverParty, config.getNcCotConfig());
+        NcCotConfig ncCotConfig = config.getNcCotConfig();
+        ncCotSender = NcCotFactory.createSender(senderRpc, receiverParty, ncCotConfig);
         addSubPtos(ncCotSender);
+        maxBaseNum = ncCotConfig.maxNum();
         preCotSender = PreCotFactory.createSender(senderRpc, receiverParty, config.getPreCotConfig());
         addSubPtos(preCotSender);
     }
@@ -52,14 +59,14 @@ public class CacheCotSender extends AbstractCotSender {
 
         stopWatch.start();
         int perRoundNum;
-        if (updateNum <= config.maxBaseNum()) {
+        if (updateNum <= maxBaseNum) {
             // we only need to run single round
             perRoundNum = updateNum;
             updateRound = 1;
         } else {
             // we need to run multiple round
-            perRoundNum = config.maxBaseNum();
-            updateRound = (int) Math.ceil((double) updateNum / config.maxBaseNum());
+            perRoundNum = maxBaseNum;
+            updateRound = (int) Math.ceil((double) updateNum / maxBaseNum);
         }
         ncCotSender.init(delta, perRoundNum);
         preCotSender.init();

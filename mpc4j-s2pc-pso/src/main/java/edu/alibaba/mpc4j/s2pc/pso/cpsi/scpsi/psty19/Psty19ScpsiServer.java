@@ -11,6 +11,8 @@ import edu.alibaba.mpc4j.common.tool.hashbin.object.HashBinEntry;
 import edu.alibaba.mpc4j.common.tool.hashbin.object.cuckoo.CuckooHashBin;
 import edu.alibaba.mpc4j.common.tool.hashbin.object.cuckoo.CuckooHashBinFactory;
 import edu.alibaba.mpc4j.common.tool.hashbin.object.cuckoo.CuckooHashBinFactory.CuckooHashBinType;
+import edu.alibaba.mpc4j.common.tool.utils.BytesUtils;
+import edu.alibaba.mpc4j.common.tool.utils.CommonUtils;
 import edu.alibaba.mpc4j.common.tool.utils.LongUtils;
 import edu.alibaba.mpc4j.s2pc.aby.basics.bc.SquareZ2Vector;
 import edu.alibaba.mpc4j.s2pc.aby.circuit.peqt.PeqtFactory;
@@ -77,9 +79,9 @@ public class Psty19ScpsiServer extends AbstractScpsiServer {
         int maxBeta = CuckooHashBinFactory.getBinNum(cuckooHashBinType, maxServerElementSize);
         int maxPointNum = cuckooHashNum * maxClientElementSize;
         bopprfReceiver.init(maxBeta, maxPointNum);
-        // init private equality test, where maxL = σ + log_2(β_max) + log_2(max_point_num)
-        int maxL = CommonConstants.STATS_BIT_LENGTH + LongUtils.ceilLog2(maxBeta) + LongUtils.ceilLog2(maxPointNum);
-        peqtSender.init(maxL, maxBeta);
+        // init private equality test, where max(l_peqt) = σ + log_2(β_max)
+        int maxPeqtL = CommonConstants.STATS_BIT_LENGTH + LongUtils.ceilLog2(maxBeta);
+        peqtSender.init(maxPeqtL, maxBeta);
         stopWatch.stop();
         long initTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
         stopWatch.reset();
@@ -98,8 +100,12 @@ public class Psty19ScpsiServer extends AbstractScpsiServer {
         int beta = CuckooHashBinFactory.getBinNum(cuckooHashBinType, serverElementSize);
         // point_num = hash_num * n_c
         int pointNum = cuckooHashNum * clientElementSize;
-        // l = σ + log_2(β) + log_2(point_num)
-        int l = CommonConstants.STATS_BIT_LENGTH + LongUtils.ceilLog2(beta) + LongUtils.ceilLog2(pointNum);
+        // l_peqt = σ + log_2(β)
+        int peqtL = CommonConstants.STATS_BIT_LENGTH + LongUtils.ceilLog2(beta);
+        int peqtByteL = CommonUtils.getByteLength(peqtL);
+        // l_opprf = σ + log_2(point_num)
+        int opprfL = Math.max(CommonConstants.STATS_BIT_LENGTH + LongUtils.ceilLog2(pointNum), peqtL);
+        int opprfByteL = CommonUtils.getByteLength(opprfL);
         // P1 inserts items into no-stash cuckoo hash bin Table_1 with β bins.
         List<byte[]> cuckooHashKeyPayload = generateCuckooHashKeyPayload();
         // P1 sends the cuckoo hash bin keys
@@ -114,7 +120,7 @@ public class Psty19ScpsiServer extends AbstractScpsiServer {
         logStepInfo(PtoState.PTO_STEP, 1, 3, binTime, "Server inserts cuckoo hash");
 
         stopWatch.start();
-        // The parties invoke a batched OPPRF.
+        // The parties invoke a batched OPPRF
         // P1 inputs Table_1[1], . . . , Table_1[β] and receives y_1^*, ..., y_β^*
         byte[][] inputArray = IntStream.range(0, beta)
             .mapToObj(batchIndex -> {
@@ -126,16 +132,24 @@ public class Psty19ScpsiServer extends AbstractScpsiServer {
                     .array();
             })
             .toArray(byte[][]::new);
-        byte[][] targetArray = bopprfReceiver.opprf(l, inputArray, pointNum);
+        byte[][] targetArray = bopprfReceiver.opprf(opprfL, inputArray, pointNum);
         stopWatch.stop();
         long opprfTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
         stopWatch.reset();
         logStepInfo(PtoState.PTO_STEP, 2, 3, opprfTime);
 
         stopWatch.start();
-        // The parties invoke a private equality test with l = σ + log_2(β) + log_2(point_num).
+        // The parties invoke a private equality test
+        targetArray = Arrays.stream(targetArray)
+            .map(target -> {
+                byte[] truncatedTarget = new byte[peqtByteL];
+                System.arraycopy(target, opprfByteL - peqtByteL, truncatedTarget, 0, peqtByteL);
+                BytesUtils.reduceByteArray(truncatedTarget, peqtL);
+                return truncatedTarget;
+            })
+            .toArray(byte[][]::new);
         // P1 inputs y_1^*, ..., y_β^* and outputs z0.
-        SquareZ2Vector z0 = peqtSender.peqt(l, targetArray);
+        SquareZ2Vector z0 = peqtSender.peqt(peqtL, targetArray);
         // create the table
         ByteBuffer[] table = IntStream.range(0, beta)
             .mapToObj(batchIndex -> {

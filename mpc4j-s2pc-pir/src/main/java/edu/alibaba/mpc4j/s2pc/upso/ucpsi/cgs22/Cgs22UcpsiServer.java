@@ -61,9 +61,9 @@ public class Cgs22UcpsiServer extends AbstractUcpsiServer {
      */
     private int beta;
     /**
-     * l
+     * l_psm
      */
-    private int l;
+    private int psmL;
     /**
      * hash keys
      */
@@ -106,11 +106,15 @@ public class Cgs22UcpsiServer extends AbstractUcpsiServer {
         // init batched OPPRF, where β_max = (1 + ε) * n_c, max_point_num = hash_num * n_s
         beta = CuckooHashBinFactory.getBinNum(cuckooHashBinType, maxClientElementSize);
         int pointNum = hashNum * serverElementSize;
-        // l = σ + log_2(d * β_max) + log_2(max_point_num)
-        l = CommonConstants.STATS_BIT_LENGTH + LongUtils.ceilLog2((long) d * beta) + LongUtils.ceilLog2(pointNum);
+        // l_psm = σ + log_2(d * β_max)
+        psmL = CommonConstants.STATS_BIT_LENGTH + LongUtils.ceilLog2((long) d * beta);
+        int psmByteL = CommonUtils.getByteLength(psmL);
+        // l_opprf = σ + log_2(max_point_num)
+        int opprfL = Math.max(CommonConstants.STATS_BIT_LENGTH + LongUtils.ceilLog2(pointNum), psmL);
+        int opprfByteL = CommonUtils.getByteLength(opprfL);
         // simple hash
         hashKeys = CommonUtils.generateRandomKeys(hashNum, secureRandom);
-        generateRbopprfInputs(l);
+        generateRbopprfInputs(opprfL);
         stopWatch.stop();
         long binTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
         stopWatch.reset();
@@ -118,17 +122,25 @@ public class Cgs22UcpsiServer extends AbstractUcpsiServer {
 
         stopWatch.start();
         // initialize unbalanced related batch opprf
-        urbopprfSender.init(l, inputArrays, targetArrays);
+        urbopprfSender.init(opprfL, inputArrays, targetArrays);
         inputArrays = null;
         targetArrays = null;
         stopWatch.stop();
-        long urbopprfTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
+        long opprfTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
         stopWatch.reset();
-        logStepInfo(PtoState.INIT_STEP, 2, 3, urbopprfTime);
+        logStepInfo(PtoState.INIT_STEP, 2, 3, opprfTime);
 
         stopWatch.start();
+        targetArray = Arrays.stream(targetArray)
+            .map(target -> {
+                byte[] truncatedTarget = new byte[psmByteL];
+                System.arraycopy(target, opprfByteL - psmByteL, truncatedTarget, 0, psmByteL);
+                BytesUtils.reduceByteArray(truncatedTarget, psmL);
+                return truncatedTarget;
+            })
+            .toArray(byte[][]::new);
         // initialize private set membership
-        psmReceiver.init(l, d, beta);
+        psmReceiver.init(psmL, d, beta);
         stopWatch.stop();
         long psmTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
         stopWatch.reset();
@@ -160,7 +172,7 @@ public class Cgs22UcpsiServer extends AbstractUcpsiServer {
 
         stopWatch.start();
         // private set membership
-        SquareZ2Vector z0 = psmReceiver.psm(l, targetArray);
+        SquareZ2Vector z0 = psmReceiver.psm(psmL, targetArray);
         targetArray = null;
         stopWatch.stop();
         long psmTime = stopWatch.getTime(TimeUnit.MILLISECONDS);

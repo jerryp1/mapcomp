@@ -1,6 +1,6 @@
 package edu.alibaba.mpc4j.s2pc.aby.basics.bc.rrg21;
 
-import com.alibaba.mpc4j.common.circuit.z2.MpcZ2Vector;
+import edu.alibaba.mpc4j.common.circuit.z2.MpcZ2Vector;
 import edu.alibaba.mpc4j.common.rpc.*;
 import edu.alibaba.mpc4j.common.rpc.utils.DataPacket;
 import edu.alibaba.mpc4j.common.rpc.utils.DataPacketHeader;
@@ -36,10 +36,6 @@ public class Rrg21BcReceiver extends AbstractBcParty {
      */
     private final CotSender cotSender;
     /**
-     * max COT num
-     */
-    private final int maxCotNum;
-    /**
      * -t1 vector
      */
     private BitVector negT1BitVector;
@@ -55,7 +51,6 @@ public class Rrg21BcReceiver extends AbstractBcParty {
         addSubPtos(cotReceiver);
         cotSender = CotFactory.createSender(receiverRpc, senderParty, cotConfig);
         addSubPtos(cotSender);
-        maxCotNum = cotConfig.maxBaseNum();
     }
 
     @Override
@@ -65,10 +60,10 @@ public class Rrg21BcReceiver extends AbstractBcParty {
 
         stopWatch.start();
         // since storing many COT outputs would lead to memory exception, here we generate COT when necessary
-        cotReceiver.init(maxRoundBitNum, Math.min(updateBitNum, maxCotNum));
+        cotReceiver.init(maxRoundBitNum, updateBitNum);
         byte[] delta = new byte[CommonConstants.BLOCK_BYTE_LENGTH];
         secureRandom.nextBytes(delta);
-        cotSender.init(delta, maxRoundBitNum, Math.min(updateBitNum, maxCotNum));
+        cotSender.init(delta, maxRoundBitNum, updateBitNum);
         stopWatch.stop();
         long initTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
         stopWatch.reset();

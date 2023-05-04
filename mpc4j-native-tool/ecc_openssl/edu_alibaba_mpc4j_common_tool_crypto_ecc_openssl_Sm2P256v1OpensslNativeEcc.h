@@ -13,7 +13,7 @@ extern "C" {
  * Signature: ()V
  */
 JNIEXPORT void JNICALL Java_edu_alibaba_mpc4j_common_tool_crypto_ecc_openssl_Sm2P256v1OpensslNativeEcc_init
-  (JNIEnv *, jobject);
+    (JNIEnv *, jobject);
 
 /*
  * Class:     edu_alibaba_mpc4j_common_tool_crypto_ecc_openssl_Sm2P256v1OpensslNativeEcc
@@ -21,7 +21,7 @@ JNIEXPORT void JNICALL Java_edu_alibaba_mpc4j_common_tool_crypto_ecc_openssl_Sm2
  * Signature: (Ljava/lang/String;)Ljava/nio/ByteBuffer;
  */
 JNIEXPORT jobject JNICALL Java_edu_alibaba_mpc4j_common_tool_crypto_ecc_openssl_Sm2P256v1OpensslNativeEcc_precompute
-  (JNIEnv *, jobject, jstring);
+    (JNIEnv *, jobject, jstring);
 
 /*
  * Class:     edu_alibaba_mpc4j_common_tool_crypto_ecc_openssl_Sm2P256v1OpensslNativeEcc
@@ -29,7 +29,7 @@ JNIEXPORT jobject JNICALL Java_edu_alibaba_mpc4j_common_tool_crypto_ecc_openssl_
  * Signature: (Ljava/nio/ByteBuffer;)V
  */
 JNIEXPORT void JNICALL Java_edu_alibaba_mpc4j_common_tool_crypto_ecc_openssl_Sm2P256v1OpensslNativeEcc_destroyPrecompute
-  (JNIEnv *, jobject, jobject);
+    (JNIEnv *, jobject, jobject);
 
 /*
  * Class:     edu_alibaba_mpc4j_common_tool_crypto_ecc_openssl_Sm2P256v1OpensslNativeEcc
@@ -37,7 +37,7 @@ JNIEXPORT void JNICALL Java_edu_alibaba_mpc4j_common_tool_crypto_ecc_openssl_Sm2
  * Signature: (Ljava/nio/ByteBuffer;Ljava/lang/String;)Ljava/lang/String;
  */
 JNIEXPORT jstring JNICALL Java_edu_alibaba_mpc4j_common_tool_crypto_ecc_openssl_Sm2P256v1OpensslNativeEcc_precomputeMultiply
-  (JNIEnv *, jobject, jobject, jstring);
+    (JNIEnv *, jobject, jobject, jstring);
 
 /*
  * Class:     edu_alibaba_mpc4j_common_tool_crypto_ecc_openssl_Sm2P256v1OpensslNativeEcc
@@ -45,7 +45,7 @@ JNIEXPORT jstring JNICALL Java_edu_alibaba_mpc4j_common_tool_crypto_ecc_openssl_
  * Signature: (Ljava/lang/String;Ljava/lang/String;)Ljava/lang/String;
  */
 JNIEXPORT jstring JNICALL Java_edu_alibaba_mpc4j_common_tool_crypto_ecc_openssl_Sm2P256v1OpensslNativeEcc_multiply
-  (JNIEnv *, jobject, jstring, jstring);
+    (JNIEnv *, jobject, jstring, jstring);
 
 /*
  * Class:     edu_alibaba_mpc4j_common_tool_crypto_ecc_openssl_Sm2P256v1OpensslNativeEcc
@@ -53,7 +53,7 @@ JNIEXPORT jstring JNICALL Java_edu_alibaba_mpc4j_common_tool_crypto_ecc_openssl_
  * Signature: ()V
  */
 JNIEXPORT void JNICALL Java_edu_alibaba_mpc4j_common_tool_crypto_ecc_openssl_Sm2P256v1OpensslNativeEcc_reset
-  (JNIEnv *, jobject);
+    (JNIEnv *, jobject);
 
 #ifdef __cplusplus
 }

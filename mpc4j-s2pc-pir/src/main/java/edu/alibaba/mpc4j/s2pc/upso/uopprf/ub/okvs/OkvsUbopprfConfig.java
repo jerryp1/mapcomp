@@ -69,7 +69,7 @@ public class OkvsUbopprfConfig implements UbopprfConfig {
 
         public Builder() {
             sqOprfConfig = SqOprfFactory.createDefaultConfig(SecurityModel.SEMI_HONEST);
-            okvsType = OkvsFactory.OkvsType.MEGA_BIN;
+            okvsType = OkvsFactory.OkvsType.H3_SINGLETON_GCT;
         }
 
         public Builder setSqOprfConfig(SqOprfConfig sqOprfConfig) {

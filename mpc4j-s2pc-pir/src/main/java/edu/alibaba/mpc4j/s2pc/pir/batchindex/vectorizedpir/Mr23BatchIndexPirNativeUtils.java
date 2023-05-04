@@ -10,9 +10,6 @@ import java.util.List;
  */
 class Mr23BatchIndexPirNativeUtils {
 
-    /**
-     * 单例模式
-     */
     private Mr23BatchIndexPirNativeUtils() {
         // empty
     }
@@ -22,10 +19,9 @@ class Mr23BatchIndexPirNativeUtils {
      *
      * @param modulusDegree         多项式阶。
      * @param plainModulusBitLength 明文模数比特长度。
-     * @param coeffModulusBitLength 密文模数比特长度。
      * @return SEAL上下文参数。
      */
-    static native byte[] generateSealContext(int modulusDegree, int plainModulusBitLength, int[] coeffModulusBitLength);
+    static native byte[] generateSealContext(int modulusDegree, int plainModulusBitLength);
 
     /**
      * 生成全同态加密公私钥对。
@@ -87,12 +83,10 @@ class Mr23BatchIndexPirNativeUtils {
      * 合并多个分桶的回复密文。
      *
      * @param sealContext SEAL上下文参数。
-     * @param publicKey   公钥。
      * @param galoisKey   Galois密钥。
      * @param responses   回复密文。
      * @param g           vectorized batch pir 参数。
      * @return 回复密文。
      */
-    static native byte[] mergeResponse(byte[] sealContext, byte[] publicKey, byte[] galoisKey, List<byte[]> responses,
-                                       int g);
+    static native byte[] mergeResponse(byte[] sealContext, byte[] galoisKey, List<byte[]> responses, int g);
 }

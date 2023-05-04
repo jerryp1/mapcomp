@@ -52,8 +52,6 @@ public class EccTest {
         configurationParams.add(new Object[]{EccType.SEC_P256_K1_OPENSSL.name(), EccType.SEC_P256_K1_OPENSSL,});
         // SEC_P256_K1_BC
         configurationParams.add(new Object[]{EccType.SEC_P256_K1_BC.name(), EccType.SEC_P256_K1_BC,});
-        // SEC_P256_R1_MCL
-        configurationParams.add(new Object[]{EccType.SEC_P256_R1_MCL.name(), EccType.SEC_P256_R1_MCL,});
         // SEC_P256_R1_OPENSSL
         configurationParams.add(new Object[]{EccType.SEC_P256_R1_OPENSSL.name(), EccType.SEC_P256_R1_OPENSSL,});
         // SEC_P256_R1_BC
@@ -83,29 +81,16 @@ public class EccTest {
     @Test
     public void testIllegalInputs() {
         Ecc ecc = EccFactory.createInstance(eccType);
-        // 尝试将长度为0的字节数组映射到椭圆曲线上
-        try {
-            ecc.hashToCurve(new byte[0]);
-            throw new IllegalStateException("ERROR: successfully HashToCurve with 0-byte length message");
-        } catch (AssertionError ignored) {
-
-        }
-        // 尝试对0个椭圆曲线求内积
-        try {
-            ecc.innerProduct(new boolean[0], new ECPoint[0]);
-            throw new IllegalStateException("ERROR: successfully inner product 0-length vectors");
-        } catch (AssertionError ignored) {
-
-        }
-        // 尝试对长度不同的椭圆曲线求内积
-        try {
+        // hash data with length = 0
+        Assert.assertThrows(AssertionError.class, () -> ecc.hashToCurve(new byte[0]));
+        // inner product with 0 element
+        Assert.assertThrows(AssertionError.class, () -> ecc.innerProduct(new boolean[0], new ECPoint[0]));
+        // inner product with different length
+        Assert.assertThrows(AssertionError.class, () -> {
             ECPoint[] points = new ECPoint[]{ecc.getG()};
             boolean[] binary = new boolean[2];
             ecc.innerProduct(binary, points);
-            throw new IllegalStateException("ERROR: successfully inner product different length vectors");
-        } catch (AssertionError ignored) {
-
-        }
+        });
     }
 
     @Test

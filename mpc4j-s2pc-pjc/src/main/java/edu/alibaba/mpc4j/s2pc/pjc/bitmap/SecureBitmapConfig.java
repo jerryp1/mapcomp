@@ -36,11 +36,6 @@ public class SecureBitmapConfig implements BitmapConfig {
     }
 
     @Override
-    public int maxBaseNum() {
-        return bcConfig.maxBaseNum();
-    }
-
-    @Override
     public void setEnvType(EnvType envType) {
         this.bcConfig.setEnvType(envType);
     }

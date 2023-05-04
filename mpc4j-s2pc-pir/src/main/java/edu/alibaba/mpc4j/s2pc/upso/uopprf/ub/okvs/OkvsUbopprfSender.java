@@ -80,9 +80,9 @@ public class OkvsUbopprfSender extends AbstractUbopprfSender {
         // init oprf
         sqOprfSender.init(batchSize, sqOprfKey);
         stopWatch.stop();
-        long initTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
+        long okvsTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
         stopWatch.reset();
-        logStepInfo(PtoState.INIT_STEP, 1, 1, initTime, "Sender generates OKVS");
+        logStepInfo(PtoState.INIT_STEP, 1, 1, okvsTime, "Sender runs OKVS + OPRF");
 
         logPhaseInfo(PtoState.INIT_END);
     }

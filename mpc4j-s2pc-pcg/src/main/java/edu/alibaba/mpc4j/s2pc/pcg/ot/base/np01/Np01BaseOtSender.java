@@ -121,7 +121,7 @@ public class Np01BaseOtSender extends AbstractBaseOtSender {
             // The sender computes PK_0^{r}
             pk0[index] = ecc.multiply(pk0[index], r);
             // The sender computes PK_1^r = C^r / (PK_0^r)
-            ECPoint pk1 = c2r.add(pk0[index].negate());
+            ECPoint pk1 = ecc.add(c2r, ecc.negate(pk0[index]));
             // The sender computes H(index, PK_0^r) and H(index, PK_1^r)
             byte[] k0InputByteArray = ecc.encode(pk0[index], false);
             r0Array[index] = kdf.deriveKey(ByteBuffer

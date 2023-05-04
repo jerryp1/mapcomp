@@ -279,28 +279,28 @@ public class HhLdpMain {
                 printInfo(printWriter, foLdpAggMetrics);
             }
         }
-        if (hgTypeList.contains(HhLdpType.BASIC)) {
+        if (hgTypeList.contains(HhLdpType.BGR)) {
             // consider changes of ε
             for (double windowEpsilon : windowEpsilons) {
-                HhLdpAggMetrics basicHgLdpAggMetrics = runBasicHgHeavyHitter(windowEpsilon);
-                printInfo(printWriter, basicHgLdpAggMetrics);
+                HhLdpAggMetrics bgrHgLdpAggMetrics = runBgrHgHeavyHitter(windowEpsilon);
+                printInfo(printWriter, bgrHgLdpAggMetrics);
             }
         }
-        if (hgTypeList.contains(HhLdpType.DIRECT)) {
+        if (hgTypeList.contains(HhLdpType.DSR)) {
             // consider changes of ε
             for (double windowEpsilon : windowEpsilons) {
-                HhLdpAggMetrics directHgLdpAggMetrics = runDirectHgHeavyHitter(windowEpsilon);
-                printInfo(printWriter, directHgLdpAggMetrics);
+                HhLdpAggMetrics dsrHgLdpAggMetrics = runDsrHgHeavyHitter(windowEpsilon);
+                printInfo(printWriter, dsrHgLdpAggMetrics);
             }
         }
-        if (hgTypeList.contains(HhLdpType.ADV)) {
+        if (hgTypeList.contains(HhLdpType.BDR)) {
             if (gammaHs.length > 0) {
                 // manually set γ_h, do not need to run automatically setting
                 for (double gammaH : gammaHs) {
                     for (double alpha : alphas) {
                         for (double windowEpsilon : windowEpsilons) {
-                            HhLdpAggMetrics advHgLdpAggMetrics = runAdvHhgHeavyHitter(windowEpsilon, alpha, gammaH);
-                            printInfo(printWriter, advHgLdpAggMetrics);
+                            HhLdpAggMetrics bdrHgLdpAggMetrics = runBdrHhgHeavyHitter(windowEpsilon, alpha, gammaH);
+                            printInfo(printWriter, bdrHgLdpAggMetrics);
                         }
                     }
                 }
@@ -309,21 +309,21 @@ public class HhLdpMain {
                 if (warmupNum > 0) {
                     for (double alpha : alphas) {
                         for (double windowEpsilon : windowEpsilons) {
-                            HhLdpAggMetrics advHgLdpAggMetrics = runAdvHhgHeavyHitter(windowEpsilon, alpha);
-                            printInfo(printWriter, advHgLdpAggMetrics);
+                            HhLdpAggMetrics bdrHgLdpAggMetrics = runBdrHhgHeavyHitter(windowEpsilon, alpha);
+                            printInfo(printWriter, bdrHgLdpAggMetrics);
                         }
                     }
                 }
             }
         }
-        if (hgTypeList.contains(HhLdpType.BUFFER)) {
+        if (hgTypeList.contains(HhLdpType.CNR)) {
             if (gammaHs.length > 0) {
                 // manually set γ_h, do not need to run automatically setting
                 for (double gammaH : gammaHs) {
                     for (double alpha : alphas) {
                         for (double windowEpsilon : windowEpsilons) {
-                            HhLdpAggMetrics advHgLdpAggMetrics = runBufferHhgHeavyHitter(windowEpsilon, alpha, gammaH);
-                            printInfo(printWriter, advHgLdpAggMetrics);
+                            HhLdpAggMetrics cnrHgLdpAggMetrics = runCnrHhgHeavyHitter(windowEpsilon, alpha, gammaH);
+                            printInfo(printWriter, cnrHgLdpAggMetrics);
                         }
                     }
                 }
@@ -332,8 +332,8 @@ public class HhLdpMain {
                 if (warmupNum > 0) {
                     for (double alpha : alphas) {
                         for (double windowEpsilon : windowEpsilons) {
-                            HhLdpAggMetrics advHgLdpAggMetrics = runBufferHhgHeavyHitter(windowEpsilon, alpha);
-                            printInfo(printWriter, advHgLdpAggMetrics);
+                            HhLdpAggMetrics cnrHgLdpAggMetrics = runCnrHhgHeavyHitter(windowEpsilon, alpha);
+                            printInfo(printWriter, cnrHgLdpAggMetrics);
                         }
                     }
                 }
@@ -415,10 +415,10 @@ public class HhLdpMain {
         return aggMetrics;
     }
 
-    HhLdpAggMetrics runBasicHgHeavyHitter(double windowEpsilon) throws IOException {
-        HhLdpAggMetrics aggMetrics = new HhLdpAggMetrics(HhLdpType.BASIC.name(), windowEpsilon, null, null);
+    HhLdpAggMetrics runBgrHgHeavyHitter(double windowEpsilon) throws IOException {
+        HhLdpAggMetrics aggMetrics = new HhLdpAggMetrics(HhLdpType.BGR.name(), windowEpsilon, null, null);
         for (int round = 0; round < testRound; round++) {
-            BasicHgHhLdpConfig config = new BasicHgHhLdpConfig
+            BgrHgHhLdpConfig config = new BgrHgHhLdpConfig
                 .Builder(domainSet, k, windowEpsilon, windowSize)
                 .build();
             HhLdpServer server = HhLdpFactory.createServer(config);
@@ -429,10 +429,10 @@ public class HhLdpMain {
         return aggMetrics;
     }
 
-    HhLdpAggMetrics runDirectHgHeavyHitter(double windowEpsilon) throws IOException {
-        HhLdpAggMetrics aggMetrics = new HhLdpAggMetrics(HhLdpType.DIRECT.name(), windowEpsilon, null, null);
+    HhLdpAggMetrics runDsrHgHeavyHitter(double windowEpsilon) throws IOException {
+        HhLdpAggMetrics aggMetrics = new HhLdpAggMetrics(HhLdpType.DSR.name(), windowEpsilon, null, null);
         for (int round = 0; round < testRound; round++) {
-            DirectHgHhLdpConfig config = new DirectHgHhLdpConfig
+            DsrHgHhLdpConfig config = new DsrHgHhLdpConfig
                 .Builder(domainSet, k, windowEpsilon, windowSize)
                 .build();
             HhLdpServer server = HhLdpFactory.createServer(config);
@@ -443,11 +443,11 @@ public class HhLdpMain {
         return aggMetrics;
     }
 
-    HhLdpAggMetrics runAdvHhgHeavyHitter(double windowEpsilon, double alpha) throws IOException {
+    HhLdpAggMetrics runBdrHhgHeavyHitter(double windowEpsilon, double alpha) throws IOException {
         double gammaH = 0;
         for (int round = 0; round < testRound; round++) {
             // get warmup gammaH
-            AdvHhgHhLdpConfig warmupConfig = new AdvHhgHhLdpConfig
+            BdrHhgHhLdpConfig warmupConfig = new BdrHhgHhLdpConfig
                 .Builder(domainSet, k, windowEpsilon, windowSize)
                 .setAlpha(alpha)
                 .build();
@@ -455,10 +455,10 @@ public class HhLdpMain {
         }
         gammaH /= testRound;
         HhLdpAggMetrics aggMetrics = new HhLdpAggMetrics(
-            HhLdpType.ADV.name() + " (auto γ_h)", windowEpsilon, alpha, gammaH
+            HhLdpType.BDR.name() + " (auto γ_h)", windowEpsilon, alpha, gammaH
         );
         for (int round = 0; round < testRound; round++) {
-            AdvHhgHhLdpConfig config = new AdvHhgHhLdpConfig
+            BdrHhgHhLdpConfig config = new BdrHhgHhLdpConfig
                 .Builder(domainSet, k, windowEpsilon, windowSize)
                 .setAlpha(alpha)
                 .build();
@@ -470,12 +470,12 @@ public class HhLdpMain {
         return aggMetrics;
     }
 
-    HhLdpAggMetrics runAdvHhgHeavyHitter(double windowEpsilon, double alpha, double gammaH) throws IOException {
+    HhLdpAggMetrics runBdrHhgHeavyHitter(double windowEpsilon, double alpha, double gammaH) throws IOException {
         HhLdpAggMetrics aggMetrics = new HhLdpAggMetrics(
-            HhLdpType.ADV.name() + " (pre γ_h)", windowEpsilon, alpha, gammaH
+            HhLdpType.BDR.name() + " (pre γ_h)", windowEpsilon, alpha, gammaH
         );
         for (int round = 0; round < testRound; round++) {
-            AdvHhgHhLdpConfig config = new AdvHhgHhLdpConfig
+            BdrHhgHhLdpConfig config = new BdrHhgHhLdpConfig
                 .Builder(domainSet, k, windowEpsilon, windowSize)
                 .setAlpha(alpha)
                 .setGammaH(gammaH)
@@ -488,11 +488,11 @@ public class HhLdpMain {
         return aggMetrics;
     }
 
-    HhLdpAggMetrics runBufferHhgHeavyHitter(double windowEpsilon, double alpha) throws IOException {
+    HhLdpAggMetrics runCnrHhgHeavyHitter(double windowEpsilon, double alpha) throws IOException {
         double gammaH = 0;
         for (int round = 0; round < testRound; round++) {
             // get warmup gammaH
-            BufferHhgHhLdpConfig warmupConfig = new BufferHhgHhLdpConfig
+            CnrHhgHhLdpConfig warmupConfig = new CnrHhgHhLdpConfig
                 .Builder(domainSet, k, windowEpsilon, windowSize)
                 .setAlpha(alpha)
                 .setLambdaL(windowSize)
@@ -501,10 +501,10 @@ public class HhLdpMain {
         }
         gammaH /= testRound;
         HhLdpAggMetrics aggMetrics = new HhLdpAggMetrics(
-            HhLdpType.BUFFER.name() + " (auto γ_h)", windowEpsilon, alpha, gammaH
+            HhLdpType.CNR.name() + " (auto γ_h)", windowEpsilon, alpha, gammaH
         );
         for (int round = 0; round < testRound; round++) {
-            BufferHhgHhLdpConfig config = new BufferHhgHhLdpConfig
+            CnrHhgHhLdpConfig config = new CnrHhgHhLdpConfig
                 .Builder(domainSet, k, windowEpsilon, windowSize)
                 .setAlpha(alpha)
                 .setLambdaL(windowSize)
@@ -517,12 +517,12 @@ public class HhLdpMain {
         return aggMetrics;
     }
 
-    HhLdpAggMetrics runBufferHhgHeavyHitter(double windowEpsilon, double alpha, double gammaH) throws IOException {
+    HhLdpAggMetrics runCnrHhgHeavyHitter(double windowEpsilon, double alpha, double gammaH) throws IOException {
         HhLdpAggMetrics aggMetrics = new HhLdpAggMetrics(
-            HhLdpType.BUFFER.name() + " (pre γ_h)", windowEpsilon, alpha, gammaH
+            HhLdpType.CNR.name() + " (pre γ_h)", windowEpsilon, alpha, gammaH
         );
         for (int round = 0; round < testRound; round++) {
-            BufferHhgHhLdpConfig config = new BufferHhgHhLdpConfig
+            CnrHhgHhLdpConfig config = new CnrHhgHhLdpConfig
                 .Builder(domainSet, k, windowEpsilon, windowSize)
                 .setAlpha(alpha)
                 .setGammaH(gammaH)

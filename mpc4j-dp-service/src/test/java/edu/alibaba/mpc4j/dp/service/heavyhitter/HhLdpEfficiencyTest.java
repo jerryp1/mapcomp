@@ -132,26 +132,27 @@ public class HhLdpEfficiencyTest {
                 FoLdpType.DE_STRING, LdpTestDataUtils.CONNECT_DATA_DOMAIN, epsilon
             );
             CONFIGS.add(new FoHhLdpConfig.Builder(deStringFoLdpConfig, DEFAULT_K, DEFAULT_WINDOW_SIZE).build());
-            // Basic HeavyGuardian
+            // BGR
             CONFIGS.add(
-                new BasicHgHhLdpConfig
+                new BgrHgHhLdpConfig
                     .Builder(LdpTestDataUtils.CONNECT_DATA_DOMAIN, DEFAULT_K, epsilon, DEFAULT_WINDOW_SIZE)
                     .build()
             );
-            // Direct HeavyGuardian
+            // DSR
             CONFIGS.add(
-                new DirectHgHhLdpConfig
+                new DsrHgHhLdpConfig
                     .Builder(LdpTestDataUtils.CONNECT_DATA_DOMAIN, DEFAULT_K, epsilon, DEFAULT_WINDOW_SIZE)
                     .build()
             );
-            // Advanced HeavyGuardian
+            // BDR
             CONFIGS.add(
-                new AdvHhgHhLdpConfig
+                new BdrHhgHhLdpConfig
                     .Builder(LdpTestDataUtils.CONNECT_DATA_DOMAIN, DEFAULT_K, epsilon, DEFAULT_WINDOW_SIZE)
                     .build()
             );
+            // CNR
             CONFIGS.add(
-                new BufferHhgHhLdpConfig
+                new CnrHhgHhLdpConfig
                     .Builder(LdpTestDataUtils.CONNECT_DATA_DOMAIN, DEFAULT_K, epsilon, DEFAULT_WINDOW_SIZE)
                     .build()
             );

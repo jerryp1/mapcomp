@@ -40,11 +40,11 @@ public class BatchPirTest {
     /**
      * 较大比特长度
      */
-    private static final int LARGE_BIT_LENGTH = 64;
+    private static final int LARGE_BIT_LENGTH = 32;
     /**
      * 较小服务端元素数量
      */
-    private static final int SMALL_SERVER_ELEMENT_SIZE = 1 << 10;
+    private static final int SMALL_SERVER_ELEMENT_SIZE = 1 << 14;
     /**
      * 默认服务端元素数量
      */
@@ -52,7 +52,7 @@ public class BatchPirTest {
     /**
      * 默认检索数目
      */
-    private static final int DEFAULT_RETRIEVAL_SIZE = 1 << 8;
+    private static final int DEFAULT_RETRIEVAL_SIZE = 1 << 11;
     /**
      * 特殊检索数目
      */
@@ -115,7 +115,7 @@ public class BatchPirTest {
 
     @Test
     public void testLargeBitLength() {
-        testPto(DEFAULT_SERVER_ELEMENT_SIZE, DEFAULT_RETRIEVAL_SIZE, LARGE_BIT_LENGTH, false);
+        testPto(DEFAULT_SERVER_ELEMENT_SIZE, DEFAULT_RETRIEVAL_SIZE, LARGE_BIT_LENGTH, true);
     }
 
     @Test

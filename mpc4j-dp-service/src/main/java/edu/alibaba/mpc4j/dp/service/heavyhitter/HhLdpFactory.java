@@ -36,21 +36,21 @@ public class HhLdpFactory {
          */
         FO,
         /**
-         * Basic HeavyGuardian
+         * Basic General Randomization
          */
-        BASIC,
+        BGR,
         /**
-         * Direct HeavyGuardian
+         * Domain-Shrinkage Randomization
          */
-        DIRECT,
+        DSR,
         /**
-         * Advanced HeavyGuardian
+         * Budget-Division Randomization
          */
-        ADV,
+        BDR,
         /**
-         * Buffer HeavyGuardian
+         * BCold-Nomination Randomization
          */
-        BUFFER,
+        CNR,
     }
 
     /**
@@ -68,14 +68,14 @@ public class HhLdpFactory {
         switch (type) {
             case FO:
                 return new FoHhLdpConfig.Builder(domainSet, k, windowEpsilon, windowSize).build();
-            case BASIC:
-                return new BasicHgHhLdpConfig.Builder(domainSet, k, windowEpsilon, windowSize).build();
-            case DIRECT:
-                return new DirectHgHhLdpConfig.Builder(domainSet, k, windowEpsilon, windowSize).build();
-            case ADV:
-                return new AdvHhgHhLdpConfig.Builder(domainSet, k, windowEpsilon, windowSize).build();
-            case BUFFER:
-                return new BufferHhgHhLdpConfig.Builder(domainSet, k, windowEpsilon, windowSize).build();
+            case BGR:
+                return new BgrHgHhLdpConfig.Builder(domainSet, k, windowEpsilon, windowSize).build();
+            case DSR:
+                return new DsrHgHhLdpConfig.Builder(domainSet, k, windowEpsilon, windowSize).build();
+            case BDR:
+                return new BdrHhgHhLdpConfig.Builder(domainSet, k, windowEpsilon, windowSize).build();
+            case CNR:
+                return new CnrHhgHhLdpConfig.Builder(domainSet, k, windowEpsilon, windowSize).build();
             default:
                 throw new IllegalArgumentException("Invalid " + HhLdpType.class.getSimpleName() + ": " + type);
         }
@@ -98,26 +98,26 @@ public class HhLdpFactory {
                                                          int k, double windowEpsilon, int windowSize,
                                                          int w, int lambdaH, Random hgRandom) {
         switch (type) {
-            case BASIC:
-                return new BasicHgHhLdpConfig
+            case BGR:
+                return new BgrHgHhLdpConfig
                     .Builder(domainSet, k, windowEpsilon, windowSize)
                     .setBucketParams(w, lambdaH)
                     .setHgRandom(hgRandom)
                     .build();
-            case DIRECT:
-                return new DirectHgHhLdpConfig
+            case DSR:
+                return new DsrHgHhLdpConfig
                     .Builder(domainSet, k, windowEpsilon, windowSize)
                     .setBucketParams(w, lambdaH)
                     .setHgRandom(hgRandom)
                     .build();
-            case ADV:
-                return new AdvHhgHhLdpConfig
+            case BDR:
+                return new BdrHhgHhLdpConfig
                     .Builder(domainSet, k, windowEpsilon, windowSize)
                     .setBucketParams(w, lambdaH)
                     .setHgRandom(hgRandom)
                     .build();
-            case BUFFER:
-                return new BufferHhgHhLdpConfig
+            case CNR:
+                return new CnrHhgHhLdpConfig
                     .Builder(domainSet, k, windowEpsilon, windowSize)
                     .setBucketParams(w, lambdaH)
                     .setHgRandom(hgRandom)
@@ -138,14 +138,14 @@ public class HhLdpFactory {
         switch (type) {
             case FO:
                 return new FoHhLdpServer((FoHhLdpConfig) config);
-            case BASIC:
-                return new BasicHgHhLdpServer((BasicHgHhLdpConfig) config);
-            case DIRECT:
-                return new DirectHgHhLdpServer((DirectHgHhLdpConfig) config);
-            case ADV:
-                return new AdvHhgHhLdpServer((AdvHhgHhLdpConfig) config);
-            case BUFFER:
-                return new BufferHhgHhLdpServer((BufferHhgHhLdpConfig) config);
+            case BGR:
+                return new BgrHgHhLdpServer((BgrHgHhLdpConfig) config);
+            case DSR:
+                return new DsrHgHhLdpServer((DsrHgHhLdpConfig) config);
+            case BDR:
+                return new BdrHhgHhLdpServer((BdrHhgHhLdpConfig) config);
+            case CNR:
+                return new CnrHhgHhLdpServer((CnrHhgHhLdpConfig) config);
             default:
                 throw new IllegalArgumentException("Invalid " + HhLdpType.class.getSimpleName() + ": " + type);
         }
@@ -162,14 +162,14 @@ public class HhLdpFactory {
         switch (type) {
             case FO:
                 return new FoHhLdpClient((FoHhLdpConfig) config);
-            case BASIC:
-                return new BasicHgHhLdpClient((BasicHgHhLdpConfig) config);
-            case DIRECT:
-                return new DirectHgHhLdpClient((DirectHgHhLdpConfig) config);
-            case ADV:
-                return new AdvHhgHhLdpClient((AdvHhgHhLdpConfig) config);
-            case BUFFER:
-                return new BufferHhgHhLdpClient((BufferHhgHhLdpConfig) config);
+            case BGR:
+                return new BgrHgHhLdpClient((BgrHgHhLdpConfig) config);
+            case DSR:
+                return new DsrHgHhLdpClient((DsrHgHhLdpConfig) config);
+            case BDR:
+                return new BdrHhgHhLdpClient((BdrHhgHhLdpConfig) config);
+            case CNR:
+                return new CnrHhgHhLdpClient((CnrHhgHhLdpConfig) config);
             default:
                 throw new IllegalArgumentException("Invalid " + HhLdpType.class.getSimpleName() + ": " + type);
         }

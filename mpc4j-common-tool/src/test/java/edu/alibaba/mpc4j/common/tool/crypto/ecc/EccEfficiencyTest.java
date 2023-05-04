@@ -54,7 +54,6 @@ public class EccEfficiencyTest {
         EccType.SEC_P256_K1_MCL,
         EccType.SEC_P256_K1_OPENSSL,
         EccType.SEC_P256_K1_BC,
-        EccType.SEC_P256_R1_MCL,
         EccType.SEC_P256_R1_OPENSSL,
         EccType.SEC_P256_R1_BC,
         EccType.SM2_P256_V1_OPENSSL,

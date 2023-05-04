@@ -83,7 +83,7 @@ public class Zcl22PkePsuServer extends AbstractPsuServer {
         eccOvdmType = config.getEccOvdmType();
         compressEncode = config.getCompressEncode();
         pipeSize = config.getPipeSize();
-        ecc = EccFactory.createInstance(getEnvType());
+        ecc = EccFactory.createInstance(envType);
     }
 
     @Override

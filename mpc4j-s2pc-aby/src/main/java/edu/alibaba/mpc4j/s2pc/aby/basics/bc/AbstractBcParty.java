@@ -1,6 +1,6 @@
 package edu.alibaba.mpc4j.s2pc.aby.basics.bc;
 
-import com.alibaba.mpc4j.common.circuit.z2.MpcZ2Vector;
+import edu.alibaba.mpc4j.common.circuit.z2.MpcZ2Vector;
 import edu.alibaba.mpc4j.common.rpc.MpcAbortException;
 import edu.alibaba.mpc4j.common.rpc.Party;
 import edu.alibaba.mpc4j.common.rpc.Rpc;
@@ -21,17 +21,13 @@ import java.util.stream.IntStream;
  */
 public abstract class AbstractBcParty extends AbstractTwoPartyPto implements BcParty {
     /**
-     * protocol configuration
-     */
-    private final BcConfig config;
-    /**
      * maximum number of bits in round.
      */
     protected int maxRoundBitNum;
     /**
      * total number of bits for updates.
      */
-    protected long maxUpdateBitNum;
+    protected long updateBitNum;
     /**
      * current number of bits.
      */
@@ -55,16 +51,14 @@ public abstract class AbstractBcParty extends AbstractTwoPartyPto implements BcP
 
     public AbstractBcParty(PtoDesc ptoDesc, Rpc ownRpc, Party otherParty, BcConfig config) {
         super(ptoDesc, ownRpc, otherParty, config);
-        this.config = config;
         andGateNum = 0;
         xorGateNum = 0;
     }
 
     protected void setInitInput(int maxRoundBitNum, int updateBitNum) {
-        MathPreconditions.checkPositiveInRangeClosed("maxRoundBitNum", maxRoundBitNum, config.maxBaseNum());
+        MathPreconditions.checkPositiveInRangeClosed("maxRoundBitNum", maxRoundBitNum, updateBitNum);
         this.maxRoundBitNum = maxRoundBitNum;
-        MathPreconditions.checkGreaterOrEqual("updateBitNum", updateBitNum, maxRoundBitNum);
-        this.maxUpdateBitNum = updateBitNum;
+        this.updateBitNum = updateBitNum;
         initState();
     }
 
@@ -315,6 +309,7 @@ public abstract class AbstractBcParty extends AbstractTwoPartyPto implements BcP
 
     @Override
     public void revealOther(SquareZ2Vector[] xiArray) {
+        //noinspection StatementWithEmptyBody
         if (xiArray.length == 0) {
             // do nothing for 0 length
         }

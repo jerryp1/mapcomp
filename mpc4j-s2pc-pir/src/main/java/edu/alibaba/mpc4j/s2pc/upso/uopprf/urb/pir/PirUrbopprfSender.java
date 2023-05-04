@@ -92,13 +92,19 @@ public class PirUrbopprfSender extends AbstractUrbopprfSender {
         generateGarbledTable();
         // init oprf
         sqOprfSender.init(batchSize, sqOprfKey);
+        stopWatch.stop();
+        long gtTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
+        stopWatch.reset();
+        logStepInfo(PtoState.INIT_STEP, 1, 2, gtTime, "Sender runs OPRF + GT");
+
+        stopWatch.start();
         // init batch index PIR
         batchIndexPirServer.init(NaiveDatabase.create(l, garbledTable), batchSize * d);
         garbledTable = null;
         stopWatch.stop();
-        long initTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
+        long pirTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
         stopWatch.reset();
-        logStepInfo(PtoState.INIT_STEP, 1, 1, initTime);
+        logStepInfo(PtoState.INIT_STEP, 2, 2, pirTime, "Sender inits PIR");
 
         logPhaseInfo(PtoState.INIT_END);
     }

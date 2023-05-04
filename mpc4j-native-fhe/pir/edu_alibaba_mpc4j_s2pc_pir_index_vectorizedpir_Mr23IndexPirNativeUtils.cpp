@@ -11,14 +11,10 @@ using namespace std;
 using namespace seal;
 
 JNIEXPORT jbyteArray JNICALL Java_edu_alibaba_mpc4j_s2pc_pir_index_vectorizedpir_Mr23IndexPirNativeUtils_generateSealContext(
-        JNIEnv *env, jclass, jint poly_modulus_degree, jint plain_modulus_size, jintArray coeff_modulus_bits) {
-    uint32_t coeff_size = env->GetArrayLength(coeff_modulus_bits);
-    jint* coeff_ptr = env->GetIntArrayElements(coeff_modulus_bits, JNI_FALSE);
-    vector<int32_t> bit_sizes(coeff_ptr, coeff_ptr + coeff_size);
+        JNIEnv *env, jclass, jint poly_modulus_degree, jint plain_modulus_size) {
     EncryptionParameters parms = EncryptionParameters(scheme_type::bfv);
     parms.set_poly_modulus_degree(poly_modulus_degree);
     parms.set_plain_modulus(PlainModulus::Batching(poly_modulus_degree, plain_modulus_size + 1));
-    //parms.set_coeff_modulus(CoeffModulus::Create(poly_modulus_degree, bit_sizes));
     parms.set_coeff_modulus(CoeffModulus::BFVDefault(poly_modulus_degree, sec_level_type::tc128));
     SEALContext context = SEALContext(parms);
     jclass exception = env->FindClass("java/lang/Exception");

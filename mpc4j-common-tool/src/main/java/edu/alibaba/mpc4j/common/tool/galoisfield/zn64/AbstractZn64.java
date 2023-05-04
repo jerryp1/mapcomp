@@ -192,7 +192,7 @@ abstract class AbstractZn64 implements Zn64 {
 
     @Override
     public int hashCode() {
-        return new Long(n).hashCode();
+        return Long.valueOf(n).hashCode();
     }
 
     @Override

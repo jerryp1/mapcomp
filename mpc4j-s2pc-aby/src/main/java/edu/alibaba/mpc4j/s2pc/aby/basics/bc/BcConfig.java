@@ -15,11 +15,4 @@ public interface BcConfig extends MultiPartyPtoConfig {
      * @return 协议类型。
      */
     BcFactory.BcType getPtoType();
-
-    /**
-     * 返回底层协议最大数量。
-     *
-     * @return 底层协议最大数量。
-     */
-    int maxBaseNum();
 }

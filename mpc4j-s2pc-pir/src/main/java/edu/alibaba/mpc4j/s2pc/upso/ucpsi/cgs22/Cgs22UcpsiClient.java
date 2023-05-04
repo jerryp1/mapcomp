@@ -7,6 +7,8 @@ import edu.alibaba.mpc4j.common.tool.hashbin.object.HashBinEntry;
 import edu.alibaba.mpc4j.common.tool.hashbin.object.cuckoo.CuckooHashBinFactory;
 import edu.alibaba.mpc4j.common.tool.hashbin.object.cuckoo.CuckooHashBinFactory.CuckooHashBinType;
 import edu.alibaba.mpc4j.common.tool.hashbin.object.cuckoo.NoStashCuckooHashBin;
+import edu.alibaba.mpc4j.common.tool.utils.BytesUtils;
+import edu.alibaba.mpc4j.common.tool.utils.CommonUtils;
 import edu.alibaba.mpc4j.common.tool.utils.LongUtils;
 import edu.alibaba.mpc4j.s2pc.aby.basics.bc.SquareZ2Vector;
 import edu.alibaba.mpc4j.s2pc.opf.psm.PsmFactory;
@@ -19,6 +21,7 @@ import edu.alibaba.mpc4j.s2pc.upso.uopprf.urb.UrbopprfFactory;
 import edu.alibaba.mpc4j.s2pc.upso.uopprf.urb.UrbopprfReceiver;
 
 import java.nio.ByteBuffer;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
@@ -56,9 +59,17 @@ public class Cgs22UcpsiClient extends AbstractUcpsiClient {
      */
     private int beta;
     /**
-     * l
+     * l_psm
      */
-    private int l;
+    private int psmL;
+    /**
+     * l_sm in byte
+     */
+    private int psmByteL;
+    /**
+     * l_opprf in byte
+     */
+    private int opprfByteL;
     /**
      * cuckoo hash bin
      */
@@ -86,14 +97,30 @@ public class Cgs22UcpsiClient extends AbstractUcpsiClient {
         beta = CuckooHashBinFactory.getBinNum(cuckooHashBinType, maxClientElementSize);
         // point_num = hash_num * n_s
         int pointNum = hashNum * serverElementSize;
-        // l = σ + log_2(d * β) + log_2(point_num)
-        l = CommonConstants.STATS_BIT_LENGTH + LongUtils.ceilLog2((long) d * beta) + LongUtils.ceilLog2(pointNum);
-        urbopprfReceiver.init(l, beta, pointNum);
-        psmSender.init(l, d, beta);
+        // l_psm = σ + log_2(d * β)
+        psmL = CommonConstants.STATS_BIT_LENGTH + LongUtils.ceilLog2((long) d * beta);
+        psmByteL = CommonUtils.getByteLength(psmL);
+        // l_opprf = σ + log_2(point_num)
+        int opprfL = Math.max(CommonConstants.STATS_BIT_LENGTH + LongUtils.ceilLog2(pointNum), psmL);
+        opprfByteL = CommonUtils.getByteLength(opprfL);
         stopWatch.stop();
-        long initTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
+        long paramTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
         stopWatch.reset();
-        logStepInfo(PtoState.INIT_STEP, 1, 1, initTime);
+        logStepInfo(PtoState.INIT_STEP, 1, 3, paramTime);
+
+        stopWatch.start();
+        urbopprfReceiver.init(opprfL, beta, pointNum);
+        stopWatch.stop();
+        long opprfTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
+        stopWatch.reset();
+        logStepInfo(PtoState.INIT_STEP, 2, 3, opprfTime);
+
+        stopWatch.start();
+        psmSender.init(psmL, d, beta);
+        stopWatch.stop();
+        long psmTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
+        stopWatch.reset();
+        logStepInfo(PtoState.INIT_STEP, 3, 3, psmTime);
 
         logPhaseInfo(PtoState.INIT_END);
     }
@@ -136,8 +163,19 @@ public class Cgs22UcpsiClient extends AbstractUcpsiClient {
         logStepInfo(PtoState.PTO_STEP, 2, 3, opprfTime);
 
         stopWatch.start();
+        targetArrays = Arrays.stream(targetArrays)
+            .map(targetArray ->
+                Arrays.stream(targetArray)
+                    .map(target -> {
+                        byte[] truncatedTarget = new byte[psmByteL];
+                        System.arraycopy(target, opprfByteL - psmByteL, truncatedTarget, 0, psmByteL);
+                        BytesUtils.reduceByteArray(truncatedTarget, psmL);
+                        return truncatedTarget;
+                    })
+                    .toArray(byte[][]::new))
+            .toArray(byte[][][]::new);
         // private set membership
-        SquareZ2Vector z1 = psmSender.psm(l, targetArrays);
+        SquareZ2Vector z1 = psmSender.psm(psmL, targetArrays);
         // create the table
         ByteBuffer[] table = IntStream.range(0, beta)
             .mapToObj(batchIndex -> {

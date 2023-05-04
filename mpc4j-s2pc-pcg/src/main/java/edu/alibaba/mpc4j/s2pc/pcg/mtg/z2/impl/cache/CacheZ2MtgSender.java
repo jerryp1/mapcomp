@@ -6,6 +6,7 @@ import edu.alibaba.mpc4j.common.rpc.PtoState;
 import edu.alibaba.mpc4j.common.rpc.Rpc;
 import edu.alibaba.mpc4j.s2pc.pcg.mtg.z2.AbstractZ2MtgParty;
 import edu.alibaba.mpc4j.s2pc.pcg.mtg.z2.Z2Triple;
+import edu.alibaba.mpc4j.s2pc.pcg.mtg.z2.core.Z2CoreMtgConfig;
 import edu.alibaba.mpc4j.s2pc.pcg.mtg.z2.core.Z2CoreMtgFactory;
 import edu.alibaba.mpc4j.s2pc.pcg.mtg.z2.core.Z2CoreMtgParty;
 
@@ -23,6 +24,10 @@ public class CacheZ2MtgSender extends AbstractZ2MtgParty {
      */
     private final Z2CoreMtgParty z2CoreMtgSender;
     /**
+     * max base num
+     */
+    private final int maxBaseNum;
+    /**
      * 更新时的单次数量
      */
     private int updateRoundNum;
@@ -37,8 +42,10 @@ public class CacheZ2MtgSender extends AbstractZ2MtgParty {
 
     public CacheZ2MtgSender(Rpc senderRpc, Party receiverParty, CacheZ2MtgConfig config) {
         super(CacheZ2MtgPtoDesc.getInstance(), senderRpc, receiverParty, config);
-        z2CoreMtgSender = Z2CoreMtgFactory.createSender(senderRpc, receiverParty, config.getZ2CoreMtgConfig());
+        Z2CoreMtgConfig z2CoreMtgConfig = config.getZ2CoreMtgConfig();
+        z2CoreMtgSender = Z2CoreMtgFactory.createSender(senderRpc, receiverParty, z2CoreMtgConfig);
         addSubPtos(z2CoreMtgSender);
+        maxBaseNum = z2CoreMtgConfig.maxNum();
     }
 
     @Override
@@ -47,16 +54,16 @@ public class CacheZ2MtgSender extends AbstractZ2MtgParty {
         logPhaseInfo(PtoState.INIT_BEGIN);
 
         stopWatch.start();
-        if (updateNum <= config.maxBaseNum()) {
+        if (updateNum <= maxBaseNum) {
             // 如果最大数量小于支持的单轮最大数量，则执行1轮最大数量即可
-            this.updateRoundNum = updateNum;
+            updateRoundNum = updateNum;
             updateRound = 1;
         } else {
             // 如果最大数量大于支持的单轮最大数量，则分批执行
-            this.updateRoundNum = config.maxBaseNum();
-            updateRound = (int)Math.ceil((double) updateNum / config.maxBaseNum());
+            updateRoundNum = maxBaseNum;
+            updateRound = (int)Math.ceil((double) updateNum / maxBaseNum);
         }
-        z2CoreMtgSender.init(this.updateRoundNum);
+        z2CoreMtgSender.init(updateRoundNum);
         z2TripleBuffer = Z2Triple.createEmpty();
         stopWatch.stop();
         long initTime = stopWatch.getTime(TimeUnit.MILLISECONDS);

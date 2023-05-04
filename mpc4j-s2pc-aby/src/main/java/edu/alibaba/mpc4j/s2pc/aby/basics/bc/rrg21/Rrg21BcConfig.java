@@ -33,11 +33,6 @@ public class Rrg21BcConfig implements BcConfig {
     }
 
     @Override
-    public int maxBaseNum() {
-        return cotConfig.maxBaseNum();
-    }
-
-    @Override
     public void setEnvType(EnvType envType) {
         cotConfig.setEnvType(envType);
     }

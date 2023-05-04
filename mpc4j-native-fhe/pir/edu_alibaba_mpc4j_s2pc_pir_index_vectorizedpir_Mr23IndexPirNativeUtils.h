@@ -10,10 +10,10 @@ extern "C" {
 /*
  * Class:     edu_alibaba_mpc4j_s2pc_pir_index_vectorizedpir_Mr23IndexPirNativeUtils
  * Method:    generateSealContext
- * Signature: (II[I)[B
+ * Signature: (II)[B
  */
 JNIEXPORT jbyteArray JNICALL Java_edu_alibaba_mpc4j_s2pc_pir_index_vectorizedpir_Mr23IndexPirNativeUtils_generateSealContext
-  (JNIEnv *, jclass, jint, jint, jintArray);
+  (JNIEnv *, jclass, jint, jint);
 
 /*
  * Class:     edu_alibaba_mpc4j_s2pc_pir_index_vectorizedpir_Mr23IndexPirNativeUtils

@@ -33,11 +33,6 @@ public class Bea91BcConfig implements BcConfig {
     }
 
     @Override
-    public int maxBaseNum() {
-        return z2MtgConfig.maxBaseNum();
-    }
-
-    @Override
     public void setEnvType(EnvType envType) {
         z2MtgConfig.setEnvType(envType);
     }

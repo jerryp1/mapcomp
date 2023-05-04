@@ -72,7 +72,7 @@ public class Lpzg24BatchIndexPirServer extends AbstractBatchIndexPirServer {
     /**
      * 序列化的多项式
      */
-    private ArrayList<ArrayList<byte[]>> dbPlaintexts;
+    private List<List<byte[]>> dbPlaintexts;
     /**
      * 最大分桶内元素数目
      */
@@ -188,7 +188,7 @@ public class Lpzg24BatchIndexPirServer extends AbstractBatchIndexPirServer {
             encodeTaskId, getPtoDesc().getPtoId(), PtoStep.CLIENT_SEND_QUERY.ordinal(), extraInfo,
             otherParty().getPartyId(), rpc.ownParty().getPartyId()
         );
-        ArrayList<byte[]> queryPayload = new ArrayList<>(rpc.receive(queryHeader).getPayload());
+        List<byte[]> queryPayload = rpc.receive(queryHeader).getPayload();
         MpcAbortPreconditions.checkArgument(
             queryPayload.size() == params.getCiphertextNum() * params.getQueryPowers().length,
             "The size of query is incorrect"
@@ -285,7 +285,7 @@ public class Lpzg24BatchIndexPirServer extends AbstractBatchIndexPirServer {
      *
      * @return 元素PRF。
      */
-    private ArrayList<ByteBuffer> computeElementPrf(int partitionIndex) {
+    private List<ByteBuffer> computeElementPrf(int partitionIndex) {
         Ecc ecc = EccFactory.createInstance(envType);
         Kdf kdf = KdfFactory.createInstance(envType);
         Prg prg = PrgFactory.createInstance(envType, CommonConstants.BLOCK_BYTE_LENGTH * 2);
@@ -403,7 +403,7 @@ public class Lpzg24BatchIndexPirServer extends AbstractBatchIndexPirServer {
      * @param query 密文多项式。
      * @return 密文的次方。
      */
-    private List<byte[]> computeQueryPowers(ArrayList<byte[]> query, int[][] powerDegree) {
+    private List<byte[]> computeQueryPowers(List<byte[]> query, int[][] powerDegree) {
         // 计算所有的密文次方
         IntStream intStream = IntStream.range(0, params.getCiphertextNum());
         intStream = parallel ? intStream.parallel() : intStream;

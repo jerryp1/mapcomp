@@ -262,13 +262,12 @@ add_library(
         ntl_poly/edu_alibaba_mpc4j_common_tool_polynomial_zp64_NtlZp64Poly.cpp
         ecc_mcl/mcl_ecc.cpp
         ecc_mcl/edu_alibaba_mpc4j_common_tool_crypto_ecc_mcl_SecP256k1MclNativeEcc.cpp
-        ecc_mcl/edu_alibaba_mpc4j_common_tool_crypto_ecc_mcl_SecP256r1MclNativeEcc.cpp
         ecc_openssl/openssl_bit_iterator.hpp
         ecc_openssl/openssl_window_method.hpp
         ecc_openssl/openssl_ecc.cpp
         ecc_openssl/edu_alibaba_mpc4j_common_tool_crypto_ecc_openssl_SecP256k1OpensslNativeEcc.cpp
-        ecc_openssl/edu_alibaba_mpc4j_common_tool_crypto_ecc_openssl_Sm2P256v1OpensslNativeEcc.cpp
         ecc_openssl/edu_alibaba_mpc4j_common_tool_crypto_ecc_openssl_SecP256r1OpensslNativeEcc.cpp
+        ecc_openssl/edu_alibaba_mpc4j_common_tool_crypto_ecc_openssl_Sm2P256v1OpensslNativeEcc.cpp
         ecc_sodium/edu_alibaba_mpc4j_common_tool_crypto_ecc_sodium_X25519SodiumByteMulEcc.cpp
         ecc_sodium/edu_alibaba_mpc4j_common_tool_crypto_ecc_sodium_Ed25519SodiumByteFullEcc.cpp
         ntl_poly/ntl_tree_zp.h

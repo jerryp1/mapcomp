@@ -1,7 +1,7 @@
 package edu.alibaba.mpc4j.s2pc.aby.basics.bc;
 
-import com.alibaba.mpc4j.common.circuit.MpcVector;
-import com.alibaba.mpc4j.common.circuit.z2.MpcZ2Vector;
+import edu.alibaba.mpc4j.common.circuit.MpcVector;
+import edu.alibaba.mpc4j.common.circuit.z2.MpcZ2Vector;
 import edu.alibaba.mpc4j.common.tool.bitvector.BitVector;
 import edu.alibaba.mpc4j.common.tool.bitvector.BitVectorFactory;
 import org.apache.commons.lang3.builder.EqualsBuilder;

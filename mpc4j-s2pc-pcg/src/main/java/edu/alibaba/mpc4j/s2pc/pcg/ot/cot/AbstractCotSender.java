@@ -44,9 +44,8 @@ public abstract class AbstractCotSender extends AbstractTwoPartyPto implements C
     protected void setInitInput(byte[] delta, int maxRoundNum, int updateNum) {
         MathPreconditions.checkEqual("Δ.length", "λ(B)", delta.length, CommonConstants.BLOCK_BYTE_LENGTH);
         this.delta = BytesUtils.clone(delta);
-        MathPreconditions.checkPositiveInRangeClosed("maxRoundNum", maxRoundNum, config.maxBaseNum());
+        MathPreconditions.checkPositiveInRangeClosed("maxRoundNum", maxRoundNum, updateNum);
         this.maxRoundNum = maxRoundNum;
-        MathPreconditions.checkGreaterOrEqual("updateNum", updateNum, maxRoundNum);
         this.updateNum = updateNum;
         initState();
     }

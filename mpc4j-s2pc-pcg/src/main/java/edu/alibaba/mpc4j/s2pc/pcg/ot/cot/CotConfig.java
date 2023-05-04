@@ -15,11 +15,4 @@ public interface CotConfig extends MultiPartyPtoConfig {
      * @return the protocol type.
      */
     CotFactory.CotType getPtoType();
-
-    /**
-     * Gets the maximal base num.
-     *
-     * @return the maximal base num.
-     */
-    int maxBaseNum();
 }
