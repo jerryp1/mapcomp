@@ -50,6 +50,7 @@ public class FilterEfficiencyTest {
     private static final FilterType[] TYPES = new FilterType[] {
         FilterType.SET_FILTER,
         FilterType.BLOOM_FILTER,
+        FilterType.GBF_SPARSE_BF,
         FilterType.SPARSE_BLOOM_FILTER,
         FilterType.CUCKOO_FILTER,
         FilterType.VACUUM_FILTER,

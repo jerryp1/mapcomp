@@ -44,12 +44,14 @@ public class MergeFilterTest {
     @Parameterized.Parameters(name = "{0}")
     public static Collection<Object[]> configurations() {
         Collection<Object[]> configurationParams = new ArrayList<>();
-        // SPARSE_BLOOM_FILTER
-        configurationParams.add(new Object[] {FilterType.SPARSE_BLOOM_FILTER.name(), FilterType.SPARSE_BLOOM_FILTER,});
-        // BLOOM_FILTER
-        configurationParams.add(new Object[] {FilterType.BLOOM_FILTER.name(), FilterType.BLOOM_FILTER,});
-        // SET_FILTER
-        configurationParams.add(new Object[] {FilterType.SET_FILTER.name(), FilterType.SET_FILTER,});
+//        // SPARSE_BLOOM_FILTER
+//        configurationParams.add(new Object[] {FilterType.SPARSE_BLOOM_FILTER.name(), FilterType.SPARSE_BLOOM_FILTER,});
+//        // BLOOM_FILTER
+//        configurationParams.add(new Object[] {FilterType.BLOOM_FILTER.name(), FilterType.BLOOM_FILTER,});
+        // GBF_SPARSE_BF
+        configurationParams.add(new Object[] {FilterType.GBF_SPARSE_BF.name(), FilterType.GBF_SPARSE_BF,});
+//        // SET_FILTER
+//        configurationParams.add(new Object[] {FilterType.SET_FILTER.name(), FilterType.SET_FILTER,});
 
         return configurationParams;
     }

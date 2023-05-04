@@ -1,0 +1,177 @@
+package edu.alibaba.mpc4j.common.tool.okve.okvs;
+
+import edu.alibaba.mpc4j.common.tool.CommonConstants;
+import edu.alibaba.mpc4j.common.tool.EnvType;
+import edu.alibaba.mpc4j.common.tool.crypto.prf.Prf;
+import edu.alibaba.mpc4j.common.tool.crypto.prf.PrfFactory;
+import edu.alibaba.mpc4j.common.tool.okve.okvs.OkvsFactory.OkvsType;
+import edu.alibaba.mpc4j.common.tool.utils.BytesUtils;
+import edu.alibaba.mpc4j.common.tool.utils.CommonUtils;
+import edu.alibaba.mpc4j.common.tool.utils.ObjectUtils;
+
+import java.util.Arrays;
+import java.util.HashSet;
+import java.util.Map;
+import java.util.Set;
+import java.util.stream.IntStream;
+
+/**
+ * 稀疏乱码布隆过滤器（Sparse Garbled Bloom Filter, GBF）的OKVS方案。原始论文：
+ * Dong C, Chen L, Wen Z. When private set intersection meets big data: an efficient and scalable protocol. CCS 2013.
+ * ACM, 2013 pp. 789-800.
+ *
+ * @author Qixian Zhou
+ * @date 2023/5/4
+ */
+public class GbfSparseOkvs<T> extends AbstractBinaryOkvs<T> implements SparseOkvs<T> {
+	/**
+	 * 乱码布隆过滤器需要40个哈希函数
+	 */
+	static int HASH_NUM = CommonConstants.STATS_BIT_LENGTH;
+	/**
+	 * 乱码布隆过滤器哈希函数
+	 */
+	private final Prf[] prfs;
+
+	public GbfSparseOkvs(EnvType envType, int n, int l, byte[][] keys) {
+		super(envType, n, getM(n), l);
+		assert keys.length == HASH_NUM;
+		prfs = IntStream.range(0, HASH_NUM)
+				.mapToObj(hashIndex -> {
+					Prf hash = PrfFactory.createInstance(envType, Integer.BYTES);
+					hash.setKey(keys[hashIndex]);
+					return hash;
+				})
+				.toArray(Prf[]::new);
+	}
+
+	@Override
+	public int[] sparsePosition(T key) {
+		byte[] keyBytes = ObjectUtils.objectToByteArray(key);
+		int[] sparsePositions = new int[HASH_NUM];
+		Set<Integer> positionSet = new HashSet<>(HASH_NUM);
+		sparsePositions[0] = prfs[0].getInteger(0, keyBytes, m);
+		positionSet.add(sparsePositions[0]);
+		// generate k distinct positions
+		for (int i = 1; i < HASH_NUM; i++) {
+			int hiIndex = 0;
+			do {
+				sparsePositions[i] = prfs[i].getInteger(hiIndex, keyBytes, m);
+				hiIndex++;
+			} while (positionSet.contains(sparsePositions[i]));
+			positionSet.add(sparsePositions[i]);
+		}
+		return sparsePositions;
+	}
+
+	@Override
+	public int sparsePositionNum() {
+		return HASH_NUM;
+	}
+
+	@Override
+	public boolean[] densePositions(T key) {
+		return new boolean[0];
+	}
+
+	@Override
+	public int maxDensePositionNum() {
+		return 0;
+	}
+
+	@Override
+	public int[] positions(T key) {
+		byte[] keyBytes = ObjectUtils.objectToByteArray(key);
+		return Arrays.stream(prfs)
+				.mapToInt(prf -> prf.getInteger(keyBytes, m))
+				.distinct()
+				.toArray();
+	}
+
+	@Override
+	public int maxPositionNum() {
+		return HASH_NUM;
+	}
+
+	@Override
+	public byte[][] encode(Map<T, byte[]> keyValueMap) throws ArithmeticException {
+		// 键值对的总数量小于等于n，之所以不写为等于n，是因为后续PSI方案中两边的数量可能不相等。不验证映射值的长度，提高性能。
+		assert keyValueMap.size() <= n;
+		keyValueMap.values().forEach(x -> {
+			assert BytesUtils.isFixedReduceByteArray(x, byteL, l);
+		});
+		Set<T> keySet = keyValueMap.keySet();
+		// 依次计算每个键值的映射结果，并根据计算结果将真实值秘密分享给存储器
+		byte[][] storage = new byte[m][];
+		for (T key : keySet) {
+			byte[] finalShare = BytesUtils.clone(keyValueMap.get(key));
+			assert finalShare.length == byteL;
+			// sparse positions
+			int[] sparsePositions = sparsePosition(key);
+			int emptySlot = -1;
+			for (int position : sparsePositions) {
+				if (storage[position] == null && emptySlot == -1) {
+					// 如果找到了一个空位置，就锁定此空位置（reserve the location for finalShare）
+					emptySlot = position;
+				} else if (storage[position] == null) {
+					// 如果当前位置为空，则随机选择一个分享值（generate a new share）
+					storage[position] = BytesUtils.randomByteArray(byteL, l, secureRandom);
+					BytesUtils.xori(finalShare, storage[position]);
+				} else {
+					// 如果当前位置已经有分享值，则更新最终分享值（reuse a share）
+					BytesUtils.xori(finalShare, storage[position]);
+				}
+			}
+			if (emptySlot == -1) {
+				// 如果迭代一轮后，没有找到空位置，则抛出异常，此种情况发生的概率为1 - 2^{-λ}
+				throw new ArithmeticException("Failed to encode Key-Value Map, cannot find empty slot");
+			}
+			storage[emptySlot] = finalShare;
+		}
+		// 把剩余的空位置都填充上随机元素
+		for (int i = 0; i < m; i++) {
+			if (storage[i] == null) {
+				storage[i] = BytesUtils.randomByteArray(byteL, l, secureRandom);
+			}
+		}
+
+		return storage;
+	}
+
+	@Override
+	public byte[] decode(byte[][] storage, T key) {
+		// 这里不能验证storage每一行的长度，否则整体算法复杂度会变为O(n^2)
+		assert storage.length == getM();
+		int[] sparsePositions = sparsePosition(key);
+		// 计算输出值
+		byte[] value = new byte[byteL];
+		for (int position : sparsePositions) {
+			BytesUtils.xori(value, storage[position]);
+		}
+		assert BytesUtils.isFixedReduceByteArray(value, byteL, l);
+		return value;
+	}
+
+	@Override
+	public OkvsType getOkvsType() {
+		return OkvsType.SPARSE_GBF;
+	}
+
+	@Override
+	public int getNegLogFailureProbability() {
+		return CommonConstants.STATS_BIT_LENGTH;
+	}
+
+	/**
+	 * 给定待编码的键值对个数，计算映射比特长度。
+	 *
+	 * @param n 插入的key-value对个数。
+	 * @return 最优的m。
+	 */
+	static int getM(int n) {
+		assert n > 0;
+		// m = n / ln(2) * 统计安全常数，向上取整到Byte.SIZE的整数倍
+		return CommonUtils.getByteLength((int) Math.ceil(n * CommonConstants.STATS_BIT_LENGTH / Math.log(2)))
+				* Byte.SIZE;
+	}
+}

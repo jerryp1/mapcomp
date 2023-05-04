@@ -35,6 +35,10 @@ public class FilterFactory {
          */
         BLOOM_FILTER,
         /**
+         * Bloom Filter without hash collision
+         */
+        GBF_SPARSE_BF,
+        /**
          * 布谷鸟过滤器
          */
         CUCKOO_FILTER,
@@ -61,6 +65,8 @@ public class FilterFactory {
                 return SetFilter.HASH_NUM;
             case BLOOM_FILTER:
                 return BloomFilter.HASH_NUM;
+            case GBF_SPARSE_BF:
+                return GbfSparseBf.HASH_NUM;
             case SPARSE_BLOOM_FILTER:
                 return SparseBloomFilter.getHashNum(maxSize);
             case CUCKOO_FILTER:
@@ -88,6 +94,8 @@ public class FilterFactory {
                 return SetFilter.create(maxSize);
             case BLOOM_FILTER:
                 return BloomFilter.create(envType, maxSize, keys);
+            case GBF_SPARSE_BF:
+                return GbfSparseBf.create(envType, maxSize, keys);
             case SPARSE_BLOOM_FILTER:
                 return SparseBloomFilter.create(envType, maxSize, keys);
             case CUCKOO_FILTER:
@@ -128,6 +136,8 @@ public class FilterFactory {
                 return SetFilter.create(maxSize);
             case BLOOM_FILTER:
                 return BloomFilter.create(envType, maxSize, keys);
+            case GBF_SPARSE_BF:
+                return GbfSparseBf.create(envType, maxSize, keys);
             case SPARSE_BLOOM_FILTER:
                 return SparseBloomFilter.create(envType, maxSize, keys);
             default:
@@ -152,6 +162,8 @@ public class FilterFactory {
                 return SetFilter.fromByteArrayList(byteArrayList);
             case BLOOM_FILTER:
                 return BloomFilter.fromByteArrayList(envType, byteArrayList);
+            case GBF_SPARSE_BF:
+                return GbfSparseBf.fromByteArrayList(envType, byteArrayList);
             case SPARSE_BLOOM_FILTER:
                 return SparseBloomFilter.fromByteArrayList(envType, byteArrayList);
             case CUCKOO_FILTER:
