@@ -7,12 +7,12 @@ import java.util.Random;
 import java.util.Set;
 
 /**
- * Direct HeavyGuardian-based Heavy Hitter LDP config.
+ * Budget-Division Randomization HeavyGuardian-based Heavy Hitter LDP config.
  *
  * @author Weiran Liu
  * @date 2023/3/21
  */
-public class DirectHgHhLdpConfig extends BaseHhLdpConfig implements HgHhLdpConfig {
+public class BdrHhgHhLdpConfig extends BaseHhLdpConfig implements HhgHhLdpConfig {
     /**
      * budget num
      */
@@ -25,12 +25,22 @@ public class DirectHgHhLdpConfig extends BaseHhLdpConfig implements HgHhLdpConfi
      * HeavyGuardian random state, used only for the server
      */
     private final Random hgRandom;
+    /**
+     * the privacy allocation parameter α
+     */
+    private final double alpha;
+    /**
+     * γ_h, set to negative if we do not manually set
+     */
+    private final double gammaH;
 
-    protected DirectHgHhLdpConfig(Builder builder) {
+    protected BdrHhgHhLdpConfig(Builder builder) {
         super(builder);
         w = builder.w;
         lambdaH = builder.lambdaH;
         hgRandom = builder.hgRandom;
+        alpha = builder.alpha;
+        gammaH = builder.gammaH;
     }
 
     @Override
@@ -48,6 +58,16 @@ public class DirectHgHhLdpConfig extends BaseHhLdpConfig implements HgHhLdpConfi
         return hgRandom;
     }
 
+    @Override
+    public double getAlpha() {
+        return alpha;
+    }
+
+    @Override
+    public double getGammaH() {
+        return gammaH;
+    }
+
     public static class Builder extends BaseHhLdpConfig.Builder {
         /**
          * budget num
@@ -61,12 +81,22 @@ public class DirectHgHhLdpConfig extends BaseHhLdpConfig implements HgHhLdpConfi
          * HeavyGuardian random state, used only for the server
          */
         private Random hgRandom;
+        /**
+         * the privacy allocation parameter α
+         */
+        private double alpha;
+        /**
+         * γ_h, set to negative if we do not manually set
+         */
+        private double gammaH;
 
         public Builder(Set<String> domainSet, int k, double windowEpsilon, int windowSize) {
-            super(HhLdpFactory.HhLdpType.DIRECT, domainSet, k, windowEpsilon, windowSize);
+            super(HhLdpFactory.HhLdpType.BDR, domainSet, k, windowEpsilon, windowSize);
             // set default values
             w = 1;
             lambdaH = k;
+            alpha = 1.0 / 3;
+            gammaH = -1;
             hgRandom = new Random();
         }
 
@@ -90,9 +120,27 @@ public class DirectHgHhLdpConfig extends BaseHhLdpConfig implements HgHhLdpConfi
             return this;
         }
 
+        public Builder setGammaH(double gammaH) {
+            MathPreconditions.checkNonNegativeInRangeClosed("γ_h", gammaH, 1);
+            this.gammaH = gammaH;
+            return this;
+        }
+
+        /**
+         * Sets the privacy allocation parameter α.
+         *
+         * @param alpha the privacy allocation parameter α.
+         * @return the builder.
+         */
+        public Builder setAlpha(double alpha) {
+            MathPreconditions.checkPositiveInRange("α", alpha, 1);
+            this.alpha = alpha;
+            return this;
+        }
+
         @Override
-        public DirectHgHhLdpConfig build() {
-            return new DirectHgHhLdpConfig(this);
+        public BdrHhgHhLdpConfig build() {
+            return new BdrHhgHhLdpConfig(this);
         }
     }
 }

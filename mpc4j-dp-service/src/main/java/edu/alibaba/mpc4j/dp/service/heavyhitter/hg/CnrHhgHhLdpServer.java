@@ -8,7 +8,7 @@ import edu.alibaba.mpc4j.common.tool.utils.ObjectUtils;
 import edu.alibaba.mpc4j.dp.service.heavyhitter.AbstractHhLdpServer;
 import edu.alibaba.mpc4j.dp.service.heavyhitter.HhLdpFactory;
 import edu.alibaba.mpc4j.dp.service.heavyhitter.HhLdpServerState;
-import edu.alibaba.mpc4j.dp.service.heavyhitter.config.BufferHhgHhLdpConfig;
+import edu.alibaba.mpc4j.dp.service.heavyhitter.config.CnrHhgHhLdpConfig;
 import edu.alibaba.mpc4j.dp.service.heavyhitter.utils.HgHhLdpServerContext;
 import edu.alibaba.mpc4j.dp.service.tool.BucketDomain;
 
@@ -17,12 +17,12 @@ import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
 /**
- * Buffer Hot HeavyGuardian-based Heavy Hitter LDP server.
+ * Cold-Nomination Randomization HeavyGuardian-based Heavy Hitter LDP server.
  *
  * @author Weiran Liu
  * @date 2023/3/21
  */
-public class BufferHhgHhLdpServer extends AbstractHhLdpServer implements HhgHhLdpServer {
+public class CnrHhgHhLdpServer extends AbstractHhLdpServer implements HhgHhLdpServer {
     /**
      * b = 1.08
      */
@@ -100,7 +100,7 @@ public class BufferHhgHhLdpServer extends AbstractHhLdpServer implements HhgHhLd
      */
     private int num;
 
-    public BufferHhgHhLdpServer(BufferHhgHhLdpConfig config) {
+    public CnrHhgHhLdpServer(CnrHhgHhLdpConfig config) {
         super(config);
         w = config.getW();
         lambdaH = config.getLambdaH();

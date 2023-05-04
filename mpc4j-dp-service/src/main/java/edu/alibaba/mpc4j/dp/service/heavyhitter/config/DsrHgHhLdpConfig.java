@@ -7,12 +7,12 @@ import java.util.Random;
 import java.util.Set;
 
 /**
- * Basic HeavyGuardian-based Heavy Hitter LDP config.
+ * Domain-Shrinkage Randomization HeavyGuardian-based Heavy Hitter LDP config.
  *
  * @author Weiran Liu
  * @date 2023/3/21
  */
-public class BasicHgHhLdpConfig extends BaseHhLdpConfig implements HgHhLdpConfig {
+public class DsrHgHhLdpConfig extends BaseHhLdpConfig implements HgHhLdpConfig {
     /**
      * budget num
      */
@@ -26,7 +26,7 @@ public class BasicHgHhLdpConfig extends BaseHhLdpConfig implements HgHhLdpConfig
      */
     private final Random hgRandom;
 
-    protected BasicHgHhLdpConfig(Builder builder) {
+    protected DsrHgHhLdpConfig(Builder builder) {
         super(builder);
         w = builder.w;
         lambdaH = builder.lambdaH;
@@ -63,7 +63,7 @@ public class BasicHgHhLdpConfig extends BaseHhLdpConfig implements HgHhLdpConfig
         private Random hgRandom;
 
         public Builder(Set<String> domainSet, int k, double windowEpsilon, int windowSize) {
-            super(HhLdpFactory.HhLdpType.BASIC, domainSet, k, windowEpsilon, windowSize);
+            super(HhLdpFactory.HhLdpType.DSR, domainSet, k, windowEpsilon, windowSize);
             // set default values
             w = 1;
             lambdaH = k;
@@ -91,8 +91,8 @@ public class BasicHgHhLdpConfig extends BaseHhLdpConfig implements HgHhLdpConfig
         }
 
         @Override
-        public BasicHgHhLdpConfig build() {
-            return new BasicHgHhLdpConfig(this);
+        public DsrHgHhLdpConfig build() {
+            return new DsrHgHhLdpConfig(this);
         }
     }
 }

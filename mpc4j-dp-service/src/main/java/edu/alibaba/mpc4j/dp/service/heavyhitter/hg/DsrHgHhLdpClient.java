@@ -3,7 +3,7 @@ package edu.alibaba.mpc4j.dp.service.heavyhitter.hg;
 import com.google.common.base.Preconditions;
 import edu.alibaba.mpc4j.dp.service.heavyhitter.AbstractHhLdpClient;
 import edu.alibaba.mpc4j.dp.service.heavyhitter.HhLdpFactory;
-import edu.alibaba.mpc4j.dp.service.heavyhitter.config.DirectHgHhLdpConfig;
+import edu.alibaba.mpc4j.dp.service.heavyhitter.config.DsrHgHhLdpConfig;
 import edu.alibaba.mpc4j.dp.service.heavyhitter.utils.HgHhLdpServerContext;
 import edu.alibaba.mpc4j.dp.service.heavyhitter.utils.HhLdpServerContext;
 import edu.alibaba.mpc4j.dp.service.tool.BucketDomain;
@@ -12,12 +12,12 @@ import java.util.*;
 import java.util.stream.IntStream;
 
 /**
- * Direct Hot HeavyGuardian-based Heavy Hitter LDP client.
+ * Domain-Shrinkage Randomization HeavyGuardian-based Heavy Hitter LDP client.
  *
  * @author Weiran Liu
  * @date 2023/3/20
  */
-public class DirectHgHhLdpClient extends AbstractHhLdpClient {
+public class DsrHgHhLdpClient extends AbstractHhLdpClient {
     /**
      * the bucket domain
      */
@@ -43,7 +43,7 @@ public class DirectHgHhLdpClient extends AbstractHhLdpClient {
      */
     private final double[] qs;
 
-    public DirectHgHhLdpClient(DirectHgHhLdpConfig config) {
+    public DsrHgHhLdpClient(DsrHgHhLdpConfig config) {
         super(config);
         int w = config.getW();
         lambdaH = config.getLambdaH();

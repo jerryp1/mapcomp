@@ -63,14 +63,14 @@ public class HgHhLdpTest {
     public static Collection<Object[]> configurations() {
         Collection<Object[]> configurations = new ArrayList<>();
 
-        // Buffer HeavyGuardian
-        configurations.add(new Object[]{HhLdpFactory.HhLdpType.BUFFER.name(), HhLdpFactory.HhLdpType.BUFFER,});
-        // Advanced HeavyGuardian
-        configurations.add(new Object[]{HhLdpFactory.HhLdpType.ADV.name(), HhLdpFactory.HhLdpType.ADV,});
-        // Direct HeavyGuardian
-        configurations.add(new Object[]{HhLdpFactory.HhLdpType.DIRECT.name(), HhLdpFactory.HhLdpType.DIRECT,});
-        // basic heavy guardian
-        configurations.add(new Object[]{HhLdpFactory.HhLdpType.BASIC.name(), HhLdpFactory.HhLdpType.BASIC,});
+        // CNR
+        configurations.add(new Object[]{HhLdpFactory.HhLdpType.CNR.name(), HhLdpFactory.HhLdpType.CNR,});
+        // BDR
+        configurations.add(new Object[]{HhLdpFactory.HhLdpType.BDR.name(), HhLdpFactory.HhLdpType.BDR,});
+        // DSR
+        configurations.add(new Object[]{HhLdpFactory.HhLdpType.DSR.name(), HhLdpFactory.HhLdpType.DSR,});
+        // BGR
+        configurations.add(new Object[]{HhLdpFactory.HhLdpType.BGR.name(), HhLdpFactory.HhLdpType.BGR,});
 
         return configurations;
     }

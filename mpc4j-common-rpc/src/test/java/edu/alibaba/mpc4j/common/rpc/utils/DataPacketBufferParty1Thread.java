@@ -8,7 +8,7 @@ import java.util.List;
 import java.util.Set;
 
 /**
- * data public buffer party 1 thread.
+ * data packet buffer party 1 thread.
  *
  * @author Weiran Liu
  * @date 2023/2/9

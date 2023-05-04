@@ -49,15 +49,15 @@ public class HhLdpTest {
     public static Collection<Object[]> configurations() {
         Collection<Object[]> configurations = new ArrayList<>();
 
-        // Buffer HeavyGuardian
-        configurations.add(new Object[]{HhLdpType.BUFFER.name(), HhLdpType.BUFFER,});
-        // Advanced HeavyGuardian
-        configurations.add(new Object[]{HhLdpType.ADV.name(), HhLdpType.ADV,});
-        // Direct HeavyGuardian
-        configurations.add(new Object[]{HhLdpType.DIRECT.name(), HhLdpType.DIRECT,});
-        // Basic HeavyGuardian
-        configurations.add(new Object[]{HhLdpType.BASIC.name(), HhLdpType.BASIC,});
-        // Frequency Oracle
+        // CNR
+        configurations.add(new Object[]{HhLdpType.CNR.name(), HhLdpType.CNR,});
+        // BDR
+        configurations.add(new Object[]{HhLdpType.BDR.name(), HhLdpType.BDR,});
+        // DSR
+        configurations.add(new Object[]{HhLdpType.DSR.name(), HhLdpType.DSR,});
+        // BGR
+        configurations.add(new Object[]{HhLdpType.BGR.name(), HhLdpType.BGR,});
+        // FO
         configurations.add(new Object[]{HhLdpType.FO.name(), HhLdpType.FO,});
 
         return configurations;

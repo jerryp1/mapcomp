@@ -1,15 +1,14 @@
 package edu.alibaba.mpc4j.dp.service.heavyhitter.hg;
 
-import com.google.common.base.Preconditions;
 import edu.alibaba.mpc4j.common.sampler.binary.bernoulli.ExpBernoulliSampler;
 import edu.alibaba.mpc4j.common.tool.hash.IntHash;
 import edu.alibaba.mpc4j.common.tool.hash.IntHashFactory;
 import edu.alibaba.mpc4j.common.tool.utils.ObjectUtils;
 import edu.alibaba.mpc4j.dp.service.heavyhitter.AbstractHhLdpServer;
 import edu.alibaba.mpc4j.dp.service.heavyhitter.HhLdpFactory;
-import edu.alibaba.mpc4j.dp.service.heavyhitter.config.AdvHhgHhLdpConfig;
-import edu.alibaba.mpc4j.dp.service.heavyhitter.utils.HgHhLdpServerContext;
 import edu.alibaba.mpc4j.dp.service.heavyhitter.HhLdpServerState;
+import edu.alibaba.mpc4j.dp.service.heavyhitter.config.DsrHgHhLdpConfig;
+import edu.alibaba.mpc4j.dp.service.heavyhitter.utils.HgHhLdpServerContext;
 import edu.alibaba.mpc4j.dp.service.tool.BucketDomain;
 
 import java.util.*;
@@ -17,12 +16,12 @@ import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
 /**
- * Advanced Hot HeavyGuardian-based Heavy Hitter LDP server.
+ * Domain-Shrinkage Randomization HeavyGuardian-based Heavy Hitter LDP server.
  *
  * @author Weiran Liu
- * @date 2022/11/19
+ * @date 2023/3/20
  */
-public class AdvHhgHhLdpServer extends AbstractHhLdpServer implements HhgHhLdpServer {
+public class DsrHgHhLdpServer extends AbstractHhLdpServer {
     /**
      * b = 1.08
      */
@@ -38,11 +37,15 @@ public class AdvHhgHhLdpServer extends AbstractHhLdpServer implements HhgHhLdpSe
     /**
      * budget num
      */
-    private final int w;
+    protected final int w;
+    /**
+     * d in each bucket
+     */
+    protected final int[] bucketDs;
     /**
      * λ_h, i.e., the cell num in each bucket
      */
-    private final int lambdaH;
+    protected final int lambdaH;
     /**
      * w buckets, each bucket has λ_h cells
      */
@@ -52,35 +55,35 @@ public class AdvHhgHhLdpServer extends AbstractHhLdpServer implements HhgHhLdpSe
      */
     private final Random hgRandom;
     /**
-     * current de-bias nums for each budget
+     * current de-bias weak nums for each budget
      */
-    private final int[] ldpNums;
+    private final int[] ldpColdNums;
     /**
-     * p1 = e^ε_1 / (e^ε_1 + 1)
+     * current de-bias strong num for each budget
      */
-    private final double p1;
+    private final int[] ldpHotNums;
     /**
-     * q1 = 1 / (e^ε_1 + 1)
+     * p= e^ε / (e^ε + (λ_h + 1) - 1)
      */
-    private final double q1;
+    private final double p;
     /**
-     * p2 = e^ε_2 / (e^ε_2 + λ_h - 1)
+     * q = 1 / (e^ε + (λ_h + 1) - 1)
      */
-    private final double p2;
+    private final double q;
     /**
-     * q2 = 1 / (e^ε_2 + λ_h - 1)
+     * p = e^ε / (e^ε + d - 1)
      */
-    private final double q2;
+    private final double[] ps;
     /**
-     * γ_h, proportion of hot items
+     * q = 1 / (e^ε + d - 1)
      */
-    private double gammaH;
+    private final double[] qs;
     /**
      * the total number of insert items
      */
     private int num;
 
-    public AdvHhgHhLdpServer(AdvHhgHhLdpConfig config) {
+    public DsrHgHhLdpServer(DsrHgHhLdpConfig config) {
         super(config);
         w = config.getW();
         lambdaH = config.getLambdaH();
@@ -88,36 +91,44 @@ public class AdvHhgHhLdpServer extends AbstractHhLdpServer implements HhgHhLdpSe
         BucketDomain bucketDomain = new BucketDomain(config.getDomainSet(), w, lambdaH);
         hgRandom = config.getHgRandom();
         // init buckets, full the budget with 0-count dummy items
-        buckets = IntStream.range(0, w)
-            .mapToObj(bucketIndex -> {
-                ArrayList<String> bucketDomainArrayList = new ArrayList<>(bucketDomain.getBucketDomainSet(bucketIndex));
-                assert bucketDomainArrayList.size() >= lambdaH;
-                Map<String, Double> bucket = new HashMap<>(lambdaH);
-                for (int i = 0; i < lambdaH; i++) {
-                    bucket.put(bucketDomainArrayList.get(i), 0.0);
-                }
-                return bucket;
-            })
-            .collect(Collectors.toCollection(ArrayList::new));
+        bucketDs = new int[w];
+        buckets = new ArrayList<>(w);
+        IntStream.range(0, w).forEach(bucketIndex -> {
+            ArrayList<String> bucketDomainArrayList = new ArrayList<>(bucketDomain.getBucketDomainSet(bucketIndex));
+            int bucketD = bucketDomainArrayList.size();
+            assert bucketD >= lambdaH;
+            Map<String, Double> bucket = new HashMap<>(lambdaH);
+            for (int i = 0; i < lambdaH; i++) {
+                bucket.put(bucketDomainArrayList.get(i), 0.0);
+            }
+            buckets.add(bucket);
+            bucketDs[bucketIndex] = bucketD;
+        });
         // init hash function
         intHash = IntHashFactory.fastestInstance();
         // init variables
         num = 0;
-        ldpNums = new int[w];
-        Arrays.fill(ldpNums, 0);
-        // set privacy parameters
-        double alpha = config.getAlpha();
-        double alphaWindowEpsilon = windowEpsilon * alpha;
-        double remainedWindowEpsilon = windowEpsilon - alphaWindowEpsilon;
-        // compute p1 and p1
-        double expAlphaWindowEpsilon = Math.exp(alphaWindowEpsilon);
-        p1 = expAlphaWindowEpsilon / (expAlphaWindowEpsilon + 1);
-        q1 = 1 / (expAlphaWindowEpsilon + 1);
-        // compute p2 and q2
-        double expRemainedWindowEpsilon = Math.exp(remainedWindowEpsilon);
-        p2 = expRemainedWindowEpsilon / (expRemainedWindowEpsilon + lambdaH - 1);
-        q2 = 1 / (expRemainedWindowEpsilon + lambdaH - 1);
-        gammaH = config.getGammaH();
+        ldpColdNums = new int[w];
+        Arrays.fill(ldpColdNums, 0);
+        ldpHotNums = new int[w];
+        Arrays.fill(ldpHotNums, 0);
+        // compute p = e^ε / (e^ε + ( + 1) - 1)
+        double expWindowEpsilon = Math.exp(windowEpsilon);
+        p = expWindowEpsilon / (expWindowEpsilon + (lambdaH + 1) - 1);
+        q = 1 / (expWindowEpsilon + (lambdaH + 1) - 1);
+        // compute ps and qs
+        ps = IntStream.range(0, w)
+            .mapToDouble(bucketIndex -> {
+                int bucketD = bucketDs[bucketIndex];
+                return expWindowEpsilon / (expWindowEpsilon + bucketD - 1);
+            })
+            .toArray();
+        qs = IntStream.range(0, w)
+            .mapToDouble(bucketIndex -> {
+                int bucketD = bucketDs[bucketIndex];
+                return 1 / (expWindowEpsilon + bucketD - 1);
+            })
+            .toArray();
     }
 
     @Override
@@ -130,24 +141,16 @@ public class AdvHhgHhLdpServer extends AbstractHhLdpServer implements HhgHhLdpSe
     @Override
     public void stopWarmup() {
         checkState(HhLdpServerState.WARMUP);
-        double hotNum = 0;
         for (int budgetIndex = 0; budgetIndex < w; budgetIndex++) {
             Map<String, Double> budget = buckets.get(budgetIndex);
-            // bias all counts and calculate λ
+            // bias all counts
             for (Map.Entry<String, Double> entry : budget.entrySet()) {
                 String item = entry.getKey();
                 double value = entry.getValue();
-                hotNum += value;
                 value = value * getDebiasFactor();
                 budget.put(item, value);
             }
-        }
-        // There are two ways of setting γ_H: (1) based on the priori knowledge; (2) warm-up setting.
-        // If we manually set γ_H, it must be in range [0, 1], we do not need to update it. Otherwise, we compute it.
-        if (gammaH < 0) {
-            Preconditions.checkArgument(num > 0, "need warmup without manually set γ_H");
-            gammaH = hotNum / num;
-            assert gammaH >= 0 && gammaH <= 1 : "γ_h must be in range [0, 1]: " + gammaH;
+            // note that here the bucket may contain # of elements that is less than lambdaH
         }
         hhLdpServerState = HhLdpServerState.STATISTICS;
     }
@@ -159,48 +162,68 @@ public class AdvHhgHhLdpServer extends AbstractHhLdpServer implements HhgHhLdpSe
         return insert(item);
     }
 
-    private double insertCount() {
-        return 1.0;
-    }
-
-    private double debiasCount() {
-        return -(gammaH * p1 * q2 + (1 - gammaH) * q1 / lambdaH);
-    }
-
-    private void debiasBucket(int bucketIndex) {
+    private double insertCount(int bucketIndex, double weakestCount) {
         switch (hhLdpServerState) {
             case WARMUP:
-                return;
+                return 1.0;
             case STATISTICS:
-                Map<String, Double> bucket = buckets.get(bucketIndex);
-                for (Map.Entry<String, Double> itemEntry : bucket.entrySet()) {
-                    String item = itemEntry.getKey();
-                    double value = itemEntry.getValue();
-                    value += debiasCount();
-                    bucket.put(item, value);
+                if (weakestCount <= 1.0) {
+                    return 1.0 / getDebiasColdFactor(bucketIndex) * getDebiasFactor();
+                } else {
+                    return 1.0;
                 }
-                break;
             default:
                 throw new IllegalStateException();
         }
     }
 
+    private double debiasCount(int bucketIndex, double weakestCount) {
+        if (weakestCount <= 1.0) {
+            return debiasColdCount(bucketIndex);
+        } else {
+            return debiasHotCount();
+        }
+    }
+
+    private double debiasColdCount(int bucketIndex) {
+        return -qs[bucketIndex] / getDebiasColdFactor(bucketIndex) * getDebiasFactor();
+    }
+
+    private double debiasHotCount() {
+        return -q;
+    }
+
+    private void debiasBucket(int bucketIndex, double weakestCount) {
+        Map<String, Double> bucket = buckets.get(bucketIndex);
+        for (Map.Entry<String, Double> itemEntry : bucket.entrySet()) {
+            String item = itemEntry.getKey();
+            double value = itemEntry.getValue();
+            value += debiasCount(bucketIndex, weakestCount);
+            bucket.put(item, value);
+        }
+    }
+
     private double getDebiasFactor() {
-        return p1 * (p2 - q2);
+        return p - q;
+    }
+
+    private double getDebiasColdFactor(int bucketIndex) {
+        return ps[bucketIndex] - qs[bucketIndex];
     }
 
     private double defaultDebiasCount(int bucketIndex) {
-        return ldpNums[bucketIndex] * debiasCount();
+        return ldpColdNums[bucketIndex] * debiasColdCount(bucketIndex) + ldpHotNums[bucketIndex] * debiasHotCount();
     }
 
     private boolean insert(String item) {
         num++;
         // it first computes the hash function h(e) (1 ⩽ h(e) ⩽ w) to map e to bucket A[h(e)].
-        byte[] itemByteArray = ObjectUtils.objectToByteArray(item);
-        int bucketIndex = Math.abs(intHash.hash(itemByteArray) % w);
-        if (hhLdpServerState.equals(HhLdpServerState.STATISTICS)) {
-            ldpNums[bucketIndex]++;
-            debiasBucket(bucketIndex);
+        int bucketIndex;
+        if (item.startsWith(HhLdpFactory.BOT_PREFIX)) {
+            bucketIndex = Integer.parseInt(item.substring(HhLdpFactory.BOT_PREFIX.length()));
+        } else {
+            byte[] itemByteArray = ObjectUtils.objectToByteArray(item);
+            bucketIndex = Math.abs(intHash.hash(itemByteArray) % w);
         }
         // find the weakest guardian
         Map<String, Double> bucket = buckets.get(bucketIndex);
@@ -209,18 +232,27 @@ public class AdvHhgHhLdpServer extends AbstractHhLdpServer implements HhgHhLdpSe
         Map.Entry<String, Double> weakestCell = bucketList.get(0);
         String weakestItem = weakestCell.getKey();
         double weakestCount = weakestCell.getValue();
+        if (hhLdpServerState.equals(HhLdpServerState.STATISTICS)) {
+            debiasBucket(bucketIndex, weakestCount);
+            if (weakestCount <= 1.0) {
+                ldpColdNums[bucketIndex]++;
+            } else {
+                ldpHotNums[bucketIndex]++;
+            }
+        }
         // Case 1: e is in one cell in the heavy part of A[h(e)] (being a king or a guardian).
         if (bucket.containsKey(item)) {
             // HeavyGuardian just increments the corresponding frequency (the count field) in the cell by 1.
             double itemCount = bucket.get(item);
-            itemCount += insertCount();
+            itemCount += insertCount(bucketIndex, weakestCount);
             bucket.put(item, itemCount);
             return true;
         }
         // Case 2: e is not in the heavy part of A[h(e)], and there are still empty cells.
         if (bucket.size() < lambdaH) {
+            assert !item.startsWith(HhLdpFactory.BOT_PREFIX) : "the item must not be ⊥: " + item;
             // It inserts e into an empty cell, i.e., sets the ID field to e and sets the count field to 1.
-            bucket.put(item, insertCount() + defaultDebiasCount(bucketIndex));
+            bucket.put(item, insertCount(bucketIndex, weakestCount) + defaultDebiasCount(bucketIndex));
             return true;
         }
         // Case 3: e is not in any cell in the heavy part of A[h(e)], and there is no empty cell.
@@ -243,7 +275,8 @@ public class AdvHhgHhLdpServer extends AbstractHhLdpServer implements HhgHhLdpSe
         // and sets the count field to 1
         if (weakestCount <= 0) {
             bucket.remove(weakestItem);
-            bucket.put(item, insertCount() + defaultDebiasCount(bucketIndex));
+            assert !item.startsWith(HhLdpFactory.BOT_PREFIX) : "the item must not be ⊥: " + item;
+            bucket.put(item, insertCount(bucketIndex, weakestCount) + defaultDebiasCount(bucketIndex));
             return true;
         } else {
             bucket.put(weakestItem, weakestCount);
@@ -292,11 +325,6 @@ public class AdvHhgHhLdpServer extends AbstractHhLdpServer implements HhgHhLdpSe
     @Override
     public int getNum() {
         return num;
-    }
-
-    @Override
-    public double getGammaH() {
-        return gammaH;
     }
 
     @Override

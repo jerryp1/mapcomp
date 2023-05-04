@@ -64,13 +64,6 @@ public class HhLdpMainTest {
     }
 
     @Test
-    public void testNoAlpha() throws IOException {
-        HhLdpMain hhLdpMain = createHhLdpMain("test_config/hh_ldp_test_config_no_alpha.conf");
-        Assert.assertEquals(0, hhLdpMain.getAlphas().length);
-        hhLdpMain.run();
-    }
-
-    @Test
     public void testAlpha() throws IOException {
         HhLdpMain hhLdpMain = createHhLdpMain("test_config/hh_ldp_test_config_alpha.conf");
         Assert.assertTrue(hhLdpMain.getAlphas().length > 0);

@@ -7,12 +7,12 @@ import java.util.Random;
 import java.util.Set;
 
 /**
- * Buffer Hot HeavyGuardian-based Heavy Hitter LDP config.
+ * Cold-Nomination Randomization HeavyGuardian-based Heavy Hitter LDP config.
  *
  * @author Weiran Liu
  * @date 2023/3/21
  */
-public class BufferHhgHhLdpConfig extends BaseHhLdpConfig implements HhgHhLdpConfig {
+public class CnrHhgHhLdpConfig extends BaseHhLdpConfig implements HhgHhLdpConfig {
     /**
      * budget num
      */
@@ -38,7 +38,7 @@ public class BufferHhgHhLdpConfig extends BaseHhLdpConfig implements HhgHhLdpCon
      */
     private final double gammaH;
 
-    protected BufferHhgHhLdpConfig(Builder builder) {
+    protected CnrHhgHhLdpConfig(Builder builder) {
         super(builder);
         w = builder.w;
         lambdaH = builder.lambdaH;
@@ -104,7 +104,7 @@ public class BufferHhgHhLdpConfig extends BaseHhLdpConfig implements HhgHhLdpCon
         private double gammaH;
 
         public Builder(Set<String> domainSet, int k, double windowEpsilon, int windowSize) {
-            super(HhLdpFactory.HhLdpType.BUFFER, domainSet, k, windowEpsilon, windowSize);
+            super(HhLdpFactory.HhLdpType.CNR, domainSet, k, windowEpsilon, windowSize);
             // set default values
             w = 1;
             lambdaH = k;
@@ -166,8 +166,8 @@ public class BufferHhgHhLdpConfig extends BaseHhLdpConfig implements HhgHhLdpCon
         }
 
         @Override
-        public BufferHhgHhLdpConfig build() {
-            return new BufferHhgHhLdpConfig(this);
+        public CnrHhgHhLdpConfig build() {
+            return new CnrHhgHhLdpConfig(this);
         }
     }
 }
