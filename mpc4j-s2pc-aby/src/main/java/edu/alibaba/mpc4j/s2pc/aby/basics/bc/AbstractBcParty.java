@@ -309,6 +309,7 @@ public abstract class AbstractBcParty extends AbstractTwoPartyPto implements BcP
 
     @Override
     public void revealOther(SquareZ2Vector[] xiArray) {
+        //noinspection StatementWithEmptyBody
         if (xiArray.length == 0) {
             // do nothing for 0 length
         }

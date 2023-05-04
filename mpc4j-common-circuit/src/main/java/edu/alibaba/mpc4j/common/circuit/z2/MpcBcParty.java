@@ -126,7 +126,6 @@ public interface MpcBcParty {
      */
     MpcZ2Vector or(MpcZ2Vector xi, MpcZ2Vector yi) throws MpcAbortException;
 
-
     /**
      * Vector OR operation.
      *

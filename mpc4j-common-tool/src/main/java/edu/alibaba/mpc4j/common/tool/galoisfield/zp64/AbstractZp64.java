@@ -201,7 +201,7 @@ abstract class AbstractZp64 implements Zp64 {
 
     @Override
     public int hashCode() {
-        return new Long(prime).hashCode();
+        return Long.valueOf(prime).hashCode();
     }
 
     @Override
