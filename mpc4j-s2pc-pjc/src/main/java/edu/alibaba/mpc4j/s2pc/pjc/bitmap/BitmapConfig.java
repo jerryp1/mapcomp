@@ -20,13 +20,6 @@ public interface BitmapConfig extends MultiPartyPtoConfig {
     BitmapType getPtoType();
 
     /**
-     * 返回底层协议最大数量。
-     *
-     * @return 底层协议最大数量。
-     */
-    int maxBaseNum();
-
-    /**
      * 返回Bc协议配置项
      *
      * @return Bc协议配置项
