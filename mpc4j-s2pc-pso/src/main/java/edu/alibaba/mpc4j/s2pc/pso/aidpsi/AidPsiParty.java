@@ -6,28 +6,28 @@ import edu.alibaba.mpc4j.common.rpc.pto.ThreePartyPto;
 import java.util.Set;
 
 /**
- * aided PSI server.
+ * aided PSI party.
  *
  * @author Weiran Liu
  * @date 2023/5/4
  */
-public interface AidPsiServer<T> extends ThreePartyPto {
+public interface AidPsiParty<T> extends ThreePartyPto {
     /**
      * Inits the protocol.
      *
-     * @param maxServerElementSize max server element size.
-     * @param maxClientElementSize max client element size.
+     * @param maxOwnElementSize   max own element size.
+     * @param maxOtherElementSize max other element size.
      * @throws MpcAbortException the protocol failure aborts.
      */
-    void init(int maxServerElementSize, int maxClientElementSize) throws MpcAbortException;
+    void init(int maxOwnElementSize, int maxOtherElementSize) throws MpcAbortException;
 
     /**
      * Executes the protocol.
      *
-     * @param serverElementSet  server element set.
-     * @param clientElementSize client element size.
+     * @param ownElementSet    own element set.
+     * @param otherElementSize other element size.
      * @return intersection.
      * @throws MpcAbortException the protocol failure aborts.
      */
-    Set<T> psi(Set<T> serverElementSet, int clientElementSize) throws MpcAbortException;
+    Set<T> psi(Set<T> ownElementSet, int otherElementSize) throws MpcAbortException;
 }
