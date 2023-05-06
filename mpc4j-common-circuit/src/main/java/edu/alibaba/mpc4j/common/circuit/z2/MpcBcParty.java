@@ -1,6 +1,7 @@
 package edu.alibaba.mpc4j.common.circuit.z2;
 
 import edu.alibaba.mpc4j.common.rpc.MpcAbortException;
+import edu.alibaba.mpc4j.common.tool.bitvector.BitVector;
 
 /**
  * Mpc Boolean Circuit Party.
@@ -75,6 +76,81 @@ public interface MpcBcParty {
         assert mergeVector.getNum() == 0 : "merged vector must remain 0 bits: " + mergeVector.getNum();
         return splitVectors;
     }
+
+    /**
+     * init the protocol.
+     *
+     * @param maxRoundBitNum maximum number of bits in round.
+     * @param updateBitNum   total number of bits for updates.
+     * @throws MpcAbortException if the protocol is abort.
+     */
+    void init(int maxRoundBitNum, int updateBitNum) throws MpcAbortException;
+
+    /**
+     * Share its own BitVector.
+     *
+     * @param xi the BitVector to be shared.
+     * @return the shared BitVector.
+     */
+    MpcZ2Vector shareOwn(BitVector xi);
+
+    /**
+     * Share its own BitVectors。
+     *
+     * @param xiArray the BitVectors to be shared.
+     * @return the shared BitVectors.
+     */
+    MpcZ2Vector[] shareOwn(BitVector[] xiArray);
+
+    /**
+     * Share other's BitVector.
+     *
+     * @param bitNum the number of bits to be shared.
+     * @return the shared BitVector.
+     * @throws MpcAbortException if the protocol is abort.
+     */
+    MpcZ2Vector shareOther(int bitNum) throws MpcAbortException;
+
+    /**
+     * Share other's BitVectors.
+     *
+     * @param bitNums the number of bits for each bit vector to be shared.
+     * @return the shared BitVectors.
+     * @throws MpcAbortException if the protocol is abort.
+     */
+    MpcZ2Vector[] shareOther(int[] bitNums) throws MpcAbortException;
+
+    /**
+     * Reveal its own BitVector.
+     *
+     * @param xi the shared BitVector.
+     * @return the reconstructed BitVector.
+     * @throws MpcAbortException if the protocol is abort.
+     */
+    BitVector revealOwn(MpcZ2Vector xi) throws MpcAbortException;
+
+    /**
+     * Reveal its own BitVectors.
+     *
+     * @param xiArray the shared BitVectors.
+     * @return the reconstructed BitVectors.
+     * @throws MpcAbortException if the protocol is abort.
+     */
+    BitVector[] revealOwn(MpcZ2Vector[] xiArray) throws MpcAbortException;
+
+    /**
+     * Reconstruct other's BitVector.
+     *
+     * @param xi the shared BitVector.
+     */
+    void revealOther(MpcZ2Vector xi);
+
+    /**
+     * Reconstruct other's BitVectors.
+     *
+     * @param xiArray the shared BitVectors.
+     */
+    void revealOther(MpcZ2Vector[] xiArray);
 
     /**
      * AND operation.

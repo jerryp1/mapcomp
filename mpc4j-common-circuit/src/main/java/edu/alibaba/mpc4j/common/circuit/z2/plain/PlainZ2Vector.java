@@ -1,6 +1,7 @@
-package edu.alibaba.mpc4j.common.circuit.z2;
+package edu.alibaba.mpc4j.common.circuit.z2.plain;
 
 import edu.alibaba.mpc4j.common.circuit.MpcVector;
+import edu.alibaba.mpc4j.common.circuit.z2.MpcZ2Vector;
 import edu.alibaba.mpc4j.common.tool.bitvector.BitVector;
 import edu.alibaba.mpc4j.common.tool.bitvector.BitVectorFactory;
 
@@ -85,7 +86,7 @@ public class PlainZ2Vector implements MpcZ2Vector {
     }
 
     @Override
-    public int getByteNum() {
+    public int byteNum() {
         return bitVector.byteNum();
     }
 
@@ -93,7 +94,6 @@ public class PlainZ2Vector implements MpcZ2Vector {
     public boolean get(int index) {
         return bitVector.get(index);
     }
-
 
     @Override
     public BitVector getBitVector() {
