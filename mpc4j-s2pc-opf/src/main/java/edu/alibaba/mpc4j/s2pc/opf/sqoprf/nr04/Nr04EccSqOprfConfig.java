@@ -2,99 +2,92 @@ package edu.alibaba.mpc4j.s2pc.opf.sqoprf.nr04;
 
 import edu.alibaba.mpc4j.common.rpc.desc.SecurityModel;
 import edu.alibaba.mpc4j.common.tool.EnvType;
-import edu.alibaba.mpc4j.s2pc.opf.oprf.kkrt16.Kkrt16OptOprfConfig;
 import edu.alibaba.mpc4j.s2pc.opf.sqoprf.SqOprfConfig;
 import edu.alibaba.mpc4j.s2pc.opf.sqoprf.SqOprfFactory;
-import edu.alibaba.mpc4j.s2pc.pcg.ot.cot.core.CoreCotConfig;
-import edu.alibaba.mpc4j.s2pc.pcg.ot.cot.core.CoreCotFactory;
+import edu.alibaba.mpc4j.s2pc.pcg.ot.cot.CotConfig;
+import edu.alibaba.mpc4j.s2pc.pcg.ot.cot.CotFactory;
 
 /**
+ * NR04 ECC single-query OPRF config.
+ *
  * @author Qixian Zhou
  * @date 2023/4/12
  */
 public class Nr04EccSqOprfConfig implements SqOprfConfig {
+    /**
+     * use compressed encoding
+     */
+    private final boolean compressEncode;
+    /**
+     * COT config
+     */
+    private final CotConfig cotConfig;
 
-	/**
-	 * 是否使用压缩椭圆曲线编码
-	 */
-	private final boolean compressEncode;
-	/**
-	 * 环境类型
-	 */
-	private EnvType envType;
-	/**
-	 * 核COT协议配置项
-	 */
-	private final CoreCotConfig coreCotConfig;
+    private Nr04EccSqOprfConfig(Builder builder) {
+        compressEncode = builder.compressEncode;
+        cotConfig = builder.cotConfig;
+    }
 
+    public CotConfig getCotConfig() {
+        return cotConfig;
+    }
 
-	private Nr04EccSqOprfConfig(Nr04EccSqOprfConfig.Builder builder) {
-		compressEncode = builder.compressEncode;
-		envType = EnvType.STANDARD;
-		coreCotConfig = builder.coreCotConfig;
-	}
+    @Override
+    public SqOprfFactory.SqOprfType getPtoType() {
+        return SqOprfFactory.SqOprfType.NR04_ECC;
+    }
 
-	public CoreCotConfig getCoreCotConfig() {
-		return coreCotConfig;
-	}
+    @Override
+    public void setEnvType(EnvType envType) {
+        cotConfig.setEnvType(envType);
+    }
 
-	@Override
-	public SqOprfFactory.SqOprfType getPtoType() {
-		return SqOprfFactory.SqOprfType.NR04_ECC;
-	}
+    @Override
+    public EnvType getEnvType() {
+        return cotConfig.getEnvType();
+    }
 
-	@Override
-	public void setEnvType(EnvType envType) {
-		this.envType = envType;
-	}
+    @Override
+    public SecurityModel getSecurityModel() {
+        SecurityModel securityModel = SecurityModel.SEMI_HONEST;
+        if (cotConfig.getSecurityModel().compareTo(securityModel) < 0) {
+            securityModel = cotConfig.getSecurityModel();
+        }
+        return securityModel;
+    }
 
-	@Override
-	public EnvType getEnvType() {
-		return envType;
-	}
+    public boolean getCompressEncode() {
+        return compressEncode;
+    }
 
-	@Override
-	public SecurityModel getSecurityModel() {
-		SecurityModel securityModel = SecurityModel.SEMI_HONEST;
-		if (coreCotConfig.getSecurityModel().compareTo(securityModel) < 0) {
-			securityModel = coreCotConfig.getSecurityModel();
-		}
-		return securityModel;
-	}
+    public static class Builder implements org.apache.commons.lang3.builder.Builder<Nr04EccSqOprfConfig> {
+        /**
+         * use compressed encoding
+         */
+        private boolean compressEncode;
+        /**
+         * COT config
+         */
+        private CotConfig cotConfig;
 
-	public boolean getCompressEncode() {
-		return compressEncode;
-	}
+        public Builder() {
+            compressEncode = true;
+            cotConfig = CotFactory.createDefaultConfig(SecurityModel.SEMI_HONEST, true);
+        }
 
-	public static class Builder implements org.apache.commons.lang3.builder.Builder<Nr04EccSqOprfConfig> {
-		/**
-		 * 是否使用压缩椭圆曲线编码
-		 */
-		private boolean compressEncode;
+        public Builder setCompressEncode(boolean compressEncode) {
+            this.compressEncode = compressEncode;
+            return this;
+        }
 
-		/**
-		 * 核COT协议配置项
-		 */
-		private CoreCotConfig coreCotConfig;
+        public Builder setCotConfig(CotConfig cotConfig) {
+            this.cotConfig = cotConfig;
+            return this;
+        }
 
-		public Builder() {
-			compressEncode = true;
-			coreCotConfig = CoreCotFactory.createDefaultConfig(SecurityModel.SEMI_HONEST);
-		}
-
-		public Nr04EccSqOprfConfig.Builder setCompressEncode(boolean compressEncode) {
-			this.compressEncode = compressEncode;
-			return this;
-		}
-
-		public Nr04EccSqOprfConfig.Builder setCoreCotConfig(CoreCotConfig coreCotConfig) {
-			this.coreCotConfig = coreCotConfig;
-			return this;
-		}
-
-		@Override
-		public Nr04EccSqOprfConfig build() {
-			return new Nr04EccSqOprfConfig(this);
-		}
-	}
+        @Override
+        public Nr04EccSqOprfConfig build() {
+            return new Nr04EccSqOprfConfig(this);
+        }
+    }
 }

@@ -39,13 +39,13 @@ public class SqOprfFactory implements PtoFactory {
          */
         RA17_BYTE_ECC,
         /**
-         * LowMC-based OPRF
+         * Naor-Reingold OPRF based on ECC
+         */
+        NR04_ECC,
+        /**
+         * LowMC OPRF
          */
         LOW_MC,
-        /**
-         * Naor-Reingold OPRF based ECC
-         */
-        NR04_ECC
     }
 
     /**

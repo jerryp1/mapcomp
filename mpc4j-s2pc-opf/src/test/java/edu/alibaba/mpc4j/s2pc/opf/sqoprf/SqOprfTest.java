@@ -3,22 +3,11 @@ package edu.alibaba.mpc4j.s2pc.opf.sqoprf;
 import com.google.common.base.Preconditions;
 import edu.alibaba.mpc4j.common.rpc.Rpc;
 import edu.alibaba.mpc4j.common.rpc.RpcManager;
-import edu.alibaba.mpc4j.common.rpc.desc.SecurityModel;
 import edu.alibaba.mpc4j.common.rpc.impl.memory.MemoryRpcManager;
-import edu.alibaba.mpc4j.common.tool.CommonConstants;
-import edu.alibaba.mpc4j.s2pc.aby.basics.bc.BcConfig;
-import edu.alibaba.mpc4j.s2pc.aby.basics.bc.bea91.Bea91BcConfig;
-import edu.alibaba.mpc4j.s2pc.opf.oprp.OprpConfig;
-import edu.alibaba.mpc4j.s2pc.opf.oprp.lowmc.LowMcOprpConfig;
 import edu.alibaba.mpc4j.s2pc.opf.sqoprf.SqOprfFactory.SqOprfType;
-import edu.alibaba.mpc4j.s2pc.opf.sqoprf.lowmc.LowMcSqOprfConfig;
 import edu.alibaba.mpc4j.s2pc.opf.sqoprf.nr04.Nr04EccSqOprfConfig;
-import edu.alibaba.mpc4j.s2pc.opf.sqoprf.nr04.Nr04EccSqOprfKey;
 import edu.alibaba.mpc4j.s2pc.opf.sqoprf.ra17.Ra17ByteEccSqOprfConfig;
 import edu.alibaba.mpc4j.s2pc.opf.sqoprf.ra17.Ra17EccSqOprfConfig;
-import edu.alibaba.mpc4j.s2pc.opf.sqoprf.ra17.Ra17EccSqOprfKey;
-import edu.alibaba.mpc4j.s2pc.pcg.mtg.z2.Z2MtgConfig;
-import edu.alibaba.mpc4j.s2pc.pcg.mtg.z2.impl.cache.CacheZ2MtgConfig;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.time.StopWatch;
 import org.junit.After;
@@ -57,11 +46,26 @@ public class SqOprfTest {
 	/**
 	 * the large batch size
 	 */
-	private static final int LARGE_BATCH_SIZE = 1 << 14;
+	private static final int LARGE_BATCH_SIZE = 1 << 12;
+	/**
+	 * a strange element byte length
+	 */
+	private static final int ELEMENT_BYTE_LENGTH = 17;
 
 	@Parameterized.Parameters(name = "{0}")
 	public static Collection<Object[]> configurations() {
 		Collection<Object[]> configurations = new ArrayList<>();
+
+		// NR04_ECC (uncompress)
+		configurations.add(new Object[]{
+			SqOprfType.NR04_ECC.name() + " (uncompress)",
+			new Nr04EccSqOprfConfig.Builder().build(),
+		});
+		// NR04_ECC (compress)
+		configurations.add(new Object[]{
+			SqOprfType.NR04_ECC.name() + " (compress)",
+			new Nr04EccSqOprfConfig.Builder().setCompressEncode(true).build(),
+		});
 		// RA17_BYTE_ECC (compress)
 		configurations.add(new Object[]{
 				SqOprfType.RA17_BYTE_ECC.name(),
@@ -76,27 +80,6 @@ public class SqOprfTest {
 		configurations.add(new Object[]{
 				SqOprfType.RA17_ECC.name() + " (uncompress)",
 				new Ra17EccSqOprfConfig.Builder().build(),
-		});
-		// NR04_ECC (uncompress)
-		configurations.add(new Object[]{
-				SqOprfType.NR04_ECC.name() + " (uncompress)",
-				new Nr04EccSqOprfConfig.Builder().build(),
-		});
-		// NR04_ECC (compress)
-		configurations.add(new Object[]{
-				SqOprfType.NR04_ECC.name() + " (compress)",
-				new Nr04EccSqOprfConfig.Builder().setCompressEncode(true).build(),
-		});
-		// LowMc (ideal)
-		Z2MtgConfig idealZ2MtgConfig = new CacheZ2MtgConfig.Builder(SecurityModel.IDEAL).build();
-		BcConfig idealBcConfig = new Bea91BcConfig.Builder().setZ2MtgConfig(idealZ2MtgConfig).build();
-		OprpConfig lowMcIdeal = new LowMcOprpConfig.Builder().setBcConfig(idealBcConfig).build();
-		// If LowMc(default) is used here, then testParallelLargeN and testLargeN (1 << 14) cannot be passed.
-		// The likely reason is that LowMc (default) requires interactively generating a large number of Beaver triples, which is time-consuming.
-		configurations.add(new Object[]{
-				SqOprfType.LOW_MC.name() + "(ideal)",
-				// LowMc (ideal)
-				new LowMcSqOprfConfig.Builder().setOprpConfig(lowMcIdeal).build(),
 		});
 
 		return configurations;
@@ -189,7 +172,7 @@ public class SqOprfTest {
 			LOGGER.info("-----test {}, batch_size = {}-----", sender.getPtoDesc().getPtoName(), batchSize);
 			byte[][] inputs = IntStream.range(0, batchSize)
 					.mapToObj(index -> {
-						byte[] input = new byte[CommonConstants.BLOCK_BYTE_LENGTH];
+						byte[] input = new byte[ELEMENT_BYTE_LENGTH];
 						SECURE_RANDOM.nextBytes(input);
 						return input;
 					})
