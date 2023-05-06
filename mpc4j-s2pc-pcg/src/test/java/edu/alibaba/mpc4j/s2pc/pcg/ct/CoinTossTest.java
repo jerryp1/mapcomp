@@ -7,6 +7,7 @@ import edu.alibaba.mpc4j.common.rpc.impl.memory.MemoryRpcManager;
 import edu.alibaba.mpc4j.common.tool.utils.BytesUtils;
 import edu.alibaba.mpc4j.common.tool.utils.CommonUtils;
 import edu.alibaba.mpc4j.s2pc.pcg.ct.CoinTossFactory.CoinTossType;
+import edu.alibaba.mpc4j.s2pc.pcg.ct.blum82.Blum82CoinTossConfig;
 import edu.alibaba.mpc4j.s2pc.pcg.ct.direct.DirectCoinTossConfig;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.time.StopWatch;
@@ -51,6 +52,10 @@ public class CoinTossTest {
     public static Collection<Object[]> configurations() {
         Collection<Object[]> configurations = new ArrayList<>();
 
+        // BLUM82
+        configurations.add(new Object[]{
+            CoinTossType.BLUM82.name(), new Blum82CoinTossConfig.Builder().build(),
+        });
         // DIRECT
         configurations.add(new Object[]{
             CoinTossType.DIRECT.name(), new DirectCoinTossConfig.Builder().build(),

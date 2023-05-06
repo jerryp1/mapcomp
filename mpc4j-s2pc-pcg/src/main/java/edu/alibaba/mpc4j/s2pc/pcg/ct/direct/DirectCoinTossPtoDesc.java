@@ -25,7 +25,7 @@ class DirectCoinTossPtoDesc implements PtoDesc {
      */
     enum PtoStep {
         /**
-         * sender sends the coins
+         * sender sends coins
          */
         SENDER_SEND_COINS,
     }

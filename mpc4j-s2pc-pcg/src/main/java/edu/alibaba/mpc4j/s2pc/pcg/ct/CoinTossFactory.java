@@ -4,6 +4,9 @@ import edu.alibaba.mpc4j.common.rpc.Party;
 import edu.alibaba.mpc4j.common.rpc.Rpc;
 import edu.alibaba.mpc4j.common.rpc.desc.SecurityModel;
 import edu.alibaba.mpc4j.common.rpc.pto.PtoFactory;
+import edu.alibaba.mpc4j.s2pc.pcg.ct.blum82.Blum82CoinTossConfig;
+import edu.alibaba.mpc4j.s2pc.pcg.ct.blum82.Blum82CoinTossReceiver;
+import edu.alibaba.mpc4j.s2pc.pcg.ct.blum82.Blum82CoinTossSender;
 import edu.alibaba.mpc4j.s2pc.pcg.ct.direct.DirectCoinTossConfig;
 import edu.alibaba.mpc4j.s2pc.pcg.ct.direct.DirectCoinTossReceiver;
 import edu.alibaba.mpc4j.s2pc.pcg.ct.direct.DirectCoinTossSender;
@@ -50,6 +53,7 @@ public class CoinTossFactory implements PtoFactory {
             case DIRECT:
                 return new DirectCoinTossSender(senderRpc, receiverParty, (DirectCoinTossConfig) config);
             case BLUM82:
+                return new Blum82CoinTossSender(senderRpc, receiverParty, (Blum82CoinTossConfig) config);
             default:
                 throw new IllegalArgumentException("Invalid " + CoinTossType.class.getSimpleName() + ": " + type.name());
         }
@@ -69,6 +73,7 @@ public class CoinTossFactory implements PtoFactory {
             case DIRECT:
                 return new DirectCoinTossReceiver(receiverRpc, senderParty, (DirectCoinTossConfig) config);
             case BLUM82:
+                return new Blum82CoinTossReceiver(receiverRpc, senderParty, (Blum82CoinTossConfig) config);
             default:
                 throw new IllegalArgumentException("Invalid " + CoinTossType.class.getSimpleName() + ": " + type.name());
         }
@@ -87,6 +92,7 @@ public class CoinTossFactory implements PtoFactory {
                 return new DirectCoinTossConfig.Builder().build();
             case COVERT:
             case MALICIOUS:
+                return new Blum82CoinTossConfig.Builder().build();
             default:
                 throw new IllegalArgumentException("Invalid " + SecurityModel.class.getSimpleName() + ": " + securityModel.name());
         }
