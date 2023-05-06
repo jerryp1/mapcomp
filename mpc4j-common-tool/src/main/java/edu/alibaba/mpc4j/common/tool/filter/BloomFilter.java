@@ -130,7 +130,7 @@ public class BloomFilter<T> implements MergeFilter<T> {
         return bloomFilter;
     }
 
-    private BloomFilter() {
+    BloomFilter() {
         // empty
     }
 

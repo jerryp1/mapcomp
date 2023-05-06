@@ -52,6 +52,8 @@ public class FilterTest {
         configurationParams.add(new Object[] {FilterType.SPARSE_BLOOM_FILTER.name(), FilterType.SPARSE_BLOOM_FILTER,});
         // BLOOM_FILTER
         configurationParams.add(new Object[] {FilterType.BLOOM_FILTER.name(), FilterType.BLOOM_FILTER,});
+        // BLOOM_FILTER
+        configurationParams.add(new Object[] {FilterType.GBF_SPARSE_BF.name(), FilterType.GBF_SPARSE_BF,});
         // SET_FILTER
         configurationParams.add(new Object[] {FilterType.SET_FILTER.name(), FilterType.SET_FILTER,});
 

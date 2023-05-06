@@ -23,6 +23,7 @@ import edu.alibaba.mpc4j.common.rpc.desc.PtoDescManager;
  * @date 2022/8/16
  */
 class Ywl20BpDpprfPtoDesc implements PtoDesc {
+
     /**
      * protocol ID
      */

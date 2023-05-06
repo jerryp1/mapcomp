@@ -46,7 +46,6 @@ public class OkvsTest {
     @Parameterized.Parameters(name = "{0}")
     public static Collection<Object[]> configurations() {
         Collection<Object[]> configurations = new ArrayList<>();
-
         // H3_SINGLETON_GCT
         configurations.add(new Object[]{OkvsType.H3_SINGLETON_GCT.name(), OkvsType.H3_SINGLETON_GCT});
         // H2_SINGLETON_GCT
@@ -57,6 +56,8 @@ public class OkvsTest {
         configurations.add(new Object[]{OkvsType.H2_DFS_GCT.name(), OkvsType.H2_DFS_GCT});
         // GBF
         configurations.add(new Object[]{OkvsType.GBF.name(), OkvsType.GBF});
+        // SPARSE_GBF
+        configurations.add(new Object[]{OkvsType.SPARSE_GBF.name(), OkvsType.SPARSE_GBF});
         // MEGA_BIN
         configurations.add(new Object[]{OkvsType.MEGA_BIN.name(), OkvsType.MEGA_BIN});
         // POLYNOMIAL
