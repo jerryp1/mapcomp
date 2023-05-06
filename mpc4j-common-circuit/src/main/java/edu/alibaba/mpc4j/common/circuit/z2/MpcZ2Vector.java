@@ -18,11 +18,20 @@ public interface MpcZ2Vector extends MpcVector {
     BitVector getBitVector();
 
     /**
+     * Gets the number of bit shares.
+     *
+     * @return the number of bit shares.
+     */
+    default int bitNum() {
+        return getNum();
+    }
+
+    /**
      * Gets the num in bytes.
      *
      * @return the num in bytes.
      */
-    int getByteNum();
+    int byteNum();
 
     /**
      * Get the value at the index.

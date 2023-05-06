@@ -8,7 +8,6 @@ import edu.alibaba.mpc4j.common.rpc.desc.PtoDesc;
 import edu.alibaba.mpc4j.common.rpc.pto.AbstractTwoPartyPto;
 import edu.alibaba.mpc4j.common.tool.MathPreconditions;
 import edu.alibaba.mpc4j.common.tool.bitvector.BitVector;
-import edu.alibaba.mpc4j.common.tool.bitvector.BitVectorFactory;
 
 import java.util.Arrays;
 import java.util.stream.IntStream;
@@ -62,10 +61,10 @@ public abstract class AbstractBcParty extends AbstractTwoPartyPto implements BcP
         initState();
     }
 
-    protected void setShareOwnInput(BitVector bitVector) {
+    protected void setShareOwnInput(BitVector xi) {
         checkInitialized();
-        MathPreconditions.checkPositiveInRangeClosed("bitNum", bitVector.bitNum(), maxRoundBitNum);
-        bitNum = bitVector.bitNum();
+        MathPreconditions.checkPositiveInRangeClosed("bitNum", xi.bitNum(), maxRoundBitNum);
+        bitNum = xi.bitNum();
         inputBitNum += bitNum;
     }
 
@@ -124,36 +123,6 @@ public abstract class AbstractBcParty extends AbstractTwoPartyPto implements BcP
     @Override
     public SquareZ2Vector createEmpty(boolean plain) {
         return SquareZ2Vector.createEmpty(plain);
-    }
-
-    @Override
-    public SquareZ2Vector[] shareOwn(BitVector[] xArray) {
-        if (xArray.length == 0) {
-            return new SquareZ2Vector[0];
-        }
-        // merge
-        BitVector mergeX = BitVectorFactory.merge(xArray);
-        // share
-        SquareZ2Vector mergeShareXi = shareOwn(mergeX);
-        // split
-        int[] bitNums = Arrays.stream(xArray).mapToInt(BitVector::bitNum).toArray();
-        return Arrays.stream(split(mergeShareXi, bitNums))
-            .map(vector -> (SquareZ2Vector) vector)
-            .toArray(SquareZ2Vector[]::new);
-    }
-
-    @Override
-    public SquareZ2Vector[] shareOther(int[] bitNums) throws MpcAbortException {
-        if (bitNums.length == 0) {
-            return new SquareZ2Vector[0];
-        }
-        // share
-        int bitNum = Arrays.stream(bitNums).sum();
-        SquareZ2Vector mergeShareXi = shareOther(bitNum);
-        // split
-        return Arrays.stream(split(mergeShareXi, bitNums))
-            .map(vector -> (SquareZ2Vector) vector)
-            .toArray(SquareZ2Vector[]::new);
     }
 
     @Override
@@ -291,31 +260,5 @@ public abstract class AbstractBcParty extends AbstractTwoPartyPto implements BcP
         return Arrays.stream(split(mergeZiArray, bitNums))
             .map(vector -> (SquareZ2Vector) vector)
             .toArray(SquareZ2Vector[]::new);
-    }
-
-    @Override
-    public BitVector[] revealOwn(SquareZ2Vector[] xiArray) throws MpcAbortException {
-        if (xiArray.length == 0) {
-            return new BitVector[0];
-        }
-        // merge
-        SquareZ2Vector mergeXiArray = (SquareZ2Vector) merge(xiArray);
-        // reveal
-        BitVector mergeX = revealOwn(mergeXiArray);
-        // split
-        int[] bitNums = Arrays.stream(xiArray).mapToInt(SquareZ2Vector::getNum).toArray();
-        return BitVectorFactory.split(mergeX, bitNums);
-    }
-
-    @Override
-    public void revealOther(SquareZ2Vector[] xiArray) {
-        //noinspection StatementWithEmptyBody
-        if (xiArray.length == 0) {
-            // do nothing for 0 length
-        }
-        // merge
-        SquareZ2Vector mergeXiArray = (SquareZ2Vector) merge(xiArray);
-        // reveal
-        revealOther(mergeXiArray);
     }
 }

@@ -143,7 +143,7 @@ public class SquareZ2Vector implements MpcZ2Vector {
     }
 
     @Override
-    public int getByteNum() {
+    public int byteNum() {
         return bitVector.byteNum();
     }
 

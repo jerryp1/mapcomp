@@ -1,5 +1,7 @@
 package edu.alibaba.mpc4j.common.circuit.z2;
 
+import edu.alibaba.mpc4j.common.circuit.z2.plain.PlainBcParty;
+import edu.alibaba.mpc4j.common.circuit.z2.plain.PlainZ2Vector;
 import edu.alibaba.mpc4j.common.tool.EnvType;
 import edu.alibaba.mpc4j.common.tool.bitvector.BitVector;
 import edu.alibaba.mpc4j.common.tool.utils.IntUtils;
@@ -124,23 +126,18 @@ public class Z2IntegerCircuitTest {
         PlainZ2Vector[] yPlainZ2Vectors = Arrays.stream(yBitVector).map(PlainZ2Vector::create).toArray(PlainZ2Vector[]::new);
         // init the protocol
         PlainBcParty party = new PlainBcParty();
-        try {
-            Z2IntegerCircuitPartyThread partyThread = new Z2IntegerCircuitPartyThread(party, operator, xPlainZ2Vectors, yPlainZ2Vectors);
-            StopWatch stopWatch = new StopWatch();
-            // execute the circuit
-            stopWatch.start();
-            partyThread.start();
-            partyThread.join();
-            stopWatch.stop();
-            stopWatch.reset();
-            // verify
-            MpcZ2Vector[] zPlainZ2Vectors = partyThread.getZ();
-            BitVector[] z = Arrays.stream(zPlainZ2Vectors).map(MpcZ2Vector::getBitVector).toArray(BitVector[]::new);
-            long[] longZs = Zl64Database.create(EnvType.STANDARD, false, z).getData();
-            assertOutput(operator, l, longXs, longYs, longZs);
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        }
+        Z2IntegerCircuitParty partyThread = new Z2IntegerCircuitParty(party, operator, xPlainZ2Vectors, yPlainZ2Vectors);
+        StopWatch stopWatch = new StopWatch();
+        // execute the circuit
+        stopWatch.start();
+        partyThread.run();
+        stopWatch.stop();
+        stopWatch.reset();
+        // verify
+        MpcZ2Vector[] zPlainZ2Vectors = partyThread.getZ();
+        BitVector[] z = Arrays.stream(zPlainZ2Vectors).map(MpcZ2Vector::getBitVector).toArray(BitVector[]::new);
+        long[] longZs = Zl64Database.create(EnvType.STANDARD, false, z).getData();
+        assertOutput(operator, l, longXs, longYs, longZs);
     }
 
     private void assertOutput(IntegerOperator operator, int l, long[] longXs, long[] longYs, long[] longZs) {

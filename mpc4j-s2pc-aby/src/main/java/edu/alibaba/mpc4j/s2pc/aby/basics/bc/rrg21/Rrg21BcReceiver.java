@@ -73,13 +73,13 @@ public class Rrg21BcReceiver extends AbstractBcParty {
     }
 
     @Override
-    public SquareZ2Vector shareOwn(BitVector x) {
-        setShareOwnInput(x);
+    public SquareZ2Vector shareOwn(BitVector x1) {
+        setShareOwnInput(x1);
         logPhaseInfo(PtoState.PTO_BEGIN, "send share");
 
         stopWatch.start();
         BitVector x1BitVector = BitVectorFactory.createRandom(bitNum, secureRandom);
-        BitVector x0BitVector = x.xor(x1BitVector);
+        BitVector x0BitVector = x1.xor(x1BitVector);
         List<byte[]> x0Payload = Collections.singletonList(x0BitVector.getBytes());
         DataPacketHeader x0Header = new DataPacketHeader(
             encodeTaskId, getPtoDesc().getPtoId(), PtoStep.RECEIVER_SEND_INPUT_SHARE.ordinal(), inputBitNum,
@@ -115,6 +115,59 @@ public class Rrg21BcReceiver extends AbstractBcParty {
 
         logPhaseInfo(PtoState.PTO_END, "receive share");
         return SquareZ2Vector.create(x1BitVector, false);
+    }
+
+    @Override
+    public BitVector revealOwn(MpcZ2Vector x1) throws MpcAbortException {
+        SquareZ2Vector squareX1 = (SquareZ2Vector) x1;
+        setRevealOwnInput(squareX1);
+        if (x1.isPlain()) {
+            return x1.getBitVector();
+        } else {
+            outputBitNum += bitNum;
+            logPhaseInfo(PtoState.PTO_BEGIN, "receive share");
+
+            stopWatch.start();
+            DataPacketHeader x0Header = new DataPacketHeader(
+                encodeTaskId, getPtoDesc().getPtoId(), PtoStep.SENDER_SEND_OUTPUT_SHARE.ordinal(), outputBitNum,
+                otherParty().getPartyId(), ownParty().getPartyId()
+            );
+            List<byte[]> x0Payload = rpc.receive(x0Header).getPayload();
+            MpcAbortPreconditions.checkArgument(x0Payload.size() == 1);
+            BitVector x0BitVector = BitVectorFactory.create(bitNum, x0Payload.get(0));
+            BitVector x1BitVector = x1.getBitVector();
+            stopWatch.stop();
+            long revealTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
+            stopWatch.reset();
+            logStepInfo(PtoState.PTO_STEP, 1, 1, revealTime, "receive share");
+
+            logPhaseInfo(PtoState.PTO_END, "receive share");
+            return x0BitVector.xor(x1BitVector);
+        }
+    }
+
+    @Override
+    public void revealOther(MpcZ2Vector x1) {
+        SquareZ2Vector squareX1 = (SquareZ2Vector) x1;
+        setRevealOtherInput(squareX1);
+        if (!x1.isPlain()) {
+            outputBitNum += bitNum;
+            logPhaseInfo(PtoState.PTO_BEGIN, "send share");
+
+            stopWatch.start();
+            List<byte[]> x1Payload = Collections.singletonList(x1.getBitVector().getBytes());
+            DataPacketHeader x1Header = new DataPacketHeader(
+                encodeTaskId, getPtoDesc().getPtoId(), PtoStep.RECEIVER_SEND_SHARE_OUTPUT.ordinal(), outputBitNum,
+                ownParty().getPartyId(), otherParty().getPartyId()
+            );
+            rpc.send(DataPacket.fromByteArrayList(x1Header, x1Payload));
+            stopWatch.stop();
+            long revealTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
+            stopWatch.reset();
+            logStepInfo(PtoState.PTO_STEP, 1, 1, revealTime, "send share");
+
+            logPhaseInfo(PtoState.PTO_END, "send share");
+        }
     }
 
     @Override
@@ -271,57 +324,6 @@ public class Rrg21BcReceiver extends AbstractBcParty {
 
             logPhaseInfo(PtoState.PTO_END, "xor");
             return squareZ1;
-        }
-    }
-
-    @Override
-    public BitVector revealOwn(SquareZ2Vector x1) throws MpcAbortException {
-        setRevealOwnInput(x1);
-        if (x1.isPlain()) {
-            return x1.getBitVector();
-        } else {
-            outputBitNum += bitNum;
-            logPhaseInfo(PtoState.PTO_BEGIN, "receive share");
-
-            stopWatch.start();
-            DataPacketHeader x0Header = new DataPacketHeader(
-                encodeTaskId, getPtoDesc().getPtoId(), PtoStep.SENDER_SEND_OUTPUT_SHARE.ordinal(), outputBitNum,
-                otherParty().getPartyId(), ownParty().getPartyId()
-            );
-            List<byte[]> x0Payload = rpc.receive(x0Header).getPayload();
-            MpcAbortPreconditions.checkArgument(x0Payload.size() == 1);
-            BitVector x0BitVector = BitVectorFactory.create(bitNum, x0Payload.get(0));
-            BitVector x1BitVector = x1.getBitVector();
-            stopWatch.stop();
-            long revealTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
-            stopWatch.reset();
-            logStepInfo(PtoState.PTO_STEP, 1, 1, revealTime, "receive share");
-
-            logPhaseInfo(PtoState.PTO_END, "receive share");
-            return x0BitVector.xor(x1BitVector);
-        }
-    }
-
-    @Override
-    public void revealOther(SquareZ2Vector x1) {
-        setRevealOtherInput(x1);
-        if (!x1.isPlain()) {
-            outputBitNum += bitNum;
-            logPhaseInfo(PtoState.PTO_BEGIN, "send share");
-
-            stopWatch.start();
-            List<byte[]> x1Payload = Collections.singletonList(x1.getBitVector().getBytes());
-            DataPacketHeader x1Header = new DataPacketHeader(
-                encodeTaskId, getPtoDesc().getPtoId(), PtoStep.RECEIVER_SEND_SHARE_OUTPUT.ordinal(), outputBitNum,
-                ownParty().getPartyId(), otherParty().getPartyId()
-            );
-            rpc.send(DataPacket.fromByteArrayList(x1Header, x1Payload));
-            stopWatch.stop();
-            long revealTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
-            stopWatch.reset();
-            logStepInfo(PtoState.PTO_STEP, 1, 1, revealTime, "send share");
-
-            logPhaseInfo(PtoState.PTO_END, "send share");
         }
     }
 }

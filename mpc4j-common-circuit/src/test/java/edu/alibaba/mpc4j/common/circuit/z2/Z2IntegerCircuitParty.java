@@ -1,5 +1,7 @@
 package edu.alibaba.mpc4j.common.circuit.z2;
 
+import edu.alibaba.mpc4j.common.circuit.z2.plain.PlainBcParty;
+import edu.alibaba.mpc4j.common.circuit.z2.plain.PlainZ2Vector;
 import edu.alibaba.mpc4j.common.rpc.MpcAbortException;
 
 import java.util.Arrays;
@@ -10,7 +12,7 @@ import java.util.Arrays;
  * @author Li Peng
  * @date 2023/4/21
  */
-class Z2IntegerCircuitPartyThread extends Thread {
+class Z2IntegerCircuitParty {
     /**
      * the party
      */
@@ -32,7 +34,7 @@ class Z2IntegerCircuitPartyThread extends Thread {
      */
     private final IntegerOperator operator;
 
-    Z2IntegerCircuitPartyThread(PlainBcParty party, IntegerOperator operator, PlainZ2Vector[] x, PlainZ2Vector[] y) {
+    Z2IntegerCircuitParty(PlainBcParty party, IntegerOperator operator, PlainZ2Vector[] x, PlainZ2Vector[] y) {
         this.party = party;
         this.operator = operator;
         this.x = x;
@@ -43,8 +45,7 @@ class Z2IntegerCircuitPartyThread extends Thread {
         return z;
     }
 
-    @Override
-    public void run() {
+    void run() {
         try {
             Z2IntegerCircuit circuit = new Z2IntegerCircuit(party);
             switch (operator) {

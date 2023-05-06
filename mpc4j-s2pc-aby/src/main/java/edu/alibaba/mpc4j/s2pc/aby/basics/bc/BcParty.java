@@ -5,6 +5,9 @@ import edu.alibaba.mpc4j.common.circuit.z2.MpcZ2Vector;
 import edu.alibaba.mpc4j.common.rpc.MpcAbortException;
 import edu.alibaba.mpc4j.common.rpc.pto.TwoPartyPto;
 import edu.alibaba.mpc4j.common.tool.bitvector.BitVector;
+import edu.alibaba.mpc4j.common.tool.bitvector.BitVectorFactory;
+
+import java.util.Arrays;
 
 /**
  * Boolean circuit party.
@@ -14,29 +17,35 @@ import edu.alibaba.mpc4j.common.tool.bitvector.BitVector;
  */
 public interface BcParty extends TwoPartyPto, MpcBcParty {
     /**
-     * init the protocol.
-     *
-     * @param maxRoundBitNum maximum number of bits in round.
-     * @param updateBitNum   total number of bits for updates.
-     * @throws MpcAbortException if the protocol is abort.
-     */
-    void init(int maxRoundBitNum, int updateBitNum) throws MpcAbortException;
-
-    /**
      * Share its own BitVector.
      *
-     * @param x the BitVector to be shared.
+     * @param xi the BitVector to be shared.
      * @return the shared BitVector.
      */
-    SquareZ2Vector shareOwn(BitVector x);
+    @Override
+    SquareZ2Vector shareOwn(BitVector xi);
 
     /**
      * Share its own BitVectors。
      *
-     * @param xArray the BitVectors to be shared.
+     * @param xiArray the BitVectors to be shared.
      * @return the shared BitVectors.
      */
-    SquareZ2Vector[] shareOwn(BitVector[] xArray);
+    @Override
+    default SquareZ2Vector[] shareOwn(BitVector[] xiArray) {
+        if (xiArray.length == 0) {
+            return new SquareZ2Vector[0];
+        }
+        // merge
+        BitVector mergeX = BitVectorFactory.merge(xiArray);
+        // share
+        SquareZ2Vector mergeShareXi = shareOwn(mergeX);
+        // split
+        int[] bitNums = Arrays.stream(xiArray).mapToInt(BitVector::bitNum).toArray();
+        return Arrays.stream(split(mergeShareXi, bitNums))
+            .map(vector -> (SquareZ2Vector) vector)
+            .toArray(SquareZ2Vector[]::new);
+    }
 
     /**
      * Share other's BitVector.
@@ -45,6 +54,7 @@ public interface BcParty extends TwoPartyPto, MpcBcParty {
      * @return the shared BitVector.
      * @throws MpcAbortException if the protocol is abort.
      */
+    @Override
     SquareZ2Vector shareOther(int bitNum) throws MpcAbortException;
 
     /**
@@ -54,16 +64,19 @@ public interface BcParty extends TwoPartyPto, MpcBcParty {
      * @return the shared BitVectors.
      * @throws MpcAbortException if the protocol is abort.
      */
-    SquareZ2Vector[] shareOther(int[] bitNums) throws MpcAbortException;
-
-    /**
-     * Reveal its own BitVector.
-     *
-     * @param xi the shared BitVector.
-     * @return the reconstructed BitVector.
-     * @throws MpcAbortException if the protocol is abort.
-     */
-    BitVector revealOwn(SquareZ2Vector xi) throws MpcAbortException;
+    @Override
+    default SquareZ2Vector[] shareOther(int[] bitNums) throws MpcAbortException {
+        if (bitNums.length == 0) {
+            return new SquareZ2Vector[0];
+        }
+        // share
+        int bitNum = Arrays.stream(bitNums).sum();
+        SquareZ2Vector mergeShareXi = shareOther(bitNum);
+        // split
+        return Arrays.stream(split(mergeShareXi, bitNums))
+            .map(vector -> (SquareZ2Vector) vector)
+            .toArray(SquareZ2Vector[]::new);
+    }
 
     /**
      * Reveal its own BitVectors.
@@ -72,21 +85,38 @@ public interface BcParty extends TwoPartyPto, MpcBcParty {
      * @return the reconstructed BitVectors.
      * @throws MpcAbortException if the protocol is abort.
      */
-    BitVector[] revealOwn(SquareZ2Vector[] xiArray) throws MpcAbortException;
-
-    /**
-     * Reconstruct other's BitVector.
-     *
-     * @param xi the shared BitVector.
-     */
-    void revealOther(SquareZ2Vector xi);
+    @Override
+    default BitVector[] revealOwn(MpcZ2Vector[] xiArray) throws MpcAbortException {
+        if (xiArray.length == 0) {
+            return new BitVector[0];
+        }
+        // merge
+        SquareZ2Vector mergeXiArray = (SquareZ2Vector) merge(xiArray);
+        // reveal
+        BitVector mergeX = revealOwn(mergeXiArray);
+        // split
+        int[] bitNums = Arrays.stream(xiArray)
+            .map(vector -> (SquareZ2Vector) vector)
+            .mapToInt(SquareZ2Vector::getNum).toArray();
+        return BitVectorFactory.split(mergeX, bitNums);
+    }
 
     /**
      * Reconstruct other's BitVectors.
      *
      * @param xiArray the shared BitVectors.
      */
-    void revealOther(SquareZ2Vector[] xiArray);
+    @Override
+    default void revealOther(MpcZ2Vector[] xiArray) {
+        //noinspection StatementWithEmptyBody
+        if (xiArray.length == 0) {
+            // do nothing for 0 length
+        }
+        // merge
+        SquareZ2Vector mergeXiArray = (SquareZ2Vector) merge(xiArray);
+        // reveal
+        revealOther(mergeXiArray);
+    }
 
     /**
      * AND operation.
