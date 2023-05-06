@@ -33,14 +33,14 @@ public class Nr04EccSqOprfKey implements SqOprfKey {
      * key derivation function
      */
     private final Kdf kdf;
-	/**
-	 * hash function
-	 */
-	private final Hash hash;
-	/**
-	 * Zp instance
-	 */
-	private final Zp zp;
+    /**
+     * hash function
+     */
+    private final Hash hash;
+    /**
+     * Zp instance
+     */
+    private final Zp zp;
     /**
      * a_0 = (a_1^0, a_2^0, ..., a_n^0), a_i^0 is n-bit random number, n is the bit-length of input.
      * The default value of n is 128.
@@ -58,8 +58,8 @@ public class Nr04EccSqOprfKey implements SqOprfKey {
         MathPreconditions.checkEqual("a1.length", "κ", a1Array.length, CommonConstants.BLOCK_BIT_LENGTH);
         ecc = EccFactory.createInstance(envType);
         kdf = KdfFactory.createInstance(envType);
-		hash = HashFactory.createInstance(envType, CommonConstants.BLOCK_BYTE_LENGTH);
-		zp = ZpFactory.createInstance(envType, ecc.getN());
+        hash = HashFactory.createInstance(envType, CommonConstants.BLOCK_BYTE_LENGTH);
+        zp = ZpFactory.createInstance(envType, ecc.getN());
         this.a0Array = Arrays.stream(a0Array)
             .peek(a0 -> Preconditions.checkArgument(zp.validateElement(a0)))
             .toArray(BigInteger[]::new);

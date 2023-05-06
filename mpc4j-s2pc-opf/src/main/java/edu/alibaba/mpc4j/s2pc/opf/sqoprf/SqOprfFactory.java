@@ -4,9 +4,9 @@ import edu.alibaba.mpc4j.common.rpc.Party;
 import edu.alibaba.mpc4j.common.rpc.Rpc;
 import edu.alibaba.mpc4j.common.rpc.desc.SecurityModel;
 import edu.alibaba.mpc4j.common.rpc.pto.PtoFactory;
-import edu.alibaba.mpc4j.s2pc.opf.sqoprf.lowmc.LowMcSqOprfConfig;
-import edu.alibaba.mpc4j.s2pc.opf.sqoprf.lowmc.LowMcSqOprfReceiver;
-import edu.alibaba.mpc4j.s2pc.opf.sqoprf.lowmc.LowMcSqOprfSender;
+import edu.alibaba.mpc4j.s2pc.opf.sqoprf.pssw09.Pssw09SqOprfConfig;
+import edu.alibaba.mpc4j.s2pc.opf.sqoprf.pssw09.Pssw09SqOprfReceiver;
+import edu.alibaba.mpc4j.s2pc.opf.sqoprf.pssw09.Pssw09SqOprfSender;
 import edu.alibaba.mpc4j.s2pc.opf.sqoprf.nr04.Nr04EccSqOprfConfig;
 import edu.alibaba.mpc4j.s2pc.opf.sqoprf.nr04.Nr04EccSqOprfReceiver;
 import edu.alibaba.mpc4j.s2pc.opf.sqoprf.nr04.Nr04EccSqOprfSender;
@@ -45,7 +45,7 @@ public class SqOprfFactory implements PtoFactory {
         /**
          * LowMC OPRF
          */
-        LOW_MC,
+        PSSW09,
     }
 
     /**
@@ -65,8 +65,8 @@ public class SqOprfFactory implements PtoFactory {
                 return new Ra17ByteEccSqOprfSender(senderRpc, receiverParty, (Ra17ByteEccSqOprfConfig) config);
             case NR04_ECC:
                 return new Nr04EccSqOprfSender(senderRpc, receiverParty, (Nr04EccSqOprfConfig) config);
-            case LOW_MC:
-                return new LowMcSqOprfSender(senderRpc, receiverParty, (LowMcSqOprfConfig) config);
+            case PSSW09:
+                return new Pssw09SqOprfSender(senderRpc, receiverParty, (Pssw09SqOprfConfig) config);
             default:
                 throw new IllegalArgumentException("Invalid " + SqOprfType.class.getSimpleName() + ": " + type.name());
         }
@@ -89,8 +89,8 @@ public class SqOprfFactory implements PtoFactory {
                 return new Ra17ByteEccSqOprfReceiver(receiverRpc, senderParty, (Ra17ByteEccSqOprfConfig) config);
             case NR04_ECC:
                 return new Nr04EccSqOprfReceiver(receiverRpc, senderParty, (Nr04EccSqOprfConfig) config);
-            case LOW_MC:
-                return new LowMcSqOprfReceiver(receiverRpc, senderParty, (LowMcSqOprfConfig) config);
+            case PSSW09:
+                return new Pssw09SqOprfReceiver(receiverRpc, senderParty, (Pssw09SqOprfConfig) config);
             default:
                 throw new IllegalArgumentException("Invalid " + SqOprfType.class.getSimpleName() + ": " + type.name());
         }

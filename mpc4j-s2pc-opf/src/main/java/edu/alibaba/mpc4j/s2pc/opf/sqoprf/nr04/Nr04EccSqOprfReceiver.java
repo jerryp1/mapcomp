@@ -98,7 +98,7 @@ public class Nr04EccSqOprfReceiver extends AbstractSqOprfReceiver {
         boolean[] flatBinaryHashes = new boolean[batchSize * CommonConstants.BLOCK_BIT_LENGTH];
         for (int i = 0; i < batchSize; i++) {
             System.arraycopy(binaryHashes[i], 0, flatBinaryHashes, i * CommonConstants.BLOCK_BIT_LENGTH,
-				CommonConstants.BLOCK_BIT_LENGTH);
+                CommonConstants.BLOCK_BIT_LENGTH);
         }
         DataPacketHeader grInvHeader = new DataPacketHeader(
             encodeTaskId, getPtoDesc().getPtoId(), PtoStep.SENDER_SEND_GR_INV.ordinal(), extraInfo,

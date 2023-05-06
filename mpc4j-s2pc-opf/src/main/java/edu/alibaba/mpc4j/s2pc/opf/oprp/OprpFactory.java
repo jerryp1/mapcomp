@@ -76,10 +76,11 @@ public class OprpFactory implements PtoFactory {
     }
 
     /**
-     * 创建默认协议配置项。
+     * Creates a default config.
      *
-     * @param securityModel 安全模型。
-     * @return 默认协议配置项。
+     * @param securityModel security model.
+     * @param silent use silent.
+     * @return a default config.
      */
     public static OprpConfig createDefaultConfig(SecurityModel securityModel, boolean silent) {
         switch (securityModel) {
