@@ -17,7 +17,7 @@ import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
 /**
- * Zp-OVDM性能测试。
+ * Zp-OVDM efficiency test.
  *
  * @author Weiran Liu
  * @date 2022/4/19
@@ -26,40 +26,31 @@ import java.util.concurrent.TimeUnit;
 public class ZpOvdmEfficiencyTest {
     private static final Logger LOGGER = LoggerFactory.getLogger(ZpOvdmEfficiencyTest.class);
     /**
-     * 最大元素数量对数输出格式
-     */
-    private static final DecimalFormat LOG_N_DECIMAL_FORMAT = new DecimalFormat("00");
-    /**
-     * 时间输出格式
+     * time decimal format
      */
     private static final DecimalFormat TIME_DECIMAL_FORMAT = new DecimalFormat("0.000");
     /**
-     * 秒表
+     * stop watch
      */
     private static final StopWatch STOP_WATCH = new StopWatch();
     /**
-     * 测试类型
+     * types
      */
     private static final ZpOvdmType[] TYPES = new ZpOvdmType[] {
         ZpOvdmType.H2_TWO_CORE_GCT,
         ZpOvdmType.H2_SINGLETON_GCT,
         ZpOvdmType.H3_SINGLETON_GCT,
+        ZpOvdmType.LPRST21_GBF,
     };
 
     @Test
     public void testEfficiency() {
         LOGGER.info("{}\t{}\t{}\t{}", "                name", "      logN", " encode(s)", " decode(s)");
-        // 2^8个元素
         testEfficiency(8);
-        // 2^10个元素
         testEfficiency(10);
-        // 2^12个元素
         testEfficiency(12);
-        // 2^14个元素
         testEfficiency(14);
-        // 2^16个元素
         testEfficiency(16);
-        // 2^18个元素
         testEfficiency(18);
     }
 
@@ -67,18 +58,19 @@ public class ZpOvdmEfficiencyTest {
         int n = 1 << logN;
         for (ZpOvdmType type : TYPES) {
             byte[][] keys = CommonUtils.generateRandomKeys(ZpOvdmFactory.getHashNum(type), ZpOvdmTestUtils.SECURE_RANDOM);
-            // 创建OKVS实例
+            // create instance
             ZpOvdm<ByteBuffer> ovdm = ZpOvdmFactory.createInstance(
                 EnvType.STANDARD, type, ZpOvdmTestUtils.DEFAULT_PRIME, n, keys
             );
-            // 生成随机键值对
+            // generate random key-value pairs
             Map<ByteBuffer, BigInteger> keyValueMap = ZpOvdmTestUtils.randomKeyValueMap(n);
+            // encode
             STOP_WATCH.start();
             BigInteger[] storage = ovdm.encode(keyValueMap);
             STOP_WATCH.stop();
             double encodeTime = (double) STOP_WATCH.getTime(TimeUnit.MILLISECONDS) / 1000;
             STOP_WATCH.reset();
-            // 解码
+            // decode
             STOP_WATCH.start();
             keyValueMap.keySet().forEach(key -> ovdm.decode(storage, key));
             STOP_WATCH.stop();
@@ -87,7 +79,7 @@ public class ZpOvdmEfficiencyTest {
             LOGGER.info(
                 "{}\t{}\t{}\t{}",
                 StringUtils.leftPad(type.name(), 20),
-                StringUtils.leftPad(LOG_N_DECIMAL_FORMAT.format(logN), 10),
+                StringUtils.leftPad(String.valueOf(logN), 10),
                 StringUtils.leftPad(TIME_DECIMAL_FORMAT.format(encodeTime), 10),
                 StringUtils.leftPad(TIME_DECIMAL_FORMAT.format(decodeTime), 10)
             );

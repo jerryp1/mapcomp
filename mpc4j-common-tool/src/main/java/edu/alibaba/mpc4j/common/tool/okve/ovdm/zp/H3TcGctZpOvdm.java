@@ -3,6 +3,7 @@ package edu.alibaba.mpc4j.common.tool.okve.ovdm.zp;
 import cc.redberry.rings.linear.LinearSolver.SystemInfo;
 import edu.alibaba.mpc4j.common.tool.CommonConstants;
 import edu.alibaba.mpc4j.common.tool.EnvType;
+import edu.alibaba.mpc4j.common.tool.MathPreconditions;
 import edu.alibaba.mpc4j.common.tool.crypto.prf.Prf;
 import edu.alibaba.mpc4j.common.tool.crypto.prf.PrfFactory;
 import edu.alibaba.mpc4j.common.tool.galoisfield.zp.ZpMaxLisFinder;
@@ -18,7 +19,7 @@ import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
 /**
- * 3哈希-两核Zp-OVDM实现。
+ * 3-hash-two-core-OVDM in ZP.
  *
  * @author Weiran Liu
  * @date 2021/10/02
@@ -134,7 +135,7 @@ class H3TcGctZpOvdm<T> extends AbstractZpOvdm<T> implements SparseZpOvdm<T> {
 
     @Override
     public BigInteger decode(BigInteger[] storage, T key) {
-        assert storage.length == getM();
+        MathPreconditions.checkEqual("storage.length", "m", storage.length, getM());
         int[] sparsePositions = sparsePositions(key);
         boolean[] densePositions = densePositions(key);
         BigInteger value = BigInteger.ZERO;
@@ -157,7 +158,7 @@ class H3TcGctZpOvdm<T> extends AbstractZpOvdm<T> implements SparseZpOvdm<T> {
 
     @Override
     public BigInteger[] encode(Map<T, BigInteger> keyValueMap) throws ArithmeticException {
-        assert keyValueMap.size() <= n;
+        MathPreconditions.checkLessOrEqual("key-value pairs num", keyValueMap.size(), n);
         // 构造数据到哈希值的查找表
         Set<T> keySet = keyValueMap.keySet();
         dataH1Map = new HashMap<>(keySet.size());
@@ -367,6 +368,7 @@ class H3TcGctZpOvdm<T> extends AbstractZpOvdm<T> implements SparseZpOvdm<T> {
      * @return 左侧哈希比特长度，向上取整为Byte.SIZE的整数倍。
      */
     static int getLm(int n) {
+        MathPreconditions.checkPositive("n", n);
         // 根据论文第5.4节，lm = 1.3 * n，向上取整到Byte.SIZE的整数倍
         return CommonUtils.getByteLength((int) Math.ceil(LEFT_EPSILON * n)) * Byte.SIZE;
     }

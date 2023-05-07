@@ -1,6 +1,9 @@
 package edu.alibaba.mpc4j.common.tool.okve.ovdm.zp;
 
 import edu.alibaba.mpc4j.common.tool.CommonConstants;
+import edu.alibaba.mpc4j.common.tool.EnvType;
+import edu.alibaba.mpc4j.common.tool.galoisfield.zp.Zp;
+import edu.alibaba.mpc4j.common.tool.galoisfield.zp.ZpFactory;
 import edu.alibaba.mpc4j.common.tool.galoisfield.zp.ZpManager;
 import edu.alibaba.mpc4j.common.tool.utils.BigIntegerUtils;
 
@@ -12,25 +15,29 @@ import java.util.Map;
 import java.util.stream.IntStream;
 
 /**
- * Zp-OVDM测试工具类。
+ * Zp-OVDM test utilities.
  *
  * @author Weiran Liu
  * @date 2022/4/19
  */
 class ZpOvdmTestUtils {
     /**
-     * 私有构造函数
+     * private constructor.
      */
     private ZpOvdmTestUtils() {
         // empty
     }
 
     /**
-     * 默认质数
+     * default prime
      */
     static final BigInteger DEFAULT_PRIME = ZpManager.getPrime(CommonConstants.BLOCK_BIT_LENGTH * 2);
     /**
-     * 随机状态
+     * default Zp
+     */
+    static final Zp DEFAULT_ZP = ZpFactory.createInstance(EnvType.STANDARD, DEFAULT_PRIME);
+    /**
+     * the random state
      */
     static final SecureRandom SECURE_RANDOM = new SecureRandom();
 

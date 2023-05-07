@@ -70,8 +70,8 @@ public class FilterTest {
 
     @Test
     public void testIllegalInputs() {
+        // try less keys
         if (FilterFactory.getHashNum(type, DEFAULT_SIZE) > 0) {
-            // try less keys
             Assert.assertThrows(IllegalArgumentException.class, () -> {
                 byte[][] lessKeys = CommonUtils.generateRandomKeys(
                     FilterFactory.getHashNum(type, DEFAULT_SIZE) - 1, SECURE_RANDOM
