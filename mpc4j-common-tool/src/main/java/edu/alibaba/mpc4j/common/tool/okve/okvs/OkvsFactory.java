@@ -31,7 +31,7 @@ public class OkvsFactory {
         /**
          *  Sparse Gbf
          */
-        SPARSE_GBF,
+        LPRST21_GBF,
         /**
          * 2哈希-单例乱码布谷鸟表
          */
@@ -73,8 +73,8 @@ public class OkvsFactory {
                 return new MegaBinOkvs<>(envType, n, l, keys);
             case GBF:
                 return new GbfBinaryOkvs<>(envType, n, l, keys);
-            case SPARSE_GBF:
-                return new GbfSparseOkvs<>(envType, n, l, keys);
+            case LPRST21_GBF:
+                return new Lprst21GbfBinaryOkvs<>(envType, n, l, keys);
             case H3_SINGLETON_GCT:
                 return new H3TcGctBinaryOkvs<>(envType, n, l, keys);
             case H2_SINGLETON_GCT:
@@ -191,8 +191,8 @@ public class OkvsFactory {
                 return H2DfsGctBinaryOkvs.HASH_NUM;
             case GBF:
                 return GbfBinaryOkvs.HASH_NUM;
-            case SPARSE_GBF:
-                return GbfSparseOkvs.HASH_NUM;
+            case LPRST21_GBF:
+                return Lprst21GbfBinaryOkvs.HASH_NUM;
             default:
                 throw new IllegalArgumentException("Invalid " + OkvsType.class.getSimpleName() + ": " + okvsType.name());
         }

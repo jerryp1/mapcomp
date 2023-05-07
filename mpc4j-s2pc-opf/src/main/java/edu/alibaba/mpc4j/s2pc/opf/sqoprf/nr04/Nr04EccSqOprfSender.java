@@ -76,8 +76,8 @@ public class Nr04EccSqOprfSender extends AbstractSqOprfSender {
         BigInteger[] a0Array = new BigInteger[CommonConstants.BLOCK_BIT_LENGTH];
         BigInteger[] a1Array = new BigInteger[CommonConstants.BLOCK_BIT_LENGTH];
         for (int i = 0; i < CommonConstants.BLOCK_BIT_LENGTH; i++) {
-            a0Array[i] = zp.createRandom(secureRandom);
-            a1Array[i] = zp.createRandom(secureRandom);
+            a0Array[i] = zp.createNonZeroRandom(secureRandom);
+            a1Array[i] = zp.createNonZeroRandom(secureRandom);
         }
         return new Nr04EccSqOprfKey(envType, a0Array, a1Array);
     }

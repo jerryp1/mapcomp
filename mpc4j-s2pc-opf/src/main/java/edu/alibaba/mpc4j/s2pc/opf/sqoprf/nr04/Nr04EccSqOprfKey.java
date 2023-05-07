@@ -61,10 +61,10 @@ public class Nr04EccSqOprfKey implements SqOprfKey {
         hash = HashFactory.createInstance(envType, CommonConstants.BLOCK_BYTE_LENGTH);
         zp = ZpFactory.createInstance(envType, ecc.getN());
         this.a0Array = Arrays.stream(a0Array)
-            .peek(a0 -> Preconditions.checkArgument(zp.validateElement(a0)))
+            .peek(a0 -> Preconditions.checkArgument(zp.validateNonZeroElement(a0)))
             .toArray(BigInteger[]::new);
         this.a1Array = Arrays.stream(a1Array)
-            .peek(a1 -> Preconditions.checkArgument(zp.validateElement(a1)))
+            .peek(a1 -> Preconditions.checkArgument(zp.validateNonZeroElement(a1)))
             .toArray(BigInteger[]::new);
     }
 
@@ -92,6 +92,4 @@ public class Nr04EccSqOprfKey implements SqOprfKey {
         // g^c
         return kdf.deriveKey(ecc.encode(ecc.multiply(ecc.getG(), c), false));
     }
-
-
 }
