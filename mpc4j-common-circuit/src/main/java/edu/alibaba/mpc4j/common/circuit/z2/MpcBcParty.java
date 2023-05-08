@@ -4,7 +4,7 @@ import edu.alibaba.mpc4j.common.rpc.MpcAbortException;
 import edu.alibaba.mpc4j.common.tool.bitvector.BitVector;
 
 /**
- * Mpc Boolean Circuit Party.
+ * MPC Boolean Circuit Party.
  *
  * @author Li Peng
  * @date 2023/4/20
@@ -55,7 +55,7 @@ public interface MpcBcParty {
         MpcZ2Vector mergeVector = createEmpty(plain);
         // we must merge the bit vector in the reverse order
         for (MpcZ2Vector vector : vectors) {
-            assert vector.getNum() > 0 : "the number of bits must be greater than 0";
+            assert vector.getNum() > 0 : "num must be greater than 0";
             mergeVector.merge(vector);
         }
         return mergeVector;
@@ -73,12 +73,12 @@ public interface MpcBcParty {
         for (int index = 0; index < bitNums.length; index++) {
             splitVectors[index] = (MpcZ2Vector) mergeVector.split(bitNums[index]);
         }
-        assert mergeVector.getNum() == 0 : "merged vector must remain 0 bits: " + mergeVector.getNum();
+        assert mergeVector.getNum() == 0 : "merged vector must remain 0 num: " + mergeVector.getNum();
         return splitVectors;
     }
 
     /**
-     * init the protocol.
+     * inits the protocol.
      *
      * @param maxRoundBitNum maximum number of bits in round.
      * @param updateBitNum   total number of bits for updates.
@@ -87,68 +87,68 @@ public interface MpcBcParty {
     void init(int maxRoundBitNum, int updateBitNum) throws MpcAbortException;
 
     /**
-     * Share its own BitVector.
+     * Shares its own vector.
      *
-     * @param xi the BitVector to be shared.
-     * @return the shared BitVector.
+     * @param xi the vector to be shared.
+     * @return the shared vector.
      */
     MpcZ2Vector shareOwn(BitVector xi);
 
     /**
-     * Share its own BitVectors。
+     * Shares its own vectors。
      *
-     * @param xiArray the BitVectors to be shared.
-     * @return the shared BitVectors.
+     * @param xiArray the vectors to be shared.
+     * @return the shared vectors.
      */
     MpcZ2Vector[] shareOwn(BitVector[] xiArray);
 
     /**
-     * Share other's BitVector.
+     * Shares other's vector.
      *
      * @param bitNum the number of bits to be shared.
-     * @return the shared BitVector.
-     * @throws MpcAbortException if the protocol is abort.
+     * @return the shared vector.
+     * @throws MpcAbortException the protocol failure aborts.
      */
     MpcZ2Vector shareOther(int bitNum) throws MpcAbortException;
 
     /**
-     * Share other's BitVectors.
+     * Share other's vectors.
      *
-     * @param bitNums the number of bits for each bit vector to be shared.
-     * @return the shared BitVectors.
-     * @throws MpcAbortException if the protocol is abort.
+     * @param bitNums the number of bits for each vector to be shared.
+     * @return the shared vectors.
+     * @throws MpcAbortException the protocol failure aborts.
      */
     MpcZ2Vector[] shareOther(int[] bitNums) throws MpcAbortException;
 
     /**
-     * Reveal its own BitVector.
+     * Reveals its own vector.
      *
-     * @param xi the shared BitVector.
-     * @return the reconstructed BitVector.
-     * @throws MpcAbortException if the protocol is abort.
+     * @param xi the shared vector.
+     * @return the revealed vector.
+     * @throws MpcAbortException the protocol failure aborts.
      */
     BitVector revealOwn(MpcZ2Vector xi) throws MpcAbortException;
 
     /**
-     * Reveal its own BitVectors.
+     * Reveals its own vectors.
      *
-     * @param xiArray the shared BitVectors.
-     * @return the reconstructed BitVectors.
-     * @throws MpcAbortException if the protocol is abort.
+     * @param xiArray the shared vectors.
+     * @return the revealed vectors.
+     * @throws MpcAbortException the protocol failure aborts.
      */
     BitVector[] revealOwn(MpcZ2Vector[] xiArray) throws MpcAbortException;
 
     /**
-     * Reconstruct other's BitVector.
+     * Reveals other's vector.
      *
-     * @param xi the shared BitVector.
+     * @param xi the shared vector.
      */
     void revealOther(MpcZ2Vector xi);
 
     /**
-     * Reconstruct other's BitVectors.
+     * Reveals other's vectors.
      *
-     * @param xiArray the shared BitVectors.
+     * @param xiArray the shared vectors.
      */
     void revealOther(MpcZ2Vector[] xiArray);
 
@@ -158,7 +158,7 @@ public interface MpcBcParty {
      * @param xi xi.
      * @param yi yi.
      * @return zi, such that z = x & y.
-     * @throws MpcAbortException if the protocol is abort.
+     * @throws MpcAbortException the protocol failure aborts.
      */
     MpcZ2Vector and(MpcZ2Vector xi, MpcZ2Vector yi) throws MpcAbortException;
 
@@ -168,7 +168,7 @@ public interface MpcBcParty {
      * @param xiArray xi array.
      * @param yiArray yi array.
      * @return zi array, such that for each j, z[i] = x[i] & y[i].
-     * @throws MpcAbortException if the protocol is abort.
+     * @throws MpcAbortException the protocol failure aborts.
      */
     MpcZ2Vector[] and(MpcZ2Vector[] xiArray, MpcZ2Vector[] yiArray) throws MpcAbortException;
 
@@ -178,7 +178,7 @@ public interface MpcBcParty {
      * @param xi xi.
      * @param yi yi.
      * @return zi, such that z = x ^ y.
-     * @throws MpcAbortException if the protocol is abort.
+     * @throws MpcAbortException the protocol failure aborts.
      */
     MpcZ2Vector xor(MpcZ2Vector xi, MpcZ2Vector yi) throws MpcAbortException;
 
@@ -188,7 +188,7 @@ public interface MpcBcParty {
      * @param xiArray xi array.
      * @param yiArray yi array.
      * @return zi array, such that for each j, z[i] = x[i] ^ y[i].
-     * @throws MpcAbortException if the protocol is abort.
+     * @throws MpcAbortException the protocol failure aborts.
      */
     MpcZ2Vector[] xor(MpcZ2Vector[] xiArray, MpcZ2Vector[] yiArray) throws MpcAbortException;
 
@@ -198,7 +198,7 @@ public interface MpcBcParty {
      * @param xi xi.
      * @param yi yi.
      * @return zi, such that z = x | y.
-     * @throws MpcAbortException if the protocol is abort.
+     * @throws MpcAbortException the protocol failure aborts.
      */
     MpcZ2Vector or(MpcZ2Vector xi, MpcZ2Vector yi) throws MpcAbortException;
 
@@ -208,7 +208,7 @@ public interface MpcBcParty {
      * @param xiArray xi array.
      * @param yiArray yi array.
      * @return zi array, such that for each j, z[i] = z[i] | y[i].
-     * @throws MpcAbortException if the protocol is abort.
+     * @throws MpcAbortException the protocol failure aborts.
      */
     MpcZ2Vector[] or(MpcZ2Vector[] xiArray, MpcZ2Vector[] yiArray) throws MpcAbortException;
 
@@ -217,7 +217,7 @@ public interface MpcBcParty {
      *
      * @param xi xi.
      * @return zi, such that z = !x.
-     * @throws MpcAbortException if the protocol is abort.
+     * @throws MpcAbortException the protocol failure aborts.
      */
     MpcZ2Vector not(MpcZ2Vector xi) throws MpcAbortException;
 
@@ -226,7 +226,7 @@ public interface MpcBcParty {
      *
      * @param xiArray xi array.
      * @return zi array, such that for each j, z[i] = !x[i].
-     * @throws MpcAbortException if the protocol is abort.
+     * @throws MpcAbortException the protocol failure aborts.
      */
     MpcZ2Vector[] not(MpcZ2Vector[] xiArray) throws MpcAbortException;
 }

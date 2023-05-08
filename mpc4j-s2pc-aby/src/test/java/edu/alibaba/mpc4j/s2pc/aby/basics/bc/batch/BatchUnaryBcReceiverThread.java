@@ -1,8 +1,8 @@
 package edu.alibaba.mpc4j.s2pc.aby.basics.bc.batch;
 
+import edu.alibaba.mpc4j.common.circuit.operator.UnaryBcOperator;
 import edu.alibaba.mpc4j.common.rpc.MpcAbortException;
 import edu.alibaba.mpc4j.common.tool.bitvector.BitVector;
-import edu.alibaba.mpc4j.s2pc.aby.basics.bc.BcOperator;
 import edu.alibaba.mpc4j.s2pc.aby.basics.bc.BcParty;
 import edu.alibaba.mpc4j.s2pc.aby.basics.bc.SquareZ2Vector;
 
@@ -22,7 +22,7 @@ class BatchUnaryBcReceiverThread extends Thread {
     /**
      * operator
      */
-    private final BcOperator bcOperator;
+    private final UnaryBcOperator operator;
     /**
      * x bit vectors
      */
@@ -48,9 +48,9 @@ class BatchUnaryBcReceiverThread extends Thread {
      */
     private BitVector[] z0Vectors;
 
-    BatchUnaryBcReceiverThread(BcParty receiver, BcOperator bcOperator, BitVector[] xBitVectors) {
+    BatchUnaryBcReceiverThread(BcParty receiver, UnaryBcOperator operator, BitVector[] xBitVectors) {
         this.receiver = receiver;
-        this.bcOperator = bcOperator;
+        this.operator = operator;
         this.xBitVectors = xBitVectors;
         totalBitNum = Arrays.stream(xBitVectors).mapToInt(BitVector::bitNum).sum();
     }
@@ -84,7 +84,7 @@ class BatchUnaryBcReceiverThread extends Thread {
             shareX1s = Arrays.stream(x1s).map(SquareZ2Vector::copy).toArray(SquareZ2Vector[]::new);
             SquareZ2Vector[] z01s, z11s;
             //noinspection SwitchStatementWithTooFewBranches
-            switch (bcOperator) {
+            switch (operator) {
                 case NOT:
                     // (plain, plain)
                     z01s = receiver.not(xs);
@@ -97,7 +97,7 @@ class BatchUnaryBcReceiverThread extends Thread {
                     z1Vectors = receiver.revealOwn(z11s);
                     break;
                 default:
-                    throw new IllegalStateException("Invalid unary boolean operator: " + bcOperator.name());
+                    throw new IllegalStateException("Invalid " + UnaryBcOperator.class.getSimpleName() + ": " + operator.name());
             }
         } catch (MpcAbortException e) {
             e.printStackTrace();

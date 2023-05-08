@@ -1,7 +1,6 @@
 package edu.alibaba.mpc4j.common.circuit.z2;
 
-import edu.alibaba.mpc4j.common.circuit.z2.plain.PlainBcParty;
-import edu.alibaba.mpc4j.common.circuit.z2.plain.PlainZ2Vector;
+import edu.alibaba.mpc4j.common.circuit.operator.Z2IntegerOperator;
 import edu.alibaba.mpc4j.common.tool.EnvType;
 import edu.alibaba.mpc4j.common.tool.bitvector.BitVector;
 import edu.alibaba.mpc4j.common.tool.utils.IntUtils;
@@ -103,14 +102,14 @@ public class Z2IntegerCircuitTest {
     }
 
     private void testPto(boolean constant, int l, long[] longXs, long[] longYs) {
-        testPto(constant, IntegerOperator.SUB, l, longXs, longYs);
-        testPto(constant, IntegerOperator.INCREASE_ONE, l, longXs, longYs);
-        testPto(constant, IntegerOperator.ADD, l, longXs, longYs);
-        testPto(constant, IntegerOperator.LEQ, l, longXs, longYs);
-        testPto(constant, IntegerOperator.EQ, l, longXs, longYs);
+        testPto(constant, Z2IntegerOperator.SUB, l, longXs, longYs);
+        testPto(constant, Z2IntegerOperator.INCREASE_ONE, l, longXs, longYs);
+        testPto(constant, Z2IntegerOperator.ADD, l, longXs, longYs);
+        testPto(constant, Z2IntegerOperator.LEQ, l, longXs, longYs);
+        testPto(constant, Z2IntegerOperator.EQ, l, longXs, longYs);
     }
 
-    private void testPto(boolean constant, IntegerOperator operator, int l, long[] longXs, long[] longYs) {
+    private void testPto(boolean constant, Z2IntegerOperator operator, int l, long[] longXs, long[] longYs) {
         int num = longXs.length;
         if (constant) {
             LOGGER.info("test constant ({}), l = {}, num = {}", operator.name(), l, num);
@@ -140,7 +139,7 @@ public class Z2IntegerCircuitTest {
         assertOutput(operator, l, longXs, longYs, longZs);
     }
 
-    private void assertOutput(IntegerOperator operator, int l, long[] longXs, long[] longYs, long[] longZs) {
+    private void assertOutput(Z2IntegerOperator operator, int l, long[] longXs, long[] longYs, long[] longZs) {
         int num = longXs.length;
         long andMod = (1L << l) - 1;
         switch (operator) {

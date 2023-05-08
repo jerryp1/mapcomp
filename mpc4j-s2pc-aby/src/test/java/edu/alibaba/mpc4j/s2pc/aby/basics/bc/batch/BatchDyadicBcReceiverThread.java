@@ -1,8 +1,8 @@
 package edu.alibaba.mpc4j.s2pc.aby.basics.bc.batch;
 
+import edu.alibaba.mpc4j.common.circuit.operator.DyadicBcOperator;
 import edu.alibaba.mpc4j.common.rpc.MpcAbortException;
 import edu.alibaba.mpc4j.common.tool.bitvector.BitVector;
-import edu.alibaba.mpc4j.s2pc.aby.basics.bc.BcOperator;
 import edu.alibaba.mpc4j.s2pc.aby.basics.bc.BcParty;
 import edu.alibaba.mpc4j.s2pc.aby.basics.bc.SquareZ2Vector;
 
@@ -22,7 +22,7 @@ class BatchDyadicBcReceiverThread extends Thread {
     /**
      * operator
      */
-    private final BcOperator bcOperator;
+    private final DyadicBcOperator operator;
     /**
      * x bit vectors
      */
@@ -64,10 +64,10 @@ class BatchDyadicBcReceiverThread extends Thread {
      */
     private BitVector[] z00Vectors;
 
-    BatchDyadicBcReceiverThread(BcParty receiver, BcOperator bcOperator,
+    BatchDyadicBcReceiverThread(BcParty receiver, DyadicBcOperator operator,
                                 BitVector[] xBitVectors, BitVector[] yBitVectors) {
         this.receiver = receiver;
-        this.bcOperator = bcOperator;
+        this.operator = operator;
         this.xBitVectors = xBitVectors;
         this.yBitVectors = yBitVectors;
         totalBitNum = Arrays.stream(xBitVectors).mapToInt(BitVector::bitNum).sum();
@@ -117,7 +117,7 @@ class BatchDyadicBcReceiverThread extends Thread {
             shareX1s = Arrays.stream(x1s).map(SquareZ2Vector::copy).toArray(SquareZ2Vector[]::new);
             SquareZ2Vector[] y1s = receiver.shareOwn(yBitVectors);
             SquareZ2Vector[] z111s, z101s, z011s, z001s;
-            switch (bcOperator) {
+            switch (operator) {
                 case XOR:
                     // (plain, plain)
                     z111s = receiver.xor(xs, ys);
@@ -179,7 +179,7 @@ class BatchDyadicBcReceiverThread extends Thread {
                     z00Vectors = receiver.revealOwn(z001s);
                     break;
                 default:
-                    throw new IllegalStateException("Invalid binary boolean operator: " + bcOperator.name());
+                    throw new IllegalStateException("Invalid " + DyadicBcOperator.class.getSimpleName() + ": " + operator.name());
             }
         } catch (MpcAbortException e) {
             e.printStackTrace();

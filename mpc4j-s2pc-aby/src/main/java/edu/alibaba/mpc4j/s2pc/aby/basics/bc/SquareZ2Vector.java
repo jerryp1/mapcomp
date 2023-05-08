@@ -153,11 +153,6 @@ public class SquareZ2Vector implements MpcZ2Vector {
     }
 
     @Override
-    public boolean get(int index) {
-        return bitVector.get(index);
-    }
-
-    @Override
     public boolean isPlain() {
         return plain;
     }

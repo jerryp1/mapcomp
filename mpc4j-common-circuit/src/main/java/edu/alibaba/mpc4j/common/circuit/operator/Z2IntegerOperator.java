@@ -1,4 +1,4 @@
-package edu.alibaba.mpc4j.common.circuit.z2;
+package edu.alibaba.mpc4j.common.circuit.operator;
 
 /**
  * Integer Operator.
@@ -6,7 +6,7 @@ package edu.alibaba.mpc4j.common.circuit.z2;
  * @author Li Peng
  * @date 2023/4/21
  */
-public enum IntegerOperator {
+public enum Z2IntegerOperator {
     /**
      * ≤
      */

@@ -17,19 +17,19 @@ import java.util.Arrays;
  */
 public interface BcParty extends TwoPartyPto, MpcBcParty {
     /**
-     * Share its own BitVector.
+     * Shares its own vector.
      *
-     * @param xi the BitVector to be shared.
-     * @return the shared BitVector.
+     * @param xi the vector to be shared.
+     * @return the shared vector.
      */
     @Override
     SquareZ2Vector shareOwn(BitVector xi);
 
     /**
-     * Share its own BitVectors。
+     * Shares its own vectors。
      *
-     * @param xiArray the BitVectors to be shared.
-     * @return the shared BitVectors.
+     * @param xiArray the vectors to be shared.
+     * @return the shared vectors.
      */
     @Override
     default SquareZ2Vector[] shareOwn(BitVector[] xiArray) {
@@ -48,21 +48,21 @@ public interface BcParty extends TwoPartyPto, MpcBcParty {
     }
 
     /**
-     * Share other's BitVector.
+     * Shares other's vector.
      *
      * @param bitNum the number of bits to be shared.
-     * @return the shared BitVector.
-     * @throws MpcAbortException if the protocol is abort.
+     * @return the shared vector.
+     * @throws MpcAbortException the protocol failure aborts.
      */
     @Override
     SquareZ2Vector shareOther(int bitNum) throws MpcAbortException;
 
     /**
-     * Share other's BitVectors.
+     * Shares other's vectors.
      *
-     * @param bitNums the number of bits for each bit vector to be shared.
-     * @return the shared BitVectors.
-     * @throws MpcAbortException if the protocol is abort.
+     * @param bitNums the number of bits for each vector to be shared.
+     * @return the shared vectors.
+     * @throws MpcAbortException the protocol failure aborts.
      */
     @Override
     default SquareZ2Vector[] shareOther(int[] bitNums) throws MpcAbortException {
@@ -79,11 +79,11 @@ public interface BcParty extends TwoPartyPto, MpcBcParty {
     }
 
     /**
-     * Reveal its own BitVectors.
+     * Reveals its own vectors.
      *
-     * @param xiArray the shared BitVectors.
-     * @return the reconstructed BitVectors.
-     * @throws MpcAbortException if the protocol is abort.
+     * @param xiArray the shared vectors.
+     * @return the revealed vectors.
+     * @throws MpcAbortException the protocol failure aborts.
      */
     @Override
     default BitVector[] revealOwn(MpcZ2Vector[] xiArray) throws MpcAbortException {
@@ -102,9 +102,9 @@ public interface BcParty extends TwoPartyPto, MpcBcParty {
     }
 
     /**
-     * Reconstruct other's BitVectors.
+     * Reveals other's vectors.
      *
-     * @param xiArray the shared BitVectors.
+     * @param xiArray the shared vectors.
      */
     @Override
     default void revealOther(MpcZ2Vector[] xiArray) {

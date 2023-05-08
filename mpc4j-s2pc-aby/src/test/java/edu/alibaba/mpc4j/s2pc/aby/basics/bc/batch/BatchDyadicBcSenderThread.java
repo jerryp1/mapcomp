@@ -1,8 +1,8 @@
 package edu.alibaba.mpc4j.s2pc.aby.basics.bc.batch;
 
+import edu.alibaba.mpc4j.common.circuit.operator.DyadicBcOperator;
 import edu.alibaba.mpc4j.common.rpc.MpcAbortException;
 import edu.alibaba.mpc4j.common.tool.bitvector.BitVector;
-import edu.alibaba.mpc4j.s2pc.aby.basics.bc.BcOperator;
 import edu.alibaba.mpc4j.s2pc.aby.basics.bc.BcParty;
 import edu.alibaba.mpc4j.s2pc.aby.basics.bc.SquareZ2Vector;
 
@@ -23,7 +23,7 @@ class BatchDyadicBcSenderThread extends Thread {
     /**
      * operator
      */
-    private final BcOperator bcOperator;
+    private final DyadicBcOperator operator;
     /**
      * x bit vectors
      */
@@ -69,15 +69,15 @@ class BatchDyadicBcSenderThread extends Thread {
      */
     private BitVector[] z00Vectors;
 
-    BatchDyadicBcSenderThread(BcParty sender, BcOperator bcOperator,
+    BatchDyadicBcSenderThread(BcParty sender, DyadicBcOperator operator,
                               BitVector[] xBitVectors, BitVector[] yBitVectors) {
         this.sender = sender;
-        this.bcOperator = bcOperator;
+        this.operator = operator;
         this.xBitVectors = xBitVectors;
         this.yBitVectors = yBitVectors;
         totalBitNum = Arrays.stream(xBitVectors).mapToInt(BitVector::bitNum).sum();
         int vectorLength = xBitVectors.length;
-        switch (bcOperator) {
+        switch (operator) {
             case XOR:
                 expectBitVectors = IntStream.range(0, vectorLength)
                     .mapToObj(index -> xBitVectors[index].xor(yBitVectors[index]))
@@ -94,7 +94,7 @@ class BatchDyadicBcSenderThread extends Thread {
                     .toArray(BitVector[]::new);
                 break;
             default:
-                throw new IllegalStateException("Invalid binary boolean operator: " + bcOperator.name());
+                throw new IllegalStateException("Invalid " + DyadicBcOperator.class.getSimpleName() + ": " + operator.name());
         }
     }
 
@@ -146,7 +146,7 @@ class BatchDyadicBcSenderThread extends Thread {
             int[] vectorBitLengths = Arrays.stream(yBitVectors).mapToInt(BitVector::bitNum).toArray();
             SquareZ2Vector[] y0s = sender.shareOther(vectorBitLengths);
             SquareZ2Vector[] z110s, z100s, z010s, z000s;
-            switch (bcOperator) {
+            switch (operator) {
                 case XOR:
                     // (plain, plain)
                     z110s = sender.xor(xs, ys);
@@ -208,7 +208,7 @@ class BatchDyadicBcSenderThread extends Thread {
                     sender.revealOther(z000s);
                     break;
                 default:
-                    throw new IllegalStateException("Invalid binary boolean operator: " + bcOperator.name());
+                    throw new IllegalStateException("Invalid binary boolean operator: " + operator.name());
             }
         } catch (MpcAbortException e) {
             e.printStackTrace();

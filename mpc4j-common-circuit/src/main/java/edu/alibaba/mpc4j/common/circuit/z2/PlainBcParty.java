@@ -1,7 +1,5 @@
-package edu.alibaba.mpc4j.common.circuit.z2.plain;
+package edu.alibaba.mpc4j.common.circuit.z2;
 
-import edu.alibaba.mpc4j.common.circuit.z2.MpcBcParty;
-import edu.alibaba.mpc4j.common.circuit.z2.MpcZ2Vector;
 import edu.alibaba.mpc4j.common.rpc.MpcAbortException;
 import edu.alibaba.mpc4j.common.tool.MathPreconditions;
 import edu.alibaba.mpc4j.common.tool.bitvector.BitVector;
@@ -18,11 +16,7 @@ public class PlainBcParty implements MpcBcParty {
     /**
      * maximum number of bits in round.
      */
-    protected int maxRoundBitNum;
-    /**
-     * total number of bits for updates.
-     */
-    protected long updateBitNum;
+    private int maxRoundBitNum;
 
     @Override
     public PlainZ2Vector createOnes(int bitNum) {
@@ -48,7 +42,6 @@ public class PlainBcParty implements MpcBcParty {
     public void init(int maxRoundBitNum, int updateBitNum) throws MpcAbortException {
         MathPreconditions.checkPositiveInRangeClosed("maxRoundBitNum", maxRoundBitNum, updateBitNum);
         this.maxRoundBitNum = maxRoundBitNum;
-        this.updateBitNum = updateBitNum;
     }
 
     @Override
@@ -60,8 +53,8 @@ public class PlainBcParty implements MpcBcParty {
 
     @Override
     public MpcZ2Vector[] shareOwn(BitVector[] xiArray) {
-        int bitNum = Arrays.stream(xiArray).mapToInt(BitVector::bitNum).sum();
-        MathPreconditions.checkPositiveInRangeClosed("bitNum", bitNum, maxRoundBitNum);
+        int totalBitNum = Arrays.stream(xiArray).mapToInt(BitVector::bitNum).sum();
+        MathPreconditions.checkPositiveInRangeClosed("totalBitNum", totalBitNum, maxRoundBitNum);
         // do nothing
         return null;
     }
@@ -75,37 +68,37 @@ public class PlainBcParty implements MpcBcParty {
 
     @Override
     public MpcZ2Vector[] shareOther(int[] bitNums) throws MpcAbortException {
-        int bitNum = Arrays.stream(bitNums).sum();
-        MathPreconditions.checkPositiveInRangeClosed("bitNum", bitNum, maxRoundBitNum);
+        int totalBitNum = Arrays.stream(bitNums).sum();
+        MathPreconditions.checkPositiveInRangeClosed("totalBitNum", totalBitNum, maxRoundBitNum);
         // do nothing
         return null;
     }
 
     @Override
     public BitVector revealOwn(MpcZ2Vector xi) throws MpcAbortException {
-        MathPreconditions.checkPositiveInRangeClosed("xi.bitNum", xi.getNum(), maxRoundBitNum);
+        MathPreconditions.checkPositiveInRangeClosed("bitNum", xi.bitNum(), maxRoundBitNum);
         // do nothing
         return null;
     }
 
     @Override
     public BitVector[] revealOwn(MpcZ2Vector[] xiArray) throws MpcAbortException {
-        int bitNum = Arrays.stream(xiArray).mapToInt(MpcZ2Vector::bitNum).sum();
-        MathPreconditions.checkPositiveInRangeClosed("bitNum", bitNum, maxRoundBitNum);
+        int totalBitNum = Arrays.stream(xiArray).mapToInt(MpcZ2Vector::bitNum).sum();
+        MathPreconditions.checkPositiveInRangeClosed("totalBitNum", totalBitNum, maxRoundBitNum);
         // do nothing
         return null;
     }
 
     @Override
     public void revealOther(MpcZ2Vector xi) {
-        MathPreconditions.checkPositiveInRangeClosed("xi.bitNum", xi.getNum(), maxRoundBitNum);
+        MathPreconditions.checkPositiveInRangeClosed("bitNum", xi.bitNum(), maxRoundBitNum);
         // do nothing
     }
 
     @Override
     public void revealOther(MpcZ2Vector[] xiArray) {
-        int bitNum = Arrays.stream(xiArray).mapToInt(MpcZ2Vector::bitNum).sum();
-        MathPreconditions.checkPositiveInRangeClosed("bitNum", bitNum, maxRoundBitNum);
+        int totalBitNum = Arrays.stream(xiArray).mapToInt(MpcZ2Vector::bitNum).sum();
+        MathPreconditions.checkPositiveInRangeClosed("totalBitNum", totalBitNum, maxRoundBitNum);
         // do nothing
     }
 
@@ -129,8 +122,8 @@ public class PlainBcParty implements MpcBcParty {
         // and operation
         PlainZ2Vector mergeZiArray = and(mergeXiArray, mergeYiArray);
         // split
-        int[] lengths = Arrays.stream(xiArray).mapToInt(MpcZ2Vector::getNum).toArray();
-        return Arrays.stream(split(mergeZiArray, lengths))
+        int[] bitNums = Arrays.stream(xiArray).mapToInt(MpcZ2Vector::bitNum).toArray();
+        return Arrays.stream(split(mergeZiArray, bitNums))
             .map(vector -> (PlainZ2Vector) vector)
             .toArray(PlainZ2Vector[]::new);
     }
@@ -155,8 +148,8 @@ public class PlainBcParty implements MpcBcParty {
         // xor operation
         PlainZ2Vector mergeZiArray = xor(mergeXiArray, mergeYiArray);
         // split
-        int[] lengths = Arrays.stream(xiArray).mapToInt(MpcZ2Vector::getNum).toArray();
-        return Arrays.stream(split(mergeZiArray, lengths))
+        int[] bitNums = Arrays.stream(xiArray).mapToInt(MpcZ2Vector::bitNum).toArray();
+        return Arrays.stream(split(mergeZiArray, bitNums))
             .map(vector -> (PlainZ2Vector) vector)
             .toArray(PlainZ2Vector[]::new);
     }
@@ -181,15 +174,15 @@ public class PlainBcParty implements MpcBcParty {
         // or operation
         PlainZ2Vector mergeZiArray = or(mergeXiArray, mergeYiArray);
         // split
-        int[] lengths = Arrays.stream(xiArray).mapToInt(MpcZ2Vector::getNum).toArray();
-        return Arrays.stream(split(mergeZiArray, lengths))
+        int[] bitNums = Arrays.stream(xiArray).mapToInt(MpcZ2Vector::bitNum).toArray();
+        return Arrays.stream(split(mergeZiArray, bitNums))
             .map(vector -> (PlainZ2Vector) vector)
             .toArray(PlainZ2Vector[]::new);
     }
 
     @Override
     public PlainZ2Vector not(MpcZ2Vector xi) {
-        return xor(xi, PlainZ2Vector.createOnes(xi.getNum()));
+        return xor(xi, PlainZ2Vector.createOnes(xi.bitNum()));
     }
 
     @Override
@@ -202,7 +195,7 @@ public class PlainBcParty implements MpcBcParty {
         // not operation
         PlainZ2Vector mergeZiArray = not(mergeXiArray);
         // split
-        int[] bitNums = Arrays.stream(xiArray).mapToInt(MpcZ2Vector::getNum).toArray();
+        int[] bitNums = Arrays.stream(xiArray).mapToInt(MpcZ2Vector::bitNum).toArray();
         return Arrays.stream(split(mergeZiArray, bitNums))
             .map(vector -> (PlainZ2Vector) vector)
             .toArray(PlainZ2Vector[]::new);

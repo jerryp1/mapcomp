@@ -1,8 +1,8 @@
 package edu.alibaba.mpc4j.s2pc.aby.basics.bc.single;
 
+import edu.alibaba.mpc4j.common.circuit.operator.DyadicBcOperator;
 import edu.alibaba.mpc4j.common.rpc.MpcAbortException;
 import edu.alibaba.mpc4j.common.tool.bitvector.BitVector;
-import edu.alibaba.mpc4j.s2pc.aby.basics.bc.BcOperator;
 import edu.alibaba.mpc4j.s2pc.aby.basics.bc.BcParty;
 import edu.alibaba.mpc4j.s2pc.aby.basics.bc.SquareZ2Vector;
 
@@ -20,7 +20,7 @@ class SingleDyadicBcSenderThread extends Thread {
     /**
      * operator
      */
-    private final BcOperator bcOperator;
+    private final DyadicBcOperator operator;
     /**
      * x bit vector
      */
@@ -66,13 +66,13 @@ class SingleDyadicBcSenderThread extends Thread {
      */
     private BitVector z00Vector;
 
-    SingleDyadicBcSenderThread(BcParty sender, BcOperator bcOperator, BitVector xBitVector, BitVector yBitVector) {
+    SingleDyadicBcSenderThread(BcParty sender, DyadicBcOperator operator, BitVector xBitVector, BitVector yBitVector) {
         this.sender = sender;
-        this.bcOperator = bcOperator;
+        this.operator = operator;
         this.xBitVector = xBitVector;
         this.yBitVector = yBitVector;
         bitNum = xBitVector.bitNum();
-        switch (bcOperator) {
+        switch (operator) {
             case XOR:
                 expectBitVector = xBitVector.xor(yBitVector);
                 break;
@@ -83,7 +83,7 @@ class SingleDyadicBcSenderThread extends Thread {
                 expectBitVector = xBitVector.or(yBitVector);
                 break;
             default:
-                throw new IllegalStateException("Invalid binary boolean operator: " + bcOperator.name());
+                throw new IllegalStateException("Invalid " + DyadicBcOperator.class.getSimpleName() + ": " + operator.name());
         }
     }
 
@@ -130,7 +130,7 @@ class SingleDyadicBcSenderThread extends Thread {
             shareX0 = x0.copy();
             SquareZ2Vector y0 = sender.shareOther(bitNum);
             SquareZ2Vector z110, z100, z010, z000;
-            switch (bcOperator) {
+            switch (operator) {
                 case XOR:
                     // (plain, plain)
                     z110 = sender.xor(x, y);
@@ -192,7 +192,7 @@ class SingleDyadicBcSenderThread extends Thread {
                     sender.revealOther(z000);
                     break;
                 default:
-                    throw new IllegalStateException("Invalid " + BcOperator.class.getSimpleName() + ": " + bcOperator.name());
+                    throw new IllegalStateException("Invalid " + DyadicBcOperator.class.getSimpleName() + ": " + operator.name());
             }
         } catch (MpcAbortException e) {
             e.printStackTrace();

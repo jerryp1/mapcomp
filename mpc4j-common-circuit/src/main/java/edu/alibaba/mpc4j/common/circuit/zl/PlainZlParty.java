@@ -1,0 +1,213 @@
+package edu.alibaba.mpc4j.common.circuit.zl;
+
+import edu.alibaba.mpc4j.common.rpc.MpcAbortException;
+import edu.alibaba.mpc4j.common.tool.MathPreconditions;
+import edu.alibaba.mpc4j.common.tool.galoisfield.zl.Zl;
+import edu.alibaba.mpc4j.crypto.matrix.vector.ZlVector;
+
+import java.util.Arrays;
+
+/**
+ * plain Zl party.
+ *
+ * @author Weiran Liu
+ * @date 2023/5/8
+ */
+public class PlainZlParty implements MpcZlParty {
+    /**
+     * the Zl instance
+     */
+    private final Zl zl;
+    /**
+     * maximum num in round.
+     */
+    private int maxRoundNum;
+
+    public PlainZlParty(Zl zl) {
+        this.zl = zl;
+    }
+
+    @Override
+    public Zl getZl() {
+        return zl;
+    }
+
+    @Override
+    public PlainZlVector createOnes(int num) {
+        return PlainZlVector.createOnes(zl, num);
+    }
+
+    @Override
+    public PlainZlVector createZeros(int num) {
+        return PlainZlVector.createZeros(zl, num);
+    }
+
+    @Override
+    public PlainZlVector createEmpty(boolean plain) {
+        return PlainZlVector.createEmpty(zl);
+    }
+
+    @Override
+    public void init(int maxRoundNum, int updateNum) throws MpcAbortException {
+        MathPreconditions.checkPositiveInRangeClosed("maxRoundNum", maxRoundNum, updateNum);
+        this.maxRoundNum = maxRoundNum;
+    }
+
+    @Override
+    public PlainZlVector shareOwn(ZlVector xi) {
+        MathPreconditions.checkPositiveInRangeClosed("num", xi.getNum(), maxRoundNum);
+        // do nothing
+        return null;
+    }
+
+    @Override
+    public PlainZlVector[] shareOwn(ZlVector[] xiArray) {
+        int totalNum = Arrays.stream(xiArray).mapToInt(ZlVector::getNum).sum();
+        MathPreconditions.checkPositiveInRangeClosed("totalNum", totalNum, maxRoundNum);
+        // do nothing
+        return null;
+    }
+
+    @Override
+    public PlainZlVector shareOther(int num) throws MpcAbortException {
+        MathPreconditions.checkPositiveInRangeClosed("num", num, maxRoundNum);
+        // do nothing
+        return null;
+    }
+
+    @Override
+    public PlainZlVector[] shareOther(int[] nums) throws MpcAbortException {
+        int totalNums = Arrays.stream(nums).sum();
+        MathPreconditions.checkPositiveInRangeClosed("totalNums", totalNums, maxRoundNum);
+        // do nothing
+        return null;
+    }
+
+    @Override
+    public ZlVector revealOwn(MpcZlVector xi) throws MpcAbortException {
+        MathPreconditions.checkPositiveInRangeClosed("num", xi.getNum(), maxRoundNum);
+        // do nothing
+        return null;
+    }
+
+    @Override
+    public ZlVector[] revealOwn(MpcZlVector[] xiArray) throws MpcAbortException {
+        int totalNum = Arrays.stream(xiArray).mapToInt(MpcZlVector::getNum).sum();
+        MathPreconditions.checkPositiveInRangeClosed("totalNum", totalNum, maxRoundNum);
+        // do nothing
+        return null;
+    }
+
+    @Override
+    public void revealOther(MpcZlVector xi) {
+        MathPreconditions.checkPositiveInRangeClosed("num", xi.getNum(), maxRoundNum);
+        // do nothing
+    }
+
+    @Override
+    public void revealOther(MpcZlVector[] xiArray) {
+        int totalNum = Arrays.stream(xiArray).mapToInt(MpcZlVector::getNum).sum();
+        MathPreconditions.checkPositiveInRangeClosed("totalNum", totalNum, maxRoundNum);
+        // do nothing
+    }
+
+    @Override
+    public PlainZlVector add(MpcZlVector xi, MpcZlVector yi) {
+        PlainZlVector plainXi = (PlainZlVector) xi;
+        PlainZlVector plainYi = (PlainZlVector) yi;
+        return PlainZlVector.create(plainXi.getZlVector().add(plainYi.getZlVector()));
+    }
+
+    @Override
+    public PlainZlVector[] add(MpcZlVector[] xiArray, MpcZlVector[] yiArray) {
+        assert xiArray.length == yiArray.length
+            : String.format("xiArray.length (%s) must be equal to yiArray.length (%s)", xiArray.length, yiArray.length);
+        if (xiArray.length == 0) {
+            return new PlainZlVector[0];
+        }
+        // merge xi and yi
+        PlainZlVector mergeXiArray = (PlainZlVector) merge(xiArray);
+        PlainZlVector mergeYiArray = (PlainZlVector) merge(yiArray);
+        // and operation
+        PlainZlVector mergeZiArray = add(mergeXiArray, mergeYiArray);
+        // split
+        int[] lengths = Arrays.stream(xiArray).mapToInt(MpcZlVector::getNum).toArray();
+        return Arrays.stream(split(mergeZiArray, lengths))
+            .map(vector -> (PlainZlVector) vector)
+            .toArray(PlainZlVector[]::new);
+    }
+
+    @Override
+    public PlainZlVector sub(MpcZlVector xi, MpcZlVector yi) {
+        PlainZlVector plainXi = (PlainZlVector) xi;
+        PlainZlVector plainYi = (PlainZlVector) yi;
+        return PlainZlVector.create(plainXi.getZlVector().sub(plainYi.getZlVector()));
+    }
+
+    @Override
+    public PlainZlVector[] sub(MpcZlVector[] xiArray, MpcZlVector[] yiArray) {
+        assert xiArray.length == yiArray.length
+            : String.format("xiArray.length (%s) must be equal to yiArray.length (%s)", xiArray.length, yiArray.length);
+        if (xiArray.length == 0) {
+            return new PlainZlVector[0];
+        }
+        // merge xi and yi
+        PlainZlVector mergeXiArray = (PlainZlVector) merge(xiArray);
+        PlainZlVector mergeYiArray = (PlainZlVector) merge(yiArray);
+        // xor operation
+        PlainZlVector mergeZiArray = sub(mergeXiArray, mergeYiArray);
+        // split
+        int[] lengths = Arrays.stream(xiArray).mapToInt(MpcZlVector::getNum).toArray();
+        return Arrays.stream(split(mergeZiArray, lengths))
+            .map(vector -> (PlainZlVector) vector)
+            .toArray(PlainZlVector[]::new);
+    }
+
+    @Override
+    public PlainZlVector neg(MpcZlVector xi) {
+        PlainZlVector plainXi = (PlainZlVector) xi;
+        return PlainZlVector.create(plainXi.getZlVector().neg());
+    }
+
+    @Override
+    public PlainZlVector[] neg(MpcZlVector[] xiArray) {
+        if (xiArray.length == 0) {
+            return new PlainZlVector[0];
+        }
+        // merge xi
+        PlainZlVector mergeXiArray = (PlainZlVector) merge(xiArray);
+        // not operation
+        PlainZlVector mergeZiArray = neg(mergeXiArray);
+        // split
+        int[] nums = Arrays.stream(xiArray).mapToInt(MpcZlVector::getNum).toArray();
+        return Arrays.stream(split(mergeZiArray, nums))
+            .map(vector -> (PlainZlVector) vector)
+            .toArray(PlainZlVector[]::new);
+    }
+
+    @Override
+    public PlainZlVector mul(MpcZlVector xi, MpcZlVector yi) {
+        PlainZlVector plainXi = (PlainZlVector) xi;
+        PlainZlVector plainYi = (PlainZlVector) yi;
+        return PlainZlVector.create(plainXi.getZlVector().mul(plainYi.getZlVector()));
+    }
+
+    @Override
+    public PlainZlVector[] mul(MpcZlVector[] xiArray, MpcZlVector[] yiArray) {
+        assert xiArray.length == yiArray.length
+            : String.format("xiArray.length (%s) must be equal to yiArray.length (%s)", xiArray.length, yiArray.length);
+        if (xiArray.length == 0) {
+            return new PlainZlVector[0];
+        }
+        // merge xi and yi
+        PlainZlVector mergeXiArray = (PlainZlVector) merge(xiArray);
+        PlainZlVector mergeYiArray = (PlainZlVector) merge(yiArray);
+        // or operation
+        PlainZlVector mergeZiArray = mul(mergeXiArray, mergeYiArray);
+        // split
+        int[] nums = Arrays.stream(xiArray).mapToInt(MpcZlVector::getNum).toArray();
+        return Arrays.stream(split(mergeZiArray, nums))
+            .map(vector -> (PlainZlVector) vector)
+            .toArray(PlainZlVector[]::new);
+    }
+}

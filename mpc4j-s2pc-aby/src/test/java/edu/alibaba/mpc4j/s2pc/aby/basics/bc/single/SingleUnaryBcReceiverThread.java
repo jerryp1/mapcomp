@@ -1,8 +1,8 @@
 package edu.alibaba.mpc4j.s2pc.aby.basics.bc.single;
 
+import edu.alibaba.mpc4j.common.circuit.operator.UnaryBcOperator;
 import edu.alibaba.mpc4j.common.rpc.MpcAbortException;
 import edu.alibaba.mpc4j.common.tool.bitvector.BitVector;
-import edu.alibaba.mpc4j.s2pc.aby.basics.bc.BcOperator;
 import edu.alibaba.mpc4j.s2pc.aby.basics.bc.BcParty;
 import edu.alibaba.mpc4j.s2pc.aby.basics.bc.SquareZ2Vector;
 
@@ -20,7 +20,7 @@ class SingleUnaryBcReceiverThread extends Thread {
     /**
      * operator
      */
-    private final BcOperator bcOperator;
+    private final UnaryBcOperator operator;
     /**
      * x bit vector
      */
@@ -46,9 +46,9 @@ class SingleUnaryBcReceiverThread extends Thread {
      */
     private BitVector z0Vector;
 
-    SingleUnaryBcReceiverThread(BcParty receiver, BcOperator bcOperator, BitVector xBitVector) {
+    SingleUnaryBcReceiverThread(BcParty receiver, UnaryBcOperator operator, BitVector xBitVector) {
         this.receiver = receiver;
-        this.bcOperator = bcOperator;
+        this.operator = operator;
         this.xBitVector = xBitVector;
         bitNum = xBitVector.bitNum();
     }
@@ -78,7 +78,7 @@ class SingleUnaryBcReceiverThread extends Thread {
             SquareZ2Vector x1 = receiver.shareOther(bitNum);
             shareX1 = x1.copy();
             //noinspection SwitchStatementWithTooFewBranches
-            switch (bcOperator) {
+            switch (operator) {
                 case NOT:
                     // (plain, plain)
                     SquareZ2Vector z01 = receiver.not(x);
@@ -91,7 +91,7 @@ class SingleUnaryBcReceiverThread extends Thread {
                     z1Vector = receiver.revealOwn(z11);
                     break;
                 default:
-                    throw new IllegalStateException("Invalid " + BcOperator.class.getSimpleName() + ": " + bcOperator.name());
+                    throw new IllegalStateException("Invalid " + UnaryBcOperator.class.getSimpleName() + ": " + operator.name());
             }
         } catch (MpcAbortException e) {
             e.printStackTrace();

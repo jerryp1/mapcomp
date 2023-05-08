@@ -1,8 +1,8 @@
 package edu.alibaba.mpc4j.s2pc.aby.basics.bc.single;
 
+import edu.alibaba.mpc4j.common.circuit.operator.UnaryBcOperator;
 import edu.alibaba.mpc4j.common.rpc.MpcAbortException;
 import edu.alibaba.mpc4j.common.tool.bitvector.BitVector;
-import edu.alibaba.mpc4j.s2pc.aby.basics.bc.BcOperator;
 import edu.alibaba.mpc4j.s2pc.aby.basics.bc.BcParty;
 import edu.alibaba.mpc4j.s2pc.aby.basics.bc.SquareZ2Vector;
 
@@ -20,7 +20,7 @@ class SingleUnaryBcSenderThread extends Thread {
     /**
      * operator
      */
-    private final BcOperator bcOperator;
+    private final UnaryBcOperator operator;
     /**
      * x bit vector
      */
@@ -50,18 +50,18 @@ class SingleUnaryBcSenderThread extends Thread {
      */
     private BitVector z0Vector;
 
-    SingleUnaryBcSenderThread(BcParty sender, BcOperator bcOperator, BitVector xBitVector) {
+    SingleUnaryBcSenderThread(BcParty sender, UnaryBcOperator operator, BitVector xBitVector) {
         this.sender = sender;
-        this.bcOperator = bcOperator;
+        this.operator = operator;
         this.xBitVector = xBitVector;
         bitNum = xBitVector.bitNum();
         //noinspection SwitchStatementWithTooFewBranches
-        switch (bcOperator) {
+        switch (operator) {
             case NOT:
                 expectBitVector = xBitVector.not();
                 break;
             default:
-                throw new IllegalStateException("Invalid unary boolean operator: " + bcOperator.name());
+                throw new IllegalStateException("Invalid unary boolean operator: " + operator.name());
         }
     }
 
@@ -95,7 +95,7 @@ class SingleUnaryBcSenderThread extends Thread {
             shareX0 = x0.copy();
             SquareZ2Vector z00, z10;
             //noinspection SwitchStatementWithTooFewBranches
-            switch (bcOperator) {
+            switch (operator) {
                 case NOT:
                     // (plain, plain)
                     z00 = sender.not(x);
@@ -108,7 +108,7 @@ class SingleUnaryBcSenderThread extends Thread {
                     sender.revealOther(z10);
                     break;
                 default:
-                    throw new IllegalStateException("Invalid " + BcOperator.class.getSimpleName() + ": " + bcOperator.name());
+                    throw new IllegalStateException("Invalid " + UnaryBcOperator.class.getSimpleName() + ": " + operator.name());
             }
         } catch (MpcAbortException e) {
             e.printStackTrace();

@@ -1,8 +1,8 @@
 package edu.alibaba.mpc4j.s2pc.aby.basics.bc.single;
 
+import edu.alibaba.mpc4j.common.circuit.operator.DyadicBcOperator;
 import edu.alibaba.mpc4j.common.rpc.MpcAbortException;
 import edu.alibaba.mpc4j.common.tool.bitvector.BitVector;
-import edu.alibaba.mpc4j.s2pc.aby.basics.bc.BcOperator;
 import edu.alibaba.mpc4j.s2pc.aby.basics.bc.BcParty;
 import edu.alibaba.mpc4j.s2pc.aby.basics.bc.SquareZ2Vector;
 
@@ -20,7 +20,7 @@ class SingleDyadicBcReceiverThread extends Thread {
     /**
      * operator
      */
-    private final BcOperator bcOperator;
+    private final DyadicBcOperator operator;
     /**
      * x bit vector
      */
@@ -62,9 +62,9 @@ class SingleDyadicBcReceiverThread extends Thread {
      */
     private BitVector z00Vector;
 
-    SingleDyadicBcReceiverThread(BcParty receiver, BcOperator bcOperator, BitVector xBitVector, BitVector yBitVector) {
+    SingleDyadicBcReceiverThread(BcParty receiver, DyadicBcOperator operator, BitVector xBitVector, BitVector yBitVector) {
         this.receiver = receiver;
-        this.bcOperator = bcOperator;
+        this.operator = operator;
         this.xBitVector = xBitVector;
         this.yBitVector = yBitVector;
         bitNum = xBitVector.bitNum();
@@ -109,7 +109,7 @@ class SingleDyadicBcReceiverThread extends Thread {
             shareX1 = x1.copy();
             SquareZ2Vector y1 = receiver.shareOwn(yBitVector);
             SquareZ2Vector z111, z101, z011, z001;
-            switch (bcOperator) {
+            switch (operator) {
                 case XOR:
                     // (plain, plain)
                     z111 = receiver.xor(x, y);
@@ -171,7 +171,7 @@ class SingleDyadicBcReceiverThread extends Thread {
                     z00Vector = receiver.revealOwn(z001);
                     break;
                 default:
-                    throw new IllegalStateException("Invalid " + BcOperator.class.getSimpleName() + ": " + bcOperator.name());
+                    throw new IllegalStateException("Invalid " + DyadicBcOperator.class.getSimpleName() + ": " + operator.name());
             }
         } catch (MpcAbortException e) {
             e.printStackTrace();

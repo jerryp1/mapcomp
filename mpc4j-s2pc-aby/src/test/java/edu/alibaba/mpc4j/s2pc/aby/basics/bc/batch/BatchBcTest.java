@@ -1,6 +1,8 @@
 package edu.alibaba.mpc4j.s2pc.aby.basics.bc.batch;
 
 import com.google.common.base.Preconditions;
+import edu.alibaba.mpc4j.common.circuit.operator.DyadicBcOperator;
+import edu.alibaba.mpc4j.common.circuit.operator.UnaryBcOperator;
 import edu.alibaba.mpc4j.common.rpc.Rpc;
 import edu.alibaba.mpc4j.common.rpc.RpcManager;
 import edu.alibaba.mpc4j.common.rpc.impl.memory.MemoryRpcManager;
@@ -8,7 +10,6 @@ import edu.alibaba.mpc4j.common.tool.bitvector.BitVector;
 import edu.alibaba.mpc4j.common.tool.bitvector.BitVectorFactory;
 import edu.alibaba.mpc4j.s2pc.aby.basics.bc.BcConfig;
 import edu.alibaba.mpc4j.s2pc.aby.basics.bc.BcFactory;
-import edu.alibaba.mpc4j.s2pc.aby.basics.bc.BcOperator;
 import edu.alibaba.mpc4j.s2pc.aby.basics.bc.BcParty;
 import edu.alibaba.mpc4j.s2pc.aby.basics.bc.bea91.Bea91BcConfig;
 import org.apache.commons.lang3.StringUtils;
@@ -150,15 +151,15 @@ public class BatchBcTest {
         BcParty receiver = BcFactory.createReceiver(receiverRpc, senderRpc.ownParty(), config);
         sender.setParallel(parallel);
         receiver.setParallel(parallel);
-        testDyadicOperator(sender, receiver, BcOperator.XOR, bitNum);
-        testDyadicOperator(sender, receiver, BcOperator.AND, bitNum);
-        testDyadicOperator(sender, receiver, BcOperator.OR, bitNum);
-        testUnaryOperator(sender, receiver, BcOperator.NOT, bitNum);
+        testDyadicOperator(sender, receiver, DyadicBcOperator.XOR, bitNum);
+        testDyadicOperator(sender, receiver, DyadicBcOperator.AND, bitNum);
+        testDyadicOperator(sender, receiver, DyadicBcOperator.OR, bitNum);
+        testUnaryOperator(sender, receiver, UnaryBcOperator.NOT, bitNum);
         sender.destroy();
         receiver.destroy();
     }
 
-    private void testDyadicOperator(BcParty sender, BcParty receiver, BcOperator bcOperator, int maxBitNum) {
+    private void testDyadicOperator(BcParty sender, BcParty receiver, DyadicBcOperator operator, int maxBitNum) {
         int randomTaskId = Math.abs(SECURE_RANDOM.nextInt());
         sender.setTaskId(randomTaskId);
         receiver.setTaskId(randomTaskId);
@@ -178,11 +179,11 @@ public class BatchBcTest {
             })
             .toArray(BitVector[]::new);
         try {
-            LOGGER.info("-----test {} ({}) start-----", sender.getPtoDesc().getPtoName(), bcOperator.name());
+            LOGGER.info("-----test {} ({}) start-----", sender.getPtoDesc().getPtoName(), operator.name());
             BatchDyadicBcSenderThread senderThread
-                = new BatchDyadicBcSenderThread(sender, bcOperator, xBitVectors, yBitVectors);
+                = new BatchDyadicBcSenderThread(sender, operator, xBitVectors, yBitVectors);
             BatchDyadicBcReceiverThread receiverThread
-                = new BatchDyadicBcReceiverThread(receiver, bcOperator, xBitVectors, yBitVectors);
+                = new BatchDyadicBcReceiverThread(receiver, operator, xBitVectors, yBitVectors);
             StopWatch stopWatch = new StopWatch();
             // 开始执行协议
             stopWatch.start();
@@ -219,14 +220,14 @@ public class BatchBcTest {
             LOGGER.info("Sender sends {}B, Receiver sends {}B, time = {}ms",
                 senderByteLength, receiverByteLength, time
             );
-            LOGGER.info("-----test {} ({}) end-----", sender.getPtoDesc().getPtoName(), bcOperator.name());
+            LOGGER.info("-----test {} ({}) end-----", sender.getPtoDesc().getPtoName(), operator.name());
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
     }
 
     @SuppressWarnings("SameParameterValue")
-    private void testUnaryOperator(BcParty sender, BcParty receiver, BcOperator bcOperator, int maxBitNum) {
+    private void testUnaryOperator(BcParty sender, BcParty receiver, UnaryBcOperator operator, int maxBitNum) {
         int randomTaskId = Math.abs(SECURE_RANDOM.nextInt());
         sender.setTaskId(randomTaskId);
         receiver.setTaskId(randomTaskId);
@@ -239,11 +240,11 @@ public class BatchBcTest {
             })
             .toArray(BitVector[]::new);
         try {
-            LOGGER.info("-----test {} ({}) start-----", sender.getPtoDesc().getPtoName(), bcOperator.name());
+            LOGGER.info("-----test {} ({}) start-----", sender.getPtoDesc().getPtoName(), operator.name());
             BatchUnaryBcSenderThread senderThread
-                = new BatchUnaryBcSenderThread(sender, bcOperator, xBitVectors);
+                = new BatchUnaryBcSenderThread(sender, operator, xBitVectors);
             BatchUnaryBcReceiverThread receiverThread
-                = new BatchUnaryBcReceiverThread(receiver, bcOperator, xBitVectors);
+                = new BatchUnaryBcReceiverThread(receiver, operator, xBitVectors);
             StopWatch stopWatch = new StopWatch();
             // 开始执行协议
             stopWatch.start();
@@ -272,7 +273,7 @@ public class BatchBcTest {
             LOGGER.info("Sender sends {}B, Receiver sends {}B, time = {}ms",
                 senderByteLength, receiverByteLength, time
             );
-            LOGGER.info("-----test {} ({}) end-----", sender.getPtoDesc().getPtoName(), bcOperator.name());
+            LOGGER.info("-----test {} ({}) end-----", sender.getPtoDesc().getPtoName(), operator.name());
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
