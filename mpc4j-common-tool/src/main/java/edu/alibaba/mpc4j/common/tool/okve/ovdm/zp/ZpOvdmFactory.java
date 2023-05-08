@@ -1,56 +1,60 @@
 package edu.alibaba.mpc4j.common.tool.okve.ovdm.zp;
 
-import com.google.common.base.Preconditions;
 import edu.alibaba.mpc4j.common.tool.EnvType;
+import edu.alibaba.mpc4j.common.tool.MathPreconditions;
 import edu.alibaba.mpc4j.common.tool.okve.cuckootable.CuckooTableSingletonTcFinder;
 import edu.alibaba.mpc4j.common.tool.okve.cuckootable.H2CuckooTableTcFinder;
 
 import java.math.BigInteger;
 
 /**
- * Zp-OVDM工厂。
+ * Zp-OVDM factory.
  *
  * @author Weiran Liu
  * @date 2021/10/01
  */
 public class ZpOvdmFactory {
     /**
-     * 私有构造函数
+     * private constructor.
      */
     private ZpOvdmFactory() {
         // empty
     }
 
     /**
-     * Zp-OVDM类型。
+     * Zp-OVDM type.
      */
     public enum ZpOvdmType {
         /**
-         * 2哈希-两核乱码布谷鸟表
+         * 2-hash two-core Garbled Cuckoo Table
          */
         H2_TWO_CORE_GCT,
         /**
-         * 2哈希-单例乱码布谷鸟表
+         * 2-hash singleton Garbled Cuckoo Table
          */
         H2_SINGLETON_GCT,
         /**
-         * 3哈希-单例乱码布谷鸟表
+         * 3-hash singleton Garbled Cuckoo Table
          */
         H3_SINGLETON_GCT,
+        /**
+         * LPRST21 Garbled Bloom Filter
+         */
+        LPRST21_GBF,
     }
 
     /**
-     * 构建Zp-OVDM。
+     * Creates an empty Zp-OVDM.
      *
-     * @param envType 环境类型。
-     * @param type    Zp-OVDM类型。
-     * @param p       模数p。
-     * @param n       待编码的键值对数量。
-     * @param keys    哈希密钥。
-     * @return Zp-OVDM。
+     * @param envType environment.
+     * @param type    Zp-OVDM type.
+     * @param p       p.
+     * @param n       number of key-value pairs.
+     * @param keys    hash keys.
+     * @return an empty Zp-OVDM.
      */
     public static <X> ZpOvdm<X> createInstance(EnvType envType, ZpOvdmType type, BigInteger p, int n, byte[][] keys) {
-        assert keys.length == getHashNum(type);
+        MathPreconditions.checkEqual("keys.length", "hashNum", keys.length, getHashNum(type));
         switch (type) {
             case H3_SINGLETON_GCT:
                 return new H3TcGctZpOvdm<>(envType, p, n, keys);
@@ -58,46 +62,52 @@ public class ZpOvdmFactory {
                 return new H2TcGctZpOvdm<>(envType, p, n, keys, new CuckooTableSingletonTcFinder<>());
             case H2_TWO_CORE_GCT:
                 return new H2TcGctZpOvdm<>(envType, p, n, keys, new H2CuckooTableTcFinder<>());
+            case LPRST21_GBF:
+                return new Lprst21GbfZpOvdm<>(envType, p, n, keys);
             default:
-                throw new IllegalArgumentException("Invalid ZpOvdmType: " + type.name());
+                throw new IllegalArgumentException("Invalid " + ZpOvdmType.class.getSimpleName() + ": " + type.name());
         }
     }
 
     /**
-     * 返回Zp-OVDM的哈希函数数量。
+     * Gets hash num.
      *
-     * @param zpOvdmType Zp-OVDM类型。
-     * @return 哈希函数数量。
+     * @param type Zp-OVDM type.
+     * @return hash num.
      */
-    public static int getHashNum(ZpOvdmType zpOvdmType) {
-        switch (zpOvdmType) {
+    public static int getHashNum(ZpOvdmType type) {
+        switch (type) {
             case H3_SINGLETON_GCT:
                 return H3TcGctZpOvdm.HASH_NUM;
             case H2_SINGLETON_GCT:
             case H2_TWO_CORE_GCT:
                 return H2TcGctZpOvdm.HASH_NUM;
+            case LPRST21_GBF:
+                return Lprst21GbfZpOvdm.HASH_NUM;
             default:
-                throw new IllegalArgumentException("Invalid ZpOvdmType: " + zpOvdmType.name());
+                throw new IllegalArgumentException("Invalid " + ZpOvdmType.class.getSimpleName() + ": " + type.name());
         }
     }
 
     /**
-     * 返回Zp-OVDM的长度m，m为Byte.SIZE的整数倍。
+     * Gets m, with m % Byte.SIZE == 0.
      *
-     * @param zpOvdmType Zp-OVDM类型。
-     * @param n          待编码的键值对数量。
-     * @return Zp-OVDM的长度m。
+     * @param type Zp-OVDM type.
+     * @param n    number of key-value pairs.
+     * @return m.
      */
-    public static int getM(ZpOvdmType zpOvdmType, int n) {
-        Preconditions.checkArgument(n > 0);
-        switch (zpOvdmType) {
+    public static int getM(ZpOvdmType type, int n) {
+        MathPreconditions.checkPositive("n", n);
+        switch (type) {
             case H3_SINGLETON_GCT:
                 return H3TcGctZpOvdm.getLm(n) + H3TcGctZpOvdm.getRm(n);
             case H2_SINGLETON_GCT:
             case H2_TWO_CORE_GCT:
                 return H2TcGctZpOvdm.getLm(n) + H2TcGctZpOvdm.getRm(n);
+            case LPRST21_GBF:
+                return Lprst21GbfZpOvdm.getM(n);
             default:
-                throw new IllegalArgumentException("Invalid ZpOvdmType: " + zpOvdmType.name());
+                throw new IllegalArgumentException("Invalid " + ZpOvdmType.class.getSimpleName() + ": " + type.name());
         }
     }
 }

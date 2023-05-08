@@ -79,6 +79,16 @@ We implement some basic tools used in PCG. We learned a lot from [KyberJCE](http
 - Bos, Joppe, Léo Ducas, Eike Kiltz, Tancrède Lepoint, Vadim Lyubashevsky, John M. Schanck, Peter Schwabe, Gregor Seiler, and Damien Stehlé. CRYSTALS-Kyber: A CCA-secure Module-lattice-based KEM. EuroS\&P 2018, IEEE, pp. 353-367.
 - Guo, Chun, Jonathan Katz, Xiao Wang, and Yu Yu. Efficient and Secure Multiparty Computation from Fixed-key Block Ciphers.S\&P 2020, IEEE, pp. 825-841.
 
+### Coin-tossing Protocol
+
+Some protocols (especially protocol with malicious security) needs to invoke a (maliciously secure) coin tossing protocol for unbiased randomness generation. We implement the commonly used coin-tossing protocol that was proposed by Blum in the following paper.
+
+- Blum, Manuel. Coin flipping by phone. In COMPCON, pp. 133-137. 1982.
+
+The security proof is shown in the following paper.
+
+- Lindell, Yehuda. How to simulate it: a tutorial on the simulation proof technique. Tutorials on the Foundations of Cryptography: Dedicated to Oded Goldreich (2017): 277-346.
+
 ### Base OT
 
 There are many research results related to base OT. We adjust some results in instance implementations.

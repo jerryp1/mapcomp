@@ -4,8 +4,9 @@ import com.google.common.base.Preconditions;
 import edu.alibaba.mpc4j.common.rpc.Rpc;
 import edu.alibaba.mpc4j.common.rpc.RpcManager;
 import edu.alibaba.mpc4j.common.rpc.impl.memory.MemoryRpcManager;
-import edu.alibaba.mpc4j.common.tool.CommonConstants;
 import edu.alibaba.mpc4j.s2pc.opf.sqoprf.SqOprfFactory.SqOprfType;
+import edu.alibaba.mpc4j.s2pc.opf.sqoprf.nr04.Nr04EccSqOprfConfig;
+import edu.alibaba.mpc4j.s2pc.opf.sqoprf.pssw09.Pssw09SqOprfConfig;
 import edu.alibaba.mpc4j.s2pc.opf.sqoprf.ra17.Ra17ByteEccSqOprfConfig;
 import edu.alibaba.mpc4j.s2pc.opf.sqoprf.ra17.Ra17EccSqOprfConfig;
 import org.apache.commons.lang3.StringUtils;
@@ -46,26 +47,39 @@ public class SqOprfTest {
     /**
      * the large batch size
      */
-    private static final int LARGE_BATCH_SIZE = 1 << 14;
+    private static final int LARGE_BATCH_SIZE = 1 << 12;
+    /**
+     * a strange element byte length
+     */
+    private static final int ELEMENT_BYTE_LENGTH = 17;
 
     @Parameterized.Parameters(name = "{0}")
     public static Collection<Object[]> configurations() {
         Collection<Object[]> configurations = new ArrayList<>();
 
+        // PSSW09
+        configurations.add(new Object[]{
+            SqOprfType.PSSW09.name(), new Pssw09SqOprfConfig.Builder().build(),
+        });
+        // NR04_ECC (uncompress)
+        configurations.add(new Object[]{
+            SqOprfType.NR04_ECC.name() + " (uncompress)", new Nr04EccSqOprfConfig.Builder().build(),
+        });
+        // NR04_ECC (compress)
+        configurations.add(new Object[]{
+            SqOprfType.NR04_ECC.name() + " (compress)", new Nr04EccSqOprfConfig.Builder().setCompressEncode(true).build(),
+        });
         // RA17_BYTE_ECC (compress)
         configurations.add(new Object[]{
-            SqOprfType.RA17_BYTE_ECC.name(),
-            new Ra17ByteEccSqOprfConfig.Builder().build(),
+            SqOprfType.RA17_BYTE_ECC.name(), new Ra17ByteEccSqOprfConfig.Builder().build(),
         });
         // RA17_ECC (compress)
         configurations.add(new Object[]{
-            SqOprfType.RA17_ECC.name() + " (compress)",
-            new Ra17EccSqOprfConfig.Builder().setCompressEncode(true).build(),
+            SqOprfType.RA17_ECC.name() + " (compress)", new Ra17EccSqOprfConfig.Builder().setCompressEncode(true).build(),
         });
         // RA17_ECC (uncompress)
         configurations.add(new Object[]{
-            SqOprfType.RA17_ECC.name() + " (uncompress)",
-            new Ra17EccSqOprfConfig.Builder().build(),
+            SqOprfType.RA17_ECC.name() + " (uncompress)", new Ra17EccSqOprfConfig.Builder().build(),
         });
 
         return configurations;
@@ -107,22 +121,22 @@ public class SqOprfTest {
     }
 
     @Test
-    public void test1N() {
+    public void test1Num() {
         testPto(1, false);
     }
 
     @Test
-    public void test2N() {
+    public void test2Num() {
         testPto(2, false);
     }
 
     @Test
-    public void test3N() {
+    public void test3Num() {
         testPto(3, false);
     }
 
     @Test
-    public void test8N() {
+    public void test8Num() {
         testPto(8, false);
     }
 
@@ -137,12 +151,12 @@ public class SqOprfTest {
     }
 
     @Test
-    public void testLargeN() {
+    public void testLargeNum() {
         testPto(LARGE_BATCH_SIZE, false);
     }
 
     @Test
-    public void testParallelLargeN() {
+    public void testParallelLargeNum() {
         testPto(LARGE_BATCH_SIZE, true);
     }
 
@@ -158,7 +172,7 @@ public class SqOprfTest {
             LOGGER.info("-----test {}, batch_size = {}-----", sender.getPtoDesc().getPtoName(), batchSize);
             byte[][] inputs = IntStream.range(0, batchSize)
                 .mapToObj(index -> {
-                    byte[] input = new byte[CommonConstants.BLOCK_BYTE_LENGTH];
+                    byte[] input = new byte[ELEMENT_BYTE_LENGTH];
                     SECURE_RANDOM.nextBytes(input);
                     return input;
                 })
@@ -198,13 +212,16 @@ public class SqOprfTest {
 
     private void assertOutput(int batchSize, SqOprfKey key, SqOprfReceiverOutput receiverOutput) {
         Assert.assertEquals(batchSize, receiverOutput.getBatchSize());
+
         Assert.assertEquals(key.getPrfByteLength(), receiverOutput.getPrfByteLength());
         int prfByteLength = key.getPrfByteLength();
         IntStream.range(0, batchSize).forEach(index -> {
             byte[] input = receiverOutput.getInput(index);
             ByteBuffer receiverPrf = ByteBuffer.wrap(receiverOutput.getPrf(index));
             Assert.assertEquals(prfByteLength, receiverPrf.array().length);
+
             ByteBuffer senderPrf = ByteBuffer.wrap(key.getPrf(input));
+
             Assert.assertEquals(prfByteLength, senderPrf.array().length);
             Assert.assertEquals(senderPrf, receiverPrf);
         });
@@ -216,4 +233,6 @@ public class SqOprfTest {
             .count();
         Assert.assertEquals(receiverOutput.getBatchSize(), distinctCount);
     }
+
+
 }

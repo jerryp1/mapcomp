@@ -1,8 +1,10 @@
 package edu.alibaba.mpc4j.common.tool.okve.ovdm.zp;
 
 import cc.redberry.rings.linear.LinearSolver.SystemInfo;
+import com.google.common.base.Preconditions;
 import edu.alibaba.mpc4j.common.tool.CommonConstants;
 import edu.alibaba.mpc4j.common.tool.EnvType;
+import edu.alibaba.mpc4j.common.tool.MathPreconditions;
 import edu.alibaba.mpc4j.common.tool.crypto.prf.Prf;
 import edu.alibaba.mpc4j.common.tool.crypto.prf.PrfFactory;
 import edu.alibaba.mpc4j.common.tool.galoisfield.zp.ZpMaxLisFinder;
@@ -20,7 +22,7 @@ import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
 /**
- * 2哈希-两核Zp-OVDM实现。
+ * 2-hash-two-core-OVDM in ZP.
  *
  * @author Weiran Liu
  * @date 2021/10/01
@@ -31,53 +33,55 @@ class H2TcGctZpOvdm<T> extends AbstractZpOvdm<T> implements SparseZpOvdm<T> {
      */
     private static final int SPARSE_HASH_NUM = 2;
     /**
-     * 2哈希-两核椭圆曲线OVDM所需的哈希函数密钥数量。
+     * hash num
      */
     static int HASH_NUM = SPARSE_HASH_NUM + 1;
     /**
-     * 2哈希-两核椭圆曲线OVDM所对应的ε
+     * ε
      */
     private static final double EPSILON = 0.4;
     /**
-     * 左侧编码比特长度，等于(2 + ε) * n，向上取整为Byte.SIZE的整数倍
+     * left m = (2 + ε) * n, flooring to lm % Byte.SIZE == 0
      */
     private final int lm;
     /**
-     * 右侧编码比特长度，等于(1 + ε) * log(n) + λ，向上取整为Byte.SIZE的整数倍
+     * right m = (1 + ε) * log(n) + λ, flooring to rm % Byte.SIZE == 0
      */
     private final int rm;
     /**
-     * 布谷鸟哈希的第1个哈希函数
+     * the first hash
      */
     private final Prf h1;
     /**
-     * 布谷鸟哈希的第2个哈希函数
+     * the second hash
      */
     private final Prf h2;
     /**
-     * 用于计算右侧r(x)的哈希函数
+     * the right hash for r(x)
      */
     private final Prf hr;
     /**
-     * 2-core图查找器
+     * 2-core finder
      */
     private final CuckooTableTcFinder<T> tcFinder;
     /**
-     * 数据到h1的映射表
+     * data -> h1
      */
     private Map<T, Integer> dataH1Map;
     /**
-     * 数据到h2的映射表
+     * data -> h2
      */
     private Map<T, Integer> dataH2Map;
     /**
-     * 数据到hr的映射表
+     * data -> hr
      */
     private Map<T, boolean[]> dataHrMap;
 
     H2TcGctZpOvdm(EnvType envType, BigInteger prime, int n, byte[][] keys, CuckooTableTcFinder<T> tcFinder) {
         super(envType, prime, n, getLm(n) + getRm(n));
-        assert (tcFinder instanceof CuckooTableSingletonTcFinder || tcFinder instanceof H2CuckooTableTcFinder);
+        Preconditions.checkArgument(
+            tcFinder instanceof CuckooTableSingletonTcFinder || tcFinder instanceof H2CuckooTableTcFinder
+        );
         lm = getLm(n);
         rm = getRm(n);
         h1 = PrfFactory.createInstance(envType, Integer.BYTES);
@@ -121,7 +125,7 @@ class H2TcGctZpOvdm<T> extends AbstractZpOvdm<T> implements SparseZpOvdm<T> {
 
     @Override
     public BigInteger decode(BigInteger[] storage, T key) {
-        assert storage.length == getM();
+        MathPreconditions.checkEqual("storage.length", "m", storage.length, getM());
         int[] sparsePositions = sparsePositions(key);
         boolean[] densePositions = densePositions(key);
         BigInteger value = BigInteger.ZERO;
@@ -153,8 +157,8 @@ class H2TcGctZpOvdm<T> extends AbstractZpOvdm<T> implements SparseZpOvdm<T> {
 
     @Override
     public BigInteger[] encode(Map<T, BigInteger> keyValueMap) throws ArithmeticException {
-        assert keyValueMap.size() <= n;
-        // 构造数据到哈希值的查找表
+        MathPreconditions.checkLessOrEqual("key-value pairs num", keyValueMap.size(), n);
+        // compute hashes
         Set<T> keySet = keyValueMap.keySet();
         dataH1Map = new HashMap<>(keySet.size());
         dataH2Map = new HashMap<>(keySet.size());
@@ -166,23 +170,23 @@ class H2TcGctZpOvdm<T> extends AbstractZpOvdm<T> implements SparseZpOvdm<T> {
             dataH2Map.put(key, sparsePositions[1]);
             dataHrMap.put(key, densePositions);
         }
-        // 生成2哈希-布谷鸟图
+        // generate 2-hash cuckoo table
         H2CuckooTable<T> h2CuckooTable = generateCuckooTable(keyValueMap);
-        // 找到2-core图
+        // find two-core graph
         tcFinder.findTwoCore(h2CuckooTable);
-        // 根据2-core图的所有数据和所有边构造矩阵
+        // find two-core nodes based on the 2-core graph
         Set<T> coreDataSet = tcFinder.getRemainedDataSet();
-        // 生成矩阵，矩阵中包含右侧的全部解，以及2-core中的全部解
+        // generate the storages for two-core nodes
         BigInteger[] storage = generateStorage(keyValueMap, coreDataSet);
-        // 将矩阵拆分为L || D
+        // split the storage to L || D
         BigInteger[] leftStorage = new BigInteger[lm];
         BigInteger[] rightStorage = new BigInteger[rm];
         System.arraycopy(storage, 0, leftStorage, 0, lm);
         System.arraycopy(storage, lm, rightStorage, 0, rm);
-        // 从栈中依次弹出数据，为相应节点赋值
+        // remove data from stack, and assign storages
         Stack<T> removedDataStack = tcFinder.getRemovedDataStack();
         Stack<Integer[]> removedDataVerticesStack = tcFinder.getRemovedDataVertices();
-        // 先计算右侧内积结果
+        // compute right inner product
         Map<T, BigInteger> removedDataInnerProductMap = removedDataStack.stream()
             .collect(Collectors.toMap(Function.identity(), removedData -> {
                 boolean[] rx = dataHrMap.get(removedData);
@@ -198,40 +202,39 @@ class H2TcGctZpOvdm<T> extends AbstractZpOvdm<T> implements SparseZpOvdm<T> {
             removedDataInnerProductMap.get(removedData);
             BigInteger innerProduct = removedDataInnerProductMap.get(removedData);
             if (source.equals(target)) {
-                // 起点和终点一致，只设置一个即可
+                // source == target, set one value
                 if (leftStorage[source] == null) {
                     leftStorage[source] = innerProduct;
                 } else {
-                    // 顶点不为空，不可能出现这种情况
-                    throw new IllegalStateException(removedData + "：(" + source + ", " + target + ")均不为空");
+                    throw new IllegalStateException(removedData + ":(" + source + ", " + target + ") all not null");
                 }
             } else {
-                // 起点和重点不一致，有4种情况
+                // source != target, there are 4 possibilities
                 if (leftStorage[source] == null && leftStorage[target] == null) {
-                    // 情况1：左右都为空
+                    // case 1: source and target are both empty
                     leftStorage[source] = zp.createNonZeroRandom(secureRandom);
                     leftStorage[target] = zp.sub(innerProduct, leftStorage[source]);
                 } else if (leftStorage[source] == null) {
-                    // 情况2：左端点为空，右端点不为空
+                    // case 2: source is empty, target is not empty
                     leftStorage[source] = zp.sub(innerProduct, leftStorage[target]);
                 } else if (leftStorage[target] == null) {
-                    // 情况3：左端点不为空，右端点为空
+                    // case 3: target is empty, source is not empty
                     leftStorage[target] = zp.sub(innerProduct, leftStorage[source]);
                 } else {
-                    // 左右端点都不为空，实现存在问题
-                    throw new IllegalStateException(removedData + "左右顶点同时有数据，算法实现有误");
+                    // source and target are both not empty, impossible
+                    throw new IllegalStateException(removedData + ":(" + source + ", " + target + ") all not null");
                 }
             }
         }
-        // 左侧矩阵补充随机数
+        // padding random values for the left part
         for (int vertex = 0; vertex < lm; vertex++) {
             if (leftStorage[vertex] == null) {
                 leftStorage[vertex] = zp.createNonZeroRandom(secureRandom);
             }
         }
-        // 更新矩阵
+        // update the storage
         System.arraycopy(leftStorage, 0, storage, 0, lm);
-        // 不应该再有没有更新的矩阵行了
+        // all storages should be not null
         for (BigInteger row : storage) {
             assert row != null;
         }
@@ -239,11 +242,11 @@ class H2TcGctZpOvdm<T> extends AbstractZpOvdm<T> implements SparseZpOvdm<T> {
     }
 
     private BigInteger[] generateStorage(Map<T, BigInteger> keyValueMap, Set<T> coreDataSet) {
-        // 初始化OVDM存储器，所有位置设置为空
+        // initialize storage, all position is null
         BigInteger[] storage = new BigInteger[m];
         // Let d˜ = |R| and abort if d˜ > d + λ
         int dTilde = coreDataSet.size();
-        // 如果没有2-core边，则补充的边都设置为随机数
+        // if there is no 2-core node, pad random element for the right part
         if (dTilde == 0) {
             IntStream.range(lm, lm + rm).forEach(index -> storage[index] = zp.createNonZeroRandom(secureRandom));
             return storage;
@@ -262,7 +265,7 @@ class H2TcGctZpOvdm<T> extends AbstractZpOvdm<T> implements SparseZpOvdm<T> {
             }
             tildePrimeMatrixRowIndex++;
         }
-        // Otherwise let M˜* be one such matrix and C ⊂ [d + λ] index the corresponding columns of M˜.
+        // Otherwise, let M˜* be one such matrix and C ⊂ [d + λ] index the corresponding columns of M˜.
         ZpMaxLisFinder maxLisFinder = new ZpMaxLisFinder(zp.getPrime(), tildePrimeMatrix);
         Set<Integer> setC = maxLisFinder.getLisRows();
         BigInteger[][] tildeStarMatrix = new BigInteger[dTilde][setC.size()];
@@ -327,7 +330,7 @@ class H2TcGctZpOvdm<T> extends AbstractZpOvdm<T> implements SparseZpOvdm<T> {
         if (systemInfo.compareTo(SystemInfo.Inconsistent) == 0) {
             throw new ArithmeticException("无法完成编码过程，线性系统无解");
         }
-        // 将求解结果更新到matrix里面
+        // update solutions into the storage
         int xVectorIndex = 0;
         for (int cIndex : setC) {
             storage[lm + cIndex] = vectorX[xVectorIndex];
@@ -343,6 +346,7 @@ class H2TcGctZpOvdm<T> extends AbstractZpOvdm<T> implements SparseZpOvdm<T> {
      * @return 左侧哈希比特长度，向上取整为Byte.SIZE的整数倍。
      */
     static int getLm(int n) {
+        MathPreconditions.checkPositive("n", n);
         // 根据论文的表2， lm = (2 + ε) * n = 2.4n，向上取整到Byte.SIZE的整数倍
         return CommonUtils.getByteLength((int) Math.ceil((2 + EPSILON) * n)) * Byte.SIZE;
     }

@@ -47,6 +47,8 @@ public class OkvsTest {
     public static Collection<Object[]> configurations() {
         Collection<Object[]> configurations = new ArrayList<>();
 
+        // LPRST21_GBF
+        configurations.add(new Object[]{OkvsType.LPRST21_GBF.name(), OkvsType.LPRST21_GBF});
         // H3_SINGLETON_GCT
         configurations.add(new Object[]{OkvsType.H3_SINGLETON_GCT.name(), OkvsType.H3_SINGLETON_GCT});
         // H2_SINGLETON_GCT

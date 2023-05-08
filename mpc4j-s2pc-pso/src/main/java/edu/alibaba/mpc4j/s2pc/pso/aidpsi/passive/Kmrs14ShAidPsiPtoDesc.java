@@ -1,4 +1,4 @@
-package edu.alibaba.mpc4j.s2pc.pso.aidpsi.kmrs14;
+package edu.alibaba.mpc4j.s2pc.pso.aidpsi.passive;
 
 import edu.alibaba.mpc4j.common.rpc.desc.PtoDesc;
 import edu.alibaba.mpc4j.common.rpc.desc.PtoDescManager;

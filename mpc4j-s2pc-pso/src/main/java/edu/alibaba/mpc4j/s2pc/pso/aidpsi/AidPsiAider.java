@@ -13,14 +13,18 @@ public interface AidPsiAider extends ThreePartyPto {
     /**
      * Inits the protocol.
      *
+     * @param maxServerElementSize max server element size.
+     * @param maxClientElementSize max client element size.
      * @throws MpcAbortException the protocol failure aborts.
      */
-    void init() throws MpcAbortException;
+    void init(int maxServerElementSize, int maxClientElementSize) throws MpcAbortException;
 
     /**
      * Executes the protocol.
      *
+     * @param serverElementSize server element size.
+     * @param clientElementSize client element size.
      * @throws MpcAbortException the protocol failure aborts.
      */
-    void psi() throws MpcAbortException;
+    void psi(int serverElementSize, int clientElementSize) throws MpcAbortException;
 }

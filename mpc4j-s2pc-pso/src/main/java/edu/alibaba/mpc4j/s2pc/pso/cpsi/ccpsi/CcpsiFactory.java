@@ -2,6 +2,7 @@ package edu.alibaba.mpc4j.s2pc.pso.cpsi.ccpsi;
 
 import edu.alibaba.mpc4j.common.rpc.Party;
 import edu.alibaba.mpc4j.common.rpc.Rpc;
+import edu.alibaba.mpc4j.common.rpc.desc.SecurityModel;
 import edu.alibaba.mpc4j.common.rpc.pto.PtoFactory;
 import edu.alibaba.mpc4j.s2pc.pso.cpsi.ccpsi.cgs22.Cgs22CcpsiClient;
 import edu.alibaba.mpc4j.s2pc.pso.cpsi.ccpsi.cgs22.Cgs22CcpsiConfig;
@@ -81,6 +82,26 @@ public class CcpsiFactory implements PtoFactory {
             case RS21:
             default:
                 throw new IllegalArgumentException("Invalid " + CcpsiType.class.getSimpleName() + ": " + type.name());
+        }
+    }
+
+
+    /**
+     * Creates a default config.
+     *
+     * @param securityModel the security model.
+     * @param silent if using a silent protocol.
+     * @return a default config.
+     */
+    public static CcpsiConfig createDefaultConfig(SecurityModel securityModel, boolean silent) {
+        switch (securityModel) {
+            case IDEAL:
+            case SEMI_HONEST:
+                return new Psty19CcpsiConfig.Builder(silent).build();
+            case COVERT:
+            case MALICIOUS:
+            default:
+                throw new IllegalArgumentException("Invalid " + SecurityModel.class.getSimpleName() + ": " + securityModel.name());
         }
     }
 }

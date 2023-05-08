@@ -6,7 +6,6 @@ import edu.alibaba.mpc4j.common.rpc.desc.PtoDesc;
 import edu.alibaba.mpc4j.common.rpc.pto.AbstractThreePartyPto;
 import edu.alibaba.mpc4j.common.tool.MathPreconditions;
 
-import java.util.ArrayList;
 import java.util.Set;
 
 /**
@@ -24,10 +23,6 @@ public abstract class AbstractAidPsiParty<T> extends AbstractThreePartyPto imple
      * max other element size
      */
     private int maxOtherElementSize;
-    /**
-     * own element array list
-     */
-    protected ArrayList<T> ownElementArrayList;
     /**
      * own element size
      */
@@ -53,7 +48,6 @@ public abstract class AbstractAidPsiParty<T> extends AbstractThreePartyPto imple
         checkInitialized();
         MathPreconditions.checkPositiveInRangeClosed("ownElementSize", ownElementSet.size(), maxOwnElementSize);
         ownElementSize = ownElementSet.size();
-        ownElementArrayList = new ArrayList<>(ownElementSet);
         MathPreconditions.checkPositiveInRangeClosed("otherElementSize", otherElementSize, maxOtherElementSize);
         this.otherElementSize = otherElementSize;
         extraInfo++;

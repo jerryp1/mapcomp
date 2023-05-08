@@ -54,6 +54,7 @@ public class OkvsEfficiencyTest {
     private static final OkvsType[] TYPES = new OkvsType[]{
         // ignore polynomial OKVS because it is too inefficient
         OkvsType.GBF,
+        OkvsType.LPRST21_GBF,
         OkvsType.MEGA_BIN,
         OkvsType.H2_TWO_CORE_GCT,
         OkvsType.H2_DFS_GCT,
