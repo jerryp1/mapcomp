@@ -4,7 +4,6 @@ import edu.alibaba.mpc4j.common.rpc.MpcAbortException;
 import edu.alibaba.mpc4j.common.rpc.pto.TwoPartyPto;
 import edu.alibaba.mpc4j.s2pc.aby.basics.bc.SquareZ2Vector;
 
-import java.nio.ByteBuffer;
 import java.util.Set;
 
 /**
@@ -13,7 +12,7 @@ import java.util.Set;
  * @author Weiran Liu
  * @date 2023/3/29
  */
-public interface ScpsiClient extends TwoPartyPto {
+public interface ScpsiClient<T> extends TwoPartyPto {
     /**
      * Inits the protocol.
      *
@@ -31,5 +30,5 @@ public interface ScpsiClient extends TwoPartyPto {
      * @return the client output.
      * @throws MpcAbortException the protocol failure aborts.
      */
-    SquareZ2Vector psi(Set<ByteBuffer> clientElementSet, int serverElementSize) throws MpcAbortException;
+    SquareZ2Vector psi(Set<T> clientElementSet, int serverElementSize) throws MpcAbortException;
 }

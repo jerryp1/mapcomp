@@ -160,7 +160,7 @@ public class CcpsiMain {
 
     private void warmupServer(Rpc serverRpc, Party clientParty, CcpsiConfig config, int taskId) throws Exception {
         Set<ByteBuffer> serverElementSet = readServerElementSet(WARMUP_SERVER_SET_SIZE, WARMUP_ELEMENT_BYTE_LENGTH);
-        CcpsiServer ccpsiServer = CcpsiFactory.createServer(serverRpc, clientParty, config);
+        CcpsiServer<ByteBuffer> ccpsiServer = CcpsiFactory.createServer(serverRpc, clientParty, config);
         ccpsiServer.setTaskId(taskId);
         ccpsiServer.setParallel(false);
         ccpsiServer.getRpc().synchronize();
@@ -186,7 +186,7 @@ public class CcpsiMain {
             "{}: serverSetSize = {}, clientSetSize = {}, parallel = {}",
             serverRpc.ownParty().getPartyName(), serverSetSize, clientSetSize, true
         );
-        CcpsiServer ccpsiServer = CcpsiFactory.createServer(serverRpc, clientParty, config);
+        CcpsiServer<ByteBuffer> ccpsiServer = CcpsiFactory.createServer(serverRpc, clientParty, config);
         ccpsiServer.setTaskId(taskId);
         ccpsiServer.setParallel(true);
         // 启动测试
@@ -312,7 +312,7 @@ public class CcpsiMain {
 
     private void warmupClient(Rpc clientRpc, Party serverParty, CcpsiConfig config, int taskId) throws Exception {
         Set<ByteBuffer> clientElementSet = readClientElementSet(WARMUP_CLIENT_SET_SIZE, WARMUP_ELEMENT_BYTE_LENGTH);
-        CcpsiClient ccpsiClient = CcpsiFactory.createClient(clientRpc, serverParty, config);
+        CcpsiClient<ByteBuffer> ccpsiClient = CcpsiFactory.createClient(clientRpc, serverParty, config);
         ccpsiClient.setTaskId(taskId);
         ccpsiClient.setParallel(false);
         ccpsiClient.getRpc().synchronize();
@@ -339,7 +339,7 @@ public class CcpsiMain {
             "{}: serverSetSize = {}, clientSetSize = {}, parallel = {}",
             clientRpc.ownParty().getPartyName(), serverSetSize, clientSetSize, true
         );
-        CcpsiClient ccpsiClient = CcpsiFactory.createClient(clientRpc, serverParty, config);
+        CcpsiClient<ByteBuffer> ccpsiClient = CcpsiFactory.createClient(clientRpc, serverParty, config);
         ccpsiClient.setTaskId(taskId);
         ccpsiClient.setParallel(true);
         // 启动测试

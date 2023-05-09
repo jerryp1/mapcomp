@@ -2,6 +2,7 @@ package edu.alibaba.mpc4j.s2pc.pso.cpsi.scpsi.psty19;
 
 import edu.alibaba.mpc4j.common.rpc.desc.SecurityModel;
 import edu.alibaba.mpc4j.common.tool.EnvType;
+import edu.alibaba.mpc4j.common.tool.hashbin.object.cuckoo.CuckooHashBinFactory;
 import edu.alibaba.mpc4j.common.tool.hashbin.object.cuckoo.CuckooHashBinFactory.CuckooHashBinType;
 import edu.alibaba.mpc4j.s2pc.aby.circuit.peqt.PeqtConfig;
 import edu.alibaba.mpc4j.s2pc.aby.circuit.peqt.PeqtFactory;
@@ -40,6 +41,11 @@ public class Psty19ScpsiConfig implements ScpsiConfig {
     @Override
     public ScpsiFactory.ScpsiType getPtoType() {
         return ScpsiFactory.ScpsiType.PSTY19;
+    }
+
+    @Override
+    public int getOutputBitNum(int serverElementSize, int clientElementSize) {
+        return CuckooHashBinFactory.getBinNum(cuckooHashBinType, serverElementSize);
     }
 
     @Override

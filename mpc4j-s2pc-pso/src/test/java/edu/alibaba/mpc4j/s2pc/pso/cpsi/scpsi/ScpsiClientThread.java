@@ -16,7 +16,7 @@ class ScpsiClientThread extends Thread {
     /**
      * client
      */
-    private final ScpsiClient client;
+    private final ScpsiClient<ByteBuffer> client;
     /**
      * client element set
      */
@@ -30,7 +30,7 @@ class ScpsiClientThread extends Thread {
      */
     private SquareZ2Vector clientOutput;
 
-    ScpsiClientThread(ScpsiClient client, Set<ByteBuffer> clientElementSet, int serverElementSize) {
+    ScpsiClientThread(ScpsiClient<ByteBuffer> client, Set<ByteBuffer> clientElementSet, int serverElementSize) {
         this.client = client;
         this.clientElementSet = clientElementSet;
         this.serverElementSize = serverElementSize;

@@ -201,8 +201,8 @@ public class CcpsiTest {
     }
 
     private void testPto(int serverSetSize, int clientSetSize, boolean parallel) {
-        CcpsiServer server = CcpsiFactory.createServer(serverRpc, clientRpc.ownParty(), config);
-        CcpsiClient client = CcpsiFactory.createClient(clientRpc, serverRpc.ownParty(), config);
+        CcpsiServer<ByteBuffer> server = CcpsiFactory.createServer(serverRpc, clientRpc.ownParty(), config);
+        CcpsiClient<ByteBuffer> client = CcpsiFactory.createClient(clientRpc, serverRpc.ownParty(), config);
         server.setParallel(parallel);
         client.setParallel(parallel);
         int randomTaskId = Math.abs(SECURE_RANDOM.nextInt());
@@ -230,7 +230,7 @@ public class CcpsiTest {
             stopWatch.reset();
             // verify
             SquareZ2Vector serverOutput = serverThread.getServerOutput();
-            CcpsiClientOutput clientOutput = clientThread.getClientOutput();
+            CcpsiClientOutput<ByteBuffer> clientOutput = clientThread.getClientOutput();
             assertOutput(serverElementSet, clientElementSet, serverOutput, clientOutput);
             LOGGER.info("Server data_packet_num = {}, payload_bytes = {}B, send_bytes = {}B, time = {}ms",
                 serverRpc.getSendDataPacketNum(), serverRpc.getPayloadByteLength(), serverRpc.getSendByteLength(),
@@ -250,14 +250,16 @@ public class CcpsiTest {
     }
 
     private void assertOutput(Set<ByteBuffer> serverElementSet, Set<ByteBuffer> clientElementSet,
-                              SquareZ2Vector serverOutput, CcpsiClientOutput clientOutput) {
+                              SquareZ2Vector serverOutput, CcpsiClientOutput<ByteBuffer> clientOutput) {
         Set<ByteBuffer> expectIntersectionSet = new HashSet<>(serverElementSet);
         expectIntersectionSet.retainAll(clientElementSet);
-        ByteBuffer[] table = clientOutput.getTable();
+        ArrayList<ByteBuffer> table = clientOutput.getTable();
         BitVector z = serverOutput.getBitVector().xor(clientOutput.getZ1().getBitVector());
         int beta = clientOutput.getBeta();
         for (int i = 0; i < beta; i++) {
-            if (expectIntersectionSet.contains(table[i])) {
+            if (table.get(i) == null) {
+                Assert.assertFalse(z.get(i));
+            } else if (expectIntersectionSet.contains(table.get(i))) {
                 Assert.assertTrue(z.get(i));
             } else {
                 Assert.assertFalse(z.get(i));

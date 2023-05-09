@@ -33,7 +33,7 @@ import java.util.stream.IntStream;
  * @author Weiran Liu
  * @date 2023/4/19
  */
-public class Cgs22CcpsiServer extends AbstractCcpsiServer {
+public class Cgs22CcpsiServer<T> extends AbstractCcpsiServer<T> {
     /**
      * related batched OPPRF sender
      */
@@ -61,7 +61,7 @@ public class Cgs22CcpsiServer extends AbstractCcpsiServer {
     /**
      * simple hash bin
      */
-    private RandomPadHashBin<ByteBuffer> simpleHashBin;
+    private RandomPadHashBin<T> simpleHashBin;
     /**
      * target array
      */
@@ -109,7 +109,7 @@ public class Cgs22CcpsiServer extends AbstractCcpsiServer {
     }
 
     @Override
-    public SquareZ2Vector psi(Set<ByteBuffer> serverElementSet, int clientElementSize) throws MpcAbortException {
+    public SquareZ2Vector psi(Set<T> serverElementSet, int clientElementSize) throws MpcAbortException {
         setPtoInput(serverElementSet, clientElementSize);
         logPhaseInfo(PtoState.PTO_BEGIN);
 
@@ -184,7 +184,7 @@ public class Cgs22CcpsiServer extends AbstractCcpsiServer {
         // P1 generates the input arrays
         inputArrays = IntStream.range(0, beta)
             .mapToObj(batchIndex -> {
-                ArrayList<HashBinEntry<ByteBuffer>> bin = new ArrayList<>(simpleHashBin.getBin(batchIndex));
+                ArrayList<HashBinEntry<T>> bin = new ArrayList<>(simpleHashBin.getBin(batchIndex));
                 return bin.stream()
                     .map(entry -> {
                         byte[] itemBytes = entry.getItemByteArray();

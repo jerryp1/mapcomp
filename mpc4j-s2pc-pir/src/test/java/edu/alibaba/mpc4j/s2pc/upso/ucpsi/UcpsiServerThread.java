@@ -16,7 +16,7 @@ public class UcpsiServerThread extends Thread {
     /**
      * the server
      */
-    private final UcpsiServer server;
+    private final UcpsiServer<ByteBuffer> server;
     /**
      * the server element set
      */
@@ -30,7 +30,7 @@ public class UcpsiServerThread extends Thread {
      */
     private SquareZ2Vector serverOutput;
 
-    UcpsiServerThread(UcpsiServer server, Set<ByteBuffer> serverElementSet, int clientElementSize) {
+    UcpsiServerThread(UcpsiServer<ByteBuffer> server, Set<ByteBuffer> serverElementSet, int clientElementSize) {
         this.server = server;
         this.serverElementSet = serverElementSet;
         this.clientElementSize = clientElementSize;

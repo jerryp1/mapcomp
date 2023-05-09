@@ -35,7 +35,7 @@ import java.util.stream.IntStream;
  * @author Weiran Liu
  * @date 2023/4/20
  */
-public class Cgs22UcpsiServer extends AbstractUcpsiServer {
+public class Cgs22UcpsiServer<T> extends AbstractUcpsiServer<T> {
     /**
      * unbalanced related batch OPPRF sender
      */
@@ -71,7 +71,7 @@ public class Cgs22UcpsiServer extends AbstractUcpsiServer {
     /**
      * simple hash bin
      */
-    private RandomPadHashBin<ByteBuffer> simpleHashBin;
+    private RandomPadHashBin<T> simpleHashBin;
     /**
      * target array
      */
@@ -98,7 +98,7 @@ public class Cgs22UcpsiServer extends AbstractUcpsiServer {
     }
 
     @Override
-    public void init(Set<ByteBuffer> serverElementSet, int maxClientElementSize) throws MpcAbortException {
+    public void init(Set<T> serverElementSet, int maxClientElementSize) throws MpcAbortException {
         setInitInput(serverElementSet, maxClientElementSize);
         logPhaseInfo(PtoState.INIT_BEGIN);
 
@@ -190,7 +190,7 @@ public class Cgs22UcpsiServer extends AbstractUcpsiServer {
         // P1 generates the input arrays
         inputArrays = IntStream.range(0, beta)
             .mapToObj(batchIndex -> {
-                ArrayList<HashBinEntry<ByteBuffer>> bin = new ArrayList<>(simpleHashBin.getBin(batchIndex));
+                ArrayList<HashBinEntry<T>> bin = new ArrayList<>(simpleHashBin.getBin(batchIndex));
                 return bin.stream()
                     .map(entry -> {
                         byte[] itemBytes = entry.getItemByteArray();

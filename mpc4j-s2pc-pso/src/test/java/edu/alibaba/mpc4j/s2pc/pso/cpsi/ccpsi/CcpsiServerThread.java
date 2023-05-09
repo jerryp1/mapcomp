@@ -16,7 +16,7 @@ public class CcpsiServerThread extends Thread {
     /**
      * server
      */
-    private final CcpsiServer server;
+    private final CcpsiServer<ByteBuffer> server;
     /**
      * server element set
      */
@@ -30,7 +30,7 @@ public class CcpsiServerThread extends Thread {
      */
     private SquareZ2Vector serverOutput;
 
-    CcpsiServerThread(CcpsiServer server, Set<ByteBuffer> serverElementSet, int clientElementSize) {
+    CcpsiServerThread(CcpsiServer<ByteBuffer> server, Set<ByteBuffer> serverElementSet, int clientElementSize) {
         this.server = server;
         this.serverElementSet = serverElementSet;
         this.clientElementSize = clientElementSize;

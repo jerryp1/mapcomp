@@ -2,6 +2,7 @@ package edu.alibaba.mpc4j.s2pc.pso.cpsi.scpsi.cgs22;
 
 import edu.alibaba.mpc4j.common.rpc.desc.SecurityModel;
 import edu.alibaba.mpc4j.common.tool.EnvType;
+import edu.alibaba.mpc4j.common.tool.hashbin.object.cuckoo.CuckooHashBinFactory;
 import edu.alibaba.mpc4j.common.tool.hashbin.object.cuckoo.CuckooHashBinFactory.CuckooHashBinType;
 import edu.alibaba.mpc4j.s2pc.opf.opprf.rb.RbopprfConfig;
 import edu.alibaba.mpc4j.s2pc.opf.opprf.rb.RbopprfFactory;
@@ -40,6 +41,11 @@ public class Cgs22ScpsiConfig implements ScpsiConfig {
     @Override
     public ScpsiFactory.ScpsiType getPtoType() {
         return ScpsiFactory.ScpsiType.CGS22;
+    }
+
+    @Override
+    public int getOutputBitNum(int serverElementSize, int clientElementSize) {
+        return CuckooHashBinFactory.getBinNum(cuckooHashBinType, serverElementSize);
     }
 
     @Override

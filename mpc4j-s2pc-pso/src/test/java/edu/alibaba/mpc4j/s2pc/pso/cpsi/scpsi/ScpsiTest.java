@@ -202,8 +202,8 @@ public class ScpsiTest {
     }
 
     public void testPto(int serverSetSize, int clientSetSize, boolean parallel) {
-        ScpsiServer server = ScpsiFactory.createServer(serverRpc, clientRpc.ownParty(), config);
-        ScpsiClient client = ScpsiFactory.createClient(clientRpc, serverRpc.ownParty(), config);
+        ScpsiServer<ByteBuffer> server = ScpsiFactory.createServer(serverRpc, clientRpc.ownParty(), config);
+        ScpsiClient<ByteBuffer> client = ScpsiFactory.createClient(clientRpc, serverRpc.ownParty(), config);
         server.setParallel(parallel);
         client.setParallel(parallel);
         int randomTaskId = Math.abs(SECURE_RANDOM.nextInt());
@@ -230,7 +230,7 @@ public class ScpsiTest {
             long time = stopWatch.getTime(TimeUnit.MILLISECONDS);
             stopWatch.reset();
             // verify
-            ScpsiServerOutput serverOutput = serverThread.getServerOutput();
+            ScpsiServerOutput<ByteBuffer> serverOutput = serverThread.getServerOutput();
             SquareZ2Vector clientOutput = clientThread.getClientOutput();
             assertOutput(serverElementSet, clientElementSet, serverOutput, clientOutput);
             LOGGER.info("Server data_packet_num = {}, payload_bytes = {}B, send_bytes = {}B, time = {}ms",
@@ -251,14 +251,16 @@ public class ScpsiTest {
     }
 
     private void assertOutput(Set<ByteBuffer> serverElementSet, Set<ByteBuffer> clientElementSet,
-                              ScpsiServerOutput serverOutput, SquareZ2Vector clientOutput) {
+                              ScpsiServerOutput<ByteBuffer> serverOutput, SquareZ2Vector clientOutput) {
         Set<ByteBuffer> expectIntersectionSet = new HashSet<>(serverElementSet);
         expectIntersectionSet.retainAll(clientElementSet);
-        ByteBuffer[] table = serverOutput.getTable();
+        ArrayList<ByteBuffer> table = serverOutput.getTable();
         BitVector z = serverOutput.getZ0().getBitVector().xor(clientOutput.getBitVector());
         int beta = serverOutput.getBeta();
         for (int i = 0; i < beta; i++) {
-            if (expectIntersectionSet.contains(table[i])) {
+            if (table.get(i) == null) {
+                Assert.assertFalse(z.get(i));
+            } else if (expectIntersectionSet.contains(table.get(i))) {
                 Assert.assertTrue(z.get(i));
             } else {
                 Assert.assertFalse(z.get(i));

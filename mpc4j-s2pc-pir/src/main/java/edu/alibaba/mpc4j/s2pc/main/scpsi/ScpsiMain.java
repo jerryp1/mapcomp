@@ -160,7 +160,7 @@ public class ScpsiMain {
 
     private void warmupServer(Rpc serverRpc, Party clientParty, ScpsiConfig config, int taskId) throws Exception {
         Set<ByteBuffer> serverElementSet = readServerElementSet(WARMUP_SERVER_SET_SIZE, WARMUP_ELEMENT_BYTE_LENGTH);
-        ScpsiServer scpsiServer = ScpsiFactory.createServer(serverRpc, clientParty, config);
+        ScpsiServer<ByteBuffer> scpsiServer = ScpsiFactory.createServer(serverRpc, clientParty, config);
         scpsiServer.setTaskId(taskId);
         scpsiServer.setParallel(false);
         scpsiServer.getRpc().synchronize();
@@ -186,7 +186,7 @@ public class ScpsiMain {
             "{}: serverSetSize = {}, clientSetSize = {}, parallel = {}",
             serverRpc.ownParty().getPartyName(), serverSetSize, clientSetSize, true
         );
-        ScpsiServer scpsiServer = ScpsiFactory.createServer(serverRpc, clientParty, config);
+        ScpsiServer<ByteBuffer> scpsiServer = ScpsiFactory.createServer(serverRpc, clientParty, config);
         scpsiServer.setTaskId(taskId);
         scpsiServer.setParallel(true);
         // 启动测试
@@ -312,7 +312,7 @@ public class ScpsiMain {
 
     private void warmupClient(Rpc clientRpc, Party serverParty, ScpsiConfig config, int taskId) throws Exception {
         Set<ByteBuffer> clientElementSet = readClientElementSet(WARMUP_CLIENT_SET_SIZE, WARMUP_ELEMENT_BYTE_LENGTH);
-        ScpsiClient scpsiClient = ScpsiFactory.createClient(clientRpc, serverParty, config);
+        ScpsiClient<ByteBuffer> scpsiClient = ScpsiFactory.createClient(clientRpc, serverParty, config);
         scpsiClient.setTaskId(taskId);
         scpsiClient.setParallel(false);
         scpsiClient.getRpc().synchronize();
@@ -339,7 +339,7 @@ public class ScpsiMain {
             "{}: serverSetSize = {}, clientSetSize = {}, parallel = {}",
             clientRpc.ownParty().getPartyName(), serverSetSize, clientSetSize, true
         );
-        ScpsiClient scpsiClient = ScpsiFactory.createClient(clientRpc, serverParty, config);
+        ScpsiClient<ByteBuffer> scpsiClient = ScpsiFactory.createClient(clientRpc, serverParty, config);
         scpsiClient.setTaskId(taskId);
         scpsiClient.setParallel(true);
         // 启动测试
