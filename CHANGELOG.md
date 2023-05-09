@@ -9,13 +9,21 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Added
 
+- `mpc4j-common-circuit`
+  - We abstract `MpcZlVector` and `MpcZlParty`.
 - `mpc4j-s2pc-pcg`
   - We implement coin-tossing protocols with semi-honest and malicious security.
+- `mpc4j-s2pc-opf`
+  - We implement Naor-Ringold OPRF, and OPRP-based OPRF.
+- `mpc4j-s2pc-pso`
+  - We formalize and implement some PSI cardinality protocols, including EC-DH-based, DH-OPRF-based, and circuit-PSI-based.
 
 ### Fixed
 
 - `mpc4j-common-tool`
   - We fixed a bug in CommitFactory. We need to create a commitment scheme with SHA256 hash for STANDARD and with SM3 hash for INLAND.
+- `mpc4j-crypto-matrix`
+  - We fixed a bug for `toString()` in vectors and databases. We need to correctly display the string even if the vector (the database) is empty (with num = 0).
 
 ## \[1.0.7\]
 

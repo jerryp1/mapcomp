@@ -148,7 +148,7 @@ We implement Private Set Operations in `mpc4j-s2pc-pso` and `mpc4j-s2pc-pjc`.
 - Resende, Amanda C. Davi, and Diego F. Aranha. Faster Unbalanced Private Set Intersection. FC 2018, Springer Berlin Heidelberg, pp. 203-221.
 - Albrecht, Martin R., Christian Rechberger, Thomas Schneider, Tyge Tiessen, and Michael Zohner. Ciphers for MPC and FHE. EUROCRYPT 2015, Part I, Springer Berlin Heidelberg, pp. 430-454.
 - Kolesnikov, Vladimir, Ranjit Kumaresan, Mike Rosulek, and Ni Trieu. Efficient Batched Oblivious PRF with Applications to Private Set Intersection. CCS 2016, ACM, pp. 818-829.
-- Huberman, Bernardo A., Matt Franklin, and Tad Hogg. Enhancing Privacy and Trust in Electronic Communities. EC 1999, ACM, pp. 78-86.
+- (PSI version) Huberman, Bernardo A., Matt Franklin, and Tad Hogg. Enhancing Privacy and Trust in Electronic Communities. EC 1999, ACM, pp. 78-86.
 
 ### Circuit PSI
 
@@ -161,3 +161,8 @@ We implement Private Set Operations in `mpc4j-s2pc-pso` and `mpc4j-s2pc-pjc`.
 - Garimella, Gayathri, Payman Mohassel, Mike Rosulek, Saeed Sadeghian, and Jaspal Singh. Private Set Operations from Oblivious Switching. PKC 2021, Cham: Springer International Publishing, pp. 591-617.
 - Kolesnikov, Vladimir, Mike Rosulek, Ni Trieu, and Xiao Wang. Scalable Private Set Union from Symmetric-key Techniques. ASIACRYPT 2019, Part II, Cham: Springer International Publishing, pp. 636-666.
 - Buddhavarapu, Prasad, Andrew Knox, Payman Mohassel, Shubho Sengupta, Erik Taubeneck, and Vlad Vlaskin. Private Matching for Compute. Cryptology ePrint Archive, Paper 2020/599.
+
+### PSI Cardinality
+
+- (PSI Cardinality version) Huberman, Bernardo A., Matt Franklin, and Tad Hogg. Enhancing Privacy and Trust in Electronic Communities. EC 1999, ACM, pp. 78-86.
+- De Cristofaro, Emiliano, Paolo Gasti, and Gene Tsudik. Fast and Private Computation of Cardinality of Set Intersection and Union. CANS 2012, pp. 218-231. Springer Berlin Heidelberg, 2012.

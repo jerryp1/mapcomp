@@ -9,7 +9,7 @@ import edu.alibaba.mpc4j.common.rpc.desc.PtoDescManager;
  * @author Qixian Zhou
  * @date 2023/4/24
  */
-public class CcPsiCaPtoDesc implements PtoDesc {
+class CcPsiCaPtoDesc implements PtoDesc {
     /**
      * protocol ID
      */
