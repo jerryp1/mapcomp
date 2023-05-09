@@ -21,13 +21,13 @@ import java.util.Arrays;
 import java.util.Collection;
 
 /**
- * single plain Zl circuit test.
+ * single plain Zl party test.
  *
  * @author Weiran Liu
  * @date 2023/5/8
  */
 @RunWith(Parameterized.class)
-public class SinglePlainZlTest {
+public class SinglePlainZlPartyTest {
     /**
      * random status
      */
@@ -69,7 +69,7 @@ public class SinglePlainZlTest {
      */
     private final Zl zl;
 
-    public SinglePlainZlTest(String name, Zl zl) {
+    public SinglePlainZlPartyTest(String name, Zl zl) {
         Preconditions.checkArgument(StringUtils.isNotBlank(name));
         this.zl = zl;
     }
@@ -105,64 +105,68 @@ public class SinglePlainZlTest {
     }
 
     private void testPto(int num) {
-        testDyadicOperator(DyadicAcOperator.ADD, num);
-        testDyadicOperator(DyadicAcOperator.SUB, num);
-        testDyadicOperator(DyadicAcOperator.MUL, num);
-        testUnaryOperator(UnaryAcOperator.NEG, num);
+        for (DyadicAcOperator operator : DyadicAcOperator.values()) {
+            testDyadicOperator(operator, num);
+        }
+        for (UnaryAcOperator operator : UnaryAcOperator.values()) {
+            testUnaryOperator(operator, num);
+        }
     }
 
     private void testDyadicOperator(DyadicAcOperator operator, int num) {
         // generate x
-        ZlVector xZlVector = ZlVector.createRandom(zl, num, SECURE_RANDOM);
-        PlainZlVector xPlainZlVector = PlainZlVector.create(xZlVector);
+        ZlVector xVector = ZlVector.createRandom(zl, num, SECURE_RANDOM);
+        PlainZlVector xPlainVector = PlainZlVector.create(xVector);
         // generate y
-        ZlVector yZlVector = ZlVector.createRandom(zl, num, SECURE_RANDOM);
-        PlainZlVector yPlainZlVector = PlainZlVector.create(yZlVector);
+        ZlVector yVector = ZlVector.createRandom(zl, num, SECURE_RANDOM);
+        PlainZlVector yPlainVector = PlainZlVector.create(yVector);
         // create z
-        ZlVector zZlVector;
-        PlainZlVector zPlainZlVector;
+        ZlVector zVector;
+        PlainZlVector zPlainVector;
         // operation
-        PlainZlParty plainZlParty = new PlainZlParty(zl);
+        PlainZlParty plainParty = new PlainZlParty(zl);
+        plainParty.init(num, num);
         switch (operator) {
             case ADD:
-                zZlVector = xZlVector.add(yZlVector);
-                zPlainZlVector = plainZlParty.add(xPlainZlVector, yPlainZlVector);
+                zVector = xVector.add(yVector);
+                zPlainVector = plainParty.add(xPlainVector, yPlainVector);
                 break;
             case SUB:
-                zZlVector = xZlVector.sub(yZlVector);
-                zPlainZlVector = plainZlParty.sub(xPlainZlVector, yPlainZlVector);
+                zVector = xVector.sub(yVector);
+                zPlainVector = plainParty.sub(xPlainVector, yPlainVector);
                 break;
             case MUL:
-                zZlVector = xZlVector.mul(yZlVector);
-                zPlainZlVector = plainZlParty.mul(xPlainZlVector, yPlainZlVector);
+                zVector = xVector.mul(yVector);
+                zPlainVector = plainParty.mul(xPlainVector, yPlainVector);
                 break;
             default:
                 throw new IllegalStateException("Invalid " + DyadicAcOperator.class.getSimpleName() + ": " + operator.name());
         }
         // verify
-        Assert.assertEquals(zZlVector, zPlainZlVector.getZlVector());
+        Assert.assertEquals(zVector, zPlainVector.getZlVector());
     }
 
     @SuppressWarnings("SameParameterValue")
     private void testUnaryOperator(UnaryAcOperator operator, int num) {
         // generate x
-        ZlVector xZlVector = ZlVector.createRandom(zl, num, SECURE_RANDOM);
-        PlainZlVector xPlainZlVector = PlainZlVector.create(xZlVector);
+        ZlVector xVector = ZlVector.createRandom(zl, num, SECURE_RANDOM);
+        PlainZlVector xPlainVector = PlainZlVector.create(xVector);
         // create z
-        ZlVector zZlVector;
-        PlainZlVector zPlainZlVector;
+        ZlVector zVector;
+        PlainZlVector zPlainVector;
         // operation
-        PlainZlParty plainZlParty = new PlainZlParty(zl);
+        PlainZlParty plainParty = new PlainZlParty(zl);
+        plainParty.init(num, num);
         //noinspection SwitchStatementWithTooFewBranches
         switch (operator) {
             case NEG:
-                zZlVector = xZlVector.neg();
-                zPlainZlVector = plainZlParty.neg(xPlainZlVector);
+                zVector = xVector.neg();
+                zPlainVector = plainParty.neg(xPlainVector);
                 break;
             default:
                 throw new IllegalStateException("Invalid " + UnaryAcOperator.class.getSimpleName() + ": " + operator.name());
         }
         // verify
-        Assert.assertEquals(zZlVector, zPlainZlVector.getZlVector());
+        Assert.assertEquals(zVector, zPlainVector.getZlVector());
     }
 }

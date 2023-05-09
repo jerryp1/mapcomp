@@ -51,9 +51,9 @@ public class BatchBcTest {
      */
     private static final int LARGE_BIT_NUM = 1 << 16;
     /**
-     * default vector length
+     * vector length
      */
-    private static final int MAX_VECTOR_LENGTH = 13;
+    private static final int VECTOR_LENGTH = 13;
 
     @Parameterized.Parameters(name = "{0}")
     public static Collection<Object[]> configurations() {
@@ -151,10 +151,12 @@ public class BatchBcTest {
         BcParty receiver = BcFactory.createReceiver(receiverRpc, senderRpc.ownParty(), config);
         sender.setParallel(parallel);
         receiver.setParallel(parallel);
-        testDyadicOperator(sender, receiver, DyadicBcOperator.XOR, bitNum);
-        testDyadicOperator(sender, receiver, DyadicBcOperator.AND, bitNum);
-        testDyadicOperator(sender, receiver, DyadicBcOperator.OR, bitNum);
-        testUnaryOperator(sender, receiver, UnaryBcOperator.NOT, bitNum);
+        for (DyadicBcOperator operator : DyadicBcOperator.values()) {
+            testDyadicOperator(sender, receiver, operator, bitNum);
+        }
+        for (UnaryBcOperator operator : UnaryBcOperator.values()) {
+            testUnaryOperator(sender, receiver, operator, bitNum);
+        }
         sender.destroy();
         receiver.destroy();
     }
@@ -164,7 +166,7 @@ public class BatchBcTest {
         sender.setTaskId(randomTaskId);
         receiver.setTaskId(randomTaskId);
         // generate xs
-        BitVector[] xBitVectors = IntStream.range(0, MAX_VECTOR_LENGTH)
+        BitVector[] xBitVectors = IntStream.range(0, VECTOR_LENGTH)
             .mapToObj(index -> {
                 // sample bitNum in [1, maxBitNum]
                 int bitNum = SECURE_RANDOM.nextInt(maxBitNum) + 1;
@@ -172,7 +174,7 @@ public class BatchBcTest {
             })
             .toArray(BitVector[]::new);
         // generate ys
-        BitVector[] yBitVectors = IntStream.range(0, MAX_VECTOR_LENGTH)
+        BitVector[] yBitVectors = IntStream.range(0, VECTOR_LENGTH)
             .mapToObj(index -> {
                 int bitNum = xBitVectors[index].bitNum();
                 return BitVectorFactory.createRandom(bitNum, SECURE_RANDOM);
@@ -232,7 +234,7 @@ public class BatchBcTest {
         sender.setTaskId(randomTaskId);
         receiver.setTaskId(randomTaskId);
         // generate xs
-        BitVector[] xBitVectors = IntStream.range(0, MAX_VECTOR_LENGTH)
+        BitVector[] xBitVectors = IntStream.range(0, VECTOR_LENGTH)
             .mapToObj(index -> {
                 // sample bitNum in [1, maxBitNum]
                 int bitNum = SECURE_RANDOM.nextInt(maxBitNum) + 1;

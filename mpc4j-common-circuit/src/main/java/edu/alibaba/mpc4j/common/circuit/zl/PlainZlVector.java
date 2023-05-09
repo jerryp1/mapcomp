@@ -4,6 +4,7 @@ import edu.alibaba.mpc4j.common.circuit.MpcVector;
 import edu.alibaba.mpc4j.common.tool.galoisfield.zl.Zl;
 import edu.alibaba.mpc4j.crypto.matrix.vector.ZlVector;
 
+import java.math.BigInteger;
 import java.security.SecureRandom;
 
 /**
@@ -13,6 +14,31 @@ import java.security.SecureRandom;
  * @date 2023/5/8
  */
 public class PlainZlVector implements MpcZlVector {
+    /**
+     * Create a plain Zl vector with the assigned value.
+     *
+     * @param values the assigned values.
+     * @return a plain Zl vector.
+     */
+    public static PlainZlVector create(Zl zl, BigInteger[] values) {
+        PlainZlVector plainZlVector = new PlainZlVector();
+        plainZlVector.zlVector = ZlVector.create(zl, values);
+
+        return plainZlVector;
+    }
+
+    /**
+     * Creates a plain Zl vector with the assigned Zl vector.
+     *
+     * @param zlVector the assigned Zl vector.
+     * @return a plain Zl vector.
+     */
+    public static PlainZlVector create(ZlVector zlVector) {
+        PlainZlVector plainZlVector = new PlainZlVector();
+        plainZlVector.zlVector = zlVector;
+        return plainZlVector;
+    }
+
     /**
      * Create a random plain Zl vector.
      *
@@ -62,18 +88,6 @@ public class PlainZlVector implements MpcZlVector {
     public static PlainZlVector createEmpty(Zl zl) {
         PlainZlVector plainZlVector = new PlainZlVector();
         plainZlVector.zlVector = ZlVector.createEmpty(zl);
-        return plainZlVector;
-    }
-
-    /**
-     * Creates a plain Zl vector with the assigned Zl vector.
-     *
-     * @param zlVector the assigned Zl vector.
-     * @return a plain Zl vector.
-     */
-    public static PlainZlVector create(ZlVector zlVector) {
-        PlainZlVector plainZlVector = new PlainZlVector();
-        plainZlVector.zlVector = zlVector;
         return plainZlVector;
     }
 

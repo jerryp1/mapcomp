@@ -321,7 +321,7 @@ public class ZlVector implements RingVector {
 
     @Override
     public String toString() {
-        String[] stringData = Arrays.stream(Arrays.copyOf(elements, MatrixUtils.DISPLAY_NUM))
+        String[] stringData = Arrays.stream(Arrays.copyOf(elements, Math.min(elements.length, MatrixUtils.DISPLAY_NUM)))
             .map(BigInteger::toString)
             .toArray(String[]::new);
         return this.getClass().getSimpleName() + " (l = " + zl.getL() + "): " + Arrays.toString(stringData);

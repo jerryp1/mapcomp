@@ -39,7 +39,7 @@ public class PlainBcParty implements MpcBcParty {
     }
 
     @Override
-    public void init(int maxRoundBitNum, int updateBitNum) throws MpcAbortException {
+    public void init(int maxRoundBitNum, int updateBitNum) {
         MathPreconditions.checkPositiveInRangeClosed("maxRoundBitNum", maxRoundBitNum, updateBitNum);
         this.maxRoundBitNum = maxRoundBitNum;
     }

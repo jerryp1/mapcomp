@@ -1,5 +1,6 @@
 package edu.alibaba.mpc4j.common.circuit.zl;
 
+import com.google.common.base.Preconditions;
 import edu.alibaba.mpc4j.common.rpc.MpcAbortException;
 import edu.alibaba.mpc4j.common.tool.MathPreconditions;
 import edu.alibaba.mpc4j.common.tool.galoisfield.zl.Zl;
@@ -22,6 +23,10 @@ public class PlainZlParty implements MpcZlParty {
      * maximum num in round.
      */
     private int maxRoundNum;
+    /**
+     * initialized
+     */
+    private boolean initialized;
 
     public PlainZlParty(Zl zl) {
         this.zl = zl;
@@ -48,13 +53,15 @@ public class PlainZlParty implements MpcZlParty {
     }
 
     @Override
-    public void init(int maxRoundNum, int updateNum) throws MpcAbortException {
+    public void init(int maxRoundNum, int updateNum) {
         MathPreconditions.checkPositiveInRangeClosed("maxRoundNum", maxRoundNum, updateNum);
         this.maxRoundNum = maxRoundNum;
+        initialized = true;
     }
 
     @Override
     public PlainZlVector shareOwn(ZlVector xi) {
+        Preconditions.checkArgument(initialized);
         MathPreconditions.checkPositiveInRangeClosed("num", xi.getNum(), maxRoundNum);
         // do nothing
         return null;
@@ -62,6 +69,7 @@ public class PlainZlParty implements MpcZlParty {
 
     @Override
     public PlainZlVector[] shareOwn(ZlVector[] xiArray) {
+        Preconditions.checkArgument(initialized);
         int totalNum = Arrays.stream(xiArray).mapToInt(ZlVector::getNum).sum();
         MathPreconditions.checkPositiveInRangeClosed("totalNum", totalNum, maxRoundNum);
         // do nothing
@@ -70,6 +78,7 @@ public class PlainZlParty implements MpcZlParty {
 
     @Override
     public PlainZlVector shareOther(int num) throws MpcAbortException {
+        Preconditions.checkArgument(initialized);
         MathPreconditions.checkPositiveInRangeClosed("num", num, maxRoundNum);
         // do nothing
         return null;
@@ -77,6 +86,7 @@ public class PlainZlParty implements MpcZlParty {
 
     @Override
     public PlainZlVector[] shareOther(int[] nums) throws MpcAbortException {
+        Preconditions.checkArgument(initialized);
         int totalNums = Arrays.stream(nums).sum();
         MathPreconditions.checkPositiveInRangeClosed("totalNums", totalNums, maxRoundNum);
         // do nothing
@@ -85,6 +95,7 @@ public class PlainZlParty implements MpcZlParty {
 
     @Override
     public ZlVector revealOwn(MpcZlVector xi) throws MpcAbortException {
+        Preconditions.checkArgument(initialized);
         MathPreconditions.checkPositiveInRangeClosed("num", xi.getNum(), maxRoundNum);
         // do nothing
         return null;
@@ -92,6 +103,7 @@ public class PlainZlParty implements MpcZlParty {
 
     @Override
     public ZlVector[] revealOwn(MpcZlVector[] xiArray) throws MpcAbortException {
+        Preconditions.checkArgument(initialized);
         int totalNum = Arrays.stream(xiArray).mapToInt(MpcZlVector::getNum).sum();
         MathPreconditions.checkPositiveInRangeClosed("totalNum", totalNum, maxRoundNum);
         // do nothing
@@ -100,12 +112,14 @@ public class PlainZlParty implements MpcZlParty {
 
     @Override
     public void revealOther(MpcZlVector xi) {
+        Preconditions.checkArgument(initialized);
         MathPreconditions.checkPositiveInRangeClosed("num", xi.getNum(), maxRoundNum);
         // do nothing
     }
 
     @Override
     public void revealOther(MpcZlVector[] xiArray) {
+        Preconditions.checkArgument(initialized);
         int totalNum = Arrays.stream(xiArray).mapToInt(MpcZlVector::getNum).sum();
         MathPreconditions.checkPositiveInRangeClosed("totalNum", totalNum, maxRoundNum);
         // do nothing
@@ -113,6 +127,8 @@ public class PlainZlParty implements MpcZlParty {
 
     @Override
     public PlainZlVector add(MpcZlVector xi, MpcZlVector yi) {
+        Preconditions.checkArgument(initialized);
+        MathPreconditions.checkPositiveInRangeClosed("num", xi.getNum(), maxRoundNum);
         PlainZlVector plainXi = (PlainZlVector) xi;
         PlainZlVector plainYi = (PlainZlVector) yi;
         return PlainZlVector.create(plainXi.getZlVector().add(plainYi.getZlVector()));
@@ -139,6 +155,8 @@ public class PlainZlParty implements MpcZlParty {
 
     @Override
     public PlainZlVector sub(MpcZlVector xi, MpcZlVector yi) {
+        Preconditions.checkArgument(initialized);
+        MathPreconditions.checkPositiveInRangeClosed("num", xi.getNum(), maxRoundNum);
         PlainZlVector plainXi = (PlainZlVector) xi;
         PlainZlVector plainYi = (PlainZlVector) yi;
         return PlainZlVector.create(plainXi.getZlVector().sub(plainYi.getZlVector()));
@@ -165,6 +183,8 @@ public class PlainZlParty implements MpcZlParty {
 
     @Override
     public PlainZlVector neg(MpcZlVector xi) {
+        Preconditions.checkArgument(initialized);
+        MathPreconditions.checkPositiveInRangeClosed("num", xi.getNum(), maxRoundNum);
         PlainZlVector plainXi = (PlainZlVector) xi;
         return PlainZlVector.create(plainXi.getZlVector().neg());
     }
@@ -187,6 +207,8 @@ public class PlainZlParty implements MpcZlParty {
 
     @Override
     public PlainZlVector mul(MpcZlVector xi, MpcZlVector yi) {
+        Preconditions.checkArgument(initialized);
+        MathPreconditions.checkPositiveInRangeClosed("num", xi.getNum(), maxRoundNum);
         PlainZlVector plainXi = (PlainZlVector) xi;
         PlainZlVector plainYi = (PlainZlVector) yi;
         return PlainZlVector.create(plainXi.getZlVector().mul(plainYi.getZlVector()));

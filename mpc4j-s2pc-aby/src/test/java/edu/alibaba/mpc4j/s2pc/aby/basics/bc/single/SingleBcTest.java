@@ -147,10 +147,12 @@ public class SingleBcTest {
         BcParty receiver = BcFactory.createReceiver(receiverRpc, senderRpc.ownParty(), config);
         sender.setParallel(parallel);
         receiver.setParallel(parallel);
-        testDyadicOperator(sender, receiver, DyadicBcOperator.XOR, bitNum);
-        testDyadicOperator(sender, receiver, DyadicBcOperator.AND, bitNum);
-        testDyadicOperator(sender, receiver, DyadicBcOperator.OR, bitNum);
-        testUnaryOperator(sender, receiver, UnaryBcOperator.NOT, bitNum);
+        for (DyadicBcOperator operator : DyadicBcOperator.values()) {
+            testDyadicOperator(sender, receiver, operator, bitNum);
+        }
+        for (UnaryBcOperator operator : UnaryBcOperator.values()) {
+            testUnaryOperator(sender, receiver, operator, bitNum);
+        }
         sender.destroy();
         receiver.destroy();
     }
