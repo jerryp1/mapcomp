@@ -166,3 +166,7 @@ We implement Private Set Operations in `mpc4j-s2pc-pso` and `mpc4j-s2pc-pjc`.
 
 - (PSI Cardinality version) Huberman, Bernardo A., Matt Franklin, and Tad Hogg. Enhancing Privacy and Trust in Electronic Communities. EC 1999, ACM, pp. 78-86.
 - De Cristofaro, Emiliano, Paolo Gasti, and Gene Tsudik. Fast and Private Computation of Cardinality of Set Intersection and Union. CANS 2012, pp. 218-231. Springer Berlin Heidelberg, 2012.
+
+### Other PSO
+
+- Kamara, Seny, Payman Mohassel, Mariana Raykova, and Saeed Sadeghian. Scaling Private Set Intersection to Billion-element Sets. FC 2014, pp. 195-215. Springer Berlin Heidelberg, 2014.

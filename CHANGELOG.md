@@ -17,6 +17,12 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
   - We implement Naor-Ringold OPRF, and OPRP-based OPRF.
 - `mpc4j-s2pc-pso`
   - We formalize and implement some PSI cardinality protocols, including EC-DH-based, DH-OPRF-based, and circuit-PSI-based.
+  - We implement server-aided PSI protocols.
+
+### Changed
+
+- `mpc4j-common-tool`
+  - We refine Filter implementations.
 
 ### Fixed
 
