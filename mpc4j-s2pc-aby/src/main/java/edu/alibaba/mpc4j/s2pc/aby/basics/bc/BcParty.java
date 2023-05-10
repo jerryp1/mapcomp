@@ -70,8 +70,8 @@ public interface BcParty extends TwoPartyPto, MpcBcParty {
             return new SquareZ2Vector[0];
         }
         // share
-        int bitNum = Arrays.stream(bitNums).sum();
-        SquareZ2Vector mergeShareXi = shareOther(bitNum);
+        int totalBitNum = Arrays.stream(bitNums).sum();
+        SquareZ2Vector mergeShareXi = shareOther(totalBitNum);
         // split
         return Arrays.stream(split(mergeShareXi, bitNums))
             .map(vector -> (SquareZ2Vector) vector)
