@@ -85,7 +85,7 @@ public class BcFactory implements PtoFactory {
      * Creates a default config.
      *
      * @param securityModel the security model.
-     * @param silent if using a silent protocol.
+     * @param silent        if using a silent protocol.
      * @return a default config.
      */
     public static BcConfig createDefaultConfig(SecurityModel securityModel, boolean silent) {

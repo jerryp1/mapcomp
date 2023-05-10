@@ -62,7 +62,7 @@ public class Bea91BcReceiver extends AbstractBcParty {
         BitVector x0BitVector = x1.xor(x1BitVector);
         List<byte[]> x0Payload = Collections.singletonList(x0BitVector.getBytes());
         DataPacketHeader x0Header = new DataPacketHeader(
-            encodeTaskId, getPtoDesc().getPtoId(), Bea91BcPtoDesc.PtoStep.RECEIVER_SEND_INPUT_SHARE.ordinal(), inputBitNum,
+            encodeTaskId, getPtoDesc().getPtoId(), PtoStep.RECEIVER_SEND_INPUT_SHARE.ordinal(), extraInfo,
             ownParty().getPartyId(), otherParty().getPartyId()
         );
         rpc.send(DataPacket.fromByteArrayList(x0Header, x0Payload));
@@ -82,7 +82,7 @@ public class Bea91BcReceiver extends AbstractBcParty {
 
         stopWatch.start();
         DataPacketHeader x1Header = new DataPacketHeader(
-            encodeTaskId, getPtoDesc().getPtoId(), PtoStep.SENDER_SEND_INPUT_SHARE.ordinal(), inputBitNum,
+            encodeTaskId, getPtoDesc().getPtoId(), PtoStep.SENDER_SEND_INPUT_SHARE.ordinal(), extraInfo,
             otherParty().getPartyId(), ownParty().getPartyId()
         );
         List<byte[]> x1Payload = rpc.receive(x1Header).getPayload();
@@ -104,12 +104,11 @@ public class Bea91BcReceiver extends AbstractBcParty {
         if (x1.isPlain()) {
             return x1.getBitVector();
         } else {
-            outputBitNum += bitNum;
             logPhaseInfo(PtoState.PTO_BEGIN, "receive share");
 
             stopWatch.start();
             DataPacketHeader x0Header = new DataPacketHeader(
-                encodeTaskId, getPtoDesc().getPtoId(), Bea91BcPtoDesc.PtoStep.SENDER_SEND_OUTPUT_SHARE.ordinal(), outputBitNum,
+                encodeTaskId, getPtoDesc().getPtoId(), PtoStep.SENDER_SEND_OUTPUT_SHARE.ordinal(), extraInfo,
                 otherParty().getPartyId(), ownParty().getPartyId()
             );
             List<byte[]> x0Payload = rpc.receive(x0Header).getPayload();
@@ -131,13 +130,12 @@ public class Bea91BcReceiver extends AbstractBcParty {
         SquareZ2Vector squareX1 = (SquareZ2Vector) x1;
         setRevealOtherInput(squareX1);
         if (!x1.isPlain()) {
-            outputBitNum += bitNum;
             logPhaseInfo(PtoState.PTO_BEGIN, "send share");
 
             stopWatch.start();
             List<byte[]> x1Payload = Collections.singletonList(x1.getBitVector().getBytes());
             DataPacketHeader x1Header = new DataPacketHeader(
-                encodeTaskId, getPtoDesc().getPtoId(), Bea91BcPtoDesc.PtoStep.RECEIVER_SEND_SHARE_OUTPUT.ordinal(), outputBitNum,
+                encodeTaskId, getPtoDesc().getPtoId(), PtoStep.RECEIVER_SEND_SHARE_OUTPUT.ordinal(), extraInfo,
                 ownParty().getPartyId(), otherParty().getPartyId()
             );
             rpc.send(DataPacket.fromByteArrayList(x1Header, x1Payload));
@@ -166,7 +164,6 @@ public class Bea91BcReceiver extends AbstractBcParty {
             return SquareZ2Vector.create(z1BitVector, false);
         } else {
             // x1 and y1 are secret bit vectors, using secret AND.
-            andGateNum += bitNum;
             logPhaseInfo(PtoState.PTO_BEGIN, "and");
 
             stopWatch.start();
@@ -188,7 +185,7 @@ public class Bea91BcReceiver extends AbstractBcParty {
             e1f1Payload.add(e1);
             e1f1Payload.add(f1);
             DataPacketHeader e1f1Header = new DataPacketHeader(
-                encodeTaskId, getPtoDesc().getPtoId(), PtoStep.RECEIVER_SEND_E1_F1.ordinal(), andGateNum,
+                encodeTaskId, getPtoDesc().getPtoId(), PtoStep.RECEIVER_SEND_E1_F1.ordinal(), extraInfo,
                 ownParty().getPartyId(), otherParty().getPartyId()
             );
             rpc.send(DataPacket.fromByteArrayList(e1f1Header, e1f1Payload));
@@ -199,7 +196,7 @@ public class Bea91BcReceiver extends AbstractBcParty {
 
             stopWatch.start();
             DataPacketHeader e0f0Header = new DataPacketHeader(
-                encodeTaskId, getPtoDesc().getPtoId(), Bea91BcPtoDesc.PtoStep.SENDER_SEND_E0_F0.ordinal(), andGateNum,
+                encodeTaskId, getPtoDesc().getPtoId(), PtoStep.SENDER_SEND_E0_F0.ordinal(), extraInfo,
                 otherParty().getPartyId(), ownParty().getPartyId()
             );
             List<byte[]> e0f0Payload = rpc.receive(e0f0Header).getPayload();
@@ -246,7 +243,6 @@ public class Bea91BcReceiver extends AbstractBcParty {
             return squareX1.copy();
         } else {
             // x1 and y1 are secret bit vectors, using secret XOR.
-            xorGateNum += bitNum;
             logPhaseInfo(PtoState.PTO_BEGIN, "xor");
 
             stopWatch.start();
