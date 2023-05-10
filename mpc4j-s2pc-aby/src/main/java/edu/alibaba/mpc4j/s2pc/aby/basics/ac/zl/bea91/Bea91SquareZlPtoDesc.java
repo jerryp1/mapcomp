@@ -4,7 +4,7 @@ import edu.alibaba.mpc4j.common.rpc.desc.PtoDesc;
 import edu.alibaba.mpc4j.common.rpc.desc.PtoDescManager;
 
 /**
- * Bea91 Zl protocol description. The protocol implements multiplication using Beaver's triple presented in the
+ * Bea91 Zl circuit protocol description. The protocol implements multiplication using Beaver's triple presented in the
  * following paper:
  * <p>
  * Beaver, Donald. Efficient multiparty protocols using circuit randomization. CRYPTO 1991, pp. 420-432. Springer,

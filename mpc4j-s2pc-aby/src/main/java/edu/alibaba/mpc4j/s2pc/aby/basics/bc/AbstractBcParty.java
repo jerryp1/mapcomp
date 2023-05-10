@@ -59,15 +59,7 @@ public abstract class AbstractBcParty extends AbstractTwoPartyPto implements BcP
         extraInfo++;
     }
 
-    protected void setAndInput(SquareZ2Vector xi, SquareZ2Vector yi) {
-        checkInitialized();
-        MathPreconditions.checkEqual("xi.bitNum", "yi.bitNum", xi.getNum(), yi.getNum());
-        MathPreconditions.checkPositiveInRangeClosed("bitNum", xi.getNum(), maxRoundBitNum);
-        bitNum = xi.getNum();
-        extraInfo++;
-    }
-
-    protected void setXorInput(SquareZ2Vector xi, SquareZ2Vector yi) {
+    protected void setDyadicOperatorInput(SquareZ2Vector xi, SquareZ2Vector yi) {
         checkInitialized();
         MathPreconditions.checkEqual("xi.bitNum", "yi.bitNum", xi.getNum(), yi.getNum());
         MathPreconditions.checkPositiveInRangeClosed("bitNum", xi.getNum(), maxRoundBitNum);

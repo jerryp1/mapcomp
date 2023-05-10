@@ -38,11 +38,11 @@ public class Rrg21BcReceiver extends AbstractBcParty {
     /**
      * -t1 vector
      */
-    private BitVector negT1BitVector;
+    private BitVector negT1Vector;
     /**
      * s1 vector
      */
-    private BitVector s1BitVector;
+    private BitVector s1Vector;
 
     public Rrg21BcReceiver(Rpc receiverRpc, Party senderParty, Rrg21BcConfig config) {
         super(Rrg21BcPtoDesc.getInstance(), receiverRpc, senderParty, config);
@@ -78,9 +78,9 @@ public class Rrg21BcReceiver extends AbstractBcParty {
         logPhaseInfo(PtoState.PTO_BEGIN, "send share");
 
         stopWatch.start();
-        BitVector x1BitVector = BitVectorFactory.createRandom(bitNum, secureRandom);
-        BitVector x0BitVector = x1.xor(x1BitVector);
-        List<byte[]> x0Payload = Collections.singletonList(x0BitVector.getBytes());
+        BitVector x1Vector = BitVectorFactory.createRandom(bitNum, secureRandom);
+        BitVector x0Vector = x1.xor(x1Vector);
+        List<byte[]> x0Payload = Collections.singletonList(x0Vector.getBytes());
         DataPacketHeader x0Header = new DataPacketHeader(
             encodeTaskId, getPtoDesc().getPtoId(), PtoStep.RECEIVER_SEND_INPUT_SHARE.ordinal(), extraInfo,
             ownParty().getPartyId(), otherParty().getPartyId()
@@ -92,7 +92,7 @@ public class Rrg21BcReceiver extends AbstractBcParty {
         logStepInfo(PtoState.PTO_STEP, 1, 1, shareTime, "send share");
 
         logPhaseInfo(PtoState.PTO_END, "send share");
-        return SquareZ2Vector.create(x1BitVector, false);
+        return SquareZ2Vector.create(x1Vector, false);
     }
 
     @Override
@@ -107,20 +107,20 @@ public class Rrg21BcReceiver extends AbstractBcParty {
         );
         List<byte[]> x1Payload = rpc.receive(x1Header).getPayload();
         MpcAbortPreconditions.checkArgument(x1Payload.size() == 1);
-        BitVector x1BitVector = BitVectorFactory.create(bitNum, x1Payload.get(0));
+        BitVector x1Vector = BitVectorFactory.create(bitNum, x1Payload.get(0));
         stopWatch.stop();
         long shareTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
         stopWatch.reset();
         logStepInfo(PtoState.PTO_STEP, 1, 1, shareTime, "receive share");
 
         logPhaseInfo(PtoState.PTO_END, "receive share");
-        return SquareZ2Vector.create(x1BitVector, false);
+        return SquareZ2Vector.create(x1Vector, false);
     }
 
     @Override
     public BitVector revealOwn(MpcZ2Vector x1) throws MpcAbortException {
-        SquareZ2Vector squareX1 = (SquareZ2Vector) x1;
-        setRevealOwnInput(squareX1);
+        SquareZ2Vector x1SquareVector = (SquareZ2Vector) x1;
+        setRevealOwnInput(x1SquareVector);
         if (x1.isPlain()) {
             return x1.getBitVector();
         } else {
@@ -133,22 +133,22 @@ public class Rrg21BcReceiver extends AbstractBcParty {
             );
             List<byte[]> x0Payload = rpc.receive(x0Header).getPayload();
             MpcAbortPreconditions.checkArgument(x0Payload.size() == 1);
-            BitVector x0BitVector = BitVectorFactory.create(bitNum, x0Payload.get(0));
-            BitVector x1BitVector = x1.getBitVector();
+            BitVector x0Vector = BitVectorFactory.create(bitNum, x0Payload.get(0));
+            BitVector x1Vector = x1.getBitVector();
             stopWatch.stop();
             long revealTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
             stopWatch.reset();
             logStepInfo(PtoState.PTO_STEP, 1, 1, revealTime, "receive share");
 
             logPhaseInfo(PtoState.PTO_END, "receive share");
-            return x0BitVector.xor(x1BitVector);
+            return x0Vector.xor(x1Vector);
         }
     }
 
     @Override
     public void revealOther(MpcZ2Vector x1) {
-        SquareZ2Vector squareX1 = (SquareZ2Vector) x1;
-        setRevealOtherInput(squareX1);
+        SquareZ2Vector x1SquareVector = (SquareZ2Vector) x1;
+        setRevealOtherInput(x1SquareVector);
         if (!x1.isPlain()) {
             logPhaseInfo(PtoState.PTO_BEGIN, "send share");
 
@@ -169,19 +169,52 @@ public class Rrg21BcReceiver extends AbstractBcParty {
     }
 
     @Override
+    public SquareZ2Vector xor(MpcZ2Vector x1, MpcZ2Vector y1) {
+        SquareZ2Vector x1SquareVector = (SquareZ2Vector) x1;
+        SquareZ2Vector y1SquareVector = (SquareZ2Vector) y1;
+        setDyadicOperatorInput(x1SquareVector, y1SquareVector);
+
+        if (x1.isPlain() && y1.isPlain()) {
+            // x1 and y1 are plain bit vector, using plain XOR.
+            BitVector z1Vector = x1.getBitVector().xor(y1.getBitVector());
+            return SquareZ2Vector.create(z1Vector, true);
+        } else if (x1.isPlain()) {
+            // x1 is plain bit vector, y1 is secret bit vector, the receiver copies y1
+            return y1SquareVector.copy();
+        } else if (y1.isPlain()) {
+            // x1 is secret bit vector, y1 is plain bit vector, the receiver copies x1
+            return x1SquareVector.copy();
+        } else {
+            // x1 and y1 are secret bit vectors, using secret XOR.
+            logPhaseInfo(PtoState.PTO_BEGIN, "xor");
+
+            stopWatch.start();
+            BitVector z1Vector = x1.getBitVector().xor(y1.getBitVector());
+            SquareZ2Vector z1SquareVector = SquareZ2Vector.create(z1Vector, false);
+            stopWatch.stop();
+            long z1Time = stopWatch.getTime(TimeUnit.MILLISECONDS);
+            stopWatch.reset();
+            logStepInfo(PtoState.PTO_STEP, 1, 1, z1Time, "xor (gen. z)");
+
+            logPhaseInfo(PtoState.PTO_END, "xor");
+            return z1SquareVector;
+        }
+    }
+
+    @Override
     public SquareZ2Vector and(MpcZ2Vector x1, MpcZ2Vector y1) throws MpcAbortException {
-        SquareZ2Vector squareX1 = (SquareZ2Vector) x1;
-        SquareZ2Vector squareY1 = (SquareZ2Vector) y1;
-        setAndInput(squareX1, squareY1);
+        SquareZ2Vector x1SquareVector = (SquareZ2Vector) x1;
+        SquareZ2Vector y1SquareVector = (SquareZ2Vector) y1;
+        setDyadicOperatorInput(x1SquareVector, y1SquareVector);
 
         if (x1.isPlain() && y1.isPlain()) {
             // x1 and y1 are plain bit vectors, using plain AND.
-            BitVector z1BitVector = x1.getBitVector().and(y1.getBitVector());
-            return SquareZ2Vector.create(z1BitVector, true);
+            BitVector z1Vector = x1.getBitVector().and(y1.getBitVector());
+            return SquareZ2Vector.create(z1Vector, true);
         } else if (x1.isPlain() || y1.isPlain()) {
             // x1 or y1 is plain bit vector, using plain AND.
-            BitVector z1BitVector = x1.getBitVector().and(y1.getBitVector());
-            return SquareZ2Vector.create(z1BitVector, false);
+            BitVector z1Vector = x1.getBitVector().and(y1.getBitVector());
+            return SquareZ2Vector.create(z1Vector, false);
         } else {
             // x1 and y1 are secret bit vectors, using secret AND.
             logPhaseInfo(PtoState.PTO_BEGIN, "and");
@@ -201,7 +234,7 @@ public class Rrg21BcReceiver extends AbstractBcParty {
             logStepInfo(PtoState.PTO_STEP, 1, 4, cotTime);
 
             stopWatch.start();
-            List<byte[]> delta1Payload = generateDelta1(rotSenderOutput, squareY1);
+            List<byte[]> delta1Payload = generateDelta1(rotSenderOutput, y1SquareVector);
             DataPacketHeader delta1Header = new DataPacketHeader(
                 encodeTaskId, getPtoDesc().getPtoId(), PtoStep.RECEIVER_SEND_DELTA1.ordinal(), extraInfo,
                 ownParty().getPartyId(), otherParty().getPartyId()
@@ -226,34 +259,34 @@ public class Rrg21BcReceiver extends AbstractBcParty {
             logStepInfo(PtoState.PTO_STEP, 3, 4, delta0Time);
 
             stopWatch.start();
-            SquareZ2Vector z1 = generateZ1(squareX1, squareY1);
-            negT1BitVector = null;
-            s1BitVector = null;
+            SquareZ2Vector z1SquareVector = generateZ1(x1SquareVector, y1SquareVector);
+            negT1Vector = null;
+            s1Vector = null;
             stopWatch.stop();
             long z1Time = stopWatch.getTime(TimeUnit.MILLISECONDS);
             stopWatch.reset();
             logStepInfo(PtoState.PTO_STEP, 4, 4, z1Time);
 
             logPhaseInfo(PtoState.PTO_END, "and");
-            return z1;
+            return z1SquareVector;
         }
     }
 
-    private List<byte[]> generateDelta1(RotSenderOutput rotSenderOutput, SquareZ2Vector y1) {
-        BitVector y = y1.getBitVector();
-        BitVector t0s = BitVectorFactory.createZeros(bitNum);
-        BitVector t1s = BitVectorFactory.createZeros(bitNum);
+    private List<byte[]> generateDelta1(RotSenderOutput rotSenderOutput, SquareZ2Vector y1SquareVector) {
+        BitVector y1Vector = y1SquareVector.getBitVector();
+        BitVector t0Vector = BitVectorFactory.createZeros(bitNum);
+        BitVector t1Vector = BitVectorFactory.createZeros(bitNum);
         // compute Δr, note that we cannot parallel execute the protocol
         IntStream.range(0, bitNum).forEach(index -> {
-            t0s.set(index, rotSenderOutput.getR0(index)[0] % 2 == 1);
-            t1s.set(index, rotSenderOutput.getR1(index)[0] % 2 == 1);
+            t0Vector.set(index, rotSenderOutput.getR0(index)[0] % 2 == 1);
+            t1Vector.set(index, rotSenderOutput.getR1(index)[0] % 2 == 1);
         });
         // Δ0 = Δ - Δr = Δ ⊕ Δr, where Δ = y1 − 2 * x1 * y1 = y1 ⊕ (0 ☉ x1 ☉ y1) = y1, hence Δ0 = y1 ⊕ Δr
-        BitVector delta1Vector = t0s.xor(t1s);
-        delta1Vector.xori(y);
+        BitVector delta1Vector = t0Vector.xor(t1Vector);
+        delta1Vector.xori(y1Vector);
         List<byte[]> delta1Payload = new LinkedList<>();
         delta1Payload.add(delta1Vector.getBytes());
-        negT1BitVector = t0s.not();
+        negT1Vector = t0Vector.not();
         return delta1Payload;
     }
 
@@ -261,63 +294,30 @@ public class Rrg21BcReceiver extends AbstractBcParty {
         throws MpcAbortException {
         MpcAbortPreconditions.checkArgument(delta0Payload.size() == 1);
         BitVector delta0Vector = BitVectorFactory.create(bitNum, delta0Payload.remove(0));
-        s1BitVector = BitVectorFactory.createZeros(bitNum);
+        s1Vector = BitVectorFactory.createZeros(bitNum);
         IntStream.range(0, bitNum).forEach(index -> {
             boolean x1 = rotReceiverOutput.getChoice(index);
             boolean t1 = rotReceiverOutput.getRb(index)[0] % 2 == 1;
             if (!x1) {
-                s1BitVector.set(index, t1);
+                s1Vector.set(index, t1);
             } else {
-                s1BitVector.set(index, t1 ^ delta0Vector.get(index));
+                s1Vector.set(index, t1 ^ delta0Vector.get(index));
             }
         });
     }
 
-    private SquareZ2Vector generateZ1(SquareZ2Vector x1, SquareZ2Vector y1) {
-        BitVector x = x1.getBitVector();
-        BitVector y = y1.getBitVector();
-        BitVector z1BitVector = BitVectorFactory.createZeros(bitNum);
+    private SquareZ2Vector generateZ1(SquareZ2Vector x1SquareVector, SquareZ2Vector y1SquareVector) {
+        BitVector x1Vector = x1SquareVector.getBitVector();
+        BitVector y1Vector = y1SquareVector.getBitVector();
+        BitVector z1Vector = BitVectorFactory.createZeros(bitNum);
         // x1 * y1 = x1 ☉ y1
-        z1BitVector.xori(x);
-        z1BitVector.andi(y);
+        z1Vector.xori(x1Vector);
+        z1Vector.andi(y1Vector);
         // x1 * y1 + x0 * (y1 − 2 * x1 * y1)
-        z1BitVector.xori(negT1BitVector);
+        z1Vector.xori(negT1Vector);
         // x1 * y1 + x0 * (y1 − 2 * x1 * y1) + x1 * (y0 − 2 * x0 * y0)
-        z1BitVector.xori(s1BitVector);
+        z1Vector.xori(s1Vector);
 
-        return SquareZ2Vector.create(z1BitVector, false);
-    }
-
-    @Override
-    public SquareZ2Vector xor(MpcZ2Vector x1, MpcZ2Vector y1) {
-        SquareZ2Vector squareX1 = (SquareZ2Vector) x1;
-        SquareZ2Vector squareY1 = (SquareZ2Vector) y1;
-        setXorInput(squareX1, squareY1);
-
-        if (x1.isPlain() && y1.isPlain()) {
-            // x1 and y1 are plain bit vector, using plain XOR.
-            BitVector z1BitVector = x1.getBitVector().xor(y1.getBitVector());
-            return SquareZ2Vector.create(z1BitVector, true);
-        } else if (x1.isPlain()) {
-            // x1 is plain bit vector, y1 is secret bit vector, the receiver copies y1
-            return squareY1.copy();
-        } else if (y1.isPlain()) {
-            // x1 is secret bit vector, y1 is plain bit vector, the receiver copies x1
-            return squareX1.copy();
-        } else {
-            // x1 and y1 are secret bit vectors, using secret XOR.
-            logPhaseInfo(PtoState.PTO_BEGIN, "xor");
-
-            stopWatch.start();
-            BitVector z1BitVector = x1.getBitVector().xor(y1.getBitVector());
-            SquareZ2Vector squareZ1 = SquareZ2Vector.create(z1BitVector, false);
-            stopWatch.stop();
-            long z1Time = stopWatch.getTime(TimeUnit.MILLISECONDS);
-            stopWatch.reset();
-            logStepInfo(PtoState.PTO_STEP, 1, 1, z1Time, "xor (gen. z)");
-
-            logPhaseInfo(PtoState.PTO_END, "xor");
-            return squareZ1;
-        }
+        return SquareZ2Vector.create(z1Vector, false);
     }
 }

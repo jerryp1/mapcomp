@@ -20,9 +20,9 @@ import java.util.concurrent.TimeUnit;
  */
 public class CacheZ2MtgReceiver extends AbstractZ2MtgParty {
     /**
-     * Z2 core multiplication triple generator
+     * core multiplication triple generator
      */
-    private final Z2CoreMtgParty z2CoreMtgReceiver;
+    private final Z2CoreMtgParty coreMtgReceiver;
     /**
      * max base num
      */
@@ -42,10 +42,10 @@ public class CacheZ2MtgReceiver extends AbstractZ2MtgParty {
 
     public CacheZ2MtgReceiver(Rpc receiverRpc, Party senderParty, CacheZ2MtgConfig config) {
         super(CacheZ2MtgPtoDesc.getInstance(), receiverRpc, senderParty, config);
-        Z2CoreMtgConfig z2CoreMtgConfig = config.getZ2CoreMtgConfig();
-        z2CoreMtgReceiver = Z2CoreMtgFactory.createReceiver(receiverRpc, senderParty, z2CoreMtgConfig);
-        addSubPtos(z2CoreMtgReceiver);
-        maxBaseNum = z2CoreMtgConfig.maxNum();
+        Z2CoreMtgConfig coreMtgConfig = config.getCoreMtgConfig();
+        coreMtgReceiver = Z2CoreMtgFactory.createReceiver(receiverRpc, senderParty, coreMtgConfig);
+        addSubPtos(coreMtgReceiver);
+        maxBaseNum = coreMtgConfig.maxNum();
     }
 
     @Override
@@ -63,7 +63,7 @@ public class CacheZ2MtgReceiver extends AbstractZ2MtgParty {
             updateRoundNum = maxBaseNum;
             updateRound = (int) Math.ceil((double) updateNum / maxBaseNum);
         }
-        z2CoreMtgReceiver.init(updateRoundNum);
+        coreMtgReceiver.init(updateRoundNum);
         tripleBuffer = Z2Triple.createEmpty();
         stopWatch.stop();
         long initTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
@@ -82,7 +82,7 @@ public class CacheZ2MtgReceiver extends AbstractZ2MtgParty {
             // generate if we do not have enough triples
             for (int round = 1; round <= updateRound; round++) {
                 stopWatch.start();
-                Z2Triple triple = z2CoreMtgReceiver.generate(updateRoundNum);
+                Z2Triple triple = coreMtgReceiver.generate(updateRoundNum);
                 tripleBuffer.merge(triple);
                 stopWatch.stop();
                 long roundTime = stopWatch.getTime(TimeUnit.MILLISECONDS);

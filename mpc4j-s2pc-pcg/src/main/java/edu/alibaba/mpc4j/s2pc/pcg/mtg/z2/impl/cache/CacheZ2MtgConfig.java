@@ -15,16 +15,16 @@ import edu.alibaba.mpc4j.s2pc.pcg.mtg.z2.core.Z2CoreMtgFactory;
  */
 public class CacheZ2MtgConfig implements Z2MtgConfig {
     /**
-     * Z2 core multiplication triple generator config
+     * core multiplication triple generator config
      */
-    private final Z2CoreMtgConfig z2CoreMtgConfig;
+    private final Z2CoreMtgConfig coreMtgConfig;
 
     private CacheZ2MtgConfig(Builder builder) {
-        z2CoreMtgConfig = builder.z2CoreMtgConfig;
+        coreMtgConfig = builder.coreMtgConfig;
     }
 
-    public Z2CoreMtgConfig getZ2CoreMtgConfig() {
-        return z2CoreMtgConfig;
+    public Z2CoreMtgConfig getCoreMtgConfig() {
+        return coreMtgConfig;
     }
 
     @Override
@@ -34,31 +34,31 @@ public class CacheZ2MtgConfig implements Z2MtgConfig {
 
     @Override
     public void setEnvType(EnvType envType) {
-        z2CoreMtgConfig.setEnvType(envType);
+        coreMtgConfig.setEnvType(envType);
     }
 
     @Override
     public EnvType getEnvType() {
-        return z2CoreMtgConfig.getEnvType();
+        return coreMtgConfig.getEnvType();
     }
 
     @Override
     public SecurityModel getSecurityModel() {
-        return z2CoreMtgConfig.getSecurityModel();
+        return coreMtgConfig.getSecurityModel();
     }
 
     public static class Builder implements org.apache.commons.lang3.builder.Builder<CacheZ2MtgConfig> {
         /**
-         * Z2 core multiplication triple generator config
+         * core multiplication triple generator config
          */
-        private Z2CoreMtgConfig z2CoreMtgConfig;
+        private Z2CoreMtgConfig coreMtgConfig;
 
         public Builder(SecurityModel securityModel) {
-            z2CoreMtgConfig = Z2CoreMtgFactory.createDefaultConfig(securityModel, true);
+            coreMtgConfig = Z2CoreMtgFactory.createDefaultConfig(securityModel, true);
         }
 
-        public Builder setZ2CoreMtgConfig(Z2CoreMtgConfig z2CoreMtgConfig) {
-            this.z2CoreMtgConfig = z2CoreMtgConfig;
+        public Builder setCoreMtgConfig(Z2CoreMtgConfig coreMtgConfig) {
+            this.coreMtgConfig = coreMtgConfig;
             return this;
         }
 

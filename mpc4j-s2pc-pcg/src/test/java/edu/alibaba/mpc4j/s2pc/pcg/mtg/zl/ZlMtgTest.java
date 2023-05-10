@@ -12,6 +12,7 @@ import edu.alibaba.mpc4j.common.tool.galoisfield.zl.ZlFactory;
 import edu.alibaba.mpc4j.common.tool.utils.LongUtils;
 import edu.alibaba.mpc4j.s2pc.pcg.mtg.zl.ZlMtgFactory.ZlMtgType;
 import edu.alibaba.mpc4j.s2pc.pcg.mtg.zl.impl.cache.CacheZlMtgConfig;
+import edu.alibaba.mpc4j.s2pc.pcg.mtg.zl.impl.offline.OfflineZlMtgConfig;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.time.StopWatch;
 import org.junit.After;
@@ -40,8 +41,6 @@ public class ZlMtgTest {
      * the random state
      */
     private static final SecureRandom SECURE_RANDOM = new SecureRandom();
-
-
     /**
      * default num
      */
@@ -64,6 +63,11 @@ public class ZlMtgTest {
         };
         for (Zl zl : zls) {
             int l = zl.getL();
+            // OFFLINE (Semi-honest)
+            configurations.add(new Object[]{
+                ZlMtgType.OFFLINE.name() + " (l = " + l + ", " + SecurityModel.SEMI_HONEST + ")",
+                new OfflineZlMtgConfig.Builder(SecurityModel.SEMI_HONEST, zl).build(),
+            });
             // CACHE (Semi-honest)
             configurations.add(new Object[]{
                 ZlMtgType.CACHE.name() + " (l = " + l + ", " + SecurityModel.SEMI_HONEST + ")",

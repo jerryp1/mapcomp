@@ -27,6 +27,14 @@ public abstract class AbstractSquareZlParty extends AbstractTwoPartyPto implemen
      */
     protected final Zl zl;
     /**
+     * l
+     */
+    protected final int l;
+    /**
+     * l in bytes
+     */
+    protected final int byteL;
+    /**
      * maximum num in round.
      */
     protected int maxRoundNum;
@@ -42,6 +50,8 @@ public abstract class AbstractSquareZlParty extends AbstractTwoPartyPto implemen
     public AbstractSquareZlParty(PtoDesc ptoDesc, Rpc ownRpc, Party otherParty, SquareZlConfig config) {
         super(ptoDesc, ownRpc, otherParty, config);
         this.zl = config.getZl();
+        l = zl.getL();
+        byteL = zl.getByteL();
     }
 
     protected void setInitInput(int maxRoundNum, int updateNum) {
@@ -116,6 +126,11 @@ public abstract class AbstractSquareZlParty extends AbstractTwoPartyPto implemen
     @Override
     public SquareZlVector[] mul(MpcZlVector[] xiArray, MpcZlVector[] yiArray) throws MpcAbortException {
         return operate(DyadicAcOperator.MUL, xiArray, yiArray);
+    }
+
+    @Override
+    public SquareZlVector neg(MpcZlVector xi) throws MpcAbortException {
+        return sub(createZeros(num), xi);
     }
 
     @Override

@@ -1,4 +1,4 @@
-package edu.alibaba.mpc4j.s2pc.pcg.mtg.zl.impl.cache;
+package edu.alibaba.mpc4j.s2pc.pcg.mtg.zl.impl.offline;
 
 import edu.alibaba.mpc4j.common.rpc.desc.SecurityModel;
 import edu.alibaba.mpc4j.common.tool.EnvType;
@@ -9,18 +9,18 @@ import edu.alibaba.mpc4j.s2pc.pcg.mtg.zl.core.ZlCoreMtgConfig;
 import edu.alibaba.mpc4j.s2pc.pcg.mtg.zl.core.ZlCoreMtgFactory;
 
 /**
- * cache Zl multiplication triple generator config.
+ * offline Zl multiplication triple generator config.
  *
  * @author Weiran Liu
  * @date 2023/5/10
  */
-public class CacheZlMtgConfig implements ZlMtgConfig {
+public class OfflineZlMtgConfig implements ZlMtgConfig {
     /**
      * core multiplication triple generator config
      */
     private final ZlCoreMtgConfig coreMtgConfig;
 
-    private CacheZlMtgConfig(Builder builder) {
+    private OfflineZlMtgConfig(Builder builder) {
         coreMtgConfig = builder.coreMtgConfig;
     }
 
@@ -30,7 +30,7 @@ public class CacheZlMtgConfig implements ZlMtgConfig {
 
     @Override
     public ZlMtgFactory.ZlMtgType getPtoType() {
-        return ZlMtgFactory.ZlMtgType.CACHE;
+        return ZlMtgFactory.ZlMtgType.OFFLINE;
     }
 
     @Override
@@ -53,7 +53,7 @@ public class CacheZlMtgConfig implements ZlMtgConfig {
         return coreMtgConfig.getSecurityModel();
     }
 
-    public static class Builder implements org.apache.commons.lang3.builder.Builder<CacheZlMtgConfig> {
+    public static class Builder implements org.apache.commons.lang3.builder.Builder<OfflineZlMtgConfig> {
         /**
          * core multiplication triple generator config
          */
@@ -69,8 +69,8 @@ public class CacheZlMtgConfig implements ZlMtgConfig {
         }
 
         @Override
-        public CacheZlMtgConfig build() {
-            return new CacheZlMtgConfig(this);
+        public OfflineZlMtgConfig build() {
+            return new OfflineZlMtgConfig(this);
         }
     }
 }

@@ -20,9 +20,9 @@ import java.util.concurrent.TimeUnit;
  */
 public class CacheZlMtgSender extends AbstractZlMtgParty {
     /**
-     * Zl core multiplication triple generator
+     * core multiplication triple generator
      */
-    private final ZlCoreMtgParty zlCoreMtgSender;
+    private final ZlCoreMtgParty coreMtgSender;
     /**
      * max base num
      */
@@ -42,10 +42,10 @@ public class CacheZlMtgSender extends AbstractZlMtgParty {
 
     public CacheZlMtgSender(Rpc senderRpc, Party receiverParty, CacheZlMtgConfig config) {
         super(CacheZlMtgPtoDesc.getInstance(), senderRpc, receiverParty, config);
-        ZlCoreMtgConfig z2CoreMtgConfig = config.getZlCoreMtgConfig();
-        zlCoreMtgSender = ZlCoreMtgFactory.createSender(senderRpc, receiverParty, z2CoreMtgConfig);
-        addSubPtos(zlCoreMtgSender);
-        maxBaseNum = z2CoreMtgConfig.maxNum();
+        ZlCoreMtgConfig coreMtgConfig = config.getCoreMtgConfig();
+        coreMtgSender = ZlCoreMtgFactory.createSender(senderRpc, receiverParty, coreMtgConfig);
+        addSubPtos(coreMtgSender);
+        maxBaseNum = coreMtgConfig.maxNum();
     }
 
     @Override
@@ -63,7 +63,7 @@ public class CacheZlMtgSender extends AbstractZlMtgParty {
             updateRoundNum = maxBaseNum;
             updateRound = (int)Math.ceil((double) updateNum / maxBaseNum);
         }
-        zlCoreMtgSender.init(updateRoundNum);
+        coreMtgSender.init(updateRoundNum);
         tripleBuffer = ZlTriple.createEmpty(zl);
         stopWatch.stop();
         long initTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
@@ -82,7 +82,7 @@ public class CacheZlMtgSender extends AbstractZlMtgParty {
             // generate if we do not have enough triples
             for (int round = 1; round <= updateRound; round++) {
                 stopWatch.start();
-                ZlTriple triple = zlCoreMtgSender.generate(updateRoundNum);
+                ZlTriple triple = coreMtgSender.generate(updateRoundNum);
                 tripleBuffer.merge(triple);
                 stopWatch.stop();
                 long roundTime = stopWatch.getTime(TimeUnit.MILLISECONDS);

@@ -9,23 +9,23 @@ import edu.alibaba.mpc4j.s2pc.pcg.mtg.zl.ZlMtgConfig;
 import edu.alibaba.mpc4j.s2pc.pcg.mtg.zl.ZlMtgFactory;
 
 /**
- * Bea91 Zl protocol config.
+ * Bea91 Zl circuit config.
  *
  * @author Weiran Liu
  * @date 2023/5/10
  */
 public class Bea91SquareZlConfig implements SquareZlConfig {
     /**
-     * Zl triple generation config
+     * multiplication triple generation config
      */
-    private final ZlMtgConfig zlMtgConfig;
+    private final ZlMtgConfig mtgConfig;
 
     private Bea91SquareZlConfig(Builder builder) {
-        zlMtgConfig = builder.zlMtgConfig;
+        mtgConfig = builder.mtgConfig;
     }
 
-    public ZlMtgConfig getZlMtgConfig() {
-        return zlMtgConfig;
+    public ZlMtgConfig getMtgConfig() {
+        return mtgConfig;
     }
 
     @Override
@@ -35,40 +35,40 @@ public class Bea91SquareZlConfig implements SquareZlConfig {
 
     @Override
     public Zl getZl() {
-        return zlMtgConfig.getZl();
+        return mtgConfig.getZl();
     }
 
     @Override
     public void setEnvType(EnvType envType) {
-        zlMtgConfig.setEnvType(envType);
+        mtgConfig.setEnvType(envType);
     }
 
     @Override
     public EnvType getEnvType() {
-        return zlMtgConfig.getEnvType();
+        return mtgConfig.getEnvType();
     }
 
     @Override
     public SecurityModel getSecurityModel() {
         SecurityModel securityModel = SecurityModel.SEMI_HONEST;
-        if (zlMtgConfig.getSecurityModel().compareTo(securityModel) < 0) {
-            securityModel = zlMtgConfig.getSecurityModel();
+        if (mtgConfig.getSecurityModel().compareTo(securityModel) < 0) {
+            securityModel = mtgConfig.getSecurityModel();
         }
         return securityModel;
     }
 
     public static class Builder implements org.apache.commons.lang3.builder.Builder<Bea91SquareZlConfig> {
         /**
-         * Boolean triple generation config
+         * multiplication triple generation config
          */
-        private ZlMtgConfig zlMtgConfig;
+        private ZlMtgConfig mtgConfig;
 
         public Builder(Zl zl) {
-            zlMtgConfig = ZlMtgFactory.createDefaultConfig(SecurityModel.SEMI_HONEST, zl);
+            mtgConfig = ZlMtgFactory.createDefaultConfig(SecurityModel.SEMI_HONEST, zl);
         }
 
-        public Builder setZlMtgConfig(ZlMtgConfig zlMtgConfig) {
-            this.zlMtgConfig = zlMtgConfig;
+        public Builder setMtgConfig(ZlMtgConfig mtgConfig) {
+            this.mtgConfig = mtgConfig;
             return this;
         }
 

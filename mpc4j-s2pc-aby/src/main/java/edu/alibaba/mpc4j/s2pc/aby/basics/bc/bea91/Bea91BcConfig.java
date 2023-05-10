@@ -23,7 +23,7 @@ public class Bea91BcConfig implements BcConfig {
         z2MtgConfig = builder.z2MtgConfig;
     }
 
-    public Z2MtgConfig getZ2MtgConfig() {
+    public Z2MtgConfig getMtgConfig() {
         return z2MtgConfig;
     }
 

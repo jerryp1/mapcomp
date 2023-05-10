@@ -1,28 +1,28 @@
-package edu.alibaba.mpc4j.s2pc.pcg.mtg.z2.impl.cache;
+package edu.alibaba.mpc4j.s2pc.pcg.mtg.zl.impl.offline;
 
 import edu.alibaba.mpc4j.common.rpc.MpcAbortException;
 import edu.alibaba.mpc4j.common.rpc.Party;
 import edu.alibaba.mpc4j.common.rpc.PtoState;
 import edu.alibaba.mpc4j.common.rpc.Rpc;
-import edu.alibaba.mpc4j.s2pc.pcg.mtg.z2.AbstractZ2MtgParty;
-import edu.alibaba.mpc4j.s2pc.pcg.mtg.z2.Z2Triple;
-import edu.alibaba.mpc4j.s2pc.pcg.mtg.z2.core.Z2CoreMtgConfig;
-import edu.alibaba.mpc4j.s2pc.pcg.mtg.z2.core.Z2CoreMtgFactory;
-import edu.alibaba.mpc4j.s2pc.pcg.mtg.z2.core.Z2CoreMtgParty;
+import edu.alibaba.mpc4j.s2pc.pcg.mtg.zl.AbstractZlMtgParty;
+import edu.alibaba.mpc4j.s2pc.pcg.mtg.zl.ZlTriple;
+import edu.alibaba.mpc4j.s2pc.pcg.mtg.zl.core.ZlCoreMtgConfig;
+import edu.alibaba.mpc4j.s2pc.pcg.mtg.zl.core.ZlCoreMtgFactory;
+import edu.alibaba.mpc4j.s2pc.pcg.mtg.zl.core.ZlCoreMtgParty;
 
 import java.util.concurrent.TimeUnit;
 
 /**
- * cache Z2 multiplication triple generator sender.
+ * offline Zl multiplication triple generator sender.
  *
  * @author Weiran Liu
- * @date 2022/7/14
+ * @date 2023/5/10
  */
-public class CacheZ2MtgSender extends AbstractZ2MtgParty {
+public class OfflineZlMtgSender extends AbstractZlMtgParty {
     /**
      * core multiplication triple generator
      */
-    private final Z2CoreMtgParty coreMtgSender;
+    private final ZlCoreMtgParty coreMtgSender;
     /**
      * max base num
      */
@@ -32,18 +32,18 @@ public class CacheZ2MtgSender extends AbstractZ2MtgParty {
      */
     private int updateRoundNum;
     /**
-     * number of rounds per update
+     * round per update
      */
     private int updateRound;
     /**
      * triple buffer
      */
-    private Z2Triple tripleBuffer;
+    private ZlTriple tripleBuffer;
 
-    public CacheZ2MtgSender(Rpc senderRpc, Party receiverParty, CacheZ2MtgConfig config) {
-        super(CacheZ2MtgPtoDesc.getInstance(), senderRpc, receiverParty, config);
-        Z2CoreMtgConfig coreMtgConfig = config.getCoreMtgConfig();
-        coreMtgSender = Z2CoreMtgFactory.createSender(senderRpc, receiverParty, coreMtgConfig);
+    public OfflineZlMtgSender(Rpc senderRpc, Party receiverParty, OfflineZlMtgConfig config) {
+        super(OfflineZlMtgPtoDesc.getInstance(), senderRpc, receiverParty, config);
+        ZlCoreMtgConfig coreMtgConfig = config.getCoreMtgConfig();
+        coreMtgSender = ZlCoreMtgFactory.createSender(senderRpc, receiverParty, coreMtgConfig);
         addSubPtos(coreMtgSender);
         maxBaseNum = coreMtgConfig.maxNum();
     }
@@ -61,20 +61,31 @@ public class CacheZ2MtgSender extends AbstractZ2MtgParty {
         } else {
             // we need to run multiple rounds
             updateRoundNum = maxBaseNum;
-            updateRound = (int)Math.ceil((double) updateNum / maxBaseNum);
+            updateRound = (int) Math.ceil((double) updateNum / maxBaseNum);
         }
         coreMtgSender.init(updateRoundNum);
-        tripleBuffer = Z2Triple.createEmpty();
+        tripleBuffer = ZlTriple.createEmpty(zl);
         stopWatch.stop();
         long initTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
         stopWatch.reset();
-        logStepInfo(PtoState.INIT_STEP, 1, 1, initTime);
+        logStepInfo(PtoState.INIT_STEP, 1, 2, initTime);
+
+        // generate triple in offline phase
+        for (int round = 1; round <= updateRound; round++) {
+            stopWatch.start();
+            ZlTriple triple = coreMtgSender.generate(updateRoundNum);
+            tripleBuffer.merge(triple);
+            stopWatch.stop();
+            long roundTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
+            stopWatch.reset();
+            logSubStepInfo(PtoState.INIT_STEP, 2, round, updateRound, roundTime);
+        }
 
         logPhaseInfo(PtoState.INIT_END);
     }
 
     @Override
-    public Z2Triple generate(int num) throws MpcAbortException {
+    public ZlTriple generate(int num) throws MpcAbortException {
         setPtoInput(num);
         logPhaseInfo(PtoState.PTO_BEGIN);
 
@@ -82,7 +93,7 @@ public class CacheZ2MtgSender extends AbstractZ2MtgParty {
             // generate if we do not have enough triples
             for (int round = 1; round <= updateRound; round++) {
                 stopWatch.start();
-                Z2Triple triple = coreMtgSender.generate(updateRoundNum);
+                ZlTriple triple = coreMtgSender.generate(updateRoundNum);
                 tripleBuffer.merge(triple);
                 stopWatch.stop();
                 long roundTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
@@ -92,7 +103,7 @@ public class CacheZ2MtgSender extends AbstractZ2MtgParty {
         }
 
         stopWatch.start();
-        Z2Triple senderOutput = tripleBuffer.split(num);
+        ZlTriple senderOutput = tripleBuffer.split(num);
         stopWatch.stop();
         long splitTripleTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
         stopWatch.reset();

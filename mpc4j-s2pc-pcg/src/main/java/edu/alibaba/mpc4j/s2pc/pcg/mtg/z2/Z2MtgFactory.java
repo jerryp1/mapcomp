@@ -89,7 +89,7 @@ public class Z2MtgFactory implements PtoFactory {
      */
     public static Z2MtgConfig createDefaultConfig(SecurityModel securityModel, boolean silent) {
         return new CacheZ2MtgConfig.Builder(securityModel)
-            .setZ2CoreMtgConfig(Z2CoreMtgFactory.createDefaultConfig(securityModel, silent))
+            .setCoreMtgConfig(Z2CoreMtgFactory.createDefaultConfig(securityModel, silent))
             .build();
     }
 }

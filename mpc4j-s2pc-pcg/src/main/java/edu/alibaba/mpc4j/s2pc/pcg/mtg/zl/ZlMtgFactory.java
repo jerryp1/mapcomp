@@ -8,6 +8,9 @@ import edu.alibaba.mpc4j.common.tool.galoisfield.zl.Zl;
 import edu.alibaba.mpc4j.s2pc.pcg.mtg.zl.impl.cache.CacheZlMtgConfig;
 import edu.alibaba.mpc4j.s2pc.pcg.mtg.zl.impl.cache.CacheZlMtgReceiver;
 import edu.alibaba.mpc4j.s2pc.pcg.mtg.zl.impl.cache.CacheZlMtgSender;
+import edu.alibaba.mpc4j.s2pc.pcg.mtg.zl.impl.offline.OfflineZlMtgConfig;
+import edu.alibaba.mpc4j.s2pc.pcg.mtg.zl.impl.offline.OfflineZlMtgReceiver;
+import edu.alibaba.mpc4j.s2pc.pcg.mtg.zl.impl.offline.OfflineZlMtgSender;
 
 /**
  * Zl multiplication triple generator factory.
@@ -51,6 +54,7 @@ public class ZlMtgFactory implements PtoFactory {
             case CACHE:
                 return new CacheZlMtgSender(senderRpc, receiverParty, (CacheZlMtgConfig) config);
             case OFFLINE:
+                return new OfflineZlMtgSender(senderRpc, receiverParty, (OfflineZlMtgConfig) config);
             default:
                 throw new IllegalArgumentException("Invalid " + ZlMtgType.class.getSimpleName() + ": " + type.name());
         }
@@ -70,6 +74,7 @@ public class ZlMtgFactory implements PtoFactory {
             case CACHE:
                 return new CacheZlMtgReceiver(receiverRpc, senderParty, (CacheZlMtgConfig) config);
             case OFFLINE:
+                return new OfflineZlMtgReceiver(receiverRpc, senderParty, (OfflineZlMtgConfig) config);
             default:
                 throw new IllegalArgumentException("Invalid " + ZlMtgType.class.getSimpleName() + ": " + type.name());
         }
