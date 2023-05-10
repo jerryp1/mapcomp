@@ -11,6 +11,8 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 - `mpc4j-common-circuit`
   - We abstract `MpcZlVector` and `MpcZlParty`.
+- `mpc4j-common-tool`
+  - We add a new BitVector named `CombinedBitVector` that tries its best to support efficient BitVector operations. Now users can use `CombinedBitVector` for all cases.
 - `mpc4j-s2pc-pcg`
   - We implement coin-tossing protocols with semi-honest and malicious security.
 - `mpc4j-s2pc-opf`

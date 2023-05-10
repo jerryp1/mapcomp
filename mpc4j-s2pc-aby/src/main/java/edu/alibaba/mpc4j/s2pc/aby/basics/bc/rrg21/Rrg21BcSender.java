@@ -243,8 +243,8 @@ public class Rrg21BcSender extends AbstractBcParty {
 
     private List<byte[]> generateDelta0(RotSenderOutput rotSenderOutput, SquareZ2Vector y0) {
         BitVector y = y0.getBitVector();
-        BitVector s0s = BitVectorFactory.createZeros(BitVectorFactory.BitVectorType.BYTES_BIT_VECTOR, bitNum);
-        BitVector s1s = BitVectorFactory.createZeros(BitVectorFactory.BitVectorType.BYTES_BIT_VECTOR, bitNum);
+        BitVector s0s = BitVectorFactory.createZeros(bitNum);
+        BitVector s1s = BitVectorFactory.createZeros(bitNum);
         // compute Δr, note that we cannot parallel execute the protocol
         IntStream.range(0, bitNum).forEach(index -> {
             s0s.set(index, rotSenderOutput.getR0(index)[0] % 2 == 1);
@@ -262,10 +262,8 @@ public class Rrg21BcSender extends AbstractBcParty {
     private void handleDelta1Payload(RotReceiverOutput rotReceiverOutput, List<byte[]> delta1Payload)
         throws MpcAbortException {
         MpcAbortPreconditions.checkArgument(delta1Payload.size() == 1);
-        BitVector delta1Vector = BitVectorFactory.create(
-            BitVectorFactory.BitVectorType.BYTES_BIT_VECTOR, bitNum, delta1Payload.remove(0)
-        );
-        t0BitVector = BitVectorFactory.createZeros(BitVectorFactory.BitVectorType.BYTES_BIT_VECTOR, bitNum);
+        BitVector delta1Vector = BitVectorFactory.create(bitNum, delta1Payload.remove(0));
+        t0BitVector = BitVectorFactory.createZeros(bitNum);
         IntStream.range(0, bitNum).forEach(index -> {
             boolean x0 = rotReceiverOutput.getChoice(index);
             boolean t0 = rotReceiverOutput.getRb(index)[0] % 2 == 1;
@@ -280,7 +278,7 @@ public class Rrg21BcSender extends AbstractBcParty {
     private SquareZ2Vector generateZ0(SquareZ2Vector x0, SquareZ2Vector y0) {
         BitVector x = x0.getBitVector();
         BitVector y = y0.getBitVector();
-        BitVector z0BitVector = BitVectorFactory.createZeros(BitVectorFactory.BitVectorType.BYTES_BIT_VECTOR, bitNum);
+        BitVector z0BitVector = BitVectorFactory.createZeros(bitNum);
         // x0 * y0 = x0 ☉ y0
         z0BitVector.xori(x);
         z0BitVector.andi(y);

@@ -86,7 +86,7 @@ public class Cgs22PeqtSender extends AbstractPeqtParty {
         // P0 samples eq_{0,j} for all j ∈ [0,q)
         BitVector[] eqs = new BitVector[q];
         for (int j = 0; j < q; j++) {
-            eqs[j] = BitVectorFactory.createZeros(BitVectorFactory.BitVectorType.BYTES_BIT_VECTOR, num);
+            eqs[j] = BitVectorFactory.createZeros(num);
         }
         // for j ∈ [0,q) do
         for (int j = 0; j < q; j++) {
@@ -98,7 +98,7 @@ public class Cgs22PeqtSender extends AbstractPeqtParty {
             vIntStream = parallel ? vIntStream.parallel() : vIntStream;
             List<byte[]> evsPayload = vIntStream
                 .mapToObj(v -> {
-                    BitVector ev = BitVectorFactory.createRandom(BitVectorFactory.BitVectorType.BYTES_BIT_VECTOR, num, secureRandom);
+                    BitVector ev = BitVectorFactory.createRandom(num, secureRandom);
                     for (int index = 0; index < num; index++) {
                         byte[] ri = lnotSenderOutput.getRb(index, v);
                         if (v == partitionInputArray[index][jFinal]) {

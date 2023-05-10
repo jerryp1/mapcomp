@@ -82,7 +82,7 @@ public class Cgs22LnotPsmReceiver extends AbstractPsmReceiver {
         BitVector[][] eqArrays = new BitVector[d][q];
         for (int i = 0; i < d; i++) {
             for (int j = 0; j < q; j++) {
-                eqArrays[i][j] = BitVectorFactory.createZeros(BitVectorFactory.BitVectorType.BYTES_BIT_VECTOR, num);
+                eqArrays[i][j] = BitVectorFactory.createZeros(num);
             }
         }
         // for j ∈ [0,q) do
@@ -98,7 +98,7 @@ public class Cgs22LnotPsmReceiver extends AbstractPsmReceiver {
             extraInfo++;
             MpcAbortPreconditions.checkArgument(evsPayload.size() == (1 << 4) * d);
             BitVector[] evArrays = evsPayload.stream()
-                .map(ev -> BitVectorFactory.create(BitVectorFactory.BitVectorType.BYTES_BIT_VECTOR, num, ev))
+                .map(ev -> BitVectorFactory.create(num, ev))
                 .toArray(BitVector[]::new);
             for (int index = 0; index < num; index++) {
                 int v = lnotReceiverOutput.getChoice(index);

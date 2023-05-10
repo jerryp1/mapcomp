@@ -134,7 +134,7 @@ public class Rrk20ZlMuxSender extends AbstractZlMuxParty {
         ZlVector negR0ZlVector = r0ZlVector.neg();
         // if x0 = 0, P0 sets (s0, s1) = (-r0, -r0 + y0), else, P0 sets (s0, s1) = (-r0 + y0, -r0).
         BitVector x0BitVector = x0.getBitVector();
-        ZlVector y0ZlVector = y0.getVector();
+        ZlVector y0ZlVector = y0.getZlVector();
         s0s = new byte[num][];
         s1s = new byte[num][];
         IntStream indexIntStream = IntStream.range(0, num);

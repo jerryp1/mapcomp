@@ -127,7 +127,7 @@ public class Rrg21ZlMuxReceiver extends AbstractZlMuxParty {
 
     private List<byte[]> generateDelta1(CotSenderOutput cotSenderOutput, SquareZ2Vector x1, SquareZlVector y1) {
         BitVector x = x1.getBitVector();
-        ZlVector y = y1.getVector();
+        ZlVector y = y1.getZlVector();
         BigInteger[] t1s = new BigInteger[num];
         IntStream delta1IntStream = IntStream.range(0, num);
         delta1IntStream = parallel ? delta1IntStream.parallel() : delta1IntStream;
@@ -180,7 +180,7 @@ public class Rrg21ZlMuxReceiver extends AbstractZlMuxParty {
 
     private SquareZlVector generateZ1(SquareZ2Vector x1, SquareZlVector y1) {
         BitVector x = x1.getBitVector();
-        ZlVector y = y1.getVector();
+        ZlVector y = y1.getZlVector();
         IntStream z1IntStream = IntStream.range(0, num);
         z1IntStream = parallel ? z1IntStream.parallel() : z1IntStream;
         BigInteger[] z1s = z1IntStream

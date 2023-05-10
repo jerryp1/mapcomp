@@ -81,7 +81,7 @@ public class Cgs22PeqtReceiver extends AbstractPeqtParty {
         // P1 creates all-zero eq_{0,j} for all j ∈ [0,q)
         BitVector[] eqs = new BitVector[q];
         for (int j = 0; j < q; j++) {
-            eqs[j] = BitVectorFactory.createZeros(BitVectorFactory.BitVectorType.BYTES_BIT_VECTOR, num);
+            eqs[j] = BitVectorFactory.createZeros(num);
         }
         // for j ∈ [0, q) do
         for (int j = 0; j < q; j++) {
@@ -96,7 +96,7 @@ public class Cgs22PeqtReceiver extends AbstractPeqtParty {
             extraInfo++;
             MpcAbortPreconditions.checkArgument(evsPayload.size() == 1 << 4);
             BitVector[] evs = evsPayload.stream()
-                .map(ev -> BitVectorFactory.create(BitVectorFactory.BitVectorType.BYTES_BIT_VECTOR, num, ev))
+                .map(ev -> BitVectorFactory.create(num, ev))
                 .toArray(BitVector[]::new);
             for (int index = 0; index < num; index++) {
                 int v = lnotReceiverOutput.getChoice(index);

@@ -208,7 +208,7 @@ public class ZlMuxTest {
         Zl zl = y0.getZl();
         BitVector x = x0.xor(x1);
         ZlVector y = y0.add(y1);
-        ZlVector z = shareZ0.add(shareZ1, true).getVector();
+        ZlVector z = shareZ0.getZlVector().add(shareZ1.getZlVector());
         for (int index = 0; index < num; index++) {
             boolean xi = x.get(index);
             if (!xi) {

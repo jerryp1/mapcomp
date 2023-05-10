@@ -47,7 +47,7 @@ public abstract class AbstractZlMuxParty extends AbstractTwoPartyPto implements 
         MathPreconditions.checkEqual("xi.num", "yi.num", xi.getNum(), yi.getNum());
         num = xi.getNum();
         MathPreconditions.checkPositiveInRangeClosed("num", num, maxNum);
-        zl = yi.getVector().getZl();
+        zl = yi.getZl();
         byteL = zl.getByteL();
     }
 }

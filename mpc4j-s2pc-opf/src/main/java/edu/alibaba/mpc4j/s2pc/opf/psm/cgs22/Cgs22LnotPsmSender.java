@@ -86,7 +86,7 @@ public class Cgs22LnotPsmSender extends AbstractPsmSender {
         BitVector[][] eqArrays = new BitVector[d][q];
         for (int i = 0; i < d; i++) {
             for (int j = 0; j < q; j++) {
-                eqArrays[i][j] = BitVectorFactory.createZeros(BitVectorFactory.BitVectorType.BYTES_BIT_VECTOR, num);
+                eqArrays[i][j] = BitVectorFactory.createZeros(num);
             }
         }
 
@@ -103,7 +103,7 @@ public class Cgs22LnotPsmSender extends AbstractPsmSender {
                     // P0 samples <eq_{0,i,j>_0 ← {0,1}, ∀i ∈ [d].
                     BitVector[] evArray = new BitVector[d];
                     for (int i = 0; i < d; i++) {
-                        evArray[i] = BitVectorFactory.createRandom(BitVectorFactory.BitVectorType.BYTES_BIT_VECTOR, num, secureRandom);
+                        evArray[i] = BitVectorFactory.createRandom(num, secureRandom);
                     }
                     for (int index = 0; index < num; index++) {
                         byte[] ri = lnotSenderOutput.getRb(index, v);
