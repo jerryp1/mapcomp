@@ -65,7 +65,7 @@ public class BatchBcTest {
         });
         // Bea91
         configurations.add(new Object[]{
-            BcFactory.BcType.Bea91.name(), new Bea91BcConfig.Builder().build()
+            BcFactory.BcType.BEA91.name(), new Bea91BcConfig.Builder().build()
         });
 
         return configurations;

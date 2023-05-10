@@ -5,7 +5,7 @@ import edu.alibaba.mpc4j.common.rpc.pto.TwoPartyPto;
 import edu.alibaba.mpc4j.s2pc.pcg.mtg.zl.ZlTriple;
 
 /**
- * Zl core triple generation.
+ * Zl core multiplication triple generator.
  *
  * @author Weiran Liu
  * @date 2022/8/11
@@ -23,7 +23,7 @@ public interface ZlCoreMtgParty extends TwoPartyPto {
      * Executes the protocol.
      *
      * @param num num.
-     * @return the Zl triple.
+     * @return Zl multiplication triple.
      * @throws MpcAbortException the protocol failure aborts.
      */
     ZlTriple generate(int num) throws MpcAbortException;

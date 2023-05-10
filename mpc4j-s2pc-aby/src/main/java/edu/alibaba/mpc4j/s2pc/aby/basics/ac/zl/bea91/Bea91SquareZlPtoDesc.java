@@ -1,10 +1,10 @@
-package edu.alibaba.mpc4j.s2pc.aby.basics.bc.bea91;
+package edu.alibaba.mpc4j.s2pc.aby.basics.ac.zl.bea91;
 
 import edu.alibaba.mpc4j.common.rpc.desc.PtoDesc;
 import edu.alibaba.mpc4j.common.rpc.desc.PtoDescManager;
 
 /**
- * Bea91 Boolean circuit protocol description. The protocol implements AND using Boolean triple presented in the
+ * Bea91 Zl protocol description. The protocol implements multiplication using Beaver's triple presented in the
  * following paper:
  * <p>
  * Beaver, Donald. Efficient multiparty protocols using circuit randomization. CRYPTO 1991, pp. 420-432. Springer,
@@ -12,17 +12,17 @@ import edu.alibaba.mpc4j.common.rpc.desc.PtoDescManager;
  * </p>
  *
  * @author Weiran Liu
- * @date 2022/02/13
+ * @date 2023/5/10
  */
-class Bea91BcPtoDesc implements PtoDesc {
+class Bea91SquareZlPtoDesc implements PtoDesc {
     /**
      * protocol ID
      */
-    private static final int PTO_ID = Math.abs((int) 139609527980746823L);
+    private static final int PTO_ID = Math.abs((int) 129498850831013577L);
     /**
      * protocol name
      */
-    private static final String PTO_NAME = "BEA91_BC";
+    private static final String PTO_NAME = "BEA91_ZL";
 
     /**
      * protocol step
@@ -57,12 +57,12 @@ class Bea91BcPtoDesc implements PtoDesc {
     /**
      * singleton mode
      */
-    private static final Bea91BcPtoDesc INSTANCE = new Bea91BcPtoDesc();
+    private static final Bea91SquareZlPtoDesc INSTANCE = new Bea91SquareZlPtoDesc();
 
     /**
      * private constructor
      */
-    private Bea91BcPtoDesc() {
+    private Bea91SquareZlPtoDesc() {
         // empty
     }
 

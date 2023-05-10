@@ -1,17 +1,17 @@
-package edu.alibaba.mpc4j.s2pc.pcg.mtg.z2;
-
-import java.security.SecureRandom;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.concurrent.TimeUnit;
+package edu.alibaba.mpc4j.s2pc.pcg.mtg.zl;
 
 import com.google.common.base.Preconditions;
 import edu.alibaba.mpc4j.common.rpc.Rpc;
 import edu.alibaba.mpc4j.common.rpc.RpcManager;
 import edu.alibaba.mpc4j.common.rpc.desc.SecurityModel;
 import edu.alibaba.mpc4j.common.rpc.impl.memory.MemoryRpcManager;
-import edu.alibaba.mpc4j.s2pc.pcg.mtg.z2.Z2MtgFactory.Z2MtgType;
-import edu.alibaba.mpc4j.s2pc.pcg.mtg.z2.impl.offline.OfflineZ2MtgConfig;
+import edu.alibaba.mpc4j.common.tool.CommonConstants;
+import edu.alibaba.mpc4j.common.tool.EnvType;
+import edu.alibaba.mpc4j.common.tool.galoisfield.zl.Zl;
+import edu.alibaba.mpc4j.common.tool.galoisfield.zl.ZlFactory;
+import edu.alibaba.mpc4j.common.tool.utils.LongUtils;
+import edu.alibaba.mpc4j.s2pc.pcg.mtg.zl.ZlMtgFactory.ZlMtgType;
+import edu.alibaba.mpc4j.s2pc.pcg.mtg.zl.impl.cache.CacheZlMtgConfig;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.time.StopWatch;
 import org.junit.After;
@@ -22,42 +22,54 @@ import org.junit.runners.Parameterized;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.security.SecureRandom;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.concurrent.TimeUnit;
+
 /**
- * Z2 multiplication triple generator test.
+ * Zl multiplication triple generator test.
  *
  * @author Weiran Liu
  * @date 2022/02/08
  */
 @RunWith(Parameterized.class)
-public class Z2MtgTest {
-    private static final Logger LOGGER = LoggerFactory.getLogger(Z2MtgTest.class);
+public class ZlMtgTest {
+    private static final Logger LOGGER = LoggerFactory.getLogger(ZlMtgTest.class);
     /**
      * the random state
      */
     private static final SecureRandom SECURE_RANDOM = new SecureRandom();
+
+
     /**
      * default num
      */
-    private static final int DEFAULT_NUM = 999;
+    private static final int DEFAULT_NUM = 99;
     /**
      * large num
      */
-    private static final int LARGE_NUM = (1 << 18) + 1;
+    private static final int LARGE_NUM = (1 << 14) + 1;
 
     @Parameterized.Parameters(name = "{0}")
     public static Collection<Object[]> configurations() {
         Collection<Object[]> configurations = new ArrayList<>();
 
-        // OFFLINE (Semi-honest)
-        configurations.add(new Object[]{
-            Z2MtgType.OFFLINE.name() + " (" + SecurityModel.SEMI_HONEST + ")",
-            new OfflineZ2MtgConfig.Builder(SecurityModel.SEMI_HONEST).build(),
-        });
-        // CACHE (Semi-honest)
-        configurations.add(new Object[]{
-            Z2MtgType.CACHE.name() + " (" + SecurityModel.SEMI_HONEST + ")",
-            new OfflineZ2MtgConfig.Builder(SecurityModel.SEMI_HONEST).build(),
-        });
+        Zl[] zls = new Zl[] {
+            ZlFactory.createInstance(EnvType.STANDARD, 1),
+            ZlFactory.createInstance(EnvType.STANDARD, LongUtils.MAX_L - 1),
+            ZlFactory.createInstance(EnvType.STANDARD, LongUtils.MAX_L),
+            ZlFactory.createInstance(EnvType.STANDARD, LongUtils.MAX_L + 1),
+            ZlFactory.createInstance(EnvType.STANDARD, CommonConstants.BLOCK_BIT_LENGTH),
+        };
+        for (Zl zl : zls) {
+            int l = zl.getL();
+            // CACHE (Semi-honest)
+            configurations.add(new Object[]{
+                ZlMtgType.CACHE.name() + " (l = " + l + ", " + SecurityModel.SEMI_HONEST + ")",
+                new CacheZlMtgConfig.Builder(SecurityModel.SEMI_HONEST, zl).build(),
+            });
+        }
 
         return configurations;
     }
@@ -73,9 +85,9 @@ public class Z2MtgTest {
     /**
      * config
      */
-    private final Z2MtgConfig config;
+    private final ZlMtgConfig config;
 
-    public Z2MtgTest(String name, Z2MtgConfig config) {
+    public ZlMtgTest(String name, ZlMtgConfig config) {
         Preconditions.checkArgument(StringUtils.isNotBlank(name));
         // We cannot use NettyRPC in the test case since it needs multi-thread connect / disconnect.
         // In other word, we cannot connect / disconnect NettyRpc in @Before / @After, respectively.
@@ -128,8 +140,8 @@ public class Z2MtgTest {
     }
 
     private void testPto(int num, boolean parallel) {
-        Z2MtgParty sender = Z2MtgFactory.createSender(senderRpc, receiverRpc.ownParty(), config);
-        Z2MtgParty receiver = Z2MtgFactory.createReceiver(receiverRpc, senderRpc.ownParty(), config);
+        ZlMtgParty sender = ZlMtgFactory.createSender(senderRpc, receiverRpc.ownParty(), config);
+        ZlMtgParty receiver = ZlMtgFactory.createReceiver(receiverRpc, senderRpc.ownParty(), config);
         sender.setParallel(parallel);
         receiver.setParallel(parallel);
         int randomTaskId = Math.abs(SECURE_RANDOM.nextInt());
@@ -137,8 +149,8 @@ public class Z2MtgTest {
         receiver.setTaskId(randomTaskId);
         try {
             LOGGER.info("-----test {} start-----", sender.getPtoDesc().getPtoName());
-            Z2MtgPartyThread senderThread = new Z2MtgPartyThread(sender, num);
-            Z2MtgPartyThread receiverThread = new Z2MtgPartyThread(receiver, num);
+            ZlMtgPartyThread senderThread = new ZlMtgPartyThread(sender, num);
+            ZlMtgPartyThread receiverThread = new ZlMtgPartyThread(receiver, num);
             StopWatch stopWatch = new StopWatch();
             // start
             stopWatch.start();
@@ -154,10 +166,10 @@ public class Z2MtgTest {
             long receiverByteLength = receiverRpc.getSendByteLength();
             senderRpc.reset();
             receiverRpc.reset();
-            Z2Triple senderOutput = senderThread.getOutput();
-            Z2Triple receiverOutput = receiverThread.getOutput();
+            ZlTriple senderOutput = senderThread.getOutput();
+            ZlTriple receiverOutput = receiverThread.getOutput();
             // verify
-            Z2MtgTestUtils.assertOutput(num, senderOutput, receiverOutput);
+            ZlMtgTestUtils.assertOutput(config.getZl(), num, senderOutput, receiverOutput);
             LOGGER.info("Sender sends {}B, Receiver sends {}B, time = {}ms",
                 senderByteLength, receiverByteLength, time
             );

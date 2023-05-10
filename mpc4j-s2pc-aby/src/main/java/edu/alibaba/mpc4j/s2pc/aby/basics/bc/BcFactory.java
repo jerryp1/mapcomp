@@ -34,7 +34,7 @@ public class BcFactory implements PtoFactory {
         /**
          * Bea91
          */
-        Bea91,
+        BEA91,
         /**
          * RRG+21
          */
@@ -52,7 +52,7 @@ public class BcFactory implements PtoFactory {
     public static BcParty createSender(Rpc senderRpc, Party receiverParty, BcConfig config) {
         BcType type = config.getPtoType();
         switch (type) {
-            case Bea91:
+            case BEA91:
                 return new Bea91BcSender(senderRpc, receiverParty, (Bea91BcConfig) config);
             case RRG21:
                 return new Rrg21BcSender(senderRpc, receiverParty, (Rrg21BcConfig) config);
@@ -72,7 +72,7 @@ public class BcFactory implements PtoFactory {
     public static BcParty createReceiver(Rpc receiverRpc, Party senderParty, BcConfig config) {
         BcType type = config.getPtoType();
         switch (type) {
-            case Bea91:
+            case BEA91:
                 return new Bea91BcReceiver(receiverRpc, senderParty, (Bea91BcConfig) config);
             case RRG21:
                 return new Rrg21BcReceiver(receiverRpc, senderParty, (Rrg21BcConfig) config);

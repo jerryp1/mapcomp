@@ -5,46 +5,45 @@ import edu.alibaba.mpc4j.common.rpc.Rpc;
 import edu.alibaba.mpc4j.common.rpc.desc.PtoDesc;
 import edu.alibaba.mpc4j.common.rpc.pto.AbstractTwoPartyPto;
 import edu.alibaba.mpc4j.common.tool.MathPreconditions;
+import edu.alibaba.mpc4j.common.tool.galoisfield.zl.Zl;
 
 /**
- * l比特三元组生成协议参与方。
+ * abstract Zl multiplication triple generator.
  *
  * @author Weiran Liu
  * @date 2022/8/11
  */
 public abstract class AbstractZlMtgParty extends AbstractTwoPartyPto implements ZlMtgParty {
     /**
-     * 配置项
+     * Zl instance
      */
-    protected final ZlMtgConfig config;
+    protected final Zl zl;
     /**
      * 比特长度
      */
-    protected int l;
+    protected final int l;
     /**
-     * 最大单轮数量
+     * max round num
      */
     protected int maxRoundNum;
     /**
-     * 更新数量
+     * update num
      */
     protected long updateNum;
     /**
-     * 数量
+     * num
      */
     protected int num;
 
     public AbstractZlMtgParty(PtoDesc ptoDesc, Rpc ownRpc, Party otherParty, ZlMtgConfig config) {
         super(ptoDesc, ownRpc, otherParty, config);
-        this.config = config;
+        zl = config.getZl();
+        l = zl.getL();
     }
 
-    protected void setInitInput(int l, int maxRoundNum, int updateNum) {
-        MathPreconditions.checkPositive("l", l);
-        this.l = l;
-        MathPreconditions.checkPositiveInRangeClosed("maxRoundNum", maxRoundNum, config.maxBaseNum());
+    protected void setInitInput(int maxRoundNum, int updateNum) {
+        MathPreconditions.checkPositiveInRangeClosed("maxRoundNum", maxRoundNum, updateNum);
         this.maxRoundNum = maxRoundNum;
-        MathPreconditions.checkGreaterOrEqual("updateNum", updateNum, maxRoundNum);
         this.updateNum = updateNum;
         initState();
     }
@@ -53,6 +52,6 @@ public abstract class AbstractZlMtgParty extends AbstractTwoPartyPto implements 
         checkInitialized();
         MathPreconditions.checkPositiveInRangeClosed("num", num, maxRoundNum);
         this.num = num;
-        extraInfo += num;
+        extraInfo++;
     }
 }

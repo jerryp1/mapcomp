@@ -1,18 +1,18 @@
-package edu.alibaba.mpc4j.s2pc.pcg.mtg.z2;
+package edu.alibaba.mpc4j.s2pc.pcg.mtg.zl;
 
 import edu.alibaba.mpc4j.common.rpc.MpcAbortException;
 
 /**
- * Z2 multiplication triple generator party thread.
+ * Zl multiplication triple generator party thread.
  *
  * @author Weiran Liu
- * @date 2022/02/08
+ * @date 2023/5/10
  */
-class Z2MtgPartyThread extends Thread {
+class ZlMtgPartyThread extends Thread {
     /**
      * party
      */
-    private final Z2MtgParty party;
+    private final ZlMtgParty party;
     /**
      * num
      */
@@ -20,14 +20,14 @@ class Z2MtgPartyThread extends Thread {
     /**
      * output
      */
-    private Z2Triple output;
+    private ZlTriple output;
 
-    Z2MtgPartyThread(Z2MtgParty party, int num) {
+    ZlMtgPartyThread(ZlMtgParty party, int num) {
         this.party = party;
         this.num = num;
     }
 
-    Z2Triple getOutput() {
+    ZlTriple getOutput() {
         return output;
     }
 

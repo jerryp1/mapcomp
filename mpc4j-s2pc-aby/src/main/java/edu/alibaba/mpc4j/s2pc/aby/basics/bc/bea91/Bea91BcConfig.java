@@ -29,7 +29,7 @@ public class Bea91BcConfig implements BcConfig {
 
     @Override
     public BcFactory.BcType getPtoType() {
-        return BcFactory.BcType.Bea91;
+        return BcFactory.BcType.BEA91;
     }
 
     @Override

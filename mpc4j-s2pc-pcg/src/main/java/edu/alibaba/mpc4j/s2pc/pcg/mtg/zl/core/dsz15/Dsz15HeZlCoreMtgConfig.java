@@ -38,7 +38,7 @@ public class Dsz15HeZlCoreMtgConfig implements ZlCoreMtgConfig {
     }
 
     @Override
-    public int maxAllowNum() {
+    public int maxNum() {
         return 1 << 20;
     }
 

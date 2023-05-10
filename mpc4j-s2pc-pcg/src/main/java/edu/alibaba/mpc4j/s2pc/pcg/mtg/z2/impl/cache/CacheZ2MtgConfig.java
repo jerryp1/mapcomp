@@ -8,14 +8,14 @@ import edu.alibaba.mpc4j.s2pc.pcg.mtg.z2.core.Z2CoreMtgConfig;
 import edu.alibaba.mpc4j.s2pc.pcg.mtg.z2.core.Z2CoreMtgFactory;
 
 /**
- * 缓存布尔三元组生成协议配置项。
+ * cache Z2 multiplication triple generator config.
  *
  * @author Weiran Liu
  * @date 2022/7/14
  */
 public class CacheZ2MtgConfig implements Z2MtgConfig {
     /**
-     * 核布尔三元组生成协议配置项
+     * Z2 core multiplication triple generator config
      */
     private final Z2CoreMtgConfig z2CoreMtgConfig;
 
@@ -49,7 +49,7 @@ public class CacheZ2MtgConfig implements Z2MtgConfig {
 
     public static class Builder implements org.apache.commons.lang3.builder.Builder<CacheZ2MtgConfig> {
         /**
-         * 核布尔三元组生成协议配置项
+         * Z2 core multiplication triple generator config
          */
         private Z2CoreMtgConfig z2CoreMtgConfig;
 

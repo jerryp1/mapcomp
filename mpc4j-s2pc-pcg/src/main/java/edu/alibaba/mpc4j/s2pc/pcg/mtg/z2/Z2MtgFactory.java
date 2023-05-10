@@ -13,21 +13,21 @@ import edu.alibaba.mpc4j.s2pc.pcg.mtg.z2.impl.offline.OfflineZ2MtgReceiver;
 import edu.alibaba.mpc4j.s2pc.pcg.mtg.z2.impl.offline.OfflineZ2MtgSender;
 
 /**
- * 布尔三元组生成协议工厂。
+ * Zl multiplication triple generator factory.
  *
  * @author Weiran Liu
  * @date 2022/02/07
  */
 public class Z2MtgFactory implements PtoFactory {
     /**
-     * 私有构造函数
+     * private constructor
      */
     private Z2MtgFactory() {
         // empty
     }
 
     /**
-     * 协议类型
+     * protocol type
      */
     public enum Z2MtgType {
         /**
@@ -41,12 +41,12 @@ public class Z2MtgFactory implements PtoFactory {
     }
 
     /**
-     * 构建发送方。
+     * Creates a sender.
      *
-     * @param senderRpc     发送方通信接口。
-     * @param receiverParty 接收方信息。
-     * @param config        配置项。
-     * @return 发送方。
+     * @param senderRpc     sender RPC.
+     * @param receiverParty receiver party.
+     * @param config        config.
+     * @return a sender.
      */
     public static Z2MtgParty createSender(Rpc senderRpc, Party receiverParty, Z2MtgConfig config) {
         Z2MtgType type = config.getPtoType();
@@ -61,12 +61,12 @@ public class Z2MtgFactory implements PtoFactory {
     }
 
     /**
-     * 构建接收方。
+     * Creates a receiver.
      *
-     * @param receiverRpc 接收方通信接口。
-     * @param senderParty 发送方信息。
-     * @param config      配置项。
-     * @return 接收方。
+     * @param receiverRpc receiver RPC.
+     * @param senderParty sender party.
+     * @param config      config.
+     * @return a receiver.
      */
     public static Z2MtgParty createReceiver(Rpc receiverRpc, Party senderParty, Z2MtgConfig config) {
         Z2MtgType type = config.getPtoType();
@@ -84,7 +84,7 @@ public class Z2MtgFactory implements PtoFactory {
      * Creates a default config.
      *
      * @param securityModel the security model.
-     * @param silent if using a silent protocol.
+     * @param silent        if using a silent protocol.
      * @return a default config.
      */
     public static Z2MtgConfig createDefaultConfig(SecurityModel securityModel, boolean silent) {

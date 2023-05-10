@@ -26,7 +26,7 @@ public class SquareZlFactory implements PtoFactory {
         /**
          * Bea91
          */
-        Bea91,
+        BEA91,
     }
 
     /**
@@ -41,7 +41,7 @@ public class SquareZlFactory implements PtoFactory {
         SquareZlType type = config.getPtoType();
         //noinspection SwitchStatementWithTooFewBranches
         switch (type) {
-            case Bea91:
+            case BEA91:
             default:
                 throw new IllegalArgumentException("Invalid " + SquareZlType.class.getSimpleName() + ": " + type.name());
         }
@@ -59,7 +59,7 @@ public class SquareZlFactory implements PtoFactory {
         SquareZlType type = config.getPtoType();
         //noinspection SwitchStatementWithTooFewBranches
         switch (type) {
-            case Bea91:
+            case BEA91:
             default:
                 throw new IllegalArgumentException("Invalid " + SquareZlType.class.getSimpleName() + ": " + type.name());
         }

@@ -40,7 +40,7 @@ public class Dsz15OtZlCoreMtgConfig implements ZlCoreMtgConfig {
     }
 
     @Override
-    public int maxAllowNum() {
+    public int maxNum() {
         return (int) Math.floor((double) (1 << 24) / zl.getL());
     }
 

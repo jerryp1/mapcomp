@@ -108,7 +108,7 @@ public class Bea91BcSender extends AbstractBcParty {
 
             stopWatch.start();
             DataPacketHeader x1Header = new DataPacketHeader(
-                encodeTaskId, getPtoDesc().getPtoId(), PtoStep.RECEIVER_SEND_SHARE_OUTPUT.ordinal(), extraInfo,
+                encodeTaskId, getPtoDesc().getPtoId(), PtoStep.RECEIVER_SEND_OUTPUT_SHARE.ordinal(), extraInfo,
                 otherParty().getPartyId(), ownParty().getPartyId()
             );
             List<byte[]> x1Payload = rpc.receive(x1Header).getPayload();

@@ -51,7 +51,7 @@ class Rrg21BcPtoDesc implements PtoDesc {
         /**
          * the receiver sends the output share
          */
-        RECEIVER_SEND_SHARE_OUTPUT
+        RECEIVER_SEND_OUTPUT_SHARE
     }
 
     /**

@@ -4,28 +4,27 @@ import edu.alibaba.mpc4j.common.rpc.MpcAbortException;
 import edu.alibaba.mpc4j.common.rpc.pto.TwoPartyPto;
 
 /**
- * l比特三元组生成协议参与方接口。
+ * Zl multiplication triple generator.
  *
  * @author Weiran Liu
  * @date 2022/8/11
  */
 public interface ZlMtgParty extends TwoPartyPto {
     /**
-     * 初始化协议。
+     * Inits the protocol.
      *
-     * @param l           比特长度。
-     * @param maxRoundNum 最大单轮数量。
-     * @param updateNum   更新数量。
-     * @throws MpcAbortException 如果协议异常中止。
+     * @param maxRoundNum max round num.
+     * @param updateNum   update num.
+     * @throws MpcAbortException the protocol failure aborts.
      */
-    void init(int l, int maxRoundNum, int updateNum) throws MpcAbortException;
+    void init(int maxRoundNum, int updateNum) throws MpcAbortException;
 
     /**
-     * 执行协议。
+     * Executes the protocol.
      *
-     * @param num 布尔三元组数量。
-     * @return 参与方输出。
-     * @throws MpcAbortException 如果协议异常中止。
+     * @param num num.
+     * @return Zl multiplication triple.
+     * @throws MpcAbortException the protocol failure aborts
      */
     ZlTriple generate(int num) throws MpcAbortException;
 }
