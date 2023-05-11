@@ -2,7 +2,7 @@
 // Created by pengliqiang on 2023/1/25.
 //
 
-#include "edu_alibaba_mpc4j_s2pc_pir_index_fastpir_Ayaa21IndexPirNativeUtils.h"
+#include "edu_alibaba_mpc4j_s2pc_pir_index_single_fastpir_Ayaa21SingleIndexPirNativeUtils.h"
 #include "seal/seal.h"
 #include "../utils.h"
 #include "../serialize.h"
@@ -12,7 +12,7 @@
 using namespace seal;
 using namespace std;
 
-JNIEXPORT jbyteArray JNICALL Java_edu_alibaba_mpc4j_s2pc_pir_index_fastpir_Ayaa21IndexPirNativeUtils_generateSealContext(
+JNIEXPORT jbyteArray JNICALL Java_edu_alibaba_mpc4j_s2pc_pir_index_single_fastpir_Ayaa21SingleIndexPirNativeUtils_generateSealContext(
         JNIEnv *env, jclass, jint poly_modulus_degree, jlong plain_modulus, jlongArray coeff_mod_arr) {
     uint32_t size = env->GetArrayLength(coeff_mod_arr);
     auto *ptr = reinterpret_cast<uint64_t *>(env->GetLongArrayElements(coeff_mod_arr, JNI_FALSE));
@@ -26,7 +26,7 @@ JNIEXPORT jbyteArray JNICALL Java_edu_alibaba_mpc4j_s2pc_pir_index_fastpir_Ayaa2
     return serialize_encryption_parms(env, parms);
 }
 
-JNIEXPORT jobject JNICALL Java_edu_alibaba_mpc4j_s2pc_pir_index_fastpir_Ayaa21IndexPirNativeUtils_keyGen(
+JNIEXPORT jobject JNICALL Java_edu_alibaba_mpc4j_s2pc_pir_index_single_fastpir_Ayaa21SingleIndexPirNativeUtils_keyGen(
         JNIEnv *env, jclass, jbyteArray parms_bytes, jintArray steps_arr) {
     EncryptionParameters parms = deserialize_encryption_parms(env, parms_bytes);
     SEALContext context(parms);
@@ -52,7 +52,7 @@ JNIEXPORT jobject JNICALL Java_edu_alibaba_mpc4j_s2pc_pir_index_fastpir_Ayaa21In
     return list_obj;
 }
 
-JNIEXPORT jobject JNICALL Java_edu_alibaba_mpc4j_s2pc_pir_index_fastpir_Ayaa21IndexPirNativeUtils_nttTransform(
+JNIEXPORT jobject JNICALL Java_edu_alibaba_mpc4j_s2pc_pir_index_single_fastpir_Ayaa21SingleIndexPirNativeUtils_nttTransform(
         JNIEnv *env, jclass, jbyteArray parms_bytes, jobjectArray plaintext_list) {
     EncryptionParameters parms = deserialize_encryption_parms(env, parms_bytes);
     SEALContext context(parms);
@@ -64,7 +64,7 @@ JNIEXPORT jobject JNICALL Java_edu_alibaba_mpc4j_s2pc_pir_index_fastpir_Ayaa21In
     return serialize_plaintexts(env, database);
 }
 
-JNIEXPORT jobject JNICALL Java_edu_alibaba_mpc4j_s2pc_pir_index_fastpir_Ayaa21IndexPirNativeUtils_generateQuery(
+JNIEXPORT jobject JNICALL Java_edu_alibaba_mpc4j_s2pc_pir_index_single_fastpir_Ayaa21SingleIndexPirNativeUtils_generateQuery(
         JNIEnv *env, jclass, jbyteArray parms_bytes, jbyteArray pk_bytes, jbyteArray sk_bytes, jint index, jint query_size) {
     EncryptionParameters parms = deserialize_encryption_parms(env, parms_bytes);
     SEALContext context(parms);
@@ -76,11 +76,9 @@ JNIEXPORT jobject JNICALL Java_edu_alibaba_mpc4j_s2pc_pir_index_fastpir_Ayaa21In
     Plaintext pt;
     uint32_t slot_count = batch_encoder.slot_count();
     uint32_t row_size = slot_count / 2;
-    for (uint32_t i = 0; i < query_size; i++)
-    {
+    for (uint32_t i = 0; i < query_size; i++) {
         vector<uint64_t> pod_matrix(slot_count, 0ULL);
-        if ((index / row_size) == i)
-        {
+        if ((index / row_size) == i) {
             pod_matrix[index % row_size] = 1;
             pod_matrix[row_size + (index % row_size)] = 1;
         }
@@ -90,9 +88,9 @@ JNIEXPORT jobject JNICALL Java_edu_alibaba_mpc4j_s2pc_pir_index_fastpir_Ayaa21In
     return serialize_ciphertexts(env, query);
 }
 
-JNIEXPORT jbyteArray JNICALL Java_edu_alibaba_mpc4j_s2pc_pir_index_fastpir_Ayaa21IndexPirNativeUtils_generateResponse(
+JNIEXPORT jbyteArray JNICALL Java_edu_alibaba_mpc4j_s2pc_pir_index_single_fastpir_Ayaa21SingleIndexPirNativeUtils_generateResponse(
         JNIEnv *env, jclass, jbyteArray parms_bytes, jbyteArray galois_bytes, jobject query_bytes,
-        jobject database_bytes, jint num_columns_per_obj) {
+        jobjectArray database_bytes, jint num_columns_per_obj) {
     EncryptionParameters parms = deserialize_encryption_parms(env, parms_bytes);
     SEALContext context(parms);
     Evaluator evaluator(context);
@@ -101,19 +99,12 @@ JNIEXPORT jbyteArray JNICALL Java_edu_alibaba_mpc4j_s2pc_pir_index_fastpir_Ayaa2
     for (auto & i : query) {
         evaluator.transform_to_ntt_inplace(i);
     }
-    vector<Plaintext> database = deserialize_plaintexts(env, database_bytes, context);
-    auto time_start = std::chrono::high_resolution_clock::now();
-    Ciphertext response = get_sum(
-            query, evaluator, *galois_keys, database, 0, num_columns_per_obj - 1);
-    auto time_end = std::chrono::high_resolution_clock::now();
-    auto db_preprocess_time = (std::chrono::duration_cast<std::chrono::microseconds>(time_end - time_start)).count();
-#ifdef DEBUG
-    cout << db_preprocess_time << "us" << endl;
-#endif
+    vector<Plaintext> database = deserialize_plaintexts_array(env, database_bytes, context);
+    Ciphertext response = get_sum(query, evaluator, *galois_keys, database, 0, num_columns_per_obj - 1);
     return serialize_ciphertext(env, response);
 }
 
-JNIEXPORT jlongArray JNICALL Java_edu_alibaba_mpc4j_s2pc_pir_index_fastpir_Ayaa21IndexPirNativeUtils_decodeResponse(
+JNIEXPORT jlongArray JNICALL Java_edu_alibaba_mpc4j_s2pc_pir_index_single_fastpir_Ayaa21SingleIndexPirNativeUtils_decodeResponse(
         JNIEnv * env, jclass, jbyteArray parms_bytes, jbyteArray sk_bytes, jbyteArray response_bytes) {
     EncryptionParameters parms = deserialize_encryption_parms(env, parms_bytes);
     SEALContext context(parms);

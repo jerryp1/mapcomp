@@ -2,7 +2,7 @@
 // Created by Liqiang Peng on 2022/11/14.
 //
 
-#include "edu_alibaba_mpc4j_s2pc_pir_index_onionpir_Mcr21IndexPirNativeUtils.h"
+#include "edu_alibaba_mpc4j_s2pc_pir_index_single_onionpir_Mcr21SingleIndexPirNativeUtils.h"
 #include "seal/seal.h"
 #include "../utils.h"
 #include "../serialize.h"
@@ -14,7 +14,7 @@
 using namespace seal;
 using namespace std;
 
-JNIEXPORT jbyteArray JNICALL Java_edu_alibaba_mpc4j_s2pc_pir_index_onionpir_Mcr21IndexPirNativeUtils_generateEncryptionParams(
+JNIEXPORT jbyteArray JNICALL Java_edu_alibaba_mpc4j_s2pc_pir_index_single_onionpir_Mcr21SingleIndexPirNativeUtils_generateEncryptionParams(
         JNIEnv *env, jclass, jint poly_modulus_degree, jint plain_modulus_size) {
     uint64_t plain_modulus = PlainModulus::Batching(poly_modulus_degree, plain_modulus_size).value();
     vector<Modulus> coeff_modulus = CoeffModulus::Create(poly_modulus_degree, {60, 60, 60});
@@ -23,7 +23,7 @@ JNIEXPORT jbyteArray JNICALL Java_edu_alibaba_mpc4j_s2pc_pir_index_onionpir_Mcr2
     return serialize_encryption_parms(env, parms);
 }
 
-JNIEXPORT jobject JNICALL Java_edu_alibaba_mpc4j_s2pc_pir_index_onionpir_Mcr21IndexPirNativeUtils_keyGen(
+JNIEXPORT jobject JNICALL Java_edu_alibaba_mpc4j_s2pc_pir_index_single_onionpir_Mcr21SingleIndexPirNativeUtils_keyGen(
         JNIEnv *env, jclass, jbyteArray parms_bytes) {
     EncryptionParameters parms = deserialize_encryption_parms(env, parms_bytes);
     SEALContext context(parms, true, sec_level_type::none);
@@ -45,7 +45,7 @@ JNIEXPORT jobject JNICALL Java_edu_alibaba_mpc4j_s2pc_pir_index_onionpir_Mcr21In
     return list_obj;
 }
 
-JNIEXPORT jobject JNICALL Java_edu_alibaba_mpc4j_s2pc_pir_index_onionpir_Mcr21IndexPirNativeUtils_preprocessDatabase(
+JNIEXPORT jobject JNICALL Java_edu_alibaba_mpc4j_s2pc_pir_index_single_onionpir_Mcr21SingleIndexPirNativeUtils_preprocessDatabase(
         JNIEnv *env, jclass, jbyteArray parms_bytes, jobject coeff_list) {
     EncryptionParameters parms = deserialize_encryption_parms(env, parms_bytes);
     SEALContext context(parms, true, sec_level_type::none);
@@ -84,7 +84,7 @@ JNIEXPORT jobject JNICALL Java_edu_alibaba_mpc4j_s2pc_pir_index_onionpir_Mcr21In
     return list_obj;
 }
 
-JNIEXPORT jobject JNICALL Java_edu_alibaba_mpc4j_s2pc_pir_index_onionpir_Mcr21IndexPirNativeUtils_encryptSecretKey(
+JNIEXPORT jobject JNICALL Java_edu_alibaba_mpc4j_s2pc_pir_index_single_onionpir_Mcr21SingleIndexPirNativeUtils_encryptSecretKey(
         JNIEnv *env, jclass, jbyteArray parms_bytes, jbyteArray pk_bytes, jbyteArray sk_bytes) {
     EncryptionParameters parms = deserialize_encryption_parms(env, parms_bytes);
     SEALContext context(parms, true, sec_level_type::none);
@@ -96,7 +96,7 @@ JNIEXPORT jobject JNICALL Java_edu_alibaba_mpc4j_s2pc_pir_index_onionpir_Mcr21In
     return serialize_ciphertexts(env, enc_sk);
 }
 
-JNIEXPORT jobject JNICALL Java_edu_alibaba_mpc4j_s2pc_pir_index_onionpir_Mcr21IndexPirNativeUtils_generateQuery(
+JNIEXPORT jobject JNICALL Java_edu_alibaba_mpc4j_s2pc_pir_index_single_onionpir_Mcr21SingleIndexPirNativeUtils_generateQuery(
         JNIEnv *env, jclass, jbyteArray parms_bytes, jbyteArray pk_bytes, jbyteArray sk_bytes, jintArray jindices,
         jintArray jnvec) {
     EncryptionParameters parms = deserialize_encryption_parms(env, parms_bytes);
@@ -197,7 +197,7 @@ JNIEXPORT jobject JNICALL Java_edu_alibaba_mpc4j_s2pc_pir_index_onionpir_Mcr21In
     return serialize_ciphertexts(env, queries);
 }
 
-JNIEXPORT jbyteArray JNICALL Java_edu_alibaba_mpc4j_s2pc_pir_index_onionpir_Mcr21IndexPirNativeUtils_generateReply(
+JNIEXPORT jbyteArray JNICALL Java_edu_alibaba_mpc4j_s2pc_pir_index_single_onionpir_Mcr21SingleIndexPirNativeUtils_generateReply(
         JNIEnv *env, jclass, jbyteArray parms_bytes, jbyteArray pk_bytes, jbyteArray galois_keys_bytes,
         jobject enc_sk_bytes, jobject query_bytes, jobject split_db_list, jintArray j_nec) {
     EncryptionParameters parms = deserialize_encryption_parms(env, parms_bytes);
@@ -312,7 +312,7 @@ JNIEXPORT jbyteArray JNICALL Java_edu_alibaba_mpc4j_s2pc_pir_index_onionpir_Mcr2
     return serialize_ciphertext(env, first_dim_ctxt[0]);
 }
 
-JNIEXPORT jlongArray JNICALL Java_edu_alibaba_mpc4j_s2pc_pir_index_onionpir_Mcr21IndexPirNativeUtils_decryptReply(
+JNIEXPORT jlongArray JNICALL Java_edu_alibaba_mpc4j_s2pc_pir_index_single_onionpir_Mcr21SingleIndexPirNativeUtils_decryptReply(
         JNIEnv *env, jclass, jbyteArray parms_bytes, jbyteArray sk_bytes, jbyteArray response_bytes) {
     EncryptionParameters parms = deserialize_encryption_parms(env, parms_bytes);
     SEALContext context(parms, true, sec_level_type::none);

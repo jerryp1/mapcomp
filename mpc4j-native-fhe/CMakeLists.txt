@@ -53,18 +53,18 @@ add_library(
         polynomials.cpp
         utils.cpp
         index_pir.cpp
-        pir/edu_alibaba_mpc4j_s2pc_pir_index_xpir_Mbfk16IndexPirNativeUtils.cpp
+        pir/edu_alibaba_mpc4j_s2pc_pir_index_single_xpir_Mbfk16SingleIndexPirNativeUtils.cpp
         pir/edu_alibaba_mpc4j_s2pc_pir_keyword_cmg21_Cmg21KwPirNativeUtils.cpp
         mtg/edu_alibaba_mpc4j_s2pc_pcg_mtg_zp64_core_rss19_Rss19Zp64CoreMtgNativeUtils.cpp
-        pir/edu_alibaba_mpc4j_s2pc_pir_index_onionpir_Mcr21IndexPirNativeUtils.cpp
+        pir/edu_alibaba_mpc4j_s2pc_pir_index_single_onionpir_Mcr21SingleIndexPirNativeUtils.cpp
         tfhe/tfhe.cpp
-        pir/edu_alibaba_mpc4j_s2pc_pir_index_sealpir_Acls18IndexPirNativeUtils.cpp
-        pir/edu_alibaba_mpc4j_s2pc_pir_index_fastpir_Ayaa21IndexPirNativeUtils.cpp
+        pir/edu_alibaba_mpc4j_s2pc_pir_index_single_sealpir_Acls18SingleIndexPirNativeUtils.cpp
+        pir/edu_alibaba_mpc4j_s2pc_pir_index_single_fastpir_Ayaa21SingleIndexPirNativeUtils.cpp
         tfhe/util.cpp
         tfhe/util.h
-        pir/edu_alibaba_mpc4j_s2pc_pir_index_vectorizedpir_Mr23IndexPirNativeUtils.cpp
-        pir/edu_alibaba_mpc4j_s2pc_pir_batchindex_psipir_Lpzg24BatchIndexPirNativeUtils.cpp
-        pir/edu_alibaba_mpc4j_s2pc_pir_batchindex_vectorizedpir_Mr23BatchIndexPirNativeUtils.cpp
+        pir/edu_alibaba_mpc4j_s2pc_pir_index_single_vectorizedpir_Mr23SingleIndexPirNativeUtils.cpp
+        pir/edu_alibaba_mpc4j_s2pc_pir_index_batch_psipir_Lpzg24BatchIndexPirNativeUtils.cpp
+        pir/edu_alibaba_mpc4j_s2pc_pir_index_batch_vectorizedpir_Mr23BatchIndexPirNativeUtils.cpp
         pir/edu_alibaba_mpc4j_s2pc_upso_upsi_cmg21_Cmg21UpsiNativeUtils.cpp)
 # 链接SEAL库
 target_link_libraries(mpc4j-native-fhe PUBLIC SEAL::seal_shared)

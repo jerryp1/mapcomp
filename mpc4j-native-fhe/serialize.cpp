@@ -251,6 +251,17 @@ vector<Plaintext> deserialize_plaintexts(JNIEnv *env, jobjectArray array, const 
     return plaintexts;
 }
 
+vector<Plaintext> deserialize_plaintexts_array(JNIEnv *env, jobjectArray array, const SEALContext& context) {
+    jint size = env->GetArrayLength(array);
+    vector<Plaintext> plaintexts;
+    for (jint i = 0; i < size; i++) {
+        auto row = (jbyteArray) env->GetObjectArrayElement(array, i);
+        plaintexts.push_back(deserialize_plaintext(env, row, context));
+        env->DeleteLocalRef(row);
+    }
+    return plaintexts;
+}
+
 vector<Plaintext> deserialize_plaintexts(JNIEnv *env, jobject list, const SEALContext& context) {
     jclass obj_class = env->FindClass("java/util/ArrayList");
     jmethodID get_method = env->GetMethodID(obj_class, "get", "(I)Ljava/lang/Object;");

@@ -1,7 +1,7 @@
 //
 // Created by pengliqiang on 2023/1/17.
 //
-#include "edu_alibaba_mpc4j_s2pc_pir_index_sealpir_Acls18IndexPirNativeUtils.h"
+#include "edu_alibaba_mpc4j_s2pc_pir_index_single_sealpir_Acls18SingleIndexPirNativeUtils.h"
 #include "seal/seal.h"
 #include "../utils.h"
 #include "../serialize.h"
@@ -11,9 +11,7 @@
 using namespace seal;
 using namespace std;
 
-// #define DEBUG
-
-JNIEXPORT jbyteArray JNICALL Java_edu_alibaba_mpc4j_s2pc_pir_index_sealpir_Acls18IndexPirNativeUtils_generateEncryptionParams(
+JNIEXPORT jbyteArray JNICALL Java_edu_alibaba_mpc4j_s2pc_pir_index_single_sealpir_Acls18SingleIndexPirNativeUtils_generateEncryptionParams(
         JNIEnv *env, jclass, jint poly_modulus_degree, jlong plain_modulus) {
     EncryptionParameters parms = generate_encryption_parameters(scheme_type::bfv, poly_modulus_degree, plain_modulus,
                                                                 CoeffModulus::BFVDefault(poly_modulus_degree,
@@ -21,7 +19,7 @@ JNIEXPORT jbyteArray JNICALL Java_edu_alibaba_mpc4j_s2pc_pir_index_sealpir_Acls1
     return serialize_encryption_parms(env, parms);
 }
 
-JNIEXPORT jobject JNICALL Java_edu_alibaba_mpc4j_s2pc_pir_index_sealpir_Acls18IndexPirNativeUtils_keyGen(
+JNIEXPORT jobject JNICALL Java_edu_alibaba_mpc4j_s2pc_pir_index_single_sealpir_Acls18SingleIndexPirNativeUtils_keyGen(
         JNIEnv *env, jclass, jbyteArray parms_bytes) {
     EncryptionParameters parms = deserialize_encryption_parms(env, parms_bytes);
     SEALContext context(parms);
@@ -43,7 +41,7 @@ JNIEXPORT jobject JNICALL Java_edu_alibaba_mpc4j_s2pc_pir_index_sealpir_Acls18In
     return list_obj;
 }
 
-JNIEXPORT jobject JNICALL Java_edu_alibaba_mpc4j_s2pc_pir_index_sealpir_Acls18IndexPirNativeUtils_nttTransform(
+JNIEXPORT jobject JNICALL Java_edu_alibaba_mpc4j_s2pc_pir_index_single_sealpir_Acls18SingleIndexPirNativeUtils_nttTransform(
         JNIEnv *env, jclass, jbyteArray parms_bytes, jobject plaintext_list) {
     EncryptionParameters parms = deserialize_encryption_parms(env, parms_bytes);
     SEALContext context(parms);
@@ -55,7 +53,7 @@ JNIEXPORT jobject JNICALL Java_edu_alibaba_mpc4j_s2pc_pir_index_sealpir_Acls18In
     return serialize_plaintexts(env, plaintexts);
 }
 
-JNIEXPORT jobject JNICALL Java_edu_alibaba_mpc4j_s2pc_pir_index_sealpir_Acls18IndexPirNativeUtils_generateQuery(
+JNIEXPORT jobject JNICALL Java_edu_alibaba_mpc4j_s2pc_pir_index_single_sealpir_Acls18SingleIndexPirNativeUtils_generateQuery(
         JNIEnv *env, jclass, jbyteArray parms_bytes, jbyteArray pk_bytes, jbyteArray sk_bytes, jintArray indices_array,
         jintArray nevc_array) {
     EncryptionParameters parms = deserialize_encryption_parms(env, parms_bytes);
@@ -78,9 +76,6 @@ JNIEXPORT jobject JNICALL Java_edu_alibaba_mpc4j_s2pc_pir_index_sealpir_Acls18In
     Plaintext pt(coeff_count);
     for (uint32_t i = 0; i < indices.size(); i++) {
         uint32_t num_ptxts = ceil((nvec[i] + 0.0) / coeff_count);
-#ifdef DEBUG
-        cout << "Client: number of ctxts needed for query = " << num_ptxts << endl;
-#endif
         for (uint32_t j = 0; j < num_ptxts; j++) {
             pt.set_zero();
             if (indices[i] >= coeff_count * j && indices[i] <= coeff_count * (j + 1)) {
@@ -94,9 +89,6 @@ JNIEXPORT jobject JNICALL Java_edu_alibaba_mpc4j_s2pc_pir_index_sealpir_Acls18In
                     }
                 }
                 uint64_t log_total = ceil(log2(total));
-#ifdef DEBUG
-                cout << "Client: Inverting " << pow(2, log_total) << endl;
-#endif
                 pt[real_index] = invert_mod((uint64_t) pow(2, log_total), parms.plain_modulus());
             }
             Ciphertext dest;
@@ -107,15 +99,15 @@ JNIEXPORT jobject JNICALL Java_edu_alibaba_mpc4j_s2pc_pir_index_sealpir_Acls18In
     return serialize_ciphertexts(env, result);
 }
 
-JNIEXPORT jobject JNICALL Java_edu_alibaba_mpc4j_s2pc_pir_index_sealpir_Acls18IndexPirNativeUtils_generateReply(
+JNIEXPORT jobject JNICALL Java_edu_alibaba_mpc4j_s2pc_pir_index_single_sealpir_Acls18SingleIndexPirNativeUtils_generateReply(
         JNIEnv * env, jclass, jbyteArray parms_bytes, jbyteArray galois_keys_bytes, jobject ciphertexts_list,
-        jobject plaintexts_list, jintArray nvec_array) {
+        jobjectArray plaintexts_list, jintArray nvec_array) {
     EncryptionParameters parms = deserialize_encryption_parms(env, parms_bytes);
     SEALContext context(parms);
     Evaluator evaluator(context);
     GaloisKeys* galois_keys = deserialize_galois_keys(env, galois_keys_bytes, context);
     auto exception = env->FindClass("java/lang/Exception");
-    vector<Plaintext> database = deserialize_plaintexts(env, plaintexts_list, context);
+    vector<Plaintext> database = deserialize_plaintexts_array(env, plaintexts_list, context);
     vector<Ciphertext> query_list = deserialize_ciphertexts(env, ciphertexts_list, context);
     jint *ptr = env->GetIntArrayElements(nvec_array, JNI_FALSE);
     uint32_t d = env->GetArrayLength(nvec_array);
@@ -137,10 +129,6 @@ JNIEXPORT jobject JNICALL Java_edu_alibaba_mpc4j_s2pc_pir_index_sealpir_Acls18In
     vector<Plaintext> intermediate_plain;
     uint32_t expansion_ratio = compute_expansion_ratio(parms);
     for (uint32_t i = 0; i < nvec.size(); i++) {
-#ifdef DEBUG
-        cout << "Server: " << i + 1 << "-th recursion level started " << endl;
-        cout << "Server: n_i = " << nvec[i] << endl;
-#endif
         vector<Ciphertext> expanded_query;
         for (uint32_t j = 0; j < query[i].size(); j++) {
             uint64_t total = coeff_count;
@@ -150,9 +138,6 @@ JNIEXPORT jobject JNICALL Java_edu_alibaba_mpc4j_s2pc_pir_index_sealpir_Acls18In
                     total = coeff_count;
                 }
             }
-#ifdef DEBUG
-            cout << "-- expanding one query ctxt into " << total << " ctxts " << endl;
-#endif
             vector<Ciphertext> expanded_query_part = expand_query(parms, query[i][j], *galois_keys, total);
             expanded_query.insert(
                     expanded_query.end(),
@@ -160,9 +145,6 @@ JNIEXPORT jobject JNICALL Java_edu_alibaba_mpc4j_s2pc_pir_index_sealpir_Acls18In
                     std::make_move_iterator(expanded_query_part.end()));
             expanded_query_part.clear();
         }
-#ifdef DEBUG
-        cout << "Server: expansion done " << endl;
-#endif
         if (expanded_query.size() != nvec[i]) {
             env->ThrowNew(exception, "size mismatch!");
         }
@@ -202,16 +184,13 @@ JNIEXPORT jobject JNICALL Java_edu_alibaba_mpc4j_s2pc_pir_index_sealpir_Acls18In
             }
             product = intermediate_plain.size();
         }
-#ifdef DEBUG
-        cout << "Server: " << i + 1 << "-th recursion level finished " << endl;
-#endif
     }
     // This should never get here
     env->ThrowNew(exception, "generate response failed!");
     return nullptr;
 }
 
-JNIEXPORT jlongArray JNICALL Java_edu_alibaba_mpc4j_s2pc_pir_index_sealpir_Acls18IndexPirNativeUtils_decryptReply(
+JNIEXPORT jlongArray JNICALL Java_edu_alibaba_mpc4j_s2pc_pir_index_single_sealpir_Acls18SingleIndexPirNativeUtils_decryptReply(
         JNIEnv *env, jclass, jbyteArray parms_bytes, jbyteArray sk_bytes, jobject response_list, jint d) {
     EncryptionParameters parms = deserialize_encryption_parms(env, parms_bytes);
     SEALContext context(parms);
@@ -225,20 +204,12 @@ JNIEXPORT jlongArray JNICALL Java_edu_alibaba_mpc4j_s2pc_pir_index_sealpir_Acls1
     vector<Ciphertext> temp = deserialize_ciphertexts(env, response_list, context);
     uint32_t ciphertext_size = temp[0].size();
     for (uint32_t i = 0; i < recursion_level; i++) {
-#ifdef DEBUG
-        cout << "Client: " << i + 1 << "/ " << recursion_level << "-th decryption layer started." << endl;
-#endif
         vector<Ciphertext> newtemp;
         vector<Plaintext> tempplain;
         for (uint32_t j = 0; j < temp.size(); j++) {
             Plaintext ptxt;
             decryptor.decrypt(temp[j], ptxt);
             tempplain.push_back(ptxt);
-#ifdef DEBUG
-            cout << "Client: reply noise budget = " << decryptor.invariant_noise_budget(temp[j]) << endl;
-            cout << "decoded (and scaled) plaintext = " << ptxt.to_string() << endl;
-            cout << "recursion level : " << i << " noise budget : " << decryptor.invariant_noise_budget(temp[j]) << endl;
-#endif
             if ((j + 1) % (exp_ratio * ciphertext_size) == 0 && j > 0) {
                 // Combine into one ciphertext.
                 Ciphertext combined(context, parms_id);
@@ -268,7 +239,7 @@ JNIEXPORT jlongArray JNICALL Java_edu_alibaba_mpc4j_s2pc_pir_index_sealpir_Acls1
     return nullptr;
 }
 
-JNIEXPORT jint JNICALL Java_edu_alibaba_mpc4j_s2pc_pir_index_sealpir_Acls18IndexPirNativeUtils_expansionRatio(
+JNIEXPORT jint JNICALL Java_edu_alibaba_mpc4j_s2pc_pir_index_single_sealpir_Acls18SingleIndexPirNativeUtils_expansionRatio(
         JNIEnv *env, jclass, jbyteArray parms_bytes) {
     EncryptionParameters parms = deserialize_encryption_parms(env, parms_bytes);
     SEALContext context(parms);

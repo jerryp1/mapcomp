@@ -2,7 +2,7 @@
 // Created by pengliqiang on 2023/3/10.
 //
 
-#include "edu_alibaba_mpc4j_s2pc_pir_batchindex_vectorizedpir_Mr23BatchIndexPirNativeUtils.h"
+#include "edu_alibaba_mpc4j_s2pc_pir_index_batch_vectorizedpir_Mr23BatchIndexPirNativeUtils.h"
 #include "seal/seal.h"
 #include "../serialize.h"
 #include "../utils.h"

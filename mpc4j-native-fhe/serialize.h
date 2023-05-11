@@ -50,6 +50,8 @@ jobject serialize_plaintexts(JNIEnv *env, const vector<Plaintext>& plaintexts);
 vector<Plaintext> deserialize_plaintexts(JNIEnv *env, jobjectArray list, const SEALContext& context);
 // deserialize plaintexts
 vector<Plaintext> deserialize_plaintexts(JNIEnv *env, jobject list, const SEALContext& context);
+// deserialize plaintexts from byte array
+vector<Plaintext> deserialize_plaintexts_array(JNIEnv *env, jobjectArray array, const SEALContext& context);
 // deserialize plaintext from coefficients
 Plaintext deserialize_plaintext_from_coeff(JNIEnv *env, jlongArray coeffs, const SEALContext& context);
 // deserialize plaintexts from coefficients
