@@ -38,6 +38,11 @@ public class PlainZlParty implements MpcZlParty {
     }
 
     @Override
+    public MpcZlVector create(ZlVector zlVector) {
+        return PlainZlVector.create(zlVector);
+    }
+
+    @Override
     public PlainZlVector createOnes(int num) {
         return PlainZlVector.createOnes(zl, num);
     }

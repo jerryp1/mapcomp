@@ -19,6 +19,11 @@ public class PlainBcParty implements MpcBcParty {
     private int maxRoundBitNum;
 
     @Override
+    public MpcZ2Vector create(BitVector bitVector) {
+        return PlainZ2Vector.create(bitVector);
+    }
+
+    @Override
     public PlainZ2Vector createOnes(int bitNum) {
         return PlainZ2Vector.createOnes(bitNum);
     }
@@ -26,11 +31,6 @@ public class PlainBcParty implements MpcBcParty {
     @Override
     public PlainZ2Vector createZeros(int bitNum) {
         return PlainZ2Vector.createZeros(bitNum);
-    }
-
-    @Override
-    public PlainZ2Vector create(int bitNum, boolean value) {
-        return PlainZ2Vector.create(bitNum, value);
     }
 
     @Override

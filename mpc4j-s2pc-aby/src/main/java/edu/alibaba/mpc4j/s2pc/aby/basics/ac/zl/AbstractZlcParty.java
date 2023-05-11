@@ -16,12 +16,12 @@ import java.util.Arrays;
 import java.util.stream.IntStream;
 
 /**
- * abstract square Zl party.
+ * abstract Zl circuit party.
  *
  * @author Weiran Liu
  * @date 2023/5/10
  */
-public abstract class AbstractSquareZlParty extends AbstractTwoPartyPto implements SquareZlParty {
+public abstract class AbstractZlcParty extends AbstractTwoPartyPto implements ZlcParty {
     /**
      * Zl instance
      */
@@ -47,7 +47,7 @@ public abstract class AbstractSquareZlParty extends AbstractTwoPartyPto implemen
      */
     protected int num;
 
-    public AbstractSquareZlParty(PtoDesc ptoDesc, Rpc ownRpc, Party otherParty, SquareZlConfig config) {
+    public AbstractZlcParty(PtoDesc ptoDesc, Rpc ownRpc, Party otherParty, ZlcConfig config) {
         super(ptoDesc, ownRpc, otherParty, config);
         this.zl = config.getZl();
         l = zl.getL();
@@ -80,12 +80,6 @@ public abstract class AbstractSquareZlParty extends AbstractTwoPartyPto implemen
         num = xi.getNum();
     }
 
-    protected void setUnaryOperatorInput(SquareZlVector xi) {
-        checkInitialized();
-        MathPreconditions.checkPositiveInRangeClosed("num", xi.getNum(), maxRoundNum);
-        num = xi.getNum();
-    }
-
     protected void setRevealOwnInput(SquareZlVector xi) {
         checkInitialized();
         MathPreconditions.checkPositiveInRangeClosed("xi.num", xi.getNum(), maxRoundNum);
@@ -96,6 +90,11 @@ public abstract class AbstractSquareZlParty extends AbstractTwoPartyPto implemen
         checkInitialized();
         MathPreconditions.checkPositiveInRangeClosed("xi.num", xi.getNum(), maxRoundNum);
         num = xi.getNum();
+    }
+
+    @Override
+    public SquareZlVector create(ZlVector zlVector) {
+        return SquareZlVector.create(zlVector, true);
     }
 
     @Override

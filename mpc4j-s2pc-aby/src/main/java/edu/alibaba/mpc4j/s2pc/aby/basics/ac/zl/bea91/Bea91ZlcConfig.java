@@ -3,8 +3,8 @@ package edu.alibaba.mpc4j.s2pc.aby.basics.ac.zl.bea91;
 import edu.alibaba.mpc4j.common.rpc.desc.SecurityModel;
 import edu.alibaba.mpc4j.common.tool.EnvType;
 import edu.alibaba.mpc4j.common.tool.galoisfield.zl.Zl;
-import edu.alibaba.mpc4j.s2pc.aby.basics.ac.zl.SquareZlConfig;
-import edu.alibaba.mpc4j.s2pc.aby.basics.ac.zl.SquareZlFactory;
+import edu.alibaba.mpc4j.s2pc.aby.basics.ac.zl.ZlcConfig;
+import edu.alibaba.mpc4j.s2pc.aby.basics.ac.zl.ZlcFactory;
 import edu.alibaba.mpc4j.s2pc.pcg.mtg.zl.ZlMtgConfig;
 import edu.alibaba.mpc4j.s2pc.pcg.mtg.zl.ZlMtgFactory;
 
@@ -14,13 +14,13 @@ import edu.alibaba.mpc4j.s2pc.pcg.mtg.zl.ZlMtgFactory;
  * @author Weiran Liu
  * @date 2023/5/10
  */
-public class Bea91SquareZlConfig implements SquareZlConfig {
+public class Bea91ZlcConfig implements ZlcConfig {
     /**
      * multiplication triple generation config
      */
     private final ZlMtgConfig mtgConfig;
 
-    private Bea91SquareZlConfig(Builder builder) {
+    private Bea91ZlcConfig(Builder builder) {
         mtgConfig = builder.mtgConfig;
     }
 
@@ -29,8 +29,8 @@ public class Bea91SquareZlConfig implements SquareZlConfig {
     }
 
     @Override
-    public SquareZlFactory.SquareZlType getPtoType() {
-        return SquareZlFactory.SquareZlType.BEA91;
+    public ZlcFactory.ZlType getPtoType() {
+        return ZlcFactory.ZlType.BEA91;
     }
 
     @Override
@@ -57,7 +57,7 @@ public class Bea91SquareZlConfig implements SquareZlConfig {
         return securityModel;
     }
 
-    public static class Builder implements org.apache.commons.lang3.builder.Builder<Bea91SquareZlConfig> {
+    public static class Builder implements org.apache.commons.lang3.builder.Builder<Bea91ZlcConfig> {
         /**
          * multiplication triple generation config
          */
@@ -73,8 +73,8 @@ public class Bea91SquareZlConfig implements SquareZlConfig {
         }
 
         @Override
-        public Bea91SquareZlConfig build() {
-            return new Bea91SquareZlConfig(this);
+        public Bea91ZlcConfig build() {
+            return new Bea91ZlcConfig(this);
         }
     }
 }

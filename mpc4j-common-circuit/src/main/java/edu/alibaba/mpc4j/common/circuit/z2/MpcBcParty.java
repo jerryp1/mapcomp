@@ -10,6 +10,15 @@ import edu.alibaba.mpc4j.common.tool.bitvector.BitVector;
  * @date 2023/4/20
  */
 public interface MpcBcParty {
+
+    /**
+     * Creates a (plain) vector with assigned value.
+     *
+     * @param bitVector assigned value.
+     * @return a vector.
+     */
+    MpcZ2Vector create(BitVector bitVector);
+
     /**
      * Creates a (plain) all-one vector.
      *
@@ -33,7 +42,13 @@ public interface MpcBcParty {
      * @param value  the assigned value.
      * @return a vector.
      */
-    MpcZ2Vector create(int bitNum, boolean value);
+    default MpcZ2Vector create(int bitNum, boolean value) {
+        if (value) {
+            return createOnes(bitNum);
+        } else {
+            return createZeros(bitNum);
+        }
+    }
 
     /**
      * Creates an empty vector.

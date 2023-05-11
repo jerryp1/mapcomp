@@ -17,7 +17,6 @@ import org.junit.runners.Parameterized;
 
 import java.security.SecureRandom;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collection;
 
 /**
@@ -40,24 +39,20 @@ public class SinglePlainZlPartyTest {
      * large num
      */
     private static final int LARGE_NUM = 1 << 16;
-    /**
-     * l array
-     */
-    private static final int[] L_ARRAY = new int[]{
-        1, 5, 7, 9, 15, 16, 17, LongUtils.MAX_L - 1, LongUtils.MAX_L, Long.SIZE, CommonConstants.BLOCK_BIT_LENGTH,
-    };
-    /**
-     * Zl array
-     */
-    private static final Zl[] ZL_ARRAY = Arrays.stream(L_ARRAY)
-        .mapToObj(l -> ZlFactory.createInstance(EnvType.STANDARD, l))
-        .toArray(Zl[]::new);
 
     @Parameterized.Parameters(name = "{0}")
     public static Collection<Object[]> configurations() {
         Collection<Object[]> configurations = new ArrayList<>();
 
-        for (Zl zl : ZL_ARRAY) {
+        Zl[] zls = new Zl[]{
+            ZlFactory.createInstance(EnvType.STANDARD, 1),
+            ZlFactory.createInstance(EnvType.STANDARD, 3),
+            ZlFactory.createInstance(EnvType.STANDARD, LongUtils.MAX_L - 1),
+            ZlFactory.createInstance(EnvType.STANDARD, LongUtils.MAX_L),
+            ZlFactory.createInstance(EnvType.STANDARD, LongUtils.MAX_L + 1),
+            ZlFactory.createInstance(EnvType.STANDARD, CommonConstants.BLOCK_BIT_LENGTH),
+        };
+        for (Zl zl : zls) {
             configurations.add(new Object[]{"l = " + zl.getL(), zl});
         }
 
@@ -114,18 +109,17 @@ public class SinglePlainZlPartyTest {
     }
 
     private void testDyadicOperator(DyadicAcOperator operator, int num) {
-        // generate x
-        ZlVector xVector = ZlVector.createRandom(zl, num, SECURE_RANDOM);
-        PlainZlVector xPlainVector = PlainZlVector.create(xVector);
-        // generate y
-        ZlVector yVector = ZlVector.createRandom(zl, num, SECURE_RANDOM);
-        PlainZlVector yPlainVector = PlainZlVector.create(yVector);
-        // create z
-        ZlVector zVector;
-        PlainZlVector zPlainVector;
-        // operation
         PlainZlParty plainParty = new PlainZlParty(zl);
         plainParty.init(num, num);
+        // generate x
+        ZlVector xVector = ZlVector.createRandom(zl, num, SECURE_RANDOM);
+        MpcZlVector xPlainVector = plainParty.create(xVector);
+        // generate y
+        ZlVector yVector = ZlVector.createRandom(zl, num, SECURE_RANDOM);
+        MpcZlVector yPlainVector = plainParty.create(yVector);
+        // create z
+        ZlVector zVector;
+        MpcZlVector zPlainVector;
         switch (operator) {
             case ADD:
                 zVector = xVector.add(yVector);
@@ -148,15 +142,14 @@ public class SinglePlainZlPartyTest {
 
     @SuppressWarnings("SameParameterValue")
     private void testUnaryOperator(UnaryAcOperator operator, int num) {
-        // generate x
-        ZlVector xVector = ZlVector.createRandom(zl, num, SECURE_RANDOM);
-        PlainZlVector xPlainVector = PlainZlVector.create(xVector);
-        // create z
-        ZlVector zVector;
-        PlainZlVector zPlainVector;
-        // operation
         PlainZlParty plainParty = new PlainZlParty(zl);
         plainParty.init(num, num);
+        // generate x
+        ZlVector xVector = ZlVector.createRandom(zl, num, SECURE_RANDOM);
+        MpcZlVector xPlainVector = plainParty.create(xVector);
+        // create z
+        ZlVector zVector;
+        MpcZlVector zPlainVector;
         //noinspection SwitchStatementWithTooFewBranches
         switch (operator) {
             case NEG:

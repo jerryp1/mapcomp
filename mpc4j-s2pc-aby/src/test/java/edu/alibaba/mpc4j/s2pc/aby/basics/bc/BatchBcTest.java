@@ -1,4 +1,4 @@
-package edu.alibaba.mpc4j.s2pc.aby.basics.bc.single;
+package edu.alibaba.mpc4j.s2pc.aby.basics.bc;
 
 import com.google.common.base.Preconditions;
 import edu.alibaba.mpc4j.common.circuit.operator.DyadicBcOperator;
@@ -8,11 +8,7 @@ import edu.alibaba.mpc4j.common.rpc.RpcManager;
 import edu.alibaba.mpc4j.common.rpc.impl.memory.MemoryRpcManager;
 import edu.alibaba.mpc4j.common.tool.bitvector.BitVector;
 import edu.alibaba.mpc4j.common.tool.bitvector.BitVectorFactory;
-import edu.alibaba.mpc4j.s2pc.aby.basics.bc.BcConfig;
-import edu.alibaba.mpc4j.s2pc.aby.basics.bc.BcFactory;
-import edu.alibaba.mpc4j.s2pc.aby.basics.bc.BcParty;
 import edu.alibaba.mpc4j.s2pc.aby.basics.bc.bea91.Bea91BcConfig;
-import edu.alibaba.mpc4j.s2pc.aby.basics.bc.rrg21.Rrg21BcConfig;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.time.StopWatch;
 import org.junit.After;
@@ -28,16 +24,17 @@ import java.security.SecureRandom;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.IntStream;
 
 /**
- * single Boolean circuit test.
+ * batch Boolean circuit test.
  *
  * @author Weiran Liu
- * @date 2022/02/14
+ * @date 2022/12/27
  */
 @RunWith(Parameterized.class)
-public class SingleBcTest {
-    private static final Logger LOGGER = LoggerFactory.getLogger(SingleBcTest.class);
+public class BatchBcTest {
+    private static final Logger LOGGER = LoggerFactory.getLogger(BatchBcTest.class);
     /**
      * random status
      */
@@ -45,22 +42,26 @@ public class SingleBcTest {
     /**
      * default number of bits
      */
-    private static final int DEFAULT_BIT_NUM = 1000;
+    private static final int DEFAULT_BIT_NUM = 999;
     /**
      * large number of bits
      */
-    private static final int LARGE_BIT_NUM = 1 << 18;
+    private static final int LARGE_BIT_NUM = (1 << 16) + 1;
+    /**
+     * vector length
+     */
+    private static final int VECTOR_LENGTH = 13;
 
     @Parameterized.Parameters(name = "{0}")
     public static Collection<Object[]> configurations() {
         Collection<Object[]> configurations = new ArrayList<>();
 
         // RRG+21
-        configurations.add(new Object[] {
-            BcFactory.BcType.RRG21.name(), new Rrg21BcConfig.Builder().build()
+        configurations.add(new Object[]{
+            BcFactory.BcType.RRG21.name(), new Bea91BcConfig.Builder().build()
         });
         // Bea91
-        configurations.add(new Object[] {
+        configurations.add(new Object[]{
             BcFactory.BcType.BEA91.name(), new Bea91BcConfig.Builder().build()
         });
 
@@ -68,19 +69,19 @@ public class SingleBcTest {
     }
 
     /**
-     * the sender
+     * sender RPC
      */
     private final Rpc senderRpc;
     /**
-     * the receiver
+     * receiver RPC
      */
     private final Rpc receiverRpc;
     /**
-     * the protocol configuration
+     * config
      */
     private final BcConfig config;
 
-    public SingleBcTest(String name, BcConfig config) {
+    public BatchBcTest(String name, BcConfig config) {
         Preconditions.checkArgument(StringUtils.isNotBlank(name));
         // We cannot use NettyRPC in the test case since it needs multi-thread connect / disconnect.
         // In other word, we cannot connect / disconnect NettyRpc in @Before / @After, respectively.
@@ -119,7 +120,7 @@ public class SingleBcTest {
 
     @Test
     public void test15BitNum() {
-        testPto(15, false);
+        testPto(15, true);
     }
 
     @Test
@@ -157,20 +158,33 @@ public class SingleBcTest {
         receiver.destroy();
     }
 
-    private void testDyadicOperator(BcParty sender, BcParty receiver, DyadicBcOperator operator, int bitNum) {
+    private void testDyadicOperator(BcParty sender, BcParty receiver, DyadicBcOperator operator, int maxBitNum) {
         int randomTaskId = Math.abs(SECURE_RANDOM.nextInt());
         sender.setTaskId(randomTaskId);
         receiver.setTaskId(randomTaskId);
-        // generate x
-        BitVector xBitVector = BitVectorFactory.createRandom(bitNum, SECURE_RANDOM);
-        // generate y
-        BitVector yBitVector = BitVectorFactory.createRandom(bitNum, SECURE_RANDOM);
+        // generate xs
+        BitVector[] xVectors = IntStream.range(0, VECTOR_LENGTH)
+            .mapToObj(index -> {
+                // sample bitNum in [1, maxBitNum]
+                int bitNum = SECURE_RANDOM.nextInt(maxBitNum) + 1;
+                return BitVectorFactory.createRandom(bitNum, SECURE_RANDOM);
+            })
+            .toArray(BitVector[]::new);
+        // generate ys
+        BitVector[] yVectors = IntStream.range(0, VECTOR_LENGTH)
+            .mapToObj(index -> {
+                int bitNum = xVectors[index].bitNum();
+                return BitVectorFactory.createRandom(bitNum, SECURE_RANDOM);
+            })
+            .toArray(BitVector[]::new);
         try {
             LOGGER.info("-----test {} ({}) start-----", sender.getPtoDesc().getPtoName(), operator.name());
-            SingleDyadicBcSenderThread senderThread = new SingleDyadicBcSenderThread(sender, operator, xBitVector, yBitVector);
-            SingleDyadicBcReceiverThread receiverThread = new SingleDyadicBcReceiverThread(receiver, operator, xBitVector, yBitVector);
+            BatchDyadicBcSenderThread senderThread
+                = new BatchDyadicBcSenderThread(sender, operator, xVectors, yVectors);
+            BatchDyadicBcReceiverThread receiverThread
+                = new BatchDyadicBcReceiverThread(receiver, operator, xVectors, yVectors);
             StopWatch stopWatch = new StopWatch();
-
+            // 开始执行协议
             stopWatch.start();
             senderThread.start();
             receiverThread.start();
@@ -183,24 +197,19 @@ public class SingleBcTest {
             long receiverByteLength = receiverRpc.getSendByteLength();
             senderRpc.reset();
             receiverRpc.reset();
-            BitVector expectBitVector = senderThread.getExpectVector();
+            BitVector[] zVectors = senderThread.getExpectVectors();
             // (plain, plain)
-            Assert.assertEquals(expectBitVector, senderThread.getZ11Vector());
-            Assert.assertEquals(expectBitVector, receiverThread.getZ11Vector());
+            Assert.assertArrayEquals(zVectors, senderThread.getSendPlainPlainVectors());
+            Assert.assertArrayEquals(zVectors, receiverThread.getRecvPlainPlainVectors());
             // (plain, secret)
-            Assert.assertEquals(expectBitVector, senderThread.getZ10Vector());
-            Assert.assertEquals(expectBitVector, receiverThread.getZ10Vector());
+            Assert.assertArrayEquals(zVectors, senderThread.getSendPlainSecretVectors());
+            Assert.assertArrayEquals(zVectors, receiverThread.getRecvPlainSecretVectors());
             // (secret, plain)
-            Assert.assertEquals(expectBitVector, senderThread.getZ01Vector());
-            Assert.assertEquals(expectBitVector, receiverThread.getZ01Vector());
+            Assert.assertArrayEquals(zVectors, senderThread.getSendSecretPlainVectors());
+            Assert.assertArrayEquals(zVectors, receiverThread.getRecvSecretPlainVectors());
             // (secret, secret)
-            Assert.assertEquals(expectBitVector, senderThread.getZ00Vector());
-            Assert.assertEquals(expectBitVector, receiverThread.getZ00Vector());
-            // immutable shares
-            Assert.assertEquals(senderThread.getShareX0(), senderThread.getFinalX010());
-            Assert.assertEquals(senderThread.getShareX0(), senderThread.getFinalX000());
-            Assert.assertEquals(receiverThread.getShareX1(), receiverThread.getFinalX011());
-            Assert.assertEquals(receiverThread.getShareX1(), receiverThread.getFinalX001());
+            Assert.assertArrayEquals(zVectors, senderThread.getSendSecretSecretVectors());
+            Assert.assertArrayEquals(zVectors, receiverThread.getRecvSecretSecretVectors());
 
             LOGGER.info("Sender sends {}B, Receiver sends {}B, time = {}ms",
                 senderByteLength, receiverByteLength, time
@@ -212,21 +221,28 @@ public class SingleBcTest {
     }
 
     @SuppressWarnings("SameParameterValue")
-    private void testUnaryOperator(BcParty sender, BcParty receiver, UnaryBcOperator operator, int bitNum) {
+    private void testUnaryOperator(BcParty sender, BcParty receiver, UnaryBcOperator operator, int maxBitNum) {
         int randomTaskId = Math.abs(SECURE_RANDOM.nextInt());
         sender.setTaskId(randomTaskId);
         receiver.setTaskId(randomTaskId);
-        // generate x
-        BitVector xBitVector = BitVectorFactory.createRandom(bitNum, SECURE_RANDOM);
+        // generate xs
+        BitVector[] xVectors = IntStream.range(0, VECTOR_LENGTH)
+            .mapToObj(index -> {
+                // sample bitNum in [1, maxBitNum]
+                int bitNum = SECURE_RANDOM.nextInt(maxBitNum) + 1;
+                return BitVectorFactory.createRandom(bitNum, SECURE_RANDOM);
+            })
+            .toArray(BitVector[]::new);
         try {
             LOGGER.info("-----test {} ({}) start-----", sender.getPtoDesc().getPtoName(), operator.name());
-            SingleUnaryBcSenderThread senderThread = new SingleUnaryBcSenderThread(sender, operator, xBitVector);
-            SingleUnaryBcReceiverThread receiverThread = new SingleUnaryBcReceiverThread(receiver, operator, xBitVector);
+            BatchUnaryBcSenderThread senderThread = new BatchUnaryBcSenderThread(sender, operator, xVectors);
+            BatchUnaryBcReceiverThread receiverThread = new BatchUnaryBcReceiverThread(receiver, operator, xVectors);
             StopWatch stopWatch = new StopWatch();
-
+            // start
             stopWatch.start();
             senderThread.start();
             receiverThread.start();
+            // stop
             senderThread.join();
             receiverThread.join();
             stopWatch.stop();
@@ -236,16 +252,13 @@ public class SingleBcTest {
             long receiverByteLength = receiverRpc.getSendByteLength();
             senderRpc.reset();
             receiverRpc.reset();
-            BitVector expectBitVector = senderThread.getExpectVector();
+            BitVector[] zVectors = senderThread.getExpectVectors();
             // (plain)
-            Assert.assertEquals(expectBitVector, senderThread.getZ1Vector());
-            Assert.assertEquals(expectBitVector, receiverThread.getZ1Vector());
+            Assert.assertArrayEquals(zVectors, senderThread.getSendPlainVectors());
+            Assert.assertArrayEquals(zVectors, receiverThread.getRecvPlainVectors());
             // (secret)
-            Assert.assertEquals(expectBitVector, senderThread.getZ0Vector());
-            Assert.assertEquals(expectBitVector, receiverThread.getZ0Vector());
-            // immutable shares
-            Assert.assertEquals(senderThread.getShareX0(), senderThread.getFinalX0());
-            Assert.assertEquals(receiverThread.getShareX1(), receiverThread.getFinalX1());
+            Assert.assertArrayEquals(zVectors, senderThread.getSendSecretVectors());
+            Assert.assertArrayEquals(zVectors, receiverThread.getRecvSecretVectors());
 
             LOGGER.info("Sender sends {}B, Receiver sends {}B, time = {}ms",
                 senderByteLength, receiverByteLength, time

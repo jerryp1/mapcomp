@@ -120,83 +120,81 @@ public class BatchPlainZlPartyTest {
     }
 
     private void testDyadicOperator(DyadicAcOperator operator, int num) {
-        // generate x
-        ZlVector[] xZlVectors = IntStream.range(0, VECTOR_LENGTH)
-            .mapToObj(index -> ZlVector.createRandom(zl, num, SECURE_RANDOM))
-            .toArray(ZlVector[]::new);
-        PlainZlVector[] xPlainZlVectors = Arrays.stream(xZlVectors)
-            .map(PlainZlVector::create)
-            .toArray(PlainZlVector[]::new);
-        // generate y
-        ZlVector[] yZlVectors = IntStream.range(0, VECTOR_LENGTH)
-            .mapToObj(index -> ZlVector.createRandom(zl, num, SECURE_RANDOM))
-            .toArray(ZlVector[]::new);
-        PlainZlVector[] yPlainZlVectors = Arrays.stream(yZlVectors)
-            .map(PlainZlVector::create)
-            .toArray(PlainZlVector[]::new);
-        // create z
-        ZlVector[] zZlVectors;
-        PlainZlVector[] zPlainZlVectors;
-        // operation
         PlainZlParty plainZlParty = new PlainZlParty(zl);
         plainZlParty.init(num * VECTOR_LENGTH, num * VECTOR_LENGTH);
+        // generate x
+        ZlVector[] xVectors = IntStream.range(0, VECTOR_LENGTH)
+            .mapToObj(index -> ZlVector.createRandom(zl, num, SECURE_RANDOM))
+            .toArray(ZlVector[]::new);
+        MpcZlVector[] xPlainVectors = Arrays.stream(xVectors)
+            .map(plainZlParty::create)
+            .toArray(MpcZlVector[]::new);
+        // generate y
+        ZlVector[] yVectors = IntStream.range(0, VECTOR_LENGTH)
+            .mapToObj(index -> ZlVector.createRandom(zl, num, SECURE_RANDOM))
+            .toArray(ZlVector[]::new);
+        MpcZlVector[] yPlainVectors = Arrays.stream(yVectors)
+            .map(plainZlParty::create)
+            .toArray(MpcZlVector[]::new);
+        // create z
+        ZlVector[] zVectors;
+        MpcZlVector[] zPlainVectors;
         switch (operator) {
             case ADD:
-                zZlVectors = IntStream.range(0, VECTOR_LENGTH)
-                    .mapToObj(index -> xZlVectors[index].add(yZlVectors[index]))
+                zVectors = IntStream.range(0, VECTOR_LENGTH)
+                    .mapToObj(index -> xVectors[index].add(yVectors[index]))
                     .toArray(ZlVector[]::new);
-                zPlainZlVectors = plainZlParty.add(xPlainZlVectors, yPlainZlVectors);
+                zPlainVectors = plainZlParty.add(xPlainVectors, yPlainVectors);
                 break;
             case SUB:
-                zZlVectors = IntStream.range(0, VECTOR_LENGTH)
-                    .mapToObj(index -> xZlVectors[index].sub(yZlVectors[index]))
+                zVectors = IntStream.range(0, VECTOR_LENGTH)
+                    .mapToObj(index -> xVectors[index].sub(yVectors[index]))
                     .toArray(ZlVector[]::new);
-                zPlainZlVectors = plainZlParty.sub(xPlainZlVectors, yPlainZlVectors);
+                zPlainVectors = plainZlParty.sub(xPlainVectors, yPlainVectors);
                 break;
             case MUL:
-                zZlVectors = IntStream.range(0, VECTOR_LENGTH)
-                    .mapToObj(index -> xZlVectors[index].mul(yZlVectors[index]))
+                zVectors = IntStream.range(0, VECTOR_LENGTH)
+                    .mapToObj(index -> xVectors[index].mul(yVectors[index]))
                     .toArray(ZlVector[]::new);
-                zPlainZlVectors = plainZlParty.mul(xPlainZlVectors, yPlainZlVectors);
+                zPlainVectors = plainZlParty.mul(xPlainVectors, yPlainVectors);
                 break;
             default:
                 throw new IllegalStateException("Invalid " + DyadicAcOperator.class.getSimpleName() + ": " + operator.name());
         }
         // verify
         IntStream.range(0, VECTOR_LENGTH).forEach(index ->
-            Assert.assertEquals(zZlVectors[index], zPlainZlVectors[index].getZlVector())
+            Assert.assertEquals(zVectors[index], zPlainVectors[index].getZlVector())
         );
     }
 
     @SuppressWarnings("SameParameterValue")
     private void testUnaryOperator(UnaryAcOperator operator, int num) {
-        // generate x
-        ZlVector[] xZlVectors = IntStream.range(0, VECTOR_LENGTH)
-            .mapToObj(index -> ZlVector.createRandom(zl, num, SECURE_RANDOM))
-            .toArray(ZlVector[]::new);
-        PlainZlVector[] xPlainZlVectors = Arrays.stream(xZlVectors)
-            .map(PlainZlVector::create)
-            .toArray(PlainZlVector[]::new);
-        // create z
-        ZlVector[] zZlVectors;
-        PlainZlVector[] zPlainZlVectors;
-        // operation
         PlainZlParty plainZlParty = new PlainZlParty(zl);
         plainZlParty.init(num * VECTOR_LENGTH, num * VECTOR_LENGTH);
+        // generate x
+        ZlVector[] xVectors = IntStream.range(0, VECTOR_LENGTH)
+            .mapToObj(index -> ZlVector.createRandom(zl, num, SECURE_RANDOM))
+            .toArray(ZlVector[]::new);
+        MpcZlVector[] xPlainVectors = Arrays.stream(xVectors)
+            .map(plainZlParty::create)
+            .toArray(MpcZlVector[]::new);
+        // create z
+        ZlVector[] zVectors;
+        MpcZlVector[] zPlainVectors;
         //noinspection SwitchStatementWithTooFewBranches
         switch (operator) {
             case NEG:
-                zZlVectors = IntStream.range(0, VECTOR_LENGTH)
-                    .mapToObj(index -> xZlVectors[index].neg())
+                zVectors = IntStream.range(0, VECTOR_LENGTH)
+                    .mapToObj(index -> xVectors[index].neg())
                     .toArray(ZlVector[]::new);
-                zPlainZlVectors = plainZlParty.neg(xPlainZlVectors);
+                zPlainVectors = plainZlParty.neg(xPlainVectors);
                 break;
             default:
                 throw new IllegalStateException("Invalid " + UnaryAcOperator.class.getSimpleName() + ": " + operator.name());
         }
         // verify
         IntStream.range(0, VECTOR_LENGTH).forEach(index ->
-            Assert.assertEquals(zZlVectors[index], zPlainZlVectors[index].getZlVector())
+            Assert.assertEquals(zVectors[index], zPlainVectors[index].getZlVector())
         );
     }
 }

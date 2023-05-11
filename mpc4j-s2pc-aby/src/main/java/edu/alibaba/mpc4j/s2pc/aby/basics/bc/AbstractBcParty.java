@@ -82,6 +82,11 @@ public abstract class AbstractBcParty extends AbstractTwoPartyPto implements BcP
     }
 
     @Override
+    public SquareZ2Vector create(BitVector bitVector) {
+        return SquareZ2Vector.create(bitVector, true);
+    }
+
+    @Override
     public SquareZ2Vector createOnes(int bitNum) {
         return SquareZ2Vector.createOnes(bitNum);
     }
@@ -89,11 +94,6 @@ public abstract class AbstractBcParty extends AbstractTwoPartyPto implements BcP
     @Override
     public SquareZ2Vector createZeros(int bitNum) {
         return SquareZ2Vector.createZeros(bitNum);
-    }
-
-    @Override
-    public SquareZ2Vector create(int bitNum, boolean value) {
-        return SquareZ2Vector.create(bitNum, value);
     }
 
     @Override

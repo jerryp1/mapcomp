@@ -19,6 +19,14 @@ public interface MpcZlParty {
     Zl getZl();
 
     /**
+     * Creates a (plain) vector with the assigned value.
+     *
+     * @param zlVector the assigned value.
+     * @return a vector.
+     */
+    MpcZlVector create(ZlVector zlVector);
+
+    /**
      * Creates a (plain) all-one vector.
      *
      * @param num num.

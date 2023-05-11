@@ -9,12 +9,12 @@ import edu.alibaba.mpc4j.crypto.matrix.vector.ZlVector;
 import java.util.Arrays;
 
 /**
- * Square Zl party.
+ * Zl circuit party.
  *
  * @author Weiran Liu
  * @date 2023/5/10
  */
-public interface SquareZlParty extends TwoPartyPto, MpcZlParty {
+public interface ZlcParty extends TwoPartyPto, MpcZlParty {
     /**
      * Shares its own vector.
      *

@@ -88,17 +88,6 @@ public class PlainZ2Vector implements MpcZ2Vector {
     }
 
     /**
-     * Creates a plain z2 vector with all bits equal assigned boolean.
-     *
-     * @param bitNum the bit num.
-     * @param value  the assigned value.
-     * @return a plain z2 vector.
-     */
-    public static PlainZ2Vector create(int bitNum, boolean value) {
-        return value ? PlainZ2Vector.createOnes(bitNum) : PlainZ2Vector.createZeros(bitNum);
-    }
-
-    /**
      * the bit vector
      */
     private BitVector bitVector;

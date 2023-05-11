@@ -71,18 +71,17 @@ public class SinglePlainZ2PartyTest {
     }
 
     private void testDyadicOperator(DyadicBcOperator operator, int bitNum) {
-        // generate x
-        BitVector xVector = BitVectorFactory.createRandom(bitNum, SECURE_RANDOM);
-        PlainZ2Vector xPlainVector = PlainZ2Vector.create(xVector);
-        // generate y
-        BitVector yVector = BitVectorFactory.createRandom(bitNum, SECURE_RANDOM);
-        PlainZ2Vector yPlainVector = PlainZ2Vector.create(yVector);
-        // create z
-        BitVector zVector;
-        PlainZ2Vector zPlainVector;
-        // operation
         PlainBcParty plainParty = new PlainBcParty();
         plainParty.init(bitNum, bitNum);
+        // generate x
+        BitVector xVector = BitVectorFactory.createRandom(bitNum, SECURE_RANDOM);
+        MpcZ2Vector xPlainVector = plainParty.create(xVector);
+        // generate y
+        BitVector yVector = BitVectorFactory.createRandom(bitNum, SECURE_RANDOM);
+        MpcZ2Vector yPlainVector = plainParty.create(yVector);
+        // create z
+        BitVector zVector;
+        MpcZ2Vector zPlainVector;
         switch (operator) {
             case XOR:
                 zVector = xVector.xor(yVector);
@@ -105,15 +104,14 @@ public class SinglePlainZ2PartyTest {
 
     @SuppressWarnings("SameParameterValue")
     private void testUnaryOperator(UnaryBcOperator operator, int num) {
-        // generate x
-        BitVector xVector = BitVectorFactory.createRandom(num, SECURE_RANDOM);
-        PlainZ2Vector xPlainVector = PlainZ2Vector.create(xVector);
-        // create z
-        BitVector zVector;
-        PlainZ2Vector zPlainVector;
-        // operation
         PlainBcParty plainParty = new PlainBcParty();
         plainParty.init(num, num);
+        // generate x
+        BitVector xVector = BitVectorFactory.createRandom(num, SECURE_RANDOM);
+        MpcZ2Vector xPlainVector = plainParty.create(xVector);
+        // create z
+        BitVector zVector;
+        MpcZ2Vector zPlainVector;
         //noinspection SwitchStatementWithTooFewBranches
         switch (operator) {
             case NOT:

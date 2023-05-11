@@ -4,25 +4,29 @@ import edu.alibaba.mpc4j.common.rpc.Party;
 import edu.alibaba.mpc4j.common.rpc.Rpc;
 import edu.alibaba.mpc4j.common.rpc.desc.SecurityModel;
 import edu.alibaba.mpc4j.common.rpc.pto.PtoFactory;
+import edu.alibaba.mpc4j.common.tool.galoisfield.zl.Zl;
+import edu.alibaba.mpc4j.s2pc.aby.basics.ac.zl.bea91.Bea91ZlcConfig;
+import edu.alibaba.mpc4j.s2pc.aby.basics.ac.zl.bea91.Bea91ZlcReceiver;
+import edu.alibaba.mpc4j.s2pc.aby.basics.ac.zl.bea91.Bea91ZlcSender;
 
 /**
- * square Zl factory.
+ * Zl circuit party factory.
  *
  * @author Weiran Liu
  * @date 2023/5/10
  */
-public class SquareZlFactory implements PtoFactory {
+public class ZlcFactory implements PtoFactory {
     /**
      * private constructor
      */
-    private SquareZlFactory() {
+    private ZlcFactory() {
         // empty
     }
 
     /**
      * protocol type
      */
-    public enum SquareZlType {
+    public enum ZlType {
         /**
          * Bea91
          */
@@ -37,13 +41,14 @@ public class SquareZlFactory implements PtoFactory {
      * @param config        the config.
      * @return a sender.
      */
-    public static SquareZlParty createSender(Rpc senderRpc, Party receiverParty, SquareZlConfig config) {
-        SquareZlType type = config.getPtoType();
+    public static ZlcParty createSender(Rpc senderRpc, Party receiverParty, ZlcConfig config) {
+        ZlType type = config.getPtoType();
         //noinspection SwitchStatementWithTooFewBranches
         switch (type) {
             case BEA91:
+                return new Bea91ZlcSender(senderRpc, receiverParty, (Bea91ZlcConfig) config);
             default:
-                throw new IllegalArgumentException("Invalid " + SquareZlType.class.getSimpleName() + ": " + type.name());
+                throw new IllegalArgumentException("Invalid " + ZlType.class.getSimpleName() + ": " + type.name());
         }
     }
 
@@ -55,13 +60,14 @@ public class SquareZlFactory implements PtoFactory {
      * @param config      the config.
      * @return a receiver.
      */
-    public static SquareZlParty createReceiver(Rpc receiverRpc, Party senderParty, SquareZlConfig config) {
-        SquareZlType type = config.getPtoType();
+    public static ZlcParty createReceiver(Rpc receiverRpc, Party senderParty, ZlcConfig config) {
+        ZlType type = config.getPtoType();
         //noinspection SwitchStatementWithTooFewBranches
         switch (type) {
             case BEA91:
+                return new Bea91ZlcReceiver(receiverRpc, senderParty, (Bea91ZlcConfig) config);
             default:
-                throw new IllegalArgumentException("Invalid " + SquareZlType.class.getSimpleName() + ": " + type.name());
+                throw new IllegalArgumentException("Invalid " + ZlType.class.getSimpleName() + ": " + type.name());
         }
     }
 
@@ -69,13 +75,14 @@ public class SquareZlFactory implements PtoFactory {
      * Creates a default config.
      *
      * @param securityModel the security model.
-     * @param silent        if using a silent protocol.
+     * @param zl            Zl instance.
      * @return a default config.
      */
-    public static SquareZlConfig createDefaultConfig(SecurityModel securityModel, boolean silent) {
+    public static ZlcConfig createDefaultConfig(SecurityModel securityModel, Zl zl) {
         switch (securityModel) {
             case IDEAL:
             case SEMI_HONEST:
+                return new Bea91ZlcConfig.Builder(zl).build();
             case COVERT:
             case MALICIOUS:
             default:

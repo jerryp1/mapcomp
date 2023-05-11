@@ -7,9 +7,9 @@ import edu.alibaba.mpc4j.common.rpc.utils.DataPacketHeader;
 import edu.alibaba.mpc4j.common.tool.galoisfield.zl.Zl;
 import edu.alibaba.mpc4j.common.tool.utils.BigIntegerUtils;
 import edu.alibaba.mpc4j.crypto.matrix.vector.ZlVector;
-import edu.alibaba.mpc4j.s2pc.aby.basics.ac.zl.AbstractSquareZlParty;
+import edu.alibaba.mpc4j.s2pc.aby.basics.ac.zl.AbstractZlcParty;
 import edu.alibaba.mpc4j.s2pc.aby.basics.ac.zl.SquareZlVector;
-import edu.alibaba.mpc4j.s2pc.aby.basics.ac.zl.bea91.Bea91SquareZlPtoDesc.PtoStep;
+import edu.alibaba.mpc4j.s2pc.aby.basics.ac.zl.bea91.Bea91ZlcPtoDesc.PtoStep;
 import edu.alibaba.mpc4j.s2pc.pcg.mtg.zl.ZlMtgFactory;
 import edu.alibaba.mpc4j.s2pc.pcg.mtg.zl.ZlMtgParty;
 import edu.alibaba.mpc4j.s2pc.pcg.mtg.zl.ZlTriple;
@@ -26,14 +26,14 @@ import java.util.stream.Collectors;
  * @author Weiran Liu
  * @date 2023/5/10
  */
-public class Bea91SquareZlSender extends AbstractSquareZlParty {
+public class Bea91ZlcSender extends AbstractZlcParty {
     /**
      * multiplication triple generator
      */
     private final ZlMtgParty mtgSender;
 
-    public Bea91SquareZlSender(Rpc senderRpc, Party receiverParty, Bea91SquareZlConfig config) {
-        super(Bea91SquareZlPtoDesc.getInstance(), senderRpc, receiverParty, config);
+    public Bea91ZlcSender(Rpc senderRpc, Party receiverParty, Bea91ZlcConfig config) {
+        super(Bea91ZlcPtoDesc.getInstance(), senderRpc, receiverParty, config);
         mtgSender = ZlMtgFactory.createSender(senderRpc, receiverParty, config.getMtgConfig());
         addSubPtos(mtgSender);
     }
@@ -110,8 +110,8 @@ public class Bea91SquareZlSender extends AbstractSquareZlParty {
 
     @Override
     public ZlVector revealOwn(MpcZlVector x0) throws MpcAbortException {
-        SquareZlVector squareX0 = (SquareZlVector) x0;
-        setRevealOwnInput(squareX0);
+        SquareZlVector x0SquareVector = (SquareZlVector) x0;
+        setRevealOwnInput(x0SquareVector);
         if (x0.isPlain()) {
             return x0.getZlVector();
         } else {
@@ -141,8 +141,8 @@ public class Bea91SquareZlSender extends AbstractSquareZlParty {
 
     @Override
     public void revealOther(MpcZlVector x0) {
-        SquareZlVector squareX0 = (SquareZlVector) x0;
-        setRevealOtherInput(squareX0);
+        SquareZlVector x0SquareVector = (SquareZlVector) x0;
+        setRevealOtherInput(x0SquareVector);
         if (!x0.isPlain()) {
             logPhaseInfo(PtoState.PTO_BEGIN, "send share");
 
@@ -166,9 +166,9 @@ public class Bea91SquareZlSender extends AbstractSquareZlParty {
 
     @Override
     public SquareZlVector add(MpcZlVector x0, MpcZlVector y0) {
-        SquareZlVector squareX0 = (SquareZlVector) x0;
-        SquareZlVector squareY0 = (SquareZlVector) y0;
-        setDyadicOperatorInput(squareX0, squareY0);
+        SquareZlVector x0SquareVector = (SquareZlVector) x0;
+        SquareZlVector y0SquareVector = (SquareZlVector) y0;
+        setDyadicOperatorInput(x0SquareVector, y0SquareVector);
         if (x0.isPlain() && y0.isPlain()) {
             // x0 and y0 are plain vector, using plain add.
             ZlVector z0Vector = x0.getZlVector().add(y0.getZlVector());
@@ -183,22 +183,22 @@ public class Bea91SquareZlSender extends AbstractSquareZlParty {
 
             stopWatch.start();
             ZlVector z0Vector = x0.getZlVector().add(y0.getZlVector());
-            SquareZlVector squareZ0 = SquareZlVector.create(z0Vector, false);
+            SquareZlVector z0SquareVector = SquareZlVector.create(z0Vector, false);
             stopWatch.stop();
             long z0Time = stopWatch.getTime(TimeUnit.MILLISECONDS);
             stopWatch.reset();
             logStepInfo(PtoState.PTO_STEP, 1, 1, z0Time, "add (gen. z)");
 
             logPhaseInfo(PtoState.PTO_END, "add");
-            return squareZ0;
+            return z0SquareVector;
         }
     }
 
     @Override
     public SquareZlVector sub(MpcZlVector x0, MpcZlVector y0) {
-        SquareZlVector squareX0 = (SquareZlVector) x0;
-        SquareZlVector squareY0 = (SquareZlVector) y0;
-        setDyadicOperatorInput(squareX0, squareY0);
+        SquareZlVector x0SquareVector = (SquareZlVector) x0;
+        SquareZlVector y0SquareVector = (SquareZlVector) y0;
+        setDyadicOperatorInput(x0SquareVector, y0SquareVector);
         if (x0.isPlain() && y0.isPlain()) {
             // x0 and y0 are plain vector, using plain sub.
             ZlVector z0Vector = x0.getZlVector().sub(y0.getZlVector());
@@ -213,22 +213,22 @@ public class Bea91SquareZlSender extends AbstractSquareZlParty {
 
             stopWatch.start();
             ZlVector z0Vector = x0.getZlVector().sub(y0.getZlVector());
-            SquareZlVector squareZ0 = SquareZlVector.create(z0Vector, false);
+            SquareZlVector z0SquareVector = SquareZlVector.create(z0Vector, false);
             stopWatch.stop();
             long z0Time = stopWatch.getTime(TimeUnit.MILLISECONDS);
             stopWatch.reset();
             logStepInfo(PtoState.PTO_STEP, 1, 1, z0Time, "sub (gen. z)");
 
             logPhaseInfo(PtoState.PTO_END, "sub");
-            return squareZ0;
+            return z0SquareVector;
         }
     }
 
     @Override
     public SquareZlVector mul(MpcZlVector x0, MpcZlVector y0) throws MpcAbortException {
-        SquareZlVector squareX0 = (SquareZlVector) x0;
-        SquareZlVector squareY0 = (SquareZlVector) y0;
-        setDyadicOperatorInput(squareX0, squareY0);
+        SquareZlVector x0SquareVector = (SquareZlVector) x0;
+        SquareZlVector y0SquareVector = (SquareZlVector) y0;
+        setDyadicOperatorInput(x0SquareVector, y0SquareVector);
         if (x0.isPlain() && y0.isPlain()) {
             // x0 and y0 are plain vector, using plain mul.
             ZlVector z0Vector = x0.getZlVector().mul(y0.getZlVector());
@@ -253,10 +253,10 @@ public class Bea91SquareZlSender extends AbstractSquareZlParty {
             ZlVector a0 = ZlVector.create(zl, triple.getA());
             ZlVector b0 = ZlVector.create(zl, triple.getB());
             ZlVector c0 = ZlVector.create(zl, triple.getC());
-            // e0 = x0 + a0
-            ZlVector e0 = x0.getZlVector().add(a0);
-            // f0 = y0 ⊕ b0
-            ZlVector f0 = y0.getZlVector().add(b0);
+            // e0 = x0 - a0
+            ZlVector e0 = x0.getZlVector().sub(a0);
+            // f0 = y0 - b0
+            ZlVector f0 = y0.getZlVector().sub(b0);
             List<byte[]> e0f0Payload = Arrays.stream(e0.getElements())
                 .map(element -> BigIntegerUtils.nonNegBigIntegerToByteArray(element, byteL))
                 .collect(Collectors.toList());
@@ -290,21 +290,21 @@ public class Bea91SquareZlSender extends AbstractSquareZlParty {
             System.arraycopy(e1f1, num, f1, 0, num);
             // e = (e0 + e1)
             ZlVector z0 = e0.add(ZlVector.create(zl, e1));
-            // f = (f0 ⊕ f1)
+            // f = (f0 + f1)
             ZlVector f = f0.add(ZlVector.create(zl, f1));
             // z0 = (e * b0) + (f * a0) + c0
-            z0 = z0.mul(b0);
-            f = f.mul(a0);
-            z0 = z0.add(f);
-            z0 = z0.add(c0);
-            SquareZlVector squareZ0 = SquareZlVector.create(zl, z0.getElements(), false);
+            z0.muli(b0);
+            f.muli(a0);
+            z0.addi(f);
+            z0.addi(c0);
+            SquareZlVector z0SquareVector = SquareZlVector.create(zl, z0.getElements(), false);
             stopWatch.stop();
             long z0Time = stopWatch.getTime(TimeUnit.MILLISECONDS);
             stopWatch.reset();
             logStepInfo(PtoState.PTO_STEP, 3, 3, z0Time, "mul (gen. z)");
 
             logPhaseInfo(PtoState.PTO_END, "mul");
-            return squareZ0;
+            return z0SquareVector;
         }
     }
 }
