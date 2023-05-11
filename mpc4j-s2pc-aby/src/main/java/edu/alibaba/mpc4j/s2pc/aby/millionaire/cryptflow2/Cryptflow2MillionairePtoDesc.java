@@ -24,9 +24,9 @@ public class Cryptflow2MillionairePtoDesc implements PtoDesc {
      */
     enum PtoStep {
         /**
-         * step1
+         * OT
          */
-        SENDER_SEND_PAYLOAD,
+        OT,
     }
 
     /**

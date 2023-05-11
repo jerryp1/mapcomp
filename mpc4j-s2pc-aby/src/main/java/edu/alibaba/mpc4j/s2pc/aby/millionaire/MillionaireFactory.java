@@ -6,7 +6,7 @@ import edu.alibaba.mpc4j.common.rpc.desc.SecurityModel;
 import edu.alibaba.mpc4j.s2pc.aby.millionaire.cryptflow2.Cryptflow2MillionaireConfig;
 import edu.alibaba.mpc4j.s2pc.aby.millionaire.cryptflow2.Cryptflow2MillionaireReceiver;
 import edu.alibaba.mpc4j.s2pc.aby.millionaire.cryptflow2.Cryptflow2MillionaireSender;
-import edu.alibaba.mpc4j.s2pc.pcg.ot.cot.CotFactory;
+import edu.alibaba.mpc4j.s2pc.pcg.ot.lnot.LnotFactory;
 
 /**
  * Millionaire Protocol Factory.
@@ -76,15 +76,14 @@ public class MillionaireFactory {
      * Creates a default config.
      *
      * @param securityModel the security model.
-     * @param silent        if using a silent protocol.
      * @return a default config.
      */
-    public static MillionaireConfig createDefaultConfig(SecurityModel securityModel, boolean silent) {
+    public static MillionaireConfig createDefaultConfig(SecurityModel securityModel) {
         switch (securityModel) {
             case IDEAL:
             case SEMI_HONEST:
                 return new Cryptflow2MillionaireConfig.Builder()
-                        .setCotConfig(CotFactory.createDefaultConfig(SecurityModel.SEMI_HONEST, silent))
+                        .setLnotConfig(LnotFactory.createCacheConfig(SecurityModel.SEMI_HONEST))
                         .build();
             case COVERT:
             case MALICIOUS:
