@@ -6,7 +6,11 @@ import edu.alibaba.mpc4j.common.rpc.RpcManager;
 import edu.alibaba.mpc4j.common.rpc.impl.memory.MemoryRpcManager;
 import edu.alibaba.mpc4j.crypto.matrix.database.NaiveDatabase;
 import edu.alibaba.mpc4j.s2pc.pir.PirUtils;
-import edu.alibaba.mpc4j.s2pc.pir.index.IndexPirFactory;
+import edu.alibaba.mpc4j.s2pc.pir.index.single.SingleIndexPirFactory;
+import edu.alibaba.mpc4j.s2pc.pir.index.single.vectorizedpir.Mr23SingleIndexPirClient;
+import edu.alibaba.mpc4j.s2pc.pir.index.single.vectorizedpir.Mr23SingleIndexPirConfig;
+import edu.alibaba.mpc4j.s2pc.pir.index.single.vectorizedpir.Mr23SingleIndexPirParams;
+import edu.alibaba.mpc4j.s2pc.pir.index.single.vectorizedpir.Mr23SingleIndexPirServer;
 import org.apache.commons.lang3.StringUtils;
 import org.junit.After;
 import org.junit.Assert;
@@ -22,7 +26,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 
 /**
- * Vectorized PIR测试类。
+ * Vectorized PIR test.
  *
  * @author Liqiang Peng
  * @date 2023/3/24
@@ -50,11 +54,11 @@ public class VectorizedPirTest {
     @Parameterized.Parameters(name = "{0}")
     public static Collection<Object[]> configurations() {
         Collection<Object[]> configurations = new ArrayList<>();
-        Mr23IndexPirConfig pirConfig = new Mr23IndexPirConfig();
+        Mr23SingleIndexPirConfig pirConfig = new Mr23SingleIndexPirConfig();
         configurations.add(new Object[]{
-            IndexPirFactory.IndexPirType.FAST_PIR.name(),
+            SingleIndexPirFactory.SingleIndexPirType.VECTORIZED_PIR.name(),
             pirConfig,
-            new Mr23IndexPirParams(
+            new Mr23SingleIndexPirParams(
                 8192,
                 20,
                 64,
@@ -75,13 +79,13 @@ public class VectorizedPirTest {
     /**
      * Vectorized PIR config
      */
-    private final Mr23IndexPirConfig indexPirConfig;
+    private final Mr23SingleIndexPirConfig indexPirConfig;
     /**
      * Vectorized PIR params
      */
-    private final Mr23IndexPirParams indexPirParams;
+    private final Mr23SingleIndexPirParams indexPirParams;
 
-    public VectorizedPirTest(String name, Mr23IndexPirConfig indexPirConfig, Mr23IndexPirParams indexPirParams) {
+    public VectorizedPirTest(String name, Mr23SingleIndexPirConfig indexPirConfig, Mr23SingleIndexPirParams indexPirParams) {
         Preconditions.checkArgument(StringUtils.isNotBlank(name));
         // We cannot use NettyRPC in the test case since it needs multi-thread connect / disconnect.
         // In other word, we cannot connect / disconnect NettyRpc in @Before / @After, respectively.
@@ -124,12 +128,12 @@ public class VectorizedPirTest {
         testVectorizedPir(indexPirConfig, indexPirParams, SMALL_ELEMENT_BYTE_LENGTH, true);
     }
 
-    public void testVectorizedPir(Mr23IndexPirConfig config, Mr23IndexPirParams indexPirParams, int elementByteLength,
+    public void testVectorizedPir(Mr23SingleIndexPirConfig config, Mr23SingleIndexPirParams indexPirParams, int elementByteLength,
                                   boolean parallel) {
         int retrievalIndex = PirUtils.generateRetrievalIndex(SERVER_ELEMENT_SIZE);
         NaiveDatabase database = PirUtils.generateDataBase(SERVER_ELEMENT_SIZE, elementByteLength * Byte.SIZE);
-        Mr23IndexPirServer server = new Mr23IndexPirServer(serverRpc, clientRpc.ownParty(), config);
-        Mr23IndexPirClient client = new Mr23IndexPirClient(clientRpc, serverRpc.ownParty(), config);
+        Mr23SingleIndexPirServer server = new Mr23SingleIndexPirServer(serverRpc, clientRpc.ownParty(), config);
+        Mr23SingleIndexPirClient client = new Mr23SingleIndexPirClient(clientRpc, serverRpc.ownParty(), config);
         // set parallel
         server.setParallel(parallel);
         client.setParallel(parallel);

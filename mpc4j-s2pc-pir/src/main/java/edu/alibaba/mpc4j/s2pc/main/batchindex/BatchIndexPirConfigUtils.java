@@ -1,13 +1,13 @@
 package edu.alibaba.mpc4j.s2pc.main.batchindex;
 
 import edu.alibaba.mpc4j.common.tool.utils.PropertiesUtils;
-import edu.alibaba.mpc4j.s2pc.pir.batchindex.BatchIndexPirConfig;
-import edu.alibaba.mpc4j.s2pc.pir.batchindex.psipir.Lpzg24BatchIndexPirConfig;
-import edu.alibaba.mpc4j.s2pc.pir.batchindex.vectorizedpir.Mr23BatchIndexPirConfig;
+import edu.alibaba.mpc4j.s2pc.pir.index.batch.BatchIndexPirConfig;
+import edu.alibaba.mpc4j.s2pc.pir.index.batch.psipir.Lpzg24BatchIndexPirConfig;
+import edu.alibaba.mpc4j.s2pc.pir.index.batch.vectorizedpir.Mr23BatchIndexPirConfig;
 
 import java.util.Properties;
 
-import static edu.alibaba.mpc4j.s2pc.pir.batchindex.BatchIndexPirFactory.*;
+import static edu.alibaba.mpc4j.s2pc.pir.index.batch.BatchIndexPirFactory.*;
 
 /**
  * Batch Index PIR 协议配置项工具类。

@@ -2,6 +2,8 @@ package edu.alibaba.mpc4j.s2pc.pir.index.fastpir;
 
 import edu.alibaba.mpc4j.common.rpc.MpcAbortException;
 import edu.alibaba.mpc4j.crypto.matrix.database.NaiveDatabase;
+import edu.alibaba.mpc4j.s2pc.pir.index.single.fastpir.Ayaa21SingleIndexPirParams;
+import edu.alibaba.mpc4j.s2pc.pir.index.single.fastpir.Ayaa21SingleIndexPirServer;
 
 /**
  * FastPIR server thread.
@@ -13,17 +15,17 @@ public class FastPirServerThread extends Thread {
     /**
      * FastPIR server
      */
-    private final Ayaa21IndexPirServer server;
+    private final Ayaa21SingleIndexPirServer server;
     /**
      * FastPIR params
      */
-    private final Ayaa21IndexPirParams indexPirParams;
+    private final Ayaa21SingleIndexPirParams indexPirParams;
     /**
      * database
      */
     private final NaiveDatabase database;
 
-    FastPirServerThread(Ayaa21IndexPirServer server, Ayaa21IndexPirParams indexPirParams, NaiveDatabase database) {
+    FastPirServerThread(Ayaa21SingleIndexPirServer server, Ayaa21SingleIndexPirParams indexPirParams, NaiveDatabase database) {
         this.server = server;
         this.indexPirParams = indexPirParams;
         this.database = database;
