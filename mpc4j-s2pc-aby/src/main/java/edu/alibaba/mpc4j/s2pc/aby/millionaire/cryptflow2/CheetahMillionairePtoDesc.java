@@ -4,40 +4,44 @@ import edu.alibaba.mpc4j.common.rpc.desc.PtoDesc;
 import edu.alibaba.mpc4j.common.rpc.desc.PtoDescManager;
 
 /**
- * Cryptflow2 Millionaire Protocol Description.
+ * Cheetah Millionaire Protocol Description.
  *
  * @author Li Peng
  * @date 2023/4/24
  */
-public class Cryptflow2MillionairePtoDesc implements PtoDesc {
+public class CheetahMillionairePtoDesc implements PtoDesc {
     /**
      * Protocol id.
      */
-    private static final int PTO_ID = Math.abs((int) 6159294510188420043L);
+    private static final int PTO_ID = Math.abs((int) 6159294510188420044L);
     /**
      * Protocol name.
      */
-    private static final String PTO_NAME = "CRYPTFLOW2_MILLIONAIRE";
+    private static final String PTO_NAME = "CHEETAH_MILLIONAIRE";
 
     /**
      * Protocol steps.
      */
     enum PtoStep {
         /**
-         * OT
+         * the sender sends s.
          */
-        OT,
+        SENDER_SENDS_S,
+        /**
+         * the sender sends t.
+         */
+        SENDER_SENDS_T,
     }
 
     /**
      * Singleton pattern.
      */
-    private static final Cryptflow2MillionairePtoDesc INSTANCE = new Cryptflow2MillionairePtoDesc();
+    private static final CheetahMillionairePtoDesc INSTANCE = new CheetahMillionairePtoDesc();
 
     /**
      * Private constructor.
      */
-    private Cryptflow2MillionairePtoDesc() {
+    private CheetahMillionairePtoDesc() {
         // empty
     }
 

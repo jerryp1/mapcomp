@@ -2,8 +2,7 @@ package edu.alibaba.mpc4j.s2pc.aby.millionaire;
 
 import edu.alibaba.mpc4j.common.rpc.MpcAbortException;
 import edu.alibaba.mpc4j.common.rpc.pto.TwoPartyPto;
-import edu.alibaba.mpc4j.common.tool.bitvector.BitVector;
-import edu.alibaba.mpc4j.crypto.matrix.vector.ZlVector;
+import edu.alibaba.mpc4j.s2pc.aby.basics.bc.SquareZ2Vector;
 
 /**
  * Millionaire Protocol Party.
@@ -13,18 +12,21 @@ import edu.alibaba.mpc4j.crypto.matrix.vector.ZlVector;
  */
 public interface MillionaireParty extends TwoPartyPto {
     /**
-     * init protocol.
+     * Inits the protocol.
      *
-     * @param l         input value bit length.
-     * @param maxBitNum max bit num.
+     * @param maxL   max input bit length.
+     * @param maxNum max num.
+     * @throws MpcAbortException the protocol failure aborts.
      */
-    void init(int l, int maxBitNum) throws MpcAbortException;
+    void init(int maxL, int maxNum) throws MpcAbortException;
 
     /**
-     * less than.
+     * Executes the protocol.
      *
-     * @param inputs input value.
-     * @return result.
+     * @param l      input bit length.
+     * @param inputs the party's inputs.
+     * @return the party's output.
+     * @throws MpcAbortException the protocol failure aborts.
      */
-    BitVector lt(ZlVector inputs) throws MpcAbortException;
+    SquareZ2Vector lt(int l, byte[][] inputs) throws MpcAbortException;
 }

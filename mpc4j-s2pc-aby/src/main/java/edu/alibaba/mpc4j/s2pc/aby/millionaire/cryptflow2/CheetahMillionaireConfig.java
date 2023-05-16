@@ -3,17 +3,19 @@ package edu.alibaba.mpc4j.s2pc.aby.millionaire.cryptflow2;
 import edu.alibaba.mpc4j.common.rpc.desc.SecurityModel;
 import edu.alibaba.mpc4j.common.tool.EnvType;
 import edu.alibaba.mpc4j.s2pc.aby.basics.bc.BcConfig;
+import edu.alibaba.mpc4j.s2pc.aby.basics.bc.BcFactory;
 import edu.alibaba.mpc4j.s2pc.aby.millionaire.MillionaireConfig;
 import edu.alibaba.mpc4j.s2pc.aby.millionaire.MillionaireFactory;
 import edu.alibaba.mpc4j.s2pc.pcg.ot.lnot.LnotConfig;
+import edu.alibaba.mpc4j.s2pc.pcg.ot.lnot.LnotFactory;
 
 /**
- * Cryptflow2 Millionaire Protocol Config.
+ * Cheetah Millionaire Protocol Config.
  *
  * @author Li Peng
  * @date 2023/4/24
  */
-public class Cryptflow2MillionaireConfig implements MillionaireConfig {
+public class CheetahMillionaireConfig implements MillionaireConfig {
     /**
      * 1-out-of-n (with n = 2^l) ot protocol config.
      */
@@ -23,7 +25,7 @@ public class Cryptflow2MillionaireConfig implements MillionaireConfig {
      */
     private final BcConfig bcConfig;
 
-    private Cryptflow2MillionaireConfig(Cryptflow2MillionaireConfig.Builder builder) {
+    private CheetahMillionaireConfig(CheetahMillionaireConfig.Builder builder) {
         lnotConfig = builder.lnotConfig;
         bcConfig = builder.bcConfig;
     }
@@ -38,7 +40,7 @@ public class Cryptflow2MillionaireConfig implements MillionaireConfig {
 
     @Override
     public MillionaireFactory.MillionaireType getPtoType() {
-        return MillionaireFactory.MillionaireType.CRYPTFLOW2;
+        return MillionaireFactory.MillionaireType.CHEETAH;
     }
 
     @Override
@@ -60,29 +62,33 @@ public class Cryptflow2MillionaireConfig implements MillionaireConfig {
         return securityModel;
     }
 
-    public static class Builder implements org.apache.commons.lang3.builder.Builder<Cryptflow2MillionaireConfig> {
+    public static class Builder implements org.apache.commons.lang3.builder.Builder<CheetahMillionaireConfig> {
         /**
-         * 1-out-of-n (with n = 2^l) ot protocol config
+         * 1-out-of-n (with n = 2^l) ot protocol config.
          */
-        private LnotConfig lnotConfig;
+        private final LnotConfig lnotConfig;
         /**
          * boolean circuit config.
          */
         private BcConfig bcConfig;
 
-        public Cryptflow2MillionaireConfig.Builder setLnotConfig(LnotConfig lnotConfig) {
-            this.lnotConfig = lnotConfig;
-            return this;
+        public Builder(SecurityModel securityModel, boolean silent) {
+            bcConfig = BcFactory.createDefaultConfig(securityModel, silent);
+            if (silent) {
+                lnotConfig = LnotFactory.createCacheConfig(securityModel);
+            } else {
+                lnotConfig = LnotFactory.createDirectConfig(securityModel);
+            }
         }
 
-        public Cryptflow2MillionaireConfig.Builder setBcConfig(BcConfig bcConfig) {
+        public CheetahMillionaireConfig.Builder setBcConfig(BcConfig bcConfig) {
             this.bcConfig = bcConfig;
             return this;
         }
 
         @Override
-        public Cryptflow2MillionaireConfig build() {
-            return new Cryptflow2MillionaireConfig(this);
+        public CheetahMillionaireConfig build() {
+            return new CheetahMillionaireConfig(this);
         }
     }
 }
