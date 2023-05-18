@@ -12,8 +12,8 @@ import edu.alibaba.mpc4j.common.tool.utils.LongUtils;
 import edu.alibaba.mpc4j.s2pc.aby.basics.z2.Z2cFactory;
 import edu.alibaba.mpc4j.s2pc.aby.basics.z2.Z2cParty;
 import edu.alibaba.mpc4j.s2pc.aby.basics.z2.SquareZ2Vector;
-import edu.alibaba.mpc4j.s2pc.aby.hamming.HammingFactory;
-import edu.alibaba.mpc4j.s2pc.aby.hamming.HammingParty;
+import edu.alibaba.mpc4j.s2pc.aby.operator.agg.hamming.HammingFactory;
+import edu.alibaba.mpc4j.s2pc.aby.operator.agg.hamming.HammingParty;
 import org.roaringbitmap.RoaringBitmap;
 
 import java.nio.ByteOrder;

@@ -4,8 +4,8 @@ import edu.alibaba.mpc4j.common.rpc.desc.SecurityModel;
 import edu.alibaba.mpc4j.common.tool.EnvType;
 import edu.alibaba.mpc4j.s2pc.aby.basics.z2.Z2cConfig;
 import edu.alibaba.mpc4j.s2pc.aby.basics.z2.Z2cFactory;
-import edu.alibaba.mpc4j.s2pc.aby.hamming.HammingConfig;
-import edu.alibaba.mpc4j.s2pc.aby.hamming.HammingFactory;
+import edu.alibaba.mpc4j.s2pc.aby.operator.agg.hamming.HammingConfig;
+import edu.alibaba.mpc4j.s2pc.aby.operator.agg.hamming.HammingFactory;
 import edu.alibaba.mpc4j.s2pc.pjc.bitmap.BitmapPtoDesc.BitmapType;
 
 

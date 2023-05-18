@@ -2,8 +2,8 @@ package edu.alibaba.mpc4j.s2pc.pso.psica.ccpsi;
 
 import edu.alibaba.mpc4j.common.rpc.desc.SecurityModel;
 import edu.alibaba.mpc4j.common.tool.EnvType;
-import edu.alibaba.mpc4j.s2pc.aby.hamming.HammingConfig;
-import edu.alibaba.mpc4j.s2pc.aby.hamming.HammingFactory;
+import edu.alibaba.mpc4j.s2pc.aby.operator.agg.hamming.HammingConfig;
+import edu.alibaba.mpc4j.s2pc.aby.operator.agg.hamming.HammingFactory;
 import edu.alibaba.mpc4j.s2pc.pso.cpsi.ccpsi.CcpsiConfig;
 import edu.alibaba.mpc4j.s2pc.pso.cpsi.ccpsi.CcpsiFactory;
 import edu.alibaba.mpc4j.s2pc.pso.psica.PsiCaConfig;
