@@ -5,7 +5,7 @@ import edu.alibaba.mpc4j.common.rpc.Rpc;
 import edu.alibaba.mpc4j.common.rpc.desc.PtoDesc;
 import edu.alibaba.mpc4j.common.rpc.pto.AbstractTwoPartyPto;
 import edu.alibaba.mpc4j.common.tool.MathPreconditions;
-import edu.alibaba.mpc4j.s2pc.aby.basics.bc.SquareZ2Vector;
+import edu.alibaba.mpc4j.s2pc.aby.basics.z2.SquareZ2Vector;
 
 /**
  * 汉明距离协议参与方。

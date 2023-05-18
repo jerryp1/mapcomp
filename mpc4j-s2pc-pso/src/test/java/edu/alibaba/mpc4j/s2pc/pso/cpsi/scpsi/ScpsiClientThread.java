@@ -1,7 +1,7 @@
 package edu.alibaba.mpc4j.s2pc.pso.cpsi.scpsi;
 
 import edu.alibaba.mpc4j.common.rpc.MpcAbortException;
-import edu.alibaba.mpc4j.s2pc.aby.basics.bc.SquareZ2Vector;
+import edu.alibaba.mpc4j.s2pc.aby.basics.z2.SquareZ2Vector;
 
 import java.nio.ByteBuffer;
 import java.util.Set;

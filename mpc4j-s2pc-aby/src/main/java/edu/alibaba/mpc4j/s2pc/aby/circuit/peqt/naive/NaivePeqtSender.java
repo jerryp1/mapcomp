@@ -7,9 +7,9 @@ import edu.alibaba.mpc4j.common.rpc.PtoState;
 import edu.alibaba.mpc4j.common.rpc.Rpc;
 import edu.alibaba.mpc4j.common.tool.bitvector.BitVector;
 import edu.alibaba.mpc4j.crypto.matrix.database.ZlDatabase;
-import edu.alibaba.mpc4j.s2pc.aby.basics.bc.BcFactory;
-import edu.alibaba.mpc4j.s2pc.aby.basics.bc.BcParty;
-import edu.alibaba.mpc4j.s2pc.aby.basics.bc.SquareZ2Vector;
+import edu.alibaba.mpc4j.s2pc.aby.basics.z2.Z2cFactory;
+import edu.alibaba.mpc4j.s2pc.aby.basics.z2.Z2cParty;
+import edu.alibaba.mpc4j.s2pc.aby.basics.z2.SquareZ2Vector;
 import edu.alibaba.mpc4j.s2pc.aby.circuit.peqt.AbstractPeqtParty;
 
 import java.util.Arrays;
@@ -25,7 +25,7 @@ public class NaivePeqtSender extends AbstractPeqtParty {
     /**
      * Boolean circuit sender
      */
-    private final BcParty bcSender;
+    private final Z2cParty bcSender;
     /**
      * Z2 integer circuit
      */
@@ -33,7 +33,7 @@ public class NaivePeqtSender extends AbstractPeqtParty {
 
     public NaivePeqtSender(Rpc senderRpc, Party receiverParty, NaivePeqtConfig config) {
         super(NaivePeqtPtoDesc.getInstance(), senderRpc, receiverParty, config);
-        bcSender = BcFactory.createSender(senderRpc, receiverParty, config.getBcConfig());
+        bcSender = Z2cFactory.createSender(senderRpc, receiverParty, config.getBcConfig());
         addSubPtos(bcSender);
         z2IntegerCircuit = new Z2IntegerCircuit(bcSender);
     }

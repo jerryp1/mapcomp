@@ -10,7 +10,7 @@ import edu.alibaba.mpc4j.common.tool.hashbin.object.cuckoo.NoStashCuckooHashBin;
 import edu.alibaba.mpc4j.common.tool.utils.BytesUtils;
 import edu.alibaba.mpc4j.common.tool.utils.CommonUtils;
 import edu.alibaba.mpc4j.common.tool.utils.LongUtils;
-import edu.alibaba.mpc4j.s2pc.aby.basics.bc.SquareZ2Vector;
+import edu.alibaba.mpc4j.s2pc.aby.basics.z2.SquareZ2Vector;
 import edu.alibaba.mpc4j.s2pc.aby.circuit.peqt.PeqtFactory;
 import edu.alibaba.mpc4j.s2pc.aby.circuit.peqt.PeqtParty;
 import edu.alibaba.mpc4j.s2pc.upso.ucpsi.AbstractUcpsiClient;

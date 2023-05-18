@@ -2,7 +2,6 @@ package edu.alibaba.mpc4j.s2pc.aby.circuit.peqt;
 
 import edu.alibaba.mpc4j.common.rpc.Party;
 import edu.alibaba.mpc4j.common.rpc.Rpc;
-import edu.alibaba.mpc4j.common.rpc.desc.SecurityModel;
 import edu.alibaba.mpc4j.common.rpc.pto.PtoFactory;
 import edu.alibaba.mpc4j.s2pc.aby.circuit.peqt.cgs22.Cgs22PeqtConfig;
 import edu.alibaba.mpc4j.s2pc.aby.circuit.peqt.cgs22.Cgs22PeqtReceiver;
@@ -82,11 +81,10 @@ public class PeqtFactory implements PtoFactory {
     /**
      * Creates a default config.
      *
-     * @param securityModel the security model.
      * @param silent        if using a silent protocol.
      * @return a default config.
      */
-    public static PeqtConfig createDefaultConfig(SecurityModel securityModel, boolean silent) {
-        return new Cgs22PeqtConfig.Builder(securityModel, silent).build();
+    public static PeqtConfig createDefaultConfig(boolean silent) {
+        return new Cgs22PeqtConfig.Builder(silent).build();
     }
 }

@@ -2,8 +2,8 @@ package edu.alibaba.mpc4j.s2pc.pjc.bitmap;
 
 import edu.alibaba.mpc4j.common.rpc.desc.SecurityModel;
 import edu.alibaba.mpc4j.common.tool.EnvType;
-import edu.alibaba.mpc4j.s2pc.aby.basics.bc.BcConfig;
-import edu.alibaba.mpc4j.s2pc.aby.basics.bc.BcFactory;
+import edu.alibaba.mpc4j.s2pc.aby.basics.z2.Z2cConfig;
+import edu.alibaba.mpc4j.s2pc.aby.basics.z2.Z2cFactory;
 import edu.alibaba.mpc4j.s2pc.aby.hamming.HammingConfig;
 import edu.alibaba.mpc4j.s2pc.aby.hamming.HammingFactory;
 import edu.alibaba.mpc4j.s2pc.pjc.bitmap.BitmapPtoDesc.BitmapType;
@@ -19,14 +19,14 @@ public class SecureBitmapConfig implements BitmapConfig {
     /**
      * BC协议
      */
-    private final BcConfig bcConfig;
+    private final Z2cConfig z2cConfig;
     /**
      * 汉明计算协议
      */
     private final HammingConfig hammingConfig;
 
     private SecureBitmapConfig(Builder builder) {
-        bcConfig = builder.bcConfig;
+        z2cConfig = builder.z2cConfig;
         hammingConfig = builder.hammingConfig;
     }
 
@@ -37,26 +37,26 @@ public class SecureBitmapConfig implements BitmapConfig {
 
     @Override
     public void setEnvType(EnvType envType) {
-        this.bcConfig.setEnvType(envType);
+        this.z2cConfig.setEnvType(envType);
     }
 
     @Override
     public EnvType getEnvType() {
-        return bcConfig.getEnvType();
+        return z2cConfig.getEnvType();
     }
 
     @Override
     public SecurityModel getSecurityModel() {
         SecurityModel securityModel = SecurityModel.SEMI_HONEST;
-        if (bcConfig.getSecurityModel().compareTo(securityModel) < 0) {
-            securityModel = bcConfig.getSecurityModel();
+        if (z2cConfig.getSecurityModel().compareTo(securityModel) < 0) {
+            securityModel = z2cConfig.getSecurityModel();
         }
         return securityModel;
     }
 
     @Override
-    public BcConfig getBcConfig() {
-        return bcConfig;
+    public Z2cConfig getBcConfig() {
+        return z2cConfig;
     }
 
     @Override
@@ -68,19 +68,19 @@ public class SecureBitmapConfig implements BitmapConfig {
         /**
          * BTG协议配置项
          */
-        private BcConfig bcConfig;
+        private Z2cConfig z2cConfig;
         /**
          * 汉明距离计算配置项
          */
         private HammingConfig hammingConfig;
 
         public Builder() {
-            bcConfig = BcFactory.createDefaultConfig(SecurityModel.SEMI_HONEST, true);
+            z2cConfig = Z2cFactory.createDefaultConfig(true);
             hammingConfig = HammingFactory.createDefaultConfig(SecurityModel.SEMI_HONEST, true);
         }
 
-        public Builder setBcConfig(BcConfig bcConfig) {
-            this.bcConfig = bcConfig;
+        public Builder setBcConfig(Z2cConfig z2cConfig) {
+            this.z2cConfig = z2cConfig;
             return this;
         }
 

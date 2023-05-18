@@ -3,13 +3,12 @@ package edu.alibaba.mpc4j.s2pc.opf.oprp;
 import com.google.common.base.Preconditions;
 import edu.alibaba.mpc4j.common.rpc.Rpc;
 import edu.alibaba.mpc4j.common.rpc.RpcManager;
-import edu.alibaba.mpc4j.common.rpc.desc.SecurityModel;
 import edu.alibaba.mpc4j.common.rpc.impl.memory.MemoryRpcManager;
 import edu.alibaba.mpc4j.common.tool.CommonConstants;
 import edu.alibaba.mpc4j.common.tool.crypto.prp.Prp;
 import edu.alibaba.mpc4j.common.tool.crypto.prp.PrpFactory;
 import edu.alibaba.mpc4j.common.tool.utils.BytesUtils;
-import edu.alibaba.mpc4j.s2pc.aby.basics.bc.BcFactory;
+import edu.alibaba.mpc4j.s2pc.aby.basics.z2.Z2cFactory;
 import edu.alibaba.mpc4j.s2pc.opf.oprp.lowmc.LowMcOprpConfig;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.time.StopWatch;
@@ -58,16 +57,12 @@ public class OprpTest {
         // LowMc (direct)
         configurations.add(new Object[] {
             OprpFactory.OprpType.LOW_MC.name() + " (direct)",
-            new LowMcOprpConfig.Builder()
-                .setBcConfig(BcFactory.createDefaultConfig(SecurityModel.SEMI_HONEST, false))
-                .build(),
+            new LowMcOprpConfig.Builder().setZ2cConfig(Z2cFactory.createDefaultConfig(false)).build(),
         });
         // LowMc (silent)
         configurations.add(new Object[] {
             OprpFactory.OprpType.LOW_MC.name() + " (silent)",
-            new LowMcOprpConfig.Builder()
-                .setBcConfig(BcFactory.createDefaultConfig(SecurityModel.SEMI_HONEST, true))
-                .build(),
+            new LowMcOprpConfig.Builder().setZ2cConfig(Z2cFactory.createDefaultConfig(true)).build(),
         });
 
         return configurations;

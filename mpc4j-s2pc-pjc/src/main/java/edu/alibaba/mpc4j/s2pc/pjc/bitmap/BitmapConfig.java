@@ -1,7 +1,7 @@
 package edu.alibaba.mpc4j.s2pc.pjc.bitmap;
 
 import edu.alibaba.mpc4j.common.rpc.pto.MultiPartyPtoConfig;
-import edu.alibaba.mpc4j.s2pc.aby.basics.bc.BcConfig;
+import edu.alibaba.mpc4j.s2pc.aby.basics.z2.Z2cConfig;
 import edu.alibaba.mpc4j.s2pc.aby.hamming.HammingConfig;
 import edu.alibaba.mpc4j.s2pc.pjc.bitmap.BitmapPtoDesc.BitmapType;
 
@@ -24,7 +24,7 @@ public interface BitmapConfig extends MultiPartyPtoConfig {
      *
      * @return Bc协议配置项
      */
-    BcConfig getBcConfig();
+    Z2cConfig getBcConfig();
 
     /**
      * 返回汉明距离协议配置项

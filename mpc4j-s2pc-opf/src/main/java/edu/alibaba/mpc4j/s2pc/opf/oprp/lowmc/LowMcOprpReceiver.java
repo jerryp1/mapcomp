@@ -9,9 +9,9 @@ import edu.alibaba.mpc4j.common.tool.bitmatrix.trans.TransBitMatrixFactory;
 import edu.alibaba.mpc4j.common.tool.crypto.prp.PrpFactory.PrpType;
 import edu.alibaba.mpc4j.common.tool.utils.BytesUtils;
 import edu.alibaba.mpc4j.common.tool.utils.LongUtils;
-import edu.alibaba.mpc4j.s2pc.aby.basics.bc.SquareZ2Vector;
-import edu.alibaba.mpc4j.s2pc.aby.basics.bc.BcFactory;
-import edu.alibaba.mpc4j.s2pc.aby.basics.bc.BcParty;
+import edu.alibaba.mpc4j.s2pc.aby.basics.z2.SquareZ2Vector;
+import edu.alibaba.mpc4j.s2pc.aby.basics.z2.Z2cFactory;
+import edu.alibaba.mpc4j.s2pc.aby.basics.z2.Z2cParty;
 import edu.alibaba.mpc4j.s2pc.opf.oprp.AbstractOprpReceiver;
 import edu.alibaba.mpc4j.s2pc.opf.oprp.OprpReceiverOutput;
 
@@ -31,7 +31,7 @@ public class LowMcOprpReceiver extends AbstractOprpReceiver {
     /**
      * BC协议接收方
      */
-    private final BcParty bcReceiver;
+    private final Z2cParty bcReceiver;
     /**
      * 初始变换密钥
      */
@@ -43,7 +43,7 @@ public class LowMcOprpReceiver extends AbstractOprpReceiver {
 
     public LowMcOprpReceiver(Rpc receiverRpc, Party senderParty, LowMcOprpConfig config) {
         super(LowMcOprpPtoDesc.getInstance(), receiverRpc, senderParty, config);
-        bcReceiver = BcFactory.createReceiver(receiverRpc, senderParty, config.getBcConfig());
+        bcReceiver = Z2cFactory.createReceiver(receiverRpc, senderParty, config.getBcConfig());
         addSubPtos(bcReceiver);
     }
 

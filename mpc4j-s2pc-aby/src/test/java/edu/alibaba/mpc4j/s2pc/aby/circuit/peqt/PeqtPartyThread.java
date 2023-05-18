@@ -1,7 +1,7 @@
 package edu.alibaba.mpc4j.s2pc.aby.circuit.peqt;
 
 import edu.alibaba.mpc4j.common.rpc.MpcAbortException;
-import edu.alibaba.mpc4j.s2pc.aby.basics.bc.SquareZ2Vector;
+import edu.alibaba.mpc4j.s2pc.aby.basics.z2.SquareZ2Vector;
 
 /**
  * private equality test sender thread.

@@ -91,8 +91,8 @@ public class Cgs22CcpsiConfig implements CcpsiConfig {
         private CuckooHashBinType cuckooHashBinType;
 
         public Builder(boolean silent) {
-            rbopprfConfig = RbopprfFactory.createDefaultConfig(SecurityModel.SEMI_HONEST);
-            psmConfig = PsmFactory.createDefaultConfig(SecurityModel.SEMI_HONEST, silent);
+            rbopprfConfig = RbopprfFactory.createDefaultConfig();
+            psmConfig = PsmFactory.createDefaultConfig(silent);
             cuckooHashBinType = CuckooHashBinType.NO_STASH_PSZ18_3_HASH;
         }
 

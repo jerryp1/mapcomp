@@ -13,9 +13,9 @@ import edu.alibaba.mpc4j.common.tool.okve.ovdm.gf2e.Gf2eOvdmFactory;
 import edu.alibaba.mpc4j.common.tool.okve.ovdm.gf2e.Gf2eOvdmFactory.Gf2eOvdmType;
 import edu.alibaba.mpc4j.common.tool.utils.BytesUtils;
 import edu.alibaba.mpc4j.common.tool.utils.LongUtils;
-import edu.alibaba.mpc4j.s2pc.aby.basics.bc.SquareZ2Vector;
-import edu.alibaba.mpc4j.s2pc.aby.basics.bc.BcFactory;
-import edu.alibaba.mpc4j.s2pc.aby.basics.bc.BcParty;
+import edu.alibaba.mpc4j.s2pc.aby.basics.z2.SquareZ2Vector;
+import edu.alibaba.mpc4j.s2pc.aby.basics.z2.Z2cFactory;
+import edu.alibaba.mpc4j.s2pc.aby.basics.z2.Z2cParty;
 import edu.alibaba.mpc4j.s2pc.pcg.ot.cot.CotSenderOutput;
 import edu.alibaba.mpc4j.s2pc.pcg.ot.cot.core.CoreCotFactory;
 import edu.alibaba.mpc4j.s2pc.pcg.ot.cot.core.CoreCotSender;
@@ -43,7 +43,7 @@ public class Zcl22SkePsuServer extends AbstractPsuServer {
     /**
      * BC协议发送方
      */
-    private final BcParty bcSender;
+    private final Z2cParty bcSender;
     /**
      * OPRP协议接收方
      */
@@ -67,7 +67,7 @@ public class Zcl22SkePsuServer extends AbstractPsuServer {
 
     public Zcl22SkePsuServer(Rpc serverRpc, Party clientParty, Zcl22SkePsuConfig config) {
         super(Zcl22SkePsuPtoDesc.getInstance(), serverRpc, clientParty, config);
-        bcSender = BcFactory.createSender(serverRpc, clientParty, config.getBcConfig());
+        bcSender = Z2cFactory.createSender(serverRpc, clientParty, config.getBcConfig());
         addSubPtos(bcSender);
         oprpReceiver = OprpFactory.createReceiver(serverRpc, clientParty, config.getOprpConfig());
         addSubPtos(oprpReceiver);

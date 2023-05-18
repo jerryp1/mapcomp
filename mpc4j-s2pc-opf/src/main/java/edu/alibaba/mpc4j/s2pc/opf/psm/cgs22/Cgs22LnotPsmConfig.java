@@ -2,8 +2,8 @@ package edu.alibaba.mpc4j.s2pc.opf.psm.cgs22;
 
 import edu.alibaba.mpc4j.common.rpc.desc.SecurityModel;
 import edu.alibaba.mpc4j.common.tool.EnvType;
-import edu.alibaba.mpc4j.s2pc.aby.basics.bc.BcConfig;
-import edu.alibaba.mpc4j.s2pc.aby.basics.bc.BcFactory;
+import edu.alibaba.mpc4j.s2pc.aby.basics.z2.Z2cConfig;
+import edu.alibaba.mpc4j.s2pc.aby.basics.z2.Z2cFactory;
 import edu.alibaba.mpc4j.s2pc.opf.psm.PsmConfig;
 import edu.alibaba.mpc4j.s2pc.opf.psm.PsmFactory;
 import edu.alibaba.mpc4j.s2pc.pcg.ot.lnot.LnotConfig;
@@ -19,20 +19,20 @@ public class Cgs22LnotPsmConfig implements PsmConfig {
     /**
      * Boolean circuit config
      */
-    private final BcConfig bcConfig;
+    private final Z2cConfig z2cConfig;
     /**
      * LNOT config
      */
     private final LnotConfig lnotConfig;
 
     private Cgs22LnotPsmConfig(Builder builder) {
-        assert builder.bcConfig.getEnvType().equals(builder.lnotConfig.getEnvType());
-        bcConfig = builder.bcConfig;
+        assert builder.z2cConfig.getEnvType().equals(builder.lnotConfig.getEnvType());
+        z2cConfig = builder.z2cConfig;
         lnotConfig = builder.lnotConfig;
     }
 
-    public BcConfig getBcConfig() {
-        return bcConfig;
+    public Z2cConfig getBcConfig() {
+        return z2cConfig;
     }
 
     public LnotConfig getLnotConfig() {
@@ -46,20 +46,20 @@ public class Cgs22LnotPsmConfig implements PsmConfig {
 
     @Override
     public void setEnvType(EnvType envType) {
-        bcConfig.setEnvType(envType);
+        z2cConfig.setEnvType(envType);
         lnotConfig.setEnvType(envType);
     }
 
     @Override
     public EnvType getEnvType() {
-        return bcConfig.getEnvType();
+        return z2cConfig.getEnvType();
     }
 
     @Override
     public SecurityModel getSecurityModel() {
-        SecurityModel securityModel = SecurityModel.MALICIOUS;
-        if (bcConfig.getSecurityModel().compareTo(securityModel) < 0) {
-            securityModel = bcConfig.getSecurityModel();
+        SecurityModel securityModel = SecurityModel.SEMI_HONEST;
+        if (z2cConfig.getSecurityModel().compareTo(securityModel) < 0) {
+            securityModel = z2cConfig.getSecurityModel();
         }
         return securityModel;
     }
@@ -68,23 +68,23 @@ public class Cgs22LnotPsmConfig implements PsmConfig {
         /**
          * Boolean circuit config
          */
-        private BcConfig bcConfig;
+        private Z2cConfig z2cConfig;
         /**
          * LNOT config
          */
         private LnotConfig lnotConfig;
 
-        public Builder(SecurityModel securityModel, boolean silent) {
-            bcConfig = BcFactory.createDefaultConfig(securityModel, silent);
+        public Builder(boolean silent) {
+            z2cConfig = Z2cFactory.createDefaultConfig(silent);
             if (silent) {
-                lnotConfig = LnotFactory.createCacheConfig(securityModel);
+                lnotConfig = LnotFactory.createCacheConfig(SecurityModel.SEMI_HONEST);
             } else {
-                lnotConfig = LnotFactory.createDirectConfig(securityModel);
+                lnotConfig = LnotFactory.createDirectConfig(SecurityModel.SEMI_HONEST);
             }
         }
 
-        public Builder setBcConfig(BcConfig bcConfig) {
-            this.bcConfig = bcConfig;
+        public Builder setZ2cConfig(Z2cConfig z2cConfig) {
+            this.z2cConfig = z2cConfig;
             return this;
         }
 

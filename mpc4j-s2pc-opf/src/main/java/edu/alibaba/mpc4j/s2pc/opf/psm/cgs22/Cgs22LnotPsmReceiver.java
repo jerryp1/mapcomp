@@ -6,9 +6,9 @@ import edu.alibaba.mpc4j.common.tool.bitvector.BitVector;
 import edu.alibaba.mpc4j.common.tool.bitvector.BitVectorFactory;
 import edu.alibaba.mpc4j.common.tool.utils.CommonUtils;
 import edu.alibaba.mpc4j.common.tool.utils.LongUtils;
-import edu.alibaba.mpc4j.s2pc.aby.basics.bc.BcFactory;
-import edu.alibaba.mpc4j.s2pc.aby.basics.bc.BcParty;
-import edu.alibaba.mpc4j.s2pc.aby.basics.bc.SquareZ2Vector;
+import edu.alibaba.mpc4j.s2pc.aby.basics.z2.Z2cFactory;
+import edu.alibaba.mpc4j.s2pc.aby.basics.z2.Z2cParty;
+import edu.alibaba.mpc4j.s2pc.aby.basics.z2.SquareZ2Vector;
 import edu.alibaba.mpc4j.s2pc.opf.psm.cgs22.Cgs22LnotPsmPtoDesc.PtoStep;
 import edu.alibaba.mpc4j.s2pc.opf.psm.AbstractPsmReceiver;
 import edu.alibaba.mpc4j.s2pc.pcg.ot.lnot.LnotFactory;
@@ -30,7 +30,7 @@ public class Cgs22LnotPsmReceiver extends AbstractPsmReceiver {
     /**
      * Boolean circuit receiver
      */
-    private final BcParty bcReceiver;
+    private final Z2cParty bcReceiver;
     /**
      * LNOT receiver
      */
@@ -38,7 +38,7 @@ public class Cgs22LnotPsmReceiver extends AbstractPsmReceiver {
 
     public Cgs22LnotPsmReceiver(Rpc senderRpc, Party receiverParty, Cgs22LnotPsmConfig config) {
         super(Cgs22LnotPsmPtoDesc.getInstance(), senderRpc, receiverParty, config);
-        bcReceiver = BcFactory.createReceiver(senderRpc, receiverParty, config.getBcConfig());
+        bcReceiver = Z2cFactory.createReceiver(senderRpc, receiverParty, config.getBcConfig());
         addSubPtos(bcReceiver);
         lnotReceiver = LnotFactory.createReceiver(senderRpc, receiverParty, config.getLnotConfig());
         addSubPtos(lnotReceiver);

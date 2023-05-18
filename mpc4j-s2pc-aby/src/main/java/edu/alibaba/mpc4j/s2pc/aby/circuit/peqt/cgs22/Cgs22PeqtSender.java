@@ -10,9 +10,9 @@ import edu.alibaba.mpc4j.common.tool.bitvector.BitVector;
 import edu.alibaba.mpc4j.common.tool.bitvector.BitVectorFactory;
 import edu.alibaba.mpc4j.common.tool.utils.CommonUtils;
 import edu.alibaba.mpc4j.common.tool.utils.LongUtils;
-import edu.alibaba.mpc4j.s2pc.aby.basics.bc.BcFactory;
-import edu.alibaba.mpc4j.s2pc.aby.basics.bc.BcParty;
-import edu.alibaba.mpc4j.s2pc.aby.basics.bc.SquareZ2Vector;
+import edu.alibaba.mpc4j.s2pc.aby.basics.z2.Z2cFactory;
+import edu.alibaba.mpc4j.s2pc.aby.basics.z2.Z2cParty;
+import edu.alibaba.mpc4j.s2pc.aby.basics.z2.SquareZ2Vector;
 import edu.alibaba.mpc4j.s2pc.aby.circuit.peqt.AbstractPeqtParty;
 import edu.alibaba.mpc4j.s2pc.aby.circuit.peqt.cgs22.Cgs22PeqtPtoDesc.PtoStep;
 import edu.alibaba.mpc4j.s2pc.pcg.ot.lnot.LnotFactory;
@@ -35,7 +35,7 @@ public class Cgs22PeqtSender extends AbstractPeqtParty {
     /**
      * Boolean circuit sender
      */
-    private final BcParty bcSender;
+    private final Z2cParty bcSender;
     /**
      * LNOT sender
      */
@@ -43,7 +43,7 @@ public class Cgs22PeqtSender extends AbstractPeqtParty {
 
     public Cgs22PeqtSender(Rpc senderRpc, Party receiverParty, Cgs22PeqtConfig config) {
         super(Cgs22PeqtPtoDesc.getInstance(), senderRpc, receiverParty, config);
-        bcSender = BcFactory.createSender(senderRpc, receiverParty, config.getBcConfig());
+        bcSender = Z2cFactory.createSender(senderRpc, receiverParty, config.getBcConfig());
         addSubPtos(bcSender);
         lnotSender = LnotFactory.createSender(senderRpc, receiverParty, config.getLnotConfig());
         addSubPtos(lnotSender);

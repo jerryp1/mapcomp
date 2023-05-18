@@ -58,7 +58,7 @@ public class Pssw09SqOprfConfig implements SqOprfConfig {
         private OprpConfig oprpConfig;
 
         public Builder() {
-            oprpConfig = OprpFactory.createDefaultConfig(SecurityModel.SEMI_HONEST, true);
+            oprpConfig = OprpFactory.createDefaultConfig(true);
         }
 
         public Pssw09SqOprfConfig.Builder setOprpConfig(OprpConfig oprpConfig) {

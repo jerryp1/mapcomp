@@ -1,7 +1,7 @@
 package edu.alibaba.mpc4j.s2pc.pso.psica.ccpsi;
 
 import edu.alibaba.mpc4j.common.rpc.*;
-import edu.alibaba.mpc4j.s2pc.aby.basics.bc.SquareZ2Vector;
+import edu.alibaba.mpc4j.s2pc.aby.basics.z2.SquareZ2Vector;
 import edu.alibaba.mpc4j.s2pc.aby.hamming.HammingFactory;
 import edu.alibaba.mpc4j.s2pc.aby.hamming.HammingParty;
 import edu.alibaba.mpc4j.s2pc.pso.cpsi.ccpsi.CcpsiConfig;

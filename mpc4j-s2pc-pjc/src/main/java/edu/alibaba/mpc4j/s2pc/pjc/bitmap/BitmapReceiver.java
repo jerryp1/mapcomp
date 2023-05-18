@@ -9,9 +9,9 @@ import edu.alibaba.mpc4j.common.tool.bitvector.BitVector;
 import edu.alibaba.mpc4j.common.tool.bitvector.BitVectorFactory;
 import edu.alibaba.mpc4j.common.tool.utils.BytesUtils;
 import edu.alibaba.mpc4j.common.tool.utils.LongUtils;
-import edu.alibaba.mpc4j.s2pc.aby.basics.bc.BcFactory;
-import edu.alibaba.mpc4j.s2pc.aby.basics.bc.BcParty;
-import edu.alibaba.mpc4j.s2pc.aby.basics.bc.SquareZ2Vector;
+import edu.alibaba.mpc4j.s2pc.aby.basics.z2.Z2cFactory;
+import edu.alibaba.mpc4j.s2pc.aby.basics.z2.Z2cParty;
+import edu.alibaba.mpc4j.s2pc.aby.basics.z2.SquareZ2Vector;
 import edu.alibaba.mpc4j.s2pc.aby.hamming.HammingFactory;
 import edu.alibaba.mpc4j.s2pc.aby.hamming.HammingParty;
 import org.roaringbitmap.RoaringBitmap;
@@ -33,7 +33,7 @@ public class BitmapReceiver extends AbstractBitmapParty {
     /**
      * Bc协议接收端
      */
-    private final BcParty bcReceiver;
+    private final Z2cParty bcReceiver;
     /**
      * 汉明距离接收端
      */
@@ -41,7 +41,7 @@ public class BitmapReceiver extends AbstractBitmapParty {
 
     public BitmapReceiver(Rpc receiverRpc, Party senderParty, BitmapConfig bitmapConfig) {
         super(getInstance(), receiverRpc, senderParty, bitmapConfig);
-        bcReceiver = BcFactory.createReceiver(receiverRpc, senderParty, bitmapConfig.getBcConfig());
+        bcReceiver = Z2cFactory.createReceiver(receiverRpc, senderParty, bitmapConfig.getBcConfig());
         addSubPtos(bcReceiver);
         hammingReceiver = HammingFactory.createReceiver(receiverRpc, senderParty, bitmapConfig.getHammingConfig());
         addSubPtos(hammingReceiver);

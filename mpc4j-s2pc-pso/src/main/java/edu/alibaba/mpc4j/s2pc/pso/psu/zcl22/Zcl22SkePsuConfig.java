@@ -3,8 +3,8 @@ package edu.alibaba.mpc4j.s2pc.pso.psu.zcl22;
 import edu.alibaba.mpc4j.common.rpc.desc.SecurityModel;
 import edu.alibaba.mpc4j.common.tool.EnvType;
 import edu.alibaba.mpc4j.common.tool.okve.ovdm.gf2e.Gf2eOvdmFactory.Gf2eOvdmType;
-import edu.alibaba.mpc4j.s2pc.aby.basics.bc.BcConfig;
-import edu.alibaba.mpc4j.s2pc.aby.basics.bc.BcFactory;
+import edu.alibaba.mpc4j.s2pc.aby.basics.z2.Z2cConfig;
+import edu.alibaba.mpc4j.s2pc.aby.basics.z2.Z2cFactory;
 import edu.alibaba.mpc4j.s2pc.pcg.ot.cot.core.CoreCotConfig;
 import edu.alibaba.mpc4j.s2pc.pcg.ot.cot.core.CoreCotFactory;
 import edu.alibaba.mpc4j.s2pc.opf.oprp.OprpConfig;
@@ -22,7 +22,7 @@ public class Zcl22SkePsuConfig implements PsuConfig {
     /**
      * BC协议配置项
      */
-    private final BcConfig bcConfig;
+    private final Z2cConfig z2cConfig;
     /**
      * OPRP协议配置项
      */
@@ -38,9 +38,9 @@ public class Zcl22SkePsuConfig implements PsuConfig {
 
     private Zcl22SkePsuConfig(Builder builder) {
         // 协议的环境类型必须相同
-        assert builder.bcConfig.getEnvType().equals(builder.oprpConfig.getEnvType());
-        assert builder.bcConfig.getEnvType().equals(builder.coreCotConfig.getEnvType());
-        bcConfig = builder.bcConfig;
+        assert builder.z2cConfig.getEnvType().equals(builder.oprpConfig.getEnvType());
+        assert builder.z2cConfig.getEnvType().equals(builder.coreCotConfig.getEnvType());
+        z2cConfig = builder.z2cConfig;
         oprpConfig = builder.oprpConfig;
         coreCotConfig = builder.coreCotConfig;
         gf2eOvdmType = builder.gf2eOvdmType;
@@ -51,8 +51,8 @@ public class Zcl22SkePsuConfig implements PsuConfig {
         return PsuType.ZCL22_SKE;
     }
 
-    public BcConfig getBcConfig() {
-        return bcConfig;
+    public Z2cConfig getBcConfig() {
+        return z2cConfig;
     }
 
     public OprpConfig getOprpConfig() {
@@ -69,21 +69,21 @@ public class Zcl22SkePsuConfig implements PsuConfig {
 
     @Override
     public void setEnvType(EnvType envType) {
-        bcConfig.setEnvType(envType);
+        z2cConfig.setEnvType(envType);
         oprpConfig.setEnvType(envType);
         coreCotConfig.setEnvType(envType);
     }
 
     @Override
     public EnvType getEnvType() {
-        return bcConfig.getEnvType();
+        return z2cConfig.getEnvType();
     }
 
     @Override
     public SecurityModel getSecurityModel() {
         SecurityModel securityModel = SecurityModel.SEMI_HONEST;
-        if (bcConfig.getSecurityModel().compareTo(securityModel) < 0) {
-            securityModel = bcConfig.getSecurityModel();
+        if (z2cConfig.getSecurityModel().compareTo(securityModel) < 0) {
+            securityModel = z2cConfig.getSecurityModel();
         }
         if (oprpConfig.getSecurityModel().compareTo(securityModel) < 0) {
             securityModel = oprpConfig.getSecurityModel();
@@ -98,7 +98,7 @@ public class Zcl22SkePsuConfig implements PsuConfig {
         /**
          * BC协议配置项
          */
-        private BcConfig bcConfig;
+        private Z2cConfig z2cConfig;
         /**
          * OPRP协议配置项
          */
@@ -113,14 +113,14 @@ public class Zcl22SkePsuConfig implements PsuConfig {
         private Gf2eOvdmType gf2eOvdmType;
 
         public Builder() {
-            bcConfig = BcFactory.createDefaultConfig(SecurityModel.SEMI_HONEST, true);
-            oprpConfig = OprpFactory.createDefaultConfig(SecurityModel.SEMI_HONEST, true);
+            z2cConfig = Z2cFactory.createDefaultConfig(true);
+            oprpConfig = OprpFactory.createDefaultConfig(true);
             coreCotConfig = CoreCotFactory.createDefaultConfig(SecurityModel.SEMI_HONEST);
             gf2eOvdmType = Gf2eOvdmType.H3_SINGLETON_GCT;
         }
 
-        public Builder setBcConfig(BcConfig bcConfig) {
-            this.bcConfig = bcConfig;
+        public Builder setBcConfig(Z2cConfig z2cConfig) {
+            this.z2cConfig = z2cConfig;
             return this;
         }
 

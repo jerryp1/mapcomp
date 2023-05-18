@@ -57,7 +57,7 @@ public class Cgs22OpprfPsmConfig implements PsmConfig {
 
     @Override
     public SecurityModel getSecurityModel() {
-        SecurityModel securityModel = SecurityModel.MALICIOUS;
+        SecurityModel securityModel = SecurityModel.SEMI_HONEST;
         if (bopprfConfig.getSecurityModel().compareTo(securityModel) < 0) {
             securityModel = bopprfConfig.getSecurityModel();
         }
@@ -77,9 +77,9 @@ public class Cgs22OpprfPsmConfig implements PsmConfig {
          */
         private PeqtConfig peqtConfig;
 
-        public Builder(SecurityModel securityModel, boolean silent) {
-            bopprfConfig = BopprfFactory.createDefaultConfig(securityModel);
-            peqtConfig = PeqtFactory.createDefaultConfig(securityModel, silent);
+        public Builder(boolean silent) {
+            bopprfConfig = BopprfFactory.createDefaultConfig();
+            peqtConfig = PeqtFactory.createDefaultConfig(silent);
         }
 
         public Builder setBopprfConfig(BopprfConfig bopprfConfig) {

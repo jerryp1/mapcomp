@@ -9,9 +9,9 @@ import edu.alibaba.mpc4j.common.tool.bitvector.BitVector;
 import edu.alibaba.mpc4j.common.tool.bitvector.BitVectorFactory;
 import edu.alibaba.mpc4j.common.tool.utils.BytesUtils;
 import edu.alibaba.mpc4j.common.tool.utils.LongUtils;
-import edu.alibaba.mpc4j.s2pc.aby.basics.bc.BcFactory;
-import edu.alibaba.mpc4j.s2pc.aby.basics.bc.BcParty;
-import edu.alibaba.mpc4j.s2pc.aby.basics.bc.SquareZ2Vector;
+import edu.alibaba.mpc4j.s2pc.aby.basics.z2.Z2cFactory;
+import edu.alibaba.mpc4j.s2pc.aby.basics.z2.Z2cParty;
+import edu.alibaba.mpc4j.s2pc.aby.basics.z2.SquareZ2Vector;
 import edu.alibaba.mpc4j.s2pc.aby.hamming.HammingFactory;
 import edu.alibaba.mpc4j.s2pc.aby.hamming.HammingParty;
 import org.roaringbitmap.RoaringBitmap;
@@ -32,7 +32,7 @@ public class BitmapSender extends AbstractBitmapParty {
     /**
      * Bc协议发送端
      */
-    private final BcParty bcSender;
+    private final Z2cParty bcSender;
     /**
      * 汉明距离计算发送端
      */
@@ -40,7 +40,7 @@ public class BitmapSender extends AbstractBitmapParty {
 
     public BitmapSender(Rpc senderRpc, Party receiverParty, BitmapConfig bitmapConfig) {
         super(BitmapPtoDesc.getInstance(), senderRpc, receiverParty, bitmapConfig);
-        bcSender = BcFactory.createSender(senderRpc, receiverParty, bitmapConfig.getBcConfig());
+        bcSender = Z2cFactory.createSender(senderRpc, receiverParty, bitmapConfig.getBcConfig());
         addSubPtos(bcSender);
         hammingSender = HammingFactory.createSender(senderRpc, receiverParty, bitmapConfig.getHammingConfig());
         addSubPtos(hammingSender);

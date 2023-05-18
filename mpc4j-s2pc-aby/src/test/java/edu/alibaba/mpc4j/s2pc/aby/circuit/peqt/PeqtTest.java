@@ -3,10 +3,9 @@ package edu.alibaba.mpc4j.s2pc.aby.circuit.peqt;
 import com.google.common.base.Preconditions;
 import edu.alibaba.mpc4j.common.rpc.Rpc;
 import edu.alibaba.mpc4j.common.rpc.RpcManager;
-import edu.alibaba.mpc4j.common.rpc.desc.SecurityModel;
 import edu.alibaba.mpc4j.common.rpc.impl.memory.MemoryRpcManager;
 import edu.alibaba.mpc4j.common.tool.bitvector.BitVector;
-import edu.alibaba.mpc4j.s2pc.aby.basics.bc.SquareZ2Vector;
+import edu.alibaba.mpc4j.s2pc.aby.basics.z2.SquareZ2Vector;
 import edu.alibaba.mpc4j.s2pc.aby.circuit.peqt.PeqtFactory.PeqtType;
 import edu.alibaba.mpc4j.s2pc.aby.circuit.peqt.cgs22.Cgs22PeqtConfig;
 import edu.alibaba.mpc4j.s2pc.aby.circuit.peqt.naive.NaivePeqtConfig;
@@ -57,25 +56,21 @@ public class PeqtTest {
     public static Collection<Object[]> configurations() {
         Collection<Object[]> configurations = new ArrayList<>();
 
-        // CGS22 (direct, semi-honest)
-        configurations.add(new Object[]{
-            PeqtType.CGS22.name() + " (direct, semi-honest)",
-            new Cgs22PeqtConfig.Builder(SecurityModel.SEMI_HONEST, false).build()
+        // CGS22 (direct)
+        configurations.add(
+            new Object[]{PeqtType.CGS22.name() + " (direct)", new Cgs22PeqtConfig.Builder(false).build()
         });
-        // CGS22 (silent, semi-honest)
+        // CGS22 (silent)
         configurations.add(new Object[]{
-            PeqtType.CGS22.name() + " (silent, semi-honest)",
-            new Cgs22PeqtConfig.Builder(SecurityModel.SEMI_HONEST, true).build()
+            PeqtType.CGS22.name() + " (silent)", new Cgs22PeqtConfig.Builder(true).build()
         });
-        // NAIVE (direct, semi-honest)
+        // NAIVE (direct)
         configurations.add(new Object[]{
-            PeqtType.NAIVE.name() + " (direct, semi-honest)",
-            new NaivePeqtConfig.Builder(SecurityModel.SEMI_HONEST, false).build()
+            PeqtType.NAIVE.name() + " (direct)", new NaivePeqtConfig.Builder( false).build()
         });
         // NAIVE (semi-honest)
         configurations.add(new Object[]{
-            PeqtType.NAIVE.name() + " (silent, semi-honest)",
-            new NaivePeqtConfig.Builder(SecurityModel.SEMI_HONEST, false).build()
+            PeqtType.NAIVE.name() + " (silent)", new NaivePeqtConfig.Builder(false).build()
         });
 
         return configurations;
