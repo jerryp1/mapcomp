@@ -124,7 +124,7 @@ public class Z2IntegerCircuitTest {
         PlainZ2Vector[] xPlainZ2Vectors = Arrays.stream(xBitVector).map(PlainZ2Vector::create).toArray(PlainZ2Vector[]::new);
         PlainZ2Vector[] yPlainZ2Vectors = Arrays.stream(yBitVector).map(PlainZ2Vector::create).toArray(PlainZ2Vector[]::new);
         // init the protocol
-        PlainBcParty party = new PlainBcParty();
+        PlainZ2cParty party = new PlainZ2cParty();
         Z2IntegerCircuitParty partyThread = new Z2IntegerCircuitParty(party, operator, xPlainZ2Vectors, yPlainZ2Vectors);
         StopWatch stopWatch = new StopWatch();
         // execute the circuit

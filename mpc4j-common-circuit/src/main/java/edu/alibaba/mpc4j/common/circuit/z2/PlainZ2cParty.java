@@ -12,7 +12,7 @@ import java.util.Arrays;
  * @author Li Peng
  * @date 2023/4/21
  */
-public class PlainBcParty implements MpcBcParty {
+public class PlainZ2cParty implements MpcZ2cParty {
     /**
      * maximum number of bits in round.
      */

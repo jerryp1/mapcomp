@@ -4,12 +4,12 @@ import edu.alibaba.mpc4j.common.rpc.MpcAbortException;
 import edu.alibaba.mpc4j.common.tool.bitvector.BitVector;
 
 /**
- * MPC Boolean Circuit Party.
+ * MPC Z2 Circuit Party.
  *
  * @author Li Peng
  * @date 2023/4/20
  */
-public interface MpcBcParty {
+public interface MpcZ2cParty {
 
     /**
      * Creates a (plain) vector with assigned value.

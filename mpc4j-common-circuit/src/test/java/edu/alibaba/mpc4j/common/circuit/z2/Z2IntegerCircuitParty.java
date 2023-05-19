@@ -15,7 +15,7 @@ class Z2IntegerCircuitParty {
     /**
      * the party
      */
-    private final PlainBcParty party;
+    private final PlainZ2cParty party;
     /**
      * x0
      */
@@ -33,7 +33,7 @@ class Z2IntegerCircuitParty {
      */
     private final Z2IntegerOperator operator;
 
-    Z2IntegerCircuitParty(PlainBcParty party, Z2IntegerOperator operator, PlainZ2Vector[] x, PlainZ2Vector[] y) {
+    Z2IntegerCircuitParty(PlainZ2cParty party, Z2IntegerOperator operator, PlainZ2Vector[] x, PlainZ2Vector[] y) {
         this.party = party;
         this.operator = operator;
         this.x = x;
