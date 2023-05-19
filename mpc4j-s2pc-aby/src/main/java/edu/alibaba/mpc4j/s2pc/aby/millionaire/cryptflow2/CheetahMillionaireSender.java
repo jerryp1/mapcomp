@@ -180,7 +180,10 @@ public class CheetahMillionaireSender extends AbstractMillionaireParty {
         for (int i = 1; i <= logQ; i++) {
             for (int j = 0; j < q / (1 << i); j++) {
                 lts[j] = bcSender.xor(bcSender.and(lts[j * 2 + 1], eqs[j * 2]), lts[j * 2]);
-                eqs[j] = bcSender.and(eqs[j * 2], eqs[j * 2 + 1]);
+                // equalities computed on lowest significant bits are never used, thus omit computing.
+                if (j < q / (1 << i) - 1) {
+                    eqs[j] = bcSender.and(eqs[j * 2], eqs[j * 2 + 1]);
+                }
             }
         }
         return lts[0];
