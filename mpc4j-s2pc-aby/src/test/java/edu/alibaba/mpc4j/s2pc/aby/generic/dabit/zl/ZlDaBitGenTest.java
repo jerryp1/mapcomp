@@ -1,4 +1,4 @@
-package edu.alibaba.mpc4j.s2pc.aby.abb.dabit;
+package edu.alibaba.mpc4j.s2pc.aby.generic.dabit.zl;
 
 import com.google.common.base.Preconditions;
 import edu.alibaba.mpc4j.common.rpc.Rpc;
@@ -13,8 +13,8 @@ import edu.alibaba.mpc4j.common.tool.utils.LongUtils;
 import edu.alibaba.mpc4j.crypto.matrix.vector.ZlVector;
 import edu.alibaba.mpc4j.s2pc.aby.basics.z2.SquareZ2Vector;
 import edu.alibaba.mpc4j.s2pc.aby.basics.zl.SquareZlVector;
-import edu.alibaba.mpc4j.s2pc.aby.abb.dabit.ZlDaBitGenFactory.ZlDaBitGenType;
-import edu.alibaba.mpc4j.s2pc.aby.abb.dabit.egk20.Egk20ZlDaBitGenConfig;
+import edu.alibaba.mpc4j.s2pc.aby.generic.dabit.zl.ZlDaBitGenFactory.ZlDaBitGenType;
+import edu.alibaba.mpc4j.s2pc.aby.generic.dabit.zl.egk20.Egk20ZlDaBitGenConfig;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.time.StopWatch;
 import org.junit.After;

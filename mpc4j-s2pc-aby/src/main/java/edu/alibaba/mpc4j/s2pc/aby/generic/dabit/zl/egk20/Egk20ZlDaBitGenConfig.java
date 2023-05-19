@@ -1,11 +1,11 @@
-package edu.alibaba.mpc4j.s2pc.aby.abb.dabit.egk20;
+package edu.alibaba.mpc4j.s2pc.aby.generic.dabit.zl.egk20;
 
 import com.google.common.base.Preconditions;
 import edu.alibaba.mpc4j.common.rpc.desc.SecurityModel;
 import edu.alibaba.mpc4j.common.tool.EnvType;
 import edu.alibaba.mpc4j.common.tool.galoisfield.zl.Zl;
-import edu.alibaba.mpc4j.s2pc.aby.abb.dabit.ZlDaBitGenConfig;
-import edu.alibaba.mpc4j.s2pc.aby.abb.dabit.ZlDaBitGenFactory;
+import edu.alibaba.mpc4j.s2pc.aby.generic.dabit.zl.ZlDaBitGenConfig;
+import edu.alibaba.mpc4j.s2pc.aby.generic.dabit.zl.ZlDaBitGenFactory;
 import edu.alibaba.mpc4j.s2pc.aby.basics.z2.Z2cConfig;
 import edu.alibaba.mpc4j.s2pc.aby.basics.z2.Z2cFactory;
 import edu.alibaba.mpc4j.s2pc.aby.basics.zl.ZlcConfig;

@@ -1,4 +1,4 @@
-package edu.alibaba.mpc4j.s2pc.aby.abb.edabit;
+package edu.alibaba.mpc4j.s2pc.aby.generic.edabit.zl;
 
 import com.google.common.base.Preconditions;
 import edu.alibaba.mpc4j.common.tool.MathPreconditions;

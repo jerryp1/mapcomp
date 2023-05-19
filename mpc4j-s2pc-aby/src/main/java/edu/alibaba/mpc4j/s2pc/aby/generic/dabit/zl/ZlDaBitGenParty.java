@@ -1,4 +1,4 @@
-package edu.alibaba.mpc4j.s2pc.aby.abb.dabit;
+package edu.alibaba.mpc4j.s2pc.aby.generic.dabit.zl;
 
 import edu.alibaba.mpc4j.common.rpc.MpcAbortException;
 import edu.alibaba.mpc4j.common.rpc.pto.TwoPartyPto;

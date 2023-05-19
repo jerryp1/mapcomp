@@ -1,11 +1,11 @@
-package edu.alibaba.mpc4j.s2pc.aby.abb.dabit;
+package edu.alibaba.mpc4j.s2pc.aby.generic.dabit.zl;
 
 import edu.alibaba.mpc4j.common.rpc.Party;
 import edu.alibaba.mpc4j.common.rpc.Rpc;
 import edu.alibaba.mpc4j.common.rpc.pto.PtoFactory;
-import edu.alibaba.mpc4j.s2pc.aby.abb.dabit.egk20.Egk20ZlDaBitGenConfig;
-import edu.alibaba.mpc4j.s2pc.aby.abb.dabit.egk20.Egk20ZlDaBitGenReceiver;
-import edu.alibaba.mpc4j.s2pc.aby.abb.dabit.egk20.Egk20ZlDaBitGenSender;
+import edu.alibaba.mpc4j.s2pc.aby.generic.dabit.zl.egk20.Egk20ZlDaBitGenConfig;
+import edu.alibaba.mpc4j.s2pc.aby.generic.dabit.zl.egk20.Egk20ZlDaBitGenReceiver;
+import edu.alibaba.mpc4j.s2pc.aby.generic.dabit.zl.egk20.Egk20ZlDaBitGenSender;
 
 /**
  * Zl daBit generation factory.
