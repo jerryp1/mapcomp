@@ -7,6 +7,7 @@ import edu.alibaba.mpc4j.common.rpc.impl.memory.MemoryRpcManager;
 import edu.alibaba.mpc4j.common.tool.galoisfield.zl.Zl;
 import edu.alibaba.mpc4j.s2pc.aby.AbyTestUtils;
 import edu.alibaba.mpc4j.s2pc.aby.generic.dabit.zl.ZlDaBitGenFactory.ZlDaBitGenType;
+import edu.alibaba.mpc4j.s2pc.aby.generic.dabit.zl.egk20.Egk20MacZlDaBitGenConfig;
 import edu.alibaba.mpc4j.s2pc.aby.generic.dabit.zl.egk20.Egk20NoMacZlDaBitGenConfig;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.time.StopWatch;
@@ -52,6 +53,12 @@ public class ZlDaBitGenTest {
 
         for (Zl zl : AbyTestUtils.ZLS) {
             int l = zl.getL();
+            // EGK20_MAC
+            configurations.add(new Object[]{
+                ZlDaBitGenType.EGK20_MAC.name() + " (l = " + l + ")",
+                new Egk20MacZlDaBitGenConfig.Builder(zl, true).build(),
+            });
+            // EGK20_NO_MAC
             configurations.add(new Object[]{
                 ZlDaBitGenType.EGK20_NO_MAC.name() + " (l = " + l + ")",
                 new Egk20NoMacZlDaBitGenConfig.Builder(zl, true).build(),

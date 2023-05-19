@@ -74,31 +74,31 @@ public class Egk20NoMacZlDaBitGenSender extends AbstractZlDaBitGenParty {
                 return b ? zl.createOne() : zl.createZero();
             })
             .toArray(BigInteger[]::new);
-        ZlVector randomZlVector0 = ZlVector.create(zl, zlArray);
+        ZlVector randomZlVector = ZlVector.create(zl, zlArray);
         BigInteger[] twoArray = IntStream.range(0, num)
             .mapToObj(index -> zl.module(BigIntegerUtils.BIGINT_2))
             .toArray(BigInteger[]::new);
         ZlVector twoZlVector = ZlVector.create(zl, twoArray);
-        SquareZlVector squareZlVector00 = zlcSender.shareOwn(randomZlVector0);
-        SquareZlVector squareZlVector10 = zlcSender.shareOther(num);
-        SquareZlVector addAb0 = zlcSender.add(squareZlVector00, squareZlVector10);
-        SquareZlVector mul2Ab0 = zlcSender.mul(squareZlVector00, squareZlVector10);
-        mul2Ab0 = zlcSender.mul(mul2Ab0, zlcSender.create(twoZlVector));
-        SquareZlVector squareZlVector0 = zlcSender.sub(addAb0, mul2Ab0);
+        SquareZlVector squareZlVector0 = zlcSender.shareOwn(randomZlVector);
+        SquareZlVector squareZlVector1 = zlcSender.shareOther(num);
+        SquareZlVector squareAddAb = zlcSender.add(squareZlVector0, squareZlVector1);
+        SquareZlVector squareMul2Ab = zlcSender.mul(squareZlVector0, squareZlVector1);
+        squareMul2Ab = zlcSender.mul(squareMul2Ab, zlcSender.create(twoZlVector));
+        SquareZlVector squareZlVector = zlcSender.sub(squareAddAb, squareMul2Ab);
         stopWatch.stop();
         long zlTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
         stopWatch.reset();
         logStepInfo(PtoState.PTO_STEP, 1, 2, zlTime);
 
         stopWatch.start();
-        ZlVector zlVector0 = squareZlVector0.getZlVector();
-        // P0 computes [b_i mod 2]_2. In order to have the MAC, we must explicitly share the Z2 vector.
-        BitVector randomZ2Vector0 = BitVectorFactory.createZeros(num);
+        ZlVector zlVector = squareZlVector.getZlVector();
+        // P0 computes [b_i mod 2]_2. We directly treat the result as the square Z2 vector.
+        BitVector randomZ2Vector = BitVectorFactory.createZeros(num);
         for (int index = 0; index < num; index++) {
-            randomZ2Vector0.set(index, zlVector0.getElement(index).and(BigInteger.ONE).equals(BigInteger.ONE));
+            randomZ2Vector.set(index, zlVector.getElement(index).and(BigInteger.ONE).equals(BigInteger.ONE));
         }
-        SquareZ2Vector squareZ2Vector0 = SquareZ2Vector.create(randomZ2Vector0, false);
-        SquareZlDaBitVector senderOutput = SquareZlDaBitVector.create(squareZlVector0, squareZ2Vector0);
+        SquareZ2Vector squareZ2Vector = SquareZ2Vector.create(randomZ2Vector, false);
+        SquareZlDaBitVector senderOutput = SquareZlDaBitVector.create(squareZlVector, squareZ2Vector);
         stopWatch.stop();
         long z2Time = stopWatch.getTime(TimeUnit.MILLISECONDS);
         stopWatch.reset();

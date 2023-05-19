@@ -8,26 +8,26 @@ import edu.alibaba.mpc4j.common.tool.bitvector.BitVector;
 import edu.alibaba.mpc4j.common.tool.bitvector.BitVectorFactory;
 import edu.alibaba.mpc4j.common.tool.utils.BigIntegerUtils;
 import edu.alibaba.mpc4j.crypto.matrix.vector.ZlVector;
-import edu.alibaba.mpc4j.s2pc.aby.generic.dabit.zl.AbstractZlDaBitGenParty;
-import edu.alibaba.mpc4j.s2pc.aby.generic.dabit.zl.SquareZlDaBitVector;
 import edu.alibaba.mpc4j.s2pc.aby.basics.z2.SquareZ2Vector;
 import edu.alibaba.mpc4j.s2pc.aby.basics.z2.Z2cFactory;
 import edu.alibaba.mpc4j.s2pc.aby.basics.z2.Z2cParty;
 import edu.alibaba.mpc4j.s2pc.aby.basics.zl.SquareZlVector;
 import edu.alibaba.mpc4j.s2pc.aby.basics.zl.ZlcFactory;
 import edu.alibaba.mpc4j.s2pc.aby.basics.zl.ZlcParty;
+import edu.alibaba.mpc4j.s2pc.aby.generic.dabit.zl.AbstractZlDaBitGenParty;
+import edu.alibaba.mpc4j.s2pc.aby.generic.dabit.zl.SquareZlDaBitVector;
 
 import java.math.BigInteger;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.IntStream;
 
 /**
- * EGK+20 semi-honest Zl (no MAC) daBit generation receiver.
+ * EGK+20 semi-honest Zl (MAC) daBit generation receiver.
  *
  * @author Weiran Liu
- * @date 2023/5/18
+ * @date 2023/5/19
  */
-public class Egk20NoMacZlDaBitGenReceiver extends AbstractZlDaBitGenParty {
+public class Egk20MacZlDaBitGenReceiver extends AbstractZlDaBitGenParty {
     /**
      * Zl circuit receiver
      */
@@ -37,8 +37,8 @@ public class Egk20NoMacZlDaBitGenReceiver extends AbstractZlDaBitGenParty {
      */
     private final Z2cParty z2cReceiver;
 
-    public Egk20NoMacZlDaBitGenReceiver(Rpc receiverPpc, Party senderParty, Egk20NoMacZlDaBitGenConfig config) {
-        super(Egk20NoMacZlDaBitGenPtoDesc.getInstance(), receiverPpc, senderParty, config);
+    public Egk20MacZlDaBitGenReceiver(Rpc receiverPpc, Party senderParty, Egk20MacZlDaBitGenConfig config) {
+        super(Egk20MacZlDaBitGenPtoDesc.getInstance(), receiverPpc, senderParty, config);
         zlcReceiver = ZlcFactory.createReceiver(receiverPpc, senderParty, config.getZlcConfig());
         addSubPtos(zlcReceiver);
         z2cReceiver = Z2cFactory.createReceiver(receiverPpc, senderParty, config.getZ2cConfig());
@@ -92,12 +92,14 @@ public class Egk20NoMacZlDaBitGenReceiver extends AbstractZlDaBitGenParty {
 
         stopWatch.start();
         ZlVector zlVector = squareZlVector.getZlVector();
-        // P1 computes [b_i mod 2]_2. We directly treat the result as the square Z2 vector.
+        // P1 computes [b_i mod 2]_2. In order to have the MAC, we must explicitly share the Z2 vector.
         BitVector randomZ2Vector = BitVectorFactory.createZeros(num);
         for (int index = 0; index < num; index++) {
             randomZ2Vector.set(index, zlVector.getElement(index).and(BigInteger.ONE).equals(BigInteger.ONE));
         }
-        SquareZ2Vector squareZ2Vector = SquareZ2Vector.create(randomZ2Vector, false);
+        SquareZ2Vector squareZ2Vector0 = z2cReceiver.shareOther(num);
+        SquareZ2Vector squareZ2Vector1 = z2cReceiver.shareOwn(randomZ2Vector);
+        SquareZ2Vector squareZ2Vector = z2cReceiver.xor(squareZ2Vector0, squareZ2Vector1);
         SquareZlDaBitVector senderOutput = SquareZlDaBitVector.create(squareZlVector, squareZ2Vector);
         stopWatch.stop();
         long z2Time = stopWatch.getTime(TimeUnit.MILLISECONDS);

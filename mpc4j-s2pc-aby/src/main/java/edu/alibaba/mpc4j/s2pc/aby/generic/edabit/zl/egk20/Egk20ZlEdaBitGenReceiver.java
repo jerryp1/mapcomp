@@ -74,17 +74,17 @@ public class Egk20ZlEdaBitGenReceiver extends AbstractZlEdaBitGenParty {
         // The parties generate private edaBit vector.
         PlainZlEdaBitVector plainZlEdaBitVector = PlainZlEdaBitVector.createRandom(zl, num, secureRandom);
         // share other vector
-        SquareZlVector squareZlVector01 = zlcReceiver.shareOther(num);
-        SquareZ2Vector[] squareZ2Vectors01 = new SquareZ2Vector[l];
+        SquareZlVector squareZlVector0 = zlcReceiver.shareOther(num);
+        SquareZ2Vector[] squareZ2Vectors0 = new SquareZ2Vector[l];
         for (int i = 0; i < l; i++) {
-            squareZ2Vectors01[i] = z2cReceiver.shareOther(num);
+            squareZ2Vectors0[i] = z2cReceiver.shareOther(num);
         }
         // share own vector
-        SquareZlVector squareZlVector11 = zlcReceiver.shareOwn(plainZlEdaBitVector.getZlVector());
-        BitVector[] bitVectors1 = plainZlEdaBitVector.getBitVectors();
-        SquareZ2Vector[] squareZ2Vectors11 = new SquareZ2Vector[l];
+        SquareZlVector squareZlVector1 = zlcReceiver.shareOwn(plainZlEdaBitVector.getZlVector());
+        BitVector[] bitVectors = plainZlEdaBitVector.getBitVectors();
+        SquareZ2Vector[] squareZ2Vectors1 = new SquareZ2Vector[l];
         for (int i = 0; i < l; i++) {
-            squareZ2Vectors11[i] = z2cReceiver.shareOwn(bitVectors1[i]);
+            squareZ2Vectors1[i] = z2cReceiver.shareOwn(bitVectors[i]);
         }
 
         stopWatch.stop();
@@ -94,9 +94,9 @@ public class Egk20ZlEdaBitGenReceiver extends AbstractZlEdaBitGenParty {
 
         stopWatch.start();
         // The parties invoke F_{ABB} to compute [r']_M = [r_0]_M = [r_1]_M.
-        SquareZlVector primeSquareZlVector = zlcReceiver.add(squareZlVector01, squareZlVector11);
+        SquareZlVector primeSquareZlVector = zlcReceiver.add(squareZlVector0, squareZlVector1);
         // The parties invoke F_{ABB} to compute nBitADD([r_0]_2, [r_1]_2).
-        MpcZ2Vector[] primeMpcZ2Vector = z2IntegerCircuit.add(squareZ2Vectors01, squareZ2Vectors11);
+        MpcZ2Vector[] primeMpcZ2Vector = z2IntegerCircuit.add(squareZ2Vectors0, squareZ2Vectors1);
         SquareZ2Vector[] primeSquareZ2Vectors = Arrays.stream(primeMpcZ2Vector)
             .map(mpcZ2Vector -> (SquareZ2Vector) mpcZ2Vector)
             .toArray(SquareZ2Vector[]::new);
