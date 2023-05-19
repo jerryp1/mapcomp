@@ -3,9 +3,9 @@ package edu.alibaba.mpc4j.s2pc.aby.generic.dabit.zl;
 import edu.alibaba.mpc4j.common.rpc.Party;
 import edu.alibaba.mpc4j.common.rpc.Rpc;
 import edu.alibaba.mpc4j.common.rpc.pto.PtoFactory;
-import edu.alibaba.mpc4j.s2pc.aby.generic.dabit.zl.egk20.Egk20ZlDaBitGenConfig;
-import edu.alibaba.mpc4j.s2pc.aby.generic.dabit.zl.egk20.Egk20ZlDaBitGenReceiver;
-import edu.alibaba.mpc4j.s2pc.aby.generic.dabit.zl.egk20.Egk20ZlDaBitGenSender;
+import edu.alibaba.mpc4j.s2pc.aby.generic.dabit.zl.egk20.Egk20NoMacZlDaBitGenConfig;
+import edu.alibaba.mpc4j.s2pc.aby.generic.dabit.zl.egk20.Egk20NoMacZlDaBitGenReceiver;
+import edu.alibaba.mpc4j.s2pc.aby.generic.dabit.zl.egk20.Egk20NoMacZlDaBitGenSender;
 
 /**
  * Zl daBit generation factory.
@@ -26,9 +26,9 @@ public class ZlDaBitGenFactory implements PtoFactory {
      */
     public enum ZlDaBitGenType {
         /**
-         * EGK20
+         * EGK20 (no MAC)
          */
-        EGK20,
+        EGK20_NO_MAC,
     }
 
     /**
@@ -43,8 +43,8 @@ public class ZlDaBitGenFactory implements PtoFactory {
         ZlDaBitGenType type = config.getPtoType();
         //noinspection SwitchStatementWithTooFewBranches
         switch (type) {
-            case EGK20:
-                return new Egk20ZlDaBitGenSender(senderRpc, receiverParty, (Egk20ZlDaBitGenConfig) config);
+            case EGK20_NO_MAC:
+                return new Egk20NoMacZlDaBitGenSender(senderRpc, receiverParty, (Egk20NoMacZlDaBitGenConfig) config);
             default:
                 throw new IllegalArgumentException("Invalid " + ZlDaBitGenType.class.getSimpleName() + ": " + type.name());
         }
@@ -62,8 +62,8 @@ public class ZlDaBitGenFactory implements PtoFactory {
         ZlDaBitGenType type = config.getPtoType();
         //noinspection SwitchStatementWithTooFewBranches
         switch (type) {
-            case EGK20:
-                return new Egk20ZlDaBitGenReceiver(receiverRpc, senderParty, (Egk20ZlDaBitGenConfig) config);
+            case EGK20_NO_MAC:
+                return new Egk20NoMacZlDaBitGenReceiver(receiverRpc, senderParty, (Egk20NoMacZlDaBitGenConfig) config);
             default:
                 throw new IllegalArgumentException("Invalid " + ZlDaBitGenType.class.getSimpleName() + ": " + type.name());
         }

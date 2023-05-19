@@ -15,7 +15,7 @@ import edu.alibaba.mpc4j.s2pc.aby.operator.row.peqt.PeqtFactory;
  */
 public class NaivePeqtConfig implements PeqtConfig {
     /**
-     * Boolean circuit config
+     * Z2 circuit config
      */
     private final Z2cConfig z2cConfig;
 
@@ -23,7 +23,7 @@ public class NaivePeqtConfig implements PeqtConfig {
         z2cConfig = builder.z2cConfig;
     }
 
-    public Z2cConfig getBcConfig() {
+    public Z2cConfig getZ2cConfig() {
         return z2cConfig;
     }
 

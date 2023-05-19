@@ -29,9 +29,9 @@ import java.util.stream.IntStream;
  */
 public class LowMcOprpReceiver extends AbstractOprpReceiver {
     /**
-     * BC协议接收方
+     * Z2 circuit receiver
      */
-    private final Z2cParty bcReceiver;
+    private final Z2cParty z2cReceiver;
     /**
      * 初始变换密钥
      */
@@ -43,8 +43,8 @@ public class LowMcOprpReceiver extends AbstractOprpReceiver {
 
     public LowMcOprpReceiver(Rpc receiverRpc, Party senderParty, LowMcOprpConfig config) {
         super(LowMcOprpPtoDesc.getInstance(), receiverRpc, senderParty, config);
-        bcReceiver = Z2cFactory.createReceiver(receiverRpc, senderParty, config.getBcConfig());
-        addSubPtos(bcReceiver);
+        z2cReceiver = Z2cFactory.createReceiver(receiverRpc, senderParty, config.getZ2cConfig());
+        addSubPtos(z2cReceiver);
     }
 
     @Override
@@ -64,7 +64,7 @@ public class LowMcOprpReceiver extends AbstractOprpReceiver {
 
         stopWatch.start();
         // 初始化BC协议
-        bcReceiver.init(
+        z2cReceiver.init(
             LowMcUtils.SBOX_NUM * 3 * maxRoundBatchSize,
             LowMcUtils.SBOX_NUM * 3 * maxRoundBatchSize * LowMcUtils.ROUND
         );
@@ -198,7 +198,7 @@ public class LowMcOprpReceiver extends AbstractOprpReceiver {
             System.arraycopy(b1, 0, ccb1, offset + 2 * batchByteSize, batchByteSize);
         }
         // 一轮AND运算
-        byte[] sbox1 = bcReceiver.and(
+        byte[] sbox1 = z2cReceiver.and(
             SquareZ2Vector.create(LowMcUtils.SBOX_NUM * 3 * roundBatchSize, baa1, false),
             SquareZ2Vector.create(LowMcUtils.SBOX_NUM * 3 * roundBatchSize, ccb1, false)
         ).getBitVector().getBytes();
@@ -211,7 +211,7 @@ public class LowMcOprpReceiver extends AbstractOprpReceiver {
             byte[] bc1 = new byte[batchByteSize];
             System.arraycopy(sbox1, offset, bc1, 0, batchByteSize);
             BytesUtils.reduceByteArray(bc1, batchSize);
-            SquareZ2Vector a1Sbox = bcReceiver.xor(
+            SquareZ2Vector a1Sbox = z2cReceiver.xor(
                 SquareZ2Vector.create(batchSize, a1, false),
                 SquareZ2Vector.create(batchSize, bc1, false)
             );
@@ -220,22 +220,22 @@ public class LowMcOprpReceiver extends AbstractOprpReceiver {
             byte[] ac1 = new byte[batchByteSize];
             System.arraycopy(sbox1, offset + batchByteSize, ac1, 0, batchByteSize);
             BytesUtils.reduceByteArray(ac1, batchSize);
-            SquareZ2Vector b1Sbox = bcReceiver.xor(
+            SquareZ2Vector b1Sbox = z2cReceiver.xor(
                 SquareZ2Vector.create(batchSize, a1, false),
                 SquareZ2Vector.create(batchSize, b1, false)
             );
-            b1Sbox = bcReceiver.xor(b1Sbox, SquareZ2Vector.create(batchSize, ac1, false));
+            b1Sbox = z2cReceiver.xor(b1Sbox, SquareZ2Vector.create(batchSize, ac1, false));
             byte[] b1SboxBytes = b1Sbox.getBitVector().getBytes();
             // c = a ⊕ b ⊕ c ⊕ (a ☉ b)
             byte[] ab1 = new byte[batchByteSize];
             System.arraycopy(sbox1, offset + 2 * batchByteSize, ab1, 0, batchByteSize);
             BytesUtils.reduceByteArray(ab1, batchSize);
-            SquareZ2Vector c1Sbox = bcReceiver.xor(
+            SquareZ2Vector c1Sbox = z2cReceiver.xor(
                 SquareZ2Vector.create(batchSize, a1, false),
                 SquareZ2Vector.create(batchSize, b1, false)
             );
-            c1Sbox = bcReceiver.xor(c1Sbox, SquareZ2Vector.create(batchSize, c1, false));
-            c1Sbox = bcReceiver.xor(c1Sbox, SquareZ2Vector.create(batchSize, ab1, false));
+            c1Sbox = z2cReceiver.xor(c1Sbox, SquareZ2Vector.create(batchSize, c1, false));
+            c1Sbox = z2cReceiver.xor(c1Sbox, SquareZ2Vector.create(batchSize, ab1, false));
             byte[] c1SboxBytes = c1Sbox.getBitVector().getBytes();
             stateBytesTransMatrix.setColumn(sboxIndex * 3, a1SboxBytes);
             stateBytesTransMatrix.setColumn(sboxIndex * 3 + 1, b1SboxBytes);

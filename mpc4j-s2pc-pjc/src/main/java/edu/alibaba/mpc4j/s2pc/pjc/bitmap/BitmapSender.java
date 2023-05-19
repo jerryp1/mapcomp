@@ -30,43 +30,43 @@ import static edu.alibaba.mpc4j.s2pc.pjc.bitmap.SecureBitmapContainer.CONTAINER_
  */
 public class BitmapSender extends AbstractBitmapParty {
     /**
-     * Bc协议发送端
+     * Z2 circuit sender
      */
-    private final Z2cParty bcSender;
+    private final Z2cParty z2cSender;
     /**
-     * 汉明距离计算发送端
+     * hamming sender
      */
     private final HammingParty hammingSender;
 
     public BitmapSender(Rpc senderRpc, Party receiverParty, BitmapConfig bitmapConfig) {
         super(BitmapPtoDesc.getInstance(), senderRpc, receiverParty, bitmapConfig);
-        bcSender = Z2cFactory.createSender(senderRpc, receiverParty, bitmapConfig.getBcConfig());
-        addSubPtos(bcSender);
+        z2cSender = Z2cFactory.createSender(senderRpc, receiverParty, bitmapConfig.getZ2cConfig());
+        addSubPtos(z2cSender);
         hammingSender = HammingFactory.createSender(senderRpc, receiverParty, bitmapConfig.getHammingConfig());
         addSubPtos(hammingSender);
     }
 
     @Override
     public SecureBitmapContainer and(SecureBitmapContainer x, SecureBitmapContainer y) throws MpcAbortException {
-        SquareZ2Vector vector = bcSender.and(x.getVector(), y.getVector());
+        SquareZ2Vector vector = z2cSender.and(x.getVector(), y.getVector());
         return new SecureBitmapContainer(vector);
     }
 
     @Override
     public SecureBitmapContainer xor(SecureBitmapContainer x, SecureBitmapContainer y) throws MpcAbortException {
-        SquareZ2Vector vector = bcSender.xor(x.getVector(), y.getVector());
+        SquareZ2Vector vector = z2cSender.xor(x.getVector(), y.getVector());
         return new SecureBitmapContainer(vector);
     }
 
     @Override
     public SecureBitmapContainer or(SecureBitmapContainer x, SecureBitmapContainer y) throws MpcAbortException {
-        SquareZ2Vector vector = bcSender.or(x.getVector(), y.getVector());
+        SquareZ2Vector vector = z2cSender.or(x.getVector(), y.getVector());
         return new SecureBitmapContainer(vector);
     }
 
     @Override
     public SecureBitmapContainer not(SecureBitmapContainer x) throws MpcAbortException {
-        SquareZ2Vector vector = bcSender.not(x.getVector());
+        SquareZ2Vector vector = z2cSender.not(x.getVector());
         return new SecureBitmapContainer(vector);
     }
 
@@ -84,7 +84,7 @@ public class BitmapSender extends AbstractBitmapParty {
         logPhaseInfo(PtoState.INIT_BEGIN);
 
         stopWatch.start();
-        bcSender.init(maxRoundNum, updateNum);
+        z2cSender.init(maxRoundNum, updateNum);
         hammingSender.init(updateNum);
         stopWatch.stop();
         long initTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
@@ -98,20 +98,20 @@ public class BitmapSender extends AbstractBitmapParty {
     public SecureBitmapContainer setOwnRoaringBitmap(RoaringBitmap roaringBitmap, int maxNum) {
         byte[] x = BitmapUtils.roaringBitmapToBytes(roaringBitmap, maxNum);
         BitVector xBitVector = BitVectorFactory.create(maxNum, x);
-        SquareZ2Vector x0 = bcSender.shareOwn(xBitVector);
+        SquareZ2Vector x0 = z2cSender.shareOwn(xBitVector);
         return new SecureBitmapContainer(x0);
     }
 
     @Override
     public SecureBitmapContainer setOtherRoaringBitmap(int maxNum) throws MpcAbortException {
-        SquareZ2Vector y0 = bcSender.shareOther(maxNum);
+        SquareZ2Vector y0 = z2cSender.shareOther(maxNum);
         return new SecureBitmapContainer(y0);
     }
 
     @Override
     public long[][] revealOwn(SecureBitmapContainer secureBitmapContainer) throws MpcAbortException {
         Preconditions.checkNotNull(secureBitmapContainer);
-        byte[] outputs = bcSender.revealOwn(secureBitmapContainer.getVector()).getBytes();
+        byte[] outputs = z2cSender.revealOwn(secureBitmapContainer.getVector()).getBytes();
         int containerNum = secureBitmapContainer.getContainerNum();
         byte[] containerOutputs = new byte[containerNum * CONTAINER_BYTE_SIZE];
         System.arraycopy(outputs, 0, containerOutputs, 0, outputs.length);
@@ -125,6 +125,6 @@ public class BitmapSender extends AbstractBitmapParty {
     @Override
     public void revealOther(SecureBitmapContainer secureBitmapContainer) {
         Preconditions.checkNotNull(secureBitmapContainer);
-        bcSender.revealOther(secureBitmapContainer.getVector());
+        z2cSender.revealOther(secureBitmapContainer.getVector());
     }
 }

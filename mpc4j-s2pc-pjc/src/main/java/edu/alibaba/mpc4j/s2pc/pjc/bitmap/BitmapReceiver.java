@@ -31,9 +31,9 @@ import static edu.alibaba.mpc4j.s2pc.pjc.bitmap.SecureBitmapContainer.CONTAINER_
  */
 public class BitmapReceiver extends AbstractBitmapParty {
     /**
-     * Bc协议接收端
+     * Z2 circuit receiver
      */
-    private final Z2cParty bcReceiver;
+    private final Z2cParty z2cReceiver;
     /**
      * 汉明距离接收端
      */
@@ -41,8 +41,8 @@ public class BitmapReceiver extends AbstractBitmapParty {
 
     public BitmapReceiver(Rpc receiverRpc, Party senderParty, BitmapConfig bitmapConfig) {
         super(getInstance(), receiverRpc, senderParty, bitmapConfig);
-        bcReceiver = Z2cFactory.createReceiver(receiverRpc, senderParty, bitmapConfig.getBcConfig());
-        addSubPtos(bcReceiver);
+        z2cReceiver = Z2cFactory.createReceiver(receiverRpc, senderParty, bitmapConfig.getZ2cConfig());
+        addSubPtos(z2cReceiver);
         hammingReceiver = HammingFactory.createReceiver(receiverRpc, senderParty, bitmapConfig.getHammingConfig());
         addSubPtos(hammingReceiver);
     }
@@ -50,27 +50,27 @@ public class BitmapReceiver extends AbstractBitmapParty {
     @Override
     public SecureBitmapContainer and(SecureBitmapContainer x, SecureBitmapContainer y) throws MpcAbortException {
         assert x.getCapacity() == y.getCapacity();
-        SquareZ2Vector vector = bcReceiver.and(x.getVector(), y.getVector());
+        SquareZ2Vector vector = z2cReceiver.and(x.getVector(), y.getVector());
         return new SecureBitmapContainer(vector);
     }
 
     @Override
     public SecureBitmapContainer xor(SecureBitmapContainer x, SecureBitmapContainer y) throws MpcAbortException {
         assert x.getCapacity() == y.getCapacity();
-        SquareZ2Vector vector = bcReceiver.xor(x.getVector(), y.getVector());
+        SquareZ2Vector vector = z2cReceiver.xor(x.getVector(), y.getVector());
         return new SecureBitmapContainer(vector);
     }
 
     @Override
     public SecureBitmapContainer or(SecureBitmapContainer x, SecureBitmapContainer y) throws MpcAbortException {
         assert x.getCapacity() == y.getCapacity();
-        SquareZ2Vector vector = bcReceiver.or(x.getVector(), y.getVector());
+        SquareZ2Vector vector = z2cReceiver.or(x.getVector(), y.getVector());
         return new SecureBitmapContainer(vector);
     }
 
     @Override
     public SecureBitmapContainer not(SecureBitmapContainer x) throws MpcAbortException {
-        SquareZ2Vector vector = bcReceiver.not(x.getVector());
+        SquareZ2Vector vector = z2cReceiver.not(x.getVector());
         return new SecureBitmapContainer(vector);
     }
 
@@ -89,7 +89,7 @@ public class BitmapReceiver extends AbstractBitmapParty {
         logPhaseInfo(PtoState.INIT_BEGIN);
 
         stopWatch.start();
-        bcReceiver.init(maxRoundNum, updateNum);
+        z2cReceiver.init(maxRoundNum, updateNum);
         hammingReceiver.init(updateNum);
         stopWatch.stop();
         long initTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
@@ -103,20 +103,20 @@ public class BitmapReceiver extends AbstractBitmapParty {
     public SecureBitmapContainer setOwnRoaringBitmap(RoaringBitmap roaringBitmap, int maxNum) {
         byte[] y = BitmapUtils.roaringBitmapToBytes(roaringBitmap, maxNum);
         BitVector yBitVector = BitVectorFactory.create(maxNum, y);
-        SquareZ2Vector y1 = bcReceiver.shareOwn(yBitVector);
+        SquareZ2Vector y1 = z2cReceiver.shareOwn(yBitVector);
         return new SecureBitmapContainer(y1);
     }
 
     @Override
     public SecureBitmapContainer setOtherRoaringBitmap(int maxNum) throws MpcAbortException {
-        SquareZ2Vector x1 = bcReceiver.shareOther(maxNum);
+        SquareZ2Vector x1 = z2cReceiver.shareOther(maxNum);
         return new SecureBitmapContainer(x1);
     }
 
     @Override
     public long[][] revealOwn(SecureBitmapContainer secureBitmapContainer) throws MpcAbortException {
         Preconditions.checkNotNull(secureBitmapContainer);
-        byte[] outputs = bcReceiver.revealOwn(secureBitmapContainer.getVector()).getBytes();
+        byte[] outputs = z2cReceiver.revealOwn(secureBitmapContainer.getVector()).getBytes();
         int containerNum = secureBitmapContainer.getContainerNum();
         byte[] containerOutputs = new byte[containerNum * CONTAINER_BYTE_SIZE];
         System.arraycopy(outputs, 0, containerOutputs, 0, outputs.length);
@@ -130,6 +130,6 @@ public class BitmapReceiver extends AbstractBitmapParty {
     @Override
     public void revealOther(SecureBitmapContainer secureBitmapContainer) {
         Preconditions.checkNotNull(secureBitmapContainer);
-        bcReceiver.revealOther(secureBitmapContainer.getVector());
+        z2cReceiver.revealOther(secureBitmapContainer.getVector());
     }
 }

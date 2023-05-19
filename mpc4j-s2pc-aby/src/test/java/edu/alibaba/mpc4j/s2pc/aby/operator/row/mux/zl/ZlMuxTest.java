@@ -10,6 +10,7 @@ import edu.alibaba.mpc4j.common.tool.bitvector.BitVectorFactory;
 import edu.alibaba.mpc4j.common.tool.galoisfield.zl.Zl;
 import edu.alibaba.mpc4j.common.tool.galoisfield.zl.ZlFactory;
 import edu.alibaba.mpc4j.crypto.matrix.vector.ZlVector;
+import edu.alibaba.mpc4j.s2pc.aby.AbyTestUtils;
 import edu.alibaba.mpc4j.s2pc.aby.basics.zl.SquareZlVector;
 import edu.alibaba.mpc4j.s2pc.aby.basics.z2.SquareZ2Vector;
 import edu.alibaba.mpc4j.s2pc.aby.operator.row.mux.zl.ZlMuxFactory.ZlMuxType;
@@ -41,9 +42,9 @@ import java.util.concurrent.TimeUnit;
 public class ZlMuxTest {
     private static final Logger LOGGER = LoggerFactory.getLogger(ZlMuxTest.class);
     /**
-     * the random state
+     * random status
      */
-    private static final SecureRandom SECURE_RANDOM = new SecureRandom();
+    private static final SecureRandom SECURE_RANDOM = AbyTestUtils.SECURE_RANDOM;
     /**
      * default num
      */

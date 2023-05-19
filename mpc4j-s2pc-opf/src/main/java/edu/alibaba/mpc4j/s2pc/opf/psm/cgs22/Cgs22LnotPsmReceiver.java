@@ -38,7 +38,7 @@ public class Cgs22LnotPsmReceiver extends AbstractPsmReceiver {
 
     public Cgs22LnotPsmReceiver(Rpc senderRpc, Party receiverParty, Cgs22LnotPsmConfig config) {
         super(Cgs22LnotPsmPtoDesc.getInstance(), senderRpc, receiverParty, config);
-        bcReceiver = Z2cFactory.createReceiver(senderRpc, receiverParty, config.getBcConfig());
+        bcReceiver = Z2cFactory.createReceiver(senderRpc, receiverParty, config.getZ2cConfig());
         addSubPtos(bcReceiver);
         lnotReceiver = LnotFactory.createReceiver(senderRpc, receiverParty, config.getLnotConfig());
         addSubPtos(lnotReceiver);

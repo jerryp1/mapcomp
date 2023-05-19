@@ -32,9 +32,9 @@ import java.util.stream.IntStream;
  */
 public class Cgs22LnotPsmSender extends AbstractPsmSender {
     /**
-     * Boolean circuit sender
+     * Z2 circuit sender
      */
-    private final Z2cParty bcSender;
+    private final Z2cParty z2cSender;
     /**
      * LNOT sender
      */
@@ -42,8 +42,8 @@ public class Cgs22LnotPsmSender extends AbstractPsmSender {
 
     public Cgs22LnotPsmSender(Rpc senderRpc, Party receiverParty, Cgs22LnotPsmConfig config) {
         super(Cgs22LnotPsmPtoDesc.getInstance(), senderRpc, receiverParty, config);
-        bcSender = Z2cFactory.createSender(senderRpc, receiverParty, config.getBcConfig());
-        addSubPtos(bcSender);
+        z2cSender = Z2cFactory.createSender(senderRpc, receiverParty, config.getZ2cConfig());
+        addSubPtos(z2cSender);
         lnotSender = LnotFactory.createSender(senderRpc, receiverParty, config.getLnotConfig());
         addSubPtos(lnotSender);
     }
@@ -57,7 +57,7 @@ public class Cgs22LnotPsmSender extends AbstractPsmSender {
         // q = l / m, where m = 4
         int maxByteL = CommonUtils.getByteLength(maxL);
         int maxQ = maxByteL * 2;
-        bcSender.init(maxNum * (maxQ - 1) * d, maxNum * (maxQ - 1) * d);
+        z2cSender.init(maxNum * (maxQ - 1) * d, maxNum * (maxQ - 1) * d);
         lnotSender.init(4, maxNum, maxNum * maxQ);
         stopWatch.stop();
         long initTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
@@ -189,7 +189,7 @@ public class Cgs22LnotPsmSender extends AbstractPsmSender {
                     eqsx0[k] = eqArrays0[i][k * 2];
                     eqsy0[k] = eqArrays0[i][k * 2 + 1];
                 }
-                SquareZ2Vector[] eqsz0 = bcSender.and(eqsx0, eqsy0);
+                SquareZ2Vector[] eqsz0 = z2cSender.and(eqsx0, eqsy0);
                 if (eqArrays0[i].length % 2 == 1) {
                     eqsz0 = Arrays.copyOf(eqsz0, nodeNum + 1);
                     eqsz0[nodeNum] = eqArrays0[i][eqArrays0[i].length - 1];
@@ -200,7 +200,7 @@ public class Cgs22LnotPsmSender extends AbstractPsmSender {
         // P1 computes eq_{log(q),1,0}_0 ⊕ ... ⊕ eq_{log(q),d,0}_0
         SquareZ2Vector z0 = SquareZ2Vector.createZeros(num);
         for (int i = 0; i < d; i++) {
-            z0 = bcSender.xor(z0, eqArrays0[i][0]);
+            z0 = z2cSender.xor(z0, eqArrays0[i][0]);
         }
         return z0;
     }

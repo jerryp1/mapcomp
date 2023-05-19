@@ -12,12 +12,12 @@ import edu.alibaba.mpc4j.s2pc.aby.basics.zl.ZlcConfig;
 import edu.alibaba.mpc4j.s2pc.aby.basics.zl.ZlcFactory;
 
 /**
- * EGK+20 Zl daBit generation config.
+ * EGK+20 Zl (no MAC) daBit generation config.
  *
  * @author Weiran Liu
  * @date 2023/5/18
  */
-public class Egk20ZlDaBitGenConfig implements ZlDaBitGenConfig {
+public class Egk20NoMacZlDaBitGenConfig implements ZlDaBitGenConfig {
     /**
      * Zl circuit config
      */
@@ -27,7 +27,7 @@ public class Egk20ZlDaBitGenConfig implements ZlDaBitGenConfig {
      */
     private final Z2cConfig z2cConfig;
 
-    private Egk20ZlDaBitGenConfig(Builder builder) {
+    private Egk20NoMacZlDaBitGenConfig(Builder builder) {
         Preconditions.checkArgument(builder.zlcConfig.getSecurityModel().equals(SecurityModel.SEMI_HONEST));
         Preconditions.checkArgument(builder.z2cConfig.getSecurityModel().equals(SecurityModel.SEMI_HONEST));
         zlcConfig = builder.zlcConfig;
@@ -38,13 +38,13 @@ public class Egk20ZlDaBitGenConfig implements ZlDaBitGenConfig {
         return zlcConfig;
     }
 
-    public Z2cConfig getBcConfig() {
+    public Z2cConfig getZ2cConfig() {
         return z2cConfig;
     }
 
     @Override
     public ZlDaBitGenFactory.ZlDaBitGenType getPtoType() {
-        return ZlDaBitGenFactory.ZlDaBitGenType.EGK20;
+        return ZlDaBitGenFactory.ZlDaBitGenType.EGK20_NO_MAC;
     }
 
     @Override
@@ -68,7 +68,7 @@ public class Egk20ZlDaBitGenConfig implements ZlDaBitGenConfig {
         return SecurityModel.SEMI_HONEST;
     }
 
-    public static class Builder implements org.apache.commons.lang3.builder.Builder<Egk20ZlDaBitGenConfig> {
+    public static class Builder implements org.apache.commons.lang3.builder.Builder<Egk20NoMacZlDaBitGenConfig> {
         /**
          * Zl circuit config
          */
@@ -94,8 +94,8 @@ public class Egk20ZlDaBitGenConfig implements ZlDaBitGenConfig {
         }
 
         @Override
-        public Egk20ZlDaBitGenConfig build() {
-            return new Egk20ZlDaBitGenConfig(this);
+        public Egk20NoMacZlDaBitGenConfig build() {
+            return new Egk20NoMacZlDaBitGenConfig(this);
         }
     }
 }

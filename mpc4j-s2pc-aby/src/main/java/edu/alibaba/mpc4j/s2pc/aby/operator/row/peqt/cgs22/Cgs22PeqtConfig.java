@@ -17,7 +17,7 @@ import edu.alibaba.mpc4j.s2pc.pcg.ot.lnot.LnotFactory;
  */
 public class Cgs22PeqtConfig implements PeqtConfig {
     /**
-     * Boolean circuit config
+     * Z2 circuit config
      */
     private final Z2cConfig z2cConfig;
     /**
@@ -31,7 +31,7 @@ public class Cgs22PeqtConfig implements PeqtConfig {
         lnotConfig = builder.lnotConfig;
     }
 
-    public Z2cConfig getBcConfig() {
+    public Z2cConfig getZ2cConfig() {
         return z2cConfig;
     }
 

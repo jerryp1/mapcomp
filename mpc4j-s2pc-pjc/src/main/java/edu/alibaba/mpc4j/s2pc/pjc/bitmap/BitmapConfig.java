@@ -24,7 +24,7 @@ public interface BitmapConfig extends MultiPartyPtoConfig {
      *
      * @return Bc协议配置项
      */
-    Z2cConfig getBcConfig();
+    Z2cConfig getZ2cConfig();
 
     /**
      * 返回汉明距离协议配置项

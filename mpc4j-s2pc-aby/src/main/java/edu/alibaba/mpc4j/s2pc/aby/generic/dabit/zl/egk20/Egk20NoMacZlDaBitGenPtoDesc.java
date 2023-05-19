@@ -4,8 +4,8 @@ import edu.alibaba.mpc4j.common.rpc.desc.PtoDesc;
 import edu.alibaba.mpc4j.common.rpc.desc.PtoDescManager;
 
 /**
- * EGK+20 semi-honest Zl daBit generation protocol description. The protocol is described in Figure 14 of the following
- * paper:
+ * EGK+20 semi-honest Zl (no MAC) daBit generation protocol description. The protocol is described in Figure 14 of the
+ * following paper:
  * <p>
  * Escudero, Daniel, Satrajit Ghosh, Marcel Keller, Rahul Rachuri, and Peter Scholl. Improved primitives for MPC over
  * mixed arithmetic-binary circuits. CRYPTO 2020, Part II 40, pp. 823-852. Springer International Publishing, 2020.
@@ -17,7 +17,7 @@ import edu.alibaba.mpc4j.common.rpc.desc.PtoDescManager;
  * @author Weiran Liu
  * @date 2023/5/18
  */
-public class Egk20ZlDaBitGenPtoDesc implements PtoDesc {
+class Egk20NoMacZlDaBitGenPtoDesc implements PtoDesc {
     /**
      * protocol ID
      */
@@ -25,16 +25,16 @@ public class Egk20ZlDaBitGenPtoDesc implements PtoDesc {
     /**
      * protocol name
      */
-    private static final String PTO_NAME = "EGK20_WITH_MAC";
+    private static final String PTO_NAME = "EGK20_NO_MAC";
     /**
      * singleton mode
      */
-    private static final Egk20ZlDaBitGenPtoDesc INSTANCE = new Egk20ZlDaBitGenPtoDesc();
+    private static final Egk20NoMacZlDaBitGenPtoDesc INSTANCE = new Egk20NoMacZlDaBitGenPtoDesc();
 
     /**
      * private constructor
      */
-    private Egk20ZlDaBitGenPtoDesc() {
+    private Egk20NoMacZlDaBitGenPtoDesc() {
         // empty
     }
 

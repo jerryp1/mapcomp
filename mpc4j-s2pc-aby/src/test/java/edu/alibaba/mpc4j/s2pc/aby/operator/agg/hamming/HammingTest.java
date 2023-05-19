@@ -6,6 +6,7 @@ import edu.alibaba.mpc4j.common.rpc.RpcManager;
 import edu.alibaba.mpc4j.common.rpc.impl.memory.MemoryRpcManager;
 import edu.alibaba.mpc4j.common.tool.utils.BytesUtils;
 import edu.alibaba.mpc4j.common.tool.utils.CommonUtils;
+import edu.alibaba.mpc4j.s2pc.aby.AbyTestUtils;
 import edu.alibaba.mpc4j.s2pc.aby.basics.z2.SquareZ2Vector;
 import edu.alibaba.mpc4j.s2pc.aby.operator.agg.hamming.bcp13.Bcp13ShHammingConfig;
 import org.apache.commons.lang3.StringUtils;
@@ -35,9 +36,9 @@ import java.util.concurrent.TimeUnit;
 public class HammingTest {
     private static final Logger LOGGER = LoggerFactory.getLogger(HammingTest.class);
     /**
-     * 随机状态
+     * random status
      */
-    private static final SecureRandom SECURE_RANDOM = new SecureRandom();
+    private static final SecureRandom SECURE_RANDOM = AbyTestUtils.SECURE_RANDOM;
     /**
      * 默认运算数量
      */

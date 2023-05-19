@@ -1,4 +1,4 @@
-package edu.alibaba.mpc4j.s2pc.aby.generic.dabit.zl;
+package edu.alibaba.mpc4j.s2pc.aby.generic.edabit.zl;
 
 import com.google.common.base.Preconditions;
 import edu.alibaba.mpc4j.common.rpc.Rpc;
@@ -6,8 +6,8 @@ import edu.alibaba.mpc4j.common.rpc.RpcManager;
 import edu.alibaba.mpc4j.common.rpc.impl.memory.MemoryRpcManager;
 import edu.alibaba.mpc4j.common.tool.galoisfield.zl.Zl;
 import edu.alibaba.mpc4j.s2pc.aby.AbyTestUtils;
-import edu.alibaba.mpc4j.s2pc.aby.generic.dabit.zl.ZlDaBitGenFactory.ZlDaBitGenType;
-import edu.alibaba.mpc4j.s2pc.aby.generic.dabit.zl.egk20.Egk20NoMacZlDaBitGenConfig;
+import edu.alibaba.mpc4j.s2pc.aby.generic.edabit.zl.ZlEdaBitGenFactory.ZlEdaBitGenType;
+import edu.alibaba.mpc4j.s2pc.aby.generic.edabit.zl.egk20.Egk20ZlEdaBitGenConfig;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.time.StopWatch;
 import org.junit.After;
@@ -25,14 +25,14 @@ import java.util.Collection;
 import java.util.concurrent.TimeUnit;
 
 /**
- * Zl daBit generation test.
+ * Zl edaBit generation test.
  *
  * @author Weiran Liu
  * @date 2023/5/18
  */
 @RunWith(Parameterized.class)
-public class ZlDaBitGenTest {
-    private static final Logger LOGGER = LoggerFactory.getLogger(ZlDaBitGenTest.class);
+public class ZlEdaBitGenTest {
+    private static final Logger LOGGER = LoggerFactory.getLogger(ZlEdaBitGenTest.class);
     /**
      * random status
      */
@@ -53,8 +53,8 @@ public class ZlDaBitGenTest {
         for (Zl zl : AbyTestUtils.ZLS) {
             int l = zl.getL();
             configurations.add(new Object[]{
-                ZlDaBitGenType.EGK20_NO_MAC.name() + " (l = " + l + ")",
-                new Egk20NoMacZlDaBitGenConfig.Builder(zl, true).build(),
+                ZlEdaBitGenType.EGK20.name() + " (l = " + l + ")",
+                new Egk20ZlEdaBitGenConfig.Builder(zl, true).build(),
             });
         }
 
@@ -72,9 +72,9 @@ public class ZlDaBitGenTest {
     /**
      * config
      */
-    private final ZlDaBitGenConfig config;
+    private final ZlEdaBitGenConfig config;
 
-    public ZlDaBitGenTest(String name, ZlDaBitGenConfig config) {
+    public ZlEdaBitGenTest(String name, ZlEdaBitGenConfig config) {
         Preconditions.checkArgument(StringUtils.isNotBlank(name));
         // We cannot use NettyRPC in the test case since it needs multi-thread connect / disconnect.
         // In other word, we cannot connect / disconnect NettyRpc in @Before / @After, respectively.
@@ -127,8 +127,8 @@ public class ZlDaBitGenTest {
     }
 
     private void testPto(int num, boolean parallel) {
-        ZlDaBitGenParty sender = ZlDaBitGenFactory.createSender(senderRpc, receiverRpc.ownParty(), config);
-        ZlDaBitGenParty receiver = ZlDaBitGenFactory.createReceiver(receiverRpc, senderRpc.ownParty(), config);
+        ZlEdaBitGenParty sender = ZlEdaBitGenFactory.createSender(senderRpc, receiverRpc.ownParty(), config);
+        ZlEdaBitGenParty receiver = ZlEdaBitGenFactory.createReceiver(receiverRpc, senderRpc.ownParty(), config);
         sender.setParallel(parallel);
         receiver.setParallel(parallel);
         int randomTaskId = Math.abs(SECURE_RANDOM.nextInt());
@@ -136,8 +136,8 @@ public class ZlDaBitGenTest {
         receiver.setTaskId(randomTaskId);
         try {
             LOGGER.info("-----test {} start-----", sender.getPtoDesc().getPtoName());
-            ZlDaBitGenPartyThread senderThread = new ZlDaBitGenPartyThread(sender, num);
-            ZlDaBitGenPartyThread receiverThread = new ZlDaBitGenPartyThread(receiver, num);
+            ZlEdaBitGenPartyThread senderThread = new ZlEdaBitGenPartyThread(sender, num);
+            ZlEdaBitGenPartyThread receiverThread = new ZlEdaBitGenPartyThread(receiver, num);
             StopWatch stopWatch = new StopWatch();
             // start
             stopWatch.start();
@@ -153,11 +153,11 @@ public class ZlDaBitGenTest {
             long receiverByteLength = receiverRpc.getSendByteLength();
             senderRpc.reset();
             receiverRpc.reset();
-            SquareZlDaBitVector senderOutput = senderThread.getOutput();
-            SquareZlDaBitVector receiverOutput = receiverThread.getOutput();
-            PlainZlDaBitVector plainZlDaBitVector = senderOutput.reveal(receiverOutput);
+            SquareZlEdaBitVector senderOutput = senderThread.getOutput();
+            SquareZlEdaBitVector receiverOutput = receiverThread.getOutput();
+            PlainZlEdaBitVector plainZlEdaBitVector = senderOutput.reveal(receiverOutput);
             // verify
-            assertOutput(num, plainZlDaBitVector);
+            assertOutput(num, plainZlEdaBitVector);
             LOGGER.info("Sender sends {}B, Receiver sends {}B, time = {}ms",
                 senderByteLength, receiverByteLength, time
             );
@@ -169,10 +169,10 @@ public class ZlDaBitGenTest {
         receiver.destroy();
     }
 
-    private void assertOutput(int num, PlainZlDaBitVector plainDaBitVector) {
-        Assert.assertEquals(num, plainDaBitVector.getNum());
+    private void assertOutput(int num, PlainZlEdaBitVector plainEdaBitVector) {
+        Assert.assertEquals(num, plainEdaBitVector.getNum());
         for (int index = 0; index < num; index++) {
-            Assert.assertEquals(plainDaBitVector.getZlElement(index), plainDaBitVector.getZ2Element(index));
+            Assert.assertEquals(plainEdaBitVector.getZlElement(index), plainEdaBitVector.getZ2Element(index));
         }
     }
 }

@@ -22,27 +22,27 @@ import java.util.concurrent.TimeUnit;
 import java.util.stream.IntStream;
 
 /**
- * EGK+20 Zl daBit generation sender.
+ * EGK+20 semi-honest Zl (no MAC) daBit generation receiver.
  *
  * @author Weiran Liu
  * @date 2023/5/18
  */
-public class Egk20ZlDaBitGenSender extends AbstractZlDaBitGenParty {
+public class Egk20NoMacZlDaBitGenReceiver extends AbstractZlDaBitGenParty {
     /**
-     * Zl sender
+     * Zl circuit receiver
      */
-    private final ZlcParty zlcSender;
+    private final ZlcParty zlcReceiver;
     /**
-     * Z2 sender
+     * Z2 circuit receiver
      */
-    private final Z2cParty bcSender;
+    private final Z2cParty z2cReceiver;
 
-    public Egk20ZlDaBitGenSender(Rpc senderPpc, Party receiverParty, Egk20ZlDaBitGenConfig config) {
-        super(Egk20ZlDaBitGenPtoDesc.getInstance(), senderPpc, receiverParty, config);
-        zlcSender = ZlcFactory.createSender(senderPpc, receiverParty, config.getZlcConfig());
-        addSubPtos(zlcSender);
-        bcSender = Z2cFactory.createSender(senderPpc, receiverParty, config.getBcConfig());
-        addSubPtos(bcSender);
+    public Egk20NoMacZlDaBitGenReceiver(Rpc receiverPpc, Party senderParty, Egk20NoMacZlDaBitGenConfig config) {
+        super(Egk20NoMacZlDaBitGenPtoDesc.getInstance(), receiverPpc, senderParty, config);
+        zlcReceiver = ZlcFactory.createReceiver(receiverPpc, senderParty, config.getZlcConfig());
+        addSubPtos(zlcReceiver);
+        z2cReceiver = Z2cFactory.createReceiver(receiverPpc, senderParty, config.getZ2cConfig());
+        addSubPtos(z2cReceiver);
     }
 
     @Override
@@ -51,8 +51,8 @@ public class Egk20ZlDaBitGenSender extends AbstractZlDaBitGenParty {
         logPhaseInfo(PtoState.INIT_BEGIN);
 
         stopWatch.start();
-        zlcSender.init(maxNum, maxNum);
-        bcSender.init(maxNum, maxNum);
+        zlcReceiver.init(maxNum, maxNum);
+        z2cReceiver.init(maxNum, maxNum);
         stopWatch.stop();
         long initTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
         stopWatch.reset();
@@ -67,38 +67,38 @@ public class Egk20ZlDaBitGenSender extends AbstractZlDaBitGenParty {
         logPhaseInfo(PtoState.PTO_BEGIN);
 
         stopWatch.start();
-        // The parties generate a random bit [b]_{2^k} in the arithmetic part of F_{ABB} by computing a + b − 2ab
+        // The parties generate a random bit [b]_{2^k} in the arithmetic part of F_{ABB}.
         BigInteger[] zlArray = IntStream.range(0, num)
             .mapToObj(index -> {
                 boolean b = secureRandom.nextBoolean();
                 return b ? zl.createOne() : zl.createZero();
             })
             .toArray(BigInteger[]::new);
-        ZlVector randomZlVector0 = ZlVector.create(zl, zlArray);
+        ZlVector randomZlVector1 = ZlVector.create(zl, zlArray);
         BigInteger[] twoArray = IntStream.range(0, num)
             .mapToObj(index -> zl.module(BigIntegerUtils.BIGINT_2))
             .toArray(BigInteger[]::new);
         ZlVector twoZlVector = ZlVector.create(zl, twoArray);
-        SquareZlVector squareZlVector00 = zlcSender.shareOwn(randomZlVector0);
-        SquareZlVector squareZlVector10 = zlcSender.shareOther(num);
-        SquareZlVector addAb0 = zlcSender.add(squareZlVector00, squareZlVector10);
-        SquareZlVector mul2Ab0 = zlcSender.mul(squareZlVector00, squareZlVector10);
-        mul2Ab0 = zlcSender.mul(mul2Ab0, zlcSender.create(twoZlVector));
-        SquareZlVector squareZlVector0 = zlcSender.sub(addAb0, mul2Ab0);
+        SquareZlVector squareZlVector01 = zlcReceiver.shareOther(num);
+        SquareZlVector squareZlVector11 = zlcReceiver.shareOwn(randomZlVector1);
+        SquareZlVector addAb1 = zlcReceiver.add(squareZlVector01, squareZlVector11);
+        SquareZlVector mul2Ab1 = zlcReceiver.mul(squareZlVector01, squareZlVector11);
+        mul2Ab1 = zlcReceiver.mul(mul2Ab1, zlcReceiver.create(twoZlVector));
+        SquareZlVector squareZlVector1 = zlcReceiver.sub(addAb1, mul2Ab1);
         stopWatch.stop();
         long zlTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
         stopWatch.reset();
         logStepInfo(PtoState.PTO_STEP, 1, 2, zlTime);
 
         stopWatch.start();
-        ZlVector zlVector0 = squareZlVector0.getZlVector();
-        // P0 computes [b_i mod 2]_2. In order to have the MAC, we must explicitly share the Z2 vector.
-        BitVector randomZ2Vector0 = BitVectorFactory.createZeros(num);
+        ZlVector zlVector1 = squareZlVector1.getZlVector();
+        // P1 computes [b_i mod 2]_2. We directly treat the result as the square Z2 vector.
+        BitVector randomZ2Vector1 = BitVectorFactory.createZeros(num);
         for (int index = 0; index < num; index++) {
-            randomZ2Vector0.set(index, zlVector0.getElement(index).and(BigInteger.ONE).equals(BigInteger.ONE));
+            randomZ2Vector1.set(index, zlVector1.getElement(index).and(BigInteger.ONE).equals(BigInteger.ONE));
         }
-        SquareZ2Vector squareZ2Vector0 = SquareZ2Vector.create(randomZ2Vector0, false);
-        SquareZlDaBitVector senderOutput = SquareZlDaBitVector.create(squareZlVector0, squareZ2Vector0);
+        SquareZ2Vector squareZ2Vector1 = SquareZ2Vector.create(randomZ2Vector1, false);
+        SquareZlDaBitVector senderOutput = SquareZlDaBitVector.create(squareZlVector1, squareZ2Vector1);
         stopWatch.stop();
         long z2Time = stopWatch.getTime(TimeUnit.MILLISECONDS);
         stopWatch.reset();

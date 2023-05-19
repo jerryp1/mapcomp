@@ -33,9 +33,9 @@ import java.util.stream.IntStream;
  */
 public class Cgs22PeqtSender extends AbstractPeqtParty {
     /**
-     * Boolean circuit sender
+     * Z2 circuit sender
      */
-    private final Z2cParty bcSender;
+    private final Z2cParty Z2cSender;
     /**
      * LNOT sender
      */
@@ -43,8 +43,8 @@ public class Cgs22PeqtSender extends AbstractPeqtParty {
 
     public Cgs22PeqtSender(Rpc senderRpc, Party receiverParty, Cgs22PeqtConfig config) {
         super(Cgs22PeqtPtoDesc.getInstance(), senderRpc, receiverParty, config);
-        bcSender = Z2cFactory.createSender(senderRpc, receiverParty, config.getBcConfig());
-        addSubPtos(bcSender);
+        Z2cSender = Z2cFactory.createSender(senderRpc, receiverParty, config.getZ2cConfig());
+        addSubPtos(Z2cSender);
         lnotSender = LnotFactory.createSender(senderRpc, receiverParty, config.getLnotConfig());
         addSubPtos(lnotSender);
     }
@@ -58,7 +58,7 @@ public class Cgs22PeqtSender extends AbstractPeqtParty {
         // q = l / m, where m = 4
         int maxByteL = CommonUtils.getByteLength(maxL);
         int maxQ = maxByteL * 2;
-        bcSender.init(maxNum * (maxQ - 1), maxNum * (maxQ - 1));
+        Z2cSender.init(maxNum * (maxQ - 1), maxNum * (maxQ - 1));
         lnotSender.init(4, maxNum, maxNum * maxQ);
         stopWatch.stop();
         long initTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
@@ -169,7 +169,7 @@ public class Cgs22PeqtSender extends AbstractPeqtParty {
                 eqsx0[i] = eqs0[i * 2];
                 eqsy0[i] = eqs0[i * 2 + 1];
             }
-            SquareZ2Vector[] eqsz0 = bcSender.and(eqsx0, eqsy0);
+            SquareZ2Vector[] eqsz0 = Z2cSender.and(eqsx0, eqsy0);
             if (eqs0.length % 2 == 1) {
                 eqsz0 = Arrays.copyOf(eqsz0, nodeNum + 1);
                 eqsz0[nodeNum] = eqs0[eqs0.length - 1];

@@ -20,7 +20,7 @@ import edu.alibaba.mpc4j.s2pc.pso.psu.PsuFactory.PsuType;
  */
 public class Zcl22SkePsuConfig implements PsuConfig {
     /**
-     * BC协议配置项
+     * Z2 circuit config
      */
     private final Z2cConfig z2cConfig;
     /**
@@ -51,7 +51,7 @@ public class Zcl22SkePsuConfig implements PsuConfig {
         return PsuType.ZCL22_SKE;
     }
 
-    public Z2cConfig getBcConfig() {
+    public Z2cConfig getZ2cConfig() {
         return z2cConfig;
     }
 
@@ -96,7 +96,7 @@ public class Zcl22SkePsuConfig implements PsuConfig {
 
     public static class Builder implements org.apache.commons.lang3.builder.Builder<Zcl22SkePsuConfig> {
         /**
-         * BC协议配置项
+         * Z2 circuit config
          */
         private Z2cConfig z2cConfig;
         /**

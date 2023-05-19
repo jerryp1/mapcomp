@@ -6,12 +6,9 @@ import edu.alibaba.mpc4j.common.circuit.operator.UnaryAcOperator;
 import edu.alibaba.mpc4j.common.rpc.Rpc;
 import edu.alibaba.mpc4j.common.rpc.RpcManager;
 import edu.alibaba.mpc4j.common.rpc.impl.memory.MemoryRpcManager;
-import edu.alibaba.mpc4j.common.tool.CommonConstants;
-import edu.alibaba.mpc4j.common.tool.EnvType;
 import edu.alibaba.mpc4j.common.tool.galoisfield.zl.Zl;
-import edu.alibaba.mpc4j.common.tool.galoisfield.zl.ZlFactory;
-import edu.alibaba.mpc4j.common.tool.utils.LongUtils;
 import edu.alibaba.mpc4j.crypto.matrix.vector.ZlVector;
+import edu.alibaba.mpc4j.s2pc.aby.AbyTestUtils;
 import edu.alibaba.mpc4j.s2pc.aby.basics.zl.bea91.Bea91ZlcConfig;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.time.StopWatch;
@@ -41,7 +38,7 @@ public class SingleZlcTest {
     /**
      * random status
      */
-    private static final SecureRandom SECURE_RANDOM = new SecureRandom();
+    private static final SecureRandom SECURE_RANDOM = AbyTestUtils.SECURE_RANDOM;
     /**
      * default num
      */
@@ -55,15 +52,7 @@ public class SingleZlcTest {
     public static Collection<Object[]> configurations() {
         Collection<Object[]> configurations = new ArrayList<>();
 
-        Zl[] zls = new Zl[]{
-            ZlFactory.createInstance(EnvType.STANDARD, 1),
-            ZlFactory.createInstance(EnvType.STANDARD, 3),
-            ZlFactory.createInstance(EnvType.STANDARD, LongUtils.MAX_L - 1),
-            ZlFactory.createInstance(EnvType.STANDARD, LongUtils.MAX_L),
-            ZlFactory.createInstance(EnvType.STANDARD, LongUtils.MAX_L + 1),
-            ZlFactory.createInstance(EnvType.STANDARD, CommonConstants.BLOCK_BIT_LENGTH),
-        };
-        for (Zl zl : zls) {
+        for (Zl zl : AbyTestUtils.ZLS) {
             // Bea91
             configurations.add(new Object[]{
                 ZlcFactory.ZlType.BEA91.name() + "(l = " + zl.getL() + ")", new Bea91ZlcConfig.Builder(zl).build()

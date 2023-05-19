@@ -17,11 +17,11 @@ import edu.alibaba.mpc4j.s2pc.pjc.bitmap.BitmapPtoDesc.BitmapType;
  */
 public class SecureBitmapConfig implements BitmapConfig {
     /**
-     * BC协议
+     * Z2 circuit config
      */
     private final Z2cConfig z2cConfig;
     /**
-     * 汉明计算协议
+     * hamming config
      */
     private final HammingConfig hammingConfig;
 
@@ -55,7 +55,7 @@ public class SecureBitmapConfig implements BitmapConfig {
     }
 
     @Override
-    public Z2cConfig getBcConfig() {
+    public Z2cConfig getZ2cConfig() {
         return z2cConfig;
     }
 

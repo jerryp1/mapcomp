@@ -5,6 +5,7 @@ import edu.alibaba.mpc4j.common.rpc.Rpc;
 import edu.alibaba.mpc4j.common.rpc.RpcManager;
 import edu.alibaba.mpc4j.common.rpc.impl.memory.MemoryRpcManager;
 import edu.alibaba.mpc4j.common.tool.bitvector.BitVector;
+import edu.alibaba.mpc4j.s2pc.aby.AbyTestUtils;
 import edu.alibaba.mpc4j.s2pc.aby.basics.z2.SquareZ2Vector;
 import edu.alibaba.mpc4j.s2pc.aby.operator.row.peqt.PeqtFactory.PeqtType;
 import edu.alibaba.mpc4j.s2pc.aby.operator.row.peqt.cgs22.Cgs22PeqtConfig;
@@ -36,9 +37,9 @@ import java.util.concurrent.TimeUnit;
 public class PeqtTest {
     private static final Logger LOGGER = LoggerFactory.getLogger(PeqtTest.class);
     /**
-     * the random state
+     * random status
      */
-    private static final SecureRandom SECURE_RANDOM = new SecureRandom();
+    private static final SecureRandom SECURE_RANDOM = AbyTestUtils.SECURE_RANDOM;
     /**
      * default num
      */

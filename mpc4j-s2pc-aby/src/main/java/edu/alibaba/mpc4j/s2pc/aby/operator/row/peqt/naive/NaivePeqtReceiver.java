@@ -23,9 +23,9 @@ import java.util.concurrent.TimeUnit;
  */
 public class NaivePeqtReceiver extends AbstractPeqtParty {
     /**
-     * Boolean circuit receiver
+     * Z2 circuit receiver
      */
-    private final Z2cParty bcReceiver;
+    private final Z2cParty z2cReceiver;
     /**
      * Z2 integer circuit
      */
@@ -33,9 +33,9 @@ public class NaivePeqtReceiver extends AbstractPeqtParty {
 
     public NaivePeqtReceiver(Rpc receiverRpc, Party senderParty, NaivePeqtConfig config) {
         super(NaivePeqtPtoDesc.getInstance(), receiverRpc, senderParty, config);
-        bcReceiver = Z2cFactory.createReceiver(receiverRpc, senderParty, config.getBcConfig());
-        addSubPtos(bcReceiver);
-        z2IntegerCircuit = new Z2IntegerCircuit(bcReceiver);
+        z2cReceiver = Z2cFactory.createReceiver(receiverRpc, senderParty, config.getZ2cConfig());
+        addSubPtos(z2cReceiver);
+        z2IntegerCircuit = new Z2IntegerCircuit(z2cReceiver);
     }
 
     @Override
@@ -44,7 +44,7 @@ public class NaivePeqtReceiver extends AbstractPeqtParty {
         logPhaseInfo(PtoState.INIT_BEGIN);
 
         stopWatch.start();
-        bcReceiver.init(maxNum * maxL, maxNum * maxL);
+        z2cReceiver.init(maxNum * maxL, maxNum * maxL);
         stopWatch.stop();
         long initTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
         stopWatch.reset();
@@ -71,8 +71,8 @@ public class NaivePeqtReceiver extends AbstractPeqtParty {
         // P1 gets and sends the share
         int[] nums = new int[l];
         Arrays.fill(nums, num);
-        SquareZ2Vector[] x1 = bcReceiver.shareOther(nums);
-        SquareZ2Vector[] y1 = bcReceiver.shareOwn(y);
+        SquareZ2Vector[] x1 = z2cReceiver.shareOther(nums);
+        SquareZ2Vector[] y1 = z2cReceiver.shareOwn(y);
         stopWatch.stop();
         long shareTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
         stopWatch.reset();

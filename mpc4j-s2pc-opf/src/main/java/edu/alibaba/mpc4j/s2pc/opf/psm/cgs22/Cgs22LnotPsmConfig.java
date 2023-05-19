@@ -31,7 +31,7 @@ public class Cgs22LnotPsmConfig implements PsmConfig {
         lnotConfig = builder.lnotConfig;
     }
 
-    public Z2cConfig getBcConfig() {
+    public Z2cConfig getZ2cConfig() {
         return z2cConfig;
     }
 

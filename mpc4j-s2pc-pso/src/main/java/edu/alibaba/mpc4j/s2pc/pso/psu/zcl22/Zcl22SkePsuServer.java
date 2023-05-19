@@ -41,9 +41,9 @@ import java.util.stream.IntStream;
  */
 public class Zcl22SkePsuServer extends AbstractPsuServer {
     /**
-     * BC协议发送方
+     * Z2 circuit sender
      */
-    private final Z2cParty bcSender;
+    private final Z2cParty z2cSender;
     /**
      * OPRP协议接收方
      */
@@ -67,8 +67,8 @@ public class Zcl22SkePsuServer extends AbstractPsuServer {
 
     public Zcl22SkePsuServer(Rpc serverRpc, Party clientParty, Zcl22SkePsuConfig config) {
         super(Zcl22SkePsuPtoDesc.getInstance(), serverRpc, clientParty, config);
-        bcSender = Z2cFactory.createSender(serverRpc, clientParty, config.getBcConfig());
-        addSubPtos(bcSender);
+        z2cSender = Z2cFactory.createSender(serverRpc, clientParty, config.getZ2cConfig());
+        addSubPtos(z2cSender);
         oprpReceiver = OprpFactory.createReceiver(serverRpc, clientParty, config.getOprpConfig());
         addSubPtos(oprpReceiver);
         coreCotSender = CoreCotFactory.createSender(serverRpc, clientParty, config.getCoreCotConfig());
@@ -83,7 +83,7 @@ public class Zcl22SkePsuServer extends AbstractPsuServer {
 
         stopWatch.start();
         // 涉及三元组部分的初始化
-        bcSender.init(maxServerElementSize, maxServerElementSize * CommonConstants.BLOCK_BIT_LENGTH);
+        z2cSender.init(maxServerElementSize, maxServerElementSize * CommonConstants.BLOCK_BIT_LENGTH);
         oprpReceiver.init(maxServerElementSize);
         stopWatch.stop();
         long bcTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
@@ -214,8 +214,8 @@ public class Zcl22SkePsuServer extends AbstractPsuServer {
         SquareZ2Vector serverPeqtShares = SquareZ2Vector.createOnes(serverElementSize);
         for (int index = 0; index < CommonConstants.BLOCK_BIT_LENGTH - logSize; index++) {
             byte[] bits = transposeTransBitMatrix.getColumn(index);
-            SquareZ2Vector notBits = bcSender.not(SquareZ2Vector.create(serverElementSize, bits, false));
-            serverPeqtShares = bcSender.and(serverPeqtShares, notBits);
+            SquareZ2Vector notBits = z2cSender.not(SquareZ2Vector.create(serverElementSize, bits, false));
+            serverPeqtShares = z2cSender.and(serverPeqtShares, notBits);
         }
         return serverPeqtShares.getBitVector().getBytes();
     }
