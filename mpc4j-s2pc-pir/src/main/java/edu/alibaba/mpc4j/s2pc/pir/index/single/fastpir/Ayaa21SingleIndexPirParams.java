@@ -33,7 +33,7 @@ public class Ayaa21SingleIndexPirParams implements SingleIndexPirParams {
     public Ayaa21SingleIndexPirParams(int polyModulusDegree, long plainModulus, long[] coeffModulus) {
         this.polyModulusDegree = polyModulusDegree;
         this.plainModulusBitLength = BigInteger.valueOf(plainModulus).bitLength() - 1;
-        this.encryptionParams = Ayaa21SingleIndexPirNativeUtils.generateSealContext(
+        this.encryptionParams = Ayaa21SingleIndexPirNativeUtils.generateEncryptionParams(
             polyModulusDegree, plainModulus, coeffModulus
         );
     }

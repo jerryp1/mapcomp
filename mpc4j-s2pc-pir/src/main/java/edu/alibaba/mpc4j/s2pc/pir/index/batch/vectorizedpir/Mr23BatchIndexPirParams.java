@@ -11,7 +11,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 /**
- * Vectorized Batch PIR协议参数。
+ * Vectorized Batch PIR params.
  *
  * @author Liqiang Peng
  * @date 2023/3/6
@@ -23,27 +23,27 @@ public class Mr23BatchIndexPirParams implements SingleIndexPirParams {
     }
 
     /**
-     * 明文模数比特长度
+     * plain modulus bit length
      */
     private final int plainModulusBitLength;
     /**
-     * 多项式阶
+     * poly modulus degree
      */
     private final int polyModulusDegree;
     /**
-     * SEAL上下文参数
+     * encryption parameters
      */
     private final byte[] encryptionParams;
     /**
-     * 哈希数目
+     * hash num
      */
     private final int hashNum;
     /**
-     * 前两维长度
+     * first two dimension size
      */
     private final int firstTwoDimensionSize;
     /**
-     * 第三维长度
+     * third dimension size
      */
     private final int thirdDimensionSize;
     /**
@@ -58,8 +58,7 @@ public class Mr23BatchIndexPirParams implements SingleIndexPirParams {
         assert firstTwoDimensionSize == PirUtils.getNextPowerOfTwo(firstTwoDimensionSize);
         this.firstTwoDimensionSize = firstTwoDimensionSize;
         this.thirdDimensionSize = thirdDimensionSize;
-        // 生成加密方案参数
-        encryptionParams = Mr23BatchIndexPirNativeUtils.generateSealContext(polyModulusDegree, plainModulusBitLength);
+        encryptionParams = Mr23BatchIndexPirNativeUtils.generateEncryptionParams(polyModulusDegree, plainModulusBitLength);
         this.hashNum = hashNum;
         this.maxRetrievalSize = maxRetrievalSize;
     }
@@ -112,168 +111,168 @@ public class Mr23BatchIndexPirParams implements SingleIndexPirParams {
     }
 
     /**
-     * 2^20，适合分桶数目16
+     * element size 2^20, retrieval size 16
      */
     public static Mr23BatchIndexPirParams ELEMENT_LOG_SIZE_20_RETRIEVAL_SIZE_16 = new Mr23BatchIndexPirParams(
         8192, 20, 128, 9, 3, 16
     );
 
     /**
-     * 2^20，适合分桶数目32
+     * element size 2^20, retrieval size 32
      */
     public static Mr23BatchIndexPirParams ELEMENT_LOG_SIZE_20_RETRIEVAL_SIZE_32 = new Mr23BatchIndexPirParams(
         8192, 20, 128, 5, 3, 32
     );
 
     /**
-     * 2^20，适合分桶数目64
+     * element size 2^20, retrieval size 64
      */
     public static Mr23BatchIndexPirParams ELEMENT_LOG_SIZE_20_RETRIEVAL_SIZE_64 = new Mr23BatchIndexPirParams(
         8192, 20, 64, 9, 3, 64
     );
 
     /**
-     * 2^20，适合分桶数目128
+     * element size 2^20, retrieval size 128
      */
     public static Mr23BatchIndexPirParams ELEMENT_LOG_SIZE_20_RETRIEVAL_SIZE_128 = new Mr23BatchIndexPirParams(
         8192, 20, 64, 5, 3, 128
     );
 
     /**
-     * 2^20，适合分桶数目256
+     * 2element size 2^20, retrieval size 256
      */
     public static Mr23BatchIndexPirParams ELEMENT_LOG_SIZE_20_RETRIEVAL_SIZE_256 = new Mr23BatchIndexPirParams(
         8192, 20, 32, 9, 3, 256
     );
 
     /**
-     * 2^20，适合分桶数目512
+     * element size 2^20, retrieval size 512
      */
     public static Mr23BatchIndexPirParams ELEMENT_LOG_SIZE_20_RETRIEVAL_SIZE_512 = new Mr23BatchIndexPirParams(
         8192, 20, 32, 5, 3, 512
     );
 
     /**
-     * 2^20，适合分桶数目1024
+     * element size 2^20, retrieval size 1024
      */
     public static Mr23BatchIndexPirParams ELEMENT_LOG_SIZE_20_RETRIEVAL_SIZE_1024 = new Mr23BatchIndexPirParams(
         8192, 20, 16, 9, 3, 1024
     );
 
     /**
-     * 2^20，适合分桶数目2048
+     * element size 2^20, retrieval size 2048
      */
     public static Mr23BatchIndexPirParams ELEMENT_LOG_SIZE_20_RETRIEVAL_SIZE_2048 = new Mr23BatchIndexPirParams(
         8192, 20, 16, 5, 3, 2048
     );
 
     /**
-     * 2^22，适合分桶数目16
+     * element size 2^22, retrieval size 16
      */
     public static Mr23BatchIndexPirParams ELEMENT_LOG_SIZE_22_RETRIEVAL_SIZE_16 = new Mr23BatchIndexPirParams(
         8192, 20, 256, 9, 3, 16
     );
 
     /**
-     * 2^22，适合分桶数目32
+     * 2element size 2^22, retrieval size 32
      */
     public static Mr23BatchIndexPirParams ELEMENT_LOG_SIZE_22_RETRIEVAL_SIZE_32 = new Mr23BatchIndexPirParams(
         8192, 20, 256, 5, 3, 32
     );
 
     /**
-     * 2^22，适合分桶数目64
+     * element size 2^22, retrieval size 64
      */
     public static Mr23BatchIndexPirParams ELEMENT_LOG_SIZE_22_RETRIEVAL_SIZE_64 = new Mr23BatchIndexPirParams(
         8192, 20, 128, 9, 3, 64
     );
 
     /**
-     * 2^22，适合分桶数目128
+     * element size 2^22, retrieval size 128
      */
     public static Mr23BatchIndexPirParams ELEMENT_LOG_SIZE_22_RETRIEVAL_SIZE_128 = new Mr23BatchIndexPirParams(
         8192, 20, 128, 5, 3, 128
     );
 
     /**
-     * 2^22，适合分桶数目256
+     * element size 2^22, retrieval size 256
      */
     public static Mr23BatchIndexPirParams ELEMENT_LOG_SIZE_22_RETRIEVAL_SIZE_256 = new Mr23BatchIndexPirParams(
         8192, 20, 64, 9, 3, 256
     );
 
     /**
-     * 2^22，适合分桶数目512
+     * element size 2^22, retrieval size 512
      */
     public static Mr23BatchIndexPirParams ELEMENT_LOG_SIZE_22_RETRIEVAL_SIZE_512 = new Mr23BatchIndexPirParams(
         8192, 20, 64, 5, 3, 512
     );
 
     /**
-     * 2^22，适合分桶数目1024
+     * element size 2^22, retrieval size 1024
      */
     public static Mr23BatchIndexPirParams ELEMENT_LOG_SIZE_22_RETRIEVAL_SIZE_1024 = new Mr23BatchIndexPirParams(
         8192, 20, 32, 9, 3, 1024
     );
 
     /**
-     * 2^22，适合分桶数目2048
+     * element size 2^22, retrieval size 2048
      */
     public static Mr23BatchIndexPirParams ELEMENT_LOG_SIZE_22_RETRIEVAL_SIZE_2048 = new Mr23BatchIndexPirParams(
         8192, 20, 32, 5, 3, 2048
     );
 
     /**
-     * 2^24，适合分桶数目16
+     * element size 2^24, retrieval size 16
      */
     public static Mr23BatchIndexPirParams ELEMENT_LOG_SIZE_24_RETRIEVAL_SIZE_16 = new Mr23BatchIndexPirParams(
         8192, 20, 512, 9, 3, 16
     );
 
     /**
-     * 2^24，适合分桶数目32
+     * element size 2^24, retrieval size 32
      */
     public static Mr23BatchIndexPirParams ELEMENT_LOG_SIZE_24_RETRIEVAL_SIZE_32 = new Mr23BatchIndexPirParams(
         8192, 20, 512, 5, 3, 32
     );
 
     /**
-     * 2^24，适合分桶数目64
+     * element size 2^24, retrieval size 64
      */
     public static Mr23BatchIndexPirParams ELEMENT_LOG_SIZE_24_RETRIEVAL_SIZE_64 = new Mr23BatchIndexPirParams(
         8192, 20, 256, 9, 3, 64
     );
 
     /**
-     * 2^24，适合分桶数目128
+     * element size 2^24, retrieval size 128
      */
     public static Mr23BatchIndexPirParams ELEMENT_LOG_SIZE_24_RETRIEVAL_SIZE_128 = new Mr23BatchIndexPirParams(
         8192, 20, 256, 5, 3, 128
     );
 
     /**
-     * 2^24，适合分桶数目256
+     * element size 2^24, retrieval size 256
      */
     public static Mr23BatchIndexPirParams ELEMENT_LOG_SIZE_24_RETRIEVAL_SIZE_256 = new Mr23BatchIndexPirParams(
         8192, 20, 128, 9, 3, 256
     );
 
     /**
-     * 2^24，适合分桶数目512
+     * element size 2^24, retrieval size 512
      */
     public static Mr23BatchIndexPirParams ELEMENT_LOG_SIZE_24_RETRIEVAL_SIZE_512 = new Mr23BatchIndexPirParams(
         8192, 20, 128, 5, 3, 512
     );
 
     /**
-     * 2^24，适合分桶数目1024
+     * element size 2^24, retrieval size 1024
      */
     public static Mr23BatchIndexPirParams ELEMENT_LOG_SIZE_24_RETRIEVAL_SIZE_1024 = new Mr23BatchIndexPirParams(
         8192, 20, 64, 9, 3, 1024
     );
 
     /**
-     * 2^24，适合分桶数目2048
+     * element size 2^24, retrieval size 2048
      */
     public static Mr23BatchIndexPirParams ELEMENT_LOG_SIZE_24_RETRIEVAL_SIZE_2048 = new Mr23BatchIndexPirParams(
         8192, 20, 64, 5, 3, 2048
@@ -316,14 +315,19 @@ public class Mr23BatchIndexPirParams implements SingleIndexPirParams {
     }
 
     /**
-     * 返回哈希数目。
+     * return hash num.
      *
-     * @return 哈希数目。
+     * @return hash num.
      */
     public int getHashNum() {
         return hashNum;
     }
 
+    /**
+     * return max retrieval size.
+     *
+     * @return max retrieval size.
+     */
     public int getMaxRetrievalSize() {
         return maxRetrievalSize;
     }

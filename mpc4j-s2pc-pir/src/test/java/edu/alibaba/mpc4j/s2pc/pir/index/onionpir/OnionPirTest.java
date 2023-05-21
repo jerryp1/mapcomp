@@ -142,8 +142,8 @@ public class OnionPirTest {
         testOnionPir(indexPirConfig, indexPirParams, SMALL_ELEMENT_BYTE_LENGTH, true);
     }
 
-    public void testOnionPir(Mcr21SingleIndexPirConfig config, Mcr21SingleIndexPirParams indexPirParams, int elementByteLength,
-                             boolean parallel) {
+    public void testOnionPir(Mcr21SingleIndexPirConfig config, Mcr21SingleIndexPirParams indexPirParams,
+                             int elementByteLength, boolean parallel) {
         int retrievalIndex = PirUtils.generateRetrievalIndex(SERVER_ELEMENT_SIZE);
         NaiveDatabase database = PirUtils.generateDataBase(SERVER_ELEMENT_SIZE, elementByteLength * Byte.SIZE);
         Mcr21SingleIndexPirServer server = new Mcr21SingleIndexPirServer(serverRpc, clientRpc.ownParty(), config);

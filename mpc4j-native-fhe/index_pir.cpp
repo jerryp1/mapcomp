@@ -351,8 +351,7 @@ uint32_t get_next_power_of_two(uint32_t number) {
 vector<uint64_t> rotate_plain(vector<uint64_t> original, int32_t index) {
     int32_t row_count = (int32_t) original.size() / 2;
     std::vector<uint64_t> result(original.size(), 0ULL);
-    for (int32_t i = 0; i < row_count; i++)
-    {
+    for (int32_t i = 0; i < row_count; i++) {
         result[i] = original[(row_count - index + i) % row_count];
     }
     return result;

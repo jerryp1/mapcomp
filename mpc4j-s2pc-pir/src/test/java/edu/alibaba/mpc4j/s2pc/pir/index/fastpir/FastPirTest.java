@@ -127,8 +127,8 @@ public class FastPirTest {
         testFastPir(indexPirConfig, indexPirParams, SMALL_ELEMENT_BYTE_LENGTH, true);
     }
 
-    public void testFastPir(Ayaa21SingleIndexPirConfig config, Ayaa21SingleIndexPirParams indexPirParams, int elementByteLength,
-                            boolean parallel) {
+    public void testFastPir(Ayaa21SingleIndexPirConfig config, Ayaa21SingleIndexPirParams indexPirParams,
+                            int elementByteLength, boolean parallel) {
         int retrievalIndex = PirUtils.generateRetrievalIndex(SERVER_ELEMENT_SIZE);
         NaiveDatabase database = PirUtils.generateDataBase(SERVER_ELEMENT_SIZE, elementByteLength * Byte.SIZE);
         Ayaa21SingleIndexPirServer server = new Ayaa21SingleIndexPirServer(serverRpc, clientRpc.ownParty(), config);

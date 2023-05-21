@@ -6,9 +6,9 @@ import edu.alibaba.mpc4j.common.rpc.pto.PtoFactory;
 import edu.alibaba.mpc4j.s2pc.pir.index.batch.naive.NaiveBatchIndexPirClient;
 import edu.alibaba.mpc4j.s2pc.pir.index.batch.naive.NaiveBatchIndexPirConfig;
 import edu.alibaba.mpc4j.s2pc.pir.index.batch.naive.NaiveBatchIndexPirServer;
-import edu.alibaba.mpc4j.s2pc.pir.index.batch.psipir.Lpzg24BatchIndexPirClient;
-import edu.alibaba.mpc4j.s2pc.pir.index.batch.psipir.Lpzg24BatchIndexPirConfig;
-import edu.alibaba.mpc4j.s2pc.pir.index.batch.psipir.Lpzg24BatchIndexPirServer;
+import edu.alibaba.mpc4j.s2pc.pir.index.batch.psipir.Lpzl24BatchIndexPirConfig;
+import edu.alibaba.mpc4j.s2pc.pir.index.batch.psipir.Lpzl24BatchIndexPirServer;
+import edu.alibaba.mpc4j.s2pc.pir.index.batch.psipir.Lpzl24BatchIndexPirClient;
 import edu.alibaba.mpc4j.s2pc.pir.index.batch.vectorizedpir.Mr23BatchIndexPirClient;
 import edu.alibaba.mpc4j.s2pc.pir.index.batch.vectorizedpir.Mr23BatchIndexPirConfig;
 import edu.alibaba.mpc4j.s2pc.pir.index.batch.vectorizedpir.Mr23BatchIndexPirServer;
@@ -57,7 +57,7 @@ public class BatchIndexPirFactory implements PtoFactory {
         BatchIndexPirType type = config.getPtoType();
         switch (type) {
             case PSI_PIR:
-                return new Lpzg24BatchIndexPirServer(serverRpc, clientParty, (Lpzg24BatchIndexPirConfig) config);
+                return new Lpzl24BatchIndexPirServer(serverRpc, clientParty, (Lpzl24BatchIndexPirConfig) config);
             case VECTORIZED_BATCH_PIR:
                 return new Mr23BatchIndexPirServer(serverRpc, clientParty, (Mr23BatchIndexPirConfig) config);
             case NAIVE_BATCH_PIR:
@@ -79,7 +79,7 @@ public class BatchIndexPirFactory implements PtoFactory {
         BatchIndexPirType type = config.getPtoType();
         switch (type) {
             case PSI_PIR:
-                return new Lpzg24BatchIndexPirClient(clientRpc, serverParty, (Lpzg24BatchIndexPirConfig) config);
+                return new Lpzl24BatchIndexPirClient(clientRpc, serverParty, (Lpzl24BatchIndexPirConfig) config);
             case VECTORIZED_BATCH_PIR:
                 return new Mr23BatchIndexPirClient(clientRpc, serverParty, (Mr23BatchIndexPirConfig) config);
             case NAIVE_BATCH_PIR:

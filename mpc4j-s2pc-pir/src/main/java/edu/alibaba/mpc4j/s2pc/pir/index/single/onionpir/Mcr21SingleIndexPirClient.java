@@ -4,6 +4,7 @@ import edu.alibaba.mpc4j.common.rpc.*;
 import edu.alibaba.mpc4j.common.rpc.utils.DataPacket;
 import edu.alibaba.mpc4j.common.rpc.utils.DataPacketHeader;
 import edu.alibaba.mpc4j.common.tool.CommonConstants;
+import edu.alibaba.mpc4j.common.tool.utils.CommonUtils;
 import edu.alibaba.mpc4j.crypto.matrix.database.NaiveDatabase;
 import edu.alibaba.mpc4j.crypto.matrix.database.ZlDatabase;
 import edu.alibaba.mpc4j.s2pc.pir.PirUtils;
@@ -140,7 +141,7 @@ public class Mcr21SingleIndexPirClient extends AbstractSingleIndexPirClient {
         elementSizeOfPlaintext = PirUtils.elementSizeOfPlaintext(
             partitionByteLength, params.getPolyModulusDegree(), params.getPlainModulusBitLength()
         );
-        int plaintextSize = (int) Math.ceil((double) num / elementSizeOfPlaintext);
+        int plaintextSize = CommonUtils.getUnitNum(num, elementSizeOfPlaintext);
         dimensionSize = PirUtils.computeDimensionLength(
             plaintextSize, params.getFirstDimensionSize(), params.SUBSEQUENT_DIMENSION_SIZE
         );
@@ -171,7 +172,7 @@ public class Mcr21SingleIndexPirClient extends AbstractSingleIndexPirClient {
             int offset = index % elementSizeOfPlaintext;
             byte[] partitionBytes = new byte[partitionByteLength];
             System.arraycopy(bytes, offset * partitionByteLength, partitionBytes, 0, partitionByteLength);
-            databases[partitionIndex] = ZlDatabase.create(partitionByteLength * Byte.SIZE, new byte[][]{partitionBytes});
+            databases[partitionIndex] = ZlDatabase.create(partitionByteLength*Byte.SIZE, new byte[][]{partitionBytes});
         });
         return NaiveDatabase.createFromZl(elementByteLength * Byte.SIZE, databases).getBytesData(0);
     }

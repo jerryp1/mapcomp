@@ -25,7 +25,8 @@ public class XPirServerThread extends Thread {
      */
     private final NaiveDatabase database;
 
-    XPirServerThread(Mbfk16SingleIndexPirServer server, Mbfk16SingleIndexPirParams indexPirParams, NaiveDatabase database) {
+    XPirServerThread(Mbfk16SingleIndexPirServer server, Mbfk16SingleIndexPirParams indexPirParams,
+                     NaiveDatabase database) {
         this.server = server;
         this.indexPirParams = indexPirParams;
         this.database = database;

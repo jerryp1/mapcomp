@@ -28,7 +28,6 @@ public class ScpsiConfigUtils {
      * @return config.
      */
     public static ScpsiConfig createScpsiConfig(Properties properties) {
-        // 读取协议类型
         String ptoTypeString = PropertiesUtils.readString(properties, "pto_name");
         ScpsiFactory.ScpsiType scpsiType = ScpsiFactory.ScpsiType.valueOf(ptoTypeString);
         boolean silent = PropertiesUtils.readBoolean(properties, "silent");
@@ -38,7 +37,9 @@ public class ScpsiConfigUtils {
             case CGS22:
                 return createCgs22ScpsiConfig(silent);
             default:
-                throw new IllegalArgumentException("Invalid " + PsuFactory.PsuType.class.getSimpleName() + ": " + scpsiType.name());
+                throw new IllegalArgumentException(
+                    "Invalid " + PsuFactory.PsuType.class.getSimpleName() + ": " + scpsiType.name()
+                );
         }
     }
 

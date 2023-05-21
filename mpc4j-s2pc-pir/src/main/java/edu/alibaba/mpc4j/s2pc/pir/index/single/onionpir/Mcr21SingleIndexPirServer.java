@@ -4,6 +4,7 @@ import edu.alibaba.mpc4j.common.rpc.*;
 import edu.alibaba.mpc4j.common.rpc.utils.DataPacket;
 import edu.alibaba.mpc4j.common.rpc.utils.DataPacketHeader;
 import edu.alibaba.mpc4j.common.tool.CommonConstants;
+import edu.alibaba.mpc4j.common.tool.utils.CommonUtils;
 import edu.alibaba.mpc4j.common.tool.utils.LongUtils;
 import edu.alibaba.mpc4j.crypto.matrix.database.NaiveDatabase;
 import edu.alibaba.mpc4j.s2pc.pir.PirUtils;
@@ -159,7 +160,7 @@ public class Mcr21SingleIndexPirServer extends AbstractSingleIndexPirServer {
         elementSizeOfPlaintext = PirUtils.elementSizeOfPlaintext(
             partitionByteLength, params.getPolyModulusDegree(), params.getPlainModulusBitLength()
         );
-        plaintextSize = (int) Math.ceil((double) num / elementSizeOfPlaintext);
+        plaintextSize = CommonUtils.getUnitNum(num, elementSizeOfPlaintext);
         dimensionSize = PirUtils.computeDimensionLength(
             plaintextSize, params.getFirstDimensionSize(), params.getSubsequentDimensionSize()
         );
@@ -214,7 +215,7 @@ public class Mcr21SingleIndexPirServer extends AbstractSingleIndexPirServer {
         int byteSizeOfPlaintext = elementSizeOfPlaintext * partitionByteLength;
         int totalByteSize = num * partitionByteLength;
         int usedCoeffSize = elementSizeOfPlaintext *
-            ((int) Math.ceil(Byte.SIZE * partitionByteLength / (double) params.getPlainModulusBitLength()));
+            CommonUtils.getUnitNum(Byte.SIZE * partitionByteLength, params.getPlainModulusBitLength());
         assert (usedCoeffSize <= params.getPolyModulusDegree())
             : "coefficient num must be less than or equal to polynomial degree";
         int offset = 0;

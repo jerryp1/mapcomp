@@ -4,7 +4,6 @@ import edu.alibaba.mpc4j.common.rpc.*;
 import edu.alibaba.mpc4j.common.rpc.utils.DataPacket;
 import edu.alibaba.mpc4j.common.rpc.utils.DataPacketHeader;
 import edu.alibaba.mpc4j.common.tool.CommonConstants;
-import edu.alibaba.mpc4j.common.tool.MathPreconditions;
 import edu.alibaba.mpc4j.common.tool.hashbin.object.HashBinEntry;
 import edu.alibaba.mpc4j.common.tool.hashbin.object.RandomPadHashBin;
 import edu.alibaba.mpc4j.common.tool.hashbin.primitive.cuckoo.IntCuckooHashBinFactory;
@@ -130,8 +129,6 @@ public class Mr23BatchIndexPirClient extends AbstractBatchIndexPirClient {
         logPhaseInfo(PtoState.PTO_BEGIN);
 
         stopWatch.start();
-        // client generate cuckoo hash bin
-        generateCuckooHashBin(indexList);
         // convert database index to bucket index
         List<Integer> binIndexList = updateBinIndex();
         stopWatch.stop();
@@ -194,6 +191,8 @@ public class Mr23BatchIndexPirClient extends AbstractBatchIndexPirClient {
      * @throws MpcAbortException the protocol failure aborts.
      */
     private List<Integer> updateBinIndex() throws MpcAbortException {
+        int[] indicesArray = IntStream.range(0, retrievalSize).map(indexList::get).toArray();
+        cuckooHashBin.insertItems(indicesArray);
         List<Integer> binIndex = new ArrayList<>(cuckooHashBin.binNum());
         binIndexRetrievalIndexMap = new HashMap<>(retrievalSize);
         for (int i = 0; i < cuckooHashBin.binNum(); i++) {
@@ -220,7 +219,7 @@ public class Mr23BatchIndexPirClient extends AbstractBatchIndexPirClient {
      *
      * @param binIndex          bin index.
      * @param binRetrievalIndex bin retrieval index.
-     * @return 查询信息。
+     * @return query.
      */
     private long[][] generateVectorizedPirQuery(int binIndex, int binRetrievalIndex) {
         int[] temp = PirUtils.computeIndices(binRetrievalIndex, dimensionsSize);
@@ -243,8 +242,8 @@ public class Mr23BatchIndexPirClient extends AbstractBatchIndexPirClient {
     /**
      * merge queries ciphertext.
      *
-     * @param queries queries ciphertext.
-     * @return merged ciphertext.
+     * @param queries queries.
+     * @return merged query.
      */
     private List<long[][]> mergeQueries(List<long[][]> queries) {
         int binNum = cuckooHashBin.binNum();
@@ -294,16 +293,6 @@ public class Mr23BatchIndexPirClient extends AbstractBatchIndexPirClient {
         keyPairPayload.add(relinKeys);
         keyPairPayload.add(galoisKeys);
         return keyPairPayload;
-    }
-
-    /**
-     * generate cuckoo hash bin.
-     *
-     * @param retrievalIndexList retrieval index list.
-     */
-    private void generateCuckooHashBin(List<Integer> retrievalIndexList) {
-        int[] indicesArray = IntStream.range(0, retrievalSize).map(retrievalIndexList::get).toArray();
-        cuckooHashBin.insertItems(indicesArray);
     }
 
     /**

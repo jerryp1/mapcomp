@@ -109,7 +109,7 @@ public class NaiveBatchIndexPirClient extends AbstractBatchIndexPirClient {
 
         stopWatch.start();
         // generate bin index list
-        List<Integer> binIndexList = updateBinIndex(indexList);
+        List<Integer> binIndexList = updateBinIndex();
         stopWatch.stop();
         long cuckooHashKeyTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
         stopWatch.reset();
@@ -179,15 +179,14 @@ public class NaiveBatchIndexPirClient extends AbstractBatchIndexPirClient {
     /**
      * update retrieval index list.
      *
-     * @param retrievalIndexList retrieval index list.
      * @return bin index list.
      * @throws MpcAbortException the protocol failure aborts.
      */
-    private List<Integer> updateBinIndex(List<Integer> retrievalIndexList) throws MpcAbortException {
+    private List<Integer> updateBinIndex() throws MpcAbortException {
         IntNoStashCuckooHashBin cuckooHashBin = IntCuckooHashBinFactory.createInstance(
             envType, cuckooHashBinType, maxRetrievalSize, binNum, hashKeys
         );
-        int[] indicesArray = IntStream.range(0, retrievalSize).map(retrievalIndexList::get).toArray();
+        int[] indicesArray = IntStream.range(0, retrievalSize).map(indexList::get).toArray();
         cuckooHashBin.insertItems(indicesArray);
         List<Integer> binIndex = new ArrayList<>(binNum);
         binIndexRetrievalIndexMap = new HashMap<>(retrievalSize);

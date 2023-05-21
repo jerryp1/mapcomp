@@ -128,8 +128,8 @@ public class VectorizedPirTest {
         testVectorizedPir(indexPirConfig, indexPirParams, SMALL_ELEMENT_BYTE_LENGTH, true);
     }
 
-    public void testVectorizedPir(Mr23SingleIndexPirConfig config, Mr23SingleIndexPirParams indexPirParams, int elementByteLength,
-                                  boolean parallel) {
+    public void testVectorizedPir(Mr23SingleIndexPirConfig config, Mr23SingleIndexPirParams indexPirParams,
+                                  int elementByteLength, boolean parallel) {
         int retrievalIndex = PirUtils.generateRetrievalIndex(SERVER_ELEMENT_SIZE);
         NaiveDatabase database = PirUtils.generateDataBase(SERVER_ELEMENT_SIZE, elementByteLength * Byte.SIZE);
         Mr23SingleIndexPirServer server = new Mr23SingleIndexPirServer(serverRpc, clientRpc.ownParty(), config);
@@ -153,9 +153,7 @@ public class VectorizedPirTest {
             LOGGER.info("Parameters: \n {}", indexPirParams.toString());
             // verify result
             ByteBuffer result = clientThread.getRetrievalResult();
-            Assert.assertEquals(
-                result, ByteBuffer.wrap(database.getBytesData(retrievalIndex))
-            );
+            Assert.assertEquals(result, ByteBuffer.wrap(database.getBytesData(retrievalIndex)));
             LOGGER.info("Client: The Retrieval Result is Correct");
         } catch (InterruptedException e) {
             e.printStackTrace();

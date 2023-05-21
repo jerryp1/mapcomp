@@ -40,7 +40,7 @@ public interface SingleIndexPirServer extends TwoPartyPto {
     /**
      * server handle client public keys.
      *
-     * @param clientPublicKeysPayload public keys.
+     * @param clientPublicKeysPayload client public key payload.
      * @throws MpcAbortException the protocol failure aborts.
      */
     void setPublicKey(List<byte[]> clientPublicKeysPayload) throws MpcAbortException;
@@ -56,7 +56,7 @@ public interface SingleIndexPirServer extends TwoPartyPto {
     /**
      * server handle client query.
      *
-     * @param clientQuery client query.
+     * @param clientQuery     client query.
      * @param encodedDatabase encoded database.
      * @return server response.
      * @throws MpcAbortException the protocol failure aborts.

@@ -28,7 +28,7 @@ public class CcpsiConfigUtils {
      * @return config.
      */
     public static CcpsiConfig createCcpsiConfig(Properties properties) {
-        // 读取协议类型
+        // read protocol type
         String ccpsiTypeString = PropertiesUtils.readString(properties, "pto_name");
         CcpsiFactory.CcpsiType ccpsiType = CcpsiFactory.CcpsiType.valueOf(ccpsiTypeString);
         boolean silent = PropertiesUtils.readBoolean(properties, "silent");
@@ -38,7 +38,9 @@ public class CcpsiConfigUtils {
             case CGS22:
                 return createCgs22CcpsiConfig(silent);
             default:
-                throw new IllegalArgumentException("Invalid " + PsuFactory.PsuType.class.getSimpleName() + ": " + ccpsiType.name());
+                throw new IllegalArgumentException(
+                    "Invalid " + PsuFactory.PsuType.class.getSimpleName() + ": " + ccpsiType.name()
+                );
         }
     }
 

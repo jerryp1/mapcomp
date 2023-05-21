@@ -96,7 +96,7 @@ public class PirUrbopprfConfig implements UrbopprfConfig {
         public Builder() {
             sqOprfConfig = SqOprfFactory.createDefaultConfig(SecurityModel.SEMI_HONEST);
             cuckooHashBinType = CuckooHashBinType.NO_STASH_PSZ18_3_HASH;
-            batchIndexPirConfig = new Mr23BatchIndexPirConfig.Builder().build();
+            batchIndexPirConfig = new Mr23BatchIndexPirConfig();
         }
 
         public Builder setSqOprfConfig(SqOprfConfig sqOprfConfig) {

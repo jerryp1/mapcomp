@@ -12,7 +12,7 @@
 using namespace seal;
 using namespace std;
 
-JNIEXPORT jbyteArray JNICALL Java_edu_alibaba_mpc4j_s2pc_pir_index_single_fastpir_Ayaa21SingleIndexPirNativeUtils_generateSealContext(
+JNIEXPORT jbyteArray JNICALL Java_edu_alibaba_mpc4j_s2pc_pir_index_single_fastpir_Ayaa21SingleIndexPirNativeUtils_generateEncryptionParams(
         JNIEnv *env, jclass, jint poly_modulus_degree, jlong plain_modulus, jlongArray coeff_mod_arr) {
     uint32_t size = env->GetArrayLength(coeff_mod_arr);
     auto *ptr = reinterpret_cast<uint64_t *>(env->GetLongArrayElements(coeff_mod_arr, JNI_FALSE));

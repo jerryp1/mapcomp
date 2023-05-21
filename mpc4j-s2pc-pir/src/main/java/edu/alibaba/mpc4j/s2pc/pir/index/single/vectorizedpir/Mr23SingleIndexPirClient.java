@@ -4,6 +4,7 @@ import edu.alibaba.mpc4j.common.rpc.*;
 import edu.alibaba.mpc4j.common.rpc.utils.DataPacket;
 import edu.alibaba.mpc4j.common.rpc.utils.DataPacketHeader;
 import edu.alibaba.mpc4j.common.tool.CommonConstants;
+import edu.alibaba.mpc4j.common.tool.utils.IntUtils;
 import edu.alibaba.mpc4j.crypto.matrix.database.NaiveDatabase;
 import edu.alibaba.mpc4j.crypto.matrix.database.ZlDatabase;
 import edu.alibaba.mpc4j.s2pc.pir.PirUtils;
@@ -115,7 +116,6 @@ public class Mr23SingleIndexPirClient extends AbstractSingleIndexPirClient {
         stopWatch.reset();
         logStepInfo(PtoState.PTO_STEP, 1, 2, genQueryTime, "Client generates query");
 
-        // 客户端接收并解密回复
         DataPacketHeader serverResponseHeader = new DataPacketHeader(
             encodeTaskId, getPtoDesc().getPtoId(), PtoStep.SERVER_SEND_RESPONSE.ordinal(), extraInfo,
             otherParty().getPartyId(), rpc.ownParty().getPartyId()
@@ -157,11 +157,11 @@ public class Mr23SingleIndexPirClient extends AbstractSingleIndexPirClient {
         if (params == null) {
             params = Mr23SingleIndexPirParams.DEFAULT_PARAMS;
         }
-
-        int maxPartitionByteLength = params.getPlainModulusBitLength()/ Byte.SIZE;
+        int maxPartitionByteLength = params.getPlainModulusBitLength() / Byte.SIZE;
         setInitInput(serverElementSize, elementByteLength, maxPartitionByteLength);
         assert params.getDimension() == 3;
-        int product = params.getFirstTwoDimensionSize() * params.getFirstTwoDimensionSize() * params.getThirdDimensionSize();
+        int product =
+            params.getFirstTwoDimensionSize() * params.getFirstTwoDimensionSize() * params.getThirdDimensionSize();
         assert product >= num;
         dimensionSize = new int[] {
             params.getThirdDimensionSize(), params.getFirstTwoDimensionSize(), params.getFirstTwoDimensionSize()
@@ -183,10 +183,8 @@ public class Mr23SingleIndexPirClient extends AbstractSingleIndexPirClient {
                 offset,
                 params.getFirstTwoDimensionSize()
             );
-            byte[] bytes = PirUtils.convertCoeffsToBytes(new long[]{coeffs}, params.getPlainModulusBitLength());
-            byte[] partitionBytes = new byte[partitionByteLength];
-            System.arraycopy(bytes, 0, partitionBytes, 0, partitionByteLength);
-            databases[partitionIndex] = ZlDatabase.create(partitionByteLength * Byte.SIZE, new byte[][]{partitionBytes});
+            byte[] bytes = IntUtils.nonNegIntToFixedByteArray(Math.toIntExact(coeffs), partitionByteLength);
+            databases[partitionIndex] = ZlDatabase.create(partitionByteLength * Byte.SIZE, new byte[][]{bytes});
         });
         return NaiveDatabase.createFromZl(elementByteLength * Byte.SIZE, databases).getBytesData(0);
     }

@@ -10,6 +10,7 @@ import edu.alibaba.mpc4j.s2pc.pir.index.single.SingleIndexPirParams;
  * @date 2023/1/17
  */
 public class Acls18SingleIndexPirParams implements SingleIndexPirParams {
+
     static {
         System.loadLibrary(CommonConstants.MPC4J_NATIVE_FHE_NAME);
     }
@@ -70,6 +71,11 @@ public class Acls18SingleIndexPirParams implements SingleIndexPirParams {
         return encryptionParams;
     }
 
+    /**
+     * return expansion ratio.
+     *
+     * @return expansion ratio.
+     */
     public int getExpansionRatio() {
         return expansionRatio;
     }

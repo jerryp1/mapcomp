@@ -7,19 +7,15 @@ import edu.alibaba.mpc4j.s2pc.pir.index.batch.BatchIndexPirConfig;
 import edu.alibaba.mpc4j.s2pc.pir.index.batch.BatchIndexPirFactory;
 
 /**
- * PSI-PIR协议配置项。
+ * Vectorized Batch PIR config.
  *
  * @author Liqiang Peng
  * @date 2023/3/7
  */
 public class Mr23BatchIndexPirConfig implements BatchIndexPirConfig {
-    /**
-     * 是否使用压缩椭圆曲线编码
-     */
-    private final boolean compressEncode;
 
-    public Mr23BatchIndexPirConfig(Builder builder) {
-        compressEncode = builder.compressEncode;
+    public Mr23BatchIndexPirConfig() {
+
     }
 
     @Override
@@ -41,33 +37,8 @@ public class Mr23BatchIndexPirConfig implements BatchIndexPirConfig {
         return EnvType.STANDARD;
     }
 
-    public boolean getCompressEncode() {
-        return compressEncode;
-    }
-
     @Override
     public BatchIndexPirFactory.BatchIndexPirType getPtoType() {
         return BatchIndexPirFactory.BatchIndexPirType.VECTORIZED_BATCH_PIR;
-    }
-
-    public static class Builder implements org.apache.commons.lang3.builder.Builder<Mr23BatchIndexPirConfig> {
-        /**
-         * 是否使用压缩椭圆曲线编码
-         */
-        private boolean compressEncode;
-
-        public Builder() {
-            compressEncode = true;
-        }
-
-        public Builder setCompressEncode(boolean compressEncode) {
-            this.compressEncode = compressEncode;
-            return this;
-        }
-
-        @Override
-        public Mr23BatchIndexPirConfig build() {
-            return new Mr23BatchIndexPirConfig(this);
-        }
     }
 }

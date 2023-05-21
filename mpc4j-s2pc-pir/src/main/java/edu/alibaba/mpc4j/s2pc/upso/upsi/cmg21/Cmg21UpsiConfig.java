@@ -9,14 +9,14 @@ import edu.alibaba.mpc4j.s2pc.upso.upsi.UpsiConfig;
 import edu.alibaba.mpc4j.s2pc.upso.upsi.UpsiFactory.UpsiType;
 
 /**
- * CMG21协议配置项。
+ * CMG21 config.
  *
  * @author Liqiang Peng
  * @date 2022/6/13
  */
 public class Cmg21UpsiConfig implements UpsiConfig {
     /**
-     * MP-OPRF协议
+     * MP-OPRF
      */
     private final MpOprfConfig mpOprfConfig;
 
@@ -60,7 +60,7 @@ public class Cmg21UpsiConfig implements UpsiConfig {
 
     public static class Builder implements org.apache.commons.lang3.builder.Builder<Cmg21UpsiConfig> {
         /**
-         * MP-OPRF协议
+         * MP-OPRF
          */
         private MpOprfConfig mpOprfConfig;
 

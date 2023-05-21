@@ -6,21 +6,22 @@ import edu.alibaba.mpc4j.common.tool.EnvType;
 import edu.alibaba.mpc4j.s2pc.pir.index.batch.BatchIndexPirConfig;
 import edu.alibaba.mpc4j.s2pc.pir.index.batch.BatchIndexPirFactory;
 import edu.alibaba.mpc4j.s2pc.upso.upsi.UpsiConfig;
+import edu.alibaba.mpc4j.s2pc.upso.upsi.cmg21.Cmg21UpsiConfig;
 
 /**
- * PSI-PIR协议配置项。
+ * PSI-PIR config.
  *
  * @author Liqiang Peng
  * @date 2023/3/7
  */
-public class Lpzg24BatchIndexPirConfig implements BatchIndexPirConfig {
+public class Lpzl24BatchIndexPirConfig implements BatchIndexPirConfig {
     /**
-     * 是否使用压缩椭圆曲线编码
+     * UPSI config
      */
-    private final boolean compressEncode;
+    private final UpsiConfig upsiConfig;
 
-    public Lpzg24BatchIndexPirConfig(Builder builder) {
-        compressEncode = builder.compressEncode;
+    public Lpzl24BatchIndexPirConfig(Builder builder) {
+        upsiConfig = builder.upsiConfig;
     }
 
     @Override
@@ -42,8 +43,8 @@ public class Lpzg24BatchIndexPirConfig implements BatchIndexPirConfig {
         return EnvType.STANDARD;
     }
 
-    public boolean getCompressEncode() {
-        return compressEncode;
+    public UpsiConfig getUpsiConfig() {
+        return upsiConfig;
     }
 
     @Override
@@ -51,28 +52,24 @@ public class Lpzg24BatchIndexPirConfig implements BatchIndexPirConfig {
         return BatchIndexPirFactory.BatchIndexPirType.PSI_PIR;
     }
 
-    public static class Builder implements org.apache.commons.lang3.builder.Builder<Lpzg24BatchIndexPirConfig> {
+    public static class Builder implements org.apache.commons.lang3.builder.Builder<Lpzl24BatchIndexPirConfig> {
         /**
-         * 是否使用压缩椭圆曲线编码
-         */
-        private boolean compressEncode;
-        /**
-         *
+         * UPSI config
          */
         private UpsiConfig upsiConfig;
 
         public Builder() {
-            compressEncode = true;
+            upsiConfig = new Cmg21UpsiConfig.Builder().build();
         }
 
-        public Builder setCompressEncode(boolean compressEncode) {
-            this.compressEncode = compressEncode;
+        public Builder setUpsiConfig(UpsiConfig upsiConfig) {
+            this.upsiConfig = upsiConfig;
             return this;
         }
 
         @Override
-        public Lpzg24BatchIndexPirConfig build() {
-            return new Lpzg24BatchIndexPirConfig(this);
+        public Lpzl24BatchIndexPirConfig build() {
+            return new Lpzl24BatchIndexPirConfig(this);
         }
     }
 }

@@ -17,17 +17,17 @@ public class Ayaa21SingleIndexPirNativeUtils {
     /**
      * generate encryption params.
      *
-     * @param modulusDegree poly modulus degree.
-     * @param plainModulus  plain modulus.
-     * @param coeffModulus  cipher modulus.
+     * @param polyModulusDegree poly modulus degree.
+     * @param plainModulus      plain modulus.
+     * @param coeffModulus      cipher modulus.
      * @return encryption params.
      */
-    static native byte[] generateSealContext(int modulusDegree, long plainModulus, long[] coeffModulus);
+    static native byte[] generateEncryptionParams(int polyModulusDegree, long plainModulus, long[] coeffModulus);
 
     /**
-     * generate key pair.
+     * key generation.
      *
-     * @param encryptionParams SEAL encryption params.
+     * @param encryptionParams encryption params.
      * @param steps            steps.
      * @return key pair.
      */
@@ -45,7 +45,7 @@ public class Ayaa21SingleIndexPirNativeUtils {
     /**
      * generate query.
      *
-     * @param encryptionParams SEAL encryption params.
+     * @param encryptionParams encryption params.
      * @param publicKey        public key.
      * @param secretKey        secret key.
      * @param index            indices.
@@ -58,7 +58,7 @@ public class Ayaa21SingleIndexPirNativeUtils {
     /**
      * generate response.
      *
-     * @param encryptionParams SEAL encryption params.
+     * @param encryptionParams encryption params.
      * @param galoisKey        Galois keys.
      * @param query            query ciphertexts.
      * @param database         database.
@@ -71,7 +71,7 @@ public class Ayaa21SingleIndexPirNativeUtils {
     /**
      * decode response.
      *
-     * @param encryptionParams SEAL encryption params.
+     * @param encryptionParams encryption params.
      * @param secretKey        secret key.
      * @param response         response ciphertext.
      * @return BFV plaintext.

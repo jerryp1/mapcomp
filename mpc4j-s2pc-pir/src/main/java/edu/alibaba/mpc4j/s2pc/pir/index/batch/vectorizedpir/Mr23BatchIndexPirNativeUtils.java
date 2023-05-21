@@ -3,7 +3,7 @@ package edu.alibaba.mpc4j.s2pc.pir.index.batch.vectorizedpir;
 import java.util.List;
 
 /**
- * Vectorized Batch PIR协议本地算法库工具类。
+ * Vectorized Batch PIR native utils.
  *
  * @author Liqiang Peng
  * @date 2023/3/6
@@ -15,78 +15,79 @@ class Mr23BatchIndexPirNativeUtils {
     }
 
     /**
-     * 生成SEAL上下文参数。
+     * generate encryption parameters.
      *
-     * @param modulusDegree         多项式阶。
-     * @param plainModulusBitLength 明文模数比特长度。
-     * @return SEAL上下文参数。
+     * @param polyModulusDegree     poly modulus degree.
+     * @param plainModulusBitLength plain modulus bit length.
+     * @return encryption parameters.
      */
-    static native byte[] generateSealContext(int modulusDegree, int plainModulusBitLength);
+    static native byte[] generateEncryptionParams(int polyModulusDegree, int plainModulusBitLength);
 
     /**
-     * 生成全同态加密公私钥对。
+     * key generations.
      *
-     * @param sealContext   SEAL上下文参数。
-     * @param dimensionSize 维度长度。
-     * @return 公私钥对。
+     * @param encryptionParameters encryption parameters.
+     * @param dimensionSize        dimension size.
+     * @return key pair.
      */
-    static native List<byte[]> keyGen(byte[] sealContext, int dimensionSize);
+    static native List<byte[]> keyGen(byte[] encryptionParameters, int dimensionSize);
 
     /**
-     * 数据库预处理。
+     * preprocess database.
      *
-     * @param sealContext SEAL上下文参数。
-     * @param coeffs      多项式系数。
-     * @param totalSize   多项式数目。
-     * @return 明文多项式。
+     * @param encryptionParameters encryption parameters.
+     * @param coeffs               coefficients.
+     * @param totalSize            total plaintext size.
+     * @return plaintext in NTT form.
      */
-    static native List<byte[]> preprocessDatabase(byte[] sealContext, long[][] coeffs, int totalSize);
+    static native List<byte[]> preprocessDatabase(byte[] encryptionParameters, long[][] coeffs, int totalSize);
 
     /**
-     * 生成问询密文。
+     * generate encrypted query.
      *
-     * @param sealContext SEAL上下文参数。
-     * @param publicKey   公钥。
-     * @param secretKey   私钥。
-     * @param queries     明文检索信息。
-     * @return 问询密文。
+     * @param encryptionParameters encryption parameters.
+     * @param publicKey            public key.
+     * @param secretKey            secret key.
+     * @param queries              plain query.
+     * @return encrypted query.
      */
-    static native List<byte[]> generateQuery(byte[] sealContext, byte[] publicKey, byte[] secretKey, long[][] queries);
+    static native List<byte[]> generateQuery(byte[] encryptionParameters, byte[] publicKey, byte[] secretKey,
+                                             long[][] queries);
 
 
     /**
-     * 生成回复密文。
+     * generate response.
      *
-     * @param sealContext           SEAL上下文参数。
-     * @param queryList             检索值密文。
-     * @param dbPlaintexts          数据库明文。
-     * @param publicKey             公钥。
-     * @param relinKeys             重线性化密钥。
-     * @param galoisKeys            Galois密钥。
-     * @param firstTwoDimensionSize 前两维向量长度。
-     * @return 检索结果密文。
+     * @param encryptionParameters  encryption parameters.
+     * @param queryList             query list.
+     * @param dbPlaintexts          database plaintext.
+     * @param publicKey             public key.
+     * @param relinKeys             relinearization keys.
+     * @param galoisKeys            Galois keys.
+     * @param firstTwoDimensionSize first two dimension size.
+     * @return response.
      */
-    static native byte[] generateReply(byte[] sealContext, List<byte[]> queryList, List<byte[]> dbPlaintexts,
+    static native byte[] generateReply(byte[] encryptionParameters, List<byte[]> queryList, List<byte[]> dbPlaintexts,
                                        byte[] publicKey, byte[] relinKeys, byte[] galoisKeys, int firstTwoDimensionSize);
 
     /**
-     * 解密回复密文。
+     * decrypt reply.
      *
-     * @param sealContext SEAL上下文参数。
-     * @param secretKey   私钥。
-     * @param response    回复密文。
-     * @return 查询结果。
+     * @param encryptionParameters encryption parameters.
+     * @param secretKey            secret key.
+     * @param response             response.
+     * @return retrieval result.
      */
-    static native long[] decryptReply(byte[] sealContext, byte[] secretKey, byte[] response);
+    static native long[] decryptReply(byte[] encryptionParameters, byte[] secretKey, byte[] response);
 
     /**
-     * 合并多个分桶的回复密文。
+     * merge responses.
      *
-     * @param sealContext SEAL上下文参数。
-     * @param galoisKey   Galois密钥。
-     * @param responses   回复密文。
-     * @param g           vectorized batch pir 参数。
-     * @return 回复密文。
+     * @param encryptionParameters encryption parameters.
+     * @param galoisKey            Galois keys.
+     * @param responses            responses.
+     * @param g                    vectorized batch PIR params.
+     * @return merged reponse.
      */
-    static native byte[] mergeResponse(byte[] sealContext, byte[] galoisKey, List<byte[]> responses, int g);
+    static native byte[] mergeResponse(byte[] encryptionParameters, byte[] galoisKey, List<byte[]> responses, int g);
 }

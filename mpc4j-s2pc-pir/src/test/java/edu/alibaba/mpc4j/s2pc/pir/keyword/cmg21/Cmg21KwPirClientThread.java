@@ -4,42 +4,43 @@ import edu.alibaba.mpc4j.common.rpc.MpcAbortException;
 
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
 /**
- * CMG21关键词PIR协议客户端线程。
+ * CMG21 keyword PIR client thread.
  *
  * @author Liqiang Peng
  * @date 2022/6/22
  */
 public class Cmg21KwPirClientThread<T> extends Thread {
     /**
-     * CMG21关键词PIR协议客户端
+     * CMG21 keyword PIR client
      */
     private final Cmg21KwPirClient<T> client;
     /**
-     * CMG21关键词PIR协议参数
+     * CMG21 keyword PIR params
      */
     private final Cmg21KwPirParams kwPirParams;
     /**
-     * 标签字节长度
+     * label byte length
      */
     private final int labelByteLength;
     /**
-     * 检索集合
+     * retrieval sets
      */
-    private final ArrayList<Set<T>> retrievalSets;
+    private final List<Set<T>> retrievalSets;
     /**
-     * 检索次数
+     * repeat time
      */
     private final int repeatTime;
     /**
-     * PIR结果
+     * retrieval result
      */
-    private final ArrayList<Map<T, ByteBuffer>> retrievalResults;
+    private final List<Map<T, ByteBuffer>> retrievalResults;
 
-    Cmg21KwPirClientThread(Cmg21KwPirClient<T> client, Cmg21KwPirParams kwPirParams, ArrayList<Set<T>> retrievalSets,
+    Cmg21KwPirClientThread(Cmg21KwPirClient<T> client, Cmg21KwPirParams kwPirParams, List<Set<T>> retrievalSets,
                            int labelByteLength) {
         this.client = client;
         this.kwPirParams = kwPirParams;

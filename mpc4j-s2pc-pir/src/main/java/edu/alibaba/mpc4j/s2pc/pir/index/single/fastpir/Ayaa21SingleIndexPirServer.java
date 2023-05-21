@@ -4,6 +4,7 @@ import edu.alibaba.mpc4j.common.rpc.*;
 import edu.alibaba.mpc4j.common.rpc.utils.DataPacket;
 import edu.alibaba.mpc4j.common.rpc.utils.DataPacketHeader;
 import edu.alibaba.mpc4j.common.tool.CommonConstants;
+import edu.alibaba.mpc4j.common.tool.utils.CommonUtils;
 import edu.alibaba.mpc4j.crypto.matrix.database.NaiveDatabase;
 import edu.alibaba.mpc4j.s2pc.pir.PirUtils;
 import edu.alibaba.mpc4j.s2pc.pir.index.single.AbstractSingleIndexPirServer;
@@ -142,8 +143,10 @@ public class Ayaa21SingleIndexPirServer extends AbstractSingleIndexPirServer {
         }
         int maxPartitionByteLength = params.getPolyModulusDegree() * params.getPlainModulusBitLength() / Byte.SIZE;
         setInitInput(database, byteLength, maxPartitionByteLength);
-        querySize = (int) Math.ceil(num / (params.getPolyModulusDegree() / 2.0));
-        elementColumnLength = (int) Math.ceil((partitionByteLength/2.0) * Byte.SIZE / params.getPlainModulusBitLength());
+        querySize = CommonUtils.getUnitNum(num, params.getPolyModulusDegree() / 2);
+        elementColumnLength = CommonUtils.getUnitNum(
+            (partitionByteLength / 2) * Byte.SIZE, params.getPlainModulusBitLength()
+        );
         IntStream intStream = IntStream.range(0, partitionSize);
         intStream = parallel ? intStream.parallel() : intStream;
         return intStream.mapToObj(this::preprocessDatabase).collect(Collectors.toList());

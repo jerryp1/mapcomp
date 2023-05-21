@@ -25,7 +25,8 @@ public class OnionPirServerThread extends Thread {
      */
     private final NaiveDatabase database;
 
-    OnionPirServerThread(Mcr21SingleIndexPirServer server, Mcr21SingleIndexPirParams indexPirParams, NaiveDatabase database) {
+    OnionPirServerThread(Mcr21SingleIndexPirServer server, Mcr21SingleIndexPirParams indexPirParams,
+                         NaiveDatabase database) {
         this.server = server;
         this.indexPirParams = indexPirParams;
         this.database = database;

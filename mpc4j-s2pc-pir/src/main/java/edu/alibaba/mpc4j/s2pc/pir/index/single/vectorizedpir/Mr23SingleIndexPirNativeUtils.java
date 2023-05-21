@@ -17,16 +17,16 @@ class Mr23SingleIndexPirNativeUtils {
     /**
      * generate encryption params.
      *
-     * @param modulusDegree         poly modulus degree.
-     * @param plainModulusBitLength plain modulus.
+     * @param polyModulusDegree     poly modulus degree.
+     * @param plainModulusBitLength plain modulus bit length.
      * @return encryption params.
      */
-    static native byte[] generateSealContext(int modulusDegree, int plainModulusBitLength);
+    static native byte[] generateEncryptionParams(int polyModulusDegree, int plainModulusBitLength);
 
     /**
      * generate key pair.
      *
-     * @param encryptionParams SEAL encryption params.
+     * @param encryptionParams encryption params.
      * @param slotNum          slot num.
      * @return key pair.
      */
@@ -35,19 +35,17 @@ class Mr23SingleIndexPirNativeUtils {
     /**
      * database preprocess.
      *
-     * @param encryptionParams SEAL encryption params.
-     * @param db               database.
+     * @param encryptionParams encryption params.
+     * @param coeffs           coeffs.
      * @param dimensionsSize   dimension size.
-     * @param plaintextSize    plaintext size.
      * @return BFV plaintexts in NTT form.
      */
-    static native List<byte[]> preprocessDatabase(byte[] encryptionParams, long[] db, int[] dimensionsSize,
-                                                  int plaintextSize);
+    static native List<byte[]> preprocessDatabase(byte[] encryptionParams, long[][] coeffs, int dimensionsSize);
 
     /**
      * generate query.
      *
-     * @param encryptionParams SEAL encryption params.
+     * @param encryptionParams encryption params.
      * @param publicKey        public key.
      * @param secretKey        secret key.
      * @param indices          indices.
@@ -60,24 +58,22 @@ class Mr23SingleIndexPirNativeUtils {
     /**
      * generate response.
      *
-     * @param encryptionParams      SEAL encryption params.
+     * @param encryptionParams      encryption params.
      * @param queryList             query ciphertext.
      * @param dbPlaintexts          encoded database.
      * @param publicKey             public key.
      * @param relinKeys             relinearization keys.
      * @param galoisKeys            Galois keys.
      * @param firstTwoDimensionSize first two dimension size.
-     * @param thirdDimensionSize    third dimension size.
      * @return response ciphertexts。
      */
     static native byte[] generateReply(byte[] encryptionParams, List<byte[]> queryList, byte[][] dbPlaintexts,
-                                       byte[] publicKey, byte[] relinKeys, byte[] galoisKeys, int firstTwoDimensionSize,
-                                       int thirdDimensionSize);
+                                       byte[] publicKey, byte[] relinKeys, byte[] galoisKeys, int firstTwoDimensionSize);
 
     /**
      * decode response.
      *
-     * @param encryptionParams SEAL encryption params.
+     * @param encryptionParams encryption params.
      * @param secretKey        secret key.
      * @param response         response ciphertext.
      * @param offset           offset.

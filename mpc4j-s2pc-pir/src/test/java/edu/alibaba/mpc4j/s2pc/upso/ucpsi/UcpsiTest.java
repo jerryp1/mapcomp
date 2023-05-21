@@ -169,7 +169,7 @@ public class UcpsiTest {
                 server.getPtoDesc().getPtoName(), serverSetSize, clientSetSize
             );
             // generate the inputs
-            ArrayList<Set<ByteBuffer>> sets = PsoUtils.generateBytesSets(serverSetSize, clientSetSize, ELEMENT_BYTE_LENGTH);
+            List<Set<ByteBuffer>> sets = PsoUtils.generateBytesSets(serverSetSize, clientSetSize, ELEMENT_BYTE_LENGTH);
             Set<ByteBuffer> serverElementSet = sets.get(0);
             Set<ByteBuffer> clientElementSet = sets.get(1);
             UcpsiServerThread serverThread = new UcpsiServerThread(server, serverElementSet, clientSetSize);

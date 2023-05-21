@@ -10,7 +10,7 @@
 using namespace std;
 using namespace seal;
 
-JNIEXPORT jbyteArray JNICALL Java_edu_alibaba_mpc4j_s2pc_pir_batchindex_vectorizedpir_Mr23BatchIndexPirNativeUtils_generateSealContext(
+JNIEXPORT jbyteArray JNICALL Java_edu_alibaba_mpc4j_s2pc_pir_index_batch_vectorizedpir_Mr23BatchIndexPirNativeUtils_generateEncryptionParams(
         JNIEnv *env, jclass, jint poly_modulus_degree, jint plain_modulus_size) {
     EncryptionParameters parms = EncryptionParameters(scheme_type::bfv);
     parms.set_poly_modulus_degree(poly_modulus_degree);
@@ -33,7 +33,7 @@ JNIEXPORT jbyteArray JNICALL Java_edu_alibaba_mpc4j_s2pc_pir_batchindex_vectoriz
     return serialize_encryption_parms(env, parms);
 }
 
-JNIEXPORT jobject JNICALL Java_edu_alibaba_mpc4j_s2pc_pir_batchindex_vectorizedpir_Mr23BatchIndexPirNativeUtils_keyGen(
+JNIEXPORT jobject JNICALL Java_edu_alibaba_mpc4j_s2pc_pir_index_batch_vectorizedpir_Mr23BatchIndexPirNativeUtils_keyGen(
         JNIEnv *env, jclass, jbyteArray parms_bytes, jint dimension_size) {
     EncryptionParameters parms = deserialize_encryption_parms(env, parms_bytes);
     SEALContext context = SEALContext(parms);
@@ -57,7 +57,7 @@ JNIEXPORT jobject JNICALL Java_edu_alibaba_mpc4j_s2pc_pir_batchindex_vectorizedp
     return list_obj;
 }
 
-JNIEXPORT jobject JNICALL Java_edu_alibaba_mpc4j_s2pc_pir_batchindex_vectorizedpir_Mr23BatchIndexPirNativeUtils_preprocessDatabase(
+JNIEXPORT jobject JNICALL Java_edu_alibaba_mpc4j_s2pc_pir_index_batch_vectorizedpir_Mr23BatchIndexPirNativeUtils_preprocessDatabase(
         JNIEnv *env, jclass, jbyteArray parms_bytes, jobjectArray coeffs_list, jint first_dimension_size) {
     EncryptionParameters parms = deserialize_encryption_parms(env, parms_bytes);
     SEALContext context(parms);
@@ -80,7 +80,7 @@ JNIEXPORT jobject JNICALL Java_edu_alibaba_mpc4j_s2pc_pir_batchindex_vectorizedp
     return serialize_plaintexts(env, encoded_db);
 }
 
-JNIEXPORT jobject JNICALL Java_edu_alibaba_mpc4j_s2pc_pir_batchindex_vectorizedpir_Mr23BatchIndexPirNativeUtils_generateQuery(
+JNIEXPORT jobject JNICALL Java_edu_alibaba_mpc4j_s2pc_pir_index_batch_vectorizedpir_Mr23BatchIndexPirNativeUtils_generateQuery(
         JNIEnv *env, jclass, jbyteArray parms_bytes, jbyteArray pk_bytes, jbyteArray sk_bytes, jobjectArray query_array) {
     EncryptionParameters parms = deserialize_encryption_parms(env, parms_bytes);
     SEALContext context(parms);
@@ -96,7 +96,7 @@ JNIEXPORT jobject JNICALL Java_edu_alibaba_mpc4j_s2pc_pir_batchindex_vectorizedp
     return serialize_ciphertexts(env, query);
 }
 
-JNIEXPORT jbyteArray JNICALL Java_edu_alibaba_mpc4j_s2pc_pir_batchindex_vectorizedpir_Mr23BatchIndexPirNativeUtils_generateReply(
+JNIEXPORT jbyteArray JNICALL Java_edu_alibaba_mpc4j_s2pc_pir_index_batch_vectorizedpir_Mr23BatchIndexPirNativeUtils_generateReply(
         JNIEnv *env, jclass, jbyteArray parms_bytes, jobject query_list, jobject db_list, jbyteArray pk_bytes,
         jbyteArray relin_keys_bytes, jbyteArray galois_keys_bytes, jint first_two_dimension_size) {
     EncryptionParameters parms = deserialize_encryption_parms(env, parms_bytes);
@@ -160,7 +160,7 @@ JNIEXPORT jbyteArray JNICALL Java_edu_alibaba_mpc4j_s2pc_pir_batchindex_vectoriz
     return serialize_ciphertext(env, second_dimension_cipher);
 }
 
-JNIEXPORT jlongArray JNICALL Java_edu_alibaba_mpc4j_s2pc_pir_batchindex_vectorizedpir_Mr23BatchIndexPirNativeUtils_decryptReply(
+JNIEXPORT jlongArray JNICALL Java_edu_alibaba_mpc4j_s2pc_pir_index_batch_vectorizedpir_Mr23BatchIndexPirNativeUtils_decryptReply(
         JNIEnv *env, jclass, jbyteArray parms_bytes, jbyteArray sk_bytes, jbyteArray response_bytes) {
     EncryptionParameters parms = deserialize_encryption_parms(env, parms_bytes);
     SEALContext context(parms);
@@ -188,7 +188,7 @@ JNIEXPORT jlongArray JNICALL Java_edu_alibaba_mpc4j_s2pc_pir_batchindex_vectoriz
     return jarr;
 }
 
-JNIEXPORT jbyteArray JNICALL Java_edu_alibaba_mpc4j_s2pc_pir_batchindex_vectorizedpir_Mr23BatchIndexPirNativeUtils_mergeResponse(
+JNIEXPORT jbyteArray JNICALL Java_edu_alibaba_mpc4j_s2pc_pir_index_batch_vectorizedpir_Mr23BatchIndexPirNativeUtils_mergeResponse(
         JNIEnv *env, jclass, jbyteArray parms_bytes, jbyteArray galois_keys_bytes,jobject response_list, jint g) {
     EncryptionParameters parms = deserialize_encryption_parms(env, parms_bytes);
     SEALContext context(parms);

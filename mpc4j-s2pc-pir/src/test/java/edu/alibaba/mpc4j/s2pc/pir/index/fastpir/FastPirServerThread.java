@@ -25,7 +25,8 @@ public class FastPirServerThread extends Thread {
      */
     private final NaiveDatabase database;
 
-    FastPirServerThread(Ayaa21SingleIndexPirServer server, Ayaa21SingleIndexPirParams indexPirParams, NaiveDatabase database) {
+    FastPirServerThread(Ayaa21SingleIndexPirServer server, Ayaa21SingleIndexPirParams indexPirParams,
+                        NaiveDatabase database) {
         this.server = server;
         this.indexPirParams = indexPirParams;
         this.database = database;

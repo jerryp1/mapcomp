@@ -138,8 +138,8 @@ public class XPirTest {
         testXPir(indexPirConfig, indexPirParams, SMALL_ELEMENT_BYTE_LENGTH, true);
     }
 
-    public void testXPir(Mbfk16SingleIndexPirConfig config, Mbfk16SingleIndexPirParams indexPirParams, int elementByteLength,
-                         boolean parallel) {
+    public void testXPir(Mbfk16SingleIndexPirConfig config, Mbfk16SingleIndexPirParams indexPirParams,
+                         int elementByteLength, boolean parallel) {
         int retrievalIndex = PirUtils.generateRetrievalIndex(SERVER_ELEMENT_SIZE);
         NaiveDatabase database = PirUtils.generateDataBase(SERVER_ELEMENT_SIZE, elementByteLength * Byte.SIZE);
         Mbfk16SingleIndexPirServer server = new Mbfk16SingleIndexPirServer(serverRpc, clientRpc.ownParty(), config);

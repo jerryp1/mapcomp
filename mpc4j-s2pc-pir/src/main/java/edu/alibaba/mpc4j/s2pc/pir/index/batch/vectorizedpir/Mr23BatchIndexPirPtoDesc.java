@@ -4,7 +4,7 @@ import edu.alibaba.mpc4j.common.rpc.desc.PtoDesc;
 import edu.alibaba.mpc4j.common.rpc.desc.PtoDescManager;
 
 /**
- * VECTORIZED_BATCH_PIR协议信息。论文来源：
+ * VECTORIZED_BATCH_PIR protocol description. The protocol comes from the following paper:
  * <p>
  * Muhammad Haris Mughees and Ling Ren. Vectorized Batch Private Information Retrieval.
  * To appear in 44th IEEE Symposium on Security and Privacy, 2023.
@@ -15,32 +15,32 @@ import edu.alibaba.mpc4j.common.rpc.desc.PtoDescManager;
  */
 public class Mr23BatchIndexPirPtoDesc implements PtoDesc {
     /**
-     * 协议ID
+     * protocol ID
      */
     private static final int PTO_ID = Math.abs((int) 6854774536447892257L);
     /**
-     * 协议名称
+     * protocol name
      */
     private static final String PTO_NAME = "VECTORIZED_BATCH_PIR";
 
     /**
-     * 协议步骤
+     * protocol step
      */
     enum PtoStep {
         /**
-         * 服务端发送布谷鸟哈希密钥
+         * server send cuckoo hash keys
          */
         SERVER_SEND_CUCKOO_HASH_KEYS,
         /**
-         * 客户端发送加密查询
+         * client send query
          */
         CLIENT_SEND_QUERY,
         /**
-         * 服务端回复密文
+         * server send response
          */
         SERVER_SEND_RESPONSE,
         /**
-         * 客户端发送公钥
+         * client send public keys
          */
         CLIENT_SEND_PUBLIC_KEYS,
     }
@@ -51,7 +51,7 @@ public class Mr23BatchIndexPirPtoDesc implements PtoDesc {
     private static final Mr23BatchIndexPirPtoDesc INSTANCE = new Mr23BatchIndexPirPtoDesc();
 
     /**
-     * private constructor
+     * private constructor.
      */
     private Mr23BatchIndexPirPtoDesc() {
         // empty

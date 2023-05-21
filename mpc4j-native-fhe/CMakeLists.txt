@@ -63,7 +63,7 @@ add_library(
         tfhe/util.cpp
         tfhe/util.h
         pir/edu_alibaba_mpc4j_s2pc_pir_index_single_vectorizedpir_Mr23SingleIndexPirNativeUtils.cpp
-        pir/edu_alibaba_mpc4j_s2pc_pir_index_batch_psipir_Lpzg24BatchIndexPirNativeUtils.cpp
+        pir/edu_alibaba_mpc4j_s2pc_pir_index_batch_psipir_Lpzl24BatchIndexPirNativeUtils.cpp
         pir/edu_alibaba_mpc4j_s2pc_pir_index_batch_vectorizedpir_Mr23BatchIndexPirNativeUtils.cpp
         pir/edu_alibaba_mpc4j_s2pc_upso_upsi_cmg21_Cmg21UpsiNativeUtils.cpp)
 # 链接SEAL库

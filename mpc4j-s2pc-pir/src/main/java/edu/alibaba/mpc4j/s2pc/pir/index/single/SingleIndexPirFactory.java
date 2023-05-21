@@ -27,7 +27,7 @@ import edu.alibaba.mpc4j.s2pc.pir.index.single.xpir.Mbfk16SingleIndexPirServer;
  */
 public class SingleIndexPirFactory implements PtoFactory {
     /**
-     * private constructor
+     * private constructor.
      */
     private SingleIndexPirFactory() {
         // empty

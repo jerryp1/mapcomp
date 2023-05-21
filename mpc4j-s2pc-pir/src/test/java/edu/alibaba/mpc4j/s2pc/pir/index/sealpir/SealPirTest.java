@@ -138,8 +138,8 @@ public class SealPirTest {
         testSealPir(indexPirConfig, indexPirParams, SMALL_ELEMENT_BYTE_LENGTH, true);
     }
 
-    public void testSealPir(Acls18SingleIndexPirConfig config, Acls18SingleIndexPirParams indexPirParams, int elementByteLength,
-                            boolean parallel) {
+    public void testSealPir(Acls18SingleIndexPirConfig config, Acls18SingleIndexPirParams indexPirParams,
+                            int elementByteLength, boolean parallel) {
         int retrievalIndex = PirUtils.generateRetrievalIndex(SERVER_ELEMENT_SIZE);
         NaiveDatabase database = PirUtils.generateDataBase(SERVER_ELEMENT_SIZE, elementByteLength * Byte.SIZE);
         Acls18SingleIndexPirServer server = new Acls18SingleIndexPirServer(serverRpc, clientRpc.ownParty(), config);

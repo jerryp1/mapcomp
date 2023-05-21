@@ -44,8 +44,7 @@ public class Mr23SingleIndexPirParams implements SingleIndexPirParams {
         assert firstTwoDimensionSize == PirUtils.getNextPowerOfTwo(firstTwoDimensionSize);
         this.firstTwoDimensionSize = firstTwoDimensionSize;
         this.thirdDimensionSize = thirdDimensionSize;
-        // 生成加密方案参数
-        this.encryptionParams = Mr23SingleIndexPirNativeUtils.generateSealContext(
+        this.encryptionParams = Mr23SingleIndexPirNativeUtils.generateEncryptionParams(
             polyModulusDegree, plainModulusBitLength
         );
     }
@@ -54,7 +53,7 @@ public class Mr23SingleIndexPirParams implements SingleIndexPirParams {
      * default params
      */
     public static Mr23SingleIndexPirParams DEFAULT_PARAMS = new Mr23SingleIndexPirParams(
-        8192, 20, 128, 64
+        8192, 20, 128, 4
     );
 
     @Override

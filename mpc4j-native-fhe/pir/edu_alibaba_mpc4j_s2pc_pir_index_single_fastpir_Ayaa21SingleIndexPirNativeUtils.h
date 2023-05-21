@@ -9,10 +9,10 @@ extern "C" {
 #endif
 /*
  * Class:     edu_alibaba_mpc4j_s2pc_pir_index_single_fastpir_Ayaa21SingleIndexPirNativeUtils
- * Method:    generateSealContext
+ * Method:    generateEncryptionParams
  * Signature: (IJ[J)[B
  */
-JNIEXPORT jbyteArray JNICALL Java_edu_alibaba_mpc4j_s2pc_pir_index_single_fastpir_Ayaa21SingleIndexPirNativeUtils_generateSealContext
+JNIEXPORT jbyteArray JNICALL Java_edu_alibaba_mpc4j_s2pc_pir_index_single_fastpir_Ayaa21SingleIndexPirNativeUtils_generateEncryptionParams
   (JNIEnv *, jclass, jint, jlong, jlongArray);
 
 /*

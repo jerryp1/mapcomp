@@ -25,7 +25,8 @@ public class VectorizedPirServerThread extends Thread {
      */
     private final NaiveDatabase database;
 
-    VectorizedPirServerThread(Mr23SingleIndexPirServer server, Mr23SingleIndexPirParams indexPirParams, NaiveDatabase database) {
+    VectorizedPirServerThread(Mr23SingleIndexPirServer server, Mr23SingleIndexPirParams indexPirParams,
+                              NaiveDatabase database) {
         this.server = server;
         this.indexPirParams = indexPirParams;
         this.database = database;

@@ -17,16 +17,16 @@ class Mcr21SingleIndexPirNativeUtils {
     /**
      * generate encryption params.
      *
-     * @param modulusDegree    poly modulus degree.
-     * @param plainModulusSize plain modulus size.
+     * @param polyModulusDegree poly modulus degree.
+     * @param plainModulusSize  plain modulus size.
      * @return encryption params.
      */
-    static native byte[] generateEncryptionParams(int modulusDegree, int plainModulusSize);
+    static native byte[] generateEncryptionParams(int polyModulusDegree, int plainModulusSize);
 
     /**
-     * generate key pair.
+     * key generation.
      *
-     * @param encryptionParams SEAL encryption params.
+     * @param encryptionParams encryption params.
      * @return key pair.
      */
     static native List<byte[]> keyGen(byte[] encryptionParams);
@@ -34,7 +34,7 @@ class Mcr21SingleIndexPirNativeUtils {
     /**
      * preprocess database.
      *
-     * @param encryptionParams SEAL encryption params.
+     * @param encryptionParams encryption params.
      * @param plaintextList    plaintexts.
      * @return decomposed plaintexts.
      */
@@ -43,7 +43,7 @@ class Mcr21SingleIndexPirNativeUtils {
     /**
      * encrypt secret key.
      *
-     * @param encryptionParams SEAL encryption params.
+     * @param encryptionParams encryption params.
      * @param publicKey        public key.
      * @param secretKey        secret key.
      * @return encrypted secret key.
@@ -53,7 +53,7 @@ class Mcr21SingleIndexPirNativeUtils {
     /**
      * generate query.
      *
-     * @param encryptionParams SEAL encryption params.
+     * @param encryptionParams encryption params.
      * @param publicKey        public key.
      * @param secretKey        secret key.
      * @param indices          retrieval indices.
@@ -66,7 +66,7 @@ class Mcr21SingleIndexPirNativeUtils {
     /**
      * generate response.
      *
-     * @param encryptionParams SEAL encryption params.
+     * @param encryptionParams encryption params.
      * @param publicKey        public key.
      * @param galoisKey        Galois keys.
      * @param encSecretKey     encrypted secret key.
@@ -82,7 +82,7 @@ class Mcr21SingleIndexPirNativeUtils {
     /**
      * decode response.
      *
-     * @param encryptionParams SEAL encryption params.
+     * @param encryptionParams encryption params.
      * @param secretKey        secret key.
      * @param response         response ciphertext.
      * @return BFV plaintext.

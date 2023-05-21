@@ -12,6 +12,7 @@ import java.util.List;
  * @date 2022/8/10
  */
 public interface SingleIndexPirClient extends TwoPartyPto {
+
     /**
      * Client initializes the protocol.
      *
@@ -59,7 +60,7 @@ public interface SingleIndexPirClient extends TwoPartyPto {
      * Client decodes response.
      *
      * @param serverResponse server response.
-     * @param index retrieval index.
+     * @param index          retrieval index.
      * @return retrieval element.
      * @throws MpcAbortException the protocol failure aborts.
      */

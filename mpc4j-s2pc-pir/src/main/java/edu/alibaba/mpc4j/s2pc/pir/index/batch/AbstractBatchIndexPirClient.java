@@ -5,14 +5,8 @@ import edu.alibaba.mpc4j.common.rpc.Rpc;
 import edu.alibaba.mpc4j.common.rpc.desc.PtoDesc;
 import edu.alibaba.mpc4j.common.rpc.pto.AbstractTwoPartyPto;
 import edu.alibaba.mpc4j.common.tool.MathPreconditions;
-import edu.alibaba.mpc4j.common.tool.utils.CommonUtils;
-import edu.alibaba.mpc4j.common.tool.utils.IntUtils;
 
-import java.nio.ByteBuffer;
-import java.util.ArrayList;
 import java.util.List;
-import java.util.stream.Collectors;
-import java.util.stream.IntStream;
 
 /**
  * abstract batch Index PIR client.
@@ -22,31 +16,31 @@ import java.util.stream.IntStream;
  */
 public abstract class AbstractBatchIndexPirClient extends AbstractTwoPartyPto implements BatchIndexPirClient {
     /**
-     * 客户端最大元素数量
+     * max client retrieval size
      */
     protected int maxRetrievalSize;
     /**
-     * 客户端元素数量
+     * client retrieval size
      */
     protected int retrievalSize;
     /**
-     * 客户端检索值
+     * index list
      */
-    protected List<ByteBuffer> indicesByteBuffer;
+    protected List<Integer> indexList;
     /**
-     * 服务端元素数量
+     * server element size
      */
     protected int serverElementSize;
     /**
-     * 元素比特长度
+     * element bit length
      */
     protected int elementBitLength;
     /**
-     * 分块的比特长度
+     * partition bit-length
      */
     protected int partitionBitLength;
     /**
-     * 分块数目
+     * partition size
      */
     protected int partitionSize;
 
@@ -71,9 +65,7 @@ public abstract class AbstractBatchIndexPirClient extends AbstractTwoPartyPto im
             MathPreconditions.checkNonNegativeInRange("index", index, serverElementSize);
         }
         this.retrievalSize = indexList.size();
-        this.indicesByteBuffer = IntStream.range(0, retrievalSize)
-            .mapToObj(i -> ByteBuffer.wrap(IntUtils.intToByteArray(indexList.get(i))))
-            .collect(Collectors.toCollection(ArrayList::new));
+        this.indexList = indexList;
         extraInfo++;
     }
 }

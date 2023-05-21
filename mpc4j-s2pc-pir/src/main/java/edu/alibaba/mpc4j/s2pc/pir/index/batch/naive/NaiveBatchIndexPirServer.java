@@ -30,10 +30,6 @@ import static edu.alibaba.mpc4j.s2pc.pir.index.batch.naive.NaiveBatchIndexPirPto
 public class NaiveBatchIndexPirServer extends AbstractBatchIndexPirServer {
 
     /**
-     * hash keys
-     */
-    private byte[][] hashKeys;
-    /**
      * plaintext in NTT form
      */
     private List<List<byte[][]>> encodedDatabase;
@@ -41,10 +37,6 @@ public class NaiveBatchIndexPirServer extends AbstractBatchIndexPirServer {
      * cuckoo hash bin type
      */
     private final IntCuckooHashBinFactory.IntCuckooHashBinType cuckooHashBinType;
-    /**
-     * bin database
-     */
-    NaiveDatabase[] binDatabase;
     /**
      * single index PIR server
      */
@@ -70,8 +62,8 @@ public class NaiveBatchIndexPirServer extends AbstractBatchIndexPirServer {
         // generate simple hash bin
         int hashNum = IntCuckooHashBinFactory.getHashNum(cuckooHashBinType);
         binNum = IntCuckooHashBinFactory.getBinNum(cuckooHashBinType, maxRetrievalSize);
-        hashKeys = CommonUtils.generateRandomKeys(hashNum, secureRandom);
-        generateSimpleHashBin(database);
+        byte[][] hashKeys = CommonUtils.generateRandomKeys(hashNum, secureRandom);
+        NaiveDatabase[] binDatabase = generateSimpleHashBin(database, hashKeys);
         DataPacketHeader cuckooHashKeyHeader = new DataPacketHeader(
             encodeTaskId, getPtoDesc().getPtoId(), PtoStep.SERVER_SEND_CUCKOO_HASH_KEYS.ordinal(), extraInfo,
             rpc.ownParty().getPartyId(), otherParty().getPartyId()
@@ -148,9 +140,11 @@ public class NaiveBatchIndexPirServer extends AbstractBatchIndexPirServer {
     /**
      * generate simple hash bin.
      *
-     * @param database database
+     * @param hashKeys hash keys.
+     * @param database database.
+     * @return bin database.
      */
-    private void generateSimpleHashBin(NaiveDatabase database) {
+    private NaiveDatabase[] generateSimpleHashBin(NaiveDatabase database, byte[][] hashKeys) {
         List<Integer> totalIndexList = IntStream.range(0, num)
             .boxed()
             .collect(Collectors.toCollection(() -> new ArrayList<>(num)));
@@ -175,7 +169,7 @@ public class NaiveBatchIndexPirServer extends AbstractBatchIndexPirServer {
                 paddingCompleteHashBin[i][j + binItems.size()] = BytesUtils.clone(paddingEntry);
             }
         }
-        binDatabase = IntStream.range(0, binNum)
+        return IntStream.range(0, binNum)
             .mapToObj(i -> NaiveDatabase.create(elementBitLength, paddingCompleteHashBin[i]))
             .toArray(NaiveDatabase[]::new);
     }

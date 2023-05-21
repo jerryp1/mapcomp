@@ -85,7 +85,7 @@ public class PirUbopprfConfig implements UbopprfConfig {
         public Builder() {
             sqOprfConfig = SqOprfFactory.createDefaultConfig(SecurityModel.SEMI_HONEST);
             okvsType = OkvsFactory.OkvsType.H3_SINGLETON_GCT;
-            batchIndexPirConfig = new Mr23BatchIndexPirConfig.Builder().build();
+            batchIndexPirConfig = new Mr23BatchIndexPirConfig();
         }
 
         public Builder setSqOprfConfig(SqOprfConfig sqOprfConfig) {

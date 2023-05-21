@@ -9,10 +9,10 @@ extern "C" {
 #endif
 /*
  * Class:     edu_alibaba_mpc4j_s2pc_pir_index_single_vectorizedpir_Mr23SingleIndexPirNativeUtils
- * Method:    generateSealContext
+ * Method:    generateEncryptionParams
  * Signature: (II)[B
  */
-JNIEXPORT jbyteArray JNICALL Java_edu_alibaba_mpc4j_s2pc_pir_index_single_vectorizedpir_Mr23SingleIndexPirNativeUtils_generateSealContext
+JNIEXPORT jbyteArray JNICALL Java_edu_alibaba_mpc4j_s2pc_pir_index_single_vectorizedpir_Mr23SingleIndexPirNativeUtils_generateEncryptionParams
   (JNIEnv *, jclass, jint, jint);
 
 /*
@@ -26,10 +26,10 @@ JNIEXPORT jobject JNICALL Java_edu_alibaba_mpc4j_s2pc_pir_index_single_vectorize
 /*
  * Class:     edu_alibaba_mpc4j_s2pc_pir_index_single_vectorizedpir_Mr23SingleIndexPirNativeUtils
  * Method:    preprocessDatabase
- * Signature: ([B[J[II)Ljava/util/List;
+ * Signature: ([B[[JI)Ljava/util/List;
  */
 JNIEXPORT jobject JNICALL Java_edu_alibaba_mpc4j_s2pc_pir_index_single_vectorizedpir_Mr23SingleIndexPirNativeUtils_preprocessDatabase
-  (JNIEnv *, jclass, jbyteArray, jlongArray, jintArray, jint);
+  (JNIEnv *, jclass, jbyteArray, jobjectArray, jint);
 
 /*
  * Class:     edu_alibaba_mpc4j_s2pc_pir_index_single_vectorizedpir_Mr23SingleIndexPirNativeUtils
@@ -42,10 +42,10 @@ JNIEXPORT jobject JNICALL Java_edu_alibaba_mpc4j_s2pc_pir_index_single_vectorize
 /*
  * Class:     edu_alibaba_mpc4j_s2pc_pir_index_single_vectorizedpir_Mr23SingleIndexPirNativeUtils
  * Method:    generateReply
- * Signature: ([BLjava/util/List;[[B[B[B[BII)[B
+ * Signature: ([BLjava/util/List;[[B[B[B[BI)[B
  */
 JNIEXPORT jbyteArray JNICALL Java_edu_alibaba_mpc4j_s2pc_pir_index_single_vectorizedpir_Mr23SingleIndexPirNativeUtils_generateReply
-  (JNIEnv *, jclass, jbyteArray, jobject, jobjectArray, jbyteArray, jbyteArray, jbyteArray, jint, jint);
+  (JNIEnv *, jclass, jbyteArray, jobject, jobjectArray, jbyteArray, jbyteArray, jbyteArray, jint);
 
 /*
  * Class:     edu_alibaba_mpc4j_s2pc_pir_index_single_vectorizedpir_Mr23SingleIndexPirNativeUtils

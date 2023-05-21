@@ -17,16 +17,16 @@ class Mbfk16SingleIndexPirNativeUtils {
     /**
      * generate encryption params.
      *
-     * @param modulusDegree poly modulus degree.
-     * @param plainModulus  plain modulus.
+     * @param polyModulusDegree poly modulus degree.
+     * @param plainModulus      plain modulus.
      * @return encryption params.
      */
-    static native byte[] generateEncryptionParams(int modulusDegree, long plainModulus);
+    static native byte[] generateEncryptionParams(int polyModulusDegree, long plainModulus);
 
     /**
      * generate key pair.
      *
-     * @param encryptionParams SEAL encryption params.
+     * @param encryptionParams encryption params.
      * @return key pair.
      */
     static native List<byte[]> keyGen(byte[] encryptionParams);
@@ -34,8 +34,8 @@ class Mbfk16SingleIndexPirNativeUtils {
     /**
      * NTT transformation.
      *
-     * @param encryptionParams SEAL encryption params.
-     * @param plaintextList    BFV plaintexts not in NTT form.
+     * @param encryptionParams encryption params.
+     * @param plaintextList    plaintext list.
      * @return BFV plaintexts in NTT form.
      */
     static native List<byte[]> nttTransform(byte[] encryptionParams, List<long[]> plaintextList);
@@ -43,7 +43,7 @@ class Mbfk16SingleIndexPirNativeUtils {
     /**
      * generate query.
      *
-     * @param encryptionParams SEAL encryption params.
+     * @param encryptionParams encryption params.
      * @param publicKey        public key.
      * @param secretKey        secret key.
      * @param indices          indices.
@@ -56,7 +56,7 @@ class Mbfk16SingleIndexPirNativeUtils {
     /**
      * generate response.
      *
-     * @param encryptionParams SEAL encryption params.
+     * @param encryptionParams encryption params.
      * @param queryList        query ciphertexts.
      * @param database         database.
      * @param nvec             dimension size.
@@ -68,7 +68,7 @@ class Mbfk16SingleIndexPirNativeUtils {
     /**
      * decode response.
      *
-     * @param encryptionParams SEAL encryption params.
+     * @param encryptionParams encryption params.
      * @param secretKey        secret key.
      * @param response         response ciphertext.
      * @param dimension        dimension.
@@ -79,7 +79,7 @@ class Mbfk16SingleIndexPirNativeUtils {
     /**
      * compute size ratio between a ciphertext and the largest plaintext that can be encrypted.
      *
-     * @param encryptionParams SEAL encryption params.
+     * @param encryptionParams encryption params.
      * @return expansion ratio.
      */
     static native int expansionRatio(byte[] encryptionParams);

@@ -31,7 +31,8 @@ public abstract class AbstractSingleIndexPirClient extends AbstractTwoPartyPto i
      */
     protected int partitionSize;
 
-    protected AbstractSingleIndexPirClient(PtoDesc ptoDesc, Rpc clientRpc, Party serverParty, SingleIndexPirConfig config) {
+    protected AbstractSingleIndexPirClient(PtoDesc ptoDesc, Rpc clientRpc, Party serverParty,
+                                           SingleIndexPirConfig config) {
         super(ptoDesc, clientRpc, serverParty, config);
     }
 

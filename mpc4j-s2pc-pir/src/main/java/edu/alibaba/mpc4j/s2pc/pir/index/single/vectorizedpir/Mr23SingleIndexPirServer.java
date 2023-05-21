@@ -4,6 +4,8 @@ import edu.alibaba.mpc4j.common.rpc.*;
 import edu.alibaba.mpc4j.common.rpc.utils.DataPacket;
 import edu.alibaba.mpc4j.common.rpc.utils.DataPacketHeader;
 import edu.alibaba.mpc4j.common.tool.CommonConstants;
+import edu.alibaba.mpc4j.common.tool.utils.CommonUtils;
+import edu.alibaba.mpc4j.common.tool.utils.IntUtils;
 import edu.alibaba.mpc4j.crypto.matrix.database.NaiveDatabase;
 import edu.alibaba.mpc4j.s2pc.pir.PirUtils;
 import edu.alibaba.mpc4j.s2pc.pir.index.single.AbstractSingleIndexPirServer;
@@ -38,10 +40,6 @@ public class Mr23SingleIndexPirServer extends AbstractSingleIndexPirServer {
      * BFV plaintext in NTT form
      */
     private List<byte[][]> encodedDatabase;
-    /**
-     * dimension size
-     */
-    private int[] dimensionSize;
     /**
      * public key
      */
@@ -146,8 +144,7 @@ public class Mr23SingleIndexPirServer extends AbstractSingleIndexPirServer {
                 publicKey,
                 relinKeys,
                 galoisKeys,
-                params.getFirstTwoDimensionSize(),
-                params.getThirdDimensionSize())
+                params.getFirstTwoDimensionSize())
             )
             .collect(toCollection(ArrayList::new));
     }
@@ -159,30 +156,37 @@ public class Mr23SingleIndexPirServer extends AbstractSingleIndexPirServer {
      * @return BFV plaintexts in NTT form.
      */
     private byte[][] preprocessDatabase(int partitionIndex) {
-        long[] coeffs = new long[num];
-        IntStream.range(0, num).forEach(i -> {
-            long[] temp = PirUtils.convertBytesToCoeffs(
-                params.getPlainModulusBitLength(), 0, partitionByteLength, databases[partitionIndex].getBytesData(i)
-            );
-            assert temp.length == 1;
-            coeffs[i] = temp[0];
-        });
-        int totalSize = params.getFirstTwoDimensionSize() * params.getThirdDimensionSize();
-        return Mr23SingleIndexPirNativeUtils.preprocessDatabase(
-            params.getEncryptionParams(), coeffs, dimensionSize, totalSize
-        ).toArray(new byte[0][]);
+        long[] items = new long[num];
+        IntStream.range(0, num)
+            .forEach(i -> items[i] = IntUtils.fixedByteArrayToNonNegInt(databases[partitionIndex].getBytesData(i)));
+        int dimLength = params.getFirstTwoDimensionSize();
+        int size = CommonUtils.getUnitNum(num, dimLength);
+        long[][] coeffs = new long[size][params.getPolyModulusDegree()];
+        int length = dimLength;
+        int groupBinSize = (params.getPolyModulusDegree() / 2) / params.getFirstTwoDimensionSize();
+        for (int i = 0; i < size; i++) {
+            long[] temp = new long[params.getPolyModulusDegree()];
+            if (i == (size - 1)) {
+                length = num - dimLength * i;
+            }
+            for (int j = 0; j < length; j++) {
+                temp[j * groupBinSize] = items[i * dimLength + j];
+            }
+            coeffs[i] = PirUtils.plaintextRotate(temp, (i % dimLength) * groupBinSize);
+        }
+        return Mr23SingleIndexPirNativeUtils
+            .preprocessDatabase(params.getEncryptionParams(), coeffs, params.getFirstTwoDimensionSize())
+            .toArray(new byte[0][]);
     }
 
     @Override
     public List<byte[][]> serverSetup(NaiveDatabase database) {
-        int maxPartitionByteLength = params.getPlainModulusBitLength()/ Byte.SIZE;
+        int maxPartitionByteLength = params.getPlainModulusBitLength() / Byte.SIZE;
         setInitInput(database, database.getByteL(), maxPartitionByteLength);
         assert params.getDimension() == 3;
-        int product = params.getFirstTwoDimensionSize() * params.getFirstTwoDimensionSize() * params.getThirdDimensionSize();
+        int product =
+            params.getFirstTwoDimensionSize() * params.getFirstTwoDimensionSize() * params.getThirdDimensionSize();
         assert product >= num;
-        this.dimensionSize = new int[] {
-            params.getThirdDimensionSize(), params.getFirstTwoDimensionSize(), params.getFirstTwoDimensionSize()
-        };
         // encode database
         IntStream intStream = IntStream.range(0, partitionSize);
         intStream = parallel ? intStream.parallel() : intStream;

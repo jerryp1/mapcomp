@@ -25,7 +25,8 @@ public class SealPirServerThread extends Thread {
      */
     private final NaiveDatabase database;
 
-    SealPirServerThread(Acls18SingleIndexPirServer server, Acls18SingleIndexPirParams indexPirParams, NaiveDatabase database) {
+    SealPirServerThread(Acls18SingleIndexPirServer server, Acls18SingleIndexPirParams indexPirParams,
+                        NaiveDatabase database) {
         this.server = server;
         this.indexPirParams = indexPirParams;
         this.database = database;

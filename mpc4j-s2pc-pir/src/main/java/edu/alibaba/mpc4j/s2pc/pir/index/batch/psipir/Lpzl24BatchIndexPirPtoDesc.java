@@ -4,60 +4,60 @@ import edu.alibaba.mpc4j.common.rpc.desc.PtoDesc;
 import edu.alibaba.mpc4j.common.rpc.desc.PtoDescManager;
 
 /**
- * PSI-PIR协议信息。
+ * PSI-PIR protocol.
  *
  * @author Liqiang Peng
  * @date 2023/3/7
  */
-public class Lpzg24BatchIndexPirPtoDesc implements PtoDesc {
+public class Lpzl24BatchIndexPirPtoDesc implements PtoDesc {
     /**
-     * 协议ID
+     * protocol ID
      */
     private static final int PTO_ID = Math.abs((int) 3563364173424535189L);
     /**
-     * 协议名称
+     * protocol name
      */
     private static final String PTO_NAME = "PSI_PIR";
 
     /**
-     * 协议步骤
+     * protocol step
      */
     enum PtoStep {
         /**
-         * 服务端发送布谷鸟哈希密钥
+         * server send cuckoo hash keys
          */
         SERVER_SEND_CUCKOO_HASH_KEYS,
         /**
-         * 客户端发送加密查询
+         * client send query
          */
         CLIENT_SEND_QUERY,
         /**
-         * 服务端回复密文
+         * serve send response
          */
         SERVER_SEND_RESPONSE,
         /**
-         * 客户端发送盲化元素
+         * client send blind elements
          */
         CLIENT_SEND_BLIND,
         /**
-         * 服务端返回客户端盲化元素PRF
+         * serve send blind element prf
          */
         SERVER_SEND_BLIND_PRF,
         /**
-         * 客户端发送公钥
+         * client send public keys
          */
         CLIENT_SEND_PUBLIC_KEYS,
     }
 
     /**
-     * 单例模式
+     * the singleton mode
      */
-    private static final Lpzg24BatchIndexPirPtoDesc INSTANCE = new Lpzg24BatchIndexPirPtoDesc();
+    private static final Lpzl24BatchIndexPirPtoDesc INSTANCE = new Lpzl24BatchIndexPirPtoDesc();
 
     /**
-     * 私有构造函数
+     * private constructor.
      */
-    private Lpzg24BatchIndexPirPtoDesc() {
+    private Lpzl24BatchIndexPirPtoDesc() {
         // empty
     }
 

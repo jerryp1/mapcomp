@@ -11,7 +11,7 @@ import edu.alibaba.mpc4j.s2pc.pir.index.batch.BatchIndexPirConfig;
 import edu.alibaba.mpc4j.s2pc.pir.index.batch.BatchIndexPirFactory;
 import edu.alibaba.mpc4j.s2pc.pir.index.batch.BatchIndexPirServer;
 import edu.alibaba.mpc4j.s2pc.pir.index.batch.naive.NaiveBatchIndexPirConfig;
-import edu.alibaba.mpc4j.s2pc.pir.index.batch.psipir.Lpzg24BatchIndexPirConfig;
+import edu.alibaba.mpc4j.s2pc.pir.index.batch.psipir.Lpzl24BatchIndexPirConfig;
 import edu.alibaba.mpc4j.s2pc.pir.index.batch.vectorizedpir.Mr23BatchIndexPirConfig;
 import edu.alibaba.mpc4j.s2pc.pir.index.single.fastpir.Ayaa21SingleIndexPirConfig;
 import edu.alibaba.mpc4j.s2pc.pir.index.single.onionpir.Mcr21SingleIndexPirConfig;
@@ -48,19 +48,19 @@ public class BatchPirTest {
     /**
      * small server element size
      */
-    private static final int SMALL_SERVER_ELEMENT_SIZE = 1 << 8;
+    private static final int SMALL_SERVER_ELEMENT_SIZE = 1 << 12;
     /**
      * default server element size
      */
-    private static final int DEFAULT_SERVER_ELEMENT_SIZE = 1 << 14;
+    private static final int DEFAULT_SERVER_ELEMENT_SIZE = 1 << 18;
     /**
      * default retrieval size
      */
-    private static final int DEFAULT_RETRIEVAL_SIZE = 1 << 4;
+    private static final int DEFAULT_RETRIEVAL_SIZE = 1 << 8;
     /**
      * special retrieval size
      */
-    private static final int SPECIAL_RETRIEVAL_SIZE = (1 << 7) + 1;
+    private static final int SPECIAL_RETRIEVAL_SIZE = (1 << 5) + 1;
 
     @Parameterized.Parameters(name = "{0}")
     public static Collection<Object[]> configurations() {
@@ -69,13 +69,13 @@ public class BatchPirTest {
         // PSI-PIR
         configurations.add(new Object[]{
             BatchIndexPirFactory.BatchIndexPirType.PSI_PIR.name(),
-            new Lpzg24BatchIndexPirConfig.Builder().build()
+            new Lpzl24BatchIndexPirConfig.Builder().build()
         });
         // vectorized batch PIR
-//        configurations.add(new Object[]{
-//            BatchIndexPirFactory.BatchIndexPirType.VECTORIZED_BATCH_PIR.name(),
-//            new Mr23BatchIndexPirConfig.Builder().build()
-//        });
+        configurations.add(new Object[]{
+            BatchIndexPirFactory.BatchIndexPirType.VECTORIZED_BATCH_PIR.name(),
+            new Mr23BatchIndexPirConfig()
+        });
         // naive batch PIR
         configurations.add(new Object[]{
             BatchIndexPirFactory.BatchIndexPirType.NAIVE_BATCH_PIR.name() + " - SEAL PIR",
