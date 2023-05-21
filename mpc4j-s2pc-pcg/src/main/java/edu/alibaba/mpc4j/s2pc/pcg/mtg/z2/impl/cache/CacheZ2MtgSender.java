@@ -48,6 +48,14 @@ public class CacheZ2MtgSender extends AbstractZ2MtgParty {
         maxBaseNum = coreMtgConfig.maxNum();
     }
 
+    public CacheZ2MtgSender(Rpc senderRpc, Party receiverParty, Party aiderParty, CacheZ2MtgConfig config) {
+        super(CacheZ2MtgPtoDesc.getInstance(), senderRpc, receiverParty, config);
+        Z2CoreMtgConfig coreMtgConfig = config.getCoreMtgConfig();
+        coreMtgSender = Z2CoreMtgFactory.createSender(senderRpc, receiverParty, aiderParty,coreMtgConfig);
+        addSubPtos(coreMtgSender);
+        maxBaseNum = coreMtgConfig.maxNum();
+    }
+
     @Override
     public void init(int maxRoundNum, int updateNum) throws MpcAbortException {
         setInitInput(maxRoundNum, updateNum);

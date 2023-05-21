@@ -48,6 +48,14 @@ public class OfflineZ2MtgReceiver extends AbstractZ2MtgParty {
         maxBaseNum = coreMtgConfig.maxNum();
     }
 
+    public OfflineZ2MtgReceiver(Rpc receiverRpc, Party senderParty, Party aiderParty, OfflineZ2MtgConfig config) {
+        super(OfflineZ2MtgPtoDesc.getInstance(), receiverRpc, senderParty, config);
+        Z2CoreMtgConfig coreMtgConfig = config.getCoreMtgConfig();
+        coreMtgReceiver = Z2CoreMtgFactory.createReceiver(receiverRpc, senderParty, aiderParty, coreMtgConfig);
+        addSubPtos(coreMtgReceiver);
+        maxBaseNum = coreMtgConfig.maxNum();
+    }
+
     @Override
     public void init(int maxRoundNum, int updateNum) throws MpcAbortException {
         setInitInput(maxRoundNum, updateNum);

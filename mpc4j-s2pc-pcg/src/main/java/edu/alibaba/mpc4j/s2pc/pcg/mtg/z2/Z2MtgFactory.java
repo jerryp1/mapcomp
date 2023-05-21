@@ -61,6 +61,27 @@ public class Z2MtgFactory implements PtoFactory {
     }
 
     /**
+     * Creates a sender.
+     *
+     * @param senderRpc     sender RPC.
+     * @param receiverParty receiver party.
+     * @param aiderParty    aider party.
+     * @param config        config.
+     * @return a sender.
+     */
+    public static Z2MtgParty createSender(Rpc senderRpc, Party receiverParty, Party aiderParty, Z2MtgConfig config) {
+        Z2MtgType type = config.getPtoType();
+        switch (type) {
+            case OFFLINE:
+                return new OfflineZ2MtgSender(senderRpc, receiverParty, aiderParty, (OfflineZ2MtgConfig) config);
+            case CACHE:
+                return new CacheZ2MtgSender(senderRpc, receiverParty, aiderParty, (CacheZ2MtgConfig) config);
+            default:
+                throw new IllegalArgumentException("Invalid " + Z2MtgType.class.getSimpleName() + ": " + type.name());
+        }
+    }
+
+    /**
      * Creates a receiver.
      *
      * @param receiverRpc receiver RPC.
@@ -75,6 +96,26 @@ public class Z2MtgFactory implements PtoFactory {
                 return new OfflineZ2MtgReceiver(receiverRpc, senderParty, (OfflineZ2MtgConfig) config);
             case CACHE:
                 return new CacheZ2MtgReceiver(receiverRpc, senderParty, (CacheZ2MtgConfig) config);
+            default:
+                throw new IllegalArgumentException("Invalid " + Z2MtgType.class.getSimpleName() + ": " + type.name());
+        }
+    }
+
+    /**
+     * Creates a receiver.
+     *
+     * @param receiverRpc receiver RPC.
+     * @param senderParty sender party.
+     * @param config      config.
+     * @return a receiver.
+     */
+    public static Z2MtgParty createReceiver(Rpc receiverRpc, Party senderParty, Party aiderParty, Z2MtgConfig config) {
+        Z2MtgType type = config.getPtoType();
+        switch (type) {
+            case OFFLINE:
+                return new OfflineZ2MtgReceiver(receiverRpc, senderParty, aiderParty, (OfflineZ2MtgConfig) config);
+            case CACHE:
+                return new CacheZ2MtgReceiver(receiverRpc, senderParty, aiderParty, (CacheZ2MtgConfig) config);
             default:
                 throw new IllegalArgumentException("Invalid " + Z2MtgType.class.getSimpleName() + ": " + type.name());
         }

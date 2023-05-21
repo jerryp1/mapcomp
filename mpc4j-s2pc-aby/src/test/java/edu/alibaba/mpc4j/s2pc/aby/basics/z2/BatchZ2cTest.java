@@ -155,8 +155,8 @@ public class BatchZ2cTest {
         for (UnaryBcOperator operator : UnaryBcOperator.values()) {
             testUnaryOperator(sender, receiver, operator, bitNum);
         }
-        sender.destroy();
-        receiver.destroy();
+        new Thread(sender::destroy).start();
+        new Thread(receiver::destroy).start();
     }
 
     private void testDyadicOperator(Z2cParty sender, Z2cParty receiver, DyadicBcOperator operator, int maxBitNum) {
