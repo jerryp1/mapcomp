@@ -3,9 +3,9 @@ package edu.alibaba.mpc4j.s2pc.aby.operator.row.millionaire;
 import edu.alibaba.mpc4j.common.rpc.Party;
 import edu.alibaba.mpc4j.common.rpc.Rpc;
 import edu.alibaba.mpc4j.common.rpc.desc.SecurityModel;
-import edu.alibaba.mpc4j.s2pc.aby.operator.row.millionaire.cheetah.CheetahMillionaireConfig;
-import edu.alibaba.mpc4j.s2pc.aby.operator.row.millionaire.cheetah.CheetahMillionaireReceiver;
-import edu.alibaba.mpc4j.s2pc.aby.operator.row.millionaire.cheetah.CheetahMillionaireSender;
+import edu.alibaba.mpc4j.s2pc.aby.operator.row.millionaire.rrk20.Rrk20MillionaireConfig;
+import edu.alibaba.mpc4j.s2pc.aby.operator.row.millionaire.rrk20.Rrk20MillionaireReceiver;
+import edu.alibaba.mpc4j.s2pc.aby.operator.row.millionaire.rrk20.Rrk20MillionaireSender;
 
 /**
  * Millionaire Protocol Factory.
@@ -26,9 +26,9 @@ public class MillionaireFactory {
      */
     public enum MillionaireType {
         /**
-         * Cheetah
+         * RRK+20, CHEETAH
          */
-        CHEETAH,
+        RRK20,
     }
 
     /**
@@ -42,8 +42,8 @@ public class MillionaireFactory {
     public static MillionaireParty createSender(Rpc senderRpc, Party receiverParty, MillionaireConfig config) {
         MillionaireType type = config.getPtoType();
         switch (type) {
-            case CHEETAH:
-                return new CheetahMillionaireSender(senderRpc, receiverParty, (CheetahMillionaireConfig) config);
+            case RRK20:
+                return new Rrk20MillionaireSender(senderRpc, receiverParty, (Rrk20MillionaireConfig) config);
             default:
                 throw new IllegalArgumentException("Invalid " + MillionaireFactory.MillionaireType.class.getSimpleName() + ": " + type.name());
         }
@@ -60,8 +60,8 @@ public class MillionaireFactory {
     public static MillionaireParty createReceiver(Rpc receiverRpc, Party senderParty, MillionaireConfig config) {
         MillionaireType type = config.getPtoType();
         switch (type) {
-            case CHEETAH:
-                return new CheetahMillionaireReceiver(receiverRpc, senderParty, (CheetahMillionaireConfig) config);
+            case RRK20:
+                return new Rrk20MillionaireReceiver(receiverRpc, senderParty, (Rrk20MillionaireConfig) config);
             default:
                 throw new IllegalArgumentException("Invalid " + MillionaireFactory.MillionaireType.class.getSimpleName() + ": " + type.name());
         }
@@ -78,7 +78,7 @@ public class MillionaireFactory {
         switch (securityModel) {
             case IDEAL:
             case SEMI_HONEST:
-                return new CheetahMillionaireConfig.Builder(securityModel, silent)
+                return new Rrk20MillionaireConfig.Builder(securityModel, silent)
                         .build();
             case COVERT:
             case MALICIOUS:

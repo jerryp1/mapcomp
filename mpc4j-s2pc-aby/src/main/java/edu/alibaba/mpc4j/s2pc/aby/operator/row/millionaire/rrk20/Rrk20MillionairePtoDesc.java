@@ -1,15 +1,15 @@
-package edu.alibaba.mpc4j.s2pc.aby.operator.row.millionaire.cheetah;
+package edu.alibaba.mpc4j.s2pc.aby.operator.row.millionaire.rrk20;
 
 import edu.alibaba.mpc4j.common.rpc.desc.PtoDesc;
 import edu.alibaba.mpc4j.common.rpc.desc.PtoDescManager;
 
 /**
- * Cheetah Millionaire Protocol Description.
+ * RRK+20 Millionaire Protocol Description.
  *
  * @author Li Peng
  * @date 2023/4/24
  */
-public class CheetahMillionairePtoDesc implements PtoDesc {
+public class Rrk20MillionairePtoDesc implements PtoDesc {
     /**
      * Protocol id.
      */
@@ -17,7 +17,7 @@ public class CheetahMillionairePtoDesc implements PtoDesc {
     /**
      * Protocol name.
      */
-    private static final String PTO_NAME = "CHEETAH_MILLIONAIRE";
+    private static final String PTO_NAME = "RRK+20";
 
     /**
      * Protocol steps.
@@ -36,12 +36,12 @@ public class CheetahMillionairePtoDesc implements PtoDesc {
     /**
      * Singleton pattern.
      */
-    private static final CheetahMillionairePtoDesc INSTANCE = new CheetahMillionairePtoDesc();
+    private static final Rrk20MillionairePtoDesc INSTANCE = new Rrk20MillionairePtoDesc();
 
     /**
      * Private constructor.
      */
-    private CheetahMillionairePtoDesc() {
+    private Rrk20MillionairePtoDesc() {
         // empty
     }
 

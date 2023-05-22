@@ -9,7 +9,7 @@ import edu.alibaba.mpc4j.common.rpc.impl.memory.MemoryRpcManager;
 import edu.alibaba.mpc4j.common.tool.bitvector.BitVector;
 import edu.alibaba.mpc4j.common.tool.utils.BigIntegerUtils;
 import edu.alibaba.mpc4j.s2pc.aby.basics.z2.SquareZ2Vector;
-import edu.alibaba.mpc4j.s2pc.aby.operator.row.millionaire.cheetah.CheetahMillionaireConfig;
+import edu.alibaba.mpc4j.s2pc.aby.operator.row.millionaire.rrk20.Rrk20MillionaireConfig;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.time.StopWatch;
 import org.junit.After;
@@ -56,15 +56,15 @@ public class MillionaireTest {
     public static Collection<Object[]> configurations() {
         Collection<Object[]> configurations = new ArrayList<>();
 
-        // Cheetah (direct, semi-honest)
+        // RRK+20 (direct, semi-honest)
         configurations.add(new Object[]{
-                MillionaireFactory.MillionaireType.CHEETAH + " (direct, semi-honest)",
-                new CheetahMillionaireConfig.Builder(SecurityModel.SEMI_HONEST, false).build()
+                MillionaireFactory.MillionaireType.RRK20 + " (direct, semi-honest)",
+                new Rrk20MillionaireConfig.Builder(SecurityModel.SEMI_HONEST, false).build()
         });
-        // Cheetah (direct, semi-honest)
+        // RRK+20 (direct, semi-honest)
         configurations.add(new Object[]{
-                MillionaireFactory.MillionaireType.CHEETAH + " (silent, semi-honest)",
-                new CheetahMillionaireConfig.Builder(SecurityModel.SEMI_HONEST, false).build()
+                MillionaireFactory.MillionaireType.RRK20 + " (silent, semi-honest)",
+                new Rrk20MillionaireConfig.Builder(SecurityModel.SEMI_HONEST, false).build()
         });
         return configurations;
     }

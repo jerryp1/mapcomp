@@ -1,4 +1,4 @@
-package edu.alibaba.mpc4j.s2pc.aby.operator.row.millionaire.cheetah;
+package edu.alibaba.mpc4j.s2pc.aby.operator.row.millionaire.rrk20;
 
 import edu.alibaba.mpc4j.common.rpc.MpcAbortException;
 import edu.alibaba.mpc4j.common.rpc.Party;
@@ -25,12 +25,12 @@ import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
 /**
- * Cheetah Millionaire Protocol Sender.
+ * RRK+20 Millionaire Protocol Sender.
  *
  * @author Li Peng
  * @date 2023/4/24
  */
-public class CheetahMillionaireSender extends AbstractMillionaireParty {
+public class Rrk20MillionaireSender extends AbstractMillionaireParty {
     /**
      * 1-out-of-n (with n = 2^l) ot sender.
      */
@@ -41,8 +41,8 @@ public class CheetahMillionaireSender extends AbstractMillionaireParty {
     private final Z2cParty z2cSender;
 
 
-    public CheetahMillionaireSender(Rpc senderRpc, Party receiverParty, CheetahMillionaireConfig config) {
-        super(CheetahMillionairePtoDesc.getInstance(), senderRpc, receiverParty, config);
+    public Rrk20MillionaireSender(Rpc senderRpc, Party receiverParty, Rrk20MillionaireConfig config) {
+        super(Rrk20MillionairePtoDesc.getInstance(), senderRpc, receiverParty, config);
         lnotSender = LnotFactory.createSender(senderRpc, receiverParty, config.getLnotConfig());
         z2cSender = Z2cFactory.createSender(senderRpc, receiverParty, config.getBcConfig());
         addSubPtos(lnotSender);
@@ -134,7 +134,7 @@ public class CheetahMillionaireSender extends AbstractMillionaireParty {
                     })
                     .collect(Collectors.toList());
             DataPacketHeader sHeader = new DataPacketHeader(
-                    encodeTaskId, getPtoDesc().getPtoId(), CheetahMillionairePtoDesc.PtoStep.SENDER_SENDS_S.ordinal(), extraInfo,
+                    encodeTaskId, getPtoDesc().getPtoId(), Rrk20MillionairePtoDesc.PtoStep.SENDER_SENDS_S.ordinal(), extraInfo,
                     ownParty().getPartyId(), otherParty().getPartyId()
             );
             extraInfo++;
@@ -161,7 +161,7 @@ public class CheetahMillionaireSender extends AbstractMillionaireParty {
                     })
                     .collect(Collectors.toList());
             DataPacketHeader tHeader = new DataPacketHeader(
-                    encodeTaskId, getPtoDesc().getPtoId(), CheetahMillionairePtoDesc.PtoStep.SENDER_SENDS_T.ordinal(), extraInfo,
+                    encodeTaskId, getPtoDesc().getPtoId(), Rrk20MillionairePtoDesc.PtoStep.SENDER_SENDS_T.ordinal(), extraInfo,
                     ownParty().getPartyId(), otherParty().getPartyId()
             );
             extraInfo++;

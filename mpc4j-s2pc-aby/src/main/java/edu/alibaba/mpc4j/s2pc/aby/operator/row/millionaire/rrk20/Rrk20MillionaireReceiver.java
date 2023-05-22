@@ -1,4 +1,4 @@
-package edu.alibaba.mpc4j.s2pc.aby.operator.row.millionaire.cheetah;
+package edu.alibaba.mpc4j.s2pc.aby.operator.row.millionaire.rrk20;
 
 import edu.alibaba.mpc4j.common.rpc.*;
 import edu.alibaba.mpc4j.common.rpc.utils.DataPacketHeader;
@@ -20,12 +20,12 @@ import java.util.concurrent.TimeUnit;
 import java.util.stream.IntStream;
 
 /**
- * Cheetah Millionaire Protocol Receiver.
+ * RRK+20 Millionaire Protocol Receiver.
  *
  * @author Li Peng
  * @date 2023/4/25
  */
-public class CheetahMillionaireReceiver extends AbstractMillionaireParty {
+public class Rrk20MillionaireReceiver extends AbstractMillionaireParty {
     /**
      * 1-out-of-n (with n = 2^l) ot receiver.
      */
@@ -35,8 +35,8 @@ public class CheetahMillionaireReceiver extends AbstractMillionaireParty {
      */
     private final Z2cParty z2cReceiver;
 
-    public CheetahMillionaireReceiver(Rpc receiverRpc, Party senderParty, CheetahMillionaireConfig config) {
-        super(CheetahMillionairePtoDesc.getInstance(), receiverRpc, senderParty, config);
+    public Rrk20MillionaireReceiver(Rpc receiverRpc, Party senderParty, Rrk20MillionaireConfig config) {
+        super(Rrk20MillionairePtoDesc.getInstance(), receiverRpc, senderParty, config);
         lnotReceiver = LnotFactory.createReceiver(receiverRpc, senderParty, config.getLnotConfig());
         z2cReceiver = Z2cFactory.createReceiver(receiverRpc, senderParty, config.getBcConfig());
         addSubPtos(lnotReceiver);
@@ -107,7 +107,7 @@ public class CheetahMillionaireReceiver extends AbstractMillionaireParty {
             LnotReceiverOutput lnotReceiverOutputLt = lnotReceiver.receive(partitionInputArray[j]);
             // for v ∈ [2^m], P1 receives lt_{0,j}_1
             DataPacketHeader ltsHeader = new DataPacketHeader(
-                    encodeTaskId, getPtoDesc().getPtoId(), CheetahMillionairePtoDesc.PtoStep.SENDER_SENDS_S.ordinal(), extraInfo,
+                    encodeTaskId, getPtoDesc().getPtoId(), Rrk20MillionairePtoDesc.PtoStep.SENDER_SENDS_S.ordinal(), extraInfo,
                     otherParty().getPartyId(), ownParty().getPartyId()
             );
             List<byte[]> ltsPayload = rpc.receive(ltsHeader).getPayload();
@@ -126,7 +126,7 @@ public class CheetahMillionaireReceiver extends AbstractMillionaireParty {
             }
             // for v ∈ [2^4], P1 receives eq_{0,j}_1
             DataPacketHeader eqsHeader = new DataPacketHeader(
-                    encodeTaskId, getPtoDesc().getPtoId(), CheetahMillionairePtoDesc.PtoStep.SENDER_SENDS_T.ordinal(), extraInfo,
+                    encodeTaskId, getPtoDesc().getPtoId(), Rrk20MillionairePtoDesc.PtoStep.SENDER_SENDS_T.ordinal(), extraInfo,
                     otherParty().getPartyId(), ownParty().getPartyId()
             );
             List<byte[]> eqsPayload = rpc.receive(eqsHeader).getPayload();

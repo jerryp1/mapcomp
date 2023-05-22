@@ -1,4 +1,4 @@
-package edu.alibaba.mpc4j.s2pc.aby.operator.row.millionaire.cheetah;
+package edu.alibaba.mpc4j.s2pc.aby.operator.row.millionaire.rrk20;
 
 import edu.alibaba.mpc4j.common.rpc.desc.SecurityModel;
 import edu.alibaba.mpc4j.common.tool.EnvType;
@@ -10,12 +10,12 @@ import edu.alibaba.mpc4j.s2pc.pcg.ot.lnot.LnotConfig;
 import edu.alibaba.mpc4j.s2pc.pcg.ot.lnot.LnotFactory;
 
 /**
- * Cheetah Millionaire Protocol Config.
+ * RRK+20 Millionaire Protocol Config.
  *
  * @author Li Peng
  * @date 2023/4/24
  */
-public class CheetahMillionaireConfig implements MillionaireConfig {
+public class Rrk20MillionaireConfig implements MillionaireConfig {
     /**
      * 1-out-of-n (with n = 2^l) ot protocol config.
      */
@@ -25,7 +25,7 @@ public class CheetahMillionaireConfig implements MillionaireConfig {
      */
     private final Z2cConfig bcConfig;
 
-    private CheetahMillionaireConfig(CheetahMillionaireConfig.Builder builder) {
+    private Rrk20MillionaireConfig(Rrk20MillionaireConfig.Builder builder) {
         lnotConfig = builder.lnotConfig;
         bcConfig = builder.bcConfig;
     }
@@ -40,7 +40,7 @@ public class CheetahMillionaireConfig implements MillionaireConfig {
 
     @Override
     public MillionaireFactory.MillionaireType getPtoType() {
-        return MillionaireFactory.MillionaireType.CHEETAH;
+        return MillionaireFactory.MillionaireType.RRK20;
     }
 
     @Override
@@ -62,7 +62,7 @@ public class CheetahMillionaireConfig implements MillionaireConfig {
         return securityModel;
     }
 
-    public static class Builder implements org.apache.commons.lang3.builder.Builder<CheetahMillionaireConfig> {
+    public static class Builder implements org.apache.commons.lang3.builder.Builder<Rrk20MillionaireConfig> {
         /**
          * 1-out-of-n (with n = 2^l) ot protocol config.
          */
@@ -81,14 +81,14 @@ public class CheetahMillionaireConfig implements MillionaireConfig {
             }
         }
 
-        public CheetahMillionaireConfig.Builder setBcConfig(Z2cConfig bcConfig) {
+        public Rrk20MillionaireConfig.Builder setBcConfig(Z2cConfig bcConfig) {
             this.bcConfig = bcConfig;
             return this;
         }
 
         @Override
-        public CheetahMillionaireConfig build() {
-            return new CheetahMillionaireConfig(this);
+        public Rrk20MillionaireConfig build() {
+            return new Rrk20MillionaireConfig(this);
         }
     }
 }
