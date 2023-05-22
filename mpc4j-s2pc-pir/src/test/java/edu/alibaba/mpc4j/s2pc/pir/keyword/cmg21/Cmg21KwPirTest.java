@@ -19,7 +19,7 @@ import java.nio.ByteBuffer;
 import java.util.*;
 
 /**
- * CMG21关键词PIR协议测试类。
+ * CMG21 keyword PIR test.
  *
  * @author Liqiang Peng
  * @date 2022/6/22
@@ -28,23 +28,23 @@ import java.util.*;
 public class Cmg21KwPirTest {
     private static final Logger LOGGER = LoggerFactory.getLogger(Cmg21KwPirTest.class);
     /**
-     * 重复检索次数
+     * repeat time
      */
     private static final int REPEAT_TIME = 1;
     /**
-     * 短标签字节长度
+     * short label byte length
      */
     private static final int SHORT_LABEL_BYTE_LENGTH = 1;
     /**
-     * 默认标签字节长度
+     * default label byte length
      */
     private static final int DEFAULT_LABEL_BYTE_LENGTH = 8;
     /**
-     * 长标签字节长度
+     * long label byte length
      */
     private static final int LONG_LABEL_BYTE_LENGTH = 128;
     /**
-     * 服务端元素数量
+     * server element size
      */
     private static final int SERVER_MAP_SIZE = 1 << 20;
 
@@ -66,19 +66,19 @@ public class Cmg21KwPirTest {
     }
 
     /**
-     * 服务端
+     * server rpc
      */
     private final Rpc serverRpc;
     /**
-     * 客户端
+     * client rpc
      */
     private final Rpc clientRpc;
     /**
-     * CMG21关键词PIR协议配置项
+     * CMG21 keyword PIR config
      */
     private final Cmg21KwPirConfig config;
     /**
-     * CMG21关键词PIR协议配置项
+     * CMG21 keyword PIR params
      */
     private final Cmg21KwPirParams params;
 
@@ -110,13 +110,12 @@ public class Cmg21KwPirTest {
 
     public void testPir(Cmg21KwPirParams kwPirParams, int labelByteLength, Cmg21KwPirConfig config, boolean parallel) {
         int retrievalSize = kwPirParams.maxRetrievalSize();
-        ArrayList<Set<String>> randomSets = PirUtils.generateStringSets(SERVER_MAP_SIZE, retrievalSize, REPEAT_TIME);
-        // 随机构建服务端关键词和标签映射
+        List<Set<String>> randomSets = PirUtils.generateStringSets(SERVER_MAP_SIZE, retrievalSize, REPEAT_TIME);
         Map<String, ByteBuffer> keywordLabelMap = PirUtils.generateKeywordLabelMap(randomSets.get(0), labelByteLength);
-        // 创建参与方实例
+        // create instances
         Cmg21KwPirServer<String> server = new Cmg21KwPirServer<>(serverRpc, clientRpc.ownParty(), config);
         Cmg21KwPirClient<String> client = new Cmg21KwPirClient<>(clientRpc, serverRpc.ownParty(), config);
-        // 设置并发
+        // set parallel
         server.setParallel(parallel);
         client.setParallel(parallel);
         Cmg21KwPirServerThread<String> serverThread = new Cmg21KwPirServerThread<>(
@@ -126,18 +125,15 @@ public class Cmg21KwPirTest {
             client, kwPirParams, Lists.newArrayList(randomSets.subList(1, REPEAT_TIME + 1)), labelByteLength
         );
         try {
-            // 开始执行协议
             serverThread.start();
             clientThread.start();
-            // 等待线程停止
             serverThread.join();
             clientThread.join();
-
             LOGGER.info("Server: The Communication costs {}MB", serverRpc.getSendByteLength() * 1.0 / (1024 * 1024));
             serverRpc.reset();
             LOGGER.info("Client: The Communication costs {}MB", clientRpc.getSendByteLength() * 1.0 / (1024 * 1024));
             clientRpc.reset();
-            // 验证结果
+            // verify result
             for (int index = 0; index < REPEAT_TIME; index++) {
                 Set<String> intersectionSet = new HashSet<>(randomSets.get(index + 1));
                 intersectionSet.retainAll(randomSets.get(0));

@@ -14,34 +14,34 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 /**
- * 关键词索引PIR协议客户端。
+ * abstract keyword PIR client.
  *
  * @author Liqiang Peng
  * @date 2022/6/20
  */
 public abstract class AbstractKwPirClient<T> extends AbstractTwoPartyPto implements KwPirClient<T> {
     /**
-     * 客户端单次查询最大查询关键词数目
+     * max client retrieval size
      */
     protected int maxRetrievalSize;
     /**
-     * 标签字节长度
+     * label byte length
      */
     protected int labelByteLength;
     /**
-     * 特殊空元素字节缓存区
+     * bot element bytebuffer
      */
     protected ByteBuffer botElementByteBuffer;
     /**
-     * 客户端关键词数组
+     * client retrieval keyword list
      */
-    protected ArrayList<ByteBuffer> retrievalArrayList;
+    protected List<ByteBuffer> retrievalKeywordList;
     /**
-     * 关键词字节数组和关键词对象映射
+     * bytebuffer object map
      */
     protected Map<ByteBuffer, T> byteArrayObjectMap;
     /**
-     * 客户端关键词数量
+     * client retrieval size
      */
     protected int retrievalSize;
 
@@ -54,7 +54,6 @@ public abstract class AbstractKwPirClient<T> extends AbstractTwoPartyPto impleme
         this.labelByteLength = labelByteLength;
         MathPreconditions.checkPositive("maxRetrievalSize", maxRetrievalSize);
         this.maxRetrievalSize = maxRetrievalSize;
-        // 设置特殊空元素
         byte[] botElementByteArray = new byte[CommonConstants.STATS_BYTE_LENGTH];
         Arrays.fill(botElementByteArray, (byte)0xFF);
         botElementByteBuffer = ByteBuffer.wrap(botElementByteArray);
@@ -65,7 +64,7 @@ public abstract class AbstractKwPirClient<T> extends AbstractTwoPartyPto impleme
         checkInitialized();
         retrievalSize = clientKeywordSet.size();
         MathPreconditions.checkPositiveInRangeClosed("retrievalSize", retrievalSize, maxRetrievalSize);
-        retrievalArrayList = clientKeywordSet.stream()
+        retrievalKeywordList = clientKeywordSet.stream()
             .map(ObjectUtils::objectToByteArray)
             .map(ByteBuffer::wrap)
             .peek(yi -> Preconditions.checkArgument(!yi.equals(botElementByteBuffer), "yi must not equal ⊥"))

@@ -6,7 +6,11 @@ import edu.alibaba.mpc4j.common.rpc.RpcManager;
 import edu.alibaba.mpc4j.common.rpc.impl.memory.MemoryRpcManager;
 import edu.alibaba.mpc4j.crypto.matrix.database.NaiveDatabase;
 import edu.alibaba.mpc4j.s2pc.pir.PirUtils;
-import edu.alibaba.mpc4j.s2pc.pir.index.*;
+import edu.alibaba.mpc4j.s2pc.pir.index.single.SingleIndexPirFactory;
+import edu.alibaba.mpc4j.s2pc.pir.index.single.xpir.Mbfk16SingleIndexPirClient;
+import edu.alibaba.mpc4j.s2pc.pir.index.single.xpir.Mbfk16SingleIndexPirConfig;
+import edu.alibaba.mpc4j.s2pc.pir.index.single.xpir.Mbfk16SingleIndexPirParams;
+import edu.alibaba.mpc4j.s2pc.pir.index.single.xpir.Mbfk16SingleIndexPirServer;
 import org.apache.commons.lang3.StringUtils;
 import org.junit.After;
 import org.junit.Assert;
@@ -50,12 +54,12 @@ public class XPirTest {
     @Parameterized.Parameters(name = "{0}")
     public static Collection<Object[]> configurations() {
         Collection<Object[]> configurations = new ArrayList<>();
-        Mbfk16IndexPirConfig xpirConfig = new Mbfk16IndexPirConfig();
+        Mbfk16SingleIndexPirConfig xpirConfig = new Mbfk16SingleIndexPirConfig();
         // XPIR (1-dimension)
         configurations.add(new Object[]{
-            IndexPirFactory.IndexPirType.XPIR.name() + " (1-dimension)",
+            SingleIndexPirFactory.SingleIndexPirType.XPIR.name() + " (1-dimension)",
             xpirConfig,
-            new Mbfk16IndexPirParams(
+            new Mbfk16SingleIndexPirParams(
                 4096,
                 20,
                 1
@@ -63,9 +67,9 @@ public class XPirTest {
         });
         // XPIR (2-dimension)
         configurations.add(new Object[]{
-            IndexPirFactory.IndexPirType.XPIR.name() + " (2-dimension)",
+            SingleIndexPirFactory.SingleIndexPirType.XPIR.name() + " (2-dimension)",
             xpirConfig,
-            new Mbfk16IndexPirParams(
+            new Mbfk16SingleIndexPirParams(
                 4096,
                 20,
                 2
@@ -85,13 +89,13 @@ public class XPirTest {
     /**
      * XPIR config
      */
-    private final Mbfk16IndexPirConfig indexPirConfig;
+    private final Mbfk16SingleIndexPirConfig indexPirConfig;
     /**
      * XPIR params
      */
-    private final Mbfk16IndexPirParams indexPirParams;
+    private final Mbfk16SingleIndexPirParams indexPirParams;
 
-    public XPirTest(String name, Mbfk16IndexPirConfig indexPirConfig, Mbfk16IndexPirParams indexPirParams) {
+    public XPirTest(String name, Mbfk16SingleIndexPirConfig indexPirConfig, Mbfk16SingleIndexPirParams indexPirParams) {
         Preconditions.checkArgument(StringUtils.isNotBlank(name));
         // We cannot use NettyRPC in the test case since it needs multi-thread connect / disconnect.
         // In other word, we cannot connect / disconnect NettyRpc in @Before / @After, respectively.
@@ -134,12 +138,12 @@ public class XPirTest {
         testXPir(indexPirConfig, indexPirParams, SMALL_ELEMENT_BYTE_LENGTH, true);
     }
 
-    public void testXPir(Mbfk16IndexPirConfig config, Mbfk16IndexPirParams indexPirParams, int elementByteLength,
-                         boolean parallel) {
+    public void testXPir(Mbfk16SingleIndexPirConfig config, Mbfk16SingleIndexPirParams indexPirParams,
+                         int elementByteLength, boolean parallel) {
         int retrievalIndex = PirUtils.generateRetrievalIndex(SERVER_ELEMENT_SIZE);
         NaiveDatabase database = PirUtils.generateDataBase(SERVER_ELEMENT_SIZE, elementByteLength * Byte.SIZE);
-        Mbfk16IndexPirServer server = new Mbfk16IndexPirServer(serverRpc, clientRpc.ownParty(), config);
-        Mbfk16IndexPirClient client = new Mbfk16IndexPirClient(clientRpc, serverRpc.ownParty(), config);
+        Mbfk16SingleIndexPirServer server = new Mbfk16SingleIndexPirServer(serverRpc, clientRpc.ownParty(), config);
+        Mbfk16SingleIndexPirClient client = new Mbfk16SingleIndexPirClient(clientRpc, serverRpc.ownParty(), config);
         server.setParallel(parallel);
         client.setParallel(parallel);
         XPirServerThread serverThread = new XPirServerThread(server, indexPirParams, database);

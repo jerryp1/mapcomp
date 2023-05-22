@@ -5,8 +5,8 @@ import edu.alibaba.mpc4j.common.tool.EnvType;
 import edu.alibaba.mpc4j.common.tool.okve.okvs.OkvsFactory;
 import edu.alibaba.mpc4j.s2pc.opf.sqoprf.SqOprfConfig;
 import edu.alibaba.mpc4j.s2pc.opf.sqoprf.SqOprfFactory;
-import edu.alibaba.mpc4j.s2pc.pir.batchindex.BatchIndexPirConfig;
-import edu.alibaba.mpc4j.s2pc.pir.batchindex.vectorizedpir.Mr23BatchIndexPirConfig;
+import edu.alibaba.mpc4j.s2pc.pir.index.batch.BatchIndexPirConfig;
+import edu.alibaba.mpc4j.s2pc.pir.index.batch.vectorizedpir.Mr23BatchIndexPirConfig;
 import edu.alibaba.mpc4j.s2pc.upso.uopprf.ub.UbopprfConfig;
 import edu.alibaba.mpc4j.s2pc.upso.uopprf.ub.UbopprfFactory;
 
@@ -85,7 +85,7 @@ public class PirUbopprfConfig implements UbopprfConfig {
         public Builder() {
             sqOprfConfig = SqOprfFactory.createDefaultConfig(SecurityModel.SEMI_HONEST);
             okvsType = OkvsFactory.OkvsType.H3_SINGLETON_GCT;
-            batchIndexPirConfig = new Mr23BatchIndexPirConfig.Builder().build();
+            batchIndexPirConfig = new Mr23BatchIndexPirConfig();
         }
 
         public Builder setSqOprfConfig(SqOprfConfig sqOprfConfig) {

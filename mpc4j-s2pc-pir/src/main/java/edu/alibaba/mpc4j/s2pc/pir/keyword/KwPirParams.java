@@ -1,23 +1,23 @@
 package edu.alibaba.mpc4j.s2pc.pir.keyword;
 
 /**
- * 关键字PIR参数。
+ * keyword PIR params interface.
  *
  * @author Weiran Liu
  * @date 2022/8/8
  */
 public interface KwPirParams {
     /**
-     * 返回最大检索数量。
+     * return max retrieval size.
      *
-     * @return 最大检索数量。
+     * @return max retrieval size.
      */
     int maxRetrievalSize();
 
     /**
-     * 返回预估服务端数据量。实际使用时可以超过预估量。
+     * return expect server size, this is not strict upper bound.
      *
-     * @return 预估服务端数据量。
+     * @return expect server size.
      */
     int expectServerSize();
 }

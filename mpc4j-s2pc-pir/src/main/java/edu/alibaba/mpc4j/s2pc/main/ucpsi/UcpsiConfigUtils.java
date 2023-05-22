@@ -29,7 +29,6 @@ public class UcpsiConfigUtils {
      * @return config.
      */
     public static UcpsiConfig createUcpsiConfig(Properties properties) {
-        // 读取协议类型
         String ucpsiTypeString = PropertiesUtils.readString(properties, "pto_name");
         UcpsiType ucpsiType = UcpsiType.valueOf(ucpsiTypeString);
         boolean silent = PropertiesUtils.readBoolean(properties, "silent");

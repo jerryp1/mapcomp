@@ -6,7 +6,11 @@ import edu.alibaba.mpc4j.common.rpc.RpcManager;
 import edu.alibaba.mpc4j.common.rpc.impl.memory.MemoryRpcManager;
 import edu.alibaba.mpc4j.crypto.matrix.database.NaiveDatabase;
 import edu.alibaba.mpc4j.s2pc.pir.PirUtils;
-import edu.alibaba.mpc4j.s2pc.pir.index.IndexPirFactory;
+import edu.alibaba.mpc4j.s2pc.pir.index.single.SingleIndexPirFactory;
+import edu.alibaba.mpc4j.s2pc.pir.index.single.fastpir.Ayaa21SingleIndexPirClient;
+import edu.alibaba.mpc4j.s2pc.pir.index.single.fastpir.Ayaa21SingleIndexPirConfig;
+import edu.alibaba.mpc4j.s2pc.pir.index.single.fastpir.Ayaa21SingleIndexPirParams;
+import edu.alibaba.mpc4j.s2pc.pir.index.single.fastpir.Ayaa21SingleIndexPirServer;
 import org.apache.commons.lang3.StringUtils;
 import org.junit.After;
 import org.junit.Assert;
@@ -45,16 +49,16 @@ public class FastPirTest {
     /**
      * database size
      */
-    private static final int SERVER_ELEMENT_SIZE = 1 << 12;
+    private static final int SERVER_ELEMENT_SIZE = 1;
 
     @Parameterized.Parameters(name = "{0}")
     public static Collection<Object[]> configurations() {
         Collection<Object[]> configurations = new ArrayList<>();
-        Ayaa21IndexPirConfig fastpirConfig = new Ayaa21IndexPirConfig();
+        Ayaa21SingleIndexPirConfig fastpirConfig = new Ayaa21SingleIndexPirConfig();
         configurations.add(new Object[]{
-            IndexPirFactory.IndexPirType.FAST_PIR.name(),
+            SingleIndexPirFactory.SingleIndexPirType.FAST_PIR.name(),
             fastpirConfig,
-            new Ayaa21IndexPirParams(
+            new Ayaa21SingleIndexPirParams(
                 4096,
                 1073153L,
                 new long[]{1152921504606830593L, 562949953216513L}
@@ -74,13 +78,13 @@ public class FastPirTest {
     /**
      * FastPIR config
      */
-    private final Ayaa21IndexPirConfig indexPirConfig;
+    private final Ayaa21SingleIndexPirConfig indexPirConfig;
     /**
      * FastPIR params
      */
-    private final Ayaa21IndexPirParams indexPirParams;
+    private final Ayaa21SingleIndexPirParams indexPirParams;
 
-    public FastPirTest(String name, Ayaa21IndexPirConfig indexPirConfig, Ayaa21IndexPirParams indexPirParams) {
+    public FastPirTest(String name, Ayaa21SingleIndexPirConfig indexPirConfig, Ayaa21SingleIndexPirParams indexPirParams) {
         Preconditions.checkArgument(StringUtils.isNotBlank(name));
         // We cannot use NettyRPC in the test case since it needs multi-thread connect / disconnect.
         // In other word, we cannot connect / disconnect NettyRpc in @Before / @After, respectively.
@@ -123,12 +127,12 @@ public class FastPirTest {
         testFastPir(indexPirConfig, indexPirParams, SMALL_ELEMENT_BYTE_LENGTH, true);
     }
 
-    public void testFastPir(Ayaa21IndexPirConfig config, Ayaa21IndexPirParams indexPirParams, int elementByteLength,
-                         boolean parallel) {
+    public void testFastPir(Ayaa21SingleIndexPirConfig config, Ayaa21SingleIndexPirParams indexPirParams,
+                            int elementByteLength, boolean parallel) {
         int retrievalIndex = PirUtils.generateRetrievalIndex(SERVER_ELEMENT_SIZE);
         NaiveDatabase database = PirUtils.generateDataBase(SERVER_ELEMENT_SIZE, elementByteLength * Byte.SIZE);
-        Ayaa21IndexPirServer server = new Ayaa21IndexPirServer(serverRpc, clientRpc.ownParty(), config);
-        Ayaa21IndexPirClient client = new Ayaa21IndexPirClient(clientRpc, serverRpc.ownParty(), config);
+        Ayaa21SingleIndexPirServer server = new Ayaa21SingleIndexPirServer(serverRpc, clientRpc.ownParty(), config);
+        Ayaa21SingleIndexPirClient client = new Ayaa21SingleIndexPirClient(clientRpc, serverRpc.ownParty(), config);
         server.setParallel(parallel);
         client.setParallel(parallel);
         FastPirServerThread serverThread = new FastPirServerThread(server, indexPirParams, database);

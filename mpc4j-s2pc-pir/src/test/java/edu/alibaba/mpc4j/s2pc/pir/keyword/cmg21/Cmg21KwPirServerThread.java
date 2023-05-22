@@ -6,30 +6,30 @@ import java.nio.ByteBuffer;
 import java.util.Map;
 
 /**
- * CMG21关键词PIR协议服务端线程。
+ * CMG21 keyword PIR server thread.
  *
  * @author Liqiang Peng
  * @date 2022/6/22
  */
 public class Cmg21KwPirServerThread<T> extends Thread {
     /**
-     * CMG21关键词PIR协议服务端
+     * CMG21 keyword PIR server
      */
     private final Cmg21KwPirServer<T> server;
     /**
-     * CMG21关键词PIR协议配置项
+     * CMG21 keyword PIR params
      */
     private final Cmg21KwPirParams kwPirParams;
     /**
-     * 关键词标签映射
+     * keyword label map
      */
     private final Map<T, ByteBuffer> keywordLabelMap;
     /**
-     * 标签字节长度
+     * label byte length
      */
     private final int labelByteLength;
     /**
-     * 重复次数
+     * repeat time
      */
     private final int repeatTime;
 

@@ -8,36 +8,37 @@ import java.util.Map;
 import java.util.Set;
 
 /**
- * 关键词索引PIR协议客户端接口。
+ * Keyword PIR client interface.
  *
  * @author Liqiang Peng
  * @date 2022/6/20
  */
 public interface KwPirClient<T> extends TwoPartyPto {
+
     /**
-     * 初始化协议。
+     * client initializes protocol.
      *
-     * @param kwPirParams     关键字PIR参数。
-     * @param labelByteLength 标签字节长度。
-     * @throws MpcAbortException 如果协议异常中止。
+     * @param kwPirParams     keyword PIR params.
+     * @param labelByteLength label byte length.
+     * @throws MpcAbortException the protocol failure aborts.
      */
     void init(KwPirParams kwPirParams, int labelByteLength) throws MpcAbortException;
 
     /**
-     * 初始化协议。
+     * client initializes protocol.
      *
-     * @param maxRetrievalSize 最大检索数量。
-     * @param labelByteLength  标签字节长度。
-     * @throws MpcAbortException 如果协议异常中止。
+     * @param maxRetrievalSize max retrieval size.
+     * @param labelByteLength  label byte length.
+     * @throws MpcAbortException the protocol failure aborts.
      */
     void init(int maxRetrievalSize, int labelByteLength) throws MpcAbortException;
 
     /**
-     * 执行协议。
+     * client executes protocol.
      *
-     * @param retrievalSet 检索集合。
-     * @return 查询元素和标签映射。
-     * @throws MpcAbortException 如果协议异常中止。
+     * @param retrievalSet retrieval set.
+     * @return keyword label map.
+     * @throws MpcAbortException the protocol failure aborts.
      */
     Map<T, ByteBuffer> pir(Set<T> retrievalSet) throws MpcAbortException;
 }

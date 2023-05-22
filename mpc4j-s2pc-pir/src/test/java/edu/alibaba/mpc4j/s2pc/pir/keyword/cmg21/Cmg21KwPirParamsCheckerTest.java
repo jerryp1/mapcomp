@@ -12,7 +12,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 
 /**
- * CMG21关键词PIR协议参数检查器测试。
+ * CMG21 keyword PIR params checker.
  *
  * @author Liqiang Peng
  * @date 2022/8/9
@@ -35,7 +35,7 @@ public class Cmg21KwPirParamsCheckerTest {
     }
 
     /**
-     * 参数
+     * params
      */
     private final Cmg21KwPirParams cmg21KwPirParams;
 

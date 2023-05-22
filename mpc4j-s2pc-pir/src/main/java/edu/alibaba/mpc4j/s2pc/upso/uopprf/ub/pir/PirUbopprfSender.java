@@ -17,8 +17,8 @@ import edu.alibaba.mpc4j.crypto.matrix.database.NaiveDatabase;
 import edu.alibaba.mpc4j.s2pc.opf.sqoprf.SqOprfFactory;
 import edu.alibaba.mpc4j.s2pc.opf.sqoprf.SqOprfKey;
 import edu.alibaba.mpc4j.s2pc.opf.sqoprf.SqOprfSender;
-import edu.alibaba.mpc4j.s2pc.pir.batchindex.BatchIndexPirFactory;
-import edu.alibaba.mpc4j.s2pc.pir.batchindex.BatchIndexPirServer;
+import edu.alibaba.mpc4j.s2pc.pir.index.batch.BatchIndexPirFactory;
+import edu.alibaba.mpc4j.s2pc.pir.index.batch.BatchIndexPirServer;
 import edu.alibaba.mpc4j.s2pc.upso.uopprf.ub.AbstractUbopprfSender;
 
 import java.nio.ByteBuffer;

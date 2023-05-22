@@ -7,14 +7,14 @@ import edu.alibaba.mpc4j.s2pc.pir.keyword.KwPirConfig;
 import edu.alibaba.mpc4j.s2pc.pir.keyword.KwPirFactory;
 
 /**
- * CMG21关键词索引PIR协议配置项。
+ * CMG21 keyword PIR config.
  *
  * @author Liqiang Peng
  * @date 2022/6/20
  */
 public class Cmg21KwPirConfig implements KwPirConfig {
     /**
-     * 是否使用压缩椭圆曲线编码
+     * ecc point compress encode
      */
     private final boolean compressEncode;
 
@@ -52,7 +52,7 @@ public class Cmg21KwPirConfig implements KwPirConfig {
 
     public static class Builder implements org.apache.commons.lang3.builder.Builder<Cmg21KwPirConfig> {
         /**
-         * 是否使用压缩椭圆曲线编码
+         * ecc point compress encode
          */
         private boolean compressEncode;
 

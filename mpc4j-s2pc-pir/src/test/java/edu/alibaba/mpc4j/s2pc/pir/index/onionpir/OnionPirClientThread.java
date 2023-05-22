@@ -1,6 +1,8 @@
 package edu.alibaba.mpc4j.s2pc.pir.index.onionpir;
 
 import edu.alibaba.mpc4j.common.rpc.MpcAbortException;
+import edu.alibaba.mpc4j.s2pc.pir.index.single.onionpir.Mcr21SingleIndexPirClient;
+import edu.alibaba.mpc4j.s2pc.pir.index.single.onionpir.Mcr21SingleIndexPirParams;
 
 import java.nio.ByteBuffer;
 
@@ -14,11 +16,11 @@ public class OnionPirClientThread extends Thread {
     /**
      * OnionPIR client
      */
-    private final Mcr21IndexPirClient client;
+    private final Mcr21SingleIndexPirClient client;
     /**
      * OnionPIR params
      */
-    private final Mcr21IndexPirParams indexPirParams;
+    private final Mcr21SingleIndexPirParams indexPirParams;
     /**
      * element byte length
      */
@@ -36,7 +38,7 @@ public class OnionPirClientThread extends Thread {
      */
     private ByteBuffer indexPirResult;
 
-    OnionPirClientThread(Mcr21IndexPirClient client, Mcr21IndexPirParams indexPirParams, int retrievalIndex,
+    OnionPirClientThread(Mcr21SingleIndexPirClient client, Mcr21SingleIndexPirParams indexPirParams, int retrievalIndex,
                          int serverElementSize, int elementByteLength) {
         this.client = client;
         this.indexPirParams = indexPirParams;
