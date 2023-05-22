@@ -1,4 +1,4 @@
-package edu.alibaba.mpc4j.s2pc.aby.millionaire;
+package edu.alibaba.mpc4j.s2pc.aby.operator.row.millionaire;
 
 import edu.alibaba.mpc4j.common.rpc.pto.MultiPartyPtoConfig;
 

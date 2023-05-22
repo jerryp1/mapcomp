@@ -1,4 +1,4 @@
-package edu.alibaba.mpc4j.s2pc.aby.millionaire;
+package edu.alibaba.mpc4j.s2pc.aby.operator.row.millionaire;
 
 
 import com.google.common.base.Preconditions;
@@ -8,8 +8,8 @@ import edu.alibaba.mpc4j.common.rpc.desc.SecurityModel;
 import edu.alibaba.mpc4j.common.rpc.impl.memory.MemoryRpcManager;
 import edu.alibaba.mpc4j.common.tool.bitvector.BitVector;
 import edu.alibaba.mpc4j.common.tool.utils.BigIntegerUtils;
-import edu.alibaba.mpc4j.s2pc.aby.basics.bc.SquareZ2Vector;
-import edu.alibaba.mpc4j.s2pc.aby.millionaire.cryptflow2.CheetahMillionaireConfig;
+import edu.alibaba.mpc4j.s2pc.aby.basics.z2.SquareZ2Vector;
+import edu.alibaba.mpc4j.s2pc.aby.operator.row.millionaire.cheetah.CheetahMillionaireConfig;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.time.StopWatch;
 import org.junit.After;
@@ -34,7 +34,7 @@ import java.util.concurrent.TimeUnit;
  */
 @RunWith(Parameterized.class)
 public class MillionaireTest {
-    private static final Logger LOGGER = LoggerFactory.getLogger(edu.alibaba.mpc4j.s2pc.aby.circuit.peqt.PeqtTest.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(MillionaireTest.class);
     /**
      * the random state
      */

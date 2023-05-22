@@ -1,4 +1,4 @@
-package edu.alibaba.mpc4j.s2pc.aby.millionaire.cryptflow2;
+package edu.alibaba.mpc4j.s2pc.aby.operator.row.millionaire.cheetah;
 
 import edu.alibaba.mpc4j.common.rpc.desc.PtoDesc;
 import edu.alibaba.mpc4j.common.rpc.desc.PtoDescManager;

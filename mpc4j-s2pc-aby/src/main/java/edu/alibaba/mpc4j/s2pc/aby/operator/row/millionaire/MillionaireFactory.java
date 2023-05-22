@@ -1,11 +1,11 @@
-package edu.alibaba.mpc4j.s2pc.aby.millionaire;
+package edu.alibaba.mpc4j.s2pc.aby.operator.row.millionaire;
 
 import edu.alibaba.mpc4j.common.rpc.Party;
 import edu.alibaba.mpc4j.common.rpc.Rpc;
 import edu.alibaba.mpc4j.common.rpc.desc.SecurityModel;
-import edu.alibaba.mpc4j.s2pc.aby.millionaire.cryptflow2.CheetahMillionaireConfig;
-import edu.alibaba.mpc4j.s2pc.aby.millionaire.cryptflow2.CheetahMillionaireReceiver;
-import edu.alibaba.mpc4j.s2pc.aby.millionaire.cryptflow2.CheetahMillionaireSender;
+import edu.alibaba.mpc4j.s2pc.aby.operator.row.millionaire.cheetah.CheetahMillionaireConfig;
+import edu.alibaba.mpc4j.s2pc.aby.operator.row.millionaire.cheetah.CheetahMillionaireReceiver;
+import edu.alibaba.mpc4j.s2pc.aby.operator.row.millionaire.cheetah.CheetahMillionaireSender;
 
 /**
  * Millionaire Protocol Factory.

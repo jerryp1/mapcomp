@@ -1,11 +1,11 @@
-package edu.alibaba.mpc4j.s2pc.aby.millionaire.cryptflow2;
+package edu.alibaba.mpc4j.s2pc.aby.operator.row.millionaire.cheetah;
 
 import edu.alibaba.mpc4j.common.rpc.desc.SecurityModel;
 import edu.alibaba.mpc4j.common.tool.EnvType;
-import edu.alibaba.mpc4j.s2pc.aby.basics.bc.BcConfig;
-import edu.alibaba.mpc4j.s2pc.aby.basics.bc.BcFactory;
-import edu.alibaba.mpc4j.s2pc.aby.millionaire.MillionaireConfig;
-import edu.alibaba.mpc4j.s2pc.aby.millionaire.MillionaireFactory;
+import edu.alibaba.mpc4j.s2pc.aby.basics.z2.Z2cConfig;
+import edu.alibaba.mpc4j.s2pc.aby.basics.z2.Z2cFactory;
+import edu.alibaba.mpc4j.s2pc.aby.operator.row.millionaire.MillionaireConfig;
+import edu.alibaba.mpc4j.s2pc.aby.operator.row.millionaire.MillionaireFactory;
 import edu.alibaba.mpc4j.s2pc.pcg.ot.lnot.LnotConfig;
 import edu.alibaba.mpc4j.s2pc.pcg.ot.lnot.LnotFactory;
 
@@ -23,7 +23,7 @@ public class CheetahMillionaireConfig implements MillionaireConfig {
     /**
      * boolean circuit config.
      */
-    private final BcConfig bcConfig;
+    private final Z2cConfig bcConfig;
 
     private CheetahMillionaireConfig(CheetahMillionaireConfig.Builder builder) {
         lnotConfig = builder.lnotConfig;
@@ -34,7 +34,7 @@ public class CheetahMillionaireConfig implements MillionaireConfig {
         return lnotConfig;
     }
 
-    public BcConfig getBcConfig() {
+    public Z2cConfig getBcConfig() {
         return bcConfig;
     }
 
@@ -68,12 +68,12 @@ public class CheetahMillionaireConfig implements MillionaireConfig {
          */
         private final LnotConfig lnotConfig;
         /**
-         * boolean circuit config.
+         * Z2 circuit config.
          */
-        private BcConfig bcConfig;
+        private Z2cConfig bcConfig;
 
         public Builder(SecurityModel securityModel, boolean silent) {
-            bcConfig = BcFactory.createDefaultConfig(securityModel, silent);
+            bcConfig = Z2cFactory.createDefaultConfig(silent);
             if (silent) {
                 lnotConfig = LnotFactory.createCacheConfig(securityModel);
             } else {
@@ -81,7 +81,7 @@ public class CheetahMillionaireConfig implements MillionaireConfig {
             }
         }
 
-        public CheetahMillionaireConfig.Builder setBcConfig(BcConfig bcConfig) {
+        public CheetahMillionaireConfig.Builder setBcConfig(Z2cConfig bcConfig) {
             this.bcConfig = bcConfig;
             return this;
         }

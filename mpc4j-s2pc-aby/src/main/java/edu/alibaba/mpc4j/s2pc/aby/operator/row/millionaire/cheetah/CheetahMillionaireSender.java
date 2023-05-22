@@ -1,4 +1,4 @@
-package edu.alibaba.mpc4j.s2pc.aby.millionaire.cryptflow2;
+package edu.alibaba.mpc4j.s2pc.aby.operator.row.millionaire.cheetah;
 
 import edu.alibaba.mpc4j.common.rpc.MpcAbortException;
 import edu.alibaba.mpc4j.common.rpc.Party;
@@ -10,10 +10,10 @@ import edu.alibaba.mpc4j.common.tool.bitvector.BitVector;
 import edu.alibaba.mpc4j.common.tool.bitvector.BitVectorFactory;
 import edu.alibaba.mpc4j.common.tool.utils.CommonUtils;
 import edu.alibaba.mpc4j.common.tool.utils.LongUtils;
-import edu.alibaba.mpc4j.s2pc.aby.basics.bc.BcFactory;
-import edu.alibaba.mpc4j.s2pc.aby.basics.bc.BcParty;
-import edu.alibaba.mpc4j.s2pc.aby.basics.bc.SquareZ2Vector;
-import edu.alibaba.mpc4j.s2pc.aby.millionaire.AbstractMillionaireParty;
+import edu.alibaba.mpc4j.s2pc.aby.basics.z2.SquareZ2Vector;
+import edu.alibaba.mpc4j.s2pc.aby.basics.z2.Z2cFactory;
+import edu.alibaba.mpc4j.s2pc.aby.basics.z2.Z2cParty;
+import edu.alibaba.mpc4j.s2pc.aby.operator.row.millionaire.AbstractMillionaireParty;
 import edu.alibaba.mpc4j.s2pc.pcg.ot.lnot.LnotFactory;
 import edu.alibaba.mpc4j.s2pc.pcg.ot.lnot.LnotSender;
 import edu.alibaba.mpc4j.s2pc.pcg.ot.lnot.LnotSenderOutput;
@@ -36,15 +36,15 @@ public class CheetahMillionaireSender extends AbstractMillionaireParty {
      */
     private final LnotSender lnotSender;
     /**
-     * boolean circuit sender.
+     * z2 circuit sender.
      */
-    private final BcParty bcSender;
+    private final Z2cParty z2cSender;
 
 
     public CheetahMillionaireSender(Rpc senderRpc, Party receiverParty, CheetahMillionaireConfig config) {
         super(CheetahMillionairePtoDesc.getInstance(), senderRpc, receiverParty, config);
         lnotSender = LnotFactory.createSender(senderRpc, receiverParty, config.getLnotConfig());
-        bcSender = BcFactory.createSender(senderRpc, receiverParty, config.getBcConfig());
+        z2cSender = Z2cFactory.createSender(senderRpc, receiverParty, config.getBcConfig());
         addSubPtos(lnotSender);
     }
 
@@ -57,7 +57,7 @@ public class CheetahMillionaireSender extends AbstractMillionaireParty {
         // q = l / m, where m = 4
         int maxByteL = CommonUtils.getByteLength(maxL);
         int maxQ = maxByteL * 2;
-        bcSender.init(maxNum * (maxQ - 1), maxNum * (maxQ - 1));
+        z2cSender.init(maxNum * (maxQ - 1), maxNum * (maxQ - 1));
         lnotSender.init(4, maxNum, maxNum * maxQ);
         stopWatch.stop();
         long initTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
@@ -179,10 +179,10 @@ public class CheetahMillionaireSender extends AbstractMillionaireParty {
         int logQ = LongUtils.ceilLog2(q);
         for (int i = 1; i <= logQ; i++) {
             for (int j = 0; j < q / (1 << i); j++) {
-                lts[j] = bcSender.xor(bcSender.and(lts[j * 2 + 1], eqs[j * 2]), lts[j * 2]);
+                lts[j] = z2cSender.xor(z2cSender.and(lts[j * 2 + 1], eqs[j * 2]), lts[j * 2]);
                 // equalities computed on lowest significant bits are never used, thus omit computing.
                 if (j < q / (1 << i) - 1) {
-                    eqs[j] = bcSender.and(eqs[j * 2], eqs[j * 2 + 1]);
+                    eqs[j] = z2cSender.and(eqs[j * 2], eqs[j * 2 + 1]);
                 }
             }
         }
