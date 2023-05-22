@@ -18,10 +18,10 @@ JNIEXPORT jbyteArray JNICALL Java_edu_alibaba_mpc4j_s2pc_pir_index_batch_vectori
 /*
  * Class:     edu_alibaba_mpc4j_s2pc_pir_index_batch_vectorizedpir_Mr23BatchIndexPirNativeUtils
  * Method:    keyGen
- * Signature: ([BI)Ljava/util/List;
+ * Signature: ([B)Ljava/util/List;
  */
 JNIEXPORT jobject JNICALL Java_edu_alibaba_mpc4j_s2pc_pir_index_batch_vectorizedpir_Mr23BatchIndexPirNativeUtils_keyGen
-  (JNIEnv *, jclass, jbyteArray, jint);
+  (JNIEnv *, jclass, jbyteArray);
 
 /*
  * Class:     edu_alibaba_mpc4j_s2pc_pir_index_batch_vectorizedpir_Mr23BatchIndexPirNativeUtils

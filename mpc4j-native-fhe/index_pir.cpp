@@ -249,7 +249,6 @@ void plain_decomposition(Plaintext &pt, const SEALContext &context, uint32_t dec
     uint32_t total_bits = plain_modulus.bit_count();
     uint64_t *raw_ptr = pt.data();
     for (uint32_t p = 0; p < r_l; p++) {
-        vector<uint64_t *> results;
         res = (std::uint64_t *) calloc((coeff_count * coeff_modulus_size), sizeof(uint64_t));
         uint32_t shift_amount = (total_bits) - ((p + 1) * base_bit);
         for (uint32_t k = 0; k < coeff_count; k++) {
@@ -346,13 +345,4 @@ uint32_t get_next_power_of_two(uint32_t number) {
     }
     uint32_t number_of_bits = get_number_of_bits(number);
     return (1 << number_of_bits);
-}
-
-vector<uint64_t> rotate_plain(vector<uint64_t> original, int32_t index) {
-    int32_t row_count = (int32_t) original.size() / 2;
-    std::vector<uint64_t> result(original.size(), 0ULL);
-    for (int32_t i = 0; i < row_count; i++) {
-        result[i] = original[(row_count - index + i) % row_count];
-    }
-    return result;
 }

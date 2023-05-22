@@ -4,7 +4,6 @@
 
 #include "edu_alibaba_mpc4j_s2pc_pir_index_single_xpir_Mbfk16SingleIndexPirNativeUtils.h"
 #include "seal/seal.h"
-#include "../utils.h"
 #include "../serialize.h"
 #include <iomanip>
 #include "../index_pir.h"
@@ -12,15 +11,18 @@
 using namespace seal;
 using namespace std;
 
-JNIEXPORT jbyteArray JNICALL Java_edu_alibaba_mpc4j_s2pc_pir_index_single_xpir_Mbfk16SingleIndexPirNativeUtils_generateEncryptionParams(
+[[maybe_unused]] JNIEXPORT
+jbyteArray JNICALL Java_edu_alibaba_mpc4j_s2pc_pir_index_single_xpir_Mbfk16SingleIndexPirNativeUtils_generateEncryptionParams(
         JNIEnv *env, jclass, jint poly_modulus_degree, jlong plain_modulus) {
-    EncryptionParameters parms = generate_encryption_parameters(scheme_type::bfv, poly_modulus_degree, plain_modulus,
-                                                                CoeffModulus::BFVDefault(poly_modulus_degree,
-                                                                                         sec_level_type::tc128));
+    EncryptionParameters parms = EncryptionParameters(scheme_type::bfv);
+    parms.set_poly_modulus_degree(poly_modulus_degree);
+    parms.set_plain_modulus(plain_modulus);
+    parms.set_coeff_modulus(CoeffModulus::BFVDefault(poly_modulus_degree, sec_level_type::tc128));
     return serialize_encryption_parms(env, parms);
 }
 
-JNIEXPORT jobject JNICALL Java_edu_alibaba_mpc4j_s2pc_pir_index_single_xpir_Mbfk16SingleIndexPirNativeUtils_keyGen(
+[[maybe_unused]] JNIEXPORT
+jobject JNICALL Java_edu_alibaba_mpc4j_s2pc_pir_index_single_xpir_Mbfk16SingleIndexPirNativeUtils_keyGen(
         JNIEnv *env, jclass, jbyteArray parms_bytes) {
     EncryptionParameters parms = deserialize_encryption_parms(env, parms_bytes);
     SEALContext context(parms);
@@ -38,20 +40,21 @@ JNIEXPORT jobject JNICALL Java_edu_alibaba_mpc4j_s2pc_pir_index_single_xpir_Mbfk
     return list_obj;
 }
 
-JNIEXPORT jobject JNICALL Java_edu_alibaba_mpc4j_s2pc_pir_index_single_xpir_Mbfk16SingleIndexPirNativeUtils_nttTransform(
+[[maybe_unused]] JNIEXPORT
+jobject JNICALL Java_edu_alibaba_mpc4j_s2pc_pir_index_single_xpir_Mbfk16SingleIndexPirNativeUtils_nttTransform(
         JNIEnv *env, jclass, jbyteArray parms_bytes, jobject plaintext_list) {
     EncryptionParameters parms = deserialize_encryption_parms(env, parms_bytes);
     SEALContext context(parms);
     Evaluator evaluator(context);
-    vector<Plaintext> plaintexts = deserialize_plaintexts_from_coeff_without_batch_encode(
-            env, plaintext_list, context);
+    vector<Plaintext> plaintexts = deserialize_plaintexts_from_coeff_without_batch_encode(env, plaintext_list, context);
     for (auto & plaintext : plaintexts) {
         evaluator.transform_to_ntt_inplace(plaintext, context.first_parms_id());
     }
     return serialize_plaintexts(env, plaintexts);
 }
 
-JNIEXPORT jobject JNICALL Java_edu_alibaba_mpc4j_s2pc_pir_index_single_xpir_Mbfk16SingleIndexPirNativeUtils_generateQuery(
+[[maybe_unused]] JNIEXPORT
+jobject JNICALL Java_edu_alibaba_mpc4j_s2pc_pir_index_single_xpir_Mbfk16SingleIndexPirNativeUtils_generateQuery(
         JNIEnv *env, jclass, jbyteArray parms_bytes, jbyteArray pk_bytes, jbyteArray sk_bytes, jintArray indices_array,
         jintArray nevc_array) {
     EncryptionParameters parms = deserialize_encryption_parms(env, parms_bytes);
@@ -84,7 +87,8 @@ JNIEXPORT jobject JNICALL Java_edu_alibaba_mpc4j_s2pc_pir_index_single_xpir_Mbfk
     return serialize_ciphertexts(env, query);
 }
 
-JNIEXPORT jobject JNICALL Java_edu_alibaba_mpc4j_s2pc_pir_index_single_xpir_Mbfk16SingleIndexPirNativeUtils_generateReply(
+[[maybe_unused]] JNIEXPORT
+jobject JNICALL Java_edu_alibaba_mpc4j_s2pc_pir_index_single_xpir_Mbfk16SingleIndexPirNativeUtils_generateReply(
         JNIEnv *env, jclass, jbyteArray parms_bytes, jobject ciphertexts_list, jobjectArray plaintexts_list,
         jintArray nvec_array) {
     EncryptionParameters parms = deserialize_encryption_parms(env, parms_bytes);
@@ -157,7 +161,8 @@ JNIEXPORT jobject JNICALL Java_edu_alibaba_mpc4j_s2pc_pir_index_single_xpir_Mbfk
     return nullptr;
 }
 
-JNIEXPORT jlongArray JNICALL Java_edu_alibaba_mpc4j_s2pc_pir_index_single_xpir_Mbfk16SingleIndexPirNativeUtils_decryptReply(
+[[maybe_unused]] JNIEXPORT
+jlongArray JNICALL Java_edu_alibaba_mpc4j_s2pc_pir_index_single_xpir_Mbfk16SingleIndexPirNativeUtils_decryptReply(
         JNIEnv *env, jclass, jbyteArray parms_bytes, jbyteArray sk_bytes, jobject response_list, jint d) {
     EncryptionParameters parms = deserialize_encryption_parms(env, parms_bytes);
     SEALContext context(parms);
@@ -206,7 +211,8 @@ JNIEXPORT jlongArray JNICALL Java_edu_alibaba_mpc4j_s2pc_pir_index_single_xpir_M
     return nullptr;
 }
 
-JNIEXPORT jint JNICALL Java_edu_alibaba_mpc4j_s2pc_pir_index_single_xpir_Mbfk16SingleIndexPirNativeUtils_expansionRatio(
+[[maybe_unused]] JNIEXPORT
+jint JNICALL Java_edu_alibaba_mpc4j_s2pc_pir_index_single_xpir_Mbfk16SingleIndexPirNativeUtils_expansionRatio(
         JNIEnv *env, jclass, jbyteArray parms_bytes) {
     EncryptionParameters parms = deserialize_encryption_parms(env, parms_bytes);
     SEALContext context(parms);

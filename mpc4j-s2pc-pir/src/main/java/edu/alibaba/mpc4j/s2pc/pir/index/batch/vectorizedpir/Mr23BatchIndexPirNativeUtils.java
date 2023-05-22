@@ -27,10 +27,9 @@ class Mr23BatchIndexPirNativeUtils {
      * key generations.
      *
      * @param encryptionParameters encryption parameters.
-     * @param dimensionSize        dimension size.
      * @return key pair.
      */
-    static native List<byte[]> keyGen(byte[] encryptionParameters, int dimensionSize);
+    static native List<byte[]> keyGen(byte[] encryptionParameters);
 
     /**
      * preprocess database.

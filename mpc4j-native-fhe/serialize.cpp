@@ -69,15 +69,6 @@ SecretKey deserialize_secret_key(JNIEnv *env, jbyteArray sk_bytes, const SEALCon
     return secret_key;
 }
 
-jbyteArray serialize_relin_keys(JNIEnv *env, const RelinKeys& relin_keys) {
-    std::ostringstream output;
-    relin_keys.save(output, Serialization::compr_mode_default);
-    jint len = (jint) output.str().size();
-    jbyteArray byte_array = env->NewByteArray(len);
-    env->SetByteArrayRegion(byte_array, 0, len, reinterpret_cast<const jbyte *>(output.str().c_str()));
-    return byte_array;
-}
-
 jbyteArray serialize_relin_keys(JNIEnv *env, const Serializable<RelinKeys>& relin_keys) {
     std::ostringstream output;
     relin_keys.save(output, Serialization::compr_mode_default);
@@ -96,15 +87,6 @@ RelinKeys deserialize_relin_keys(JNIEnv *env, jbyteArray relin_keys_bytes, const
     // free
     env->ReleaseByteArrayElements(relin_keys_bytes, byte_array, 0);
     return relin_keys;
-}
-
-jbyteArray serialize_galois_keys(JNIEnv *env, const GaloisKeys& galois_keys) {
-    std::ostringstream output;
-    galois_keys.save(output, Serialization::compr_mode_default);
-    jint len = (jint) output.str().size();
-    jbyteArray byte_array = env->NewByteArray(len);
-    env->SetByteArrayRegion(byte_array, 0, len, reinterpret_cast<const jbyte *>(output.str().c_str()));
-    return byte_array;
 }
 
 jbyteArray serialize_galois_keys(JNIEnv *env, const Serializable<GaloisKeys>& galois_keys) {

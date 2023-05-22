@@ -27,10 +27,9 @@ class Mr23SingleIndexPirNativeUtils {
      * generate key pair.
      *
      * @param encryptionParams encryption params.
-     * @param slotNum          slot num.
      * @return key pair.
      */
-    static native List<byte[]> keyGen(byte[] encryptionParams, int slotNum);
+    static native List<byte[]> keyGen(byte[] encryptionParams);
 
     /**
      * database preprocess.

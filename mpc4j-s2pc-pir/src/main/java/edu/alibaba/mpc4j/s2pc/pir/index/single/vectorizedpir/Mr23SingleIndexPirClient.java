@@ -195,9 +195,7 @@ public class Mr23SingleIndexPirClient extends AbstractSingleIndexPirClient {
      * @return public keys.
      */
     private List<byte[]> generateKeyPair() {
-        List<byte[]> keyPair = Mr23SingleIndexPirNativeUtils.keyGen(
-            params.getEncryptionParams(), params.getFirstTwoDimensionSize()
-        );
+        List<byte[]> keyPair = Mr23SingleIndexPirNativeUtils.keyGen(params.getEncryptionParams());
         assert (keyPair.size() == 4);
         publicKey = keyPair.remove(0);
         secretKey = keyPair.remove(0);

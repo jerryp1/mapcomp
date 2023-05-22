@@ -12,7 +12,7 @@ extern "C" {
  * Method:    genEncryptionParameters
  * Signature: (IJ[I)Ljava/util/List;
  */
-JNIEXPORT jobject JNICALL Java_edu_alibaba_mpc4j_s2pc_pir_index_batch_psipir_Lpzl24BatchIndexPirNativeUtils_genEncryptionParameters
+[[maybe_unused]] JNIEXPORT jobject JNICALL Java_edu_alibaba_mpc4j_s2pc_pir_index_batch_psipir_Lpzl24BatchIndexPirNativeUtils_genEncryptionParameters
   (JNIEnv *, jclass, jint, jlong, jintArray);
 
 /*

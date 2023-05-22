@@ -280,9 +280,7 @@ public class Mr23BatchIndexPirClient extends AbstractBatchIndexPirClient {
      * @return key pair payload.
      */
     private List<byte[]> generateKeyPairPayload() {
-        List<byte[]> keyPair = Mr23BatchIndexPirNativeUtils.keyGen(
-            params.getEncryptionParams(), params.getFirstTwoDimensionSize()
-        );
+        List<byte[]> keyPair = Mr23BatchIndexPirNativeUtils.keyGen(params.getEncryptionParams());
         assert (keyPair.size() == 4);
         this.publicKey = keyPair.remove(0);
         this.secretKey = keyPair.remove(0);
