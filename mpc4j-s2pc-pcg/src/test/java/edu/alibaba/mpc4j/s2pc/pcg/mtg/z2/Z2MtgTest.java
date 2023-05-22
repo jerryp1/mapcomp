@@ -23,7 +23,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * 布尔三元组生成协议测试。
+ * Z2 multiplication triple generator test.
  *
  * @author Weiran Liu
  * @date 2022/02/08
@@ -32,17 +32,17 @@ import org.slf4j.LoggerFactory;
 public class Z2MtgTest {
     private static final Logger LOGGER = LoggerFactory.getLogger(Z2MtgTest.class);
     /**
-     * 随机状态
+     * the random state
      */
     private static final SecureRandom SECURE_RANDOM = new SecureRandom();
     /**
-     * 默认数量
+     * default num
      */
-    private static final int DEFAULT_NUM = 1000;
+    private static final int DEFAULT_NUM = 999;
     /**
-     * 较大数量
+     * large num
      */
-    private static final int LARGE_NUM = 1 << 18;
+    private static final int LARGE_NUM = (1 << 18) + 1;
 
     @Parameterized.Parameters(name = "{0}")
     public static Collection<Object[]> configurations() {
@@ -63,15 +63,15 @@ public class Z2MtgTest {
     }
 
     /**
-     * 发送方
+     * sender RPC
      */
     private final Rpc senderRpc;
     /**
-     * 接收方
+     * receiver RPC
      */
     private final Rpc receiverRpc;
     /**
-     * 协议类型
+     * config
      */
     private final Z2MtgConfig config;
 
@@ -140,10 +140,11 @@ public class Z2MtgTest {
             Z2MtgPartyThread senderThread = new Z2MtgPartyThread(sender, num);
             Z2MtgPartyThread receiverThread = new Z2MtgPartyThread(receiver, num);
             StopWatch stopWatch = new StopWatch();
-            // 开始执行协议
+            // start
             stopWatch.start();
             senderThread.start();
             receiverThread.start();
+            // stop
             senderThread.join();
             receiverThread.join();
             stopWatch.stop();
@@ -155,16 +156,16 @@ public class Z2MtgTest {
             receiverRpc.reset();
             Z2Triple senderOutput = senderThread.getOutput();
             Z2Triple receiverOutput = receiverThread.getOutput();
-            // 验证结果
+            // verify
             Z2MtgTestUtils.assertOutput(num, senderOutput, receiverOutput);
             LOGGER.info("Sender sends {}B, Receiver sends {}B, time = {}ms",
                 senderByteLength, receiverByteLength, time
             );
+            new Thread(sender::destroy).start();
+            new Thread(receiver::destroy).start();
             LOGGER.info("-----test {} end-----", sender.getPtoDesc().getPtoName());
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
-        sender.destroy();
-        receiver.destroy();
     }
 }

@@ -239,7 +239,7 @@ public class ZlDatabase implements ModBitNumDatabase {
 
     @Override
     public String toString() {
-        String[] stringData = Arrays.stream(Arrays.copyOf(data, MatrixUtils.DISPLAY_NUM))
+        String[] stringData = Arrays.stream(Arrays.copyOf(data, Math.min(data.length, MatrixUtils.DISPLAY_NUM)))
             .map(Hex::toHexString)
             .toArray(String[]::new);
         return this.getClass().getSimpleName() + " (l = " + l + "): " + Arrays.toString(stringData);

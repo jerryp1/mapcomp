@@ -1,7 +1,6 @@
 package edu.alibaba.mpc4j.common.circuit.z2;
 
-import edu.alibaba.mpc4j.common.circuit.z2.plain.PlainBcParty;
-import edu.alibaba.mpc4j.common.circuit.z2.plain.PlainZ2Vector;
+import edu.alibaba.mpc4j.common.circuit.operator.Z2IntegerOperator;
 import edu.alibaba.mpc4j.common.rpc.MpcAbortException;
 
 import java.util.Arrays;
@@ -16,7 +15,7 @@ class Z2IntegerCircuitParty {
     /**
      * the party
      */
-    private final PlainBcParty party;
+    private final PlainZ2cParty party;
     /**
      * x0
      */
@@ -32,9 +31,9 @@ class Z2IntegerCircuitParty {
     /**
      * operator
      */
-    private final IntegerOperator operator;
+    private final Z2IntegerOperator operator;
 
-    Z2IntegerCircuitParty(PlainBcParty party, IntegerOperator operator, PlainZ2Vector[] x, PlainZ2Vector[] y) {
+    Z2IntegerCircuitParty(PlainZ2cParty party, Z2IntegerOperator operator, PlainZ2Vector[] x, PlainZ2Vector[] y) {
         this.party = party;
         this.operator = operator;
         this.x = x;

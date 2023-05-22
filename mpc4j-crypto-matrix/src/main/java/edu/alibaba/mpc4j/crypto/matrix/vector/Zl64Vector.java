@@ -320,7 +320,7 @@ public class Zl64Vector implements RingVector {
 
     @Override
     public String toString() {
-        String[] stringData = Arrays.stream(Arrays.copyOf(elements, MatrixUtils.DISPLAY_NUM))
+        String[] stringData = Arrays.stream(Arrays.copyOf(elements, Math.min(elements.length, MatrixUtils.DISPLAY_NUM)))
             .mapToObj(String::valueOf)
             .toArray(String[]::new);
         return this.getClass().getSimpleName() + " (l = " + zl64.getL() + "): " + Arrays.toString(stringData);

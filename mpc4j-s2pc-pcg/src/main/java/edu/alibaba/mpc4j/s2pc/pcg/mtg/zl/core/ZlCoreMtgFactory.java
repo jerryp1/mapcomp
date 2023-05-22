@@ -8,21 +8,21 @@ import edu.alibaba.mpc4j.common.tool.galoisfield.zl.Zl;
 import edu.alibaba.mpc4j.s2pc.pcg.mtg.zl.core.dsz15.*;
 
 /**
- * 核l比特三元组生成协议工厂。
+ * Zl core multiplication triple generator factory.
  *
  * @author Weiran Liu
  * @date 2022/8/11
  */
 public class ZlCoreMtgFactory implements PtoFactory {
     /**
-     * 私有构造函数
+     * private constructor
      */
     private ZlCoreMtgFactory() {
         // empty
     }
 
     /**
-     * 协议类型
+     * protocol type
      */
     public enum ZlCoreMtgType {
         /**
@@ -36,12 +36,12 @@ public class ZlCoreMtgFactory implements PtoFactory {
     }
 
     /**
-     * 构建发送方。
+     * Creates a sender.
      *
-     * @param senderRpc     发送方通信接口。
-     * @param receiverParty 接收方信息。
-     * @param config        配置项。
-     * @return 发送方。
+     * @param senderRpc     sender RPC.
+     * @param receiverParty receiver party.
+     * @param config        config.
+     * @return a sender.
      */
     public static ZlCoreMtgParty createSender(Rpc senderRpc, Party receiverParty, ZlCoreMtgConfig config) {
         ZlCoreMtgType type = config.getPtoType();
@@ -56,12 +56,12 @@ public class ZlCoreMtgFactory implements PtoFactory {
     }
 
     /**
-     * 构建接收方。
+     * Creates a receiver.
      *
-     * @param receiverRpc 接收方通信接口。
-     * @param senderParty 发送方信息。
-     * @param config      配置项。
-     * @return 接收方。
+     * @param receiverRpc receiver RPC.
+     * @param senderParty sender party.
+     * @param config      config.
+     * @return a receiver.
      */
     public static ZlCoreMtgParty createReceiver(Rpc receiverRpc, Party senderParty, ZlCoreMtgConfig config) {
         ZlCoreMtgType type = config.getPtoType();
@@ -76,11 +76,11 @@ public class ZlCoreMtgFactory implements PtoFactory {
     }
 
     /**
-     * 创建默认配置项。
+     * Creates a default config.
      *
-     * @param securityModel 安全模型。
-     * @param zl            the Zl instance.
-     * @return 默认配置项。
+     * @param securityModel security model.
+     * @param zl            Zl instance.
+     * @return default config.
      */
     public static ZlCoreMtgConfig createDefaultConfig(SecurityModel securityModel, Zl zl) {
         switch (securityModel) {

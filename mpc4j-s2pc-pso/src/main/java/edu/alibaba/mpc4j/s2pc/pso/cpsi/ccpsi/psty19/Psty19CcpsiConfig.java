@@ -2,9 +2,10 @@ package edu.alibaba.mpc4j.s2pc.pso.cpsi.ccpsi.psty19;
 
 import edu.alibaba.mpc4j.common.rpc.desc.SecurityModel;
 import edu.alibaba.mpc4j.common.tool.EnvType;
+import edu.alibaba.mpc4j.common.tool.hashbin.object.cuckoo.CuckooHashBinFactory;
 import edu.alibaba.mpc4j.common.tool.hashbin.object.cuckoo.CuckooHashBinFactory.CuckooHashBinType;
-import edu.alibaba.mpc4j.s2pc.aby.circuit.peqt.PeqtConfig;
-import edu.alibaba.mpc4j.s2pc.aby.circuit.peqt.PeqtFactory;
+import edu.alibaba.mpc4j.s2pc.aby.operator.row.peqt.PeqtConfig;
+import edu.alibaba.mpc4j.s2pc.aby.operator.row.peqt.PeqtFactory;
 import edu.alibaba.mpc4j.s2pc.opf.opprf.batch.BopprfConfig;
 import edu.alibaba.mpc4j.s2pc.opf.opprf.batch.BopprfFactory;
 import edu.alibaba.mpc4j.s2pc.pso.cpsi.ccpsi.CcpsiConfig;
@@ -40,6 +41,11 @@ public class Psty19CcpsiConfig implements CcpsiConfig {
     @Override
     public CcpsiFactory.CcpsiType getPtoType() {
         return CcpsiFactory.CcpsiType.PSTY19;
+    }
+
+    @Override
+    public int getOutputBitNum(int serverElementSize, int clientElementSize) {
+        return CuckooHashBinFactory.getBinNum(cuckooHashBinType, clientElementSize);
     }
 
     @Override
@@ -85,8 +91,8 @@ public class Psty19CcpsiConfig implements CcpsiConfig {
         private CuckooHashBinType cuckooHashBinType;
 
         public Builder(boolean silent) {
-            bopprfConfig = BopprfFactory.createDefaultConfig(SecurityModel.SEMI_HONEST);
-            peqtConfig = PeqtFactory.createDefaultConfig(SecurityModel.SEMI_HONEST, silent);
+            bopprfConfig = BopprfFactory.createDefaultConfig();
+            peqtConfig = PeqtFactory.createDefaultConfig(silent);
             cuckooHashBinType = CuckooHashBinType.NO_STASH_PSZ18_3_HASH;
         }
 

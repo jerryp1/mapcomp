@@ -158,7 +158,7 @@ public class UcpsiMain {
 
     private void warmupServer(Rpc serverRpc, Party clientParty, UcpsiConfig config, int taskId) throws Exception {
         Set<ByteBuffer> serverElementSet = readServerElementSet(WARMUP_SERVER_SET_SIZE, WARMUP_ELEMENT_BYTE_LENGTH);
-        UcpsiServer ucpsiServer = UcpsiFactory.createServer(serverRpc, clientParty, config);
+        UcpsiServer<ByteBuffer> ucpsiServer = UcpsiFactory.createServer(serverRpc, clientParty, config);
         ucpsiServer.setTaskId(taskId);
         ucpsiServer.setParallel(false);
         ucpsiServer.getRpc().synchronize();
@@ -184,7 +184,7 @@ public class UcpsiMain {
             "{}: serverSetSize = {}, clientSetSize = {}, parallel = {}",
             serverRpc.ownParty().getPartyName(), serverSetSize, clientSetSize, true
         );
-        UcpsiServer ucpsiServer = UcpsiFactory.createServer(serverRpc, clientParty, config);
+        UcpsiServer<ByteBuffer> ucpsiServer = UcpsiFactory.createServer(serverRpc, clientParty, config);
         ucpsiServer.setTaskId(taskId);
         ucpsiServer.setParallel(true);
         // 启动测试
@@ -305,7 +305,7 @@ public class UcpsiMain {
 
     private void warmupClient(Rpc clientRpc, Party serverParty, UcpsiConfig config, int taskId) throws Exception {
         Set<ByteBuffer> clientElementSet = readClientElementSet(WARMUP_CLIENT_SET_SIZE, WARMUP_ELEMENT_BYTE_LENGTH);
-        UcpsiClient ucpsiClient = UcpsiFactory.createClient(clientRpc, serverParty, config);
+        UcpsiClient<ByteBuffer> ucpsiClient = UcpsiFactory.createClient(clientRpc, serverParty, config);
         ucpsiClient.setTaskId(taskId);
         ucpsiClient.setParallel(false);
         ucpsiClient.getRpc().synchronize();
@@ -332,7 +332,7 @@ public class UcpsiMain {
             "{}: serverSetSize = {}, clientSetSize = {}, parallel = {}",
             clientRpc.ownParty().getPartyName(), serverSetSize, clientSetSize, true
         );
-        UcpsiClient ucpsiClient = UcpsiFactory.createClient(clientRpc, serverParty, config);
+        UcpsiClient<ByteBuffer> ucpsiClient = UcpsiFactory.createClient(clientRpc, serverParty, config);
         ucpsiClient.setTaskId(taskId);
         ucpsiClient.setParallel(true);
         // 启动测试

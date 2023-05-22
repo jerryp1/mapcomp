@@ -72,8 +72,8 @@ public class Cgs22UcpsiConfig implements UcpsiConfig {
         private PsmConfig psmConfig;
 
         public Builder(boolean silent) {
-            urbopprfConfig = UrbopprfFactory.createDefaultConfig(SecurityModel.SEMI_HONEST);
-            psmConfig = PsmFactory.createDefaultConfig(SecurityModel.SEMI_HONEST, silent);
+            urbopprfConfig = UrbopprfFactory.createDefaultConfig();
+            psmConfig = PsmFactory.createDefaultConfig(silent);
         }
 
         public Builder setUrbopprfConfig(UrbopprfConfig urbopprfConfig) {

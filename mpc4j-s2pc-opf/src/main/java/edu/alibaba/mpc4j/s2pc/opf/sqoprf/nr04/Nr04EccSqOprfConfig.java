@@ -1,7 +1,7 @@
 package edu.alibaba.mpc4j.s2pc.opf.sqoprf.nr04;
 
 import edu.alibaba.mpc4j.common.rpc.desc.SecurityModel;
-import edu.alibaba.mpc4j.common.tool.EnvType;
+import edu.alibaba.mpc4j.common.rpc.pto.AbstractMultiPartyPtoConfig;
 import edu.alibaba.mpc4j.s2pc.opf.sqoprf.SqOprfConfig;
 import edu.alibaba.mpc4j.s2pc.opf.sqoprf.SqOprfFactory;
 import edu.alibaba.mpc4j.s2pc.pcg.ot.cot.CotConfig;
@@ -13,7 +13,7 @@ import edu.alibaba.mpc4j.s2pc.pcg.ot.cot.CotFactory;
  * @author Qixian Zhou
  * @date 2023/4/12
  */
-public class Nr04EccSqOprfConfig implements SqOprfConfig {
+public class Nr04EccSqOprfConfig extends AbstractMultiPartyPtoConfig implements SqOprfConfig {
     /**
      * use compressed encoding
      */
@@ -24,6 +24,7 @@ public class Nr04EccSqOprfConfig implements SqOprfConfig {
     private final CotConfig cotConfig;
 
     private Nr04EccSqOprfConfig(Builder builder) {
+        super(SecurityModel.SEMI_HONEST, builder.cotConfig);
         compressEncode = builder.compressEncode;
         cotConfig = builder.cotConfig;
     }
@@ -35,25 +36,6 @@ public class Nr04EccSqOprfConfig implements SqOprfConfig {
     @Override
     public SqOprfFactory.SqOprfType getPtoType() {
         return SqOprfFactory.SqOprfType.NR04_ECC;
-    }
-
-    @Override
-    public void setEnvType(EnvType envType) {
-        cotConfig.setEnvType(envType);
-    }
-
-    @Override
-    public EnvType getEnvType() {
-        return cotConfig.getEnvType();
-    }
-
-    @Override
-    public SecurityModel getSecurityModel() {
-        SecurityModel securityModel = SecurityModel.SEMI_HONEST;
-        if (cotConfig.getSecurityModel().compareTo(securityModel) < 0) {
-            securityModel = cotConfig.getSecurityModel();
-        }
-        return securityModel;
     }
 
     public boolean getCompressEncode() {

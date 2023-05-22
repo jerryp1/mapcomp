@@ -17,9 +17,9 @@ public class Z2IntegerCircuit {
     /**
      * MPC boolean circuit party.
      */
-    private final MpcBcParty party;
+    private final MpcZ2cParty party;
 
-    public Z2IntegerCircuit(MpcBcParty party) {
+    public Z2IntegerCircuit(MpcZ2cParty party) {
         this.party = party;
     }
 

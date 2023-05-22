@@ -305,6 +305,6 @@ public class Zl64Database implements ModBitNumDatabase {
     @Override
     public String toString() {
         return this.getClass().getSimpleName() + " (l = " + l + "): "
-            + Arrays.toString(Arrays.copyOf(data, MatrixUtils.DISPLAY_NUM));
+            + Arrays.toString(Arrays.copyOf(data, Math.min(data.length, MatrixUtils.DISPLAY_NUM)));
     }
 }

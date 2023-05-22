@@ -2,8 +2,8 @@ package edu.alibaba.mpc4j.s2pc.upso.ucpsi.psty19;
 
 import edu.alibaba.mpc4j.common.rpc.desc.SecurityModel;
 import edu.alibaba.mpc4j.common.tool.EnvType;
-import edu.alibaba.mpc4j.s2pc.aby.circuit.peqt.PeqtConfig;
-import edu.alibaba.mpc4j.s2pc.aby.circuit.peqt.PeqtFactory;
+import edu.alibaba.mpc4j.s2pc.aby.operator.row.peqt.PeqtConfig;
+import edu.alibaba.mpc4j.s2pc.aby.operator.row.peqt.PeqtFactory;
 import edu.alibaba.mpc4j.s2pc.upso.ucpsi.UcpsiConfig;
 import edu.alibaba.mpc4j.s2pc.upso.uopprf.ub.UbopprfConfig;
 import edu.alibaba.mpc4j.s2pc.upso.uopprf.ub.UbopprfFactory;
@@ -72,8 +72,8 @@ public class Psty19UcpsiConfig implements UcpsiConfig {
         private PeqtConfig peqtConfig;
 
         public Builder(boolean silent) {
-            ubopprfConfig = UbopprfFactory.createDefaultConfig(SecurityModel.SEMI_HONEST);
-            peqtConfig = PeqtFactory.createDefaultConfig(SecurityModel.SEMI_HONEST, silent);
+            ubopprfConfig = UbopprfFactory.createDefaultConfig();
+            peqtConfig = PeqtFactory.createDefaultConfig(silent);
         }
 
         public Builder setUbopprfConfig(UbopprfConfig ubopprfConfig) {

@@ -260,7 +260,7 @@ public class NaiveDatabase implements ModBitNumDatabase {
 
     @Override
     public String toString() {
-        String[] stringData = Arrays.stream(Arrays.copyOf(data, MatrixUtils.DISPLAY_NUM))
+        String[] stringData = Arrays.stream(Arrays.copyOf(data, Math.min(data.length, MatrixUtils.DISPLAY_NUM)))
             .map(element -> element.toString(16))
             .map(element -> element.toUpperCase(Locale.ROOT))
             .toArray(String[]::new);

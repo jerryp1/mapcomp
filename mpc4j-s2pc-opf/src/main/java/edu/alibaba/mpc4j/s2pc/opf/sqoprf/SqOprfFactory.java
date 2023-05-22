@@ -106,9 +106,9 @@ public class SqOprfFactory implements PtoFactory {
         switch (securityModel) {
             case IDEAL:
             case SEMI_HONEST:
-                return new Ra17ByteEccSqOprfConfig.Builder().build();
             case COVERT:
             case MALICIOUS:
+                return new Ra17ByteEccSqOprfConfig.Builder().build();
             default:
                 throw new IllegalArgumentException("Invalid " + SecurityModel.class.getSimpleName() + ": " + securityModel.name());
         }

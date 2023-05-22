@@ -6,9 +6,9 @@ import edu.alibaba.mpc4j.common.tool.okve.okvs.OkvsFactory.OkvsType;
 import edu.alibaba.mpc4j.common.tool.okve.ovdm.ecc.EccOvdmFactory.EccOvdmType;
 import edu.alibaba.mpc4j.common.tool.okve.ovdm.gf2e.Gf2eOvdmFactory.Gf2eOvdmType;
 import edu.alibaba.mpc4j.common.tool.utils.PropertiesUtils;
-import edu.alibaba.mpc4j.s2pc.aby.basics.bc.BcConfig;
-import edu.alibaba.mpc4j.s2pc.aby.basics.bc.BcFactory;
-import edu.alibaba.mpc4j.s2pc.aby.basics.bc.bea91.Bea91BcConfig;
+import edu.alibaba.mpc4j.s2pc.aby.basics.z2.Z2cConfig;
+import edu.alibaba.mpc4j.s2pc.aby.basics.z2.Z2cFactory;
+import edu.alibaba.mpc4j.s2pc.aby.basics.z2.bea91.Bea91Z2cConfig;
 import edu.alibaba.mpc4j.s2pc.pcg.mtg.z2.Z2MtgConfig;
 import edu.alibaba.mpc4j.s2pc.pcg.mtg.z2.impl.offline.OfflineZ2MtgConfig;
 import edu.alibaba.mpc4j.s2pc.pcg.ot.cot.impl.cache.CacheCotConfig;
@@ -114,23 +114,23 @@ public class PsuConfigUtils {
         boolean offlineZ2Mtg = PropertiesUtils.readBoolean(properties, "offline_z2_mtg", true);
         if (offlineZ2Mtg) {
             Z2MtgConfig offlineZ2MtgConfig = new OfflineZ2MtgConfig.Builder(SecurityModel.SEMI_HONEST).build();
-            BcConfig offlineBcConfig = new Bea91BcConfig.Builder()
+            Z2cConfig offlineZ2cConfig = new Bea91Z2cConfig.Builder()
                 .setZ2MtgConfig(offlineZ2MtgConfig)
                 .build();
             OprpConfig offlineOprpConfig = new LowMcOprpConfig.Builder()
-                .setBcConfig(offlineBcConfig)
+                .setZ2cConfig(offlineZ2cConfig)
                 .build();
             return new Zcl22SkePsuConfig.Builder()
                 .setCoreCotConfig(CoreCotFactory.createDefaultConfig(SecurityModel.SEMI_HONEST))
                 .setOprpConfig(offlineOprpConfig)
-                .setBcConfig(offlineBcConfig)
+                .setBcConfig(offlineZ2cConfig)
                 .setGf2eOvdmType(Gf2eOvdmType.H3_SINGLETON_GCT)
                 .build();
         } else {
             return new Zcl22SkePsuConfig.Builder()
                 .setCoreCotConfig(CoreCotFactory.createDefaultConfig(SecurityModel.SEMI_HONEST))
-                .setOprpConfig(OprpFactory.createDefaultConfig(SecurityModel.SEMI_HONEST, true))
-                .setBcConfig(BcFactory.createDefaultConfig(SecurityModel.SEMI_HONEST, true))
+                .setOprpConfig(OprpFactory.createDefaultConfig(true))
+                .setBcConfig(Z2cFactory.createDefaultConfig(true))
                 .setGf2eOvdmType(Gf2eOvdmType.H3_SINGLETON_GCT)
                 .build();
         }
