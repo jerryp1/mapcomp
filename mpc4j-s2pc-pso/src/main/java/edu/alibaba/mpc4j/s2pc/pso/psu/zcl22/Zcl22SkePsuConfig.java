@@ -1,7 +1,7 @@
 package edu.alibaba.mpc4j.s2pc.pso.psu.zcl22;
 
 import edu.alibaba.mpc4j.common.rpc.desc.SecurityModel;
-import edu.alibaba.mpc4j.common.tool.EnvType;
+import edu.alibaba.mpc4j.common.rpc.pto.AbstractMultiPartyPtoConfig;
 import edu.alibaba.mpc4j.common.tool.okve.ovdm.gf2e.Gf2eOvdmFactory.Gf2eOvdmType;
 import edu.alibaba.mpc4j.s2pc.aby.basics.z2.Z2cConfig;
 import edu.alibaba.mpc4j.s2pc.aby.basics.z2.Z2cFactory;
@@ -18,7 +18,7 @@ import edu.alibaba.mpc4j.s2pc.pso.psu.PsuFactory.PsuType;
  * @author Weiran Liu
  * @date 2022/02/16
  */
-public class Zcl22SkePsuConfig implements PsuConfig {
+public class Zcl22SkePsuConfig extends AbstractMultiPartyPtoConfig implements PsuConfig {
     /**
      * Z2 circuit config
      */
@@ -37,9 +37,7 @@ public class Zcl22SkePsuConfig implements PsuConfig {
     private final Gf2eOvdmType gf2eOvdmType;
 
     private Zcl22SkePsuConfig(Builder builder) {
-        // 协议的环境类型必须相同
-        assert builder.z2cConfig.getEnvType().equals(builder.oprpConfig.getEnvType());
-        assert builder.z2cConfig.getEnvType().equals(builder.coreCotConfig.getEnvType());
+        super(SecurityModel.SEMI_HONEST, builder.z2cConfig, builder.oprpConfig, builder.coreCotConfig);
         z2cConfig = builder.z2cConfig;
         oprpConfig = builder.oprpConfig;
         coreCotConfig = builder.coreCotConfig;
@@ -67,33 +65,6 @@ public class Zcl22SkePsuConfig implements PsuConfig {
         return gf2eOvdmType;
     }
 
-    @Override
-    public void setEnvType(EnvType envType) {
-        z2cConfig.setEnvType(envType);
-        oprpConfig.setEnvType(envType);
-        coreCotConfig.setEnvType(envType);
-    }
-
-    @Override
-    public EnvType getEnvType() {
-        return z2cConfig.getEnvType();
-    }
-
-    @Override
-    public SecurityModel getSecurityModel() {
-        SecurityModel securityModel = SecurityModel.SEMI_HONEST;
-        if (z2cConfig.getSecurityModel().compareTo(securityModel) < 0) {
-            securityModel = z2cConfig.getSecurityModel();
-        }
-        if (oprpConfig.getSecurityModel().compareTo(securityModel) < 0) {
-            securityModel = oprpConfig.getSecurityModel();
-        }
-        if (coreCotConfig.getSecurityModel().compareTo(securityModel) < 0) {
-            securityModel = coreCotConfig.getSecurityModel();
-        }
-        return securityModel;
-    }
-
     public static class Builder implements org.apache.commons.lang3.builder.Builder<Zcl22SkePsuConfig> {
         /**
          * Z2 circuit config
@@ -112,9 +83,9 @@ public class Zcl22SkePsuConfig implements PsuConfig {
          */
         private Gf2eOvdmType gf2eOvdmType;
 
-        public Builder() {
-            z2cConfig = Z2cFactory.createDefaultConfig(true);
-            oprpConfig = OprpFactory.createDefaultConfig(true);
+        public Builder(SecurityModel securityModel) {
+            z2cConfig = Z2cFactory.createDefaultConfig(securityModel, true);
+            oprpConfig = OprpFactory.createDefaultConfig(securityModel, true);
             coreCotConfig = CoreCotFactory.createDefaultConfig(SecurityModel.SEMI_HONEST);
             gf2eOvdmType = Gf2eOvdmType.H3_SINGLETON_GCT;
         }

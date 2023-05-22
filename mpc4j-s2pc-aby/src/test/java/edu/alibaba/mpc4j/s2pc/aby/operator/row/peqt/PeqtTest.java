@@ -3,6 +3,7 @@ package edu.alibaba.mpc4j.s2pc.aby.operator.row.peqt;
 import com.google.common.base.Preconditions;
 import edu.alibaba.mpc4j.common.rpc.Rpc;
 import edu.alibaba.mpc4j.common.rpc.RpcManager;
+import edu.alibaba.mpc4j.common.rpc.desc.SecurityModel;
 import edu.alibaba.mpc4j.common.rpc.impl.memory.MemoryRpcManager;
 import edu.alibaba.mpc4j.common.tool.bitvector.BitVector;
 import edu.alibaba.mpc4j.s2pc.aby.AbyTestUtils;
@@ -57,21 +58,15 @@ public class PeqtTest {
     public static Collection<Object[]> configurations() {
         Collection<Object[]> configurations = new ArrayList<>();
 
-        // CGS22 (direct)
-        configurations.add(
-            new Object[]{PeqtType.CGS22.name() + " (direct)", new Cgs22PeqtConfig.Builder(false).build()
-        });
-        // CGS22 (silent)
+        // CGS22
         configurations.add(new Object[]{
-            PeqtType.CGS22.name() + " (silent)", new Cgs22PeqtConfig.Builder(true).build()
+            PeqtType.CGS22.name() + " (" + SecurityModel.SEMI_HONEST.name() + ")",
+            new Cgs22PeqtConfig.Builder(SecurityModel.SEMI_HONEST, false).build()
         });
-        // NAIVE (direct)
+        // NAIVE
         configurations.add(new Object[]{
-            PeqtType.NAIVE.name() + " (direct)", new NaivePeqtConfig.Builder( false).build()
-        });
-        // NAIVE (semi-honest)
-        configurations.add(new Object[]{
-            PeqtType.NAIVE.name() + " (silent)", new NaivePeqtConfig.Builder(false).build()
+            PeqtType.NAIVE.name() + " (" + SecurityModel.SEMI_HONEST.name() + ")",
+            new NaivePeqtConfig.Builder(SecurityModel.SEMI_HONEST, false).build()
         });
 
         return configurations;

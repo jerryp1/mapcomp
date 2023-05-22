@@ -77,10 +77,11 @@ public class PsmFactory implements PtoFactory {
     /**
      * Creates a default config.
      *
+     * @param securityModel security model.
      * @param silent        if using a silent protocol.
      * @return a default config.
      */
-    public static PsmConfig createDefaultConfig(boolean silent) {
-        return new Cgs22OpprfPsmConfig.Builder(silent).build();
+    public static PsmConfig createDefaultConfig(SecurityModel securityModel, boolean silent) {
+        return new Cgs22OpprfPsmConfig.Builder(securityModel, silent).build();
     }
 }

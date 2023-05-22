@@ -3,6 +3,7 @@ package edu.alibaba.mpc4j.s2pc.opf.sqoprf;
 import com.google.common.base.Preconditions;
 import edu.alibaba.mpc4j.common.rpc.Rpc;
 import edu.alibaba.mpc4j.common.rpc.RpcManager;
+import edu.alibaba.mpc4j.common.rpc.desc.SecurityModel;
 import edu.alibaba.mpc4j.common.rpc.impl.memory.MemoryRpcManager;
 import edu.alibaba.mpc4j.s2pc.opf.sqoprf.SqOprfFactory.SqOprfType;
 import edu.alibaba.mpc4j.s2pc.opf.sqoprf.nr04.Nr04EccSqOprfConfig;
@@ -59,7 +60,8 @@ public class SqOprfTest {
 
         // PSSW09
         configurations.add(new Object[]{
-            SqOprfType.PSSW09.name(), new Pssw09SqOprfConfig.Builder().build(),
+            SqOprfType.PSSW09.name() + " (" + SecurityModel.SEMI_HONEST + ")",
+            new Pssw09SqOprfConfig.Builder(SecurityModel.SEMI_HONEST).build(),
         });
         // NR04_ECC (uncompress)
         configurations.add(new Object[]{

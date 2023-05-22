@@ -102,7 +102,7 @@ public class PsuTest {
         });
         // ZCL22_SKE
         configurations.add(new Object[] {
-            PsuFactory.PsuType.ZCL22_SKE.name(), new Zcl22SkePsuConfig.Builder().build(),
+            PsuFactory.PsuType.ZCL22_SKE.name(), new Zcl22SkePsuConfig.Builder(SecurityModel.SEMI_HONEST).build(),
         });
         // GMR21 (silent COT)
         configurations.add(new Object[] {

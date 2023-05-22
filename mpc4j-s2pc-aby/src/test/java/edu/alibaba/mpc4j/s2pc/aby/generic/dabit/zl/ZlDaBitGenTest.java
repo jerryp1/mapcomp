@@ -3,6 +3,7 @@ package edu.alibaba.mpc4j.s2pc.aby.generic.dabit.zl;
 import com.google.common.base.Preconditions;
 import edu.alibaba.mpc4j.common.rpc.Rpc;
 import edu.alibaba.mpc4j.common.rpc.RpcManager;
+import edu.alibaba.mpc4j.common.rpc.desc.SecurityModel;
 import edu.alibaba.mpc4j.common.rpc.impl.memory.MemoryRpcManager;
 import edu.alibaba.mpc4j.common.tool.galoisfield.zl.Zl;
 import edu.alibaba.mpc4j.s2pc.aby.AbyTestUtils;
@@ -55,13 +56,13 @@ public class ZlDaBitGenTest {
             int l = zl.getL();
             // EGK20_MAC
             configurations.add(new Object[]{
-                ZlDaBitGenType.EGK20_MAC.name() + " (l = " + l + ")",
-                new Egk20MacZlDaBitGenConfig.Builder(zl, true).build(),
+                ZlDaBitGenType.EGK20_MAC.name() + " (" + SecurityModel.SEMI_HONEST.name() + ", l = " + l + ")",
+                new Egk20MacZlDaBitGenConfig.Builder(SecurityModel.SEMI_HONEST, zl, false).build(),
             });
             // EGK20_NO_MAC
             configurations.add(new Object[]{
-                ZlDaBitGenType.EGK20_NO_MAC.name() + " (l = " + l + ")",
-                new Egk20NoMacZlDaBitGenConfig.Builder(zl, true).build(),
+                ZlDaBitGenType.EGK20_NO_MAC.name() + " (" + SecurityModel.SEMI_HONEST.name() + ", l = " + l + ")",
+                new Egk20NoMacZlDaBitGenConfig.Builder(SecurityModel.SEMI_HONEST, zl, false).build(),
             });
         }
 

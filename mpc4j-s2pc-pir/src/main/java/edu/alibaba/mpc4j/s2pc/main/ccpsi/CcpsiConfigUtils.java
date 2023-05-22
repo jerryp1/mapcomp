@@ -1,5 +1,6 @@
 package edu.alibaba.mpc4j.s2pc.main.ccpsi;
 
+import edu.alibaba.mpc4j.common.rpc.desc.SecurityModel;
 import edu.alibaba.mpc4j.common.tool.utils.PropertiesUtils;
 import edu.alibaba.mpc4j.s2pc.pso.cpsi.ccpsi.CcpsiConfig;
 import edu.alibaba.mpc4j.s2pc.pso.cpsi.ccpsi.CcpsiFactory;
@@ -43,10 +44,10 @@ public class CcpsiConfigUtils {
     }
 
     private static CcpsiConfig createPsty19CcpsiConfig(boolean silent) {
-        return new Psty19CcpsiConfig.Builder(silent).build();
+        return new Psty19CcpsiConfig.Builder(SecurityModel.SEMI_HONEST, silent).build();
     }
 
     private static CcpsiConfig createCgs22CcpsiConfig(boolean silent) {
-        return new Cgs22CcpsiConfig.Builder(silent).build();
+        return new Cgs22CcpsiConfig.Builder(SecurityModel.SEMI_HONEST, silent).build();
     }
 }

@@ -1,7 +1,7 @@
 package edu.alibaba.mpc4j.s2pc.aby.operator.row.peqt.cgs22;
 
 import edu.alibaba.mpc4j.common.rpc.desc.SecurityModel;
-import edu.alibaba.mpc4j.common.tool.EnvType;
+import edu.alibaba.mpc4j.common.rpc.pto.AbstractMultiPartyPtoConfig;
 import edu.alibaba.mpc4j.s2pc.aby.basics.z2.Z2cConfig;
 import edu.alibaba.mpc4j.s2pc.aby.basics.z2.Z2cFactory;
 import edu.alibaba.mpc4j.s2pc.aby.operator.row.peqt.PeqtConfig;
@@ -15,7 +15,7 @@ import edu.alibaba.mpc4j.s2pc.pcg.ot.lnot.LnotFactory;
  * @author Weiran Liu
  * @date 2023/4/14
  */
-public class Cgs22PeqtConfig implements PeqtConfig {
+public class Cgs22PeqtConfig extends AbstractMultiPartyPtoConfig implements PeqtConfig {
     /**
      * Z2 circuit config
      */
@@ -26,7 +26,7 @@ public class Cgs22PeqtConfig implements PeqtConfig {
     private final LnotConfig lnotConfig;
 
     private Cgs22PeqtConfig(Builder builder) {
-        assert builder.z2cConfig.getEnvType().equals(builder.lnotConfig.getEnvType());
+        super(SecurityModel.SEMI_HONEST, builder.z2cConfig, builder.lnotConfig);
         z2cConfig = builder.z2cConfig;
         lnotConfig = builder.lnotConfig;
     }
@@ -44,26 +44,6 @@ public class Cgs22PeqtConfig implements PeqtConfig {
         return PeqtFactory.PeqtType.CGS22;
     }
 
-    @Override
-    public void setEnvType(EnvType envType) {
-        z2cConfig.setEnvType(envType);
-        lnotConfig.setEnvType(envType);
-    }
-
-    @Override
-    public EnvType getEnvType() {
-        return z2cConfig.getEnvType();
-    }
-
-    @Override
-    public SecurityModel getSecurityModel() {
-        SecurityModel securityModel = SecurityModel.MALICIOUS;
-        if (z2cConfig.getSecurityModel().compareTo(securityModel) < 0) {
-            securityModel = z2cConfig.getSecurityModel();
-        }
-        return securityModel;
-    }
-
     public static class Builder implements org.apache.commons.lang3.builder.Builder<Cgs22PeqtConfig> {
         /**
          * Boolean circuit config
@@ -74,16 +54,16 @@ public class Cgs22PeqtConfig implements PeqtConfig {
          */
         private LnotConfig lnotConfig;
 
-        public Builder(boolean silent) {
-            z2cConfig = Z2cFactory.createDefaultConfig(silent);
+        public Builder(SecurityModel securityModel, boolean silent) {
+            z2cConfig = Z2cFactory.createDefaultConfig(securityModel, silent);
             if (silent) {
-                lnotConfig = LnotFactory.createCacheConfig(SecurityModel.SEMI_HONEST);
+                lnotConfig = LnotFactory.createCacheConfig(securityModel);
             } else {
-                lnotConfig = LnotFactory.createDirectConfig(SecurityModel.SEMI_HONEST);
+                lnotConfig = LnotFactory.createDirectConfig(securityModel);
             }
         }
 
-        public Builder setBcConfig(Z2cConfig z2cConfig) {
+        public Builder setZ2cConfig(Z2cConfig z2cConfig) {
             this.z2cConfig = z2cConfig;
             return this;
         }

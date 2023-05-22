@@ -1,21 +1,16 @@
 package edu.alibaba.mpc4j.s2pc.pcg.mtg.z2.core;
 
-import edu.alibaba.mpc4j.common.rpc.Rpc;
-import edu.alibaba.mpc4j.common.rpc.RpcManager;
-import edu.alibaba.mpc4j.common.rpc.impl.memory.MemoryRpcManager;
+import edu.alibaba.mpc4j.common.rpc.test.AbstractThreePartyPtoTest;
 import edu.alibaba.mpc4j.s2pc.pcg.aid.AiderThread;
 import edu.alibaba.mpc4j.s2pc.pcg.aid.TrustDealAider;
 import edu.alibaba.mpc4j.s2pc.pcg.mtg.z2.Z2MtgTestUtils;
 import edu.alibaba.mpc4j.s2pc.pcg.mtg.z2.Z2Triple;
 import edu.alibaba.mpc4j.s2pc.pcg.mtg.z2.core.aid.AidZ2CoreMtgConfig;
 import org.apache.commons.lang3.time.StopWatch;
-import org.junit.After;
-import org.junit.Before;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.security.SecureRandom;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -24,12 +19,8 @@ import java.util.concurrent.TimeUnit;
  * @author Weiran Liu
  * @date 2023/5/20
  */
-public class Z2CoreMtgAidTest {
+public class Z2CoreMtgAidTest extends AbstractThreePartyPtoTest {
     private static final Logger LOGGER = LoggerFactory.getLogger(Z2CoreMtgAidTest.class);
-    /**
-     * the random state
-     */
-    private static final SecureRandom SECURE_RANDOM = new SecureRandom();
     /**
      * default num
      */
@@ -39,44 +30,13 @@ public class Z2CoreMtgAidTest {
      */
     private static final int LARGE_NUM = 1 << 18;
     /**
-     * sender RPC
-     */
-    private final Rpc senderRpc;
-    /**
-     * receiver RPC
-     */
-    private final Rpc receiverRpc;
-    /**
-     * aider RPC
-     */
-    private final Rpc aiderRpc;
-    /**
      * config
      */
     private final Z2CoreMtgConfig config;
 
     public Z2CoreMtgAidTest() {
-        // We cannot use NettyRPC in the test case since it needs multi-thread connect / disconnect.
-        // In other word, we cannot connect / disconnect NettyRpc in @Before / @After, respectively.
-        RpcManager rpcManager = new MemoryRpcManager(3);
-        senderRpc = rpcManager.getRpc(0);
-        receiverRpc = rpcManager.getRpc(1);
-        aiderRpc = rpcManager.getRpc(2);
+        super(Z2CoreMtgFactory.Z2CoreMtgType.AID.name());
         this.config = new AidZ2CoreMtgConfig.Builder().build();
-    }
-
-    @Before
-    public void connect() {
-        senderRpc.connect();
-        receiverRpc.connect();
-        aiderRpc.connect();
-    }
-
-    @After
-    public void disconnect() {
-        senderRpc.disconnect();
-        receiverRpc.disconnect();
-        aiderRpc.disconnect();
     }
 
     @Test
@@ -105,9 +65,9 @@ public class Z2CoreMtgAidTest {
     }
 
     private void testPto(int num, boolean parallel) {
-        Z2CoreMtgParty sender = Z2CoreMtgFactory.createSender(senderRpc, receiverRpc.ownParty(), aiderRpc.ownParty(), config);
-        Z2CoreMtgParty receiver = Z2CoreMtgFactory.createReceiver(receiverRpc, senderRpc.ownParty(), aiderRpc.ownParty(), config);
-        TrustDealAider aider = new TrustDealAider(aiderRpc, senderRpc.ownParty(), receiverRpc.ownParty());
+        Z2CoreMtgParty sender = Z2CoreMtgFactory.createSender(firstRpc, secondRpc.ownParty(), thirdRpc.ownParty(), config);
+        Z2CoreMtgParty receiver = Z2CoreMtgFactory.createReceiver(secondRpc, firstRpc.ownParty(), thirdRpc.ownParty(), config);
+        TrustDealAider aider = new TrustDealAider(thirdRpc, firstRpc.ownParty(), secondRpc.ownParty());
         sender.setParallel(parallel);
         receiver.setParallel(parallel);
         aider.setParallel(parallel);
@@ -120,29 +80,23 @@ public class Z2CoreMtgAidTest {
             Z2CoreMtgPartyThread senderThread = new Z2CoreMtgPartyThread(sender, num);
             Z2CoreMtgPartyThread receiverThread = new Z2CoreMtgPartyThread(receiver, num);
             AiderThread aiderThread = new AiderThread(aider);
-            StopWatch stopWatch = new StopWatch();
+            STOP_WATCH.start();
             // start
-            stopWatch.start();
             senderThread.start();
             receiverThread.start();
             aiderThread.start();
             // stop
             senderThread.join();
             receiverThread.join();
-            stopWatch.stop();
-            long time = stopWatch.getTime(TimeUnit.MILLISECONDS);
-            stopWatch.reset();
-            long senderByteLength = senderRpc.getSendByteLength();
-            long receiverByteLength = receiverRpc.getSendByteLength();
-            senderRpc.reset();
-            receiverRpc.reset();
+            STOP_WATCH.stop();
+            long time = STOP_WATCH.getTime(TimeUnit.MILLISECONDS);
+            STOP_WATCH.reset();
+            // verify
             Z2Triple senderOutput = senderThread.getOutput();
             Z2Triple receiverOutput = receiverThread.getOutput();
-            // verify
             Z2MtgTestUtils.assertOutput(num, senderOutput, receiverOutput);
-            LOGGER.info("Sender sends {}B, Receiver sends {}B, time = {}ms",
-                senderByteLength, receiverByteLength, time
-            );
+            printAndResetRpc(time);
+            // destroy
             new Thread(sender::destroy).start();
             new Thread(receiver::destroy).start();
             aiderThread.join();

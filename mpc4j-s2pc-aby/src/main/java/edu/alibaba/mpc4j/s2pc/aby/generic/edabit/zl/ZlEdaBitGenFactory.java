@@ -51,6 +51,26 @@ public class ZlEdaBitGenFactory implements PtoFactory {
     }
 
     /**
+     * Creates a sender.
+     *
+     * @param senderRpc     sender RPC.
+     * @param receiverParty receiver party.
+     * @param aiderParty    aider party.
+     * @param config        config.
+     * @return a sender.
+     */
+    public static ZlEdaBitGenParty createSender(Rpc senderRpc, Party receiverParty, Party aiderParty, ZlEdaBitGenConfig config) {
+        ZlEdaBitGenType type = config.getPtoType();
+        //noinspection SwitchStatementWithTooFewBranches
+        switch (type) {
+            case EGK20:
+                return new Egk20ZlEdaBitGenSender(senderRpc, receiverParty, (Egk20ZlEdaBitGenConfig) config);
+            default:
+                throw new IllegalArgumentException("Invalid " + ZlEdaBitGenType.class.getSimpleName() + ": " + type.name());
+        }
+    }
+
+    /**
      * Creates a receiver.
      *
      * @param receiverRpc the receiver RPC.
@@ -64,6 +84,26 @@ public class ZlEdaBitGenFactory implements PtoFactory {
         switch (type) {
             case EGK20:
                 return new Egk20ZlEdaBitGenReceiver(receiverRpc, senderParty, (Egk20ZlEdaBitGenConfig) config);
+            default:
+                throw new IllegalArgumentException("Invalid " + ZlEdaBitGenType.class.getSimpleName() + ": " + type.name());
+        }
+    }
+
+    /**
+     * Creates a receiver.
+     *
+     * @param receiverRpc receiver RPC.
+     * @param senderParty sender party.
+     * @param aiderParty aider party.
+     * @param config      config.
+     * @return a receiver.
+     */
+    public static ZlEdaBitGenParty createReceiver(Rpc receiverRpc, Party senderParty, Party aiderParty, ZlEdaBitGenConfig config) {
+        ZlEdaBitGenType type = config.getPtoType();
+        //noinspection SwitchStatementWithTooFewBranches
+        switch (type) {
+            case EGK20:
+                return new Egk20ZlEdaBitGenReceiver(receiverRpc, senderParty, aiderParty, (Egk20ZlEdaBitGenConfig) config);
             default:
                 throw new IllegalArgumentException("Invalid " + ZlEdaBitGenType.class.getSimpleName() + ": " + type.name());
         }

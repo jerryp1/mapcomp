@@ -3,6 +3,7 @@ package edu.alibaba.mpc4j.s2pc.upso.ucpsi;
 import com.google.common.base.Preconditions;
 import edu.alibaba.mpc4j.common.rpc.Rpc;
 import edu.alibaba.mpc4j.common.rpc.RpcManager;
+import edu.alibaba.mpc4j.common.rpc.desc.SecurityModel;
 import edu.alibaba.mpc4j.common.rpc.impl.memory.MemoryRpcManager;
 import edu.alibaba.mpc4j.common.tool.CommonConstants;
 import edu.alibaba.mpc4j.common.tool.bitvector.BitVector;
@@ -70,28 +71,32 @@ public class UcpsiTest {
         // CGS22
         configurations.add(new Object[]{
             UcpsiFactory.UcpsiType.CGS22.name() + " (direct + pir)",
-            new Cgs22UcpsiConfig.Builder(false)
+            new Cgs22UcpsiConfig.Builder(SecurityModel.SEMI_HONEST, false)
                 .setUrbopprfConfig(new PirUrbopprfConfig.Builder().build())
                 .build()
         });
         configurations.add(new Object[]{
-            UcpsiFactory.UcpsiType.CGS22.name() + " (silent)", new Cgs22UcpsiConfig.Builder(true).build()
+            UcpsiFactory.UcpsiType.CGS22.name() + " (silent)",
+            new Cgs22UcpsiConfig.Builder(SecurityModel.SEMI_HONEST, true).build()
         });
         configurations.add(new Object[]{
-            UcpsiFactory.UcpsiType.CGS22.name() + " (direct)", new Cgs22UcpsiConfig.Builder(false).build()
+            UcpsiFactory.UcpsiType.CGS22.name() + " (direct)",
+            new Cgs22UcpsiConfig.Builder(SecurityModel.SEMI_HONEST, false).build()
         });
         // PSTY19
         configurations.add(new Object[]{
             UcpsiFactory.UcpsiType.PSTY19.name() + " (direct + pir)",
-            new Psty19UcpsiConfig.Builder(false)
+            new Psty19UcpsiConfig.Builder(SecurityModel.SEMI_HONEST, false)
                 .setUbopprfConfig(new PirUbopprfConfig.Builder().build())
                 .build()
         });
         configurations.add(new Object[]{
-            UcpsiFactory.UcpsiType.PSTY19.name() + " (silent)", new Psty19UcpsiConfig.Builder(true).build()
+            UcpsiFactory.UcpsiType.PSTY19.name() + " (silent)",
+            new Psty19UcpsiConfig.Builder(SecurityModel.SEMI_HONEST, true).build()
         });
         configurations.add(new Object[]{
-            UcpsiFactory.UcpsiType.PSTY19.name() + " (direct)", new Psty19UcpsiConfig.Builder(false).build()
+            UcpsiFactory.UcpsiType.PSTY19.name() + " (direct)",
+            new Psty19UcpsiConfig.Builder(SecurityModel.SEMI_HONEST, false).build()
         });
         return configurations;
     }

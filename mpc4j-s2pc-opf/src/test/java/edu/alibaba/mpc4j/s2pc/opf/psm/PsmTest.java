@@ -3,6 +3,7 @@ package edu.alibaba.mpc4j.s2pc.opf.psm;
 import com.google.common.base.Preconditions;
 import edu.alibaba.mpc4j.common.rpc.Rpc;
 import edu.alibaba.mpc4j.common.rpc.RpcManager;
+import edu.alibaba.mpc4j.common.rpc.desc.SecurityModel;
 import edu.alibaba.mpc4j.common.rpc.impl.memory.MemoryRpcManager;
 import edu.alibaba.mpc4j.common.tool.bitvector.BitVector;
 import edu.alibaba.mpc4j.s2pc.aby.basics.z2.SquareZ2Vector;
@@ -60,25 +61,15 @@ public class PsmTest {
     public static Collection<Object[]> configurations() {
         Collection<Object[]> configurations = new ArrayList<>();
 
-        // CGS22_OPPRF (direct, semi-honest)
+        // CGS22_OPPRF
         configurations.add(new Object[]{
-            PsmType.CGS22_OPPRF.name() + " (direct)",
-            new Cgs22OpprfPsmConfig.Builder(false).build()
+            PsmType.CGS22_OPPRF.name() + " (" + SecurityModel.SEMI_HONEST.name() + ")",
+            new Cgs22OpprfPsmConfig.Builder(SecurityModel.SEMI_HONEST, false).build()
         });
-        // CGS22_OPPRF (silent, semi-honest)
+        // CGS22_LNOT
         configurations.add(new Object[]{
-            PsmType.CGS22_OPPRF.name() + " (silent)",
-            new Cgs22OpprfPsmConfig.Builder(true).build()
-        });
-        // CGS22_LNOT (direct, semi-honest)
-        configurations.add(new Object[]{
-            PsmType.CGS22_LNOT.name() + " (direct)",
-            new Cgs22LnotPsmConfig.Builder(false).build()
-        });
-        // CGS22_LNOT (silent, semi-honest)
-        configurations.add(new Object[]{
-            PsmType.CGS22_LNOT.name() + " (silent)",
-            new Cgs22LnotPsmConfig.Builder(true).build()
+            PsmType.CGS22_LNOT.name() + " (" + SecurityModel.SEMI_HONEST.name() + ")",
+            new Cgs22LnotPsmConfig.Builder(SecurityModel.SEMI_HONEST, false).build()
         });
 
         return configurations;

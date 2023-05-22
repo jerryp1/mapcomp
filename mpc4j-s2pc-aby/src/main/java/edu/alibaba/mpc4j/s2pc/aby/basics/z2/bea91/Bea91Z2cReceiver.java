@@ -37,6 +37,12 @@ public class Bea91Z2cReceiver extends AbstractZ2cParty {
         addSubPtos(mtgReceiver);
     }
 
+    public Bea91Z2cReceiver(Rpc receiverRpc, Party senderParty, Party aiderParty, Bea91Z2cConfig config) {
+        super(Bea91Z2cPtoDesc.getInstance(), receiverRpc, senderParty, config);
+        mtgReceiver = Z2MtgFactory.createReceiver(receiverRpc, senderParty, aiderParty, config.getMtgConfig());
+        addSubPtos(mtgReceiver);
+    }
+
     @Override
     public void init(int maxRoundBitNum, int updateBitNum) throws MpcAbortException {
         setInitInput(maxRoundBitNum, updateBitNum);

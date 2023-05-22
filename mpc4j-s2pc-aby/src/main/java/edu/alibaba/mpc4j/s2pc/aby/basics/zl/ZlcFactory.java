@@ -2,6 +2,7 @@ package edu.alibaba.mpc4j.s2pc.aby.basics.zl;
 
 import edu.alibaba.mpc4j.common.rpc.Party;
 import edu.alibaba.mpc4j.common.rpc.Rpc;
+import edu.alibaba.mpc4j.common.rpc.desc.SecurityModel;
 import edu.alibaba.mpc4j.common.rpc.pto.PtoFactory;
 import edu.alibaba.mpc4j.common.tool.galoisfield.zl.Zl;
 import edu.alibaba.mpc4j.s2pc.aby.basics.zl.bea91.Bea91ZlcConfig;
@@ -73,10 +74,11 @@ public class ZlcFactory implements PtoFactory {
     /**
      * Creates a default config.
      *
-     * @param zl Zl instance.
+     * @param securityModel security model.
+     * @param zl            Zl instance.
      * @return a default config.
      */
-    public static ZlcConfig createDefaultConfig(Zl zl) {
+    public static ZlcConfig createDefaultConfig(SecurityModel securityModel, Zl zl) {
         return new Bea91ZlcConfig.Builder(zl).build();
     }
 }
