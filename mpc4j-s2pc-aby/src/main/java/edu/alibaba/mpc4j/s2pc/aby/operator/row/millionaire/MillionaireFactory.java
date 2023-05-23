@@ -75,15 +75,7 @@ public class MillionaireFactory {
      * @return a default config.
      */
     public static MillionaireConfig createDefaultConfig(SecurityModel securityModel, boolean silent) {
-        switch (securityModel) {
-            case IDEAL:
-            case SEMI_HONEST:
-                return new Rrk20MillionaireConfig.Builder(securityModel, silent)
-                        .build();
-            case COVERT:
-            case MALICIOUS:
-            default:
-                throw new IllegalArgumentException("Invalid " + SecurityModel.class.getSimpleName() + ": " + securityModel.name());
-        }
+        return new Rrk20MillionaireConfig.Builder(securityModel, silent)
+                .build();
     }
 }

@@ -56,14 +56,9 @@ public class MillionaireTest {
     public static Collection<Object[]> configurations() {
         Collection<Object[]> configurations = new ArrayList<>();
 
-        // RRK+20 (direct, semi-honest)
+        // RRK+20
         configurations.add(new Object[]{
                 MillionaireFactory.MillionaireType.RRK20 + " (direct, semi-honest)",
-                new Rrk20MillionaireConfig.Builder(SecurityModel.SEMI_HONEST, false).build()
-        });
-        // RRK+20 (direct, semi-honest)
-        configurations.add(new Object[]{
-                MillionaireFactory.MillionaireType.RRK20 + " (silent, semi-honest)",
                 new Rrk20MillionaireConfig.Builder(SecurityModel.SEMI_HONEST, false).build()
         });
         return configurations;
