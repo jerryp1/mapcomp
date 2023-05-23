@@ -163,7 +163,7 @@ jobject JNICALL Java_edu_alibaba_mpc4j_s2pc_pir_index_single_sealpir_Acls18Singl
         vector<Ciphertext> intermediateCtxts(product);
         Ciphertext temp;
         for (uint32_t k = 0; k < product; k++) {
-            evaluator.multiply_plain(expanded_query[0], (*cur)[k],intermediateCtxts[k]);
+            evaluator.multiply_plain(expanded_query[0], (*cur)[k], intermediateCtxts[k]);
             for (uint32_t j = 1; j < nvec[i]; j++) {
                 evaluator.multiply_plain(expanded_query[j], (*cur)[k + j * product], temp);
                 evaluator.add_inplace(intermediateCtxts[k], temp); // Adds to first component.
@@ -248,5 +248,5 @@ jint JNICALL Java_edu_alibaba_mpc4j_s2pc_pir_index_single_sealpir_Acls18SingleIn
         JNIEnv *env, jclass, jbyteArray parms_bytes) {
     EncryptionParameters parms = deserialize_encryption_parms(env, parms_bytes);
     SEALContext context(parms);
-    return (jint) compute_expansion_ratio(context.first_context_data()->parms());
+    return (jint) compute_expansion_ratio(context.last_context_data()->parms()) << 1;
 }

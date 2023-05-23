@@ -60,7 +60,7 @@ public class SealPirTest {
             SingleIndexPirFactory.SingleIndexPirType.SEAL_PIR.name() + " (1-dimension)",
             sealpirConfig,
             new Acls18SingleIndexPirParams(
-                4096,
+                8192,
                 20,
                 1
             )
@@ -70,7 +70,7 @@ public class SealPirTest {
             SingleIndexPirFactory.SingleIndexPirType.SEAL_PIR.name() + " (2-dimension)",
             sealpirConfig,
             new Acls18SingleIndexPirParams(
-                4096,
+                8192,
                 20,
                 2
             )

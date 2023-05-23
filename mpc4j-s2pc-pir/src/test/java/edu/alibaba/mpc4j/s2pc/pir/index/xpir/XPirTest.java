@@ -49,7 +49,7 @@ public class XPirTest {
     /**
      * database size
      */
-    private static final int SERVER_ELEMENT_SIZE = 1 << 12;
+    private static final int SERVER_ELEMENT_SIZE = 1 << 8;
 
     @Parameterized.Parameters(name = "{0}")
     public static Collection<Object[]> configurations() {
@@ -70,7 +70,7 @@ public class XPirTest {
             SingleIndexPirFactory.SingleIndexPirType.XPIR.name() + " (2-dimension)",
             xpirConfig,
             new Mbfk16SingleIndexPirParams(
-                4096,
+                8192,
                 20,
                 2
             )

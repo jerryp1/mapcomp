@@ -216,5 +216,5 @@ jint JNICALL Java_edu_alibaba_mpc4j_s2pc_pir_index_single_xpir_Mbfk16SingleIndex
         JNIEnv *env, jclass, jbyteArray parms_bytes) {
     EncryptionParameters parms = deserialize_encryption_parms(env, parms_bytes);
     SEALContext context(parms);
-    return (jint) compute_expansion_ratio(context.first_context_data()->parms());
+    return (jint) compute_expansion_ratio(context.last_context_data()->parms()) << 1;
 }
