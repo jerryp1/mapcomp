@@ -60,6 +60,7 @@ public class Rrk20ZlDreluSender extends AbstractZlDreluParty {
 
         stopWatch.start();
         millionaireSender.init(maxL, maxNum);
+        z2cSender.init(maxL * maxNum, maxL * maxNum);
         stopWatch.stop();
         long initTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
         stopWatch.reset();

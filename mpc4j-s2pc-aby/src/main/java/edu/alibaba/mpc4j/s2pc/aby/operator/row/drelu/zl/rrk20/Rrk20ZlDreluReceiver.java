@@ -46,7 +46,7 @@ public class Rrk20ZlDreluReceiver extends AbstractZlDreluParty {
 
     public Rrk20ZlDreluReceiver(Rpc receiverRpc, Party senderParty, Rrk20ZlDreluConfig config) {
         super(Rrk20ZlDreluPtoDesc.getInstance(), receiverRpc, senderParty, config);
-        millionaireReceiver = MillionaireFactory.createSender(receiverRpc, senderParty, config.getMillionaireConfig());
+        millionaireReceiver = MillionaireFactory.createReceiver(receiverRpc, senderParty, config.getMillionaireConfig());
         addSubPtos(millionaireReceiver);
         z2cReceiver = Z2cFactory.createReceiver(receiverRpc, senderParty, config.getZ2cConfig());
         addSubPtos(z2cReceiver);
@@ -59,6 +59,7 @@ public class Rrk20ZlDreluReceiver extends AbstractZlDreluParty {
 
         stopWatch.start();
         millionaireReceiver.init(maxL, maxNum);
+        z2cReceiver.init(maxL * maxNum, maxL * maxNum);
         stopWatch.stop();
         long initTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
         stopWatch.reset();
