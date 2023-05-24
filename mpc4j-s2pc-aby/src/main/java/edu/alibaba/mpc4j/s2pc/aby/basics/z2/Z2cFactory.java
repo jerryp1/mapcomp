@@ -11,7 +11,6 @@ import edu.alibaba.mpc4j.s2pc.aby.basics.z2.rrg21.Rrg21Z2cConfig;
 import edu.alibaba.mpc4j.s2pc.aby.basics.z2.rrg21.Rrg21Z2cReceiver;
 import edu.alibaba.mpc4j.s2pc.aby.basics.z2.rrg21.Rrg21Z2cSender;
 import edu.alibaba.mpc4j.s2pc.pcg.mtg.z2.Z2MtgFactory;
-import edu.alibaba.mpc4j.s2pc.pcg.ot.cot.CotFactory;
 
 /**
  * Z2 circuit factory.
@@ -62,6 +61,26 @@ public class Z2cFactory implements PtoFactory {
     }
 
     /**
+     * Creates a sender.
+     *
+     * @param senderRpc     sender RPC.
+     * @param receiverParty receiver party.
+     * @param aiderParty    aider party.
+     * @param config        config.
+     * @return a sender.
+     */
+    public static Z2cParty createSender(Rpc senderRpc, Party receiverParty, Party aiderParty, Z2cConfig config) {
+        BcType type = config.getPtoType();
+        //noinspection SwitchStatementWithTooFewBranches
+        switch (type) {
+            case BEA91:
+                return new Bea91Z2cSender(senderRpc, receiverParty, aiderParty, (Bea91Z2cConfig) config);
+            default:
+                throw new IllegalArgumentException("Invalid " + BcType.class.getSimpleName() + ": " + type.name());
+        }
+    }
+
+    /**
      * Creates a receiver.
      *
      * @param receiverRpc the receiver RPC.
@@ -82,20 +101,41 @@ public class Z2cFactory implements PtoFactory {
     }
 
     /**
+     * Creates a receiver.
+     *
+     * @param receiverRpc receiver RPC.
+     * @param senderParty sender party.
+     * @param aiderParty  aider party.
+     * @param config      config.
+     * @return a receiver.
+     */
+    public static Z2cParty createReceiver(Rpc receiverRpc, Party senderParty, Party aiderParty, Z2cConfig config) {
+        BcType type = config.getPtoType();
+        //noinspection SwitchStatementWithTooFewBranches
+        switch (type) {
+            case BEA91:
+                return new Bea91Z2cReceiver(receiverRpc, senderParty, aiderParty, (Bea91Z2cConfig) config);
+            default:
+                throw new IllegalArgumentException("Invalid " + BcType.class.getSimpleName() + ": " + type.name());
+        }
+    }
+
+    /**
      * Creates a default config.
      *
-     * @param silent        if using a silent protocol.
+     * @param silent if using a silent protocol.
      * @return a default config.
      */
-    public static Z2cConfig createDefaultConfig(boolean silent) {
-        if (silent) {
-            return new Bea91Z2cConfig.Builder()
-                .setZ2MtgConfig(Z2MtgFactory.createDefaultConfig(SecurityModel.SEMI_HONEST, true))
-                .build();
-        } else {
-            return new Rrg21Z2cConfig.Builder()
-                .setCotConfig(CotFactory.createDefaultConfig(SecurityModel.SEMI_HONEST, false))
-                .build();
+    public static Z2cConfig createDefaultConfig(SecurityModel securityModel, boolean silent) {
+        switch (securityModel) {
+            case IDEAL:
+            case TRUSTED_DEALER:
+            case SEMI_HONEST:
+                return new Bea91Z2cConfig.Builder()
+                    .setZ2MtgConfig(Z2MtgFactory.createDefaultConfig(securityModel, silent))
+                    .build();
+            default:
+                throw new IllegalArgumentException("Invalid " + SecurityModel.class.getSimpleName() + ": " + securityModel);
         }
     }
 }

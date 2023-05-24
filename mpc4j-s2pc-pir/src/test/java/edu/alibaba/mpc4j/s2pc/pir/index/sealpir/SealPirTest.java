@@ -6,7 +6,11 @@ import edu.alibaba.mpc4j.common.rpc.RpcManager;
 import edu.alibaba.mpc4j.common.rpc.impl.memory.MemoryRpcManager;
 import edu.alibaba.mpc4j.crypto.matrix.database.NaiveDatabase;
 import edu.alibaba.mpc4j.s2pc.pir.PirUtils;
-import edu.alibaba.mpc4j.s2pc.pir.index.IndexPirFactory;
+import edu.alibaba.mpc4j.s2pc.pir.index.single.SingleIndexPirFactory;
+import edu.alibaba.mpc4j.s2pc.pir.index.single.sealpir.Acls18SingleIndexPirClient;
+import edu.alibaba.mpc4j.s2pc.pir.index.single.sealpir.Acls18SingleIndexPirConfig;
+import edu.alibaba.mpc4j.s2pc.pir.index.single.sealpir.Acls18SingleIndexPirParams;
+import edu.alibaba.mpc4j.s2pc.pir.index.single.sealpir.Acls18SingleIndexPirServer;
 import org.apache.commons.lang3.StringUtils;
 import org.junit.After;
 import org.junit.Assert;
@@ -50,23 +54,23 @@ public class SealPirTest {
     @Parameterized.Parameters(name = "{0}")
     public static Collection<Object[]> configurations() {
         Collection<Object[]> configurations = new ArrayList<>();
-        Acls18IndexPirConfig sealpirConfig = new Acls18IndexPirConfig();
+        Acls18SingleIndexPirConfig sealpirConfig = new Acls18SingleIndexPirConfig();
         // SEAL PIR (1-dimension)
         configurations.add(new Object[]{
-            IndexPirFactory.IndexPirType.SEAL_PIR.name() + " (1-dimension)",
+            SingleIndexPirFactory.SingleIndexPirType.SEAL_PIR.name() + " (1-dimension)",
             sealpirConfig,
-            new Acls18IndexPirParams(
-                4096,
+            new Acls18SingleIndexPirParams(
+                8192,
                 20,
                 1
             )
         });
         // SEAL PIR (2-dimension)
         configurations.add(new Object[]{
-            IndexPirFactory.IndexPirType.SEAL_PIR.name() + " (2-dimension)",
+            SingleIndexPirFactory.SingleIndexPirType.SEAL_PIR.name() + " (2-dimension)",
             sealpirConfig,
-            new Acls18IndexPirParams(
-                4096,
+            new Acls18SingleIndexPirParams(
+                8192,
                 20,
                 2
             )
@@ -85,13 +89,13 @@ public class SealPirTest {
     /**
      * SEAL PIR config
      */
-    private final Acls18IndexPirConfig indexPirConfig;
+    private final Acls18SingleIndexPirConfig indexPirConfig;
     /**
      * SEAL PIR params
      */
-    private final Acls18IndexPirParams indexPirParams;
+    private final Acls18SingleIndexPirParams indexPirParams;
 
-    public SealPirTest(String name, Acls18IndexPirConfig indexPirConfig, Acls18IndexPirParams indexPirParams) {
+    public SealPirTest(String name, Acls18SingleIndexPirConfig indexPirConfig, Acls18SingleIndexPirParams indexPirParams) {
         Preconditions.checkArgument(StringUtils.isNotBlank(name));
         // We cannot use NettyRPC in the test case since it needs multi-thread connect / disconnect.
         // In other word, we cannot connect / disconnect NettyRpc in @Before / @After, respectively.
@@ -134,12 +138,12 @@ public class SealPirTest {
         testSealPir(indexPirConfig, indexPirParams, SMALL_ELEMENT_BYTE_LENGTH, true);
     }
 
-    public void testSealPir(Acls18IndexPirConfig config, Acls18IndexPirParams indexPirParams, int elementByteLength,
-                            boolean parallel) {
+    public void testSealPir(Acls18SingleIndexPirConfig config, Acls18SingleIndexPirParams indexPirParams,
+                            int elementByteLength, boolean parallel) {
         int retrievalIndex = PirUtils.generateRetrievalIndex(SERVER_ELEMENT_SIZE);
         NaiveDatabase database = PirUtils.generateDataBase(SERVER_ELEMENT_SIZE, elementByteLength * Byte.SIZE);
-        Acls18IndexPirServer server = new Acls18IndexPirServer(serverRpc, clientRpc.ownParty(), config);
-        Acls18IndexPirClient client = new Acls18IndexPirClient(clientRpc, serverRpc.ownParty(), config);
+        Acls18SingleIndexPirServer server = new Acls18SingleIndexPirServer(serverRpc, clientRpc.ownParty(), config);
+        Acls18SingleIndexPirClient client = new Acls18SingleIndexPirClient(clientRpc, serverRpc.ownParty(), config);
         // set parallel
         server.setParallel(parallel);
         client.setParallel(parallel);

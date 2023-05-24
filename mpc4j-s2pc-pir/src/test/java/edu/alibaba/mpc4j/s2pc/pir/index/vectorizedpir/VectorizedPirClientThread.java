@@ -1,6 +1,8 @@
 package edu.alibaba.mpc4j.s2pc.pir.index.vectorizedpir;
 
 import edu.alibaba.mpc4j.common.rpc.MpcAbortException;
+import edu.alibaba.mpc4j.s2pc.pir.index.single.vectorizedpir.Mr23SingleIndexPirClient;
+import edu.alibaba.mpc4j.s2pc.pir.index.single.vectorizedpir.Mr23SingleIndexPirParams;
 
 import java.nio.ByteBuffer;
 
@@ -14,11 +16,11 @@ public class VectorizedPirClientThread extends Thread {
     /**
      * Vectorized PIR client
      */
-    private final Mr23IndexPirClient client;
+    private final Mr23SingleIndexPirClient client;
     /**
      * Vectorized PIR params
      */
-    private final Mr23IndexPirParams indexPirParams;
+    private final Mr23SingleIndexPirParams indexPirParams;
     /**
      * element byte length
      */
@@ -36,7 +38,7 @@ public class VectorizedPirClientThread extends Thread {
      */
     private ByteBuffer indexPirResult;
 
-    VectorizedPirClientThread(Mr23IndexPirClient client, Mr23IndexPirParams indexPirParams, int retrievalIndex,
+    VectorizedPirClientThread(Mr23SingleIndexPirClient client, Mr23SingleIndexPirParams indexPirParams, int retrievalIndex,
                               int serverElementSize, int elementByteLength) {
         this.client = client;
         this.indexPirParams = indexPirParams;

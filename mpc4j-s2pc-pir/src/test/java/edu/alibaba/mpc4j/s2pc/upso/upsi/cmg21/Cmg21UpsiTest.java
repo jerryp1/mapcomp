@@ -23,7 +23,7 @@ import java.util.List;
 import java.util.Set;
 
 /**
- * UPSI协议测试。
+ * CMG21 UPSI test.
  *
  * @author Liqiang Peng
  * @date 2022/5/26
@@ -44,19 +44,19 @@ public class Cmg21UpsiTest {
         return configurations;
     }
     /**
-     * 服务端
+     * server rpc
      */
     private final Rpc serverRpc;
     /**
-     * 客户端
+     * client rpc
      */
     private final Rpc clientRpc;
     /**
-     * the unbalanced PSI config
+     * CMG21 UPSI config
      */
-    private final UpsiConfig config;
+    private final Cmg21UpsiConfig config;
 
-    public Cmg21UpsiTest(String name, UpsiConfig config) {
+    public Cmg21UpsiTest(String name, Cmg21UpsiConfig config) {
         Preconditions.checkArgument(StringUtils.isNotBlank(name));
         // We cannot use NettyRPC in the test case since it needs multi-thread connect / disconnect.
         // In other word, we cannot connect / disconnect NettyRpc in @Before / @After, respectively.
@@ -153,19 +153,19 @@ public class Cmg21UpsiTest {
         testUpsi(Cmg21UpsiParams.SERVER_1M_CLIENT_MAX_5535, true);
     }
 
-    public void testUpsi(UpsiParams upsiParams, boolean parallel) {
+    public void testUpsi(Cmg21UpsiParams upsiParams, boolean parallel) {
         int serverSize = upsiParams.expectServerSize();
         int clientSize = upsiParams.maxClientElementSize();
         List<Set<String>> sets = PsoUtils.generateStringSets("ID", serverSize, clientSize);
         Set<String> serverElementSet = sets.get(0);
         Set<String> clientElementSet = sets.get(1);
-        // 创建参与方实例
-        UpsiServer<String> server = UpsiFactory.createServer(serverRpc, clientRpc.ownParty(), config);
-        UpsiClient<String> client = UpsiFactory.createClient(clientRpc, serverRpc.ownParty(), config);
+        // create instances
+        Cmg21UpsiServer<String> server = new Cmg21UpsiServer<>(serverRpc, clientRpc.ownParty(), config);
+        Cmg21UpsiClient<String> client = new Cmg21UpsiClient<>(clientRpc, serverRpc.ownParty(), config);
         int randomTaskId = Math.abs(new SecureRandom().nextInt());
         server.setTaskId(randomTaskId);
         client.setTaskId(randomTaskId);
-        // 设置并发
+        // set parallel
         server.setParallel(parallel);
         client.setParallel(parallel);
         Cmg21UpsiServerThread<String> serverThread = new Cmg21UpsiServerThread<>(
@@ -173,13 +173,11 @@ public class Cmg21UpsiTest {
         );
         Cmg21UpsiClientThread<String> clientThread = new Cmg21UpsiClientThread<>(client, upsiParams, clientElementSet);
         try {
-            // 开始执行协议
             serverThread.start();
             clientThread.start();
-            // 等待线程停止
             serverThread.join();
             clientThread.join();
-            // 验证结果
+            // verify result
             Set<String> psiResult = clientThread.getIntersectionSet();
             LOGGER.info("Server: The Communication costs {}MB", serverRpc.getSendByteLength() * 1.0 / (1024 * 1024));
             LOGGER.info("Client: The Communication costs {}MB", clientRpc.getSendByteLength() * 1.0 / (1024 * 1024));

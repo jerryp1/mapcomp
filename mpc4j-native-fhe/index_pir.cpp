@@ -249,7 +249,6 @@ void plain_decomposition(Plaintext &pt, const SEALContext &context, uint32_t dec
     uint32_t total_bits = plain_modulus.bit_count();
     uint64_t *raw_ptr = pt.data();
     for (uint32_t p = 0; p < r_l; p++) {
-        vector<uint64_t *> results;
         res = (std::uint64_t *) calloc((coeff_count * coeff_modulus_size), sizeof(uint64_t));
         uint32_t shift_amount = (total_bits) - ((p + 1) * base_bit);
         for (uint32_t k = 0; k < coeff_count; k++) {
@@ -310,8 +309,8 @@ Ciphertext get_sum(vector<Ciphertext> &query, Evaluator& evaluator, GaloisKeys &
         uint32_t count = (end - start) + 1;
         uint32_t next_power_of_two = get_next_power_of_two(count);
         int32_t mid = (int32_t) next_power_of_two / 2;
-        seal::Ciphertext left_sum = get_sum(query, evaluator, gal_keys, encoded_db, start, start + mid - 1);
-        seal::Ciphertext right_sum = get_sum(query, evaluator, gal_keys, encoded_db, start + mid, end);
+        Ciphertext left_sum = get_sum(query, evaluator, gal_keys, encoded_db, start, start + mid - 1);
+        Ciphertext right_sum = get_sum(query, evaluator, gal_keys, encoded_db, start + mid, end);
         evaluator.rotate_rows_inplace(right_sum, -mid, gal_keys);
         evaluator.add_inplace(left_sum, right_sum);
         return left_sum;
@@ -321,8 +320,10 @@ Ciphertext get_sum(vector<Ciphertext> &query, Evaluator& evaluator, GaloisKeys &
         uint32_t query_size = query.size();
         evaluator.multiply_plain(query[0], encoded_db[query_size * start], column_sum);
         for (uint32_t j = 1; j < query_size; j++) {
-            evaluator.multiply_plain(query[j], encoded_db[query_size * start + j], temp_ct);
-            evaluator.add_inplace(column_sum, temp_ct);
+            if (!encoded_db[query_size * start + j].is_zero()) {
+                evaluator.multiply_plain(query[j], encoded_db[query_size * start + j], temp_ct);
+                evaluator.add_inplace(column_sum, temp_ct);
+            }
         }
         evaluator.transform_from_ntt_inplace(column_sum);
         return column_sum;
@@ -344,14 +345,4 @@ uint32_t get_next_power_of_two(uint32_t number) {
     }
     uint32_t number_of_bits = get_number_of_bits(number);
     return (1 << number_of_bits);
-}
-
-vector<uint64_t> rotate_plain(vector<uint64_t> original, int32_t index) {
-    int32_t row_count = (int32_t) original.size() / 2;
-    std::vector<uint64_t> result(original.size(), 0ULL);
-    for (int32_t i = 0; i < row_count; i++)
-    {
-        result[i] = original[(row_count - index + i) % row_count];
-    }
-    return result;
 }

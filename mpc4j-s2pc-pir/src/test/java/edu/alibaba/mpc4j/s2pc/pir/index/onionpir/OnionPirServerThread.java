@@ -2,6 +2,8 @@ package edu.alibaba.mpc4j.s2pc.pir.index.onionpir;
 
 import edu.alibaba.mpc4j.common.rpc.MpcAbortException;
 import edu.alibaba.mpc4j.crypto.matrix.database.NaiveDatabase;
+import edu.alibaba.mpc4j.s2pc.pir.index.single.onionpir.Mcr21SingleIndexPirParams;
+import edu.alibaba.mpc4j.s2pc.pir.index.single.onionpir.Mcr21SingleIndexPirServer;
 
 /**
  * OnionPIR server thread.
@@ -13,17 +15,18 @@ public class OnionPirServerThread extends Thread {
     /**
      * OnionPIR server
      */
-    private final Mcr21IndexPirServer server;
+    private final Mcr21SingleIndexPirServer server;
     /**
      * OnionPIR params
      */
-    private final Mcr21IndexPirParams indexPirParams;
+    private final Mcr21SingleIndexPirParams indexPirParams;
     /**
      * database
      */
     private final NaiveDatabase database;
 
-    OnionPirServerThread(Mcr21IndexPirServer server, Mcr21IndexPirParams indexPirParams, NaiveDatabase database) {
+    OnionPirServerThread(Mcr21SingleIndexPirServer server, Mcr21SingleIndexPirParams indexPirParams,
+                         NaiveDatabase database) {
         this.server = server;
         this.indexPirParams = indexPirParams;
         this.database = database;

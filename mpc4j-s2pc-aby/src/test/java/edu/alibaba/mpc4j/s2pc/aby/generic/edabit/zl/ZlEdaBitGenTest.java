@@ -3,6 +3,7 @@ package edu.alibaba.mpc4j.s2pc.aby.generic.edabit.zl;
 import com.google.common.base.Preconditions;
 import edu.alibaba.mpc4j.common.rpc.Rpc;
 import edu.alibaba.mpc4j.common.rpc.RpcManager;
+import edu.alibaba.mpc4j.common.rpc.desc.SecurityModel;
 import edu.alibaba.mpc4j.common.rpc.impl.memory.MemoryRpcManager;
 import edu.alibaba.mpc4j.common.tool.galoisfield.zl.Zl;
 import edu.alibaba.mpc4j.s2pc.aby.AbyTestUtils;
@@ -52,9 +53,10 @@ public class ZlEdaBitGenTest {
 
         for (Zl zl : AbyTestUtils.ZLS) {
             int l = zl.getL();
+            // EGK20
             configurations.add(new Object[]{
-                ZlEdaBitGenType.EGK20.name() + " (l = " + l + ")",
-                new Egk20ZlEdaBitGenConfig.Builder(zl, true).build(),
+                ZlEdaBitGenType.EGK20.name() + " (" + SecurityModel.SEMI_HONEST + ", l = " + l + ")",
+                new Egk20ZlEdaBitGenConfig.Builder(SecurityModel.SEMI_HONEST, zl, false).build(),
             });
         }
 

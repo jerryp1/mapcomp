@@ -3,6 +3,7 @@ package edu.alibaba.mpc4j.s2pc.pso.cpsi.ccpsi;
 import com.google.common.base.Preconditions;
 import edu.alibaba.mpc4j.common.rpc.Rpc;
 import edu.alibaba.mpc4j.common.rpc.RpcManager;
+import edu.alibaba.mpc4j.common.rpc.desc.SecurityModel;
 import edu.alibaba.mpc4j.common.rpc.impl.memory.MemoryRpcManager;
 import edu.alibaba.mpc4j.common.tool.CommonConstants;
 import edu.alibaba.mpc4j.common.tool.bitvector.BitVector;
@@ -69,52 +70,60 @@ public class CcpsiTest {
         // CGS22
         configurations.add(new Object[]{
             CcpsiType.CGS22.name() + " (silent)",
-            new Cgs22CcpsiConfig.Builder(true).build(),
+            new Cgs22CcpsiConfig.Builder(SecurityModel.SEMI_HONEST, true).build(),
         });
         configurations.add(new Object[]{
             CcpsiType.CGS22.name() + " (direct)",
-            new Cgs22CcpsiConfig.Builder(false).build(),
+            new Cgs22CcpsiConfig.Builder(SecurityModel.SEMI_HONEST, false).build(),
         });
         configurations.add(new Object[]{
             CcpsiType.CGS22.name() + " (2 hash, silent)",
-            new Cgs22CcpsiConfig.Builder(true).setCuckooHashBinType(CuckooHashBinType.NAIVE_2_HASH).build(),
+            new Cgs22CcpsiConfig.Builder(SecurityModel.SEMI_HONEST, true)
+                .setCuckooHashBinType(CuckooHashBinType.NAIVE_2_HASH).build(),
         });
         configurations.add(new Object[]{
             CcpsiType.CGS22.name() + " (2 hash, direct)",
-            new Cgs22CcpsiConfig.Builder(false).setCuckooHashBinType(CuckooHashBinType.NAIVE_2_HASH).build(),
+            new Cgs22CcpsiConfig.Builder(SecurityModel.SEMI_HONEST, false)
+                .setCuckooHashBinType(CuckooHashBinType.NAIVE_2_HASH).build(),
         });
         configurations.add(new Object[]{
             CcpsiType.CGS22.name() + " (4 hash, silent)",
-            new Cgs22CcpsiConfig.Builder(true).setCuckooHashBinType(CuckooHashBinType.NAIVE_4_HASH).build(),
+            new Cgs22CcpsiConfig.Builder(SecurityModel.SEMI_HONEST, true)
+                .setCuckooHashBinType(CuckooHashBinType.NAIVE_4_HASH).build(),
         });
         configurations.add(new Object[]{
             CcpsiType.CGS22.name() + " (4 hash, direct)",
-            new Cgs22CcpsiConfig.Builder(false).setCuckooHashBinType(CuckooHashBinType.NAIVE_4_HASH).build(),
+            new Cgs22CcpsiConfig.Builder(SecurityModel.SEMI_HONEST, false)
+                .setCuckooHashBinType(CuckooHashBinType.NAIVE_4_HASH).build(),
         });
         // PSTY19
         configurations.add(new Object[]{
             CcpsiType.PSTY19.name() + " (silent)",
-            new Psty19CcpsiConfig.Builder(true).build(),
+            new Psty19CcpsiConfig.Builder(SecurityModel.SEMI_HONEST, true).build(),
         });
         configurations.add(new Object[]{
             CcpsiType.PSTY19.name() + " (direct)",
-            new Psty19CcpsiConfig.Builder(false).build(),
+            new Psty19CcpsiConfig.Builder(SecurityModel.SEMI_HONEST, false).build(),
         });
         configurations.add(new Object[]{
             CcpsiType.PSTY19.name() + " (2 hash, silent)",
-            new Psty19CcpsiConfig.Builder(true).setCuckooHashBinType(CuckooHashBinType.NAIVE_2_HASH).build(),
+            new Psty19CcpsiConfig.Builder(SecurityModel.SEMI_HONEST, true)
+                .setCuckooHashBinType(CuckooHashBinType.NAIVE_2_HASH).build(),
         });
         configurations.add(new Object[]{
             CcpsiType.PSTY19.name() + " (2 hash, direct)",
-            new Psty19CcpsiConfig.Builder(false).setCuckooHashBinType(CuckooHashBinType.NAIVE_2_HASH).build(),
+            new Psty19CcpsiConfig.Builder(SecurityModel.SEMI_HONEST, false)
+                .setCuckooHashBinType(CuckooHashBinType.NAIVE_2_HASH).build(),
         });
         configurations.add(new Object[]{
             CcpsiType.PSTY19.name() + " (4 hash, silent)",
-            new Psty19CcpsiConfig.Builder(true).setCuckooHashBinType(CuckooHashBinType.NAIVE_4_HASH).build(),
+            new Psty19CcpsiConfig.Builder(SecurityModel.SEMI_HONEST, true)
+                .setCuckooHashBinType(CuckooHashBinType.NAIVE_4_HASH).build(),
         });
         configurations.add(new Object[]{
             CcpsiType.PSTY19.name() + " (4 hash, direct)",
-            new Psty19CcpsiConfig.Builder(false).setCuckooHashBinType(CuckooHashBinType.NAIVE_4_HASH).build(),
+            new Psty19CcpsiConfig.Builder(SecurityModel.SEMI_HONEST, false)
+                .setCuckooHashBinType(CuckooHashBinType.NAIVE_4_HASH).build(),
         });
 
         return configurations;

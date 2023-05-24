@@ -54,6 +54,26 @@ public class ZlDaBitGenFactory implements PtoFactory {
     }
 
     /**
+     * Creates a sender.
+     *
+     * @param senderRpc     the sender RPC.
+     * @param receiverParty the receiver party.
+     * @param config        the config.
+     * @return a sender.
+     */
+    public static ZlDaBitGenParty createSender(Rpc senderRpc, Party receiverParty, Party aiderParty, ZlDaBitGenConfig config) {
+        ZlDaBitGenType type = config.getPtoType();
+        switch (type) {
+            case EGK20_NO_MAC:
+                return new Egk20NoMacZlDaBitGenSender(senderRpc, receiverParty, aiderParty, (Egk20NoMacZlDaBitGenConfig) config);
+            case EGK20_MAC:
+                return new Egk20MacZlDaBitGenSender(senderRpc, receiverParty, aiderParty, (Egk20MacZlDaBitGenConfig) config);
+            default:
+                throw new IllegalArgumentException("Invalid " + ZlDaBitGenType.class.getSimpleName() + ": " + type.name());
+        }
+    }
+
+    /**
      * Creates a receiver.
      *
      * @param receiverRpc the receiver RPC.
@@ -68,6 +88,26 @@ public class ZlDaBitGenFactory implements PtoFactory {
                 return new Egk20NoMacZlDaBitGenReceiver(receiverRpc, senderParty, (Egk20NoMacZlDaBitGenConfig) config);
             case EGK20_MAC:
                 return new Egk20MacZlDaBitGenReceiver(receiverRpc, senderParty, (Egk20MacZlDaBitGenConfig) config);
+            default:
+                throw new IllegalArgumentException("Invalid " + ZlDaBitGenType.class.getSimpleName() + ": " + type.name());
+        }
+    }
+
+    /**
+     * Creates a receiver.
+     *
+     * @param receiverRpc the receiver RPC.
+     * @param senderParty the sender party.
+     * @param config      the config.
+     * @return a receiver.
+     */
+    public static ZlDaBitGenParty createReceiver(Rpc receiverRpc, Party senderParty, Party aiderParty, ZlDaBitGenConfig config) {
+        ZlDaBitGenType type = config.getPtoType();
+        switch (type) {
+            case EGK20_NO_MAC:
+                return new Egk20NoMacZlDaBitGenReceiver(receiverRpc, senderParty, aiderParty, (Egk20NoMacZlDaBitGenConfig) config);
+            case EGK20_MAC:
+                return new Egk20MacZlDaBitGenReceiver(receiverRpc, senderParty, aiderParty, (Egk20MacZlDaBitGenConfig) config);
             default:
                 throw new IllegalArgumentException("Invalid " + ZlDaBitGenType.class.getSimpleName() + ": " + type.name());
         }

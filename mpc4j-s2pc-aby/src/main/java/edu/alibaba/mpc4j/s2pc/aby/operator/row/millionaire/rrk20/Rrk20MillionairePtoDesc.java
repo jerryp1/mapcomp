@@ -4,7 +4,11 @@ import edu.alibaba.mpc4j.common.rpc.desc.PtoDesc;
 import edu.alibaba.mpc4j.common.rpc.desc.PtoDescManager;
 
 /**
- * RRK+20 Millionaire Protocol Description.
+ * RRK+20 Zl millionaire protocol description. The protocol comes from Algorithm 1 of the following paper:
+ * <p>
+ * Rathee, Deevashwer, Mayank Rathee, Nishant Kumar, Nishanth Chandran, Divya Gupta, Aseem Rastogi, and Rahul Sharma.
+ * CrypTFlow2: Practical 2-party secure inference. CCS 2020, pp. 325-342. 2020.
+ * </p>
  *
  * @author Li Peng
  * @date 2023/4/24

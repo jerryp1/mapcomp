@@ -39,8 +39,8 @@ public class Pssw09SqOprfConfig extends AbstractMultiPartyPtoConfig implements S
          */
         private OprpConfig oprpConfig;
 
-        public Builder() {
-            oprpConfig = OprpFactory.createDefaultConfig(true);
+        public Builder(SecurityModel securityModel) {
+            oprpConfig = OprpFactory.createDefaultConfig(securityModel, true);
         }
 
         public Pssw09SqOprfConfig.Builder setOprpConfig(OprpConfig oprpConfig) {

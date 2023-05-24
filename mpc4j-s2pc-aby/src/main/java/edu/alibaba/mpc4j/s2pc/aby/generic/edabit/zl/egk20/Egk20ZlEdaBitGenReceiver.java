@@ -49,6 +49,16 @@ public class Egk20ZlEdaBitGenReceiver extends AbstractZlEdaBitGenParty {
         z2IntegerCircuit = new Z2IntegerCircuit(z2cReceiver);
     }
 
+    public Egk20ZlEdaBitGenReceiver(Rpc receiverPpc, Party senderParty, Party aiderParty, Egk20ZlEdaBitGenConfig config) {
+        super(Egk20ZlEdaBitGenPtoDesc.getInstance(), receiverPpc, senderParty, config);
+        //TODO add aider
+        zlcReceiver = ZlcFactory.createReceiver(receiverPpc, senderParty, config.getZlcConfig());
+        addSubPtos(zlcReceiver);
+        z2cReceiver = Z2cFactory.createReceiver(receiverPpc, senderParty, aiderParty, config.getZ2cConfig());
+        addSubPtos(z2cReceiver);
+        z2IntegerCircuit = new Z2IntegerCircuit(z2cReceiver);
+    }
+
     @Override
     public void init(int maxNum) throws MpcAbortException {
         setInitInput(maxNum);

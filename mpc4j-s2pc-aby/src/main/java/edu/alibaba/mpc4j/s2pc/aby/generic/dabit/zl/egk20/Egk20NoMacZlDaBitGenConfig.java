@@ -1,8 +1,7 @@
 package edu.alibaba.mpc4j.s2pc.aby.generic.dabit.zl.egk20;
 
-import com.google.common.base.Preconditions;
 import edu.alibaba.mpc4j.common.rpc.desc.SecurityModel;
-import edu.alibaba.mpc4j.common.tool.EnvType;
+import edu.alibaba.mpc4j.common.rpc.pto.AbstractMultiPartyPtoConfig;
 import edu.alibaba.mpc4j.common.tool.galoisfield.zl.Zl;
 import edu.alibaba.mpc4j.s2pc.aby.generic.dabit.zl.ZlDaBitGenConfig;
 import edu.alibaba.mpc4j.s2pc.aby.generic.dabit.zl.ZlDaBitGenFactory;
@@ -17,7 +16,7 @@ import edu.alibaba.mpc4j.s2pc.aby.basics.zl.ZlcFactory;
  * @author Weiran Liu
  * @date 2023/5/18
  */
-public class Egk20NoMacZlDaBitGenConfig implements ZlDaBitGenConfig {
+public class Egk20NoMacZlDaBitGenConfig extends AbstractMultiPartyPtoConfig implements ZlDaBitGenConfig {
     /**
      * Zl circuit config
      */
@@ -28,8 +27,7 @@ public class Egk20NoMacZlDaBitGenConfig implements ZlDaBitGenConfig {
     private final Z2cConfig z2cConfig;
 
     private Egk20NoMacZlDaBitGenConfig(Builder builder) {
-        Preconditions.checkArgument(builder.zlcConfig.getSecurityModel().equals(SecurityModel.SEMI_HONEST));
-        Preconditions.checkArgument(builder.z2cConfig.getSecurityModel().equals(SecurityModel.SEMI_HONEST));
+        super(SecurityModel.SEMI_HONEST, builder.zlcConfig, builder.z2cConfig);
         zlcConfig = builder.zlcConfig;
         z2cConfig = builder.z2cConfig;
     }
@@ -52,22 +50,6 @@ public class Egk20NoMacZlDaBitGenConfig implements ZlDaBitGenConfig {
         return zlcConfig.getZl();
     }
 
-    @Override
-    public void setEnvType(EnvType envType) {
-        zlcConfig.setEnvType(envType);
-        z2cConfig.setEnvType(envType);
-    }
-
-    @Override
-    public EnvType getEnvType() {
-        return zlcConfig.getEnvType();
-    }
-
-    @Override
-    public SecurityModel getSecurityModel() {
-        return SecurityModel.SEMI_HONEST;
-    }
-
     public static class Builder implements org.apache.commons.lang3.builder.Builder<Egk20NoMacZlDaBitGenConfig> {
         /**
          * Zl circuit config
@@ -78,9 +60,9 @@ public class Egk20NoMacZlDaBitGenConfig implements ZlDaBitGenConfig {
          */
         private Z2cConfig z2cConfig;
 
-        public Builder(Zl zl, boolean silent) {
-            zlcConfig = ZlcFactory.createDefaultConfig(zl);
-            z2cConfig = Z2cFactory.createDefaultConfig(silent);
+        public Builder(SecurityModel securityModel, Zl zl, boolean silent) {
+            zlcConfig = ZlcFactory.createDefaultConfig(securityModel, zl);
+            z2cConfig = Z2cFactory.createDefaultConfig(securityModel, silent);
         }
 
         public Builder setZlcConfig(ZlcConfig zlcConfig) {
@@ -88,7 +70,7 @@ public class Egk20NoMacZlDaBitGenConfig implements ZlDaBitGenConfig {
             return this;
         }
 
-        public Builder setBcConfig(Z2cConfig z2cConfig) {
+        public Builder setZ2cConfig(Z2cConfig z2cConfig) {
             this.z2cConfig = z2cConfig;
             return this;
         }

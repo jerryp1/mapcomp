@@ -13,8 +13,8 @@ import edu.alibaba.mpc4j.common.tool.utils.CommonUtils;
 import edu.alibaba.mpc4j.s2pc.opf.sqoprf.SqOprfFactory;
 import edu.alibaba.mpc4j.s2pc.opf.sqoprf.SqOprfReceiver;
 import edu.alibaba.mpc4j.s2pc.opf.sqoprf.SqOprfReceiverOutput;
-import edu.alibaba.mpc4j.s2pc.pir.batchindex.BatchIndexPirClient;
-import edu.alibaba.mpc4j.s2pc.pir.batchindex.BatchIndexPirFactory;
+import edu.alibaba.mpc4j.s2pc.pir.index.batch.BatchIndexPirClient;
+import edu.alibaba.mpc4j.s2pc.pir.index.batch.BatchIndexPirFactory;
 import edu.alibaba.mpc4j.s2pc.upso.uopprf.ub.AbstractUbopprfReceiver;
 
 import java.nio.ByteBuffer;

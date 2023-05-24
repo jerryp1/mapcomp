@@ -117,20 +117,20 @@ public class PsuConfigUtils {
             Z2cConfig offlineZ2cConfig = new Bea91Z2cConfig.Builder()
                 .setZ2MtgConfig(offlineZ2MtgConfig)
                 .build();
-            OprpConfig offlineOprpConfig = new LowMcOprpConfig.Builder()
+            OprpConfig offlineOprpConfig = new LowMcOprpConfig.Builder(SecurityModel.SEMI_HONEST)
                 .setZ2cConfig(offlineZ2cConfig)
                 .build();
-            return new Zcl22SkePsuConfig.Builder()
+            return new Zcl22SkePsuConfig.Builder(SecurityModel.SEMI_HONEST)
                 .setCoreCotConfig(CoreCotFactory.createDefaultConfig(SecurityModel.SEMI_HONEST))
                 .setOprpConfig(offlineOprpConfig)
                 .setBcConfig(offlineZ2cConfig)
                 .setGf2eOvdmType(Gf2eOvdmType.H3_SINGLETON_GCT)
                 .build();
         } else {
-            return new Zcl22SkePsuConfig.Builder()
+            return new Zcl22SkePsuConfig.Builder(SecurityModel.SEMI_HONEST)
                 .setCoreCotConfig(CoreCotFactory.createDefaultConfig(SecurityModel.SEMI_HONEST))
-                .setOprpConfig(OprpFactory.createDefaultConfig(true))
-                .setBcConfig(Z2cFactory.createDefaultConfig(true))
+                .setOprpConfig(OprpFactory.createDefaultConfig(SecurityModel.SEMI_HONEST, true))
+                .setBcConfig(Z2cFactory.createDefaultConfig(SecurityModel.SEMI_HONEST, true))
                 .setGf2eOvdmType(Gf2eOvdmType.H3_SINGLETON_GCT)
                 .build();
         }

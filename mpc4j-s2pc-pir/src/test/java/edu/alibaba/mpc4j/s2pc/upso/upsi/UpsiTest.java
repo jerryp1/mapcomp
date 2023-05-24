@@ -23,7 +23,7 @@ import java.util.List;
 import java.util.Set;
 
 /**
- * UPSI协议测试。
+ * UPSI test.
  *
  * @author Liqiang Peng
  * @date 2022/5/26
@@ -32,27 +32,27 @@ import java.util.Set;
 public class UpsiTest {
     private static final Logger LOGGER = LoggerFactory.getLogger(UpsiTest.class);
     /**
-     * 服务端元素数量
+     * server element size
      */
-    private static final int SERVER_ELEMENT_SIZE = 1 << 20;
+    private static final int SERVER_ELEMENT_SIZE = 1 << 18;
     /**
-     * 客户端元素数量
+     * client element size
      */
     private static final int CLIENT_ELEMENT_SIZE = 1 << 12;
     /**
-     * 客户端最大元素数量
+     * max client element size
      */
     private static final int MAX_CLIENT_ELEMENT_SIZE = 5535;
     /**
-     * 服务端
+     * server rpc
      */
     private final Rpc serverRpc;
     /**
-     * 客户端
+     * client rpc
      */
     private final Rpc clientRpc;
     /**
-     * the unbalanced PSI config
+     * UPSI config
      */
     private final UpsiConfig config;
 
@@ -105,13 +105,13 @@ public class UpsiTest {
         List<Set<String>> sets = PsoUtils.generateStringSets("ID", serverSize, clientSize);
         Set<String> serverElementSet = sets.get(0);
         Set<String> clientElementSet = sets.get(1);
-        // 创建参与方实例
+        // create instances
         UpsiServer<String> server = UpsiFactory.createServer(serverRpc, clientRpc.ownParty(), config);
         UpsiClient<String> client = UpsiFactory.createClient(clientRpc, serverRpc.ownParty(), config);
         int randomTaskId = Math.abs(new SecureRandom().nextInt());
         server.setTaskId(randomTaskId);
         client.setTaskId(randomTaskId);
-        // 设置并发
+        // set parallel
         server.setParallel(parallel);
         client.setParallel(parallel);
         UpsiServerThread<String> serverThread = new UpsiServerThread<>(
@@ -121,13 +121,11 @@ public class UpsiTest {
             client, MAX_CLIENT_ELEMENT_SIZE, clientElementSet
         );
         try {
-            // 开始执行协议
             serverThread.start();
             clientThread.start();
-            // 等待线程停止
             serverThread.join();
             clientThread.join();
-            // 验证结果
+            // verify result
             Set<String> psiResult = clientThread.getIntersectionSet();
             LOGGER.info("Server: The Communication costs {}MB", serverRpc.getSendByteLength() * 1.0 / (1024 * 1024));
             LOGGER.info("Client: The Communication costs {}MB", clientRpc.getSendByteLength() * 1.0 / (1024 * 1024));

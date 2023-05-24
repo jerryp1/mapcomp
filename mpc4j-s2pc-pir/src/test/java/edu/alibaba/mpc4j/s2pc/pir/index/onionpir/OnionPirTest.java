@@ -6,7 +6,11 @@ import edu.alibaba.mpc4j.common.rpc.RpcManager;
 import edu.alibaba.mpc4j.common.rpc.impl.memory.MemoryRpcManager;
 import edu.alibaba.mpc4j.crypto.matrix.database.NaiveDatabase;
 import edu.alibaba.mpc4j.s2pc.pir.PirUtils;
-import edu.alibaba.mpc4j.s2pc.pir.index.IndexPirFactory;
+import edu.alibaba.mpc4j.s2pc.pir.index.single.SingleIndexPirFactory;
+import edu.alibaba.mpc4j.s2pc.pir.index.single.onionpir.Mcr21SingleIndexPirClient;
+import edu.alibaba.mpc4j.s2pc.pir.index.single.onionpir.Mcr21SingleIndexPirConfig;
+import edu.alibaba.mpc4j.s2pc.pir.index.single.onionpir.Mcr21SingleIndexPirParams;
+import edu.alibaba.mpc4j.s2pc.pir.index.single.onionpir.Mcr21SingleIndexPirServer;
 import org.apache.commons.lang3.StringUtils;
 import org.junit.After;
 import org.junit.Assert;
@@ -50,28 +54,28 @@ public class OnionPirTest {
     @Parameterized.Parameters(name = "{0}")
     public static Collection<Object[]> configurations() {
         Collection<Object[]> configurations = new ArrayList<>();
-        Mcr21IndexPirConfig onionpirConfig = new Mcr21IndexPirConfig();
+        Mcr21SingleIndexPirConfig onionpirConfig = new Mcr21SingleIndexPirConfig();
         // first dimension is 32
         configurations.add(new Object[]{
-            IndexPirFactory.IndexPirType.ONION_PIR.name() + " (first dimension 32)",
+            SingleIndexPirFactory.SingleIndexPirType.ONION_PIR.name() + " (first dimension 32)",
             onionpirConfig,
-            new Mcr21IndexPirParams(
+            new Mcr21SingleIndexPirParams(
                 32
             )
         });
         // first dimension is 128
         configurations.add(new Object[]{
-            IndexPirFactory.IndexPirType.ONION_PIR.name() + " (first dimension 128)",
+            SingleIndexPirFactory.SingleIndexPirType.ONION_PIR.name() + " (first dimension 128)",
             onionpirConfig,
-            new Mcr21IndexPirParams(
+            new Mcr21SingleIndexPirParams(
                 128
             )
         });
         // first dimension is 256
         configurations.add(new Object[]{
-            IndexPirFactory.IndexPirType.ONION_PIR.name() + " (first dimension 256)",
+            SingleIndexPirFactory.SingleIndexPirType.ONION_PIR.name() + " (first dimension 256)",
             onionpirConfig,
-            new Mcr21IndexPirParams(
+            new Mcr21SingleIndexPirParams(
                 256
             )
         });
@@ -89,13 +93,13 @@ public class OnionPirTest {
     /**
      * OnionPIR config
      */
-    private final Mcr21IndexPirConfig indexPirConfig;
+    private final Mcr21SingleIndexPirConfig indexPirConfig;
     /**
      * OnionPIR params
      */
-    private final Mcr21IndexPirParams indexPirParams;
+    private final Mcr21SingleIndexPirParams indexPirParams;
 
-    public OnionPirTest(String name, Mcr21IndexPirConfig indexPirConfig, Mcr21IndexPirParams indexPirParams) {
+    public OnionPirTest(String name, Mcr21SingleIndexPirConfig indexPirConfig, Mcr21SingleIndexPirParams indexPirParams) {
         Preconditions.checkArgument(StringUtils.isNotBlank(name));
         // We cannot use NettyRPC in the test case since it needs multi-thread connect / disconnect.
         // In other word, we cannot connect / disconnect NettyRpc in @Before / @After, respectively.
@@ -138,12 +142,12 @@ public class OnionPirTest {
         testOnionPir(indexPirConfig, indexPirParams, SMALL_ELEMENT_BYTE_LENGTH, true);
     }
 
-    public void testOnionPir(Mcr21IndexPirConfig config, Mcr21IndexPirParams indexPirParams, int elementByteLength,
-                             boolean parallel) {
+    public void testOnionPir(Mcr21SingleIndexPirConfig config, Mcr21SingleIndexPirParams indexPirParams,
+                             int elementByteLength, boolean parallel) {
         int retrievalIndex = PirUtils.generateRetrievalIndex(SERVER_ELEMENT_SIZE);
         NaiveDatabase database = PirUtils.generateDataBase(SERVER_ELEMENT_SIZE, elementByteLength * Byte.SIZE);
-        Mcr21IndexPirServer server = new Mcr21IndexPirServer(serverRpc, clientRpc.ownParty(), config);
-        Mcr21IndexPirClient client = new Mcr21IndexPirClient(clientRpc, serverRpc.ownParty(), config);
+        Mcr21SingleIndexPirServer server = new Mcr21SingleIndexPirServer(serverRpc, clientRpc.ownParty(), config);
+        Mcr21SingleIndexPirClient client = new Mcr21SingleIndexPirClient(clientRpc, serverRpc.ownParty(), config);
         server.setParallel(parallel);
         client.setParallel(parallel);
         OnionPirServerThread serverThread = new OnionPirServerThread(server, indexPirParams, database);

@@ -1,6 +1,7 @@
 package edu.alibaba.mpc4j.s2pc.pir.index;
 
 import edu.alibaba.mpc4j.common.rpc.MpcAbortException;
+import edu.alibaba.mpc4j.s2pc.pir.index.single.SingleIndexPirClient;
 
 import java.nio.ByteBuffer;
 
@@ -14,7 +15,7 @@ public class IndexPirClientThread extends Thread {
     /**
      * index PIR client
      */
-    private final IndexPirClient client;
+    private final SingleIndexPirClient client;
     /**
      * element byte length
      */
@@ -32,7 +33,7 @@ public class IndexPirClientThread extends Thread {
      */
     private ByteBuffer indexPirResult;
 
-    IndexPirClientThread(IndexPirClient client, int retrievalIndex, int serverElementSize, int elementByteLength) {
+    IndexPirClientThread(SingleIndexPirClient client, int retrievalIndex, int serverElementSize, int elementByteLength) {
         this.client = client;
         this.retrievalIndex = retrievalIndex;
         this.serverElementSize = serverElementSize;

@@ -6,34 +6,35 @@ import java.nio.ByteBuffer;
 import java.util.Map;
 
 /**
- * 关键词索引PIR协议服务端线程。
+ * keyword PIR server thread.
  *
  * @author Liqiang Peng
  * @date 2022/6/22
  */
 public class KwPirServerThread<T> extends Thread {
     /**
-     * 服务端
+     * keyword PIR server
      */
     private final KwPirServer<T> server;
     /**
-     * 关键词标签映射
+     * keyword label map
      */
     private final Map<T, ByteBuffer> keywordLabelMap;
     /**
-     * 客户端检索数量
+     * retrieval size
      */
     private final int retrievalSize;
     /**
-     * 标签字节长度
+     * label byte length
      */
     private final int labelByteLength;
     /**
-     * 重复次数
+     * repeat time
      */
     private final int repeatTime;
 
-    KwPirServerThread(KwPirServer<T> server, Map<T, ByteBuffer> keywordLabelMap, int retrievalSize, int labelByteLength, int repeatTime) {
+    KwPirServerThread(KwPirServer<T> server, Map<T, ByteBuffer> keywordLabelMap, int retrievalSize, int labelByteLength,
+                      int repeatTime) {
         this.server = server;
         this.keywordLabelMap = keywordLabelMap;
         this.retrievalSize = retrievalSize;

@@ -3,6 +3,7 @@ package edu.alibaba.mpc4j.s2pc.opf.oprp;
 import com.google.common.base.Preconditions;
 import edu.alibaba.mpc4j.common.rpc.Rpc;
 import edu.alibaba.mpc4j.common.rpc.RpcManager;
+import edu.alibaba.mpc4j.common.rpc.desc.SecurityModel;
 import edu.alibaba.mpc4j.common.rpc.impl.memory.MemoryRpcManager;
 import edu.alibaba.mpc4j.common.tool.CommonConstants;
 import edu.alibaba.mpc4j.common.tool.crypto.prp.Prp;
@@ -54,15 +55,12 @@ public class OprpTest {
     public static Collection<Object[]> configurations() {
         Collection<Object[]> configurations = new ArrayList<>();
 
-        // LowMc (direct)
+        // LowMC
         configurations.add(new Object[] {
-            OprpFactory.OprpType.LOW_MC.name() + " (direct)",
-            new LowMcOprpConfig.Builder().setZ2cConfig(Z2cFactory.createDefaultConfig(false)).build(),
-        });
-        // LowMc (silent)
-        configurations.add(new Object[] {
-            OprpFactory.OprpType.LOW_MC.name() + " (silent)",
-            new LowMcOprpConfig.Builder().setZ2cConfig(Z2cFactory.createDefaultConfig(true)).build(),
+            OprpFactory.OprpType.LOW_MC.name() + " (" + SecurityModel.SEMI_HONEST.name() + ")",
+            new LowMcOprpConfig.Builder(SecurityModel.SEMI_HONEST)
+                .setZ2cConfig(Z2cFactory.createDefaultConfig(SecurityModel.SEMI_HONEST, false))
+                .build(),
         });
 
         return configurations;

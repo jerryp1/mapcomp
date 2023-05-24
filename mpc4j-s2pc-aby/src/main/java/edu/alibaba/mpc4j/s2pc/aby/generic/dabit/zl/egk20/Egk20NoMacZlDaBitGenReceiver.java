@@ -45,6 +45,15 @@ public class Egk20NoMacZlDaBitGenReceiver extends AbstractZlDaBitGenParty {
         addSubPtos(z2cReceiver);
     }
 
+    public Egk20NoMacZlDaBitGenReceiver(Rpc receiverPpc, Party senderParty, Party aider, Egk20NoMacZlDaBitGenConfig config) {
+        super(Egk20NoMacZlDaBitGenPtoDesc.getInstance(), receiverPpc, senderParty, config);
+        //TODO add aider
+        zlcReceiver = ZlcFactory.createReceiver(receiverPpc, senderParty, config.getZlcConfig());
+        addSubPtos(zlcReceiver);
+        z2cReceiver = Z2cFactory.createReceiver(receiverPpc, senderParty, aider, config.getZ2cConfig());
+        addSubPtos(z2cReceiver);
+    }
+
     @Override
     public void init(int maxNum) throws MpcAbortException {
         setInitInput(maxNum);

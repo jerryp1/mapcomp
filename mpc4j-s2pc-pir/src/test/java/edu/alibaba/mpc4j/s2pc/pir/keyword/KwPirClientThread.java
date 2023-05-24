@@ -4,42 +4,43 @@ import edu.alibaba.mpc4j.common.rpc.MpcAbortException;
 
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
 /**
- * 关键词索引PIR协议客户端线程。
+ * keyword PIR client thread.
  *
  * @author Liqiang Peng
  * @date 2022/6/22
  */
 public class KwPirClientThread<T> extends Thread {
     /**
-     * 关键词PIR协议客户端
+     * keyword PIR client
      */
     private final KwPirClient<T> client;
     /**
-     * 标签字节长度
+     * label byte length
      */
     private final int labelByteLength;
     /**
-     * 检索集合
+     * retrieval sets
      */
-    private final ArrayList<Set<T>> retrievalSets;
+    private final List<Set<T>> retrievalSets;
     /**
-     * 客户端检索数量
+     * retrieval size
      */
     private final int retrievalSize;
     /**
-     * 检索次数
+     * repeat time
      */
     private final int repeatTime;
     /**
-     * PIR结果
+     * retrieval result
      */
-    private final ArrayList<Map<T, ByteBuffer>> retrievalResults;
+    private final List<Map<T, ByteBuffer>> retrievalResults;
 
-    KwPirClientThread(KwPirClient<T> client, ArrayList<Set<T>> retrievalSets, int retrievalSize, int labelByteLength) {
+    KwPirClientThread(KwPirClient<T> client, List<Set<T>> retrievalSets, int retrievalSize, int labelByteLength) {
         this.client = client;
         this.retrievalSets = retrievalSets;
         this.retrievalSize = retrievalSize;

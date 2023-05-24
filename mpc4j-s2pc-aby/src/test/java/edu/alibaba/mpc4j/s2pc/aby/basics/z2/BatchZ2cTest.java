@@ -28,7 +28,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.stream.IntStream;
 
 /**
- * batch Boolean circuit test.
+ * batch Z2 circuit test.
  *
  * @author Weiran Liu
  * @date 2022/12/27
