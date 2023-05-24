@@ -38,8 +38,9 @@ public class Rrk20MillionaireReceiver extends AbstractMillionaireParty {
     public Rrk20MillionaireReceiver(Rpc receiverRpc, Party senderParty, Rrk20MillionaireConfig config) {
         super(Rrk20MillionairePtoDesc.getInstance(), receiverRpc, senderParty, config);
         lnotReceiver = LnotFactory.createReceiver(receiverRpc, senderParty, config.getLnotConfig());
-        z2cReceiver = Z2cFactory.createReceiver(receiverRpc, senderParty, config.getBcConfig());
         addSubPtos(lnotReceiver);
+        z2cReceiver = Z2cFactory.createReceiver(receiverRpc, senderParty, config.getBcConfig());
+        addSubPtos(z2cReceiver);
     }
 
     @Override
@@ -76,16 +77,16 @@ public class Rrk20MillionaireReceiver extends AbstractMillionaireParty {
         stopWatch.start();
         SquareZ2Vector[][] shares = iterateSubstrings(partitionInputArray);
         stopWatch.stop();
-        long lnotTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
+        long iterateTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
         stopWatch.reset();
-        logStepInfo(PtoState.PTO_STEP, 2, 3, lnotTime);
+        logStepInfo(PtoState.PTO_STEP, 2, 3, iterateTime);
 
         stopWatch.start();
         SquareZ2Vector z0 = combine(shares);
         stopWatch.stop();
-        long bitwiseTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
+        long combineTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
         stopWatch.reset();
-        logStepInfo(PtoState.PTO_STEP, 3, 3, bitwiseTime);
+        logStepInfo(PtoState.PTO_STEP, 3, 3, combineTime);
 
         logPhaseInfo(PtoState.PTO_END);
 

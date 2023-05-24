@@ -27,7 +27,7 @@ public class Rrk20MillionaireConfig implements MillionaireConfig {
 
     private Rrk20MillionaireConfig(Rrk20MillionaireConfig.Builder builder) {
         lnotConfig = builder.lnotConfig;
-        bcConfig = builder.bcConfig;
+        bcConfig = builder.z2cConfig;
     }
 
     public LnotConfig getLnotConfig() {
@@ -70,20 +70,15 @@ public class Rrk20MillionaireConfig implements MillionaireConfig {
         /**
          * Z2 circuit config.
          */
-        private Z2cConfig bcConfig;
+        private final Z2cConfig z2cConfig;
 
         public Builder(SecurityModel securityModel, boolean silent) {
-            bcConfig = Z2cFactory.createDefaultConfig(securityModel, silent);
+            z2cConfig = Z2cFactory.createDefaultConfig(securityModel, silent);
             if (silent) {
-                lnotConfig = LnotFactory.createCacheConfig(securityModel);
+                lnotConfig = LnotFactory.createCacheConfig(SecurityModel.SEMI_HONEST);
             } else {
-                lnotConfig = LnotFactory.createDirectConfig(securityModel);
+                lnotConfig = LnotFactory.createDirectConfig(SecurityModel.SEMI_HONEST);
             }
-        }
-
-        public Rrk20MillionaireConfig.Builder setBcConfig(Z2cConfig bcConfig) {
-            this.bcConfig = bcConfig;
-            return this;
         }
 
         @Override
