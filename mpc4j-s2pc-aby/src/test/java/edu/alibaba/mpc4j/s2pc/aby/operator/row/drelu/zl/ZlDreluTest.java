@@ -144,7 +144,7 @@ public class ZlDreluTest {
 
     @Test
     public void testParallelLargeNum() {
-        testPto(DEFAULT_ZL, LARGE_NUM, false);
+        testPto(DEFAULT_ZL, LARGE_NUM, true);
     }
 
     private void testPto(Zl zl, int num, boolean parallel) {
