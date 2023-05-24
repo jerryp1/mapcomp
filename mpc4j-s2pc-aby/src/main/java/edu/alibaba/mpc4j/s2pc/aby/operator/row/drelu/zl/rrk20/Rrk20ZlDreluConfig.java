@@ -78,7 +78,7 @@ public class Rrk20ZlDreluConfig implements ZlDreluConfig {
 
         public Builder() {
             millionaireConfig = MillionaireFactory.createDefaultConfig(SecurityModel.SEMI_HONEST, true);
-            z2cConfig = Z2cFactory.createDefaultConfig(true);
+            z2cConfig = Z2cFactory.createDefaultConfig(SecurityModel.SEMI_HONEST, true);
         }
 
         public Rrk20ZlDreluConfig.Builder setMillionaireConfig(MillionaireConfig millionaireConfig) {
