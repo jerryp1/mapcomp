@@ -61,7 +61,7 @@ public class Rrk20ZlDreluConfig implements ZlDreluConfig {
             securityModel = millionaireConfig.getSecurityModel();
         }
         if (z2cConfig.getSecurityModel().compareTo(securityModel) < 0) {
-            securityModel = millionaireConfig.getSecurityModel();
+            securityModel = z2cConfig.getSecurityModel();
         }
         return securityModel;
     }
