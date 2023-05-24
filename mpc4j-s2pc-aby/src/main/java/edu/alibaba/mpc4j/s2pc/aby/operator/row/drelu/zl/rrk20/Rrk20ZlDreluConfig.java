@@ -81,16 +81,6 @@ public class Rrk20ZlDreluConfig implements ZlDreluConfig {
             z2cConfig = Z2cFactory.createDefaultConfig(SecurityModel.SEMI_HONEST, true);
         }
 
-        public Rrk20ZlDreluConfig.Builder setMillionaireConfig(MillionaireConfig millionaireConfig) {
-            this.millionaireConfig = millionaireConfig;
-            return this;
-        }
-
-        public Rrk20ZlDreluConfig.Builder setZ2cConfig(Z2cConfig z2cConfig) {
-            this.z2cConfig = z2cConfig;
-            return this;
-        }
-
         @Override
         public Rrk20ZlDreluConfig build() {
             return new Rrk20ZlDreluConfig(this);
