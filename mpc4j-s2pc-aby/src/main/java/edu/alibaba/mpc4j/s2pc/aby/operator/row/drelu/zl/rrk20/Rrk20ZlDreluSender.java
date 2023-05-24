@@ -4,9 +4,9 @@ import edu.alibaba.mpc4j.common.rpc.MpcAbortException;
 import edu.alibaba.mpc4j.common.rpc.Party;
 import edu.alibaba.mpc4j.common.rpc.PtoState;
 import edu.alibaba.mpc4j.common.rpc.Rpc;
+import edu.alibaba.mpc4j.common.tool.bitvector.BitVector;
 import edu.alibaba.mpc4j.common.tool.bitvector.BitVectorFactory;
 import edu.alibaba.mpc4j.common.tool.utils.BigIntegerUtils;
-import edu.alibaba.mpc4j.common.tool.utils.BinaryUtils;
 import edu.alibaba.mpc4j.common.tool.utils.CommonUtils;
 import edu.alibaba.mpc4j.s2pc.aby.basics.z2.SquareZ2Vector;
 import edu.alibaba.mpc4j.s2pc.aby.basics.z2.Z2cFactory;
@@ -19,6 +19,7 @@ import edu.alibaba.mpc4j.s2pc.aby.operator.row.millionaire.MillionaireParty;
 import java.math.BigInteger;
 import java.util.Arrays;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.IntStream;
 
 /**
  * RRK+20 Zl DReLU Sender.
@@ -43,7 +44,6 @@ public class Rrk20ZlDreluSender extends AbstractZlDreluParty {
      * remaining x
      */
     private byte[][] remainingX;
-
 
     public Rrk20ZlDreluSender(Rpc senderRpc, Party receiverParty, Rrk20ZlDreluConfig config) {
         super(Rrk20ZlDreluPtoDesc.getInstance(), senderRpc, receiverParty, config);
@@ -84,8 +84,14 @@ public class Rrk20ZlDreluSender extends AbstractZlDreluParty {
 
         // millionaire and xor
         stopWatch.start();
-        SquareZ2Vector carry = millionaireSender.lt(l, remainingX);
-        SquareZ2Vector drelu = z2cSender.xor(msb, carry);
+        SquareZ2Vector one = SquareZ2Vector.createOnes(num);
+        SquareZ2Vector drelu;
+        if (l == 1) {
+            drelu = z2cSender.xor(msb, one);
+        } else {
+            SquareZ2Vector carry = millionaireSender.lt(l - 1, remainingX);
+            drelu = z2cSender.xor(msb, z2cSender.xor(carry, one));
+        }
         stopWatch.stop();
         long ptoTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
         stopWatch.reset();
@@ -97,17 +103,17 @@ public class Rrk20ZlDreluSender extends AbstractZlDreluParty {
     }
 
     private void partitionInputs(SquareZlVector xi) {
-        byte[] msbBytes = new byte[CommonUtils.getByteLength(num)];
+        BitVector msbBitVector = BitVectorFactory.createZeros(num);
         BigInteger[] remaining = new BigInteger[num];
-        for (int i = 0; i < num; i++) {
+        IntStream.range(0, num).forEach(i -> {
             BigInteger x = xi.getZlVector().getElement(i);
-            BinaryUtils.setBoolean(msbBytes, i, x.testBit(zl.getL()));
-            remaining[i] = x.setBit(i);
-        }
+            msbBitVector.set(i, x.testBit(l - 1));
+            remaining[i] = x.setBit(l - 1).flipBit(l - 1);
+        });
         remainingX = Arrays.stream(remaining)
                 .map(v -> BigInteger.ONE.shiftLeft(l - 1).subtract(BigInteger.ONE).subtract(v))
-                .map(v -> BigIntegerUtils.nonNegBigIntegerToByteArray(v, CommonUtils.getByteLength(zl.getL() - 1)))
+                .map(v -> BigIntegerUtils.nonNegBigIntegerToByteArray(v, CommonUtils.getByteLength(l - 1)))
                 .toArray(byte[][]::new);
-        msb = SquareZ2Vector.create(BitVectorFactory.create(num, msbBytes), false);
+        msb = SquareZ2Vector.create(msbBitVector, false);
     }
 }

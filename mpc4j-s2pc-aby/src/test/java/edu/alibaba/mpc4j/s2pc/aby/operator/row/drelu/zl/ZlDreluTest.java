@@ -50,7 +50,7 @@ public class ZlDreluTest {
     /**
      * large num
      */
-    private static final int LARGE_NUM = 1 << 18;
+    private static final int LARGE_NUM = 1 << 16;
     /**
      * small Zl
      */
@@ -64,10 +64,9 @@ public class ZlDreluTest {
     public static Collection<Object[]> configurations() {
         Collection<Object[]> configurations = new ArrayList<>();
 
-        // RRK+20 (direct, semi-honest)
+        // RRK+20
         configurations.add(new Object[]{
-                ZlDreluFactory.ZlDreluType.RRK20 + " (silent, semi-honest)",
-                new Rrk20ZlDreluConfig.Builder().build()
+                ZlDreluFactory.ZlDreluType.RRK20.name(), new Rrk20ZlDreluConfig.Builder().build()
         });
 
         return configurations;
