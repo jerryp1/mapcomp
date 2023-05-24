@@ -73,7 +73,7 @@ public class Rrk20MillionaireConfig implements MillionaireConfig {
         private Z2cConfig bcConfig;
 
         public Builder(SecurityModel securityModel, boolean silent) {
-            bcConfig = Z2cFactory.createDefaultConfig(silent);
+            bcConfig = Z2cFactory.createDefaultConfig(securityModel, silent);
             if (silent) {
                 lnotConfig = LnotFactory.createCacheConfig(securityModel);
             } else {
