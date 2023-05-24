@@ -70,11 +70,11 @@ public class Rrk20ZlDreluConfig implements ZlDreluConfig {
         /**
          * Millionaire config
          */
-        private MillionaireConfig millionaireConfig;
+        private final MillionaireConfig millionaireConfig;
         /**
          * Z2 circuit config.
          */
-        private Z2cConfig z2cConfig;
+        private final Z2cConfig z2cConfig;
 
         public Builder() {
             millionaireConfig = MillionaireFactory.createDefaultConfig(SecurityModel.SEMI_HONEST, true);
