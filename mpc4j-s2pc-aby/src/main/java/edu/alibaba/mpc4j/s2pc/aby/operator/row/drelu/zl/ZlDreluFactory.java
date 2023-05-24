@@ -82,8 +82,6 @@ public class ZlDreluFactory implements PtoFactory {
             case IDEAL:
             case SEMI_HONEST:
                 return new Rrk20ZlDreluConfig.Builder()
-                        .setMillionaireConfig(MillionaireFactory.createDefaultConfig(SecurityModel.SEMI_HONEST, silent))
-                        .setZ2cConfig(Z2cFactory.createDefaultConfig(securityModel, silent))
                         .build();
             case COVERT:
             case MALICIOUS:
