@@ -21,7 +21,7 @@ public class Rrk20MillionairePtoDesc implements PtoDesc {
     /**
      * Protocol name.
      */
-    private static final String PTO_NAME = "RRK+20";
+    private static final String PTO_NAME = "RRK+20_MILLIONAIRE";
 
     /**
      * Protocol steps.

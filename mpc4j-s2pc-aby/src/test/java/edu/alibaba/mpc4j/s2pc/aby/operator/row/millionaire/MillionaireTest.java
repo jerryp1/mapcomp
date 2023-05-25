@@ -155,6 +155,11 @@ public class MillionaireTest {
     }
 
     @Test
+    public void test19L() {
+        testPto(19, DEFAULT_NUM, false);
+    }
+
+    @Test
     public void testLargeNum() {
         testPto(DEFAULT_L, LARGE_NUM, false);
     }
@@ -212,15 +217,9 @@ public class MillionaireTest {
     private void assertOutput(int num, byte[][] xs, byte[][] ys, BitVector z) {
         Assert.assertEquals(num, z.bitNum());
         for (int index = 0; index < num; index++) {
-            boolean xi = BigIntegerUtils.byteArrayToNonNegBigInteger(xs[index])
+            boolean result = BigIntegerUtils.byteArrayToNonNegBigInteger(xs[index])
                     .compareTo(BigIntegerUtils.byteArrayToNonNegBigInteger(ys[index])) < 0;
-            if (xi) {
-                // less than
-                Assert.assertTrue(z.get(index));
-            } else {
-                // greater equal than
-                Assert.assertFalse(z.get(index));
-            }
+            Assert.assertEquals(z.get(index), result);
         }
     }
 
