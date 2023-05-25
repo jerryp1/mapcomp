@@ -4,24 +4,24 @@ import edu.alibaba.mpc4j.common.rpc.MpcAbortException;
 import edu.alibaba.mpc4j.s2pc.aby.basics.zl.SquareZlVector;
 
 /**
- * Zl mux sender thread.
+ * Zl greater party thread.
  *
  * @author Li Peng
  * @date 2023/5/24
  */
 class ZlGreaterPartyThread extends Thread {
     /**
-     * the sender
+     * the party
      */
     private final ZlGreaterParty party;
     /**
-     * x0
+     * x
      */
-    private final SquareZlVector x;
+    private final SquareZlVector shareX;
     /**
-     * y0
+     * y
      */
-    private final SquareZlVector y;
+    private final SquareZlVector shareY;
     /**
      * num
      */
@@ -37,8 +37,8 @@ class ZlGreaterPartyThread extends Thread {
 
     ZlGreaterPartyThread(ZlGreaterParty party, SquareZlVector shareX, SquareZlVector shareY) {
         this.party = party;
-        this.x = shareX;
-        this.y = shareY;
+        this.shareX = shareX;
+        this.shareY = shareY;
         this.num = shareX.getNum();
         this.l = shareX.getZl().getL();
     }
@@ -51,7 +51,7 @@ class ZlGreaterPartyThread extends Thread {
     public void run() {
         try {
             party.init(l, num);
-            shareZ = party.gt(x, y);
+            shareZ = party.gt(shareX, shareY);
         } catch (MpcAbortException e) {
             e.printStackTrace();
         }

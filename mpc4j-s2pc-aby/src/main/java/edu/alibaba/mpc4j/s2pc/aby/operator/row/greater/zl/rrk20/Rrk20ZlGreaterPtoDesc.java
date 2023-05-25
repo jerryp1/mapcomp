@@ -21,7 +21,7 @@ public class Rrk20ZlGreaterPtoDesc implements PtoDesc {
     /**
      * protocol name
      */
-    private static final String PTO_NAME = "RRK+20_ZL_DRELU";
+    private static final String PTO_NAME = "RRK+20_ZL_GREATER";
 
     /**
      * protocol step
