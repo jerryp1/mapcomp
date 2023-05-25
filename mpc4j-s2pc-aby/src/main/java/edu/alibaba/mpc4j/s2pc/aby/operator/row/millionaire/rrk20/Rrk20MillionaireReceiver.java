@@ -155,14 +155,23 @@ public class Rrk20MillionaireReceiver extends AbstractMillionaireParty {
         SquareZ2Vector[] eqs = shares[1];
         // tree-based AND
         int logQ = LongUtils.ceilLog2(q);
+        int currentNodeNum = q / 2;
+        int lastNodeNum = q;
         for (int i = 1; i <= logQ; i++) {
-            for (int j = 0; j < q / (1 << i); j++) {
+            for (int j = 0; j < currentNodeNum; j++) {
                 lts[j] = z2cReceiver.xor(z2cReceiver.and(lts[j * 2 + 1], eqs[j * 2]), lts[j * 2]);
-                // equalities computed on lowest significant bits are never used, thus omit computing
-                if (j < q / (1 << i) - 1) {
+                // equalities computed on lowest significant bits are never used, thus omit computing.
+                if (j < currentNodeNum - 1 || lastNodeNum % 2 == 1) {
                     eqs[j] = z2cReceiver.and(eqs[j * 2], eqs[j * 2 + 1]);
                 }
             }
+            if (lastNodeNum % 2 == 1) {
+                lts[currentNodeNum] = lts[lastNodeNum - 1];
+                eqs[currentNodeNum] = eqs[lastNodeNum - 1];
+                currentNodeNum++;
+            }
+            lastNodeNum = currentNodeNum;
+            currentNodeNum = lastNodeNum / 2;
         }
         return lts[0];
     }
