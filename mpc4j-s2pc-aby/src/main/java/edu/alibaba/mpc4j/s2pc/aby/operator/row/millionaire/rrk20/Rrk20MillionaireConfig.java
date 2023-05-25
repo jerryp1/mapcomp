@@ -21,21 +21,21 @@ public class Rrk20MillionaireConfig implements MillionaireConfig {
      */
     private final LnotConfig lnotConfig;
     /**
-     * boolean circuit config.
+     * Z2 circuit config.
      */
-    private final Z2cConfig bcConfig;
+    private final Z2cConfig z2cConfig;
 
     private Rrk20MillionaireConfig(Rrk20MillionaireConfig.Builder builder) {
         lnotConfig = builder.lnotConfig;
-        bcConfig = builder.z2cConfig;
+        z2cConfig = builder.z2cConfig;
     }
 
     public LnotConfig getLnotConfig() {
         return lnotConfig;
     }
 
-    public Z2cConfig getBcConfig() {
-        return bcConfig;
+    public Z2cConfig getZ2cConfig() {
+        return z2cConfig;
     }
 
     @Override
@@ -58,6 +58,9 @@ public class Rrk20MillionaireConfig implements MillionaireConfig {
         SecurityModel securityModel = SecurityModel.SEMI_HONEST;
         if (lnotConfig.getSecurityModel().compareTo(securityModel) < 0) {
             securityModel = lnotConfig.getSecurityModel();
+        }
+        if (z2cConfig.getSecurityModel().compareTo(securityModel) < 0) {
+            securityModel = z2cConfig.getSecurityModel();
         }
         return securityModel;
     }
