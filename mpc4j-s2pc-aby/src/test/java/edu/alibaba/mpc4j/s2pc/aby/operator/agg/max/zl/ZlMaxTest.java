@@ -130,6 +130,21 @@ public class ZlMaxTest {
     }
 
     @Test
+    public void test7Num() {
+        testPto(7, false);
+    }
+
+    @Test
+    public void test9Num() {
+        testPto(9, false);
+    }
+
+    @Test
+    public void test19Num() {
+        testPto(19, false);
+    }
+
+    @Test
     public void testDefaultNum() {
         testPto(DEFAULT_NUM, false);
     }
