@@ -1,6 +1,7 @@
 package edu.alibaba.mpc4j.s2pc.aby.operator.row.drelu.zl.rrk20;
 
 import edu.alibaba.mpc4j.common.rpc.desc.SecurityModel;
+import edu.alibaba.mpc4j.common.rpc.pto.AbstractMultiPartyPtoConfig;
 import edu.alibaba.mpc4j.common.tool.EnvType;
 import edu.alibaba.mpc4j.s2pc.aby.basics.z2.Z2cConfig;
 import edu.alibaba.mpc4j.s2pc.aby.basics.z2.Z2cFactory;
@@ -15,7 +16,7 @@ import edu.alibaba.mpc4j.s2pc.aby.operator.row.millionaire.MillionaireFactory;
  * @author Li Peng
  * @date 2023/5/22
  */
-public class Rrk20ZlDreluConfig implements ZlDreluConfig {
+public class Rrk20ZlDreluConfig extends AbstractMultiPartyPtoConfig implements ZlDreluConfig {
     /**
      * Millionaire config
      */
@@ -26,6 +27,7 @@ public class Rrk20ZlDreluConfig implements ZlDreluConfig {
     private final Z2cConfig z2cConfig;
 
     private Rrk20ZlDreluConfig(Rrk20ZlDreluConfig.Builder builder) {
+        super(SecurityModel.SEMI_HONEST, builder.millionaireConfig, builder.z2cConfig);
         millionaireConfig = builder.millionaireConfig;
         z2cConfig = builder.z2cConfig;
     }
