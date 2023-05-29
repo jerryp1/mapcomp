@@ -6,6 +6,9 @@ import edu.alibaba.mpc4j.common.rpc.pto.PtoFactory;
 import edu.alibaba.mpc4j.s2pc.pir.index.single.fastpir.Ayaa21SingleIndexPirClient;
 import edu.alibaba.mpc4j.s2pc.pir.index.single.fastpir.Ayaa21SingleIndexPirConfig;
 import edu.alibaba.mpc4j.s2pc.pir.index.single.fastpir.Ayaa21SingleIndexPirServer;
+import edu.alibaba.mpc4j.s2pc.pir.index.single.mulpir.Alpr21SingleIndexPirClient;
+import edu.alibaba.mpc4j.s2pc.pir.index.single.mulpir.Alpr21SingleIndexPirConfig;
+import edu.alibaba.mpc4j.s2pc.pir.index.single.mulpir.Alpr21SingleIndexPirServer;
 import edu.alibaba.mpc4j.s2pc.pir.index.single.onionpir.Mcr21SingleIndexPirClient;
 import edu.alibaba.mpc4j.s2pc.pir.index.single.onionpir.Mcr21SingleIndexPirConfig;
 import edu.alibaba.mpc4j.s2pc.pir.index.single.onionpir.Mcr21SingleIndexPirServer;
@@ -57,6 +60,10 @@ public class SingleIndexPirFactory implements PtoFactory {
          * Vectorized PIR
          */
         VECTORIZED_PIR,
+        /**
+         * Mul PIR
+         */
+        MUL_PIR,
     }
 
     /**
@@ -80,6 +87,8 @@ public class SingleIndexPirFactory implements PtoFactory {
                 return new Ayaa21SingleIndexPirServer(serverRpc, clientParty, (Ayaa21SingleIndexPirConfig) config);
             case VECTORIZED_PIR:
                 return new Mr23SingleIndexPirServer(serverRpc, clientParty, (Mr23SingleIndexPirConfig) config);
+            case MUL_PIR:
+                return new Alpr21SingleIndexPirServer(serverRpc, clientParty, (Alpr21SingleIndexPirConfig) config);
             default:
                 throw new IllegalArgumentException(
                     "Invalid " + SingleIndexPirType.class.getSimpleName() + ": " + type.name()
@@ -108,6 +117,8 @@ public class SingleIndexPirFactory implements PtoFactory {
                 return new Ayaa21SingleIndexPirClient(clientRpc, serverParty, (Ayaa21SingleIndexPirConfig) config);
             case VECTORIZED_PIR:
                 return new Mr23SingleIndexPirClient(clientRpc, serverParty, (Mr23SingleIndexPirConfig) config);
+            case MUL_PIR:
+                return new Alpr21SingleIndexPirClient(clientRpc, serverParty, (Alpr21SingleIndexPirConfig) config);
             default:
                 throw new IllegalArgumentException(
                     "Invalid " + SingleIndexPirType.class.getSimpleName() + ": " + type.name()

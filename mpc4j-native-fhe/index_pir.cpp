@@ -346,3 +346,155 @@ uint32_t get_next_power_of_two(uint32_t number) {
     uint32_t number_of_bits = get_number_of_bits(number);
     return (1 << number_of_bits);
 }
+
+
+
+// for MulPIR, reference: https://github.com/OpenMined/PIR/blob/master/pir/cpp/server.cpp#L148
+vector<Ciphertext> new_expand_query(const EncryptionParameters& parms, const std::vector<Ciphertext>& cts, uint32_t total_items,
+                                const GaloisKeys& galois_keys) {  
+    
+    uint32_t poly_modulus_degree = parms.poly_modulus_degree();
+    uint32_t expect_cts_size = ( total_items % parms.poly_modulus_degree() == 0 ) 
+                                ? total_items / parms.poly_modulus_degree() 
+                                : total_items / parms.poly_modulus_degree() + 1;
+    if (cts.size() != expect_cts_size) {
+        throw logic_error("Number of ciphertexts doesn't match number of items for oblivious expansion.");
+    }
+    /*
+        Briefly analyze the principle of new_expand_query. Consider two dimensions, each of length d1 and d2. Essentially, we need to expand a single ciphertext into vectors of length d1 and d2 in each dimension.
+
+        In SealPIR, the query index of each dimension requires at least one ciphertext to store. In fact, there is a lot of waste in this. Considering d1=4, d2=4, here only 8 coefficients are needed to represent the query index of each dimension, and one PT has N coefficients, so when dim_sum <= N, one PT can be used to represent all dimensions query index.
+
+        Consider a more specific example, indices[0] = 1, indices[1] = 0, the corresponding PT is: c_4x^4 + c_1x^1.
+
+        The expanded result is: [E(0) E(1) E(0) E(0) , E(1) E(0) E(0) E(0)]
+    */
+    std::vector<Ciphertext> results;
+    results.reserve(total_items);
+    for (const auto& ct : cts) {
+        vector<Ciphertext> temp = new_single_expand_query(parms, ct, std::min(poly_modulus_degree, total_items), galois_keys);
+        results.insert(results.end(), std::make_move_iterator(temp.begin()),
+                    std::make_move_iterator(temp.end()));
+        // Except for the last ciphertext, each previous ciphertext is expanded to a vector of length N
+        total_items -= poly_modulus_degree;
+    }
+    return results;
+}
+// for MulPIR, reference: https://github.com/OpenMined/PIR/blob/master/pir/cpp/server.cpp#L106
+// ct is Single Ciphertext
+vector<Ciphertext> new_single_expand_query(const EncryptionParameters& parms, const Ciphertext& ct, const uint32_t num_items,
+                                const GaloisKeys& galois_keys) {
+
+    SEALContext context(parms);
+    Evaluator evaluator(context);
+    const uint32_t poly_modulus_degree = parms.poly_modulus_degree();
+    // single ct is expanded to a vector of length N at most
+    if (num_items > poly_modulus_degree) {
+        throw logic_error("Cannot expand more items from a CT than poly modulus degree.");
+    }
+    size_t logm = ceil(log2(num_items));
+    // if num_items is just power of 2, return itself.
+    std::vector<seal::Ciphertext> results(get_next_power_of_two(num_items));
+
+    results[0] = ct;
+    for (size_t j = 0; j < logm; ++j) {
+       
+        const size_t two_power_j = (1 << j);
+
+        for (size_t k = 0; k < two_power_j; ++k) {
+            auto c0 = results[k];
+            // replace substitute_power_x_inplace(...)
+            evaluator.apply_galois_inplace(c0, (poly_modulus_degree >> j) + 1, galois_keys);
+            /**
+            `multiply_power_of_X` and the `multiply_inverse_power_of_x` in the open source implementation of MulPIR are almost the same, however, using `multiply_inverse_power_of_x` will cause a runtime error. No reason has been found for the time being, and it is very puzzling.  Fortunately, the correct result can be obtained using `multiply_power_of_X` as well.
+            */
+            uint32_t index1 =  ((poly_modulus_degree << 1) - two_power_j) % (poly_modulus_degree << 1);
+            // This essentially produces what the paper calls c1
+            multiply_power_of_X(results[k], results[k + two_power_j], index1, context);
+
+            // Do the multiply by power of x after substitution operator to avoid
+            // having to do the substitution operator a second time, since it's about
+            // 20x slower. Except that now instead of multiplying by x^(-2^j) we have
+            // to do the substitution first ourselves, producing
+            // (x^(N/2^j + 1))^(-2^j) = 1/x^(2^j * (N/2^j + 1)) = 1/x^(N + 2^j)
+            seal::Ciphertext c1;
+            uint32_t index2 =  ((poly_modulus_degree << 1) - (poly_modulus_degree + two_power_j)) % (poly_modulus_degree << 1);
+            multiply_power_of_X(c0, c1, index2, context);
+
+            evaluator.add_inplace(results[k], c0);
+            evaluator.add_inplace(results[k + two_power_j], c1);
+        }
+    }
+    
+    results.resize(num_items);
+    return results;
+
+}
+
+// For MulPIR, reference:  https://github.com/OpenMined/PIR/blob/master/pir/cpp/database.cpp#L170
+vector<Ciphertext> multiply_mulpir( const EncryptionParameters& parms,  
+                                    const RelinKeys* const relin_keys, 
+                                    const vector<Plaintext>& database,
+                                    uint32_t database_it, 
+                                    vector<Ciphertext>& selection_vector,
+                                    uint32_t selection_vector_it, 
+                                    vector<uint32_t>& dimensions, 
+                                    uint32_t depth) {
+
+    SEALContext context(parms);
+    Evaluator evaluator(context);
+
+    const size_t this_dimension = dimensions[0];
+    vector<uint32_t> remaining_dimensions = vector<uint32_t>(dimensions.begin() + 1, dimensions.end());
+    vector<Ciphertext> result;
+    bool first_pass = true;
+
+    for (size_t i = 0; i < this_dimension; ++i) {
+      // make sure we don't go past end of DB
+      if (database_it == database.size()) break;
+      vector<Ciphertext> temp_ct;
+      // When recursing to the last dimension, execute ct*pt, and then accumulate 
+      if (remaining_dimensions.empty()) {
+        // base case: have to multiply against DB
+        temp_ct.resize(1);
+
+        evaluator.multiply_plain(selection_vector[selection_vector_it + i], 
+                                    database[database_it++], temp_ct[0]);
+      } else {
+        // enter recursion 
+        vector<Ciphertext> lower_result =
+            multiply_mulpir(parms, relin_keys, database, database_it, selection_vector, selection_vector_it + this_dimension, remaining_dimensions, depth + 1);
+        /*
+            In the open source implementation of MulPIR, database_it_ is a global variable, which is an absolute distance in different recursions. We didn’t have global variables at the time, so we needed to manually adjust database_it_, and pay attention to understanding the way of multi-dimensional calculation. Here we need to add the product of the remaining dimension arrays, because after recursion, it means that we have processed all the the remaining dimension arrays.
+        */
+        uint32_t ramain_dim_prod = std::accumulate(remaining_dimensions.begin(), remaining_dimensions.end(), 1, std::multiplies<uint32_t>());
+        database_it += ramain_dim_prod;
+        
+        temp_ct.resize(1);
+        // when ciphertext * ciphertext , can not be NTT form
+        // lower_result[0] has been handled, here we handle the selection_vector
+        if (selection_vector[selection_vector_it + i].is_ntt_form()) {
+            evaluator.transform_from_ntt_inplace(selection_vector[selection_vector_it + i]);
+        }
+        
+        evaluator.multiply(lower_result[0], selection_vector[selection_vector_it + i], temp_ct[0]);
+        evaluator.relinearize_inplace(temp_ct[0], *relin_keys);
+      }
+      // this is the start point for ct + ct
+      if (first_pass) {
+        result = temp_ct;
+        first_pass = false;
+      } else {
+        for (size_t j = 0; j < result.size(); ++j) {
+          evaluator.add_inplace(result[j], temp_ct[j]);
+        }
+      }// next for loop 
+    }
+    // ensure when ciphertext * ciphertext, the ct is not the NTT form
+    for (auto& ct : result) {
+      if (ct.is_ntt_form()) {
+        evaluator.transform_from_ntt_inplace(ct);
+      }
+    }
+    return result;                  
+}
