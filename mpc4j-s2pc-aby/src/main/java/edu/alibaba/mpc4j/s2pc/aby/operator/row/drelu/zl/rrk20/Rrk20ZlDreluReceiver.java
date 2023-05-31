@@ -111,7 +111,13 @@ public class Rrk20ZlDreluReceiver extends AbstractZlDreluParty {
             remaining[i] = x.setBit(l - 1).flipBit(l - 1);
         });
         remainingX = Arrays.stream(remaining)
-                .map(v -> BigIntegerUtils.nonNegBigIntegerToByteArray(v, CommonUtils.getByteLength(l - 1)))
+                .map(v -> {
+                    if (l == 1) {
+                        return new byte[0];
+                    } else {
+                        return BigIntegerUtils.nonNegBigIntegerToByteArray(v, CommonUtils.getByteLength(l - 1));
+                    }
+                })
                 .toArray(byte[][]::new);
         msb = SquareZ2Vector.create(msbBitVector, false);
     }
