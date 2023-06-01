@@ -1,5 +1,7 @@
 package edu.alibaba.mpc4j.common.circuit.z2;
 
+import edu.alibaba.mpc4j.common.circuit.z2.adder.Adder;
+import edu.alibaba.mpc4j.common.circuit.z2.adder.AdderFactory;
 import edu.alibaba.mpc4j.common.rpc.MpcAbortException;
 import edu.alibaba.mpc4j.common.tool.MathPreconditions;
 import edu.alibaba.mpc4j.common.tool.utils.LongUtils;
@@ -17,10 +19,23 @@ public class Z2IntegerCircuit {
     /**
      * MPC boolean circuit party.
      */
-    private final MpcZ2cParty party;
+    protected final MpcZ2cParty party;
+    /**
+     * default adder type.
+     */
+    private static final AdderFactory.AdderTypes DEFAULT_ADDER_TYPE
+            = AdderFactory.AdderTypes.MANCHESTER;
+    /**
+     * adder.
+     */
+    private Adder adder;
 
     public Z2IntegerCircuit(MpcZ2cParty party) {
         this.party = party;
+    }
+
+    private Adder getAdderInstance() {
+        return adder == null ? AdderFactory.createAdder(party, DEFAULT_ADDER_TYPE) : adder;
     }
 
     /**
@@ -101,6 +116,7 @@ public class Z2IntegerCircuit {
 
     /**
      * x ≤ y.
+     *
      * @param xiArray xi array.
      * @param yiArray yi array.
      * @return zi array, where z = (x ≤ y).
@@ -112,62 +128,24 @@ public class Z2IntegerCircuit {
         return result[0];
     }
 
-    private MpcZ2Vector[] add(MpcZ2Vector[] xs, MpcZ2Vector[] ys, boolean cin) throws MpcAbortException {
-        int bitNum = xs[0].getNum();
+    private MpcZ2Vector[] add(MpcZ2Vector[] xiArray, MpcZ2Vector[] yiArray, boolean cin) throws MpcAbortException {
+        int bitNum = xiArray[0].getNum();
         MpcZ2Vector cinVector = party.create(bitNum, cin);
-        MpcZ2Vector[] zs = addFullBits(xs, ys, cinVector);
+        MpcZ2Vector[] zs = getAdderInstance().add(xiArray, yiArray, cinVector);
         // ignore the highest carry_out bit.
-        return Arrays.copyOfRange(zs, 1, xs.length + 1);
+        return Arrays.copyOfRange(zs, 1, xiArray.length + 1);
     }
 
-    /**
-     * Full n-bit adders. Computation is performed in big-endian order.
-     *
-     * @param xs  x array in big-endian order.
-     * @param ys  y array in big-endian order.
-     * @param cin carry_in bit.
-     * @return (carry_out bit, result).
-     */
-    private MpcZ2Vector[] addFullBits(MpcZ2Vector[] xs, MpcZ2Vector[] ys, MpcZ2Vector cin) throws MpcAbortException {
-        MpcZ2Vector[] zs = new MpcZ2Vector[xs.length + 1];
-        MpcZ2Vector[] t = addOneBit(xs[xs.length - 1], ys[ys.length - 1], cin);
-        zs[zs.length - 1] = t[0];
-        for (int i = zs.length - 1; i > 1; i--) {
-            t = addOneBit(xs[i - 2], ys[i - 2], t[1]);
-            zs[i - 1] = t[0];
-        }
-        zs[0] = t[1];
-        return zs;
-    }
-
-    /**
-     * Full 1-bit adders.
-     *
-     * @param x x.
-     * @param y y.
-     * @param c carry-in bit.
-     * @return (carry_out bit, result).
-     */
-    private MpcZ2Vector[] addOneBit(MpcZ2Vector x, MpcZ2Vector y, MpcZ2Vector c) throws MpcAbortException {
-        MpcZ2Vector[] z = new MpcZ2Vector[2];
-        MpcZ2Vector t1 = party.xor(x, c);
-        MpcZ2Vector t2 = party.xor(y, c);
-        z[0] = party.xor(x, t2);
-        t1 = party.and(t1, t2);
-        z[1] = party.xor(c, t1);
-        return z;
-    }
-
-    private void checkInputs(MpcZ2Vector[] xs, MpcZ2Vector[] ys) {
-        int l = xs.length;
+    protected void checkInputs(MpcZ2Vector[] xiArray, MpcZ2Vector[] yiArray) {
+        int l = xiArray.length;
         MathPreconditions.checkPositive("l", l);
         // check equal l.
-        MathPreconditions.checkEqual("l", "y.length", l, ys.length);
+        MathPreconditions.checkEqual("l", "y.length", l, yiArray.length);
         // check equal num for all vectors.
-        int num = xs[0].getNum();
+        int num = xiArray[0].getNum();
         IntStream.range(0, l).forEach(i -> {
-            MathPreconditions.checkEqual("num", "xi.num", num, xs[i].getNum());
-            MathPreconditions.checkEqual("num", "yi.num", num, ys[i].getNum());
+            MathPreconditions.checkEqual("num", "xi.num", num, xiArray[i].getNum());
+            MathPreconditions.checkEqual("num", "yi.num", num, yiArray[i].getNum());
         });
     }
 
