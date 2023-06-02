@@ -21,6 +21,10 @@ public abstract class AbstractParallelPrefixAdder extends AbstractAdder {
      * bit length of input.
      */
     protected int l;
+    /**
+     * num
+     */
+    protected int num;
 
     public AbstractParallelPrefixAdder(MpcZ2cParty party) {
         super(party);
@@ -50,12 +54,17 @@ public abstract class AbstractParallelPrefixAdder extends AbstractAdder {
         }
     }
 
+    private Tuple createZeroTuple() {
+        return new Tuple(party.createZeros(num), party.createZeros(num));
+    }
+
     @Override
     public MpcZ2Vector[] add(MpcZ2Vector[] xiArray, MpcZ2Vector[] yiArray, MpcZ2Vector cin)
             throws MpcAbortException {
 
         checkInputs(xiArray, yiArray);
         this.l = xiArray.length;
+        this.num = xiArray[0].getNum();
         MpcZ2Vector[] p = party.xor(xiArray, yiArray);
         MpcZ2Vector[] g = party.and(xiArray, yiArray);
         MpcZ2Vector[] c = new MpcZ2Vector[l];
@@ -65,7 +74,7 @@ public abstract class AbstractParallelPrefixAdder extends AbstractAdder {
         // add prefix
         addPrefix(tuples);
 
-        // c TODO 这一步前后carry存在依赖关系，不是并行的
+        // carry-outs TODO 这一步前后carry存在依赖关系，不是并行的
         for (int i = l - 1; i >= 0; i--) {
             if (i == l - 1) {
                 c[i] = party.or(tuples[i].getG(), party.and(tuples[i].getP(), cin));
@@ -73,7 +82,7 @@ public abstract class AbstractParallelPrefixAdder extends AbstractAdder {
             }
             c[i] = party.or(tuples[i].getG(), party.and(tuples[i].getP(), c[i + 1]));
         }
-        // s
+        // s, the output bits
         for (int i = l; i >= 0; i--) {
             if (i == l) {
                 s[i] = party.xor(p[i - 1], cin);
@@ -105,22 +114,22 @@ public abstract class AbstractParallelPrefixAdder extends AbstractAdder {
         return new Tuple(gOut, pOut);
     }
 
-    protected MpcZ2Vector[] extendsToCeil2(MpcZ2Vector[] x) {
+    protected Tuple[] extendsToCeil2(Tuple[] x) {
         int num = x.length;
         int ceilBitLength = BigInteger.valueOf(num - 1).bitLength();
         int ceilNum = 1 << ceilBitLength;
         if (num != ceilNum) {
-            MpcZ2Vector[] output = new MpcZ2Vector[ceilNum];
+            Tuple[] output = new Tuple[ceilNum];
             System.arraycopy(x, 0, output, ceilNum - num, num);
             for (int i = 0; i < ceilNum - num; i++) {
-                output[i] = party.createZeros(x[0].bitNum());
+                output[i] = createZeroTuple();
             }
             return output;
         }
         return x;
     }
 
-    protected MpcZ2Vector[] cutToNum(MpcZ2Vector[] x, int num) {
+    protected Tuple[] cutToNum(Tuple[] x, int num) {
         MathPreconditions.checkGreaterOrEqual("x.length", x.length, num);
         if (x.length != num) {
             return Arrays.copyOfRange(x, x.length - num, x.length);

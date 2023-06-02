@@ -23,7 +23,7 @@ public class AdderFactory {
         /**
          * Ripple carry adder.
          */
-        RIPPLE_CARRY_ADDER,
+        RIPPLE_CARRY,
         /**
          * Manchester carry-chain adder.
          */
@@ -31,7 +31,11 @@ public class AdderFactory {
         /**
          * Parallel prefix adder using Sklansky structure. TODO 待添加论文链接
          */
-        SKLANSKY;
+        SKLANSKY,
+        /**
+         * Parallel prefix adder using Brent-Kung structure. TODO 待添加论文链接
+         */
+        BRENT_KUNG;
     }
 
     /**
@@ -43,12 +47,14 @@ public class AdderFactory {
      */
     public static Adder createAdder(MpcZ2cParty party, AdderTypes type) {
         switch (type) {
-            case RIPPLE_CARRY_ADDER:
+            case RIPPLE_CARRY:
                 return new RippleCarryAdder(party);
             case MANCHESTER:
                 return new ManchesterAdder(party);
             case SKLANSKY:
                 return new SklanskyAdder(party);
+            case BRENT_KUNG:
+                return new BrentKungAdder(party);
             default:
                 throw new IllegalArgumentException("Invalid " + AdderFactory.AdderTypes.class.getSimpleName() + ": " + type.name());
         }

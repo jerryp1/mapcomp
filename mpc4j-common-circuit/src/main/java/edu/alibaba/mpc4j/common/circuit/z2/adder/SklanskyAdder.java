@@ -5,7 +5,7 @@ import edu.alibaba.mpc4j.common.rpc.MpcAbortException;
 import edu.alibaba.mpc4j.common.tool.utils.LongUtils;
 
 /**
- * Parallel Prefix Adder using Sklansky structure.
+ * Parallel prefix adder using Sklansky structure.
  *
  * @author Li Peng
  * @date 2023/6/1
@@ -23,14 +23,14 @@ public class SklanskyAdder extends AbstractParallelPrefixAdder {
         int blockSize = 2;
         for (int i = 0; i < logL; i++) {
             for (int j = 0; j < blockNum; j++) {
-                Tuple input2 = tuples[l - (j * blockSize + blockSize / 2)];
+                Tuple input = tuples[l - (j * blockSize + blockSize / 2)];
                 for (int k = 0; k < blockSize / 2; k++) {
                     int current = l - (j * blockSize + blockSize / 2 + k) - 1;
-                    tuples[current] = op(tuples[current], input2);
+                    tuples[current] = op(tuples[current], input);
                 }
             }
-            blockNum = (blockNum >> 1);
-            blockSize = (blockSize << 1);
+            blockNum >>= 1;
+            blockSize <<= 1;
         }
     }
 }

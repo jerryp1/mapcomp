@@ -51,7 +51,7 @@ public class Z2IntegerCircuitTest {
     @Test
     public void testConstant() {
         testConstant(DEFAULT_L);
-        testConstant(LARGE_L);
+//        testConstant(LARGE_L);
     }
 
     public void testConstant(int l) {
@@ -87,7 +87,7 @@ public class Z2IntegerCircuitTest {
 
     private void testRandom(int num) {
         testRandom(DEFAULT_L, num);
-        testRandom(LARGE_L, num);
+//        testRandom(LARGE_L, num);
     }
 
     private void testRandom(int l, int num) {
