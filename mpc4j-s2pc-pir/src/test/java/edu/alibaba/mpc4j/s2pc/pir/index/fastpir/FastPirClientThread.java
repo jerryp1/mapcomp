@@ -22,9 +22,9 @@ public class FastPirClientThread extends Thread {
      */
     private final Ayaa21SingleIndexPirParams indexPirParams;
     /**
-     * element byte length
+     * element bit length
      */
-    private final int elementByteLength;
+    private final int elementBitLength;
     /**
      * retrieval index value
      */
@@ -39,12 +39,12 @@ public class FastPirClientThread extends Thread {
     private ByteBuffer indexPirResult;
 
     FastPirClientThread(Ayaa21SingleIndexPirClient client, Ayaa21SingleIndexPirParams indexPirParams, int retrievalIndex,
-                        int serverElementSize, int elementByteLength) {
+                        int serverElementSize, int elementBitLength) {
         this.client = client;
         this.indexPirParams = indexPirParams;
         this.retrievalIndex = retrievalIndex;
         this.serverElementSize = serverElementSize;
-        this.elementByteLength = elementByteLength;
+        this.elementBitLength = elementBitLength;
     }
 
     public ByteBuffer getRetrievalResult() {
@@ -54,7 +54,7 @@ public class FastPirClientThread extends Thread {
     @Override
     public void run() {
         try {
-            client.init(indexPirParams, serverElementSize, elementByteLength);
+            client.init(indexPirParams, serverElementSize, elementBitLength);
             client.getRpc().synchronize();
             indexPirResult = ByteBuffer.wrap(client.pir(retrievalIndex));
         } catch (MpcAbortException e) {

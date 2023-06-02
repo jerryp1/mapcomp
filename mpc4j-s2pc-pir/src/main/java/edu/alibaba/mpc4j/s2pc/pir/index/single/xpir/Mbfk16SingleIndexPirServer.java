@@ -128,8 +128,8 @@ public class Mbfk16SingleIndexPirServer extends AbstractSingleIndexPirServer {
 
     @Override
     public List<byte[][]> serverSetup(NaiveDatabase database) {
-        int maxPartitionByteLength = params.getPolyModulusDegree() * params.getPlainModulusBitLength() / Byte.SIZE;
-        setInitInput(database, database.getByteL(), maxPartitionByteLength);
+        int maxPartitionBitLength = params.getPolyModulusDegree() * params.getPlainModulusBitLength();
+        setInitInput(database, database.getL(), maxPartitionBitLength);
         elementSizeOfPlaintext = PirUtils.elementSizeOfPlaintext(
             partitionByteLength, params.getPolyModulusDegree(), params.getPlainModulusBitLength()
         );

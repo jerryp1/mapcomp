@@ -18,7 +18,11 @@ import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
+import static edu.alibaba.mpc4j.s2pc.pir.index.single.mulpir.Alpr21SingleIndexPirPtoDesc.*;
+
 /**
+ * MulPIR server.
+ *
  * @author Qixian Zhou
  * @date 2023/5/29
  */
@@ -29,7 +33,7 @@ public class Alpr21SingleIndexPirServer extends AbstractSingleIndexPirServer {
     }
 
     /**
-     * SEAL PIR params
+     * MulPIR params
      */
     private Alpr21SingleIndexPirParams params;
     /**
@@ -58,7 +62,7 @@ public class Alpr21SingleIndexPirServer extends AbstractSingleIndexPirServer {
     private List<byte[][]> encodedDatabase;
 
     public Alpr21SingleIndexPirServer(Rpc serverRpc, Party clientParty, Alpr21SingleIndexPirConfig config) {
-        super(Alpr21SingleIndexPirPtoDesc.getInstance(), serverRpc, clientParty, config);
+        super(getInstance(), serverRpc, clientParty, config);
     }
 
     @Override
@@ -69,8 +73,8 @@ public class Alpr21SingleIndexPirServer extends AbstractSingleIndexPirServer {
 
         // receive Galois keys and Relin keys
         DataPacketHeader clientPublicKeysHeader = new DataPacketHeader(
-                encodeTaskId, getPtoDesc().getPtoId(), Alpr21SingleIndexPirPtoDesc.PtoStep.CLIENT_SEND_PUBLIC_KEYS.ordinal(), extraInfo,
-                otherParty().getPartyId(), rpc.ownParty().getPartyId()
+            encodeTaskId, getPtoDesc().getPtoId(), PtoStep.CLIENT_SEND_PUBLIC_KEYS.ordinal(), extraInfo,
+            otherParty().getPartyId(), rpc.ownParty().getPartyId()
         );
         List<byte[]> publicKeyPayload = rpc.receive(clientPublicKeysHeader).getPayload();
 
@@ -92,8 +96,8 @@ public class Alpr21SingleIndexPirServer extends AbstractSingleIndexPirServer {
 
         // receive Galois keys
         DataPacketHeader clientPublicKeysHeader = new DataPacketHeader(
-                encodeTaskId, getPtoDesc().getPtoId(), Alpr21SingleIndexPirPtoDesc.PtoStep.CLIENT_SEND_PUBLIC_KEYS.ordinal(), extraInfo,
-                otherParty().getPartyId(), rpc.ownParty().getPartyId()
+            encodeTaskId, getPtoDesc().getPtoId(), PtoStep.CLIENT_SEND_PUBLIC_KEYS.ordinal(), extraInfo,
+            otherParty().getPartyId(), rpc.ownParty().getPartyId()
         );
         List<byte[]> publicKeyPayload = rpc.receive(clientPublicKeysHeader).getPayload();
 
@@ -114,8 +118,8 @@ public class Alpr21SingleIndexPirServer extends AbstractSingleIndexPirServer {
         logPhaseInfo(PtoState.PTO_BEGIN);
 
         DataPacketHeader clientQueryHeader = new DataPacketHeader(
-                encodeTaskId, getPtoDesc().getPtoId(), Alpr21SingleIndexPirPtoDesc.PtoStep.CLIENT_SEND_QUERY.ordinal(), extraInfo,
-                otherParty().getPartyId(), rpc.ownParty().getPartyId()
+            encodeTaskId, getPtoDesc().getPtoId(), PtoStep.CLIENT_SEND_QUERY.ordinal(), extraInfo,
+            otherParty().getPartyId(), rpc.ownParty().getPartyId()
         );
         List<byte[]> clientQueryPayload = new ArrayList<>(rpc.receive(clientQueryHeader).getPayload());
         // receive query
@@ -123,8 +127,8 @@ public class Alpr21SingleIndexPirServer extends AbstractSingleIndexPirServer {
         List<byte[]> serverResponsePayload = generateResponse(clientQueryPayload, encodedDatabase);
 
         DataPacketHeader serverResponseHeader = new DataPacketHeader(
-                encodeTaskId, getPtoDesc().getPtoId(), Alpr21SingleIndexPirPtoDesc.PtoStep.SERVER_SEND_RESPONSE.ordinal(), extraInfo,
-                rpc.ownParty().getPartyId(), otherParty().getPartyId()
+            encodeTaskId, getPtoDesc().getPtoId(), PtoStep.SERVER_SEND_RESPONSE.ordinal(), extraInfo,
+            rpc.ownParty().getPartyId(), otherParty().getPartyId()
         );
         rpc.send(DataPacket.fromByteArrayList(serverResponseHeader, serverResponsePayload));
         stopWatch.stop();
@@ -157,48 +161,41 @@ public class Alpr21SingleIndexPirServer extends AbstractSingleIndexPirServer {
         this.relinKeys = clientPublicKeysPayload.remove(0);
     }
 
-    /**
-     * server setup.
-     *
-     * @return encoded database.
-     */
+    @Override
     public List<byte[][]> serverSetup(NaiveDatabase database) {
-
-        int maxPartitionByteLength = params.getPolyModulusDegree() * params.getPlainModulusBitLength() / Byte.SIZE;
-        setInitInput(database, database.getByteL(), maxPartitionByteLength);
-
+        int maxPartitionBitLength = params.getPolyModulusDegree() * params.getPlainModulusBitLength();
+        setInitInput(database, database.getL(), maxPartitionBitLength);
         elementSizeOfPlaintext = PirUtils.elementSizeOfPlaintext(
-                partitionByteLength, params.getPolyModulusDegree(), params.getPlainModulusBitLength()
+            partitionByteLength, params.getPolyModulusDegree(), params.getPlainModulusBitLength()
         );
         plaintextSize = (int) Math.ceil((double) num / this.elementSizeOfPlaintext);
         dimensionSize = PirUtils.computeDimensionLength(plaintextSize, params.getDimension());
-
         // encode database
         IntStream intStream = IntStream.range(0, databases.length);
         intStream = parallel ? intStream.parallel() : intStream;
         return intStream.mapToObj(this::preprocessDatabase).collect(Collectors.toList());
     }
 
-    /**
-     * server handle client query.
-     *
-     * @param clientQueryPayload client query.
-     * @return server response.
-     * @throws MpcAbortException the protocol failure aborts.
-     */
-    public List<byte[]> generateResponse(List<byte[]> clientQueryPayload, List<byte[][]> encodedDatabase) throws MpcAbortException {
+    @Override
+    public List<byte[]> generateResponse(List<byte[]> clientQueryPayload, List<byte[][]> encodedDatabase)
+        throws MpcAbortException {
         // query ciphertext number should be ceil(dim_sum/N)
         int expectQueryPayloadSize = (Arrays.stream(dimensionSize).sum() % params.getPolyModulusDegree() == 0)
                 ? Arrays.stream(dimensionSize).sum() / params.getPolyModulusDegree()
                 : Arrays.stream(dimensionSize).sum() / params.getPolyModulusDegree() + 1;
-
         MpcAbortPreconditions.checkArgument(clientQueryPayload.size() == expectQueryPayloadSize);
-
         IntStream intStream = IntStream.range(0, databases.length);
         intStream = parallel ? intStream.parallel() : intStream;
         return intStream
-                .mapToObj(i -> Alpr21SingleIndexPirNativeUtils.generateReply(
-                        params.getEncryptionParams(), galoisKeys, relinKeys, clientQueryPayload, encodedDatabase.get(i), dimensionSize)
+                .mapToObj(i ->
+                    Alpr21SingleIndexPirNativeUtils.generateReply(
+                        params.getEncryptionParams(),
+                        galoisKeys,
+                        relinKeys,
+                        clientQueryPayload,
+                        encodedDatabase.get(i),
+                        dimensionSize
+                    )
                 )
                 .flatMap(Collection::stream)
                 .collect(Collectors.toCollection(ArrayList::new));
@@ -226,7 +223,6 @@ public class Alpr21SingleIndexPirServer extends AbstractSingleIndexPirServer {
                 ((int) Math.ceil(Byte.SIZE * partitionByteLength / (double) params.getPlainModulusBitLength()));
         assert (usedCoeffSize <= params.getPolyModulusDegree())
                 : "coefficient num must be less than or equal to polynomial degree";
-        // 字节转换为多项式系数
         int offset = 0;
         for (int i = 0; i < plaintextSize; i++) {
             int processByteSize;
@@ -258,5 +254,4 @@ public class Alpr21SingleIndexPirServer extends AbstractSingleIndexPirServer {
                 .forEach(coeffsList::add);
         return Alpr21SingleIndexPirNativeUtils.nttTransform(params.getEncryptionParams(), coeffsList).toArray(new byte[0][]);
     }
-
 }

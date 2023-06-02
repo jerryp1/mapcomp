@@ -59,13 +59,13 @@ public class Ayaa21SingleIndexPirClient extends AbstractSingleIndexPirClient {
     }
 
     @Override
-    public void init(SingleIndexPirParams indexPirParams, int serverElementSize, int elementByteLength) {
+    public void init(SingleIndexPirParams indexPirParams, int serverElementSize, int elementBitLength) {
         assert (indexPirParams instanceof Ayaa21SingleIndexPirParams);
         params = (Ayaa21SingleIndexPirParams) indexPirParams;
         logPhaseInfo(PtoState.INIT_BEGIN);
 
         stopWatch.start();
-        List<byte[]> publicKeysPayload = clientSetup(serverElementSize, elementByteLength);
+        List<byte[]> publicKeysPayload = clientSetup(serverElementSize, elementBitLength);
         // client sends Galois keys
         DataPacketHeader clientPublicKeysHeader = new DataPacketHeader(
             encodeTaskId, getPtoDesc().getPtoId(), PtoStep.CLIENT_SEND_PUBLIC_KEYS.ordinal(), extraInfo,
@@ -81,12 +81,12 @@ public class Ayaa21SingleIndexPirClient extends AbstractSingleIndexPirClient {
     }
 
     @Override
-    public void init(int serverElementSize, int elementByteLength) {
+    public void init(int serverElementSize, int elementBitLength) {
         params = Ayaa21SingleIndexPirParams.DEFAULT_PARAMS;
         logPhaseInfo(PtoState.INIT_BEGIN);
 
         stopWatch.start();
-        List<byte[]> publicKeysPayload = clientSetup(serverElementSize, elementByteLength);
+        List<byte[]> publicKeysPayload = clientSetup(serverElementSize, elementBitLength);
         // client sends Galois keys
         DataPacketHeader clientPublicKeysHeader = new DataPacketHeader(
             encodeTaskId, getPtoDesc().getPtoId(), PtoStep.CLIENT_SEND_PUBLIC_KEYS.ordinal(), extraInfo,
@@ -136,13 +136,16 @@ public class Ayaa21SingleIndexPirClient extends AbstractSingleIndexPirClient {
     }
 
     @Override
-    public List<byte[]> clientSetup(int serverElementSize, int elementByteLength) {
+    public List<byte[]> clientSetup(int serverElementSize, int elementBitLength) {
         if (params == null) {
             params = Ayaa21SingleIndexPirParams.DEFAULT_PARAMS;
         }
+        int elementByteLength = CommonUtils.getByteLength(elementBitLength);
         isPadding = elementByteLength % 2 == 1;
-        int maxPartitionByteLength = params.getPolyModulusDegree() * params.getPlainModulusBitLength() / Byte.SIZE;
-        setInitInput(serverElementSize, isPadding ? elementByteLength + 1 : elementByteLength, maxPartitionByteLength);
+        int maxPartitionBitLength = params.getPolyModulusDegree() * params.getPlainModulusBitLength();
+        setInitInput(
+            serverElementSize, isPadding ? elementBitLength + Byte.SIZE : elementBitLength, maxPartitionBitLength
+        );
         querySize = CommonUtils.getUnitNum(num, params.getPolyModulusDegree() / 2);
         elementColumnLength = CommonUtils.getUnitNum(
             (partitionByteLength / 2) * Byte.SIZE, params.getPlainModulusBitLength()
@@ -180,11 +183,11 @@ public class Ayaa21SingleIndexPirClient extends AbstractSingleIndexPirClient {
             System.arraycopy(lowerBytes, 0, partitionBytes, partitionByteLength / 2, partitionByteLength / 2);
             databases[partitionIndex] = ZlDatabase.create(partitionByteLength * Byte.SIZE, new byte[][]{partitionBytes});
         });
-        byte[] temp = NaiveDatabase.createFromZl(elementByteLength * Byte.SIZE, databases).getBytesData(0);
+        byte[] temp = NaiveDatabase.createFromZl(elementBitLength, databases).getBytesData(0);
         byte[] element;
         if (isPadding) {
-            element = new byte[elementByteLength - 1];
-            System.arraycopy(temp, 1, element, 0, elementByteLength - 1);
+            element = new byte[CommonUtils.getByteLength(elementBitLength) - 1];
+            System.arraycopy(temp, 1, element, 0, CommonUtils.getByteLength(elementBitLength) - 1);
         } else {
             element = temp;
         }

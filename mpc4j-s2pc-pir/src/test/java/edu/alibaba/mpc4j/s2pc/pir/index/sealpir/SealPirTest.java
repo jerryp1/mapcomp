@@ -4,6 +4,7 @@ import com.google.common.base.Preconditions;
 import edu.alibaba.mpc4j.common.rpc.Rpc;
 import edu.alibaba.mpc4j.common.rpc.RpcManager;
 import edu.alibaba.mpc4j.common.rpc.impl.memory.MemoryRpcManager;
+import edu.alibaba.mpc4j.common.tool.CommonConstants;
 import edu.alibaba.mpc4j.crypto.matrix.database.NaiveDatabase;
 import edu.alibaba.mpc4j.s2pc.pir.PirUtils;
 import edu.alibaba.mpc4j.s2pc.pir.index.single.SingleIndexPirFactory;
@@ -35,17 +36,17 @@ import java.util.Collection;
 public class SealPirTest {
     private static final Logger LOGGER = LoggerFactory.getLogger(SealPirTest.class);
     /**
-     * default element byte length
+     * default element bit length
      */
-    private static final int DEFAULT_ELEMENT_BYTE_LENGTH = 64;
+    private static final int DEFAULT_ELEMENT_BIT_LENGTH = CommonConstants.BLOCK_BIT_LENGTH;
     /**
-     * large element byte length
+     * large element bit length
      */
-    private static final int LARGE_ELEMENT_BYTE_LENGTH = 30000;
+    private static final int LARGE_ELEMENT_BIT_LENGTH = 160000;
     /**
-     * small element byte length
+     * small element bit length
      */
-    private static final int SMALL_ELEMENT_BYTE_LENGTH = 8;
+    private static final int SMALL_ELEMENT_BIT_LENGTH = CommonConstants.STATS_BIT_LENGTH;
     /**
      * database size
      */
@@ -60,12 +61,30 @@ public class SealPirTest {
             SingleIndexPirFactory.SingleIndexPirType.SEAL_PIR.name() + " (1-dimension)",
             sealpirConfig,
             new Acls18SingleIndexPirParams(
+                4096,
+                20,
+                1
+            )
+        });
+        configurations.add(new Object[]{
+            SingleIndexPirFactory.SingleIndexPirType.SEAL_PIR.name() + " (1-dimension)",
+            sealpirConfig,
+            new Acls18SingleIndexPirParams(
                 8192,
                 20,
                 1
             )
         });
         // SEAL PIR (2-dimension)
+        configurations.add(new Object[]{
+            SingleIndexPirFactory.SingleIndexPirType.SEAL_PIR.name() + " (2-dimension)",
+            sealpirConfig,
+            new Acls18SingleIndexPirParams(
+                4096,
+                20,
+                2
+            )
+        });
         configurations.add(new Object[]{
             SingleIndexPirFactory.SingleIndexPirType.SEAL_PIR.name() + " (2-dimension)",
             sealpirConfig,
@@ -120,28 +139,28 @@ public class SealPirTest {
 
     @Test
     public void testSealPir() {
-        testSealPir(indexPirConfig, indexPirParams, DEFAULT_ELEMENT_BYTE_LENGTH, false);
+        testSealPir(indexPirConfig, indexPirParams, DEFAULT_ELEMENT_BIT_LENGTH, false);
     }
 
     @Test
     public void testParallelSealPir() {
-        testSealPir(indexPirConfig, indexPirParams, DEFAULT_ELEMENT_BYTE_LENGTH, true);
+        testSealPir(indexPirConfig, indexPirParams, DEFAULT_ELEMENT_BIT_LENGTH, true);
     }
 
     @Test
     public void testLargeElementSealPir() {
-        testSealPir(indexPirConfig, indexPirParams, LARGE_ELEMENT_BYTE_LENGTH, true);
+        testSealPir(indexPirConfig, indexPirParams, LARGE_ELEMENT_BIT_LENGTH, true);
     }
 
     @Test
     public void testSmallElementSealPir() {
-        testSealPir(indexPirConfig, indexPirParams, SMALL_ELEMENT_BYTE_LENGTH, true);
+        testSealPir(indexPirConfig, indexPirParams, SMALL_ELEMENT_BIT_LENGTH, true);
     }
 
     public void testSealPir(Acls18SingleIndexPirConfig config, Acls18SingleIndexPirParams indexPirParams,
-                            int elementByteLength, boolean parallel) {
+                            int elementBitLength, boolean parallel) {
         int retrievalIndex = PirUtils.generateRetrievalIndex(SERVER_ELEMENT_SIZE);
-        NaiveDatabase database = PirUtils.generateDataBase(SERVER_ELEMENT_SIZE, elementByteLength * Byte.SIZE);
+        NaiveDatabase database = PirUtils.generateDataBase(SERVER_ELEMENT_SIZE, elementBitLength);
         Acls18SingleIndexPirServer server = new Acls18SingleIndexPirServer(serverRpc, clientRpc.ownParty(), config);
         Acls18SingleIndexPirClient client = new Acls18SingleIndexPirClient(clientRpc, serverRpc.ownParty(), config);
         // set parallel
@@ -149,7 +168,7 @@ public class SealPirTest {
         client.setParallel(parallel);
         SealPirServerThread serverThread = new SealPirServerThread(server, indexPirParams, database);
         SealPirClientThread clientThread = new SealPirClientThread(
-            client, indexPirParams, retrievalIndex, SERVER_ELEMENT_SIZE, elementByteLength
+            client, indexPirParams, retrievalIndex, SERVER_ELEMENT_SIZE, elementBitLength
         );
         try {
             serverThread.start();

@@ -8,7 +8,10 @@ import edu.alibaba.mpc4j.common.tool.hashbin.primitive.cuckoo.IntNoStashCuckooHa
 import edu.alibaba.mpc4j.s2pc.pir.index.batch.BatchIndexPirConfig;
 import edu.alibaba.mpc4j.s2pc.pir.index.batch.BatchIndexPirFactory;
 import edu.alibaba.mpc4j.s2pc.pir.index.single.SingleIndexPirConfig;
+import edu.alibaba.mpc4j.s2pc.pir.index.single.fastpir.Ayaa21SingleIndexPirConfig;
+import edu.alibaba.mpc4j.s2pc.pir.index.single.onionpir.Mcr21SingleIndexPirConfig;
 import edu.alibaba.mpc4j.s2pc.pir.index.single.sealpir.Acls18SingleIndexPirConfig;
+import edu.alibaba.mpc4j.s2pc.pir.index.single.xpir.Mbfk16SingleIndexPirConfig;
 
 /**
  * naive batch index PIR config.
@@ -28,6 +31,10 @@ public class NaiveBatchIndexPirConfig implements BatchIndexPirConfig {
 
     public NaiveBatchIndexPirConfig(Builder builder) {
         singleIndexPirConfig = builder.singleIndexPirConfig;
+        assert (singleIndexPirConfig instanceof Ayaa21SingleIndexPirConfig) ||
+            (singleIndexPirConfig instanceof Mcr21SingleIndexPirConfig) ||
+            (singleIndexPirConfig instanceof Acls18SingleIndexPirConfig) ||
+            (singleIndexPirConfig instanceof Mbfk16SingleIndexPirConfig);
         cuckooHashBinType = builder.cuckooHashBinType;
     }
 

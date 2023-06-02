@@ -15,9 +15,9 @@ import edu.alibaba.mpc4j.common.tool.utils.CommonUtils;
  */
 public abstract class AbstractSingleIndexPirClient extends AbstractTwoPartyPto implements SingleIndexPirClient {
     /**
-     * element byte length
+     * element bit length
      */
-    protected int elementByteLength;
+    protected int elementBitLength;
     /**
      * database size
      */
@@ -26,6 +26,10 @@ public abstract class AbstractSingleIndexPirClient extends AbstractTwoPartyPto i
      * partition byte length
      */
     protected int partitionByteLength;
+    /**
+     * partition bit-length
+     */
+    protected int partitionBitLength;
     /**
      * partition size
      */
@@ -36,13 +40,14 @@ public abstract class AbstractSingleIndexPirClient extends AbstractTwoPartyPto i
         super(ptoDesc, clientRpc, serverParty, config);
     }
 
-    protected void setInitInput(int num, int elementByteLength, int maxPartitionByteLength) {
-        MathPreconditions.checkPositive("elementByteLength", elementByteLength);
-        this.elementByteLength = elementByteLength;
+    protected void setInitInput(int num, int elementBitLength, int maxPartitionBitLength) {
+        MathPreconditions.checkPositive("elementBitLength", elementBitLength);
+        this.elementBitLength = elementBitLength;
         MathPreconditions.checkPositive("num", num);
         this.num = num;
-        partitionByteLength = Math.min(maxPartitionByteLength, elementByteLength);
-        partitionSize = CommonUtils.getUnitNum(elementByteLength, partitionByteLength);
+        partitionBitLength = Math.min(maxPartitionBitLength, elementBitLength);
+        partitionByteLength = CommonUtils.getByteLength(partitionBitLength);
+        partitionSize = CommonUtils.getUnitNum(elementBitLength, partitionBitLength);
         initState();
     }
 

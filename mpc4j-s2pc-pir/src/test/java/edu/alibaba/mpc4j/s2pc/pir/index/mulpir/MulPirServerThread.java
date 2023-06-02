@@ -6,6 +6,8 @@ import edu.alibaba.mpc4j.s2pc.pir.index.single.mulpir.Alpr21SingleIndexPirParams
 import edu.alibaba.mpc4j.s2pc.pir.index.single.mulpir.Alpr21SingleIndexPirServer;
 
 /**
+ * Mul PIR server thread.
+ *
  * @author Qixian Zhou
  * @date 2023/5/29
  */

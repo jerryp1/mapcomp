@@ -141,8 +141,8 @@ public class Ayaa21SingleIndexPirServer extends AbstractSingleIndexPirServer {
         if (byteLength % 2 == 1) {
             byteLength++;
         }
-        int maxPartitionByteLength = params.getPolyModulusDegree() * params.getPlainModulusBitLength() / Byte.SIZE;
-        setInitInput(database, byteLength, maxPartitionByteLength);
+        int maxPartitionBitLength = params.getPolyModulusDegree() * params.getPlainModulusBitLength();
+        setInitInput(database, byteLength * Byte.SIZE, maxPartitionBitLength);
         querySize = CommonUtils.getUnitNum(num, params.getPolyModulusDegree() / 2);
         elementColumnLength = CommonUtils.getUnitNum(
             (partitionByteLength / 2) * Byte.SIZE, params.getPlainModulusBitLength()

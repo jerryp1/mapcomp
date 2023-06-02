@@ -15,6 +15,9 @@ import edu.alibaba.mpc4j.s2pc.pir.index.single.onionpir.Mcr21SingleIndexPirServe
 import edu.alibaba.mpc4j.s2pc.pir.index.single.sealpir.Acls18SingleIndexPirClient;
 import edu.alibaba.mpc4j.s2pc.pir.index.single.sealpir.Acls18SingleIndexPirConfig;
 import edu.alibaba.mpc4j.s2pc.pir.index.single.sealpir.Acls18SingleIndexPirServer;
+import edu.alibaba.mpc4j.s2pc.pir.index.single.simplepir.Hhcm23SingleIndexPirClient;
+import edu.alibaba.mpc4j.s2pc.pir.index.single.simplepir.Hhcm23SingleIndexPirConfig;
+import edu.alibaba.mpc4j.s2pc.pir.index.single.simplepir.Hhcm23SingleIndexPirServer;
 import edu.alibaba.mpc4j.s2pc.pir.index.single.vectorizedpir.Mr23SingleIndexPirClient;
 import edu.alibaba.mpc4j.s2pc.pir.index.single.vectorizedpir.Mr23SingleIndexPirConfig;
 import edu.alibaba.mpc4j.s2pc.pir.index.single.vectorizedpir.Mr23SingleIndexPirServer;
@@ -64,6 +67,10 @@ public class SingleIndexPirFactory implements PtoFactory {
          * Mul PIR
          */
         MUL_PIR,
+        /**
+         * Simple PIR
+         */
+        SIMPLE_PIR,
     }
 
     /**
@@ -89,6 +96,8 @@ public class SingleIndexPirFactory implements PtoFactory {
                 return new Mr23SingleIndexPirServer(serverRpc, clientParty, (Mr23SingleIndexPirConfig) config);
             case MUL_PIR:
                 return new Alpr21SingleIndexPirServer(serverRpc, clientParty, (Alpr21SingleIndexPirConfig) config);
+            case SIMPLE_PIR:
+                return new Hhcm23SingleIndexPirServer(serverRpc, clientParty, (Hhcm23SingleIndexPirConfig) config);
             default:
                 throw new IllegalArgumentException(
                     "Invalid " + SingleIndexPirType.class.getSimpleName() + ": " + type.name()
@@ -119,6 +128,8 @@ public class SingleIndexPirFactory implements PtoFactory {
                 return new Mr23SingleIndexPirClient(clientRpc, serverParty, (Mr23SingleIndexPirConfig) config);
             case MUL_PIR:
                 return new Alpr21SingleIndexPirClient(clientRpc, serverParty, (Alpr21SingleIndexPirConfig) config);
+            case SIMPLE_PIR:
+                return new Hhcm23SingleIndexPirClient(clientRpc, serverParty, (Hhcm23SingleIndexPirConfig) config);
             default:
                 throw new IllegalArgumentException(
                     "Invalid " + SingleIndexPirType.class.getSimpleName() + ": " + type.name()

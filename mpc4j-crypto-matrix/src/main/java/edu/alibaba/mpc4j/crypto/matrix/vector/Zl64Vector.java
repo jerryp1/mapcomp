@@ -1,6 +1,7 @@
 package edu.alibaba.mpc4j.crypto.matrix.vector;
 
 import com.google.common.base.Preconditions;
+import edu.alibaba.mpc4j.common.sampler.integral.gaussian.DiscGaussSampler;
 import edu.alibaba.mpc4j.common.tool.MathPreconditions;
 import edu.alibaba.mpc4j.common.tool.galoisfield.zl64.Zl64;
 import edu.alibaba.mpc4j.crypto.matrix.MatrixUtils;
@@ -10,6 +11,9 @@ import org.apache.commons.lang3.builder.HashCodeBuilder;
 import java.security.SecureRandom;
 import java.util.Arrays;
 import java.util.stream.IntStream;
+
+import static edu.alibaba.mpc4j.common.sampler.integral.gaussian.DiscGaussSamplerFactory.*;
+import static edu.alibaba.mpc4j.common.sampler.integral.gaussian.DiscGaussSamplerFactory.createInstance;
 
 /**
  * the Zl64 vector.
@@ -77,6 +81,23 @@ public class Zl64Vector implements RingVector {
         vector.elements = IntStream.range(0, num)
             .mapToLong(index -> zl64.createOne())
             .toArray();
+        return vector;
+    }
+
+    /**
+     * Creates a Gaussian sample vector.
+     *
+     * @param zl64  Zl64 instance.
+     * @param num   the num.
+     * @param c     the mean of the distribution c.
+     * @param sigma the width parameter σ.
+     * @return a vector.
+     */
+    public static Zl64Vector createGaussianSample(Zl64 zl64, int num, int c, double sigma) {
+        Zl64Vector vector = new Zl64Vector(zl64);
+        MathPreconditions.checkPositive("num", num);
+        DiscGaussSampler discGaussSampler = createInstance(DiscGaussSamplerType.CONVOLUTION, c, sigma);
+        vector.elements = IntStream.range(0, num).mapToLong(i -> zl64.module(discGaussSampler.sample())).toArray();
         return vector;
     }
 

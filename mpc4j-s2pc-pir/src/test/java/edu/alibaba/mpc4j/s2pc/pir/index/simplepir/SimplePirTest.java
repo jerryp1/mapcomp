@@ -1,4 +1,4 @@
-package edu.alibaba.mpc4j.s2pc.pir.index.fastpir;
+package edu.alibaba.mpc4j.s2pc.pir.index.simplepir;
 
 import com.google.common.base.Preconditions;
 import edu.alibaba.mpc4j.common.rpc.Rpc;
@@ -8,10 +8,7 @@ import edu.alibaba.mpc4j.common.tool.CommonConstants;
 import edu.alibaba.mpc4j.crypto.matrix.database.NaiveDatabase;
 import edu.alibaba.mpc4j.s2pc.pir.PirUtils;
 import edu.alibaba.mpc4j.s2pc.pir.index.single.SingleIndexPirFactory;
-import edu.alibaba.mpc4j.s2pc.pir.index.single.fastpir.Ayaa21SingleIndexPirClient;
-import edu.alibaba.mpc4j.s2pc.pir.index.single.fastpir.Ayaa21SingleIndexPirConfig;
-import edu.alibaba.mpc4j.s2pc.pir.index.single.fastpir.Ayaa21SingleIndexPirParams;
-import edu.alibaba.mpc4j.s2pc.pir.index.single.fastpir.Ayaa21SingleIndexPirServer;
+import edu.alibaba.mpc4j.s2pc.pir.index.single.simplepir.*;
 import org.apache.commons.lang3.StringUtils;
 import org.junit.After;
 import org.junit.Assert;
@@ -27,43 +24,40 @@ import java.util.ArrayList;
 import java.util.Collection;
 
 /**
- * FastPIR test.
+ * Simple PIR test.
  *
  * @author Liqiang Peng
- * @date 2022/8/26
+ * @date 2023/5/29
  */
 @RunWith(Parameterized.class)
-public class FastPirTest {
-    private static final Logger LOGGER = LoggerFactory.getLogger(FastPirTest.class);
+public class SimplePirTest {
+    private static final Logger LOGGER = LoggerFactory.getLogger(SimplePirTest.class);
     /**
      * default element bit length
      */
-    private static final int DEFAULT_ELEMENT_BIT_LENGTH = CommonConstants.BLOCK_BIT_LENGTH;
+    private static final int DEFAULT_ELEMENT_BIT_LENGTH = CommonConstants.BLOCK_BYTE_LENGTH;
     /**
      * large element bit length
      */
-    private static final int LARGE_ELEMENT_BIT_LENGTH = 160000;
+    private static final int LARGE_ELEMENT_BIT_LENGTH = CommonConstants.STATS_BIT_LENGTH;
     /**
      * small element bit length
      */
-    private static final int SMALL_ELEMENT_BIT_LENGTH = CommonConstants.STATS_BIT_LENGTH;
+    private static final int SMALL_ELEMENT_BIT_LENGTH = Byte.SIZE;
     /**
      * database size
      */
-    private static final int SERVER_ELEMENT_SIZE = 1 << 12;
+    private static final int SERVER_ELEMENT_SIZE = 1 << 18;
 
     @Parameterized.Parameters(name = "{0}")
     public static Collection<Object[]> configurations() {
         Collection<Object[]> configurations = new ArrayList<>();
-        Ayaa21SingleIndexPirConfig fastpirConfig = new Ayaa21SingleIndexPirConfig();
+        Hhcm23SingleIndexPirConfig config = new Hhcm23SingleIndexPirConfig();
+        // simple PIR
         configurations.add(new Object[]{
-            SingleIndexPirFactory.SingleIndexPirType.FAST_PIR.name(),
-            fastpirConfig,
-            new Ayaa21SingleIndexPirParams(
-                4096,
-                1073153L,
-                new long[]{1152921504606830593L, 562949953216513L}
-            )
+            SingleIndexPirFactory.SingleIndexPirType.SIMPLE_PIR.name(),
+            config,
+            Hhcm23SingleIndexPirParams.SERVER_ELEMENT_LOG_SIZE_30
         });
         return configurations;
     }
@@ -77,15 +71,16 @@ public class FastPirTest {
      */
     private final Rpc clientRpc;
     /**
-     * FastPIR config
+     * Simple PIR config
      */
-    private final Ayaa21SingleIndexPirConfig indexPirConfig;
+    private final Hhcm23SingleIndexPirConfig indexPirConfig;
     /**
-     * FastPIR params
+     * Simple PIR params
      */
-    private final Ayaa21SingleIndexPirParams indexPirParams;
+    private final Hhcm23SingleIndexPirParams indexPirParams;
 
-    public FastPirTest(String name, Ayaa21SingleIndexPirConfig indexPirConfig, Ayaa21SingleIndexPirParams indexPirParams) {
+    public SimplePirTest(String name, Hhcm23SingleIndexPirConfig indexPirConfig,
+                         Hhcm23SingleIndexPirParams indexPirParams) {
         Preconditions.checkArgument(StringUtils.isNotBlank(name));
         // We cannot use NettyRPC in the test case since it needs multi-thread connect / disconnect.
         // In other word, we cannot connect / disconnect NettyRpc in @Before / @After, respectively.
@@ -109,35 +104,36 @@ public class FastPirTest {
     }
 
     @Test
-    public void testFastPir() {
-        testFastPir(indexPirConfig, indexPirParams, DEFAULT_ELEMENT_BIT_LENGTH, false);
+    public void testSimplePir() {
+        testSimplePir(indexPirConfig, indexPirParams, DEFAULT_ELEMENT_BIT_LENGTH, false);
     }
 
     @Test
-    public void testParallelFastPir() {
-        testFastPir(indexPirConfig, indexPirParams, DEFAULT_ELEMENT_BIT_LENGTH, true);
+    public void testParallelSimplePir() {
+        testSimplePir(indexPirConfig, indexPirParams, DEFAULT_ELEMENT_BIT_LENGTH, true);
     }
 
     @Test
-    public void testLargeElementFastPir() {
-        testFastPir(indexPirConfig, indexPirParams, LARGE_ELEMENT_BIT_LENGTH, true);
+    public void testLargeElementSimplePir() {
+        testSimplePir(indexPirConfig, indexPirParams, LARGE_ELEMENT_BIT_LENGTH, true);
     }
 
     @Test
-    public void testSmallElementFastPir() {
-        testFastPir(indexPirConfig, indexPirParams, SMALL_ELEMENT_BIT_LENGTH, true);
+    public void testSmallElementSimplePir() {
+        testSimplePir(indexPirConfig, indexPirParams, SMALL_ELEMENT_BIT_LENGTH, true);
     }
 
-    public void testFastPir(Ayaa21SingleIndexPirConfig config, Ayaa21SingleIndexPirParams indexPirParams,
-                            int elementBitLength, boolean parallel) {
+    public void testSimplePir(Hhcm23SingleIndexPirConfig config, Hhcm23SingleIndexPirParams indexPirParams,
+                              int elementBitLength, boolean parallel) {
         int retrievalIndex = PirUtils.generateRetrievalIndex(SERVER_ELEMENT_SIZE);
         NaiveDatabase database = PirUtils.generateDataBase(SERVER_ELEMENT_SIZE, elementBitLength);
-        Ayaa21SingleIndexPirServer server = new Ayaa21SingleIndexPirServer(serverRpc, clientRpc.ownParty(), config);
-        Ayaa21SingleIndexPirClient client = new Ayaa21SingleIndexPirClient(clientRpc, serverRpc.ownParty(), config);
+        Hhcm23SingleIndexPirServer server = new Hhcm23SingleIndexPirServer(serverRpc, clientRpc.ownParty(), config);
+        Hhcm23SingleIndexPirClient client = new Hhcm23SingleIndexPirClient(clientRpc, serverRpc.ownParty(), config);
+        // set parallel
         server.setParallel(parallel);
         client.setParallel(parallel);
-        FastPirServerThread serverThread = new FastPirServerThread(server, indexPirParams, database);
-        FastPirClientThread clientThread = new FastPirClientThread(
+        SimplePirServerThread serverThread = new SimplePirServerThread(server, indexPirParams, database);
+        SimplePirClientThread clientThread = new SimplePirClientThread(
             client, indexPirParams, retrievalIndex, SERVER_ELEMENT_SIZE, elementBitLength
         );
         try {

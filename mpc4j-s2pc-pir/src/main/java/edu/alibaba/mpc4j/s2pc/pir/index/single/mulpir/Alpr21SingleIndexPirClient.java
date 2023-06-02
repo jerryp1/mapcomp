@@ -4,7 +4,6 @@ import edu.alibaba.mpc4j.common.rpc.*;
 import edu.alibaba.mpc4j.common.rpc.utils.DataPacket;
 import edu.alibaba.mpc4j.common.rpc.utils.DataPacketHeader;
 import edu.alibaba.mpc4j.common.tool.CommonConstants;
-import edu.alibaba.mpc4j.common.tool.utils.CommonUtils;
 import edu.alibaba.mpc4j.crypto.matrix.database.NaiveDatabase;
 import edu.alibaba.mpc4j.crypto.matrix.database.ZlDatabase;
 import edu.alibaba.mpc4j.s2pc.pir.PirUtils;
@@ -16,19 +15,22 @@ import java.util.List;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.IntStream;
 
+import static edu.alibaba.mpc4j.s2pc.pir.index.single.mulpir.Alpr21SingleIndexPirPtoDesc.*;
+
 /**
+ * MulPIR client.
+ *
  * @author Qixian Zhou
  * @date 2023/5/29
  */
 public class Alpr21SingleIndexPirClient extends AbstractSingleIndexPirClient {
-
 
     static {
         System.loadLibrary(CommonConstants.MPC4J_NATIVE_FHE_NAME);
     }
 
     /**
-     * SEAL PIR params
+     * MulPIR params
      */
     private Alpr21SingleIndexPirParams params;
     /**
@@ -40,10 +42,6 @@ public class Alpr21SingleIndexPirClient extends AbstractSingleIndexPirClient {
      */
     private int[] dimensionSize;
     /**
-     * partition byte length
-     */
-    private int partitionByteLength;
-    /**
      * public key
      */
     private byte[] publicKey;
@@ -51,28 +49,24 @@ public class Alpr21SingleIndexPirClient extends AbstractSingleIndexPirClient {
      * private key
      */
     private byte[] secretKey;
-    /**
-     * partition size
-     */
-    private int partitionSize;
 
     public Alpr21SingleIndexPirClient(Rpc clientRpc, Party serverParty, Alpr21SingleIndexPirConfig config) {
-        super(Alpr21SingleIndexPirPtoDesc.getInstance(), clientRpc, serverParty, config);
+        super(getInstance(), clientRpc, serverParty, config);
     }
 
     @Override
-    public void init(SingleIndexPirParams indexPirParams, int serverElementSize, int elementByteLength) {
+    public void init(SingleIndexPirParams indexPirParams, int serverElementSize, int elementBitLength) {
         assert (indexPirParams instanceof Alpr21SingleIndexPirParams);
         params = (Alpr21SingleIndexPirParams) indexPirParams;
         logPhaseInfo(PtoState.INIT_BEGIN);
 
         stopWatch.start();
 
-        List<byte[]> publicKeysPayload = clientSetup(serverElementSize, elementByteLength);
+        List<byte[]> publicKeysPayload = clientSetup(serverElementSize, elementBitLength);
         // client sends Galois keys and relinKeys
         DataPacketHeader clientPublicKeysHeader = new DataPacketHeader(
-                encodeTaskId, getPtoDesc().getPtoId(), Alpr21SingleIndexPirPtoDesc.PtoStep.CLIENT_SEND_PUBLIC_KEYS.ordinal(), extraInfo,
-                rpc.ownParty().getPartyId(), otherParty().getPartyId()
+            encodeTaskId, getPtoDesc().getPtoId(), PtoStep.CLIENT_SEND_PUBLIC_KEYS.ordinal(), extraInfo,
+            rpc.ownParty().getPartyId(), otherParty().getPartyId()
         );
         rpc.send(DataPacket.fromByteArrayList(clientPublicKeysHeader, publicKeysPayload));
         stopWatch.stop();
@@ -84,16 +78,16 @@ public class Alpr21SingleIndexPirClient extends AbstractSingleIndexPirClient {
     }
 
     @Override
-    public void init(int serverElementSize, int elementByteLength) {
+    public void init(int serverElementSize, int elementBitLength) {
         params = Alpr21SingleIndexPirParams.DEFAULT_PARAMS;
         logPhaseInfo(PtoState.INIT_BEGIN);
 
         stopWatch.start();
-        List<byte[]> publicKeysPayload = clientSetup(serverElementSize, elementByteLength);
+        List<byte[]> publicKeysPayload = clientSetup(serverElementSize, elementBitLength);
         // client sends Galois keys
         DataPacketHeader clientPublicKeysHeader = new DataPacketHeader(
-                encodeTaskId, getPtoDesc().getPtoId(), Alpr21SingleIndexPirPtoDesc.PtoStep.CLIENT_SEND_PUBLIC_KEYS.ordinal(), extraInfo,
-                rpc.ownParty().getPartyId(), otherParty().getPartyId()
+            encodeTaskId, getPtoDesc().getPtoId(), PtoStep.CLIENT_SEND_PUBLIC_KEYS.ordinal(), extraInfo,
+            rpc.ownParty().getPartyId(), otherParty().getPartyId()
         );
         rpc.send(DataPacket.fromByteArrayList(clientPublicKeysHeader, publicKeysPayload));
         stopWatch.stop();
@@ -112,10 +106,9 @@ public class Alpr21SingleIndexPirClient extends AbstractSingleIndexPirClient {
         stopWatch.start();
         // client generates query
         List<byte[]> clientQueryPayload = generateQuery(index);
-
         DataPacketHeader clientQueryHeader = new DataPacketHeader(
-                encodeTaskId, getPtoDesc().getPtoId(), Alpr21SingleIndexPirPtoDesc.PtoStep.CLIENT_SEND_QUERY.ordinal(), extraInfo,
-                rpc.ownParty().getPartyId(), otherParty().getPartyId()
+            encodeTaskId, getPtoDesc().getPtoId(), PtoStep.CLIENT_SEND_QUERY.ordinal(), extraInfo,
+            rpc.ownParty().getPartyId(), otherParty().getPartyId()
         );
         rpc.send(DataPacket.fromByteArrayList(clientQueryHeader, clientQueryPayload));
         stopWatch.stop();
@@ -125,8 +118,8 @@ public class Alpr21SingleIndexPirClient extends AbstractSingleIndexPirClient {
 
         // receive response
         DataPacketHeader serverResponseHeader = new DataPacketHeader(
-                encodeTaskId, getPtoDesc().getPtoId(), Alpr21SingleIndexPirPtoDesc.PtoStep.SERVER_SEND_RESPONSE.ordinal(), extraInfo,
-                otherParty().getPartyId(), rpc.ownParty().getPartyId()
+            encodeTaskId, getPtoDesc().getPtoId(), PtoStep.SERVER_SEND_RESPONSE.ordinal(), extraInfo,
+            otherParty().getPartyId(), rpc.ownParty().getPartyId()
         );
         List<byte[]> serverResponsePayload = rpc.receive(serverResponseHeader).getPayload();
         stopWatch.start();
@@ -140,23 +133,15 @@ public class Alpr21SingleIndexPirClient extends AbstractSingleIndexPirClient {
         return element;
     }
 
-    /**
-     * client setup.
-     *
-     * @return public keys.
-     */
-    public List<byte[]> clientSetup(int serverElementSize, int elementByteLength) {
+    @Override
+    public List<byte[]> clientSetup(int serverElementSize, int elementBitLength) {
         if (params == null) {
             params = Alpr21SingleIndexPirParams.DEFAULT_PARAMS;
         }
-
-        int maxPartitionByteLength = params.getPolyModulusDegree() * params.getPlainModulusBitLength() / Byte.SIZE;
-        setInitInput(serverElementSize, elementByteLength, maxPartitionByteLength);
-
-        partitionByteLength = Math.min(maxPartitionByteLength, elementByteLength);
-        partitionSize = CommonUtils.getUnitNum(elementByteLength, partitionByteLength);
+        int maxPartitionBitLength = params.getPolyModulusDegree() * params.getPlainModulusBitLength();
+        setInitInput(serverElementSize, elementBitLength, maxPartitionBitLength);
         elementSizeOfPlaintext = PirUtils.elementSizeOfPlaintext(
-                partitionByteLength, params.getPolyModulusDegree(), params.getPlainModulusBitLength()
+            partitionByteLength, params.getPolyModulusDegree(), params.getPlainModulusBitLength()
         );
         int plaintextSize = (int) Math.ceil((double) this.num / elementSizeOfPlaintext);
         dimensionSize = PirUtils.computeDimensionLength(plaintextSize, params.getDimension());
@@ -168,7 +153,6 @@ public class Alpr21SingleIndexPirClient extends AbstractSingleIndexPirClient {
         int indexOfPlaintext = index / elementSizeOfPlaintext;
         // base pt index, compute indices for each dimension
         int[] indices = PirUtils.computeIndices(indexOfPlaintext, dimensionSize);
-
         return Alpr21SingleIndexPirNativeUtils.generateQuery(
                 params.getEncryptionParams(), publicKey, secretKey, indices, dimensionSize
         );
@@ -176,7 +160,6 @@ public class Alpr21SingleIndexPirClient extends AbstractSingleIndexPirClient {
 
     @Override
     public byte[] decodeResponse(List<byte[]> response, int index) throws MpcAbortException {
-
         MpcAbortPreconditions.checkArgument(response.size() == partitionSize);
         ZlDatabase[] databases = new ZlDatabase[partitionSize];
         IntStream intStream = IntStream.range(0, partitionSize);
@@ -192,11 +175,9 @@ public class Alpr21SingleIndexPirClient extends AbstractSingleIndexPirClient {
             int offset = index % elementSizeOfPlaintext;
             byte[] partitionBytes = new byte[partitionByteLength];
             System.arraycopy(bytes, offset * partitionByteLength, partitionBytes, 0, partitionByteLength);
-            databases[partitionIndex] = ZlDatabase.create(partitionByteLength * Byte.SIZE, new byte[][]{partitionBytes});
+            databases[partitionIndex] = ZlDatabase.create(partitionBitLength, new byte[][]{partitionBytes});
         });
-
-        return NaiveDatabase.createFromZl(elementByteLength * Byte.SIZE, databases).getBytesData(0);
-
+        return NaiveDatabase.createFromZl(elementBitLength, databases).getBytesData(0);
     }
 
 
@@ -215,8 +196,6 @@ public class Alpr21SingleIndexPirClient extends AbstractSingleIndexPirClient {
         publicKeys.add(keyPair.remove(0));
         // add Relin keys
         publicKeys.add(keyPair.remove(0));
-
         return publicKeys;
     }
-
 }

@@ -7,6 +7,8 @@ import edu.alibaba.mpc4j.s2pc.pir.index.single.mulpir.Alpr21SingleIndexPirParams
 import java.nio.ByteBuffer;
 
 /**
+ * Mul PIR client thread.
+ *
  * @author Qixian Zhou
  * @date 2023/5/29
  */
@@ -20,9 +22,9 @@ public class MulPirClientThread extends Thread {
      */
     private final Alpr21SingleIndexPirParams indexPirParams;
     /**
-     * element byte length
+     * element bit length
      */
-    private final int elementByteLength;
+    private final int elementBitLength;
     /**
      * retrieval index
      */
@@ -36,13 +38,13 @@ public class MulPirClientThread extends Thread {
      */
     private ByteBuffer indexPirResult;
 
-    MulPirClientThread(Alpr21SingleIndexPirClient client, Alpr21SingleIndexPirParams indexPirParams, int retrievalSingleIndex,
-                       int serverElementSize, int elementByteLength) {
+    MulPirClientThread(Alpr21SingleIndexPirClient client, Alpr21SingleIndexPirParams indexPirParams,
+                       int retrievalSingleIndex, int serverElementSize, int elementBitLength) {
         this.client = client;
         this.indexPirParams = indexPirParams;
         this.retrievalSingleIndex = retrievalSingleIndex;
         this.serverElementSize = serverElementSize;
-        this.elementByteLength = elementByteLength;
+        this.elementBitLength = elementBitLength;
     }
 
     public ByteBuffer getRetrievalResult() {
@@ -52,7 +54,7 @@ public class MulPirClientThread extends Thread {
     @Override
     public void run() {
         try {
-            client.init(indexPirParams, serverElementSize, elementByteLength);
+            client.init(indexPirParams, serverElementSize, elementBitLength);
             client.getRpc().synchronize();
             indexPirResult = ByteBuffer.wrap(client.pir(retrievalSingleIndex));
         } catch (MpcAbortException e) {
