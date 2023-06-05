@@ -16,7 +16,7 @@ public class SerialAdder extends AbstractParallelPrefixAdder {
     }
 
     @Override
-    public void addPrefix(Tuple[] tuples) throws MpcAbortException {
+    public void addPrefix() throws MpcAbortException {
         Tuple input = tuples[l - 1];
         for (int i = l - 2; i >= 0; i--) {
             tuples[i] = op(tuples[i], input);

@@ -23,7 +23,7 @@ public class BrentKungAdder extends AbstractParallelPrefixAdder {
     }
 
     @Override
-    public void addPrefix(Tuple[] tuples) throws MpcAbortException {
+    public void addPrefix() throws MpcAbortException {
         int ceilL = 1 << (BigInteger.valueOf(tuples.length - 1).bitLength());
         // offset denotes the distance of index in a perfect binary tree (with ceilL leaves) and index in the ture tree (with l nodes).
         int offset = ceilL - l;
@@ -34,16 +34,19 @@ public class BrentKungAdder extends AbstractParallelPrefixAdder {
         // while we should avoid iterations in the nodes which beyond ture indexes by determining if index >= 0.
         // first tree-reduction
         for (int i = 0; i < logL; i++) {
+            int[] inputIndexes = new int[blockNum];
+            int[] outputIndexes = new int[blockNum];
             for (int j = 0; j < blockNum; j++) {
                 int inputIndex = ceilL - (j * blockSize + blockSize / 2) - offset;
                 if (inputIndex >= 0) {
-                    Tuple input = tuples[inputIndex];
+                    inputIndexes[j] = inputIndex;
                     int currentIndex = ceilL - ((j + 1) * blockSize) - offset;
                     if (currentIndex >= 0) {
-                        tuples[currentIndex] = op(tuples[currentIndex], input);
+                        outputIndexes[j] = currentIndex;
                     }
                 }
             }
+            updateCurrentLevel(inputIndexes, outputIndexes);
             blockNum >>= 1;
             blockSize <<= 1;
         }
@@ -51,16 +54,19 @@ public class BrentKungAdder extends AbstractParallelPrefixAdder {
         blockNum = 2;
         blockSize = ceilL / 2;
         for (int i = 0; i < logL - 1; i++) {
+            int[] inputIndexes = new int[blockNum];
+            int[] outputIndexes = new int[blockNum];
             for (int j = 0; j < blockNum - 1; j++) {
                 int inputIndex = ceilL - (j + 1) * blockSize - offset;
                 if (inputIndex >= 0) {
-                    Tuple input = tuples[ceilL - (j + 1) * blockSize - offset];
-                    int current = ceilL - (j + 1) * blockSize - blockSize / 2 - offset;
-                    if (current >= 0) {
-                        tuples[current] = op(tuples[current], input);
+                    inputIndexes[j] = inputIndex;
+                    int currentIndex = ceilL - (j + 1) * blockSize - blockSize / 2 - offset;
+                    if (currentIndex >= 0) {
+                        outputIndexes[j] = currentIndex;
                     }
                 }
             }
+            updateCurrentLevel(inputIndexes, outputIndexes);
             blockNum <<= 1;
             blockSize >>= 1;
         }
