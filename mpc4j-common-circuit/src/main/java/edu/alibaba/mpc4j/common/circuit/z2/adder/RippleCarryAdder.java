@@ -5,7 +5,7 @@ import edu.alibaba.mpc4j.common.circuit.z2.MpcZ2cParty;
 import edu.alibaba.mpc4j.common.rpc.MpcAbortException;
 
 /**
- * Ripple carry adder.
+ * Ripple carry adder. Circuit is organized with serials of full 1-bit adders.
  *
  * @author Li Peng
  * @date 2023/6/1

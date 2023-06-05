@@ -5,7 +5,11 @@ import edu.alibaba.mpc4j.common.rpc.MpcAbortException;
 import edu.alibaba.mpc4j.common.tool.utils.LongUtils;
 
 /**
- * Parallel prefix adder using Sklansky structure.
+ * Parallel prefix adder using Sklansky structure. The structure comes from the following paper:
+ *
+ * <p>
+ * Sklansky, Jack. "Conditional-sum addition logic." IRE Transactions on Electronic computers 2 (1960): 226-231.
+ * </p>
  *
  * @author Li Peng
  * @date 2023/6/1

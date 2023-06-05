@@ -7,7 +7,11 @@ import edu.alibaba.mpc4j.common.tool.utils.LongUtils;
 import java.math.BigInteger;
 
 /**
- * Parallel prefix adder using Brent-Kung structure.
+ * Parallel prefix adder using Brent-Kung structure. The structure comes from the following paper:
+ *
+ * <p>
+ * Brent, and Kung. "A regular layout for parallel adders." IEEE transactions on Computers 100.3 (1982): 260-264.
+ * </p>
  *
  * @author Li Peng
  * @date 2023/6/1

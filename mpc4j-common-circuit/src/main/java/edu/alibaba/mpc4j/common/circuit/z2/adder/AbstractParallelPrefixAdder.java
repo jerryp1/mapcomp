@@ -3,15 +3,20 @@ package edu.alibaba.mpc4j.common.circuit.z2.adder;
 import edu.alibaba.mpc4j.common.circuit.z2.MpcZ2Vector;
 import edu.alibaba.mpc4j.common.circuit.z2.MpcZ2cParty;
 import edu.alibaba.mpc4j.common.rpc.MpcAbortException;
-import edu.alibaba.mpc4j.common.tool.MathPreconditions;
 
-import java.math.BigInteger;
-import java.util.Arrays;
 import java.util.stream.IntStream;
 
 /**
  * Abstract Parallel Prefix Adder.
- * TODO 还需要加入各种检查
+ * <p>
+ * Parallel prefix adders are arguably the most commonly used arithmetic units in circuit design and have been extensively investigated in literature.
+ * They are easy to pipeline and (part of them) enjoy lower circuit depth (compared with other adders), which is attracting to be used in MPC situation.
+ * <p>
+ * A taxonomy of parallel prefix adder can be found in following paper:
+ *
+ * <p>
+ * Harris, David. "A taxonomy of parallel prefix networks." The Thrity-Seventh Asilomar Conference on Signals, Systems & Computers, 2003. Vol. 2. IEEE, 2003.
+ * </p>
  *
  * @author Li Peng
  * @date 2023/6/1
@@ -30,6 +35,9 @@ public abstract class AbstractParallelPrefixAdder extends AbstractAdder {
         super(party);
     }
 
+    /**
+     * The tuple consists of p and g bits, which are used in prefix network computation.
+     */
     protected static class Tuple {
         /**
          * the generate bit.
@@ -54,35 +62,52 @@ public abstract class AbstractParallelPrefixAdder extends AbstractAdder {
         }
     }
 
-    private Tuple createZeroTuple() {
-        return new Tuple(party.createZeros(num), party.createZeros(num));
-    }
-
     @Override
     public MpcZ2Vector[] add(MpcZ2Vector[] xiArray, MpcZ2Vector[] yiArray, MpcZ2Vector cin)
             throws MpcAbortException {
-
         checkInputs(xiArray, yiArray);
         this.l = xiArray.length;
         this.num = xiArray[0].getNum();
+        // 1. pre-computation of g, p
         MpcZ2Vector[] p = party.xor(xiArray, yiArray);
         MpcZ2Vector[] g = party.and(xiArray, yiArray);
-        MpcZ2Vector[] c = new MpcZ2Vector[l];
-        MpcZ2Vector[] s = new MpcZ2Vector[l + 1];
         Tuple[] tuples = IntStream.range(0, l)
                 .mapToObj(i -> new Tuple(g[i], p[i])).toArray(Tuple[]::new);
-        // add prefix
+        // 2. prefix computation using a prefix network
         addPrefix(tuples);
+        // 3. carry-outs, c_i = (P_i · cin) + Gi
+        MpcZ2Vector[] c = genCarryOuts(tuples, cin);
+        // 4. s, the output sum bits, s_i = c_i ⊕ p_{i-1}
+        return genSumOuts(p, c, cin);
+    }
 
-        // carry-outs TODO 这一步前后carry存在依赖关系，不是并行的
+    /**
+     * Generates the carry_out bits.
+     *
+     * @param tuples tuples.
+     * @param cin    carry_in.
+     * @return carry_outs.
+     * @throws MpcAbortException the protocol failure aborts.
+     */
+    private MpcZ2Vector[] genCarryOuts(Tuple[] tuples, MpcZ2Vector cin) throws MpcAbortException {
+        MpcZ2Vector[] c = new MpcZ2Vector[l + 1];
         for (int i = l - 1; i >= 0; i--) {
-            if (i == l - 1) {
-                c[i] = party.or(tuples[i].getG(), party.and(tuples[i].getP(), cin));
-                continue;
-            }
-            c[i] = party.or(tuples[i].getG(), party.and(tuples[i].getP(), c[i + 1]));
+            c[i] = party.or(tuples[i].getG(), party.and(tuples[i].getP(), cin));
         }
-        // s, the output bits
+        return c;
+    }
+
+    /**
+     * Generates the sum output bits.
+     *
+     * @param p   p
+     * @param c   carry_outs
+     * @param cin carry_in
+     * @return sum output bits
+     * @throws MpcAbortException the protocol failure aborts.
+     */
+    private MpcZ2Vector[] genSumOuts(MpcZ2Vector[] p, MpcZ2Vector[] c, MpcZ2Vector cin) throws MpcAbortException {
+        MpcZ2Vector[] s = new MpcZ2Vector[l + 1];
         for (int i = l; i >= 0; i--) {
             if (i == l) {
                 s[i] = party.xor(p[i - 1], cin);
@@ -97,6 +122,12 @@ public abstract class AbstractParallelPrefixAdder extends AbstractAdder {
         return s;
     }
 
+    /**
+     * Prefix computation using a prefix network.
+     *
+     * @param tuples tuples.
+     * @throws MpcAbortException the protocol failure aborts.
+     */
     public abstract void addPrefix(Tuple[] tuples) throws MpcAbortException;
 
     /**
@@ -112,28 +143,5 @@ public abstract class AbstractParallelPrefixAdder extends AbstractAdder {
         MpcZ2Vector gOut = party.or(input1.getG(), party.and(input1.getP(), input2.getG()));
         MpcZ2Vector pOut = party.and(input1.getP(), input2.getP());
         return new Tuple(gOut, pOut);
-    }
-
-    protected Tuple[] extendsToCeil2(Tuple[] x) {
-        int num = x.length;
-        int ceilBitLength = BigInteger.valueOf(num - 1).bitLength();
-        int ceilNum = 1 << ceilBitLength;
-        if (num != ceilNum) {
-            Tuple[] output = new Tuple[ceilNum];
-            System.arraycopy(x, 0, output, ceilNum - num, num);
-            for (int i = 0; i < ceilNum - num; i++) {
-                output[i] = createZeroTuple();
-            }
-            return output;
-        }
-        return x;
-    }
-
-    protected Tuple[] cutToNum(Tuple[] x, int num) {
-        MathPreconditions.checkGreaterOrEqual("x.length", x.length, num);
-        if (x.length != num) {
-            return Arrays.copyOfRange(x, x.length - num, x.length);
-        }
-        return x;
     }
 }

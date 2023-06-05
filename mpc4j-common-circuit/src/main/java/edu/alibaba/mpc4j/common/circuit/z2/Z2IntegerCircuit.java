@@ -28,14 +28,18 @@ public class Z2IntegerCircuit {
     /**
      * adder.
      */
-    private Adder adder;
+    private static Adder adder;
 
     public Z2IntegerCircuit(MpcZ2cParty party) {
         this.party = party;
+
     }
 
     private Adder getAdderInstance() {
-        return adder == null ? AdderFactory.createAdder(party, DEFAULT_ADDER_TYPE) : adder;
+        if (adder == null) {
+            adder = AdderFactory.createAdder(party, DEFAULT_ADDER_TYPE);
+        }
+        return adder;
     }
 
     /**

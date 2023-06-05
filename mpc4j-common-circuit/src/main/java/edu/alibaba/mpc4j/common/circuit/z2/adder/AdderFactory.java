@@ -25,15 +25,23 @@ public class AdderFactory {
          */
         RIPPLE_CARRY,
         /**
-         * Manchester carry-chain adder.
+         * Serial adder using linear prefix network, which essentially gives Ripple Carry Adder in pre-computation mode.
          */
-        MANCHESTER,
+        SERIAL,
         /**
-         * Parallel prefix adder using Sklansky structure. TODO 待添加论文链接
+         * Parallel prefix adder using Sklansky structure. The structure comes from the following paper:
+         *
+         * <p>
+         * Sklansky, Jack. "Conditional-sum addition logic." IRE Transactions on Electronic computers 2 (1960): 226-231.
+         * </p>
          */
         SKLANSKY,
         /**
-         * Parallel prefix adder using Brent-Kung structure. TODO 待添加论文链接
+         * Parallel prefix adder using Brent-Kung structure. The structure comes from the following paper:
+         *
+         * <p>
+         * Brent, and Kung. "A regular layout for parallel adders." IEEE transactions on Computers 100.3 (1982): 260-264.
+         * </p>
          */
         BRENT_KUNG;
     }
@@ -49,8 +57,8 @@ public class AdderFactory {
         switch (type) {
             case RIPPLE_CARRY:
                 return new RippleCarryAdder(party);
-            case MANCHESTER:
-                return new ManchesterAdder(party);
+            case SERIAL:
+                return new SerialAdder(party);
             case SKLANSKY:
                 return new SklanskyAdder(party);
             case BRENT_KUNG:

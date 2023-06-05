@@ -16,7 +16,7 @@ public interface Adder {
      * @param xiArray xi array.
      * @param yiArray yi array.
      * @param cin     carry-in bit.
-     * @return (carry - out bit, result).
+     * @return (carry_out bit, result).
      * @throws MpcAbortException the protocol failure aborts.
      */
     MpcZ2Vector[] add(MpcZ2Vector[] xiArray, MpcZ2Vector[] yiArray, MpcZ2Vector cin)
