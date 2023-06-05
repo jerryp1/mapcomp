@@ -3,7 +3,9 @@ package edu.alibaba.mpc4j.common.circuit.z2.adder;
 import edu.alibaba.mpc4j.common.circuit.z2.MpcZ2Vector;
 import edu.alibaba.mpc4j.common.circuit.z2.MpcZ2cParty;
 import edu.alibaba.mpc4j.common.rpc.MpcAbortException;
+import edu.alibaba.mpc4j.common.tool.MathPreconditions;
 
+import java.util.Arrays;
 import java.util.stream.IntStream;
 
 /**
@@ -13,7 +15,6 @@ import java.util.stream.IntStream;
  * They are easy to pipeline and (part of them) enjoy lower circuit depth (compared with other adders), which is attracting to be used in MPC situation.
  * <p>
  * A taxonomy of parallel prefix adder can be found in following paper:
- *
  * <p>
  * Harris, David. "A taxonomy of parallel prefix networks." The Thrity-Seventh Asilomar Conference on Signals, Systems & Computers, 2003. Vol. 2. IEEE, 2003.
  * </p>
@@ -30,6 +31,10 @@ public abstract class AbstractParallelPrefixAdder extends AbstractAdder {
      * num
      */
     protected int num;
+    /**
+     * The tuples consist of generate bits and propagate bits, which are used in prefix sum computation.
+     */
+    protected Tuple[] tuples;
 
     public AbstractParallelPrefixAdder(MpcZ2cParty party) {
         super(party);
@@ -71,13 +76,13 @@ public abstract class AbstractParallelPrefixAdder extends AbstractAdder {
         // 1. pre-computation of g, p
         MpcZ2Vector[] p = party.xor(xiArray, yiArray);
         MpcZ2Vector[] g = party.and(xiArray, yiArray);
-        Tuple[] tuples = IntStream.range(0, l)
+        this.tuples = IntStream.range(0, l)
                 .mapToObj(i -> new Tuple(g[i], p[i])).toArray(Tuple[]::new);
         // 2. prefix computation using a prefix network
-        addPrefix(tuples);
-        // 3. carry-outs, c_i = (P_i · cin) + Gi
+        addPrefix();
+        // 3. carry-outs generation, where c_i = (P_i · cin) + Gi
         MpcZ2Vector[] c = genCarryOuts(tuples, cin);
-        // 4. s, the output sum bits, s_i = c_i ⊕ p_{i-1}
+        // 4. output sum bits generation, where s_i = c_i ⊕ p_{i-1}
         return genSumOuts(p, c, cin);
     }
 
@@ -90,7 +95,7 @@ public abstract class AbstractParallelPrefixAdder extends AbstractAdder {
      * @throws MpcAbortException the protocol failure aborts.
      */
     private MpcZ2Vector[] genCarryOuts(Tuple[] tuples, MpcZ2Vector cin) throws MpcAbortException {
-        MpcZ2Vector[] c = new MpcZ2Vector[l + 1];
+        MpcZ2Vector[] c = new MpcZ2Vector[l];
         for (int i = l - 1; i >= 0; i--) {
             c[i] = party.or(tuples[i].getG(), party.and(tuples[i].getP(), cin));
         }
@@ -125,13 +130,12 @@ public abstract class AbstractParallelPrefixAdder extends AbstractAdder {
     /**
      * Prefix computation using a prefix network.
      *
-     * @param tuples tuples.
      * @throws MpcAbortException the protocol failure aborts.
      */
-    public abstract void addPrefix(Tuple[] tuples) throws MpcAbortException;
+    public abstract void addPrefix() throws MpcAbortException;
 
     /**
-     * Basic operation of parallel prefix adder, which is associative
+     * Basic prefix-sum operation of parallel prefix adder, which is associative
      * and is able to be organized as parallel structure.
      *
      * @param input1 input tuple.
@@ -143,5 +147,48 @@ public abstract class AbstractParallelPrefixAdder extends AbstractAdder {
         MpcZ2Vector gOut = party.or(input1.getG(), party.and(input1.getP(), input2.getG()));
         MpcZ2Vector pOut = party.and(input1.getP(), input2.getP());
         return new Tuple(gOut, pOut);
+    }
+
+    /**
+     * Basic prefix-sum operation of parallel prefix adder in vector form, which is associative
+     * and is able to be organized as parallel structure.
+     *
+     * @param inputs1 input tuples.
+     * @param inputs2 input tuples.
+     * @return output tuples.
+     * @throws MpcAbortException the protocol failure aborts.
+     */
+    protected Tuple[] vectorOp(Tuple[] inputs1, Tuple[] inputs2) throws MpcAbortException {
+        MathPreconditions.checkEqual("inputs1.num", "inputs2.num", inputs1.length, inputs2.length);
+
+        MpcZ2Vector[] g1s = Arrays.stream(inputs1).map(Tuple::getG).toArray(MpcZ2Vector[]::new);
+        MpcZ2Vector[] g2s = Arrays.stream(inputs2).map(Tuple::getG).toArray(MpcZ2Vector[]::new);
+        MpcZ2Vector[] p1s = Arrays.stream(inputs1).map(Tuple::getP).toArray(MpcZ2Vector[]::new);
+        MpcZ2Vector[] p2s = Arrays.stream(inputs2).map(Tuple::getP).toArray(MpcZ2Vector[]::new);
+
+        MpcZ2Vector[] gOuts = party.or(g1s, party.and(p1s, g2s));
+        MpcZ2Vector[] pOuts = party.and(p1s, p2s);
+
+        return IntStream.range(0, inputs1.length).mapToObj(i -> new Tuple(gOuts[i], pOuts[i])).toArray(Tuple[]::new);
+    }
+
+    /**
+     * Updates the tuples in current level of tree.
+     *
+     * @param inputIndexes  the indexes of input tuples.
+     * @param outputIndexes the indexes of output tuples.
+     * @throws MpcAbortException the protocol failure aborts.
+     */
+    protected void updateCurrentLevel(int[] inputIndexes, int[] outputIndexes) throws MpcAbortException {
+        MathPreconditions.checkEqual("inputIndexes.num", "outputIndexes.num", inputIndexes.length, outputIndexes.length);
+        MathPreconditions.checkLessOrEqual("inputIndexes.num", inputIndexes.length, tuples.length);
+
+        // inputs1 are from outputIndexes because the tuples at outputIndexes positions are always part of op()'s inputs.
+        Tuple[] inputs1 = Arrays.stream(outputIndexes).mapToObj(outputIndex -> tuples[outputIndex]).toArray(Tuple[]::new);
+        Tuple[] inputs2 = Arrays.stream(inputIndexes).mapToObj(inputIndex -> tuples[inputIndex]).toArray(Tuple[]::new);
+
+        Tuple[] outputs = vectorOp(inputs1, inputs2);
+
+        IntStream.range(0, inputIndexes.length).forEach(i -> tuples[outputIndexes[i]] = outputs[i]);
     }
 }

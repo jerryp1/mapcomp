@@ -4,6 +4,8 @@ import edu.alibaba.mpc4j.common.circuit.z2.MpcZ2cParty;
 import edu.alibaba.mpc4j.common.rpc.MpcAbortException;
 import edu.alibaba.mpc4j.common.tool.utils.LongUtils;
 
+import java.math.BigInteger;
+
 /**
  * Parallel prefix adder using Sklansky structure. The structure comes from the following paper:
  *
@@ -21,18 +23,31 @@ public class SklanskyAdder extends AbstractParallelPrefixAdder {
     }
 
     @Override
-    public void addPrefix(Tuple[] tuples) throws MpcAbortException {
-        int logL = LongUtils.ceilLog2(l);
-        int blockNum = l / 2;
+    public void addPrefix() throws MpcAbortException {
+        int ceilL = 1 << (BigInteger.valueOf(tuples.length - 1).bitLength());
+        // offset denotes the distance of index in a perfect binary tree (with ceilL leaves) and index in the ture tree (with l nodes).
+        int offset = ceilL - l;
+        int logL = LongUtils.ceilLog2(ceilL);
+        // reduction will be performed in a perfect binary tree (with ceilL leaves) instead of the ture tree,
+        // while we should avoid iterations in the nodes which beyond ture indexes by determining if index >= 0.
+        int blockNum = ceilL / 2;
         int blockSize = 2;
         for (int i = 0; i < logL; i++) {
+            int[] inputIndexes = new int[blockNum * (blockSize / 2)];
+            int[] outputIndexes = new int[blockNum * (blockSize / 2)];
             for (int j = 0; j < blockNum; j++) {
-                Tuple input = tuples[l - (j * blockSize + blockSize / 2)];
-                for (int k = 0; k < blockSize / 2; k++) {
-                    int current = l - (j * blockSize + blockSize / 2 + k) - 1;
-                    tuples[current] = op(tuples[current], input);
+                int inputIndex = ceilL - (j * blockSize + blockSize / 2) - offset;
+                if (inputIndex >= 0) {
+                    for (int k = 0; k < blockSize / 2; k++) {
+                        int currentIndex = ceilL - (j * blockSize + blockSize / 2 + k) - 1 - offset;
+                        if (currentIndex >= 0) {
+                            inputIndexes[j * blockSize / 2 + k] = inputIndex;
+                            outputIndexes[j * blockSize / 2 + k] = currentIndex;
+                        }
+                    }
                 }
             }
+            updateCurrentLevel(inputIndexes, outputIndexes);
             blockNum >>= 1;
             blockSize <<= 1;
         }
