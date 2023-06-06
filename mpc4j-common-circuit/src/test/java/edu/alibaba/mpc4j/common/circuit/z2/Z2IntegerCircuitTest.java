@@ -102,11 +102,11 @@ public class Z2IntegerCircuitTest {
     }
 
     private void testPto(boolean constant, int l, long[] longXs, long[] longYs) {
-//        testPto(constant, Z2IntegerOperator.SUB, l, longXs, longYs);
-//        testPto(constant, Z2IntegerOperator.INCREASE_ONE, l, longXs, longYs);
+        testPto(constant, Z2IntegerOperator.SUB, l, longXs, longYs);
+        testPto(constant, Z2IntegerOperator.INCREASE_ONE, l, longXs, longYs);
         testPto(constant, Z2IntegerOperator.ADD, l, longXs, longYs);
-//        testPto(constant, Z2IntegerOperator.LEQ, l, longXs, longYs);
-//        testPto(constant, Z2IntegerOperator.EQ, l, longXs, longYs);
+        testPto(constant, Z2IntegerOperator.LEQ, l, longXs, longYs);
+        testPto(constant, Z2IntegerOperator.EQ, l, longXs, longYs);
     }
 
     private void testPto(boolean constant, Z2IntegerOperator operator, int l, long[] longXs, long[] longYs) {
