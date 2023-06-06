@@ -32,6 +32,10 @@ public abstract class AbstractParallelPrefixAdder extends AbstractAdder {
      */
     protected int num;
     /**
+     * the (original) propagate bits, which are used in sum-out bits generation.
+     */
+    private MpcZ2Vector[] ps;
+    /**
      * The tuples consist of generate bits and propagate bits, which are used in prefix sum computation.
      */
     protected Tuple[] tuples;
@@ -65,6 +69,10 @@ public abstract class AbstractParallelPrefixAdder extends AbstractAdder {
         public MpcZ2Vector getP() {
             return p;
         }
+
+        public static MpcZ2Vector[] getPs(Tuple[] tuples) {
+            return Arrays.stream(tuples).map(Tuple::getP).toArray(MpcZ2Vector[]::new);
+        }
     }
 
     @Override
@@ -73,28 +81,45 @@ public abstract class AbstractParallelPrefixAdder extends AbstractAdder {
         checkInputs(xiArray, yiArray);
         this.l = xiArray.length;
         this.num = xiArray[0].getNum();
-        // 1. pre-computation of g, p
-        MpcZ2Vector[] p = party.xor(xiArray, yiArray);
-        MpcZ2Vector[] g = party.and(xiArray, yiArray);
-        this.tuples = IntStream.range(0, l)
-                .mapToObj(i -> new Tuple(g[i], p[i])).toArray(Tuple[]::new);
+        // 1. pre-computation of (g, p) tuples.
+        genTuples(xiArray, yiArray);
         // 2. prefix computation using a prefix network
         addPrefix();
         // 3. carry-outs generation, where c_i = (P_i · cin) + Gi
-        MpcZ2Vector[] c = genCarryOuts(tuples, cin);
+        MpcZ2Vector[] c = genCarryOuts(cin);
         // 4. output sum bits generation, where s_i = c_i ⊕ p_{i-1}
-        return genSumOuts(p, c, cin);
+        return genSumOuts(c, cin);
     }
+
+    /**
+     * Generates (p,g) tuples.
+     *
+     * @param xiArray xi array.
+     * @param yiArray yi array.
+     * @throws MpcAbortException the protocol failure aborts.
+     */
+    private void genTuples(MpcZ2Vector[] xiArray, MpcZ2Vector[] yiArray) throws MpcAbortException {
+        MpcZ2Vector[] gs = party.and(xiArray, yiArray);
+        this.ps = party.xor(xiArray, yiArray);
+        this.tuples = IntStream.range(0, l)
+                .mapToObj(i -> new Tuple(gs[i], ps[i])).toArray(Tuple[]::new);
+    }
+
+    /**
+     * Prefix computation using a prefix network.
+     *
+     * @throws MpcAbortException the protocol failure aborts.
+     */
+    protected abstract void addPrefix() throws MpcAbortException;
 
     /**
      * Generates the carry_out bits.
      *
-     * @param tuples tuples.
-     * @param cin    carry_in.
+     * @param cin carry_in.
      * @return carry_outs.
      * @throws MpcAbortException the protocol failure aborts.
      */
-    private MpcZ2Vector[] genCarryOuts(Tuple[] tuples, MpcZ2Vector cin) throws MpcAbortException {
+    private MpcZ2Vector[] genCarryOuts(MpcZ2Vector cin) throws MpcAbortException {
         MpcZ2Vector[] gs = Arrays.stream(tuples).map(Tuple::getG).toArray(MpcZ2Vector[]::new);
         MpcZ2Vector[] ps = Arrays.stream(tuples).map(Tuple::getP).toArray(MpcZ2Vector[]::new);
         MpcZ2Vector[] cins = IntStream.range(0, tuples.length).mapToObj(i -> cin).toArray(MpcZ2Vector[]::new);
@@ -104,34 +129,26 @@ public abstract class AbstractParallelPrefixAdder extends AbstractAdder {
     /**
      * Generates the sum output bits.
      *
-     * @param p   p
      * @param c   carry_outs
      * @param cin carry_in
      * @return sum output bits
      * @throws MpcAbortException the protocol failure aborts.
      */
-    private MpcZ2Vector[] genSumOuts(MpcZ2Vector[] p, MpcZ2Vector[] c, MpcZ2Vector cin) throws MpcAbortException {
+    private MpcZ2Vector[] genSumOuts(MpcZ2Vector[] c, MpcZ2Vector cin) throws MpcAbortException {
         MpcZ2Vector[] s = new MpcZ2Vector[l + 1];
         for (int i = l; i >= 0; i--) {
             if (i == l) {
-                s[i] = party.xor(p[i - 1], cin);
+                s[i] = party.xor(ps[i - 1], cin);
                 continue;
             }
             if (i == 0) {
                 s[i] = c[i];
                 continue;
             }
-            s[i] = party.xor(p[i - 1], c[i]);
+            s[i] = party.xor(ps[i - 1], c[i]);
         }
         return s;
     }
-
-    /**
-     * Prefix computation using a prefix network.
-     *
-     * @throws MpcAbortException the protocol failure aborts.
-     */
-    public abstract void addPrefix() throws MpcAbortException;
 
     /**
      * Basic prefix-sum operation of parallel prefix adder, which is associative

@@ -23,7 +23,7 @@ public class SklanskyAdder extends AbstractParallelPrefixAdder {
     }
 
     @Override
-    public void addPrefix() throws MpcAbortException {
+    protected void addPrefix() throws MpcAbortException {
         int ceilL = 1 << (BigInteger.valueOf(tuples.length - 1).bitLength());
         // offset denotes the distance of index in a perfect binary tree (with ceilL leaves) and index in the ture tree (with l nodes).
         int offset = ceilL - l;

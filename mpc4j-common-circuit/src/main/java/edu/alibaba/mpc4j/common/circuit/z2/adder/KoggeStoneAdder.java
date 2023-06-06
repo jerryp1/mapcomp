@@ -23,7 +23,7 @@ public class KoggeStoneAdder extends AbstractParallelPrefixAdder {
     }
 
     @Override
-    public void addPrefix() throws MpcAbortException {
+    protected void addPrefix() throws MpcAbortException {
         int gap = 1;
         while (gap < l) {
             int[] inputIndexes = IntStream.range(gap, l).toArray();
