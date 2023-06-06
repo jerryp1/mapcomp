@@ -69,10 +69,6 @@ public abstract class AbstractParallelPrefixAdder extends AbstractAdder {
         public MpcZ2Vector getP() {
             return p;
         }
-
-        public static MpcZ2Vector[] getPs(Tuple[] tuples) {
-            return Arrays.stream(tuples).map(Tuple::getP).toArray(MpcZ2Vector[]::new);
-        }
     }
 
     @Override
