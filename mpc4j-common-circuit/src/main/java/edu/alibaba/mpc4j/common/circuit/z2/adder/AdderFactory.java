@@ -25,7 +25,7 @@ public class AdderFactory {
          */
         RIPPLE_CARRY,
         /**
-         * Serial adder using linear prefix network, which essentially gives Ripple Carry Adder in pre-computation mode.
+         * Serial adder using linear prefix network, which essentially gives a Ripple Carry Adder in pre-computation mode.
          */
         SERIAL,
         /**
@@ -43,7 +43,16 @@ public class AdderFactory {
          * Brent, and Kung. "A regular layout for parallel adders." IEEE transactions on Computers 100.3 (1982): 260-264.
          * </p>
          */
-        BRENT_KUNG;
+        BRENT_KUNG,
+        /**
+         * Parallel prefix adder using Kogge-Stone structure. The structure comes from the following paper:
+         *
+         * <p>
+         * Kogge, Peter M., and Harold S. Stone. "A parallel algorithm for the efficient solution of a general class of
+         * recurrence equations." IEEE transactions on computers 100.8 (1973): 786-793.
+         * </p>
+         */
+        KOGGE_STONE,
     }
 
     /**
@@ -63,6 +72,8 @@ public class AdderFactory {
                 return new SklanskyAdder(party);
             case BRENT_KUNG:
                 return new BrentKungAdder(party);
+            case KOGGE_STONE:
+                return new KoggeStoneAdder(party);
             default:
                 throw new IllegalArgumentException("Invalid " + AdderFactory.AdderTypes.class.getSimpleName() + ": " + type.name());
         }

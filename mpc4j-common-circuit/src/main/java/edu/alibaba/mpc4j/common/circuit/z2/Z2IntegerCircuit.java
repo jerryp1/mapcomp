@@ -24,7 +24,7 @@ public class Z2IntegerCircuit {
      * default adder type.
      */
     private static final AdderFactory.AdderTypes DEFAULT_ADDER_TYPE
-            = AdderFactory.AdderTypes.SKLANSKY;
+            = AdderFactory.AdderTypes.KOGGE_STONE;
     /**
      * adder.
      */

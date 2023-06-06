@@ -4,7 +4,7 @@ import edu.alibaba.mpc4j.common.circuit.z2.MpcZ2cParty;
 import edu.alibaba.mpc4j.common.rpc.MpcAbortException;
 
 /**
- * Serial adder using linear prefix network, which essentially gives Ripple Carry Adder in pre-computation mode.
+ * Serial adder using linear prefix network, which essentially gives a Ripple Carry Adder in pre-computation mode.
  *
  * @author Li Peng
  * @date 2023/6/1
