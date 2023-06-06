@@ -51,7 +51,7 @@ public class Z2IntegerCircuitTest {
     @Test
     public void testConstant() {
         testConstant(DEFAULT_L);
-//        testConstant(LARGE_L);
+        testConstant(LARGE_L);
     }
 
     public void testConstant(int l) {
