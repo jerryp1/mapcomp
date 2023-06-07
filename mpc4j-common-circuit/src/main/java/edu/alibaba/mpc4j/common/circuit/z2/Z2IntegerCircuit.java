@@ -3,7 +3,6 @@ package edu.alibaba.mpc4j.common.circuit.z2;
 import edu.alibaba.mpc4j.common.circuit.z2.adder.Adder;
 import edu.alibaba.mpc4j.common.circuit.z2.adder.AdderFactory;
 import edu.alibaba.mpc4j.common.rpc.MpcAbortException;
-import edu.alibaba.mpc4j.common.tool.MathPreconditions;
 import edu.alibaba.mpc4j.common.tool.utils.LongUtils;
 
 import java.util.Arrays;
@@ -15,31 +14,20 @@ import java.util.stream.IntStream;
  * @author Li Peng
  * @date 2023/4/20
  */
-public class Z2IntegerCircuit {
-    /**
-     * MPC boolean circuit party.
-     */
-    protected final MpcZ2cParty party;
-    /**
-     * default adder type.
-     */
-    private static final AdderFactory.AdderTypes DEFAULT_ADDER_TYPE
-            = AdderFactory.AdderTypes.SKLANSKY;
+public class Z2IntegerCircuit extends AbstractZ2Circuit {
     /**
      * adder.
      */
     private static Adder adder;
 
     public Z2IntegerCircuit(MpcZ2cParty party) {
-        this.party = party;
-
+        this(party, new Z2CircuitConfig.Builder().build());
     }
 
-    private Adder getAdderInstance() {
-        if (adder == null) {
-            adder = AdderFactory.createAdder(party, DEFAULT_ADDER_TYPE);
-        }
-        return adder;
+    public Z2IntegerCircuit(MpcZ2cParty party, Z2CircuitConfig config) {
+        super(party);
+        this.party = party;
+        adder = AdderFactory.createAdder(party, config.getAdderType());
     }
 
     /**
@@ -135,29 +123,8 @@ public class Z2IntegerCircuit {
     private MpcZ2Vector[] add(MpcZ2Vector[] xiArray, MpcZ2Vector[] yiArray, boolean cin) throws MpcAbortException {
         int bitNum = xiArray[0].getNum();
         MpcZ2Vector cinVector = party.create(bitNum, cin);
-        MpcZ2Vector[] zs = getAdderInstance().add(xiArray, yiArray, cinVector);
+        MpcZ2Vector[] zs = adder.add(xiArray, yiArray, cinVector);
         // ignore the highest carry_out bit.
         return Arrays.copyOfRange(zs, 1, xiArray.length + 1);
-    }
-
-    protected void checkInputs(MpcZ2Vector[] xiArray, MpcZ2Vector[] yiArray) {
-        int l = xiArray.length;
-        MathPreconditions.checkPositive("l", l);
-        // check equal l.
-        MathPreconditions.checkEqual("l", "y.length", l, yiArray.length);
-        // check equal num for all vectors.
-        int num = xiArray[0].getNum();
-        IntStream.range(0, l).forEach(i -> {
-            MathPreconditions.checkEqual("num", "xi.num", num, xiArray[i].getNum());
-            MathPreconditions.checkEqual("num", "yi.num", num, yiArray[i].getNum());
-        });
-    }
-
-    private void checkInputs(MpcZ2Vector[] xs) {
-        int l = xs.length;
-        MathPreconditions.checkPositive("l", l);
-        // check equal num for all vectors.
-        int num = xs[0].getNum();
-        IntStream.range(0, l).forEach(i -> MathPreconditions.checkEqual("num", "xi.num", num, xs[i].getNum()));
     }
 }

@@ -1,31 +1,36 @@
 package edu.alibaba.mpc4j.common.circuit.z2;
 
+import com.google.common.base.Preconditions;
 import edu.alibaba.mpc4j.common.circuit.operator.Z2IntegerOperator;
+import edu.alibaba.mpc4j.common.circuit.z2.adder.AdderFactory;
 import edu.alibaba.mpc4j.common.tool.EnvType;
 import edu.alibaba.mpc4j.common.tool.bitvector.BitVector;
 import edu.alibaba.mpc4j.common.tool.utils.IntUtils;
 import edu.alibaba.mpc4j.common.tool.utils.LongUtils;
 import edu.alibaba.mpc4j.crypto.matrix.database.Zl64Database;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.time.StopWatch;
 import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.junit.runners.Parameterized;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.security.SecureRandom;
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.stream.IntStream;
 
 /**
- * Z2 integer circuit Test. Inputs are created in [0, 2^(l-1)) to avoid overflow in subtraction, which is suggested in
- * <p>
- * https://www.doc.ic.ac.uk/~eedwards/compsys/arithmetic/index.html
- * </p>
+ * Z2 Adder Test.
  *
  * @author Li Peng
- * @date 2023/4/21
+ * @date 2023/6/7
  */
-public class Z2IntegerCircuitTest {
-    private static final Logger LOGGER = LoggerFactory.getLogger(Z2IntegerCircuitTest.class);
+@RunWith(Parameterized.class)
+public class Z2AdderTest {
+    private static final Logger LOGGER = LoggerFactory.getLogger(Z2AdderTest.class);
     /**
      * the random state
      */
@@ -46,6 +51,47 @@ public class Z2IntegerCircuitTest {
      * large l
      */
     private static final int LARGE_L = LongUtils.MAX_L;
+    /**
+     * the config
+     */
+    private final Z2CircuitConfig config;
+
+    @Parameterized.Parameters(name = "{0}")
+    public static Collection<Object[]> configurations() {
+        Collection<Object[]> configurations = new ArrayList<>();
+
+        // Ripple-carry adder
+        configurations.add(new Object[]{
+                AdderFactory.AdderTypes.RIPPLE_CARRY + " (ripple-carry adder)",
+                new Z2CircuitConfig.Builder().setAdderType(AdderFactory.AdderTypes.RIPPLE_CARRY).build()
+        });
+        // Serial adder
+        configurations.add(new Object[]{
+                AdderFactory.AdderTypes.SERIAL + " (serial adder)",
+                new Z2CircuitConfig.Builder().setAdderType(AdderFactory.AdderTypes.SERIAL).build()
+        });
+        // Sklansky adder
+        configurations.add(new Object[]{
+                AdderFactory.AdderTypes.SKLANSKY + " (sklansky adder)",
+                new Z2CircuitConfig.Builder().setAdderType(AdderFactory.AdderTypes.SKLANSKY).build()
+        });
+        // Brent-kung adder
+        configurations.add(new Object[]{
+                AdderFactory.AdderTypes.BRENT_KUNG + " (brent-kung adder)",
+                new Z2CircuitConfig.Builder().setAdderType(AdderFactory.AdderTypes.BRENT_KUNG).build()
+        });
+        // Kogge-stone adder
+        configurations.add(new Object[]{
+                AdderFactory.AdderTypes.KOGGE_STONE + " (kogge-stone adder)",
+                new Z2CircuitConfig.Builder().setAdderType(AdderFactory.AdderTypes.KOGGE_STONE).build()
+        });
+        return configurations;
+    }
+
+    public Z2AdderTest(String name, Z2CircuitConfig config) {
+        Preconditions.checkArgument(StringUtils.isNotBlank(name));
+        this.config = config;
+    }
 
     @Test
     public void testConstant() {
@@ -100,20 +146,13 @@ public class Z2IntegerCircuitTest {
         LOGGER.info("------------------------------");
     }
 
-    private void testPto(boolean constant, int l, long[] longXs, long[] longYs) {
-        testPto(constant, Z2IntegerOperator.SUB, l, longXs, longYs);
-        testPto(constant, Z2IntegerOperator.INCREASE_ONE, l, longXs, longYs);
-        testPto(constant, Z2IntegerOperator.ADD, l, longXs, longYs);
-        testPto(constant, Z2IntegerOperator.LEQ, l, longXs, longYs);
-        testPto(constant, Z2IntegerOperator.EQ, l, longXs, longYs);
-    }
 
-    private void testPto(boolean constant, Z2IntegerOperator operator, int l, long[] longXs, long[] longYs) {
+    private void testPto(boolean constant, int l, long[] longXs, long[] longYs) {
         int num = longXs.length;
         if (constant) {
-            LOGGER.info("test constant ({}), l = {}, num = {}", operator.name(), l, num);
+            LOGGER.info("test constant ({}), l = {}, num = {}", Z2IntegerOperator.ADD, l, num);
         } else {
-            LOGGER.info("test random ({}), l = {}, num = {}", operator.name(), l, num);
+            LOGGER.info("test random ({}), l = {}, num = {}", Z2IntegerOperator.ADD, l, num);
         }
         // partition
         Zl64Database zl64Xs = Zl64Database.create(l, longXs);
@@ -124,7 +163,7 @@ public class Z2IntegerCircuitTest {
         PlainZ2Vector[] yPlainZ2Vectors = Arrays.stream(yBitVector).map(PlainZ2Vector::create).toArray(PlainZ2Vector[]::new);
         // init the protocol
         PlainZ2cParty party = new PlainZ2cParty();
-        Z2IntegerCircuitParty partyThread = new Z2IntegerCircuitParty(party, operator, xPlainZ2Vectors, yPlainZ2Vectors);
+        Z2IntegerCircuitParty partyThread = new Z2IntegerCircuitParty(party, Z2IntegerOperator.ADD, xPlainZ2Vectors, yPlainZ2Vectors, config);
         StopWatch stopWatch = new StopWatch();
         // execute the circuit
         stopWatch.start();
@@ -135,6 +174,6 @@ public class Z2IntegerCircuitTest {
         MpcZ2Vector[] zPlainZ2Vectors = partyThread.getZ();
         BitVector[] z = Arrays.stream(zPlainZ2Vectors).map(MpcZ2Vector::getBitVector).toArray(BitVector[]::new);
         long[] longZs = Zl64Database.create(EnvType.STANDARD, false, z).getData();
-        Z2CircuitTestUtils.assertOutput(operator, l, longXs, longYs, longZs);
+        Z2CircuitTestUtils.assertOutput(Z2IntegerOperator.ADD, l, longXs, longYs, longZs);
     }
 }

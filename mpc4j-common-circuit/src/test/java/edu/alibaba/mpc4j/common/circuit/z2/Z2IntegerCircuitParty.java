@@ -32,12 +32,21 @@ class Z2IntegerCircuitParty {
      * operator
      */
     private final Z2IntegerOperator operator;
+    /**
+     * config
+     */
+    private Z2CircuitConfig config;
 
     Z2IntegerCircuitParty(PlainZ2cParty party, Z2IntegerOperator operator, PlainZ2Vector[] x, PlainZ2Vector[] y) {
+        this(party, operator, x, y, new Z2CircuitConfig.Builder().build());
+    }
+
+    Z2IntegerCircuitParty(PlainZ2cParty party, Z2IntegerOperator operator, PlainZ2Vector[] x, PlainZ2Vector[] y, Z2CircuitConfig config) {
         this.party = party;
         this.operator = operator;
         this.x = x;
         this.y = y;
+        this.config = config;
     }
 
     MpcZ2Vector[] getZ() {
@@ -46,7 +55,7 @@ class Z2IntegerCircuitParty {
 
     void run() {
         try {
-            Z2IntegerCircuit circuit = new Z2IntegerCircuit(party);
+            Z2IntegerCircuit circuit = new Z2IntegerCircuit(party, config);
             switch (operator) {
                 case LEQ:
                     z = new PlainZ2Vector[]{(PlainZ2Vector) circuit.leq(x, y)};
