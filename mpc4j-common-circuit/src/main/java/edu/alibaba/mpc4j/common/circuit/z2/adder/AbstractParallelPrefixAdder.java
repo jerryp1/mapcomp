@@ -10,10 +10,9 @@ import java.util.stream.IntStream;
 
 /**
  * Abstract Parallel Prefix Adder.
- * <p>
  * Parallel prefix adders are arguably the most commonly used arithmetic units in circuit design and have been extensively investigated in literature.
- * They are easy to pipeline and (part of them) enjoy lower circuit depth (compared with other adders), which is attracting to be used in MPC situation.
- * <p>
+ * They are easy to pipeline and (part of them) enjoy lower circuit depth (compared with other adders), which are attracting to be used in MPC situation.
+ *
  * A taxonomy of parallel prefix adder can be found in following paper:
  * <p>
  * Harris, David. "A taxonomy of parallel prefix networks." The Thrity-Seventh Asilomar Conference on Signals, Systems & Computers, 2003. Vol. 2. IEEE, 2003.
