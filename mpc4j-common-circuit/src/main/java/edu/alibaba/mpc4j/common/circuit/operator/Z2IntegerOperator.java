@@ -24,6 +24,10 @@ public enum Z2IntegerOperator {
      */
     ADD,
     /**
+     * *
+     */
+    MUL,
+    /**
      * ==
      */
     EQ,

@@ -38,6 +38,13 @@ public class Z2CircuitTestUtils {
                     Assert.assertEquals(expectZ, actualZ);
                 });
                 break;
+            case MUL:
+                IntStream.range(0, num).forEach(i -> {
+                    long expectZ = (longXs[i] * longYs[i]) & andMod;
+                    long actualZ = longZs[i];
+                    Assert.assertEquals(expectZ, actualZ);
+                });
+                break;
             case LEQ:
                 IntStream.range(0, num).forEach(i -> {
                     boolean expectZ = (longXs[i] <= longYs[i]);

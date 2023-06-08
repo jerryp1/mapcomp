@@ -66,6 +66,9 @@ class Z2IntegerCircuitParty {
                 case ADD:
                     z = Arrays.stream(circuit.add(x, y)).toArray(MpcZ2Vector[]::new);
                     break;
+                case MUL:
+                    z = Arrays.stream(circuit.mul(x, y)).toArray(MpcZ2Vector[]::new);
+                    break;
                 case INCREASE_ONE:
                     z = Arrays.stream(circuit.increaseOne(x)).toArray(MpcZ2Vector[]::new);
                     break;

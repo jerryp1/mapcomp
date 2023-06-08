@@ -24,14 +24,6 @@ import java.util.stream.IntStream;
  */
 public abstract class AbstractParallelPrefixAdder extends AbstractAdder {
     /**
-     * bit length of input.
-     */
-    protected int l;
-    /**
-     * num
-     */
-    protected int num;
-    /**
      * the (original) propagate bits, which are used in sum-out bits generation.
      */
     private MpcZ2Vector[] ps;

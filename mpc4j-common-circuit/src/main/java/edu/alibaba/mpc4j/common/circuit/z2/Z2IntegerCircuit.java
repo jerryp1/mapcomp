@@ -2,6 +2,8 @@ package edu.alibaba.mpc4j.common.circuit.z2;
 
 import edu.alibaba.mpc4j.common.circuit.z2.adder.Adder;
 import edu.alibaba.mpc4j.common.circuit.z2.adder.AdderFactory;
+import edu.alibaba.mpc4j.common.circuit.z2.multiplier.Multiplier;
+import edu.alibaba.mpc4j.common.circuit.z2.multiplier.MultiplierFactory;
 import edu.alibaba.mpc4j.common.rpc.MpcAbortException;
 import edu.alibaba.mpc4j.common.tool.utils.LongUtils;
 
@@ -18,7 +20,11 @@ public class Z2IntegerCircuit extends AbstractZ2Circuit {
     /**
      * adder.
      */
-    private static Adder adder;
+    private final Adder adder;
+    /**
+     * adder.
+     */
+    private final Multiplier multiplier;
 
     public Z2IntegerCircuit(MpcZ2cParty party) {
         this(party, new Z2CircuitConfig.Builder().build());
@@ -27,7 +33,8 @@ public class Z2IntegerCircuit extends AbstractZ2Circuit {
     public Z2IntegerCircuit(MpcZ2cParty party, Z2CircuitConfig config) {
         super(party);
         this.party = party;
-        adder = AdderFactory.createAdder(party, config.getAdderType());
+        this.adder = AdderFactory.createAdder(party, config.getAdderType());
+        this.multiplier = MultiplierFactory.createMultiplier(party, config.getMultiplierTypes(), adder);
     }
 
     /**
@@ -41,6 +48,12 @@ public class Z2IntegerCircuit extends AbstractZ2Circuit {
     public MpcZ2Vector[] add(MpcZ2Vector[] xiArray, MpcZ2Vector[] yiArray) throws MpcAbortException {
         checkInputs(xiArray, yiArray);
         return add(xiArray, yiArray, false);
+    }
+
+    private MpcZ2Vector[] add(MpcZ2Vector[] xiArray, MpcZ2Vector[] yiArray, boolean cin) throws MpcAbortException {
+        MpcZ2Vector[] zs = adder.add(xiArray, yiArray, cin);
+        // ignore the highest carry_out bit.
+        return Arrays.copyOfRange(zs, 1, xiArray.length + 1);
     }
 
     /**
@@ -70,6 +83,19 @@ public class Z2IntegerCircuit extends AbstractZ2Circuit {
         int bitNum = xiArray[0].getNum();
         MpcZ2Vector[] ys = IntStream.range(0, l).mapToObj(i -> party.createZeros(bitNum)).toArray(MpcZ2Vector[]::new);
         return add(xiArray, ys, true);
+    }
+
+    /**
+     * x * y.
+     *
+     * @param xiArray xi array.
+     * @param yiArray yi array.
+     * @return zi array, where z = x + y.
+     * @throws MpcAbortException the protocol failure aborts.
+     */
+    public MpcZ2Vector[] mul(MpcZ2Vector[] xiArray, MpcZ2Vector[] yiArray) throws MpcAbortException {
+        checkInputs(xiArray, yiArray);
+        return multiplier.mul(xiArray, yiArray);
     }
 
     /**
@@ -120,11 +146,4 @@ public class Z2IntegerCircuit extends AbstractZ2Circuit {
         return result[0];
     }
 
-    private MpcZ2Vector[] add(MpcZ2Vector[] xiArray, MpcZ2Vector[] yiArray, boolean cin) throws MpcAbortException {
-        int bitNum = xiArray[0].getNum();
-        MpcZ2Vector cinVector = party.create(bitNum, cin);
-        MpcZ2Vector[] zs = adder.add(xiArray, yiArray, cinVector);
-        // ignore the highest carry_out bit.
-        return Arrays.copyOfRange(zs, 1, xiArray.length + 1);
-    }
 }
