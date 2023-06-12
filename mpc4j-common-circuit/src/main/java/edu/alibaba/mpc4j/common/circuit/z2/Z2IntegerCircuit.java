@@ -22,7 +22,7 @@ public class Z2IntegerCircuit extends AbstractZ2Circuit {
      */
     private final Adder adder;
     /**
-     * adder.
+     * multiplier.
      */
     private final Multiplier multiplier;
 
