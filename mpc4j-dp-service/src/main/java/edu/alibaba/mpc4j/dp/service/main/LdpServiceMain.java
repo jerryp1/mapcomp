@@ -5,6 +5,7 @@ import org.apache.log4j.PropertyConfigurator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.FileInputStream;
 import java.util.Properties;
 
 /**
@@ -20,7 +21,7 @@ public class LdpServiceMain {
         // read log config file
         LOGGER.info("read log config");
         Properties log4jProperties = new Properties();
-        log4jProperties.load(LdpServiceMain.class.getResourceAsStream("/log4j.properties"));
+        log4jProperties.load(new FileInputStream("log4j.properties"));
         PropertyConfigurator.configure(log4jProperties);
         // read config file
         LOGGER.info("read config file");
