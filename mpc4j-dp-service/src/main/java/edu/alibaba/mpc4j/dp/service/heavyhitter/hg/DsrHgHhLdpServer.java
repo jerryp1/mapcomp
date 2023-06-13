@@ -8,8 +8,10 @@ import edu.alibaba.mpc4j.dp.service.heavyhitter.AbstractHhLdpServer;
 import edu.alibaba.mpc4j.dp.service.heavyhitter.HhLdpFactory;
 import edu.alibaba.mpc4j.dp.service.heavyhitter.HhLdpServerState;
 import edu.alibaba.mpc4j.dp.service.heavyhitter.config.DsrHgHhLdpConfig;
+import edu.alibaba.mpc4j.dp.service.tool.BucketDoubleComparator;
 import edu.alibaba.mpc4j.dp.service.heavyhitter.utils.HgHhLdpServerContext;
 import edu.alibaba.mpc4j.dp.service.tool.BucketDomain;
+import edu.alibaba.mpc4j.dp.service.tool.HeavyGuardianUtils;
 
 import java.util.*;
 import java.util.stream.Collectors;
@@ -30,6 +32,10 @@ public class DsrHgHhLdpServer extends AbstractHhLdpServer {
      * ln(b)
      */
     private static final double LN_B = Math.log(B);
+    /**
+     * bucket comparator
+     */
+    private final BucketDoubleComparator bucketComparator;
     /**
      * the non-cryptographic 32-bit hash function
      */
@@ -85,6 +91,7 @@ public class DsrHgHhLdpServer extends AbstractHhLdpServer {
 
     public DsrHgHhLdpServer(DsrHgHhLdpConfig config) {
         super(config);
+        bucketComparator = new BucketDoubleComparator();
         w = config.getW();
         lambdaH = config.getLambdaH();
         // set |Ω| in each bucket, and insert empty elements in the bucket
@@ -222,14 +229,11 @@ public class DsrHgHhLdpServer extends AbstractHhLdpServer {
         if (item.startsWith(HhLdpFactory.BOT_PREFIX)) {
             bucketIndex = Integer.parseInt(item.substring(HhLdpFactory.BOT_PREFIX.length()));
         } else {
-            byte[] itemByteArray = ObjectUtils.objectToByteArray(item);
-            bucketIndex = Math.abs(intHash.hash(itemByteArray) % w);
+            bucketIndex = HeavyGuardianUtils.getItemBucket(intHash, w, item);
         }
         // find the weakest guardian
         Map<String, Double> bucket = buckets.get(bucketIndex);
-        List<Map.Entry<String, Double>> bucketList = new ArrayList<>(bucket.entrySet());
-        bucketList.sort(Comparator.comparingDouble(Map.Entry::getValue));
-        Map.Entry<String, Double> weakestCell = bucketList.get(0);
+        Map.Entry<String, Double> weakestCell = Collections.min(bucket.entrySet(), bucketComparator);
         String weakestItem = weakestCell.getKey();
         double weakestCount = weakestCell.getValue();
         if (hhLdpServerState.equals(HhLdpServerState.STATISTICS)) {

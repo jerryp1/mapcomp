@@ -207,6 +207,9 @@ public class HhLdpMain {
         dataStream.close();
         Map<String, Integer> correctCountMap = domainSet.stream()
             .collect(Collectors.toMap(item -> item, streamCounter::query));
+        // total item num
+        long totalItemNum = correctCountMap.values().stream().mapToInt(i -> i).sum();
+        LOGGER.info("Total Item Num : {}", totalItemNum);
         // correct heavy hitter
         List<Map.Entry<String, Integer>> correctOrderedList = new ArrayList<>(correctCountMap.entrySet());
         correctOrderedList.sort(Comparator.comparingInt(Map.Entry::getValue));

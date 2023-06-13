@@ -7,10 +7,12 @@ import edu.alibaba.mpc4j.common.tool.utils.ObjectUtils;
 import edu.alibaba.mpc4j.dp.service.heavyhitter.AbstractHhLdpServer;
 import edu.alibaba.mpc4j.dp.service.heavyhitter.HhLdpFactory;
 import edu.alibaba.mpc4j.dp.service.heavyhitter.config.BgrHgHhLdpConfig;
+import edu.alibaba.mpc4j.dp.service.tool.BucketDoubleComparator;
 import edu.alibaba.mpc4j.dp.service.heavyhitter.utils.HhLdpServerContext;
 import edu.alibaba.mpc4j.dp.service.heavyhitter.utils.EmptyHhLdpServerContext;
 import edu.alibaba.mpc4j.dp.service.heavyhitter.HhLdpServerState;
 import edu.alibaba.mpc4j.dp.service.tool.BucketDomain;
+import edu.alibaba.mpc4j.dp.service.tool.HeavyGuardianUtils;
 
 import java.util.*;
 import java.util.stream.Collectors;
@@ -31,6 +33,10 @@ public class BgrHgHhLdpServer extends AbstractHhLdpServer {
      * ln(b)
      */
     private static final double LN_B = Math.log(B);
+    /**
+     * bucket comparator
+     */
+    private final BucketDoubleComparator bucketComparator;
     /**
      * the non-cryptographic 32-bit hash function
      */
@@ -70,6 +76,7 @@ public class BgrHgHhLdpServer extends AbstractHhLdpServer {
 
     public BgrHgHhLdpServer(BgrHgHhLdpConfig config) {
         super(config);
+        bucketComparator = new BucketDoubleComparator();
         w = config.getW();
         lambdaH = config.getLambdaH();
         // set |Ω| in each bucket, and insert empty elements in the bucket
@@ -157,17 +164,14 @@ public class BgrHgHhLdpServer extends AbstractHhLdpServer {
     private boolean insert(String item) {
         num++;
         // it first computes the hash function h(e) (1 ⩽ h(e) ⩽ w) to map e to bucket A[h(e)].
-        byte[] itemByteArray = ObjectUtils.objectToByteArray(item);
-        int bucketIndex = Math.abs(intHash.hash(itemByteArray) % w);
+        int bucketIndex = HeavyGuardianUtils.getItemBucket(intHash, w, item);
         if (hhLdpServerState.equals(HhLdpServerState.STATISTICS)) {
             ldpNums[bucketIndex]++;
             debiasBucket(bucketIndex);
         }
         // find the weakest guardian
         Map<String, Double> bucket = buckets.get(bucketIndex);
-        List<Map.Entry<String, Double>> bucketList = new ArrayList<>(bucket.entrySet());
-        bucketList.sort(Comparator.comparingDouble(Map.Entry::getValue));
-        Map.Entry<String, Double> weakestCell = bucketList.get(0);
+        Map.Entry<String, Double> weakestCell = Collections.min(bucket.entrySet(), bucketComparator);
         String weakestItem = weakestCell.getKey();
         double weakestCount = weakestCell.getValue();
         // Case 1: e is in one cell in the heavy part of A[h(e)] (being a king or a guardian).
