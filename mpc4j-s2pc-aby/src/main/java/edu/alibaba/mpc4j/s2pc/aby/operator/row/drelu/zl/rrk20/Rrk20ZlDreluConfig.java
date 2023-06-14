@@ -2,7 +2,6 @@ package edu.alibaba.mpc4j.s2pc.aby.operator.row.drelu.zl.rrk20;
 
 import edu.alibaba.mpc4j.common.rpc.desc.SecurityModel;
 import edu.alibaba.mpc4j.common.rpc.pto.AbstractMultiPartyPtoConfig;
-import edu.alibaba.mpc4j.common.tool.EnvType;
 import edu.alibaba.mpc4j.s2pc.aby.basics.z2.Z2cConfig;
 import edu.alibaba.mpc4j.s2pc.aby.basics.z2.Z2cFactory;
 import edu.alibaba.mpc4j.s2pc.aby.operator.row.drelu.zl.ZlDreluConfig;
@@ -43,29 +42,6 @@ public class Rrk20ZlDreluConfig extends AbstractMultiPartyPtoConfig implements Z
     @Override
     public ZlDreluFactory.ZlDreluType getPtoType() {
         return ZlDreluFactory.ZlDreluType.RRK20;
-    }
-
-    @Override
-    public void setEnvType(EnvType envType) {
-        millionaireConfig.setEnvType(envType);
-        z2cConfig.setEnvType(envType);
-    }
-
-    @Override
-    public EnvType getEnvType() {
-        return millionaireConfig.getEnvType();
-    }
-
-    @Override
-    public SecurityModel getSecurityModel() {
-        SecurityModel securityModel = SecurityModel.SEMI_HONEST;
-        if (millionaireConfig.getSecurityModel().compareTo(securityModel) < 0) {
-            securityModel = millionaireConfig.getSecurityModel();
-        }
-        if (z2cConfig.getSecurityModel().compareTo(securityModel) < 0) {
-            securityModel = z2cConfig.getSecurityModel();
-        }
-        return securityModel;
     }
 
     public static class Builder implements org.apache.commons.lang3.builder.Builder<Rrk20ZlDreluConfig> {

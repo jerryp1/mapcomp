@@ -1,7 +1,7 @@
 package edu.alibaba.mpc4j.s2pc.aby.operator.agg.max.zl.rrk20;
 
 import edu.alibaba.mpc4j.common.rpc.desc.SecurityModel;
-import edu.alibaba.mpc4j.common.tool.EnvType;
+import edu.alibaba.mpc4j.common.rpc.pto.AbstractMultiPartyPtoConfig;
 import edu.alibaba.mpc4j.common.tool.galoisfield.zl.Zl;
 import edu.alibaba.mpc4j.s2pc.aby.operator.agg.max.zl.ZlMaxConfig;
 import edu.alibaba.mpc4j.s2pc.aby.operator.agg.max.zl.ZlMaxFactory;
@@ -14,13 +14,14 @@ import edu.alibaba.mpc4j.s2pc.aby.operator.row.greater.zl.ZlGreaterFactory;
  * @author Li Peng
  * @date 2023/5/22
  */
-public class Rrk20ZlMaxConfig implements ZlMaxConfig {
+public class Rrk20ZlMaxConfig extends AbstractMultiPartyPtoConfig implements ZlMaxConfig {
     /**
      * Zl greater config.
      */
     private final ZlGreaterConfig zlGreaterConfig;
 
     private Rrk20ZlMaxConfig(Builder builder) {
+        super(SecurityModel.SEMI_HONEST, builder.zlGreaterConfig);
         zlGreaterConfig = builder.zlGreaterConfig;
     }
 
@@ -36,25 +37,6 @@ public class Rrk20ZlMaxConfig implements ZlMaxConfig {
     @Override
     public Zl getZl() {
         return zlGreaterConfig.getZl();
-    }
-
-    @Override
-    public void setEnvType(EnvType envType) {
-        zlGreaterConfig.setEnvType(envType);
-    }
-
-    @Override
-    public EnvType getEnvType() {
-        return zlGreaterConfig.getEnvType();
-    }
-
-    @Override
-    public SecurityModel getSecurityModel() {
-        SecurityModel securityModel = SecurityModel.SEMI_HONEST;
-        if (zlGreaterConfig.getSecurityModel().compareTo(securityModel) < 0) {
-            securityModel = zlGreaterConfig.getSecurityModel();
-        }
-        return securityModel;
     }
 
     public static class Builder implements org.apache.commons.lang3.builder.Builder<Rrk20ZlMaxConfig> {

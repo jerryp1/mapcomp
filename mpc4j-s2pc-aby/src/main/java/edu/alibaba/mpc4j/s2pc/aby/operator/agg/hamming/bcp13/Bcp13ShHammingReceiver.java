@@ -43,7 +43,7 @@ public class Bcp13ShHammingReceiver extends AbstractHammingParty {
 
         stopWatch.start();
         // init COT receiver
-        cotReceiver.init(maxBitNum, maxBitNum);
+        cotReceiver.init(maxBitNum);
         stopWatch.stop();
         long initTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
         stopWatch.reset();

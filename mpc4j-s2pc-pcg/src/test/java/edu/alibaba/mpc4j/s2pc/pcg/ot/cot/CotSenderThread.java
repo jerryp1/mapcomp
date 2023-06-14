@@ -39,7 +39,7 @@ class CotSenderThread extends Thread {
     @Override
     public void run() {
         try {
-            sender.init(delta, num, num);
+            sender.init(delta, num);
             senderOutput = sender.send(num);
         } catch (MpcAbortException e) {
             e.printStackTrace();

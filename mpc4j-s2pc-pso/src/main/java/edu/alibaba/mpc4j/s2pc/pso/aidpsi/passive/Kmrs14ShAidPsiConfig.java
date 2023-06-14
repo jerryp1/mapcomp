@@ -1,7 +1,7 @@
 package edu.alibaba.mpc4j.s2pc.pso.aidpsi.passive;
 
 import edu.alibaba.mpc4j.common.rpc.desc.SecurityModel;
-import edu.alibaba.mpc4j.common.tool.EnvType;
+import edu.alibaba.mpc4j.common.rpc.pto.AbstractMultiPartyPtoConfig;
 import edu.alibaba.mpc4j.s2pc.pcg.ct.CoinTossConfig;
 import edu.alibaba.mpc4j.s2pc.pcg.ct.CoinTossFactory;
 import edu.alibaba.mpc4j.s2pc.pso.aidpsi.AidPsiConfig;
@@ -13,34 +13,20 @@ import edu.alibaba.mpc4j.s2pc.pso.aidpsi.AidPsiFactory;
  * @author Weiran Liu
  * @date 2023/5/8
  */
-public class Kmrs14ShAidPsiConfig implements AidPsiConfig {
+public class Kmrs14ShAidPsiConfig extends AbstractMultiPartyPtoConfig implements AidPsiConfig {
     /**
      * coin-tossing config
      */
     private final CoinTossConfig coinTossConfig;
 
     private Kmrs14ShAidPsiConfig(Builder builder) {
+        super(SecurityModel.SEMI_HONEST, builder.coinTossConfig);
         coinTossConfig = builder.coinTossConfig;
     }
 
     @Override
     public AidPsiFactory.AidPsiType getPtoType() {
         return AidPsiFactory.AidPsiType.KMRS14_SH_AIDER;
-    }
-
-    @Override
-    public void setEnvType(EnvType envType) {
-        coinTossConfig.setEnvType(envType);
-    }
-
-    @Override
-    public EnvType getEnvType() {
-        return coinTossConfig.getEnvType();
-    }
-
-    @Override
-    public SecurityModel getSecurityModel() {
-        return SecurityModel.SEMI_HONEST;
     }
 
     public CoinTossConfig getCoinTossConfig() {

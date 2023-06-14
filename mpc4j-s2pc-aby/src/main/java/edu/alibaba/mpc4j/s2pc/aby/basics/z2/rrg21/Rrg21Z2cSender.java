@@ -62,8 +62,8 @@ public class Rrg21Z2cSender extends AbstractZ2cParty {
         byte[] delta = new byte[CommonConstants.BLOCK_BYTE_LENGTH];
         secureRandom.nextBytes(delta);
         // since storing many COT outputs would lead to memory exception, here we generate COT when necessary
-        cotSender.init(delta, updateBitNum, updateBitNum);
-        cotReceiver.init(updateBitNum, updateBitNum);
+        cotSender.init(delta, updateBitNum);
+        cotReceiver.init(updateBitNum);
         stopWatch.stop();
         long initTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
         stopWatch.reset();

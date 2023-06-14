@@ -30,12 +30,12 @@ public class DirectCotReceiver extends AbstractCotReceiver {
     }
 
     @Override
-    public void init(int maxRoundNum, int updateNum) throws MpcAbortException {
-        setInitInput(maxRoundNum, updateNum);
+    public void init(int updateNum) throws MpcAbortException {
+        setInitInput(updateNum);
         logPhaseInfo(PtoState.INIT_BEGIN);
 
         stopWatch.start();
-        coreCotReceiver.init(maxRoundNum);
+        coreCotReceiver.init(updateNum);
         stopWatch.stop();
         long initTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
         stopWatch.reset();

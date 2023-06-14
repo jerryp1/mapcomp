@@ -30,12 +30,12 @@ public class DirectCotSender extends AbstractCotSender {
     }
 
     @Override
-    public void init(byte[] delta, int maxRoundNum, int updateNum) throws MpcAbortException {
-        setInitInput(delta, maxRoundNum, updateNum);
+    public void init(byte[] delta, int updateNum) throws MpcAbortException {
+        setInitInput(delta, updateNum);
         logPhaseInfo(PtoState.INIT_BEGIN);
 
         stopWatch.start();
-        coreCotSender.init(delta, maxRoundNum);
+        coreCotSender.init(delta, updateNum);
         stopWatch.stop();
         long initTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
         stopWatch.reset();

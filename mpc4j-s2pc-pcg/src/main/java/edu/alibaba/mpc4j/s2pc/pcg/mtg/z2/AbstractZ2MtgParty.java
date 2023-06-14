@@ -44,6 +44,7 @@ public abstract class AbstractZ2MtgParty extends AbstractTwoPartyPto implements 
 
     protected void setPtoInput(int num) {
         checkInitialized();
+        MathPreconditions.checkPositive("num", num);
         this.num = num;
         byteNum = CommonUtils.getByteLength(num);
         extraInfo += num;
