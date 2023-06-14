@@ -1,39 +1,48 @@
-package edu.alibaba.mpc4j.s2pc.pcg.mtg.z2.core.aid;
+package edu.alibaba.mpc4j.s2pc.pcg.mtg.zl.core.aid;
 
 import edu.alibaba.mpc4j.common.rpc.*;
 import edu.alibaba.mpc4j.common.rpc.pto.AbstractThreePartyPto;
 import edu.alibaba.mpc4j.common.rpc.utils.DataPacket;
 import edu.alibaba.mpc4j.common.rpc.utils.DataPacketHeader;
 import edu.alibaba.mpc4j.common.tool.MathPreconditions;
+import edu.alibaba.mpc4j.common.tool.galoisfield.zl.Zl;
+import edu.alibaba.mpc4j.common.tool.utils.BigIntegerUtils;
 import edu.alibaba.mpc4j.common.tool.utils.IntUtils;
 import edu.alibaba.mpc4j.s2pc.pcg.aid.TrustDealPtoDesc;
 import edu.alibaba.mpc4j.s2pc.pcg.aid.TrustDealType;
-import edu.alibaba.mpc4j.s2pc.pcg.mtg.z2.Z2Triple;
-import edu.alibaba.mpc4j.s2pc.pcg.mtg.z2.core.Z2CoreMtgParty;
+import edu.alibaba.mpc4j.s2pc.pcg.mtg.zl.ZlTriple;
+import edu.alibaba.mpc4j.s2pc.pcg.mtg.zl.core.ZlCoreMtgParty;
 
+import java.math.BigInteger;
+import java.nio.ByteBuffer;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
 /**
- * aid Z2 core multiplication triple generation sender.
+ * aid Zl core multiplication triple generation sender.
  *
  * @author Weiran Liu
- * @date 2023/5/20
+ * @date 2023/6/14
  */
-public class AidZ2CoreMtgParty extends AbstractThreePartyPto implements Z2CoreMtgParty {
+public class AidZlCoreMtgParty extends AbstractThreePartyPto implements ZlCoreMtgParty {
     /**
      * config
      */
-    private final AidZ2CoreMtgConfig config;
+    private final AidZlCoreMtgConfig config;
+    /**
+     * Zl instance
+     */
+    private final Zl zl;
     /**
      * max num
      */
     private int maxNum;
 
-    public AidZ2CoreMtgParty(Rpc ownRpc, Party otherParty, Party aiderParty, AidZ2CoreMtgConfig config) {
+    public AidZlCoreMtgParty(Rpc ownRpc, Party otherParty, Party aiderParty, AidZlCoreMtgConfig config) {
         super(TrustDealPtoDesc.getInstance(), ownRpc, otherParty, aiderParty, config);
         this.config = config;
+        zl = config.getZl();
     }
 
     @Override
@@ -43,9 +52,10 @@ public class AidZ2CoreMtgParty extends AbstractThreePartyPto implements Z2CoreMt
 
         stopWatch.start();
         // init aider
-        int aidTypeIndex = TrustDealType.Z2_TRIPLE.ordinal();
+        int aidTypeIndex = TrustDealType.ZL_TRIPLE.ordinal();
         List<byte[]> initQueryPayload = new LinkedList<>();
         initQueryPayload.add(IntUtils.intToByteArray(aidTypeIndex));
+        initQueryPayload.add(IntUtils.intToByteArray(zl.getL()));
         DataPacketHeader initQueryHeader = new DataPacketHeader(
             encodeTaskId, getPtoDesc().getPtoId(), TrustDealPtoDesc.AidPtoStep.INIT_QUERY.ordinal(), extraInfo,
             ownParty().getPartyId(), rightParty().getPartyId()
@@ -80,7 +90,7 @@ public class AidZ2CoreMtgParty extends AbstractThreePartyPto implements Z2CoreMt
     }
 
     @Override
-    public Z2Triple generate(int num) throws MpcAbortException {
+    public ZlTriple generate(int num) throws MpcAbortException {
         setPtoInput(num);
         logPhaseInfo(PtoState.PTO_BEGIN);
 
@@ -105,16 +115,34 @@ public class AidZ2CoreMtgParty extends AbstractThreePartyPto implements Z2CoreMt
 
         stopWatch.start();
         MpcAbortPreconditions.checkArgument(requestResponsePayload.size() == 3);
-        byte[] a0 = requestResponsePayload.remove(0);
-        byte[] b0 = requestResponsePayload.remove(0);
-        byte[] c0 = requestResponsePayload.remove(0);
+        ByteBuffer aiBuffer = ByteBuffer.wrap(requestResponsePayload.remove(0));
+        ByteBuffer biBuffer = ByteBuffer.wrap(requestResponsePayload.remove(0));
+        ByteBuffer ciBuffer = ByteBuffer.wrap(requestResponsePayload.remove(0));
+        // convert to (ai, bi, ci)
+        int byteL = zl.getByteL();
+        byte[] byteBufferArray = new byte[byteL];
+        BigInteger[] aiArray = new BigInteger[num];
+        for (int index = 0; index < num; index++) {
+            aiBuffer.get(byteBufferArray);
+            aiArray[index] = BigIntegerUtils.byteArrayToNonNegBigInteger(byteBufferArray);
+        }
+        BigInteger[] biArray = new BigInteger[num];
+        for (int index = 0; index < num; index++) {
+            biBuffer.get(byteBufferArray);
+            biArray[index] = BigIntegerUtils.byteArrayToNonNegBigInteger(byteBufferArray);
+        }
+        BigInteger[] ciArray = new BigInteger[num];
+        for (int index = 0; index < num; index++) {
+            ciBuffer.get(byteBufferArray);
+            ciArray[index] = BigIntegerUtils.byteArrayToNonNegBigInteger(byteBufferArray);
+        }
         stopWatch.stop();
         long requestResponseTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
         stopWatch.reset();
         logStepInfo(PtoState.PTO_STEP, 2, 2, requestResponseTime);
 
         logPhaseInfo(PtoState.PTO_END);
-        return Z2Triple.create(num, a0, b0, c0);
+        return ZlTriple.create(zl, num, aiArray, biArray, ciArray);
     }
 
     protected void setPtoInput(int num) {

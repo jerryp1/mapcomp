@@ -36,6 +36,11 @@
         </dependency>
         <dependency>
             <groupId>edu.alibaba</groupId>
+            <artifactId>mpc4j-crypto-matrix</artifactId>
+            <version>1.0.8-SNAPSHOT</version>
+        </dependency>
+        <dependency>
+            <groupId>edu.alibaba</groupId>
             <artifactId>mpc4j-crypto-phe</artifactId>
             <version>1.0.8-SNAPSHOT</version>
         </dependency>
