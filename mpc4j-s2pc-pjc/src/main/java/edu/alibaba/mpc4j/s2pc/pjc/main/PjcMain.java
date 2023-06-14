@@ -4,11 +4,9 @@ import edu.alibaba.mpc4j.common.tool.utils.PropertiesUtils;
 import edu.alibaba.mpc4j.s2pc.pjc.main.pid.PidMain;
 import edu.alibaba.mpc4j.s2pc.pjc.main.pmid.PmidMain;
 import edu.alibaba.mpc4j.s2pc.pso.main.PsoMain;
-import org.apache.log4j.PropertyConfigurator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.FileInputStream;
 import java.util.Properties;
 
 /**
@@ -26,11 +24,6 @@ public class PjcMain {
      * @param args 只有一个输入：配置文件。
      */
     public static void main(String[] args) throws Exception {
-        // 读取日志配置文件
-        LOGGER.info("read log config");
-        Properties log4jProperties = new Properties();
-        log4jProperties.load(new FileInputStream("log4j.properties"));
-        PropertyConfigurator.configure(log4jProperties);
         // 读取配置文件
         LOGGER.info("read PTO config");
         Properties properties = PropertiesUtils.loadProperties(args[0]);

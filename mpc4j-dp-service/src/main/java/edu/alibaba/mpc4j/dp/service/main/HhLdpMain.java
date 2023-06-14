@@ -175,7 +175,7 @@ public class HhLdpMain {
         warmupPercentage = PropertiesUtils.readDouble(properties, "warmup_percentage");
         MathPreconditions.checkNonNegativeInRangeClosed("warmup_percentage", warmupPercentage, 1.0);
         windowEpsilons = PropertiesUtils.readDoubleArray(properties, "window_epsilon");
-        lambdaL = PropertiesUtils.readIntWithDefault(properties, "λ_l (# of light part)", CnrHhgHhLdpConfig.DEFAULT_LAMBDA_L);
+        lambdaL = PropertiesUtils.readIntWithDefault(properties, "lambda_l", CnrHhgHhLdpConfig.DEFAULT_LAMBDA_L);
         MathPreconditions.checkPositive("λ_l", lambdaL);
         alphas = PropertiesUtils.readDoubleArrayWithDefault(properties, "alpha");
         gammaHs = PropertiesUtils.readDoubleArrayWithDefault(properties, "gamma_h");
