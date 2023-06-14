@@ -26,7 +26,7 @@ public abstract class AbstractCotSender extends AbstractTwoPartyPto implements C
     /**
      * update num
      */
-    protected long updateNum;
+    protected int updateNum;
     /**
      * num
      */

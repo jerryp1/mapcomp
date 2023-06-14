@@ -20,7 +20,7 @@ public abstract class AbstractCotReceiver extends AbstractTwoPartyPto implements
     /**
      * update num
      */
-    protected long updateNum;
+    protected int updateNum;
     /**
      * choices
      */

@@ -59,7 +59,7 @@ public class Cgs22PeqtSender extends AbstractPeqtParty {
         int maxByteL = CommonUtils.getByteLength(maxL);
         int maxQ = maxByteL * 2;
         Z2cSender.init(maxNum * (maxQ - 1));
-        lnotSender.init(4, maxNum, maxNum * maxQ);
+        lnotSender.init(4, maxNum * maxQ);
         stopWatch.stop();
         long initTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
         stopWatch.reset();

@@ -54,7 +54,7 @@ public class Cgs22LnotPsmReceiver extends AbstractPsmReceiver {
         int maxByteL = CommonUtils.getByteLength(maxL);
         int maxQ = maxByteL * 2;
         bcReceiver.init(maxNum * (maxQ - 1) * d);
-        lnotReceiver.init(4, maxNum, maxNum * maxQ);
+        lnotReceiver.init(4, maxNum * maxQ);
         stopWatch.stop();
         long initTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
         stopWatch.reset();
