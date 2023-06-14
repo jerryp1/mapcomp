@@ -20,10 +20,6 @@ public class PlainZlParty implements MpcZlParty {
      */
     private final Zl zl;
     /**
-     * maximum num in round.
-     */
-    private int maxRoundNum;
-    /**
      * initialized
      */
     private boolean initialized;
@@ -58,16 +54,15 @@ public class PlainZlParty implements MpcZlParty {
     }
 
     @Override
-    public void init(int maxRoundNum, int updateNum) {
-        MathPreconditions.checkPositiveInRangeClosed("maxRoundNum", maxRoundNum, updateNum);
-        this.maxRoundNum = maxRoundNum;
+    public void init(int updateNum) {
+        MathPreconditions.checkPositive("updateNum", updateNum);
         initialized = true;
     }
 
     @Override
     public PlainZlVector shareOwn(ZlVector xi) {
         Preconditions.checkArgument(initialized);
-        MathPreconditions.checkPositiveInRangeClosed("num", xi.getNum(), maxRoundNum);
+        MathPreconditions.checkPositive("num", xi.getNum());
         // do nothing
         return null;
     }
@@ -76,7 +71,7 @@ public class PlainZlParty implements MpcZlParty {
     public PlainZlVector[] shareOwn(ZlVector[] xiArray) {
         Preconditions.checkArgument(initialized);
         int totalNum = Arrays.stream(xiArray).mapToInt(ZlVector::getNum).sum();
-        MathPreconditions.checkPositiveInRangeClosed("totalNum", totalNum, maxRoundNum);
+        MathPreconditions.checkPositive("totalNum", totalNum);
         // do nothing
         return null;
     }
@@ -84,7 +79,7 @@ public class PlainZlParty implements MpcZlParty {
     @Override
     public PlainZlVector shareOther(int num) throws MpcAbortException {
         Preconditions.checkArgument(initialized);
-        MathPreconditions.checkPositiveInRangeClosed("num", num, maxRoundNum);
+        MathPreconditions.checkPositive("num", num);
         // do nothing
         return null;
     }
@@ -92,8 +87,8 @@ public class PlainZlParty implements MpcZlParty {
     @Override
     public PlainZlVector[] shareOther(int[] nums) throws MpcAbortException {
         Preconditions.checkArgument(initialized);
-        int totalNums = Arrays.stream(nums).sum();
-        MathPreconditions.checkPositiveInRangeClosed("totalNums", totalNums, maxRoundNum);
+        int totalNum = Arrays.stream(nums).sum();
+        MathPreconditions.checkPositive("totalNum", totalNum);
         // do nothing
         return null;
     }
@@ -101,7 +96,7 @@ public class PlainZlParty implements MpcZlParty {
     @Override
     public ZlVector revealOwn(MpcZlVector xi) throws MpcAbortException {
         Preconditions.checkArgument(initialized);
-        MathPreconditions.checkPositiveInRangeClosed("num", xi.getNum(), maxRoundNum);
+        MathPreconditions.checkPositive("num", xi.getNum());
         // do nothing
         return null;
     }
@@ -110,7 +105,7 @@ public class PlainZlParty implements MpcZlParty {
     public ZlVector[] revealOwn(MpcZlVector[] xiArray) throws MpcAbortException {
         Preconditions.checkArgument(initialized);
         int totalNum = Arrays.stream(xiArray).mapToInt(MpcZlVector::getNum).sum();
-        MathPreconditions.checkPositiveInRangeClosed("totalNum", totalNum, maxRoundNum);
+        MathPreconditions.checkPositive("totalNum", totalNum);
         // do nothing
         return null;
     }
@@ -118,7 +113,7 @@ public class PlainZlParty implements MpcZlParty {
     @Override
     public void revealOther(MpcZlVector xi) {
         Preconditions.checkArgument(initialized);
-        MathPreconditions.checkPositiveInRangeClosed("num", xi.getNum(), maxRoundNum);
+        MathPreconditions.checkPositive("num", xi.getNum());
         // do nothing
     }
 
@@ -126,14 +121,14 @@ public class PlainZlParty implements MpcZlParty {
     public void revealOther(MpcZlVector[] xiArray) {
         Preconditions.checkArgument(initialized);
         int totalNum = Arrays.stream(xiArray).mapToInt(MpcZlVector::getNum).sum();
-        MathPreconditions.checkPositiveInRangeClosed("totalNum", totalNum, maxRoundNum);
+        MathPreconditions.checkPositive("totalNum", totalNum);
         // do nothing
     }
 
     @Override
     public PlainZlVector add(MpcZlVector xi, MpcZlVector yi) {
         Preconditions.checkArgument(initialized);
-        MathPreconditions.checkPositiveInRangeClosed("num", xi.getNum(), maxRoundNum);
+        MathPreconditions.checkPositive("num", xi.getNum());
         PlainZlVector plainXi = (PlainZlVector) xi;
         PlainZlVector plainYi = (PlainZlVector) yi;
         return PlainZlVector.create(plainXi.getZlVector().add(plainYi.getZlVector()));
@@ -141,8 +136,7 @@ public class PlainZlParty implements MpcZlParty {
 
     @Override
     public PlainZlVector[] add(MpcZlVector[] xiArray, MpcZlVector[] yiArray) {
-        assert xiArray.length == yiArray.length
-            : String.format("xiArray.length (%s) must be equal to yiArray.length (%s)", xiArray.length, yiArray.length);
+        MathPreconditions.checkEqual("xiArray.length", "yiArray.length", xiArray.length, yiArray.length);
         if (xiArray.length == 0) {
             return new PlainZlVector[0];
         }
@@ -161,7 +155,7 @@ public class PlainZlParty implements MpcZlParty {
     @Override
     public PlainZlVector sub(MpcZlVector xi, MpcZlVector yi) {
         Preconditions.checkArgument(initialized);
-        MathPreconditions.checkPositiveInRangeClosed("num", xi.getNum(), maxRoundNum);
+        MathPreconditions.checkPositive("num", xi.getNum());
         PlainZlVector plainXi = (PlainZlVector) xi;
         PlainZlVector plainYi = (PlainZlVector) yi;
         return PlainZlVector.create(plainXi.getZlVector().sub(plainYi.getZlVector()));
@@ -169,8 +163,7 @@ public class PlainZlParty implements MpcZlParty {
 
     @Override
     public PlainZlVector[] sub(MpcZlVector[] xiArray, MpcZlVector[] yiArray) {
-        assert xiArray.length == yiArray.length
-            : String.format("xiArray.length (%s) must be equal to yiArray.length (%s)", xiArray.length, yiArray.length);
+        MathPreconditions.checkEqual("xiArray.length", "yiArray.length", xiArray.length, yiArray.length);
         if (xiArray.length == 0) {
             return new PlainZlVector[0];
         }
@@ -189,7 +182,7 @@ public class PlainZlParty implements MpcZlParty {
     @Override
     public PlainZlVector neg(MpcZlVector xi) {
         Preconditions.checkArgument(initialized);
-        MathPreconditions.checkPositiveInRangeClosed("num", xi.getNum(), maxRoundNum);
+        MathPreconditions.checkPositive("num", xi.getNum());
         PlainZlVector plainXi = (PlainZlVector) xi;
         return PlainZlVector.create(plainXi.getZlVector().neg());
     }
@@ -213,7 +206,7 @@ public class PlainZlParty implements MpcZlParty {
     @Override
     public PlainZlVector mul(MpcZlVector xi, MpcZlVector yi) {
         Preconditions.checkArgument(initialized);
-        MathPreconditions.checkPositiveInRangeClosed("num", xi.getNum(), maxRoundNum);
+        MathPreconditions.checkPositive("num", xi.getNum());
         PlainZlVector plainXi = (PlainZlVector) xi;
         PlainZlVector plainYi = (PlainZlVector) yi;
         return PlainZlVector.create(plainXi.getZlVector().mul(plainYi.getZlVector()));
@@ -221,8 +214,7 @@ public class PlainZlParty implements MpcZlParty {
 
     @Override
     public PlainZlVector[] mul(MpcZlVector[] xiArray, MpcZlVector[] yiArray) {
-        assert xiArray.length == yiArray.length
-            : String.format("xiArray.length (%s) must be equal to yiArray.length (%s)", xiArray.length, yiArray.length);
+        MathPreconditions.checkEqual("xiArray.length", "yiArray.length", xiArray.length, yiArray.length);
         if (xiArray.length == 0) {
             return new PlainZlVector[0];
         }

@@ -18,13 +18,22 @@ class Z2MtgPartyThread extends Thread {
      */
     private final int num;
     /**
+     * update num
+     */
+    private final int updateNum;
+    /**
      * output
      */
     private Z2Triple output;
 
     Z2MtgPartyThread(Z2MtgParty party, int num) {
+        this(party, num, num);
+    }
+
+    Z2MtgPartyThread(Z2MtgParty party, int num, int updateNum) {
         this.party = party;
         this.num = num;
+        this.updateNum = updateNum;
     }
 
     Z2Triple getOutput() {
@@ -34,7 +43,7 @@ class Z2MtgPartyThread extends Thread {
     @Override
     public void run() {
         try {
-            party.init(num);
+            party.init(updateNum);
             output = party.generate(num);
         } catch (MpcAbortException e) {
             e.printStackTrace();

@@ -18,13 +18,22 @@ class ZlMtgPartyThread extends Thread {
      */
     private final int num;
     /**
+     * update num
+     */
+    private final int updateNum;
+    /**
      * output
      */
     private ZlTriple output;
 
     ZlMtgPartyThread(ZlMtgParty party, int num) {
+        this(party, num, num);
+    }
+
+    ZlMtgPartyThread(ZlMtgParty party, int num, int updateNum) {
         this.party = party;
         this.num = num;
+        this.updateNum = updateNum;
     }
 
     ZlTriple getOutput() {
@@ -34,7 +43,7 @@ class ZlMtgPartyThread extends Thread {
     @Override
     public void run() {
         try {
-            party.init(num, num);
+            party.init(updateNum);
             output = party.generate(num);
         } catch (MpcAbortException e) {
             e.printStackTrace();
