@@ -168,17 +168,19 @@ public class Rrk20MillionaireReceiver extends AbstractMillionaireParty {
                 leftEqs[j] = eqs[j * 2];
                 rightEqs[j] = eqs[j * 2 + 1];
             }
-            lts = z2cReceiver.xor(z2cReceiver.and(rightLts, leftEqs), leftLts);
-            eqs = z2cReceiver.and(leftEqs, rightEqs);
+            SquareZ2Vector[] newLts = z2cReceiver.xor(z2cReceiver.and(rightLts, leftEqs), leftLts);
+            SquareZ2Vector[] newEqs = z2cReceiver.and(leftEqs, rightEqs);
             if (lastNodeNum % 2 == 1) {
-                lts = Arrays.copyOf(lts, currentNodeNum + 1);
-                lts[currentNodeNum] = rightLts[rightLts.length - 1];
-                eqs = Arrays.copyOf(eqs, currentNodeNum + 1);
-                eqs[currentNodeNum] = rightEqs[rightEqs.length - 1];
+                newLts = Arrays.copyOf(newLts, currentNodeNum + 1);
+                newLts[currentNodeNum] = lts[lastNodeNum - 1];
+                newEqs = Arrays.copyOf(newEqs, currentNodeNum + 1);
+                newEqs[currentNodeNum] = eqs[lastNodeNum - 1];
                 currentNodeNum++;
             }
             lastNodeNum = currentNodeNum;
-            currentNodeNum = lastNodeNum / 2;
+            currentNodeNum = currentNodeNum / 2;
+            lts = newLts;
+            eqs = newEqs;
         }
         return lts[0];
     }
