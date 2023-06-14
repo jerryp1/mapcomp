@@ -7,7 +7,6 @@ import edu.alibaba.mpc4j.common.tool.utils.IntUtils;
 import edu.alibaba.mpc4j.common.tool.utils.LongUtils;
 import edu.alibaba.mpc4j.crypto.matrix.database.Zl64Database;
 import org.apache.commons.lang3.time.StopWatch;
-import org.junit.Assert;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -56,11 +55,11 @@ public class Z2IntegerCircuitTest {
 
     public void testConstant(int l) {
         long[] longXs = IntStream.range(0, DEFAULT_NUM)
-            .mapToLong(i -> i)
-            .toArray();
+                .mapToLong(i -> i)
+                .toArray();
         long[] longYs = IntStream.range(0, DEFAULT_NUM)
-            .mapToLong(i -> DEFAULT_NUM / 2 + i)
-            .toArray();
+                .mapToLong(i -> DEFAULT_NUM / 2 + i)
+                .toArray();
         testPto(true, l, longXs, longYs);
         LOGGER.info("------------------------------");
     }
@@ -92,11 +91,11 @@ public class Z2IntegerCircuitTest {
 
     private void testRandom(int l, int num) {
         long[] longXs = IntStream.range(0, num)
-            .mapToLong(i -> LongUtils.randomNonNegative(1L << (l - 1), SECURE_RANDOM))
-            .toArray();
+                .mapToLong(i -> LongUtils.randomNonNegative(1L << (l - 1), SECURE_RANDOM))
+                .toArray();
         long[] longYs = IntStream.range(0, num)
-            .mapToLong(i -> LongUtils.randomNonNegative(1L << (l - 1), SECURE_RANDOM))
-            .toArray();
+                .mapToLong(i -> LongUtils.randomNonNegative(1L << (l - 1), SECURE_RANDOM))
+                .toArray();
         testPto(false, l, longXs, longYs);
         LOGGER.info("------------------------------");
     }
@@ -136,50 +135,6 @@ public class Z2IntegerCircuitTest {
         MpcZ2Vector[] zPlainZ2Vectors = partyThread.getZ();
         BitVector[] z = Arrays.stream(zPlainZ2Vectors).map(MpcZ2Vector::getBitVector).toArray(BitVector[]::new);
         long[] longZs = Zl64Database.create(EnvType.STANDARD, false, z).getData();
-        assertOutput(operator, l, longXs, longYs, longZs);
-    }
-
-    private void assertOutput(Z2IntegerOperator operator, int l, long[] longXs, long[] longYs, long[] longZs) {
-        int num = longXs.length;
-        long andMod = (1L << l) - 1;
-        switch (operator) {
-            case SUB:
-                IntStream.range(0, num).forEach(i -> {
-                    long expectZ = (longXs[i] - longYs[i]) & andMod;
-                    long actualZ = longZs[i];
-                    Assert.assertEquals(expectZ, actualZ);
-                });
-                break;
-            case INCREASE_ONE:
-                IntStream.range(0, num).forEach(i -> {
-                    long expectZ = (longXs[i] + 1) & andMod;
-                    long actualZ = longZs[i];
-                    Assert.assertEquals(expectZ, actualZ);
-                });
-                break;
-            case ADD:
-                IntStream.range(0, num).forEach(i -> {
-                    long expectZ = (longXs[i] + longYs[i]) & andMod;
-                    long actualZ = longZs[i];
-                    Assert.assertEquals(expectZ, actualZ);
-                });
-                break;
-            case LEQ:
-                IntStream.range(0, num).forEach(i -> {
-                    boolean expectZ = (longXs[i] <= longYs[i]);
-                    boolean actualZ = (longZs[i] % 2) == 1;
-                    Assert.assertEquals(expectZ, actualZ);
-                });
-                break;
-            case EQ:
-                IntStream.range(0, num).forEach(i -> {
-                    boolean expectZ = (longXs[i] == longYs[i]);
-                    boolean actualZ = (longZs[i] % 2) == 1;
-                    Assert.assertEquals(expectZ, actualZ);
-                });
-                break;
-            default:
-                throw new IllegalStateException("Invalid " + operator.name() + ": " + operator.name());
-        }
+        Z2CircuitTestUtils.assertOutput(operator, l, longXs, longYs, longZs);
     }
 }

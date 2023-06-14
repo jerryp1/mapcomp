@@ -58,8 +58,8 @@ public class Rrk20MillionaireSender extends AbstractMillionaireParty {
         // q = l / m, where m = 4
         int maxByteL = CommonUtils.getByteLength(maxL);
         int maxQ = maxByteL * 2;
-        z2cSender.init(maxNum * (maxQ - 1), maxNum * (maxQ - 1));
-        lnotSender.init(4, maxNum, maxNum * maxQ);
+        z2cSender.init(maxNum * (maxQ - 1));
+        lnotSender.init(4, maxNum * maxQ);
         stopWatch.stop();
         long initTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
         stopWatch.reset();
@@ -181,16 +181,24 @@ public class Rrk20MillionaireSender extends AbstractMillionaireParty {
         int currentNodeNum = q / 2;
         int lastNodeNum = q;
         for (int i = 1; i <= logQ; i++) {
+            SquareZ2Vector[] leftLts = new SquareZ2Vector[currentNodeNum];
+            SquareZ2Vector[] rightLts = new SquareZ2Vector[currentNodeNum];
+            SquareZ2Vector[] leftEqs = new SquareZ2Vector[currentNodeNum];
+            SquareZ2Vector[] rightEqs = new SquareZ2Vector[currentNodeNum];
             for (int j = 0; j < currentNodeNum; j++) {
-                lts[j] = z2cSender.xor(z2cSender.and(lts[j * 2 + 1], eqs[j * 2]), lts[j * 2]);
-                // equalities computed on lowest significant bits are never used, thus omit computing.
-                if (j < currentNodeNum - 1 || lastNodeNum % 2 == 1) {
-                    eqs[j] = z2cSender.and(eqs[j * 2], eqs[j * 2 + 1]);
-                }
+                leftLts[j] = lts[j * 2];
+                rightLts[j] = lts[j * 2 + 1];
+                leftEqs[j] = eqs[j * 2];
+                rightEqs[j] = eqs[j * 2 + 1];
             }
+            lts = z2cSender.xor(z2cSender.and(rightLts, leftEqs), leftLts);
+            eqs = z2cSender.and(leftEqs, rightEqs);
+
             if (lastNodeNum % 2 == 1) {
-                lts[currentNodeNum] = lts[lastNodeNum - 1];
-                eqs[currentNodeNum] = eqs[lastNodeNum - 1];
+                lts = Arrays.copyOf(lts, currentNodeNum + 1);
+                lts[currentNodeNum] = rightLts[rightLts.length - 1];
+                eqs = Arrays.copyOf(eqs, currentNodeNum + 1);
+                eqs[currentNodeNum] = rightEqs[rightEqs.length - 1];
                 currentNodeNum++;
             }
             lastNodeNum = currentNodeNum;

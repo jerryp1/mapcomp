@@ -164,7 +164,7 @@ public class PeqtTest {
 
     @Test
     public void testParallelLargeNum() {
-        testPto(DEFAULT_L, LARGE_NUM, false);
+        testPto(DEFAULT_L, LARGE_NUM, true);
     }
 
     private void testPto(int l, int num, boolean parallel) {

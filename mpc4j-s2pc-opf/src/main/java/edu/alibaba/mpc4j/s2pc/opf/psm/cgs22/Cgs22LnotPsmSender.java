@@ -57,8 +57,8 @@ public class Cgs22LnotPsmSender extends AbstractPsmSender {
         // q = l / m, where m = 4
         int maxByteL = CommonUtils.getByteLength(maxL);
         int maxQ = maxByteL * 2;
-        z2cSender.init(maxNum * (maxQ - 1) * d, maxNum * (maxQ - 1) * d);
-        lnotSender.init(4, maxNum, maxNum * maxQ);
+        z2cSender.init(maxNum * (maxQ - 1) * d);
+        lnotSender.init(4, maxNum * maxQ);
         stopWatch.stop();
         long initTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
         stopWatch.reset();

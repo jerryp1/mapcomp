@@ -110,7 +110,7 @@ public class SinglePlainZlPartyTest {
 
     private void testDyadicOperator(DyadicAcOperator operator, int num) {
         PlainZlParty plainParty = new PlainZlParty(zl);
-        plainParty.init(num, num);
+        plainParty.init(num);
         // generate x
         ZlVector xVector = ZlVector.createRandom(zl, num, SECURE_RANDOM);
         MpcZlVector xPlainVector = plainParty.create(xVector);
@@ -143,7 +143,7 @@ public class SinglePlainZlPartyTest {
     @SuppressWarnings("SameParameterValue")
     private void testUnaryOperator(UnaryAcOperator operator, int num) {
         PlainZlParty plainParty = new PlainZlParty(zl);
-        plainParty.init(num, num);
+        plainParty.init(num);
         // generate x
         ZlVector xVector = ZlVector.createRandom(zl, num, SECURE_RANDOM);
         MpcZlVector xPlainVector = plainParty.create(xVector);

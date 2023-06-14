@@ -86,7 +86,7 @@ public class PropertiesUtils {
             LOGGER.info("{} is set (equal to the default value): {}", keyword, defaultValue);
             return readString;
         } else {
-            LOGGER.info("{} is set (use the set value), value: {}", keyword, readString);
+            LOGGER.info("{} is set (use the set value): {}", keyword, readString);
             return readString;
         }
     }
@@ -162,6 +162,19 @@ public class PropertiesUtils {
      */
     public static int readInt(Properties properties, String keyword) {
         String intString = readString(properties, keyword);
+        return Integer.parseInt(intString);
+    }
+
+    /**
+     * Reads the int from the properties.
+     *
+     * @param properties   the properties.
+     * @param keyword      the keyword.
+     * @param defaultValue the default value.
+     * @return the int from the properties.
+     */
+    public static int readIntWithDefault(Properties properties, String keyword, int defaultValue) {
+        String intString = readString(properties, keyword, String.valueOf(defaultValue));
         return Integer.parseInt(intString);
     }
 

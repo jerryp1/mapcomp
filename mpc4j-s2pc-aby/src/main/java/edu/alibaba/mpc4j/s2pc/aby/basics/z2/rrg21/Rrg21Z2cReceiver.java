@@ -54,16 +54,16 @@ public class Rrg21Z2cReceiver extends AbstractZ2cParty {
     }
 
     @Override
-    public void init(int maxRoundBitNum, int updateBitNum) throws MpcAbortException {
-        setInitInput(maxRoundBitNum, updateBitNum);
+    public void init(int updateBitNum) throws MpcAbortException {
+        setInitInput(updateBitNum);
         logPhaseInfo(PtoState.INIT_BEGIN);
 
         stopWatch.start();
         // since storing many COT outputs would lead to memory exception, here we generate COT when necessary
-        cotReceiver.init(maxRoundBitNum, updateBitNum);
+        cotReceiver.init(updateBitNum);
         byte[] delta = new byte[CommonConstants.BLOCK_BYTE_LENGTH];
         secureRandom.nextBytes(delta);
-        cotSender.init(delta, maxRoundBitNum, updateBitNum);
+        cotSender.init(delta, updateBitNum);
         stopWatch.stop();
         long initTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
         stopWatch.reset();

@@ -51,7 +51,7 @@ public class Bcp13ShHammingSender extends AbstractHammingParty {
         // init COT sender
         byte[] delta = new byte[CommonConstants.BLOCK_BYTE_LENGTH];
         secureRandom.nextBytes(delta);
-        cotSender.init(delta, maxBitNum, maxBitNum);
+        cotSender.init(delta, maxBitNum);
         stopWatch.stop();
         long initTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
         stopWatch.reset();

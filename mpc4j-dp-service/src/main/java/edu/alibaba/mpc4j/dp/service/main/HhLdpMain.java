@@ -98,10 +98,6 @@ public class HhLdpMain {
      */
     private final double[] windowEpsilons;
     /**
-     * window size (w)
-     */
-    private final int windowSize;
-    /**
      * α
      */
     private final double[] alphas;
@@ -109,6 +105,10 @@ public class HhLdpMain {
      * γ_h
      */
     private final double[] gammaHs;
+    /**
+     * λ_l
+     */
+    private final int lambdaL;
     /**
      * test round
      */
@@ -175,7 +175,8 @@ public class HhLdpMain {
         warmupPercentage = PropertiesUtils.readDouble(properties, "warmup_percentage");
         MathPreconditions.checkNonNegativeInRangeClosed("warmup_percentage", warmupPercentage, 1.0);
         windowEpsilons = PropertiesUtils.readDoubleArray(properties, "window_epsilon");
-        windowSize = PropertiesUtils.readInt(properties, "window_size");
+        lambdaL = PropertiesUtils.readIntWithDefault(properties, "lambda_l", CnrHhgHhLdpConfig.DEFAULT_LAMBDA_L);
+        MathPreconditions.checkPositive("λ_l", lambdaL);
         alphas = PropertiesUtils.readDoubleArrayWithDefault(properties, "alpha");
         gammaHs = PropertiesUtils.readDoubleArrayWithDefault(properties, "gamma_h");
         Arrays.stream(gammaHs).forEach(gammaH -> MathPreconditions.checkNonNegativeInRangeClosed("γ_h", gammaH, 1.0));
@@ -207,6 +208,9 @@ public class HhLdpMain {
         dataStream.close();
         Map<String, Integer> correctCountMap = domainSet.stream()
             .collect(Collectors.toMap(item -> item, streamCounter::query));
+        // total item num
+        long totalItemNum = correctCountMap.values().stream().mapToInt(i -> i).sum();
+        LOGGER.info("Total Item Num : {}", totalItemNum);
         // correct heavy hitter
         List<Map.Entry<String, Integer>> correctOrderedList = new ArrayList<>(correctCountMap.entrySet());
         correctOrderedList.sort(Comparator.comparingInt(Map.Entry::getValue));
@@ -242,6 +246,10 @@ public class HhLdpMain {
 
     double[] getGammaHs() {
         return gammaHs;
+    }
+
+    int getLambdaL() {
+        return lambdaL;
     }
 
     int getWarmupNum() {
@@ -405,7 +413,7 @@ public class HhLdpMain {
         for (int round = 0; round < testRound; round++) {
             FoLdpConfig foLdpConfig = FoLdpFactory.createDefaultConfig(foLdpType, domainSet, windowEpsilon);
             HhLdpConfig hhLdpConfig = new FoHhLdpConfig
-                .Builder(foLdpConfig, k, windowSize)
+                .Builder(foLdpConfig, k)
                 .build();
             HhLdpServer server = HhLdpFactory.createServer(hhLdpConfig);
             HhLdpClient client = HhLdpFactory.createClient(hhLdpConfig);
@@ -419,7 +427,7 @@ public class HhLdpMain {
         HhLdpAggMetrics aggMetrics = new HhLdpAggMetrics(HhLdpType.BGR.name(), windowEpsilon, null, null);
         for (int round = 0; round < testRound; round++) {
             BgrHgHhLdpConfig config = new BgrHgHhLdpConfig
-                .Builder(domainSet, k, windowEpsilon, windowSize)
+                .Builder(domainSet, k, windowEpsilon)
                 .build();
             HhLdpServer server = HhLdpFactory.createServer(config);
             HhLdpClient client = HhLdpFactory.createClient(config);
@@ -433,7 +441,7 @@ public class HhLdpMain {
         HhLdpAggMetrics aggMetrics = new HhLdpAggMetrics(HhLdpType.DSR.name(), windowEpsilon, null, null);
         for (int round = 0; round < testRound; round++) {
             DsrHgHhLdpConfig config = new DsrHgHhLdpConfig
-                .Builder(domainSet, k, windowEpsilon, windowSize)
+                .Builder(domainSet, k, windowEpsilon)
                 .build();
             HhLdpServer server = HhLdpFactory.createServer(config);
             HhLdpClient client = HhLdpFactory.createClient(config);
@@ -448,7 +456,7 @@ public class HhLdpMain {
         for (int round = 0; round < testRound; round++) {
             // get warmup gammaH
             BdrHhgHhLdpConfig warmupConfig = new BdrHhgHhLdpConfig
-                .Builder(domainSet, k, windowEpsilon, windowSize)
+                .Builder(domainSet, k, windowEpsilon)
                 .setAlpha(alpha)
                 .build();
             gammaH += getWarmupHhgHeavyHitterGammaH(warmupConfig);
@@ -459,7 +467,7 @@ public class HhLdpMain {
         );
         for (int round = 0; round < testRound; round++) {
             BdrHhgHhLdpConfig config = new BdrHhgHhLdpConfig
-                .Builder(domainSet, k, windowEpsilon, windowSize)
+                .Builder(domainSet, k, windowEpsilon)
                 .setAlpha(alpha)
                 .build();
             HhLdpServer server = HhLdpFactory.createServer(config);
@@ -476,7 +484,7 @@ public class HhLdpMain {
         );
         for (int round = 0; round < testRound; round++) {
             BdrHhgHhLdpConfig config = new BdrHhgHhLdpConfig
-                .Builder(domainSet, k, windowEpsilon, windowSize)
+                .Builder(domainSet, k, windowEpsilon)
                 .setAlpha(alpha)
                 .setGammaH(gammaH)
                 .build();
@@ -493,9 +501,9 @@ public class HhLdpMain {
         for (int round = 0; round < testRound; round++) {
             // get warmup gammaH
             CnrHhgHhLdpConfig warmupConfig = new CnrHhgHhLdpConfig
-                .Builder(domainSet, k, windowEpsilon, windowSize)
+                .Builder(domainSet, k, windowEpsilon)
                 .setAlpha(alpha)
-                .setLambdaL(windowSize)
+                .setLambdaL(lambdaL)
                 .build();
             gammaH += getWarmupHhgHeavyHitterGammaH(warmupConfig);
         }
@@ -505,9 +513,9 @@ public class HhLdpMain {
         );
         for (int round = 0; round < testRound; round++) {
             CnrHhgHhLdpConfig config = new CnrHhgHhLdpConfig
-                .Builder(domainSet, k, windowEpsilon, windowSize)
+                .Builder(domainSet, k, windowEpsilon)
                 .setAlpha(alpha)
-                .setLambdaL(windowSize)
+                .setLambdaL(lambdaL)
                 .build();
             HhLdpServer server = HhLdpFactory.createServer(config);
             HhLdpClient client = HhLdpFactory.createClient(config);
@@ -523,10 +531,10 @@ public class HhLdpMain {
         );
         for (int round = 0; round < testRound; round++) {
             CnrHhgHhLdpConfig config = new CnrHhgHhLdpConfig
-                .Builder(domainSet, k, windowEpsilon, windowSize)
+                .Builder(domainSet, k, windowEpsilon)
                 .setAlpha(alpha)
                 .setGammaH(gammaH)
-                .setLambdaL(windowSize)
+                .setLambdaL(lambdaL)
                 .build();
             HhLdpServer server = HhLdpFactory.createServer(config);
             HhLdpClient client = HhLdpFactory.createClient(config);

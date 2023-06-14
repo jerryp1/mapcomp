@@ -95,11 +95,10 @@ public interface MpcZ2cParty {
     /**
      * inits the protocol.
      *
-     * @param maxRoundBitNum maximum number of bits in round.
      * @param updateBitNum   total number of bits for updates.
      * @throws MpcAbortException if the protocol is abort.
      */
-    void init(int maxRoundBitNum, int updateBitNum) throws MpcAbortException;
+    void init(int updateBitNum) throws MpcAbortException;
 
     /**
      * Shares its own vector.

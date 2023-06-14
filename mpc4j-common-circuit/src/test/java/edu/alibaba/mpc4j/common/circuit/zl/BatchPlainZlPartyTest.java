@@ -121,7 +121,7 @@ public class BatchPlainZlPartyTest {
 
     private void testDyadicOperator(DyadicAcOperator operator, int num) {
         PlainZlParty plainZlParty = new PlainZlParty(zl);
-        plainZlParty.init(num * VECTOR_LENGTH, num * VECTOR_LENGTH);
+        plainZlParty.init(num * VECTOR_LENGTH);
         // generate x
         ZlVector[] xVectors = IntStream.range(0, VECTOR_LENGTH)
             .mapToObj(index -> ZlVector.createRandom(zl, num, SECURE_RANDOM))
@@ -170,7 +170,7 @@ public class BatchPlainZlPartyTest {
     @SuppressWarnings("SameParameterValue")
     private void testUnaryOperator(UnaryAcOperator operator, int num) {
         PlainZlParty plainZlParty = new PlainZlParty(zl);
-        plainZlParty.init(num * VECTOR_LENGTH, num * VECTOR_LENGTH);
+        plainZlParty.init(num * VECTOR_LENGTH);
         // generate x
         ZlVector[] xVectors = IntStream.range(0, VECTOR_LENGTH)
             .mapToObj(index -> ZlVector.createRandom(zl, num, SECURE_RANDOM))

@@ -57,8 +57,8 @@ public class CacheZ2MtgSender extends AbstractZ2MtgParty {
     }
 
     @Override
-    public void init(int maxRoundNum, int updateNum) throws MpcAbortException {
-        setInitInput(maxRoundNum, updateNum);
+    public void init(int updateNum) throws MpcAbortException {
+        setInitInput(updateNum);
         logPhaseInfo(PtoState.INIT_BEGIN);
 
         stopWatch.start();
