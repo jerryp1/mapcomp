@@ -104,6 +104,7 @@ public class Z2IntegerCircuitTest {
         testPto(constant, Z2IntegerOperator.SUB, l, longXs, longYs);
         testPto(constant, Z2IntegerOperator.INCREASE_ONE, l, longXs, longYs);
         testPto(constant, Z2IntegerOperator.ADD, l, longXs, longYs);
+        testPto(constant, Z2IntegerOperator.MUL, l, longXs, longYs);
         testPto(constant, Z2IntegerOperator.LEQ, l, longXs, longYs);
         testPto(constant, Z2IntegerOperator.EQ, l, longXs, longYs);
     }
@@ -124,7 +125,7 @@ public class Z2IntegerCircuitTest {
         PlainZ2Vector[] yPlainZ2Vectors = Arrays.stream(yBitVector).map(PlainZ2Vector::create).toArray(PlainZ2Vector[]::new);
         // init the protocol
         PlainZ2cParty party = new PlainZ2cParty();
-        Z2IntegerCircuitParty partyThread = new Z2IntegerCircuitParty(party, operator, xPlainZ2Vectors, yPlainZ2Vectors);
+        Z2IntegerCircuitParty partyThread = new Z2IntegerCircuitParty(party, operator, xPlainZ2Vectors, yPlainZ2Vectors, new Z2CircuitConfig.Builder().build());
         StopWatch stopWatch = new StopWatch();
         // execute the circuit
         stopWatch.start();

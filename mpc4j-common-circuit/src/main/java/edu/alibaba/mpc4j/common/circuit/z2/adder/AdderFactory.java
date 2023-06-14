@@ -1,6 +1,6 @@
 package edu.alibaba.mpc4j.common.circuit.z2.adder;
 
-import edu.alibaba.mpc4j.common.circuit.z2.MpcZ2cParty;
+import edu.alibaba.mpc4j.common.circuit.z2.Z2IntegerCircuit;
 
 /**
  * Adder Factory.
@@ -58,22 +58,22 @@ public class AdderFactory {
     /**
      * Creates a adder.
      *
-     * @param party party.
-     * @param type  type of adder.
+     * @param type type of adder.
+     * @param type z2 integer circuit.
      * @return a adder.
      */
-    public static Adder createAdder(MpcZ2cParty party, AdderTypes type) {
+    public static Adder createAdder(AdderTypes type, Z2IntegerCircuit circuit) {
         switch (type) {
             case RIPPLE_CARRY:
-                return new RippleCarryAdder(party);
+                return new RippleCarryAdder(circuit);
             case SERIAL:
-                return new SerialAdder(party);
+                return new SerialAdder(circuit);
             case SKLANSKY:
-                return new SklanskyAdder(party);
+                return new SklanskyAdder(circuit);
             case BRENT_KUNG:
-                return new BrentKungAdder(party);
+                return new BrentKungAdder(circuit);
             case KOGGE_STONE:
-                return new KoggeStoneAdder(party);
+                return new KoggeStoneAdder(circuit);
             default:
                 throw new IllegalArgumentException("Invalid " + AdderFactory.AdderTypes.class.getSimpleName() + ": " + type.name());
         }

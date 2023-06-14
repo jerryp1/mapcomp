@@ -1,7 +1,6 @@
 package edu.alibaba.mpc4j.common.circuit.z2.multiplier;
 
-import edu.alibaba.mpc4j.common.circuit.z2.MpcZ2cParty;
-import edu.alibaba.mpc4j.common.circuit.z2.adder.Adder;
+import edu.alibaba.mpc4j.common.circuit.z2.Z2IntegerCircuit;
 
 /**
  * Multiplier Factory.
@@ -30,14 +29,14 @@ public class MultiplierFactory {
     /**
      * Creates a multiplier.
      *
-     * @param party party.
-     * @param type  type of adder.
+     * @param type    type of adder.
+     * @param circuit z2 integer circuit.
      * @return a adder.
      */
-    public static Multiplier createMultiplier(MpcZ2cParty party, MultiplierTypes type, Adder adder) {
+    public static Multiplier createMultiplier(MultiplierTypes type, Z2IntegerCircuit circuit) {
         switch (type) {
             case SHIFT_ADD:
-                return new ShiftAddMultiplier(party, adder);
+                return new ShiftAddMultiplier(circuit);
             default:
                 throw new IllegalArgumentException("Invalid " + MultiplierTypes.class.getSimpleName() + ": " + type.name());
         }

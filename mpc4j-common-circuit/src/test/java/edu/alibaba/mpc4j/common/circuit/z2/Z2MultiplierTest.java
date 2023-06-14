@@ -63,7 +63,7 @@ public class Z2MultiplierTest {
         // Shift/add multiplier
         configurations.add(new Object[]{
                 MultiplierFactory.MultiplierTypes.SHIFT_ADD + " (shift/add multiplier)",
-                new Z2CircuitConfig.Builder().setMultiplierTypes(MultiplierFactory.MultiplierTypes.SHIFT_ADD).build()
+                new Z2CircuitConfig.Builder().setMultiplierType(MultiplierFactory.MultiplierTypes.SHIFT_ADD).build()
         });
         return configurations;
     }

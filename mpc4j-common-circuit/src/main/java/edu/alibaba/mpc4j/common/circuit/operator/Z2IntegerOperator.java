@@ -31,4 +31,8 @@ public enum Z2IntegerOperator {
      * ==
      */
     EQ,
+    /**
+     * sort
+     */
+    SORT,
 }

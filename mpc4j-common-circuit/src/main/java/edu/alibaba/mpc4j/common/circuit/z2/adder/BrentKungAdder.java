@@ -1,6 +1,6 @@
 package edu.alibaba.mpc4j.common.circuit.z2.adder;
 
-import edu.alibaba.mpc4j.common.circuit.z2.MpcZ2cParty;
+import edu.alibaba.mpc4j.common.circuit.z2.Z2IntegerCircuit;
 import edu.alibaba.mpc4j.common.rpc.MpcAbortException;
 import edu.alibaba.mpc4j.common.tool.utils.LongUtils;
 
@@ -18,8 +18,8 @@ import java.math.BigInteger;
  */
 public class BrentKungAdder extends AbstractParallelPrefixAdder {
 
-    public BrentKungAdder(MpcZ2cParty party) {
-        super(party);
+    public BrentKungAdder(Z2IntegerCircuit circuit) {
+        super(circuit.getParty());
     }
 
     @Override

@@ -1,7 +1,7 @@
 package edu.alibaba.mpc4j.common.circuit.z2.multiplier;
 
 import edu.alibaba.mpc4j.common.circuit.z2.MpcZ2Vector;
-import edu.alibaba.mpc4j.common.circuit.z2.MpcZ2cParty;
+import edu.alibaba.mpc4j.common.circuit.z2.Z2IntegerCircuit;
 import edu.alibaba.mpc4j.common.circuit.z2.adder.Adder;
 import edu.alibaba.mpc4j.common.rpc.MpcAbortException;
 
@@ -20,9 +20,9 @@ public class ShiftAddMultiplier extends AbstractMultiplier {
      */
     Adder adder;
 
-    public ShiftAddMultiplier(MpcZ2cParty party, Adder adder) {
-        super(party);
-        this.adder = adder;
+    public ShiftAddMultiplier(Z2IntegerCircuit circuit) {
+        super(circuit.getParty());
+        this.adder = circuit.getAdder();
     }
 
     @Override
