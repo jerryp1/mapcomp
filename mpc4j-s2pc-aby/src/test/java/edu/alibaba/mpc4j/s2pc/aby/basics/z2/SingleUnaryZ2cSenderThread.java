@@ -71,7 +71,7 @@ class SingleUnaryZ2cSenderThread extends Thread {
     @Override
     public void run() {
         try {
-            sender.init(bitNum, bitNum);
+            sender.init(bitNum);
             // set inputs
             MpcZ2Vector xPlainMpcVector = sender.create(xVector);
             MpcZ2Vector x0SecretMpcVector = sender.shareOwn(xVector);

@@ -141,4 +141,40 @@ public class ZlMtgTest extends AbstractTwoPartyPtoTest {
             e.printStackTrace();
         }
     }
+
+    @Test
+    public void testLessUpdate() {
+        int num = DEFAULT_NUM;
+        ZlMtgParty sender = ZlMtgFactory.createSender(firstRpc, secondRpc.ownParty(), config);
+        ZlMtgParty receiver = ZlMtgFactory.createReceiver(secondRpc, firstRpc.ownParty(), config);
+        int randomTaskId = Math.abs(SECURE_RANDOM.nextInt());
+        sender.setTaskId(randomTaskId);
+        receiver.setTaskId(randomTaskId);
+        try {
+            LOGGER.info("-----test {} start-----", sender.getPtoDesc().getPtoName());
+            ZlMtgPartyThread senderThread = new ZlMtgPartyThread(sender, num, num / 2 - 1);
+            ZlMtgPartyThread receiverThread = new ZlMtgPartyThread(receiver, num, num / 2 - 1);
+            STOP_WATCH.start();
+            // start
+            senderThread.start();
+            receiverThread.start();
+            // stop
+            senderThread.join();
+            receiverThread.join();
+            STOP_WATCH.stop();
+            long time = STOP_WATCH.getTime(TimeUnit.MILLISECONDS);
+            STOP_WATCH.reset();
+            // verify
+            ZlTriple senderOutput = senderThread.getOutput();
+            ZlTriple receiverOutput = receiverThread.getOutput();
+            ZlMtgTestUtils.assertOutput(config.getZl(), num, senderOutput, receiverOutput);
+            printAndResetRpc(time);
+            // destroy
+            new Thread(sender::destroy).start();
+            new Thread(receiver::destroy).start();
+            LOGGER.info("-----test {} end-----", sender.getPtoDesc().getPtoName());
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+    }
 }

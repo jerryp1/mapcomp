@@ -1,7 +1,7 @@
 package edu.alibaba.mpc4j.s2pc.aby.operator.row.greater.zl.rrk20;
 
 import edu.alibaba.mpc4j.common.rpc.desc.SecurityModel;
-import edu.alibaba.mpc4j.common.tool.EnvType;
+import edu.alibaba.mpc4j.common.rpc.pto.AbstractMultiPartyPtoConfig;
 import edu.alibaba.mpc4j.common.tool.galoisfield.zl.Zl;
 import edu.alibaba.mpc4j.s2pc.aby.basics.zl.ZlcConfig;
 import edu.alibaba.mpc4j.s2pc.aby.basics.zl.ZlcFactory;
@@ -18,7 +18,7 @@ import edu.alibaba.mpc4j.s2pc.aby.operator.row.mux.zl.ZlMuxFactory;
  * @author Li Peng
  * @date 2023/5/22
  */
-public class Rrk20ZlGreaterConfig implements ZlGreaterConfig {
+public class Rrk20ZlGreaterConfig extends AbstractMultiPartyPtoConfig implements ZlGreaterConfig {
     /**
      * Zl circuit config.
      */
@@ -32,7 +32,8 @@ public class Rrk20ZlGreaterConfig implements ZlGreaterConfig {
      */
     private final ZlDreluConfig zlDreluConfig;
 
-    private Rrk20ZlGreaterConfig(Rrk20ZlGreaterConfig.Builder builder) {
+    private Rrk20ZlGreaterConfig(Builder builder) {
+        super(SecurityModel.SEMI_HONEST, builder.zlcConfig, builder.zlMuxConfig, builder.zlDreluConfig);
         zlcConfig = builder.zlcConfig;
         zlMuxConfig = builder.zlMuxConfig;
         zlDreluConfig = builder.zlDreluConfig;
@@ -58,33 +59,6 @@ public class Rrk20ZlGreaterConfig implements ZlGreaterConfig {
     @Override
     public Zl getZl() {
         return zlcConfig.getZl();
-    }
-
-    @Override
-    public void setEnvType(EnvType envType) {
-        zlcConfig.setEnvType(envType);
-        zlMuxConfig.setEnvType(envType);
-        zlDreluConfig.setEnvType(envType);
-    }
-
-    @Override
-    public EnvType getEnvType() {
-        return zlcConfig.getEnvType();
-    }
-
-    @Override
-    public SecurityModel getSecurityModel() {
-        SecurityModel securityModel = SecurityModel.SEMI_HONEST;
-        if (zlcConfig.getSecurityModel().compareTo(securityModel) < 0) {
-            securityModel = zlcConfig.getSecurityModel();
-        }
-        if (zlMuxConfig.getSecurityModel().compareTo(securityModel) < 0) {
-            securityModel = zlMuxConfig.getSecurityModel();
-        }
-        if (zlDreluConfig.getSecurityModel().compareTo(securityModel) < 0) {
-            securityModel = zlDreluConfig.getSecurityModel();
-        }
-        return securityModel;
     }
 
     public static class Builder implements org.apache.commons.lang3.builder.Builder<Rrk20ZlGreaterConfig> {

@@ -90,52 +90,52 @@ public class NcCotTest extends AbstractTwoPartyPtoTest {
         // CRR21 (Malicious, Regular-Index, Silver11)
         configurations.add(new Object[]{
             NcCotType.CRR21.name() + " (" + SecurityModel.MALICIOUS + " (Regular-Index, Silver 11)",
-            new Crr21NcCotConfig.Builder().setCodeType(LdpcCreatorUtils.CodeType.SILVER_11)
+            new Crr21NcCotConfig.Builder(SecurityModel.MALICIOUS).setCodeType(LdpcCreatorUtils.CodeType.SILVER_11)
                 .setMspCotConfig(new Bcg19RegMspCotConfig.Builder(SecurityModel.MALICIOUS).build())
                 .build(),
         });
         // CRR21 (Regular-Index, Silver11)
         configurations.add(new Object[]{
             NcCotType.CRR21.name() + " (" + SecurityModel.SEMI_HONEST + ", Regular-Index, Silver 11)",
-            new Crr21NcCotConfig.Builder().setCodeType(LdpcCreatorUtils.CodeType.SILVER_11)
+            new Crr21NcCotConfig.Builder(SecurityModel.SEMI_HONEST).setCodeType(LdpcCreatorUtils.CodeType.SILVER_11)
                 .setMspCotConfig(new Bcg19RegMspCotConfig.Builder(SecurityModel.SEMI_HONEST).build())
                 .build(),
         });
         // CRR21 (Unique-Index, Silver11)
         configurations.add(new Object[]{
             NcCotType.CRR21.name() + " (" + SecurityModel.MALICIOUS + ", Unique-Index, Silver 11)",
-            new Crr21NcCotConfig.Builder().setCodeType(LdpcCreatorUtils.CodeType.SILVER_11)
+            new Crr21NcCotConfig.Builder(SecurityModel.MALICIOUS).setCodeType(LdpcCreatorUtils.CodeType.SILVER_11)
                 .setMspCotConfig(new Ywl20UniMspCotConfig.Builder(SecurityModel.MALICIOUS).build())
                 .build(),
         });
         configurations.add(new Object[]{
             NcCotType.CRR21.name() + " (" + SecurityModel.SEMI_HONEST + ", Unique-Index, Silver 11)",
-            new Crr21NcCotConfig.Builder().setCodeType(LdpcCreatorUtils.CodeType.SILVER_11)
+            new Crr21NcCotConfig.Builder(SecurityModel.SEMI_HONEST).setCodeType(LdpcCreatorUtils.CodeType.SILVER_11)
                 .setMspCotConfig(new Ywl20UniMspCotConfig.Builder(SecurityModel.SEMI_HONEST).build())
                 .build(),
         });
         // CRR21 (Regular-Index, Silver5)
         configurations.add(new Object[]{
             NcCotType.CRR21.name() + " (" + SecurityModel.MALICIOUS + ", Regular-Index, Silver 5)",
-            new Crr21NcCotConfig.Builder().setCodeType(LdpcCreatorUtils.CodeType.SILVER_5)
+            new Crr21NcCotConfig.Builder(SecurityModel.MALICIOUS).setCodeType(LdpcCreatorUtils.CodeType.SILVER_5)
                 .setMspCotConfig(new Bcg19RegMspCotConfig.Builder(SecurityModel.MALICIOUS).build()).build(),
         });
         configurations.add(new Object[]{
             NcCotType.CRR21.name() + " (" + SecurityModel.SEMI_HONEST + ", Regular-Index, Silver 5)",
-            new Crr21NcCotConfig.Builder().setCodeType(LdpcCreatorUtils.CodeType.SILVER_5)
+            new Crr21NcCotConfig.Builder(SecurityModel.SEMI_HONEST).setCodeType(LdpcCreatorUtils.CodeType.SILVER_5)
                 .setMspCotConfig(new Bcg19RegMspCotConfig.Builder(SecurityModel.SEMI_HONEST).build())
                 .build(),
         });
         // CRR21 (Unique-Index, Silver5)
         configurations.add(new Object[]{
             NcCotType.CRR21.name() + " (" + SecurityModel.MALICIOUS + ", Unique-Index, Silver 5)",
-            new Crr21NcCotConfig.Builder().setCodeType(LdpcCreatorUtils.CodeType.SILVER_5)
+            new Crr21NcCotConfig.Builder(SecurityModel.MALICIOUS).setCodeType(LdpcCreatorUtils.CodeType.SILVER_5)
                 .setMspCotConfig(new Ywl20UniMspCotConfig.Builder(SecurityModel.MALICIOUS).build()).build(),
         });
         // CRR21 (Semi-honest, Unique-Index, Silver5)
         configurations.add(new Object[]{
             NcCotType.CRR21.name() + " (" + SecurityModel.SEMI_HONEST + ", Unique-Index, Silver 5)",
-            new Crr21NcCotConfig.Builder().setCodeType(LdpcCreatorUtils.CodeType.SILVER_5)
+            new Crr21NcCotConfig.Builder(SecurityModel.SEMI_HONEST).setCodeType(LdpcCreatorUtils.CodeType.SILVER_5)
                 .setMspCotConfig(new Ywl20UniMspCotConfig.Builder(SecurityModel.SEMI_HONEST).build()).build(),
         });
 

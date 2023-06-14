@@ -88,7 +88,7 @@ public class Zcl22SkePsuClient extends AbstractPsuClient {
 
         stopWatch.start();
         // 涉及三元组部分的初始化
-        z2cReceiver.init(maxServerElementSize, maxServerElementSize * CommonConstants.BLOCK_BIT_LENGTH);
+        z2cReceiver.init(maxServerElementSize * CommonConstants.BLOCK_BIT_LENGTH);
         oprpSender.init(maxServerElementSize);
         stopWatch.stop();
         long bcTime = stopWatch.getTime(TimeUnit.MILLISECONDS);

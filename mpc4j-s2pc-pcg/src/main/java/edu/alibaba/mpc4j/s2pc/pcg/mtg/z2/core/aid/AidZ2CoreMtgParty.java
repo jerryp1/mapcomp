@@ -86,7 +86,6 @@ public class AidZ2CoreMtgParty extends AbstractThreePartyPto implements Z2CoreMt
 
         stopWatch.start();
         List<byte[]> requestQueryPayload = new LinkedList<>();
-        requestQueryPayload.add(IntUtils.intToByteArray(TrustDealType.Z2_TRIPLE.ordinal()));
         requestQueryPayload.add(IntUtils.intToByteArray(num));
         DataPacketHeader requestQueryHeader = new DataPacketHeader(
             encodeTaskId, getPtoDesc().getPtoId(), TrustDealPtoDesc.AidPtoStep.REQUEST_QUERY.ordinal(), extraInfo,

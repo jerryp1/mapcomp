@@ -97,7 +97,7 @@ class SingleDyadicZlcSenderThread extends Thread {
     @Override
     public void run() {
         try {
-            sender.init(num, num);
+            sender.init(num);
             // generate x and y
             MpcZlVector xPlainMpcVector = sender.create(xVector);
             MpcZlVector yPlainMpcVector = sender.create(yVector);

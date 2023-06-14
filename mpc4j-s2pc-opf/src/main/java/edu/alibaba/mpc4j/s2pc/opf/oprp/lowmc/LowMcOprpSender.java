@@ -65,10 +65,7 @@ public class LowMcOprpSender extends AbstractOprpSender {
 
         stopWatch.start();
         // 初始化BC协议
-        z2cSender.init(
-            LowMcUtils.SBOX_NUM * 3 * maxRoundBatchSize,
-            LowMcUtils.SBOX_NUM * 3 * maxRoundBatchSize * LowMcUtils.ROUND
-        );
+        z2cSender.init(LowMcUtils.SBOX_NUM * 3 * maxRoundBatchSize * LowMcUtils.ROUND);
         stopWatch.stop();
         long initBcTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
         stopWatch.reset();

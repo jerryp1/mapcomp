@@ -1,7 +1,7 @@
 package edu.alibaba.mpc4j.s2pc.pcg.mtg.zl.core;
 
 import edu.alibaba.mpc4j.common.rpc.MpcAbortException;
-import edu.alibaba.mpc4j.common.rpc.pto.TwoPartyPto;
+import edu.alibaba.mpc4j.common.rpc.pto.MultiPartyPto;
 import edu.alibaba.mpc4j.s2pc.pcg.mtg.zl.ZlTriple;
 
 /**
@@ -10,7 +10,7 @@ import edu.alibaba.mpc4j.s2pc.pcg.mtg.zl.ZlTriple;
  * @author Weiran Liu
  * @date 2022/8/11
  */
-public interface ZlCoreMtgParty extends TwoPartyPto {
+public interface ZlCoreMtgParty extends MultiPartyPto {
     /**
      * Inits the protocol.
      *

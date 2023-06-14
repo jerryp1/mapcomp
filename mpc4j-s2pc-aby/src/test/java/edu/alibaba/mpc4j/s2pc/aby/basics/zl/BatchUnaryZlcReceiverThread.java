@@ -57,7 +57,7 @@ class BatchUnaryZlcReceiverThread extends Thread {
     @Override
     public void run() {
         try {
-            receiver.init(totalNum, totalNum);
+            receiver.init(totalNum);
             // set inputs
             MpcZlVector[] xPlainMpcVectors = Arrays.stream(xVectors)
                 .map(receiver::create)

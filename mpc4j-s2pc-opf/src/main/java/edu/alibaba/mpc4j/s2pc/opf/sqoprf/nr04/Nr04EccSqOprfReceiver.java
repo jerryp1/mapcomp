@@ -75,7 +75,7 @@ public class Nr04EccSqOprfReceiver extends AbstractSqOprfReceiver {
         stopWatch.start();
         // init COTs, where max number of OTs = N_C^{max} * κ
         int maxCotNum = maxBatchSize * CommonConstants.BLOCK_BIT_LENGTH;
-        cotReceiver.init(maxCotNum, maxCotNum);
+        cotReceiver.init(maxCotNum);
         stopWatch.stop();
         long cotTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
         stopWatch.reset();

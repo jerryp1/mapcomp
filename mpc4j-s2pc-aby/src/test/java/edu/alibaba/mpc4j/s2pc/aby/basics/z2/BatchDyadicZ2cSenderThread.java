@@ -107,7 +107,7 @@ class BatchDyadicZ2cSenderThread extends Thread {
     @Override
     public void run() {
         try {
-            sender.init(totalBitNum, totalBitNum);
+            sender.init(totalBitNum);
             // set inputs
             MpcZ2Vector[] xPlainMpcVectors = Arrays.stream(xVectors)
                 .map(sender::create)

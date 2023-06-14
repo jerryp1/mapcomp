@@ -168,4 +168,50 @@ public class LnotTest extends AbstractTwoPartyPtoTest {
             e.printStackTrace();
         }
     }
+
+    @Test
+    public void testLessUpdate() {
+        int l = DEFAULT_L;
+        int num = DEFAULT_NUM;
+        LnotSender sender = LnotFactory.createSender(firstRpc, secondRpc.ownParty(), config);
+        LnotReceiver receiver = LnotFactory.createReceiver(secondRpc, firstRpc.ownParty(), config);
+        int randomTaskId = Math.abs(SECURE_RANDOM.nextInt());
+        sender.setTaskId(randomTaskId);
+        receiver.setTaskId(randomTaskId);
+        // generate the input
+        int n = (1 << l);
+        int[] choiceArray = IntStream.range(0, num)
+            .map(index -> SECURE_RANDOM.nextInt(n))
+            .toArray();
+        try {
+            LOGGER.info("-----test {} start-----", sender.getPtoDesc().getPtoName());
+            LnotSenderThread senderThread = new LnotSenderThread(sender, l, num, num / 2 - 1);
+            LnotReceiverThread receiverThread = new LnotReceiverThread(receiver, l, choiceArray, num / 2 - 1);
+            STOP_WATCH.start();
+            // start
+            senderThread.start();
+            receiverThread.start();
+            // stop
+            senderThread.join();
+            receiverThread.join();
+            STOP_WATCH.stop();
+            long time = STOP_WATCH.getTime(TimeUnit.MILLISECONDS);
+            STOP_WATCH.reset();
+            // verify
+            LnotSenderOutput senderOutput = senderThread.getSenderOutput();
+            LnotReceiverOutput receiverOutput = receiverThread.getReceiverOutput();
+            LnotTestUtils.assertOutput(l, num, senderOutput, receiverOutput);
+            int[] actualChoiceArray = IntStream.range(0, num)
+                .map(receiverOutput::getChoice)
+                .toArray();
+            Assert.assertArrayEquals(choiceArray, actualChoiceArray);
+            printAndResetRpc(time);
+            // destroy
+            new Thread(sender::destroy).start();
+            new Thread(receiver::destroy).start();
+            LOGGER.info("-----test {} end-----", sender.getPtoDesc().getPtoName());
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+    }
 }

@@ -52,7 +52,7 @@ public class Rrk20ZlGreaterReceiver extends AbstractZlGreaterParty {
         logPhaseInfo(PtoState.INIT_BEGIN);
 
         stopWatch.start();
-        zlcReceiver.init(maxL * maxNum, maxL * maxNum);
+        zlcReceiver.init(maxL * maxNum);
         zlMuxReceiver.init(maxNum);
         zlDreluReceiver.init(maxL, maxNum);
         stopWatch.stop();
