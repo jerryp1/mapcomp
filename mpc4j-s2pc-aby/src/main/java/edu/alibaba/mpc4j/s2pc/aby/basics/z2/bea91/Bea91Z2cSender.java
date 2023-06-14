@@ -44,12 +44,12 @@ public class Bea91Z2cSender extends AbstractZ2cParty {
     }
 
     @Override
-    public void init(int maxRoundBitNum, int updateBitNum) throws MpcAbortException {
-        setInitInput(maxRoundBitNum, updateBitNum);
+    public void init(int updateBitNum) throws MpcAbortException {
+        setInitInput(updateBitNum);
         logPhaseInfo(PtoState.INIT_BEGIN);
 
         stopWatch.start();
-        mtgSender.init(maxRoundBitNum, updateBitNum);
+        mtgSender.init(updateBitNum);
         stopWatch.stop();
         long initTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
         stopWatch.reset();

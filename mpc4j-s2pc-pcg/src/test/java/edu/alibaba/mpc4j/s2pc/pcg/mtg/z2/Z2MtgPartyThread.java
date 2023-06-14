@@ -34,7 +34,7 @@ class Z2MtgPartyThread extends Thread {
     @Override
     public void run() {
         try {
-            party.init(num, num);
+            party.init(num);
             output = party.generate(num);
         } catch (MpcAbortException e) {
             e.printStackTrace();

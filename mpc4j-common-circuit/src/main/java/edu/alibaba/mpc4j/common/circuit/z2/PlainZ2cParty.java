@@ -13,10 +13,6 @@ import java.util.Arrays;
  * @date 2023/4/21
  */
 public class PlainZ2cParty implements MpcZ2cParty {
-    /**
-     * maximum number of bits in round.
-     */
-    private int maxRoundBitNum;
 
     @Override
     public MpcZ2Vector create(BitVector bitVector) {
@@ -39,14 +35,13 @@ public class PlainZ2cParty implements MpcZ2cParty {
     }
 
     @Override
-    public void init(int maxRoundBitNum, int updateBitNum) {
-        MathPreconditions.checkPositiveInRangeClosed("maxRoundBitNum", maxRoundBitNum, updateBitNum);
-        this.maxRoundBitNum = maxRoundBitNum;
+    public void init(int updateBitNum) {
+        MathPreconditions.checkPositive("updateBitNum", updateBitNum);
     }
 
     @Override
     public PlainZ2Vector shareOwn(BitVector xi) {
-        MathPreconditions.checkPositiveInRangeClosed("bitNum", xi.bitNum(), maxRoundBitNum);
+        MathPreconditions.checkPositive("bitNum", xi.bitNum());
         // do nothing
         return null;
     }
@@ -54,14 +49,14 @@ public class PlainZ2cParty implements MpcZ2cParty {
     @Override
     public MpcZ2Vector[] shareOwn(BitVector[] xiArray) {
         int totalBitNum = Arrays.stream(xiArray).mapToInt(BitVector::bitNum).sum();
-        MathPreconditions.checkPositiveInRangeClosed("totalBitNum", totalBitNum, maxRoundBitNum);
+        MathPreconditions.checkPositive("totalBitNum", totalBitNum);
         // do nothing
         return null;
     }
 
     @Override
     public MpcZ2Vector shareOther(int bitNum) throws MpcAbortException {
-        MathPreconditions.checkPositiveInRangeClosed("bitNum", bitNum, maxRoundBitNum);
+        MathPreconditions.checkPositive("bitNum", bitNum);
         // do nothing
         return null;
     }
@@ -69,14 +64,14 @@ public class PlainZ2cParty implements MpcZ2cParty {
     @Override
     public MpcZ2Vector[] shareOther(int[] bitNums) throws MpcAbortException {
         int totalBitNum = Arrays.stream(bitNums).sum();
-        MathPreconditions.checkPositiveInRangeClosed("totalBitNum", totalBitNum, maxRoundBitNum);
+        MathPreconditions.checkPositive("totalBitNum", totalBitNum);
         // do nothing
         return null;
     }
 
     @Override
     public BitVector revealOwn(MpcZ2Vector xi) throws MpcAbortException {
-        MathPreconditions.checkPositiveInRangeClosed("bitNum", xi.bitNum(), maxRoundBitNum);
+        MathPreconditions.checkPositive("bitNum", xi.bitNum());
         // do nothing
         return null;
     }
@@ -84,21 +79,21 @@ public class PlainZ2cParty implements MpcZ2cParty {
     @Override
     public BitVector[] revealOwn(MpcZ2Vector[] xiArray) throws MpcAbortException {
         int totalBitNum = Arrays.stream(xiArray).mapToInt(MpcZ2Vector::bitNum).sum();
-        MathPreconditions.checkPositiveInRangeClosed("totalBitNum", totalBitNum, maxRoundBitNum);
+        MathPreconditions.checkPositive("totalBitNum", totalBitNum);
         // do nothing
         return null;
     }
 
     @Override
     public void revealOther(MpcZ2Vector xi) {
-        MathPreconditions.checkPositiveInRangeClosed("bitNum", xi.bitNum(), maxRoundBitNum);
+        MathPreconditions.checkPositive("bitNum", xi.bitNum());
         // do nothing
     }
 
     @Override
     public void revealOther(MpcZ2Vector[] xiArray) {
         int totalBitNum = Arrays.stream(xiArray).mapToInt(MpcZ2Vector::bitNum).sum();
-        MathPreconditions.checkPositiveInRangeClosed("totalBitNum", totalBitNum, maxRoundBitNum);
+        MathPreconditions.checkPositive("totalBitNum", totalBitNum);
         // do nothing
     }
 

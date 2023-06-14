@@ -58,7 +58,7 @@ public class Rrk20MillionaireSender extends AbstractMillionaireParty {
         // q = l / m, where m = 4
         int maxByteL = CommonUtils.getByteLength(maxL);
         int maxQ = maxByteL * 2;
-        z2cSender.init(maxNum * (maxQ - 1), maxNum * (maxQ - 1));
+        z2cSender.init(maxNum * (maxQ - 1));
         lnotSender.init(4, maxNum, maxNum * maxQ);
         stopWatch.stop();
         long initTime = stopWatch.getTime(TimeUnit.MILLISECONDS);

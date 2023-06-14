@@ -61,7 +61,7 @@ public class Egk20NoMacZlDaBitGenSender extends AbstractZlDaBitGenParty {
 
         stopWatch.start();
         zlcSender.init(maxNum, maxNum);
-        z2cSender.init(maxNum, maxNum);
+        z2cSender.init(maxNum);
         stopWatch.stop();
         long initTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
         stopWatch.reset();

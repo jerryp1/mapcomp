@@ -97,7 +97,7 @@ class SingleDyadicZ2cSenderThread extends Thread {
     @Override
     public void run() {
         try {
-            sender.init(bitNum, bitNum);
+            sender.init(bitNum);
             // generate x and y
             MpcZ2Vector xPlainMpcVector = sender.create(xVector);
             MpcZ2Vector yPlainMpcVector = sender.create(yVector);

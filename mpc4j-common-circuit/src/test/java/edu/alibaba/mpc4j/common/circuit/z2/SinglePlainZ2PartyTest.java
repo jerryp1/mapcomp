@@ -72,7 +72,7 @@ public class SinglePlainZ2PartyTest {
 
     private void testDyadicOperator(DyadicBcOperator operator, int bitNum) {
         PlainZ2cParty plainParty = new PlainZ2cParty();
-        plainParty.init(bitNum, bitNum);
+        plainParty.init(bitNum);
         // generate x
         BitVector xVector = BitVectorFactory.createRandom(bitNum, SECURE_RANDOM);
         MpcZ2Vector xPlainVector = plainParty.create(xVector);
@@ -105,7 +105,7 @@ public class SinglePlainZ2PartyTest {
     @SuppressWarnings("SameParameterValue")
     private void testUnaryOperator(UnaryBcOperator operator, int num) {
         PlainZ2cParty plainParty = new PlainZ2cParty();
-        plainParty.init(num, num);
+        plainParty.init(num);
         // generate x
         BitVector xVector = BitVectorFactory.createRandom(num, SECURE_RANDOM);
         MpcZ2Vector xPlainVector = plainParty.create(xVector);

@@ -66,7 +66,7 @@ public class Egk20ZlEdaBitGenSender extends AbstractZlEdaBitGenParty {
 
         stopWatch.start();
         zlcSender.init(maxNum, maxNum);
-        z2cSender.init(maxNum, maxNum * l);
+        z2cSender.init(maxNum * l);
         stopWatch.stop();
         long initTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
         stopWatch.reset();
