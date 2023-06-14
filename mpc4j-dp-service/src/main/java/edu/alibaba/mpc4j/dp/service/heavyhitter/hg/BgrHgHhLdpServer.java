@@ -3,7 +3,6 @@ package edu.alibaba.mpc4j.dp.service.heavyhitter.hg;
 import edu.alibaba.mpc4j.common.sampler.binary.bernoulli.ExpBernoulliSampler;
 import edu.alibaba.mpc4j.common.tool.hash.IntHash;
 import edu.alibaba.mpc4j.common.tool.hash.IntHashFactory;
-import edu.alibaba.mpc4j.common.tool.utils.ObjectUtils;
 import edu.alibaba.mpc4j.dp.service.heavyhitter.AbstractHhLdpServer;
 import edu.alibaba.mpc4j.dp.service.heavyhitter.HhLdpFactory;
 import edu.alibaba.mpc4j.dp.service.heavyhitter.config.BgrHgHhLdpConfig;
@@ -237,8 +236,7 @@ public class BgrHgHhLdpServer extends AbstractHhLdpServer {
     }
 
     private double response(String item) {
-        byte[] itemByteArray = ObjectUtils.objectToByteArray(item);
-        int bucketIndex = Math.abs(intHash.hash(itemByteArray) % w);
+        int bucketIndex = HeavyGuardianUtils.getItemBucket(intHash, w, item);
         // first, it checks the heavy part in bucket A[h(e)].
         Map<String, Double> bucket = buckets.get(bucketIndex);
         switch (hhLdpServerState) {

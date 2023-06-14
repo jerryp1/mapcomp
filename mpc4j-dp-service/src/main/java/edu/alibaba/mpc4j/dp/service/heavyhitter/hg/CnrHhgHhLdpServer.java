@@ -4,7 +4,6 @@ import com.google.common.base.Preconditions;
 import edu.alibaba.mpc4j.common.sampler.binary.bernoulli.ExpBernoulliSampler;
 import edu.alibaba.mpc4j.common.tool.hash.IntHash;
 import edu.alibaba.mpc4j.common.tool.hash.IntHashFactory;
-import edu.alibaba.mpc4j.common.tool.utils.ObjectUtils;
 import edu.alibaba.mpc4j.dp.service.heavyhitter.AbstractHhLdpServer;
 import edu.alibaba.mpc4j.dp.service.heavyhitter.HhLdpFactory;
 import edu.alibaba.mpc4j.dp.service.heavyhitter.HhLdpServerState;
@@ -285,8 +284,7 @@ public class CnrHhgHhLdpServer extends AbstractHhLdpServer implements HhgHhLdpSe
     private boolean randomizeInsert(String item) {
         num++;
         // it first computes the hash function h(e) (1 ⩽ h(e) ⩽ w) to map e to bucket A[h(e)].
-        byte[] itemByteArray = ObjectUtils.objectToByteArray(item);
-        int bucketIndex = Math.abs(intHash.hash(itemByteArray) % w);
+        int bucketIndex = HeavyGuardianUtils.getItemBucket(intHash, w, item);
         Map<String, Double> bucket = buckets.get(bucketIndex);
         ldpBucketNums[bucketIndex]++;
         bucketDebias(bucketIndex);
@@ -445,8 +443,7 @@ public class CnrHhgHhLdpServer extends AbstractHhLdpServer implements HhgHhLdpSe
     }
 
     private double response(String item) {
-        byte[] itemByteArray = ObjectUtils.objectToByteArray(item);
-        int bucketIndex = Math.abs(intHash.hash(itemByteArray) % w);
+        int bucketIndex = HeavyGuardianUtils.getItemBucket(intHash, w, item);
         // first, it checks the heavy part in bucket A[h(e)].
         Map<String, Double> bucket = buckets.get(bucketIndex);
         switch (hhLdpServerState) {
