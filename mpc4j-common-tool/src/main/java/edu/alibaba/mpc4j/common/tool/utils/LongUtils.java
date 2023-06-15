@@ -201,6 +201,19 @@ public class LongUtils {
     }
 
     /**
+     * 返回给定{@code long[][]}的克隆结果。
+     *
+     * @param longArrays 待克隆的{@code long[][]}。
+     * @return {@code long[][]}的克隆结果。如果待克隆的{@code long[][]}为null，则返回null。
+     */
+    public static long[][] clone(final long[][] longArrays) {
+        if (longArrays == null) {
+            return null;
+        }
+        return Arrays.stream(longArrays).map(LongUtils::clone).toArray(long[][]::new);
+    }
+
+    /**
      * 计算两个数组的XOR结果。
      *
      * @param x1 第一个数组。

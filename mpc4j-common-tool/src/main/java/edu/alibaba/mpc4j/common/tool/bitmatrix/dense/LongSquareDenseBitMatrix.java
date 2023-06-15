@@ -25,23 +25,23 @@ public class LongSquareDenseBitMatrix implements SquareDenseBitMatrix {
     /**
      * 布尔方阵的大小
      */
-    private int size;
+    private final int size;
     /**
      * 布尔方阵的字节大小
      */
-    private int byteSize;
+    private final int byteSize;
     /**
      * 字节偏移量
      */
-    private int byteOffset;
+    private final int byteOffset;
     /**
      * 布尔方阵的长整数大小
      */
-    private int longSize;
+    private final int longSize;
     /**
      * 长整数偏移量
      */
-    private int longOffset;
+    private final int longOffset;
     /**
      * 布尔方阵
      */
@@ -53,13 +53,7 @@ public class LongSquareDenseBitMatrix implements SquareDenseBitMatrix {
      * @param positions 布尔方阵中取值为1的位置。
      */
     public static LongSquareDenseBitMatrix fromSparse(int[][] positions) {
-        LongSquareDenseBitMatrix squareDenseBitMatrix = new LongSquareDenseBitMatrix();
-        assert positions.length > 0 : "size must be greater than 0";
-        squareDenseBitMatrix.size = positions.length;
-        squareDenseBitMatrix.byteSize = CommonUtils.getByteLength(squareDenseBitMatrix.size);
-        squareDenseBitMatrix.byteOffset = squareDenseBitMatrix.byteSize * Byte.SIZE - squareDenseBitMatrix.size;
-        squareDenseBitMatrix.longSize = CommonUtils.getLongLength(squareDenseBitMatrix.size);
-        squareDenseBitMatrix.longOffset = squareDenseBitMatrix.longSize * Long.SIZE - squareDenseBitMatrix.size;
+        LongSquareDenseBitMatrix squareDenseBitMatrix = new LongSquareDenseBitMatrix(positions.length);
         squareDenseBitMatrix.longBitMatrix = Arrays.stream(positions)
             .map(rowPositions -> {
                 long[] row = new long[squareDenseBitMatrix.longSize];
@@ -81,13 +75,7 @@ public class LongSquareDenseBitMatrix implements SquareDenseBitMatrix {
      * @param bitMatrix 布尔方阵描述。
      */
     public static LongSquareDenseBitMatrix fromDense(byte[][] bitMatrix) {
-        LongSquareDenseBitMatrix squareDenseBitMatrix = new LongSquareDenseBitMatrix();
-        assert bitMatrix.length > 0 : "size must be greater than 0";
-        squareDenseBitMatrix.size = bitMatrix.length;
-        squareDenseBitMatrix.byteSize = CommonUtils.getByteLength(squareDenseBitMatrix.size);
-        squareDenseBitMatrix.byteOffset = squareDenseBitMatrix.byteSize * Byte.SIZE - squareDenseBitMatrix.size;
-        squareDenseBitMatrix.longSize = CommonUtils.getLongLength(squareDenseBitMatrix.size);
-        squareDenseBitMatrix.longOffset = squareDenseBitMatrix.longSize * Long.SIZE - squareDenseBitMatrix.size;
+        LongSquareDenseBitMatrix squareDenseBitMatrix = new LongSquareDenseBitMatrix(bitMatrix.length);
         int byteSize = CommonUtils.getByteLength(squareDenseBitMatrix.size);
         squareDenseBitMatrix.longBitMatrix = Arrays.stream(bitMatrix)
             .map(row -> {
@@ -106,13 +94,7 @@ public class LongSquareDenseBitMatrix implements SquareDenseBitMatrix {
      * @param bitMatrix 布尔方阵描述。
      */
     private static LongSquareDenseBitMatrix fromDense(long[][] bitMatrix) {
-        LongSquareDenseBitMatrix squareDenseBitMatrix = new LongSquareDenseBitMatrix();
-        assert bitMatrix.length > 0 : "size must be greater than 0";
-        squareDenseBitMatrix.size = bitMatrix.length;
-        squareDenseBitMatrix.byteSize = CommonUtils.getByteLength(squareDenseBitMatrix.size);
-        squareDenseBitMatrix.byteOffset = squareDenseBitMatrix.byteSize * Byte.SIZE - squareDenseBitMatrix.size;
-        squareDenseBitMatrix.longSize = CommonUtils.getLongLength(squareDenseBitMatrix.size);
-        squareDenseBitMatrix.longOffset = squareDenseBitMatrix.longSize * Long.SIZE - squareDenseBitMatrix.size;
+        LongSquareDenseBitMatrix squareDenseBitMatrix = new LongSquareDenseBitMatrix(bitMatrix.length);
         squareDenseBitMatrix.longBitMatrix = Arrays.stream(bitMatrix)
             .peek(row -> {
                 assert row.length == squareDenseBitMatrix.longSize
@@ -125,10 +107,15 @@ public class LongSquareDenseBitMatrix implements SquareDenseBitMatrix {
     }
 
     /**
-     * 私有构造函数。
+     * private constructor.
      */
-    private LongSquareDenseBitMatrix() {
-        // empty
+    private LongSquareDenseBitMatrix(int size) {
+        assert size > 0 : "size must be greater than 0: " + size;
+        this.size = size;
+        byteSize = CommonUtils.getByteLength(size);
+        byteOffset = byteSize * Byte.SIZE - size;
+        longSize = CommonUtils.getLongLength(size);
+        longOffset = longSize * Long.SIZE - size;
     }
 
     @Override
@@ -313,61 +300,49 @@ public class LongSquareDenseBitMatrix implements SquareDenseBitMatrix {
 
     @Override
     public SquareDenseBitMatrix inverse() {
-        // 构造布尔矩阵
-        boolean[][] matrix = Arrays.stream(longBitMatrix)
-            .map(x -> BinaryUtils.longArrayToBinary(x, size))
-            .toArray(boolean[][]::new);
-        // 构造逆矩阵，先将逆矩阵初始化为单位阵
-        boolean[][] inverseMatrix = new boolean[size][size];
-        IntStream.range(0, size).forEach(i -> inverseMatrix[i][i] = true);
+        long[][] matrix = LongUtils.clone(longBitMatrix);
+        long[][] inverseMatrix = new long[size][longSize];
+        IntStream.range(0, size).forEach(i -> BinaryUtils.setBoolean(inverseMatrix[i], i + longOffset, true));
         // 利用初等变换计算逆矩阵。首先将左矩阵转换为上三角矩阵
         for (int p = 0; p < size; p++) {
-            if (!matrix[p][p]) {
+            if (!BinaryUtils.getBoolean(matrix[p], p + longOffset)) {
                 // 找到一个不为0的行
                 int other = p + 1;
-                while (other < size && !matrix[other][p]) {
+                while (other < size && !BinaryUtils.getBoolean(matrix[other], p + longOffset)) {
                     other++;
                 }
                 if (other >= size) {
                     throw new ArithmeticException("Cannot invert bit matrix");
                 } else {
                     // 左侧矩阵行swap
-                    boolean[] matrixRowTemp = matrix[p];
+                    long[] matrixRowTemp = matrix[p];
                     matrix[p] = matrix[other];
                     matrix[other] = matrixRowTemp;
                     // 右侧矩阵行swap
-                    boolean[] inverseMatrixRowTemp = inverseMatrix[p];
+                    long[] inverseMatrixRowTemp = inverseMatrix[p];
                     inverseMatrix[p] = inverseMatrix[other];
                     inverseMatrix[other] = inverseMatrixRowTemp;
                 }
             }
             // 左右侧矩阵高斯消元
             for (int i = p + 1; i < size; i++) {
-                if (matrix[i][p]) {
-                    for (int j = 0; j < size; j++) {
-                        matrix[i][j] = matrix[i][j] ^ matrix[p][j];
-                        inverseMatrix[i][j] = inverseMatrix[i][j] ^ inverseMatrix[p][j];
-                    }
+                if (BinaryUtils.getBoolean(matrix[i], p + longOffset)) {
+                    LongUtils.xori(matrix[i], matrix[p]);
+                    LongUtils.xori(inverseMatrix[i], inverseMatrix[p]);
                 }
             }
         }
         // 将左侧矩阵转为单位矩阵，此时右侧得到的矩阵就是左侧矩阵的逆矩阵
         for (int p = size - 1; p >= 0; p--) {
             for (int r = 0; r < p; r++) {
-                if (matrix[r][p]) {
+                if (BinaryUtils.getBoolean(matrix[r], p + longOffset)) {
                     // 如果有1的，则进行相加
-                    for (int j = 0; j < size; j++) {
-                        matrix[r][j] ^= matrix[p][j];
-                        inverseMatrix[r][j] ^= inverseMatrix[p][j];
-                    }
+                    LongUtils.xori(matrix[r], matrix[p]);
+                    LongUtils.xori(inverseMatrix[r], inverseMatrix[p]);
                 }
             }
         }
-        // 返回逆矩阵
-        long[][] invertLongBitMatrix = Arrays.stream(inverseMatrix)
-            .map(BinaryUtils::binaryToRoundLongArray)
-            .toArray(long[][]::new);
-        return LongSquareDenseBitMatrix.fromDense(invertLongBitMatrix);
+        return LongSquareDenseBitMatrix.fromDense(inverseMatrix);
     }
 
     @Override
