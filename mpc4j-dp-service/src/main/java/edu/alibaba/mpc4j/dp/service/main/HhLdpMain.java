@@ -272,7 +272,7 @@ public class HhLdpMain {
         // write warmup_percentage
         printWriter.println("warmup_percentage = " + warmupPercentage);
         // write tab
-        String tab = "type\tε_w\tα\tγ_h\ts_time(s)\tc_time(s)\tcomm.(B)\tmem.(B)\t" +
+        String tab = "name\tε_w\tα\tγ_h\ts_time(s)\tc_time(s)\tcomm.(B)\tcontext(B)\tmem.(B)\t" +
             "warmup_ndcg\twarmup_precision\tndcg\tprecision\tabe\tre";
         printWriter.println(tab);
         LOGGER.info("{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}",
