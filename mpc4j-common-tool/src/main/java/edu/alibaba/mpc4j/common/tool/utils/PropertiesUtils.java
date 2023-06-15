@@ -175,6 +175,9 @@ public class PropertiesUtils {
      */
     public static int readIntWithDefault(Properties properties, String keyword, int defaultValue) {
         String intString = readString(properties, keyword, String.valueOf(defaultValue));
+        if ("".equals(intString)) {
+            return defaultValue;
+        }
         return Integer.parseInt(intString);
     }
 

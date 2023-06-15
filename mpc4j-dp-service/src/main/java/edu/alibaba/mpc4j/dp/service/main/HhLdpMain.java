@@ -29,6 +29,7 @@ import java.text.DecimalFormat;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicLong;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
@@ -53,6 +54,10 @@ public class HhLdpMain {
      * int format
      */
     private static final DecimalFormat INTEGER_DECIMAL_FORMAT = new DecimalFormat("0");
+    /**
+     * large data num unit, used for report current status
+     */
+    private static final int LARGE_DATA_NUM_UNIT = 1000000;
     /**
      * 任务类型名称
      */
@@ -270,10 +275,10 @@ public class HhLdpMain {
         String tab = "type\tε_w\tα\tγ_h\ts_time(s)\tc_time(s)\tcomm.(B)\tmem.(B)\t" +
             "warmup_ndcg\twarmup_precision\tndcg\tprecision\tabe\tre";
         printWriter.println(tab);
-        LOGGER.info("{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}",
+        LOGGER.info("{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}",
             "                name", "         ε", "         α", "       γ_h",
             "           s_time(s)", "           c_time(s)",
-            "            comm.(B)", "             mem.(B)",
+            "            comm.(B)", "         context (B)","             mem.(B)",
             "         warmup_ndcg", "    warmup_precision",
             "                ndcg", "           precision", "                 abe", "                  re"
         );
@@ -357,22 +362,27 @@ public class HhLdpMain {
         for (int round = 0; round < testRound; round++) {
             HeavyGuardian heavyGuardian = new HeavyGuardian(1, k, 0);
             Stream<String> dataStream = StreamDataUtils.obtainItemStream(datasetPath);
+            AtomicInteger atomicDataIndex = new AtomicInteger();
+            AtomicLong payloadBytes = new AtomicLong();
             serverStopWatch.start();
             serverStopWatch.suspend();
             clientStopWatch.start();
             clientStopWatch.suspend();
-            long payloadBytes = dataStream
-                .mapToLong(item -> {
-                    clientStopWatch.resume();
-                    byte[] itemBytes = item.getBytes(HhLdpFactory.DEFAULT_CHARSET);
-                    clientStopWatch.suspend();
-                    serverStopWatch.resume();
-                    String recoverItem = new String(itemBytes, HhLdpFactory.DEFAULT_CHARSET);
-                    heavyGuardian.insert(recoverItem);
-                    serverStopWatch.suspend();
-                    return itemBytes.length;
-                })
-                .sum();
+            dataStream.forEach(item -> {
+                // report progress
+                int dataIndex = atomicDataIndex.incrementAndGet();
+                if (dataIndex % LARGE_DATA_NUM_UNIT == 0) {
+                    LOGGER.info("data index = " + dataIndex);
+                }
+                clientStopWatch.resume();
+                byte[] itemBytes = item.getBytes(HhLdpFactory.DEFAULT_CHARSET);
+                clientStopWatch.suspend();
+                payloadBytes.getAndAdd(itemBytes.length);
+                serverStopWatch.resume();
+                String recoverItem = new String(itemBytes, HhLdpFactory.DEFAULT_CHARSET);
+                heavyGuardian.insert(recoverItem);
+                serverStopWatch.suspend();
+            });
             dataStream.close();
             serverStopWatch.stop();
             long serverTimeMs = serverStopWatch.getTime(TimeUnit.MILLISECONDS);
@@ -395,7 +405,8 @@ public class HhLdpMain {
             HhLdpMetrics metrics = new HhLdpMetrics();
             metrics.setServerTimeMs(serverTimeMs);
             metrics.setClientTimeMs(clientTimeMs);
-            metrics.setPayloadBytes(payloadBytes);
+            metrics.setPayloadBytes(payloadBytes.longValue());
+            metrics.setContextBytes(0L);
             metrics.setMemoryBytes(memoryBytes);
             metrics.setNdcg(HeavyHitterMetrics.ndcg(heavyHitters, correctHeavyHitters));
             metrics.setPrecision(HeavyHitterMetrics.precision(heavyHitters, correctHeavyHitters));
@@ -565,6 +576,13 @@ public class HhLdpMain {
         AtomicInteger warmupIndex = new AtomicInteger();
         Stream<String> dataStream = StreamDataUtils.obtainItemStream(datasetPath);
         dataStream.filter(item -> warmupIndex.getAndIncrement() <= warmupNum)
+            .peek(item -> {
+                // report progress
+                int dataIndex = warmupIndex.intValue();
+                if (dataIndex % LARGE_DATA_NUM_UNIT == 0) {
+                    LOGGER.info("data index (warmup) = " + dataIndex);
+                }
+            })
             .map(client::warmup)
             .forEach(server::warmupInsert);
         dataStream.close();
@@ -582,20 +600,28 @@ public class HhLdpMain {
         serverStopWatch.suspend();
         clientStopWatch.start();
         clientStopWatch.suspend();
+        AtomicLong payloadBytes = new AtomicLong();
+        AtomicLong contextBytes = new AtomicLong();
         AtomicInteger randomizedIndex = new AtomicInteger();
         dataStream = StreamDataUtils.obtainItemStream(datasetPath);
-        long payloadBytes = dataStream
-            .filter(item -> randomizedIndex.getAndIncrement() > warmupNum)
-            .mapToLong(item -> {
-                clientStopWatch.resume();
-                byte[] itemBytes = client.randomize(server.getServerContext(), item);
-                clientStopWatch.suspend();
-                serverStopWatch.resume();
-                server.randomizeInsert(itemBytes);
-                serverStopWatch.suspend();
-                return itemBytes.length;
+        dataStream.filter(item -> randomizedIndex.getAndIncrement() > warmupNum)
+            .peek(item -> {
+                // report progress
+                int dataIndex = randomizedIndex.intValue();
+                if (dataIndex % LARGE_DATA_NUM_UNIT == 0) {
+                    LOGGER.info("data index (randomized) = " + dataIndex);
+                }
             })
-            .sum();
+            .forEach(item -> {
+            clientStopWatch.resume();
+            byte[] itemBytes = client.randomize(server.getServerContext(), item);
+            clientStopWatch.suspend();
+            payloadBytes.getAndAdd(itemBytes.length);
+            contextBytes.getAndAdd(server.getServerContext().toClientInfo().length);
+            serverStopWatch.resume();
+            server.randomizeInsert(itemBytes);
+            serverStopWatch.suspend();
+        });
         dataStream.close();
         serverStopWatch.stop();
         long serverTimeMs = serverStopWatch.getTime(TimeUnit.MILLISECONDS);
@@ -614,7 +640,8 @@ public class HhLdpMain {
             .collect(Collectors.toList());
         metrics.setServerTimeMs(serverTimeMs);
         metrics.setClientTimeMs(clientTimeMs);
-        metrics.setPayloadBytes(payloadBytes);
+        metrics.setPayloadBytes(payloadBytes.longValue());
+        metrics.setContextBytes(contextBytes.longValue());
         metrics.setMemoryBytes(memoryBytes);
         metrics.setNdcg(HeavyHitterMetrics.ndcg(heavyHitters, correctHeavyHitters));
         metrics.setPrecision(HeavyHitterMetrics.precision(heavyHitters, correctHeavyHitters));
@@ -631,6 +658,7 @@ public class HhLdpMain {
         double serverTime = aggMetrics.getServerTimeSecond();
         double clientTime = aggMetrics.getClientTimeSecond();
         long payloadBytes = aggMetrics.getPayloadBytes();
+        long contextBytes = aggMetrics.getContextBytes();
         long memoryBytes = aggMetrics.getMemoryBytes();
         double warmupNdcg = aggMetrics.getWarmupNdcg();
         double warmupPrecision = aggMetrics.getWarmupPrecision();
@@ -638,7 +666,7 @@ public class HhLdpMain {
         double precision = aggMetrics.getPrecision();
         double abe = aggMetrics.getAbe();
         double re = aggMetrics.getRe();
-        LOGGER.info("{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}",
+        LOGGER.info("{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}",
             StringUtils.leftPad(typeString, 20),
             StringUtils.leftPad(windowEpsilonString, 10),
             StringUtils.leftPad(alphaString, 10),
@@ -646,6 +674,7 @@ public class HhLdpMain {
             StringUtils.leftPad(TIME_DECIMAL_FORMAT.format(serverTime), 20),
             StringUtils.leftPad(TIME_DECIMAL_FORMAT.format(clientTime), 20),
             StringUtils.leftPad(INTEGER_DECIMAL_FORMAT.format(payloadBytes), 20),
+            StringUtils.leftPad(INTEGER_DECIMAL_FORMAT.format(contextBytes), 20),
             StringUtils.leftPad(INTEGER_DECIMAL_FORMAT.format(memoryBytes), 20),
             StringUtils.leftPad(DOUBLE_DECIMAL_FORMAT.format(warmupNdcg), 20),
             StringUtils.leftPad(DOUBLE_DECIMAL_FORMAT.format(warmupPrecision), 20),
@@ -656,7 +685,7 @@ public class HhLdpMain {
         );
         printWriter.println(
             typeString + "\t" + windowEpsilonString + "\t" + alphaString + "\t" + gammaString + "\t"
-                + serverTime + "\t" + clientTime + "\t" + payloadBytes + "\t" + memoryBytes + "\t"
+                + serverTime + "\t" + clientTime + "\t" + payloadBytes + "\t" + contextBytes + "\t" + memoryBytes + "\t"
                 + warmupNdcg + "\t" + warmupPrecision + "\t" + ndcg + "\t" + precision + "\t" + abe + "\t" + re
         );
     }

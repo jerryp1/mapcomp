@@ -80,7 +80,7 @@ public class DsrHgHhLdpClient extends AbstractHhLdpClient {
         checkItemInDomain(item);
         int bucketIndex = bucketDomain.getItemBucket(item);
         assert bucketDomain.getBucketDomainSet(bucketIndex).contains(item);
-        Map<String, Double> currentBucket = hgServerContext.getBudget(bucketIndex);
+        Map<String, Double> currentBucket = hgServerContext.getBucket(bucketIndex);
         assert currentBucket.size() == lambdaH;
         // there must be λ_h elements in the budget, randomize the item
         return mechanism(bucketIndex, currentBucket, item, random).getBytes(HhLdpFactory.DEFAULT_CHARSET);
