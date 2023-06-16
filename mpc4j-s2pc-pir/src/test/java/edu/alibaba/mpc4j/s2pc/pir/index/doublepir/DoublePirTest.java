@@ -1,4 +1,4 @@
-package edu.alibaba.mpc4j.s2pc.pir.index.simplepir;
+package edu.alibaba.mpc4j.s2pc.pir.index.doublepir;
 
 import com.google.common.base.Preconditions;
 import edu.alibaba.mpc4j.common.rpc.Rpc;
@@ -8,7 +8,10 @@ import edu.alibaba.mpc4j.common.tool.CommonConstants;
 import edu.alibaba.mpc4j.crypto.matrix.database.NaiveDatabase;
 import edu.alibaba.mpc4j.s2pc.pir.PirUtils;
 import edu.alibaba.mpc4j.s2pc.pir.index.single.SingleIndexPirFactory;
-import edu.alibaba.mpc4j.s2pc.pir.index.single.simplepir.*;
+import edu.alibaba.mpc4j.s2pc.pir.index.single.doublepir.Hhcm23DoubleSingleIndexPirClient;
+import edu.alibaba.mpc4j.s2pc.pir.index.single.doublepir.Hhcm23DoubleSingleIndexPirConfig;
+import edu.alibaba.mpc4j.s2pc.pir.index.single.doublepir.Hhcm23DoubleSingleIndexPirParams;
+import edu.alibaba.mpc4j.s2pc.pir.index.single.doublepir.Hhcm23DoubleSingleIndexPirServer;
 import org.apache.commons.lang3.StringUtils;
 import org.junit.After;
 import org.junit.Assert;
@@ -24,14 +27,14 @@ import java.util.ArrayList;
 import java.util.Collection;
 
 /**
- * Simple PIR test.
+ * Double PIR test.
  *
  * @author Liqiang Peng
  * @date 2023/5/29
  */
 @RunWith(Parameterized.class)
-public class SimplePirTest {
-    private static final Logger LOGGER = LoggerFactory.getLogger(SimplePirTest.class);
+public class DoublePirTest {
+    private static final Logger LOGGER = LoggerFactory.getLogger(DoublePirTest.class);
     /**
      * default element bit length
      */
@@ -47,17 +50,17 @@ public class SimplePirTest {
     /**
      * database size
      */
-    private static final int SERVER_ELEMENT_SIZE = 1 << 20;
+    private static final int SERVER_ELEMENT_SIZE = 1 << 22;
 
     @Parameterized.Parameters(name = "{0}")
     public static Collection<Object[]> configurations() {
         Collection<Object[]> configurations = new ArrayList<>();
-        Hhcm23SimpleSingleIndexPirConfig config = new Hhcm23SimpleSingleIndexPirConfig();
-        // simple PIR
+        Hhcm23DoubleSingleIndexPirConfig config = new Hhcm23DoubleSingleIndexPirConfig();
+        // double PIR
         configurations.add(new Object[]{
-            SingleIndexPirFactory.SingleIndexPirType.SIMPLE_PIR.name(),
+            SingleIndexPirFactory.SingleIndexPirType.DOUBLE_PIR.name(),
             config,
-            Hhcm23SimpleSingleIndexPirParams.DEFAULT_PARAMS
+            Hhcm23DoubleSingleIndexPirParams.DEFAULT_PARAMS
         });
         return configurations;
     }
@@ -71,24 +74,23 @@ public class SimplePirTest {
      */
     private final Rpc clientRpc;
     /**
-     * Simple PIR config
+     * Double PIR config
      */
-    private final Hhcm23SimpleSingleIndexPirConfig indexPirConfig;
+    private final Hhcm23DoubleSingleIndexPirConfig config;
     /**
-     * Simple PIR params
+     * Double PIR params
      */
-    private final Hhcm23SimpleSingleIndexPirParams indexPirParams;
+    private final Hhcm23DoubleSingleIndexPirParams params;
 
-    public SimplePirTest(String name, Hhcm23SimpleSingleIndexPirConfig indexPirConfig,
-                         Hhcm23SimpleSingleIndexPirParams indexPirParams) {
+    public DoublePirTest(String name, Hhcm23DoubleSingleIndexPirConfig config, Hhcm23DoubleSingleIndexPirParams params) {
         Preconditions.checkArgument(StringUtils.isNotBlank(name));
         // We cannot use NettyRPC in the test case since it needs multi-thread connect / disconnect.
         // In other word, we cannot connect / disconnect NettyRpc in @Before / @After, respectively.
         RpcManager rpcManager = new MemoryRpcManager(2);
         serverRpc = rpcManager.getRpc(0);
         clientRpc = rpcManager.getRpc(1);
-        this.indexPirConfig = indexPirConfig;
-        this.indexPirParams = indexPirParams;
+        this.config = config;
+        this.params = params;
     }
 
     @Before
@@ -104,37 +106,37 @@ public class SimplePirTest {
     }
 
     @Test
-    public void testSimplePir() {
-        testSimplePir(indexPirConfig, indexPirParams, DEFAULT_ELEMENT_BIT_LENGTH, false);
+    public void testDoublePir() {
+        testDoublePir(config, params, DEFAULT_ELEMENT_BIT_LENGTH, false);
     }
 
     @Test
-    public void testParallelSimplePir() {
-        testSimplePir(indexPirConfig, indexPirParams, DEFAULT_ELEMENT_BIT_LENGTH, true);
+    public void testParallelDoublePir() {
+        testDoublePir(config, params, DEFAULT_ELEMENT_BIT_LENGTH, true);
     }
 
     @Test
-    public void testLargeElementSimplePir() {
-        testSimplePir(indexPirConfig, indexPirParams, LARGE_ELEMENT_BIT_LENGTH, true);
+    public void testLargeElementDoublePir() {
+        testDoublePir(config, params, LARGE_ELEMENT_BIT_LENGTH, true);
     }
 
     @Test
-    public void testSmallElementSimplePir() {
-        testSimplePir(indexPirConfig, indexPirParams, SMALL_ELEMENT_BIT_LENGTH, true);
+    public void testSmallElementDoublePir() {
+        testDoublePir(config, params, SMALL_ELEMENT_BIT_LENGTH, true);
     }
 
-    public void testSimplePir(Hhcm23SimpleSingleIndexPirConfig config, Hhcm23SimpleSingleIndexPirParams indexPirParams,
+    public void testDoublePir(Hhcm23DoubleSingleIndexPirConfig config, Hhcm23DoubleSingleIndexPirParams params,
                               int elementBitLength, boolean parallel) {
         int retrievalIndex = PirUtils.generateRetrievalIndex(SERVER_ELEMENT_SIZE);
         NaiveDatabase database = PirUtils.generateDataBase(SERVER_ELEMENT_SIZE, elementBitLength);
-        Hhcm23SimpleSingleIndexPirServer server = new Hhcm23SimpleSingleIndexPirServer(serverRpc, clientRpc.ownParty(), config);
-        Hhcm23SimpleSingleIndexPirClient client = new Hhcm23SimpleSingleIndexPirClient(clientRpc, serverRpc.ownParty(), config);
+        Hhcm23DoubleSingleIndexPirServer server = new Hhcm23DoubleSingleIndexPirServer(serverRpc, clientRpc.ownParty(), config);
+        Hhcm23DoubleSingleIndexPirClient client = new Hhcm23DoubleSingleIndexPirClient(clientRpc, serverRpc.ownParty(), config);
         // set parallel
         server.setParallel(parallel);
         client.setParallel(parallel);
-        SimplePirServerThread serverThread = new SimplePirServerThread(server, indexPirParams, database);
-        SimplePirClientThread clientThread = new SimplePirClientThread(
-            client, indexPirParams, retrievalIndex, SERVER_ELEMENT_SIZE, elementBitLength
+        DoublePirServerThread serverThread = new DoublePirServerThread(server, params, database);
+        DoublePirClientThread clientThread = new DoublePirClientThread(
+            client, params, retrievalIndex, SERVER_ELEMENT_SIZE, elementBitLength
         );
         try {
             serverThread.start();
@@ -145,7 +147,7 @@ public class SimplePirTest {
             serverRpc.reset();
             LOGGER.info("Client: The Communication costs {}MB", clientRpc.getSendByteLength() * 1.0 / (1024 * 1024));
             clientRpc.reset();
-            LOGGER.info("Parameters: \n {}", indexPirParams.toString());
+            LOGGER.info("Parameters: \n {}", params.toString());
             // verify result
             ByteBuffer result = clientThread.getRetrievalResult();
             Assert.assertEquals(

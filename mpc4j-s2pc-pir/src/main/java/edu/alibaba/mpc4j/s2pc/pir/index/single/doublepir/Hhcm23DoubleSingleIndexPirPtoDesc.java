@@ -1,10 +1,10 @@
-package edu.alibaba.mpc4j.s2pc.pir.index.single.simplepir;
+package edu.alibaba.mpc4j.s2pc.pir.index.single.doublepir;
 
 import edu.alibaba.mpc4j.common.rpc.desc.PtoDesc;
 import edu.alibaba.mpc4j.common.rpc.desc.PtoDescManager;
 
 /**
- * Simple PIR protocol description. The protocol comes from the following paper:
+ * Double PIR protocol description. The protocol comes from the following paper:
  * <p>
  * Alexandra Henzinger, Matthew M. Hong, Henry Corrigan-Gibbs, Sarah Meiklejohn, and Vinod Vaikuntanathan.
  * One Server for the Price of Two: Simple and Fast Single-Server Private Information Retrieval.
@@ -13,17 +13,17 @@ import edu.alibaba.mpc4j.common.rpc.desc.PtoDescManager;
  * The implementation is based on https://github.com/ahenzinger/simplepir.
  *
  * @author Liqiang Peng
- * @date 2023/5/30
+ * @date 2023/6/2
  */
-public class Hhcm23SingleIndexPirPtoDesc implements PtoDesc {
+public class Hhcm23DoubleSingleIndexPirPtoDesc implements PtoDesc {
     /**
      * protocol ID
      */
-    private static final int PTO_ID = Math.abs((int) 9088226481202664859L);
+    private static final int PTO_ID = Math.abs((int) 6475745671502379922L);
     /**
      * protocol name
      */
-    private static final String PTO_NAME = "SIMPLE_PIR";
+    private static final String PTO_NAME = "DOUBLE_PIR";
 
     /**
      * the protocol step
@@ -50,12 +50,12 @@ public class Hhcm23SingleIndexPirPtoDesc implements PtoDesc {
     /**
      * the singleton mode
      */
-    private static final Hhcm23SingleIndexPirPtoDesc INSTANCE = new Hhcm23SingleIndexPirPtoDesc();
+    private static final Hhcm23DoubleSingleIndexPirPtoDesc INSTANCE = new Hhcm23DoubleSingleIndexPirPtoDesc();
 
     /**
      * private constructor.
      */
-    private Hhcm23SingleIndexPirPtoDesc() {
+    private Hhcm23DoubleSingleIndexPirPtoDesc() {
         // empty
     }
 

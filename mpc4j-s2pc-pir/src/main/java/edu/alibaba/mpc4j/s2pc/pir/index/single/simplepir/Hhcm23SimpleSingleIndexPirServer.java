@@ -1,13 +1,10 @@
 package edu.alibaba.mpc4j.s2pc.pir.index.single.simplepir;
 
-import edu.alibaba.mpc4j.common.rpc.MpcAbortException;
-import edu.alibaba.mpc4j.common.rpc.Party;
-import edu.alibaba.mpc4j.common.rpc.PtoState;
-import edu.alibaba.mpc4j.common.rpc.Rpc;
+import edu.alibaba.mpc4j.common.rpc.*;
 import edu.alibaba.mpc4j.common.rpc.utils.DataPacket;
 import edu.alibaba.mpc4j.common.rpc.utils.DataPacketHeader;
 import edu.alibaba.mpc4j.common.tool.CommonConstants;
-import edu.alibaba.mpc4j.common.tool.utils.IntUtils;
+import edu.alibaba.mpc4j.common.tool.utils.CommonUtils;
 import edu.alibaba.mpc4j.common.tool.utils.LongUtils;
 import edu.alibaba.mpc4j.crypto.matrix.database.NaiveDatabase;
 import edu.alibaba.mpc4j.crypto.matrix.matrix.Zl64Matrix;
@@ -16,6 +13,7 @@ import edu.alibaba.mpc4j.s2pc.pir.PirUtils;
 import edu.alibaba.mpc4j.s2pc.pir.index.single.AbstractSingleIndexPirServer;
 import edu.alibaba.mpc4j.s2pc.pir.index.single.SingleIndexPirParams;
 
+import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -23,7 +21,8 @@ import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
-import static edu.alibaba.mpc4j.s2pc.pir.index.single.simplepir.Hhcm23SingleIndexPirPtoDesc.*;
+import static edu.alibaba.mpc4j.common.tool.utils.BigIntegerUtils.*;
+import static edu.alibaba.mpc4j.s2pc.pir.index.single.simplepir.Hhcm23SimpleSingleIndexPirPtoDesc.*;
 
 /**
  * Simple PIR server.
@@ -31,12 +30,12 @@ import static edu.alibaba.mpc4j.s2pc.pir.index.single.simplepir.Hhcm23SingleInde
  * @author Liqiang Peng
  * @date 2023/5/30
  */
-public class Hhcm23SingleIndexPirServer extends AbstractSingleIndexPirServer {
+public class Hhcm23SimpleSingleIndexPirServer extends AbstractSingleIndexPirServer {
 
     /**
      * Simple PIR params
      */
-    private Hhcm23SingleIndexPirParams params;
+    private Hhcm23SimpleSingleIndexPirParams params;
     /**
      * hint
      */
@@ -49,16 +48,23 @@ public class Hhcm23SingleIndexPirServer extends AbstractSingleIndexPirServer {
      * random seed
      */
     private byte[] seed;
+    /**
+     * cols
+     */
+    private int cols;
+    /**
+     * partition count
+     */
+    private int count;
 
-    public Hhcm23SingleIndexPirServer(Rpc serverRpc, Party clientParty, Hhcm23SingleIndexPirConfig config) {
+    public Hhcm23SimpleSingleIndexPirServer(Rpc serverRpc, Party clientParty, Hhcm23SimpleSingleIndexPirConfig config) {
         super(getInstance(), serverRpc, clientParty, config);
     }
 
     @Override
     public void init(SingleIndexPirParams indexPirParams, NaiveDatabase database) throws MpcAbortException {
-        assert indexPirParams instanceof Hhcm23SingleIndexPirParams;
-        params = (Hhcm23SingleIndexPirParams) indexPirParams;
-        assert (1L << params.expectElementLogSize) > database.rows();
+        assert indexPirParams instanceof Hhcm23SimpleSingleIndexPirParams;
+        params = (Hhcm23SimpleSingleIndexPirParams) indexPirParams;
         logPhaseInfo(PtoState.INIT_BEGIN);
 
         stopWatch.start();
@@ -68,7 +74,7 @@ public class Hhcm23SingleIndexPirServer extends AbstractSingleIndexPirServer {
             rpc.ownParty().getPartyId(), otherParty().getPartyId()
         );
         rpc.send(DataPacket.fromByteArrayList(seedPayloadHeader, Collections.singletonList(seed)));
-        List<byte[]> hintPayload = IntStream.range(0, partitionSize)
+        List<byte[]> hintPayload = IntStream.range(0, count)
             .mapToObj(i -> LongUtils.longArrayToByteArray(hint[i].elements))
             .collect(Collectors.toList());
         DataPacketHeader hintPayloadHeader = new DataPacketHeader(
@@ -86,8 +92,7 @@ public class Hhcm23SingleIndexPirServer extends AbstractSingleIndexPirServer {
 
     @Override
     public void init(NaiveDatabase database) throws MpcAbortException {
-        params = Hhcm23SingleIndexPirParams.SERVER_ELEMENT_LOG_SIZE_30;
-        assert (1L << params.expectElementLogSize) > database.rows();
+        params = Hhcm23SimpleSingleIndexPirParams.DEFAULT_PARAMS;
         logPhaseInfo(PtoState.INIT_BEGIN);
 
         stopWatch.start();
@@ -97,7 +102,7 @@ public class Hhcm23SingleIndexPirServer extends AbstractSingleIndexPirServer {
             rpc.ownParty().getPartyId(), otherParty().getPartyId()
         );
         rpc.send(DataPacket.fromByteArrayList(seedPayloadHeader, Collections.singletonList(seed)));
-        List<byte[]> hintPayload = IntStream.range(0, partitionSize)
+        List<byte[]> hintPayload = IntStream.range(0, count)
             .mapToObj(i -> LongUtils.longArrayToByteArray(hint[i].elements))
             .collect(Collectors.toList());
         DataPacketHeader hintPayloadHeader = new DataPacketHeader(
@@ -136,7 +141,7 @@ public class Hhcm23SingleIndexPirServer extends AbstractSingleIndexPirServer {
         stopWatch.stop();
         long genResponseTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
         stopWatch.reset();
-        logStepInfo(PtoState.PTO_STEP, 1, 1, genResponseTime, "Client generates reply");
+        logStepInfo(PtoState.PTO_STEP, 1, 1, genResponseTime, "Server generates reply");
 
         logPhaseInfo(PtoState.PTO_END);
     }
@@ -148,28 +153,46 @@ public class Hhcm23SingleIndexPirServer extends AbstractSingleIndexPirServer {
 
     @Override
     public List<byte[][]> serverSetup(NaiveDatabase database) {
-        int maxPartitionBitLength = PirUtils.getBitLength(params.p) - 1;
+        int maxPartitionBitLength = 0, rows = 0, d = 0;
+        int upperBound = CommonUtils.getUnitNum(database.getL(), params.logP - 1);
+        for (count = 1; count < upperBound + 1; count++) {
+            maxPartitionBitLength = CommonUtils.getUnitNum(database.getL(), count);
+            d = CommonUtils.getUnitNum(maxPartitionBitLength, params.logP - 1);
+            if ((BigInteger.valueOf(d).multiply(BigInteger.valueOf(database.rows())))
+                .compareTo(INT_MAX_VALUE.shiftRight(1)) < 0) {
+                int[] dims = PirUtils.approxSquareDatabaseDims(database.rows(), d);
+                rows = dims[0];
+                cols = dims[1];
+                params.setPlainModulo(PirUtils.getBitLength(cols));
+                break;
+            }
+        }
         setInitInput(database, database.getL(), maxPartitionBitLength);
-        int dimensionLength = (int) Math.max(2, Math.ceil(Math.pow(num, 1.0 / 2)));
         // public matrix A
         seed = new byte[CommonConstants.BLOCK_BYTE_LENGTH];
         secureRandom.nextBytes(seed);
-        Zl64Matrix a = Zl64Matrix.createRandom(params.zl64, dimensionLength, params.n, seed);
+        Zl64Matrix a = Zl64Matrix.createRandom(params.zl64, cols, params.n, seed);
         // generate the client's hint, which is the database multiplied by A. Also known as the setup.
-        db = new Zl64Matrix[partitionSize];
-        hint = new Zl64Matrix[partitionSize];
-        for (int i = 0; i < partitionSize; i++) {
-            long[] elements = new long[dimensionLength * dimensionLength];
-            for (int j = 0; j < num; j++) {
-                elements[j] = IntUtils.fixedByteArrayToNonNegInt(databases[i].getBytesData(j));
-            }
-            // padding elements
-            for (int j = num; j < dimensionLength * dimensionLength; j++) {
-                elements[j] = 1L;
-            }
-            // values mod the plaintext modulus p
-            db[i] = Zl64Matrix.create(params.zl64, elements, dimensionLength, dimensionLength);
+        db = new Zl64Matrix[count];
+        for (int i = 0; i < count; i++) {
+            db[i] = Zl64Matrix.createZeros(params.zl64, rows, cols);
             db[i].setParallel(parallel);
+        }
+        hint = new Zl64Matrix[count];
+        int rowElementsNum = rows / d;
+        for (int i = 0; i < count; i++) {
+            for (int j = 0; j < cols; j++) {
+                for (int l = 0; l < rowElementsNum; l++) {
+                    if (j * rowElementsNum + l < num) {
+                        byte[] element = databases[i].getBytesData(j * rowElementsNum + l);
+                        long[] coeffs = PirUtils.convertBytesToCoeffs(params.logP - 1, 0, element.length, element);
+                        // values mod the plaintext modulus p
+                        for (int k = 0; k < d; k++) {
+                            db[i].set(l * d + k, j, coeffs[k]);
+                        }
+                    }
+                }
+            }
             hint[i] = db[i].matrixMul(a);
         }
         return null;
@@ -177,9 +200,11 @@ public class Hhcm23SingleIndexPirServer extends AbstractSingleIndexPirServer {
 
     @Override
     public List<byte[]> generateResponse(List<byte[]> clientQuery, List<byte[][]> empty) throws MpcAbortException {
+        MpcAbortPreconditions.checkArgument(clientQuery.size() == 1);
         long[] queryElements = LongUtils.byteArrayToLongArray(clientQuery.get(0));
+        MpcAbortPreconditions.checkArgument(queryElements.length == cols);
         Zl64Vector query = Zl64Vector.create(params.zl64, queryElements);
-        return IntStream.range(0, partitionSize)
+        return IntStream.range(0, count)
             .mapToObj(i -> LongUtils.longArrayToByteArray(db[i].matrixMulVector(query).getElements()))
             .collect(Collectors.toList());
     }

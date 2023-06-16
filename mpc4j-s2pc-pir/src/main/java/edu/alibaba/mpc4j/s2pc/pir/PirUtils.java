@@ -478,4 +478,46 @@ public class PirUtils {
         }
         return dimensionArray;
     }
+
+    /**
+     * Find smallest l, m such that l*m >= num * d and d divides l, where d is
+     * the number of Z_p elements per DB entry determined by bit-length and p.
+     *
+     * @param num database size.
+     * @param d   Z_p element num.
+     * @return l and m.
+     */
+    public static int[] approxSquareDatabaseDims(int num, int d) {
+        MathPreconditions.checkPositive("num", num);
+        long rows = (long) Math.max(2, Math.ceil(Math.sqrt(d * num)));
+        long rem = rows % d;
+        if (rem != 0) {
+            rows += d - rem;
+        }
+        long cols = (long) Math.ceil((double) d * num / rows);
+        return new int[]{Math.toIntExact(rows), Math.toIntExact(cols)};
+    }
+
+    /**
+     * Find smallest l, m such that l*m >= N * d and d divides l, where d is
+     * the number of Z_p elements per DB entry determined by bit-length and p, and m >= lower_bound_m.
+     *
+     * @param num         database size.
+     * @param d           Z_p element num.
+     * @param mLowerBound lower bound of m.
+     * @return l and m.
+     */
+    public static int[] approxSquareDatabaseDims(int num, int d, int mLowerBound) {
+        int[] dims = approxSquareDatabaseDims(num, d);
+        if (dims[1] >= mLowerBound) {
+            return dims;
+        }
+        dims[1] = mLowerBound;
+        dims[0] = CommonUtils.getUnitNum(d * num, dims[1]);
+        int rem = dims[0] % d;
+        if (rem != 0) {
+            dims[0] += d - rem;
+        }
+        return dims;
+    }
 }

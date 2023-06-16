@@ -280,6 +280,16 @@ public class Zl64Vector implements RingVector {
         indexIntStream.forEach(index -> this.elements[index] = zl64.mul(this.elements[index], that.elements[index]));
     }
 
+    public long innerProduct(RingVector other) {
+        Zl64Vector that = (Zl64Vector) other;
+        checkInputs(that);
+        int num = getNum();
+        return IntStream.range(0, num)
+            .mapToLong(i -> zl64.mul(this.elements[i], that.elements[i]))
+            .reduce(zl64::add)
+            .orElseThrow(Error::new);
+    }
+
     private void checkInputs(Zl64Vector that) {
         Preconditions.checkArgument(this.zl64.equals(that.zl64));
         MathPreconditions.checkEqual("this.num", "that.num", this.getNum(), that.getNum());

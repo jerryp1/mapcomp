@@ -14,7 +14,7 @@ import edu.alibaba.mpc4j.s2pc.pir.index.single.sealpir.Acls18SingleIndexPirConfi
 import edu.alibaba.mpc4j.s2pc.pir.index.single.SingleIndexPirClient;
 import edu.alibaba.mpc4j.s2pc.pir.index.single.SingleIndexPirFactory;
 import edu.alibaba.mpc4j.s2pc.pir.index.single.SingleIndexPirServer;
-import edu.alibaba.mpc4j.s2pc.pir.index.single.simplepir.Hhcm23SingleIndexPirConfig;
+import edu.alibaba.mpc4j.s2pc.pir.index.single.simplepir.Hhcm23SimpleSingleIndexPirConfig;
 import edu.alibaba.mpc4j.s2pc.pir.index.single.vectorizedpir.Mr23SingleIndexPirConfig;
 import edu.alibaba.mpc4j.s2pc.pir.index.single.xpir.Mbfk16SingleIndexPirConfig;
 import org.apache.commons.lang3.StringUtils;
@@ -78,7 +78,7 @@ public class IndexPirTest {
         });
         // Simple PIR
         configurations.add(new Object[]{
-            SingleIndexPirFactory.SingleIndexPirType.SIMPLE_PIR.name(), new Hhcm23SingleIndexPirConfig()
+            SingleIndexPirFactory.SingleIndexPirType.SIMPLE_PIR.name(), new Hhcm23SimpleSingleIndexPirConfig()
         });
         return configurations;
     }

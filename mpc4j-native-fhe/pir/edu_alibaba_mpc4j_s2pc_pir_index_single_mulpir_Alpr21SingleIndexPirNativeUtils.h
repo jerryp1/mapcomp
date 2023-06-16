@@ -16,7 +16,7 @@ JNIEXPORT jbyteArray JNICALL Java_edu_alibaba_mpc4j_s2pc_pir_index_single_mulpir
   (JNIEnv *, jclass, jint, jlong);
 
 /*
- * Class:     edu_alibaba_mpc4j_s2pc_pir_single_index_single_mulpir_Alpr21SingleIndexPirNativeUtils
+ * Class:     edu_alibaba_mpc4j_s2pc_pir_index_single_mulpir_Alpr21SingleIndexPirNativeUtils
  * Method:    keyGen
  * Signature: ([B)Ljava/util/List;
  */
@@ -42,7 +42,7 @@ JNIEXPORT jobject JNICALL Java_edu_alibaba_mpc4j_s2pc_pir_index_single_mulpir_Al
 /*
  * Class:     edu_alibaba_mpc4j_s2pc_pir_index_single_mulpir_Alpr21SingleIndexPirNativeUtils
  * Method:    generateReply
- * Signature: ([B[B[BLjava/util/List;Ljava/util/List;[I)Ljava/util/List;
+ * Signature: ([B[B[BLjava/util/List;[[B[I)Ljava/util/List;
  */
 JNIEXPORT jobject JNICALL Java_edu_alibaba_mpc4j_s2pc_pir_index_single_mulpir_Alpr21SingleIndexPirNativeUtils_generateReply
   (JNIEnv *, jclass, jbyteArray, jbyteArray, jbyteArray, jobject, jobjectArray, jintArray);
@@ -50,18 +50,10 @@ JNIEXPORT jobject JNICALL Java_edu_alibaba_mpc4j_s2pc_pir_index_single_mulpir_Al
 /*
  * Class:     edu_alibaba_mpc4j_s2pc_pir_index_single_mulpir_Alpr21SingleIndexPirNativeUtils
  * Method:    decryptReply
- * Signature: ([B[BLjava/util/List;I)[J
+ * Signature: ([B[BLjava/util/List;)[J
  */
 JNIEXPORT jlongArray JNICALL Java_edu_alibaba_mpc4j_s2pc_pir_index_single_mulpir_Alpr21SingleIndexPirNativeUtils_decryptReply
-  (JNIEnv *, jclass, jbyteArray, jbyteArray, jobject, jint);
-
-/*
- * Class:     edu_alibaba_mpc4j_s2pc_pir_index_single_mulpir_Alpr21SingleIndexPirNativeUtils
- * Method:    expansionRatio
- * Signature: ([B)I
- */
-JNIEXPORT jint JNICALL Java_edu_alibaba_mpc4j_s2pc_pir_index_single_mulpir_Alpr21SingleIndexPirNativeUtils_expansionRatio
-  (JNIEnv *, jclass, jbyteArray);
+  (JNIEnv *, jclass, jbyteArray, jbyteArray, jobject);
 
 #ifdef __cplusplus
 }

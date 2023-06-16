@@ -16,8 +16,11 @@ import org.junit.runners.Parameterized;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.awt.*;
 import java.nio.ByteBuffer;
+import java.security.SecureRandom;
 import java.util.*;
+import java.util.List;
 
 /**
  * keyword PIR test.
@@ -91,6 +94,11 @@ public class KwPirTest {
     @Test
     public void testSmallRetrievalSizeParallel() {
         testPir(SMALL_CLIENT_SET_SIZE, config, true);
+    }
+
+    @Test
+    public void test() {
+        System.out.println(new SecureRandom().nextLong());
     }
 
     @Test

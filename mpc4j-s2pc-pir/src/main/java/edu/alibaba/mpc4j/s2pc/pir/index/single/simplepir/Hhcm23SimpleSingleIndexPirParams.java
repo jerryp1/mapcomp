@@ -11,7 +11,7 @@ import edu.alibaba.mpc4j.s2pc.pir.index.single.SingleIndexPirParams;
  * @author Liqiang Peng
  * @date 2023/5/26
  */
-public class Hhcm23SingleIndexPirParams implements SingleIndexPirParams {
+public class Hhcm23SimpleSingleIndexPirParams implements SingleIndexPirParams {
     /**
      * the integer modulus
      */
@@ -33,25 +33,40 @@ public class Hhcm23SingleIndexPirParams implements SingleIndexPirParams {
      */
     public Zl64 zl64;
     /**
-     * expect element log size
+     * bit length of p
      */
-    public int expectElementLogSize;
+    public int logP = 9;
 
-    public Hhcm23SingleIndexPirParams(int n, int p, int l, double stdDev, int expectElementLogSize) {
+    public Hhcm23SimpleSingleIndexPirParams(int n, int modulusBitLength, double stdDev) {
         this.n = n;
-        this.p = p;
-        this.q = 1L << l;
+        this.q = 1L << modulusBitLength;
         this.stdDev = stdDev;
-        this.zl64 = Zl64Factory.createInstance(EnvType.STANDARD_JDK, l);
-        this.expectElementLogSize = expectElementLogSize;
+        this.zl64 = Zl64Factory.createInstance(EnvType.STANDARD_JDK, modulusBitLength);
     }
 
     /**
-     * server element log size 30
+     * default params
      */
-    public static Hhcm23SingleIndexPirParams SERVER_ELEMENT_LOG_SIZE_30 = new Hhcm23SingleIndexPirParams(
-        1024, 701, 32, 6.4, 30
-    );
+    public static Hhcm23SimpleSingleIndexPirParams DEFAULT_PARAMS = new Hhcm23SimpleSingleIndexPirParams(1024, 32, 6.4);
+
+    /**
+     * set plain modulo.
+     *
+     * @param m cols.
+     */
+    public void setPlainModulo(int m) {
+        if (m <= 13) {
+            this.p = 991;
+        } else if (m == 14) {
+            this.p = 833;
+        } else if (m == 15) {
+            this.p = 701;
+        } else if (m == 16) {
+            this.p = 589;
+        } else {
+            assert false : "failed to generate Simple PIR params.";
+        }
+    }
 
     @Override
     public int getPlainModulusBitLength() {
@@ -81,4 +96,7 @@ public class Hhcm23SingleIndexPirParams implements SingleIndexPirParams {
                 " - q : " + q + "\n" +
                 " - std-dev : " + stdDev;
     }
+
+
+
 }

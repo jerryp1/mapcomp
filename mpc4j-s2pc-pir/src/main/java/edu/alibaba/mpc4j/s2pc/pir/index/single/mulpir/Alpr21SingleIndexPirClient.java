@@ -168,8 +168,7 @@ public class Alpr21SingleIndexPirClient extends AbstractSingleIndexPirClient {
             long[] coeffs = Alpr21SingleIndexPirNativeUtils.decryptReply(
                     params.getEncryptionParams(),
                     secretKey,
-                    response.subList(partitionIndex, partitionIndex + 1),
-                    params.getDimension()
+                    response.subList(partitionIndex, partitionIndex + 1)
             );
             byte[] bytes = PirUtils.convertCoeffsToBytes(coeffs, params.getPlainModulusBitLength());
             int offset = index % elementSizeOfPlaintext;

@@ -1,6 +1,7 @@
 package edu.alibaba.mpc4j.crypto.matrix.matrix;
 
 import edu.alibaba.mpc4j.crypto.matrix.vector.RingVector;
+import edu.alibaba.mpc4j.crypto.matrix.vector.Vector;
 
 /**
  * ring matrix.
@@ -105,4 +106,20 @@ public interface RingMatrix extends Matrix {
      * @return the result.
      */
     RingMatrix transpose();
+
+    /**
+     * Decompose the matrix base on p.
+     *
+     * @param p the modulo.
+     * @return decomposed matrix.
+     */
+    RingMatrix decompose(long p);
+
+    /**
+     * Recompose the matrix base on p.
+     *
+     * @param p the modulo.
+     * @return recomposed matrix.
+     */
+    RingMatrix recompose(long p);
 }

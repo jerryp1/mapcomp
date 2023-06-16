@@ -264,4 +264,60 @@ public class Zl64Matrix implements RingMatrix {
         }
         return transposedMatrix;
     }
+
+    private long[] decomposed(long p, long q, long element) {
+        int size = (int) Math.ceil(Math.log(q - 1) / Math.log(p));
+        long[] digits = new long[size];
+        int i = 0;
+        while (element > 0) {
+            digits[i] = element % p;
+            element = element / p;
+            i = i + 1;
+        }
+        return digits;
+    }
+
+    @Override
+    public Zl64Matrix decompose(long p) {
+        long q = 1L << (zl64.getL() - 1);
+        int size = (int) Math.ceil(Math.log(q - 1) / Math.log(p));
+        Zl64Matrix matrix = Zl64Matrix.createZeros(zl64, rows * size, cols);
+        for (int i = 0; i < rows; i++) {
+            for (int j = 0; j < cols; j++) {
+                long[] digits = decomposed(p, q, get(i, j));
+                for (int l = 0; l < size; l++) {
+                    matrix.set(i * size + l, j, digits[l]);
+                }
+            }
+        }
+        return matrix;
+    }
+
+    private long recomposed(long p, long[] digits) {
+        long element = 0L;
+        long r = 1L;
+        for (long digit : digits) {
+            element = element + r * digit;
+            r = r * p;
+        }
+        return element;
+    }
+
+    @Override
+    public Zl64Matrix recompose(long p) {
+        long q = 1L << (zl64.getL() - 1);
+        int size = (int) Math.ceil(Math.log(q - 1) / Math.log(p));
+        Zl64Matrix matrix = Zl64Matrix.createZeros(zl64, rows / size, cols);
+        for (int i = 0; i < matrix.rows; i++) {
+            for (int j = 0; j < cols; j++) {
+                long[] digits = new long[size];
+                for (int l = 0; l < size; l++) {
+                    digits[l] = get(i * size + l, j);
+                }
+                long element = recomposed(p, digits);
+                matrix.set(i, j, element);
+            }
+        }
+        return matrix;
+    }
 }

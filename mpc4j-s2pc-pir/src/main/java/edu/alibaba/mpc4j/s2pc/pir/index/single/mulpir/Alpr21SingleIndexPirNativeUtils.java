@@ -74,9 +74,8 @@ public class Alpr21SingleIndexPirNativeUtils {
      * @param encryptionParams SEAL encryption params.
      * @param secretKey        secret key.
      * @param response         response ciphertext.
-     * @param dimension        dimension.
      * @return BFV plaintext.
      */
-    static native long[] decryptReply(byte[] encryptionParams, byte[] secretKey, List<byte[]> response, int dimension);
+    static native long[] decryptReply(byte[] encryptionParams, byte[] secretKey, List<byte[]> response);
 
 }

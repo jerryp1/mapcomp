@@ -44,7 +44,7 @@ public class Alpr21SingleIndexPirParams implements SingleIndexPirParams {
     /**
      * default params
      */
-    public static Alpr21SingleIndexPirParams DEFAULT_PARAMS = new Alpr21SingleIndexPirParams(8192, 24, 2);
+    public static Alpr21SingleIndexPirParams DEFAULT_PARAMS = new Alpr21SingleIndexPirParams(8192, 24, 3);
 
     @Override
     public int getPlainModulusBitLength() {

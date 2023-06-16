@@ -1,26 +1,28 @@
-package edu.alibaba.mpc4j.s2pc.pir.index.simplepir;
+package edu.alibaba.mpc4j.s2pc.pir.index.doublepir;
 
 import edu.alibaba.mpc4j.common.rpc.MpcAbortException;
+import edu.alibaba.mpc4j.s2pc.pir.index.single.doublepir.Hhcm23DoubleSingleIndexPirClient;
+import edu.alibaba.mpc4j.s2pc.pir.index.single.doublepir.Hhcm23DoubleSingleIndexPirParams;
 import edu.alibaba.mpc4j.s2pc.pir.index.single.simplepir.Hhcm23SimpleSingleIndexPirClient;
 import edu.alibaba.mpc4j.s2pc.pir.index.single.simplepir.Hhcm23SimpleSingleIndexPirParams;
 
 import java.nio.ByteBuffer;
 
 /**
- * Simple PIR client thread.
+ * Double PIR client thread.
  *
  * @author Liqiang Peng
  * @date 2023/5/31
  */
-public class SimplePirClientThread extends Thread {
+public class DoublePirClientThread extends Thread {
     /**
-     * Simple PIR client
+     * Double PIR client
      */
-    private final Hhcm23SimpleSingleIndexPirClient client;
+    private final Hhcm23DoubleSingleIndexPirClient client;
     /**
-     * Simple PIR params
+     * Double PIR params
      */
-    private final Hhcm23SimpleSingleIndexPirParams indexPirParams;
+    private final Hhcm23DoubleSingleIndexPirParams indexPirParams;
     /**
      * element bit length
      */
@@ -38,7 +40,7 @@ public class SimplePirClientThread extends Thread {
      */
     private ByteBuffer indexPirResult;
 
-    SimplePirClientThread(Hhcm23SimpleSingleIndexPirClient client, Hhcm23SimpleSingleIndexPirParams indexPirParams,
+    DoublePirClientThread(Hhcm23DoubleSingleIndexPirClient client, Hhcm23DoubleSingleIndexPirParams indexPirParams,
                           int retrievalIndex, int serverElementSize, int elementBitLength) {
         this.client = client;
         this.indexPirParams = indexPirParams;
