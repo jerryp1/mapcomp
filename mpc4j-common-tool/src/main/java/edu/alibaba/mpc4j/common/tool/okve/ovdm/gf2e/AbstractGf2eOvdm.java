@@ -4,7 +4,7 @@ import edu.alibaba.mpc4j.common.tool.CommonConstants;
 import edu.alibaba.mpc4j.common.tool.EnvType;
 import edu.alibaba.mpc4j.common.tool.galoisfield.gf2e.Gf2e;
 import edu.alibaba.mpc4j.common.tool.galoisfield.gf2e.Gf2eFactory;
-import edu.alibaba.mpc4j.common.tool.galoisfield.gf2e.Gf2eLinearSolver;
+import edu.alibaba.mpc4j.common.tool.galoisfield.tool.BitMatrixLinearSolver;
 import edu.alibaba.mpc4j.common.tool.utils.CommonUtils;
 import edu.alibaba.mpc4j.common.tool.utils.LongUtils;
 
@@ -48,7 +48,7 @@ abstract class AbstractGf2eOvdm<T> implements Gf2eOvdm<T> {
     /**
      * 线性求解器
      */
-    protected final Gf2eLinearSolver gf2eLinearSolver;
+    protected final BitMatrixLinearSolver linearSolver;
 
     protected AbstractGf2eOvdm(EnvType envType, int l, int n, int m) {
         assert n > 0;
@@ -63,7 +63,7 @@ abstract class AbstractGf2eOvdm<T> implements Gf2eOvdm<T> {
         mByteLength = m / Byte.SIZE;
         secureRandom = new SecureRandom();
         gf2e = Gf2eFactory.createInstance(envType, l);
-        gf2eLinearSolver = new Gf2eLinearSolver(gf2e);
+        linearSolver = new BitMatrixLinearSolver(l);
     }
 
     @Override

@@ -268,13 +268,15 @@ class H2TcGctGf2eOvdm<T> extends AbstractGf2eOvdm<T> implements SparseGf2eOvdm<T
         Gf2eMaxLisFinder maxLisFinder = new Gf2eMaxLisFinder(gf2e, tildePrimeMatrix);
         Set<Integer> setC = maxLisFinder.getLisRows();
         int size = setC.size();
-        byte[][][] tildeStarMatrix = new byte[dTilde][size][];
+        int byteSize = CommonUtils.getByteLength(size);
+        int offsetSize = byteSize * Byte.SIZE - size;
+        byte[][] tildeStarMatrix = new byte[dTilde][byteSize];
         int tildeStarMatrixRowIndex = 0;
         for (T data : coreDataSet) {
             boolean[] rxBinary = dataHrMap.get(data);
             int rmIndex = 0;
             for (Integer r : setC) {
-                tildeStarMatrix[tildeStarMatrixRowIndex][rmIndex] = rxBinary[r] ? gf2e.createOne() : gf2e.createZero();
+                BinaryUtils.setBoolean(tildeStarMatrix[tildeStarMatrixRowIndex], offsetSize + rmIndex, rxBinary[r]);
                 rmIndex++;
             }
             tildeStarMatrixRowIndex++;
@@ -325,7 +327,7 @@ class H2TcGctGf2eOvdm<T> extends AbstractGf2eOvdm<T> implements SparseGf2eOvdm<T
         // Using Gaussian elimination solve the system
         // M˜* (P_{m' + C_1}, ..., P_{m' + C_{d˜})^T = (v'_{R_1}, ..., v'_{R_{d˜})^T.
         byte[][] vectorX = new byte[size][];
-        SystemInfo systemInfo = gf2eLinearSolver.solve(tildeStarMatrix, vectorY, vectorX, true);
+        SystemInfo systemInfo = linearSolver.solve(tildeStarMatrix, size, vectorY, vectorX);
         if (systemInfo.compareTo(SystemInfo.Inconsistent) == 0) {
             throw new ArithmeticException("无法完成编码过程，线性系统无解");
         }
