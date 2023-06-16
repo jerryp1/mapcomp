@@ -11,7 +11,6 @@ import edu.alibaba.mpc4j.common.tool.okve.okvs.OkvsFactory.OkvsType;
 import edu.alibaba.mpc4j.common.tool.utils.*;
 
 import java.util.*;
-import java.util.stream.IntStream;
 
 /**
  * 基于深度优先遍历（Depth-First Search，DFS）的不经意键值对存储器实现。原始方案来自下述论文第30页附录C：
@@ -214,18 +213,16 @@ class H2DfsGctBinaryOkvs<T> extends AbstractBinaryOkvs<T> implements SparseOkvs<
             // 存在环路，这里有个非常大的坑，求解线性方程组时要把环路中涉及到的所有边都包含进来，而不止包含back edge
             // 所以需要实现Cuckoo Graph中找涉及到back edge的环路边问题，本质上把环路边找到就是找了一个2-core
             // for each non-tree edge, solve the linear system
-            byte[][][] matrixByteM = new byte[size][rm][];
+            byte[][] matrixByteM = new byte[size][];
             byte[][] vectorByteY = new byte[size][];
             int rowIndex = 0;
             for (T cycleEdgeData : cycleEdgeDataSet) {
                 boolean[] rx = dataHrMap.get(cycleEdgeData);
-                matrixByteM[rowIndex] = IntStream.range(0, rm)
-                    .mapToObj(rmIndex -> rx[rmIndex] ? gf2e.createOne() : gf2e.createZero())
-                    .toArray(byte[][]::new);
+                matrixByteM[rowIndex] = BinaryUtils.binaryToByteArray(rx);
                 vectorByteY[rowIndex] = BytesUtils.clone(keyValueMap.get(cycleEdgeData));
                 rowIndex++;
             }
-            SystemInfo systemInfo = gf2eLinearSolver.solve(matrixByteM, vectorByteY, vectorByteX, true);
+            SystemInfo systemInfo = linearSolver.solve(matrixByteM, rm, vectorByteY, vectorByteX);
             if (systemInfo.compareTo(SystemInfo.Inconsistent) == 0) {
                 throw new ArithmeticException("ERROR: cannot encode key-value map, Linear System unsolved");
             }

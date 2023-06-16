@@ -284,28 +284,24 @@ class H3TcGctBinaryOkvs<T> extends AbstractBinaryOkvs<T> implements SparseOkvs<T
         if (coreDataSet.size() != 0) {
             int size = coreDataSet.size();
             // 矩阵M有2-core边数量的行
-            byte[][][] matrixM = new byte[size][m][];
+            byte[][] matrixM = new byte[size][byteM];
             byte[][] vectorY = new byte[size][];
             int rowIndex = 0;
             for (T coreData : coreDataSet) {
-                boolean[] lx = new boolean[lm];
                 int h1Value = dataH1Map.get(coreData);
                 int h2Value = dataH2Map.get(coreData);
                 int h3Value = dataH3Map.get(coreData);
-                lx[h1Value] = true;
-                lx[h2Value] = true;
-                lx[h3Value] = true;
                 boolean[] rx = dataHrMap.get(coreData);
-                for (int columnIndex = 0; columnIndex < lm; columnIndex++) {
-                    matrixM[rowIndex][columnIndex] = lx[columnIndex] ? gf2e.createOne() : gf2e.createZero();
-                }
+                BinaryUtils.setBoolean(matrixM[rowIndex], offsetM + h1Value, true);
+                BinaryUtils.setBoolean(matrixM[rowIndex], offsetM + h2Value, true);
+                BinaryUtils.setBoolean(matrixM[rowIndex], offsetM + h3Value, true);
                 for (int columnIndex = 0; columnIndex < rm; columnIndex++) {
-                    matrixM[rowIndex][lm + columnIndex] = rx[columnIndex] ? gf2e.createOne() : gf2e.createZero();
+                    BinaryUtils.setBoolean(matrixM[rowIndex], offsetM + lm + columnIndex, rx[columnIndex]);
                 }
                 vectorY[rowIndex] = BytesUtils.clone(keyValueMap.get(coreData));
                 rowIndex++;
             }
-            SystemInfo systemInfo = gf2eLinearSolver.solve(matrixM, vectorY, vectorX, true);
+            SystemInfo systemInfo = linearSolver.solve(matrixM, m, vectorY, vectorX);
             if (systemInfo.compareTo(SystemInfo.Inconsistent) == 0) {
                 throw new ArithmeticException("无法完成编码过程，线性系统无解");
             }
