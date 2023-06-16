@@ -66,7 +66,7 @@ class H2DfsGctBinaryOkvs<T> extends AbstractBinaryOkvs<T> implements SparseOkvs<
     /**
      * 数据到hr的映射表
      */
-    private Map<T, boolean[]> dataHrMap;
+    private Map<T, byte[]> dataHrMap;
 
     H2DfsGctBinaryOkvs(EnvType envType, int n, int l, byte[][] keys) {
         super(n, getLm(n) + getRm(n), l);
@@ -101,8 +101,12 @@ class H2DfsGctBinaryOkvs<T> extends AbstractBinaryOkvs<T> implements SparseOkvs<
 
     @Override
     public boolean[] densePositions(T key) {
+        return BinaryUtils.byteArrayToBinary(denseBytePositions(key));
+    }
+
+    private byte[] denseBytePositions(T key) {
         byte[] keyBytes = ObjectUtils.objectToByteArray(key);
-        return BinaryUtils.byteArrayToBinary(hr.getBytes(keyBytes));
+        return hr.getBytes(keyBytes);
     }
 
     @Override
@@ -148,10 +152,10 @@ class H2DfsGctBinaryOkvs<T> extends AbstractBinaryOkvs<T> implements SparseOkvs<
         dataHrMap = new HashMap<>(keySet.size());
         for (T key : keySet) {
             int[] sparsePositions = sparsePosition(key);
-            boolean[] densePositions = densePositions(key);
+            byte[] denseBytePositions = denseBytePositions(key);
             dataH1Map.put(key, sparsePositions[0]);
             dataH2Map.put(key, sparsePositions[1]);
-            dataHrMap.put(key, densePositions);
+            dataHrMap.put(key, denseBytePositions);
         }
         // 生成2哈希-布谷鸟表
         H2CuckooTable<T> h2CuckooTable = generateCuckooTable(keyValueMap);
@@ -173,7 +177,7 @@ class H2DfsGctBinaryOkvs<T> extends AbstractBinaryOkvs<T> implements SparseOkvs<
             ArrayList<T> traversalEdgeDataList = rootEdgeMap.get(root);
             for (T traversalEdgeData : traversalEdgeDataList) {
                 // set lv = lu XOR <r(x_i), R> XOR y_i
-                boolean[] rx = dataHrMap.get(traversalEdgeData);
+                byte[] rx = dataHrMap.get(traversalEdgeData);
                 Integer[] vertices = h2CuckooTable.getVertices(traversalEdgeData);
                 Integer source = vertices[0];
                 Integer target = vertices[1];
@@ -217,8 +221,8 @@ class H2DfsGctBinaryOkvs<T> extends AbstractBinaryOkvs<T> implements SparseOkvs<
             byte[][] vectorByteY = new byte[size][];
             int rowIndex = 0;
             for (T cycleEdgeData : cycleEdgeDataSet) {
-                boolean[] rx = dataHrMap.get(cycleEdgeData);
-                matrixByteM[rowIndex] = BinaryUtils.binaryToByteArray(rx);
+                byte[] rx = dataHrMap.get(cycleEdgeData);
+                matrixByteM[rowIndex] = BytesUtils.clone(rx);
                 vectorByteY[rowIndex] = BytesUtils.clone(keyValueMap.get(cycleEdgeData));
                 rowIndex++;
             }

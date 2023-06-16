@@ -610,6 +610,28 @@ public class BytesUtils {
     }
 
     /**
+     * Computes the inner product of x and y.
+     *
+     * @param x           vector x.
+     * @param xByteLength x byte length.
+     * @param y           vector y.
+     * @return the inner product of x and y.
+     */
+    public static byte[] innerProduct(byte[][] x, int xByteLength, byte[] y) {
+        int num = x.length;
+        int byteNum = CommonUtils.getByteLength(num);
+        int offsetNum = byteNum * Byte.SIZE - num;
+        assert BytesUtils.isFixedReduceByteArray(y, byteNum, num);
+        byte[] value = new byte[xByteLength];
+        for (int i = 0; i < x.length; i++) {
+            if (BinaryUtils.getBoolean(y, offsetNum + i)) {
+                xori(value, x[i]);
+            }
+        }
+        return value;
+    }
+
+    /**
      * 计算a和b的汉明距离。
      *
      * @param a 字节数组a。
