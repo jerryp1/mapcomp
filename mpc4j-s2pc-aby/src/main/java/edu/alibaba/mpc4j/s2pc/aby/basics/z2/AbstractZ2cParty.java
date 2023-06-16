@@ -22,10 +22,6 @@ import java.util.stream.IntStream;
  */
 public abstract class AbstractZ2cParty extends AbstractTwoPartyPto implements Z2cParty {
     /**
-     * maximum number of bits in round.
-     */
-    protected int maxRoundBitNum;
-    /**
      * total number of bits for updates.
      */
     protected long updateBitNum;
@@ -38,23 +34,22 @@ public abstract class AbstractZ2cParty extends AbstractTwoPartyPto implements Z2
         super(ptoDesc, ownRpc, otherParty, config);
     }
 
-    protected void setInitInput(int maxRoundBitNum, int updateBitNum) {
-        MathPreconditions.checkPositiveInRangeClosed("maxRoundBitNum", maxRoundBitNum, updateBitNum);
-        this.maxRoundBitNum = maxRoundBitNum;
+    protected void setInitInput(int updateBitNum) {
+        MathPreconditions.checkPositive("updateBitNum", updateBitNum);
         this.updateBitNum = updateBitNum;
         initState();
     }
 
     protected void setShareOwnInput(BitVector xi) {
         checkInitialized();
-        MathPreconditions.checkPositiveInRangeClosed("bitNum", xi.bitNum(), maxRoundBitNum);
+        MathPreconditions.checkPositive("bitNum", xi.bitNum());
         bitNum = xi.bitNum();
         extraInfo++;
     }
 
     protected void setShareOtherInput(int bitNum) {
         checkInitialized();
-        MathPreconditions.checkPositiveInRangeClosed("bitNum", bitNum, maxRoundBitNum);
+        MathPreconditions.checkPositive("bitNum", bitNum);
         this.bitNum = bitNum;
         extraInfo++;
     }
@@ -62,22 +57,22 @@ public abstract class AbstractZ2cParty extends AbstractTwoPartyPto implements Z2
     protected void setDyadicOperatorInput(SquareZ2Vector xi, SquareZ2Vector yi) {
         checkInitialized();
         MathPreconditions.checkEqual("xi.bitNum", "yi.bitNum", xi.getNum(), yi.getNum());
-        MathPreconditions.checkPositiveInRangeClosed("bitNum", xi.getNum(), maxRoundBitNum);
-        bitNum = xi.getNum();
+        MathPreconditions.checkPositive("bitNum", xi.bitNum());
+        bitNum = xi.bitNum();
         extraInfo++;
     }
 
     protected void setRevealOwnInput(SquareZ2Vector xi) {
         checkInitialized();
-        MathPreconditions.checkPositiveInRangeClosed("xi.bitNum", xi.getNum(), maxRoundBitNum);
-        bitNum = xi.getNum();
+        MathPreconditions.checkPositive("xi.bitNum", xi.bitNum());
+        bitNum = xi.bitNum();
         extraInfo++;
     }
 
     protected void setRevealOtherInput(SquareZ2Vector xi) {
         checkInitialized();
-        MathPreconditions.checkPositiveInRangeClosed("xi.bitNum", xi.getNum(), maxRoundBitNum);
-        bitNum = xi.getNum();
+        MathPreconditions.checkPositive("xi.bitNum", xi.bitNum());
+        bitNum = xi.bitNum();
         extraInfo++;
     }
 

@@ -95,11 +95,10 @@ public interface MpcZ2cParty {
     /**
      * inits the protocol.
      *
-     * @param maxRoundBitNum maximum number of bits in round.
      * @param updateBitNum   total number of bits for updates.
      * @throws MpcAbortException if the protocol is abort.
      */
-    void init(int maxRoundBitNum, int updateBitNum) throws MpcAbortException;
+    void init(int updateBitNum) throws MpcAbortException;
 
     /**
      * Shares its own vector.
@@ -244,4 +243,54 @@ public interface MpcZ2cParty {
      * @throws MpcAbortException the protocol failure aborts.
      */
     MpcZ2Vector[] not(MpcZ2Vector[] xiArray) throws MpcAbortException;
+
+    /**
+     * MUX operation.
+     *
+     * @param xi xi.
+     * @param yi yi.
+     * @param ci ci.
+     * @return zi, such that z = (c ? y : x).
+     * @throws MpcAbortException the protocol failure aborts.
+     */
+    default MpcZ2Vector mux(MpcZ2Vector xi, MpcZ2Vector yi, MpcZ2Vector ci) throws MpcAbortException {
+        return xor(and(xor(xi, yi), ci), xi);
+    }
+
+    /**
+     * Vector MUX operation.
+     *
+     * @param xiArray xiArray array.
+     * @param yiArray yiArray array.
+     * @param ciArray ciArray.
+     * @return ziArray, such that for each i, z[i] = (c[i] ? y[i] : x[i]).
+     * @throws MpcAbortException the protocol failure aborts.
+     */
+    default MpcZ2Vector[] mux(MpcZ2Vector[] xiArray, MpcZ2Vector[] yiArray, MpcZ2Vector[] ciArray) throws MpcAbortException {
+        return xor(and(xor(xiArray, yiArray), ciArray), xiArray);
+    }
+
+    /**
+     * Equality operation.
+     *
+     * @param xi xi.
+     * @param yi yi.
+     * @return zi, such that z = (x == y).
+     * @throws MpcAbortException the protocol failure aborts.
+     */
+    default MpcZ2Vector eq(MpcZ2Vector xi, MpcZ2Vector yi) throws MpcAbortException {
+        return not(xor(xi, yi));
+    }
+
+    /**
+     * Vector equality operation.
+     *
+     * @param xiArray xi array.
+     * @param yiArray yi array.
+     * @return zi array, such that for each i, z[i] = (x[i] == y[i]).
+     * @throws MpcAbortException the protocol failure aborts.
+     */
+    default MpcZ2Vector[] eq(MpcZ2Vector[] xiArray, MpcZ2Vector[] yiArray) throws MpcAbortException {
+        return not(xor(xiArray, yiArray));
+    }
 }

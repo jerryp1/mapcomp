@@ -87,11 +87,10 @@ public interface MpcZlParty {
     /**
      * inits the protocol.
      *
-     * @param maxRoundNum maximum num in round.
-     * @param updateNum   total num for updates.
+     * @param updateNum total num for updates.
      * @throws MpcAbortException if the protocol is abort.
      */
-    void init(int maxRoundNum, int updateNum) throws MpcAbortException;
+    void init(int updateNum) throws MpcAbortException;
 
     /**
      * Shares its own vector.

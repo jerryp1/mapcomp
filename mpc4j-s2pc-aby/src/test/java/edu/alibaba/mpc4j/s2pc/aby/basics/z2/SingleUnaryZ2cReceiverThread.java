@@ -55,7 +55,7 @@ class SingleUnaryZ2cReceiverThread extends Thread {
     @Override
     public void run() {
         try {
-            receiver.init(bitNum, bitNum);
+            receiver.init(bitNum);
             // set inputs
             MpcZ2Vector xPlainMpcVector = receiver.create(xVector);
             MpcZ2Vector x1SecretMpcVector = receiver.shareOther(bitNum);

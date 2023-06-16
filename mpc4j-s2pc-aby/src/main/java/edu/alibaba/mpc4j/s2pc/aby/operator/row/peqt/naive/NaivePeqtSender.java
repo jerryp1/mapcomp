@@ -44,7 +44,7 @@ public class NaivePeqtSender extends AbstractPeqtParty {
         logPhaseInfo(PtoState.INIT_BEGIN);
 
         stopWatch.start();
-        z2cSender.init(maxNum * maxL, maxNum * maxL);
+        z2cSender.init(maxNum * maxL);
         stopWatch.stop();
         long initTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
         stopWatch.reset();

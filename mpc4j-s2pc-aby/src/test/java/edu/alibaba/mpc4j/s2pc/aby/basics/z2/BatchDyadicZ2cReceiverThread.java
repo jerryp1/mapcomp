@@ -78,7 +78,7 @@ class BatchDyadicZ2cReceiverThread extends Thread {
     @Override
     public void run() {
         try {
-            receiver.init(totalBitNum, totalBitNum);
+            receiver.init(totalBitNum);
             // set inputs
             MpcZ2Vector[] xPlainMpcVectors = Arrays.stream(xVectors)
                 .map(receiver::create)

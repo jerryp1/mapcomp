@@ -44,12 +44,12 @@ public class Bea91ZlcReceiver extends AbstractZlcParty {
     }
 
     @Override
-    public void init(int maxRoundNum, int updateNum) throws MpcAbortException {
-        setInitInput(maxRoundNum, updateNum);
+    public void init(int updateNum) throws MpcAbortException {
+        setInitInput(updateNum);
         logPhaseInfo(PtoState.INIT_BEGIN);
 
         stopWatch.start();
-        mtgReceiver.init(maxRoundNum, updateNum);
+        mtgReceiver.init(updateNum);
         stopWatch.stop();
         long initTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
         stopWatch.reset();

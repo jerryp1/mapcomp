@@ -6,10 +6,14 @@ import edu.alibaba.mpc4j.common.rpc.utils.DataPacket;
 import edu.alibaba.mpc4j.common.rpc.utils.DataPacketHeader;
 import edu.alibaba.mpc4j.common.tool.bitvector.BitVector;
 import edu.alibaba.mpc4j.common.tool.bitvector.BitVectorFactory;
+import edu.alibaba.mpc4j.common.tool.galoisfield.zl.Zl;
 import edu.alibaba.mpc4j.common.tool.galoisfield.zl.ZlFactory;
+import edu.alibaba.mpc4j.common.tool.utils.BigIntegerUtils;
 import edu.alibaba.mpc4j.common.tool.utils.IntUtils;
+import edu.alibaba.mpc4j.crypto.matrix.vector.ZlVector;
 import edu.alibaba.mpc4j.s2pc.pcg.aid.TrustDealPtoDesc.AidPtoStep;
 
+import java.nio.ByteBuffer;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
 
@@ -21,13 +25,18 @@ import java.util.concurrent.TimeUnit;
  */
 public class TrustDealAider extends AbstractThreePartyPto {
     /**
-     * encoded task ID map
+     * encoded task ID -> param
      */
-    private final Map<Long, Object> encodeTaskIdMap;
+    private final Map<Long, Object> encodeTaskIdParamMap;
+    /**
+     * encode task ID -> type
+     */
+    private final Map<Long, TrustDealType> encodeTaskIdTypeMap;
 
     public TrustDealAider(Rpc aiderRpc, Party leftParty, Party rightParty) {
         super(TrustDealPtoDesc.getInstance(), aiderRpc, leftParty, rightParty, new TrustDealConfig.Builder().build());
-        encodeTaskIdMap = new HashMap<>(1);
+        encodeTaskIdParamMap = new HashMap<>(1);
+        encodeTaskIdTypeMap = new HashMap<>(1);
     }
 
     /**
@@ -85,7 +94,7 @@ public class TrustDealAider extends AbstractThreePartyPto {
                 default:
                     throw new MpcAbortException("Invalid " + AidPtoStep.class.getSimpleName() + ": " + aidPtoStep);
             }
-            run = (encodeTaskIdMap.size() != 0);
+            run = (encodeTaskIdParamMap.size() != 0);
         }
         logPhaseInfo(PtoState.PTO_END);
     }
@@ -97,7 +106,8 @@ public class TrustDealAider extends AbstractThreePartyPto {
         int thatId = (thisId == leftParty().getPartyId() ? rightParty().getPartyId() : leftParty().getPartyId());
         long initExtraInfo = thisInitHeader.getExtraInfo();
         // check no-exist of encode task ID
-        MpcAbortPreconditions.checkArgument(!encodeTaskIdMap.containsKey(initEncodeTaskId));
+        MpcAbortPreconditions.checkArgument(!encodeTaskIdParamMap.containsKey(initEncodeTaskId));
+        MpcAbortPreconditions.checkArgument(!encodeTaskIdParamMap.containsKey(initEncodeTaskId));
         // receive init query from that party
         DataPacketHeader thatInitHeader = new DataPacketHeader(
             initEncodeTaskId, getPtoDesc().getPtoId(), AidPtoStep.INIT_QUERY.ordinal(), initExtraInfo,
@@ -113,10 +123,11 @@ public class TrustDealAider extends AbstractThreePartyPto {
         int thatTypeIndex = IntUtils.byteArrayToInt(thatInitPayload.get(0));
         MpcAbortPreconditions.checkArgument(thisTypeIndex == thatTypeIndex);
         TrustDealType trustDealType = TrustDealType.values()[thatTypeIndex];
+        encodeTaskIdTypeMap.put(initEncodeTaskId, trustDealType);
         switch (trustDealType) {
             case Z2_TRIPLE:
                 // Z2 triple, no config
-                encodeTaskIdMap.put(initEncodeTaskId, new Object());
+                encodeTaskIdParamMap.put(initEncodeTaskId, new Object());
                 break;
             case ZL_TRIPLE:
                 // Zl triple, read l
@@ -125,7 +136,7 @@ public class TrustDealAider extends AbstractThreePartyPto {
                 int thisL = IntUtils.byteArrayToInt(thisInitPayload.get(1));
                 int thatL = IntUtils.byteArrayToInt(thatInitPayload.get(1));
                 MpcAbortPreconditions.checkArgument(thisL == thatL);
-                encodeTaskIdMap.put(initEncodeTaskId, ZlFactory.createInstance(envType, thisL));
+                encodeTaskIdParamMap.put(initEncodeTaskId, ZlFactory.createInstance(envType, thisL));
                 break;
             default:
                 throw new MpcAbortException("Invalid " + TrustDealType.class.getSimpleName() + ": " + trustDealType.name());
@@ -151,7 +162,7 @@ public class TrustDealAider extends AbstractThreePartyPto {
         int thatId = (thisId == leftParty().getPartyId() ? rightParty().getPartyId() : leftParty().getPartyId());
         long requestExtraInfo = thisRequestHeader.getExtraInfo();
         // check encode task ID
-        MpcAbortPreconditions.checkArgument(encodeTaskIdMap.containsKey(requestEncodeTaskId));
+        MpcAbortPreconditions.checkArgument(encodeTaskIdParamMap.containsKey(requestEncodeTaskId));
         // receive request query from that party
         DataPacketHeader thatRequestHeader = new DataPacketHeader(
             requestEncodeTaskId, getPtoDesc().getPtoId(), AidPtoStep.REQUEST_QUERY.ordinal(), requestExtraInfo,
@@ -161,45 +172,43 @@ public class TrustDealAider extends AbstractThreePartyPto {
         // parse and check type
         List<byte[]> thisRequestPayload = thisRequestDataPacket.getPayload();
         List<byte[]> thatRequestPayload = thatRequestDataPacket.getPayload();
-        MpcAbortPreconditions.checkArgument(thisRequestPayload.size() >= 1);
-        MpcAbortPreconditions.checkArgument(thatRequestPayload.size() >= 1);
-        int thisTypeIndex = IntUtils.byteArrayToInt(thisRequestPayload.get(0));
-        int thatTypeIndex = IntUtils.byteArrayToInt(thatRequestPayload.get(0));
-        MpcAbortPreconditions.checkArgument(thisTypeIndex == thatTypeIndex);
-        TrustDealType trustDealType = TrustDealType.values()[thatTypeIndex];
-        //noinspection SwitchStatementWithTooFewBranches
+        MpcAbortPreconditions.checkArgument(thisRequestPayload.size() == 1);
+        MpcAbortPreconditions.checkArgument(thatRequestPayload.size() == 1);
+        // read type
+        TrustDealType trustDealType = encodeTaskIdTypeMap.get(requestEncodeTaskId);
+        // read num
+        int thisNum = IntUtils.byteArrayToInt(thisRequestPayload.get(0));
+        int thatNum = IntUtils.byteArrayToInt(thatRequestPayload.get(0));
+        MpcAbortPreconditions.checkArgument(thisNum == thatNum);
+        MpcAbortPreconditions.checkArgument(thisNum > 0);
         switch (trustDealType) {
             case Z2_TRIPLE:
-                z2TripleResponse(requestEncodeTaskId, requestExtraInfo, thisRequestPayload, thatRequestPayload);
+                z2TripleResponse(requestEncodeTaskId, requestExtraInfo, thisNum);
+                break;
+            case ZL_TRIPLE:
+                zlTripleResponse(requestEncodeTaskId, requestExtraInfo, thisNum);
                 break;
             default:
                 throw new MpcAbortException("Invalid " + TrustDealType.class.getSimpleName() + ": " + trustDealType.name());
         }
     }
 
-    private void z2TripleResponse(long requestEncodeTaskId, long requestExtraInfo,
-                                  List<byte[]> thisRequestPayload, List<byte[]> thatRequestPayload)
-        throws MpcAbortException {
-        MpcAbortPreconditions.checkArgument(thisRequestPayload.size() == 2);
-        MpcAbortPreconditions.checkArgument(thatRequestPayload.size() == 2);
-        int thisNum = IntUtils.byteArrayToInt(thisRequestPayload.get(1));
-        int thatNum = IntUtils.byteArrayToInt(thatRequestPayload.get(1));
-        MpcAbortPreconditions.checkArgument(thisNum == thatNum);
+    private void z2TripleResponse(long requestEncodeTaskId, long requestExtraInfo, int num) {
         // generate Z2 triple
-        BitVector aBitVector = BitVectorFactory.createRandom(thisNum, secureRandom);
-        BitVector bBitVector = BitVectorFactory.createRandom(thisNum, secureRandom);
-        BitVector cBitVector = aBitVector.and(bBitVector);
-        BitVector a0BitVector = BitVectorFactory.createRandom(thisNum, secureRandom);
-        BitVector a1BitVector = aBitVector.xor(a0BitVector);
-        BitVector b0BitVector = BitVectorFactory.createRandom(thisNum, secureRandom);
-        BitVector b1BitVector = bBitVector.xor(b0BitVector);
-        BitVector c0BitVector = BitVectorFactory.createRandom(thisNum, secureRandom);
-        BitVector c1BitVector = cBitVector.xor(c0BitVector);
+        BitVector aVector = BitVectorFactory.createRandom(num, secureRandom);
+        BitVector bVector = BitVectorFactory.createRandom(num, secureRandom);
+        BitVector cVector = aVector.and(bVector);
+        BitVector a0Vector = BitVectorFactory.createRandom(num, secureRandom);
+        BitVector a1Vector = aVector.xor(a0Vector);
+        BitVector b0Vector = BitVectorFactory.createRandom(num, secureRandom);
+        BitVector b1Vector = bVector.xor(b0Vector);
+        BitVector c0Vector = BitVectorFactory.createRandom(num, secureRandom);
+        BitVector c1Vector = cVector.xor(c0Vector);
         // response to the left party
         List<byte[]> leftResponsePayload = new LinkedList<>();
-        leftResponsePayload.add(a0BitVector.getBytes());
-        leftResponsePayload.add(b0BitVector.getBytes());
-        leftResponsePayload.add(c0BitVector.getBytes());
+        leftResponsePayload.add(a0Vector.getBytes());
+        leftResponsePayload.add(b0Vector.getBytes());
+        leftResponsePayload.add(c0Vector.getBytes());
         DataPacketHeader leftResponseHeader = new DataPacketHeader(
             requestEncodeTaskId, getPtoDesc().getPtoId(), AidPtoStep.REQUEST_RESPONSE.ordinal(), requestExtraInfo,
             ownParty().getPartyId(), leftParty().getPartyId()
@@ -207,9 +216,68 @@ public class TrustDealAider extends AbstractThreePartyPto {
         rpc.send(DataPacket.fromByteArrayList(leftResponseHeader, leftResponsePayload));
         // response to the right party
         List<byte[]> rightResponsePayload = new LinkedList<>();
-        rightResponsePayload.add(a1BitVector.getBytes());
-        rightResponsePayload.add(b1BitVector.getBytes());
-        rightResponsePayload.add(c1BitVector.getBytes());
+        rightResponsePayload.add(a1Vector.getBytes());
+        rightResponsePayload.add(b1Vector.getBytes());
+        rightResponsePayload.add(c1Vector.getBytes());
+        DataPacketHeader rightResponseHeader = new DataPacketHeader(
+            requestEncodeTaskId, getPtoDesc().getPtoId(), AidPtoStep.REQUEST_RESPONSE.ordinal(), requestExtraInfo,
+            ownParty().getPartyId(), rightParty().getPartyId()
+        );
+        rpc.send(DataPacket.fromByteArrayList(rightResponseHeader, rightResponsePayload));
+    }
+
+    private void zlTripleResponse(long requestEncodeTaskId, long requestExtraInfo, int num) {
+        // generate Zl triple
+        Zl zl = (Zl) encodeTaskIdParamMap.get(requestEncodeTaskId);
+        int byteL = zl.getByteL();
+        ZlVector aVector = ZlVector.createRandom(zl, num, secureRandom);
+        ZlVector bVector = ZlVector.createRandom(zl, num, secureRandom);
+        ZlVector cVector = aVector.mul(bVector);
+        ZlVector a0Vector = ZlVector.createRandom(zl, num, secureRandom);
+        ZlVector a1Vector = aVector.sub(a0Vector);
+        ZlVector b0Vector = ZlVector.createRandom(zl, num, secureRandom);
+        ZlVector b1Vector = bVector.sub(b0Vector);
+        ZlVector c0Vector = ZlVector.createRandom(zl, num, secureRandom);
+        ZlVector c1Vector = cVector.sub(c0Vector);
+        // response to the left party
+        ByteBuffer a0ByteBuffer = ByteBuffer.allocate(num * byteL);
+        for (int index = 0; index < num; index++) {
+            a0ByteBuffer.put(BigIntegerUtils.nonNegBigIntegerToByteArray(a0Vector.getElement(index), byteL));
+        }
+        ByteBuffer b0ByteBuffer = ByteBuffer.allocate(num * byteL);
+        for (int index = 0; index < num; index++) {
+            b0ByteBuffer.put(BigIntegerUtils.nonNegBigIntegerToByteArray(b0Vector.getElement(index), byteL));
+        }
+        ByteBuffer c0ByteBuffer = ByteBuffer.allocate(num * byteL);
+        for (int index = 0; index < num; index++) {
+            c0ByteBuffer.put(BigIntegerUtils.nonNegBigIntegerToByteArray(c0Vector.getElement(index), byteL));
+        }
+        List<byte[]> leftResponsePayload = new LinkedList<>();
+        leftResponsePayload.add(a0ByteBuffer.array());
+        leftResponsePayload.add(b0ByteBuffer.array());
+        leftResponsePayload.add(c0ByteBuffer.array());
+        DataPacketHeader leftResponseHeader = new DataPacketHeader(
+            requestEncodeTaskId, getPtoDesc().getPtoId(), AidPtoStep.REQUEST_RESPONSE.ordinal(), requestExtraInfo,
+            ownParty().getPartyId(), leftParty().getPartyId()
+        );
+        rpc.send(DataPacket.fromByteArrayList(leftResponseHeader, leftResponsePayload));
+        // response to the right party
+        ByteBuffer a1ByteBuffer = ByteBuffer.allocate(num * byteL);
+        for (int index = 0; index < num; index++) {
+            a1ByteBuffer.put(BigIntegerUtils.nonNegBigIntegerToByteArray(a1Vector.getElement(index), byteL));
+        }
+        ByteBuffer b1ByteBuffer = ByteBuffer.allocate(num * byteL);
+        for (int index = 0; index < num; index++) {
+            b1ByteBuffer.put(BigIntegerUtils.nonNegBigIntegerToByteArray(b1Vector.getElement(index), byteL));
+        }
+        ByteBuffer c1ByteBuffer = ByteBuffer.allocate(num * byteL);
+        for (int index = 0; index < num; index++) {
+            c1ByteBuffer.put(BigIntegerUtils.nonNegBigIntegerToByteArray(c1Vector.getElement(index), byteL));
+        }
+        List<byte[]> rightResponsePayload = new LinkedList<>();
+        rightResponsePayload.add(a1ByteBuffer.array());
+        rightResponsePayload.add(b1ByteBuffer.array());
+        rightResponsePayload.add(c1ByteBuffer.array());
         DataPacketHeader rightResponseHeader = new DataPacketHeader(
             requestEncodeTaskId, getPtoDesc().getPtoId(), AidPtoStep.REQUEST_RESPONSE.ordinal(), requestExtraInfo,
             ownParty().getPartyId(), rightParty().getPartyId()
@@ -224,7 +292,8 @@ public class TrustDealAider extends AbstractThreePartyPto {
         int thatId = (thisId == leftParty().getPartyId() ? rightParty().getPartyId() : leftParty().getPartyId());
         long destroyExtraInfo = thisHeader.getExtraInfo();
         // check encode task ID
-        MpcAbortPreconditions.checkArgument(encodeTaskIdMap.containsKey(destroyEncodeTaskId));
+        MpcAbortPreconditions.checkArgument(encodeTaskIdParamMap.containsKey(destroyEncodeTaskId));
+        MpcAbortPreconditions.checkArgument(encodeTaskIdTypeMap.containsKey(destroyEncodeTaskId));
         // receive destroy query from that party
         DataPacketHeader thatHeader = new DataPacketHeader(
             destroyEncodeTaskId, getPtoDesc().getPtoId(), AidPtoStep.DESTROY_QUERY.ordinal(), destroyExtraInfo,
@@ -234,7 +303,8 @@ public class TrustDealAider extends AbstractThreePartyPto {
         MpcAbortPreconditions.checkArgument(thisDataPacket.getPayload().size() == 0);
         MpcAbortPreconditions.checkArgument(thatDataPacket.getPayload().size() == 0);
         // remove encode task ID from the set
-        encodeTaskIdMap.remove(destroyEncodeTaskId);
+        encodeTaskIdParamMap.remove(destroyEncodeTaskId);
+        encodeTaskIdTypeMap.remove(destroyEncodeTaskId);
         // response to the left party
         DataPacketHeader leftResponseHeader = new DataPacketHeader(
             destroyEncodeTaskId, getPtoDesc().getPtoId(), AidPtoStep.DESTROY_RESPONSE.ordinal(), destroyExtraInfo,

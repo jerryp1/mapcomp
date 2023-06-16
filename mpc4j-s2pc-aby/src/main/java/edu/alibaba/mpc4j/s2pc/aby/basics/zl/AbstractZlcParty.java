@@ -35,10 +35,6 @@ public abstract class AbstractZlcParty extends AbstractTwoPartyPto implements Zl
      */
     protected final int byteL;
     /**
-     * maximum num in round.
-     */
-    protected int maxRoundNum;
-    /**
      * total num for updates.
      */
     protected long updateNum;
@@ -54,41 +50,40 @@ public abstract class AbstractZlcParty extends AbstractTwoPartyPto implements Zl
         byteL = zl.getByteL();
     }
 
-    protected void setInitInput(int maxRoundNum, int updateNum) {
-        MathPreconditions.checkPositiveInRangeClosed("maxRoundNum", maxRoundNum, updateNum);
-        this.maxRoundNum = maxRoundNum;
+    protected void setInitInput(int updateNum) {
+        MathPreconditions.checkPositive("updateNum", updateNum);
         this.updateNum = updateNum;
         initState();
     }
 
     protected void setShareOwnInput(ZlVector xi) {
         checkInitialized();
-        MathPreconditions.checkPositiveInRangeClosed("num", xi.getNum(), maxRoundNum);
+        MathPreconditions.checkPositive("num", xi.getNum());
         num = xi.getNum();
     }
 
     protected void setShareOtherInput(int num) {
         checkInitialized();
-        MathPreconditions.checkPositiveInRangeClosed("num", num, maxRoundNum);
+        MathPreconditions.checkPositive("num", num);
         this.num = num;
     }
 
     protected void setDyadicOperatorInput(SquareZlVector xi, SquareZlVector yi) {
         checkInitialized();
         MathPreconditions.checkEqual("xi.num", "yi.num", xi.getNum(), yi.getNum());
-        MathPreconditions.checkPositiveInRangeClosed("num", xi.getNum(), maxRoundNum);
+        MathPreconditions.checkPositive("num", xi.getNum());
         num = xi.getNum();
     }
 
     protected void setRevealOwnInput(SquareZlVector xi) {
         checkInitialized();
-        MathPreconditions.checkPositiveInRangeClosed("xi.num", xi.getNum(), maxRoundNum);
+        MathPreconditions.checkPositive("xi.num", xi.getNum());
         num = xi.getNum();
     }
 
     protected void setRevealOtherInput(SquareZlVector xi) {
         checkInitialized();
-        MathPreconditions.checkPositiveInRangeClosed("xi.num", xi.getNum(), maxRoundNum);
+        MathPreconditions.checkPositive("xi.num", xi.getNum());
         num = xi.getNum();
     }
 

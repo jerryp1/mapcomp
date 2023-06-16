@@ -3,6 +3,8 @@ package edu.alibaba.mpc4j.common.circuit.z2;
 import edu.alibaba.mpc4j.common.circuit.MpcVector;
 import edu.alibaba.mpc4j.common.tool.bitvector.BitVector;
 
+import java.util.stream.IntStream;
+
 /**
  * MPC Bit Vector.
  *
@@ -32,4 +34,10 @@ public interface MpcZ2Vector extends MpcVector {
      * @return the num in bytes.
      */
     int byteNum();
+
+    static MpcZ2Vector[] reverse(MpcZ2Vector[] inputs) {
+        MpcZ2Vector[] result = new MpcZ2Vector[inputs.length];
+        IntStream.range(0, inputs.length).forEach(i -> result[i] = inputs[inputs.length - i - 1]);
+        return result;
+    }
 }

@@ -196,4 +196,41 @@ public class CotTest extends AbstractTwoPartyPtoTest {
             e.printStackTrace();
         }
     }
+
+    @Test
+    public void testLessUpdate() {
+        int num = DEFAULT_NUM;
+        CotSender sender = CotFactory.createSender(firstRpc, secondRpc.ownParty(), config);
+        CotReceiver receiver = CotFactory.createReceiver(secondRpc, firstRpc.ownParty(), config);
+        int randomTaskId = Math.abs(SECURE_RANDOM.nextInt());
+        sender.setTaskId(randomTaskId);
+        receiver.setTaskId(randomTaskId);
+        try {
+            LOGGER.info("-----test {} (less update) start-----", sender.getPtoDesc().getPtoName());
+            byte[] delta = new byte[CommonConstants.BLOCK_BYTE_LENGTH];
+            SECURE_RANDOM.nextBytes(delta);
+            boolean[] choices = new boolean[num];
+            IntStream.range(0, DEFAULT_NUM).forEach(index -> choices[index] = SECURE_RANDOM.nextBoolean());
+            CotSenderThread senderThread = new CotSenderThread(sender, delta, num, num / 2 - 1);
+            CotReceiverThread receiverThread = new CotReceiverThread(receiver, choices, num / 2 - 1);
+            STOP_WATCH.start();
+            senderThread.start();
+            receiverThread.start();
+            senderThread.join();
+            receiverThread.join();
+            STOP_WATCH.stop();
+            long time = STOP_WATCH.getTime(TimeUnit.MILLISECONDS);
+            STOP_WATCH.reset();
+            CotSenderOutput senderOutput = senderThread.getSenderOutput();
+            CotReceiverOutput receiverOutput = receiverThread.getReceiverOutput();
+            CotTestUtils.assertOutput(num, senderOutput, receiverOutput);
+            printAndResetRpc(time);
+            // destroy
+            new Thread(sender::destroy).start();
+            new Thread(receiver::destroy).start();
+            LOGGER.info("-----test {} (less update) end-----", sender.getPtoDesc().getPtoName());
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+    }
 }

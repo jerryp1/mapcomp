@@ -65,8 +65,8 @@ public class Egk20ZlEdaBitGenReceiver extends AbstractZlEdaBitGenParty {
         logPhaseInfo(PtoState.INIT_BEGIN);
 
         stopWatch.start();
-        zlcReceiver.init(maxNum, maxNum);
-        z2cReceiver.init(maxNum, maxNum * l);
+        zlcReceiver.init(maxNum);
+        z2cReceiver.init(maxNum * l);
         stopWatch.stop();
         long initTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
         stopWatch.reset();

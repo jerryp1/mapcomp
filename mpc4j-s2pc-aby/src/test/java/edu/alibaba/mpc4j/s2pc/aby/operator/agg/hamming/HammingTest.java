@@ -126,7 +126,7 @@ public class HammingTest {
 
     @Test
     public void testParallelLargeNum() {
-        testPto(LARGE_NUM, false);
+        testPto(LARGE_NUM, true);
     }
 
     private void testPto(int num, boolean parallel) {

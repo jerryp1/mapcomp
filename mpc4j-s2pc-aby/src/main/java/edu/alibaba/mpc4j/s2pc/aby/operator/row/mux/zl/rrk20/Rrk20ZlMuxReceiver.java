@@ -65,10 +65,10 @@ public class Rrk20ZlMuxReceiver extends AbstractZlMuxParty {
         logPhaseInfo(PtoState.INIT_BEGIN);
 
         stopWatch.start();
-        cotReceiver.init(maxNum, maxNum);
+        cotReceiver.init(maxNum);
         byte[] delta = new byte[CommonConstants.BLOCK_BYTE_LENGTH];
         secureRandom.nextBytes(delta);
-        cotSender.init(delta, maxNum, maxNum);
+        cotSender.init(delta, maxNum);
         stopWatch.stop();
         long initTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
         stopWatch.reset();

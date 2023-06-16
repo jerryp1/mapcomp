@@ -71,7 +71,7 @@ class SingleUnaryZlcSenderThread extends Thread {
     @Override
     public void run() {
         try {
-            sender.init(num, num);
+            sender.init(num);
             // set inputs
             MpcZlVector xPlainMpcVector = sender.create(xVector);
             MpcZlVector x0SecretMpcVector = sender.shareOwn(xVector);

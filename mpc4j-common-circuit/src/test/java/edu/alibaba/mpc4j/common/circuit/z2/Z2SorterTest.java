@@ -1,0 +1,168 @@
+package edu.alibaba.mpc4j.common.circuit.z2;
+
+import com.google.common.base.Preconditions;
+import edu.alibaba.mpc4j.common.circuit.operator.Z2IntegerOperator;
+import edu.alibaba.mpc4j.common.circuit.z2.sorter.SorterFactory;
+import edu.alibaba.mpc4j.common.tool.EnvType;
+import edu.alibaba.mpc4j.common.tool.bitvector.BitVector;
+import edu.alibaba.mpc4j.common.tool.utils.IntUtils;
+import edu.alibaba.mpc4j.common.tool.utils.LongUtils;
+import edu.alibaba.mpc4j.crypto.matrix.database.Zl64Database;
+import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.time.StopWatch;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.junit.runners.Parameterized;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import java.security.SecureRandom;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.stream.IntStream;
+
+/**
+ * Z2 Sorter Test.
+ *
+ * @author Li Peng
+ * @date 2023/6/13
+ */
+@RunWith(Parameterized.class)
+public class Z2SorterTest {
+    private static final Logger LOGGER = LoggerFactory.getLogger(Z2SorterTest.class);
+    /**
+     * the random state
+     */
+    private static final SecureRandom SECURE_RANDOM = new SecureRandom();
+    /**
+     * default num of elements to be sorted
+     */
+    private static final int DEFAULT_NUM_SORTED = 1024;
+    /**
+     * large num of elements to be sorted
+     */
+    private static final int LARGE_NUM_SORTED = 1 << 16;
+    /**
+     * default num
+     */
+    private static final int DEFAULT_NUM = 1 << 8;
+    /**
+     * default large num
+     */
+    private static final int DEFAULT_LARGE_NUM = 1 << 12;
+    /**
+     * default l
+     */
+    private static final int DEFAULT_L = IntUtils.MAX_L;
+    /**
+     * large l
+     */
+    private static final int LARGE_L = LongUtils.MAX_L;
+    /**
+     * the config
+     */
+    private final Z2CircuitConfig config;
+
+    @Parameterized.Parameters(name = "{0}")
+    public static Collection<Object[]> configurations() {
+        Collection<Object[]> configurations = new ArrayList<>();
+
+        // Bitonic sorter.
+        configurations.add(new Object[]{
+                SorterFactory.SorterTypes.BITONIC + " (bitonic sorter)",
+                new Z2CircuitConfig.Builder().setSorterType(SorterFactory.SorterTypes.BITONIC).build()
+        });
+        return configurations;
+    }
+
+    public Z2SorterTest(String name, Z2CircuitConfig config) {
+        Preconditions.checkArgument(StringUtils.isNotBlank(name));
+        this.config = config;
+    }
+
+    @Test
+    public void testConstant() {
+        testConstant(DEFAULT_L);
+        testConstant(LARGE_L);
+    }
+
+    public void testConstant(int l) {
+        long[][] longXs = IntStream.range(0, DEFAULT_NUM_SORTED).mapToObj(index -> IntStream.range(0, DEFAULT_NUM)
+                .mapToLong(i -> i)
+                .toArray()).toArray(long[][]::new);
+        testPto(true, l, longXs);
+        LOGGER.info("------------------------------");
+    }
+
+    @Test
+    public void test1Num() {
+        testRandom(DEFAULT_NUM, 1);
+        testRandom(DEFAULT_LARGE_NUM, 1);
+
+    }
+
+    @Test
+    public void test2Num() {
+        testRandom(DEFAULT_NUM, 2);
+        testRandom(DEFAULT_LARGE_NUM, 2);
+
+    }
+
+    @Test
+    public void test8Num() {
+        testRandom(DEFAULT_NUM, 8);
+        testRandom(DEFAULT_LARGE_NUM, 8);
+
+    }
+
+    @Test
+    public void testLargeNum() {
+        testRandom(DEFAULT_NUM, LARGE_NUM_SORTED);
+        testRandom(DEFAULT_LARGE_NUM, LARGE_NUM_SORTED);
+
+    }
+
+    private void testRandom(int num, int numOfSorted) {
+        testRandom(DEFAULT_L, num, numOfSorted);
+        testRandom(LARGE_L, num, numOfSorted);
+    }
+
+    private void testRandom(int l, int num, int numOfSorted) {
+        long[][] longXs = IntStream.range(0, numOfSorted).mapToObj(index -> IntStream.range(0, num)
+                .mapToLong(i -> LongUtils.randomNonNegative(1L << (l - 1), SECURE_RANDOM))
+                .toArray()).toArray(long[][]::new);
+        testPto(false, l, longXs);
+        LOGGER.info("------------------------------");
+    }
+
+
+    private void testPto(boolean constant, int l, long[][] longXs) {
+        int num = longXs[0].length;
+        int numOfSorted = longXs.length;
+        if (constant) {
+            LOGGER.info("test constant ({}), l = {}, num = {}, num of sorted elements = {}", Z2IntegerOperator.SORT, l, num, numOfSorted);
+        } else {
+            LOGGER.info("test random ({}), l = {}, num = {}, num of sorted elements = {}", Z2IntegerOperator.SORT, l, num, numOfSorted);
+        }
+        // partition
+        PlainZ2Vector[][] xPlainZ2Vectors = IntStream.range(0, numOfSorted).mapToObj(index -> {
+            Zl64Database zl64Xs = Zl64Database.create(l, longXs[index]);
+            BitVector[] xBitVector = zl64Xs.bitPartition(EnvType.STANDARD, false);
+            return Arrays.stream(xBitVector).map(PlainZ2Vector::create).toArray(PlainZ2Vector[]::new);
+        }).toArray(PlainZ2Vector[][]::new);
+        // init the protocol
+        PlainZ2cParty party = new PlainZ2cParty();
+        Z2IntegerCircuitParty partyThread = new Z2IntegerCircuitParty(party, Z2IntegerOperator.SORT, xPlainZ2Vectors, null, config);
+        StopWatch stopWatch = new StopWatch();
+        // execute the circuit
+        stopWatch.start();
+        partyThread.run();
+        stopWatch.stop();
+        stopWatch.reset();
+        // verify
+        BitVector[][] z = IntStream.range(0, numOfSorted).mapToObj(i -> Arrays.stream(xPlainZ2Vectors[i]).map(MpcZ2Vector::getBitVector).toArray(BitVector[]::new)).toArray(BitVector[][]::new);
+        long[][] longZs = IntStream.range(0, numOfSorted).mapToObj(i -> Zl64Database.create(EnvType.STANDARD, false, z[i]).getData()).toArray(long[][]::new);
+        Z2CircuitTestUtils.assertSortOutput(Z2IntegerOperator.SORT, longXs, longZs);
+    }
+}

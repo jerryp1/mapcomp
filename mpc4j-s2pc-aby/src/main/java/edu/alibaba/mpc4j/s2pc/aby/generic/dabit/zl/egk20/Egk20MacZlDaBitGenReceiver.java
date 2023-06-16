@@ -60,8 +60,8 @@ public class Egk20MacZlDaBitGenReceiver extends AbstractZlDaBitGenParty {
         logPhaseInfo(PtoState.INIT_BEGIN);
 
         stopWatch.start();
-        zlcReceiver.init(maxNum, maxNum);
-        z2cReceiver.init(maxNum, maxNum);
+        zlcReceiver.init(maxNum);
+        z2cReceiver.init(maxNum);
         stopWatch.stop();
         long initTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
         stopWatch.reset();

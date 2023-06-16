@@ -23,10 +23,6 @@ public abstract class AbstractZlMtgParty extends AbstractTwoPartyPto implements 
      */
     protected final int l;
     /**
-     * max round num
-     */
-    protected int maxRoundNum;
-    /**
      * update num
      */
     protected long updateNum;
@@ -41,16 +37,15 @@ public abstract class AbstractZlMtgParty extends AbstractTwoPartyPto implements 
         l = zl.getL();
     }
 
-    protected void setInitInput(int maxRoundNum, int updateNum) {
-        MathPreconditions.checkPositiveInRangeClosed("maxRoundNum", maxRoundNum, updateNum);
-        this.maxRoundNum = maxRoundNum;
+    protected void setInitInput(int updateNum) {
+        MathPreconditions.checkPositive("updateNum", updateNum);
         this.updateNum = updateNum;
         initState();
     }
 
     protected void setPtoInput(int num) {
         checkInitialized();
-        MathPreconditions.checkPositiveInRangeClosed("num", num, maxRoundNum);
+        MathPreconditions.checkPositive("num", num);
         this.num = num;
         extraInfo++;
     }
