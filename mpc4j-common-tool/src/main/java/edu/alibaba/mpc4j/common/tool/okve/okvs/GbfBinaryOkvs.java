@@ -33,7 +33,7 @@ public class GbfBinaryOkvs<T> extends AbstractBinaryOkvs<T> {
     private final Prf[] prfs;
 
     public GbfBinaryOkvs(EnvType envType, int n, int l, byte[][] keys) {
-        super(envType, n, getM(n), l);
+        super(n, getM(n), l);
         assert keys.length == HASH_NUM;
         prfs = IntStream.range(0, HASH_NUM)
             .mapToObj(hashIndex -> {

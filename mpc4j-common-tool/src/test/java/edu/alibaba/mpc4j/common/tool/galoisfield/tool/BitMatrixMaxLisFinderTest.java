@@ -41,6 +41,32 @@ public class BitMatrixMaxLisFinderTest {
         .collect(Collectors.toSet());
 
     /**
+     * 4-by-3 system, singular (for 3)
+     */
+    private static final byte[][] SINGULAR_4_3 = new byte[][] {
+        new byte[] { 0b00000010 },
+        new byte[] { 0b00000110 },
+        new byte[] { 0b00000001 },
+        new byte[] { 0b00000101 },
+    };
+    private static final Set<Integer> SINGULAR_4_3_RESULT = Arrays.stream(new int[] {0, 1, 2})
+        .boxed()
+        .collect(Collectors.toSet());
+
+    /**
+     * 4-by-3 system, non-singular (for 3)
+     */
+    private static final byte[][] NON_SINGULAR_4_3 = new byte[][] {
+        new byte[] { 0b00000110 },
+        new byte[] { 0b00000110 },
+        new byte[] { 0b00000001 },
+        new byte[] { 0b00000101 },
+    };
+    private static final Set<Integer> NON_SINGULAR_4_3_RESULT = Arrays.stream(new int[] {0, 2, 3})
+        .boxed()
+        .collect(Collectors.toSet());
+
+    /**
      * 8-by-8 system, singular
      */
     private static final byte[][] SINGULAR_8_8 = new byte[][] {
@@ -167,6 +193,16 @@ public class BitMatrixMaxLisFinderTest {
     }
 
     @Test
+    public void testSingular4x3() {
+        test(SINGULAR_4_3, 3, SINGULAR_4_3_RESULT);
+    }
+
+    @Test
+    public void testNonSingular4x3() {
+        test(NON_SINGULAR_4_3, 3, NON_SINGULAR_4_3_RESULT);
+    }
+
+    @Test
     public void testSingular8x8() {
         test(SINGULAR_8_8, 8, SINGULAR_8_8_RESULT);
     }
@@ -182,7 +218,7 @@ public class BitMatrixMaxLisFinderTest {
     }
 
     private void test(byte[][] matrix, int m, Set<Integer> result) {
-        Set<Integer> lisRows = maxLisFinder.getLisRows(matrix, m);
+        Set<Integer> lisRows = maxLisFinder.getLisColumns(matrix, m);
         Assert.assertEquals(result, lisRows);
     }
 }

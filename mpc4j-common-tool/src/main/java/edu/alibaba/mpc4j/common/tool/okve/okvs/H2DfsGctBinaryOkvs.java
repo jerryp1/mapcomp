@@ -69,7 +69,7 @@ class H2DfsGctBinaryOkvs<T> extends AbstractBinaryOkvs<T> implements SparseOkvs<
     private Map<T, boolean[]> dataHrMap;
 
     H2DfsGctBinaryOkvs(EnvType envType, int n, int l, byte[][] keys) {
-        super(envType, n, getLm(n) + getRm(n), l);
+        super(n, getLm(n) + getRm(n), l);
         lm = getLm(n);
         rm = getRm(n);
         h1 = PrfFactory.createInstance(envType, Integer.BYTES);
@@ -228,7 +228,7 @@ class H2DfsGctBinaryOkvs<T> extends AbstractBinaryOkvs<T> implements SparseOkvs<
             }
         } else {
             // 不存在环路，所有vectorX均设置为0
-            Arrays.fill(vectorByteX, gf2e.createZero());
+            Arrays.fill(vectorByteX, new byte[byteL]);
         }
         // 求解结果不可能为空
         return vectorByteX;

@@ -5,7 +5,6 @@ import edu.alibaba.mpc4j.common.tool.CommonConstants;
 import edu.alibaba.mpc4j.common.tool.EnvType;
 import edu.alibaba.mpc4j.common.tool.crypto.prf.Prf;
 import edu.alibaba.mpc4j.common.tool.crypto.prf.PrfFactory;
-import edu.alibaba.mpc4j.common.tool.galoisfield.gf2e.Gf2eMaxLisFinder;
 import edu.alibaba.mpc4j.common.tool.okve.cuckootable.CuckooTableSingletonTcFinder;
 import edu.alibaba.mpc4j.common.tool.okve.cuckootable.CuckooTableTcFinder;
 import edu.alibaba.mpc4j.common.tool.okve.cuckootable.H2CuckooTable;
@@ -73,7 +72,7 @@ class H2TcGctGf2eOvdm<T> extends AbstractGf2eOvdm<T> implements SparseGf2eOvdm<T
     private Map<T, boolean[]> dataHrMap;
 
     H2TcGctGf2eOvdm(EnvType envType, int l, int n, byte[][] keys, CuckooTableTcFinder<T> tcFinder) {
-        super(envType, l, n, getLm(n) + getRm(n));
+        super(l, n, getLm(n) + getRm(n));
         assert (tcFinder instanceof CuckooTableSingletonTcFinder || tcFinder instanceof H2CuckooTableTcFinder);
         lm = getLm(n);
         rm = getRm(n);
@@ -254,19 +253,20 @@ class H2TcGctGf2eOvdm<T> extends AbstractGf2eOvdm<T> implements SparseGf2eOvdm<T
             throw new ArithmeticException("|d˜| = " + dTilde + "，d + λ + " + rm + "，线性系统无解");
         }
         // Let M˜' ∈ {0, 1}^{d˜ × (d + λ)} be the sub-matrix of M˜ obtained by taking the row indexed by R.
-        byte[][][] tildePrimeMatrix = new byte[rm][dTilde][];
+        int dByteTilde = CommonUtils.getByteLength(dTilde);
+        int dOffsetTilde = dByteTilde * Byte.SIZE - dTilde;
+        byte[][] tildePrimeMatrix = new byte[rm][dByteTilde];
         int tildePrimeMatrixRowIndex = 0;
         for (T data : coreDataSet) {
             boolean[] rxBinary = dataHrMap.get(data);
             for (int rmIndex = 0; rmIndex < rm; rmIndex++) {
-                tildePrimeMatrix[rmIndex][tildePrimeMatrixRowIndex]
-                    = rxBinary[rmIndex] ? gf2e.createOne() : gf2e.createZero();
+                BinaryUtils.setBoolean(tildePrimeMatrix[rmIndex], dOffsetTilde + tildePrimeMatrixRowIndex, rxBinary[rmIndex]);
             }
             tildePrimeMatrixRowIndex++;
         }
-        // Otherwise let M˜* be one such matrix and C ⊂ [d + λ] index the corresponding columns of M˜.
-        Gf2eMaxLisFinder maxLisFinder = new Gf2eMaxLisFinder(gf2e, tildePrimeMatrix);
-        Set<Integer> setC = maxLisFinder.getLisRows();
+        // let M˜* be the sub-matrix of M˜ containing an invertible d˜ × d˜ matrix,
+        // and C ⊂ [d + λ] index the corresponding columns of M˜.
+        Set<Integer> setC = maxLisFinder.getLisColumns(tildePrimeMatrix, dTilde);
         int size = setC.size();
         int byteSize = CommonUtils.getByteLength(size);
         int offsetSize = byteSize * Byte.SIZE - size;

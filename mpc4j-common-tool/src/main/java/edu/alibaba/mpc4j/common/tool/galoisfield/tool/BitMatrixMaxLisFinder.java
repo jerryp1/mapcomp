@@ -13,7 +13,8 @@ import java.util.Set;
 import java.util.stream.IntStream;
 
 /**
- * bit matrix max linear independent system finder. Given an n × m (n ≥ m), it finds the max linear independent rows.
+ * bit matrix max linear independent system finder. Given an n × m (n ≥ m) bit matrix, it finds the max linear
+ * independent rows.
  *
  * @author Weiran Liu
  * @date 2023/6/16
@@ -32,8 +33,8 @@ public class BitMatrixMaxLisFinder {
      */
     private int[] rowEchelonForm(byte[][] lhs, int nColumns) {
         int nRows = lhs.length;
-        // m > 0
-        MathPreconditions.checkGreaterOrEqual("m", nColumns, nRows);
+        // 0 <= m <= n
+        MathPreconditions.checkNonNegativeInRangeClosed("m", nColumns, nRows);
         int nByteColumns = CommonUtils.getByteLength(nColumns);
         int nOffsetColumns = nByteColumns * Byte.SIZE - nColumns;
         // verify each row has at most nColumns valid bits, and not all-zero
@@ -44,7 +45,7 @@ public class BitMatrixMaxLisFinder {
         if (nRows == 0) {
             return new int[0];
         }
-        int[] rowLabels = IntStream.range(0, nColumns).toArray();
+        int[] rowLabels = IntStream.range(0, nRows).toArray();
         // number of zero columns, here we consider if the leading row is 0
         int nZeroColumns = 0;
         for (int iColumn = 0, to = Math.min(nRows, nColumns); iColumn < to; ++iColumn) {
@@ -84,16 +85,16 @@ public class BitMatrixMaxLisFinder {
     }
 
     /**
-     * Gets maximal linear independent rows. Note that lsh is not modified when solving the system.
+     * Gets maximal linear independent columns. Note that lsh is not modified.
      *
      * @param lhs      the lhs of the system.
      * @param nColumns number of columns.
      * @return maximal linear independent rows.
      */
-    public Set<Integer> getLisRows(byte[][] lhs, int nColumns) {
+    public Set<Integer> getLisColumns(byte[][] lhs, int nColumns) {
         int nRows = lhs.length;
-        // m >= n
-        MathPreconditions.checkGreaterOrEqual("m", nColumns, nColumns);
+        // 0 <= m <= n
+        MathPreconditions.checkNonNegativeInRangeClosed("m", nColumns, nRows);
         int nByteColumns = CommonUtils.getByteLength(nColumns);
         int nOffsetColumns = nByteColumns * Byte.SIZE - nColumns;
         // verify each row has at most nColumns valid bits, and not all-zero

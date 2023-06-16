@@ -80,7 +80,7 @@ class H3TcGctBinaryOkvs<T> extends AbstractBinaryOkvs<T> implements SparseOkvs<T
     private Map<T, boolean[]> dataHrMap;
 
     H3TcGctBinaryOkvs(EnvType envType, int n, int l, byte[][] keys) {
-        super(envType, n, getLm(n) + getRm(n), l);
+        super(n, getLm(n) + getRm(n), l);
         assert keys.length == HASH_NUM;
         lm = getLm(n);
         rm = getRm(n);
@@ -307,7 +307,7 @@ class H3TcGctBinaryOkvs<T> extends AbstractBinaryOkvs<T> implements SparseOkvs<T
             }
         } else {
             // 不存在环路，所有vectorX均设置为0，注意这里不能设置为空
-            Arrays.fill(vectorX, gf2e.createZero());
+            Arrays.fill(vectorX, new byte[byteL]);
         }
         byte[][] matrix = new byte[m][];
         for (Integer vertex : coreVertexSet) {

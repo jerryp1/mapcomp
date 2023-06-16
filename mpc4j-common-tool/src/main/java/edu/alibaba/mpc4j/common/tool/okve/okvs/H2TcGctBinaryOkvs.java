@@ -76,7 +76,7 @@ public class H2TcGctBinaryOkvs<T> extends AbstractBinaryOkvs<T> implements Spars
     private Map<T, boolean[]> dataHrMap;
 
     H2TcGctBinaryOkvs(EnvType envType, int n, int l, byte[][] keys, CuckooTableTcFinder<T> tcFinder) {
-        super(envType, n, getLm(n) + getRm(n), l);
+        super(n, getLm(n) + getRm(n), l);
         assert (tcFinder instanceof CuckooTableSingletonTcFinder || tcFinder instanceof H2CuckooTableTcFinder);
         lm = getLm(n);
         rm = getRm(n);
@@ -272,7 +272,7 @@ public class H2TcGctBinaryOkvs<T> extends AbstractBinaryOkvs<T> implements Spars
             }
         } else {
             // 不存在环路，所有vectorX均设置为0，注意这里不能设置为空
-            Arrays.fill(vectorX, gf2e.createZero());
+            Arrays.fill(vectorX, new byte[byteL]);
         }
         byte[][] matrix = new byte[m][];
         for (Integer vertex : coreVertexSet) {
