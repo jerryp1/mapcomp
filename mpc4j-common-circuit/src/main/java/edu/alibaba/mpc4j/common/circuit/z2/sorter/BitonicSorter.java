@@ -56,8 +56,8 @@ public class BitonicSorter extends AbstractSorter {
         }
     }
 
-    private void compare(MpcZ2Vector[][] key, int i, int j, MpcZ2Vector dir) throws MpcAbortException {
-        MpcZ2Vector swap = party.eq(party.not(circuit.leq(key[i], key[j])), dir);
+    private void compare(MpcZ2Vector[][] key, int i, int j, MpcZ2Vector isAscending) throws MpcAbortException {
+        MpcZ2Vector swap = party.eq(party.not(circuit.leq(key[i], key[j])), isAscending);
         MpcZ2Vector[] s = mux(key[j], key[i], swap);
         s = party.xor(s, key[i]);
         MpcZ2Vector[] ki = party.xor(key[j], s);

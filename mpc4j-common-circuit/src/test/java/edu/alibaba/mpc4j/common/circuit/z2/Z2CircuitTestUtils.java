@@ -65,20 +65,18 @@ public class Z2CircuitTestUtils {
         }
     }
 
-    public static void assertSortOutput(Z2IntegerOperator operator, long[][] longXs, long[][] longZs) {
+    public static void assertSortOutput(int l, long[][] longXs, long[][] longZs) {
         int num = longXs[0].length;
         int numOfSorted = longXs.length;
-        switch (operator) {
-            case SORT:
-                for (int i = 0; i < num; i++) {
-                    Arrays.sort(longXs[i]);
-                    for (int j = 0; j < numOfSorted; j++) {
-                        Assert.assertEquals(longXs[j][i], longZs[j][i]);
-                    }
-                }
-                break;
-            default:
-                throw new IllegalStateException("Invalid " + operator.name() + ": " + operator.name());
+        long andMod = (1L << l) - 1;
+        for (int i = 0; i < num; i++) {
+            int finalI = i;
+            Long[] expected = IntStream.range(0, numOfSorted).mapToObj(j -> longXs[j][finalI]).toArray(Long[]::new);
+            Arrays.sort(expected);
+            for (int j = 0; j < numOfSorted; j++) {
+                long actual = longZs[j][i] & andMod;
+                Assert.assertEquals(expected[j].longValue(), actual);
+            }
         }
     }
 }
