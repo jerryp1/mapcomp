@@ -37,6 +37,10 @@ public class BitMatrixLinearSolverTest {
      */
     private static final int RANDOM_ROUND = 1000;
     /**
+     * l
+     */
+    private static final int L = CommonConstants.STATS_BIT_LENGTH;
+    /**
      * random state
      */
     private static final SecureRandom SECURE_RANDOM = new SecureRandom();
@@ -80,8 +84,8 @@ public class BitMatrixLinearSolverTest {
         this.d = d;
         byteD = CommonUtils.getByteLength(d);
         offsetD = byteD * Byte.SIZE - d;
-        gf2e = Gf2eFactory.createInstance(EnvType.STANDARD, CommonConstants.STATS_BIT_LENGTH);
-        linearSolver = new BitMatrixLinearSolver(gf2e.getL());
+        gf2e = Gf2eFactory.createInstance(EnvType.STANDARD, L);
+        linearSolver = new BitMatrixLinearSolver(L);
     }
 
     @Test
@@ -204,7 +208,7 @@ public class BitMatrixLinearSolverTest {
         byte[][] copyB = BytesUtils.clone(b);
         // solve x
         byte[][] x = new byte[nColumn][];
-        LinearSolver.SystemInfo systemInfo = linearSolver.solve(matrixA, nColumn, b, x);
+        LinearSolver.SystemInfo systemInfo = linearSolver.freeSolve(matrixA, nColumn, b, x);
         Assert.assertNotEquals(LinearSolver.SystemInfo.Inconsistent, systemInfo);
         for (int rowIndex = 0; rowIndex < nrow; rowIndex++) {
             byte[] res = gf2e.createZero();

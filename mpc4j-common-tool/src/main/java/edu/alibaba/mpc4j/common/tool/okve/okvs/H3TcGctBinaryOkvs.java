@@ -301,7 +301,7 @@ class H3TcGctBinaryOkvs<T> extends AbstractBinaryOkvs<T> implements SparseOkvs<T
                 vectorY[rowIndex] = BytesUtils.clone(keyValueMap.get(coreData));
                 rowIndex++;
             }
-            SystemInfo systemInfo = linearSolver.solve(matrixM, m, vectorY, vectorX);
+            SystemInfo systemInfo = linearSolver.freeSolve(matrixM, m, vectorY, vectorX);
             if (systemInfo.compareTo(SystemInfo.Inconsistent) == 0) {
                 throw new ArithmeticException("无法完成编码过程，线性系统无解");
             }

@@ -226,7 +226,7 @@ class H2DfsGctBinaryOkvs<T> extends AbstractBinaryOkvs<T> implements SparseOkvs<
                 vectorByteY[rowIndex] = BytesUtils.clone(keyValueMap.get(cycleEdgeData));
                 rowIndex++;
             }
-            SystemInfo systemInfo = linearSolver.solve(matrixByteM, rm, vectorByteY, vectorByteX);
+            SystemInfo systemInfo = linearSolver.freeSolve(matrixByteM, rm, vectorByteY, vectorByteX);
             if (systemInfo.compareTo(SystemInfo.Inconsistent) == 0) {
                 throw new ArithmeticException("ERROR: cannot encode key-value map, Linear System unsolved");
             }

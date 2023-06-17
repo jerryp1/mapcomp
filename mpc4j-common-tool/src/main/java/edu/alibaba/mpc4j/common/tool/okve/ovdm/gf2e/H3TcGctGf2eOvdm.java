@@ -361,7 +361,7 @@ class H3TcGctGf2eOvdm<T> extends AbstractGf2eOvdm<T> implements SparseGf2eOvdm<T
         // Using Gaussian elimination solve the system
         // M˜* (P_{m' + C_1}, ..., P_{m' + C_{d˜})^T = (v'_{R_1}, ..., v'_{R_{d˜})^T.
         byte[][] vectorX = new byte[size][];
-        SystemInfo systemInfo = linearSolver.solve(tildeStarMatrix, size, vectorY, vectorX);
+        SystemInfo systemInfo = linearSolver.freeSolve(tildeStarMatrix, size, vectorY, vectorX);
         if (systemInfo.compareTo(SystemInfo.Inconsistent) == 0) {
             throw new ArithmeticException("无法完成编码过程，线性系统无解");
         }

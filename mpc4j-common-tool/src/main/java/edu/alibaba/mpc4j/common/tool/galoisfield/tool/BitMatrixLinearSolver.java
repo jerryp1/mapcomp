@@ -9,7 +9,10 @@ import edu.alibaba.mpc4j.common.tool.utils.BytesUtils;
 import edu.alibaba.mpc4j.common.tool.utils.CommonUtils;
 import gnu.trove.list.array.TIntArrayList;
 
+import java.security.SecureRandom;
 import java.util.Arrays;
+import java.util.HashSet;
+import java.util.Set;
 
 import static cc.redberry.rings.linear.LinearSolver.SystemInfo.*;
 
@@ -22,6 +25,10 @@ import static cc.redberry.rings.linear.LinearSolver.SystemInfo.*;
  */
 public class BitMatrixLinearSolver {
     /**
+     * l
+     */
+    private final int l;
+    /**
      * byte l
      */
     private final int byteL;
@@ -29,12 +36,41 @@ public class BitMatrixLinearSolver {
      * zero, only use for comparison
      */
     private final byte[] zeroElement;
+    /**
+     * the random state
+     */
+    private final SecureRandom secureRandom;
 
     public BitMatrixLinearSolver(int l) {
+        this(l, new SecureRandom());
+    }
+
+    public BitMatrixLinearSolver(int l, SecureRandom secureRandom) {
         MathPreconditions.checkPositive("l", l);
+        this.l = l;
         byteL = CommonUtils.getByteLength(l);
         zeroElement = new byte[byteL];
         Arrays.fill(zeroElement, (byte) 0x00);
+        this.secureRandom = secureRandom;
+    }
+
+    /**
+     * the output of the function rowEchelonFrom.
+     */
+    private static class RowEchelonFromInfo {
+        /**
+         * number of zero columns
+         */
+        private final int nZeroColumns;
+        /**
+         * max linear independent column index
+         */
+        private final Set<Integer> maxLisColumns;
+
+        private RowEchelonFromInfo(int nZeroColumns, Set<Integer> maxLisColumns) {
+            this.nZeroColumns = nZeroColumns;
+            this.maxLisColumns = maxLisColumns;
+        }
     }
 
     /**
@@ -46,9 +82,10 @@ public class BitMatrixLinearSolver {
      * @param rhs      the rhs of the system.
      * @return the number of free variables.
      */
-    private int rowEchelonForm(byte[][] lhs, int nColumns, byte[][] rhs) {
+    private RowEchelonFromInfo rowEchelonForm(byte[][] lhs, int nColumns, byte[][] rhs) {
         MathPreconditions.checkEqual("lhs.length", "rhs.length", lhs.length, rhs.length);
         int nRows = lhs.length;
+        Set<Integer> maxLisColumns = new HashSet<>(nRows);
         // m >= n
         MathPreconditions.checkGreaterOrEqual("m", nColumns, nRows);
         int nByteColumns = CommonUtils.getByteLength(nColumns);
@@ -59,7 +96,7 @@ public class BitMatrixLinearSolver {
         );
         // do not need to solve when nRows = 0
         if (nRows == 0) {
-            return 0;
+            return new RowEchelonFromInfo(0, maxLisColumns);
         }
         // number of zero columns, here we consider if the leading row is 0
         int nZeroColumns = 0;
@@ -78,6 +115,8 @@ public class BitMatrixLinearSolver {
                 }
                 ArraysUtil.swap(lhs, row, max);
                 ArraysUtil.swap(rhs, row, max);
+                // add that column into the set
+                maxLisColumns.add(iColumn);
             }
             // if we cannot find one, it means this column is free, nothing to do on this column
             if (!BinaryUtils.getBoolean(lhs[row], iColumn + nOffsetColumns)) {
@@ -94,7 +133,26 @@ public class BitMatrixLinearSolver {
                 }
             }
         }
-        return nZeroColumns;
+        return new RowEchelonFromInfo(nZeroColumns, maxLisColumns);
+    }
+
+    /**
+     * Solves linear system {@code lhs.x = rhs} and reduces the lhs to row echelon form. The result is stored in {@code
+     * result} (which should have enough length). Free variables are set as zero. Note that lsh is modified when solving
+     * the system.
+     *
+     * @param lhs      the lhs of the system (will be reduced to row echelon form).
+     * @param nColumns number of columns.
+     * @param rhs      the rhs of the system.
+     * @param result   where to place the result.
+     * @return system information (inconsistent, under-determined or consistent).
+     */
+    public LinearSolver.SystemInfo freeSolve(byte[][] lhs, int nColumns, byte[][] rhs, byte[][] result) {
+        return solve(lhs, nColumns, rhs, result, false);
+    }
+
+    public LinearSolver.SystemInfo fullSolve(byte[][] lhs, int nColumns, byte[][] rhs, byte[][] result) {
+        return solve(lhs, nColumns, rhs, result, true);
     }
 
     /**
@@ -104,10 +162,11 @@ public class BitMatrixLinearSolver {
      * @param lhs      the lhs of the system (will be reduced to row echelon form).
      * @param nColumns number of columns.
      * @param rhs      the rhs of the system.
+     * @param isFull   if full free variables with random elements.
      * @param result   where to place the result.
      * @return system information (inconsistent, under-determined or consistent).
      */
-    public LinearSolver.SystemInfo solve(byte[][] lhs, int nColumns, byte[][] rhs, byte[][] result) {
+    private LinearSolver.SystemInfo solve(byte[][] lhs, int nColumns, byte[][] rhs, byte[][] result, boolean isFull) {
         MathPreconditions.checkEqual("lhs.length", "rhs.length", lhs.length, rhs.length);
         int nRows = lhs.length;
         // m >= n
@@ -124,31 +183,11 @@ public class BitMatrixLinearSolver {
             return Consistent;
         }
         if (nRows == 1) {
-            // if n = 1, then the linear system only has one equation ax = b, therefore x = b * (a^-1)
-            if (nColumns == 1) {
-                // if m = 1, then we directly compute x = b
-                result[0] = BytesUtils.clone(rhs[0]);
-                return Consistent;
-            }
-            // if m > 1, the linear system contains free variables.
-            Arrays.fill(result, new byte[byteL]);
-            // if b = 0, then we have ax = 0, x = 0
-            if (isZero(rhs[0])) {
-                return Consistent;
-            }
-            // b != 0, we only need to consider the first non-zero equation a[i]x = b[i],
-            // and set x[i] = b, leaving other x[j] as 0.
-            for (int i = 0; i < nColumns; ++i) {
-                if (BinaryUtils.getBoolean(lhs[0], nOffsetColumns + i)) {
-                    result[i] = BytesUtils.clone(rhs[0]);
-                    return Consistent;
-                }
-            }
-            // if all a[i] = 0, note that b != 0, this means we do not have any solution.
-            return Inconsistent;
+            return solveOneRow(lhs, nColumns, rhs, result, isFull);
         }
         // if n > 1, transform lsh to Echelon form.
-        int nUnderDetermined = rowEchelonForm(lhs, nColumns, rhs);
+        RowEchelonFromInfo info = rowEchelonForm(lhs, nColumns, rhs);
+        int nUnderDetermined = info.nZeroColumns;
         if (nRows > nColumns) {
             // over-determined system, check that all rhs are zero, otherwise we do not have any solution
             for (int i = nColumns; i < nRows; ++i) {
@@ -222,6 +261,73 @@ public class BitMatrixLinearSolver {
             result[nzColumns.get(i)] = rhs[nzRows.get(i)];
         }
         return Consistent;
+    }
+
+    private LinearSolver.SystemInfo solveOneRow(byte[][] lhs, int nColumns, byte[][] rhs, byte[][] result, boolean isFull) {
+        int nByteColumns = CommonUtils.getByteLength(nColumns);
+        int nOffsetColumns = nByteColumns * Byte.SIZE - nColumns;
+        int iRow = 0;
+        // if n = 1, then the linear system only has one equation ax = b, therefore x = b * (a^-1)
+        if (nColumns == 1) {
+            // if m = 1, then we directly compute x = b
+            if (BinaryUtils.getBoolean(lhs[iRow], nOffsetColumns)) {
+                // if a_0 = 1, then x_0 = b_0
+                result[0] = BytesUtils.clone(rhs[iRow]);
+                return Consistent;
+            } else {
+                // if a_0 = 0, it can be solved only if b_0 = 0
+                if (isZero(rhs[iRow])) {
+                    result[0] = isFull ? BytesUtils.randomByteArray(byteL, l, secureRandom) : new byte[byteL];
+                    return Consistent;
+                } else {
+                    return Inconsistent;
+                }
+            }
+        }
+        // if m > 1, the linear system contains free variables.
+        Arrays.fill(result, new byte[byteL]);
+        // find the first non-zero equation a[i]x = b[i]
+        int firstNonZeroColumn = -1;
+        for (int i = 0; i < nColumns; ++i) {
+            if (BinaryUtils.getBoolean(lhs[iRow], nOffsetColumns + i)) {
+                firstNonZeroColumn = i;
+                break;
+            }
+        }
+        // if all a[i] = 0, we have solution only if b = 0
+        if (firstNonZeroColumn == -1) {
+            if (isZero(rhs[iRow])) {
+                if (isFull) {
+                    // full random variables
+                    for (int i = 0; i < nColumns; i++) {
+                        result[i] = BytesUtils.randomByteArray(byteL, l, secureRandom);
+                    }
+                }
+                return Consistent;
+            } else {
+                // if all a[i] = 0 and b != 0, this means we do not have any solution.
+                return Inconsistent;
+            }
+        } else {
+            // b != 0, we need to consider the first non-zero equation a[i]x = b[i].
+            if (isFull) {
+                // set random variables
+                for (int i = 0; i < nColumns; ++i) {
+                    if (i == firstNonZeroColumn) {
+                        continue;
+                    }
+                    result[i] = BytesUtils.randomByteArray(byteL, l, secureRandom);
+                    if (BinaryUtils.getBoolean(lhs[iRow], nOffsetColumns + i)) {
+                        // zero position, set random variable, and r[0] = r[0] - r[i]).
+                        subi(rhs[iRow], result[i]);
+                    }
+                }
+            }
+            // b != 0, we only need to consider the first non-zero equation a[i]x = b[i],
+            // and set x[i] = b, leaving other x[j] as 0.
+            result[firstNonZeroColumn] = BytesUtils.clone(rhs[iRow]);
+            return Consistent;
+        }
     }
 
     private boolean isZero(byte[] element) {
