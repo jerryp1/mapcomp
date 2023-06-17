@@ -6,7 +6,6 @@ import edu.alibaba.mpc4j.common.tool.EnvType;
 import edu.alibaba.mpc4j.common.tool.galoisfield.gf2e.Gf2e;
 import edu.alibaba.mpc4j.common.tool.galoisfield.gf2e.Gf2eFactory;
 import edu.alibaba.mpc4j.common.tool.utils.BytesUtils;
-import edu.alibaba.mpc4j.common.tool.utils.CommonUtils;
 import org.junit.Assert;
 import org.junit.Test;
 
@@ -23,10 +22,6 @@ public class BitMatrixLinearSolverConstantTest {
      * l
      */
     private static final int L = CommonConstants.STATS_BIT_LENGTH;
-    /**
-     * l in byte
-     */
-    private static final int BYTE_L = CommonUtils.getByteLength(L);
     /**
      * random state
      */
@@ -52,12 +47,11 @@ public class BitMatrixLinearSolverConstantTest {
         byte[][] matrixA = new byte[][]{
             new byte[]{0x01},
         };
-        byte[] b0 = new byte[BYTE_L];
         byte[][] b = new byte[][]{
-            BytesUtils.clone(b0),
+            gf2e.createZero(),
         };
         byte[][] x = new byte[m][];
-        LinearSolver.SystemInfo systemInfo = linearSolver.freeSolve(matrixA, m, b, x);
+        LinearSolver.SystemInfo systemInfo = linearSolver.freeSolve(BytesUtils.clone(matrixA), m, BytesUtils.clone(b), x);
         Assert.assertEquals(LinearSolver.SystemInfo.Consistent, systemInfo);
         Assert.assertTrue(gf2e.isZero(x[0]));
 
@@ -65,25 +59,21 @@ public class BitMatrixLinearSolverConstantTest {
         matrixA = new byte[][]{
             new byte[]{0b00000001},
         };
-        b0 = BytesUtils.randomByteArray(BYTE_L, L, SECURE_RANDOM);
         b = new byte[][]{
-            BytesUtils.clone(b0),
+            gf2e.createNonZeroRandom(SECURE_RANDOM),
         };
-        x = new byte[m][];
-        systemInfo = linearSolver.freeSolve(matrixA, m, b, x);
+        systemInfo = linearSolver.freeSolve(BytesUtils.clone(matrixA), m, BytesUtils.clone(b), x);
         Assert.assertEquals(LinearSolver.SystemInfo.Consistent, systemInfo);
-        Assert.assertTrue(gf2e.isEqual(b0, x[0]));
+        Assert.assertTrue(gf2e.isEqual(b[0], x[0]));
 
         // A = | 0 |, b = 0, solve Ax = b.
         matrixA = new byte[][]{
             new byte[]{0b00000000},
         };
-        b0 = new byte[BYTE_L];
         b = new byte[][]{
-            BytesUtils.clone(b0),
+            gf2e.createZero(),
         };
-        x = new byte[m][];
-        systemInfo = linearSolver.freeSolve(matrixA, m, b, x);
+        systemInfo = linearSolver.freeSolve(BytesUtils.clone(matrixA), m, BytesUtils.clone(b), x);
         Assert.assertEquals(LinearSolver.SystemInfo.Consistent, systemInfo);
         Assert.assertTrue(gf2e.isZero(x[0]));
 
@@ -91,12 +81,10 @@ public class BitMatrixLinearSolverConstantTest {
         matrixA = new byte[][]{
             new byte[]{0b00000000},
         };
-        b0 = BytesUtils.randomByteArray(BYTE_L, L, SECURE_RANDOM);
         b = new byte[][]{
-            BytesUtils.clone(b0),
+            gf2e.createNonZeroRandom(SECURE_RANDOM),
         };
-        x = new byte[m][];
-        systemInfo = linearSolver.freeSolve(matrixA, m, b, x);
+        systemInfo = linearSolver.freeSolve(BytesUtils.clone(matrixA), m, BytesUtils.clone(b), x);
         Assert.assertEquals(LinearSolver.SystemInfo.Inconsistent, systemInfo);
     }
 
@@ -107,12 +95,11 @@ public class BitMatrixLinearSolverConstantTest {
         byte[][] matrixA = new byte[][]{
             new byte[]{0x01},
         };
-        byte[] b0 = new byte[BYTE_L];
         byte[][] b = new byte[][]{
-            BytesUtils.clone(b0),
+            gf2e.createZero(),
         };
         byte[][] x = new byte[m][];
-        LinearSolver.SystemInfo systemInfo = linearSolver.fullSolve(matrixA, m, b, x);
+        LinearSolver.SystemInfo systemInfo = linearSolver.fullSolve(BytesUtils.clone(matrixA), m, BytesUtils.clone(b), x);
         Assert.assertEquals(LinearSolver.SystemInfo.Consistent, systemInfo);
         Assert.assertTrue(gf2e.isZero(x[0]));
 
@@ -120,25 +107,21 @@ public class BitMatrixLinearSolverConstantTest {
         matrixA = new byte[][]{
             new byte[]{0b00000001},
         };
-        b0 = BytesUtils.randomByteArray(BYTE_L, L, SECURE_RANDOM);
         b = new byte[][]{
-            BytesUtils.clone(b0),
+            gf2e.createNonZeroRandom(SECURE_RANDOM),
         };
-        x = new byte[m][];
-        systemInfo = linearSolver.fullSolve(matrixA, m, b, x);
+        systemInfo = linearSolver.fullSolve(BytesUtils.clone(matrixA), m, BytesUtils.clone(b), x);
         Assert.assertEquals(LinearSolver.SystemInfo.Consistent, systemInfo);
-        Assert.assertTrue(gf2e.isEqual(b0, x[0]));
+        Assert.assertTrue(gf2e.isEqual(b[0], x[0]));
 
         // A = | 0 |, b = 0, solve Ax = b.
         matrixA = new byte[][]{
             new byte[]{0b00000000},
         };
-        b0 = new byte[BYTE_L];
         b = new byte[][]{
-            BytesUtils.clone(b0),
+            gf2e.createZero(),
         };
-        x = new byte[m][];
-        systemInfo = linearSolver.fullSolve(matrixA, m, b, x);
+        systemInfo = linearSolver.fullSolve(BytesUtils.clone(matrixA), m, BytesUtils.clone(b), x);
         Assert.assertEquals(LinearSolver.SystemInfo.Consistent, systemInfo);
         Assert.assertFalse(gf2e.isZero(x[0]));
 
@@ -146,12 +129,10 @@ public class BitMatrixLinearSolverConstantTest {
         matrixA = new byte[][]{
             new byte[]{0b00000000},
         };
-        b0 = BytesUtils.randomByteArray(BYTE_L, L, SECURE_RANDOM);
         b = new byte[][]{
-            BytesUtils.clone(b0),
+            gf2e.createNonZeroRandom(SECURE_RANDOM),
         };
-        x = new byte[m][];
-        systemInfo = linearSolver.fullSolve(matrixA, m, b, x);
+        systemInfo = linearSolver.fullSolve(BytesUtils.clone(matrixA), m, BytesUtils.clone(b), x);
         Assert.assertEquals(LinearSolver.SystemInfo.Inconsistent, systemInfo);
     }
 
@@ -162,12 +143,11 @@ public class BitMatrixLinearSolverConstantTest {
         byte[][] matrixA = new byte[][]{
             new byte[]{0b00000011},
         };
-        byte[] b0 = new byte[BYTE_L];
         byte[][] b = new byte[][]{
-            BytesUtils.clone(b0),
+            gf2e.createZero(),
         };
         byte[][] x = new byte[m][];
-        LinearSolver.SystemInfo systemInfo = linearSolver.freeSolve(matrixA, m, b, x);
+        LinearSolver.SystemInfo systemInfo = linearSolver.freeSolve(BytesUtils.clone(matrixA), m, BytesUtils.clone(b), x);
         Assert.assertEquals(LinearSolver.SystemInfo.Consistent, systemInfo);
         Assert.assertTrue(gf2e.isZero(x[0]));
         Assert.assertTrue(gf2e.isZero(x[1]));
@@ -176,26 +156,22 @@ public class BitMatrixLinearSolverConstantTest {
         matrixA = new byte[][]{
             new byte[]{0b00000011},
         };
-        b0 = BytesUtils.randomByteArray(BYTE_L, L, SECURE_RANDOM);
         b = new byte[][]{
-            BytesUtils.clone(b0),
+            gf2e.createRandom(SECURE_RANDOM),
         };
-        x = new byte[m][];
-        systemInfo = linearSolver.freeSolve(matrixA, m, b, x);
+        systemInfo = linearSolver.freeSolve(BytesUtils.clone(matrixA), m, BytesUtils.clone(b), x);
         Assert.assertEquals(LinearSolver.SystemInfo.Consistent, systemInfo);
-        Assert.assertTrue(gf2e.isEqual(b0, x[0]));
+        Assert.assertTrue(gf2e.isEqual(b[0], x[0]));
         Assert.assertTrue(gf2e.isZero(x[1]));
 
         // A = | 0 1 |, b = 0, solve Ax = b.
         matrixA = new byte[][]{
             new byte[]{0b00000001},
         };
-        b0 = new byte[BYTE_L];
         b = new byte[][]{
-            BytesUtils.clone(b0),
+            gf2e.createZero(),
         };
-        x = new byte[m][];
-        systemInfo = linearSolver.freeSolve(matrixA, m, b, x);
+        systemInfo = linearSolver.freeSolve(BytesUtils.clone(matrixA), m, BytesUtils.clone(b), x);
         Assert.assertEquals(LinearSolver.SystemInfo.Consistent, systemInfo);
         Assert.assertTrue(gf2e.isZero(x[0]));
         Assert.assertTrue(gf2e.isZero(x[1]));
@@ -204,26 +180,22 @@ public class BitMatrixLinearSolverConstantTest {
         matrixA = new byte[][]{
             new byte[]{0b00000001},
         };
-        b0 = BytesUtils.randomByteArray(BYTE_L, L, SECURE_RANDOM);
         b = new byte[][]{
-            BytesUtils.clone(b0),
+            gf2e.createNonZeroRandom(SECURE_RANDOM),
         };
-        x = new byte[m][];
-        systemInfo = linearSolver.freeSolve(matrixA, m, b, x);
+        systemInfo = linearSolver.freeSolve(BytesUtils.clone(matrixA), m, BytesUtils.clone(b), x);
         Assert.assertEquals(LinearSolver.SystemInfo.Consistent, systemInfo);
         Assert.assertTrue(gf2e.isZero(x[0]));
-        Assert.assertTrue(gf2e.isEqual(b0, x[1]));
+        Assert.assertTrue(gf2e.isEqual(b[0], x[1]));
 
         // A = | 1 0 |, b = 0, solve Ax = b.
         matrixA = new byte[][]{
             new byte[]{0b00000010},
         };
-        b0 = new byte[BYTE_L];
         b = new byte[][]{
-            BytesUtils.clone(b0),
+            gf2e.createZero(),
         };
-        x = new byte[m][];
-        systemInfo = linearSolver.freeSolve(matrixA, m, b, x);
+        systemInfo = linearSolver.freeSolve(BytesUtils.clone(matrixA), m, BytesUtils.clone(b), x);
         Assert.assertEquals(LinearSolver.SystemInfo.Consistent, systemInfo);
         Assert.assertTrue(gf2e.isZero(x[0]));
         Assert.assertTrue(gf2e.isZero(x[1]));
@@ -232,26 +204,22 @@ public class BitMatrixLinearSolverConstantTest {
         matrixA = new byte[][]{
             new byte[]{0b00000010},
         };
-        b0 = BytesUtils.randomByteArray(BYTE_L, L, SECURE_RANDOM);
         b = new byte[][]{
-            BytesUtils.clone(b0),
+            gf2e.createNonZeroRandom(SECURE_RANDOM),
         };
-        x = new byte[m][];
-        systemInfo = linearSolver.freeSolve(matrixA, m, b, x);
+        systemInfo = linearSolver.freeSolve(BytesUtils.clone(matrixA), m, BytesUtils.clone(b), x);
         Assert.assertEquals(LinearSolver.SystemInfo.Consistent, systemInfo);
-        Assert.assertTrue(gf2e.isEqual(b0, x[0]));
+        Assert.assertTrue(gf2e.isEqual(b[0], x[0]));
         Assert.assertTrue(gf2e.isZero(x[1]));
 
         // A = | 0 0 |, b = 0, solve Ax = b.
         matrixA = new byte[][]{
             new byte[]{0b00000000},
         };
-        b0 = new byte[BYTE_L];
         b = new byte[][]{
-            BytesUtils.clone(b0),
+            gf2e.createZero(),
         };
-        x = new byte[m][];
-        systemInfo = linearSolver.freeSolve(matrixA, m, b, x);
+        systemInfo = linearSolver.freeSolve(BytesUtils.clone(matrixA), m, BytesUtils.clone(b), x);
         Assert.assertEquals(LinearSolver.SystemInfo.Consistent, systemInfo);
         Assert.assertTrue(gf2e.isZero(x[0]));
         Assert.assertTrue(gf2e.isZero(x[0]));
@@ -260,12 +228,10 @@ public class BitMatrixLinearSolverConstantTest {
         matrixA = new byte[][]{
             new byte[]{0b00000000},
         };
-        b0 = BytesUtils.randomByteArray(BYTE_L, L, SECURE_RANDOM);
         b = new byte[][]{
-            BytesUtils.clone(b0),
+            gf2e.createNonZeroRandom(SECURE_RANDOM),
         };
-        x = new byte[m][];
-        systemInfo = linearSolver.freeSolve(matrixA, m, b, x);
+        systemInfo = linearSolver.freeSolve(BytesUtils.clone(matrixA), m, BytesUtils.clone(b), x);
         Assert.assertEquals(LinearSolver.SystemInfo.Inconsistent, systemInfo);
     }
 
@@ -276,112 +242,97 @@ public class BitMatrixLinearSolverConstantTest {
         byte[][] matrixA = new byte[][]{
             new byte[]{0b00000011},
         };
-        byte[] b0 = new byte[BYTE_L];
         byte[][] b = new byte[][]{
-            BytesUtils.clone(b0),
+            gf2e.createZero(),
         };
         byte[][] x = new byte[m][];
-        LinearSolver.SystemInfo systemInfo = linearSolver.fullSolve(matrixA, m, b, x);
+        LinearSolver.SystemInfo systemInfo = linearSolver.fullSolve(BytesUtils.clone(matrixA), m, BytesUtils.clone(b), x);
         Assert.assertEquals(LinearSolver.SystemInfo.Consistent, systemInfo);
         Assert.assertFalse(gf2e.isZero(x[0]));
         Assert.assertFalse(gf2e.isZero(x[1]));
         Assert.assertTrue(gf2e.isZero(gf2e.add(x[0], x[1])));
 
         // A = | 1 1 |, b = r, solve Ax = b.
-        matrixA = new byte[][] {
-            new byte[] {0b00000011},
+        matrixA = new byte[][]{
+            new byte[]{0b00000011},
         };
-        b0 = BytesUtils.randomByteArray(BYTE_L, L, SECURE_RANDOM);
-        b = new byte[][] {
-            BytesUtils.clone(b0),
+        b = new byte[][]{
+            gf2e.createNonZeroRandom(SECURE_RANDOM),
         };
-        x = new byte[m][];
-        systemInfo = linearSolver.fullSolve(matrixA, m, b, x);
+        systemInfo = linearSolver.fullSolve(BytesUtils.clone(matrixA), m, BytesUtils.clone(b), x);
         Assert.assertEquals(LinearSolver.SystemInfo.Consistent, systemInfo);
         Assert.assertFalse(gf2e.isZero(x[0]));
         Assert.assertFalse(gf2e.isZero(x[1]));
-        Assert.assertTrue(gf2e.isEqual(b0, gf2e.add(x[0], x[1])));
+        Assert.assertTrue(gf2e.isEqual(b[0], gf2e.add(x[0], x[1])));
 
         // A = | 0 1 |, b = 0, solve Ax = b.
-        matrixA = new byte[][] {
-            new byte[] {0b00000001},
+        matrixA = new byte[][]{
+            new byte[]{0b00000001},
         };
-        b0 = new byte[BYTE_L];
-        b = new byte[][] {
-            BytesUtils.clone(b0),
+        b = new byte[][]{
+            gf2e.createZero(),
         };
-        x = new byte[m][];
-        systemInfo = linearSolver.fullSolve(matrixA, m, b, x);
+        systemInfo = linearSolver.fullSolve(BytesUtils.clone(matrixA), m, BytesUtils.clone(b), x);
         Assert.assertEquals(LinearSolver.SystemInfo.Consistent, systemInfo);
         Assert.assertFalse(gf2e.isZero(x[0]));
         Assert.assertTrue(gf2e.isZero(x[1]));
 
         // A = | 0 1 |, b = r, solve Ax = b.
-        matrixA = new byte[][] {
-            new byte[] {0b00000001},
+        matrixA = new byte[][]{
+            new byte[]{0b00000001},
         };
-        b0 = BytesUtils.randomByteArray(BYTE_L, L, SECURE_RANDOM);
-        b = new byte[][] {
-            BytesUtils.clone(b0),
+        b = new byte[][]{
+            gf2e.createNonZeroRandom(SECURE_RANDOM),
         };
-        x = new byte[m][];
-        systemInfo = linearSolver.fullSolve(matrixA, m, b, x);
+        systemInfo = linearSolver.fullSolve(BytesUtils.clone(matrixA), m, BytesUtils.clone(b), x);
         Assert.assertEquals(LinearSolver.SystemInfo.Consistent, systemInfo);
         Assert.assertFalse(gf2e.isZero(x[0]));
-        Assert.assertTrue(gf2e.isEqual(b0, x[1]));
+        Assert.assertTrue(gf2e.isEqual(b[0], x[1]));
 
         // A = | 1 0 |, b = 0, solve Ax = b.
-        matrixA = new byte[][] {
-            new byte[] {0b00000010},
+        matrixA = new byte[][]{
+            new byte[]{0b00000010},
         };
-        b0 = new byte[BYTE_L];
-        b = new byte[][] {
-            BytesUtils.clone(b0),
+        b = new byte[][]{
+            gf2e.createZero(),
         };
-        x = new byte[m][];
-        systemInfo = linearSolver.fullSolve(matrixA, m, b, x);
+        systemInfo = linearSolver.fullSolve(BytesUtils.clone(matrixA), m, BytesUtils.clone(b), x);
         Assert.assertEquals(LinearSolver.SystemInfo.Consistent, systemInfo);
         Assert.assertTrue(gf2e.isZero(x[0]));
         Assert.assertFalse(gf2e.isZero(x[1]));
 
         // A = | 1 0 |, b = r, solve Ax = b.
-        matrixA = new byte[][] {
-            new byte[] {0b00000010},
+        matrixA = new byte[][]{
+            new byte[]{0b00000010},
         };
-        b0 = BytesUtils.randomByteArray(BYTE_L, L, SECURE_RANDOM);
-        b = new byte[][] {
-            BytesUtils.clone(b0),
+        b = new byte[][]{
+            gf2e.createNonZeroRandom(SECURE_RANDOM),
         };
-        x = new byte[m][];
-        systemInfo = linearSolver.fullSolve(matrixA, m, b, x);
+        systemInfo = linearSolver.fullSolve(BytesUtils.clone(matrixA), m, BytesUtils.clone(b), x);
         Assert.assertEquals(LinearSolver.SystemInfo.Consistent, systemInfo);
-        Assert.assertTrue(gf2e.isEqual(b0, x[0]));
+        Assert.assertTrue(gf2e.isEqual(b[0], x[0]));
         Assert.assertFalse(gf2e.isZero(x[1]));
 
         // A = | 0 0 |, b = 0, solve Ax = b.
-        matrixA = new byte[][] {
-            new byte[] {0b00000000},
+        matrixA = new byte[][]{
+            new byte[]{0b00000000},
         };
-        b0 = new byte[BYTE_L];
-        b = new byte[][] {
-            BytesUtils.clone(b0),
+        b = new byte[][]{
+            gf2e.createZero(),
         };
-        x = new byte[m][];
-        systemInfo = linearSolver.fullSolve(matrixA, m, b, x);
+        systemInfo = linearSolver.fullSolve(BytesUtils.clone(matrixA), m, BytesUtils.clone(b), x);
         Assert.assertEquals(LinearSolver.SystemInfo.Consistent, systemInfo);
         Assert.assertFalse(gf2e.isZero(x[0]));
         Assert.assertFalse(gf2e.isZero(x[0]));
 
         // A = | 0 0 |, b = r, solve Ax = b.
-        matrixA = new byte[][] {
-            new byte[] {0b00000000},
+        matrixA = new byte[][]{
+            new byte[]{0b00000000},
         };
-        b0 = BytesUtils.randomByteArray(BYTE_L, L, SECURE_RANDOM);
-        b = new byte[][] {
-            BytesUtils.clone(b0),
+        b = new byte[][]{
+            gf2e.createNonZeroRandom(SECURE_RANDOM),
         };
-        x = new byte[m][];
-        systemInfo = linearSolver.fullSolve(matrixA, m, b, x);
+        systemInfo = linearSolver.fullSolve(BytesUtils.clone(matrixA), m, BytesUtils.clone(b), x);
         Assert.assertEquals(LinearSolver.SystemInfo.Inconsistent, systemInfo);
     }
 }

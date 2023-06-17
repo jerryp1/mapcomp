@@ -90,7 +90,7 @@ public class BitMatrixLinearSolver {
         MathPreconditions.checkGreaterOrEqual("m", nColumns, nRows);
         int nByteColumns = CommonUtils.getByteLength(nColumns);
         int nOffsetColumns = nByteColumns * Byte.SIZE - nColumns;
-        // verify each row has at most nColumns valid bits, and not all-zero
+        // verify each row has at most nColumns valid bits
         Arrays.stream(lhs).forEach(row ->
             Preconditions.checkArgument(BytesUtils.isFixedReduceByteArray(row, nByteColumns, nColumns))
         );
@@ -170,11 +170,11 @@ public class BitMatrixLinearSolver {
         MathPreconditions.checkEqual("lhs.length", "rhs.length", lhs.length, rhs.length);
         int nRows = lhs.length;
         // m >= n
-        MathPreconditions.checkGreaterOrEqual("m", nColumns, nColumns);
+        MathPreconditions.checkGreaterOrEqual("m", nColumns, nRows);
         MathPreconditions.checkEqual("result.length", "m", result.length, nColumns);
         int nByteColumns = CommonUtils.getByteLength(nColumns);
         int nOffsetColumns = nByteColumns * Byte.SIZE - nColumns;
-        // verify each row has at most nColumns valid bits, and not all-zero
+        // verify each row has at most nColumns valid bits
         Arrays.stream(lhs).forEach(row ->
             Preconditions.checkArgument(BytesUtils.isFixedReduceByteArray(row, nByteColumns, nColumns))
         );
@@ -188,14 +188,6 @@ public class BitMatrixLinearSolver {
         // if n > 1, transform lsh to Echelon form.
         RowEchelonFromInfo info = rowEchelonForm(lhs, nColumns, rhs);
         int nUnderDetermined = info.nZeroColumns;
-        if (nRows > nColumns) {
-            // over-determined system, check that all rhs are zero, otherwise we do not have any solution
-            for (int i = nColumns; i < nRows; ++i) {
-                if (!isZero(rhs[i])) {
-                    return Inconsistent;
-                }
-            }
-        }
         Arrays.fill(result, createZero());
         // back substitution in case of determined system
         if (nUnderDetermined == 0 && nColumns <= nRows) {
