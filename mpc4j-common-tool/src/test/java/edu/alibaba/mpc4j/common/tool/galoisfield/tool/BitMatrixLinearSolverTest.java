@@ -200,24 +200,33 @@ public class BitMatrixLinearSolverTest {
     }
 
     private void testGaussianElimination(byte[][] matrixA, int nColumn, byte[][] b) {
+        byte[][] x = new byte[nColumn][];
+        LinearSolver.SystemInfo systemInfo;
+        // free solve
+        systemInfo = linearSolver.freeSolve(BytesUtils.clone(matrixA), nColumn, BytesUtils.clone(b), x);
+        Assert.assertNotEquals(LinearSolver.SystemInfo.Inconsistent, systemInfo);
+        assertCorrect(matrixA, nColumn, b, x);
+        // full solve
+        systemInfo = linearSolver.fullSolve(BytesUtils.clone(matrixA), nColumn, BytesUtils.clone(b), x);
+        Assert.assertNotEquals(LinearSolver.SystemInfo.Inconsistent, systemInfo);
+        assertCorrect(matrixA, nColumn, b, x);
+        for (byte[] xi : x) {
+            Assert.assertFalse(gf2e.isZero(xi));
+        }
+    }
+
+    private void assertCorrect(byte[][] matrixA, int nColumn, byte[][] b, byte[][] x) {
         int nrow = b.length;
         int nByteColumn = CommonUtils.getByteLength(nColumn);
         int nOffsetColumn = nByteColumn * Byte.SIZE - nColumn;
-        // byte[]是可变的，因此要复制一份出来
-        byte[][] copyMatrixA = BytesUtils.clone(matrixA);
-        byte[][] copyB = BytesUtils.clone(b);
-        // solve x
-        byte[][] x = new byte[nColumn][];
-        LinearSolver.SystemInfo systemInfo = linearSolver.freeSolve(matrixA, nColumn, b, x);
-        Assert.assertNotEquals(LinearSolver.SystemInfo.Inconsistent, systemInfo);
         for (int rowIndex = 0; rowIndex < nrow; rowIndex++) {
             byte[] res = gf2e.createZero();
             for (int columnIndex = 0; columnIndex < nColumn; columnIndex++) {
-                if (BinaryUtils.getBoolean(copyMatrixA[rowIndex], nOffsetColumn + columnIndex)) {
+                if (BinaryUtils.getBoolean(matrixA[rowIndex], nOffsetColumn + columnIndex)) {
                     gf2e.addi(res, x[columnIndex]);
                 }
             }
-            Assert.assertArrayEquals(copyB[rowIndex], res);
+            Assert.assertArrayEquals(b[rowIndex], res);
         }
     }
 }

@@ -13,6 +13,8 @@ import java.security.SecureRandom;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Set;
+import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 
 import static cc.redberry.rings.linear.LinearSolver.SystemInfo.*;
 
@@ -63,7 +65,7 @@ public class BitMatrixLinearSolver {
          */
         private final int nZeroColumns;
         /**
-         * max linear independent column index
+         * max linear independent columns
          */
         private final Set<Integer> maxLisColumns;
 
@@ -115,8 +117,6 @@ public class BitMatrixLinearSolver {
                 }
                 ArraysUtil.swap(lhs, row, max);
                 ArraysUtil.swap(rhs, row, max);
-                // add that column into the set
-                maxLisColumns.add(iColumn);
             }
             // if we cannot find one, it means this column is free, nothing to do on this column
             if (!BinaryUtils.getBoolean(lhs[row], iColumn + nOffsetColumns)) {
@@ -124,6 +124,8 @@ public class BitMatrixLinearSolver {
                 to = Math.min(nRows + nZeroColumns, nColumns);
                 continue;
             }
+            // add that column into the set
+            maxLisColumns.add(iColumn);
             // forward Gaussian elimination
             for (int iRow = row + 1; iRow < nRows; ++iRow) {
                 boolean alpha = BinaryUtils.getBoolean(lhs[iRow], iColumn + nOffsetColumns);
@@ -189,8 +191,8 @@ public class BitMatrixLinearSolver {
         RowEchelonFromInfo info = rowEchelonForm(lhs, nColumns, rhs);
         int nUnderDetermined = info.nZeroColumns;
         Arrays.fill(result, createZero());
-        // back substitution in case of determined system
-        if (nUnderDetermined == 0 && nColumns <= nRows) {
+        // for determined system, free and full solution are the same
+        if (nUnderDetermined == 0 && nColumns == nRows) {
             for (int i = nColumns - 1; i >= 0; i--) {
                 byte[] sum = createZero();
                 for (int j = i + 1; j < nColumns; j++) {
@@ -202,60 +204,11 @@ public class BitMatrixLinearSolver {
             }
             return Consistent;
         }
-        // back substitution in case of under-determined system
-        TIntArrayList nzColumns = new TIntArrayList(), nzRows = new TIntArrayList();
-        // number of zero columns
-        int nZeroColumns = 0;
-        int iRow = 0;
-        for (int iColumn = 0, to = Math.min(nRows, nColumns); iColumn < to; ++iColumn) {
-            // find pivot row and swap
-            iRow = iColumn - nZeroColumns;
-            if (!BinaryUtils.getBoolean(lhs[iRow], nOffsetColumns + iColumn)) {
-                if (iColumn == (nColumns - 1) && !isZero(rhs[iRow])) {
-                    return Inconsistent;
-                }
-                ++nZeroColumns;
-                to = Math.min(nRows + nZeroColumns, nColumns);
-                continue;
-            }
-            // scale current row
-            byte[] row = lhs[iRow];
-            boolean val = BinaryUtils.getBoolean(row, nOffsetColumns + iColumn);
-            // it should be row = valInv ? row : new byte[nRows], but note that valInv = val
-            row = val ? row : new byte[nRows];
-            // it should be rhs[iRow] = valInv ? rhs[iRow] : createZero(, but note that valInv = val
-            rhs[iRow] = val ? rhs[iRow] : createZero();
-            // scale all rows before
-            for (int i = 0; i < iRow; i++) {
-                byte[] pRow = lhs[i];
-                boolean v = BinaryUtils.getBoolean(pRow, nOffsetColumns + iColumn);
-                if (!v) {
-                    continue;
-                }
-                BytesUtils.xori(pRow, row);
-                subi(rhs[i], rhs[iRow]);
-            }
-            if (!isZero(rhs[iRow]) && !BinaryUtils.getBoolean(lhs[iRow], nOffsetColumns + iColumn)) {
-                return Inconsistent;
-            }
-            nzColumns.add(iColumn);
-            nzRows.add(iRow);
-        }
-        ++iRow;
-        if (iRow < nRows) {
-            for (; iRow < nRows; ++iRow) {
-                if (!isZero(rhs[iRow])) {
-                    return Inconsistent;
-                }
-            }
-        }
-        for (int i = 0; i < nzColumns.size(); ++i) {
-            result[nzColumns.get(i)] = rhs[nzRows.get(i)];
-        }
-        return Consistent;
+        return solveUnderDeterminedRows(lhs, nColumns, rhs, result, info, isFull);
     }
 
-    private LinearSolver.SystemInfo solveOneRow(byte[][] lhs, int nColumns, byte[][] rhs, byte[][] result, boolean isFull) {
+    private LinearSolver.SystemInfo solveOneRow(
+        byte[][] lhs, int nColumns, byte[][] rhs, byte[][] result, boolean isFull) {
         int nByteColumns = CommonUtils.getByteLength(nColumns);
         int nOffsetColumns = nByteColumns * Byte.SIZE - nColumns;
         int iRow = 0;
@@ -320,6 +273,82 @@ public class BitMatrixLinearSolver {
             result[firstNonZeroColumn] = BytesUtils.clone(rhs[iRow]);
             return Consistent;
         }
+    }
+
+    private LinearSolver.SystemInfo solveUnderDeterminedRows(byte[][] lhs, int nColumns, byte[][] rhs, byte[][] result,
+                                                             RowEchelonFromInfo info, boolean isFull) {
+        int nRows = lhs.length;
+        int nByteColumns = CommonUtils.getByteLength(nColumns);
+        int nOffsetColumns = nByteColumns * Byte.SIZE - nColumns;
+        // back substitution in case of under-determined system
+        TIntArrayList nzColumns = new TIntArrayList(), nzRows = new TIntArrayList();
+        // number of zero columns
+        int nZeroColumns = 0;
+        int iRow = 0;
+        for (int iColumn = 0, to = Math.min(nRows, nColumns); iColumn < to; ++iColumn) {
+            iRow = iColumn - nZeroColumns;
+            if (!BinaryUtils.getBoolean(lhs[iRow], nOffsetColumns + iColumn)) {
+                if (iColumn == (nColumns - 1) && !isZero(rhs[iRow])) {
+                    return Inconsistent;
+                }
+                ++nZeroColumns;
+                // full solution needs to set the corresponding result[iColumn] as a random variable
+                to = Math.min(nRows + nZeroColumns, nColumns);
+                continue;
+            }
+            // scale current row, that is, make lhs[iRow][iColumn] = 1, and scale other entries in this row.
+            // it should be as follows, but here val == 1, valInv = 1, so we can ignore these steps
+            // val = row[iColumn]; valInv = 1 / val;
+            // for (int i = iColumn; i < nColumns; i++) { row[i] = valInv * row[i] }
+            byte[] row = lhs[iRow];
+            // scale all rows before
+            for (int i = 0; i < iRow; i++) {
+                byte[] pRow = lhs[i];
+                boolean v = BinaryUtils.getBoolean(pRow, nOffsetColumns + iColumn);
+                if (!v) {
+                    continue;
+                }
+                BytesUtils.xori(pRow, row);
+                subi(rhs[i], rhs[iRow]);
+            }
+            if (!isZero(rhs[iRow]) && !BinaryUtils.getBoolean(lhs[iRow], nOffsetColumns + iColumn)) {
+                return Inconsistent;
+            }
+            // label that column and its corresponding row for the solution b[row].
+            nzColumns.add(iColumn);
+            nzRows.add(iRow);
+        }
+        ++iRow;
+        if (iRow < nRows) {
+            for (; iRow < nRows; ++iRow) {
+                if (!isZero(rhs[iRow])) {
+                    return Inconsistent;
+                }
+            }
+        }
+        for (int i = 0; i < nzColumns.size(); ++i) {
+            result[nzColumns.get(i)] = rhs[nzRows.get(i)];
+        }
+        if (isFull) {
+            Set<Integer> maxLisColumns = info.maxLisColumns;
+            Set<Integer> nonMaxLisColumns = IntStream.range(0, nColumns).boxed().collect(Collectors.toSet());
+            nonMaxLisColumns.removeAll(maxLisColumns);
+            // set result[iColumn] corresponding to the non-maxLisColumns as random variables
+            for (int nonMaxLisColumn : nonMaxLisColumns) {
+                result[nonMaxLisColumn] = BytesUtils.randomByteArray(byteL, l, secureRandom);
+            }
+            for (int i = 0; i < nzColumns.size(); ++i) {
+                int iNzColumn = nzColumns.get(i);
+                int iNzRow = nzRows.get(i);
+                // subtract other free variables
+                for (int nonMaxLisColumn : nonMaxLisColumns) {
+                    if (BinaryUtils.getBoolean(lhs[iNzRow], nOffsetColumns + nonMaxLisColumn)) {
+                        subi(result[iNzColumn], result[nonMaxLisColumn]);
+                    }
+                }
+            }
+        }
+        return Consistent;
     }
 
     private boolean isZero(byte[] element) {
