@@ -4,6 +4,8 @@ import edu.alibaba.mpc4j.common.circuit.z2.adder.Adder;
 import edu.alibaba.mpc4j.common.circuit.z2.adder.AdderFactory;
 import edu.alibaba.mpc4j.common.circuit.z2.multiplier.Multiplier;
 import edu.alibaba.mpc4j.common.circuit.z2.multiplier.MultiplierFactory;
+import edu.alibaba.mpc4j.common.circuit.z2.sorter.Sorter;
+import edu.alibaba.mpc4j.common.circuit.z2.sorter.SorterFactory;
 import edu.alibaba.mpc4j.common.rpc.MpcAbortException;
 import edu.alibaba.mpc4j.common.tool.utils.LongUtils;
 
@@ -22,9 +24,13 @@ public class Z2IntegerCircuit extends AbstractZ2Circuit {
      */
     private final Adder adder;
     /**
-     * adder.
+     * multiplier.
      */
     private final Multiplier multiplier;
+    /**
+     * sorter.
+     */
+    private final Sorter sorter;
 
     public Z2IntegerCircuit(MpcZ2cParty party) {
         this(party, new Z2CircuitConfig.Builder().build());
@@ -33,8 +39,9 @@ public class Z2IntegerCircuit extends AbstractZ2Circuit {
     public Z2IntegerCircuit(MpcZ2cParty party, Z2CircuitConfig config) {
         super(party);
         this.party = party;
-        this.adder = AdderFactory.createAdder(party, config.getAdderType());
-        this.multiplier = MultiplierFactory.createMultiplier(party, config.getMultiplierTypes(), adder);
+        this.adder = AdderFactory.createAdder(config.getAdderType(), this);
+        this.multiplier = MultiplierFactory.createMultiplier(config.getMultiplierType(), this);
+        this.sorter = SorterFactory.createSorter(config.getSorterType(), this);
     }
 
     /**
@@ -146,4 +153,20 @@ public class Z2IntegerCircuit extends AbstractZ2Circuit {
         return result[0];
     }
 
+    public void sort(MpcZ2Vector[][] xiArray) throws MpcAbortException {
+        Arrays.stream(xiArray).forEach(this::checkInputs);
+        sorter.sort(xiArray);
+    }
+
+    public Adder getAdder() {
+        return adder;
+    }
+
+    public Multiplier getMultiplier() {
+        return multiplier;
+    }
+
+    public Sorter getSorter() {
+        return sorter;
+    }
 }

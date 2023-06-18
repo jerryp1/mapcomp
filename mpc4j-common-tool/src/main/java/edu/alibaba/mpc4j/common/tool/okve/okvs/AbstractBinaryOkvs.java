@@ -1,10 +1,7 @@
 package edu.alibaba.mpc4j.common.tool.okve.okvs;
 
 import edu.alibaba.mpc4j.common.tool.CommonConstants;
-import edu.alibaba.mpc4j.common.tool.EnvType;
-import edu.alibaba.mpc4j.common.tool.galoisfield.gf2e.Gf2e;
-import edu.alibaba.mpc4j.common.tool.galoisfield.gf2e.Gf2eFactory;
-import edu.alibaba.mpc4j.common.tool.galoisfield.gf2e.Gf2eLinearSolver;
+import edu.alibaba.mpc4j.common.tool.galoisfield.tool.BitMatrixLinearSolver;
 import edu.alibaba.mpc4j.common.tool.utils.CommonUtils;
 import edu.alibaba.mpc4j.common.tool.utils.LongUtils;
 
@@ -26,9 +23,13 @@ abstract class AbstractBinaryOkvs<T> implements BinaryOkvs<T> {
      */
     protected final int m;
     /**
-     * m的字节长度
+     * m in byte
      */
-    final int mByteLength;
+    protected final int byteM;
+    /**
+     * offset m
+     */
+    protected final int offsetM;
     /**
      * OKVS映射值比特长度
      */
@@ -42,19 +43,15 @@ abstract class AbstractBinaryOkvs<T> implements BinaryOkvs<T> {
      */
     protected final SecureRandom secureRandom;
     /**
-     * GF2E
-     */
-    protected final Gf2e gf2e;
-    /**
      * 线性求解器
      */
-    protected final Gf2eLinearSolver gf2eLinearSolver;
+    protected final BitMatrixLinearSolver linearSolver;
     /**
      * parallel encode
      */
     protected boolean parallelEncode;
 
-    protected AbstractBinaryOkvs(EnvType envType, int n, int m, int l) {
+    protected AbstractBinaryOkvs(int n, int m, int l) {
         // 二进制OKVS可以编码1个元素
         assert n > 0;
         this.n = n;
@@ -66,10 +63,10 @@ abstract class AbstractBinaryOkvs<T> implements BinaryOkvs<T> {
         // 要求m >= n，且m可以被Byte.SIZE整除
         assert m >= n && m % Byte.SIZE == 0;
         this.m = m;
-        mByteLength = m / Byte.SIZE;
+        byteM = CommonUtils.getByteLength(m);
+        offsetM = byteM * Byte.SIZE - m;
         secureRandom = new SecureRandom();
-        gf2e = Gf2eFactory.createInstance(envType, l);
-        gf2eLinearSolver = new Gf2eLinearSolver(gf2e);
+        linearSolver = new BitMatrixLinearSolver(l);
         parallelEncode = false;
     }
 

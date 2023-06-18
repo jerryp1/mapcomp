@@ -1,6 +1,6 @@
 package edu.alibaba.mpc4j.common.circuit.z2.adder;
 
-import edu.alibaba.mpc4j.common.circuit.z2.MpcZ2cParty;
+import edu.alibaba.mpc4j.common.circuit.z2.Z2IntegerCircuit;
 import edu.alibaba.mpc4j.common.rpc.MpcAbortException;
 
 import java.util.stream.IntStream;
@@ -18,8 +18,8 @@ import java.util.stream.IntStream;
  */
 public class KoggeStoneAdder extends AbstractParallelPrefixAdder {
 
-    public KoggeStoneAdder(MpcZ2cParty party) {
-        super(party);
+    public KoggeStoneAdder(Z2IntegerCircuit circuit) {
+        super(circuit.getParty());
     }
 
     @Override

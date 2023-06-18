@@ -331,6 +331,6 @@ public class DsrHgHhLdpServer extends AbstractHhLdpServer {
 
     @Override
     public HgHhLdpServerContext getServerContext() {
-        return new HgHhLdpServerContext(buckets);
+        return HgHhLdpServerContext.fromBuckets(buckets);
     }
 }

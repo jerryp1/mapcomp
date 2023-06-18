@@ -24,6 +24,7 @@ public class PjcMain {
      * @param args 只有一个输入：配置文件。
      */
     public static void main(String[] args) throws Exception {
+        PropertiesUtils.loadLog4jProperties();
         // 读取配置文件
         LOGGER.info("read PTO config");
         Properties properties = PropertiesUtils.loadProperties(args[0]);

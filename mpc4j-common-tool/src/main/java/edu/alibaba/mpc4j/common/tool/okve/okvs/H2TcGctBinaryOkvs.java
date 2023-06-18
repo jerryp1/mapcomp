@@ -76,7 +76,7 @@ public class H2TcGctBinaryOkvs<T> extends AbstractBinaryOkvs<T> implements Spars
     private Map<T, boolean[]> dataHrMap;
 
     H2TcGctBinaryOkvs(EnvType envType, int n, int l, byte[][] keys, CuckooTableTcFinder<T> tcFinder) {
-        super(envType, n, getLm(n) + getRm(n), l);
+        super(n, getLm(n) + getRm(n), l);
         assert (tcFinder instanceof CuckooTableSingletonTcFinder || tcFinder instanceof H2CuckooTableTcFinder);
         lm = getLm(n);
         rm = getRm(n);
@@ -251,32 +251,28 @@ public class H2TcGctBinaryOkvs<T> extends AbstractBinaryOkvs<T> implements Spars
         if (coreDataSet.size() != 0) {
             int size = coreDataSet.size();
             // 矩阵M有2-core边数量的行，2.4n + 1.4 * log(n) + λ列
-            byte[][][] matrixM = new byte[size][m][];
+            byte[][] matrixM = new byte[size][byteM];
             byte[][] vectorY = new byte[size][];
             int rowIndex = 0;
             for (T coreData : coreDataSet) {
                 int h1Value = dataH1Map.get(coreData);
                 int h2Value = dataH2Map.get(coreData);
-                boolean[] lx = new boolean[lm];
-                lx[h1Value] = true;
-                lx[h2Value] = true;
                 boolean[] rx = dataHrMap.get(coreData);
-                for (int columnIndex = 0; columnIndex < lm; columnIndex++) {
-                    matrixM[rowIndex][columnIndex] = lx[columnIndex] ? gf2e.createOne() : gf2e.createZero();
-                }
+                BinaryUtils.setBoolean(matrixM[rowIndex], offsetM + h1Value, true);
+                BinaryUtils.setBoolean(matrixM[rowIndex], offsetM + h2Value, true);
                 for (int columnIndex = 0; columnIndex < rm; columnIndex++) {
-                    matrixM[rowIndex][lm + columnIndex] = rx[columnIndex] ? gf2e.createOne() : gf2e.createZero();
+                    BinaryUtils.setBoolean(matrixM[rowIndex], offsetM + lm + columnIndex, rx[columnIndex]);
                 }
                 vectorY[rowIndex] = BytesUtils.clone(keyValueMap.get(coreData));
                 rowIndex++;
             }
-            SystemInfo systemInfo = gf2eLinearSolver.solve(matrixM, vectorY, vectorX, true);
+            SystemInfo systemInfo = linearSolver.freeSolve(matrixM, m, vectorY, vectorX);
             if (systemInfo.compareTo(SystemInfo.Inconsistent) == 0) {
                 throw new ArithmeticException("无法完成编码过程，线性系统无解");
             }
         } else {
             // 不存在环路，所有vectorX均设置为0，注意这里不能设置为空
-            Arrays.fill(vectorX, gf2e.createZero());
+            Arrays.fill(vectorX, new byte[byteL]);
         }
         byte[][] matrix = new byte[m][];
         for (Integer vertex : coreVertexSet) {

@@ -3,6 +3,7 @@ package edu.alibaba.mpc4j.common.circuit.z2;
 import edu.alibaba.mpc4j.common.circuit.CircuitConfig;
 import edu.alibaba.mpc4j.common.circuit.z2.adder.AdderFactory;
 import edu.alibaba.mpc4j.common.circuit.z2.multiplier.MultiplierFactory;
+import edu.alibaba.mpc4j.common.circuit.z2.sorter.SorterFactory;
 
 /**
  * Z2 Integer Circuit Config.
@@ -18,11 +19,16 @@ public class Z2CircuitConfig implements CircuitConfig {
     /**
      * Multiplier type.
      */
-    private MultiplierFactory.MultiplierTypes multiplierTypes;
+    private MultiplierFactory.MultiplierTypes multiplierType;
+    /**
+     * Sorter type.
+     */
+    private SorterFactory.SorterTypes sorterType;
 
     private Z2CircuitConfig(Builder builder) {
         setAdderType(builder.adderType);
-        setMultiplierTypes(builder.multiplierTypes);
+        setMultiplierType(builder.multiplierType);
+        setSorterType(builder.sorterType);
     }
 
     public AdderFactory.AdderTypes getAdderType() {
@@ -33,12 +39,20 @@ public class Z2CircuitConfig implements CircuitConfig {
         this.adderType = adderType;
     }
 
-    public MultiplierFactory.MultiplierTypes getMultiplierTypes() {
-        return multiplierTypes;
+    public MultiplierFactory.MultiplierTypes getMultiplierType() {
+        return multiplierType;
     }
 
-    public void setMultiplierTypes(MultiplierFactory.MultiplierTypes multiplierTypes) {
-        this.multiplierTypes = multiplierTypes;
+    public void setMultiplierType(MultiplierFactory.MultiplierTypes multiplierType) {
+        this.multiplierType = multiplierType;
+    }
+
+    public SorterFactory.SorterTypes getSorterType() {
+        return sorterType;
+    }
+
+    public void setSorterType(SorterFactory.SorterTypes sorterType) {
+        this.sorterType = sorterType;
     }
 
     public static class Builder implements org.apache.commons.lang3.builder.Builder<Z2CircuitConfig> {
@@ -49,11 +63,16 @@ public class Z2CircuitConfig implements CircuitConfig {
         /**
          * Multiplier type.
          */
-        private MultiplierFactory.MultiplierTypes multiplierTypes;
+        private MultiplierFactory.MultiplierTypes multiplierType;
+        /**
+         * Sorter type.
+         */
+        private SorterFactory.SorterTypes sorterType;
 
         public Builder() {
             adderType = AdderFactory.AdderTypes.RIPPLE_CARRY;
-            multiplierTypes = MultiplierFactory.MultiplierTypes.SHIFT_ADD;
+            multiplierType = MultiplierFactory.MultiplierTypes.SHIFT_ADD;
+            sorterType = SorterFactory.SorterTypes.BITONIC;
         }
 
         public Builder setAdderType(AdderFactory.AdderTypes adderType) {
@@ -61,8 +80,13 @@ public class Z2CircuitConfig implements CircuitConfig {
             return this;
         }
 
-        public Builder setMultiplierTypes(MultiplierFactory.MultiplierTypes multiplierTypes) {
-            this.multiplierTypes = multiplierTypes;
+        public Builder setMultiplierType(MultiplierFactory.MultiplierTypes multiplierType) {
+            this.multiplierType = multiplierType;
+            return this;
+        }
+
+        public Builder setSorterType(SorterFactory.SorterTypes sorterType) {
+            this.sorterType = sorterType;
             return this;
         }
 

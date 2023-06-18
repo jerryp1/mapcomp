@@ -1,8 +1,5 @@
-package edu.alibaba.mpc4j.common.tool.galoisfield.gf2e;
+package edu.alibaba.mpc4j.common.tool.galoisfield.tool;
 
-import edu.alibaba.mpc4j.common.tool.CommonConstants;
-import edu.alibaba.mpc4j.common.tool.EnvType;
-import edu.alibaba.mpc4j.common.tool.utils.BinaryUtils;
 import org.bouncycastle.util.encoders.Hex;
 import org.junit.Assert;
 import org.junit.Test;
@@ -13,66 +10,100 @@ import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
 /**
- * GF(2^l)矩阵最大线性无关向量查找器测试。
+ * Z2 max linear independent row finder test.
  *
  * @author Weiran Liu
  * @date 2021/09/27
  */
-public class Gf2eMaxLisFinderTest {
+public class BitMatrixMaxLisFinderTest {
     /**
-     * test 1 (3-by-3 system, singular)
+     * 3-by-3 system, singular
      */
-    private static final byte[][] TEST_1 = new byte[][] {
-        new byte[] { 0x02 },
-        new byte[] { 0x06 },
-        new byte[] { 0x01 },
+    private static final byte[][] SINGULAR_3_3 = new byte[][] {
+        new byte[] { 0b00000010 },
+        new byte[] { 0b00000110 },
+        new byte[] { 0b00000001 },
     };
-    private static final Set<Integer> TEST_1_RESULT = Arrays.stream(new int[] {0, 1, 2})
+    private static final Set<Integer> SINGULAR_3_3_RESULT = Arrays.stream(new int[] {0, 1, 2})
         .boxed()
         .collect(Collectors.toSet());
 
     /**
-     * test 2 (3-by-3 system, singular)
+     * 3-by-3 system, non-singular
      */
-    private static final byte[][] TEST_2 = new byte[][] {
-        new byte[] { 0x00 },
-        new byte[] { 0x01 },
-        new byte[] { 0x07 },
+    private static final byte[][] NON_SINGULAR_3_3 = new byte[][] {
+        new byte[] { 0b00000010 },
+        new byte[] { 0b00000101 },
+        new byte[] { 0b00000111 },
     };
-    private static final Set<Integer> TEST_2_RESULT = Arrays.stream(new int[] {1, 2})
+    private static final Set<Integer> NON_SINGULAR_3_3_RESULT = Arrays.stream(new int[] {0, 1})
         .boxed()
         .collect(Collectors.toSet());
 
     /**
-     * test 3 (8-by-8 system, singular)
+     * 4-by-3 system, singular (for 3)
      */
-    private static final byte[][] TEST_3 = new byte[][] {
-        new byte[] {(byte)0xde, }, new byte[] {(byte)0x35, },
-        new byte[] {(byte)0x47, }, new byte[] {(byte)0xd3, },
-        new byte[] {(byte)0x5d, }, new byte[] {(byte)0x77, },
-        new byte[] {(byte)0x63, }, new byte[] {(byte)0x73, },
+    private static final byte[][] SINGULAR_4_3 = new byte[][] {
+        new byte[] { 0b00000010 },
+        new byte[] { 0b00000110 },
+        new byte[] { 0b00000001 },
+        new byte[] { 0b00000101 },
     };
-    private static final Set<Integer> TEST_3_RESULT = Arrays.stream(new int[] {0, 1, 2, 3, 4, 5, 6, 7})
+    private static final Set<Integer> SINGULAR_4_3_RESULT = Arrays.stream(new int[] {0, 1, 2})
         .boxed()
         .collect(Collectors.toSet());
 
     /**
-     * test 4 (8-by-8 system, non-singular)
+     * 4-by-3 system, non-singular (for 3)
      */
-    private static final byte[][] TEST_4 = new byte[][] {
-        new byte[] {(byte)0x80, }, new byte[] {(byte)0xC0, },
-        new byte[] {(byte)0x40, }, new byte[] {(byte)0x20, },
-        new byte[] {(byte)0x10, }, new byte[] {(byte)0x04, },
-        new byte[] {(byte)0x02, }, new byte[] {(byte)0x01, },
+    private static final byte[][] NON_SINGULAR_4_3 = new byte[][] {
+        new byte[] { 0b00000110 },
+        new byte[] { 0b00000110 },
+        new byte[] { 0b00000001 },
+        new byte[] { 0b00000101 },
     };
-    private static final Set<Integer> TEST_4_RESULT = Arrays.stream(new int[] {1, 2, 3, 4, 5, 6, 7})
+    private static final Set<Integer> NON_SINGULAR_4_3_RESULT = Arrays.stream(new int[] {0, 2, 3})
         .boxed()
         .collect(Collectors.toSet());
 
     /**
-     * test 5 (128-by-128 system, singular)
+     * 8-by-8 system, singular
      */
-    private static final byte[][] TEST_5 = new byte[][] {
+    private static final byte[][] SINGULAR_8_8 = new byte[][] {
+        new byte[] {(byte)0b11011110, },
+        new byte[] {(byte)0b00110101, },
+        new byte[] {(byte)0b01000111, },
+        new byte[] {(byte)0b11010011, },
+        new byte[] {(byte)0b01011101, },
+        new byte[] {(byte)0b01110111, },
+        new byte[] {(byte)0b01100011, },
+        new byte[] {(byte)0b01110011, },
+    };
+    private static final Set<Integer> SINGULAR_8_8_RESULT = Arrays.stream(new int[] {0, 1, 2, 3, 4, 5, 6, 7})
+        .boxed()
+        .collect(Collectors.toSet());
+
+    /**
+     * 8-by-8 system, non-singular
+     */
+    private static final byte[][] NON_SINGULAR_8_8 = new byte[][] {
+        new byte[] {(byte)0b10000000, },
+        new byte[] {(byte)0b11000000, },
+        new byte[] {(byte)0b01000000, },
+        new byte[] {(byte)0b00100000, },
+        new byte[] {(byte)0b00010000, },
+        new byte[] {(byte)0b00000100, },
+        new byte[] {(byte)0b00000010, },
+        new byte[] {(byte)0b00000001, },
+    };
+    private static final Set<Integer> NON_SINGULAR_8_8_RESULT = Arrays.stream(new int[] {0, 1, 3, 4, 5, 6, 7})
+        .boxed()
+        .collect(Collectors.toSet());
+
+    /**
+     * 128-by-128 system, singular
+     */
+    private static final byte[][] SINGULAR_128_128 = new byte[][] {
         Hex.decode("de3547d35d7763737b6ec5825f32786d"), Hex.decode("a1bf2597d8732f367e52b8560916d23a"),
         Hex.decode("f72e3cc9bdb8a5c0e4aaae0160b2b5e0"), Hex.decode("bd611bd92408e58abd56402baabd035d"),
         Hex.decode("d94fedafaaae5344aa35b034c6861e86"), Hex.decode("130bb264fd142470c1f146023cfd60d2"),
@@ -138,49 +169,56 @@ public class Gf2eMaxLisFinderTest {
         Hex.decode("a106ec01e3bd4522f22b340ecfd57fc7"), Hex.decode("f137bacfcc2a859943d0019b6bbb655c"),
         Hex.decode("7677e3f99bd8b7eabc873bc23c662509"), Hex.decode("f43a4253f3c3fd597cdacbe067e296da"),
     };
-    private static final Set<Integer> TEST_5_RESULT = IntStream.range(0, 128)
+    private static final Set<Integer> SINGULAR_128_128_RESULT = IntStream.range(0, 128)
         .boxed()
         .collect(Collectors.toSet());
 
-    @Test
-    public void test1() {
-        test(TEST_1, 3, 3, TEST_1_RESULT);
+    /**
+     * binary max linear independent row finder
+     */
+    private final BitMatrixMaxLisFinder maxLisFinder;
+
+    public BitMatrixMaxLisFinderTest() {
+        maxLisFinder = new BitMatrixMaxLisFinder();
     }
 
     @Test
-    public void test2() {
-        test(TEST_2, 3, 3, TEST_2_RESULT);
+    public void testSingular3x3() {
+        test(SINGULAR_3_3, 3, SINGULAR_3_3_RESULT);
     }
 
     @Test
-    public void test3() {
-        test(TEST_3, 8, 8, TEST_3_RESULT);
+    public void testNonSingular3x3() {
+        test(NON_SINGULAR_3_3, 3, NON_SINGULAR_3_3_RESULT);
     }
 
     @Test
-    public void test4() {
-        test(TEST_4, 8, 8, TEST_4_RESULT);
+    public void testSingular4x3() {
+        test(SINGULAR_4_3, 3, SINGULAR_4_3_RESULT);
     }
 
     @Test
-    public void test5() {
-        test(TEST_5, 128, 128, TEST_5_RESULT);
+    public void testNonSingular4x3() {
+        test(NON_SINGULAR_4_3, 3, NON_SINGULAR_4_3_RESULT);
     }
 
-    private void test(byte[][] matrix, int m, int n, Set<Integer> result) {
-        Gf2e gf2e = Gf2eFactory.createInstance(EnvType.STANDARD_JDK, CommonConstants.BLOCK_BIT_LENGTH);
-        boolean[][] binaryMatrix = Arrays.stream(matrix)
-            .map(row -> BinaryUtils.byteArrayToBinary(row, n))
-            .toArray(boolean[][]::new);
-        byte[][][] matrixM = new byte[m][n][];
+    @Test
+    public void testSingular8x8() {
+        test(SINGULAR_8_8, 8, SINGULAR_8_8_RESULT);
+    }
 
-        for (int i = 0; i < m; i++) {
-            for (int j = 0; j < n; j++) {
-                matrixM[i][j] = binaryMatrix[i][j] ? gf2e.createOne() : gf2e.createZero();
-            }
-        }
-        Gf2eMaxLisFinder maxLisFinder = new Gf2eMaxLisFinder(gf2e, matrixM);
-        Set<Integer> lisRows = maxLisFinder.getLisRows();
+    @Test
+    public void testNonSingular8x8() {
+        test(NON_SINGULAR_8_8, 8, NON_SINGULAR_8_8_RESULT);
+    }
+
+    @Test
+    public void testSingular128x128() {
+        test(SINGULAR_128_128, 128, SINGULAR_128_128_RESULT);
+    }
+
+    private void test(byte[][] matrix, int m, Set<Integer> result) {
+        Set<Integer> lisRows = maxLisFinder.getLisColumns(matrix, m);
         Assert.assertEquals(result, lisRows);
     }
 }

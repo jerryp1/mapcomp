@@ -1,10 +1,8 @@
 package edu.alibaba.mpc4j.common.tool.okve.ovdm.gf2e;
 
 import edu.alibaba.mpc4j.common.tool.CommonConstants;
-import edu.alibaba.mpc4j.common.tool.EnvType;
-import edu.alibaba.mpc4j.common.tool.galoisfield.gf2e.Gf2e;
-import edu.alibaba.mpc4j.common.tool.galoisfield.gf2e.Gf2eFactory;
-import edu.alibaba.mpc4j.common.tool.galoisfield.gf2e.Gf2eLinearSolver;
+import edu.alibaba.mpc4j.common.tool.galoisfield.tool.BitMatrixLinearSolver;
+import edu.alibaba.mpc4j.common.tool.galoisfield.tool.BitMatrixMaxLisFinder;
 import edu.alibaba.mpc4j.common.tool.utils.CommonUtils;
 import edu.alibaba.mpc4j.common.tool.utils.LongUtils;
 
@@ -42,15 +40,15 @@ abstract class AbstractGf2eOvdm<T> implements Gf2eOvdm<T> {
      */
     protected final SecureRandom secureRandom;
     /**
-     * GF2E
-     */
-    protected final Gf2e gf2e;
-    /**
      * 线性求解器
      */
-    protected final Gf2eLinearSolver gf2eLinearSolver;
+    protected final BitMatrixLinearSolver linearSolver;
+    /**
+     * max linear independent system finder
+     */
+    protected final BitMatrixMaxLisFinder maxLisFinder;
 
-    protected AbstractGf2eOvdm(EnvType envType, int l, int n, int m) {
+    protected AbstractGf2eOvdm(int l, int n, int m) {
         assert n > 0;
         this.n = n;
         int minL = LongUtils.ceilLog2(n) + CommonConstants.STATS_BIT_LENGTH;
@@ -62,8 +60,8 @@ abstract class AbstractGf2eOvdm<T> implements Gf2eOvdm<T> {
         this.m = m;
         mByteLength = m / Byte.SIZE;
         secureRandom = new SecureRandom();
-        gf2e = Gf2eFactory.createInstance(envType, l);
-        gf2eLinearSolver = new Gf2eLinearSolver(gf2e);
+        linearSolver = new BitMatrixLinearSolver(l);
+        maxLisFinder = new BitMatrixMaxLisFinder();
     }
 
     @Override

@@ -54,7 +54,7 @@ public class Lprst21GbfBinaryOkvs<T> extends AbstractBinaryOkvs<T> implements Sp
     private final Prf[] prfs;
 
     public Lprst21GbfBinaryOkvs(EnvType envType, int n, int l, byte[][] keys) {
-        super(envType, n, getM(n), l);
+        super(n, getM(n), l);
         assert keys.length == HASH_NUM;
         prfs = IntStream.range(0, HASH_NUM)
             .mapToObj(hashIndex -> {

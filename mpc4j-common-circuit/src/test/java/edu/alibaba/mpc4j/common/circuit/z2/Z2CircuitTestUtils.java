@@ -3,6 +3,7 @@ package edu.alibaba.mpc4j.common.circuit.z2;
 import edu.alibaba.mpc4j.common.circuit.operator.Z2IntegerOperator;
 import org.junit.Assert;
 
+import java.util.Arrays;
 import java.util.stream.IntStream;
 
 /**
@@ -58,6 +59,23 @@ public class Z2CircuitTestUtils {
                     boolean actualZ = (longZs[i] % 2) == 1;
                     Assert.assertEquals(expectZ, actualZ);
                 });
+                break;
+            default:
+                throw new IllegalStateException("Invalid " + operator.name() + ": " + operator.name());
+        }
+    }
+
+    public static void assertSortOutput(Z2IntegerOperator operator, long[][] longXs, long[][] longZs) {
+        int num = longXs[0].length;
+        int numOfSorted = longXs.length;
+        switch (operator) {
+            case SORT:
+                for (int i = 0; i < num; i++) {
+                    Arrays.sort(longXs[i]);
+                    for (int j = 0; j < numOfSorted; j++) {
+                        Assert.assertEquals(longXs[j][i], longZs[j][i]);
+                    }
+                }
                 break;
             default:
                 throw new IllegalStateException("Invalid " + operator.name() + ": " + operator.name());

@@ -1,7 +1,7 @@
 package edu.alibaba.mpc4j.common.circuit.z2.adder;
 
 import edu.alibaba.mpc4j.common.circuit.z2.MpcZ2Vector;
-import edu.alibaba.mpc4j.common.circuit.z2.MpcZ2cParty;
+import edu.alibaba.mpc4j.common.circuit.z2.Z2IntegerCircuit;
 import edu.alibaba.mpc4j.common.rpc.MpcAbortException;
 
 /**
@@ -12,8 +12,8 @@ import edu.alibaba.mpc4j.common.rpc.MpcAbortException;
  */
 public class RippleCarryAdder extends AbstractAdder {
 
-    public RippleCarryAdder(MpcZ2cParty party) {
-        super(party);
+    public RippleCarryAdder(Z2IntegerCircuit circuit) {
+        super(circuit.getParty());
     }
 
     @Override

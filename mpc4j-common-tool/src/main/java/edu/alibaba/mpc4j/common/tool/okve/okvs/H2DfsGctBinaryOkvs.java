@@ -11,7 +11,6 @@ import edu.alibaba.mpc4j.common.tool.okve.okvs.OkvsFactory.OkvsType;
 import edu.alibaba.mpc4j.common.tool.utils.*;
 
 import java.util.*;
-import java.util.stream.IntStream;
 
 /**
  * 基于深度优先遍历（Depth-First Search，DFS）的不经意键值对存储器实现。原始方案来自下述论文第30页附录C：
@@ -67,10 +66,10 @@ class H2DfsGctBinaryOkvs<T> extends AbstractBinaryOkvs<T> implements SparseOkvs<
     /**
      * 数据到hr的映射表
      */
-    private Map<T, boolean[]> dataHrMap;
+    private Map<T, byte[]> dataHrMap;
 
     H2DfsGctBinaryOkvs(EnvType envType, int n, int l, byte[][] keys) {
-        super(envType, n, getLm(n) + getRm(n), l);
+        super(n, getLm(n) + getRm(n), l);
         lm = getLm(n);
         rm = getRm(n);
         h1 = PrfFactory.createInstance(envType, Integer.BYTES);
@@ -102,8 +101,12 @@ class H2DfsGctBinaryOkvs<T> extends AbstractBinaryOkvs<T> implements SparseOkvs<
 
     @Override
     public boolean[] densePositions(T key) {
+        return BinaryUtils.byteArrayToBinary(denseBytePositions(key));
+    }
+
+    private byte[] denseBytePositions(T key) {
         byte[] keyBytes = ObjectUtils.objectToByteArray(key);
-        return BinaryUtils.byteArrayToBinary(hr.getBytes(keyBytes));
+        return hr.getBytes(keyBytes);
     }
 
     @Override
@@ -149,10 +152,10 @@ class H2DfsGctBinaryOkvs<T> extends AbstractBinaryOkvs<T> implements SparseOkvs<
         dataHrMap = new HashMap<>(keySet.size());
         for (T key : keySet) {
             int[] sparsePositions = sparsePosition(key);
-            boolean[] densePositions = densePositions(key);
+            byte[] denseBytePositions = denseBytePositions(key);
             dataH1Map.put(key, sparsePositions[0]);
             dataH2Map.put(key, sparsePositions[1]);
-            dataHrMap.put(key, densePositions);
+            dataHrMap.put(key, denseBytePositions);
         }
         // 生成2哈希-布谷鸟表
         H2CuckooTable<T> h2CuckooTable = generateCuckooTable(keyValueMap);
@@ -174,7 +177,7 @@ class H2DfsGctBinaryOkvs<T> extends AbstractBinaryOkvs<T> implements SparseOkvs<
             ArrayList<T> traversalEdgeDataList = rootEdgeMap.get(root);
             for (T traversalEdgeData : traversalEdgeDataList) {
                 // set lv = lu XOR <r(x_i), R> XOR y_i
-                boolean[] rx = dataHrMap.get(traversalEdgeData);
+                byte[] rx = dataHrMap.get(traversalEdgeData);
                 Integer[] vertices = h2CuckooTable.getVertices(traversalEdgeData);
                 Integer source = vertices[0];
                 Integer target = vertices[1];
@@ -214,24 +217,22 @@ class H2DfsGctBinaryOkvs<T> extends AbstractBinaryOkvs<T> implements SparseOkvs<
             // 存在环路，这里有个非常大的坑，求解线性方程组时要把环路中涉及到的所有边都包含进来，而不止包含back edge
             // 所以需要实现Cuckoo Graph中找涉及到back edge的环路边问题，本质上把环路边找到就是找了一个2-core
             // for each non-tree edge, solve the linear system
-            byte[][][] matrixByteM = new byte[size][rm][];
+            byte[][] matrixByteM = new byte[size][];
             byte[][] vectorByteY = new byte[size][];
             int rowIndex = 0;
             for (T cycleEdgeData : cycleEdgeDataSet) {
-                boolean[] rx = dataHrMap.get(cycleEdgeData);
-                matrixByteM[rowIndex] = IntStream.range(0, rm)
-                    .mapToObj(rmIndex -> rx[rmIndex] ? gf2e.createOne() : gf2e.createZero())
-                    .toArray(byte[][]::new);
+                byte[] rx = dataHrMap.get(cycleEdgeData);
+                matrixByteM[rowIndex] = BytesUtils.clone(rx);
                 vectorByteY[rowIndex] = BytesUtils.clone(keyValueMap.get(cycleEdgeData));
                 rowIndex++;
             }
-            SystemInfo systemInfo = gf2eLinearSolver.solve(matrixByteM, vectorByteY, vectorByteX, true);
+            SystemInfo systemInfo = linearSolver.freeSolve(matrixByteM, rm, vectorByteY, vectorByteX);
             if (systemInfo.compareTo(SystemInfo.Inconsistent) == 0) {
                 throw new ArithmeticException("ERROR: cannot encode key-value map, Linear System unsolved");
             }
         } else {
             // 不存在环路，所有vectorX均设置为0
-            Arrays.fill(vectorByteX, gf2e.createZero());
+            Arrays.fill(vectorByteX, new byte[byteL]);
         }
         // 求解结果不可能为空
         return vectorByteX;

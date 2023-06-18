@@ -303,6 +303,6 @@ public class BdrHhgHhLdpServer extends AbstractHhLdpServer implements HhgHhLdpSe
 
     @Override
     public HgHhLdpServerContext getServerContext() {
-        return new HgHhLdpServerContext(buckets);
+        return HgHhLdpServerContext.fromBuckets(buckets);
     }
 }
