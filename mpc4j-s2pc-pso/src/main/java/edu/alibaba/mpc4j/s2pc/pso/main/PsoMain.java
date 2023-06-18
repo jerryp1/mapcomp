@@ -23,6 +23,7 @@ public class PsoMain {
      * @param args 只有一个输入：配置文件。
      */
     public static void main(String[] args) throws Exception {
+        PropertiesUtils.loadLog4jProperties();
         // read config
         LOGGER.info("read PTO config");
         Properties properties = PropertiesUtils.loadProperties(args[0]);

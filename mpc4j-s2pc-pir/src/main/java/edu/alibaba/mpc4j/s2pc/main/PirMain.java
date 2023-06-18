@@ -26,6 +26,7 @@ public class PirMain {
      * @param args one input: config file name.
      */
     public static void main(String[] args) throws Exception {
+        PropertiesUtils.loadLog4jProperties();
         // read log file
         LOGGER.info("read log config");
         Properties log4jProperties = new Properties();
