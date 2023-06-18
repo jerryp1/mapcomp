@@ -368,11 +368,13 @@ public class HhLdpMain {
             serverStopWatch.suspend();
             clientStopWatch.start();
             clientStopWatch.suspend();
+            final int finalRound = round;
             dataStream.forEach(item -> {
                 // report progress
                 int dataIndex = atomicDataIndex.incrementAndGet();
                 if (dataIndex % LARGE_DATA_NUM_UNIT == 0) {
-                    LOGGER.info("data index = " + dataIndex);
+                    LOGGER.info("round: {}, data index: {}",
+                        (finalRound + 1), (dataIndex / LARGE_DATA_NUM_UNIT * LARGE_DATA_NUM_UNIT));
                 }
                 clientStopWatch.resume();
                 byte[] itemBytes = item.getBytes(HhLdpFactory.DEFAULT_CHARSET);
@@ -428,7 +430,7 @@ public class HhLdpMain {
                 .build();
             HhLdpServer server = HhLdpFactory.createServer(hhLdpConfig);
             HhLdpClient client = HhLdpFactory.createClient(hhLdpConfig);
-            HhLdpMetrics metrics = runLdpHeavyHitter(server, client);
+            HhLdpMetrics metrics = runLdpHeavyHitter(server, client, round);
             aggMetrics.addMetrics(metrics);
         }
         return aggMetrics;
@@ -442,7 +444,7 @@ public class HhLdpMain {
                 .build();
             HhLdpServer server = HhLdpFactory.createServer(config);
             HhLdpClient client = HhLdpFactory.createClient(config);
-            HhLdpMetrics metrics = runLdpHeavyHitter(server, client);
+            HhLdpMetrics metrics = runLdpHeavyHitter(server, client, round);
             aggMetrics.addMetrics(metrics);
         }
         return aggMetrics;
@@ -456,7 +458,7 @@ public class HhLdpMain {
                 .build();
             HhLdpServer server = HhLdpFactory.createServer(config);
             HhLdpClient client = HhLdpFactory.createClient(config);
-            HhLdpMetrics metrics = runLdpHeavyHitter(server, client);
+            HhLdpMetrics metrics = runLdpHeavyHitter(server, client, round);
             aggMetrics.addMetrics(metrics);
         }
         return aggMetrics;
@@ -483,7 +485,7 @@ public class HhLdpMain {
                 .build();
             HhLdpServer server = HhLdpFactory.createServer(config);
             HhLdpClient client = HhLdpFactory.createClient(config);
-            HhLdpMetrics metrics = runLdpHeavyHitter(server, client);
+            HhLdpMetrics metrics = runLdpHeavyHitter(server, client, round);
             aggMetrics.addMetrics(metrics);
         }
         return aggMetrics;
@@ -501,7 +503,7 @@ public class HhLdpMain {
                 .build();
             HhLdpServer server = HhLdpFactory.createServer(config);
             HhLdpClient client = HhLdpFactory.createClient(config);
-            HhLdpMetrics metrics = runLdpHeavyHitter(server, client);
+            HhLdpMetrics metrics = runLdpHeavyHitter(server, client, round);
             aggMetrics.addMetrics(metrics);
         }
         return aggMetrics;
@@ -530,7 +532,7 @@ public class HhLdpMain {
                 .build();
             HhLdpServer server = HhLdpFactory.createServer(config);
             HhLdpClient client = HhLdpFactory.createClient(config);
-            HhLdpMetrics metrics = runLdpHeavyHitter(server, client);
+            HhLdpMetrics metrics = runLdpHeavyHitter(server, client, round);
             aggMetrics.addMetrics(metrics);
         }
         return aggMetrics;
@@ -549,7 +551,7 @@ public class HhLdpMain {
                 .build();
             HhLdpServer server = HhLdpFactory.createServer(config);
             HhLdpClient client = HhLdpFactory.createClient(config);
-            HhLdpMetrics metrics = runLdpHeavyHitter(server, client);
+            HhLdpMetrics metrics = runLdpHeavyHitter(server, client, round);
             aggMetrics.addMetrics(metrics);
         }
         return aggMetrics;
@@ -569,7 +571,7 @@ public class HhLdpMain {
         return warmupServer.getGammaH();
     }
 
-    HhLdpMetrics runLdpHeavyHitter(HhLdpServer server, HhLdpClient client) throws IOException {
+    HhLdpMetrics runLdpHeavyHitter(HhLdpServer server, HhLdpClient client, int round) throws IOException {
         // metrics
         HhLdpMetrics metrics = new HhLdpMetrics();
         // warmup
@@ -580,7 +582,8 @@ public class HhLdpMain {
                 // report progress
                 int dataIndex = warmupIndex.intValue();
                 if (dataIndex % LARGE_DATA_NUM_UNIT == 0) {
-                    LOGGER.info("data index (warmup) = " + dataIndex);
+                    LOGGER.info("round: {}, data index (for warmup): {}",
+                        (round + 1), dataIndex / LARGE_DATA_NUM_UNIT * LARGE_DATA_NUM_UNIT);
                 }
             })
             .map(client::warmup)
@@ -607,9 +610,10 @@ public class HhLdpMain {
         dataStream.filter(item -> randomizedIndex.getAndIncrement() > warmupNum)
             .peek(item -> {
                 // report progress
-                int dataIndex = randomizedIndex.intValue();
+                int dataIndex = randomizedIndex.intValue() - warmupNum;
                 if (dataIndex % LARGE_DATA_NUM_UNIT == 0) {
-                    LOGGER.info("data index (randomized) = " + dataIndex);
+                    LOGGER.info("round: {}, data index (for randomized): {}",
+                        (round + 1), (dataIndex / LARGE_DATA_NUM_UNIT * LARGE_DATA_NUM_UNIT));
                 }
             })
             .forEach(item -> {

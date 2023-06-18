@@ -48,7 +48,7 @@ public class PropertiesUtils {
             // log4j.appender.consoleAppender.layout=org.apache.log4j.PatternLayout
             properties.setProperty("log4j.appender.consoleAppender.layout", "org.apache.log4j.PatternLayout");
             // log4j.appender.consoleAppender.layout.ConversionPattern=%d [%t] %-5p %c - %m%n
-            properties.setProperty("log4j.appender.CA.layout.ConversionPattern", "%d [%t] %-5p %c - %m%n");
+            properties.setProperty("log4j.appender.consoleAppender.layout.ConversionPattern", "%d [%t] %-5p %c - %m%n");
             PropertyConfigurator.configure(properties);
             LOGGER.info("Cannot find file {} from the path: {} (for customized log4j setting), use default configuration.",
                 LOG4J_PROPERTIES_NAME, fileObject.getAbsolutePath());
