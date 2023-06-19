@@ -237,7 +237,7 @@ public class LongSquareDenseBitMatrix implements SquareDenseBitMatrix {
     @Override
     public void lmulAddi(boolean[] v, boolean[] t) {
         assert v.length == size : "length of v must be " + size + ": " + v.length;
-        assert t.length == size :  "length of t must be " + size + ": " + t.length;
+        assert t.length == size : "length of t must be " + size + ": " + t.length;
         for (int rowIndex = 0; rowIndex < size; rowIndex++) {
             if (v[rowIndex]) {
                 for (int columnIndex = 0; columnIndex < size; columnIndex++) {
@@ -250,7 +250,7 @@ public class LongSquareDenseBitMatrix implements SquareDenseBitMatrix {
     @Override
     public void lExtMulAddi(byte[][] v, byte[][] t) {
         assert v.length == size : "length of v must be " + size + ": " + v.length;
-        assert t.length == size :  "length of t must be " + size + ": " + t.length;
+        assert t.length == size : "length of t must be " + size + ": " + t.length;
         assert v[0].length == t[0].length : "length of t[i] must be " + v[0].length + ": " + t[0].length;
         for (int columnIndex = 0; columnIndex < size; columnIndex++) {
             for (int rowIndex = 0; rowIndex < size; rowIndex++) {

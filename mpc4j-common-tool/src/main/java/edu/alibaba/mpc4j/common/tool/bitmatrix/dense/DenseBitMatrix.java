@@ -3,32 +3,32 @@ package edu.alibaba.mpc4j.common.tool.bitmatrix.dense;
 import edu.alibaba.mpc4j.common.tool.EnvType;
 
 /**
- * 密集布尔矩阵接口。
+ * dense matrix.
  *
  * @author Weiran Liu
  * @date 2022/8/1
  */
 public interface DenseBitMatrix {
     /**
-     * 布尔矩阵相加。
+     * Adds a matrix.
      *
-     * @param that 另一个布尔矩阵。
+     * @param that that matrix.
      * @return 相加结果。
      */
     DenseBitMatrix add(DenseBitMatrix that);
 
     /**
-     * 布尔矩阵相加，结果更新至当前布尔矩阵中。
+     * Adds a matrix (inplace).
      *
-     * @param that 另一个布尔矩阵。
+     * @param that that matrix.
      */
     void addi(DenseBitMatrix that);
 
     /**
-     * 当前布尔矩阵右乘给定布尔矩阵。
+     * Multiplies a matrix.
      *
-     * @param that 另一个布尔矩阵。
-     * @return 右乘结果。
+     * @param that that matrix.
+     * @return result.
      */
     DenseBitMatrix multiply(DenseBitMatrix that);
 

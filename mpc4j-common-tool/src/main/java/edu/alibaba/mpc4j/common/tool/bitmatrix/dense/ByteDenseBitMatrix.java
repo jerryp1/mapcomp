@@ -8,7 +8,7 @@ import org.apache.commons.lang3.builder.EqualsBuilder;
  *
  * @author Weiran Liu, Hanwen Feng
  */
-public class ByteDenseBitMatrix extends AbstractByteDenseBitMatrix{
+public class ByteDenseBitMatrix extends AbstractByteDenseBitMatrix {
 
     public static ByteDenseBitMatrix fromDense(final int columns, byte[][] byteArrays) {
         ByteDenseBitMatrix denseBitMatrix = new ByteDenseBitMatrix();
@@ -36,7 +36,7 @@ public class ByteDenseBitMatrix extends AbstractByteDenseBitMatrix{
 
     @Override
     public DenseBitMatrix multiply(DenseBitMatrix that) {
-        return fromDense(that.getColumns(),super.multiplyToBytes(that));
+        return fromDense(that.getColumns(), super.multiplyToBytes(that));
     }
 
     @Override

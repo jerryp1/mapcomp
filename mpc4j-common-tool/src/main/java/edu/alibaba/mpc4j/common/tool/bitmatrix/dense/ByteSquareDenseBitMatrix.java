@@ -127,9 +127,10 @@ public class ByteSquareDenseBitMatrix extends AbstractByteDenseBitMatrix impleme
         }
         // 将左侧矩阵转为单位矩阵，此时右侧得到的矩阵就是左侧矩阵的逆矩阵
         for (int p = size - 1; p >= 0; p--) {
+            // from the top to the bottom
             for (int r = 0; r < p; r++) {
                 if (BinaryUtils.getBoolean(matrix[r], p + byteOffset)) {
-                    // 如果有1的，则进行相加
+                    // if matrix[r][p] = 1, then eliminate
                     BytesUtils.xori(matrix[r], matrix[p]);
                     BytesUtils.xori(inverseMatrix[r], inverseMatrix[p]);
                 }
