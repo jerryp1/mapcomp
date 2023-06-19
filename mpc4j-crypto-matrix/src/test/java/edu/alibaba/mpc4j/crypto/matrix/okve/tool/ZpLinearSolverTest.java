@@ -1,8 +1,11 @@
-package edu.alibaba.mpc4j.common.tool.galoisfield.zp;
+package edu.alibaba.mpc4j.crypto.matrix.okve.tool;
 
 import cc.redberry.rings.linear.LinearSolver.SystemInfo;
 import edu.alibaba.mpc4j.common.tool.CommonConstants;
 import edu.alibaba.mpc4j.common.tool.EnvType;
+import edu.alibaba.mpc4j.common.tool.galoisfield.zp.Zp;
+import edu.alibaba.mpc4j.common.tool.galoisfield.zp.ZpFactory;
+import edu.alibaba.mpc4j.common.tool.galoisfield.zp.ZpManager;
 import org.junit.Assert;
 import org.junit.Test;
 

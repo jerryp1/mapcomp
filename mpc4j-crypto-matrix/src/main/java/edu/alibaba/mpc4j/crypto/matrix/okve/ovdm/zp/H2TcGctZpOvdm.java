@@ -7,7 +7,7 @@ import edu.alibaba.mpc4j.common.tool.EnvType;
 import edu.alibaba.mpc4j.common.tool.MathPreconditions;
 import edu.alibaba.mpc4j.common.tool.crypto.prf.Prf;
 import edu.alibaba.mpc4j.common.tool.crypto.prf.PrfFactory;
-import edu.alibaba.mpc4j.common.tool.galoisfield.zp.ZpMaxLisFinder;
+import edu.alibaba.mpc4j.crypto.matrix.okve.tool.ZpMaxLisFinder;
 import edu.alibaba.mpc4j.crypto.matrix.okve.cuckootable.CuckooTableSingletonTcFinder;
 import edu.alibaba.mpc4j.crypto.matrix.okve.cuckootable.CuckooTableTcFinder;
 import edu.alibaba.mpc4j.crypto.matrix.okve.cuckootable.H2CuckooTable;

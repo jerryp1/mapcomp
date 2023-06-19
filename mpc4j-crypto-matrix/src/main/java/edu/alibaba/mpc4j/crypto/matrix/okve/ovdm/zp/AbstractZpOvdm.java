@@ -4,7 +4,7 @@ import edu.alibaba.mpc4j.common.tool.EnvType;
 import edu.alibaba.mpc4j.common.tool.MathPreconditions;
 import edu.alibaba.mpc4j.common.tool.galoisfield.zp.Zp;
 import edu.alibaba.mpc4j.common.tool.galoisfield.zp.ZpFactory;
-import edu.alibaba.mpc4j.common.tool.galoisfield.zp.ZpLinearSolver;
+import edu.alibaba.mpc4j.crypto.matrix.okve.tool.ZpLinearSolver;
 import edu.alibaba.mpc4j.common.tool.utils.CommonUtils;
 
 import java.math.BigInteger;

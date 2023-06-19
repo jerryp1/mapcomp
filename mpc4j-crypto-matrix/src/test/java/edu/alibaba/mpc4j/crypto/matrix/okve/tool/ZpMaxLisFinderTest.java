@@ -1,4 +1,4 @@
-package edu.alibaba.mpc4j.common.tool.galoisfield.zp;
+package edu.alibaba.mpc4j.crypto.matrix.okve.tool;
 
 import org.junit.Assert;
 import org.junit.Test;
