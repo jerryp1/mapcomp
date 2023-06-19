@@ -4,7 +4,7 @@ import com.google.common.base.Preconditions;
 import edu.alibaba.mpc4j.common.rpc.Rpc;
 import edu.alibaba.mpc4j.common.rpc.RpcManager;
 import edu.alibaba.mpc4j.common.rpc.impl.memory.MemoryRpcManager;
-import edu.alibaba.mpc4j.common.tool.okve.okvs.OkvsFactory;
+import edu.alibaba.mpc4j.crypto.matrix.okve.okvs.OkvsFactory;
 import edu.alibaba.mpc4j.common.tool.utils.BytesUtils;
 import edu.alibaba.mpc4j.common.tool.utils.CommonUtils;
 import edu.alibaba.mpc4j.s2pc.upso.uopprf.UopprfTestUtils;

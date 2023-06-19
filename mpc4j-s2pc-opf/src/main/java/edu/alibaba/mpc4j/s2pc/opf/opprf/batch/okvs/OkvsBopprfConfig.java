@@ -2,7 +2,7 @@ package edu.alibaba.mpc4j.s2pc.opf.opprf.batch.okvs;
 
 import edu.alibaba.mpc4j.common.rpc.desc.SecurityModel;
 import edu.alibaba.mpc4j.common.rpc.pto.AbstractMultiPartyPtoConfig;
-import edu.alibaba.mpc4j.common.tool.okve.okvs.OkvsFactory;
+import edu.alibaba.mpc4j.crypto.matrix.okve.okvs.OkvsFactory;
 import edu.alibaba.mpc4j.s2pc.opf.opprf.batch.BopprfConfig;
 import edu.alibaba.mpc4j.s2pc.opf.opprf.batch.BopprfFactory;
 import edu.alibaba.mpc4j.s2pc.opf.oprf.OprfConfig;

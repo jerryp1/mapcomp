@@ -2,7 +2,7 @@ package edu.alibaba.mpc4j.s2pc.upso.uopprf.ub.pir;
 
 import edu.alibaba.mpc4j.common.rpc.desc.SecurityModel;
 import edu.alibaba.mpc4j.common.tool.EnvType;
-import edu.alibaba.mpc4j.common.tool.okve.okvs.OkvsFactory;
+import edu.alibaba.mpc4j.crypto.matrix.okve.okvs.OkvsFactory;
 import edu.alibaba.mpc4j.s2pc.opf.sqoprf.SqOprfConfig;
 import edu.alibaba.mpc4j.s2pc.opf.sqoprf.SqOprfFactory;
 import edu.alibaba.mpc4j.s2pc.pir.index.batch.BatchIndexPirConfig;
