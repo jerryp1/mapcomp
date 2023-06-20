@@ -2,8 +2,8 @@ package edu.alibaba.mpc4j.common.tool.bitmatrix.sparse;
 
 import edu.alibaba.mpc4j.common.tool.CommonConstants;
 import edu.alibaba.mpc4j.common.tool.EnvType;
+import edu.alibaba.mpc4j.common.tool.bitmatrix.dense.ByteDenseBitMatrix;
 import edu.alibaba.mpc4j.common.tool.bitmatrix.dense.DenseBitMatrix;
-import edu.alibaba.mpc4j.common.tool.bitmatrix.dense.DenseBitMatrixTestUtils;
 import edu.alibaba.mpc4j.common.tool.utils.BytesUtils;
 import org.junit.Assert;
 import org.junit.Test;
@@ -74,7 +74,7 @@ public class SparseBitMatrixTest {
         // 转换为稠密矩阵
         DenseBitMatrix denseBitMatrix0 = sparseBitMatrix0.toTransDenseBitMatrix();
         // 生成稠密矩阵
-        DenseBitMatrix denseBitMatrix1 = DenseBitMatrixTestUtils.createRandom(rows, columns, SECURE_RANDOM);
+        DenseBitMatrix denseBitMatrix1 = ByteDenseBitMatrix.createRandom(rows, columns, SECURE_RANDOM);
         // 验证
         Assert.assertEquals(sparseBitMatrix0.transMultiply(denseBitMatrix1), denseBitMatrix0.multiply(denseBitMatrix1));
     }

@@ -28,7 +28,7 @@ import java.util.stream.IntStream;
  * @date 2023/6/19
  */
 @RunWith(Parameterized.class)
-public class SquareZpMatrixTest {
+public class DenseZpMatrixTest {
     /**
      * random round
      */
@@ -49,7 +49,7 @@ public class SquareZpMatrixTest {
         int[] sizes = new int[]{4, 7, 8, 9, 15, 16, 17, 39, 40, 41};
         // add each l
         for (int size : sizes) {
-            configurations.add(new Object[]{"D = " + size + ")", size});
+            configurations.add(new Object[]{"size = " + size + ")", size});
         }
 
         return configurations;
@@ -64,7 +64,7 @@ public class SquareZpMatrixTest {
      */
     private final Zp zp;
 
-    public SquareZpMatrixTest(String name, int size) {
+    public DenseZpMatrixTest(String name, int size) {
         Preconditions.checkArgument(StringUtils.isNotBlank(name));
         this.size = size;
         zp = ZpFactory.createInstance(EnvType.STANDARD, L);
@@ -88,9 +88,9 @@ public class SquareZpMatrixTest {
         for (int round = 0; round < RANDOM_ROUND; round++) {
             Collections.shuffle(identityRows, SECURE_RANDOM);
             BigInteger[][] data = identityRows.toArray(new BigInteger[0][]);
-            ZpMatrix matrix = DenseZpMatrix.fromDense(zp, data);
-            ZpMatrix iMatrix = matrix.inverse();
-            Assert.assertTrue(ZpMatrixFactory.isIdentity(matrix.multiply(iMatrix)));
+            DenseZpMatrix matrix = DenseZpMatrix.fromDense(zp, data);
+            DenseZpMatrix iMatrix = matrix.inverse();
+            Assert.assertTrue(DenseZpMatrix.isIdentity(matrix.multiply(iMatrix)));
         }
     }
 
@@ -115,7 +115,7 @@ public class SquareZpMatrixTest {
             // set a random row to be 0
             int zeroRowIndex = SECURE_RANDOM.nextInt(size);
             data[zeroRowIndex] = IntStream.range(0, size).mapToObj(index -> zp.createZero()).toArray(BigInteger[]::new);
-            ZpMatrix matrix = DenseZpMatrix.fromDense(zp, data);
+            DenseZpMatrix matrix = DenseZpMatrix.fromDense(zp, data);
             Assert.assertThrows(ArithmeticException.class, matrix::inverse);
         }
     }
@@ -139,9 +139,9 @@ public class SquareZpMatrixTest {
         for (int round = 0; round < RANDOM_ROUND; round++) {
             Collections.shuffle(upperTriangleRows, SECURE_RANDOM);
             BigInteger[][] data = upperTriangleRows.toArray(new BigInteger[0][]);
-            ZpMatrix matrix = DenseZpMatrix.fromDense(zp, data);
-            ZpMatrix iMatrix = matrix.inverse();
-            Assert.assertTrue(ZpMatrixFactory.isIdentity(matrix.multiply(iMatrix)));
+            DenseZpMatrix matrix = DenseZpMatrix.fromDense(zp, data);
+            DenseZpMatrix iMatrix = matrix.inverse();
+            Assert.assertTrue(DenseZpMatrix.isIdentity(matrix.multiply(iMatrix)));
         }
     }
 
@@ -167,7 +167,7 @@ public class SquareZpMatrixTest {
             // set a random row to be 0
             int zeroRowIndex = SECURE_RANDOM.nextInt(size);
             data[zeroRowIndex] = IntStream.range(0, size).mapToObj(index -> zp.createZero()).toArray(BigInteger[]::new);
-            ZpMatrix matrix = DenseZpMatrix.fromDense(zp, data);
+            DenseZpMatrix matrix = DenseZpMatrix.fromDense(zp, data);
             Assert.assertThrows(ArithmeticException.class, matrix::inverse);
         }
     }
@@ -191,9 +191,9 @@ public class SquareZpMatrixTest {
         for (int round = 0; round < RANDOM_ROUND; round++) {
             Collections.shuffle(lowerTriangleRows, SECURE_RANDOM);
             BigInteger[][] data = lowerTriangleRows.toArray(new BigInteger[0][]);
-            ZpMatrix matrix = DenseZpMatrix.fromDense(zp, data);
-            ZpMatrix iMatrix = matrix.inverse();
-            Assert.assertTrue(ZpMatrixFactory.isIdentity(matrix.multiply(iMatrix)));
+            DenseZpMatrix matrix = DenseZpMatrix.fromDense(zp, data);
+            DenseZpMatrix iMatrix = matrix.inverse();
+            Assert.assertTrue(DenseZpMatrix.isIdentity(matrix.multiply(iMatrix)));
         }
     }
 }

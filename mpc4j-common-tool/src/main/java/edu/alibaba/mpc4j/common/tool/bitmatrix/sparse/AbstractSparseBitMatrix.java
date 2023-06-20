@@ -1,7 +1,6 @@
 package edu.alibaba.mpc4j.common.tool.bitmatrix.sparse;
 
 import edu.alibaba.mpc4j.common.tool.bitmatrix.dense.ByteDenseBitMatrix;
-import edu.alibaba.mpc4j.common.tool.bitmatrix.dense.ByteSquareDenseBitMatrix;
 import edu.alibaba.mpc4j.common.tool.bitmatrix.dense.DenseBitMatrix;
 import org.apache.commons.lang3.builder.EqualsBuilder;
 import org.apache.commons.lang3.builder.HashCodeBuilder;
@@ -212,9 +211,7 @@ public abstract class AbstractSparseBitMatrix {
     public DenseBitMatrix transMultiply(DenseBitMatrix denseBitMatrix) {
         assert denseBitMatrix.getRows() == rows;
 
-        return (rows == denseBitMatrix.getColumns())
-            ? ByteSquareDenseBitMatrix.fromDense(lExtMul(denseBitMatrix.toByteArrays()))
-            : ByteDenseBitMatrix.fromDense(denseBitMatrix.getColumns(), lExtMul(denseBitMatrix.toByteArrays()));
+        return ByteDenseBitMatrix.createFromDense(denseBitMatrix.getColumns(), lExtMul(denseBitMatrix.getByteArrayData()));
     }
 
     /**
@@ -226,9 +223,7 @@ public abstract class AbstractSparseBitMatrix {
         IntStream intStream = IntStream.range(0, getCols());
         intStream = parallel ? intStream.parallel() : intStream;
         int[][] positions = intStream.mapToObj(i -> getCol(i).getNonZeroIndexArray()).toArray(int[][]::new);
-        return (rows == cols)
-            ? ByteSquareDenseBitMatrix.fromSparse(positions)
-            : ByteDenseBitMatrix.fromSparse(rows, positions);
+        return ByteDenseBitMatrix.createFromSparse(rows, positions);
     }
 
     /**

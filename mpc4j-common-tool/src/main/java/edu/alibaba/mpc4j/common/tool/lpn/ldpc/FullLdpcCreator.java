@@ -1,6 +1,6 @@
 package edu.alibaba.mpc4j.common.tool.lpn.ldpc;
 
-import edu.alibaba.mpc4j.common.tool.bitmatrix.dense.ByteSquareDenseBitMatrix;
+import edu.alibaba.mpc4j.common.tool.bitmatrix.dense.ByteDenseBitMatrix;
 import edu.alibaba.mpc4j.common.tool.bitmatrix.sparse.LowerTriangularSparseBitMatrix;
 import edu.alibaba.mpc4j.common.tool.bitmatrix.sparse.SparseBitMatrix;
 import edu.alibaba.mpc4j.common.tool.bitmatrix.sparse.UpperTriangularSparseBitMatrix;
@@ -146,8 +146,11 @@ public class FullLdpcCreator extends AbstractLdpcCreator {
         SparseBitMatrix bTranspose = tempB.transpose();
         SparseBitMatrix eTranspose = tempE.transpose();
 
-        matrixEp = ByteSquareDenseBitMatrix.fromDense(fTranspose.lExtMul(cTranspose.invLextMul(bTranspose.toTransDenseBitMatrix().toByteArrays())))
-            .add(eTranspose.toTransDenseBitMatrix()).inverse();
+        matrixEp = ByteDenseBitMatrix.createFromDense(
+            gapValue, fTranspose.lExtMul(cTranspose.invLextMul(bTranspose.toTransDenseBitMatrix().getByteArrayData()))
+            )
+            .add(eTranspose.toTransDenseBitMatrix())
+            .inverse();
     }
 
     /**

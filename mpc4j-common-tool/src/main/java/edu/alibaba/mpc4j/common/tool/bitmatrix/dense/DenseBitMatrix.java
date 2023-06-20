@@ -18,7 +18,7 @@ public interface DenseBitMatrix {
     DenseBitMatrix add(DenseBitMatrix that);
 
     /**
-     * Adds a matrix (inplace).
+     * Inplace adds a matrix.
      *
      * @param that that matrix.
      */
@@ -33,96 +33,143 @@ public interface DenseBitMatrix {
     DenseBitMatrix multiply(DenseBitMatrix that);
 
     /**
-     * 当前布尔矩阵左乘v，即计算v·M。
+     * Left-multiplies a vector v, i.e., v·M.
      *
-     * @param v 向量v。
-     * @return v·M。
+     * @param v the vector v.
+     * @return v·M.
      */
     byte[] lmul(final byte[] v);
 
     /**
-     * 当前布尔矩阵左乘布尔向量v，即计算v·M。
+     * Left-multiplies a vector v, i.e., v·M.
      *
-     * @param v 向量v。
-     * @return v·M。
+     * @param v the vector v.
+     * @return v·M.
      */
     boolean[] lmul(final boolean[] v);
 
     /**
-     * 当前布尔矩阵左乘扩域GF2E的向量v，即计算v·M
-     * @param v 扩域GF2E上的向量v。
+     * Left-multiplies an extended vector v, i.e., v·M.
+     *
+     * @param v an extended vector v.
      * @return v·M。
      */
     byte[][] lExtMul(final byte[][] v);
 
     /**
-     * 计算v·M + t，结果更新至t中。
+     * Computes v·M + t, and sets the result into t.
      *
-     * @param v 向量v。
-     * @param t 向量t。
+     * @param v the vector v.
+     * @param t the vector t.
      */
     void lmulAddi(final byte[] v, byte[] t);
 
     /**
-     * 计算v·M + t，结果更新至t中。
+     * Computes v·M + t, and sets the result into t.
      *
-     * @param v 向量v。
-     * @param t 向量t。
+     * @param v the vector v.
+     * @param t the vector t.
      */
     void lmulAddi(final boolean[] v, boolean[] t);
 
     /**
-     * 计算v·M + t，结果更新至t中。
+     * Computes v·M + t, and sets the result into t.
      *
-     * @param v 扩域GF2E上的向量v。
-     * @param t 扩域GF2E上的向量t。
+     * @param v an extended vector v.
+     * @param t an extended vector t.
      */
     void lExtMulAddi(final byte[][] v, byte[][] t);
 
     /**
-     * 布尔矩阵转置。
+     * Transposes a matrix.
      *
-     * @param envType  环境类型。
-     * @param parallel 是否并发。
-     * @return 转置结果。
+     * @param envType  environment.
+     * @param parallel parallel operation.
+     * @return result.
      */
     DenseBitMatrix transpose(EnvType envType, boolean parallel);
 
     /**
-     * 返回行数量。
+     * Inverses the matrix.
      *
-     * @return 行数量。
+     * @return the inverse matrix.
+     */
+    DenseBitMatrix inverse();
+
+    /**
+     * Gets the number of rows.
+     *
+     * @return the number of rows.
      */
     int getRows();
 
     /**
-     * 得到第{@code x}列。
+     * Gets the assigned byte array row.
      *
-     * @param x 行索引值。
-     * @return 第{@code x}列。
+     * @param iRow row index.
+     * @return the assigned byte array row.
      */
-    byte[] getRow(int x);
+    byte[] getByteArrayRow(int iRow);
 
     /**
-     * 返回列数量。
+     * Gets the assigned long array row.
      *
-     * @return 列数量。
+     * @param iRow row index.
+     * @return the assigned long array row.
+     */
+    long[] getLongArrayRow(int iRow);
+
+    /**
+     * Gets the number of columns.
+     *
+     * @return the number of columns.
      */
     int getColumns();
 
     /**
-     * 得到(x, y)坐标对应的布尔值。
+     * Gets the size. Note that only square matrix support this.
      *
-     * @param x 行坐标。
-     * @param y 列坐标。
-     * @return (x, y)坐标对应的布尔值。
+     * @return size.
+     * @throws IllegalArgumentException if the matrix is not square.
+     */
+    int getSize();
+
+    /**
+     * Gets the size in byte. Note that only square matrix support this.
+     *
+     * @return size.
+     * @throws IllegalArgumentException if the matrix is not square.
+     */
+    int getByteSize();
+
+    /**
+     * Gets the size in long. Note that only square matrix support this.
+     *
+     * @return size.
+     * @throws IllegalArgumentException if the matrix is not square.
+     */
+    int getLongSize();
+
+    /**
+     * Gets the entry at (iRow, iColumn).
+     *
+     * @param x row index.
+     * @param y column index.
+     * @return the entry at (iRow, iColumn).
      */
     boolean get(int x, int y);
 
     /**
-     * 返回表示矩阵的字节数组。
+     * Gets the byte array data.
      *
-     * @return 表示矩阵的字节数组。
+     * @return the byte array data.
      */
-    byte[][] toByteArrays();
+    byte[][] getByteArrayData();
+
+    /**
+     * Gets the long array data.
+     *
+     * @return the long array data.
+     */
+    long[][] getLongArrayData();
 }

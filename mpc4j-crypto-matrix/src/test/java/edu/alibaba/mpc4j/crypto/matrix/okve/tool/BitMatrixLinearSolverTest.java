@@ -4,7 +4,7 @@ import cc.redberry.rings.linear.LinearSolver;
 import com.google.common.base.Preconditions;
 import edu.alibaba.mpc4j.common.tool.CommonConstants;
 import edu.alibaba.mpc4j.common.tool.EnvType;
-import edu.alibaba.mpc4j.common.tool.bitmatrix.dense.ByteSquareDenseBitMatrix;
+import edu.alibaba.mpc4j.common.tool.bitmatrix.dense.ByteDenseBitMatrix;
 import edu.alibaba.mpc4j.common.tool.galoisfield.gf2e.Gf2e;
 import edu.alibaba.mpc4j.common.tool.galoisfield.gf2e.Gf2eFactory;
 import edu.alibaba.mpc4j.common.tool.utils.BinaryUtils;
@@ -141,8 +141,8 @@ public class BitMatrixLinearSolverTest {
                 matrixA[row] = BytesUtils.randomByteArray(byteD, d, SECURE_RANDOM);
             }
             try {
-                ByteSquareDenseBitMatrix squareDenseBitMatrix = ByteSquareDenseBitMatrix.fromDense(matrixA);
-                squareDenseBitMatrix.inverse();
+                ByteDenseBitMatrix bitMatrix = ByteDenseBitMatrix.createFromDense(d, matrixA);
+                bitMatrix.inverse();
             } catch (ArithmeticException e) {
                 continue;
             }
@@ -165,8 +165,8 @@ public class BitMatrixLinearSolverTest {
                 b[row] = gf2e.createRandom(SECURE_RANDOM);
             }
             try {
-                ByteSquareDenseBitMatrix squareDenseBitMatrix = ByteSquareDenseBitMatrix.fromDense(matrixA);
-                squareDenseBitMatrix.inverse();
+                ByteDenseBitMatrix bitMatrix = ByteDenseBitMatrix.createFromDense(d, matrixA);
+                bitMatrix.inverse();
             } catch (ArithmeticException e) {
                 continue;
             }

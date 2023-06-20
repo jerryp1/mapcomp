@@ -13,7 +13,7 @@ import java.security.SecureRandom;
 import java.util.stream.IntStream;
 
 /**
- * dense Zp matrix.
+ * BigInteger dense Zp matrix.
  *
  * @author Weiran Liu
  * @date 2023/6/19
@@ -25,7 +25,7 @@ public class DenseZpMatrix implements ZpMatrix {
      * @param matrix matrix.
      * @return true if it is an identity matrix.
      */
-    static boolean isIdentity(DenseZpMatrix matrix) {
+    public static boolean isIdentity(DenseZpMatrix matrix) {
         if (matrix.rows != matrix.columns) {
             return false;
         }
@@ -126,7 +126,7 @@ public class DenseZpMatrix implements ZpMatrix {
      * @param data the matrix data.
      * @return a matrix.
      */
-    public static DenseZpMatrix fromDenseUncheck(Zp zp, BigInteger[][] data) {
+    private static DenseZpMatrix fromDenseUncheck(Zp zp, BigInteger[][] data) {
         int rows = data.length;
         int columns = data[0].length;
         DenseZpMatrix matrix = new DenseZpMatrix(zp, rows, columns);
@@ -152,24 +152,26 @@ public class DenseZpMatrix implements ZpMatrix {
     protected BigInteger[][] data;
 
     protected DenseZpMatrix(Zp zp, int rows, int columns) {
-        MathPreconditions.checkPositive("rows", rows);
-        MathPreconditions.checkPositive("columns", columns);
         this.zp = zp;
         this.rows = rows;
         this.columns = columns;
     }
 
-    @Override
-    public ZpMatrixFactory.ZpMatrixType getType() {
-        return ZpMatrixFactory.ZpMatrixType.DENSE;
-    }
-
-    @Override
+    /**
+     * Copies the matrix.
+     *
+     * @return the copied matrix.
+     */
     public DenseZpMatrix copy() {
         return DenseZpMatrix.fromDenseUncheck(zp, BigIntegerUtils.clone(data));
     }
 
-    @Override
+    /**
+     * Adds a matrix.
+     *
+     * @param that that matrix.
+     * @return result.
+     */
     public DenseZpMatrix add(ZpMatrix that) {
         Preconditions.checkArgument(this.zp.equals(that.getZp()));
         MathPreconditions.checkEqual("this.rows", "that.rows", this.rows, that.getRows());
@@ -180,14 +182,18 @@ public class DenseZpMatrix implements ZpMatrix {
                 addData[iRow][iColumn] = zp.add(data[iRow][iColumn], that.getEntry(iRow, iColumn));
             }
         }
-        return DenseZpMatrix.fromDense(zp, addData);
+        return DenseZpMatrix.fromDenseUncheck(zp, addData);
     }
 
-    @Override
+    /**
+     * Multiplies a matrix.
+     *
+     * @param that that matrix.
+     * @return result.
+     */
     public DenseZpMatrix multiply(ZpMatrix that) {
-        int thatRows = that.getRows();
         int thatColumns = that.getColumns();
-        MathPreconditions.checkEqual("this.columns", "that.rows", this.columns, thatRows);
+        MathPreconditions.checkEqual("this.columns", "that.rows", this.columns, that.getRows());
         BigInteger[][] mulData = new BigInteger[rows][thatColumns];
         for (int row = 0; row < rows; row++) {
             for (int column = 0; column < thatColumns; column++) {
@@ -200,7 +206,11 @@ public class DenseZpMatrix implements ZpMatrix {
         return DenseZpMatrix.fromDenseUncheck(zp, mulData);
     }
 
-    @Override
+    /**
+     * Transposes the matrix.
+     *
+     * @return result.
+     */
     public DenseZpMatrix transpose() {
         BigInteger[][] tData = new BigInteger[columns][rows];
         for (int iRow = 0; iRow < rows; iRow++) {
@@ -211,7 +221,12 @@ public class DenseZpMatrix implements ZpMatrix {
         return DenseZpMatrix.fromDenseUncheck(zp, tData);
     }
 
-    @Override
+    /**
+     * Inverses the matrix.
+     *
+     * @return the inverse matrix.
+     * @throws IllegalArgumentException if the matrix is not square.
+     */
     public DenseZpMatrix inverse() {
         MathPreconditions.checkEqual("rows", "columns", rows, columns);
         int size = rows;

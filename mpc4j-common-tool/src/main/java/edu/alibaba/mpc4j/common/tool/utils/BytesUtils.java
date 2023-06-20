@@ -180,19 +180,6 @@ public class BytesUtils {
      * Verify that the given {@code byte[]} has the fixed size and contains at most {@code bitLength} valid bits.
      * The bits are represented in Big-endian format.
      *
-     * @param byteArray the given {@code byte[]}.
-     * @param bitLength the expected bit length.
-     * @return true the given {@code byte[]} has the fixed size and contains at most {@code bitLength} valid bits.
-     */
-    public static boolean isFixedReduceByteArray(byte[] byteArray, final int bitLength) {
-        int byteLength = CommonUtils.getByteLength(bitLength);
-        return isFixedReduceByteArray(byteArray, byteLength, bitLength);
-    }
-
-    /**
-     * Verify that the given {@code byte[]} has the fixed size and contains at most {@code bitLength} valid bits.
-     * The bits are represented in Big-endian format.
-     *
      * @param byteArray  the given {@code byte[]}.
      * @param byteLength the expected byte length.
      * @param bitLength  the expected bit length.
@@ -211,6 +198,20 @@ public class BytesUtils {
             }
         }
         return true;
+    }
+
+    /**
+     * Creates an all-one byte array.
+     *
+     * @param bitLength bit length.
+     * @return an all-one byte array.
+     */
+    public static byte[] allOneByteArray(int bitLength) {
+        int byteLength = CommonUtils.getByteLength(bitLength);
+        byte[] vector = new byte[byteLength];
+        Arrays.fill(vector, (byte) 0xFF);
+        BytesUtils.reduceByteArray(vector, bitLength);
+        return vector;
     }
 
     /**

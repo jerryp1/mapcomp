@@ -5,56 +5,12 @@ import edu.alibaba.mpc4j.common.tool.galoisfield.zp.Zp;
 import java.math.BigInteger;
 
 /**
- * Zp matrix.
+ * dense Zp matrix.
  *
  * @author Weiran Liu
  * @date 2023/6/19
  */
 public interface ZpMatrix {
-    /**
-     * Gets type.
-     *
-     * @return type.
-     */
-    ZpMatrixFactory.ZpMatrixType getType();
-
-    /**
-     * Copies the matrix.
-     *
-     * @return the copied matrix.
-     */
-    DenseZpMatrix copy();
-
-    /**
-     * Adds a matrix.
-     *
-     * @param that that matrix.
-     * @return result.
-     */
-    ZpMatrix add(ZpMatrix that);
-
-    /**
-     * Multiplies a matrix.
-     *
-     * @param that that matrix.
-     * @return result.
-     */
-    ZpMatrix multiply(ZpMatrix that);
-
-    /**
-     * Transposes the matrix.
-     *
-     * @return result.
-     */
-    ZpMatrix transpose();
-
-    /**
-     * Inverses the matrix.
-     *
-     * @return inversed matrix.
-     */
-    ZpMatrix inverse();
-
     /**
      * Gets Zp instance.
      *
@@ -93,11 +49,11 @@ public interface ZpMatrix {
     int getSize();
 
     /**
-     * Gets the element at (iRow, iColumn).
+     * Gets the entry at (iRow, iColumn).
      *
      * @param iRow    row index.
      * @param iColumn column index.
-     * @return the element at (iRow, iColumn).
+     * @return the entry at (iRow, iColumn).
      */
     BigInteger getEntry(int iRow, int iColumn);
 
