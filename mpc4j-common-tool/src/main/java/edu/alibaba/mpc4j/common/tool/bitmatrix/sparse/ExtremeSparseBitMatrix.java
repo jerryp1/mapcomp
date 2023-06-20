@@ -91,7 +91,7 @@ public class ExtremeSparseBitMatrix {
         byte[][] outputs = new byte[cols][xVec[0].length];
         for (int i = 0; i < nonEmptyColIndex.length; i++) {
             int index = nonEmptyColIndex[i];
-            colsList.get(i).rightMultiplyXori(xVec, outputs[index]);
+            colsList.get(i).rightGf2lMultiplyXori(xVec, outputs[index]);
         }
         return outputs;
     }
@@ -109,7 +109,7 @@ public class ExtremeSparseBitMatrix {
 
         for (int i = 0; i < nonEmptyColIndex.length; i++) {
             int index = nonEmptyColIndex[i];
-            colsList.get(i).rightMultiplyXori(xVec, yVec[index]);
+            colsList.get(i).rightGf2lMultiplyXori(xVec, yVec[index]);
         }
     }
 

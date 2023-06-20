@@ -171,7 +171,7 @@ public abstract class AbstractSparseBitMatrix {
         byte[][] outputs = new byte[cols][];
         IntStream multiplyIntStream = IntStream.range(0, getCols());
         multiplyIntStream = parallel ? multiplyIntStream.parallel() : multiplyIntStream;
-        multiplyIntStream.forEach(i -> outputs[i] = getCol(i).rightMultiply(vecX));
+        multiplyIntStream.forEach(i -> outputs[i] = getCol(i).rightGf2lMultiply(vecX));
         return outputs;
     }
 
@@ -189,7 +189,7 @@ public abstract class AbstractSparseBitMatrix {
 
         IntStream multiplyIntStream = IntStream.range(0, getCols());
         multiplyIntStream = parallel ? multiplyIntStream.parallel() : multiplyIntStream;
-        multiplyIntStream.forEach(i -> getCol(i).rightMultiplyXori(vecX, vecY[i]));
+        multiplyIntStream.forEach(i -> getCol(i).rightGf2lMultiplyXori(vecX, vecY[i]));
     }
 
     /**

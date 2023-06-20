@@ -126,9 +126,9 @@ public class SquareDenseBitMatrixEfficiencyTest {
             byte[] randomInput = new byte[CommonConstants.BLOCK_BYTE_LENGTH];
             SECURE_RANDOM.nextBytes(randomInput);
             // warm-up
-            IntStream.range(0, ROUND).forEach(index -> bitMatrix.lmul(randomInput));
+            IntStream.range(0, ROUND).forEach(index -> bitMatrix.leftMultiply(randomInput));
             STOP_WATCH.start();
-            IntStream.range(0, ROUND).forEach(index -> bitMatrix.lmul(randomInput));
+            IntStream.range(0, ROUND).forEach(index -> bitMatrix.leftMultiply(randomInput));
             STOP_WATCH.stop();
             double mulTime = (double) STOP_WATCH.getTime(TimeUnit.MICROSECONDS) / ROUND;
             STOP_WATCH.reset();

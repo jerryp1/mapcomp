@@ -203,10 +203,10 @@ public class JdkBytesLowMcPrp implements Prp {
         assert key.length == BYTE_SIZE;
         // LowMC内部不存储密钥，只存储扩展密钥，因此密钥得到了拷贝
         // 初始扩展密钥
-        initKey = keyMatrices[0].lmul(key);
+        initKey = keyMatrices[0].leftMultiply(key);
         // 根据轮数扩展密钥
         roundKeys = IntStream.range(0, round)
-            .mapToObj(roundIndex -> keyMatrices[roundIndex + 1].lmul(key))
+            .mapToObj(roundIndex -> keyMatrices[roundIndex + 1].leftMultiply(key))
             .toArray(byte[][]::new);
     }
 
@@ -222,7 +222,7 @@ public class JdkBytesLowMcPrp implements Prp {
             // m computations of 3-bit sbox, remaining n-3m bits remain the same
             sboxLayer(state);
             // affine layer, state = MultiplyWithGF2Matrix(LMatrix(i),state)
-            state = linearMatrices[roundIndex].lmul(state);
+            state = linearMatrices[roundIndex].leftMultiply(state);
             // state = state + Constants(i)
             BytesUtils.xori(state, constants[roundIndex]);
             // generate round key and add to the state
@@ -243,7 +243,7 @@ public class JdkBytesLowMcPrp implements Prp {
             // state = state + Constants(i)
             BytesUtils.xori(state, constants[roundIndex]);
             // affine layer, state = MultiplyWithGF2Matrix(LMatrix(i),state)
-            state = invertLinearMatrices[roundIndex].lmul(state);
+            state = invertLinearMatrices[roundIndex].leftMultiply(state);
             // m computations of 3-bit sbox, remaining n-3m bits remain the same
             sboxInvLayer(state);
         }

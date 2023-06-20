@@ -189,7 +189,7 @@ public class LongDenseBitMatrix implements DenseBitMatrix {
     }
 
     @Override
-    public LongDenseBitMatrix add(DenseBitMatrix that) {
+    public LongDenseBitMatrix xor(DenseBitMatrix that) {
         MathPreconditions.checkEqual("this.rows", "that.rows", this.rows, that.getRows());
         MathPreconditions.checkEqual("this.columns", "that.columns", this.columns, that.getColumns());
         long[][] addData = IntStream.range(0, rows)
@@ -199,7 +199,7 @@ public class LongDenseBitMatrix implements DenseBitMatrix {
     }
 
     @Override
-    public void addi(DenseBitMatrix that) {
+    public void xori(DenseBitMatrix that) {
         MathPreconditions.checkEqual("this.rows", "that.rows", this.rows, that.getRows());
         MathPreconditions.checkEqual("this.columns", "that.columns", this.columns, that.getColumns());
         IntStream.range(0, rows).forEach(iRow -> LongUtils.xori(data[iRow], that.getLongArrayRow(iRow)));
@@ -223,7 +223,7 @@ public class LongDenseBitMatrix implements DenseBitMatrix {
     }
 
     @Override
-    public byte[] lmul(final byte[] v) {
+    public byte[] leftMultiply(final byte[] v) {
         Preconditions.checkArgument(BytesUtils.isFixedReduceByteArray(v, byteRows, rows));
         long[] longOutput = new long[longColumns];
         for (int iRow = 0; iRow < rows; iRow++) {
@@ -234,13 +234,24 @@ public class LongDenseBitMatrix implements DenseBitMatrix {
         return LongUtils.longArrayToByteArray(longOutput, byteColumns);
     }
 
+    @Override
+    public void leftMultiplyXori(byte[] v, byte[] t) {
+        Preconditions.checkArgument(BytesUtils.isFixedReduceByteArray(v, byteRows, rows));
+        Preconditions.checkArgument(BytesUtils.isFixedReduceByteArray(t, byteColumns, columns));
+        for (int iRow = 0; iRow < rows; iRow++) {
+            if (BinaryUtils.getBoolean(v, iRow + byteRowsOffset)) {
+                BytesUtils.xori(t, getByteArrayRow(iRow));
+            }
+        }
+    }
+
     /**
-     * Left-multiplies a vector v, i.e., v·M.
+     * Left-multiplies a vector v (encoded as a long array), i.e., computes v·M.
      *
-     * @param v the vector v.
-     * @return v·M.
+     * @param v the vector v (encoded as a long array).
+     * @return v·M (encoded as a byte array).
      */
-    public long[] lmul(final long[] v) {
+    public long[] leftMultiply(final long[] v) {
         Preconditions.checkArgument(LongUtils.isFixedReduceLongArray(v, longRows, rows));
         long[] output = new long[longColumns];
         for (int iRow = 0; iRow < rows; iRow++) {
@@ -252,7 +263,7 @@ public class LongDenseBitMatrix implements DenseBitMatrix {
     }
 
     @Override
-    public boolean[] lmul(boolean[] v) {
+    public boolean[] leftMultiply(boolean[] v) {
         MathPreconditions.checkEqual("v.length", "rows", v.length, rows);
         long[] output = new long[longColumns];
         for (int iRow = 0; iRow < rows; iRow++) {
@@ -264,26 +275,7 @@ public class LongDenseBitMatrix implements DenseBitMatrix {
     }
 
     @Override
-    public byte[][] lExtMul(byte[][] v) {
-        MathPreconditions.checkEqual("v.length", "rows", v.length, rows);
-        byte[][] output = new byte[columns][v[0].length];
-        lExtMulAddi(v, output);
-        return output;
-    }
-
-    @Override
-    public void lmulAddi(byte[] v, byte[] t) {
-        Preconditions.checkArgument(BytesUtils.isFixedReduceByteArray(v, byteRows, rows));
-        Preconditions.checkArgument(BytesUtils.isFixedReduceByteArray(t, byteColumns, columns));
-        for (int iRow = 0; iRow < rows; iRow++) {
-            if (BinaryUtils.getBoolean(v, iRow + byteRowsOffset)) {
-                BytesUtils.xori(t, getByteArrayRow(iRow));
-            }
-        }
-    }
-
-    @Override
-    public void lmulAddi(boolean[] v, boolean[] t) {
+    public void leftMultiplyXori(boolean[] v, boolean[] t) {
         MathPreconditions.checkEqual("v.length", "rows", v.length, rows);
         MathPreconditions.checkEqual("t.length", "columns", t.length, columns);
         for (int rowIndex = 0; rowIndex < rows; rowIndex++) {
@@ -296,7 +288,15 @@ public class LongDenseBitMatrix implements DenseBitMatrix {
     }
 
     @Override
-    public void lExtMulAddi(byte[][] v, byte[][] t) {
+    public byte[][] leftGf2lMultiply(byte[][] v) {
+        MathPreconditions.checkEqual("v.length", "rows", v.length, rows);
+        byte[][] output = new byte[columns][v[0].length];
+        leftGf2lMultiplyXori(v, output);
+        return output;
+    }
+
+    @Override
+    public void leftGf2lMultiplyXori(byte[][] v, byte[][] t) {
         MathPreconditions.checkEqual("v.length", "rows", v.length, rows);
         MathPreconditions.checkEqual("t.length", "columns", t.length, columns);
         MathPreconditions.checkEqual("vi.length", "t.length", v[0].length, t[0].length);
@@ -407,12 +407,6 @@ public class LongDenseBitMatrix implements DenseBitMatrix {
     public int getByteSize() {
         MathPreconditions.checkEqual("rows", "columns", rows, columns);
         return byteRows;
-    }
-
-    @Override
-    public int getLongSize() {
-        MathPreconditions.checkEqual("rows", "columns", rows, columns);
-        return longRows;
     }
 
     @Override

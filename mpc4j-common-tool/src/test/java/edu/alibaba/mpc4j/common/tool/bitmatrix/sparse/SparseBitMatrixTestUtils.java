@@ -18,23 +18,9 @@ public class SparseBitMatrixTestUtils {
 
     static SparseBitMatrix createRandom(int cols, int rows, int weight, SecureRandom secureRandom) {
         ArrayList<SparseBitVector> colsList = IntStream.range(0, cols)
-            .mapToObj(colIndex -> createRandomSparseBitVector(rows, weight, secureRandom))
+            .mapToObj(colIndex -> SparseBitVector.createRandom(weight, rows, secureRandom))
             .collect(Collectors.toCollection(ArrayList::new));
         return SparseBitMatrix.creatFromColsList(colsList);
-    }
-
-    static SparseBitVector createRandomSparseBitVector(int bitSize, int size, SecureRandom secureRandom) {
-        HashSet<Integer> indexSet = new HashSet<>();
-        int[] indexesArray = new int[size];
-        for (int i = 0; i < size; i++) {
-            int index = secureRandom.nextInt(bitSize);
-            while (!indexSet.add(index)) {
-                index = (index + 1) % bitSize;
-            }
-            indexesArray[i] = index;
-        }
-        Arrays.sort(indexesArray);
-        return SparseBitVector.createUncheck(indexesArray, bitSize);
     }
 
     static LowerTriangularSparseBitMatrix createRandomLowerTriangular(int size, int weight, SecureRandom secureRandom) {

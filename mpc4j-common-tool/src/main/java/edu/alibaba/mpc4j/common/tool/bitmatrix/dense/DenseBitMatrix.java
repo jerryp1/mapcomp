@@ -10,19 +10,19 @@ import edu.alibaba.mpc4j.common.tool.EnvType;
  */
 public interface DenseBitMatrix {
     /**
-     * Adds a matrix.
+     * xor a matrix.
      *
      * @param that that matrix.
-     * @return 相加结果。
+     * @return added matrix.
      */
-    DenseBitMatrix add(DenseBitMatrix that);
+    DenseBitMatrix xor(DenseBitMatrix that);
 
     /**
-     * Inplace adds a matrix.
+     * Inplace xor a matrix.
      *
      * @param that that matrix.
      */
-    void addi(DenseBitMatrix that);
+    void xori(DenseBitMatrix that);
 
     /**
      * Multiplies a matrix.
@@ -33,52 +33,53 @@ public interface DenseBitMatrix {
     DenseBitMatrix multiply(DenseBitMatrix that);
 
     /**
-     * Left-multiplies a vector v, i.e., v·M.
+     * Left-multiplies a vector v (encoded as a byte array), i.e., computes v·M.
+     *
+     * @param v the vector v (encoded as a byte array).
+     * @return v·M (encoded as a byte array).
+     */
+    byte[] leftMultiply(final byte[] v);
+
+    /**
+     * Left-multiplies a vector v (encoded as a byte array), and inplace add t, i.e., computes t = v·M ⊕ t.
+     *
+     * @param v the vector v (encoded as a byte array).
+     * @param t the vector t (encoded as a byte array).
+     */
+    void leftMultiplyXori(final byte[] v, byte[] t);
+
+    /**
+     * Left-multiplies a vector v, i.e., computes v·M.
      *
      * @param v the vector v.
      * @return v·M.
      */
-    byte[] lmul(final byte[] v);
+    boolean[] leftMultiply(final boolean[] v);
 
     /**
-     * Left-multiplies a vector v, i.e., v·M.
+     * Left-multiplies a vector v, and inplace add t, i.e., computes t = v·M ⊕ t.
      *
      * @param v the vector v.
+     * @param t the vector t.
+     */
+    void leftMultiplyXori(final boolean[] v, boolean[] t);
+
+    /**
+     * Left-multiplies an GF2L vector v, i.e., computes v·M by treating entries in M as 1's in the GF2L field.
+     *
+     * @param v an GF2L vector v.
      * @return v·M.
      */
-    boolean[] lmul(final boolean[] v);
+    byte[][] leftGf2lMultiply(final byte[][] v);
 
     /**
-     * Left-multiplies an extended vector v, i.e., v·M.
+     * Computes v·M, and inplace add the result in t, i.e., computes t = v·M ⊕ t by treating entries in M as 1's in
+     * the GF2L field.
      *
-     * @param v an extended vector v.
-     * @return v·M。
+     * @param v an GF2L vector v.
+     * @param t an GF2L vector t.
      */
-    byte[][] lExtMul(final byte[][] v);
-
-    /**
-     * Computes v·M + t, and sets the result into t.
-     *
-     * @param v the vector v.
-     * @param t the vector t.
-     */
-    void lmulAddi(final byte[] v, byte[] t);
-
-    /**
-     * Computes v·M + t, and sets the result into t.
-     *
-     * @param v the vector v.
-     * @param t the vector t.
-     */
-    void lmulAddi(final boolean[] v, boolean[] t);
-
-    /**
-     * Computes v·M + t, and sets the result into t.
-     *
-     * @param v an extended vector v.
-     * @param t an extended vector t.
-     */
-    void lExtMulAddi(final byte[][] v, byte[][] t);
+    void leftGf2lMultiplyXori(final byte[][] v, byte[][] t);
 
     /**
      * Transposes a matrix.
@@ -141,14 +142,6 @@ public interface DenseBitMatrix {
      * @throws IllegalArgumentException if the matrix is not square.
      */
     int getByteSize();
-
-    /**
-     * Gets the size in long. Note that only square matrix support this.
-     *
-     * @return size.
-     * @throws IllegalArgumentException if the matrix is not square.
-     */
-    int getLongSize();
 
     /**
      * Gets the entry at (iRow, iColumn).

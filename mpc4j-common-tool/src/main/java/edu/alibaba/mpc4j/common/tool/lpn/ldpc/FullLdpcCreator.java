@@ -149,7 +149,7 @@ public class FullLdpcCreator extends AbstractLdpcCreator {
         matrixEp = ByteDenseBitMatrix.createFromDense(
             gapValue, fTranspose.lExtMul(cTranspose.invLextMul(bTranspose.toTransDenseBitMatrix().getByteArrayData()))
             )
-            .add(eTranspose.toTransDenseBitMatrix())
+            .xor(eTranspose.toTransDenseBitMatrix())
             .inverse();
     }
 

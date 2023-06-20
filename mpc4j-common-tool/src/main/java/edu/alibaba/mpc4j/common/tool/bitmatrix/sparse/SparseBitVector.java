@@ -8,6 +8,7 @@ import gnu.trove.set.hash.TIntHashSet;
 import org.apache.commons.lang3.builder.EqualsBuilder;
 import org.apache.commons.lang3.builder.HashCodeBuilder;
 
+import java.security.SecureRandom;
 import java.util.Arrays;
 
 /**
@@ -22,7 +23,7 @@ import java.util.Arrays;
 
 public class SparseBitVector {
     /**
-     * the number of bits in the bit vector.
+     * the total number of bits in the bit vector.
      */
     private final int bitNum;
     /**
@@ -34,7 +35,7 @@ public class SparseBitVector {
      * Creates from the positions. The input positions will be de-duplicated and sorted.
      *
      * @param positions positions with value 1.
-     * @param bitNum    the number of bits.
+     * @param bitNum    the total number of bits.
      * @return a sparse bit vector.
      */
     public static SparseBitVector create(int[] positions, int bitNum) {
@@ -57,7 +58,7 @@ public class SparseBitVector {
      * Creates from the positions without validate check.
      *
      * @param positions positions with value 1.
-     * @param bitNum    the number of bits.
+     * @param bitNum    the total number of bits.
      * @return a sparse bit vector.
      */
     public static SparseBitVector createUncheck(int[] positions, int bitNum) {
@@ -70,7 +71,7 @@ public class SparseBitVector {
      * Creates from the positions. The input positions will be de-duplicated and sorted.
      *
      * @param positions positions with value 1.
-     * @param bitNum    the number of bits.
+     * @param bitNum    the total number of bits.
      * @return a sparse bit vector.
      */
     public static SparseBitVector create(TIntArrayList positions, int bitNum) {
@@ -91,7 +92,7 @@ public class SparseBitVector {
      * Creates from the positions without validate check.
      *
      * @param positions positions with value 1.
-     * @param bitNum    the number of bits.
+     * @param bitNum    the total number of bits.
      * @return a sparse bit vector.
      */
     public static SparseBitVector createUncheck(TIntArrayList positions, int bitNum) {
@@ -101,10 +102,10 @@ public class SparseBitVector {
     }
 
     /**
-     * Creates an empty sparse vector.
+     * Creates an empty sparse bit vector.
      *
      * @param ensureCapacity the desired number of positions with value 1.
-     * @param bitNum         the number of bits.
+     * @param bitNum         the total number of bits.
      */
     public static SparseBitVector createEmpty(int ensureCapacity, int bitNum) {
         MathPreconditions.checkPositive("bitNum", bitNum);
@@ -114,15 +115,36 @@ public class SparseBitVector {
     }
 
     /**
-     * Creates an empty sparse vector.
+     * Creates an empty sparse bit vector.
      *
-     * @param bitNum the number of bits.
+     * @param bitNum the total number of bits.
      */
     public static SparseBitVector createEmpty(int bitNum) {
         MathPreconditions.checkPositive("bitNum", bitNum);
         SparseBitVector bitVector = new SparseBitVector(bitNum);
         bitVector.positions = new TIntArrayList();
         return bitVector;
+    }
+
+    /**
+     * Creates a random sparse bit vector.
+     *
+     * @param size the number of positions.
+     * @param bitNum the total number of bits.
+     * @param secureRandom random state.
+     * @return a random sparse bit vector.
+     */
+    public static SparseBitVector createRandom(int size, int bitNum, SecureRandom secureRandom) {
+        MathPreconditions.checkPositive("bitNum", bitNum);
+        MathPreconditions.checkNonNegativeInRangeClosed("size", size, bitNum);
+        TIntSet tIntSet = new TIntHashSet(size);
+        while (tIntSet.size() < size) {
+            int position = secureRandom.nextInt(bitNum);
+            tIntSet.add(position);
+        }
+        TIntArrayList tIntArrayList = new TIntArrayList(tIntSet);
+        tIntArrayList.sort();
+        return SparseBitVector.createUncheck(tIntArrayList, bitNum);
     }
 
     /**
@@ -261,9 +283,9 @@ public class SparseBitVector {
     }
 
     /**
-     * Gets the number of bits in the sparse bit vector.
+     * Gets the total number of bits in the sparse bit vector.
      *
-     * @return the number of bits in the sparse bit vector.
+     * @return the total number of bits in the sparse bit vector.
      */
     public int getBitNum() {
         return bitNum;
@@ -334,7 +356,7 @@ public class SparseBitVector {
      * @param xVector the GF2L vector.
      * @return the result.
      */
-    public byte[] rightMultiply(final byte[][] xVector) {
+    public byte[] rightGf2lMultiply(final byte[][] xVector) {
         MathPreconditions.checkEqual("bitNum", "xVector.length", bitNum, xVector.length);
         byte[] r = new byte[xVector[0].length];
         for (int i = 0; i < positions.size(); i++) {
@@ -350,7 +372,7 @@ public class SparseBitVector {
      * @param xVector the GF2E vector.
      * @param y       the other GF2E element.
      */
-    public void rightMultiplyXori(final byte[][] xVector, byte[] y) {
+    public void rightGf2lMultiplyXori(final byte[][] xVector, byte[] y) {
         assert bitNum == xVector.length;
         assert xVector[0].length == y.length;
         for (int i = 0; i < positions.size(); i++) {

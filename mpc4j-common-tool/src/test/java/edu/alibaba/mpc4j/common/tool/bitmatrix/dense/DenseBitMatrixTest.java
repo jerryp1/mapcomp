@@ -60,58 +60,58 @@ public class DenseBitMatrixTest {
     }
 
     @Test
-    public void testConstantAdd() {
+    public void testConstantXor() {
         for (int rows : SIZES) {
             for (int columns : SIZES) {
                 // 0 + 0 = 0
                 DenseBitMatrix zero = DenseBitMatrixFactory.createAllZero(type, rows, columns);
-                Assert.assertEquals(zero, zero.add(zero));
+                Assert.assertEquals(zero, zero.xor(zero));
                 DenseBitMatrix inner = DenseBitMatrixFactory.createAllZero(type, rows, columns);
-                inner.addi(zero);
+                inner.xori(zero);
                 Assert.assertEquals(zero, inner);
                 // 0 + 1 = 1
                 DenseBitMatrix one = DenseBitMatrixFactory.createAllOne(type, rows, columns);
-                Assert.assertEquals(one, one.add(zero));
-                Assert.assertEquals(one, zero.add(one));
+                Assert.assertEquals(one, one.xor(zero));
+                Assert.assertEquals(one, zero.xor(one));
                 inner = DenseBitMatrixFactory.createAllZero(type, rows, columns);
-                inner.addi(one);
+                inner.xori(one);
                 Assert.assertEquals(one, inner);
                 inner = DenseBitMatrixFactory.createAllOne(type, rows, columns);
-                inner.addi(zero);
+                inner.xori(zero);
                 Assert.assertEquals(one, inner);
                 // 1 + 1 = 0
-                Assert.assertEquals(zero, one.add(one));
+                Assert.assertEquals(zero, one.xor(one));
                 inner = DenseBitMatrixFactory.createAllOne(type, rows, columns);
-                inner.addi(one);
+                inner.xori(one);
                 Assert.assertEquals(zero, inner);
             }
         }
     }
 
     @Test
-    public void testRandomAdd() {
+    public void testRandomXor() {
         for (int rows : SIZES) {
             for (int columns : SIZES) {
-                testRandomAdd(rows, columns);
+                testRandomXor(rows, columns);
             }
         }
     }
 
-    private void testRandomAdd(int rows, int columns) {
+    private void testRandomXor(int rows, int columns) {
         DenseBitMatrix zero = DenseBitMatrixFactory.createAllZero(type, rows, columns);
         DenseBitMatrix inner;
         // random + random = 0
         for (int round = 0; round < ROUND; round++) {
             DenseBitMatrix random = DenseBitMatrixFactory.createRandom(type, rows, columns, SECURE_RANDOM);
-            Assert.assertEquals(zero, random.add(random));
+            Assert.assertEquals(zero, random.xor(random));
             inner = DenseBitMatrixFactory.createRandom(type, rows, columns, SECURE_RANDOM);
-            inner.addi(inner);
+            inner.xori(inner);
             Assert.assertEquals(zero, inner);
         }
         // random + 0 = random
         for (int round = 0; round < ROUND; round++) {
             DenseBitMatrix random = DenseBitMatrixFactory.createRandom(type, rows, columns, SECURE_RANDOM);
-            Assert.assertEquals(random, random.add(zero));
+            Assert.assertEquals(random, random.xor(zero));
         }
     }
 
@@ -140,15 +140,15 @@ public class DenseBitMatrixTest {
     }
 
     @Test
-    public void testLmul() {
+    public void testLeftMultiply() {
         for (int rows : SIZES) {
             for (int columns : SIZES) {
-                testLmul(rows, columns);
+                testLeftMultiply(rows, columns);
             }
         }
     }
 
-    private void testLmul(int rows, int columns) {
+    private void testLeftMultiply(int rows, int columns) {
         for (int round = 0; round < ROUND; round++) {
             DenseBitMatrix a = DenseBitMatrixFactory.createRandom(type, rows, rows, SECURE_RANDOM);
             DenseBitMatrix b = DenseBitMatrixFactory.createRandom(type, rows, columns, SECURE_RANDOM);
@@ -157,7 +157,7 @@ public class DenseBitMatrixTest {
             byte[][] byteVectorActualArray = IntStream.range(0, rows)
                 .mapToObj(rowIndex -> {
                     byte[] v = a.getByteArrayRow(rowIndex);
-                    return b.lmul(v);
+                    return b.leftMultiply(v);
                 })
                 .toArray(byte[][]::new);
             Assert.assertArrayEquals(expectArray, byteVectorActualArray);
@@ -165,7 +165,7 @@ public class DenseBitMatrixTest {
             byte[][] binaryVectorActualArray = IntStream.range(0, rows)
                 .mapToObj(rowIndex -> {
                     boolean[] v = BinaryUtils.byteArrayToBinary(a.getByteArrayRow(rowIndex), rows);
-                    return b.lmul(v);
+                    return b.leftMultiply(v);
                 })
                 .map(BinaryUtils::binaryToRoundByteArray)
                 .toArray(byte[][]::new);
@@ -174,25 +174,25 @@ public class DenseBitMatrixTest {
     }
 
     @Test
-    public void testLmulAddi() {
+    public void testLeftMultiplyXori() {
         for (int rows : SIZES) {
             for (int columns : SIZES) {
-                testLmulAddi(rows, columns);
+                testLeftMultiplyXori(rows, columns);
             }
         }
     }
 
-    private void testLmulAddi(int rows, int columns) {
+    private void testLeftMultiplyXori(int rows, int columns) {
         for (int round = 0; round < ROUND; round++) {
             DenseBitMatrix a = DenseBitMatrixFactory.createRandom(type, rows, rows, SECURE_RANDOM);
             DenseBitMatrix b = DenseBitMatrixFactory.createRandom(type, rows, columns, SECURE_RANDOM);
             DenseBitMatrix c = DenseBitMatrixFactory.createRandom(type, rows, columns, SECURE_RANDOM);
-            byte[][] expectArray = a.multiply(b).add(c).getByteArrayData();
+            byte[][] expectArray = a.multiply(b).xor(c).getByteArrayData();
             // 将a矩阵分别转换成byte[]分别与b矩阵左乘
             byte[][] byteVectorActualArray = IntStream.range(0, rows)
                 .mapToObj(rowIndex -> {
                     byte[] t = BytesUtils.clone(c.getByteArrayRow(rowIndex));
-                    b.lmulAddi(a.getByteArrayRow(rowIndex), t);
+                    b.leftMultiplyXori(a.getByteArrayRow(rowIndex), t);
                     return t;
                 })
                 .toArray(byte[][]::new);
@@ -202,13 +202,13 @@ public class DenseBitMatrixTest {
             DenseBitMatrix a = DenseBitMatrixFactory.createRandom(type, rows, rows, SECURE_RANDOM);
             DenseBitMatrix b = DenseBitMatrixFactory.createRandom(type, rows, columns, SECURE_RANDOM);
             DenseBitMatrix c = DenseBitMatrixFactory.createRandom(type, rows, columns, SECURE_RANDOM);
-            byte[][] expectArray = a.multiply(b).add(c).getByteArrayData();
+            byte[][] expectArray = a.multiply(b).xor(c).getByteArrayData();
             // 将a矩阵分别转换成boolean[]分别与b矩阵左乘
             byte[][] byteVectorActualArray = IntStream.range(0, rows)
                 .mapToObj(rowIndex -> {
                     boolean[] v = BinaryUtils.byteArrayToBinary(a.getByteArrayRow(rowIndex), rows);
                     boolean[] t = BinaryUtils.byteArrayToBinary(c.getByteArrayRow(rowIndex), columns);
-                    b.lmulAddi(v, t);
+                    b.leftMultiplyXori(v, t);
                     return BinaryUtils.binaryToRoundByteArray(t);
                 })
                 .toArray(byte[][]::new);
@@ -235,45 +235,45 @@ public class DenseBitMatrixTest {
     }
 
     @Test
-    public void testLextMul() {
+    public void testLeftGf2lMultiply() {
         for (int rows : SIZES) {
             for (int columns : SIZES) {
-                testLextMul(rows, columns);
+                testLeftGf2lMultiply(rows, columns);
             }
         }
     }
 
-    private void testLextMul(int rows, int columns) {
+    private void testLeftGf2lMultiply(int rows, int columns) {
         for (int round = 0; round < ROUND; round++) {
             DenseBitMatrix a = DenseBitMatrixFactory.createRandom(type, rows, rows, SECURE_RANDOM);
             DenseBitMatrix b = DenseBitMatrixFactory.createRandom(type, rows, columns, SECURE_RANDOM);
             // 测试方法： (A^T*B)^T = (A.toArrays())*B
             DenseBitMatrix aTranspose = a.transpose(EnvType.STANDARD_JDK, false);
             byte[][] expectArray = aTranspose.multiply(b).transpose(EnvType.STANDARD_JDK, false).getByteArrayData();
-            byte[][] byteVectorActualArray = b.lExtMul(a.getByteArrayData());
+            byte[][] byteVectorActualArray = b.leftGf2lMultiply(a.getByteArrayData());
             Assert.assertArrayEquals(expectArray, byteVectorActualArray);
         }
     }
 
     @Test
-    public void testLextMulAddi(){
+    public void testLeftGf2lMultiplyXori(){
         for (int rows : SIZES) {
             for (int columns : SIZES) {
-                testLextMulAddi(rows, columns);
+                testLeftGf2lMultiplyXori(rows, columns);
             }
         }
     }
 
-    private void testLextMulAddi(int rows, int columns) {
+    private void testLeftGf2lMultiplyXori(int rows, int columns) {
         for (int round = 0; round < ROUND; round++) {
             DenseBitMatrix a = DenseBitMatrixFactory.createRandom(type, rows, rows, SECURE_RANDOM);
             DenseBitMatrix b = DenseBitMatrixFactory.createRandom(type, rows, columns, SECURE_RANDOM);
             DenseBitMatrix c = DenseBitMatrixFactory.createRandom(type, rows, columns, SECURE_RANDOM);
             // 测试方法： ((A^T*B) + C)^T = (A.toArrays())*B + C^T.toArray()
             DenseBitMatrix aTranspose = a.transpose(EnvType.STANDARD_JDK, false);
-            byte[][] expectArray = aTranspose.multiply(b).add(c).transpose(EnvType.STANDARD_JDK, false).getByteArrayData();
+            byte[][] expectArray = aTranspose.multiply(b).xor(c).transpose(EnvType.STANDARD_JDK, false).getByteArrayData();
             byte[][] byteVectorActualArray = c.transpose(EnvType.STANDARD_JDK, false).getByteArrayData();
-            b.lExtMulAddi(a.getByteArrayData(), byteVectorActualArray);
+            b.leftGf2lMultiplyXori(a.getByteArrayData(), byteVectorActualArray);
             Assert.assertArrayEquals(expectArray, byteVectorActualArray);
         }
     }
