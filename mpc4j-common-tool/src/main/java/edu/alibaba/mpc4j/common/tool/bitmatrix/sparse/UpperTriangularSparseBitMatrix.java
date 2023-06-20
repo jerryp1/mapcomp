@@ -52,7 +52,7 @@ public class UpperTriangularSparseBitMatrix extends AbstractSparseBitMatrix {
         for (int i = 0; i < cols; i++) {
             outputs[i] = v[i];
             for (int j = 0; j < getCol(i).getSize() - 1; j++) {
-                int index = getCol(i).getValue(j);
+                int index = getCol(i).getPosition(j);
                 outputs[i] ^= outputs[index];
             }
         }
@@ -85,7 +85,7 @@ public class UpperTriangularSparseBitMatrix extends AbstractSparseBitMatrix {
         for (int i = 0; i < cols; i++) {
             outputs[i] = BytesUtils.clone(v[i]);
             for (int j = 0; j < getCol(i).getSize() - 1; j++) {
-                int index = getCol(i).getValue(j);
+                int index = getCol(i).getPosition(j);
                 BytesUtils.xori(outputs[i], outputs[index]);
             }
         }
@@ -147,7 +147,7 @@ public class UpperTriangularSparseBitMatrix extends AbstractSparseBitMatrix {
 
     private static boolean isUpperTriangular(ArrayList<SparseBitVector> colList) {
         for (int colIndex = 0; colIndex < colList.size(); colIndex++) {
-            if (colList.get(colIndex).getLastValue() != colIndex) {
+            if (colList.get(colIndex).getLastPosition() != colIndex) {
                 return false;
             }
         }

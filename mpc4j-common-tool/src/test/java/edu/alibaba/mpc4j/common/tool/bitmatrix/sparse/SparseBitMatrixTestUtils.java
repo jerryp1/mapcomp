@@ -34,7 +34,7 @@ public class SparseBitMatrixTestUtils {
             indexesArray[i] = index;
         }
         Arrays.sort(indexesArray);
-        return SparseBitVector.createUnCheck(indexesArray, bitSize);
+        return SparseBitVector.createUncheck(indexesArray, bitSize);
     }
 
     static LowerTriangularSparseBitMatrix createRandomLowerTriangular(int size, int weight, SecureRandom secureRandom) {
@@ -44,10 +44,12 @@ public class SparseBitMatrixTestUtils {
         return LowerTriangularSparseBitMatrix.create(colsList);
     }
 
-    static byte[][] generateRandomExtendFieldVector(int dimension, int filedLength, SecureRandom secureRandom) {
+    static byte[][] generateRandomExtendFieldVector(int dimension,
+                                                    @SuppressWarnings("SameParameterValue") int fieldLength,
+                                                    SecureRandom secureRandom) {
         return IntStream.range(0, dimension)
             .mapToObj(index -> {
-                byte[] output = new byte[filedLength];
+                byte[] output = new byte[fieldLength];
                 secureRandom.nextBytes(output);
                 return output;
             })

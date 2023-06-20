@@ -124,11 +124,11 @@ public class FullLdpcCreator extends AbstractLdpcCreator {
         IntStream.range(0, kValue - gapValue).parallel()
                 .forEach(colIndex -> {
                     int rem = colIndex % gapValue;
-                    SparseBitVector fullCol = SparseBitVector.createUnCheck(rightSeed[rem], kValue).shiftConstant(colIndex);
+                    SparseBitVector fullCol = SparseBitVector.createUncheck(rightSeed[rem], kValue).shiftRight(colIndex);
                     // 矩阵C的列为左矩阵每列的前 k - gap 项。
-                    cColsArray[colIndex] = fullCol.getSubArray(0, kValue - gapValue);
+                    cColsArray[colIndex] = fullCol.sub(0, kValue - gapValue);
                     // 矩阵F的列为左矩阵每列的后 gap 项。
-                    fColsArray[colIndex] = fullCol.getSubArray(kValue - gapValue, kValue);
+                    fColsArray[colIndex] = fullCol.sub(kValue - gapValue, kValue);
                 });
         // 将数组转为ArrayList，然后生成对应的稀疏矩阵。
         ArrayList<SparseBitVector> cColsList = Stream.of(cColsArray).collect(Collectors.toCollection(ArrayList::new));
