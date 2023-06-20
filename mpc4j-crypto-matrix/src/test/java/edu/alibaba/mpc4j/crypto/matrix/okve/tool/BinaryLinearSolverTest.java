@@ -25,13 +25,13 @@ import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
 /**
- * bit matrix linear solver test.
+ * binary linear solver test.
  *
  * @author Weiran Liu
  * @date 2023/6/16
  */
 @RunWith(Parameterized.class)
-public class BitMatrixLinearSolverTest {
+public class BinaryLinearSolverTest {
     /**
      * random round
      */
@@ -77,15 +77,15 @@ public class BitMatrixLinearSolverTest {
     /**
      * linear solver
      */
-    private final BitMatrixLinearSolver linearSolver;
+    private final BinaryLinearSolver linearSolver;
 
-    public BitMatrixLinearSolverTest(String name, int d) {
+    public BinaryLinearSolverTest(String name, int d) {
         Preconditions.checkArgument(StringUtils.isNotBlank(name));
         this.d = d;
         byteD = CommonUtils.getByteLength(d);
         offsetD = byteD * Byte.SIZE - d;
         gf2e = Gf2eFactory.createInstance(EnvType.STANDARD, L);
-        linearSolver = new BitMatrixLinearSolver(L);
+        linearSolver = new BinaryLinearSolver(L);
     }
 
     @Test

@@ -25,7 +25,7 @@ import static cc.redberry.rings.linear.LinearSolver.SystemInfo.*;
  * @author Weiran Liu
  * @date 2023/6/16
  */
-public class BitMatrixLinearSolver {
+public class BinaryLinearSolver {
     /**
      * l
      */
@@ -43,11 +43,11 @@ public class BitMatrixLinearSolver {
      */
     private final SecureRandom secureRandom;
 
-    public BitMatrixLinearSolver(int l) {
+    public BinaryLinearSolver(int l) {
         this(l, new SecureRandom());
     }
 
-    public BitMatrixLinearSolver(int l, SecureRandom secureRandom) {
+    public BinaryLinearSolver(int l, SecureRandom secureRandom) {
         MathPreconditions.checkPositive("l", l);
         this.l = l;
         byteL = CommonUtils.getByteLength(l);

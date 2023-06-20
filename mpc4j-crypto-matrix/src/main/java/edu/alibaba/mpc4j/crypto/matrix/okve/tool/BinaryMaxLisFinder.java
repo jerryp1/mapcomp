@@ -19,9 +19,9 @@ import java.util.stream.IntStream;
  * @author Weiran Liu
  * @date 2023/6/16
  */
-public class BitMatrixMaxLisFinder {
+public class BinaryMaxLisFinder {
 
-    public BitMatrixMaxLisFinder() {
+    public BinaryMaxLisFinder() {
         // empty
     }
 

@@ -1,8 +1,8 @@
 package edu.alibaba.mpc4j.crypto.matrix.okve.ovdm.gf2e;
 
 import edu.alibaba.mpc4j.common.tool.CommonConstants;
-import edu.alibaba.mpc4j.crypto.matrix.okve.tool.BitMatrixLinearSolver;
-import edu.alibaba.mpc4j.crypto.matrix.okve.tool.BitMatrixMaxLisFinder;
+import edu.alibaba.mpc4j.crypto.matrix.okve.tool.BinaryLinearSolver;
+import edu.alibaba.mpc4j.crypto.matrix.okve.tool.BinaryMaxLisFinder;
 import edu.alibaba.mpc4j.common.tool.utils.CommonUtils;
 import edu.alibaba.mpc4j.common.tool.utils.LongUtils;
 
@@ -42,11 +42,11 @@ abstract class AbstractGf2eOvdm<T> implements Gf2eOvdm<T> {
     /**
      * 线性求解器
      */
-    protected final BitMatrixLinearSolver linearSolver;
+    protected final BinaryLinearSolver linearSolver;
     /**
      * max linear independent system finder
      */
-    protected final BitMatrixMaxLisFinder maxLisFinder;
+    protected final BinaryMaxLisFinder maxLisFinder;
 
     protected AbstractGf2eOvdm(int l, int n, int m) {
         assert n > 0;
@@ -60,8 +60,8 @@ abstract class AbstractGf2eOvdm<T> implements Gf2eOvdm<T> {
         this.m = m;
         mByteLength = m / Byte.SIZE;
         secureRandom = new SecureRandom();
-        linearSolver = new BitMatrixLinearSolver(l);
-        maxLisFinder = new BitMatrixMaxLisFinder();
+        linearSolver = new BinaryLinearSolver(l);
+        maxLisFinder = new BinaryMaxLisFinder();
     }
 
     @Override

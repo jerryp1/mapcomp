@@ -12,12 +12,12 @@ import org.junit.Test;
 import java.security.SecureRandom;
 
 /**
- * bit matrix linear solver test with constant inputs.
+ * binary linear solver test with constant inputs.
  *
  * @author Weiran Liu
  * @date 2023/6/17
  */
-public class BitMatrixLinearSolverConstantTest {
+public class BinaryConstantLinearSolverTest {
     /**
      * l
      */
@@ -33,11 +33,11 @@ public class BitMatrixLinearSolverConstantTest {
     /**
      * linear solver
      */
-    private final BitMatrixLinearSolver linearSolver;
+    private final BinaryLinearSolver linearSolver;
 
-    public BitMatrixLinearSolverConstantTest() {
+    public BinaryConstantLinearSolverTest() {
         gf2e = Gf2eFactory.createInstance(EnvType.STANDARD, L);
-        linearSolver = new BitMatrixLinearSolver(L);
+        linearSolver = new BinaryLinearSolver(L);
     }
 
     @Test

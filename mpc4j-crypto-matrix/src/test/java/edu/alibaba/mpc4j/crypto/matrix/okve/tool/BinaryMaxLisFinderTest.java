@@ -10,12 +10,12 @@ import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
 /**
- * Z2 max linear independent row finder test.
+ * binary linear independent row finder test.
  *
  * @author Weiran Liu
  * @date 2021/09/27
  */
-public class BitMatrixMaxLisFinderTest {
+public class BinaryMaxLisFinderTest {
     /**
      * 3-by-3 system, singular
      */
@@ -176,10 +176,10 @@ public class BitMatrixMaxLisFinderTest {
     /**
      * binary max linear independent row finder
      */
-    private final BitMatrixMaxLisFinder maxLisFinder;
+    private final BinaryMaxLisFinder maxLisFinder;
 
-    public BitMatrixMaxLisFinderTest() {
-        maxLisFinder = new BitMatrixMaxLisFinder();
+    public BinaryMaxLisFinderTest() {
+        maxLisFinder = new BinaryMaxLisFinder();
     }
 
     @Test

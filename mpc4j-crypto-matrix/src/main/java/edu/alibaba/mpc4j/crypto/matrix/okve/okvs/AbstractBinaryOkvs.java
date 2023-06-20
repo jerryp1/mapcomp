@@ -1,7 +1,7 @@
 package edu.alibaba.mpc4j.crypto.matrix.okve.okvs;
 
 import edu.alibaba.mpc4j.common.tool.CommonConstants;
-import edu.alibaba.mpc4j.crypto.matrix.okve.tool.BitMatrixLinearSolver;
+import edu.alibaba.mpc4j.crypto.matrix.okve.tool.BinaryLinearSolver;
 import edu.alibaba.mpc4j.common.tool.utils.CommonUtils;
 import edu.alibaba.mpc4j.common.tool.utils.LongUtils;
 
@@ -45,7 +45,7 @@ abstract class AbstractBinaryOkvs<T> implements BinaryOkvs<T> {
     /**
      * 线性求解器
      */
-    protected final BitMatrixLinearSolver linearSolver;
+    protected final BinaryLinearSolver linearSolver;
     /**
      * parallel encode
      */
@@ -66,7 +66,7 @@ abstract class AbstractBinaryOkvs<T> implements BinaryOkvs<T> {
         byteM = CommonUtils.getByteLength(m);
         offsetM = byteM * Byte.SIZE - m;
         secureRandom = new SecureRandom();
-        linearSolver = new BitMatrixLinearSolver(l);
+        linearSolver = new BinaryLinearSolver(l);
         parallelEncode = false;
     }
 
