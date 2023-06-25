@@ -1,7 +1,7 @@
 package edu.alibaba.mpc4j.common.tool.lpn.ldpc;
 
-import edu.alibaba.mpc4j.common.tool.bitmatrix.dense.ByteSquareDenseBitMatrix;
-import edu.alibaba.mpc4j.common.tool.bitmatrix.dense.SquareDenseBitMatrix;
+import edu.alibaba.mpc4j.common.tool.bitmatrix.dense.ByteDenseBitMatrix;
+import edu.alibaba.mpc4j.common.tool.bitmatrix.dense.DenseBitMatrix;
 import edu.alibaba.mpc4j.common.tool.bitmatrix.sparse.LowerTriangularSparseBitMatrix;
 import edu.alibaba.mpc4j.common.tool.bitmatrix.sparse.SparseBitMatrix;
 import edu.alibaba.mpc4j.common.tool.lpn.LpnParams;
@@ -64,7 +64,7 @@ public abstract class AbstractLdpcCreator implements LdpcCreator {
     /**
      * 矩阵Ep
      */
-    protected SquareDenseBitMatrix matrixEp;
+    protected DenseBitMatrix matrixEp;
     /**
      * Ldpc Encoder 最终生成的OT数量的对数。
      * 例如ceilLogN = 24, 则该Ldpc 可以产生 2^24的OT。
@@ -133,7 +133,7 @@ public abstract class AbstractLdpcCreator implements LdpcCreator {
             int[] lpnParaArray = {lpnParams.getN(), lpnParams.getK(), lpnParams.getT()};
             printWriter.println(Base64.getEncoder().encodeToString(IntUtils.intArrayToByteArray(lpnParaArray)));
             // write matrix Ep
-            Arrays.stream(matrixEp.toByteArrays()).forEach( byteArray ->
+            Arrays.stream(matrixEp.getByteArrayData()).forEach(byteArray ->
                 printWriter.println(Base64.getEncoder().encodeToString(byteArray))
             );
             printWriter.close();
@@ -160,7 +160,7 @@ public abstract class AbstractLdpcCreator implements LdpcCreator {
             for (int rowIndex = 0; rowIndex < gapValue; rowIndex++) {
                 matrixEpArrays[rowIndex] = Base64.getDecoder().decode(silverBufferedReader.readLine());
             }
-            matrixEp = ByteSquareDenseBitMatrix.fromDense(matrixEpArrays);
+            matrixEp = ByteDenseBitMatrix.createFromDense(gapValue, matrixEpArrays);
             silverBufferedReader.close();
             silverInputStream.close();
         } catch (NullPointerException | IOException e) {

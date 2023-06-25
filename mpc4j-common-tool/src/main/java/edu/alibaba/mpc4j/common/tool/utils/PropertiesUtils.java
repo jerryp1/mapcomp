@@ -2,6 +2,7 @@ package edu.alibaba.mpc4j.common.tool.utils;
 
 import com.google.common.base.Preconditions;
 import edu.alibaba.mpc4j.common.tool.MathPreconditions;
+import org.apache.log4j.PropertyConfigurator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -19,9 +20,39 @@ import java.util.*;
  */
 public class PropertiesUtils {
     private static final Logger LOGGER = LoggerFactory.getLogger(PropertiesUtils.class);
+    /**
+     * log4j.properties name
+     */
+    private static final String LOG4J_PROPERTIES_NAME = "log4j.properties";
 
     private PropertiesUtils() {
         // empty
+    }
+
+    /**
+     * load log4j properties.
+     */
+    public static void loadLog4jProperties() {
+        File fileObject = new File(LOG4J_PROPERTIES_NAME);
+        try {
+            Properties log4jProperties = new Properties();
+            log4jProperties.load(new FileInputStream("log4j.properties"));
+            PropertyConfigurator.configure(log4jProperties);
+            LOGGER.info("Successfully load file {} from the path: {}", LOG4J_PROPERTIES_NAME, fileObject.getAbsolutePath());
+        } catch (IOException e) {
+            Properties properties = new Properties();
+            // log4j.rootLogger=INFO,consoleAppender
+            properties.setProperty("log4j.rootLogger", "INFO,consoleAppender");
+            // log4j.appender.consoleAppender=org.apache.log4j.ConsoleAppender
+            properties.setProperty("log4j.appender.consoleAppender", "org.apache.log4j.ConsoleAppender");
+            // log4j.appender.consoleAppender.layout=org.apache.log4j.PatternLayout
+            properties.setProperty("log4j.appender.consoleAppender.layout", "org.apache.log4j.PatternLayout");
+            // log4j.appender.consoleAppender.layout.ConversionPattern=%d [%t] %-5p %c - %m%n
+            properties.setProperty("log4j.appender.consoleAppender.layout.ConversionPattern", "%d [%t] %-5p %c - %m%n");
+            PropertyConfigurator.configure(properties);
+            LOGGER.info("Cannot find file {} from the path: {} (for customized log4j setting), use default configuration.",
+                LOG4J_PROPERTIES_NAME, fileObject.getAbsolutePath());
+        }
     }
 
     /**

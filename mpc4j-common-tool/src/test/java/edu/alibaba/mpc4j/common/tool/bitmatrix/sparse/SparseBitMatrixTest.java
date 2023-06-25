@@ -2,8 +2,8 @@ package edu.alibaba.mpc4j.common.tool.bitmatrix.sparse;
 
 import edu.alibaba.mpc4j.common.tool.CommonConstants;
 import edu.alibaba.mpc4j.common.tool.EnvType;
+import edu.alibaba.mpc4j.common.tool.bitmatrix.dense.ByteDenseBitMatrix;
 import edu.alibaba.mpc4j.common.tool.bitmatrix.dense.DenseBitMatrix;
-import edu.alibaba.mpc4j.common.tool.bitmatrix.dense.DenseBitMatrixTestUtils;
 import edu.alibaba.mpc4j.common.tool.utils.BytesUtils;
 import org.junit.Assert;
 import org.junit.Test;
@@ -53,7 +53,7 @@ public class SparseBitMatrixTest {
         // 转换为稠密矩阵
         DenseBitMatrix denseBitMatrix0 = sparseBitMatrix0.toTransDenseBitMatrix().transpose(EnvType.STANDARD_JDK, false);
         DenseBitMatrix denseBitMatrix1 = sparseBitMatrix1.toTransDenseBitMatrix().transpose(EnvType.STANDARD_JDK, false);
-        DenseBitMatrix sumDenseMatrix = denseBitMatrix0.add(denseBitMatrix1);
+        DenseBitMatrix sumDenseMatrix = denseBitMatrix0.xor(denseBitMatrix1);
         // 验证
         Assert.assertEquals(sumSparseMatrix.toTransDenseBitMatrix().transpose(EnvType.STANDARD_JDK, false), sumDenseMatrix);
     }
@@ -74,7 +74,7 @@ public class SparseBitMatrixTest {
         // 转换为稠密矩阵
         DenseBitMatrix denseBitMatrix0 = sparseBitMatrix0.toTransDenseBitMatrix();
         // 生成稠密矩阵
-        DenseBitMatrix denseBitMatrix1 = DenseBitMatrixTestUtils.createRandom(rows, columns, SECURE_RANDOM);
+        DenseBitMatrix denseBitMatrix1 = ByteDenseBitMatrix.createRandom(rows, columns, SECURE_RANDOM);
         // 验证
         Assert.assertEquals(sparseBitMatrix0.transMultiply(denseBitMatrix1), denseBitMatrix0.multiply(denseBitMatrix1));
     }
@@ -113,7 +113,7 @@ public class SparseBitMatrixTest {
             boolean[] v = SparseBitMatrixTestUtils.generateRandomBitVector(rows, SECURE_RANDOM);
             SparseBitMatrix sparseBitMatrix = SparseBitMatrixTestUtils.createRandom(columns, rows, weight, SECURE_RANDOM);
             DenseBitMatrix denseBitMatrix = sparseBitMatrix.toTransDenseBitMatrix().transpose(EnvType.STANDARD_JDK, false);
-            Assert.assertArrayEquals(sparseBitMatrix.lmul(v), denseBitMatrix.lmul(v));
+            Assert.assertArrayEquals(sparseBitMatrix.lmul(v), denseBitMatrix.leftMultiply(v));
         }
     }
 
@@ -135,7 +135,7 @@ public class SparseBitMatrixTest {
             SparseBitMatrix sparseBitMatrix = SparseBitMatrixTestUtils.createRandom(columns, rows, weight, SECURE_RANDOM);
             DenseBitMatrix denseBitMatrix = sparseBitMatrix.toTransDenseBitMatrix().transpose(EnvType.STANDARD_JDK, false);
             sparseBitMatrix.lmulAddi(v, t0);
-            denseBitMatrix.lmulAddi(v, t1);
+            denseBitMatrix.leftMultiplyXori(v, t1);
             Assert.assertArrayEquals(t0, t1);
         }
     }
@@ -155,7 +155,7 @@ public class SparseBitMatrixTest {
             byte[][] v = SparseBitMatrixTestUtils.generateRandomExtendFieldVector(rows, CommonConstants.BLOCK_BYTE_LENGTH, SECURE_RANDOM);
             SparseBitMatrix sparseBitMatrix = SparseBitMatrixTestUtils.createRandom(columns, rows, weight, SECURE_RANDOM);
             DenseBitMatrix denseBitMatrix = sparseBitMatrix.toTransDenseBitMatrix().transpose(EnvType.STANDARD_JDK, false);
-            Assert.assertArrayEquals(sparseBitMatrix.lExtMul(v), denseBitMatrix.lExtMul(v));
+            Assert.assertArrayEquals(sparseBitMatrix.lExtMul(v), denseBitMatrix.leftGf2lMultiply(v));
         }
     }
 
@@ -177,7 +177,7 @@ public class SparseBitMatrixTest {
             SparseBitMatrix sparseBitMatrix = SparseBitMatrixTestUtils.createRandom(columns, rows, weight, SECURE_RANDOM);
             DenseBitMatrix denseBitMatrix = sparseBitMatrix.toTransDenseBitMatrix().transpose(EnvType.STANDARD_JDK, false);
             sparseBitMatrix.lExtMulAddi(v, t0);
-            denseBitMatrix.lExtMulAddi(v, t1);
+            denseBitMatrix.leftGf2lMultiplyXori(v, t1);
             Assert.assertArrayEquals(t0, t1);
         }
     }

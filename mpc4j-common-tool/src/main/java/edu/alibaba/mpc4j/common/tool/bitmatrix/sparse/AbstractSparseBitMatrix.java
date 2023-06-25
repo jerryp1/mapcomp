@@ -1,13 +1,12 @@
 package edu.alibaba.mpc4j.common.tool.bitmatrix.sparse;
 
 import edu.alibaba.mpc4j.common.tool.bitmatrix.dense.ByteDenseBitMatrix;
-import edu.alibaba.mpc4j.common.tool.bitmatrix.dense.ByteSquareDenseBitMatrix;
 import edu.alibaba.mpc4j.common.tool.bitmatrix.dense.DenseBitMatrix;
+import gnu.trove.list.array.TIntArrayList;
 import org.apache.commons.lang3.builder.EqualsBuilder;
 import org.apache.commons.lang3.builder.HashCodeBuilder;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
@@ -43,9 +42,9 @@ public abstract class AbstractSparseBitMatrix {
      */
     protected void initFromColList(ArrayList<SparseBitVector> colsList) {
         assert colsList.size() > 0 : "colsList must be non-empty";
-        this.rows = colsList.get(0).getBitSize();
+        this.rows = colsList.get(0).getBitNum();
         for (SparseBitVector col : colsList) {
-            assert col.getBitSize() == rows : "all sparse vectors must have the same bit size";
+            assert col.getBitNum() == rows : "all sparse vectors must have the same bit size";
         }
         this.colsList = colsList;
         this.cols = colsList.size();
@@ -66,10 +65,10 @@ public abstract class AbstractSparseBitMatrix {
         colsList = new ArrayList<>();
         colsList.ensureCapacity(cols);
         // 循环移位initVector，并写入colsList
-        SparseBitVector tempVector = initVector.copyOf();
+        SparseBitVector tempVector = initVector.copy();
         for (int j = 0; j < cols; j++) {
             colsList.add(tempVector);
-            tempVector = tempVector.cyclicMove();
+            tempVector = tempVector.cyclicShiftRight();
         }
     }
 
@@ -86,7 +85,7 @@ public abstract class AbstractSparseBitMatrix {
         IntStream addStream = IntStream.range(0, cols);
         addStream = parallel ? addStream.parallel() : addStream;
         return addStream
-            .mapToObj(index -> this.getCol(index).add(that.getCol(index)))
+            .mapToObj(index -> this.getCol(index).xor(that.getCol(index)))
             .collect(Collectors.toCollection(ArrayList::new));
     }
 
@@ -105,7 +104,7 @@ public abstract class AbstractSparseBitMatrix {
 
         IntStream intStream = IntStream.range(startColIndex, endColIndex);
         return intStream.parallel().
-            mapToObj(index -> getCol(index).getSubArray(startRowIndex, endRowIndex)
+            mapToObj(index -> getCol(index).sub(startRowIndex, endRowIndex)
             ).collect(Collectors.toCollection(ArrayList::new));
     }
 
@@ -115,23 +114,13 @@ public abstract class AbstractSparseBitMatrix {
      * @return 行向量组。
      */
     protected ArrayList<SparseBitVector> getRowsList() {
-        ArrayList<int[]> rowsIndexList = new ArrayList<>();
-        rowsIndexList.ensureCapacity(rows);
-        // init an array to count the number of non-zero points in each row
-        int[] targetCounter = new int[rows];
-        // count the number column by column
-        for (SparseBitVector array : colsList) {
-            array.indexCounter(targetCounter);
-        }
-        // put empty sparse vectors in the rowIndexList
-        for (int size : targetCounter) {
-            rowsIndexList.add(new int[size]);
-        }
-        // write non-zero points into the rowsIndexList
-        Arrays.fill(targetCounter, 0);
-        for (int colIndex = 0; colIndex < cols; colIndex++) {
-            for (int rowIndex : getCol(colIndex).getNonZeroIndexArray()) {
-                rowsIndexList.get(rowIndex)[targetCounter[rowIndex]++] = colIndex;
+        ArrayList<TIntArrayList> rowsIndexList = IntStream.range(0, rows)
+            .mapToObj(iRow -> new TIntArrayList(cols))
+            .collect(Collectors.toCollection(ArrayList::new));
+        for (int iColumn = 0; iColumn < cols; iColumn++) {
+            int[] positions = colsList.get(iColumn).getPositions();
+            for (int iRow : positions) {
+                rowsIndexList.get(iRow).add(iColumn);
             }
         }
         // convert rowsIndexList to rowsList, thus sort
@@ -167,7 +156,7 @@ public abstract class AbstractSparseBitMatrix {
 
         IntStream multiplyIntStream = IntStream.range(0, cols);
         multiplyIntStream = parallel ? multiplyIntStream.parallel() : multiplyIntStream;
-        multiplyIntStream.forEach(i -> vecY[i] ^= getCol(i).multiply(vecX));
+        multiplyIntStream.forEach(i -> vecY[i] ^= getCol(i).rightMultiply(vecX));
     }
 
     /**
@@ -182,7 +171,7 @@ public abstract class AbstractSparseBitMatrix {
         byte[][] outputs = new byte[cols][];
         IntStream multiplyIntStream = IntStream.range(0, getCols());
         multiplyIntStream = parallel ? multiplyIntStream.parallel() : multiplyIntStream;
-        multiplyIntStream.forEach(i -> outputs[i] = getCol(i).multiply(vecX));
+        multiplyIntStream.forEach(i -> outputs[i] = getCol(i).rightGf2lMultiply(vecX));
         return outputs;
     }
 
@@ -200,7 +189,7 @@ public abstract class AbstractSparseBitMatrix {
 
         IntStream multiplyIntStream = IntStream.range(0, getCols());
         multiplyIntStream = parallel ? multiplyIntStream.parallel() : multiplyIntStream;
-        multiplyIntStream.forEach(i -> getCol(i).multiplyAddi(vecX, vecY[i]));
+        multiplyIntStream.forEach(i -> getCol(i).rightGf2lMultiplyXori(vecX, vecY[i]));
     }
 
     /**
@@ -212,9 +201,7 @@ public abstract class AbstractSparseBitMatrix {
     public DenseBitMatrix transMultiply(DenseBitMatrix denseBitMatrix) {
         assert denseBitMatrix.getRows() == rows;
 
-        return (rows == denseBitMatrix.getColumns())
-            ? ByteSquareDenseBitMatrix.fromDense(lExtMul(denseBitMatrix.toByteArrays()))
-            : ByteDenseBitMatrix.fromDense(denseBitMatrix.getColumns(), lExtMul(denseBitMatrix.toByteArrays()));
+        return ByteDenseBitMatrix.createFromDense(denseBitMatrix.getColumns(), lExtMul(denseBitMatrix.getByteArrayData()));
     }
 
     /**
@@ -225,10 +212,8 @@ public abstract class AbstractSparseBitMatrix {
     public DenseBitMatrix toTransDenseBitMatrix() {
         IntStream intStream = IntStream.range(0, getCols());
         intStream = parallel ? intStream.parallel() : intStream;
-        int[][] positions = intStream.mapToObj(i -> getCol(i).getNonZeroIndexArray()).toArray(int[][]::new);
-        return (rows == cols)
-            ? ByteSquareDenseBitMatrix.fromSparse(positions)
-            : ByteDenseBitMatrix.fromSparse(rows, positions);
+        int[][] positions = intStream.mapToObj(i -> getCol(i).getPositions()).toArray(int[][]::new);
+        return ByteDenseBitMatrix.createFromSparse(rows, positions);
     }
 
     /**

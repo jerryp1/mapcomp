@@ -58,7 +58,7 @@ public class ExtremeSparseBitMatrix {
         boolean[] outputs = new boolean[cols];
         for (int i = 0; i < nonEmptyColIndex.length; i++) {
             int index = nonEmptyColIndex[i];
-            outputs[index] = colsList.get(i).multiply(xVec);
+            outputs[index] = colsList.get(i).rightMultiply(xVec);
         }
         return outputs;
     }
@@ -74,7 +74,7 @@ public class ExtremeSparseBitMatrix {
         assert yVec.length == cols;
         for (int i = 0; i < nonEmptyColIndex.length; i++) {
             int index = nonEmptyColIndex[i];
-            yVec[index] ^= colsList.get(i).multiply(xVec);
+            yVec[index] ^= colsList.get(i).rightMultiply(xVec);
         }
 
     }
@@ -91,7 +91,7 @@ public class ExtremeSparseBitMatrix {
         byte[][] outputs = new byte[cols][xVec[0].length];
         for (int i = 0; i < nonEmptyColIndex.length; i++) {
             int index = nonEmptyColIndex[i];
-            colsList.get(i).multiplyAddi(xVec, outputs[index]);
+            colsList.get(i).rightGf2lMultiplyXori(xVec, outputs[index]);
         }
         return outputs;
     }
@@ -109,7 +109,7 @@ public class ExtremeSparseBitMatrix {
 
         for (int i = 0; i < nonEmptyColIndex.length; i++) {
             int index = nonEmptyColIndex[i];
-            colsList.get(i).multiplyAddi(xVec, yVec[index]);
+            colsList.get(i).rightGf2lMultiplyXori(xVec, yVec[index]);
         }
     }
 

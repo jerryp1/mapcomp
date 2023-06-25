@@ -18,23 +18,9 @@ public class SparseBitMatrixTestUtils {
 
     static SparseBitMatrix createRandom(int cols, int rows, int weight, SecureRandom secureRandom) {
         ArrayList<SparseBitVector> colsList = IntStream.range(0, cols)
-            .mapToObj(colIndex -> createRandomSparseBitVector(rows, weight, secureRandom))
+            .mapToObj(colIndex -> SparseBitVector.createRandom(weight, rows, secureRandom))
             .collect(Collectors.toCollection(ArrayList::new));
         return SparseBitMatrix.creatFromColsList(colsList);
-    }
-
-    static SparseBitVector createRandomSparseBitVector(int bitSize, int size, SecureRandom secureRandom) {
-        HashSet<Integer> indexSet = new HashSet<>();
-        int[] indexesArray = new int[size];
-        for (int i = 0; i < size; i++) {
-            int index = secureRandom.nextInt(bitSize);
-            while (!indexSet.add(index)) {
-                index = (index + 1) % bitSize;
-            }
-            indexesArray[i] = index;
-        }
-        Arrays.sort(indexesArray);
-        return SparseBitVector.createUnCheck(indexesArray, bitSize);
     }
 
     static LowerTriangularSparseBitMatrix createRandomLowerTriangular(int size, int weight, SecureRandom secureRandom) {
@@ -44,10 +30,12 @@ public class SparseBitMatrixTestUtils {
         return LowerTriangularSparseBitMatrix.create(colsList);
     }
 
-    static byte[][] generateRandomExtendFieldVector(int dimension, int filedLength, SecureRandom secureRandom) {
+    static byte[][] generateRandomExtendFieldVector(int dimension,
+                                                    @SuppressWarnings("SameParameterValue") int fieldLength,
+                                                    SecureRandom secureRandom) {
         return IntStream.range(0, dimension)
             .mapToObj(index -> {
-                byte[] output = new byte[filedLength];
+                byte[] output = new byte[fieldLength];
                 secureRandom.nextBytes(output);
                 return output;
             })

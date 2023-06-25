@@ -53,7 +53,7 @@ public class LowerTriangularSparseBitMatrix extends AbstractSparseBitMatrix {
         for (int i = cols - 1; i >= 0; --i) {
             outputs[i] = v[i];
             for (int j = 1; j < getCol(i).getSize(); j++) {
-                int index = getCol(i).getValue(j);
+                int index = getCol(i).getPosition(j);
                 outputs[i] ^= outputs[index];
             }
         }
@@ -88,7 +88,7 @@ public class LowerTriangularSparseBitMatrix extends AbstractSparseBitMatrix {
         for (int i = getCols() - 1; i >= 0; --i) {
             outputs[i] = BytesUtils.clone(v[i]);
             for (int j = 1; j < getCol(i).getSize(); j++) {
-                int index = getCol(i).getValue(j);
+                int index = getCol(i).getPosition(j);
                 BytesUtils.xori(outputs[i], outputs[index]);
             }
         }
@@ -150,7 +150,7 @@ public class LowerTriangularSparseBitMatrix extends AbstractSparseBitMatrix {
 
     private static boolean isLowerTriangular(ArrayList<SparseBitVector> colList) {
         for (int colIndex = 0; colIndex < colList.size(); colIndex++) {
-            if (colList.get(colIndex).getValue(0) != colIndex) {
+            if (colList.get(colIndex).getPosition(0) != colIndex) {
                 return false;
             }
         }

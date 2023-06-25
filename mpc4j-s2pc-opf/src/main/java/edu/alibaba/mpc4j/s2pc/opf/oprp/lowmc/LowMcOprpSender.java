@@ -148,10 +148,10 @@ public class LowMcOprpSender extends AbstractOprpSender {
     private void extendKey(byte[] senderShareKeyBytes) {
         long[] senderShareKeyLongs = LongUtils.byteArrayToLongArray(senderShareKeyBytes);
         // 初始扩展密钥
-        initKeyShare = LowMcUtils.KEY_MATRICES[0].lmul(senderShareKeyLongs);
+        initKeyShare = LowMcUtils.KEY_MATRICES[0].leftMultiply(senderShareKeyLongs);
         // 根据轮数扩展密钥
         roundKeyShares = IntStream.range(0, LowMcUtils.ROUND)
-            .mapToObj(roundIndex -> LowMcUtils.KEY_MATRICES[roundIndex + 1].lmul(senderShareKeyLongs))
+            .mapToObj(roundIndex -> LowMcUtils.KEY_MATRICES[roundIndex + 1].leftMultiply(senderShareKeyLongs))
             .toArray(long[][]::new);
     }
 
@@ -248,7 +248,7 @@ public class LowMcOprpSender extends AbstractOprpSender {
         IntStream rowIndexIntStream = IntStream.range(0, batchSize);
         rowIndexIntStream = parallel ? rowIndexIntStream.parallel() : rowIndexIntStream;
         return rowIndexIntStream
-            .mapToObj(row -> LowMcUtils.LINEAR_MATRICES[roundIndex].lmul(states[row]))
+            .mapToObj(row -> LowMcUtils.LINEAR_MATRICES[roundIndex].leftMultiply(states[row]))
             .toArray(long[][]::new);
     }
 

@@ -180,19 +180,6 @@ public class BytesUtils {
      * Verify that the given {@code byte[]} has the fixed size and contains at most {@code bitLength} valid bits.
      * The bits are represented in Big-endian format.
      *
-     * @param byteArray the given {@code byte[]}.
-     * @param bitLength the expected bit length.
-     * @return true the given {@code byte[]} has the fixed size and contains at most {@code bitLength} valid bits.
-     */
-    public static boolean isFixedReduceByteArray(byte[] byteArray, final int bitLength) {
-        int byteLength = CommonUtils.getByteLength(bitLength);
-        return isFixedReduceByteArray(byteArray, byteLength, bitLength);
-    }
-
-    /**
-     * Verify that the given {@code byte[]} has the fixed size and contains at most {@code bitLength} valid bits.
-     * The bits are represented in Big-endian format.
-     *
      * @param byteArray  the given {@code byte[]}.
      * @param byteLength the expected byte length.
      * @param bitLength  the expected bit length.
@@ -211,6 +198,20 @@ public class BytesUtils {
             }
         }
         return true;
+    }
+
+    /**
+     * Creates an all-one byte array.
+     *
+     * @param bitLength bit length.
+     * @return an all-one byte array.
+     */
+    public static byte[] allOneByteArray(int bitLength) {
+        int byteLength = CommonUtils.getByteLength(bitLength);
+        byte[] vector = new byte[byteLength];
+        Arrays.fill(vector, (byte) 0xFF);
+        BytesUtils.reduceByteArray(vector, bitLength);
+        return vector;
     }
 
     /**
@@ -603,6 +604,28 @@ public class BytesUtils {
         byte[] value = new byte[xByteLength];
         for (int i = 0; i < x.length; i++) {
             if (y[i]) {
+                xori(value, x[i]);
+            }
+        }
+        return value;
+    }
+
+    /**
+     * Computes the inner product of x and y.
+     *
+     * @param x           vector x.
+     * @param xByteLength x byte length.
+     * @param y           vector y.
+     * @return the inner product of x and y.
+     */
+    public static byte[] innerProduct(byte[][] x, int xByteLength, byte[] y) {
+        int num = x.length;
+        int byteNum = CommonUtils.getByteLength(num);
+        int offsetNum = byteNum * Byte.SIZE - num;
+        assert BytesUtils.isFixedReduceByteArray(y, byteNum, num);
+        byte[] value = new byte[xByteLength];
+        for (int i = 0; i < x.length; i++) {
+            if (BinaryUtils.getBoolean(y, offsetNum + i)) {
                 xori(value, x[i]);
             }
         }

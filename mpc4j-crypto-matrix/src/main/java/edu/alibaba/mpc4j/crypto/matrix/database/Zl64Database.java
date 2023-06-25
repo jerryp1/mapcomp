@@ -187,10 +187,10 @@ public class Zl64Database implements ModBitNumDatabase {
     public BitVector[] bitPartition(EnvType envType, boolean parallel) {
         int rows = rows();
         byte[][] bytesData = Arrays.stream(data).mapToObj(LongUtils::longToByteArray).toArray(byte[][]::new);
-        DenseBitMatrix byteDenseBitMatrix = ByteDenseBitMatrix.fromDense(Long.SIZE, bytesData);
+        DenseBitMatrix byteDenseBitMatrix = ByteDenseBitMatrix.createFromDense(Long.SIZE, bytesData);
         DenseBitMatrix transByteDenseBitMatrix = byteDenseBitMatrix.transpose(envType, parallel);
         return IntStream.range(offset, Long.SIZE)
-            .mapToObj(index -> BitVectorFactory.create(rows, transByteDenseBitMatrix.getRow(index)))
+            .mapToObj(index -> BitVectorFactory.create(rows, transByteDenseBitMatrix.getByteArrayRow(index)))
             .toArray(BitVector[]::new);
     }
 

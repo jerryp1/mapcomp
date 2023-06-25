@@ -16,6 +16,7 @@ public class LdpServiceMain {
     private static final Logger LOGGER = LoggerFactory.getLogger(LdpServiceMain.class);
 
     public static void main(String[] args) throws Exception {
+        PropertiesUtils.loadLog4jProperties();
         // read config file
         LOGGER.info("read config file");
         Properties properties = PropertiesUtils.loadProperties(args[0]);
