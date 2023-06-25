@@ -2,16 +2,21 @@ package edu.alibaba.mpc4j.crypto.matrix.okve.tool;
 
 import cc.redberry.rings.linear.LinearSolver;
 import cc.redberry.rings.util.ArraysUtil;
+import edu.alibaba.mpc4j.common.tool.MathPreconditions;
 import edu.alibaba.mpc4j.common.tool.galoisfield.zp.Zp;
 import gnu.trove.list.array.TIntArrayList;
+import gnu.trove.set.TIntSet;
+import gnu.trove.set.hash.TIntHashSet;
 
 import java.math.BigInteger;
+import java.security.SecureRandom;
 import java.util.Arrays;
 
 import static cc.redberry.rings.linear.LinearSolver.SystemInfo.*;
 
 /**
- * 求解线性方程组Ax = b，其中矩阵A为有限域的元素，而x与b为椭圆曲线的元素。
+ * Solving the linear equation Ax = b, where A is a bit matrix represented in a compact from (using byte[][]), x is a
+ * vector containing Zp elements.
  * <p>
  * 此线性求解器代码参考了Rings中的实现（参见cc.redberry.rings.linear.LinearSolver）。
  * </p>
@@ -21,73 +26,82 @@ import static cc.redberry.rings.linear.LinearSolver.SystemInfo.*;
  */
 public class ZpLinearSolver {
     /**
-     * Zp运算库
+     * Zp instance
      */
     private final Zp zp;
+    /**
+     * the random state
+     */
+    private final SecureRandom secureRandom;
 
     public ZpLinearSolver(Zp zp) {
+        this(zp, new SecureRandom());
+    }
+
+    public ZpLinearSolver(Zp zp, SecureRandom secureRandom) {
         this.zp = zp;
+        this.secureRandom = secureRandom;
     }
 
     /**
-     * Gives the row echelon form of the linear system {@code lhs.x = rhs}.
+     * Gives the row echelon form of the linear system {@code lhs.x = rhs}. Note that here we only allow
+     * <p> m (number of columns) >= n (number of rows) </p>
      *
-     * @param lhs                    the lhs of the system.
-     * @param rhs                    the rhs of the system.
-     * @param breakOnUnderDetermined whether to return immediately if it was detected that system is under determined.
-     * @return the number of free variables.
+     * @param lhs the lhs of the system.
+     * @param rhs the rhs of the system.
+     * @return the information for row Echelon form.
      */
-    private int rowEchelonForm(BigInteger[][] lhs, BigInteger[] rhs, boolean breakOnUnderDetermined) {
-        if (rhs != null && lhs.length != rhs.length) {
-            throw new IllegalArgumentException("lhs.length != rhs.length");
-        }
-        if (lhs.length == 0) {
-            return 0;
-        }
+    private RowEchelonFormInfo rowEchelonForm(BigInteger[][] lhs, BigInteger[] rhs) {
+        MathPreconditions.checkEqual("lhs.length", "rhs.length", lhs.length, rhs.length);
         int nRows = lhs.length;
+        TIntSet maxLisColumns = new TIntHashSet(nRows);
+        // do not need to solve when nRows = 0
+        if (nRows == 0) {
+            return new RowEchelonFormInfo(0, maxLisColumns);
+        }
+        // m >= n
+        MathPreconditions.checkGreaterOrEqual("m", lhs[0].length, nRows);
         int nColumns = lhs[0].length;
-        // number of zero columns
+        // verify each row has m elements
+        Arrays.stream(lhs).forEach(row ->
+            MathPreconditions.checkEqual("m", "lsh[i].length", nColumns, row.length)
+        );
+        // number of zero columns, here we consider if some columns are 0.
         int nZeroColumns = 0;
         for (int iColumn = 0, to = Math.min(nRows, nColumns); iColumn < to; ++iColumn) {
             // find pivot row and swap
             int row = iColumn - nZeroColumns;
             int max = row;
-            if (lhs[row][iColumn].equals(BigInteger.ZERO)) {
+            if (zp.isZero(lhs[row][iColumn])) {
                 for (int iRow = row + 1; iRow < nRows; ++iRow) {
-                    if (!lhs[iRow][iColumn].equals(BigInteger.ZERO)) {
+                    if (!zp.isZero(lhs[iRow][iColumn])) {
                         max = iRow;
                         break;
                     }
                 }
                 ArraysUtil.swap(lhs, row, max);
-                if (rhs != null) {
-                    ArraysUtil.swap(rhs, row, max);
-                }
+                ArraysUtil.swap(rhs, row, max);
             }
-            // singular
-            if (lhs[row][iColumn].equals(BigInteger.ZERO)) {
-                if (breakOnUnderDetermined) {
-                    return 1;
-                }
-                // nothing to do on this column
+            // if we cannot find one, it means this column is free, nothing to do on this column
+            if (zp.isZero(lhs[row][iColumn])) {
                 ++nZeroColumns;
                 to = Math.min(nRows + nZeroColumns, nColumns);
                 continue;
             }
-            // pivot within A and b
+            // add that column into the set
+            maxLisColumns.add(iColumn);
+            // forward Gaussian elimination
             for (int iRow = row + 1; iRow < nRows; ++iRow) {
                 BigInteger alpha = zp.div(lhs[iRow][iColumn], lhs[row][iColumn]);
-                if (rhs != null) {
-                    rhs[iRow] = zp.sub(rhs[iRow], zp.mul(rhs[row], alpha));
-                }
-                if (!alpha.equals(BigInteger.ZERO)) {
+                rhs[iRow] = zp.sub(rhs[iRow], zp.mul(rhs[row], alpha));
+                if (!zp.isZero(alpha)) {
                     for (int iCol = iColumn; iCol < nColumns; ++iCol) {
                         lhs[iRow][iCol] = zp.sub(lhs[iRow][iCol], zp.mul(alpha, lhs[row][iCol]));
                     }
                 }
             }
         }
-        return nZeroColumns;
+        return new RowEchelonFormInfo(nZeroColumns, maxLisColumns);
     }
 
     /**
@@ -133,8 +147,9 @@ public class ZpLinearSolver {
             }
             return Inconsistent;
         }
-
-        int nUnderDetermined = rowEchelonForm(lhs, rhs, !solveIfUnderDetermined);
+        // if n > 1, transform lsh to Echelon form.
+        RowEchelonFormInfo info = rowEchelonForm(lhs, rhs);
+        int nUnderDetermined = info.getZeroColumnNum();
         if (!solveIfUnderDetermined && nUnderDetermined > 0) {
             // under-determined system
             return UnderDetermined;

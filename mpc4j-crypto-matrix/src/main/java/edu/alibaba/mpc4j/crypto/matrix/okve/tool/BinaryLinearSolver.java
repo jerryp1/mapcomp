@@ -8,18 +8,17 @@ import edu.alibaba.mpc4j.common.tool.utils.BinaryUtils;
 import edu.alibaba.mpc4j.common.tool.utils.BytesUtils;
 import edu.alibaba.mpc4j.common.tool.utils.CommonUtils;
 import gnu.trove.list.array.TIntArrayList;
+import gnu.trove.set.TIntSet;
+import gnu.trove.set.hash.TIntHashSet;
 
 import java.security.SecureRandom;
 import java.util.Arrays;
-import java.util.HashSet;
-import java.util.Set;
-import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
 import static cc.redberry.rings.linear.LinearSolver.SystemInfo.*;
 
 /**
- * Solving the linear equation Ax = b, where A is a bit matrix represented in a compact form (using byte[][]), x is
+ * Solving the linear equation Ax = b, where A is a bit matrix represented in a compact form (using byte[][]), x is a
  * vector containing elements for which addition and subtraction are all XOR.
  *
  * @author Weiran Liu
@@ -57,37 +56,23 @@ public class BinaryLinearSolver {
     }
 
     /**
-     * the output of the function rowEchelonFrom.
-     */
-    private static class RowEchelonFromInfo {
-        /**
-         * number of zero columns
-         */
-        private final int nZeroColumns;
-        /**
-         * max linear independent columns
-         */
-        private final Set<Integer> maxLisColumns;
-
-        private RowEchelonFromInfo(int nZeroColumns, Set<Integer> maxLisColumns) {
-            this.nZeroColumns = nZeroColumns;
-            this.maxLisColumns = maxLisColumns;
-        }
-    }
-
-    /**
      * Gives the row echelon form of the linear system {@code lhs.x = rhs}. Note that here we only allow
      * <p> m (number of columns) >= n (number of rows) </p>
      *
      * @param lhs      the lhs of the system.
      * @param nColumns number of columns.
      * @param rhs      the rhs of the system.
-     * @return the number of free variables.
+     * @return the information for row Echelon form.
      */
-    private RowEchelonFromInfo rowEchelonForm(byte[][] lhs, int nColumns, byte[][] rhs) {
+    private RowEchelonFormInfo rowEchelonForm(byte[][] lhs, int nColumns, byte[][] rhs) {
         MathPreconditions.checkEqual("lhs.length", "rhs.length", lhs.length, rhs.length);
         int nRows = lhs.length;
-        Set<Integer> maxLisColumns = new HashSet<>(nRows);
+        TIntSet maxLisColumns = new TIntHashSet(nRows);
+        // do not need to solve when nRows = 0
+        if (nRows == 0) {
+            MathPreconditions.checkEqual("m", "0", nColumns, 0);
+            return new RowEchelonFormInfo(0, maxLisColumns);
+        }
         // m >= n
         MathPreconditions.checkGreaterOrEqual("m", nColumns, nRows);
         int nByteColumns = CommonUtils.getByteLength(nColumns);
@@ -96,11 +81,7 @@ public class BinaryLinearSolver {
         Arrays.stream(lhs).forEach(row ->
             Preconditions.checkArgument(BytesUtils.isFixedReduceByteArray(row, nByteColumns, nColumns))
         );
-        // do not need to solve when nRows = 0
-        if (nRows == 0) {
-            return new RowEchelonFromInfo(0, maxLisColumns);
-        }
-        // number of zero columns, here we consider if the leading row is 0
+        // number of zero columns, here we consider if some columns are 0.
         int nZeroColumns = 0;
         for (int iColumn = 0, to = Math.min(nRows, nColumns); iColumn < to; ++iColumn) {
             // find pivot row and swap
@@ -135,7 +116,7 @@ public class BinaryLinearSolver {
                 }
             }
         }
-        return new RowEchelonFromInfo(nZeroColumns, maxLisColumns);
+        return new RowEchelonFormInfo(nZeroColumns, maxLisColumns);
     }
 
     /**
@@ -188,8 +169,8 @@ public class BinaryLinearSolver {
             return solveOneRow(lhs, nColumns, rhs, result, isFull);
         }
         // if n > 1, transform lsh to Echelon form.
-        RowEchelonFromInfo info = rowEchelonForm(lhs, nColumns, rhs);
-        int nUnderDetermined = info.nZeroColumns;
+        RowEchelonFormInfo info = rowEchelonForm(lhs, nColumns, rhs);
+        int nUnderDetermined = info.getZeroColumnNum();
         Arrays.fill(result, createZero());
         // for determined system, free and full solution are the same
         if (nUnderDetermined == 0 && nColumns == nRows) {
@@ -276,7 +257,7 @@ public class BinaryLinearSolver {
     }
 
     private LinearSolver.SystemInfo solveUnderDeterminedRows(byte[][] lhs, int nColumns, byte[][] rhs, byte[][] result,
-                                                             RowEchelonFromInfo info, boolean isFull) {
+                                                             RowEchelonFormInfo info, boolean isFull) {
         int nRows = lhs.length;
         int nByteColumns = CommonUtils.getByteLength(nColumns);
         int nOffsetColumns = nByteColumns * Byte.SIZE - nColumns;
@@ -330,18 +311,20 @@ public class BinaryLinearSolver {
             result[nzColumns.get(i)] = rhs[nzRows.get(i)];
         }
         if (isFull) {
-            Set<Integer> maxLisColumns = info.maxLisColumns;
-            Set<Integer> nonMaxLisColumns = IntStream.range(0, nColumns).boxed().collect(Collectors.toSet());
+            TIntSet maxLisColumns = info.getMaxLisColumns();
+            TIntSet nonMaxLisColumns = new TIntHashSet(nColumns);
+            nonMaxLisColumns.addAll(IntStream.range(0, nColumns).toArray());
             nonMaxLisColumns.removeAll(maxLisColumns);
+            int[] nonMaxLisColumnArray = nonMaxLisColumns.toArray();
             // set result[iColumn] corresponding to the non-maxLisColumns as random variables
-            for (int nonMaxLisColumn : nonMaxLisColumns) {
+            for (int nonMaxLisColumn : nonMaxLisColumnArray) {
                 result[nonMaxLisColumn] = BytesUtils.randomByteArray(byteL, l, secureRandom);
             }
             for (int i = 0; i < nzColumns.size(); ++i) {
                 int iNzColumn = nzColumns.get(i);
                 int iNzRow = nzRows.get(i);
                 // subtract other free variables
-                for (int nonMaxLisColumn : nonMaxLisColumns) {
+                for (int nonMaxLisColumn : nonMaxLisColumnArray) {
                     if (BinaryUtils.getBoolean(lhs[iNzRow], nOffsetColumns + nonMaxLisColumn)) {
                         subi(result[iNzColumn], result[nonMaxLisColumn]);
                     }
