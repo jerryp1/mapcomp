@@ -94,6 +94,8 @@ public interface DenseBitMatrix {
      * Inverses the matrix.
      *
      * @return the inverse matrix.
+     * @throws IllegalArgumentException if the matrix is not a square matrix.
+     * @throws ArithmeticException      if the square matrix is not invertible.
      */
     DenseBitMatrix inverse();
 
