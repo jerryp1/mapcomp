@@ -34,6 +34,6 @@ public abstract class AbstractSorter extends AbstractZ2Circuit implements Sorter
         this.sortedNum = xiArrays.length;
         this.l = xiArrays[0].length;
         this.num = xiArrays[0][0].getNum();
-        sort(xiArrays, party.createOnes(num);
+        sort(xiArrays, party.createOnes(num));
     }
 }
