@@ -41,10 +41,6 @@ public abstract class AbstractKwPirServer<T> extends AbstractTwoPartyPto impleme
      * bot element bytebuffer
      */
     protected ByteBuffer botElementByteBuffer;
-    /**
-     * keyword label map
-     */
-    protected Map<T, ByteBuffer> keywordLabelMap;
 
     protected AbstractKwPirServer(PtoDesc ptoDesc, Rpc serverRpc, Party clientParty, KwPirConfig config) {
         super(ptoDesc, serverRpc, clientParty, config);
@@ -57,7 +53,6 @@ public abstract class AbstractKwPirServer<T> extends AbstractTwoPartyPto impleme
         Arrays.fill(botElementByteArray, (byte) 0xFF);
         botElementByteBuffer = ByteBuffer.wrap(botElementByteArray);
         MathPreconditions.checkPositive("keywordNum", keywordLabelMap.size());
-        this.keywordLabelMap = keywordLabelMap;
         keywordSize = keywordLabelMap.size();
         Iterator<Entry<T, ByteBuffer>> iterator = keywordLabelMap.entrySet().iterator();
         Set<T> serverElementSet = new HashSet<>();

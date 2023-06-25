@@ -13,7 +13,7 @@ import edu.alibaba.mpc4j.common.rpc.desc.PtoDescManager;
  * @author Liqiang Peng
  * @date 2023/6/16
  */
-public class Cmg21KwPirPtoDesc implements PtoDesc {
+public class Aaag22KwPirPtoDesc implements PtoDesc {
     /**
      * protocol ID
      */
@@ -30,11 +30,11 @@ public class Cmg21KwPirPtoDesc implements PtoDesc {
         /**
          * server send cuckoo hash keys
          */
-        SERVER_SEND_CUCKOO_HASH_KEYS,
+        SERVER_SEND_PRF_KEY,
         /**
          * client send encryption params
          */
-        CLIENT_SEND_FHE_PARAMS,
+        CLIENT_SEND_PUBLIC_KEYS,
         /**
          * client send query
          */
@@ -42,7 +42,7 @@ public class Cmg21KwPirPtoDesc implements PtoDesc {
         /**
          * server send item response
          */
-        SERVER_SEND_ITEM_RESPONSE,
+        SERVER_SEND_RESPONSE,
         /**
          * server send label response
          */
@@ -60,12 +60,12 @@ public class Cmg21KwPirPtoDesc implements PtoDesc {
     /**
      * the singleton mode
      */
-    private static final Cmg21KwPirPtoDesc INSTANCE = new Cmg21KwPirPtoDesc();
+    private static final Aaag22KwPirPtoDesc INSTANCE = new Aaag22KwPirPtoDesc();
 
     /**
      * private constructor.
      */
-    private Cmg21KwPirPtoDesc() {
+    private Aaag22KwPirPtoDesc() {
         // empty
     }
 

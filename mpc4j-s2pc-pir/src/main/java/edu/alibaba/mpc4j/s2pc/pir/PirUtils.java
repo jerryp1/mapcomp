@@ -77,7 +77,8 @@ public class PirUtils {
                     if (SECURE_RANDOM.nextBoolean()) {
                         clientSet.add(serverList.get(index));
                     } else {
-                        clientSet.add("ID_" + index + "_DISTINCT");
+                        clientSet.add(serverList.get(index));
+                        //clientSet.add("ID_" + index + "_DISTINCT");
                     }
                     return clientSet;
                 }

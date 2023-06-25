@@ -30,6 +30,10 @@ public class KwPirFactory implements PtoFactory {
          * CMG21
          */
         CMG21,
+        /**
+         * AAAG22
+         */
+        AAAG22,
     }
 
     /**
