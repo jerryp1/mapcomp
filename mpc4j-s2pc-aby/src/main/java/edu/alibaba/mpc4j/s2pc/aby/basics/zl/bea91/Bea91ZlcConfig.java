@@ -45,8 +45,8 @@ public class Bea91ZlcConfig extends AbstractMultiPartyPtoConfig implements ZlcCo
          */
         private ZlMtgConfig mtgConfig;
 
-        public Builder(Zl zl) {
-            mtgConfig = ZlMtgFactory.createDefaultConfig(SecurityModel.SEMI_HONEST, zl);
+        public Builder(SecurityModel securityModel, Zl zl) {
+            mtgConfig = ZlMtgFactory.createDefaultConfig(securityModel, zl);
         }
 
         public Builder setMtgConfig(ZlMtgConfig mtgConfig) {

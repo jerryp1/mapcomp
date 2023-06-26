@@ -53,6 +53,26 @@ public class ZlcFactory implements PtoFactory {
     }
 
     /**
+     * Creates a sender.
+     *
+     * @param senderRpc     sender RPC.
+     * @param receiverParty receiver party.
+     * @param aiderParty    aider party.
+     * @param config        the config.
+     * @return a sender.
+     */
+    public static ZlcParty createSender(Rpc senderRpc, Party receiverParty, Party aiderParty, ZlcConfig config) {
+        ZlType type = config.getPtoType();
+        //noinspection SwitchStatementWithTooFewBranches
+        switch (type) {
+            case BEA91:
+                return new Bea91ZlcSender(senderRpc, receiverParty, aiderParty, (Bea91ZlcConfig) config);
+            default:
+                throw new IllegalArgumentException("Invalid " + ZlType.class.getSimpleName() + ": " + type.name());
+        }
+    }
+
+    /**
      * Creates a receiver.
      *
      * @param receiverRpc the receiver RPC.
@@ -72,6 +92,25 @@ public class ZlcFactory implements PtoFactory {
     }
 
     /**
+     * Creates a receiver.
+     *
+     * @param receiverRpc the receiver RPC.
+     * @param senderParty the sender party.
+     * @param config      the config.
+     * @return a receiver.
+     */
+    public static ZlcParty createReceiver(Rpc receiverRpc, Party senderParty, Party aiderParty, ZlcConfig config) {
+        ZlType type = config.getPtoType();
+        //noinspection SwitchStatementWithTooFewBranches
+        switch (type) {
+            case BEA91:
+                return new Bea91ZlcReceiver(receiverRpc, senderParty, aiderParty, (Bea91ZlcConfig) config);
+            default:
+                throw new IllegalArgumentException("Invalid " + ZlType.class.getSimpleName() + ": " + type.name());
+        }
+    }
+
+    /**
      * Creates a default config.
      *
      * @param securityModel security model.
@@ -79,6 +118,14 @@ public class ZlcFactory implements PtoFactory {
      * @return a default config.
      */
     public static ZlcConfig createDefaultConfig(SecurityModel securityModel, Zl zl) {
-        return new Bea91ZlcConfig.Builder(zl).build();
+        switch (securityModel) {
+            case IDEAL:
+            case TRUSTED_DEALER:
+            case SEMI_HONEST:
+                return new Bea91ZlcConfig.Builder(securityModel, zl).build();
+            default:
+                throw new IllegalArgumentException("Invalid " + SecurityModel.class.getSimpleName() + ": " + securityModel);
+        }
+
     }
 }

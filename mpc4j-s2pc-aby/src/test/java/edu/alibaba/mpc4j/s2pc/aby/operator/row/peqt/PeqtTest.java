@@ -1,28 +1,20 @@
 package edu.alibaba.mpc4j.s2pc.aby.operator.row.peqt;
 
-import com.google.common.base.Preconditions;
-import edu.alibaba.mpc4j.common.rpc.Rpc;
-import edu.alibaba.mpc4j.common.rpc.RpcManager;
 import edu.alibaba.mpc4j.common.rpc.desc.SecurityModel;
-import edu.alibaba.mpc4j.common.rpc.impl.memory.MemoryRpcManager;
+import edu.alibaba.mpc4j.common.rpc.test.AbstractTwoPartyPtoTest;
 import edu.alibaba.mpc4j.common.tool.bitvector.BitVector;
-import edu.alibaba.mpc4j.s2pc.aby.AbyTestUtils;
 import edu.alibaba.mpc4j.s2pc.aby.basics.z2.SquareZ2Vector;
 import edu.alibaba.mpc4j.s2pc.aby.operator.row.peqt.PeqtFactory.PeqtType;
 import edu.alibaba.mpc4j.s2pc.aby.operator.row.peqt.cgs22.Cgs22PeqtConfig;
 import edu.alibaba.mpc4j.s2pc.aby.operator.row.peqt.naive.NaivePeqtConfig;
-import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.time.StopWatch;
-import org.junit.After;
 import org.junit.Assert;
-import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.security.SecureRandom;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -35,12 +27,8 @@ import java.util.concurrent.TimeUnit;
  * @date 2023/4/14
  */
 @RunWith(Parameterized.class)
-public class PeqtTest {
+public class PeqtTest extends AbstractTwoPartyPtoTest {
     private static final Logger LOGGER = LoggerFactory.getLogger(PeqtTest.class);
-    /**
-     * random status
-     */
-    private static final SecureRandom SECURE_RANDOM = AbyTestUtils.SECURE_RANDOM;
     /**
      * default num
      */
@@ -73,38 +61,13 @@ public class PeqtTest {
     }
 
     /**
-     * the sender RPC
-     */
-    private final Rpc senderRpc;
-    /**
-     * the receiver RPC
-     */
-    private final Rpc receiverRpc;
-    /**
      * the config
      */
     private final PeqtConfig config;
 
     public PeqtTest(String name, PeqtConfig config) {
-        Preconditions.checkArgument(StringUtils.isNotBlank(name));
-        // We cannot use NettyRPC in the test case since it needs multi-thread connect / disconnect.
-        // In other word, we cannot connect / disconnect NettyRpc in @Before / @After, respectively.
-        RpcManager rpcManager = new MemoryRpcManager(2);
-        senderRpc = rpcManager.getRpc(0);
-        receiverRpc = rpcManager.getRpc(1);
+        super(name);
         this.config = config;
-    }
-
-    @Before
-    public void connect() {
-        senderRpc.connect();
-        receiverRpc.connect();
-    }
-
-    @After
-    public void disconnect() {
-        senderRpc.disconnect();
-        receiverRpc.disconnect();
     }
 
     @Test
@@ -172,8 +135,8 @@ public class PeqtTest {
         byte[][] xs = PeqtTestUtils.genSenderInputArray(l, num, SECURE_RANDOM);
         byte[][] ys = PeqtTestUtils.genReceiverInputArray(l, xs, SECURE_RANDOM);
         // init the protocol
-        PeqtParty sender = PeqtFactory.createSender(senderRpc, receiverRpc.ownParty(), config);
-        PeqtParty receiver = PeqtFactory.createReceiver(receiverRpc, senderRpc.ownParty(), config);
+        PeqtParty sender = PeqtFactory.createSender(firstRpc, secondRpc.ownParty(), config);
+        PeqtParty receiver = PeqtFactory.createReceiver(secondRpc, firstRpc.ownParty(), config);
         sender.setParallel(parallel);
         receiver.setParallel(parallel);
         try {
@@ -190,12 +153,12 @@ public class PeqtTest {
             stopWatch.stop();
             long time = stopWatch.getTime(TimeUnit.MILLISECONDS);
             stopWatch.reset();
-            long senderByteLength = senderRpc.getSendByteLength();
-            long senderRound = senderRpc.getSendDataPacketNum();
-            long receiverByteLength = receiverRpc.getSendByteLength();
-            long receiverRound = receiverRpc.getSendDataPacketNum();
-            senderRpc.reset();
-            receiverRpc.reset();
+            long senderByteLength = firstRpc.getSendByteLength();
+            long senderRound = firstRpc.getSendDataPacketNum();
+            long receiverByteLength = secondRpc.getSendByteLength();
+            long receiverRound = secondRpc.getSendDataPacketNum();
+            firstRpc.reset();
+            secondRpc.reset();
             SquareZ2Vector z0 = senderThread.getZi();
             SquareZ2Vector z1 = receiverThread.getZi();
             BitVector z = z0.getBitVector().xor(z1.getBitVector());
@@ -208,8 +171,9 @@ public class PeqtTest {
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
-        sender.destroy();
-        receiver.destroy();
+        // destroy
+        new Thread(sender::destroy).start();
+        new Thread(receiver::destroy).start();
     }
 
     private void assertOutput(int num, byte[][] xs, byte[][] ys, BitVector z) {

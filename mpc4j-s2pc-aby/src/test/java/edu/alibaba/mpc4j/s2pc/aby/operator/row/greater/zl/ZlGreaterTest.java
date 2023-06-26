@@ -1,21 +1,14 @@
 package edu.alibaba.mpc4j.s2pc.aby.operator.row.greater.zl;
 
-import com.google.common.base.Preconditions;
-import edu.alibaba.mpc4j.common.rpc.Rpc;
-import edu.alibaba.mpc4j.common.rpc.RpcManager;
-import edu.alibaba.mpc4j.common.rpc.impl.memory.MemoryRpcManager;
+import edu.alibaba.mpc4j.common.rpc.test.AbstractTwoPartyPtoTest;
 import edu.alibaba.mpc4j.common.tool.EnvType;
 import edu.alibaba.mpc4j.common.tool.galoisfield.zl.Zl;
 import edu.alibaba.mpc4j.common.tool.galoisfield.zl.ZlFactory;
 import edu.alibaba.mpc4j.crypto.matrix.vector.ZlVector;
-import edu.alibaba.mpc4j.s2pc.aby.AbyTestUtils;
 import edu.alibaba.mpc4j.s2pc.aby.basics.zl.SquareZlVector;
 import edu.alibaba.mpc4j.s2pc.aby.operator.row.greater.zl.rrk20.Rrk20ZlGreaterConfig;
-import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.time.StopWatch;
-import org.junit.After;
 import org.junit.Assert;
-import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
@@ -23,7 +16,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.math.BigInteger;
-import java.security.SecureRandom;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.concurrent.TimeUnit;
@@ -36,12 +28,8 @@ import java.util.stream.IntStream;
  * @date 2023/5/24
  */
 @RunWith(Parameterized.class)
-public class ZlGreaterTest {
+public class ZlGreaterTest extends AbstractTwoPartyPtoTest {
     private static final Logger LOGGER = LoggerFactory.getLogger(ZlGreaterTest.class);
-    /**
-     * random status
-     */
-    private static final SecureRandom SECURE_RANDOM = AbyTestUtils.SECURE_RANDOM;
     /**
      * default num
      */
@@ -58,10 +46,6 @@ public class ZlGreaterTest {
      * default Zl
      */
     private static final Zl DEFAULT_ZL = ZlFactory.createInstance(EnvType.STANDARD, Integer.SIZE);
-    /**
-     * current Zl
-     */
-    private final Zl zl;
 
     @Parameterized.Parameters(name = "{0}")
     public static Collection<Object[]> configurations() {
@@ -69,50 +53,31 @@ public class ZlGreaterTest {
 
         // RRK+20, default zl
         configurations.add(new Object[]{
-                ZlGreaterFactory.ZlGreaterType.RRK20.name() + "default zl", new Rrk20ZlGreaterConfig.Builder(DEFAULT_ZL).build()
+            ZlGreaterFactory.ZlGreaterType.RRK20.name() + " (l = " + DEFAULT_ZL.getL() + ")",
+            new Rrk20ZlGreaterConfig.Builder(DEFAULT_ZL).build()
         });
         // RRK+20, small zl
         configurations.add(new Object[]{
-                ZlGreaterFactory.ZlGreaterType.RRK20.name() + "small zl", new Rrk20ZlGreaterConfig.Builder(SMALL_ZL).build()
+            ZlGreaterFactory.ZlGreaterType.RRK20.name() + " (l = " + SMALL_ZL.getL() + ")",
+            new Rrk20ZlGreaterConfig.Builder(SMALL_ZL).build()
         });
 
         return configurations;
     }
 
     /**
-     * the sender RPC
-     */
-    private final Rpc senderRpc;
-    /**
-     * the receiver RPC
-     */
-    private final Rpc receiverRpc;
-    /**
      * the config
      */
     private final ZlGreaterConfig config;
+    /**
+     * Zl instance
+     */
+    private final Zl zl;
 
     public ZlGreaterTest(String name, ZlGreaterConfig config) {
-        Preconditions.checkArgument(StringUtils.isNotBlank(name));
-        // We cannot use NettyRPC in the test case since it needs multi-thread connect / disconnect.
-        // In other word, we cannot connect / disconnect NettyRpc in @Before / @After, respectively.
-        RpcManager rpcManager = new MemoryRpcManager(2);
-        senderRpc = rpcManager.getRpc(0);
-        receiverRpc = rpcManager.getRpc(1);
+        super(name);
         this.config = config;
-        this.zl = config.getZl();
-    }
-
-    @Before
-    public void connect() {
-        senderRpc.connect();
-        receiverRpc.connect();
-    }
-
-    @After
-    public void disconnect() {
-        senderRpc.disconnect();
-        receiverRpc.disconnect();
+        zl = config.getZl();
     }
 
     @Test
@@ -155,13 +120,13 @@ public class ZlGreaterTest {
         Assert.assertTrue(zl.getL() > 2);
         // create inputs, making sure that the plain value is positive under 2' complement notation in zl.
         BigInteger[] randomsX0 = IntStream.range(0, num)
-                .mapToObj(i -> new BigInteger(zl.getL() - 2, SECURE_RANDOM)).toArray(BigInteger[]::new);
+            .mapToObj(i -> new BigInteger(zl.getL() - 2, SECURE_RANDOM)).toArray(BigInteger[]::new);
         BigInteger[] randomsX1 = IntStream.range(0, num)
-                .mapToObj(i -> new BigInteger(zl.getL() - 2, SECURE_RANDOM)).toArray(BigInteger[]::new);
+            .mapToObj(i -> new BigInteger(zl.getL() - 2, SECURE_RANDOM)).toArray(BigInteger[]::new);
         BigInteger[] randomsY0 = IntStream.range(0, num)
-                .mapToObj(i -> new BigInteger(zl.getL() - 2, SECURE_RANDOM)).toArray(BigInteger[]::new);
+            .mapToObj(i -> new BigInteger(zl.getL() - 2, SECURE_RANDOM)).toArray(BigInteger[]::new);
         BigInteger[] randomsY1 = IntStream.range(0, num)
-                .mapToObj(i -> new BigInteger(zl.getL() - 2, SECURE_RANDOM)).toArray(BigInteger[]::new);
+            .mapToObj(i -> new BigInteger(zl.getL() - 2, SECURE_RANDOM)).toArray(BigInteger[]::new);
         ZlVector x0 = ZlVector.create(zl, randomsX0);
         ZlVector x1 = ZlVector.create(zl, randomsX1);
         ZlVector y0 = ZlVector.create(zl, randomsY0);
@@ -171,8 +136,8 @@ public class ZlGreaterTest {
         SquareZlVector shareY0 = SquareZlVector.create(y0, false);
         SquareZlVector shareY1 = SquareZlVector.create(y1, false);
         // init the protocol
-        ZlGreaterParty sender = ZlGreaterFactory.createSender(senderRpc, receiverRpc.ownParty(), config);
-        ZlGreaterParty receiver = ZlGreaterFactory.createReceiver(receiverRpc, senderRpc.ownParty(), config);
+        ZlGreaterParty sender = ZlGreaterFactory.createSender(firstRpc, secondRpc.ownParty(), config);
+        ZlGreaterParty receiver = ZlGreaterFactory.createReceiver(secondRpc, firstRpc.ownParty(), config);
         sender.setParallel(parallel);
         receiver.setParallel(parallel);
         try {
@@ -189,23 +154,24 @@ public class ZlGreaterTest {
             stopWatch.stop();
             long time = stopWatch.getTime(TimeUnit.MILLISECONDS);
             stopWatch.reset();
-            long senderByteLength = senderRpc.getSendByteLength();
-            long receiverByteLength = receiverRpc.getSendByteLength();
-            senderRpc.reset();
-            receiverRpc.reset();
+            long senderByteLength = firstRpc.getSendByteLength();
+            long receiverByteLength = secondRpc.getSendByteLength();
+            firstRpc.reset();
+            secondRpc.reset();
             SquareZlVector shareZ0 = senderThread.getShareZ();
             SquareZlVector shareZ1 = receiverThread.getShareZ();
             // verify
             assertOutput(x0, x1, y0, y1, shareZ0, shareZ1);
             LOGGER.info("Sender sends {}B, Receiver sends {}B, time = {}ms",
-                    senderByteLength, receiverByteLength, time
+                senderByteLength, receiverByteLength, time
             );
             LOGGER.info("-----test {} end-----", sender.getPtoDesc().getPtoName());
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
-        sender.destroy();
-        receiver.destroy();
+        // destroy
+        new Thread(sender::destroy).start();
+        new Thread(receiver::destroy).start();
     }
 
     private void assertOutput(ZlVector x0, ZlVector x1, ZlVector y0, ZlVector y1,

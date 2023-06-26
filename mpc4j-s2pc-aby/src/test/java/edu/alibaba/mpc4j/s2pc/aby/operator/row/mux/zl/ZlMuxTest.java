@@ -1,33 +1,25 @@
 package edu.alibaba.mpc4j.s2pc.aby.operator.row.mux.zl;
 
-import com.google.common.base.Preconditions;
-import edu.alibaba.mpc4j.common.rpc.Rpc;
-import edu.alibaba.mpc4j.common.rpc.RpcManager;
-import edu.alibaba.mpc4j.common.rpc.impl.memory.MemoryRpcManager;
+import edu.alibaba.mpc4j.common.rpc.test.AbstractTwoPartyPtoTest;
 import edu.alibaba.mpc4j.common.tool.EnvType;
 import edu.alibaba.mpc4j.common.tool.bitvector.BitVector;
 import edu.alibaba.mpc4j.common.tool.bitvector.BitVectorFactory;
 import edu.alibaba.mpc4j.common.tool.galoisfield.zl.Zl;
 import edu.alibaba.mpc4j.common.tool.galoisfield.zl.ZlFactory;
 import edu.alibaba.mpc4j.crypto.matrix.vector.ZlVector;
-import edu.alibaba.mpc4j.s2pc.aby.AbyTestUtils;
 import edu.alibaba.mpc4j.s2pc.aby.basics.zl.SquareZlVector;
 import edu.alibaba.mpc4j.s2pc.aby.basics.z2.SquareZ2Vector;
 import edu.alibaba.mpc4j.s2pc.aby.operator.row.mux.zl.ZlMuxFactory.ZlMuxType;
 import edu.alibaba.mpc4j.s2pc.aby.operator.row.mux.zl.rrg21.Rrg21ZlMuxConfig;
 import edu.alibaba.mpc4j.s2pc.aby.operator.row.mux.zl.rrk20.Rrk20ZlMuxConfig;
-import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.time.StopWatch;
-import org.junit.After;
 import org.junit.Assert;
-import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.security.SecureRandom;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.concurrent.TimeUnit;
@@ -39,12 +31,8 @@ import java.util.concurrent.TimeUnit;
  * @date 2023/4/10
  */
 @RunWith(Parameterized.class)
-public class ZlMuxTest {
+public class ZlMuxTest extends AbstractTwoPartyPtoTest {
     private static final Logger LOGGER = LoggerFactory.getLogger(ZlMuxTest.class);
-    /**
-     * random status
-     */
-    private static final SecureRandom SECURE_RANDOM = AbyTestUtils.SECURE_RANDOM;
     /**
      * default num
      */
@@ -79,38 +67,13 @@ public class ZlMuxTest {
     }
 
     /**
-     * the sender RPC
-     */
-    private final Rpc senderRpc;
-    /**
-     * the receiver RPC
-     */
-    private final Rpc receiverRpc;
-    /**
      * the config
      */
     private final ZlMuxConfig config;
 
     public ZlMuxTest(String name, ZlMuxConfig config) {
-        Preconditions.checkArgument(StringUtils.isNotBlank(name));
-        // We cannot use NettyRPC in the test case since it needs multi-thread connect / disconnect.
-        // In other word, we cannot connect / disconnect NettyRpc in @Before / @After, respectively.
-        RpcManager rpcManager = new MemoryRpcManager(2);
-        senderRpc = rpcManager.getRpc(0);
-        receiverRpc = rpcManager.getRpc(1);
+        super(name);
         this.config = config;
-    }
-
-    @Before
-    public void connect() {
-        senderRpc.connect();
-        receiverRpc.connect();
-    }
-
-    @After
-    public void disconnect() {
-        senderRpc.disconnect();
-        receiverRpc.disconnect();
     }
 
     @Test
@@ -164,8 +127,8 @@ public class ZlMuxTest {
         SquareZlVector shareY0 = SquareZlVector.create(y0, false);
         SquareZlVector shareY1 = SquareZlVector.create(y1, false);
         // init the protocol
-        ZlMuxParty sender = ZlMuxFactory.createSender(senderRpc, receiverRpc.ownParty(), config);
-        ZlMuxParty receiver = ZlMuxFactory.createReceiver(receiverRpc, senderRpc.ownParty(), config);
+        ZlMuxParty sender = ZlMuxFactory.createSender(firstRpc, secondRpc.ownParty(), config);
+        ZlMuxParty receiver = ZlMuxFactory.createReceiver(secondRpc, firstRpc.ownParty(), config);
         sender.setParallel(parallel);
         receiver.setParallel(parallel);
         try {
@@ -182,10 +145,10 @@ public class ZlMuxTest {
             stopWatch.stop();
             long time = stopWatch.getTime(TimeUnit.MILLISECONDS);
             stopWatch.reset();
-            long senderByteLength = senderRpc.getSendByteLength();
-            long receiverByteLength = receiverRpc.getSendByteLength();
-            senderRpc.reset();
-            receiverRpc.reset();
+            long senderByteLength = firstRpc.getSendByteLength();
+            long receiverByteLength = secondRpc.getSendByteLength();
+            firstRpc.reset();
+            secondRpc.reset();
             SquareZlVector shareZ0 = senderThread.getShareZ0();
             SquareZlVector shareZ1 = receiverThread.getShareZ1();
             // verify
@@ -197,8 +160,9 @@ public class ZlMuxTest {
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
-        sender.destroy();
-        receiver.destroy();
+        // destroy
+        new Thread(sender::destroy).start();
+        new Thread(receiver::destroy).start();
     }
 
     private void assertOutput(BitVector x0, BitVector x1, ZlVector y0, ZlVector y1,

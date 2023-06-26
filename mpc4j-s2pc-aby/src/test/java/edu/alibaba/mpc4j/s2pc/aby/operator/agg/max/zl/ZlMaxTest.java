@@ -1,21 +1,14 @@
 package edu.alibaba.mpc4j.s2pc.aby.operator.agg.max.zl;
 
-import com.google.common.base.Preconditions;
-import edu.alibaba.mpc4j.common.rpc.Rpc;
-import edu.alibaba.mpc4j.common.rpc.RpcManager;
-import edu.alibaba.mpc4j.common.rpc.impl.memory.MemoryRpcManager;
+import edu.alibaba.mpc4j.common.rpc.test.AbstractTwoPartyPtoTest;
 import edu.alibaba.mpc4j.common.tool.EnvType;
 import edu.alibaba.mpc4j.common.tool.galoisfield.zl.Zl;
 import edu.alibaba.mpc4j.common.tool.galoisfield.zl.ZlFactory;
 import edu.alibaba.mpc4j.crypto.matrix.vector.ZlVector;
-import edu.alibaba.mpc4j.s2pc.aby.AbyTestUtils;
 import edu.alibaba.mpc4j.s2pc.aby.basics.zl.SquareZlVector;
 import edu.alibaba.mpc4j.s2pc.aby.operator.agg.max.zl.rrk20.Rrk20ZlMaxConfig;
-import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.time.StopWatch;
-import org.junit.After;
 import org.junit.Assert;
-import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
@@ -23,7 +16,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.math.BigInteger;
-import java.security.SecureRandom;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.IntStream;
@@ -35,12 +27,8 @@ import java.util.stream.IntStream;
  * @date 2023/5/24
  */
 @RunWith(Parameterized.class)
-public class ZlMaxTest {
+public class ZlMaxTest extends AbstractTwoPartyPtoTest {
     private static final Logger LOGGER = LoggerFactory.getLogger(ZlMaxTest.class);
-    /**
-     * random status
-     */
-    private static final SecureRandom SECURE_RANDOM = AbyTestUtils.SECURE_RANDOM;
     /**
      * default num
      */
@@ -68,50 +56,27 @@ public class ZlMaxTest {
 
         // RRK+20, default zl
         configurations.add(new Object[]{
-                ZlMaxFactory.ZlMaxType.RRK20.name() + "default zl", new Rrk20ZlMaxConfig.Builder(DEFAULT_ZL).build()
+                ZlMaxFactory.ZlMaxType.RRK20.name() + " (l = " + DEFAULT_ZL.getL() + ")",
+            new Rrk20ZlMaxConfig.Builder(DEFAULT_ZL).build()
         });
         // RRK+20, small zl
         configurations.add(new Object[]{
-                ZlMaxFactory.ZlMaxType.RRK20.name() + "small zl", new Rrk20ZlMaxConfig.Builder(SMALL_ZL).build()
+                ZlMaxFactory.ZlMaxType.RRK20.name() + " (l = " + SMALL_ZL.getL() + ")",
+            new Rrk20ZlMaxConfig.Builder(SMALL_ZL).build()
         });
 
         return configurations;
     }
 
     /**
-     * the sender RPC
-     */
-    private final Rpc senderRpc;
-    /**
-     * the receiver RPC
-     */
-    private final Rpc receiverRpc;
-    /**
      * the config
      */
     private final ZlMaxConfig config;
 
     public ZlMaxTest(String name, ZlMaxConfig config) {
-        Preconditions.checkArgument(StringUtils.isNotBlank(name));
-        // We cannot use NettyRPC in the test case since it needs multi-thread connect / disconnect.
-        // In other word, we cannot connect / disconnect NettyRpc in @Before / @After, respectively.
-        RpcManager rpcManager = new MemoryRpcManager(2);
-        senderRpc = rpcManager.getRpc(0);
-        receiverRpc = rpcManager.getRpc(1);
+        super(name);
         this.config = config;
         this.zl = config.getZl();
-    }
-
-    @Before
-    public void connect() {
-        senderRpc.connect();
-        receiverRpc.connect();
-    }
-
-    @After
-    public void disconnect() {
-        senderRpc.disconnect();
-        receiverRpc.disconnect();
     }
 
     @Test
@@ -177,8 +142,8 @@ public class ZlMaxTest {
         SquareZlVector shareX0 = SquareZlVector.create(x0, false);
         SquareZlVector shareX1 = SquareZlVector.create(x1, false);
         // init the protocol
-        ZlMaxParty sender = ZlMaxFactory.createSender(senderRpc, receiverRpc.ownParty(), config);
-        ZlMaxParty receiver = ZlMaxFactory.createReceiver(receiverRpc, senderRpc.ownParty(), config);
+        ZlMaxParty sender = ZlMaxFactory.createSender(firstRpc, secondRpc.ownParty(), config);
+        ZlMaxParty receiver = ZlMaxFactory.createReceiver(secondRpc, firstRpc.ownParty(), config);
         sender.setParallel(parallel);
         receiver.setParallel(parallel);
         try {
@@ -195,10 +160,10 @@ public class ZlMaxTest {
             stopWatch.stop();
             long time = stopWatch.getTime(TimeUnit.MILLISECONDS);
             stopWatch.reset();
-            long senderByteLength = senderRpc.getSendByteLength();
-            long receiverByteLength = receiverRpc.getSendByteLength();
-            senderRpc.reset();
-            receiverRpc.reset();
+            long senderByteLength = firstRpc.getSendByteLength();
+            long receiverByteLength = secondRpc.getSendByteLength();
+            firstRpc.reset();
+            secondRpc.reset();
             SquareZlVector shareZ0 = senderThread.getShareZ();
             SquareZlVector shareZ1 = receiverThread.getShareZ();
             // verify
@@ -210,8 +175,9 @@ public class ZlMaxTest {
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
-        sender.destroy();
-        receiver.destroy();
+        // destroy
+        new Thread(sender::destroy).start();
+        new Thread(receiver::destroy).start();
     }
 
     private void assertOutput(ZlVector x0, ZlVector x1, SquareZlVector shareZ0, SquareZlVector shareZ1) {
