@@ -1,10 +1,7 @@
 package edu.alibaba.mpc4j.s2pc.pso.cpsi.ccpsi;
 
-import com.google.common.base.Preconditions;
-import edu.alibaba.mpc4j.common.rpc.Rpc;
-import edu.alibaba.mpc4j.common.rpc.RpcManager;
 import edu.alibaba.mpc4j.common.rpc.desc.SecurityModel;
-import edu.alibaba.mpc4j.common.rpc.impl.memory.MemoryRpcManager;
+import edu.alibaba.mpc4j.common.rpc.test.AbstractTwoPartyPtoTest;
 import edu.alibaba.mpc4j.common.tool.CommonConstants;
 import edu.alibaba.mpc4j.common.tool.bitvector.BitVector;
 import edu.alibaba.mpc4j.common.tool.hashbin.object.cuckoo.CuckooHashBinFactory.CuckooHashBinType;
@@ -14,11 +11,8 @@ import edu.alibaba.mpc4j.s2pc.pso.PsoUtils;
 import edu.alibaba.mpc4j.s2pc.pso.cpsi.ccpsi.CcpsiFactory.CcpsiType;
 import edu.alibaba.mpc4j.s2pc.pso.cpsi.ccpsi.cgs22.Cgs22CcpsiConfig;
 import edu.alibaba.mpc4j.s2pc.pso.cpsi.ccpsi.psty19.Psty19CcpsiConfig;
-import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.time.StopWatch;
-import org.junit.After;
 import org.junit.Assert;
-import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
@@ -26,7 +20,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.nio.ByteBuffer;
-import java.security.SecureRandom;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
@@ -40,12 +33,8 @@ import java.util.concurrent.TimeUnit;
  * @date 2023/4/18
  */
 @RunWith(Parameterized.class)
-public class CcpsiTest {
+public class CcpsiTest extends AbstractTwoPartyPtoTest {
     private static final Logger LOGGER = LoggerFactory.getLogger(CcpsiTest.class);
-    /**
-     * the random state
-     */
-    private static final SecureRandom SECURE_RANDOM = new SecureRandom();
     /**
      * default size
      */
@@ -130,38 +119,13 @@ public class CcpsiTest {
     }
 
     /**
-     * server RPC
-     */
-    private final Rpc serverRpc;
-    /**
-     * client RPC
-     */
-    private final Rpc clientRpc;
-    /**
      * the config
      */
     private final CcpsiConfig config;
 
     public CcpsiTest(String name, CcpsiConfig config) {
-        Preconditions.checkArgument(StringUtils.isNotBlank(name));
-        // We cannot use NettyRPC in the test case since it needs multi-thread connect / disconnect.
-        // In other word, we cannot connect / disconnect NettyRpc in @Before / @After, respectively.
-        RpcManager rpcManager = new MemoryRpcManager(2);
-        serverRpc = rpcManager.getRpc(0);
-        clientRpc = rpcManager.getRpc(1);
+        super(name);
         this.config = config;
-    }
-
-    @Before
-    public void connect() {
-        serverRpc.connect();
-        clientRpc.connect();
-    }
-
-    @After
-    public void disconnect() {
-        serverRpc.disconnect();
-        clientRpc.disconnect();
     }
 
     @Test
@@ -210,8 +174,8 @@ public class CcpsiTest {
     }
 
     private void testPto(int serverSetSize, int clientSetSize, boolean parallel) {
-        CcpsiServer<ByteBuffer> server = CcpsiFactory.createServer(serverRpc, clientRpc.ownParty(), config);
-        CcpsiClient<ByteBuffer> client = CcpsiFactory.createClient(clientRpc, serverRpc.ownParty(), config);
+        CcpsiServer<ByteBuffer> server = CcpsiFactory.createServer(firstRpc, secondRpc.ownParty(), config);
+        CcpsiClient<ByteBuffer> client = CcpsiFactory.createClient(secondRpc, firstRpc.ownParty(), config);
         server.setParallel(parallel);
         client.setParallel(parallel);
         int randomTaskId = Math.abs(SECURE_RANDOM.nextInt());
@@ -228,10 +192,11 @@ public class CcpsiTest {
             CcpsiServerThread serverThread = new CcpsiServerThread(server, serverElementSet, clientSetSize);
             CcpsiClientThread clientThread = new CcpsiClientThread(client, clientElementSet, serverSetSize);
             StopWatch stopWatch = new StopWatch();
-            // execute the protocol
+            // start
             stopWatch.start();
             serverThread.start();
             clientThread.start();
+            // stop
             serverThread.join();
             clientThread.join();
             stopWatch.stop();
@@ -242,20 +207,21 @@ public class CcpsiTest {
             CcpsiClientOutput<ByteBuffer> clientOutput = clientThread.getClientOutput();
             assertOutput(serverElementSet, clientElementSet, serverOutput, clientOutput);
             LOGGER.info("Server data_packet_num = {}, payload_bytes = {}B, send_bytes = {}B, time = {}ms",
-                serverRpc.getSendDataPacketNum(), serverRpc.getPayloadByteLength(), serverRpc.getSendByteLength(),
+                firstRpc.getSendDataPacketNum(), firstRpc.getPayloadByteLength(), firstRpc.getSendByteLength(),
                 time
             );
             LOGGER.info("Client data_packet_num = {}, payload_bytes = {}B, send_bytes = {}B, time = {}ms",
-                clientRpc.getSendDataPacketNum(), clientRpc.getPayloadByteLength(), clientRpc.getSendByteLength(),
+                secondRpc.getSendDataPacketNum(), secondRpc.getPayloadByteLength(), secondRpc.getSendByteLength(),
                 time
             );
-            serverRpc.reset();
-            clientRpc.reset();
+            firstRpc.reset();
+            secondRpc.reset();
+            // destroy
+            new Thread(server::destroy).start();
+            new Thread(client::destroy).start();
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
-        server.destroy();
-        client.destroy();
     }
 
     private void assertOutput(Set<ByteBuffer> serverElementSet, Set<ByteBuffer> clientElementSet,

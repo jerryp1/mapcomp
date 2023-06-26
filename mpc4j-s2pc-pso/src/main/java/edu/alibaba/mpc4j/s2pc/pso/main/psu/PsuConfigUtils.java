@@ -11,9 +11,6 @@ import edu.alibaba.mpc4j.s2pc.aby.basics.z2.Z2cFactory;
 import edu.alibaba.mpc4j.s2pc.aby.basics.z2.bea91.Bea91Z2cConfig;
 import edu.alibaba.mpc4j.s2pc.pcg.mtg.z2.Z2MtgConfig;
 import edu.alibaba.mpc4j.s2pc.pcg.mtg.z2.impl.offline.OfflineZ2MtgConfig;
-import edu.alibaba.mpc4j.s2pc.pcg.ot.cot.impl.cache.CacheCotConfig;
-import edu.alibaba.mpc4j.s2pc.pcg.ot.cot.impl.direct.DirectCotConfig;
-import edu.alibaba.mpc4j.s2pc.pcg.ot.cot.core.CoreCotConfig;
 import edu.alibaba.mpc4j.s2pc.pcg.ot.cot.core.CoreCotFactory;
 import edu.alibaba.mpc4j.s2pc.opf.oprf.OprfConfig;
 import edu.alibaba.mpc4j.s2pc.opf.oprf.cm20.Cm20MpOprfConfig;
@@ -21,8 +18,6 @@ import edu.alibaba.mpc4j.s2pc.opf.oprf.kkrt16.Kkrt16OptOprfConfig;
 import edu.alibaba.mpc4j.s2pc.opf.oprp.OprpConfig;
 import edu.alibaba.mpc4j.s2pc.opf.oprp.OprpFactory;
 import edu.alibaba.mpc4j.s2pc.opf.oprp.lowmc.LowMcOprpConfig;
-import edu.alibaba.mpc4j.s2pc.opf.osn.OsnConfig;
-import edu.alibaba.mpc4j.s2pc.opf.osn.gmr21.Gmr21OsnConfig;
 import edu.alibaba.mpc4j.s2pc.pso.psu.PsuConfig;
 import edu.alibaba.mpc4j.s2pc.pso.psu.PsuFactory.PsuType;
 import edu.alibaba.mpc4j.s2pc.pso.psu.gmr21.Gmr21PsuConfig;
@@ -92,20 +87,8 @@ public class PsuConfigUtils {
     }
 
     private static Gmr21PsuConfig generateGmr21PsuConfig(Properties properties) {
-        // 是否使用安静OT
         boolean silentCot = PropertiesUtils.readBoolean(properties, "silent_cot", false);
-        OsnConfig osnConfig = silentCot
-            ? new Gmr21OsnConfig.Builder()
-                .setCotConfig(new CacheCotConfig.Builder(SecurityModel.SEMI_HONEST).build())
-                .build()
-            : new Gmr21OsnConfig.Builder()
-                .setCotConfig(new DirectCotConfig.Builder(SecurityModel.SEMI_HONEST).build())
-                .build();
-        CoreCotConfig coreCotConfig = CoreCotFactory.createDefaultConfig(SecurityModel.SEMI_HONEST);
-
-        return new Gmr21PsuConfig.Builder()
-            .setCoreCotConfig(coreCotConfig)
-            .setOsnConfig(osnConfig)
+        return new Gmr21PsuConfig.Builder(silentCot)
             .setOkvsType(OkvsType.MEGA_BIN)
             .build();
     }
@@ -171,18 +154,8 @@ public class PsuConfigUtils {
         CuckooHashBinType cuckooHashBinType = CuckooHashBinType.valueOf(cuckooHashTypeString);
         // 是否使用安静OT
         boolean silentCot = PropertiesUtils.readBoolean(properties, "silent_cot", false);
-        OsnConfig osnConfig = silentCot
-            ? new Gmr21OsnConfig.Builder()
-                .setCotConfig(new CacheCotConfig.Builder(SecurityModel.SEMI_HONEST).build())
-                .build()
-            : new Gmr21OsnConfig.Builder()
-                .setCotConfig(new DirectCotConfig.Builder(SecurityModel.SEMI_HONEST).build())
-                .build();
-        CoreCotConfig coreCotConfig = CoreCotFactory.createDefaultConfig(SecurityModel.SEMI_HONEST);
 
-        return new Jsz22SfcPsuConfig.Builder()
-            .setCoreCotConfig(coreCotConfig)
-            .setOsnConfig(osnConfig)
+        return new Jsz22SfcPsuConfig.Builder(silentCot)
             .setOprfConfig(oprfConfig)
             .setCuckooHashBinType(cuckooHashBinType)
             .build();
@@ -212,16 +185,8 @@ public class PsuConfigUtils {
         CuckooHashBinType cuckooHashBinType = CuckooHashBinType.valueOf(cuckooHashTypeString);
         // 是否使用安静OT
         boolean silentCot = PropertiesUtils.readBoolean(properties, "silent_cot", false);
-        OsnConfig osnConfig = silentCot
-            ? new Gmr21OsnConfig.Builder()
-            .setCotConfig(new CacheCotConfig.Builder(SecurityModel.SEMI_HONEST).build())
-            .build()
-            : new Gmr21OsnConfig.Builder()
-                .setCotConfig(new DirectCotConfig.Builder(SecurityModel.SEMI_HONEST).build())
-                .build();
 
-        return new Jsz22SfsPsuConfig.Builder()
-            .setOsnConfig(osnConfig)
+        return new Jsz22SfsPsuConfig.Builder(silentCot)
             .setOprfConfig(oprfConfig)
             .setCuckooHashBinType(cuckooHashBinType)
             .build();
