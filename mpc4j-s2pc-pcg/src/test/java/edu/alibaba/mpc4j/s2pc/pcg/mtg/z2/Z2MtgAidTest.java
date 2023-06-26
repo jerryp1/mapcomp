@@ -40,11 +40,13 @@ public class Z2MtgAidTest extends AbstractThreePartyPtoTest {
 
         // OFFLINE
         configurations.add(new Object[]{
-            Z2MtgType.OFFLINE.name(), new OfflineZ2MtgConfig.Builder(SecurityModel.TRUSTED_DEALER).build(),
+            Z2MtgType.OFFLINE.name() + " (" + SecurityModel.TRUSTED_DEALER + ")",
+            new OfflineZ2MtgConfig.Builder(SecurityModel.TRUSTED_DEALER).build(),
         });
         // CACHE
         configurations.add(new Object[]{
-            Z2MtgType.CACHE.name(), new OfflineZ2MtgConfig.Builder(SecurityModel.TRUSTED_DEALER).build(),
+            Z2MtgType.CACHE.name() + " (" + SecurityModel.TRUSTED_DEALER + ")",
+            new OfflineZ2MtgConfig.Builder(SecurityModel.TRUSTED_DEALER).build(),
         });
 
         return configurations;
@@ -127,7 +129,6 @@ public class Z2MtgAidTest extends AbstractThreePartyPtoTest {
             new Thread(receiver::destroy).start();
             aiderThread.join();
             new Thread(aider::destroy).start();
-            LOGGER.info("-----test {} end-----", sender.getPtoDesc().getPtoName());
         } catch (InterruptedException e) {
             e.printStackTrace();
         }

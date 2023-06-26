@@ -54,11 +54,13 @@ public class BpDpprfTest extends AbstractTwoPartyPtoTest {
 
         // YWL20 (semi-honest)
         configurations.add(new Object[]{
-            BpDpprfType.YWL20.name() + " (semi-honest)", new Ywl20BpDpprfConfig.Builder(SecurityModel.SEMI_HONEST).build(),
+            BpDpprfType.YWL20.name() + " (" + SecurityModel.SEMI_HONEST + ")",
+            new Ywl20BpDpprfConfig.Builder(SecurityModel.SEMI_HONEST).build(),
         });
         // YWL20 (malicious)
         configurations.add(new Object[]{
-            BpDpprfType.YWL20.name() + " (malicious)", new Ywl20BpDpprfConfig.Builder(SecurityModel.MALICIOUS).build(),
+            BpDpprfType.YWL20.name() + " (" + SecurityModel.MALICIOUS + ")",
+            new Ywl20BpDpprfConfig.Builder(SecurityModel.MALICIOUS).build(),
         });
 
         return configurations;

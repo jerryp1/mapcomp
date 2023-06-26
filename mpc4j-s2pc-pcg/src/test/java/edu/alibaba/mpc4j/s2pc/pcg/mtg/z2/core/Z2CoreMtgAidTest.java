@@ -101,7 +101,6 @@ public class Z2CoreMtgAidTest extends AbstractThreePartyPtoTest {
             new Thread(receiver::destroy).start();
             aiderThread.join();
             new Thread(aider::destroy).start();
-            LOGGER.info("-----test {} end-----", sender.getPtoDesc().getPtoName());
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
