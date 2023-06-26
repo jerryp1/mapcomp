@@ -18,7 +18,6 @@ jbyteArray JNICALL Java_edu_alibaba_mpc4j_s2pc_pir_index_single_constantweightpi
         JNIEnv *env, jclass, jint poly_modulus_degree, jlong plain_modulus) {
     EncryptionParameters parms = EncryptionParameters(scheme_type::bfv);
     parms.set_poly_modulus_degree(poly_modulus_degree);
-    // parms.set_plain_modulus(PlainModulus::Batching(poly_modulus_degree, plain_modulus_bit_length));
     parms.set_plain_modulus(plain_modulus);
     parms.set_coeff_modulus(CoeffModulus::BFVDefault(poly_modulus_degree,sec_level_type::tc128));
     return serialize_encryption_parms(env, parms);
@@ -110,9 +109,6 @@ JNIEXPORT jbyteArray JNICALL Java_edu_alibaba_mpc4j_s2pc_pir_index_single_consta
         jobjectArray plaintexts_list, jobject pt_index_codewords_list, jint num_input_ciphers, 
         jint codeword_bit_length, jint hamming_weight, jint eq_type) {
     
-    // chrono::high_resolution_clock::time_point time_start, time_end;
-    // chrono::microseconds time_diff;
-    
     EncryptionParameters parms = deserialize_encryption_parms(env, parms_bytes);
     SEALContext context(parms);
     Evaluator evaluator(context);
@@ -139,15 +135,9 @@ JNIEXPORT jbyteArray JNICALL Java_edu_alibaba_mpc4j_s2pc_pir_index_single_consta
         vector<uint32_t> tmp(ptr, ptr + len);
         pt_index_codewords[i] = tmp;
     }
-      // Expansion
-    // time_start = chrono::high_resolution_clock::now();
+    // Expansion
     vector<Ciphertext> expanded_query;
-    // this->time_start = chrono::high_resolution_clock::now();
-    // 这里的 expand 是把 h 个 查询密文，转换为 长度为m 的 0，1 密文向量
     expanded_query = mk22_expand_input_ciphers(parms, *galois_keys, query_list, num_input_ciphers, codeword_bit_length);
-    // time_end = chrono::high_resolution_clock::now();
-    // time_diff = chrono::duration_cast<chrono::microseconds>(time_end - time_start);
-    // std::cout << "server expand: " << (double)time_diff.count()/(1000*1000) << " s" << std::endl;
     
     if (expanded_query.size() != codeword_bit_length) {
         throw logic_error("expanded query size shoule be equal codeword bit length.");
@@ -157,20 +147,12 @@ JNIEXPORT jbyteArray JNICALL Java_edu_alibaba_mpc4j_s2pc_pir_index_single_consta
          throw logic_error("eq type must be 0 or 1.");
     }
     
-    // time_start = chrono::high_resolution_clock::now();
+   
     vector<Ciphertext> selection_vector(num_pts);
     mk22_generate_selection_vector(evaluator, &relin_keys, codeword_bit_length, hamming_weight, eq_type, expanded_query,pt_index_codewords, selection_vector);
-    // time_end = chrono::high_resolution_clock::now();
-    // time_diff = chrono::duration_cast<chrono::microseconds>(time_end - time_start);
-    // std::cout << "server Sel Vector: " << (double)time_diff.count()/(1000*1000) << " s" << std::endl;
     
-    // time_start = chrono::high_resolution_clock::now();
     Ciphertext encrypted_answer;
     encrypted_answer = mk22_faster_inner_product(evaluator, selection_vector, database);
-    // time_end = chrono::high_resolution_clock::now();
-    // time_diff = chrono::duration_cast<chrono::microseconds>(time_end - time_start);
-    // std::cout << "server Inner Product: " << (double)time_diff.count()/(1000*1000) << " s" << std::endl;
-    
 
     evaluator.transform_from_ntt_inplace(encrypted_answer);
     evaluator.mod_switch_to_inplace(encrypted_answer, context.last_context_data()->parms_id());

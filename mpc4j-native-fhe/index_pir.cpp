@@ -506,11 +506,10 @@ vector<Ciphertext> mk22_expand_input_ciphers(const EncryptionParameters& parms, 
     vector<Ciphertext> temp_expanded;
     // m
     uint64_t remaining_bits = num_bits;
-    // 对应算法5 line-3，最外层循环 
+    // Corresponding paper Algorithm 5, line-3
     for (int i=0;i<num_input_ciphers;i++){
         temp_expanded.clear();
-        // 注意输入：单个密文， 单次最多扩展出 N 个密文 ，因为一个PT 最多能够使用的 slots 就是 N
-        // 这里其实对应 单个密文的扩展 
+        // A single ciphertext expands to 2^c ciphertexts
         temp_expanded = mk22_expand_procedure(parms, galois_keys, input_ciphers[i], min<uint64_t>(remaining_bits, parms.poly_modulus_degree()));
         for (int j=0;j<temp_expanded.size();j++)
             answer.push_back(temp_expanded[j]);
@@ -526,7 +525,7 @@ vector<Ciphertext> mk22_expand_procedure(const EncryptionParameters& parms, cons
     Evaluator evaluator(context);
 
     vector<Ciphertext> ciphers(used_slots);
-    // 对应 c , 所以整个算法是对应 算法5 的 line-4 以后的部分，即没有包括最外层的 for j \in [h] 这个循环 
+    // Corresponding to the paper Algorithm 5, the part after line-4, not including for j \in [h]  
     uint64_t expansion_level = (int)ceil(log2(used_slots));
     ciphers[0] = input_cipher; // line-4
     for (uint64_t a = 0; a < expansion_level; a++){ // line-5 
@@ -557,7 +556,7 @@ vector<Ciphertext> mk22_expand_procedure(const EncryptionParameters& parms, cons
 
 }
 
-// 这里就是完整的 算法6 了
+// Corresponding Algorithm 6 of paper
 void mk22_generate_selection_vector(Evaluator& evaluator, 
                                const RelinKeys* const relin_keys,
                                uint32_t codeword_bit_length, 
@@ -567,7 +566,6 @@ void mk22_generate_selection_vector(Evaluator& evaluator,
                                vector<vector<uint32_t>>& pt_index_codewords,  
                                vector<Ciphertext>& selection_vector){
     
-    // #pragma omp parallel for
     for (uint32_t ch=0; ch<pt_index_codewords.size(); ch++){
         selection_vector[ch] = mk22_generate_selection_bit(
             evaluator,
@@ -590,30 +588,21 @@ Ciphertext mk22_faster_inner_product(Evaluator& evaluator,
         throw logic_error("the size of selection vector should be equal the size of the database.");
     }
 
-    // #pragma omp parallel for
     for (uint64_t i = 0; i < selection_vector.size(); i++){
         if(!selection_vector[i].is_ntt_form()) {
             evaluator.transform_to_ntt_inplace(selection_vector[i]);
         }
     } 
-    
-    // 列向量 即按列存放 
+
     vector<Ciphertext> sub_ciphers;
-    // #pragma omp parallel
-    {
-        Ciphertext operand;
-        // #pragma omp for collapse(2)
-        // 遍历数据库每一行
-        for (uint64_t ch=0; ch<database.size(); ch++){
-            // 明文 * 密文 
-            evaluator.multiply_plain(selection_vector[ch], database[ch], operand);
-            #pragma omp critical
-            {
-                sub_ciphers.push_back(operand);
-            }
+    Ciphertext operand;
+    for (uint64_t ch=0; ch<database.size(); ch++){
+        evaluator.multiply_plain(selection_vector[ch], database[ch], operand);
+        #pragma omp critical
+        {
+            sub_ciphers.push_back(operand);
         }
     }
-    
     Ciphertext encrypted_answer;
     evaluator.add_many(sub_ciphers, encrypted_answer);
     
@@ -678,16 +667,14 @@ Ciphertext mk22_constant_weight_eq(Evaluator& evaluator,
    
     if (hamming_weight > 1){ // k > 1
         vector<Ciphertext> mult_operands;
-        for (uint32_t i=0; i<codeword_bit_length; i++){ // 遍历 m 个比特
-            if (single_pt_index_codeword[i]==1){ // 明文比特等于 1，就把对应的 密文比特放进去 
+        // m-bit
+        for (uint32_t i=0; i<codeword_bit_length; i++){ 
+            if (single_pt_index_codeword[i]==1){ 
                 mult_operands.push_back(encrypted_query[i]);
             }
         }
-        // 这里会有密文*密文，并且乘法的次数就是 hamming weight k, 结果是一个密文，而且这个密文不是 E(0)，就是 E(1)
-        // 这里直接调用的 Seal 接口
         evaluator.multiply_many(mult_operands, *relin_keys, temp_ciphertext);
     } else {
-        // 如果 k = 1,那整个逻辑非常简单了，不需要执行 多次乘法，因为就一个嘛，把encrypted_query 中对应的比特扣下来就是对应的 sel 
         for (uint32_t i=0; i < codeword_bit_length; i++){
             if (single_pt_index_codeword[i]==1){
                 temp_ciphertext = encrypted_query[i];

@@ -1,14 +1,6 @@
 cmake_minimum_required(VERSION 3.10)
 project(mpc4j_native_fhe)
 
-# set(CMAKE_CXX_COMPILER "/usr/bin/g++")
-# set(CMAKE_C_COMPILER "/usr/bin/gcc")
-# set(CMAKE_CXX_STANDARD 11)
-# set(CMAKE_CXX_EXTENSIONS OFF)
-# set(CMAKE_OSX_ARCHITECTURES "x86_64")
-
-
-
 # Import Microsoft SEAL
 find_package(SEAL 4.0.0 EXACT REQUIRED)
 if(NOT SEAL_FOUND)
