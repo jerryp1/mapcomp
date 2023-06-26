@@ -17,7 +17,7 @@ import java.util.Arrays;
  * @author Hanwen Feng
  * @date 2022/10/09
  */
-public class SparseBitMatrixTest {
+public class NaiveSparseBitMatrixTest {
     /**
      * 测试维度
      */
@@ -47,12 +47,12 @@ public class SparseBitMatrixTest {
 
     private void testRandomAdd(int rows, int columns, int weight) {
         // 生成随机矩阵
-        SparseBitMatrix sparseBitMatrix0 = SparseBitMatrixTestUtils.createRandom(columns, rows, weight, SECURE_RANDOM);
-        SparseBitMatrix sparseBitMatrix1 = SparseBitMatrixTestUtils.createRandom(columns, rows, weight, SECURE_RANDOM);
-        SparseBitMatrix sumSparseMatrix = sparseBitMatrix0.add(sparseBitMatrix1);
+        NaiveSparseBitMatrix naiveSparseBitMatrix0 = SparseBitMatrixTestUtils.createRandom(columns, rows, weight, SECURE_RANDOM);
+        NaiveSparseBitMatrix naiveSparseBitMatrix1 = SparseBitMatrixTestUtils.createRandom(columns, rows, weight, SECURE_RANDOM);
+        NaiveSparseBitMatrix sumSparseMatrix = naiveSparseBitMatrix0.add(naiveSparseBitMatrix1);
         // 转换为稠密矩阵
-        DenseBitMatrix denseBitMatrix0 = sparseBitMatrix0.toTransDenseBitMatrix().transpose(EnvType.STANDARD_JDK, false);
-        DenseBitMatrix denseBitMatrix1 = sparseBitMatrix1.toTransDenseBitMatrix().transpose(EnvType.STANDARD_JDK, false);
+        DenseBitMatrix denseBitMatrix0 = naiveSparseBitMatrix0.toTransDenseBitMatrix().transpose(EnvType.STANDARD_JDK, false);
+        DenseBitMatrix denseBitMatrix1 = naiveSparseBitMatrix1.toTransDenseBitMatrix().transpose(EnvType.STANDARD_JDK, false);
         DenseBitMatrix sumDenseMatrix = denseBitMatrix0.xor(denseBitMatrix1);
         // 验证
         Assert.assertEquals(sumSparseMatrix.toTransDenseBitMatrix().transpose(EnvType.STANDARD_JDK, false), sumDenseMatrix);
@@ -70,13 +70,13 @@ public class SparseBitMatrixTest {
 
     private void testTransMultiply(int rows, int columns, int weight) {
         // 生成随机矩阵
-        SparseBitMatrix sparseBitMatrix0 = SparseBitMatrixTestUtils.createRandom(columns, rows, weight, SECURE_RANDOM);
+        NaiveSparseBitMatrix naiveSparseBitMatrix0 = SparseBitMatrixTestUtils.createRandom(columns, rows, weight, SECURE_RANDOM);
         // 转换为稠密矩阵
-        DenseBitMatrix denseBitMatrix0 = sparseBitMatrix0.toTransDenseBitMatrix();
+        DenseBitMatrix denseBitMatrix0 = naiveSparseBitMatrix0.toTransDenseBitMatrix();
         // 生成稠密矩阵
         DenseBitMatrix denseBitMatrix1 = ByteDenseBitMatrix.createRandom(rows, columns, SECURE_RANDOM);
         // 验证
-        Assert.assertEquals(sparseBitMatrix0.transMultiply(denseBitMatrix1), denseBitMatrix0.multiply(denseBitMatrix1));
+        Assert.assertEquals(naiveSparseBitMatrix0.transMultiply(denseBitMatrix1), denseBitMatrix0.multiply(denseBitMatrix1));
     }
 
     @Test
@@ -91,9 +91,9 @@ public class SparseBitMatrixTest {
 
     private void testTranspose(int rows, int columns, int weight) {
         for (int round = 0; round < ROUND; round++) {
-            SparseBitMatrix origin = SparseBitMatrixTestUtils.createRandom(rows, columns, weight, SECURE_RANDOM);
-            SparseBitMatrix transpose = origin.transpose();
-            SparseBitMatrix recover = transpose.transpose();
+            NaiveSparseBitMatrix origin = SparseBitMatrixTestUtils.createRandom(rows, columns, weight, SECURE_RANDOM);
+            NaiveSparseBitMatrix transpose = origin.transpose();
+            NaiveSparseBitMatrix recover = transpose.transpose();
             Assert.assertEquals(origin, recover);
         }
     }
@@ -111,9 +111,9 @@ public class SparseBitMatrixTest {
     private void testLmul(int rows, int columns, int weight) {
         for (int round = 0; round < ROUND; round++) {
             boolean[] v = SparseBitMatrixTestUtils.generateRandomBitVector(rows, SECURE_RANDOM);
-            SparseBitMatrix sparseBitMatrix = SparseBitMatrixTestUtils.createRandom(columns, rows, weight, SECURE_RANDOM);
-            DenseBitMatrix denseBitMatrix = sparseBitMatrix.toTransDenseBitMatrix().transpose(EnvType.STANDARD_JDK, false);
-            Assert.assertArrayEquals(sparseBitMatrix.lmul(v), denseBitMatrix.leftMultiply(v));
+            NaiveSparseBitMatrix naiveSparseBitMatrix = SparseBitMatrixTestUtils.createRandom(columns, rows, weight, SECURE_RANDOM);
+            DenseBitMatrix denseBitMatrix = naiveSparseBitMatrix.toTransDenseBitMatrix().transpose(EnvType.STANDARD_JDK, false);
+            Assert.assertArrayEquals(naiveSparseBitMatrix.lmul(v), denseBitMatrix.leftMultiply(v));
         }
     }
 
@@ -132,9 +132,9 @@ public class SparseBitMatrixTest {
             boolean[] v = SparseBitMatrixTestUtils.generateRandomBitVector(rows, SECURE_RANDOM);
             boolean[] t0 = SparseBitMatrixTestUtils.generateRandomBitVector(columns, SECURE_RANDOM);
             boolean[] t1 = Arrays.copyOf(t0, t0.length);
-            SparseBitMatrix sparseBitMatrix = SparseBitMatrixTestUtils.createRandom(columns, rows, weight, SECURE_RANDOM);
-            DenseBitMatrix denseBitMatrix = sparseBitMatrix.toTransDenseBitMatrix().transpose(EnvType.STANDARD_JDK, false);
-            sparseBitMatrix.lmulAddi(v, t0);
+            NaiveSparseBitMatrix naiveSparseBitMatrix = SparseBitMatrixTestUtils.createRandom(columns, rows, weight, SECURE_RANDOM);
+            DenseBitMatrix denseBitMatrix = naiveSparseBitMatrix.toTransDenseBitMatrix().transpose(EnvType.STANDARD_JDK, false);
+            naiveSparseBitMatrix.lmulAddi(v, t0);
             denseBitMatrix.leftMultiplyXori(v, t1);
             Assert.assertArrayEquals(t0, t1);
         }
@@ -153,9 +153,9 @@ public class SparseBitMatrixTest {
     private void testLextMul(int rows, int columns, int weight) {
         for (int round = 0; round < ROUND; round++) {
             byte[][] v = SparseBitMatrixTestUtils.generateRandomExtendFieldVector(rows, CommonConstants.BLOCK_BYTE_LENGTH, SECURE_RANDOM);
-            SparseBitMatrix sparseBitMatrix = SparseBitMatrixTestUtils.createRandom(columns, rows, weight, SECURE_RANDOM);
-            DenseBitMatrix denseBitMatrix = sparseBitMatrix.toTransDenseBitMatrix().transpose(EnvType.STANDARD_JDK, false);
-            Assert.assertArrayEquals(sparseBitMatrix.lExtMul(v), denseBitMatrix.leftGf2lMultiply(v));
+            NaiveSparseBitMatrix naiveSparseBitMatrix = SparseBitMatrixTestUtils.createRandom(columns, rows, weight, SECURE_RANDOM);
+            DenseBitMatrix denseBitMatrix = naiveSparseBitMatrix.toTransDenseBitMatrix().transpose(EnvType.STANDARD_JDK, false);
+            Assert.assertArrayEquals(naiveSparseBitMatrix.lExtMul(v), denseBitMatrix.leftGf2lMultiply(v));
         }
     }
 
@@ -174,9 +174,9 @@ public class SparseBitMatrixTest {
             byte[][] v = SparseBitMatrixTestUtils.generateRandomExtendFieldVector(rows, CommonConstants.BLOCK_BYTE_LENGTH, SECURE_RANDOM);
             byte[][] t0 = SparseBitMatrixTestUtils.generateRandomExtendFieldVector(columns, CommonConstants.BLOCK_BYTE_LENGTH, SECURE_RANDOM);
             byte[][] t1 = Arrays.stream(t0).map(BytesUtils::clone).toArray(byte[][]::new);
-            SparseBitMatrix sparseBitMatrix = SparseBitMatrixTestUtils.createRandom(columns, rows, weight, SECURE_RANDOM);
-            DenseBitMatrix denseBitMatrix = sparseBitMatrix.toTransDenseBitMatrix().transpose(EnvType.STANDARD_JDK, false);
-            sparseBitMatrix.lExtMulAddi(v, t0);
+            NaiveSparseBitMatrix naiveSparseBitMatrix = SparseBitMatrixTestUtils.createRandom(columns, rows, weight, SECURE_RANDOM);
+            DenseBitMatrix denseBitMatrix = naiveSparseBitMatrix.toTransDenseBitMatrix().transpose(EnvType.STANDARD_JDK, false);
+            naiveSparseBitMatrix.lExtMulAddi(v, t0);
             denseBitMatrix.leftGf2lMultiplyXori(v, t1);
             Assert.assertArrayEquals(t0, t1);
         }
@@ -193,11 +193,11 @@ public class SparseBitMatrixTest {
     }
 
     private void testSubMatrix(int rows, int columns, int weight) {
-        SparseBitMatrix whole = SparseBitMatrixTestUtils.createRandom(columns, rows, weight, SECURE_RANDOM);
+        NaiveSparseBitMatrix whole = SparseBitMatrixTestUtils.createRandom(columns, rows, weight, SECURE_RANDOM);
 
         int splitIndex = rows / 2;
-        SparseBitMatrix subA = whole.getSubMatrix(0, columns, 0, splitIndex);
-        SparseBitMatrix subB = whole.getSubMatrix(0, columns, splitIndex, rows);
+        NaiveSparseBitMatrix subA = whole.getSubMatrix(0, columns, 0, splitIndex);
+        NaiveSparseBitMatrix subB = whole.getSubMatrix(0, columns, splitIndex, rows);
 
         boolean[] v = SparseBitMatrixTestUtils.generateRandomBitVector(rows, SECURE_RANDOM);
 
@@ -243,12 +243,12 @@ public class SparseBitMatrixTest {
     }
 
     private void testExtremeSparseMatrix(int rows, int cols, int weight) {
-        SparseBitMatrix sparseBitMatrix = SparseBitMatrixTestUtils.createRandom(cols, rows, weight, SECURE_RANDOM);
-        ExtremeSparseBitMatrix extremeSparseBitMatrix = sparseBitMatrix.toExtremeSparseMatrix();
+        NaiveSparseBitMatrix naiveSparseBitMatrix = SparseBitMatrixTestUtils.createRandom(cols, rows, weight, SECURE_RANDOM);
+        ExtremeSparseBitMatrix extremeSparseBitMatrix = naiveSparseBitMatrix.toExtremeSparseMatrix();
         boolean[] input = SparseBitMatrixTestUtils.generateRandomBitVector(rows, SECURE_RANDOM);
         byte[][] extInput = SparseBitMatrixTestUtils.generateRandomExtendFieldVector(rows, CommonConstants.BLOCK_BYTE_LENGTH, SECURE_RANDOM);
-        Assert.assertArrayEquals(sparseBitMatrix.lmul(input), extremeSparseBitMatrix.lmul(input));
-        Assert.assertArrayEquals(sparseBitMatrix.lExtMul(extInput), extremeSparseBitMatrix.lExtMul(extInput));
+        Assert.assertArrayEquals(naiveSparseBitMatrix.lmul(input), extremeSparseBitMatrix.lmul(input));
+        Assert.assertArrayEquals(naiveSparseBitMatrix.lExtMul(extInput), extremeSparseBitMatrix.lExtMul(extInput));
     }
 
 }

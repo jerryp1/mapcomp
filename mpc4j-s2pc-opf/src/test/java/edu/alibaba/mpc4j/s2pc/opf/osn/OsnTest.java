@@ -151,29 +151,21 @@ public class OsnTest extends AbstractTwoPartyPtoTest {
             OsnSenderThread senderThread = new OsnSenderThread(sender, inputVector, byteLength);
             OsnReceiverThread receiverThread = new OsnReceiverThread(receiver, permutationMap, byteLength);
             StopWatch stopWatch = new StopWatch();
-            // 开始执行协议
+            // start
             stopWatch.start();
             senderThread.start();
             receiverThread.start();
+            // stop
             senderThread.join();
             receiverThread.join();
             stopWatch.stop();
             long time = stopWatch.getTime(TimeUnit.MILLISECONDS);
             stopWatch.reset();
+            // verify
             OsnPartyOutput senderOutput = senderThread.getSenderOutput();
             OsnPartyOutput receiverOutput = receiverThread.getReceiverOutput();
-            // 验证结果
             assertOutput(inputVector, permutationMap, senderOutput, receiverOutput);
-            LOGGER.info("Sender data_packet_num = {}, payload_bytes = {}B, send_bytes = {}B, time = {}ms",
-                firstRpc.getSendDataPacketNum(), firstRpc.getPayloadByteLength(), firstRpc.getSendByteLength(),
-                time
-            );
-            LOGGER.info("Receiver data_packet_num = {}, payload_bytes = {}B, send_bytes = {}B, time = {}ms",
-                secondRpc.getSendDataPacketNum(), secondRpc.getPayloadByteLength(), secondRpc.getSendByteLength(),
-                time
-            );
-            firstRpc.reset();
-            secondRpc.reset();
+            printAndResetRpc(time);
             // destroy
             new Thread(sender::destroy).start();
             new Thread(receiver::destroy).start();

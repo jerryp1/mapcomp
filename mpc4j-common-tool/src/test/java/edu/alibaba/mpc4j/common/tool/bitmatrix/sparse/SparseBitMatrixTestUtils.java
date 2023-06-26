@@ -16,11 +16,11 @@ public class SparseBitMatrixTestUtils {
         // empty
     }
 
-    static SparseBitMatrix createRandom(int cols, int rows, int weight, SecureRandom secureRandom) {
+    static NaiveSparseBitMatrix createRandom(int cols, int rows, int weight, SecureRandom secureRandom) {
         ArrayList<SparseBitVector> colsList = IntStream.range(0, cols)
             .mapToObj(colIndex -> SparseBitVector.createRandom(weight, rows, secureRandom))
             .collect(Collectors.toCollection(ArrayList::new));
-        return SparseBitMatrix.creatFromColsList(colsList);
+        return NaiveSparseBitMatrix.creatFromColsList(colsList);
     }
 
     static LowerTriangularSparseBitMatrix createRandomLowerTriangular(int size, int weight, SecureRandom secureRandom) {

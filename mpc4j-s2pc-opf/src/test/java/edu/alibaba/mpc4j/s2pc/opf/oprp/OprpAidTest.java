@@ -132,20 +132,11 @@ public class OprpAidTest extends AbstractThreePartyPtoTest {
             stopWatch.stop();
             long time = stopWatch.getTime(TimeUnit.MILLISECONDS);
             stopWatch.reset();
+            // verify
             OprpSenderOutput senderOutput = senderThread.getSenderOutput();
             OprpReceiverOutput receiverOutput = receiverThread.getReceiverOutput();
-            // verify
             assertOutput(batchSize, key, messages, senderOutput, receiverOutput);
-            LOGGER.info("Sender data_packet_num = {}, payload_bytes = {}B, send_bytes = {}B, time = {}ms",
-                firstRpc.getSendDataPacketNum(), firstRpc.getPayloadByteLength(), firstRpc.getSendByteLength(),
-                time
-            );
-            LOGGER.info("Receiver data_packet_num = {}, payload_bytes = {}B, send_bytes = {}B, time = {}ms",
-                secondRpc.getSendDataPacketNum(), secondRpc.getPayloadByteLength(), secondRpc.getSendByteLength(),
-                time
-            );
-            firstRpc.reset();
-            secondRpc.reset();
+            printAndResetRpc(time);
             // destroy
             new Thread(sender::destroy).start();
             new Thread(receiver::destroy).start();

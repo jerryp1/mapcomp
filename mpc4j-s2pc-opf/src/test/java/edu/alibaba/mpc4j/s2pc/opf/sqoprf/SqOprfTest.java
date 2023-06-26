@@ -161,20 +161,11 @@ public class SqOprfTest extends AbstractTwoPartyPtoTest {
             stopWatch.stop();
             long time = stopWatch.getTime(TimeUnit.MILLISECONDS);
             stopWatch.reset();
+            // verify
             SqOprfKey key = senderThread.getKey();
             SqOprfReceiverOutput receiverOutput = receiverThread.getReceiverOutput();
-            // verify
             assertOutput(batchSize, key, receiverOutput);
-            LOGGER.info("Sender data_packet_num = {}, payload_bytes = {}B, send_bytes = {}B, time = {}ms",
-                firstRpc.getSendDataPacketNum(), firstRpc.getPayloadByteLength(), firstRpc.getSendByteLength(),
-                time
-            );
-            LOGGER.info("Receiver data_packet_num = {}, payload_bytes = {}B, send_bytes = {}B, time = {}ms",
-                secondRpc.getSendDataPacketNum(), secondRpc.getPayloadByteLength(), secondRpc.getSendByteLength(),
-                time
-            );
-            firstRpc.reset();
-            secondRpc.reset();
+            printAndResetRpc(time);
             // destroy
             new Thread(sender::destroy).start();
             new Thread(receiver::destroy).start();

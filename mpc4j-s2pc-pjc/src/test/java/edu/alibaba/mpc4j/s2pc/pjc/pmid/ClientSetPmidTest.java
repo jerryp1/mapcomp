@@ -178,16 +178,7 @@ public class ClientSetPmidTest extends AbstractTwoPartyPtoTest {
             stopWatch.reset();
             // verify
             assertOutput(serverMap, clientSet, serverThread.getServerOutput(), clientThread.getClientOutput());
-            LOGGER.info("Server data_packet_num = {}, payload_bytes = {}B, send_bytes = {}B, time = {}ms",
-                firstRpc.getSendDataPacketNum(), firstRpc.getPayloadByteLength(), firstRpc.getSendByteLength(),
-                time
-            );
-            LOGGER.info("Client data_packet_num = {}, payload_bytes = {}B, send_bytes = {}B, time = {}ms",
-                secondRpc.getSendDataPacketNum(), secondRpc.getPayloadByteLength(), secondRpc.getSendByteLength(),
-                time
-            );
-            firstRpc.reset();
-            secondRpc.reset();
+            printAndResetRpc(time);
             // destroy
             new Thread(server::destroy).start();
             new Thread(client::destroy).start();

@@ -153,20 +153,13 @@ public class PsmTest extends AbstractTwoPartyPtoTest {
             stopWatch.stop();
             long time = stopWatch.getTime(TimeUnit.MILLISECONDS);
             stopWatch.reset();
-            long senderByteLength = firstRpc.getSendByteLength();
-            long senderRound = firstRpc.getSendDataPacketNum();
-            long receiverByteLength = secondRpc.getSendByteLength();
-            long receiverRound = secondRpc.getSendDataPacketNum();
-            firstRpc.reset();
-            secondRpc.reset();
+            // verify
             SquareZ2Vector z0 = senderThread.getZ0();
             SquareZ2Vector z1 = receiverThread.getZ1();
             BitVector z = z0.getBitVector().xor(z1.getBitVector());
             // verify
             assertOutput(num, senderInputArrays, receiverInputArray, z);
-            LOGGER.info("Sender sends {}B / {} rounds, Receiver sends {}B / {} rounds, time = {}ms",
-                senderByteLength, senderRound, receiverByteLength, receiverRound, time
-            );
+            printAndResetRpc(time);
             // destroy
             new Thread(sender::destroy).start();
             new Thread(receiver::destroy).start();

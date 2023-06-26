@@ -150,21 +150,7 @@ public class AidPsiTest extends AbstractThreePartyPtoTest {
             stopWatch.reset();
             // verify
             assertOutput(serverSet, clientSet, clientThread.getIntersectionSet());
-            LOGGER.info("Server data_packet_num = {}, payload_bytes = {}B, send_bytes = {}B, time = {}ms",
-                firstRpc.getSendDataPacketNum(), firstRpc.getPayloadByteLength(), firstRpc.getSendByteLength(),
-                time
-            );
-            LOGGER.info("Client data_packet_num = {}, payload_bytes = {}B, send_bytes = {}B, time = {}ms",
-                secondRpc.getSendDataPacketNum(), secondRpc.getPayloadByteLength(), secondRpc.getSendByteLength(),
-                time
-            );
-            LOGGER.info("Aider data_packet_num = {}, payload_bytes = {}B, send_bytes = {}B, time = {}ms",
-                thirdRpc.getSendDataPacketNum(), thirdRpc.getPayloadByteLength(), thirdRpc.getSendByteLength(),
-                time
-            );
-            firstRpc.reset();
-            secondRpc.reset();
-            thirdRpc.reset();
+            printAndResetRpc(time);
             // destroy
             new Thread(server::destroy).start();
             new Thread(client::destroy).start();
