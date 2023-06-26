@@ -97,7 +97,7 @@ public class PsuConfigUtils {
         boolean offlineZ2Mtg = PropertiesUtils.readBoolean(properties, "offline_z2_mtg", true);
         if (offlineZ2Mtg) {
             Z2MtgConfig offlineZ2MtgConfig = new OfflineZ2MtgConfig.Builder(SecurityModel.SEMI_HONEST).build();
-            Z2cConfig offlineZ2cConfig = new Bea91Z2cConfig.Builder()
+            Z2cConfig offlineZ2cConfig = new Bea91Z2cConfig.Builder(SecurityModel.SEMI_HONEST)
                 .setZ2MtgConfig(offlineZ2MtgConfig)
                 .build();
             OprpConfig offlineOprpConfig = new LowMcOprpConfig.Builder(SecurityModel.SEMI_HONEST)
