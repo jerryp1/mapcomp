@@ -1,4 +1,5 @@
-package edu.alibaba.mpc4j.s2pc.pir.index.mulpir;
+package edu.alibaba.mpc4j.s2pc.pir.index.constantweightpir;
+
 
 import com.google.common.base.Preconditions;
 import edu.alibaba.mpc4j.common.rpc.Rpc;
@@ -7,10 +8,10 @@ import edu.alibaba.mpc4j.common.rpc.impl.memory.MemoryRpcManager;
 import edu.alibaba.mpc4j.crypto.matrix.database.NaiveDatabase;
 import edu.alibaba.mpc4j.s2pc.pir.PirUtils;
 import edu.alibaba.mpc4j.s2pc.pir.index.single.SingleIndexPirFactory;
-import edu.alibaba.mpc4j.s2pc.pir.index.single.mulpir.Alpr21SingleIndexPirClient;
-import edu.alibaba.mpc4j.s2pc.pir.index.single.mulpir.Alpr21SingleIndexPirConfig;
-import edu.alibaba.mpc4j.s2pc.pir.index.single.mulpir.Alpr21SingleIndexPirParams;
-import edu.alibaba.mpc4j.s2pc.pir.index.single.mulpir.Alpr21SingleIndexPirServer;
+import edu.alibaba.mpc4j.s2pc.pir.index.single.constantweightpir.Mk22SingleIndexPirClient;
+import edu.alibaba.mpc4j.s2pc.pir.index.single.constantweightpir.Mk22SingleIndexPirConfig;
+import edu.alibaba.mpc4j.s2pc.pir.index.single.constantweightpir.Mk22SingleIndexPirParams;
+import edu.alibaba.mpc4j.s2pc.pir.index.single.constantweightpir.Mk22SingleIndexPirServer;
 import org.apache.commons.lang3.StringUtils;
 import org.junit.After;
 import org.junit.Assert;
@@ -27,18 +28,18 @@ import java.util.ArrayList;
 import java.util.Collection;
 
 /**
- * Mul PIR test
+ * Constant-Weight PIR test
  *
  * @author Qixian Zhou
  * @date 2023/5/29
  */
 @RunWith(Parameterized.class)
-public class MulPirTest {
-    private static final Logger LOGGER = LoggerFactory.getLogger(MulPirTest.class);
+public class ConstantWeightPirTest {
+    private static final Logger LOGGER = LoggerFactory.getLogger(edu.alibaba.mpc4j.s2pc.pir.index.constantweightpir.ConstantWeightPirTest.class);
     /**
      * default element byte length
      */
-    private static final int DEFAULT_ELEMENT_BYTE_LENGTH = 64;
+    private static final int DEFAULT_ELEMENT_BYTE_LENGTH = (8192 * 21) / 8;
     /**
      * large element byte length
      */
@@ -50,42 +51,35 @@ public class MulPirTest {
     /**
      * database size
      */
-    private static final int SERVER_ELEMENT_SIZE = (1 << 12);
+    private static final int SERVER_ELEMENT_SIZE = (1 << 8);
 
     @Parameterized.Parameters(name = "{0}")
     public static Collection<Object[]> configurations() {
         Collection<Object[]> configurations = new ArrayList<>();
-        Alpr21SingleIndexPirConfig mulpirConfig = new Alpr21SingleIndexPirConfig();
-        // Mul PIR (1-dimension)
+        Mk22SingleIndexPirConfig config = new Mk22SingleIndexPirConfig();
+        // ConstantWeight PIR (CONSTANT_WEIGHT_EQ)
         configurations.add(new Object[]{
-                SingleIndexPirFactory.SingleIndexPirType.MUL_PIR.name() + " (1-dimension)",
-                mulpirConfig,
-                new Alpr21SingleIndexPirParams(
-                        4096,
-                        20,
-                        1
-                )
-        });
-        // Mul PIR (2-dimension)
-        configurations.add(new Object[]{
-                SingleIndexPirFactory.SingleIndexPirType.MUL_PIR.name() + " (2-dimension)",
-                mulpirConfig,
-                new Alpr21SingleIndexPirParams(
+                SingleIndexPirFactory.SingleIndexPirType.CONSTANT_WEIGHT_PIR.name() + " (CONSTANT_WEIGHT_EQ)",
+                config,
+                new Mk22SingleIndexPirParams(
+                        2,
                         8192,
-                        20,
-                        2
+                        21,
+                        Mk22SingleIndexPirParams.EqualityType.CONSTANT_WEIGHT
                 )
         });
-        // Mul PIR (3-dimension)
+
         configurations.add(new Object[]{
-                SingleIndexPirFactory.SingleIndexPirType.MUL_PIR.name() + " (3-dimension)",
-                mulpirConfig,
-                new Alpr21SingleIndexPirParams(
+                SingleIndexPirFactory.SingleIndexPirType.CONSTANT_WEIGHT_PIR.name() + " (FOLKLORE)",
+                config,
+                new Mk22SingleIndexPirParams(
+                        2,
                         8192,
-                        20,
-                        3
+                        21,
+                        Mk22SingleIndexPirParams.EqualityType.FOLKLORE
                 )
         });
+
         return configurations;
     }
 
@@ -98,15 +92,15 @@ public class MulPirTest {
      */
     private final Rpc clientRpc;
     /**
-     * Mul PIR config
+     * ConstantWeight PIR config
      */
-    private final Alpr21SingleIndexPirConfig indexPirConfig;
+    private final Mk22SingleIndexPirConfig indexPirConfig;
     /**
-     * Mul PIR params
+     * ConstantWeight PIR params
      */
-    private final Alpr21SingleIndexPirParams indexPirParams;
+    private final Mk22SingleIndexPirParams indexPirParams;
 
-    public MulPirTest(String name, Alpr21SingleIndexPirConfig indexPirConfig, Alpr21SingleIndexPirParams indexPirParams) {
+    public ConstantWeightPirTest(String name, Mk22SingleIndexPirConfig indexPirConfig, Mk22SingleIndexPirParams indexPirParams) {
         Preconditions.checkArgument(StringUtils.isNotBlank(name));
         // We cannot use NettyRPC in the test case since it needs multi-thread connect / disconnect.
         // In other word, we cannot connect / disconnect NettyRpc in @Before / @After, respectively.
@@ -130,37 +124,38 @@ public class MulPirTest {
     }
 
     @Test
-    public void testMulPir() {
-        testMulPir(indexPirConfig, indexPirParams, DEFAULT_ELEMENT_BYTE_LENGTH, false);
+    public void testConstantWeightPir() {
+        testConstantWeightPir(indexPirConfig, indexPirParams, DEFAULT_ELEMENT_BYTE_LENGTH, false);
     }
 
     @Test
-    public void testParallelMulPir() {
-        testMulPir(indexPirConfig, indexPirParams, DEFAULT_ELEMENT_BYTE_LENGTH, true);
+    public void testParallelConstantWeightPir() {
+        testConstantWeightPir(indexPirConfig, indexPirParams, DEFAULT_ELEMENT_BYTE_LENGTH, true);
     }
 
     @Test
     public void testLargeElementMulPir() {
-        testMulPir(indexPirConfig, indexPirParams, LARGE_ELEMENT_BYTE_LENGTH, true);
+        testConstantWeightPir(indexPirConfig, indexPirParams, LARGE_ELEMENT_BYTE_LENGTH, true);
     }
 
     @Test
     public void testSmallElementMulPir() {
-        testMulPir(indexPirConfig, indexPirParams, SMALL_ELEMENT_BYTE_LENGTH, true);
+        testConstantWeightPir(indexPirConfig, indexPirParams, SMALL_ELEMENT_BYTE_LENGTH, true);
     }
 
-    public void testMulPir(Alpr21SingleIndexPirConfig config, Alpr21SingleIndexPirParams indexPirParams, int elementByteLength,
+
+    public void testConstantWeightPir(Mk22SingleIndexPirConfig config, Mk22SingleIndexPirParams indexPirParams, int elementByteLength,
                            boolean parallel) {
         int retrievalSingleIndex = PirUtils.generateRetrievalIndex(SERVER_ELEMENT_SIZE);
 
         NaiveDatabase database = PirUtils.generateDataBase(SERVER_ELEMENT_SIZE, elementByteLength * Byte.SIZE);
-        Alpr21SingleIndexPirServer server = new Alpr21SingleIndexPirServer(serverRpc, clientRpc.ownParty(), config);
-        Alpr21SingleIndexPirClient client = new Alpr21SingleIndexPirClient(clientRpc, serverRpc.ownParty(), config);
+        Mk22SingleIndexPirServer server = new Mk22SingleIndexPirServer(serverRpc, clientRpc.ownParty(), config);
+        Mk22SingleIndexPirClient client = new Mk22SingleIndexPirClient(clientRpc, serverRpc.ownParty(), config);
         // set parallel
         server.setParallel(parallel);
         client.setParallel(parallel);
-        MulPirServerThread serverThread = new MulPirServerThread(server, indexPirParams, database);
-        MulPirClientThread clientThread = new MulPirClientThread(
+        ConstantWeightPirServerThread serverThread = new ConstantWeightPirServerThread(server, indexPirParams, database);
+        ConstantWeightPirClientThread clientThread = new ConstantWeightPirClientThread(
                 client, indexPirParams, retrievalSingleIndex, SERVER_ELEMENT_SIZE, elementByteLength
         );
         try {

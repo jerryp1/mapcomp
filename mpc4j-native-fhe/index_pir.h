@@ -68,6 +68,40 @@ vector<Ciphertext> multiply_mulpir( const EncryptionParameters& parms,
                                     uint32_t selection_vector_it, 
                                     vector<uint32_t>& dimensions, 
                                     uint32_t depth);
+// For constant-weight pir, reference: 
+// convert h ciphertexts to length-m ciphers vector, m is the codeword bit length
+vector<Ciphertext> mk22_expand_input_ciphers(const EncryptionParameters& parms, const GaloisKeys& galois_keys,  vector<Ciphertext>& input_ciphers, uint64_t num_input_ciphers, uint64_t num_bits);
 
+// convert single Ciphertext to 2^c Ciphertext 
+vector<Ciphertext> mk22_expand_procedure(const EncryptionParameters& parms, const GaloisKeys& galois_keys, const Ciphertext &input_cipher, uint64_t used_slots);
 
+Ciphertext mk22_folklore_eq(Evaluator& evaluator, 
+                            const RelinKeys* const relin_keys,
+                            uint32_t codeword_bit_length, 
+                            vector<Ciphertext>& encrypted_query, 
+                            vector<uint32_t>& single_pt_index_codeword);
+
+Ciphertext mk22_constant_weight_eq(Evaluator& evaluator, 
+                            const RelinKeys* const relin_keys,
+                            uint32_t codeword_bit_length, 
+                            uint32_t hamming_weight,
+                            vector<Ciphertext>& encrypted_query, vector<uint32_t>& single_pt_index_codeword);
+Ciphertext mk22_generate_selection_bit( Evaluator& evaluator, 
+                                        const RelinKeys* const relin_keys,
+                                        uint32_t codeword_bit_length, 
+                                        uint32_t hamming_weight,
+                                        uint32_t eq_type,
+                                        vector<Ciphertext>& encrypted_query,
+                                        vector<uint32_t>& single_pt_index_codeword);
+void mk22_generate_selection_vector(Evaluator& evaluator, 
+                               const RelinKeys* const relin_keys,
+                               uint32_t codeword_bit_length, 
+                               uint32_t hamming_weight,
+                               uint32_t eq_type,
+                               vector<Ciphertext>& expanded_query, 
+                               vector<vector<uint32_t>>& pt_index_codewords_list,  
+                               vector<Ciphertext>& selection_vector);
+Ciphertext mk22_faster_inner_product(Evaluator& evaluator, 
+                               vector<Ciphertext>& selection_vector, 
+                               vector<Plaintext>& database);
 #endif //MPC4J_NATIVE_FHE_INDEX_PIR_H

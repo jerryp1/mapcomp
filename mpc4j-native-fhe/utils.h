@@ -19,4 +19,15 @@ Serializable<GaloisKeys> generate_galois_keys(const SEALContext& context, KeyGen
 uint64_t invert_mod(uint64_t m, const seal::Modulus &mod);
 
 void try_clear_irrelevant_bits(const EncryptionParameters &parms, Ciphertext &ciphertext);
+
+
+
+template< typename T >
+std::string int_to_hex( T i )
+{
+  std::stringstream stream;
+  stream << std::hex << i;
+  return stream.str();
+}
+
 #endif //MPC4J_NATIVE_FHE_UTILS_H

@@ -498,3 +498,203 @@ vector<Ciphertext> multiply_mulpir( const EncryptionParameters& parms,
     }
     return result;                  
 }
+
+
+vector<Ciphertext> mk22_expand_input_ciphers(const EncryptionParameters& parms, const GaloisKeys& galois_keys,  vector<Ciphertext>& input_ciphers, uint64_t num_input_ciphers, uint64_t num_bits) {
+
+    vector<Ciphertext> answer;
+    vector<Ciphertext> temp_expanded;
+    // m
+    uint64_t remaining_bits = num_bits;
+    // 对应算法5 line-3，最外层循环 
+    for (int i=0;i<num_input_ciphers;i++){
+        temp_expanded.clear();
+        // 注意输入：单个密文， 单次最多扩展出 N 个密文 ，因为一个PT 最多能够使用的 slots 就是 N
+        // 这里其实对应 单个密文的扩展 
+        temp_expanded = mk22_expand_procedure(parms, galois_keys, input_ciphers[i], min<uint64_t>(remaining_bits, parms.poly_modulus_degree()));
+        for (int j=0;j<temp_expanded.size();j++)
+            answer.push_back(temp_expanded[j]);
+        remaining_bits -= temp_expanded.size();
+    }
+    return answer;
+}
+
+// convert single Ciphertext to 2^c Ciphertext 
+vector<Ciphertext> mk22_expand_procedure(const EncryptionParameters& parms, const GaloisKeys& galois_keys, const Ciphertext &input_cipher, uint64_t used_slots) {
+
+    SEALContext context(parms);
+    Evaluator evaluator(context);
+
+    vector<Ciphertext> ciphers(used_slots);
+    // 对应 c , 所以整个算法是对应 算法5 的 line-4 以后的部分，即没有包括最外层的 for j \in [h] 这个循环 
+    uint64_t expansion_level = (int)ceil(log2(used_slots));
+    ciphers[0] = input_cipher; // line-4
+    for (uint64_t a = 0; a < expansion_level; a++){ // line-5 
+        // #pragma omp parallel
+        {
+            // #pragma omp for
+            for (uint64_t b = 0; b < (1<<a); b++){ // line-6
+                auto temp_0=ciphers[b];
+                auto temp_2=ciphers[b];
+                evaluator.apply_galois_inplace(temp_0, (parms.poly_modulus_degree() >> a) + 1, galois_keys);
+                evaluator.add_inplace(ciphers[b], temp_0);
+
+                if (b+(1<<a) < used_slots){
+                    Ciphertext temp_1;
+                    // multiply_power_of_X almost equals multiply_inverse_power_of_X in constant-weight PIR opensource
+                    uint32_t index = ((parms.poly_modulus_degree() << 1) - (1 << a)) % (parms.poly_modulus_degree() << 1);
+                    multiply_power_of_X(temp_2, ciphers[b + (1 << a) ], index, context);
+                    multiply_power_of_X(temp_0, temp_1, index, context);
+                    // multiply_inverse_power_of_X(temp_2, 1<<a, ciphers[b+(1<<a)]);
+                    // multiply_inverse_power_of_X(temp_0, 1<<a, temp_1);
+                    evaluator.sub_inplace(ciphers[b + (1<<a)], temp_1);
+                }
+            }
+        }
+    
+    }
+    return ciphers;
+
+}
+
+// 这里就是完整的 算法6 了
+void mk22_generate_selection_vector(Evaluator& evaluator, 
+                               const RelinKeys* const relin_keys,
+                               uint32_t codeword_bit_length, 
+                               uint32_t hamming_weight,
+                               uint32_t eq_type,
+                               vector<Ciphertext>& expanded_query, 
+                               vector<vector<uint32_t>>& pt_index_codewords,  
+                               vector<Ciphertext>& selection_vector){
+    
+    // #pragma omp parallel for
+    for (uint32_t ch=0; ch<pt_index_codewords.size(); ch++){
+        selection_vector[ch] = mk22_generate_selection_bit(
+            evaluator,
+            relin_keys,
+            codeword_bit_length,
+            hamming_weight,
+            eq_type,
+            expanded_query,
+            pt_index_codewords[ch]
+            );
+    }
+    return;
+}
+
+Ciphertext mk22_faster_inner_product(Evaluator& evaluator, 
+                               vector<Ciphertext>& selection_vector, 
+                               vector<Plaintext>& database){
+
+    if(selection_vector.size() !=  database.size()) {
+        throw logic_error("the size of selection vector should be equal the size of the database.");
+    }
+
+    // #pragma omp parallel for
+    for (uint64_t i = 0; i < selection_vector.size(); i++){
+        if(!selection_vector[i].is_ntt_form()) {
+            evaluator.transform_to_ntt_inplace(selection_vector[i]);
+        }
+    } 
+    
+    // 列向量 即按列存放 
+    vector<Ciphertext> sub_ciphers;
+    // #pragma omp parallel
+    {
+        Ciphertext operand;
+        // #pragma omp for collapse(2)
+        // 遍历数据库每一行
+        for (uint64_t ch=0; ch<database.size(); ch++){
+            // 明文 * 密文 
+            evaluator.multiply_plain(selection_vector[ch], database[ch], operand);
+            #pragma omp critical
+            {
+                sub_ciphers.push_back(operand);
+            }
+        }
+    }
+    
+    Ciphertext encrypted_answer;
+    evaluator.add_many(sub_ciphers, encrypted_answer);
+    
+    return encrypted_answer;
+}
+
+
+
+// eq_type = 0 --> folkore_eq
+// eq_type = 1 --> constant_weight_eq
+Ciphertext mk22_generate_selection_bit( Evaluator& evaluator, 
+                                        const RelinKeys* const relin_keys,
+                                        uint32_t codeword_bit_length, 
+                                        uint32_t hamming_weight,
+                                        uint32_t eq_type,
+                                        vector<Ciphertext>& encrypted_query,
+                                        vector<uint32_t>& single_pt_index_codeword) {
+    
+    if (single_pt_index_codeword.size() != encrypted_query.size()) {
+        throw logic_error(" codewords bit length should equal beteween plain codewords and cipher codewords vector");
+    }
+
+    Ciphertext temp_ciphertext;
+    if (eq_type == 0) {
+        temp_ciphertext = mk22_folklore_eq(evaluator,relin_keys, codeword_bit_length,  encrypted_query, single_pt_index_codeword);
+    }else if (eq_type == 1) {
+        temp_ciphertext = mk22_constant_weight_eq(evaluator, relin_keys, codeword_bit_length, hamming_weight, encrypted_query, single_pt_index_codeword);
+    }else {
+        throw logic_error("eq_type must be 0 or 1.");
+    }
+
+    return temp_ciphertext;
+}
+
+Ciphertext mk22_folklore_eq(Evaluator& evaluator, 
+                            const RelinKeys* const relin_keys,
+                            uint32_t codeword_bit_length, 
+                            vector<Ciphertext>& encrypted_query, 
+                            vector<uint32_t>& single_pt_index_codeword){
+    Ciphertext temp_ciphertext;
+    vector<Ciphertext> mult_operands;
+    for (uint32_t i=0; i < codeword_bit_length; i++){
+        if (single_pt_index_codeword[i]==1){
+            mult_operands.push_back(encrypted_query[i]);
+        } else {
+            Ciphertext operand;
+            evaluator.sub_plain(encrypted_query[i], Plaintext("1"), operand);
+            evaluator.negate_inplace(operand);
+            mult_operands.push_back(operand);
+        }
+    }
+    evaluator.multiply_many(mult_operands, *relin_keys, temp_ciphertext);
+    return temp_ciphertext;
+}
+
+Ciphertext mk22_constant_weight_eq(Evaluator& evaluator, 
+                            const RelinKeys* const relin_keys,
+                            uint32_t codeword_bit_length, 
+                            uint32_t hamming_weight,
+                            vector<Ciphertext>& encrypted_query, vector<uint32_t>& single_pt_index_codeword){
+    Ciphertext temp_ciphertext;
+   
+    if (hamming_weight > 1){ // k > 1
+        vector<Ciphertext> mult_operands;
+        for (uint32_t i=0; i<codeword_bit_length; i++){ // 遍历 m 个比特
+            if (single_pt_index_codeword[i]==1){ // 明文比特等于 1，就把对应的 密文比特放进去 
+                mult_operands.push_back(encrypted_query[i]);
+            }
+        }
+        // 这里会有密文*密文，并且乘法的次数就是 hamming weight k, 结果是一个密文，而且这个密文不是 E(0)，就是 E(1)
+        // 这里直接调用的 Seal 接口
+        evaluator.multiply_many(mult_operands, *relin_keys, temp_ciphertext);
+    } else {
+        // 如果 k = 1,那整个逻辑非常简单了，不需要执行 多次乘法，因为就一个嘛，把encrypted_query 中对应的比特扣下来就是对应的 sel 
+        for (uint32_t i=0; i < codeword_bit_length; i++){
+            if (single_pt_index_codeword[i]==1){
+                temp_ciphertext = encrypted_query[i];
+            }
+        }
+    }
+    return temp_ciphertext;
+}
+
+
