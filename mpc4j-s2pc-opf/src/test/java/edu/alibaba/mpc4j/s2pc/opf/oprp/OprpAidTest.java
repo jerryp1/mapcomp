@@ -1,12 +1,14 @@
 package edu.alibaba.mpc4j.s2pc.opf.oprp;
 
 import edu.alibaba.mpc4j.common.rpc.desc.SecurityModel;
-import edu.alibaba.mpc4j.common.rpc.test.AbstractTwoPartyPtoTest;
+import edu.alibaba.mpc4j.common.rpc.test.AbstractThreePartyPtoTest;
 import edu.alibaba.mpc4j.common.tool.CommonConstants;
 import edu.alibaba.mpc4j.common.tool.crypto.prp.Prp;
 import edu.alibaba.mpc4j.common.tool.crypto.prp.PrpFactory;
 import edu.alibaba.mpc4j.common.tool.utils.BytesUtils;
 import edu.alibaba.mpc4j.s2pc.opf.oprp.lowmc.LowMcOprpConfig;
+import edu.alibaba.mpc4j.s2pc.pcg.aid.AiderThread;
+import edu.alibaba.mpc4j.s2pc.pcg.aid.TrustDealAider;
 import org.apache.commons.lang3.time.StopWatch;
 import org.junit.Assert;
 import org.junit.Test;
@@ -22,14 +24,14 @@ import java.util.concurrent.TimeUnit;
 import java.util.stream.IntStream;
 
 /**
- * OPRP test.
+ * OPRP aid test.
  *
  * @author Weiran Liu
- * @date 2022/02/14
+ * @date 2023/6/26
  */
 @RunWith(Parameterized.class)
-public class OprpTest extends AbstractTwoPartyPtoTest {
-    private static final Logger LOGGER = LoggerFactory.getLogger(OprpTest.class);
+public class OprpAidTest extends AbstractThreePartyPtoTest {
+    private static final Logger LOGGER = LoggerFactory.getLogger(OprpAidTest.class);
     /**
      * default batch size
      */
@@ -45,8 +47,8 @@ public class OprpTest extends AbstractTwoPartyPtoTest {
 
         // LowMC
         configurations.add(new Object[] {
-            OprpFactory.OprpType.LOW_MC.name() + " (" + SecurityModel.SEMI_HONEST.name() + ")",
-            new LowMcOprpConfig.Builder(SecurityModel.SEMI_HONEST)
+            OprpFactory.OprpType.LOW_MC.name() + " (" + SecurityModel.TRUSTED_DEALER.name() + ")",
+            new LowMcOprpConfig.Builder(SecurityModel.TRUSTED_DEALER)
                 .build(),
         });
 
@@ -54,11 +56,11 @@ public class OprpTest extends AbstractTwoPartyPtoTest {
     }
 
     /**
-     * 协议类型
+     * config
      */
     private final OprpConfig config;
 
-    public OprpTest(String name, OprpConfig config) {
+    public OprpAidTest(String name, OprpConfig config) {
         super(name);
         this.config = config;
     }
@@ -94,13 +96,16 @@ public class OprpTest extends AbstractTwoPartyPtoTest {
     }
 
     private void testPto(int batchSize, boolean parallel) {
-        OprpSender sender = OprpFactory.createSender(firstRpc, secondRpc.ownParty(), config);
-        OprpReceiver receiver = OprpFactory.createReceiver(secondRpc, firstRpc.ownParty(), config);
+        OprpSender sender = OprpFactory.createSender(firstRpc, secondRpc.ownParty(), thirdRpc.ownParty(), config);
+        OprpReceiver receiver = OprpFactory.createReceiver(secondRpc, firstRpc.ownParty(), thirdRpc.ownParty(), config);
+        TrustDealAider aider = new TrustDealAider(thirdRpc, firstRpc.ownParty(), secondRpc.ownParty());
         sender.setParallel(parallel);
         receiver.setParallel(parallel);
+        aider.setParallel(parallel);
         int randomTaskId = Math.abs(SECURE_RANDOM.nextInt());
         sender.setTaskId(randomTaskId);
         receiver.setTaskId(randomTaskId);
+        aider.setTaskId(randomTaskId);
         try {
             LOGGER.info("-----test {}, batch_size = {}-----", sender.getPtoDesc().getPtoName(), batchSize);
             byte[] key = new byte[CommonConstants.BLOCK_BYTE_LENGTH];
@@ -114,11 +119,13 @@ public class OprpTest extends AbstractTwoPartyPtoTest {
                 .toArray(byte[][]::new);
             OprpSenderThread senderThread = new OprpSenderThread(sender, key, batchSize);
             OprpReceiverThread receiverThread = new OprpReceiverThread(receiver, messages);
+            AiderThread aiderThread = new AiderThread(aider);
             StopWatch stopWatch = new StopWatch();
             // start
             stopWatch.start();
             senderThread.start();
             receiverThread.start();
+            aiderThread.start();
             // stop
             senderThread.join();
             receiverThread.join();
@@ -142,6 +149,8 @@ public class OprpTest extends AbstractTwoPartyPtoTest {
             // destroy
             new Thread(sender::destroy).start();
             new Thread(receiver::destroy).start();
+            aiderThread.join();
+            new Thread(aider::destroy).start();
         } catch (InterruptedException e) {
             e.printStackTrace();
         }

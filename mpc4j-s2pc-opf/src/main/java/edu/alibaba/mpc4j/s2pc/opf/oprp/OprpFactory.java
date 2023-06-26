@@ -10,40 +10,40 @@ import edu.alibaba.mpc4j.s2pc.opf.oprp.lowmc.LowMcOprpReceiver;
 import edu.alibaba.mpc4j.s2pc.opf.oprp.lowmc.LowMcOprpSender;
 
 /**
- * OPRP协议工厂。
+ * OPRP factory.
  *
  * @author Weiran Liu
  * @date 2022/02/11
  */
 public class OprpFactory implements PtoFactory {
     /**
-     * 私有构造函数
+     * private constructor
      */
     private OprpFactory() {
         // empty
     }
 
     /**
-     * 协议类型
+     * protocol type
      */
     public enum OprpType {
         /**
-         * 20轮LowMC协议
+         * LowMC
          */
         LOW_MC,
         /**
-         * 20轮逆LowMC协议
+         * inverse LowMC
          */
         LOW_MC_INV,
     }
 
     /**
-     * 构建发送方。
+     * Creates a sender.
      *
-     * @param senderRpc     发送方通信接口。
-     * @param receiverParty 接收方信息。
-     * @param config        配置项。
-     * @return 发送方。
+     * @param senderRpc     sender RPC.
+     * @param receiverParty receiver party.
+     * @param config        config.
+     * @return a sender.
      */
     public static OprpSender createSender(Rpc senderRpc, Party receiverParty, OprpConfig config) {
         OprpType type = config.getPtoType();
@@ -57,18 +57,58 @@ public class OprpFactory implements PtoFactory {
     }
 
     /**
-     * 构建接收方。
+     * Creates a sender.
      *
-     * @param receiverRpc 接收方通信接口。
-     * @param senderParty 发送方信息。
-     * @param config      配置项。
-     * @return 接收方。
+     * @param senderRpc     sender RPC.
+     * @param receiverParty receiver party.
+     * @param aiderParty    aider party.
+     * @param config        config.
+     * @return a sender.
+     */
+    public static OprpSender createSender(Rpc senderRpc, Party receiverParty, Party aiderParty, OprpConfig config) {
+        OprpType type = config.getPtoType();
+        switch (type) {
+            case LOW_MC:
+                return new LowMcOprpSender(senderRpc, receiverParty, aiderParty, (LowMcOprpConfig) config);
+            case LOW_MC_INV:
+            default:
+                throw new IllegalArgumentException("Invalid " + OprpType.class.getSimpleName() + ": " + type.name());
+        }
+    }
+
+    /**
+     * Creates a receiver.
+     *
+     * @param receiverRpc receiver RPC.
+     * @param senderParty sender party.
+     * @param config      config.
+     * @return a receiver.
      */
     public static OprpReceiver createReceiver(Rpc receiverRpc, Party senderParty, OprpConfig config) {
         OprpType type = config.getPtoType();
         switch (type) {
             case LOW_MC:
                 return new LowMcOprpReceiver(receiverRpc, senderParty, (LowMcOprpConfig) config);
+            case LOW_MC_INV:
+            default:
+                throw new IllegalArgumentException("Invalid " + OprpType.class.getSimpleName() + ": " + type.name());
+        }
+    }
+
+    /**
+     * Creates a receiver.
+     *
+     * @param receiverRpc receiver RPC.
+     * @param senderParty sender party.
+     * @param aiderParty  aider party.
+     * @param config      config.
+     * @return a receiver.
+     */
+    public static OprpReceiver createReceiver(Rpc receiverRpc, Party senderParty, Party aiderParty, OprpConfig config) {
+        OprpType type = config.getPtoType();
+        switch (type) {
+            case LOW_MC:
+                return new LowMcOprpReceiver(receiverRpc, senderParty, aiderParty, (LowMcOprpConfig) config);
             case LOW_MC_INV:
             default:
                 throw new IllegalArgumentException("Invalid " + OprpType.class.getSimpleName() + ": " + type.name());

@@ -48,6 +48,12 @@ public class LowMcOprpSender extends AbstractOprpSender {
         addSubPtos(z2cSender);
     }
 
+    public LowMcOprpSender(Rpc senderRpc, Party receiverParty, Party aiderParty, LowMcOprpConfig config) {
+        super(LowMcOprpPtoDesc.getInstance(), senderRpc, receiverParty, config);
+        z2cSender = Z2cFactory.createSender(senderRpc, receiverParty, aiderParty, config.getZ2cConfig());
+        addSubPtos(z2cSender);
+    }
+
     @Override
     public PrpType getPrpType() {
         return PrpType.JDK_LONGS_LOW_MC_20;
