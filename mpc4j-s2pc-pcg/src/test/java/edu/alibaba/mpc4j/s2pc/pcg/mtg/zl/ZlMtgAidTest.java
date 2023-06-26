@@ -52,14 +52,15 @@ public class ZlMtgAidTest extends AbstractThreePartyPtoTest {
         };
 
         for (Zl zl : zls) {
+            int l = zl.getL();
             // OFFLINE
             configurations.add(new Object[]{
-                ZlMtgType.OFFLINE.name() + " (" + zl + ", " + SecurityModel.SEMI_HONEST + ")",
+                ZlMtgType.OFFLINE.name() + " (l = " + l + ", " + SecurityModel.SEMI_HONEST + ")",
                 new OfflineZlMtgConfig.Builder(SecurityModel.TRUSTED_DEALER, zl).build(),
             });
             // CACHE
             configurations.add(new Object[]{
-                ZlMtgType.CACHE.name() +" (" + zl + ", " + SecurityModel.SEMI_HONEST + ")",
+                ZlMtgType.CACHE.name() + " (l = " + l + ", " + SecurityModel.SEMI_HONEST + ")",
                 new OfflineZlMtgConfig.Builder(SecurityModel.TRUSTED_DEALER, zl).build(),
             });
         }
