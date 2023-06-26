@@ -48,6 +48,14 @@ public class CacheZlMtgReceiver extends AbstractZlMtgParty {
         maxBaseNum = coreMtgConfig.maxNum();
     }
 
+    public CacheZlMtgReceiver(Rpc receiverRpc, Party senderParty, Party aiderParty, CacheZlMtgConfig config) {
+        super(CacheZlMtgPtoDesc.getInstance(), receiverRpc, senderParty, config);
+        ZlCoreMtgConfig coreMtgConfig = config.getCoreMtgConfig();
+        coreMtgReceiver = ZlCoreMtgFactory.createReceiver(receiverRpc, senderParty, aiderParty, coreMtgConfig);
+        addSubPtos(coreMtgReceiver);
+        maxBaseNum = coreMtgConfig.maxNum();
+    }
+
     @Override
     public void init(int updateNum) throws MpcAbortException {
         setInitInput(updateNum);

@@ -48,6 +48,14 @@ public class CacheZlMtgSender extends AbstractZlMtgParty {
         maxBaseNum = coreMtgConfig.maxNum();
     }
 
+    public CacheZlMtgSender(Rpc senderRpc, Party receiverParty, Party aiderParty, CacheZlMtgConfig config) {
+        super(CacheZlMtgPtoDesc.getInstance(), senderRpc, receiverParty, config);
+        ZlCoreMtgConfig coreMtgConfig = config.getCoreMtgConfig();
+        coreMtgSender = ZlCoreMtgFactory.createSender(senderRpc, receiverParty, aiderParty, coreMtgConfig);
+        addSubPtos(coreMtgSender);
+        maxBaseNum = coreMtgConfig.maxNum();
+    }
+
     @Override
     public void init(int updateNum) throws MpcAbortException {
         setInitInput(updateNum);
@@ -61,7 +69,7 @@ public class CacheZlMtgSender extends AbstractZlMtgParty {
         } else {
             // we need to run multiple rounds
             updateRoundNum = maxBaseNum;
-            updateRound = (int)Math.ceil((double) updateNum / maxBaseNum);
+            updateRound = (int) Math.ceil((double) updateNum / maxBaseNum);
         }
         coreMtgSender.init(updateRoundNum);
         tripleBuffer = ZlTriple.createEmpty(zl);

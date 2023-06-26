@@ -61,6 +61,27 @@ public class ZlMtgFactory implements PtoFactory {
     }
 
     /**
+     * Creates a sender.
+     *
+     * @param senderRpc     sender RPC.
+     * @param receiverParty receiver party.
+     * @param aiderParty    aider party.
+     * @param config        config.
+     * @return a sender.
+     */
+    public static ZlMtgParty createSender(Rpc senderRpc, Party receiverParty, Party aiderParty, ZlMtgConfig config) {
+        ZlMtgType type = config.getPtoType();
+        switch (type) {
+            case CACHE:
+                return new CacheZlMtgSender(senderRpc, receiverParty, aiderParty, (CacheZlMtgConfig) config);
+            case OFFLINE:
+                return new OfflineZlMtgSender(senderRpc, receiverParty, aiderParty, (OfflineZlMtgConfig) config);
+            default:
+                throw new IllegalArgumentException("Invalid " + ZlMtgType.class.getSimpleName() + ": " + type.name());
+        }
+    }
+
+    /**
      * Creates a receiver.
      *
      * @param receiverRpc receiver RPC.
@@ -75,6 +96,27 @@ public class ZlMtgFactory implements PtoFactory {
                 return new CacheZlMtgReceiver(receiverRpc, senderParty, (CacheZlMtgConfig) config);
             case OFFLINE:
                 return new OfflineZlMtgReceiver(receiverRpc, senderParty, (OfflineZlMtgConfig) config);
+            default:
+                throw new IllegalArgumentException("Invalid " + ZlMtgType.class.getSimpleName() + ": " + type.name());
+        }
+    }
+
+    /**
+     * Creates a receiver.
+     *
+     * @param receiverRpc receiver RPC.
+     * @param senderParty sender party.
+     * @param aiderParty  aider party.
+     * @param config      config.
+     * @return a receiver.
+     */
+    public static ZlMtgParty createReceiver(Rpc receiverRpc, Party senderParty, Party aiderParty, ZlMtgConfig config) {
+        ZlMtgType type = config.getPtoType();
+        switch (type) {
+            case CACHE:
+                return new CacheZlMtgReceiver(receiverRpc, senderParty, aiderParty, (CacheZlMtgConfig) config);
+            case OFFLINE:
+                return new OfflineZlMtgReceiver(receiverRpc, senderParty, aiderParty, (OfflineZlMtgConfig) config);
             default:
                 throw new IllegalArgumentException("Invalid " + ZlMtgType.class.getSimpleName() + ": " + type.name());
         }
