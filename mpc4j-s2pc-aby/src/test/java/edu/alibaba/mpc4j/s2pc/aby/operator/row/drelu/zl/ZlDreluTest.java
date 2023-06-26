@@ -136,17 +136,11 @@ public class ZlDreluTest extends AbstractTwoPartyPtoTest {
             stopWatch.stop();
             long time = stopWatch.getTime(TimeUnit.MILLISECONDS);
             stopWatch.reset();
-            long senderByteLength = firstRpc.getSendByteLength();
-            long receiverByteLength = secondRpc.getSendByteLength();
-            firstRpc.reset();
-            secondRpc.reset();
+            // verify
             SquareZ2Vector shareZ0 = senderThread.getShareZ();
             SquareZ2Vector shareZ1 = receiverThread.getShareZ();
-            // verify
             assertOutput(x0, x1, shareZ0, shareZ1);
-            LOGGER.info("Sender sends {}B, Receiver sends {}B, time = {}ms",
-                senderByteLength, receiverByteLength, time
-            );
+            printAndResetRpc(time);
             LOGGER.info("-----test {} end-----", sender.getPtoDesc().getPtoName());
         } catch (InterruptedException e) {
             e.printStackTrace();

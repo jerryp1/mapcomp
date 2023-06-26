@@ -2,6 +2,7 @@ package edu.alibaba.mpc4j.s2pc.aby.basics.z2;
 
 import edu.alibaba.mpc4j.common.circuit.operator.DyadicBcOperator;
 import edu.alibaba.mpc4j.common.circuit.operator.UnaryBcOperator;
+import edu.alibaba.mpc4j.common.rpc.desc.SecurityModel;
 import edu.alibaba.mpc4j.common.rpc.test.AbstractTwoPartyPtoTest;
 import edu.alibaba.mpc4j.common.tool.bitvector.BitVector;
 import edu.alibaba.mpc4j.common.tool.bitvector.BitVectorFactory;
@@ -47,7 +48,8 @@ public class SingleZ2cTest extends AbstractTwoPartyPtoTest {
         });
         // Bea91
         configurations.add(new Object[] {
-            Z2cFactory.BcType.BEA91.name(), new Bea91Z2cConfig.Builder().build()
+            Z2cFactory.BcType.BEA91.name() + " (" + SecurityModel.SEMI_HONEST + ")",
+            new Bea91Z2cConfig.Builder(SecurityModel.SEMI_HONEST).build()
         });
 
         return configurations;
@@ -104,22 +106,19 @@ public class SingleZ2cTest extends AbstractTwoPartyPtoTest {
     }
 
     private void testPto(int bitNum, boolean parallel) {
+        for (DyadicBcOperator operator : DyadicBcOperator.values()) {
+            testDyadicOperator(operator, bitNum, parallel);
+        }
+        for (UnaryBcOperator operator : UnaryBcOperator.values()) {
+            testUnaryOperator(operator, bitNum, parallel);
+        }
+    }
+
+    private void testDyadicOperator(DyadicBcOperator operator, int bitNum, boolean parallel) {
         Z2cParty sender = Z2cFactory.createSender(firstRpc, secondRpc.ownParty(), config);
         Z2cParty receiver = Z2cFactory.createReceiver(secondRpc, firstRpc.ownParty(), config);
         sender.setParallel(parallel);
         receiver.setParallel(parallel);
-        for (DyadicBcOperator operator : DyadicBcOperator.values()) {
-            testDyadicOperator(sender, receiver, operator, bitNum);
-        }
-        for (UnaryBcOperator operator : UnaryBcOperator.values()) {
-            testUnaryOperator(sender, receiver, operator, bitNum);
-        }
-        // destroy
-        new Thread(sender::destroy).start();
-        new Thread(receiver::destroy).start();
-    }
-
-    private void testDyadicOperator(Z2cParty sender, Z2cParty receiver, DyadicBcOperator operator, int bitNum) {
         int randomTaskId = Math.abs(SECURE_RANDOM.nextInt());
         sender.setTaskId(randomTaskId);
         receiver.setTaskId(randomTaskId);
@@ -132,19 +131,17 @@ public class SingleZ2cTest extends AbstractTwoPartyPtoTest {
             SingleDyadicZ2cSenderThread senderThread = new SingleDyadicZ2cSenderThread(sender, operator, xVector, yVector);
             SingleDyadicZ2cReceiverThread receiverThread = new SingleDyadicZ2cReceiverThread(receiver, operator, xVector, yVector);
             StopWatch stopWatch = new StopWatch();
-
+            // start
             stopWatch.start();
             senderThread.start();
             receiverThread.start();
+            // stop
             senderThread.join();
             receiverThread.join();
             stopWatch.stop();
             long time = stopWatch.getTime(TimeUnit.MILLISECONDS);
             stopWatch.reset();
-            long senderByteLength = firstRpc.getSendByteLength();
-            long receiverByteLength = secondRpc.getSendByteLength();
-            firstRpc.reset();
-            secondRpc.reset();
+            // verify
             BitVector zVector = senderThread.getExpectVector();
             // (plain, plain)
             Assert.assertEquals(zVector, senderThread.getSenPlainPlainVector());
@@ -158,10 +155,10 @@ public class SingleZ2cTest extends AbstractTwoPartyPtoTest {
             // (secret, secret)
             Assert.assertEquals(zVector, senderThread.getSendSecretSecretVector());
             Assert.assertEquals(zVector, receiverThread.getRecvSecretSecretVector());
-
-            LOGGER.info("Sender sends {}B, Receiver sends {}B, time = {}ms",
-                senderByteLength, receiverByteLength, time
-            );
+            printAndResetRpc(time);
+            // destroy
+            new Thread(sender::destroy).start();
+            new Thread(receiver::destroy).start();
             LOGGER.info("-----test {} ({}) end-----", sender.getPtoDesc().getPtoName(), operator.name());
         } catch (InterruptedException e) {
             e.printStackTrace();
@@ -169,7 +166,11 @@ public class SingleZ2cTest extends AbstractTwoPartyPtoTest {
     }
 
     @SuppressWarnings("SameParameterValue")
-    private void testUnaryOperator(Z2cParty sender, Z2cParty receiver, UnaryBcOperator operator, int bitNum) {
+    private void testUnaryOperator(UnaryBcOperator operator, int bitNum, boolean parallel) {
+        Z2cParty sender = Z2cFactory.createSender(firstRpc, secondRpc.ownParty(), config);
+        Z2cParty receiver = Z2cFactory.createReceiver(secondRpc, firstRpc.ownParty(), config);
+        sender.setParallel(parallel);
+        receiver.setParallel(parallel);
         int randomTaskId = Math.abs(SECURE_RANDOM.nextInt());
         sender.setTaskId(randomTaskId);
         receiver.setTaskId(randomTaskId);
@@ -190,10 +191,7 @@ public class SingleZ2cTest extends AbstractTwoPartyPtoTest {
             stopWatch.stop();
             long time = stopWatch.getTime(TimeUnit.MILLISECONDS);
             stopWatch.reset();
-            long senderByteLength = firstRpc.getSendByteLength();
-            long receiverByteLength = secondRpc.getSendByteLength();
-            firstRpc.reset();
-            secondRpc.reset();
+            // verify
             BitVector zVector = senderThread.getExpectVector();
             // (plain)
             Assert.assertEquals(zVector, senderThread.getSendPlainVector());
@@ -201,11 +199,10 @@ public class SingleZ2cTest extends AbstractTwoPartyPtoTest {
             // (secret)
             Assert.assertEquals(zVector, senderThread.getSendSecretVector());
             Assert.assertEquals(zVector, receiverThread.getRecvSecretVector());
-
-            LOGGER.info("Sender sends {}B, Receiver sends {}B, time = {}ms",
-                senderByteLength, receiverByteLength, time
-            );
-            LOGGER.info("-----test {} ({}) end-----", sender.getPtoDesc().getPtoName(), operator.name());
+            printAndResetRpc(time);
+            // destroy
+            new Thread(sender::destroy).start();
+            new Thread(receiver::destroy).start();
         } catch (InterruptedException e) {
             e.printStackTrace();
         }

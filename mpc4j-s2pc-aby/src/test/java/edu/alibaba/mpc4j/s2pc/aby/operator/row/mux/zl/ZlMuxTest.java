@@ -145,17 +145,11 @@ public class ZlMuxTest extends AbstractTwoPartyPtoTest {
             stopWatch.stop();
             long time = stopWatch.getTime(TimeUnit.MILLISECONDS);
             stopWatch.reset();
-            long senderByteLength = firstRpc.getSendByteLength();
-            long receiverByteLength = secondRpc.getSendByteLength();
-            firstRpc.reset();
-            secondRpc.reset();
+            // verify
             SquareZlVector shareZ0 = senderThread.getShareZ0();
             SquareZlVector shareZ1 = receiverThread.getShareZ1();
-            // verify
             assertOutput(x0, x1, y0, y1, shareZ0, shareZ1);
-            LOGGER.info("Sender sends {}B, Receiver sends {}B, time = {}ms",
-                senderByteLength, receiverByteLength, time
-            );
+            printAndResetRpc(time);
             LOGGER.info("-----test {} end-----", sender.getPtoDesc().getPtoName());
         } catch (InterruptedException e) {
             e.printStackTrace();

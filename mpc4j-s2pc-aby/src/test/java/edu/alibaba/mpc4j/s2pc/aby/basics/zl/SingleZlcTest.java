@@ -120,22 +120,19 @@ public class SingleZlcTest extends AbstractTwoPartyPtoTest {
     }
 
     private void testPto(int num, boolean parallel) {
+        for (DyadicAcOperator operator : DyadicAcOperator.values()) {
+            testDyadicOperator(operator, num, parallel);
+        }
+        for (UnaryAcOperator operator : UnaryAcOperator.values()) {
+            testUnaryOperator(operator, num, parallel);
+        }
+    }
+
+    private void testDyadicOperator(DyadicAcOperator operator, int num, boolean parallel) {
         ZlcParty sender = ZlcFactory.createSender(firstRpc, secondRpc.ownParty(), config);
         ZlcParty receiver = ZlcFactory.createReceiver(secondRpc, firstRpc.ownParty(), config);
         sender.setParallel(parallel);
         receiver.setParallel(parallel);
-        for (DyadicAcOperator operator : DyadicAcOperator.values()) {
-            testDyadicOperator(sender, receiver, operator, num);
-        }
-        for (UnaryAcOperator operator : UnaryAcOperator.values()) {
-            testUnaryOperator(sender, receiver, operator, num);
-        }
-        // destroy
-        new Thread(sender::destroy).start();
-        new Thread(receiver::destroy).start();
-    }
-
-    private void testDyadicOperator(ZlcParty sender, ZlcParty receiver, DyadicAcOperator operator, int num) {
         int randomTaskId = Math.abs(SECURE_RANDOM.nextInt());
         sender.setTaskId(randomTaskId);
         receiver.setTaskId(randomTaskId);
@@ -148,19 +145,17 @@ public class SingleZlcTest extends AbstractTwoPartyPtoTest {
             SingleDyadicZlcSenderThread senderThread = new SingleDyadicZlcSenderThread(sender, operator, xVector, yVector);
             SingleDyadicZlcReceiverThread receiverThread = new SingleDyadicZlcReceiverThread(receiver, operator, xVector, yVector);
             StopWatch stopWatch = new StopWatch();
-
+            // start
             stopWatch.start();
             senderThread.start();
             receiverThread.start();
+            // stop
             senderThread.join();
             receiverThread.join();
             stopWatch.stop();
             long time = stopWatch.getTime(TimeUnit.MILLISECONDS);
             stopWatch.reset();
-            long senderByteLength = firstRpc.getSendByteLength();
-            long receiverByteLength = secondRpc.getSendByteLength();
-            firstRpc.reset();
-            secondRpc.reset();
+            // verify
             ZlVector zVector = senderThread.getExpectVector();
             // (plain, plain)
             Assert.assertEquals(zVector, senderThread.getSenPlainPlainVector());
@@ -174,10 +169,10 @@ public class SingleZlcTest extends AbstractTwoPartyPtoTest {
             // (secret, secret)
             Assert.assertEquals(zVector, senderThread.getSendSecretSecretVector());
             Assert.assertEquals(zVector, receiverThread.getRecvSecretSecretVector());
-
-            LOGGER.info("Sender sends {}B, Receiver sends {}B, time = {}ms",
-                senderByteLength, receiverByteLength, time
-            );
+            printAndResetRpc(time);
+            // destroy
+            new Thread(sender::destroy).start();
+            new Thread(receiver::destroy).start();
             LOGGER.info("-----test {} ({}) end-----", sender.getPtoDesc().getPtoName(), operator.name());
         } catch (InterruptedException e) {
             e.printStackTrace();
@@ -185,7 +180,11 @@ public class SingleZlcTest extends AbstractTwoPartyPtoTest {
     }
 
     @SuppressWarnings("SameParameterValue")
-    private void testUnaryOperator(ZlcParty sender, ZlcParty receiver, UnaryAcOperator operator, int num) {
+    private void testUnaryOperator(UnaryAcOperator operator, int num, boolean parallel) {
+        ZlcParty sender = ZlcFactory.createSender(firstRpc, secondRpc.ownParty(), config);
+        ZlcParty receiver = ZlcFactory.createReceiver(secondRpc, firstRpc.ownParty(), config);
+        sender.setParallel(parallel);
+        receiver.setParallel(parallel);
         int randomTaskId = Math.abs(SECURE_RANDOM.nextInt());
         sender.setTaskId(randomTaskId);
         receiver.setTaskId(randomTaskId);
@@ -196,19 +195,17 @@ public class SingleZlcTest extends AbstractTwoPartyPtoTest {
             SingleUnaryZlcSenderThread senderThread = new SingleUnaryZlcSenderThread(sender, operator, xVector);
             SingleUnaryZlcReceiverThread receiverThread = new SingleUnaryZlcReceiverThread(receiver, operator, xVector);
             StopWatch stopWatch = new StopWatch();
-
+            // start
             stopWatch.start();
             senderThread.start();
             receiverThread.start();
+            // stop
             senderThread.join();
             receiverThread.join();
             stopWatch.stop();
             long time = stopWatch.getTime(TimeUnit.MILLISECONDS);
             stopWatch.reset();
-            long senderByteLength = firstRpc.getSendByteLength();
-            long receiverByteLength = secondRpc.getSendByteLength();
-            firstRpc.reset();
-            secondRpc.reset();
+            // verify
             ZlVector zVector = senderThread.getExpectVector();
             // (plain)
             Assert.assertEquals(zVector, senderThread.getSendPlainVector());
@@ -216,10 +213,10 @@ public class SingleZlcTest extends AbstractTwoPartyPtoTest {
             // (secret)
             Assert.assertEquals(zVector, senderThread.getSendSecretVector());
             Assert.assertEquals(zVector, receiverThread.getRecvSecretVector());
-
-            LOGGER.info("Sender sends {}B, Receiver sends {}B, time = {}ms",
-                senderByteLength, receiverByteLength, time
-            );
+            printAndResetRpc(time);
+            // destroy
+            new Thread(sender::destroy).start();
+            new Thread(receiver::destroy).start();
             LOGGER.info("-----test {} ({}) end-----", sender.getPtoDesc().getPtoName(), operator.name());
         } catch (InterruptedException e) {
             e.printStackTrace();

@@ -156,20 +156,12 @@ public class MillionaireTest extends AbstractTwoPartyPtoTest {
             stopWatch.stop();
             long time = stopWatch.getTime(TimeUnit.MILLISECONDS);
             stopWatch.reset();
-            long senderByteLength = firstRpc.getSendByteLength();
-            long senderRound = firstRpc.getSendDataPacketNum();
-            long receiverByteLength = secondRpc.getSendByteLength();
-            long receiverRound = secondRpc.getSendDataPacketNum();
-            firstRpc.reset();
-            secondRpc.reset();
+            // verify
             SquareZ2Vector z0 = senderThread.getZi();
             SquareZ2Vector z1 = receiverThread.getZi();
             BitVector z = z0.getBitVector().xor(z1.getBitVector());
-            // verify
             assertOutput(num, xs, ys, z);
-            LOGGER.info("Sender sends {}B / {} rounds, Receiver sends {}B / {} rounds, time = {}ms",
-                senderByteLength, senderRound, receiverByteLength, receiverRound, time
-            );
+            printAndResetRpc(time);
             LOGGER.info("-----test {} end-----", sender.getPtoDesc().getPtoName());
         } catch (InterruptedException e) {
             e.printStackTrace();

@@ -125,22 +125,19 @@ public class BatchZlcTest extends AbstractTwoPartyPtoTest {
     }
 
     private void testPto(int num, boolean parallel) {
+        for (DyadicAcOperator operator : DyadicAcOperator.values()) {
+            testDyadicOperator(operator, num, parallel);
+        }
+        for (UnaryAcOperator operator : UnaryAcOperator.values()) {
+            testUnaryOperator(operator, num, parallel);
+        }
+    }
+
+    private void testDyadicOperator(DyadicAcOperator operator, int maxNum, boolean parallel) {
         ZlcParty sender = ZlcFactory.createSender(firstRpc, secondRpc.ownParty(), config);
         ZlcParty receiver = ZlcFactory.createReceiver(secondRpc, firstRpc.ownParty(), config);
         sender.setParallel(parallel);
         receiver.setParallel(parallel);
-        for (DyadicAcOperator operator : DyadicAcOperator.values()) {
-            testDyadicOperator(sender, receiver, operator, num);
-        }
-        for (UnaryAcOperator operator : UnaryAcOperator.values()) {
-            testUnaryOperator(sender, receiver, operator, num);
-        }
-        // destroy
-        new Thread(sender::destroy).start();
-        new Thread(receiver::destroy).start();
-    }
-
-    private void testDyadicOperator(ZlcParty sender, ZlcParty receiver, DyadicAcOperator operator, int maxNum) {
         int randomTaskId = Math.abs(SECURE_RANDOM.nextInt());
         sender.setTaskId(randomTaskId);
         receiver.setTaskId(randomTaskId);
@@ -176,10 +173,7 @@ public class BatchZlcTest extends AbstractTwoPartyPtoTest {
             stopWatch.stop();
             long time = stopWatch.getTime(TimeUnit.MILLISECONDS);
             stopWatch.reset();
-            long senderByteLength = firstRpc.getSendByteLength();
-            long receiverByteLength = secondRpc.getSendByteLength();
-            firstRpc.reset();
-            secondRpc.reset();
+            // verify
             ZlVector[] expectVectors = senderThread.getExpectVectors();
             // (plain, plain)
             Assert.assertArrayEquals(expectVectors, senderThread.getSendPlainPlainVectors());
@@ -193,10 +187,10 @@ public class BatchZlcTest extends AbstractTwoPartyPtoTest {
             // (secret, secret)
             Assert.assertArrayEquals(expectVectors, senderThread.getSendSecretSecretVectors());
             Assert.assertArrayEquals(expectVectors, receiverThread.getRecvSecretSecretVectors());
-
-            LOGGER.info("Sender sends {}B, Receiver sends {}B, time = {}ms",
-                senderByteLength, receiverByteLength, time
-            );
+            printAndResetRpc(time);
+            // destroy
+            new Thread(sender::destroy).start();
+            new Thread(receiver::destroy).start();
             LOGGER.info("-----test {} ({}) end-----", sender.getPtoDesc().getPtoName(), operator.name());
         } catch (InterruptedException e) {
             e.printStackTrace();
@@ -204,7 +198,11 @@ public class BatchZlcTest extends AbstractTwoPartyPtoTest {
     }
 
     @SuppressWarnings("SameParameterValue")
-    private void testUnaryOperator(ZlcParty sender, ZlcParty receiver, UnaryAcOperator operator, int maxNum) {
+    private void testUnaryOperator(UnaryAcOperator operator, int maxNum, boolean parallel) {
+        ZlcParty sender = ZlcFactory.createSender(firstRpc, secondRpc.ownParty(), config);
+        ZlcParty receiver = ZlcFactory.createReceiver(secondRpc, firstRpc.ownParty(), config);
+        sender.setParallel(parallel);
+        receiver.setParallel(parallel);
         int randomTaskId = Math.abs(SECURE_RANDOM.nextInt());
         sender.setTaskId(randomTaskId);
         receiver.setTaskId(randomTaskId);
@@ -231,10 +229,7 @@ public class BatchZlcTest extends AbstractTwoPartyPtoTest {
             stopWatch.stop();
             long time = stopWatch.getTime(TimeUnit.MILLISECONDS);
             stopWatch.reset();
-            long senderByteLength = firstRpc.getSendByteLength();
-            long receiverByteLength = secondRpc.getSendByteLength();
-            firstRpc.reset();
-            secondRpc.reset();
+            // verify
             ZlVector[] zVectors = senderThread.getExpectVectors();
             // (plain)
             Assert.assertArrayEquals(zVectors, senderThread.getSendPlainVectors());
@@ -242,10 +237,10 @@ public class BatchZlcTest extends AbstractTwoPartyPtoTest {
             // (secret)
             Assert.assertArrayEquals(zVectors, senderThread.getSendSecretVectors());
             Assert.assertArrayEquals(zVectors, receiverThread.getRecvSecretVectors());
-
-            LOGGER.info("Sender sends {}B, Receiver sends {}B, time = {}ms",
-                senderByteLength, receiverByteLength, time
-            );
+            printAndResetRpc(time);
+            // destroy
+            new Thread(sender::destroy).start();
+            new Thread(receiver::destroy).start();
             LOGGER.info("-----test {} ({}) end-----", sender.getPtoDesc().getPtoName(), operator.name());
         } catch (InterruptedException e) {
             e.printStackTrace();

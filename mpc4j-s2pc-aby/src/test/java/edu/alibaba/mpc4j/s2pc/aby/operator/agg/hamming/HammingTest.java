@@ -159,17 +159,11 @@ public class HammingTest extends AbstractTwoPartyPtoTest {
             stopWatch.stop();
             long time = stopWatch.getTime(TimeUnit.MILLISECONDS);
             stopWatch.reset();
-            long senderByteLength = firstRpc.getSendByteLength();
-            long receiverByteLength = secondRpc.getSendByteLength();
-            firstRpc.reset();
-            secondRpc.reset();
+            // verify
             int senderHammingDistance = senderThread.getHammingDistance();
             int receiverHammingDistance = receiverThread.getHammingDistance();
-            // verify
             assertOutput(expectHammingDistance, senderHammingDistance, receiverHammingDistance);
-            LOGGER.info("Sender sends {}B, Receiver sends {}B, time = {}ms",
-                senderByteLength, receiverByteLength, time
-            );
+            printAndResetRpc(time);
             LOGGER.info("-----test {} end-----", sender.getPtoDesc().getPtoName());
         } catch (InterruptedException e) {
             e.printStackTrace();

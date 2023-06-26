@@ -131,18 +131,12 @@ public class ZlDaBitGenTest extends AbstractTwoPartyPtoTest {
             stopWatch.stop();
             long time = stopWatch.getTime(TimeUnit.MILLISECONDS);
             stopWatch.reset();
-            long senderByteLength = firstRpc.getSendByteLength();
-            long receiverByteLength = secondRpc.getSendByteLength();
-            firstRpc.reset();
-            secondRpc.reset();
             SquareZlDaBitVector senderOutput = senderThread.getOutput();
             SquareZlDaBitVector receiverOutput = receiverThread.getOutput();
             PlainZlDaBitVector plainZlDaBitVector = senderOutput.reveal(receiverOutput);
             // verify
             assertOutput(num, plainZlDaBitVector);
-            LOGGER.info("Sender sends {}B, Receiver sends {}B, time = {}ms",
-                senderByteLength, receiverByteLength, time
-            );
+            printAndResetRpc(time);
             LOGGER.info("-----test {} end-----", sender.getPtoDesc().getPtoName());
         } catch (InterruptedException e) {
             e.printStackTrace();

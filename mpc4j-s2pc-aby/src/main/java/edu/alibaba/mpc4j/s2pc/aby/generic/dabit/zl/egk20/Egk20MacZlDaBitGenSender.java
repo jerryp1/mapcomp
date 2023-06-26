@@ -45,12 +45,11 @@ public class Egk20MacZlDaBitGenSender extends AbstractZlDaBitGenParty {
         addSubPtos(z2cSender);
     }
 
-    public Egk20MacZlDaBitGenSender(Rpc senderPpc, Party receiverParty, Party aider, Egk20MacZlDaBitGenConfig config) {
+    public Egk20MacZlDaBitGenSender(Rpc senderPpc, Party receiverParty, Party aiderParty, Egk20MacZlDaBitGenConfig config) {
         super(Egk20MacZlDaBitGenPtoDesc.getInstance(), senderPpc, receiverParty, config);
-        //TODO add aider
-        zlcSender = ZlcFactory.createSender(senderPpc, receiverParty, config.getZlcConfig());
+        zlcSender = ZlcFactory.createSender(senderPpc, receiverParty, aiderParty, config.getZlcConfig());
         addSubPtos(zlcSender);
-        z2cSender = Z2cFactory.createSender(senderPpc, receiverParty, aider, config.getZ2cConfig());
+        z2cSender = Z2cFactory.createSender(senderPpc, receiverParty, aiderParty, config.getZ2cConfig());
         addSubPtos(z2cSender);
     }
 

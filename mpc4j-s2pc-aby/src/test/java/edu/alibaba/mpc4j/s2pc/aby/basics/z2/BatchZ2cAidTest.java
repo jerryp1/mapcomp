@@ -3,11 +3,12 @@ package edu.alibaba.mpc4j.s2pc.aby.basics.z2;
 import edu.alibaba.mpc4j.common.circuit.operator.DyadicBcOperator;
 import edu.alibaba.mpc4j.common.circuit.operator.UnaryBcOperator;
 import edu.alibaba.mpc4j.common.rpc.desc.SecurityModel;
-import edu.alibaba.mpc4j.common.rpc.test.AbstractTwoPartyPtoTest;
+import edu.alibaba.mpc4j.common.rpc.test.AbstractThreePartyPtoTest;
 import edu.alibaba.mpc4j.common.tool.bitvector.BitVector;
 import edu.alibaba.mpc4j.common.tool.bitvector.BitVectorFactory;
 import edu.alibaba.mpc4j.s2pc.aby.basics.z2.bea91.Bea91Z2cConfig;
-import edu.alibaba.mpc4j.s2pc.aby.basics.z2.rrg21.Rrg21Z2cConfig;
+import edu.alibaba.mpc4j.s2pc.pcg.aid.AiderThread;
+import edu.alibaba.mpc4j.s2pc.pcg.aid.TrustDealAider;
 import org.apache.commons.lang3.time.StopWatch;
 import org.junit.Assert;
 import org.junit.Test;
@@ -22,14 +23,14 @@ import java.util.concurrent.TimeUnit;
 import java.util.stream.IntStream;
 
 /**
- * batch Z2 circuit test.
+ * batch Z2 circuit aid test.
  *
  * @author Weiran Liu
- * @date 2022/12/27
+ * @date 2023/6/26
  */
 @RunWith(Parameterized.class)
-public class BatchZ2cTest extends AbstractTwoPartyPtoTest {
-    private static final Logger LOGGER = LoggerFactory.getLogger(BatchZ2cTest.class);
+public class BatchZ2cAidTest extends AbstractThreePartyPtoTest {
+    private static final Logger LOGGER = LoggerFactory.getLogger(BatchZ2cAidTest.class);
     /**
      * default number of bits
      */
@@ -47,15 +48,10 @@ public class BatchZ2cTest extends AbstractTwoPartyPtoTest {
     public static Collection<Object[]> configurations() {
         Collection<Object[]> configurations = new ArrayList<>();
 
-        // RRG+21
-        configurations.add(new Object[]{
-            Z2cFactory.BcType.RRG21.name(),
-            new Rrg21Z2cConfig.Builder().build()
-        });
         // Bea91
         configurations.add(new Object[]{
-            Z2cFactory.BcType.BEA91.name() + " (" + SecurityModel.SEMI_HONEST + ")",
-            new Bea91Z2cConfig.Builder(SecurityModel.SEMI_HONEST).build()
+            Z2cFactory.BcType.BEA91.name() + " (" + SecurityModel.TRUSTED_DEALER + ")",
+            new Bea91Z2cConfig.Builder(SecurityModel.TRUSTED_DEALER).build()
         });
 
         return configurations;
@@ -66,7 +62,7 @@ public class BatchZ2cTest extends AbstractTwoPartyPtoTest {
      */
     private final Z2cConfig config;
 
-    public BatchZ2cTest(String name, Z2cConfig config) {
+    public BatchZ2cAidTest(String name, Z2cConfig config) {
         super(name);
         this.config = config;
     }
@@ -121,13 +117,16 @@ public class BatchZ2cTest extends AbstractTwoPartyPtoTest {
     }
 
     private void testDyadicOperator(DyadicBcOperator operator, int maxBitNum, boolean parallel) {
-        Z2cParty sender = Z2cFactory.createSender(firstRpc, secondRpc.ownParty(), config);
-        Z2cParty receiver = Z2cFactory.createReceiver(secondRpc, firstRpc.ownParty(), config);
+        Z2cParty sender = Z2cFactory.createSender(firstRpc, secondRpc.ownParty(), thirdRpc.ownParty(), config);
+        Z2cParty receiver = Z2cFactory.createReceiver(secondRpc, firstRpc.ownParty(), thirdRpc.ownParty(), config);
+        TrustDealAider aider = new TrustDealAider(thirdRpc, firstRpc.ownParty(), secondRpc.ownParty());
         sender.setParallel(parallel);
         receiver.setParallel(parallel);
+        aider.setParallel(parallel);
         int randomTaskId = Math.abs(SECURE_RANDOM.nextInt());
         sender.setTaskId(randomTaskId);
         receiver.setTaskId(randomTaskId);
+        aider.setTaskId(randomTaskId);
         // generate xs
         BitVector[] xVectors = IntStream.range(0, VECTOR_LENGTH)
             .mapToObj(index -> {
@@ -149,11 +148,13 @@ public class BatchZ2cTest extends AbstractTwoPartyPtoTest {
                 = new BatchDyadicZ2cSenderThread(sender, operator, xVectors, yVectors);
             BatchDyadicZ2cReceiverThread receiverThread
                 = new BatchDyadicZ2cReceiverThread(receiver, operator, xVectors, yVectors);
+            AiderThread aiderThread = new AiderThread(aider);
             StopWatch stopWatch = new StopWatch();
             // start
             stopWatch.start();
             senderThread.start();
             receiverThread.start();
+            aiderThread.start();
             // stop
             senderThread.join();
             receiverThread.join();
@@ -178,6 +179,8 @@ public class BatchZ2cTest extends AbstractTwoPartyPtoTest {
             // destroy
             new Thread(sender::destroy).start();
             new Thread(receiver::destroy).start();
+            aiderThread.join();
+            new Thread(aider::destroy).start();
             LOGGER.info("-----test {} ({}) end-----", sender.getPtoDesc().getPtoName(), operator.name());
         } catch (InterruptedException e) {
             e.printStackTrace();
@@ -186,13 +189,16 @@ public class BatchZ2cTest extends AbstractTwoPartyPtoTest {
 
     @SuppressWarnings("SameParameterValue")
     private void testUnaryOperator(UnaryBcOperator operator, int maxBitNum, boolean parallel) {
-        Z2cParty sender = Z2cFactory.createSender(firstRpc, secondRpc.ownParty(), config);
-        Z2cParty receiver = Z2cFactory.createReceiver(secondRpc, firstRpc.ownParty(), config);
+        Z2cParty sender = Z2cFactory.createSender(firstRpc, secondRpc.ownParty(), thirdRpc.ownParty(), config);
+        Z2cParty receiver = Z2cFactory.createReceiver(secondRpc, firstRpc.ownParty(), thirdRpc.ownParty(), config);
+        TrustDealAider aider = new TrustDealAider(thirdRpc, firstRpc.ownParty(), secondRpc.ownParty());
         sender.setParallel(parallel);
         receiver.setParallel(parallel);
+        aider.setParallel(parallel);
         int randomTaskId = Math.abs(SECURE_RANDOM.nextInt());
         sender.setTaskId(randomTaskId);
         receiver.setTaskId(randomTaskId);
+        aider.setTaskId(randomTaskId);
         // generate xs
         BitVector[] xVectors = IntStream.range(0, VECTOR_LENGTH)
             .mapToObj(index -> {
@@ -205,11 +211,13 @@ public class BatchZ2cTest extends AbstractTwoPartyPtoTest {
             LOGGER.info("-----test {} ({}) start-----", sender.getPtoDesc().getPtoName(), operator.name());
             BatchUnaryZ2cSenderThread senderThread = new BatchUnaryZ2cSenderThread(sender, operator, xVectors);
             BatchUnaryZ2cReceiverThread receiverThread = new BatchUnaryZ2cReceiverThread(receiver, operator, xVectors);
+            AiderThread aiderThread = new AiderThread(aider);
             StopWatch stopWatch = new StopWatch();
             // start
             stopWatch.start();
             senderThread.start();
             receiverThread.start();
+            aiderThread.start();
             // stop
             senderThread.join();
             receiverThread.join();
@@ -228,6 +236,8 @@ public class BatchZ2cTest extends AbstractTwoPartyPtoTest {
             // destroy
             new Thread(sender::destroy).start();
             new Thread(receiver::destroy).start();
+            aiderThread.join();
+            new Thread(aider::destroy).start();
             LOGGER.info("-----test {} ({}) end-----", sender.getPtoDesc().getPtoName(), operator.name());
         } catch (InterruptedException e) {
             e.printStackTrace();
