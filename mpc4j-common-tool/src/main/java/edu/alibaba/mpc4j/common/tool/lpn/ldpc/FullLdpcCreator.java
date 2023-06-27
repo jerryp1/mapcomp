@@ -1,9 +1,9 @@
 package edu.alibaba.mpc4j.common.tool.lpn.ldpc;
 
 import edu.alibaba.mpc4j.common.tool.bitmatrix.dense.ByteDenseBitMatrix;
-import edu.alibaba.mpc4j.common.tool.bitmatrix.sparse.LowerTriangularSparseBitMatrix;
-import edu.alibaba.mpc4j.common.tool.bitmatrix.sparse.SparseBitMatrix;
-import edu.alibaba.mpc4j.common.tool.bitmatrix.sparse.UpperTriangularSparseBitMatrix;
+import edu.alibaba.mpc4j.common.tool.bitmatrix.sparse.LowerTriSquareSparseBitMatrix;
+import edu.alibaba.mpc4j.common.tool.bitmatrix.sparse.NaiveSparseBitMatrix;
+import edu.alibaba.mpc4j.common.tool.bitmatrix.sparse.UpperTriSquareSparseBitMatrix;
 import edu.alibaba.mpc4j.common.tool.lpn.LpnParams;
 import edu.alibaba.mpc4j.common.tool.bitmatrix.sparse.SparseBitVector;
 
@@ -27,9 +27,9 @@ public class FullLdpcCreator extends AbstractLdpcCreator {
     /**
      * 由于给定参数下 Ep未必存在，需要多次调整参数尝试。引入临时矩阵，最终确定后写入到A~F。
      */
-    private SparseBitMatrix tempA, tempB, tempD, tempE, tempF;
+    private NaiveSparseBitMatrix tempA, tempB, tempD, tempE, tempF;
 
-    private LowerTriangularSparseBitMatrix tempC;
+    private LowerTriSquareSparseBitMatrix tempC;
     /**
      * 最大尝试次数
      */
@@ -64,8 +64,8 @@ public class FullLdpcCreator extends AbstractLdpcCreator {
                 matrixA = tempA;
                 matrixB = tempB;
                 matrixC = tempC;
-                matrixD = tempD.toExtremeSparseMatrix();
-                matrixF = tempF.toExtremeSparseMatrix();
+                matrixD = tempD.toExtremeSparseBitMatrix();
+                matrixF = tempF.toExtremeSparseBitMatrix();
                 break;
             } catch (ArithmeticException e) {
                 // 当Ep 不存在时，将tryKvalue 加1。
@@ -99,13 +99,13 @@ public class FullLdpcCreator extends AbstractLdpcCreator {
             ss.add(firstCol[i]);
         }
         // 根据初始列向量，创建循环左矩阵。
-        SparseBitMatrix leftMtx = SparseBitMatrix.createCyclicMatrix(kValue, kValue, firstCol);
+        NaiveSparseBitMatrix leftMtx = NaiveSparseBitMatrix.createFromCyclic(kValue, kValue, firstCol);
         // 提取矩阵A,B，D,E。
-        tempA = leftMtx.getSubMatrix(0, kValue - gapValue, 0, kValue - gapValue);
-        tempB = leftMtx.getSubMatrix(kValue - gapValue, kValue, 0, kValue - gapValue);
-        tempD = leftMtx.getSubMatrix(0, kValue - gapValue,
+        tempA = leftMtx.subMatrix(0, kValue - gapValue, 0, kValue - gapValue);
+        tempB = leftMtx.subMatrix(kValue - gapValue, kValue, 0, kValue - gapValue);
+        tempD = leftMtx.subMatrix(0, kValue - gapValue,
             kValue - gapValue, kValue);
-        tempE = leftMtx.getSubMatrix(kValue - gapValue, kValue, kValue - gapValue, kValue);
+        tempE = leftMtx.subMatrix(kValue - gapValue, kValue, kValue - gapValue, kValue);
     }
 
     /**
@@ -132,24 +132,24 @@ public class FullLdpcCreator extends AbstractLdpcCreator {
                 });
         // 将数组转为ArrayList，然后生成对应的稀疏矩阵。
         ArrayList<SparseBitVector> cColsList = Stream.of(cColsArray).collect(Collectors.toCollection(ArrayList::new));
-        tempC = LowerTriangularSparseBitMatrix.createUnCheck(cColsList);
+        tempC = LowerTriSquareSparseBitMatrix.createUncheck(cColsList);
         ArrayList<SparseBitVector> fColsList = Stream.of(fColsArray).collect(Collectors.toCollection(ArrayList::new));
-        tempF = SparseBitMatrix.creatFromColsList(fColsList);
+        tempF = NaiveSparseBitMatrix.createFromColumnList(fColsList);
     }
 
     /**
      * 计算Ep = (F*C^{-1}*B）+ E)^{-1}。
      */
     private void computeMatrixEp() {
-        UpperTriangularSparseBitMatrix cTranspose = tempC.transpose();
-        SparseBitMatrix fTranspose = tempF.transpose();
-        SparseBitMatrix bTranspose = tempB.transpose();
-        SparseBitMatrix eTranspose = tempE.transpose();
+        UpperTriSquareSparseBitMatrix cTranspose = tempC.transpose();
+        NaiveSparseBitMatrix fTranspose = tempF.transpose();
+        NaiveSparseBitMatrix bTranspose = tempB.transpose();
+        NaiveSparseBitMatrix eTranspose = tempE.transpose();
 
         matrixEp = ByteDenseBitMatrix.createFromDense(
-            gapValue, fTranspose.lExtMul(cTranspose.invLextMul(bTranspose.toTransDenseBitMatrix().getByteArrayData()))
+            gapValue, fTranspose.lExtMul(cTranspose.invLextMul(bTranspose.transposeDense().getByteArrayData()))
             )
-            .xor(eTranspose.toTransDenseBitMatrix())
+            .xor(eTranspose.transposeDense())
             .inverse();
     }
 

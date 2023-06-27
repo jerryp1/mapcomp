@@ -1,7 +1,11 @@
 package edu.alibaba.mpc4j.common.tool.bitmatrix.sparse;
 
 import edu.alibaba.mpc4j.common.tool.MathPreconditions;
+import edu.alibaba.mpc4j.common.tool.bitvector.BitVector;
+import edu.alibaba.mpc4j.common.tool.bitvector.BitVectorFactory;
+import edu.alibaba.mpc4j.common.tool.utils.BinaryUtils;
 import edu.alibaba.mpc4j.common.tool.utils.BytesUtils;
+import edu.alibaba.mpc4j.common.tool.utils.CommonUtils;
 import gnu.trove.list.array.TIntArrayList;
 import gnu.trove.set.TIntSet;
 import gnu.trove.set.hash.TIntHashSet;
@@ -12,7 +16,7 @@ import java.security.SecureRandom;
 import java.util.Arrays;
 
 /**
- * sparse bit vector, i.e., only a small number of positions are 1. For example:
+ * sparse bit vector x, i.e., only a small number of positions are 1. For example:
  * <p>
  * If the vector length is 8, and positions 1, 2, 5 are 1, others are 0, we set positions = (1,2,5), bitNum = 8.
  * </p>
@@ -129,14 +133,22 @@ public class SparseBitVector {
     /**
      * Creates a random sparse bit vector.
      *
-     * @param size the number of positions.
-     * @param bitNum the total number of bits.
+     * @param size         the number of positions.
+     * @param bitNum       the total number of bits.
      * @param secureRandom random state.
      * @return a random sparse bit vector.
      */
     public static SparseBitVector createRandom(int size, int bitNum, SecureRandom secureRandom) {
         MathPreconditions.checkPositive("bitNum", bitNum);
         MathPreconditions.checkNonNegativeInRangeClosed("size", size, bitNum);
+        if (size == bitNum) {
+            // all entries are 1
+            TIntArrayList tIntArrayList = new TIntArrayList();
+            for (int i = 0; i < bitNum; i++) {
+                tIntArrayList.add(i);
+            }
+            return SparseBitVector.createUncheck(tIntArrayList, bitNum);
+        }
         TIntSet tIntSet = new TIntHashSet(size);
         while (tIntSet.size() < size) {
             int position = secureRandom.nextInt(bitNum);
@@ -165,7 +177,7 @@ public class SparseBitVector {
     }
 
     /**
-     * Copies the sparse bit vector with the positions assigned as (positions[from], ..., positions[to - 1]).
+     * Copies the sparse bit vector with the positions assigned as positions[from ... to - 1]).
      * For example:
      * <p>
      * if positions = (1,4,6,8), from = 1, to = 3, it copies the sparse bit vector with positions = (4,6), and
@@ -335,49 +347,57 @@ public class SparseBitVector {
     }
 
     /**
-     * Right-multiplies the sparse bit vector with a (transpose) boolean vector, i.e., computes &lt;v,x&gt;.
+     * Given a boolean vector v, computes t = &lt;x,v&gt;.
      *
-     * @param xVector the boolean vector.
-     * @return the result.
+     * @param v the boolean vector v.
+     * @return the result boolean vector t.
      */
-    public boolean rightMultiply(final boolean[] xVector) {
-        MathPreconditions.checkEqual("bitNum", "xVector.length", bitNum, xVector.length);
-        boolean r = false;
+    public boolean rightMultiply(final boolean[] v) {
+        MathPreconditions.checkEqual("bitNum", "v.length", bitNum, v.length);
+        boolean t = false;
         for (int i = 0; i < positions.size(); i++) {
-            r = (xVector[positions.get(i)] != r);
+            t = (v[positions.get(i)] != t);
         }
-        return r;
+        return t;
     }
 
     /**
-     * Right-multiplies the sparse bit vector with a (transpose) GF2L vector, i.e., computes &lt;v,x&gt; by treating v
-     * as 1's in the GF2L field.
+     * Given a GF2L vector v, computes &lt;x,v&gt; by treating each entry in x as 1's in the GF2L field.
      *
-     * @param xVector the GF2L vector.
-     * @return the result.
+     * @param v the GF2L vector v.
+     * @return the result GF2L vector t.
      */
-    public byte[] rightGf2lMultiply(final byte[][] xVector) {
-        MathPreconditions.checkEqual("bitNum", "xVector.length", bitNum, xVector.length);
-        byte[] r = new byte[xVector[0].length];
+    public byte[] rightGf2lMultiply(final byte[][] v) {
+        MathPreconditions.checkEqual("bitNum", "v.length", bitNum, v.length);
+        byte[] t = new byte[v[0].length];
         for (int i = 0; i < positions.size(); i++) {
-            BytesUtils.xori(r, xVector[positions.get(i)]);
+            BytesUtils.xori(t, v[positions.get(i)]);
         }
-        return r;
+        return t;
     }
 
     /**
-     * Right-multiplies the sparse bit vector with a (transpose) GF2L vector, and then inplace add the result into the
-     * other GF2L element, i.e., computes y = &lt;v,x&gt; ⊕ y by treating v as 1's in the GF2L field.
+     * Gieven a GF2L vector v, computes t = &lt;x,v&gt; ⊕ t by treating each entry in v as 1's in the GF2L field.
      *
-     * @param xVector the GF2E vector.
-     * @param y       the other GF2E element.
+     * @param v the GF2E vector v.
+     * @param t the GF2E element t.
      */
-    public void rightGf2lMultiplyXori(final byte[][] xVector, byte[] y) {
-        assert bitNum == xVector.length;
-        assert xVector[0].length == y.length;
+    public void rightGf2lMultiplyXori(final byte[][] v, byte[] t) {
+        assert bitNum == v.length;
+        assert v[0].length == t.length;
         for (int i = 0; i < positions.size(); i++) {
-            BytesUtils.xori(y, xVector[positions.get(i)]);
+            BytesUtils.xori(t, v[positions.get(i)]);
         }
+    }
+
+    /**
+     * Gets x[i].
+     *
+     * @param index the index.
+     * @return x[i].
+     */
+    public boolean get(int index) {
+        return positions.contains(index);
     }
 
     /**
@@ -388,6 +408,15 @@ public class SparseBitVector {
      */
     public int getPosition(int index) {
         return positions.get(index);
+    }
+
+    /**
+     * Gets the first position.
+     *
+     * @return the first position.
+     */
+    public int getFirstPosition() {
+        return positions.get(0);
     }
 
     /**
@@ -408,9 +437,50 @@ public class SparseBitVector {
         return positions.toArray();
     }
 
+    /**
+     * Return if it is an all-zero bit vector.
+     *
+     * @return true if it is an all-zero bit vector; false otherwise.
+     */
+    public boolean isZero() {
+        return positions.size() == 0;
+    }
+
+    /**
+     * to byte array representation.
+     *
+     * @return byte array representation.
+     */
+    public byte[] toByteArray() {
+        int byteBitNum = CommonUtils.getByteLength(bitNum);
+        int offsetBitNum = byteBitNum * Byte.SIZE - bitNum;
+        byte[] byteArray = new byte[byteBitNum];
+        for (int position : positions.toArray()) {
+            BinaryUtils.setBoolean(byteArray, offsetBitNum + position, true);
+        }
+        return byteArray;
+    }
+
+    /**
+     * to dense representation.
+     *
+     * @return dense representation.
+     */
+    public BitVector toDense() {
+        return BitVectorFactory.create(bitNum, toByteArray());
+    }
+
     @Override
     public String toString() {
-        return Arrays.toString(positions.toArray());
+        StringBuilder stringBuilder = new StringBuilder();
+        for (int i = 0; i < bitNum; i++) {
+            if (get(i)) {
+                stringBuilder.append(1);
+            } else {
+                stringBuilder.append(0);
+            }
+        }
+        return stringBuilder.toString();
     }
 
     @Override

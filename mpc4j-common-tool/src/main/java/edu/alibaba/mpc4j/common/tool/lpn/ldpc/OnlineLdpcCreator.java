@@ -1,8 +1,8 @@
 package edu.alibaba.mpc4j.common.tool.lpn.ldpc;
 
 import edu.alibaba.mpc4j.common.tool.bitmatrix.sparse.ExtremeSparseBitMatrix;
-import edu.alibaba.mpc4j.common.tool.bitmatrix.sparse.LowerTriangularSparseBitMatrix;
-import edu.alibaba.mpc4j.common.tool.bitmatrix.sparse.SparseBitMatrix;
+import edu.alibaba.mpc4j.common.tool.bitmatrix.sparse.LowerTriSquareSparseBitMatrix;
+import edu.alibaba.mpc4j.common.tool.bitmatrix.sparse.NaiveSparseBitMatrix;
 import edu.alibaba.mpc4j.common.tool.bitmatrix.sparse.SparseBitVector;
 
 
@@ -84,8 +84,8 @@ class OnlineLdpcCreator extends AbstractLdpcCreator {
         // 将list转为数组。
         int[] dNonEmptyIndex = dNonEmptyIndexList.stream().mapToInt(k -> k).toArray();
         // 根据计算的colsList创建矩阵A和D。
-        matrixA = SparseBitMatrix.creatFromColsList(aColsList);
-        matrixD = new ExtremeSparseBitMatrix(dColsList, dNonEmptyIndex, gapValue, kValue - gapValue);
+        matrixA = NaiveSparseBitMatrix.createFromColumnList(aColsList);
+        matrixD = ExtremeSparseBitMatrix.createUncheck(gapValue, kValue - gapValue, dNonEmptyIndex, dColsList);
         // 继续循环移位当前列gapValue次，得到矩阵B。
         for (int colIndex = 0; colIndex < gapValue; colIndex++) {
             if (currentVector.getLastPosition() < kValue - gapValue) {
@@ -98,7 +98,7 @@ class OnlineLdpcCreator extends AbstractLdpcCreator {
             currentVector = currentVector.cyclicShiftRight();
         }
         // 创建矩阵B。
-        matrixB = SparseBitMatrix.creatFromColsList(bColsList);
+        matrixB = NaiveSparseBitMatrix.createFromColumnList(bColsList);
     }
 
     /**
@@ -125,9 +125,9 @@ class OnlineLdpcCreator extends AbstractLdpcCreator {
             });
         // 将数组转为ArrayList，然后生成对应的稀疏矩阵。
         ArrayList<SparseBitVector> cColsList = Stream.of(cColsArray).collect(Collectors.toCollection(ArrayList::new));
-        matrixC = LowerTriangularSparseBitMatrix.createUnCheck(cColsList);
+        matrixC = LowerTriSquareSparseBitMatrix.createUncheck(cColsList);
         ArrayList<SparseBitVector> fColsList = Stream.of(fColsArray).collect(Collectors.toCollection(ArrayList::new));
-        matrixF = SparseBitMatrix.creatFromColsList(fColsList).toExtremeSparseMatrix();
+        matrixF = NaiveSparseBitMatrix.createFromColumnList(fColsList).toExtremeSparseBitMatrix();
     }
 
     /**

@@ -232,6 +232,34 @@ public class BytesUtils {
     }
 
     /**
+     * Generates a random byte array.
+     *
+     * @param byteLength   byte length.
+     * @param secureRandom random state.
+     * @return a random byte array.
+     */
+    public static byte[] randomByteArray(final int byteLength, SecureRandom secureRandom) {
+        assert byteLength > 0 : "byteLength must be greater than 0: " + byteLength;
+        byte[] byteArray = new byte[byteLength];
+        secureRandom.nextBytes(byteArray);
+        return byteArray;
+    }
+
+    /**
+     * Creates random byte array vector.
+     *
+     * @param length       vector length.
+     * @param byteLength   byte length.
+     * @param secureRandom random state.
+     * @return a random byte array vector.
+     */
+    public static byte[][] randomByteArrayVector(final int length, final int byteLength, SecureRandom secureRandom) {
+        return IntStream.range(0, length)
+            .mapToObj(index -> BytesUtils.randomByteArray(byteLength, secureRandom))
+            .toArray(byte[][]::new);
+    }
+
+    /**
      * 在给定{@code byte[]}前填充0x00到指定的长度。如果指定长度等于给定{@code byte[]}的长度，则直接返回结果，否则将进行复制。
      *
      * @param byteArray 给定的{@code byte[]}。

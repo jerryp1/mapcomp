@@ -2,8 +2,8 @@ package edu.alibaba.mpc4j.common.tool.lpn.ldpc;
 
 import edu.alibaba.mpc4j.common.tool.bitmatrix.dense.ByteDenseBitMatrix;
 import edu.alibaba.mpc4j.common.tool.bitmatrix.dense.DenseBitMatrix;
-import edu.alibaba.mpc4j.common.tool.bitmatrix.sparse.LowerTriangularSparseBitMatrix;
-import edu.alibaba.mpc4j.common.tool.bitmatrix.sparse.SparseBitMatrix;
+import edu.alibaba.mpc4j.common.tool.bitmatrix.sparse.LowerTriSquareSparseBitMatrix;
+import edu.alibaba.mpc4j.common.tool.bitmatrix.sparse.NaiveSparseBitMatrix;
 import edu.alibaba.mpc4j.common.tool.lpn.LpnParams;
 import edu.alibaba.mpc4j.common.tool.bitmatrix.sparse.ExtremeSparseBitMatrix;
 import edu.alibaba.mpc4j.common.tool.utils.IntUtils;
@@ -44,15 +44,15 @@ public abstract class AbstractLdpcCreator implements LdpcCreator {
     /**
      * 分块矩阵A
      */
-    protected SparseBitMatrix matrixA;
+    protected NaiveSparseBitMatrix matrixA;
     /**
      * 分块矩阵B
      */
-    protected SparseBitMatrix matrixB;
+    protected NaiveSparseBitMatrix matrixB;
     /**
      * 分块矩阵C
      */
-    protected LowerTriangularSparseBitMatrix matrixC;
+    protected LowerTriSquareSparseBitMatrix matrixC;
     /**
      * 分块矩阵D
      */

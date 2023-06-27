@@ -2,8 +2,8 @@ package edu.alibaba.mpc4j.common.tool.lpn.ldpc;
 
 import edu.alibaba.mpc4j.common.tool.bitmatrix.dense.DenseBitMatrix;
 import edu.alibaba.mpc4j.common.tool.bitmatrix.sparse.ExtremeSparseBitMatrix;
-import edu.alibaba.mpc4j.common.tool.bitmatrix.sparse.LowerTriangularSparseBitMatrix;
-import edu.alibaba.mpc4j.common.tool.bitmatrix.sparse.SparseBitMatrix;
+import edu.alibaba.mpc4j.common.tool.bitmatrix.sparse.LowerTriSquareSparseBitMatrix;
+import edu.alibaba.mpc4j.common.tool.bitmatrix.sparse.NaiveSparseBitMatrix;
 import edu.alibaba.mpc4j.common.tool.utils.BytesUtils;
 
 import java.util.Arrays;
@@ -33,15 +33,15 @@ public class LdpcCoder {
     /**
      * 分块矩阵A
      */
-    private final SparseBitMatrix matrixA;
+    private final NaiveSparseBitMatrix matrixA;
     /**
      * 分块矩阵B
      */
-    private final SparseBitMatrix matrixB;
+    private final NaiveSparseBitMatrix matrixB;
     /**
      * 分块矩阵C
      */
-    private final LowerTriangularSparseBitMatrix matrixC;
+    private final LowerTriSquareSparseBitMatrix matrixC;
     /**
      * 分块矩阵D
      */
@@ -66,7 +66,7 @@ public class LdpcCoder {
      * 包私有构造函数
      * 传入所有成员变量，完成初始化。
      */
-    LdpcCoder(SparseBitMatrix matrixA, SparseBitMatrix matrixB, LowerTriangularSparseBitMatrix matrixC, ExtremeSparseBitMatrix matrixD,
+    LdpcCoder(NaiveSparseBitMatrix matrixA, NaiveSparseBitMatrix matrixB, LowerTriSquareSparseBitMatrix matrixC, ExtremeSparseBitMatrix matrixD,
               ExtremeSparseBitMatrix matrixF, DenseBitMatrix matrixEp, int gapValue, int kValue) {
         this.matrixA = matrixA;
         this.matrixB = matrixB;
