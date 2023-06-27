@@ -107,7 +107,7 @@ public class PlainZ2cParty implements MpcZ2cParty {
     @Override
     public PlainZ2Vector[] and(MpcZ2Vector[] xiArray, MpcZ2Vector[] yiArray) {
         assert xiArray.length == yiArray.length
-                : String.format("xiArray.length (%s) must be equal to yiArray.length (%s)", xiArray.length, yiArray.length);
+            : String.format("xiArray.length (%s) must be equal to yiArray.length (%s)", xiArray.length, yiArray.length);
         if (xiArray.length == 0) {
             return new PlainZ2Vector[0];
         }
@@ -119,8 +119,8 @@ public class PlainZ2cParty implements MpcZ2cParty {
         // split
         int[] bitNums = Arrays.stream(xiArray).mapToInt(MpcZ2Vector::bitNum).toArray();
         return Arrays.stream(split(mergeZiArray, bitNums))
-                .map(vector -> (PlainZ2Vector) vector)
-                .toArray(PlainZ2Vector[]::new);
+            .map(vector -> (PlainZ2Vector) vector)
+            .toArray(PlainZ2Vector[]::new);
     }
 
     @Override
@@ -133,7 +133,7 @@ public class PlainZ2cParty implements MpcZ2cParty {
     @Override
     public PlainZ2Vector[] xor(MpcZ2Vector[] xiArray, MpcZ2Vector[] yiArray) {
         assert xiArray.length == yiArray.length
-                : String.format("xiArray.length (%s) must be equal to yiArray.length (%s)", xiArray.length, yiArray.length);
+            : String.format("xiArray.length (%s) must be equal to yiArray.length (%s)", xiArray.length, yiArray.length);
         if (xiArray.length == 0) {
             return new PlainZ2Vector[0];
         }
@@ -145,8 +145,8 @@ public class PlainZ2cParty implements MpcZ2cParty {
         // split
         int[] bitNums = Arrays.stream(xiArray).mapToInt(MpcZ2Vector::bitNum).toArray();
         return Arrays.stream(split(mergeZiArray, bitNums))
-                .map(vector -> (PlainZ2Vector) vector)
-                .toArray(PlainZ2Vector[]::new);
+            .map(vector -> (PlainZ2Vector) vector)
+            .toArray(PlainZ2Vector[]::new);
     }
 
     @Override
@@ -159,7 +159,7 @@ public class PlainZ2cParty implements MpcZ2cParty {
     @Override
     public PlainZ2Vector[] or(MpcZ2Vector[] xiArray, MpcZ2Vector[] yiArray) {
         assert xiArray.length == yiArray.length
-                : String.format("xiArray.length (%s) must be equal to yiArray.length (%s)", xiArray.length, yiArray.length);
+            : String.format("xiArray.length (%s) must be equal to yiArray.length (%s)", xiArray.length, yiArray.length);
         if (xiArray.length == 0) {
             return new PlainZ2Vector[0];
         }
@@ -171,8 +171,8 @@ public class PlainZ2cParty implements MpcZ2cParty {
         // split
         int[] bitNums = Arrays.stream(xiArray).mapToInt(MpcZ2Vector::bitNum).toArray();
         return Arrays.stream(split(mergeZiArray, bitNums))
-                .map(vector -> (PlainZ2Vector) vector)
-                .toArray(PlainZ2Vector[]::new);
+            .map(vector -> (PlainZ2Vector) vector)
+            .toArray(PlainZ2Vector[]::new);
     }
 
     @Override
@@ -192,7 +192,7 @@ public class PlainZ2cParty implements MpcZ2cParty {
         // split
         int[] bitNums = Arrays.stream(xiArray).mapToInt(MpcZ2Vector::bitNum).toArray();
         return Arrays.stream(split(mergeZiArray, bitNums))
-                .map(vector -> (PlainZ2Vector) vector)
-                .toArray(PlainZ2Vector[]::new);
+            .map(vector -> (PlainZ2Vector) vector)
+            .toArray(PlainZ2Vector[]::new);
     }
 }

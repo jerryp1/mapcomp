@@ -12,7 +12,7 @@ import java.util.stream.IntStream;
  * Abstract Parallel Prefix Adder.
  * Parallel prefix adders are arguably the most commonly used arithmetic units in circuit design and have been extensively investigated in literature.
  * They are easy to pipeline and (part of them) enjoy lower circuit depth (compared with other adders), which are attracting to be used in MPC situation.
- *
+ * <p>
  * A taxonomy of parallel prefix adder can be found in following paper:
  * <p>
  * Harris, David. "A taxonomy of parallel prefix networks." The Thrity-Seventh Asilomar Conference on Signals, Systems & Computers, 2003. Vol. 2. IEEE, 2003.
@@ -64,7 +64,7 @@ public abstract class AbstractParallelPrefixAdder extends AbstractAdder {
 
     @Override
     public MpcZ2Vector[] add(MpcZ2Vector[] xiArray, MpcZ2Vector[] yiArray, MpcZ2Vector cin)
-            throws MpcAbortException {
+        throws MpcAbortException {
         checkInputs(xiArray, yiArray);
         this.l = xiArray.length;
         this.num = xiArray[0].getNum();
@@ -89,7 +89,7 @@ public abstract class AbstractParallelPrefixAdder extends AbstractAdder {
         MpcZ2Vector[] gs = party.and(xiArray, yiArray);
         this.ps = party.xor(xiArray, yiArray);
         this.tuples = IntStream.range(0, l)
-                .mapToObj(i -> new Tuple(gs[i], ps[i])).toArray(Tuple[]::new);
+            .mapToObj(i -> new Tuple(gs[i], ps[i])).toArray(Tuple[]::new);
     }
 
     /**

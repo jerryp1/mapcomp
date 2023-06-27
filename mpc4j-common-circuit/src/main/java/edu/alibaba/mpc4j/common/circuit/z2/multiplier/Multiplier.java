@@ -19,5 +19,5 @@ public interface Multiplier {
      * @throws MpcAbortException the protocol failure aborts.
      */
     MpcZ2Vector[] mul(MpcZ2Vector[] xiArray, MpcZ2Vector[] yiArray)
-            throws MpcAbortException;
+        throws MpcAbortException;
 }

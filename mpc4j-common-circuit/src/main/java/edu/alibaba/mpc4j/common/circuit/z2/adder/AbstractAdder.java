@@ -27,7 +27,7 @@ public abstract class AbstractAdder extends AbstractZ2Circuit implements Adder {
 
     @Override
     public MpcZ2Vector[] add(MpcZ2Vector[] xiArray, MpcZ2Vector[] yiArray, boolean cin)
-            throws MpcAbortException {
+        throws MpcAbortException {
         this.l = xiArray.length;
         this.num = xiArray[0].getNum();
         int bitNum = xiArray[0].getNum();

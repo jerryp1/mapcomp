@@ -11,7 +11,7 @@ import edu.alibaba.mpc4j.common.rpc.MpcAbortException;
  */
 public interface Sorter {
     /**
-     * Sort with ascending order.
+     * Sorts in ascending order.
      *
      * @param xiArrays xi arrays.
      * @throws MpcAbortException the protocol failure aborts.
@@ -19,12 +19,12 @@ public interface Sorter {
     void sort(MpcZ2Vector[][] xiArrays) throws MpcAbortException;
 
     /**
-     * Sort.
+     * Sorts in the specified order.
      *
-     * @param xiArrays    xi arrays.
-     * @param isAscending sort order.
+     * @param xiArrays xi arrays.
+     * @param dir      sorting order.
      * @throws MpcAbortException the protocol failure aborts.
      */
-    void sort(MpcZ2Vector[][] xiArrays, MpcZ2Vector isAscending)
-            throws MpcAbortException;
+    void sort(MpcZ2Vector[][] xiArrays, MpcZ2Vector dir)
+        throws MpcAbortException;
 }

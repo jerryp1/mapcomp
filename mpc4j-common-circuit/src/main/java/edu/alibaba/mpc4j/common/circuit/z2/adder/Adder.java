@@ -20,7 +20,7 @@ public interface Adder {
      * @throws MpcAbortException the protocol failure aborts.
      */
     MpcZ2Vector[] add(MpcZ2Vector[] xiArray, MpcZ2Vector[] yiArray, MpcZ2Vector cin)
-            throws MpcAbortException;
+        throws MpcAbortException;
 
     /**
      * x + y + carry-in. Computation is performed in big-endian order.
@@ -32,5 +32,5 @@ public interface Adder {
      * @throws MpcAbortException the protocol failure aborts.
      */
     MpcZ2Vector[] add(MpcZ2Vector[] xiArray, MpcZ2Vector[] yiArray, boolean cin)
-            throws MpcAbortException;
+        throws MpcAbortException;
 }
