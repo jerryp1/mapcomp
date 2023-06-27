@@ -189,7 +189,9 @@ public class Hhcm23DoubleSingleIndexPirServer extends AbstractSingleIndexPirServ
                 }
             }
             // hint_s = A transposed * db transposed
-            Zl64Matrix s = a1.transpose().matrixMul(db[i].transpose());
+            Zl64Matrix a1Trans = a1.transpose();
+            a1Trans.setParallel(parallel);
+            Zl64Matrix s = a1Trans.matrixMul(db[i].transpose());
             // decomposed(hint_s);
             hintS[i] = s.decompose(params.p);
             hintS[i].setParallel(parallel);

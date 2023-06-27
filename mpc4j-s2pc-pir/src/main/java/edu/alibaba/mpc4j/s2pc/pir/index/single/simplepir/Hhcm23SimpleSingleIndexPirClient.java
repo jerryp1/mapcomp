@@ -207,7 +207,9 @@ public class Hhcm23SimpleSingleIndexPirClient extends AbstractSingleIndexPirClie
     public byte[] decodeResponse(List<byte[]> serverResponse, int rowIndex) throws MpcAbortException {
         MpcAbortPreconditions.checkArgument(serverResponse.size() == partitionSize);
         ZlDatabase[] databases = new ZlDatabase[partitionSize];
-        for (int i = 0; i < partitionSize; i++) {
+        IntStream intStream = IntStream.range(0, partitionSize);
+        intStream = parallel ? intStream.parallel() : intStream;
+        intStream.forEach(i -> {
             Zl64Vector vector = hint[i].matrixMulVector(secretKey);
             long[] responseElements = LongUtils.byteArrayToLongArray(serverResponse.get(i));
             Zl64Vector response = Zl64Vector.create(params.zl64, responseElements);
@@ -219,7 +221,7 @@ public class Hhcm23SimpleSingleIndexPirClient extends AbstractSingleIndexPirClie
                 .toArray();
             byte[] bytes = PirUtils.convertCoeffsToBytes(element, params.logP - 1);
             databases[i] = ZlDatabase.create(partitionBitLength, new byte[][]{bytes});
-        }
+        });
         return NaiveDatabase.createFromZl(elementBitLength, databases).getBytesData(0);
     }
 

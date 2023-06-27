@@ -176,7 +176,7 @@ jbyteArray JNICALL Java_edu_alibaba_mpc4j_s2pc_pir_keyword_aaag22_Aaag22KwPirNat
 [[maybe_unused]] JNIEXPORT
 jbyteArray JNICALL Java_edu_alibaba_mpc4j_s2pc_pir_keyword_aaag22_Aaag22KwPirNativeUtils_processPir(
         JNIEnv *env, jclass, jbyteArray parms_bytes, jbyteArray galois_keys_bytes, jobject pir_database_bytes,
-        jobject row_results_bytes, jint pir_num_columns_per_obj, jint) {
+        jobject row_results_bytes, jint pir_num_columns_per_obj) {
     EncryptionParameters parms = deserialize_encryption_parms(env, parms_bytes);
     SEALContext context(parms);
     Evaluator evaluator(context);
@@ -184,6 +184,9 @@ jbyteArray JNICALL Java_edu_alibaba_mpc4j_s2pc_pir_keyword_aaag22_Aaag22KwPirNat
     vector<Ciphertext> row_results = deserialize_ciphertexts(env, row_results_bytes, context);
     vector<Plaintext> pir_database = deserialize_plaintexts(env, pir_database_bytes, context);
     Ciphertext result = get_sum(row_results, evaluator, *galois_keys, pir_database, 0, (pir_num_columns_per_obj / 2) - 1) ;
+    while (result.parms_id() != context.last_parms_id()) {
+        evaluator.mod_switch_to_next_inplace(result);
+    }
     return serialize_ciphertext(env, result);
 }
 

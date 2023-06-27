@@ -74,10 +74,10 @@ JNIEXPORT jbyteArray JNICALL Java_edu_alibaba_mpc4j_s2pc_pir_keyword_aaag22_Aaag
 /*
  * Class:     edu_alibaba_mpc4j_s2pc_pir_keyword_aaag22_Aaag22KwPirNativeUtils
  * Method:    processPir
- * Signature: ([B[BLjava/util/List;Ljava/util/List;II)[B
+ * Signature: ([B[BLjava/util/List;Ljava/util/List;I)[B
  */
 JNIEXPORT jbyteArray JNICALL Java_edu_alibaba_mpc4j_s2pc_pir_keyword_aaag22_Aaag22KwPirNativeUtils_processPir
-  (JNIEnv *, jclass, jbyteArray, jbyteArray, jobject, jobject, jint, jint);
+  (JNIEnv *, jclass, jbyteArray, jbyteArray, jobject, jobject, jint);
 
 /*
  * Class:     edu_alibaba_mpc4j_s2pc_pir_keyword_aaag22_Aaag22KwPirNativeUtils

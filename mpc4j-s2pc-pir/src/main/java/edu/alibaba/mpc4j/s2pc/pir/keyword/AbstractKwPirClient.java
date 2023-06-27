@@ -19,39 +19,41 @@ import java.util.stream.Collectors;
  * @author Liqiang Peng
  * @date 2022/6/20
  */
-public abstract class AbstractKwPirClient<T> extends AbstractTwoPartyPto implements KwPirClient<T> {
+public abstract class AbstractKwPirClient extends AbstractTwoPartyPto implements KwPirClient {
+    /**
+     * server element size
+     */
+    protected int serverElementSize;
     /**
      * max client retrieval size
      */
     protected int maxRetrievalSize;
     /**
-     * label byte length
+     * value byte length
      */
-    protected int labelByteLength;
+    protected int valueByteLength;
     /**
      * bot element bytebuffer
      */
     protected ByteBuffer botElementByteBuffer;
     /**
-     * client retrieval keyword list
+     * client retrieval key list
      */
-    protected List<ByteBuffer> retrievalKeywordList;
-    /**
-     * bytebuffer object map
-     */
-    protected Map<ByteBuffer, T> byteArrayObjectMap;
+    protected List<ByteBuffer> retrievalKeyList;
     /**
      * client retrieval size
      */
-    protected int retrievalSize;
+    protected int retrievalKeySize;
 
     protected AbstractKwPirClient(PtoDesc ptoDesc, Rpc clientRpc, Party serverParty, KwPirConfig config) {
         super(ptoDesc, clientRpc, serverParty, config);
     }
 
-    protected void setInitInput(int maxRetrievalSize, int labelByteLength) {
-        MathPreconditions.checkPositive("labelByteLength", labelByteLength);
-        this.labelByteLength = labelByteLength;
+    protected void setInitInput(int maxRetrievalSize, int serverElementSize, int valueByteLength) {
+        MathPreconditions.checkPositive("labelByteLength", valueByteLength);
+        this.serverElementSize = serverElementSize;
+        MathPreconditions.checkPositive("valueByteLength", valueByteLength);
+        this.valueByteLength = valueByteLength;
         MathPreconditions.checkPositive("maxRetrievalSize", maxRetrievalSize);
         this.maxRetrievalSize = maxRetrievalSize;
         byte[] botElementByteArray = new byte[CommonConstants.STATS_BYTE_LENGTH];
@@ -60,21 +62,15 @@ public abstract class AbstractKwPirClient<T> extends AbstractTwoPartyPto impleme
         initState();
     }
 
-    protected void setPtoInput(Set<T> clientKeywordSet) {
+    protected void setPtoInput(Set<ByteBuffer> clientKeySet) {
         checkInitialized();
-        retrievalSize = clientKeywordSet.size();
-        MathPreconditions.checkPositiveInRangeClosed("retrievalSize", retrievalSize, maxRetrievalSize);
-        retrievalKeywordList = clientKeywordSet.stream()
+        retrievalKeySize = clientKeySet.size();
+        MathPreconditions.checkPositiveInRangeClosed("retrievalSize", retrievalKeySize, maxRetrievalSize);
+        retrievalKeyList = clientKeySet.stream()
             .map(ObjectUtils::objectToByteArray)
             .map(ByteBuffer::wrap)
             .peek(yi -> Preconditions.checkArgument(!yi.equals(botElementByteBuffer), "yi must not equal ⊥"))
             .collect(Collectors.toCollection(ArrayList::new));
-        byteArrayObjectMap = new HashMap<>(retrievalSize);
-        clientKeywordSet.forEach(clientElementObject ->
-            byteArrayObjectMap.put(
-                ByteBuffer.wrap(ObjectUtils.objectToByteArray(clientElementObject)), clientElementObject
-            )
-        );
         extraInfo++;
     }
 }

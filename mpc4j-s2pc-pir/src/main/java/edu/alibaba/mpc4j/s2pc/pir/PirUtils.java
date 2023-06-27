@@ -1,6 +1,7 @@
 package edu.alibaba.mpc4j.s2pc.pir;
 
 import com.google.common.base.Preconditions;
+import com.google.common.primitives.Bytes;
 import edu.alibaba.mpc4j.common.tool.MathPreconditions;
 import edu.alibaba.mpc4j.common.tool.utils.BytesUtils;
 import edu.alibaba.mpc4j.common.tool.utils.CommonUtils;
@@ -77,14 +78,61 @@ public class PirUtils {
                     if (SECURE_RANDOM.nextBoolean()) {
                         clientSet.add(serverList.get(index));
                     } else {
-                        clientSet.add(serverList.get(index));
-                        //clientSet.add("ID_" + index + "_DISTINCT");
+                        clientSet.add("ID_" + index + "_DISTINCT");
                     }
                     return clientSet;
                 }
             })
             .collect(Collectors.toCollection(ArrayList::new));
         List<Set<String>> results = new ArrayList<>(2);
+        results.add(serverSet);
+        results.addAll(clientSets);
+        return results;
+    }
+
+    /**
+     * generate random bytebuffer sets.
+     *
+     * @param serverSetSize server set size.
+     * @param clientSetSize client set size.
+     * @param repeatTime    repeat time.
+     * @return string sets.
+     */
+    public static List<Set<ByteBuffer>> generateByteBufferSets(int serverSetSize, int clientSetSize, int repeatTime) {
+        assert serverSetSize >= 1 : "server must have at least 1 elements";
+        assert clientSetSize >= 1 : "client must have at least 1 elements";
+        assert repeatTime >= 1 : "repeat time must be greater than or equal to 1: " + repeatTime;
+        // create server set
+        Set<ByteBuffer> serverSet = IntStream.range(0, serverSetSize)
+            .mapToObj(index -> ByteBuffer.wrap(("ID_" + index).getBytes()))
+            .collect(Collectors.toSet());
+        List<ByteBuffer> serverList = new ArrayList<>(serverSet);
+        // create client set
+        List<Set<ByteBuffer>> clientSets = IntStream.range(0, repeatTime)
+            .mapToObj(repeatIndex -> {
+                if (clientSetSize > 1) {
+                    int matchedItemSize = clientSetSize / 2;
+                    Set<ByteBuffer> clientSet = new HashSet<>(clientSetSize);
+                    for (int index = 0; index < matchedItemSize; index++) {
+                        clientSet.add(serverList.get(index));
+                    }
+                    for (int index = matchedItemSize; index < clientSetSize; index++) {
+                        clientSet.add(ByteBuffer.wrap(("ID_" + index + "_DISTINCT").getBytes()));
+                    }
+                    return clientSet;
+                } else {
+                    Set<ByteBuffer> clientSet = new HashSet<>(clientSetSize);
+                    int index = SECURE_RANDOM.nextInt(serverSetSize);
+                    if (SECURE_RANDOM.nextBoolean()) {
+                        clientSet.add(serverList.get(index));
+                    } else {
+                        clientSet.add(ByteBuffer.wrap(("ID_" + index + "_DISTINCT").getBytes()));
+                    }
+                    return clientSet;
+                }
+            })
+            .collect(Collectors.toCollection(ArrayList::new));
+        List<Set<ByteBuffer>> results = new ArrayList<>(2);
         results.add(serverSet);
         results.addAll(clientSets);
         return results;
@@ -98,6 +146,26 @@ public class PirUtils {
      * @return keyword label map.
      */
     public static Map<String, ByteBuffer> generateKeywordLabelMap(Set<String> keywordSet, int labelByteLength) {
+        return keywordSet.stream()
+            .collect(Collectors.toMap(
+                keyword -> keyword,
+                keyword -> {
+                    byte[] label = new byte[labelByteLength];
+                    SECURE_RANDOM.nextBytes(label);
+                    return ByteBuffer.wrap(label);
+                }
+            ));
+    }
+
+    /**
+     * generate keyword label map.
+     *
+     * @param keywordSet      keyword set.
+     * @param labelByteLength label byte length.
+     * @return keyword label map.
+     */
+    public static Map<ByteBuffer, ByteBuffer> generateKeywordByteBufferLabelMap(Set<ByteBuffer> keywordSet,
+                                                                                int labelByteLength) {
         return keywordSet.stream()
             .collect(Collectors.toMap(
                 keyword -> keyword,

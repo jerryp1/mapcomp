@@ -52,10 +52,6 @@ public class Hhcm23SimpleSingleIndexPirServer extends AbstractSingleIndexPirServ
      * cols
      */
     private int cols;
-    /**
-     * partition count
-     */
-    private int count;
 
     public Hhcm23SimpleSingleIndexPirServer(Rpc serverRpc, Party clientParty, Hhcm23SimpleSingleIndexPirConfig config) {
         super(getInstance(), serverRpc, clientParty, config);
@@ -74,7 +70,7 @@ public class Hhcm23SimpleSingleIndexPirServer extends AbstractSingleIndexPirServ
             rpc.ownParty().getPartyId(), otherParty().getPartyId()
         );
         rpc.send(DataPacket.fromByteArrayList(seedPayloadHeader, Collections.singletonList(seed)));
-        List<byte[]> hintPayload = IntStream.range(0, count)
+        List<byte[]> hintPayload = IntStream.range(0, partitionSize)
             .mapToObj(i -> LongUtils.longArrayToByteArray(hint[i].elements))
             .collect(Collectors.toList());
         DataPacketHeader hintPayloadHeader = new DataPacketHeader(
@@ -102,7 +98,7 @@ public class Hhcm23SimpleSingleIndexPirServer extends AbstractSingleIndexPirServ
             rpc.ownParty().getPartyId(), otherParty().getPartyId()
         );
         rpc.send(DataPacket.fromByteArrayList(seedPayloadHeader, Collections.singletonList(seed)));
-        List<byte[]> hintPayload = IntStream.range(0, count)
+        List<byte[]> hintPayload = IntStream.range(0, partitionSize)
             .mapToObj(i -> LongUtils.longArrayToByteArray(hint[i].elements))
             .collect(Collectors.toList());
         DataPacketHeader hintPayloadHeader = new DataPacketHeader(
@@ -155,7 +151,7 @@ public class Hhcm23SimpleSingleIndexPirServer extends AbstractSingleIndexPirServ
     public List<byte[][]> serverSetup(NaiveDatabase database) {
         int maxPartitionBitLength = 0, rows = 0, d = 0;
         int upperBound = CommonUtils.getUnitNum(database.getL(), params.logP - 1);
-        for (count = 1; count < upperBound + 1; count++) {
+        for (int count = 1; count < upperBound + 1; count++) {
             maxPartitionBitLength = CommonUtils.getUnitNum(database.getL(), count);
             d = CommonUtils.getUnitNum(maxPartitionBitLength, params.logP - 1);
             if ((BigInteger.valueOf(d).multiply(BigInteger.valueOf(database.rows())))
@@ -173,14 +169,14 @@ public class Hhcm23SimpleSingleIndexPirServer extends AbstractSingleIndexPirServ
         secureRandom.nextBytes(seed);
         Zl64Matrix a = Zl64Matrix.createRandom(params.zl64, cols, params.n, seed);
         // generate the client's hint, which is the database multiplied by A. Also known as the setup.
-        db = new Zl64Matrix[count];
-        for (int i = 0; i < count; i++) {
+        db = new Zl64Matrix[partitionSize];
+        for (int i = 0; i < partitionSize; i++) {
             db[i] = Zl64Matrix.createZeros(params.zl64, rows, cols);
             db[i].setParallel(parallel);
         }
-        hint = new Zl64Matrix[count];
+        hint = new Zl64Matrix[partitionSize];
         int rowElementsNum = rows / d;
-        for (int i = 0; i < count; i++) {
+        for (int i = 0; i < partitionSize; i++) {
             for (int j = 0; j < cols; j++) {
                 for (int l = 0; l < rowElementsNum; l++) {
                     if (j * rowElementsNum + l < num) {
@@ -204,7 +200,7 @@ public class Hhcm23SimpleSingleIndexPirServer extends AbstractSingleIndexPirServ
         long[] queryElements = LongUtils.byteArrayToLongArray(clientQuery.get(0));
         MpcAbortPreconditions.checkArgument(queryElements.length == cols);
         Zl64Vector query = Zl64Vector.create(params.zl64, queryElements);
-        return IntStream.range(0, count)
+        return IntStream.range(0, partitionSize)
             .mapToObj(i -> LongUtils.longArrayToByteArray(db[i].matrixMulVector(query).getElements()))
             .collect(Collectors.toList());
     }

@@ -8,7 +8,6 @@ import edu.alibaba.mpc4j.common.tool.crypto.prf.Prf;
 import edu.alibaba.mpc4j.common.tool.crypto.prf.PrfFactory;
 import edu.alibaba.mpc4j.common.tool.utils.BytesUtils;
 import edu.alibaba.mpc4j.common.tool.utils.CommonUtils;
-import edu.alibaba.mpc4j.common.tool.utils.LongUtils;
 import edu.alibaba.mpc4j.s2pc.pir.PirUtils;
 import edu.alibaba.mpc4j.s2pc.pir.keyword.AbstractKwPirServer;
 import edu.alibaba.mpc4j.s2pc.pir.keyword.KwPirParams;
@@ -27,8 +26,7 @@ import java.util.stream.Stream;
  * @author Liqiang Peng
  * @date 2023/6/16
  */
-public class Aaag22KwPirServer<T> extends AbstractKwPirServer<T> {
-
+public class Aaag22KwPirServer extends AbstractKwPirServer {
     /**
      * AAAG22 keyword PIR params
      */
@@ -61,6 +59,9 @@ public class Aaag22KwPirServer<T> extends AbstractKwPirServer<T> {
      * masks
      */
     private List<byte[]> masks;
+    /**
+     * is padding
+     */
     private boolean isPadding = false;
 
     public Aaag22KwPirServer(Rpc serverRpc, Party clientParty, Aaag22KwPirConfig config) {
@@ -68,7 +69,7 @@ public class Aaag22KwPirServer<T> extends AbstractKwPirServer<T> {
     }
 
     @Override
-    public void init(KwPirParams kwPirParams, Map<T, ByteBuffer> serverKeywordLabelMap, int labelByteLength)
+    public void init(KwPirParams kwPirParams, Map<ByteBuffer, ByteBuffer> serverKeywordLabelMap, int labelByteLength)
         throws MpcAbortException {
         setInitInput(serverKeywordLabelMap, labelByteLength);
         logPhaseInfo(PtoState.INIT_BEGIN);
@@ -81,13 +82,11 @@ public class Aaag22KwPirServer<T> extends AbstractKwPirServer<T> {
         if (CommonUtils.getUnitNum(labelByteLength * Byte.SIZE, params.getPlainModulusSize()) % 2 == 1) {
             isPadding = true;
         }
-        List<ByteBuffer> keywordPrfOutput = computeKeywordPrf();
+        List<ByteBuffer> keywordPrf = computeKeywordPrf();
         Map<ByteBuffer, ByteBuffer> keywordPrfLabelMap = IntStream.range(0, keywordSize)
             .boxed()
             .collect(Collectors.toMap(
-                keywordPrfOutput::get,
-                i -> serverKeywordLabelMap.get(byteArrayObjectMap.get(keywordList.get(i))),
-                (a, b) -> b)
+                keywordPrf::get, i -> serverKeywordLabelMap.get(keywordList.get(i)), (a, b) -> b)
             );
         DataPacketHeader prfKeyHeader = new DataPacketHeader(
             encodeTaskId, getPtoDesc().getPtoId(), PtoStep.SERVER_SEND_PRF_KEY.ordinal(), extraInfo,
@@ -100,14 +99,14 @@ public class Aaag22KwPirServer<T> extends AbstractKwPirServer<T> {
         logStepInfo(PtoState.INIT_STEP, 1, 3, prfTime, "Server compute keyword prf");
 
         stopWatch.start();
-        encodedKeyword = encodeKeyword(keywordPrfOutput);
+        encodedKeyword = encodeKeyword(keywordPrf);
         stopWatch.stop();
         long keywordEncodeTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
         stopWatch.reset();
         logStepInfo(PtoState.INIT_STEP, 2, 4, keywordEncodeTime, "Server encodes keyword");
 
         stopWatch.start();
-        encodedLabel = encodeLabel(keywordPrfOutput, keywordPrfLabelMap);
+        encodedLabel = encodeLabel(keywordPrf, keywordPrfLabelMap);
         stopWatch.stop();
         long labelEncodeTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
         stopWatch.reset();
@@ -131,8 +130,9 @@ public class Aaag22KwPirServer<T> extends AbstractKwPirServer<T> {
     }
 
     @Override
-    public void init(Map<T, ByteBuffer> serverKeywordLabelMap, int maxRetrievalSize, int labelByteLength)
+    public void init(Map<ByteBuffer, ByteBuffer> serverKeywordLabelMap, int maxRetrievalSize, int labelByteLength)
         throws MpcAbortException {
+        MpcAbortPreconditions.checkArgument(maxRetrievalSize == 1);
         setInitInput(serverKeywordLabelMap, labelByteLength);
         logPhaseInfo(PtoState.INIT_BEGIN);
 
@@ -143,13 +143,11 @@ public class Aaag22KwPirServer<T> extends AbstractKwPirServer<T> {
         if (CommonUtils.getUnitNum(labelByteLength * Byte.SIZE, params.getPlainModulusSize()) % 2 == 1) {
             isPadding = true;
         }
-        List<ByteBuffer> keywordPrfOutput = computeKeywordPrf();
+        List<ByteBuffer> keywordPrf = computeKeywordPrf();
         Map<ByteBuffer, ByteBuffer> keywordPrfLabelMap = IntStream.range(0, keywordSize)
             .boxed()
             .collect(Collectors.toMap(
-                keywordPrfOutput::get,
-                i -> serverKeywordLabelMap.get(byteArrayObjectMap.get(keywordList.get(i))),
-                (a, b) -> b)
+                keywordPrf::get, i -> serverKeywordLabelMap.get(keywordList.get(i)), (a, b) -> b)
             );
         DataPacketHeader prfKeyHeader = new DataPacketHeader(
             encodeTaskId, getPtoDesc().getPtoId(), PtoStep.SERVER_SEND_PRF_KEY.ordinal(), extraInfo,
@@ -162,14 +160,14 @@ public class Aaag22KwPirServer<T> extends AbstractKwPirServer<T> {
         logStepInfo(PtoState.INIT_STEP, 1, 4, prfTime, "Server compute keyword prf");
 
         stopWatch.start();
-        encodedKeyword = encodeKeyword(keywordPrfOutput);
+        encodedKeyword = encodeKeyword(keywordPrf);
         stopWatch.stop();
         long keywordEncodeTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
         stopWatch.reset();
         logStepInfo(PtoState.INIT_STEP, 2, 4, keywordEncodeTime, "Server encodes keyword");
 
         stopWatch.start();
-        encodedLabel = encodeLabel(keywordPrfOutput, keywordPrfLabelMap);
+        encodedLabel = encodeLabel(keywordPrf, keywordPrfLabelMap);
         stopWatch.stop();
         long labelEncodeTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
         stopWatch.reset();
@@ -197,7 +195,6 @@ public class Aaag22KwPirServer<T> extends AbstractKwPirServer<T> {
         setPtoInput();
         logPhaseInfo(PtoState.PTO_BEGIN);
 
-
         DataPacketHeader queryHeader = new DataPacketHeader(
             encodeTaskId, getPtoDesc().getPtoId(), PtoStep.CLIENT_SEND_QUERY.ordinal(), extraInfo,
             otherParty().getPartyId(), rpc.ownParty().getPartyId()
@@ -219,6 +216,13 @@ public class Aaag22KwPirServer<T> extends AbstractKwPirServer<T> {
         logPhaseInfo(PtoState.PTO_END);
     }
 
+    /**
+     * server generate response.
+     *
+     * @param queryPayload client query.
+     * @return server response.
+     * @throws MpcAbortException the protocol failure aborts.
+     */
     private byte[] generateResponse(List<byte[]> queryPayload) throws MpcAbortException {
         MpcAbortPreconditions.checkArgument(queryPayload.size() == 1);
         byte[] query = queryPayload.get(0);
@@ -232,16 +236,14 @@ public class Aaag22KwPirServer<T> extends AbstractKwPirServer<T> {
             colStream = parallel ? colStream.parallel() : colStream;
             List<byte[]> columnResults = colStream
                 .mapToObj(j -> Aaag22KwPirNativeUtils.processColumn(
-                    params.encryptionParams, publicKey, relinKeys, encodedKeyword.get(i)[j], expandedQuery.get(j)
-                ))
+                    params.encryptionParams, publicKey, relinKeys, encodedKeyword.get(i)[j], expandedQuery.get(j)))
                 .collect(Collectors.toList());
             return Aaag22KwPirNativeUtils.processRow(params.encryptionParams, relinKeys, galoisKeys, columnResults);
         }).collect(Collectors.toList());
-
-        return Aaag22KwPirNativeUtils.processPir(params.encryptionParams, galoisKeys, encodedLabel, rowResults, params.pirColumnNumPerObj, params.queryCiphertextNum);
+        return Aaag22KwPirNativeUtils.processPir(
+            params.encryptionParams, galoisKeys, encodedLabel, rowResults, params.pirColumnNumPerObj
+        );
     }
-
-
 
     /**
      * compute keyword prf.
@@ -261,14 +263,20 @@ public class Aaag22KwPirServer<T> extends AbstractKwPirServer<T> {
             .collect(Collectors.toList());
     }
 
-    private List<long[][]> encodeKeyword(List<ByteBuffer> keywordPrfOutput) {
+    /**
+     * preprocess keyword encoding.
+     *
+     * @param keywordPrf keyword prf.
+     * @return encoded keyword.
+     */
+    private List<long[][]> encodeKeyword(List<ByteBuffer> keywordPrf) {
         int slotNum = params.getPolyModulusDegree() / 2;
         List<long[][]> encodedCoeffs = IntStream.range(0, params.rowNum)
             .mapToObj(i -> new long[params.colNum][params.getPolyModulusDegree()])
             .collect(Collectors.toList());
         for (int i = 0; i < keywordSize; i++) {
             long[] coeffs = PirUtils.convertBytesToCoeffs(
-                params.getPlainModulusSize(), 0, params.keywordPrfByteLength, keywordPrfOutput.get(i).array()
+                params.getPlainModulusSize(), 0, params.keywordPrfByteLength, keywordPrf.get(i).array()
             );
             assert coeffs.length == params.colNum * 2;
             int index = i / slotNum;
@@ -281,7 +289,14 @@ public class Aaag22KwPirServer<T> extends AbstractKwPirServer<T> {
         return encodedCoeffs;
     }
 
-    private List<byte[]> encodeLabel(List<ByteBuffer> keywordPrfOutput, Map<ByteBuffer, ByteBuffer> keywordPrfLabelMap) {
+    /**
+     * preprocess label encoding.
+     *
+     * @param keywordPrf keyword prf.
+     * @param keywordPrfLabelMap keyword prf label map.
+     * @return encoded label.
+     */
+    private List<byte[]> encodeLabel(List<ByteBuffer> keywordPrf, Map<ByteBuffer, ByteBuffer> keywordPrfLabelMap) {
         long[][] labelCoeffs = new long[params.pirDbRowNum][params.getPolyModulusDegree()];
         for (int i = 0; i < params.pirDbRowNum; i++) {
             for (int j = 0; j < params.getPolyModulusDegree(); j++) {
@@ -290,7 +305,7 @@ public class Aaag22KwPirServer<T> extends AbstractKwPirServer<T> {
         }
         int slotCount = params.getPolyModulusDegree() / 2;
         for (int i = 0; i < keywordSize; i++) {
-            byte[] label = keywordPrfLabelMap.get(keywordPrfOutput.get(i)).array();
+            byte[] label = keywordPrfLabelMap.get(keywordPrf.get(i)).array();
             if (isPadding) {
                 label = BytesUtils.paddingByteArray(label, label.length + 2);
                 label[0] = 0x01;
@@ -312,6 +327,12 @@ public class Aaag22KwPirServer<T> extends AbstractKwPirServer<T> {
         return Aaag22KwPirNativeUtils.nttTransform(params.encryptionParams, labelCoeffs);
     }
 
+    /**
+     * set public keys.
+     *
+     * @param clientPublicKeysPayload client public keys payload.
+     * @throws MpcAbortException the protocol failure aborts.
+     */
     private void setPublicKey(List<byte[]> clientPublicKeysPayload) throws MpcAbortException {
         MpcAbortPreconditions.checkArgument(clientPublicKeysPayload.size() == 3);
         this.publicKey = clientPublicKeysPayload.get(0);

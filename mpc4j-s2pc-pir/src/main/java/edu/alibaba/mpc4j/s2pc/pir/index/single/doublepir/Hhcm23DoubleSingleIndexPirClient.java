@@ -173,6 +173,7 @@ public class Hhcm23DoubleSingleIndexPirClient extends AbstractSingleIndexPirClie
         setInitInput(serverElementSize, elementBitLength, params.logP - 1);
         // secret key
         secretKey1 = Zl64Vector.createRandom(params.zl64, params.n, secureRandom);
+        secretKey1.setParallel(parallel);
         secretKey2 = Zl64Vector.createRandom(params.zl64, params.n, secureRandom);
         return null;
     }
@@ -189,12 +190,16 @@ public class Hhcm23DoubleSingleIndexPirClient extends AbstractSingleIndexPirClie
         Zl64Vector e1 = Zl64Vector.createGaussianSample(params.zl64, cols, 0, params.stdDev);
         Zl64Vector e2 = Zl64Vector.createGaussianSample(params.zl64, rows, 0, params.stdDev);
         // Compute c_1 = A_1 * s_1 + e_1 + floor * u_i_row
-        Zl64Vector c1 = a1.matrixMulVector(secretKey1).add(e1);
+        Zl64Vector c1 = a1.matrixMulVector(secretKey1);
+        c1.setParallel(parallel);
+        c1.addi(e1);
         // Add q/p * 1 only to the index corresponding to the desired column
         long[] elements1 = c1.getElements();
         elements1[colIndex] = params.zl64.add(elements1[colIndex], floor);
         // Compute c_2 = A_2 * s_2 + e_2 + floor * u_i_col
-        Zl64Vector c2 = a2.matrixMulVector(secretKey2).add(e2);
+        Zl64Vector c2 = a2.matrixMulVector(secretKey2);
+        c2.setParallel(parallel);
+        c2.addi(e2);
         long[] elements2 = c2.getElements();
         elements2[rowIndex] = params.zl64.add(elements2[rowIndex], floor);
         List<byte[]> query = new ArrayList<>();

@@ -284,7 +284,9 @@ public class Zl64Vector implements RingVector {
         Zl64Vector that = (Zl64Vector) other;
         checkInputs(that);
         int num = getNum();
-        return IntStream.range(0, num)
+        IntStream intStream = IntStream.range(0, num);
+        intStream = parallel ? intStream.parallel() : intStream;
+        return intStream
             .mapToLong(i -> zl64.mul(this.elements[i], that.elements[i]))
             .reduce(zl64::add)
             .orElseThrow(Error::new);

@@ -35,7 +35,7 @@ public class SimplePirTest {
     /**
      * default element bit length
      */
-    private static final int DEFAULT_ELEMENT_BIT_LENGTH = CommonConstants.STATS_BIT_LENGTH;
+    private static final int DEFAULT_ELEMENT_BIT_LENGTH = Double.SIZE;
     /**
      * large element bit length
      */
@@ -47,7 +47,7 @@ public class SimplePirTest {
     /**
      * database size
      */
-    private static final int SERVER_ELEMENT_SIZE = 1 << 20;
+    private static final int SERVER_ELEMENT_SIZE = 1 << 16;
 
     @Parameterized.Parameters(name = "{0}")
     public static Collection<Object[]> configurations() {
@@ -141,9 +141,7 @@ public class SimplePirTest {
             clientThread.start();
             serverThread.join();
             clientThread.join();
-            LOGGER.info("Server: The Communication costs {}MB", serverRpc.getSendByteLength() * 1.0 / (1024 * 1024));
             serverRpc.reset();
-            LOGGER.info("Client: The Communication costs {}MB", clientRpc.getSendByteLength() * 1.0 / (1024 * 1024));
             clientRpc.reset();
             LOGGER.info("Parameters: \n {}", indexPirParams.toString());
             // verify result

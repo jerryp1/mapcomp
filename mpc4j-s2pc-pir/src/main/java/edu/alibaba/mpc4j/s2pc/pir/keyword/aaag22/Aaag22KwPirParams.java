@@ -6,7 +6,7 @@ import edu.alibaba.mpc4j.s2pc.pir.keyword.KwPirParams;
 import java.util.Arrays;
 
 /**
- * AAAG23 keyword PIR params.
+ * AAAG22 keyword PIR params.
  *
  * @author Liqiang Peng
  * @date 2023/6/16
@@ -15,23 +15,15 @@ public class Aaag22KwPirParams implements KwPirParams {
     /**
      * plain modulus bit length
      */
-    private final int plainModulusBitLength = 16;
+    private final int plainModulusBitLength;
     /**
      * poly modulus degree
      */
-    private final int polyModulusDegree = 32768;
+    private final int polyModulusDegree;
     /**
      * coeffs modulus bits
      */
-    private final int[] coeffModulusBits = {60, 60, 60, 60, 60, 60, 60, 60, 60, 60, 60, 60, 60};
-    /**
-     * expect server size
-     */
-    private final int expectServerSize;
-    /**
-     * max retrieval size
-     */
-    private final int maxRetrievalSize;
+    private final int[] coeffModulusBits;
     /**
      * column num
      */
@@ -44,10 +36,6 @@ public class Aaag22KwPirParams implements KwPirParams {
      * query ciphertext num
      */
     public int queryCiphertextNum;
-    /**
-     * database row num
-     */
-    public int databaseRowNum;
     /**
      * PIR object num
      */
@@ -63,19 +51,31 @@ public class Aaag22KwPirParams implements KwPirParams {
     /**
      * keyword bit length
      */
-    public int keywordPrfByteLength = 8;
-
+    public int keywordPrfByteLength;
+    /**
+     * encryption params
+     */
     public byte[] encryptionParams;
 
-    private Aaag22KwPirParams(int expectServerSize) {
-        this.expectServerSize = expectServerSize;
-        this.maxRetrievalSize = 1;
+    private Aaag22KwPirParams(int polyModulusDegree, int plainModulusBitLength, int[] coeffModulusBits,
+                              int keywordPrfByteLength) {
+        this.polyModulusDegree = polyModulusDegree;
+        assert plainModulusBitLength == 16;
+        this.plainModulusBitLength = plainModulusBitLength;
+        this.coeffModulusBits = coeffModulusBits;
         this.encryptionParams = Aaag22KwPirNativeUtils.genEncryptionParameters(
-            polyModulusDegree, (1 << plainModulusBitLength)+ 1, coeffModulusBits
+            polyModulusDegree, (1L << plainModulusBitLength) + 1, coeffModulusBits
         );
+        this.keywordPrfByteLength = keywordPrfByteLength;
+        assert CommonUtils.getUnitNum(Byte.SIZE * keywordPrfByteLength, plainModulusBitLength) % 2 == 0;
     }
 
-    public static Aaag22KwPirParams DEFAULT_PARAMS = new Aaag22KwPirParams(1000000);
+    /**
+     * default params
+     */
+    public static Aaag22KwPirParams DEFAULT_PARAMS = new Aaag22KwPirParams(
+        32768, 16, new int[]{60, 60, 60, 60, 60, 60, 60, 60, 60, 60, 60, 60, 60}, 8
+    );
 
     /**
      * initialize PIR params.
@@ -124,21 +124,16 @@ public class Aaag22KwPirParams implements KwPirParams {
 
     @Override
     public int maxRetrievalSize() {
-        return maxRetrievalSize;
-    }
-
-    @Override
-    public int expectServerSize() {
-        return expectServerSize;
+        return 1;
     }
 
     @Override
     public String toString() {
         return
             " Encryption parameters: {" + "\n" +
-            "     - plain_modulus_size : " + plainModulusBitLength + "\n" +
-            "     - poly_modulus_degree : " + polyModulusDegree + "\n" +
-            "     - coeff_modulus_bits : " + Arrays.toString(coeffModulusBits) + "\n" +
+            "     - plain_modulus_size : " + getPlainModulusSize() + "\n" +
+            "     - poly_modulus_degree : " + getPolyModulusDegree() + "\n" +
+            "     - coeff_modulus_bits : " + Arrays.toString(getCoeffModulusBits()) + "\n" +
             "  }" + "\n";
     }
 }
