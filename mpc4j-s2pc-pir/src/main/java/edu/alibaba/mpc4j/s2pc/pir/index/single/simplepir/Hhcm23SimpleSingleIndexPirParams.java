@@ -35,7 +35,7 @@ public class Hhcm23SimpleSingleIndexPirParams implements SingleIndexPirParams {
     /**
      * bit length of p
      */
-    public int logP = 9;
+    public int logP = 10;
 
     public Hhcm23SimpleSingleIndexPirParams(int n, int modulusBitLength, double stdDev) {
         this.n = n;

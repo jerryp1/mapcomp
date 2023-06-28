@@ -181,7 +181,9 @@ public class Hhcm23DoubleSingleIndexPirServer extends AbstractSingleIndexPirServ
                 for (int l = 0; l < cols; l++) {
                     if (j * rows + l < num) {
                         byte[] element = databases[i].getBytesData(j * rows + l);
-                        long[] coeffs = PirUtils.convertBytesToCoeffs(params.logP - 1, 0, element.length, element);
+                        long[] coeffs = PirUtils.convertBytesToCoeffs(
+                            partitionByteLength * Byte.SIZE, 0, element.length, element
+                        );
                         assert coeffs.length == 1;
                         // values mod the plaintext modulus p
                         db[i].set(j, l, coeffs[0]);

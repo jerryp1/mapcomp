@@ -4,6 +4,7 @@ import edu.alibaba.mpc4j.common.rpc.*;
 import edu.alibaba.mpc4j.common.rpc.utils.DataPacket;
 import edu.alibaba.mpc4j.common.rpc.utils.DataPacketHeader;
 import edu.alibaba.mpc4j.common.tool.CommonConstants;
+import edu.alibaba.mpc4j.common.tool.utils.BytesUtils;
 import edu.alibaba.mpc4j.common.tool.utils.CommonUtils;
 import edu.alibaba.mpc4j.common.tool.utils.LongUtils;
 import edu.alibaba.mpc4j.crypto.matrix.database.NaiveDatabase;
@@ -165,7 +166,7 @@ public class Hhcm23SimpleSingleIndexPirClient extends AbstractSingleIndexPirClie
     @Override
     public List<byte[]> clientSetup(int serverElementSize, int elementBitLength) {
         int maxPartitionBitLength = 0;
-        int upperBound = CommonUtils.getUnitNum(serverElementSize, params.logP - 1);
+        int upperBound = CommonUtils.getUnitNum(elementBitLength, params.logP - 1);
         for (int count = 1; count < upperBound + 1; count++) {
             maxPartitionBitLength = CommonUtils.getUnitNum(elementBitLength, count);
             d = CommonUtils.getUnitNum(maxPartitionBitLength, params.logP - 1);
@@ -196,7 +197,9 @@ public class Hhcm23SimpleSingleIndexPirClient extends AbstractSingleIndexPirClie
         // error term, allow correctness error 𝛿 = 2^{−40}.
         Zl64Vector error = Zl64Vector.createGaussianSample(params.zl64, cols, 0, params.stdDev);
         // query = A * s + e + q/p * u_i_col
-        Zl64Vector query = a.matrixMulVector(secretKey).add(error);
+        Zl64Vector query = a.matrixMulVector(secretKey);
+        query.setParallel(parallel);
+        query.addi(error);
         // Add q/p * 1 only to the index corresponding to the desired column
         long[] elements = query.getElements();
         elements[colIndex] = params.zl64.add(elements[colIndex], floor);
@@ -208,6 +211,7 @@ public class Hhcm23SimpleSingleIndexPirClient extends AbstractSingleIndexPirClie
         MpcAbortPreconditions.checkArgument(serverResponse.size() == partitionSize);
         ZlDatabase[] databases = new ZlDatabase[partitionSize];
         IntStream intStream = IntStream.range(0, partitionSize);
+        double delta = params.p * 1.0 / params.q;
         intStream = parallel ? intStream.parallel() : intStream;
         intStream.forEach(i -> {
             Zl64Vector vector = hint[i].matrixMulVector(secretKey);
@@ -217,10 +221,12 @@ public class Hhcm23SimpleSingleIndexPirClient extends AbstractSingleIndexPirClie
             response.subi(vector);
             long[] element = IntStream.range(0, d)
                 .mapToLong(j ->
-                    (int) (Math.round(response.getElement(rowIndex * d + j) * params.p * 1.0 / params.q) % params.p))
+                    (int) (Math.round(response.getElement(rowIndex * d + j) * delta) % params.p))
                 .toArray();
             byte[] bytes = PirUtils.convertCoeffsToBytes(element, params.logP - 1);
-            databases[i] = ZlDatabase.create(partitionBitLength, new byte[][]{bytes});
+            databases[i] = ZlDatabase.create(
+                partitionBitLength, new byte[][]{BytesUtils.clone(bytes, 0, partitionByteLength)}
+            );
         });
         return NaiveDatabase.createFromZl(elementBitLength, databases).getBytesData(0);
     }

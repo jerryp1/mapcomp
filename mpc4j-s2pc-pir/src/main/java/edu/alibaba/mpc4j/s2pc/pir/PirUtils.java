@@ -396,8 +396,8 @@ public class PirUtils {
      * @return byte array.
      */
     public static byte[] convertCoeffsToBytes(long[] coeffArray, int logt) {
-        int longArrayLength = coeffArray.length;
-        byte[] byteArray = new byte[longArrayLength * logt / Byte.SIZE];
+        int len = CommonUtils.getUnitNum(coeffArray.length * logt, Byte.SIZE);
+        byte[] byteArray = new byte[len];
         int room = Byte.SIZE;
         int j = 0;
         for (long l : coeffArray) {

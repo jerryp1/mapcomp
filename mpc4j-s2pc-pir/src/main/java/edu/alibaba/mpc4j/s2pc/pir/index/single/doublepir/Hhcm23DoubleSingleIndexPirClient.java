@@ -4,6 +4,7 @@ import edu.alibaba.mpc4j.common.rpc.*;
 import edu.alibaba.mpc4j.common.rpc.utils.DataPacket;
 import edu.alibaba.mpc4j.common.rpc.utils.DataPacketHeader;
 import edu.alibaba.mpc4j.common.tool.CommonConstants;
+import edu.alibaba.mpc4j.common.tool.utils.BytesUtils;
 import edu.alibaba.mpc4j.common.tool.utils.LongUtils;
 import edu.alibaba.mpc4j.crypto.matrix.database.NaiveDatabase;
 import edu.alibaba.mpc4j.crypto.matrix.database.ZlDatabase;
@@ -14,6 +15,7 @@ import edu.alibaba.mpc4j.s2pc.pir.index.single.AbstractSingleIndexPirClient;
 import edu.alibaba.mpc4j.s2pc.pir.index.single.SingleIndexPirParams;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.IntStream;
@@ -214,6 +216,7 @@ public class Hhcm23DoubleSingleIndexPirClient extends AbstractSingleIndexPirClie
         ZlDatabase[] databases = new ZlDatabase[partitionSize];
         long q = 1L << (params.zl64.getL() - 1);
         int size = (int) Math.ceil(Math.log(q - 1) / Math.log(params.p));
+        double delta = params.p * 1.0 / params.q;
         for (int i = 0; i < partitionSize; i++) {
             Zl64Matrix h = Zl64Matrix.create(
                 params.zl64, LongUtils.byteArrayToLongArray(serverResponse.get(i * 2)), size, params.n
@@ -229,7 +232,7 @@ public class Hhcm23DoubleSingleIndexPirClient extends AbstractSingleIndexPirClie
             ans.subi(combine.matrixMulVector(secretKey2));
             long[] ansElements = ans.getElements();
             for (int j = 0; j < ans.getNum(); j++) {
-                ansElements[j] = (int) (Math.round(ansElements[j] * params.p * 1.0 / params.q) % params.p);
+                ansElements[j] = (int) (Math.round(ansElements[j] * delta) % params.p);
             }
             long[] elements = new long[params.n];
             for (int j = 0; j < params.n; j++) {
@@ -242,8 +245,8 @@ public class Hhcm23DoubleSingleIndexPirClient extends AbstractSingleIndexPirClie
             long a1 = recomposed(params.p, digits);
             Zl64Vector h1 = Zl64Vector.create(params.zl64, elements);
             long value = params.zl64.sub(a1, secretKey1.innerProduct(h1));
-            value = (int) (Math.round(value * params.p * 1.0 / params.q) % params.p);
-            byte[] bytes = PirUtils.convertCoeffsToBytes(new long[] {value}, params.logP - 1);
+            value = (int) (Math.round(value * delta) % params.p);
+            byte[] bytes = PirUtils.convertCoeffsToBytes(new long[] {value}, partitionByteLength * Byte.SIZE);
             databases[i] = ZlDatabase.create(partitionBitLength, new byte[][]{bytes});
         }
         return NaiveDatabase.createFromZl(elementBitLength, databases).getBytesData(0);

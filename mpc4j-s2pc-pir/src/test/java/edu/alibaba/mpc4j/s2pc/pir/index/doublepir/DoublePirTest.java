@@ -50,7 +50,7 @@ public class DoublePirTest {
     /**
      * database size
      */
-    private static final int SERVER_ELEMENT_SIZE = 1 << 16;
+    private static final int SERVER_ELEMENT_SIZE = 1 << 12;
 
     @Parameterized.Parameters(name = "{0}")
     public static Collection<Object[]> configurations() {
