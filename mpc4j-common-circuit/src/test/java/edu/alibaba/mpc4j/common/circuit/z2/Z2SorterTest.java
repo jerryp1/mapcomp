@@ -70,8 +70,13 @@ public class Z2SorterTest {
 
         // Bitonic sorter.
         configurations.add(new Object[]{
-                SorterFactory.SorterTypes.BITONIC + " (bitonic sorter)",
-                new Z2CircuitConfig.Builder().setSorterType(SorterFactory.SorterTypes.BITONIC).build()
+            SorterFactory.SorterTypes.BITONIC + " (bitonic sorter)",
+            new Z2CircuitConfig.Builder().setSorterType(SorterFactory.SorterTypes.BITONIC).build()
+        });
+        // Randomized Shell sorter.
+        configurations.add(new Object[]{
+            SorterFactory.SorterTypes.RANDOMIZED_SHELL_SORTER + " (randomized shell sorter)",
+            new Z2CircuitConfig.Builder().setSorterType(SorterFactory.SorterTypes.RANDOMIZED_SHELL_SORTER).build()
         });
         return configurations;
     }
@@ -89,8 +94,8 @@ public class Z2SorterTest {
 
     public void testConstant(int l) {
         long[][] longXs = IntStream.range(0, DEFAULT_SORTED_NUM).mapToObj(index -> IntStream.range(0, DEFAULT_NUM)
-                .mapToLong(i -> index)
-                .toArray()).toArray(long[][]::new);
+            .mapToLong(i -> index)
+            .toArray()).toArray(long[][]::new);
         testPto(true, l, longXs);
         LOGGER.info("------------------------------");
     }
@@ -134,8 +139,8 @@ public class Z2SorterTest {
 
     private void testRandom(int l, int num, int numOfSorted) {
         long[][] longXs = IntStream.range(0, numOfSorted).mapToObj(index -> IntStream.range(0, num)
-                .mapToLong(i -> LongUtils.randomNonNegative(1L << (l - 1), SECURE_RANDOM))
-                .toArray()).toArray(long[][]::new);
+            .mapToLong(i -> LongUtils.randomNonNegative(1L << (l - 1), SECURE_RANDOM))
+            .toArray()).toArray(long[][]::new);
         testPto(false, l, longXs);
         LOGGER.info("------------------------------");
     }

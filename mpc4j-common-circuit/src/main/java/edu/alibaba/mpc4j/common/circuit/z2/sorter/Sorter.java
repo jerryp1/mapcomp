@@ -22,7 +22,7 @@ public interface Sorter {
      * Sorts in the specified order.
      *
      * @param xiArrays xi arrays.
-     * @param dir      sorting order.
+     * @param dir      sorting order, ture for ascending..
      * @throws MpcAbortException the protocol failure aborts.
      */
     void sort(MpcZ2Vector[][] xiArrays, MpcZ2Vector dir)

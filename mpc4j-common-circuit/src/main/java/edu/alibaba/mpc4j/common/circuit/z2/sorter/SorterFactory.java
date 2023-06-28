@@ -25,6 +25,10 @@ public class SorterFactory {
          * Bitonic sorter.
          */
         BITONIC,
+        /**
+         * Randomized shell sorter.
+         */
+        RANDOMIZED_SHELL_SORTER
     }
 
     /**
@@ -37,6 +41,8 @@ public class SorterFactory {
         switch (type) {
             case BITONIC:
                 return new BitonicSorter(circuit);
+            case RANDOMIZED_SHELL_SORTER:
+                return new RandomizedShellSorter(circuit);
             default:
                 throw new IllegalArgumentException("Invalid " + MultiplierFactory.MultiplierTypes.class.getSimpleName() + ": " + type.name());
         }
