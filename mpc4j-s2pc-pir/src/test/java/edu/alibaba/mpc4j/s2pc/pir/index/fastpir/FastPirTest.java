@@ -4,6 +4,7 @@ import com.google.common.base.Preconditions;
 import edu.alibaba.mpc4j.common.rpc.Rpc;
 import edu.alibaba.mpc4j.common.rpc.RpcManager;
 import edu.alibaba.mpc4j.common.rpc.impl.memory.MemoryRpcManager;
+import edu.alibaba.mpc4j.common.rpc.test.AbstractTwoPartyPtoTest;
 import edu.alibaba.mpc4j.common.tool.CommonConstants;
 import edu.alibaba.mpc4j.crypto.matrix.database.NaiveDatabase;
 import edu.alibaba.mpc4j.s2pc.pir.PirUtils;
@@ -33,7 +34,7 @@ import java.util.Collection;
  * @date 2022/8/26
  */
 @RunWith(Parameterized.class)
-public class FastPirTest {
+public class FastPirTest extends AbstractTwoPartyPtoTest {
     private static final Logger LOGGER = LoggerFactory.getLogger(FastPirTest.class);
     /**
      * default element bit length
@@ -69,14 +70,6 @@ public class FastPirTest {
     }
 
     /**
-     * server rpc
-     */
-    private final Rpc serverRpc;
-    /**
-     * client rpc
-     */
-    private final Rpc clientRpc;
-    /**
      * FastPIR config
      */
     private final Ayaa21SingleIndexPirConfig indexPirConfig;
@@ -86,26 +79,9 @@ public class FastPirTest {
     private final Ayaa21SingleIndexPirParams indexPirParams;
 
     public FastPirTest(String name, Ayaa21SingleIndexPirConfig indexPirConfig, Ayaa21SingleIndexPirParams indexPirParams) {
-        Preconditions.checkArgument(StringUtils.isNotBlank(name));
-        // We cannot use NettyRPC in the test case since it needs multi-thread connect / disconnect.
-        // In other word, we cannot connect / disconnect NettyRpc in @Before / @After, respectively.
-        RpcManager rpcManager = new MemoryRpcManager(2);
-        serverRpc = rpcManager.getRpc(0);
-        clientRpc = rpcManager.getRpc(1);
+        super(name);
         this.indexPirConfig = indexPirConfig;
         this.indexPirParams = indexPirParams;
-    }
-
-    @Before
-    public void connect() {
-        serverRpc.connect();
-        clientRpc.connect();
-    }
-
-    @After
-    public void disconnect() {
-        serverRpc.disconnect();
-        clientRpc.disconnect();
     }
 
     @Test
@@ -132,8 +108,8 @@ public class FastPirTest {
                             int elementBitLength, boolean parallel) {
         int retrievalIndex = PirUtils.generateRetrievalIndex(SERVER_ELEMENT_SIZE);
         NaiveDatabase database = PirUtils.generateDataBase(SERVER_ELEMENT_SIZE, elementBitLength);
-        Ayaa21SingleIndexPirServer server = new Ayaa21SingleIndexPirServer(serverRpc, clientRpc.ownParty(), config);
-        Ayaa21SingleIndexPirClient client = new Ayaa21SingleIndexPirClient(clientRpc, serverRpc.ownParty(), config);
+        Ayaa21SingleIndexPirServer server = new Ayaa21SingleIndexPirServer(firstRpc, secondRpc.ownParty(), config);
+        Ayaa21SingleIndexPirClient client = new Ayaa21SingleIndexPirClient(secondRpc, firstRpc.ownParty(), config);
         server.setParallel(parallel);
         client.setParallel(parallel);
         FastPirServerThread serverThread = new FastPirServerThread(server, indexPirParams, database);
@@ -145,21 +121,16 @@ public class FastPirTest {
             clientThread.start();
             serverThread.join();
             clientThread.join();
-            LOGGER.info("Server: The Communication costs {}MB", serverRpc.getSendByteLength() * 1.0 / (1024 * 1024));
-            serverRpc.reset();
-            LOGGER.info("Client: The Communication costs {}MB", clientRpc.getSendByteLength() * 1.0 / (1024 * 1024));
-            clientRpc.reset();
-            LOGGER.info("Parameters: \n {}", indexPirParams.toString());
             // verify result
             ByteBuffer result = clientThread.getRetrievalResult();
             Assert.assertEquals(
                 result, ByteBuffer.wrap(database.getBytesData(retrievalIndex))
             );
-            LOGGER.info("Client: The Retrieval Result is Correct");
+            // destroy
+            new Thread(server::destroy).start();
+            new Thread(client::destroy).start();
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
-        server.destroy();
-        client.destroy();
     }
 }

@@ -1,9 +1,6 @@
 package edu.alibaba.mpc4j.s2pc.pir.batchpir;
 
-import com.google.common.base.Preconditions;
-import edu.alibaba.mpc4j.common.rpc.Rpc;
-import edu.alibaba.mpc4j.common.rpc.RpcManager;
-import edu.alibaba.mpc4j.common.rpc.impl.memory.MemoryRpcManager;
+import edu.alibaba.mpc4j.common.rpc.test.AbstractTwoPartyPtoTest;
 import edu.alibaba.mpc4j.crypto.matrix.database.NaiveDatabase;
 import edu.alibaba.mpc4j.s2pc.pir.PirUtils;
 import edu.alibaba.mpc4j.s2pc.pir.index.batch.BatchIndexPirClient;
@@ -16,7 +13,6 @@ import edu.alibaba.mpc4j.s2pc.pir.index.batch.vectorizedpir.Mr23BatchIndexPirCon
 import edu.alibaba.mpc4j.s2pc.pir.index.single.fastpir.Ayaa21SingleIndexPirConfig;
 import edu.alibaba.mpc4j.s2pc.pir.index.single.onionpir.Mcr21SingleIndexPirConfig;
 import edu.alibaba.mpc4j.s2pc.pir.index.single.xpir.Mbfk16SingleIndexPirConfig;
-import org.apache.commons.lang3.StringUtils;
 import org.junit.Assert;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -32,7 +28,7 @@ import java.util.*;
  * @date 2023/3/9
  */
 @RunWith(Parameterized.class)
-public class BatchPirTest {
+public class BatchPirTest extends AbstractTwoPartyPtoTest {
     /**
      * default bit length
      */
@@ -103,25 +99,12 @@ public class BatchPirTest {
     }
 
     /**
-     * server rpc
-     */
-    private final Rpc serverRpc;
-    /**
-     * client rpc
-     */
-    private final Rpc clientRpc;
-    /**
      * batch PIR config
      */
     private final BatchIndexPirConfig config;
 
     public BatchPirTest(String name, BatchIndexPirConfig config) {
-        Preconditions.checkArgument(StringUtils.isNotBlank(name));
-        // We cannot use NettyRPC in the test case since it needs multi-thread connect / disconnect.
-        // In other word, we cannot connect / disconnect NettyRpc in @Before / @After, respectively.
-        RpcManager rpcManager = new MemoryRpcManager(2);
-        serverRpc = rpcManager.getRpc(0);
-        clientRpc = rpcManager.getRpc(1);
+        super(name);
         this.config = config;
     }
 
@@ -184,8 +167,8 @@ public class BatchPirTest {
         Set<Integer> retrievalIndexSet = PirUtils.generateRetrievalIndexSet(serverElementSize, retrievalIndexSize);
         NaiveDatabase database = PirUtils.generateDataBase(serverElementSize, elementBitLength);
         // create instance
-        BatchIndexPirServer server = BatchIndexPirFactory.createServer(serverRpc, clientRpc.ownParty(), config);
-        BatchIndexPirClient client = BatchIndexPirFactory.createClient(clientRpc, serverRpc.ownParty(), config);
+        BatchIndexPirServer server = BatchIndexPirFactory.createServer(firstRpc, secondRpc.ownParty(), config);
+        BatchIndexPirClient client = BatchIndexPirFactory.createClient(secondRpc, firstRpc.ownParty(), config);
         // set parallel
         server.setParallel(parallel);
         client.setParallel(parallel);
@@ -199,16 +182,17 @@ public class BatchPirTest {
             clientThread.start();
             serverThread.join();
             clientThread.join();
-            // verify result
+            // verify
             Map<Integer, byte[]> result = clientThread.getRetrievalResult();
             Assert.assertEquals(retrievalIndexSize, result.size());
             result.forEach((key, value) ->
                 Assert.assertEquals(ByteBuffer.wrap(database.getBytesData(key)), ByteBuffer.wrap(value))
             );
+            // destroy
+            new Thread(server::destroy).start();
+            new Thread(client::destroy).start();
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
-        server.destroy();
-        client.destroy();
     }
 }
