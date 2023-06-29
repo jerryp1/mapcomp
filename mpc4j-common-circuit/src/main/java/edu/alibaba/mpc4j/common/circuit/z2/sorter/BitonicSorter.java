@@ -4,11 +4,13 @@ import edu.alibaba.mpc4j.common.circuit.z2.MpcZ2Vector;
 import edu.alibaba.mpc4j.common.circuit.z2.Z2IntegerCircuit;
 import edu.alibaba.mpc4j.common.rpc.MpcAbortException;
 
+import java.math.BigInteger;
+
 
 /**
  * Bitonic Sorter. Bitonic sort has a complexity of O(m log^2 m) comparisons with small constant, and is data-oblivious
  * since its control flow is independent of the input.
- *
+ * <p>
  * The scheme comes from the following paper:
  *
  * <p>
@@ -53,9 +55,10 @@ public class BitonicSorter extends AbstractSortingNetwork {
      */
     private void bitonicMerge(MpcZ2Vector[][] xiArray, int start, int len, MpcZ2Vector dir) throws MpcAbortException {
         if (len > 1) {
-            int m = len / 2;
+            // minimum power of two greater than or equal to len.
+            int m = 1 << (BigInteger.valueOf(len - 1).bitLength() - 1);
             for (int i = start; i < start + len - m; i++) {
-                exchangeWithOrder(xiArray, i, i + m, dir);
+                compareExchange(xiArray, i, i + m, dir);
             }
             bitonicMerge(xiArray, start, m, dir);
             bitonicMerge(xiArray, start + m, len - m, dir);

@@ -10,12 +10,12 @@ import java.util.stream.IntStream;
 /**
  * Randomized Shell Sorter. Randomized Shell sort has a complexity of O(m log m) comparisons, and is data-oblivious
  * since its control flow is independent of the input.
- *
+ * <p>
  * The scheme comes from the following paper:
  *
  * <p>
- *     Goodrich, Michael T. "Randomized shellsort: A simple oblivious sorting algorithm." Proceedings of the twenty-first
- *     annual ACM-SIAM symposium on Discrete Algorithms. Society for Industrial and Applied Mathematics, 2010.
+ * Goodrich, Michael T. "Randomized shellsort: A simple oblivious sorting algorithm." Proceedings of the twenty-first
+ * annual ACM-SIAM symposium on Discrete Algorithms. Society for Industrial and Applied Mathematics, 2010.
  * </p>
  *
  * @author Li Peng
@@ -61,7 +61,6 @@ public class RandomizedShellSorter extends AbstractSortingNetwork {
     }
 
     public void randomizedShellSort(MpcZ2Vector[][] xiArray) throws MpcAbortException {
-        // we assume that n is xiArray power of 2
         int n = xiArray.length;
         // random number generator (not shown)
         SecureRandom rand = new SecureRandom();
@@ -102,7 +101,10 @@ public class RandomizedShellSorter extends AbstractSortingNetwork {
      * @throws MpcAbortException the protocol failure aborts.
      */
     protected void exchangeWhenDescending(MpcZ2Vector[][] xiArray, int i, int j) throws MpcAbortException {
-        exchangeWithOrder(xiArray, i, j, party.createOnes(num));
+        if (i >= xiArray.length || j >= xiArray.length) {
+            return;
+        }
+        compareExchange(xiArray, i, j, party.createOnes(num));
     }
 
     /**

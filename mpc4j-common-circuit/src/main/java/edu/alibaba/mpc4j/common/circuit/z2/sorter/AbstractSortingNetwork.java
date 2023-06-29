@@ -3,6 +3,7 @@ package edu.alibaba.mpc4j.common.circuit.z2.sorter;
 import edu.alibaba.mpc4j.common.circuit.z2.MpcZ2Vector;
 import edu.alibaba.mpc4j.common.circuit.z2.Z2IntegerCircuit;
 import edu.alibaba.mpc4j.common.rpc.MpcAbortException;
+import edu.alibaba.mpc4j.common.tool.MathPreconditions;
 
 /**
  * Abstract Sorting Network.
@@ -30,7 +31,9 @@ public abstract class AbstractSortingNetwork extends AbstractSorter {
      * @param dir     sorting order.
      * @throws MpcAbortException the protocol failure aborts.
      */
-    protected void exchangeWithOrder(MpcZ2Vector[][] xiArray, int i, int j, MpcZ2Vector dir) throws MpcAbortException {
+    protected void compareExchange(MpcZ2Vector[][] xiArray, int i, int j, MpcZ2Vector dir) throws MpcAbortException {
+        checkInputIndex(xiArray, i);
+        checkInputIndex(xiArray, j);
         // exchange is ture when order of xi, xj do not satisfies dir
         MpcZ2Vector exchange = party.eq(party.not(circuit.leq(xiArray[i], xiArray[j])), dir);
         MpcZ2Vector[] s = mux(xiArray[j], xiArray[i], exchange);
@@ -39,5 +42,9 @@ public abstract class AbstractSortingNetwork extends AbstractSorter {
         MpcZ2Vector[] kj = party.xor(xiArray[i], s);
         xiArray[i] = ki;
         xiArray[j] = kj;
+    }
+
+    protected void checkInputIndex(MpcZ2Vector[][] xiArray, int i) {
+        MathPreconditions.checkLess("i", i, xiArray.length);
     }
 }
