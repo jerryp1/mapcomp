@@ -4,6 +4,9 @@ import edu.alibaba.mpc4j.common.rpc.Party;
 import edu.alibaba.mpc4j.common.rpc.Rpc;
 import edu.alibaba.mpc4j.common.rpc.desc.SecurityModel;
 import edu.alibaba.mpc4j.common.rpc.pto.PtoFactory;
+import edu.alibaba.mpc4j.s2pc.pir.keyword.aaag22.Aaag22KwPirClient;
+import edu.alibaba.mpc4j.s2pc.pir.keyword.aaag22.Aaag22KwPirConfig;
+import edu.alibaba.mpc4j.s2pc.pir.keyword.aaag22.Aaag22KwPirServer;
 import edu.alibaba.mpc4j.s2pc.pir.keyword.cmg21.Cmg21KwPirClient;
 import edu.alibaba.mpc4j.s2pc.pir.keyword.cmg21.Cmg21KwPirConfig;
 import edu.alibaba.mpc4j.s2pc.pir.keyword.cmg21.Cmg21KwPirServer;
@@ -30,6 +33,10 @@ public class KwPirFactory implements PtoFactory {
          * CMG21
          */
         CMG21,
+        /**
+         * AAAG22
+         */
+        AAAG22,
     }
 
     /**
@@ -40,12 +47,13 @@ public class KwPirFactory implements PtoFactory {
      * @param config      config.
      * @return keyword PIR server.
      */
-    public static <T> KwPirServer<T> createServer(Rpc serverRpc, Party clientParty, KwPirConfig config) {
+    public static KwPirServer createServer(Rpc serverRpc, Party clientParty, KwPirConfig config) {
         KwPirType type = config.getProType();
-        //noinspection SwitchStatementWithTooFewBranches
         switch (type) {
             case CMG21:
-                return new Cmg21KwPirServer<>(serverRpc, clientParty, (Cmg21KwPirConfig) config);
+                return new Cmg21KwPirServer(serverRpc, clientParty, (Cmg21KwPirConfig) config);
+            case AAAG22:
+                return new Aaag22KwPirServer(serverRpc, clientParty, (Aaag22KwPirConfig) config);
             default:
                 throw new IllegalArgumentException("Invalid " + KwPirType.class.getSimpleName() + ": " + type.name());
         }
@@ -59,12 +67,13 @@ public class KwPirFactory implements PtoFactory {
      * @param config      config.
      * @return keyword PIR client.
      */
-    public static <T> KwPirClient<T> createClient(Rpc clientRpc, Party serverParty, KwPirConfig config) {
+    public static KwPirClient createClient(Rpc clientRpc, Party serverParty, KwPirConfig config) {
         KwPirType type = config.getProType();
-        //noinspection SwitchStatementWithTooFewBranches
         switch (type) {
             case CMG21:
-                return new Cmg21KwPirClient<>(clientRpc, serverParty, (Cmg21KwPirConfig) config);
+                return new Cmg21KwPirClient(clientRpc, serverParty, (Cmg21KwPirConfig) config);
+            case AAAG22:
+                return new Aaag22KwPirClient(clientRpc, serverParty, (Aaag22KwPirConfig) config);
             default:
                 throw new IllegalArgumentException("Invalid " + KwPirType.class.getSimpleName() + ": " + type.name());
         }
@@ -80,6 +89,7 @@ public class KwPirFactory implements PtoFactory {
         switch (securityModel) {
             case IDEAL:
             case SEMI_HONEST:
+                return new Aaag22KwPirConfig.Builder().build();
             case COVERT:
             case MALICIOUS:
                 return new Cmg21KwPirConfig.Builder().build();

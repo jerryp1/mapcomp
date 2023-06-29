@@ -4,6 +4,7 @@ import com.google.common.base.Preconditions;
 import edu.alibaba.mpc4j.common.rpc.Rpc;
 import edu.alibaba.mpc4j.common.rpc.RpcManager;
 import edu.alibaba.mpc4j.common.rpc.impl.memory.MemoryRpcManager;
+import edu.alibaba.mpc4j.common.tool.CommonConstants;
 import edu.alibaba.mpc4j.crypto.matrix.database.NaiveDatabase;
 import edu.alibaba.mpc4j.s2pc.pir.PirUtils;
 import edu.alibaba.mpc4j.s2pc.pir.index.single.SingleIndexPirFactory;
@@ -35,17 +36,17 @@ import java.util.Collection;
 public class VectorizedPirTest {
     private static final Logger LOGGER = LoggerFactory.getLogger(VectorizedPirTest.class);
     /**
-     * default element byte length
+     * default element bit length
      */
-    private static final int DEFAULT_ELEMENT_BYTE_LENGTH = 16;
+    private static final int DEFAULT_ELEMENT_BIT_LENGTH = CommonConstants.STATS_BIT_LENGTH;
     /**
-     * large element byte length
+     * large element bit length
      */
-    private static final int LARGE_ELEMENT_BYTE_LENGTH = 64;
+    private static final int LARGE_ELEMENT_BIT_LENGTH = CommonConstants.BLOCK_BIT_LENGTH;
     /**
-     * small element byte length
+     * small element bit length
      */
-    private static final int SMALL_ELEMENT_BYTE_LENGTH = 2;
+    private static final int SMALL_ELEMENT_BIT_LENGTH = 2;
     /**
      * database size
      */
@@ -110,28 +111,28 @@ public class VectorizedPirTest {
 
     @Test
     public void testVectorizedPir() {
-        testVectorizedPir(indexPirConfig, indexPirParams, DEFAULT_ELEMENT_BYTE_LENGTH, false);
+        testVectorizedPir(indexPirConfig, indexPirParams, DEFAULT_ELEMENT_BIT_LENGTH, false);
     }
 
     @Test
     public void testParallelVectorizedPir() {
-        testVectorizedPir(indexPirConfig, indexPirParams, DEFAULT_ELEMENT_BYTE_LENGTH, true);
+        testVectorizedPir(indexPirConfig, indexPirParams, DEFAULT_ELEMENT_BIT_LENGTH, true);
     }
 
     @Test
     public void testLargeElementVectorizedPir() {
-        testVectorizedPir(indexPirConfig, indexPirParams, LARGE_ELEMENT_BYTE_LENGTH, true);
+        testVectorizedPir(indexPirConfig, indexPirParams, LARGE_ELEMENT_BIT_LENGTH, true);
     }
 
     @Test
     public void testSmallElementVectorizedPir() {
-        testVectorizedPir(indexPirConfig, indexPirParams, SMALL_ELEMENT_BYTE_LENGTH, true);
+        testVectorizedPir(indexPirConfig, indexPirParams, SMALL_ELEMENT_BIT_LENGTH, true);
     }
 
     public void testVectorizedPir(Mr23SingleIndexPirConfig config, Mr23SingleIndexPirParams indexPirParams,
-                                  int elementByteLength, boolean parallel) {
+                                  int elementBitLength, boolean parallel) {
         int retrievalIndex = PirUtils.generateRetrievalIndex(SERVER_ELEMENT_SIZE);
-        NaiveDatabase database = PirUtils.generateDataBase(SERVER_ELEMENT_SIZE, elementByteLength * Byte.SIZE);
+        NaiveDatabase database = PirUtils.generateDataBase(SERVER_ELEMENT_SIZE, elementBitLength);
         Mr23SingleIndexPirServer server = new Mr23SingleIndexPirServer(serverRpc, clientRpc.ownParty(), config);
         Mr23SingleIndexPirClient client = new Mr23SingleIndexPirClient(clientRpc, serverRpc.ownParty(), config);
         // set parallel
@@ -139,7 +140,7 @@ public class VectorizedPirTest {
         client.setParallel(parallel);
         VectorizedPirServerThread serverThread = new VectorizedPirServerThread(server, indexPirParams, database);
         VectorizedPirClientThread clientThread = new VectorizedPirClientThread(
-            client, indexPirParams, retrievalIndex, SERVER_ELEMENT_SIZE, elementByteLength
+            client, indexPirParams, retrievalIndex, SERVER_ELEMENT_SIZE, elementBitLength
         );
         try {
             serverThread.start();

@@ -1,6 +1,8 @@
 package edu.alibaba.mpc4j.s2pc.pir.keyword;
 
 import edu.alibaba.mpc4j.common.rpc.MpcAbortException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.nio.ByteBuffer;
 import java.util.Map;
@@ -11,15 +13,16 @@ import java.util.Map;
  * @author Liqiang Peng
  * @date 2022/6/22
  */
-public class KwPirServerThread<T> extends Thread {
+public class KwPirServerThread extends Thread {
+    private static final Logger LOGGER = LoggerFactory.getLogger(KwPirServerThread.class);
     /**
      * keyword PIR server
      */
-    private final KwPirServer<T> server;
+    private final KwPirServer server;
     /**
      * keyword label map
      */
-    private final Map<T, ByteBuffer> keywordLabelMap;
+    private final Map<ByteBuffer, ByteBuffer> keywordLabelMap;
     /**
      * retrieval size
      */
@@ -33,8 +36,8 @@ public class KwPirServerThread<T> extends Thread {
      */
     private final int repeatTime;
 
-    KwPirServerThread(KwPirServer<T> server, Map<T, ByteBuffer> keywordLabelMap, int retrievalSize, int labelByteLength,
-                      int repeatTime) {
+    KwPirServerThread(KwPirServer server, Map<ByteBuffer, ByteBuffer> keywordLabelMap, int retrievalSize,
+                      int labelByteLength, int repeatTime) {
         this.server = server;
         this.keywordLabelMap = keywordLabelMap;
         this.retrievalSize = retrievalSize;
@@ -46,10 +49,15 @@ public class KwPirServerThread<T> extends Thread {
     public void run() {
         try {
             server.init(keywordLabelMap, retrievalSize, labelByteLength);
+            LOGGER.info("Server: The Offline Communication costs {}MB",
+                server.getRpc().getSendByteLength() * 1.0 / (1024 * 1024));
+            server.getRpc().reset();
             server.getRpc().synchronize();
             for (int i = 0; i < repeatTime; i++) {
                 server.pir();
             }
+            LOGGER.info("Server: The Online Communication costs {}MB",
+                server.getRpc().getSendByteLength() * 1.0 / (1024 * 1024));
         } catch (MpcAbortException e) {
             e.printStackTrace();
         }

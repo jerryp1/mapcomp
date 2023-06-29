@@ -7,6 +7,7 @@ import edu.alibaba.mpc4j.common.rpc.RpcManager;
 import edu.alibaba.mpc4j.common.rpc.impl.memory.MemoryRpcManager;
 import edu.alibaba.mpc4j.common.tool.CommonConstants;
 import edu.alibaba.mpc4j.s2pc.pir.PirUtils;
+import edu.alibaba.mpc4j.s2pc.pir.keyword.aaag22.Aaag22KwPirConfig;
 import edu.alibaba.mpc4j.s2pc.pir.keyword.cmg21.Cmg21KwPirConfig;
 import org.apache.commons.lang3.StringUtils;
 import org.junit.Assert;
@@ -18,6 +19,7 @@ import org.slf4j.LoggerFactory;
 
 import java.nio.ByteBuffer;
 import java.util.*;
+import java.util.List;
 
 /**
  * keyword PIR test.
@@ -33,25 +35,25 @@ public class KwPirTest {
      */
     private static final int REPEAT_TIME = 1;
     /**
+     * short label byte length
+     */
+    private static final int SHORT_LABEL_BYTE_LENGTH = CommonConstants.STATS_BYTE_LENGTH;
+    /**
      * default label byte length
      */
     private static final int DEFAULT_LABEL_BYTE_LENGTH = CommonConstants.BLOCK_BYTE_LENGTH;
+    /**
+     * long label byte length
+     */
+    private static final int LONG_LABEL_BYTE_LENGTH = CommonConstants.STATS_BIT_LENGTH;
     /**
      * server element size
      */
     private static final int SERVER_MAP_SIZE = 1 << 18;
     /**
-     * small client element size
+     * client element size
      */
-    private static final int SMALL_CLIENT_SET_SIZE = 1;
-    /**
-     * default client element size
-     */
-    private static final int DEFAULT_CLIENT_SET_SIZE = 1 << 8;
-    /**
-     * large client element size
-     */
-    private static final int LARGE_CLIENT_SET_SIZE = 1 << 12;
+    private static final int CLIENT_SET_SIZE = 1;
 
     @Parameterized.Parameters(name = "{0}")
     public static Collection<Object[]> configurations() {
@@ -60,6 +62,10 @@ public class KwPirTest {
         // CMG21
         configurations.add(new Object[]{
             KwPirFactory.KwPirType.CMG21.name(), new Cmg21KwPirConfig.Builder().build()
+        });
+        // AAAG22
+        configurations.add(new Object[]{
+            KwPirFactory.KwPirType.AAAG22.name(), new Aaag22KwPirConfig.Builder().build()
         });
 
         return configurations;
@@ -89,53 +95,54 @@ public class KwPirTest {
     }
 
     @Test
-    public void testSmallRetrievalSizeParallel() {
-        testPir(SMALL_CLIENT_SET_SIZE, config, true);
+    public void testShortLabelParallel() {
+        testPir(SHORT_LABEL_BYTE_LENGTH, config, true);
     }
 
     @Test
-    public void testDefaultRetrievalSizeParallel() {
-        testPir(DEFAULT_CLIENT_SET_SIZE, config, true);
+    public void testDefaultLabelParallel() {
+        testPir(DEFAULT_LABEL_BYTE_LENGTH, config, true);
     }
 
     @Test
-    public void testLargeRetrievalSizeParallel() {
-        testPir(LARGE_CLIENT_SET_SIZE, config, true);
+    public void testLongLabelParallel() {
+        testPir(LONG_LABEL_BYTE_LENGTH, config, true);
     }
 
-    public void testPir(int retrievalSize, KwPirConfig config, boolean parallel) {
-        List<Set<String>> randomSets = PirUtils.generateStringSets(SERVER_MAP_SIZE, retrievalSize, REPEAT_TIME);
-        Map<String, ByteBuffer> keywordLabelMap = PirUtils.generateKeywordLabelMap(
-            randomSets.get(0), DEFAULT_LABEL_BYTE_LENGTH
+    public void testPir(int labelByteLength, KwPirConfig config, boolean parallel) {
+        List<Set<ByteBuffer>> randomSets = PirUtils.generateByteBufferSets(SERVER_MAP_SIZE, CLIENT_SET_SIZE, REPEAT_TIME);
+        Map<ByteBuffer, ByteBuffer> keywordLabelMap = PirUtils.generateKeywordByteBufferLabelMap(
+            randomSets.get(0), labelByteLength
         );
         // create instances
-        KwPirServer<String> server = KwPirFactory.createServer(serverRpc, clientRpc.ownParty(), config);
-        KwPirClient<String> client = KwPirFactory.createClient(clientRpc, serverRpc.ownParty(), config);
+        KwPirServer server = KwPirFactory.createServer(serverRpc, clientRpc.ownParty(), config);
+        KwPirClient client = KwPirFactory.createClient(clientRpc, serverRpc.ownParty(), config);
         // set parallel
         server.setParallel(parallel);
         client.setParallel(parallel);
-        KwPirServerThread<String> serverThread = new KwPirServerThread<>(
-            server, keywordLabelMap, retrievalSize, DEFAULT_LABEL_BYTE_LENGTH, REPEAT_TIME
+        KwPirServerThread serverThread = new KwPirServerThread(
+            server, keywordLabelMap, CLIENT_SET_SIZE, labelByteLength, REPEAT_TIME
         );
-        KwPirClientThread<String> clientThread = new KwPirClientThread<>(
-            client, Lists.newArrayList(randomSets.subList(1, REPEAT_TIME + 1)), retrievalSize, DEFAULT_LABEL_BYTE_LENGTH
+        KwPirClientThread clientThread = new KwPirClientThread(
+            client, Lists.newArrayList(randomSets.subList(1, REPEAT_TIME + 1)), CLIENT_SET_SIZE, SERVER_MAP_SIZE, labelByteLength
         );
         try {
             serverThread.start();
             clientThread.start();
             serverThread.join();
             clientThread.join();
-            LOGGER.info("Server: The Communication costs {}MB", serverRpc.getSendByteLength() * 1.0 / (1024 * 1024));
             serverRpc.reset();
-            LOGGER.info("Client: The Communication costs {}MB", clientRpc.getSendByteLength() * 1.0 / (1024 * 1024));
             clientRpc.reset();
             // verify result
             for (int index = 0; index < REPEAT_TIME; index++) {
-                Set<String> intersectionSet = new HashSet<>(randomSets.get(index + 1));
+                Set<ByteBuffer> intersectionSet = new HashSet<>(randomSets.get(index + 1));
                 intersectionSet.retainAll(randomSets.get(0));
-                Map<String, ByteBuffer> pirResult = clientThread.getRetrievalResult(index);
+                Map<ByteBuffer, ByteBuffer> pirResult = clientThread.getRetrievalResult(index);
                 Assert.assertEquals(intersectionSet.size(), pirResult.size());
-                pirResult.forEach((key, value) -> Assert.assertEquals(value, keywordLabelMap.get(key)));
+                pirResult.forEach((key, value) -> {
+                    Assert.assertEquals(value, keywordLabelMap.get(key));
+                    LOGGER.info("key {}, value{}", Arrays.toString(key.array()), Arrays.toString(value.array()));
+                });
             }
         } catch (InterruptedException e) {
             e.printStackTrace();

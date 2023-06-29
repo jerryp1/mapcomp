@@ -56,13 +56,13 @@ public class Mcr21SingleIndexPirClient extends AbstractSingleIndexPirClient {
     }
 
     @Override
-    public void init(SingleIndexPirParams indexPirParams, int serverElementSize, int elementByteLength) {
+    public void init(SingleIndexPirParams indexPirParams, int serverElementSize, int elementBitLength) {
         assert (indexPirParams instanceof Mcr21SingleIndexPirParams);
         params = (Mcr21SingleIndexPirParams) indexPirParams;
         logPhaseInfo(PtoState.INIT_BEGIN);
 
         stopWatch.start();
-        List<byte[]> publicKeysPayload = clientSetup(serverElementSize, elementByteLength);
+        List<byte[]> publicKeysPayload = clientSetup(serverElementSize, elementBitLength);
         DataPacketHeader clientPublicKeysHeader = new DataPacketHeader(
             encodeTaskId, getPtoDesc().getPtoId(), PtoStep.CLIENT_SEND_PUBLIC_KEYS.ordinal(), extraInfo,
             rpc.ownParty().getPartyId(), otherParty().getPartyId()
@@ -77,12 +77,12 @@ public class Mcr21SingleIndexPirClient extends AbstractSingleIndexPirClient {
     }
 
     @Override
-    public void init(int serverElementSize, int elementByteLength) {
+    public void init(int serverElementSize, int elementBitLength) {
         params = Mcr21SingleIndexPirParams.DEFAULT_PARAMS;
         logPhaseInfo(PtoState.INIT_BEGIN);
 
         stopWatch.start();
-        List<byte[]> publicKeysPayload = clientSetup(serverElementSize, elementByteLength);
+        List<byte[]> publicKeysPayload = clientSetup(serverElementSize, elementBitLength);
         DataPacketHeader clientPublicKeysHeader = new DataPacketHeader(
             encodeTaskId, getPtoDesc().getPtoId(), PtoStep.CLIENT_SEND_PUBLIC_KEYS.ordinal(), extraInfo,
             rpc.ownParty().getPartyId(), otherParty().getPartyId()
@@ -132,12 +132,12 @@ public class Mcr21SingleIndexPirClient extends AbstractSingleIndexPirClient {
     }
 
     @Override
-    public List<byte[]> clientSetup(int serverElementSize, int elementByteLength) {
+    public List<byte[]> clientSetup(int serverElementSize, int elementBitLength) {
         if (params == null) {
             params = Mcr21SingleIndexPirParams.DEFAULT_PARAMS;
         }
-        int maxPartitionByteLength = params.getPolyModulusDegree() * params.getPlainModulusBitLength() / Byte.SIZE;
-        setInitInput(serverElementSize, elementByteLength, maxPartitionByteLength);
+        int maxPartitionBitLength = params.getPolyModulusDegree() * params.getPlainModulusBitLength();
+        setInitInput(serverElementSize, elementBitLength, maxPartitionBitLength);
         elementSizeOfPlaintext = PirUtils.elementSizeOfPlaintext(
             partitionByteLength, params.getPolyModulusDegree(), params.getPlainModulusBitLength()
         );
@@ -172,9 +172,9 @@ public class Mcr21SingleIndexPirClient extends AbstractSingleIndexPirClient {
             int offset = index % elementSizeOfPlaintext;
             byte[] partitionBytes = new byte[partitionByteLength];
             System.arraycopy(bytes, offset * partitionByteLength, partitionBytes, 0, partitionByteLength);
-            databases[partitionIndex] = ZlDatabase.create(partitionByteLength*Byte.SIZE, new byte[][]{partitionBytes});
+            databases[partitionIndex] = ZlDatabase.create(partitionBitLength, new byte[][]{partitionBytes});
         });
-        return NaiveDatabase.createFromZl(elementByteLength * Byte.SIZE, databases).getBytesData(0);
+        return NaiveDatabase.createFromZl(elementBitLength, databases).getBytesData(0);
     }
 
     /**

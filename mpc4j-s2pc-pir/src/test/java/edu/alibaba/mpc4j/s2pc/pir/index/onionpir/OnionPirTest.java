@@ -4,6 +4,7 @@ import com.google.common.base.Preconditions;
 import edu.alibaba.mpc4j.common.rpc.Rpc;
 import edu.alibaba.mpc4j.common.rpc.RpcManager;
 import edu.alibaba.mpc4j.common.rpc.impl.memory.MemoryRpcManager;
+import edu.alibaba.mpc4j.common.tool.CommonConstants;
 import edu.alibaba.mpc4j.crypto.matrix.database.NaiveDatabase;
 import edu.alibaba.mpc4j.s2pc.pir.PirUtils;
 import edu.alibaba.mpc4j.s2pc.pir.index.single.SingleIndexPirFactory;
@@ -35,17 +36,17 @@ import java.util.Collection;
 public class OnionPirTest {
     private static final Logger LOGGER = LoggerFactory.getLogger(OnionPirTest.class);
     /**
-     * default element byte length
+     * default element bit length
      */
-    private static final int DEFAULT_ELEMENT_BYTE_LENGTH = 64;
+    private static final int DEFAULT_ELEMENT_BIT_LENGTH = CommonConstants.BLOCK_BIT_LENGTH;
     /**
-     * large element byte length
+     * large element bit length
      */
-    private static final int LARGE_ELEMENT_BYTE_LENGTH = 30000;
+    private static final int LARGE_ELEMENT_BIT_LENGTH = 160000;
     /**
-     * small element byte length
+     * small element bit length
      */
-    private static final int SMALL_ELEMENT_BYTE_LENGTH = 8;
+    private static final int SMALL_ELEMENT_BIT_LENGTH = CommonConstants.STATS_BIT_LENGTH;
     /**
      * database size
      */
@@ -124,35 +125,35 @@ public class OnionPirTest {
 
     @Test
     public void testOnionPir() {
-        testOnionPir(indexPirConfig, indexPirParams, DEFAULT_ELEMENT_BYTE_LENGTH, false);
+        testOnionPir(indexPirConfig, indexPirParams, DEFAULT_ELEMENT_BIT_LENGTH, false);
     }
 
     @Test
     public void testParallelOnionPir() {
-        testOnionPir(indexPirConfig, indexPirParams, DEFAULT_ELEMENT_BYTE_LENGTH, true);
+        testOnionPir(indexPirConfig, indexPirParams, DEFAULT_ELEMENT_BIT_LENGTH, true);
     }
 
     @Test
     public void testLargeElementOnionPir() {
-        testOnionPir(indexPirConfig, indexPirParams, LARGE_ELEMENT_BYTE_LENGTH, true);
+        testOnionPir(indexPirConfig, indexPirParams, LARGE_ELEMENT_BIT_LENGTH, true);
     }
 
     @Test
     public void testSmallElementOnionPir() {
-        testOnionPir(indexPirConfig, indexPirParams, SMALL_ELEMENT_BYTE_LENGTH, true);
+        testOnionPir(indexPirConfig, indexPirParams, SMALL_ELEMENT_BIT_LENGTH, true);
     }
 
     public void testOnionPir(Mcr21SingleIndexPirConfig config, Mcr21SingleIndexPirParams indexPirParams,
-                             int elementByteLength, boolean parallel) {
+                             int elementBitLength, boolean parallel) {
         int retrievalIndex = PirUtils.generateRetrievalIndex(SERVER_ELEMENT_SIZE);
-        NaiveDatabase database = PirUtils.generateDataBase(SERVER_ELEMENT_SIZE, elementByteLength * Byte.SIZE);
+        NaiveDatabase database = PirUtils.generateDataBase(SERVER_ELEMENT_SIZE, elementBitLength);
         Mcr21SingleIndexPirServer server = new Mcr21SingleIndexPirServer(serverRpc, clientRpc.ownParty(), config);
         Mcr21SingleIndexPirClient client = new Mcr21SingleIndexPirClient(clientRpc, serverRpc.ownParty(), config);
         server.setParallel(parallel);
         client.setParallel(parallel);
         OnionPirServerThread serverThread = new OnionPirServerThread(server, indexPirParams, database);
         OnionPirClientThread clientThread = new OnionPirClientThread(
-            client, indexPirParams, retrievalIndex, SERVER_ELEMENT_SIZE, elementByteLength
+            client, indexPirParams, retrievalIndex, SERVER_ELEMENT_SIZE, elementBitLength
         );
         try {
             serverThread.start();

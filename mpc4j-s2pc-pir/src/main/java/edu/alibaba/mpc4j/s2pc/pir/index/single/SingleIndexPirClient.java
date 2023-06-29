@@ -18,17 +18,19 @@ public interface SingleIndexPirClient extends TwoPartyPto {
      *
      * @param indexPirParams    index PIR params.
      * @param serverElementSize database size.
-     * @param elementByteLength element byte length.
+     * @param elementBitLength  element bit length.
+     * @throws MpcAbortException the protocol failure aborts.
      */
-    void init(SingleIndexPirParams indexPirParams, int serverElementSize, int elementByteLength);
+    void init(SingleIndexPirParams indexPirParams, int serverElementSize, int elementBitLength) throws MpcAbortException;
 
     /**
      * Client initializes the protocol.
      *
      * @param serverElementSize database size.
-     * @param elementByteLength element byte length.
+     * @param elementBitLength  element bit length.
+     * @throws MpcAbortException the protocol failure aborts.
      */
-    void init(int serverElementSize, int elementByteLength);
+    void init(int serverElementSize, int elementBitLength) throws MpcAbortException;
 
     /**
      * Client executes the protocol.
@@ -43,10 +45,10 @@ public interface SingleIndexPirClient extends TwoPartyPto {
      * Client generates key pair.
      *
      * @param serverElementSize server element size.
-     * @param elementByteLength element byte length.
+     * @param elementBitLength  element bit length.
      * @return public keys.
      */
-    List<byte[]> clientSetup(int serverElementSize, int elementByteLength);
+    List<byte[]> clientSetup(int serverElementSize, int elementBitLength);
 
     /**
      * Client generates query.

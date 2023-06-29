@@ -17,9 +17,9 @@ public class IndexPirClientThread extends Thread {
      */
     private final SingleIndexPirClient client;
     /**
-     * element byte length
+     * element bit length
      */
-    private final int elementByteLength;
+    private final int elementBitLength;
     /**
      * retrieval index
      */
@@ -33,11 +33,11 @@ public class IndexPirClientThread extends Thread {
      */
     private ByteBuffer indexPirResult;
 
-    IndexPirClientThread(SingleIndexPirClient client, int retrievalIndex, int serverElementSize, int elementByteLength) {
+    IndexPirClientThread(SingleIndexPirClient client, int retrievalIndex, int serverElementSize, int elementBitLength) {
         this.client = client;
         this.retrievalIndex = retrievalIndex;
         this.serverElementSize = serverElementSize;
-        this.elementByteLength = elementByteLength;
+        this.elementBitLength = elementBitLength;
     }
 
     public ByteBuffer getRetrievalResult() {
@@ -47,7 +47,7 @@ public class IndexPirClientThread extends Thread {
     @Override
     public void run() {
         try {
-            client.init(serverElementSize, elementByteLength);
+            client.init(serverElementSize, elementBitLength);
             client.getRpc().synchronize();
             indexPirResult = ByteBuffer.wrap(client.pir(retrievalIndex));
         } catch (MpcAbortException e) {

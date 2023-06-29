@@ -259,7 +259,6 @@ public class Cmg21KwPirParams implements KwPirParams {
         return maxRetrievalSize;
     }
 
-    @Override
     public int expectServerSize() {
         return expectServerSize;
     }
