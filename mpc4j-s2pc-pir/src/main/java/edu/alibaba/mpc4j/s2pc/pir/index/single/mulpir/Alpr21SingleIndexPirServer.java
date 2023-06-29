@@ -4,6 +4,7 @@ import edu.alibaba.mpc4j.common.rpc.*;
 import edu.alibaba.mpc4j.common.rpc.utils.DataPacket;
 import edu.alibaba.mpc4j.common.rpc.utils.DataPacketHeader;
 import edu.alibaba.mpc4j.common.tool.CommonConstants;
+import edu.alibaba.mpc4j.common.tool.utils.CommonUtils;
 import edu.alibaba.mpc4j.crypto.matrix.database.NaiveDatabase;
 import edu.alibaba.mpc4j.s2pc.pir.PirUtils;
 import edu.alibaba.mpc4j.s2pc.pir.index.single.AbstractSingleIndexPirServer;
@@ -134,7 +135,7 @@ public class Alpr21SingleIndexPirServer extends AbstractSingleIndexPirServer {
         stopWatch.stop();
         long genResponseTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
         stopWatch.reset();
-        logStepInfo(PtoState.PTO_STEP, 1, 1, genResponseTime, "Client generates reply");
+        logStepInfo(PtoState.PTO_STEP, 1, 1, genResponseTime, "Server generates reply");
 
         logPhaseInfo(PtoState.PTO_END);
     }
@@ -171,7 +172,7 @@ public class Alpr21SingleIndexPirServer extends AbstractSingleIndexPirServer {
         plaintextSize = (int) Math.ceil((double) num / this.elementSizeOfPlaintext);
         dimensionSize = PirUtils.computeDimensionLength(plaintextSize, params.getDimension());
         // encode database
-        IntStream intStream = IntStream.range(0, databases.length);
+        IntStream intStream = IntStream.range(0, partitionSize);
         intStream = parallel ? intStream.parallel() : intStream;
         return intStream.mapToObj(this::preprocessDatabase).collect(Collectors.toList());
     }
@@ -180,25 +181,21 @@ public class Alpr21SingleIndexPirServer extends AbstractSingleIndexPirServer {
     public List<byte[]> generateResponse(List<byte[]> clientQueryPayload, List<byte[][]> encodedDatabase)
         throws MpcAbortException {
         // query ciphertext number should be ceil(dim_sum/N)
-        int expectQueryPayloadSize = (Arrays.stream(dimensionSize).sum() % params.getPolyModulusDegree() == 0)
-                ? Arrays.stream(dimensionSize).sum() / params.getPolyModulusDegree()
-                : Arrays.stream(dimensionSize).sum() / params.getPolyModulusDegree() + 1;
+        int sum = Arrays.stream(dimensionSize).sum();
+        int expectQueryPayloadSize = CommonUtils.getUnitNum(sum, params.getPolyModulusDegree());
         MpcAbortPreconditions.checkArgument(clientQueryPayload.size() == expectQueryPayloadSize);
-        IntStream intStream = IntStream.range(0, databases.length);
+        IntStream intStream = IntStream.range(0, partitionSize);
         intStream = parallel ? intStream.parallel() : intStream;
         return intStream
-                .mapToObj(i ->
-                    Alpr21SingleIndexPirNativeUtils.generateReply(
-                        params.getEncryptionParams(),
-                        galoisKeys,
-                        relinKeys,
-                        clientQueryPayload,
-                        encodedDatabase.get(i),
-                        dimensionSize
-                    )
-                )
-                .flatMap(Collection::stream)
-                .collect(Collectors.toCollection(ArrayList::new));
+            .mapToObj(i -> Alpr21SingleIndexPirNativeUtils.generateReply(
+                params.getEncryptionParams(),
+                galoisKeys,
+                relinKeys,
+                clientQueryPayload,
+                encodedDatabase.get(i),
+                dimensionSize))
+            .flatMap(Collection::stream)
+            .collect(Collectors.toCollection(ArrayList::new));
     }
 
     /**
@@ -220,9 +217,9 @@ public class Alpr21SingleIndexPirServer extends AbstractSingleIndexPirServer {
         int byteSizeOfPlaintext = elementSizeOfPlaintext * partitionByteLength;
         int totalByteSize = num * partitionByteLength;
         int usedCoeffSize = elementSizeOfPlaintext *
-                ((int) Math.ceil(Byte.SIZE * partitionByteLength / (double) params.getPlainModulusBitLength()));
+            ((int) Math.ceil(Byte.SIZE * partitionByteLength / (double) params.getPlainModulusBitLength()));
         assert (usedCoeffSize <= params.getPolyModulusDegree())
-                : "coefficient num must be less than or equal to polynomial degree";
+            : "coefficient num must be less than or equal to polynomial degree";
         int offset = 0;
         for (int i = 0; i < plaintextSize; i++) {
             int processByteSize;
@@ -236,7 +233,7 @@ public class Alpr21SingleIndexPirServer extends AbstractSingleIndexPirServer {
             assert (processByteSize % partitionByteLength == 0);
             // Get the coefficients of the elements that will be packed in plaintext i
             long[] coeffs = PirUtils.convertBytesToCoeffs(
-                    params.getPlainModulusBitLength(), offset, processByteSize, combinedBytes
+                params.getPlainModulusBitLength(), offset, processByteSize, combinedBytes
             );
             assert (coeffs.length <= usedCoeffSize);
             offset += processByteSize;
@@ -250,8 +247,9 @@ public class Alpr21SingleIndexPirServer extends AbstractSingleIndexPirServer {
         int currentPlaintextSize = coeffsList.size();
         assert (currentPlaintextSize <= plaintextSize);
         IntStream.range(0, (prod - currentPlaintextSize))
-                .mapToObj(i -> IntStream.range(0, params.getPolyModulusDegree()).mapToLong(i1 -> 1L).toArray())
-                .forEach(coeffsList::add);
-        return Alpr21SingleIndexPirNativeUtils.nttTransform(params.getEncryptionParams(), coeffsList).toArray(new byte[0][]);
+            .mapToObj(i -> IntStream.range(0, params.getPolyModulusDegree()).mapToLong(i1 -> 1L).toArray())
+            .forEach(coeffsList::add);
+        return Alpr21SingleIndexPirNativeUtils.nttTransform(params.getEncryptionParams(), coeffsList)
+            .toArray(new byte[0][]);
     }
 }

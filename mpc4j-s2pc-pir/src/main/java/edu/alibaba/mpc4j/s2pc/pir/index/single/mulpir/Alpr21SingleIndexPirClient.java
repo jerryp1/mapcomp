@@ -61,7 +61,6 @@ public class Alpr21SingleIndexPirClient extends AbstractSingleIndexPirClient {
         logPhaseInfo(PtoState.INIT_BEGIN);
 
         stopWatch.start();
-
         List<byte[]> publicKeysPayload = clientSetup(serverElementSize, elementBitLength);
         // client sends Galois keys and relinKeys
         DataPacketHeader clientPublicKeysHeader = new DataPacketHeader(
@@ -154,7 +153,7 @@ public class Alpr21SingleIndexPirClient extends AbstractSingleIndexPirClient {
         // base pt index, compute indices for each dimension
         int[] indices = PirUtils.computeIndices(indexOfPlaintext, dimensionSize);
         return Alpr21SingleIndexPirNativeUtils.generateQuery(
-                params.getEncryptionParams(), publicKey, secretKey, indices, dimensionSize
+            params.getEncryptionParams(), publicKey, secretKey, indices, dimensionSize
         );
     }
 
@@ -166,9 +165,7 @@ public class Alpr21SingleIndexPirClient extends AbstractSingleIndexPirClient {
         intStream = parallel ? intStream.parallel() : intStream;
         intStream.forEach(partitionIndex -> {
             long[] coeffs = Alpr21SingleIndexPirNativeUtils.decryptReply(
-                    params.getEncryptionParams(),
-                    secretKey,
-                    response.subList(partitionIndex, partitionIndex + 1)
+                params.getEncryptionParams(), secretKey, response.subList(partitionIndex, partitionIndex + 1)
             );
             byte[] bytes = PirUtils.convertCoeffsToBytes(coeffs, params.getPlainModulusBitLength());
             int offset = index % elementSizeOfPlaintext;
@@ -178,7 +175,6 @@ public class Alpr21SingleIndexPirClient extends AbstractSingleIndexPirClient {
         });
         return NaiveDatabase.createFromZl(elementBitLength, databases).getBytesData(0);
     }
-
 
     /**
      * client generates key pair.

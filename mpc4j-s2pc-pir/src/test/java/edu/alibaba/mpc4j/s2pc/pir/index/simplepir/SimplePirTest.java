@@ -146,10 +146,8 @@ public class SimplePirTest {
             LOGGER.info("Parameters: \n {}", indexPirParams.toString());
             // verify result
             ByteBuffer result = clientThread.getRetrievalResult();
-            Assert.assertEquals(
-                result, ByteBuffer.wrap(database.getBytesData(retrievalIndex))
-            );
-            LOGGER.info("Client: The Retrieval Result is Correct");
+            Assert.assertEquals(result, ByteBuffer.wrap(database.getBytesData(retrievalIndex)));
+            LOGGER.info("Main: The Retrieval Result is Correct");
         } catch (InterruptedException e) {
             e.printStackTrace();
         }

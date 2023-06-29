@@ -4,18 +4,18 @@ import edu.alibaba.mpc4j.common.rpc.*;
 import edu.alibaba.mpc4j.common.rpc.utils.DataPacket;
 import edu.alibaba.mpc4j.common.rpc.utils.DataPacketHeader;
 import edu.alibaba.mpc4j.common.tool.CommonConstants;
-import edu.alibaba.mpc4j.common.tool.utils.CommonUtils;
 import edu.alibaba.mpc4j.crypto.matrix.database.NaiveDatabase;
 import edu.alibaba.mpc4j.crypto.matrix.database.ZlDatabase;
 import edu.alibaba.mpc4j.s2pc.pir.PirUtils;
 import edu.alibaba.mpc4j.s2pc.pir.index.single.AbstractSingleIndexPirClient;
 import edu.alibaba.mpc4j.s2pc.pir.index.single.SingleIndexPirParams;
 
-
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.IntStream;
+
+import static edu.alibaba.mpc4j.s2pc.pir.index.single.constantweightpir.Mk22SingleIndexPirPtoDesc.*;
 
 /**
  * Constant-weight PIR client
@@ -31,17 +31,13 @@ public class Mk22SingleIndexPirClient extends AbstractSingleIndexPirClient {
     }
 
     /**
-     * SEAL PIR params
+     * constant weight PIR params
      */
     private Mk22SingleIndexPirParams params;
     /**
      * element size per BFV plaintext
      */
     private int elementSizeOfPlaintext;
-    /**
-     * partition byte length
-     */
-    private int partitionByteLength;
     /**
      * public key
      */
@@ -50,29 +46,24 @@ public class Mk22SingleIndexPirClient extends AbstractSingleIndexPirClient {
      * private key
      */
     private byte[] secretKey;
-    /**
-     * partition size
-     */
-    private int partitionSize;
 
     public Mk22SingleIndexPirClient(Rpc clientRpc, Party serverParty, Mk22SingleIndexPirConfig config) {
-        super(Mk22SingleIndexPirPtoDesc.getInstance(), clientRpc, serverParty, config);
+        super(getInstance(), clientRpc, serverParty, config);
     }
 
     @Override
-    public void init(SingleIndexPirParams indexPirParams, int serverElementSize, int elementByteLength) {
+    public void init(SingleIndexPirParams indexPirParams, int serverElementSize, int elementBitLength) {
         assert (indexPirParams instanceof Mk22SingleIndexPirParams);
         params = (Mk22SingleIndexPirParams) indexPirParams;
         params.setQueryParams(serverElementSize);
         logPhaseInfo(PtoState.INIT_BEGIN);
 
         stopWatch.start();
-
-        List<byte[]> publicKeysPayload = clientSetup(serverElementSize, elementByteLength);
+        List<byte[]> publicKeysPayload = clientSetup(serverElementSize, elementBitLength);
         // client sends Galois keys and relinKeys
         DataPacketHeader clientPublicKeysHeader = new DataPacketHeader(
-                encodeTaskId, getPtoDesc().getPtoId(), Mk22SingleIndexPirPtoDesc.PtoStep.CLIENT_SEND_PUBLIC_KEYS.ordinal(), extraInfo,
-                rpc.ownParty().getPartyId(), otherParty().getPartyId()
+            encodeTaskId, getPtoDesc().getPtoId(), PtoStep.CLIENT_SEND_PUBLIC_KEYS.ordinal(), extraInfo,
+            rpc.ownParty().getPartyId(), otherParty().getPartyId()
         );
         rpc.send(DataPacket.fromByteArrayList(clientPublicKeysHeader, publicKeysPayload));
         stopWatch.stop();
@@ -93,8 +84,8 @@ public class Mk22SingleIndexPirClient extends AbstractSingleIndexPirClient {
         List<byte[]> publicKeysPayload = clientSetup(serverElementSize, elementByteLength);
         // client sends Galois keys
         DataPacketHeader clientPublicKeysHeader = new DataPacketHeader(
-                encodeTaskId, getPtoDesc().getPtoId(), Mk22SingleIndexPirPtoDesc.PtoStep.CLIENT_SEND_PUBLIC_KEYS.ordinal(), extraInfo,
-                rpc.ownParty().getPartyId(), otherParty().getPartyId()
+            encodeTaskId, getPtoDesc().getPtoId(), PtoStep.CLIENT_SEND_PUBLIC_KEYS.ordinal(), extraInfo,
+            rpc.ownParty().getPartyId(), otherParty().getPartyId()
         );
         rpc.send(DataPacket.fromByteArrayList(clientPublicKeysHeader, publicKeysPayload));
         stopWatch.stop();
@@ -114,8 +105,8 @@ public class Mk22SingleIndexPirClient extends AbstractSingleIndexPirClient {
         // client generates query
         List<byte[]> clientQueryPayload = generateQuery(index);
         DataPacketHeader clientQueryHeader = new DataPacketHeader(
-                encodeTaskId, getPtoDesc().getPtoId(), Mk22SingleIndexPirPtoDesc.PtoStep.CLIENT_SEND_QUERY.ordinal(), extraInfo,
-                rpc.ownParty().getPartyId(), otherParty().getPartyId()
+            encodeTaskId, getPtoDesc().getPtoId(), PtoStep.CLIENT_SEND_QUERY.ordinal(), extraInfo,
+            rpc.ownParty().getPartyId(), otherParty().getPartyId()
         );
         rpc.send(DataPacket.fromByteArrayList(clientQueryHeader, clientQueryPayload));
         stopWatch.stop();
@@ -125,8 +116,8 @@ public class Mk22SingleIndexPirClient extends AbstractSingleIndexPirClient {
 
         // receive response
         DataPacketHeader serverResponseHeader = new DataPacketHeader(
-                encodeTaskId, getPtoDesc().getPtoId(), Mk22SingleIndexPirPtoDesc.PtoStep.SERVER_SEND_RESPONSE.ordinal(), extraInfo,
-                otherParty().getPartyId(), rpc.ownParty().getPartyId()
+            encodeTaskId, getPtoDesc().getPtoId(), PtoStep.SERVER_SEND_RESPONSE.ordinal(), extraInfo,
+            otherParty().getPartyId(), rpc.ownParty().getPartyId()
         );
         List<byte[]> serverResponsePayload = rpc.receive(serverResponseHeader).getPayload();
         stopWatch.start();
@@ -140,25 +131,16 @@ public class Mk22SingleIndexPirClient extends AbstractSingleIndexPirClient {
         return element;
     }
 
-    /**
-     * client setup.
-     *
-     * @return public keys.
-     */
-    public List<byte[]> clientSetup(int serverElementSize, int elementByteLength) {
+    @Override
+    public List<byte[]> clientSetup(int serverElementSize, int elementBitLength) {
         if (params == null) {
             params = Mk22SingleIndexPirParams.DEFAULT_PARAMS;
         }
-        // Because the batching mode is used, the number of available coefficient bits needs to be -1
-        int maxPartitionByteLength = params.getPolyModulusDegree() * params.getPlainModulusBitLength() / Byte.SIZE;
-        setInitInput(serverElementSize, elementByteLength, maxPartitionByteLength);
-
-        partitionByteLength = Math.min(maxPartitionByteLength, elementByteLength);
-        partitionSize = CommonUtils.getUnitNum(elementByteLength, partitionByteLength);
+        int maxPartitionBitLength = params.getPolyModulusDegree() * params.getPlainModulusBitLength();
+        setInitInput(serverElementSize, elementBitLength, maxPartitionBitLength);
         elementSizeOfPlaintext = PirUtils.elementSizeOfPlaintext(
-                partitionByteLength, params.getPolyModulusDegree(), params.getPlainModulusBitLength()
+            partitionByteLength, params.getPolyModulusDegree(), params.getPlainModulusBitLength()
         );
-
         return generateKeyPair();
     }
 
@@ -169,32 +151,37 @@ public class Mk22SingleIndexPirClient extends AbstractSingleIndexPirClient {
         int[] encodedIndex;
         switch (params.getEqualityType()) {
             case FOLKLORE:
-                encodedIndex = Mk22SingleIndexPirUtils.getFolkloreCodeword(indexOfPlaintext, params.getCodewordsBitLength());
+                encodedIndex = Mk22SingleIndexPirUtils.getFolkloreCodeword(
+                    indexOfPlaintext, params.getCodewordsBitLength()
+                );
                 break;
             case CONSTANT_WEIGHT:
-                encodedIndex = Mk22SingleIndexPirUtils.getPerfectConstantWeightCodeword(indexOfPlaintext, params.getCodewordsBitLength(), params.getHammingWeight());
+                encodedIndex = Mk22SingleIndexPirUtils.getPerfectConstantWeightCodeword(
+                    indexOfPlaintext, params.getCodewordsBitLength(), params.getHammingWeight()
+                );
                 break;
             default:
                 throw new IllegalStateException("Invalid Equality Operator Type");
         }
         return Mk22SingleIndexPirNativeUtils.generateQuery(
-                params.getEncryptionParams(), publicKey, secretKey, encodedIndex, params.getUsedSlotsPerPlain(), params.getNumInputCiphers()
+            params.getEncryptionParams(),
+            publicKey,
+            secretKey,
+            encodedIndex,
+            params.getUsedSlotsPerPlain(),
+            params.getNumInputCiphers()
         );
     }
 
     @Override
     public byte[] decodeResponse(List<byte[]> response, int index) throws MpcAbortException {
-
         MpcAbortPreconditions.checkArgument(response.size() == partitionSize);
         ZlDatabase[] databases = new ZlDatabase[partitionSize];
         IntStream intStream = IntStream.range(0, partitionSize);
         intStream = parallel ? intStream.parallel() : intStream;
         intStream.forEach(partitionIndex -> {
             long[] coeffs = Mk22SingleIndexPirNativeUtils.decryptReply(
-                    params.getEncryptionParams(),
-                    secretKey,
-                    response.subList(partitionIndex, partitionIndex + 1),
-                    params.getDimension()
+                params.getEncryptionParams(), secretKey, response.get(partitionIndex)
             );
             byte[] bytes = PirUtils.convertCoeffsToBytes(coeffs, params.getPlainModulusBitLength());
             int offset = index % elementSizeOfPlaintext;
@@ -202,11 +189,8 @@ public class Mk22SingleIndexPirClient extends AbstractSingleIndexPirClient {
             System.arraycopy(bytes, offset * partitionByteLength, partitionBytes, 0, partitionByteLength);
             databases[partitionIndex] = ZlDatabase.create(partitionByteLength * Byte.SIZE, new byte[][]{partitionBytes});
         });
-
-        return NaiveDatabase.createFromZl(elementByteLength * Byte.SIZE, databases).getBytesData(0);
-
+        return NaiveDatabase.createFromZl(elementBitLength, databases).getBytesData(0);
     }
-
 
     /**
      * client generates key pair.
@@ -223,7 +207,6 @@ public class Mk22SingleIndexPirClient extends AbstractSingleIndexPirClient {
         publicKeys.add(keyPair.remove(0));
         // add Relin keys
         publicKeys.add(keyPair.remove(0));
-
         return publicKeys;
     }
 }

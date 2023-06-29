@@ -27,8 +27,8 @@ public class Alpr21SingleIndexPirConfig implements SingleIndexPirConfig {
     public void setEnvType(EnvType envType) {
         if (envType.equals(EnvType.STANDARD_JDK) || envType.equals(EnvType.INLAND_JDK)) {
             throw new IllegalArgumentException("Protocol using " + CommonConstants.MPC4J_NATIVE_FHE_NAME
-                    + " must not be " + EnvType.STANDARD_JDK.name() + " or " + EnvType.INLAND_JDK.name()
-                    + ": " + envType.name());
+                + " must not be " + EnvType.STANDARD_JDK.name() + " or " + EnvType.INLAND_JDK.name()
+                + ": " + envType.name());
         }
     }
 

@@ -46,40 +46,32 @@ public class Mk22SingleIndexPirNativeUtils {
      * @param encryptionParams  SEAL encryption params.
      * @param publicKey         public key.
      * @param secretKey         secret key.
-     * @param encodedIndex      index after encode: E_q
-     * @param usedSlotsPerPlain 2^c
-     * @param numInputCipher    h
+     * @param encodedIndex      index after encode: E_q.
+     * @param usedSlotsPerPlain 2^c.
+     * @param numInputCipher    h.
      * @return query ciphertexts.
      */
-    static native List<byte[]> generateQuery(byte[] encryptionParams, byte[] publicKey, byte[] secretKey, int[] encodedIndex,
-                                             int usedSlotsPerPlain, int numInputCipher);
-
+    static native List<byte[]> generateQuery(byte[] encryptionParams, byte[] publicKey, byte[] secretKey,
+                                             int[] encodedIndex, int usedSlotsPerPlain, int numInputCipher);
 
     /**
      * generate response.
      *
-     * @param encryptionParams        params
-     * @param galoisKey               galois keys
-     * @param relinKey                relin keys
-     * @param queryList               query list
-     * @param database                database contains BFV PTS
-     * @param plaintextIndexCodewords server BFV PT index codewords
-     * @param numInputCiphers         h
-     * @param codewordBitLength       k
-     * @param hammingWeight           m
-     * @param eqType                  folklore or constant-weight
+     * @param encryptionParams        params.
+     * @param galoisKey               galois keys.
+     * @param relinKey                relin keys.
+     * @param queryList               query list.
+     * @param database                database contains BFV PTS.
+     * @param plaintextIndexCodewords server BFV PT index codewords.
+     * @param numInputCiphers         h.
+     * @param codewordBitLength       k.
+     * @param hammingWeight           m.
+     * @param eqType                  folklore or constant-weight.
      * @return response ciphertexts.
      */
-    static native byte[] generateReply(byte[] encryptionParams,
-                                       byte[] galoisKey,
-                                       byte[] relinKey,
-                                       List<byte[]> queryList,
-                                       byte[][] database,
-                                       List<int[]> plaintextIndexCodewords,
-                                       int numInputCiphers,
-                                       int codewordBitLength,
-                                       int hammingWeight,
-                                       int eqType);
+    static native byte[] generateReply(byte[] encryptionParams, byte[] galoisKey, byte[] relinKey, List<byte[]> queryList,
+                                       byte[][] database, List<int[]> plaintextIndexCodewords, int numInputCiphers,
+                                       int codewordBitLength, int hammingWeight, int eqType);
 
     /**
      * decode response.
@@ -87,9 +79,7 @@ public class Mk22SingleIndexPirNativeUtils {
      * @param encryptionParams SEAL encryption params.
      * @param secretKey        secret key.
      * @param response         response ciphertext.
-     * @param dimension        dimension.
      * @return BFV plaintext.
      */
-    static native long[] decryptReply(byte[] encryptionParams, byte[] secretKey, List<byte[]> response, int dimension);
-
+    static native long[] decryptReply(byte[] encryptionParams, byte[] secretKey, byte[] response);
 }

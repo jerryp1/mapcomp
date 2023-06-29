@@ -16,6 +16,8 @@ import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
+import static edu.alibaba.mpc4j.s2pc.pir.index.single.constantweightpir.Mk22SingleIndexPirPtoDesc.*;
+
 /**
  * Constant-weight PIR server
  *
@@ -29,7 +31,7 @@ public class Mk22SingleIndexPirServer extends AbstractSingleIndexPirServer {
     }
 
     /**
-     * SEAL PIR params
+     * constant weight PIR params
      */
     private Mk22SingleIndexPirParams params;
     /**
@@ -58,7 +60,7 @@ public class Mk22SingleIndexPirServer extends AbstractSingleIndexPirServer {
     private List<byte[][]> encodedDatabase;
 
     public Mk22SingleIndexPirServer(Rpc serverRpc, Party clientParty, Mk22SingleIndexPirConfig config) {
-        super(Mk22SingleIndexPirPtoDesc.getInstance(), serverRpc, clientParty, config);
+        super(getInstance(), serverRpc, clientParty, config);
     }
 
     @Override
@@ -70,15 +72,14 @@ public class Mk22SingleIndexPirServer extends AbstractSingleIndexPirServer {
 
         // receive Galois keys and Relin keys
         DataPacketHeader clientPublicKeysHeader = new DataPacketHeader(
-                encodeTaskId, getPtoDesc().getPtoId(), Mk22SingleIndexPirPtoDesc.PtoStep.CLIENT_SEND_PUBLIC_KEYS.ordinal(), extraInfo,
-                otherParty().getPartyId(), rpc.ownParty().getPartyId()
+            encodeTaskId, getPtoDesc().getPtoId(), PtoStep.CLIENT_SEND_PUBLIC_KEYS.ordinal(), extraInfo,
+            otherParty().getPartyId(), rpc.ownParty().getPartyId()
         );
         List<byte[]> publicKeyPayload = rpc.receive(clientPublicKeysHeader).getPayload();
 
         stopWatch.start();
         handleClientPublicKeysPayload(publicKeyPayload);
         encodedDatabase = serverSetup(database);
-
         stopWatch.stop();
         long initTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
         stopWatch.reset();
@@ -95,8 +96,8 @@ public class Mk22SingleIndexPirServer extends AbstractSingleIndexPirServer {
 
         // receive Galois keys
         DataPacketHeader clientPublicKeysHeader = new DataPacketHeader(
-                encodeTaskId, getPtoDesc().getPtoId(), Mk22SingleIndexPirPtoDesc.PtoStep.CLIENT_SEND_PUBLIC_KEYS.ordinal(), extraInfo,
-                otherParty().getPartyId(), rpc.ownParty().getPartyId()
+            encodeTaskId, getPtoDesc().getPtoId(), PtoStep.CLIENT_SEND_PUBLIC_KEYS.ordinal(), extraInfo,
+            otherParty().getPartyId(), rpc.ownParty().getPartyId()
         );
         List<byte[]> publicKeyPayload = rpc.receive(clientPublicKeysHeader).getPayload();
 
@@ -117,23 +118,22 @@ public class Mk22SingleIndexPirServer extends AbstractSingleIndexPirServer {
         logPhaseInfo(PtoState.PTO_BEGIN);
 
         DataPacketHeader clientQueryHeader = new DataPacketHeader(
-                encodeTaskId, getPtoDesc().getPtoId(), Mk22SingleIndexPirPtoDesc.PtoStep.CLIENT_SEND_QUERY.ordinal(), extraInfo,
-                otherParty().getPartyId(), rpc.ownParty().getPartyId()
+            encodeTaskId, getPtoDesc().getPtoId(), PtoStep.CLIENT_SEND_QUERY.ordinal(), extraInfo,
+            otherParty().getPartyId(), rpc.ownParty().getPartyId()
         );
         List<byte[]> clientQueryPayload = new ArrayList<>(rpc.receive(clientQueryHeader).getPayload());
-        // receive query
+
         stopWatch.start();
         List<byte[]> serverResponsePayload = generateResponse(clientQueryPayload, encodedDatabase);
-
         DataPacketHeader serverResponseHeader = new DataPacketHeader(
-                encodeTaskId, getPtoDesc().getPtoId(), Mk22SingleIndexPirPtoDesc.PtoStep.SERVER_SEND_RESPONSE.ordinal(), extraInfo,
-                rpc.ownParty().getPartyId(), otherParty().getPartyId()
+            encodeTaskId, getPtoDesc().getPtoId(), PtoStep.SERVER_SEND_RESPONSE.ordinal(), extraInfo,
+            rpc.ownParty().getPartyId(), otherParty().getPartyId()
         );
         rpc.send(DataPacket.fromByteArrayList(serverResponseHeader, serverResponsePayload));
         stopWatch.stop();
         long genResponseTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
         stopWatch.reset();
-        logStepInfo(PtoState.PTO_STEP, 1, 1, genResponseTime, "Client generates reply");
+        logStepInfo(PtoState.PTO_STEP, 1, 1, genResponseTime, "Server generates reply");
 
         logPhaseInfo(PtoState.PTO_END);
     }
@@ -160,45 +160,28 @@ public class Mk22SingleIndexPirServer extends AbstractSingleIndexPirServer {
         this.relinKeys = clientPublicKeysPayload.remove(0);
     }
 
-    /**
-     * server setup.
-     *
-     * @return encoded database.
-     */
+    @Override
     public List<byte[][]> serverSetup(NaiveDatabase database) {
-        int maxPartitionByteLength = params.getPolyModulusDegree() * params.getPlainModulusBitLength() / Byte.SIZE;
-        setInitInput(database, database.getByteL(), maxPartitionByteLength);
-
+        int maxPartitionBitLength = params.getPolyModulusDegree() * params.getPlainModulusBitLength();
+        setInitInput(database, database.getL(), maxPartitionBitLength);
         elementSizeOfPlaintext = PirUtils.elementSizeOfPlaintext(
-                partitionByteLength, params.getPolyModulusDegree(), params.getPlainModulusBitLength()
+            partitionByteLength, params.getPolyModulusDegree(), params.getPlainModulusBitLength()
         );
         plaintextSize = (int) Math.ceil((double) num / this.elementSizeOfPlaintext);
-
-        plaintextIndexCodewords = Mk22SingleIndexPirUtils.getPlaintextIndexCodeword(plaintextSize, params.getCodewordsBitLength(), params.getHammingWeight(), params.getEqualityType());
-        assert plaintextIndexCodewords.size() == plaintextSize;
-        for (int[] plaintextIndexCodeword : plaintextIndexCodewords) {
-            assert plaintextIndexCodeword.length == params.getCodewordsBitLength();
-        }
+        plaintextIndexCodewords = getPlaintextIndexCodeword();
         // encode database
-        IntStream intStream = IntStream.range(0, databases.length);
+        IntStream intStream = IntStream.range(0, partitionSize);
         intStream = parallel ? intStream.parallel() : intStream;
         return intStream.mapToObj(this::preprocessDatabase).collect(Collectors.toList());
     }
 
-    /**
-     * server handle client query.
-     *
-     * @param clientQueryPayload client query.
-     * @return server response.
-     * @throws MpcAbortException the protocol failure aborts.
-     */
-    public List<byte[]> generateResponse(List<byte[]> clientQueryPayload, List<byte[][]> encodedDatabase) throws MpcAbortException {
+    @Override
+    public List<byte[]> generateResponse(List<byte[]> clientQueryPayload, List<byte[][]> encodedDatabase)
+        throws MpcAbortException {
         // query ciphertext number should be h = ceil(m/2^c)
         MpcAbortPreconditions.checkArgument(clientQueryPayload.size() == params.getNumInputCiphers());
-
-        IntStream intStream = IntStream.range(0, databases.length);
+        IntStream intStream = IntStream.range(0, partitionSize);
         intStream = parallel ? intStream.parallel() : intStream;
-
         int eqType;
         switch (params.getEqualityType()) {
             case FOLKLORE:
@@ -210,13 +193,21 @@ public class Mk22SingleIndexPirServer extends AbstractSingleIndexPirServer {
             default:
                 throw new IllegalStateException("Invalid Equality Operator Type");
         }
-
         return intStream
-                .mapToObj(i -> Mk22SingleIndexPirNativeUtils.generateReply(
-                        params.getEncryptionParams(), galoisKeys, relinKeys, clientQueryPayload, encodedDatabase.get(i),
-                        plaintextIndexCodewords, params.getNumInputCiphers(), params.getCodewordsBitLength(), params.getHammingWeight(), eqType)
-                )
-                .collect(Collectors.toCollection(ArrayList::new));
+            .mapToObj(i ->
+                Mk22SingleIndexPirNativeUtils.generateReply(
+                    params.getEncryptionParams(),
+                    galoisKeys,
+                    relinKeys,
+                    clientQueryPayload,
+                    encodedDatabase.get(i),
+                    plaintextIndexCodewords,
+                    params.getNumInputCiphers(),
+                    params.getCodewordsBitLength(),
+                    params.getHammingWeight(),
+                    eqType
+                ))
+            .collect(Collectors.toCollection(ArrayList::new));
     }
 
     /**
@@ -232,15 +223,13 @@ public class Mk22SingleIndexPirServer extends AbstractSingleIndexPirServer {
             System.arraycopy(element, 0, combinedBytes, rowSingleIndex * partitionByteLength, partitionByteLength);
         });
         // in Constant-weight PIR, dimension is always 1.
-        int prod = plaintextSize;
         List<long[]> coeffsList = new ArrayList<>();
         int byteSizeOfPlaintext = elementSizeOfPlaintext * partitionByteLength;
         int totalByteSize = num * partitionByteLength;
         int usedCoeffSize = elementSizeOfPlaintext *
-                ((int) Math.ceil(Byte.SIZE * partitionByteLength / (double) params.getPlainModulusBitLength()));
+            ((int) Math.ceil(Byte.SIZE * partitionByteLength / (double) params.getPlainModulusBitLength()));
         assert (usedCoeffSize <= params.getPolyModulusDegree())
-                : "coefficient num must be less than or equal to polynomial degree";
-        // 字节转换为多项式系数
+            : "coefficient num must be less than or equal to polynomial degree";
         int offset = 0;
         for (int i = 0; i < plaintextSize; i++) {
             int processByteSize;
@@ -254,7 +243,7 @@ public class Mk22SingleIndexPirServer extends AbstractSingleIndexPirServer {
             assert (processByteSize % partitionByteLength == 0);
             // Get the coefficients of the elements that will be packed in plaintext i
             long[] coeffs = PirUtils.convertBytesToCoeffs(
-                    params.getPlainModulusBitLength(), offset, processByteSize, combinedBytes
+                params.getPlainModulusBitLength(), offset, processByteSize, combinedBytes
             );
             assert (coeffs.length <= usedCoeffSize);
             offset += processByteSize;
@@ -267,11 +256,39 @@ public class Mk22SingleIndexPirServer extends AbstractSingleIndexPirServer {
         // Add padding plaintext to make database a matrix
         int currentPlaintextSize = coeffsList.size();
         assert (currentPlaintextSize <= plaintextSize);
-        IntStream.range(0, (prod - currentPlaintextSize))
-                .mapToObj(i -> IntStream.range(0, params.getPolyModulusDegree()).mapToLong(i1 -> 1L).toArray())
-                .forEach(coeffsList::add);
-        return Mk22SingleIndexPirNativeUtils.nttTransform(params.getEncryptionParams(), coeffsList).toArray(new byte[0][]);
+        IntStream.range(0, (plaintextSize - currentPlaintextSize))
+            .mapToObj(i -> IntStream.range(0, params.getPolyModulusDegree()).mapToLong(i1 -> 1L).toArray())
+            .forEach(coeffsList::add);
+        return
+            Mk22SingleIndexPirNativeUtils.nttTransform(params.getEncryptionParams(), coeffsList).toArray(new byte[0][]);
     }
 
+    /**
+     * generate the codeword of index in range [0, plaintextSize -1]
+     *
+     * @return codewords of indices.
+     */
+    private List<int[]> getPlaintextIndexCodeword() {
+        IntStream intStream = IntStream.range(0, plaintextSize);
+        intStream = parallel ? intStream.parallel() : intStream;
+        List<int[]> codewords;
+        switch (params.getEqualityType()) {
+            case FOLKLORE:
+                codewords = intStream
+                    .mapToObj(i -> Mk22SingleIndexPirUtils.getFolkloreCodeword(i, params.getCodewordsBitLength()))
+                    .collect(Collectors.toList());
+                break;
+            case CONSTANT_WEIGHT:
+                codewords = intStream
+                    .mapToObj(i -> Mk22SingleIndexPirUtils.getPerfectConstantWeightCodeword(
+                        i, params.getCodewordsBitLength(), params.getHammingWeight()
+                        ))
+                    .collect(Collectors.toList());
+                break;
+            default:
+                throw new IllegalStateException("Invalid Equality Operator Type");
+        }
+        return codewords;
+    }
 }
 

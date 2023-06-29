@@ -2,6 +2,8 @@ package edu.alibaba.mpc4j.s2pc.pir.index;
 
 import edu.alibaba.mpc4j.common.rpc.MpcAbortException;
 import edu.alibaba.mpc4j.s2pc.pir.index.single.SingleIndexPirClient;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.nio.ByteBuffer;
 
@@ -12,6 +14,7 @@ import java.nio.ByteBuffer;
  * @date 2022/8/26
  */
 public class IndexPirClientThread extends Thread {
+    private static final Logger LOGGER = LoggerFactory.getLogger(IndexPirClientThread.class);
     /**
      * index PIR client
      */
@@ -48,8 +51,11 @@ public class IndexPirClientThread extends Thread {
     public void run() {
         try {
             client.init(serverElementSize, elementBitLength);
+            LOGGER.info("Client: The Offline Communication costs {}MB", client.getRpc().getSendByteLength() * 1.0 / (1024 * 1024));
+            client.getRpc().reset();
             client.getRpc().synchronize();
             indexPirResult = ByteBuffer.wrap(client.pir(retrievalIndex));
+            LOGGER.info("Client: The Online Communication costs {}MB", client.getRpc().getSendByteLength() * 1.0 / (1024 * 1024));
         } catch (MpcAbortException e) {
             e.printStackTrace();
         }

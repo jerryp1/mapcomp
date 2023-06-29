@@ -39,12 +39,10 @@ jobject JNICALL Java_edu_alibaba_mpc4j_s2pc_pir_index_single_mulpir_Alpr21Single
     jbyteArray pk_byte = serialize_public_key(env, public_key);
     jbyteArray sk_byte = serialize_secret_key(env, secret_key);
     jbyteArray galois_keys_bytes = serialize_galois_keys(env, galois_keys);
-    // add for MulPIR
     jbyteArray relin_keys_bytes = serialize_relin_keys(env, relin_keys);
     env->CallBooleanMethod(list_obj, list_add, pk_byte);
     env->CallBooleanMethod(list_obj, list_add, sk_byte);
     env->CallBooleanMethod(list_obj, list_add, galois_keys_bytes);
-    // add for MulPIR
     env->CallBooleanMethod(list_obj, list_add, relin_keys_bytes);
     return list_obj;
 }
@@ -110,9 +108,6 @@ jobject JNICALL Java_edu_alibaba_mpc4j_s2pc_pir_index_single_mulpir_Alpr21Single
             }else {
                 m = poly_modulus_degree;
             }
-#ifdef DEBUG
-                cout << "Client: Inverting " << m << endl;
-#endif
             // Set the coefficients corresponding to indices[0], the range of coefficients used here is [0, offset]. 
             // Done Place indices[0] on a PT
             pt[indices[0] + offset] = invert_mod(m, parms.plain_modulus());
@@ -127,8 +122,6 @@ jobject JNICALL Java_edu_alibaba_mpc4j_s2pc_pir_index_single_mulpir_Alpr21Single
             }
         }
         result.push_back(encryptor.encrypt_symmetric(pt));
-        // encryptor.encrypt_symmetric(pt, result[c]);
-        // encryptor.encrypt(pt, result[c]);
     }
     return serialize_ciphertexts(env, result);
 }
@@ -146,7 +139,7 @@ jobject JNICALL Java_edu_alibaba_mpc4j_s2pc_pir_index_single_mulpir_Alpr21Single
     vector<Ciphertext> query_list = deserialize_ciphertexts(env, ciphertexts_list, context);
     jint *ptr = env->GetIntArrayElements(nvec_array, JNI_FALSE);
     uint32_t d = env->GetArrayLength(nvec_array);
-    vector<uint32_t> nvec(ptr, ptr + d);
+    vector<int32_t> nvec(ptr, ptr + d);
     // calculate dim_sum
     uint32_t dim_sum = std::accumulate(nvec.begin(), nvec.end(), 0);
     // convert query ct to [ E(0) E(0) ... E(1) ... E(0) E(1)... ], size is dim_sum
@@ -154,14 +147,13 @@ jobject JNICALL Java_edu_alibaba_mpc4j_s2pc_pir_index_single_mulpir_Alpr21Single
     for(auto& single  : selection_vector) {
         evaluator.transform_to_ntt_inplace(single);
     }
-
     if (dim_sum != selection_vector.size()) {
         throw logic_error("Selection vector size does not match dimensions");
     }
-    vector<Ciphertext> results;
-    results = multiply_mulpir(parms, &relin_keys, database, 0, selection_vector, 0,  nvec, 0);
+    vector<Ciphertext> results = multiply_mulpir(parms, &relin_keys, database, 0, selection_vector, 0,  nvec, 0);
     return serialize_ciphertexts(env, results);
 }
+
 [[maybe_unused]] JNIEXPORT
 jlongArray JNICALL Java_edu_alibaba_mpc4j_s2pc_pir_index_single_mulpir_Alpr21SingleIndexPirNativeUtils_decryptReply(
         JNIEnv *env, jclass, jbyteArray parms_bytes, jbyteArray sk_bytes, jobject response_list) {

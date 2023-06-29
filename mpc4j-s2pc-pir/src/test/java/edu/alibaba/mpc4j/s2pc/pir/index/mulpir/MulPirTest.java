@@ -161,24 +161,20 @@ public class MulPirTest {
         client.setParallel(parallel);
         MulPirServerThread serverThread = new MulPirServerThread(server, indexPirParams, database);
         MulPirClientThread clientThread = new MulPirClientThread(
-                client, indexPirParams, retrievalSingleIndex, SERVER_ELEMENT_SIZE, elementBitLength
+            client, indexPirParams, retrievalSingleIndex, SERVER_ELEMENT_SIZE, elementBitLength
         );
         try {
             serverThread.start();
             clientThread.start();
             serverThread.join();
             clientThread.join();
-            LOGGER.info("Server: The Communication costs {}MB", serverRpc.getSendByteLength() * 1.0 / (1024 * 1024));
             serverRpc.reset();
-            LOGGER.info("Client: The Communication costs {}MB", clientRpc.getSendByteLength() * 1.0 / (1024 * 1024));
             clientRpc.reset();
             LOGGER.info("Parameters: \n {}", indexPirParams.toString());
             // verify result
             ByteBuffer result = clientThread.getRetrievalResult();
-            Assert.assertEquals(
-                    result, ByteBuffer.wrap(database.getBytesData(retrievalSingleIndex))
-            );
-            LOGGER.info("Client: The Retrieval Result is Correct");
+            Assert.assertEquals(result, ByteBuffer.wrap(database.getBytesData(retrievalSingleIndex)));
+            LOGGER.info("Main: The Retrieval Result is Correct");
         } catch (InterruptedException e) {
             e.printStackTrace();
         }

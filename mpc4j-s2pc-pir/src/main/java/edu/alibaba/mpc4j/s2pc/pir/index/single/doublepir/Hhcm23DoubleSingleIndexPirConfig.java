@@ -36,6 +36,6 @@ public class Hhcm23DoubleSingleIndexPirConfig implements SingleIndexPirConfig {
 
     @Override
     public SingleIndexPirFactory.SingleIndexPirType getProType() {
-        return SingleIndexPirFactory.SingleIndexPirType.SIMPLE_PIR;
+        return SingleIndexPirFactory.SingleIndexPirType.DOUBLE_PIR;
     }
 }

@@ -5,6 +5,7 @@ import com.google.common.base.Preconditions;
 import edu.alibaba.mpc4j.common.rpc.Rpc;
 import edu.alibaba.mpc4j.common.rpc.RpcManager;
 import edu.alibaba.mpc4j.common.rpc.impl.memory.MemoryRpcManager;
+import edu.alibaba.mpc4j.common.tool.CommonConstants;
 import edu.alibaba.mpc4j.crypto.matrix.database.NaiveDatabase;
 import edu.alibaba.mpc4j.s2pc.pir.PirUtils;
 import edu.alibaba.mpc4j.s2pc.pir.index.single.SingleIndexPirFactory;
@@ -35,23 +36,23 @@ import java.util.Collection;
  */
 @RunWith(Parameterized.class)
 public class ConstantWeightPirTest {
-    private static final Logger LOGGER = LoggerFactory.getLogger(edu.alibaba.mpc4j.s2pc.pir.index.constantweightpir.ConstantWeightPirTest.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(ConstantWeightPirTest.class);
     /**
-     * default element byte length
+     * default element bit length
      */
-    private static final int DEFAULT_ELEMENT_BYTE_LENGTH = (8192 * 21) / 8;
+    private static final int DEFAULT_ELEMENT_BIT_LENGTH = CommonConstants.BLOCK_BIT_LENGTH;
     /**
-     * large element byte length
+     * large element bit length
      */
-    private static final int LARGE_ELEMENT_BYTE_LENGTH = 30000;
+    private static final int LARGE_ELEMENT_BIT_LENGTH = 10000;
     /**
-     * small element byte length
+     * small element bit length
      */
-    private static final int SMALL_ELEMENT_BYTE_LENGTH = 8;
+    private static final int SMALL_ELEMENT_BIT_LENGTH = CommonConstants.STATS_BIT_LENGTH;
     /**
      * database size
      */
-    private static final int SERVER_ELEMENT_SIZE = (1 << 8);
+    private static final int SERVER_ELEMENT_SIZE = 1 << 12;
 
     @Parameterized.Parameters(name = "{0}")
     public static Collection<Object[]> configurations() {
@@ -59,25 +60,12 @@ public class ConstantWeightPirTest {
         Mk22SingleIndexPirConfig config = new Mk22SingleIndexPirConfig();
         // ConstantWeight PIR (CONSTANT_WEIGHT_EQ)
         configurations.add(new Object[]{
-                SingleIndexPirFactory.SingleIndexPirType.CONSTANT_WEIGHT_PIR.name() + " (CONSTANT_WEIGHT_EQ)",
-                config,
-                new Mk22SingleIndexPirParams(
-                        2,
-                        8192,
-                        21,
-                        Mk22SingleIndexPirParams.EqualityType.CONSTANT_WEIGHT
-                )
+            SingleIndexPirFactory.SingleIndexPirType.CONSTANT_WEIGHT_PIR.name() + " (CONSTANT_WEIGHT_EQ)",
+            config, new Mk22SingleIndexPirParams(2, 16384, 21, Mk22SingleIndexPirParams.EqualityType.CONSTANT_WEIGHT)
         });
-
         configurations.add(new Object[]{
-                SingleIndexPirFactory.SingleIndexPirType.CONSTANT_WEIGHT_PIR.name() + " (FOLKLORE)",
-                config,
-                new Mk22SingleIndexPirParams(
-                        2,
-                        8192,
-                        21,
-                        Mk22SingleIndexPirParams.EqualityType.FOLKLORE
-                )
+            SingleIndexPirFactory.SingleIndexPirType.CONSTANT_WEIGHT_PIR.name() + " (FOLKLORE)",
+            config, new Mk22SingleIndexPirParams(2, 16384, 21, Mk22SingleIndexPirParams.EqualityType.FOLKLORE)
         });
 
         return configurations;
@@ -100,7 +88,8 @@ public class ConstantWeightPirTest {
      */
     private final Mk22SingleIndexPirParams indexPirParams;
 
-    public ConstantWeightPirTest(String name, Mk22SingleIndexPirConfig indexPirConfig, Mk22SingleIndexPirParams indexPirParams) {
+    public ConstantWeightPirTest(String name, Mk22SingleIndexPirConfig indexPirConfig,
+                                 Mk22SingleIndexPirParams indexPirParams) {
         Preconditions.checkArgument(StringUtils.isNotBlank(name));
         // We cannot use NettyRPC in the test case since it needs multi-thread connect / disconnect.
         // In other word, we cannot connect / disconnect NettyRpc in @Before / @After, respectively.
@@ -125,30 +114,28 @@ public class ConstantWeightPirTest {
 
     @Test
     public void testConstantWeightPir() {
-        testConstantWeightPir(indexPirConfig, indexPirParams, DEFAULT_ELEMENT_BYTE_LENGTH, false);
+        testConstantWeightPir(indexPirConfig, indexPirParams, DEFAULT_ELEMENT_BIT_LENGTH, false);
     }
 
     @Test
     public void testParallelConstantWeightPir() {
-        testConstantWeightPir(indexPirConfig, indexPirParams, DEFAULT_ELEMENT_BYTE_LENGTH, true);
+        testConstantWeightPir(indexPirConfig, indexPirParams, DEFAULT_ELEMENT_BIT_LENGTH, true);
     }
 
     @Test
     public void testLargeElementMulPir() {
-        testConstantWeightPir(indexPirConfig, indexPirParams, LARGE_ELEMENT_BYTE_LENGTH, true);
+        testConstantWeightPir(indexPirConfig, indexPirParams, LARGE_ELEMENT_BIT_LENGTH, true);
     }
 
     @Test
     public void testSmallElementMulPir() {
-        testConstantWeightPir(indexPirConfig, indexPirParams, SMALL_ELEMENT_BYTE_LENGTH, true);
+        testConstantWeightPir(indexPirConfig, indexPirParams, SMALL_ELEMENT_BIT_LENGTH, true);
     }
 
-
-    public void testConstantWeightPir(Mk22SingleIndexPirConfig config, Mk22SingleIndexPirParams indexPirParams, int elementByteLength,
-                           boolean parallel) {
+    public void testConstantWeightPir(Mk22SingleIndexPirConfig config, Mk22SingleIndexPirParams indexPirParams,
+                                      int elementBitLength, boolean parallel) {
         int retrievalSingleIndex = PirUtils.generateRetrievalIndex(SERVER_ELEMENT_SIZE);
-
-        NaiveDatabase database = PirUtils.generateDataBase(SERVER_ELEMENT_SIZE, elementByteLength * Byte.SIZE);
+        NaiveDatabase database = PirUtils.generateDataBase(SERVER_ELEMENT_SIZE, elementBitLength);
         Mk22SingleIndexPirServer server = new Mk22SingleIndexPirServer(serverRpc, clientRpc.ownParty(), config);
         Mk22SingleIndexPirClient client = new Mk22SingleIndexPirClient(clientRpc, serverRpc.ownParty(), config);
         // set parallel
@@ -156,24 +143,20 @@ public class ConstantWeightPirTest {
         client.setParallel(parallel);
         ConstantWeightPirServerThread serverThread = new ConstantWeightPirServerThread(server, indexPirParams, database);
         ConstantWeightPirClientThread clientThread = new ConstantWeightPirClientThread(
-                client, indexPirParams, retrievalSingleIndex, SERVER_ELEMENT_SIZE, elementByteLength
+            client, indexPirParams, retrievalSingleIndex, SERVER_ELEMENT_SIZE, elementBitLength
         );
         try {
             serverThread.start();
             clientThread.start();
             serverThread.join();
             clientThread.join();
-            LOGGER.info("Server: The Communication costs {}MB", serverRpc.getSendByteLength() * 1.0 / (1024 * 1024));
             serverRpc.reset();
-            LOGGER.info("Client: The Communication costs {}MB", clientRpc.getSendByteLength() * 1.0 / (1024 * 1024));
             clientRpc.reset();
             LOGGER.info("Parameters: \n {}", indexPirParams.toString());
             // verify result
             ByteBuffer result = clientThread.getRetrievalResult();
-            Assert.assertEquals(
-                    result, ByteBuffer.wrap(database.getBytesData(retrievalSingleIndex))
-            );
-            LOGGER.info("Client: The Retrieval Result is Correct");
+            Assert.assertEquals(result, ByteBuffer.wrap(database.getBytesData(retrievalSingleIndex)));
+            LOGGER.info("Main: The Retrieval Result is Correct");
         } catch (InterruptedException e) {
             e.printStackTrace();
         }

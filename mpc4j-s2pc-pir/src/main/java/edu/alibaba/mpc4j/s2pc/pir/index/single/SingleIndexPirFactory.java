@@ -6,6 +6,9 @@ import edu.alibaba.mpc4j.common.rpc.pto.PtoFactory;
 import edu.alibaba.mpc4j.s2pc.pir.index.single.constantweightpir.Mk22SingleIndexPirClient;
 import edu.alibaba.mpc4j.s2pc.pir.index.single.constantweightpir.Mk22SingleIndexPirConfig;
 import edu.alibaba.mpc4j.s2pc.pir.index.single.constantweightpir.Mk22SingleIndexPirServer;
+import edu.alibaba.mpc4j.s2pc.pir.index.single.doublepir.Hhcm23DoubleSingleIndexPirClient;
+import edu.alibaba.mpc4j.s2pc.pir.index.single.doublepir.Hhcm23DoubleSingleIndexPirConfig;
+import edu.alibaba.mpc4j.s2pc.pir.index.single.doublepir.Hhcm23DoubleSingleIndexPirServer;
 import edu.alibaba.mpc4j.s2pc.pir.index.single.fastpir.Ayaa21SingleIndexPirClient;
 import edu.alibaba.mpc4j.s2pc.pir.index.single.fastpir.Ayaa21SingleIndexPirConfig;
 import edu.alibaba.mpc4j.s2pc.pir.index.single.fastpir.Ayaa21SingleIndexPirServer;
@@ -18,6 +21,9 @@ import edu.alibaba.mpc4j.s2pc.pir.index.single.onionpir.Mcr21SingleIndexPirServe
 import edu.alibaba.mpc4j.s2pc.pir.index.single.sealpir.Acls18SingleIndexPirClient;
 import edu.alibaba.mpc4j.s2pc.pir.index.single.sealpir.Acls18SingleIndexPirConfig;
 import edu.alibaba.mpc4j.s2pc.pir.index.single.sealpir.Acls18SingleIndexPirServer;
+import edu.alibaba.mpc4j.s2pc.pir.index.single.simplepir.Hhcm23SimpleSingleIndexPirClient;
+import edu.alibaba.mpc4j.s2pc.pir.index.single.simplepir.Hhcm23SimpleSingleIndexPirConfig;
+import edu.alibaba.mpc4j.s2pc.pir.index.single.simplepir.Hhcm23SimpleSingleIndexPirServer;
 import edu.alibaba.mpc4j.s2pc.pir.index.single.vectorizedpir.Mr23SingleIndexPirClient;
 import edu.alibaba.mpc4j.s2pc.pir.index.single.vectorizedpir.Mr23SingleIndexPirConfig;
 import edu.alibaba.mpc4j.s2pc.pir.index.single.vectorizedpir.Mr23SingleIndexPirServer;
@@ -68,6 +74,14 @@ public class SingleIndexPirFactory implements PtoFactory {
          */
         MUL_PIR,
         /**
+         * simple PIR
+         */
+        SIMPLE_PIR,
+        /**
+         * double PIR
+         */
+        DOUBLE_PIR,
+        /**
          * Constant Weight PIR
          */
         CONSTANT_WEIGHT_PIR,
@@ -96,6 +110,10 @@ public class SingleIndexPirFactory implements PtoFactory {
                 return new Mr23SingleIndexPirServer(serverRpc, clientParty, (Mr23SingleIndexPirConfig) config);
             case MUL_PIR:
                 return new Alpr21SingleIndexPirServer(serverRpc, clientParty, (Alpr21SingleIndexPirConfig) config);
+            case SIMPLE_PIR:
+                return new Hhcm23SimpleSingleIndexPirServer(serverRpc, clientParty, (Hhcm23SimpleSingleIndexPirConfig) config);
+            case DOUBLE_PIR:
+                return new Hhcm23DoubleSingleIndexPirServer(serverRpc, clientParty, (Hhcm23DoubleSingleIndexPirConfig) config);
             case CONSTANT_WEIGHT_PIR:
                 return new Mk22SingleIndexPirServer(serverRpc, clientParty, (Mk22SingleIndexPirConfig) config);
             default:
@@ -128,6 +146,10 @@ public class SingleIndexPirFactory implements PtoFactory {
                 return new Mr23SingleIndexPirClient(clientRpc, serverParty, (Mr23SingleIndexPirConfig) config);
             case MUL_PIR:
                 return new Alpr21SingleIndexPirClient(clientRpc, serverParty, (Alpr21SingleIndexPirConfig) config);
+            case SIMPLE_PIR:
+                return new Hhcm23SimpleSingleIndexPirClient(clientRpc, serverParty, (Hhcm23SimpleSingleIndexPirConfig) config);
+            case DOUBLE_PIR:
+                return new Hhcm23DoubleSingleIndexPirClient(clientRpc, serverParty, (Hhcm23DoubleSingleIndexPirConfig) config);
             case CONSTANT_WEIGHT_PIR:
                 return new Mk22SingleIndexPirClient(clientRpc, serverParty, (Mk22SingleIndexPirConfig) config);
             default:
