@@ -54,31 +54,38 @@ public class IndexPirTest {
         Collection<Object[]> configurations = new ArrayList<>();
         // XPIR
         configurations.add(new Object[]{
-            SingleIndexPirFactory.SingleIndexPirType.XPIR.name(), new Mbfk16SingleIndexPirConfig()
+            SingleIndexPirFactory.SingleIndexPirType.XPIR.name(),
+            new Mbfk16SingleIndexPirConfig.Builder().build()
         });
         // SEAL PIR
         configurations.add(new Object[]{
-            SingleIndexPirFactory.SingleIndexPirType.SEAL_PIR.name(), new Acls18SingleIndexPirConfig()
+            SingleIndexPirFactory.SingleIndexPirType.SEAL_PIR.name(),
+            new Acls18SingleIndexPirConfig.Builder().build()
         });
         // OnionPIR
         configurations.add(new Object[]{
-            SingleIndexPirFactory.SingleIndexPirType.ONION_PIR.name(), new Mcr21SingleIndexPirConfig()
+            SingleIndexPirFactory.SingleIndexPirType.ONION_PIR.name(),
+            new Mcr21SingleIndexPirConfig.Builder().build()
         });
         // FastPIR
         configurations.add(new Object[]{
-            SingleIndexPirFactory.SingleIndexPirType.FAST_PIR.name(), new Ayaa21SingleIndexPirConfig()
+            SingleIndexPirFactory.SingleIndexPirType.FAST_PIR.name(),
+            new Ayaa21SingleIndexPirConfig.Builder().build()
         });
         // Vectorized PIR
         configurations.add(new Object[]{
-            SingleIndexPirFactory.SingleIndexPirType.VECTORIZED_PIR.name(), new Mr23SingleIndexPirConfig()
+            SingleIndexPirFactory.SingleIndexPirType.VECTORIZED_PIR.name(),
+            new Mr23SingleIndexPirConfig.Builder().build()
         });
         // Mul PIR
         configurations.add(new Object[]{
-            SingleIndexPirFactory.SingleIndexPirType.MUL_PIR.name(), new Alpr21SingleIndexPirConfig()
+            SingleIndexPirFactory.SingleIndexPirType.MUL_PIR.name(),
+            new Alpr21SingleIndexPirConfig.Builder().build()
         });
         // Simple PIR
         configurations.add(new Object[]{
-            SingleIndexPirFactory.SingleIndexPirType.SIMPLE_PIR.name(), new Hhcm23SimpleSingleIndexPirConfig()
+            SingleIndexPirFactory.SingleIndexPirType.SIMPLE_PIR.name(),
+            new Hhcm23SimpleSingleIndexPirConfig.Builder().build()
         });
         return configurations;
     }

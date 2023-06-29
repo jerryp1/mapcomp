@@ -55,7 +55,7 @@ public class XPirTest {
     @Parameterized.Parameters(name = "{0}")
     public static Collection<Object[]> configurations() {
         Collection<Object[]> configurations = new ArrayList<>();
-        Mbfk16SingleIndexPirConfig xpirConfig = new Mbfk16SingleIndexPirConfig();
+        Mbfk16SingleIndexPirConfig xpirConfig = new Mbfk16SingleIndexPirConfig.Builder().build();
         // XPIR (1-dimension)
         configurations.add(new Object[]{
             SingleIndexPirFactory.SingleIndexPirType.XPIR.name() + " (1-dimension)",

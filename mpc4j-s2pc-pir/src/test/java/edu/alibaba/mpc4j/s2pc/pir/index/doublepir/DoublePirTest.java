@@ -55,7 +55,7 @@ public class DoublePirTest {
     @Parameterized.Parameters(name = "{0}")
     public static Collection<Object[]> configurations() {
         Collection<Object[]> configurations = new ArrayList<>();
-        Hhcm23DoubleSingleIndexPirConfig config = new Hhcm23DoubleSingleIndexPirConfig();
+        Hhcm23DoubleSingleIndexPirConfig config = new Hhcm23DoubleSingleIndexPirConfig.Builder().build();
         // double PIR
         configurations.add(new Object[]{
             SingleIndexPirFactory.SingleIndexPirType.DOUBLE_PIR.name(),

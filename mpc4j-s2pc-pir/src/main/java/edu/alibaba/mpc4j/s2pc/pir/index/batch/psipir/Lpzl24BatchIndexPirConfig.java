@@ -1,8 +1,7 @@
 package edu.alibaba.mpc4j.s2pc.pir.index.batch.psipir;
 
 import edu.alibaba.mpc4j.common.rpc.desc.SecurityModel;
-import edu.alibaba.mpc4j.common.tool.CommonConstants;
-import edu.alibaba.mpc4j.common.tool.EnvType;
+import edu.alibaba.mpc4j.common.rpc.pto.AbstractMultiPartyPtoConfig;
 import edu.alibaba.mpc4j.s2pc.pir.index.batch.BatchIndexPirConfig;
 import edu.alibaba.mpc4j.s2pc.pir.index.batch.BatchIndexPirFactory;
 import edu.alibaba.mpc4j.s2pc.upso.upsi.UpsiConfig;
@@ -14,33 +13,15 @@ import edu.alibaba.mpc4j.s2pc.upso.upsi.cmg21.Cmg21UpsiConfig;
  * @author Liqiang Peng
  * @date 2023/3/7
  */
-public class Lpzl24BatchIndexPirConfig implements BatchIndexPirConfig {
+public class Lpzl24BatchIndexPirConfig extends AbstractMultiPartyPtoConfig implements BatchIndexPirConfig {
     /**
      * UPSI config
      */
     private final UpsiConfig upsiConfig;
 
     public Lpzl24BatchIndexPirConfig(Builder builder) {
+        super(SecurityModel.MALICIOUS, builder.upsiConfig);
         upsiConfig = builder.upsiConfig;
-    }
-
-    @Override
-    public SecurityModel getSecurityModel() {
-        return SecurityModel.SEMI_HONEST;
-    }
-
-    @Override
-    public void setEnvType(EnvType envType) {
-        if (envType.equals(EnvType.STANDARD_JDK) || envType.equals(EnvType.INLAND_JDK)) {
-            throw new IllegalArgumentException("Protocol using " + CommonConstants.MPC4J_NATIVE_FHE_NAME
-                + " must not be " + EnvType.STANDARD_JDK.name() + " or " + EnvType.INLAND_JDK.name()
-                + ": " + envType.name());
-        }
-    }
-
-    @Override
-    public EnvType getEnvType() {
-        return EnvType.STANDARD;
     }
 
     public UpsiConfig getUpsiConfig() {

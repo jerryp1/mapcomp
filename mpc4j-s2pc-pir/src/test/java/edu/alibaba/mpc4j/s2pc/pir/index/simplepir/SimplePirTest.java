@@ -52,7 +52,7 @@ public class SimplePirTest {
     @Parameterized.Parameters(name = "{0}")
     public static Collection<Object[]> configurations() {
         Collection<Object[]> configurations = new ArrayList<>();
-        Hhcm23SimpleSingleIndexPirConfig config = new Hhcm23SimpleSingleIndexPirConfig();
+        Hhcm23SimpleSingleIndexPirConfig config = new Hhcm23SimpleSingleIndexPirConfig.Builder().build();
         // simple PIR
         configurations.add(new Object[]{
             SingleIndexPirFactory.SingleIndexPirType.SIMPLE_PIR.name(),

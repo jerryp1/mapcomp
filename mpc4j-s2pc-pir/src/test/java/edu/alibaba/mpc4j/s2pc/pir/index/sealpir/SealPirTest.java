@@ -55,7 +55,7 @@ public class SealPirTest {
     @Parameterized.Parameters(name = "{0}")
     public static Collection<Object[]> configurations() {
         Collection<Object[]> configurations = new ArrayList<>();
-        Acls18SingleIndexPirConfig sealpirConfig = new Acls18SingleIndexPirConfig();
+        Acls18SingleIndexPirConfig sealpirConfig = new Acls18SingleIndexPirConfig.Builder().build();
         // SEAL PIR (1-dimension)
         configurations.add(new Object[]{
             SingleIndexPirFactory.SingleIndexPirType.SEAL_PIR.name() + " (1-dimension)",

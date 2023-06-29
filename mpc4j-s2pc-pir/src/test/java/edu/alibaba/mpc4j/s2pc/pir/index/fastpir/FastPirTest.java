@@ -55,7 +55,7 @@ public class FastPirTest {
     @Parameterized.Parameters(name = "{0}")
     public static Collection<Object[]> configurations() {
         Collection<Object[]> configurations = new ArrayList<>();
-        Ayaa21SingleIndexPirConfig fastpirConfig = new Ayaa21SingleIndexPirConfig();
+        Ayaa21SingleIndexPirConfig fastpirConfig = new Ayaa21SingleIndexPirConfig.Builder().build();
         configurations.add(new Object[]{
             SingleIndexPirFactory.SingleIndexPirType.FAST_PIR.name(),
             fastpirConfig,

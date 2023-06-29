@@ -74,7 +74,7 @@ public class BatchPirTest {
         // vectorized batch PIR
         configurations.add(new Object[]{
             BatchIndexPirFactory.BatchIndexPirType.VECTORIZED_BATCH_PIR.name(),
-            new Mr23BatchIndexPirConfig()
+            new Mr23BatchIndexPirConfig.Builder().build()
         });
         // naive batch PIR
         configurations.add(new Object[]{
@@ -83,15 +83,21 @@ public class BatchPirTest {
         });
         configurations.add(new Object[]{
             BatchIndexPirFactory.BatchIndexPirType.NAIVE_BATCH_PIR.name() + " - XPIR",
-            new NaiveBatchIndexPirConfig.Builder().setSingIndexPirConfig(new Mbfk16SingleIndexPirConfig()).build()
+            new NaiveBatchIndexPirConfig.Builder()
+                .setSingIndexPirConfig(new Mbfk16SingleIndexPirConfig.Builder().build())
+                .build()
         });
         configurations.add(new Object[]{
             BatchIndexPirFactory.BatchIndexPirType.NAIVE_BATCH_PIR.name() + " - Onion PIR",
-            new NaiveBatchIndexPirConfig.Builder().setSingIndexPirConfig(new Mcr21SingleIndexPirConfig()).build()
+            new NaiveBatchIndexPirConfig.Builder()
+                .setSingIndexPirConfig(new Mcr21SingleIndexPirConfig.Builder().build())
+                .build()
         });
         configurations.add(new Object[]{
             BatchIndexPirFactory.BatchIndexPirType.NAIVE_BATCH_PIR.name() + " - Fast PIR",
-            new NaiveBatchIndexPirConfig.Builder().setSingIndexPirConfig(new Ayaa21SingleIndexPirConfig()).build()
+            new NaiveBatchIndexPirConfig.Builder()
+                .setSingIndexPirConfig(new Ayaa21SingleIndexPirConfig.Builder().build())
+                .build()
         });
         return configurations;
     }

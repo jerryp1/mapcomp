@@ -55,7 +55,7 @@ public class VectorizedPirTest {
     @Parameterized.Parameters(name = "{0}")
     public static Collection<Object[]> configurations() {
         Collection<Object[]> configurations = new ArrayList<>();
-        Mr23SingleIndexPirConfig pirConfig = new Mr23SingleIndexPirConfig();
+        Mr23SingleIndexPirConfig pirConfig = new Mr23SingleIndexPirConfig.Builder().build();
         configurations.add(new Object[]{
             SingleIndexPirFactory.SingleIndexPirType.VECTORIZED_PIR.name(),
             pirConfig,

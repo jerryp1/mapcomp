@@ -14,7 +14,7 @@ import edu.alibaba.mpc4j.s2pc.pir.keyword.KwPirFactory;
 public class Aaag22KwPirConfig extends AbstractMultiPartyPtoConfig implements KwPirConfig {
 
     public Aaag22KwPirConfig(Builder builder) {
-        super(SecurityModel.SEMI_HONEST);
+        super(SecurityModel.MALICIOUS);
     }
 
     @Override

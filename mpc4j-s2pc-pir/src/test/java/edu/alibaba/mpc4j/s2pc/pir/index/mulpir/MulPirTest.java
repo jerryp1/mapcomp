@@ -56,7 +56,7 @@ public class MulPirTest {
     @Parameterized.Parameters(name = "{0}")
     public static Collection<Object[]> configurations() {
         Collection<Object[]> configurations = new ArrayList<>();
-        Alpr21SingleIndexPirConfig mulpirConfig = new Alpr21SingleIndexPirConfig();
+        Alpr21SingleIndexPirConfig mulpirConfig = new Alpr21SingleIndexPirConfig.Builder().build();
         // Mul PIR (1-dimension)
         configurations.add(new Object[]{
             SingleIndexPirFactory.SingleIndexPirType.MUL_PIR.name() + " (1-dimension)",

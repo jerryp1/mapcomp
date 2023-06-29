@@ -55,7 +55,7 @@ public class OnionPirTest {
     @Parameterized.Parameters(name = "{0}")
     public static Collection<Object[]> configurations() {
         Collection<Object[]> configurations = new ArrayList<>();
-        Mcr21SingleIndexPirConfig onionpirConfig = new Mcr21SingleIndexPirConfig();
+        Mcr21SingleIndexPirConfig onionpirConfig = new Mcr21SingleIndexPirConfig.Builder().build();
         // first dimension is 32
         configurations.add(new Object[]{
             SingleIndexPirFactory.SingleIndexPirType.ONION_PIR.name() + " (first dimension 32)",
