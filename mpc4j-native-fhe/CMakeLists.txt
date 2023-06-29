@@ -44,6 +44,7 @@ ELSEIF (UNIX)
     message(STATUS "JNI_INCLUDE_DIRS:  ${JNI_INCLUDE_DIRS}")
 ENDIF()
 
+
 # 构建mpc4j_native_fhe库
 add_library(
         mpc4j-native-fhe
@@ -66,7 +67,9 @@ add_library(
         pir/edu_alibaba_mpc4j_s2pc_pir_index_batch_psipir_Lpzl24BatchIndexPirNativeUtils.cpp
         pir/edu_alibaba_mpc4j_s2pc_pir_index_batch_vectorizedpir_Mr23BatchIndexPirNativeUtils.cpp
         pir/edu_alibaba_mpc4j_s2pc_upso_upsi_cmg21_Cmg21UpsiNativeUtils.cpp
-        pir/edu_alibaba_mpc4j_s2pc_pir_index_single_mulpir_Alpr21SingleIndexPirNativeUtils.cpp pir/edu_alibaba_mpc4j_s2pc_pir_keyword_aaag22_Aaag22KwPirNativeUtils.cpp)
+        pir/edu_alibaba_mpc4j_s2pc_pir_index_single_mulpir_Alpr21SingleIndexPirNativeUtils.cpp
+        pir/edu_alibaba_mpc4j_s2pc_pir_index_single_constantweightpir_Mk22SingleIndexPirNativeUtils.cpp
+        pir/edu_alibaba_mpc4j_s2pc_pir_keyword_aaag22_Aaag22KwPirNativeUtils.cpp)
 # 链接SEAL库
 target_link_libraries(mpc4j-native-fhe PUBLIC SEAL::seal_shared)
 #target_link_libraries(mpc4j-native-fhe PUBLIC SEAL::seal)

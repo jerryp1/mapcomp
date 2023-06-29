@@ -37,7 +37,7 @@ public class Alpr21SingleIndexPirParams implements SingleIndexPirParams {
         this.plainModulusBitLength = plainModulusBitLength;
         this.dimension = dimension;
         this.encryptionParams = Alpr21SingleIndexPirNativeUtils.generateEncryptionParams(
-                polyModulusDegree, (1L << plainModulusBitLength) + 1
+            polyModulusDegree, (1L << plainModulusBitLength) + 1
         );
     }
 
@@ -69,9 +69,9 @@ public class Alpr21SingleIndexPirParams implements SingleIndexPirParams {
     @Override
     public String toString() {
         return
-                "SEAL encryption parameters : " + "\n" +
-                        " - degree of polynomial modulus : " + polyModulusDegree + "\n" +
-                        " - size of plaintext modulus : " + plainModulusBitLength + "\n" +
-                        " - dimension : " + dimension;
+            "SEAL encryption parameters : " + "\n" +
+                " - degree of polynomial modulus : " + polyModulusDegree + "\n" +
+                " - size of plaintext modulus : " + plainModulusBitLength + "\n" +
+                " - dimension : " + dimension;
     }
 }

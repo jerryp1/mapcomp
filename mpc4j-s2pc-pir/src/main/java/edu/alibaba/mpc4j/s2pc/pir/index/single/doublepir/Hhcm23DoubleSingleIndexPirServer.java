@@ -143,7 +143,7 @@ public class Hhcm23DoubleSingleIndexPirServer extends AbstractSingleIndexPirServ
         stopWatch.stop();
         long genResponseTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
         stopWatch.reset();
-        logStepInfo(PtoState.PTO_STEP, 1, 1, genResponseTime, "Client generates reply");
+        logStepInfo(PtoState.PTO_STEP, 1, 1, genResponseTime, "Server generates reply");
 
         logPhaseInfo(PtoState.PTO_END);
     }

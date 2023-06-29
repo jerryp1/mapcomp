@@ -3,6 +3,9 @@ package edu.alibaba.mpc4j.s2pc.pir.index.single;
 import edu.alibaba.mpc4j.common.rpc.Party;
 import edu.alibaba.mpc4j.common.rpc.Rpc;
 import edu.alibaba.mpc4j.common.rpc.pto.PtoFactory;
+import edu.alibaba.mpc4j.s2pc.pir.index.single.constantweightpir.Mk22SingleIndexPirClient;
+import edu.alibaba.mpc4j.s2pc.pir.index.single.constantweightpir.Mk22SingleIndexPirConfig;
+import edu.alibaba.mpc4j.s2pc.pir.index.single.constantweightpir.Mk22SingleIndexPirServer;
 import edu.alibaba.mpc4j.s2pc.pir.index.single.doublepir.Hhcm23DoubleSingleIndexPirClient;
 import edu.alibaba.mpc4j.s2pc.pir.index.single.doublepir.Hhcm23DoubleSingleIndexPirConfig;
 import edu.alibaba.mpc4j.s2pc.pir.index.single.doublepir.Hhcm23DoubleSingleIndexPirServer;
@@ -71,13 +74,17 @@ public class SingleIndexPirFactory implements PtoFactory {
          */
         MUL_PIR,
         /**
-         * Simple PIR
+         * simple PIR
          */
         SIMPLE_PIR,
         /**
-         * Double PIR
+         * double PIR
          */
         DOUBLE_PIR,
+        /**
+         * Constant Weight PIR
+         */
+        CONSTANT_WEIGHT_PIR,
     }
 
     /**
@@ -104,13 +111,11 @@ public class SingleIndexPirFactory implements PtoFactory {
             case MUL_PIR:
                 return new Alpr21SingleIndexPirServer(serverRpc, clientParty, (Alpr21SingleIndexPirConfig) config);
             case SIMPLE_PIR:
-                return new Hhcm23SimpleSingleIndexPirServer(
-                    serverRpc, clientParty, (Hhcm23SimpleSingleIndexPirConfig) config
-                );
+                return new Hhcm23SimpleSingleIndexPirServer(serverRpc, clientParty, (Hhcm23SimpleSingleIndexPirConfig) config);
             case DOUBLE_PIR:
-                return new Hhcm23DoubleSingleIndexPirServer(
-                    serverRpc, clientParty, (Hhcm23DoubleSingleIndexPirConfig) config
-                );
+                return new Hhcm23DoubleSingleIndexPirServer(serverRpc, clientParty, (Hhcm23DoubleSingleIndexPirConfig) config);
+            case CONSTANT_WEIGHT_PIR:
+                return new Mk22SingleIndexPirServer(serverRpc, clientParty, (Mk22SingleIndexPirConfig) config);
             default:
                 throw new IllegalArgumentException(
                     "Invalid " + SingleIndexPirType.class.getSimpleName() + ": " + type.name()
@@ -142,13 +147,11 @@ public class SingleIndexPirFactory implements PtoFactory {
             case MUL_PIR:
                 return new Alpr21SingleIndexPirClient(clientRpc, serverParty, (Alpr21SingleIndexPirConfig) config);
             case SIMPLE_PIR:
-                return new Hhcm23SimpleSingleIndexPirClient(
-                    clientRpc, serverParty, (Hhcm23SimpleSingleIndexPirConfig) config
-                );
+                return new Hhcm23SimpleSingleIndexPirClient(clientRpc, serverParty, (Hhcm23SimpleSingleIndexPirConfig) config);
             case DOUBLE_PIR:
-                return new Hhcm23DoubleSingleIndexPirClient(
-                    clientRpc, serverParty, (Hhcm23DoubleSingleIndexPirConfig) config
-                );
+                return new Hhcm23DoubleSingleIndexPirClient(clientRpc, serverParty, (Hhcm23DoubleSingleIndexPirConfig) config);
+            case CONSTANT_WEIGHT_PIR:
+                return new Mk22SingleIndexPirClient(clientRpc, serverParty, (Mk22SingleIndexPirConfig) config);
             default:
                 throw new IllegalArgumentException(
                     "Invalid " + SingleIndexPirType.class.getSimpleName() + ": " + type.name()

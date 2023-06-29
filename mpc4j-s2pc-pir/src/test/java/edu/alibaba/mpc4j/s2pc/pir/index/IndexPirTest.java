@@ -4,9 +4,12 @@ import com.google.common.base.Preconditions;
 import edu.alibaba.mpc4j.common.rpc.Rpc;
 import edu.alibaba.mpc4j.common.rpc.RpcManager;
 import edu.alibaba.mpc4j.common.rpc.impl.memory.MemoryRpcManager;
+import edu.alibaba.mpc4j.common.tool.CommonConstants;
 import edu.alibaba.mpc4j.crypto.matrix.database.NaiveDatabase;
 import edu.alibaba.mpc4j.s2pc.pir.PirUtils;
 import edu.alibaba.mpc4j.s2pc.pir.index.single.SingleIndexPirConfig;
+import edu.alibaba.mpc4j.s2pc.pir.index.single.constantweightpir.Mk22SingleIndexPirConfig;
+import edu.alibaba.mpc4j.s2pc.pir.index.single.doublepir.Hhcm23DoubleSingleIndexPirConfig;
 import edu.alibaba.mpc4j.s2pc.pir.index.single.fastpir.Ayaa21SingleIndexPirConfig;
 import edu.alibaba.mpc4j.s2pc.pir.index.single.mulpir.Alpr21SingleIndexPirConfig;
 import edu.alibaba.mpc4j.s2pc.pir.index.single.onionpir.Mcr21SingleIndexPirConfig;
@@ -43,11 +46,11 @@ public class IndexPirTest {
     /**
      * default element bit length
      */
-    private static final int DEFAULT_ELEMENT_BIT_LENGTH = Byte.SIZE;
+    private static final int DEFAULT_ELEMENT_BIT_LENGTH = Double.SIZE;
     /**
      * server element size
      */
-    private static final int SERVER_ELEMENT_SIZE = 1 << 16;
+    private static final int SERVER_ELEMENT_SIZE = 1 << 14;
 
     @Parameterized.Parameters(name = "{0}")
     public static Collection<Object[]> configurations() {
@@ -86,6 +89,14 @@ public class IndexPirTest {
         configurations.add(new Object[]{
             SingleIndexPirFactory.SingleIndexPirType.SIMPLE_PIR.name(),
             new Hhcm23SimpleSingleIndexPirConfig.Builder().build()
+        });
+        // Double PIR
+        configurations.add(new Object[]{
+            SingleIndexPirFactory.SingleIndexPirType.DOUBLE_PIR.name(), new Hhcm23DoubleSingleIndexPirConfig()
+        });
+        // constant weight PIR
+        configurations.add(new Object[]{
+            SingleIndexPirFactory.SingleIndexPirType.CONSTANT_WEIGHT_PIR.name(), new Mk22SingleIndexPirConfig()
         });
         return configurations;
     }
@@ -151,16 +162,12 @@ public class IndexPirTest {
             clientThread.start();
             serverThread.join();
             clientThread.join();
-            LOGGER.info("Server: The Communication costs {}MB", serverRpc.getSendByteLength() * 1.0 / (1024 * 1024));
             serverRpc.reset();
-            LOGGER.info("Client: The Communication costs {}MB", clientRpc.getSendByteLength() * 1.0 / (1024 * 1024));
             clientRpc.reset();
             // verify result
             ByteBuffer result = clientThread.getRetrievalResult();
-            Assert.assertEquals(
-                result, ByteBuffer.wrap(database.getBytesData(retrievalIndex))
-            );
-            LOGGER.info("Client: The Retrieval Result is Correct");
+            Assert.assertEquals(result, ByteBuffer.wrap(database.getBytesData(retrievalIndex)));
+            LOGGER.info("Main: The Retrieval Result is Correct");
         } catch (InterruptedException e) {
             e.printStackTrace();
         }

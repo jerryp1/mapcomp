@@ -69,8 +69,6 @@ public class BatchPirClientThread extends Thread {
             LOGGER.info(
                 "Client: Online Communication costs {}MB", client.getRpc().getSendByteLength() * 1.0 / (1 << 20)
             );
-            client.getRpc().synchronize();
-            client.getRpc().reset();
         } catch (MpcAbortException e) {
             e.printStackTrace();
         }

@@ -1,6 +1,9 @@
 package edu.alibaba.mpc4j.s2pc.pir.index.doublepir;
 
-import edu.alibaba.mpc4j.common.rpc.test.AbstractTwoPartyPtoTest;
+import com.google.common.base.Preconditions;
+import edu.alibaba.mpc4j.common.rpc.Rpc;
+import edu.alibaba.mpc4j.common.rpc.RpcManager;
+import edu.alibaba.mpc4j.common.rpc.impl.memory.MemoryRpcManager;
 import edu.alibaba.mpc4j.common.tool.CommonConstants;
 import edu.alibaba.mpc4j.crypto.matrix.database.NaiveDatabase;
 import edu.alibaba.mpc4j.s2pc.pir.PirUtils;
@@ -9,10 +12,15 @@ import edu.alibaba.mpc4j.s2pc.pir.index.single.doublepir.Hhcm23DoubleSingleIndex
 import edu.alibaba.mpc4j.s2pc.pir.index.single.doublepir.Hhcm23DoubleSingleIndexPirConfig;
 import edu.alibaba.mpc4j.s2pc.pir.index.single.doublepir.Hhcm23DoubleSingleIndexPirParams;
 import edu.alibaba.mpc4j.s2pc.pir.index.single.doublepir.Hhcm23DoubleSingleIndexPirServer;
+import org.apache.commons.lang3.StringUtils;
+import org.junit.After;
 import org.junit.Assert;
+import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
@@ -25,7 +33,8 @@ import java.util.Collection;
  * @date 2023/5/29
  */
 @RunWith(Parameterized.class)
-public class DoublePirTest extends AbstractTwoPartyPtoTest {
+public class DoublePirTest {
+    private static final Logger LOGGER = LoggerFactory.getLogger(DoublePirTest.class);
     /**
      * default element bit length
      */
@@ -46,7 +55,7 @@ public class DoublePirTest extends AbstractTwoPartyPtoTest {
     @Parameterized.Parameters(name = "{0}")
     public static Collection<Object[]> configurations() {
         Collection<Object[]> configurations = new ArrayList<>();
-        Hhcm23DoubleSingleIndexPirConfig config = new Hhcm23DoubleSingleIndexPirConfig.Builder().build();
+        Hhcm23DoubleSingleIndexPirConfig config = new Hhcm23DoubleSingleIndexPirConfig();
         // double PIR
         configurations.add(new Object[]{
             SingleIndexPirFactory.SingleIndexPirType.DOUBLE_PIR.name(),
@@ -57,6 +66,14 @@ public class DoublePirTest extends AbstractTwoPartyPtoTest {
     }
 
     /**
+     * server rpc
+     */
+    private final Rpc serverRpc;
+    /**
+     * client rpc
+     */
+    private final Rpc clientRpc;
+    /**
      * Double PIR config
      */
     private final Hhcm23DoubleSingleIndexPirConfig config;
@@ -66,9 +83,26 @@ public class DoublePirTest extends AbstractTwoPartyPtoTest {
     private final Hhcm23DoubleSingleIndexPirParams params;
 
     public DoublePirTest(String name, Hhcm23DoubleSingleIndexPirConfig config, Hhcm23DoubleSingleIndexPirParams params) {
-        super(name);
+        Preconditions.checkArgument(StringUtils.isNotBlank(name));
+        // We cannot use NettyRPC in the test case since it needs multi-thread connect / disconnect.
+        // In other word, we cannot connect / disconnect NettyRpc in @Before / @After, respectively.
+        RpcManager rpcManager = new MemoryRpcManager(2);
+        serverRpc = rpcManager.getRpc(0);
+        clientRpc = rpcManager.getRpc(1);
         this.config = config;
         this.params = params;
+    }
+
+    @Before
+    public void connect() {
+        serverRpc.connect();
+        clientRpc.connect();
+    }
+
+    @After
+    public void disconnect() {
+        serverRpc.disconnect();
+        clientRpc.disconnect();
     }
 
     @Test
@@ -95,8 +129,8 @@ public class DoublePirTest extends AbstractTwoPartyPtoTest {
                               int elementBitLength, boolean parallel) {
         int retrievalIndex = PirUtils.generateRetrievalIndex(SERVER_ELEMENT_SIZE);
         NaiveDatabase database = PirUtils.generateDataBase(SERVER_ELEMENT_SIZE, elementBitLength);
-        Hhcm23DoubleSingleIndexPirServer server = new Hhcm23DoubleSingleIndexPirServer(firstRpc, secondRpc.ownParty(), config);
-        Hhcm23DoubleSingleIndexPirClient client = new Hhcm23DoubleSingleIndexPirClient(secondRpc, firstRpc.ownParty(), config);
+        Hhcm23DoubleSingleIndexPirServer server = new Hhcm23DoubleSingleIndexPirServer(serverRpc, clientRpc.ownParty(), config);
+        Hhcm23DoubleSingleIndexPirClient client = new Hhcm23DoubleSingleIndexPirClient(clientRpc, serverRpc.ownParty(), config);
         // set parallel
         server.setParallel(parallel);
         client.setParallel(parallel);
@@ -109,18 +143,17 @@ public class DoublePirTest extends AbstractTwoPartyPtoTest {
             clientThread.start();
             serverThread.join();
             clientThread.join();
-            firstRpc.reset();
-            secondRpc.reset();
+            serverRpc.reset();
+            clientRpc.reset();
+            LOGGER.info("Parameters: \n {}", params.toString());
             // verify result
             ByteBuffer result = clientThread.getRetrievalResult();
-            Assert.assertEquals(
-                result, ByteBuffer.wrap(database.getBytesData(retrievalIndex))
-            );
-            // destroy
-            new Thread(server::destroy).start();
-            new Thread(client::destroy).start();
+            Assert.assertEquals(result, ByteBuffer.wrap(database.getBytesData(retrievalIndex)));
+            LOGGER.info("Main: The Retrieval Result is Correct");
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
+        server.destroy();
+        client.destroy();
     }
 }

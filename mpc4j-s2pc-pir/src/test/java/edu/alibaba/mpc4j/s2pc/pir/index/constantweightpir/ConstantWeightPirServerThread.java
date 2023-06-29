@@ -1,35 +1,35 @@
-package edu.alibaba.mpc4j.s2pc.pir.index.onionpir;
+package edu.alibaba.mpc4j.s2pc.pir.index.constantweightpir;
 
 import edu.alibaba.mpc4j.common.rpc.MpcAbortException;
 import edu.alibaba.mpc4j.crypto.matrix.database.NaiveDatabase;
-import edu.alibaba.mpc4j.s2pc.pir.index.single.onionpir.Mcr21SingleIndexPirParams;
-import edu.alibaba.mpc4j.s2pc.pir.index.single.onionpir.Mcr21SingleIndexPirServer;
+import edu.alibaba.mpc4j.s2pc.pir.index.single.constantweightpir.Mk22SingleIndexPirParams;
+import edu.alibaba.mpc4j.s2pc.pir.index.single.constantweightpir.Mk22SingleIndexPirServer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * OnionPIR server thread.
+ * Constant-Weight Pir Server Thread
  *
- * @author Liqiang Peng
- * @date 2022/8/26
+ * @author Qixian Zhou
+ * @date 2023/6/20
  */
-public class OnionPirServerThread extends Thread {
-    private static final Logger LOGGER = LoggerFactory.getLogger(OnionPirServerThread.class);
+public class ConstantWeightPirServerThread extends Thread {
+    private static final Logger LOGGER = LoggerFactory.getLogger(ConstantWeightPirServerThread.class);
     /**
-     * OnionPIR server
+     * Constant-Weight PIR server
      */
-    private final Mcr21SingleIndexPirServer server;
+    private final Mk22SingleIndexPirServer server;
     /**
-     * OnionPIR params
+     * Constant-Weight PIR params
      */
-    private final Mcr21SingleIndexPirParams indexPirParams;
+    private final Mk22SingleIndexPirParams indexPirParams;
     /**
      * database
      */
     private final NaiveDatabase database;
 
-    OnionPirServerThread(Mcr21SingleIndexPirServer server, Mcr21SingleIndexPirParams indexPirParams,
-                         NaiveDatabase database) {
+    ConstantWeightPirServerThread(Mk22SingleIndexPirServer server, Mk22SingleIndexPirParams indexPirParams,
+                                  NaiveDatabase database) {
         this.server = server;
         this.indexPirParams = indexPirParams;
         this.database = database;

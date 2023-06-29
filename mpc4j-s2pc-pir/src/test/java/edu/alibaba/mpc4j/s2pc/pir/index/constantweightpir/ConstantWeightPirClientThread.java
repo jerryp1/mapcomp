@@ -1,39 +1,40 @@
-package edu.alibaba.mpc4j.s2pc.pir.index.fastpir;
+package edu.alibaba.mpc4j.s2pc.pir.index.constantweightpir;
 
 import edu.alibaba.mpc4j.common.rpc.MpcAbortException;
-import edu.alibaba.mpc4j.s2pc.pir.index.single.fastpir.Ayaa21SingleIndexPirClient;
-import edu.alibaba.mpc4j.s2pc.pir.index.single.fastpir.Ayaa21SingleIndexPirParams;
+import edu.alibaba.mpc4j.s2pc.pir.index.single.constantweightpir.Mk22SingleIndexPirClient;
+import edu.alibaba.mpc4j.s2pc.pir.index.single.constantweightpir.Mk22SingleIndexPirParams;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
 
 import java.nio.ByteBuffer;
 
 /**
- * FastPIR client thread.
+ * Constant-Weight Pir Client Thread
  *
- * @author Liqiang Peng
- * @date 2022/8/26
+ * @author Qixian Zhou
+ * @date 2023/6/20
  */
-public class FastPirClientThread extends Thread {
-    private static final Logger LOGGER = LoggerFactory.getLogger(FastPirClientThread.class);
+public class ConstantWeightPirClientThread extends Thread {
+    private static final Logger LOGGER = LoggerFactory.getLogger(ConstantWeightPirClientThread.class);
     /**
-     * FastPIR client
+     * Constant-Weight PIR client
      */
-    private final Ayaa21SingleIndexPirClient client;
+    private final Mk22SingleIndexPirClient client;
     /**
-     * FastPIR params
+     * Constant-Weight PIR params
      */
-    private final Ayaa21SingleIndexPirParams indexPirParams;
+    private final Mk22SingleIndexPirParams indexPirParams;
     /**
      * element bit length
      */
     private final int elementBitLength;
     /**
-     * retrieval index value
+     * retrieval index
      */
-    private final int retrievalIndex;
+    private final int retrievalSingleIndex;
     /**
-     * server element size
+     * database size
      */
     private final int serverElementSize;
     /**
@@ -41,11 +42,11 @@ public class FastPirClientThread extends Thread {
      */
     private ByteBuffer indexPirResult;
 
-    FastPirClientThread(Ayaa21SingleIndexPirClient client, Ayaa21SingleIndexPirParams indexPirParams, int retrievalIndex,
-                        int serverElementSize, int elementBitLength) {
+    ConstantWeightPirClientThread(Mk22SingleIndexPirClient client, Mk22SingleIndexPirParams indexPirParams,
+                                  int retrievalSingleIndex, int serverElementSize, int elementBitLength) {
         this.client = client;
         this.indexPirParams = indexPirParams;
-        this.retrievalIndex = retrievalIndex;
+        this.retrievalSingleIndex = retrievalSingleIndex;
         this.serverElementSize = serverElementSize;
         this.elementBitLength = elementBitLength;
     }
@@ -61,7 +62,7 @@ public class FastPirClientThread extends Thread {
             LOGGER.info("Client: The Offline Communication costs {}MB", client.getRpc().getSendByteLength() * 1.0 / (1024 * 1024));
             client.getRpc().reset();
             client.getRpc().synchronize();
-            indexPirResult = ByteBuffer.wrap(client.pir(retrievalIndex));
+            indexPirResult = ByteBuffer.wrap(client.pir(retrievalSingleIndex));
             LOGGER.info("Client: The Online Communication costs {}MB", client.getRpc().getSendByteLength() * 1.0 / (1024 * 1024));
         } catch (MpcAbortException e) {
             e.printStackTrace();

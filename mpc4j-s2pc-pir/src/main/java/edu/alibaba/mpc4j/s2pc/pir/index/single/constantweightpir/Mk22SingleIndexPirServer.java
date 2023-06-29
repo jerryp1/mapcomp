@@ -1,10 +1,9 @@
-package edu.alibaba.mpc4j.s2pc.pir.index.single.mulpir;
+package edu.alibaba.mpc4j.s2pc.pir.index.single.constantweightpir;
 
 import edu.alibaba.mpc4j.common.rpc.*;
 import edu.alibaba.mpc4j.common.rpc.utils.DataPacket;
 import edu.alibaba.mpc4j.common.rpc.utils.DataPacketHeader;
 import edu.alibaba.mpc4j.common.tool.CommonConstants;
-import edu.alibaba.mpc4j.common.tool.utils.CommonUtils;
 import edu.alibaba.mpc4j.crypto.matrix.database.NaiveDatabase;
 import edu.alibaba.mpc4j.s2pc.pir.PirUtils;
 import edu.alibaba.mpc4j.s2pc.pir.index.single.AbstractSingleIndexPirServer;
@@ -12,31 +11,29 @@ import edu.alibaba.mpc4j.s2pc.pir.index.single.SingleIndexPirParams;
 
 
 import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
-import static edu.alibaba.mpc4j.s2pc.pir.index.single.mulpir.Alpr21SingleIndexPirPtoDesc.*;
+import static edu.alibaba.mpc4j.s2pc.pir.index.single.constantweightpir.Mk22SingleIndexPirPtoDesc.*;
 
 /**
- * MulPIR server.
+ * Constant-weight PIR server
  *
  * @author Qixian Zhou
- * @date 2023/5/29
+ * @date 2023/6/18
  */
-public class Alpr21SingleIndexPirServer extends AbstractSingleIndexPirServer {
+public class Mk22SingleIndexPirServer extends AbstractSingleIndexPirServer {
 
     static {
         System.loadLibrary(CommonConstants.MPC4J_NATIVE_FHE_NAME);
     }
 
     /**
-     * MulPIR params
+     * constant weight PIR params
      */
-    private Alpr21SingleIndexPirParams params;
+    private Mk22SingleIndexPirParams params;
     /**
      * Galois Keys
      */
@@ -54,22 +51,23 @@ public class Alpr21SingleIndexPirServer extends AbstractSingleIndexPirServer {
      */
     private int plaintextSize;
     /**
-     * dimension size
+     * plaintext index codeword
      */
-    private int[] dimensionSize;
+    private List<int[]> plaintextIndexCodewords;
     /**
      * BFV plaintext in NTT form
      */
     private List<byte[][]> encodedDatabase;
 
-    public Alpr21SingleIndexPirServer(Rpc serverRpc, Party clientParty, Alpr21SingleIndexPirConfig config) {
+    public Mk22SingleIndexPirServer(Rpc serverRpc, Party clientParty, Mk22SingleIndexPirConfig config) {
         super(getInstance(), serverRpc, clientParty, config);
     }
 
     @Override
     public void init(SingleIndexPirParams indexPirParams, NaiveDatabase database) throws MpcAbortException {
-        assert (indexPirParams instanceof Alpr21SingleIndexPirParams);
-        params = (Alpr21SingleIndexPirParams) indexPirParams;
+        assert (indexPirParams instanceof Mk22SingleIndexPirParams);
+        params = (Mk22SingleIndexPirParams) indexPirParams;
+        params.setQueryParams(database.rows());
         logPhaseInfo(PtoState.INIT_BEGIN);
 
         // receive Galois keys and Relin keys
@@ -92,7 +90,8 @@ public class Alpr21SingleIndexPirServer extends AbstractSingleIndexPirServer {
 
     @Override
     public void init(NaiveDatabase database) throws MpcAbortException {
-        params = Alpr21SingleIndexPirParams.DEFAULT_PARAMS;
+        params = Mk22SingleIndexPirParams.DEFAULT_PARAMS;
+        params.setQueryParams(database.rows());
         logPhaseInfo(PtoState.INIT_BEGIN);
 
         // receive Galois keys
@@ -123,10 +122,9 @@ public class Alpr21SingleIndexPirServer extends AbstractSingleIndexPirServer {
             otherParty().getPartyId(), rpc.ownParty().getPartyId()
         );
         List<byte[]> clientQueryPayload = new ArrayList<>(rpc.receive(clientQueryHeader).getPayload());
-        // receive query
+
         stopWatch.start();
         List<byte[]> serverResponsePayload = generateResponse(clientQueryPayload, encodedDatabase);
-
         DataPacketHeader serverResponseHeader = new DataPacketHeader(
             encodeTaskId, getPtoDesc().getPtoId(), PtoStep.SERVER_SEND_RESPONSE.ordinal(), extraInfo,
             rpc.ownParty().getPartyId(), otherParty().getPartyId()
@@ -143,7 +141,7 @@ public class Alpr21SingleIndexPirServer extends AbstractSingleIndexPirServer {
     @Override
     public void setPublicKey(List<byte[]> clientPublicKeysPayload) throws MpcAbortException {
         if (params == null) {
-            params = Alpr21SingleIndexPirParams.DEFAULT_PARAMS;
+            params = Mk22SingleIndexPirParams.DEFAULT_PARAMS;
         }
         MpcAbortPreconditions.checkArgument(clientPublicKeysPayload.size() == 2);
         this.galoisKeys = clientPublicKeysPayload.remove(0);
@@ -170,7 +168,7 @@ public class Alpr21SingleIndexPirServer extends AbstractSingleIndexPirServer {
             partitionByteLength, params.getPolyModulusDegree(), params.getPlainModulusBitLength()
         );
         plaintextSize = (int) Math.ceil((double) num / this.elementSizeOfPlaintext);
-        dimensionSize = PirUtils.computeDimensionLength(plaintextSize, params.getDimension());
+        plaintextIndexCodewords = getPlaintextIndexCodeword();
         // encode database
         IntStream intStream = IntStream.range(0, partitionSize);
         intStream = parallel ? intStream.parallel() : intStream;
@@ -180,21 +178,35 @@ public class Alpr21SingleIndexPirServer extends AbstractSingleIndexPirServer {
     @Override
     public List<byte[]> generateResponse(List<byte[]> clientQueryPayload, List<byte[][]> encodedDatabase)
         throws MpcAbortException {
-        // query ciphertext number should be ceil(dim_sum/N)
-        int sum = Arrays.stream(dimensionSize).sum();
-        int expectQueryPayloadSize = CommonUtils.getUnitNum(sum, params.getPolyModulusDegree());
-        MpcAbortPreconditions.checkArgument(clientQueryPayload.size() == expectQueryPayloadSize);
+        // query ciphertext number should be h = ceil(m/2^c)
+        MpcAbortPreconditions.checkArgument(clientQueryPayload.size() == params.getNumInputCiphers());
         IntStream intStream = IntStream.range(0, partitionSize);
         intStream = parallel ? intStream.parallel() : intStream;
+        int eqType;
+        switch (params.getEqualityType()) {
+            case FOLKLORE:
+                eqType = 0;
+                break;
+            case CONSTANT_WEIGHT:
+                eqType = 1;
+                break;
+            default:
+                throw new IllegalStateException("Invalid Equality Operator Type");
+        }
         return intStream
-            .mapToObj(i -> Alpr21SingleIndexPirNativeUtils.generateReply(
-                params.getEncryptionParams(),
-                galoisKeys,
-                relinKeys,
-                clientQueryPayload,
-                encodedDatabase.get(i),
-                dimensionSize))
-            .flatMap(Collection::stream)
+            .mapToObj(i ->
+                Mk22SingleIndexPirNativeUtils.generateReply(
+                    params.getEncryptionParams(),
+                    galoisKeys,
+                    relinKeys,
+                    clientQueryPayload,
+                    encodedDatabase.get(i),
+                    plaintextIndexCodewords,
+                    params.getNumInputCiphers(),
+                    params.getCodewordsBitLength(),
+                    params.getHammingWeight(),
+                    eqType
+                ))
             .collect(Collectors.toCollection(ArrayList::new));
     }
 
@@ -210,9 +222,7 @@ public class Alpr21SingleIndexPirServer extends AbstractSingleIndexPirServer {
             byte[] element = databases[partitionSingleIndex].getBytesData(rowSingleIndex);
             System.arraycopy(element, 0, combinedBytes, rowSingleIndex * partitionByteLength, partitionByteLength);
         });
-        // number of FV plaintexts needed to create the d-dimensional matrix
-        int prod = Arrays.stream(dimensionSize).reduce(1, (a, b) -> a * b);
-        assert (plaintextSize <= prod);
+        // in Constant-weight PIR, dimension is always 1.
         List<long[]> coeffsList = new ArrayList<>();
         int byteSizeOfPlaintext = elementSizeOfPlaintext * partitionByteLength;
         int totalByteSize = num * partitionByteLength;
@@ -246,10 +256,39 @@ public class Alpr21SingleIndexPirServer extends AbstractSingleIndexPirServer {
         // Add padding plaintext to make database a matrix
         int currentPlaintextSize = coeffsList.size();
         assert (currentPlaintextSize <= plaintextSize);
-        IntStream.range(0, (prod - currentPlaintextSize))
+        IntStream.range(0, (plaintextSize - currentPlaintextSize))
             .mapToObj(i -> IntStream.range(0, params.getPolyModulusDegree()).mapToLong(i1 -> 1L).toArray())
             .forEach(coeffsList::add);
-        return Alpr21SingleIndexPirNativeUtils.nttTransform(params.getEncryptionParams(), coeffsList)
-            .toArray(new byte[0][]);
+        return
+            Mk22SingleIndexPirNativeUtils.nttTransform(params.getEncryptionParams(), coeffsList).toArray(new byte[0][]);
+    }
+
+    /**
+     * generate the codeword of index in range [0, plaintextSize -1]
+     *
+     * @return codewords of indices.
+     */
+    private List<int[]> getPlaintextIndexCodeword() {
+        IntStream intStream = IntStream.range(0, plaintextSize);
+        intStream = parallel ? intStream.parallel() : intStream;
+        List<int[]> codewords;
+        switch (params.getEqualityType()) {
+            case FOLKLORE:
+                codewords = intStream
+                    .mapToObj(i -> Mk22SingleIndexPirUtils.getFolkloreCodeword(i, params.getCodewordsBitLength()))
+                    .collect(Collectors.toList());
+                break;
+            case CONSTANT_WEIGHT:
+                codewords = intStream
+                    .mapToObj(i -> Mk22SingleIndexPirUtils.getPerfectConstantWeightCodeword(
+                        i, params.getCodewordsBitLength(), params.getHammingWeight()
+                        ))
+                    .collect(Collectors.toList());
+                break;
+            default:
+                throw new IllegalStateException("Invalid Equality Operator Type");
+        }
+        return codewords;
     }
 }
+

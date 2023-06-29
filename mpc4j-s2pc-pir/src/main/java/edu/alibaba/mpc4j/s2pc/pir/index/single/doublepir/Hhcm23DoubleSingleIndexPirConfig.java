@@ -19,7 +19,7 @@ public class Hhcm23DoubleSingleIndexPirConfig extends AbstractMultiPartyPtoConfi
 
     @Override
     public SingleIndexPirFactory.SingleIndexPirType getProType() {
-        return SingleIndexPirFactory.SingleIndexPirType.SIMPLE_PIR;
+        return SingleIndexPirFactory.SingleIndexPirType.DOUBLE_PIR;
     }
 
     public static class Builder implements org.apache.commons.lang3.builder.Builder<Hhcm23DoubleSingleIndexPirConfig> {

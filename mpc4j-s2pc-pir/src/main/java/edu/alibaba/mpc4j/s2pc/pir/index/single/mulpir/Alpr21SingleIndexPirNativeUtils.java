@@ -77,5 +77,4 @@ public class Alpr21SingleIndexPirNativeUtils {
      * @return BFV plaintext.
      */
     static native long[] decryptReply(byte[] encryptionParams, byte[] secretKey, List<byte[]> response);
-
 }

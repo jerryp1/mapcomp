@@ -4,7 +4,6 @@ import com.google.common.base.Preconditions;
 import edu.alibaba.mpc4j.common.rpc.Rpc;
 import edu.alibaba.mpc4j.common.rpc.RpcManager;
 import edu.alibaba.mpc4j.common.rpc.impl.memory.MemoryRpcManager;
-import edu.alibaba.mpc4j.common.rpc.test.AbstractTwoPartyPtoTest;
 import edu.alibaba.mpc4j.common.tool.CommonConstants;
 import edu.alibaba.mpc4j.crypto.matrix.database.NaiveDatabase;
 import edu.alibaba.mpc4j.s2pc.pir.PirUtils;
@@ -34,7 +33,7 @@ import java.util.Collection;
  * @date 2022/8/26
  */
 @RunWith(Parameterized.class)
-public class FastPirTest extends AbstractTwoPartyPtoTest {
+public class FastPirTest {
     private static final Logger LOGGER = LoggerFactory.getLogger(FastPirTest.class);
     /**
      * default element bit length
@@ -56,19 +55,25 @@ public class FastPirTest extends AbstractTwoPartyPtoTest {
     @Parameterized.Parameters(name = "{0}")
     public static Collection<Object[]> configurations() {
         Collection<Object[]> configurations = new ArrayList<>();
-        Ayaa21SingleIndexPirConfig fastpirConfig = new Ayaa21SingleIndexPirConfig.Builder().build();
+        Ayaa21SingleIndexPirConfig fastpirConfig = new Ayaa21SingleIndexPirConfig();
         configurations.add(new Object[]{
             SingleIndexPirFactory.SingleIndexPirType.FAST_PIR.name(),
             fastpirConfig,
             new Ayaa21SingleIndexPirParams(
-                4096,
-                1073153L,
-                new long[]{1152921504606830593L, 562949953216513L}
+                4096, 1073153L, new long[]{1152921504606830593L, 562949953216513L}
             )
         });
         return configurations;
     }
 
+    /**
+     * server rpc
+     */
+    private final Rpc serverRpc;
+    /**
+     * client rpc
+     */
+    private final Rpc clientRpc;
     /**
      * FastPIR config
      */
@@ -79,9 +84,26 @@ public class FastPirTest extends AbstractTwoPartyPtoTest {
     private final Ayaa21SingleIndexPirParams indexPirParams;
 
     public FastPirTest(String name, Ayaa21SingleIndexPirConfig indexPirConfig, Ayaa21SingleIndexPirParams indexPirParams) {
-        super(name);
+        Preconditions.checkArgument(StringUtils.isNotBlank(name));
+        // We cannot use NettyRPC in the test case since it needs multi-thread connect / disconnect.
+        // In other word, we cannot connect / disconnect NettyRpc in @Before / @After, respectively.
+        RpcManager rpcManager = new MemoryRpcManager(2);
+        serverRpc = rpcManager.getRpc(0);
+        clientRpc = rpcManager.getRpc(1);
         this.indexPirConfig = indexPirConfig;
         this.indexPirParams = indexPirParams;
+    }
+
+    @Before
+    public void connect() {
+        serverRpc.connect();
+        clientRpc.connect();
+    }
+
+    @After
+    public void disconnect() {
+        serverRpc.disconnect();
+        clientRpc.disconnect();
     }
 
     @Test
@@ -108,8 +130,8 @@ public class FastPirTest extends AbstractTwoPartyPtoTest {
                             int elementBitLength, boolean parallel) {
         int retrievalIndex = PirUtils.generateRetrievalIndex(SERVER_ELEMENT_SIZE);
         NaiveDatabase database = PirUtils.generateDataBase(SERVER_ELEMENT_SIZE, elementBitLength);
-        Ayaa21SingleIndexPirServer server = new Ayaa21SingleIndexPirServer(firstRpc, secondRpc.ownParty(), config);
-        Ayaa21SingleIndexPirClient client = new Ayaa21SingleIndexPirClient(secondRpc, firstRpc.ownParty(), config);
+        Ayaa21SingleIndexPirServer server = new Ayaa21SingleIndexPirServer(serverRpc, clientRpc.ownParty(), config);
+        Ayaa21SingleIndexPirClient client = new Ayaa21SingleIndexPirClient(clientRpc, serverRpc.ownParty(), config);
         server.setParallel(parallel);
         client.setParallel(parallel);
         FastPirServerThread serverThread = new FastPirServerThread(server, indexPirParams, database);
@@ -121,16 +143,17 @@ public class FastPirTest extends AbstractTwoPartyPtoTest {
             clientThread.start();
             serverThread.join();
             clientThread.join();
+            serverRpc.reset();
+            clientRpc.reset();
+            LOGGER.info("Parameters: \n {}", indexPirParams.toString());
             // verify result
             ByteBuffer result = clientThread.getRetrievalResult();
-            Assert.assertEquals(
-                result, ByteBuffer.wrap(database.getBytesData(retrievalIndex))
-            );
-            // destroy
-            new Thread(server::destroy).start();
-            new Thread(client::destroy).start();
+            Assert.assertEquals(result, ByteBuffer.wrap(database.getBytesData(retrievalIndex)));
+            LOGGER.info("Main: The Retrieval Result is Correct");
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
+        server.destroy();
+        client.destroy();
     }
 }
