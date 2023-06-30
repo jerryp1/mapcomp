@@ -34,7 +34,7 @@ public class PjcMain {
         switch (ptoType) {
             case PidMain.PTO_TYPE_NAME:
                 PidMain pidMain = new PidMain(properties);
-                pidMain.run();
+                pidMain.runNetty();
                 break;
             case PmidMain.PTO_TYPE_NAME:
                 PmidMain pmidMain = new PmidMain(properties);
