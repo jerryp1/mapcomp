@@ -1,26 +1,19 @@
 package edu.alibaba.mpc4j.s2pc.upso.upsi.cmg21;
 
-import com.google.common.base.Preconditions;
-import edu.alibaba.mpc4j.common.rpc.Rpc;
-import edu.alibaba.mpc4j.common.rpc.RpcManager;
-import edu.alibaba.mpc4j.common.rpc.impl.memory.MemoryRpcManager;
+import edu.alibaba.mpc4j.common.rpc.test.AbstractTwoPartyPtoTest;
 import edu.alibaba.mpc4j.s2pc.pso.PsoUtils;
 import edu.alibaba.mpc4j.s2pc.upso.upsi.*;
-import org.apache.commons.lang3.StringUtils;
-import org.junit.After;
 import org.junit.Assert;
-import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.security.SecureRandom;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.Set;
+import java.util.concurrent.TimeUnit;
 
 /**
  * CMG21 UPSI test.
@@ -29,8 +22,7 @@ import java.util.Set;
  * @date 2022/5/26
  */
 @RunWith(Parameterized.class)
-public class Cmg21UpsiTest {
-    private static final Logger LOGGER = LoggerFactory.getLogger(Cmg21UpsiTest.class);
+public class Cmg21UpsiTest extends AbstractTwoPartyPtoTest {
 
     @Parameterized.Parameters(name = "{0}")
     public static Collection<Object[]> configurations() {
@@ -43,39 +35,15 @@ public class Cmg21UpsiTest {
 
         return configurations;
     }
-    /**
-     * server rpc
-     */
-    private final Rpc serverRpc;
-    /**
-     * client rpc
-     */
-    private final Rpc clientRpc;
+
     /**
      * CMG21 UPSI config
      */
     private final Cmg21UpsiConfig config;
 
     public Cmg21UpsiTest(String name, Cmg21UpsiConfig config) {
-        Preconditions.checkArgument(StringUtils.isNotBlank(name));
-        // We cannot use NettyRPC in the test case since it needs multi-thread connect / disconnect.
-        // In other word, we cannot connect / disconnect NettyRpc in @Before / @After, respectively.
-        RpcManager rpcManager = new MemoryRpcManager(2);
-        serverRpc = rpcManager.getRpc(0);
-        clientRpc = rpcManager.getRpc(1);
+        super(name);
         this.config = config;
-    }
-
-    @Before
-    public void connect() {
-        serverRpc.connect();
-        clientRpc.connect();
-    }
-
-    @After
-    public void disconnect() {
-        serverRpc.disconnect();
-        clientRpc.disconnect();
     }
 
     @Test
@@ -160,34 +128,39 @@ public class Cmg21UpsiTest {
         Set<String> serverElementSet = sets.get(0);
         Set<String> clientElementSet = sets.get(1);
         // create instances
-        Cmg21UpsiServer<String> server = new Cmg21UpsiServer<>(serverRpc, clientRpc.ownParty(), config);
-        Cmg21UpsiClient<String> client = new Cmg21UpsiClient<>(clientRpc, serverRpc.ownParty(), config);
+        Cmg21UpsiServer<String> server = new Cmg21UpsiServer<>(firstRpc, secondRpc.ownParty(), config);
+        Cmg21UpsiClient<String> client = new Cmg21UpsiClient<>(secondRpc, firstRpc.ownParty(), config);
         int randomTaskId = Math.abs(new SecureRandom().nextInt());
         server.setTaskId(randomTaskId);
         client.setTaskId(randomTaskId);
-        // set parallel
         server.setParallel(parallel);
         client.setParallel(parallel);
-        Cmg21UpsiServerThread<String> serverThread = new Cmg21UpsiServerThread<>(
-            server, upsiParams, serverElementSet, clientElementSet.size()
-        );
-        Cmg21UpsiClientThread<String> clientThread = new Cmg21UpsiClientThread<>(client, upsiParams, clientElementSet);
         try {
+            Cmg21UpsiServerThread<String> serverThread = new Cmg21UpsiServerThread<>(
+                server, upsiParams, serverElementSet, clientElementSet.size()
+            );
+            Cmg21UpsiClientThread<String> clientThread = new Cmg21UpsiClientThread<>(client, upsiParams, clientElementSet);
+            STOP_WATCH.start();
+            // start
             serverThread.start();
             clientThread.start();
+            // stop
             serverThread.join();
             clientThread.join();
-            // verify result
+            STOP_WATCH.stop();
+            long time = STOP_WATCH.getTime(TimeUnit.MILLISECONDS);
+            STOP_WATCH.reset();
+            // verify
             Set<String> psiResult = clientThread.getIntersectionSet();
-            LOGGER.info("Server: The Communication costs {}MB", serverRpc.getSendByteLength() * 1.0 / (1024 * 1024));
-            LOGGER.info("Client: The Communication costs {}MB", clientRpc.getSendByteLength() * 1.0 / (1024 * 1024));
             sets.get(0).retainAll(sets.get(1));
             Assert.assertTrue(sets.get(0).containsAll(psiResult));
             Assert.assertTrue(psiResult.containsAll(sets.get(0)));
+            printAndResetRpc(time);
+            // destroy
+            new Thread(server::destroy).start();
+            new Thread(client::destroy).start();
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
-        server.destroy();
-        client.destroy();
     }
 }
