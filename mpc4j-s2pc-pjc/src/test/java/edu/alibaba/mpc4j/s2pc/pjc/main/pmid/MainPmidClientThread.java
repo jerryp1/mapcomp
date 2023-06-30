@@ -1,16 +1,15 @@
-package edu.alibaba.mpc4j.s2pc.pjc.main;
+package edu.alibaba.mpc4j.s2pc.pjc.main.pmid;
 
 import edu.alibaba.mpc4j.common.rpc.Party;
 import edu.alibaba.mpc4j.common.rpc.Rpc;
-import edu.alibaba.mpc4j.s2pc.pjc.main.pid.PidMain;
 
 /**
- * main PID client thread.
+ * main PMID client thread.
  *
  * @author Weiran Liu
  * @date 2023/6/30
  */
-class MainPidClientThread extends Thread {
+class MainPmidClientThread extends Thread {
     /**
      * client RPC
      */
@@ -22,18 +21,18 @@ class MainPidClientThread extends Thread {
     /**
      * main PID
      */
-    private final PidMain pidMain;
+    private final PmidMain pmidMain;
 
-    MainPidClientThread(Rpc clientRpc, Party serverParty, PidMain pidMain) {
+    MainPmidClientThread(Rpc clientRpc, Party serverParty, PmidMain pmidMain) {
         this.clientRpc = clientRpc;
         this.serverParty = serverParty;
-        this.pidMain = pidMain;
+        this.pmidMain = pmidMain;
     }
 
     @Override
     public void run() {
         try {
-            pidMain.runClient(clientRpc, serverParty);
+            pmidMain.runClient(clientRpc, serverParty);
         } catch (Exception e) {
             e.printStackTrace();
         }

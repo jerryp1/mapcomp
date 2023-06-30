@@ -1,10 +1,9 @@
-package edu.alibaba.mpc4j.s2pc.pjc.main;
+package edu.alibaba.mpc4j.s2pc.pjc.main.pid;
 
 import edu.alibaba.mpc4j.common.rpc.Rpc;
 import edu.alibaba.mpc4j.common.rpc.RpcManager;
 import edu.alibaba.mpc4j.common.rpc.impl.memory.MemoryRpcManager;
 import edu.alibaba.mpc4j.common.tool.utils.PropertiesUtils;
-import edu.alibaba.mpc4j.s2pc.pjc.main.pid.PidMain;
 import org.junit.Test;
 
 import java.util.Objects;
@@ -46,7 +45,7 @@ public class MainPidTest {
 
     @Test
     public void testBkms20EccCompressTrue() throws Exception {
-        Properties properties = readConfig("pid/conf_pid_bkms20_ecc_compress_true.txt");
+        Properties properties = readConfig("pid/conf_pid_bkms20_ecc.txt");
         runTest(new PidMain(properties));
     }
 

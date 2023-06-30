@@ -1,4 +1,4 @@
-package edu.alibaba.mpc4j.s2pc.pjc.main;
+package edu.alibaba.mpc4j.s2pc.pjc.main.pid;
 
 import edu.alibaba.mpc4j.common.rpc.MpcAbortException;
 import edu.alibaba.mpc4j.common.rpc.Party;

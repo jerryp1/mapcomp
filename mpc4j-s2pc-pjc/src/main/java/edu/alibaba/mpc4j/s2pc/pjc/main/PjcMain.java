@@ -38,7 +38,7 @@ public class PjcMain {
                 break;
             case PmidMain.PTO_TYPE_NAME:
                 PmidMain pmidMain = new PmidMain(properties);
-                pmidMain.run();
+                pmidMain.runNetty();
                 break;
             default:
                 throw new IllegalArgumentException("Invalid pto_type: " + ptoType);
