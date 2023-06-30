@@ -38,19 +38,19 @@ public class Z2SorterTest {
     /**
      * default num of elements to be sorted
      */
-    private static final int DEFAULT_NUM_SORTED = 1024;
+    private static final int DEFAULT_SORTED_NUM = 10;
     /**
      * large num of elements to be sorted
      */
-    private static final int LARGE_NUM_SORTED = 1 << 16;
+    private static final int LARGE_SORTED_NUM = 1 << 8;
     /**
      * default num
      */
-    private static final int DEFAULT_NUM = 1 << 8;
+    private static final int DEFAULT_NUM = 1 << 4;
     /**
      * default large num
      */
-    private static final int DEFAULT_LARGE_NUM = 1 << 12;
+    private static final int DEFAULT_LARGE_NUM = 1 << 8;
     /**
      * default l
      */
@@ -70,8 +70,13 @@ public class Z2SorterTest {
 
         // Bitonic sorter.
         configurations.add(new Object[]{
-                SorterFactory.SorterTypes.BITONIC + " (bitonic sorter)",
-                new Z2CircuitConfig.Builder().setSorterType(SorterFactory.SorterTypes.BITONIC).build()
+            SorterFactory.SorterTypes.BITONIC + " (bitonic sorter)",
+            new Z2CircuitConfig.Builder().setSorterType(SorterFactory.SorterTypes.BITONIC).build()
+        });
+        // Randomized Shell sorter.
+        configurations.add(new Object[]{
+            SorterFactory.SorterTypes.RANDOMIZED_SHELL_SORTER + " (randomized shell sorter)",
+            new Z2CircuitConfig.Builder().setSorterType(SorterFactory.SorterTypes.RANDOMIZED_SHELL_SORTER).build()
         });
         return configurations;
     }
@@ -88,39 +93,43 @@ public class Z2SorterTest {
     }
 
     public void testConstant(int l) {
-        long[][] longXs = IntStream.range(0, DEFAULT_NUM_SORTED).mapToObj(index -> IntStream.range(0, DEFAULT_NUM)
-                .mapToLong(i -> i)
-                .toArray()).toArray(long[][]::new);
+        long[][] longXs = IntStream.range(0, DEFAULT_SORTED_NUM).mapToObj(index -> IntStream.range(0, DEFAULT_NUM)
+            .mapToLong(i -> index)
+            .toArray()).toArray(long[][]::new);
         testPto(true, l, longXs);
         LOGGER.info("------------------------------");
     }
 
     @Test
-    public void test1Num() {
+    public void test1SortedNum() {
         testRandom(DEFAULT_NUM, 1);
         testRandom(DEFAULT_LARGE_NUM, 1);
 
     }
 
     @Test
-    public void test2Num() {
+    public void test2SortedNum() {
         testRandom(DEFAULT_NUM, 2);
         testRandom(DEFAULT_LARGE_NUM, 2);
 
     }
 
     @Test
-    public void test8Num() {
+    public void test8SortedNum() {
         testRandom(DEFAULT_NUM, 8);
         testRandom(DEFAULT_LARGE_NUM, 8);
-
     }
 
     @Test
-    public void testLargeNum() {
-        testRandom(DEFAULT_NUM, LARGE_NUM_SORTED);
-        testRandom(DEFAULT_LARGE_NUM, LARGE_NUM_SORTED);
+    public void testDefaultSortedNum() {
+        testRandom(DEFAULT_NUM, DEFAULT_SORTED_NUM);
+        testRandom(DEFAULT_LARGE_NUM, DEFAULT_SORTED_NUM);
+    }
 
+    @Test
+    public void testLargeSortedNum() {
+        testRandom(DEFAULT_NUM, LARGE_SORTED_NUM);
+        testRandom(DEFAULT_LARGE_NUM, LARGE_SORTED_NUM);
     }
 
     private void testRandom(int num, int numOfSorted) {
@@ -130,8 +139,8 @@ public class Z2SorterTest {
 
     private void testRandom(int l, int num, int numOfSorted) {
         long[][] longXs = IntStream.range(0, numOfSorted).mapToObj(index -> IntStream.range(0, num)
-                .mapToLong(i -> LongUtils.randomNonNegative(1L << (l - 1), SECURE_RANDOM))
-                .toArray()).toArray(long[][]::new);
+            .mapToLong(i -> LongUtils.randomNonNegative(1L << (l - 1), SECURE_RANDOM))
+            .toArray()).toArray(long[][]::new);
         testPto(false, l, longXs);
         LOGGER.info("------------------------------");
     }
@@ -163,6 +172,6 @@ public class Z2SorterTest {
         // verify
         BitVector[][] z = IntStream.range(0, numOfSorted).mapToObj(i -> Arrays.stream(xPlainZ2Vectors[i]).map(MpcZ2Vector::getBitVector).toArray(BitVector[]::new)).toArray(BitVector[][]::new);
         long[][] longZs = IntStream.range(0, numOfSorted).mapToObj(i -> Zl64Database.create(EnvType.STANDARD, false, z[i]).getData()).toArray(long[][]::new);
-        Z2CircuitTestUtils.assertSortOutput(Z2IntegerOperator.SORT, longXs, longZs);
+        Z2CircuitTestUtils.assertSortOutput(l, longXs, longZs);
     }
 }

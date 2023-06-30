@@ -19,8 +19,6 @@ public class RippleCarryAdder extends AbstractAdder {
     @Override
     public MpcZ2Vector[] add(MpcZ2Vector[] xiArray, MpcZ2Vector[] yiArray, MpcZ2Vector cin) throws MpcAbortException {
         checkInputs(xiArray, yiArray);
-        this.l = xiArray.length;
-        this.num = xiArray[0].getNum();
         MpcZ2Vector[] zs = new MpcZ2Vector[l + 1];
         MpcZ2Vector[] t = addOneBit(xiArray[l - 1], yiArray[l - 1], cin);
         zs[zs.length - 1] = t[0];

@@ -6,6 +6,7 @@ import edu.alibaba.mpc4j.common.rpc.MpcAbortException;
 
 import java.math.BigInteger;
 
+
 /**
  * Bitonic Sorter. Bitonic sort has a complexity of O(m log^2 m) comparisons with small constant, and is data-oblivious
  * since its control flow is independent of the input.
@@ -20,49 +21,47 @@ import java.math.BigInteger;
  * @author Li Peng
  * @date 2023/6/12
  */
-public class BitonicSorter extends AbstractSorter {
-    /**
-     * Z2 integer circuit.
-     */
-    private final Z2IntegerCircuit circuit;
+public class BitonicSorter extends AbstractSortingNetwork {
 
     public BitonicSorter(Z2IntegerCircuit circuit) {
         super(circuit);
-        this.circuit = circuit;
     }
 
     @Override
-    public void sort(MpcZ2Vector[][] xiArrays, MpcZ2Vector isAscending) throws MpcAbortException {
-        bitonicSort(xiArrays, 0, xiArrays.length, isAscending);
+    public void sort(MpcZ2Vector[][] xiArrays, MpcZ2Vector dir) throws MpcAbortException {
+        bitonicSort(xiArrays, 0, xiArrays.length, dir);
     }
 
-    private void bitonicSort(MpcZ2Vector[][] xiArrays, int start, int len, MpcZ2Vector isAscending) throws MpcAbortException {
+    private void bitonicSort(MpcZ2Vector[][] xiArrays, int start, int len, MpcZ2Vector dir) throws MpcAbortException {
         if (len > 1) {
+            // Divide the array into two partitions and then sort
+            // the partitions in different directions.
             int m = len / 2;
-            bitonicSort(xiArrays, start, m, party.not(isAscending));
-            bitonicSort(xiArrays, start + m, len - m, isAscending);
-            bitonicMerge(xiArrays, start, len, isAscending);
+            bitonicSort(xiArrays, start, m, party.not(dir));
+            bitonicSort(xiArrays, start + m, len - m, dir);
+            // Merge the results.
+            bitonicMerge(xiArrays, start, len, dir);
         }
     }
 
-    private void bitonicMerge(MpcZ2Vector[][] key, int start, int len, MpcZ2Vector isAscending) throws MpcAbortException {
+    /**
+     * Sorts a bitonic sequence in the specified order.
+     *
+     * @param xiArray items.
+     * @param start   start location
+     * @param len     length.
+     * @param dir     sorting order, ture for ascending.
+     * @throws MpcAbortException the protocol failure aborts.
+     */
+    private void bitonicMerge(MpcZ2Vector[][] xiArray, int start, int len, MpcZ2Vector dir) throws MpcAbortException {
         if (len > 1) {
+            // minimum power of two greater than or equal to len.
             int m = 1 << (BigInteger.valueOf(len - 1).bitLength() - 1);
             for (int i = start; i < start + len - m; i++) {
-                compare(key, i, i + m, isAscending);
+                compareExchange(xiArray, i, i + m, dir);
             }
-            bitonicMerge(key, start, m, isAscending);
-            bitonicMerge(key, start + m, len - m, isAscending);
+            bitonicMerge(xiArray, start, m, dir);
+            bitonicMerge(xiArray, start + m, len - m, dir);
         }
-    }
-
-    private void compare(MpcZ2Vector[][] key, int i, int j, MpcZ2Vector dir) throws MpcAbortException {
-        MpcZ2Vector swap = party.eq(party.not(circuit.leq(key[i], key[j])), dir);
-        MpcZ2Vector[] s = mux(key[j], key[i], swap);
-        s = party.xor(s, key[i]);
-        MpcZ2Vector[] ki = party.xor(key[j], s);
-        MpcZ2Vector[] kj = party.xor(key[i], s);
-        key[i] = ki;
-        key[j] = kj;
     }
 }

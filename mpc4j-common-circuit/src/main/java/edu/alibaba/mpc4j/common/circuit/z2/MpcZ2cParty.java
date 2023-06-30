@@ -95,7 +95,7 @@ public interface MpcZ2cParty {
     /**
      * inits the protocol.
      *
-     * @param updateBitNum   total number of bits for updates.
+     * @param updateBitNum total number of bits for updates.
      * @throws MpcAbortException if the protocol is abort.
      */
     void init(int updateBitNum) throws MpcAbortException;

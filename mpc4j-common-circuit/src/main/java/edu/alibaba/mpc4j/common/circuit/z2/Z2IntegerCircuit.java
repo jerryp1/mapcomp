@@ -161,12 +161,4 @@ public class Z2IntegerCircuit extends AbstractZ2Circuit {
     public Adder getAdder() {
         return adder;
     }
-
-    public Multiplier getMultiplier() {
-        return multiplier;
-    }
-
-    public Sorter getSorter() {
-        return sorter;
-    }
 }
