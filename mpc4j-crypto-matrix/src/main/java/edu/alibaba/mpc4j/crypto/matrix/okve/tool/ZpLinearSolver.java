@@ -9,7 +9,6 @@ import gnu.trove.set.TIntSet;
 import gnu.trove.set.hash.TIntHashSet;
 
 import java.math.BigInteger;
-import java.security.SecureRandom;
 import java.util.Arrays;
 
 import static cc.redberry.rings.linear.LinearSolver.SystemInfo.*;
@@ -29,18 +28,9 @@ public class ZpLinearSolver {
      * Zp instance
      */
     private final Zp zp;
-    /**
-     * the random state
-     */
-    private final SecureRandom secureRandom;
 
     public ZpLinearSolver(Zp zp) {
-        this(zp, new SecureRandom());
-    }
-
-    public ZpLinearSolver(Zp zp, SecureRandom secureRandom) {
         this.zp = zp;
-        this.secureRandom = secureRandom;
     }
 
     /**
