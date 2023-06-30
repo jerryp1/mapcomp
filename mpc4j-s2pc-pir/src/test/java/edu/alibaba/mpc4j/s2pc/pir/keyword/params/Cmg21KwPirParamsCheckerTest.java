@@ -1,6 +1,8 @@
-package edu.alibaba.mpc4j.s2pc.pir.keyword.cmg21;
+package edu.alibaba.mpc4j.s2pc.pir.keyword.params;
 
 import com.google.common.base.Preconditions;
+import edu.alibaba.mpc4j.s2pc.pir.keyword.cmg21.Cmg21KwPirParams;
+import edu.alibaba.mpc4j.s2pc.pir.keyword.cmg21.Cmg21KwPirParamsChecker;
 import org.apache.commons.lang3.StringUtils;
 import org.junit.Assert;
 import org.junit.Ignore;

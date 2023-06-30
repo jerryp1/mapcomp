@@ -1,10 +1,6 @@
-package edu.alibaba.mpc4j.s2pc.pir.index.constantweightpir;
+package edu.alibaba.mpc4j.s2pc.pir.index.params;
 
-
-import com.google.common.base.Preconditions;
-import edu.alibaba.mpc4j.common.rpc.Rpc;
-import edu.alibaba.mpc4j.common.rpc.RpcManager;
-import edu.alibaba.mpc4j.common.rpc.impl.memory.MemoryRpcManager;
+import edu.alibaba.mpc4j.common.rpc.test.AbstractTwoPartyPtoTest;
 import edu.alibaba.mpc4j.common.tool.CommonConstants;
 import edu.alibaba.mpc4j.crypto.matrix.database.NaiveDatabase;
 import edu.alibaba.mpc4j.s2pc.pir.PirUtils;
@@ -13,16 +9,10 @@ import edu.alibaba.mpc4j.s2pc.pir.index.single.constantweightpir.Mk22SingleIndex
 import edu.alibaba.mpc4j.s2pc.pir.index.single.constantweightpir.Mk22SingleIndexPirConfig;
 import edu.alibaba.mpc4j.s2pc.pir.index.single.constantweightpir.Mk22SingleIndexPirParams;
 import edu.alibaba.mpc4j.s2pc.pir.index.single.constantweightpir.Mk22SingleIndexPirServer;
-import org.apache.commons.lang3.StringUtils;
-import org.junit.After;
 import org.junit.Assert;
-import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
@@ -35,8 +25,7 @@ import java.util.Collection;
  * @date 2023/5/29
  */
 @RunWith(Parameterized.class)
-public class ConstantWeightPirTest {
-    private static final Logger LOGGER = LoggerFactory.getLogger(ConstantWeightPirTest.class);
+public class ConstantWeightPirParamsTest extends AbstractTwoPartyPtoTest {
     /**
      * default element bit length
      */
@@ -57,7 +46,7 @@ public class ConstantWeightPirTest {
     @Parameterized.Parameters(name = "{0}")
     public static Collection<Object[]> configurations() {
         Collection<Object[]> configurations = new ArrayList<>();
-        Mk22SingleIndexPirConfig config = new Mk22SingleIndexPirConfig();
+        Mk22SingleIndexPirConfig config = new Mk22SingleIndexPirConfig.Builder().build();
         // ConstantWeight PIR (CONSTANT_WEIGHT_EQ)
         configurations.add(new Object[]{
             SingleIndexPirFactory.SingleIndexPirType.CONSTANT_WEIGHT_PIR.name() + " (CONSTANT_WEIGHT_EQ)",
@@ -72,14 +61,6 @@ public class ConstantWeightPirTest {
     }
 
     /**
-     * server rpc
-     */
-    private final Rpc serverRpc;
-    /**
-     * client rpc
-     */
-    private final Rpc clientRpc;
-    /**
      * ConstantWeight PIR config
      */
     private final Mk22SingleIndexPirConfig indexPirConfig;
@@ -88,28 +69,11 @@ public class ConstantWeightPirTest {
      */
     private final Mk22SingleIndexPirParams indexPirParams;
 
-    public ConstantWeightPirTest(String name, Mk22SingleIndexPirConfig indexPirConfig,
-                                 Mk22SingleIndexPirParams indexPirParams) {
-        Preconditions.checkArgument(StringUtils.isNotBlank(name));
-        // We cannot use NettyRPC in the test case since it needs multi-thread connect / disconnect.
-        // In other word, we cannot connect / disconnect NettyRpc in @Before / @After, respectively.
-        RpcManager rpcManager = new MemoryRpcManager(2);
-        serverRpc = rpcManager.getRpc(0);
-        clientRpc = rpcManager.getRpc(1);
+    public ConstantWeightPirParamsTest(String name, Mk22SingleIndexPirConfig indexPirConfig,
+                                       Mk22SingleIndexPirParams indexPirParams) {
+        super(name);
         this.indexPirConfig = indexPirConfig;
         this.indexPirParams = indexPirParams;
-    }
-
-    @Before
-    public void connect() {
-        serverRpc.connect();
-        clientRpc.connect();
-    }
-
-    @After
-    public void disconnect() {
-        serverRpc.disconnect();
-        clientRpc.disconnect();
     }
 
     @Test
@@ -136,13 +100,13 @@ public class ConstantWeightPirTest {
                                       int elementBitLength, boolean parallel) {
         int retrievalSingleIndex = PirUtils.generateRetrievalIndex(SERVER_ELEMENT_SIZE);
         NaiveDatabase database = PirUtils.generateDataBase(SERVER_ELEMENT_SIZE, elementBitLength);
-        Mk22SingleIndexPirServer server = new Mk22SingleIndexPirServer(serverRpc, clientRpc.ownParty(), config);
-        Mk22SingleIndexPirClient client = new Mk22SingleIndexPirClient(clientRpc, serverRpc.ownParty(), config);
+        Mk22SingleIndexPirServer server = new Mk22SingleIndexPirServer(firstRpc, secondRpc.ownParty(), config);
+        Mk22SingleIndexPirClient client = new Mk22SingleIndexPirClient(secondRpc, firstRpc.ownParty(), config);
         // set parallel
         server.setParallel(parallel);
         client.setParallel(parallel);
-        ConstantWeightPirServerThread serverThread = new ConstantWeightPirServerThread(server, indexPirParams, database);
-        ConstantWeightPirClientThread clientThread = new ConstantWeightPirClientThread(
+        IndexPirParamsServerThread serverThread = new IndexPirParamsServerThread(server, indexPirParams, database);
+        IndexPirParamsClientThread clientThread = new IndexPirParamsClientThread(
             client, indexPirParams, retrievalSingleIndex, SERVER_ELEMENT_SIZE, elementBitLength
         );
         try {
@@ -150,17 +114,14 @@ public class ConstantWeightPirTest {
             clientThread.start();
             serverThread.join();
             clientThread.join();
-            serverRpc.reset();
-            clientRpc.reset();
-            LOGGER.info("Parameters: \n {}", indexPirParams.toString());
             // verify result
             ByteBuffer result = clientThread.getRetrievalResult();
             Assert.assertEquals(result, ByteBuffer.wrap(database.getBytesData(retrievalSingleIndex)));
-            LOGGER.info("Main: The Retrieval Result is Correct");
+            // destroy
+            new Thread(server::destroy).start();
+            new Thread(client::destroy).start();
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
-        server.destroy();
-        client.destroy();
     }
 }

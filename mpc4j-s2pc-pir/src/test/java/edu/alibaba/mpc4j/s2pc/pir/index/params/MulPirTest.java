@@ -1,9 +1,6 @@
-package edu.alibaba.mpc4j.s2pc.pir.index.mulpir;
+package edu.alibaba.mpc4j.s2pc.pir.index.params;
 
-import com.google.common.base.Preconditions;
-import edu.alibaba.mpc4j.common.rpc.Rpc;
-import edu.alibaba.mpc4j.common.rpc.RpcManager;
-import edu.alibaba.mpc4j.common.rpc.impl.memory.MemoryRpcManager;
+import edu.alibaba.mpc4j.common.rpc.test.AbstractTwoPartyPtoTest;
 import edu.alibaba.mpc4j.common.tool.CommonConstants;
 import edu.alibaba.mpc4j.crypto.matrix.database.NaiveDatabase;
 import edu.alibaba.mpc4j.s2pc.pir.PirUtils;
@@ -12,16 +9,10 @@ import edu.alibaba.mpc4j.s2pc.pir.index.single.mulpir.Alpr21SingleIndexPirClient
 import edu.alibaba.mpc4j.s2pc.pir.index.single.mulpir.Alpr21SingleIndexPirConfig;
 import edu.alibaba.mpc4j.s2pc.pir.index.single.mulpir.Alpr21SingleIndexPirParams;
 import edu.alibaba.mpc4j.s2pc.pir.index.single.mulpir.Alpr21SingleIndexPirServer;
-import org.apache.commons.lang3.StringUtils;
-import org.junit.After;
 import org.junit.Assert;
-import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
@@ -34,8 +25,7 @@ import java.util.Collection;
  * @date 2023/5/29
  */
 @RunWith(Parameterized.class)
-public class MulPirTest {
-    private static final Logger LOGGER = LoggerFactory.getLogger(MulPirTest.class);
+public class MulPirTest extends AbstractTwoPartyPtoTest {
     /**
      * default element bit length
      */
@@ -91,14 +81,6 @@ public class MulPirTest {
     }
 
     /**
-     * server rpc
-     */
-    private final Rpc serverRpc;
-    /**
-     * client rpc
-     */
-    private final Rpc clientRpc;
-    /**
      * Mul PIR config
      */
     private final Alpr21SingleIndexPirConfig indexPirConfig;
@@ -108,26 +90,9 @@ public class MulPirTest {
     private final Alpr21SingleIndexPirParams indexPirParams;
 
     public MulPirTest(String name, Alpr21SingleIndexPirConfig indexPirConfig, Alpr21SingleIndexPirParams indexPirParams) {
-        Preconditions.checkArgument(StringUtils.isNotBlank(name));
-        // We cannot use NettyRPC in the test case since it needs multi-thread connect / disconnect.
-        // In other word, we cannot connect / disconnect NettyRpc in @Before / @After, respectively.
-        RpcManager rpcManager = new MemoryRpcManager(2);
-        serverRpc = rpcManager.getRpc(0);
-        clientRpc = rpcManager.getRpc(1);
+        super(name);
         this.indexPirConfig = indexPirConfig;
         this.indexPirParams = indexPirParams;
-    }
-
-    @Before
-    public void connect() {
-        serverRpc.connect();
-        clientRpc.connect();
-    }
-
-    @After
-    public void disconnect() {
-        serverRpc.disconnect();
-        clientRpc.disconnect();
     }
 
     @Test
@@ -154,13 +119,13 @@ public class MulPirTest {
                            int elementBitLength, boolean parallel) {
         int retrievalSingleIndex = PirUtils.generateRetrievalIndex(SERVER_ELEMENT_SIZE);
         NaiveDatabase database = PirUtils.generateDataBase(SERVER_ELEMENT_SIZE, elementBitLength);
-        Alpr21SingleIndexPirServer server = new Alpr21SingleIndexPirServer(serverRpc, clientRpc.ownParty(), config);
-        Alpr21SingleIndexPirClient client = new Alpr21SingleIndexPirClient(clientRpc, serverRpc.ownParty(), config);
+        Alpr21SingleIndexPirServer server = new Alpr21SingleIndexPirServer(firstRpc, secondRpc.ownParty(), config);
+        Alpr21SingleIndexPirClient client = new Alpr21SingleIndexPirClient(secondRpc, firstRpc.ownParty(), config);
         // set parallel
         server.setParallel(parallel);
         client.setParallel(parallel);
-        MulPirServerThread serverThread = new MulPirServerThread(server, indexPirParams, database);
-        MulPirClientThread clientThread = new MulPirClientThread(
+        IndexPirParamsServerThread serverThread = new IndexPirParamsServerThread(server, indexPirParams, database);
+        IndexPirParamsClientThread clientThread = new IndexPirParamsClientThread(
             client, indexPirParams, retrievalSingleIndex, SERVER_ELEMENT_SIZE, elementBitLength
         );
         try {
@@ -168,17 +133,14 @@ public class MulPirTest {
             clientThread.start();
             serverThread.join();
             clientThread.join();
-            serverRpc.reset();
-            clientRpc.reset();
-            LOGGER.info("Parameters: \n {}", indexPirParams.toString());
             // verify result
             ByteBuffer result = clientThread.getRetrievalResult();
             Assert.assertEquals(result, ByteBuffer.wrap(database.getBytesData(retrievalSingleIndex)));
-            LOGGER.info("Main: The Retrieval Result is Correct");
+            // destroy
+            new Thread(server::destroy).start();
+            new Thread(client::destroy).start();
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
-        server.destroy();
-        client.destroy();
     }
 }

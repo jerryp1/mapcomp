@@ -66,15 +66,18 @@ public class KwPirClientThread extends Thread {
     public void run() {
         try {
             client.init(retrievalSize, serverElementSize, labelByteLength);
-            LOGGER.info("Client: The Offline Communication costs {}MB",
-                client.getRpc().getSendByteLength() * 1.0 / (1024 * 1024));
-            client.getRpc().reset();
+            LOGGER.info(
+                "Client: The Offline Communication costs {}MB", client.getRpc().getSendByteLength() * 1.0 / (1 << 20)
+            );
             client.getRpc().synchronize();
+            client.getRpc().reset();
+
             for (int i = 0; i < repeatTime; i++) {
                 retrievalResults.add(client.pir(retrievalSets.get(i)));
             }
-            LOGGER.info("Client: The Online Communication costs {}MB",
-                client.getRpc().getSendByteLength() * 1.0 / (1024 * 1024));
+            LOGGER.info(
+                "Client: The Online Communication costs {}MB", client.getRpc().getSendByteLength() * 1.0 / (1 << 20)
+            );
         } catch (MpcAbortException e) {
             e.printStackTrace();
         }

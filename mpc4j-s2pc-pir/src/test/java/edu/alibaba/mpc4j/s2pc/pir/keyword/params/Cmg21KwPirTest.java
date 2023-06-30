@@ -1,33 +1,27 @@
-package edu.alibaba.mpc4j.s2pc.pir.keyword.aaag22;
+package edu.alibaba.mpc4j.s2pc.pir.keyword.params;
 
-import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
-import edu.alibaba.mpc4j.common.rpc.Rpc;
-import edu.alibaba.mpc4j.common.rpc.RpcManager;
-import edu.alibaba.mpc4j.common.rpc.impl.memory.MemoryRpcManager;
+import edu.alibaba.mpc4j.common.rpc.test.AbstractTwoPartyPtoTest;
 import edu.alibaba.mpc4j.common.tool.CommonConstants;
 import edu.alibaba.mpc4j.s2pc.pir.PirUtils;
-import edu.alibaba.mpc4j.s2pc.pir.keyword.KwPirFactory;
-import org.apache.commons.lang3.StringUtils;
+import edu.alibaba.mpc4j.s2pc.pir.keyword.*;
+import edu.alibaba.mpc4j.s2pc.pir.keyword.cmg21.*;
 import org.junit.Assert;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.nio.ByteBuffer;
 import java.util.*;
 
 /**
- * AAAG22 keyword PIR test.
+ * CMG21 keyword PIR test.
  *
  * @author Liqiang Peng
- * @date 2023/6/20
+ * @date 2022/6/22
  */
 @RunWith(Parameterized.class)
-public class Aaag22KwPirTest {
-    private static final Logger LOGGER = LoggerFactory.getLogger(Aaag22KwPirTest.class);
+public class Cmg21KwPirTest extends AbstractTwoPartyPtoTest {
     /**
      * repeat time
      */
@@ -53,38 +47,30 @@ public class Aaag22KwPirTest {
     public static Collection<Object[]> configurations() {
         Collection<Object[]> configurations = new ArrayList<>();
 
+        // CMG21
         configurations.add(new Object[]{
-            KwPirFactory.KwPirType.CMG21.name(), new Aaag22KwPirConfig.Builder().build(),
-            Aaag22KwPirParams.DEFAULT_PARAMS
+            KwPirFactory.KwPirType.CMG21.name() + " max client set size 1", new Cmg21KwPirConfig.Builder().build(),
+            Cmg21KwPirParams.SERVER_1M_CLIENT_MAX_1
+        });
+        configurations.add(new Object[]{
+            KwPirFactory.KwPirType.CMG21.name() + " max client set size 4096", new Cmg21KwPirConfig.Builder().build(),
+            Cmg21KwPirParams.SERVER_1M_CLIENT_MAX_4096
         });
 
         return configurations;
     }
 
     /**
-     * server rpc
+     * CMG21 keyword PIR config
      */
-    private final Rpc serverRpc;
+    private final Cmg21KwPirConfig config;
     /**
-     * client rpc
+     * CMG21 keyword PIR params
      */
-    private final Rpc clientRpc;
-    /**
-     * AAAG22 keyword PIR config
-     */
-    private final Aaag22KwPirConfig config;
-    /**
-     * AAAG22 keyword PIR params
-     */
-    private final Aaag22KwPirParams params;
+    private final Cmg21KwPirParams params;
 
-    public Aaag22KwPirTest(String name, Aaag22KwPirConfig config, Aaag22KwPirParams params) {
-        Preconditions.checkArgument(StringUtils.isNotBlank(name));
-        // We cannot use NettyRPC in the test case since it needs multi-thread connect / disconnect.
-        // In other word, we cannot connect / disconnect NettyRpc in @Before / @After, respectively.
-        RpcManager rpcManager = new MemoryRpcManager(2);
-        serverRpc = rpcManager.getRpc(0);
-        clientRpc = rpcManager.getRpc(1);
+    public Cmg21KwPirTest(String name, Cmg21KwPirConfig config, Cmg21KwPirParams params) {
+        super(name);
         this.config = config;
         this.params = params;
     }
@@ -104,21 +90,20 @@ public class Aaag22KwPirTest {
         testPir(params, LONG_LABEL_BYTE_LENGTH, config, true);
     }
 
-    public void testPir(Aaag22KwPirParams kwPirParams, int labelByteLength, Aaag22KwPirConfig config, boolean parallel) {
+    public void testPir(Cmg21KwPirParams kwPirParams, int labelByteLength, Cmg21KwPirConfig config, boolean parallel) {
         int retrievalSize = kwPirParams.maxRetrievalSize();
         List<Set<ByteBuffer>> randomSets = PirUtils.generateByteBufferSets(SERVER_MAP_SIZE, retrievalSize, REPEAT_TIME);
-        // server key-value map
         Map<ByteBuffer, ByteBuffer> keywordLabelMap = PirUtils.generateKeywordByteBufferLabelMap(randomSets.get(0), labelByteLength);
         // create instances
-        Aaag22KwPirServer server = new Aaag22KwPirServer(serverRpc, clientRpc.ownParty(), config);
-        Aaag22KwPirClient client = new Aaag22KwPirClient(clientRpc, serverRpc.ownParty(), config);
+        Cmg21KwPirServer server = new Cmg21KwPirServer(firstRpc, secondRpc.ownParty(), config);
+        Cmg21KwPirClient client = new Cmg21KwPirClient(secondRpc, firstRpc.ownParty(), config);
         // set parallel
         server.setParallel(parallel);
         client.setParallel(parallel);
-        Aaag22KwPirServerThread serverThread = new Aaag22KwPirServerThread(
+        KwPirParamsServerThread serverThread = new KwPirParamsServerThread(
             server, kwPirParams, keywordLabelMap, labelByteLength, REPEAT_TIME
         );
-        Aaag22KwPirClientThread clientThread = new Aaag22KwPirClientThread(
+        KwPirParamsClientThread clientThread = new KwPirParamsClientThread(
             client, kwPirParams, Lists.newArrayList(randomSets.subList(1, REPEAT_TIME + 1)), SERVER_MAP_SIZE, labelByteLength
         );
         try {
@@ -126,24 +111,20 @@ public class Aaag22KwPirTest {
             clientThread.start();
             serverThread.join();
             clientThread.join();
-            serverRpc.reset();
-            clientRpc.reset();
             // verify result
             for (int index = 0; index < REPEAT_TIME; index++) {
                 Set<ByteBuffer> intersectionSet = new HashSet<>(randomSets.get(index + 1));
                 intersectionSet.retainAll(randomSets.get(0));
                 Map<ByteBuffer, ByteBuffer> pirResult = clientThread.getRetrievalResult(index);
                 Assert.assertEquals(intersectionSet.size(), pirResult.size());
-                pirResult.forEach((key, value) -> {
-                    Assert.assertEquals(value, keywordLabelMap.get(key));
-                    LOGGER.info("key {}, value{}", Arrays.toString(key.array()), Arrays.toString(value.array()));
-                });
+                pirResult.forEach((key, value) -> Assert.assertEquals(value, keywordLabelMap.get(key)));
             }
+            // destroy
+            new Thread(server::destroy).start();
+            new Thread(client::destroy).start();
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
-        server.destroy();
-        client.destroy();
     }
 }
 

@@ -32,11 +32,18 @@ public class IndexPirServerThread extends Thread {
     public void run() {
         try {
             server.init(database);
-            LOGGER.info("Server: The Offline Communication costs {}MB", server.getRpc().getSendByteLength() * 1.0 / (1024 * 1024));
-            server.getRpc().reset();
+            LOGGER.info(
+                "Server: The Offline Communication costs {}MB", server.getRpc().getSendByteLength() * 1.0 / (1 << 20)
+            );
             server.getRpc().synchronize();
+            server.getRpc().reset();
+
             server.pir();
-            LOGGER.info("Server: The Online Communication costs {}MB", server.getRpc().getSendByteLength() * 1.0 / (1024 * 1024));
+            LOGGER.info(
+                "Server: The Online Communication costs {}MB", server.getRpc().getSendByteLength() * 1.0 / (1 << 20)
+            );
+            server.getRpc().synchronize();
+            server.getRpc().reset();
         } catch (MpcAbortException e) {
             e.printStackTrace();
         }

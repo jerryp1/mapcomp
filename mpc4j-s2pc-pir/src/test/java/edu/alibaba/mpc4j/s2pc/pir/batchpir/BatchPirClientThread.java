@@ -61,14 +61,17 @@ public class BatchPirClientThread extends Thread {
         try {
             client.init(serverElementSize, elementBitLength, maxRetrievalSize);
             LOGGER.info(
-                "Client: Offline Communication costs {}MB", client.getRpc().getSendByteLength() * 1.0 / (1 << 20)
+                "Client: The Offline Communication costs {}MB", client.getRpc().getSendByteLength() * 1.0 / (1 << 20)
             );
             client.getRpc().synchronize();
             client.getRpc().reset();
+
             retrievalResult = client.pir(retrievalIndexList);
             LOGGER.info(
-                "Client: Online Communication costs {}MB", client.getRpc().getSendByteLength() * 1.0 / (1 << 20)
+                "Client: The Online Communication costs {}MB", client.getRpc().getSendByteLength() * 1.0 / (1 << 20)
             );
+            client.getRpc().synchronize();
+            client.getRpc().reset();
         } catch (MpcAbortException e) {
             e.printStackTrace();
         }

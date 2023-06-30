@@ -1,10 +1,6 @@
 package edu.alibaba.mpc4j.s2pc.pir.index;
 
-import com.google.common.base.Preconditions;
-import edu.alibaba.mpc4j.common.rpc.Rpc;
-import edu.alibaba.mpc4j.common.rpc.RpcManager;
-import edu.alibaba.mpc4j.common.rpc.impl.memory.MemoryRpcManager;
-import edu.alibaba.mpc4j.common.tool.CommonConstants;
+import edu.alibaba.mpc4j.common.rpc.test.AbstractTwoPartyPtoTest;
 import edu.alibaba.mpc4j.crypto.matrix.database.NaiveDatabase;
 import edu.alibaba.mpc4j.s2pc.pir.PirUtils;
 import edu.alibaba.mpc4j.s2pc.pir.index.single.SingleIndexPirConfig;
@@ -20,15 +16,10 @@ import edu.alibaba.mpc4j.s2pc.pir.index.single.SingleIndexPirServer;
 import edu.alibaba.mpc4j.s2pc.pir.index.single.simplepir.Hhcm23SimpleSingleIndexPirConfig;
 import edu.alibaba.mpc4j.s2pc.pir.index.single.vectorizedpir.Mr23SingleIndexPirConfig;
 import edu.alibaba.mpc4j.s2pc.pir.index.single.xpir.Mbfk16SingleIndexPirConfig;
-import org.apache.commons.lang3.StringUtils;
-import org.junit.After;
 import org.junit.Assert;
-import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
@@ -41,8 +32,7 @@ import java.util.Collection;
  * @date 2022/8/26
  */
 @RunWith(Parameterized.class)
-public class IndexPirTest {
-    private static final Logger LOGGER = LoggerFactory.getLogger(IndexPirTest.class);
+public class IndexPirTest extends AbstractTwoPartyPtoTest {
     /**
      * default element bit length
      */
@@ -92,48 +82,25 @@ public class IndexPirTest {
         });
         // Double PIR
         configurations.add(new Object[]{
-            SingleIndexPirFactory.SingleIndexPirType.DOUBLE_PIR.name(), new Hhcm23DoubleSingleIndexPirConfig()
+            SingleIndexPirFactory.SingleIndexPirType.DOUBLE_PIR.name(),
+            new Hhcm23DoubleSingleIndexPirConfig.Builder().build()
         });
         // constant weight PIR
         configurations.add(new Object[]{
-            SingleIndexPirFactory.SingleIndexPirType.CONSTANT_WEIGHT_PIR.name(), new Mk22SingleIndexPirConfig()
+            SingleIndexPirFactory.SingleIndexPirType.CONSTANT_WEIGHT_PIR.name(),
+            new Mk22SingleIndexPirConfig.Builder().build()
         });
         return configurations;
     }
 
-    /**
-     * server rpc
-     */
-    private final Rpc serverRpc;
-    /**
-     * client rpc
-     */
-    private final Rpc clientRpc;
     /**
      * index PIR config
      */
     private final SingleIndexPirConfig indexPirConfig;
 
     public IndexPirTest(String name, SingleIndexPirConfig indexPirConfig) {
-        Preconditions.checkArgument(StringUtils.isNotBlank(name));
-        // We cannot use NettyRPC in the test case since it needs multi-thread connect / disconnect.
-        // In other word, we cannot connect / disconnect NettyRpc in @Before / @After, respectively.
-        RpcManager rpcManager = new MemoryRpcManager(2);
-        serverRpc = rpcManager.getRpc(0);
-        clientRpc = rpcManager.getRpc(1);
+        super(name);
         this.indexPirConfig = indexPirConfig;
-    }
-
-    @Before
-    public void connect() {
-        serverRpc.connect();
-        clientRpc.connect();
-    }
-
-    @After
-    public void disconnect() {
-        serverRpc.disconnect();
-        clientRpc.disconnect();
     }
 
     @Test
@@ -149,8 +116,8 @@ public class IndexPirTest {
     public void testIndexPir(SingleIndexPirConfig config, int elementBitLength, int serverElementSize, boolean parallel) {
         int retrievalIndex = PirUtils.generateRetrievalIndex(SERVER_ELEMENT_SIZE);
         NaiveDatabase database = PirUtils.generateDataBase(SERVER_ELEMENT_SIZE, elementBitLength);
-        SingleIndexPirServer server = SingleIndexPirFactory.createServer(serverRpc, clientRpc.ownParty(), config);
-        SingleIndexPirClient client = SingleIndexPirFactory.createClient(clientRpc, serverRpc.ownParty(), config);
+        SingleIndexPirServer server = SingleIndexPirFactory.createServer(firstRpc, secondRpc.ownParty(), config);
+        SingleIndexPirClient client = SingleIndexPirFactory.createClient(secondRpc, firstRpc.ownParty(), config);
         server.setParallel(parallel);
         client.setParallel(parallel);
         IndexPirServerThread serverThread = new IndexPirServerThread(server, database);
@@ -162,16 +129,14 @@ public class IndexPirTest {
             clientThread.start();
             serverThread.join();
             clientThread.join();
-            serverRpc.reset();
-            clientRpc.reset();
             // verify result
             ByteBuffer result = clientThread.getRetrievalResult();
             Assert.assertEquals(result, ByteBuffer.wrap(database.getBytesData(retrievalIndex)));
-            LOGGER.info("Main: The Retrieval Result is Correct");
+            // destroy
+            new Thread(server::destroy).start();
+            new Thread(client::destroy).start();
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
-        server.destroy();
-        client.destroy();
     }
 }

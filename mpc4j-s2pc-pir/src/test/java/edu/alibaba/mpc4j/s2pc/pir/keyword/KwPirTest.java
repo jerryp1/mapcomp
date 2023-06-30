@@ -1,21 +1,15 @@
 package edu.alibaba.mpc4j.s2pc.pir.keyword;
 
-import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
-import edu.alibaba.mpc4j.common.rpc.Rpc;
-import edu.alibaba.mpc4j.common.rpc.RpcManager;
-import edu.alibaba.mpc4j.common.rpc.impl.memory.MemoryRpcManager;
+import edu.alibaba.mpc4j.common.rpc.test.AbstractTwoPartyPtoTest;
 import edu.alibaba.mpc4j.common.tool.CommonConstants;
 import edu.alibaba.mpc4j.s2pc.pir.PirUtils;
 import edu.alibaba.mpc4j.s2pc.pir.keyword.aaag22.Aaag22KwPirConfig;
 import edu.alibaba.mpc4j.s2pc.pir.keyword.cmg21.Cmg21KwPirConfig;
-import org.apache.commons.lang3.StringUtils;
 import org.junit.Assert;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.nio.ByteBuffer;
 import java.util.*;
@@ -28,8 +22,7 @@ import java.util.List;
  * @date 2022/6/22
  */
 @RunWith(Parameterized.class)
-public class KwPirTest {
-    private static final Logger LOGGER = LoggerFactory.getLogger(KwPirTest.class);
+public class KwPirTest extends AbstractTwoPartyPtoTest {
     /**
      * repeat time
      */
@@ -72,25 +65,12 @@ public class KwPirTest {
     }
 
     /**
-     * server rpc
-     */
-    private final Rpc serverRpc;
-    /**
-     * client rpc
-     */
-    private final Rpc clientRpc;
-    /**
      * keyword PIR config
      */
     private final KwPirConfig config;
 
     public KwPirTest(String name, KwPirConfig config) {
-        Preconditions.checkArgument(StringUtils.isNotBlank(name));
-        // We cannot use NettyRPC in the test case since it needs multi-thread connect / disconnect.
-        // In other word, we cannot connect / disconnect NettyRpc in @Before / @After, respectively.
-        RpcManager rpcManager = new MemoryRpcManager(2);
-        serverRpc = rpcManager.getRpc(0);
-        clientRpc = rpcManager.getRpc(1);
+        super(name);
         this.config = config;
     }
 
@@ -115,8 +95,8 @@ public class KwPirTest {
             randomSets.get(0), labelByteLength
         );
         // create instances
-        KwPirServer server = KwPirFactory.createServer(serverRpc, clientRpc.ownParty(), config);
-        KwPirClient client = KwPirFactory.createClient(clientRpc, serverRpc.ownParty(), config);
+        KwPirServer server = KwPirFactory.createServer(firstRpc, secondRpc.ownParty(), config);
+        KwPirClient client = KwPirFactory.createClient(secondRpc, firstRpc.ownParty(), config);
         // set parallel
         server.setParallel(parallel);
         client.setParallel(parallel);
@@ -131,23 +111,19 @@ public class KwPirTest {
             clientThread.start();
             serverThread.join();
             clientThread.join();
-            serverRpc.reset();
-            clientRpc.reset();
             // verify result
             for (int index = 0; index < REPEAT_TIME; index++) {
                 Set<ByteBuffer> intersectionSet = new HashSet<>(randomSets.get(index + 1));
                 intersectionSet.retainAll(randomSets.get(0));
                 Map<ByteBuffer, ByteBuffer> pirResult = clientThread.getRetrievalResult(index);
                 Assert.assertEquals(intersectionSet.size(), pirResult.size());
-                pirResult.forEach((key, value) -> {
-                    Assert.assertEquals(value, keywordLabelMap.get(key));
-                    LOGGER.info("key {}, value{}", Arrays.toString(key.array()), Arrays.toString(value.array()));
-                });
+                pirResult.forEach((key, value) -> Assert.assertEquals(value, keywordLabelMap.get(key)));
             }
+            // destroy
+            new Thread(server::destroy).start();
+            new Thread(client::destroy).start();
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
-        server.destroy();
-        client.destroy();
     }
 }

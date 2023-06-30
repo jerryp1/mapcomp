@@ -1,9 +1,6 @@
-package edu.alibaba.mpc4j.s2pc.pir.index.sealpir;
+package edu.alibaba.mpc4j.s2pc.pir.index.params;
 
-import com.google.common.base.Preconditions;
-import edu.alibaba.mpc4j.common.rpc.Rpc;
-import edu.alibaba.mpc4j.common.rpc.RpcManager;
-import edu.alibaba.mpc4j.common.rpc.impl.memory.MemoryRpcManager;
+import edu.alibaba.mpc4j.common.rpc.test.AbstractTwoPartyPtoTest;
 import edu.alibaba.mpc4j.common.tool.CommonConstants;
 import edu.alibaba.mpc4j.crypto.matrix.database.NaiveDatabase;
 import edu.alibaba.mpc4j.s2pc.pir.PirUtils;
@@ -12,15 +9,10 @@ import edu.alibaba.mpc4j.s2pc.pir.index.single.sealpir.Acls18SingleIndexPirClien
 import edu.alibaba.mpc4j.s2pc.pir.index.single.sealpir.Acls18SingleIndexPirConfig;
 import edu.alibaba.mpc4j.s2pc.pir.index.single.sealpir.Acls18SingleIndexPirParams;
 import edu.alibaba.mpc4j.s2pc.pir.index.single.sealpir.Acls18SingleIndexPirServer;
-import org.apache.commons.lang3.StringUtils;
-import org.junit.After;
 import org.junit.Assert;
-import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
@@ -33,8 +25,7 @@ import java.util.Collection;
  * @date 2022/8/26
  */
 @RunWith(Parameterized.class)
-public class SealPirTest {
-    private static final Logger LOGGER = LoggerFactory.getLogger(SealPirTest.class);
+public class SealPirTest extends AbstractTwoPartyPtoTest {
     /**
      * default element bit length
      */
@@ -98,14 +89,6 @@ public class SealPirTest {
     }
 
     /**
-     * server rpc
-     */
-    private final Rpc serverRpc;
-    /**
-     * client rpc
-     */
-    private final Rpc clientRpc;
-    /**
      * SEAL PIR config
      */
     private final Acls18SingleIndexPirConfig indexPirConfig;
@@ -115,26 +98,9 @@ public class SealPirTest {
     private final Acls18SingleIndexPirParams indexPirParams;
 
     public SealPirTest(String name, Acls18SingleIndexPirConfig indexPirConfig, Acls18SingleIndexPirParams indexPirParams) {
-        Preconditions.checkArgument(StringUtils.isNotBlank(name));
-        // We cannot use NettyRPC in the test case since it needs multi-thread connect / disconnect.
-        // In other word, we cannot connect / disconnect NettyRpc in @Before / @After, respectively.
-        RpcManager rpcManager = new MemoryRpcManager(2);
-        serverRpc = rpcManager.getRpc(0);
-        clientRpc = rpcManager.getRpc(1);
+        super(name);
         this.indexPirConfig = indexPirConfig;
         this.indexPirParams = indexPirParams;
-    }
-
-    @Before
-    public void connect() {
-        serverRpc.connect();
-        clientRpc.connect();
-    }
-
-    @After
-    public void disconnect() {
-        serverRpc.disconnect();
-        clientRpc.disconnect();
     }
 
     @Test
@@ -161,13 +127,13 @@ public class SealPirTest {
                             int elementBitLength, boolean parallel) {
         int retrievalIndex = PirUtils.generateRetrievalIndex(SERVER_ELEMENT_SIZE);
         NaiveDatabase database = PirUtils.generateDataBase(SERVER_ELEMENT_SIZE, elementBitLength);
-        Acls18SingleIndexPirServer server = new Acls18SingleIndexPirServer(serverRpc, clientRpc.ownParty(), config);
-        Acls18SingleIndexPirClient client = new Acls18SingleIndexPirClient(clientRpc, serverRpc.ownParty(), config);
+        Acls18SingleIndexPirServer server = new Acls18SingleIndexPirServer(firstRpc, secondRpc.ownParty(), config);
+        Acls18SingleIndexPirClient client = new Acls18SingleIndexPirClient(secondRpc, firstRpc.ownParty(), config);
         // set parallel
         server.setParallel(parallel);
         client.setParallel(parallel);
-        SealPirServerThread serverThread = new SealPirServerThread(server, indexPirParams, database);
-        SealPirClientThread clientThread = new SealPirClientThread(
+        IndexPirParamsServerThread serverThread = new IndexPirParamsServerThread(server, indexPirParams, database);
+        IndexPirParamsClientThread clientThread = new IndexPirParamsClientThread(
             client, indexPirParams, retrievalIndex, SERVER_ELEMENT_SIZE, elementBitLength
         );
         try {
@@ -175,17 +141,14 @@ public class SealPirTest {
             clientThread.start();
             serverThread.join();
             clientThread.join();
-            serverRpc.reset();
-            clientRpc.reset();
-            LOGGER.info("Parameters: \n {}", indexPirParams.toString());
             // verify result
             ByteBuffer result = clientThread.getRetrievalResult();
             Assert.assertEquals(result, ByteBuffer.wrap(database.getBytesData(retrievalIndex)));
-            LOGGER.info("Main: The Retrieval Result is Correct");
+            // destroy
+            new Thread(server::destroy).start();
+            new Thread(client::destroy).start();
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
-        server.destroy();
-        client.destroy();
     }
 }

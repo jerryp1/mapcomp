@@ -1,6 +1,8 @@
-package edu.alibaba.mpc4j.s2pc.pir.keyword.cmg21;
+package edu.alibaba.mpc4j.s2pc.pir.keyword.params;
 
 import edu.alibaba.mpc4j.common.rpc.MpcAbortException;
+import edu.alibaba.mpc4j.s2pc.pir.keyword.KwPirClient;
+import edu.alibaba.mpc4j.s2pc.pir.keyword.KwPirParams;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -11,21 +13,21 @@ import java.util.Map;
 import java.util.Set;
 
 /**
- * CMG21 keyword PIR client thread.
+ * keyword PIR params client thread.
  *
- * @author Liqiang Peng
- * @date 2022/6/22
+ * @author Weiran Liu
+ * @date 2023/6/30
  */
-public class Cmg21KwPirClientThread extends Thread {
-    private static final Logger LOGGER = LoggerFactory.getLogger(Cmg21KwPirClientThread.class);
+public class KwPirParamsClientThread extends Thread {
+    private static final Logger LOGGER = LoggerFactory.getLogger(KwPirParamsClientThread.class);
     /**
-     * CMG21 keyword PIR client
+     * keyword PIR client
      */
-    private final Cmg21KwPirClient client;
+    private final KwPirClient client;
     /**
-     * CMG21 keyword PIR params
+     * keyword PIR params
      */
-    private final Cmg21KwPirParams kwPirParams;
+    private final KwPirParams kwPirParams;
     /**
      * label byte length
      */
@@ -47,8 +49,8 @@ public class Cmg21KwPirClientThread extends Thread {
      */
     private final int serverElementSize;
 
-    Cmg21KwPirClientThread(Cmg21KwPirClient client, Cmg21KwPirParams kwPirParams, List<Set<ByteBuffer>> retrievalSets,
-                           int serverElementSize, int labelByteLength) {
+    KwPirParamsClientThread(KwPirClient client, KwPirParams kwPirParams,
+                            List<Set<ByteBuffer>> retrievalSets, int serverElementSize, int labelByteLength) {
         this.client = client;
         this.kwPirParams = kwPirParams;
         this.retrievalSets = retrievalSets;
@@ -66,15 +68,20 @@ public class Cmg21KwPirClientThread extends Thread {
     public void run() {
         try {
             client.init(kwPirParams, serverElementSize, labelByteLength);
-            LOGGER.info("Client: The Offline Communication costs {}MB",
-                client.getRpc().getSendByteLength() * 1.0 / (1024 * 1024));
-            client.getRpc().reset();
+            LOGGER.info(
+                "Client: The Offline Communication costs {}MB", client.getRpc().getSendByteLength() * 1.0 / (1 << 20)
+            );
             client.getRpc().synchronize();
+            client.getRpc().reset();
+
             for (int i = 0; i < repeatTime; i++) {
                 retrievalResults.add(client.pir(retrievalSets.get(i)));
             }
-            LOGGER.info("Client: The Online Communication costs {}MB",
-                client.getRpc().getSendByteLength() * 1.0 / (1024 * 1024));
+            LOGGER.info(
+                "Client: The Online Communication costs {}MB", client.getRpc().getSendByteLength() * 1.0 / (1 << 20)
+            );
+            client.getRpc().synchronize();
+            client.getRpc().reset();
         } catch (MpcAbortException e) {
             e.printStackTrace();
         }

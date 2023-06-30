@@ -1,42 +1,43 @@
-package edu.alibaba.mpc4j.s2pc.pir.batchpir;
+package edu.alibaba.mpc4j.s2pc.pir.index.params;
 
 import edu.alibaba.mpc4j.common.rpc.MpcAbortException;
 import edu.alibaba.mpc4j.crypto.matrix.database.NaiveDatabase;
-import edu.alibaba.mpc4j.s2pc.pir.index.batch.BatchIndexPirServer;
+import edu.alibaba.mpc4j.s2pc.pir.index.single.SingleIndexPirParams;
+import edu.alibaba.mpc4j.s2pc.pir.index.single.SingleIndexPirServer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * batch PIR server thread.
+ * Index PIR params server thread.
  *
- * @author Liqiang Peng
- * @date 2023/3/9
+ * @author Weiran Liu
+ * @date 2023/6/29
  */
-public class BatchPirServerThread extends Thread {
-    private static final Logger LOGGER = LoggerFactory.getLogger(BatchPirServerThread.class);
+public class IndexPirParamsServerThread extends Thread {
+    private static final Logger LOGGER = LoggerFactory.getLogger(IndexPirParamsServerThread.class);
     /**
-     * batch PIR server
+     * index PIR server
      */
-    private final BatchIndexPirServer server;
+    private final SingleIndexPirServer server;
+    /**
+     * index PIR params
+     */
+    private final SingleIndexPirParams indexPirParams;
     /**
      * database
      */
     private final NaiveDatabase database;
-    /**
-     * max retrieval size
-     */
-    private final int maxRetrievalSize;
 
-    BatchPirServerThread(BatchIndexPirServer server, NaiveDatabase database, int maxRetrievalSize) {
+    IndexPirParamsServerThread(SingleIndexPirServer server, SingleIndexPirParams indexPirParams, NaiveDatabase database) {
         this.server = server;
+        this.indexPirParams = indexPirParams;
         this.database = database;
-        this.maxRetrievalSize = maxRetrievalSize;
     }
 
     @Override
     public void run() {
         try {
-            server.init(database, maxRetrievalSize);
+            server.init(indexPirParams, database);
             LOGGER.info(
                 "Server: The Offline Communication costs {}MB", server.getRpc().getSendByteLength() * 1.0 / (1 << 20)
             );

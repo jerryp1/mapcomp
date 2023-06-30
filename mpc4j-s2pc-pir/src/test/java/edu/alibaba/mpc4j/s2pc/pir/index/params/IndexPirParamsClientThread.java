@@ -1,24 +1,29 @@
-package edu.alibaba.mpc4j.s2pc.pir.index;
+package edu.alibaba.mpc4j.s2pc.pir.index.params;
 
 import edu.alibaba.mpc4j.common.rpc.MpcAbortException;
 import edu.alibaba.mpc4j.s2pc.pir.index.single.SingleIndexPirClient;
+import edu.alibaba.mpc4j.s2pc.pir.index.single.SingleIndexPirParams;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.nio.ByteBuffer;
 
 /**
- * Index PIR client thread.
+ * Index PIR params client thread.
  *
- * @author Liqiang Peng
- * @date 2022/8/26
+ * @author Weiran Liu
+ * @date 2023/3/29
  */
-public class IndexPirClientThread extends Thread {
-    private static final Logger LOGGER = LoggerFactory.getLogger(IndexPirClientThread.class);
+public class IndexPirParamsClientThread extends Thread {
+    private static final Logger LOGGER = LoggerFactory.getLogger(IndexPirParamsClientThread.class);
     /**
      * index PIR client
      */
     private final SingleIndexPirClient client;
+    /**
+     * index PIR params
+     */
+    private final SingleIndexPirParams indexPirParams;
     /**
      * element bit length
      */
@@ -36,8 +41,10 @@ public class IndexPirClientThread extends Thread {
      */
     private ByteBuffer indexPirResult;
 
-    IndexPirClientThread(SingleIndexPirClient client, int retrievalIndex, int serverElementSize, int elementBitLength) {
+    IndexPirParamsClientThread(SingleIndexPirClient client, SingleIndexPirParams indexPirParams,
+                               int retrievalIndex, int serverElementSize, int elementBitLength) {
         this.client = client;
+        this.indexPirParams = indexPirParams;
         this.retrievalIndex = retrievalIndex;
         this.serverElementSize = serverElementSize;
         this.elementBitLength = elementBitLength;
@@ -50,7 +57,7 @@ public class IndexPirClientThread extends Thread {
     @Override
     public void run() {
         try {
-            client.init(serverElementSize, elementBitLength);
+            client.init(indexPirParams, serverElementSize, elementBitLength);
             LOGGER.info(
                 "Client: The Offline Communication costs {}MB", client.getRpc().getSendByteLength() * 1.0 / (1 << 20)
             );
