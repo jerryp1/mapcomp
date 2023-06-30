@@ -39,7 +39,7 @@ public class BatchIndexPirConfigUtils {
     }
 
     private static BatchIndexPirConfig createMr23BatchIndexPirConfig() {
-        return new Mr23BatchIndexPirConfig();
+        return new Mr23BatchIndexPirConfig.Builder().build();
     }
 
     private static BatchIndexPirConfig createLpzg24BatchIndexPirConfig() {

@@ -3,7 +3,7 @@ package edu.alibaba.mpc4j.s2pc.opf.mqrpmt.gmr21;
 import edu.alibaba.mpc4j.common.rpc.desc.SecurityModel;
 import edu.alibaba.mpc4j.common.rpc.pto.AbstractMultiPartyPtoConfig;
 import edu.alibaba.mpc4j.common.tool.hashbin.object.cuckoo.CuckooHashBinFactory.CuckooHashBinType;
-import edu.alibaba.mpc4j.common.tool.okve.okvs.OkvsFactory.OkvsType;
+import edu.alibaba.mpc4j.crypto.matrix.okve.okvs.OkvsFactory.OkvsType;
 import edu.alibaba.mpc4j.s2pc.opf.mqrpmt.MqRpmtConfig;
 import edu.alibaba.mpc4j.s2pc.opf.mqrpmt.MqRpmtFactory;
 import edu.alibaba.mpc4j.s2pc.opf.oprf.OprfConfig;
@@ -95,10 +95,10 @@ public class Gmr21MqRpmtConfig extends AbstractMultiPartyPtoConfig implements Mq
          */
         private CuckooHashBinType cuckooHashBinType;
 
-        public Builder() {
+        public Builder(boolean silent) {
             cuckooHashOprfConfig = OprfFactory.createOprfDefaultConfig(SecurityModel.SEMI_HONEST);
             peqtOprfConfig = OprfFactory.createOprfDefaultConfig(SecurityModel.SEMI_HONEST);
-            osnConfig = OsnFactory.createDefaultConfig(SecurityModel.SEMI_HONEST, true);
+            osnConfig = OsnFactory.createDefaultConfig(SecurityModel.SEMI_HONEST, silent);
             okvsType = OkvsType.MEGA_BIN;
             // GMR21源代码使用普通布谷鸟哈希实现无贮存区布谷鸟哈希的功能，这样通信量可以更小一点
             cuckooHashBinType = CuckooHashBinType.NAIVE_3_HASH;

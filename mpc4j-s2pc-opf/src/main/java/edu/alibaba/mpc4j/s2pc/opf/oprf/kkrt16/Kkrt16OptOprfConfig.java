@@ -20,7 +20,7 @@ public class Kkrt16OptOprfConfig extends AbstractMultiPartyPtoConfig implements 
     private final CoreCotConfig coreCotConfig;
 
     private Kkrt16OptOprfConfig(Builder builder) {
-        super(SecurityModel.SEMI_HONEST);
+        super(SecurityModel.SEMI_HONEST, builder.coreCotConfig);
         coreCotConfig = builder.coreCotConfig;
     }
 

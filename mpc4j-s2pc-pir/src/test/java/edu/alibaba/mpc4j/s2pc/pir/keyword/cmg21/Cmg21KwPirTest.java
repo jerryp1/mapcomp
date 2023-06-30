@@ -5,6 +5,7 @@ import com.google.common.collect.Lists;
 import edu.alibaba.mpc4j.common.rpc.Rpc;
 import edu.alibaba.mpc4j.common.rpc.RpcManager;
 import edu.alibaba.mpc4j.common.rpc.impl.memory.MemoryRpcManager;
+import edu.alibaba.mpc4j.common.tool.CommonConstants;
 import edu.alibaba.mpc4j.s2pc.pir.PirUtils;
 import edu.alibaba.mpc4j.s2pc.pir.keyword.*;
 import org.apache.commons.lang3.StringUtils;
@@ -34,15 +35,15 @@ public class Cmg21KwPirTest {
     /**
      * short label byte length
      */
-    private static final int SHORT_LABEL_BYTE_LENGTH = 1;
+    private static final int SHORT_LABEL_BYTE_LENGTH = CommonConstants.STATS_BYTE_LENGTH;
     /**
      * default label byte length
      */
-    private static final int DEFAULT_LABEL_BYTE_LENGTH = 8;
+    private static final int DEFAULT_LABEL_BYTE_LENGTH = CommonConstants.BLOCK_BYTE_LENGTH;
     /**
      * long label byte length
      */
-    private static final int LONG_LABEL_BYTE_LENGTH = 128;
+    private static final int LONG_LABEL_BYTE_LENGTH = CommonConstants.STATS_BIT_LENGTH;
     /**
      * server element size
      */
@@ -110,36 +111,37 @@ public class Cmg21KwPirTest {
 
     public void testPir(Cmg21KwPirParams kwPirParams, int labelByteLength, Cmg21KwPirConfig config, boolean parallel) {
         int retrievalSize = kwPirParams.maxRetrievalSize();
-        List<Set<String>> randomSets = PirUtils.generateStringSets(SERVER_MAP_SIZE, retrievalSize, REPEAT_TIME);
-        Map<String, ByteBuffer> keywordLabelMap = PirUtils.generateKeywordLabelMap(randomSets.get(0), labelByteLength);
+        List<Set<ByteBuffer>> randomSets = PirUtils.generateByteBufferSets(SERVER_MAP_SIZE, retrievalSize, REPEAT_TIME);
+        Map<ByteBuffer, ByteBuffer> keywordLabelMap = PirUtils.generateKeywordByteBufferLabelMap(randomSets.get(0), labelByteLength);
         // create instances
-        Cmg21KwPirServer<String> server = new Cmg21KwPirServer<>(serverRpc, clientRpc.ownParty(), config);
-        Cmg21KwPirClient<String> client = new Cmg21KwPirClient<>(clientRpc, serverRpc.ownParty(), config);
+        Cmg21KwPirServer server = new Cmg21KwPirServer(serverRpc, clientRpc.ownParty(), config);
+        Cmg21KwPirClient client = new Cmg21KwPirClient(clientRpc, serverRpc.ownParty(), config);
         // set parallel
         server.setParallel(parallel);
         client.setParallel(parallel);
-        Cmg21KwPirServerThread<String> serverThread = new Cmg21KwPirServerThread<>(
+        Cmg21KwPirServerThread serverThread = new Cmg21KwPirServerThread(
             server, kwPirParams, keywordLabelMap, labelByteLength, REPEAT_TIME
         );
-        Cmg21KwPirClientThread<String> clientThread = new Cmg21KwPirClientThread<>(
-            client, kwPirParams, Lists.newArrayList(randomSets.subList(1, REPEAT_TIME + 1)), labelByteLength
+        Cmg21KwPirClientThread clientThread = new Cmg21KwPirClientThread(
+            client, kwPirParams, Lists.newArrayList(randomSets.subList(1, REPEAT_TIME + 1)), SERVER_MAP_SIZE, labelByteLength
         );
         try {
             serverThread.start();
             clientThread.start();
             serverThread.join();
             clientThread.join();
-            LOGGER.info("Server: The Communication costs {}MB", serverRpc.getSendByteLength() * 1.0 / (1024 * 1024));
             serverRpc.reset();
-            LOGGER.info("Client: The Communication costs {}MB", clientRpc.getSendByteLength() * 1.0 / (1024 * 1024));
             clientRpc.reset();
             // verify result
             for (int index = 0; index < REPEAT_TIME; index++) {
-                Set<String> intersectionSet = new HashSet<>(randomSets.get(index + 1));
+                Set<ByteBuffer> intersectionSet = new HashSet<>(randomSets.get(index + 1));
                 intersectionSet.retainAll(randomSets.get(0));
-                Map<String, ByteBuffer> pirResult = clientThread.getRetrievalResult(index);
+                Map<ByteBuffer, ByteBuffer> pirResult = clientThread.getRetrievalResult(index);
                 Assert.assertEquals(intersectionSet.size(), pirResult.size());
-                pirResult.forEach((key, value) -> Assert.assertEquals(value, keywordLabelMap.get(key)));
+                pirResult.forEach((key, value) -> {
+                    Assert.assertEquals(value, keywordLabelMap.get(key));
+                    LOGGER.info("key {}, value{}", Arrays.toString(key.array()), Arrays.toString(value.array()));
+                });
             }
         } catch (InterruptedException e) {
             e.printStackTrace();

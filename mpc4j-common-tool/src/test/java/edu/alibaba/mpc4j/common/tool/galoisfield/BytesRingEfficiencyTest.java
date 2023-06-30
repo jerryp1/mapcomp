@@ -47,7 +47,7 @@ public class BytesRingEfficiencyTest {
     /**
      * the GF2K test types
      */
-    private static final Gf2kType[] GF2K_TYPES = new Gf2kType[]{Gf2kType.BC, Gf2kType.NTL, Gf2kType.RINGS,};
+    private static final Gf2kType[] GF2K_TYPES = new Gf2kType[]{Gf2kType.NTL, Gf2kType.BC, Gf2kType.RINGS,};
     /**
      * the GF2E test types
      */
@@ -72,7 +72,7 @@ public class BytesRingEfficiencyTest {
             "                type", "         l",
             "   add(us)", "  addi(us)", "   neg(us)", "  negi(us)", "   sub(us)", "  subi(us)", "   mul(us)", "  muli(us)"
         );
-        int[] ls = new int[]{1, 2, 3, 4, 40, 62, 256};
+        int[] ls = new int[]{1, 2, 3, 4, 40, 62, 128, 256};
         for (int l : ls) {
             for (Gf2eType type : GF2E_TYPES) {
                 Gf2e gf2e = Gf2eFactory.createInstance(EnvType.STANDARD, type, l);

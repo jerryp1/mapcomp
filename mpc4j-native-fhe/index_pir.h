@@ -1,4 +1,9 @@
 /*
+ * @Description: 
+ * @Author: Qixian Zhou
+ * @Date: 2023-05-28 19:35:10
+ */
+/*
  * Created by pengliqiang on 2022/9/13.
  */
 
@@ -44,5 +49,25 @@ uint32_t get_number_of_bits(uint64_t number);
 
 Ciphertext get_sum(vector<Ciphertext> &query, Evaluator& evaluator, GaloisKeys &gal_keys, vector<Plaintext> &encoded_db,
                    uint32_t start, uint32_t end);
+
+// For MulPIR, reference: https://github.com/OpenMined/PIR/blob/master/pir/cpp/server.cpp#L148
+vector<Ciphertext> new_expand_query(const EncryptionParameters& parms, const std::vector<Ciphertext>& cts, uint32_t total_items,
+                                const GaloisKeys& galois_keys);
+// For MulPIR, reference: https://github.com/OpenMined/PIR/blob/master/pir/cpp/server.cpp#L106
+// ct is Single Ciphertext
+vector<Ciphertext> new_single_expand_query(const EncryptionParameters& parms, const Ciphertext& ct, uint32_t num_items,
+                                const GaloisKeys& galois_keys);
+
+
+// For MulPIR, reference:  https://github.com/OpenMined/PIR/blob/master/pir/cpp/database.cpp#L170
+vector<Ciphertext> multiply_mulpir( const EncryptionParameters& parms,  
+                                    const RelinKeys* const relin_keys, 
+                                    const vector<Plaintext>& database,
+                                    uint32_t database_it, 
+                                    vector<Ciphertext>& selection_vector,
+                                    uint32_t selection_vector_it, 
+                                    vector<uint32_t>& dimensions, 
+                                    uint32_t depth);
+
 
 #endif //MPC4J_NATIVE_FHE_INDEX_PIR_H

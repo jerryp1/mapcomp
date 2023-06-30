@@ -51,8 +51,7 @@ public class Egk20ZlEdaBitGenReceiver extends AbstractZlEdaBitGenParty {
 
     public Egk20ZlEdaBitGenReceiver(Rpc receiverPpc, Party senderParty, Party aiderParty, Egk20ZlEdaBitGenConfig config) {
         super(Egk20ZlEdaBitGenPtoDesc.getInstance(), receiverPpc, senderParty, config);
-        //TODO add aider
-        zlcReceiver = ZlcFactory.createReceiver(receiverPpc, senderParty, config.getZlcConfig());
+        zlcReceiver = ZlcFactory.createReceiver(receiverPpc, senderParty, aiderParty, config.getZlcConfig());
         addSubPtos(zlcReceiver);
         z2cReceiver = Z2cFactory.createReceiver(receiverPpc, senderParty, aiderParty, config.getZ2cConfig());
         addSubPtos(z2cReceiver);

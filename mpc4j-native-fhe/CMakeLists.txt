@@ -65,7 +65,8 @@ add_library(
         pir/edu_alibaba_mpc4j_s2pc_pir_index_single_vectorizedpir_Mr23SingleIndexPirNativeUtils.cpp
         pir/edu_alibaba_mpc4j_s2pc_pir_index_batch_psipir_Lpzl24BatchIndexPirNativeUtils.cpp
         pir/edu_alibaba_mpc4j_s2pc_pir_index_batch_vectorizedpir_Mr23BatchIndexPirNativeUtils.cpp
-        pir/edu_alibaba_mpc4j_s2pc_upso_upsi_cmg21_Cmg21UpsiNativeUtils.cpp)
+        pir/edu_alibaba_mpc4j_s2pc_upso_upsi_cmg21_Cmg21UpsiNativeUtils.cpp
+        pir/edu_alibaba_mpc4j_s2pc_pir_index_single_mulpir_Alpr21SingleIndexPirNativeUtils.cpp pir/edu_alibaba_mpc4j_s2pc_pir_keyword_aaag22_Aaag22KwPirNativeUtils.cpp)
 # 链接SEAL库
 target_link_libraries(mpc4j-native-fhe PUBLIC SEAL::seal_shared)
 #target_link_libraries(mpc4j-native-fhe PUBLIC SEAL::seal)

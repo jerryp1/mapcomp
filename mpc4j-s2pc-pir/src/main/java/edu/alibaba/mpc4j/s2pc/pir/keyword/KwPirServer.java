@@ -12,26 +12,28 @@ import java.util.Map;
  * @author Liqiang Peng
  * @date 2022/6/20
  */
-public interface KwPirServer<T> extends TwoPartyPto {
+public interface KwPirServer extends TwoPartyPto {
     /**
      * server initializes protocol.
      *
      * @param kwPirParams     keyword PIR params.
-     * @param keywordLabelMap keyword label map.
-     * @param labelByteLength label byte length.
+     * @param keyValueMap     key value map.
+     * @param valueByteLength value byte length.
      * @throws MpcAbortException the protocol failure aborts.
      */
-    void init(KwPirParams kwPirParams, Map<T, ByteBuffer> keywordLabelMap, int labelByteLength) throws MpcAbortException;
+    void init(KwPirParams kwPirParams, Map<ByteBuffer, ByteBuffer> keyValueMap, int valueByteLength)
+        throws MpcAbortException;
 
     /**
      * server initializes protocol.
      *
-     * @param keywordLabelMap  keyword label map.
+     * @param keyValueMap      key value map.
      * @param maxRetrievalSize max retrieval size.
-     * @param labelByteLength  label byte length.
+     * @param valueByteLength  value byte length.
      * @throws MpcAbortException the protocol failure aborts.
      */
-    void init(Map<T, ByteBuffer> keywordLabelMap, int maxRetrievalSize, int labelByteLength) throws MpcAbortException;
+    void init(Map<ByteBuffer, ByteBuffer> keyValueMap, int maxRetrievalSize, int valueByteLength)
+        throws MpcAbortException;
 
     /**
      * server executes protocol.

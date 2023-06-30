@@ -4,6 +4,7 @@ import com.google.common.base.Preconditions;
 import edu.alibaba.mpc4j.common.rpc.Rpc;
 import edu.alibaba.mpc4j.common.rpc.RpcManager;
 import edu.alibaba.mpc4j.common.rpc.impl.memory.MemoryRpcManager;
+import edu.alibaba.mpc4j.common.tool.CommonConstants;
 import edu.alibaba.mpc4j.crypto.matrix.database.NaiveDatabase;
 import edu.alibaba.mpc4j.s2pc.pir.PirUtils;
 import edu.alibaba.mpc4j.s2pc.pir.index.single.SingleIndexPirFactory;
@@ -35,26 +36,26 @@ import java.util.Collection;
 public class XPirTest {
     private static final Logger LOGGER = LoggerFactory.getLogger(XPirTest.class);
     /**
-     * default element byte length
+     * default element bit length
      */
-    private static final int DEFAULT_ELEMENT_BYTE_LENGTH = 64;
+    private static final int DEFAULT_ELEMENT_BIT_LENGTH = CommonConstants.BLOCK_BIT_LENGTH;
     /**
-     * large element byte length
+     * large element bit length
      */
-    private static final int LARGE_ELEMENT_BYTE_LENGTH = 30000;
+    private static final int LARGE_ELEMENT_BIT_LENGTH = 160000;
     /**
-     * small element byte length
+     * small element bit length
      */
-    private static final int SMALL_ELEMENT_BYTE_LENGTH = 8;
+    private static final int SMALL_ELEMENT_BIT_LENGTH = CommonConstants.STATS_BIT_LENGTH;
     /**
      * database size
      */
-    private static final int SERVER_ELEMENT_SIZE = 1 << 8;
+    private static final int SERVER_ELEMENT_SIZE = 1 << 12;
 
     @Parameterized.Parameters(name = "{0}")
     public static Collection<Object[]> configurations() {
         Collection<Object[]> configurations = new ArrayList<>();
-        Mbfk16SingleIndexPirConfig xpirConfig = new Mbfk16SingleIndexPirConfig();
+        Mbfk16SingleIndexPirConfig xpirConfig = new Mbfk16SingleIndexPirConfig.Builder().build();
         // XPIR (1-dimension)
         configurations.add(new Object[]{
             SingleIndexPirFactory.SingleIndexPirType.XPIR.name() + " (1-dimension)",
@@ -65,7 +66,25 @@ public class XPirTest {
                 1
             )
         });
+        configurations.add(new Object[]{
+            SingleIndexPirFactory.SingleIndexPirType.XPIR.name() + " (1-dimension)",
+            xpirConfig,
+            new Mbfk16SingleIndexPirParams(
+                8192,
+                20,
+                1
+            )
+        });
         // XPIR (2-dimension)
+        configurations.add(new Object[]{
+            SingleIndexPirFactory.SingleIndexPirType.XPIR.name() + " (2-dimension)",
+            xpirConfig,
+            new Mbfk16SingleIndexPirParams(
+                4096,
+                20,
+                2
+            )
+        });
         configurations.add(new Object[]{
             SingleIndexPirFactory.SingleIndexPirType.XPIR.name() + " (2-dimension)",
             xpirConfig,
@@ -120,35 +139,35 @@ public class XPirTest {
 
     @Test
     public void testXPir() {
-        testXPir(indexPirConfig, indexPirParams, DEFAULT_ELEMENT_BYTE_LENGTH, false);
+        testXPir(indexPirConfig, indexPirParams, DEFAULT_ELEMENT_BIT_LENGTH, false);
     }
 
     @Test
     public void testParallelXPir() {
-        testXPir(indexPirConfig, indexPirParams, DEFAULT_ELEMENT_BYTE_LENGTH, true);
+        testXPir(indexPirConfig, indexPirParams, DEFAULT_ELEMENT_BIT_LENGTH, true);
     }
 
     @Test
     public void testLargeElementXPir() {
-        testXPir(indexPirConfig, indexPirParams, LARGE_ELEMENT_BYTE_LENGTH, true);
+        testXPir(indexPirConfig, indexPirParams, LARGE_ELEMENT_BIT_LENGTH, true);
     }
 
     @Test
     public void testSmallElementXPir() {
-        testXPir(indexPirConfig, indexPirParams, SMALL_ELEMENT_BYTE_LENGTH, true);
+        testXPir(indexPirConfig, indexPirParams, SMALL_ELEMENT_BIT_LENGTH, true);
     }
 
     public void testXPir(Mbfk16SingleIndexPirConfig config, Mbfk16SingleIndexPirParams indexPirParams,
-                         int elementByteLength, boolean parallel) {
+                         int elementBitLength, boolean parallel) {
         int retrievalIndex = PirUtils.generateRetrievalIndex(SERVER_ELEMENT_SIZE);
-        NaiveDatabase database = PirUtils.generateDataBase(SERVER_ELEMENT_SIZE, elementByteLength * Byte.SIZE);
+        NaiveDatabase database = PirUtils.generateDataBase(SERVER_ELEMENT_SIZE, elementBitLength);
         Mbfk16SingleIndexPirServer server = new Mbfk16SingleIndexPirServer(serverRpc, clientRpc.ownParty(), config);
         Mbfk16SingleIndexPirClient client = new Mbfk16SingleIndexPirClient(clientRpc, serverRpc.ownParty(), config);
         server.setParallel(parallel);
         client.setParallel(parallel);
         XPirServerThread serverThread = new XPirServerThread(server, indexPirParams, database);
         XPirClientThread clientThread = new XPirClientThread(
-            client, indexPirParams, retrievalIndex, SERVER_ELEMENT_SIZE, elementByteLength
+            client, indexPirParams, retrievalIndex, SERVER_ELEMENT_SIZE, elementBitLength
         );
         try {
             serverThread.start();

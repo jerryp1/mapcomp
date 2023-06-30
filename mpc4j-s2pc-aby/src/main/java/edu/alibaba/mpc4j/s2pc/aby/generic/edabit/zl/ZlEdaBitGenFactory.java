@@ -64,7 +64,7 @@ public class ZlEdaBitGenFactory implements PtoFactory {
         //noinspection SwitchStatementWithTooFewBranches
         switch (type) {
             case EGK20:
-                return new Egk20ZlEdaBitGenSender(senderRpc, receiverParty, (Egk20ZlEdaBitGenConfig) config);
+                return new Egk20ZlEdaBitGenSender(senderRpc, receiverParty, aiderParty, (Egk20ZlEdaBitGenConfig) config);
             default:
                 throw new IllegalArgumentException("Invalid " + ZlEdaBitGenType.class.getSimpleName() + ": " + type.name());
         }

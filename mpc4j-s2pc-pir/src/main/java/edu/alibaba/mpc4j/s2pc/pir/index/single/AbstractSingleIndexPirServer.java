@@ -4,6 +4,7 @@ import edu.alibaba.mpc4j.common.rpc.Party;
 import edu.alibaba.mpc4j.common.rpc.Rpc;
 import edu.alibaba.mpc4j.common.rpc.desc.PtoDesc;
 import edu.alibaba.mpc4j.common.rpc.pto.AbstractTwoPartyPto;
+import edu.alibaba.mpc4j.common.tool.utils.CommonUtils;
 import edu.alibaba.mpc4j.crypto.matrix.database.NaiveDatabase;
 import edu.alibaba.mpc4j.crypto.matrix.database.ZlDatabase;
 
@@ -27,6 +28,10 @@ public abstract class AbstractSingleIndexPirServer extends AbstractTwoPartyPto i
      */
     protected int partitionSize;
     /**
+     * partition bit-length
+     */
+    protected int partitionBitLength;
+    /**
      * partition byte length
      */
     protected int partitionByteLength;
@@ -36,10 +41,11 @@ public abstract class AbstractSingleIndexPirServer extends AbstractTwoPartyPto i
         super(ptoDesc, serverRpc, clientParty, config);
     }
 
-    protected void setInitInput(NaiveDatabase database, int elementByteLength, int maxPartitionByteLength) {
+    protected void setInitInput(NaiveDatabase database, int elementBitLength, int maxPartitionBitLength) {
         num = database.rows();
-        partitionByteLength = Math.min(maxPartitionByteLength, elementByteLength);
-        databases = database.partitionZl(partitionByteLength * Byte.SIZE);
+        partitionBitLength = Math.min(maxPartitionBitLength, elementBitLength);
+        partitionByteLength = CommonUtils.getByteLength(partitionBitLength);
+        databases = database.partitionZl(partitionBitLength);
         partitionSize = databases.length;
         initState();
     }

@@ -8,11 +8,13 @@ import edu.alibaba.mpc4j.crypto.matrix.database.NaiveDatabase;
 import edu.alibaba.mpc4j.s2pc.pir.PirUtils;
 import edu.alibaba.mpc4j.s2pc.pir.index.single.SingleIndexPirConfig;
 import edu.alibaba.mpc4j.s2pc.pir.index.single.fastpir.Ayaa21SingleIndexPirConfig;
+import edu.alibaba.mpc4j.s2pc.pir.index.single.mulpir.Alpr21SingleIndexPirConfig;
 import edu.alibaba.mpc4j.s2pc.pir.index.single.onionpir.Mcr21SingleIndexPirConfig;
 import edu.alibaba.mpc4j.s2pc.pir.index.single.sealpir.Acls18SingleIndexPirConfig;
 import edu.alibaba.mpc4j.s2pc.pir.index.single.SingleIndexPirClient;
 import edu.alibaba.mpc4j.s2pc.pir.index.single.SingleIndexPirFactory;
 import edu.alibaba.mpc4j.s2pc.pir.index.single.SingleIndexPirServer;
+import edu.alibaba.mpc4j.s2pc.pir.index.single.simplepir.Hhcm23SimpleSingleIndexPirConfig;
 import edu.alibaba.mpc4j.s2pc.pir.index.single.vectorizedpir.Mr23SingleIndexPirConfig;
 import edu.alibaba.mpc4j.s2pc.pir.index.single.xpir.Mbfk16SingleIndexPirConfig;
 import org.apache.commons.lang3.StringUtils;
@@ -39,9 +41,9 @@ import java.util.Collection;
 public class IndexPirTest {
     private static final Logger LOGGER = LoggerFactory.getLogger(IndexPirTest.class);
     /**
-     * default element byte length
+     * default element bit length
      */
-    private static final int DEFAULT_ELEMENT_BYTE_LENGTH = Byte.SIZE;
+    private static final int DEFAULT_ELEMENT_BIT_LENGTH = Byte.SIZE;
     /**
      * server element size
      */
@@ -52,23 +54,38 @@ public class IndexPirTest {
         Collection<Object[]> configurations = new ArrayList<>();
         // XPIR
         configurations.add(new Object[]{
-            SingleIndexPirFactory.SingleIndexPirType.XPIR.name(), new Mbfk16SingleIndexPirConfig()
+            SingleIndexPirFactory.SingleIndexPirType.XPIR.name(),
+            new Mbfk16SingleIndexPirConfig.Builder().build()
         });
         // SEAL PIR
         configurations.add(new Object[]{
-            SingleIndexPirFactory.SingleIndexPirType.SEAL_PIR.name(), new Acls18SingleIndexPirConfig()
+            SingleIndexPirFactory.SingleIndexPirType.SEAL_PIR.name(),
+            new Acls18SingleIndexPirConfig.Builder().build()
         });
         // OnionPIR
         configurations.add(new Object[]{
-            SingleIndexPirFactory.SingleIndexPirType.ONION_PIR.name(), new Mcr21SingleIndexPirConfig()
+            SingleIndexPirFactory.SingleIndexPirType.ONION_PIR.name(),
+            new Mcr21SingleIndexPirConfig.Builder().build()
         });
         // FastPIR
         configurations.add(new Object[]{
-            SingleIndexPirFactory.SingleIndexPirType.FAST_PIR.name(), new Ayaa21SingleIndexPirConfig()
+            SingleIndexPirFactory.SingleIndexPirType.FAST_PIR.name(),
+            new Ayaa21SingleIndexPirConfig.Builder().build()
         });
         // Vectorized PIR
         configurations.add(new Object[]{
-            SingleIndexPirFactory.SingleIndexPirType.VECTORIZED_PIR.name(), new Mr23SingleIndexPirConfig()
+            SingleIndexPirFactory.SingleIndexPirType.VECTORIZED_PIR.name(),
+            new Mr23SingleIndexPirConfig.Builder().build()
+        });
+        // Mul PIR
+        configurations.add(new Object[]{
+            SingleIndexPirFactory.SingleIndexPirType.MUL_PIR.name(),
+            new Alpr21SingleIndexPirConfig.Builder().build()
+        });
+        // Simple PIR
+        configurations.add(new Object[]{
+            SingleIndexPirFactory.SingleIndexPirType.SIMPLE_PIR.name(),
+            new Hhcm23SimpleSingleIndexPirConfig.Builder().build()
         });
         return configurations;
     }
@@ -110,24 +127,24 @@ public class IndexPirTest {
 
     @Test
     public void testParallelIndexPir() {
-        testIndexPir(indexPirConfig, DEFAULT_ELEMENT_BYTE_LENGTH, SERVER_ELEMENT_SIZE, true);
+        testIndexPir(indexPirConfig, DEFAULT_ELEMENT_BIT_LENGTH, SERVER_ELEMENT_SIZE, true);
     }
 
     @Test
     public void testIndexPir() {
-        testIndexPir(indexPirConfig, DEFAULT_ELEMENT_BYTE_LENGTH, SERVER_ELEMENT_SIZE, false);
+        testIndexPir(indexPirConfig, DEFAULT_ELEMENT_BIT_LENGTH, SERVER_ELEMENT_SIZE, false);
     }
 
-    public void testIndexPir(SingleIndexPirConfig config, int elementByteLength, int serverElementSize, boolean parallel) {
+    public void testIndexPir(SingleIndexPirConfig config, int elementBitLength, int serverElementSize, boolean parallel) {
         int retrievalIndex = PirUtils.generateRetrievalIndex(SERVER_ELEMENT_SIZE);
-        NaiveDatabase database = PirUtils.generateDataBase(SERVER_ELEMENT_SIZE, elementByteLength * Byte.SIZE);
+        NaiveDatabase database = PirUtils.generateDataBase(SERVER_ELEMENT_SIZE, elementBitLength);
         SingleIndexPirServer server = SingleIndexPirFactory.createServer(serverRpc, clientRpc.ownParty(), config);
         SingleIndexPirClient client = SingleIndexPirFactory.createClient(clientRpc, serverRpc.ownParty(), config);
         server.setParallel(parallel);
         client.setParallel(parallel);
         IndexPirServerThread serverThread = new IndexPirServerThread(server, database);
         IndexPirClientThread clientThread = new IndexPirClientThread(
-            client, retrievalIndex, serverElementSize, elementByteLength
+            client, retrievalIndex, serverElementSize, elementBitLength
         );
         try {
             serverThread.start();

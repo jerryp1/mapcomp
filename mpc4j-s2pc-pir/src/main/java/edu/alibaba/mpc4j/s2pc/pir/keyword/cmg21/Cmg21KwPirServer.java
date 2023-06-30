@@ -40,7 +40,7 @@ import java.util.stream.Stream;
  * @author Liqiang Peng
  * @date 2022/6/20
  */
-public class Cmg21KwPirServer<T> extends AbstractKwPirServer<T> {
+public class Cmg21KwPirServer extends AbstractKwPirServer {
     /**
      * stream cipher
      */
@@ -89,7 +89,7 @@ public class Cmg21KwPirServer<T> extends AbstractKwPirServer<T> {
     }
 
     @Override
-    public void init(KwPirParams kwPirParams, Map<T, ByteBuffer> serverKeywordLabelMap, int labelByteLength) {
+    public void init(KwPirParams kwPirParams, Map<ByteBuffer, ByteBuffer> serverKeywordLabelMap, int labelByteLength) {
         setInitInput(serverKeywordLabelMap, labelByteLength);
         logPhaseInfo(PtoState.INIT_BEGIN);
 
@@ -113,10 +113,8 @@ public class Cmg21KwPirServer<T> extends AbstractKwPirServer<T> {
         List<ByteBuffer> keywordPrfs = computeKeywordPrf();
         Map<ByteBuffer, ByteBuffer> prfLabelMap = IntStream.range(0, keywordSize)
             .boxed()
-            .collect(Collectors.toMap(
-                keywordPrfs::get,
-                i -> serverKeywordLabelMap.get(byteArrayObjectMap.get(keywordList.get(i))),
-                (a, b) -> b)
+            .collect(
+                Collectors.toMap(keywordPrfs::get, i -> serverKeywordLabelMap.get(keywordList.get(i)), (a, b) -> b)
             );
         stopWatch.stop();
         long oprfTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
@@ -143,7 +141,7 @@ public class Cmg21KwPirServer<T> extends AbstractKwPirServer<T> {
     }
 
     @Override
-    public void init(Map<T, ByteBuffer> serverKeywordLabelMap, int maxRetrievalSize, int labelByteLength)
+    public void init(Map<ByteBuffer, ByteBuffer> serverKeywordLabelMap, int maxRetrievalSize, int labelByteLength)
         throws MpcAbortException {
         MathPreconditions.checkPositive("maxRetrievalSize", maxRetrievalSize);
         if (maxRetrievalSize > 1) {
@@ -172,10 +170,8 @@ public class Cmg21KwPirServer<T> extends AbstractKwPirServer<T> {
         List<ByteBuffer> keywordPrfs = computeKeywordPrf();
         Map<ByteBuffer, ByteBuffer> prfLabelMap = IntStream.range(0, keywordSize)
             .boxed()
-            .collect(Collectors.toMap(
-                keywordPrfs::get,
-                i -> serverKeywordLabelMap.get(byteArrayObjectMap.get(keywordList.get(i))),
-                (a, b) -> b)
+            .collect(
+                Collectors.toMap(keywordPrfs::get, i -> serverKeywordLabelMap.get(keywordList.get(i)), (a, b) -> b)
             );
         stopWatch.stop();
         long oprfTime = stopWatch.getTime(TimeUnit.MILLISECONDS);

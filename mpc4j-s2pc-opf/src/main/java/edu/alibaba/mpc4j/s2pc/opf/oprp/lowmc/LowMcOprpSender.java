@@ -48,6 +48,12 @@ public class LowMcOprpSender extends AbstractOprpSender {
         addSubPtos(z2cSender);
     }
 
+    public LowMcOprpSender(Rpc senderRpc, Party receiverParty, Party aiderParty, LowMcOprpConfig config) {
+        super(LowMcOprpPtoDesc.getInstance(), senderRpc, receiverParty, config);
+        z2cSender = Z2cFactory.createSender(senderRpc, receiverParty, aiderParty, config.getZ2cConfig());
+        addSubPtos(z2cSender);
+    }
+
     @Override
     public PrpType getPrpType() {
         return PrpType.JDK_LONGS_LOW_MC_20;
@@ -148,10 +154,10 @@ public class LowMcOprpSender extends AbstractOprpSender {
     private void extendKey(byte[] senderShareKeyBytes) {
         long[] senderShareKeyLongs = LongUtils.byteArrayToLongArray(senderShareKeyBytes);
         // 初始扩展密钥
-        initKeyShare = LowMcUtils.KEY_MATRICES[0].lmul(senderShareKeyLongs);
+        initKeyShare = LowMcUtils.KEY_MATRICES[0].leftMultiply(senderShareKeyLongs);
         // 根据轮数扩展密钥
         roundKeyShares = IntStream.range(0, LowMcUtils.ROUND)
-            .mapToObj(roundIndex -> LowMcUtils.KEY_MATRICES[roundIndex + 1].lmul(senderShareKeyLongs))
+            .mapToObj(roundIndex -> LowMcUtils.KEY_MATRICES[roundIndex + 1].leftMultiply(senderShareKeyLongs))
             .toArray(long[][]::new);
     }
 
@@ -248,7 +254,7 @@ public class LowMcOprpSender extends AbstractOprpSender {
         IntStream rowIndexIntStream = IntStream.range(0, batchSize);
         rowIndexIntStream = parallel ? rowIndexIntStream.parallel() : rowIndexIntStream;
         return rowIndexIntStream
-            .mapToObj(row -> LowMcUtils.LINEAR_MATRICES[roundIndex].lmul(states[row]))
+            .mapToObj(row -> LowMcUtils.LINEAR_MATRICES[roundIndex].leftMultiply(states[row]))
             .toArray(long[][]::new);
     }
 

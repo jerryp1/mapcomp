@@ -44,12 +44,12 @@ public class SpDpprfTest extends AbstractTwoPartyPtoTest {
 
         // YWL20 (semi-honest)
         configurations.add(new Object[]{
-            SpDpprfType.YWL20.name() + " (semi-honest)",
+            SpDpprfType.YWL20.name() + " (" + SecurityModel.SEMI_HONEST + ")",
             new Ywl20SpDpprfConfig.Builder(SecurityModel.SEMI_HONEST).build(),
         });
         // YWL20 (malicious)
         configurations.add(new Object[]{
-            SpDpprfType.YWL20.name() + " (malicious)",
+            SpDpprfType.YWL20.name() + " (" + SecurityModel.MALICIOUS + ")",
             new Ywl20SpDpprfConfig.Builder(SecurityModel.MALICIOUS).build(),
         });
 

@@ -181,8 +181,8 @@ public class Mr23SingleIndexPirServer extends AbstractSingleIndexPirServer {
 
     @Override
     public List<byte[][]> serverSetup(NaiveDatabase database) {
-        int maxPartitionByteLength = params.getPlainModulusBitLength() / Byte.SIZE;
-        setInitInput(database, database.getByteL(), maxPartitionByteLength);
+        int maxPartitionBitLength = params.getPlainModulusBitLength();
+        setInitInput(database, database.getL(), maxPartitionBitLength);
         assert params.getDimension() == 3;
         int product =
             params.getFirstTwoDimensionSize() * params.getFirstTwoDimensionSize() * params.getThirdDimensionSize();

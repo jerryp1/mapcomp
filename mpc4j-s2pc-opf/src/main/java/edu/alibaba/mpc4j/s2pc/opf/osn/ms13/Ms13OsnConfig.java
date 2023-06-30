@@ -39,8 +39,8 @@ public class Ms13OsnConfig extends AbstractMultiPartyPtoConfig implements OsnCon
          */
         private CotConfig cotConfig;
 
-        public Builder() {
-            cotConfig = CotFactory.createDefaultConfig(SecurityModel.SEMI_HONEST, true);
+        public Builder(boolean silent) {
+            cotConfig = CotFactory.createDefaultConfig(SecurityModel.SEMI_HONEST, silent);
         }
 
         public Builder setCotConfig(CotConfig cotConfig) {

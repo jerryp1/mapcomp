@@ -68,9 +68,9 @@ public class Jsz22SfsPsuConfig extends AbstractMultiPartyPtoConfig implements Ps
          */
         private CuckooHashBinType cuckooHashBinType;
 
-        public Builder() {
+        public Builder(boolean silent) {
             oprfConfig = OprfFactory.createOprfDefaultConfig(SecurityModel.SEMI_HONEST);
-            osnConfig = OsnFactory.createDefaultConfig(SecurityModel.SEMI_HONEST, true);
+            osnConfig = OsnFactory.createDefaultConfig(SecurityModel.SEMI_HONEST, silent);
             // 论文建议平衡场景下使用PSZ18的3哈希协议，非平衡场景下使用PSZ18的4哈希协议
             cuckooHashBinType = CuckooHashBinType.NAIVE_3_HASH;
         }

@@ -1,20 +1,14 @@
 package edu.alibaba.mpc4j.s2pc.opf.sqoprf;
 
-import com.google.common.base.Preconditions;
-import edu.alibaba.mpc4j.common.rpc.Rpc;
-import edu.alibaba.mpc4j.common.rpc.RpcManager;
 import edu.alibaba.mpc4j.common.rpc.desc.SecurityModel;
-import edu.alibaba.mpc4j.common.rpc.impl.memory.MemoryRpcManager;
+import edu.alibaba.mpc4j.common.rpc.test.AbstractTwoPartyPtoTest;
 import edu.alibaba.mpc4j.s2pc.opf.sqoprf.SqOprfFactory.SqOprfType;
 import edu.alibaba.mpc4j.s2pc.opf.sqoprf.nr04.Nr04EccSqOprfConfig;
 import edu.alibaba.mpc4j.s2pc.opf.sqoprf.pssw09.Pssw09SqOprfConfig;
 import edu.alibaba.mpc4j.s2pc.opf.sqoprf.ra17.Ra17ByteEccSqOprfConfig;
 import edu.alibaba.mpc4j.s2pc.opf.sqoprf.ra17.Ra17EccSqOprfConfig;
-import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.time.StopWatch;
-import org.junit.After;
 import org.junit.Assert;
-import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
@@ -22,7 +16,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.nio.ByteBuffer;
-import java.security.SecureRandom;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.concurrent.TimeUnit;
@@ -35,12 +28,8 @@ import java.util.stream.IntStream;
  * @date 2023/4/11
  */
 @RunWith(Parameterized.class)
-public class SqOprfTest {
+public class SqOprfTest extends AbstractTwoPartyPtoTest {
     private static final Logger LOGGER = LoggerFactory.getLogger(SqOprfTest.class);
-    /**
-     * the random state
-     */
-    private static final SecureRandom SECURE_RANDOM = new SecureRandom();
     /**
      * the default batch size
      */
@@ -65,61 +54,41 @@ public class SqOprfTest {
         });
         // NR04_ECC (uncompress)
         configurations.add(new Object[]{
-            SqOprfType.NR04_ECC.name() + " (uncompress)", new Nr04EccSqOprfConfig.Builder().build(),
+            SqOprfType.NR04_ECC.name() + " (uncompress)",
+            new Nr04EccSqOprfConfig.Builder().build(),
         });
         // NR04_ECC (compress)
         configurations.add(new Object[]{
-            SqOprfType.NR04_ECC.name() + " (compress)", new Nr04EccSqOprfConfig.Builder().setCompressEncode(true).build(),
+            SqOprfType.NR04_ECC.name() + " (compress)",
+            new Nr04EccSqOprfConfig.Builder().setCompressEncode(true).build(),
         });
         // RA17_BYTE_ECC (compress)
         configurations.add(new Object[]{
-            SqOprfType.RA17_BYTE_ECC.name(), new Ra17ByteEccSqOprfConfig.Builder().build(),
+            SqOprfType.RA17_BYTE_ECC.name(),
+            new Ra17ByteEccSqOprfConfig.Builder().build(),
         });
         // RA17_ECC (compress)
         configurations.add(new Object[]{
-            SqOprfType.RA17_ECC.name() + " (compress)", new Ra17EccSqOprfConfig.Builder().setCompressEncode(true).build(),
+            SqOprfType.RA17_ECC.name() + " (compress)",
+            new Ra17EccSqOprfConfig.Builder().setCompressEncode(true).build(),
         });
         // RA17_ECC (uncompress)
         configurations.add(new Object[]{
-            SqOprfType.RA17_ECC.name() + " (uncompress)", new Ra17EccSqOprfConfig.Builder().build(),
+            SqOprfType.RA17_ECC.name() + " (uncompress)",
+            new Ra17EccSqOprfConfig.Builder().build(),
         });
 
         return configurations;
     }
 
     /**
-     * sender RPC
-     */
-    private final Rpc senderRpc;
-    /**
-     * receiver RPC
-     */
-    private final Rpc receiverRpc;
-    /**
      * config
      */
     private final SqOprfConfig config;
 
     public SqOprfTest(String name, SqOprfConfig config) {
-        Preconditions.checkArgument(StringUtils.isNotBlank(name));
-        // We cannot use NettyRPC in the test case since it needs multi-thread connect / disconnect.
-        // In other word, we cannot connect / disconnect NettyRpc in @Before / @After, respectively.
-        RpcManager rpcManager = new MemoryRpcManager(2);
-        senderRpc = rpcManager.getRpc(0);
-        receiverRpc = rpcManager.getRpc(1);
+        super(name);
         this.config = config;
-    }
-
-    @Before
-    public void connect() {
-        senderRpc.connect();
-        receiverRpc.connect();
-    }
-
-    @After
-    public void disconnect() {
-        senderRpc.disconnect();
-        receiverRpc.disconnect();
     }
 
     @Test
@@ -163,8 +132,8 @@ public class SqOprfTest {
     }
 
     private void testPto(int batchSize, boolean parallel) {
-        SqOprfSender sender = SqOprfFactory.createSender(senderRpc, receiverRpc.ownParty(), config);
-        SqOprfReceiver receiver = SqOprfFactory.createReceiver(receiverRpc, senderRpc.ownParty(), config);
+        SqOprfSender sender = SqOprfFactory.createSender(firstRpc, secondRpc.ownParty(), config);
+        SqOprfReceiver receiver = SqOprfFactory.createReceiver(secondRpc, firstRpc.ownParty(), config);
         sender.setParallel(parallel);
         receiver.setParallel(parallel);
         int randomTaskId = Math.abs(SECURE_RANDOM.nextInt());
@@ -182,39 +151,31 @@ public class SqOprfTest {
             SqOprfSenderThread senderThread = new SqOprfSenderThread(sender, batchSize);
             SqOprfReceiverThread receiverThread = new SqOprfReceiverThread(receiver, inputs);
             StopWatch stopWatch = new StopWatch();
-            // execute the protocol
+            // start
             stopWatch.start();
             senderThread.start();
             receiverThread.start();
+            // stop
             senderThread.join();
             receiverThread.join();
             stopWatch.stop();
             long time = stopWatch.getTime(TimeUnit.MILLISECONDS);
             stopWatch.reset();
+            // verify
             SqOprfKey key = senderThread.getKey();
             SqOprfReceiverOutput receiverOutput = receiverThread.getReceiverOutput();
-            // 验证结果
             assertOutput(batchSize, key, receiverOutput);
-            LOGGER.info("Sender data_packet_num = {}, payload_bytes = {}B, send_bytes = {}B, time = {}ms",
-                senderRpc.getSendDataPacketNum(), senderRpc.getPayloadByteLength(), senderRpc.getSendByteLength(),
-                time
-            );
-            LOGGER.info("Receiver data_packet_num = {}, payload_bytes = {}B, send_bytes = {}B, time = {}ms",
-                receiverRpc.getSendDataPacketNum(), receiverRpc.getPayloadByteLength(), receiverRpc.getSendByteLength(),
-                time
-            );
-            senderRpc.reset();
-            receiverRpc.reset();
+            printAndResetRpc(time);
+            // destroy
+            new Thread(sender::destroy).start();
+            new Thread(receiver::destroy).start();
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
-        sender.destroy();
-        receiver.destroy();
     }
 
     private void assertOutput(int batchSize, SqOprfKey key, SqOprfReceiverOutput receiverOutput) {
         Assert.assertEquals(batchSize, receiverOutput.getBatchSize());
-
         Assert.assertEquals(key.getPrfByteLength(), receiverOutput.getPrfByteLength());
         int prfByteLength = key.getPrfByteLength();
         IntStream.range(0, batchSize).forEach(index -> {

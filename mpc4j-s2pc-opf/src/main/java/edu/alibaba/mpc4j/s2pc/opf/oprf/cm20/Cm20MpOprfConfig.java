@@ -20,7 +20,7 @@ public class Cm20MpOprfConfig extends AbstractMultiPartyPtoConfig implements MpO
     private final CoreCotConfig coreCotConfig;
 
     private Cm20MpOprfConfig(Builder builder) {
-        super(SecurityModel.SEMI_HONEST);
+        super(SecurityModel.SEMI_HONEST, builder.coreCotConfig);
         coreCotConfig = builder.coreCotConfig;
     }
 
