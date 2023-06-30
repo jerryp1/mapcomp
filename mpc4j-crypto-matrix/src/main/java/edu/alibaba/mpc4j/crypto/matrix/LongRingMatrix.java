@@ -1,7 +1,6 @@
-package edu.alibaba.mpc4j.crypto.matrix.matrix;
+package edu.alibaba.mpc4j.crypto.matrix;
 
 import edu.alibaba.mpc4j.crypto.matrix.vector.RingVector;
-import edu.alibaba.mpc4j.crypto.matrix.vector.Vector;
 
 /**
  * ring matrix.
@@ -9,7 +8,7 @@ import edu.alibaba.mpc4j.crypto.matrix.vector.Vector;
  * @author Liqiang Peng
  * @date 2023/5/23
  */
-public interface RingMatrix extends Matrix {
+public interface LongRingMatrix extends Matrix {
 
     /**
      * Get the element at position (i, j).
@@ -35,7 +34,7 @@ public interface RingMatrix extends Matrix {
      * @param n row num.
      * @return Appended matrix.
      */
-    RingMatrix appendZeros(int n);
+    LongRingMatrix appendZeros(int n);
 
     /**
      * Concat.
@@ -43,7 +42,7 @@ public interface RingMatrix extends Matrix {
      * @param other the other matrix.
      * @return the result.
      */
-    RingMatrix concat(RingMatrix other);
+    LongRingMatrix concat(LongRingMatrix other);
 
     /**
      * Addition.
@@ -58,7 +57,7 @@ public interface RingMatrix extends Matrix {
      * @param other the other matrix.
      * @return the result.
      */
-    RingMatrix matrixAdd(RingMatrix other);
+    LongRingMatrix matrixAdd(LongRingMatrix other);
 
     /**
      * Addition at position (i, j).
@@ -75,7 +74,7 @@ public interface RingMatrix extends Matrix {
      * @param other the other matrix.
      * @return the result.
      */
-    RingMatrix matrixSub(RingMatrix other);
+    LongRingMatrix matrixSub(LongRingMatrix other);
 
     /**
      * Subtraction.
@@ -90,7 +89,7 @@ public interface RingMatrix extends Matrix {
      * @param other the other matrix.
      * @return the result.
      */
-    RingMatrix matrixMul(RingMatrix other);
+    LongRingMatrix matrixMul(LongRingMatrix other);
 
     /**
      * Multiplication.
@@ -105,7 +104,7 @@ public interface RingMatrix extends Matrix {
      *
      * @return the result.
      */
-    RingMatrix transpose();
+    LongRingMatrix transpose();
 
     /**
      * Decompose the matrix base on p.
@@ -113,7 +112,7 @@ public interface RingMatrix extends Matrix {
      * @param p the modulo.
      * @return decomposed matrix.
      */
-    RingMatrix decompose(long p);
+    LongRingMatrix decompose(long p);
 
     /**
      * Recompose the matrix base on p.
@@ -121,5 +120,5 @@ public interface RingMatrix extends Matrix {
      * @param p the modulo.
      * @return recomposed matrix.
      */
-    RingMatrix recompose(long p);
+    LongRingMatrix recompose(long p);
 }

@@ -149,7 +149,11 @@ public class DenseZpMatrix implements ZpMatrix {
     /**
      * data
      */
-    protected BigInteger[][] data;
+    private BigInteger[][] data;
+    /**
+     * parallel
+     */
+    private boolean parallel;
 
     protected DenseZpMatrix(Zp zp, int rows, int columns) {
         this.zp = zp;
@@ -157,11 +161,12 @@ public class DenseZpMatrix implements ZpMatrix {
         this.columns = columns;
     }
 
-    /**
-     * Copies the matrix.
-     *
-     * @return the copied matrix.
-     */
+    @Override
+    public void setParallel(boolean parallel) {
+        this.parallel = parallel;
+    }
+
+    @Override
     public DenseZpMatrix copy() {
         return DenseZpMatrix.fromDenseUncheck(zp, BigIntegerUtils.clone(data));
     }
@@ -177,11 +182,13 @@ public class DenseZpMatrix implements ZpMatrix {
         MathPreconditions.checkEqual("this.rows", "that.rows", this.rows, that.getRows());
         MathPreconditions.checkEqual("this.columns", "that.columns", this.columns, that.getColumns());
         BigInteger[][] addData = new BigInteger[rows][columns];
-        for (int iRow = 0; iRow < rows; iRow++) {
+        IntStream rowIntStream = IntStream.range(0, rows);
+        rowIntStream = parallel ? rowIntStream.parallel() : rowIntStream;
+        rowIntStream.forEach(iRow -> {
             for (int iColumn = 0; iColumn < columns; iColumn++) {
                 addData[iRow][iColumn] = zp.add(data[iRow][iColumn], that.getEntry(iRow, iColumn));
             }
-        }
+        });
         return DenseZpMatrix.fromDenseUncheck(zp, addData);
     }
 
@@ -195,14 +202,16 @@ public class DenseZpMatrix implements ZpMatrix {
         int thatColumns = that.getColumns();
         MathPreconditions.checkEqual("this.columns", "that.rows", this.columns, that.getRows());
         BigInteger[][] mulData = new BigInteger[rows][thatColumns];
-        for (int row = 0; row < rows; row++) {
-            for (int column = 0; column < thatColumns; column++) {
-                mulData[row][column] = BigInteger.ZERO;
+        IntStream rowIntStream = IntStream.range(0, rows);
+        rowIntStream = parallel ? rowIntStream.parallel() : rowIntStream;
+        rowIntStream.forEach(iRow -> {
+            for (int iColumn = 0; iColumn < thatColumns; iColumn++) {
+                mulData[iRow][iColumn] = BigInteger.ZERO;
                 for (int index = 0; index < columns; index++) {
-                    mulData[row][column] = zp.add(mulData[row][column], zp.mul(data[row][index], that.getEntry(index, column)));
+                    mulData[iRow][iColumn] = zp.add(mulData[iRow][iColumn], zp.mul(data[iRow][index], that.getEntry(index, iColumn)));
                 }
             }
-        }
+        });
         return DenseZpMatrix.fromDenseUncheck(zp, mulData);
     }
 
@@ -213,11 +222,13 @@ public class DenseZpMatrix implements ZpMatrix {
      */
     public DenseZpMatrix transpose() {
         BigInteger[][] tData = new BigInteger[columns][rows];
-        for (int iRow = 0; iRow < rows; iRow++) {
+        IntStream rowIntStream = IntStream.range(0, rows);
+        rowIntStream = parallel ? rowIntStream.parallel() : rowIntStream;
+        rowIntStream.forEach(iRow -> {
             for (int iColumn = 0; iColumn < columns; iColumn++) {
                 tData[iColumn][iRow] = data[iRow][iColumn];
             }
-        }
+        });
         return DenseZpMatrix.fromDenseUncheck(zp, tData);
     }
 

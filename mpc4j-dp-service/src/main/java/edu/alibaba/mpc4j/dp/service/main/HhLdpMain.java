@@ -265,8 +265,8 @@ public class HhLdpMain {
         // create report file
         LOGGER.info("Create report file");
         String filePath = "".equals(reportFilePostfix)
-            ? TASK_TYPE_NAME + "_" + datasetName + "_" + testRound + ".txt"
-            : TASK_TYPE_NAME + "_" + datasetName + "_" + testRound + "_" + reportFilePostfix + ".txt";
+            ? TASK_TYPE_NAME + "_" + datasetName + "_" + testRound + ".output"
+            : TASK_TYPE_NAME + "_" + datasetName + "_" + testRound + "_" + reportFilePostfix + ".output";
         FileWriter fileWriter = new FileWriter(filePath);
         PrintWriter printWriter = new PrintWriter(fileWriter, true);
         // write warmup_percentage

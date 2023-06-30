@@ -122,13 +122,16 @@ We implement some Private Information Retrieval (PIR) protocols. We note that th
 
 ### Index PIR
 
-We re-implement FastPIR, OnionPIR, SealPIR, and XPIR in `mpc4j-s2pc-pir`. We note that we learned a lot from their original implementations. See [FastPIR](https://github.com/ishtiyaque/FastPIR), [Onion-PIR](https://github.com/mhmughees/Onion-PIR), [SealPIR](https://github.com/microsoft/SealPIR) and [XPIR](https://github.com/XPIR-team/XPIR) for more details.
+We re-implement many index PIR schemes in `mpc4j-s2pc-pir`. We note that we learned a lot from their original implementations.
 
 - Ahmad, Ishtiyaque, Yuntian Yang, Divyakant Agrawal, Amr El Abbadi, and Trinabh Gupta. Addra: Metadata-private Voice Communication over Fully Untrusted Infrastructure. OSDI 2021.
 - Mughees, Muhammad Haris, Hao Chen, and Ling Ren. OnionPIR: Response Efficient Single-server PIR. CCS 2021, ACM, pp. 2292-2306.
 - Angel, Sebastian, Hao Chen, Kim Laine, and Srinath Setty. PIR with Compressed Queries and Amortized Query Processing. S\&P 2018, IEEE, pp. 962-979.
 - Melchor, Carlos Aguilar, Joris Barrier, Laurent Fousse, and Marc-Olivier Killijian. XPIR: Private Information Retrieval for Everyone. PETS 2016, pp. 155-174.
 - Mughees, Muhammad Haris, and Ling Ren. Vectorized Batch Private Information Retrieval. S\&P 2023, IEEE.
+- Ali, Asra, Tancrede Lepoint, Sarvar Patel, Mariana Raykova, Phillipp Schoppmann, Karn Seth, and Kevin Yeo. Communication–computation Trade-offs in PIR. USENIX Security 2021, pp. 1811-1828.
+- Mahdavi, Rasoul Akhavan, and Florian Kerschbaum. Constant-weight PIR: Single-round Keyword PIR via Constant-weight Equality Operators. USENIX Security 2022, pp. 1723-1740.
+- Henzinger, Alexandra, Matthew M. Hong, Henry Corrigan-Gibbs, Sarah Meiklejohn, and Vinod Vaikuntanathan. One Server for the Price of Two: Simple and Fast Single-server Private Information Retrieval. USENIX Security 2023.
 
 ### Keyword PIR and Unbalanced PSI
 
@@ -137,6 +140,7 @@ We implement Keyword PIR (also known as Labeled PSI) in `mpc4j-s2pc-pir` and unb
 - Cong, Kelong, Radames Cruz Moreno, Mariana Botelho da Gama, Wei Dai, Ilia Iliashenko, Kim Laine, and Michael Rosenberg. Labeled PSI from Homomorphic Encryption with Reduced Computation and Communication. CCS 2021, ACM, pp. 1135-1150.
 - Chen, Hao, Zhicong Huang, Kim Laine, and Peter Rindal. Labeled PSI from Fully Homomorphic Encryption with Malicious Security. CCS 2018, ACM, pp. 1223-1237.
 - Chen, Hao, Kim Laine, and Peter Rindal. Fast Private Set Intersection from Homomorphic Encryption. CCS 2017, ACM, pp. 1243-1255.
+- Ahmad, Ishtiyaque, Divyakant Agrawal, Amr El Abbadi, and Trinabh Gupta. Pantheon: Private Retrieval from Public Key-Value Store. VLDB 2022, pp. 643-656.
 
 ## Private Set Operation
 

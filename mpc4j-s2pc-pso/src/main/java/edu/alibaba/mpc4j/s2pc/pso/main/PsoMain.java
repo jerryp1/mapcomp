@@ -37,7 +37,7 @@ public class PsoMain {
                 break;
             case PsuMain.PTO_TYPE_NAME:
                 PsuMain psuMain = new PsuMain(properties);
-                psuMain.run();
+                psuMain.runNetty();
                 break;
             default:
                 throw new IllegalArgumentException("Invalid pto_type: " + ptoType);

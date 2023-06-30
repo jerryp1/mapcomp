@@ -1,6 +1,7 @@
 package edu.alibaba.mpc4j.crypto.matrix.zp;
 
 import edu.alibaba.mpc4j.common.tool.galoisfield.zp.Zp;
+import edu.alibaba.mpc4j.crypto.matrix.Matrix;
 
 import java.math.BigInteger;
 
@@ -10,7 +11,7 @@ import java.math.BigInteger;
  * @author Weiran Liu
  * @date 2023/6/19
  */
-public interface ZpMatrix {
+public interface ZpMatrix extends Matrix {
     /**
      * Gets Zp instance.
      *
@@ -19,26 +20,12 @@ public interface ZpMatrix {
     Zp getZp();
 
     /**
-     * Gets the number of rows.
-     *
-     * @return the number of row.s
-     */
-    int getRows();
-
-    /**
      * Gets the assigned row.
      *
      * @param iRow row index.
      * @return the assigned row.
      */
     BigInteger[] getRow(int iRow);
-
-    /**
-     * Gets the number of columns.
-     *
-     * @return the number of columns.
-     */
-    int getColumns();
 
     /**
      * Gets the size. Note that only square matrix support this.

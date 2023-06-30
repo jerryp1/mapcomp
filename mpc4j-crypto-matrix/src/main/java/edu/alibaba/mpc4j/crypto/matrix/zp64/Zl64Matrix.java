@@ -1,7 +1,8 @@
-package edu.alibaba.mpc4j.crypto.matrix.matrix;
+package edu.alibaba.mpc4j.crypto.matrix.zp64;
 
 import edu.alibaba.mpc4j.common.tool.CommonConstants;
 import edu.alibaba.mpc4j.common.tool.galoisfield.zl64.Zl64;
+import edu.alibaba.mpc4j.crypto.matrix.LongRingMatrix;
 import edu.alibaba.mpc4j.crypto.matrix.vector.RingVector;
 import edu.alibaba.mpc4j.crypto.matrix.vector.Zl64Vector;
 
@@ -16,7 +17,7 @@ import java.util.stream.IntStream;
  * @author Liqiang Peng
  * @date 2023/5/23
  */
-public class Zl64Matrix implements RingMatrix {
+public class Zl64Matrix implements LongRingMatrix {
     /**
      * Zl instance
      */
@@ -137,7 +138,7 @@ public class Zl64Matrix implements RingMatrix {
     }
 
     @Override
-    public int getCols() {
+    public int getColumns() {
         return cols;
     }
 
@@ -159,11 +160,11 @@ public class Zl64Matrix implements RingMatrix {
     }
 
     @Override
-    public Zl64Matrix concat(RingMatrix other) {
+    public Zl64Matrix concat(LongRingMatrix other) {
         if (rows == 0 && cols == 0) {
             return (Zl64Matrix) other;
         }
-        assert cols == other.getCols();
+        assert cols == other.getColumns();
         Zl64Matrix that = (Zl64Matrix) other;
         long[] result = new long[(rows + that.rows) * cols];
         System.arraycopy(elements, 0, result, 0, rows * cols);
@@ -179,8 +180,8 @@ public class Zl64Matrix implements RingMatrix {
     }
 
     @Override
-    public Zl64Matrix matrixAdd(RingMatrix other) {
-        assert this.rows == other.getRows() && this.cols == other.getCols();
+    public Zl64Matrix matrixAdd(LongRingMatrix other) {
+        assert this.rows == other.getRows() && this.cols == other.getColumns();
         Zl64Matrix that = (Zl64Matrix) other;
         long[] result = new long[rows * cols];
         IntStream intStream = IntStream.range(0, rows * cols);
@@ -196,8 +197,8 @@ public class Zl64Matrix implements RingMatrix {
     }
 
     @Override
-    public Zl64Matrix matrixSub(RingMatrix other) {
-        assert this.rows == other.getRows() && this.cols == other.getCols();
+    public Zl64Matrix matrixSub(LongRingMatrix other) {
+        assert this.rows == other.getRows() && this.cols == other.getColumns();
         Zl64Matrix that = (Zl64Matrix) other;
         long[] result = new long[rows * cols];
         IntStream intStream = IntStream.range(0, rows * cols);
@@ -214,7 +215,7 @@ public class Zl64Matrix implements RingMatrix {
     }
 
     @Override
-    public Zl64Matrix matrixMul(RingMatrix other) {
+    public Zl64Matrix matrixMul(LongRingMatrix other) {
         Zl64Matrix that = (Zl64Matrix) other;
         if (that.cols == 1) {
             Zl64Vector vector = matrixMulVector(Zl64Vector.create(zl64, that.elements));

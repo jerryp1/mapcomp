@@ -30,12 +30,11 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 - `mpc4j-s2pc-pso`
   - We formalize and implement some PSI cardinality protocols, including EC-DH-based, DH-OPRF-based, and circuit-PSI-based.
   - We implement server-aided PSI protocols.
+- others
+  - We add test cases for PSU, PID and PMID.
 
 ### Changed
 
-- `all`
-  - We refine configs for multi-party protocols so that we can remove many duplicate codes.
-  - We refine test cases for multi-party protocols so tha we can remove many duplicate codes.
 - `mpc4j-common-tool`
   - We refine Filter implementations.
   - We refine implementations for sparse bit vector and sparse bit matrix.
@@ -44,6 +43,9 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
   - We remove number of bits / number of elements in general MPC.
 - `mpc4j-crypto-matrix`
     - We move OKVS implementations into `mpc4j-crypto-matrix`.
+- others
+  - We refine configs for multi-party protocols so that we can remove many duplicate codes.
+  - We refine test cases for multi-party protocols so tha we can remove many duplicate codes.
 
 ### Fixed
 

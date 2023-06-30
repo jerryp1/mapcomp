@@ -308,7 +308,7 @@ public class PirUtils {
      * @return server file name.
      */
     public static String getServerFileName(String prefix, int setSize, int elementBitLength) {
-        return prefix + "_" + elementBitLength + "_" + setSize + ".txt";
+        return prefix + "_" + elementBitLength + "_" + setSize + ".input";
     }
 
     /**
@@ -319,7 +319,7 @@ public class PirUtils {
      * @return client file name.
      */
     public static String getClientFileName(String prefix, int setSize) {
-        return prefix + "_" + setSize + ".txt";
+        return prefix + "_" + setSize + ".input";
     }
 
     /**

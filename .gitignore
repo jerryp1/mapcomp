@@ -19,3 +19,7 @@ cmake-build-debug/
 *.iws
 *.iml
 *.ipr
+
+### input and output
+*.input
+*.output

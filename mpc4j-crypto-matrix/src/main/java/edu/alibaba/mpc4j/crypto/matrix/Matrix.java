@@ -1,4 +1,4 @@
-package edu.alibaba.mpc4j.crypto.matrix.matrix;
+package edu.alibaba.mpc4j.crypto.matrix;
 
 /**
  * the matrix interface.
@@ -33,5 +33,5 @@ public interface Matrix {
      *
      * @return the cols of the matrix.
      */
-    int getCols();
+    int getColumns();
 }
