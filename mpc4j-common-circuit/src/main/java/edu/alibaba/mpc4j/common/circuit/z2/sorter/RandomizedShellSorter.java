@@ -38,7 +38,7 @@ public class RandomizedShellSorter extends AbstractSortingNetwork {
 
     private void permuteRandom(int[] indexes, SecureRandom rand) {
         for (int i = 0; i < indexes.length; i++) {
-            // Use the Knuth random perm. algorithm
+            // Use the Knuth random permutation algorithm
             exchange(indexes, i, rand.nextInt(indexes.length - i) + i);
         }
     }
@@ -62,7 +62,6 @@ public class RandomizedShellSorter extends AbstractSortingNetwork {
 
     public void randomizedShellSort(MpcZ2Vector[][] xiArray) throws MpcAbortException {
         int n = xiArray.length;
-        // random number generator (not shown)
         SecureRandom rand = new SecureRandom();
         for (int offset = n / 2; offset > 0; offset /= 2) {
             for (int i = 0; i < n - offset; i += offset) {
