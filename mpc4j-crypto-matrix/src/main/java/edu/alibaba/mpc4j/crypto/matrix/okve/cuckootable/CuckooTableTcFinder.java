@@ -37,5 +37,5 @@ public interface CuckooTableTcFinder<T> {
      *
      * @return 被删除数据关联顶点的栈。
      */
-    Stack<Integer[]> getRemovedDataVertices();
+    Stack<int[]> getRemovedDataVertices();
 }

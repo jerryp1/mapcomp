@@ -1,7 +1,11 @@
 package edu.alibaba.mpc4j.crypto.matrix.okve.cuckootable;
 
+import gnu.trove.map.TIntObjectMap;
+import gnu.trove.map.hash.TIntObjectHashMap;
+import gnu.trove.set.TIntSet;
+import gnu.trove.set.hash.TIntHashSet;
+
 import java.util.*;
-import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
 /**
@@ -22,7 +26,7 @@ public class H2CuckooTableTcFinder<T> implements CuckooTableTcFinder<T> {
     /**
      * 2哈希-布谷鸟图顶点集合
      */
-    private Set<Integer> h2CuckooGraphVertexSet;
+    private TIntSet h2CuckooGraphVertexSet;
     /**
      * 删除数据的栈
      */
@@ -34,7 +38,7 @@ public class H2CuckooTableTcFinder<T> implements CuckooTableTcFinder<T> {
     /**
      * 删除数据对应顶点的栈
      */
-    private Stack<Integer[]> removedDataVertices;
+    private Stack<int[]> removedDataVertices;
     /**
      * 2-core图
      */
@@ -42,7 +46,7 @@ public class H2CuckooTableTcFinder<T> implements CuckooTableTcFinder<T> {
     /**
      * 2-core图顶点集合
      */
-    private Set<Integer> coreGraphVertexSet;
+    private TIntSet coreGraphVertexSet;
 
     @Override
     public void findTwoCore(CuckooTable<T> cuckooTable) {
@@ -50,7 +54,8 @@ public class H2CuckooTableTcFinder<T> implements CuckooTableTcFinder<T> {
         h2CuckooTable = (H2CuckooTable<T>)cuckooTable;
         h2CuckooGraph = h2CuckooTable.getCuckooGraph();
         int numOfVertices = h2CuckooTable.getNumOfVertices();
-        h2CuckooGraphVertexSet = IntStream.range(0, numOfVertices).boxed().collect(Collectors.toSet());
+        int[] vertexArray = IntStream.range(0, numOfVertices).toArray();
+        h2CuckooGraphVertexSet = new TIntHashSet(vertexArray);
         coreCuckooGraph = new ArrayList<>();
         IntStream.range(0, numOfVertices).forEach(vertex -> {
             // 只添加度大于等于1的顶点
@@ -66,7 +71,7 @@ public class H2CuckooTableTcFinder<T> implements CuckooTableTcFinder<T> {
             }
             coreCuckooGraph.add(coreCuckooGraphVertexDataSet);
         });
-        coreGraphVertexSet = new HashSet<>(h2CuckooGraphVertexSet);
+        coreGraphVertexSet = new TIntHashSet(h2CuckooGraphVertexSet);
         // 构建删除点的栈和集合
         removedDataStack = new Stack<>();
         removedDataVertices = new Stack<>();
@@ -77,9 +82,11 @@ public class H2CuckooTableTcFinder<T> implements CuckooTableTcFinder<T> {
 
     private void findTwoCoreGraph() {
         // 构造标记映射
-        Map<Integer, Boolean> h2CuckooGraphVertexMarkMap = new HashMap<>(h2CuckooGraphVertexSet.size());
-        h2CuckooGraphVertexSet.forEach(vertex -> h2CuckooGraphVertexMarkMap.put(vertex, Boolean.FALSE));
-        for (Integer vertex : h2CuckooGraphVertexSet) {
+        TIntObjectMap<Boolean> h2CuckooGraphVertexMarkMap = new TIntObjectHashMap<>(h2CuckooGraphVertexSet.size());
+        for (int vertex : h2CuckooGraphVertexSet.toArray()) {
+            h2CuckooGraphVertexMarkMap.put(vertex, Boolean.FALSE);
+        }
+        for (int vertex : h2CuckooGraphVertexSet.toArray()) {
             // 由于处理前面顶点的过程中可能会删除后面的顶点，因此当该顶点未被处理过且当前2core图仍包含此顶点时，才需要再处理此顶点
             if (!h2CuckooGraphVertexMarkMap.get(vertex) && coreGraphVertexSet.contains(vertex)) {
                 findTwoCoreGraph(h2CuckooGraphVertexMarkMap, vertex);
@@ -87,7 +94,7 @@ public class H2CuckooTableTcFinder<T> implements CuckooTableTcFinder<T> {
         }
     }
 
-    private void findTwoCoreGraph(Map<Integer, Boolean> h2CuckooGraphVertexMarkMap, Integer vertex) {
+    private void findTwoCoreGraph(TIntObjectMap<Boolean> h2CuckooGraphVertexMarkMap, int vertex) {
         if (!h2CuckooGraphVertexMarkMap.get(vertex)) {
             h2CuckooGraphVertexMarkMap.put(vertex, Boolean.TRUE);
             Set<T> coreVertexDataSet = coreCuckooGraph.get(vertex);
@@ -100,8 +107,8 @@ public class H2CuckooTableTcFinder<T> implements CuckooTableTcFinder<T> {
                 for (T data : copiedCoreVertexDataSet) {
                     if (remainedDataSet.contains(data)) {
                         // 如果这条边没被迭代过程删除，则继续处理
-                        Integer[] vertices = h2CuckooTable.getVertices(data);
-                        Integer target = vertex.equals(vertices[0]) ? vertices[1] : vertices[0];
+                        int[] vertices = h2CuckooTable.getVertices(data);
+                        int target = vertex == vertices[0] ? vertices[1] : vertices[0];
                         // 如果下一节点还没有处理，则处理下一节点
                         if (!h2CuckooGraphVertexMarkMap.get(target)) {
                             findTwoCoreGraph(h2CuckooGraphVertexMarkMap, target);
@@ -126,9 +133,9 @@ public class H2CuckooTableTcFinder<T> implements CuckooTableTcFinder<T> {
             }
             remainedDataSet.remove(data);
             removedDataStack.push(data);
-            Integer[] vertices = h2CuckooTable.getVertices(data);
+            int[] vertices = h2CuckooTable.getVertices(data);
             removedDataVertices.push(vertices);
-            for (Integer vertex : vertices) {
+            for (int vertex : vertices) {
                 coreCuckooGraph.get(vertex).remove(data);
             }
         }
@@ -147,7 +154,7 @@ public class H2CuckooTableTcFinder<T> implements CuckooTableTcFinder<T> {
     }
 
     @Override
-    public Stack<Integer[]> getRemovedDataVertices() {
+    public Stack<int[]> getRemovedDataVertices() {
         return removedDataVertices;
     }
 }

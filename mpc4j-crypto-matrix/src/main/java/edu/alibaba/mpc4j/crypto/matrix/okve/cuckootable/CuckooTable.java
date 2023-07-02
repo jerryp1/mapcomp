@@ -24,7 +24,7 @@ public interface CuckooTable<T> {
      * @param vertices 涉及顶点。
      * @param data     插入边所对应的数据。
      */
-    void addData(Integer[] vertices, T data);
+    void addData(int[] vertices, T data);
 
     /**
      * 返回插入的数据量。
@@ -46,7 +46,7 @@ public interface CuckooTable<T> {
      * @param vertices 顶点。
      * @return 顶点中的所有数据。
      */
-    Set<T> getDataSet(Integer[] vertices);
+    Set<T> getDataSet(int[] vertices);
 
     /**
      * 返回数据对应的字节数组。
@@ -62,7 +62,7 @@ public interface CuckooTable<T> {
      * @param data 数据。
      * @return 数据所对应的顶点，如果尚未插入此数据，则返回{@code null}。
      */
-    Integer[] getVertices(T data);
+    int[] getVertices(T data);
 
     /**
      * 返回边。

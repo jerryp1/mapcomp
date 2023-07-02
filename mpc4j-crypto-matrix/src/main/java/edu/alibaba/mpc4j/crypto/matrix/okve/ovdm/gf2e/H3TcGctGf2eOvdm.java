@@ -191,10 +191,10 @@ class H3TcGctGf2eOvdm<T> extends AbstractGf2eOvdm<T> implements SparseGf2eOvdm<T
         System.arraycopy(storage, lm, rightStorage, 0, rm);
         // 从栈中依次弹出数据，为相应节点赋值
         Stack<T> removedDataStack = singletonFinder.getRemovedDataStack();
-        Stack<Integer[]> removedDataVerticesStack = singletonFinder.getRemovedDataVertices();
+        Stack<int[]> removedDataVerticesStack = singletonFinder.getRemovedDataVertices();
         while (!removedDataStack.empty()) {
             T removedData = removedDataStack.pop();
-            Integer[] removedDataVertices = removedDataVerticesStack.pop();
+            int[] removedDataVertices = removedDataVerticesStack.pop();
             int vertex0 = removedDataVertices[0];
             int vertex1 = removedDataVertices[1];
             int vertex2 = removedDataVertices[2];
@@ -435,7 +435,7 @@ class H3TcGctGf2eOvdm<T> extends AbstractGf2eOvdm<T> implements SparseGf2eOvdm<T
             int h1Value = dataH1Map.get(key);
             int h2Value = dataH2Map.get(key);
             int h3Value = dataH3Map.get(key);
-            h3CuckooTable.addData(new Integer[]{h1Value, h2Value, h3Value}, key);
+            h3CuckooTable.addData(new int[]{h1Value, h2Value, h3Value}, key);
         }
         return h3CuckooTable;
     }

@@ -186,17 +186,17 @@ class H2TcGctGf2eOvdm<T> extends AbstractGf2eOvdm<T> implements SparseGf2eOvdm<T
         System.arraycopy(storage, lm, rightStorage, 0, rm);
         // 从栈中依次弹出数据，为相应节点赋值
         Stack<T> removedDataStack = tcFinder.getRemovedDataStack();
-        Stack<Integer[]> removedDataVerticesStack = tcFinder.getRemovedDataVertices();
+        Stack<int[]> removedDataVerticesStack = tcFinder.getRemovedDataVertices();
         while (!removedDataStack.empty()) {
             T removedData = removedDataStack.pop();
-            Integer[] removedDataVertices = removedDataVerticesStack.pop();
-            Integer source = removedDataVertices[0];
-            Integer target = removedDataVertices[1];
+            int[] removedDataVertices = removedDataVerticesStack.pop();
+            int source = removedDataVertices[0];
+            int target = removedDataVertices[1];
             boolean[] rx = dataHrMap.get(removedData);
             byte[] innerProduct = BytesUtils.innerProduct(rightStorage, byteL, rx);
             byte[] value = keyValueMap.get(removedData);
             BytesUtils.xori(innerProduct, value);
-            if (source.equals(target)) {
+            if (source == target) {
                 // 起点和终点一致，只设置一个即可
                 if (leftStorage[source] == null) {
                     leftStorage[source] = innerProduct;
@@ -382,7 +382,7 @@ class H2TcGctGf2eOvdm<T> extends AbstractGf2eOvdm<T> implements SparseGf2eOvdm<T
         for (T key : keySet) {
             int h1Value = dataH1Map.get(key);
             int h2Value = dataH2Map.get(key);
-            h2CuckooTable.addData(new Integer[]{h1Value, h2Value}, key);
+            h2CuckooTable.addData(new int[]{h1Value, h2Value}, key);
         }
         return h2CuckooTable;
     }

@@ -11,9 +11,12 @@ import edu.alibaba.mpc4j.crypto.matrix.okve.cuckootable.H2CuckooTable;
 import edu.alibaba.mpc4j.crypto.matrix.okve.cuckootable.H2CuckooTableTcFinder;
 import edu.alibaba.mpc4j.crypto.matrix.okve.okvs.OkvsFactory.OkvsType;
 import edu.alibaba.mpc4j.common.tool.utils.*;
+import gnu.trove.map.TObjectIntMap;
+import gnu.trove.map.hash.TObjectIntHashMap;
+import gnu.trove.set.TIntSet;
+import gnu.trove.set.hash.TIntHashSet;
 
 import java.util.*;
-import java.util.stream.Collectors;
 
 /**
  * 2哈希-两核乱码布谷鸟表。原始构造来自于：
@@ -65,11 +68,11 @@ public class H2TcGctBinaryOkvs<T> extends AbstractBinaryOkvs<T> implements Spars
     /**
      * 数据到h1的映射表
      */
-    private Map<T, Integer> dataH1Map;
+    private TObjectIntMap<T> dataH1Map;
     /**
      * 数据到h2的映射表
      */
-    private Map<T, Integer> dataH2Map;
+    private TObjectIntMap<T> dataH2Map;
     /**
      * 数据到hr的映射表
      */
@@ -157,8 +160,8 @@ public class H2TcGctBinaryOkvs<T> extends AbstractBinaryOkvs<T> implements Spars
         });
         // 构造数据到哈希值的查找表
         Set<T> keySet = keyValueMap.keySet();
-        dataH1Map = new HashMap<>(keySet.size());
-        dataH2Map = new HashMap<>(keySet.size());
+        dataH1Map = new TObjectIntHashMap<>(keySet.size());
+        dataH2Map = new TObjectIntHashMap<>(keySet.size());
         dataHrMap = new HashMap<>(keySet.size());
         for (T key : keySet) {
             int[] sparsePositions = sparsePosition(key);
@@ -173,10 +176,8 @@ public class H2TcGctBinaryOkvs<T> extends AbstractBinaryOkvs<T> implements Spars
         tcFinder.findTwoCore(h2CuckooTable);
         // 根据2-core图的所有数据和所有边构造矩阵
         Set<T> coreDataSet = tcFinder.getRemainedDataSet();
-        Set<Integer> coreVertexSet = coreDataSet.stream()
-            .map(h2CuckooTable::getVertices)
-            .flatMap(Arrays::stream)
-            .collect(Collectors.toSet());
+        TIntSet coreVertexSet = new TIntHashSet(keySet.size());
+        coreDataSet.stream().map(h2CuckooTable::getVertices).forEach(coreVertexSet::addAll);
         // 生成矩阵，矩阵中包含右侧的全部解，以及2-core中的全部解
         byte[][] storage = generateStorage(keyValueMap, coreVertexSet, coreDataSet);
         // 将矩阵拆分为L || R
@@ -186,10 +187,10 @@ public class H2TcGctBinaryOkvs<T> extends AbstractBinaryOkvs<T> implements Spars
         System.arraycopy(storage, lm, rightStorage, 0, rm);
         // 从栈中依次弹出数据，为相应节点赋值
         Stack<T> removedDataStack = tcFinder.getRemovedDataStack();
-        Stack<Integer[]> removedDataVerticesStack = tcFinder.getRemovedDataVertices();
+        Stack<int[]> removedDataVerticesStack = tcFinder.getRemovedDataVertices();
         while (!removedDataStack.empty()) {
             T removedData = removedDataStack.pop();
-            Integer[] removedDataVertices = removedDataVerticesStack.pop();
+            int[] removedDataVertices = removedDataVerticesStack.pop();
             int source = removedDataVertices[0];
             int target = removedDataVertices[1];
             boolean[] rx = dataHrMap.get(removedData);
@@ -218,7 +219,7 @@ public class H2TcGctBinaryOkvs<T> extends AbstractBinaryOkvs<T> implements Spars
                 } else if (leftStorage[target] == null) {
                     // 情况3：左端点不为空，右端点为空
                     BytesUtils.xori(innerProduct, leftStorage[source]);
-                    leftStorage[target] =innerProduct;
+                    leftStorage[target] = innerProduct;
                 } else {
                     // 左右端点都不为空，实现存在问题
                     throw new IllegalStateException(removedData + "左右顶点同时有数据，算法实现有误");
@@ -241,7 +242,7 @@ public class H2TcGctBinaryOkvs<T> extends AbstractBinaryOkvs<T> implements Spars
         return storage;
     }
 
-    private byte[][] generateStorage(Map<T, byte[]> keyValueMap, Set<Integer> coreVertexSet, Set<T> coreDataSet) {
+    private byte[][] generateStorage(Map<T, byte[]> keyValueMap, TIntSet coreVertexSet, Set<T> coreDataSet) {
         // initialize variables L = {l_1, ..., l_m}, R = (r_1, ..., r_{χ + λ})
         byte[][] vectorX = new byte[m][];
         if (coreDataSet.size() > m) {
@@ -275,7 +276,7 @@ public class H2TcGctBinaryOkvs<T> extends AbstractBinaryOkvs<T> implements Spars
             Arrays.fill(vectorX, new byte[byteL]);
         }
         byte[][] matrix = new byte[m][];
-        for (Integer vertex : coreVertexSet) {
+        for (int vertex : coreVertexSet.toArray()) {
             // 把2-core图的边所对应的矩阵设置好
             matrix[vertex] = BytesUtils.clone(vectorX[vertex]);
         }
@@ -292,7 +293,7 @@ public class H2TcGctBinaryOkvs<T> extends AbstractBinaryOkvs<T> implements Spars
      */
     static int getLm(int n) {
         // 根据论文的表2， lm = (2 + ε) * n = 2.4n，向上取整到Byte.SIZE的整数倍
-        return CommonUtils.getByteLength((int)Math.ceil((2 + EPSILON) * n)) * Byte.SIZE;
+        return CommonUtils.getByteLength((int) Math.ceil((2 + EPSILON) * n)) * Byte.SIZE;
     }
 
     /**
@@ -304,7 +305,7 @@ public class H2TcGctBinaryOkvs<T> extends AbstractBinaryOkvs<T> implements Spars
     static int getRm(int n) {
         // 根据论文完整版第18页，r = (1 + ε) * log(n) + λ = 1.4 * log(n) + λ，向上取整到Byte.SIZE的整数倍
         return CommonUtils.getByteLength(
-            (int)Math.ceil((1 + EPSILON) * DoubleUtils.log2(n)) + CommonConstants.STATS_BIT_LENGTH
+            (int) Math.ceil((1 + EPSILON) * DoubleUtils.log2(n)) + CommonConstants.STATS_BIT_LENGTH
         ) * Byte.SIZE;
     }
 
@@ -321,7 +322,7 @@ public class H2TcGctBinaryOkvs<T> extends AbstractBinaryOkvs<T> implements Spars
         for (T key : keySet) {
             int h1Value = dataH1Map.get(key);
             int h2Value = dataH2Map.get(key);
-            h2CuckooTable.addData(new Integer[] {h1Value, h2Value}, key);
+            h2CuckooTable.addData(new int[]{h1Value, h2Value}, key);
         }
         return h2CuckooTable;
     }

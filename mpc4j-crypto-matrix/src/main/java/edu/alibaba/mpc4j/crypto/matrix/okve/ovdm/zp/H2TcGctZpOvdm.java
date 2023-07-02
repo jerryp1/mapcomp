@@ -15,6 +15,8 @@ import edu.alibaba.mpc4j.crypto.matrix.okve.cuckootable.H2CuckooTable;
 import edu.alibaba.mpc4j.crypto.matrix.okve.cuckootable.H2CuckooTableTcFinder;
 import edu.alibaba.mpc4j.crypto.matrix.okve.ovdm.zp.ZpOvdmFactory.ZpOvdmType;
 import edu.alibaba.mpc4j.common.tool.utils.*;
+import gnu.trove.map.TObjectIntMap;
+import gnu.trove.map.hash.TObjectIntHashMap;
 import gnu.trove.set.TIntSet;
 
 import java.math.BigInteger;
@@ -73,11 +75,11 @@ class H2TcGctZpOvdm<T> extends AbstractZpOvdm<T> implements SparseZpOvdm<T> {
     /**
      * data -> h1
      */
-    private Map<T, Integer> dataH1Map;
+    private TObjectIntMap<T> dataH1Map;
     /**
      * data -> h2
      */
-    private Map<T, Integer> dataH2Map;
+    private TObjectIntMap<T> dataH2Map;
     /**
      * data -> hr
      */
@@ -168,8 +170,8 @@ class H2TcGctZpOvdm<T> extends AbstractZpOvdm<T> implements SparseZpOvdm<T> {
         MathPreconditions.checkLessOrEqual("key-value pairs num", keyValueMap.size(), n);
         // compute hashes
         Set<T> keySet = keyValueMap.keySet();
-        dataH1Map = new HashMap<>(keySet.size());
-        dataH2Map = new HashMap<>(keySet.size());
+        dataH1Map = new TObjectIntHashMap<>(keySet.size());
+        dataH2Map = new TObjectIntHashMap<>(keySet.size());
         dataHrMap = new HashMap<>(keySet.size());
         for (T key : keySet) {
             int[] sparsePositions = sparsePositions(key);
@@ -193,7 +195,7 @@ class H2TcGctZpOvdm<T> extends AbstractZpOvdm<T> implements SparseZpOvdm<T> {
         System.arraycopy(storage, lm, rightStorage, 0, rm);
         // remove data from stack, and assign storages
         Stack<T> removedDataStack = tcFinder.getRemovedDataStack();
-        Stack<Integer[]> removedDataVerticesStack = tcFinder.getRemovedDataVertices();
+        Stack<int[]> removedDataVerticesStack = tcFinder.getRemovedDataVertices();
         // compute right inner product
         Map<T, BigInteger> removedDataInnerProductMap = removedDataStack.stream()
             .collect(Collectors.toMap(Function.identity(), removedData -> {
@@ -204,12 +206,12 @@ class H2TcGctZpOvdm<T> extends AbstractZpOvdm<T> implements SparseZpOvdm<T> {
             }));
         while (!removedDataStack.empty()) {
             T removedData = removedDataStack.pop();
-            Integer[] removedDataVertices = removedDataVerticesStack.pop();
-            Integer source = removedDataVertices[0];
-            Integer target = removedDataVertices[1];
+            int[] removedDataVertices = removedDataVerticesStack.pop();
+            int source = removedDataVertices[0];
+            int target = removedDataVertices[1];
             removedDataInnerProductMap.get(removedData);
             BigInteger innerProduct = removedDataInnerProductMap.get(removedData);
-            if (source.equals(target)) {
+            if (source == target) {
                 // source == target, set one value
                 if (leftStorage[source] == null) {
                     leftStorage[source] = innerProduct;
@@ -385,7 +387,7 @@ class H2TcGctZpOvdm<T> extends AbstractZpOvdm<T> implements SparseZpOvdm<T> {
         for (T key : keySet) {
             int h1Value = dataH1Map.get(key);
             int h2Value = dataH2Map.get(key);
-            h2CuckooTable.addData(new Integer[]{h1Value, h2Value}, key);
+            h2CuckooTable.addData(new int[]{h1Value, h2Value}, key);
         }
         return h2CuckooTable;
     }

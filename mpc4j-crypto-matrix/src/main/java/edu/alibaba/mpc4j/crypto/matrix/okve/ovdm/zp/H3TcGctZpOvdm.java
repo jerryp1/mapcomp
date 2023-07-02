@@ -11,6 +11,8 @@ import edu.alibaba.mpc4j.crypto.matrix.okve.tool.ZpMaxLisFinder;
 import edu.alibaba.mpc4j.crypto.matrix.okve.cuckootable.CuckooTableSingletonTcFinder;
 import edu.alibaba.mpc4j.crypto.matrix.okve.cuckootable.H3CuckooTable;
 import edu.alibaba.mpc4j.common.tool.utils.*;
+import gnu.trove.map.TObjectIntMap;
+import gnu.trove.map.hash.TObjectIntHashMap;
 import gnu.trove.set.TIntSet;
 
 import java.math.BigInteger;
@@ -73,15 +75,15 @@ class H3TcGctZpOvdm<T> extends AbstractZpOvdm<T> implements SparseZpOvdm<T> {
     /**
      * 数据到h1的映射表
      */
-    private Map<T, Integer> dataH1Map;
+    private TObjectIntMap<T> dataH1Map;
     /**
      * 数据到h2的映射表
      */
-    private Map<T, Integer> dataH2Map;
+    private TObjectIntMap<T> dataH2Map;
     /**
      * 数据到h3的映射表
      */
-    private Map<T, Integer> dataH3Map;
+    private TObjectIntMap<T> dataH3Map;
     /**
      * 数据到hr的映射表
      */
@@ -167,9 +169,9 @@ class H3TcGctZpOvdm<T> extends AbstractZpOvdm<T> implements SparseZpOvdm<T> {
         MathPreconditions.checkLessOrEqual("key-value pairs num", keyValueMap.size(), n);
         // 构造数据到哈希值的查找表
         Set<T> keySet = keyValueMap.keySet();
-        dataH1Map = new HashMap<>(keySet.size());
-        dataH2Map = new HashMap<>(keySet.size());
-        dataH3Map = new HashMap<>(keySet.size());
+        dataH1Map = new TObjectIntHashMap<>(keySet.size());
+        dataH2Map = new TObjectIntHashMap<>(keySet.size());
+        dataH3Map = new TObjectIntHashMap<>(keySet.size());
         dataHrMap = new HashMap<>(keySet.size());
         for (T key : keySet) {
             int[] sparsePositions = sparsePositions(key);
@@ -195,7 +197,7 @@ class H3TcGctZpOvdm<T> extends AbstractZpOvdm<T> implements SparseZpOvdm<T> {
         System.arraycopy(storage, lm, rightStorage, 0, rm);
         // 从栈中依次弹出数据，为相应节点赋值
         Stack<T> removedDataStack = singletonFinder.getRemovedDataStack();
-        Stack<Integer[]> removedDataVerticesStack = singletonFinder.getRemovedDataVertices();
+        Stack<int[]> removedDataVerticesStack = singletonFinder.getRemovedDataVertices();
         // 先计算右侧内积结果
         Map<T, BigInteger> removedDataInnerProductMap = removedDataStack.stream()
             .collect(Collectors.toMap(Function.identity(), removedData -> {
@@ -206,7 +208,7 @@ class H3TcGctZpOvdm<T> extends AbstractZpOvdm<T> implements SparseZpOvdm<T> {
             }));
         while (!removedDataStack.empty()) {
             T removedData = removedDataStack.pop();
-            Integer[] removedDataVertices = removedDataVerticesStack.pop();
+            int[] removedDataVertices = removedDataVerticesStack.pop();
             int vertex0 = removedDataVertices[0];
             int vertex1 = removedDataVertices[1];
             int vertex2 = removedDataVertices[2];
@@ -424,7 +426,7 @@ class H3TcGctZpOvdm<T> extends AbstractZpOvdm<T> implements SparseZpOvdm<T> {
             int h1Value = dataH1Map.get(key);
             int h2Value = dataH2Map.get(key);
             int h3Value = dataH3Map.get(key);
-            h3CuckooTable.addData(new Integer[]{h1Value, h2Value, h3Value}, key);
+            h3CuckooTable.addData(new int[]{h1Value, h2Value, h3Value}, key);
         }
         return h3CuckooTable;
     }

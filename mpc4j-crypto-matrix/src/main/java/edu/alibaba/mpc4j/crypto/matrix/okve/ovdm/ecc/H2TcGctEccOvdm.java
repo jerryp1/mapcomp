@@ -16,6 +16,8 @@ import edu.alibaba.mpc4j.common.tool.utils.BinaryUtils;
 import edu.alibaba.mpc4j.common.tool.utils.CommonUtils;
 import edu.alibaba.mpc4j.common.tool.utils.DoubleUtils;
 import edu.alibaba.mpc4j.common.tool.utils.ObjectUtils;
+import gnu.trove.map.TObjectIntMap;
+import gnu.trove.map.hash.TObjectIntHashMap;
 import gnu.trove.set.TIntSet;
 import org.bouncycastle.math.ec.ECPoint;
 
@@ -77,11 +79,11 @@ class H2TcGctEccOvdm<T> extends AbstractEccOvdm<T> implements SparseEccOvdm<T> {
     /**
      * 数据到h1的映射表
      */
-    private Map<T, Integer> dataH1Map;
+    private TObjectIntMap<T> dataH1Map;
     /**
      * 数据到h2的映射表
      */
-    private Map<T, Integer> dataH2Map;
+    private TObjectIntMap<T> dataH2Map;
     /**
      * 数据到hr的映射表
      */
@@ -167,8 +169,8 @@ class H2TcGctEccOvdm<T> extends AbstractEccOvdm<T> implements SparseEccOvdm<T> {
         assert keyValueMap.size() <= n;
         // 构造数据到哈希值的查找表
         Set<T> keySet = keyValueMap.keySet();
-        dataH1Map = new HashMap<>(keySet.size());
-        dataH2Map = new HashMap<>(keySet.size());
+        dataH1Map = new TObjectIntHashMap<>(keySet.size());
+        dataH2Map = new TObjectIntHashMap<>(keySet.size());
         dataHrMap = new HashMap<>(keySet.size());
         for (T key : keySet) {
             int[] sparsePositions = sparsePositions(key);
@@ -192,7 +194,7 @@ class H2TcGctEccOvdm<T> extends AbstractEccOvdm<T> implements SparseEccOvdm<T> {
         System.arraycopy(storage, lm, rightStorage, 0, rm);
         // 从栈中依次弹出数据，为相应节点赋值
         Stack<T> removedDataStack = tcFinder.getRemovedDataStack();
-        Stack<Integer[]> removedDataVerticesStack = tcFinder.getRemovedDataVertices();
+        Stack<int[]> removedDataVerticesStack = tcFinder.getRemovedDataVertices();
         // 先计算右侧内积结果
         Map<T, ECPoint> removedDataInnerProductMap = removedDataStack.stream()
             .collect(Collectors.toMap(Function.identity(), removedData -> {
@@ -203,11 +205,11 @@ class H2TcGctEccOvdm<T> extends AbstractEccOvdm<T> implements SparseEccOvdm<T> {
             }));
         while (!removedDataStack.empty()) {
             T removedData = removedDataStack.pop();
-            Integer[] removedDataVertices = removedDataVerticesStack.pop();
-            Integer source = removedDataVertices[0];
-            Integer target = removedDataVertices[1];
+            int[] removedDataVertices = removedDataVerticesStack.pop();
+            int source = removedDataVertices[0];
+            int target = removedDataVertices[1];
             ECPoint innerProduct = removedDataInnerProductMap.get(removedData);
-            if (source.equals(target)) {
+            if (source == target) {
                 // 起点和终点一致，只设置一个即可
                 if (leftStorage[source] == null) {
                     leftStorage[source] = innerProduct;
@@ -383,7 +385,7 @@ class H2TcGctEccOvdm<T> extends AbstractEccOvdm<T> implements SparseEccOvdm<T> {
         for (T key : keySet) {
             int h1Value = dataH1Map.get(key);
             int h2Value = dataH2Map.get(key);
-            h2CuckooTable.addData(new Integer[]{h1Value, h2Value}, key);
+            h2CuckooTable.addData(new int[]{h1Value, h2Value}, key);
         }
         return h2CuckooTable;
     }

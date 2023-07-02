@@ -26,39 +26,39 @@ public class H3CuckooTableTest {
         String[] edgeStrings = IntStream.range(0, 6).mapToObj(index -> "Edge String" + index).toArray(String[]::new);
         int dataNum = 0;
         // 插入(0, 0, 0)边，应该可以添加成功
-        h3CuckooTable.addData(new Integer[] {0, 0, 0}, edgeStrings[dataNum]);
+        h3CuckooTable.addData(new int[]{0, 0, 0}, edgeStrings[dataNum]);
         dataNum++;
         Assert.assertEquals(h3CuckooTable.getDataNum(), dataNum);
         // 插入(1, 1, 2)边，应该可以添加成功
-        h3CuckooTable.addData(new Integer[] {1, 1, 2}, edgeStrings[dataNum]);
+        h3CuckooTable.addData(new int[]{1, 1, 2}, edgeStrings[dataNum]);
         dataNum++;
         Assert.assertEquals(h3CuckooTable.getDataNum(), dataNum);
         // 插入(1, 2, 1)边，应该可以添加成功
-        h3CuckooTable.addData(new Integer[] {1, 2, 1}, edgeStrings[dataNum]);
+        h3CuckooTable.addData(new int[]{1, 2, 1}, edgeStrings[dataNum]);
         dataNum++;
         Assert.assertEquals(h3CuckooTable.getDataNum(), dataNum);
         // 插入(2, 1, 1)边，应该可以添加成功
-        h3CuckooTable.addData(new Integer[] {2, 1, 1}, edgeStrings[dataNum]);
+        h3CuckooTable.addData(new int[]{2, 1, 1}, edgeStrings[dataNum]);
         dataNum++;
         Assert.assertEquals(h3CuckooTable.getDataNum(), dataNum);
         // 插入(3, 4, 5)边，应该可以添加成功
-        h3CuckooTable.addData(new Integer[] {3, 4, 5}, edgeStrings[dataNum]);
+        h3CuckooTable.addData(new int[]{3, 4, 5}, edgeStrings[dataNum]);
         dataNum++;
         Assert.assertEquals(h3CuckooTable.getDataNum(), dataNum);
         // 插入(3, 4, 5)边，数据不同，应该可以添加成功
-        h3CuckooTable.addData(new Integer[] {3, 4, 5}, edgeStrings[dataNum]);
+        h3CuckooTable.addData(new int[]{3, 4, 5}, edgeStrings[dataNum]);
         dataNum++;
         Assert.assertEquals(h3CuckooTable.getDataNum(), dataNum);
         // 插入相同的边，数据相同，应该失败
         try {
-            h3CuckooTable.addData(new Integer[] {3, 4, 5}, edgeStrings[dataNum - 1]);
+            h3CuckooTable.addData(new int[]{3, 4, 5}, edgeStrings[dataNum - 1]);
             Assert.fail("ERROR: Successfully insert duplicate item");
         } catch (IllegalArgumentException ignored) {
 
         }
         // 插入顺序不同但排序相同的边，数据相同，应该失败
         try {
-            h3CuckooTable.addData(new Integer[] {3, 5, 4}, edgeStrings[dataNum - 1]);
+            h3CuckooTable.addData(new int[]{3, 5, 4}, edgeStrings[dataNum - 1]);
             Assert.fail("ERROR: Successfully insert duplicate item");
         } catch (IllegalArgumentException ignored) {
 

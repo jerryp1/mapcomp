@@ -26,7 +26,7 @@ public class CuckooTableSingletonTcFinder<T> implements CuckooTableTcFinder<T> {
     /**
      * 删除数据对应顶点的栈
      */
-    private Stack<Integer[]> removedDataVertices;
+    private Stack<int[]> removedDataVertices;
     /**
      * core图
      */
@@ -83,9 +83,9 @@ public class CuckooTableSingletonTcFinder<T> implements CuckooTableTcFinder<T> {
                     data = containedData;
                 }
                 assert (data != null);
-                Integer[] vertices = cuckooTable.getVertices(data);
+                int[] vertices = cuckooTable.getVertices(data);
                 // 从所有集合中删除数据
-                for (Integer vertex : vertices) {
+                for (int vertex : vertices) {
                     if (twoCoreVertexSet.contains(vertex)) {
                         Set<T> vertexDataSet = coreCuckooGraph.get(vertex);
                         vertexDataSet.remove(data);
@@ -117,7 +117,7 @@ public class CuckooTableSingletonTcFinder<T> implements CuckooTableTcFinder<T> {
     }
 
     @Override
-    public Stack<Integer[]> getRemovedDataVertices() {
+    public Stack<int[]> getRemovedDataVertices() {
         return removedDataVertices;
     }
 }
