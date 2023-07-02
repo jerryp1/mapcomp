@@ -21,6 +21,10 @@ public class Gf2kFactory {
      */
     public enum Gf2kType {
         /**
+         * combined
+         */
+        COMBINED,
+        /**
          * NTL
          */
         NTL,
@@ -43,6 +47,8 @@ public class Gf2kFactory {
      */
     public static Gf2k createInstance(EnvType envType, Gf2kType type) {
         switch (type) {
+            case COMBINED:
+                return new CombinedGf2k(envType);
             case NTL:
                 return new NtlGf2k(envType);
             case BC:
@@ -61,9 +67,9 @@ public class Gf2kFactory {
      * @return an instance.
      */
     public static Gf2k createInstance(EnvType envType) {
-        // BC is the fastest
         switch (envType) {
             case STANDARD:
+                return new CombinedGf2k(envType);
             case STANDARD_JDK:
             case INLAND:
             case INLAND_JDK:
