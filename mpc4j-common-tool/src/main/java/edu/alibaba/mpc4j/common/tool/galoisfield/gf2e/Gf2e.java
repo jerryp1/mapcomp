@@ -28,17 +28,4 @@ public interface Gf2e extends BytesField {
     default String getName() {
         return getGf2eType().name();
     }
-
-    /**
-     * Returns whether the two elements are equal.
-     *
-     * @param p p.
-     * @param q q.
-     * @return true if p == q, false otherwise.
-     */
-    default boolean isEqual(byte[] p, byte[] q) {
-        validateElement(p);
-        validateElement(q);
-        return Arrays.equals(p, q);
-    }
 }

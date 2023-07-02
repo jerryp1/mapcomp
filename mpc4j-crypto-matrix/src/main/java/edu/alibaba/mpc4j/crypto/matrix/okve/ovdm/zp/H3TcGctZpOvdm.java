@@ -347,7 +347,7 @@ class H3TcGctZpOvdm<T> extends AbstractZpOvdm<T> implements SparseZpOvdm<T> {
         // Using Gaussian elimination solve the system
         // M˜* (P_{m' + C_1}, ..., P_{m' + C_{d˜})^T = (v'_{R_1}, ..., v'_{R_{d˜})^T.
         BigInteger[] vectorX = new BigInteger[setC.size()];
-        SystemInfo systemInfo = zpLinearSolver.solve(tildeStarMatrix, vectorY, vectorX, true);
+        SystemInfo systemInfo = zpLinearSolver.freeSolve(tildeStarMatrix, vectorY, vectorX);
         if (systemInfo.compareTo(SystemInfo.Inconsistent) == 0) {
             throw new ArithmeticException("无法完成编码过程，线性系统无解");
         }

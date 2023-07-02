@@ -1,123 +1,220 @@
 package edu.alibaba.mpc4j.crypto.matrix.okve.tool;
 
+import cc.redberry.rings.linear.LinearSolver;
 import cc.redberry.rings.linear.LinearSolver.SystemInfo;
-import edu.alibaba.mpc4j.common.tool.CommonConstants;
+import com.google.common.base.Preconditions;
 import edu.alibaba.mpc4j.common.tool.EnvType;
 import edu.alibaba.mpc4j.common.tool.galoisfield.zp.Zp;
 import edu.alibaba.mpc4j.common.tool.galoisfield.zp.ZpFactory;
-import edu.alibaba.mpc4j.common.tool.galoisfield.zp.ZpManager;
+import edu.alibaba.mpc4j.common.tool.utils.BigIntegerUtils;
+import edu.alibaba.mpc4j.crypto.matrix.zp.DenseZpMatrix;
+import org.apache.commons.lang3.StringUtils;
 import org.junit.Assert;
 import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.junit.runners.Parameterized;
 
 import java.math.BigInteger;
 import java.security.SecureRandom;
+import java.util.*;
+import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 
 /**
- * Zp高斯消元法测试。
+ * Zp linear solver test.
  *
  * @author Weiran Liu
  * @date 2021/05/08
  */
+@RunWith(Parameterized.class)
 public class ZpLinearSolverTest {
     /**
-     * 随机测试轮数
+     * random round
      */
-    private static final int RANDOM_ROUND = 1000;
+    private static final int RANDOM_ROUND = 50;
     /**
-     * 矩阵维度，取奇数以验证所有可能的边界情况
-     */
-    private static final int DIMENSION = 7;
-    /**
-     * 随机状态
+     * random state
      */
     private static final SecureRandom SECURE_RANDOM = new SecureRandom();
+
+    @Parameterized.Parameters(name = "{0}")
+    public static Collection<Object[]> configurations() {
+        Collection<Object[]> configurations = new ArrayList<>();
+
+        int[] ds = new int[]{7, 8, 9, 15, 16, 17, 39, 40, 41};
+        int[] ls = new int[]{39, 40, 41};
+        // add each l and d
+        for (int l : ls) {
+            for (int d : ds) {
+                configurations.add(new Object[]{"l = " + l + ", D = " + d + ")", l, d});
+            }
+        }
+
+        return configurations;
+    }
+
     /**
-     * Zp有限域
+     * Zp instance
      */
     private final Zp zp;
     /**
-     * 线性求解器
+     * dimension d
      */
-    private final ZpLinearSolver zpLinearSolver;
+    private final int d;
+    /**
+     * Zp linear solver
+     */
+    private final ZpLinearSolver linearSolver;
 
-    public ZpLinearSolverTest() {
-        BigInteger p = ZpManager.getPrime(CommonConstants.BLOCK_BIT_LENGTH);
-        zp = ZpFactory.createInstance(EnvType.STANDARD, p);
-        zpLinearSolver = new ZpLinearSolver(zp);
+    public ZpLinearSolverTest(String name, int l, int d) {
+        Preconditions.checkArgument(StringUtils.isNotBlank(name));
+        zp = ZpFactory.createInstance(EnvType.STANDARD, l);
+        this.d = d;
+        linearSolver = new ZpLinearSolver(zp);
     }
 
     @Test
-    public void testFullRankLinearSolver() {
+    public void testIdentitySquareFullRank() {
+        List<BigInteger[]> identityRows = IntStream.range(0, d)
+            .mapToObj(rowIndex -> {
+                BigInteger[] row = new BigInteger[d];
+                Arrays.fill(row, zp.createZero());
+                row[rowIndex] = zp.createNonZeroRandom(SECURE_RANDOM);
+                return row;
+            })
+            .collect(Collectors.toList());
         for (int round = 0; round < RANDOM_ROUND; round++) {
-            // 当矩阵都是随机点时，有非常高的概率有解
-            BigInteger[][] matrixA = new BigInteger[DIMENSION][DIMENSION];
-            for (int row = 0; row < DIMENSION; row++) {
-                for (int column = 0; column < DIMENSION; column++) {
-                    matrixA[row][column] = zp.createRandom(SECURE_RANDOM);
-                }
-            }
-            BigInteger[] b = new BigInteger[DIMENSION];
-            for (int row = 0; row < DIMENSION; row++) {
-                b[row] = zp.createRandom(SECURE_RANDOM);
+            Collections.shuffle(identityRows, SECURE_RANDOM);
+            BigInteger[][] matrixA = identityRows.toArray(new BigInteger[0][]);
+            BigInteger[] b = new BigInteger[d];
+            for (int iRow = 0; iRow < d; iRow++) {
+                b[iRow] = zp.createRandom(SECURE_RANDOM);
             }
             testGaussianElimination(matrixA, b);
         }
     }
 
     @Test
-    public void testNotFullRankLinearSolver() {
+    public void testIdentitySquareNotFullRank() {
+        List<BigInteger[]> identityRows = IntStream.range(0, d)
+            .mapToObj(rowIndex -> {
+                BigInteger[] row = new BigInteger[d];
+                Arrays.fill(row, zp.createZero());
+                row[rowIndex] = zp.createNonZeroRandom(SECURE_RANDOM);
+                return row;
+            })
+            .collect(Collectors.toList());
         for (int round = 0; round < RANDOM_ROUND; round++) {
-            // 将第一行设置为全0
-            BigInteger[][] matrixA = new BigInteger[DIMENSION][DIMENSION];
-            for (int column = 0; column < DIMENSION; column++) {
-                matrixA[0][column] = BigInteger.ZERO;
+            Collections.shuffle(identityRows, SECURE_RANDOM);
+            BigInteger[][] matrixA = BigIntegerUtils.clone(identityRows.toArray(new BigInteger[0][]));
+            BigInteger[] b = new BigInteger[d];
+            for (int iRow = 0; iRow < d; iRow++) {
+                b[iRow] = zp.createRandom(SECURE_RANDOM);
             }
-            // 剩余行随机选择
-            for (int row = 1; row < DIMENSION; row++) {
-                for (int column = 0; column < DIMENSION; column++) {
-                    matrixA[row][column] = zp.createRandom(SECURE_RANDOM);
-                }
+            // set a random row to be 0
+            int r = SECURE_RANDOM.nextInt(d);
+            Arrays.fill(matrixA[r], zp.createZero());
+            b[r] = zp.createZero();
+            testGaussianElimination(matrixA, b);
+        }
+    }
+
+    @Test
+    public void testRandomSquareFullRank() {
+        for (int round = 0; round < RANDOM_ROUND; round++) {
+            // we choose a full rank matrix
+            BigInteger[][] matrixA = new BigInteger[d][d];
+            for (int iRow = 0; iRow < d; iRow++) {
+               for (int iColumn = 0; iColumn < d; iColumn++) {
+                   matrixA[iRow][iColumn] = zp.createRandom(SECURE_RANDOM);
+               }
             }
-            BigInteger[] b = new BigInteger[DIMENSION];
-            // y_0设置为0
-            b[0] = BigInteger.ZERO;
-            for (int row = 1; row < DIMENSION; row++) {
-                b[row] = zp.createRandom(SECURE_RANDOM);
+            try {
+                DenseZpMatrix zpMatrix = DenseZpMatrix.fromDense(zp, matrixA);
+                zpMatrix.inverse();
+            } catch (ArithmeticException e) {
+                continue;
+            }
+            BigInteger[] b = new BigInteger[d];
+            for (int iRow = 0; iRow < d; iRow++) {
+                b[iRow] = zp.createRandom(SECURE_RANDOM);
             }
             testGaussianElimination(matrixA, b);
         }
     }
 
     @Test
-    public void testRectangularLinearSolver() {
+    public void testRandomSquareNotFullRank() {
         for (int round = 0; round < RANDOM_ROUND; round++) {
-            // 当矩阵都是随机点时，有非常高的概率有解
-            BigInteger[][] matrixA = new BigInteger[DIMENSION][DIMENSION * 2];
-            for (int row = 0; row < DIMENSION; row++) {
-                for (int column = 0; column < DIMENSION * 2; column++) {
-                    matrixA[row][column] = zp.createRandom(SECURE_RANDOM);
+            // we choose a full rank matrix
+            BigInteger[][] matrixA = new BigInteger[d][d];
+            for (int iRow = 0; iRow < d; iRow++) {
+                for (int iColumn = 0; iColumn < d; iColumn++) {
+                    matrixA[iRow][iColumn] = zp.createRandom(SECURE_RANDOM);
                 }
             }
-            BigInteger[] b = new BigInteger[DIMENSION];
-            for (int row = 0; row < DIMENSION; row++) {
-                b[row] = zp.createRandom(SECURE_RANDOM);
+            try {
+                DenseZpMatrix zpMatrix = DenseZpMatrix.fromDense(zp, matrixA);
+                zpMatrix.inverse();
+            } catch (ArithmeticException e) {
+                continue;
+            }
+            BigInteger[] b = new BigInteger[d];
+            for (int iRow = 0; iRow < d; iRow++) {
+                b[iRow] = zp.createRandom(SECURE_RANDOM);
+            }
+            // set a random row to be 0
+            int r = SECURE_RANDOM.nextInt(d);
+            Arrays.fill(matrixA[r], zp.createZero());
+            b[r] = zp.createZero();
+            testGaussianElimination(matrixA, b);
+        }
+    }
+
+    @Test
+    public void testRectangular() {
+        for (int round = 0; round < RANDOM_ROUND; round++) {
+            BigInteger[][] matrixA = new BigInteger[d][d * 2];
+            for (int iRow = 0; iRow < d; iRow++) {
+                Arrays.fill(matrixA[iRow], zp.createZero());
+                // the left-most and the right-most bits are set to non-zero elements
+                matrixA[iRow][iRow] = zp.createRandom(SECURE_RANDOM);
+                matrixA[iRow][2 * d - 1 - iRow] = zp.createRandom(SECURE_RANDOM);
+            }
+            BigInteger[] b = new BigInteger[d];
+            for (int iRow = 0; iRow < d; iRow++) {
+                b[iRow] = zp.createRandom(SECURE_RANDOM);
             }
             testGaussianElimination(matrixA, b);
         }
     }
 
     private void testGaussianElimination(BigInteger[][] matrixA, BigInteger[] b) {
-        int nrow = b.length;
-        int ncol = matrixA[0].length;
-        BigInteger[] x = new BigInteger[ncol];
-        SystemInfo systemInfo = zpLinearSolver.solve(matrixA, b, x, true);
-        Assert.assertNotEquals(SystemInfo.Inconsistent, systemInfo);
-        for (int rowIndex = 0; rowIndex < nrow; rowIndex++) {
-            BigInteger res = BigInteger.ZERO;
-            for (int columnIndex = 0; columnIndex < ncol; columnIndex++) {
-                res = zp.add(res, zp.mul(x[columnIndex], matrixA[rowIndex][columnIndex]));
+        int nColumns = matrixA[0].length;
+        BigInteger[] x = new BigInteger[nColumns];
+        SystemInfo systemInfo;
+        // free solve
+        systemInfo = linearSolver.freeSolve(BigIntegerUtils.clone(matrixA), BigIntegerUtils.clone(b), x);
+        Assert.assertNotEquals(LinearSolver.SystemInfo.Inconsistent, systemInfo);
+        assertCorrect(matrixA, b, x);
+        // full solve
+        systemInfo = linearSolver.fullSolve(BigIntegerUtils.clone(matrixA), BigIntegerUtils.clone(b), x);
+        Assert.assertNotEquals(LinearSolver.SystemInfo.Inconsistent, systemInfo);
+        assertCorrect(matrixA, b, x);
+        for (BigInteger xi : x) {
+            Assert.assertFalse(zp.isZero(xi));
+        }
+    }
+
+    private void assertCorrect(BigInteger[][] matrixA, BigInteger[] b, BigInteger[] x) {
+        int nRows = b.length;
+        int nColumns = x.length;
+        for (int iRow = 0; iRow < nRows; iRow++) {
+            BigInteger result = zp.createZero();
+            for (int iColumn = 0; iColumn < nColumns; iColumn++) {
+                result = zp.add(result, zp.mul(matrixA[iRow][iColumn], x[iColumn]));
             }
-            Assert.assertEquals(b[rowIndex], res);
+            Assert.assertEquals(b[iRow], result);
         }
     }
 }
