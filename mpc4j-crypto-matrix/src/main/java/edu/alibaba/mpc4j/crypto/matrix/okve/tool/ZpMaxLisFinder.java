@@ -1,132 +1,132 @@
 package edu.alibaba.mpc4j.crypto.matrix.okve.tool;
 
-import edu.alibaba.mpc4j.common.tool.CommonConstants;
-import edu.alibaba.mpc4j.common.tool.galoisfield.MaxLisFinder;
+import cc.redberry.rings.util.ArraysUtil;
+import edu.alibaba.mpc4j.common.tool.MathPreconditions;
+import edu.alibaba.mpc4j.common.tool.galoisfield.zp.Zp;
+import edu.alibaba.mpc4j.common.tool.utils.BigIntegerUtils;
+import gnu.trove.set.TIntSet;
+import gnu.trove.set.hash.TIntHashSet;
 
 import java.math.BigInteger;
-import java.util.HashSet;
-import java.util.Set;
+import java.util.Arrays;
 import java.util.stream.IntStream;
 
 /**
- * Z_p域最大线性无关组（Maximal Linearly Independent System）查找器。实现参考下述高斯消元法实现。
- * <p>
- * https://algs4.cs.princeton.edu/99scientific/GaussianElimination.java.html
- * </p>
+ * Given an n × m (n ≥ m) Zp matrix, it finds the max linear independent rows.
  *
  * @author Weiran Liu
  * @date 2021/09/11
  */
-public class ZpMaxLisFinder implements MaxLisFinder {
+public class ZpMaxLisFinder {
     /**
-     * Z_p域的质数p
+     * Zp instance
      */
-    private final BigInteger prime;
-    /**
-     * 行数
-     */
-    private final int m;
-    /**
-     * 列数
-     */
-    private final int n;
-    /**
-     * 拷贝的矩阵
-     */
-    private final BigInteger[][] copiedMatrix;
-    /**
-     * 行号标识
-     */
-    private final int[] rowLabels;
+    private final Zp zp;
 
-    public ZpMaxLisFinder(BigInteger prime, BigInteger[][] matrix) {
-        // 验证p是否为质数
-        assert prime.isProbablePrime(CommonConstants.STATS_BIT_LENGTH);
-        this.prime = prime;
-        // 设置矩阵行数和列数，并检查输入矩阵的有效性
-        m = matrix.length;
-        assert m > 0;
-        n = matrix[0].length;
-        assert n > 0 && m >= n;
-        for (int rowIndex = 0; rowIndex < m; rowIndex++) {
-            assert matrix[rowIndex].length == n;
-        }
-        // 复制一份矩阵，因为查找线性无关组时需要在矩阵上操作
-        copiedMatrix = new BigInteger[m][n];
-        IntStream.range(0, m)
-            .forEach(rowIndex -> IntStream.range(0, n)
-                .forEach(columnIndex -> copiedMatrix[rowIndex][columnIndex] = matrix[rowIndex][columnIndex].mod(prime))
-            );
-        rowLabels = IntStream.range(0, m).toArray();
-        forwardElimination();
+    public ZpMaxLisFinder(Zp zp) {
+        this.zp = zp;
     }
 
-    private void forwardElimination() {
-        for (int p = 0; p < n; p++) {
-            // find pivot row using partial pivoting
-            int max = p;
-            for (int i = p + 1; i < m; i++) {
-                if (copiedMatrix[i][p].compareTo(copiedMatrix[max][p]) > 0) {
-                    max = i;
+    /**
+     * Gives the row echelon form of the matrix A.
+     *
+     * @param lhs the lhs of the system.
+     * @return the swapped row labels.
+     */
+    private int[] rowEchelonForm(BigInteger[][] lhs) {
+        int nRows = lhs.length;
+        MathPreconditions.checkPositive("n", nRows);
+        int nColumns = lhs[0].length;
+        // 0 <= m <= n
+        MathPreconditions.checkNonNegativeInRangeClosed("m", nColumns, nRows);
+        // verify each row has nColumns elements
+        Arrays.stream(lhs).forEach(row ->
+            MathPreconditions.checkEqual("row.length", "m", row.length, nColumns)
+        );
+        int[] rowLabels = IntStream.range(0, nRows).toArray();
+        // number of zero columns, here we consider if the leading row is 0
+        int nZeroColumns = 0;
+        for (int iColumn = 0, to = Math.min(nRows, nColumns); iColumn < to; ++iColumn) {
+            // find pivot row and swap
+            int row = iColumn - nZeroColumns;
+            int max = row;
+            // find the row where the first element is not 0
+            if (zp.isZero(lhs[row][iColumn])) {
+                for (int iRow = row + 1; iRow < nRows; ++iRow) {
+                    if (!zp.isZero(lhs[iRow][iColumn])) {
+                        max = iRow;
+                        break;
+                    }
                 }
+                ArraysUtil.swap(lhs, row, max);
+                // swap the row label
+                int rowIndexTemp = rowLabels[row];
+                rowLabels[row] = rowLabels[max];
+                rowLabels[max] = rowIndexTemp;
             }
-            // swap
-            swap(p, max);
-            // 奇异或近似奇异，需要继续往后计算
-            if (copiedMatrix[p][p].compareTo(BigInteger.ZERO) == 0) {
+            // if we cannot find one, it means this column is free, nothing to do on this column
+            if (zp.isZero(lhs[row][iColumn])) {
+                ++nZeroColumns;
+                to = Math.min(nRows + nZeroColumns, nColumns);
                 continue;
             }
-            // pivot
-            pivot(p);
-        }
-    }
-
-    /**
-     * swap row1 and row2.
-     *
-     * @param row1 row1.
-     * @param row2 row2.
-     */
-    private void swap(int row1, int row2) {
-        // 交换矩阵内容
-        BigInteger[] tempRow = copiedMatrix[row1];
-        copiedMatrix[row1] = copiedMatrix[row2];
-        copiedMatrix[row2] = tempRow;
-        // 交换行号
-        int rowIndexTemp = rowLabels[row1];
-        rowLabels[row1] = rowLabels[row2];
-        rowLabels[row2] = rowIndexTemp;
-    }
-
-    /**
-     * pivot on a[p][p].
-     *
-     * @param p p.
-     */
-    private void pivot(int p) {
-        for (int i = p + 1; i < m; i++) {
-            BigInteger alpha = copiedMatrix[i][p].multiply(copiedMatrix[p][p].modInverse(prime)).mod(prime);
-            for (int j = p; j < n; j++) {
-                copiedMatrix[i][j] = copiedMatrix[i][j].subtract(alpha.multiply(copiedMatrix[p][j])).mod(prime);
-            }
-        }
-    }
-
-    @Override
-    public Set<Integer> getLisRows() {
-        Set<Integer> lisRowSet = new HashSet<>(n);
-        for (int p = 0; p < m; p++) {
-            boolean isLinearIndependent = false;
-            for (int j = p; j < n; j++) {
-                // 只要有1个不为0，此行就是线性无关行
-                if (!copiedMatrix[p][j].equals(BigInteger.ZERO)) {
-                    isLinearIndependent = true;
-                    break;
+            // forward Gaussian elimination
+            for (int iRow = row + 1; iRow < nRows; ++iRow) {
+                BigInteger alpha = zp.div(lhs[iRow][iColumn], lhs[row][iColumn]);
+                if (!zp.isZero(alpha)) {
+                    for (int iCol = iColumn; iCol < nColumns; ++iCol) {
+                        lhs[iRow][iCol] = zp.sub(lhs[iRow][iCol], zp.mul(alpha, lhs[row][iCol]));
+                    }
                 }
             }
-            if (isLinearIndependent) {
-                lisRowSet.add(rowLabels[p]);
+        }
+        return rowLabels;
+    }
+
+    /**
+     * Gets maximal linear independent columns. Note that lsh is not modified.
+     *
+     * @param lhs      the lhs of the system.
+     * @return maximal linear independent rows.
+     */
+    public TIntSet getLisRows(BigInteger[][] lhs) {
+        int nRows = lhs.length;
+        MathPreconditions.checkPositive("n", nRows);
+        int nColumns = lhs[0].length;
+        // 0 <= m <= n
+        MathPreconditions.checkNonNegativeInRangeClosed("m", nColumns, nRows);
+        // verify each row has nColumns elements
+        Arrays.stream(lhs).forEach(row ->
+            MathPreconditions.checkEqual("row.length", "m", row.length, nColumns)
+        );
+        // copy the matrix
+        BigInteger[][] copyLhs = BigIntegerUtils.clone(lhs);
+        if (nRows == 1) {
+            // if n = 1, and we know that any row cannot be all-zero, then this row is the only linear independent row.
+            TIntSet hashSet = new TIntHashSet(1);
+            hashSet.add(0);
+            return hashSet;
+        }
+        // if n > 1, transform lsh to Echelon form.
+        int[] rowLabels = rowEchelonForm(copyLhs);
+        // there are at most n linear independent rows.
+        TIntSet lisRowSet = new TIntHashSet(nRows);
+        // number of zero columns
+        int nZeroColumns = 0;
+        int iRow;
+        for (int iColumn = 0, to = Math.min(nRows, nColumns); iColumn < to; ++iColumn) {
+            // find linear independent rows, note that lhs[iRow, iColumn]
+            iRow = iColumn - nZeroColumns;
+            // if this pivot is zero, and it is the last row, there is no solution
+            if (zp.isZero(copyLhs[iRow][iColumn])) {
+                if (iColumn == (nColumns - 1)) {
+                    return lisRowSet;
+                }
+                ++nZeroColumns;
+                to = Math.min(nRows + nZeroColumns, nColumns);
+                continue;
             }
+            lisRowSet.add(rowLabels[iRow]);
         }
         return lisRowSet;
     }

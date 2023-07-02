@@ -8,6 +8,10 @@ import edu.alibaba.mpc4j.common.tool.crypto.prf.PrfFactory;
 import edu.alibaba.mpc4j.crypto.matrix.okve.cuckootable.CuckooTableSingletonTcFinder;
 import edu.alibaba.mpc4j.crypto.matrix.okve.cuckootable.H3CuckooTable;
 import edu.alibaba.mpc4j.common.tool.utils.*;
+import gnu.trove.map.TObjectIntMap;
+import gnu.trove.map.hash.TObjectIntHashMap;
+import gnu.trove.set.TIntSet;
+import gnu.trove.set.hash.TIntHashSet;
 
 import java.util.*;
 import java.util.stream.IntStream;
@@ -62,15 +66,15 @@ class H3TcGctGf2eOvdm<T> extends AbstractGf2eOvdm<T> implements SparseGf2eOvdm<T
     /**
      * 数据到h1的映射表
      */
-    private Map<T, Integer> dataH1Map;
+    private TObjectIntMap<T> dataH1Map;
     /**
      * 数据到h2的映射表
      */
-    private Map<T, Integer> dataH2Map;
+    private TObjectIntMap<T> dataH2Map;
     /**
      * 数据到h3的映射表
      */
-    private Map<T, Integer> dataH3Map;
+    private TObjectIntMap<T> dataH3Map;
     /**
      * 数据到hr的映射表
      */
@@ -159,9 +163,9 @@ class H3TcGctGf2eOvdm<T> extends AbstractGf2eOvdm<T> implements SparseGf2eOvdm<T
         });
         // 构造数据到哈希值的查找表
         Set<T> keySet = keyValueMap.keySet();
-        dataH1Map = new HashMap<>(keySet.size());
-        dataH2Map = new HashMap<>(keySet.size());
-        dataH3Map = new HashMap<>(keySet.size());
+        dataH1Map = new TObjectIntHashMap<>(keySet.size());
+        dataH2Map = new TObjectIntHashMap<>(keySet.size());
+        dataH3Map = new TObjectIntHashMap<>(keySet.size());
         dataHrMap = new HashMap<>(keySet.size());
         for (T key : keySet) {
             int[] sparsePositions = sparsePositions(key);
@@ -294,7 +298,8 @@ class H3TcGctGf2eOvdm<T> extends AbstractGf2eOvdm<T> implements SparseGf2eOvdm<T
         }
         // let M˜* be the sub-matrix of M˜ containing an invertible d˜ × d˜ matrix,
         // and C ⊂ [d + λ] index the corresponding columns of M˜.
-        Set<Integer> setC = maxLisFinder.getLisColumns(tildePrimeMatrix, dTilde);
+        TIntSet setC = maxLisFinder.getLisColumns(tildePrimeMatrix, dTilde);
+        int[] cArray = setC.toArray();
         int size = setC.size();
         int byteSize = CommonUtils.getByteLength(size);
         int offsetSize = byteSize * Byte.SIZE - size;
@@ -303,14 +308,14 @@ class H3TcGctGf2eOvdm<T> extends AbstractGf2eOvdm<T> implements SparseGf2eOvdm<T
         for (T data : coreDataSet) {
             boolean[] rxBinary = dataHrMap.get(data);
             int rmIndex = 0;
-            for (Integer r : setC) {
+            for (int r : cArray) {
                 BinaryUtils.setBoolean(tildeStarMatrix[tildeStarMatrixRowIndex], offsetSize + rmIndex, rxBinary[r]);
                 rmIndex++;
             }
             tildeStarMatrixRowIndex++;
         }
         // Let C' = {j | i \in R, M'_{i, j} = 1} ∪ ([d + λ] \ C + m')
-        Set<Integer> setPrimeC = new HashSet<>(dTilde * 2 + rm / 2);
+        TIntSet setPrimeC = new TIntHashSet(dTilde * 2 + rm / 2);
         for (T data : coreDataSet) {
             setPrimeC.add(dataH1Map.get(data));
             setPrimeC.add(dataH2Map.get(data));
@@ -322,7 +327,7 @@ class H3TcGctGf2eOvdm<T> extends AbstractGf2eOvdm<T> implements SparseGf2eOvdm<T
             }
         }
         // For i ∈ C' assign P_i ∈ G
-        for (Integer primeIndexC : setPrimeC) {
+        for (int primeIndexC : setPrimeC.toArray()) {
             storage[primeIndexC] = BytesUtils.randomByteArray(byteL, l, secureRandom);
         }
         // For i ∈ R, define v'_i = v_i - (MP), where P_i is assigned to be zero if unassigned.
@@ -367,7 +372,7 @@ class H3TcGctGf2eOvdm<T> extends AbstractGf2eOvdm<T> implements SparseGf2eOvdm<T
         }
         // 将求解结果更新到matrix里面
         int xVectorIndex = 0;
-        for (int cIndex : setC) {
+        for (int cIndex : cArray) {
             storage[this.lm + cIndex] = BytesUtils.clone(vectorX[xVectorIndex]);
             xVectorIndex++;
         }

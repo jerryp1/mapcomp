@@ -6,6 +6,7 @@ import edu.alibaba.mpc4j.common.tool.EnvType;
 import edu.alibaba.mpc4j.common.tool.crypto.ecc.Ecc;
 import edu.alibaba.mpc4j.common.tool.crypto.prf.Prf;
 import edu.alibaba.mpc4j.common.tool.crypto.prf.PrfFactory;
+import edu.alibaba.mpc4j.common.tool.galoisfield.zp.ZpFactory;
 import edu.alibaba.mpc4j.crypto.matrix.okve.tool.ZpMaxLisFinder;
 import edu.alibaba.mpc4j.crypto.matrix.okve.cuckootable.CuckooTableSingletonTcFinder;
 import edu.alibaba.mpc4j.crypto.matrix.okve.cuckootable.CuckooTableTcFinder;
@@ -15,6 +16,7 @@ import edu.alibaba.mpc4j.common.tool.utils.BinaryUtils;
 import edu.alibaba.mpc4j.common.tool.utils.CommonUtils;
 import edu.alibaba.mpc4j.common.tool.utils.DoubleUtils;
 import edu.alibaba.mpc4j.common.tool.utils.ObjectUtils;
+import gnu.trove.set.TIntSet;
 import org.bouncycastle.math.ec.ECPoint;
 
 import java.math.BigInteger;
@@ -69,6 +71,10 @@ class H2TcGctEccOvdm<T> extends AbstractEccOvdm<T> implements SparseEccOvdm<T> {
      */
     private final CuckooTableTcFinder<T> tcFinder;
     /**
+     * max linear independent system finder
+     */
+    private final ZpMaxLisFinder maxLisFinder;
+    /**
      * 数据到h1的映射表
      */
     private Map<T, Integer> dataH1Map;
@@ -93,6 +99,7 @@ class H2TcGctEccOvdm<T> extends AbstractEccOvdm<T> implements SparseEccOvdm<T> {
         hr = PrfFactory.createInstance(envType, rm / Byte.SIZE);
         hr.setKey(keys[2]);
         this.tcFinder = tcFinder;
+        maxLisFinder = new ZpMaxLisFinder(ZpFactory.createInstance(envType, ecc.getN()));
     }
 
     @Override
@@ -268,14 +275,14 @@ class H2TcGctEccOvdm<T> extends AbstractEccOvdm<T> implements SparseEccOvdm<T> {
             tildePrimeMatrixRowIndex++;
         }
         // Otherwise let M˜* be one such matrix and C ⊂ [d + λ] index the corresponding columns of M˜.
-        ZpMaxLisFinder zpMaxLisFinder = new ZpMaxLisFinder(ecc.getN(), tildePrimeMatrix);
-        Set<Integer> setC = zpMaxLisFinder.getLisRows();
+        TIntSet setC = maxLisFinder.getLisRows(tildePrimeMatrix);
+        int[] cArray = setC.toArray();
         BigInteger[][] tildeStarMatrix = new BigInteger[dTilde][setC.size()];
         int tildeStarMatrixRowIndex = 0;
         for (T data : coreDataSet) {
             boolean[] rxBinary = dataHrMap.get(data);
             int rmIndex = 0;
-            for (Integer r : setC) {
+            for (int r : cArray) {
                 tildeStarMatrix[tildeStarMatrixRowIndex][rmIndex] = rxBinary[r] ? BigInteger.ONE : BigInteger.ZERO;
                 rmIndex++;
             }
@@ -332,7 +339,7 @@ class H2TcGctEccOvdm<T> extends AbstractEccOvdm<T> implements SparseEccOvdm<T> {
         }
         // 将求解结果更新到matrix里面
         int xVectorIndex = 0;
-        for (int cIndex : setC) {
+        for (int cIndex : cArray) {
             storage[lm + cIndex] = vectorX[xVectorIndex];
             xVectorIndex++;
         }

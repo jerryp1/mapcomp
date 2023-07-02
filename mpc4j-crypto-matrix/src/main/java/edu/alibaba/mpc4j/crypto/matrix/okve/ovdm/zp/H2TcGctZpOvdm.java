@@ -7,6 +7,7 @@ import edu.alibaba.mpc4j.common.tool.EnvType;
 import edu.alibaba.mpc4j.common.tool.MathPreconditions;
 import edu.alibaba.mpc4j.common.tool.crypto.prf.Prf;
 import edu.alibaba.mpc4j.common.tool.crypto.prf.PrfFactory;
+import edu.alibaba.mpc4j.common.tool.galoisfield.zp.ZpFactory;
 import edu.alibaba.mpc4j.crypto.matrix.okve.tool.ZpMaxLisFinder;
 import edu.alibaba.mpc4j.crypto.matrix.okve.cuckootable.CuckooTableSingletonTcFinder;
 import edu.alibaba.mpc4j.crypto.matrix.okve.cuckootable.CuckooTableTcFinder;
@@ -14,6 +15,7 @@ import edu.alibaba.mpc4j.crypto.matrix.okve.cuckootable.H2CuckooTable;
 import edu.alibaba.mpc4j.crypto.matrix.okve.cuckootable.H2CuckooTableTcFinder;
 import edu.alibaba.mpc4j.crypto.matrix.okve.ovdm.zp.ZpOvdmFactory.ZpOvdmType;
 import edu.alibaba.mpc4j.common.tool.utils.*;
+import gnu.trove.set.TIntSet;
 
 import java.math.BigInteger;
 import java.util.*;
@@ -65,6 +67,10 @@ class H2TcGctZpOvdm<T> extends AbstractZpOvdm<T> implements SparseZpOvdm<T> {
      */
     private final CuckooTableTcFinder<T> tcFinder;
     /**
+     * max linear independent system finder
+     */
+    private final ZpMaxLisFinder maxLisFinder;
+    /**
      * data -> h1
      */
     private Map<T, Integer> dataH1Map;
@@ -76,6 +82,7 @@ class H2TcGctZpOvdm<T> extends AbstractZpOvdm<T> implements SparseZpOvdm<T> {
      * data -> hr
      */
     private Map<T, boolean[]> dataHrMap;
+
 
     H2TcGctZpOvdm(EnvType envType, BigInteger prime, int n, byte[][] keys, CuckooTableTcFinder<T> tcFinder) {
         super(envType, prime, n, getLm(n) + getRm(n));
@@ -91,6 +98,7 @@ class H2TcGctZpOvdm<T> extends AbstractZpOvdm<T> implements SparseZpOvdm<T> {
         hr = PrfFactory.createInstance(envType, rm / Byte.SIZE);
         hr.setKey(keys[2]);
         this.tcFinder = tcFinder;
+        maxLisFinder = new ZpMaxLisFinder(ZpFactory.createInstance(envType, prime));
     }
 
     @Override
@@ -266,14 +274,14 @@ class H2TcGctZpOvdm<T> extends AbstractZpOvdm<T> implements SparseZpOvdm<T> {
             tildePrimeMatrixRowIndex++;
         }
         // Otherwise, let M˜* be one such matrix and C ⊂ [d + λ] index the corresponding columns of M˜.
-        ZpMaxLisFinder maxLisFinder = new ZpMaxLisFinder(zp.getPrime(), tildePrimeMatrix);
-        Set<Integer> setC = maxLisFinder.getLisRows();
+        TIntSet setC = maxLisFinder.getLisRows(tildePrimeMatrix);
+        int[] cArray = setC.toArray();
         BigInteger[][] tildeStarMatrix = new BigInteger[dTilde][setC.size()];
         int tildeStarMatrixRowIndex = 0;
         for (T data : coreDataSet) {
             boolean[] rxBinary = dataHrMap.get(data);
             int rmIndex = 0;
-            for (Integer r : setC) {
+            for (int r : cArray) {
                 tildeStarMatrix[tildeStarMatrixRowIndex][rmIndex] = rxBinary[r] ? BigInteger.ONE : BigInteger.ZERO;
                 rmIndex++;
             }
@@ -332,7 +340,7 @@ class H2TcGctZpOvdm<T> extends AbstractZpOvdm<T> implements SparseZpOvdm<T> {
         }
         // update solutions into the storage
         int xVectorIndex = 0;
-        for (int cIndex : setC) {
+        for (int cIndex : cArray) {
             storage[lm + cIndex] = vectorX[xVectorIndex];
             xVectorIndex++;
         }
