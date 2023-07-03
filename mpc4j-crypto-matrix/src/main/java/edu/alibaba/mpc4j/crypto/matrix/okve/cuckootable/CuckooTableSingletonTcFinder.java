@@ -1,7 +1,9 @@
 package edu.alibaba.mpc4j.crypto.matrix.okve.cuckootable;
 
+import gnu.trove.set.TIntSet;
+import gnu.trove.set.hash.TIntHashSet;
+
 import java.util.*;
-import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
 /**
@@ -38,7 +40,7 @@ public class CuckooTableSingletonTcFinder<T> implements CuckooTableTcFinder<T> {
         int numOfVertices = cuckooTable.getNumOfVertices();
         coreCuckooGraph = new ArrayList<>();
         // 构建搜索节点集合
-        Set<Integer> twoCoreVertexSet = IntStream.range(0, numOfVertices).boxed().collect(Collectors.toSet());
+        TIntSet twoCoreVertexSet = new TIntHashSet(IntStream.range(0, numOfVertices).toArray());
         ArrayList<Set<T>> cuckooGraph = cuckooTable.getCuckooGraph();
         IntStream.range(0, numOfVertices).forEach(vertex -> {
             // 只添加度大于等于1的顶点
@@ -61,10 +63,10 @@ public class CuckooTableSingletonTcFinder<T> implements CuckooTableTcFinder<T> {
         findSingletons(twoCoreVertexSet);
     }
 
-    private void findSingletons(Set<Integer> twoCoreVertexSet) {
+    private void findSingletons(TIntSet twoCoreVertexSet) {
         Queue<Integer> singletonQueue = new LinkedList<>();
         // 先扫描一遍所有可能的顶点，把Singleton的加进去
-        for (Integer vertex : twoCoreVertexSet) {
+        for (int vertex : twoCoreVertexSet.toArray()) {
             Set<T> vertexDataSet = coreCuckooGraph.get(vertex);
             if (vertexDataSet.size() == 1) {
                 singletonQueue.add(vertex);

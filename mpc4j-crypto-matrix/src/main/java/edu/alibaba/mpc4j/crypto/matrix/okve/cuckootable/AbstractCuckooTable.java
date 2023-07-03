@@ -94,10 +94,12 @@ abstract class AbstractCuckooTable<T> implements CuckooTable<T> {
         int[] sortedVertices = Arrays.stream(vertices).sorted().toArray();
         int source = sortedVertices[0];
         // 复制一份起点所包含的所有元素，依次拿掉终点不是指定顶点的元素
-        return new HashSet<>(cuckooGraph.get(source)).stream().filter(candidateData -> {
-            int[] candidateDataVertices = getVertices(candidateData);
-            return Arrays.equals(sortedVertices, candidateDataVertices);
-        }).collect(Collectors.toSet());
+        return new HashSet<>(cuckooGraph.get(source)).stream()
+            .filter(candidateData -> {
+                int[] candidateDataVertices = getVertices(candidateData);
+                return Arrays.equals(sortedVertices, candidateDataVertices);
+            })
+            .collect(Collectors.toSet());
     }
 
     @Override

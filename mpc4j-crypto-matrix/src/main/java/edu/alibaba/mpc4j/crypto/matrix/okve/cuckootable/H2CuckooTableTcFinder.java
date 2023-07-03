@@ -123,7 +123,7 @@ public class H2CuckooTableTcFinder<T> implements CuckooTableTcFinder<T> {
         }
     }
 
-    private void processSelfVertex(Integer targetVertex) {
+    private void processSelfVertex(int targetVertex) {
         Set<T> coreVertexDataSet = coreCuckooGraph.get(targetVertex);
         // 如果有边，把边拿出来
         if (coreVertexDataSet.size() == 1) {
