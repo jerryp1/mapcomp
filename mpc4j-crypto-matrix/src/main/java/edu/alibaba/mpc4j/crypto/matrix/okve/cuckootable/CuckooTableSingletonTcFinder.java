@@ -1,5 +1,6 @@
 package edu.alibaba.mpc4j.crypto.matrix.okve.cuckootable;
 
+import gnu.trove.list.linked.TIntLinkedList;
 import gnu.trove.set.TIntSet;
 import gnu.trove.set.hash.TIntHashSet;
 
@@ -64,7 +65,7 @@ public class CuckooTableSingletonTcFinder<T> implements CuckooTableTcFinder<T> {
     }
 
     private void findSingletons(TIntSet twoCoreVertexSet) {
-        Queue<Integer> singletonQueue = new LinkedList<>();
+        TIntLinkedList singletonQueue = new TIntLinkedList();
         // 先扫描一遍所有可能的顶点，把Singleton的加进去
         for (int vertex : twoCoreVertexSet.toArray()) {
             Set<T> vertexDataSet = coreCuckooGraph.get(vertex);
@@ -75,7 +76,8 @@ public class CuckooTableSingletonTcFinder<T> implements CuckooTableTcFinder<T> {
         // 开始遍历节点
         while (singletonQueue.size() > 0) {
             // 仍然存在Singleton，提取出来一个删掉
-            Integer singletonVertex = singletonQueue.remove();
+            int singletonVertex = singletonQueue.get(0);
+            singletonQueue.removeAt(0);
             Set<T> singletonVertexDataSet = coreCuckooGraph.get(singletonVertex);
             // 有可能出现等于0的情况，这是因为最后一次删除的时候把两个节点都删空了，因此这里再判断一下
             if (singletonVertexDataSet.size() == 1) {
