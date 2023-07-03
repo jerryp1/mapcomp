@@ -87,8 +87,7 @@ public class NaiveBatchIndexPirClient extends AbstractBatchIndexPirClient {
 
         stopWatch.start();
         // client init single index PIR client
-        int elementByteLength = CommonUtils.getByteLength(elementBitLength);
-        List<byte[]> publicKeysPayload = indexPirClient.clientSetup(maxBinSize, elementByteLength);
+        List<byte[]> publicKeysPayload = indexPirClient.clientSetup(maxBinSize, elementBitLength);
         DataPacketHeader clientPublicKeysHeader = new DataPacketHeader(
             encodeTaskId, getPtoDesc().getPtoId(), PtoStep.CLIENT_SEND_PUBLIC_KEYS.ordinal(), extraInfo,
             rpc.ownParty().getPartyId(), otherParty().getPartyId()
