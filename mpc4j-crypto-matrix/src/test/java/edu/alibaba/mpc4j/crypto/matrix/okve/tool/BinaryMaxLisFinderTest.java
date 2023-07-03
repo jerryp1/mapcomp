@@ -203,7 +203,7 @@ public class BinaryMaxLisFinderTest {
     }
 
     private void test(byte[][] matrix, int m, TIntSet result) {
-        TIntSet lisRows = maxLisFinder.getLisColumns(matrix, m);
+        TIntSet lisRows = maxLisFinder.getLisRows(matrix, m);
         Assert.assertEquals(result, lisRows);
     }
 }

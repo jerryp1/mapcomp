@@ -58,11 +58,11 @@ class H3GctGfe2Dokvs<T> extends AbstractGf2eDokvs<T> implements SparseGf2eDokvs<
      * Gets left m. The result is shown in Section 5.4 of the paper.
      *
      * @param n number of key-value pairs.
-     * @return lm = (1 + ε_l) * n, with lm % Byte.SIZE == 0.
+     * @return lm = ε_l * n, with lm % Byte.SIZE == 0.
      */
     static int getLm(int n) {
         MathPreconditions.checkPositive("n", n);
-        return CommonUtils.getByteLength((int) Math.ceil((1 + LEFT_EPSILON) * n)) * Byte.SIZE;
+        return CommonUtils.getByteLength((int) Math.ceil(LEFT_EPSILON * n)) * Byte.SIZE;
     }
 
     /**
@@ -372,7 +372,7 @@ class H3GctGfe2Dokvs<T> extends AbstractGf2eDokvs<T> implements SparseGf2eDokvs<
         }
         // let M˜* be the sub-matrix of M˜ containing an invertible d˜ × d˜ matrix,
         // and C ⊂ [d + λ] index the corresponding columns of M˜.
-        TIntSet setC = maxLisFinder.getLisColumns(tildePrimeMatrix, dTilde);
+        TIntSet setC = maxLisFinder.getLisRows(tildePrimeMatrix, dTilde);
         int[] cArray = setC.toArray();
         int size = setC.size();
         int byteSize = CommonUtils.getByteLength(size);

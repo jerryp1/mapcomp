@@ -1,8 +1,7 @@
 package edu.alibaba.mpc4j.crypto.matrix.okve.dokvs.gf2e;
 
-import cc.redberry.rings.linear.LinearSolver.SystemInfo;
+import cc.redberry.rings.linear.LinearSolver;
 import com.google.common.base.Preconditions;
-import edu.alibaba.mpc4j.common.tool.CommonConstants;
 import edu.alibaba.mpc4j.common.tool.EnvType;
 import edu.alibaba.mpc4j.common.tool.MathPreconditions;
 import edu.alibaba.mpc4j.common.tool.crypto.prf.Prf;
@@ -13,18 +12,23 @@ import edu.alibaba.mpc4j.crypto.matrix.okve.cuckootable.CuckooTableTcFinder;
 import edu.alibaba.mpc4j.crypto.matrix.okve.cuckootable.H2CuckooTable;
 import edu.alibaba.mpc4j.crypto.matrix.okve.cuckootable.H2CuckooTableTcFinder;
 import edu.alibaba.mpc4j.crypto.matrix.okve.tool.BinaryLinearSolver;
-import edu.alibaba.mpc4j.crypto.matrix.okve.tool.BinaryMaxLisFinder;
+import gnu.trove.map.TIntIntMap;
 import gnu.trove.map.TObjectIntMap;
+import gnu.trove.map.hash.TIntIntHashMap;
 import gnu.trove.map.hash.TObjectIntHashMap;
 import gnu.trove.set.TIntSet;
 import gnu.trove.set.hash.TIntHashSet;
 
 import java.security.SecureRandom;
-import java.util.*;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Set;
+import java.util.Stack;
 import java.util.stream.IntStream;
 
 /**
- * garbled cuckoo table with 2 hash functions. The non-doubly construction is from the following paper:
+ * abstract DOKVS using garbled cuckoo table with 2 hash functions. The non-doubly construction is from the following
+ * paper:
  * <p>
  * Pinkas B, Rosulek M, Trieu N, et al. PSI from PaXoS: Fast, Malicious Private Set Intersection. EUROCRYPT 2020,
  * Springer, Cham, 2020, pp. 739-767.
@@ -34,11 +38,16 @@ import java.util.stream.IntStream;
  * Rindal, Peter, and Phillipp Schoppmann. VOLE-PSI: fast OPRF and circuit-PSI from vector-OLE. EUROCRYPT 2021,
  * pp. 901-930. Cham: Springer International Publishing, 2021.
  * </p>
+ * Here we use blazing fast encoding introduced in the following paper:
+ * <p>
+ * Raghuraman, Srinivasan, and Peter Rindal. Blazing fast PSI from improved OKVS and subfield VOLE. ACM CCS 2022,
+ * pp. 2505-2517.
+ * </p>
  *
  * @author Weiran Liu
  * @date 2023/7/3
  */
-class H2GctGf2eDokvs<T> extends AbstractGf2eDokvs<T> implements SparseGf2eDokvs<T> {
+abstract class AbstractH2GctGf2eDokvs<T> extends AbstractGf2eDokvs<T> implements SparseGf2eDokvs<T> {
     /**
      * number of sparse hashes
      */
@@ -48,40 +57,11 @@ class H2GctGf2eDokvs<T> extends AbstractGf2eDokvs<T> implements SparseGf2eDokvs<
      */
     static int TOTAL_HASH_NUM = SPARSE_HASH_NUM + 1;
     /**
-     * ε
-     */
-    private static final double EPSILON = 0.4;
-
-    /**
-     * Gets left m. The result is shown in Table 2 of the paper.
-     *
-     * @param n number of key-value pairs.
-     * @return lm = (2 + ε) * n, with lm % Byte.SIZE == 0.
-     */
-    static int getLm(int n) {
-        MathPreconditions.checkPositive("n", n);
-        return CommonUtils.getByteLength((int) Math.ceil((2 + EPSILON) * n)) * Byte.SIZE;
-    }
-
-    /**
-     * Gets right m. The result is shown in the full version of the paper page 18.
-     *
-     * @param n number of key-value pairs.
-     * @return rm = (1 + ε) * log(n) + λ, with rm % Byte.SIZE == 0.
-     */
-    static int getRm(int n) {
-        MathPreconditions.checkPositive("n", n);
-        return CommonUtils.getByteLength(
-            (int) Math.ceil((1 + EPSILON) * DoubleUtils.log2(n)) + CommonConstants.STATS_BIT_LENGTH
-        ) * Byte.SIZE;
-    }
-
-    /**
-     * left m, i.e., sparse part. lm = (2 + ε) * n, with lm % Byte.SIZE == 0.
+     * left m, i.e., sparse part.
      */
     private final int lm;
     /**
-     * right m, i.e., dense part. rm = (1 + ε) * log(n) + λ with rm % Byte.SIZE == 0.
+     * right m, i.e., dense part.
      */
     private final int rm;
     /**
@@ -99,15 +79,11 @@ class H2GctGf2eDokvs<T> extends AbstractGf2eDokvs<T> implements SparseGf2eDokvs<
     /**
      * two core finder
      */
-    private final CuckooTableTcFinder<T> tcFinder;
+    protected final CuckooTableTcFinder<T> tcFinder;
     /**
      * binary linear solver
      */
     private final BinaryLinearSolver linearSolver;
-    /**
-     * max linear independent finder
-     */
-    private final BinaryMaxLisFinder maxLisFinder;
     /**
      * key -> h1
      */
@@ -121,16 +97,17 @@ class H2GctGf2eDokvs<T> extends AbstractGf2eDokvs<T> implements SparseGf2eDokvs<
      */
     private Map<T, boolean[]> dataHrMap;
 
-    H2GctGf2eDokvs(EnvType envType, int l, int n, byte[][] keys, CuckooTableTcFinder<T> tcFinder) {
-        this(envType, l, n, keys, tcFinder, new SecureRandom());
+    AbstractH2GctGf2eDokvs(EnvType envType, int l, int n, int lm, int rm,
+                           byte[][] keys, CuckooTableTcFinder<T> tcFinder) {
+        this(envType, l, n, lm, rm, keys, tcFinder, new SecureRandom());
     }
 
-    H2GctGf2eDokvs(EnvType envType, int l, int n, byte[][] keys, CuckooTableTcFinder<T> tcFinder,
-                   SecureRandom secureRandom) {
-        super(l, n, getLm(n) + getRm(n));
+    AbstractH2GctGf2eDokvs(EnvType envType, int l, int n, int lm, int rm,
+                           byte[][] keys, CuckooTableTcFinder<T> tcFinder, SecureRandom secureRandom) {
+        super(l, n, lm + rm);
         MathPreconditions.checkEqual("keys.length", "hash_num", keys.length, TOTAL_HASH_NUM);
-        lm = getLm(n);
-        rm = getRm(n);
+        this.lm = lm;
+        this.rm = rm;
         h1 = PrfFactory.createInstance(envType, Integer.BYTES);
         h1.setKey(keys[0]);
         h2 = PrfFactory.createInstance(envType, Integer.BYTES);
@@ -139,7 +116,6 @@ class H2GctGf2eDokvs<T> extends AbstractGf2eDokvs<T> implements SparseGf2eDokvs<
         hr.setKey(keys[2]);
         this.tcFinder = tcFinder;
         linearSolver = new BinaryLinearSolver(l, secureRandom);
-        maxLisFinder = new BinaryMaxLisFinder();
     }
 
     @Override
@@ -199,17 +175,6 @@ class H2GctGf2eDokvs<T> extends AbstractGf2eDokvs<T> implements SparseGf2eDokvs<
     }
 
     @Override
-    public Gf2eDokvsFactory.Gf2eDokvsType getType() {
-        if (tcFinder instanceof CuckooTableSingletonTcFinder) {
-            return Gf2eDokvsFactory.Gf2eDokvsType.H2_SINGLETON_GCT;
-        } else if (tcFinder instanceof H2CuckooTableTcFinder) {
-            return Gf2eDokvsFactory.Gf2eDokvsType.H2_TWO_CORE_GCT;
-        } else {
-            throw new IllegalStateException("Invalid TcFinder:" + tcFinder.getClass().getSimpleName());
-        }
-    }
-
-    @Override
     public byte[][] encode(Map<T, byte[]> keyValueMap, boolean doublyEncode) throws ArithmeticException {
         MathPreconditions.checkLessOrEqual("key-value size", keyValueMap.size(), n);
         keyValueMap.values().forEach(x -> Preconditions.checkArgument(BytesUtils.isFixedReduceByteArray(x, byteL, l)));
@@ -233,14 +198,11 @@ class H2GctGf2eDokvs<T> extends AbstractGf2eDokvs<T> implements SparseGf2eDokvs<
         // construct matrix based on two-core graph
         Set<T> coreDataSet = tcFinder.getRemainedDataSet();
         // generate storage that contains all solutions in the right part and involved left part.
-        byte[][] storage;
-        if (doublyEncode) {
-            storage = generateDoublyStorage(keyValueMap, coreDataSet);
-        } else {
-            TIntSet coreVertexSet = new TIntHashSet(keySet.size());
-            coreDataSet.stream().map(h2CuckooTable::getVertices).forEach(coreVertexSet::addAll);
-            storage = generateFreeStorage(keyValueMap, coreVertexSet, coreDataSet);
-        }
+        TIntSet coreVertexSet = new TIntHashSet(keySet.size());
+        coreDataSet.stream().map(h2CuckooTable::getVertices).forEach(coreVertexSet::addAll);
+        byte[][] storage = doublyEncode
+            ? generateDoublyStorage(keyValueMap, coreVertexSet, coreDataSet)
+            : generateFreeStorage(keyValueMap, coreVertexSet, coreDataSet);
         // split D = L || R
         byte[][] leftStorage = new byte[lm][];
         byte[][] rightStorage = new byte[rm][];
@@ -303,10 +265,11 @@ class H2GctGf2eDokvs<T> extends AbstractGf2eDokvs<T> implements SparseGf2eDokvs<
         return h2CuckooTable;
     }
 
-    private byte[][] generateDoublyStorage(Map<T, byte[]> keyValueMap, Set<T> coreDataSet) {
+    private byte[][] generateDoublyStorage(Map<T, byte[]> keyValueMap, TIntSet coreVertexSet, Set<T> coreDataSet) {
         byte[][] storage = new byte[m][];
-        // Let d˜ = |R| and abort if d˜ > d + λ
+        // Let d˜ = |R| and abort if d˜ > d + rm
         int dTilde = coreDataSet.size();
+        int d = coreVertexSet.size();
         if (dTilde == 0) {
             // d˜ = 0, we do not need to solve equations, fill random variables.
             IntStream.range(lm, lm + rm).forEach(index ->
@@ -314,88 +277,44 @@ class H2GctGf2eDokvs<T> extends AbstractGf2eDokvs<T> implements SparseGf2eDokvs<
             );
             return storage;
         }
-        if (dTilde > rm) {
-            throw new ArithmeticException("|d˜| = " + dTilde + "，d + λ + " + rm + " no solutions");
+        if (dTilde > d + rm) {
+            throw new ArithmeticException("|d˜| = " + dTilde + ", rm = " + rm + " no solutions");
         }
-        // Let M˜' ∈ {0, 1}^{d˜ × (d + λ)} be the sub-matrix of M˜ obtained by taking the row indexed by R.
-        int dByteTilde = CommonUtils.getByteLength(dTilde);
-        int dOffsetTilde = dByteTilde * Byte.SIZE - dTilde;
-        byte[][] tildePrimeMatrix = new byte[rm][dByteTilde];
+        // Let M˜' ∈ {0,1}^{d˜ × (d + rm)} be the sub-matrix of M˜ obtained by taking the row indexed by R.
+        int columnTildeBytes = CommonUtils.getByteLength(d + rm);
+        int columnTildeOffset = columnTildeBytes * Byte.SIZE - (d + rm);
+        byte[][] tildePrimeMatrix = new byte[dTilde][columnTildeBytes];
+        byte[][] vectorY = new byte[dTilde][];
+        // construct the vertex -> index map
+        int[] coreVertexArray = coreVertexSet.toArray();
+        TIntIntMap coreVertexMap = new TIntIntHashMap(d);
+        for (int index = 0; index < d; index++) {
+            coreVertexMap.put(coreVertexArray[index], index);
+        }
         int tildePrimeMatrixRowIndex = 0;
         for (T data : coreDataSet) {
+            int h1 = dataH1Map.get(data);
+            BinaryUtils.setBoolean(tildePrimeMatrix[tildePrimeMatrixRowIndex], columnTildeOffset + coreVertexMap.get(h1), true);
+            int h2 = dataH2Map.get(data);
+            BinaryUtils.setBoolean(tildePrimeMatrix[tildePrimeMatrixRowIndex], columnTildeOffset + coreVertexMap.get(h2), true);
             boolean[] rxBinary = dataHrMap.get(data);
             for (int rmIndex = 0; rmIndex < rm; rmIndex++) {
-                BinaryUtils.setBoolean(tildePrimeMatrix[rmIndex], dOffsetTilde + tildePrimeMatrixRowIndex, rxBinary[rmIndex]);
+                BinaryUtils.setBoolean(tildePrimeMatrix[tildePrimeMatrixRowIndex], columnTildeOffset + d + rmIndex, rxBinary[rmIndex]);
             }
+            vectorY[tildePrimeMatrixRowIndex] = BytesUtils.clone(keyValueMap.get(data));
             tildePrimeMatrixRowIndex++;
-        }
-        // let M˜* be the sub-matrix of M˜ containing an invertible d˜ × d˜ matrix,
-        // and C ⊂ [d + λ] index the corresponding columns of M˜.
-        TIntSet setC = maxLisFinder.getLisColumns(tildePrimeMatrix, dTilde);
-        int[] cArray = setC.toArray();
-        int size = setC.size();
-        int byteSize = CommonUtils.getByteLength(size);
-        int offsetSize = byteSize * Byte.SIZE - size;
-        byte[][] tildeStarMatrix = new byte[dTilde][byteSize];
-        int tildeStarMatrixRowIndex = 0;
-        for (T data : coreDataSet) {
-            boolean[] rxBinary = dataHrMap.get(data);
-            int rmIndex = 0;
-            for (int r : cArray) {
-                BinaryUtils.setBoolean(tildeStarMatrix[tildeStarMatrixRowIndex], offsetSize + rmIndex, rxBinary[r]);
-                rmIndex++;
-            }
-            tildeStarMatrixRowIndex++;
-        }
-        // Let C' = {j | i \in R, M'_{i, j} = 1} ∪ ([d + λ] \ C + m')
-        TIntSet setPrimeC = new TIntHashSet(dTilde * 2 + rm / 2);
-        for (T data : coreDataSet) {
-            setPrimeC.add(dataH1Map.get(data));
-            setPrimeC.add(dataH2Map.get(data));
-        }
-        for (int rmIndex = 0; rmIndex < rm; rmIndex++) {
-            if (!setC.contains(rmIndex)) {
-                setPrimeC.add(lm + rmIndex);
-            }
-        }
-        // For i ∈ C' assign P_i ∈ G
-        for (int primeIndexC : setPrimeC.toArray()) {
-            storage[primeIndexC] = BytesUtils.randomByteArray(byteL, l, secureRandom);
-        }
-        // For i ∈ R, define v'_i = v_i - (MP), where P_i is assigned to be zero if unassigned.
-        byte[][] vectorY = new byte[dTilde][];
-        int coreRowIndex = 0;
-        for (T data : coreDataSet) {
-            int h1Value = dataH1Map.get(data);
-            int h2Value = dataH2Map.get(data);
-            boolean[] rx = dataHrMap.get(data);
-            byte[] mp = new byte[byteL];
-            storage[h1Value] = (storage[h1Value] == null) ? new byte[byteL] : storage[h1Value];
-            storage[h2Value] = (storage[h2Value] == null) ? new byte[byteL] : storage[h2Value];
-            // h1 and h2 must be distinct
-            BytesUtils.xori(mp, storage[h1Value]);
-            BytesUtils.xori(mp, storage[h2Value]);
-            for (int rxIndex = 0; rxIndex < rx.length; rxIndex++) {
-                if (rx[rxIndex]) {
-                    if (storage[lm + rxIndex] == null) {
-                        storage[lm + rxIndex] = new byte[byteL];
-                    }
-                    BytesUtils.xori(mp, storage[lm + rxIndex]);
-                }
-            }
-            vectorY[coreRowIndex] = BytesUtils.xor(keyValueMap.get(data), mp);
-            coreRowIndex++;
         }
         // Using Gaussian elimination solve the system
         // M˜* (P_{m' + C_1}, ..., P_{m' + C_{d˜})^T = (v'_{R_1}, ..., v'_{R_{d˜})^T.
-        byte[][] vectorX = new byte[size][];
-        SystemInfo systemInfo = linearSolver.freeSolve(tildeStarMatrix, size, vectorY, vectorX);
-        assert systemInfo.equals(SystemInfo.Consistent);
+        byte[][] vectorX = new byte[d + rm][];
+        LinearSolver.SystemInfo systemInfo = linearSolver.fullSolve(tildePrimeMatrix, d + rm, vectorY, vectorX);
+        assert systemInfo.equals(LinearSolver.SystemInfo.Consistent);
         // update the result into the storage
-        int xVectorIndex = 0;
-        for (int cIndex : cArray) {
-            storage[lm + cIndex] = BytesUtils.clone(vectorX[xVectorIndex]);
-            xVectorIndex++;
+        for (int iRow = 0; iRow < d; iRow++) {
+            storage[coreVertexArray[iRow]] = BytesUtils.clone(vectorX[iRow]);
+        }
+        for (int rmIndex = 0; rmIndex < rm; rmIndex++) {
+            storage[lm + rmIndex] = BytesUtils.clone(vectorX[d + rmIndex]);
         }
         return storage;
     }
@@ -403,8 +322,9 @@ class H2GctGf2eDokvs<T> extends AbstractGf2eDokvs<T> implements SparseGf2eDokvs<
     private byte[][] generateFreeStorage(Map<T, byte[]> keyValueMap, TIntSet coreVertexSet, Set<T> coreDataSet) {
         // Let d˜ = |R| and abort if d˜ > d + λ
         int dTilde = coreDataSet.size();
-        if (dTilde > rm) {
-            throw new ArithmeticException("|d˜| = " + dTilde + "，d + λ + " + rm + " no solutions");
+        int d = coreVertexSet.size();
+        if (dTilde > d + rm) {
+            throw new ArithmeticException("|d˜| = " + dTilde + ", rm = " + (d + rm) + " no solutions");
         }
         if (dTilde == 0) {
             byte[][] storage = new byte[m][];
@@ -429,8 +349,8 @@ class H2GctGf2eDokvs<T> extends AbstractGf2eDokvs<T> implements SparseGf2eDokvs<
                 vectorY[rowIndex] = BytesUtils.clone(keyValueMap.get(coreData));
                 rowIndex++;
             }
-            SystemInfo systemInfo = linearSolver.freeSolve(matrixM, m, vectorY, vectorX);
-            assert systemInfo.equals(SystemInfo.Consistent);
+            LinearSolver.SystemInfo systemInfo = linearSolver.freeSolve(matrixM, m, vectorY, vectorX);
+            assert systemInfo.equals(LinearSolver.SystemInfo.Consistent);
             byte[][] storage = new byte[m][];
             // set left part
             for (int vertex : coreVertexSet.toArray()) {

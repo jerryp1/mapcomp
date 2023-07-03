@@ -1,8 +1,6 @@
 package edu.alibaba.mpc4j.crypto.matrix.okve.dokvs.gf2e;
 
 import edu.alibaba.mpc4j.common.tool.EnvType;
-import edu.alibaba.mpc4j.crypto.matrix.okve.cuckootable.CuckooTableSingletonTcFinder;
-import edu.alibaba.mpc4j.crypto.matrix.okve.cuckootable.H2CuckooTableTcFinder;
 
 /**
  * GF(2^e)-DOKVS factory.
@@ -34,6 +32,10 @@ public class Gf2eDokvsFactory {
          * singleton garbled cuckoo table with 3 hash functions.
          */
         H3_SINGLETON_GCT,
+        /**
+         * blazing fast using garbled cuckoo table with 2 hash function.
+         */
+        H2_BLAZE_GCT,
     }
 
     /**
@@ -49,9 +51,11 @@ public class Gf2eDokvsFactory {
     public static <X> Gf2eDokvs<X> createInstance(EnvType envType, Gf2eDokvsType type, int l, int n, byte[][] keys) {
         switch (type) {
             case H2_TWO_CORE_GCT:
-                return new H2GctGf2eDokvs<>(envType, l, n, keys, new H2CuckooTableTcFinder<>());
+                return new H2TwoCoreGctGf2eDokvs<>(envType, l, n, keys);
             case H2_SINGLETON_GCT:
-                return new H2GctGf2eDokvs<>(envType, l, n, keys, new CuckooTableSingletonTcFinder<>());
+                return new H2SingletonGctGf2eDokvs<>(envType, l, n, keys);
+            case H2_BLAZE_GCT:
+                return new H2BlazeGctGf2eDokvs<>(envType, l, n, keys);
             case H3_SINGLETON_GCT:
                 return new H3GctGfe2Dokvs<>(envType, l, n, keys);
             default:
@@ -69,7 +73,8 @@ public class Gf2eDokvsFactory {
         switch (type) {
             case H2_TWO_CORE_GCT:
             case H2_SINGLETON_GCT:
-                return H2GctGf2eDokvs.TOTAL_HASH_NUM;
+            case H2_BLAZE_GCT:
+                return AbstractH2GctGf2eDokvs.TOTAL_HASH_NUM;
             case H3_SINGLETON_GCT:
                 return H3GctGfe2Dokvs.TOTAL_HASH_NUM;
             default:
@@ -89,7 +94,9 @@ public class Gf2eDokvsFactory {
         switch (type) {
             case H2_TWO_CORE_GCT:
             case H2_SINGLETON_GCT:
-                return H2GctGf2eDokvs.getLm(n) + H2GctGf2eDokvs.getRm(n);
+                return H2TwoCoreGctGf2eDokvs.getLm(n) + H2TwoCoreGctGf2eDokvs.getRm(n);
+            case H2_BLAZE_GCT:
+                return H2BlazeGctGf2eDokvs.getLm(n) + H2BlazeGctGf2eDokvs.getRm(n);
             case H3_SINGLETON_GCT:
                 return H3GctGfe2Dokvs.getLm(n) + H3GctGfe2Dokvs.getRm(n);
             default:

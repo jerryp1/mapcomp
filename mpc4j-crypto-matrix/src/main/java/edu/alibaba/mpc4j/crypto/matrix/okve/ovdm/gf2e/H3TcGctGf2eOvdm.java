@@ -298,7 +298,7 @@ class H3TcGctGf2eOvdm<T> extends AbstractGf2eOvdm<T> implements SparseGf2eOvdm<T
         }
         // let M˜* be the sub-matrix of M˜ containing an invertible d˜ × d˜ matrix,
         // and C ⊂ [d + λ] index the corresponding columns of M˜.
-        TIntSet setC = maxLisFinder.getLisColumns(tildePrimeMatrix, dTilde);
+        TIntSet setC = maxLisFinder.getLisRows(tildePrimeMatrix, dTilde);
         int[] cArray = setC.toArray();
         int size = setC.size();
         int byteSize = CommonUtils.getByteLength(size);

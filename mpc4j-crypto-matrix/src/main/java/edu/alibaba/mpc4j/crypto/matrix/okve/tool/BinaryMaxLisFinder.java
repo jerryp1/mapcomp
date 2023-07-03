@@ -88,7 +88,7 @@ public class BinaryMaxLisFinder {
      * @param nColumns number of columns.
      * @return maximal linear independent rows.
      */
-    public TIntSet getLisColumns(byte[][] lhs, int nColumns) {
+    public TIntSet getLisRows(byte[][] lhs, int nColumns) {
         int nRows = lhs.length;
         MathPreconditions.checkPositive("n", nRows);
         // 0 <= m <= n
