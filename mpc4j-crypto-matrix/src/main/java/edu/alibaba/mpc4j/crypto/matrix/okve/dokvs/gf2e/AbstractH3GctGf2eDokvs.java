@@ -48,7 +48,7 @@ abstract class AbstractH3GctGf2eDokvs<T> extends AbstractGf2eDokvs<T> implements
     /**
      * number of sparse hashes
      */
-    private static final int SPARSE_HASH_NUM = 3;
+    protected static final int SPARSE_HASH_NUM = 3;
     /**
      * number of total hashes
      */

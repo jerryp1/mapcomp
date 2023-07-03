@@ -22,7 +22,7 @@ import java.security.SecureRandom;
  * @author Weiran Liu
  * @date 2023/7/3
  */
-class H3GctGfe2Dokvs<T> extends AbstractH3GctGf2eDokvs<T> {
+class H3SingletonGctGfe2Dokvs<T> extends AbstractH3GctGf2eDokvs<T> {
     /**
      * left ε, i.e., ε_l.
      */
@@ -72,11 +72,11 @@ class H3GctGfe2Dokvs<T> extends AbstractH3GctGf2eDokvs<T> {
         }
     }
 
-    H3GctGfe2Dokvs(EnvType envType, int l, int n, byte[][] keys) {
+    H3SingletonGctGfe2Dokvs(EnvType envType, int l, int n, byte[][] keys) {
         this(envType, l, n, keys, new SecureRandom());
     }
 
-    H3GctGfe2Dokvs(EnvType envType, int l, int n, byte[][] keys, SecureRandom secureRandom) {
+    H3SingletonGctGfe2Dokvs(EnvType envType, int l, int n, byte[][] keys, SecureRandom secureRandom) {
         super(envType, l, n, getLm(n), getRm(n), keys, secureRandom);
     }
 

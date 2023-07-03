@@ -29,13 +29,17 @@ public class Gf2eDokvsFactory {
          */
         H2_SINGLETON_GCT,
         /**
+         * blazing fast using garbled cuckoo table with 2 hash function.
+         */
+        H2_BLAZE_GCT,
+        /**
          * singleton garbled cuckoo table with 3 hash functions.
          */
         H3_SINGLETON_GCT,
         /**
-         * blazing fast using garbled cuckoo table with 2 hash function.
+         * blazing fast using garbled cuckoo table with 3 hash function.
          */
-        H2_BLAZE_GCT,
+        H3_BLAZE_GCT,
     }
 
     /**
@@ -57,7 +61,9 @@ public class Gf2eDokvsFactory {
             case H2_BLAZE_GCT:
                 return new H2BlazeGctGf2eDokvs<>(envType, l, n, keys);
             case H3_SINGLETON_GCT:
-                return new H3GctGfe2Dokvs<>(envType, l, n, keys);
+                return new H3SingletonGctGfe2Dokvs<>(envType, l, n, keys);
+            case H3_BLAZE_GCT:
+                return new H3BlazeGctGf2eDokvs<>(envType, l, n, keys);
             default:
                 throw new IllegalArgumentException("Invalid " + Gf2eDokvsType.class.getSimpleName() + ": " + type.name());
         }
@@ -76,7 +82,8 @@ public class Gf2eDokvsFactory {
             case H2_BLAZE_GCT:
                 return AbstractH2GctGf2eDokvs.TOTAL_HASH_NUM;
             case H3_SINGLETON_GCT:
-                return H3GctGfe2Dokvs.TOTAL_HASH_NUM;
+            case H3_BLAZE_GCT:
+                return H3SingletonGctGfe2Dokvs.TOTAL_HASH_NUM;
             default:
                 throw new IllegalArgumentException("Invalid " + Gf2eDokvsType.class.getSimpleName() + ": " + type.name());
         }
@@ -98,7 +105,9 @@ public class Gf2eDokvsFactory {
             case H2_BLAZE_GCT:
                 return H2BlazeGctGf2eDokvs.getLm(n) + H2BlazeGctGf2eDokvs.getRm(n);
             case H3_SINGLETON_GCT:
-                return H3GctGfe2Dokvs.getLm(n) + H3GctGfe2Dokvs.getRm(n);
+                return H3SingletonGctGfe2Dokvs.getLm(n) + H3SingletonGctGfe2Dokvs.getRm(n);
+            case H3_BLAZE_GCT:
+                return H3BlazeGctGf2eDokvs.getLm(n) + H3BlazeGctGf2eDokvs.getRm(n);
             default:
                 throw new IllegalArgumentException("Invalid " + Gf2eDokvsType.class.getSimpleName() + ": " + type.name());
         }

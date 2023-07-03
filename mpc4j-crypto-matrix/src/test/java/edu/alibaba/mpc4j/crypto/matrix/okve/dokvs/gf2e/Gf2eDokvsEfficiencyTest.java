@@ -49,8 +49,9 @@ public class Gf2eDokvsEfficiencyTest {
     @Test
     public void testEfficiency() {
         LOGGER.info(
-            "{}\t{}\t{}\t{}\t{}\t{}",
-            "                name", "      logN", " encode(s)", " decode(s)", "dEncode(s)", "dDecode(s)"
+            "{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}",
+            "                name", "      logN", "         m", "        lm", "        rm",
+            " encode(s)", " decode(s)", "dEncode(s)", "dDecode(s)"
         );
         testEfficiency(8);
         testEfficiency(10);
@@ -89,10 +90,24 @@ public class Gf2eDokvsEfficiencyTest {
             STOP_WATCH.stop();
             double doublyDecodeTime = (double) STOP_WATCH.getTime(TimeUnit.MILLISECONDS) / 1000;
             STOP_WATCH.reset();
+            String lm;
+            String rm;
+            if (dokvs instanceof SparseGf2eDokvs) {
+                SparseGf2eDokvs<ByteBuffer> sparseDokvs = (SparseGf2eDokvs<ByteBuffer>) dokvs;
+                int m = sparseDokvs.getM();
+                lm = String.valueOf(sparseDokvs.sparsePositionRange());
+                rm = String.valueOf(m - sparseDokvs.sparsePositionRange());
+            } else {
+                lm = "-";
+                rm = "-";
+            }
             LOGGER.info(
-                "{}\t{}\t{}\t{}\t{}\t{}",
+                "{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}",
                 StringUtils.leftPad(type.name(), 20),
                 StringUtils.leftPad(String.valueOf(logN), 10),
+                StringUtils.leftPad(String.valueOf(dokvs.getM()), 10),
+                StringUtils.leftPad(lm, 10),
+                StringUtils.leftPad(rm, 10),
                 StringUtils.leftPad(TIME_DECIMAL_FORMAT.format(nonDoublyEncodeTime), 10),
                 StringUtils.leftPad(TIME_DECIMAL_FORMAT.format(nonDoublyDecodeTime), 10),
                 StringUtils.leftPad(TIME_DECIMAL_FORMAT.format(doublyEncodeTime), 10),

@@ -21,12 +21,12 @@ import java.security.SecureRandom;
  */
 class H2BlazeGctGf2eDokvs<T> extends AbstractH2GctGf2eDokvs<T> {
     /**
-     * left ε, i.e., ε_l, it is shown in the VOLE-PSI code.
+     * left ε, i.e., ε_l.
      */
     private static final double LEFT_EPSILON = 2.0;
 
     /**
-     * Gets left m. The result is shown in the VOLE-PSI code.
+     * Gets left m. The result is shown in Lemma 5 of the paper, i.e., w = 2, e = 2.
      *
      * @param n number of key-value pairs.
      * @return lm = ε_l * n, with lm % Byte.SIZE == 0.
@@ -39,7 +39,7 @@ class H2BlazeGctGf2eDokvs<T> extends AbstractH2GctGf2eDokvs<T> {
     /**
      * Gets right m. The result is shown in the final part of Section 3.1. That is,
      * <p>
-     * λ / (g - λ - 1.9) = 7.529 / ((log_2(n) - 2.556) + 0.610).
+     * α_n = λ / (g - λ - 1.9) = 7.529 / ((log_2(n) - 2.556) + 0.610).
      * </p>
      * Therefore, we can compute g with the following formula with λ = 40.
      * <p>
