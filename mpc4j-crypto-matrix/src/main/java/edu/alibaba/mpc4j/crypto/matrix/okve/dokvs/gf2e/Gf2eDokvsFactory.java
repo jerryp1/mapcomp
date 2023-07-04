@@ -40,6 +40,10 @@ public class Gf2eDokvsFactory {
          * blazing fast using garbled cuckoo table with 3 hash function.
          */
         H3_BLAZE_GCT,
+        /**
+         * distinct garbled bloom filter
+         */
+        DISTINCT_GBF,
     }
 
     /**
@@ -52,18 +56,20 @@ public class Gf2eDokvsFactory {
      * @param keys    keys.
      * @return and instance.
      */
-    public static <X> Gf2eDokvs<X> createInstance(EnvType envType, Gf2eDokvsType type, int l, int n, byte[][] keys) {
+    public static <X> Gf2eDokvs<X> createInstance(EnvType envType, Gf2eDokvsType type, int n, int l, byte[][] keys) {
         switch (type) {
             case H2_TWO_CORE_GCT:
-                return new H2TwoCoreGctGf2eDokvs<>(envType, l, n, keys);
+                return new H2TwoCoreGctGf2eDokvs<>(envType, n, l, keys);
             case H2_SINGLETON_GCT:
-                return new H2SingletonGctGf2eDokvs<>(envType, l, n, keys);
+                return new H2SingletonGctGf2eDokvs<>(envType, n, l, keys);
             case H2_BLAZE_GCT:
-                return new H2BlazeGctGf2eDokvs<>(envType, l, n, keys);
+                return new H2BlazeGctGf2eDokvs<>(envType, n, l, keys);
             case H3_SINGLETON_GCT:
-                return new H3SingletonGctGfe2Dokvs<>(envType, l, n, keys);
+                return new H3SingletonGctGfe2Dokvs<>(envType, n, l, keys);
             case H3_BLAZE_GCT:
-                return new H3BlazeGctGf2eDokvs<>(envType, l, n, keys);
+                return new H3BlazeGctGf2eDokvs<>(envType, n, l, keys);
+            case DISTINCT_GBF:
+                return new DistinctGbfDokvs<>(envType, n, l, keys);
             default:
                 throw new IllegalArgumentException("Invalid " + Gf2eDokvsType.class.getSimpleName() + ": " + type.name());
         }
@@ -84,6 +90,8 @@ public class Gf2eDokvsFactory {
             case H3_SINGLETON_GCT:
             case H3_BLAZE_GCT:
                 return H3SingletonGctGfe2Dokvs.TOTAL_HASH_NUM;
+            case DISTINCT_GBF:
+                return DistinctGbfDokvs.TOTAL_HASH_NUM;
             default:
                 throw new IllegalArgumentException("Invalid " + Gf2eDokvsType.class.getSimpleName() + ": " + type.name());
         }
@@ -108,6 +116,8 @@ public class Gf2eDokvsFactory {
                 return H3SingletonGctGfe2Dokvs.getLm(n) + H3SingletonGctGfe2Dokvs.getRm(n);
             case H3_BLAZE_GCT:
                 return H3BlazeGctGf2eDokvs.getLm(n) + H3BlazeGctGf2eDokvs.getRm(n);
+            case DISTINCT_GBF:
+                return DistinctGbfDokvs.getM(n);
             default:
                 throw new IllegalArgumentException("Invalid " + Gf2eDokvsType.class.getSimpleName() + ": " + type.name());
         }

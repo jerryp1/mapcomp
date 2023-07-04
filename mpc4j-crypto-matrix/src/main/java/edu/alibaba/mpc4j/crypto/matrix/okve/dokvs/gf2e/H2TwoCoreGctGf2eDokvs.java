@@ -57,12 +57,12 @@ class H2TwoCoreGctGf2eDokvs<T> extends AbstractH2GctGf2eDokvs<T> {
         ) * Byte.SIZE;
     }
 
-    H2TwoCoreGctGf2eDokvs(EnvType envType, int l, int n, byte[][] keys) {
-        this(envType, l, n, keys, new SecureRandom());
+    H2TwoCoreGctGf2eDokvs(EnvType envType, int n, int l, byte[][] keys) {
+        this(envType, n, l, keys, new SecureRandom());
     }
 
-    H2TwoCoreGctGf2eDokvs(EnvType envType, int l, int n, byte[][] keys, SecureRandom secureRandom) {
-        super(envType, l, n, getLm(n), getRm(n), keys, new H2CuckooTableTcFinder<>(), secureRandom);
+    H2TwoCoreGctGf2eDokvs(EnvType envType, int n, int l, byte[][] keys, SecureRandom secureRandom) {
+        super(envType, n, getLm(n), getRm(n), l, keys, new H2CuckooTableTcFinder<>(), secureRandom);
     }
 
     @Override

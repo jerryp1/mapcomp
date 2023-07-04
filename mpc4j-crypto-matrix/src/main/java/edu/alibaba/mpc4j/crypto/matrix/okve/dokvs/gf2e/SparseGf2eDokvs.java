@@ -6,7 +6,7 @@ import java.util.stream.IntStream;
  * sparse GF(2^e) DOKVS. The positions can be split into the sparse part and the dense part.
  *
  * @author Weiran Liu
- * @date 2023/7/3
+ * @date 2023/7/4
  */
 public interface SparseGf2eDokvs<T> extends Gf2eDokvs<T> {
     /**
@@ -25,11 +25,11 @@ public interface SparseGf2eDokvs<T> extends Gf2eDokvs<T> {
     int[] sparsePositions(T key);
 
     /**
-     * Gets the sparse num.
+     * Gets the maximal sparse num.
      *
-     * @return the sparse num.
+     * @return the maximal sparse num.
      */
-    int sparsePositionNum();
+    int maxSparsePositionNum();
 
     /**
      * Gets the dense positions.
@@ -52,7 +52,7 @@ public interface SparseGf2eDokvs<T> extends Gf2eDokvs<T> {
      * @return the maximal num.
      */
     default int maxPositionNum() {
-        return sparsePositionNum() + maxDensePositionNum();
+        return maxSparsePositionNum() + maxDensePositionNum();
     }
 
     /**

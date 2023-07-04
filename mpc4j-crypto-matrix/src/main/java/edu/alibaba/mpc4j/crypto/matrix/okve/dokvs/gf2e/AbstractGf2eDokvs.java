@@ -42,7 +42,7 @@ abstract class AbstractGf2eDokvs<T> implements Gf2eDokvs<T> {
      */
     protected boolean parallelEncode;
 
-    protected AbstractGf2eDokvs(int l, int n, int m) {
+    protected AbstractGf2eDokvs(int n, int m, int l) {
         MathPreconditions.checkPositive("n", n);
         this.n = n;
         // here we only need to require l > 0

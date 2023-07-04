@@ -47,7 +47,7 @@ import java.util.stream.IntStream;
  * @author Weiran Liu
  * @date 2023/7/3
  */
-abstract class AbstractH2GctGf2eDokvs<T> extends AbstractGf2eDokvs<T> implements SparseGf2eDokvs<T> {
+abstract class AbstractH2GctGf2eDokvs<T> extends AbstractGf2eDokvs<T> implements SparseConstantGf2eDokvs<T> {
     /**
      * number of sparse hashes
      */
@@ -97,14 +97,14 @@ abstract class AbstractH2GctGf2eDokvs<T> extends AbstractGf2eDokvs<T> implements
      */
     private Map<T, boolean[]> dataHrMap;
 
-    AbstractH2GctGf2eDokvs(EnvType envType, int l, int n, int lm, int rm,
+    AbstractH2GctGf2eDokvs(EnvType envType, int n, int lm, int rm, int l,
                            byte[][] keys, CuckooTableTcFinder<T> tcFinder) {
-        this(envType, l, n, lm, rm, keys, tcFinder, new SecureRandom());
+        this(envType, n, lm, rm, l, keys, tcFinder, new SecureRandom());
     }
 
-    AbstractH2GctGf2eDokvs(EnvType envType, int l, int n, int lm, int rm,
+    AbstractH2GctGf2eDokvs(EnvType envType, int n, int lm, int rm, int l,
                            byte[][] keys, CuckooTableTcFinder<T> tcFinder, SecureRandom secureRandom) {
-        super(l, n, lm + rm);
+        super(n, lm + rm, l);
         MathPreconditions.checkEqual("keys.length", "hash_num", keys.length, TOTAL_HASH_NUM);
         this.lm = lm;
         this.rm = rm;
