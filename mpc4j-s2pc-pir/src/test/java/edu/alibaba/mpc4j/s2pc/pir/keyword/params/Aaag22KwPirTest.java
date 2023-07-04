@@ -41,14 +41,14 @@ public class Aaag22KwPirTest extends AbstractTwoPartyPtoTest {
     /**
      * server element size
      */
-    private static final int SERVER_MAP_SIZE = 1 << 20;
+    private static final int SERVER_MAP_SIZE = 1 << 18;
 
     @Parameterized.Parameters(name = "{0}")
     public static Collection<Object[]> configurations() {
         Collection<Object[]> configurations = new ArrayList<>();
 
         configurations.add(new Object[]{
-            KwPirFactory.KwPirType.CMG21.name(), new Aaag22KwPirConfig.Builder().build(),
+            KwPirFactory.KwPirType.AAAG22.name(), new Aaag22KwPirConfig.Builder().build(),
             Aaag22KwPirParams.DEFAULT_PARAMS
         });
 
