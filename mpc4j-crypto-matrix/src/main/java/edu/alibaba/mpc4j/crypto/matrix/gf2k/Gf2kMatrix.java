@@ -1,23 +1,21 @@
-package edu.alibaba.mpc4j.crypto.matrix.zp;
+package edu.alibaba.mpc4j.crypto.matrix.gf2k;
 
-import edu.alibaba.mpc4j.common.tool.galoisfield.zp.Zp;
+import edu.alibaba.mpc4j.common.tool.galoisfield.gf2k.Gf2k;
 import edu.alibaba.mpc4j.crypto.matrix.Matrix;
 
-import java.math.BigInteger;
-
 /**
- * Zp matrix.
+ * GF(2^κ) matrix.
  *
  * @author Weiran Liu
- * @date 2023/6/19
+ * @date 2023/7/4
  */
-public interface ZpMatrix extends Matrix {
+public interface Gf2kMatrix extends Matrix {
     /**
-     * Gets Zp instance.
+     * Gets GF2K instance.
      *
-     * @return Zp instance.
+     * @return GF2K instance.
      */
-    Zp getZp();
+    Gf2k getGf2k();
 
     /**
      * Gets the assigned row.
@@ -25,7 +23,7 @@ public interface ZpMatrix extends Matrix {
      * @param iRow row index.
      * @return the assigned row.
      */
-    BigInteger[] getRow(int iRow);
+    byte[][] getRow(int iRow);
 
     /**
      * Gets the size. Note that only square matrix support this.
@@ -42,12 +40,12 @@ public interface ZpMatrix extends Matrix {
      * @param iColumn column index.
      * @return the entry at (iRow, iColumn).
      */
-    BigInteger getEntry(int iRow, int iColumn);
+    byte[] getEntry(int iRow, int iColumn);
 
     /**
      * Gets the data.
      *
      * @return the data.
      */
-    BigInteger[][] getData();
+    byte[][][] getData();
 }

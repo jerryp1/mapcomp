@@ -1,31 +1,31 @@
-package edu.alibaba.mpc4j.crypto.matrix.zp;
+package edu.alibaba.mpc4j.crypto.matrix.gf2k;
 
 import cc.redberry.rings.util.ArraysUtil;
 import com.google.common.base.Preconditions;
 import edu.alibaba.mpc4j.common.tool.MathPreconditions;
-import edu.alibaba.mpc4j.common.tool.galoisfield.zp.Zp;
-import edu.alibaba.mpc4j.common.tool.utils.BigIntegerUtils;
+import edu.alibaba.mpc4j.common.tool.galoisfield.gf2k.Gf2k;
+import edu.alibaba.mpc4j.common.tool.utils.BytesUtils;
+import edu.alibaba.mpc4j.crypto.matrix.zp.ZpMatrix;
 import org.apache.commons.lang3.builder.EqualsBuilder;
 import org.apache.commons.lang3.builder.HashCodeBuilder;
 
-import java.math.BigInteger;
 import java.security.SecureRandom;
 import java.util.stream.IntStream;
 
 /**
- * BigInteger dense Zp matrix.
+ * dense GF(2^κ) matrix.
  *
  * @author Weiran Liu
- * @date 2023/6/19
+ * @date 2023/7/4
  */
-public class DenseZpMatrix implements ZpMatrix {
+public class DenseGf2kMatrix implements Gf2kMatrix {
     /**
      * Returns if the given matrix is an identity matrix.
      *
      * @param matrix matrix.
      * @return true if it is an identity matrix.
      */
-    public static boolean isIdentity(DenseZpMatrix matrix) {
+    public static boolean isIdentity(DenseGf2kMatrix matrix) {
         if (matrix.rows != matrix.columns) {
             return false;
         }
@@ -33,11 +33,11 @@ public class DenseZpMatrix implements ZpMatrix {
         for (int row = 0; row < size; row++) {
             for (int column = 0; column < size; column++) {
                 if (row == column) {
-                    if (!matrix.zp.isOne(matrix.data[row][column])) {
+                    if (!matrix.gf2k.isOne(matrix.data[row][column])) {
                         return false;
                     }
                 } else {
-                    if (!matrix.zp.isZero(matrix.data[row][column])) {
+                    if (!matrix.gf2k.isZero(matrix.data[row][column])) {
                         return false;
                     }
                 }
@@ -49,46 +49,46 @@ public class DenseZpMatrix implements ZpMatrix {
     /**
      * Creates a random matrix.
      *
-     * @param zp           Zp instance.
+     * @param gf2k         GF2K instance.
      * @param rows         rows.
      * @param columns      columns.
      * @param secureRandom random state.
      * @return a random matrix.
      */
-    public static DenseZpMatrix createRandom(Zp zp, int rows, int columns, SecureRandom secureRandom) {
-        DenseZpMatrix matrix = new DenseZpMatrix(zp, rows, columns);
+    public static DenseGf2kMatrix createRandom(Gf2k gf2k, int rows, int columns, SecureRandom secureRandom) {
+        DenseGf2kMatrix matrix = new DenseGf2kMatrix(gf2k, rows, columns);
         matrix.data = IntStream.range(0, rows)
             .mapToObj(iRow ->
                 IntStream.range(0, columns)
-                    .mapToObj(iColumn -> zp.createRandom(secureRandom))
-                    .toArray(BigInteger[]::new)
+                    .mapToObj(iColumn -> gf2k.createRandom(secureRandom))
+                    .toArray(byte[][]::new)
             )
-            .toArray(BigInteger[][]::new);
+            .toArray(byte[][][]::new);
         return matrix;
     }
 
     /**
      * Creates an identity matrix.
      *
-     * @param zp   Zp instance.
+     * @param gf2k GF2K instance.
      * @param size size.
      * @return an identity matrix.
      */
-    public static DenseZpMatrix createIdentity(Zp zp, int size) {
-        DenseZpMatrix matrix = new DenseZpMatrix(zp, size, size);
-        matrix.data = createIdentityData(zp, size);
+    public static DenseGf2kMatrix createIdentity(Gf2k gf2k, int size) {
+        DenseGf2kMatrix matrix = new DenseGf2kMatrix(gf2k, size, size);
+        matrix.data = createIdentityData(gf2k, size);
         return matrix;
     }
 
-    private static BigInteger[][] createIdentityData(Zp zp, int size) {
+    private static byte[][][] createIdentityData(Gf2k gf2k, int size) {
         MathPreconditions.checkPositive("size", size);
-        BigInteger[][] matrix = new BigInteger[size][size];
+        byte[][][] matrix = new byte[size][size][];
         for (int row = 0; row < size; row++) {
             for (int column = 0; column < size; column++) {
                 if (row == column) {
-                    matrix[row][column] = zp.createOne();
+                    matrix[row][column] = gf2k.createOne();
                 } else {
-                    matrix[row][column] = zp.createZero();
+                    matrix[row][column] = gf2k.createZero();
                 }
             }
         }
@@ -98,21 +98,21 @@ public class DenseZpMatrix implements ZpMatrix {
     /**
      * Creates a matrix.
      *
-     * @param zp   Zp instance.
+     * @param gf2k GF2K instance.
      * @param data the matrix data.
      * @return a matrix.
      */
-    public static DenseZpMatrix fromDense(Zp zp, BigInteger[][] data) {
+    public static DenseGf2kMatrix fromDense(Gf2k gf2k, byte[][][] data) {
         MathPreconditions.checkPositive("rows", data.length);
         int rows = data.length;
         MathPreconditions.checkPositive("columns", data[0].length);
         int columns = data[0].length;
-        DenseZpMatrix matrix = new DenseZpMatrix(zp, rows, columns);
+        DenseGf2kMatrix matrix = new DenseGf2kMatrix(gf2k, rows, columns);
         // verify square and valid elements
         for (int iRow = 0; iRow < rows; iRow++) {
             MathPreconditions.checkEqual(iRow + "-th row length", "size", data[iRow].length, columns);
             for (int iColumn = 0; iColumn < columns; iColumn++) {
-                Preconditions.checkArgument(zp.validateElement(data[iRow][iColumn]));
+                Preconditions.checkArgument(gf2k.validateElement(data[iRow][iColumn]));
             }
         }
         matrix.data = data;
@@ -122,22 +122,22 @@ public class DenseZpMatrix implements ZpMatrix {
     /**
      * Creates a matrix without validate check.
      *
-     * @param zp   Zp instance.
+     * @param gf2k GF2K instance.
      * @param data the matrix data.
      * @return a matrix.
      */
-    private static DenseZpMatrix fromDenseUncheck(Zp zp, BigInteger[][] data) {
+    private static DenseGf2kMatrix fromDenseUncheck(Gf2k gf2k, byte[][][] data) {
         int rows = data.length;
         int columns = data[0].length;
-        DenseZpMatrix matrix = new DenseZpMatrix(zp, rows, columns);
+        DenseGf2kMatrix matrix = new DenseGf2kMatrix(gf2k, rows, columns);
         matrix.data = data;
         return matrix;
     }
 
     /**
-     * Zp instance
+     * GF2K instance
      */
-    protected final Zp zp;
+    protected final Gf2k gf2k;
     /**
      * number of rows
      */
@@ -149,14 +149,14 @@ public class DenseZpMatrix implements ZpMatrix {
     /**
      * data
      */
-    private BigInteger[][] data;
+    private byte[][][] data;
     /**
      * parallel
      */
     private boolean parallel;
 
-    protected DenseZpMatrix(Zp zp, int rows, int columns) {
-        this.zp = zp;
+    protected DenseGf2kMatrix(Gf2k gf2k, int rows, int columns) {
+        this.gf2k = gf2k;
         this.rows = rows;
         this.columns = columns;
     }
@@ -167,8 +167,8 @@ public class DenseZpMatrix implements ZpMatrix {
     }
 
     @Override
-    public DenseZpMatrix copy() {
-        return DenseZpMatrix.fromDenseUncheck(zp, BigIntegerUtils.clone(data));
+    public DenseGf2kMatrix copy() {
+        return DenseGf2kMatrix.fromDenseUncheck(gf2k, BytesUtils.clone(data));
     }
 
     /**
@@ -177,19 +177,19 @@ public class DenseZpMatrix implements ZpMatrix {
      * @param that that matrix.
      * @return result.
      */
-    public DenseZpMatrix add(ZpMatrix that) {
-        Preconditions.checkArgument(this.zp.equals(that.getZp()));
+    public DenseGf2kMatrix add(Gf2kMatrix that) {
+        Preconditions.checkArgument(this.gf2k.equals(that.getGf2k()));
         MathPreconditions.checkEqual("this.rows", "that.rows", this.rows, that.getRows());
         MathPreconditions.checkEqual("this.columns", "that.columns", this.columns, that.getColumns());
-        BigInteger[][] addData = new BigInteger[rows][columns];
+        byte[][][] addData = new byte[rows][columns][];
         IntStream rowIntStream = IntStream.range(0, rows);
         rowIntStream = parallel ? rowIntStream.parallel() : rowIntStream;
         rowIntStream.forEach(iRow -> {
             for (int iColumn = 0; iColumn < columns; iColumn++) {
-                addData[iRow][iColumn] = zp.add(data[iRow][iColumn], that.getEntry(iRow, iColumn));
+                addData[iRow][iColumn] = gf2k.add(data[iRow][iColumn], that.getEntry(iRow, iColumn));
             }
         });
-        return DenseZpMatrix.fromDenseUncheck(zp, addData);
+        return DenseGf2kMatrix.fromDenseUncheck(gf2k, addData);
     }
 
     /**
@@ -198,21 +198,21 @@ public class DenseZpMatrix implements ZpMatrix {
      * @param that that matrix.
      * @return result.
      */
-    public DenseZpMatrix multiply(ZpMatrix that) {
+    public DenseGf2kMatrix multiply(Gf2kMatrix that) {
         int thatColumns = that.getColumns();
         MathPreconditions.checkEqual("this.columns", "that.rows", this.columns, that.getRows());
-        BigInteger[][] mulData = new BigInteger[rows][thatColumns];
+        byte[][][] mulData = new byte[rows][thatColumns][];
         IntStream rowIntStream = IntStream.range(0, rows);
         rowIntStream = parallel ? rowIntStream.parallel() : rowIntStream;
         rowIntStream.forEach(iRow -> {
             for (int iColumn = 0; iColumn < thatColumns; iColumn++) {
-                mulData[iRow][iColumn] = zp.createZero();
+                mulData[iRow][iColumn] = gf2k.createZero();
                 for (int index = 0; index < columns; index++) {
-                    mulData[iRow][iColumn] = zp.add(mulData[iRow][iColumn], zp.mul(data[iRow][index], that.getEntry(index, iColumn)));
+                   gf2k.addi(mulData[iRow][iColumn], gf2k.mul(data[iRow][index], that.getEntry(index, iColumn)));
                 }
             }
         });
-        return DenseZpMatrix.fromDenseUncheck(zp, mulData);
+        return DenseGf2kMatrix.fromDenseUncheck(gf2k, mulData);
     }
 
     /**
@@ -220,16 +220,16 @@ public class DenseZpMatrix implements ZpMatrix {
      *
      * @return result.
      */
-    public DenseZpMatrix transpose() {
-        BigInteger[][] tData = new BigInteger[columns][rows];
+    public DenseGf2kMatrix transpose() {
+        byte[][][] tData = new byte[columns][rows][];
         IntStream rowIntStream = IntStream.range(0, rows);
         rowIntStream = parallel ? rowIntStream.parallel() : rowIntStream;
         rowIntStream.forEach(iRow -> {
             for (int iColumn = 0; iColumn < columns; iColumn++) {
-                tData[iColumn][iRow] = data[iRow][iColumn];
+                tData[iColumn][iRow] = BytesUtils.clone(data[iRow][iColumn]);
             }
         });
-        return DenseZpMatrix.fromDenseUncheck(zp, tData);
+        return DenseGf2kMatrix.fromDenseUncheck(gf2k, tData);
     }
 
     /**
@@ -238,22 +238,22 @@ public class DenseZpMatrix implements ZpMatrix {
      * @return the inverse matrix.
      * @throws IllegalArgumentException if the matrix is not square.
      */
-    public DenseZpMatrix inverse() {
+    public DenseGf2kMatrix inverse() {
         MathPreconditions.checkEqual("rows", "columns", rows, columns);
         int size = rows;
         // copy the matrix, since the inverse procedure modifies the matrix.
-        BigInteger[][] cData = BigIntegerUtils.clone(data);
+        byte[][][] cData = BytesUtils.clone(data);
         // init the inverse matrix as the identity matrix.
-        BigInteger[][] iData = createIdentityData(zp, size);
+        byte[][][] iData = createIdentityData(gf2k, size);
         // transform the left matrix to the upper-triangular matrix
         for (int column = 0; column < size; column++) {
             //noinspection UnnecessaryLocalVariable
             int row = column;
-            if (zp.isZero(cData[row][column])) {
+            if (gf2k.isZero(cData[row][column])) {
                 // find a non-zero row
                 int max = row;
                 for (int iRow = row + 1; iRow < size; ++iRow) {
-                    if (!zp.isZero(cData[iRow][column])) {
+                    if (!gf2k.isZero(cData[iRow][column])) {
                         max = iRow;
                         break;
                     }
@@ -263,21 +263,21 @@ public class DenseZpMatrix implements ZpMatrix {
                 // right swap
                 ArraysUtil.swap(iData, row, max);
                 // singular
-                if (zp.isZero(cData[row][column])) {
+                if (gf2k.isZero(cData[row][column])) {
                     throw new ArithmeticException("Cannot inverse the matrix");
                 }
             }
             // Gaussian elimination
             for (int iRow = row + 1; iRow < size; ++iRow) {
-                BigInteger alpha = zp.div(cData[iRow][column], cData[row][column]);
-                if (!zp.isZero(alpha)) {
+                byte[] alpha = gf2k.div(cData[iRow][column], cData[row][column]);
+                if (!gf2k.isZero(alpha)) {
                     // left elimination
                     for (int iColumn = column; iColumn < size; ++iColumn) {
-                        cData[iRow][iColumn] = zp.sub(cData[iRow][iColumn], zp.mul(cData[row][iColumn], alpha));
+                        gf2k.subi(cData[iRow][iColumn], gf2k.mul(cData[row][iColumn], alpha));
                     }
                     // right elimination
                     for (int iColumn = 0; iColumn < size; iColumn++) {
-                        iData[iRow][iColumn] = zp.sub(iData[iRow][iColumn], zp.mul(iData[row][iColumn], alpha));
+                        gf2k.subi(iData[iRow][iColumn], gf2k.mul(iData[row][iColumn], alpha));
                     }
                 }
             }
@@ -287,40 +287,40 @@ public class DenseZpMatrix implements ZpMatrix {
             //noinspection UnnecessaryLocalVariable
             int row = column;
             // row normalization, i.e., set matrix[row][column] = 1
-            BigInteger val = cData[row][column];
-            assert !zp.isZero(val);
-            if (!zp.isOne(val)) {
-                BigInteger valInv = zp.inv(val);
+            byte[] val = BytesUtils.clone(cData[row][column]);
+            assert !gf2k.isZero(val);
+            if (!gf2k.isOne(val)) {
+                byte[] valInv = gf2k.inv(val);
                 // left normalization
                 for (int iColumn = column; iColumn < size; iColumn++) {
-                    cData[row][iColumn] = zp.mul(cData[row][iColumn], valInv);
+                    gf2k.muli(cData[row][iColumn], valInv);
                 }
                 // right normalization
                 for (int iColumn = 0; iColumn < size; iColumn++) {
-                    iData[row][iColumn] = zp.mul(iData[row][iColumn], valInv);
+                    gf2k.muli(iData[row][iColumn], valInv);
                 }
             }
             // substitution
             for (int iRow = 0; iRow < row; iRow++) {
-                if (!zp.isZero(cData[iRow][column])) {
-                    BigInteger alpha = cData[iRow][column];
+                if (!gf2k.isZero(cData[iRow][column])) {
+                    byte[] alpha = BytesUtils.clone(cData[iRow][column]);
                     // left substitution
                     for (int iColumn = column; iColumn < size; iColumn++) {
-                        cData[iRow][iColumn] = zp.sub(cData[iRow][iColumn], zp.mul(cData[row][iColumn], alpha));
+                        gf2k.subi(cData[iRow][iColumn], gf2k.mul(cData[row][iColumn], alpha));
                     }
                     // right substitution
                     for (int iColumn = 0; iColumn < size; iColumn++) {
-                        iData[iRow][iColumn] = zp.sub(iData[iRow][iColumn], zp.mul(iData[row][iColumn], alpha));
+                        gf2k.subi(iData[iRow][iColumn], gf2k.mul(iData[row][iColumn], alpha));
                     }
                 }
             }
         }
-        return DenseZpMatrix.fromDenseUncheck(zp, iData);
+        return DenseGf2kMatrix.fromDenseUncheck(gf2k, iData);
     }
 
     @Override
-    public Zp getZp() {
-        return zp;
+    public Gf2k getGf2k() {
+        return gf2k;
     }
 
     @Override
@@ -329,7 +329,7 @@ public class DenseZpMatrix implements ZpMatrix {
     }
 
     @Override
-    public BigInteger[] getRow(int iRow) {
+    public byte[][] getRow(int iRow) {
         return data[iRow];
     }
 
@@ -345,18 +345,18 @@ public class DenseZpMatrix implements ZpMatrix {
     }
 
     @Override
-    public BigInteger getEntry(int iRow, int iColumn) {
+    public byte[] getEntry(int iRow, int iColumn) {
         return data[iRow][iColumn];
     }
 
     @Override
-    public BigInteger[][] getData() {
+    public byte[][][] getData() {
         return data;
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(zp).append(data).hashCode();
+        return new HashCodeBuilder().append(gf2k).append(data).hashCode();
     }
 
     @Override
@@ -369,7 +369,7 @@ public class DenseZpMatrix implements ZpMatrix {
         }
         ZpMatrix that = (ZpMatrix) obj;
         return new EqualsBuilder()
-            .append(this.zp, that.getZp())
+            .append(this.gf2k, that.getZp())
             .append(this.data, that.getData())
             .isEquals();
     }

@@ -1,18 +1,16 @@
-package edu.alibaba.mpc4j.crypto.matrix.zp;
+package edu.alibaba.mpc4j.crypto.matrix.gf2k;
 
 import com.google.common.base.Preconditions;
-import edu.alibaba.mpc4j.common.tool.CommonConstants;
 import edu.alibaba.mpc4j.common.tool.EnvType;
-import edu.alibaba.mpc4j.common.tool.galoisfield.zp.Zp;
-import edu.alibaba.mpc4j.common.tool.galoisfield.zp.ZpFactory;
-import edu.alibaba.mpc4j.common.tool.utils.BigIntegerUtils;
+import edu.alibaba.mpc4j.common.tool.galoisfield.gf2k.Gf2k;
+import edu.alibaba.mpc4j.common.tool.galoisfield.gf2k.Gf2kFactory;
+import edu.alibaba.mpc4j.common.tool.utils.BytesUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.junit.Assert;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 
-import java.math.BigInteger;
 import java.security.SecureRandom;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -22,21 +20,17 @@ import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
 /**
- * square dense Zp matrix test.
+ * dense GF(2^κ) matrix test.
  *
  * @author Weiran Liu
- * @date 2023/6/19
+ * @date 2023/7/4
  */
 @RunWith(Parameterized.class)
-public class DenseZpMatrixTest {
+public class DenseGf2kMatrixTest {
     /**
      * random round
      */
     private static final int RANDOM_ROUND = 100;
-    /**
-     * l
-     */
-    private static final int L = CommonConstants.STATS_BIT_LENGTH;
     /**
      * random state
      */
@@ -60,26 +54,26 @@ public class DenseZpMatrixTest {
      */
     private final int size;
     /**
-     * Zp instance
+     * GF2K instance
      */
-    private final Zp zp;
+    private final Gf2k gf2k;
 
-    public DenseZpMatrixTest(String name, int size) {
+    public DenseGf2kMatrixTest(String name, int size) {
         Preconditions.checkArgument(StringUtils.isNotBlank(name));
         this.size = size;
-        zp = ZpFactory.createInstance(EnvType.STANDARD, L);
+        gf2k = Gf2kFactory.createInstance(EnvType.STANDARD);
     }
 
     @Test
     public void testIdentityInvertible() {
-        List<BigInteger[]> identityRows = IntStream.range(0, size)
+        List<byte[][]> identityRows = IntStream.range(0, size)
             .mapToObj(iRow -> {
-                BigInteger[] row = new BigInteger[size];
+                byte[][] row = new byte[size][];
                 for (int iColumn = 0; iColumn < size; iColumn++) {
                     if (iColumn == iRow) {
-                        row[iColumn] = zp.createOne();
+                        row[iColumn] = gf2k.createOne();
                     } else {
-                        row[iColumn] = zp.createZero();
+                        row[iColumn] = gf2k.createZero();
                     }
                 }
                 return row;
@@ -87,23 +81,23 @@ public class DenseZpMatrixTest {
             .collect(Collectors.toList());
         for (int round = 0; round < RANDOM_ROUND; round++) {
             Collections.shuffle(identityRows, SECURE_RANDOM);
-            BigInteger[][] data = identityRows.toArray(new BigInteger[0][]);
-            DenseZpMatrix matrix = DenseZpMatrix.fromDense(zp, data);
-            DenseZpMatrix iMatrix = matrix.inverse();
-            Assert.assertTrue(DenseZpMatrix.isIdentity(matrix.multiply(iMatrix)));
+            byte[][][] data = identityRows.toArray(new byte[0][][]);
+            DenseGf2kMatrix matrix = DenseGf2kMatrix.fromDense(gf2k, data);
+            DenseGf2kMatrix iMatrix = matrix.inverse();
+            Assert.assertTrue(DenseGf2kMatrix.isIdentity(matrix.multiply(iMatrix)));
         }
     }
 
     @Test
     public void testIdentityIrreversible() {
-        List<BigInteger[]> identityRows = IntStream.range(0, size)
+        List<byte[][]> identityRows = IntStream.range(0, size)
             .mapToObj(iRow -> {
-                BigInteger[] row = new BigInteger[size];
+                byte[][] row = new byte[size][];
                 for (int iColumn = 0; iColumn < size; iColumn++) {
                     if (iColumn == iRow) {
-                        row[iColumn] = zp.createOne();
+                        row[iColumn] = gf2k.createOne();
                     } else {
-                        row[iColumn] = zp.createZero();
+                        row[iColumn] = gf2k.createZero();
                     }
                 }
                 return row;
@@ -111,11 +105,11 @@ public class DenseZpMatrixTest {
             .collect(Collectors.toList());
         for (int round = 0; round < RANDOM_ROUND; round++) {
             Collections.shuffle(identityRows, SECURE_RANDOM);
-            BigInteger[][] data = BigIntegerUtils.clone(identityRows.toArray(new BigInteger[0][]));
+            byte[][][] data = BytesUtils.clone(identityRows.toArray(new byte[0][][]));
             // set a random row to be 0
             int zeroRowIndex = SECURE_RANDOM.nextInt(size);
-            data[zeroRowIndex] = IntStream.range(0, size).mapToObj(index -> zp.createZero()).toArray(BigInteger[]::new);
-            DenseZpMatrix matrix = DenseZpMatrix.fromDense(zp, data);
+            data[zeroRowIndex] = IntStream.range(0, size).mapToObj(index -> gf2k.createZero()).toArray(byte[][]::new);
+            DenseGf2kMatrix matrix = DenseGf2kMatrix.fromDense(gf2k, data);
             Assert.assertThrows(ArithmeticException.class, matrix::inverse);
         }
     }
@@ -123,14 +117,14 @@ public class DenseZpMatrixTest {
     @Test
     public void testRandomUpperTriangleInvertible() {
         // upper-triangle matrix must be invertible
-        List<BigInteger[]> upperTriangleRows = IntStream.range(0, size)
+        List<byte[][]> upperTriangleRows = IntStream.range(0, size)
             .mapToObj(iRow -> {
-                BigInteger[] row = new BigInteger[size];
+                byte[][] row = new byte[size][];
                 for (int iColumn = 0; iColumn < size; iColumn++) {
                     if (iColumn < iRow) {
-                        row[iColumn] = zp.createZero();
+                        row[iColumn] = gf2k.createZero();
                     } else {
-                        row[iColumn] = zp.createNonZeroRandom(SECURE_RANDOM);
+                        row[iColumn] = gf2k.createNonZeroRandom(SECURE_RANDOM);
                     }
                 }
                 return row;
@@ -138,24 +132,24 @@ public class DenseZpMatrixTest {
             .collect(Collectors.toList());
         for (int round = 0; round < RANDOM_ROUND; round++) {
             Collections.shuffle(upperTriangleRows, SECURE_RANDOM);
-            BigInteger[][] data = upperTriangleRows.toArray(new BigInteger[0][]);
-            DenseZpMatrix matrix = DenseZpMatrix.fromDense(zp, data);
-            DenseZpMatrix iMatrix = matrix.inverse();
-            Assert.assertTrue(DenseZpMatrix.isIdentity(matrix.multiply(iMatrix)));
+            byte[][][] data = upperTriangleRows.toArray(new byte[0][][]);
+            DenseGf2kMatrix matrix = DenseGf2kMatrix.fromDense(gf2k, data);
+            DenseGf2kMatrix iMatrix = matrix.inverse();
+            Assert.assertTrue(DenseGf2kMatrix.isIdentity(matrix.multiply(iMatrix)));
         }
     }
 
     @Test
     public void testRandomUpperTriangleIrreversible() {
         // upper-triangle matrix must be invertible
-        List<BigInteger[]> upperTriangleRows = IntStream.range(0, size)
+        List<byte[][]> upperTriangleRows = IntStream.range(0, size)
             .mapToObj(iRow -> {
-                BigInteger[] row = new BigInteger[size];
+                byte[][] row = new byte[size][];
                 for (int iColumn = 0; iColumn < size; iColumn++) {
                     if (iColumn < iRow) {
-                        row[iColumn] = zp.createZero();
+                        row[iColumn] = gf2k.createZero();
                     } else {
-                        row[iColumn] = zp.createNonZeroRandom(SECURE_RANDOM);
+                        row[iColumn] = gf2k.createNonZeroRandom(SECURE_RANDOM);
                     }
                 }
                 return row;
@@ -163,11 +157,11 @@ public class DenseZpMatrixTest {
             .collect(Collectors.toList());
         for (int round = 0; round < RANDOM_ROUND; round++) {
             Collections.shuffle(upperTriangleRows, SECURE_RANDOM);
-            BigInteger[][] data = upperTriangleRows.toArray(new BigInteger[0][]);
+            byte[][][] data = upperTriangleRows.toArray(new byte[0][][]);
             // set a random row to be 0
             int zeroRowIndex = SECURE_RANDOM.nextInt(size);
-            data[zeroRowIndex] = IntStream.range(0, size).mapToObj(index -> zp.createZero()).toArray(BigInteger[]::new);
-            DenseZpMatrix matrix = DenseZpMatrix.fromDense(zp, data);
+            data[zeroRowIndex] = IntStream.range(0, size).mapToObj(index -> gf2k.createZero()).toArray(byte[][]::new);
+            DenseGf2kMatrix matrix = DenseGf2kMatrix.fromDense(gf2k, data);
             Assert.assertThrows(ArithmeticException.class, matrix::inverse);
         }
     }
@@ -175,14 +169,14 @@ public class DenseZpMatrixTest {
     @Test
     public void testRandomLowerTriangleInvertible() {
         // lower-triangle matrix must be invertible
-        List<BigInteger[]> lowerTriangleRows = IntStream.range(0, size)
+        List<byte[][]> lowerTriangleRows = IntStream.range(0, size)
             .mapToObj(iRow -> {
-                BigInteger[] row = new BigInteger[size];
+                byte[][] row = new byte[size][];
                 for (int iColumn = 0; iColumn < size; iColumn++) {
                     if (iColumn <= iRow) {
-                        row[iColumn] = zp.createNonZeroRandom(SECURE_RANDOM);
+                        row[iColumn] = gf2k.createNonZeroRandom(SECURE_RANDOM);
                     } else {
-                        row[iColumn] = zp.createZero();
+                        row[iColumn] = gf2k.createZero();
                     }
                 }
                 return row;
@@ -190,10 +184,10 @@ public class DenseZpMatrixTest {
             .collect(Collectors.toList());
         for (int round = 0; round < RANDOM_ROUND; round++) {
             Collections.shuffle(lowerTriangleRows, SECURE_RANDOM);
-            BigInteger[][] data = lowerTriangleRows.toArray(new BigInteger[0][]);
-            DenseZpMatrix matrix = DenseZpMatrix.fromDense(zp, data);
-            DenseZpMatrix iMatrix = matrix.inverse();
-            Assert.assertTrue(DenseZpMatrix.isIdentity(matrix.multiply(iMatrix)));
+            byte[][][] data = lowerTriangleRows.toArray(new byte[0][][]);
+            DenseGf2kMatrix matrix = DenseGf2kMatrix.fromDense(gf2k, data);
+            DenseGf2kMatrix iMatrix = matrix.inverse();
+            Assert.assertTrue(DenseGf2kMatrix.isIdentity(matrix.multiply(iMatrix)));
         }
     }
 }

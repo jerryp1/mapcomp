@@ -343,6 +343,19 @@ public class BytesUtils {
     }
 
     /**
+     * 返回给定{@code byte[][][]}的克隆结果。
+     *
+     * @param byteArrays 待克隆的{@code byte[][][]}。
+     * @return {@code byte[][][]}的克隆结果。如果待克隆的{@code byte[][][]}为null，则返回null。
+     */
+    public static byte[][][] clone(final byte[][][] byteArrays) {
+        if (byteArrays == null) {
+            return null;
+        }
+        return Arrays.stream(byteArrays).map(BytesUtils::clone).toArray(byte[][][]::new);
+    }
+
+    /**
      * 计算两个字节数组的XOR结果。
      *
      * @param x1 第一个字节数组。

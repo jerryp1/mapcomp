@@ -3,40 +3,41 @@ package edu.alibaba.mpc4j.crypto.matrix.okve.tool;
 import cc.redberry.rings.linear.LinearSolver;
 import cc.redberry.rings.util.ArraysUtil;
 import edu.alibaba.mpc4j.common.tool.MathPreconditions;
-import edu.alibaba.mpc4j.common.tool.galoisfield.zp.Zp;
+import edu.alibaba.mpc4j.common.tool.galoisfield.gf2k.Gf2k;
+import edu.alibaba.mpc4j.common.tool.utils.BytesUtils;
 import gnu.trove.list.array.TIntArrayList;
 import gnu.trove.set.TIntSet;
 import gnu.trove.set.hash.TIntHashSet;
 
-import java.math.BigInteger;
 import java.security.SecureRandom;
 import java.util.Arrays;
 import java.util.stream.IntStream;
 
-import static cc.redberry.rings.linear.LinearSolver.SystemInfo.*;
+import static cc.redberry.rings.linear.LinearSolver.SystemInfo.Consistent;
+import static cc.redberry.rings.linear.LinearSolver.SystemInfo.Inconsistent;
 
 /**
- * Solving the linear equation Ax = b, where A is a matrix with n×m Zp elements, y is a vector with Zp elements.
+ * Solving the linear equation Ax = b, where A is a matrix with n×m GF(2^κ) elements, y is a vector with GF(2^κ) elements.
  *
  * @author Weiran Liu
- * @date 2022/7/6
+ * @date 2023/7/3
  */
-public class ZpLinearSolver {
+public class Gf2kLinearSolver {
     /**
-     * Zp instance
+     * GF(2^κ) instance
      */
-    private final Zp zp;
+    private final Gf2k gf2k;
     /**
      * the random state
      */
     private final SecureRandom secureRandom;
 
-    public ZpLinearSolver(Zp zp) {
-        this(zp, new SecureRandom());
+    public Gf2kLinearSolver(Gf2k gf2k) {
+        this(gf2k, new SecureRandom());
     }
 
-    public ZpLinearSolver(Zp zp, SecureRandom secureRandom) {
-        this.zp = zp;
+    public Gf2kLinearSolver(Gf2k gf2k, SecureRandom secureRandom) {
+        this.gf2k = gf2k;
         this.secureRandom = secureRandom;
     }
 
@@ -48,7 +49,7 @@ public class ZpLinearSolver {
      * @param rhs the rhs of the system.
      * @return the information for row Echelon form.
      */
-    private RowEchelonFormInfo rowEchelonForm(BigInteger[][] lhs, BigInteger[] rhs) {
+    private RowEchelonFormInfo rowEchelonForm(byte[][][] lhs, byte[][] rhs) {
         MathPreconditions.checkEqual("lhs.length", "rhs.length", lhs.length, rhs.length);
         int nRows = lhs.length;
         TIntSet maxLisColumns = new TIntHashSet(nRows);
@@ -69,9 +70,9 @@ public class ZpLinearSolver {
             // find pivot row and swap
             int row = iColumn - nZeroColumns;
             int max = row;
-            if (zp.isZero(lhs[row][iColumn])) {
+            if (gf2k.isZero(lhs[row][iColumn])) {
                 for (int iRow = row + 1; iRow < nRows; ++iRow) {
-                    if (!zp.isZero(lhs[iRow][iColumn])) {
+                    if (!gf2k.isZero(lhs[iRow][iColumn])) {
                         max = iRow;
                         break;
                     }
@@ -80,7 +81,7 @@ public class ZpLinearSolver {
                 ArraysUtil.swap(rhs, row, max);
             }
             // if we cannot find one, it means this column is free, nothing to do on this column
-            if (zp.isZero(lhs[row][iColumn])) {
+            if (gf2k.isZero(lhs[row][iColumn])) {
                 ++nZeroColumns;
                 to = Math.min(nRows + nZeroColumns, nColumns);
                 continue;
@@ -89,11 +90,11 @@ public class ZpLinearSolver {
             maxLisColumns.add(iColumn);
             // forward Gaussian elimination
             for (int iRow = row + 1; iRow < nRows; ++iRow) {
-                BigInteger alpha = zp.div(lhs[iRow][iColumn], lhs[row][iColumn]);
-                rhs[iRow] = zp.sub(rhs[iRow], zp.mul(rhs[row], alpha));
-                if (!zp.isZero(alpha)) {
+                byte[] alpha = gf2k.div(lhs[iRow][iColumn], lhs[row][iColumn]);
+                rhs[iRow] = gf2k.sub(rhs[iRow], gf2k.mul(rhs[row], alpha));
+                if (!gf2k.isZero(alpha)) {
                     for (int iCol = iColumn; iCol < nColumns; ++iCol) {
-                        lhs[iRow][iCol] = zp.sub(lhs[iRow][iCol], zp.mul(alpha, lhs[row][iCol]));
+                        lhs[iRow][iCol] = gf2k.sub(lhs[iRow][iCol], gf2k.mul(alpha, lhs[row][iCol]));
                     }
                 }
             }
@@ -111,7 +112,7 @@ public class ZpLinearSolver {
      * @param result where to place the result.
      * @return system information (inconsistent or consistent).
      */
-    public LinearSolver.SystemInfo freeSolve(BigInteger[][] lhs, BigInteger[] rhs, BigInteger[] result) {
+    public LinearSolver.SystemInfo freeSolve(byte[][][] lhs, byte[][] rhs, byte[][] result) {
         return solve(lhs, rhs, result, false);
     }
 
@@ -125,11 +126,11 @@ public class ZpLinearSolver {
      * @param result where to place the result.
      * @return system information (inconsistent or consistent).
      */
-    public LinearSolver.SystemInfo fullSolve(BigInteger[][] lhs, BigInteger[] rhs, BigInteger[] result) {
+    public LinearSolver.SystemInfo fullSolve(byte[][][] lhs, byte[][] rhs, byte[][] result) {
         return solve(lhs, rhs, result, true);
     }
 
-    private LinearSolver.SystemInfo solve(BigInteger[][] lhs, BigInteger[] rhs, BigInteger[] result, boolean isFull) {
+    private LinearSolver.SystemInfo solve(byte[][][] lhs, byte[][] rhs, byte[][] result, boolean isFull) {
         MathPreconditions.checkEqual("lhs.length", "rhs.length", lhs.length, rhs.length);
         int nRows = lhs.length;
         int nColumns = result.length;
@@ -144,11 +145,11 @@ public class ZpLinearSolver {
             if (isFull) {
                 // full random variables
                 for (int iColumn = 0; iColumn < nColumns; iColumn++) {
-                    result[iColumn] = zp.createNonZeroRandom(secureRandom);
+                    result[iColumn] = gf2k.createNonZeroRandom(secureRandom);
                 }
             } else {
                 // full zero variables
-                Arrays.fill(result, zp.createZero());
+                Arrays.fill(result, gf2k.createZero());
             }
             return Consistent;
         }
@@ -158,34 +159,34 @@ public class ZpLinearSolver {
         // if n > 1, transform lsh to Echelon form.
         RowEchelonFormInfo info = rowEchelonForm(lhs, rhs);
         int nUnderDetermined = info.getZeroColumnNum();
-        Arrays.fill(result, zp.createZero());
+        Arrays.fill(result, gf2k.createZero());
         // for determined system, free and full solution are the same
         if (nUnderDetermined == 0 && nColumns == nRows) {
             for (int i = nColumns - 1; i >= 0; i--) {
-                BigInteger sum = BigInteger.ZERO;
+                byte[] sum = gf2k.createZero();
                 for (int j = i + 1; j < nColumns; j++) {
-                    sum = zp.add(sum, zp.mul(result[j], lhs[i][j]));
+                    gf2k.addi(sum, gf2k.mul(result[j], lhs[i][j]));
                 }
-                result[i] = zp.div(zp.sub(rhs[i], sum), lhs[i][i]);
+                result[i] = gf2k.div(gf2k.sub(rhs[i], sum), lhs[i][i]);
             }
             return Consistent;
         }
         return solveUnderDeterminedRows(lhs, rhs, result, info, isFull);
     }
 
-    private LinearSolver.SystemInfo solveOneRow(BigInteger[][] lhs, BigInteger[] rhs, BigInteger[] result, boolean isFull) {
+    private LinearSolver.SystemInfo solveOneRow(byte[][][] lhs, byte[][] rhs, byte[][] result, boolean isFull) {
         int nColumns = result.length;
         // when n = 1, then the linear system only has one equation a[0]x[0] + ... + a[m]x[m] = b[0]
         if (nColumns == 1) {
             // if m = 1, then we directly compute a[0]x[0] = b[0]
-            if (!zp.isZero(lhs[0][0])) {
+            if (!gf2k.isZero(lhs[0][0])) {
                 // a[0] != 0, x[0] = b[0] / a[0]
-                result[0] = zp.div(rhs[0], lhs[0][0]);
+                result[0] = gf2k.div(rhs[0], lhs[0][0]);
                 return Consistent;
             } else {
                 // a[0] == 0, it can be solved only if b[0] = 0
-                if (zp.isZero(rhs[0])) {
-                    result[0] = isFull ? zp.createNonZeroRandom(secureRandom) : zp.createZero();
+                if (gf2k.isZero(rhs[0])) {
+                    result[0] = isFull ? gf2k.createNonZeroRandom(secureRandom) : gf2k.createZero();
                     return Consistent;
                 } else {
                     return Inconsistent;
@@ -193,22 +194,22 @@ public class ZpLinearSolver {
             }
         }
         // if m > 1, the linear system a[0]x[0] + ... + a[m]x[m] = b[0] contains free variables.
-        Arrays.fill(result, zp.createZero());
+        Arrays.fill(result, gf2k.createZero());
         // find the first non-zero a[t]
         int firstNonZeroColumn = -1;
         for (int i = 0; i < nColumns; ++i) {
-            if (!zp.isZero(lhs[0][i])) {
+            if (!gf2k.isZero(lhs[0][i])) {
                 firstNonZeroColumn = i;
                 break;
             }
         }
         // if all a[i] = 0, we have solution only if b[0] = 0
         if (firstNonZeroColumn == -1) {
-            if (zp.isZero(rhs[0])) {
+            if (gf2k.isZero(rhs[0])) {
                 if (isFull) {
                     // full random variables
                     for (int i = 0; i < nColumns; i++) {
-                        result[i] = zp.createNonZeroRandom(secureRandom);
+                        result[i] = gf2k.createNonZeroRandom(secureRandom);
                     }
                 }
                 return Consistent;
@@ -225,20 +226,20 @@ public class ZpLinearSolver {
                         continue;
                     }
                     // for i != t, set random x[i]
-                    result[i] = zp.createNonZeroRandom(secureRandom);
-                    if (!zp.isZero(lhs[0][i])) {
+                    result[i] = gf2k.createNonZeroRandom(secureRandom);
+                    if (!gf2k.isZero(lhs[0][i])) {
                         // a[i] != 0, b[0] = b[0] - a[i] * x[i].
-                        rhs[0] = zp.sub(rhs[0], zp.mul(lhs[0][i], result[i]));
+                        gf2k.subi(rhs[0], gf2k.mul(lhs[0][i], result[i]));
                     }
                 }
             }
             // set x[t] = b[0] / a[0]
-            result[firstNonZeroColumn] = zp.div(rhs[0], lhs[0][firstNonZeroColumn]);
+            result[firstNonZeroColumn] = gf2k.div(rhs[0], lhs[0][firstNonZeroColumn]);
             return Consistent;
         }
     }
 
-    private LinearSolver.SystemInfo solveUnderDeterminedRows(BigInteger[][] lhs, BigInteger[] rhs, BigInteger[] result,
+    private LinearSolver.SystemInfo solveUnderDeterminedRows(byte[][][] lhs, byte[][] rhs, byte[][] result,
                                                              RowEchelonFormInfo info, boolean isFull) {
         int nRows = lhs.length;
         int nColumns = result.length;
@@ -250,8 +251,8 @@ public class ZpLinearSolver {
         for (int iColumn = 0, to = Math.min(nRows, nColumns); iColumn < to; ++iColumn) {
             // find pivot row and swap
             iRow = iColumn - nZeroColumns;
-            if (zp.isZero(lhs[iRow][iColumn])) {
-                if (iColumn == (nColumns - 1) && !zp.isZero(rhs[iRow])) {
+            if (gf2k.isZero(lhs[iRow][iColumn])) {
+                if (iColumn == (nColumns - 1) && !gf2k.isZero(rhs[iRow])) {
                     return Inconsistent;
                 }
                 ++nZeroColumns;
@@ -260,26 +261,28 @@ public class ZpLinearSolver {
                 continue;
             }
             // scale current row, that is, make lhs[iRow][iColumn] = 1, and scale other entries in this row.
-            BigInteger[] row = lhs[iRow];
-            BigInteger val = row[iColumn];
-            BigInteger valInv = zp.inv(val);
+            byte[][] row = lhs[iRow];
+            // we will modify row[iColumn], copy val
+            byte[] val = BytesUtils.clone(row[iColumn]);
+            byte[] valInv = gf2k.inv(val);
             for (int i = iColumn; i < nColumns; i++) {
-                row[i] = zp.mul(valInv, row[i]);
+                row[i] = gf2k.mul(valInv, row[i]);
             }
-            rhs[iRow] = zp.mul(rhs[iRow], valInv);
+            rhs[iRow] = gf2k.mul(rhs[iRow], valInv);
             // scale all rows before
             for (int i = 0; i < iRow; i++) {
-                BigInteger[] pRow = lhs[i];
-                BigInteger v = pRow[iColumn];
-                if (zp.isZero(v)) {
+                byte[][] pRow = lhs[i];
+                // we will modify pRow[iColumn], copy v
+                byte[] v = BytesUtils.clone(pRow[iColumn]);
+                if (gf2k.isZero(v)) {
                     continue;
                 }
                 for (int j = iColumn; j < nColumns; ++j) {
-                    pRow[j] = zp.sub(pRow[j], zp.mul(v, row[j]));
+                    pRow[j] = gf2k.sub(pRow[j], gf2k.mul(v, row[j]));
                 }
-                rhs[i] = zp.sub(rhs[i], zp.mul(rhs[iRow], v));
+                gf2k.subi(rhs[i], gf2k.mul(rhs[iRow], v));
             }
-            if (!zp.isZero(rhs[iRow]) && zp.isZero(lhs[iRow][iColumn])) {
+            if (!gf2k.isZero(rhs[iRow]) && gf2k.isZero(lhs[iRow][iColumn])) {
                 return Inconsistent;
             }
             // label that column and its corresponding row for the solution b[row].
@@ -289,7 +292,7 @@ public class ZpLinearSolver {
         ++iRow;
         if (iRow < nRows) {
             for (; iRow < nRows; ++iRow) {
-                if (!zp.isZero(rhs[iRow])) {
+                if (!gf2k.isZero(rhs[iRow])) {
                     return Inconsistent;
                 }
             }
@@ -305,16 +308,16 @@ public class ZpLinearSolver {
             int[] nonMaxLisColumnArray = nonMaxLisColumns.toArray();
             // set result[iColumn] corresponding to the non-maxLisColumns as random variables
             for (int nonMaxLisColumn : nonMaxLisColumnArray) {
-                result[nonMaxLisColumn] = zp.createNonZeroRandom(secureRandom);
+                result[nonMaxLisColumn] = gf2k.createNonZeroRandom(secureRandom);
             }
             for (int i = 0; i < nzColumns.size(); ++i) {
                 int iNzColumn = nzColumns.get(i);
                 int iNzRow = nzRows.get(i);
                 // subtract other free variables
                 for (int nonMaxLisColumn : nonMaxLisColumnArray) {
-                    if (!zp.isZero(lhs[iNzRow][nonMaxLisColumn])) {
-                        rhs[0] = zp.sub(rhs[0], zp.mul(lhs[0][i], result[i]));
-                        result[iNzColumn] = zp.sub(result[iNzColumn], zp.mul(lhs[iNzRow][nonMaxLisColumn], result[nonMaxLisColumn]));
+                    if (!gf2k.isZero(lhs[iNzRow][nonMaxLisColumn])) {
+                        rhs[0] = gf2k.sub(rhs[0], gf2k.mul(lhs[0][i], result[i]));
+                        result[iNzColumn] = gf2k.sub(result[iNzColumn], gf2k.mul(lhs[iNzRow][nonMaxLisColumn], result[nonMaxLisColumn]));
                     }
                 }
             }
@@ -322,4 +325,3 @@ public class ZpLinearSolver {
         return Consistent;
     }
 }
-
