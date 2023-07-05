@@ -120,6 +120,8 @@ After successfully obtaining the compiled C/C++ libraries (named `libmpc4j-nativ
 
 `mpc4j` has been tested on MAC (`x86_64` / `aarch64`), Ubuntu 20.04  (`x86_64` / `aarch64`), and CentOS 8 (`x86_64`). We welcome developers to do tests on other platforms. 
 
+We note that you may need to run test cases in `mpc4j-s2pc-pir` separately, especially for test cases in `IndexPirTest` and `KwPirTest`. The reason is that PIR and related implementations heavily consume the main memory, and direct running all test cases may (automatically) involve frequent fullGC, introducing problems.
+
 ### Performances
 
 We have received a lot of suggestions and some performance reports from users. We thank [Dr. Yongha Son](https://github.com/yonghaason) for providing performance reports for Private Set Union (PSU) on his development platform (Intel Xeon 3.5GHz) under the **Unit Test**. He reported that:
