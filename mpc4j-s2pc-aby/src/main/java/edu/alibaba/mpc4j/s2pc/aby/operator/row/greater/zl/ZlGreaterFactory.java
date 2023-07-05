@@ -43,6 +43,7 @@ public class ZlGreaterFactory implements PtoFactory {
      */
     public static ZlGreaterParty createSender(Rpc senderRpc, Party receiverParty, ZlGreaterConfig config) {
         ZlGreaterType type = config.getPtoType();
+        //noinspection SwitchStatementWithTooFewBranches
         switch (type) {
             case RRK20:
                 return new Rrk20ZlGreaterSender(senderRpc, receiverParty, (Rrk20ZlGreaterConfig) config);
@@ -61,6 +62,7 @@ public class ZlGreaterFactory implements PtoFactory {
      */
     public static ZlGreaterParty createReceiver(Rpc receiverRpc, Party senderParty, ZlGreaterConfig config) {
         ZlGreaterType type = config.getPtoType();
+        //noinspection SwitchStatementWithTooFewBranches
         switch (type) {
             case RRK20:
                 return new Rrk20ZlGreaterReceiver(receiverRpc, senderParty, (Rrk20ZlGreaterConfig) config);

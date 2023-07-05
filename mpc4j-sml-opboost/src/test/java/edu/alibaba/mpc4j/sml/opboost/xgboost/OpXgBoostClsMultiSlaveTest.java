@@ -113,6 +113,7 @@ public class OpXgBoostClsMultiSlaveTest extends AbstractThreePartyPtoTest {
     }
 
     @Before
+    @Override
     public void connect() {
         super.connect();
         host.init();
@@ -121,6 +122,7 @@ public class OpXgBoostClsMultiSlaveTest extends AbstractThreePartyPtoTest {
     }
 
     @After
+    @Override
     public void disconnect() {
         host.destroy();
         leftSlave.destroy();

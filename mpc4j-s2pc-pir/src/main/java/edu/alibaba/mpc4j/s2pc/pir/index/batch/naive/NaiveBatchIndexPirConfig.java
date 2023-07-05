@@ -70,7 +70,7 @@ public class NaiveBatchIndexPirConfig extends AbstractMultiPartyPtoConfig implem
             cuckooHashBinType = IntCuckooHashBinFactory.IntCuckooHashBinType.NO_STASH_NAIVE;
         }
 
-        public Builder setSingIndexPirConfig(SingleIndexPirConfig singleIndexPirConfig) {
+        public Builder setSingleIndexPirConfig(SingleIndexPirConfig singleIndexPirConfig) {
             this.singleIndexPirConfig = singleIndexPirConfig;
             return this;
         }

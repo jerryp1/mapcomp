@@ -44,6 +44,7 @@ public class ZlDreluFactory implements PtoFactory {
      */
     public static ZlDreluParty createSender(Rpc senderRpc, Party receiverParty, ZlDreluConfig config) {
         ZlDreluFactory.ZlDreluType type = config.getPtoType();
+        //noinspection SwitchStatementWithTooFewBranches
         switch (type) {
             case RRK20:
                 return new Rrk20ZlDreluSender(senderRpc, receiverParty, (Rrk20ZlDreluConfig) config);
@@ -62,6 +63,7 @@ public class ZlDreluFactory implements PtoFactory {
      */
     public static ZlDreluParty createReceiver(Rpc receiverRpc, Party senderParty, ZlDreluConfig config) {
         ZlDreluFactory.ZlDreluType type = config.getPtoType();
+        //noinspection SwitchStatementWithTooFewBranches
         switch (type) {
             case RRK20:
                 return new Rrk20ZlDreluReceiver(receiverRpc, senderParty, (Rrk20ZlDreluConfig) config);

@@ -80,19 +80,19 @@ public class BatchPirTest extends AbstractTwoPartyPtoTest {
         configurations.add(new Object[]{
             BatchIndexPirFactory.BatchIndexPirType.NAIVE_BATCH_PIR.name() + " - XPIR",
             new NaiveBatchIndexPirConfig.Builder()
-                .setSingIndexPirConfig(new Mbfk16SingleIndexPirConfig.Builder().build())
+                .setSingleIndexPirConfig(new Mbfk16SingleIndexPirConfig.Builder().build())
                 .build()
         });
         configurations.add(new Object[]{
             BatchIndexPirFactory.BatchIndexPirType.NAIVE_BATCH_PIR.name() + " - Onion PIR",
             new NaiveBatchIndexPirConfig.Builder()
-                .setSingIndexPirConfig(new Mcr21SingleIndexPirConfig.Builder().build())
+                .setSingleIndexPirConfig(new Mcr21SingleIndexPirConfig.Builder().build())
                 .build()
         });
         configurations.add(new Object[]{
             BatchIndexPirFactory.BatchIndexPirType.NAIVE_BATCH_PIR.name() + " - Fast PIR",
             new NaiveBatchIndexPirConfig.Builder()
-                .setSingIndexPirConfig(new Ayaa21SingleIndexPirConfig.Builder().build())
+                .setSingleIndexPirConfig(new Ayaa21SingleIndexPirConfig.Builder().build())
                 .build()
         });
         return configurations;

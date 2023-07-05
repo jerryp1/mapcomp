@@ -96,6 +96,7 @@ public class OpGbdtRegSingleSlaveTest extends AbstractTwoPartyPtoTest {
     }
 
     @Before
+    @Override
     public void connect() {
         super.connect();
         host.init();
@@ -103,6 +104,7 @@ public class OpGbdtRegSingleSlaveTest extends AbstractTwoPartyPtoTest {
     }
 
     @After
+    @Override
     public void disconnect() {
         host.destroy();
         slave.destroy();

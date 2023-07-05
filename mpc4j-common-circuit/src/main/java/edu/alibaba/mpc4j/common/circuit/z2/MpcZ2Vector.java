@@ -35,6 +35,12 @@ public interface MpcZ2Vector extends MpcVector {
      */
     int byteNum();
 
+    /**
+     * Reverse the inputs.
+     *
+     * @param inputs the inputs.
+     * @return the reversed inputs.
+     */
     static MpcZ2Vector[] reverse(MpcZ2Vector[] inputs) {
         MpcZ2Vector[] result = new MpcZ2Vector[inputs.length];
         IntStream.range(0, inputs.length).forEach(i -> result[i] = inputs[inputs.length - i - 1]);
