@@ -46,7 +46,7 @@ public class MillionaireFactory {
             case RRK20:
                 return new Rrk20MillionaireSender(senderRpc, receiverParty, (Rrk20MillionaireConfig) config);
             default:
-                throw new IllegalArgumentException("Invalid " + MillionaireFactory.MillionaireType.class.getSimpleName() + ": " + type.name());
+                throw new IllegalArgumentException("Invalid " + MillionaireType.class.getSimpleName() + ": " + type.name());
         }
     }
 
@@ -65,7 +65,7 @@ public class MillionaireFactory {
             case RRK20:
                 return new Rrk20MillionaireReceiver(receiverRpc, senderParty, (Rrk20MillionaireConfig) config);
             default:
-                throw new IllegalArgumentException("Invalid " + MillionaireFactory.MillionaireType.class.getSimpleName() + ": " + type.name());
+                throw new IllegalArgumentException("Invalid " + MillionaireType.class.getSimpleName() + ": " + type.name());
         }
     }
 
