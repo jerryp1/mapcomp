@@ -134,7 +134,7 @@ public class Hhcm23DoubleSingleIndexPirServer extends AbstractSingleIndexPirServ
 
         // generate response
         stopWatch.start();
-        List<byte[]> serverResponsePayload = generateResponse(clientQueryPayload, new ArrayList<>());
+        List<byte[]> serverResponsePayload = generateResponse(clientQueryPayload);
         DataPacketHeader serverResponseHeader = new DataPacketHeader(
             encodeTaskId, getPtoDesc().getPtoId(), PtoStep.SERVER_SEND_RESPONSE.ordinal(), extraInfo,
             rpc.ownParty().getPartyId(), otherParty().getPartyId()
@@ -204,8 +204,7 @@ public class Hhcm23DoubleSingleIndexPirServer extends AbstractSingleIndexPirServ
     }
 
     @Override
-    public List<byte[]> generateResponse(List<byte[]> clientQuery, List<byte[][]> empty) throws MpcAbortException {
-        MpcAbortPreconditions.checkArgument(clientQuery.size() == 2);
+    public List<byte[]> generateResponse(List<byte[]> clientQuery, List<byte[][]> empty) {
         long[] c1Elements = LongUtils.byteArrayToLongArray(clientQuery.get(0));
         Zl64Matrix c1 = Zl64Matrix.create(params.zl64, c1Elements, 1, cols);
         c1.setParallel(parallel);
@@ -224,5 +223,16 @@ public class Hhcm23DoubleSingleIndexPirServer extends AbstractSingleIndexPirServ
             response.add(LongUtils.longArrayToByteArray(ans.getElements()));
         }
         return response;
+    }
+
+    @Override
+    public List<byte[]> generateResponse(List<byte[]> clientQuery) throws MpcAbortException {
+        MpcAbortPreconditions.checkArgument(clientQuery.size() == getQuerySize());
+        return generateResponse(clientQuery, null);
+    }
+
+    @Override
+    public int getQuerySize() {
+        return 2;
     }
 }

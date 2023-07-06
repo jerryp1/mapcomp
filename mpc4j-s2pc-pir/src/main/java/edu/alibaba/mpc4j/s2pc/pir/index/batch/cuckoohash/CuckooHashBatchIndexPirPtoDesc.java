@@ -1,23 +1,25 @@
-package edu.alibaba.mpc4j.s2pc.pir.index.batch.naive;
+package edu.alibaba.mpc4j.s2pc.pir.index.batch.cuckoohash;
 
 import edu.alibaba.mpc4j.common.rpc.desc.PtoDesc;
 import edu.alibaba.mpc4j.common.rpc.desc.PtoDescManager;
 
 /**
- * Naive Batch Index PIR protocol description.
+ * Cuckoo hash Batch Index PIR protocol description.
+ * The client and the server perform B PIR instances, one for each bucket, to retrieve all the desired
+ * entries. This framework is compatible with any single index PIR scheme.
  *
  * @author Liqiang Peng
- * @date 2023/7/5
+ * @date 2023/3/7
  */
-public class NaiveBatchIndexPirPtoDesc implements PtoDesc {
+public class CuckooHashBatchIndexPirPtoDesc implements PtoDesc {
     /**
      * protocol ID
      */
-    private static final int PTO_ID = Math.abs((int) 3795763157005644970L);
+    private static final int PTO_ID = Math.abs((int) 2361093113454124451L);
     /**
      * protocol name
      */
-    private static final String PTO_NAME = "NAIVE_BATCH_PIR";
+    private static final String PTO_NAME = "CUCKOO_HASH_BATCH_PIR";
 
     /**
      * protocol step
@@ -44,12 +46,12 @@ public class NaiveBatchIndexPirPtoDesc implements PtoDesc {
     /**
      * the singleton mode
      */
-    private static final NaiveBatchIndexPirPtoDesc INSTANCE = new NaiveBatchIndexPirPtoDesc();
+    private static final CuckooHashBatchIndexPirPtoDesc INSTANCE = new CuckooHashBatchIndexPirPtoDesc();
 
     /**
      * private constructor.
      */
-    private NaiveBatchIndexPirPtoDesc() {
+    private CuckooHashBatchIndexPirPtoDesc() {
         // empty
     }
 

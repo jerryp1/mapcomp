@@ -124,7 +124,7 @@ public class Mk22SingleIndexPirServer extends AbstractSingleIndexPirServer {
         List<byte[]> clientQueryPayload = new ArrayList<>(rpc.receive(clientQueryHeader).getPayload());
 
         stopWatch.start();
-        List<byte[]> serverResponsePayload = generateResponse(clientQueryPayload, encodedDatabase);
+        List<byte[]> serverResponsePayload = generateResponse(clientQueryPayload);
         DataPacketHeader serverResponseHeader = new DataPacketHeader(
             encodeTaskId, getPtoDesc().getPtoId(), PtoStep.SERVER_SEND_RESPONSE.ordinal(), extraInfo,
             rpc.ownParty().getPartyId(), otherParty().getPartyId()
@@ -176,10 +176,7 @@ public class Mk22SingleIndexPirServer extends AbstractSingleIndexPirServer {
     }
 
     @Override
-    public List<byte[]> generateResponse(List<byte[]> clientQueryPayload, List<byte[][]> encodedDatabase)
-        throws MpcAbortException {
-        // query ciphertext number should be h = ceil(m/2^c)
-        MpcAbortPreconditions.checkArgument(clientQueryPayload.size() == params.getNumInputCiphers());
+    public List<byte[]> generateResponse(List<byte[]> clientQueryPayload, List<byte[][]> encodedDatabase) {
         IntStream intStream = IntStream.range(0, partitionSize);
         intStream = parallel ? intStream.parallel() : intStream;
         int eqType;
@@ -208,6 +205,18 @@ public class Mk22SingleIndexPirServer extends AbstractSingleIndexPirServer {
                     eqType
                 ))
             .collect(Collectors.toCollection(ArrayList::new));
+    }
+
+    @Override
+    public List<byte[]> generateResponse(List<byte[]> clientQueryPayload) throws MpcAbortException {
+        // query ciphertext number should be h = ceil(m/2^c)
+        MpcAbortPreconditions.checkArgument(clientQueryPayload.size() == getQuerySize());
+        return generateResponse(clientQueryPayload, encodedDatabase);
+    }
+
+    @Override
+    public int getQuerySize() {
+        return params.getNumInputCiphers();
     }
 
     /**

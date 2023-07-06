@@ -57,10 +57,6 @@ public class Hhcm23SimpleSingleIndexPirClient extends AbstractSingleIndexPirClie
      */
     private Zl64Matrix a;
     /**
-     * row index
-     */
-    private int rowIndex;
-    /**
      * Z_p elements num
      */
     private int d;
@@ -153,7 +149,7 @@ public class Hhcm23SimpleSingleIndexPirClient extends AbstractSingleIndexPirClie
         );
         List<byte[]> serverResponsePayload = rpc.receive(serverResponseHeader).getPayload();
         stopWatch.start();
-        byte[] element = decodeResponse(serverResponsePayload, rowIndex);
+        byte[] element = decodeResponse(serverResponsePayload, index);
         stopWatch.stop();
         long responseTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
         stopWatch.reset();
@@ -188,8 +184,6 @@ public class Hhcm23SimpleSingleIndexPirClient extends AbstractSingleIndexPirClie
     @Override
     public List<byte[]> generateQuery(int index) {
         int rowElementsNum = rows / d;
-        // row index
-        rowIndex = index % rowElementsNum;
         // column index
         int colIndex = index / rowElementsNum;
         // q / p
@@ -207,8 +201,11 @@ public class Hhcm23SimpleSingleIndexPirClient extends AbstractSingleIndexPirClie
     }
 
     @Override
-    public byte[] decodeResponse(List<byte[]> serverResponse, int rowIndex) throws MpcAbortException {
+    public byte[] decodeResponse(List<byte[]> serverResponse, int index) throws MpcAbortException {
         MpcAbortPreconditions.checkArgument(serverResponse.size() == partitionSize);
+        int rowElementsNum = rows / d;
+        // row index
+        int rowIndex = index % rowElementsNum;
         ZlDatabase[] databases = new ZlDatabase[partitionSize];
         IntStream intStream = IntStream.range(0, partitionSize);
         double delta = params.p * 1.0 / params.q;
@@ -217,7 +214,6 @@ public class Hhcm23SimpleSingleIndexPirClient extends AbstractSingleIndexPirClie
             Zl64Vector vector = hint[i].matrixMulVector(secretKey);
             long[] responseElements = LongUtils.byteArrayToLongArray(serverResponse.get(i));
             Zl64Vector response = Zl64Vector.create(params.zl64, responseElements);
-            response.setParallel(parallel);
             response.subi(vector);
             long[] element = IntStream.range(0, d)
                 .mapToLong(j ->

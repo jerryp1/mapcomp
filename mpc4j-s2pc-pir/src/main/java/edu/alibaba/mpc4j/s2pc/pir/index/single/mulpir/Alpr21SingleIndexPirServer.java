@@ -123,10 +123,10 @@ public class Alpr21SingleIndexPirServer extends AbstractSingleIndexPirServer {
             otherParty().getPartyId(), rpc.ownParty().getPartyId()
         );
         List<byte[]> clientQueryPayload = new ArrayList<>(rpc.receive(clientQueryHeader).getPayload());
+
         // receive query
         stopWatch.start();
-        List<byte[]> serverResponsePayload = generateResponse(clientQueryPayload, encodedDatabase);
-
+        List<byte[]> serverResponsePayload = generateResponse(clientQueryPayload);
         DataPacketHeader serverResponseHeader = new DataPacketHeader(
             encodeTaskId, getPtoDesc().getPtoId(), PtoStep.SERVER_SEND_RESPONSE.ordinal(), extraInfo,
             rpc.ownParty().getPartyId(), otherParty().getPartyId()
@@ -178,12 +178,7 @@ public class Alpr21SingleIndexPirServer extends AbstractSingleIndexPirServer {
     }
 
     @Override
-    public List<byte[]> generateResponse(List<byte[]> clientQueryPayload, List<byte[][]> encodedDatabase)
-        throws MpcAbortException {
-        // query ciphertext number should be ceil(dim_sum/N)
-        int sum = Arrays.stream(dimensionSize).sum();
-        int expectQueryPayloadSize = CommonUtils.getUnitNum(sum, params.getPolyModulusDegree());
-        MpcAbortPreconditions.checkArgument(clientQueryPayload.size() == expectQueryPayloadSize);
+    public List<byte[]> generateResponse(List<byte[]> clientQueryPayload, List<byte[][]> encodedDatabase) {
         IntStream intStream = IntStream.range(0, partitionSize);
         intStream = parallel ? intStream.parallel() : intStream;
         return intStream
@@ -196,6 +191,19 @@ public class Alpr21SingleIndexPirServer extends AbstractSingleIndexPirServer {
                 dimensionSize))
             .flatMap(Collection::stream)
             .collect(Collectors.toCollection(ArrayList::new));
+    }
+
+    @Override
+    public List<byte[]> generateResponse(List<byte[]> clientQuery) throws MpcAbortException {
+        MpcAbortPreconditions.checkArgument(clientQuery.size() == getQuerySize());
+        return generateResponse(clientQuery, encodedDatabase);
+    }
+
+    @Override
+    public int getQuerySize() {
+        // query ciphertext number should be ceil(dim_sum/N)
+        int sum = Arrays.stream(dimensionSize).sum();
+        return CommonUtils.getUnitNum(sum, params.getPolyModulusDegree());
     }
 
     /**

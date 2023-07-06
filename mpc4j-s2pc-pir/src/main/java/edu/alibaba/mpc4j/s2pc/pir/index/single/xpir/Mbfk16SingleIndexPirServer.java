@@ -112,7 +112,7 @@ public class Mbfk16SingleIndexPirServer extends AbstractSingleIndexPirServer {
         List<byte[]> clientQueryPayload = new ArrayList<>(rpc.receive(clientQueryHeader).getPayload());
 
         stopWatch.start();
-        List<byte[]> serverResponsePayload = generateResponse(clientQueryPayload, encodedDatabase);
+        List<byte[]> serverResponsePayload = generateResponse(clientQueryPayload);
         DataPacketHeader serverResponseHeader = new DataPacketHeader(
             encodeTaskId, getPtoDesc().getPtoId(), PtoStep.SERVER_SEND_RESPONSE.ordinal(), extraInfo,
             rpc.ownParty().getPartyId(), otherParty().getPartyId()
@@ -142,9 +142,7 @@ public class Mbfk16SingleIndexPirServer extends AbstractSingleIndexPirServer {
     }
 
     @Override
-    public List<byte[]> generateResponse(List<byte[]> clientQueryPayload, List<byte[][]> encodedDatabase)
-        throws MpcAbortException {
-        MpcAbortPreconditions.checkArgument(clientQueryPayload.size() == Arrays.stream(dimensionSize).sum());
+    public List<byte[]> generateResponse(List<byte[]> clientQueryPayload, List<byte[][]> encodedDatabase) {
         IntStream intStream = IntStream.range(0, partitionSize);
         intStream = parallel ? intStream.parallel() : intStream;
         return intStream
@@ -153,6 +151,17 @@ public class Mbfk16SingleIndexPirServer extends AbstractSingleIndexPirServer {
             )
             .flatMap(Collection::stream)
             .collect(Collectors.toCollection(ArrayList::new));
+    }
+
+    @Override
+    public List<byte[]> generateResponse(List<byte[]> clientQuery) throws MpcAbortException {
+        MpcAbortPreconditions.checkArgument(clientQuery.size() == getQuerySize());
+        return generateResponse(clientQuery, encodedDatabase);
+    }
+
+    @Override
+    public int getQuerySize() {
+        return Arrays.stream(dimensionSize).sum();
     }
 
     /**

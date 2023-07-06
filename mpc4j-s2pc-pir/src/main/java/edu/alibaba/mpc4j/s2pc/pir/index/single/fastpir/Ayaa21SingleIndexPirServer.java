@@ -112,7 +112,7 @@ public class Ayaa21SingleIndexPirServer extends AbstractSingleIndexPirServer {
         List<byte[]> clientQueryPayload = rpc.receive(clientQueryHeader).getPayload();
 
         stopWatch.start();
-        List<byte[]> serverResponsePayload = generateResponse(clientQueryPayload, encodedDatabase);
+        List<byte[]> serverResponsePayload = generateResponse(clientQueryPayload);
         DataPacketHeader serverResponseHeader = new DataPacketHeader(
             encodeTaskId, getPtoDesc().getPtoId(), PtoStep.SERVER_SEND_RESPONSE.ordinal(), extraInfo,
             rpc.ownParty().getPartyId(), otherParty().getPartyId()
@@ -184,9 +184,7 @@ public class Ayaa21SingleIndexPirServer extends AbstractSingleIndexPirServer {
     }
 
     @Override
-    public List<byte[]> generateResponse(List<byte[]> clientQueryPayload, List<byte[][]> encodedDatabase)
-        throws MpcAbortException {
-        MpcAbortPreconditions.checkArgument(clientQueryPayload.size() == querySize);
+    public List<byte[]> generateResponse(List<byte[]> clientQueryPayload, List<byte[][]> encodedDatabase) {
         List<byte[]> clientQuery = IntStream.range(0, querySize)
             .mapToObj(clientQueryPayload::get)
             .collect(Collectors.toCollection(ArrayList::new));
@@ -200,5 +198,16 @@ public class Ayaa21SingleIndexPirServer extends AbstractSingleIndexPirServer {
                 encodedDatabase.get(i),
                 elementColumnLength))
             .collect(Collectors.toCollection(ArrayList::new));
+    }
+
+    @Override
+    public List<byte[]> generateResponse(List<byte[]> clientQueryPayload) throws MpcAbortException {
+        MpcAbortPreconditions.checkArgument(clientQueryPayload.size() == getQuerySize());
+        return generateResponse(clientQueryPayload, encodedDatabase);
+    }
+
+    @Override
+    public int getQuerySize() {
+        return querySize;
     }
 }
