@@ -55,17 +55,12 @@ public class OkvsUbopprfSender extends AbstractUbopprfSender {
      * okvs storage
      */
     private byte[][] okvsStorage;
-    /**
-     * sent OKVS
-     */
-    private boolean sent;
 
     public OkvsUbopprfSender(Rpc senderRpc, Party receiverParty, OkvsUbopprfConfig config) {
         super(OkvsUbopprfPtoDesc.getInstance(), senderRpc, receiverParty, config);
         sqOprfSender = SqOprfFactory.createSender(senderRpc, receiverParty, config.getSqOprfConfig());
         addSubPtos(sqOprfSender);
         okvsType = config.getOkvsType();
-        sent = false;
     }
 
     @Override
@@ -74,11 +69,18 @@ public class OkvsUbopprfSender extends AbstractUbopprfSender {
         logPhaseInfo(PtoState.INIT_BEGIN);
 
         stopWatch.start();
-        sent = false;
         sqOprfKey = sqOprfSender.keyGen();
         generateOkvs();
         // init oprf
         sqOprfSender.init(batchSize, sqOprfKey);
+        // send OKVS keys
+        List<byte[]> okvsKeysPayload = Arrays.stream(okvsKeys).collect(Collectors.toList());
+        DataPacketHeader okvsKeysHeader = new DataPacketHeader(
+            encodeTaskId, ptoDesc.getPtoId(), PtoStep.SENDER_SEND_OKVS_KEYS.ordinal(), extraInfo,
+            ownParty().getPartyId(), otherParty().getPartyId()
+        );
+        rpc.send(DataPacket.fromByteArrayList(okvsKeysHeader, okvsKeysPayload));
+        okvsKeys = null;
         stopWatch.stop();
         long okvsTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
         stopWatch.reset();
@@ -92,30 +94,19 @@ public class OkvsUbopprfSender extends AbstractUbopprfSender {
         setPtoInput();
         logPhaseInfo(PtoState.PTO_BEGIN);
 
-        if (!sent) {
-            stopWatch.start();
-            // send OKVS keys
-            List<byte[]> okvsKeysPayload = Arrays.stream(okvsKeys).collect(Collectors.toList());
-            DataPacketHeader okvsKeysHeader = new DataPacketHeader(
-                encodeTaskId, ptoDesc.getPtoId(), PtoStep.SENDER_SEND_OKVS_KEYS.ordinal(), extraInfo,
-                ownParty().getPartyId(), otherParty().getPartyId()
-            );
-            rpc.send(DataPacket.fromByteArrayList(okvsKeysHeader, okvsKeysPayload));
-            okvsKeys = null;
-            // send OKVS storage
-            List<byte[]> okvsPayload = Arrays.stream(okvsStorage).collect(Collectors.toList());
-            DataPacketHeader okvsHeader = new DataPacketHeader(
-                encodeTaskId, ptoDesc.getPtoId(), PtoStep.SENDER_SEND_OKVS.ordinal(), extraInfo,
-                ownParty().getPartyId(), otherParty().getPartyId()
-            );
-            rpc.send(DataPacket.fromByteArrayList(okvsHeader, okvsPayload));
-            okvsStorage = null;
-            sent = true;
-            stopWatch.stop();
-            long okvsTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
-            stopWatch.reset();
-            logStepInfo(PtoState.PTO_STEP, 0, 1, okvsTime, "Sender sends OKVS");
-        }
+        stopWatch.start();
+        // send OKVS storage
+        List<byte[]> okvsPayload = Arrays.stream(okvsStorage).collect(Collectors.toList());
+        DataPacketHeader okvsHeader = new DataPacketHeader(
+            encodeTaskId, ptoDesc.getPtoId(), PtoStep.SENDER_SEND_OKVS.ordinal(), extraInfo,
+            ownParty().getPartyId(), otherParty().getPartyId()
+        );
+        rpc.send(DataPacket.fromByteArrayList(okvsHeader, okvsPayload));
+        okvsStorage = null;
+        stopWatch.stop();
+        long okvsTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
+        stopWatch.reset();
+        logStepInfo(PtoState.PTO_STEP, 0, 1, okvsTime, "Sender sends OKVS");
 
         stopWatch.start();
         sqOprfSender.oprf(batchSize);

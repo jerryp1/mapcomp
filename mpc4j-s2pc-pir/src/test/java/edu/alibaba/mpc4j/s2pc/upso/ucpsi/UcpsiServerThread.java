@@ -44,6 +44,7 @@ public class UcpsiServerThread extends Thread {
     public void run() {
         try {
             server.init(serverElementSet, clientElementSize);
+            server.getRpc().synchronize();
             serverOutput = server.psi();
         } catch (MpcAbortException e) {
             e.printStackTrace();

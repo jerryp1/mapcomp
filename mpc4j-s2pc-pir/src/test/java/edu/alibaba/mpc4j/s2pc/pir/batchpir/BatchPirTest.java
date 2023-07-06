@@ -7,12 +7,10 @@ import edu.alibaba.mpc4j.s2pc.pir.index.batch.BatchIndexPirClient;
 import edu.alibaba.mpc4j.s2pc.pir.index.batch.BatchIndexPirConfig;
 import edu.alibaba.mpc4j.s2pc.pir.index.batch.BatchIndexPirFactory;
 import edu.alibaba.mpc4j.s2pc.pir.index.batch.BatchIndexPirServer;
+import edu.alibaba.mpc4j.s2pc.pir.index.batch.cuckoohash.CuckooHashBatchIndexPirConfig;
 import edu.alibaba.mpc4j.s2pc.pir.index.batch.naive.NaiveBatchIndexPirConfig;
-import edu.alibaba.mpc4j.s2pc.pir.index.batch.psipir.Lpzl24BatchIndexPirConfig;
 import edu.alibaba.mpc4j.s2pc.pir.index.batch.vectorizedpir.Mr23BatchIndexPirConfig;
 import edu.alibaba.mpc4j.s2pc.pir.index.single.fastpir.Ayaa21SingleIndexPirConfig;
-import edu.alibaba.mpc4j.s2pc.pir.index.single.onionpir.Mcr21SingleIndexPirConfig;
-import edu.alibaba.mpc4j.s2pc.pir.index.single.xpir.Mbfk16SingleIndexPirConfig;
 import org.junit.Assert;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -62,10 +60,16 @@ public class BatchPirTest extends AbstractTwoPartyPtoTest {
     public static Collection<Object[]> configurations() {
         Collection<Object[]> configurations = new ArrayList<>();
 
-        // PSI-PIR
+        // cuckoo hash batch PIR
         configurations.add(new Object[]{
-            BatchIndexPirFactory.BatchIndexPirType.PSI_PIR.name(),
-            new Lpzl24BatchIndexPirConfig.Builder().build()
+            BatchIndexPirFactory.BatchIndexPirType.CUCKOO_HASH_BATCH_PIR.name() + " - SEAL PIR",
+            new CuckooHashBatchIndexPirConfig.Builder().build()
+        });
+        configurations.add(new Object[]{
+            BatchIndexPirFactory.BatchIndexPirType.CUCKOO_HASH_BATCH_PIR.name() + " - Fast PIR",
+            new CuckooHashBatchIndexPirConfig.Builder()
+                .setSingleIndexPirConfig(new Ayaa21SingleIndexPirConfig.Builder().build())
+                .build()
         });
         // vectorized batch PIR
         configurations.add(new Object[]{
@@ -74,20 +78,8 @@ public class BatchPirTest extends AbstractTwoPartyPtoTest {
         });
         // naive batch PIR
         configurations.add(new Object[]{
-            BatchIndexPirFactory.BatchIndexPirType.NAIVE_BATCH_PIR.name() + " - SEAL PIR",
+            BatchIndexPirFactory.BatchIndexPirType.NAIVE_BATCH_PIR.name() + " - SIMPLE PIR",
             new NaiveBatchIndexPirConfig.Builder().build()
-        });
-        configurations.add(new Object[]{
-            BatchIndexPirFactory.BatchIndexPirType.NAIVE_BATCH_PIR.name() + " - XPIR",
-            new NaiveBatchIndexPirConfig.Builder()
-                .setSingleIndexPirConfig(new Mbfk16SingleIndexPirConfig.Builder().build())
-                .build()
-        });
-        configurations.add(new Object[]{
-            BatchIndexPirFactory.BatchIndexPirType.NAIVE_BATCH_PIR.name() + " - Onion PIR",
-            new NaiveBatchIndexPirConfig.Builder()
-                .setSingleIndexPirConfig(new Mcr21SingleIndexPirConfig.Builder().build())
-                .build()
         });
         configurations.add(new Object[]{
             BatchIndexPirFactory.BatchIndexPirType.NAIVE_BATCH_PIR.name() + " - Fast PIR",

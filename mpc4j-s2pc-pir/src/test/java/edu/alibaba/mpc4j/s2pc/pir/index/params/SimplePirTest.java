@@ -26,11 +26,11 @@ public class SimplePirTest extends AbstractTwoPartyPtoTest {
     /**
      * default element bit length
      */
-    private static final int DEFAULT_ELEMENT_BIT_LENGTH = Double.SIZE;
+    private static final int DEFAULT_ELEMENT_BIT_LENGTH = 25;
     /**
      * large element bit length
      */
-    private static final int LARGE_ELEMENT_BIT_LENGTH = CommonConstants.BLOCK_BIT_LENGTH;
+    private static final int LARGE_ELEMENT_BIT_LENGTH = Double.SIZE;
     /**
      * small element bit length
      */
@@ -38,7 +38,7 @@ public class SimplePirTest extends AbstractTwoPartyPtoTest {
     /**
      * database size
      */
-    private static final int SERVER_ELEMENT_SIZE = 1 << 14;
+    private static final int SERVER_ELEMENT_SIZE = 1 << 18;
 
     @Parameterized.Parameters(name = "{0}")
     public static Collection<Object[]> configurations() {

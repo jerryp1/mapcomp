@@ -52,10 +52,6 @@ public class PirUbopprfSender extends AbstractUbopprfSender {
      */
     private SqOprfKey sqOprfKey;
     /**
-     * OKVS keys
-     */
-    private byte[][] okvsKeys;
-    /**
      * okvs dense storage
      */
     private byte[][] okvsDenseStorage;
@@ -88,11 +84,18 @@ public class PirUbopprfSender extends AbstractUbopprfSender {
 
         stopWatch.start();
         sqOprfKey = sqOprfSender.keyGen();
-        okvsKeys = CommonUtils.generateRandomKeys(OkvsFactory.getHashNum(okvsType), secureRandom);
+        byte[][] okvsKeys = CommonUtils.generateRandomKeys(OkvsFactory.getHashNum(okvsType), secureRandom);
         okvs = OkvsFactory.createSparseInstance(envType, okvsType, pointNum, l, okvsKeys);
         generateOkvs();
         // init oprf
         sqOprfSender.init(batchSize, sqOprfKey);
+        // send OKVS keys
+        List<byte[]> okvsKeysPayload = Arrays.stream(okvsKeys).collect(Collectors.toList());
+        DataPacketHeader okvsKeysHeader = new DataPacketHeader(
+            encodeTaskId, ptoDesc.getPtoId(), PtoStep.SENDER_SEND_OKVS_KEYS.ordinal(), extraInfo,
+            ownParty().getPartyId(), otherParty().getPartyId()
+        );
+        rpc.send(DataPacket.fromByteArrayList(okvsKeysHeader, okvsKeysPayload));
         stopWatch.stop();
         long okvsTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
         stopWatch.reset();
@@ -115,14 +118,6 @@ public class PirUbopprfSender extends AbstractUbopprfSender {
         logPhaseInfo(PtoState.PTO_BEGIN);
 
         stopWatch.start();
-        // send OKVS keys
-        List<byte[]> okvsKeysPayload = Arrays.stream(okvsKeys).collect(Collectors.toList());
-        DataPacketHeader okvsKeysHeader = new DataPacketHeader(
-            encodeTaskId, ptoDesc.getPtoId(), PtoStep.SENDER_SEND_OKVS_KEYS.ordinal(), extraInfo,
-            ownParty().getPartyId(), otherParty().getPartyId()
-        );
-        rpc.send(DataPacket.fromByteArrayList(okvsKeysHeader, okvsKeysPayload));
-        okvsKeys = null;
         // send OKVS dense storage
         List<byte[]> okvsPayload = Arrays.stream(okvsDenseStorage).collect(Collectors.toList());
         DataPacketHeader okvsHeader = new DataPacketHeader(

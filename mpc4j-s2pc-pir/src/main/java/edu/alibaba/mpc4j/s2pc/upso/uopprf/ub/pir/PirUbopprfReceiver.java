@@ -9,7 +9,6 @@ import edu.alibaba.mpc4j.crypto.matrix.okve.okvs.Okvs;
 import edu.alibaba.mpc4j.crypto.matrix.okve.okvs.OkvsFactory;
 import edu.alibaba.mpc4j.crypto.matrix.okve.okvs.SparseOkvs;
 import edu.alibaba.mpc4j.common.tool.utils.BytesUtils;
-import edu.alibaba.mpc4j.common.tool.utils.CommonUtils;
 import edu.alibaba.mpc4j.s2pc.opf.sqoprf.SqOprfFactory;
 import edu.alibaba.mpc4j.s2pc.opf.sqoprf.SqOprfReceiver;
 import edu.alibaba.mpc4j.s2pc.opf.sqoprf.SqOprfReceiverOutput;
@@ -71,12 +70,22 @@ public class PirUbopprfReceiver extends AbstractUbopprfReceiver {
         setInitInput(l, batchSize, pointNum);
         logPhaseInfo(PtoState.INIT_BEGIN);
 
+        // receive OKVS keys
+        DataPacketHeader okvsKeysHeader = new DataPacketHeader(
+            encodeTaskId, ptoDesc.getPtoId(), PtoStep.SENDER_SEND_OKVS_KEYS.ordinal(), extraInfo,
+            otherParty().getPartyId(), ownParty().getPartyId()
+        );
+        List<byte[]> okvsKeysPayload = rpc.receive(okvsKeysHeader).getPayload();
+
         stopWatch.start();
+        // init okvs
+        int keyNum = OkvsFactory.getHashNum(okvsType);
+        MpcAbortPreconditions.checkArgument(okvsKeysPayload.size() == keyNum);
+        okvsKeys = okvsKeysPayload.toArray(new byte[0][]);
+        okvs = OkvsFactory.createSparseInstance(envType, okvsType, pointNum, l, okvsKeys);
         // init oprf
         sqOprfReceiver.init(batchSize);
         // init batch PIR
-        okvsKeys = CommonUtils.generateRandomKeys(OkvsFactory.getHashNum(okvsType), secureRandom);
-        okvs = OkvsFactory.createSparseInstance(envType, okvsType, pointNum, l, okvsKeys);
         batchIndexPirClient.init(okvs.getM() - okvs.maxDensePositionNum(), l, batchSize * okvs.sparsePositionNum());
         stopWatch.stop();
         long initTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
@@ -91,12 +100,6 @@ public class PirUbopprfReceiver extends AbstractUbopprfReceiver {
         setPtoInput(inputArray);
         logPhaseInfo(PtoState.PTO_BEGIN);
 
-        // receive OKVS keys
-        DataPacketHeader okvsKeysHeader = new DataPacketHeader(
-            encodeTaskId, ptoDesc.getPtoId(), PtoStep.SENDER_SEND_OKVS_KEYS.ordinal(), extraInfo,
-            otherParty().getPartyId(), ownParty().getPartyId()
-        );
-        List<byte[]> okvsKeysPayload = rpc.receive(okvsKeysHeader).getPayload();
         // receive OKVS dense part
         DataPacketHeader okvsHeader = new DataPacketHeader(
             encodeTaskId, ptoDesc.getPtoId(), PtoStep.SENDER_SEND_OKVS.ordinal(), extraInfo,
@@ -104,17 +107,11 @@ public class PirUbopprfReceiver extends AbstractUbopprfReceiver {
         );
         List<byte[]> okvsDensePayload = rpc.receive(okvsHeader).getPayload();
 
-
-        stopWatch.start();
-        okvsKeys = okvsKeysPayload.toArray(new byte[0][]);
         // receiver run batch index PIR
+        stopWatch.start();
         List<Integer> retrievalIndexList = generateRetrievalIndexList();
         Map<Integer, byte[]> okvsSparsePayload = batchIndexPirClient.pir(retrievalIndexList);
         // recover okvs storage
-        int keyNum = OkvsFactory.getHashNum(okvsType);
-        MpcAbortPreconditions.checkArgument(okvsKeysPayload.size() == keyNum);
-        // set okvs keys
-        okvs = OkvsFactory.createSparseInstance(envType, okvsType, pointNum, l, okvsKeys);
         generateOkvsStorage(okvsDensePayload, okvsSparsePayload, retrievalIndexList);
         stopWatch.stop();
         long batchPirTime = stopWatch.getTime(TimeUnit.MILLISECONDS);

@@ -153,7 +153,8 @@ public class Hhcm23SimpleSingleIndexPirServer extends AbstractSingleIndexPirServ
         int upperBound = CommonUtils.getUnitNum(database.getL(), params.logP - 1);
         for (int count = 1; count < upperBound + 1; count++) {
             maxPartitionBitLength = CommonUtils.getUnitNum(database.getL(), count);
-            d = CommonUtils.getUnitNum(maxPartitionBitLength, params.logP - 1);
+            int maxPartitionByteLength = CommonUtils.getByteLength(maxPartitionBitLength);
+            d = CommonUtils.getUnitNum(maxPartitionByteLength * Byte.SIZE, params.logP - 1);
             if ((BigInteger.valueOf(d).multiply(BigInteger.valueOf(database.rows())))
                 .compareTo(INT_MAX_VALUE.shiftRight(1)) < 0) {
                 int[] dims = PirUtils.approxSquareDatabaseDims(database.rows(), d);

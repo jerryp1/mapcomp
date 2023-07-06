@@ -165,7 +165,8 @@ public class Hhcm23SimpleSingleIndexPirClient extends AbstractSingleIndexPirClie
         int upperBound = CommonUtils.getUnitNum(elementBitLength, params.logP - 1);
         for (int count = 1; count < upperBound + 1; count++) {
             maxPartitionBitLength = CommonUtils.getUnitNum(elementBitLength, count);
-            d = CommonUtils.getUnitNum(maxPartitionBitLength, params.logP - 1);
+            int maxPartitionByteLength = CommonUtils.getByteLength(maxPartitionBitLength);
+            d = CommonUtils.getUnitNum(maxPartitionByteLength * Byte.SIZE, params.logP - 1);
             if ((BigInteger.valueOf(d).multiply(BigInteger.valueOf(serverElementSize)))
                 .compareTo(INT_MAX_VALUE.shiftRight(1)) < 0) {
                 int[] dims = PirUtils.approxSquareDatabaseDims(serverElementSize, d);
