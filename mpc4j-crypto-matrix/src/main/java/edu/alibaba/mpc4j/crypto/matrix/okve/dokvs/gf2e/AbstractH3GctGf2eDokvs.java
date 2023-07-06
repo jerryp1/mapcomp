@@ -335,7 +335,10 @@ abstract class AbstractH3GctGf2eDokvs<T> extends AbstractGf2eDokvs<T> implements
         // M˜* (P_{m' + C_1}, ..., P_{m' + C_{d˜})^T = (v'_{R_1}, ..., v'_{R_{d˜})^T.
         byte[][] vectorX = new byte[d + rm][];
         LinearSolver.SystemInfo systemInfo = linearSolver.fullSolve(tildePrimeMatrix, d + rm, vectorY, vectorX);
-        assert systemInfo.equals(LinearSolver.SystemInfo.Consistent);
+        // Although d˜ > d + rm, we cannot find solution with a negligible probability since the matrix is not full rank
+        if (!systemInfo.equals(LinearSolver.SystemInfo.Consistent)) {
+            throw new ArithmeticException("There is no solution, the linear system does not have full rank");
+        }
         // update the result into the storage
         for (int iRow = 0; iRow < d; iRow++) {
             storage[coreVertexArray[iRow]] = BytesUtils.clone(vectorX[iRow]);
@@ -379,7 +382,10 @@ abstract class AbstractH3GctGf2eDokvs<T> extends AbstractGf2eDokvs<T> implements
                 rowIndex++;
             }
             LinearSolver.SystemInfo systemInfo = linearSolver.freeSolve(matrixM, m, vectorY, vectorX);
-            assert systemInfo.equals(LinearSolver.SystemInfo.Consistent);
+            // Although d˜ > d + rm, we cannot find solution with a negligible probability since the matrix is not full rank
+            if (!systemInfo.equals(LinearSolver.SystemInfo.Consistent)) {
+                throw new ArithmeticException("There is no solution, the linear system does not have full rank");
+            }
             byte[][] storage = new byte[m][];
             for (int vertex : coreVertexSet.toArray()) {
                 // set left part
