@@ -37,10 +37,12 @@ public class Gf2kConsistencyTest {
     public static Collection<Object[]> configurations() {
         Collection<Object[]> configurations = new ArrayList<>();
 
-        // BC V.S. Native_NTL
-        configurations.add(new Object[] {"BC V.S. NTL", Gf2kType.BC, Gf2kType.NTL});
+        // BC V.S. COMBINED
+        configurations.add(new Object[]{"BC V.S. COMBINED", Gf2kType.BC, Gf2kType.COMBINED});
+        // BC V.S. NTL
+        configurations.add(new Object[]{"BC V.S. NTL", Gf2kType.BC, Gf2kType.NTL});
         // BC V.S. RINGS
-        configurations.add(new Object[] {"BC V.S. RINGS", Gf2kType.BC, Gf2kType.RINGS});
+        configurations.add(new Object[]{"BC V.S. RINGS", Gf2kType.BC, Gf2kType.RINGS});
 
         return configurations;
     }

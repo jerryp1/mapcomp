@@ -100,6 +100,7 @@ public class OpXgBoostRegSingleSlaveTest extends AbstractTwoPartyPtoTest {
     }
 
     @Before
+    @Override
     public void connect() {
         super.connect();
         host.init();
@@ -107,6 +108,7 @@ public class OpXgBoostRegSingleSlaveTest extends AbstractTwoPartyPtoTest {
     }
 
     @After
+    @Override
     public void disconnect() {
         host.destroy();
         slave.destroy();

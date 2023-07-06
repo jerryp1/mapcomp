@@ -6,15 +6,14 @@ import edu.alibaba.mpc4j.common.tool.MathPreconditions;
 import edu.alibaba.mpc4j.common.tool.utils.BinaryUtils;
 import edu.alibaba.mpc4j.common.tool.utils.BytesUtils;
 import edu.alibaba.mpc4j.common.tool.utils.CommonUtils;
+import gnu.trove.set.TIntSet;
+import gnu.trove.set.hash.TIntHashSet;
 
 import java.util.Arrays;
-import java.util.HashSet;
-import java.util.Set;
 import java.util.stream.IntStream;
 
 /**
- * bit matrix max linear independent system finder. Given an n × m (n ≥ m) bit matrix, it finds the max linear
- * independent rows.
+ * Given an n × m (n ≥ m) bit matrix, it finds the max linear independent rows.
  *
  * @author Weiran Liu
  * @date 2023/6/16
@@ -30,9 +29,11 @@ public class BinaryMaxLisFinder {
      *
      * @param lhs      the lhs of the system.
      * @param nColumns number of columns.
+     * @return the swapped row labels.
      */
     private int[] rowEchelonForm(byte[][] lhs, int nColumns) {
         int nRows = lhs.length;
+        MathPreconditions.checkPositive("n", nRows);
         // 0 <= m <= n
         MathPreconditions.checkNonNegativeInRangeClosed("m", nColumns, nRows);
         int nByteColumns = CommonUtils.getByteLength(nColumns);
@@ -41,10 +42,6 @@ public class BinaryMaxLisFinder {
         Arrays.stream(lhs).forEach(row ->
             Preconditions.checkArgument(BytesUtils.isFixedReduceByteArray(row, nByteColumns, nColumns))
         );
-        // do not need to solve when nRows = 0
-        if (nRows == 0) {
-            return new int[0];
-        }
         int[] rowLabels = IntStream.range(0, nRows).toArray();
         // number of zero columns, here we consider if the leading row is 0
         int nZeroColumns = 0;
@@ -91,8 +88,9 @@ public class BinaryMaxLisFinder {
      * @param nColumns number of columns.
      * @return maximal linear independent rows.
      */
-    public Set<Integer> getLisColumns(byte[][] lhs, int nColumns) {
+    public TIntSet getLisRows(byte[][] lhs, int nColumns) {
         int nRows = lhs.length;
+        MathPreconditions.checkPositive("n", nRows);
         // 0 <= m <= n
         MathPreconditions.checkNonNegativeInRangeClosed("m", nColumns, nRows);
         int nByteColumns = CommonUtils.getByteLength(nColumns);
@@ -101,22 +99,18 @@ public class BinaryMaxLisFinder {
         Arrays.stream(lhs).forEach(row ->
             Preconditions.checkArgument(BytesUtils.isFixedReduceByteArray(row, nByteColumns, nColumns))
         );
-        if (nRows == 0) {
-            // if n = 0, there is no linear independent rows.
-            return new HashSet<>(0);
-        }
         // copy the matrix
         byte[][] copyLhs = BytesUtils.clone(lhs);
         if (nRows == 1) {
             // if n = 1, and we know that any row cannot be all-zero, then this row is the only linear independent row.
-            HashSet<Integer> hashSet = new HashSet<>(1);
+            TIntSet hashSet = new TIntHashSet(1);
             hashSet.add(0);
             return hashSet;
         }
         // if n > 1, transform lsh to Echelon form.
         int[] rowLabels = rowEchelonForm(copyLhs, nColumns);
         // there are at most n linear independent rows.
-        Set<Integer> lisRowSet = new HashSet<>(nRows);
+        TIntSet lisRowSet = new TIntHashSet(nRows);
         // number of zero columns
         int nZeroColumns = 0;
         int iRow;

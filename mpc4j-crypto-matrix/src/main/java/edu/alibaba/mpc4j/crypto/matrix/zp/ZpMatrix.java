@@ -6,7 +6,7 @@ import edu.alibaba.mpc4j.crypto.matrix.Matrix;
 import java.math.BigInteger;
 
 /**
- * dense Zp matrix.
+ * Zp matrix.
  *
  * @author Weiran Liu
  * @date 2023/6/19

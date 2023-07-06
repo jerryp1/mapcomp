@@ -41,11 +41,12 @@ public class MillionaireFactory {
      */
     public static MillionaireParty createSender(Rpc senderRpc, Party receiverParty, MillionaireConfig config) {
         MillionaireType type = config.getPtoType();
+        //noinspection SwitchStatementWithTooFewBranches
         switch (type) {
             case RRK20:
                 return new Rrk20MillionaireSender(senderRpc, receiverParty, (Rrk20MillionaireConfig) config);
             default:
-                throw new IllegalArgumentException("Invalid " + MillionaireFactory.MillionaireType.class.getSimpleName() + ": " + type.name());
+                throw new IllegalArgumentException("Invalid " + MillionaireType.class.getSimpleName() + ": " + type.name());
         }
     }
 
@@ -59,11 +60,12 @@ public class MillionaireFactory {
      */
     public static MillionaireParty createReceiver(Rpc receiverRpc, Party senderParty, MillionaireConfig config) {
         MillionaireType type = config.getPtoType();
+        //noinspection SwitchStatementWithTooFewBranches
         switch (type) {
             case RRK20:
                 return new Rrk20MillionaireReceiver(receiverRpc, senderParty, (Rrk20MillionaireConfig) config);
             default:
-                throw new IllegalArgumentException("Invalid " + MillionaireFactory.MillionaireType.class.getSimpleName() + ": " + type.name());
+                throw new IllegalArgumentException("Invalid " + MillionaireType.class.getSimpleName() + ": " + type.name());
         }
     }
 

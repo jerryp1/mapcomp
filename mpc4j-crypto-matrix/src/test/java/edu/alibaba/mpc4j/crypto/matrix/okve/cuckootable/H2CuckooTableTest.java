@@ -25,25 +25,25 @@ public class H2CuckooTableTest {
         String edgeString1 = "Edge String 1";
         String edgeString2 = "Edge String 2";
         // 插入self-loop边
-        h2CuckooTable.addData(new Integer[] {0, 0}, edgeString1);
+        h2CuckooTable.addData(new int[] {0, 0}, edgeString1);
         Assert.assertEquals(h2CuckooTable.getDataSet().size(), 1);
         // 插入另一条self-loop边，但数据不同，理论上可以添加成功
-        h2CuckooTable.addData(new Integer[] {0, 0}, edgeString2);
+        h2CuckooTable.addData(new int[] {0, 0}, edgeString2);
         Assert.assertEquals(h2CuckooTable.getDataSet().size(), 2);
         // 查看起点到终点是否包含两个元素
-        Integer[] vertices = new Integer[] {0, 0};
+        int[] vertices = new int[] {0, 0};
         Set<String> verticesDataSet = h2CuckooTable.getDataSet(vertices);
         Assert.assertEquals(2, verticesDataSet.size());
         // 插入self-loop边，数据相同，应该添加失败
         try {
-            h2CuckooTable.addData(new Integer[] {0, 0}, edgeString1);
+            h2CuckooTable.addData(new int[] {0, 0}, edgeString1);
             Assert.fail("ERROR: Successfully insert duplicate item");
         } catch (IllegalArgumentException ignored) {
 
         }
         // 插入正常边，并查看是否可以得到插入的边
         String edgeString3 = "Edge String 3";
-        h2CuckooTable.addData(new Integer[] {0, 1}, edgeString3);
+        h2CuckooTable.addData(new int[] {0, 1}, edgeString3);
         Assert.assertEquals(h2CuckooTable.getDataSet().size(), 3);
     }
 }

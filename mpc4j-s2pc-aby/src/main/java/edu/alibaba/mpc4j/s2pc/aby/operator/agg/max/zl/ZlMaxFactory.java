@@ -43,6 +43,7 @@ public class ZlMaxFactory implements PtoFactory {
      */
     public static ZlMaxParty createSender(Rpc senderRpc, Party receiverParty, ZlMaxConfig config) {
         ZlMaxType type = config.getPtoType();
+        //noinspection SwitchStatementWithTooFewBranches
         switch (type) {
             case RRK20:
                 return new Rrk20ZlMaxSender(senderRpc, receiverParty, (Rrk20ZlMaxConfig) config);
@@ -61,6 +62,7 @@ public class ZlMaxFactory implements PtoFactory {
      */
     public static ZlMaxParty createReceiver(Rpc receiverRpc, Party senderParty, ZlMaxConfig config) {
         ZlMaxType type = config.getPtoType();
+        //noinspection SwitchStatementWithTooFewBranches
         switch (type) {
             case RRK20:
                 return new Rrk20ZlMaxReceiver(receiverRpc, senderParty, (Rrk20ZlMaxConfig) config);

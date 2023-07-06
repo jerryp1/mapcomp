@@ -7,7 +7,7 @@
     <groupId>edu.alibaba</groupId>
     <artifactId>mpc4j</artifactId>
     <packaging>pom</packaging>
-    <version>1.0.8-SNAPSHOT</version>
+    <version>1.0.9-SNAPSHOT</version>
     <modules>
         <module>mpc4j-common-data</module>
         <module>mpc4j-common-jnagmp</module>
@@ -28,6 +28,7 @@
         <module>mpc4j-sml-opboost</module>
         <module>mpc4j-common-circuit</module>
         <module>mpc4j-s2pc-sbitmap</module>
+        <module>mpc4j-crypto-fhe</module>
     </modules>
 
     <properties>

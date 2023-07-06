@@ -1,7 +1,10 @@
 package edu.alibaba.mpc4j.crypto.matrix.okve.cuckootable;
 
+import gnu.trove.list.linked.TIntLinkedList;
+import gnu.trove.set.TIntSet;
+import gnu.trove.set.hash.TIntHashSet;
+
 import java.util.*;
-import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
 /**
@@ -26,7 +29,7 @@ public class CuckooTableSingletonTcFinder<T> implements CuckooTableTcFinder<T> {
     /**
      * 删除数据对应顶点的栈
      */
-    private Stack<Integer[]> removedDataVertices;
+    private Stack<int[]> removedDataVertices;
     /**
      * core图
      */
@@ -38,7 +41,7 @@ public class CuckooTableSingletonTcFinder<T> implements CuckooTableTcFinder<T> {
         int numOfVertices = cuckooTable.getNumOfVertices();
         coreCuckooGraph = new ArrayList<>();
         // 构建搜索节点集合
-        Set<Integer> twoCoreVertexSet = IntStream.range(0, numOfVertices).boxed().collect(Collectors.toSet());
+        TIntSet twoCoreVertexSet = new TIntHashSet(IntStream.range(0, numOfVertices).toArray());
         ArrayList<Set<T>> cuckooGraph = cuckooTable.getCuckooGraph();
         IntStream.range(0, numOfVertices).forEach(vertex -> {
             // 只添加度大于等于1的顶点
@@ -61,10 +64,10 @@ public class CuckooTableSingletonTcFinder<T> implements CuckooTableTcFinder<T> {
         findSingletons(twoCoreVertexSet);
     }
 
-    private void findSingletons(Set<Integer> twoCoreVertexSet) {
-        Queue<Integer> singletonQueue = new LinkedList<>();
+    private void findSingletons(TIntSet twoCoreVertexSet) {
+        TIntLinkedList singletonQueue = new TIntLinkedList();
         // 先扫描一遍所有可能的顶点，把Singleton的加进去
-        for (Integer vertex : twoCoreVertexSet) {
+        for (int vertex : twoCoreVertexSet.toArray()) {
             Set<T> vertexDataSet = coreCuckooGraph.get(vertex);
             if (vertexDataSet.size() == 1) {
                 singletonQueue.add(vertex);
@@ -73,7 +76,8 @@ public class CuckooTableSingletonTcFinder<T> implements CuckooTableTcFinder<T> {
         // 开始遍历节点
         while (singletonQueue.size() > 0) {
             // 仍然存在Singleton，提取出来一个删掉
-            Integer singletonVertex = singletonQueue.remove();
+            int singletonVertex = singletonQueue.get(0);
+            singletonQueue.removeAt(0);
             Set<T> singletonVertexDataSet = coreCuckooGraph.get(singletonVertex);
             // 有可能出现等于0的情况，这是因为最后一次删除的时候把两个节点都删空了，因此这里再判断一下
             if (singletonVertexDataSet.size() == 1) {
@@ -83,9 +87,9 @@ public class CuckooTableSingletonTcFinder<T> implements CuckooTableTcFinder<T> {
                     data = containedData;
                 }
                 assert (data != null);
-                Integer[] vertices = cuckooTable.getVertices(data);
+                int[] vertices = cuckooTable.getVertices(data);
                 // 从所有集合中删除数据
-                for (Integer vertex : vertices) {
+                for (int vertex : vertices) {
                     if (twoCoreVertexSet.contains(vertex)) {
                         Set<T> vertexDataSet = coreCuckooGraph.get(vertex);
                         vertexDataSet.remove(data);
@@ -117,7 +121,7 @@ public class CuckooTableSingletonTcFinder<T> implements CuckooTableTcFinder<T> {
     }
 
     @Override
-    public Stack<Integer[]> getRemovedDataVertices() {
+    public Stack<int[]> getRemovedDataVertices() {
         return removedDataVertices;
     }
 }

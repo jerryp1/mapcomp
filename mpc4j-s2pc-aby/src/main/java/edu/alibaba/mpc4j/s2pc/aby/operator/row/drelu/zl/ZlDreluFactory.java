@@ -4,11 +4,9 @@ import edu.alibaba.mpc4j.common.rpc.Party;
 import edu.alibaba.mpc4j.common.rpc.Rpc;
 import edu.alibaba.mpc4j.common.rpc.desc.SecurityModel;
 import edu.alibaba.mpc4j.common.rpc.pto.PtoFactory;
-import edu.alibaba.mpc4j.s2pc.aby.basics.z2.Z2cFactory;
 import edu.alibaba.mpc4j.s2pc.aby.operator.row.drelu.zl.rrk20.Rrk20ZlDreluConfig;
 import edu.alibaba.mpc4j.s2pc.aby.operator.row.drelu.zl.rrk20.Rrk20ZlDreluReceiver;
 import edu.alibaba.mpc4j.s2pc.aby.operator.row.drelu.zl.rrk20.Rrk20ZlDreluSender;
-import edu.alibaba.mpc4j.s2pc.aby.operator.row.millionaire.MillionaireFactory;
 
 /**
  * Zl DReLU Factory
@@ -44,11 +42,12 @@ public class ZlDreluFactory implements PtoFactory {
      */
     public static ZlDreluParty createSender(Rpc senderRpc, Party receiverParty, ZlDreluConfig config) {
         ZlDreluFactory.ZlDreluType type = config.getPtoType();
+        //noinspection SwitchStatementWithTooFewBranches
         switch (type) {
             case RRK20:
                 return new Rrk20ZlDreluSender(senderRpc, receiverParty, (Rrk20ZlDreluConfig) config);
             default:
-                throw new IllegalArgumentException("Invalid " + ZlDreluFactory.ZlDreluType.class.getSimpleName() + ": " + type.name());
+                throw new IllegalArgumentException("Invalid " + ZlDreluType.class.getSimpleName() + ": " + type.name());
         }
     }
 
@@ -62,11 +61,12 @@ public class ZlDreluFactory implements PtoFactory {
      */
     public static ZlDreluParty createReceiver(Rpc receiverRpc, Party senderParty, ZlDreluConfig config) {
         ZlDreluFactory.ZlDreluType type = config.getPtoType();
+        //noinspection SwitchStatementWithTooFewBranches
         switch (type) {
             case RRK20:
                 return new Rrk20ZlDreluReceiver(receiverRpc, senderParty, (Rrk20ZlDreluConfig) config);
             default:
-                throw new IllegalArgumentException("Invalid " + ZlDreluFactory.ZlDreluType.class.getSimpleName() + ": " + type.name());
+                throw new IllegalArgumentException("Invalid " + ZlDreluType.class.getSimpleName() + ": " + type.name());
         }
     }
 

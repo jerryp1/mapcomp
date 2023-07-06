@@ -29,7 +29,7 @@ abstract class AbstractCuckooTable<T> implements CuckooTable<T> {
     /**
      * 数据与边的集合
      */
-    private final Map<T, Integer[]> dataVertexMap;
+    private final Map<T, int[]> dataVertexMap;
     /**
      * 布谷鸟图
      */
@@ -59,7 +59,7 @@ abstract class AbstractCuckooTable<T> implements CuckooTable<T> {
     }
 
     @Override
-    public void addData(Integer[] vertices, T data) {
+    public void addData(int[] vertices, T data) {
         assert vertices.length == hashNum;
         // 不需要验证vertices是否包含相同的顶点索引值，因为2哈希-布谷鸟图允许重复的定点索引值
         for (int vertex : vertices) {
@@ -70,7 +70,7 @@ abstract class AbstractCuckooTable<T> implements CuckooTable<T> {
         }
         byte[] dataBytes = ObjectUtils.objectToByteArray(data);
         ByteBuffer dataByteBuffer = ByteBuffer.wrap(dataBytes);
-        Integer[] sortedVertices = Arrays.stream(vertices).sorted().toArray(Integer[]::new);
+        int[] sortedVertices = Arrays.stream(vertices).sorted().toArray();
         // 向顶点的数据集合插入元素
         Arrays.stream(sortedVertices).forEach(vertex -> cuckooGraph.get(vertex).add(data));
         // 将输入添加到本地缓存中
@@ -89,15 +89,17 @@ abstract class AbstractCuckooTable<T> implements CuckooTable<T> {
     }
 
     @Override
-    public Set<T> getDataSet(Integer[] vertices) {
+    public Set<T> getDataSet(int[] vertices) {
         assert vertices.length == this.hashNum;
-        Integer[] sortedVertices = Arrays.stream(vertices).sorted().toArray(Integer[]::new);
-        Integer source = sortedVertices[0];
+        int[] sortedVertices = Arrays.stream(vertices).sorted().toArray();
+        int source = sortedVertices[0];
         // 复制一份起点所包含的所有元素，依次拿掉终点不是指定顶点的元素
-        return new HashSet<>(cuckooGraph.get(source)).stream().filter(candidateData -> {
-            Integer[] candidateDataVertices = getVertices(candidateData);
-            return Arrays.equals(sortedVertices, candidateDataVertices);
-        }).collect(Collectors.toSet());
+        return new HashSet<>(cuckooGraph.get(source)).stream()
+            .filter(candidateData -> {
+                int[] candidateDataVertices = getVertices(candidateData);
+                return Arrays.equals(sortedVertices, candidateDataVertices);
+            })
+            .collect(Collectors.toSet());
     }
 
     @Override
@@ -106,7 +108,7 @@ abstract class AbstractCuckooTable<T> implements CuckooTable<T> {
     }
 
     @Override
-    public Integer[] getVertices(T data) {
+    public int[] getVertices(T data) {
         return dataVertexMap.get(data);
     }
 

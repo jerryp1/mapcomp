@@ -47,7 +47,7 @@ public class DenseZpMatrixTest {
         Collection<Object[]> configurations = new ArrayList<>();
 
         int[] sizes = new int[]{4, 7, 8, 9, 15, 16, 17, 39, 40, 41};
-        // add each l
+        // add each size
         for (int size : sizes) {
             configurations.add(new Object[]{"size = " + size + ")", size});
         }

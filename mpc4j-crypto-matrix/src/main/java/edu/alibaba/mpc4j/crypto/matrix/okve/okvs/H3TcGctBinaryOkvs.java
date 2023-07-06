@@ -8,9 +8,12 @@ import edu.alibaba.mpc4j.common.tool.crypto.prf.PrfFactory;
 import edu.alibaba.mpc4j.crypto.matrix.okve.cuckootable.CuckooTableSingletonTcFinder;
 import edu.alibaba.mpc4j.crypto.matrix.okve.cuckootable.H3CuckooTable;
 import edu.alibaba.mpc4j.common.tool.utils.*;
+import gnu.trove.map.TObjectIntMap;
+import gnu.trove.map.hash.TObjectIntHashMap;
+import gnu.trove.set.TIntSet;
+import gnu.trove.set.hash.TIntHashSet;
 
 import java.util.*;
-import java.util.stream.Collectors;
 
 /**
  * 3哈希-两核乱码布谷鸟表。原始构造来自于下述论文的Section 4.1: OKVS based on a 3-Hash Garbled Cuckoo Table：
@@ -64,15 +67,15 @@ class H3TcGctBinaryOkvs<T> extends AbstractBinaryOkvs<T> implements SparseOkvs<T
     /**
      * 数据到h1的映射表
      */
-    private Map<T, Integer> dataH1Map;
+    private TObjectIntMap<T> dataH1Map;
     /**
      * 数据到h2的映射表
      */
-    private Map<T, Integer> dataH2Map;
+    private TObjectIntMap<T> dataH2Map;
     /**
      * 数据到h3的映射表
      */
-    private Map<T, Integer> dataH3Map;
+    private TObjectIntMap<T> dataH3Map;
     /**
      * 数据到hr的映射表
      */
@@ -163,9 +166,9 @@ class H3TcGctBinaryOkvs<T> extends AbstractBinaryOkvs<T> implements SparseOkvs<T
         });
         // 构造数据到哈希值的查找表
         Set<T> keySet = keyValueMap.keySet();
-        dataH1Map = new HashMap<>(keySet.size());
-        dataH2Map = new HashMap<>(keySet.size());
-        dataH3Map = new HashMap<>(keySet.size());
+        dataH1Map = new TObjectIntHashMap<>(keySet.size());
+        dataH2Map = new TObjectIntHashMap<>(keySet.size());
+        dataH3Map = new TObjectIntHashMap<>(keySet.size());
         dataHrMap = new HashMap<>(keySet.size());
         for (T key : keySet) {
             int[] sparsePositions = sparsePosition(key);
@@ -182,10 +185,8 @@ class H3TcGctBinaryOkvs<T> extends AbstractBinaryOkvs<T> implements SparseOkvs<T
         singletonFinder.findTwoCore(h3CuckooTable);
         // 根据2-core图的所有数据和所有边构造矩阵
         Set<T> coreDataSet = singletonFinder.getRemainedDataSet();
-        Set<Integer> coreVertexSet = coreDataSet.stream()
-            .map(h3CuckooTable::getVertices)
-            .flatMap(Arrays::stream)
-            .collect(Collectors.toSet());
+        TIntSet coreVertexSet = new TIntHashSet(keySet.size());
+        coreDataSet.stream().map(h3CuckooTable::getVertices).forEach(coreVertexSet::addAll);
         // 生成矩阵，矩阵中包含右侧的全部解，以及2-core中的全部解
         byte[][] storage = generateStorage(keyValueMap, coreVertexSet, coreDataSet);
         // 将矩阵拆分为L || R
@@ -195,10 +196,10 @@ class H3TcGctBinaryOkvs<T> extends AbstractBinaryOkvs<T> implements SparseOkvs<T
         System.arraycopy(storage, lm, rightStorage, 0, rm);
         // 从栈中依次弹出数据，为相应节点赋值
         Stack<T> removedDataStack = singletonFinder.getRemovedDataStack();
-        Stack<Integer[]> removedDataVerticesStack = singletonFinder.getRemovedDataVertices();
+        Stack<int[]> removedDataVerticesStack = singletonFinder.getRemovedDataVertices();
         while (!removedDataStack.empty()) {
             T removedData = removedDataStack.pop();
-            Integer[] removedDataVertices = removedDataVerticesStack.pop();
+            int[] removedDataVertices = removedDataVerticesStack.pop();
             int vertex0 = removedDataVertices[0];
             int vertex1 = removedDataVertices[1];
             int vertex2 = removedDataVertices[2];
@@ -273,7 +274,7 @@ class H3TcGctBinaryOkvs<T> extends AbstractBinaryOkvs<T> implements SparseOkvs<T
         }
     }
 
-    private byte[][] generateStorage(Map<T, byte[]> keyValueMap, Set<Integer> coreVertexSet, Set<T> coreDataSet) {
+    private byte[][] generateStorage(Map<T, byte[]> keyValueMap, TIntSet coreVertexSet, Set<T> coreDataSet) {
         // initialize variables L = {l_1, ..., l_m}, R = (r_1, ..., r_{χ + λ})
         byte[][] vectorX = new byte[m][];
         if (coreDataSet.size() > m) {
@@ -309,7 +310,7 @@ class H3TcGctBinaryOkvs<T> extends AbstractBinaryOkvs<T> implements SparseOkvs<T
             Arrays.fill(vectorX, new byte[byteL]);
         }
         byte[][] matrix = new byte[m][];
-        for (Integer vertex : coreVertexSet) {
+        for (int vertex : coreVertexSet.toArray()) {
             // 把2-core图的边所对应的矩阵设置好
             matrix[vertex] = BytesUtils.clone(vectorX[vertex]);
         }
@@ -356,7 +357,7 @@ class H3TcGctBinaryOkvs<T> extends AbstractBinaryOkvs<T> implements SparseOkvs<T
             int h1Value = dataH1Map.get(key);
             int h2Value = dataH2Map.get(key);
             int h3Value = dataH3Map.get(key);
-            h3CuckooTable.addData(new Integer[]{h1Value, h2Value, h3Value}, key);
+            h3CuckooTable.addData(new int[]{h1Value, h2Value, h3Value}, key);
         }
         return h3CuckooTable;
     }

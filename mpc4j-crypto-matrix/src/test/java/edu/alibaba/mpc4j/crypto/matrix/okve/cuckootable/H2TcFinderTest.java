@@ -25,30 +25,30 @@ public class H2TcFinderTest {
         Collection<Object[]> configurationParams = new ArrayList<>();
         // Self-Loop
         H2CuckooTable<String> selfLoopH2CuckooTable = new H2CuckooTable<>(1);
-        selfLoopH2CuckooTable.addData(new Integer[] {0, 0}, "Self-Loop Node 1");
-        selfLoopH2CuckooTable.addData(new Integer[] {0, 0}, "Self-Loop Node 2");
+        selfLoopH2CuckooTable.addData(new int[] {0, 0}, "Self-Loop Node 1");
+        selfLoopH2CuckooTable.addData(new int[] {0, 0}, "Self-Loop Node 2");
         configurationParams.add(new Object[] {"Self Loop", selfLoopH2CuckooTable, 2});
         // Tree
         H2CuckooTable<String> treeH2CuckooTable = new H2CuckooTable<>(5);
-        treeH2CuckooTable.addData(new Integer[] {0, 1}, "Tree Node 1");
-        treeH2CuckooTable.addData(new Integer[] {1, 2}, "Tree Node 2");
-        treeH2CuckooTable.addData(new Integer[] {3, 0}, "Tree Node 3");
-        treeH2CuckooTable.addData(new Integer[] {2, 4}, "Tree Node 4");
+        treeH2CuckooTable.addData(new int[] {0, 1}, "Tree Node 1");
+        treeH2CuckooTable.addData(new int[] {1, 2}, "Tree Node 2");
+        treeH2CuckooTable.addData(new int[] {3, 0}, "Tree Node 3");
+        treeH2CuckooTable.addData(new int[] {2, 4}, "Tree Node 4");
         configurationParams.add(new Object[] {"Tree", treeH2CuckooTable, 0});
         // Ring
         H2CuckooTable<String> ringH2CuckooTable = new H2CuckooTable<>(4);
-        ringH2CuckooTable.addData(new Integer[] {0, 1}, "Cycle Node 1");
-        ringH2CuckooTable.addData(new Integer[] {1, 2}, "Cycle Node 2");
-        ringH2CuckooTable.addData(new Integer[] {2, 3}, "Cycle Node 3");
-        ringH2CuckooTable.addData(new Integer[] {0, 2}, "Cycle Node 4");
-        ringH2CuckooTable.addData(new Integer[] {0, 1}, "Cycle Node 5");
-        ringH2CuckooTable.addData(new Integer[] {1, 3}, "Cycle Node 6");
+        ringH2CuckooTable.addData(new int[] {0, 1}, "Cycle Node 1");
+        ringH2CuckooTable.addData(new int[] {1, 2}, "Cycle Node 2");
+        ringH2CuckooTable.addData(new int[] {2, 3}, "Cycle Node 3");
+        ringH2CuckooTable.addData(new int[] {0, 2}, "Cycle Node 4");
+        ringH2CuckooTable.addData(new int[] {0, 1}, "Cycle Node 5");
+        ringH2CuckooTable.addData(new int[] {1, 3}, "Cycle Node 6");
         configurationParams.add(new Object[] {"Ring", ringH2CuckooTable, 6});
         // Self Loop with Cycle
         H2CuckooTable<String> selfCycleH2CuckooTable = new H2CuckooTable<>(3);
-        selfCycleH2CuckooTable.addData(new Integer[] {0, 0}, "Self Loop with Cycle Node 1");
-        selfCycleH2CuckooTable.addData(new Integer[] {0, 1}, "Self Loop with Cycle Node 2");
-        selfCycleH2CuckooTable.addData(new Integer[] {1, 1}, "Self Loop with Cycle Node 3");
+        selfCycleH2CuckooTable.addData(new int[] {0, 0}, "Self Loop with Cycle Node 1");
+        selfCycleH2CuckooTable.addData(new int[] {0, 1}, "Self Loop with Cycle Node 2");
+        selfCycleH2CuckooTable.addData(new int[] {1, 1}, "Self Loop with Cycle Node 3");
         configurationParams.add(new Object[] {"Self Loop with Cycle", selfCycleH2CuckooTable, 3});
 
         return configurationParams;

@@ -1,12 +1,11 @@
 package edu.alibaba.mpc4j.crypto.matrix.okve.tool;
 
+import gnu.trove.set.TIntSet;
+import gnu.trove.set.hash.TIntHashSet;
 import org.bouncycastle.util.encoders.Hex;
 import org.junit.Assert;
 import org.junit.Test;
 
-import java.util.Arrays;
-import java.util.Set;
-import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
 /**
@@ -24,9 +23,7 @@ public class BinaryMaxLisFinderTest {
         new byte[] { 0b00000110 },
         new byte[] { 0b00000001 },
     };
-    private static final Set<Integer> SINGULAR_3_3_RESULT = Arrays.stream(new int[] {0, 1, 2})
-        .boxed()
-        .collect(Collectors.toSet());
+    private static final TIntSet SINGULAR_3_3_RESULT = new TIntHashSet(new int[] {0, 1, 2});
 
     /**
      * 3-by-3 system, non-singular
@@ -36,9 +33,7 @@ public class BinaryMaxLisFinderTest {
         new byte[] { 0b00000101 },
         new byte[] { 0b00000111 },
     };
-    private static final Set<Integer> NON_SINGULAR_3_3_RESULT = Arrays.stream(new int[] {0, 1})
-        .boxed()
-        .collect(Collectors.toSet());
+    private static final TIntSet NON_SINGULAR_3_3_RESULT = new TIntHashSet(new int[] {0, 1});
 
     /**
      * 4-by-3 system, singular (for 3)
@@ -49,9 +44,7 @@ public class BinaryMaxLisFinderTest {
         new byte[] { 0b00000001 },
         new byte[] { 0b00000101 },
     };
-    private static final Set<Integer> SINGULAR_4_3_RESULT = Arrays.stream(new int[] {0, 1, 2})
-        .boxed()
-        .collect(Collectors.toSet());
+    private static final TIntSet SINGULAR_4_3_RESULT = new TIntHashSet(new int[] {0, 1, 2});
 
     /**
      * 4-by-3 system, non-singular (for 3)
@@ -62,9 +55,7 @@ public class BinaryMaxLisFinderTest {
         new byte[] { 0b00000001 },
         new byte[] { 0b00000101 },
     };
-    private static final Set<Integer> NON_SINGULAR_4_3_RESULT = Arrays.stream(new int[] {0, 2, 3})
-        .boxed()
-        .collect(Collectors.toSet());
+    private static final TIntSet NON_SINGULAR_4_3_RESULT = new TIntHashSet(new int[] {0, 2, 3});
 
     /**
      * 8-by-8 system, singular
@@ -79,9 +70,7 @@ public class BinaryMaxLisFinderTest {
         new byte[] {(byte)0b01100011, },
         new byte[] {(byte)0b01110011, },
     };
-    private static final Set<Integer> SINGULAR_8_8_RESULT = Arrays.stream(new int[] {0, 1, 2, 3, 4, 5, 6, 7})
-        .boxed()
-        .collect(Collectors.toSet());
+    private static final TIntSet SINGULAR_8_8_RESULT = new TIntHashSet(new int[] {0, 1, 2, 3, 4, 5, 6, 7});
 
     /**
      * 8-by-8 system, non-singular
@@ -96,9 +85,7 @@ public class BinaryMaxLisFinderTest {
         new byte[] {(byte)0b00000010, },
         new byte[] {(byte)0b00000001, },
     };
-    private static final Set<Integer> NON_SINGULAR_8_8_RESULT = Arrays.stream(new int[] {0, 1, 3, 4, 5, 6, 7})
-        .boxed()
-        .collect(Collectors.toSet());
+    private static final TIntSet NON_SINGULAR_8_8_RESULT = new TIntHashSet(new int[] {0, 1, 3, 4, 5, 6, 7});
 
     /**
      * 128-by-128 system, singular
@@ -169,9 +156,7 @@ public class BinaryMaxLisFinderTest {
         Hex.decode("a106ec01e3bd4522f22b340ecfd57fc7"), Hex.decode("f137bacfcc2a859943d0019b6bbb655c"),
         Hex.decode("7677e3f99bd8b7eabc873bc23c662509"), Hex.decode("f43a4253f3c3fd597cdacbe067e296da"),
     };
-    private static final Set<Integer> SINGULAR_128_128_RESULT = IntStream.range(0, 128)
-        .boxed()
-        .collect(Collectors.toSet());
+    private static final TIntSet SINGULAR_128_128_RESULT = new TIntHashSet(IntStream.range(0, 128).toArray());
 
     /**
      * binary max linear independent row finder
@@ -217,8 +202,8 @@ public class BinaryMaxLisFinderTest {
         test(SINGULAR_128_128, 128, SINGULAR_128_128_RESULT);
     }
 
-    private void test(byte[][] matrix, int m, Set<Integer> result) {
-        Set<Integer> lisRows = maxLisFinder.getLisColumns(matrix, m);
+    private void test(byte[][] matrix, int m, TIntSet result) {
+        TIntSet lisRows = maxLisFinder.getLisRows(matrix, m);
         Assert.assertEquals(result, lisRows);
     }
 }

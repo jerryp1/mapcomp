@@ -8,6 +8,10 @@ import edu.alibaba.mpc4j.common.tool.crypto.prf.PrfFactory;
 import edu.alibaba.mpc4j.crypto.matrix.okve.cuckootable.H2CuckooTable;
 import edu.alibaba.mpc4j.crypto.matrix.okve.cuckootable.H2CuckooTableDfsDealer;
 import edu.alibaba.mpc4j.common.tool.utils.*;
+import gnu.trove.map.TIntObjectMap;
+import gnu.trove.map.TObjectIntMap;
+import gnu.trove.map.hash.TObjectIntHashMap;
+import gnu.trove.set.TIntSet;
 
 import java.util.*;
 
@@ -57,11 +61,11 @@ class H2DfsGctBinaryOkvs<T> extends AbstractBinaryOkvs<T> implements SparseOkvs<
     /**
      * 数据到h1的映射表
      */
-    private Map<T, Integer> dataH1Map;
+    private TObjectIntMap<T> dataH1Map;
     /**
      * 数据到h2的映射表
      */
-    private Map<T, Integer> dataH2Map;
+    private TObjectIntMap<T> dataH2Map;
     /**
      * 数据到hr的映射表
      */
@@ -146,8 +150,8 @@ class H2DfsGctBinaryOkvs<T> extends AbstractBinaryOkvs<T> implements SparseOkvs<
         });
         // 构造数据到哈希值的查找表
         Set<T> keySet = keyValueMap.keySet();
-        dataH1Map = new HashMap<>(keySet.size());
-        dataH2Map = new HashMap<>(keySet.size());
+        dataH1Map = new TObjectIntHashMap<>(keySet.size());
+        dataH2Map = new TObjectIntHashMap<>(keySet.size());
         dataHrMap = new HashMap<>(keySet.size());
         for (T key : keySet) {
             int[] sparsePositions = sparsePosition(key);
@@ -165,9 +169,9 @@ class H2DfsGctBinaryOkvs<T> extends AbstractBinaryOkvs<T> implements SparseOkvs<
         byte[][] rightMatrix = generateRightMatrix(keyValueMap, dfsDealer.getCycleEdgeDataSet());
         // 所有环路都已经处理完毕，生成矩阵左半部分
         byte[][] leftMatrix = new byte[lm][];
-        Map<Integer, ArrayList<T>> rootEdgeMap = dfsDealer.getRootTraversalDataMap();
-        Set<Integer> rootSet = rootEdgeMap.keySet();
-        for (Integer root : rootSet) {
+        TIntObjectMap<ArrayList<T>> rootEdgeMap = dfsDealer.getRootTraversalDataMap();
+        TIntSet rootSet = rootEdgeMap.keySet();
+        for (int root : rootSet.toArray()) {
             if (leftMatrix[root] != null) {
                 throw new IllegalStateException("重新调用DFS更新节点值时，根节点不可能已被设置，算法实现有误");
             }
@@ -177,9 +181,9 @@ class H2DfsGctBinaryOkvs<T> extends AbstractBinaryOkvs<T> implements SparseOkvs<
             for (T traversalEdgeData : traversalEdgeDataList) {
                 // set lv = lu XOR <r(x_i), R> XOR y_i
                 byte[] rx = dataHrMap.get(traversalEdgeData);
-                Integer[] vertices = h2CuckooTable.getVertices(traversalEdgeData);
-                Integer source = vertices[0];
-                Integer target = vertices[1];
+                int[] vertices = h2CuckooTable.getVertices(traversalEdgeData);
+                int source = vertices[0];
+                int target = vertices[1];
                 byte[] innerProduct = BytesUtils.innerProduct(rightMatrix, byteL, rx);
                 byte[] valueBytes = keyValueMap.get(traversalEdgeData);
                 BytesUtils.xori(innerProduct, valueBytes);
@@ -249,7 +253,7 @@ class H2DfsGctBinaryOkvs<T> extends AbstractBinaryOkvs<T> implements SparseOkvs<
         for (T key : keySet) {
             int h1Value = dataH1Map.get(key);
             int h2Value = dataH2Map.get(key);
-            h2CuckooTable.addData(new Integer[]{h1Value, h2Value}, key);
+            h2CuckooTable.addData(new int[]{h1Value, h2Value}, key);
         }
         return h2CuckooTable;
     }

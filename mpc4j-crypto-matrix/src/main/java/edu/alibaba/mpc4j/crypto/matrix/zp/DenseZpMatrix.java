@@ -206,7 +206,7 @@ public class DenseZpMatrix implements ZpMatrix {
         rowIntStream = parallel ? rowIntStream.parallel() : rowIntStream;
         rowIntStream.forEach(iRow -> {
             for (int iColumn = 0; iColumn < thatColumns; iColumn++) {
-                mulData[iRow][iColumn] = BigInteger.ZERO;
+                mulData[iRow][iColumn] = zp.createZero();
                 for (int index = 0; index < columns; index++) {
                     mulData[iRow][iColumn] = zp.add(mulData[iRow][iColumn], zp.mul(data[iRow][index], that.getEntry(index, iColumn)));
                 }
@@ -253,7 +253,7 @@ public class DenseZpMatrix implements ZpMatrix {
                 // find a non-zero row
                 int max = row;
                 for (int iRow = row + 1; iRow < size; ++iRow) {
-                    if (!cData[iRow][column].equals(BigInteger.ZERO)) {
+                    if (!zp.isZero(cData[iRow][column])) {
                         max = iRow;
                         break;
                     }

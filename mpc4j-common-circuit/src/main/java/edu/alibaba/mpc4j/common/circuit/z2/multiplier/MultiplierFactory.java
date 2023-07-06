@@ -34,6 +34,7 @@ public class MultiplierFactory {
      * @return a adder.
      */
     public static Multiplier createMultiplier(MultiplierTypes type, Z2IntegerCircuit circuit) {
+        //noinspection SwitchStatementWithTooFewBranches
         switch (type) {
             case SHIFT_ADD:
                 return new ShiftAddMultiplier(circuit);

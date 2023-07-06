@@ -6,10 +6,14 @@ import edu.alibaba.mpc4j.common.tool.EnvType;
 import edu.alibaba.mpc4j.common.tool.MathPreconditions;
 import edu.alibaba.mpc4j.common.tool.crypto.prf.Prf;
 import edu.alibaba.mpc4j.common.tool.crypto.prf.PrfFactory;
+import edu.alibaba.mpc4j.common.tool.galoisfield.zp.ZpFactory;
 import edu.alibaba.mpc4j.crypto.matrix.okve.tool.ZpMaxLisFinder;
 import edu.alibaba.mpc4j.crypto.matrix.okve.cuckootable.CuckooTableSingletonTcFinder;
 import edu.alibaba.mpc4j.crypto.matrix.okve.cuckootable.H3CuckooTable;
 import edu.alibaba.mpc4j.common.tool.utils.*;
+import gnu.trove.map.TObjectIntMap;
+import gnu.trove.map.hash.TObjectIntHashMap;
+import gnu.trove.set.TIntSet;
 
 import java.math.BigInteger;
 import java.util.*;
@@ -65,17 +69,21 @@ class H3TcGctZpOvdm<T> extends AbstractZpOvdm<T> implements SparseZpOvdm<T> {
      */
     private final Prf hr;
     /**
+     * max linear independent system finder
+     */
+    private final ZpMaxLisFinder maxLisFinder;
+    /**
      * 数据到h1的映射表
      */
-    private Map<T, Integer> dataH1Map;
+    private TObjectIntMap<T> dataH1Map;
     /**
      * 数据到h2的映射表
      */
-    private Map<T, Integer> dataH2Map;
+    private TObjectIntMap<T> dataH2Map;
     /**
      * 数据到h3的映射表
      */
-    private Map<T, Integer> dataH3Map;
+    private TObjectIntMap<T> dataH3Map;
     /**
      * 数据到hr的映射表
      */
@@ -93,6 +101,7 @@ class H3TcGctZpOvdm<T> extends AbstractZpOvdm<T> implements SparseZpOvdm<T> {
         h3.setKey(keys[2]);
         hr = PrfFactory.createInstance(envType, rm / Byte.SIZE);
         hr.setKey(keys[3]);
+        maxLisFinder = new ZpMaxLisFinder(ZpFactory.createInstance(envType, prime));
     }
 
     @Override
@@ -160,9 +169,9 @@ class H3TcGctZpOvdm<T> extends AbstractZpOvdm<T> implements SparseZpOvdm<T> {
         MathPreconditions.checkLessOrEqual("key-value pairs num", keyValueMap.size(), n);
         // 构造数据到哈希值的查找表
         Set<T> keySet = keyValueMap.keySet();
-        dataH1Map = new HashMap<>(keySet.size());
-        dataH2Map = new HashMap<>(keySet.size());
-        dataH3Map = new HashMap<>(keySet.size());
+        dataH1Map = new TObjectIntHashMap<>(keySet.size());
+        dataH2Map = new TObjectIntHashMap<>(keySet.size());
+        dataH3Map = new TObjectIntHashMap<>(keySet.size());
         dataHrMap = new HashMap<>(keySet.size());
         for (T key : keySet) {
             int[] sparsePositions = sparsePositions(key);
@@ -188,7 +197,7 @@ class H3TcGctZpOvdm<T> extends AbstractZpOvdm<T> implements SparseZpOvdm<T> {
         System.arraycopy(storage, lm, rightStorage, 0, rm);
         // 从栈中依次弹出数据，为相应节点赋值
         Stack<T> removedDataStack = singletonFinder.getRemovedDataStack();
-        Stack<Integer[]> removedDataVerticesStack = singletonFinder.getRemovedDataVertices();
+        Stack<int[]> removedDataVerticesStack = singletonFinder.getRemovedDataVertices();
         // 先计算右侧内积结果
         Map<T, BigInteger> removedDataInnerProductMap = removedDataStack.stream()
             .collect(Collectors.toMap(Function.identity(), removedData -> {
@@ -199,7 +208,7 @@ class H3TcGctZpOvdm<T> extends AbstractZpOvdm<T> implements SparseZpOvdm<T> {
             }));
         while (!removedDataStack.empty()) {
             T removedData = removedDataStack.pop();
-            Integer[] removedDataVertices = removedDataVerticesStack.pop();
+            int[] removedDataVertices = removedDataVerticesStack.pop();
             int vertex0 = removedDataVertices[0];
             int vertex1 = removedDataVertices[1];
             int vertex2 = removedDataVertices[2];
@@ -281,14 +290,14 @@ class H3TcGctZpOvdm<T> extends AbstractZpOvdm<T> implements SparseZpOvdm<T> {
             tildePrimeMatrixRowIndex++;
         }
         // Otherwise, let M˜* be one such matrix and C ⊂ [d + λ] index the corresponding columns of M˜.
-        ZpMaxLisFinder zpMaxLisFinder = new ZpMaxLisFinder(zp.getPrime(), tildePrimeMatrix);
-        Set<Integer> setC = zpMaxLisFinder.getLisRows();
+        TIntSet setC = maxLisFinder.getLisRows(tildePrimeMatrix);
+        int[] cArray = setC.toArray();
         BigInteger[][] tildeStarMatrix = new BigInteger[dTilde][setC.size()];
         int tildeStarMatrixRowIndex = 0;
         for (T data : coreDataSet) {
             boolean[] rxBinary = dataHrMap.get(data);
             int rmIndex = 0;
-            for (Integer r : setC) {
+            for (int r : cArray) {
                 tildeStarMatrix[tildeStarMatrixRowIndex][rmIndex] = rxBinary[r] ? BigInteger.ONE : BigInteger.ZERO;
                 rmIndex++;
             }
@@ -347,13 +356,13 @@ class H3TcGctZpOvdm<T> extends AbstractZpOvdm<T> implements SparseZpOvdm<T> {
         // Using Gaussian elimination solve the system
         // M˜* (P_{m' + C_1}, ..., P_{m' + C_{d˜})^T = (v'_{R_1}, ..., v'_{R_{d˜})^T.
         BigInteger[] vectorX = new BigInteger[setC.size()];
-        SystemInfo systemInfo = zpLinearSolver.solve(tildeStarMatrix, vectorY, vectorX, true);
+        SystemInfo systemInfo = zpLinearSolver.freeSolve(tildeStarMatrix, vectorY, vectorX);
         if (systemInfo.compareTo(SystemInfo.Inconsistent) == 0) {
             throw new ArithmeticException("无法完成编码过程，线性系统无解");
         }
         // 将求解结果更新到matrix里面
         int xVectorIndex = 0;
-        for (int cIndex : setC) {
+        for (int cIndex : cArray) {
             storage[lm + cIndex] = vectorX[xVectorIndex];
             xVectorIndex++;
         }
@@ -417,7 +426,7 @@ class H3TcGctZpOvdm<T> extends AbstractZpOvdm<T> implements SparseZpOvdm<T> {
             int h1Value = dataH1Map.get(key);
             int h2Value = dataH2Map.get(key);
             int h3Value = dataH3Map.get(key);
-            h3CuckooTable.addData(new Integer[]{h1Value, h2Value, h3Value}, key);
+            h3CuckooTable.addData(new int[]{h1Value, h2Value, h3Value}, key);
         }
         return h3CuckooTable;
     }

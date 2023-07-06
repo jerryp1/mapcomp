@@ -91,9 +91,9 @@ public class BinaryLinearSolverTest {
     @Test
     public void testIdentitySquareFullRank() {
         List<byte[]> identityRows = IntStream.range(0, d)
-            .mapToObj(rowIndex -> {
+            .mapToObj(iRow -> {
                 byte[] row = new byte[byteD];
-                BinaryUtils.setBoolean(row, rowIndex + offsetD, true);
+                BinaryUtils.setBoolean(row, iRow + offsetD, true);
                 return row;
             })
             .collect(Collectors.toList());
@@ -101,8 +101,8 @@ public class BinaryLinearSolverTest {
             Collections.shuffle(identityRows, SECURE_RANDOM);
             byte[][] matrixA = identityRows.toArray(new byte[0][]);
             byte[][] b = new byte[d][];
-            for (int row = 0; row < d; row++) {
-                b[row] = gf2e.createRandom(SECURE_RANDOM);
+            for (int iRow = 0; iRow < d; iRow++) {
+                b[iRow] = gf2e.createRandom(SECURE_RANDOM);
             }
             testGaussianElimination(matrixA, d, b);
         }
@@ -111,9 +111,9 @@ public class BinaryLinearSolverTest {
     @Test
     public void testIdentitySquareNotFullRank() {
         List<byte[]> identityRows = IntStream.range(0, d)
-            .mapToObj(rowIndex -> {
+            .mapToObj(iRow -> {
                 byte[] row = new byte[byteD];
-                BinaryUtils.setBoolean(row, rowIndex + offsetD, true);
+                BinaryUtils.setBoolean(row, iRow + offsetD, true);
                 return row;
             })
             .collect(Collectors.toList());
@@ -121,8 +121,8 @@ public class BinaryLinearSolverTest {
             Collections.shuffle(identityRows, SECURE_RANDOM);
             byte[][] matrixA = BytesUtils.clone(identityRows.toArray(new byte[0][]));
             byte[][] b = new byte[d][];
-            for (int row = 0; row < d; row++) {
-                b[row] = gf2e.createRandom(SECURE_RANDOM);
+            for (int iRow = 0; iRow < d; iRow++) {
+                b[iRow] = gf2e.createRandom(SECURE_RANDOM);
             }
             // set a random row to be 0
             int r = SECURE_RANDOM.nextInt(d);
@@ -137,8 +137,8 @@ public class BinaryLinearSolverTest {
         for (int round = 0; round < RANDOM_ROUND; round++) {
             // we choose a full rank matrix
             byte[][] matrixA = new byte[d][];
-            for (int row = 0; row < d; row++) {
-                matrixA[row] = BytesUtils.randomByteArray(byteD, d, SECURE_RANDOM);
+            for (int iRow = 0; iRow < d; iRow++) {
+                matrixA[iRow] = BytesUtils.randomByteArray(byteD, d, SECURE_RANDOM);
             }
             try {
                 ByteDenseBitMatrix bitMatrix = ByteDenseBitMatrix.createFromDense(d, matrixA);
@@ -147,8 +147,8 @@ public class BinaryLinearSolverTest {
                 continue;
             }
             byte[][] b = new byte[d][];
-            for (int row = 0; row < d; row++) {
-                b[row] = gf2e.createRandom(SECURE_RANDOM);
+            for (int iRow = 0; iRow < d; iRow++) {
+                b[iRow] = gf2e.createRandom(SECURE_RANDOM);
             }
             testGaussianElimination(matrixA, d, b);
         }
@@ -160,9 +160,9 @@ public class BinaryLinearSolverTest {
             byte[][] matrixA = new byte[d][];
             byte[][] b = new byte[d][];
             // set random full-rank matrix
-            for (int row = 0; row < d; row++) {
-                matrixA[row] = BytesUtils.randomByteArray(byteD, d, SECURE_RANDOM);
-                b[row] = gf2e.createRandom(SECURE_RANDOM);
+            for (int iRow = 0; iRow < d; iRow++) {
+                matrixA[iRow] = BytesUtils.randomByteArray(byteD, d, SECURE_RANDOM);
+                b[iRow] = gf2e.createRandom(SECURE_RANDOM);
             }
             try {
                 ByteDenseBitMatrix bitMatrix = ByteDenseBitMatrix.createFromDense(d, matrixA);
@@ -185,48 +185,48 @@ public class BinaryLinearSolverTest {
             int nDoubleColumn = d * 2;
             int nByteDoubleColumn = CommonUtils.getByteLength(nDoubleColumn);
             int nOffsetDoubleColumn = nByteDoubleColumn * Byte.SIZE - nDoubleColumn;
-            for (int row = 0; row < d; row++) {
-                matrixA[row] = new byte[nByteDoubleColumn];
+            for (int iRow = 0; iRow < d; iRow++) {
+                matrixA[iRow] = new byte[nByteDoubleColumn];
                 // the left-most and the right-most bits are set to true
-                BinaryUtils.setBoolean(matrixA[row], nOffsetDoubleColumn + row, true);
-                BinaryUtils.setBoolean(matrixA[row], nOffsetDoubleColumn + 2 * d - 1 - row, true);
+                BinaryUtils.setBoolean(matrixA[iRow], nOffsetDoubleColumn + iRow, true);
+                BinaryUtils.setBoolean(matrixA[iRow], nOffsetDoubleColumn + 2 * d - 1 - iRow, true);
             }
             byte[][] b = new byte[d][];
-            for (int row = 0; row < d; row++) {
-                b[row] = gf2e.createRandom(SECURE_RANDOM);
+            for (int iRow = 0; iRow < d; iRow++) {
+                b[iRow] = gf2e.createRandom(SECURE_RANDOM);
             }
             testGaussianElimination(matrixA, nDoubleColumn, b);
         }
     }
 
-    private void testGaussianElimination(byte[][] matrixA, int nColumn, byte[][] b) {
-        byte[][] x = new byte[nColumn][];
+    private void testGaussianElimination(byte[][] matrixA, int nColumns, byte[][] b) {
+        byte[][] x = new byte[nColumns][];
         LinearSolver.SystemInfo systemInfo;
         // free solve
-        systemInfo = linearSolver.freeSolve(BytesUtils.clone(matrixA), nColumn, BytesUtils.clone(b), x);
+        systemInfo = linearSolver.freeSolve(BytesUtils.clone(matrixA), nColumns, BytesUtils.clone(b), x);
         Assert.assertNotEquals(LinearSolver.SystemInfo.Inconsistent, systemInfo);
-        assertCorrect(matrixA, nColumn, b, x);
+        assertCorrect(matrixA, nColumns, b, x);
         // full solve
-        systemInfo = linearSolver.fullSolve(BytesUtils.clone(matrixA), nColumn, BytesUtils.clone(b), x);
+        systemInfo = linearSolver.fullSolve(BytesUtils.clone(matrixA), nColumns, BytesUtils.clone(b), x);
         Assert.assertNotEquals(LinearSolver.SystemInfo.Inconsistent, systemInfo);
-        assertCorrect(matrixA, nColumn, b, x);
+        assertCorrect(matrixA, nColumns, b, x);
         for (byte[] xi : x) {
             Assert.assertFalse(gf2e.isZero(xi));
         }
     }
 
-    private void assertCorrect(byte[][] matrixA, int nColumn, byte[][] b, byte[][] x) {
-        int nrow = b.length;
-        int nByteColumn = CommonUtils.getByteLength(nColumn);
-        int nOffsetColumn = nByteColumn * Byte.SIZE - nColumn;
-        for (int rowIndex = 0; rowIndex < nrow; rowIndex++) {
-            byte[] res = gf2e.createZero();
-            for (int columnIndex = 0; columnIndex < nColumn; columnIndex++) {
-                if (BinaryUtils.getBoolean(matrixA[rowIndex], nOffsetColumn + columnIndex)) {
-                    gf2e.addi(res, x[columnIndex]);
+    private void assertCorrect(byte[][] matrixA, int nColumns, byte[][] b, byte[][] x) {
+        int nRows = b.length;
+        int nByteColumn = CommonUtils.getByteLength(nColumns);
+        int nOffsetColumn = nByteColumn * Byte.SIZE - nColumns;
+        for (int iRow = 0; iRow < nRows; iRow++) {
+            byte[] result = gf2e.createZero();
+            for (int iColumn = 0; iColumn < nColumns; iColumn++) {
+                if (BinaryUtils.getBoolean(matrixA[iRow], nOffsetColumn + iColumn)) {
+                    gf2e.addi(result, x[iColumn]);
                 }
             }
-            Assert.assertArrayEquals(b[rowIndex], res);
+            Assert.assertArrayEquals(b[iRow], result);
         }
     }
 }

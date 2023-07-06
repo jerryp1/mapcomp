@@ -58,8 +58,8 @@ public class AdderFactory {
     /**
      * Creates a adder.
      *
-     * @param type type of adder.
-     * @param type z2 integer circuit.
+     * @param type    type of adder.
+     * @param circuit z2 integer circuit.
      * @return a adder.
      */
     public static Adder createAdder(AdderTypes type, Z2IntegerCircuit circuit) {

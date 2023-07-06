@@ -31,7 +31,7 @@ public class OkvsEfficiencyTest {
     /**
      * default L
      */
-    private static final int DEFAULT_L = CommonConstants.STATS_BIT_LENGTH;
+    private static final int DEFAULT_L = CommonConstants.BLOCK_BIT_LENGTH;
     /**
      * default byte L
      */
