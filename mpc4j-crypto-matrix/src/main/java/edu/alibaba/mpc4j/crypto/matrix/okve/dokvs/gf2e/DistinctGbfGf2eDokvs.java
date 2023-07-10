@@ -4,6 +4,8 @@ import edu.alibaba.mpc4j.common.tool.EnvType;
 import edu.alibaba.mpc4j.common.tool.utils.IntUtils;
 import edu.alibaba.mpc4j.common.tool.utils.ObjectUtils;
 
+import java.security.SecureRandom;
+
 /**
  * Distinct Garbled Bloom Filter (GBF) DOKVS. The original scheme is described in the following paper:
  * <p>
@@ -23,7 +25,11 @@ import edu.alibaba.mpc4j.common.tool.utils.ObjectUtils;
 class DistinctGbfGf2eDokvs<T> extends AbstractGbfGf2eDokvs<T> implements SparseConstantGf2eDokvs<T> {
 
     DistinctGbfGf2eDokvs(EnvType envType, int n, int l, byte[] key) {
-        super(envType, n, l, key);
+        super(envType, n, l, key, new SecureRandom());
+    }
+
+    DistinctGbfGf2eDokvs(EnvType envType, int n, int l, byte[] key, SecureRandom secureRandom) {
+        super(envType, n, l, key, secureRandom);
     }
 
     @Override

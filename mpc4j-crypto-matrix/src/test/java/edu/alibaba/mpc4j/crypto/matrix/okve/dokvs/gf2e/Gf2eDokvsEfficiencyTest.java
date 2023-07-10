@@ -15,6 +15,7 @@ import java.security.SecureRandom;
 import java.text.DecimalFormat;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Stream;
 
 /**
  * GF(2^e)-DOKVS efficient tests.
@@ -49,33 +50,41 @@ public class Gf2eDokvsEfficiencyTest {
     @Test
     public void testEfficiency() {
         LOGGER.info(
-            "{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}",
-            "                name", "      logN", "         m", "        lm", "        rm",
+            "{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}",
+            "                name", "      logN", "         m", "        lm", "        rm", "parallel",
             " encode(s)", " decode(s)", "dEncode(s)", "dDecode(s)"
         );
-        testEfficiency(8);
-        testEfficiency(10);
-        testEfficiency(12);
-        testEfficiency(14);
-        testEfficiency(16);
-        testEfficiency(18);
+        testEfficiency(false);
+        testEfficiency(true);
     }
 
-    private void testEfficiency(int logN) {
+    private void testEfficiency(boolean parallelEncode) {
+        testEfficiency(8, parallelEncode);
+        testEfficiency(10, parallelEncode);
+        testEfficiency(12, parallelEncode);
+        testEfficiency(14, parallelEncode);
+        testEfficiency(16, parallelEncode);
+        testEfficiency(18, parallelEncode);
+    }
+
+    private void testEfficiency(int logN, boolean parallelEncode) {
         int n = 1 << logN;
         int l = DEFAULT_L;
         for (Gf2eDokvsType type : TYPES) {
             int hashNum = Gf2eDokvsFactory.getHashKeyNum(type);
             byte[][] keys = CommonUtils.generateRandomKeys(hashNum, SECURE_RANDOM);
             Gf2eDokvs<ByteBuffer> dokvs = Gf2eDokvsFactory.createInstance(EnvType.STANDARD, type, n, l, keys);
+            dokvs.setParallelEncode(parallelEncode);
             Map<ByteBuffer, byte[]> keyValueMap = Gf2eDokvsTest.randomKeyValueMap(n, l);
             STOP_WATCH.start();
             byte[][] nonDoublyStorage = dokvs.encode(keyValueMap, false);
             STOP_WATCH.stop();
             double nonDoublyEncodeTime = (double) STOP_WATCH.getTime(TimeUnit.MILLISECONDS) / 1000;
             STOP_WATCH.reset();
+            Stream<ByteBuffer> nonDoublyKeyStream = keyValueMap.keySet().stream();
+            nonDoublyKeyStream = parallelEncode ? nonDoublyKeyStream.parallel() : nonDoublyKeyStream;
             STOP_WATCH.start();
-            keyValueMap.keySet().forEach(key -> dokvs.decode(nonDoublyStorage, key));
+            nonDoublyKeyStream.forEach(key -> dokvs.decode(nonDoublyStorage, key));
             STOP_WATCH.stop();
             double nonDoublyDecodeTime = (double) STOP_WATCH.getTime(TimeUnit.MILLISECONDS) / 1000;
             STOP_WATCH.reset();
@@ -84,8 +93,10 @@ public class Gf2eDokvsEfficiencyTest {
             STOP_WATCH.stop();
             double doublyEncodeTime = (double) STOP_WATCH.getTime(TimeUnit.MILLISECONDS) / 1000;
             STOP_WATCH.reset();
+            Stream<ByteBuffer> doublyKeyStream = keyValueMap.keySet().stream();
+            doublyKeyStream = parallelEncode ? doublyKeyStream.parallel() : doublyKeyStream;
             STOP_WATCH.start();
-            keyValueMap.keySet().forEach(key -> dokvs.decode(doublyStorage, key));
+            doublyKeyStream.forEach(key -> dokvs.decode(doublyStorage, key));
             STOP_WATCH.stop();
             double doublyDecodeTime = (double) STOP_WATCH.getTime(TimeUnit.MILLISECONDS) / 1000;
             STOP_WATCH.reset();
@@ -101,12 +112,13 @@ public class Gf2eDokvsEfficiencyTest {
                 rm = "-";
             }
             LOGGER.info(
-                "{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}",
+                "{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}",
                 StringUtils.leftPad(type.name(), 20),
                 StringUtils.leftPad(String.valueOf(logN), 10),
                 StringUtils.leftPad(String.valueOf(dokvs.getM()), 10),
                 StringUtils.leftPad(lm, 10),
                 StringUtils.leftPad(rm, 10),
+                StringUtils.leftPad(String.valueOf(parallelEncode), 10),
                 StringUtils.leftPad(TIME_DECIMAL_FORMAT.format(nonDoublyEncodeTime), 10),
                 StringUtils.leftPad(TIME_DECIMAL_FORMAT.format(nonDoublyDecodeTime), 10),
                 StringUtils.leftPad(TIME_DECIMAL_FORMAT.format(doublyEncodeTime), 10),

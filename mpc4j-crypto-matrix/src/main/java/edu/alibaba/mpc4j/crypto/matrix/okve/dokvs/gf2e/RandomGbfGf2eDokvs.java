@@ -4,6 +4,7 @@ import edu.alibaba.mpc4j.common.tool.EnvType;
 import edu.alibaba.mpc4j.common.tool.utils.IntUtils;
 import edu.alibaba.mpc4j.common.tool.utils.ObjectUtils;
 
+import java.security.SecureRandom;
 import java.util.Arrays;
 
 /**
@@ -19,8 +20,12 @@ import java.util.Arrays;
  */
 public class RandomGbfGf2eDokvs<T> extends AbstractGbfGf2eDokvs<T> {
 
-    public RandomGbfGf2eDokvs(EnvType envType, int n, int l, byte[] key) {
-        super(envType, n, l, key);
+    RandomGbfGf2eDokvs(EnvType envType, int n, int l, byte[] key) {
+        super(envType, n, l, key, new SecureRandom());
+    }
+
+    RandomGbfGf2eDokvs(EnvType envType, int n, int l, byte[] key, SecureRandom secureRandom) {
+        super(envType, n, l, key, secureRandom);
     }
 
     @Override

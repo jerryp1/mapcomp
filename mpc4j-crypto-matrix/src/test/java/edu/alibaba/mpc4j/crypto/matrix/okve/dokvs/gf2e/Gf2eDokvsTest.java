@@ -113,6 +113,11 @@ public class Gf2eDokvsTest {
     }
 
     @Test
+    public void testParallelDefault() {
+        testDokvs(DEFAULT_N, DEFAULT_L, true);
+    }
+
+    @Test
     public void testSpecialL() {
         testDokvs(DEFAULT_N, DEFAULT_L - 1);
         testDokvs(DEFAULT_N, DEFAULT_L + 1);
@@ -163,10 +168,15 @@ public class Gf2eDokvsTest {
     }
 
     private void testDokvs(int n, int l) {
+        testDokvs(n, l, false);
+    }
+
+    private void testDokvs(int n, int l, boolean parallelEncode) {
         int byteL = CommonUtils.getByteLength(l);
         for (int round = 0; round < ROUND; round++) {
             byte[][] keys = CommonUtils.generateRandomKeys(hashNum, SECURE_RANDOM);
             Gf2eDokvs<ByteBuffer> dokvs = Gf2eDokvsFactory.createInstance(EnvType.STANDARD, type, n, l, keys);
+            dokvs.setParallelEncode(parallelEncode);
             Map<ByteBuffer, byte[]> keyValueMap = randomKeyValueMap(n, l);
             // non-doubly encode
             byte[][] nonDoublyStorage = dokvs.encode(keyValueMap, false);

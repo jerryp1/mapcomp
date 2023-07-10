@@ -42,6 +42,10 @@ public class Gf2eDokvsFactory {
          */
         H3_BLAZE_GCT,
         /**
+         * cluster blazing fast using garbled cuckoo table with 3 hash function.
+         */
+        H3_CLUSTER_BLAZE_GCT,
+        /**
          * distinct garbled bloom filter
          */
         DISTINCT_GBF,
@@ -78,6 +82,8 @@ public class Gf2eDokvsFactory {
                 return new H3SingletonGctGfe2Dokvs<>(envType, n, l, keys);
             case H3_BLAZE_GCT:
                 return new H3BlazeGctGf2eDokvs<>(envType, n, l, keys);
+            case H3_CLUSTER_BLAZE_GCT:
+                return new H3ClusterBlazeGctGf2eDokvs<>(envType, n, l, keys);
             case DISTINCT_GBF:
                 return new DistinctGbfGf2eDokvs<>(envType, n, l, keys[0]);
             case RANDOM_GBF:
@@ -102,6 +108,7 @@ public class Gf2eDokvsFactory {
             case H2_BLAZE_GCT:
             case H3_SINGLETON_GCT:
             case H3_BLAZE_GCT:
+            case H3_CLUSTER_BLAZE_GCT:
             case DISTINCT_GBF:
             case RANDOM_GBF:
                 return true;
@@ -135,6 +142,8 @@ public class Gf2eDokvsFactory {
                 return new H3SingletonGctGfe2Dokvs<>(envType, n, l, keys);
             case H3_BLAZE_GCT:
                 return new H3BlazeGctGf2eDokvs<>(envType, n, l, keys);
+            case H3_CLUSTER_BLAZE_GCT:
+                return new H3ClusterBlazeGctGf2eDokvs<>(envType, n, l, keys);
             case DISTINCT_GBF:
                 return new DistinctGbfGf2eDokvs<>(envType, n, l, keys[0]);
             case RANDOM_GBF:
@@ -159,6 +168,8 @@ public class Gf2eDokvsFactory {
             case H3_SINGLETON_GCT:
             case H3_BLAZE_GCT:
                 return H3SingletonGctGfe2Dokvs.HASH_KEY_NUM;
+            case H3_CLUSTER_BLAZE_GCT:
+                return H3ClusterBlazeGctGf2eDokvs.HASH_KEY_NUM;
             case DISTINCT_GBF:
             case RANDOM_GBF:
                 return AbstractGbfGf2eDokvs.HASH_KEY_NUM;
@@ -189,6 +200,8 @@ public class Gf2eDokvsFactory {
                 return H3SingletonGctGfe2Dokvs.getLm(n) + H3SingletonGctGfe2Dokvs.getRm(n);
             case H3_BLAZE_GCT:
                 return H3BlazeGctGf2eDokvs.getLm(n) + H3BlazeGctGf2eDokvs.getRm(n);
+            case H3_CLUSTER_BLAZE_GCT:
+                return H3ClusterBlazeGctGf2eDokvs.getM(n);
             case DISTINCT_GBF:
             case RANDOM_GBF:
                 return AbstractGbfGf2eDokvs.getM(n);

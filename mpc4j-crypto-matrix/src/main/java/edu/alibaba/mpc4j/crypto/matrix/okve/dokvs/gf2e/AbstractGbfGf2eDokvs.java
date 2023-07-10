@@ -9,6 +9,7 @@ import edu.alibaba.mpc4j.common.tool.crypto.prf.PrfFactory;
 import edu.alibaba.mpc4j.common.tool.utils.BytesUtils;
 import edu.alibaba.mpc4j.common.tool.utils.CommonUtils;
 
+import java.security.SecureRandom;
 import java.util.Map;
 import java.util.Set;
 
@@ -56,8 +57,8 @@ abstract class AbstractGbfGf2eDokvs<T> extends AbstractGf2eDokvs<T> implements S
      */
     protected final Prf hash;
 
-    AbstractGbfGf2eDokvs(EnvType envType, int n, int l, byte[] key) {
-        super(n, getM(n), l);
+    AbstractGbfGf2eDokvs(EnvType envType, int n, int l, byte[] key, SecureRandom secureRandom) {
+        super(n, getM(n), l, secureRandom);
         hash = PrfFactory.createInstance(envType, Integer.BYTES * SPARSE_HASH_NUM);
         hash.setKey(key);
     }
@@ -125,13 +126,13 @@ abstract class AbstractGbfGf2eDokvs<T> extends AbstractGf2eDokvs<T> implements S
     }
 
     @Override
-    public byte[] decode(byte[][] storage, T key) {
-        MathPreconditions.checkEqual("storage.length", "m", storage.length, m);
+    public byte[] decode(byte[][] storage, int from, int to, T key) {
+        MathPreconditions.checkEqual("storage.length", "m", to - from, m);
         // here we do not verify bit length for each storage, otherwise decode would require O(n) computation.
         int[] sparsePositions = sparsePositions(key);
         byte[] value = new byte[byteL];
         for (int position : sparsePositions) {
-            BytesUtils.xori(value, storage[position]);
+            BytesUtils.xori(value, storage[position + from]);
         }
         assert BytesUtils.isFixedReduceByteArray(value, byteL, l);
         return value;

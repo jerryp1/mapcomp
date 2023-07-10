@@ -48,7 +48,7 @@ abstract class AbstractH3GctGf2eDokvs<T> extends AbstractGf2eDokvs<T> implements
     /**
      * number of sparse hashes
      */
-    protected static final int SPARSE_HASH_NUM = 3;
+    static final int SPARSE_HASH_NUM = 3;
     /**
      * number of hash keys
      */
@@ -99,7 +99,7 @@ abstract class AbstractH3GctGf2eDokvs<T> extends AbstractGf2eDokvs<T> implements
     }
 
     AbstractH3GctGf2eDokvs(EnvType envType, int n, int lm, int rm, int l, byte[][] keys, SecureRandom secureRandom) {
-        super(n, lm + rm, l);
+        super(n, lm + rm, l, secureRandom);
         MathPreconditions.checkEqual("keys.length", "hash_num", keys.length, HASH_KEY_NUM);
         this.lm = lm;
         this.rm = rm;
@@ -157,19 +157,19 @@ abstract class AbstractH3GctGf2eDokvs<T> extends AbstractGf2eDokvs<T> implements
     }
 
     @Override
-    public byte[] decode(byte[][] storage, T key) {
-        MathPreconditions.checkEqual("storage.length", "m", storage.length, m);
+    public byte[] decode(byte[][] storage, int from, int to, T key) {
+        MathPreconditions.checkEqual("storage.length", "m", to - from, m);
         // here we do not verify bit length for each storage, otherwise decode would require O(n) computation.
         int[] sparsePositions = sparsePositions(key);
         boolean[] densePositions = binaryDensePositions(key);
         byte[] value = new byte[byteL];
         // h1, h2 and h3 must be distinct
-        BytesUtils.xori(value, storage[sparsePositions[0]]);
-        BytesUtils.xori(value, storage[sparsePositions[1]]);
-        BytesUtils.xori(value, storage[sparsePositions[2]]);
+        BytesUtils.xori(value, storage[sparsePositions[0] + from]);
+        BytesUtils.xori(value, storage[sparsePositions[1] + from]);
+        BytesUtils.xori(value, storage[sparsePositions[2] + from]);
         for (int rmIndex = 0; rmIndex < rm; rmIndex++) {
             if (densePositions[rmIndex]) {
-                BytesUtils.xori(value, storage[lm + rmIndex]);
+                BytesUtils.xori(value, storage[lm + rmIndex + from]);
             }
         }
         assert BytesUtils.isFixedReduceByteArray(value, byteL, l);

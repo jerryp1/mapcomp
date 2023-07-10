@@ -217,8 +217,8 @@ class MegaBinGf2eDokvs<T> implements Gf2eDokvs<T> {
     }
 
     @Override
-    public byte[] decode(byte[][] storage, T key) {
-        MathPreconditions.checkEqual("storage.length", "m", storage.length, m);
+    public byte[] decode(byte[][] storage, int from, int to, T key) {
+        MathPreconditions.checkEqual("storage.length", "m", to - from, m);
         // here we do not verify bit length for each storage, otherwise decode would require O(n) computation.
         byte[] hashKey = hm.getBytes(ObjectUtils.objectToByteArray(key));
         BytesUtils.reduceByteArray(hashKey, l);
@@ -226,7 +226,7 @@ class MegaBinGf2eDokvs<T> implements Gf2eDokvs<T> {
         int binIndex = binHash.getInteger(hashKey, binNum);
         // get the corresponding polynomial coefficients
         byte[][] coefficients = new byte[binSize][];
-        System.arraycopy(storage, binIndex * binSize, coefficients, 0, binSize);
+        System.arraycopy(storage, binIndex * binSize + from, coefficients, 0, binSize);
 
         return gf2ePoly.evaluate(coefficients, hashKey);
     }
