@@ -8,7 +8,7 @@ import java.util.stream.IntStream;
  * @author Weiran Liu
  * @date 2023/7/4
  */
-public interface SparseGf2eDokvs<T> extends Gf2eDokvs<T> {
+public interface SparseGf2eDokvs<T> extends BinaryGf2eDokvs<T> {
     /**
      * Gets the sparse range. All sparse positions are in range [0, sparseRange).
      *
@@ -51,6 +51,7 @@ public interface SparseGf2eDokvs<T> extends Gf2eDokvs<T> {
      *
      * @return the maximal num.
      */
+    @Override
     default int maxPositionNum() {
         return maxSparsePositionNum() + maxDensePositionNum();
     }
@@ -61,6 +62,7 @@ public interface SparseGf2eDokvs<T> extends Gf2eDokvs<T> {
      * @param key the key.
      * @return the positions.
      */
+    @Override
     default int[] positions(T key) {
         int sparseRange = sparsePositionRange();
         int denseNum = maxDensePositionNum();

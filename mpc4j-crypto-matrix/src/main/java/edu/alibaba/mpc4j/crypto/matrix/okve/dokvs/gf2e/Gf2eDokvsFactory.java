@@ -59,9 +59,62 @@ public class Gf2eDokvsFactory {
      * @param n       number of key-value pairs.
      * @param l       value bit length.
      * @param keys    keys.
-     * @return and instance.
+     * @return an instance.
      */
     public static <X> Gf2eDokvs<X> createInstance(EnvType envType, Gf2eDokvsType type, int n, int l, byte[][] keys) {
+        MathPreconditions.checkEqual("keys.length", "hash_num", keys.length, getHashKeyNum(type));
+        switch (type) {
+            case H2_TWO_CORE_GCT:
+                return new H2TwoCoreGctGf2eDokvs<>(envType, n, l, keys);
+            case H2_SINGLETON_GCT:
+                return new H2SingletonGctGf2eDokvs<>(envType, n, l, keys);
+            case H2_BLAZE_GCT:
+                return new H2BlazeGctGf2eDokvs<>(envType, n, l, keys);
+            case H3_SINGLETON_GCT:
+                return new H3SingletonGctGfe2Dokvs<>(envType, n, l, keys);
+            case H3_BLAZE_GCT:
+                return new H3BlazeGctGf2eDokvs<>(envType, n, l, keys);
+            case DISTINCT_GBF:
+                return new DistinctGbfGf2eDokvs<>(envType, n, l, keys[0]);
+            case RANDOM_GBF:
+                return new RandomGbfGf2eDokvs<>(envType, n, l, keys[0]);
+            default:
+                throw new IllegalArgumentException("Invalid " + Gf2eDokvsType.class.getSimpleName() + ": " + type.name());
+        }
+    }
+
+    /**
+     * Returns if the given type is a binary type.
+     *
+     * @param type type.
+     * @return true if the given type is a binary type.
+     */
+    public static boolean isBinary(Gf2eDokvsType type) {
+        switch (type) {
+            case H2_TWO_CORE_GCT:
+            case H2_SINGLETON_GCT:
+            case H2_BLAZE_GCT:
+            case H3_SINGLETON_GCT:
+            case H3_BLAZE_GCT:
+            case DISTINCT_GBF:
+            case RANDOM_GBF:
+                return true;
+            default:
+                throw new IllegalArgumentException("Invalid " + Gf2eDokvsType.class.getSimpleName() + ": " + type.name());
+        }
+    }
+
+    /**
+     * Creates a binary instance.
+     *
+     * @param envType environment.
+     * @param type    type.
+     * @param n       number of key-value pairs.
+     * @param l       value bit length.
+     * @param keys    keys.
+     * @return a binary instance.
+     */
+    public static <X> BinaryGf2eDokvs<X> createBinaryInstance(EnvType envType, Gf2eDokvsType type, int n, int l, byte[][] keys) {
         MathPreconditions.checkEqual("keys.length", "hash_num", keys.length, getHashKeyNum(type));
         switch (type) {
             case H2_TWO_CORE_GCT:
