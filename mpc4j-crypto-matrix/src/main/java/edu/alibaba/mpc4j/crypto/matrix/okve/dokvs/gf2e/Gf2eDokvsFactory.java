@@ -49,6 +49,10 @@ public class Gf2eDokvsFactory {
          * random garbled bloom filter
          */
         RANDOM_GBF,
+        /**
+         * MegaBin
+         */
+        MEGA_BIN,
     }
 
     /**
@@ -78,6 +82,8 @@ public class Gf2eDokvsFactory {
                 return new DistinctGbfGf2eDokvs<>(envType, n, l, keys[0]);
             case RANDOM_GBF:
                 return new RandomGbfGf2eDokvs<>(envType, n, l, keys[0]);
+            case MEGA_BIN:
+                return new MegaBinGf2eDokvs<>(envType, n, l, keys);
             default:
                 throw new IllegalArgumentException("Invalid " + Gf2eDokvsType.class.getSimpleName() + ": " + type.name());
         }
@@ -99,6 +105,8 @@ public class Gf2eDokvsFactory {
             case DISTINCT_GBF:
             case RANDOM_GBF:
                 return true;
+            case MEGA_BIN:
+                return false;
             default:
                 throw new IllegalArgumentException("Invalid " + Gf2eDokvsType.class.getSimpleName() + ": " + type.name());
         }
@@ -154,19 +162,22 @@ public class Gf2eDokvsFactory {
             case DISTINCT_GBF:
             case RANDOM_GBF:
                 return AbstractGbfGf2eDokvs.HASH_KEY_NUM;
+            case MEGA_BIN:
+                return MegaBinGf2eDokvs.HASH_KEY_NUM;
             default:
                 throw new IllegalArgumentException("Invalid " + Gf2eDokvsType.class.getSimpleName() + ": " + type.name());
         }
     }
 
     /**
-     * Gets m with m % Byte.SIZE == 0.
+     * Gets m.
      *
+     * @param envType environment.
      * @param type type.
      * @param n    number of key-value pairs.
      * @return m.
      */
-    public static int getM(Gf2eDokvsType type, int n) {
+    public static int getM(EnvType envType, Gf2eDokvsType type, int n) {
         MathPreconditions.checkPositive("n", n);
         switch (type) {
             case H2_TWO_CORE_GCT:
@@ -181,6 +192,8 @@ public class Gf2eDokvsFactory {
             case DISTINCT_GBF:
             case RANDOM_GBF:
                 return AbstractGbfGf2eDokvs.getM(n);
+            case MEGA_BIN:
+                return MegaBinGf2eDokvs.getM(envType, n);
             default:
                 throw new IllegalArgumentException("Invalid " + Gf2eDokvsType.class.getSimpleName() + ": " + type.name());
         }
