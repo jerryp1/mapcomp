@@ -61,6 +61,10 @@ public class CuckooFilter<T> implements Filter<T> {
      * hash num
      */
     static final int HASH_NUM = 2;
+    /**
+     * hash key num
+     */
+    static final int HASH_KEY_NUM = 2;
 
     /**
      * Gets the bucket num, must be in format 2^k.

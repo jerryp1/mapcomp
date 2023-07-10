@@ -61,6 +61,10 @@ public class VacuumFilter<T> implements Filter<T> {
      */
     private static final int MAX_NUM_KICKS = 1 << 11;
     /**
+     * hash num
+     */
+    static final int HASH_NUM = 2;
+    /**
      * VacummFilter中的哈希函数数量
      */
     static final int HASH_KEY_NUM = 2;
