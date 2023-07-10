@@ -53,7 +53,7 @@ class H3ClusterBlazeGctGf2eDokvs<T> implements BinaryGf2eDokvs<T> {
      */
     static int getM(int n) {
         int binNum = CommonUtils.getUnitNum(n, EXPECT_BIN_SIZE);
-        int binN = MaxBinSizeUtils.expectMaxBinSize(n, binNum);
+        int binN = MaxBinSizeUtils.approxMaxBinSize(n, binNum);
         int binLm = H3BlazeGctGf2eDokvs.getLm(binN);
         int binRm = H3BlazeGctGf2eDokvs.getRm(binN);
         int binM = binLm + binRm;
@@ -119,7 +119,7 @@ class H3ClusterBlazeGctGf2eDokvs<T> implements BinaryGf2eDokvs<T> {
         parallelEncode = false;
         // calculate bin_num and bin_size
         binNum = CommonUtils.getUnitNum(n, EXPECT_BIN_SIZE);
-        binN = MaxBinSizeUtils.expectMaxBinSize(n, binNum);
+        binN = MaxBinSizeUtils.approxMaxBinSize(n, binNum);
         int binLm = H3BlazeGctGf2eDokvs.getLm(binN);
         binRm = H3BlazeGctGf2eDokvs.getRm(binN);
         binM = binLm + binRm;

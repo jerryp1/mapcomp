@@ -52,9 +52,21 @@ public class MaxBinSizeUtilsTest {
     }
 
     @Test
-    public void testMaxBinSize() {
+    public void testExactMaxBinSize() {
+        int exactK = MaxBinSizeUtils.exactMaxBinSize(n, b);
+        Assert.assertTrue(exactK >= ((double)n / b));
+    }
+
+    @Test
+    public void testExpectMaxBinSize() {
         int expectK = MaxBinSizeUtils.expectMaxBinSize(n, b);
         int exactK = MaxBinSizeUtils.exactMaxBinSize(n, b);
-        Assert.assertTrue(exactK >= ((double)n / b) && expectK >= exactK);
+        Assert.assertTrue(expectK >= exactK);
+    }
+
+    @Test
+    public void testApproxMaxBinSize() {
+        int approxK = MaxBinSizeUtils.approxMaxBinSize(n, b);
+        Assert.assertTrue(approxK >= ((double)n / b));
     }
 }
