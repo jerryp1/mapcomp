@@ -3,6 +3,8 @@ package edu.alibaba.mpc4j.common.tool.filter;
 import edu.alibaba.mpc4j.common.tool.EnvType;
 import edu.alibaba.mpc4j.common.tool.MathPreconditions;
 import edu.alibaba.mpc4j.common.tool.utils.*;
+import gnu.trove.map.TIntIntMap;
+import gnu.trove.map.hash.TIntIntHashMap;
 
 import java.util.*;
 
@@ -16,7 +18,7 @@ import java.util.*;
  * @author Ziyuan Liang, Weiran Liu
  * @date 2020/09/30
  */
-public class SparseRandomBloomFilter<T> extends AbstractRandomBloomFilter<T> {
+public class SparseRandomBloomFilter<T> extends AbstractBloomFilter<T> {
     /**
      * hash key num = 1
      */
@@ -26,9 +28,13 @@ public class SparseRandomBloomFilter<T> extends AbstractRandomBloomFilter<T> {
      */
     private static final int MAX_LOG_N = 23;
     /**
+     * type
+     */
+    private static final FilterFactory.FilterType FILTER_TYPE = FilterFactory.FilterType.SPARSE_RANDOM_BLOOM_FILTER;
+    /**
      * n -> m
      */
-    private static final Map<Integer, Integer> SBF_BIT_LENGTH_INIT_MATRIX = new HashMap<>();
+    private static final TIntIntMap SBF_BIT_LENGTH_INIT_MATRIX = new TIntIntHashMap();
 
     static {
         SBF_BIT_LENGTH_INIT_MATRIX.put(8, 88031);
@@ -67,7 +73,7 @@ public class SparseRandomBloomFilter<T> extends AbstractRandomBloomFilter<T> {
     /**
      * n -> hashNum
      */
-    private static final Map<Integer, Integer> HASH_NUM_INIT_MATRIX = new HashMap<>();
+    private static final TIntIntMap HASH_NUM_INIT_MATRIX = new TIntIntHashMap();
 
     static {
         HASH_NUM_INIT_MATRIX.put(8, 105);
@@ -131,7 +137,8 @@ public class SparseRandomBloomFilter<T> extends AbstractRandomBloomFilter<T> {
     static <X> SparseRandomBloomFilter<X> fromByteArrayList(EnvType envType, List<byte[]> byteArrayList) {
         MathPreconditions.checkEqual("byteArrayList.size", "desired size", byteArrayList.size(), 6);
         // type
-        byteArrayList.remove(0);
+        int typeOrdinal = IntUtils.byteArrayToInt(byteArrayList.remove(0));
+        MathPreconditions.checkEqual("", "", typeOrdinal, FILTER_TYPE.ordinal());
         // max size
         int maxSize = IntUtils.byteArrayToInt(byteArrayList.remove(0));
         int m = SparseRandomBloomFilter.bitSize(maxSize);
@@ -148,8 +155,18 @@ public class SparseRandomBloomFilter<T> extends AbstractRandomBloomFilter<T> {
     }
 
     SparseRandomBloomFilter(EnvType envType, int maxSize, int m, byte[] key, int size, byte[] storage, int itemByteLength) {
-        super(FilterFactory.FilterType.SPARSE_RANDOM_BLOOM_FILTER, envType, maxSize, m,
+        super(FILTER_TYPE, envType, maxSize, m,
             SparseRandomBloomFilter.getHashNum(maxSize),
             key, size, storage, itemByteLength);
+    }
+
+    @Override
+    public int[] hashIndexes(T data) {
+        byte[] dataBytes = ObjectUtils.objectToByteArray(data);
+        byte[] hashes = hash.getBytes(dataBytes);
+        return Arrays.stream(IntUtils.byteArrayToIntArray(hashes))
+            .map(hi -> Math.abs(hi % m))
+            .distinct()
+            .toArray();
     }
 }

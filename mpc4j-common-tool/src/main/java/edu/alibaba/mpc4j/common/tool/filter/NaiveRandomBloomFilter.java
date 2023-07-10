@@ -23,7 +23,7 @@ import java.util.List;
  * @author Weiran Liu
  * @date 2020/06/30
  */
-public class NaiveRandomBloomFilter<T> extends AbstractRandomBloomFilter<T> {
+public class NaiveRandomBloomFilter<T> extends AbstractBloomFilter<T> {
     /**
      * When m = n log_2(e) * log_2(1/p), HASH_NUM = log_2(1/p)
      */
@@ -32,6 +32,10 @@ public class NaiveRandomBloomFilter<T> extends AbstractRandomBloomFilter<T> {
      * hash key num = 1
      */
     static final int HASH_KEY_NUM = 1;
+    /**
+     * type
+     */
+    private static final FilterType FILTER_TYPE = FilterType.NAIVE_RANDOM_BLOOM_FILTER;
 
     /**
      * Gets m for the given n.
@@ -73,7 +77,8 @@ public class NaiveRandomBloomFilter<T> extends AbstractRandomBloomFilter<T> {
     static <X> NaiveRandomBloomFilter<X> fromByteArrayList(EnvType envType, List<byte[]> byteArrayList) {
         MathPreconditions.checkEqual("byteArrayList.size", "desired size", byteArrayList.size(), 6);
         // type
-        byteArrayList.remove(0);
+        int typeOrdinal = IntUtils.byteArrayToInt(byteArrayList.remove(0));
+        MathPreconditions.checkEqual("", "", typeOrdinal, FILTER_TYPE.ordinal());
         // max size
         int maxSize = IntUtils.byteArrayToInt(byteArrayList.remove(0));
         int m = NaiveRandomBloomFilter.bitSize(maxSize);
@@ -90,6 +95,16 @@ public class NaiveRandomBloomFilter<T> extends AbstractRandomBloomFilter<T> {
     }
 
     NaiveRandomBloomFilter(EnvType envType, int maxSize, int m, byte[] key, int size, byte[] storage, int itemByteLength) {
-        super(FilterType.NAIVE_RANDOM_BLOOM_FILTER, envType, maxSize, m, HASH_NUM, key, size, storage, itemByteLength);
+        super(FILTER_TYPE, envType, maxSize, m, HASH_NUM, key, size, storage, itemByteLength);
+    }
+
+    @Override
+    public int[] hashIndexes(T data) {
+        byte[] dataBytes = ObjectUtils.objectToByteArray(data);
+        byte[] hashes = hash.getBytes(dataBytes);
+        return Arrays.stream(IntUtils.byteArrayToIntArray(hashes))
+            .map(hi -> Math.abs(hi % m))
+            .distinct()
+            .toArray();
     }
 }

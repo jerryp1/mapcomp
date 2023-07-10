@@ -1,20 +1,12 @@
 package edu.alibaba.mpc4j.common.tool.filter;
 
-import com.google.common.base.Preconditions;
 import edu.alibaba.mpc4j.common.tool.CommonConstants;
 import edu.alibaba.mpc4j.common.tool.EnvType;
 import edu.alibaba.mpc4j.common.tool.MathPreconditions;
-import edu.alibaba.mpc4j.common.tool.crypto.prf.Prf;
-import edu.alibaba.mpc4j.common.tool.crypto.prf.PrfFactory;
 import edu.alibaba.mpc4j.common.tool.filter.FilterFactory.FilterType;
 import edu.alibaba.mpc4j.common.tool.utils.*;
-import gnu.trove.set.TIntSet;
-import gnu.trove.set.hash.TIntHashSet;
-import org.apache.commons.lang3.builder.EqualsBuilder;
-import org.apache.commons.lang3.builder.HashCodeBuilder;
 
 import java.util.*;
-import java.util.stream.IntStream;
 
 /**
  * Distinct Bloom Filter related to distrinct Garbled Bloom Filter, which requires that any inputs have constant distinct
@@ -33,9 +25,13 @@ public class DistinctBloomFilter<T> extends AbstractBloomFilter<T> {
      */
     static final int HASH_NUM = CommonConstants.STATS_BIT_LENGTH;
     /**
-     * hash key num = hash num for computing distinct outputs
+     * hash key num = 1
      */
-    static final int HASH_KEY_NUM = HASH_NUM;
+    static final int HASH_KEY_NUM = 1;
+    /**
+     * type
+     */
+    private static final FilterType FILTER_TYPE = FilterType.DISTINCT_BLOOM_FILTER;
 
     /**
      * Gets m for the given n.
@@ -54,17 +50,16 @@ public class DistinctBloomFilter<T> extends AbstractBloomFilter<T> {
      *
      * @param envType environment.
      * @param maxSize max number of inserted elements.
-     * @param keys    hash keys.
+     * @param key     hash key.
      * @return an empty filter.
      */
-    public static <X> DistinctBloomFilter<X> create(EnvType envType, int maxSize, byte[][] keys) {
-        MathPreconditions.checkEqual("keys.length", "hashNum", keys.length, HASH_KEY_NUM);
+    public static <X> DistinctBloomFilter<X> create(EnvType envType, int maxSize, byte[] key) {
         int m = DistinctBloomFilter.bitSize(maxSize);
         byte[] storage = new byte[CommonUtils.getByteLength(m)];
         // all positions are initialed as 0
         Arrays.fill(storage, (byte) 0x00);
 
-        return new DistinctBloomFilter<>(envType, maxSize, m, keys, 0, storage, 0);
+        return new DistinctBloomFilter<>(envType, maxSize, m, key, 0, storage, 0);
     }
 
     /**
@@ -76,9 +71,10 @@ public class DistinctBloomFilter<T> extends AbstractBloomFilter<T> {
      * @return the filter.
      */
     static <X> DistinctBloomFilter<X> fromByteArrayList(EnvType envType, List<byte[]> byteArrayList) {
-        MathPreconditions.checkEqual("byteArrayList.size", "desired size", byteArrayList.size(), 5 + HASH_KEY_NUM);
+        MathPreconditions.checkEqual("byteArrayList.size", "desired size", byteArrayList.size(), 6);
         // type
-        byteArrayList.remove(0);
+        int typeOrdinal = IntUtils.byteArrayToInt(byteArrayList.remove(0));
+        MathPreconditions.checkEqual("", "", typeOrdinal, FILTER_TYPE.ordinal());
         // max size
         int maxSize = IntUtils.byteArrayToInt(byteArrayList.remove(0));
         int m = DistinctBloomFilter.bitSize(maxSize);
@@ -88,126 +84,44 @@ public class DistinctBloomFilter<T> extends AbstractBloomFilter<T> {
         int itemByteLength = IntUtils.byteArrayToInt(byteArrayList.remove(0));
         // storage
         byte[] storage = byteArrayList.remove(0);
-        // keys
-        byte[][] keys = byteArrayList.toArray(new byte[0][]);
-        MathPreconditions.checkEqual("keys.length", "hash key num", keys.length, HASH_KEY_NUM);
+        // key
+        byte[] key = byteArrayList.remove(0);
 
-        return new DistinctBloomFilter<>(envType, maxSize, m, keys, size, storage, itemByteLength);
+        return new DistinctBloomFilter<>(envType, maxSize, m, key, size, storage, itemByteLength);
     }
 
-    /**
-     * hashes
-     */
-    private final Prf[] hashes;
 
-    DistinctBloomFilter(EnvType envType, int maxSize, int m, byte[][] keys, int size, byte[] storage, int itemByteLength) {
-        super(FilterType.DISTINCT_BLOOM_FILTER, envType, maxSize, m, size, storage, itemByteLength);
-        hashes = Arrays.stream(keys)
-            .map(key -> {
-                Prf hash = PrfFactory.createInstance(envType, Integer.BYTES);
-                hash.setKey(key);
-                return hash;
-            })
-            .toArray(Prf[]::new);
-    }
-
-    @Override
-    public List<byte[]> toByteArrayList() {
-        List<byte[]> byteArrayList = new LinkedList<>();
-        // type
-        byteArrayList.add(IntUtils.intToByteArray(bloomFilterType.ordinal()));
-        // max size
-        byteArrayList.add(IntUtils.intToByteArray(maxSize));
-        // size
-        byteArrayList.add(IntUtils.intToByteArray(size));
-        // item byte length
-        byteArrayList.add(IntUtils.intToByteArray(itemByteLength));
-        // storage
-        byteArrayList.add(BytesUtils.clone(storage));
-        // keys
-        for (Prf hash : hashes) {
-            byteArrayList.add(BytesUtils.clone(hash.getKey()));
-        }
-
-        return byteArrayList;
+    DistinctBloomFilter(EnvType envType, int maxSize, int m, byte[] key, int size, byte[] storage, int itemByteLength) {
+        super(FILTER_TYPE, envType, maxSize, m, HASH_NUM, key, size, storage, itemByteLength);
     }
 
     @Override
     public int[] hashIndexes(T data) {
         byte[] dataBytes = ObjectUtils.objectToByteArray(data);
-        int[] hashIndexes = new int[HASH_NUM];
-        TIntSet positionSet = new TIntHashSet(HASH_NUM);
-        hashIndexes[0] = hashes[0].getInteger(0, dataBytes, m);
-        positionSet.add(hashIndexes[0]);
-        // generate k distinct positions
-        for (int i = 1; i < HASH_NUM; i++) {
-            int hiIndex = 0;
-            do {
-                hashIndexes[i] = hashes[i].getInteger(hiIndex, dataBytes, m);
-                hiIndex++;
-            } while (positionSet.contains(hashIndexes[i]));
-            positionSet.add(hashIndexes[i]);
+        int[] hashes = IntUtils.byteArrayToIntArray(hash.getBytes(dataBytes));
+        // we now use the method provided in VOLE-PSI to get distinct hash indexes
+        for (int j = 0; j < HASH_NUM; j++) {
+            // hj = r % (m - j)
+            int modulus = m - j;
+            int hj = Math.abs(hashes[j] % modulus);
+            int i = 0;
+            int end = j;
+            // for each previous hi <= hj, we set hj = hj + 1.
+            while (i != end) {
+                if (hashes[i] <= hj) {
+                    hj++;
+                } else {
+                    break;
+                }
+                i++;
+            }
+            // now we now that all hi > hj, we place the value
+            while (i != end) {
+                hashes[end] = hashes[end - 1];
+                end--;
+            }
+            hashes[i] = hj;
         }
-        return hashIndexes;
-    }
-
-    @Override
-    public void merge(MergeFilter<T> other) {
-        DistinctBloomFilter<T> that = (DistinctBloomFilter<T>) other;
-        // max size should be the same
-        MathPreconditions.checkEqual("this.maxSize", "that.maxSize", this.maxSize, that.maxSize);
-        MathPreconditions.checkEqual("this.hashNum", "that.hashNum", this.hashes.length, that.hashes.length);
-        int hashNum = hashes.length;
-        IntStream.range(0, hashNum).forEach(hashIndex -> {
-            // hash type should be equal
-            Preconditions.checkArgument(this.hashes[hashIndex].getPrfType().equals(that.hashes[hashIndex].getPrfType()));
-            // key should be equal
-            Preconditions.checkArgument(Arrays.equals(hashes[hashIndex].getKey(), that.hashes[hashIndex].getKey()));
-        });
-        MathPreconditions.checkLessOrEqual("merge size", this.size + that.size, maxSize);
-        // merge Bloom Filter
-        BytesUtils.ori(storage, that.storage);
-        size += that.size;
-        itemByteLength += that.itemByteLength;
-    }
-
-    @Override
-    public boolean equals(Object obj) {
-        if (!(obj instanceof DistinctBloomFilter)) {
-            return false;
-        }
-        if (this == obj) {
-            return true;
-        }
-        //noinspection unchecked
-        DistinctBloomFilter<T> that = (DistinctBloomFilter<T>) obj;
-        EqualsBuilder equalsBuilder = new EqualsBuilder();
-        equalsBuilder
-            .append(this.maxSize, that.maxSize)
-            .append(this.size, that.size)
-            .append(this.itemByteLength, that.itemByteLength)
-            .append(this.storage, that.storage);
-        int hashNum = hashes.length;
-        IntStream.range(0, hashNum).forEach(hashIndex -> {
-            equalsBuilder.append(hashes[hashIndex].getPrfType(), that.hashes[hashIndex].getPrfType());
-            equalsBuilder.append(hashes[hashIndex].getKey(), that.hashes[hashIndex].getKey());
-        });
-        return equalsBuilder.isEquals();
-    }
-
-    @Override
-    public int hashCode() {
-        HashCodeBuilder hashCodeBuilder = new HashCodeBuilder();
-        hashCodeBuilder
-            .append(maxSize)
-            .append(size)
-            .append(itemByteLength)
-            .append(storage);
-        int hashNum = hashes.length;
-        IntStream.range(0, hashNum).forEach(hashIndex -> {
-            hashCodeBuilder.append(hashes[hashIndex].getPrfType());
-            hashCodeBuilder.append(hashes[hashIndex].getKey());
-        });
-        return hashCodeBuilder.toHashCode();
+        return hashes;
     }
 }

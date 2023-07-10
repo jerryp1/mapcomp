@@ -123,7 +123,7 @@ public class FilterFactory {
             case SPARSE_RANDOM_BLOOM_FILTER:
                 return SparseRandomBloomFilter.create(envType, maxSize, keys[0]);
             case DISTINCT_BLOOM_FILTER:
-                return DistinctBloomFilter.create(envType, maxSize, keys);
+                return DistinctBloomFilter.create(envType, maxSize, keys[0]);
             case CUCKOO_FILTER:
                 return CuckooFilter.create(envType, maxSize, keys);
             case VACUUM_FILTER:
@@ -167,7 +167,7 @@ public class FilterFactory {
             case SPARSE_RANDOM_BLOOM_FILTER:
                 return SparseRandomBloomFilter.create(envType, maxSize, keys[0]);
             case DISTINCT_BLOOM_FILTER:
-                return DistinctBloomFilter.create(envType, maxSize, keys);
+                return DistinctBloomFilter.create(envType, maxSize, keys[0]);
             default:
                 throw new IllegalArgumentException("Invalid " + FilterType.class.getSimpleName() + ": " + type);
         }
@@ -199,6 +199,28 @@ public class FilterFactory {
                 return VacuumFilter.fromByteArrayList(envType, byteArrayList);
             default:
                 throw new IllegalArgumentException("Invalid " + FilterType.class.getSimpleName() + ": " + filterType);
+        }
+    }
+
+    /**
+     * Creates an empty bloom filter.
+     *
+     * @param envType environment.
+     * @param type    filter type.
+     * @param maxSize max number of elements.
+     * @param key     key.
+     * @return an empty bloom filter.
+     */
+    public static <X> BloomFilter<X> createBloomFilter(EnvType envType, FilterType type, int maxSize, byte[] key) {
+        switch (type) {
+            case NAIVE_RANDOM_BLOOM_FILTER:
+                return NaiveRandomBloomFilter.create(envType, maxSize, key);
+            case SPARSE_RANDOM_BLOOM_FILTER:
+                return SparseRandomBloomFilter.create(envType, maxSize, key);
+            case DISTINCT_BLOOM_FILTER:
+                return DistinctBloomFilter.create(envType, maxSize, key);
+            default:
+                throw new IllegalArgumentException("Invalid " + FilterType.class.getSimpleName() + ": " + type);
         }
     }
 }
