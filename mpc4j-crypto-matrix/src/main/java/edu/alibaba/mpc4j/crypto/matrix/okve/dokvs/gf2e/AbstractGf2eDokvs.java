@@ -24,7 +24,7 @@ abstract class AbstractGf2eDokvs<T> implements Gf2eDokvs<T> {
     /**
      * m in byte
      */
-    final int byteM;
+    protected final int byteM;
     /**
      * bit length of values
      */
