@@ -159,6 +159,7 @@ abstract class AbstractH3GctGf2eDokvs<T> extends AbstractGf2eDokvs<T> implements
     @Override
     public byte[] decode(byte[][] storage, T key) {
         MathPreconditions.checkEqual("storage.length", "m", storage.length, m);
+        // here we do not verify bit length for each storage, otherwise decode would require O(n) computation.
         int[] sparsePositions = sparsePositions(key);
         boolean[] densePositions = binaryDensePositions(key);
         byte[] value = new byte[byteL];

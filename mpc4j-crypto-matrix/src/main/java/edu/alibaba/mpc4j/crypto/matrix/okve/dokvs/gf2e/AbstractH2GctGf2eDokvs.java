@@ -149,6 +149,7 @@ abstract class AbstractH2GctGf2eDokvs<T> extends AbstractGf2eDokvs<T> implements
     @Override
     public byte[] decode(byte[][] storage, T key) {
         MathPreconditions.checkEqual("storage.length", "m", storage.length, m);
+        // here we do not verify bit length for each storage, otherwise decode would require O(n) computation.
         assert (tcFinder instanceof CuckooTableSingletonTcFinder || tcFinder instanceof H2CuckooTableTcFinder);
         int[] sparsePositions = sparsePositions(key);
         boolean[] binaryDensePositions = binaryDensePositions(key);
