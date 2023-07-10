@@ -66,7 +66,7 @@ public class Gf2eDokvsTest {
     public Gf2eDokvsTest(String name, Gf2eDokvsType type) {
         Preconditions.checkArgument(StringUtils.isNotBlank(name));
         this.type = type;
-        hashNum = Gf2eDokvsFactory.getHashNum(type);
+        hashNum = Gf2eDokvsFactory.getHashKeyNum(type);
     }
 
     @Test
@@ -77,7 +77,7 @@ public class Gf2eDokvsTest {
             Gf2eDokvsFactory.createInstance(EnvType.STANDARD, type, DEFAULT_N, DEFAULT_L, moreKeys);
         });
         // try setting less keys
-        if (Gf2eDokvsFactory.getHashNum(type) > 0) {
+        if (Gf2eDokvsFactory.getHashKeyNum(type) > 0) {
             Assert.assertThrows(IllegalArgumentException.class, () -> {
                 byte[][] lessKeys = CommonUtils.generateRandomKeys(hashNum - 1, SECURE_RANDOM);
                 Gf2eDokvsFactory.createInstance(EnvType.STANDARD, type, DEFAULT_N, DEFAULT_L, lessKeys);

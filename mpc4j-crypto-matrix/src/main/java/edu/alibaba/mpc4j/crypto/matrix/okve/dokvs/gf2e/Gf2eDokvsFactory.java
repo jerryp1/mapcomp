@@ -1,6 +1,7 @@
 package edu.alibaba.mpc4j.crypto.matrix.okve.dokvs.gf2e;
 
 import edu.alibaba.mpc4j.common.tool.EnvType;
+import edu.alibaba.mpc4j.common.tool.MathPreconditions;
 
 /**
  * GF(2^e)-DOKVS factory.
@@ -57,6 +58,7 @@ public class Gf2eDokvsFactory {
      * @return and instance.
      */
     public static <X> Gf2eDokvs<X> createInstance(EnvType envType, Gf2eDokvsType type, int n, int l, byte[][] keys) {
+        MathPreconditions.checkEqual("keys.length", "hash_num", keys.length, getHashKeyNum(type));
         switch (type) {
             case H2_TWO_CORE_GCT:
                 return new H2TwoCoreGctGf2eDokvs<>(envType, n, l, keys);
@@ -69,29 +71,29 @@ public class Gf2eDokvsFactory {
             case H3_BLAZE_GCT:
                 return new H3BlazeGctGf2eDokvs<>(envType, n, l, keys);
             case DISTINCT_GBF:
-                return new DistinctGbfDokvs<>(envType, n, l, keys);
+                return new DistinctGbfDokvs<>(envType, n, l, keys[0]);
             default:
                 throw new IllegalArgumentException("Invalid " + Gf2eDokvsType.class.getSimpleName() + ": " + type.name());
         }
     }
 
     /**
-     * Gets number of required hashes.
+     * Gets number of required hash keys.
      *
      * @param type type.
-     * @return number of required hashes.
+     * @return number of required hash keys.
      */
-    public static int getHashNum(Gf2eDokvsType type) {
+    public static int getHashKeyNum(Gf2eDokvsType type) {
         switch (type) {
             case H2_TWO_CORE_GCT:
             case H2_SINGLETON_GCT:
             case H2_BLAZE_GCT:
-                return AbstractH2GctGf2eDokvs.TOTAL_HASH_NUM;
+                return AbstractH2GctGf2eDokvs.HASH_KEY_NUM;
             case H3_SINGLETON_GCT:
             case H3_BLAZE_GCT:
-                return H3SingletonGctGfe2Dokvs.TOTAL_HASH_NUM;
+                return H3SingletonGctGfe2Dokvs.HASH_KEY_NUM;
             case DISTINCT_GBF:
-                return DistinctGbfDokvs.TOTAL_HASH_NUM;
+                return DistinctGbfDokvs.HASH_KEY_NUM;
             default:
                 throw new IllegalArgumentException("Invalid " + Gf2eDokvsType.class.getSimpleName() + ": " + type.name());
         }
@@ -105,7 +107,7 @@ public class Gf2eDokvsFactory {
      * @return m.
      */
     public static int getM(Gf2eDokvsType type, int n) {
-        assert n > 0;
+        MathPreconditions.checkPositive("n", n);
         switch (type) {
             case H2_TWO_CORE_GCT:
             case H2_SINGLETON_GCT:

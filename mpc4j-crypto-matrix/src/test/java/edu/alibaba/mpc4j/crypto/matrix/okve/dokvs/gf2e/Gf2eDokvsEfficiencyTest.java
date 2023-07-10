@@ -65,7 +65,7 @@ public class Gf2eDokvsEfficiencyTest {
         int n = 1 << logN;
         int l = DEFAULT_L;
         for (Gf2eDokvsType type : TYPES) {
-            int hashNum = Gf2eDokvsFactory.getHashNum(type);
+            int hashNum = Gf2eDokvsFactory.getHashKeyNum(type);
             byte[][] keys = CommonUtils.generateRandomKeys(hashNum, SECURE_RANDOM);
             Gf2eDokvs<ByteBuffer> dokvs = Gf2eDokvsFactory.createInstance(EnvType.STANDARD, type, n, l, keys);
             Map<ByteBuffer, byte[]> keyValueMap = Gf2eDokvsTest.randomKeyValueMap(n, l);

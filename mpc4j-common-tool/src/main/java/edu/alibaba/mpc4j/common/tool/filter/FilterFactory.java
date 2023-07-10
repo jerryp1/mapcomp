@@ -54,32 +54,6 @@ public class FilterFactory {
     }
 
     /**
-     * Gets hash num.
-     *
-     * @param type    filter type.
-     * @param maxSize max number of elements.
-     * @return hash num.
-     */
-    public static int getHashNum(FilterType type, int maxSize) {
-        switch (type) {
-            case SET_FILTER:
-                return SetFilter.HASH_NUM;
-            case NAIVE_RANDOM_BLOOM_FILTER:
-                return NaiveRandomBloomFilter.HASH_NUM;
-            case SPARSE_RANDOM_BLOOM_FILTER:
-                return SparseRandomBloomFilter.getHashNum(maxSize);
-            case DISTINCT_BLOOM_FILTER:
-                return DistinctBloomFilter.HASH_NUM;
-            case CUCKOO_FILTER:
-                return CuckooFilter.HASH_NUM;
-            case VACUUM_FILTER:
-                return VacuumFilter.HASH_NUM;
-            default:
-                throw new IllegalArgumentException("Invalid " + FilterType.class.getSimpleName() + ": " + type);
-        }
-    }
-
-    /**
      * Gets hash key num.
      *
      * @param type filter type.

@@ -23,7 +23,7 @@ public class DistinctBloomFilter<T> extends AbstractBloomFilter<T> {
     /**
      * When m = n log_2(e) * log_2(1/p), HASH_NUM = log_2(1/p)
      */
-    static final int HASH_NUM = CommonConstants.STATS_BIT_LENGTH;
+    private static final int HASH_NUM = CommonConstants.STATS_BIT_LENGTH;
     /**
      * hash key num = 1
      */

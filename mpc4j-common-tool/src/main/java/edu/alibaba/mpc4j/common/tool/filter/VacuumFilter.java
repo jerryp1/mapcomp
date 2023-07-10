@@ -63,11 +63,11 @@ public class VacuumFilter<T> implements Filter<T> {
     /**
      * hash num
      */
-    static final int HASH_NUM = 2;
+    private static final int HASH_NUM = 2;
     /**
      * VacummFilter中的哈希函数数量
      */
-    static final int HASH_KEY_NUM = 2;
+    static final int HASH_KEY_NUM = HASH_NUM;
 
     /**
      * 返回桶的数量。

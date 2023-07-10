@@ -53,9 +53,9 @@ abstract class AbstractH2GctGf2eDokvs<T> extends AbstractGf2eDokvs<T> implements
      */
     private static final int SPARSE_HASH_NUM = 2;
     /**
-     * number of total hashes
+     * number of hash keys
      */
-    static int TOTAL_HASH_NUM = SPARSE_HASH_NUM + 1;
+    static int HASH_KEY_NUM = 2;
     /**
      * left m, i.e., sparse part.
      */
@@ -65,13 +65,9 @@ abstract class AbstractH2GctGf2eDokvs<T> extends AbstractGf2eDokvs<T> implements
      */
     private final int rm;
     /**
-     * H1: {0, 1}^* -> [0, lm)
+     * Hi: {0, 1}^* -> [0, lm)
      */
-    private final Prf h1;
-    /**
-     * H2: {0, 1}^* -> [0, lm)
-     */
-    private final Prf h2;
+    private final Prf hl;
     /**
      * Hr: {0, 1}^* -> {0, 1}^rm
      */
@@ -105,15 +101,13 @@ abstract class AbstractH2GctGf2eDokvs<T> extends AbstractGf2eDokvs<T> implements
     AbstractH2GctGf2eDokvs(EnvType envType, int n, int lm, int rm, int l,
                            byte[][] keys, CuckooTableTcFinder<T> tcFinder, SecureRandom secureRandom) {
         super(n, lm + rm, l);
-        MathPreconditions.checkEqual("keys.length", "hash_num", keys.length, TOTAL_HASH_NUM);
+        MathPreconditions.checkEqual("keys.length", "hash_num", keys.length, HASH_KEY_NUM);
         this.lm = lm;
         this.rm = rm;
-        h1 = PrfFactory.createInstance(envType, Integer.BYTES);
-        h1.setKey(keys[0]);
-        h2 = PrfFactory.createInstance(envType, Integer.BYTES);
-        h2.setKey(keys[1]);
+        hl = PrfFactory.createInstance(envType, Integer.BYTES * SPARSE_HASH_NUM);
+        hl.setKey(keys[0]);
         hr = PrfFactory.createInstance(envType, rm / Byte.SIZE);
-        hr.setKey(keys[2]);
+        hr.setKey(keys[1]);
         this.tcFinder = tcFinder;
         linearSolver = new BinaryLinearSolver(l, secureRandom);
     }
@@ -126,15 +120,13 @@ abstract class AbstractH2GctGf2eDokvs<T> extends AbstractGf2eDokvs<T> implements
     @Override
     public int[] sparsePositions(T key) {
         byte[] keyBytes = ObjectUtils.objectToByteArray(key);
-        int[] sparsePositions = new int[SPARSE_HASH_NUM];
-        // h1
-        sparsePositions[0] = h1.getInteger(0, keyBytes, lm);
-        // h2 != h1
-        int h2Index = 0;
-        do {
-            sparsePositions[1] = h2.getInteger(h2Index, keyBytes, lm);
-            h2Index++;
-        } while (sparsePositions[1] == sparsePositions[0]);
+        int[] sparsePositions = IntUtils.byteArrayToIntArray(hl.getBytes(keyBytes));
+        // we now use the method provided in VOLE-PSI to get distinct hash indexes
+        sparsePositions[0] = Math.abs(sparsePositions[0] % lm);
+        sparsePositions[1] = Math.abs(sparsePositions[1] % (lm - 1));
+        if (sparsePositions[1] >= sparsePositions[0]) {
+            sparsePositions[1]++;
+        }
         return sparsePositions;
     }
 
@@ -157,7 +149,6 @@ abstract class AbstractH2GctGf2eDokvs<T> extends AbstractGf2eDokvs<T> implements
     @Override
     public byte[] decode(byte[][] storage, T key) {
         MathPreconditions.checkEqual("storage.length", "m", storage.length, m);
-        assert storage.length == m;
         assert (tcFinder instanceof CuckooTableSingletonTcFinder || tcFinder instanceof H2CuckooTableTcFinder);
         int[] sparsePositions = sparsePositions(key);
         boolean[] binaryDensePositions = binaryDensePositions(key);

@@ -8,13 +8,11 @@ import edu.alibaba.mpc4j.common.tool.crypto.prf.Prf;
 import edu.alibaba.mpc4j.common.tool.crypto.prf.PrfFactory;
 import edu.alibaba.mpc4j.common.tool.utils.BytesUtils;
 import edu.alibaba.mpc4j.common.tool.utils.CommonUtils;
+import edu.alibaba.mpc4j.common.tool.utils.IntUtils;
 import edu.alibaba.mpc4j.common.tool.utils.ObjectUtils;
-import gnu.trove.set.TIntSet;
-import gnu.trove.set.hash.TIntHashSet;
 
 import java.util.Map;
 import java.util.Set;
-import java.util.stream.IntStream;
 
 /**
  * Distinct Garbled Bloom Filter (GBF) DOKVS. The original scheme is described in the following paper:
@@ -36,7 +34,11 @@ class DistinctGbfDokvs<T> extends AbstractGf2eDokvs<T> implements SparseConstant
     /**
      * Garbled Bloom Filter needs λ hashes
      */
-    static int TOTAL_HASH_NUM = CommonConstants.STATS_BIT_LENGTH;
+    private static final int SPARSE_HASH_NUM = CommonConstants.STATS_BIT_LENGTH;
+    /**
+     * we only need to use one hash key
+     */
+    static final int HASH_KEY_NUM = 1;
 
     /**
      * Gets m for the given n.
@@ -55,18 +57,12 @@ class DistinctGbfDokvs<T> extends AbstractGf2eDokvs<T> implements SparseConstant
     /**
      * hashes
      */
-    private final Prf[] prfs;
+    private final Prf hash;
 
-    public DistinctGbfDokvs(EnvType envType, int n, int l, byte[][] keys) {
+    public DistinctGbfDokvs(EnvType envType, int n, int l, byte[] key) {
         super(n, getM(n), l);
-        MathPreconditions.checkEqual("keys.length", "hash_num", keys.length, TOTAL_HASH_NUM);
-        prfs = IntStream.range(0, TOTAL_HASH_NUM)
-            .mapToObj(hashIndex -> {
-                Prf hash = PrfFactory.createInstance(envType, Integer.BYTES);
-                hash.setKey(keys[hashIndex]);
-                return hash;
-            })
-            .toArray(Prf[]::new);
+        hash = PrfFactory.createInstance(envType, Integer.BYTES * SPARSE_HASH_NUM);
+        hash.setKey(key);
     }
 
     @Override
@@ -77,26 +73,36 @@ class DistinctGbfDokvs<T> extends AbstractGf2eDokvs<T> implements SparseConstant
     @Override
     public int[] sparsePositions(T key) {
         byte[] keyBytes = ObjectUtils.objectToByteArray(key);
-        int[] sparsePositions = new int[TOTAL_HASH_NUM];
-        TIntSet positionSet = new TIntHashSet(TOTAL_HASH_NUM);
-        // h1
-        sparsePositions[0] = prfs[0].getInteger(0, keyBytes, m);
-        positionSet.add(sparsePositions[0]);
-        // generate other λ - 1 distinct positions
-        for (int i = 1; i < TOTAL_HASH_NUM; i++) {
-            int hiIndex = 0;
-            do {
-                sparsePositions[i] = prfs[i].getInteger(hiIndex, keyBytes, m);
-                hiIndex++;
-            } while (positionSet.contains(sparsePositions[i]));
-            positionSet.add(sparsePositions[i]);
+        int[] hashes = IntUtils.byteArrayToIntArray(hash.getBytes(keyBytes));
+        // we now use the method provided in VOLE-PSI to get distinct hash indexes
+        for (int j = 0; j < SPARSE_HASH_NUM; j++) {
+            // hj = r % (m - j)
+            int modulus = m - j;
+            int hj = Math.abs(hashes[j] % modulus);
+            int i = 0;
+            int end = j;
+            // for each previous hi <= hj, we set hj = hj + 1.
+            while (i != end) {
+                if (hashes[i] <= hj) {
+                    hj++;
+                } else {
+                    break;
+                }
+                i++;
+            }
+            // now we now that all hi > hj, we place the value
+            while (i != end) {
+                hashes[end] = hashes[end - 1];
+                end--;
+            }
+            hashes[i] = hj;
         }
-        return sparsePositions;
+        return hashes;
     }
 
     @Override
     public int sparsePositionNum() {
-        return TOTAL_HASH_NUM;
+        return SPARSE_HASH_NUM;
     }
 
     @Override
