@@ -80,7 +80,7 @@ abstract class AbstractGbfGf2eDokvs<T> extends AbstractGf2eDokvs<T> implements S
     }
 
     @Override
-    public int maxDensePositionNum() {
+    public int densePositionRange() {
         return 0;
     }
 
@@ -126,13 +126,13 @@ abstract class AbstractGbfGf2eDokvs<T> extends AbstractGf2eDokvs<T> implements S
     }
 
     @Override
-    public byte[] decode(byte[][] storage, int from, int to, T key) {
-        MathPreconditions.checkEqual("storage.length", "m", to - from, m);
+    public byte[] decode(byte[][] storage, T key) {
         // here we do not verify bit length for each storage, otherwise decode would require O(n) computation.
+        MathPreconditions.checkEqual("storage.length", "m", storage.length, m);
         int[] sparsePositions = sparsePositions(key);
         byte[] value = new byte[byteL];
         for (int position : sparsePositions) {
-            BytesUtils.xori(value, storage[position + from]);
+            BytesUtils.xori(value, storage[position]);
         }
         assert BytesUtils.isFixedReduceByteArray(value, byteL, l);
         return value;

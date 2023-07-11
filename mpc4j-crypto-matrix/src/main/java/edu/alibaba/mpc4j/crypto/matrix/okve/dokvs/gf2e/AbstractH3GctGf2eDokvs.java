@@ -152,24 +152,24 @@ abstract class AbstractH3GctGf2eDokvs<T> extends AbstractGf2eDokvs<T> implements
     }
 
     @Override
-    public int maxDensePositionNum() {
+    public int densePositionRange() {
         return rm;
     }
 
     @Override
-    public byte[] decode(byte[][] storage, int from, int to, T key) {
-        MathPreconditions.checkEqual("storage.length", "m", to - from, m);
+    public byte[] decode(byte[][] storage, T key) {
         // here we do not verify bit length for each storage, otherwise decode would require O(n) computation.
+        MathPreconditions.checkEqual("storage.length", "m", storage.length, m);
         int[] sparsePositions = sparsePositions(key);
         boolean[] densePositions = binaryDensePositions(key);
         byte[] value = new byte[byteL];
         // h1, h2 and h3 must be distinct
-        BytesUtils.xori(value, storage[sparsePositions[0] + from]);
-        BytesUtils.xori(value, storage[sparsePositions[1] + from]);
-        BytesUtils.xori(value, storage[sparsePositions[2] + from]);
+        BytesUtils.xori(value, storage[sparsePositions[0]]);
+        BytesUtils.xori(value, storage[sparsePositions[1]]);
+        BytesUtils.xori(value, storage[sparsePositions[2]]);
         for (int rmIndex = 0; rmIndex < rm; rmIndex++) {
             if (densePositions[rmIndex]) {
-                BytesUtils.xori(value, storage[lm + rmIndex + from]);
+                BytesUtils.xori(value, storage[lm + rmIndex]);
             }
         }
         assert BytesUtils.isFixedReduceByteArray(value, byteL, l);

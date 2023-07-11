@@ -10,7 +10,7 @@ import java.util.stream.IntStream;
  */
 public interface SparseGf2eDokvs<T> extends BinaryGf2eDokvs<T> {
     /**
-     * Gets the sparse range. All sparse positions are in range [0, sparseRange).
+     * Gets the sparse position range. All sparse positions are in range [0, sparseRange).
      *
      * @return the sparse range.
      */
@@ -40,11 +40,11 @@ public interface SparseGf2eDokvs<T> extends BinaryGf2eDokvs<T> {
     boolean[] binaryDensePositions(T key);
 
     /**
-     * Gets the maximal dense num.
+     * Gets the dense position range. All dense positions are in range [sparseRange, sparseRange + denseRange).
      *
-     * @return the maximal dense num.
+     * @return dense position range.
      */
-    int maxDensePositionNum();
+    int densePositionRange();
 
     /**
      * Gets the maximal num.
@@ -53,7 +53,7 @@ public interface SparseGf2eDokvs<T> extends BinaryGf2eDokvs<T> {
      */
     @Override
     default int maxPositionNum() {
-        return maxSparsePositionNum() + maxDensePositionNum();
+        return maxSparsePositionNum() + densePositionRange();
     }
 
     /**
@@ -65,7 +65,7 @@ public interface SparseGf2eDokvs<T> extends BinaryGf2eDokvs<T> {
     @Override
     default int[] positions(T key) {
         int sparseRange = sparsePositionRange();
-        int denseNum = maxDensePositionNum();
+        int denseNum = densePositionRange();
         int[] sparsePositions = sparsePositions(key);
         boolean[] binaryDensePositions = binaryDensePositions(key);
         int[] densePositions = IntStream.range(0, denseNum)

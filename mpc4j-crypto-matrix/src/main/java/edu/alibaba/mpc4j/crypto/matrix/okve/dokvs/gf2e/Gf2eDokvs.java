@@ -58,20 +58,7 @@ public interface Gf2eDokvs<T> {
      * @param key     key.
      * @return value.
      */
-    default byte[] decode(byte[][] storage, T key) {
-        return decode(storage, 0, storage.length, key);
-    }
-
-    /**
-     * Decodes the key.
-     *
-     * @param storage encoded storage.
-     * @param from from index.
-     * @param to to index.
-     * @param key     key.
-     * @return value.
-     */
-    byte[] decode(byte[][] storage, int from, int to, T key);
+    byte[] decode(byte[][] storage, T key);
 
     /**
      * Gets the number of keys to encode.

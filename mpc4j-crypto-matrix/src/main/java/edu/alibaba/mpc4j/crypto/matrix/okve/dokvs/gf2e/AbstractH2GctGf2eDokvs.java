@@ -142,24 +142,24 @@ abstract class AbstractH2GctGf2eDokvs<T> extends AbstractGf2eDokvs<T> implements
     }
 
     @Override
-    public int maxDensePositionNum() {
+    public int densePositionRange() {
         return rm;
     }
 
     @Override
-    public byte[] decode(byte[][] storage, int from, int to, T key) {
-        MathPreconditions.checkEqual("storage.length", "m", to - from, m);
+    public byte[] decode(byte[][] storage, T key) {
         // here we do not verify bit length for each storage, otherwise decode would require O(n) computation.
+        MathPreconditions.checkEqual("storage.length", "m", storage.length, m);
         assert (tcFinder instanceof CuckooTableSingletonTcFinder || tcFinder instanceof H2CuckooTableTcFinder);
         int[] sparsePositions = sparsePositions(key);
         boolean[] binaryDensePositions = binaryDensePositions(key);
         byte[] value = new byte[byteL];
         // h1 and h2 must be distinct
-        BytesUtils.xori(value, storage[sparsePositions[0] + from]);
-        BytesUtils.xori(value, storage[sparsePositions[1] + from]);
+        BytesUtils.xori(value, storage[sparsePositions[0]]);
+        BytesUtils.xori(value, storage[sparsePositions[1]]);
         for (int rmIndex = 0; rmIndex < rm; rmIndex++) {
             if (binaryDensePositions[rmIndex]) {
-                BytesUtils.xori(value, storage[lm + rmIndex + from]);
+                BytesUtils.xori(value, storage[lm + rmIndex]);
             }
         }
         assert BytesUtils.isFixedReduceByteArray(value, byteL, l);

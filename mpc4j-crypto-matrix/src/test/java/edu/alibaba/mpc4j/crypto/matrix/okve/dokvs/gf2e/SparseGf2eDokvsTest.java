@@ -13,16 +13,19 @@ import org.junit.runners.Parameterized;
 
 import java.nio.ByteBuffer;
 import java.security.SecureRandom;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.Map;
 
 /**
- * binary GF(2^e)-DOKVS tests.
+ * sparse GF(2^e)-DOKVS tests.
  *
  * @author Weiran Liu
- * @date 2022/01/06
+ * @date 2023/7/11
  */
 @RunWith(Parameterized.class)
-public class BinaryGf2eDokvsTest {
+public class SparseGf2eDokvsTest {
     /**
      * default n
      */
@@ -45,7 +48,7 @@ public class BinaryGf2eDokvsTest {
         Collection<Object[]> configurations = new ArrayList<>();
 
         for (Gf2eDokvsType type : Gf2eDokvsType.values()) {
-            if (Gf2eDokvsFactory.isBinary(type)) {
+            if (Gf2eDokvsFactory.isSparse(type)) {
                 configurations.add(new Object[]{type.name(), type});
             }
         }
@@ -62,7 +65,7 @@ public class BinaryGf2eDokvsTest {
      */
     private final int hashNum;
 
-    public BinaryGf2eDokvsTest(String name, Gf2eDokvsType type) {
+    public SparseGf2eDokvsTest(String name, Gf2eDokvsType type) {
         Preconditions.checkArgument(StringUtils.isNotBlank(name));
         this.type = type;
         hashNum = Gf2eDokvsFactory.getHashKeyNum(type);
@@ -70,76 +73,92 @@ public class BinaryGf2eDokvsTest {
 
     @Test
     public void testDefault() {
-        testBinaryDokvs(DEFAULT_N);
+        testSparseDokvs(DEFAULT_N);
     }
 
     @Test
     public void testSpecialL() {
-        testBinaryDokvs(DEFAULT_N, DEFAULT_L - 1);
-        testBinaryDokvs(DEFAULT_N, DEFAULT_L + 1);
+        testSparseDokvs(DEFAULT_N, DEFAULT_L - 1);
+        testSparseDokvs(DEFAULT_N, DEFAULT_L + 1);
     }
 
     @Test
     public void test1n() {
-        testBinaryDokvs(1);
+        testSparseDokvs(1);
     }
 
     @Test
     public void test2n() {
-        testBinaryDokvs(2);
+        testSparseDokvs(2);
     }
 
     @Test
     public void test3n() {
-        testBinaryDokvs(3);
+        testSparseDokvs(3);
     }
 
     @Test
     public void test40n() {
-        testBinaryDokvs(40);
+        testSparseDokvs(40);
     }
 
     @Test
     public void testLog8n() {
-        testBinaryDokvs(1 << 8);
+        testSparseDokvs(1 << 8);
     }
 
     @Test
     public void testLog10n() {
-        testBinaryDokvs(1 << 10);
+        testSparseDokvs(1 << 10);
     }
 
     @Test
     public void testLog12n() {
-        testBinaryDokvs(1 << 12);
+        testSparseDokvs(1 << 12);
     }
 
     @Test
     public void testLog14n() {
-        testBinaryDokvs(1 << 14);
+        testSparseDokvs(1 << 14);
     }
 
-    private void testBinaryDokvs(int n) {
-        testBinaryDokvs(n, DEFAULT_L);
+    private void testSparseDokvs(int n) {
+        testSparseDokvs(n, DEFAULT_L);
     }
 
-    private void testBinaryDokvs(int n, int l) {
+    private void testSparseDokvs(int n, int l) {
         int byteL = CommonUtils.getByteLength(l);
         for (int round = 0; round < ROUND; round++) {
             byte[][] keys = CommonUtils.generateRandomKeys(hashNum, SECURE_RANDOM);
-            BinaryGf2eDokvs<ByteBuffer> dokvs = Gf2eDokvsFactory.createBinaryInstance(EnvType.STANDARD, type, n, l, keys);
+            SparseGf2eDokvs<ByteBuffer> dokvs = Gf2eDokvsFactory.createSparseInstance(EnvType.STANDARD, type, n, l, keys);
             Map<ByteBuffer, byte[]> keyValueMap = Gf2eDokvsTest.randomKeyValueMap(n, l);
+            int sparseRange = dokvs.sparsePositionRange();
+            int denseRange = dokvs.densePositionRange();
             // non-doubly encode
             byte[][] nonDoublyStorage = dokvs.encode(keyValueMap, false);
+            byte[][] nonDoublySparseStorage = new byte[sparseRange][];
+            System.arraycopy(nonDoublyStorage, 0, nonDoublySparseStorage, 0, sparseRange);
+            byte[][] nonDoublyDenseStorage = new byte[denseRange][];
+            System.arraycopy(nonDoublyStorage, sparseRange, nonDoublyDenseStorage, 0, denseRange);
             // parallel decode
             keyValueMap.keySet().stream().parallel().forEach(key -> {
                 byte[] value = keyValueMap.get(key);
-                int[] positions = dokvs.positions(key);
-                byte[] decodeValue = BytesUtils.innerProduct(nonDoublyStorage, byteL, positions);
+                int[] sparsePositions = dokvs.sparsePositions(key);
+                boolean[] densePositions = dokvs.binaryDensePositions(key);
+                byte[] decodeValue = BytesUtils.innerProduct(nonDoublySparseStorage, byteL, sparsePositions);
+                for (int densePosition = 0; densePosition < denseRange; densePosition++) {
+                    if (densePositions[densePosition]) {
+                        BytesUtils.xori(decodeValue, nonDoublyDenseStorage[densePosition]);
+                    }
+                }
                 Assert.assertArrayEquals(value, decodeValue);
             });
             // doubly encode
             byte[][] doublyStorage = dokvs.encode(keyValueMap, true);
+            byte[][] doublySparseStorage = new byte[sparseRange][];
+            System.arraycopy(doublyStorage, 0, doublySparseStorage, 0, sparseRange);
+            byte[][] doublyDenseStorage = new byte[denseRange][];
+            System.arraycopy(doublyStorage, sparseRange, doublyDenseStorage, 0, denseRange);
             // verify non-zero storage
             byte[] zero = new byte[byteL];
             Arrays.fill(zero, (byte) 0x00);
@@ -149,8 +168,14 @@ public class BinaryGf2eDokvsTest {
             // parallel decode
             keyValueMap.keySet().stream().parallel().forEach(key -> {
                 byte[] value = keyValueMap.get(key);
-                int[] positions = dokvs.positions(key);
-                byte[] decodeValue = BytesUtils.innerProduct(doublyStorage, byteL, positions);
+                int[] sparsePositions = dokvs.sparsePositions(key);
+                boolean[] densePositions = dokvs.binaryDensePositions(key);
+                byte[] decodeValue = BytesUtils.innerProduct(doublySparseStorage, byteL, sparsePositions);
+                for (int densePosition = 0; densePosition < denseRange; densePosition++) {
+                    if (densePositions[densePosition]) {
+                        BytesUtils.xori(decodeValue, doublyDenseStorage[densePosition]);
+                    }
+                }
                 Assert.assertArrayEquals(value, decodeValue);
             });
         }

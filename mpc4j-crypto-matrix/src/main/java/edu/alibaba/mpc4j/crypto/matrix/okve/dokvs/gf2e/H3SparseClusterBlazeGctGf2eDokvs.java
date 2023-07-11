@@ -22,16 +22,13 @@ import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
 /**
- * Clustering blazing fast DOKVS using garbled cuckoo table with 3 hash functions. The construction is from the paper:
- * <p>
- * Raghuraman, Srinivasan, and Peter Rindal. Blazing fast PSI from improved OKVS and subfield VOLE. ACM CCS 2022,
- * pp. 2505-2517.
- * </p>
+ * Sparse clustering blazing fast DOKVS using garbled cuckoo table with 3 hash functions. We rearrange the storages
+ * so that the dense part are clustered together.
  *
  * @author Weiran Liu
  * @date 2023/7/10
  */
-class H3ClusterBlazeGctGf2eDokvs<T> implements BinaryGf2eDokvs<T> {
+class H3SparseClusterBlazeGctGf2eDokvs<T> implements BinaryGf2eDokvs<T>, SparseConstantGf2eDokvs<T> {
     /**
      * number of sparse hashes
      */
@@ -44,6 +41,10 @@ class H3ClusterBlazeGctGf2eDokvs<T> implements BinaryGf2eDokvs<T> {
      * expected bin size, i.e., m^* = 2^14
      */
     private static final int EXPECT_BIN_SIZE = 1 << 14;
+    /**
+     * type
+     */
+    private static final Gf2eDokvsFactory.Gf2eDokvsType TYPE = Gf2eDokvsFactory.Gf2eDokvsType.H3_SPARSE_CLUSTER_BLAZE_GCT;
 
     /**
      * Gets m.
@@ -85,6 +86,10 @@ class H3ClusterBlazeGctGf2eDokvs<T> implements BinaryGf2eDokvs<T> {
      */
     private final int binN;
     /**
+     * left m in each bin
+     */
+    private final int binLm;
+    /**
      * right m in each bin
      */
     private final int binRm;
@@ -105,11 +110,11 @@ class H3ClusterBlazeGctGf2eDokvs<T> implements BinaryGf2eDokvs<T> {
      */
     private final ArrayList<H3BlazeGctGf2eDokvs<T>> bins;
 
-    H3ClusterBlazeGctGf2eDokvs(EnvType envType, int n, int l, byte[][] keys) {
+    H3SparseClusterBlazeGctGf2eDokvs(EnvType envType, int n, int l, byte[][] keys) {
         this(envType, n, l, keys, new SecureRandom());
     }
 
-    H3ClusterBlazeGctGf2eDokvs(EnvType envType, int n, int l, byte[][] keys, SecureRandom secureRandom) {
+    H3SparseClusterBlazeGctGf2eDokvs(EnvType envType, int n, int l, byte[][] keys, SecureRandom secureRandom) {
         MathPreconditions.checkPositive("n", n);
         this.n = n;
         // here we only need to require l > 0
@@ -120,7 +125,7 @@ class H3ClusterBlazeGctGf2eDokvs<T> implements BinaryGf2eDokvs<T> {
         // calculate bin_num and bin_size
         binNum = CommonUtils.getUnitNum(n, EXPECT_BIN_SIZE);
         binN = MaxBinSizeUtils.approxMaxBinSize(n, binNum);
-        int binLm = H3BlazeGctGf2eDokvs.getLm(binN);
+        binLm = H3BlazeGctGf2eDokvs.getLm(binN);
         binRm = H3BlazeGctGf2eDokvs.getRm(binN);
         binM = binLm + binRm;
         m = binNum * binM;
@@ -157,13 +162,43 @@ class H3ClusterBlazeGctGf2eDokvs<T> implements BinaryGf2eDokvs<T> {
     }
 
     @Override
+    public int sparsePositionRange() {
+        return binNum * binLm;
+    }
+
+    @Override
+    public int[] sparsePositions(T key) {
+        byte[] keyBytes = ObjectUtils.objectToByteArray(key);
+        int binIndex = binHash.getInteger(keyBytes, binNum);
+        int[] binSparsePositions = bins.get(binIndex).sparsePositions(key);
+        return Arrays.stream(binSparsePositions)
+            .map(position -> position + binLm * binIndex)
+            .toArray();
+    }
+
+    @Override
+    public boolean[] binaryDensePositions(T key) {
+        byte[] keyBytes = ObjectUtils.objectToByteArray(key);
+        int binIndex = binHash.getInteger(keyBytes, binNum);
+        boolean[] binBinaryDensePositions = bins.get(binIndex).binaryDensePositions(key);
+        boolean[] binaryDensePositions = new boolean[binNum * binRm];
+        System.arraycopy(binBinaryDensePositions, 0, binaryDensePositions, binIndex * binRm, binRm);
+        return binaryDensePositions;
+    }
+
+    @Override
+    public int densePositionRange() {
+        return binNum * binRm;
+    }
+
+    @Override
     public int maxPositionNum() {
         return SPARSE_HASH_NUM + binNum * binRm;
     }
 
     @Override
     public Gf2eDokvsFactory.Gf2eDokvsType getType() {
-        return Gf2eDokvsFactory.Gf2eDokvsType.H3_CLUSTER_BLAZE_GCT;
+        return TYPE;
     }
 
     @Override
@@ -194,19 +229,38 @@ class H3ClusterBlazeGctGf2eDokvs<T> implements BinaryGf2eDokvs<T> {
         // encode
         IntStream binIndexIntStream = IntStream.range(0, binNum);
         binIndexIntStream = parallelEncode ? binIndexIntStream.parallel() : binIndexIntStream;
-        return binIndexIntStream
+        byte[][][] naiveStorage = binIndexIntStream
             .mapToObj(binIndex -> bins.get(binIndex).encode(keyValueMaps.get(binIndex), doublyEncode))
-            .flatMap(Arrays::stream)
-            .toArray(byte[][]::new);
+            .toArray(byte[][][]::new);
+        // rearrange storage
+        byte[][] sparseStorage = new byte[binNum * binM][byteL];
+        for (int binIndex = 0; binIndex < binNum; binIndex++) {
+            // copy sparse positions
+            System.arraycopy(naiveStorage[binIndex], 0, sparseStorage, binLm * binIndex, binLm);
+            // copy dense positions
+            System.arraycopy(naiveStorage[binIndex], binLm, sparseStorage, binLm * binNum + binRm * binIndex, binRm);
+        }
+        return sparseStorage;
     }
 
     @Override
-    public byte[] decode(byte[][] storage, int from, int to, T key) {
-        MathPreconditions.checkEqual("storage.length", "m", storage.length, m);
+    public byte[] decode(byte[][] storage, T key) {
         // here we do not verify bit length for each storage, otherwise decode would require O(n) computation.
+        MathPreconditions.checkEqual("storage.length", "m", storage.length, m);
         byte[] keyBytes = ObjectUtils.objectToByteArray(key);
         int binIndex = binHash.getInteger(keyBytes, binNum);
-        return bins.get(binIndex).decode(storage, binIndex * binM + from, (binIndex + 1) * binM + from, key);
+        int[] binSparsePositions = bins.get(binIndex).sparsePositions(key);
+        boolean[] binDensePositions = bins.get(binIndex).binaryDensePositions(key);
+        byte[] value = new byte[byteL];
+        for (int binSparsePosition : binSparsePositions) {
+            BytesUtils.xori(value, storage[binLm * binIndex + binSparsePosition]);
+        }
+        for (int binDensePosition = 0; binDensePosition < binRm; binDensePosition++) {
+            if (binDensePositions[binDensePosition]) {
+                BytesUtils.xori(value, storage[binLm * binNum + binRm * binIndex + binDensePosition]);
+            }
+        }
+        return value;
     }
 
     @Override
@@ -222,5 +276,10 @@ class H3ClusterBlazeGctGf2eDokvs<T> implements BinaryGf2eDokvs<T> {
     @Override
     public int getM() {
         return m;
+    }
+
+    @Override
+    public int sparsePositionNum() {
+        return SPARSE_HASH_NUM;
     }
 }
