@@ -57,13 +57,6 @@ public interface Gf2kDokvs<T> {
     int getN();
 
     /**
-     * Gets the bit length of values, i.e., all values should be in {0, 1}^l.
-     *
-     * @return the bit length of values.
-     */
-    int getL();
-
-    /**
      * Gets the size of the encoded storage. The size m must satisfy {@code m / Byte.SIZE == 0}.
      *
      * @return the size of the encoded storage.
