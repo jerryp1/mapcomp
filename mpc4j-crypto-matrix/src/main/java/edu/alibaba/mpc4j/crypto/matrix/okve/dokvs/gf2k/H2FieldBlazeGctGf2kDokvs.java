@@ -11,12 +11,12 @@ import edu.alibaba.mpc4j.crypto.matrix.okve.dokvs.gf2k.Gf2kDokvsFactory.Gf2kDokv
 import java.security.SecureRandom;
 
 /**
- * Blazing fast DOKVS using garbled cuckoo table with 2 hash functions.
+ * field blazing fast DOKVS using garbled cuckoo table with 2 hash functions.
  *
  * @author Weiran Liu
  * @date 2023/7/11
  */
-class H2FieldBlazeGctGf2kDokvs<T> extends AbstractH2GctGf2kDokvs<T> {
+class H2FieldBlazeGctGf2kDokvs<T> extends AbstractH2FieldGctGf2kDokvs<T> {
     /**
      * left ε, i.e., ε_l.
      */

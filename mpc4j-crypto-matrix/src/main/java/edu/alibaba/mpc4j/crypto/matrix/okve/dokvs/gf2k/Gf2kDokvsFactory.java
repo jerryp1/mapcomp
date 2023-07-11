@@ -41,7 +41,7 @@ public class Gf2kDokvsFactory {
         /**
          * field cluster blazing fast garbled cuckoo table with 2 hash functions.
          */
-        H2_FIELD_CLUSTER_BLAZE_GCT,
+        H2_CLUSTER_FIELD_BLAZE_GCT,
         /**
          * binary singleton garbled cuckoo table with 3 hash functions.
          */
@@ -57,7 +57,7 @@ public class Gf2kDokvsFactory {
         /**
          * field cluster blazing fast garbled cuckoo table with 3 hash functions.
          */
-        H3_FIELD_CLUSTER_BLAZE_GCT,
+        H3_CLUSTER_FIELD_BLAZE_GCT,
     }
 
     /**
@@ -89,6 +89,8 @@ public class Gf2kDokvsFactory {
                 return new BinaryGf2kDokvs<>(envType, type, GF2K_GF2E_TYPE_MAP.get(type), n, keys);
             case H2_FIELD_BLAZE_GCT:
                 return new H2FieldBlazeGctGf2kDokvs<>(envType, n, keys);
+            case H2_CLUSTER_FIELD_BLAZE_GCT:
+                return new H2ClusterFieldBlazeGctGf2kDokvs<>(envType, n, keys);
             default:
                 throw new IllegalArgumentException("Invalid " + Gf2kDokvsType.class.getSimpleName() + ": " + type.name());
         }
@@ -109,6 +111,33 @@ public class Gf2kDokvsFactory {
                 return Gf2eDokvsFactory.getHashKeyNum(GF2K_GF2E_TYPE_MAP.get(type));
             case H2_FIELD_BLAZE_GCT:
                 return H2FieldBlazeGctGf2kDokvs.HASH_KEY_NUM;
+            case H2_CLUSTER_FIELD_BLAZE_GCT:
+                return H2ClusterFieldBlazeGctGf2kDokvs.HASH_KEY_NUM;
+            default:
+                throw new IllegalArgumentException("Invalid " + Gf2kDokvsType.class.getSimpleName() + ": " + type.name());
+        }
+    }
+
+    /**
+     * Gets m.
+     *
+     * @param envType environment.
+     * @param type type.
+     * @param n    number of key-value pairs.
+     * @return m.
+     */
+    public static int getM(EnvType envType, Gf2kDokvsType type, int n) {
+        MathPreconditions.checkPositive("n", n);
+        switch (type) {
+            case H2_BINARY_SINGLETON_GCT:
+            case H2_BINARY_BLAZE_GCT:
+            case H3_BINARY_SINGLETON_GCT:
+            case H3_BINARY_BLAZE_GCT:
+                return Gf2eDokvsFactory.getM(envType, GF2K_GF2E_TYPE_MAP.get(type), n);
+            case H2_FIELD_BLAZE_GCT:
+                return H2FieldBlazeGctGf2kDokvs.getLm(n) + H2FieldBlazeGctGf2kDokvs.getRm(n);
+            case H2_CLUSTER_FIELD_BLAZE_GCT:
+                return H2ClusterFieldBlazeGctGf2kDokvs.getM(n);
             default:
                 throw new IllegalArgumentException("Invalid " + Gf2kDokvsType.class.getSimpleName() + ": " + type.name());
         }

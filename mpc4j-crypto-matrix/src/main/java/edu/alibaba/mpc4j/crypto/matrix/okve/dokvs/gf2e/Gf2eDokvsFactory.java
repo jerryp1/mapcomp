@@ -262,8 +262,9 @@ public class Gf2eDokvsFactory {
         MathPreconditions.checkPositive("n", n);
         switch (type) {
             case H2_TWO_CORE_GCT:
-            case H2_SINGLETON_GCT:
                 return H2TwoCoreGctGf2eDokvs.getLm(n) + H2TwoCoreGctGf2eDokvs.getRm(n);
+            case H2_SINGLETON_GCT:
+                return H2SingletonGctGf2eDokvs.getLm(n) + H2SingletonGctGf2eDokvs.getRm(n);
             case H2_BLAZE_GCT:
                 return H2BlazeGctGf2eDokvs.getLm(n) + H2BlazeGctGf2eDokvs.getRm(n);
             case H3_SINGLETON_GCT:
@@ -271,9 +272,8 @@ public class Gf2eDokvsFactory {
             case H3_BLAZE_GCT:
                 return H3BlazeGctGf2eDokvs.getLm(n) + H3BlazeGctGf2eDokvs.getRm(n);
             case H3_NAIVE_CLUSTER_BLAZE_GCT:
-                return H3NaiveClusterBlazeGctGf2eDokvs.getM(n);
             case H3_SPARSE_CLUSTER_BLAZE_GCT:
-                return H3SparseClusterBlazeGctGf2eDokvs.getM(n);
+                return AbstractH3ClusterBlazeGctGf2eDokvs.getM(n);
             case DISTINCT_GBF:
             case RANDOM_GBF:
                 return AbstractGbfGf2eDokvs.getM(n);

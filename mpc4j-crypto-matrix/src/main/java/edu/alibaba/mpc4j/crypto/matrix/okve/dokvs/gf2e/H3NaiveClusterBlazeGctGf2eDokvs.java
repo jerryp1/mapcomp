@@ -1,6 +1,5 @@
 package edu.alibaba.mpc4j.crypto.matrix.okve.dokvs.gf2e;
 
-import com.google.common.base.Preconditions;
 import edu.alibaba.mpc4j.common.tool.EnvType;
 import edu.alibaba.mpc4j.common.tool.MathPreconditions;
 import edu.alibaba.mpc4j.common.tool.utils.BytesUtils;
@@ -57,7 +56,6 @@ class H3NaiveClusterBlazeGctGf2eDokvs<T> extends AbstractH3ClusterBlazeGctGf2eDo
     @Override
     public byte[][] encode(Map<T, byte[]> keyValueMap, boolean doublyEncode) throws ArithmeticException {
         MathPreconditions.checkLessOrEqual("key-value size", keyValueMap.size(), n);
-        keyValueMap.values().forEach(x -> Preconditions.checkArgument(BytesUtils.isFixedReduceByteArray(x, byteL, l)));
         // create and split bins
         ArrayList<Map<T, byte[]>> keyValueMaps = IntStream.range(0, binNum)
             .mapToObj(binIndex -> new ConcurrentHashMap<T, byte[]>(binN))

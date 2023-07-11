@@ -188,6 +188,7 @@ public class Gf2kDokvsTest {
             Map<ByteBuffer, byte[]> keyValueMap = randomKeyValueMap(n);
             // non-doubly encode
             byte[][] nonDoublyStorage = dokvs.encode(keyValueMap, false);
+            Assert.assertEquals(Gf2kDokvsFactory.getM(EnvType.STANDARD, type, n), nonDoublyStorage.length);
             // parallel decode
             keyValueMap.keySet().stream().parallel().forEach(key -> {
                 byte[] value = keyValueMap.get(key);
@@ -196,6 +197,7 @@ public class Gf2kDokvsTest {
             });
             // doubly encode
             byte[][] doublyStorage = dokvs.encode(keyValueMap, true);
+            Assert.assertEquals(Gf2kDokvsFactory.getM(EnvType.STANDARD, type, n), nonDoublyStorage.length);
             // verify non-zero storage
             byte[] zero = new byte[BYTE_KAPPA];
             Arrays.fill(zero, (byte) 0x00);

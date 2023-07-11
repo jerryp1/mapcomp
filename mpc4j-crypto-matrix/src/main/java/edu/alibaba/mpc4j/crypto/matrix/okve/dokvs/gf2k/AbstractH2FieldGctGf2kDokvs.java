@@ -25,12 +25,12 @@ import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
 /**
- * abstract GF2K-DOKVS using garbled cuckoo table with 2 hash functions.
+ * abstract field GF2K-DOKVS using garbled cuckoo table with 2 hash functions.
  *
  * @author Weiran Liu
  * @date 2023/7/11
  */
-abstract class AbstractH2GctGf2kDokvs<T> extends AbstractGf2kDokvs<T> {
+abstract class AbstractH2FieldGctGf2kDokvs<T> extends AbstractGf2kDokvs<T> implements FieldGf2kDokvs<T> {
     /**
      * number of sparse hashes
      */
@@ -76,12 +76,12 @@ abstract class AbstractH2GctGf2kDokvs<T> extends AbstractGf2kDokvs<T> {
      */
     private Map<T, byte[][]> dataHrMap;
 
-    AbstractH2GctGf2kDokvs(EnvType envType, int n, int lm, int rm, byte[][] keys, CuckooTableTcFinder<T> tcFinder) {
+    AbstractH2FieldGctGf2kDokvs(EnvType envType, int n, int lm, int rm, byte[][] keys, CuckooTableTcFinder<T> tcFinder) {
         this(envType, n, lm, rm, keys, tcFinder, new SecureRandom());
     }
 
-    AbstractH2GctGf2kDokvs(EnvType envType, int n, int lm, int rm,
-                           byte[][] keys, CuckooTableTcFinder<T> tcFinder, SecureRandom secureRandom) {
+    AbstractH2FieldGctGf2kDokvs(EnvType envType, int n, int lm, int rm,
+                                byte[][] keys, CuckooTableTcFinder<T> tcFinder, SecureRandom secureRandom) {
         super(envType, n, lm + rm, secureRandom);
         MathPreconditions.checkEqual("keys.length", "hash_num", keys.length, HASH_KEY_NUM);
         this.lm = lm;
@@ -94,7 +94,8 @@ abstract class AbstractH2GctGf2kDokvs<T> extends AbstractGf2kDokvs<T> {
         linearSolver = new Gf2kLinearSolver(gf2k, secureRandom);
     }
 
-    private int[] sparsePositions(T key) {
+    @Override
+    public int[] sparsePositions(T key) {
         byte[] keyBytes = ObjectUtils.objectToByteArray(key);
         int[] sparsePositions = IntUtils.byteArrayToIntArray(hl.getBytes(keyBytes));
         // we now use the method provided in VOLE-PSI to get distinct hash indexes
@@ -106,7 +107,8 @@ abstract class AbstractH2GctGf2kDokvs<T> extends AbstractGf2kDokvs<T> {
         return sparsePositions;
     }
 
-    private byte[][] denseFields(T key) {
+    @Override
+    public byte[][] denseFields(T key) {
         byte[] keyBytes = ObjectUtils.objectToByteArray(key);
         byte[][] wedgeKs = new byte[rm][];
         // ^k = I(k, r), and I: {0, 1}^* → {0, 1}^κ is a random mapping.
