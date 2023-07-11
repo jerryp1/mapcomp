@@ -163,6 +163,11 @@ public class Gf2eDokvsTest {
         testDokvs(1 << 14);
     }
 
+    @Test
+    public void testParallelLog14n() {
+        testDokvs(1 << 14, DEFAULT_L, true);
+    }
+
     private void testDokvs(int n) {
         testDokvs(n, DEFAULT_L);
     }

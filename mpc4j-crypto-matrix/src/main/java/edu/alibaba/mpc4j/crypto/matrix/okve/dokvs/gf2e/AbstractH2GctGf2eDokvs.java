@@ -13,18 +13,17 @@ import edu.alibaba.mpc4j.crypto.matrix.okve.cuckootable.H2CuckooTable;
 import edu.alibaba.mpc4j.crypto.matrix.okve.cuckootable.H2CuckooTableTcFinder;
 import edu.alibaba.mpc4j.crypto.matrix.okve.tool.BinaryLinearSolver;
 import gnu.trove.map.TIntIntMap;
-import gnu.trove.map.TObjectIntMap;
 import gnu.trove.map.hash.TIntIntHashMap;
-import gnu.trove.map.hash.TObjectIntHashMap;
 import gnu.trove.set.TIntSet;
 import gnu.trove.set.hash.TIntHashSet;
 
 import java.security.SecureRandom;
-import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
 import java.util.Stack;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.IntStream;
+import java.util.stream.Stream;
 
 /**
  * abstract DOKVS using garbled cuckoo table with 2 hash functions. The non-doubly construction is from the following
@@ -83,11 +82,11 @@ abstract class AbstractH2GctGf2eDokvs<T> extends AbstractGf2eDokvs<T> implements
     /**
      * key -> h1
      */
-    private TObjectIntMap<T> dataH1Map;
+    private Map<T, Integer> dataH1Map;
     /**
      * key -> h2
      */
-    private TObjectIntMap<T> dataH2Map;
+    private Map<T, Integer> dataH2Map;
     /**
      * key -> hr
      */
@@ -173,16 +172,18 @@ abstract class AbstractH2GctGf2eDokvs<T> extends AbstractGf2eDokvs<T> implements
         // construct maps
         Set<T> keySet = keyValueMap.keySet();
         int keySize = keySet.size();
-        dataH1Map = new TObjectIntHashMap<>(keySize);
-        dataH2Map = new TObjectIntHashMap<>(keySize);
-        dataHrMap = new HashMap<>(keySize);
-        for (T key : keySet) {
+        dataH1Map = new ConcurrentHashMap<>(keySize);
+        dataH2Map = new ConcurrentHashMap<>(keySize);
+        dataHrMap = new ConcurrentHashMap<>(keySize);
+        Stream<T> keyStream = keySet.stream();
+        keyStream = parallelEncode ? keyStream.parallel() : keyStream;
+        keyStream.forEach(key -> {
             int[] sparsePositions = sparsePositions(key);
             boolean[] binaryDensePositions = binaryDensePositions(key);
             dataH1Map.put(key, sparsePositions[0]);
             dataH2Map.put(key, sparsePositions[1]);
             dataHrMap.put(key, binaryDensePositions);
-        }
+        });
         // generate cuckoo table with 2 hash functions
         H2CuckooTable<T> h2CuckooTable = generateCuckooTable(keyValueMap);
         // find two-core graph

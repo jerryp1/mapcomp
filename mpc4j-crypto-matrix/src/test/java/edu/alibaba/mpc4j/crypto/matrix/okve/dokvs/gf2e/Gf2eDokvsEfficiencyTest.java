@@ -51,20 +51,20 @@ public class Gf2eDokvsEfficiencyTest {
     public void testEfficiency() {
         LOGGER.info(
             "{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}",
-            "                name", "      logN", "         m", "        lm", "        rm", "parallel",
+            "                          name", "      logN", "         m", "        lm", "        rm", "  parallel",
             " encode(s)", " decode(s)", "dEncode(s)", "dDecode(s)"
         );
-        testEfficiency(false);
-        testEfficiency(true);
+        testEfficiency(8);
+        testEfficiency(10);
+        testEfficiency(12);
+        testEfficiency(14);
+        testEfficiency(16);
+        testEfficiency(18);
     }
 
-    private void testEfficiency(boolean parallelEncode) {
-        testEfficiency(8, parallelEncode);
-        testEfficiency(10, parallelEncode);
-        testEfficiency(12, parallelEncode);
-        testEfficiency(14, parallelEncode);
-        testEfficiency(16, parallelEncode);
-        testEfficiency(18, parallelEncode);
+    private void testEfficiency(int logN) {
+        testEfficiency(logN, false);
+        testEfficiency(logN, true);
     }
 
     private void testEfficiency(int logN, boolean parallelEncode) {
@@ -113,7 +113,7 @@ public class Gf2eDokvsEfficiencyTest {
             }
             LOGGER.info(
                 "{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}",
-                StringUtils.leftPad(type.name(), 20),
+                StringUtils.leftPad(type.name(), 30),
                 StringUtils.leftPad(String.valueOf(logN), 10),
                 StringUtils.leftPad(String.valueOf(dokvs.getM()), 10),
                 StringUtils.leftPad(lm, 10),

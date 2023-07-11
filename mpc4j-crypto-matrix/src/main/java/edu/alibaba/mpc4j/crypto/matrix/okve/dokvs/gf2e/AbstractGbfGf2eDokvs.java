@@ -12,6 +12,8 @@ import edu.alibaba.mpc4j.common.tool.utils.CommonUtils;
 import java.security.SecureRandom;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.stream.Stream;
 
 /**
  * abstract Garbled Bloom Filter DOKVS. The original scheme is described in the following paper:
@@ -89,12 +91,18 @@ abstract class AbstractGbfGf2eDokvs<T> extends AbstractGf2eDokvs<T> implements S
         MathPreconditions.checkLessOrEqual("key-value size", keyValueMap.size(), n);
         keyValueMap.values().forEach(x -> Preconditions.checkArgument(BytesUtils.isFixedReduceByteArray(x, byteL, l)));
         Set<T> keySet = keyValueMap.keySet();
+        Map<T, int[]> sparsePositionsMap = new ConcurrentHashMap<>(keySet.size());
+        Stream<T> keyStream = keySet.stream();
+        keyStream = parallelEncode ? keyStream.parallel() : keyStream;
+        keyStream.forEach(key -> {
+            int[] sparsePositions = sparsePositions(key);
+            sparsePositionsMap.put(key, sparsePositions);
+        });
         // compute positions for all keys, create shares.
         byte[][] storage = new byte[m][];
         for (T key : keySet) {
             byte[] finalShare = BytesUtils.clone(keyValueMap.get(key));
-            assert finalShare.length == byteL;
-            int[] sparsePositions = sparsePositions(key);
+            int[] sparsePositions = sparsePositionsMap.get(key);
             int emptySlot = -1;
             for (int position : sparsePositions) {
                 if (storage[position] == null && emptySlot == -1) {
