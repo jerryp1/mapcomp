@@ -91,6 +91,8 @@ public class Gf2kDokvsFactory {
                 return new H2FieldBlazeGctGf2kDokvs<>(envType, n, keys);
             case H2_CLUSTER_FIELD_BLAZE_GCT:
                 return new H2ClusterFieldBlazeGctGf2kDokvs<>(envType, n, keys);
+            case H3_FIELD_BLAZE_GCT:
+                return new H3FieldBlazeGctGf2kDokvs<>(envType, n, keys);
             default:
                 throw new IllegalArgumentException("Invalid " + Gf2kDokvsType.class.getSimpleName() + ": " + type.name());
         }
@@ -113,6 +115,8 @@ public class Gf2kDokvsFactory {
                 return H2FieldBlazeGctGf2kDokvs.HASH_KEY_NUM;
             case H2_CLUSTER_FIELD_BLAZE_GCT:
                 return H2ClusterFieldBlazeGctGf2kDokvs.HASH_KEY_NUM;
+            case H3_FIELD_BLAZE_GCT:
+                return H3FieldBlazeGctGf2kDokvs.HASH_KEY_NUM;
             default:
                 throw new IllegalArgumentException("Invalid " + Gf2kDokvsType.class.getSimpleName() + ": " + type.name());
         }
@@ -138,6 +142,8 @@ public class Gf2kDokvsFactory {
                 return H2FieldBlazeGctGf2kDokvs.getLm(n) + H2FieldBlazeGctGf2kDokvs.getRm(n);
             case H2_CLUSTER_FIELD_BLAZE_GCT:
                 return H2ClusterFieldBlazeGctGf2kDokvs.getM(n);
+            case H3_FIELD_BLAZE_GCT:
+                return H3FieldBlazeGctGf2kDokvs.getLm(n) + H3FieldBlazeGctGf2kDokvs.getRm(n);
             default:
                 throw new IllegalArgumentException("Invalid " + Gf2kDokvsType.class.getSimpleName() + ": " + type.name());
         }

@@ -1,6 +1,7 @@
 package edu.alibaba.mpc4j.crypto.matrix.okve.dokvs.gf2k;
 
 import cc.redberry.rings.linear.LinearSolver;
+import com.google.common.base.Preconditions;
 import edu.alibaba.mpc4j.common.tool.EnvType;
 import edu.alibaba.mpc4j.common.tool.MathPreconditions;
 import edu.alibaba.mpc4j.common.tool.crypto.prf.Prf;
@@ -76,10 +77,6 @@ abstract class AbstractH2FieldGctGf2kDokvs<T> extends AbstractGf2kDokvs<T> imple
      */
     private Map<T, byte[][]> dataHrMap;
 
-    AbstractH2FieldGctGf2kDokvs(EnvType envType, int n, int lm, int rm, byte[][] keys, CuckooTableTcFinder<T> tcFinder) {
-        this(envType, n, lm, rm, keys, tcFinder, new SecureRandom());
-    }
-
     AbstractH2FieldGctGf2kDokvs(EnvType envType, int n, int lm, int rm,
                                 byte[][] keys, CuckooTableTcFinder<T> tcFinder, SecureRandom secureRandom) {
         super(envType, n, lm + rm, secureRandom);
@@ -88,7 +85,7 @@ abstract class AbstractH2FieldGctGf2kDokvs<T> extends AbstractGf2kDokvs<T> imple
         this.rm = rm;
         hl = PrfFactory.createInstance(envType, Integer.BYTES * SPARSE_HASH_NUM);
         hl.setKey(keys[0]);
-        hr = PrfFactory.createInstance(envType, BYTE_KAPPA);
+        hr = PrfFactory.createInstance(envType, gf2k.getByteL());
         hr.setKey(keys[1]);
         this.tcFinder = tcFinder;
         linearSolver = new Gf2kLinearSolver(gf2k, secureRandom);
@@ -127,7 +124,7 @@ abstract class AbstractH2FieldGctGf2kDokvs<T> extends AbstractGf2kDokvs<T> imple
         assert (tcFinder instanceof CuckooTableSingletonTcFinder || tcFinder instanceof H2CuckooTableTcFinder);
         int[] sparsePositions = sparsePositions(key);
         byte[][] denseFields = denseFields(key);
-        byte[] value = new byte[BYTE_KAPPA];
+        byte[] value = gf2k.createZero();
         // h1 and h2 must be distinct
         gf2k.addi(value, storage[sparsePositions[0]]);
         gf2k.addi(value, storage[sparsePositions[1]]);
@@ -141,7 +138,7 @@ abstract class AbstractH2FieldGctGf2kDokvs<T> extends AbstractGf2kDokvs<T> imple
     @Override
     public byte[][] encode(Map<T, byte[]> keyValueMap, boolean doublyEncode) throws ArithmeticException {
         MathPreconditions.checkLessOrEqual("key-value size", keyValueMap.size(), n);
-        keyValueMap.values().forEach(x -> MathPreconditions.checkEqual("x.length", "κ (in byte)", x.length, BYTE_KAPPA));
+        keyValueMap.values().forEach(x -> Preconditions.checkArgument(gf2k.validateElement(x)));
         // construct maps
         Set<T> keySet = keyValueMap.keySet();
         int keySize = keySet.size();
@@ -183,7 +180,7 @@ abstract class AbstractH2FieldGctGf2kDokvs<T> extends AbstractGf2kDokvs<T> imple
             int source = removedDataVertices[0];
             int target = removedDataVertices[1];
             byte[][] rx = dataHrMap.get(removedData);
-            byte[] innerProduct = new byte[BYTE_KAPPA];
+            byte[] innerProduct = gf2k.createZero();
             for (int rmIndex = 0; rmIndex < rm; rmIndex++) {
                 gf2k.addi(innerProduct, gf2k.mul(rx[rmIndex], rightStorage[rmIndex]));
             }
@@ -248,7 +245,7 @@ abstract class AbstractH2FieldGctGf2kDokvs<T> extends AbstractGf2kDokvs<T> imple
             throw new ArithmeticException("|d˜| = " + dTilde + ", d + rm = " + (d + rm) + " no solutions");
         }
         // Let M˜' ∈ {0,1}^{d˜ × (d + rm)} be the sub-matrix of M˜ obtained by taking the row indexed by R.
-        byte[][][] tildePrimeMatrix = new byte[dTilde][d + rm][BYTE_KAPPA];
+        byte[][][] tildePrimeMatrix = new byte[dTilde][d + rm][gf2k.getByteL()];
         byte[][] vectorY = new byte[dTilde][];
         // construct the vertex -> index map
         int[] coreVertexArray = coreVertexSet.toArray();
@@ -299,7 +296,7 @@ abstract class AbstractH2FieldGctGf2kDokvs<T> extends AbstractGf2kDokvs<T> imple
             return storage;
         } else {
             // we need to solve equations
-            byte[][][] matrixM = new byte[dTilde][m][BYTE_KAPPA];
+            byte[][][] matrixM = new byte[dTilde][m][gf2k.getByteL()];
             byte[][] vectorX = new byte[m][];
             byte[][] vectorY = new byte[dTilde][];
             int rowIndex = 0;

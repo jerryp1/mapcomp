@@ -93,11 +93,6 @@ abstract class AbstractH2GctGf2eDokvs<T> extends AbstractGf2eDokvs<T> implements
     private Map<T, boolean[]> dataHrMap;
 
     AbstractH2GctGf2eDokvs(EnvType envType, int n, int lm, int rm, int l,
-                           byte[][] keys, CuckooTableTcFinder<T> tcFinder) {
-        this(envType, n, lm, rm, l, keys, tcFinder, new SecureRandom());
-    }
-
-    AbstractH2GctGf2eDokvs(EnvType envType, int n, int lm, int rm, int l,
                            byte[][] keys, CuckooTableTcFinder<T> tcFinder, SecureRandom secureRandom) {
         super(n, lm + rm, l, secureRandom);
         MathPreconditions.checkEqual("keys.length", "hash_num", keys.length, HASH_KEY_NUM);

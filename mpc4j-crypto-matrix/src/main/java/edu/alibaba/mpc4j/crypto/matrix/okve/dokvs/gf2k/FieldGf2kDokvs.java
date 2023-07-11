@@ -22,6 +22,4 @@ public interface FieldGf2kDokvs<T> extends Gf2kDokvs<T> {
      * @return the dense fields.
      */
     byte[][] denseFields(T key);
-
-
 }

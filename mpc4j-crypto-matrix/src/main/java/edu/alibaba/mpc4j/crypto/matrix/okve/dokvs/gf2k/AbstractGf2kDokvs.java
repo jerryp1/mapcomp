@@ -1,7 +1,6 @@
 package edu.alibaba.mpc4j.crypto.matrix.okve.dokvs.gf2k;
 
 import com.google.common.base.Preconditions;
-import edu.alibaba.mpc4j.common.tool.CommonConstants;
 import edu.alibaba.mpc4j.common.tool.EnvType;
 import edu.alibaba.mpc4j.common.tool.MathPreconditions;
 import edu.alibaba.mpc4j.common.tool.galoisfield.gf2k.Gf2k;
@@ -16,10 +15,6 @@ import java.security.SecureRandom;
  * @date 2023/7/11
  */
 abstract class AbstractGf2kDokvs<T> implements Gf2kDokvs<T> {
-    /**
-     * κ in bytes
-     */
-    protected final int BYTE_KAPPA = CommonConstants.BLOCK_BYTE_LENGTH;
     /**
      * GF2K instance
      */
