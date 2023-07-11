@@ -22,7 +22,7 @@ import java.util.stream.IntStream;
  * @author Weiran Liu
  * @date 2023/7/11
  */
-abstract class AbstractH3ClusterBlazeGctGf2eDokvs<T> implements BinaryGf2eDokvs<T> {
+abstract class AbstractH3ClusterBlazeGctGf2eDokvs<T> extends AbstractGf2eDokvs<T> implements BinaryGf2eDokvs<T> {
     /**
      * number of sparse hashes
      */
@@ -43,6 +43,7 @@ abstract class AbstractH3ClusterBlazeGctGf2eDokvs<T> implements BinaryGf2eDokvs<
      * @return m.
      */
     static int getM(int n) {
+        MathPreconditions.checkPositive("n", n);
         int binNum = CommonUtils.getUnitNum(n, EXPECT_BIN_SIZE);
         int binN = MaxBinSizeUtils.approxMaxBinSize(n, binNum);
         int binLm = H3BlazeGctDovsUtils.getLm(binN);
@@ -51,22 +52,6 @@ abstract class AbstractH3ClusterBlazeGctGf2eDokvs<T> implements BinaryGf2eDokvs<
         return binNum * binM;
     }
 
-    /**
-     * number of key-value pairs.
-     */
-    protected final int n;
-    /**
-     * bit length of values
-     */
-    protected final int l;
-    /**
-     * l in byte
-     */
-    protected final int byteL;
-    /**
-     * parallel encode
-     */
-    protected boolean parallelEncode;
     /**
      * number of bins
      */
@@ -88,10 +73,6 @@ abstract class AbstractH3ClusterBlazeGctGf2eDokvs<T> implements BinaryGf2eDokvs<
      */
     protected final int binM;
     /**
-     * size of encode storage.
-     */
-    protected final int m;
-    /**
      * bin hash
      */
     protected final Prf binHash;
@@ -101,20 +82,13 @@ abstract class AbstractH3ClusterBlazeGctGf2eDokvs<T> implements BinaryGf2eDokvs<
     protected final ArrayList<H3BlazeGctGf2eDokvs<T>> bins;
 
     AbstractH3ClusterBlazeGctGf2eDokvs(EnvType envType, int n, int l, byte[][] keys, SecureRandom secureRandom) {
-        MathPreconditions.checkPositive("n", n);
-        this.n = n;
-        // here we only need to require l > 0
-        MathPreconditions.checkPositive("l", l);
-        this.l = l;
-        byteL = CommonUtils.getByteLength(l);
-        parallelEncode = false;
+        super(n, getM(n), l, secureRandom);
         // calculate bin_num and bin_size
         binNum = CommonUtils.getUnitNum(n, EXPECT_BIN_SIZE);
         binN = MaxBinSizeUtils.approxMaxBinSize(n, binNum);
         binLm = H3BlazeGctDovsUtils.getLm(binN);
         binRm = H3BlazeGctDovsUtils.getRm(binN);
         binM = binLm + binRm;
-        m = binNum * binM;
         // clone keys
         MathPreconditions.checkEqual("keys.length", "hash_num", keys.length, HASH_KEY_NUM);
         // init bin hash
@@ -139,30 +113,5 @@ abstract class AbstractH3ClusterBlazeGctGf2eDokvs<T> implements BinaryGf2eDokvs<
     @Override
     public int maxPositionNum() {
         return SPARSE_HASH_NUM + binNum * binRm;
-    }
-
-    @Override
-    public void setParallelEncode(boolean parallelEncode) {
-        this.parallelEncode = parallelEncode;
-    }
-
-    @Override
-    public boolean getParallelEncode() {
-        return parallelEncode;
-    }
-
-    @Override
-    public int getN() {
-        return n;
-    }
-
-    @Override
-    public int getL() {
-        return l;
-    }
-
-    @Override
-    public int getM() {
-        return m;
     }
 }

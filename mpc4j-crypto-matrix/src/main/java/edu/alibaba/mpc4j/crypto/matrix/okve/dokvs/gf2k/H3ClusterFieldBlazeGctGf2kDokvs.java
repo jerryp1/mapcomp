@@ -6,8 +6,6 @@ import edu.alibaba.mpc4j.common.tool.crypto.kdf.Kdf;
 import edu.alibaba.mpc4j.common.tool.crypto.kdf.KdfFactory;
 import edu.alibaba.mpc4j.common.tool.crypto.prf.Prf;
 import edu.alibaba.mpc4j.common.tool.crypto.prf.PrfFactory;
-import edu.alibaba.mpc4j.common.tool.galoisfield.gf2k.Gf2k;
-import edu.alibaba.mpc4j.common.tool.galoisfield.gf2k.Gf2kFactory;
 import edu.alibaba.mpc4j.common.tool.hashbin.MaxBinSizeUtils;
 import edu.alibaba.mpc4j.common.tool.utils.BytesUtils;
 import edu.alibaba.mpc4j.common.tool.utils.CommonUtils;
@@ -29,7 +27,7 @@ import java.util.stream.Stream;
  * @author Weiran Liu
  * @date 2023/7/11
  */
-class H3ClusterFieldBlazeGctGf2kDokvs<T> implements Gf2kDokvs<T> {
+class H3ClusterFieldBlazeGctGf2kDokvs<T> extends AbstractGf2kDokvs<T> implements Gf2kDokvs<T> {
     /**
      * number of hash keys, one more key for bin
      */
@@ -46,6 +44,7 @@ class H3ClusterFieldBlazeGctGf2kDokvs<T> implements Gf2kDokvs<T> {
      * @return m.
      */
     static int getM(int n) {
+        MathPreconditions.checkPositive("n", n);
         int binNum = CommonUtils.getUnitNum(n, EXPECT_BIN_SIZE);
         int binN = MaxBinSizeUtils.approxMaxBinSize(n, binNum);
         int binLm = H3FieldBlazeGctGf2kDokvs.getLm(binN);
@@ -54,18 +53,6 @@ class H3ClusterFieldBlazeGctGf2kDokvs<T> implements Gf2kDokvs<T> {
         return binNum * binM;
     }
 
-    /**
-     * GF2K instance
-     */
-    private final Gf2k gf2k;
-    /**
-     * number of key-value pairs.
-     */
-    private final int n;
-    /**
-     * parallel encode
-     */
-    private boolean parallelEncode;
     /**
      * number of bins
      */
@@ -87,10 +74,6 @@ class H3ClusterFieldBlazeGctGf2kDokvs<T> implements Gf2kDokvs<T> {
      */
     private final int binM;
     /**
-     * size of encode storage.
-     */
-    private final int m;
-    /**
      * bin hash
      */
     private final Prf binHash;
@@ -104,17 +87,13 @@ class H3ClusterFieldBlazeGctGf2kDokvs<T> implements Gf2kDokvs<T> {
     }
 
     H3ClusterFieldBlazeGctGf2kDokvs(EnvType envType, int n, byte[][] keys, SecureRandom secureRandom) {
-        MathPreconditions.checkPositive("n", n);
-        gf2k = Gf2kFactory.createInstance(envType);
-        this.n = n;
-        parallelEncode = false;
+        super(envType, n, getM(n), secureRandom);
         // calculate bin_num and bin_size
         binNum = CommonUtils.getUnitNum(n, EXPECT_BIN_SIZE);
         binN = MaxBinSizeUtils.approxMaxBinSize(n, binNum);
         binLm = H3FieldBlazeGctGf2kDokvs.getLm(binN);
         binRm = H3FieldBlazeGctGf2kDokvs.getRm(binN);
         binM = binLm + binRm;
-        m = binNum * binM;
         // clone keys
         MathPreconditions.checkEqual("keys.length", "hash_num", keys.length, HASH_KEY_NUM);
         // init bin hash
@@ -139,16 +118,6 @@ class H3ClusterFieldBlazeGctGf2kDokvs<T> implements Gf2kDokvs<T> {
     @Override
     public Gf2kDokvsType getType() {
         return Gf2kDokvsType.H3_CLUSTER_FIELD_BLAZE_GCT;
-    }
-
-    @Override
-    public void setParallelEncode(boolean parallelEncode) {
-        this.parallelEncode = parallelEncode;
-    }
-
-    @Override
-    public boolean getParallelEncode() {
-        return parallelEncode;
     }
 
     @Override
@@ -192,15 +161,5 @@ class H3ClusterFieldBlazeGctGf2kDokvs<T> implements Gf2kDokvs<T> {
             gf2k.addi(value, gf2k.mul(storage[binIndex * binM + binLm + rmIndex], binDenseFields[rmIndex]));
         }
         return value;
-    }
-
-    @Override
-    public int getN() {
-        return n;
-    }
-
-    @Override
-    public int getM() {
-        return m;
     }
 }

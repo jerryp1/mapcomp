@@ -7,6 +7,7 @@ import edu.alibaba.mpc4j.crypto.matrix.okve.dokvs.gf2e.Gf2eDokvsFactory;
 import edu.alibaba.mpc4j.crypto.matrix.okve.dokvs.gf2e.Gf2eDokvsFactory.Gf2eDokvsType;
 import edu.alibaba.mpc4j.crypto.matrix.okve.dokvs.gf2k.Gf2kDokvsFactory.Gf2kDokvsType;
 
+import java.security.SecureRandom;
 import java.util.Map;
 
 /**
@@ -15,7 +16,7 @@ import java.util.Map;
  * @author Weiran Liu
  * @date 2023/7/11
  */
-class BinaryGf2kDokvs<T> implements Gf2kDokvs<T> {
+class BinaryGf2kDokvs<T> extends AbstractGf2kDokvs<T> implements Gf2kDokvs<T> {
     /**
      * type
      */
@@ -26,6 +27,11 @@ class BinaryGf2kDokvs<T> implements Gf2kDokvs<T> {
     private final Gf2eDokvs<T> gf2eDokvs;
 
     BinaryGf2kDokvs(EnvType envType, Gf2kDokvsType type, Gf2eDokvsType gf2eDokvsType, int n, byte[][] keys) {
+        this(envType, type, gf2eDokvsType, n, keys, new SecureRandom());
+    }
+
+    BinaryGf2kDokvs(EnvType envType, Gf2kDokvsType type, Gf2eDokvsType gf2eDokvsType, int n, byte[][] keys, SecureRandom secureRandom) {
+        super(envType, n, Gf2eDokvsFactory.getM(envType, gf2eDokvsType, n), secureRandom);
         this.type = type;
         gf2eDokvs = Gf2eDokvsFactory.createInstance(envType, gf2eDokvsType, n, CommonConstants.BLOCK_BIT_LENGTH, keys);
     }
@@ -38,12 +44,8 @@ class BinaryGf2kDokvs<T> implements Gf2kDokvs<T> {
 
     @Override
     public void setParallelEncode(boolean parallelEncode) {
+        super.setParallelEncode(parallelEncode);
         gf2eDokvs.setParallelEncode(parallelEncode);
-    }
-
-    @Override
-    public boolean getParallelEncode() {
-        return gf2eDokvs.getParallelEncode();
     }
 
     @Override
@@ -54,15 +56,5 @@ class BinaryGf2kDokvs<T> implements Gf2kDokvs<T> {
     @Override
     public byte[] decode(byte[][] storage, T key) {
         return gf2eDokvs.decode(storage, key);
-    }
-
-    @Override
-    public int getN() {
-        return gf2eDokvs.getN();
-    }
-
-    @Override
-    public int getM() {
-        return gf2eDokvs.getM();
     }
 }
