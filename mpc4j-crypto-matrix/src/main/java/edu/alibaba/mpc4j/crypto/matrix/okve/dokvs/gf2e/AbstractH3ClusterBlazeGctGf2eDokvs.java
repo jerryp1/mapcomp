@@ -9,6 +9,7 @@ import edu.alibaba.mpc4j.common.tool.crypto.prf.PrfFactory;
 import edu.alibaba.mpc4j.common.tool.hashbin.MaxBinSizeUtils;
 import edu.alibaba.mpc4j.common.tool.utils.BytesUtils;
 import edu.alibaba.mpc4j.common.tool.utils.CommonUtils;
+import edu.alibaba.mpc4j.crypto.matrix.okve.dokvs.H3BlazeGctDovsUtils;
 
 import java.security.SecureRandom;
 import java.util.ArrayList;
@@ -44,8 +45,8 @@ abstract class AbstractH3ClusterBlazeGctGf2eDokvs<T> implements BinaryGf2eDokvs<
     static int getM(int n) {
         int binNum = CommonUtils.getUnitNum(n, EXPECT_BIN_SIZE);
         int binN = MaxBinSizeUtils.approxMaxBinSize(n, binNum);
-        int binLm = H3BlazeGctGf2eDokvs.getLm(binN);
-        int binRm = H3BlazeGctGf2eDokvs.getRm(binN);
+        int binLm = H3BlazeGctDovsUtils.getLm(binN);
+        int binRm = H3BlazeGctDovsUtils.getRm(binN);
         int binM = binLm + binRm;
         return binNum * binM;
     }
@@ -110,8 +111,8 @@ abstract class AbstractH3ClusterBlazeGctGf2eDokvs<T> implements BinaryGf2eDokvs<
         // calculate bin_num and bin_size
         binNum = CommonUtils.getUnitNum(n, EXPECT_BIN_SIZE);
         binN = MaxBinSizeUtils.approxMaxBinSize(n, binNum);
-        binLm = H3BlazeGctGf2eDokvs.getLm(binN);
-        binRm = H3BlazeGctGf2eDokvs.getRm(binN);
+        binLm = H3BlazeGctDovsUtils.getLm(binN);
+        binRm = H3BlazeGctDovsUtils.getRm(binN);
         binM = binLm + binRm;
         m = binNum * binM;
         // clone keys

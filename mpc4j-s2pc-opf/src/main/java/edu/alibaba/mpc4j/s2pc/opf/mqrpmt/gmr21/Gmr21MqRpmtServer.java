@@ -3,7 +3,6 @@ package edu.alibaba.mpc4j.s2pc.opf.mqrpmt.gmr21;
 import edu.alibaba.mpc4j.common.rpc.*;
 import edu.alibaba.mpc4j.common.rpc.utils.DataPacket;
 import edu.alibaba.mpc4j.common.rpc.utils.DataPacketHeader;
-import edu.alibaba.mpc4j.common.tool.CommonConstants;
 import edu.alibaba.mpc4j.common.tool.benes.BenesNetworkUtils;
 import edu.alibaba.mpc4j.common.tool.crypto.hash.Hash;
 import edu.alibaba.mpc4j.common.tool.crypto.hash.HashFactory;
@@ -11,9 +10,9 @@ import edu.alibaba.mpc4j.common.tool.hashbin.object.HashBinEntry;
 import edu.alibaba.mpc4j.common.tool.hashbin.object.cuckoo.CuckooHashBin;
 import edu.alibaba.mpc4j.common.tool.hashbin.object.cuckoo.CuckooHashBinFactory;
 import edu.alibaba.mpc4j.common.tool.hashbin.object.cuckoo.CuckooHashBinFactory.CuckooHashBinType;
-import edu.alibaba.mpc4j.crypto.matrix.okve.okvs.Okvs;
-import edu.alibaba.mpc4j.crypto.matrix.okve.okvs.OkvsFactory;
-import edu.alibaba.mpc4j.crypto.matrix.okve.okvs.OkvsFactory.OkvsType;
+import edu.alibaba.mpc4j.common.tool.utils.CommonUtils;
+import edu.alibaba.mpc4j.crypto.matrix.okve.dokvs.gf2e.Gf2eDokvs;
+import edu.alibaba.mpc4j.crypto.matrix.okve.dokvs.gf2e.Gf2eDokvsFactory;
 import edu.alibaba.mpc4j.common.tool.utils.BytesUtils;
 import edu.alibaba.mpc4j.s2pc.opf.mqrpmt.AbstractMqRpmtServer;
 import edu.alibaba.mpc4j.s2pc.opf.mqrpmt.gmr21.Gmr21MqRpmtPtoDesc.PtoStep;
@@ -50,7 +49,7 @@ public class Gmr21MqRpmtServer extends AbstractMqRpmtServer {
     /**
      * OKVS类型
      */
-    private final OkvsType okvsType;
+    private final Gf2eDokvsFactory.Gf2eDokvsType dokvsType;
     /**
      * 布谷鸟哈希类型
      */
@@ -64,9 +63,9 @@ public class Gmr21MqRpmtServer extends AbstractMqRpmtServer {
      */
     private Hash finiteFieldHash;
     /**
-     * OKVS密钥
+     * DOKVS hash keys
      */
-    private byte[][] okvsHashKeys;
+    private byte[][] dokvsHashKeys;
     /**
      * 无贮存区布谷鸟哈希
      */
@@ -76,9 +75,9 @@ public class Gmr21MqRpmtServer extends AbstractMqRpmtServer {
      */
     private int binNum;
     /**
-     * OKVS大小
+     * m for DOKVS
      */
-    private int okvsM;
+    private int dokvsM;
     /**
      * 交换映射
      */
@@ -108,7 +107,7 @@ public class Gmr21MqRpmtServer extends AbstractMqRpmtServer {
         addSubPtos(osnReceiver);
         peqtOprfSender = OprfFactory.createOprfSender(serverRpc, clientParty, config.getPeqtOprfConfig());
         addSubPtos(peqtOprfSender);
-        okvsType = config.getOkvsType();
+        dokvsType = config.getGf2eDokvsType();
         cuckooHashBinType = config.getCuckooHashBinType();
         cuckooHashNum = CuckooHashBinFactory.getHashNum(cuckooHashBinType);
     }
@@ -133,17 +132,10 @@ public class Gmr21MqRpmtServer extends AbstractMqRpmtServer {
         logStepInfo(PtoState.INIT_STEP, 1, 2, initTime);
 
         stopWatch.start();
-        List<byte[]> keysPayload = new LinkedList<>();
         // 初始化OKVS密钥
-        int okvsHashKeyNum = OkvsFactory.getHashNum(okvsType);
-        okvsHashKeys = IntStream.range(0, okvsHashKeyNum)
-            .mapToObj(keyIndex -> {
-                byte[] okvsKey = new byte[CommonConstants.BLOCK_BYTE_LENGTH];
-                secureRandom.nextBytes(okvsKey);
-                keysPayload.add(okvsKey);
-                return okvsKey;
-            })
-            .toArray(byte[][]::new);
+        int dokvsHashKeyNum = Gf2eDokvsFactory.getHashKeyNum(dokvsType);
+        dokvsHashKeys = CommonUtils.generateRandomKeys(dokvsHashKeyNum, secureRandom);
+        List<byte[]> keysPayload = Arrays.stream(dokvsHashKeys).collect(Collectors.toList());
         DataPacketHeader keysHeader = new DataPacketHeader(
             encodeTaskId, getPtoDesc().getPtoId(), PtoStep.SERVER_SEND_KEYS.ordinal(), extraInfo,
             ownParty().getPartyId(), otherParty().getPartyId()
@@ -171,7 +163,7 @@ public class Gmr21MqRpmtServer extends AbstractMqRpmtServer {
         rpc.send(DataPacket.fromByteArrayList(cuckooHashKeyHeader, cuckooHashKeyPayload));
         binNum = CuckooHashBinFactory.getBinNum(cuckooHashBinType, serverElementSize);
         // 设置OKVS大小
-        okvsM = OkvsFactory.getM(okvsType, clientElementSize * cuckooHashNum);
+        dokvsM = Gf2eDokvsFactory.getM(envType, dokvsType, clientElementSize * cuckooHashNum);
         // 初始化PEQT哈希
         Hash peqtHash = HashFactory.createInstance(envType, Gmr21MqRpmtPtoDesc.getPeqtByteLength(binNum));
         // 构造交换映射
@@ -268,11 +260,11 @@ public class Gmr21MqRpmtServer extends AbstractMqRpmtServer {
     }
 
     private void handleOkvsPayload(List<byte[]> okvsPayload) throws MpcAbortException {
-        MpcAbortPreconditions.checkArgument(okvsPayload.size() == okvsM);
+        MpcAbortPreconditions.checkArgument(okvsPayload.size() == dokvsM);
         byte[][] storage = okvsPayload.toArray(new byte[0][]);
-        Okvs<ByteBuffer> okvs = OkvsFactory.createInstance(
-            envType, okvsType, clientElementSize * cuckooHashNum,
-            Gmr21MqRpmtPtoDesc.FINITE_FIELD_BYTE_LENGTH * Byte.SIZE, okvsHashKeys
+        Gf2eDokvs<ByteBuffer> dokvs = Gf2eDokvsFactory.createInstance(
+            envType, dokvsType, clientElementSize * cuckooHashNum,
+            Gmr21MqRpmtPtoDesc.FINITE_FIELD_BYTE_LENGTH * Byte.SIZE, dokvsHashKeys
         );
         IntStream okvsDecodeIntStream = IntStream.range(0, binNum);
         okvsDecodeIntStream = parallel ? okvsDecodeIntStream.parallel() : okvsDecodeIntStream;
@@ -280,7 +272,7 @@ public class Gmr21MqRpmtServer extends AbstractMqRpmtServer {
             .mapToObj(index -> {
                 // 扩展输入
                 ByteBuffer key = ByteBuffer.wrap(extendEntryBytes[index]);
-                byte[] pi = okvs.decode(storage, key);
+                byte[] pi = dokvs.decode(storage, key);
                 byte[] fi = fArray[index];
                 BytesUtils.xori(pi, fi);
                 return pi;

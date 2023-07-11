@@ -2,6 +2,10 @@ package edu.alibaba.mpc4j.crypto.matrix.okve.dokvs.gf2e;
 
 import edu.alibaba.mpc4j.common.tool.EnvType;
 import edu.alibaba.mpc4j.common.tool.MathPreconditions;
+import edu.alibaba.mpc4j.crypto.matrix.okve.dokvs.H2BlazeGctDokvsUtils;
+import edu.alibaba.mpc4j.crypto.matrix.okve.dokvs.H2NaiveGctDokvsUtils;
+import edu.alibaba.mpc4j.crypto.matrix.okve.dokvs.H3BlazeGctDovsUtils;
+import edu.alibaba.mpc4j.crypto.matrix.okve.dokvs.H3NaiveGctDokvsUtils;
 
 /**
  * GF(2^e)-DOKVS factory.
@@ -237,9 +241,8 @@ public class Gf2eDokvsFactory {
             case H3_BLAZE_GCT:
                 return AbstractH3GctGf2eDokvs.HASH_KEY_NUM;
             case H3_NAIVE_CLUSTER_BLAZE_GCT:
-                return H3NaiveClusterBlazeGctGf2eDokvs.HASH_KEY_NUM;
             case H3_SPARSE_CLUSTER_BLAZE_GCT:
-                return H3SparseClusterBlazeGctGf2eDokvs.HASH_KEY_NUM;
+                return AbstractH3ClusterBlazeGctGf2eDokvs.HASH_KEY_NUM;
             case DISTINCT_GBF:
             case RANDOM_GBF:
                 return AbstractGbfGf2eDokvs.HASH_KEY_NUM;
@@ -262,15 +265,14 @@ public class Gf2eDokvsFactory {
         MathPreconditions.checkPositive("n", n);
         switch (type) {
             case H2_TWO_CORE_GCT:
-                return H2TwoCoreGctGf2eDokvs.getLm(n) + H2TwoCoreGctGf2eDokvs.getRm(n);
             case H2_SINGLETON_GCT:
-                return H2SingletonGctGf2eDokvs.getLm(n) + H2SingletonGctGf2eDokvs.getRm(n);
+                return H2NaiveGctDokvsUtils.getLm(n) + H2NaiveGctDokvsUtils.getRm(n);
             case H2_BLAZE_GCT:
-                return H2BlazeGctGf2eDokvs.getLm(n) + H2BlazeGctGf2eDokvs.getRm(n);
+                return H2BlazeGctDokvsUtils.getLm(n) + H2BlazeGctDokvsUtils.getRm(n);
             case H3_SINGLETON_GCT:
-                return H3SingletonGctGfe2Dokvs.getLm(n) + H3SingletonGctGfe2Dokvs.getRm(n);
+                return H3NaiveGctDokvsUtils.getLm(n) + H3NaiveGctDokvsUtils.getRm(n);
             case H3_BLAZE_GCT:
-                return H3BlazeGctGf2eDokvs.getLm(n) + H3BlazeGctGf2eDokvs.getRm(n);
+                return H3BlazeGctDovsUtils.getLm(n) + H3BlazeGctDovsUtils.getRm(n);
             case H3_NAIVE_CLUSTER_BLAZE_GCT:
             case H3_SPARSE_CLUSTER_BLAZE_GCT:
                 return AbstractH3ClusterBlazeGctGf2eDokvs.getM(n);

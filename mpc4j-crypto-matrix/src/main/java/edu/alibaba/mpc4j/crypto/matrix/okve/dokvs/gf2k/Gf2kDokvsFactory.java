@@ -35,14 +35,6 @@ public class Gf2kDokvsFactory {
          */
         H2_BINARY_BLAZE_GCT,
         /**
-         * field blazing fast garbled cuckoo table with 2 hash functions.
-         */
-        H2_FIELD_BLAZE_GCT,
-        /**
-         * field cluster blazing fast garbled cuckoo table with 2 hash functions.
-         */
-        H2_CLUSTER_FIELD_BLAZE_GCT,
-        /**
          * binary singleton garbled cuckoo table with 3 hash functions.
          */
         H3_BINARY_SINGLETON_GCT,
@@ -54,6 +46,10 @@ public class Gf2kDokvsFactory {
          * field blazing fast using garbled cuckoo table with 3 hash function.
          */
         H3_FIELD_BLAZE_GCT,
+        /**
+         * binary cluster blazing fast garbled cuckoo table with 3 hash functions.
+         */
+        H3_CLUSTER_BINARY_BLAZE_GCT,
         /**
          * field cluster blazing fast garbled cuckoo table with 3 hash functions.
          */
@@ -68,6 +64,7 @@ public class Gf2kDokvsFactory {
         .put(Gf2kDokvsType.H2_BINARY_BLAZE_GCT, Gf2eDokvsType.H2_BLAZE_GCT)
         .put(Gf2kDokvsType.H3_BINARY_SINGLETON_GCT, Gf2eDokvsType.H3_SINGLETON_GCT)
         .put(Gf2kDokvsType.H3_BINARY_BLAZE_GCT, Gf2eDokvsType.H3_BLAZE_GCT)
+        .put(Gf2kDokvsType.H3_CLUSTER_BINARY_BLAZE_GCT, Gf2eDokvsType.H3_NAIVE_CLUSTER_BLAZE_GCT)
         .build();
 
     /**
@@ -86,13 +83,12 @@ public class Gf2kDokvsFactory {
             case H2_BINARY_BLAZE_GCT:
             case H3_BINARY_SINGLETON_GCT:
             case H3_BINARY_BLAZE_GCT:
+            case H3_CLUSTER_BINARY_BLAZE_GCT:
                 return new BinaryGf2kDokvs<>(envType, type, GF2K_GF2E_TYPE_MAP.get(type), n, keys);
-            case H2_FIELD_BLAZE_GCT:
-                return new H2FieldBlazeGctGf2kDokvs<>(envType, n, keys);
-            case H2_CLUSTER_FIELD_BLAZE_GCT:
-                return new H2ClusterFieldBlazeGctGf2kDokvs<>(envType, n, keys);
             case H3_FIELD_BLAZE_GCT:
                 return new H3FieldBlazeGctGf2kDokvs<>(envType, n, keys);
+            case H3_CLUSTER_FIELD_BLAZE_GCT:
+                return new H3ClusterFieldBlazeGctGf2kDokvs<>(envType, n, keys);
             default:
                 throw new IllegalArgumentException("Invalid " + Gf2kDokvsType.class.getSimpleName() + ": " + type.name());
         }
@@ -110,13 +106,12 @@ public class Gf2kDokvsFactory {
             case H2_BINARY_BLAZE_GCT:
             case H3_BINARY_SINGLETON_GCT:
             case H3_BINARY_BLAZE_GCT:
+            case H3_CLUSTER_BINARY_BLAZE_GCT:
                 return Gf2eDokvsFactory.getHashKeyNum(GF2K_GF2E_TYPE_MAP.get(type));
-            case H2_FIELD_BLAZE_GCT:
-                return H2FieldBlazeGctGf2kDokvs.HASH_KEY_NUM;
-            case H2_CLUSTER_FIELD_BLAZE_GCT:
-                return H2ClusterFieldBlazeGctGf2kDokvs.HASH_KEY_NUM;
             case H3_FIELD_BLAZE_GCT:
                 return H3FieldBlazeGctGf2kDokvs.HASH_KEY_NUM;
+            case H3_CLUSTER_FIELD_BLAZE_GCT:
+                return H3ClusterFieldBlazeGctGf2kDokvs.HASH_KEY_NUM;
             default:
                 throw new IllegalArgumentException("Invalid " + Gf2kDokvsType.class.getSimpleName() + ": " + type.name());
         }
@@ -137,13 +132,12 @@ public class Gf2kDokvsFactory {
             case H2_BINARY_BLAZE_GCT:
             case H3_BINARY_SINGLETON_GCT:
             case H3_BINARY_BLAZE_GCT:
+            case H3_CLUSTER_BINARY_BLAZE_GCT:
                 return Gf2eDokvsFactory.getM(envType, GF2K_GF2E_TYPE_MAP.get(type), n);
-            case H2_FIELD_BLAZE_GCT:
-                return H2FieldBlazeGctGf2kDokvs.getLm(n) + H2FieldBlazeGctGf2kDokvs.getRm(n);
-            case H2_CLUSTER_FIELD_BLAZE_GCT:
-                return H2ClusterFieldBlazeGctGf2kDokvs.getM(n);
             case H3_FIELD_BLAZE_GCT:
                 return H3FieldBlazeGctGf2kDokvs.getLm(n) + H3FieldBlazeGctGf2kDokvs.getRm(n);
+            case H3_CLUSTER_FIELD_BLAZE_GCT:
+                return H3ClusterFieldBlazeGctGf2kDokvs.getM(n);
             default:
                 throw new IllegalArgumentException("Invalid " + Gf2kDokvsType.class.getSimpleName() + ": " + type.name());
         }

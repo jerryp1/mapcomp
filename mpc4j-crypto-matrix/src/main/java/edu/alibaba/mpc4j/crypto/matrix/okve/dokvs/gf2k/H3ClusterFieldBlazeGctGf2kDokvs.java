@@ -29,11 +29,11 @@ import java.util.stream.Stream;
  * @author Weiran Liu
  * @date 2023/7/11
  */
-class H2ClusterFieldBlazeGctGf2kDokvs<T> implements Gf2kDokvs<T> {
+class H3ClusterFieldBlazeGctGf2kDokvs<T> implements Gf2kDokvs<T> {
     /**
      * number of hash keys, one more key for bin
      */
-    static final int HASH_KEY_NUM = H2FieldBlazeGctGf2kDokvs.HASH_KEY_NUM + 1;
+    static final int HASH_KEY_NUM = H3FieldBlazeGctGf2kDokvs.HASH_KEY_NUM + 1;
     /**
      * expected bin size, i.e., m^* = 2^14
      */
@@ -48,8 +48,8 @@ class H2ClusterFieldBlazeGctGf2kDokvs<T> implements Gf2kDokvs<T> {
     static int getM(int n) {
         int binNum = CommonUtils.getUnitNum(n, EXPECT_BIN_SIZE);
         int binN = MaxBinSizeUtils.approxMaxBinSize(n, binNum);
-        int binLm = H2FieldBlazeGctGf2kDokvs.getLm(binN);
-        int binRm = H2FieldBlazeGctGf2kDokvs.getRm(binN);
+        int binLm = H3FieldBlazeGctGf2kDokvs.getLm(binN);
+        int binRm = H3FieldBlazeGctGf2kDokvs.getRm(binN);
         int binM = binLm + binRm;
         return binNum * binM;
     }
@@ -97,13 +97,13 @@ class H2ClusterFieldBlazeGctGf2kDokvs<T> implements Gf2kDokvs<T> {
     /**
      * bins
      */
-    private final ArrayList<H2FieldBlazeGctGf2kDokvs<T>> bins;
+    private final ArrayList<H3FieldBlazeGctGf2kDokvs<T>> bins;
 
-    H2ClusterFieldBlazeGctGf2kDokvs(EnvType envType, int n, byte[][] keys) {
+    H3ClusterFieldBlazeGctGf2kDokvs(EnvType envType, int n, byte[][] keys) {
         this(envType, n, keys, new SecureRandom());
     }
 
-    H2ClusterFieldBlazeGctGf2kDokvs(EnvType envType, int n, byte[][] keys, SecureRandom secureRandom) {
+    H3ClusterFieldBlazeGctGf2kDokvs(EnvType envType, int n, byte[][] keys, SecureRandom secureRandom) {
         MathPreconditions.checkPositive("n", n);
         gf2k = Gf2kFactory.createInstance(envType);
         this.n = n;
@@ -111,8 +111,8 @@ class H2ClusterFieldBlazeGctGf2kDokvs<T> implements Gf2kDokvs<T> {
         // calculate bin_num and bin_size
         binNum = CommonUtils.getUnitNum(n, EXPECT_BIN_SIZE);
         binN = MaxBinSizeUtils.approxMaxBinSize(n, binNum);
-        binLm = H2FieldBlazeGctGf2kDokvs.getLm(binN);
-        binRm = H2FieldBlazeGctGf2kDokvs.getRm(binN);
+        binLm = H3FieldBlazeGctGf2kDokvs.getLm(binN);
+        binRm = H3FieldBlazeGctGf2kDokvs.getRm(binN);
         binM = binLm + binRm;
         m = binNum * binM;
         // clone keys
@@ -131,14 +131,14 @@ class H2ClusterFieldBlazeGctGf2kDokvs<T> implements Gf2kDokvs<T> {
                 for (int keyIndex = 0; keyIndex < HASH_KEY_NUM - 1; keyIndex++) {
                     cloneKeys[keyIndex] = kdf.deriveKey(cloneKeys[keyIndex]);
                 }
-                return new H2FieldBlazeGctGf2kDokvs<T>(envType, binN, cloneKeys, secureRandom);
+                return new H3FieldBlazeGctGf2kDokvs<T>(envType, binN, cloneKeys, secureRandom);
             })
             .collect(Collectors.toCollection(ArrayList::new));
     }
 
     @Override
     public Gf2kDokvsType getType() {
-        return Gf2kDokvsType.H2_CLUSTER_FIELD_BLAZE_GCT;
+        return Gf2kDokvsType.H3_CLUSTER_FIELD_BLAZE_GCT;
     }
 
     @Override
