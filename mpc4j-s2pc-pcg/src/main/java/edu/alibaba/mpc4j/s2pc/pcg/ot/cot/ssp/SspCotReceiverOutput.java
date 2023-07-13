@@ -1,8 +1,9 @@
-package edu.alibaba.mpc4j.s2pc.pcg.ot.cot.bsp;
+package edu.alibaba.mpc4j.s2pc.pcg.ot.cot.ssp;
 
 import java.util.Arrays;
 
 import edu.alibaba.mpc4j.common.tool.CommonConstants;
+import edu.alibaba.mpc4j.common.tool.MathPreconditions;
 import edu.alibaba.mpc4j.s2pc.pcg.PcgPartyOutput;
 
 /**
@@ -17,50 +18,51 @@ public class SspCotReceiverOutput implements PcgPartyOutput {
      */
     private int alpha;
     /**
-     * Rb数组
+     * Rb array
      */
     private byte[][] rbArray;
 
     /**
-     * 创建接收方输出。
+     * Creates a receiver output.
      *
-     * @param alpha   α。
-     * @param rbArray Rb数组。
-     * @return 接收方输出。
+     * @param alpha   α.
+     * @param rbArray Rb array.
+     * @return a receiver output.
      */
     public static SspCotReceiverOutput create(int alpha, byte[][] rbArray) {
         SspCotReceiverOutput receiverOutput = new SspCotReceiverOutput();
-        assert alpha >= 0 && alpha < rbArray.length : "α must be in range [0, " + rbArray.length + "): " + alpha;
+        MathPreconditions.checkPositive("RbArray.length", rbArray.length);
+        MathPreconditions.checkNonNegativeInRange("α", alpha, rbArray.length);
         receiverOutput.alpha = alpha;
         receiverOutput.rbArray = Arrays.stream(rbArray)
-            .peek(rb -> {
-                assert rb.length == CommonConstants.BLOCK_BYTE_LENGTH;
-            })
+            .peek(rb ->
+                MathPreconditions.checkEqual("Rb.length", "λ in bytes", rb.length, CommonConstants.BLOCK_BYTE_LENGTH)
+            )
             .toArray(byte[][]::new);
         return receiverOutput;
     }
 
     /**
-     * 私有构造函数。
+     * private constructor.
      */
     private SspCotReceiverOutput() {
         // empty
     }
 
     /**
-     * 返回单点索引值。
+     * Gets α. Note that b[α] = 1 and b[i] = 0 for i ≠ α.
      *
-     * @return 单点索引值。
+     * @return α.
      */
     public int getAlpha() {
         return alpha;
     }
 
     /**
-     * 返回Rb。
+     * Gets Rb.
      *
-     * @param index 索引值。
-     * @return Rb。
+     * @param index index.
+     * @return Rb.
      */
     public byte[] getRb(int index) {
         return rbArray[index];
