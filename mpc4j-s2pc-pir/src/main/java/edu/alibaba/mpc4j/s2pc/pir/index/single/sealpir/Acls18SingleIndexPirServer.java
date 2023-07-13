@@ -63,6 +63,7 @@ public class Acls18SingleIndexPirServer extends AbstractSingleIndexPirServer {
 
     @Override
     public void init(SingleIndexPirParams indexPirParams, NaiveDatabase database) throws MpcAbortException {
+        setInitInput(database);
         assert (indexPirParams instanceof Acls18SingleIndexPirParams);
         params = (Acls18SingleIndexPirParams) indexPirParams;
         logPhaseInfo(PtoState.INIT_BEGIN);
@@ -87,7 +88,8 @@ public class Acls18SingleIndexPirServer extends AbstractSingleIndexPirServer {
 
     @Override
     public void init(NaiveDatabase database) throws MpcAbortException {
-        params = Acls18SingleIndexPirParams.DEFAULT_PARAMS;
+        setInitInput(database);
+        setDefaultParams();
         logPhaseInfo(PtoState.INIT_BEGIN);
 
         // receive Galois keys
@@ -121,7 +123,7 @@ public class Acls18SingleIndexPirServer extends AbstractSingleIndexPirServer {
         List<byte[]> clientQueryPayload = new ArrayList<>(rpc.receive(clientQueryHeader).getPayload());
 
         stopWatch.start();
-        List<byte[]> serverResponsePayload = generateResponse(clientQueryPayload);
+        List<byte[]> serverResponsePayload = generateResponse(clientQueryPayload, encodedDatabase);
         DataPacketHeader serverResponseHeader = new DataPacketHeader(
             encodeTaskId, getPtoDesc().getPtoId(), PtoStep.SERVER_SEND_RESPONSE.ordinal(), extraInfo,
             rpc.ownParty().getPartyId(), otherParty().getPartyId()
@@ -130,16 +132,13 @@ public class Acls18SingleIndexPirServer extends AbstractSingleIndexPirServer {
         stopWatch.stop();
         long genResponseTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
         stopWatch.reset();
-        logStepInfo(PtoState.PTO_STEP, 1, 1, genResponseTime, "Client generates reply");
+        logStepInfo(PtoState.PTO_STEP, 1, 1, genResponseTime, "Server generates reply");
 
         logPhaseInfo(PtoState.PTO_END);
     }
 
     @Override
     public void setPublicKey(List<byte[]> clientPublicKeysPayload) throws MpcAbortException {
-        if (params == null) {
-            params = Acls18SingleIndexPirParams.DEFAULT_PARAMS;
-        }
         MpcAbortPreconditions.checkArgument(clientPublicKeysPayload.size() == 1);
         galoisKeys = clientPublicKeysPayload.remove(0);
     }
@@ -147,11 +146,14 @@ public class Acls18SingleIndexPirServer extends AbstractSingleIndexPirServer {
     @Override
     public List<byte[][]> serverSetup(NaiveDatabase database) {
         int maxPartitionBitLength = params.getPolyModulusDegree() * params.getPlainModulusBitLength();
-        setInitInput(database, database.getL(), maxPartitionBitLength);
+        partitionBitLength = Math.min(maxPartitionBitLength, database.getL());
+        partitionByteLength = CommonUtils.getByteLength(partitionBitLength);
+        databases = database.partitionZl(partitionBitLength);
+        partitionSize = databases.length;
         elementSizeOfPlaintext = PirUtils.elementSizeOfPlaintext(
             partitionByteLength, params.getPolyModulusDegree(), params.getPlainModulusBitLength()
         );
-        plaintextSize = CommonUtils.getUnitNum(num, elementSizeOfPlaintext);
+        plaintextSize = CommonUtils.getUnitNum(database.rows(), elementSizeOfPlaintext);
         dimensionSize = PirUtils.computeDimensionLength(plaintextSize, params.getDimension());
         // encode database
         IntStream intStream = IntStream.range(0, partitionSize);
@@ -172,9 +174,8 @@ public class Acls18SingleIndexPirServer extends AbstractSingleIndexPirServer {
     }
 
     @Override
-    public List<byte[]> generateResponse(List<byte[]> clientQuery) throws MpcAbortException {
-        MpcAbortPreconditions.checkArgument(clientQuery.size() == getQuerySize());
-        return generateResponse(clientQuery, encodedDatabase);
+    public void setDefaultParams() {
+        params = Acls18SingleIndexPirParams.DEFAULT_PARAMS;
     }
 
     @Override
@@ -189,8 +190,8 @@ public class Acls18SingleIndexPirServer extends AbstractSingleIndexPirServer {
      * @return BFV plaintexts in NTT form.
      */
     private byte[][] preprocessDatabase(int partitionIndex) {
-        byte[] combinedBytes = new byte[num * partitionByteLength];
-        IntStream.range(0, num).forEach(rowIndex -> {
+        byte[] combinedBytes = new byte[databases[partitionIndex].rows() * partitionByteLength];
+        IntStream.range(0, databases[partitionIndex].rows()).forEach(rowIndex -> {
             byte[] element = databases[partitionIndex].getBytesData(rowIndex);
             System.arraycopy(element, 0, combinedBytes, rowIndex * partitionByteLength, partitionByteLength);
         });
@@ -199,7 +200,7 @@ public class Acls18SingleIndexPirServer extends AbstractSingleIndexPirServer {
         assert (plaintextSize <= prod);
         List<long[]> coeffsList = new ArrayList<>();
         int byteSizeOfPlaintext = elementSizeOfPlaintext * partitionByteLength;
-        int totalByteSize = num * partitionByteLength;
+        int totalByteSize = databases[partitionIndex].rows() * partitionByteLength;
         int usedCoeffSize = elementSizeOfPlaintext *
             CommonUtils.getUnitNum(Byte.SIZE * partitionByteLength, params.getPlainModulusBitLength());
         assert (usedCoeffSize <= params.getPolyModulusDegree())

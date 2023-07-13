@@ -59,6 +59,7 @@ public class Mr23SingleIndexPirServer extends AbstractSingleIndexPirServer {
 
     @Override
     public void init(SingleIndexPirParams indexPirParams, NaiveDatabase database) throws MpcAbortException {
+        setInitInput(database);
         assert (indexPirParams instanceof Mr23SingleIndexPirParams);
         params = (Mr23SingleIndexPirParams) indexPirParams;
         logPhaseInfo(PtoState.INIT_BEGIN);
@@ -83,7 +84,8 @@ public class Mr23SingleIndexPirServer extends AbstractSingleIndexPirServer {
 
     @Override
     public void init(NaiveDatabase database) throws MpcAbortException {
-        params = Mr23SingleIndexPirParams.DEFAULT_PARAMS;
+        setInitInput(database);
+        setDefaultParams();
         logPhaseInfo(PtoState.INIT_BEGIN);
 
         // receive public keys
@@ -116,7 +118,7 @@ public class Mr23SingleIndexPirServer extends AbstractSingleIndexPirServer {
         List<byte[]> clientQueryPayload = rpc.receive(clientQueryHeader).getPayload();
 
         stopWatch.start();
-        List<byte[]> serverResponsePayload = generateResponse(clientQueryPayload);
+        List<byte[]> serverResponsePayload = generateResponse(clientQueryPayload, encodedDatabase);
         DataPacketHeader serverResponseHeader = new DataPacketHeader(
             encodeTaskId, getPtoDesc().getPtoId(), PtoStep.SERVER_SEND_RESPONSE.ordinal(), extraInfo,
             rpc.ownParty().getPartyId(), otherParty().getPartyId()
@@ -145,12 +147,6 @@ public class Mr23SingleIndexPirServer extends AbstractSingleIndexPirServer {
                 params.getFirstTwoDimensionSize())
             )
             .collect(toCollection(ArrayList::new));
-    }
-
-    @Override
-    public List<byte[]> generateResponse(List<byte[]> clientQuery) throws MpcAbortException {
-        MpcAbortPreconditions.checkArgument(clientQuery.size() == getQuerySize());
-        return generateResponse(clientQuery, encodedDatabase);
     }
 
     @Override
@@ -191,7 +187,10 @@ public class Mr23SingleIndexPirServer extends AbstractSingleIndexPirServer {
     @Override
     public List<byte[][]> serverSetup(NaiveDatabase database) {
         int maxPartitionBitLength = params.getPlainModulusBitLength();
-        setInitInput(database, database.getL(), maxPartitionBitLength);
+        partitionBitLength = Math.min(maxPartitionBitLength, database.getL());
+        partitionByteLength = CommonUtils.getByteLength(partitionBitLength);
+        databases = database.partitionZl(partitionBitLength);
+        partitionSize = databases.length;
         assert params.getDimension() == 3;
         int product =
             params.getFirstTwoDimensionSize() * params.getFirstTwoDimensionSize() * params.getThirdDimensionSize();
@@ -204,12 +203,14 @@ public class Mr23SingleIndexPirServer extends AbstractSingleIndexPirServer {
 
     @Override
     public void setPublicKey(List<byte[]> clientPublicKeysPayload) throws MpcAbortException {
-        if (params == null) {
-            params = Mr23SingleIndexPirParams.DEFAULT_PARAMS;
-        }
         MpcAbortPreconditions.checkArgument(clientPublicKeysPayload.size() == 3);
         publicKey = clientPublicKeysPayload.remove(0);
         relinKeys = clientPublicKeysPayload.remove(0);
         galoisKeys = clientPublicKeysPayload.remove(0);
+    }
+
+    @Override
+    public void setDefaultParams() {
+        params = Mr23SingleIndexPirParams.DEFAULT_PARAMS;
     }
 }

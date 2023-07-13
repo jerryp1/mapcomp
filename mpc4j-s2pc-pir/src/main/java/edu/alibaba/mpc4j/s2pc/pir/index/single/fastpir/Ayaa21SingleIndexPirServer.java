@@ -55,6 +55,7 @@ public class Ayaa21SingleIndexPirServer extends AbstractSingleIndexPirServer {
 
     @Override
     public void init(SingleIndexPirParams indexPirParams, NaiveDatabase database) throws MpcAbortException {
+        setInitInput(database);
         assert (indexPirParams instanceof Ayaa21SingleIndexPirParams);
         params = (Ayaa21SingleIndexPirParams) indexPirParams;
         logPhaseInfo(PtoState.INIT_BEGIN);
@@ -79,7 +80,8 @@ public class Ayaa21SingleIndexPirServer extends AbstractSingleIndexPirServer {
 
     @Override
     public void init(NaiveDatabase database) throws MpcAbortException {
-        params = Ayaa21SingleIndexPirParams.DEFAULT_PARAMS;
+        setInitInput(database);
+        setDefaultParams();
         logPhaseInfo(PtoState.INIT_BEGIN);
 
         // receive Galois keys
@@ -112,7 +114,7 @@ public class Ayaa21SingleIndexPirServer extends AbstractSingleIndexPirServer {
         List<byte[]> clientQueryPayload = rpc.receive(clientQueryHeader).getPayload();
 
         stopWatch.start();
-        List<byte[]> serverResponsePayload = generateResponse(clientQueryPayload);
+        List<byte[]> serverResponsePayload = generateResponse(clientQueryPayload, encodedDatabase);
         DataPacketHeader serverResponseHeader = new DataPacketHeader(
             encodeTaskId, getPtoDesc().getPtoId(), PtoStep.SERVER_SEND_RESPONSE.ordinal(), extraInfo,
             rpc.ownParty().getPartyId(), otherParty().getPartyId()
@@ -128,9 +130,6 @@ public class Ayaa21SingleIndexPirServer extends AbstractSingleIndexPirServer {
 
     @Override
     public void setPublicKey(List<byte[]> clientPublicKeysPayload) throws MpcAbortException {
-        if (params == null) {
-            params = Ayaa21SingleIndexPirParams.DEFAULT_PARAMS;
-        }
         MpcAbortPreconditions.checkArgument(clientPublicKeysPayload.size() == 1);
         galoisKeys = clientPublicKeysPayload.remove(0);
     }
@@ -142,8 +141,11 @@ public class Ayaa21SingleIndexPirServer extends AbstractSingleIndexPirServer {
             byteLength++;
         }
         int maxPartitionBitLength = params.getPolyModulusDegree() * params.getPlainModulusBitLength();
-        setInitInput(database, byteLength * Byte.SIZE, maxPartitionBitLength);
-        querySize = CommonUtils.getUnitNum(num, params.getPolyModulusDegree() / 2);
+        partitionBitLength = Math.min(maxPartitionBitLength, byteLength * Byte.SIZE);
+        partitionByteLength = CommonUtils.getByteLength(partitionBitLength);
+        databases = database.partitionZl(partitionBitLength);
+        partitionSize = databases.length;
+        querySize = CommonUtils.getUnitNum(database.rows(), params.getPolyModulusDegree() / 2);
         elementColumnLength = CommonUtils.getUnitNum(
             (partitionByteLength / 2) * Byte.SIZE, params.getPlainModulusBitLength()
         );
@@ -162,7 +164,7 @@ public class Ayaa21SingleIndexPirServer extends AbstractSingleIndexPirServer {
         int coeffCount = params.getPolyModulusDegree();
         long[][] encodedDatabase = new long[querySize * elementColumnLength][coeffCount];
         int rowSize = params.getPolyModulusDegree() / 2;
-        for (int i = 0; i < num; i++) {
+        for (int i = 0; i < databases[partitionIndex].rows(); i++) {
             int rowIndex = i / rowSize;
             int colIndex = i % rowSize;
             byte[] element = databases[partitionIndex].getBytesData(i);
@@ -201,9 +203,8 @@ public class Ayaa21SingleIndexPirServer extends AbstractSingleIndexPirServer {
     }
 
     @Override
-    public List<byte[]> generateResponse(List<byte[]> clientQueryPayload) throws MpcAbortException {
-        MpcAbortPreconditions.checkArgument(clientQueryPayload.size() == getQuerySize());
-        return generateResponse(clientQueryPayload, encodedDatabase);
+    public void setDefaultParams() {
+        params = Ayaa21SingleIndexPirParams.DEFAULT_PARAMS;
     }
 
     @Override

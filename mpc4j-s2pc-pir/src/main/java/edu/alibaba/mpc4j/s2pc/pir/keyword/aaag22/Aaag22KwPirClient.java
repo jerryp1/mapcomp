@@ -87,6 +87,7 @@ public class Aaag22KwPirClient extends AbstractKwPirClient {
     @Override
     public void init(int maxRetrievalSize, int serverElementSize, int labelByteLength) throws MpcAbortException {
         params = Aaag22KwPirParams.DEFAULT_PARAMS;
+        assert maxRetrievalSize <= params.maxRetrievalSize();
         setInitInput(params.maxRetrievalSize(), serverElementSize, labelByteLength);
         logPhaseInfo(PtoState.INIT_BEGIN);
 

@@ -68,6 +68,7 @@ public class Alpr21SingleIndexPirServer extends AbstractSingleIndexPirServer {
 
     @Override
     public void init(SingleIndexPirParams indexPirParams, NaiveDatabase database) throws MpcAbortException {
+        setInitInput(database);
         assert (indexPirParams instanceof Alpr21SingleIndexPirParams);
         params = (Alpr21SingleIndexPirParams) indexPirParams;
         logPhaseInfo(PtoState.INIT_BEGIN);
@@ -80,7 +81,7 @@ public class Alpr21SingleIndexPirServer extends AbstractSingleIndexPirServer {
         List<byte[]> publicKeyPayload = rpc.receive(clientPublicKeysHeader).getPayload();
 
         stopWatch.start();
-        handleClientPublicKeysPayload(publicKeyPayload);
+        setPublicKey(publicKeyPayload);
         encodedDatabase = serverSetup(database);
         stopWatch.stop();
         long initTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
@@ -92,7 +93,8 @@ public class Alpr21SingleIndexPirServer extends AbstractSingleIndexPirServer {
 
     @Override
     public void init(NaiveDatabase database) throws MpcAbortException {
-        params = Alpr21SingleIndexPirParams.DEFAULT_PARAMS;
+        setInitInput(database);
+        setDefaultParams();
         logPhaseInfo(PtoState.INIT_BEGIN);
 
         // receive Galois keys
@@ -103,7 +105,7 @@ public class Alpr21SingleIndexPirServer extends AbstractSingleIndexPirServer {
         List<byte[]> publicKeyPayload = rpc.receive(clientPublicKeysHeader).getPayload();
 
         stopWatch.start();
-        handleClientPublicKeysPayload(publicKeyPayload);
+        setPublicKey(publicKeyPayload);
         encodedDatabase = serverSetup(database);
         stopWatch.stop();
         long initTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
@@ -126,7 +128,7 @@ public class Alpr21SingleIndexPirServer extends AbstractSingleIndexPirServer {
 
         // receive query
         stopWatch.start();
-        List<byte[]> serverResponsePayload = generateResponse(clientQueryPayload);
+        List<byte[]> serverResponsePayload = generateResponse(clientQueryPayload, encodedDatabase);
         DataPacketHeader serverResponseHeader = new DataPacketHeader(
             encodeTaskId, getPtoDesc().getPtoId(), PtoStep.SERVER_SEND_RESPONSE.ordinal(), extraInfo,
             rpc.ownParty().getPartyId(), otherParty().getPartyId()
@@ -142,21 +144,6 @@ public class Alpr21SingleIndexPirServer extends AbstractSingleIndexPirServer {
 
     @Override
     public void setPublicKey(List<byte[]> clientPublicKeysPayload) throws MpcAbortException {
-        if (params == null) {
-            params = Alpr21SingleIndexPirParams.DEFAULT_PARAMS;
-        }
-        MpcAbortPreconditions.checkArgument(clientPublicKeysPayload.size() == 2);
-        this.galoisKeys = clientPublicKeysPayload.remove(0);
-        this.relinKeys = clientPublicKeysPayload.remove(0);
-    }
-
-    /**
-     * server handle client public keys.
-     *
-     * @param clientPublicKeysPayload public keys.
-     * @throws MpcAbortException the protocol failure aborts.
-     */
-    public void handleClientPublicKeysPayload(List<byte[]> clientPublicKeysPayload) throws MpcAbortException {
         MpcAbortPreconditions.checkArgument(clientPublicKeysPayload.size() == 2);
         this.galoisKeys = clientPublicKeysPayload.remove(0);
         this.relinKeys = clientPublicKeysPayload.remove(0);
@@ -165,11 +152,14 @@ public class Alpr21SingleIndexPirServer extends AbstractSingleIndexPirServer {
     @Override
     public List<byte[][]> serverSetup(NaiveDatabase database) {
         int maxPartitionBitLength = params.getPolyModulusDegree() * params.getPlainModulusBitLength();
-        setInitInput(database, database.getL(), maxPartitionBitLength);
+        partitionBitLength = Math.min(maxPartitionBitLength, database.getL());
+        partitionByteLength = CommonUtils.getByteLength(partitionBitLength);
+        databases = database.partitionZl(partitionBitLength);
+        partitionSize = databases.length;
         elementSizeOfPlaintext = PirUtils.elementSizeOfPlaintext(
             partitionByteLength, params.getPolyModulusDegree(), params.getPlainModulusBitLength()
         );
-        plaintextSize = (int) Math.ceil((double) num / this.elementSizeOfPlaintext);
+        plaintextSize = CommonUtils.getUnitNum(database.rows(), elementSizeOfPlaintext);
         dimensionSize = PirUtils.computeDimensionLength(plaintextSize, params.getDimension());
         // encode database
         IntStream intStream = IntStream.range(0, partitionSize);
@@ -194,9 +184,8 @@ public class Alpr21SingleIndexPirServer extends AbstractSingleIndexPirServer {
     }
 
     @Override
-    public List<byte[]> generateResponse(List<byte[]> clientQuery) throws MpcAbortException {
-        MpcAbortPreconditions.checkArgument(clientQuery.size() == getQuerySize());
-        return generateResponse(clientQuery, encodedDatabase);
+    public void setDefaultParams() {
+        params = Alpr21SingleIndexPirParams.DEFAULT_PARAMS;
     }
 
     @Override
@@ -213,8 +202,8 @@ public class Alpr21SingleIndexPirServer extends AbstractSingleIndexPirServer {
      * @return BFV plaintexts in NTT form.
      */
     private byte[][] preprocessDatabase(int partitionSingleIndex) {
-        byte[] combinedBytes = new byte[num * partitionByteLength];
-        IntStream.range(0, num).forEach(rowSingleIndex -> {
+        byte[] combinedBytes = new byte[databases[partitionSingleIndex].rows() * partitionByteLength];
+        IntStream.range(0, databases[partitionSingleIndex].rows()).forEach(rowSingleIndex -> {
             byte[] element = databases[partitionSingleIndex].getBytesData(rowSingleIndex);
             System.arraycopy(element, 0, combinedBytes, rowSingleIndex * partitionByteLength, partitionByteLength);
         });
@@ -223,7 +212,7 @@ public class Alpr21SingleIndexPirServer extends AbstractSingleIndexPirServer {
         assert (plaintextSize <= prod);
         List<long[]> coeffsList = new ArrayList<>();
         int byteSizeOfPlaintext = elementSizeOfPlaintext * partitionByteLength;
-        int totalByteSize = num * partitionByteLength;
+        int totalByteSize = databases[partitionSingleIndex].rows() * partitionByteLength;
         int usedCoeffSize = elementSizeOfPlaintext *
             ((int) Math.ceil(Byte.SIZE * partitionByteLength / (double) params.getPlainModulusBitLength()));
         assert (usedCoeffSize <= params.getPolyModulusDegree())

@@ -1,4 +1,4 @@
-package edu.alibaba.mpc4j.s2pc.pir.index.batch.cuckoohash;
+package edu.alibaba.mpc4j.s2pc.pir.index.batch.simplepir;
 
 import edu.alibaba.mpc4j.common.rpc.*;
 import edu.alibaba.mpc4j.common.rpc.utils.DataPacket;
@@ -8,9 +8,9 @@ import edu.alibaba.mpc4j.common.tool.hashbin.primitive.SimpleIntHashBin;
 import edu.alibaba.mpc4j.common.tool.hashbin.primitive.cuckoo.IntCuckooHashBinFactory;
 import edu.alibaba.mpc4j.common.tool.hashbin.primitive.cuckoo.IntCuckooHashBinFactory.IntCuckooHashBinType;
 import edu.alibaba.mpc4j.common.tool.hashbin.primitive.cuckoo.IntNoStashCuckooHashBin;
+import edu.alibaba.mpc4j.crypto.matrix.zp64.Zl64Matrix;
 import edu.alibaba.mpc4j.s2pc.pir.index.batch.AbstractBatchIndexPirClient;
-import edu.alibaba.mpc4j.s2pc.pir.index.single.SingleIndexPirClient;
-import edu.alibaba.mpc4j.s2pc.pir.index.single.SingleIndexPirFactory;
+import edu.alibaba.mpc4j.s2pc.pir.index.single.simplepir.Hhcm23SimpleSingleIndexPirClient;
 import gnu.trove.list.TIntList;
 import gnu.trove.list.array.TIntArrayList;
 
@@ -19,15 +19,15 @@ import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
-import static edu.alibaba.mpc4j.s2pc.pir.index.batch.cuckoohash.CuckooHashBatchIndexPirPtoDesc.PtoStep;
+import static edu.alibaba.mpc4j.s2pc.pir.index.batch.simplepir.CuckooHashBatchSimplePirPtoDesc.PtoStep;
 
 /**
- * cuckoo hash batch Index PIR client.
+ * Batch Simple PIR based on Cuckoo Hash client.
  *
  * @author Liqiang Peng
- * @date 2023/3/7
+ * @date 2023/7/7
  */
-public class CuckooHashBatchIndexPirClient extends AbstractBatchIndexPirClient {
+public class CuckooHashBatchSimplePirClient extends AbstractBatchIndexPirClient {
 
     /**
      * cuckoo hash bin type
@@ -46,17 +46,21 @@ public class CuckooHashBatchIndexPirClient extends AbstractBatchIndexPirClient {
      */
     private int[][] hashBin;
     /**
-     * single index PIR client
+     * simple PIR client
      */
-    private final SingleIndexPirClient indexPirClient;
+    private final Hhcm23SimpleSingleIndexPirClient simplePirClient;
     /**
      * bin num
      */
     private int binNum;
+    /**
+     * hint
+     */
+    private Zl64Matrix[][] hint;
 
-    public CuckooHashBatchIndexPirClient(Rpc clientRpc, Party serverParty, CuckooHashBatchIndexPirConfig config) {
-        super(CuckooHashBatchIndexPirPtoDesc.getInstance(), clientRpc, serverParty, config);
-        indexPirClient = SingleIndexPirFactory.createClient(clientRpc, serverParty, config.getSingleIndexPirConfig());
+    public CuckooHashBatchSimplePirClient(Rpc clientRpc, Party serverParty, CuckooHashBatchSimplePirConfig config) {
+        super(CuckooHashBatchSimplePirPtoDesc.getInstance(), clientRpc, serverParty, config);
+        simplePirClient = new Hhcm23SimpleSingleIndexPirClient(clientRpc, serverParty, config.getSimplePirConfig());
         cuckooHashBinType = config.getCuckooHashBinType();
     }
 
@@ -84,16 +88,30 @@ public class CuckooHashBatchIndexPirClient extends AbstractBatchIndexPirClient {
         stopWatch.reset();
         logStepInfo(PtoState.INIT_STEP, 1, 2, hashTime);
 
+        // receive seed and hint
+        DataPacketHeader seedPayloadHeader = new DataPacketHeader(
+            encodeTaskId, getPtoDesc().getPtoId(), PtoStep.SERVER_SEND_SEED.ordinal(), extraInfo,
+            otherParty().getPartyId(), rpc.ownParty().getPartyId()
+        );
+        List<byte[]> seedPayload = rpc.receive(seedPayloadHeader).getPayload();
+        DataPacketHeader hintPayloadHeader = new DataPacketHeader(
+            encodeTaskId, getPtoDesc().getPtoId(), PtoStep.SERVER_SEND_HINT.ordinal(), extraInfo,
+            otherParty().getPartyId(), rpc.ownParty().getPartyId()
+        );
+        List<byte[]> hintPayload = rpc.receive(hintPayloadHeader).getPayload();
+
         stopWatch.start();
         // client init single index PIR client
-        indexPirClient.setParallel(parallel);
-        indexPirClient.setDefaultParams();
-        List<byte[]> publicKeysPayload = indexPirClient.clientSetup(maxBinSize, elementBitLength);
-        DataPacketHeader clientPublicKeysHeader = new DataPacketHeader(
-            encodeTaskId, getPtoDesc().getPtoId(), PtoStep.CLIENT_SEND_PUBLIC_KEYS.ordinal(), extraInfo,
-            rpc.ownParty().getPartyId(), otherParty().getPartyId()
-        );
-        rpc.send(DataPacket.fromByteArrayList(clientPublicKeysHeader, publicKeysPayload));
+        simplePirClient.setParallel(parallel);
+        simplePirClient.setDefaultParams();
+        simplePirClient.clientBatchSetup(serverElementSize, maxBinSize, elementBitLength);
+        simplePirClient.handledSeedPayload(seedPayload);
+        partitionSize = simplePirClient.partitionSize;
+        MpcAbortPreconditions.checkArgument(hintPayload.size() == binNum * partitionSize);
+        hint = new Zl64Matrix[binNum][partitionSize];
+        for (int i = 0; i < binNum; i++) {
+            hint[i] = simplePirClient.handledHintPayload(hintPayload.subList(i*partitionSize, (i+1)*partitionSize));
+        }
         stopWatch.stop();
         long initIndexPirTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
         stopWatch.reset();
@@ -119,7 +137,7 @@ public class CuckooHashBatchIndexPirClient extends AbstractBatchIndexPirClient {
         IntStream intStream = IntStream.range(0, binNum);
         intStream = parallel ? intStream.parallel() : intStream;
         List<byte[]> clientQueryPayload = intStream
-            .mapToObj(i -> indexPirClient.generateQuery(binIndexList.get(i)))
+            .mapToObj(i -> simplePirClient.generateQuery(binIndexList.get(i)))
             .flatMap(Collection::stream)
             .collect(Collectors.toList());
         DataPacketHeader clientQueryHeader = new DataPacketHeader(
@@ -137,26 +155,31 @@ public class CuckooHashBatchIndexPirClient extends AbstractBatchIndexPirClient {
             otherParty().getPartyId(), rpc.ownParty().getPartyId()
         );
         List<byte[]> responsePayload = rpc.receive(responseHeader).getPayload();
-        MpcAbortPreconditions.checkArgument(responsePayload.size() % binNum == 0);
+        MpcAbortPreconditions.checkArgument(responsePayload.size() == binNum * partitionSize);
 
         stopWatch.start();
-        int binResponseSize = responsePayload.size() / binNum;
         IntStream decodeStream = IntStream.range(0, binNum);
         decodeStream = parallel ? decodeStream.parallel() : decodeStream;
-        List<byte[]> decodedItemList = decodeStream.mapToObj(i -> {
-            try {
+        List<byte[]> result = decodeStream
+            .mapToObj(i -> {
                 if (binIndexList.get(i) != -1) {
-                    return indexPirClient.decodeResponse(
-                        responsePayload.subList(i * binResponseSize, (i + 1) * binResponseSize), binIndexList.get(i), elementBitLength
-                    );
+                    try {
+                        return simplePirClient.decodeResponse(
+                            responsePayload.subList(i * partitionSize, (i + 1) * partitionSize),
+                            binIndexList.get(i),
+                            hint[i],
+                            elementBitLength
+                        );
+                    } catch (MpcAbortException e) {
+                        e.printStackTrace();
+                        return null;
+                    }
                 } else {
                     return new byte[0];
                 }
-            } catch (MpcAbortException e) {
-                e.printStackTrace();
-            }
-            return null;
-        }).collect(Collectors.toList());
+            })
+            .filter(Objects::nonNull)
+            .collect(Collectors.toList());
         stopWatch.stop();
         long decodeResponseTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
         stopWatch.reset();
@@ -169,7 +192,7 @@ public class CuckooHashBatchIndexPirClient extends AbstractBatchIndexPirClient {
             .collect(
                 Collectors.toMap(
                     integer -> binIndexRetrievalIndexMap.get(integer),
-                    decodedItemList::get,
+                    result::get,
                     (a, b) -> b,
                     () -> new HashMap<>(retrievalSize)
                 )

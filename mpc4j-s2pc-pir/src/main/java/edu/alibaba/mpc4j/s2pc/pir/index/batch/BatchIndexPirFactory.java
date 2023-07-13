@@ -6,12 +6,12 @@ import edu.alibaba.mpc4j.common.rpc.pto.PtoFactory;
 import edu.alibaba.mpc4j.s2pc.pir.index.batch.cuckoohash.CuckooHashBatchIndexPirClient;
 import edu.alibaba.mpc4j.s2pc.pir.index.batch.cuckoohash.CuckooHashBatchIndexPirConfig;
 import edu.alibaba.mpc4j.s2pc.pir.index.batch.cuckoohash.CuckooHashBatchIndexPirServer;
-import edu.alibaba.mpc4j.s2pc.pir.index.batch.naive.NaiveBatchIndexPirClient;
-import edu.alibaba.mpc4j.s2pc.pir.index.batch.naive.NaiveBatchIndexPirConfig;
-import edu.alibaba.mpc4j.s2pc.pir.index.batch.naive.NaiveBatchIndexPirServer;
 import edu.alibaba.mpc4j.s2pc.pir.index.batch.psipir.Lpzl24BatchIndexPirConfig;
 import edu.alibaba.mpc4j.s2pc.pir.index.batch.psipir.Lpzl24BatchIndexPirServer;
 import edu.alibaba.mpc4j.s2pc.pir.index.batch.psipir.Lpzl24BatchIndexPirClient;
+import edu.alibaba.mpc4j.s2pc.pir.index.batch.simplepir.CuckooHashBatchSimplePirClient;
+import edu.alibaba.mpc4j.s2pc.pir.index.batch.simplepir.CuckooHashBatchSimplePirConfig;
+import edu.alibaba.mpc4j.s2pc.pir.index.batch.simplepir.CuckooHashBatchSimplePirServer;
 import edu.alibaba.mpc4j.s2pc.pir.index.batch.vectorizedpir.Mr23BatchIndexPirClient;
 import edu.alibaba.mpc4j.s2pc.pir.index.batch.vectorizedpir.Mr23BatchIndexPirConfig;
 import edu.alibaba.mpc4j.s2pc.pir.index.batch.vectorizedpir.Mr23BatchIndexPirServer;
@@ -43,13 +43,37 @@ public class BatchIndexPirFactory implements PtoFactory {
          */
         VECTORIZED_BATCH_PIR,
         /**
-         * native batch PIR
+         * XPIR
          */
-        NAIVE_BATCH_PIR,
+        XPIR,
         /**
-         * cuckoo hash batch PIR
+         * SealPIR
          */
-        CUCKOO_HASH_BATCH_PIR,
+        SEAL_PIR,
+        /**
+         * OnionPIR
+         */
+        ONION_PIR,
+        /**
+         * FastPIR
+         */
+        FAST_PIR,
+        /**
+         * Vectorized PIR
+         */
+        VECTORIZED_PIR,
+        /**
+         * Mul PIR
+         */
+        MUL_PIR,
+        /**
+         * simple PIR
+         */
+        SIMPLE_PIR,
+        /**
+         * Constant Weight PIR
+         */
+        CONSTANT_WEIGHT_PIR,
     }
 
     /**
@@ -66,11 +90,17 @@ public class BatchIndexPirFactory implements PtoFactory {
             case PSI_PIR:
                 return new Lpzl24BatchIndexPirServer(serverRpc, clientParty, (Lpzl24BatchIndexPirConfig) config);
             case VECTORIZED_BATCH_PIR:
+            case VECTORIZED_PIR:
                 return new Mr23BatchIndexPirServer(serverRpc, clientParty, (Mr23BatchIndexPirConfig) config);
-            case CUCKOO_HASH_BATCH_PIR:
+            case XPIR:
+            case SEAL_PIR:
+            case ONION_PIR:
+            case FAST_PIR:
+            case CONSTANT_WEIGHT_PIR:
+            case MUL_PIR:
                 return new CuckooHashBatchIndexPirServer(serverRpc, clientParty, (CuckooHashBatchIndexPirConfig) config);
-            case NAIVE_BATCH_PIR:
-                return new NaiveBatchIndexPirServer(serverRpc, clientParty, (NaiveBatchIndexPirConfig) config);
+            case SIMPLE_PIR:
+                return new CuckooHashBatchSimplePirServer(serverRpc, clientParty, (CuckooHashBatchSimplePirConfig) config);
             default:
                 throw new IllegalArgumentException("Invalid " + BatchIndexPirType.class.getSimpleName() + ": " + type.name());
         }
@@ -90,11 +120,17 @@ public class BatchIndexPirFactory implements PtoFactory {
             case PSI_PIR:
                 return new Lpzl24BatchIndexPirClient(clientRpc, serverParty, (Lpzl24BatchIndexPirConfig) config);
             case VECTORIZED_BATCH_PIR:
+            case VECTORIZED_PIR:
                 return new Mr23BatchIndexPirClient(clientRpc, serverParty, (Mr23BatchIndexPirConfig) config);
-            case CUCKOO_HASH_BATCH_PIR:
+            case XPIR:
+            case SEAL_PIR:
+            case ONION_PIR:
+            case FAST_PIR:
+            case CONSTANT_WEIGHT_PIR:
+            case MUL_PIR:
                 return new CuckooHashBatchIndexPirClient(clientRpc, serverParty, (CuckooHashBatchIndexPirConfig) config);
-            case NAIVE_BATCH_PIR:
-                return new NaiveBatchIndexPirClient(clientRpc, serverParty, (NaiveBatchIndexPirConfig) config);
+            case SIMPLE_PIR:
+                return new CuckooHashBatchSimplePirClient(clientRpc, serverParty, (CuckooHashBatchSimplePirConfig) config);
             default:
                 throw new IllegalArgumentException("Invalid " + BatchIndexPirType.class.getSimpleName() + ": " + type.name());
         }

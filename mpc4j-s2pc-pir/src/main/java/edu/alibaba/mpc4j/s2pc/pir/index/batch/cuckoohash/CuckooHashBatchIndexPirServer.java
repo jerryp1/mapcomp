@@ -3,12 +3,11 @@ package edu.alibaba.mpc4j.s2pc.pir.index.batch.cuckoohash;
 import edu.alibaba.mpc4j.common.rpc.*;
 import edu.alibaba.mpc4j.common.rpc.utils.DataPacket;
 import edu.alibaba.mpc4j.common.rpc.utils.DataPacketHeader;
-import edu.alibaba.mpc4j.common.tool.hashbin.object.HashBinEntry;
-import edu.alibaba.mpc4j.common.tool.hashbin.object.RandomPadHashBin;
+import edu.alibaba.mpc4j.common.tool.hashbin.primitive.IntHashBin;
+import edu.alibaba.mpc4j.common.tool.hashbin.primitive.SimpleIntHashBin;
 import edu.alibaba.mpc4j.common.tool.hashbin.primitive.cuckoo.IntCuckooHashBinFactory;
 import edu.alibaba.mpc4j.common.tool.utils.BytesUtils;
 import edu.alibaba.mpc4j.common.tool.utils.CommonUtils;
-import edu.alibaba.mpc4j.common.tool.utils.IntUtils;
 import edu.alibaba.mpc4j.crypto.matrix.database.NaiveDatabase;
 import edu.alibaba.mpc4j.s2pc.pir.index.batch.AbstractBatchIndexPirServer;
 import edu.alibaba.mpc4j.s2pc.pir.index.single.SingleIndexPirFactory;
@@ -49,7 +48,6 @@ public class CuckooHashBatchIndexPirServer extends AbstractBatchIndexPirServer {
     public CuckooHashBatchIndexPirServer(Rpc serverRpc, Party clientParty, CuckooHashBatchIndexPirConfig config) {
         super(CuckooHashBatchIndexPirPtoDesc.getInstance(), serverRpc, clientParty, config);
         singleIndexPirServer = SingleIndexPirFactory.createServer(serverRpc, clientParty, config.getSingleIndexPirConfig());
-        addSubPtos(singleIndexPirServer);
         cuckooHashBinType = config.getCuckooHashBinType();
     }
 
@@ -83,6 +81,8 @@ public class CuckooHashBatchIndexPirServer extends AbstractBatchIndexPirServer {
 
         stopWatch.start();
         // init single index PIR server
+        singleIndexPirServer.setParallel(parallel);
+        singleIndexPirServer.setDefaultParams();
         singleIndexPirServer.setPublicKey(publicKeyPayload);
         encodedDatabase = IntStream.range(0, binNum)
             .mapToObj(i -> singleIndexPirServer.serverSetup(binDatabase[i]))
@@ -145,28 +145,25 @@ public class CuckooHashBatchIndexPirServer extends AbstractBatchIndexPirServer {
      * @return bin database.
      */
     private NaiveDatabase[] generateSimpleHashBin(NaiveDatabase database, byte[][] hashKeys) {
-        List<Integer> totalIndexList = IntStream.range(0, num)
-            .boxed()
-            .collect(Collectors.toCollection(() -> new ArrayList<>(num)));
-        RandomPadHashBin<Integer> completeHash = new RandomPadHashBin<>(envType, binNum, num, hashKeys);
-        completeHash.insertItems(totalIndexList);
-        int maxBinSize = completeHash.binSize(0);
+        int[] totalIndex = IntStream.range(0, num).toArray();
+        IntHashBin intHashBin = new SimpleIntHashBin(envType, binNum, num, hashKeys);
+        intHashBin.insertItems(totalIndex);
+        int maxBinSize = intHashBin.binSize(0);
         for (int i = 1; i < binNum; i++) {
-            if (completeHash.binSize(i) > maxBinSize) {
-                maxBinSize = completeHash.binSize(i);
+            if (intHashBin.binSize(i) > maxBinSize) {
+                maxBinSize = intHashBin.binSize(i);
             }
         }
         byte[][][] paddingCompleteHashBin = new byte[binNum][maxBinSize][elementByteLength];
         byte[] paddingEntry = BytesUtils.randomByteArray(elementByteLength, elementBitLength, secureRandom);
         for (int i = 0; i < binNum; i++) {
-            List<HashBinEntry<Integer>> binItems = new ArrayList<>(completeHash.getBin(i));
-            for (int j = 0; j < binItems.size(); j++) {
-                paddingCompleteHashBin[i][j] =
-                    database.getBytesData(IntUtils.byteArrayToInt(binItems.get(j).getItemByteArray()));
+            int size = intHashBin.binSize(i);
+            for (int j = 0; j < size; j++) {
+                paddingCompleteHashBin[i][j] = database.getBytesData(intHashBin.getBin(i)[j]);
             }
-            int paddingNum = maxBinSize - binItems.size();
+            int paddingNum = maxBinSize - size;
             for (int j = 0; j < paddingNum; j++) {
-                paddingCompleteHashBin[i][j + binItems.size()] = BytesUtils.clone(paddingEntry);
+                paddingCompleteHashBin[i][j + size] = BytesUtils.clone(paddingEntry);
             }
         }
         return IntStream.range(0, binNum)

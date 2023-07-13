@@ -1,23 +1,23 @@
-package edu.alibaba.mpc4j.s2pc.pir.index.batch.naive;
+package edu.alibaba.mpc4j.s2pc.pir.index.batch.simplepir;
 
 import edu.alibaba.mpc4j.common.rpc.desc.PtoDesc;
 import edu.alibaba.mpc4j.common.rpc.desc.PtoDescManager;
 
 /**
- * Naive Batch Index PIR protocol description.
+ * Batch Simple PIR based on Cuckoo Hash protocol description.
  *
  * @author Liqiang Peng
- * @date 2023/7/5
+ * @date 2023/7/7
  */
-public class NaiveBatchIndexPirPtoDesc implements PtoDesc {
+public class CuckooHashBatchSimplePirPtoDesc implements PtoDesc {
     /**
      * protocol ID
      */
-    private static final int PTO_ID = Math.abs((int) 3795763157005644970L);
+    private static final int PTO_ID = Math.abs((int) 4445246211208037554L);
     /**
      * protocol name
      */
-    private static final String PTO_NAME = "NAIVE_BATCH_PIR";
+    private static final String PTO_NAME = "BATCH_SIMPLE_PIR";
 
     /**
      * protocol step
@@ -39,17 +39,25 @@ public class NaiveBatchIndexPirPtoDesc implements PtoDesc {
          * client send public keys
          */
         CLIENT_SEND_PUBLIC_KEYS,
+        /**
+         * serve send seed
+         */
+        SERVER_SEND_SEED,
+        /**
+         * server send hint
+         */
+        SERVER_SEND_HINT,
     }
 
     /**
      * the singleton mode
      */
-    private static final NaiveBatchIndexPirPtoDesc INSTANCE = new NaiveBatchIndexPirPtoDesc();
+    private static final CuckooHashBatchSimplePirPtoDesc INSTANCE = new CuckooHashBatchSimplePirPtoDesc();
 
     /**
      * private constructor.
      */
-    private NaiveBatchIndexPirPtoDesc() {
+    private CuckooHashBatchSimplePirPtoDesc() {
         // empty
     }
 

@@ -7,10 +7,13 @@ import edu.alibaba.mpc4j.common.tool.hashbin.primitive.cuckoo.IntCuckooHashBinFa
 import edu.alibaba.mpc4j.s2pc.pir.index.batch.BatchIndexPirConfig;
 import edu.alibaba.mpc4j.s2pc.pir.index.batch.BatchIndexPirFactory;
 import edu.alibaba.mpc4j.s2pc.pir.index.single.SingleIndexPirConfig;
+import edu.alibaba.mpc4j.s2pc.pir.index.single.constantweightpir.Mk22SingleIndexPirConfig;
 import edu.alibaba.mpc4j.s2pc.pir.index.single.fastpir.Ayaa21SingleIndexPirConfig;
+import edu.alibaba.mpc4j.s2pc.pir.index.single.mulpir.Alpr21SingleIndexPirConfig;
 import edu.alibaba.mpc4j.s2pc.pir.index.single.onionpir.Mcr21SingleIndexPirConfig;
 import edu.alibaba.mpc4j.s2pc.pir.index.single.sealpir.Acls18SingleIndexPirConfig;
 import edu.alibaba.mpc4j.s2pc.pir.index.single.xpir.Mbfk16SingleIndexPirConfig;
+import edu.alibaba.mpc4j.s2pc.pir.keyword.alpr21.Alpr21KwPirConfig;
 
 /**
  * cuckoo hash batch index PIR config.
@@ -36,6 +39,8 @@ public class CuckooHashBatchIndexPirConfig extends AbstractMultiPartyPtoConfig i
             (singleIndexPirConfig instanceof Ayaa21SingleIndexPirConfig) ||
             (singleIndexPirConfig instanceof Mcr21SingleIndexPirConfig) ||
             (singleIndexPirConfig instanceof Acls18SingleIndexPirConfig) ||
+            (singleIndexPirConfig instanceof Mk22SingleIndexPirConfig) ||
+            (singleIndexPirConfig instanceof Alpr21SingleIndexPirConfig) ||
             (singleIndexPirConfig instanceof Mbfk16SingleIndexPirConfig),
             "Invalid " + SingleIndexPirConfig.class.getSimpleName() + ": "
                 + singleIndexPirConfig.getClass().getSimpleName());
@@ -52,7 +57,24 @@ public class CuckooHashBatchIndexPirConfig extends AbstractMultiPartyPtoConfig i
 
     @Override
     public BatchIndexPirFactory.BatchIndexPirType getPtoType() {
-        return BatchIndexPirFactory.BatchIndexPirType.CUCKOO_HASH_BATCH_PIR;
+        switch (singleIndexPirConfig.getProType()) {
+            case CONSTANT_WEIGHT_PIR:
+                return BatchIndexPirFactory.BatchIndexPirType.CONSTANT_WEIGHT_PIR;
+            case SEAL_PIR:
+                return BatchIndexPirFactory.BatchIndexPirType.SEAL_PIR;
+            case ONION_PIR:
+                return BatchIndexPirFactory.BatchIndexPirType.ONION_PIR;
+            case FAST_PIR:
+                return BatchIndexPirFactory.BatchIndexPirType.FAST_PIR;
+            case MUL_PIR:
+                return BatchIndexPirFactory.BatchIndexPirType.MUL_PIR;
+            case XPIR:
+                return BatchIndexPirFactory.BatchIndexPirType.XPIR;
+            default:
+                throw new IllegalArgumentException("Invalid " +
+                    BatchIndexPirFactory.BatchIndexPirType.class.getSimpleName() + ": " +
+                    singleIndexPirConfig.getProType().name());
+        }
     }
 
     public static class Builder implements org.apache.commons.lang3.builder.Builder<CuckooHashBatchIndexPirConfig> {

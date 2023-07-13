@@ -4,7 +4,7 @@ import edu.alibaba.mpc4j.common.rpc.desc.SecurityModel;
 import edu.alibaba.mpc4j.common.rpc.pto.AbstractMultiPartyPtoConfig;
 import edu.alibaba.mpc4j.common.tool.hashbin.object.cuckoo.CuckooHashBinFactory;
 import edu.alibaba.mpc4j.s2pc.pir.index.batch.BatchIndexPirConfig;
-import edu.alibaba.mpc4j.s2pc.pir.index.batch.naive.NaiveBatchIndexPirConfig;
+import edu.alibaba.mpc4j.s2pc.pir.index.batch.simplepir.CuckooHashBatchSimplePirConfig;
 import edu.alibaba.mpc4j.s2pc.pir.keyword.KwPirConfig;
 import edu.alibaba.mpc4j.s2pc.pir.keyword.KwPirFactory;
 
@@ -54,7 +54,7 @@ public class Alpr21KwPirConfig extends AbstractMultiPartyPtoConfig implements Kw
         private CuckooHashBinFactory.CuckooHashBinType cuckooHashBinType;
 
         public Builder() {
-            indexPirConfig = new NaiveBatchIndexPirConfig.Builder().build();
+            indexPirConfig = new CuckooHashBatchSimplePirConfig.Builder().build();
             cuckooHashBinType = CuckooHashBinFactory.CuckooHashBinType.NO_STASH_NAIVE;
         }
 

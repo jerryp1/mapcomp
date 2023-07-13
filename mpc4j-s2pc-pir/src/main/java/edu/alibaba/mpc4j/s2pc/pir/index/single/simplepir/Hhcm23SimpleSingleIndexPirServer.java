@@ -35,7 +35,7 @@ public class Hhcm23SimpleSingleIndexPirServer extends AbstractSingleIndexPirServ
     /**
      * Simple PIR params
      */
-    private Hhcm23SimpleSingleIndexPirParams params;
+    public Hhcm23SimpleSingleIndexPirParams params;
     /**
      * hint
      */
@@ -59,6 +59,7 @@ public class Hhcm23SimpleSingleIndexPirServer extends AbstractSingleIndexPirServ
 
     @Override
     public void init(SingleIndexPirParams indexPirParams, NaiveDatabase database) throws MpcAbortException {
+        setInitInput(database);
         assert indexPirParams instanceof Hhcm23SimpleSingleIndexPirParams;
         params = (Hhcm23SimpleSingleIndexPirParams) indexPirParams;
         logPhaseInfo(PtoState.INIT_BEGIN);
@@ -88,7 +89,8 @@ public class Hhcm23SimpleSingleIndexPirServer extends AbstractSingleIndexPirServ
 
     @Override
     public void init(NaiveDatabase database) throws MpcAbortException {
-        params = Hhcm23SimpleSingleIndexPirParams.DEFAULT_PARAMS;
+        setInitInput(database);
+        setDefaultParams();
         logPhaseInfo(PtoState.INIT_BEGIN);
 
         stopWatch.start();
@@ -128,7 +130,7 @@ public class Hhcm23SimpleSingleIndexPirServer extends AbstractSingleIndexPirServ
 
         // generate response
         stopWatch.start();
-        List<byte[]> serverResponsePayload = generateResponse(clientQueryPayload);
+        List<byte[]> serverResponsePayload = generateResponse(clientQueryPayload, null);
         DataPacketHeader serverResponseHeader = new DataPacketHeader(
             encodeTaskId, getPtoDesc().getPtoId(), PtoStep.SERVER_SEND_RESPONSE.ordinal(), extraInfo,
             rpc.ownParty().getPartyId(), otherParty().getPartyId()
@@ -164,7 +166,10 @@ public class Hhcm23SimpleSingleIndexPirServer extends AbstractSingleIndexPirServ
                 break;
             }
         }
-        setInitInput(database, database.getL(), maxPartitionBitLength);
+        partitionBitLength = Math.min(maxPartitionBitLength, database.getL());
+        partitionByteLength = CommonUtils.getByteLength(partitionBitLength);
+        databases = database.partitionZl(partitionBitLength);
+        partitionSize = databases.length;
         // public matrix A
         seed = new byte[CommonConstants.BLOCK_BYTE_LENGTH];
         secureRandom.nextBytes(seed);
@@ -206,9 +211,8 @@ public class Hhcm23SimpleSingleIndexPirServer extends AbstractSingleIndexPirServ
     }
 
     @Override
-    public List<byte[]> generateResponse(List<byte[]> clientQuery) throws MpcAbortException {
-        MpcAbortPreconditions.checkArgument(clientQuery.size() == getQuerySize());
-        return generateResponse(clientQuery, null);
+    public void setDefaultParams() {
+        params = Hhcm23SimpleSingleIndexPirParams.DEFAULT_PARAMS;
     }
 
     @Override
