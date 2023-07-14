@@ -4,8 +4,11 @@ import com.google.common.collect.Lists;
 import edu.alibaba.mpc4j.common.rpc.test.AbstractTwoPartyPtoTest;
 import edu.alibaba.mpc4j.common.tool.CommonConstants;
 import edu.alibaba.mpc4j.s2pc.pir.PirUtils;
-import edu.alibaba.mpc4j.s2pc.pir.keyword.*;
-import edu.alibaba.mpc4j.s2pc.pir.keyword.cmg21.*;
+import edu.alibaba.mpc4j.s2pc.pir.keyword.KwPirFactory;
+import edu.alibaba.mpc4j.s2pc.pir.keyword.alpr21.Alpr21KwPirClient;
+import edu.alibaba.mpc4j.s2pc.pir.keyword.alpr21.Alpr21KwPirConfig;
+import edu.alibaba.mpc4j.s2pc.pir.keyword.alpr21.Alpr21KwPirParams;
+import edu.alibaba.mpc4j.s2pc.pir.keyword.alpr21.Alpr21KwPirServer;
 import org.junit.Assert;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -15,93 +18,98 @@ import java.nio.ByteBuffer;
 import java.util.*;
 
 /**
- * CMG21 keyword PIR test.
+ * ALPR21 keyword PIR test.
  *
  * @author Liqiang Peng
- * @date 2022/6/22
+ * @date 2023/7/14
  */
 @RunWith(Parameterized.class)
-public class Cmg21KwPirTest extends AbstractTwoPartyPtoTest {
+public class Alpr21KwPirTest extends AbstractTwoPartyPtoTest {
     /**
      * repeat time
      */
     private static final int REPEAT_TIME = 1;
     /**
-     * short label byte length
-     */
-    private static final int SHORT_LABEL_BYTE_LENGTH = CommonConstants.STATS_BYTE_LENGTH;
-    /**
      * default label byte length
      */
-    private static final int DEFAULT_LABEL_BYTE_LENGTH = CommonConstants.BLOCK_BYTE_LENGTH;
-    /**
-     * long label byte length
-     */
-    private static final int LONG_LABEL_BYTE_LENGTH = CommonConstants.STATS_BIT_LENGTH;
+    private static final int DEFAULT_LABEL_BYTE_LENGTH = Double.BYTES;
     /**
      * server element size
      */
-    private static final int SERVER_MAP_SIZE = 1 << 16;
+    private static final int SERVER_MAP_SIZE = 1 << 18;
+    /**
+     * large retrieval size
+     */
+    private static final int LARGE_RETRIEVAL_SIZE = 1 << 8;
+    /**
+     * default retrieval size
+     */
+    private static final int DEFAULT_RETRIEVAL_SIZE = 1 << 6;
+    /**
+     * small retrieval size
+     */
+    private static final int SMALL_RETRIEVAL_SIZE = 1 << 4;
 
     @Parameterized.Parameters(name = "{0}")
     public static Collection<Object[]> configurations() {
         Collection<Object[]> configurations = new ArrayList<>();
 
-        // CMG21
+        // ALPR21
         configurations.add(new Object[]{
-            KwPirFactory.KwPirType.CMG21.name() + " max client set size 1", new Cmg21KwPirConfig.Builder().build(),
-            Cmg21KwPirParams.SERVER_1M_CLIENT_MAX_1
+            KwPirFactory.KwPirType.ALPR21.name() + " truncation size 3 bytes", new Alpr21KwPirConfig.Builder().build(),
+            new Alpr21KwPirParams(CommonConstants.BLOCK_BYTE_LENGTH, 3)
         });
         configurations.add(new Object[]{
-            KwPirFactory.KwPirType.CMG21.name() + " max client set size 4096", new Cmg21KwPirConfig.Builder().build(),
-            Cmg21KwPirParams.SERVER_1M_CLIENT_MAX_4096
+            KwPirFactory.KwPirType.ALPR21.name() + " truncation size 5 bytes", new Alpr21KwPirConfig.Builder().build(),
+            new Alpr21KwPirParams(CommonConstants.BLOCK_BYTE_LENGTH, CommonConstants.STATS_BYTE_LENGTH)
         });
 
         return configurations;
     }
 
     /**
-     * CMG21 keyword PIR config
+     * ALPR21 keyword PIR config
      */
-    private final Cmg21KwPirConfig config;
+    private final Alpr21KwPirConfig config;
     /**
-     * CMG21 keyword PIR params
+     * ALPR21 keyword PIR params
      */
-    private final Cmg21KwPirParams params;
+    private final Alpr21KwPirParams params;
 
-    public Cmg21KwPirTest(String name, Cmg21KwPirConfig config, Cmg21KwPirParams params) {
+    public Alpr21KwPirTest(String name, Alpr21KwPirConfig config, Alpr21KwPirParams params) {
         super(name);
         this.config = config;
         this.params = params;
     }
 
     @Test
-    public void testShortLabelParallel() {
-        testPir(params, SHORT_LABEL_BYTE_LENGTH, config, true);
+    public void testSmallRetrievalSizeParallel() {
+        testPir(params, SMALL_RETRIEVAL_SIZE, config, true);
     }
 
     @Test
-    public void testDefaultLabelParallel() {
-        testPir(params, DEFAULT_LABEL_BYTE_LENGTH, config, true);
+    public void testDefaultRetrievalSizeParallel() {
+        testPir(params, DEFAULT_RETRIEVAL_SIZE, config, true);
     }
 
     @Test
-    public void testLongLabelParallel() {
-        testPir(params, LONG_LABEL_BYTE_LENGTH, config, true);
+    public void testLargeRetrievalSizeParallel() {
+        testPir(params, LARGE_RETRIEVAL_SIZE, config, true);
     }
 
-    public void testPir(Cmg21KwPirParams kwPirParams, int labelByteLength, Cmg21KwPirConfig config, boolean parallel) {
-        int retrievalSize = kwPirParams.maxRetrievalSize();
+    public void testPir(Alpr21KwPirParams kwPirParams, int retrievalSize, Alpr21KwPirConfig config, boolean parallel) {
         List<Set<ByteBuffer>> randomSets = PirUtils.generateByteBufferSets(SERVER_MAP_SIZE, retrievalSize, REPEAT_TIME);
-        Map<ByteBuffer, ByteBuffer> keywordLabelMap = PirUtils.generateKeywordByteBufferLabelMap(randomSets.get(0), labelByteLength);
+        Map<ByteBuffer, ByteBuffer> keywordLabelMap = PirUtils.generateKeywordByteBufferLabelMap(
+            randomSets.get(0), DEFAULT_LABEL_BYTE_LENGTH
+        );
         // create instances
-        Cmg21KwPirServer server = new Cmg21KwPirServer(firstRpc, secondRpc.ownParty(), config);
-        Cmg21KwPirClient client = new Cmg21KwPirClient(secondRpc, firstRpc.ownParty(), config);
+        Alpr21KwPirServer server = new Alpr21KwPirServer(firstRpc, secondRpc.ownParty(), config);
+        Alpr21KwPirClient client = new Alpr21KwPirClient(secondRpc, firstRpc.ownParty(), config);
         // set parallel
         server.setParallel(parallel);
         client.setParallel(parallel);
         KwPirParamsServerThread serverThread = new KwPirParamsServerThread(
-            server, kwPirParams, keywordLabelMap, retrievalSize, labelByteLength, REPEAT_TIME
+            server, kwPirParams, keywordLabelMap, retrievalSize, DEFAULT_LABEL_BYTE_LENGTH, REPEAT_TIME
         );
         KwPirParamsClientThread clientThread = new KwPirParamsClientThread(
             client,
@@ -109,7 +117,7 @@ public class Cmg21KwPirTest extends AbstractTwoPartyPtoTest {
             Lists.newArrayList(randomSets.subList(1, REPEAT_TIME + 1)),
             retrievalSize,
             SERVER_MAP_SIZE,
-            labelByteLength
+            DEFAULT_LABEL_BYTE_LENGTH
         );
         try {
             serverThread.start();
@@ -132,5 +140,3 @@ public class Cmg21KwPirTest extends AbstractTwoPartyPtoTest {
         }
     }
 }
-
-

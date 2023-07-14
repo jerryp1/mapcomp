@@ -104,7 +104,7 @@ public class CuckooHashBatchSimplePirClient extends AbstractBatchIndexPirClient 
         // client init single index PIR client
         simplePirClient.setParallel(parallel);
         simplePirClient.setDefaultParams();
-        simplePirClient.clientBatchSetup(serverElementSize, maxBinSize, elementBitLength);
+        simplePirClient.clientBatchSetup(serverElementSize, maxBinSize, binNum, elementBitLength);
         simplePirClient.handledSeedPayload(seedPayload);
         partitionSize = simplePirClient.partitionSize;
         MpcAbortPreconditions.checkArgument(hintPayload.size() == binNum * partitionSize);
@@ -137,7 +137,12 @@ public class CuckooHashBatchSimplePirClient extends AbstractBatchIndexPirClient 
         IntStream intStream = IntStream.range(0, binNum);
         intStream = parallel ? intStream.parallel() : intStream;
         List<byte[]> clientQueryPayload = intStream
-            .mapToObj(i -> simplePirClient.generateQuery(binIndexList.get(i)))
+            .mapToObj(i -> {
+                if (binIndexList.get(i) == -1) {
+                    return simplePirClient.generateQuery(0);
+                } else {
+                    return simplePirClient.generateQuery(binIndexList.get(i));
+                }})
             .flatMap(Collection::stream)
             .collect(Collectors.toList());
         DataPacketHeader clientQueryHeader = new DataPacketHeader(
@@ -189,13 +194,11 @@ public class CuckooHashBatchSimplePirClient extends AbstractBatchIndexPirClient 
         return IntStream.range(0, binIndexList.size())
             .filter(i -> binIndexList.get(i) != -1)
             .boxed()
-            .collect(
-                Collectors.toMap(
-                    integer -> binIndexRetrievalIndexMap.get(integer),
-                    result::get,
-                    (a, b) -> b,
-                    () -> new HashMap<>(retrievalSize)
-                )
+            .collect(Collectors.toMap(
+                integer -> binIndexRetrievalIndexMap.get(integer),
+                result::get,
+                (a, b) -> b,
+                () -> new HashMap<>(retrievalSize))
             );
     }
 

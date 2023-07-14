@@ -247,8 +247,8 @@ public class CuckooHashBatchSimplePirServer extends AbstractBatchIndexPirServer 
             d = CommonUtils.getUnitNum(maxPartitionByteLength * Byte.SIZE, simplePirServer.params.logP - 1);
             if ((BigInteger.valueOf(d).multiply(BigInteger.valueOf(binSize)))
                 .compareTo(INT_MAX_VALUE.shiftRight(1)) < 0) {
-                cols = (int) Math.max(2, Math.ceil(Math.sqrt(d * num)));
-                rows = (int) Math.ceil((double) d * binSize / cols);
+                rows = (int) Math.max(2, Math.ceil(Math.sqrt(d * num)));
+                rows = CommonUtils.getUnitNum(rows, binNum);
                 long rem = rows % d;
                 if (rem != 0) {
                     rows += d - rem;

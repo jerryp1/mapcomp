@@ -15,6 +15,9 @@ import edu.alibaba.mpc4j.s2pc.pir.keyword.alpr21.Alpr21KwPirPtoDesc.PtoStep;
 import java.nio.ByteBuffer;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
+import java.util.stream.IntStream;
+import java.util.stream.Stream;
 
 import static edu.alibaba.mpc4j.common.tool.hashbin.object.cuckoo.CuckooHashBinFactory.*;
 
@@ -45,10 +48,6 @@ public class Alpr21KwPirClient extends AbstractKwPirClient {
      * hash keys
      */
     private byte[][] hashKeys;
-    /**
-     * truncation byte length
-     */
-    private final int truncationByteLength = 6;
 
     public Alpr21KwPirClient(Rpc clientRpc, Party serverParty, Alpr21KwPirConfig config) {
         super(Alpr21KwPirPtoDesc.getInstance(), clientRpc, serverParty, config);
@@ -58,32 +57,32 @@ public class Alpr21KwPirClient extends AbstractKwPirClient {
     }
 
     @Override
-    public void init(KwPirParams kwPirParams, int serverElementSize, int labelByteLength) throws MpcAbortException {
+    public void init(KwPirParams kwPirParams, int serverElementSize, int maxRetrievalSize, int labelByteLength) throws MpcAbortException {
+        setInitInput(maxRetrievalSize, serverElementSize, labelByteLength);
+        logPhaseInfo(PtoState.INIT_BEGIN);
         assert (kwPirParams instanceof Alpr21KwPirParams);
         params = (Alpr21KwPirParams) kwPirParams;
+        params.setMaxRetrievalSize(maxRetrievalSize);
 
-        setInitInput(params.maxRetrievalSize(), serverElementSize, labelByteLength);
-        logPhaseInfo(PtoState.INIT_BEGIN);
-
-        DataPacketHeader cuckooHashKeyHeader = new DataPacketHeader(
-            encodeTaskId, getPtoDesc().getPtoId(), PtoStep.SERVER_SEND_CUCKOO_HASH_KEYS.ordinal(), extraInfo,
-            otherParty().getPartyId(), rpc.ownParty().getPartyId()
-        );
-        List<byte[]> cuckooHashKeysPayload = rpc.receive(cuckooHashKeyHeader).getPayload();
         DataPacketHeader prfKeyHeader = new DataPacketHeader(
             encodeTaskId, getPtoDesc().getPtoId(), PtoStep.SERVER_SEND_PRF_KEY.ordinal(), extraInfo,
             otherParty().getPartyId(), rpc.ownParty().getPartyId()
         );
         List<byte[]> prfKeyPayload = rpc.receive(prfKeyHeader).getPayload();
+        DataPacketHeader cuckooHashKeyHeader = new DataPacketHeader(
+            encodeTaskId, getPtoDesc().getPtoId(), PtoStep.SERVER_SEND_CUCKOO_HASH_KEYS.ordinal(), extraInfo,
+            otherParty().getPartyId(), rpc.ownParty().getPartyId()
+        );
+        List<byte[]> cuckooHashKeysPayload = rpc.receive(cuckooHashKeyHeader).getPayload();
 
         stopWatch.start();
-        MpcAbortPreconditions.checkArgument(cuckooHashKeysPayload.size() == getHashNum(cuckooHashBinType));
-        hashKeys = cuckooHashKeysPayload.toArray(new byte[0][]);
         MpcAbortPreconditions.checkArgument(prfKeyPayload.size() == 1);
         prfKey = prfKeyPayload.get(0);
+        MpcAbortPreconditions.checkArgument(cuckooHashKeysPayload.size() == getHashNum(cuckooHashBinType));
+        hashKeys = cuckooHashKeysPayload.toArray(new byte[0][]);
         int binNum = getBinNum(cuckooHashBinType, serverElementSize);
-        int elementBitLength = (truncationByteLength + labelByteLength) * Byte.SIZE;
-        indexPirClient.init(binNum, elementBitLength, hashKeys.length);
+        int elementBitLength = (params.truncationByteLength + labelByteLength) * Byte.SIZE;
+        indexPirClient.init(binNum, elementBitLength, hashKeys.length * maxRetrievalSize);
         stopWatch.stop();
         long initTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
         stopWatch.reset();
@@ -94,29 +93,30 @@ public class Alpr21KwPirClient extends AbstractKwPirClient {
 
     @Override
     public void init(int maxRetrievalSize, int serverElementSize, int labelByteLength) throws MpcAbortException {
-        params = Alpr21KwPirParams.DEFAULT_PARAMS;
-        setInitInput(params.maxRetrievalSize(), serverElementSize, labelByteLength);
+        setInitInput(maxRetrievalSize, serverElementSize, labelByteLength);
         logPhaseInfo(PtoState.INIT_BEGIN);
+        params = Alpr21KwPirParams.DEFAULT_PARAMS;
+        params.setMaxRetrievalSize(maxRetrievalSize);
 
-        DataPacketHeader cuckooHashKeyHeader = new DataPacketHeader(
-            encodeTaskId, getPtoDesc().getPtoId(), PtoStep.SERVER_SEND_CUCKOO_HASH_KEYS.ordinal(), extraInfo,
-            otherParty().getPartyId(), rpc.ownParty().getPartyId()
-        );
-        List<byte[]> cuckooHashKeysPayload = rpc.receive(cuckooHashKeyHeader).getPayload();
         DataPacketHeader prfKeyHeader = new DataPacketHeader(
             encodeTaskId, getPtoDesc().getPtoId(), PtoStep.SERVER_SEND_PRF_KEY.ordinal(), extraInfo,
             otherParty().getPartyId(), rpc.ownParty().getPartyId()
         );
         List<byte[]> prfKeyPayload = rpc.receive(prfKeyHeader).getPayload();
+        DataPacketHeader cuckooHashKeyHeader = new DataPacketHeader(
+            encodeTaskId, getPtoDesc().getPtoId(), PtoStep.SERVER_SEND_CUCKOO_HASH_KEYS.ordinal(), extraInfo,
+            otherParty().getPartyId(), rpc.ownParty().getPartyId()
+        );
+        List<byte[]> cuckooHashKeysPayload = rpc.receive(cuckooHashKeyHeader).getPayload();
 
         stopWatch.start();
-        MpcAbortPreconditions.checkArgument(cuckooHashKeysPayload.size() == getHashNum(cuckooHashBinType));
-        hashKeys = cuckooHashKeysPayload.toArray(new byte[0][]);
         MpcAbortPreconditions.checkArgument(prfKeyPayload.size() == 1);
         prfKey = prfKeyPayload.get(0);
+        MpcAbortPreconditions.checkArgument(cuckooHashKeysPayload.size() == getHashNum(cuckooHashBinType));
+        hashKeys = cuckooHashKeysPayload.toArray(new byte[0][]);
         int binNum = getBinNum(cuckooHashBinType, serverElementSize);
-        int elementBitLength = (truncationByteLength + labelByteLength) * Byte.SIZE;
-        indexPirClient.init(binNum, elementBitLength, hashKeys.length);
+        int elementBitLength = (params.truncationByteLength + labelByteLength) * Byte.SIZE;
+        indexPirClient.init(binNum, elementBitLength, hashKeys.length * maxRetrievalSize);
         stopWatch.stop();
         long initTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
         stopWatch.reset();
@@ -131,7 +131,7 @@ public class Alpr21KwPirClient extends AbstractKwPirClient {
         logPhaseInfo(PtoState.PTO_BEGIN);
 
         stopWatch.start();
-        ByteBuffer prfOutput = computePrf();
+        List<ByteBuffer> prfOutput = computePrf();
         List<Integer> indexList = computeIndex(prfOutput);
         Map<Integer, byte[]> retrievalMap = indexPirClient.pir(indexList);
         Map<ByteBuffer, ByteBuffer> pirResult = handleResponse(retrievalMap, prfOutput);
@@ -151,22 +151,24 @@ public class Alpr21KwPirClient extends AbstractKwPirClient {
      * @param keyPrf       key prf.
      * @return retrieval result map.
      */
-    private Map<ByteBuffer, ByteBuffer> handleResponse(Map<Integer, byte[]> retrievalMap, ByteBuffer keyPrf) {
-        Map<ByteBuffer, ByteBuffer> result = new HashMap<>(1);
+    private Map<ByteBuffer, ByteBuffer> handleResponse(Map<Integer, byte[]> retrievalMap, List<ByteBuffer> keyPrf) {
+        Map<ByteBuffer, ByteBuffer> result = new HashMap<>(retrievalKeySize);
         retrievalMap.forEach((index, item) -> {
             try {
-                MpcAbortPreconditions.checkArgument(item.length == truncationByteLength + valueByteLength);
+                MpcAbortPreconditions.checkArgument(item.length == params.truncationByteLength + valueByteLength);
             } catch (MpcAbortException e) {
                 e.printStackTrace();
             }
-            byte[] retrievalKeyBytes = BytesUtils.clone(item, 0, truncationByteLength);
-            byte[] localKeyBytes = BytesUtils.clone(keyPrf.array(), 0, truncationByteLength);
-            if (ByteBuffer.wrap(retrievalKeyBytes).equals(ByteBuffer.wrap(localKeyBytes))) {
-                result.put(
-                    retrievalKeyList.get(0),
-                    ByteBuffer.wrap(BytesUtils.clone(item, truncationByteLength, valueByteLength))
-                );
-            }
+            byte[] retrievalKeyBytes = BytesUtils.clone(item, 0, params.truncationByteLength);
+            IntStream.range(0, retrievalKeySize).forEach(i -> {
+                byte[] localKeyBytes = BytesUtils.clone(keyPrf.get(i).array(), 0, params.truncationByteLength);
+                if (ByteBuffer.wrap(retrievalKeyBytes).equals(ByteBuffer.wrap(localKeyBytes))) {
+                    result.put(
+                        retrievalKeyList.get(i),
+                        ByteBuffer.wrap(BytesUtils.clone(item, params.truncationByteLength, valueByteLength))
+                    );
+                }
+            });
         });
         return result;
     }
@@ -176,10 +178,15 @@ public class Alpr21KwPirClient extends AbstractKwPirClient {
      *
      * @return prf element.
      */
-    private ByteBuffer computePrf() {
+    private List<ByteBuffer> computePrf() {
         Prf prf = PrfFactory.createInstance(envType, params.keywordPrfByteLength);
         prf.setKey(prfKey);
-        return ByteBuffer.wrap(prf.getBytes(retrievalKeyList.get(0).array()));
+        Stream<ByteBuffer> keywordStream = retrievalKeyList.stream();
+        keywordStream = parallel ? keywordStream.parallel() : keywordStream;
+        return keywordStream
+            .map(byteBuffer -> prf.getBytes(byteBuffer.array()))
+            .map(ByteBuffer::wrap)
+            .collect(Collectors.toList());
     }
 
     /**
@@ -188,7 +195,7 @@ public class Alpr21KwPirClient extends AbstractKwPirClient {
      * @param prfOutput retrieval prf.
      * @return retrieval index list.
      */
-    private List<Integer> computeIndex(ByteBuffer prfOutput) {
+    private List<Integer> computeIndex(List<ByteBuffer> prfOutput) {
         int binNum = getBinNum(cuckooHashBinType, serverElementSize);
         Prf[] hashes = Arrays.stream(hashKeys)
             .map(key -> {
@@ -197,11 +204,13 @@ public class Alpr21KwPirClient extends AbstractKwPirClient {
                 return prf;
             })
             .toArray(Prf[]::new);
-        List<Integer> indexList = new ArrayList<>();
-        for (int hashIndex = 0; hashIndex < hashKeys.length; hashIndex++) {
-            HashBinEntry<ByteBuffer> hashBinEntry = HashBinEntry.fromRealItem(hashIndex, prfOutput);
-            indexList.add(hashes[hashIndex].getInteger(hashBinEntry.getItemByteArray(), binNum));
+        Set<Integer> indexList = new HashSet<>();
+        for (ByteBuffer byteBuffer : prfOutput) {
+            for (int hashIndex = 0; hashIndex < hashKeys.length; hashIndex++) {
+                HashBinEntry<ByteBuffer> hashBinEntry = HashBinEntry.fromRealItem(hashIndex, byteBuffer);
+                indexList.add(hashes[hashIndex].getInteger(hashBinEntry.getItemByteArray(), binNum));
+            }
         }
-        return indexList;
+        return new ArrayList<>(indexList);
     }
 }

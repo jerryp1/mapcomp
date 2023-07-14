@@ -60,41 +60,46 @@ public class Alpr21KwPirServer extends AbstractKwPirServer {
     }
 
     @Override
-    public void init(KwPirParams kwPirParams, Map<ByteBuffer, ByteBuffer> serverKeywordLabelMap, int labelByteLength)
-        throws MpcAbortException {
-        setInitInput(serverKeywordLabelMap, labelByteLength);
+    public void init(KwPirParams kwPirParams, Map<ByteBuffer, ByteBuffer> serverKeywordLabelMap, int maxRetrievalSize,
+                     int labelByteLength) throws MpcAbortException {
+        setInitInput(serverKeywordLabelMap, maxRetrievalSize, labelByteLength);
         logPhaseInfo(PtoState.INIT_BEGIN);
-
         assert (kwPirParams instanceof Alpr21KwPirParams);
         params = (Alpr21KwPirParams) kwPirParams;
+        params.setMaxRetrievalSize(maxRetrievalSize);
 
+        // compute keyword prf
         stopWatch.start();
-        byte[] botElementByteArray = new byte[params.keywordPrfByteLength];
-        Arrays.fill(botElementByteArray, (byte) 0xFF);
-        botElementByteBuffer = ByteBuffer.wrap(botElementByteArray);
         List<ByteBuffer> keywordPrf = computeKeywordPrf();
         Map<ByteBuffer, ByteBuffer> prfLabelMap = IntStream.range(0, keywordSize)
             .boxed()
             .collect(
                 Collectors.toMap(keywordPrf::get, i -> serverKeywordLabelMap.get(keywordList.get(i)), (a, b) -> b)
             );
-        NaiveDatabase database = generateCuckooHashBin(keywordPrf, prfLabelMap);
-        indexPirServer.init(database, hashKeys.length);
-        DataPacketHeader cuckooHashKeyHeader = new DataPacketHeader(
-            encodeTaskId, getPtoDesc().getPtoId(), PtoStep.SERVER_SEND_CUCKOO_HASH_KEYS.ordinal(), extraInfo,
-            rpc.ownParty().getPartyId(), otherParty().getPartyId()
-        );
-        List<byte[]> cuckooHashKeyPayload = Arrays.stream(hashKeys).collect(Collectors.toList());
-        rpc.send(DataPacket.fromByteArrayList(cuckooHashKeyHeader, cuckooHashKeyPayload));
         DataPacketHeader prfKeyHeader = new DataPacketHeader(
             encodeTaskId, getPtoDesc().getPtoId(), PtoStep.SERVER_SEND_PRF_KEY.ordinal(), extraInfo,
             rpc.ownParty().getPartyId(), otherParty().getPartyId()
         );
         rpc.send(DataPacket.fromByteArrayList(prfKeyHeader, Collections.singletonList(prfKey)));
         stopWatch.stop();
+        long prfTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
+        stopWatch.reset();
+        logStepInfo(PtoState.INIT_STEP, 1, 2, prfTime);
+
+        // init batch index pir
+        stopWatch.start();
+        NaiveDatabase database = generateCuckooHashBin(keywordPrf, prfLabelMap);
+        indexPirServer.init(database, hashKeys.length * maxRetrievalSize);
+        DataPacketHeader cuckooHashKeyHeader = new DataPacketHeader(
+            encodeTaskId, getPtoDesc().getPtoId(), PtoStep.SERVER_SEND_CUCKOO_HASH_KEYS.ordinal(), extraInfo,
+            rpc.ownParty().getPartyId(), otherParty().getPartyId()
+        );
+        List<byte[]> cuckooHashKeyPayload = Arrays.stream(hashKeys).collect(Collectors.toList());
+        rpc.send(DataPacket.fromByteArrayList(cuckooHashKeyHeader, cuckooHashKeyPayload));
+        stopWatch.stop();
         long initTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
         stopWatch.reset();
-        logStepInfo(PtoState.INIT_STEP, 1, 1, initTime);
+        logStepInfo(PtoState.INIT_STEP, 2, 2, initTime);
 
         logPhaseInfo(PtoState.INIT_END);
     }
@@ -102,39 +107,43 @@ public class Alpr21KwPirServer extends AbstractKwPirServer {
     @Override
     public void init(Map<ByteBuffer, ByteBuffer> serverKeywordLabelMap, int maxRetrievalSize, int labelByteLength)
         throws MpcAbortException {
-        MpcAbortPreconditions.checkArgument(maxRetrievalSize == 1);
-        setInitInput(serverKeywordLabelMap, labelByteLength);
+        setInitInput(serverKeywordLabelMap, maxRetrievalSize, labelByteLength);
         logPhaseInfo(PtoState.INIT_BEGIN);
-
         params = Alpr21KwPirParams.DEFAULT_PARAMS;
+        params.setMaxRetrievalSize(maxRetrievalSize);
 
+        // compute keyword prf
         stopWatch.start();
-        byte[] botElementByteArray = new byte[params.keywordPrfByteLength];
-        Arrays.fill(botElementByteArray, (byte) 0xFF);
-        botElementByteBuffer = ByteBuffer.wrap(botElementByteArray);
         List<ByteBuffer> keywordPrf = computeKeywordPrf();
         Map<ByteBuffer, ByteBuffer> prfLabelMap = IntStream.range(0, keywordSize)
             .boxed()
             .collect(
                 Collectors.toMap(keywordPrf::get, i -> serverKeywordLabelMap.get(keywordList.get(i)), (a, b) -> b)
             );
-        NaiveDatabase database = generateCuckooHashBin(keywordPrf, prfLabelMap);
-        indexPirServer.init(database, hashKeys.length);
-        DataPacketHeader cuckooHashKeyHeader = new DataPacketHeader(
-            encodeTaskId, getPtoDesc().getPtoId(), PtoStep.SERVER_SEND_CUCKOO_HASH_KEYS.ordinal(), extraInfo,
-            rpc.ownParty().getPartyId(), otherParty().getPartyId()
-        );
-        List<byte[]> cuckooHashKeyPayload = Arrays.stream(hashKeys).collect(Collectors.toList());
-        rpc.send(DataPacket.fromByteArrayList(cuckooHashKeyHeader, cuckooHashKeyPayload));
         DataPacketHeader prfKeyHeader = new DataPacketHeader(
             encodeTaskId, getPtoDesc().getPtoId(), PtoStep.SERVER_SEND_PRF_KEY.ordinal(), extraInfo,
             rpc.ownParty().getPartyId(), otherParty().getPartyId()
         );
         rpc.send(DataPacket.fromByteArrayList(prfKeyHeader, Collections.singletonList(prfKey)));
         stopWatch.stop();
+        long prfTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
+        stopWatch.reset();
+        logStepInfo(PtoState.INIT_STEP, 1, 2, prfTime);
+
+        // init batch index pir
+        stopWatch.start();
+        NaiveDatabase database = generateCuckooHashBin(keywordPrf, prfLabelMap);
+        indexPirServer.init(database, hashKeys.length * maxRetrievalSize);
+        DataPacketHeader cuckooHashKeyHeader = new DataPacketHeader(
+            encodeTaskId, getPtoDesc().getPtoId(), PtoStep.SERVER_SEND_CUCKOO_HASH_KEYS.ordinal(), extraInfo,
+            rpc.ownParty().getPartyId(), otherParty().getPartyId()
+        );
+        List<byte[]> cuckooHashKeyPayload = Arrays.stream(hashKeys).collect(Collectors.toList());
+        rpc.send(DataPacket.fromByteArrayList(cuckooHashKeyHeader, cuckooHashKeyPayload));
+        stopWatch.stop();
         long initTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
         stopWatch.reset();
-        logStepInfo(PtoState.INIT_STEP, 1, 1, initTime);
+        logStepInfo(PtoState.INIT_STEP, 2, 2, initTime);
 
         logPhaseInfo(PtoState.INIT_END);
     }
@@ -180,13 +189,15 @@ public class Alpr21KwPirServer extends AbstractKwPirServer {
      * @return database.
      */
     private NaiveDatabase generateCuckooHashBin(List<ByteBuffer> keywordPrf, Map<ByteBuffer, ByteBuffer> prfLabelMap) {
+        byte[] botElementByteArray = new byte[params.keywordPrfByteLength];
+        Arrays.fill(botElementByteArray, (byte) 0xFF);
+        botElementByteBuffer = ByteBuffer.wrap(botElementByteArray);
         CuckooHashBin<ByteBuffer> cuckooHashBin = CuckooHashBinFactory.createEnforceNoStashCuckooHashBin(
             envType, cuckooHashBinType, keywordSize, keywordPrf, secureRandom
         );
         hashKeys = cuckooHashBin.getHashKeys();
         cuckooHashBin.insertPaddingItems(botElementByteBuffer);
         byte[][] cuckooHashBinItems = new byte[cuckooHashBin.binNum()][];
-        int truncationByteLength = 6;
         for (int i = 0; i < cuckooHashBin.binNum(); i++) {
             ByteBuffer item = cuckooHashBin.getHashBinEntry(i).getItem();
             byte[] value = new byte[labelByteLength];
@@ -195,8 +206,8 @@ public class Alpr21KwPirServer extends AbstractKwPirServer {
             } else {
                 secureRandom.nextBytes(value);
             }
-            cuckooHashBinItems[i] = Bytes.concat(BytesUtils.clone(item.array(), 0, truncationByteLength), value);
+            cuckooHashBinItems[i] = Bytes.concat(BytesUtils.clone(item.array(), 0, params.truncationByteLength), value);
         }
-        return NaiveDatabase.create((truncationByteLength + labelByteLength) * Byte.SIZE, cuckooHashBinItems);
+        return NaiveDatabase.create((params.truncationByteLength + labelByteLength) * Byte.SIZE, cuckooHashBinItems);
     }
 }

@@ -89,13 +89,15 @@ public class Cmg21KwPirServer extends AbstractKwPirServer {
     }
 
     @Override
-    public void init(KwPirParams kwPirParams, Map<ByteBuffer, ByteBuffer> serverKeywordLabelMap, int labelByteLength) {
-        setInitInput(serverKeywordLabelMap, labelByteLength);
+    public void init(KwPirParams kwPirParams, Map<ByteBuffer, ByteBuffer> serverKeywordLabelMap, int maxRetrievalSize,
+                     int labelByteLength) {
+        setInitInput(serverKeywordLabelMap, maxRetrievalSize, labelByteLength);
         logPhaseInfo(PtoState.INIT_BEGIN);
-
-        stopWatch.start();
         assert (kwPirParams instanceof Cmg21KwPirParams);
         params = (Cmg21KwPirParams) kwPirParams;
+        assert maxRetrievalSize <= params.maxRetrievalSize();
+
+        stopWatch.start();
         hashKeys = CommonUtils.generateRandomKeys(params.getCuckooHashKeyNum(), secureRandom);
         DataPacketHeader cuckooHashKeyHeader = new DataPacketHeader(
             encodeTaskId, getPtoDesc().getPtoId(), PtoStep.SERVER_SEND_CUCKOO_HASH_KEYS.ordinal(), extraInfo,
@@ -149,8 +151,9 @@ public class Cmg21KwPirServer extends AbstractKwPirServer {
         } else {
             params = Cmg21KwPirParams.SERVER_1M_CLIENT_MAX_1;
         }
-        setInitInput(serverKeywordLabelMap, labelByteLength);
+        setInitInput(serverKeywordLabelMap, maxRetrievalSize, labelByteLength);
         logPhaseInfo(PtoState.INIT_BEGIN);
+        assert maxRetrievalSize <= params.maxRetrievalSize();
 
         stopWatch.start();
         hashKeys = CommonUtils.generateRandomKeys(params.getCuckooHashKeyNum(), secureRandom);

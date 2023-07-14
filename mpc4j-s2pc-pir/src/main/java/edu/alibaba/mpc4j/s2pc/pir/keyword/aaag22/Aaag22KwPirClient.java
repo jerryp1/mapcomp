@@ -50,12 +50,13 @@ public class Aaag22KwPirClient extends AbstractKwPirClient {
     }
 
     @Override
-    public void init(KwPirParams kwPirParams, int serverElementSize, int labelByteLength) throws MpcAbortException {
+    public void init(KwPirParams kwPirParams, int serverElementSize, int maxRetrievalSize, int labelByteLength)
+        throws MpcAbortException {
+        setInitInput(maxRetrievalSize, serverElementSize, labelByteLength);
+        logPhaseInfo(PtoState.INIT_BEGIN);
         assert (kwPirParams instanceof Aaag22KwPirParams);
         params = (Aaag22KwPirParams) kwPirParams;
-
-        setInitInput(params.maxRetrievalSize(), serverElementSize, labelByteLength);
-        logPhaseInfo(PtoState.INIT_BEGIN);
+        assert maxRetrievalSize <= kwPirParams.maxRetrievalSize();
 
         DataPacketHeader prfHashKeyHeader = new DataPacketHeader(
             encodeTaskId, getPtoDesc().getPtoId(), PtoStep.SERVER_SEND_PRF_KEY.ordinal(), extraInfo,
@@ -86,10 +87,10 @@ public class Aaag22KwPirClient extends AbstractKwPirClient {
 
     @Override
     public void init(int maxRetrievalSize, int serverElementSize, int labelByteLength) throws MpcAbortException {
+        setInitInput(maxRetrievalSize, serverElementSize, labelByteLength);
+        logPhaseInfo(PtoState.INIT_BEGIN);
         params = Aaag22KwPirParams.DEFAULT_PARAMS;
         assert maxRetrievalSize <= params.maxRetrievalSize();
-        setInitInput(params.maxRetrievalSize(), serverElementSize, labelByteLength);
-        logPhaseInfo(PtoState.INIT_BEGIN);
 
         DataPacketHeader prfHashKeyHeader = new DataPacketHeader(
             encodeTaskId, getPtoDesc().getPtoId(), PtoStep.SERVER_SEND_PRF_KEY.ordinal(), extraInfo,

@@ -188,7 +188,7 @@ public class Hhcm23SimpleSingleIndexPirClient extends AbstractSingleIndexPirClie
         return null;
     }
 
-    public void clientBatchSetup(int serverElementSize, int binSize, int elementBitLength) {
+    public void clientBatchSetup(int serverElementSize, int binSize, int binNum, int elementBitLength) {
         int maxPartitionBitLength = 0;
         int upperBound = CommonUtils.getUnitNum(elementBitLength, params.logP - 1);
         for (int count = 1; count < upperBound + 1; count++) {
@@ -197,8 +197,8 @@ public class Hhcm23SimpleSingleIndexPirClient extends AbstractSingleIndexPirClie
             d = CommonUtils.getUnitNum(maxPartitionByteLength * Byte.SIZE, params.logP - 1);
             if ((BigInteger.valueOf(d).multiply(BigInteger.valueOf(binSize)))
                 .compareTo(INT_MAX_VALUE.shiftRight(1)) < 0) {
-                cols = (int) Math.max(2, Math.ceil(Math.sqrt(d * serverElementSize)));
-                rows = (int) Math.ceil((double) d * binSize / cols);
+                rows = (int) Math.max(2, Math.ceil(Math.sqrt(d * serverElementSize)));
+                rows = CommonUtils.getUnitNum(rows, binNum);
                 long rem = rows % d;
                 if (rem != 0) {
                     rows += d - rem;

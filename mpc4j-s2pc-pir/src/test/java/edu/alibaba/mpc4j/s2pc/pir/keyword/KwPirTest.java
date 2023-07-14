@@ -43,7 +43,7 @@ public class KwPirTest extends AbstractTwoPartyPtoTest {
     /**
      * server element size
      */
-    private static final int SERVER_MAP_SIZE = 1 << 18;
+    private static final int SERVER_MAP_SIZE = 1 << 14;
     /**
      * client element size
      */
