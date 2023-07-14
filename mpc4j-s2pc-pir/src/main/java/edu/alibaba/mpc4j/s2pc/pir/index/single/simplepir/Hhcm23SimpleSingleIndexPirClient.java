@@ -188,7 +188,8 @@ public class Hhcm23SimpleSingleIndexPirClient extends AbstractSingleIndexPirClie
         return null;
     }
 
-    public void clientBatchSetup(int serverElementSize, int binSize, int binNum, int elementBitLength) {
+    public void clientBatchSetup(int serverElementSize, int binSize, int binNum, int elementBitLength,
+                                 boolean isCommunicationOptimal) {
         int maxPartitionBitLength = 0;
         int upperBound = CommonUtils.getUnitNum(elementBitLength, params.logP - 1);
         for (int count = 1; count < upperBound + 1; count++) {
@@ -197,13 +198,19 @@ public class Hhcm23SimpleSingleIndexPirClient extends AbstractSingleIndexPirClie
             d = CommonUtils.getUnitNum(maxPartitionByteLength * Byte.SIZE, params.logP - 1);
             if ((BigInteger.valueOf(d).multiply(BigInteger.valueOf(binSize)))
                 .compareTo(INT_MAX_VALUE.shiftRight(1)) < 0) {
-                rows = (int) Math.max(2, Math.ceil(Math.sqrt(d * serverElementSize)));
-                rows = CommonUtils.getUnitNum(rows, binNum);
-                long rem = rows % d;
-                if (rem != 0) {
-                    rows += d - rem;
+                if (isCommunicationOptimal) {
+                    rows = (int) Math.max(2, Math.ceil(Math.sqrt(d * serverElementSize)));
+                    rows = CommonUtils.getUnitNum(rows, binNum);
+                    long rem = rows % d;
+                    if (rem != 0) {
+                        rows += d - rem;
+                    }
+                    cols = (int) Math.ceil((double) d * binSize / rows);
+                } else {
+                    int[] dims = PirUtils.approxSquareDatabaseDims(binSize, d);
+                    rows = dims[0];
+                    cols = dims[1];
                 }
-                cols = (int) Math.ceil((double) d * binSize / rows);
                 params.setPlainModulo(PirUtils.getBitLength(cols));
                 break;
             }

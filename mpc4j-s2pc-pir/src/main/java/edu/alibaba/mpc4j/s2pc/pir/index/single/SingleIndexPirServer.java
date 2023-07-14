@@ -71,6 +71,15 @@ public interface SingleIndexPirServer extends TwoPartyPto {
     List<byte[]> generateResponse(List<byte[]> clientQuery, List<byte[][]> encodedDatabase) throws MpcAbortException;
 
     /**
+     * server handle client query.
+     *
+     * @param clientQuery client query.
+     * @return server response.
+     * @throws MpcAbortException the protocol failure aborts.
+     */
+    List<byte[]> generateResponse(List<byte[]> clientQuery) throws MpcAbortException;
+
+    /**
      * set default params.
      */
     void setDefaultParams();

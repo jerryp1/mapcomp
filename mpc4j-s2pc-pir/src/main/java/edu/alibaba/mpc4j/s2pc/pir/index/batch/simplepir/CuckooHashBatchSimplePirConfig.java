@@ -22,11 +22,16 @@ public class CuckooHashBatchSimplePirConfig extends AbstractMultiPartyPtoConfig 
      * cuckoo hash type
      */
     private final IntCuckooHashBinFactory.IntCuckooHashBinType cuckooHashBinType;
+    /**
+     * communication optimal
+     */
+    private final boolean communicationOptimal;
 
     public CuckooHashBatchSimplePirConfig(Builder builder) {
         super(SecurityModel.MALICIOUS);
         simplePirConfig = builder.simplePirConfig;
         cuckooHashBinType = builder.cuckooHashBinType;
+        communicationOptimal = builder.communicationOptimal;
     }
 
     public Hhcm23SimpleSingleIndexPirConfig getSimplePirConfig() {
@@ -42,6 +47,10 @@ public class CuckooHashBatchSimplePirConfig extends AbstractMultiPartyPtoConfig 
         return BatchIndexPirFactory.BatchIndexPirType.SIMPLE_PIR;
     }
 
+    public boolean isCommunicationOptimal() {
+        return communicationOptimal;
+    }
+
     public static class Builder implements org.apache.commons.lang3.builder.Builder<CuckooHashBatchSimplePirConfig> {
         /**
          * simple PIR config
@@ -51,10 +60,15 @@ public class CuckooHashBatchSimplePirConfig extends AbstractMultiPartyPtoConfig 
          * cuckoo hash
          */
         private IntCuckooHashBinFactory.IntCuckooHashBinType cuckooHashBinType;
+        /**
+         * communication optimal
+         */
+        private boolean communicationOptimal;
 
         public Builder() {
             simplePirConfig = new Hhcm23SimpleSingleIndexPirConfig.Builder().build();
             cuckooHashBinType = IntCuckooHashBinFactory.IntCuckooHashBinType.NO_STASH_NAIVE;
+            communicationOptimal = true;
         }
 
         public Builder setSimplePirConfig(Hhcm23SimpleSingleIndexPirConfig simplePirConfig) {
@@ -64,6 +78,11 @@ public class CuckooHashBatchSimplePirConfig extends AbstractMultiPartyPtoConfig 
 
         public Builder setCuckooHashBinType(IntCuckooHashBinFactory.IntCuckooHashBinType cuckooHashBinType) {
             this.cuckooHashBinType = cuckooHashBinType;
+            return this;
+        }
+
+        public Builder setCommunicationOptimal(boolean communicationOptimal) {
+            this.communicationOptimal = communicationOptimal;
             return this;
         }
 

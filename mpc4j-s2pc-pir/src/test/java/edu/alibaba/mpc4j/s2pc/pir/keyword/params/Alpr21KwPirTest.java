@@ -4,6 +4,8 @@ import com.google.common.collect.Lists;
 import edu.alibaba.mpc4j.common.rpc.test.AbstractTwoPartyPtoTest;
 import edu.alibaba.mpc4j.common.tool.CommonConstants;
 import edu.alibaba.mpc4j.s2pc.pir.PirUtils;
+import edu.alibaba.mpc4j.s2pc.pir.index.batch.naive.NaiveBatchIndexPirConfig;
+import edu.alibaba.mpc4j.s2pc.pir.index.batch.simplepir.CuckooHashBatchSimplePirConfig;
 import edu.alibaba.mpc4j.s2pc.pir.keyword.KwPirFactory;
 import edu.alibaba.mpc4j.s2pc.pir.keyword.alpr21.Alpr21KwPirClient;
 import edu.alibaba.mpc4j.s2pc.pir.keyword.alpr21.Alpr21KwPirConfig;
@@ -56,14 +58,27 @@ public class Alpr21KwPirTest extends AbstractTwoPartyPtoTest {
 
         // ALPR21
         configurations.add(new Object[]{
-            KwPirFactory.KwPirType.ALPR21.name() + " truncation size 3 bytes", new Alpr21KwPirConfig.Builder().build(),
+            KwPirFactory.KwPirType.ALPR21.name() + " truncation size 3 bytes - communication optimal",
+            new Alpr21KwPirConfig.Builder().build(),
             new Alpr21KwPirParams(CommonConstants.BLOCK_BYTE_LENGTH, 3)
         });
         configurations.add(new Object[]{
-            KwPirFactory.KwPirType.ALPR21.name() + " truncation size 5 bytes", new Alpr21KwPirConfig.Builder().build(),
-            new Alpr21KwPirParams(CommonConstants.BLOCK_BYTE_LENGTH, CommonConstants.STATS_BYTE_LENGTH)
+            KwPirFactory.KwPirType.ALPR21.name() + " truncation size 3 bytes - computation optimal",
+            new Alpr21KwPirConfig.Builder()
+                .setBatchIndexPirConfig(
+                    new CuckooHashBatchSimplePirConfig.Builder()
+                        .setCommunicationOptimal(false)
+                        .build()
+                ).build(),
+            new Alpr21KwPirParams(CommonConstants.BLOCK_BYTE_LENGTH, 3)
         });
-
+        configurations.add(new Object[]{
+            KwPirFactory.KwPirType.ALPR21.name() + " truncation size 3 bytes - naive batch simple PIR",
+            new Alpr21KwPirConfig.Builder()
+                .setBatchIndexPirConfig(new NaiveBatchIndexPirConfig.Builder().build())
+                .build(),
+            new Alpr21KwPirParams(CommonConstants.BLOCK_BYTE_LENGTH, 3)
+        });
         return configurations;
     }
 

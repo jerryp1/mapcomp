@@ -203,6 +203,11 @@ public class Ayaa21SingleIndexPirServer extends AbstractSingleIndexPirServer {
     }
 
     @Override
+    public List<byte[]> generateResponse(List<byte[]> clientQuery) throws MpcAbortException {
+        return generateResponse(clientQuery, encodedDatabase);
+    }
+
+    @Override
     public void setDefaultParams() {
         params = Ayaa21SingleIndexPirParams.DEFAULT_PARAMS;
     }

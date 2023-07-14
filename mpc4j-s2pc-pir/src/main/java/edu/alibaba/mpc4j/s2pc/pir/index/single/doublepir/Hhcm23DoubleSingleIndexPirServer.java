@@ -232,6 +232,11 @@ public class Hhcm23DoubleSingleIndexPirServer extends AbstractSingleIndexPirServ
     }
 
     @Override
+    public List<byte[]> generateResponse(List<byte[]> clientQuery) throws MpcAbortException {
+        return generateResponse(clientQuery, null);
+    }
+
+    @Override
     public void setDefaultParams() {
         params = Hhcm23DoubleSingleIndexPirParams.DEFAULT_PARAMS;
     }

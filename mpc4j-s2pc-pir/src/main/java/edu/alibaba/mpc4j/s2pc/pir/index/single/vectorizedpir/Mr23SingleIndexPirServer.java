@@ -150,6 +150,11 @@ public class Mr23SingleIndexPirServer extends AbstractSingleIndexPirServer {
     }
 
     @Override
+    public List<byte[]> generateResponse(List<byte[]> clientQuery) throws MpcAbortException {
+        return generateResponse(clientQuery, encodedDatabase);
+    }
+
+    @Override
     public int getQuerySize() {
         return params.getDimension();
     }

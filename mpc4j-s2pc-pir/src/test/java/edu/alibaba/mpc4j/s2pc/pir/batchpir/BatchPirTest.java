@@ -8,6 +8,7 @@ import edu.alibaba.mpc4j.s2pc.pir.index.batch.BatchIndexPirConfig;
 import edu.alibaba.mpc4j.s2pc.pir.index.batch.BatchIndexPirFactory;
 import edu.alibaba.mpc4j.s2pc.pir.index.batch.BatchIndexPirServer;
 import edu.alibaba.mpc4j.s2pc.pir.index.batch.cuckoohash.CuckooHashBatchIndexPirConfig;
+import edu.alibaba.mpc4j.s2pc.pir.index.batch.naive.NaiveBatchIndexPirConfig;
 import edu.alibaba.mpc4j.s2pc.pir.index.batch.psipir.Lpzl24BatchIndexPirConfig;
 import edu.alibaba.mpc4j.s2pc.pir.index.batch.simplepir.CuckooHashBatchSimplePirConfig;
 import edu.alibaba.mpc4j.s2pc.pir.index.batch.vectorizedpir.Mr23BatchIndexPirConfig;
@@ -67,55 +68,60 @@ public class BatchPirTest extends AbstractTwoPartyPtoTest {
         Collection<Object[]> configurations = new ArrayList<>();
 
         // cuckoo hash batch PIR
-//        configurations.add(new Object[]{
-//            BatchIndexPirFactory.BatchIndexPirType.SEAL_PIR.name(),
-//            new CuckooHashBatchIndexPirConfig.Builder()
-//                .setSingleIndexPirConfig(new Acls18SingleIndexPirConfig.Builder().build())
-//                .build()
-//        });
-//        configurations.add(new Object[]{
-//            BatchIndexPirFactory.BatchIndexPirType.FAST_PIR.name(),
-//            new CuckooHashBatchIndexPirConfig.Builder()
-//                .setSingleIndexPirConfig(new Ayaa21SingleIndexPirConfig.Builder().build())
-//                .build()
-//        });
-//        configurations.add(new Object[]{
-//            BatchIndexPirFactory.BatchIndexPirType.ONION_PIR.name(),
-//            new CuckooHashBatchIndexPirConfig.Builder()
-//                .setSingleIndexPirConfig(new Mcr21SingleIndexPirConfig.Builder().build())
-//                .build()
-//        });
-//        configurations.add(new Object[]{
-//            BatchIndexPirFactory.BatchIndexPirType.CONSTANT_WEIGHT_PIR.name(),
-//            new CuckooHashBatchIndexPirConfig.Builder()
-//                .setSingleIndexPirConfig(new Mk22SingleIndexPirConfig.Builder().build())
-//                .build()
-//        });
-//        configurations.add(new Object[]{
-//            BatchIndexPirFactory.BatchIndexPirType.MUL_PIR.name(),
-//            new CuckooHashBatchIndexPirConfig.Builder()
-//                .setSingleIndexPirConfig(new Alpr21SingleIndexPirConfig.Builder().build())
-//                .build()
-//        });
-//        configurations.add(new Object[]{
-//            BatchIndexPirFactory.BatchIndexPirType.XPIR.name(),
-//            new CuckooHashBatchIndexPirConfig.Builder()
-//                .setSingleIndexPirConfig(new Mbfk16SingleIndexPirConfig.Builder().build())
-//                .build()
-//        });
+        configurations.add(new Object[]{
+            BatchIndexPirFactory.BatchIndexPirType.SEAL_PIR.name(),
+            new CuckooHashBatchIndexPirConfig.Builder()
+                .setSingleIndexPirConfig(new Acls18SingleIndexPirConfig.Builder().build())
+                .build()
+        });
+        configurations.add(new Object[]{
+            BatchIndexPirFactory.BatchIndexPirType.FAST_PIR.name(),
+            new CuckooHashBatchIndexPirConfig.Builder()
+                .setSingleIndexPirConfig(new Ayaa21SingleIndexPirConfig.Builder().build())
+                .build()
+        });
+        configurations.add(new Object[]{
+            BatchIndexPirFactory.BatchIndexPirType.ONION_PIR.name(),
+            new CuckooHashBatchIndexPirConfig.Builder()
+                .setSingleIndexPirConfig(new Mcr21SingleIndexPirConfig.Builder().build())
+                .build()
+        });
+        configurations.add(new Object[]{
+            BatchIndexPirFactory.BatchIndexPirType.CONSTANT_WEIGHT_PIR.name(),
+            new CuckooHashBatchIndexPirConfig.Builder()
+                .setSingleIndexPirConfig(new Mk22SingleIndexPirConfig.Builder().build())
+                .build()
+        });
+        configurations.add(new Object[]{
+            BatchIndexPirFactory.BatchIndexPirType.MUL_PIR.name(),
+            new CuckooHashBatchIndexPirConfig.Builder()
+                .setSingleIndexPirConfig(new Alpr21SingleIndexPirConfig.Builder().build())
+                .build()
+        });
+        configurations.add(new Object[]{
+            BatchIndexPirFactory.BatchIndexPirType.XPIR.name(),
+            new CuckooHashBatchIndexPirConfig.Builder()
+                .setSingleIndexPirConfig(new Mbfk16SingleIndexPirConfig.Builder().build())
+                .build()
+        });
         // PSI - PIR
-//        configurations.add(new Object[]{
-//            BatchIndexPirFactory.BatchIndexPirType.PSI_PIR.name(), new Lpzl24BatchIndexPirConfig.Builder().build()
-//        });
+        configurations.add(new Object[]{
+            BatchIndexPirFactory.BatchIndexPirType.PSI_PIR.name(), new Lpzl24BatchIndexPirConfig.Builder().build()
+        });
         // vectorized batch PIR
-//        configurations.add(new Object[]{
-//            BatchIndexPirFactory.BatchIndexPirType.VECTORIZED_BATCH_PIR.name(),
-//            new Mr23BatchIndexPirConfig.Builder().build()
-//        });
+        configurations.add(new Object[]{
+            BatchIndexPirFactory.BatchIndexPirType.VECTORIZED_BATCH_PIR.name(),
+            new Mr23BatchIndexPirConfig.Builder().build()
+        });
         // batch Simple PIR
         configurations.add(new Object[]{
             BatchIndexPirFactory.BatchIndexPirType.SIMPLE_PIR.name(),
             new CuckooHashBatchSimplePirConfig.Builder().build()
+        });
+        // naive batch PIR
+        configurations.add(new Object[]{
+            BatchIndexPirFactory.BatchIndexPirType.NAIVE_BATCH_PIR.name(),
+            new NaiveBatchIndexPirConfig.Builder().build()
         });
         return configurations;
     }

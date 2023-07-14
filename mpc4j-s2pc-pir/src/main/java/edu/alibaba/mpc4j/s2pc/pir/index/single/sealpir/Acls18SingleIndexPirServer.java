@@ -174,6 +174,11 @@ public class Acls18SingleIndexPirServer extends AbstractSingleIndexPirServer {
     }
 
     @Override
+    public List<byte[]> generateResponse(List<byte[]> clientQuery) throws MpcAbortException {
+        return generateResponse(clientQuery, encodedDatabase);
+    }
+
+    @Override
     public void setDefaultParams() {
         params = Acls18SingleIndexPirParams.DEFAULT_PARAMS;
     }

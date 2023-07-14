@@ -63,11 +63,16 @@ public class CuckooHashBatchSimplePirServer extends AbstractBatchIndexPirServer 
      * seed
      */
     byte[] seed;
+    /**
+     * communication optimal
+     */
+    private final boolean isCommunicationOptimal;
 
     public CuckooHashBatchSimplePirServer(Rpc serverRpc, Party clientParty, CuckooHashBatchSimplePirConfig config) {
         super(CuckooHashBatchSimplePirPtoDesc.getInstance(), serverRpc, clientParty, config);
         simplePirServer = new Hhcm23SimpleSingleIndexPirServer(serverRpc, clientParty, config.getSimplePirConfig());
         cuckooHashBinType = config.getCuckooHashBinType();
+        isCommunicationOptimal = config.isCommunicationOptimal();
     }
 
     @Override
@@ -247,13 +252,19 @@ public class CuckooHashBatchSimplePirServer extends AbstractBatchIndexPirServer 
             d = CommonUtils.getUnitNum(maxPartitionByteLength * Byte.SIZE, simplePirServer.params.logP - 1);
             if ((BigInteger.valueOf(d).multiply(BigInteger.valueOf(binSize)))
                 .compareTo(INT_MAX_VALUE.shiftRight(1)) < 0) {
-                rows = (int) Math.max(2, Math.ceil(Math.sqrt(d * num)));
-                rows = CommonUtils.getUnitNum(rows, binNum);
-                long rem = rows % d;
-                if (rem != 0) {
-                    rows += d - rem;
+                if (isCommunicationOptimal) {
+                    rows = (int) Math.max(2, Math.ceil(Math.sqrt(d * num)));
+                    rows = CommonUtils.getUnitNum(rows, binNum);
+                    long rem = rows % d;
+                    if (rem != 0) {
+                        rows += d - rem;
+                    }
+                    cols = (int) Math.ceil((double) d * binSize / rows);
+                } else {
+                    int[] dims = PirUtils.approxSquareDatabaseDims(binSize, d);
+                    rows = dims[0];
+                    cols = dims[1];
                 }
-                cols = (int) Math.ceil((double) d * binSize / rows);
                 simplePirServer.params.setPlainModulo(PirUtils.getBitLength(cols));
                 break;
             }

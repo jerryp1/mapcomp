@@ -57,11 +57,16 @@ public class CuckooHashBatchSimplePirClient extends AbstractBatchIndexPirClient 
      * hint
      */
     private Zl64Matrix[][] hint;
+    /**
+     * communication optimal
+     */
+    private final boolean isCommunicationOptimal;
 
     public CuckooHashBatchSimplePirClient(Rpc clientRpc, Party serverParty, CuckooHashBatchSimplePirConfig config) {
         super(CuckooHashBatchSimplePirPtoDesc.getInstance(), clientRpc, serverParty, config);
         simplePirClient = new Hhcm23SimpleSingleIndexPirClient(clientRpc, serverParty, config.getSimplePirConfig());
         cuckooHashBinType = config.getCuckooHashBinType();
+        isCommunicationOptimal = config.isCommunicationOptimal();
     }
 
     @Override
@@ -104,7 +109,7 @@ public class CuckooHashBatchSimplePirClient extends AbstractBatchIndexPirClient 
         // client init single index PIR client
         simplePirClient.setParallel(parallel);
         simplePirClient.setDefaultParams();
-        simplePirClient.clientBatchSetup(serverElementSize, maxBinSize, binNum, elementBitLength);
+        simplePirClient.clientBatchSetup(serverElementSize, maxBinSize, binNum, elementBitLength, isCommunicationOptimal);
         simplePirClient.handledSeedPayload(seedPayload);
         partitionSize = simplePirClient.partitionSize;
         MpcAbortPreconditions.checkArgument(hintPayload.size() == binNum * partitionSize);
