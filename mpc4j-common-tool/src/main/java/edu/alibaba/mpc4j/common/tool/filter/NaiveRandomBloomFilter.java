@@ -10,7 +10,7 @@ import java.util.Arrays;
 import java.util.List;
 
 /**
- * naive Bloom Filter. We refer to the following implementation:
+ * naive random Bloom Filter. We refer to the following implementation:
  * <p>
  * https://github.com/google/guava/blob/master/guava/src/com/google/common/hash/BloomFilter.java
  * </p>
@@ -23,11 +23,19 @@ import java.util.List;
  * @author Weiran Liu
  * @date 2020/06/30
  */
-public class NaiveBloomFilter<T> extends AbstractBloomFilter<T> {
+public class NaiveRandomBloomFilter<T> extends AbstractBloomFilter<T> {
     /**
      * When m = n log_2(e) * log_2(1/p), HASH_NUM = log_2(1/p)
      */
-    static final int HASH_NUM = CommonConstants.STATS_BIT_LENGTH;
+    private static final int HASH_NUM = CommonConstants.STATS_BIT_LENGTH;
+    /**
+     * hash key num = 1
+     */
+    static final int HASH_KEY_NUM = 1;
+    /**
+     * type
+     */
+    private static final FilterType FILTER_TYPE = FilterType.NAIVE_RANDOM_BLOOM_FILTER;
 
     /**
      * Gets m for the given n.
@@ -47,16 +55,15 @@ public class NaiveBloomFilter<T> extends AbstractBloomFilter<T> {
      *
      * @param envType environment.
      * @param maxSize max number of inserted elements.
-     * @param keys    hash keys.
+     * @param key     hash key.
      * @return an empty filter.
      */
-    public static <X> NaiveBloomFilter<X> create(EnvType envType, int maxSize, byte[][] keys) {
-        MathPreconditions.checkEqual("keys.length", "hashNum", keys.length, HASH_NUM);
-        int m = NaiveBloomFilter.bitSize(maxSize);
+    public static <X> NaiveRandomBloomFilter<X> create(EnvType envType, int maxSize, byte[] key) {
+        int m = NaiveRandomBloomFilter.bitSize(maxSize);
         byte[] storage = new byte[CommonUtils.getByteLength(m)];
         // all positions are initiated as 0
         Arrays.fill(storage, (byte) 0x00);
-        return new NaiveBloomFilter<>(envType, maxSize, m, keys, 0, storage, 0);
+        return new NaiveRandomBloomFilter<>(envType, maxSize, m, key, 0, storage, 0);
     }
 
     /**
@@ -67,35 +74,36 @@ public class NaiveBloomFilter<T> extends AbstractBloomFilter<T> {
      * @param <X>           the type.
      * @return the filter.
      */
-    static <X> NaiveBloomFilter<X> fromByteArrayList(EnvType envType, List<byte[]> byteArrayList) {
-        MathPreconditions.checkEqual("byteArrayList.size", "desired size", byteArrayList.size(), 5 + HASH_NUM);
+    static <X> NaiveRandomBloomFilter<X> fromByteArrayList(EnvType envType, List<byte[]> byteArrayList) {
+        MathPreconditions.checkEqual("byteArrayList.size", "desired size", byteArrayList.size(), 6);
         // type
-        byteArrayList.remove(0);
+        int typeOrdinal = IntUtils.byteArrayToInt(byteArrayList.remove(0));
+        MathPreconditions.checkEqual("", "", typeOrdinal, FILTER_TYPE.ordinal());
         // max size
         int maxSize = IntUtils.byteArrayToInt(byteArrayList.remove(0));
-        int m = NaiveBloomFilter.bitSize(maxSize);
+        int m = NaiveRandomBloomFilter.bitSize(maxSize);
         // size
         int size = IntUtils.byteArrayToInt(byteArrayList.remove(0));
         // item byte length
         int itemByteLength = IntUtils.byteArrayToInt(byteArrayList.remove(0));
         // storage
         byte[] storage = byteArrayList.remove(0);
-        // keys
-        byte[][] keys = byteArrayList.toArray(new byte[0][]);
-        MathPreconditions.checkEqual("keys.length", "hashNum", keys.length, HASH_NUM);
+        // key
+        byte[] key = byteArrayList.remove(0);
 
-        return new NaiveBloomFilter<>(envType, maxSize, m, keys, size, storage, itemByteLength);
+        return new NaiveRandomBloomFilter<>(envType, maxSize, m, key, size, storage, itemByteLength);
     }
 
-    NaiveBloomFilter(EnvType envType, int maxSize, int m, byte[][] keys, int size, byte[] storage, int itemByteLength) {
-        super(FilterType.NAIVE_BLOOM_FILTER, envType, maxSize, m, keys, size, storage, itemByteLength);
+    NaiveRandomBloomFilter(EnvType envType, int maxSize, int m, byte[] key, int size, byte[] storage, int itemByteLength) {
+        super(FILTER_TYPE, envType, maxSize, m, HASH_NUM, key, size, storage, itemByteLength);
     }
 
     @Override
     public int[] hashIndexes(T data) {
         byte[] dataBytes = ObjectUtils.objectToByteArray(data);
-        return Arrays.stream(hashes)
-            .mapToInt(hash -> hash.getInteger(dataBytes, m))
+        byte[] hashes = hash.getBytes(dataBytes);
+        return Arrays.stream(IntUtils.byteArrayToIntArray(hashes))
+            .map(hi -> Math.abs(hi % m))
             .distinct()
             .toArray();
     }

@@ -1,14 +1,15 @@
 package edu.alibaba.mpc4j.common.tool.filter;
 
-import com.google.common.base.Preconditions;
 import edu.alibaba.mpc4j.common.tool.EnvType;
 import edu.alibaba.mpc4j.common.tool.MathPreconditions;
 import edu.alibaba.mpc4j.common.tool.utils.*;
+import gnu.trove.map.TIntIntMap;
+import gnu.trove.map.hash.TIntIntHashMap;
 
 import java.util.*;
 
 /**
- * sparse Bloom Filter, which have larger m than naive Bloom Filter. This Bloom Filter is used in the following paper:
+ * sparse random Bloom Filter, which have larger m than naive Bloom Filter. This Bloom Filter is used in the paper:
  * <p>
  * Rindal P, Rosulek M. Improved private set intersection against malicious adversaries. EUROCRYPT 2017. Springer, Cham,
  * 2017: 235-259.
@@ -17,15 +18,23 @@ import java.util.*;
  * @author Ziyuan Liang, Weiran Liu
  * @date 2020/09/30
  */
-public class SparseBloomFilter<T> extends AbstractBloomFilter<T> {
+public class SparseRandomBloomFilter<T> extends AbstractBloomFilter<T> {
+    /**
+     * hash key num = 1
+     */
+    static final int HASH_KEY_NUM = 1;
     /**
      * max number of supported elements (in log size)
      */
     private static final int MAX_LOG_N = 23;
     /**
+     * type
+     */
+    private static final FilterFactory.FilterType FILTER_TYPE = FilterFactory.FilterType.SPARSE_RANDOM_BLOOM_FILTER;
+    /**
      * n -> m
      */
-    private static final Map<Integer, Integer> SBF_BIT_LENGTH_INIT_MATRIX = new HashMap<>();
+    private static final TIntIntMap SBF_BIT_LENGTH_INIT_MATRIX = new TIntIntHashMap();
 
     static {
         SBF_BIT_LENGTH_INIT_MATRIX.put(8, 88031);
@@ -64,7 +73,7 @@ public class SparseBloomFilter<T> extends AbstractBloomFilter<T> {
     /**
      * n -> hashNum
      */
-    private static final Map<Integer, Integer> HASH_NUM_INIT_MATRIX = new HashMap<>();
+    private static final TIntIntMap HASH_NUM_INIT_MATRIX = new TIntIntHashMap();
 
     static {
         HASH_NUM_INIT_MATRIX.put(8, 105);
@@ -105,18 +114,16 @@ public class SparseBloomFilter<T> extends AbstractBloomFilter<T> {
      *
      * @param envType environment.
      * @param maxSize max number of inserted elements.
-     * @param keys    hash keys.
+     * @param key    hash key.
      * @return an empty filter.
      */
-    public static <X> SparseBloomFilter<X> create(EnvType envType, int maxSize, byte[][] keys) {
-        int m = SparseBloomFilter.bitSize(maxSize);
-        int hashNum = SparseBloomFilter.getHashNum(maxSize);
-        MathPreconditions.checkEqual("keys.length", "hashNum", keys.length, hashNum);
+    public static <X> SparseRandomBloomFilter<X> create(EnvType envType, int maxSize, byte[] key) {
+        int m = SparseRandomBloomFilter.bitSize(maxSize);
         byte[] storage = new byte[CommonUtils.getByteLength(m)];
         // all positions are initiated as 0
         Arrays.fill(storage, (byte) 0x00);
 
-        return new SparseBloomFilter<>(envType, maxSize, m, keys, 0, storage, 0);
+        return new SparseRandomBloomFilter<>(envType, maxSize, m, key, 0, storage, 0);
     }
 
     /**
@@ -127,37 +134,38 @@ public class SparseBloomFilter<T> extends AbstractBloomFilter<T> {
      * @param <X>           the type.
      * @return the filter.
      */
-    static <X> SparseBloomFilter<X> fromByteArrayList(EnvType envType, List<byte[]> byteArrayList) {
-        MathPreconditions.checkGreaterOrEqual("byteArrayList.size", byteArrayList.size(), 5);
-        Preconditions.checkArgument(byteArrayList.size() >= 5);
+    static <X> SparseRandomBloomFilter<X> fromByteArrayList(EnvType envType, List<byte[]> byteArrayList) {
+        MathPreconditions.checkEqual("byteArrayList.size", "desired size", byteArrayList.size(), 6);
         // type
-        byteArrayList.remove(0);
+        int typeOrdinal = IntUtils.byteArrayToInt(byteArrayList.remove(0));
+        MathPreconditions.checkEqual("", "", typeOrdinal, FILTER_TYPE.ordinal());
         // max size
         int maxSize = IntUtils.byteArrayToInt(byteArrayList.remove(0));
-        int m = SparseBloomFilter.bitSize(maxSize);
-        int hashNum = SparseBloomFilter.getHashNum(maxSize);
+        int m = SparseRandomBloomFilter.bitSize(maxSize);
         // size
         int size = IntUtils.byteArrayToInt(byteArrayList.remove(0));
         // item byte length
         int itemByteLength = IntUtils.byteArrayToInt(byteArrayList.remove(0));
         // storage
         byte[] storage = byteArrayList.remove(0);
-        // keys
-        byte[][] keys = byteArrayList.toArray(new byte[0][]);
-        MathPreconditions.checkEqual("keys.length", "hashNum", keys.length, hashNum);
+        // key
+        byte[] key = byteArrayList.remove(0);
 
-        return new SparseBloomFilter<>(envType, maxSize, m, keys, size, storage, itemByteLength);
+        return new SparseRandomBloomFilter<>(envType, maxSize, m, key, size, storage, itemByteLength);
     }
 
-    SparseBloomFilter(EnvType envType, int maxSize, int m, byte[][] keys, int size, byte[] storage, int itemByteLength) {
-        super(FilterFactory.FilterType.SPARSE_BLOOM_FILTER, envType, maxSize, m, keys, size, storage, itemByteLength);
+    SparseRandomBloomFilter(EnvType envType, int maxSize, int m, byte[] key, int size, byte[] storage, int itemByteLength) {
+        super(FILTER_TYPE, envType, maxSize, m,
+            SparseRandomBloomFilter.getHashNum(maxSize),
+            key, size, storage, itemByteLength);
     }
 
     @Override
     public int[] hashIndexes(T data) {
         byte[] dataBytes = ObjectUtils.objectToByteArray(data);
-        return Arrays.stream(hashes)
-            .mapToInt(hash -> hash.getInteger(dataBytes, m))
+        byte[] hashes = hash.getBytes(dataBytes);
+        return Arrays.stream(IntUtils.byteArrayToIntArray(hashes))
+            .map(hi -> Math.abs(hi % m))
             .distinct()
             .toArray();
     }

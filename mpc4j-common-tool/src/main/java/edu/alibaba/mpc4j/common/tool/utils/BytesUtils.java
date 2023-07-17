@@ -652,6 +652,22 @@ public class BytesUtils {
     }
 
     /**
+     * Computes the inner product of x and y (positions labeled as 1).
+     *
+     * @param x           vector x.
+     * @param xByteLength x byte length.
+     * @param positions   vector y (positions labeled as 1).
+     * @return the inner product of x and y.
+     */
+    public static byte[] innerProduct(byte[][] x, int xByteLength, int[] positions) {
+        byte[] value = new byte[xByteLength];
+        for (int position : positions) {
+            BytesUtils.xori(value, x[position]);
+        }
+        return value;
+    }
+
+    /**
      * Computes the inner product of x and y.
      *
      * @param x           vector x.

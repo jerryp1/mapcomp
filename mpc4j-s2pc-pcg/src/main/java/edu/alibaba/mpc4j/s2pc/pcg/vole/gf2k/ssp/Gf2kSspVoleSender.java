@@ -14,7 +14,7 @@ public interface Gf2kSspVoleSender extends TwoPartyPto {
     /**
      * Inits the protocol.
      *
-     * @param maxNum num.
+     * @param maxNum max num.
      * @throws MpcAbortException the protocol failure aborts.
      */
     void init(int maxNum) throws MpcAbortException;
@@ -34,7 +34,7 @@ public interface Gf2kSspVoleSender extends TwoPartyPto {
      *
      * @param alpha           α.
      * @param num             num.
-     * @param preSenderOutput pre-computed sender output.
+     * @param preSenderOutput pre-computed GF2K-VOLE sender output.
      * @return the sender output.
      * @throws MpcAbortException the protocol failure aborts.
      */

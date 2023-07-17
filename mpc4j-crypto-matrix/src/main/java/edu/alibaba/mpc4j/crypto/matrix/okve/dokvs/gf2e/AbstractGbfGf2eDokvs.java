@@ -8,35 +8,37 @@ import edu.alibaba.mpc4j.common.tool.crypto.prf.Prf;
 import edu.alibaba.mpc4j.common.tool.crypto.prf.PrfFactory;
 import edu.alibaba.mpc4j.common.tool.utils.BytesUtils;
 import edu.alibaba.mpc4j.common.tool.utils.CommonUtils;
-import edu.alibaba.mpc4j.common.tool.utils.ObjectUtils;
-import gnu.trove.set.TIntSet;
-import gnu.trove.set.hash.TIntHashSet;
 
+import java.security.SecureRandom;
 import java.util.Map;
 import java.util.Set;
-import java.util.stream.IntStream;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.stream.Stream;
 
 /**
- * Distinct Garbled Bloom Filter (GBF) DOKVS. The original scheme is described in the following paper:
+ * abstract Garbled Bloom Filter DOKVS. The original scheme is described in the following paper:
  * <p>
  * Dong C, Chen L, Wen Z. When private set intersection meets big data: an efficient and scalable protocol. CCS 2013.
  * ACM, 2013 pp. 789-800.
  * </p>
- * In this implementation, we require that any inputs have constant distinct positions in the Garbled Bloom Filter.
- * This requirement is used in the following paper:
+ * The following paper points out that GBF is a DOKVS.
  * <p>
- * Lepoint, Tancrede, Sarvar Patel, Mariana Raykova, Karn Seth, and Ni Trieu. Private join and compute from PIR with
- * default. ASIACRYPT 2021, Part II, pp. 605-634. Cham: Springer International Publishing, 2021.
+ * Pinkas B, Rosulek M, Trieu N, et al. PSI from PaXoS: Fast, Malicious Private Set Intersection. EUROCRYPT 2020,
+ * Springer, Cham, 2020, pp. 739-767.
  * </p>
  *
  * @author Weiran Liu
- * @date 2023/7/3
+ * @date 2023/7/10
  */
-class DistinctGbfDokvs<T> extends AbstractGf2eDokvs<T> implements SparseConstantGf2eDokvs<T> {
+abstract class AbstractGbfGf2eDokvs<T> extends AbstractGf2eDokvs<T> implements SparseGf2eDokvs<T> {
     /**
      * Garbled Bloom Filter needs λ hashes
      */
-    static int TOTAL_HASH_NUM = CommonConstants.STATS_BIT_LENGTH;
+    protected static final int SPARSE_HASH_NUM = CommonConstants.STATS_BIT_LENGTH;
+    /**
+     * we only need to use one hash key
+     */
+    static final int HASH_KEY_NUM = 1;
 
     /**
      * Gets m for the given n.
@@ -55,18 +57,12 @@ class DistinctGbfDokvs<T> extends AbstractGf2eDokvs<T> implements SparseConstant
     /**
      * hashes
      */
-    private final Prf[] prfs;
+    protected final Prf hash;
 
-    public DistinctGbfDokvs(EnvType envType, int n, int l, byte[][] keys) {
-        super(n, getM(n), l);
-        MathPreconditions.checkEqual("keys.length", "hash_num", keys.length, TOTAL_HASH_NUM);
-        prfs = IntStream.range(0, TOTAL_HASH_NUM)
-            .mapToObj(hashIndex -> {
-                Prf hash = PrfFactory.createInstance(envType, Integer.BYTES);
-                hash.setKey(keys[hashIndex]);
-                return hash;
-            })
-            .toArray(Prf[]::new);
+    AbstractGbfGf2eDokvs(EnvType envType, int n, int l, byte[] key, SecureRandom secureRandom) {
+        super(n, getM(n), l, secureRandom);
+        hash = PrfFactory.createInstance(envType, Integer.BYTES * SPARSE_HASH_NUM);
+        hash.setKey(key);
     }
 
     @Override
@@ -75,28 +71,8 @@ class DistinctGbfDokvs<T> extends AbstractGf2eDokvs<T> implements SparseConstant
     }
 
     @Override
-    public int[] sparsePositions(T key) {
-        byte[] keyBytes = ObjectUtils.objectToByteArray(key);
-        int[] sparsePositions = new int[TOTAL_HASH_NUM];
-        TIntSet positionSet = new TIntHashSet(TOTAL_HASH_NUM);
-        // h1
-        sparsePositions[0] = prfs[0].getInteger(0, keyBytes, m);
-        positionSet.add(sparsePositions[0]);
-        // generate other λ - 1 distinct positions
-        for (int i = 1; i < TOTAL_HASH_NUM; i++) {
-            int hiIndex = 0;
-            do {
-                sparsePositions[i] = prfs[i].getInteger(hiIndex, keyBytes, m);
-                hiIndex++;
-            } while (positionSet.contains(sparsePositions[i]));
-            positionSet.add(sparsePositions[i]);
-        }
-        return sparsePositions;
-    }
-
-    @Override
-    public int sparsePositionNum() {
-        return TOTAL_HASH_NUM;
+    public int maxSparsePositionNum() {
+        return SPARSE_HASH_NUM;
     }
 
     @Override
@@ -106,7 +82,7 @@ class DistinctGbfDokvs<T> extends AbstractGf2eDokvs<T> implements SparseConstant
     }
 
     @Override
-    public int maxDensePositionNum() {
+    public int densePositionRange() {
         return 0;
     }
 
@@ -115,12 +91,18 @@ class DistinctGbfDokvs<T> extends AbstractGf2eDokvs<T> implements SparseConstant
         MathPreconditions.checkLessOrEqual("key-value size", keyValueMap.size(), n);
         keyValueMap.values().forEach(x -> Preconditions.checkArgument(BytesUtils.isFixedReduceByteArray(x, byteL, l)));
         Set<T> keySet = keyValueMap.keySet();
+        Map<T, int[]> sparsePositionsMap = new ConcurrentHashMap<>(keySet.size());
+        Stream<T> keyStream = keySet.stream();
+        keyStream = parallelEncode ? keyStream.parallel() : keyStream;
+        keyStream.forEach(key -> {
+            int[] sparsePositions = sparsePositions(key);
+            sparsePositionsMap.put(key, sparsePositions);
+        });
         // compute positions for all keys, create shares.
         byte[][] storage = new byte[m][];
         for (T key : keySet) {
             byte[] finalShare = BytesUtils.clone(keyValueMap.get(key));
-            assert finalShare.length == byteL;
-            int[] sparsePositions = sparsePositions(key);
+            int[] sparsePositions = sparsePositionsMap.get(key);
             int emptySlot = -1;
             for (int position : sparsePositions) {
                 if (storage[position] == null && emptySlot == -1) {
@@ -154,7 +136,7 @@ class DistinctGbfDokvs<T> extends AbstractGf2eDokvs<T> implements SparseConstant
     @Override
     public byte[] decode(byte[][] storage, T key) {
         // here we do not verify bit length for each storage, otherwise decode would require O(n) computation.
-        assert storage.length == getM();
+        MathPreconditions.checkEqual("storage.length", "m", storage.length, m);
         int[] sparsePositions = sparsePositions(key);
         byte[] value = new byte[byteL];
         for (int position : sparsePositions) {
@@ -162,10 +144,5 @@ class DistinctGbfDokvs<T> extends AbstractGf2eDokvs<T> implements SparseConstant
         }
         assert BytesUtils.isFixedReduceByteArray(value, byteL, l);
         return value;
-    }
-
-    @Override
-    public Gf2eDokvsFactory.Gf2eDokvsType getType() {
-        return Gf2eDokvsFactory.Gf2eDokvsType.DISTINCT_GBF;
     }
 }

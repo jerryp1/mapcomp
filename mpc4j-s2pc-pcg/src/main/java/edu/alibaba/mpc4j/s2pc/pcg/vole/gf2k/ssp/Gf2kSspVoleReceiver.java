@@ -33,7 +33,7 @@ public interface Gf2kSspVoleReceiver extends TwoPartyPto {
      * Executes the protocol.
      *
      * @param num               num.
-     * @param preReceiverOutput pre-computed receiver output.
+     * @param preReceiverOutput pre-computed GF2K-VOLE receiver output.
      * @return the receiver output.
      * @throws MpcAbortException the protocol failure aborts.
      */
