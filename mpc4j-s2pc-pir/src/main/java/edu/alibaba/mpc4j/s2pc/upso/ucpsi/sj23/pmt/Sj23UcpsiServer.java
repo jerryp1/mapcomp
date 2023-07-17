@@ -1,6 +1,9 @@
-package edu.alibaba.mpc4j.s2pc.upso.ucpsi.cgs22;
+package edu.alibaba.mpc4j.s2pc.upso.ucpsi.sj23.pmt;
 
-import edu.alibaba.mpc4j.common.rpc.*;
+import edu.alibaba.mpc4j.common.rpc.MpcAbortException;
+import edu.alibaba.mpc4j.common.rpc.Party;
+import edu.alibaba.mpc4j.common.rpc.PtoState;
+import edu.alibaba.mpc4j.common.rpc.Rpc;
 import edu.alibaba.mpc4j.common.rpc.utils.DataPacket;
 import edu.alibaba.mpc4j.common.rpc.utils.DataPacketHeader;
 import edu.alibaba.mpc4j.common.tool.CommonConstants;
@@ -30,12 +33,12 @@ import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
 /**
- * CGS22 unbalanced circuit PSI server.
+ * SJ23 unbalanced circuit PSI server.
  *
- * @author Weiran Liu
- * @date 2023/4/20
+ * @author Liqiang Peng
+ * @date 2023/7/17
  */
-public class Cgs22UcpsiServer<T> extends AbstractUcpsiServer<T> {
+public class Sj23UcpsiServer<T> extends AbstractUcpsiServer<T> {
     /**
      * unbalanced related batch OPPRF sender
      */
@@ -85,13 +88,13 @@ public class Cgs22UcpsiServer<T> extends AbstractUcpsiServer<T> {
      */
     private byte[][][] targetArrays;
 
-    public Cgs22UcpsiServer(Rpc serverRpc, Party clientParty, Cgs22UcpsiConfig config) {
-        super(Cgs22UcpsiPtoDesc.getInstance(), serverRpc, clientParty, config);
+    public Sj23UcpsiServer(Rpc clientRpc, Party senderParty, Cgs22UcpsiConfig config) {
+        super(Cgs22UcpsiPtoDesc.getInstance(), clientRpc, senderParty, config);
         UrbopprfConfig urbopprfConfig = config.getUrbopprfConfig();
-        urbopprfSender = UrbopprfFactory.createSender(serverRpc, clientParty, urbopprfConfig);
+        urbopprfSender = UrbopprfFactory.createSender(clientRpc, senderParty, urbopprfConfig);
         d = urbopprfConfig.getD();
         addSubPtos(urbopprfSender);
-        psmReceiver = PsmFactory.createReceiver(serverRpc, clientParty, config.getPsmConfig());
+        psmReceiver = PsmFactory.createReceiver(clientRpc, senderParty, config.getPsmConfig());
         addSubPtos(psmReceiver);
         cuckooHashBinType = CuckooHashBinType.NO_STASH_PSZ18_3_HASH;
         hashNum = CuckooHashBinFactory.getHashNum(cuckooHashBinType);
