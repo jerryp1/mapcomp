@@ -40,7 +40,7 @@ public class Wykw21Gf2kShSspVoleReceiver extends AbstractGf2kSspVoleReceiver {
      */
     private final SpDpprfSender spDpprfSender;
     /**
-     * GF2K VOLE receiver output
+     * GF2K-VOLE receiver output
      */
     private Gf2kVoleReceiverOutput gf2kVoleReceiverOutput;
 

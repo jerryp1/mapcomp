@@ -9,7 +9,7 @@ import edu.alibaba.mpc4j.s2pc.pcg.vole.gf2k.ssp.Gf2kSspVoleReceiverOutput;
 import java.util.Arrays;
 
 /**
- * Batch single-point GF2K VOLE receiver output.
+ * Batch single-point GF2K-VOLE receiver output.
  *
  * @author Weiran Liu
  * @date 2023/7/12

@@ -1,23 +1,23 @@
-package edu.alibaba.mpc4j.s2pc.pcg.vole.gf2k.ssp;
+package edu.alibaba.mpc4j.s2pc.pcg.ot.cot.ssp;
 
 import edu.alibaba.mpc4j.common.rpc.Party;
 import edu.alibaba.mpc4j.common.rpc.Rpc;
 import edu.alibaba.mpc4j.common.rpc.desc.PtoDesc;
 import edu.alibaba.mpc4j.common.rpc.pto.AbstractTwoPartyPto;
 import edu.alibaba.mpc4j.common.tool.MathPreconditions;
-import edu.alibaba.mpc4j.s2pc.pcg.vole.gf2k.Gf2kVoleSenderOutput;
+import edu.alibaba.mpc4j.s2pc.pcg.ot.cot.CotReceiverOutput;
 
 /**
- * abstract GF2K-SSP-VOLE sender.
+ * abstract SSP-COT receiver.
  *
  * @author Weiran Liu
- * @date 2023/3/16
+ * @date 2023/7/13
  */
-public abstract class AbstractGf2kSspVoleSender extends AbstractTwoPartyPto implements Gf2kSspVoleSender {
+public abstract class AbstractSspCotReceiver extends AbstractTwoPartyPto implements SspCotReceiver {
     /**
      * config
      */
-    protected final Gf2kSspVoleConfig config;
+    protected final SspCotConfig config;
     /**
      * max num
      */
@@ -31,8 +31,8 @@ public abstract class AbstractGf2kSspVoleSender extends AbstractTwoPartyPto impl
      */
     protected int num;
 
-    protected AbstractGf2kSspVoleSender(PtoDesc ptoDesc, Rpc senderRpc, Party receiverParty, Gf2kSspVoleConfig config) {
-        super(ptoDesc, senderRpc, receiverParty, config);
+    protected AbstractSspCotReceiver(PtoDesc ptoDesc, Rpc receiverRpc, Party senderParty, SspCotConfig config) {
+        super(ptoDesc, receiverRpc, senderParty, config);
         this.config = config;
     }
 
@@ -51,10 +51,10 @@ public abstract class AbstractGf2kSspVoleSender extends AbstractTwoPartyPto impl
         extraInfo++;
     }
 
-    protected void setPtoInput(int alpha, int num, Gf2kVoleSenderOutput preSenderOutput) {
+    protected void setPtoInput(int alpha, int num, CotReceiverOutput preReceiverOutput) {
         setPtoInput(alpha, num);
         MathPreconditions.checkGreaterOrEqual(
-            "preNum", preSenderOutput.getNum(), Gf2kSspVoleFactory.getPrecomputeNum(config, num)
+            "preNum", preReceiverOutput.getNum(), SspCotFactory.getPrecomputeNum(config, num)
         );
     }
 }

@@ -32,7 +32,6 @@ public class BspCotReceiverOutput implements PcgPartyOutput {
             // 验证数量均为num
             .peek(iOutput ->
                 MathPreconditions.checkEqual("each num", "i-th num", receiverOutput.eachNum, iOutput.getNum())
-
             )
             .toArray(SspCotReceiverOutput[]::new);
         return receiverOutput;
@@ -56,9 +55,9 @@ public class BspCotReceiverOutput implements PcgPartyOutput {
     }
 
     /**
-     * Gets num for each SSP-COT output.
+     * Gets num for each SSP-COT receiver output.
      *
-     * @return num for each SSP-COT output.
+     * @return num for each SSP-COT receiver output.
      */
     public int getEachNum() {
         return eachNum;

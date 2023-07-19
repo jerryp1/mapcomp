@@ -26,26 +26,26 @@ import edu.alibaba.mpc4j.s2pc.pcg.ot.cot.CotSenderOutput;
 import edu.alibaba.mpc4j.s2pc.pcg.ot.cot.bsp.ywl20.Ywl20ShBspCotPtoDesc.PtoStep;
 
 /**
- * YWL20-BSP-COT半诚实安全协议发送方。
+ * semi-honest YWL20-BSP-COT sender.
  *
  * @author Weiran Liu
  * @date 2022/01/24
  */
 public class Ywl20ShBspCotSender extends AbstractBspCotSender {
     /**
-     * DPPRF协议配置项
+     * BP-DPPRF config
      */
     private final BpDpprfConfig bpDpprfConfig;
     /**
-     * 核COT协议发送方
+     * core COT
      */
     private final CoreCotSender coreCotSender;
     /**
-     * DPPRF协议发送方
+     * BP-DPPRF
      */
     private final BpDpprfSender bpDpprfSender;
     /**
-     * COT协议发送方输出
+     * COT sender output
      */
     private CotSenderOutput cotSenderOutput;
 

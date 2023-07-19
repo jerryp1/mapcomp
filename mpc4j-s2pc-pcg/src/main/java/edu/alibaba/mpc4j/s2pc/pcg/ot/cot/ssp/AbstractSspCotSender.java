@@ -1,4 +1,4 @@
-package edu.alibaba.mpc4j.s2pc.pcg.vole.gf2k.ssp;
+package edu.alibaba.mpc4j.s2pc.pcg.ot.cot.ssp;
 
 import com.google.common.base.Preconditions;
 import edu.alibaba.mpc4j.common.rpc.Party;
@@ -8,21 +8,21 @@ import edu.alibaba.mpc4j.common.rpc.pto.AbstractTwoPartyPto;
 import edu.alibaba.mpc4j.common.tool.CommonConstants;
 import edu.alibaba.mpc4j.common.tool.MathPreconditions;
 import edu.alibaba.mpc4j.common.tool.utils.BytesUtils;
-import edu.alibaba.mpc4j.s2pc.pcg.vole.gf2k.Gf2kVoleReceiverOutput;
+import edu.alibaba.mpc4j.s2pc.pcg.ot.cot.CotSenderOutput;
 
 import java.util.Arrays;
 
 /**
- * abstract GF2K-SSP-VOLE receiver.
+ * abstract SSP-COT sender.
  *
  * @author Weiran Liu
- * @date 2023/3/16
+ * @date 2023/7/13
  */
-public abstract class AbstractGf2kSspVoleReceiver extends AbstractTwoPartyPto implements Gf2kSspVoleReceiver {
+public abstract class AbstractSspCotSender extends AbstractTwoPartyPto implements SspCotSender {
     /**
      * config
      */
-    protected final Gf2kSspVoleConfig config;
+    protected final SspCotConfig config;
     /**
      * Δ
      */
@@ -36,8 +36,8 @@ public abstract class AbstractGf2kSspVoleReceiver extends AbstractTwoPartyPto im
      */
     protected int num;
 
-    protected AbstractGf2kSspVoleReceiver(PtoDesc ptoDesc, Rpc receiverRpc, Party senderParty, Gf2kSspVoleConfig config) {
-        super(ptoDesc, receiverRpc, senderParty, config);
+    protected AbstractSspCotSender(PtoDesc ptoDesc, Rpc senderRpc, Party receiverParty, SspCotConfig config) {
+        super(ptoDesc, senderRpc, receiverParty, config);
         this.config = config;
     }
 
@@ -56,11 +56,11 @@ public abstract class AbstractGf2kSspVoleReceiver extends AbstractTwoPartyPto im
         extraInfo++;
     }
 
-    protected void setPtoInput(int num, Gf2kVoleReceiverOutput preReceiverOutput) {
+    protected void setPtoInput(int num, CotSenderOutput preSenderOutput) {
         setPtoInput(num);
-        Preconditions.checkArgument(Arrays.equals(delta, preReceiverOutput.getDelta()));
+        Preconditions.checkArgument(Arrays.equals(delta, preSenderOutput.getDelta()));
         MathPreconditions.checkGreaterOrEqual(
-            "preNum", preReceiverOutput.getNum(), Gf2kSspVoleFactory.getPrecomputeNum(config, num)
+            "preNum", preSenderOutput.getNum(), SspCotFactory.getPrecomputeNum(config, num)
         );
     }
 }

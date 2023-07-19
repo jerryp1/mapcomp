@@ -10,34 +10,34 @@ import edu.alibaba.mpc4j.common.tool.MathPreconditions;
 import edu.alibaba.mpc4j.s2pc.pcg.ot.cot.CotReceiverOutput;
 
 /**
- * BSP-COT协议接收方。
+ * abstract BSP-COT receiver.
  *
  * @author Weiran Liu
  * @date 2022/01/22
  */
 public abstract class AbstractBspCotReceiver extends AbstractTwoPartyPto implements BspCotReceiver {
     /**
-     * 配置项
+     * config
      */
     private final BspCotConfig config;
     /**
-     * 最大数量
+     * max num for each SSP-COT
      */
     private int maxNum;
     /**
-     * 最大批处理数量
+     * max batch num
      */
     private int maxBatchNum;
     /**
-     * 单点索引值数组
+     * α array
      */
     protected int[] alphaArray;
     /**
-     * 数量
+     * num for each SSP-COT
      */
     protected int num;
     /**
-     * 批处理数量
+     * batch num
      */
     protected int batchNum;
 

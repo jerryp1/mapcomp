@@ -1,15 +1,12 @@
-package edu.alibaba.mpc4j.s2pc.pcg.vole.gf2k.ssp;
+package edu.alibaba.mpc4j.s2pc.pcg.ot.cot.ssp;
 
 import edu.alibaba.mpc4j.common.rpc.test.AbstractTwoPartyPtoTest;
-import edu.alibaba.mpc4j.common.tool.EnvType;
-import edu.alibaba.mpc4j.common.tool.galoisfield.gf2k.Gf2k;
-import edu.alibaba.mpc4j.common.tool.galoisfield.gf2k.Gf2kFactory;
-import edu.alibaba.mpc4j.common.tool.utils.BytesUtils;
-import edu.alibaba.mpc4j.s2pc.pcg.vole.gf2k.Gf2kVoleReceiverOutput;
-import edu.alibaba.mpc4j.s2pc.pcg.vole.gf2k.Gf2kVoleSenderOutput;
-import edu.alibaba.mpc4j.s2pc.pcg.vole.gf2k.Gf2kVoleTestUtils;
-import edu.alibaba.mpc4j.s2pc.pcg.vole.gf2k.ssp.Gf2kSspVoleFactory.Gf2kSspVoleType;
-import edu.alibaba.mpc4j.s2pc.pcg.vole.gf2k.ssp.wykw21.Wykw21Gf2kShSspVoleConfig;
+import edu.alibaba.mpc4j.common.tool.CommonConstants;
+import edu.alibaba.mpc4j.s2pc.pcg.ot.cot.CotReceiverOutput;
+import edu.alibaba.mpc4j.s2pc.pcg.ot.cot.CotSenderOutput;
+import edu.alibaba.mpc4j.s2pc.pcg.ot.cot.CotTestUtils;
+import edu.alibaba.mpc4j.s2pc.pcg.ot.cot.ssp.ywl20.Ywl20ShSspCotConfig;
+import edu.alibaba.mpc4j.s2pc.pcg.ot.cot.ssp.SspCotFactory.SspCotType;
 import org.junit.Assert;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -24,18 +21,14 @@ import java.util.concurrent.TimeUnit;
 import java.util.stream.IntStream;
 
 /**
- * Single single-point GF2K-VOLE tests.
+ * Single single-point COT tests.
  *
  * @author Weiran Liu
- * @date 2023/3/16
+ * @date 2023/7/19
  */
 @RunWith(Parameterized.class)
-public class Gf2kSspVoleTest extends AbstractTwoPartyPtoTest {
-    private static final Logger LOGGER = LoggerFactory.getLogger(Gf2kSspVoleTest.class);
-    /**
-     * GF2K
-     */
-    private static final Gf2k GF2K = Gf2kFactory.createInstance(EnvType.STANDARD);
+public class SspCotTest extends AbstractTwoPartyPtoTest {
+    private static final Logger LOGGER = LoggerFactory.getLogger(SspCotTest.class);
     /**
      * default num, the num is not even, and not in format 2^k
      */
@@ -49,9 +42,9 @@ public class Gf2kSspVoleTest extends AbstractTwoPartyPtoTest {
     public static Collection<Object[]> configurations() {
         Collection<Object[]> configurations = new ArrayList<>();
 
-        // WYKW21_SEMI_HONEST
+        // YWL20_SEMI_HONEST
         configurations.add(new Object[]{
-            Gf2kSspVoleType.WYKW21_SEMI_HONEST.name(), new Wykw21Gf2kShSspVoleConfig.Builder().build(),
+            SspCotType.YWL20_SEMI_HONEST.name(), new Ywl20ShSspCotConfig.Builder().build(),
         });
 
         return configurations;
@@ -60,9 +53,9 @@ public class Gf2kSspVoleTest extends AbstractTwoPartyPtoTest {
     /**
      * config
      */
-    private final Gf2kSspVoleConfig config;
+    private final SspCotConfig config;
 
-    public Gf2kSspVoleTest(String name, Gf2kSspVoleConfig config) {
+    public SspCotTest(String name, SspCotConfig config) {
         super(name);
         this.config = config;
     }
@@ -125,8 +118,8 @@ public class Gf2kSspVoleTest extends AbstractTwoPartyPtoTest {
     }
 
     private void testPto(int alpha, int num, boolean parallel) {
-        Gf2kSspVoleSender sender = Gf2kSspVoleFactory.createSender(firstRpc, secondRpc.ownParty(), config);
-        Gf2kSspVoleReceiver receiver = Gf2kSspVoleFactory.createReceiver(secondRpc, firstRpc.ownParty(), config);
+        SspCotSender sender = SspCotFactory.createSender(firstRpc, secondRpc.ownParty(), config);
+        SspCotReceiver receiver = SspCotFactory.createReceiver(secondRpc, firstRpc.ownParty(), config);
         sender.setParallel(parallel);
         receiver.setParallel(parallel);
         int randomTaskId = Math.abs(SECURE_RANDOM.nextInt());
@@ -134,9 +127,10 @@ public class Gf2kSspVoleTest extends AbstractTwoPartyPtoTest {
         receiver.setTaskId(randomTaskId);
         try {
             LOGGER.info("-----test {} start-----", sender.getPtoDesc().getPtoName());
-            byte[] delta = GF2K.createRangeRandom(SECURE_RANDOM);
-            Gf2kSspVoleSenderThread senderThread = new Gf2kSspVoleSenderThread(sender, alpha, num);
-            Gf2kSspVoleReceiverThread receiverThread = new Gf2kSspVoleReceiverThread(receiver, delta, num);
+            byte[] delta = new byte[CommonConstants.BLOCK_BYTE_LENGTH];
+            SECURE_RANDOM.nextBytes(delta);
+            SspCotSenderThread senderThread = new SspCotSenderThread(sender, delta, num);
+            SspCotReceiverThread receiverThread = new SspCotReceiverThread(receiver, alpha, num);
             STOP_WATCH.start();
             // start
             senderThread.start();
@@ -148,8 +142,8 @@ public class Gf2kSspVoleTest extends AbstractTwoPartyPtoTest {
             long time = STOP_WATCH.getTime(TimeUnit.MILLISECONDS);
             STOP_WATCH.reset();
             // verify
-            Gf2kSspVoleSenderOutput senderOutput = senderThread.getSenderOutput();
-            Gf2kSspVoleReceiverOutput receiverOutput = receiverThread.getReceiverOutput();
+            SspCotSenderOutput senderOutput = senderThread.getSenderOutput();
+            SspCotReceiverOutput receiverOutput = receiverThread.getReceiverOutput();
             assertOutput(num, senderOutput, receiverOutput);
             printAndResetRpc(time);
             // destroy
@@ -163,22 +157,23 @@ public class Gf2kSspVoleTest extends AbstractTwoPartyPtoTest {
 
     @Test
     public void testPrecompute() {
-        Gf2kSspVoleSender sender = Gf2kSspVoleFactory.createSender(firstRpc, secondRpc.ownParty(), config);
-        Gf2kSspVoleReceiver receiver = Gf2kSspVoleFactory.createReceiver(secondRpc, firstRpc.ownParty(), config);
+        SspCotSender sender = SspCotFactory.createSender(firstRpc, secondRpc.ownParty(), config);
+        SspCotReceiver receiver = SspCotFactory.createReceiver(secondRpc, firstRpc.ownParty(), config);
         int randomTaskId = Math.abs(SECURE_RANDOM.nextInt());
         sender.setTaskId(randomTaskId);
         receiver.setTaskId(randomTaskId);
         int num = DEFAULT_NUM;
         try {
             LOGGER.info("-----test {} (precompute) start-----", sender.getPtoDesc().getPtoName());
-            byte[] delta = GF2K.createRangeRandom(SECURE_RANDOM);
+            byte[] delta = new byte[CommonConstants.BLOCK_BYTE_LENGTH];
+            SECURE_RANDOM.nextBytes(delta);
             int alpha = SECURE_RANDOM.nextInt(num);
-            Gf2kVoleReceiverOutput preReceiverOutput = Gf2kVoleTestUtils.genReceiverOutput(
-                Gf2kSspVoleFactory.getPrecomputeNum(config, num), delta, SECURE_RANDOM
+            CotSenderOutput preSenderOutput = CotTestUtils.genSenderOutput(
+                SspCotFactory.getPrecomputeNum(config, num), delta, SECURE_RANDOM
             );
-            Gf2kVoleSenderOutput preSenderOutput = Gf2kVoleTestUtils.genSenderOutput(preReceiverOutput, SECURE_RANDOM);
-            Gf2kSspVoleSenderThread senderThread = new Gf2kSspVoleSenderThread(sender, alpha, num, preSenderOutput);
-            Gf2kSspVoleReceiverThread receiverThread = new Gf2kSspVoleReceiverThread(receiver, delta, num, preReceiverOutput);
+            CotReceiverOutput preReceiverOutput = CotTestUtils.genReceiverOutput(preSenderOutput, SECURE_RANDOM);
+            SspCotSenderThread senderThread = new SspCotSenderThread(sender, delta, num, preSenderOutput);
+            SspCotReceiverThread receiverThread = new SspCotReceiverThread(receiver, alpha, num, preReceiverOutput);
             STOP_WATCH.start();
             senderThread.start();
             receiverThread.start();
@@ -187,8 +182,8 @@ public class Gf2kSspVoleTest extends AbstractTwoPartyPtoTest {
             STOP_WATCH.stop();
             long time = STOP_WATCH.getTime(TimeUnit.MILLISECONDS);
             STOP_WATCH.reset();
-            Gf2kSspVoleSenderOutput senderOutput = senderThread.getSenderOutput();
-            Gf2kSspVoleReceiverOutput receiverOutput = receiverThread.getReceiverOutput();
+            SspCotSenderOutput senderOutput = senderThread.getSenderOutput();
+            SspCotReceiverOutput receiverOutput = receiverThread.getReceiverOutput();
             assertOutput(num, senderOutput, receiverOutput);
             printAndResetRpc(time);
             // destroy
@@ -202,19 +197,20 @@ public class Gf2kSspVoleTest extends AbstractTwoPartyPtoTest {
 
     @Test
     public void testResetDelta() {
-        Gf2kSspVoleSender sender = Gf2kSspVoleFactory.createSender(firstRpc, secondRpc.ownParty(), config);
-        Gf2kSspVoleReceiver receiver = Gf2kSspVoleFactory.createReceiver(secondRpc, firstRpc.ownParty(), config);
+        SspCotSender sender = SspCotFactory.createSender(firstRpc, secondRpc.ownParty(), config);
+        SspCotReceiver receiver = SspCotFactory.createReceiver(secondRpc, firstRpc.ownParty(), config);
         int randomTaskId = Math.abs(SECURE_RANDOM.nextInt());
         sender.setTaskId(randomTaskId);
         receiver.setTaskId(randomTaskId);
         int num = DEFAULT_NUM;
         try {
             LOGGER.info("-----test {} (reset Δ) start-----", sender.getPtoDesc().getPtoName());
-            byte[] delta = GF2K.createRangeRandom(SECURE_RANDOM);
+            byte[] delta = new byte[CommonConstants.BLOCK_BYTE_LENGTH];
+            SECURE_RANDOM.nextBytes(delta);
             int alpha = SECURE_RANDOM.nextInt(num);
             // first round
-            Gf2kSspVoleSenderThread senderThread = new Gf2kSspVoleSenderThread(sender, alpha, num);
-            Gf2kSspVoleReceiverThread receiverThread = new Gf2kSspVoleReceiverThread(receiver, delta, num);
+            SspCotSenderThread senderThread = new SspCotSenderThread(sender, delta, num);
+            SspCotReceiverThread receiverThread = new SspCotReceiverThread(receiver, alpha, num);
             STOP_WATCH.start();
             senderThread.start();
             receiverThread.start();
@@ -223,15 +219,15 @@ public class Gf2kSspVoleTest extends AbstractTwoPartyPtoTest {
             STOP_WATCH.stop();
             long firstTime = STOP_WATCH.getTime(TimeUnit.MILLISECONDS);
             STOP_WATCH.reset();
-            Gf2kSspVoleSenderOutput firstSenderOutput = senderThread.getSenderOutput();
-            Gf2kSspVoleReceiverOutput firstReceiverOutput = receiverThread.getReceiverOutput();
+            SspCotSenderOutput firstSenderOutput = senderThread.getSenderOutput();
+            SspCotReceiverOutput firstReceiverOutput = receiverThread.getReceiverOutput();
             assertOutput(num, firstSenderOutput, firstReceiverOutput);
             printAndResetRpc(firstTime);
             // second round, reset Δ
-            delta = GF2K.createRangeRandom(SECURE_RANDOM);
+            SECURE_RANDOM.nextBytes(delta);
             alpha = SECURE_RANDOM.nextInt(num);
-            senderThread = new Gf2kSspVoleSenderThread(sender, alpha, num);
-            receiverThread = new Gf2kSspVoleReceiverThread(receiver, delta, num);
+            senderThread = new SspCotSenderThread(sender, delta, num);
+            receiverThread = new SspCotReceiverThread(receiver, alpha, num);
             STOP_WATCH.start();
             senderThread.start();
             receiverThread.start();
@@ -240,12 +236,12 @@ public class Gf2kSspVoleTest extends AbstractTwoPartyPtoTest {
             STOP_WATCH.stop();
             long secondTime = STOP_WATCH.getTime(TimeUnit.MILLISECONDS);
             STOP_WATCH.reset();
-            Gf2kSspVoleSenderOutput secondSenderOutput = senderThread.getSenderOutput();
-            Gf2kSspVoleReceiverOutput secondReceiverOutput = receiverThread.getReceiverOutput();
+            SspCotSenderOutput secondSenderOutput = senderThread.getSenderOutput();
+            SspCotReceiverOutput secondReceiverOutput = receiverThread.getReceiverOutput();
             assertOutput(num, secondSenderOutput, secondReceiverOutput);
             // Δ should be different
             Assert.assertNotEquals(
-                ByteBuffer.wrap(secondReceiverOutput.getDelta()), ByteBuffer.wrap(firstReceiverOutput.getDelta())
+                ByteBuffer.wrap(secondSenderOutput.getDelta()), ByteBuffer.wrap(firstSenderOutput.getDelta())
             );
             printAndResetRpc(secondTime);
             // destroy
@@ -257,23 +253,14 @@ public class Gf2kSspVoleTest extends AbstractTwoPartyPtoTest {
         }
     }
 
-    private void assertOutput(int num, Gf2kSspVoleSenderOutput senderOutput, Gf2kSspVoleReceiverOutput receiverOutput) {
+    private void assertOutput(int num, SspCotSenderOutput senderOutput, SspCotReceiverOutput receiverOutput) {
         Assert.assertEquals(num, senderOutput.getNum());
         Assert.assertEquals(num, receiverOutput.getNum());
         IntStream.range(0, num).forEach(index -> {
-            byte[] w = senderOutput.getT(index);
-            byte[] v = receiverOutput.getQ(index);
-            if (index == senderOutput.getAlpha()) {
-                // w = v + Δ · u
-                byte[] u = senderOutput.getX();
-                byte[] delta = receiverOutput.getDelta();
-                byte[] vPrime = BytesUtils.clone(delta);
-                GF2K.muli(vPrime, u);
-                GF2K.addi(vPrime, v);
-                Assert.assertArrayEquals(w, vPrime);
+            if (index == receiverOutput.getAlpha()) {
+                Assert.assertArrayEquals(senderOutput.getR1(index), receiverOutput.getRb(index));
             } else {
-                // w = v
-                Assert.assertArrayEquals(w, v);
+                Assert.assertArrayEquals(senderOutput.getR0(index), receiverOutput.getRb(index));
             }
         });
     }

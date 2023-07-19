@@ -45,7 +45,6 @@ public class BspCotSenderOutput implements PcgPartyOutput {
             .peek(iOutput -> {
                 Preconditions.checkArgument(BytesUtils.equals(senderOutput.delta, iOutput.getDelta()));
                 MathPreconditions.checkEqual("each num", "i-th num", senderOutput.eachNum, iOutput.getNum());
-                assert iOutput.getNum() == senderOutput.eachNum;
             })
             .toArray(SspCotSenderOutput[]::new);
         return senderOutput;

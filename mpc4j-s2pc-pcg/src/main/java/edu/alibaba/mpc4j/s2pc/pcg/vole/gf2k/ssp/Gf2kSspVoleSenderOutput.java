@@ -1,14 +1,14 @@
 package edu.alibaba.mpc4j.s2pc.pcg.vole.gf2k.ssp;
 
 import edu.alibaba.mpc4j.common.tool.CommonConstants;
+import edu.alibaba.mpc4j.common.tool.MathPreconditions;
 import edu.alibaba.mpc4j.common.tool.utils.BytesUtils;
 import edu.alibaba.mpc4j.s2pc.pcg.PcgPartyOutput;
-import org.bouncycastle.util.encoders.Hex;
 
 import java.util.Arrays;
 
 /**
- * Single single-point GF2K VOLE sender output.
+ * Single single-point GF2K-VOLE sender output.
  * <p>
  * The sender gets (x, t) with t = q + Δ·x, where Δ and q is owned by the receiver, and only the α-th x is non-zero.
  * </p>
@@ -40,17 +40,15 @@ public class Gf2kSspVoleSenderOutput implements PcgPartyOutput {
      */
     public static Gf2kSspVoleSenderOutput create(int alpha, byte[] x, byte[][] ts) {
         Gf2kSspVoleSenderOutput receiverOutput = new Gf2kSspVoleSenderOutput();
-        assert ts.length > 0 : "# of t must be greater than 0: " + ts.length;
-        assert alpha >= 0 && alpha < ts.length : "α must be in range [0, " + ts.length + "): " + alpha;
+        MathPreconditions.checkPositive("num", ts.length);
+        MathPreconditions.checkNonNegativeInRange("α", alpha, ts.length);
         receiverOutput.alpha = alpha;
-        assert x.length == CommonConstants.BLOCK_BYTE_LENGTH
-            : "x must be in range [0, 2^" + CommonConstants.BLOCK_BIT_LENGTH + "): " + Hex.toHexString(x);
+        MathPreconditions.checkEqual("x.length", "λ in bytes", x.length, CommonConstants.BLOCK_BYTE_LENGTH);
         receiverOutput.x = BytesUtils.clone(x);
         receiverOutput.ts = Arrays.stream(ts)
-            .peek(t -> {
-                assert t.length == CommonConstants.BLOCK_BYTE_LENGTH
-                    : "t must be in range [0, 2^" + CommonConstants.BLOCK_BIT_LENGTH + "): " + Hex.toHexString(t);
-            })
+            .peek(t ->
+                MathPreconditions.checkEqual("t.length", "λ in bytes", t.length, CommonConstants.BLOCK_BYTE_LENGTH)
+            )
             .toArray(byte[][]::new);
         return receiverOutput;
     }
@@ -81,9 +79,9 @@ public class Gf2kSspVoleSenderOutput implements PcgPartyOutput {
     }
 
     /**
-     * Gets t.
+     * Gets the assigned t.
      *
-     * @param index the index.
+     * @param index index.
      * @return t.
      */
     public byte[] getT(int index) {

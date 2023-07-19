@@ -24,7 +24,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * BSP-COT协议测试。
+ * Batched single-point COT tests.
  *
  * @author Weiran Liu
  * @date 2022/01/24
@@ -33,19 +33,19 @@ import org.slf4j.LoggerFactory;
 public class BspCotTest extends AbstractTwoPartyPtoTest {
     private static final Logger LOGGER = LoggerFactory.getLogger(BspCotTest.class);
     /**
-     * 默认数量，设置为既不是偶数、也不是2^k格式的数量
+     * default num, we select an odd number and not with the format 2^k
      */
     private static final int DEFAULT_NUM = 9;
     /**
-     * 较大数量
+     * large num
      */
     private static final int LARGE_NUM = 1 << 16;
     /**
-     * 默认批处理数量，设置为既不是偶数、也不是2^k格式的数量
+     * default batch num,  we select an odd number and not with the format 2^k
      */
     private static final int DEFAULT_BATCH_NUM = 9;
     /**
-     * 较大批处理数量
+     * large batch num
      */
     private static final int LARGE_BATCH_NUM = 1 << 16;
 
@@ -66,7 +66,7 @@ public class BspCotTest extends AbstractTwoPartyPtoTest {
     }
 
     /**
-     * 协议类型
+     * config
      */
     private final BspCotConfig config;
 

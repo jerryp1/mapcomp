@@ -20,30 +20,30 @@ import edu.alibaba.mpc4j.s2pc.pcg.ot.cot.CotReceiverOutput;
 import edu.alibaba.mpc4j.s2pc.pcg.ot.cot.bsp.ywl20.Ywl20ShBspCotPtoDesc.PtoStep;
 
 /**
- * YWL20-BSP-COT半诚实安全协议接收方。
+ * semi-honest YWL20-BSP-COT receiver.
  *
  * @author Weiran Liu
  * @date 2022/01/24
  */
 public class Ywl20ShBspCotReceiver extends AbstractBspCotReceiver {
     /**
-     * DPPRF协议配置项
+     * BP-DPPRF config
      */
     private final BpDpprfConfig bpDpprfConfig;
     /**
-     * COT协议接收方
+     * core COT
      */
     private final CoreCotReceiver coreCotReceiver;
     /**
-     * DPPRF协议接收方
+     * BP-DPPRF
      */
     private final BpDpprfReceiver bpDpprfReceiver;
     /**
-     * COT协议接收方输出
+     * COT receiver output
      */
     private CotReceiverOutput cotReceiverOutput;
     /**
-     * DPPRF接收方输出
+     * BP-DPPRF receiver output
      */
     private BpDpprfReceiverOutput bpDpprfReceiverOutput;
 
@@ -80,8 +80,7 @@ public class Ywl20ShBspCotReceiver extends AbstractBspCotReceiver {
     }
 
     @Override
-    public BspCotReceiverOutput receive(int[] alphaArray, int num, CotReceiverOutput preReceiverOutput)
-        throws MpcAbortException {
+    public BspCotReceiverOutput receive(int[] alphaArray, int num, CotReceiverOutput preReceiverOutput) throws MpcAbortException {
         setPtoInput(alphaArray, num, preReceiverOutput);
         cotReceiverOutput = preReceiverOutput;
         return receive();

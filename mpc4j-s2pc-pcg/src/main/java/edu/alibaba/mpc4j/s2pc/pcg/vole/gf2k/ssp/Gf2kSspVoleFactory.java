@@ -4,12 +4,13 @@ import edu.alibaba.mpc4j.common.rpc.Party;
 import edu.alibaba.mpc4j.common.rpc.Rpc;
 import edu.alibaba.mpc4j.common.rpc.desc.SecurityModel;
 import edu.alibaba.mpc4j.common.rpc.pto.PtoFactory;
+import edu.alibaba.mpc4j.common.tool.MathPreconditions;
 import edu.alibaba.mpc4j.s2pc.pcg.vole.gf2k.ssp.wykw21.Wykw21Gf2kShSspVoleConfig;
 import edu.alibaba.mpc4j.s2pc.pcg.vole.gf2k.ssp.wykw21.Wykw21Gf2kShSspVoleReceiver;
 import edu.alibaba.mpc4j.s2pc.pcg.vole.gf2k.ssp.wykw21.Wykw21Gf2kShSspVoleSender;
 
 /**
- * Single single-point GF2K VOLE factory.
+ * Single single-point GF2K-VOLE factory.
  *
  * @author Weiran Liu
  * @date 2023/3/16
@@ -44,7 +45,7 @@ public class Gf2kSspVoleFactory implements PtoFactory {
      * @return the pre-computed num.
      */
     public static int getPrecomputeNum(Gf2kSspVoleConfig config, int num) {
-        assert num > 0 : "num must be greater than 0: " + num;
+        MathPreconditions.checkPositive("num", num);
         Gf2kSspVoleType type = config.getPtoType();
         switch (type) {
             case WYKW21_SEMI_HONEST:

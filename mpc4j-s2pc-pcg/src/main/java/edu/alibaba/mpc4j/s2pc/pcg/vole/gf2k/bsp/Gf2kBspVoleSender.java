@@ -5,7 +5,7 @@ import edu.alibaba.mpc4j.common.rpc.pto.TwoPartyPto;
 import edu.alibaba.mpc4j.s2pc.pcg.vole.gf2k.Gf2kVoleSenderOutput;
 
 /**
- * Batch single-point GF2K VOLE sender.
+ * Batched single-point GF2K-VOLE sender.
  *
  * @author Weiran Liu
  * @date 2023/7/12
