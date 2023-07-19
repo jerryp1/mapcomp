@@ -5,9 +5,9 @@ import edu.alibaba.mpc4j.common.rpc.Rpc;
 import edu.alibaba.mpc4j.common.rpc.desc.SecurityModel;
 import edu.alibaba.mpc4j.common.rpc.pto.PtoFactory;
 import edu.alibaba.mpc4j.common.tool.MathPreconditions;
-import edu.alibaba.mpc4j.s2pc.pcg.vole.gf2k.ssp.wykw21.Wykw21Gf2kShSspVoleConfig;
-import edu.alibaba.mpc4j.s2pc.pcg.vole.gf2k.ssp.wykw21.Wykw21Gf2kShSspVoleReceiver;
-import edu.alibaba.mpc4j.s2pc.pcg.vole.gf2k.ssp.wykw21.Wykw21Gf2kShSspVoleSender;
+import edu.alibaba.mpc4j.s2pc.pcg.vole.gf2k.ssp.wykw21.Wykw21ShGf2kSspVoleConfig;
+import edu.alibaba.mpc4j.s2pc.pcg.vole.gf2k.ssp.wykw21.Wykw21ShGf2kSspVoleReceiver;
+import edu.alibaba.mpc4j.s2pc.pcg.vole.gf2k.ssp.wykw21.Wykw21ShGf2kSspVoleSender;
 
 /**
  * Single single-point GF2K-VOLE factory.
@@ -69,7 +69,7 @@ public class Gf2kSspVoleFactory implements PtoFactory {
         Gf2kSspVoleType type = config.getPtoType();
         switch (type) {
             case WYKW21_SEMI_HONEST:
-                return new Wykw21Gf2kShSspVoleSender(senderRpc, receiverParty, (Wykw21Gf2kShSspVoleConfig) config);
+                return new Wykw21ShGf2kSspVoleSender(senderRpc, receiverParty, (Wykw21ShGf2kSspVoleConfig) config);
             case WYKW21_MALICIOUS:
             default:
                 throw new IllegalArgumentException("Invalid " + Gf2kSspVoleType.class.getSimpleName() + ": " + type.name());
@@ -88,7 +88,7 @@ public class Gf2kSspVoleFactory implements PtoFactory {
         Gf2kSspVoleType type = config.getPtoType();
         switch (type) {
             case WYKW21_SEMI_HONEST:
-                return new Wykw21Gf2kShSspVoleReceiver(receiverRpc, senderParty, (Wykw21Gf2kShSspVoleConfig) config);
+                return new Wykw21ShGf2kSspVoleReceiver(receiverRpc, senderParty, (Wykw21ShGf2kSspVoleConfig) config);
             case WYKW21_MALICIOUS:
             default:
                 throw new IllegalArgumentException("Invalid " + Gf2kSspVoleType.class.getSimpleName() + ": " + type.name());
@@ -105,7 +105,7 @@ public class Gf2kSspVoleFactory implements PtoFactory {
         switch (securityModel) {
             case IDEAL:
             case SEMI_HONEST:
-                return new Wykw21Gf2kShSspVoleConfig.Builder().build();
+                return new Wykw21ShGf2kSspVoleConfig.Builder().build();
             case COVERT:
             case MALICIOUS:
             default:

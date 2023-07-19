@@ -13,29 +13,29 @@ import edu.alibaba.mpc4j.s2pc.pcg.vole.gf2k.core.Gf2kCoreVoleSender;
 import edu.alibaba.mpc4j.s2pc.pcg.vole.gf2k.ssp.AbstractGf2kSspVoleSender;
 import edu.alibaba.mpc4j.s2pc.pcg.vole.gf2k.ssp.Gf2kSspVoleFactory;
 import edu.alibaba.mpc4j.s2pc.pcg.vole.gf2k.ssp.Gf2kSspVoleSenderOutput;
-import edu.alibaba.mpc4j.s2pc.pcg.vole.gf2k.ssp.wykw21.Wykw21Gf2kShSspVolePtoDesc.PtoStep;
+import edu.alibaba.mpc4j.s2pc.pcg.vole.gf2k.ssp.wykw21.Wykw21ShGf2kSspVolePtoDesc.PtoStep;
 
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.IntStream;
 
 /**
- * WYKW21-SSP-GF2K-VOLE (semi-honest) sender.
+ * semi-honest WYKW21-SSP-GF2K-VOLE sender.
  *
  * @author Weiran Liu
  * @date 2022/3/16
  */
-public class Wykw21Gf2kShSspVoleSender extends AbstractGf2kSspVoleSender {
+public class Wykw21ShGf2kSspVoleSender extends AbstractGf2kSspVoleSender {
     /**
-     * the GF2K instance
+     * GF2K instance
      */
     private final Gf2k gf2k;
     /**
-     * GF2K core VOLE sender
+     * core GF2K-VOLE sender
      */
     private final Gf2kCoreVoleSender gf2kCoreVoleSender;
     /**
-     * single-point DPPRF receiver
+     * SP-DPPRF receiver
      */
     private final SpDpprfReceiver spDpprfReceiver;
     /**
@@ -43,8 +43,8 @@ public class Wykw21Gf2kShSspVoleSender extends AbstractGf2kSspVoleSender {
      */
     private Gf2kVoleSenderOutput gf2kVoleSenderOutput;
 
-    public Wykw21Gf2kShSspVoleSender(Rpc receiverRpc, Party senderParty, Wykw21Gf2kShSspVoleConfig config) {
-        super(Wykw21Gf2kShSspVolePtoDesc.getInstance(), receiverRpc, senderParty, config);
+    public Wykw21ShGf2kSspVoleSender(Rpc receiverRpc, Party senderParty, Wykw21ShGf2kSspVoleConfig config) {
+        super(Wykw21ShGf2kSspVolePtoDesc.getInstance(), receiverRpc, senderParty, config);
         gf2kCoreVoleSender = Gf2kCoreVoleFactory.createSender(receiverRpc, senderParty, config.getGf2kCoreVoleConfig());
         addSubPtos(gf2kCoreVoleSender);
         spDpprfReceiver = SpDpprfFactory.createReceiver(receiverRpc, senderParty, config.getSpDpprfConfig());
