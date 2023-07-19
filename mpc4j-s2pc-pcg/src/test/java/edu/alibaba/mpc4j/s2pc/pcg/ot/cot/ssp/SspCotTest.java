@@ -42,6 +42,10 @@ public class SspCotTest extends AbstractTwoPartyPtoTest {
     public static Collection<Object[]> configurations() {
         Collection<Object[]> configurations = new ArrayList<>();
 
+        // YWL20_MALICIOUS
+        configurations.add(new Object[]{
+            SspCotType.YWL20_MALICIOUS.name(), new Ywl20ShSspCotConfig.Builder().build(),
+        });
         // YWL20_SEMI_HONEST
         configurations.add(new Object[]{
             SspCotType.YWL20_SEMI_HONEST.name(), new Ywl20ShSspCotConfig.Builder().build(),

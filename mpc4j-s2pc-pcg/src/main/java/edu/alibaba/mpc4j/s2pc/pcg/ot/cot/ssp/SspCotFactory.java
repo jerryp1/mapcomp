@@ -7,9 +7,7 @@ import edu.alibaba.mpc4j.common.rpc.pto.PtoFactory;
 import edu.alibaba.mpc4j.common.tool.CommonConstants;
 import edu.alibaba.mpc4j.common.tool.MathPreconditions;
 import edu.alibaba.mpc4j.common.tool.utils.LongUtils;
-import edu.alibaba.mpc4j.s2pc.pcg.ot.cot.ssp.ywl20.Ywl20ShSspCotConfig;
-import edu.alibaba.mpc4j.s2pc.pcg.ot.cot.ssp.ywl20.Ywl20ShSspCotReceiver;
-import edu.alibaba.mpc4j.s2pc.pcg.ot.cot.ssp.ywl20.Ywl20ShSspCotSender;
+import edu.alibaba.mpc4j.s2pc.pcg.ot.cot.ssp.ywl20.*;
 
 /**
  * Single single-point COT factory.
@@ -73,6 +71,7 @@ public class SspCotFactory implements PtoFactory {
             case YWL20_SEMI_HONEST:
                 return new Ywl20ShSspCotSender(senderRpc, receiverParty, (Ywl20ShSspCotConfig) config);
             case YWL20_MALICIOUS:
+                return new Ywl20MaSspCotSender(senderRpc, receiverParty, (Ywl20MaSspCotConfig) config);
             default:
                 throw new IllegalArgumentException("Invalid " + SspCotType.class.getSimpleName() + ": " + type.name());
         }
@@ -92,6 +91,7 @@ public class SspCotFactory implements PtoFactory {
             case YWL20_SEMI_HONEST:
                 return new Ywl20ShSspCotReceiver(receiverRpc, senderParty, (Ywl20ShSspCotConfig) config);
             case YWL20_MALICIOUS:
+                return new Ywl20MaSspCotReceiver(receiverRpc, senderParty, (Ywl20MaSspCotConfig) config);
             default:
                 throw new IllegalArgumentException("Invalid " + SspCotType.class.getSimpleName() + ": " + type.name());
         }
@@ -110,6 +110,7 @@ public class SspCotFactory implements PtoFactory {
                 return new Ywl20ShSspCotConfig.Builder().build();
             case COVERT:
             case MALICIOUS:
+                return new Ywl20MaSspCotConfig.Builder().build();
             default:
                 throw new IllegalArgumentException("Invalid " + SecurityModel.class.getSimpleName() + ": " + securityModel.name());
         }

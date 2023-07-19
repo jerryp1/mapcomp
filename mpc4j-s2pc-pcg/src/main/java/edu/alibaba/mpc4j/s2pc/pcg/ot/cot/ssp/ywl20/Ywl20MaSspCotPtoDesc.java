@@ -1,28 +1,27 @@
-package edu.alibaba.mpc4j.s2pc.pcg.ot.cot.bsp.ywl20;
+package edu.alibaba.mpc4j.s2pc.pcg.ot.cot.ssp.ywl20;
 
 import edu.alibaba.mpc4j.common.rpc.desc.PtoDesc;
 import edu.alibaba.mpc4j.common.rpc.desc.PtoDescManager;
 
 /**
- * malicious YWL20-BSP-COT protocol description. The protocol comes from the following paper:
+ * malicious YWL20-SSP-COT protocol description. The construction comes from the following paper:
  * <p>
  * Yang, Kang, Chenkai Weng, Xiao Lan, Jiang Zhang, and Xiao Wang. Ferret: Fast extension for correlated OT with small
  * communication. CCS 2020, pp. 1607-1626. 2020.
  * </p>
- * We leverage the batched consistency check shown in Appendix B: Batched Consistency Check.
  *
  * @author Weiran Liu
- * @date 2022/6/7
+ * @date 2023/7/19
  */
-class Ywl20MaBspCotPtoDesc implements PtoDesc {
+class Ywl20MaSspCotPtoDesc implements PtoDesc {
     /**
      * protocol ID
      */
-    private static final int PTO_ID = Math.abs((int) 5636166080693023093L);
+    private static final int PTO_ID = Math.abs((int) 6565040122362017744L);
     /**
      * protocol name
      */
-    private static final String PTO_NAME = "YWL20_MA_BSP_COT";
+    private static final String PTO_NAME = "YWL20_MA_SSP_COT";
 
     /**
      * protocol step
@@ -49,12 +48,12 @@ class Ywl20MaBspCotPtoDesc implements PtoDesc {
     /**
      * singleton mode
      */
-    private static final Ywl20MaBspCotPtoDesc INSTANCE = new Ywl20MaBspCotPtoDesc();
+    private static final Ywl20MaSspCotPtoDesc INSTANCE = new Ywl20MaSspCotPtoDesc();
 
     /**
      * private constructor
      */
-    private Ywl20MaBspCotPtoDesc() {
+    private Ywl20MaSspCotPtoDesc() {
         // empty
     }
 

@@ -1,4 +1,4 @@
-package edu.alibaba.mpc4j.s2pc.pcg.ot.cot.bsp.ywl20;
+package edu.alibaba.mpc4j.s2pc.pcg.ot.cot.ssp.ywl20;
 
 import edu.alibaba.mpc4j.common.rpc.*;
 import edu.alibaba.mpc4j.common.rpc.utils.DataPacket;
@@ -12,44 +12,44 @@ import edu.alibaba.mpc4j.common.tool.galoisfield.gf2k.Gf2k;
 import edu.alibaba.mpc4j.common.tool.galoisfield.gf2k.Gf2kFactory;
 import edu.alibaba.mpc4j.common.tool.utils.BinaryUtils;
 import edu.alibaba.mpc4j.common.tool.utils.BytesUtils;
-import edu.alibaba.mpc4j.s2pc.pcg.dpprf.bp.BpDpprfConfig;
-import edu.alibaba.mpc4j.s2pc.pcg.dpprf.bp.BpDpprfFactory;
-import edu.alibaba.mpc4j.s2pc.pcg.dpprf.bp.BpDpprfReceiver;
-import edu.alibaba.mpc4j.s2pc.pcg.dpprf.bp.BpDpprfReceiverOutput;
-import edu.alibaba.mpc4j.s2pc.pcg.ot.cot.bsp.AbstractBspCotReceiver;
-import edu.alibaba.mpc4j.s2pc.pcg.ot.cot.bsp.BspCotReceiverOutput;
-import edu.alibaba.mpc4j.s2pc.pcg.ot.cot.ssp.SspCotReceiverOutput;
+import edu.alibaba.mpc4j.s2pc.pcg.dpprf.sp.SpDpprfConfig;
+import edu.alibaba.mpc4j.s2pc.pcg.dpprf.sp.SpDpprfFactory;
+import edu.alibaba.mpc4j.s2pc.pcg.dpprf.sp.SpDpprfReceiver;
+import edu.alibaba.mpc4j.s2pc.pcg.dpprf.sp.SpDpprfReceiverOutput;
+import edu.alibaba.mpc4j.s2pc.pcg.ot.cot.CotReceiverOutput;
 import edu.alibaba.mpc4j.s2pc.pcg.ot.cot.core.CoreCotFactory;
 import edu.alibaba.mpc4j.s2pc.pcg.ot.cot.core.CoreCotReceiver;
-import edu.alibaba.mpc4j.s2pc.pcg.ot.cot.CotReceiverOutput;
-import edu.alibaba.mpc4j.s2pc.pcg.ot.cot.bsp.ywl20.Ywl20MaBspCotPtoDesc.PtoStep;
+import edu.alibaba.mpc4j.s2pc.pcg.ot.cot.ssp.AbstractSspCotReceiver;
+import edu.alibaba.mpc4j.s2pc.pcg.ot.cot.ssp.SspCotReceiverOutput;
+import edu.alibaba.mpc4j.s2pc.pcg.ot.cot.ssp.ywl20.Ywl20MaSspCotPtoDesc.PtoStep;
 
 import java.nio.ByteBuffer;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.IntStream;
 
 /**
- * malicious YWL20-BSP-COT receiver.
+ * malicious YWL20-SSP-COT receiver.
  *
  * @author Weiran Liu
- * @date 2022/6/7
+ * @date 2023/7/19
  */
-public class Ywl20MaBspCotReceiver extends AbstractBspCotReceiver {
+public class Ywl20MaSspCotReceiver extends AbstractSspCotReceiver {
     /**
-     * BP-DPPRF config
+     * SP-DPPRF config
      */
-    private final BpDpprfConfig bpDpprfConfig;
+    private final SpDpprfConfig spDpprfConfig;
     /**
      * core COT
      */
     private final CoreCotReceiver coreCotReceiver;
     /**
-     * BP-DPPRF
+     * SP-DPPRF
      */
-    private final BpDpprfReceiver bpDpprfReceiver;
+    private final SpDpprfReceiver spDpprfReceiver;
     /**
      * GF(2^128) instance
      */
@@ -67,36 +67,35 @@ public class Ywl20MaBspCotReceiver extends AbstractBspCotReceiver {
      */
     private CotReceiverOutput checkCotReceiverOutput;
     /**
-     * BP-DPPRF receiver output
+     * SP-DPPRF receiver output
      */
-    private BpDpprfReceiverOutput bpDpprfReceiverOutput;
+    private SpDpprfReceiverOutput spDpprfReceiverOutput;
     /**
      * random oracle
      */
     private Prf randomOracle;
 
-    public Ywl20MaBspCotReceiver(Rpc receiverRpc, Party senderParty, Ywl20MaBspCotConfig config) {
-        super(Ywl20MaBspCotPtoDesc.getInstance(), receiverRpc, senderParty, config);
+    public Ywl20MaSspCotReceiver(Rpc receiverRpc, Party senderParty, Ywl20MaSspCotConfig config) {
+        super(Ywl20MaSspCotPtoDesc.getInstance(), receiverRpc, senderParty, config);
         coreCotReceiver = CoreCotFactory.createReceiver(receiverRpc, senderParty, config.getCoreCotConfig());
         addSubPtos(coreCotReceiver);
-        bpDpprfConfig = config.getBpDpprfConfig();
-        bpDpprfReceiver = BpDpprfFactory.createReceiver(receiverRpc, senderParty, bpDpprfConfig);
-        addSubPtos(bpDpprfReceiver);
+        spDpprfConfig = config.getSpDpprfConfig();
+        spDpprfReceiver = SpDpprfFactory.createReceiver(receiverRpc, senderParty, spDpprfConfig);
+        addSubPtos(spDpprfReceiver);
         gf2k = Gf2kFactory.createInstance(envType);
         hash = HashFactory.createInstance(envType, 2 * CommonConstants.BLOCK_BYTE_LENGTH);
     }
 
     @Override
-    public void init(int maxBatchNum, int maxNum) throws MpcAbortException {
-        setInitInput(maxBatchNum, maxNum);
+    public void init(int maxNum) throws MpcAbortException {
+        setInitInput(maxNum);
         logPhaseInfo(PtoState.INIT_BEGIN);
 
         stopWatch.start();
         // we need to request COT two times, one for DPPRF, one for λ
-        int maxCotNum = BpDpprfFactory.getPrecomputeNum(bpDpprfConfig, maxBatchNum, maxNum)
-            + CommonConstants.BLOCK_BIT_LENGTH;
+        int maxCotNum = SpDpprfFactory.getPrecomputeNum(spDpprfConfig, maxNum) + CommonConstants.BLOCK_BIT_LENGTH;
         coreCotReceiver.init(maxCotNum);
-        bpDpprfReceiver.init(maxBatchNum, maxNum);
+        spDpprfReceiver.init(maxNum);
         stopWatch.stop();
         long initTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
         stopWatch.reset();
@@ -123,25 +122,25 @@ public class Ywl20MaBspCotReceiver extends AbstractBspCotReceiver {
     }
 
     @Override
-    public BspCotReceiverOutput receive(int[] alphaArray, int num) throws MpcAbortException {
-        setPtoInput(alphaArray, num);
+    public SspCotReceiverOutput receive(int alpha, int num) throws MpcAbortException {
+        setPtoInput(alpha, num);
         return receive();
     }
 
     @Override
-    public BspCotReceiverOutput receive(int[] alphaArray, int num, CotReceiverOutput preReceiverOutput)
+    public SspCotReceiverOutput receive(int alpha, int num, CotReceiverOutput preReceiverOutput)
         throws MpcAbortException {
-        setPtoInput(alphaArray, num, preReceiverOutput);
+        setPtoInput(alpha, num, preReceiverOutput);
         cotReceiverOutput = preReceiverOutput;
         return receive();
     }
 
-    private BspCotReceiverOutput receive() throws MpcAbortException {
+    private SspCotReceiverOutput receive() throws MpcAbortException {
         logPhaseInfo(PtoState.PTO_BEGIN);
 
         stopWatch.start();
         // R send (extend, h) to F_COT, which returns (r_i, t_i) ∈ {0,1} × {0,1}^κ to R
-        int dpprfCotNum = BpDpprfFactory.getPrecomputeNum(bpDpprfConfig, batchNum, num);
+        int dpprfCotNum = SpDpprfFactory.getPrecomputeNum(spDpprfConfig, num);
         if (cotReceiverOutput == null) {
             boolean[] rs = new boolean[dpprfCotNum + CommonConstants.BLOCK_BIT_LENGTH];
             IntStream.range(0, dpprfCotNum + CommonConstants.BLOCK_BIT_LENGTH).forEach(index ->
@@ -160,7 +159,7 @@ public class Ywl20MaBspCotReceiver extends AbstractBspCotReceiver {
         logStepInfo(PtoState.PTO_STEP, 1, 4, cotTime);
 
         stopWatch.start();
-        bpDpprfReceiverOutput = bpDpprfReceiver.puncture(alphaArray, num, extendCotReceiverOutput);
+        spDpprfReceiverOutput = spDpprfReceiver.puncture(alpha, num, extendCotReceiverOutput);
         stopWatch.stop();
         long dpprfTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
         stopWatch.reset();
@@ -172,8 +171,8 @@ public class Ywl20MaBspCotReceiver extends AbstractBspCotReceiver {
             otherParty().getPartyId(), ownParty().getPartyId()
         );
         List<byte[]> correlatePayload = rpc.receive(correlateHeader).getPayload();
-        BspCotReceiverOutput receiverOutput = generateReceiverOutput(correlatePayload);
-        bpDpprfReceiverOutput = null;
+        SspCotReceiverOutput receiverOutput = generateReceiverOutput(correlatePayload);
+        spDpprfReceiverOutput = null;
         stopWatch.stop();
         long outputTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
         stopWatch.reset();
@@ -205,46 +204,34 @@ public class Ywl20MaBspCotReceiver extends AbstractBspCotReceiver {
         return receiverOutput;
     }
 
-    private BspCotReceiverOutput generateReceiverOutput(List<byte[]> correlatePayload) throws MpcAbortException {
-        MpcAbortPreconditions.checkArgument(correlatePayload.size() == batchNum);
-        byte[][] correlateByteArrays = correlatePayload.toArray(new byte[0][]);
-        IntStream batchIndexIntStream = IntStream.range(0, batchNum);
-        batchIndexIntStream = parallel ? batchIndexIntStream.parallel() : batchIndexIntStream;
-        SspCotReceiverOutput[] sspCotReceiverOutputs = batchIndexIntStream
-            .mapToObj(batchIndex -> {
-                byte[][] rbArray = bpDpprfReceiverOutput.getSpDpprfReceiverOutput(batchIndex).getPprfKeys();
-                // computes w[α]
-                for (int i = 0; i < num; i++) {
-                    if (i != alphaArray[batchIndex]) {
-                        BytesUtils.xori(correlateByteArrays[batchIndex], rbArray[i]);
-                    }
-                }
-                rbArray[alphaArray[batchIndex]] = correlateByteArrays[batchIndex];
-                return SspCotReceiverOutput.create(alphaArray[batchIndex], rbArray);
-            })
-            .toArray(SspCotReceiverOutput[]::new);
-        return BspCotReceiverOutput.create(sspCotReceiverOutputs);
+    private SspCotReceiverOutput generateReceiverOutput(List<byte[]> correlatePayload) throws MpcAbortException {
+        MpcAbortPreconditions.checkArgument(correlatePayload.size() == 1);
+        byte[] correlateByteArray = correlatePayload.get(0);
+        byte[][] rbArray = spDpprfReceiverOutput.getPprfKeys();
+        // computes w[α]
+        for (int i = 0; i < num; i++) {
+            if (i != alpha) {
+                BytesUtils.xori(correlateByteArray, rbArray[i]);
+            }
+        }
+        rbArray[alpha] = correlateByteArray;
+        return SspCotReceiverOutput.create(alpha, rbArray);
     }
 
     private List<byte[]> generateCheckChoicePayload() {
         // R computes ϕ := Σ_{i ∈ [m]} χ_{α_l}^l ∈ F_{2^κ}
         byte[] phi = new byte[CommonConstants.BLOCK_BYTE_LENGTH];
-        for (int l = 0; l < batchNum; l++) {
-            byte[] indexMessage = ByteBuffer.allocate(Long.BYTES + Integer.BYTES + Integer.BYTES)
-                .putLong(extraInfo).putInt(l).putInt(alphaArray[l]).array();
-            // Sample χ_α
-            byte[] chiAlpha = randomOracle.getBytes(indexMessage);
-            BytesUtils.xori(phi, chiAlpha);
-        }
+        byte[] indexMessage = ByteBuffer.allocate(Long.BYTES + Integer.BYTES).putLong(extraInfo).putInt(alpha).array();
+        // Sample χ_α
+        byte[] chiAlpha = randomOracle.getBytes(indexMessage);
+        BytesUtils.xori(phi, chiAlpha);
         // R sends x' := x + x^* ∈ F_2^κ to S
         byte[] xStar = BinaryUtils.binaryToByteArray(checkCotReceiverOutput.getChoices());
         BytesUtils.xori(phi, xStar);
-        List<byte[]> checkChoicePayload = new LinkedList<>();
-        checkChoicePayload.add(phi);
-        return checkChoicePayload;
+        return Collections.singletonList(phi);
     }
 
-    private byte[] computeExpectHashValue(BspCotReceiverOutput receiverOutput) {
+    private byte[] computeExpectHashValue(SspCotReceiverOutput receiverOutput) {
         // R computes Z :=  Σ_{i ∈ [κ]} (z^*[i]·X^i) ∈ F_{2^κ}
         byte[] z = new byte[CommonConstants.BLOCK_BYTE_LENGTH];
         for (int checkIndex = 0; checkIndex < CommonConstants.BLOCK_BIT_LENGTH; checkIndex++) {
@@ -257,30 +244,18 @@ public class Ywl20MaBspCotReceiver extends AbstractBspCotReceiver {
             gf2k.addi(z, zi);
         }
         checkCotReceiverOutput = null;
-        // R computes W := Σ_{l ∈ [m]}(Σ_{i ∈ [n]} (χ[i]·w[i])) + Z ∈ F_{2^κ}
-        IntStream lIntStream = IntStream.range(0, batchNum);
-        lIntStream = parallel ? lIntStream.parallel() : lIntStream;
-        byte[][] ws = lIntStream
-            .mapToObj(l -> {
-                byte[] w = new byte[CommonConstants.BLOCK_BYTE_LENGTH];
-                for (int i = 0; i < num; i++) {
-                    // samples uniform {χ_i}_{i ∈ [n]}
-                    byte[] indexMessage = ByteBuffer.allocate(Long.BYTES + Integer.BYTES + Integer.BYTES)
-                        .putLong(extraInfo).putInt(l).putInt(i).array();
-                    byte[] chi = randomOracle.getBytes(indexMessage);
-                    // χ[i]·w[i]
-                    gf2k.muli(chi, receiverOutput.get(l).getRb(i));
-                    // w += χ[i]·w[i]
-                    BytesUtils.xori(w, chi);
-                }
-                return w;
-            })
-            .toArray(byte[][]::new);
-        // W := Σ_{i ∈ [n]} (χ[i]·w[i]) + Z
+        // R computes W := Σ_{i ∈ [n]} (χ[i]·w[i]) + Z ∈ F_{2^κ}
         byte[] w = new byte[CommonConstants.BLOCK_BYTE_LENGTH];
-        for (int l = 0; l < batchNum; l++) {
-            gf2k.addi(w, ws[l]);
+        for (int i = 0; i < num; i++) {
+            // samples uniform {χ_i}_{i ∈ [n]}
+            byte[] indexMessage = ByteBuffer.allocate(Long.BYTES + Integer.BYTES).putLong(extraInfo).putInt(i).array();
+            byte[] chi = randomOracle.getBytes(indexMessage);
+            // χ[i]·w[i]
+            gf2k.muli(chi, receiverOutput.getRb(i));
+            // w += χ[i]·w[i]
+            BytesUtils.xori(w, chi);
         }
+        // W := Σ_{i ∈ [n]} (χ[i]·w[i]) + Z
         gf2k.addi(w, z);
         // H'(w)
         return hash.digestToBytes(w);
