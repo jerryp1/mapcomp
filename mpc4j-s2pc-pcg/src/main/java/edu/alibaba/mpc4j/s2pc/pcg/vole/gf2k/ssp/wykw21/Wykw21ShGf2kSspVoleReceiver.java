@@ -28,10 +28,6 @@ import java.util.concurrent.TimeUnit;
  */
 public class Wykw21ShGf2kSspVoleReceiver extends AbstractGf2kSspVoleReceiver {
     /**
-     * GF2K instance
-     */
-    private final Gf2k gf2k;
-    /**
      * core GF2K-VOLE receiver
      */
     private final Gf2kCoreVoleReceiver gf2kCoreVoleReceiver;
@@ -39,6 +35,10 @@ public class Wykw21ShGf2kSspVoleReceiver extends AbstractGf2kSspVoleReceiver {
      * SP-DPPRF sender
      */
     private final SpDpprfSender spDpprfSender;
+    /**
+     * GF2K instance
+     */
+    private final Gf2k gf2k;
     /**
      * GF2K-VOLE receiver output
      */

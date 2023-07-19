@@ -27,10 +27,6 @@ import java.util.stream.IntStream;
  */
 public class Wykw21ShGf2kSspVoleSender extends AbstractGf2kSspVoleSender {
     /**
-     * GF2K instance
-     */
-    private final Gf2k gf2k;
-    /**
      * core GF2K-VOLE sender
      */
     private final Gf2kCoreVoleSender gf2kCoreVoleSender;
@@ -38,6 +34,10 @@ public class Wykw21ShGf2kSspVoleSender extends AbstractGf2kSspVoleSender {
      * SP-DPPRF receiver
      */
     private final SpDpprfReceiver spDpprfReceiver;
+    /**
+     * GF2K instance
+     */
+    private final Gf2k gf2k;
     /**
      * GF2K-VOLE sender output
      */

@@ -5,9 +5,7 @@ import edu.alibaba.mpc4j.common.rpc.Rpc;
 import edu.alibaba.mpc4j.common.rpc.desc.SecurityModel;
 import edu.alibaba.mpc4j.common.rpc.pto.PtoFactory;
 import edu.alibaba.mpc4j.common.tool.MathPreconditions;
-import edu.alibaba.mpc4j.s2pc.pcg.vole.gf2k.ssp.wykw21.Wykw21ShGf2kSspVoleConfig;
-import edu.alibaba.mpc4j.s2pc.pcg.vole.gf2k.ssp.wykw21.Wykw21ShGf2kSspVoleReceiver;
-import edu.alibaba.mpc4j.s2pc.pcg.vole.gf2k.ssp.wykw21.Wykw21ShGf2kSspVoleSender;
+import edu.alibaba.mpc4j.s2pc.pcg.vole.gf2k.ssp.wykw21.*;
 
 /**
  * Single single-point GF2K-VOLE factory.
@@ -71,6 +69,7 @@ public class Gf2kSspVoleFactory implements PtoFactory {
             case WYKW21_SEMI_HONEST:
                 return new Wykw21ShGf2kSspVoleSender(senderRpc, receiverParty, (Wykw21ShGf2kSspVoleConfig) config);
             case WYKW21_MALICIOUS:
+                return new Wykw21MaGf2kSspVoleSender(senderRpc, receiverParty, (Wykw21MaGf2kSspVoleConfig) config);
             default:
                 throw new IllegalArgumentException("Invalid " + Gf2kSspVoleType.class.getSimpleName() + ": " + type.name());
         }
@@ -90,6 +89,7 @@ public class Gf2kSspVoleFactory implements PtoFactory {
             case WYKW21_SEMI_HONEST:
                 return new Wykw21ShGf2kSspVoleReceiver(receiverRpc, senderParty, (Wykw21ShGf2kSspVoleConfig) config);
             case WYKW21_MALICIOUS:
+                return new Wykw21MaGf2kSspVoleReceiver(receiverRpc, senderParty, (Wykw21MaGf2kSspVoleConfig) config);
             default:
                 throw new IllegalArgumentException("Invalid " + Gf2kSspVoleType.class.getSimpleName() + ": " + type.name());
         }
@@ -108,6 +108,7 @@ public class Gf2kSspVoleFactory implements PtoFactory {
                 return new Wykw21ShGf2kSspVoleConfig.Builder().build();
             case COVERT:
             case MALICIOUS:
+                return new Wykw21MaGf2kSspVoleConfig.Builder().build();
             default:
                 throw new IllegalArgumentException("Invalid " + SecurityModel.class.getSimpleName() + ": " + securityModel.name());
         }
