@@ -24,6 +24,7 @@ public class Ywl20UniMspCotConfig extends AbstractMultiPartyPtoConfig implements
         bspCotConfig = builder.bspcotConfig;
     }
 
+    @Override
     public BspCotConfig getBspCotConfig() {
         return bspCotConfig;
     }

@@ -1,16 +1,16 @@
-package edu.alibaba.mpc4j.s2pc.pcg.ot.cot.msp;
+package edu.alibaba.mpc4j.s2pc.pcg.vole.gf2k.msp;
 
 import edu.alibaba.mpc4j.common.rpc.MpcAbortException;
 import edu.alibaba.mpc4j.common.rpc.pto.TwoPartyPto;
-import edu.alibaba.mpc4j.s2pc.pcg.ot.cot.CotReceiverOutput;
+import edu.alibaba.mpc4j.s2pc.pcg.vole.gf2k.Gf2kVoleSenderOutput;
 
 /**
- * multi single-point COT receiver.
+ * multi single-point GF2K-VOLE sender.
  *
  * @author Weiran Liu
- * @date 2022/02/03
+ * @date 2023/7/22
  */
-public interface MspCotReceiver extends TwoPartyPto {
+public interface Gf2kMspVoleSender extends TwoPartyPto {
     /**
      * Inits the protocol.
      *
@@ -25,19 +25,19 @@ public interface MspCotReceiver extends TwoPartyPto {
      *
      * @param t   sparse num.
      * @param num num.
-     * @return receiver output.
+     * @return sender output.
      * @throws MpcAbortException the protocol failure aborts.
      */
-    MspCotReceiverOutput receive(int t, int num) throws MpcAbortException;
+    Gf2kMspVoleSenderOutput send(int t, int num) throws MpcAbortException;
 
     /**
      * Executes the protocol.
      *
-     * @param t                 sparse num.
-     * @param num               num.
-     * @param preReceiverOutput pre-computed receiver output.
-     * @return receiver output.
+     * @param t               sparse num.
+     * @param num             num.
+     * @param preSenderOutput pre-computed GF2K-VOLE sender output.
+     * @return sender output.
      * @throws MpcAbortException the protocol failure aborts.
      */
-    MspCotReceiverOutput receive(int t, int num, CotReceiverOutput preReceiverOutput) throws MpcAbortException;
+    Gf2kMspVoleSenderOutput send(int t, int num, Gf2kVoleSenderOutput preSenderOutput) throws MpcAbortException;
 }

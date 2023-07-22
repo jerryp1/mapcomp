@@ -39,18 +39,18 @@ public class Gf2kSspVoleSenderOutput implements PcgPartyOutput {
      * @return a sender output.
      */
     public static Gf2kSspVoleSenderOutput create(int alpha, byte[] x, byte[][] ts) {
-        Gf2kSspVoleSenderOutput receiverOutput = new Gf2kSspVoleSenderOutput();
+        Gf2kSspVoleSenderOutput senderOutput = new Gf2kSspVoleSenderOutput();
         MathPreconditions.checkPositive("num", ts.length);
         MathPreconditions.checkNonNegativeInRange("α", alpha, ts.length);
-        receiverOutput.alpha = alpha;
+        senderOutput.alpha = alpha;
         MathPreconditions.checkEqual("x.length", "λ in bytes", x.length, CommonConstants.BLOCK_BYTE_LENGTH);
-        receiverOutput.x = BytesUtils.clone(x);
-        receiverOutput.ts = Arrays.stream(ts)
+        senderOutput.x = BytesUtils.clone(x);
+        senderOutput.ts = Arrays.stream(ts)
             .peek(t ->
                 MathPreconditions.checkEqual("t.length", "λ in bytes", t.length, CommonConstants.BLOCK_BYTE_LENGTH)
             )
             .toArray(byte[][]::new);
-        return receiverOutput;
+        return senderOutput;
     }
 
     /**

@@ -24,6 +24,7 @@ public class Bcg19RegMspCotConfig extends AbstractMultiPartyPtoConfig implements
         bspCotConfig = builder.bspcotConfig;
     }
 
+    @Override
     public BspCotConfig getBspCotConfig() {
         return bspCotConfig;
     }

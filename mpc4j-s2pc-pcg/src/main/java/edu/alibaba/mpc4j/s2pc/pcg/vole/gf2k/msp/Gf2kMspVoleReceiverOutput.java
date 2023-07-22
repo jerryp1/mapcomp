@@ -1,4 +1,4 @@
-package edu.alibaba.mpc4j.s2pc.pcg.vole.gf2k.ssp;
+package edu.alibaba.mpc4j.s2pc.pcg.vole.gf2k.msp;
 
 import edu.alibaba.mpc4j.common.tool.CommonConstants;
 import edu.alibaba.mpc4j.common.tool.MathPreconditions;
@@ -8,15 +8,12 @@ import edu.alibaba.mpc4j.s2pc.pcg.PcgPartyOutput;
 import java.util.Arrays;
 
 /**
- * Single single-point GF2K-VOLE receiver output.
- * <p>
- * The receiver gets (Δ, q) with t = q + Δ · x, where x and t are owned by the sender, and there are only one non-zero x.
- * </p>
+ * multi single-point GF2K-VOLE receiver output.
  *
  * @author Weiran Liu
- * @date 2023/3/16
+ * @date 2023/7/22
  */
-public class Gf2kSspVoleReceiverOutput implements PcgPartyOutput {
+public class Gf2kMspVoleReceiverOutput implements PcgPartyOutput {
     /**
      * Δ
      */
@@ -33,8 +30,8 @@ public class Gf2kSspVoleReceiverOutput implements PcgPartyOutput {
      * @param qArray q array.
      * @return a sender output.
      */
-    public static Gf2kSspVoleReceiverOutput create(byte[] delta, byte[][] qArray) {
-        Gf2kSspVoleReceiverOutput receiverOutput = new Gf2kSspVoleReceiverOutput();
+    public static Gf2kMspVoleReceiverOutput create(byte[] delta, byte[][] qArray) {
+        Gf2kMspVoleReceiverOutput receiverOutput = new Gf2kMspVoleReceiverOutput();
         MathPreconditions.checkEqual("delta.length", "λ in bytes", delta.length, CommonConstants.BLOCK_BYTE_LENGTH);
         receiverOutput.delta = BytesUtils.clone(delta);
         MathPreconditions.checkPositive("qArray.length", qArray.length);
@@ -49,7 +46,7 @@ public class Gf2kSspVoleReceiverOutput implements PcgPartyOutput {
     /**
      * private constructor.
      */
-    private Gf2kSspVoleReceiverOutput() {
+    private Gf2kMspVoleReceiverOutput() {
         // empty
     }
 
@@ -70,6 +67,15 @@ public class Gf2kSspVoleReceiverOutput implements PcgPartyOutput {
      */
     public byte[] getQ(int index) {
         return qs[index];
+    }
+
+    /**
+     * Gets q array.
+     *
+     * @return q array.
+     */
+    public byte[][] getQs() {
+        return qs;
     }
 
     @Override
