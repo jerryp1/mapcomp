@@ -25,9 +25,9 @@ public class PsmFactory implements PtoFactory {
      */
     public enum PsmType {
         /**
-         * CGS22 based on LNOT
+         * CGS22 naive PSM (PSM1)
          */
-        CGS22_LNOT,
+        CGS22_NAIVE,
         /**
          * CGS22 based on OPPRF (PSM2)
          */
@@ -45,8 +45,8 @@ public class PsmFactory implements PtoFactory {
     public static PsmSender createSender(Rpc senderRpc, Party receiverParty, PsmConfig config) {
         PsmType type = config.getPtoType();
         switch (type) {
-            case CGS22_LNOT:
-                return new Cgs22LnotPsmSender(senderRpc, receiverParty, (Cgs22LnotPsmConfig) config);
+            case CGS22_NAIVE:
+                return new Cgs22NaivePsmSender(senderRpc, receiverParty, (Cgs22NaivePsmConfig) config);
             case CGS22_OPPRF:
                 return new Cgs22OpprfPsmSender(senderRpc, receiverParty, (Cgs22OpprfPsmConfig) config);
             default:
@@ -65,8 +65,8 @@ public class PsmFactory implements PtoFactory {
     public static PsmReceiver createReceiver(Rpc receiverRpc, Party senderParty, PsmConfig config) {
         PsmType type = config.getPtoType();
         switch (type) {
-            case CGS22_LNOT:
-                return new Cgs22LnotPsmReceiver(receiverRpc, senderParty, (Cgs22LnotPsmConfig) config);
+            case CGS22_NAIVE:
+                return new Cgs22NaivePsmReceiver(receiverRpc, senderParty, (Cgs22NaivePsmConfig) config);
             case CGS22_OPPRF:
                 return new Cgs22OpprfPsmReceiver(receiverRpc, senderParty, (Cgs22OpprfPsmConfig) config);
             default:

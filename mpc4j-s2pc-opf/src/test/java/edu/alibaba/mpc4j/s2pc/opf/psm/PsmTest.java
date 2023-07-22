@@ -5,7 +5,7 @@ import edu.alibaba.mpc4j.common.rpc.test.AbstractTwoPartyPtoTest;
 import edu.alibaba.mpc4j.common.tool.bitvector.BitVector;
 import edu.alibaba.mpc4j.s2pc.aby.basics.z2.SquareZ2Vector;
 import edu.alibaba.mpc4j.s2pc.opf.psm.PsmFactory.PsmType;
-import edu.alibaba.mpc4j.s2pc.opf.psm.cgs22.Cgs22LnotPsmConfig;
+import edu.alibaba.mpc4j.s2pc.opf.psm.cgs22.Cgs22NaivePsmConfig;
 import edu.alibaba.mpc4j.s2pc.opf.psm.cgs22.Cgs22OpprfPsmConfig;
 import org.apache.commons.lang3.time.StopWatch;
 import org.junit.Assert;
@@ -57,8 +57,8 @@ public class PsmTest extends AbstractTwoPartyPtoTest {
         });
         // CGS22_LNOT
         configurations.add(new Object[]{
-            PsmType.CGS22_LNOT.name() + " (" + SecurityModel.SEMI_HONEST.name() + ")",
-            new Cgs22LnotPsmConfig.Builder(SecurityModel.SEMI_HONEST, false).build()
+            PsmType.CGS22_NAIVE.name() + " (" + SecurityModel.SEMI_HONEST.name() + ")",
+            new Cgs22NaivePsmConfig.Builder(SecurityModel.SEMI_HONEST, false).build()
         });
 
         return configurations;

@@ -2,6 +2,7 @@ package edu.alibaba.mpc4j.s2pc.opf.pesm;
 
 import edu.alibaba.mpc4j.common.rpc.Party;
 import edu.alibaba.mpc4j.common.rpc.Rpc;
+import edu.alibaba.mpc4j.common.rpc.desc.SecurityModel;
 import edu.alibaba.mpc4j.common.rpc.pto.PtoFactory;
 import edu.alibaba.mpc4j.s2pc.opf.pesm.cgs22.Cgs22LnotPesmConfig;
 import edu.alibaba.mpc4j.s2pc.opf.pesm.cgs22.Cgs22LnotPesmReceiver;
@@ -67,5 +68,16 @@ public class PesmFactory implements PtoFactory {
             default:
                 throw new IllegalArgumentException("Invalid " + PesmType.class.getSimpleName() + ": " + type.name());
         }
+    }
+
+    /**
+     * Creates a default config.
+     *
+     * @param securityModel security model.
+     * @param silent        if using a silent protocol.
+     * @return a default config.
+     */
+    public static PesmConfig createDefaultConfig(SecurityModel securityModel, boolean silent) {
+        return new Cgs22LnotPesmConfig.Builder(securityModel, silent).build();
     }
 }

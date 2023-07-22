@@ -52,7 +52,7 @@ class PesmSenderThread extends Thread {
         try {
             sender.init(l, d, num);
             sender.getRpc().reset();
-            z0 = sender.psm(l, inputArrays);
+            z0 = sender.pesm(l, inputArrays);
         } catch (MpcAbortException e) {
             e.printStackTrace();
         }

@@ -4,16 +4,12 @@ import edu.alibaba.mpc4j.common.rpc.desc.PtoDesc;
 import edu.alibaba.mpc4j.common.rpc.desc.PtoDescManager;
 
 /**
- * CGS22 1-out-of-n (with n = 2^l) OT based PSM. The protocol is described in Fig. 6 of the following paper:
- * <p>
- * Chandran, Nishanth, Divya Gupta, and Akash Shah. Circuit-PSI With Linear Complexity via Relaxed Batch OPPRF.
- * PETS 2022, pp. 353-372.
- * </p>
+ * CGS22 naive PSM by directly invoking PESM.
  *
  * @author Weiran Liu
  * @date 2023/4/16
  */
-class Cgs22LnotPsmPtoDesc implements PtoDesc {
+class Cgs22NaivePsmPtoDesc implements PtoDesc {
     /**
      * protocol ID
      */
@@ -21,27 +17,16 @@ class Cgs22LnotPsmPtoDesc implements PtoDesc {
     /**
      * protocol name
      */
-    private static final String PTO_NAME = "CGS22_LNOT_PSM";
-
-    /**
-     * protocol step
-     */
-    enum PtoStep {
-        /**
-         * the sender sends equality payloads
-         */
-        SENDER_SEND_EV_ARRAYS,
-    }
-
+    private static final String PTO_NAME = "CGS22_NAIVE_PSM";
     /**
      * singleton mode
      */
-    private static final Cgs22LnotPsmPtoDesc INSTANCE = new Cgs22LnotPsmPtoDesc();
+    private static final Cgs22NaivePsmPtoDesc INSTANCE = new Cgs22NaivePsmPtoDesc();
 
     /**
      * private constructor.
      */
-    private Cgs22LnotPsmPtoDesc() {
+    private Cgs22NaivePsmPtoDesc() {
         // empty
     }
 
