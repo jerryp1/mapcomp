@@ -9,6 +9,7 @@ import edu.alibaba.mpc4j.s2pc.pcg.vole.gf2k.Gf2kVoleReceiverOutput;
 import edu.alibaba.mpc4j.s2pc.pcg.vole.gf2k.Gf2kVoleSenderOutput;
 import edu.alibaba.mpc4j.s2pc.pcg.vole.gf2k.Gf2kVoleTestUtils;
 import edu.alibaba.mpc4j.s2pc.pcg.vole.gf2k.bsp.Gf2kBspVoleFactory.Gf2kBspVoleType;
+import edu.alibaba.mpc4j.s2pc.pcg.vole.gf2k.bsp.wykw21.Wykw21MaGf2kBspVoleConfig;
 import edu.alibaba.mpc4j.s2pc.pcg.vole.gf2k.bsp.wykw21.Wykw21ShGf2kBspVoleConfig;
 import edu.alibaba.mpc4j.s2pc.pcg.vole.gf2k.ssp.Gf2kSspVoleReceiverOutput;
 import edu.alibaba.mpc4j.s2pc.pcg.vole.gf2k.ssp.Gf2kSspVoleSenderOutput;
@@ -59,6 +60,10 @@ public class Gf2kBspVoleTest extends AbstractTwoPartyPtoTest {
     public static Collection<Object[]> configurations() {
         Collection<Object[]> configurations = new ArrayList<>();
 
+        // WYKW21_MALICIOUS
+        configurations.add(new Object[]{
+            Gf2kBspVoleType.WYKW21_MALICIOUS.name(), new Wykw21MaGf2kBspVoleConfig.Builder().build(),
+        });
         // WYKW21_SEMI_HONEST
         configurations.add(new Object[]{
             Gf2kBspVoleType.WYKW21_SEMI_HONEST.name(), new Wykw21ShGf2kBspVoleConfig.Builder().build(),

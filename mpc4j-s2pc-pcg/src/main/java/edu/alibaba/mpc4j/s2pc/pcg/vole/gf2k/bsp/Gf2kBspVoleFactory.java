@@ -5,9 +5,7 @@ import edu.alibaba.mpc4j.common.rpc.Rpc;
 import edu.alibaba.mpc4j.common.rpc.desc.SecurityModel;
 import edu.alibaba.mpc4j.common.rpc.pto.PtoFactory;
 import edu.alibaba.mpc4j.common.tool.MathPreconditions;
-import edu.alibaba.mpc4j.s2pc.pcg.vole.gf2k.bsp.wykw21.Wykw21ShGf2kBspVoleConfig;
-import edu.alibaba.mpc4j.s2pc.pcg.vole.gf2k.bsp.wykw21.Wykw21ShGf2kBspVoleReceiver;
-import edu.alibaba.mpc4j.s2pc.pcg.vole.gf2k.bsp.wykw21.Wykw21ShGf2kBspVoleSender;
+import edu.alibaba.mpc4j.s2pc.pcg.vole.gf2k.bsp.wykw21.*;
 
 /**
  * Batch single-point GF2K-VOLE factory.
@@ -73,6 +71,7 @@ public class Gf2kBspVoleFactory implements PtoFactory {
             case WYKW21_SEMI_HONEST:
                 return new Wykw21ShGf2kBspVoleSender(senderRpc, receiverParty, (Wykw21ShGf2kBspVoleConfig) config);
             case WYKW21_MALICIOUS:
+                return new Wykw21MaGf2kBspVoleSender(senderRpc, receiverParty, (Wykw21MaGf2kBspVoleConfig) config);
             default:
                 throw new IllegalArgumentException("Invalid " + Gf2kBspVoleType.class.getSimpleName() + ": " + type.name());
         }
@@ -92,6 +91,7 @@ public class Gf2kBspVoleFactory implements PtoFactory {
             case WYKW21_SEMI_HONEST:
                 return new Wykw21ShGf2kBspVoleReceiver(receiverRpc, senderParty, (Wykw21ShGf2kBspVoleConfig) config);
             case WYKW21_MALICIOUS:
+                return new Wykw21MaGf2kBspVoleReceiver(receiverRpc, senderParty, (Wykw21MaGf2kBspVoleConfig) config);
             default:
                 throw new IllegalArgumentException("Invalid " + Gf2kBspVoleType.class.getSimpleName() + ": " + type.name());
         }
@@ -107,8 +107,10 @@ public class Gf2kBspVoleFactory implements PtoFactory {
         switch (securityModel) {
             case IDEAL:
             case SEMI_HONEST:
+                return new Wykw21ShGf2kBspVoleConfig.Builder().build();
             case COVERT:
             case MALICIOUS:
+                return new Wykw21MaGf2kBspVoleConfig.Builder().build();
             default:
                 throw new IllegalArgumentException("Invalid " + SecurityModel.class.getSimpleName() + ": " + securityModel.name());
         }

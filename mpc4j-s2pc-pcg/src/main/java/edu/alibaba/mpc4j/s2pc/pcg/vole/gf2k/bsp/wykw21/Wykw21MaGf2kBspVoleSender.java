@@ -1,4 +1,4 @@
-package edu.alibaba.mpc4j.s2pc.pcg.vole.gf2k.ssp.wykw21;
+package edu.alibaba.mpc4j.s2pc.pcg.vole.gf2k.bsp.wykw21;
 
 import edu.alibaba.mpc4j.common.rpc.*;
 import edu.alibaba.mpc4j.common.rpc.utils.DataPacket;
@@ -10,16 +10,17 @@ import edu.alibaba.mpc4j.common.tool.crypto.prf.Prf;
 import edu.alibaba.mpc4j.common.tool.crypto.prf.PrfFactory;
 import edu.alibaba.mpc4j.common.tool.galoisfield.gf2k.Gf2k;
 import edu.alibaba.mpc4j.common.tool.galoisfield.gf2k.Gf2kFactory;
-import edu.alibaba.mpc4j.s2pc.pcg.dpprf.sp.SpDpprfFactory;
-import edu.alibaba.mpc4j.s2pc.pcg.dpprf.sp.SpDpprfReceiver;
-import edu.alibaba.mpc4j.s2pc.pcg.dpprf.sp.SpDpprfReceiverOutput;
+import edu.alibaba.mpc4j.s2pc.pcg.dpprf.bp.BpDpprfFactory;
+import edu.alibaba.mpc4j.s2pc.pcg.dpprf.bp.BpDpprfReceiver;
+import edu.alibaba.mpc4j.s2pc.pcg.dpprf.bp.BpDpprfReceiverOutput;
 import edu.alibaba.mpc4j.s2pc.pcg.vole.gf2k.Gf2kVoleSenderOutput;
+import edu.alibaba.mpc4j.s2pc.pcg.vole.gf2k.bsp.AbstractGf2kBspVoleSender;
+import edu.alibaba.mpc4j.s2pc.pcg.vole.gf2k.bsp.Gf2kBspVoleFactory;
+import edu.alibaba.mpc4j.s2pc.pcg.vole.gf2k.bsp.Gf2kBspVoleSenderOutput;
 import edu.alibaba.mpc4j.s2pc.pcg.vole.gf2k.core.Gf2kCoreVoleFactory;
 import edu.alibaba.mpc4j.s2pc.pcg.vole.gf2k.core.Gf2kCoreVoleSender;
-import edu.alibaba.mpc4j.s2pc.pcg.vole.gf2k.ssp.AbstractGf2kSspVoleSender;
-import edu.alibaba.mpc4j.s2pc.pcg.vole.gf2k.ssp.Gf2kSspVoleFactory;
+import edu.alibaba.mpc4j.s2pc.pcg.vole.gf2k.bsp.wykw21.Wykw21MaGf2kBspVolePtoDesc.PtoStep;
 import edu.alibaba.mpc4j.s2pc.pcg.vole.gf2k.ssp.Gf2kSspVoleSenderOutput;
-import edu.alibaba.mpc4j.s2pc.pcg.vole.gf2k.ssp.wykw21.Wykw21MaGf2kSspVolePtoDesc.PtoStep;
 import org.bouncycastle.crypto.Commitment;
 
 import java.nio.ByteBuffer;
@@ -30,20 +31,20 @@ import java.util.concurrent.TimeUnit;
 import java.util.stream.IntStream;
 
 /**
- * malicious WYKW21-SSP-GF2K-VOLE sender.
+ * malicious WYKW21-BSP-GF2K-VOLE sender.
  *
  * @author Weiran Liu
- * @date 2023/7/19
+ * @date 2023/7/22
  */
-public class Wykw21MaGf2kSspVoleSender extends AbstractGf2kSspVoleSender {
+public class Wykw21MaGf2kBspVoleSender extends AbstractGf2kBspVoleSender {
     /**
      * core GF2K-VOLE sender
      */
     private final Gf2kCoreVoleSender gf2kCoreVoleSender;
     /**
-     * SP-DPPRF receiver
+     * BP-DPPRF receiver
      */
-    private final SpDpprfReceiver spDpprfReceiver;
+    private final BpDpprfReceiver bpDpprfReceiver;
     /**
      * GF2K instance
      */
@@ -61,26 +62,26 @@ public class Wykw21MaGf2kSspVoleSender extends AbstractGf2kSspVoleSender {
      */
     private Gf2kVoleSenderOutput gf2kVoleSenderOutput;
 
-    public Wykw21MaGf2kSspVoleSender(Rpc receiverRpc, Party senderParty, Wykw21MaGf2kSspVoleConfig config) {
-        super(Wykw21MaGf2kSspVolePtoDesc.getInstance(), receiverRpc, senderParty, config);
+    public Wykw21MaGf2kBspVoleSender(Rpc receiverRpc, Party senderParty, Wykw21MaGf2kBspVoleConfig config) {
+        super(Wykw21MaGf2kBspVolePtoDesc.getInstance(), receiverRpc, senderParty, config);
         gf2kCoreVoleSender = Gf2kCoreVoleFactory.createSender(receiverRpc, senderParty, config.getGf2kCoreVoleConfig());
         addSubPtos(gf2kCoreVoleSender);
-        spDpprfReceiver = SpDpprfFactory.createReceiver(receiverRpc, senderParty, config.getSpDpprfConfig());
-        addSubPtos(spDpprfReceiver);
+        bpDpprfReceiver = BpDpprfFactory.createReceiver(receiverRpc, senderParty, config.getBpDpprfConfig());
+        addSubPtos(bpDpprfReceiver);
         gf2k = Gf2kFactory.createInstance(envType);
         commit = CommitFactory.createInstance(envType, secureRandom);
         randomOracle = PrfFactory.createInstance(envType, gf2k.getByteL());
     }
 
     @Override
-    public void init(int maxNum) throws MpcAbortException {
-        setInitInput(maxNum);
+    public void init(int maxBatchNum, int maxEachNum) throws MpcAbortException {
+        setInitInput(maxBatchNum, maxEachNum);
         logPhaseInfo(PtoState.INIT_BEGIN);
 
         stopWatch.start();
-        int maxPreVoleNum = Gf2kSspVoleFactory.getPrecomputeNum(config, maxNum);
+        int maxPreVoleNum = Gf2kBspVoleFactory.getPrecomputeNum(config, maxBatchNum, maxEachNum);
         gf2kCoreVoleSender.init(maxPreVoleNum);
-        spDpprfReceiver.init(maxNum);
+        bpDpprfReceiver.init(maxBatchNum, maxEachNum);
         stopWatch.stop();
         long initTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
         stopWatch.reset();
@@ -90,24 +91,25 @@ public class Wykw21MaGf2kSspVoleSender extends AbstractGf2kSspVoleSender {
     }
 
     @Override
-    public Gf2kSspVoleSenderOutput send(int alpha, int num) throws MpcAbortException {
-        setPtoInput(alpha, num);
+    public Gf2kBspVoleSenderOutput send(int[] alphaArray, int eachNum) throws MpcAbortException {
+        setPtoInput(alphaArray, eachNum);
         return send();
     }
 
     @Override
-    public Gf2kSspVoleSenderOutput send(int alpha, int num, Gf2kVoleSenderOutput preSenderOutput) throws MpcAbortException {
-        setPtoInput(alpha, num, preSenderOutput);
+    public Gf2kBspVoleSenderOutput send(int[] alphaArray, int eachNum, Gf2kVoleSenderOutput preSenderOutput)
+        throws MpcAbortException {
+        setPtoInput(alphaArray, eachNum, preSenderOutput);
         gf2kVoleSenderOutput = preSenderOutput;
         return send();
     }
 
-    private Gf2kSspVoleSenderOutput send() throws MpcAbortException {
+    private Gf2kBspVoleSenderOutput send() throws MpcAbortException {
         logPhaseInfo(PtoState.PTO_BEGIN);
 
         stopWatch.start();
         // We need to invoke F_VOLE two times, one for the Extend phase, one for the Consistency check phase
-        int preVoleNum = Gf2kSspVoleFactory.getPrecomputeNum(config, num);
+        int preVoleNum = Gf2kBspVoleFactory.getPrecomputeNum(config, batchNum, eachNum);
         if (gf2kVoleSenderOutput == null) {
             byte[][] xs = IntStream.range(0, preVoleNum)
                 .mapToObj(index -> gf2k.createRandom(secureRandom))
@@ -124,9 +126,15 @@ public class Wykw21MaGf2kSspVoleSender extends AbstractGf2kSspVoleSender {
         stopWatch.start();
         // In the Extend phase, S send (extend, 1) to F_VOLE, which returns (x, t) ∈ {0,1}^κ × {0,1}^κ to S.
         // S sample β ∈ {0,1}^κ, sets δ = c, and sends a' = β - a to R. Here we reuse β = a, δ = c. We reuse x as β.
-        byte[] beta = gf2kVoleSenderOutput.getX(0);
-        assert !gf2k.isZero(beta);
-        byte[] littleDelta = gf2kVoleSenderOutput.getT(0);
+        byte[][] betaArray = IntStream.range(0, batchNum)
+            .mapToObj(batchIndex -> gf2kVoleSenderOutput.getX(batchIndex))
+            .peek(beta -> {
+                assert !gf2k.isZero(beta);
+            })
+            .toArray(byte[][]::new);
+        byte[][] littleDeltaArray = IntStream.range(0, batchNum)
+            .mapToObj(batchIndex -> gf2kVoleSenderOutput.getT(batchIndex))
+            .toArray(byte[][]::new);
         stopWatch.stop();
         long aPrimeTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
         stopWatch.reset();
@@ -134,32 +142,43 @@ public class Wykw21MaGf2kSspVoleSender extends AbstractGf2kSspVoleSender {
 
         stopWatch.start();
         // S runs GGM to obtain {v_j}_{j ≠ α)
-        SpDpprfReceiverOutput spDpprfReceiverOutput = spDpprfReceiver.puncture(alpha, num);
+        BpDpprfReceiverOutput bpDpprfReceiverOutput = bpDpprfReceiver.puncture(alphaArray, eachNum);
         stopWatch.stop();
         long dpprfTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
         stopWatch.reset();
         logStepInfo(PtoState.PTO_STEP, 3, 6, dpprfTime);
 
-        DataPacketHeader dHeader = new DataPacketHeader(
-            encodeTaskId, getPtoDesc().getPtoId(), PtoStep.RECEIVER_SEND_D.ordinal(), extraInfo,
+        DataPacketHeader dsHeader = new DataPacketHeader(
+            encodeTaskId, getPtoDesc().getPtoId(), PtoStep.RECEIVER_SEND_DS.ordinal(), extraInfo,
             otherParty().getPartyId(), ownParty().getPartyId()
         );
-        List<byte[]> dPayload = rpc.receive(dHeader).getPayload();
+        List<byte[]> dsPayload = rpc.receive(dsHeader).getPayload();
 
         stopWatch.start();
-        // S defines w[i] = v_i for i ≠ α, and w[α] = δ - (d + Σ_{i ∈ [i ≠ α)} w[i])
-        MpcAbortPreconditions.checkArgument(dPayload.size() == 1);
-        byte[] d = dPayload.get(0);
-        byte[][] ws = spDpprfReceiverOutput.getPprfKeys();
-        ws[alpha] = d;
-        for (int i = 0; i < num; i++) {
-            if (i != alpha) {
-                gf2k.addi(ws[alpha], ws[i]);
-            }
-        }
-        gf2k.negi(ws[alpha]);
-        gf2k.addi(ws[alpha], littleDelta);
-        Gf2kSspVoleSenderOutput senderOutput = Gf2kSspVoleSenderOutput.create(alpha, beta, ws);
+        MpcAbortPreconditions.checkArgument(dsPayload.size() == batchNum);
+        byte[][] ds = dsPayload.toArray(new byte[0][]);
+        IntStream batchIntStream = IntStream.range(0, batchNum);
+        batchIntStream = parallel ? batchIntStream.parallel() : batchIntStream;
+        Gf2kSspVoleSenderOutput[] gf2kSspVoleSenderOutputs = batchIntStream
+            .mapToObj(batchIndex -> {
+                // S defines w[i] = v_i for i ≠ α, and w[α] = δ - (d + Σ_{i ∈ [i ≠ α)} w[i])
+                int alpha = alphaArray[batchIndex];
+                byte[] d = ds[batchIndex];
+                byte[] beta = betaArray[batchIndex];
+                byte[] littleDelta = littleDeltaArray[batchIndex];
+                byte[][] ws = bpDpprfReceiverOutput.getSpDpprfReceiverOutput(batchIndex).getPprfKeys();
+                ws[alpha] = d;
+                for (int i = 0; i < eachNum; i++) {
+                    if (i != alpha) {
+                        gf2k.addi(ws[alpha], ws[i]);
+                    }
+                }
+                gf2k.negi(ws[alpha]);
+                gf2k.addi(ws[alpha], littleDelta);
+                return Gf2kSspVoleSenderOutput.create(alpha, beta, ws);
+            })
+            .toArray(Gf2kSspVoleSenderOutput[]::new);
+        Gf2kBspVoleSenderOutput senderOutput = Gf2kBspVoleSenderOutput.create(gf2kSspVoleSenderOutputs);
         stopWatch.stop();
         long outputTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
         stopWatch.reset();
@@ -167,26 +186,40 @@ public class Wykw21MaGf2kSspVoleSender extends AbstractGf2kSspVoleSender {
 
         stopWatch.start();
         // In the Consistency check phase, S send (extend, 1) to F_VOLE, which returns (x, t) ∈ {0,1}^κ × {0,1}^κ to S
-        byte[] x = gf2kVoleSenderOutput.getX(1);
-        byte[] z = gf2kVoleSenderOutput.getT(1);
+        byte[] x = gf2kVoleSenderOutput.getX(batchNum);
+        byte[] z = gf2kVoleSenderOutput.getT(batchNum);
         gf2kVoleSenderOutput = null;
-        // S samples χ_i for i ∈ [0, n), and extracts χ_α
+        // S samples χ_{i, j} for i ∈ [0, n), j ∈ [0, t), and extracts χ_{α, j}
         byte[] seed = new byte[CommonConstants.BLOCK_BYTE_LENGTH];
         secureRandom.nextBytes(seed);
         randomOracle.setKey(seed);
-        IntStream indexIntStream = IntStream.range(0, num);
-        indexIntStream = parallel ? indexIntStream.parallel() : indexIntStream;
-        byte[][] chiArray = indexIntStream
-            .mapToObj(i -> {
-                byte[] indexMessage = ByteBuffer.allocate(Long.BYTES + Integer.BYTES)
-                    .putLong(extraInfo).putInt(i).array();
-                return randomOracle.getBytes(indexMessage);
+        batchIntStream = IntStream.range(0, batchNum);
+        batchIntStream = parallel ? batchIntStream.parallel() : batchIntStream;
+        byte[][] betaChiAlphas = new byte[batchNum][];
+        byte[][][] chiArrays = batchIntStream
+            .mapToObj(j -> {
+                // generate χ_{i, j} for i ∈ [0, n)
+                byte[][] chiArray = IntStream.range(0, eachNum)
+                    .mapToObj(i -> {
+                        byte[] indexMessage = ByteBuffer.allocate(Long.BYTES + Integer.BYTES + Integer.BYTES)
+                            .putLong(extraInfo).putInt(j).putInt(i).array();
+                        return randomOracle.getBytes(indexMessage);
+                    })
+                    .toArray(byte[][]::new);
+                // compute β · χ_{{α, j}, j}
+                byte[] beta = betaArray[j];
+                int alpha = alphaArray[j];
+                betaChiAlphas[j] = gf2k.mul(beta, chiArray[alpha]);
+                return chiArray;
             })
-            .toArray(byte[][]::new);
-        // S then computes x^* = β · χ_α - x
-        byte[] xStar = gf2k.mul(beta, chiArray[alpha]);
+            .toArray(byte[][][]::new);
+        // S then computes x^* = Σ_{j ∈ [0, t)} {β · χ_{{α, j}, j}} - x
+        byte[] xStar = gf2k.createZero();
+        for (int j = 0; j < batchNum; j++) {
+            gf2k.addi(xStar, betaChiAlphas[j]);
+        }
         gf2k.subi(xStar, x);
-        // S sends ({χ_i}_{i ∈ [0, n)}, x^*) to R
+        // S sends ({χ_{i, j}_{i ∈ [0, n), j ∈ [0, t)}, x^*) to R
         List<byte[]> xStarPayload = new LinkedList<>();
         xStarPayload.add(seed);
         xStarPayload.add(xStar);
@@ -195,15 +228,21 @@ public class Wykw21MaGf2kSspVoleSender extends AbstractGf2kSspVoleSender {
             ownParty().getPartyId(), otherParty().getPartyId()
         );
         rpc.send(DataPacket.fromByteArrayList(xStarHeader, xStarPayload));
-        // S computes V_A = Σ_{i = 0}^{n - 1} {χ_i · w[i]} - z.
-        indexIntStream = IntStream.range(0, num);
+        // S computes V_A = Σ_{i ∈ [0, n)} (Σ_{j ∈ [0, t}} {χ_{i, j} · w_j[i]}) - z.
+        IntStream indexIntStream = IntStream.range(0, eachNum);
         indexIntStream = parallel ? indexIntStream.parallel() : indexIntStream;
-        byte[][] chiWs = indexIntStream
-            .mapToObj(i -> gf2k.mul(chiArray[i], ws[i]))
+        byte[][] batchChiWs = indexIntStream
+            .mapToObj(i -> {
+                byte[] chiWs = gf2k.createZero();
+                for (int j = 0; j < batchNum; j++) {
+                    gf2k.addi(chiWs, gf2k.mul(chiArrays[j][i], gf2kSspVoleSenderOutputs[j].getT(i)));
+                }
+                return chiWs;
+            })
             .toArray(byte[][]::new);
         byte[] va = gf2k.createZero();
-        for (int i = 0; i < num; i++) {
-            gf2k.addi(va, chiWs[i]);
+        for (int i = 0; i < eachNum; i++) {
+            gf2k.addi(va, batchChiWs[i]);
         }
         gf2k.subi(va, z);
         stopWatch.stop();
