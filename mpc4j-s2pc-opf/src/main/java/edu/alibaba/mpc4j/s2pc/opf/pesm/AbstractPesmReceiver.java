@@ -1,4 +1,4 @@
-package edu.alibaba.mpc4j.s2pc.opf.psm;
+package edu.alibaba.mpc4j.s2pc.opf.pesm;
 
 import com.google.common.base.Preconditions;
 import edu.alibaba.mpc4j.common.rpc.Party;
@@ -13,20 +13,20 @@ import edu.alibaba.mpc4j.common.tool.utils.CommonUtils;
 import java.util.Arrays;
 
 /**
- * abstract private set membership receiver.
+ * abstract private (equal) set membership receiver.
  *
  * @author Weiran Liu
- * @date 2023/4/16
+ * @date 2023/7/22
  */
-public abstract class AbstractPsmReceiver extends AbstractTwoPartyPto implements PsmReceiver {
+public abstract class AbstractPesmReceiver extends AbstractTwoPartyPto implements PesmReceiver {
     /**
      * max num
      */
     private int maxNum;
     /**
-     * point num
+     * max d
      */
-    protected int d;
+    private int maxD;
     /**
      * max l
      */
@@ -35,6 +35,10 @@ public abstract class AbstractPsmReceiver extends AbstractTwoPartyPto implements
      * num
      */
     protected int num;
+    /**
+     * point num
+     */
+    protected int d;
     /**
      * l
      */
@@ -48,26 +52,27 @@ public abstract class AbstractPsmReceiver extends AbstractTwoPartyPto implements
      */
     protected byte[][] inputArray;
 
-    public AbstractPsmReceiver(PtoDesc ptoDesc, Rpc ownRpc, Party otherParty, PsmConfig config) {
+    public AbstractPesmReceiver(PtoDesc ptoDesc, Rpc ownRpc, Party otherParty, PesmConfig config) {
         super(ptoDesc, ownRpc, otherParty, config);
     }
 
-    protected void setInitInput(int maxL, int d, int maxNum) {
+    protected void setInitInput(int maxL, int maxD, int maxNum) {
         MathPreconditions.checkGreaterOrEqual("maxL", maxL, CommonConstants.STATS_BIT_LENGTH);
         this.maxL = maxL;
-        MathPreconditions.checkPositive("d", d);
-        this.d = d;
-        MathPreconditions.checkGreater("maxNum", maxNum, 1);
+        MathPreconditions.checkPositive("maxD", maxD);
+        this.maxD = maxD;
+        MathPreconditions.checkPositive("maxNum", maxNum);
         this.maxNum = maxNum;
         initState();
     }
 
-    protected void setPtoInput(int l, byte[][] inputArray) {
+    protected void setPtoInput(int l, int d, byte[][] inputArray) {
         MathPreconditions.checkGreaterOrEqual("l", l, CommonConstants.STATS_BIT_LENGTH);
         MathPreconditions.checkLessOrEqual("l", l, maxL);
         this.l = l;
         byteL = CommonUtils.getByteLength(l);
-        MathPreconditions.checkGreater("inputArrays.num", inputArray.length, 1);
+        MathPreconditions.checkPositiveInRangeClosed("d", d, maxD);
+        this.d = d;
         MathPreconditions.checkPositiveInRangeClosed("inputArray.num", inputArray.length, maxNum);
         num = inputArray.length;
         this.inputArray = Arrays.stream(inputArray)

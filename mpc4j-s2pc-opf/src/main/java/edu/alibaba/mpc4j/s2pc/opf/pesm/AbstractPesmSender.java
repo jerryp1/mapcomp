@@ -1,4 +1,4 @@
-package edu.alibaba.mpc4j.s2pc.opf.psm;
+package edu.alibaba.mpc4j.s2pc.opf.pesm;
 
 import com.google.common.base.Preconditions;
 import edu.alibaba.mpc4j.common.rpc.Party;
@@ -14,24 +14,28 @@ import java.nio.ByteBuffer;
 import java.util.Arrays;
 
 /**
- * abstract private set membership sender.
+ * abstract private (equal) set membership sender.
  *
  * @author Weiran Liu
- * @date 2023/4/16
+ * @date 2023/7/22
  */
-public abstract class AbstractPsmSender extends AbstractTwoPartyPto implements PsmSender {
+public abstract class AbstractPesmSender extends AbstractTwoPartyPto implements PesmSender {
     /**
      * max num
      */
     private int maxNum;
     /**
-     * point num
+     * max set size
      */
-    protected int d;
+    private int maxD;
     /**
      * max l
      */
     private int maxL;
+    /**
+     * point num
+     */
+    protected int d;
     /**
      * num
      */
@@ -49,16 +53,16 @@ public abstract class AbstractPsmSender extends AbstractTwoPartyPto implements P
      */
     protected byte[][][] inputArrays;
 
-    public AbstractPsmSender(PtoDesc ptoDesc, Rpc ownRpc, Party otherParty, PsmConfig config) {
+    public AbstractPesmSender(PtoDesc ptoDesc, Rpc ownRpc, Party otherParty, PesmConfig config) {
         super(ptoDesc, ownRpc, otherParty, config);
     }
 
-    protected void setInitInput(int maxL, int d, int maxNum) {
+    protected void setInitInput(int maxL, int maxD, int maxNum) {
         MathPreconditions.checkGreaterOrEqual("maxL", maxL, CommonConstants.STATS_BIT_LENGTH);
         this.maxL = maxL;
-        MathPreconditions.checkPositive("d", d);
-        this.d = d;
-        MathPreconditions.checkGreater("maxNum", maxNum, 1);
+        MathPreconditions.checkPositive("maxD", maxD);
+        this.maxD = maxD;
+        MathPreconditions.checkPositive("maxNum", maxNum);
         this.maxNum = maxNum;
         initState();
     }
@@ -68,16 +72,10 @@ public abstract class AbstractPsmSender extends AbstractTwoPartyPto implements P
         MathPreconditions.checkLessOrEqual("l", l, maxL);
         this.l = l;
         byteL = CommonUtils.getByteLength(l);
-        MathPreconditions.checkGreater("inputArrays.num", inputArrays.length, 1);
         MathPreconditions.checkPositiveInRangeClosed("inputArrays.num", inputArrays.length, maxNum);
         num = inputArrays.length;
-        // check all inputs are distinct
-        long distinctCount = Arrays.stream(inputArrays)
-            .flatMap(Arrays::stream)
-            .map(ByteBuffer::wrap)
-            .distinct()
-            .count();
-        MathPreconditions.checkEqual("distinct inputs", "d * num", distinctCount, (long) d * num);
+        d = inputArrays[0].length;
+        MathPreconditions.checkPositiveInRangeClosed("d", d, maxD);
         this.inputArrays = Arrays.stream(inputArrays)
             .peek(inputArray -> {
                 // check point num
