@@ -23,7 +23,7 @@ public abstract class AbstractBspCotReceiver extends AbstractTwoPartyPto impleme
     /**
      * max num for each SSP-COT
      */
-    private int maxNum;
+    private int maxEachNum;
     /**
      * max batch num
      */
@@ -35,7 +35,7 @@ public abstract class AbstractBspCotReceiver extends AbstractTwoPartyPto impleme
     /**
      * num for each SSP-COT
      */
-    protected int num;
+    protected int eachNum;
     /**
      * batch num
      */
@@ -46,30 +46,30 @@ public abstract class AbstractBspCotReceiver extends AbstractTwoPartyPto impleme
         this.config = config;
     }
 
-    protected void setInitInput(int maxBatchNum, int maxNum) {
-        MathPreconditions.checkPositive("maxNum", maxNum);
-        this.maxNum = maxNum;
+    protected void setInitInput(int maxBatchNum, int maxEachNum) {
+        MathPreconditions.checkPositive("maxEachNum", maxEachNum);
+        this.maxEachNum = maxEachNum;
         MathPreconditions.checkPositive("maxBatchNum", maxBatchNum);
         this.maxBatchNum = maxBatchNum;
         initState();
     }
 
-    protected void setPtoInput(int[] alphaArray, int num) {
+    protected void setPtoInput(int[] alphaArray, int eachNum) {
         checkInitialized();
-        MathPreconditions.checkPositiveInRangeClosed("num", num, maxNum);
-        this.num = num;
+        MathPreconditions.checkPositiveInRangeClosed("eachNum", eachNum, maxEachNum);
+        this.eachNum = eachNum;
         batchNum = alphaArray.length;
         MathPreconditions.checkPositiveInRangeClosed("batchNum", batchNum, maxBatchNum);
         this.alphaArray = Arrays.stream(alphaArray)
-            .peek(alpha -> MathPreconditions.checkNonNegativeInRange("α", alpha, num))
+            .peek(alpha -> MathPreconditions.checkNonNegativeInRange("α", alpha, eachNum))
             .toArray();
         extraInfo++;
     }
 
-    protected void setPtoInput(int[] alphaArray, int num, CotReceiverOutput preReceiverOutput) {
-        setPtoInput(alphaArray, num);
+    protected void setPtoInput(int[] alphaArray, int eachNum, CotReceiverOutput preReceiverOutput) {
+        setPtoInput(alphaArray, eachNum);
         MathPreconditions.checkGreaterOrEqual(
-            "preCotNum", preReceiverOutput.getNum(), BspCotFactory.getPrecomputeNum(config, batchNum, num)
+            "preCotNum", preReceiverOutput.getNum(), BspCotFactory.getPrecomputeNum(config, batchNum, eachNum)
         );
     }
 }

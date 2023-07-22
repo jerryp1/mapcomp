@@ -87,16 +87,16 @@ public class Ywl20MaBspCotReceiver extends AbstractBspCotReceiver {
     }
 
     @Override
-    public void init(int maxBatchNum, int maxNum) throws MpcAbortException {
-        setInitInput(maxBatchNum, maxNum);
+    public void init(int maxBatchNum, int maxEachNum) throws MpcAbortException {
+        setInitInput(maxBatchNum, maxEachNum);
         logPhaseInfo(PtoState.INIT_BEGIN);
 
         stopWatch.start();
         // we need to request COT two times, one for DPPRF, one for λ
-        int maxCotNum = BpDpprfFactory.getPrecomputeNum(bpDpprfConfig, maxBatchNum, maxNum)
+        int maxCotNum = BpDpprfFactory.getPrecomputeNum(bpDpprfConfig, maxBatchNum, maxEachNum)
             + CommonConstants.BLOCK_BIT_LENGTH;
         coreCotReceiver.init(maxCotNum);
-        bpDpprfReceiver.init(maxBatchNum, maxNum);
+        bpDpprfReceiver.init(maxBatchNum, maxEachNum);
         stopWatch.stop();
         long initTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
         stopWatch.reset();
@@ -123,15 +123,15 @@ public class Ywl20MaBspCotReceiver extends AbstractBspCotReceiver {
     }
 
     @Override
-    public BspCotReceiverOutput receive(int[] alphaArray, int num) throws MpcAbortException {
-        setPtoInput(alphaArray, num);
+    public BspCotReceiverOutput receive(int[] alphaArray, int eachNum) throws MpcAbortException {
+        setPtoInput(alphaArray, eachNum);
         return receive();
     }
 
     @Override
-    public BspCotReceiverOutput receive(int[] alphaArray, int num, CotReceiverOutput preReceiverOutput)
+    public BspCotReceiverOutput receive(int[] alphaArray, int eachNum, CotReceiverOutput preReceiverOutput)
         throws MpcAbortException {
-        setPtoInput(alphaArray, num, preReceiverOutput);
+        setPtoInput(alphaArray, eachNum, preReceiverOutput);
         cotReceiverOutput = preReceiverOutput;
         return receive();
     }
@@ -141,7 +141,7 @@ public class Ywl20MaBspCotReceiver extends AbstractBspCotReceiver {
 
         stopWatch.start();
         // R send (extend, h) to F_COT, which returns (r_i, t_i) ∈ {0,1} × {0,1}^κ to R
-        int dpprfCotNum = BpDpprfFactory.getPrecomputeNum(bpDpprfConfig, batchNum, num);
+        int dpprfCotNum = BpDpprfFactory.getPrecomputeNum(bpDpprfConfig, batchNum, eachNum);
         if (cotReceiverOutput == null) {
             boolean[] rs = new boolean[dpprfCotNum + CommonConstants.BLOCK_BIT_LENGTH];
             IntStream.range(0, dpprfCotNum + CommonConstants.BLOCK_BIT_LENGTH).forEach(index ->
@@ -160,7 +160,7 @@ public class Ywl20MaBspCotReceiver extends AbstractBspCotReceiver {
         logStepInfo(PtoState.PTO_STEP, 1, 4, cotTime);
 
         stopWatch.start();
-        bpDpprfReceiverOutput = bpDpprfReceiver.puncture(alphaArray, num, extendCotReceiverOutput);
+        bpDpprfReceiverOutput = bpDpprfReceiver.puncture(alphaArray, eachNum, extendCotReceiverOutput);
         stopWatch.stop();
         long dpprfTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
         stopWatch.reset();
@@ -214,7 +214,7 @@ public class Ywl20MaBspCotReceiver extends AbstractBspCotReceiver {
             .mapToObj(batchIndex -> {
                 byte[][] rbArray = bpDpprfReceiverOutput.getSpDpprfReceiverOutput(batchIndex).getPprfKeys();
                 // computes w[α]
-                for (int i = 0; i < num; i++) {
+                for (int i = 0; i < eachNum; i++) {
                     if (i != alphaArray[batchIndex]) {
                         BytesUtils.xori(correlateByteArrays[batchIndex], rbArray[i]);
                     }
@@ -263,7 +263,7 @@ public class Ywl20MaBspCotReceiver extends AbstractBspCotReceiver {
         byte[][] ws = lIntStream
             .mapToObj(l -> {
                 byte[] w = new byte[CommonConstants.BLOCK_BYTE_LENGTH];
-                for (int i = 0; i < num; i++) {
+                for (int i = 0; i < eachNum; i++) {
                     // samples uniform {χ_i}_{i ∈ [n]}
                     byte[] indexMessage = ByteBuffer.allocate(Long.BYTES + Integer.BYTES + Integer.BYTES)
                         .putLong(extraInfo).putInt(l).putInt(i).array();

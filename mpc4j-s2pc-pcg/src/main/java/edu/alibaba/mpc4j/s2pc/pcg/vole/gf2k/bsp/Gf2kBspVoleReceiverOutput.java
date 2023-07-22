@@ -3,7 +3,7 @@ package edu.alibaba.mpc4j.s2pc.pcg.vole.gf2k.bsp;
 import com.google.common.base.Preconditions;
 import edu.alibaba.mpc4j.common.tool.MathPreconditions;
 import edu.alibaba.mpc4j.common.tool.utils.BytesUtils;
-import edu.alibaba.mpc4j.s2pc.pcg.PcgPartyOutput;
+import edu.alibaba.mpc4j.s2pc.pcg.BatchPcgOutput;
 import edu.alibaba.mpc4j.s2pc.pcg.vole.gf2k.ssp.Gf2kSspVoleReceiverOutput;
 
 import java.util.Arrays;
@@ -14,7 +14,7 @@ import java.util.Arrays;
  * @author Weiran Liu
  * @date 2023/7/12
  */
-public class Gf2kBspVoleReceiverOutput implements PcgPartyOutput {
+public class Gf2kBspVoleReceiverOutput implements BatchPcgOutput {
     /**
      * GF2K-SSP-VOLE receiver outputs
      */
@@ -85,17 +85,8 @@ public class Gf2kBspVoleReceiverOutput implements PcgPartyOutput {
         return eachNum;
     }
 
-    /**
-     * Get batch num.
-     *
-     * @return batch num.
-     */
-    public int getBatchNum() {
-        return receiverOutputs.length;
-    }
-
     @Override
-    public int getNum() {
+    public int getBatchNum() {
         return receiverOutputs.length;
     }
 }

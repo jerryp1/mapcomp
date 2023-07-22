@@ -57,14 +57,14 @@ public class Ywl20ShBspCotReceiver extends AbstractBspCotReceiver {
     }
 
     @Override
-    public void init(int maxBatchNum, int maxNum) throws MpcAbortException {
-        setInitInput(maxBatchNum, maxNum);
+    public void init(int maxBatchNum, int maxEachNum) throws MpcAbortException {
+        setInitInput(maxBatchNum, maxEachNum);
         logPhaseInfo(PtoState.INIT_BEGIN);
 
         stopWatch.start();
-        int maxCotNum = BpDpprfFactory.getPrecomputeNum(bpDpprfConfig, maxBatchNum, maxNum);
+        int maxCotNum = BpDpprfFactory.getPrecomputeNum(bpDpprfConfig, maxBatchNum, maxEachNum);
         coreCotReceiver.init(maxCotNum);
-        bpDpprfReceiver.init(maxBatchNum, maxNum);
+        bpDpprfReceiver.init(maxBatchNum, maxEachNum);
         stopWatch.stop();
         long initTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
         stopWatch.reset();
@@ -74,14 +74,14 @@ public class Ywl20ShBspCotReceiver extends AbstractBspCotReceiver {
     }
 
     @Override
-    public BspCotReceiverOutput receive(int[] alphaArray, int num) throws MpcAbortException {
-        setPtoInput(alphaArray, num);
+    public BspCotReceiverOutput receive(int[] alphaArray, int eachNum) throws MpcAbortException {
+        setPtoInput(alphaArray, eachNum);
         return receive();
     }
 
     @Override
-    public BspCotReceiverOutput receive(int[] alphaArray, int num, CotReceiverOutput preReceiverOutput) throws MpcAbortException {
-        setPtoInput(alphaArray, num, preReceiverOutput);
+    public BspCotReceiverOutput receive(int[] alphaArray, int eachNum, CotReceiverOutput preReceiverOutput) throws MpcAbortException {
+        setPtoInput(alphaArray, eachNum, preReceiverOutput);
         cotReceiverOutput = preReceiverOutput;
         return receive();
     }
@@ -90,7 +90,7 @@ public class Ywl20ShBspCotReceiver extends AbstractBspCotReceiver {
         logPhaseInfo(PtoState.PTO_BEGIN);
 
         stopWatch.start();
-        int cotNum = BpDpprfFactory.getPrecomputeNum(bpDpprfConfig, batchNum, num);
+        int cotNum = BpDpprfFactory.getPrecomputeNum(bpDpprfConfig, batchNum, eachNum);
         // R send (extend, h) to F_COT, which returns (r_i, t_i) ∈ {0,1} × {0,1}^κ to R
         if (cotReceiverOutput == null) {
             boolean[] rs = new boolean[cotNum];
@@ -105,7 +105,7 @@ public class Ywl20ShBspCotReceiver extends AbstractBspCotReceiver {
         logStepInfo(PtoState.PTO_STEP, 1, 3, cotTime);
 
         stopWatch.start();
-        bpDpprfReceiverOutput = bpDpprfReceiver.puncture(alphaArray, num, cotReceiverOutput);
+        bpDpprfReceiverOutput = bpDpprfReceiver.puncture(alphaArray, eachNum, cotReceiverOutput);
         cotReceiverOutput = null;
         stopWatch.stop();
         long dpprfTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
@@ -137,7 +137,7 @@ public class Ywl20ShBspCotReceiver extends AbstractBspCotReceiver {
             .mapToObj(batchIndex -> {
                 byte[][] rbArray = bpDpprfReceiverOutput.getSpDpprfReceiverOutput(batchIndex).getPprfKeys();
                 // computes w[α]
-                for (int i = 0; i < num; i++) {
+                for (int i = 0; i < eachNum; i++) {
                     if (i != alphaArray[batchIndex]) {
                         BytesUtils.xori(correlateByteArrays[batchIndex], rbArray[i]);
                     }

@@ -94,7 +94,7 @@ public class Wykw21ShGf2kBspVoleReceiver extends AbstractGf2kBspVoleReceiver {
 
         stopWatch.start();
         // R send (extend, 1) to F_VOLE, which returns b ∈ {0,1}^κ to R
-        int preVoleNum = Gf2kBspVoleFactory.getPrecomputeNum(config, batchNum, num);
+        int preVoleNum = Gf2kBspVoleFactory.getPrecomputeNum(config, batchNum, eachNum);
         if (gf2kVoleReceiverOutput == null) {
             gf2kVoleReceiverOutput = gf2kCoreVoleReceiver.receive(preVoleNum);
         } else {
@@ -116,7 +116,7 @@ public class Wykw21ShGf2kBspVoleReceiver extends AbstractGf2kBspVoleReceiver {
 
         stopWatch.start();
         // R runs GGM to obtain ({v_j}_{j ∈ [0, n}), {(K_0^i, K_1^i)}_{i ∈ [h]}), and sets v[j] = v_j for j ∈ [0, n}.
-        BpDpprfSenderOutput bpDpprfSenderOutput = bpDpprfSender.puncture(batchNum, num);
+        BpDpprfSenderOutput bpDpprfSenderOutput = bpDpprfSender.puncture(batchNum, eachNum);
         stopWatch.stop();
         long dpprfTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
         stopWatch.reset();
@@ -132,7 +132,7 @@ public class Wykw21ShGf2kBspVoleReceiver extends AbstractGf2kBspVoleReceiver {
                 byte[] d = gf2k.createZero();
                 byte[] gamma = gammaArray[batchIndex];
                 byte[][] vs = bpDpprfSenderOutput.getSpDpprfSenderOutput(batchIndex).getPrfKeys();
-                for (int i = 0; i < num; i++) {
+                for (int i = 0; i < eachNum; i++) {
                     gf2k.addi(d, vs[i]);
                 }
                 gf2k.negi(d);

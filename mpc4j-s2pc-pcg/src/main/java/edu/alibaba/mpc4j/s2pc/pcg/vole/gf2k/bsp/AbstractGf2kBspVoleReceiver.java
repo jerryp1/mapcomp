@@ -30,7 +30,7 @@ public abstract class AbstractGf2kBspVoleReceiver extends AbstractTwoPartyPto im
     /**
      * max num for each GF2K-SSP-VOLE
      */
-    private int maxNum;
+    private int maxEachNum;
     /**
      * max batch num
      */
@@ -38,7 +38,7 @@ public abstract class AbstractGf2kBspVoleReceiver extends AbstractTwoPartyPto im
     /**
      * num for each GF2K-SSP-VOLE
      */
-    protected int num;
+    protected int eachNum;
     /**
      * batch num
      */
@@ -53,7 +53,7 @@ public abstract class AbstractGf2kBspVoleReceiver extends AbstractTwoPartyPto im
         MathPreconditions.checkEqual("Δ.length", "λ(B)", delta.length, CommonConstants.BLOCK_BYTE_LENGTH);
         this.delta = BytesUtils.clone(delta);
         MathPreconditions.checkPositive("maxEachNum", maxEachNum);
-        this.maxNum = maxEachNum;
+        this.maxEachNum = maxEachNum;
         MathPreconditions.checkPositive("maxBatchNum", maxBatchNum);
         this.maxBatchNum = maxBatchNum;
         initState();
@@ -61,8 +61,8 @@ public abstract class AbstractGf2kBspVoleReceiver extends AbstractTwoPartyPto im
 
     protected void setPtoInput(int batchNum, int eachNum) {
         checkInitialized();
-        MathPreconditions.checkPositiveInRangeClosed("eachNum", eachNum, maxNum);
-        this.num = eachNum;
+        MathPreconditions.checkPositiveInRangeClosed("eachNum", eachNum, maxEachNum);
+        this.eachNum = eachNum;
         MathPreconditions.checkPositiveInRangeClosed("batchNum", batchNum, maxBatchNum);
         this.batchNum = batchNum;
         extraInfo++;

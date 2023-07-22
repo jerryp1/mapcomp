@@ -84,7 +84,7 @@ public class Gf2kBspVoleTest extends AbstractTwoPartyPtoTest {
         //noinspection UnnecessaryLocalVariable
         int batchNum = DEFAULT_BATCH_NUM;
         int[] alphaArray = IntStream.range(0, batchNum)
-            .map(mIndex -> 0)
+            .map(alphaIndex -> 0)
             .toArray();
         testPto(alphaArray, num, false);
     }
@@ -96,7 +96,7 @@ public class Gf2kBspVoleTest extends AbstractTwoPartyPtoTest {
         //noinspection UnnecessaryLocalVariable
         int batchNum = DEFAULT_BATCH_NUM;
         int[] alphaArray = IntStream.range(0, batchNum)
-            .map(mIndex -> DEFAULT_EACH_NUM - 1)
+            .map(alphaIndex -> DEFAULT_EACH_NUM - 1)
             .toArray();
         testPto(alphaArray, num, false);
     }
@@ -107,7 +107,7 @@ public class Gf2kBspVoleTest extends AbstractTwoPartyPtoTest {
         //noinspection UnnecessaryLocalVariable
         int batchNum = DEFAULT_BATCH_NUM;
         int[] alphaArray = IntStream.range(0, batchNum)
-            .map(mIndex -> SECURE_RANDOM.nextInt(eachNum))
+            .map(alphaIndex -> SECURE_RANDOM.nextInt(eachNum))
             .toArray();
         testPto(alphaArray, eachNum, false);
     }
@@ -118,7 +118,27 @@ public class Gf2kBspVoleTest extends AbstractTwoPartyPtoTest {
         //noinspection UnnecessaryLocalVariable
         int batchNum = DEFAULT_BATCH_NUM;
         int[] alphaArray = IntStream.range(0, batchNum)
-            .map(mIndex -> SECURE_RANDOM.nextInt(eachNum))
+            .map(alphaIndex -> SECURE_RANDOM.nextInt(eachNum))
+            .toArray();
+        testPto(alphaArray, eachNum, false);
+    }
+
+    @Test
+    public void test1BatchNum() {
+        int eachNum = DEFAULT_EACH_NUM;
+        int batchNum = 1;
+        int[] alphaArray = IntStream.range(0, batchNum)
+            .map(alphaIndex -> SECURE_RANDOM.nextInt(eachNum))
+            .toArray();
+        testPto(alphaArray, eachNum, false);
+    }
+
+    @Test
+    public void test2BatchNum() {
+        int eachNum = DEFAULT_EACH_NUM;
+        int batchNum = 2;
+        int[] alphaArray = IntStream.range(0, batchNum)
+            .map(alphaIndex -> SECURE_RANDOM.nextInt(eachNum))
             .toArray();
         testPto(alphaArray, eachNum, false);
     }
@@ -129,7 +149,7 @@ public class Gf2kBspVoleTest extends AbstractTwoPartyPtoTest {
         //noinspection UnnecessaryLocalVariable
         int batchNum = DEFAULT_BATCH_NUM;
         int[] alphaArray = IntStream.range(0, batchNum)
-            .map(mIndex -> SECURE_RANDOM.nextInt(eachNum))
+            .map(alphaIndex -> SECURE_RANDOM.nextInt(eachNum))
             .toArray();
         testPto(alphaArray, eachNum, false);
     }
@@ -140,7 +160,7 @@ public class Gf2kBspVoleTest extends AbstractTwoPartyPtoTest {
         //noinspection UnnecessaryLocalVariable
         int batchNum = DEFAULT_BATCH_NUM;
         int[] alphaArray = IntStream.range(0, batchNum)
-            .map(mIndex -> SECURE_RANDOM.nextInt(eachNum))
+            .map(alphaIndex -> SECURE_RANDOM.nextInt(eachNum))
             .toArray();
         testPto(alphaArray, eachNum, true);
     }
@@ -151,7 +171,7 @@ public class Gf2kBspVoleTest extends AbstractTwoPartyPtoTest {
         //noinspection UnnecessaryLocalVariable
         int batchNum = LARGE_BATCH_NUM;
         int[] alphaArray = IntStream.range(0, batchNum)
-            .map(mIndex -> SECURE_RANDOM.nextInt(eachNum))
+            .map(alphaIndex -> SECURE_RANDOM.nextInt(eachNum))
             .toArray();
         testPto(alphaArray, eachNum, false);
     }
@@ -162,7 +182,7 @@ public class Gf2kBspVoleTest extends AbstractTwoPartyPtoTest {
         //noinspection UnnecessaryLocalVariable
         int batchNum = LARGE_BATCH_NUM;
         int[] alphaArray = IntStream.range(0, batchNum)
-            .map(mIndex -> SECURE_RANDOM.nextInt(eachNum))
+            .map(alphaIndex -> SECURE_RANDOM.nextInt(eachNum))
             .toArray();
         testPto(alphaArray, eachNum, true);
     }
@@ -173,7 +193,7 @@ public class Gf2kBspVoleTest extends AbstractTwoPartyPtoTest {
         //noinspection UnnecessaryLocalVariable
         int batchNum = DEFAULT_BATCH_NUM;
         int[] alphaArray = IntStream.range(0, batchNum)
-            .map(mIndex -> SECURE_RANDOM.nextInt(eachNum))
+            .map(alphaIndex -> SECURE_RANDOM.nextInt(eachNum))
             .toArray();
         testPto(alphaArray, eachNum, false);
     }
@@ -184,7 +204,7 @@ public class Gf2kBspVoleTest extends AbstractTwoPartyPtoTest {
         //noinspection UnnecessaryLocalVariable
         int batchNum = DEFAULT_BATCH_NUM;
         int[] alphaArray = IntStream.range(0, batchNum)
-            .map(mIndex -> SECURE_RANDOM.nextInt(eachNum))
+            .map(alphaIndex -> SECURE_RANDOM.nextInt(eachNum))
             .toArray();
         testPto(alphaArray, eachNum, true);
     }
@@ -240,7 +260,7 @@ public class Gf2kBspVoleTest extends AbstractTwoPartyPtoTest {
             LOGGER.info("-----test {} (precompute) start-----", sender.getPtoDesc().getPtoName());
             byte[] delta = GF2K.createRangeRandom(SECURE_RANDOM);
             int[] alphaArray = IntStream.range(0, batchNum)
-                .map(mIndex -> SECURE_RANDOM.nextInt(eachNum))
+                .map(alphaIndex -> SECURE_RANDOM.nextInt(eachNum))
                 .toArray();
             Gf2kVoleReceiverOutput preReceiverOutput = Gf2kVoleTestUtils.genReceiverOutput(
                 Gf2kBspVoleFactory.getPrecomputeNum(config, batchNum, eachNum), delta, SECURE_RANDOM
@@ -286,7 +306,7 @@ public class Gf2kBspVoleTest extends AbstractTwoPartyPtoTest {
             LOGGER.info("-----test {} (reset Δ) start-----", sender.getPtoDesc().getPtoName());
             byte[] delta = GF2K.createRangeRandom(SECURE_RANDOM);
             int[] alphaArray = IntStream.range(0, batchNum)
-                .map(mIndex -> SECURE_RANDOM.nextInt(eachNum))
+                .map(alphaIndex -> SECURE_RANDOM.nextInt(eachNum))
                 .toArray();
             // first round
             Gf2kBspVoleSenderThread senderThread = new Gf2kBspVoleSenderThread(sender, alphaArray, eachNum);
@@ -306,7 +326,7 @@ public class Gf2kBspVoleTest extends AbstractTwoPartyPtoTest {
             // second round, reset Δ
             delta = GF2K.createRangeRandom(SECURE_RANDOM);
             alphaArray = IntStream.range(0, batchNum)
-                .map(mIndex -> SECURE_RANDOM.nextInt(eachNum))
+                .map(alphaIndex -> SECURE_RANDOM.nextInt(eachNum))
                 .toArray();
             senderThread = new Gf2kBspVoleSenderThread(sender, alphaArray, eachNum);
             receiverThread = new Gf2kBspVoleReceiverThread(receiver, delta, batchNum, eachNum);

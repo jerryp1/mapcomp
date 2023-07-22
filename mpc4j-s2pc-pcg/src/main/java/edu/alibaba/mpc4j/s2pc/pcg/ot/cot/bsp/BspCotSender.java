@@ -16,29 +16,29 @@ public interface BspCotSender extends TwoPartyPto {
      *
      * @param delta       Δ.
      * @param maxBatchNum max batch num.
-     * @param maxNum      max num for each SSP-COT.
+     * @param maxEachNum  max num for each SSP-COT.
      * @throws MpcAbortException the protocol failure aborts.
      */
-    void init(byte[] delta, int maxBatchNum, int maxNum) throws MpcAbortException;
+    void init(byte[] delta, int maxBatchNum, int maxEachNum) throws MpcAbortException;
 
     /**
      * Executes the protocol.
      *
      * @param batchNum batch num.
-     * @param num      num for each SSP-COT.
+     * @param eachNum  num for each SSP-COT.
      * @return sender output.
      * @throws MpcAbortException the protocol failure aborts.
      */
-    BspCotSenderOutput send(int batchNum, int num) throws MpcAbortException;
+    BspCotSenderOutput send(int batchNum, int eachNum) throws MpcAbortException;
 
     /**
      * Executes the protocol.
      *
      * @param batchNum        batch num.
-     * @param num             num for each SSP-COT.
+     * @param eachNum         num for each SSP-COT.
      * @param preSenderOutput pre-computed COT sender output.
      * @return sender output.
      * @throws MpcAbortException the protocol failure aborts.
      */
-    BspCotSenderOutput send(int batchNum, int num, CotSenderOutput preSenderOutput) throws MpcAbortException;
+    BspCotSenderOutput send(int batchNum, int eachNum, CotSenderOutput preSenderOutput) throws MpcAbortException;
 }
