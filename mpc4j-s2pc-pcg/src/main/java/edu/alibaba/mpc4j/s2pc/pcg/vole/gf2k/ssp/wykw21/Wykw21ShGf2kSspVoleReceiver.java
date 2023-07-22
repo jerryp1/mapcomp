@@ -16,7 +16,7 @@ import edu.alibaba.mpc4j.s2pc.pcg.vole.gf2k.ssp.Gf2kSspVoleFactory;
 import edu.alibaba.mpc4j.s2pc.pcg.vole.gf2k.ssp.Gf2kSspVoleReceiverOutput;
 import edu.alibaba.mpc4j.s2pc.pcg.vole.gf2k.ssp.wykw21.Wykw21ShGf2kSspVolePtoDesc.PtoStep;
 
-import java.util.LinkedList;
+import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
@@ -125,8 +125,7 @@ public class Wykw21ShGf2kSspVoleReceiver extends AbstractGf2kSspVoleReceiver {
         }
         gf2k.negi(d);
         gf2k.addi(d, gamma);
-        List<byte[]> dPayload = new LinkedList<>();
-        dPayload.add(d);
+        List<byte[]> dPayload = Collections.singletonList(d);
         DataPacketHeader dHeader = new DataPacketHeader(
             encodeTaskId, getPtoDesc().getPtoId(), PtoStep.RECEIVER_SEND_D.ordinal(), extraInfo,
             ownParty().getPartyId(), otherParty().getPartyId()

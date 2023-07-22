@@ -68,6 +68,15 @@ public class Gf2kBspVoleSenderOutput implements PcgPartyOutput {
         return eachNum;
     }
 
+    /**
+     * Get batch num.
+     *
+     * @return batch num.
+     */
+    public int getBatchNum() {
+        return senderOutputs.length;
+    }
+
     @Override
     public int getNum() {
         return senderOutputs.length;

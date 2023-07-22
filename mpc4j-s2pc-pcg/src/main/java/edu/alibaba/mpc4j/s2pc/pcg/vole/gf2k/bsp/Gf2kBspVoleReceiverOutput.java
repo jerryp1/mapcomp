@@ -85,6 +85,15 @@ public class Gf2kBspVoleReceiverOutput implements PcgPartyOutput {
         return eachNum;
     }
 
+    /**
+     * Get batch num.
+     *
+     * @return batch num.
+     */
+    public int getBatchNum() {
+        return receiverOutputs.length;
+    }
+
     @Override
     public int getNum() {
         return receiverOutputs.length;

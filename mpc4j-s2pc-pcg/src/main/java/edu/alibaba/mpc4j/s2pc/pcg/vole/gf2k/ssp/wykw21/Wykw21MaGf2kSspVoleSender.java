@@ -149,7 +149,7 @@ public class Wykw21MaGf2kSspVoleSender extends AbstractGf2kSspVoleSender {
         stopWatch.start();
         // S defines w[i] = v_i for i ≠ α, and w[α] = δ - (d + Σ_{i ∈ [i ≠ α)} w[i])
         MpcAbortPreconditions.checkArgument(dPayload.size() == 1);
-        byte[] d = dPayload.remove(0);
+        byte[] d = dPayload.get(0);
         byte[][] ws = spDpprfReceiverOutput.getPprfKeys();
         ws[alpha] = d;
         for (int i = 0; i < num; i++) {

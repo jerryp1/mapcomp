@@ -3,7 +3,6 @@ package edu.alibaba.mpc4j.s2pc.pcg.vole.gf2k.ssp.wykw21;
 import edu.alibaba.mpc4j.common.rpc.*;
 import edu.alibaba.mpc4j.common.rpc.utils.DataPacket;
 import edu.alibaba.mpc4j.common.rpc.utils.DataPacketHeader;
-import edu.alibaba.mpc4j.common.tool.CommonConstants;
 import edu.alibaba.mpc4j.common.tool.crypto.commit.Commit;
 import edu.alibaba.mpc4j.common.tool.crypto.commit.CommitFactory;
 import edu.alibaba.mpc4j.common.tool.crypto.prf.Prf;
@@ -25,7 +24,6 @@ import org.bouncycastle.crypto.Commitment;
 
 import java.nio.ByteBuffer;
 import java.util.Collections;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.IntStream;
@@ -145,8 +143,7 @@ public class Wykw21MaGf2kSspVoleReceiver extends AbstractGf2kSspVoleReceiver {
         }
         gf2k.negi(d);
         gf2k.addi(d, gamma);
-        List<byte[]> dPayload = new LinkedList<>();
-        dPayload.add(d);
+        List<byte[]> dPayload = Collections.singletonList(d);
         DataPacketHeader dHeader = new DataPacketHeader(
             encodeTaskId, getPtoDesc().getPtoId(), PtoStep.RECEIVER_SEND_D.ordinal(), extraInfo,
             ownParty().getPartyId(), otherParty().getPartyId()
