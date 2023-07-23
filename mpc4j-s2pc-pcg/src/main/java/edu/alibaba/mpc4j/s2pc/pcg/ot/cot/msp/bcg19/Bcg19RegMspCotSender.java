@@ -95,7 +95,7 @@ public class Bcg19RegMspCotSender extends AbstractMspCotSender {
         return senderOutput;
     }
 
-    private MspCotSenderOutput generateSenderOutput(final BspCotSenderOutput bspCotSenderOutput) {
+    private MspCotSenderOutput generateSenderOutput(BspCotSenderOutput bspCotSenderOutput) {
         byte[][] r0Array = IntStream.range(0, t)
             .mapToObj(i -> {
                 // we need to first compute num / t then multiply i, since i * num may be greater than Integer.MAX_VALUE

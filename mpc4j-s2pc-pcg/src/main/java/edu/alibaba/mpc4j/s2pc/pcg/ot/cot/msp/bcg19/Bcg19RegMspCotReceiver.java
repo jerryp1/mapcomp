@@ -106,8 +106,8 @@ public class Bcg19RegMspCotReceiver extends AbstractMspCotReceiver {
         return receiverOutput;
     }
 
-    private MspCotReceiverOutput generateReceiverOutput(final int[] innerAlphaArray,
-                                                        final BspCotReceiverOutput bspCotReceiverOutput) {
+    private MspCotReceiverOutput generateReceiverOutput(int[] innerAlphaArray,
+                                                        BspCotReceiverOutput bspCotReceiverOutput) {
         int[] alphaArray = new int[t];
         byte[][] rbArray = IntStream.range(0, t)
             .mapToObj(i -> {
