@@ -1,59 +1,48 @@
 package edu.alibaba.mpc4j.s2pc.pcg.ot.cot.nc.ywl20;
 
-import java.util.HashMap;
-import java.util.Map;
-
+import edu.alibaba.mpc4j.common.tool.MathPreconditions;
 import edu.alibaba.mpc4j.common.tool.lpn.LpnParams;
 import edu.alibaba.mpc4j.common.tool.lpn.LpnParamsChecker;
 import edu.alibaba.mpc4j.common.tool.utils.LongUtils;
 import edu.alibaba.mpc4j.s2pc.pcg.ot.cot.msp.MspCotConfig;
 import edu.alibaba.mpc4j.s2pc.pcg.ot.cot.msp.MspCotFactory;
+import gnu.trove.map.TIntDoubleMap;
+import gnu.trove.map.hash.TIntDoubleHashMap;
 
 /**
- * YWL20-NC-COT协议LPN参数查找器。参数查找方法的思路来自于下述论文第7节：
+ * YWL20-NC-COT LPN parameter finder. The idea comes from Section 7 of the following paper:
  * <p>
  * Yang, Kang, Chenkai Weng, Xiao Lan, Jiang Zhang, and Xiao Wang. Ferret: Fast extension for correlated OT with small
  * communication. CCS 2020, pp. 1607-1626. 2020.
  * </p>
- * 论文原文描述为：
+ * It says:
  * <p>
  * First, we determine the LPN parameter k. This is because the LPN encoding process can get the maximum speed if all k
  * values can fit in the CPU cache. With k determined, we pick n and t such that n − t * log(n / t) − k is close to
  * 10^7 and that (n, t, k) is secure against all known attacks of complexity 2^{128} steps. This by done by enumerating
  * the set of possible t and find the smallest parameter set.
  * </p>
- * 通过计算YWL20的参数可以发现：
- * <p>
- * One-Time Step阶段，n / k约为16；Main Iteration阶段，n / k约为18，且t最大不会超过1400。
- * </p>
- * 为此：
- * <p>
- * - 给定需要计算得到的n，令k的最小值为离n / 32向上取整，且形式为2^x格式的值。
- * - 从t = 1到t = 1536进行二分查找，找到满足最优解的最小t，作为返回结果。
- * </p>
- * 按照此方法查找，可以得到k取得最小值的(n, k, t)，但t的取值会比k略大。
  *
  * @author Hanwen Feng, Weiran Liu
  * @date 2022/01/26
  */
-public class Ywl20LpnParamsFinder {
+public class Ywl20NcCotLpnParamsFinder {
     /**
-     * 单位K，根据论文推断应为2^6，但是由于参数查找速度比较慢，这里选择128比特
+     * unit K, the paper tries K = 2^6, for efficiency reason, we choose a larger unit K.
      */
     private static final int UNIT_K = 128;
     /**
-     * 迭代最小log(n)
+     * min log(n)
      */
     private static final int ITERATION_MIN_LOG_N = 12;
     /**
-     * 迭代最大log(n)
+     * max log(n)
      */
     private static final int ITERATION_MAX_LOG_N = 24;
-
     /**
-     * 搜索N时的放大倍数，通过实验得到
+     * factors when searching max(n). The values are selected by experiments.
      */
-    private static final Map<Integer, Double> ITERATION_UPPER_N_FACTOR_MAP = new HashMap<>();
+    private static final TIntDoubleMap ITERATION_UPPER_N_FACTOR_MAP = new TIntDoubleHashMap();
 
     static {
         ITERATION_UPPER_N_FACTOR_MAP.put(12, 3.7);
@@ -70,22 +59,23 @@ public class Ywl20LpnParamsFinder {
         ITERATION_UPPER_N_FACTOR_MAP.put(23, 1.1);
         ITERATION_UPPER_N_FACTOR_MAP.put(24, 1.1);
     }
+
     /**
-     * 私有构造函数
+     * private constructor.
      */
-    private Ywl20LpnParamsFinder() {
+    private Ywl20NcCotLpnParamsFinder() {
         // empty
     }
 
     /**
-     * 查找启动（Setup）阶段的LPN参数。
+     * Finds LPN parameters in Setup phase.
      *
-     * @param config 配置项。
-     * @param iterationLpnParams 迭代阶段的LPN参数。
-     * @return 启动阶段的LPN参数。
+     * @param config             config.
+     * @param iterationLpnParams LPN parameters in Iteration phase.
+     * @return LPN parameters in Setup phase.
      */
     public static LpnParams findSetupLpnParams(MspCotConfig config, LpnParams iterationLpnParams) {
-        // 初始化阶段需要k = k个COT，以及MSPCOT所需的预计算COT
+        // in Setup phase, we need k = k COT and pre-computed COT used in MSP-COT
         int minSetupN = iterationLpnParams.getK()
             + MspCotFactory.getPrecomputeNum(config, iterationLpnParams.getT(), iterationLpnParams.getN());
         int k = UNIT_K;
@@ -94,16 +84,16 @@ public class Ywl20LpnParamsFinder {
         while (k < minSetupN) {
             LpnParams lpnParams = findSetupMinT(k, minSetupN);
             if (lpnParams != null) {
-                // 计算LPN参数所需COT数量：init阶段的k个COT（如果是恶意安全，则为k + λ） + MSPCOT协议消耗的COT（与n和t相关）
+                // compute COT num: k in Init phase and ones used in MSP-COT (depends on n and t).
                 int cotNum = MspCotFactory.getPrecomputeNum(config, lpnParams.getT(), lpnParams.getN())
                     + lpnParams.getK();
-                // 如果此LPN参数所需的COT数量更少，则将此LPN参数设置为最优参数
+                // choose this param if this requires fewer COT.
                 if (optimalLpnParams == null || cotNum < optimalCotNum) {
                     optimalLpnParams = lpnParams;
                     optimalCotNum = cotNum;
                 }
             }
-            // 放大k
+            // add k
             k += UNIT_K;
         }
         if (optimalLpnParams != null) {
@@ -113,15 +103,15 @@ public class Ywl20LpnParamsFinder {
     }
 
     /**
-     * 查找启动（Setup）阶段满足安全性要求，且t取得最小值的LPN参数。
-     * 1 <= t <= min(minSetupN, 2048)中的每一个t都对应一个最大的n，在所有满足条件的t中选择最小的t。
+     * Finds min(t) in Setup phase that satisfies security parameter. Each t ∈ [1, min(minSetupN, 1536)] has a max(n),
+     * we choose the min(t).
      *
-     * @param k         k的取值。
-     * @param minSetupN 启动阶段n的最小值。
-     * @return 满足安全性要求，且t取得最小值的LPN参数。
+     * @param k         k.
+     * @param minSetupN min(n) in Setup phase.
+     * @return min(t) in Setup phase that satisfies security parameter.
      */
     private static LpnParams findSetupMinT(int k, int minSetupN) {
-        // 从t在[1, 1536]且t <= n的范围中二分查找
+        // t ∈ [1, min(minSetupN, 1536)]
         int lowerT = 1;
         int upperT = Math.min(minSetupN, 1536);
         LpnParams lpnParams = null;
@@ -130,11 +120,11 @@ public class Ywl20LpnParamsFinder {
             currentT = (lowerT + upperT) / 2;
             int n = findSetupMaxN(k, currentT, minSetupN);
             if (n >= 0) {
-                // 如果能找到满足要求的n，则尝试让t更小
+                // if we can find a valid n, then try decrease t.
                 lpnParams = LpnParams.uncheckCreate(n, k, currentT);
                 upperT = currentT - 1;
             } else {
-                // 如果无法找到满足要求的n，则让t更大
+                // if we cannot find a valid n, then increase t.
                 lowerT = currentT + 1;
             }
         }
@@ -142,34 +132,34 @@ public class Ywl20LpnParamsFinder {
     }
 
     /**
-     * 查找启动（Setup）阶段满足安全性要求的n最大值。
-     * 给定k和t后，安全参数随着n的增大而降低。只要(k, t, minSetupN)满足安全性要求，就可以找到满足安全性要求的最大n。
+     * Finds max(n) in Setup phase that satisfies security parameter. Given k and t, the security parameter
+     * decreases with the increase of n. Here we find (k, t, min(n)) that satisfies security parameter and n - k is
+     * greater than the required MSP-COT when iterating.
      *
-     * @param k         k的取值。
-     * @param t         t的取值。
-     * @param minSetupN 启动阶段n的最小值。
-     * @return 满足安全性要求的最大n。
+     * @param k         k.
+     * @param t         t.
+     * @param minSetupN min(n) in Setup phase.
+     * @return max(n) in Setup phase that satisfies security parameter.
      */
     private static int findSetupMaxN(int k, int t, int minSetupN) {
         if (!LpnParamsChecker.validLpnParams(minSetupN, k, t)) {
-            // 如果最小值都不满足要求，则直接返回-1
+            // if min(n) is invalid, return -1
             return -1;
         }
+        // set lowerN and upperN, then do binary search
         int logMinSetupN = LongUtils.ceilLog2(minSetupN);
-        // 将目标n的最大值设为给定值向上取2^x格式的2倍，超过这个范围已经没有意义了
         int lowerN = minSetupN;
-        int upperN = (int)(minSetupN * ITERATION_UPPER_N_FACTOR_MAP.get(logMinSetupN));
-        // 二分查找
+        int upperN = (int) (minSetupN * ITERATION_UPPER_N_FACTOR_MAP.get(logMinSetupN));
         int maxN = -1;
         int currentN;
         while (lowerN <= upperN) {
             currentN = (lowerN + upperN) / 2;
             if (LpnParamsChecker.validLpnParams(currentN, k, t)) {
                 maxN = currentN;
-                // 当前n满足要求，n可以再增大
+                // current n is valid, try to increase.
                 lowerN = currentN + 1;
             } else {
-                // 当前n不满足要求，n需要减小
+                // current n is invalid, decrease.
                 upperN = currentN - 1;
             }
         }
@@ -177,49 +167,52 @@ public class Ywl20LpnParamsFinder {
     }
 
     /**
-     * 查找迭代（Iteration）阶段的LPN参数。
+     * Finds LPN parameters in Iteration phase.
      *
-     * @param config 配置项。
+     * @param config     config.
+     * @param minOutputN min(n) that needs to output in Iteration phase.
      * @return 启动阶段的LPN参数。
      */
-    public static LpnParams findIterationLpnParams(MspCotConfig config, int minN) {
-        assert minN >= (1 << ITERATION_MIN_LOG_N) && minN <= (1 << ITERATION_MAX_LOG_N);
+    public static LpnParams findIterationLpnParams(MspCotConfig config, int minOutputN) {
+        MathPreconditions.checkInRangeClosed(
+            "minOutputN", minOutputN, 1 << ITERATION_MIN_LOG_N, 1 << ITERATION_MAX_LOG_N
+        );
         int k = UNIT_K;
-        while (k < minN) {
-            LpnParams lpnParams = findIterationMinT(config, k, minN);
+        while (k < minOutputN) {
+            LpnParams lpnParams = findIterationMinT(config, k, minOutputN);
             if (lpnParams != null) {
                 return lpnParams;
             }
-            // 放大k
+            // add k
             k += UNIT_K;
         }
-        throw new IllegalArgumentException("Cannot find valid n > " + minN + " even when k = " + k);
+        throw new IllegalArgumentException("Cannot find valid n > " + minOutputN + " even when k = " + k);
     }
 
     /**
-     * 查找迭代（Iteration）阶段满足安全性要求，且t取得最小值的LPN参数。
-     * 1 <= t <= min(minN, 2048)中的每一个t都对应一个最大的n，在所有满足条件的t中选择最小的t。
+     * Finds min(t) in Iteration phase that satisfies security parameter. Each t ∈ [1, min(minOutputN, 1536)] has a max(n),
+     * we choose the min(t).
      *
-     * @param config MSPCOT协议配置项。
-     * @param k      k的取值。
-     * @param minN   单轮密钥数量n的最小值。
-     * @return 满足安全性要求，且t取得最小值的LPN参数。
+     * @param config     config.
+     * @param k          k.
+     * @param minOutputN min(n) that needs to output in Iteration phase.
+     * @return min(t) in Iteration phase that satisfies security parameter.
      */
-    private static LpnParams findIterationMinT(MspCotConfig config, int k, int minN) {
-        // 从t在[1, 1536]且t <= n的范围中二分查找
+    private static LpnParams findIterationMinT(MspCotConfig config, int k, int minOutputN) {
+        // t ∈ [1, min(minOutputN, 1536)]
         int lowerT = 1;
-        int upperT = Math.min(minN, 1536);
+        int upperT = Math.min(minOutputN, 1536);
         LpnParams lpnParams = null;
         int currentT;
         while (lowerT <= upperT) {
             currentT = (lowerT + upperT) / 2;
-            int suitableN = findIterationSuitableN(config, k, currentT, minN);
+            int suitableN = findIterationSuitableN(config, k, currentT, minOutputN);
             if (suitableN >= 0) {
-                // 如果能找到满足要求的n，则尝试让t更小
+                // if we can find a valid n, then try decrease t.
                 lpnParams = LpnParams.uncheckCreate(suitableN, k, currentT);
                 upperT = currentT - 1;
             } else {
-                // 如果无法找到满足要求的n，则让t更大
+                // if we cannot find a valid n, then increase t.
                 lowerT = currentT + 1;
             }
         }
@@ -227,59 +220,59 @@ public class Ywl20LpnParamsFinder {
     }
 
     /**
-     * 查找迭代（Iteration）阶段满足安全性要求的n最大值。
-     * 给定k和t后，安全参数随着n的增大而降低。要求(k, t, minN)满足安全性要求，且n - k大于MSPCOT消耗的COT数量，查到满足安全性要求的最小n。
+     * Finds suitable(n) in Iteration phase that satisfies security parameter. Given k and t, the security parameter
+     * decreases with the increase of n. Here we find (k, t, suitable(n)) that satisfies security parameter and n - k is
+     * greater than the required GF2K-MSP-VOLE when iterating.
      *
-     * @param config MSPCOT协议配置项。
-     * @param k      k的取值。
-     * @param t      t的取值。
-     * @param minN   单轮密钥数量n的最小值。
-     * @return 满足安全性要求的最大n。
+     * @param config     config.
+     * @param k          k.
+     * @param t          t.
+     * @param minOutputN min(n) that needs to output in Iteration phase.
+     * @return suitable(n) in Iteration phase that satisfies security parameter.
      */
-    private static int findIterationSuitableN(MspCotConfig config, int k, int t, int minN) {
-        if (!LpnParamsChecker.validLpnParams(minN, k, t)) {
-            // 如果最小值都不满足要求，则直接返回-1
+    private static int findIterationSuitableN(MspCotConfig config, int k, int t, int minOutputN) {
+        if (!LpnParamsChecker.validLpnParams(minOutputN, k, t)) {
+            // if min(n) is invalid, return -1
             return -1;
         }
-        // 将目标n的最大值设为给定值的某个倍数
-        int logMinN = LongUtils.ceilLog2(minN);
-        int lowerN = minN;
-        int upperN = (int)(minN * ITERATION_UPPER_N_FACTOR_MAP.get(logMinN));
-        // 二分查找
+        // set binary search range
+        int logMinN = LongUtils.ceilLog2(minOutputN);
+        int lowerN = minOutputN;
+        int upperN = (int) (minOutputN * ITERATION_UPPER_N_FACTOR_MAP.get(logMinN));
         int maxN = -1;
         int currentN;
         while (lowerN <= upperN) {
             currentN = (lowerN + upperN) / 2;
             if (LpnParamsChecker.validLpnParams(currentN, k, t)) {
                 maxN = currentN;
-                // 当前n满足要求，n可以再增大
+                // if n is valid, try to increase n.
                 lowerN = maxN + 1;
             } else {
-                // 当前n不满足要求，n需要减小
+                // if n is invalid, try to decrease n.
                 upperN = maxN - 1;
             }
         }
         if (maxN < 0) {
             return -1;
         }
-        // 如果maxN都不能满足要求，则找不到合适的参数
+        // if max(n) - k is smaller than the required MSP-COT when iterating, it means we cannot find a valid n.
         int maxNecessaryCotNum = MspCotFactory.getPrecomputeNum(config, t, maxN) + k;
-        if (maxN - minN < maxNecessaryCotNum) {
+        if (maxN - minOutputN < maxNecessaryCotNum) {
             return -1;
         }
-        // 如果maxN满足要求，再进行二分查找，寻找最合适的n
-        lowerN = minN;
+        // if max(n) is OK, we can try to decrease n.
+        lowerN = minOutputN;
         upperN = maxN;
         int suitableN = maxN;
         while (lowerN <= upperN) {
             currentN = (lowerN + upperN) / 2;
             int necessaryCotNum = MspCotFactory.getPrecomputeNum(config, t, currentN) + k;
-            if (currentN - minN >= necessaryCotNum) {
+            if (currentN - minOutputN >= necessaryCotNum) {
                 suitableN = currentN;
-                // 当前n满足要求，n可以减小
+                // if n is valid, try to increase n.
                 upperN = currentN - 1;
             } else {
-                // 当前n不满足要求，n需要增大
+                // if n is invalid, try to decrease n.
                 lowerN = currentN + 1;
             }
         }
@@ -287,17 +280,17 @@ public class Ywl20LpnParamsFinder {
     }
 
     /**
-     * 计算迭代（Iteration）阶段输出的密钥对数量。
+     * Gets the number of output COT in each Iteration.
      *
-     * @param config MSPCOT协议配置项。
-     * @param iterationLpnParams 迭代LPN参数。
-     * @return 迭代（Iteration）阶段输出的密钥对数量。
+     * @param config             config.
+     * @param iterationLpnParams LPN parameters in Iteration phase.
+     * @return the number of output COT in each Iteration.
      */
     public static int getIterationOutputSize(MspCotConfig config, LpnParams iterationLpnParams) {
         int n = iterationLpnParams.getN();
         int k = iterationLpnParams.getK();
         int t = iterationLpnParams.getT();
-        // 迭代过程需要留出MSPCOT的预计算COT和k个预计算COT
+        // we need to subtract k and the required MSP-COT when iterating.
         return n - MspCotFactory.getPrecomputeNum(config, t, n) - k;
     }
 }

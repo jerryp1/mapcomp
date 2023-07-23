@@ -18,41 +18,53 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * YWL20的LPN参数查找器测试。
+ * YWL20-NC-COT LPN parameter finder tests.
  *
  * @author Weiran Liu
  * @date 2022/01/27
  */
 @Ignore
 @RunWith(Parameterized.class)
-public class Ywl20LpnParamsFinderTest {
-    private static final Logger LOGGER = LoggerFactory.getLogger(Ywl20LpnParamsFinderTest.class);
+public class Ywl20NcCotLpnParamsFinderTest {
+    private static final Logger LOGGER = LoggerFactory.getLogger(Ywl20NcCotLpnParamsFinderTest.class);
 
     @Parameterized.Parameters(name = "{0}")
     public static Collection<Object[]> configurations() {
-        Collection<Object[]> configurationParams = new ArrayList<>();
-        // YWL20(Malicious) + BCG19(Regular-Index)
-        MspCotConfig bcg19MaRegMspCotConfig = new Bcg19RegMspCotConfig.Builder(SecurityModel.MALICIOUS).build();
-        configurationParams.add(new Object[] {"YWL20(Malicious) + BCG19(Regular-Index)", bcg19MaRegMspCotConfig,});
-        // YWL20(Malicious) + YWL20(Unique-Index)
-        MspCotConfig ywl20MaUniMspCotConfig = new Ywl20UniMspCotConfig.Builder(SecurityModel.MALICIOUS).build();
-        configurationParams.add(new Object[] {"YWL20(Malicious) + YWL20(Unique-Index)", ywl20MaUniMspCotConfig,});
-        // YWL20(Semi-honest) + BCG19(Regular-Index)
-        MspCotConfig bcg19ShRegMspCotConfig = new Bcg19RegMspCotConfig.Builder(SecurityModel.SEMI_HONEST).build();
-        configurationParams.add(new Object[] {"YWL20(Semi-honest) + BCG19(Regular-Index)", bcg19ShRegMspCotConfig,});
-        // YWL20(Semi-honest) + YWL20(Unique-Index)
-        MspCotConfig ywl20ShUniMspCotConfig = new Ywl20UniMspCotConfig.Builder(SecurityModel.SEMI_HONEST).build();
-        configurationParams.add(new Object[] {"YWL20(Semi-honest) + YWL20(Unique-Index)", ywl20ShUniMspCotConfig,});
+        Collection<Object[]> configurations = new ArrayList<>();
 
-        return configurationParams;
+        // YWL20(Malicious) + BCG19(Regular-Index)
+        MspCotConfig bcg19MaRegMspCotConfig = new Bcg19RegMspCotConfig
+            .Builder(SecurityModel.MALICIOUS)
+            .build();
+        configurations.add(new Object[] {"YWL20(Malicious) + BCG19(Regular-Index)", bcg19MaRegMspCotConfig,});
+
+        // YWL20(Malicious) + YWL20(Unique-Index)
+        MspCotConfig ywl20MaUniMspCotConfig = new Ywl20UniMspCotConfig
+            .Builder(SecurityModel.MALICIOUS)
+            .build();
+        configurations.add(new Object[] {"YWL20(Malicious) + YWL20(Unique-Index)", ywl20MaUniMspCotConfig,});
+
+        // YWL20(Semi-honest) + BCG19(Regular-Index)
+        MspCotConfig bcg19ShRegMspCotConfig = new Bcg19RegMspCotConfig
+            .Builder(SecurityModel.SEMI_HONEST)
+            .build();
+        configurations.add(new Object[] {"YWL20(Semi-honest) + BCG19(Regular-Index)", bcg19ShRegMspCotConfig,});
+
+        // YWL20(Semi-honest) + YWL20(Unique-Index)
+        MspCotConfig ywl20ShUniMspCotConfig = new Ywl20UniMspCotConfig
+            .Builder(SecurityModel.SEMI_HONEST)
+            .build();
+        configurations.add(new Object[] {"YWL20(Semi-honest) + YWL20(Unique-Index)", ywl20ShUniMspCotConfig,});
+
+        return configurations;
     }
 
     /**
-     * MSPCOT协议配置项
+     * MSP-COT config
      */
     private final MspCotConfig config;
 
-    public Ywl20LpnParamsFinderTest(String name, MspCotConfig config) {
+    public Ywl20NcCotLpnParamsFinderTest(String name, MspCotConfig config) {
         Preconditions.checkArgument(StringUtils.isNotBlank(name));
         this.config = config;
     }
@@ -124,14 +136,13 @@ public class Ywl20LpnParamsFinderTest {
 
     @Test
     public void test10Million() {
-        // YWL20的参数使密钥数量接近于1000万
         testLpnParamsFinder(10000000);
     }
 
     private void testLpnParamsFinder(int minN) {
         LOGGER.info("-----find LPN Params for n = {}-----", minN);
-        LpnParams iterationLpnParams = Ywl20LpnParamsFinder.findIterationLpnParams(config, minN);
-        LpnParams setupLpnParams = Ywl20LpnParamsFinder.findSetupLpnParams(config, iterationLpnParams);
+        LpnParams iterationLpnParams = Ywl20NcCotLpnParamsFinder.findIterationLpnParams(config, minN);
+        LpnParams setupLpnParams = Ywl20NcCotLpnParamsFinder.findSetupLpnParams(config, iterationLpnParams);
         LOGGER.info("Setup    : {}", setupLpnParams);
         LOGGER.info("Iteration: {}", iterationLpnParams);
     }
@@ -139,13 +150,12 @@ public class Ywl20LpnParamsFinderTest {
     @Test
     public void testIterationOutputSize() {
         LOGGER.info("-----get {} output size-----", config.getPtoType());
-
         LpnParams ferretUniLpnParams = LpnParams.uncheckCreate(10616092, 588160, 1324);
-        int ferretUniOutputSize = Ywl20LpnParamsFinder.getIterationOutputSize(config, ferretUniLpnParams);
+        int ferretUniOutputSize = Ywl20NcCotLpnParamsFinder.getIterationOutputSize(config, ferretUniLpnParams);
         LOGGER.info("Ferret Uni {}: output size = {}", ferretUniLpnParams, ferretUniOutputSize);
 
         LpnParams ferretRegLpnParams = LpnParams.uncheckCreate(10805248, 589760, 1319);
-        int ferretRegOutputSize = Ywl20LpnParamsFinder.getIterationOutputSize(config, ferretRegLpnParams);
+        int ferretRegOutputSize = Ywl20NcCotLpnParamsFinder.getIterationOutputSize(config, ferretRegLpnParams);
         LOGGER.info("Ferret Reg {}: output size = {}", ferretRegLpnParams, ferretRegOutputSize);
     }
 }
