@@ -7,10 +7,10 @@ import com.google.common.base.Preconditions;
 import edu.alibaba.mpc4j.common.rpc.desc.SecurityModel;
 import edu.alibaba.mpc4j.common.tool.lpn.LpnParams;
 import edu.alibaba.mpc4j.s2pc.pcg.ot.cot.msp.MspCotConfig;
+import edu.alibaba.mpc4j.s2pc.pcg.ot.cot.msp.MspCotFactory;
 import edu.alibaba.mpc4j.s2pc.pcg.ot.cot.msp.bcg19.Bcg19RegMspCotConfig;
 import edu.alibaba.mpc4j.s2pc.pcg.ot.cot.msp.ywl20.Ywl20UniMspCotConfig;
 import org.apache.commons.lang3.StringUtils;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
@@ -23,7 +23,6 @@ import org.slf4j.LoggerFactory;
  * @author Weiran Liu
  * @date 2022/01/27
  */
-@Ignore
 @RunWith(Parameterized.class)
 public class Ywl20NcCotLpnParamsFinderTest {
     private static final Logger LOGGER = LoggerFactory.getLogger(Ywl20NcCotLpnParamsFinderTest.class);
@@ -32,29 +31,27 @@ public class Ywl20NcCotLpnParamsFinderTest {
     public static Collection<Object[]> configurations() {
         Collection<Object[]> configurations = new ArrayList<>();
 
-        // YWL20(Malicious) + BCG19(Regular-Index)
-        MspCotConfig bcg19MaRegMspCotConfig = new Bcg19RegMspCotConfig
-            .Builder(SecurityModel.MALICIOUS)
-            .build();
-        configurations.add(new Object[] {"YWL20(Malicious) + BCG19(Regular-Index)", bcg19MaRegMspCotConfig,});
+        // BCG19_REG (malicious)
+        configurations.add(new Object[] {
+            MspCotFactory.MspCotType.BCG19_REG + " (" + SecurityModel.MALICIOUS + ")",
+            new Bcg19RegMspCotConfig.Builder(SecurityModel.MALICIOUS).build(),
+        });
+        // BCG19_REG (semi-honest)
+        configurations.add(new Object[] {
+            MspCotFactory.MspCotType.BCG19_REG + " (" + SecurityModel.SEMI_HONEST + ")",
+            new Bcg19RegMspCotConfig.Builder(SecurityModel.SEMI_HONEST).build(),
+        });
 
-        // YWL20(Malicious) + YWL20(Unique-Index)
-        MspCotConfig ywl20MaUniMspCotConfig = new Ywl20UniMspCotConfig
-            .Builder(SecurityModel.MALICIOUS)
-            .build();
-        configurations.add(new Object[] {"YWL20(Malicious) + YWL20(Unique-Index)", ywl20MaUniMspCotConfig,});
-
-        // YWL20(Semi-honest) + BCG19(Regular-Index)
-        MspCotConfig bcg19ShRegMspCotConfig = new Bcg19RegMspCotConfig
-            .Builder(SecurityModel.SEMI_HONEST)
-            .build();
-        configurations.add(new Object[] {"YWL20(Semi-honest) + BCG19(Regular-Index)", bcg19ShRegMspCotConfig,});
-
-        // YWL20(Semi-honest) + YWL20(Unique-Index)
-        MspCotConfig ywl20ShUniMspCotConfig = new Ywl20UniMspCotConfig
-            .Builder(SecurityModel.SEMI_HONEST)
-            .build();
-        configurations.add(new Object[] {"YWL20(Semi-honest) + YWL20(Unique-Index)", ywl20ShUniMspCotConfig,});
+        // YWL20_UNI (malicious)
+        configurations.add(new Object[] {
+            MspCotFactory.MspCotType.YWL20_UNI + " (" + SecurityModel.MALICIOUS + ")",
+            new Ywl20UniMspCotConfig.Builder(SecurityModel.MALICIOUS).build(),
+        });
+        // YWL20_UNI (semi-honest)
+        configurations.add(new Object[] {
+            MspCotFactory.MspCotType.YWL20_UNI + " (" + SecurityModel.SEMI_HONEST + ")",
+            new Ywl20UniMspCotConfig.Builder(SecurityModel.SEMI_HONEST).build(),
+        });
 
         return configurations;
     }

@@ -34,11 +34,11 @@ public class Ywl20NcCotLpnParamsFinder {
     /**
      * min log(n)
      */
-    private static final int ITERATION_MIN_LOG_N = 12;
+    static final int ITERATION_MIN_LOG_N = 12;
     /**
      * max log(n)
      */
-    private static final int ITERATION_MAX_LOG_N = 24;
+    static final int ITERATION_MAX_LOG_N = 24;
     /**
      * factors when searching max(n). The values are selected by experiments.
      */

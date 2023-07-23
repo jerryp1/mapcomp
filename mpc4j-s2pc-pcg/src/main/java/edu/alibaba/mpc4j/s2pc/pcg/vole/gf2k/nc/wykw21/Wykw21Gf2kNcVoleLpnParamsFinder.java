@@ -27,7 +27,7 @@ import gnu.trove.map.hash.TIntDoubleHashMap;
  * @author Weiran Liu
  * @date 2023/7/23
  */
-public class Wykw21GfkNcVoleLpnParamsFinder {
+public class Wykw21Gf2kNcVoleLpnParamsFinder {
     /**
      * unit K, the paper tries K = 2^6, for efficiency reason, we choose a larger unit K.
      */
@@ -35,11 +35,11 @@ public class Wykw21GfkNcVoleLpnParamsFinder {
     /**
      * min log(n)
      */
-    private static final int ITERATION_MIN_LOG_N = 12;
+    static final int ITERATION_MIN_LOG_N = 12;
     /**
      * max log(n)
      */
-    private static final int ITERATION_MAX_LOG_N = 24;
+    static final int ITERATION_MAX_LOG_N = 24;
     /**
      * factors when searching max(n). The values are selected by experiments.
      */
@@ -65,7 +65,7 @@ public class Wykw21GfkNcVoleLpnParamsFinder {
     /**
      * private constructor
      */
-    private Wykw21GfkNcVoleLpnParamsFinder() {
+    private Wykw21Gf2kNcVoleLpnParamsFinder() {
         // empty
     }
 

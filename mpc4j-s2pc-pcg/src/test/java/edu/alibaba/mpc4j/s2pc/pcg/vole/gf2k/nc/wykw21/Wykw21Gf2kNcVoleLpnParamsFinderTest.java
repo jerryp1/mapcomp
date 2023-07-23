@@ -4,6 +4,7 @@ import com.google.common.base.Preconditions;
 import edu.alibaba.mpc4j.common.rpc.desc.SecurityModel;
 import edu.alibaba.mpc4j.common.tool.lpn.LpnParams;
 import edu.alibaba.mpc4j.s2pc.pcg.vole.gf2k.msp.Gf2kMspVoleConfig;
+import edu.alibaba.mpc4j.s2pc.pcg.vole.gf2k.msp.Gf2kMspVoleFactory;
 import edu.alibaba.mpc4j.s2pc.pcg.vole.gf2k.msp.bcg19.Bcg19RegGf2kMspVoleConfig;
 import org.apache.commons.lang3.StringUtils;
 import org.junit.Ignore;
@@ -24,22 +25,23 @@ import java.util.Collection;
  */
 @Ignore
 @RunWith(Parameterized.class)
-public class Wykw21GfkNcVoleLpnParamsFinderTest {
-    private static final Logger LOGGER = LoggerFactory.getLogger(Wykw21GfkNcVoleLpnParamsFinderTest.class);
+public class Wykw21Gf2kNcVoleLpnParamsFinderTest {
+    private static final Logger LOGGER = LoggerFactory.getLogger(Wykw21Gf2kNcVoleLpnParamsFinderTest.class);
 
     @Parameterized.Parameters(name = "{0}")
     public static Collection<Object[]> configurations() {
         Collection<Object[]> configurations = new ArrayList<>();
-        // WYKW21(Malicious) + BCG19(Regular-Index)
-        Gf2kMspVoleConfig bcg19MaRegGf2kMspVoleConfig = new Bcg19RegGf2kMspVoleConfig
-            .Builder(SecurityModel.MALICIOUS)
-            .build();
-        configurations.add(new Object[] {"WYKW21(Malicious) + BCG19(Regular-Index)", bcg19MaRegGf2kMspVoleConfig,});
-        // WYKW21(Semi-honest) + BCG19(Regular-Index)
-        Gf2kMspVoleConfig bcg19ShRegGf2kMspVoleConfig = new Bcg19RegGf2kMspVoleConfig
-            .Builder(SecurityModel.SEMI_HONEST)
-            .build();
-        configurations.add(new Object[] {"WYKW21(Semi-honest) + BCG19(Regular-Index)", bcg19ShRegGf2kMspVoleConfig,});
+
+        // BCG19_REG (malicious)
+        configurations.add(new Object[] {
+            Gf2kMspVoleFactory.Gf2kMspVoleType.BCG19_REG + " (" + SecurityModel.MALICIOUS + ")",
+            new Bcg19RegGf2kMspVoleConfig.Builder(SecurityModel.MALICIOUS).build(),
+        });
+        // BCG19_REG (malicious)
+        configurations.add(new Object[] {
+            Gf2kMspVoleFactory.Gf2kMspVoleType.BCG19_REG + " (" + SecurityModel.SEMI_HONEST + ")",
+            new Bcg19RegGf2kMspVoleConfig.Builder(SecurityModel.SEMI_HONEST).build(),
+        });
 
         return configurations;
     }
@@ -49,7 +51,7 @@ public class Wykw21GfkNcVoleLpnParamsFinderTest {
      */
     private final Gf2kMspVoleConfig config;
 
-    public Wykw21GfkNcVoleLpnParamsFinderTest(String name, Gf2kMspVoleConfig config) {
+    public Wykw21Gf2kNcVoleLpnParamsFinderTest(String name, Gf2kMspVoleConfig config) {
         Preconditions.checkArgument(StringUtils.isNotBlank(name));
         this.config = config;
     }
@@ -127,8 +129,8 @@ public class Wykw21GfkNcVoleLpnParamsFinderTest {
 
     private void testLpnParamsFinder(int minN) {
         LOGGER.info("-----find LPN Params for n = {}-----", minN);
-        LpnParams iterationLpnParams = Wykw21GfkNcVoleLpnParamsFinder.findIterationLpnParams(config, minN);
-        LpnParams setupLpnParams = Wykw21GfkNcVoleLpnParamsFinder.findSetupLpnParams(config, iterationLpnParams);
+        LpnParams iterationLpnParams = Wykw21Gf2kNcVoleLpnParamsFinder.findIterationLpnParams(config, minN);
+        LpnParams setupLpnParams = Wykw21Gf2kNcVoleLpnParamsFinder.findSetupLpnParams(config, iterationLpnParams);
         LOGGER.info("Setup    : {}", setupLpnParams);
         LOGGER.info("Iteration: {}", iterationLpnParams);
     }
@@ -137,7 +139,7 @@ public class Wykw21GfkNcVoleLpnParamsFinderTest {
     public void testIterationOutputSize() {
         LOGGER.info("-----get {} output size-----", config.getPtoType());
         LpnParams wolverineRegLpnParams = LpnParams.uncheckCreate(10805248, 589760, 1319);
-        int wolverineRegOutputSize = Wykw21GfkNcVoleLpnParamsFinder.getIterationOutputSize(config, wolverineRegLpnParams);
+        int wolverineRegOutputSize = Wykw21Gf2kNcVoleLpnParamsFinder.getIterationOutputSize(config, wolverineRegLpnParams);
         LOGGER.info("Wolverine Reg {}: output size = {}", wolverineRegLpnParams, wolverineRegOutputSize);
     }
 }
