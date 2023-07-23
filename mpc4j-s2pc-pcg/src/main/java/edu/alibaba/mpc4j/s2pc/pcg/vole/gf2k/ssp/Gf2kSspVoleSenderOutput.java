@@ -70,19 +70,33 @@ public class Gf2kSspVoleSenderOutput implements PcgPartyOutput {
     }
 
     /**
-     * Gets x.
-     *
-     * @return x.
+     * Gets x[α].
+     * @return x[α].
      */
-    public byte[] getX() {
+    public byte[] getAlphaX() {
         return x;
+    }
+
+    /**
+     * Gets the assigned x.
+     *
+     * @param index index.
+     * @return the assigned x, where x is non-zero when index = α.
+     */
+    public byte[] getX(int index) {
+        MathPreconditions.checkNonNegativeInRange("index", index, ts.length);
+        if (index == alpha) {
+            return BytesUtils.clone(x);
+        } else {
+            return new byte[CommonConstants.BLOCK_BYTE_LENGTH];
+        }
     }
 
     /**
      * Gets the assigned t.
      *
      * @param index index.
-     * @return t.
+     * @return the assigned t.
      */
     public byte[] getT(int index) {
         return ts[index];

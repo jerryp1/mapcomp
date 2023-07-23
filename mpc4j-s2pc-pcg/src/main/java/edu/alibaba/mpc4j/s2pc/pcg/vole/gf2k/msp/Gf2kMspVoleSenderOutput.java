@@ -4,6 +4,8 @@ import edu.alibaba.mpc4j.common.tool.CommonConstants;
 import edu.alibaba.mpc4j.common.tool.MathPreconditions;
 import edu.alibaba.mpc4j.common.tool.utils.BytesUtils;
 import edu.alibaba.mpc4j.s2pc.pcg.PcgPartyOutput;
+import gnu.trove.map.TIntIntMap;
+import gnu.trove.map.hash.TIntIntHashMap;
 
 import java.util.Arrays;
 
@@ -19,9 +21,13 @@ public class Gf2kMspVoleSenderOutput implements PcgPartyOutput {
      */
     private int[] alphaArray;
     /**
-     * single x
+     * x[α]s
      */
-    private byte[] x;
+    private byte[][] alphaXs;
+    /**
+     * i -> α
+     */
+    private TIntIntMap alphaIndexMap;
     /**
      * t array
      */
@@ -31,11 +37,11 @@ public class Gf2kMspVoleSenderOutput implements PcgPartyOutput {
      * Creates a sender output.
      *
      * @param alphaArray α array.
-     * @param x          x.
+     * @param alphaXs    x[α]s.
      * @param ts         t array.
      * @return a sender output.
      */
-    public static Gf2kMspVoleSenderOutput create(int[] alphaArray, byte[] x, byte[][] ts) {
+    public static Gf2kMspVoleSenderOutput create(int[] alphaArray, byte[][] alphaXs, byte[][] ts) {
         Gf2kMspVoleSenderOutput senderOutput = new Gf2kMspVoleSenderOutput();
         MathPreconditions.checkPositive("ts.length", ts.length);
         int num = ts.length;
@@ -49,8 +55,16 @@ public class Gf2kMspVoleSenderOutput implements PcgPartyOutput {
             "(distinct) alphaArray.length", "alphaArray.length",
             senderOutput.alphaArray.length, alphaArray.length
         );
-        MathPreconditions.checkEqual("x.length", "λ in bytes", x.length, CommonConstants.BLOCK_BYTE_LENGTH);
-        senderOutput.x = BytesUtils.clone(x);
+        MathPreconditions.checkEqual("x[α]s.length", "alphaArray.length", alphaXs.length, alphaArray.length);
+        senderOutput.alphaXs = Arrays.stream(alphaXs)
+            .peek(x -> MathPreconditions.checkEqual(
+                "x.length", "λ in bytes", x.length, CommonConstants.BLOCK_BYTE_LENGTH
+            ))
+            .toArray(byte[][]::new);
+        senderOutput.alphaIndexMap = new TIntIntHashMap(alphaArray.length);
+        for (int alphaIndex = 0; alphaIndex < alphaArray.length; alphaIndex++) {
+            senderOutput.alphaIndexMap.put(alphaArray[alphaIndex], alphaIndex);
+        }
         senderOutput.ts = Arrays.stream(ts)
             .peek(t -> MathPreconditions.checkEqual(
                 "t.length", "λ in bytes", t.length, CommonConstants.BLOCK_BYTE_LENGTH
@@ -76,12 +90,26 @@ public class Gf2kMspVoleSenderOutput implements PcgPartyOutput {
     }
 
     /**
-     * Gets x.
+     * Gets x[α]s.
+     *
+     * @return x[α]s.
+     */
+    public byte[][] getAlphaXs() {
+        return alphaXs;
+    }
+
+    /**
+     * Gets the assigned x.
      *
      * @return x.
      */
-    public byte[] getX() {
-        return x;
+    public byte[] getX(int index) {
+        MathPreconditions.checkNonNegativeInRange("index", index, ts.length);
+        if (alphaIndexMap.containsKey(index)) {
+            return BytesUtils.clone(alphaXs[alphaIndexMap.get(index)]);
+        } else {
+            return new byte[CommonConstants.BLOCK_BYTE_LENGTH];
+        }
     }
 
     /**

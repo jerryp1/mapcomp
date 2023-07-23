@@ -1,4 +1,4 @@
-package edu.alibaba.mpc4j.s2pc.pcg.ot.cot.msp.bcg19;
+package edu.alibaba.mpc4j.s2pc.pcg.vole.gf2k.msp.bcg19;
 
 import edu.alibaba.mpc4j.common.rpc.desc.PtoDesc;
 import edu.alibaba.mpc4j.common.rpc.desc.PtoDescManager;
@@ -22,28 +22,33 @@ import edu.alibaba.mpc4j.common.rpc.desc.PtoDescManager;
  * Boyle, Elette, Geoffroy Couteau, Niv Gilboa, Yuval Ishai, Lisa Kohl, Peter Rindal, and Peter Scholl. Efficient
  * two-round OT extension and silent non-interactive secure computation. CCS 2019, pp. 291-308. 2019.
  * </p>
+ * The following paper introduce this technique into VOLE:
+ * <p>
+ * Weng, Chenkai, Kang Yang, Jonathan Katz, and Xiao Wang. Wolverine: fast, scalable, and communication-efficient
+ * zero-knowledge proofs for boolean and arithmetic circuits. S&P 2021, pp. 1074-1091. IEEE, 2021.
+ * </p>
  *
  * @author Weiran Liu
- * @date 2022/01/25
+ * @date 2023/7/23
  */
-class Bcg19RegMspCotPtoDesc implements PtoDesc {
+class Bcg19RegGf2kMspVolePtoDesc implements PtoDesc {
     /**
      * protocol ID
      */
-    private static final int PTO_ID = Math.abs((int) 5132887582232393843L);
+    private static final int PTO_ID = Math.abs((int) 8522955282621429171L);
     /**
      * protocol name
      */
-    private static final String PTO_NAME = "BCG19_REG_MSP_COT";
+    private static final String PTO_NAME = "BCG19_REG_GF2K_MSP_VOLE";
     /**
      * singleton mode
      */
-    private static final Bcg19RegMspCotPtoDesc INSTANCE = new Bcg19RegMspCotPtoDesc();
+    private static final Bcg19RegGf2kMspVolePtoDesc INSTANCE = new Bcg19RegGf2kMspVolePtoDesc();
 
     /**
      * private constructor.
      */
-    private Bcg19RegMspCotPtoDesc() {
+    private Bcg19RegGf2kMspVolePtoDesc() {
         // empty
     }
 

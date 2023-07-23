@@ -9,6 +9,9 @@ import edu.alibaba.mpc4j.common.tool.hashbin.MaxBinSizeUtils;
 import edu.alibaba.mpc4j.common.tool.hashbin.primitive.cuckoo.IntCuckooHashBinFactory;
 import edu.alibaba.mpc4j.s2pc.pcg.vole.gf2k.bsp.Gf2kBspVoleConfig;
 import edu.alibaba.mpc4j.s2pc.pcg.vole.gf2k.bsp.Gf2kBspVoleFactory;
+import edu.alibaba.mpc4j.s2pc.pcg.vole.gf2k.msp.bcg19.Bcg19RegGf2kMspVoleConfig;
+import edu.alibaba.mpc4j.s2pc.pcg.vole.gf2k.msp.bcg19.Bcg19RegGf2kMspVoleReceiver;
+import edu.alibaba.mpc4j.s2pc.pcg.vole.gf2k.msp.bcg19.Bcg19RegGf2kMspVoleSender;
 import edu.alibaba.mpc4j.s2pc.pcg.vole.gf2k.msp.ywl20.Ywl20UniGf2kMspVoleUtils;
 
 /**
@@ -61,7 +64,7 @@ public class Gf2kMspVoleFactory implements PtoFactory {
                 int maxBinSize = MaxBinSizeUtils.expectMaxBinSize(keyNum * num, binNum);
                 return Gf2kBspVoleFactory.getPrecomputeNum(gf2kBspVoleConfig, binNum, maxBinSize + 1);
             default:
-                throw new IllegalArgumentException("Invalid " +Gf2kMspVoleType.class.getSimpleName() + ": " + type.name());
+                throw new IllegalArgumentException("Invalid " + Gf2kMspVoleType.class.getSimpleName() + ": " + type.name());
         }
     }
 
@@ -77,6 +80,7 @@ public class Gf2kMspVoleFactory implements PtoFactory {
         Gf2kMspVoleType type = config.getPtoType();
         switch (type) {
             case BCG19_REG:
+                return new Bcg19RegGf2kMspVoleSender(senderRpc, receiverParty, (Bcg19RegGf2kMspVoleConfig) config);
             case YWL20_UNI:
             default:
                 throw new IllegalArgumentException("Invalid " + Gf2kMspVoleType.class.getSimpleName() + ": " + type.name());
@@ -95,6 +99,7 @@ public class Gf2kMspVoleFactory implements PtoFactory {
         Gf2kMspVoleType type = config.getPtoType();
         switch (type) {
             case BCG19_REG:
+                return new Bcg19RegGf2kMspVoleReceiver(receiverRpc, senderParty, (Bcg19RegGf2kMspVoleConfig) config);
             case YWL20_UNI:
             default:
                 throw new IllegalArgumentException("Invalid " + Gf2kMspVoleType.class.getSimpleName() + ": " + type.name());
@@ -111,6 +116,7 @@ public class Gf2kMspVoleFactory implements PtoFactory {
         switch (securityModel) {
             case IDEAL:
             case SEMI_HONEST:
+                return new Bcg19RegGf2kMspVoleConfig.Builder(securityModel).build();
             case COVERT:
             case MALICIOUS:
             default:

@@ -1,23 +1,29 @@
-package edu.alibaba.mpc4j.s2pc.pcg.ot.cot.msp;
+package edu.alibaba.mpc4j.s2pc.pcg.vole.gf2k.msp;
 
 import edu.alibaba.mpc4j.common.rpc.Party;
 import edu.alibaba.mpc4j.common.rpc.Rpc;
 import edu.alibaba.mpc4j.common.rpc.desc.PtoDesc;
 import edu.alibaba.mpc4j.common.rpc.pto.AbstractTwoPartyPto;
+import edu.alibaba.mpc4j.common.tool.CommonConstants;
 import edu.alibaba.mpc4j.common.tool.MathPreconditions;
-import edu.alibaba.mpc4j.s2pc.pcg.ot.cot.CotReceiverOutput;
+import edu.alibaba.mpc4j.common.tool.utils.BytesUtils;
+import edu.alibaba.mpc4j.s2pc.pcg.vole.gf2k.Gf2kVoleReceiverOutput;
 
 /**
- * abstract multi single-point COT receiver.
+ * abstract GF2K-MSP-VOLE receiver.
  *
  * @author Weiran Liu
- * @date 2022/01/22
+ * @date 2023/7/23
  */
-public abstract class AbstractMspCotReceiver extends AbstractTwoPartyPto implements MspCotReceiver {
+public abstract class AbstractGf2kMspVoleReceiver extends AbstractTwoPartyPto implements Gf2kMspVoleReceiver {
     /**
      * config
      */
-    private final MspCotConfig config;
+    private final Gf2kMspVoleConfig config;
+    /**
+     * Δ
+     */
+    protected byte[] delta;
     /**
      * max num
      */
@@ -35,12 +41,14 @@ public abstract class AbstractMspCotReceiver extends AbstractTwoPartyPto impleme
      */
     protected int t;
 
-    protected AbstractMspCotReceiver(PtoDesc ptoDesc, Rpc receiverRpc, Party senderParty, MspCotConfig config) {
-        super(ptoDesc, receiverRpc, senderParty, config);
+    protected AbstractGf2kMspVoleReceiver(PtoDesc ptoDesc, Rpc senderRpc, Party receiverParty, Gf2kMspVoleConfig config) {
+        super(ptoDesc, senderRpc, receiverParty, config);
         this.config = config;
     }
 
-    protected void setInitInput(int maxT, int maxNum) {
+    protected void setInitInput(byte[] delta, int maxT, int maxNum) {
+        MathPreconditions.checkEqual("Δ.length", "λ(B)", delta.length, CommonConstants.BLOCK_BYTE_LENGTH);
+        this.delta = BytesUtils.clone(delta);
         MathPreconditions.checkPositive("maxNum", maxNum);
         this.maxNum = maxNum;
         MathPreconditions.checkPositiveInRangeClosed("maxT", maxT, maxNum);
@@ -58,10 +66,10 @@ public abstract class AbstractMspCotReceiver extends AbstractTwoPartyPto impleme
         extraInfo++;
     }
 
-    protected void setPtoInput(int t, int num, CotReceiverOutput preReceiverOutput) {
+    protected void setPtoInput(int t, int num, Gf2kVoleReceiverOutput preReceiverOutput) {
         setPtoInput(t, num);
         MathPreconditions.checkGreaterOrEqual(
-            "preCotNum", preReceiverOutput.getNum(), MspCotFactory.getPrecomputeNum(config, t, num)
+            "preNum", preReceiverOutput.getNum(), Gf2kMspVoleFactory.getPrecomputeNum(config, t, num)
         );
     }
 }

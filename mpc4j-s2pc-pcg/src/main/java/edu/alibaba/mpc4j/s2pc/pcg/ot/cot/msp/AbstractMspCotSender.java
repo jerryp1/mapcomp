@@ -27,11 +27,11 @@ public abstract class AbstractMspCotSender extends AbstractTwoPartyPto implement
     /**
      * max num
      */
-    protected int maxNum;
+    private int maxNum;
     /**
      * max sparse num
      */
-    protected int maxT;
+    private int maxT;
     /**
      * num
      */

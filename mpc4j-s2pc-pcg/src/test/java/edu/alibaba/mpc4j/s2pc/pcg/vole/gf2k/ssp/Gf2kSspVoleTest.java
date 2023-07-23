@@ -268,17 +268,18 @@ public class Gf2kSspVoleTest extends AbstractTwoPartyPtoTest {
         IntStream.range(0, num).forEach(index -> {
             byte[] w = senderOutput.getT(index);
             byte[] v = receiverOutput.getQ(index);
+            byte[] u = senderOutput.getX(index);
+            byte[] delta = receiverOutput.getDelta();
+            byte[] vPrime = BytesUtils.clone(delta);
+            GF2K.muli(vPrime, u);
+            GF2K.addi(vPrime, v);
+            Assert.assertArrayEquals(w, vPrime);
             if (index == senderOutput.getAlpha()) {
-                // w = v + Δ · u
-                byte[] u = senderOutput.getX();
-                byte[] delta = receiverOutput.getDelta();
-                byte[] vPrime = BytesUtils.clone(delta);
-                GF2K.muli(vPrime, u);
-                GF2K.addi(vPrime, v);
-                Assert.assertArrayEquals(w, vPrime);
+                // u is non-zero
+                Assert.assertFalse(GF2K.isZero(u));
             } else {
-                // w = v
-                Assert.assertArrayEquals(w, v);
+                // u is zero
+                Assert.assertTrue(GF2K.isZero(u));
             }
         });
     }

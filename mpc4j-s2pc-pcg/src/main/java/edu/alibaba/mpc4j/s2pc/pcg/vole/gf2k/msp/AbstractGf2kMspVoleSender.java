@@ -1,23 +1,23 @@
-package edu.alibaba.mpc4j.s2pc.pcg.ot.cot.msp;
+package edu.alibaba.mpc4j.s2pc.pcg.vole.gf2k.msp;
 
 import edu.alibaba.mpc4j.common.rpc.Party;
 import edu.alibaba.mpc4j.common.rpc.Rpc;
 import edu.alibaba.mpc4j.common.rpc.desc.PtoDesc;
 import edu.alibaba.mpc4j.common.rpc.pto.AbstractTwoPartyPto;
 import edu.alibaba.mpc4j.common.tool.MathPreconditions;
-import edu.alibaba.mpc4j.s2pc.pcg.ot.cot.CotReceiverOutput;
+import edu.alibaba.mpc4j.s2pc.pcg.vole.gf2k.Gf2kVoleSenderOutput;
 
 /**
- * abstract multi single-point COT receiver.
+ * abstract GF2K-MSP-VOLE sender.
  *
  * @author Weiran Liu
- * @date 2022/01/22
+ * @date 2023/7/23
  */
-public abstract class AbstractMspCotReceiver extends AbstractTwoPartyPto implements MspCotReceiver {
+public abstract class AbstractGf2kMspVoleSender extends AbstractTwoPartyPto implements Gf2kMspVoleSender {
     /**
      * config
      */
-    private final MspCotConfig config;
+    private final Gf2kMspVoleConfig config;
     /**
      * max num
      */
@@ -35,7 +35,7 @@ public abstract class AbstractMspCotReceiver extends AbstractTwoPartyPto impleme
      */
     protected int t;
 
-    protected AbstractMspCotReceiver(PtoDesc ptoDesc, Rpc receiverRpc, Party senderParty, MspCotConfig config) {
+    protected AbstractGf2kMspVoleSender(PtoDesc ptoDesc, Rpc receiverRpc, Party senderParty, Gf2kMspVoleConfig config) {
         super(ptoDesc, receiverRpc, senderParty, config);
         this.config = config;
     }
@@ -58,10 +58,10 @@ public abstract class AbstractMspCotReceiver extends AbstractTwoPartyPto impleme
         extraInfo++;
     }
 
-    protected void setPtoInput(int t, int num, CotReceiverOutput preReceiverOutput) {
+    protected void setPtoInput(int t, int num, Gf2kVoleSenderOutput preSenderOutput) {
         setPtoInput(t, num);
         MathPreconditions.checkGreaterOrEqual(
-            "preCotNum", preReceiverOutput.getNum(), MspCotFactory.getPrecomputeNum(config, t, num)
+            "preNum", preSenderOutput.getNum(), Gf2kMspVoleFactory.getPrecomputeNum(config, t, num)
         );
     }
 }
