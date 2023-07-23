@@ -41,8 +41,8 @@ public abstract class AbstractGf2kMspVoleReceiver extends AbstractTwoPartyPto im
      */
     protected int t;
 
-    protected AbstractGf2kMspVoleReceiver(PtoDesc ptoDesc, Rpc senderRpc, Party receiverParty, Gf2kMspVoleConfig config) {
-        super(ptoDesc, senderRpc, receiverParty, config);
+    protected AbstractGf2kMspVoleReceiver(PtoDesc ptoDesc, Rpc receiverRpc, Party senderParty, Gf2kMspVoleConfig config) {
+        super(ptoDesc, receiverRpc, senderParty, config);
         this.config = config;
     }
 

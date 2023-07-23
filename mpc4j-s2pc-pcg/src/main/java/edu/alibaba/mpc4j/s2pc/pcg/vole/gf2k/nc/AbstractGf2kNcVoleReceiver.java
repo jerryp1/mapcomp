@@ -1,4 +1,4 @@
-package edu.alibaba.mpc4j.s2pc.pcg.ot.cot.nc;
+package edu.alibaba.mpc4j.s2pc.pcg.vole.gf2k.nc;
 
 import edu.alibaba.mpc4j.common.rpc.Party;
 import edu.alibaba.mpc4j.common.rpc.Rpc;
@@ -9,16 +9,16 @@ import edu.alibaba.mpc4j.common.tool.MathPreconditions;
 import edu.alibaba.mpc4j.common.tool.utils.BytesUtils;
 
 /**
- * abstract no-choice COT sender.
+ * abstract no-choice GF2K-VOLE receiver.
  *
  * @author Weiran Liu
- * @date 2022/01/26
+ * @date 2023/7/23
  */
-public abstract class AbstractNcCotSender extends AbstractTwoPartyPto implements NcCotSender {
+public abstract class AbstractGf2kNcVoleReceiver extends AbstractTwoPartyPto implements Gf2kNcVoleReceiver {
     /**
      * config
      */
-    private final NcCotConfig config;
+    private final Gf2kNcVoleConfig config;
     /**
      * Δ
      */
@@ -28,8 +28,8 @@ public abstract class AbstractNcCotSender extends AbstractTwoPartyPto implements
      */
     protected int num;
 
-    protected AbstractNcCotSender(PtoDesc ptoDesc, Rpc senderRpc, Party receiverParty, NcCotConfig config) {
-        super(ptoDesc, senderRpc, receiverParty, config);
+    protected AbstractGf2kNcVoleReceiver(PtoDesc ptoDesc, Rpc receiverRpc, Party senderParty, Gf2kNcVoleConfig config) {
+        super(ptoDesc, receiverRpc, senderParty, config);
         this.config = config;
     }
 

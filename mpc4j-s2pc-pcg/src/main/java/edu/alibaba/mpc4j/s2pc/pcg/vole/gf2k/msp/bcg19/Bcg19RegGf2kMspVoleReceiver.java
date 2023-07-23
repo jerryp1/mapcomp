@@ -32,9 +32,9 @@ public class Bcg19RegGf2kMspVoleReceiver extends AbstractGf2kMspVoleReceiver {
      */
     private Gf2kVoleReceiverOutput gf2kVoleReceiverOutput;
 
-    public Bcg19RegGf2kMspVoleReceiver(Rpc senderRpc, Party receiverParty, Bcg19RegGf2kMspVoleConfig config) {
-        super(Bcg19RegGf2kMspVolePtoDesc.getInstance(), senderRpc, receiverParty, config);
-        gf2kBspVoleReceiver = Gf2kBspVoleFactory.createReceiver(senderRpc, receiverParty, config.getGf2kBspVoleConfig());
+    public Bcg19RegGf2kMspVoleReceiver(Rpc receiverRpc, Party senderParty, Bcg19RegGf2kMspVoleConfig config) {
+        super(Bcg19RegGf2kMspVolePtoDesc.getInstance(), receiverRpc, senderParty, config);
+        gf2kBspVoleReceiver = Gf2kBspVoleFactory.createReceiver(receiverRpc, senderParty, config.getGf2kBspVoleConfig());
         addSubPtos(gf2kBspVoleReceiver);
     }
 

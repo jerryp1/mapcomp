@@ -35,8 +35,8 @@ public abstract class AbstractGf2kMspVoleSender extends AbstractTwoPartyPto impl
      */
     protected int t;
 
-    protected AbstractGf2kMspVoleSender(PtoDesc ptoDesc, Rpc receiverRpc, Party senderParty, Gf2kMspVoleConfig config) {
-        super(ptoDesc, receiverRpc, senderParty, config);
+    protected AbstractGf2kMspVoleSender(PtoDesc ptoDesc, Rpc senderRpc, Party receiverParty, Gf2kMspVoleConfig config) {
+        super(ptoDesc, senderRpc, receiverParty, config);
         this.config = config;
     }
 

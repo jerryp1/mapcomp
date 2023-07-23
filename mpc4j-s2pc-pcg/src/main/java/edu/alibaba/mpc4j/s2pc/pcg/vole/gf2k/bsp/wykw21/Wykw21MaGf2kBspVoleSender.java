@@ -62,11 +62,11 @@ public class Wykw21MaGf2kBspVoleSender extends AbstractGf2kBspVoleSender {
      */
     private Gf2kVoleSenderOutput gf2kVoleSenderOutput;
 
-    public Wykw21MaGf2kBspVoleSender(Rpc receiverRpc, Party senderParty, Wykw21MaGf2kBspVoleConfig config) {
-        super(Wykw21MaGf2kBspVolePtoDesc.getInstance(), receiverRpc, senderParty, config);
-        gf2kCoreVoleSender = Gf2kCoreVoleFactory.createSender(receiverRpc, senderParty, config.getGf2kCoreVoleConfig());
+    public Wykw21MaGf2kBspVoleSender(Rpc senderRpc, Party receiverParty, Wykw21MaGf2kBspVoleConfig config) {
+        super(Wykw21MaGf2kBspVolePtoDesc.getInstance(), senderRpc, receiverParty, config);
+        gf2kCoreVoleSender = Gf2kCoreVoleFactory.createSender(senderRpc, receiverParty, config.getGf2kCoreVoleConfig());
         addSubPtos(gf2kCoreVoleSender);
-        bpDpprfReceiver = BpDpprfFactory.createReceiver(receiverRpc, senderParty, config.getBpDpprfConfig());
+        bpDpprfReceiver = BpDpprfFactory.createReceiver(senderRpc, receiverParty, config.getBpDpprfConfig());
         addSubPtos(bpDpprfReceiver);
         gf2k = Gf2kFactory.createInstance(envType);
         commit = CommitFactory.createInstance(envType, secureRandom);

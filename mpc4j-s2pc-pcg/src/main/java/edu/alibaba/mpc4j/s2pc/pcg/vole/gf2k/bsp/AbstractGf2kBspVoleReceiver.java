@@ -44,8 +44,8 @@ public abstract class AbstractGf2kBspVoleReceiver extends AbstractTwoPartyPto im
      */
     protected int batchNum;
 
-    protected AbstractGf2kBspVoleReceiver(PtoDesc ptoDesc, Rpc senderRpc, Party receiverParty, Gf2kBspVoleConfig config) {
-        super(ptoDesc, senderRpc, receiverParty, config);
+    protected AbstractGf2kBspVoleReceiver(PtoDesc ptoDesc, Rpc receiverRpc, Party senderParty, Gf2kBspVoleConfig config) {
+        super(ptoDesc, receiverRpc, senderParty, config);
         this.config = config;
     }
 
