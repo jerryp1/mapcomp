@@ -5,6 +5,8 @@ import edu.alibaba.mpc4j.common.rpc.Rpc;
 import edu.alibaba.mpc4j.common.rpc.desc.PtoDesc;
 import edu.alibaba.mpc4j.common.rpc.pto.AbstractTwoPartyPto;
 import edu.alibaba.mpc4j.common.tool.MathPreconditions;
+import edu.alibaba.mpc4j.common.tool.galoisfield.gf2k.Gf2k;
+import edu.alibaba.mpc4j.common.tool.galoisfield.gf2k.Gf2kFactory;
 import edu.alibaba.mpc4j.s2pc.pcg.vole.gf2k.Gf2kVoleSenderOutput;
 
 import java.util.Arrays;
@@ -20,6 +22,10 @@ public abstract class AbstractGf2kBspVoleSender extends AbstractTwoPartyPto impl
      * config
      */
     protected final Gf2kBspVoleConfig config;
+    /**
+     * GF2K instance
+     */
+    protected final Gf2k gf2k;
     /**
      * max num for each GF2K-SSP-VOLE
      */
@@ -44,6 +50,7 @@ public abstract class AbstractGf2kBspVoleSender extends AbstractTwoPartyPto impl
     protected AbstractGf2kBspVoleSender(PtoDesc ptoDesc, Rpc senderRpc, Party receiverParty, Gf2kBspVoleConfig config) {
         super(ptoDesc, senderRpc, receiverParty, config);
         this.config = config;
+        gf2k = Gf2kFactory.createInstance(envType);
     }
 
     protected void setInitInput(int maxBatchNum, int maxEachNum) {

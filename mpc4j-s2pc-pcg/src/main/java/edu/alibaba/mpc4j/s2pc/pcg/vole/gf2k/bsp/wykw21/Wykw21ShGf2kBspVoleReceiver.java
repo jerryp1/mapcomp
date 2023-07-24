@@ -6,8 +6,6 @@ import edu.alibaba.mpc4j.common.rpc.PtoState;
 import edu.alibaba.mpc4j.common.rpc.Rpc;
 import edu.alibaba.mpc4j.common.rpc.utils.DataPacket;
 import edu.alibaba.mpc4j.common.rpc.utils.DataPacketHeader;
-import edu.alibaba.mpc4j.common.tool.galoisfield.gf2k.Gf2k;
-import edu.alibaba.mpc4j.common.tool.galoisfield.gf2k.Gf2kFactory;
 import edu.alibaba.mpc4j.s2pc.pcg.dpprf.bp.BpDpprfFactory;
 import edu.alibaba.mpc4j.s2pc.pcg.dpprf.bp.BpDpprfSender;
 import edu.alibaba.mpc4j.s2pc.pcg.dpprf.bp.BpDpprfSenderOutput;
@@ -41,10 +39,6 @@ public class Wykw21ShGf2kBspVoleReceiver extends AbstractGf2kBspVoleReceiver {
      */
     private final BpDpprfSender bpDpprfSender;
     /**
-     * GF2K instance
-     */
-    private final Gf2k gf2k;
-    /**
      * GF2K-VOLE receiver output
      */
     private Gf2kVoleReceiverOutput gf2kVoleReceiverOutput;
@@ -55,7 +49,6 @@ public class Wykw21ShGf2kBspVoleReceiver extends AbstractGf2kBspVoleReceiver {
         addSubPtos(gf2kCoreVoleReceiver);
         bpDpprfSender = BpDpprfFactory.createSender(receiverRpc, senderParty, config.getBpDpprfConfig());
         addSubPtos(bpDpprfSender);
-        gf2k = Gf2kFactory.createInstance(envType);
     }
 
     @Override

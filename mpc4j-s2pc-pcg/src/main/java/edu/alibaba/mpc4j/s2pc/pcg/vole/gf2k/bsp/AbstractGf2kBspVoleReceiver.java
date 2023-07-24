@@ -7,6 +7,8 @@ import edu.alibaba.mpc4j.common.rpc.desc.PtoDesc;
 import edu.alibaba.mpc4j.common.rpc.pto.AbstractTwoPartyPto;
 import edu.alibaba.mpc4j.common.tool.CommonConstants;
 import edu.alibaba.mpc4j.common.tool.MathPreconditions;
+import edu.alibaba.mpc4j.common.tool.galoisfield.gf2k.Gf2k;
+import edu.alibaba.mpc4j.common.tool.galoisfield.gf2k.Gf2kFactory;
 import edu.alibaba.mpc4j.common.tool.utils.BytesUtils;
 import edu.alibaba.mpc4j.s2pc.pcg.vole.gf2k.Gf2kVoleReceiverOutput;
 
@@ -23,6 +25,10 @@ public abstract class AbstractGf2kBspVoleReceiver extends AbstractTwoPartyPto im
      * config
      */
     protected final Gf2kBspVoleConfig config;
+    /**
+     * GF2K instance
+     */
+    protected final Gf2k gf2k;
     /**
      * Δ
      */
@@ -47,6 +53,7 @@ public abstract class AbstractGf2kBspVoleReceiver extends AbstractTwoPartyPto im
     protected AbstractGf2kBspVoleReceiver(PtoDesc ptoDesc, Rpc receiverRpc, Party senderParty, Gf2kBspVoleConfig config) {
         super(ptoDesc, receiverRpc, senderParty, config);
         this.config = config;
+        gf2k = Gf2kFactory.createInstance(envType);
     }
 
     protected void setInitInput(byte[] delta, int maxBatchNum, int maxEachNum) {

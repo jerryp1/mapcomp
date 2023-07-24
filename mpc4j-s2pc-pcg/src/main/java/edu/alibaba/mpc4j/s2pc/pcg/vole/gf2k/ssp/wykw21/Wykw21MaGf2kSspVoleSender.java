@@ -8,8 +8,6 @@ import edu.alibaba.mpc4j.common.tool.crypto.commit.Commit;
 import edu.alibaba.mpc4j.common.tool.crypto.commit.CommitFactory;
 import edu.alibaba.mpc4j.common.tool.crypto.prf.Prf;
 import edu.alibaba.mpc4j.common.tool.crypto.prf.PrfFactory;
-import edu.alibaba.mpc4j.common.tool.galoisfield.gf2k.Gf2k;
-import edu.alibaba.mpc4j.common.tool.galoisfield.gf2k.Gf2kFactory;
 import edu.alibaba.mpc4j.s2pc.pcg.dpprf.sp.SpDpprfFactory;
 import edu.alibaba.mpc4j.s2pc.pcg.dpprf.sp.SpDpprfReceiver;
 import edu.alibaba.mpc4j.s2pc.pcg.dpprf.sp.SpDpprfReceiverOutput;
@@ -45,10 +43,6 @@ public class Wykw21MaGf2kSspVoleSender extends AbstractGf2kSspVoleSender {
      */
     private final SpDpprfReceiver spDpprfReceiver;
     /**
-     * GF2K instance
-     */
-    private final Gf2k gf2k;
-    /**
      * commitment scheme
      */
     private final Commit commit;
@@ -67,7 +61,6 @@ public class Wykw21MaGf2kSspVoleSender extends AbstractGf2kSspVoleSender {
         addSubPtos(gf2kCoreVoleSender);
         spDpprfReceiver = SpDpprfFactory.createReceiver(senderRpc, receiverParty, config.getSpDpprfConfig());
         addSubPtos(spDpprfReceiver);
-        gf2k = Gf2kFactory.createInstance(envType);
         commit = CommitFactory.createInstance(envType, secureRandom);
         randomOracle = PrfFactory.createInstance(envType, gf2k.getByteL());
     }

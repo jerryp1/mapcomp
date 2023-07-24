@@ -4,6 +4,9 @@ import edu.alibaba.mpc4j.common.rpc.Party;
 import edu.alibaba.mpc4j.common.rpc.Rpc;
 import edu.alibaba.mpc4j.common.rpc.desc.SecurityModel;
 import edu.alibaba.mpc4j.common.rpc.pto.PtoFactory;
+import edu.alibaba.mpc4j.s2pc.pcg.vole.gf2k.nc.direct.DirectGf2kNcVoleConfig;
+import edu.alibaba.mpc4j.s2pc.pcg.vole.gf2k.nc.direct.DirectGf2kNcVoleReceiver;
+import edu.alibaba.mpc4j.s2pc.pcg.vole.gf2k.nc.direct.DirectGf2kNcVoleSender;
 
 /**
  * no-choice GF2K-VOLE factory.
@@ -45,6 +48,7 @@ public class Gf2kNcVoleFactory implements PtoFactory {
         Gf2kNcVoleType type = config.getPtoType();
         switch (type) {
             case DIRECT:
+                return new DirectGf2kNcVoleSender(senderRpc, receiverParty, (DirectGf2kNcVoleConfig) config);
             case WYKW21:
             default:
                 throw new IllegalArgumentException("Invalid " + Gf2kNcVoleType.class.getSimpleName() + ": " + type.name());
@@ -63,6 +67,7 @@ public class Gf2kNcVoleFactory implements PtoFactory {
         Gf2kNcVoleType type = config.getPtoType();
         switch (type) {
             case DIRECT:
+                return new DirectGf2kNcVoleReceiver(receiverRpc, senderParty, (DirectGf2kNcVoleConfig) config);
             case WYKW21:
             default:
                 throw new IllegalArgumentException("Invalid " + Gf2kNcVoleType.class.getSimpleName() + ": " + type.name());
@@ -77,6 +82,10 @@ public class Gf2kNcVoleFactory implements PtoFactory {
      * @return a default config.
      */
     public static Gf2kNcVoleConfig createDefaultConfig(SecurityModel securityModel, boolean silent) {
-        return null;
+        if (silent) {
+            return null;
+        } else {
+            return new DirectGf2kNcVoleConfig.Builder(securityModel).build();
+        }
     }
 }

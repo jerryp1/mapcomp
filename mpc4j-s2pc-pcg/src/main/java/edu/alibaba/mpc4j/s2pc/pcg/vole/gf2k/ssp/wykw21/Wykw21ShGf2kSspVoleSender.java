@@ -2,8 +2,6 @@ package edu.alibaba.mpc4j.s2pc.pcg.vole.gf2k.ssp.wykw21;
 
 import edu.alibaba.mpc4j.common.rpc.*;
 import edu.alibaba.mpc4j.common.rpc.utils.DataPacketHeader;
-import edu.alibaba.mpc4j.common.tool.galoisfield.gf2k.Gf2k;
-import edu.alibaba.mpc4j.common.tool.galoisfield.gf2k.Gf2kFactory;
 import edu.alibaba.mpc4j.s2pc.pcg.dpprf.sp.SpDpprfFactory;
 import edu.alibaba.mpc4j.s2pc.pcg.dpprf.sp.SpDpprfReceiver;
 import edu.alibaba.mpc4j.s2pc.pcg.dpprf.sp.SpDpprfReceiverOutput;
@@ -35,10 +33,6 @@ public class Wykw21ShGf2kSspVoleSender extends AbstractGf2kSspVoleSender {
      */
     private final SpDpprfReceiver spDpprfReceiver;
     /**
-     * GF2K instance
-     */
-    private final Gf2k gf2k;
-    /**
      * GF2K-VOLE sender output
      */
     private Gf2kVoleSenderOutput gf2kVoleSenderOutput;
@@ -49,7 +43,6 @@ public class Wykw21ShGf2kSspVoleSender extends AbstractGf2kSspVoleSender {
         addSubPtos(gf2kCoreVoleSender);
         spDpprfReceiver = SpDpprfFactory.createReceiver(senderRpc, receiverParty, config.getSpDpprfConfig());
         addSubPtos(spDpprfReceiver);
-        gf2k = Gf2kFactory.createInstance(envType);
     }
 
     @Override

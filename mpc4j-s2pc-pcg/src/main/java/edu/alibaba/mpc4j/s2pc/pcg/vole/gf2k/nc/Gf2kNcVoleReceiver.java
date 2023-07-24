@@ -26,5 +26,5 @@ public interface Gf2kNcVoleReceiver extends TwoPartyPto {
      * @return receiver output.
      * @throws MpcAbortException the protocol failure aborts.
      */
-    Gf2kVoleReceiverOutput receiver() throws MpcAbortException;
+    Gf2kVoleReceiverOutput receive() throws MpcAbortException;
 }

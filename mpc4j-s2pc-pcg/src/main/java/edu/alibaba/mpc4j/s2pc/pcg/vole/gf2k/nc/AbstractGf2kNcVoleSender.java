@@ -5,6 +5,8 @@ import edu.alibaba.mpc4j.common.rpc.Rpc;
 import edu.alibaba.mpc4j.common.rpc.desc.PtoDesc;
 import edu.alibaba.mpc4j.common.rpc.pto.AbstractTwoPartyPto;
 import edu.alibaba.mpc4j.common.tool.MathPreconditions;
+import edu.alibaba.mpc4j.common.tool.galoisfield.gf2k.Gf2k;
+import edu.alibaba.mpc4j.common.tool.galoisfield.gf2k.Gf2kFactory;
 
 /**
  * abstract no-choice GF2K-VOLE sender.
@@ -18,6 +20,10 @@ public abstract class AbstractGf2kNcVoleSender extends AbstractTwoPartyPto imple
      */
     private final Gf2kNcVoleConfig config;
     /**
+     * GF2K instance
+     */
+    protected final Gf2k gf2k;
+    /**
      * num
      */
     protected int num;
@@ -25,6 +31,7 @@ public abstract class AbstractGf2kNcVoleSender extends AbstractTwoPartyPto imple
     protected AbstractGf2kNcVoleSender(PtoDesc ptoDesc, Rpc senderRpc, Party receiverParty, Gf2kNcVoleConfig config) {
         super(ptoDesc, senderRpc, receiverParty, config);
         this.config = config;
+        gf2k = Gf2kFactory.createInstance(envType);
     }
 
     protected void setInitInput(int num) {

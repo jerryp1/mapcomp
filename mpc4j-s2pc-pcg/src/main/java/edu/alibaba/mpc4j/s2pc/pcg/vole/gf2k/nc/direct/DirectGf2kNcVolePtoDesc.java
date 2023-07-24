@@ -4,7 +4,7 @@ import edu.alibaba.mpc4j.common.rpc.desc.PtoDesc;
 import edu.alibaba.mpc4j.common.rpc.desc.PtoDescManager;
 
 /**
- * direct no-choice COT protocol description. This protocol directly invoke core GF2K-VOLE.
+ * direct no-choice GF2K-VOLE protocol description. This protocol directly invoke core GF2K-VOLE.
  *
  * @author Weiran Liu
  * @date 2023/7/23
