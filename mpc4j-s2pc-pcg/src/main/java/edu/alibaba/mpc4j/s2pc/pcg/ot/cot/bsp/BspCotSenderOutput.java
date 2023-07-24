@@ -5,7 +5,7 @@ import java.util.Arrays;
 import com.google.common.base.Preconditions;
 import edu.alibaba.mpc4j.common.tool.MathPreconditions;
 import edu.alibaba.mpc4j.common.tool.utils.BytesUtils;
-import edu.alibaba.mpc4j.s2pc.pcg.PcgPartyOutput;
+import edu.alibaba.mpc4j.s2pc.pcg.BatchPcgOutput;
 import edu.alibaba.mpc4j.s2pc.pcg.ot.cot.ssp.SspCotSenderOutput;
 
 /**
@@ -14,7 +14,7 @@ import edu.alibaba.mpc4j.s2pc.pcg.ot.cot.ssp.SspCotSenderOutput;
  * @author Weiran Liu
  * @date 2022/01/22
  */
-public class BspCotSenderOutput implements PcgPartyOutput {
+public class BspCotSenderOutput implements BatchPcgOutput {
     /**
      * SSP-COT sender outputs
      */
@@ -45,7 +45,6 @@ public class BspCotSenderOutput implements PcgPartyOutput {
             .peek(iOutput -> {
                 Preconditions.checkArgument(BytesUtils.equals(senderOutput.delta, iOutput.getDelta()));
                 MathPreconditions.checkEqual("each num", "i-th num", senderOutput.eachNum, iOutput.getNum());
-                assert iOutput.getNum() == senderOutput.eachNum;
             })
             .toArray(SspCotSenderOutput[]::new);
         return senderOutput;
@@ -87,7 +86,7 @@ public class BspCotSenderOutput implements PcgPartyOutput {
     }
 
     @Override
-    public int getNum() {
+    public int getBatchNum() {
         return senderOutputs.length;
     }
 }

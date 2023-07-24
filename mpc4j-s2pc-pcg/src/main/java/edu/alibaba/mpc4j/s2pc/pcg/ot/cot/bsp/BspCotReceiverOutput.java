@@ -1,7 +1,7 @@
 package edu.alibaba.mpc4j.s2pc.pcg.ot.cot.bsp;
 
 import edu.alibaba.mpc4j.common.tool.MathPreconditions;
-import edu.alibaba.mpc4j.s2pc.pcg.PcgPartyOutput;
+import edu.alibaba.mpc4j.s2pc.pcg.BatchPcgOutput;
 import edu.alibaba.mpc4j.s2pc.pcg.ot.cot.ssp.SspCotReceiverOutput;
 
 import java.util.Arrays;
@@ -12,7 +12,7 @@ import java.util.Arrays;
  * @author Weiran Liu
  * @date 2022/01/22
  */
-public class BspCotReceiverOutput implements PcgPartyOutput {
+public class BspCotReceiverOutput implements BatchPcgOutput {
     /**
      * SSP-COT receiver outputs
      */
@@ -32,7 +32,6 @@ public class BspCotReceiverOutput implements PcgPartyOutput {
             // 验证数量均为num
             .peek(iOutput ->
                 MathPreconditions.checkEqual("each num", "i-th num", receiverOutput.eachNum, iOutput.getNum())
-
             )
             .toArray(SspCotReceiverOutput[]::new);
         return receiverOutput;
@@ -56,16 +55,16 @@ public class BspCotReceiverOutput implements PcgPartyOutput {
     }
 
     /**
-     * Gets num for each SSP-COT output.
+     * Gets num for each SSP-COT receiver output.
      *
-     * @return num for each SSP-COT output.
+     * @return num for each SSP-COT receiver output.
      */
     public int getEachNum() {
         return eachNum;
     }
 
     @Override
-    public int getNum() {
+    public int getBatchNum() {
         return receiverOutputs.length;
     }
 }

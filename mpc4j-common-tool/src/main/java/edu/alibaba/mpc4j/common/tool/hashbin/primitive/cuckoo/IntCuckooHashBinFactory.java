@@ -1,71 +1,76 @@
 package edu.alibaba.mpc4j.common.tool.hashbin.primitive.cuckoo;
 
+import com.google.common.base.Preconditions;
 import edu.alibaba.mpc4j.common.tool.EnvType;
+import edu.alibaba.mpc4j.common.tool.MathPreconditions;
 import edu.alibaba.mpc4j.common.tool.hashbin.object.cuckoo.CuckooHashBinFactory;
 import edu.alibaba.mpc4j.common.tool.hashbin.object.cuckoo.CuckooHashBinFactory.CuckooHashBinType;
+import edu.alibaba.mpc4j.common.tool.utils.CommonUtils;
+
+import java.security.SecureRandom;
 
 /**
- * 整数布谷鸟哈希桶工厂。
+ * int cuckoo hash bin factory.
  *
  * @author Weiran Liu
  * @date 2022/02/23
  */
 public class IntCuckooHashBinFactory {
     /**
-     * 私有构造函数。
+     * private constructor.
      */
     private IntCuckooHashBinFactory() {
         // empty
     }
 
     /**
-     * 布谷鸟哈希类型
+     * int cuckoo hash bin type
      */
     public enum IntCuckooHashBinType {
         /**
-         * 无暂存区，朴素整数布谷鸟哈希
+         * no-stash, naive
          */
         NO_STASH_NAIVE,
         /**
-         * 无暂存区，DRRT布谷鸟哈希
+         * no-stash, DRRT18
          */
         NO_STASH_DRRT18,
         /**
-         * 无暂存区，包含3个哈希函数的PSZ18布谷鸟哈希
+         * no-stash, 3-hash PSZ18
          */
         NO_STASH_PSZ18_3_HASH,
         /**
-         * 无暂存区，包含4个哈希函数的PSZ18布谷鸟哈希
+         * no-stash, 4-hash PSZ18
          */
         NO_STASH_PSZ18_4_HASH,
         /**
-         * 无暂存区，包含5个哈希函数的PSZ18布谷鸟哈希
+         * no-stash, 5-hash PSZ18
          */
         NO_STASH_PSZ18_5_HASH,
     }
 
     /**
-     * 布谷鸟哈希支持插的最大元素数量
+     * max supported item size
      */
     static final int MAX_ITEM_SIZE_UPPER_BOUND = 1 << 24;
     /**
-     * 驱逐元素的最大尝试次数
+     * max total tries
      */
     static final int DEFAULT_MAX_TOTAL_TRIES = 1 << 10;
 
     /**
-     * 构建整数布谷鸟哈希。
+     * Creates an int cuckoo hash bin.
      *
-     * @param envType     环境类型。
-     * @param type        整数布谷鸟哈希类型。
-     * @param maxItemSize 插入的元素数量。
-     * @param keys        密钥。
-     * @return 整数布谷鸟哈希。
+     * @param envType     environment.
+     * @param type        type.
+     * @param maxItemSize max item size.
+     * @param keys        keys.
+     * @return an int cuckoo hash bin.
      */
     public static IntNoStashCuckooHashBin createInstance(EnvType envType, IntCuckooHashBinType type,
                                                          int maxItemSize, byte[][] keys) {
         checkInputs(type, maxItemSize, keys);
-        assert keys.length == getHashNum(type) : type.name() + " needs " + getHashNum(type) + " hash keys";
+        MathPreconditions.checkEqual("keys.length", "hashNum", keys.length, getHashNum(type));
         switch (type) {
             case NO_STASH_NAIVE:
                 return new NaiveIntNoStashCuckooHashBin(envType, maxItemSize, keys);
@@ -76,19 +81,54 @@ public class IntCuckooHashBinFactory {
             case NO_STASH_PSZ18_5_HASH:
                 return new Psz18IntNoStashCuckooHashBin(envType, type, maxItemSize, keys);
             default:
-                throw new IllegalArgumentException("Invalid IntCuckooHashBinType: " + type.name());
+                throw new IllegalArgumentException("Invalid " + IntCuckooHashBinType.class.getSimpleName() + ": " + type.name());
         }
     }
 
     /**
-     * 构建整数布谷鸟哈希。
+     * Creates an int cuckoo hash bin that enforce empty stash.
      *
-     * @param envType     环境类型。
-     * @param type        整数布谷鸟哈希类型。
-     * @param maxItemSize 插入的元素数量。
-     * @param binNum      指定哈希桶数量。
-     * @param keys        密钥。
-     * @return 整数布谷鸟哈希。
+     * @param envType      environment.
+     * @param type         type.
+     * @param maxItemSize  max item size.
+     * @param items        items.
+     * @param secureRandom the random state to generate keys.
+     * @return an int cuckoo hash bin.
+     */
+    public static IntNoStashCuckooHashBin createEnforceInstance(EnvType envType, IntCuckooHashBinType type,
+                                                                         int maxItemSize, int[] items,
+                                                                         SecureRandom secureRandom) {
+        int hashNum = getHashNum(type);
+        byte[][] keys;
+        IntNoStashCuckooHashBin intNoStashCuckooHashBin = null;
+        boolean success = false;
+        // 重复插入，直到成功
+        while (!success) {
+            try {
+                keys = CommonUtils.generateRandomKeys(hashNum, secureRandom);
+                intNoStashCuckooHashBin = IntCuckooHashBinFactory.createInstance(
+                    envType, type, maxItemSize, keys
+                );
+                // R inserts α_0,...,α_{t − 1} into a Cuckoo hash table T of size m
+                intNoStashCuckooHashBin.insertItems(items);
+                success = true;
+            } catch (ArithmeticException ignored) {
+
+            }
+        }
+        Preconditions.checkNotNull(intNoStashCuckooHashBin);
+        return intNoStashCuckooHashBin;
+    }
+
+    /**
+     * Creates an int cuckoo hash bin.
+     *
+     * @param envType     environment.
+     * @param type        type.
+     * @param maxItemSize max item size.
+     * @param binNum      number of bins.
+     * @param keys        keys.
+     * @return an int cuckoo hash bin.
      */
     public static IntNoStashCuckooHashBin createInstance(EnvType envType, IntCuckooHashBinType type,
                                                          int maxItemSize, int binNum, byte[][] keys) {

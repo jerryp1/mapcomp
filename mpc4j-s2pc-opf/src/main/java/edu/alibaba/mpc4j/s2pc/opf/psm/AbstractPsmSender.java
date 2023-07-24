@@ -12,7 +12,6 @@ import edu.alibaba.mpc4j.common.tool.utils.CommonUtils;
 
 import java.nio.ByteBuffer;
 import java.util.Arrays;
-import java.util.stream.IntStream;
 
 /**
  * abstract private set membership sender.
@@ -24,7 +23,7 @@ public abstract class AbstractPsmSender extends AbstractTwoPartyPto implements P
     /**
      * max num
      */
-    protected int maxNum;
+    private int maxNum;
     /**
      * point num
      */
@@ -32,7 +31,7 @@ public abstract class AbstractPsmSender extends AbstractTwoPartyPto implements P
     /**
      * max l
      */
-    protected int maxL;
+    private int maxL;
     /**
      * num
      */

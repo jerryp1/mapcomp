@@ -92,6 +92,18 @@ abstract class AbstractIntNoStashCuckooHashBin implements IntNoStashCuckooHashBi
     }
 
     @Override
+    public int getHashNum() {
+        return hashNum;
+    }
+
+    @Override
+    public byte[][] getHashKeys() {
+        return Arrays.stream(hashes)
+            .map(Prf::getKey)
+            .toArray(byte[][]::new);
+    }
+
+    @Override
     public void insertItems(int[] items) {
         assert !insertedItems;
         // 一次插入的元素数量小于等于预先设定好的数量

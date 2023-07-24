@@ -5,7 +5,7 @@ import edu.alibaba.mpc4j.common.rpc.pto.TwoPartyPto;
 import edu.alibaba.mpc4j.s2pc.pcg.vole.gf2k.Gf2kVoleReceiverOutput;
 
 /**
- * Single single-point GF2K VOLE receiver.
+ * Single single-point GF2K-VOLE receiver.
  *
  * @author Weiran Liu
  * @date 2023/3/16
@@ -24,7 +24,7 @@ public interface Gf2kSspVoleReceiver extends TwoPartyPto {
      * Executes the protocol
      *
      * @param num num.
-     * @return the receiver output.
+     * @return receiver output.
      * @throws MpcAbortException the protocol failure aborts.
      */
     Gf2kSspVoleReceiverOutput receive(int num) throws MpcAbortException;
@@ -34,7 +34,7 @@ public interface Gf2kSspVoleReceiver extends TwoPartyPto {
      *
      * @param num               num.
      * @param preReceiverOutput pre-computed GF2K-VOLE receiver output.
-     * @return the receiver output.
+     * @return receiver output.
      * @throws MpcAbortException the protocol failure aborts.
      */
     Gf2kSspVoleReceiverOutput receive(int num, Gf2kVoleReceiverOutput preReceiverOutput) throws MpcAbortException;

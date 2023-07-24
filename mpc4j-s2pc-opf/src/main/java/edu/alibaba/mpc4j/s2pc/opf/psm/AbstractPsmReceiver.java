@@ -22,7 +22,7 @@ public abstract class AbstractPsmReceiver extends AbstractTwoPartyPto implements
     /**
      * max num
      */
-    protected int maxNum;
+    private int maxNum;
     /**
      * point num
      */
@@ -30,7 +30,7 @@ public abstract class AbstractPsmReceiver extends AbstractTwoPartyPto implements
     /**
      * max l
      */
-    protected int maxL;
+    private int maxL;
     /**
      * num
      */
