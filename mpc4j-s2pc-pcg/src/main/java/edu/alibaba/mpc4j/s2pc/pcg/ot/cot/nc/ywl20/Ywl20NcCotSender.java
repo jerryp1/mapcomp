@@ -110,7 +110,7 @@ public class Ywl20NcCotSender extends AbstractNcCotSender {
         );
         List<byte[]> matrixInitKeyPayload = rpc.receive(matrixInitKeyHeader).getPayload();
         MpcAbortPreconditions.checkArgument(matrixInitKeyPayload.size() == 1);
-        byte[] initKey = matrixInitKeyPayload.remove(0);
+        byte[] initKey = matrixInitKeyPayload.get(0);
         LocalLinearCoder matrixInitA = new LocalLinearCoder(envType, initK, initN, initKey, parallel);
         stopWatch.stop();
         long keyInitTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
@@ -156,7 +156,7 @@ public class Ywl20NcCotSender extends AbstractNcCotSender {
         );
         List<byte[]> matrixKeyPayload = rpc.receive(matrixKeyHeader).getPayload();
         MpcAbortPreconditions.checkArgument(matrixKeyPayload.size() == 1);
-        byte[] matrixKey = matrixKeyPayload.remove(0);
+        byte[] matrixKey = matrixKeyPayload.get(0);
         LocalLinearCoder matrixA = new LocalLinearCoder(envType, iterationK, iterationN, matrixKey, parallel);
         stopWatch.stop();
         long keyTime = stopWatch.getTime(TimeUnit.MILLISECONDS);

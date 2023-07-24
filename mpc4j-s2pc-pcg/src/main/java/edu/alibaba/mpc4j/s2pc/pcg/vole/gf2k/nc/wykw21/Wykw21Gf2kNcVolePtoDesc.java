@@ -179,7 +179,7 @@ class Wykw21Gf2kNcVolePtoDesc implements PtoDesc {
      */
     static LpnParams getSetupLpnParams(Gf2kMspVoleConfig config, int num) {
         int ceilLogN = LongUtils.ceilLog2(num);
-        MathPreconditions.checkPositiveInRangeClosed("ceil(log(num))", ceilLogN, MAX_LOG_N);
+        MathPreconditions.checkNonNegativeInRangeClosed("ceil(log(num))", ceilLogN, MAX_LOG_N);
         if (ceilLogN < MIN_LOG_N) {
             ceilLogN = MIN_LOG_N;
         }
@@ -216,7 +216,7 @@ class Wykw21Gf2kNcVolePtoDesc implements PtoDesc {
      */
     static LpnParams getIterationLpnParams(Gf2kMspVoleConfig config, int num) {
         int ceilLogN = LongUtils.ceilLog2(num);
-        MathPreconditions.checkPositiveInRangeClosed("ceil(log(num))", ceilLogN, MAX_LOG_N);
+        MathPreconditions.checkNonNegativeInRangeClosed("ceil(log(num))", ceilLogN, MAX_LOG_N);
         if (ceilLogN < MIN_LOG_N) {
             ceilLogN = MIN_LOG_N;
         }

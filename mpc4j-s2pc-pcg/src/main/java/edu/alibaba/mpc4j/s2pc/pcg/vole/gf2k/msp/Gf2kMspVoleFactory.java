@@ -105,9 +105,9 @@ public class Gf2kMspVoleFactory implements PtoFactory {
         switch (securityModel) {
             case IDEAL:
             case SEMI_HONEST:
-                return new Bcg19RegGf2kMspVoleConfig.Builder(securityModel).build();
             case COVERT:
             case MALICIOUS:
+                return new Bcg19RegGf2kMspVoleConfig.Builder(securityModel).build();
             default:
                 throw new IllegalArgumentException("Invalid " + SecurityModel.class.getSimpleName() + ": " + securityModel.name());
         }

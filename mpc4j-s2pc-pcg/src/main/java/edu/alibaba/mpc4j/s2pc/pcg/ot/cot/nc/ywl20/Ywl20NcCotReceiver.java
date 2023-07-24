@@ -1,6 +1,6 @@
 package edu.alibaba.mpc4j.s2pc.pcg.ot.cot.nc.ywl20;
 
-import java.util.LinkedList;
+import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.IntStream;
@@ -63,7 +63,7 @@ public class Ywl20NcCotReceiver extends AbstractNcCotReceiver {
     /**
      * COT num used in MSP-COT
      */
-    private int preCotNum;
+    private int rCotPreNum;
     /**
      * COT receiver output used in MSP-COT
      */
@@ -114,8 +114,7 @@ public class Ywl20NcCotReceiver extends AbstractNcCotReceiver {
         // get seed for matrix A used in setup
         byte[] matrixInitKey = new byte[CommonConstants.BLOCK_BYTE_LENGTH];
         secureRandom.nextBytes(matrixInitKey);
-        List<byte[]> matrixInitKeyPayload = new LinkedList<>();
-        matrixInitKeyPayload.add(matrixInitKey);
+        List<byte[]> matrixInitKeyPayload = Collections.singletonList(matrixInitKey);
         DataPacketHeader matrixInitKeyHeader = new DataPacketHeader(
             encodeTaskId, getPtoDesc().getPtoId(), PtoStep.RECEIVER_SEND_SETUP_KEY.ordinal(),
             ownParty().getPartyId(), otherParty().getPartyId()
@@ -148,8 +147,8 @@ public class Ywl20NcCotReceiver extends AbstractNcCotReceiver {
         );
         rCotReceiverOutput = CotReceiverOutput.create(initX, initZ);
         wCotReceiverOutput = rCotReceiverOutput.split(iterationK);
-        preCotNum = MspCotFactory.getPrecomputeNum(mspCotConfig, iterationT, iterationN);
-        rCotReceiverOutput.reduce(preCotNum);
+        rCotPreNum = MspCotFactory.getPrecomputeNum(mspCotConfig, iterationT, iterationN);
+        rCotReceiverOutput.reduce(rCotPreNum);
         stopWatch.stop();
         long extendInitTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
         stopWatch.reset();
@@ -167,8 +166,7 @@ public class Ywl20NcCotReceiver extends AbstractNcCotReceiver {
         // get seed for matrix A used in iteration
         byte[] matrixKey = new byte[CommonConstants.BLOCK_BYTE_LENGTH];
         secureRandom.nextBytes(matrixKey);
-        List<byte[]> matrixKeyPayload = new LinkedList<>();
-        matrixKeyPayload.add(matrixKey);
+        List<byte[]> matrixKeyPayload = Collections.singletonList(matrixKey);
         DataPacketHeader matrixKeyHeader = new DataPacketHeader(
             encodeTaskId, getPtoDesc().getPtoId(), PtoStep.RECEIVER_SEND_ITERATION_LEY.ordinal(), extraInfo,
             ownParty().getPartyId(), otherParty().getPartyId()
@@ -202,7 +200,7 @@ public class Ywl20NcCotReceiver extends AbstractNcCotReceiver {
         // split COT output into k0 + MSP-COT + output
         CotReceiverOutput receiverOutput = CotReceiverOutput.create(x, z);
         wCotReceiverOutput = receiverOutput.split(iterationK);
-        rCotReceiverOutput = receiverOutput.split(preCotNum);
+        rCotReceiverOutput = receiverOutput.split(rCotPreNum);
         receiverOutput.reduce(num);
         stopWatch.stop();
         long extendTime = stopWatch.getTime(TimeUnit.MILLISECONDS);

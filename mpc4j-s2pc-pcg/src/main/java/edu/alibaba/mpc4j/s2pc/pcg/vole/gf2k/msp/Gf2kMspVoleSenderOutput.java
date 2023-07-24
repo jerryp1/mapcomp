@@ -90,15 +90,6 @@ public class Gf2kMspVoleSenderOutput implements PcgPartyOutput {
     }
 
     /**
-     * Gets x[α]s.
-     *
-     * @return x[α]s.
-     */
-    public byte[][] getAlphaXs() {
-        return alphaXs;
-    }
-
-    /**
      * Gets the assigned x.
      *
      * @return x.

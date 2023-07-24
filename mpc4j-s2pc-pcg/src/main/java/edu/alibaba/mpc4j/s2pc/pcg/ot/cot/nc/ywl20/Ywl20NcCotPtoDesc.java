@@ -264,7 +264,7 @@ class Ywl20NcCotPtoDesc implements PtoDesc {
      */
     static LpnParams getSetupLpnParams(MspCotConfig config, int num) {
         int ceilLogN = LongUtils.ceilLog2(num);
-        MathPreconditions.checkPositiveInRangeClosed("ceil(log(num))", ceilLogN, MAX_LOG_N);
+        MathPreconditions.checkNonNegativeInRangeClosed("ceil(log(num))", ceilLogN, MAX_LOG_N);
         if (ceilLogN < MIN_LOG_N) {
             ceilLogN = MIN_LOG_N;
         }
@@ -314,7 +314,7 @@ class Ywl20NcCotPtoDesc implements PtoDesc {
      */
     static LpnParams getIterationLpnParams(MspCotConfig config, int num) {
         int ceilLogN = LongUtils.ceilLog2(num);
-        MathPreconditions.checkPositiveInRangeClosed("ceil(log(num))", ceilLogN, MAX_LOG_N);
+        MathPreconditions.checkNonNegativeInRangeClosed("ceil(log(num))", ceilLogN, MAX_LOG_N);
         if (ceilLogN < MIN_LOG_N) {
             ceilLogN = MIN_LOG_N;
         }

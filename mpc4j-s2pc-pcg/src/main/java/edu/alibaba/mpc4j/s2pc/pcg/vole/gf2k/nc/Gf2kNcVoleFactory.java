@@ -7,6 +7,9 @@ import edu.alibaba.mpc4j.common.rpc.pto.PtoFactory;
 import edu.alibaba.mpc4j.s2pc.pcg.vole.gf2k.nc.direct.DirectGf2kNcVoleConfig;
 import edu.alibaba.mpc4j.s2pc.pcg.vole.gf2k.nc.direct.DirectGf2kNcVoleReceiver;
 import edu.alibaba.mpc4j.s2pc.pcg.vole.gf2k.nc.direct.DirectGf2kNcVoleSender;
+import edu.alibaba.mpc4j.s2pc.pcg.vole.gf2k.nc.wykw21.Wykw21Gf2kNcVoleConfig;
+import edu.alibaba.mpc4j.s2pc.pcg.vole.gf2k.nc.wykw21.Wykw21Gf2kNcVoleReceiver;
+import edu.alibaba.mpc4j.s2pc.pcg.vole.gf2k.nc.wykw21.Wykw21Gf2kNcVoleSender;
 
 /**
  * no-choice GF2K-VOLE factory.
@@ -50,6 +53,7 @@ public class Gf2kNcVoleFactory implements PtoFactory {
             case DIRECT:
                 return new DirectGf2kNcVoleSender(senderRpc, receiverParty, (DirectGf2kNcVoleConfig) config);
             case WYKW21:
+                return new Wykw21Gf2kNcVoleSender(senderRpc, receiverParty, (Wykw21Gf2kNcVoleConfig) config);
             default:
                 throw new IllegalArgumentException("Invalid " + Gf2kNcVoleType.class.getSimpleName() + ": " + type.name());
         }
@@ -69,6 +73,7 @@ public class Gf2kNcVoleFactory implements PtoFactory {
             case DIRECT:
                 return new DirectGf2kNcVoleReceiver(receiverRpc, senderParty, (DirectGf2kNcVoleConfig) config);
             case WYKW21:
+                return new Wykw21Gf2kNcVoleReceiver(receiverRpc, senderParty, (Wykw21Gf2kNcVoleConfig) config);
             default:
                 throw new IllegalArgumentException("Invalid " + Gf2kNcVoleType.class.getSimpleName() + ": " + type.name());
         }
@@ -83,7 +88,7 @@ public class Gf2kNcVoleFactory implements PtoFactory {
      */
     public static Gf2kNcVoleConfig createDefaultConfig(SecurityModel securityModel, boolean silent) {
         if (silent) {
-            return null;
+            return new Wykw21Gf2kNcVoleConfig.Builder(securityModel).build();
         } else {
             return new DirectGf2kNcVoleConfig.Builder(securityModel).build();
         }

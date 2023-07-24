@@ -24,7 +24,7 @@ public class DirectGf2kNcVoleConfig extends AbstractMultiPartyPtoConfig implemen
         coreVoleConfig = builder.coreVoleConfig;
     }
 
-    public Gf2kCoreVoleConfig getGf2kCoreVoleConfig() {
+    public Gf2kCoreVoleConfig getCoreVoleConfig() {
         return coreVoleConfig;
     }
 
@@ -49,7 +49,7 @@ public class DirectGf2kNcVoleConfig extends AbstractMultiPartyPtoConfig implemen
             coreVoleConfig = Gf2kCoreVoleFactory.createDefaultConfig(securityModel);
         }
 
-        public Builder setGf2kCoreVoleConfig(Gf2kCoreVoleConfig coreVoleConfig) {
+        public Builder setCoreVoleConfig(Gf2kCoreVoleConfig coreVoleConfig) {
             this.coreVoleConfig = coreVoleConfig;
             return this;
         }
