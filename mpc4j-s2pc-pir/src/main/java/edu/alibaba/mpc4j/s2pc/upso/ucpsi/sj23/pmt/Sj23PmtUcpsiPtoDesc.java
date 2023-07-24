@@ -13,7 +13,7 @@ import edu.alibaba.mpc4j.common.rpc.desc.PtoDescManager;
  * @author Liqiang Peng
  * @date 2023/7/17
  */
-class Sj23PeqtUcpsiPtoDesc implements PtoDesc {
+class Sj23PmtUcpsiPtoDesc implements PtoDesc {
     /**
      * the protocol ID
      */
@@ -31,17 +31,41 @@ class Sj23PeqtUcpsiPtoDesc implements PtoDesc {
          * the sender sends cuckoo hash keys
          */
         SERVER_SEND_HASH_KEYS,
+        /**
+         * client sends public keys
+         */
+        CLIENT_SEND_PUBLIC_KEYS,
+        /**
+         * server sends public keys
+         */
+        SERVER_SEND_PUBLIC_KEYS,
+        /**
+         * client sends query
+         */
+        CLIENT_SEND_QUERY,
+        /**
+         * server sends response
+         */
+        SERVER_SEND_RESPONSE,
+        /**
+         * server sends query
+         */
+        SERVER_SEND_QUERY,
+        /**
+         * client sends response
+         */
+        CLIENT_SEND_RESPONSE,
     }
 
     /**
      * the singleton mode
      */
-    private static final Sj23PeqtUcpsiPtoDesc INSTANCE = new Sj23PeqtUcpsiPtoDesc();
+    private static final Sj23PmtUcpsiPtoDesc INSTANCE = new Sj23PmtUcpsiPtoDesc();
 
     /**
      * private constructor.
      */
-    private Sj23PeqtUcpsiPtoDesc() {
+    private Sj23PmtUcpsiPtoDesc() {
         // empty
     }
 

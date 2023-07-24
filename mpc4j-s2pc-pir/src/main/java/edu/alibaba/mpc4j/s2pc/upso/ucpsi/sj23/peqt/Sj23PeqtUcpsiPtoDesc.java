@@ -21,7 +21,7 @@ class Sj23PeqtUcpsiPtoDesc implements PtoDesc {
     /**
      * the protocol name
      */
-    private static final String PTO_NAME = "SJ23-UCPSI";
+    private static final String PTO_NAME = "SJ23_PEQT_UCPSI";
 
     /**
      * the protocol step
@@ -35,6 +35,14 @@ class Sj23PeqtUcpsiPtoDesc implements PtoDesc {
          * client sends public keys
          */
         CLIENT_SEND_PUBLIC_KEYS,
+        /**
+         * client sends query
+         */
+        CLIENT_SEND_QUERY,
+        /**
+         * server sends response
+         */
+        SERVER_SEND_RESPONSE,
     }
 
     /**

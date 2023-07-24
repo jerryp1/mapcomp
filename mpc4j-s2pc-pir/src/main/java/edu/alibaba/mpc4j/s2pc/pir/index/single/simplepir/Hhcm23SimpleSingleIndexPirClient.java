@@ -9,7 +9,7 @@ import edu.alibaba.mpc4j.common.tool.utils.CommonUtils;
 import edu.alibaba.mpc4j.common.tool.utils.LongUtils;
 import edu.alibaba.mpc4j.crypto.matrix.database.NaiveDatabase;
 import edu.alibaba.mpc4j.crypto.matrix.database.ZlDatabase;
-import edu.alibaba.mpc4j.crypto.matrix.zp64.Zl64Matrix;
+import edu.alibaba.mpc4j.crypto.matrix.zl64.Zl64Matrix;
 import edu.alibaba.mpc4j.crypto.matrix.vector.Zl64Vector;
 import edu.alibaba.mpc4j.s2pc.pir.PirUtils;
 import edu.alibaba.mpc4j.s2pc.pir.index.single.AbstractSingleIndexPirClient;
@@ -188,8 +188,15 @@ public class Hhcm23SimpleSingleIndexPirClient extends AbstractSingleIndexPirClie
         return null;
     }
 
-    public void clientBatchSetup(int serverElementSize, int binSize, int binNum, int elementBitLength,
-                                 boolean isCommunicationOptimal) {
+    /**
+     * client setup.
+     *
+     * @param binSize                bin size.
+     * @param binNum                 bin num.
+     * @param elementBitLength       element bit length.
+     * @param isCommunicationOptimal is communication optimal.
+     */
+    public void clientBatchSetup(int binSize, int binNum, int elementBitLength, boolean isCommunicationOptimal) {
         int maxPartitionBitLength = 0;
         int upperBound = CommonUtils.getUnitNum(elementBitLength, params.logP - 1);
         for (int count = 1; count < upperBound + 1; count++) {
@@ -199,7 +206,7 @@ public class Hhcm23SimpleSingleIndexPirClient extends AbstractSingleIndexPirClie
             if ((BigInteger.valueOf(d).multiply(BigInteger.valueOf(binSize)))
                 .compareTo(INT_MAX_VALUE.shiftRight(1)) < 0) {
                 if (isCommunicationOptimal) {
-                    rows = (int) Math.max(2, Math.ceil(Math.sqrt(d * serverElementSize)));
+                    rows = (int) Math.max(2, Math.ceil(Math.sqrt(d * binSize * binNum)));
                     rows = CommonUtils.getUnitNum(rows, binNum);
                     long rem = rows % d;
                     if (rem != 0) {
@@ -233,7 +240,6 @@ public class Hhcm23SimpleSingleIndexPirClient extends AbstractSingleIndexPirClie
         Zl64Vector error = Zl64Vector.createGaussianSample(params.zl64, cols, 0, params.stdDev);
         // query = A * s + e + q/p * u_i_col
         Zl64Vector query = a.matrixMulVector(secretKey);
-        query.setParallel(parallel);
         query.addi(error);
         // Add q/p * 1 only to the index corresponding to the desired column
         long[] elements = query.getElements();

@@ -13,7 +13,7 @@ import edu.alibaba.mpc4j.common.tool.utils.LongUtils;
 import edu.alibaba.mpc4j.crypto.matrix.database.NaiveDatabase;
 import edu.alibaba.mpc4j.crypto.matrix.database.ZlDatabase;
 import edu.alibaba.mpc4j.crypto.matrix.vector.Zl64Vector;
-import edu.alibaba.mpc4j.crypto.matrix.zp64.Zl64Matrix;
+import edu.alibaba.mpc4j.crypto.matrix.zl64.Zl64Matrix;
 import edu.alibaba.mpc4j.s2pc.pir.PirUtils;
 import edu.alibaba.mpc4j.s2pc.pir.index.batch.AbstractBatchIndexPirServer;
 import edu.alibaba.mpc4j.s2pc.pir.index.single.simplepir.Hhcm23SimpleSingleIndexPirServer;
@@ -67,12 +67,17 @@ public class CuckooHashBatchSimplePirServer extends AbstractBatchIndexPirServer 
      * communication optimal
      */
     private final boolean isCommunicationOptimal;
+    /**
+     * hash num
+     */
+    private final int hashNum;
 
     public CuckooHashBatchSimplePirServer(Rpc serverRpc, Party clientParty, CuckooHashBatchSimplePirConfig config) {
         super(CuckooHashBatchSimplePirPtoDesc.getInstance(), serverRpc, clientParty, config);
         simplePirServer = new Hhcm23SimpleSingleIndexPirServer(serverRpc, clientParty, config.getSimplePirConfig());
         cuckooHashBinType = config.getCuckooHashBinType();
         isCommunicationOptimal = config.isCommunicationOptimal();
+        hashNum = IntCuckooHashBinFactory.getHashNum(cuckooHashBinType);
     }
 
     @Override
@@ -82,7 +87,6 @@ public class CuckooHashBatchSimplePirServer extends AbstractBatchIndexPirServer 
 
         stopWatch.start();
         // generate simple hash bin
-        int hashNum = IntCuckooHashBinFactory.getHashNum(cuckooHashBinType);
         binNum = IntCuckooHashBinFactory.getBinNum(cuckooHashBinType, maxRetrievalSize);
         byte[][] hashKeys = CommonUtils.generateRandomKeys(hashNum, secureRandom);
         NaiveDatabase[] binDatabase = generateSimpleHashBin(database, hashKeys);
@@ -241,6 +245,8 @@ public class CuckooHashBatchSimplePirServer extends AbstractBatchIndexPirServer 
     /**
      * server setup.
      *
+     * @param binDatabase bin database.
+     * @param binSize     bin size.
      * @return hint.
      */
     Zl64Matrix[][] setup(NaiveDatabase[] binDatabase, int binSize) {
@@ -253,7 +259,7 @@ public class CuckooHashBatchSimplePirServer extends AbstractBatchIndexPirServer 
             if ((BigInteger.valueOf(d).multiply(BigInteger.valueOf(binSize)))
                 .compareTo(INT_MAX_VALUE.shiftRight(1)) < 0) {
                 if (isCommunicationOptimal) {
-                    rows = (int) Math.max(2, Math.ceil(Math.sqrt(d * num)));
+                    rows = (int) Math.max(2, Math.ceil(Math.sqrt(d * binSize * binNum)));
                     rows = CommonUtils.getUnitNum(rows, binNum);
                     long rem = rows % d;
                     if (rem != 0) {

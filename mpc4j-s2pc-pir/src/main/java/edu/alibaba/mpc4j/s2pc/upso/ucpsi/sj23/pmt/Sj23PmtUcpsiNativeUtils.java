@@ -1,4 +1,4 @@
-package edu.alibaba.mpc4j.s2pc.upso.ucpsi.sj23.peqt;
+package edu.alibaba.mpc4j.s2pc.upso.ucpsi.sj23.pmt;
 
 import edu.alibaba.mpc4j.common.tool.CommonConstants;
 
@@ -8,13 +8,13 @@ import java.util.List;
  * @author Liqiang Peng
  * @date 2023/7/17
  */
-public class Sj23PeqtUcpsiNativeUtils {
+public class Sj23PmtUcpsiNativeUtils {
 
     static {
         System.loadLibrary(CommonConstants.MPC4J_NATIVE_FHE_NAME);
     }
 
-    private Sj23PeqtUcpsiNativeUtils() {
+    private Sj23PmtUcpsiNativeUtils() {
         // empty
     }
 
@@ -49,19 +49,6 @@ public class Sj23PeqtUcpsiNativeUtils {
     static native List<byte[]> computeEncryptedPowers(byte[] encryptionParams, byte[] relinKeys,
                                                       List<byte[]> encryptedQuery, int[][] parentPowers,
                                                       int[] sourcePowers, int psLowDegree);
-
-    /**
-     * Paterson-Stockmeyer compute matches.
-     *
-     * @param encryptionParams encryption params.
-     * @param relinKeys        relinearization keys.
-     * @param plaintextPolys   plaintexts.
-     * @param ciphertextPolys  ciphertexts.
-     * @param psLowDegree      Paterson-Stockmeyer low degree.
-     * @return encrypted matches.
-     */
-    static native byte[] optComputeMatches(byte[] encryptionParams, byte[] publicKey, byte[] relinKeys, long[][] plaintextPolys,
-                                           List<byte[]> ciphertextPolys, int psLowDegree, long[] mask);
 
     /**
      * naive method compute matches.

@@ -1,63 +1,63 @@
-package edu.alibaba.mpc4j.s2pc.upso.ucpsi.sj23.pmt;
+package edu.alibaba.mpc4j.s2pc.upso.ucpsi.sj23.peqt;
 
 import edu.alibaba.mpc4j.common.rpc.desc.SecurityModel;
 import edu.alibaba.mpc4j.common.rpc.pto.AbstractMultiPartyPtoConfig;
+import edu.alibaba.mpc4j.s2pc.aby.basics.z2.Z2cConfig;
+import edu.alibaba.mpc4j.s2pc.aby.basics.z2.Z2cFactory;
 import edu.alibaba.mpc4j.s2pc.aby.operator.row.peqt.PeqtConfig;
 import edu.alibaba.mpc4j.s2pc.aby.operator.row.peqt.PeqtFactory;
-import edu.alibaba.mpc4j.s2pc.opf.psm.PsmConfig;
-import edu.alibaba.mpc4j.s2pc.opf.psm.PsmFactory;
 import edu.alibaba.mpc4j.s2pc.upso.ucpsi.UcpsiConfig;
 
 import static edu.alibaba.mpc4j.s2pc.upso.ucpsi.UcpsiFactory.UcpsiType;
 
 /**
- * SJ23 unbalanced circuit PSI config.
+ * SJ23 peqt unbalanced circuit PSI config.
  *
  * @author Liqiang Peng
  * @date 2023/7/17
  */
-public class Sj23UcpsiConfig extends AbstractMultiPartyPtoConfig implements UcpsiConfig {
+public class Sj23PeqtUcpsiConfig extends AbstractMultiPartyPtoConfig implements UcpsiConfig {
     /**
      * peqt config
      */
     private final PeqtConfig peqtConfig;
     /**
-     * private set membership config
+     * Z2C config
      */
-    private final PsmConfig psmConfig;
+    private final Z2cConfig z2cConfig;
 
-    private Sj23UcpsiConfig(Builder builder) {
-        super(SecurityModel.SEMI_HONEST, builder.peqtConfig, builder.psmConfig);
+    private Sj23PeqtUcpsiConfig(Builder builder) {
+        super(SecurityModel.SEMI_HONEST, builder.peqtConfig);
         peqtConfig = builder.peqtConfig;
-        psmConfig = builder.psmConfig;
+        z2cConfig = builder.z2cConfig;
     }
 
     @Override
     public UcpsiType getPtoType() {
-        return UcpsiType.CGS22;
+        return UcpsiType.SJ23_PEQT;
     }
 
     public PeqtConfig getPeqtConfig() {
         return peqtConfig;
     }
 
-    public PsmConfig getPsmConfig() {
-        return psmConfig;
+    public Z2cConfig getZ2cConfig() {
+        return z2cConfig;
     }
 
-    public static class Builder implements org.apache.commons.lang3.builder.Builder<Sj23UcpsiConfig> {
+    public static class Builder implements org.apache.commons.lang3.builder.Builder<Sj23PeqtUcpsiConfig> {
         /**
          * peqt config
          */
         private PeqtConfig peqtConfig;
         /**
-         * private set membership config
+         * Z2C config
          */
-        private PsmConfig psmConfig;
+        private Z2cConfig z2cConfig;
 
         public Builder(SecurityModel securityModel, boolean silent) {
             peqtConfig = PeqtFactory.createDefaultConfig(securityModel, silent);
-            psmConfig = PsmFactory.createDefaultConfig(securityModel, silent);
+            z2cConfig = Z2cFactory.createDefaultConfig(securityModel, silent);
         }
 
         public Builder setPeqtConfig(PeqtConfig peqtConfig) {
@@ -65,14 +65,14 @@ public class Sj23UcpsiConfig extends AbstractMultiPartyPtoConfig implements Ucps
             return this;
         }
 
-        public Builder setPsmConfig(PsmConfig psmConfig) {
-            this.psmConfig = psmConfig;
+        public Builder setZ2cConfig(Z2cConfig z2cConfig) {
+            this.z2cConfig = z2cConfig;
             return this;
         }
 
         @Override
-        public Sj23UcpsiConfig build() {
-            return new Sj23UcpsiConfig(this);
+        public Sj23PeqtUcpsiConfig build() {
+            return new Sj23PeqtUcpsiConfig(this);
         }
     }
 }

@@ -38,7 +38,7 @@ public class Sj23PeqtUcpsiParams {
     /**
      * plain modulus
      */
-    public final int plainModulus;
+    public final long plainModulus;
     /**
      * poly modulus degree
      */
@@ -55,9 +55,13 @@ public class Sj23PeqtUcpsiParams {
      * l bit length
      */
     public final int l;
+    /**
+     * encryption params
+     */
+    public final byte[] encryptionParams;
 
     private Sj23PeqtUcpsiParams(int binNum, int maxPartitionSizePerBin, int itemEncodedSlotSize, int psLowDegree,
-                                int[] queryPowers, int plainModulusSize, int plainModulus, int polyModulusDegree) {
+                                int[] queryPowers, int plainModulusSize, long plainModulus, int polyModulusDegree) {
         this.binNum = binNum;
         this.maxPartitionSizePerBin = maxPartitionSizePerBin;
         this.itemEncodedSlotSize = itemEncodedSlotSize;
@@ -69,31 +73,123 @@ public class Sj23PeqtUcpsiParams {
         this.itemPerCiphertext = polyModulusDegree / itemEncodedSlotSize;
         this.ciphertextNum = binNum / itemPerCiphertext;
         this.l = itemEncodedSlotSize * plainModulusSize;
+        this.encryptionParams = Sj23PeqtUcpsiNativeUtils.genEncryptionParameters(polyModulusDegree, plainModulus);
     }
 
     /**
      * serve log size 20, client log size 8.
      */
     public static final Sj23PeqtUcpsiParams SERVER_LOG_SIZE_20_CLIENT_LOG_SIZE_8 = new Sj23PeqtUcpsiParams(
-        4096, 228, 2,
+        1 << 12, 228, 2,
         4, new int[]{1, 2, 3, 4, 5, 10, 15, 35, 55, 75, 95, 115, 125, 130, 140},
-        33, 123, 8192
+        32, 8589852673L, 1 << 13
     );
 
     /**
-     * return encoded array.
-     *
-     * @param hashBinEntry hash bin entry.
-     * @param shiftMask    shift mask.
-     * @return encoded array.
+     * serve log size 20, client log size 12.
      */
-    public long[] getHashBinEntryEncodedArray(byte[] hashBinEntry, BigInteger shiftMask) {
-        long[] encodedArray = new long[itemEncodedSlotSize];
-        BigInteger input = BigIntegerUtils.byteArrayToNonNegBigInteger(hashBinEntry);
-        for (int i = 0; i < itemEncodedSlotSize; i++) {
-            encodedArray[i] = input.and(shiftMask).longValueExact();
-            input = input.shiftRight(l);
+    public static final Sj23PeqtUcpsiParams SERVER_LOG_SIZE_20_CLIENT_LOG_SIZE_12 = new Sj23PeqtUcpsiParams(
+        1 << 13, 98, 2,
+        8, new int[]{1, 3, 4, 9, 27},
+        33, 17179672577L, 1 << 14
+    );
+
+    /**
+     * serve log size 20, client log size 13.
+     */
+    public static final Sj23PeqtUcpsiParams SERVER_LOG_SIZE_20_CLIENT_LOG_SIZE_13 = new Sj23PeqtUcpsiParams(
+        1 << 14, 98, 1,
+        8, new int[]{1, 3, 4, 9, 27},
+        59, 1152921504606748673L, 1 << 14
+    );
+
+    /**
+     * serve log size 20, client log size 16.
+     */
+    public static final Sj23PeqtUcpsiParams SERVER_LOG_SIZE_20_CLIENT_LOG_SIZE_16 = new Sj23PeqtUcpsiParams(
+        3 * (1 << 15), 40, 2,
+        0, new int[]{1, 3, 4, 9, 11, 16, 17, 19, 20},
+        34, 34359410689L, 1 << 13
+    );
+
+    /**
+     * serve log size 24, client log size 12.
+     */
+    public static final Sj23PeqtUcpsiParams SERVER_LOG_SIZE_24_CLIENT_LOG_SIZE_12 = new Sj23PeqtUcpsiParams(
+        1 << 13, 1304, 2,
+        44, new int[]{1, 3, 11, 18, 45, 225},
+        37, 274877153281L, 1 << 14
+    );
+
+    /**
+     * serve log size 24, client log size 13.
+     */
+    public static final Sj23PeqtUcpsiParams SERVER_LOG_SIZE_24_CLIENT_LOG_SIZE_13 = new Sj23PeqtUcpsiParams(
+        1 << 14, 1304, 2,
+        44, new int[]{1, 3, 11, 18, 45, 225},
+        38, 549755486209L, 1 << 14
+    );
+
+    /**
+     * serve log size 24, client log size 16.
+     */
+    public static final Sj23PeqtUcpsiParams SERVER_LOG_SIZE_24_CLIENT_LOG_SIZE_16 = new Sj23PeqtUcpsiParams(
+        3 * (1 << 15), 98, 2,
+        8, new int[]{1, 3, 4, 9, 27},
+        35, 68718428161L, 1 << 14
+    );
+
+    /**
+     * serve log size 26, client log size 12.
+     */
+    public static final Sj23PeqtUcpsiParams SERVER_LOG_SIZE_26_CLIENT_LOG_SIZE_12 = new Sj23PeqtUcpsiParams(
+        1 << 13, 1304, 2,
+        44, new int[]{1, 3, 11, 18, 45, 225},
+        37, 274877153281L, 1 << 14
+    );
+
+    /**
+     * serve log size 26, client log size 16.
+     */
+    public static final Sj23PeqtUcpsiParams SERVER_LOG_SIZE_26_CLIENT_LOG_SIZE_16 = new Sj23PeqtUcpsiParams(
+        3 * (1 << 15), 98, 2,
+        8, new int[]{1, 3, 4, 9, 27},
+        35, 68718428161L, 1 << 14
+    );
+
+    /**
+     * get SJ23 UCPSI params.
+     *
+     * @param serverElementSize server element size.
+     * @param clientElementSize client element size.
+     * @return SJ23 UCPSI params.
+     */
+    static public Sj23PeqtUcpsiParams getParams(int serverElementSize, int clientElementSize) {
+        if (serverElementSize <= 1 << 20) {
+            if (clientElementSize <= 1 << 8) {
+                return SERVER_LOG_SIZE_20_CLIENT_LOG_SIZE_8;
+            } else if (clientElementSize <= 1 << 12) {
+                return SERVER_LOG_SIZE_20_CLIENT_LOG_SIZE_12;
+            } else if (clientElementSize <= 1 << 13) {
+                return SERVER_LOG_SIZE_20_CLIENT_LOG_SIZE_13;
+            } else if (clientElementSize <= 1 << 16) {
+                return SERVER_LOG_SIZE_20_CLIENT_LOG_SIZE_16;
+            }
+        } else if (serverElementSize <= 1 << 24) {
+            if (clientElementSize <= 1 << 12) {
+                return SERVER_LOG_SIZE_24_CLIENT_LOG_SIZE_12;
+            } else if (clientElementSize <= 1 << 13) {
+                return SERVER_LOG_SIZE_24_CLIENT_LOG_SIZE_13;
+            } else if (clientElementSize <= 1 << 16) {
+                return SERVER_LOG_SIZE_24_CLIENT_LOG_SIZE_16;
+            }
+        } else if (serverElementSize <= 1 << 26) {
+            if (clientElementSize <= 1 << 12) {
+                return SERVER_LOG_SIZE_26_CLIENT_LOG_SIZE_12;
+            } else if (clientElementSize <= 1 << 16) {
+                return SERVER_LOG_SIZE_26_CLIENT_LOG_SIZE_16;
+            }
         }
-        return encodedArray;
+        throw new IllegalArgumentException("Invalid element size");
     }
 }
