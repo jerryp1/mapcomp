@@ -4,8 +4,8 @@ import edu.alibaba.mpc4j.common.rpc.desc.SecurityModel;
 import edu.alibaba.mpc4j.common.rpc.pto.AbstractMultiPartyPtoConfig;
 import edu.alibaba.mpc4j.s2pc.aby.basics.z2.Z2cConfig;
 import edu.alibaba.mpc4j.s2pc.aby.basics.z2.Z2cFactory;
-import edu.alibaba.mpc4j.s2pc.opf.psm.PsmConfig;
-import edu.alibaba.mpc4j.s2pc.opf.psm.PsmFactory;
+import edu.alibaba.mpc4j.s2pc.opf.pesm.PesmConfig;
+import edu.alibaba.mpc4j.s2pc.opf.pesm.PesmFactory;
 import edu.alibaba.mpc4j.s2pc.upso.ucpsi.UcpsiConfig;
 
 import static edu.alibaba.mpc4j.s2pc.upso.ucpsi.UcpsiFactory.UcpsiType;
@@ -20,15 +20,15 @@ public class Sj23PmtUcpsiConfig extends AbstractMultiPartyPtoConfig implements U
     /**
      * pmt config
      */
-    private final PsmConfig psmConfig;
+    private final PesmConfig pesmConfig;
     /**
      * Z2C config
      */
     private final Z2cConfig z2cConfig;
 
     private Sj23PmtUcpsiConfig(Builder builder) {
-        super(SecurityModel.SEMI_HONEST, builder.psmConfig, builder.z2cConfig);
-        psmConfig = builder.psmConfig;
+        super(SecurityModel.SEMI_HONEST, builder.pesmConfig, builder.z2cConfig);
+        pesmConfig = builder.pesmConfig;
         z2cConfig = builder.z2cConfig;
     }
 
@@ -41,22 +41,22 @@ public class Sj23PmtUcpsiConfig extends AbstractMultiPartyPtoConfig implements U
         return z2cConfig;
     }
 
-    public PsmConfig getPsmConfig() {
-        return psmConfig;
+    public PesmConfig getPesmConfig() {
+        return pesmConfig;
     }
 
     public static class Builder implements org.apache.commons.lang3.builder.Builder<Sj23PmtUcpsiConfig> {
         /**
          * pmt config
          */
-        private PsmConfig psmConfig;
+        private PesmConfig pesmConfig;
         /**
          * Z2C config
          */
         private Z2cConfig z2cConfig;
 
         public Builder(SecurityModel securityModel, boolean silent) {
-            psmConfig = PsmFactory.createDefaultConfig(securityModel, silent);
+            pesmConfig = PesmFactory.createDefaultConfig(securityModel, silent);
             z2cConfig = Z2cFactory.createDefaultConfig(securityModel, silent);
         }
 
@@ -65,8 +65,8 @@ public class Sj23PmtUcpsiConfig extends AbstractMultiPartyPtoConfig implements U
             return this;
         }
 
-        public Builder setPsmConfig(PsmConfig psmConfig) {
-            this.psmConfig = psmConfig;
+        public Builder setPesmConfig(PesmConfig pesmConfig) {
+            this.pesmConfig = pesmConfig;
             return this;
         }
 
