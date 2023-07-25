@@ -2,10 +2,8 @@ package edu.alibaba.mpc4j.s2pc.upso.ucpsi.sj23.pmt;
 
 import edu.alibaba.mpc4j.common.rpc.desc.SecurityModel;
 import edu.alibaba.mpc4j.common.rpc.pto.AbstractMultiPartyPtoConfig;
-import edu.alibaba.mpc4j.s2pc.aby.basics.z2.Z2cConfig;
-import edu.alibaba.mpc4j.s2pc.aby.basics.z2.Z2cFactory;
-import edu.alibaba.mpc4j.s2pc.opf.psm.PsmConfig;
-import edu.alibaba.mpc4j.s2pc.opf.psm.PsmFactory;
+import edu.alibaba.mpc4j.s2pc.opf.psm.pdsm.PdsmConfig;
+import edu.alibaba.mpc4j.s2pc.opf.psm.pdsm.PdsmFactory;
 import edu.alibaba.mpc4j.s2pc.upso.ucpsi.UcpsiConfig;
 
 import static edu.alibaba.mpc4j.s2pc.upso.ucpsi.UcpsiFactory.UcpsiType;
@@ -20,16 +18,11 @@ public class Sj23PmtUcpsiConfig extends AbstractMultiPartyPtoConfig implements U
     /**
      * pmt config
      */
-    private final PsmConfig psmConfig;
-    /**
-     * Z2C config
-     */
-    private final Z2cConfig z2cConfig;
+    private final PdsmConfig pdsmConfig;
 
     private Sj23PmtUcpsiConfig(Builder builder) {
-        super(SecurityModel.SEMI_HONEST, builder.psmConfig, builder.z2cConfig);
-        psmConfig = builder.psmConfig;
-        z2cConfig = builder.z2cConfig;
+        super(SecurityModel.SEMI_HONEST, builder.pdsmConfig);
+        pdsmConfig = builder.pdsmConfig;
     }
 
     @Override
@@ -37,36 +30,22 @@ public class Sj23PmtUcpsiConfig extends AbstractMultiPartyPtoConfig implements U
         return UcpsiType.SJ23_PMT;
     }
 
-    public Z2cConfig getZ2cConfig() {
-        return z2cConfig;
-    }
-
-    public PsmConfig getPsmConfig() {
-        return psmConfig;
+    public PdsmConfig getPsmConfig() {
+        return pdsmConfig;
     }
 
     public static class Builder implements org.apache.commons.lang3.builder.Builder<Sj23PmtUcpsiConfig> {
         /**
          * pmt config
          */
-        private PsmConfig psmConfig;
-        /**
-         * Z2C config
-         */
-        private Z2cConfig z2cConfig;
+        private PdsmConfig pdsmConfig;
 
         public Builder(SecurityModel securityModel, boolean silent) {
-            psmConfig = PsmFactory.createDefaultConfig(securityModel, silent);
-            z2cConfig = Z2cFactory.createDefaultConfig(securityModel, silent);
+            pdsmConfig = PdsmFactory.createDefaultConfig(securityModel, silent);
         }
 
-        public Builder setZ2cConfig(Z2cConfig z2cConfig) {
-            this.z2cConfig = z2cConfig;
-            return this;
-        }
-
-        public Builder setPsmConfig(PsmConfig psmConfig) {
-            this.psmConfig = psmConfig;
+        public Builder setPsmConfig(PdsmConfig pdsmConfig) {
+            this.pdsmConfig = pdsmConfig;
             return this;
         }
 

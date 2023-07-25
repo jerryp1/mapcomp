@@ -19,9 +19,9 @@ import edu.alibaba.mpc4j.common.tool.utils.CommonUtils;
 import edu.alibaba.mpc4j.common.tool.utils.LongUtils;
 import edu.alibaba.mpc4j.common.tool.utils.ObjectUtils;
 import edu.alibaba.mpc4j.s2pc.aby.basics.z2.SquareZ2Vector;
-import edu.alibaba.mpc4j.s2pc.opf.psm.PsmFactory;
-import edu.alibaba.mpc4j.s2pc.opf.psm.PsmReceiver;
-import edu.alibaba.mpc4j.s2pc.opf.psm.PsmSender;
+import edu.alibaba.mpc4j.s2pc.opf.psm.pdsm.PdsmFactory;
+import edu.alibaba.mpc4j.s2pc.opf.psm.pdsm.PdsmReceiver;
+import edu.alibaba.mpc4j.s2pc.opf.psm.pdsm.PdsmSender;
 import edu.alibaba.mpc4j.s2pc.upso.UpsoUtils;
 import edu.alibaba.mpc4j.s2pc.upso.ucpsi.AbstractUcpsiClient;
 import edu.alibaba.mpc4j.s2pc.upso.ucpsi.UcpsiClientOutput;
@@ -45,11 +45,11 @@ public class Sj23PmtUcpsiClient<T> extends AbstractUcpsiClient<T> {
     /**
      * private set membership receiver
      */
-    private final PsmReceiver psmReceiver;
+    private final PdsmReceiver pdsmReceiver;
     /**
      * private set membership sender
      */
-    private final PsmSender psmSender;
+    private final PdsmSender pdsmSender;
     /**
      * cuckoo hash num
      */
@@ -125,10 +125,10 @@ public class Sj23PmtUcpsiClient<T> extends AbstractUcpsiClient<T> {
 
     public Sj23PmtUcpsiClient(Rpc clientRpc, Party serverParty, Sj23PmtUcpsiConfig config) {
         super(getInstance(), clientRpc, serverParty, config);
-        psmSender = PsmFactory.createSender(clientRpc, serverParty, config.getPsmConfig());
-        addSubPtos(psmSender);
-        psmReceiver = PsmFactory.createReceiver(clientRpc, serverParty, config.getPsmConfig());
-        addSubPtos(psmReceiver);
+        pdsmSender = PdsmFactory.createSender(clientRpc, serverParty, config.getPsmConfig());
+        addSubPtos(pdsmSender);
+        pdsmReceiver = PdsmFactory.createReceiver(clientRpc, serverParty, config.getPsmConfig());
+        addSubPtos(pdsmReceiver);
         cuckooHashBinType = CuckooHashBinType.NO_STASH_PSZ18_3_HASH;
         hashNum = CuckooHashBinFactory.getHashNum(cuckooHashBinType);
         rpcCount = 0;
@@ -177,8 +177,8 @@ public class Sj23PmtUcpsiClient<T> extends AbstractUcpsiClient<T> {
         shiftMask = BigInteger.ONE.shiftLeft(params.plainModulusSize).subtract(BigInteger.ONE);
         byteL = CommonUtils.getByteLength(params.l);
         zp64 = Zp64Factory.createInstance(envType, params.plainModulus);
-        psmReceiver.init(params.l, params.alphaUpperBound, params.alphaUpperBound * params.binNum);
-        psmSender.init(params.l, params.alphaUpperBound, params.alphaUpperBound * params.binNum);
+        pdsmReceiver.init(params.l, params.alphaUpperBound, params.alphaUpperBound * params.binNum);
+        pdsmSender.init(params.l, params.alphaUpperBound, params.alphaUpperBound * params.binNum);
         stopWatch.stop();
         long initTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
         stopWatch.reset();
@@ -237,11 +237,11 @@ public class Sj23PmtUcpsiClient<T> extends AbstractUcpsiClient<T> {
         // private membership test
         SquareZ2Vector pemtOutput;
         if (isHeReceiver) {
-            psmReceiver.init(params.l, alpha, alpha * params.binNum);
-            pemtOutput = psmReceiver.psm(params.l, mask);
+            pdsmReceiver.init(params.l, alpha, alpha * params.binNum);
+            pemtOutput = pdsmReceiver.psm(params.l, mask);
         } else {
-            psmSender.init(params.l, alpha, alpha * params.binNum);
-            pemtOutput = psmSender.psm(params.l, response);
+            pdsmSender.init(params.l, alpha, alpha * params.binNum);
+            pemtOutput = pdsmSender.psm(params.l, response);
         }
         ArrayList<T> table = IntStream.range(0, params.binNum)
             .mapToObj(batchIndex -> {
