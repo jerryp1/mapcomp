@@ -37,7 +37,7 @@ public class UcpsiTest extends AbstractTwoPartyPtoTest {
     /**
      * default server element size
      */
-    private static final int DEFAULT_SERVER_ELEMENT_SIZE = 1 << 16;
+    private static final int DEFAULT_SERVER_ELEMENT_SIZE = 1 << 17;
     /**
      * default client element size
      */

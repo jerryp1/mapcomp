@@ -18,9 +18,6 @@ import edu.alibaba.mpc4j.common.tool.utils.CommonUtils;
 import edu.alibaba.mpc4j.common.tool.utils.LongUtils;
 import edu.alibaba.mpc4j.common.tool.utils.ObjectUtils;
 import edu.alibaba.mpc4j.s2pc.aby.basics.z2.SquareZ2Vector;
-import edu.alibaba.mpc4j.s2pc.opf.pesm.PesmFactory;
-import edu.alibaba.mpc4j.s2pc.opf.pesm.PesmReceiver;
-import edu.alibaba.mpc4j.s2pc.opf.pesm.PesmSender;
 import edu.alibaba.mpc4j.s2pc.opf.psm.PsmFactory;
 import edu.alibaba.mpc4j.s2pc.opf.psm.PsmReceiver;
 import edu.alibaba.mpc4j.s2pc.opf.psm.PsmSender;
@@ -46,11 +43,11 @@ public class Sj23PmtUcpsiServer<T> extends AbstractUcpsiServer<T> {
     /**
      * private set membership receiver
      */
-    private final PesmReceiver pesmReceiver;
+    private final PsmReceiver psmReceiver;
     /**
      * private set membership sender
      */
-    private final PesmSender pesmSender;
+    private final PsmSender psmSender;
     /**
      * cuckoo hash num
      */
@@ -118,10 +115,10 @@ public class Sj23PmtUcpsiServer<T> extends AbstractUcpsiServer<T> {
 
     public Sj23PmtUcpsiServer(Rpc serverRpc, Party clientParty, Sj23PmtUcpsiConfig config) {
         super(getInstance(), serverRpc, clientParty, config);
-        pesmReceiver = PesmFactory.createReceiver(serverRpc, clientParty, config.getPesmConfig());
-        addSubPtos(pesmReceiver);
-        pesmSender = PesmFactory.createSender(serverRpc, clientParty, config.getPesmConfig());
-        addSubPtos(pesmSender);
+        psmReceiver = PsmFactory.createReceiver(serverRpc, clientParty, config.getPsmConfig());
+        addSubPtos(psmReceiver);
+        psmSender = PsmFactory.createSender(serverRpc, clientParty, config.getPsmConfig());
+        addSubPtos(psmSender);
         hashNum = CuckooHashBinFactory.getHashNum(CuckooHashBinType.NO_STASH_PSZ18_3_HASH);
         rpcCount = 0;
         isHeSender = false;
@@ -184,8 +181,8 @@ public class Sj23PmtUcpsiServer<T> extends AbstractUcpsiServer<T> {
         stopWatch.start();
         handleClientPublicKeyPayload(clientPublicKeysPayload);
         // initialize pmt
-        pesmSender.init(params.l, alpha, alpha * params.binNum);
-        pesmReceiver.init(params.l, alpha, alpha * params.binNum);
+        psmSender.init(params.l, params.alphaUpperBound, params.alphaUpperBound * params.binNum);
+        psmReceiver.init(params.l, params.alphaUpperBound, params.alphaUpperBound * params.binNum);
         stopWatch.stop();
         long pmtInitTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
         stopWatch.reset();
@@ -233,9 +230,11 @@ public class Sj23PmtUcpsiServer<T> extends AbstractUcpsiServer<T> {
         // private membership test
         SquareZ2Vector pesmOutput;
         if (isHeSender) {
-            pesmOutput = pesmSender.pesm(params.l, decodeResponse);
+            psmSender.init(params.l, alpha, alpha * params.binNum);
+            pesmOutput = psmSender.psm(params.l, decodeResponse);
         } else {
-            pesmOutput = pesmReceiver.pesm(params.l, alpha, mask);
+            psmReceiver.init(params.l, alpha, alpha * params.binNum);
+            pesmOutput = psmReceiver.psm(params.l, mask);
         }
         stopWatch.stop();
         long pmtTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
