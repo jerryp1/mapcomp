@@ -5,9 +5,8 @@ import edu.alibaba.mpc4j.common.rpc.utils.DataPacketHeader;
 import edu.alibaba.mpc4j.common.tool.CommonConstants;
 import edu.alibaba.mpc4j.common.tool.crypto.prf.Prf;
 import edu.alibaba.mpc4j.common.tool.crypto.prf.PrfFactory;
-import edu.alibaba.mpc4j.crypto.matrix.okve.okvs.Okvs;
-import edu.alibaba.mpc4j.crypto.matrix.okve.okvs.OkvsFactory;
-import edu.alibaba.mpc4j.crypto.matrix.okve.okvs.SparseOkvs;
+import edu.alibaba.mpc4j.crypto.matrix.okve.dokvs.gf2e.Gf2eDokvsFactory;
+import edu.alibaba.mpc4j.crypto.matrix.okve.dokvs.gf2e.SparseGf2eDokvs;
 import edu.alibaba.mpc4j.common.tool.utils.BytesUtils;
 import edu.alibaba.mpc4j.s2pc.opf.sqoprf.SqOprfFactory;
 import edu.alibaba.mpc4j.s2pc.opf.sqoprf.SqOprfReceiver;
@@ -36,9 +35,9 @@ public class PirUbopprfReceiver extends AbstractUbopprfReceiver {
      */
     private final SqOprfReceiver sqOprfReceiver;
     /**
-     * the OKVS type
+     * OKVS type
      */
-    private final OkvsFactory.OkvsType okvsType;
+    private final Gf2eDokvsFactory.Gf2eDokvsType okvsType;
     /**
      * OKVS keys
      */
@@ -52,9 +51,9 @@ public class PirUbopprfReceiver extends AbstractUbopprfReceiver {
      */
     private final BatchIndexPirClient batchIndexPirClient;
     /**
-     * sparse okvs
+     * sparse OKVS
      */
-    private SparseOkvs<ByteBuffer> okvs;
+    private SparseGf2eDokvs<ByteBuffer> sparseOkvs;
 
     public PirUbopprfReceiver(Rpc receiverRpc, Party senderParty, PirUbopprfConfig config) {
         super(getInstance(), receiverRpc, senderParty, config);
@@ -79,14 +78,14 @@ public class PirUbopprfReceiver extends AbstractUbopprfReceiver {
 
         stopWatch.start();
         // init okvs
-        int keyNum = OkvsFactory.getHashNum(okvsType);
+        int keyNum = Gf2eDokvsFactory.getHashKeyNum(okvsType);
         MpcAbortPreconditions.checkArgument(okvsKeysPayload.size() == keyNum);
         okvsKeys = okvsKeysPayload.toArray(new byte[0][]);
-        okvs = OkvsFactory.createSparseInstance(envType, okvsType, pointNum, l, okvsKeys);
+        sparseOkvs = Gf2eDokvsFactory.createSparseInstance(envType, okvsType, pointNum, l, okvsKeys);
         // init oprf
         sqOprfReceiver.init(batchSize);
         // init batch PIR
-        batchIndexPirClient.init(okvs.getM() - okvs.maxDensePositionNum(), l, batchSize * okvs.sparsePositionNum());
+        batchIndexPirClient.init(sparseOkvs.sparsePositionRange(), l, batchSize * sparseOkvs.maxSparsePositionNum());
         stopWatch.stop();
         long initTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
         stopWatch.reset();
@@ -147,8 +146,8 @@ public class PirUbopprfReceiver extends AbstractUbopprfReceiver {
      */
     private void generateOkvsStorage(List<byte[]> okvsDensePayload, Map<Integer, byte[]> okvsSparsePayload,
                                      List<Integer> retrievalIndexList) throws MpcAbortException {
-        int sparsePositionNum = okvs.getM() - okvs.maxDensePositionNum();
-        int densePositionNum = okvs.maxDensePositionNum();
+        int sparsePositionNum = sparseOkvs.sparsePositionRange();
+        int densePositionNum = sparseOkvs.densePositionRange();
         MpcAbortPreconditions.checkArgument(densePositionNum == okvsDensePayload.size());
         MpcAbortPreconditions.checkArgument(retrievalIndexList.size() == okvsSparsePayload.size());
         okvsStorage = new byte[sparsePositionNum + densePositionNum][];
@@ -157,7 +156,9 @@ public class PirUbopprfReceiver extends AbstractUbopprfReceiver {
         }
         byte[][] denseOkvsStorage = okvsDensePayload.toArray(new byte[0][]);
         System.arraycopy(denseOkvsStorage, 0, okvsStorage, sparsePositionNum, denseOkvsStorage.length);
-        MpcAbortPreconditions.checkArgument(okvsStorage.length == OkvsFactory.getM(okvsType, pointNum));
+        MpcAbortPreconditions.checkArgument(
+            okvsStorage.length == Gf2eDokvsFactory.getM(envType, okvsType, pointNum)
+        );
     }
 
     /**
@@ -166,9 +167,9 @@ public class PirUbopprfReceiver extends AbstractUbopprfReceiver {
      * @return sparse okvs retrieval index list.
      */
     private List<Integer> generateRetrievalIndexList() {
-        SparseOkvs<ByteBuffer> okvs = OkvsFactory.createSparseInstance(envType, okvsType, pointNum, l, okvsKeys);
+        SparseGf2eDokvs<ByteBuffer> sparseOkvs = Gf2eDokvsFactory.createSparseInstance(envType, okvsType, pointNum, l, okvsKeys);
         return Arrays.stream(inputArray)
-            .map(bytes -> okvs.sparsePosition(ByteBuffer.wrap(bytes)))
+            .map(bytes -> sparseOkvs.sparsePositions(ByteBuffer.wrap(bytes)))
             .flatMapToInt(Arrays::stream)
             .distinct()
             .boxed()
@@ -186,7 +187,7 @@ public class PirUbopprfReceiver extends AbstractUbopprfReceiver {
         Prf prf = PrfFactory.createInstance(envType, byteL);
         prf.setKey(new byte[CommonConstants.BLOCK_BYTE_LENGTH]);
         // compute PRF output
-        Okvs<ByteBuffer> okvs = OkvsFactory.createInstance(envType, okvsType, pointNum, l, okvsKeys);
+        SparseGf2eDokvs<ByteBuffer> sparseOkvs = Gf2eDokvsFactory.createSparseInstance(envType, okvsType, pointNum, l, okvsKeys);
         IntStream batchIntStream = IntStream.range(0, batchSize);
         batchIntStream = parallel ? batchIntStream.parallel() : batchIntStream;
         return batchIntStream
@@ -195,7 +196,7 @@ public class PirUbopprfReceiver extends AbstractUbopprfReceiver {
                 byte[] programOutput = oprfReceiverOutput.getPrf(batchIndex);
                 programOutput = prf.getBytes(programOutput);
                 BytesUtils.reduceByteArray(programOutput, l);
-                byte[] okvsOutput = okvs.decode(okvsStorage, ByteBuffer.wrap(input));
+                byte[] okvsOutput = sparseOkvs.decode(okvsStorage, ByteBuffer.wrap(input));
                 BytesUtils.xori(programOutput, okvsOutput);
                 return programOutput;
             })

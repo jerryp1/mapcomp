@@ -39,12 +39,12 @@ public class Cgs22OpprfPdsmSender extends AbstractPdsmSender {
     }
 
     @Override
-    public void init(int maxL, int d, int maxNum) throws MpcAbortException {
-        setInitInput(maxL, d, maxNum);
+    public void init(int maxL, int maxD, int maxNum) throws MpcAbortException {
+        setInitInput(maxL, maxD, maxNum);
         logPhaseInfo(PtoState.INIT_BEGIN);
 
         stopWatch.start();
-        bopprfSender.init(maxNum, maxNum * d);
+        bopprfSender.init(maxNum, maxNum * maxD);
         peqtSender.init(maxL, maxNum);
         stopWatch.stop();
         long initTime = stopWatch.getTime(TimeUnit.MILLISECONDS);

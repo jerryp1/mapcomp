@@ -2,7 +2,7 @@ package edu.alibaba.mpc4j.s2pc.upso.uopprf.ub.pir;
 
 import edu.alibaba.mpc4j.common.rpc.desc.SecurityModel;
 import edu.alibaba.mpc4j.common.rpc.pto.AbstractMultiPartyPtoConfig;
-import edu.alibaba.mpc4j.crypto.matrix.okve.okvs.OkvsFactory;
+import edu.alibaba.mpc4j.crypto.matrix.okve.dokvs.gf2e.Gf2eDokvsFactory;
 import edu.alibaba.mpc4j.s2pc.opf.sqoprf.SqOprfConfig;
 import edu.alibaba.mpc4j.s2pc.opf.sqoprf.SqOprfFactory;
 import edu.alibaba.mpc4j.s2pc.pir.index.batch.BatchIndexPirConfig;
@@ -24,7 +24,7 @@ public class PirUbopprfConfig extends AbstractMultiPartyPtoConfig implements Ubo
     /**
      * OKVS type
      */
-    private final OkvsFactory.OkvsType okvsType;
+    private final Gf2eDokvsFactory.Gf2eDokvsType okvsType;
     /**
      * batch index PIR config
      */
@@ -46,7 +46,7 @@ public class PirUbopprfConfig extends AbstractMultiPartyPtoConfig implements Ubo
         return sqOprfConfig;
     }
 
-    public OkvsFactory.OkvsType getOkvsType() {
+    public Gf2eDokvsFactory.Gf2eDokvsType getOkvsType() {
         return okvsType;
     }
 
@@ -60,9 +60,9 @@ public class PirUbopprfConfig extends AbstractMultiPartyPtoConfig implements Ubo
          */
         private SqOprfConfig sqOprfConfig;
         /**
-         * OKVS type
+         * DOKVS type
          */
-        private OkvsFactory.OkvsType okvsType;
+        private Gf2eDokvsFactory.Gf2eDokvsType okvsType;
         /**
          * batch index PIR config
          */
@@ -70,7 +70,7 @@ public class PirUbopprfConfig extends AbstractMultiPartyPtoConfig implements Ubo
 
         public Builder() {
             sqOprfConfig = SqOprfFactory.createDefaultConfig(SecurityModel.SEMI_HONEST);
-            okvsType = OkvsFactory.OkvsType.H3_SINGLETON_GCT;
+            okvsType = Gf2eDokvsFactory.Gf2eDokvsType.H3_SPARSE_CLUSTER_BLAZE_GCT;
             batchIndexPirConfig = new Mr23BatchIndexPirConfig.Builder().build();
         }
 
@@ -79,7 +79,7 @@ public class PirUbopprfConfig extends AbstractMultiPartyPtoConfig implements Ubo
             return this;
         }
 
-        public Builder setOkvsType(OkvsFactory.OkvsType okvsType) {
+        public Builder setOkvsType(Gf2eDokvsFactory.Gf2eDokvsType okvsType) {
             this.okvsType = okvsType;
             return this;
         }

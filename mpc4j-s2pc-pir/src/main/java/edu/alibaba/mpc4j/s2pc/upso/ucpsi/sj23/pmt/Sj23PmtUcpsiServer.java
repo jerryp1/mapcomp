@@ -230,11 +230,9 @@ public class Sj23PmtUcpsiServer<T> extends AbstractUcpsiServer<T> {
         // private membership test
         SquareZ2Vector pesmOutput;
         if (isHeSender) {
-            pdsmSender.init(params.l, alpha, alpha * params.binNum);
             pesmOutput = pdsmSender.psm(params.l, decodeResponse);
         } else {
-            pdsmReceiver.init(params.l, alpha, alpha * params.binNum);
-            pesmOutput = pdsmReceiver.psm(params.l, mask);
+            pesmOutput = pdsmReceiver.psm(params.l, alpha, mask);
         }
         stopWatch.stop();
         long pmtTime = stopWatch.getTime(TimeUnit.MILLISECONDS);

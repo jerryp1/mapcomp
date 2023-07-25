@@ -38,12 +38,12 @@ public class Cgs22OpprfPdsmReceiver extends AbstractPdsmReceiver {
     }
 
     @Override
-    public void init(int maxL, int d, int maxNum) throws MpcAbortException {
-        setInitInput(maxL, d, maxNum);
+    public void init(int maxL, int maxD, int maxNum) throws MpcAbortException {
+        setInitInput(maxL, maxD, maxNum);
         logPhaseInfo(PtoState.INIT_BEGIN);
 
         stopWatch.start();
-        bopprfReceiver.init(maxNum, maxNum * d);
+        bopprfReceiver.init(maxNum, maxNum * maxD);
         peqtReceiver.init(maxL, maxNum);
         stopWatch.stop();
         long initTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
@@ -54,8 +54,8 @@ public class Cgs22OpprfPdsmReceiver extends AbstractPdsmReceiver {
     }
 
     @Override
-    public SquareZ2Vector psm(int l, byte[][] inputArray) throws MpcAbortException {
-        setPtoInput(l, inputArray);
+    public SquareZ2Vector psm(int l, int d, byte[][] inputArray) throws MpcAbortException {
+        setPtoInput(l, d, inputArray);
         logPhaseInfo(PtoState.PTO_BEGIN);
 
         stopWatch.start();

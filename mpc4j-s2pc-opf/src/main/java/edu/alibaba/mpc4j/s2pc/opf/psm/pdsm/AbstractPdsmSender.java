@@ -25,9 +25,9 @@ public abstract class AbstractPdsmSender extends AbstractTwoPartyPto implements 
      */
     private int maxNum;
     /**
-     * point num
+     * max d
      */
-    protected int d;
+    private int maxD;
     /**
      * max l
      */
@@ -36,6 +36,10 @@ public abstract class AbstractPdsmSender extends AbstractTwoPartyPto implements 
      * num
      */
     protected int num;
+    /**
+     * point num
+     */
+    protected int d;
     /**
      * l
      */
@@ -53,32 +57,26 @@ public abstract class AbstractPdsmSender extends AbstractTwoPartyPto implements 
         super(ptoDesc, ownRpc, otherParty, config);
     }
 
-    protected void setInitInput(int maxL, int d, int maxNum) {
+    protected void setInitInput(int maxL, int maxD, int maxNum) {
         MathPreconditions.checkGreaterOrEqual("maxL", maxL, CommonConstants.STATS_BIT_LENGTH);
         this.maxL = maxL;
-        MathPreconditions.checkPositive("d", d);
-        this.d = d;
+        MathPreconditions.checkPositive("maxD", maxD);
+        this.maxD = maxD;
         MathPreconditions.checkGreater("maxNum", maxNum, 1);
         this.maxNum = maxNum;
         initState();
     }
 
     protected void setPtoInput(int l, byte[][][] inputArrays) {
-        MathPreconditions.checkGreaterOrEqual("l", l, CommonConstants.STATS_BIT_LENGTH);
-        MathPreconditions.checkLessOrEqual("l", l, maxL);
+        MathPreconditions.checkInRangeClosed("l", l, CommonConstants.STATS_BIT_LENGTH, maxL);
         this.l = l;
         byteL = CommonUtils.getByteLength(l);
-        MathPreconditions.checkGreater("inputArrays.num", inputArrays.length, 1);
-        MathPreconditions.checkPositiveInRangeClosed("inputArrays.num", inputArrays.length, maxNum);
+        MathPreconditions.checkInRangeClosed("inputArrays.num", inputArrays.length, 2, maxNum);
         num = inputArrays.length;
+        MathPreconditions.checkPositiveInRangeClosed("d", inputArrays[0].length, maxD);
+        d = inputArrays[0].length;
         // check all inputs are distinct
         long distinctCount = Arrays.stream(inputArrays)
-            .flatMap(Arrays::stream)
-            .map(ByteBuffer::wrap)
-            .distinct()
-            .count();
-        MathPreconditions.checkEqual("distinct inputs", "d * num", distinctCount, (long) d * num);
-        this.inputArrays = Arrays.stream(inputArrays)
             .peek(inputArray -> {
                 // check point num
                 MathPreconditions.checkEqual("d", "inputArray.length", d, inputArray.length);
@@ -86,6 +84,11 @@ public abstract class AbstractPdsmSender extends AbstractTwoPartyPto implements 
                     Preconditions.checkArgument(BytesUtils.isFixedReduceByteArray(input, byteL, l));
                 }
             })
-            .toArray(byte[][][]::new);
+            .flatMap(Arrays::stream)
+            .map(ByteBuffer::wrap)
+            .distinct()
+            .count();
+        MathPreconditions.checkEqual("distinct inputs", "d * num", distinctCount, (long) d * num);
+        this.inputArrays = inputArrays;
     }
 }

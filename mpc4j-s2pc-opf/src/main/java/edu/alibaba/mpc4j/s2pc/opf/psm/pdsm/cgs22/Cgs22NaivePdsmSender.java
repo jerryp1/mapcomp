@@ -30,12 +30,12 @@ public class Cgs22NaivePdsmSender extends AbstractPdsmSender {
     }
 
     @Override
-    public void init(int maxL, int d, int maxNum) throws MpcAbortException {
-        setInitInput(maxL, d, maxNum);
+    public void init(int maxL, int maxD, int maxNum) throws MpcAbortException {
+        setInitInput(maxL, maxD, maxNum);
         logPhaseInfo(PtoState.INIT_BEGIN);
 
         stopWatch.start();
-        pesmSender.init(maxL, d, maxNum);
+        pesmSender.init(maxL, maxD, maxNum);
         stopWatch.stop();
         long initTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
         stopWatch.reset();

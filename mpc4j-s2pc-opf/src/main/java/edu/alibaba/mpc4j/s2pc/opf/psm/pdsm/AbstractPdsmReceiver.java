@@ -24,9 +24,9 @@ public abstract class AbstractPdsmReceiver extends AbstractTwoPartyPto implement
      */
     private int maxNum;
     /**
-     * point num
+     * max d
      */
-    protected int d;
+    private int maxD;
     /**
      * max l
      */
@@ -35,6 +35,10 @@ public abstract class AbstractPdsmReceiver extends AbstractTwoPartyPto implement
      * num
      */
     protected int num;
+    /**
+     * point num
+     */
+    protected int d;
     /**
      * l
      */
@@ -52,23 +56,24 @@ public abstract class AbstractPdsmReceiver extends AbstractTwoPartyPto implement
         super(ptoDesc, ownRpc, otherParty, config);
     }
 
-    protected void setInitInput(int maxL, int d, int maxNum) {
+    protected void setInitInput(int maxL, int maxD, int maxNum) {
         MathPreconditions.checkGreaterOrEqual("maxL", maxL, CommonConstants.STATS_BIT_LENGTH);
         this.maxL = maxL;
-        MathPreconditions.checkPositive("d", d);
-        this.d = d;
+        MathPreconditions.checkPositive("maxD", maxD);
+        this.maxD = maxD;
         MathPreconditions.checkGreater("maxNum", maxNum, 1);
         this.maxNum = maxNum;
         initState();
     }
 
-    protected void setPtoInput(int l, byte[][] inputArray) {
+    protected void setPtoInput(int l, int d, byte[][] inputArray) {
         MathPreconditions.checkGreaterOrEqual("l", l, CommonConstants.STATS_BIT_LENGTH);
         MathPreconditions.checkLessOrEqual("l", l, maxL);
         this.l = l;
         byteL = CommonUtils.getByteLength(l);
-        MathPreconditions.checkGreater("inputArrays.num", inputArray.length, 1);
-        MathPreconditions.checkPositiveInRangeClosed("inputArray.num", inputArray.length, maxNum);
+        MathPreconditions.checkPositiveInRangeClosed("d", d, maxD);
+        this.d = d;
+        MathPreconditions.checkInRangeClosed("inputArrays.num", inputArray.length, 2, maxNum);
         num = inputArray.length;
         this.inputArray = Arrays.stream(inputArray)
             .peek(input -> Preconditions.checkArgument(BytesUtils.isFixedReduceByteArray(input, byteL, l)))

@@ -9,8 +9,8 @@ import edu.alibaba.mpc4j.common.rpc.utils.DataPacketHeader;
 import edu.alibaba.mpc4j.common.tool.CommonConstants;
 import edu.alibaba.mpc4j.common.tool.crypto.prf.Prf;
 import edu.alibaba.mpc4j.common.tool.crypto.prf.PrfFactory;
-import edu.alibaba.mpc4j.crypto.matrix.okve.okvs.Okvs;
-import edu.alibaba.mpc4j.crypto.matrix.okve.okvs.OkvsFactory;
+import edu.alibaba.mpc4j.crypto.matrix.okve.dokvs.gf2e.Gf2eDokvs;
+import edu.alibaba.mpc4j.crypto.matrix.okve.dokvs.gf2e.Gf2eDokvsFactory;
 import edu.alibaba.mpc4j.common.tool.utils.BytesUtils;
 import edu.alibaba.mpc4j.common.tool.utils.CommonUtils;
 import edu.alibaba.mpc4j.s2pc.upso.uopprf.ub.okvs.OkvsUbopprfPtoDesc.PtoStep;
@@ -42,7 +42,7 @@ public class OkvsUbopprfSender extends AbstractUbopprfSender {
     /**
      * the OKVS type
      */
-    private final OkvsFactory.OkvsType okvsType;
+    private final Gf2eDokvsFactory.Gf2eDokvsType okvsType;
     /**
      * single-query OPRF key
      */
@@ -52,7 +52,7 @@ public class OkvsUbopprfSender extends AbstractUbopprfSender {
      */
     private byte[][] okvsKeys;
     /**
-     * okvs storage
+     * OKVS storage
      */
     private byte[][] okvsStorage;
 
@@ -119,8 +119,8 @@ public class OkvsUbopprfSender extends AbstractUbopprfSender {
     }
 
     private void generateOkvs() {
-        okvsKeys = CommonUtils.generateRandomKeys(OkvsFactory.getHashNum(okvsType), secureRandom);
-        Okvs<ByteBuffer> okvs = OkvsFactory.createInstance(envType, okvsType, pointNum, l, okvsKeys);
+        okvsKeys = CommonUtils.generateRandomKeys(Gf2eDokvsFactory.getHashKeyNum(okvsType), secureRandom);
+        Gf2eDokvs<ByteBuffer> okvs = Gf2eDokvsFactory.createInstance(envType, okvsType, pointNum, l, okvsKeys);
         okvs.setParallelEncode(parallel);
         // construct key-value map
         Map<ByteBuffer, byte[]> keyValueMap = new ConcurrentHashMap<>(pointNum);
@@ -144,6 +144,6 @@ public class OkvsUbopprfSender extends AbstractUbopprfSender {
                 keyValueMap.put(ByteBuffer.wrap(input), programOutput);
             }
         });
-        okvsStorage = okvs.encode(keyValueMap);
+        okvsStorage = okvs.encode(keyValueMap, false);
     }
 }

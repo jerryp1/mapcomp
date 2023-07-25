@@ -237,10 +237,8 @@ public class Sj23PmtUcpsiClient<T> extends AbstractUcpsiClient<T> {
         // private membership test
         SquareZ2Vector pemtOutput;
         if (isHeReceiver) {
-            pdsmReceiver.init(params.l, alpha, alpha * params.binNum);
-            pemtOutput = pdsmReceiver.psm(params.l, mask);
+            pemtOutput = pdsmReceiver.psm(params.l, alpha, mask);
         } else {
-            pdsmSender.init(params.l, alpha, alpha * params.binNum);
             pemtOutput = pdsmSender.psm(params.l, response);
         }
         ArrayList<T> table = IntStream.range(0, params.binNum)

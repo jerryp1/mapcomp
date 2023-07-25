@@ -172,7 +172,7 @@ public class Cgs22UcpsiServer<T> extends AbstractUcpsiServer<T> {
 
         stopWatch.start();
         // private set membership
-        SquareZ2Vector z0 = pdsmReceiver.psm(psmL, targetArray);
+        SquareZ2Vector z0 = pdsmReceiver.psm(psmL, d, targetArray);
         targetArray = null;
         stopWatch.stop();
         long psmTime = stopWatch.getTime(TimeUnit.MILLISECONDS);

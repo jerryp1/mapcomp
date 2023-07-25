@@ -61,12 +61,12 @@ public class UcpsiTest extends AbstractTwoPartyPtoTest {
 
         // SJ23
         configurations.add(new Object[]{
-            UcpsiFactory.UcpsiType.SJ23_PEQT.name() + " (peqt)",
+            UcpsiFactory.UcpsiType.SJ23_PEQT.name(),
             new Sj23PeqtUcpsiConfig.Builder(SecurityModel.SEMI_HONEST, true)
                 .build()
         });
         configurations.add(new Object[]{
-            UcpsiFactory.UcpsiType.SJ23_PMT.name() + " (pmt)",
+            UcpsiFactory.UcpsiType.SJ23_PMT.name(),
             new Sj23PmtUcpsiConfig.Builder(SecurityModel.SEMI_HONEST, true)
                 .build()
         });
