@@ -1,4 +1,4 @@
-package edu.alibaba.mpc4j.crypto.matrix.zp64;
+package edu.alibaba.mpc4j.crypto.matrix.zl64;
 
 import edu.alibaba.mpc4j.common.tool.CommonConstants;
 import edu.alibaba.mpc4j.common.tool.galoisfield.zl64.Zl64;
@@ -228,11 +228,11 @@ public class Zl64Matrix implements LongRingMatrix {
         rowIndexStream.forEach(i ->
             IntStream.range(0, that.cols).forEach(j ->
                 IntStream.range(0, cols).forEach(l ->
-                    element[i * that.cols + j] =
-                        zl64.add(element[i * that.cols + j], zl64.mul(get(i, l), that.get(l, j)))
+                    element[i * that.cols + j] = element[i * that.cols + j] + get(i, l) * that.get(l, j)
                 )
             )
         );
+        IntStream.range(0, rows * that.cols).forEach(i -> element[i] = zl64.module(element[i]));
         return Zl64Matrix.create(zl64, element, rows, that.cols);
     }
 
@@ -243,9 +243,12 @@ public class Zl64Matrix implements LongRingMatrix {
         long[] result = new long[rows];
         IntStream rowIndexStream = IntStream.range(0, rows);
         rowIndexStream = parallel ? rowIndexStream.parallel() : rowIndexStream;
-        rowIndexStream.forEach(rowIndex -> IntStream.range(0, cols).forEach(colIndex -> result[rowIndex] =
-            zl64.add(result[rowIndex], zl64.mul(get(rowIndex, colIndex), zl64Vector.getElement(colIndex)))
-        ));
+        rowIndexStream.forEach(rowIndex ->
+            IntStream.range(0, cols).forEach(colIndex ->
+                result[rowIndex] += get(rowIndex, colIndex) * zl64Vector.getElement(colIndex)
+            )
+        );
+        IntStream.range(0, rows).forEach(i -> result[i] = zl64.module(result[i]));
         return Zl64Vector.create(zl64, result);
     }
 

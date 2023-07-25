@@ -80,12 +80,13 @@ public class Cmg21KwPirClient extends AbstractKwPirClient {
     }
 
     @Override
-    public void init(KwPirParams kwPirParams, int serverElementSize, int valueByteLength) throws MpcAbortException {
-        setInitInput(kwPirParams.maxRetrievalSize(), serverElementSize, valueByteLength);
+    public void init(KwPirParams kwPirParams, int serverElementSize, int maxRetrievalSize, int valueByteLength)
+        throws MpcAbortException {
+        setInitInput(maxRetrievalSize, serverElementSize, valueByteLength);
         logPhaseInfo(PtoState.INIT_BEGIN);
-
         assert (kwPirParams instanceof Cmg21KwPirParams);
         params = (Cmg21KwPirParams) kwPirParams;
+        assert maxRetrievalSize <= params.maxRetrievalSize();
 
         DataPacketHeader cuckooHashKeyHeader = new DataPacketHeader(
             encodeTaskId, getPtoDesc().getPtoId(), PtoStep.SERVER_SEND_CUCKOO_HASH_KEYS.ordinal(), extraInfo,
@@ -113,8 +114,9 @@ public class Cmg21KwPirClient extends AbstractKwPirClient {
         } else {
             params = Cmg21KwPirParams.SERVER_1M_CLIENT_MAX_1;
         }
-        setInitInput(params.maxRetrievalSize(), serverElementSize, valueByteLength);
+        setInitInput(maxRetrievalSize, serverElementSize, valueByteLength);
         logPhaseInfo(PtoState.INIT_BEGIN);
+        assert maxRetrievalSize <= params.maxRetrievalSize();
 
         DataPacketHeader cuckooHashKeyHeader = new DataPacketHeader(
             encodeTaskId, getPtoDesc().getPtoId(), PtoStep.SERVER_SEND_CUCKOO_HASH_KEYS.ordinal(), extraInfo,

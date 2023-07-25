@@ -5,6 +5,8 @@ import edu.alibaba.mpc4j.common.tool.utils.PropertiesUtils;
 import edu.alibaba.mpc4j.s2pc.upso.ucpsi.UcpsiConfig;
 import edu.alibaba.mpc4j.s2pc.upso.ucpsi.cgs22.Cgs22UcpsiConfig;
 import edu.alibaba.mpc4j.s2pc.upso.ucpsi.psty19.Psty19UcpsiConfig;
+import edu.alibaba.mpc4j.s2pc.upso.ucpsi.sj23.peqt.Sj23PeqtUcpsiConfig;
+import edu.alibaba.mpc4j.s2pc.upso.ucpsi.sj23.pmt.Sj23PmtUcpsiConfig;
 import edu.alibaba.mpc4j.s2pc.upso.uopprf.ub.pir.PirUbopprfConfig;
 import edu.alibaba.mpc4j.s2pc.upso.uopprf.urb.pir.PirUrbopprfConfig;
 
@@ -41,6 +43,10 @@ public class UcpsiConfigUtils {
                 return createPsty19UcpsiOkvsConfig(silent);
             case PSTY19_PIR:
                 return createPsty19UcpsiPirConfig(silent);
+            case SJ23_PEQT:
+                return createSj23UcpsiPeqtConfig(silent);
+            case SJ23_PSM:
+                return createSj23UcpsiPmtConfig(silent);
             default:
                 throw new IllegalArgumentException("Invalid " + UcpsiType.class.getSimpleName() + ": " + ucpsiType.name());
         }
@@ -64,5 +70,13 @@ public class UcpsiConfigUtils {
         return new Cgs22UcpsiConfig.Builder(SecurityModel.SEMI_HONEST, silent)
             .setUrbopprfConfig(new PirUrbopprfConfig.Builder().build())
             .build();
+    }
+
+    private static UcpsiConfig createSj23UcpsiPeqtConfig(boolean silent) {
+        return new Sj23PeqtUcpsiConfig.Builder(SecurityModel.SEMI_HONEST, silent).build();
+    }
+
+    private static UcpsiConfig createSj23UcpsiPmtConfig(boolean silent) {
+        return new Sj23PmtUcpsiConfig.Builder(SecurityModel.SEMI_HONEST, silent).build();
     }
 }

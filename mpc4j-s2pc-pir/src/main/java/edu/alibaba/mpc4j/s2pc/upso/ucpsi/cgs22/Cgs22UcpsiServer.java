@@ -85,13 +85,13 @@ public class Cgs22UcpsiServer<T> extends AbstractUcpsiServer<T> {
      */
     private byte[][][] targetArrays;
 
-    public Cgs22UcpsiServer(Rpc clientRpc, Party senderParty, Cgs22UcpsiConfig config) {
-        super(Cgs22UcpsiPtoDesc.getInstance(), clientRpc, senderParty, config);
+    public Cgs22UcpsiServer(Rpc serverRpc, Party clientParty, Cgs22UcpsiConfig config) {
+        super(Cgs22UcpsiPtoDesc.getInstance(), serverRpc, clientParty, config);
         UrbopprfConfig urbopprfConfig = config.getUrbopprfConfig();
-        urbopprfSender = UrbopprfFactory.createSender(clientRpc, senderParty, urbopprfConfig);
+        urbopprfSender = UrbopprfFactory.createSender(serverRpc, clientParty, urbopprfConfig);
         d = urbopprfConfig.getD();
         addSubPtos(urbopprfSender);
-        psmReceiver = PsmFactory.createReceiver(clientRpc, senderParty, config.getPsmConfig());
+        psmReceiver = PsmFactory.createReceiver(serverRpc, clientParty, config.getPsmConfig());
         addSubPtos(psmReceiver);
         cuckooHashBinType = CuckooHashBinType.NO_STASH_PSZ18_3_HASH;
         hashNum = CuckooHashBinFactory.getHashNum(cuckooHashBinType);

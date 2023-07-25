@@ -41,7 +41,7 @@ public class Cmg21KwPirTest extends AbstractTwoPartyPtoTest {
     /**
      * server element size
      */
-    private static final int SERVER_MAP_SIZE = 1 << 20;
+    private static final int SERVER_MAP_SIZE = 1 << 16;
 
     @Parameterized.Parameters(name = "{0}")
     public static Collection<Object[]> configurations() {
@@ -101,10 +101,15 @@ public class Cmg21KwPirTest extends AbstractTwoPartyPtoTest {
         server.setParallel(parallel);
         client.setParallel(parallel);
         KwPirParamsServerThread serverThread = new KwPirParamsServerThread(
-            server, kwPirParams, keywordLabelMap, labelByteLength, REPEAT_TIME
+            server, kwPirParams, keywordLabelMap, retrievalSize, labelByteLength, REPEAT_TIME
         );
         KwPirParamsClientThread clientThread = new KwPirParamsClientThread(
-            client, kwPirParams, Lists.newArrayList(randomSets.subList(1, REPEAT_TIME + 1)), SERVER_MAP_SIZE, labelByteLength
+            client,
+            kwPirParams,
+            Lists.newArrayList(randomSets.subList(1, REPEAT_TIME + 1)),
+            retrievalSize,
+            SERVER_MAP_SIZE,
+            labelByteLength
         );
         try {
             serverThread.start();

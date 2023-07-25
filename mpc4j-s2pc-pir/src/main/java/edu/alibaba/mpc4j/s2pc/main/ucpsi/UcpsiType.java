@@ -23,4 +23,12 @@ public enum UcpsiType {
      * CGS22 PIR
      */
     CGS22_PIR,
+    /**
+     * SJ23 PEQT
+     */
+    SJ23_PEQT,
+    /**
+     * SJ23 PSM
+     */
+    SJ23_PSM,
 }
