@@ -82,7 +82,9 @@ class H3NaiveClusterBlazeGctGf2eDokvs<T> extends AbstractH3ClusterBlazeGctGf2eDo
         MathPreconditions.checkEqual("storage.length", "m", storage.length, m);
         byte[] keyBytes = ObjectUtils.objectToByteArray(key);
         int binIndex = binHash.getInteger(keyBytes, binNum);
-        int[] positions = bins.get(binIndex).positions(key);
+        int[] positions = Arrays.stream(bins.get(binIndex).positions(key))
+            .map(binPosition -> binPosition + binIndex * binM)
+            .toArray();
         return BytesUtils.innerProduct(storage, byteL, positions);
     }
 }

@@ -5,6 +5,7 @@ import edu.alibaba.mpc4j.common.tool.utils.CommonUtils;
 import edu.alibaba.mpc4j.crypto.matrix.okve.dokvs.gf2e.Gf2eDokvsFactory.Gf2eDokvsType;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.time.StopWatch;
+import org.junit.Assert;
 import org.junit.Ignore;
 import org.junit.Test;
 import org.slf4j.Logger;
@@ -15,6 +16,7 @@ import java.security.SecureRandom;
 import java.text.DecimalFormat;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 /**
@@ -84,9 +86,12 @@ public class Gf2eDokvsEfficiencyTest {
             Stream<ByteBuffer> nonDoublyKeyStream = keyValueMap.keySet().stream();
             nonDoublyKeyStream = parallelEncode ? nonDoublyKeyStream.parallel() : nonDoublyKeyStream;
             STOP_WATCH.start();
-            nonDoublyKeyStream.forEach(key -> dokvs.decode(nonDoublyStorage, key));
+            Map<ByteBuffer, byte[]> nonDoublyDecodeKeyValueMap = nonDoublyKeyStream
+                .collect(Collectors.toMap(key -> key, key -> dokvs.decode(nonDoublyStorage, key)));
             STOP_WATCH.stop();
             double nonDoublyDecodeTime = (double) STOP_WATCH.getTime(TimeUnit.MILLISECONDS) / 1000;
+            keyValueMap.keySet()
+                .forEach(key -> Assert.assertArrayEquals(keyValueMap.get(key), nonDoublyDecodeKeyValueMap.get(key)));
             STOP_WATCH.reset();
             STOP_WATCH.start();
             byte[][] doublyStorage = dokvs.encode(keyValueMap, true);
@@ -96,9 +101,12 @@ public class Gf2eDokvsEfficiencyTest {
             Stream<ByteBuffer> doublyKeyStream = keyValueMap.keySet().stream();
             doublyKeyStream = parallelEncode ? doublyKeyStream.parallel() : doublyKeyStream;
             STOP_WATCH.start();
-            doublyKeyStream.forEach(key -> dokvs.decode(doublyStorage, key));
+            Map<ByteBuffer, byte[]> doublyDecodeKeyValueMap = doublyKeyStream
+                .collect(Collectors.toMap(key -> key, key -> dokvs.decode(doublyStorage, key)));
             STOP_WATCH.stop();
             double doublyDecodeTime = (double) STOP_WATCH.getTime(TimeUnit.MILLISECONDS) / 1000;
+            keyValueMap.keySet()
+                .forEach(key -> Assert.assertArrayEquals(keyValueMap.get(key), doublyDecodeKeyValueMap.get(key)));
             STOP_WATCH.reset();
             String lm;
             String rm;

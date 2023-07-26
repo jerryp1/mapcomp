@@ -1,5 +1,6 @@
 package edu.alibaba.mpc4j.s2pc.upso.uopprf.ub.pir;
 
+import com.google.common.base.Preconditions;
 import edu.alibaba.mpc4j.common.rpc.desc.SecurityModel;
 import edu.alibaba.mpc4j.common.rpc.pto.AbstractMultiPartyPtoConfig;
 import edu.alibaba.mpc4j.crypto.matrix.okve.dokvs.gf2e.Gf2eDokvsFactory;
@@ -71,6 +72,7 @@ public class PirUbopprfConfig extends AbstractMultiPartyPtoConfig implements Ubo
         public Builder() {
             sqOprfConfig = SqOprfFactory.createDefaultConfig(SecurityModel.SEMI_HONEST);
             okvsType = Gf2eDokvsFactory.Gf2eDokvsType.H3_SPARSE_CLUSTER_BLAZE_GCT;
+            assert Gf2eDokvsFactory.isSparse(okvsType);
             batchIndexPirConfig = new Mr23BatchIndexPirConfig.Builder().build();
         }
 
@@ -80,6 +82,7 @@ public class PirUbopprfConfig extends AbstractMultiPartyPtoConfig implements Ubo
         }
 
         public Builder setOkvsType(Gf2eDokvsFactory.Gf2eDokvsType okvsType) {
+            Preconditions.checkArgument(Gf2eDokvsFactory.isSparse(okvsType));
             this.okvsType = okvsType;
             return this;
         }

@@ -169,13 +169,15 @@ public class Gf2eDokvsTest {
     }
 
     @Test
-    public void testLog14n() {
-        testDokvs(1 << 14);
+    public void testLog16n() {
+        // we need to test n > (1 << 14) for cluster version
+        testDokvs(1 << 16);
     }
 
     @Test
-    public void testParallelLog14n() {
-        testDokvs(1 << 14, DEFAULT_L, true);
+    public void testParallelLog16n() {
+        // we need to test n > (1 << 14) for cluster version
+        testDokvs(1 << 16, DEFAULT_L, true);
     }
 
     private void testDokvs(int n) {
