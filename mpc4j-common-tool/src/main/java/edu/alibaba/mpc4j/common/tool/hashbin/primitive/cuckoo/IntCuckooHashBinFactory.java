@@ -32,10 +32,6 @@ public class IntCuckooHashBinFactory {
          */
         NO_STASH_NAIVE,
         /**
-         * no-stash, DRRT18
-         */
-        NO_STASH_DRRT18,
-        /**
          * no-stash, 3-hash PSZ18
          */
         NO_STASH_PSZ18_3_HASH,
@@ -74,8 +70,6 @@ public class IntCuckooHashBinFactory {
         switch (type) {
             case NO_STASH_NAIVE:
                 return new NaiveIntNoStashCuckooHashBin(envType, maxItemSize, keys);
-            case NO_STASH_DRRT18:
-                return new Drrt18IntNoStashCuckooHashBin(envType, maxItemSize, keys);
             case NO_STASH_PSZ18_3_HASH:
             case NO_STASH_PSZ18_4_HASH:
             case NO_STASH_PSZ18_5_HASH:
@@ -96,8 +90,8 @@ public class IntCuckooHashBinFactory {
      * @return an int cuckoo hash bin.
      */
     public static IntNoStashCuckooHashBin createEnforceInstance(EnvType envType, IntCuckooHashBinType type,
-                                                                         int maxItemSize, int[] items,
-                                                                         SecureRandom secureRandom) {
+                                                                int maxItemSize, int[] items,
+                                                                SecureRandom secureRandom) {
         int hashNum = getHashNum(type);
         byte[][] keys;
         IntNoStashCuckooHashBin intNoStashCuckooHashBin = null;
@@ -133,18 +127,15 @@ public class IntCuckooHashBinFactory {
     public static IntNoStashCuckooHashBin createInstance(EnvType envType, IntCuckooHashBinType type,
                                                          int maxItemSize, int binNum, byte[][] keys) {
         checkInputs(type, maxItemSize, binNum, keys);
-        assert keys.length == getHashNum(type) : type.name() + " needs " + getHashNum(type) + " hash keys";
         switch (type) {
             case NO_STASH_NAIVE:
                 return new NaiveIntNoStashCuckooHashBin(envType, maxItemSize, binNum, keys);
-            case NO_STASH_DRRT18:
-                return new Drrt18IntNoStashCuckooHashBin(envType, maxItemSize, binNum, keys);
             case NO_STASH_PSZ18_3_HASH:
             case NO_STASH_PSZ18_4_HASH:
             case NO_STASH_PSZ18_5_HASH:
                 return new Psz18IntNoStashCuckooHashBin(envType, type, maxItemSize, binNum, keys);
             default:
-                throw new IllegalArgumentException("Invalid IntCuckooHashBinType: " + type.name());
+                throw new IllegalArgumentException("Invalid " + IntCuckooHashBinType.class.getSimpleName() + ": " + type.name());
         }
     }
 
@@ -153,24 +144,24 @@ public class IntCuckooHashBinFactory {
     }
 
     private static void checkInputs(IntCuckooHashBinType type, int maxItemSize, int binNum, byte[][] keys) {
-        assert keys.length == getHashNum(type) : type.name() + " needs " + getHashNum(type) + " hash keys";
-        assert maxItemSize > 0 && maxItemSize <= IntCuckooHashBinFactory.MAX_ITEM_SIZE_UPPER_BOUND
-            : "maxItemSize must be in range (0, " + IntCuckooHashBinFactory.MAX_ITEM_SIZE_UPPER_BOUND + "]";
-        assert binNum > maxItemSize : "binNum must be greater than maxItemSize";
+        MathPreconditions.checkEqual("hashNum", "keys.length", getHashNum(type), keys.length);
+        MathPreconditions.checkPositiveInRangeClosed(
+            "maxItemSize", maxItemSize, IntCuckooHashBinFactory.MAX_ITEM_SIZE_UPPER_BOUND
+        );
+        // the equal case is that binNum = 1 and maxItemSize = 1
+        MathPreconditions.checkGreaterOrEqual("binNum", binNum, maxItemSize);
     }
 
     /**
      * 返回与此整数布谷鸟哈希桶类型对应的对象布谷鸟哈希桶类型。
      *
-     * @param intCuckooHashBinType 整数布谷鸟哈希桶类型。
+     * @param type 整数布谷鸟哈希桶类型。
      * @return 对应的对象布谷鸟哈希桶类型。
      */
-    static CuckooHashBinType relateCuckooHashBinType(IntCuckooHashBinType intCuckooHashBinType) {
-        switch (intCuckooHashBinType) {
+    static CuckooHashBinType relateCuckooHashBinType(IntCuckooHashBinType type) {
+        switch (type) {
             case NO_STASH_NAIVE:
                 return CuckooHashBinType.NO_STASH_NAIVE;
-            case NO_STASH_DRRT18:
-                return CuckooHashBinType.NO_STASH_DRRT18;
             case NO_STASH_PSZ18_3_HASH:
                 return CuckooHashBinType.NO_STASH_PSZ18_3_HASH;
             case NO_STASH_PSZ18_4_HASH:
@@ -178,7 +169,7 @@ public class IntCuckooHashBinFactory {
             case NO_STASH_PSZ18_5_HASH:
                 return CuckooHashBinType.NO_STASH_PSZ18_5_HASH;
             default:
-                throw new IllegalArgumentException("Invalid IntCuckooHashBinType: " + intCuckooHashBinType.name());
+                throw new IllegalArgumentException("Invalid " + IntCuckooHashBinType.class.getSimpleName() + ": " + type.name());
         }
     }
 

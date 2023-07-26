@@ -55,7 +55,7 @@ public class BspCotFactory implements PtoFactory {
             case YWL20_MALICIOUS:
                 return LongUtils.ceilLog2(num) * batchNum + CommonConstants.BLOCK_BIT_LENGTH;
             default:
-                throw new IllegalArgumentException("Invalid BspCotType: " + type.name());
+                throw new IllegalArgumentException("Invalid: " + BspCotType.class.getSimpleName() + ": " + type.name());
         }
     }
 
