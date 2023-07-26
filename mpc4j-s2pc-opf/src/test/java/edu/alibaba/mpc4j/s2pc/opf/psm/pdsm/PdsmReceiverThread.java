@@ -51,7 +51,7 @@ class PdsmReceiverThread extends Thread {
     public void run() {
         try {
             receiver.init(l, d, num);
-            z1 = receiver.psm(l, d, inputArray);
+            z1 = receiver.pdsm(l, d, inputArray);
         } catch (MpcAbortException e) {
             e.printStackTrace();
         }

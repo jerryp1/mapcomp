@@ -55,7 +55,7 @@ public class Cgs22OpprfPdsmSender extends AbstractPdsmSender {
     }
 
     @Override
-    public SquareZ2Vector psm(int l, byte[][][] inputArrays) throws MpcAbortException {
+    public SquareZ2Vector pdsm(int l, byte[][][] inputArrays) throws MpcAbortException {
         setPtoInput(l, inputArrays);
         logPhaseInfo(PtoState.PTO_BEGIN);
 
@@ -86,7 +86,6 @@ public class Cgs22OpprfPdsmSender extends AbstractPdsmSender {
 
         stopWatch.start();
         // P0 and P1 call Feq with inputs t and w and receive bits y0 and y1 respectively
-
         SquareZ2Vector z0 = peqtSender.peqt(l, targetArray);
         stopWatch.stop();
         long peqtTime = stopWatch.getTime(TimeUnit.MILLISECONDS);

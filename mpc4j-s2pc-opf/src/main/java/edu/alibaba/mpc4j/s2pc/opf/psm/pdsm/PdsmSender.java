@@ -29,5 +29,5 @@ public interface PdsmSender extends TwoPartyPto {
      * @return the party's output.
      * @throws MpcAbortException the protocol failure aborts.
      */
-    SquareZ2Vector psm(int l, byte[][][] inputArrays) throws MpcAbortException;
+    SquareZ2Vector pdsm(int l, byte[][][] inputArrays) throws MpcAbortException;
 }

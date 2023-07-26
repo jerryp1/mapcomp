@@ -1,7 +1,7 @@
 //
 // Created by pengliqiang on 2023/7/21.
 //
-#include "edu_alibaba_mpc4j_s2pc_upso_ucpsi_sj23_pmt_Sj23PmtUcpsiNativeUtils.h"
+#include "edu_alibaba_mpc4j_s2pc_upso_ucpsi_sj23_pdsm_Sj23PdsmUcpsiNativeUtils.h"
 #include "seal/seal.h"
 #include "../serialize.h"
 #include "../apsi.h"
@@ -12,7 +12,7 @@ using namespace std;
 using namespace seal;
 
 [[maybe_unused]] JNIEXPORT
-jbyteArray JNICALL Java_edu_alibaba_mpc4j_s2pc_upso_ucpsi_sj23_pmt_Sj23PmtUcpsiNativeUtils_genEncryptionParameters(
+jbyteArray JNICALL Java_edu_alibaba_mpc4j_s2pc_upso_ucpsi_sj23_pdsm_Sj23PdsmUcpsiNativeUtils_genEncryptionParameters(
         JNIEnv *env, jclass, jint poly_modulus_degree, jlong plain_modulus) {
     EncryptionParameters parms = EncryptionParameters(scheme_type::bfv);
     parms.set_poly_modulus_degree(poly_modulus_degree);
@@ -22,7 +22,7 @@ jbyteArray JNICALL Java_edu_alibaba_mpc4j_s2pc_upso_ucpsi_sj23_pmt_Sj23PmtUcpsiN
 }
 
 [[maybe_unused]] JNIEXPORT
-jobject JNICALL Java_edu_alibaba_mpc4j_s2pc_upso_ucpsi_sj23_pmt_Sj23PmtUcpsiNativeUtils_keyGen(
+jobject JNICALL Java_edu_alibaba_mpc4j_s2pc_upso_ucpsi_sj23_pdsm_Sj23PdsmUcpsiNativeUtils_keyGen(
         JNIEnv *env, jclass, jbyteArray parms_bytes) {
     EncryptionParameters parms = deserialize_encryption_parms(env, parms_bytes);
     SEALContext context = SEALContext(parms);
@@ -44,7 +44,7 @@ jobject JNICALL Java_edu_alibaba_mpc4j_s2pc_upso_ucpsi_sj23_pmt_Sj23PmtUcpsiNati
 }
 
 [[maybe_unused]] JNIEXPORT
-jobject JNICALL Java_edu_alibaba_mpc4j_s2pc_upso_ucpsi_sj23_pmt_Sj23PmtUcpsiNativeUtils_computeEncryptedPowers(
+jobject JNICALL Java_edu_alibaba_mpc4j_s2pc_upso_ucpsi_sj23_pdsm_Sj23PdsmUcpsiNativeUtils_computeEncryptedPowers(
         JNIEnv *env, jclass, jbyteArray parms_bytes, jbyteArray relin_keys_bytes, jobject query_list,
         jobjectArray jparent_powers, jintArray jsource_power_index, jint ps_low_power) {
     EncryptionParameters parms = deserialize_encryption_parms(env, parms_bytes);
@@ -73,7 +73,7 @@ jobject JNICALL Java_edu_alibaba_mpc4j_s2pc_upso_ucpsi_sj23_pmt_Sj23PmtUcpsiNati
 }
 
 [[maybe_unused]] JNIEXPORT
-jbyteArray JNICALL Java_edu_alibaba_mpc4j_s2pc_upso_ucpsi_sj23_pmt_Sj23PmtUcpsiNativeUtils_naiveComputeMatches(
+jbyteArray JNICALL Java_edu_alibaba_mpc4j_s2pc_upso_ucpsi_sj23_pdsm_Sj23PdsmUcpsiNativeUtils_naiveComputeMatches(
         JNIEnv *env, jclass, jbyteArray parms_bytes, jbyteArray pk_bytes, jobjectArray database_coeffs,
         jobject query_list, jlongArray r_coeffs) {
     EncryptionParameters parms = deserialize_encryption_parms(env, parms_bytes);
@@ -108,7 +108,7 @@ jbyteArray JNICALL Java_edu_alibaba_mpc4j_s2pc_upso_ucpsi_sj23_pmt_Sj23PmtUcpsiN
 }
 
 [[maybe_unused]] JNIEXPORT
-jobject JNICALL Java_edu_alibaba_mpc4j_s2pc_upso_ucpsi_sj23_pmt_Sj23PmtUcpsiNativeUtils_generateQuery(
+jobject JNICALL Java_edu_alibaba_mpc4j_s2pc_upso_ucpsi_sj23_pdsm_Sj23PdsmUcpsiNativeUtils_generateQuery(
         JNIEnv *env, jclass, jbyteArray parms_bytes, jbyteArray pk_bytes, jbyteArray sk_bytes, jobjectArray coeffs_array) {
     EncryptionParameters parms = deserialize_encryption_parms(env, parms_bytes);
     SEALContext context = SEALContext(parms);
@@ -127,7 +127,7 @@ jobject JNICALL Java_edu_alibaba_mpc4j_s2pc_upso_ucpsi_sj23_pmt_Sj23PmtUcpsiNati
 }
 
 [[maybe_unused]] JNIEXPORT
-jlongArray JNICALL Java_edu_alibaba_mpc4j_s2pc_upso_ucpsi_sj23_pmt_Sj23PmtUcpsiNativeUtils_decodeReply(
+jlongArray JNICALL Java_edu_alibaba_mpc4j_s2pc_upso_ucpsi_sj23_pdsm_Sj23PdsmUcpsiNativeUtils_decodeReply(
         JNIEnv *env, jclass, jbyteArray parms_bytes, jbyteArray sk_bytes, jbyteArray response_byte) {
     EncryptionParameters parms = deserialize_encryption_parms(env, parms_bytes);
     SEALContext context = SEALContext(parms);

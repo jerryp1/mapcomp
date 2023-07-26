@@ -1,4 +1,4 @@
-package edu.alibaba.mpc4j.s2pc.upso.ucpsi.sj23.pmt;
+package edu.alibaba.mpc4j.s2pc.upso.ucpsi.sj23.pdsm;
 
 import edu.alibaba.mpc4j.common.rpc.desc.SecurityModel;
 import edu.alibaba.mpc4j.common.rpc.pto.AbstractMultiPartyPtoConfig;
@@ -14,27 +14,27 @@ import static edu.alibaba.mpc4j.s2pc.upso.ucpsi.UcpsiFactory.UcpsiType;
  * @author Liqiang Peng
  * @date 2023/7/17
  */
-public class Sj23PmtUcpsiConfig extends AbstractMultiPartyPtoConfig implements UcpsiConfig {
+public class Sj23PdsmUcpsiConfig extends AbstractMultiPartyPtoConfig implements UcpsiConfig {
     /**
      * pmt config
      */
     private final PdsmConfig pdsmConfig;
 
-    private Sj23PmtUcpsiConfig(Builder builder) {
+    private Sj23PdsmUcpsiConfig(Builder builder) {
         super(SecurityModel.SEMI_HONEST, builder.pdsmConfig);
         pdsmConfig = builder.pdsmConfig;
     }
 
     @Override
     public UcpsiType getPtoType() {
-        return UcpsiType.SJ23_PMT;
+        return UcpsiType.SJ23_PDSM;
     }
 
     public PdsmConfig getPsmConfig() {
         return pdsmConfig;
     }
 
-    public static class Builder implements org.apache.commons.lang3.builder.Builder<Sj23PmtUcpsiConfig> {
+    public static class Builder implements org.apache.commons.lang3.builder.Builder<Sj23PdsmUcpsiConfig> {
         /**
          * pmt config
          */
@@ -50,8 +50,8 @@ public class Sj23PmtUcpsiConfig extends AbstractMultiPartyPtoConfig implements U
         }
 
         @Override
-        public Sj23PmtUcpsiConfig build() {
-            return new Sj23PmtUcpsiConfig(this);
+        public Sj23PdsmUcpsiConfig build() {
+            return new Sj23PdsmUcpsiConfig(this);
         }
     }
 }

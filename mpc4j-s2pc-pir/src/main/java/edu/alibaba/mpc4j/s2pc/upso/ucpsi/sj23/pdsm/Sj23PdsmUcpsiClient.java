@@ -1,4 +1,4 @@
-package edu.alibaba.mpc4j.s2pc.upso.ucpsi.sj23.pmt;
+package edu.alibaba.mpc4j.s2pc.upso.ucpsi.sj23.pdsm;
 
 import edu.alibaba.mpc4j.common.rpc.*;
 import edu.alibaba.mpc4j.common.rpc.utils.DataPacket;
@@ -33,7 +33,7 @@ import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
-import static edu.alibaba.mpc4j.s2pc.upso.ucpsi.sj23.pmt.Sj23PmtUcpsiPtoDesc.*;
+import static edu.alibaba.mpc4j.s2pc.upso.ucpsi.sj23.pdsm.Sj23PdsmUcpsiPtoDesc.*;
 
 /**
  * SJ23 unbalanced circuit PSI client.
@@ -41,7 +41,7 @@ import static edu.alibaba.mpc4j.s2pc.upso.ucpsi.sj23.pmt.Sj23PmtUcpsiPtoDesc.*;
  * @author Liqiang Peng
  * @date 2023/7/21
  */
-public class Sj23PmtUcpsiClient<T> extends AbstractUcpsiClient<T> {
+public class Sj23PdsmUcpsiClient<T> extends AbstractUcpsiClient<T> {
     /**
      * private set membership receiver
      */
@@ -65,7 +65,7 @@ public class Sj23PmtUcpsiClient<T> extends AbstractUcpsiClient<T> {
     /**
      * SJ23 UCPSI params
      */
-    private Sj23PmtUcpsiParams params;
+    private Sj23PdsmUcpsiParams params;
     /**
      * cuckoo hash bin
      */
@@ -123,7 +123,7 @@ public class Sj23PmtUcpsiClient<T> extends AbstractUcpsiClient<T> {
      */
     private BigInteger shiftMask;
 
-    public Sj23PmtUcpsiClient(Rpc clientRpc, Party serverParty, Sj23PmtUcpsiConfig config) {
+    public Sj23PdsmUcpsiClient(Rpc clientRpc, Party serverParty, Sj23PdsmUcpsiConfig config) {
         super(getInstance(), clientRpc, serverParty, config);
         pdsmSender = PdsmFactory.createSender(clientRpc, serverParty, config.getPsmConfig());
         addSubPtos(pdsmSender);
@@ -139,7 +139,7 @@ public class Sj23PmtUcpsiClient<T> extends AbstractUcpsiClient<T> {
     public void init(int maxClientElementSize, int serverElementSize) throws MpcAbortException {
         setInitInput(maxClientElementSize, serverElementSize);
         logPhaseInfo(PtoState.INIT_BEGIN);
-        params = Sj23PmtUcpsiParams.getParams(serverElementSize, maxClientElementSize);
+        params = Sj23PdsmUcpsiParams.getParams(serverElementSize, maxClientElementSize);
 
         DataPacketHeader cuckooHashKeyHeader = new DataPacketHeader(
             encodeTaskId, getPtoDesc().getPtoId(), PtoStep.SERVER_SEND_HASH_KEYS.ordinal(), extraInfo,
@@ -177,8 +177,8 @@ public class Sj23PmtUcpsiClient<T> extends AbstractUcpsiClient<T> {
         shiftMask = BigInteger.ONE.shiftLeft(params.plainModulusSize).subtract(BigInteger.ONE);
         byteL = CommonUtils.getByteLength(params.l);
         zp64 = Zp64Factory.createInstance(envType, params.plainModulus);
-        pdsmReceiver.init(params.l, params.alphaUpperBound, params.alphaUpperBound * params.binNum);
-        pdsmSender.init(params.l, params.alphaUpperBound, params.alphaUpperBound * params.binNum);
+        pdsmReceiver.init(params.l, params.alphaUpperBound, params.binNum);
+        pdsmSender.init(params.l, params.alphaUpperBound, params.binNum);
         stopWatch.stop();
         long initTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
         stopWatch.reset();
@@ -237,9 +237,9 @@ public class Sj23PmtUcpsiClient<T> extends AbstractUcpsiClient<T> {
         // private membership test
         SquareZ2Vector pemtOutput;
         if (isHeReceiver) {
-            pemtOutput = pdsmReceiver.psm(params.l, alpha, mask);
+            pemtOutput = pdsmReceiver.pdsm(params.l, alpha, mask);
         } else {
-            pemtOutput = pdsmSender.psm(params.l, response);
+            pemtOutput = pdsmSender.pdsm(params.l, response);
         }
         ArrayList<T> table = IntStream.range(0, params.binNum)
             .mapToObj(batchIndex -> {
@@ -272,7 +272,7 @@ public class Sj23PmtUcpsiClient<T> extends AbstractUcpsiClient<T> {
             .collect(Collectors.toCollection(ArrayList::new));
         Stream<long[][]> queryStream = parallel ? encodedQuery.stream().parallel() : encodedQuery.stream();
         return queryStream
-            .map(i -> Sj23PmtUcpsiNativeUtils.generateQuery(params.encryptionParams, clientPublicKey, clientSecretKey, i))
+            .map(i -> Sj23PdsmUcpsiNativeUtils.generateQuery(params.encryptionParams, clientPublicKey, clientSecretKey, i))
             .flatMap(Collection::stream)
             .collect(Collectors.toList());
     }
@@ -327,7 +327,7 @@ public class Sj23PmtUcpsiClient<T> extends AbstractUcpsiClient<T> {
             .collect(Collectors.toCollection(ArrayList::new));
         Stream<long[][]> encodeStream = parallel ? encodedQuery.stream().parallel() : encodedQuery.stream();
         List<byte[]> queryPayload = encodeStream
-            .map(i -> Sj23PmtUcpsiNativeUtils.generateQuery(params.encryptionParams, clientPublicKey, clientSecretKey, i))
+            .map(i -> Sj23PdsmUcpsiNativeUtils.generateQuery(params.encryptionParams, clientPublicKey, clientSecretKey, i))
             .flatMap(Collection::stream)
             .collect(Collectors.toList());
         DataPacketHeader queryHeader = new DataPacketHeader(
@@ -358,7 +358,7 @@ public class Sj23PmtUcpsiClient<T> extends AbstractUcpsiClient<T> {
         IntStream intStream = IntStream.range(0, params.ciphertextNum);
         intStream = parallel ? intStream.parallel() : intStream;
         List<byte[]> queryPowers = intStream
-            .mapToObj(i -> Sj23PmtUcpsiNativeUtils.computeEncryptedPowers(
+            .mapToObj(i -> Sj23PdsmUcpsiNativeUtils.computeEncryptedPowers(
                 params.encryptionParams,
                 serverRelinKeys,
                 queryList.subList(i * params.queryPowers.length, (i + 1) * params.queryPowers.length),
@@ -370,7 +370,7 @@ public class Sj23PmtUcpsiClient<T> extends AbstractUcpsiClient<T> {
         return IntStream.range(0, params.ciphertextNum)
             .mapToObj(i ->
                 (parallel ? IntStream.range(0, alpha).parallel() : IntStream.range(0, alpha))
-                    .mapToObj(j -> Sj23PmtUcpsiNativeUtils.naiveComputeMatches(
+                    .mapToObj(j -> Sj23PdsmUcpsiNativeUtils.naiveComputeMatches(
                         params.encryptionParams,
                         serverPublicKey,
                         plaintextList.get(i * alpha + j),
@@ -388,7 +388,7 @@ public class Sj23PmtUcpsiClient<T> extends AbstractUcpsiClient<T> {
      * @return public keys.
      */
     private List<byte[]> clientKeyGen() {
-        List<byte[]> keyPair = Sj23PmtUcpsiNativeUtils.keyGen(params.encryptionParams);
+        List<byte[]> keyPair = Sj23PdsmUcpsiNativeUtils.keyGen(params.encryptionParams);
         List<byte[]> publicKeys = new ArrayList<>();
         this.clientPublicKey = keyPair.get(0);
         byte[] clientRelinKeys = keyPair.get(1);
@@ -436,7 +436,7 @@ public class Sj23PmtUcpsiClient<T> extends AbstractUcpsiClient<T> {
         MpcAbortPreconditions.checkArgument(responsePayload.size() == params.ciphertextNum * alpha);
         Stream<byte[]> responseStream = parallel ? responsePayload.stream().parallel() : responsePayload.stream();
         List<long[]> coeffs = responseStream
-            .map(i -> Sj23PmtUcpsiNativeUtils.decodeReply(params.encryptionParams, clientSecretKey, i))
+            .map(i -> Sj23PdsmUcpsiNativeUtils.decodeReply(params.encryptionParams, clientSecretKey, i))
             .collect(Collectors.toCollection(ArrayList::new));
         byte[][][] response = new byte[params.binNum][alpha][byteL];
         for (int i = 0; i < params.binNum; i++) {

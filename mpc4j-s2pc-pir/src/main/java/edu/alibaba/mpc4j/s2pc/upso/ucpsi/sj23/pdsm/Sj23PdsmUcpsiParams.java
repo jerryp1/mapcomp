@@ -1,4 +1,4 @@
-package edu.alibaba.mpc4j.s2pc.upso.ucpsi.sj23.pmt;
+package edu.alibaba.mpc4j.s2pc.upso.ucpsi.sj23.pdsm;
 
 import java.util.stream.IntStream;
 
@@ -8,7 +8,7 @@ import java.util.stream.IntStream;
  * @author Liqiang Peng
  * @date 2023/7/21
  */
-public class Sj23PmtUcpsiParams {
+public class Sj23PdsmUcpsiParams {
     /**
      * bin num
      */
@@ -54,7 +54,7 @@ public class Sj23PmtUcpsiParams {
      */
     public final int alphaUpperBound;
 
-    private Sj23PmtUcpsiParams(int binNum, int maxPartitionSizePerBin, int alphaUpperBound) {
+    private Sj23PdsmUcpsiParams(int binNum, int maxPartitionSizePerBin, int alphaUpperBound) {
         this.binNum = binNum;
         this.maxPartitionSizePerBin = maxPartitionSizePerBin;
         this.queryPowers = IntStream.range(0, maxPartitionSizePerBin).map(i -> i + 1).toArray();
@@ -65,62 +65,62 @@ public class Sj23PmtUcpsiParams {
         this.ciphertextNum = binNum / itemPerCiphertext;
         this.l = plainModulusSize;
         this.alphaUpperBound = alphaUpperBound;
-        this.encryptionParams = Sj23PmtUcpsiNativeUtils.genEncryptionParameters(polyModulusDegree, plainModulus);
+        this.encryptionParams = Sj23PdsmUcpsiNativeUtils.genEncryptionParameters(polyModulusDegree, plainModulus);
     }
 
     /**
      * serve log size 20, client log size 12.
      */
-    public static final Sj23PmtUcpsiParams SERVER_LOG_SIZE_20_CLIENT_LOG_SIZE_12 = new Sj23PmtUcpsiParams(
+    public static final Sj23PdsmUcpsiParams SERVER_LOG_SIZE_20_CLIENT_LOG_SIZE_12 = new Sj23PdsmUcpsiParams(
         1 << 13, 24, 4
     );
 
     /**
      * serve log size 20, client log size 13.
      */
-    public static final Sj23PmtUcpsiParams SERVER_LOG_SIZE_20_CLIENT_LOG_SIZE_13 = new Sj23PmtUcpsiParams(
+    public static final Sj23PdsmUcpsiParams SERVER_LOG_SIZE_20_CLIENT_LOG_SIZE_13 = new Sj23PdsmUcpsiParams(
         1 << 14, 18,  4
     );
 
     /**
      * serve log size 20, client log size 16.
      */
-    public static final Sj23PmtUcpsiParams SERVER_LOG_SIZE_20_CLIENT_LOG_SIZE_16 = new Sj23PmtUcpsiParams(
+    public static final Sj23PdsmUcpsiParams SERVER_LOG_SIZE_20_CLIENT_LOG_SIZE_16 = new Sj23PdsmUcpsiParams(
         3 * (1 << 15), 8, 3
     );
 
     /**
      * serve log size 24, client log size 12.
      */
-    public static final Sj23PmtUcpsiParams SERVER_LOG_SIZE_24_CLIENT_LOG_SIZE_12 = new Sj23PmtUcpsiParams(
+    public static final Sj23PdsmUcpsiParams SERVER_LOG_SIZE_24_CLIENT_LOG_SIZE_12 = new Sj23PdsmUcpsiParams(
         1 << 13, 83, 3
     );
 
     /**
      * serve log size 24, client log size 13.
      */
-    public static final Sj23PmtUcpsiParams SERVER_LOG_SIZE_24_CLIENT_LOG_SIZE_13 = new Sj23PmtUcpsiParams(
+    public static final Sj23PdsmUcpsiParams SERVER_LOG_SIZE_24_CLIENT_LOG_SIZE_13 = new Sj23PdsmUcpsiParams(
         1 << 14, 55,  3
     );
 
     /**
      * serve log size 24, client log size 16.
      */
-    public static final Sj23PmtUcpsiParams SERVER_LOG_SIZE_24_CLIENT_LOG_SIZE_16 = new Sj23PmtUcpsiParams(
+    public static final Sj23PdsmUcpsiParams SERVER_LOG_SIZE_24_CLIENT_LOG_SIZE_16 = new Sj23PdsmUcpsiParams(
         3 * (1 << 15), 24, 2
     );
 
     /**
      * serve log size 26, client log size 12.
      */
-    public static final Sj23PmtUcpsiParams SERVER_LOG_SIZE_26_CLIENT_LOG_SIZE_12 = new Sj23PmtUcpsiParams(
+    public static final Sj23PdsmUcpsiParams SERVER_LOG_SIZE_26_CLIENT_LOG_SIZE_12 = new Sj23PdsmUcpsiParams(
         1 << 13, 158, 4
     );
 
     /**
      * serve log size 26, client log size 16.
      */
-    public static final Sj23PmtUcpsiParams SERVER_LOG_SIZE_26_CLIENT_LOG_SIZE_16 = new Sj23PmtUcpsiParams(
+    public static final Sj23PdsmUcpsiParams SERVER_LOG_SIZE_26_CLIENT_LOG_SIZE_16 = new Sj23PdsmUcpsiParams(
         3 * (1 << 15), 55, 2
     );
 
@@ -131,7 +131,7 @@ public class Sj23PmtUcpsiParams {
      * @param clientElementSize client element size.
      * @return SJ23 UCPSI params.
      */
-    static public Sj23PmtUcpsiParams getParams(int serverElementSize, int clientElementSize) {
+    static public Sj23PdsmUcpsiParams getParams(int serverElementSize, int clientElementSize) {
         if (serverElementSize <= 1 << 20) {
             if (clientElementSize <= 1 << 12) {
                 return SERVER_LOG_SIZE_20_CLIENT_LOG_SIZE_12;

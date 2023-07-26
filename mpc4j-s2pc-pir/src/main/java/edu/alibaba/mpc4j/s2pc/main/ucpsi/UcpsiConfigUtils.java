@@ -6,7 +6,7 @@ import edu.alibaba.mpc4j.s2pc.upso.ucpsi.UcpsiConfig;
 import edu.alibaba.mpc4j.s2pc.upso.ucpsi.cgs22.Cgs22UcpsiConfig;
 import edu.alibaba.mpc4j.s2pc.upso.ucpsi.psty19.Psty19UcpsiConfig;
 import edu.alibaba.mpc4j.s2pc.upso.ucpsi.sj23.peqt.Sj23PeqtUcpsiConfig;
-import edu.alibaba.mpc4j.s2pc.upso.ucpsi.sj23.pmt.Sj23PmtUcpsiConfig;
+import edu.alibaba.mpc4j.s2pc.upso.ucpsi.sj23.pdsm.Sj23PdsmUcpsiConfig;
 import edu.alibaba.mpc4j.s2pc.upso.uopprf.ub.pir.PirUbopprfConfig;
 import edu.alibaba.mpc4j.s2pc.upso.uopprf.urb.pir.PirUrbopprfConfig;
 
@@ -77,6 +77,6 @@ public class UcpsiConfigUtils {
     }
 
     private static UcpsiConfig createSj23UcpsiPmtConfig(boolean silent) {
-        return new Sj23PmtUcpsiConfig.Builder(SecurityModel.SEMI_HONEST, silent).build();
+        return new Sj23PdsmUcpsiConfig.Builder(SecurityModel.SEMI_HONEST, silent).build();
     }
 }

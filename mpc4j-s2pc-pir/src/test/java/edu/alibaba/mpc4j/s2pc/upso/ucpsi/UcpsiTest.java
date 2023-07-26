@@ -11,7 +11,7 @@ import edu.alibaba.mpc4j.s2pc.pso.PsoUtils;
 import edu.alibaba.mpc4j.s2pc.upso.ucpsi.cgs22.Cgs22UcpsiConfig;
 import edu.alibaba.mpc4j.s2pc.upso.ucpsi.psty19.Psty19UcpsiConfig;
 import edu.alibaba.mpc4j.s2pc.upso.ucpsi.sj23.peqt.Sj23PeqtUcpsiConfig;
-import edu.alibaba.mpc4j.s2pc.upso.ucpsi.sj23.pmt.Sj23PmtUcpsiConfig;
+import edu.alibaba.mpc4j.s2pc.upso.ucpsi.sj23.pdsm.Sj23PdsmUcpsiConfig;
 import edu.alibaba.mpc4j.s2pc.upso.uopprf.ub.pir.PirUbopprfConfig;
 import edu.alibaba.mpc4j.s2pc.upso.uopprf.urb.pir.PirUrbopprfConfig;
 import org.junit.Assert;
@@ -66,8 +66,8 @@ public class UcpsiTest extends AbstractTwoPartyPtoTest {
                 .build()
         });
         configurations.add(new Object[]{
-            UcpsiFactory.UcpsiType.SJ23_PMT.name(),
-            new Sj23PmtUcpsiConfig.Builder(SecurityModel.SEMI_HONEST, true)
+            UcpsiFactory.UcpsiType.SJ23_PDSM.name(),
+            new Sj23PdsmUcpsiConfig.Builder(SecurityModel.SEMI_HONEST, true)
                 .build()
         });
         // CGS22

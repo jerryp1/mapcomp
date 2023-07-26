@@ -1,4 +1,4 @@
-package edu.alibaba.mpc4j.s2pc.upso.ucpsi.sj23.pmt;
+package edu.alibaba.mpc4j.s2pc.upso.ucpsi.sj23.pdsm;
 
 import edu.alibaba.mpc4j.common.rpc.desc.PtoDesc;
 import edu.alibaba.mpc4j.common.rpc.desc.PtoDescManager;
@@ -13,7 +13,7 @@ import edu.alibaba.mpc4j.common.rpc.desc.PtoDescManager;
  * @author Liqiang Peng
  * @date 2023/7/17
  */
-class Sj23PmtUcpsiPtoDesc implements PtoDesc {
+class Sj23PdsmUcpsiPtoDesc implements PtoDesc {
     /**
      * the protocol ID
      */
@@ -60,12 +60,12 @@ class Sj23PmtUcpsiPtoDesc implements PtoDesc {
     /**
      * the singleton mode
      */
-    private static final Sj23PmtUcpsiPtoDesc INSTANCE = new Sj23PmtUcpsiPtoDesc();
+    private static final Sj23PdsmUcpsiPtoDesc INSTANCE = new Sj23PdsmUcpsiPtoDesc();
 
     /**
      * private constructor.
      */
-    private Sj23PmtUcpsiPtoDesc() {
+    private Sj23PdsmUcpsiPtoDesc() {
         // empty
     }
 

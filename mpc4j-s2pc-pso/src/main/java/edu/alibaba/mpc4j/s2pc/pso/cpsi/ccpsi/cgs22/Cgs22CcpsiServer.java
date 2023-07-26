@@ -161,7 +161,7 @@ public class Cgs22CcpsiServer<T> extends AbstractCcpsiServer<T> {
             })
             .toArray(byte[][]::new);
         // P1 inputs y_1^*, ..., y_β^* and outputs z0.
-        SquareZ2Vector z0 = pdsmReceiver.psm(psmL, d, targetArray);
+        SquareZ2Vector z0 = pdsmReceiver.pdsm(psmL, d, targetArray);
         targetArray = null;
         stopWatch.stop();
         long psmTime = stopWatch.getTime(TimeUnit.MILLISECONDS);

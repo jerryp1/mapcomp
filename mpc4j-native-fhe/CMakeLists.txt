@@ -72,7 +72,7 @@ add_library(
         pir/edu_alibaba_mpc4j_s2pc_pir_index_single_constantweightpir_Mk22SingleIndexPirNativeUtils.cpp
         pir/edu_alibaba_mpc4j_s2pc_pir_keyword_aaag22_Aaag22KwPirNativeUtils.cpp
         pir/edu_alibaba_mpc4j_s2pc_upso_ucpsi_sj23_peqt_Sj23PeqtUcpsiNativeUtils.cpp
-        pir/edu_alibaba_mpc4j_s2pc_upso_ucpsi_sj23_pmt_Sj23PmtUcpsiNativeUtils.cpp)
+        pir/edu_alibaba_mpc4j_s2pc_upso_ucpsi_sj23_pdsm_Sj23PdsmUcpsiNativeUtils.cpp)
 # 链接SEAL库
 target_link_libraries(mpc4j-native-fhe PUBLIC SEAL::seal_shared)
 #target_link_libraries(mpc4j-native-fhe PUBLIC SEAL::seal)

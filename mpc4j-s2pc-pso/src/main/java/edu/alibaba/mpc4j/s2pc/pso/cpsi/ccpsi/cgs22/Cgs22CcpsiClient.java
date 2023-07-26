@@ -160,7 +160,7 @@ public class Cgs22CcpsiClient<T> extends AbstractCcpsiClient<T> {
                     .toArray(byte[][]::new))
             .toArray(byte[][][]::new);
         // P2 inputs y_1^*, ..., y_β^* and outputs z1.
-        SquareZ2Vector z1 = pdsmSender.psm(psmL, targetArrays);
+        SquareZ2Vector z1 = pdsmSender.pdsm(psmL, targetArrays);
         // create the table
         ArrayList<T> table = IntStream.range(0, beta)
             .mapToObj(batchIndex -> {

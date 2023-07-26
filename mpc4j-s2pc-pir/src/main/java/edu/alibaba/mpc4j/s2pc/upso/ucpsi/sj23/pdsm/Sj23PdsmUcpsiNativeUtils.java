@@ -1,4 +1,4 @@
-package edu.alibaba.mpc4j.s2pc.upso.ucpsi.sj23.pmt;
+package edu.alibaba.mpc4j.s2pc.upso.ucpsi.sj23.pdsm;
 
 import edu.alibaba.mpc4j.common.tool.CommonConstants;
 
@@ -8,13 +8,13 @@ import java.util.List;
  * @author Liqiang Peng
  * @date 2023/7/17
  */
-public class Sj23PmtUcpsiNativeUtils {
+public class Sj23PdsmUcpsiNativeUtils {
 
     static {
         System.loadLibrary(CommonConstants.MPC4J_NATIVE_FHE_NAME);
     }
 
-    private Sj23PmtUcpsiNativeUtils() {
+    private Sj23PdsmUcpsiNativeUtils() {
         // empty
     }
 

@@ -177,7 +177,7 @@ public class Cgs22UcpsiClient<T> extends AbstractUcpsiClient<T> {
                     .toArray(byte[][]::new))
             .toArray(byte[][][]::new);
         // private set membership
-        SquareZ2Vector z1 = pdsmSender.psm(psmL, targetArrays);
+        SquareZ2Vector z1 = pdsmSender.pdsm(psmL, targetArrays);
         // create the table
         ArrayList<T> table = IntStream.range(0, beta)
             .mapToObj(batchIndex -> {

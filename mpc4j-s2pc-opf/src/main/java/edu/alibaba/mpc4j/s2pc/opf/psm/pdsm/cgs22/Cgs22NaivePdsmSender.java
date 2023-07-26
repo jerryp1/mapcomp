@@ -45,7 +45,7 @@ public class Cgs22NaivePdsmSender extends AbstractPdsmSender {
     }
 
     @Override
-    public SquareZ2Vector psm(int l, byte[][][] inputArrays) throws MpcAbortException {
+    public SquareZ2Vector pdsm(int l, byte[][][] inputArrays) throws MpcAbortException {
         setPtoInput(l, inputArrays);
         logPhaseInfo(PtoState.PTO_BEGIN);
 
