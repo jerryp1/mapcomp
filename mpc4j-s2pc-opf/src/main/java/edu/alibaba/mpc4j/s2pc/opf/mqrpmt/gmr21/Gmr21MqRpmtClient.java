@@ -12,6 +12,7 @@ import edu.alibaba.mpc4j.common.tool.hashbin.object.cuckoo.CuckooHashBinFactory.
 import edu.alibaba.mpc4j.crypto.matrix.okve.dokvs.gf2e.Gf2eDokvs;
 import edu.alibaba.mpc4j.crypto.matrix.okve.dokvs.gf2e.Gf2eDokvsFactory;
 import edu.alibaba.mpc4j.common.tool.utils.BytesUtils;
+import edu.alibaba.mpc4j.crypto.matrix.okve.dokvs.gf2e.Gf2eDokvsFactory.Gf2eDokvsType;
 import edu.alibaba.mpc4j.s2pc.opf.mqrpmt.AbstractMqRpmtClient;
 import edu.alibaba.mpc4j.s2pc.opf.mqrpmt.gmr21.Gmr21MqRpmtPtoDesc.PtoStep;
 import edu.alibaba.mpc4j.s2pc.opf.oprf.*;
@@ -47,7 +48,7 @@ public class Gmr21MqRpmtClient extends AbstractMqRpmtClient {
     /**
      * OKVS类型
      */
-    private final Gf2eDokvsFactory.Gf2eDokvsType gf2eDokvsType;
+    private final Gf2eDokvsType okvsType;
     /**
      * 布谷鸟哈希类型
      */
@@ -85,7 +86,7 @@ public class Gmr21MqRpmtClient extends AbstractMqRpmtClient {
         addSubPtos(osnSender);
         peqtOprfReceiver = OprfFactory.createOprfReceiver(clientRpc, serverParty, config.getPeqtOprfConfig());
         addSubPtos(peqtOprfReceiver);
-        gf2eDokvsType = config.getGf2eDokvsType();
+        okvsType = config.getOkvsType();
         cuckooHashBinType = config.getCuckooHashBinType();
         cuckooHashNum = CuckooHashBinFactory.getHashNum(cuckooHashBinType);
     }
@@ -115,8 +116,8 @@ public class Gmr21MqRpmtClient extends AbstractMqRpmtClient {
             otherParty().getPartyId(), ownParty().getPartyId()
         );
         List<byte[]> keysPayload = rpc.receive(keysHeader).getPayload();
-        int dokvsHashKeyNum = Gf2eDokvsFactory.getHashKeyNum(gf2eDokvsType);
-        MpcAbortPreconditions.checkArgument(keysPayload.size() == dokvsHashKeyNum);
+        int okvsHashKeyNum = Gf2eDokvsFactory.getHashKeyNum(okvsType);
+        MpcAbortPreconditions.checkArgument(keysPayload.size() == okvsHashKeyNum);
         // 初始化OKVS密钥
         okvsHashKeys = keysPayload.toArray(new byte[0][]);
         stopWatch.stop();
@@ -286,7 +287,7 @@ public class Gmr21MqRpmtClient extends AbstractMqRpmtClient {
                 index -> valueArray[index]
             ));
         Gf2eDokvs<ByteBuffer> okvs = Gf2eDokvsFactory.createInstance(
-            envType, gf2eDokvsType, cuckooHashNum * clientElementSize,
+            envType, okvsType, cuckooHashNum * clientElementSize,
             Gmr21MqRpmtPtoDesc.FINITE_FIELD_BYTE_LENGTH * Byte.SIZE, okvsHashKeys
         );
         // OKVS编码可以并行处理

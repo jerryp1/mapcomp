@@ -10,6 +10,7 @@ import edu.alibaba.mpc4j.common.tool.CommonConstants;
 import edu.alibaba.mpc4j.common.tool.crypto.prf.Prf;
 import edu.alibaba.mpc4j.common.tool.crypto.prf.PrfFactory;
 import edu.alibaba.mpc4j.crypto.matrix.okve.dokvs.gf2e.Gf2eDokvsFactory;
+import edu.alibaba.mpc4j.crypto.matrix.okve.dokvs.gf2e.Gf2eDokvsFactory.Gf2eDokvsType;
 import edu.alibaba.mpc4j.crypto.matrix.okve.dokvs.gf2e.SparseGf2eDokvs;
 import edu.alibaba.mpc4j.common.tool.utils.BytesUtils;
 import edu.alibaba.mpc4j.common.tool.utils.CommonUtils;
@@ -46,7 +47,7 @@ public class PirUbopprfSender extends AbstractUbopprfSender {
     /**
      * OKVS type
      */
-    private final Gf2eDokvsFactory.Gf2eDokvsType okvsType;
+    private final Gf2eDokvsType okvsType;
     /**
      * single-query OPRF key
      */

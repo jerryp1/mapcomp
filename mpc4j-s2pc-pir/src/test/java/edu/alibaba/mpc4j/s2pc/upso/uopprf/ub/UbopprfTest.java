@@ -58,11 +58,19 @@ public class UbopprfTest extends AbstractTwoPartyPtoTest {
 
         configurations.add(new Object[]{
             UbopprfType.PIR.name() + "(" + Gf2eDokvsType.H3_SPARSE_CLUSTER_BLAZE_GCT + ")",
-            new PirUbopprfConfig.Builder().setOkvsType(Gf2eDokvsType.H3_SPARSE_CLUSTER_BLAZE_GCT).build(),
+            new PirUbopprfConfig.Builder().setSparseOkvsType(Gf2eDokvsType.H3_SPARSE_CLUSTER_BLAZE_GCT).build(),
+        });
+        configurations.add(new Object[]{
+            UbopprfType.PIR.name() + "(" + Gf2eDokvsType.H3_SINGLETON_GCT + ")",
+            new PirUbopprfConfig.Builder().setSparseOkvsType(Gf2eDokvsType.H3_SINGLETON_GCT).build(),
         });
         configurations.add(new Object[]{
             UbopprfType.PIR.name() + "(" + Gf2eDokvsType.H2_SINGLETON_GCT + ")",
-            new PirUbopprfConfig.Builder().setOkvsType(Gf2eDokvsType.H2_SINGLETON_GCT).build(),
+            new PirUbopprfConfig.Builder().setSparseOkvsType(Gf2eDokvsType.H2_SINGLETON_GCT).build(),
+        });
+        configurations.add(new Object[]{
+            UbopprfType.OKVS.name() + "(" + Gf2eDokvsType.H3_NAIVE_CLUSTER_BLAZE_GCT + ")",
+            new OkvsUbopprfConfig.Builder().setOkvsType(Gf2eDokvsType.H3_SPARSE_CLUSTER_BLAZE_GCT).build(),
         });
         configurations.add(new Object[]{
             UbopprfType.OKVS.name() + "(" + Gf2eDokvsType.H3_SPARSE_CLUSTER_BLAZE_GCT + ")",
@@ -80,7 +88,6 @@ public class UbopprfTest extends AbstractTwoPartyPtoTest {
             UbopprfType.OKVS.name() + "(" + Gf2eDokvsType.DISTINCT_GBF + ")",
             new OkvsUbopprfConfig.Builder().setOkvsType(Gf2eDokvsType.DISTINCT_GBF).build(),
         });
-        // MegaBin
         configurations.add(new Object[]{
             UbopprfType.OKVS.name() + "(" + Gf2eDokvsType.MEGA_BIN + ")",
             new OkvsUbopprfConfig.Builder().setOkvsType(Gf2eDokvsType.MEGA_BIN).build(),

@@ -43,7 +43,7 @@ import java.util.stream.Stream;
  * @author Weiran Liu
  * @date 2023/7/10
  */
-class MegaBinGf2eDokvs<T> implements Gf2eDokvs<T> {
+public class MegaBinGf2eDokvs<T> implements Gf2eDokvs<T> {
     /**
      * Gets the number of bins.
      *

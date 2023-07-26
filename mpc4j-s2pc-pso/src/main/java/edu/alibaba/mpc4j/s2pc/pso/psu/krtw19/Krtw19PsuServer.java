@@ -9,16 +9,15 @@ import edu.alibaba.mpc4j.common.tool.crypto.hash.HashFactory;
 import edu.alibaba.mpc4j.common.tool.crypto.prg.Prg;
 import edu.alibaba.mpc4j.common.tool.crypto.prg.PrgFactory;
 import edu.alibaba.mpc4j.common.tool.hashbin.object.EmptyPadHashBin;
-import edu.alibaba.mpc4j.crypto.matrix.okve.okvs.Okvs;
-import edu.alibaba.mpc4j.crypto.matrix.okve.okvs.OkvsFactory;
-import edu.alibaba.mpc4j.crypto.matrix.okve.okvs.OkvsFactory.OkvsType;
+import edu.alibaba.mpc4j.common.tool.polynomial.gf2e.Gf2ePoly;
+import edu.alibaba.mpc4j.common.tool.polynomial.gf2e.Gf2ePolyFactory;
 import edu.alibaba.mpc4j.common.tool.utils.BytesUtils;
 import edu.alibaba.mpc4j.s2pc.opf.oprf.*;
 import edu.alibaba.mpc4j.s2pc.pcg.ot.cot.CotSenderOutput;
 import edu.alibaba.mpc4j.s2pc.pcg.ot.cot.core.CoreCotFactory;
 import edu.alibaba.mpc4j.s2pc.pcg.ot.cot.core.CoreCotSender;
 import edu.alibaba.mpc4j.s2pc.pso.psu.AbstractPsuServer;
-import edu.alibaba.mpc4j.s2pc.pso.psu.krtw19.Krtw19OriPsuPtoDesc.PtoStep;
+import edu.alibaba.mpc4j.s2pc.pso.psu.krtw19.Krtw19PsuPtoDesc.PtoStep;
 
 import java.nio.ByteBuffer;
 import java.util.Arrays;
@@ -30,12 +29,12 @@ import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
 /**
- * KRTW19-ORI-PSU协议服务端。
+ * KRTW19-PSU server.
  *
  * @author Weiran Liu
- * @date 2022/02/15
+ * @date 2022/02/20
  */
-public class Krtw19OriPsuServer extends AbstractPsuServer {
+public class Krtw19PsuServer extends AbstractPsuServer {
     /**
      * RMPT协议的OPRF接收方
      */
@@ -49,10 +48,6 @@ public class Krtw19OriPsuServer extends AbstractPsuServer {
      */
     private final CoreCotSender coreCotSender;
     /**
-     * OKVS类型
-     */
-    private final OkvsType okvsType;
-    /**
      * 流水线执行数量
      */
     private final int pipeSize;
@@ -60,10 +55,6 @@ public class Krtw19OriPsuServer extends AbstractPsuServer {
      * 桶哈希函数密钥
      */
     private byte[][] hashBinKeys;
-    /**
-     * OKVS哈希函数
-     */
-    private byte[][] okvsHashKeys;
     /**
      * 桶数量（β）
      */
@@ -77,13 +68,13 @@ public class Krtw19OriPsuServer extends AbstractPsuServer {
      */
     private EmptyPadHashBin<ByteBuffer> hashBin;
     /**
-     * OKVS大小
+     * 多项式系数数量
      */
-    private int okvsM;
+    private int coefficientNum;
     /**
-     * 有限域比特长度
+     * 多项式服务
      */
-    private int fieldBitLength;
+    private Gf2ePoly gf2ePoly;
     /**
      * 有限域哈希函数
      */
@@ -97,15 +88,14 @@ public class Krtw19OriPsuServer extends AbstractPsuServer {
      */
     private Prg encPrg;
 
-    public Krtw19OriPsuServer(Rpc serverRpc, Party clientParty, Krtw19OriPsuConfig config) {
-        super(Krtw19OriPsuPtoDesc.getInstance(), serverRpc, clientParty, config);
+    public Krtw19PsuServer(Rpc serverRpc, Party clientParty, Krtw19PsuConfig config) {
+        super(Krtw19PsuPtoDesc.getInstance(), serverRpc, clientParty, config);
         rpmtOprfReceiver = OprfFactory.createOprfReceiver(serverRpc, clientParty, config.getRpmtOprfConfig());
         addSubPtos(rpmtOprfReceiver);
         peqtOprfSender = OprfFactory.createOprfSender(serverRpc, clientParty, config.getPeqtOprfConfig());
         addSubPtos(peqtOprfSender);
         coreCotSender = CoreCotFactory.createSender(serverRpc, clientParty, config.getCoreCotConfig());
         addSubPtos(coreCotSender);
-        okvsType = config.getOkvsType();
         pipeSize = config.getPipeSize();
     }
 
@@ -132,16 +122,6 @@ public class Krtw19OriPsuServer extends AbstractPsuServer {
         hashBinKeys = new byte[1][CommonConstants.BLOCK_BYTE_LENGTH];
         secureRandom.nextBytes(hashBinKeys[0]);
         keysPayload.add(hashBinKeys[0]);
-        // 初始化OKVS密钥
-        int okvsHashKeyNum = OkvsFactory.getHashNum(okvsType);
-        okvsHashKeys = IntStream.range(0, okvsHashKeyNum)
-            .mapToObj(keyIndex -> {
-                byte[] okvsKey = new byte[CommonConstants.BLOCK_BYTE_LENGTH];
-                secureRandom.nextBytes(okvsKey);
-                keysPayload.add(okvsKey);
-                return okvsKey;
-            })
-            .toArray(byte[][]::new);
         DataPacketHeader keysHeader = new DataPacketHeader(
             encodeTaskId, getPtoDesc().getPtoId(), PtoStep.SERVER_SEND_KEYS.ordinal(), extraInfo,
             ownParty().getPartyId(), otherParty().getPartyId()
@@ -186,15 +166,18 @@ public class Krtw19OriPsuServer extends AbstractPsuServer {
         hashBin.insertItems(serverElementArrayList);
         // 放置特殊的元素\bot，并进行随机置乱
         hashBin.insertPaddingItems(botElementByteBuffer);
-        // 设置OKVS大小
-        okvsM = OkvsFactory.getM(okvsType, maxBinSize - 1);
         // 设置有限域比特长度σ = λ + log(β * (m + 1)^2)
-        fieldBitLength = Krtw19PsuUtils.getFiniteFieldBitLength(binNum, maxBinSize);
+        int fieldBitLength = Krtw19PsuUtils.getFiniteFieldBitLength(binNum, maxBinSize);
         int fieldByteLength = fieldBitLength / Byte.SIZE;
         // 设置有限域哈希
         finiteFieldHash = HashFactory.createInstance(envType, fieldByteLength);
-        int peqtByteLength = Krtw19PsuUtils.getPeqtByteLength(binNum, maxBinSize);
-        peqtHash = HashFactory.createInstance(getEnvType(), peqtByteLength);
+        // 设置多项式运算服务
+        gf2ePoly = Gf2ePolyFactory.createInstance(envType, fieldBitLength);
+        // 设置多项式系数数量，客户端会用根插值算法插值maxBinSize - 1个元素，因此多项式系数数量为maxBinSize
+        coefficientNum = gf2ePoly.rootCoefficientNum(maxBinSize - 1);
+        // 设置PEQT哈希
+        int peqtLength = Krtw19PsuUtils.getPeqtByteLength(binNum, maxBinSize);
+        peqtHash = HashFactory.createInstance(getEnvType(), peqtLength);
         // 设置加密伪随机数生成器
         encPrg = PrgFactory.createInstance(envType, elementByteLength);
     }
@@ -223,46 +206,46 @@ public class Krtw19OriPsuServer extends AbstractPsuServer {
         // 初始化s*的空间
         byte[][] ss = new byte[binNum][];
         // Pipeline过程，先执行整除倍，最后再循环一遍
-        int pipeTime = binNum / pipeSize;
+        int pipelineTime = binNum / pipeSize;
         int round;
-        for (round = 0; round < pipeTime; round++) {
-            DataPacketHeader okvsHeader = new DataPacketHeader(
-                encodeTaskId, getPtoDesc().getPtoId(), PtoStep.CLIENT_SEND_OKVS.ordinal(), extraInfo,
+        for (round = 0; round < pipelineTime; round++) {
+            DataPacketHeader polyHeader = new DataPacketHeader(
+                encodeTaskId, getPtoDesc().getPtoId(), PtoStep.CLIENT_SEND_POLYS.ordinal(), extraInfo,
                 otherParty().getPartyId(), ownParty().getPartyId()
             );
-            List<byte[]> okvsPayload = rpc.receive(okvsHeader).getPayload();
-            handleOkvs(ss, xs, qs, okvsPayload, round * pipeSize, (round + 1) * pipeSize);
+            List<byte[]> polyPayload = rpc.receive(polyHeader).getPayload();
+            handlePoly(ss, qs, polyPayload, round * pipeSize, (round + 1) * pipeSize);
             extraInfo++;
         }
         int remain = binNum - round * pipeSize;
         if (remain > 0) {
-            DataPacketHeader okvsHeader = new DataPacketHeader(
-                encodeTaskId, getPtoDesc().getPtoId(), PtoStep.CLIENT_SEND_OKVS.ordinal(), extraInfo,
+            DataPacketHeader polyHeader = new DataPacketHeader(
+                encodeTaskId, getPtoDesc().getPtoId(), PtoStep.CLIENT_SEND_POLYS.ordinal(), extraInfo,
                 otherParty().getPartyId(), ownParty().getPartyId()
             );
-            List<byte[]> okvsPayload = rpc.receive(okvsHeader).getPayload();
-            handleOkvs(ss, xs, qs, okvsPayload, round * pipeSize, binNum);
+            List<byte[]> polyPayload = rpc.receive(polyHeader).getPayload();
+            handlePoly(ss, qs, polyPayload, round * pipeSize, binNum);
             extraInfo++;
         }
         stopWatch.stop();
-        long okvsTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
+        long polyTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
         stopWatch.reset();
-        logSubStepInfo(PtoState.PTO_STEP, 2, 2 + (binColumnIndex * 4), maxBinSize * 4, okvsTime);
+        logSubStepInfo(PtoState.PTO_STEP, 2, 2 + (binColumnIndex * 4), maxBinSize * 4, polyTime);
 
         stopWatch.start();
         // 调用并发送sStarsOprf
         OprfSenderOutput peqtOprfSenderOutput = peqtOprfSender.oprf(binNum);
-        IntStream sOprfIntStream = IntStream.range(0, binNum);
-        sOprfIntStream = parallel ? sOprfIntStream.parallel() : sOprfIntStream;
-        List<byte[]> sStarOprfPayload = sOprfIntStream
+        IntStream sIntStream = IntStream.range(0, binNum);
+        sIntStream = parallel ? sIntStream.parallel() : sIntStream;
+        List<byte[]> sStarPayload = sIntStream
             .mapToObj(sIndex -> peqtOprfSenderOutput.getPrf(sIndex, ss[sIndex]))
             .map(peqtHash::digestToBytes)
             .collect(Collectors.toList());
-        DataPacketHeader sStarOprfHeader = new DataPacketHeader(
+        DataPacketHeader sStarHeader = new DataPacketHeader(
             encodeTaskId, getPtoDesc().getPtoId(), PtoStep.SERVER_SEND_S_STAR_OPRFS.ordinal(), extraInfo,
             ownParty().getPartyId(), otherParty().getPartyId()
         );
-        rpc.send(DataPacket.fromByteArrayList(sStarOprfHeader, sStarOprfPayload));
+        rpc.send(DataPacket.fromByteArrayList(sStarHeader, sStarPayload));
         stopWatch.stop();
         long peqtTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
         stopWatch.reset();
@@ -292,23 +275,21 @@ public class Krtw19OriPsuServer extends AbstractPsuServer {
         logSubStepInfo(PtoState.PTO_STEP, 2, 4 + (binColumnIndex * 4), maxBinSize * 4, encTime);
     }
 
-    private void handleOkvs(byte[][] ss, byte[][] xs, byte[][] qs, List<byte[]> okvsPayload, int start, int end)
+    private void handlePoly(byte[][] ss, byte[][] qs, List<byte[]> polyPayload, int start, int end)
         throws MpcAbortException {
-        MpcAbortPreconditions.checkArgument(okvsPayload.size() == (end - start) * okvsM);
-        // 恢复OKVS
-        byte[][] flatStorageArray = okvsPayload.toArray(new byte[0][]);
-        IntStream xIntStream = IntStream.range(start, end);
-        xIntStream = parallel ? xIntStream.parallel() : xIntStream;
-        xIntStream.forEach(index -> {
-            int okvsStart = index - start;
-            int okvsEnd = (index + 1) - start;
-            byte[][] okvsStorage = Arrays.copyOfRange(flatStorageArray, okvsStart * okvsM, okvsEnd * okvsM);
-            ByteBuffer xStar = ByteBuffer.wrap(xs[index]);
-            Okvs<ByteBuffer> okvs = OkvsFactory.createInstance(
-                envType, okvsType, maxBinSize - 1, fieldBitLength, okvsHashKeys
+        MpcAbortPreconditions.checkArgument(polyPayload.size() == (end - start) * coefficientNum);
+        byte[][] flatPolyArray = polyPayload.toArray(new byte[0][]);
+        // 计算s^*
+        IntStream qIntStream = IntStream.range(start, end);
+        qIntStream = parallel ? qIntStream.parallel() : qIntStream;
+        qIntStream.forEach(index -> {
+            int polyStart = index - start;
+            int polyEnd = (index + 1) - start;
+            byte[][] coefficients = Arrays.copyOfRange(
+                flatPolyArray, polyStart * coefficientNum, polyEnd * coefficientNum
             );
-            ss[index] = okvs.decode(okvsStorage, xStar);
-            BytesUtils.xori(ss[index], qs[index]);
+            byte[] qStar = finiteFieldHash.digestToBytes(qs[index]);
+            ss[index] = gf2ePoly.evaluate(coefficients, qStar);
         });
     }
 }

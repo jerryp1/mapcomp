@@ -1,7 +1,7 @@
 package edu.alibaba.mpc4j.s2pc.opf.opprf.batch;
 
 import edu.alibaba.mpc4j.common.rpc.test.AbstractTwoPartyPtoTest;
-import edu.alibaba.mpc4j.crypto.matrix.okve.okvs.OkvsFactory.OkvsType;
+import edu.alibaba.mpc4j.crypto.matrix.okve.dokvs.gf2e.Gf2eDokvsFactory.Gf2eDokvsType;
 import edu.alibaba.mpc4j.common.tool.utils.BytesUtils;
 import edu.alibaba.mpc4j.common.tool.utils.CommonUtils;
 import edu.alibaba.mpc4j.s2pc.opf.opprf.OpprfTestUtils;
@@ -57,21 +57,24 @@ public class BopprfTest extends AbstractTwoPartyPtoTest {
         Collection<Object[]> configurations = new ArrayList<>();
 
         configurations.add(new Object[]{
-            BopprfType.OKVS.name() + "(" + OkvsType.H3_SINGLETON_GCT + ")",
-            new OkvsBopprfConfig.Builder().setOkvsType(OkvsType.H3_SINGLETON_GCT).build(),
+            BopprfType.OKVS.name() + "(" + Gf2eDokvsType.H3_NAIVE_CLUSTER_BLAZE_GCT + ")",
+            new OkvsBopprfConfig.Builder().setOkvsType(Gf2eDokvsType.H3_NAIVE_CLUSTER_BLAZE_GCT).build(),
         });
         configurations.add(new Object[]{
-            BopprfType.OKVS.name() + "(" + OkvsType.H2_SINGLETON_GCT + ")",
-            new OkvsBopprfConfig.Builder().setOkvsType(OkvsType.H2_SINGLETON_GCT).build(),
+            BopprfType.OKVS.name() + "(" + Gf2eDokvsType.H3_SINGLETON_GCT + ")",
+            new OkvsBopprfConfig.Builder().setOkvsType(Gf2eDokvsType.H3_SINGLETON_GCT).build(),
         });
         configurations.add(new Object[]{
-            BopprfType.OKVS.name() + "(" + OkvsType.GBF + ")",
-            new OkvsBopprfConfig.Builder().setOkvsType(OkvsType.GBF).build(),
+            BopprfType.OKVS.name() + "(" + Gf2eDokvsType.H2_SINGLETON_GCT + ")",
+            new OkvsBopprfConfig.Builder().setOkvsType(Gf2eDokvsType.H2_SINGLETON_GCT).build(),
         });
-        // MegaBin
         configurations.add(new Object[]{
-            BopprfType.OKVS.name() + "(" + OkvsType.MEGA_BIN + ")",
-            new OkvsBopprfConfig.Builder().setOkvsType(OkvsType.MEGA_BIN).build(),
+            BopprfType.OKVS.name() + "(" + Gf2eDokvsType.DISTINCT_GBF + ")",
+            new OkvsBopprfConfig.Builder().setOkvsType(Gf2eDokvsType.DISTINCT_GBF).build(),
+        });
+        configurations.add(new Object[]{
+            BopprfType.OKVS.name() + "(" + Gf2eDokvsType.MEGA_BIN + ")",
+            new OkvsBopprfConfig.Builder().setOkvsType(Gf2eDokvsType.MEGA_BIN).build(),
         });
 
         return configurations;

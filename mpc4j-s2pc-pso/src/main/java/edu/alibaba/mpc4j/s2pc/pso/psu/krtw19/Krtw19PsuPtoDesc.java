@@ -4,55 +4,57 @@ import edu.alibaba.mpc4j.common.rpc.desc.PtoDesc;
 import edu.alibaba.mpc4j.common.rpc.desc.PtoDescManager;
 
 /**
- * KRTW19-ORI-PSU协议信息。原始论文：
+ * KRTW19-PSU protocol description. The scheme is described in the following paper:
+ * <p>
  * Kolesnikov V, Rosulek M, Trieu N, et al. Scalable private set union from symmetric-key techniques. ASIACRYPT 2019,
  * pp. 636-666.
- * 此实现为论文描述的实现。KRTW19开源代码的实现有进一步的优化方法。
+ * </p>
+ * The implementation follows the open-source code in the paper, i.e., root polynomial instead of interpolation.
  *
  * @author Weiran Liu
- * @date 2022/02/15
+ * @date 2022/02/20
  */
-class Krtw19OriPsuPtoDesc implements PtoDesc {
+class Krtw19PsuPtoDesc implements PtoDesc {
     /**
-     * 协议ID
+     * protocol ID
      */
-    private static final int PTO_ID = Math.abs((int)5986401728116628943L);
+    private static final int PTO_ID = Math.abs((int)1647093902110062076L);
     /**
-     * 协议名称
+     * protocol name
      */
-    private static final String PTO_NAME = "KRTW19_ORI_PSU";
+    private static final String PTO_NAME = "KRTW19_PSU";
 
     /**
-     * 协议步骤
+     * protocol step
      */
     enum PtoStep {
         /**
-         * 服务端发送各个密钥参数
+         * server sends keys
          */
         SERVER_SEND_KEYS,
         /**
-         * 客户端发送OKVS
+         * client sends polynomials
          */
-        CLIENT_SEND_OKVS,
+        CLIENT_SEND_POLYS,
         /**
-         * 服务端发送PEQT验证数据
+         * server sends S* OPRFs.
          */
         SERVER_SEND_S_STAR_OPRFS,
         /**
-         * 服务端发送加密元素
+         * server sends encrypted elements
          */
         SERVER_SEND_ENC_ELEMENTS,
     }
 
     /**
-     * 单例模式
+     * singleton mode
      */
-    private static final Krtw19OriPsuPtoDesc INSTANCE = new Krtw19OriPsuPtoDesc();
+    private static final Krtw19PsuPtoDesc INSTANCE = new Krtw19PsuPtoDesc();
 
     /**
-     * 私有构造函数
+     * private constructor.
      */
-    private Krtw19OriPsuPtoDesc() {
+    private Krtw19PsuPtoDesc() {
         // empty
     }
 

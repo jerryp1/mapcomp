@@ -11,12 +11,12 @@ import edu.alibaba.mpc4j.s2pc.pso.psu.PsuConfig;
 import edu.alibaba.mpc4j.s2pc.pso.psu.PsuFactory;
 
 /**
- * KRTW19-OPT-PSU协议配置项。
+ * KRTW19-PSU config.
  *
  * @author Weiran Liu
  * @date 2022/02/20
  */
-public class Krtw19OptPsuConfig extends AbstractMultiPartyPtoConfig implements PsuConfig {
+public class Krtw19PsuConfig extends AbstractMultiPartyPtoConfig implements PsuConfig {
     /**
      * RPMT所用OPRF配置项
      */
@@ -34,7 +34,7 @@ public class Krtw19OptPsuConfig extends AbstractMultiPartyPtoConfig implements P
      */
     private final int pipeSize;
 
-    private Krtw19OptPsuConfig(Builder builder) {
+    private Krtw19PsuConfig(Builder builder) {
         super(SecurityModel.SEMI_HONEST, builder.rpmtOprfConfig, builder.peqtOprfConfig, builder.coreCotConfig);
         rpmtOprfConfig = builder.rpmtOprfConfig;
         peqtOprfConfig = builder.peqtOprfConfig;
@@ -44,7 +44,7 @@ public class Krtw19OptPsuConfig extends AbstractMultiPartyPtoConfig implements P
 
     @Override
     public PsuFactory.PsuType getPtoType() {
-        return PsuFactory.PsuType.KRTW19_OPT;
+        return PsuFactory.PsuType.KRTW19;
     }
 
     public OprfConfig getRpmtOprfConfig() {
@@ -63,7 +63,7 @@ public class Krtw19OptPsuConfig extends AbstractMultiPartyPtoConfig implements P
         return pipeSize;
     }
 
-    public static class Builder implements org.apache.commons.lang3.builder.Builder<Krtw19OptPsuConfig> {
+    public static class Builder implements org.apache.commons.lang3.builder.Builder<Krtw19PsuConfig> {
         /**
          * RPMT所用OPRF配置项
          */
@@ -110,8 +110,8 @@ public class Krtw19OptPsuConfig extends AbstractMultiPartyPtoConfig implements P
         }
 
         @Override
-        public Krtw19OptPsuConfig build() {
-            return new Krtw19OptPsuConfig(this);
+        public Krtw19PsuConfig build() {
+            return new Krtw19PsuConfig(this);
         }
     }
 }

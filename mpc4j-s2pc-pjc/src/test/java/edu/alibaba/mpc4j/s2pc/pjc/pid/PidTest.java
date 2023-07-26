@@ -1,12 +1,13 @@
 package edu.alibaba.mpc4j.s2pc.pjc.pid;
 
 import edu.alibaba.mpc4j.common.rpc.test.AbstractTwoPartyPtoTest;
-import edu.alibaba.mpc4j.crypto.matrix.okve.okvs.OkvsFactory.OkvsType;
+import edu.alibaba.mpc4j.crypto.matrix.okve.dokvs.gf2e.Gf2eDokvsFactory.Gf2eDokvsType;
 import edu.alibaba.mpc4j.s2pc.pso.PsoUtils;
 import edu.alibaba.mpc4j.s2pc.pjc.pid.bkms20.Bkms20ByteEccPidConfig;
 import edu.alibaba.mpc4j.s2pc.pjc.pid.bkms20.Bkms20EccPidConfig;
 import edu.alibaba.mpc4j.s2pc.pjc.pid.gmr21.Gmr21MpPidConfig;
 import edu.alibaba.mpc4j.s2pc.pjc.pid.gmr21.Gmr21SloppyPidConfig;
+import edu.alibaba.mpc4j.s2pc.pso.psu.PsuFactory.PsuType;
 import edu.alibaba.mpc4j.s2pc.pso.psu.jsz22.Jsz22SfcPsuConfig;
 import org.apache.commons.lang3.time.StopWatch;
 import org.junit.Assert;
@@ -52,22 +53,22 @@ public class PidTest extends AbstractTwoPartyPtoTest {
         });
         // GMR21_MP (JSZ22_SFC_PSU)
         configurations.add(new Object[] {
-            PidFactory.PidType.GMR21_MP.name() + " (JSZ22_SFC_PSU)",
+            PidFactory.PidType.GMR21_MP.name() + " (" + PsuType.JSZ22_SFC + ")",
             new Gmr21MpPidConfig.Builder().setPsuConfig(new Jsz22SfcPsuConfig.Builder(false).build()).build(),
         });
         // GMR21_SLOPPY (MEGA_BIN)
         configurations.add(new Object[] {
-            PidFactory.PidType.GMR21_SLOPPY.name() + " (MEGA_BIN)",
-            new Gmr21SloppyPidConfig.Builder().setSloppyOkvsType(OkvsType.MEGA_BIN).build(),
+            PidFactory.PidType.GMR21_SLOPPY.name() + " (" + Gf2eDokvsType.MEGA_BIN + ")",
+            new Gmr21SloppyPidConfig.Builder().setSloppyOkvsType(Gf2eDokvsType.MEGA_BIN).build(),
         });
         // GMR21_SLOPPY (H3_SINGLETON_GCT)
         configurations.add(new Object[] {
-            PidFactory.PidType.GMR21_SLOPPY.name() + " (H3_SINGLETON_GCT)",
-            new Gmr21SloppyPidConfig.Builder().setSloppyOkvsType(OkvsType.H3_SINGLETON_GCT).build(),
+            PidFactory.PidType.GMR21_SLOPPY.name() + " (" + Gf2eDokvsType.H3_SINGLETON_GCT + ")",
+            new Gmr21SloppyPidConfig.Builder().setSloppyOkvsType(Gf2eDokvsType.H3_SINGLETON_GCT).build(),
         });
         // GMR21_SLOPPY (JSZ22_SFC_PSU)
         configurations.add(new Object[] {
-            PidFactory.PidType.GMR21_SLOPPY.name() + " (JSZ22_SFC_PSU)",
+            PidFactory.PidType.GMR21_SLOPPY.name() + " (" + PsuType.JSZ22_SFC + ")",
             new Gmr21SloppyPidConfig.Builder().setPsuConfig(new Jsz22SfcPsuConfig.Builder(false).build()).build(),
         });
         // BKMS20_BYTE_ECC

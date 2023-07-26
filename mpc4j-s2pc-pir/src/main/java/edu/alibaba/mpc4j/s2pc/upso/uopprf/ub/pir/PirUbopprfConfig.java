@@ -4,6 +4,7 @@ import com.google.common.base.Preconditions;
 import edu.alibaba.mpc4j.common.rpc.desc.SecurityModel;
 import edu.alibaba.mpc4j.common.rpc.pto.AbstractMultiPartyPtoConfig;
 import edu.alibaba.mpc4j.crypto.matrix.okve.dokvs.gf2e.Gf2eDokvsFactory;
+import edu.alibaba.mpc4j.crypto.matrix.okve.dokvs.gf2e.Gf2eDokvsFactory.Gf2eDokvsType;
 import edu.alibaba.mpc4j.s2pc.opf.sqoprf.SqOprfConfig;
 import edu.alibaba.mpc4j.s2pc.opf.sqoprf.SqOprfFactory;
 import edu.alibaba.mpc4j.s2pc.pir.index.batch.BatchIndexPirConfig;
@@ -25,7 +26,7 @@ public class PirUbopprfConfig extends AbstractMultiPartyPtoConfig implements Ubo
     /**
      * OKVS type
      */
-    private final Gf2eDokvsFactory.Gf2eDokvsType okvsType;
+    private final Gf2eDokvsType okvsType;
     /**
      * batch index PIR config
      */
@@ -47,7 +48,7 @@ public class PirUbopprfConfig extends AbstractMultiPartyPtoConfig implements Ubo
         return sqOprfConfig;
     }
 
-    public Gf2eDokvsFactory.Gf2eDokvsType getOkvsType() {
+    public Gf2eDokvsType getOkvsType() {
         return okvsType;
     }
 
@@ -63,7 +64,7 @@ public class PirUbopprfConfig extends AbstractMultiPartyPtoConfig implements Ubo
         /**
          * DOKVS type
          */
-        private Gf2eDokvsFactory.Gf2eDokvsType okvsType;
+        private Gf2eDokvsType okvsType;
         /**
          * batch index PIR config
          */
@@ -71,7 +72,7 @@ public class PirUbopprfConfig extends AbstractMultiPartyPtoConfig implements Ubo
 
         public Builder() {
             sqOprfConfig = SqOprfFactory.createDefaultConfig(SecurityModel.SEMI_HONEST);
-            okvsType = Gf2eDokvsFactory.Gf2eDokvsType.H3_SPARSE_CLUSTER_BLAZE_GCT;
+            okvsType = Gf2eDokvsType.H3_SPARSE_CLUSTER_BLAZE_GCT;
             assert Gf2eDokvsFactory.isSparse(okvsType);
             batchIndexPirConfig = new Mr23BatchIndexPirConfig.Builder().build();
         }
@@ -81,7 +82,7 @@ public class PirUbopprfConfig extends AbstractMultiPartyPtoConfig implements Ubo
             return this;
         }
 
-        public Builder setOkvsType(Gf2eDokvsFactory.Gf2eDokvsType okvsType) {
+        public Builder setSparseOkvsType(Gf2eDokvsType okvsType) {
             Preconditions.checkArgument(Gf2eDokvsFactory.isSparse(okvsType));
             this.okvsType = okvsType;
             return this;

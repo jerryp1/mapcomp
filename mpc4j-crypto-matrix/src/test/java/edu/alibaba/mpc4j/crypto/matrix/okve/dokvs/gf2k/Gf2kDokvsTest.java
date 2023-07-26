@@ -167,12 +167,12 @@ public class Gf2kDokvsTest {
     }
 
     @Test
-    public void testLog14n() {
+    public void testLog16n() {
         testDokvs(1 << 14);
     }
 
     @Test
-    public void testParallelLog14n() {
+    public void testParallelLog16n() {
         testDokvs(1 << 14, true);
     }
 

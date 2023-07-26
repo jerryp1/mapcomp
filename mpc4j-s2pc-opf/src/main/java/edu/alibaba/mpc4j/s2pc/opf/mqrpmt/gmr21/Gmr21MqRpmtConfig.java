@@ -33,7 +33,7 @@ public class Gmr21MqRpmtConfig extends AbstractMultiPartyPtoConfig implements Mq
     /**
      * OKVS type
      */
-    private final Gf2eDokvsType gf2eDokvsType;
+    private final Gf2eDokvsType okvsType;
     /**
      * 布谷鸟哈希类型
      */
@@ -44,7 +44,7 @@ public class Gmr21MqRpmtConfig extends AbstractMultiPartyPtoConfig implements Mq
         cuckooHashOprfConfig = builder.cuckooHashOprfConfig;
         peqtOprfConfig = builder.peqtOprfConfig;
         osnConfig = builder.osnConfig;
-        gf2eDokvsType = builder.gf2eDokvsType;
+        okvsType = builder.okvsType;
         cuckooHashBinType = builder.cuckooHashBinType;
     }
 
@@ -65,8 +65,8 @@ public class Gmr21MqRpmtConfig extends AbstractMultiPartyPtoConfig implements Mq
         return osnConfig;
     }
 
-    public Gf2eDokvsType getGf2eDokvsType() {
-        return gf2eDokvsType;
+    public Gf2eDokvsType getOkvsType() {
+        return okvsType;
     }
 
     public CuckooHashBinType getCuckooHashBinType() {
@@ -89,7 +89,7 @@ public class Gmr21MqRpmtConfig extends AbstractMultiPartyPtoConfig implements Mq
         /**
          * OKVS type
          */
-        private Gf2eDokvsType gf2eDokvsType;
+        private Gf2eDokvsType okvsType;
         /**
          * 布谷鸟哈希类型
          */
@@ -99,7 +99,7 @@ public class Gmr21MqRpmtConfig extends AbstractMultiPartyPtoConfig implements Mq
             cuckooHashOprfConfig = OprfFactory.createOprfDefaultConfig(SecurityModel.SEMI_HONEST);
             peqtOprfConfig = OprfFactory.createOprfDefaultConfig(SecurityModel.SEMI_HONEST);
             osnConfig = OsnFactory.createDefaultConfig(SecurityModel.SEMI_HONEST, silent);
-            gf2eDokvsType = Gf2eDokvsType.MEGA_BIN;
+            okvsType = Gf2eDokvsType.MEGA_BIN;
             // GMR21源代码使用普通布谷鸟哈希实现无贮存区布谷鸟哈希的功能，这样通信量可以更小一点
             cuckooHashBinType = CuckooHashBinType.NAIVE_3_HASH;
         }
@@ -119,8 +119,8 @@ public class Gmr21MqRpmtConfig extends AbstractMultiPartyPtoConfig implements Mq
             return this;
         }
 
-        public Builder setGf2eDokvsType(Gf2eDokvsType gf2eDokvsType) {
-            this.gf2eDokvsType = gf2eDokvsType;
+        public Builder setOkvsType(Gf2eDokvsType okvsType) {
+            this.okvsType = okvsType;
             return this;
         }
 

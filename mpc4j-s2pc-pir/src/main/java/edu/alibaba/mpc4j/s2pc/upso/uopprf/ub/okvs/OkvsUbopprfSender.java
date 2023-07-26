@@ -13,6 +13,7 @@ import edu.alibaba.mpc4j.crypto.matrix.okve.dokvs.gf2e.Gf2eDokvs;
 import edu.alibaba.mpc4j.crypto.matrix.okve.dokvs.gf2e.Gf2eDokvsFactory;
 import edu.alibaba.mpc4j.common.tool.utils.BytesUtils;
 import edu.alibaba.mpc4j.common.tool.utils.CommonUtils;
+import edu.alibaba.mpc4j.crypto.matrix.okve.dokvs.gf2e.Gf2eDokvsFactory.Gf2eDokvsType;
 import edu.alibaba.mpc4j.s2pc.upso.uopprf.ub.okvs.OkvsUbopprfPtoDesc.PtoStep;
 import edu.alibaba.mpc4j.s2pc.upso.uopprf.ub.AbstractUbopprfSender;
 import edu.alibaba.mpc4j.s2pc.opf.sqoprf.SqOprfFactory;
@@ -42,7 +43,7 @@ public class OkvsUbopprfSender extends AbstractUbopprfSender {
     /**
      * the OKVS type
      */
-    private final Gf2eDokvsFactory.Gf2eDokvsType okvsType;
+    private final Gf2eDokvsType okvsType;
     /**
      * single-query OPRF key
      */
