@@ -1,5 +1,6 @@
 package edu.alibaba.mpc4j.s2pc.opf.opprf.batch;
 
+import edu.alibaba.mpc4j.common.rpc.desc.SecurityModel;
 import edu.alibaba.mpc4j.common.rpc.test.AbstractTwoPartyPtoTest;
 import edu.alibaba.mpc4j.crypto.matrix.okve.dokvs.gf2e.Gf2eDokvsFactory.Gf2eDokvsType;
 import edu.alibaba.mpc4j.common.tool.utils.BytesUtils;
@@ -7,6 +8,8 @@ import edu.alibaba.mpc4j.common.tool.utils.CommonUtils;
 import edu.alibaba.mpc4j.s2pc.opf.opprf.OpprfTestUtils;
 import edu.alibaba.mpc4j.s2pc.opf.opprf.batch.BopprfFactory.BopprfType;
 import edu.alibaba.mpc4j.s2pc.opf.opprf.batch.okvs.OkvsBopprfConfig;
+import edu.alibaba.mpc4j.s2pc.opf.oprf.OprfFactory.OprfType;
+import edu.alibaba.mpc4j.s2pc.opf.oprf.rs21.Rs21MpOprfConfig;
 import org.apache.commons.lang3.time.StopWatch;
 import org.junit.Assert;
 import org.junit.Test;
@@ -56,6 +59,13 @@ public class BopprfTest extends AbstractTwoPartyPtoTest {
     public static Collection<Object[]> configurations() {
         Collection<Object[]> configurations = new ArrayList<>();
 
+        configurations.add(new Object[]{
+            BopprfType.OKVS.name() + "(" + Gf2eDokvsType.H3_NAIVE_CLUSTER_BLAZE_GCT + ", " + OprfType.RS21.name() + ")",
+            new OkvsBopprfConfig.Builder()
+                .setOkvsType(Gf2eDokvsType.H3_NAIVE_CLUSTER_BLAZE_GCT)
+                .setOprfConfig(new Rs21MpOprfConfig.Builder(SecurityModel.SEMI_HONEST).build())
+                .build(),
+        });
         configurations.add(new Object[]{
             BopprfType.OKVS.name() + "(" + Gf2eDokvsType.H3_NAIVE_CLUSTER_BLAZE_GCT + ")",
             new OkvsBopprfConfig.Builder().setOkvsType(Gf2eDokvsType.H3_NAIVE_CLUSTER_BLAZE_GCT).build(),

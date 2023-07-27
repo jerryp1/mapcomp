@@ -40,7 +40,7 @@ public class CuckooHashBinParamsTest {
     /**
      * max round
      */
-    private static final int MAX_ROUND = 1 << 20;
+    private static final int MAX_ROUND = 1 << 22;
     /**
      * target σ = 40
      */
