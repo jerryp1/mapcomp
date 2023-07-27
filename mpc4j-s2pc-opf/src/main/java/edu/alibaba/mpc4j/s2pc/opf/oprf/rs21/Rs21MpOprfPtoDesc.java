@@ -28,11 +28,15 @@ class Rs21MpOprfPtoDesc implements PtoDesc {
      */
     enum PtoStep {
         /**
-         * receiver sends OKVS, including key (r) and masked OKVS storage (P + A'), with w_r
+         * sender sends c^s
+         */
+        SENDER_SEND_CS,
+        /**
+         * receiver sends OKVS, including key (r) and masked OKVS storage (P + A'), with w^r
          */
         RECEIVER_SEND_OKVS_WR,
         /**
-         * sender sends w_s
+         * sender sends w^s
          */
         SENDER_SEND_WS,
     }

@@ -6,38 +6,33 @@ import edu.alibaba.mpc4j.common.tool.CommonConstants;
 import edu.alibaba.mpc4j.s2pc.opf.oprf.OprfFactory.OprfType;
 import edu.alibaba.mpc4j.s2pc.opf.oprf.cm20.Cm20MpOprfConfig;
 import edu.alibaba.mpc4j.s2pc.opf.oprf.fipr05.Fipr05MpOprfConfig;
+import edu.alibaba.mpc4j.s2pc.opf.oprf.kkrt16.Kkrt16OptOprfConfig;
+import edu.alibaba.mpc4j.s2pc.opf.oprf.kkrt16.Kkrt16OriOprfConfig;
 import edu.alibaba.mpc4j.s2pc.opf.oprf.rs21.Rs21MpOprfConfig;
 import org.apache.commons.lang3.time.StopWatch;
-import org.junit.Assert;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
-import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.IntStream;
 
 /**
- * multi-query OPRF test.
+ * OPRF efficiency test.
  *
  * @author Weiran Liu
- * @date 2022/4/9
+ * @date 2023/7/27
  */
+@Ignore
 @RunWith(Parameterized.class)
-public class MpOprfTest extends AbstractTwoPartyPtoTest {
-    private static final Logger LOGGER = LoggerFactory.getLogger(OprfTest.class);
+public class OprfEfficiencyTest extends AbstractTwoPartyPtoTest {
     /**
-     * default batch size
+     * the large size
      */
-    private static final int DEFAULT_BATCH_SIZE = 1000;
-    /**
-     * large batch size
-     */
-    private static final int LARGE_BATCH_SIZE = 1 << 12;
+    private static final int BATCH_SIZE = 1 << 20;
 
     @Parameterized.Parameters(name = "{0}")
     public static Collection<Object[]> configurations() {
@@ -56,6 +51,14 @@ public class MpOprfTest extends AbstractTwoPartyPtoTest {
         configurations.add(new Object[]{
             OprfType.CM20.name(), new Cm20MpOprfConfig.Builder().build(),
         });
+        // KKRT16_ORI
+        configurations.add(new Object[]{
+            OprfType.KKRT16_ORI.name(), new Kkrt16OriOprfConfig.Builder().build(),
+        });
+        // KKRT16_OPT
+        configurations.add(new Object[]{
+            OprfType.KKRT16_OPT.name(), new Kkrt16OptOprfConfig.Builder().build(),
+        });
         // FIPR05
         configurations.add(new Object[]{
             OprfType.FIPR05.name(), new Fipr05MpOprfConfig.Builder().build(),
@@ -67,63 +70,33 @@ public class MpOprfTest extends AbstractTwoPartyPtoTest {
     /**
      * the config
      */
-    private final MpOprfConfig config;
+    private final OprfConfig config;
 
-    public MpOprfTest(String name, MpOprfConfig config) {
+    public OprfEfficiencyTest(String name, OprfConfig config) {
         super(name);
         this.config = config;
     }
 
     @Test
-    public void test1N() {
-        testPto(1, false);
-    }
-
-    @Test
-    public void test2N() {
-        testPto(2, false);
-    }
-
-    @Test
-    public void test3N() {
-        testPto(3, false);
-    }
-
-    @Test
-    public void test8N() {
-        testPto(8, false);
-    }
-
-    @Test
-    public void testDefault() {
-        testPto(DEFAULT_BATCH_SIZE, false);
-    }
-
-    @Test
-    public void testParallelDefault() {
-        testPto(DEFAULT_BATCH_SIZE, true);
-    }
-
-    @Test
     public void testLargeN() {
-        testPto(LARGE_BATCH_SIZE, false);
+        testPto(false);
     }
 
     @Test
     public void testParallelLargeN() {
-        testPto(LARGE_BATCH_SIZE, true);
+        testPto(true);
     }
 
-    private void testPto(int batchSize, boolean parallel) {
-        MpOprfSender sender = OprfFactory.createMpOprfSender(firstRpc, secondRpc.ownParty(), config);
-        MpOprfReceiver receiver = OprfFactory.createMpOprfReceiver(secondRpc, firstRpc.ownParty(), config);
+    private void testPto(boolean parallel) {
+        OprfSender sender = OprfFactory.createOprfSender(firstRpc, secondRpc.ownParty(), config);
+        OprfReceiver receiver = OprfFactory.createOprfReceiver(secondRpc, firstRpc.ownParty(), config);
         sender.setParallel(parallel);
         receiver.setParallel(parallel);
         int randomTaskId = Math.abs(SECURE_RANDOM.nextInt());
         sender.setTaskId(randomTaskId);
         receiver.setTaskId(randomTaskId);
+        int batchSize = BATCH_SIZE;
         try {
-            LOGGER.info("-----test {}, batch_size = {}-----", sender.getPtoDesc().getPtoName(), batchSize);
             byte[][] inputs = IntStream.range(0, batchSize)
                 .mapToObj(index -> {
                     byte[] input = new byte[CommonConstants.BLOCK_BYTE_LENGTH];
@@ -131,8 +104,8 @@ public class MpOprfTest extends AbstractTwoPartyPtoTest {
                     return input;
                 })
                 .toArray(byte[][]::new);
-            MpOprfSenderThread senderThread = new MpOprfSenderThread(sender, batchSize);
-            MpOprfReceiverThread receiverThread = new MpOprfReceiverThread(receiver, inputs);
+            OprfSenderThread senderThread = new OprfSenderThread(sender, batchSize);
+            OprfReceiverThread receiverThread = new OprfReceiverThread(receiver, inputs);
             StopWatch stopWatch = new StopWatch();
             // start
             stopWatch.start();
@@ -144,10 +117,6 @@ public class MpOprfTest extends AbstractTwoPartyPtoTest {
             stopWatch.stop();
             long time = stopWatch.getTime(TimeUnit.MILLISECONDS);
             stopWatch.reset();
-            // verify
-            MpOprfSenderOutput senderOutput = senderThread.getSenderOutput();
-            MpOprfReceiverOutput receiverOutput = receiverThread.getReceiverOutput();
-            assertOutput(batchSize, senderOutput, receiverOutput);
             printAndResetRpc(time);
             // destroy
             new Thread(sender::destroy).start();
@@ -155,24 +124,5 @@ public class MpOprfTest extends AbstractTwoPartyPtoTest {
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
-    }
-
-    private void assertOutput(int n, MpOprfSenderOutput senderOutput, MpOprfReceiverOutput receiverOutput) {
-        Assert.assertEquals(senderOutput.getPrfByteLength(), receiverOutput.getPrfByteLength());
-        Assert.assertEquals(n, senderOutput.getBatchSize());
-        Assert.assertEquals(n, receiverOutput.getBatchSize());
-        IntStream.range(0, n).forEach(index -> {
-            byte[] input = receiverOutput.getInput(index);
-            byte[] receiverPrf = receiverOutput.getPrf(index);
-            byte[] senderPrf = senderOutput.getPrf(input);
-            Assert.assertArrayEquals(senderPrf, receiverPrf);
-        });
-        // all PRFs should be distinct
-        long distinctCount = IntStream.range(0, n)
-            .mapToObj(receiverOutput::getPrf)
-            .map(ByteBuffer::wrap)
-            .distinct()
-            .count();
-        Assert.assertEquals(receiverOutput.getBatchSize(), distinctCount);
     }
 }
