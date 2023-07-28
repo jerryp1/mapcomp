@@ -5,6 +5,7 @@ import edu.alibaba.mpc4j.common.rpc.utils.DataPacket;
 import edu.alibaba.mpc4j.common.rpc.utils.DataPacketHeader;
 import edu.alibaba.mpc4j.common.tool.bitmatrix.trans.TransBitMatrix;
 import edu.alibaba.mpc4j.common.tool.bitmatrix.trans.TransBitMatrixFactory;
+import edu.alibaba.mpc4j.common.tool.bitvector.BitVector;
 import edu.alibaba.mpc4j.common.tool.bitvector.BitVectorFactory;
 import edu.alibaba.mpc4j.common.tool.crypto.hash.Hash;
 import edu.alibaba.mpc4j.common.tool.crypto.hash.HashFactory;
@@ -15,11 +16,10 @@ import edu.alibaba.mpc4j.common.tool.hashbin.object.HashBinEntry;
 import edu.alibaba.mpc4j.common.tool.hashbin.object.cuckoo.CuckooHashBinFactory;
 import edu.alibaba.mpc4j.common.tool.hashbin.object.cuckoo.CuckooHashBinFactory.CuckooHashBinType;
 import edu.alibaba.mpc4j.common.tool.hashbin.object.cuckoo.NoStashCuckooHashBin;
+import edu.alibaba.mpc4j.common.tool.utils.BytesUtils;
 import edu.alibaba.mpc4j.common.tool.utils.CommonUtils;
 import edu.alibaba.mpc4j.common.tool.utils.ObjectUtils;
 import edu.alibaba.mpc4j.s2pc.aby.basics.z2.SquareZ2Vector;
-import edu.alibaba.mpc4j.s2pc.aby.basics.z2.Z2cFactory;
-import edu.alibaba.mpc4j.s2pc.aby.basics.z2.Z2cParty;
 import edu.alibaba.mpc4j.s2pc.aby.operator.row.peqt.PeqtFactory;
 import edu.alibaba.mpc4j.s2pc.aby.operator.row.peqt.PeqtParty;
 import edu.alibaba.mpc4j.s2pc.pir.PirUtils;
@@ -47,10 +47,6 @@ public class Sj23PeqtUcpsiClient<T> extends AbstractUcpsiClient<T> {
      * peqt receiver
      */
     private final PeqtParty peqtParty;
-    /**
-     * Z2C party
-     */
-    private final Z2cParty z2cParty;
     /**
      * cuckoo hash bin type
      */
@@ -88,8 +84,6 @@ public class Sj23PeqtUcpsiClient<T> extends AbstractUcpsiClient<T> {
         super(getInstance(), clientRpc, serverParty, config);
         peqtParty = PeqtFactory.createReceiver(clientRpc, serverParty, config.getPeqtConfig());
         addSubPtos(peqtParty);
-        z2cParty = Z2cFactory.createReceiver(clientRpc, serverParty, config.getZ2cConfig());
-        addSubPtos(z2cParty);
         cuckooHashBinType = CuckooHashBinType.NO_STASH_PSZ18_3_HASH;
         hashNum = CuckooHashBinFactory.getHashNum(cuckooHashBinType);
     }
@@ -112,12 +106,17 @@ public class Sj23PeqtUcpsiClient<T> extends AbstractUcpsiClient<T> {
         // generate public keys
         int approxMaxBinSize = MaxBinSizeUtils.approxMaxBinSize(serverElementSize * hashNum, params.binNum);
         alpha = CommonUtils.getUnitNum(approxMaxBinSize, params.maxPartitionSizePerBin);
+
+        System.out.println(alpha);
+        alpha = 5;
+
         List<byte[]> publicKeysPayload = keyGen();
         DataPacketHeader clientPublicKeysHeader = new DataPacketHeader(
             encodeTaskId, getPtoDesc().getPtoId(), PtoStep.CLIENT_SEND_PUBLIC_KEYS.ordinal(), extraInfo,
             rpc.ownParty().getPartyId(), otherParty().getPartyId()
         );
         rpc.send(DataPacket.fromByteArrayList(clientPublicKeysHeader, publicKeysPayload));
+        System.out.println(publicKeysPayload.stream().mapToInt(m -> m.length).sum());
         stopWatch.stop();
         long keyGenTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
         stopWatch.reset();
@@ -126,7 +125,6 @@ public class Sj23PeqtUcpsiClient<T> extends AbstractUcpsiClient<T> {
         stopWatch.start();
         // init peqt and z2pc party
         peqtParty.init(params.l, alpha * params.binNum);
-        z2cParty.init(params.binNum * alpha);
         stopWatch.stop();
         long initTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
         stopWatch.reset();
@@ -155,6 +153,7 @@ public class Sj23PeqtUcpsiClient<T> extends AbstractUcpsiClient<T> {
             rpc.ownParty().getPartyId(), otherParty().getPartyId()
         );
         rpc.send(DataPacket.fromByteArrayList(queryHeader, queryPayload));
+        System.out.println(queryPayload.stream().mapToInt(m -> m.length).sum());
         stopWatch.stop();
         long genQueryTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
         stopWatch.reset();
@@ -165,6 +164,7 @@ public class Sj23PeqtUcpsiClient<T> extends AbstractUcpsiClient<T> {
             otherParty().getPartyId(), rpc.ownParty().getPartyId()
         );
         List<byte[]> responsePayload = rpc.receive(responseHeader).getPayload();
+        System.out.println(responsePayload.stream().mapToInt(m -> m.length).sum());
 
         stopWatch.start();
         // decode reply
@@ -193,20 +193,20 @@ public class Sj23PeqtUcpsiClient<T> extends AbstractUcpsiClient<T> {
      * @param z             peqt output.
      * @param hashObjectMap hash object map.
      * @return ucpsi client output.
-     * @throws MpcAbortException the protocol failure aborts.
      */
-    private UcpsiClientOutput<T> handlePeqtOutput(SquareZ2Vector z, Map<byte[], T> hashObjectMap)
-        throws MpcAbortException {
+    private UcpsiClientOutput<T> handlePeqtOutput(SquareZ2Vector z, Map<byte[], T> hashObjectMap) {
         SquareZ2Vector[] binVector = IntStream.range(0, params.binNum)
             .mapToObj(i -> z.split(alpha))
             .toArray(SquareZ2Vector[]::new);
         TransBitMatrix matrix = TransBitMatrixFactory.createInstance(envType, alpha, params.binNum, parallel);
         IntStream.range(0, params.binNum).forEach(i -> matrix.setColumn(i, binVector[i].getBitVector().getBytes()));
         TransBitMatrix transpose = matrix.transpose();
-        SquareZ2Vector[] partitionVector = IntStream.range(0, alpha)
-            .mapToObj(i -> SquareZ2Vector.create(BitVectorFactory.create(params.binNum, transpose.getColumn(i)), false))
-            .toArray(SquareZ2Vector[]::new);
-        SquareZ2Vector z1 = (SquareZ2Vector) UpsoUtils.or(partitionVector, z2cParty);
+        BitVector bitVector = BitVectorFactory.createZeros(params.binNum);
+        for (int i = 0; i < alpha; i++) {
+            BitVector temp = BitVectorFactory.create(params.binNum, transpose.getColumn(i));
+            bitVector = bitVector.xor(temp);
+        }
+        SquareZ2Vector z1 = SquareZ2Vector.create(bitVector, false);
         ArrayList<T> table = IntStream.range(0, params.binNum)
             .mapToObj(batchIndex -> {
                 HashBinEntry<byte[]> item = cuckooHashBin.getHashBinEntry(batchIndex);
@@ -323,6 +323,7 @@ public class Sj23PeqtUcpsiClient<T> extends AbstractUcpsiClient<T> {
                 long[] item = new long[params.itemEncodedSlotSize];
                 System.arraycopy(coeffs.get(cipherIndex * alpha + j), coeffIndex, item, 0, params.itemEncodedSlotSize);
                 masks[i * alpha + j] = PirUtils.convertCoeffsToBytes(item, params.plainModulusSize);
+                BytesUtils.reduceByteArray(masks[i * alpha + j], params.l);
             }
         }
         return masks;

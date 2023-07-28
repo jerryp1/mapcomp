@@ -1,9 +1,5 @@
 package edu.alibaba.mpc4j.s2pc.upso.ucpsi.sj23.peqt;
 
-import edu.alibaba.mpc4j.common.tool.utils.BigIntegerUtils;
-
-import java.math.BigInteger;
-
 /**
  * SJ23 UCPSI params.
  *
