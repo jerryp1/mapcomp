@@ -13,11 +13,14 @@ using namespace seal;
 
 [[maybe_unused]] JNIEXPORT
 jbyteArray JNICALL Java_edu_alibaba_mpc4j_s2pc_upso_ucpsi_sj23_peqt_Sj23PeqtUcpsiNativeUtils_genEncryptionParameters(
-        JNIEnv *env, jclass, jint poly_modulus_degree, jlong plain_modulus) {
+        JNIEnv *env, jclass, jint poly_modulus_degree, jlong plain_modulus, jintArray coeff_modulus_bits) {
+    uint32_t coeff_size = env->GetArrayLength(coeff_modulus_bits);
+    jint* coeff_ptr = env->GetIntArrayElements(coeff_modulus_bits, JNI_FALSE);
+    vector<int32_t> bit_sizes(coeff_ptr, coeff_ptr + coeff_size);
     EncryptionParameters parms = EncryptionParameters(scheme_type::bfv);
     parms.set_poly_modulus_degree(poly_modulus_degree);
     parms.set_plain_modulus(plain_modulus);
-    parms.set_coeff_modulus(CoeffModulus::BFVDefault(poly_modulus_degree, sec_level_type::tc128));
+    parms.set_coeff_modulus(CoeffModulus::Create(poly_modulus_degree, std::move(bit_sizes)));
     return serialize_encryption_parms(env, parms);
 }
 

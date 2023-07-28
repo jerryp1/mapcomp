@@ -97,10 +97,6 @@ public class Sj23PeqtUcpsiServer<T> extends AbstractUcpsiServer<T> {
         // max bin size
         int approxMaxBinSize = MaxBinSizeUtils.approxMaxBinSize(serverElementSize * hashNum, params.binNum);
         alpha = CommonUtils.getUnitNum(approxMaxBinSize, params.maxPartitionSizePerBin);
-
-        System.out.println(alpha);
-        alpha = 5;
-
         // server sends hash keys
         List<byte[]> cuckooHashKeyPayload = Arrays.stream(hashKeys).collect(Collectors.toList());
         DataPacketHeader cuckooHashKeyHeader = new DataPacketHeader(

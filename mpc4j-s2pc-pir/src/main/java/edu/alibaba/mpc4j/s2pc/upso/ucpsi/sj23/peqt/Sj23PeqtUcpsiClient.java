@@ -106,10 +106,6 @@ public class Sj23PeqtUcpsiClient<T> extends AbstractUcpsiClient<T> {
         // generate public keys
         int approxMaxBinSize = MaxBinSizeUtils.approxMaxBinSize(serverElementSize * hashNum, params.binNum);
         alpha = CommonUtils.getUnitNum(approxMaxBinSize, params.maxPartitionSizePerBin);
-
-        System.out.println(alpha);
-        alpha = 5;
-
         List<byte[]> publicKeysPayload = keyGen();
         DataPacketHeader clientPublicKeysHeader = new DataPacketHeader(
             encodeTaskId, getPtoDesc().getPtoId(), PtoStep.CLIENT_SEND_PUBLIC_KEYS.ordinal(), extraInfo,

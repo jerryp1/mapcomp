@@ -17,7 +17,7 @@ jbyteArray JNICALL Java_edu_alibaba_mpc4j_s2pc_upso_ucpsi_sj23_pdsm_Sj23PdsmUcps
     EncryptionParameters parms = EncryptionParameters(scheme_type::bfv);
     parms.set_poly_modulus_degree(poly_modulus_degree);
     parms.set_plain_modulus(plain_modulus);
-    parms.set_coeff_modulus(CoeffModulus::BFVDefault(poly_modulus_degree, sec_level_type::tc128));
+    parms.set_coeff_modulus(CoeffModulus::Create(poly_modulus_degree, {36, 36, 35, 35, 35}));
     return serialize_encryption_parms(env, parms);
 }
 
@@ -95,10 +95,10 @@ jbyteArray JNICALL Java_edu_alibaba_mpc4j_s2pc_upso_ucpsi_sj23_pdsm_Sj23PdsmUcps
     uint64_t plain_modulus = parms.plain_modulus().value();
     auto random_factory = seal::UniformRandomGeneratorFactory::DefaultFactory();
     auto random = random_factory->create();
-    for (uint32_t j = 0; j < slot_count; j++) {
-        mask[j] = random_nonzero_integer(random, plain_modulus / (1L << 32));
-    }
-    evaluator.multiply_plain_inplace(f_evaluated, mask);
+//    for (uint32_t j = 0; j < slot_count; j++) {
+//        mask[j] = random_nonzero_integer(random, plain_modulus / (1L << 32));
+//    }
+//    evaluator.multiply_plain_inplace(f_evaluated, mask);
     Plaintext r = deserialize_plaintext_from_coeff(env, r_coeffs, context);
     evaluator.add_plain_inplace(f_evaluated, r);
     while (f_evaluated.parms_id() != context.last_parms_id()) {
@@ -142,6 +142,7 @@ jlongArray JNICALL Java_edu_alibaba_mpc4j_s2pc_upso_ucpsi_sj23_pdsm_Sj23PdsmUcps
         env->ThrowNew(exception, "noise budget is 0.");
         return nullptr;
     }
+    cerr << noise_budget << endl;
     Plaintext decrypted;
     vector<uint64_t> dec_vec(slot_count);
     decryptor.decrypt(response, decrypted);
