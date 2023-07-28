@@ -11,6 +11,7 @@ import edu.alibaba.mpc4j.common.tool.galoisfield.gf2k.Gf2kFactory;
 import edu.alibaba.mpc4j.common.tool.utils.BytesUtils;
 import edu.alibaba.mpc4j.crypto.matrix.okve.dokvs.gf2k.Gf2kDokvs;
 import edu.alibaba.mpc4j.crypto.matrix.okve.dokvs.gf2k.Gf2kDokvsFactory;
+import edu.alibaba.mpc4j.crypto.matrix.okve.dokvs.gf2k.Gf2kDokvsFactory.Gf2kDokvsType;
 import edu.alibaba.mpc4j.s2pc.opf.oprf.MpOprfSenderOutput;
 
 import java.nio.ByteBuffer;
@@ -36,10 +37,6 @@ public class Rs21MpOprfSenderOutput implements MpOprfSenderOutput {
      */
     private final Prf hf;
     /**
-     * H^out: {0,1}^* → {0,1}^{λ}
-     */
-    private final Prf hOut;
-    /**
      * Δ
      */
     private final byte[] delta;
@@ -48,29 +45,27 @@ public class Rs21MpOprfSenderOutput implements MpOprfSenderOutput {
      */
     private final byte[] w;
     /**
-     * GF2K-DOKVS
+     * GF2K-OKVS
      */
-    private final Gf2kDokvs<ByteBuffer> dokvs;
+    private final Gf2kDokvs<ByteBuffer> okvs;
     /**
      * vector K, i.e., masked OKVS storage
      */
     private final byte[][] vectorK;
 
     Rs21MpOprfSenderOutput(EnvType envType, int batchSize, byte[] delta, byte[] w,
-                           Gf2kDokvsFactory.Gf2kDokvsType dokvsType, byte[][] dokvsKeys, byte[][] vectorK) {
+                           Gf2kDokvsType dokvsType, byte[][] okvsKeys, byte[][] vectorK) {
         MathPreconditions.checkPositive("batchSize", batchSize);
         this.batchSize = batchSize;
         gf2k = Gf2kFactory.createInstance(envType);
         hf = PrfFactory.createInstance(envType, gf2k.getByteL());
         hf.setKey(new byte[CommonConstants.BLOCK_BYTE_LENGTH]);
-        hOut = PrfFactory.createInstance(envType, CommonConstants.BLOCK_BYTE_LENGTH);
-        hOut.setKey(new byte[CommonConstants.BLOCK_BYTE_LENGTH]);
         Preconditions.checkArgument(gf2k.validateElement(delta));
-        this.delta = delta;
+        this.delta = BytesUtils.clone(delta);
         Preconditions.checkArgument(gf2k.validateElement(w));
         this.w = BytesUtils.clone(w);
-        dokvs = Gf2kDokvsFactory.createInstance(envType, dokvsType, batchSize, dokvsKeys);
-        MathPreconditions.checkEqual("m", "k.length", dokvs.getM(), vectorK.length);
+        okvs = Gf2kDokvsFactory.createInstance(envType, dokvsType, batchSize, okvsKeys);
+        MathPreconditions.checkEqual("m", "k.length", okvs.getM(), vectorK.length);
         this.vectorK = Arrays.stream(vectorK)
             .peek(ki -> Preconditions.checkArgument(gf2k.validateElement(ki)))
             .map(BytesUtils::clone)
@@ -81,15 +76,15 @@ public class Rs21MpOprfSenderOutput implements MpOprfSenderOutput {
     public byte[] getPrf(byte[] input) {
         ByteBuffer inputByteBuffer = ByteBuffer.wrap(input);
         // Decode(K, y, r) - ΔH^F(y) + w
-        byte[] y1 = dokvs.decode(vectorK, inputByteBuffer);
+        byte[] y1 = okvs.decode(vectorK, inputByteBuffer);
         gf2k.subi(y1, gf2k.mul(delta, hf.getBytes(input)));
         gf2k.addi(y1, w);
         // H(y1, y) = H(Decode(K, y, r) - ΔH^F(y) + w, y)
-        byte[] y1y = ByteBuffer.allocate(gf2k.getByteL() + input.length)
+        byte[] y1y = ByteBuffer.allocate(CommonConstants.BLOCK_BYTE_LENGTH + input.length)
             .put(y1)
             .put(input)
             .array();
-        return hOut.getBytes(y1y);
+        return hf.getBytes(y1y);
     }
 
     @Override

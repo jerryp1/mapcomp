@@ -40,7 +40,7 @@ public class CuckooHashBinParamsTest {
     /**
      * max round
      */
-    private static final int MAX_ROUND = 1 << 20;
+    private static final int MAX_ROUND = 1 << 22;
     /**
      * target σ = 40
      */
@@ -53,25 +53,29 @@ public class CuckooHashBinParamsTest {
      * regression point num
      */
     private static final int REGRESSION_POINT_NUM = 5;
+    /**
+     * ε
+     */
+    private static final double EPSILON = 1.3;
 
     @Parameterized.Parameters(name = "{0}")
     public static Collection<Object[]> configurations() {
         Collection<Object[]> configurations = new ArrayList<>();
 
         // NO_STASH_NAIVE
-        configurations.add(new Object[] {
+        configurations.add(new Object[]{
             CuckooHashBinType.NO_STASH_NAIVE.name(), CuckooHashBinType.NO_STASH_NAIVE
         });
         // NO_STASH_PSZ18_3_HASH
-        configurations.add(new Object[] {
+        configurations.add(new Object[]{
             CuckooHashBinType.NO_STASH_PSZ18_3_HASH.name(), CuckooHashBinType.NO_STASH_PSZ18_3_HASH
         });
         // NO_STASH_PSZ18_4_HASH
-        configurations.add(new Object[] {
+        configurations.add(new Object[]{
             CuckooHashBinType.NO_STASH_PSZ18_4_HASH.name(), CuckooHashBinType.NO_STASH_PSZ18_4_HASH
         });
         // NO_STASH_PSZ18_5_HASH
-        configurations.add(new Object[] {
+        configurations.add(new Object[]{
             CuckooHashBinType.NO_STASH_PSZ18_5_HASH.name(), CuckooHashBinType.NO_STASH_PSZ18_5_HASH
         });
 
@@ -131,9 +135,14 @@ public class CuckooHashBinParamsTest {
             .map(ByteBuffer::wrap)
             .collect(Collectors.toList());
         int minBinNum = num + 2;
-        int maxBinNum = minBinNum + REGRESSION_POINT_NUM;
+        int maxBinNum = (int) Math.ceil(minBinNum * EPSILON);
+        if (maxBinNum - minBinNum < REGRESSION_POINT_NUM) {
+            maxBinNum = minBinNum + REGRESSION_POINT_NUM;
+        }
+        int binInterval = (maxBinNum - minBinNum) / REGRESSION_POINT_NUM;
         double[][] points = new double[REGRESSION_POINT_NUM][2];
-        for (int binNum = minBinNum; binNum < maxBinNum; binNum++) {
+        int pointIndex = 0;
+        for (int binNum = minBinNum; binNum <= maxBinNum && pointIndex < REGRESSION_POINT_NUM; binNum += binInterval) {
             int finalBinNum = binNum;
             // for each bin num, test its security parameter
             int noStashCount = IntStream.range(0, MAX_ROUND).parallel()
@@ -152,9 +161,9 @@ public class CuckooHashBinParamsTest {
                 })
                 .sum();
             double sigma = -1 * DoubleUtils.log2(1 - (double) noStashCount / MAX_ROUND);
-            int pointIndex = binNum - minBinNum;
             points[pointIndex][0] = binNum;
             points[pointIndex][1] = sigma;
+            pointIndex++;
             LOGGER.info("log(num) = {}, bin = {}, σ = {}", logNum, binNum, sigma);
         }
         // linear regression
@@ -166,7 +175,7 @@ public class CuckooHashBinParamsTest {
         // σ = k * bin + b, now we want to get bin
         double estimateBinNum = (TARGET_SIGMA - b) / k;
         LOGGER.info("log(num) = {}, σ = {}, estimate bin = {}, estimate ε = {}",
-            num, TARGET_SIGMA, estimateBinNum, estimateBinNum / num
+            logNum, TARGET_SIGMA, estimateBinNum, estimateBinNum / num
         );
     }
 }

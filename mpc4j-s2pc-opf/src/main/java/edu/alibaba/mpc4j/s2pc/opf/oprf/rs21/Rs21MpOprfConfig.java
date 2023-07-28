@@ -2,9 +2,10 @@ package edu.alibaba.mpc4j.s2pc.opf.oprf.rs21;
 
 import edu.alibaba.mpc4j.common.rpc.desc.SecurityModel;
 import edu.alibaba.mpc4j.common.rpc.pto.AbstractMultiPartyPtoConfig;
-import edu.alibaba.mpc4j.crypto.matrix.okve.dokvs.gf2k.Gf2kDokvsFactory;
+import edu.alibaba.mpc4j.crypto.matrix.okve.dokvs.gf2k.Gf2kDokvsFactory.Gf2kDokvsType;
 import edu.alibaba.mpc4j.s2pc.opf.oprf.MpOprfConfig;
 import edu.alibaba.mpc4j.s2pc.opf.oprf.OprfFactory;
+import edu.alibaba.mpc4j.s2pc.opf.oprf.OprfFactory.OprfType;
 import edu.alibaba.mpc4j.s2pc.pcg.vole.gf2k.nc.Gf2kNcVoleConfig;
 import edu.alibaba.mpc4j.s2pc.pcg.vole.gf2k.nc.Gf2kNcVoleFactory;
 
@@ -20,26 +21,26 @@ public class Rs21MpOprfConfig extends AbstractMultiPartyPtoConfig implements MpO
      */
     private final Gf2kNcVoleConfig ncVoleConfig;
     /**
-     * GF2K-DOUBLY_OKVS type
+     * GF2K-OKVS type
      */
-    private final Gf2kDokvsFactory.Gf2kDokvsType dokvsType;
+    private final Gf2kDokvsType okvsType;
 
     private Rs21MpOprfConfig(Builder builder) {
         super(SecurityModel.MALICIOUS, builder.ncVoleConfig);
         ncVoleConfig = builder.ncVoleConfig;
-        dokvsType = builder.dokvsType;
+        okvsType = builder.okvsType;
     }
 
     public Gf2kNcVoleConfig getNcVoleConfig() {
         return ncVoleConfig;
     }
 
-    public Gf2kDokvsFactory.Gf2kDokvsType getDokvsType() {
-        return dokvsType;
+    public Gf2kDokvsType getOkvsType() {
+        return okvsType;
     }
 
     @Override
-    public OprfFactory.OprfType getPtoType() {
+    public OprfType getPtoType() {
         return OprfFactory.OprfType.RS21;
     }
 
@@ -49,13 +50,13 @@ public class Rs21MpOprfConfig extends AbstractMultiPartyPtoConfig implements MpO
          */
         private Gf2kNcVoleConfig ncVoleConfig;
         /**
-         * GF2K-DOUBLY_OKVS type
+         * GF2K-OKVS type
          */
-        private Gf2kDokvsFactory.Gf2kDokvsType dokvsType;
+        private Gf2kDokvsType okvsType;
 
         public Builder(SecurityModel securityModel) {
             ncVoleConfig = Gf2kNcVoleFactory.createDefaultConfig(securityModel, true);
-            dokvsType = Gf2kDokvsFactory.Gf2kDokvsType.H3_CLUSTER_FIELD_BLAZE_GCT;
+            okvsType = Gf2kDokvsType.H3_CLUSTER_FIELD_BLAZE_GCT;
         }
 
         public Builder setNcVoleConfig(Gf2kNcVoleConfig ncVoleConfig) {
@@ -63,8 +64,8 @@ public class Rs21MpOprfConfig extends AbstractMultiPartyPtoConfig implements MpO
             return this;
         }
 
-        public Builder setDokvsType(Gf2kDokvsFactory.Gf2kDokvsType dokvsType) {
-            this.dokvsType = dokvsType;
+        public Builder setOkvsType(Gf2kDokvsType okvsType) {
+            this.okvsType = okvsType;
             return this;
         }
 

@@ -1,4 +1,4 @@
-package edu.alibaba.mpc4j.s2pc.pso.cpsi.scpsi.psty19;
+package edu.alibaba.mpc4j.s2pc.pso.cpsi.scpsi.rs21;
 
 import edu.alibaba.mpc4j.common.rpc.desc.SecurityModel;
 import edu.alibaba.mpc4j.common.rpc.pto.AbstractMultiPartyPtoConfig;
@@ -6,18 +6,19 @@ import edu.alibaba.mpc4j.common.tool.hashbin.object.cuckoo.CuckooHashBinFactory;
 import edu.alibaba.mpc4j.common.tool.hashbin.object.cuckoo.CuckooHashBinFactory.CuckooHashBinType;
 import edu.alibaba.mpc4j.s2pc.aby.operator.row.peqt.PeqtConfig;
 import edu.alibaba.mpc4j.s2pc.aby.operator.row.peqt.PeqtFactory;
-import edu.alibaba.mpc4j.s2pc.pso.cpsi.scpsi.ScpsiFactory;
 import edu.alibaba.mpc4j.s2pc.opf.opprf.batch.BopprfConfig;
-import edu.alibaba.mpc4j.s2pc.opf.opprf.batch.BopprfFactory;
+import edu.alibaba.mpc4j.s2pc.opf.opprf.batch.okvs.OkvsBopprfConfig;
+import edu.alibaba.mpc4j.s2pc.opf.oprf.rs21.Rs21MpOprfConfig;
+import edu.alibaba.mpc4j.s2pc.pso.cpsi.scpsi.ScpsiFactory.ScpsiType;
 import edu.alibaba.mpc4j.s2pc.pso.cpsi.scpsi.BopprfScpsiConfig;
 
 /**
- * PSTY19 server-payload circuit PSI config.
+ * RS21 server-payload circuit PSI config.
  *
  * @author Weiran Liu
- * @date 2023/3/29
+ * @date 2023/7/27
  */
-public class Psty19ScpsiConfig extends AbstractMultiPartyPtoConfig implements BopprfScpsiConfig {
+public class Rs21ScpsiConfig extends AbstractMultiPartyPtoConfig implements BopprfScpsiConfig {
     /**
      * Batch OPPRF config
      */
@@ -31,7 +32,7 @@ public class Psty19ScpsiConfig extends AbstractMultiPartyPtoConfig implements Bo
      */
     private final CuckooHashBinType cuckooHashBinType;
 
-    private Psty19ScpsiConfig(Builder builder) {
+    private Rs21ScpsiConfig(Builder builder) {
         super(SecurityModel.SEMI_HONEST, builder.bopprfConfig, builder.peqtConfig);
         bopprfConfig = builder.bopprfConfig;
         peqtConfig = builder.peqtConfig;
@@ -39,8 +40,8 @@ public class Psty19ScpsiConfig extends AbstractMultiPartyPtoConfig implements Bo
     }
 
     @Override
-    public ScpsiFactory.ScpsiType getPtoType() {
-        return ScpsiFactory.ScpsiType.PSTY19;
+    public ScpsiType getPtoType() {
+        return ScpsiType.RS21;
     }
 
     @Override
@@ -63,7 +64,7 @@ public class Psty19ScpsiConfig extends AbstractMultiPartyPtoConfig implements Bo
         return cuckooHashBinType;
     }
 
-    public static class Builder implements org.apache.commons.lang3.builder.Builder<Psty19ScpsiConfig> {
+    public static class Builder implements org.apache.commons.lang3.builder.Builder<Rs21ScpsiConfig> {
         /**
          * Batch OPPRF config
          */
@@ -78,7 +79,9 @@ public class Psty19ScpsiConfig extends AbstractMultiPartyPtoConfig implements Bo
         private CuckooHashBinType cuckooHashBinType;
 
         public Builder(boolean silent) {
-            bopprfConfig = BopprfFactory.createDefaultConfig();
+            bopprfConfig = new OkvsBopprfConfig.Builder()
+                .setOprfConfig(new Rs21MpOprfConfig.Builder(SecurityModel.SEMI_HONEST).build())
+                .build();
             peqtConfig = PeqtFactory.createDefaultConfig(SecurityModel.SEMI_HONEST, silent);
             cuckooHashBinType = CuckooHashBinType.NO_STASH_PSZ18_3_HASH;
         }
@@ -94,8 +97,8 @@ public class Psty19ScpsiConfig extends AbstractMultiPartyPtoConfig implements Bo
         }
 
         @Override
-        public Psty19ScpsiConfig build() {
-            return new Psty19ScpsiConfig(this);
+        public Rs21ScpsiConfig build() {
+            return new Rs21ScpsiConfig(this);
         }
     }
 }

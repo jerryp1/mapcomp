@@ -1,10 +1,10 @@
-package edu.alibaba.mpc4j.s2pc.pso.cpsi.ccpsi.psty19;
+package edu.alibaba.mpc4j.s2pc.pso.cpsi.ccpsi;
 
 import edu.alibaba.mpc4j.common.rpc.desc.PtoDesc;
 import edu.alibaba.mpc4j.common.rpc.desc.PtoDescManager;
 
 /**
- * PSTY19 client-payload circuit PSI protocol description. The protocol comes from the following paper:
+ * batched OPPRF-based client-payload circuit PSI protocol description. The protocol comes from the following paper:
  * <p>
  * Pinkas, Benny, Thomas Schneider, Oleksandr Tkachenko, and Avishay Yanai. Efficient circuit-based PSI with linear
  * communication. EUROCRYPT 2019, Part III, pp. 122-153. Springer International Publishing, 2019.
@@ -12,26 +12,37 @@ import edu.alibaba.mpc4j.common.rpc.desc.PtoDescManager;
  * The implementation has linear communication with stash-less cuckoo hashing.
  *
  * @author Weiran Liu
- * @date 2023/4/19
+ * @date 2023/7/28
  */
-class Psty19CcpsiPtoDesc implements PtoDesc {
+class BopprfCcpsiPtoDesc implements PtoDesc {
     /**
      * the protocol ID
      */
-    private static final int PTO_ID = Math.abs((int) 4489112381934735960L);
+    private static final int PTO_ID = Math.abs((int) 266505387179424887L);
     /**
      * the protocol name
      */
-    private static final String PTO_NAME = "PRTY19-CCPSI";
+    private static final String PTO_NAME = "BOPPRF-CCPSI";
+
+    /**
+     * the protocol step
+     */
+    enum PtoStep {
+        /**
+         * the client sends cuckoo hash keys
+         */
+        CLIENT_SEND_CUCKOO_HASH_KEYS,
+    }
+
     /**
      * the singleton mode
      */
-    private static final Psty19CcpsiPtoDesc INSTANCE = new Psty19CcpsiPtoDesc();
+    private static final BopprfCcpsiPtoDesc INSTANCE = new BopprfCcpsiPtoDesc();
 
     /**
      * private constructor.
      */
-    private Psty19CcpsiPtoDesc() {
+    private BopprfCcpsiPtoDesc() {
         // empty
     }
 

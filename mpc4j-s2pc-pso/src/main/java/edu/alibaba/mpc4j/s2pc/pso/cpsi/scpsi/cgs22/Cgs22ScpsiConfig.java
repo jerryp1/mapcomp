@@ -74,9 +74,9 @@ public class Cgs22ScpsiConfig extends AbstractMultiPartyPtoConfig implements Scp
          */
         private CuckooHashBinType cuckooHashBinType;
 
-        public Builder(SecurityModel securityModel, boolean silent) {
+        public Builder(boolean silent) {
             rbopprfConfig = RbopprfFactory.createDefaultConfig();
-            pdsmConfig = PdsmFactory.createDefaultConfig(securityModel, silent);
+            pdsmConfig = PdsmFactory.createDefaultConfig(SecurityModel.SEMI_HONEST, silent);
             cuckooHashBinType = CuckooHashBinType.NO_STASH_PSZ18_3_HASH;
         }
 

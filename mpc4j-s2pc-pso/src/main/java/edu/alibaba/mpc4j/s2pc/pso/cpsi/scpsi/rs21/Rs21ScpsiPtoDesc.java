@@ -1,37 +1,37 @@
-package edu.alibaba.mpc4j.s2pc.pso.cpsi.ccpsi.psty19;
+package edu.alibaba.mpc4j.s2pc.pso.cpsi.scpsi.rs21;
 
 import edu.alibaba.mpc4j.common.rpc.desc.PtoDesc;
 import edu.alibaba.mpc4j.common.rpc.desc.PtoDescManager;
 
 /**
- * PSTY19 client-payload circuit PSI protocol description. The protocol comes from the following paper:
+ * RS21 server-payload circuit PSI protocol description. The protocol is described in the following paper:
  * <p>
- * Pinkas, Benny, Thomas Schneider, Oleksandr Tkachenko, and Avishay Yanai. Efficient circuit-based PSI with linear
- * communication. EUROCRYPT 2019, Part III, pp. 122-153. Springer International Publishing, 2019.
+ * Rindal, Peter, and Phillipp Schoppmann. VOLE-PSI: fast OPRF and circuit-PSI from vector-OLE. EUROCRYPT 2021,
+ * pp. 901-930. Cham: Springer International Publishing, 2021.
  * </p>
  * The implementation has linear communication with stash-less cuckoo hashing.
  *
  * @author Weiran Liu
- * @date 2023/4/19
+ * @date 2023/7/27
  */
-class Psty19CcpsiPtoDesc implements PtoDesc {
+public class Rs21ScpsiPtoDesc implements PtoDesc {
     /**
      * the protocol ID
      */
-    private static final int PTO_ID = Math.abs((int) 4489112381934735960L);
+    private static final int PTO_ID = Math.abs((int) 6977323854840309280L);
     /**
      * the protocol name
      */
-    private static final String PTO_NAME = "PRTY19-CCPSI";
+    private static final String PTO_NAME = "RS21-SCPSI";
     /**
      * the singleton mode
      */
-    private static final Psty19CcpsiPtoDesc INSTANCE = new Psty19CcpsiPtoDesc();
+    private static final Rs21ScpsiPtoDesc INSTANCE = new Rs21ScpsiPtoDesc();
 
     /**
      * private constructor.
      */
-    private Psty19CcpsiPtoDesc() {
+    private Rs21ScpsiPtoDesc() {
         // empty
     }
 

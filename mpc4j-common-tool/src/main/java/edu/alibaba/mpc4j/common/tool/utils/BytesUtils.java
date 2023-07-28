@@ -20,19 +20,34 @@ public class BytesUtils {
         // empty
     }
 
-    /**
-     * 调换字节的大小端表示，即如果输入为0b00000001，则输出为0b10000000。
-     *
-     * @param byteValue 给定的{@code byte}。
-     * @return 调换结果。
-     */
-    public static byte reverseBit(final byte byteValue) {
+    private static byte innerReverseBit(final byte byteValue) {
         byte copyByteValue = byteValue;
         int reverseByteValue = 0;
         for (int i = 0; i < Byte.SIZE; i++, copyByteValue >>= 1) {
             reverseByteValue = reverseByteValue << 1 | (copyByteValue & 1);
         }
         return (byte) reverseByteValue;
+    }
+
+    /**
+     * reverse bit array map
+     */
+    private static final byte[] REVERSE_BIT_ARRAY = new byte[1 << Byte.SIZE];
+
+    static {
+        for (int i = 0; i < (1 << Byte.SIZE); i++) {
+            REVERSE_BIT_ARRAY[i] = innerReverseBit((byte) i);
+        }
+    }
+
+    /**
+     * reverse bits in the given byte, e.g., if byte value is 0b00000001, then the reversed byte value is 0b10000000.
+     *
+     * @param byteValue the given byte.
+     * @return the reversed byte.
+     */
+    public static byte reverseBit(final byte byteValue) {
+        return REVERSE_BIT_ARRAY[(int) byteValue & 0xFF];
     }
 
     /**
