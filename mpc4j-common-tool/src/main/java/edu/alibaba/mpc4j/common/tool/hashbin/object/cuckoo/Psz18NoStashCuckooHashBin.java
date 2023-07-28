@@ -45,27 +45,30 @@ class Psz18NoStashCuckooHashBin<T> extends AbstractNoStashCuckooHashBin<T> {
                 if (maxItemSize == 1) {
                     // although we can set binNum = 1 when n = 1, in some cases we must require BinNum > 1
                     return 2.0;
-                } else if (maxItemSize < 4) {
-                    // 2^1 <= n < 2^2
-                    return 15.60;
-                } else if (maxItemSize < 8) {
+                } else if (maxItemSize == 2) {
+                    // n = 2^1
+                    return 14.187707604221078;
+                } else if (maxItemSize < (1 << 2)) {
+                    // 2^1 < n < 2^2
+                    return 14.187707604221078;
+                } else if (maxItemSize < (1 << 3)) {
                     // 2^2 <= n < 2^3
-                    return 10.00;
-                } else if (maxItemSize < 16) {
+                    return 7.753054660935952;
+                } else if (maxItemSize < (1 << 4)) {
                     // 2^3 <= n < 2^4
-                    return 6.00;
-                } else if (maxItemSize < 32) {
+                    return 4.607033636298429;
+                } else if (maxItemSize < (1 << 5)) {
                     // 2^4 <= n < 2^5
-                    return 4.00;
-                } else if (maxItemSize < 64) {
+                    return 3.098373987514505;
+                } else if (maxItemSize < (1 << 6)) {
                     // 2^5 <= n < 2^6
-                    return 3.00;
-                } else if (maxItemSize < 128) {
+                    return 2.404682247274576;
+                } else if (maxItemSize <= (1 << 7)) {
                     // 2^6 <= n < 2^7
-                    return 2.00;
+                    return 1.977988668572465;
                 } else if (maxItemSize <= MAX_SPECIAL_ITEM_SIZE) {
-                    // 2^7 <= n <= 2^8
-                    return 1.50;
+                    // 2^6 <= n <= 2^7
+                    return 1.7304160190125353;
                 } else {
                     return H3_EPSILON;
                 }
@@ -74,55 +77,61 @@ class Psz18NoStashCuckooHashBin<T> extends AbstractNoStashCuckooHashBin<T> {
                 if (maxItemSize == 1) {
                     // although we can set binNum = 1 when n = 1, in some cases we must require BinNum > 1
                     return 2.0;
-                } else if (maxItemSize < 4) {
-                    // 2^1 <= n < 2^2
-                    return 6.864;
-                } else if (maxItemSize < 8) {
+                } else if (maxItemSize == 2) {
+                    // n = 2^1
+                    return 8.756395990772287;
+                } else if (maxItemSize < (1 << 2)) {
+                    // 2^1 < n < 2^2
+                    return 8.756395990772287;
+                } else if (maxItemSize < (1 << 3)) {
                     // 2^2 <= n < 2^3
-                    return 4.338;
-                } else if (maxItemSize < 16) {
+                    return 4.382000122115682;
+                } else if (maxItemSize < (1 << 4)) {
                     // 2^3 <= n < 2^4
-                    return 2.680;
-                } else if (maxItemSize < 32) {
+                    return 3.010631584268285;
+                } else if (maxItemSize < (1 << 5)) {
                     // 2^4 <= n < 2^5
-                    return 1.956;
-                } else if (maxItemSize < 64) {
+                    return 1.9450721783545393;
+                } else if (maxItemSize < (1 << 6)) {
                     // 2^5 <= n < 2^6
-                    return 1.573;
-                } else if (maxItemSize < 128) {
+                    return 1.5931742066193089;
+                } else if (maxItemSize <= (1 << 7)) {
                     // 2^6 <= n < 2^7
-                    return 1.335;
+                    return 1.34375;
                 } else if (maxItemSize <= MAX_SPECIAL_ITEM_SIZE) {
-                    // 2^7 <= n <= 2^8
-                    return 1.191;
+                    // 2^6 <= n <= 2^7
+                    return 1.1796875;
                 } else {
                     return H4_EPSILON;
                 }
             case NO_STASH_PSZ18_5_HASH:
-                // 4 hashes
+                // 5 hashes
                 if (maxItemSize == 1) {
                     // although we can set binNum = 1 when n = 1, in some cases we must require BinNum > 1
                     return 2.0;
-                } else if (maxItemSize < 4) {
-                    // 2^1 <= n < 2^2
-                    return 2.595;
-                } else if (maxItemSize < 8) {
+                } else if (maxItemSize == 2) {
+                    // n = 2^1
+                    return 8;
+                } else if (maxItemSize < (1 << 2)) {
+                    // 2^1 < n < 2^2
+                    return 8;
+                } else if (maxItemSize < (1 << 3)) {
                     // 2^2 <= n < 2^3
-                    return 2.202;
-                } else if (maxItemSize < 16) {
+                    return 2.75;
+                } else if (maxItemSize < (1 << 4)) {
                     // 2^3 <= n < 2^4
-                    return 1.868;
-                } else if (maxItemSize < 32) {
+                    return 2.125;
+                } else if (maxItemSize < (1 << 5)) {
                     // 2^4 <= n < 2^5
-                    return 1.585;
-                } else if (maxItemSize < 64) {
+                    return 1.818;
+                } else if (maxItemSize < (1 << 6)) {
                     // 2^5 <= n < 2^6
-                    return 1.345;
-                } else if (maxItemSize < 128) {
+                    return 1.375;
+                } else if (maxItemSize <= (1 << 7)) {
                     // 2^6 <= n < 2^7
-                    return 1.220;
+                    return H5_EPSILON;
                 } else if (maxItemSize <= MAX_SPECIAL_ITEM_SIZE) {
-                    // 2^7 <= n <= 2^8
+                    // 2^6 <= n <= 2^7
                     return H5_EPSILON;
                 } else {
                     return H5_EPSILON;
