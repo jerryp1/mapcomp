@@ -2,7 +2,7 @@ package edu.alibaba.mpc4j.s2pc.pso.cpsi.scpsi.psty19;
 
 import edu.alibaba.mpc4j.common.rpc.Party;
 import edu.alibaba.mpc4j.common.rpc.Rpc;
-import edu.alibaba.mpc4j.s2pc.pso.cpsi.scpsi.bopprf.AbstractBopprfScpsiServer;
+import edu.alibaba.mpc4j.s2pc.pso.cpsi.scpsi.AbstractBopprfScpsiServer;
 
 /**
  * PSTY19 server-payload circuit PSI server.

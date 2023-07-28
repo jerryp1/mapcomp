@@ -1,22 +1,20 @@
-package edu.alibaba.mpc4j.s2pc.pso.cpsi.scpsi.bopprf;
+package edu.alibaba.mpc4j.s2pc.pso.cpsi.ccpsi;
 
 import edu.alibaba.mpc4j.common.tool.hashbin.object.cuckoo.CuckooHashBinFactory.CuckooHashBinType;
 import edu.alibaba.mpc4j.s2pc.aby.operator.row.peqt.PeqtConfig;
 import edu.alibaba.mpc4j.s2pc.opf.opprf.batch.BopprfConfig;
-import edu.alibaba.mpc4j.s2pc.pso.cpsi.scpsi.ScpsiConfig;
 
 /**
- * BOPPRF-based server-payload circuit PSI config.
+ * batched OPPRF-based client-payload circuit PSI config.
  *
  * @author Weiran Liu
  * @date 2023/7/27
  */
-public interface BopprfScpsiConfig extends ScpsiConfig {
-
+public interface BopprfCcpsiConfig extends CcpsiConfig {
     /**
-     * Gets BOPPRF config.
+     * Gets batched OPPRF config.
      *
-     * @return BOPPRF config.
+     * @return batched OPPRF config.
      */
     BopprfConfig getBopprfConfig();
 

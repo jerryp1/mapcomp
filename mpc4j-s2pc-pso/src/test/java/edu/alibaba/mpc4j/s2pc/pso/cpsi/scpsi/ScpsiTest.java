@@ -51,7 +51,9 @@ public class ScpsiTest extends AbstractTwoPartyPtoTest {
      * element byte length
      */
     private static final int ELEMENT_BYTE_LENGTH = CommonUtils.getByteLength(ELEMENT_BIT_LENGTH);
-
+    /**
+     * cuckoo hash bin types
+     */
     private static final CuckooHashBinType[] CUCKOO_HASH_BIN_TYPES = new CuckooHashBinType[] {
         CuckooHashBinType.NO_STASH_PSZ18_3_HASH,
         CuckooHashBinType.NAIVE_2_HASH,

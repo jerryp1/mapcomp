@@ -9,7 +9,7 @@ import edu.alibaba.mpc4j.s2pc.aby.operator.row.peqt.PeqtFactory;
 import edu.alibaba.mpc4j.s2pc.pso.cpsi.scpsi.ScpsiFactory;
 import edu.alibaba.mpc4j.s2pc.opf.opprf.batch.BopprfConfig;
 import edu.alibaba.mpc4j.s2pc.opf.opprf.batch.BopprfFactory;
-import edu.alibaba.mpc4j.s2pc.pso.cpsi.scpsi.bopprf.BopprfScpsiConfig;
+import edu.alibaba.mpc4j.s2pc.pso.cpsi.scpsi.BopprfScpsiConfig;
 
 /**
  * PSTY19 server-payload circuit PSI config.

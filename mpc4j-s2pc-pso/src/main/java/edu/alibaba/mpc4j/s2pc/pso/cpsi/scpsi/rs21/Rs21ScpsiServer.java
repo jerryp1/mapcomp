@@ -2,7 +2,7 @@ package edu.alibaba.mpc4j.s2pc.pso.cpsi.scpsi.rs21;
 
 import edu.alibaba.mpc4j.common.rpc.Party;
 import edu.alibaba.mpc4j.common.rpc.Rpc;
-import edu.alibaba.mpc4j.s2pc.pso.cpsi.scpsi.bopprf.AbstractBopprfScpsiServer;
+import edu.alibaba.mpc4j.s2pc.pso.cpsi.scpsi.AbstractBopprfScpsiServer;
 
 /**
  * RS21 server-payload circuit PSI server.

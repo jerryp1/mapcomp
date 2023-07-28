@@ -1,4 +1,4 @@
-package edu.alibaba.mpc4j.s2pc.pso.cpsi.scpsi.rs21;
+package edu.alibaba.mpc4j.s2pc.pso.cpsi.ccpsi.rs21;
 
 import edu.alibaba.mpc4j.common.rpc.desc.SecurityModel;
 import edu.alibaba.mpc4j.common.rpc.pto.AbstractMultiPartyPtoConfig;
@@ -9,16 +9,16 @@ import edu.alibaba.mpc4j.s2pc.aby.operator.row.peqt.PeqtFactory;
 import edu.alibaba.mpc4j.s2pc.opf.opprf.batch.BopprfConfig;
 import edu.alibaba.mpc4j.s2pc.opf.opprf.batch.okvs.OkvsBopprfConfig;
 import edu.alibaba.mpc4j.s2pc.opf.oprf.rs21.Rs21MpOprfConfig;
-import edu.alibaba.mpc4j.s2pc.pso.cpsi.scpsi.ScpsiFactory.ScpsiType;
-import edu.alibaba.mpc4j.s2pc.pso.cpsi.scpsi.BopprfScpsiConfig;
+import edu.alibaba.mpc4j.s2pc.pso.cpsi.ccpsi.BopprfCcpsiConfig;
+import edu.alibaba.mpc4j.s2pc.pso.cpsi.ccpsi.CcpsiFactory.CcpsiType;
 
 /**
- * RS21 server-payload circuit PSI config.
+ * RS21 client-payload circuit PSI config.
  *
  * @author Weiran Liu
- * @date 2023/7/27
+ * @date 2023/7/28
  */
-public class Rs21ScpsiConfig extends AbstractMultiPartyPtoConfig implements BopprfScpsiConfig {
+public class Rs21CcpsiConfig extends AbstractMultiPartyPtoConfig implements BopprfCcpsiConfig {
     /**
      * Batch OPPRF config
      */
@@ -32,7 +32,7 @@ public class Rs21ScpsiConfig extends AbstractMultiPartyPtoConfig implements Bopp
      */
     private final CuckooHashBinType cuckooHashBinType;
 
-    private Rs21ScpsiConfig(Builder builder) {
+    private Rs21CcpsiConfig(Builder builder) {
         super(SecurityModel.SEMI_HONEST, builder.bopprfConfig, builder.peqtConfig);
         bopprfConfig = builder.bopprfConfig;
         peqtConfig = builder.peqtConfig;
@@ -40,13 +40,13 @@ public class Rs21ScpsiConfig extends AbstractMultiPartyPtoConfig implements Bopp
     }
 
     @Override
-    public ScpsiType getPtoType() {
-        return ScpsiType.RS21;
+    public CcpsiType getPtoType() {
+        return CcpsiType.RS21;
     }
 
     @Override
     public int getOutputBitNum(int serverElementSize, int clientElementSize) {
-        return CuckooHashBinFactory.getBinNum(cuckooHashBinType, serverElementSize);
+        return CuckooHashBinFactory.getBinNum(cuckooHashBinType, clientElementSize);
     }
 
     @Override
@@ -64,7 +64,7 @@ public class Rs21ScpsiConfig extends AbstractMultiPartyPtoConfig implements Bopp
         return cuckooHashBinType;
     }
 
-    public static class Builder implements org.apache.commons.lang3.builder.Builder<Rs21ScpsiConfig> {
+    public static class Builder implements org.apache.commons.lang3.builder.Builder<Rs21CcpsiConfig> {
         /**
          * Batch OPPRF config
          */
@@ -97,8 +97,8 @@ public class Rs21ScpsiConfig extends AbstractMultiPartyPtoConfig implements Bopp
         }
 
         @Override
-        public Rs21ScpsiConfig build() {
-            return new Rs21ScpsiConfig(this);
+        public Rs21CcpsiConfig build() {
+            return new Rs21CcpsiConfig(this);
         }
     }
 }
