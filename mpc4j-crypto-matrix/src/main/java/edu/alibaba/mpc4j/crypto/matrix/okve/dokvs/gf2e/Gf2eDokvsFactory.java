@@ -38,6 +38,14 @@ public class Gf2eDokvsFactory {
          */
         H2_BLAZE_GCT,
         /**
+         * cluster blazing fast using garbled cuckoo table with 2 hash function.
+         */
+        H2_NAIVE_CLUSTER_BLAZE_GCT,
+        /**
+         * sparse cluster blazing fast using garbled cuckoo table with 2 hash function.
+         */
+        H2_SPARSE_CLUSTER_BLAZE_GCT,
+        /**
          * singleton garbled cuckoo table with 3 hash functions.
          */
         H3_SINGLETON_GCT,
@@ -86,6 +94,10 @@ public class Gf2eDokvsFactory {
                 return new H2SingletonGctGf2eDokvs<>(envType, n, l, keys);
             case H2_BLAZE_GCT:
                 return new H2BlazeGctGf2eDokvs<>(envType, n, l, keys);
+            case H2_NAIVE_CLUSTER_BLAZE_GCT:
+                return new H2NaiveClusterBlazeGctGf2eDokvs<>(envType, n, l, keys);
+            case H2_SPARSE_CLUSTER_BLAZE_GCT:
+                return new H2SparseClusterBlazeGctGf2eDokvs<>(envType, n, l, keys);
             case H3_SINGLETON_GCT:
                 return new H3SingletonGctGfe2Dokvs<>(envType, n, l, keys);
             case H3_BLAZE_GCT:
@@ -116,6 +128,8 @@ public class Gf2eDokvsFactory {
             case H2_TWO_CORE_GCT:
             case H2_SINGLETON_GCT:
             case H2_BLAZE_GCT:
+            case H2_NAIVE_CLUSTER_BLAZE_GCT:
+            case H2_SPARSE_CLUSTER_BLAZE_GCT:
             case H3_SINGLETON_GCT:
             case H3_BLAZE_GCT:
             case H3_NAIVE_CLUSTER_BLAZE_GCT:
@@ -149,6 +163,10 @@ public class Gf2eDokvsFactory {
                 return new H2SingletonGctGf2eDokvs<>(envType, n, l, keys);
             case H2_BLAZE_GCT:
                 return new H2BlazeGctGf2eDokvs<>(envType, n, l, keys);
+            case H2_NAIVE_CLUSTER_BLAZE_GCT:
+                return new H2NaiveClusterBlazeGctGf2eDokvs<>(envType, n, l, keys);
+            case H2_SPARSE_CLUSTER_BLAZE_GCT:
+                return new H2SparseClusterBlazeGctGf2eDokvs<>(envType, n, l, keys);
             case H3_SINGLETON_GCT:
                 return new H3SingletonGctGfe2Dokvs<>(envType, n, l, keys);
             case H3_BLAZE_GCT:
@@ -177,12 +195,14 @@ public class Gf2eDokvsFactory {
             case H2_TWO_CORE_GCT:
             case H2_SINGLETON_GCT:
             case H2_BLAZE_GCT:
+            case H2_SPARSE_CLUSTER_BLAZE_GCT:
             case H3_SINGLETON_GCT:
             case H3_BLAZE_GCT:
             case H3_SPARSE_CLUSTER_BLAZE_GCT:
             case DISTINCT_GBF:
             case RANDOM_GBF:
                 return true;
+            case H2_NAIVE_CLUSTER_BLAZE_GCT:
             case H3_NAIVE_CLUSTER_BLAZE_GCT:
             case MEGA_BIN:
                 return false;
@@ -210,6 +230,8 @@ public class Gf2eDokvsFactory {
                 return new H2SingletonGctGf2eDokvs<>(envType, n, l, keys);
             case H2_BLAZE_GCT:
                 return new H2BlazeGctGf2eDokvs<>(envType, n, l, keys);
+            case H2_SPARSE_CLUSTER_BLAZE_GCT:
+                return new H2SparseClusterBlazeGctGf2eDokvs<>(envType, n, l, keys);
             case H3_SINGLETON_GCT:
                 return new H3SingletonGctGfe2Dokvs<>(envType, n, l, keys);
             case H3_BLAZE_GCT:
@@ -237,6 +259,9 @@ public class Gf2eDokvsFactory {
             case H2_SINGLETON_GCT:
             case H2_BLAZE_GCT:
                 return AbstractH2GctGf2eDokvs.HASH_KEY_NUM;
+            case H2_NAIVE_CLUSTER_BLAZE_GCT:
+            case H2_SPARSE_CLUSTER_BLAZE_GCT:
+                return AbstractH2ClusterBlazeGctGf2eDokvs.HASH_KEY_NUM;
             case H3_SINGLETON_GCT:
             case H3_BLAZE_GCT:
                 return AbstractH3GctGf2eDokvs.HASH_KEY_NUM;
@@ -269,6 +294,9 @@ public class Gf2eDokvsFactory {
                 return H2NaiveGctDokvsUtils.getLm(n) + H2NaiveGctDokvsUtils.getRm(n);
             case H2_BLAZE_GCT:
                 return H2BlazeGctDokvsUtils.getLm(n) + H2BlazeGctDokvsUtils.getRm(n);
+            case H2_NAIVE_CLUSTER_BLAZE_GCT:
+            case H2_SPARSE_CLUSTER_BLAZE_GCT:
+                return AbstractH2ClusterBlazeGctGf2eDokvs.getM(n);
             case H3_SINGLETON_GCT:
                 return H3NaiveGctDokvsUtils.getLm(n) + H3NaiveGctDokvsUtils.getRm(n);
             case H3_BLAZE_GCT:

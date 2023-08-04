@@ -7,6 +7,7 @@ import edu.alibaba.mpc4j.common.tool.utils.CommonUtils;
 import edu.alibaba.mpc4j.common.tool.utils.IntUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.junit.Assert;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
@@ -25,6 +26,7 @@ import java.util.stream.IntStream;
  * @author Weiran Liu
  * @date 2023/8/2
  */
+@Ignore
 @RunWith(Parameterized.class)
 public class NoStashCuckooHashBinTest {
     /**

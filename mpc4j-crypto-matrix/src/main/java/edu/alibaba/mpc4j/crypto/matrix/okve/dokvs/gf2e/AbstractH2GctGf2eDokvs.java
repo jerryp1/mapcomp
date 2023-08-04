@@ -50,7 +50,7 @@ abstract class AbstractH2GctGf2eDokvs<T> extends AbstractGf2eDokvs<T> implements
     /**
      * number of sparse hashes
      */
-    private static final int SPARSE_HASH_NUM = 2;
+    static final int SPARSE_HASH_NUM = 2;
     /**
      * number of hash keys
      */
