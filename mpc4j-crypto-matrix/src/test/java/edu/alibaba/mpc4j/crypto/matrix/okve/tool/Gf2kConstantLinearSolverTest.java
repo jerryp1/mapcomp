@@ -1,6 +1,6 @@
 package edu.alibaba.mpc4j.crypto.matrix.okve.tool;
 
-import cc.redberry.rings.linear.LinearSolver;
+import cc.redberry.rings.linear.LinearSolver.SystemInfo;
 import edu.alibaba.mpc4j.common.tool.EnvType;
 import edu.alibaba.mpc4j.common.tool.galoisfield.gf2k.Gf2k;
 import edu.alibaba.mpc4j.common.tool.galoisfield.gf2k.Gf2kFactory;
@@ -41,14 +41,14 @@ public class Gf2kConstantLinearSolverTest {
         byte[][][] matrixA = new byte[0][m][];
         byte[][] b = new byte[0][];
         byte[][] x = new byte[m][];
-        LinearSolver.SystemInfo systemInfo;
+        SystemInfo systemInfo;
         systemInfo = linearSolver.freeSolve(BytesUtils.clone(matrixA), BytesUtils.clone(b), x);
-        Assert.assertEquals(LinearSolver.SystemInfo.Consistent, systemInfo);
+        Assert.assertEquals(SystemInfo.Consistent, systemInfo);
         for (int iColumn = 0; iColumn < m; iColumn++) {
             Assert.assertTrue(gf2k.isZero(x[iColumn]));
         }
         systemInfo = linearSolver.fullSolve(BytesUtils.clone(matrixA), BytesUtils.clone(b), x);
-        Assert.assertEquals(LinearSolver.SystemInfo.Consistent, systemInfo);
+        Assert.assertEquals(SystemInfo.Consistent, systemInfo);
         for (int iColumn = 0; iColumn < m; iColumn++) {
             Assert.assertFalse(gf2k.isZero(x[iColumn]));
         }
@@ -59,7 +59,7 @@ public class Gf2kConstantLinearSolverTest {
         byte[][][] matrixA;
         byte[][] b;
         byte[][] x = new byte[1][];
-        LinearSolver.SystemInfo systemInfo;
+        SystemInfo systemInfo;
 
         // A = | 1 |, b = 0, solve Ax = b.
         matrixA = new byte[][][]{
@@ -69,10 +69,10 @@ public class Gf2kConstantLinearSolverTest {
             gf2k.createZero(),
         };
         systemInfo = linearSolver.freeSolve(BytesUtils.clone(matrixA), BytesUtils.clone(b), x);
-        Assert.assertEquals(LinearSolver.SystemInfo.Consistent, systemInfo);
+        Assert.assertEquals(SystemInfo.Consistent, systemInfo);
         Assert.assertTrue(gf2k.isZero(x[0]));
         systemInfo = linearSolver.fullSolve(BytesUtils.clone(matrixA), BytesUtils.clone(b), x);
-        Assert.assertEquals(LinearSolver.SystemInfo.Consistent, systemInfo);
+        Assert.assertEquals(SystemInfo.Consistent, systemInfo);
         Assert.assertTrue(gf2k.isZero(x[0]));
 
         // A = | 1 |, b = r, solve Ax = b.
@@ -83,10 +83,10 @@ public class Gf2kConstantLinearSolverTest {
             gf2k.createNonZeroRandom(SECURE_RANDOM),
         };
         systemInfo = linearSolver.freeSolve(BytesUtils.clone(matrixA), BytesUtils.clone(b), x);
-        Assert.assertEquals(LinearSolver.SystemInfo.Consistent, systemInfo);
+        Assert.assertEquals(SystemInfo.Consistent, systemInfo);
         Assert.assertTrue(gf2k.isEqual(b[0], x[0]));
         systemInfo = linearSolver.fullSolve(BytesUtils.clone(matrixA), BytesUtils.clone(b), x);
-        Assert.assertEquals(LinearSolver.SystemInfo.Consistent, systemInfo);
+        Assert.assertEquals(SystemInfo.Consistent, systemInfo);
         Assert.assertTrue(gf2k.isEqual(b[0], x[0]));
 
         // A = | 0 |, b = 0, solve Ax = b.
@@ -97,10 +97,10 @@ public class Gf2kConstantLinearSolverTest {
             gf2k.createZero(),
         };
         systemInfo = linearSolver.freeSolve(BytesUtils.clone(matrixA), BytesUtils.clone(b), x);
-        Assert.assertEquals(LinearSolver.SystemInfo.Consistent, systemInfo);
+        Assert.assertEquals(SystemInfo.Consistent, systemInfo);
         Assert.assertTrue(gf2k.isZero(x[0]));
         systemInfo = linearSolver.fullSolve(BytesUtils.clone(matrixA), BytesUtils.clone(b), x);
-        Assert.assertEquals(LinearSolver.SystemInfo.Consistent, systemInfo);
+        Assert.assertEquals(SystemInfo.Consistent, systemInfo);
         Assert.assertFalse(gf2k.isZero(x[0]));
 
         // A = | 0 |, b = r, solve Ax = b.
@@ -111,9 +111,9 @@ public class Gf2kConstantLinearSolverTest {
             gf2k.createNonZeroRandom(SECURE_RANDOM),
         };
         systemInfo = linearSolver.freeSolve(BytesUtils.clone(matrixA), BytesUtils.clone(b), x);
-        Assert.assertEquals(LinearSolver.SystemInfo.Inconsistent, systemInfo);
+        Assert.assertEquals(SystemInfo.Inconsistent, systemInfo);
         systemInfo = linearSolver.fullSolve(BytesUtils.clone(matrixA), BytesUtils.clone(b), x);
-        Assert.assertEquals(LinearSolver.SystemInfo.Inconsistent, systemInfo);
+        Assert.assertEquals(SystemInfo.Inconsistent, systemInfo);
     }
 
     @Test
@@ -121,7 +121,7 @@ public class Gf2kConstantLinearSolverTest {
         byte[][][] matrixA;
         byte[][] b;
         byte[][] x = new byte[1][];
-        LinearSolver.SystemInfo systemInfo;
+        SystemInfo systemInfo;
 
         // A = | r[0] |, b = 0, solve Ax = b.
         matrixA = new byte[][][]{
@@ -131,10 +131,10 @@ public class Gf2kConstantLinearSolverTest {
             gf2k.createZero(),
         };
         systemInfo = linearSolver.freeSolve(BytesUtils.clone(matrixA), BytesUtils.clone(b), x);
-        Assert.assertEquals(LinearSolver.SystemInfo.Consistent, systemInfo);
+        Assert.assertEquals(SystemInfo.Consistent, systemInfo);
         Assert.assertTrue(gf2k.isZero(x[0]));
         systemInfo = linearSolver.fullSolve(BytesUtils.clone(matrixA), BytesUtils.clone(b), x);
-        Assert.assertEquals(LinearSolver.SystemInfo.Consistent, systemInfo);
+        Assert.assertEquals(SystemInfo.Consistent, systemInfo);
         Assert.assertTrue(gf2k.isZero(x[0]));
 
         // A = | r[0] |, b = r, solve Ax = b.
@@ -145,10 +145,10 @@ public class Gf2kConstantLinearSolverTest {
             gf2k.createNonZeroRandom(SECURE_RANDOM),
         };
         systemInfo = linearSolver.freeSolve(BytesUtils.clone(matrixA), BytesUtils.clone(b), x);
-        Assert.assertEquals(LinearSolver.SystemInfo.Consistent, systemInfo);
+        Assert.assertEquals(SystemInfo.Consistent, systemInfo);
         assertCorrect(matrixA, b, x);
         systemInfo = linearSolver.fullSolve(BytesUtils.clone(matrixA), BytesUtils.clone(b), x);
-        Assert.assertEquals(LinearSolver.SystemInfo.Consistent, systemInfo);
+        Assert.assertEquals(SystemInfo.Consistent, systemInfo);
         assertCorrect(matrixA, b, x);
     }
 
@@ -158,7 +158,7 @@ public class Gf2kConstantLinearSolverTest {
         byte[][][] matrixA;
         byte[][] b;
         byte[][] x = new byte[m][];
-        LinearSolver.SystemInfo systemInfo;
+        SystemInfo systemInfo;
 
         // A = | 1 1 |, b = 0, solve Ax = b.
         matrixA = new byte[][][]{
@@ -168,14 +168,15 @@ public class Gf2kConstantLinearSolverTest {
             gf2k.createZero(),
         };
         systemInfo = linearSolver.freeSolve(BytesUtils.clone(matrixA), BytesUtils.clone(b), x);
-        Assert.assertEquals(LinearSolver.SystemInfo.Consistent, systemInfo);
+        Assert.assertEquals(SystemInfo.Consistent, systemInfo);
+        assertCorrect(matrixA, b, x);
         Assert.assertTrue(gf2k.isZero(x[0]));
         Assert.assertTrue(gf2k.isZero(x[1]));
         systemInfo = linearSolver.fullSolve(BytesUtils.clone(matrixA), BytesUtils.clone(b), x);
-        Assert.assertEquals(LinearSolver.SystemInfo.Consistent, systemInfo);
+        Assert.assertEquals(SystemInfo.Consistent, systemInfo);
+        assertCorrect(matrixA, b, x);
         Assert.assertFalse(gf2k.isZero(x[0]));
         Assert.assertFalse(gf2k.isZero(x[1]));
-        Assert.assertTrue(gf2k.isZero(gf2k.add(x[0], x[1])));
 
         // A = | 1 1 |, b = r, solve Ax = b.
         matrixA = new byte[][][]{
@@ -185,14 +186,13 @@ public class Gf2kConstantLinearSolverTest {
             gf2k.createNonZeroRandom(SECURE_RANDOM),
         };
         systemInfo = linearSolver.freeSolve(BytesUtils.clone(matrixA), BytesUtils.clone(b), x);
-        Assert.assertEquals(LinearSolver.SystemInfo.Consistent, systemInfo);
-        Assert.assertTrue(gf2k.isEqual(b[0], x[0]));
+        Assert.assertEquals(SystemInfo.Consistent, systemInfo);
+        assertCorrect(matrixA, b, x);
         Assert.assertTrue(gf2k.isZero(x[1]));
         systemInfo = linearSolver.fullSolve(BytesUtils.clone(matrixA), BytesUtils.clone(b), x);
-        Assert.assertEquals(LinearSolver.SystemInfo.Consistent, systemInfo);
-        Assert.assertFalse(gf2k.isZero(x[0]));
+        Assert.assertEquals(SystemInfo.Consistent, systemInfo);
+        assertCorrect(matrixA, b, x);
         Assert.assertFalse(gf2k.isZero(x[1]));
-        Assert.assertTrue(gf2k.isEqual(b[0], gf2k.add(x[0], x[1])));
 
         // A = | 0 1 |, b = 0, solve Ax = b.
         matrixA = new byte[][][]{
@@ -202,11 +202,13 @@ public class Gf2kConstantLinearSolverTest {
             gf2k.createZero(),
         };
         systemInfo = linearSolver.freeSolve(BytesUtils.clone(matrixA), BytesUtils.clone(b), x);
-        Assert.assertEquals(LinearSolver.SystemInfo.Consistent, systemInfo);
+        Assert.assertEquals(SystemInfo.Consistent, systemInfo);
+        assertCorrect(matrixA, b, x);
         Assert.assertTrue(gf2k.isZero(x[0]));
         Assert.assertTrue(gf2k.isZero(x[1]));
         systemInfo = linearSolver.fullSolve(BytesUtils.clone(matrixA), BytesUtils.clone(b), x);
-        Assert.assertEquals(LinearSolver.SystemInfo.Consistent, systemInfo);
+        Assert.assertEquals(SystemInfo.Consistent, systemInfo);
+        assertCorrect(matrixA, b, x);
         Assert.assertFalse(gf2k.isZero(x[0]));
         Assert.assertTrue(gf2k.isZero(x[1]));
 
@@ -218,13 +220,13 @@ public class Gf2kConstantLinearSolverTest {
             gf2k.createNonZeroRandom(SECURE_RANDOM),
         };
         systemInfo = linearSolver.freeSolve(BytesUtils.clone(matrixA), BytesUtils.clone(b), x);
-        Assert.assertEquals(LinearSolver.SystemInfo.Consistent, systemInfo);
+        Assert.assertEquals(SystemInfo.Consistent, systemInfo);
+        assertCorrect(matrixA, b, x);
         Assert.assertTrue(gf2k.isZero(x[0]));
-        Assert.assertTrue(gf2k.isEqual(b[0], x[1]));
         systemInfo = linearSolver.fullSolve(BytesUtils.clone(matrixA), BytesUtils.clone(b), x);
-        Assert.assertEquals(LinearSolver.SystemInfo.Consistent, systemInfo);
+        Assert.assertEquals(SystemInfo.Consistent, systemInfo);
+        assertCorrect(matrixA, b, x);
         Assert.assertFalse(gf2k.isZero(x[0]));
-        Assert.assertTrue(gf2k.isEqual(b[0], x[1]));
 
         // A = | 1 0 |, b = 0, solve Ax = b.
         matrixA = new byte[][][]{
@@ -234,11 +236,13 @@ public class Gf2kConstantLinearSolverTest {
             gf2k.createZero(),
         };
         systemInfo = linearSolver.freeSolve(BytesUtils.clone(matrixA), BytesUtils.clone(b), x);
-        Assert.assertEquals(LinearSolver.SystemInfo.Consistent, systemInfo);
+        Assert.assertEquals(SystemInfo.Consistent, systemInfo);
+        assertCorrect(matrixA, b, x);
         Assert.assertTrue(gf2k.isZero(x[0]));
         Assert.assertTrue(gf2k.isZero(x[1]));
         systemInfo = linearSolver.fullSolve(BytesUtils.clone(matrixA), BytesUtils.clone(b), x);
-        Assert.assertEquals(LinearSolver.SystemInfo.Consistent, systemInfo);
+        Assert.assertEquals(SystemInfo.Consistent, systemInfo);
+        assertCorrect(matrixA, b, x);
         Assert.assertTrue(gf2k.isZero(x[0]));
         Assert.assertFalse(gf2k.isZero(x[1]));
 
@@ -250,12 +254,12 @@ public class Gf2kConstantLinearSolverTest {
             gf2k.createNonZeroRandom(SECURE_RANDOM),
         };
         systemInfo = linearSolver.freeSolve(BytesUtils.clone(matrixA), BytesUtils.clone(b), x);
-        Assert.assertEquals(LinearSolver.SystemInfo.Consistent, systemInfo);
-        Assert.assertTrue(gf2k.isEqual(b[0], x[0]));
+        Assert.assertEquals(SystemInfo.Consistent, systemInfo);
+        assertCorrect(matrixA, b, x);
         Assert.assertTrue(gf2k.isZero(x[1]));
         systemInfo = linearSolver.fullSolve(BytesUtils.clone(matrixA), BytesUtils.clone(b), x);
-        Assert.assertEquals(LinearSolver.SystemInfo.Consistent, systemInfo);
-        Assert.assertTrue(gf2k.isEqual(b[0], x[0]));
+        Assert.assertEquals(SystemInfo.Consistent, systemInfo);
+        assertCorrect(matrixA, b, x);
         Assert.assertFalse(gf2k.isZero(x[1]));
 
         // A = | 0 0 |, b = 0, solve Ax = b.
@@ -266,11 +270,13 @@ public class Gf2kConstantLinearSolverTest {
             gf2k.createZero(),
         };
         systemInfo = linearSolver.freeSolve(BytesUtils.clone(matrixA), BytesUtils.clone(b), x);
-        Assert.assertEquals(LinearSolver.SystemInfo.Consistent, systemInfo);
+        Assert.assertEquals(SystemInfo.Consistent, systemInfo);
+        assertCorrect(matrixA, b, x);
         Assert.assertTrue(gf2k.isZero(x[0]));
         Assert.assertTrue(gf2k.isZero(x[0]));
         systemInfo = linearSolver.fullSolve(BytesUtils.clone(matrixA), BytesUtils.clone(b), x);
-        Assert.assertEquals(LinearSolver.SystemInfo.Consistent, systemInfo);
+        Assert.assertEquals(SystemInfo.Consistent, systemInfo);
+        assertCorrect(matrixA, b, x);
         Assert.assertFalse(gf2k.isZero(x[0]));
         Assert.assertFalse(gf2k.isZero(x[0]));
 
@@ -282,9 +288,9 @@ public class Gf2kConstantLinearSolverTest {
             gf2k.createNonZeroRandom(SECURE_RANDOM),
         };
         systemInfo = linearSolver.freeSolve(BytesUtils.clone(matrixA), BytesUtils.clone(b), x);
-        Assert.assertEquals(LinearSolver.SystemInfo.Inconsistent, systemInfo);
+        Assert.assertEquals(SystemInfo.Inconsistent, systemInfo);
         systemInfo = linearSolver.fullSolve(BytesUtils.clone(matrixA), BytesUtils.clone(b), x);
-        Assert.assertEquals(LinearSolver.SystemInfo.Inconsistent, systemInfo);
+        Assert.assertEquals(SystemInfo.Inconsistent, systemInfo);
     }
 
     @Test
@@ -293,7 +299,7 @@ public class Gf2kConstantLinearSolverTest {
         byte[][][] matrixA;
         byte[][] b;
         byte[][] x = new byte[m][];
-        LinearSolver.SystemInfo systemInfo;
+        SystemInfo systemInfo;
 
         // A = | r[0] r[1] |, b = 0, solve Ax = b.
         matrixA = new byte[][][]{
@@ -303,12 +309,12 @@ public class Gf2kConstantLinearSolverTest {
             gf2k.createZero(),
         };
         systemInfo = linearSolver.freeSolve(BytesUtils.clone(matrixA), BytesUtils.clone(b), x);
-        Assert.assertEquals(LinearSolver.SystemInfo.Consistent, systemInfo);
+        Assert.assertEquals(SystemInfo.Consistent, systemInfo);
         assertCorrect(matrixA, b, x);
         Assert.assertTrue(gf2k.isZero(x[0]));
         Assert.assertTrue(gf2k.isZero(x[1]));
         systemInfo = linearSolver.fullSolve(BytesUtils.clone(matrixA), BytesUtils.clone(b), x);
-        Assert.assertEquals(LinearSolver.SystemInfo.Consistent, systemInfo);
+        Assert.assertEquals(SystemInfo.Consistent, systemInfo);
         assertCorrect(matrixA, b, x);
         Assert.assertFalse(gf2k.isZero(x[0]));
         Assert.assertFalse(gf2k.isZero(x[1]));
@@ -321,13 +327,12 @@ public class Gf2kConstantLinearSolverTest {
             gf2k.createNonZeroRandom(SECURE_RANDOM),
         };
         systemInfo = linearSolver.freeSolve(BytesUtils.clone(matrixA), BytesUtils.clone(b), x);
-        Assert.assertEquals(LinearSolver.SystemInfo.Consistent, systemInfo);
+        Assert.assertEquals(SystemInfo.Consistent, systemInfo);
         assertCorrect(matrixA, b, x);
         Assert.assertTrue(gf2k.isZero(x[1]));
         systemInfo = linearSolver.fullSolve(BytesUtils.clone(matrixA), BytesUtils.clone(b), x);
-        Assert.assertEquals(LinearSolver.SystemInfo.Consistent, systemInfo);
+        Assert.assertEquals(SystemInfo.Consistent, systemInfo);
         assertCorrect(matrixA, b, x);
-        Assert.assertFalse(gf2k.isZero(x[0]));
         Assert.assertFalse(gf2k.isZero(x[1]));
     }
 
@@ -340,7 +345,7 @@ public class Gf2kConstantLinearSolverTest {
         };
         byte[][] b;
         byte[][] x = new byte[m][];
-        LinearSolver.SystemInfo systemInfo;
+        SystemInfo systemInfo;
 
         // A = | 1 1 |, b = | 0 |, solve Ax = b.
         //     | 1 1 |      | 0 |
@@ -349,13 +354,15 @@ public class Gf2kConstantLinearSolverTest {
             gf2k.createZero(),
         };
         systemInfo = linearSolver.freeSolve(BytesUtils.clone(matrixA), BytesUtils.clone(b), x);
-        Assert.assertEquals(LinearSolver.SystemInfo.Consistent, systemInfo);
+        Assert.assertEquals(SystemInfo.Consistent, systemInfo);
+        assertCorrect(matrixA, b, x);
         Assert.assertTrue(gf2k.isZero(x[0]));
         Assert.assertTrue(gf2k.isZero(x[1]));
         systemInfo = linearSolver.fullSolve(BytesUtils.clone(matrixA), BytesUtils.clone(b), x);
-        Assert.assertEquals(LinearSolver.SystemInfo.Consistent, systemInfo);
+        Assert.assertEquals(SystemInfo.Consistent, systemInfo);
+        assertCorrect(matrixA, b, x);
+        Assert.assertFalse(gf2k.isZero(x[0]));
         Assert.assertFalse(gf2k.isZero(x[1]));
-        Assert.assertTrue(gf2k.isEqual(b[0], gf2k.add(x[0], x[1])));
 
         // A = | 1 1 |, b = | r0 |, solve Ax = b.
         //     | 1 1 |      | 0  |
@@ -364,9 +371,9 @@ public class Gf2kConstantLinearSolverTest {
             gf2k.createZero(),
         };
         systemInfo = linearSolver.freeSolve(BytesUtils.clone(matrixA), BytesUtils.clone(b), x);
-        Assert.assertEquals(LinearSolver.SystemInfo.Inconsistent, systemInfo);
+        Assert.assertEquals(SystemInfo.Inconsistent, systemInfo);
         systemInfo = linearSolver.fullSolve(BytesUtils.clone(matrixA), BytesUtils.clone(b), x);
-        Assert.assertEquals(LinearSolver.SystemInfo.Inconsistent, systemInfo);
+        Assert.assertEquals(SystemInfo.Inconsistent, systemInfo);
 
         // A = | 1 1 |, b = | 0  |, solve Ax = b.
         //     | 1 1 |      | r1 |
@@ -375,9 +382,9 @@ public class Gf2kConstantLinearSolverTest {
             gf2k.createNonZeroRandom(SECURE_RANDOM),
         };
         systemInfo = linearSolver.freeSolve(BytesUtils.clone(matrixA), BytesUtils.clone(b), x);
-        Assert.assertEquals(LinearSolver.SystemInfo.Inconsistent, systemInfo);
+        Assert.assertEquals(SystemInfo.Inconsistent, systemInfo);
         systemInfo = linearSolver.fullSolve(BytesUtils.clone(matrixA), BytesUtils.clone(b), x);
-        Assert.assertEquals(LinearSolver.SystemInfo.Inconsistent, systemInfo);
+        Assert.assertEquals(SystemInfo.Inconsistent, systemInfo);
 
         // A = | 1 1 |, b = | r0 |, solve Ax = b.
         //     | 1 1 |      | r1 |
@@ -388,20 +395,20 @@ public class Gf2kConstantLinearSolverTest {
         // r0 != r1
         if (!gf2k.isEqual(b[0], b[1])) {
             systemInfo = linearSolver.freeSolve(BytesUtils.clone(matrixA), BytesUtils.clone(b), x);
-            Assert.assertEquals(LinearSolver.SystemInfo.Inconsistent, systemInfo);
+            Assert.assertEquals(SystemInfo.Inconsistent, systemInfo);
             systemInfo = linearSolver.fullSolve(BytesUtils.clone(matrixA), BytesUtils.clone(b), x);
-            Assert.assertEquals(LinearSolver.SystemInfo.Inconsistent, systemInfo);
+            Assert.assertEquals(SystemInfo.Inconsistent, systemInfo);
         }
         // r0 = r1
         b[1] = b[0];
         systemInfo = linearSolver.freeSolve(BytesUtils.clone(matrixA), BytesUtils.clone(b), x);
-        Assert.assertEquals(LinearSolver.SystemInfo.Consistent, systemInfo);
-        Assert.assertTrue(gf2k.isEqual(b[0], x[0]));
+        Assert.assertEquals(SystemInfo.Consistent, systemInfo);
+        assertCorrect(matrixA, b, x);
         Assert.assertTrue(gf2k.isZero(x[1]));
         systemInfo = linearSolver.fullSolve(BytesUtils.clone(matrixA), BytesUtils.clone(b), x);
-        Assert.assertEquals(LinearSolver.SystemInfo.Consistent, systemInfo);
+        Assert.assertEquals(SystemInfo.Consistent, systemInfo);
+        assertCorrect(matrixA, b, x);
         Assert.assertFalse(gf2k.isZero(x[1]));
-        Assert.assertTrue(gf2k.isEqual(b[0], gf2k.add(x[0], x[1])));
     }
 
     @Test
@@ -413,7 +420,7 @@ public class Gf2kConstantLinearSolverTest {
         };
         byte[][] b;
         byte[][] x = new byte[m][];
-        LinearSolver.SystemInfo systemInfo;
+        SystemInfo systemInfo;
 
         // A = | 0 0 |, b = | 0 |, solve Ax = b.
         //     | 0 0 |      | 0 |
@@ -422,11 +429,13 @@ public class Gf2kConstantLinearSolverTest {
             gf2k.createZero(),
         };
         systemInfo = linearSolver.freeSolve(BytesUtils.clone(matrixA), BytesUtils.clone(b), x);
-        Assert.assertEquals(LinearSolver.SystemInfo.Consistent, systemInfo);
+        Assert.assertEquals(SystemInfo.Consistent, systemInfo);
+        assertCorrect(matrixA, b, x);
         Assert.assertTrue(gf2k.isZero(x[0]));
         Assert.assertTrue(gf2k.isZero(x[1]));
         systemInfo = linearSolver.fullSolve(BytesUtils.clone(matrixA), BytesUtils.clone(b), x);
-        Assert.assertEquals(LinearSolver.SystemInfo.Consistent, systemInfo);
+        Assert.assertEquals(SystemInfo.Consistent, systemInfo);
+        assertCorrect(matrixA, b, x);
         Assert.assertFalse(gf2k.isZero(x[0]));
         Assert.assertFalse(gf2k.isZero(x[1]));
 
@@ -437,9 +446,9 @@ public class Gf2kConstantLinearSolverTest {
             gf2k.createZero(),
         };
         systemInfo = linearSolver.freeSolve(BytesUtils.clone(matrixA), BytesUtils.clone(b), x);
-        Assert.assertEquals(LinearSolver.SystemInfo.Inconsistent, systemInfo);
+        Assert.assertEquals(SystemInfo.Inconsistent, systemInfo);
         systemInfo = linearSolver.fullSolve(BytesUtils.clone(matrixA), BytesUtils.clone(b), x);
-        Assert.assertEquals(LinearSolver.SystemInfo.Inconsistent, systemInfo);
+        Assert.assertEquals(SystemInfo.Inconsistent, systemInfo);
 
         // A = | 0 0 |, b = | 0  |, solve Ax = b.
         //     | 0 0 |      | r1 |
@@ -448,9 +457,9 @@ public class Gf2kConstantLinearSolverTest {
             gf2k.createNonZeroRandom(SECURE_RANDOM),
         };
         systemInfo = linearSolver.freeSolve(BytesUtils.clone(matrixA), BytesUtils.clone(b), x);
-        Assert.assertEquals(LinearSolver.SystemInfo.Inconsistent, systemInfo);
+        Assert.assertEquals(SystemInfo.Inconsistent, systemInfo);
         systemInfo = linearSolver.fullSolve(BytesUtils.clone(matrixA), BytesUtils.clone(b), x);
-        Assert.assertEquals(LinearSolver.SystemInfo.Inconsistent, systemInfo);
+        Assert.assertEquals(SystemInfo.Inconsistent, systemInfo);
 
         // A = | 0 0 |, b = | r0 |, solve Ax = b.
         //     | 0 0 |      | r1 |
@@ -459,9 +468,9 @@ public class Gf2kConstantLinearSolverTest {
             gf2k.createNonZeroRandom(SECURE_RANDOM),
         };
         systemInfo = linearSolver.freeSolve(BytesUtils.clone(matrixA), BytesUtils.clone(b), x);
-        Assert.assertEquals(LinearSolver.SystemInfo.Inconsistent, systemInfo);
+        Assert.assertEquals(SystemInfo.Inconsistent, systemInfo);
         systemInfo = linearSolver.fullSolve(BytesUtils.clone(matrixA), BytesUtils.clone(b), x);
-        Assert.assertEquals(LinearSolver.SystemInfo.Inconsistent, systemInfo);
+        Assert.assertEquals(SystemInfo.Inconsistent, systemInfo);
     }
 
     @Test
@@ -470,7 +479,7 @@ public class Gf2kConstantLinearSolverTest {
         byte[][][] matrixA;
         byte[][] b;
         byte[][] x = new byte[m][];
-        LinearSolver.SystemInfo systemInfo;
+        SystemInfo systemInfo;
 
         // A = | 1 0 |, b = | r0 |, solve Ax = b.
         //     | 0 1 |      | r1 |
@@ -484,23 +493,19 @@ public class Gf2kConstantLinearSolverTest {
         };
         if (!gf2k.isEqual(b[0], b[1])) {
             systemInfo = linearSolver.freeSolve(BytesUtils.clone(matrixA), BytesUtils.clone(b), x);
-            Assert.assertEquals(LinearSolver.SystemInfo.Consistent, systemInfo);
-            Assert.assertTrue(gf2k.isEqual(b[0], x[0]));
-            Assert.assertTrue(gf2k.isEqual(b[1], x[1]));
+            Assert.assertEquals(SystemInfo.Consistent, systemInfo);
+            assertCorrect(matrixA, b, x);
             systemInfo = linearSolver.fullSolve(BytesUtils.clone(matrixA), BytesUtils.clone(b), x);
-            Assert.assertEquals(LinearSolver.SystemInfo.Consistent, systemInfo);
-            Assert.assertTrue(gf2k.isEqual(b[0], x[0]));
-            Assert.assertTrue(gf2k.isEqual(b[1], x[1]));
+            assertCorrect(matrixA, b, x);
+            Assert.assertEquals(SystemInfo.Consistent, systemInfo);
         }
         b[1] = b[0];
         systemInfo = linearSolver.freeSolve(BytesUtils.clone(matrixA), BytesUtils.clone(b), x);
-        Assert.assertEquals(LinearSolver.SystemInfo.Consistent, systemInfo);
-        Assert.assertTrue(gf2k.isEqual(b[0], x[0]));
-        Assert.assertTrue(gf2k.isEqual(b[1], x[1]));
+        Assert.assertEquals(SystemInfo.Consistent, systemInfo);
+        assertCorrect(matrixA, b, x);
         systemInfo = linearSolver.fullSolve(BytesUtils.clone(matrixA), BytesUtils.clone(b), x);
-        Assert.assertEquals(LinearSolver.SystemInfo.Consistent, systemInfo);
-        Assert.assertTrue(gf2k.isEqual(b[0], x[0]));
-        Assert.assertTrue(gf2k.isEqual(b[1], x[1]));
+        Assert.assertEquals(SystemInfo.Consistent, systemInfo);
+        assertCorrect(matrixA, b, x);
 
         // A = | 0 0 |, b = | r0 |, solve Ax = b.
         //     | 1 0 |      | r1 |
@@ -513,9 +518,9 @@ public class Gf2kConstantLinearSolverTest {
             gf2k.createNonZeroRandom(SECURE_RANDOM),
         };
         systemInfo = linearSolver.freeSolve(BytesUtils.clone(matrixA), BytesUtils.clone(b), x);
-        Assert.assertEquals(LinearSolver.SystemInfo.Inconsistent, systemInfo);
+        Assert.assertEquals(SystemInfo.Inconsistent, systemInfo);
         systemInfo = linearSolver.fullSolve(BytesUtils.clone(matrixA), BytesUtils.clone(b), x);
-        Assert.assertEquals(LinearSolver.SystemInfo.Inconsistent, systemInfo);
+        Assert.assertEquals(SystemInfo.Inconsistent, systemInfo);
 
         // A = | 0 1 |, b = | r0 |, solve Ax = b.
         //     | 1 0 |      | r1  |
@@ -528,13 +533,11 @@ public class Gf2kConstantLinearSolverTest {
             gf2k.createNonZeroRandom(SECURE_RANDOM),
         };
         systemInfo = linearSolver.freeSolve(BytesUtils.clone(matrixA), BytesUtils.clone(b), x);
-        Assert.assertEquals(LinearSolver.SystemInfo.Consistent, systemInfo);
-        Assert.assertTrue(gf2k.isEqual(b[0], x[1]));
-        Assert.assertTrue(gf2k.isEqual(b[1], x[0]));
+        Assert.assertEquals(SystemInfo.Consistent, systemInfo);
+        assertCorrect(matrixA, b, x);
         systemInfo = linearSolver.fullSolve(BytesUtils.clone(matrixA), BytesUtils.clone(b), x);
-        Assert.assertEquals(LinearSolver.SystemInfo.Consistent, systemInfo);
-        Assert.assertTrue(gf2k.isEqual(b[0], x[1]));
-        Assert.assertTrue(gf2k.isEqual(b[1], x[0]));
+        Assert.assertEquals(SystemInfo.Consistent, systemInfo);
+        assertCorrect(matrixA, b, x);
     }
 
     @Test
@@ -547,7 +550,7 @@ public class Gf2kConstantLinearSolverTest {
         matrixA[1] = BytesUtils.clone(matrixA[0]);
         byte[][] b;
         byte[][] x = new byte[m][];
-        LinearSolver.SystemInfo systemInfo;
+        SystemInfo systemInfo;
 
         // A = | r[0] r[1] |, b = | 0 |, solve Ax = b.
         //     | r[0] r[1] |      | 0 |
@@ -556,12 +559,14 @@ public class Gf2kConstantLinearSolverTest {
             gf2k.createZero(),
         };
         systemInfo = linearSolver.freeSolve(BytesUtils.clone(matrixA), BytesUtils.clone(b), x);
-        Assert.assertEquals(LinearSolver.SystemInfo.Consistent, systemInfo);
+        Assert.assertEquals(SystemInfo.Consistent, systemInfo);
+        assertCorrect(matrixA, b, x);
         Assert.assertTrue(gf2k.isZero(x[0]));
         Assert.assertTrue(gf2k.isZero(x[1]));
         systemInfo = linearSolver.fullSolve(BytesUtils.clone(matrixA), BytesUtils.clone(b), x);
-        Assert.assertEquals(LinearSolver.SystemInfo.Consistent, systemInfo);
+        Assert.assertEquals(SystemInfo.Consistent, systemInfo);
         assertCorrect(matrixA, b, x);
+        Assert.assertFalse(gf2k.isZero(x[0]));
         Assert.assertFalse(gf2k.isZero(x[1]));
 
         // A = | r[0] r[1] |, b = | r0 |, solve Ax = b.
@@ -571,9 +576,9 @@ public class Gf2kConstantLinearSolverTest {
             gf2k.createZero(),
         };
         systemInfo = linearSolver.freeSolve(BytesUtils.clone(matrixA), BytesUtils.clone(b), x);
-        Assert.assertEquals(LinearSolver.SystemInfo.Inconsistent, systemInfo);
+        Assert.assertEquals(SystemInfo.Inconsistent, systemInfo);
         systemInfo = linearSolver.fullSolve(BytesUtils.clone(matrixA), BytesUtils.clone(b), x);
-        Assert.assertEquals(LinearSolver.SystemInfo.Inconsistent, systemInfo);
+        Assert.assertEquals(SystemInfo.Inconsistent, systemInfo);
 
         // A = | r[0] r[1] |, b = | 0  |, solve Ax = b.
         //     | r[0] r[1] |      | r1 |
@@ -582,9 +587,9 @@ public class Gf2kConstantLinearSolverTest {
             gf2k.createNonZeroRandom(SECURE_RANDOM),
         };
         systemInfo = linearSolver.freeSolve(BytesUtils.clone(matrixA), BytesUtils.clone(b), x);
-        Assert.assertEquals(LinearSolver.SystemInfo.Inconsistent, systemInfo);
+        Assert.assertEquals(SystemInfo.Inconsistent, systemInfo);
         systemInfo = linearSolver.fullSolve(BytesUtils.clone(matrixA), BytesUtils.clone(b), x);
-        Assert.assertEquals(LinearSolver.SystemInfo.Inconsistent, systemInfo);
+        Assert.assertEquals(SystemInfo.Inconsistent, systemInfo);
 
         // A = | r[0] r[1] |, b = | r0 |, solve Ax = b.
         //     | r[0] r[1] |      | r1 |
@@ -595,18 +600,18 @@ public class Gf2kConstantLinearSolverTest {
         // r0 != r1
         if (!gf2k.isEqual(b[0], b[1])) {
             systemInfo = linearSolver.freeSolve(BytesUtils.clone(matrixA), BytesUtils.clone(b), x);
-            Assert.assertEquals(LinearSolver.SystemInfo.Inconsistent, systemInfo);
+            Assert.assertEquals(SystemInfo.Inconsistent, systemInfo);
             systemInfo = linearSolver.fullSolve(BytesUtils.clone(matrixA), BytesUtils.clone(b), x);
-            Assert.assertEquals(LinearSolver.SystemInfo.Inconsistent, systemInfo);
+            Assert.assertEquals(SystemInfo.Inconsistent, systemInfo);
         }
         // r0 == r1
         b[1] = b[0];
         systemInfo = linearSolver.freeSolve(BytesUtils.clone(matrixA), BytesUtils.clone(b), x);
-        Assert.assertEquals(LinearSolver.SystemInfo.Consistent, systemInfo);
+        Assert.assertEquals(SystemInfo.Consistent, systemInfo);
         assertCorrect(matrixA, b, x);
         Assert.assertTrue(gf2k.isZero(x[1]));
         systemInfo = linearSolver.fullSolve(BytesUtils.clone(matrixA), BytesUtils.clone(b), x);
-        Assert.assertEquals(LinearSolver.SystemInfo.Consistent, systemInfo);
+        Assert.assertEquals(SystemInfo.Consistent, systemInfo);
         assertCorrect(matrixA, b, x);
         Assert.assertFalse(gf2k.isZero(x[1]));
     }
@@ -620,7 +625,7 @@ public class Gf2kConstantLinearSolverTest {
         };
         byte[][] b;
         byte[][] x = new byte[m][];
-        LinearSolver.SystemInfo systemInfo;
+        SystemInfo systemInfo;
 
         // A = | 1 1 1 |, b = | 0 |, solve Ax = b.
         //     | 1 1 1 |      | 0 |
@@ -629,15 +634,17 @@ public class Gf2kConstantLinearSolverTest {
             gf2k.createZero(),
         };
         systemInfo = linearSolver.freeSolve(BytesUtils.clone(matrixA), BytesUtils.clone(b), x);
-        Assert.assertEquals(LinearSolver.SystemInfo.Consistent, systemInfo);
+        Assert.assertEquals(SystemInfo.Consistent, systemInfo);
+        assertCorrect(matrixA, b, x);
         Assert.assertTrue(gf2k.isZero(x[0]));
         Assert.assertTrue(gf2k.isZero(x[1]));
         Assert.assertTrue(gf2k.isZero(x[2]));
         systemInfo = linearSolver.fullSolve(BytesUtils.clone(matrixA), BytesUtils.clone(b), x);
-        Assert.assertEquals(LinearSolver.SystemInfo.Consistent, systemInfo);
+        Assert.assertEquals(SystemInfo.Consistent, systemInfo);
+        assertCorrect(matrixA, b, x);
+        Assert.assertFalse(gf2k.isZero(x[0]));
         Assert.assertFalse(gf2k.isZero(x[1]));
         Assert.assertFalse(gf2k.isZero(x[2]));
-        Assert.assertTrue(gf2k.isEqual(b[0], gf2k.add(gf2k.add(x[0], x[1]), x[2])));
 
         // A = | 1 1 1 |, b = | r0 |, solve Ax = b.
         //     | 1 1 1 |      | 0  |
@@ -646,9 +653,9 @@ public class Gf2kConstantLinearSolverTest {
             gf2k.createZero(),
         };
         systemInfo = linearSolver.freeSolve(BytesUtils.clone(matrixA), BytesUtils.clone(b), x);
-        Assert.assertEquals(LinearSolver.SystemInfo.Inconsistent, systemInfo);
+        Assert.assertEquals(SystemInfo.Inconsistent, systemInfo);
         systemInfo = linearSolver.fullSolve(BytesUtils.clone(matrixA), BytesUtils.clone(b), x);
-        Assert.assertEquals(LinearSolver.SystemInfo.Inconsistent, systemInfo);
+        Assert.assertEquals(SystemInfo.Inconsistent, systemInfo);
 
         // A = | 1 1 1 |, b = | 0  |, solve Ax = b.
         //     | 1 1 1 |      | r1 |
@@ -657,9 +664,9 @@ public class Gf2kConstantLinearSolverTest {
             gf2k.createNonZeroRandom(SECURE_RANDOM),
         };
         systemInfo = linearSolver.freeSolve(BytesUtils.clone(matrixA), BytesUtils.clone(b), x);
-        Assert.assertEquals(LinearSolver.SystemInfo.Inconsistent, systemInfo);
+        Assert.assertEquals(SystemInfo.Inconsistent, systemInfo);
         systemInfo = linearSolver.fullSolve(BytesUtils.clone(matrixA), BytesUtils.clone(b), x);
-        Assert.assertEquals(LinearSolver.SystemInfo.Inconsistent, systemInfo);
+        Assert.assertEquals(SystemInfo.Inconsistent, systemInfo);
 
         // A = | 1 1 1 |, b = | r0 |, solve Ax = b.
         //     | 1 1 1 |      | r1 |
@@ -670,22 +677,22 @@ public class Gf2kConstantLinearSolverTest {
         // r0 != r1
         if (!gf2k.isEqual(b[0], b[1])) {
             systemInfo = linearSolver.freeSolve(BytesUtils.clone(matrixA), BytesUtils.clone(b), x);
-            Assert.assertEquals(LinearSolver.SystemInfo.Inconsistent, systemInfo);
+            Assert.assertEquals(SystemInfo.Inconsistent, systemInfo);
             systemInfo = linearSolver.fullSolve(BytesUtils.clone(matrixA), BytesUtils.clone(b), x);
-            Assert.assertEquals(LinearSolver.SystemInfo.Inconsistent, systemInfo);
+            Assert.assertEquals(SystemInfo.Inconsistent, systemInfo);
         }
         // r0 = r1
         b[1] = b[0];
         systemInfo = linearSolver.freeSolve(BytesUtils.clone(matrixA), BytesUtils.clone(b), x);
-        Assert.assertEquals(LinearSolver.SystemInfo.Consistent, systemInfo);
-        Assert.assertTrue(gf2k.isEqual(b[0], x[0]));
+        Assert.assertEquals(SystemInfo.Consistent, systemInfo);
+        assertCorrect(matrixA, b, x);
         Assert.assertTrue(gf2k.isZero(x[1]));
         Assert.assertTrue(gf2k.isZero(x[2]));
         systemInfo = linearSolver.fullSolve(BytesUtils.clone(matrixA), BytesUtils.clone(b), x);
-        Assert.assertEquals(LinearSolver.SystemInfo.Consistent, systemInfo);
+        Assert.assertEquals(SystemInfo.Consistent, systemInfo);
+        assertCorrect(matrixA, b, x);
         Assert.assertFalse(gf2k.isZero(x[1]));
         Assert.assertFalse(gf2k.isZero(x[2]));
-        Assert.assertTrue(gf2k.isEqual(b[0], gf2k.add(gf2k.add(x[0], x[1]), x[2])));
     }
 
     @Test
@@ -697,7 +704,7 @@ public class Gf2kConstantLinearSolverTest {
         };
         byte[][] b;
         byte[][] x = new byte[m][];
-        LinearSolver.SystemInfo systemInfo;
+        SystemInfo systemInfo;
 
         // A = | 0 0 0 |, b = | 0 |, solve Ax = b.
         //     | 0 0 0 |      | 0 |
@@ -706,12 +713,14 @@ public class Gf2kConstantLinearSolverTest {
             gf2k.createZero(),
         };
         systemInfo = linearSolver.freeSolve(BytesUtils.clone(matrixA), BytesUtils.clone(b), x);
-        Assert.assertEquals(LinearSolver.SystemInfo.Consistent, systemInfo);
+        Assert.assertEquals(SystemInfo.Consistent, systemInfo);
+        assertCorrect(matrixA, b, x);
         Assert.assertTrue(gf2k.isZero(x[0]));
         Assert.assertTrue(gf2k.isZero(x[1]));
         Assert.assertTrue(gf2k.isZero(x[2]));
         systemInfo = linearSolver.fullSolve(BytesUtils.clone(matrixA), BytesUtils.clone(b), x);
-        Assert.assertEquals(LinearSolver.SystemInfo.Consistent, systemInfo);
+        Assert.assertEquals(SystemInfo.Consistent, systemInfo);
+        assertCorrect(matrixA, b, x);
         Assert.assertFalse(gf2k.isZero(x[0]));
         Assert.assertFalse(gf2k.isZero(x[1]));
         Assert.assertFalse(gf2k.isZero(x[2]));
@@ -723,9 +732,9 @@ public class Gf2kConstantLinearSolverTest {
             gf2k.createZero(),
         };
         systemInfo = linearSolver.freeSolve(BytesUtils.clone(matrixA), BytesUtils.clone(b), x);
-        Assert.assertEquals(LinearSolver.SystemInfo.Inconsistent, systemInfo);
+        Assert.assertEquals(SystemInfo.Inconsistent, systemInfo);
         systemInfo = linearSolver.fullSolve(BytesUtils.clone(matrixA), BytesUtils.clone(b), x);
-        Assert.assertEquals(LinearSolver.SystemInfo.Inconsistent, systemInfo);
+        Assert.assertEquals(SystemInfo.Inconsistent, systemInfo);
 
         // A = | 0 0 0 |, b = | 0  |, solve Ax = b.
         //     | 0 0 0 |      | r1 |
@@ -734,9 +743,9 @@ public class Gf2kConstantLinearSolverTest {
             gf2k.createNonZeroRandom(SECURE_RANDOM),
         };
         systemInfo = linearSolver.freeSolve(BytesUtils.clone(matrixA), BytesUtils.clone(b), x);
-        Assert.assertEquals(LinearSolver.SystemInfo.Inconsistent, systemInfo);
+        Assert.assertEquals(SystemInfo.Inconsistent, systemInfo);
         systemInfo = linearSolver.fullSolve(BytesUtils.clone(matrixA), BytesUtils.clone(b), x);
-        Assert.assertEquals(LinearSolver.SystemInfo.Inconsistent, systemInfo);
+        Assert.assertEquals(SystemInfo.Inconsistent, systemInfo);
 
         // A = | 0 0 0 |, b = | r0 |, solve Ax = b.
         //     | 0 0 0 |      | r1 |
@@ -745,9 +754,9 @@ public class Gf2kConstantLinearSolverTest {
             gf2k.createNonZeroRandom(SECURE_RANDOM),
         };
         systemInfo = linearSolver.freeSolve(BytesUtils.clone(matrixA), BytesUtils.clone(b), x);
-        Assert.assertEquals(LinearSolver.SystemInfo.Inconsistent, systemInfo);
+        Assert.assertEquals(SystemInfo.Inconsistent, systemInfo);
         systemInfo = linearSolver.fullSolve(BytesUtils.clone(matrixA), BytesUtils.clone(b), x);
-        Assert.assertEquals(LinearSolver.SystemInfo.Inconsistent, systemInfo);
+        Assert.assertEquals(SystemInfo.Inconsistent, systemInfo);
     }
 
     @Test
@@ -756,7 +765,7 @@ public class Gf2kConstantLinearSolverTest {
         byte[][][] matrixA;
         byte[][] b;
         byte[][] x = new byte[m][];
-        LinearSolver.SystemInfo systemInfo;
+        SystemInfo systemInfo;
 
         // A = | 0 0 1 |, b = | 0 |, solve Ax = b.
         //     | 1 0 0 |      | 0 |
@@ -769,12 +778,14 @@ public class Gf2kConstantLinearSolverTest {
             gf2k.createZero(),
         };
         systemInfo = linearSolver.freeSolve(BytesUtils.clone(matrixA), BytesUtils.clone(b), x);
-        Assert.assertEquals(LinearSolver.SystemInfo.Consistent, systemInfo);
+        Assert.assertEquals(SystemInfo.Consistent, systemInfo);
+        assertCorrect(matrixA, b, x);
         Assert.assertTrue(gf2k.isZero(x[0]));
         Assert.assertTrue(gf2k.isZero(x[1]));
         Assert.assertTrue(gf2k.isZero(x[2]));
         systemInfo = linearSolver.fullSolve(BytesUtils.clone(matrixA), BytesUtils.clone(b), x);
-        Assert.assertEquals(LinearSolver.SystemInfo.Consistent, systemInfo);
+        Assert.assertEquals(SystemInfo.Consistent, systemInfo);
+        assertCorrect(matrixA, b, x);
         Assert.assertTrue(gf2k.isZero(x[0]));
         Assert.assertFalse(gf2k.isZero(x[1]));
         Assert.assertTrue(gf2k.isZero(x[2]));
@@ -790,15 +801,13 @@ public class Gf2kConstantLinearSolverTest {
             gf2k.createRandom(SECURE_RANDOM),
         };
         systemInfo = linearSolver.freeSolve(BytesUtils.clone(matrixA), BytesUtils.clone(b), x);
-        Assert.assertEquals(LinearSolver.SystemInfo.Consistent, systemInfo);
-        Assert.assertTrue(gf2k.isEqual(b[1], x[0]));
+        Assert.assertEquals(SystemInfo.Consistent, systemInfo);
+        assertCorrect(matrixA, b, x);
         Assert.assertTrue(gf2k.isZero(x[1]));
-        Assert.assertTrue(gf2k.isEqual(b[0], x[2]));
         systemInfo = linearSolver.fullSolve(BytesUtils.clone(matrixA), BytesUtils.clone(b), x);
-        Assert.assertEquals(LinearSolver.SystemInfo.Consistent, systemInfo);
-        Assert.assertTrue(gf2k.isEqual(b[1], x[0]));
+        Assert.assertEquals(SystemInfo.Consistent, systemInfo);
+        assertCorrect(matrixA, b, x);
         Assert.assertFalse(gf2k.isZero(x[1]));
-        Assert.assertTrue(gf2k.isEqual(b[0], x[2]));
 
         // A = | 0 1 1 |, b = | r0 |, solve Ax = b.
         //     | 1 1 0 |      | r1 |
@@ -811,14 +820,12 @@ public class Gf2kConstantLinearSolverTest {
             gf2k.createRandom(SECURE_RANDOM),
         };
         systemInfo = linearSolver.freeSolve(BytesUtils.clone(matrixA), BytesUtils.clone(b), x);
-        Assert.assertEquals(LinearSolver.SystemInfo.Consistent, systemInfo);
-        Assert.assertTrue(gf2k.isEqual(gf2k.add(x[1], x[2]), b[0]));
-        Assert.assertTrue(gf2k.isEqual(gf2k.add(x[0], x[1]), b[1]));
+        Assert.assertEquals(SystemInfo.Consistent, systemInfo);
+        assertCorrect(matrixA, b, x);
         Assert.assertTrue(gf2k.isZero(x[2]));
         systemInfo = linearSolver.fullSolve(BytesUtils.clone(matrixA), BytesUtils.clone(b), x);
-        Assert.assertEquals(LinearSolver.SystemInfo.Consistent, systemInfo);
-        Assert.assertTrue(gf2k.isEqual(gf2k.add(x[1], x[2]), b[0]));
-        Assert.assertTrue(gf2k.isEqual(gf2k.add(x[0], x[1]), b[1]));
+        Assert.assertEquals(SystemInfo.Consistent, systemInfo);
+        assertCorrect(matrixA, b, x);
         Assert.assertFalse(gf2k.isZero(x[2]));
 
         // A = | 0 1 1 |, b = | r0 |, solve Ax = b.
@@ -832,14 +839,12 @@ public class Gf2kConstantLinearSolverTest {
             gf2k.createRandom(SECURE_RANDOM),
         };
         systemInfo = linearSolver.freeSolve(BytesUtils.clone(matrixA), BytesUtils.clone(b), x);
-        Assert.assertEquals(LinearSolver.SystemInfo.Consistent, systemInfo);
-        Assert.assertTrue(gf2k.isEqual(gf2k.add(x[1], x[2]), b[0]));
-        Assert.assertTrue(gf2k.isEqual(gf2k.add(gf2k.add(x[0], x[1]), x[2]), b[1]));
+        Assert.assertEquals(SystemInfo.Consistent, systemInfo);
+        assertCorrect(matrixA, b, x);
         Assert.assertTrue(gf2k.isZero(x[2]));
         systemInfo = linearSolver.fullSolve(BytesUtils.clone(matrixA), BytesUtils.clone(b), x);
-        Assert.assertEquals(LinearSolver.SystemInfo.Consistent, systemInfo);
-        Assert.assertTrue(gf2k.isEqual(gf2k.add(x[1], x[2]), b[0]));
-        Assert.assertTrue(gf2k.isEqual(gf2k.add(gf2k.add(x[0], x[1]), x[2]), b[1]));
+        Assert.assertEquals(SystemInfo.Consistent, systemInfo);
+        assertCorrect(matrixA, b, x);
         Assert.assertFalse(gf2k.isZero(x[2]));
     }
 
@@ -849,7 +854,7 @@ public class Gf2kConstantLinearSolverTest {
         byte[][][] matrixA;
         byte[][] b;
         byte[][] x = new byte[m][];
-        LinearSolver.SystemInfo systemInfo;
+        SystemInfo systemInfo;
 
         // A = | 0 0 r |, b = | 0 |, solve Ax = b.
         //     | r 0 0 |      | 0 |
@@ -862,12 +867,14 @@ public class Gf2kConstantLinearSolverTest {
             gf2k.createZero(),
         };
         systemInfo = linearSolver.freeSolve(BytesUtils.clone(matrixA), BytesUtils.clone(b), x);
-        Assert.assertEquals(LinearSolver.SystemInfo.Consistent, systemInfo);
+        Assert.assertEquals(SystemInfo.Consistent, systemInfo);
+        assertCorrect(matrixA, b, x);
         Assert.assertTrue(gf2k.isZero(x[0]));
         Assert.assertTrue(gf2k.isZero(x[1]));
         Assert.assertTrue(gf2k.isZero(x[2]));
         systemInfo = linearSolver.fullSolve(BytesUtils.clone(matrixA), BytesUtils.clone(b), x);
-        Assert.assertEquals(LinearSolver.SystemInfo.Consistent, systemInfo);
+        Assert.assertEquals(SystemInfo.Consistent, systemInfo);
+        assertCorrect(matrixA, b, x);
         Assert.assertTrue(gf2k.isZero(x[0]));
         Assert.assertFalse(gf2k.isZero(x[1]));
         Assert.assertTrue(gf2k.isZero(x[2]));
@@ -883,11 +890,11 @@ public class Gf2kConstantLinearSolverTest {
             gf2k.createRandom(SECURE_RANDOM),
         };
         systemInfo = linearSolver.freeSolve(BytesUtils.clone(matrixA), BytesUtils.clone(b), x);
-        Assert.assertEquals(LinearSolver.SystemInfo.Consistent, systemInfo);
+        Assert.assertEquals(SystemInfo.Consistent, systemInfo);
         assertCorrect(matrixA, b, x);
         Assert.assertTrue(gf2k.isZero(x[1]));
         systemInfo = linearSolver.fullSolve(BytesUtils.clone(matrixA), BytesUtils.clone(b), x);
-        Assert.assertEquals(LinearSolver.SystemInfo.Consistent, systemInfo);
+        Assert.assertEquals(SystemInfo.Consistent, systemInfo);
         assertCorrect(matrixA, b, x);
         Assert.assertFalse(gf2k.isZero(x[1]));
 
@@ -902,11 +909,11 @@ public class Gf2kConstantLinearSolverTest {
             gf2k.createRandom(SECURE_RANDOM),
         };
         systemInfo = linearSolver.freeSolve(BytesUtils.clone(matrixA), BytesUtils.clone(b), x);
-        Assert.assertEquals(LinearSolver.SystemInfo.Consistent, systemInfo);
+        Assert.assertEquals(SystemInfo.Consistent, systemInfo);
         assertCorrect(matrixA, b, x);
         Assert.assertTrue(gf2k.isZero(x[2]));
         systemInfo = linearSolver.fullSolve(BytesUtils.clone(matrixA), BytesUtils.clone(b), x);
-        Assert.assertEquals(LinearSolver.SystemInfo.Consistent, systemInfo);
+        Assert.assertEquals(SystemInfo.Consistent, systemInfo);
         assertCorrect(matrixA, b, x);
         Assert.assertFalse(gf2k.isZero(x[2]));
 
@@ -921,11 +928,11 @@ public class Gf2kConstantLinearSolverTest {
             gf2k.createRandom(SECURE_RANDOM),
         };
         systemInfo = linearSolver.freeSolve(BytesUtils.clone(matrixA), BytesUtils.clone(b), x);
-        Assert.assertEquals(LinearSolver.SystemInfo.Consistent, systemInfo);
+        Assert.assertEquals(SystemInfo.Consistent, systemInfo);
         assertCorrect(matrixA, b, x);
         Assert.assertTrue(gf2k.isZero(x[2]));
         systemInfo = linearSolver.fullSolve(BytesUtils.clone(matrixA), BytesUtils.clone(b), x);
-        Assert.assertEquals(LinearSolver.SystemInfo.Consistent, systemInfo);
+        Assert.assertEquals(SystemInfo.Consistent, systemInfo);
         assertCorrect(matrixA, b, x);
         Assert.assertFalse(gf2k.isZero(x[2]));
     }

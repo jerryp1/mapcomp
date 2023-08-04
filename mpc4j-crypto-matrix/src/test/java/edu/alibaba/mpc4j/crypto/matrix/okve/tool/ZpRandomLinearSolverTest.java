@@ -27,7 +27,7 @@ import java.util.stream.IntStream;
  * @date 2021/05/08
  */
 @RunWith(Parameterized.class)
-public class ZpLinearSolverTest {
+public class ZpRandomLinearSolverTest {
     /**
      * random round
      */
@@ -66,7 +66,7 @@ public class ZpLinearSolverTest {
      */
     private final ZpLinearSolver linearSolver;
 
-    public ZpLinearSolverTest(String name, int l, int d) {
+    public ZpRandomLinearSolverTest(String name, int l, int d) {
         Preconditions.checkArgument(StringUtils.isNotBlank(name));
         zp = ZpFactory.createInstance(EnvType.STANDARD, l);
         this.d = d;

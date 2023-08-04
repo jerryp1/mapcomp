@@ -31,7 +31,7 @@ import java.util.stream.IntStream;
  * @date 2023/6/16
  */
 @RunWith(Parameterized.class)
-public class BinaryLinearSolverTest {
+public class BinaryRandomLinearSolverTest {
     /**
      * random round
      */
@@ -79,7 +79,7 @@ public class BinaryLinearSolverTest {
      */
     private final BinaryLinearSolver linearSolver;
 
-    public BinaryLinearSolverTest(String name, int d) {
+    public BinaryRandomLinearSolverTest(String name, int d) {
         Preconditions.checkArgument(StringUtils.isNotBlank(name));
         this.d = d;
         byteD = CommonUtils.getByteLength(d);

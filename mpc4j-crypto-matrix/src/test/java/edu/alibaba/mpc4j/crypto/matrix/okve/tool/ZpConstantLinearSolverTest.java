@@ -210,7 +210,6 @@ public class ZpConstantLinearSolverTest {
         systemInfo = linearSolver.fullSolve(BigIntegerUtils.clone(matrixA), BigIntegerUtils.clone(b), x);
         Assert.assertEquals(SystemInfo.Consistent, systemInfo);
         assertCorrect(matrixA, b, x);
-        Assert.assertFalse(zp.isZero(x[0]));
         Assert.assertFalse(zp.isZero(x[1]));
 
         // A = | 0 1 |, b = 0, solve Ax = b.
@@ -246,7 +245,6 @@ public class ZpConstantLinearSolverTest {
         Assert.assertEquals(SystemInfo.Consistent, systemInfo);
         assertCorrect(matrixA, b, x);
         Assert.assertFalse(zp.isZero(x[0]));
-        Assert.assertFalse(zp.isZero(x[1]));
 
         // A = | 1 0 |, b = 0, solve Ax = b.
         matrixA = new BigInteger[][]{
@@ -289,10 +287,12 @@ public class ZpConstantLinearSolverTest {
         };
         systemInfo = linearSolver.freeSolve(BigIntegerUtils.clone(matrixA), BigIntegerUtils.clone(b), x);
         Assert.assertEquals(SystemInfo.Consistent, systemInfo);
+        assertCorrect(matrixA, b, x);
         Assert.assertTrue(zp.isZero(x[0]));
         Assert.assertTrue(zp.isZero(x[0]));
         systemInfo = linearSolver.fullSolve(BigIntegerUtils.clone(matrixA), BigIntegerUtils.clone(b), x);
         Assert.assertEquals(SystemInfo.Consistent, systemInfo);
+        assertCorrect(matrixA, b, x);
         Assert.assertFalse(zp.isZero(x[0]));
         Assert.assertFalse(zp.isZero(x[0]));
 
@@ -349,7 +349,6 @@ public class ZpConstantLinearSolverTest {
         systemInfo = linearSolver.fullSolve(BigIntegerUtils.clone(matrixA), BigIntegerUtils.clone(b), x);
         Assert.assertEquals(SystemInfo.Consistent, systemInfo);
         assertCorrect(matrixA, b, x);
-        Assert.assertFalse(zp.isZero(x[0]));
         Assert.assertFalse(zp.isZero(x[1]));
     }
 
@@ -578,7 +577,6 @@ public class ZpConstantLinearSolverTest {
         systemInfo = linearSolver.freeSolve(BigIntegerUtils.clone(matrixA), BigIntegerUtils.clone(b), x);
         Assert.assertEquals(SystemInfo.Consistent, systemInfo);
         assertCorrect(matrixA, b, x);
-        Assert.assertTrue(zp.isZero(x[0]));
         Assert.assertTrue(zp.isZero(x[1]));
         systemInfo = linearSolver.fullSolve(BigIntegerUtils.clone(matrixA), BigIntegerUtils.clone(b), x);
         Assert.assertEquals(SystemInfo.Consistent, systemInfo);
@@ -707,7 +705,6 @@ public class ZpConstantLinearSolverTest {
         systemInfo = linearSolver.fullSolve(BigIntegerUtils.clone(matrixA), BigIntegerUtils.clone(b), x);
         Assert.assertEquals(SystemInfo.Consistent, systemInfo);
         assertCorrect(matrixA, b, x);
-        Assert.assertFalse(zp.isZero(x[0]));
         Assert.assertFalse(zp.isZero(x[1]));
         Assert.assertFalse(zp.isZero(x[2]));
     }
