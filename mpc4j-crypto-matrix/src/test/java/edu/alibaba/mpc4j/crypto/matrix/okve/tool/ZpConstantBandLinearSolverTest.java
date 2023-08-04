@@ -5,12 +5,12 @@ import edu.alibaba.mpc4j.common.tool.EnvType;
 import edu.alibaba.mpc4j.common.tool.galoisfield.zp.Zp;
 import edu.alibaba.mpc4j.common.tool.galoisfield.zp.ZpFactory;
 import edu.alibaba.mpc4j.common.tool.utils.BigIntegerUtils;
+import edu.alibaba.mpc4j.common.tool.utils.IntUtils;
 import org.junit.Assert;
 import org.junit.Test;
 
 import java.math.BigInteger;
 import java.security.SecureRandom;
-import java.util.Arrays;
 import java.util.stream.IntStream;
 
 /**
@@ -49,11 +49,11 @@ public class ZpConstantBandLinearSolverTest {
         BigInteger[] x = new BigInteger[nColumns];
         SystemInfo systemInfo;
         systemInfo = bandLinearSolver.freeSolve(
-            Arrays.copyOf(ss, ss.length), nColumns, BigIntegerUtils.clone(bandA), BigIntegerUtils.clone(b), x
+            IntUtils.clone(ss), nColumns, BigIntegerUtils.clone(bandA), BigIntegerUtils.clone(b), x
         );
         Assert.assertEquals(SystemInfo.Consistent, systemInfo);
         systemInfo = bandLinearSolver.fullSolve(
-            Arrays.copyOf(ss, ss.length), nColumns, BigIntegerUtils.clone(bandA), BigIntegerUtils.clone(b), x
+            IntUtils.clone(ss), nColumns, BigIntegerUtils.clone(bandA), BigIntegerUtils.clone(b), x
         );
         Assert.assertEquals(SystemInfo.Consistent, systemInfo);
     }
@@ -69,14 +69,14 @@ public class ZpConstantBandLinearSolverTest {
         BigInteger[] x = new BigInteger[nColumns];
         SystemInfo systemInfo;
         systemInfo = bandLinearSolver.freeSolve(
-            Arrays.copyOf(ss, ss.length), nColumns, BigIntegerUtils.clone(bandA), BigIntegerUtils.clone(b), x
+            IntUtils.clone(ss), nColumns, BigIntegerUtils.clone(bandA), BigIntegerUtils.clone(b), x
         );
         Assert.assertEquals(SystemInfo.Consistent, systemInfo);
         for (int iColumn = 0; iColumn < nColumns; iColumn++) {
             Assert.assertTrue(zp.isZero(x[iColumn]));
         }
         systemInfo = bandLinearSolver.fullSolve(
-            Arrays.copyOf(ss, ss.length), nColumns, BigIntegerUtils.clone(bandA), BigIntegerUtils.clone(b), x
+            IntUtils.clone(ss), nColumns, BigIntegerUtils.clone(bandA), BigIntegerUtils.clone(b), x
         );
         Assert.assertEquals(SystemInfo.Consistent, systemInfo);
         for (int iColumn = 0; iColumn < nColumns; iColumn++) {
@@ -102,12 +102,12 @@ public class ZpConstantBandLinearSolverTest {
             zp.createZero(),
         };
         systemInfo = bandLinearSolver.freeSolve(
-            Arrays.copyOf(ss, ss.length), nColumns, BigIntegerUtils.clone(bandA), BigIntegerUtils.clone(b), x
+            IntUtils.clone(ss), nColumns, BigIntegerUtils.clone(bandA), BigIntegerUtils.clone(b), x
         );
         Assert.assertEquals(SystemInfo.Consistent, systemInfo);
         Assert.assertTrue(zp.isZero(x[0]));
         systemInfo = bandLinearSolver.fullSolve(
-            Arrays.copyOf(ss, ss.length), nColumns, BigIntegerUtils.clone(bandA), BigIntegerUtils.clone(b), x
+            IntUtils.clone(ss), nColumns, BigIntegerUtils.clone(bandA), BigIntegerUtils.clone(b), x
         );
         Assert.assertEquals(SystemInfo.Consistent, systemInfo);
         Assert.assertTrue(zp.isZero(x[0]));
@@ -120,12 +120,12 @@ public class ZpConstantBandLinearSolverTest {
             zp.createNonZeroRandom(SECURE_RANDOM),
         };
         systemInfo = bandLinearSolver.freeSolve(
-            Arrays.copyOf(ss, ss.length), nColumns, BigIntegerUtils.clone(bandA), BigIntegerUtils.clone(b), x
+            IntUtils.clone(ss), nColumns, BigIntegerUtils.clone(bandA), BigIntegerUtils.clone(b), x
         );
         Assert.assertEquals(SystemInfo.Consistent, systemInfo);
         assertCorrect(ss, bandA, b, x);
         systemInfo = bandLinearSolver.fullSolve(
-            Arrays.copyOf(ss, ss.length), nColumns, BigIntegerUtils.clone(bandA), BigIntegerUtils.clone(b), x
+            IntUtils.clone(ss), nColumns, BigIntegerUtils.clone(bandA), BigIntegerUtils.clone(b), x
         );
         Assert.assertEquals(SystemInfo.Consistent, systemInfo);
         assertCorrect(ss, bandA, b, x);
@@ -138,12 +138,12 @@ public class ZpConstantBandLinearSolverTest {
             zp.createZero(),
         };
         systemInfo = bandLinearSolver.freeSolve(
-            Arrays.copyOf(ss, ss.length), nColumns, BigIntegerUtils.clone(bandA), BigIntegerUtils.clone(b), x
+            IntUtils.clone(ss), nColumns, BigIntegerUtils.clone(bandA), BigIntegerUtils.clone(b), x
         );
         Assert.assertEquals(SystemInfo.Consistent, systemInfo);
         Assert.assertTrue(zp.isZero(x[0]));
         systemInfo = bandLinearSolver.fullSolve(
-            Arrays.copyOf(ss, ss.length), nColumns, BigIntegerUtils.clone(bandA), BigIntegerUtils.clone(b), x
+            IntUtils.clone(ss), nColumns, BigIntegerUtils.clone(bandA), BigIntegerUtils.clone(b), x
         );
         Assert.assertEquals(SystemInfo.Consistent, systemInfo);
         Assert.assertFalse(zp.isZero(x[0]));
@@ -156,11 +156,11 @@ public class ZpConstantBandLinearSolverTest {
             zp.createNonZeroRandom(SECURE_RANDOM),
         };
         systemInfo = bandLinearSolver.freeSolve(
-            Arrays.copyOf(ss, ss.length), nColumns, BigIntegerUtils.clone(bandA), BigIntegerUtils.clone(b), x
+            IntUtils.clone(ss), nColumns, BigIntegerUtils.clone(bandA), BigIntegerUtils.clone(b), x
         );
         Assert.assertEquals(SystemInfo.Inconsistent, systemInfo);
         systemInfo = bandLinearSolver.fullSolve(
-            Arrays.copyOf(ss, ss.length), nColumns, BigIntegerUtils.clone(bandA), BigIntegerUtils.clone(b), x
+            IntUtils.clone(ss), nColumns, BigIntegerUtils.clone(bandA), BigIntegerUtils.clone(b), x
         );
         Assert.assertEquals(SystemInfo.Inconsistent, systemInfo);
     }
@@ -169,47 +169,47 @@ public class ZpConstantBandLinearSolverTest {
     public void testRandom1x1() {
         int nColumns = 1;
         int[] ss;
-        BigInteger[][] matrixA;
+        BigInteger[][] bandA;
         BigInteger[] b;
         BigInteger[] x = new BigInteger[nColumns];
         SystemInfo systemInfo;
 
         // A = | r[0] |, b = 0, solve Ax = b.
         ss = new int[]{0,};
-        matrixA = new BigInteger[][]{
+        bandA = new BigInteger[][]{
             new BigInteger[]{zp.createNonZeroRandom(SECURE_RANDOM),},
         };
         b = new BigInteger[]{
             zp.createZero(),
         };
         systemInfo = bandLinearSolver.freeSolve(
-            Arrays.copyOf(ss, ss.length), nColumns, BigIntegerUtils.clone(matrixA), BigIntegerUtils.clone(b), x
+            IntUtils.clone(ss), nColumns, BigIntegerUtils.clone(bandA), BigIntegerUtils.clone(b), x
         );
         Assert.assertEquals(SystemInfo.Consistent, systemInfo);
         Assert.assertTrue(zp.isZero(x[0]));
         systemInfo = bandLinearSolver.fullSolve(
-            Arrays.copyOf(ss, ss.length), nColumns, BigIntegerUtils.clone(matrixA), BigIntegerUtils.clone(b), x
+            IntUtils.clone(ss), nColumns, BigIntegerUtils.clone(bandA), BigIntegerUtils.clone(b), x
         );
         Assert.assertEquals(SystemInfo.Consistent, systemInfo);
         Assert.assertTrue(zp.isZero(x[0]));
 
         // A = | r[0] |, b = r, solve Ax = b.
-        matrixA = new BigInteger[][]{
+        bandA = new BigInteger[][]{
             new BigInteger[]{zp.createNonZeroRandom(SECURE_RANDOM),},
         };
         b = new BigInteger[]{
             zp.createNonZeroRandom(SECURE_RANDOM),
         };
         systemInfo = bandLinearSolver.freeSolve(
-            Arrays.copyOf(ss, ss.length), nColumns, BigIntegerUtils.clone(matrixA), BigIntegerUtils.clone(b), x
+            IntUtils.clone(ss), nColumns, BigIntegerUtils.clone(bandA), BigIntegerUtils.clone(b), x
         );
         Assert.assertEquals(SystemInfo.Consistent, systemInfo);
-        assertCorrect(ss, matrixA, b, x);
+        assertCorrect(ss, bandA, b, x);
         systemInfo = bandLinearSolver.fullSolve(
-            Arrays.copyOf(ss, ss.length), nColumns, BigIntegerUtils.clone(matrixA), BigIntegerUtils.clone(b), x
+            IntUtils.clone(ss), nColumns, BigIntegerUtils.clone(bandA), BigIntegerUtils.clone(b), x
         );
         Assert.assertEquals(SystemInfo.Consistent, systemInfo);
-        assertCorrect(ss, matrixA, b, x);
+        assertCorrect(ss, bandA, b, x);
     }
 
     @Test
@@ -230,14 +230,14 @@ public class ZpConstantBandLinearSolverTest {
             zp.createZero(),
         };
         systemInfo = bandLinearSolver.freeSolve(
-            Arrays.copyOf(ss, ss.length), nColumns, BigIntegerUtils.clone(bandA), BigIntegerUtils.clone(b), x
+            IntUtils.clone(ss), nColumns, BigIntegerUtils.clone(bandA), BigIntegerUtils.clone(b), x
         );
         Assert.assertEquals(SystemInfo.Consistent, systemInfo);
         assertCorrect(ss, bandA, b, x);
         Assert.assertTrue(zp.isZero(x[0]));
         Assert.assertTrue(zp.isZero(x[1]));
         systemInfo = bandLinearSolver.fullSolve(
-            Arrays.copyOf(ss, ss.length), nColumns, BigIntegerUtils.clone(bandA), BigIntegerUtils.clone(b), x
+            IntUtils.clone(ss), nColumns, BigIntegerUtils.clone(bandA), BigIntegerUtils.clone(b), x
         );
         Assert.assertEquals(SystemInfo.Consistent, systemInfo);
         assertCorrect(ss, bandA, b, x);
@@ -252,13 +252,13 @@ public class ZpConstantBandLinearSolverTest {
             zp.createNonZeroRandom(SECURE_RANDOM),
         };
         systemInfo = bandLinearSolver.freeSolve(
-            Arrays.copyOf(ss, ss.length), nColumns, BigIntegerUtils.clone(bandA), BigIntegerUtils.clone(b), x
+            IntUtils.clone(ss), nColumns, BigIntegerUtils.clone(bandA), BigIntegerUtils.clone(b), x
         );
         Assert.assertEquals(SystemInfo.Consistent, systemInfo);
         assertCorrect(ss, bandA, b, x);
         Assert.assertTrue(zp.isZero(x[1]));
         systemInfo = bandLinearSolver.fullSolve(
-            Arrays.copyOf(ss, ss.length), nColumns, BigIntegerUtils.clone(bandA), BigIntegerUtils.clone(b), x
+            IntUtils.clone(ss), nColumns, BigIntegerUtils.clone(bandA), BigIntegerUtils.clone(b), x
         );
         Assert.assertEquals(SystemInfo.Consistent, systemInfo);
         assertCorrect(ss, bandA, b, x);
@@ -274,14 +274,14 @@ public class ZpConstantBandLinearSolverTest {
             zp.createZero(),
         };
         systemInfo = bandLinearSolver.freeSolve(
-            Arrays.copyOf(ss, ss.length), nColumns, BigIntegerUtils.clone(bandA), BigIntegerUtils.clone(b), x
+            IntUtils.clone(ss), nColumns, BigIntegerUtils.clone(bandA), BigIntegerUtils.clone(b), x
         );
         Assert.assertEquals(SystemInfo.Consistent, systemInfo);
         assertCorrect(ss, bandA, b, x);
         Assert.assertTrue(zp.isZero(x[0]));
         Assert.assertTrue(zp.isZero(x[1]));
         systemInfo = bandLinearSolver.fullSolve(
-            Arrays.copyOf(ss, ss.length), nColumns, BigIntegerUtils.clone(bandA), BigIntegerUtils.clone(b), x
+            IntUtils.clone(ss), nColumns, BigIntegerUtils.clone(bandA), BigIntegerUtils.clone(b), x
         );
         Assert.assertEquals(SystemInfo.Consistent, systemInfo);
         assertCorrect(ss, bandA, b, x);
@@ -297,13 +297,13 @@ public class ZpConstantBandLinearSolverTest {
             zp.createNonZeroRandom(SECURE_RANDOM),
         };
         systemInfo = bandLinearSolver.freeSolve(
-            Arrays.copyOf(ss, ss.length), nColumns, BigIntegerUtils.clone(bandA), BigIntegerUtils.clone(b), x
+            IntUtils.clone(ss), nColumns, BigIntegerUtils.clone(bandA), BigIntegerUtils.clone(b), x
         );
         Assert.assertEquals(SystemInfo.Consistent, systemInfo);
         assertCorrect(ss, bandA, b, x);
         Assert.assertTrue(zp.isZero(x[0]));
         systemInfo = bandLinearSolver.fullSolve(
-            Arrays.copyOf(ss, ss.length), nColumns, BigIntegerUtils.clone(bandA), BigIntegerUtils.clone(b), x
+            IntUtils.clone(ss), nColumns, BigIntegerUtils.clone(bandA), BigIntegerUtils.clone(b), x
         );
         Assert.assertEquals(SystemInfo.Consistent, systemInfo);
         assertCorrect(ss, bandA, b, x);
@@ -318,14 +318,14 @@ public class ZpConstantBandLinearSolverTest {
             zp.createZero(),
         };
         systemInfo = bandLinearSolver.freeSolve(
-            Arrays.copyOf(ss, ss.length), nColumns, BigIntegerUtils.clone(bandA), BigIntegerUtils.clone(b), x
+            IntUtils.clone(ss), nColumns, BigIntegerUtils.clone(bandA), BigIntegerUtils.clone(b), x
         );
         Assert.assertEquals(SystemInfo.Consistent, systemInfo);
         assertCorrect(ss, bandA, b, x);
         Assert.assertTrue(zp.isZero(x[0]));
         Assert.assertTrue(zp.isZero(x[1]));
         systemInfo = bandLinearSolver.fullSolve(
-            Arrays.copyOf(ss, ss.length), nColumns, BigIntegerUtils.clone(bandA), BigIntegerUtils.clone(b), x
+            IntUtils.clone(ss), nColumns, BigIntegerUtils.clone(bandA), BigIntegerUtils.clone(b), x
         );
         Assert.assertEquals(SystemInfo.Consistent, systemInfo);
         assertCorrect(ss, bandA, b, x);
@@ -341,13 +341,13 @@ public class ZpConstantBandLinearSolverTest {
             zp.createNonZeroRandom(SECURE_RANDOM),
         };
         systemInfo = bandLinearSolver.freeSolve(
-            Arrays.copyOf(ss, ss.length), nColumns, BigIntegerUtils.clone(bandA), BigIntegerUtils.clone(b), x
+            IntUtils.clone(ss), nColumns, BigIntegerUtils.clone(bandA), BigIntegerUtils.clone(b), x
         );
         Assert.assertEquals(SystemInfo.Consistent, systemInfo);
         assertCorrect(ss, bandA, b, x);
         Assert.assertTrue(zp.isZero(x[1]));
         systemInfo = bandLinearSolver.fullSolve(
-            Arrays.copyOf(ss, ss.length), nColumns, BigIntegerUtils.clone(bandA), BigIntegerUtils.clone(b), x
+            IntUtils.clone(ss), nColumns, BigIntegerUtils.clone(bandA), BigIntegerUtils.clone(b), x
         );
         Assert.assertEquals(SystemInfo.Consistent, systemInfo);
         assertCorrect(ss, bandA, b, x);
@@ -362,14 +362,14 @@ public class ZpConstantBandLinearSolverTest {
             zp.createZero(),
         };
         systemInfo = bandLinearSolver.freeSolve(
-            Arrays.copyOf(ss, ss.length), nColumns, BigIntegerUtils.clone(bandA), BigIntegerUtils.clone(b), x
+            IntUtils.clone(ss), nColumns, BigIntegerUtils.clone(bandA), BigIntegerUtils.clone(b), x
         );
         Assert.assertEquals(SystemInfo.Consistent, systemInfo);
         assertCorrect(ss, bandA, b, x);
         Assert.assertTrue(zp.isZero(x[0]));
         Assert.assertTrue(zp.isZero(x[0]));
         systemInfo = bandLinearSolver.fullSolve(
-            Arrays.copyOf(ss, ss.length), nColumns, BigIntegerUtils.clone(bandA), BigIntegerUtils.clone(b), x
+            IntUtils.clone(ss), nColumns, BigIntegerUtils.clone(bandA), BigIntegerUtils.clone(b), x
         );
         Assert.assertEquals(SystemInfo.Consistent, systemInfo);
         assertCorrect(ss, bandA, b, x);
@@ -385,11 +385,11 @@ public class ZpConstantBandLinearSolverTest {
             zp.createNonZeroRandom(SECURE_RANDOM),
         };
         systemInfo = bandLinearSolver.freeSolve(
-            Arrays.copyOf(ss, ss.length), nColumns, BigIntegerUtils.clone(bandA), BigIntegerUtils.clone(b), x
+            IntUtils.clone(ss), nColumns, BigIntegerUtils.clone(bandA), BigIntegerUtils.clone(b), x
         );
         Assert.assertEquals(SystemInfo.Inconsistent, systemInfo);
         systemInfo = bandLinearSolver.fullSolve(
-            Arrays.copyOf(ss, ss.length), nColumns, BigIntegerUtils.clone(bandA), BigIntegerUtils.clone(b), x
+            IntUtils.clone(ss), nColumns, BigIntegerUtils.clone(bandA), BigIntegerUtils.clone(b), x
         );
         Assert.assertEquals(SystemInfo.Inconsistent, systemInfo);
     }
@@ -412,14 +412,14 @@ public class ZpConstantBandLinearSolverTest {
             zp.createZero(),
         };
         systemInfo = bandLinearSolver.freeSolve(
-            Arrays.copyOf(ss, ss.length), nColumns, BigIntegerUtils.clone(bandA), BigIntegerUtils.clone(b), x
+            IntUtils.clone(ss), nColumns, BigIntegerUtils.clone(bandA), BigIntegerUtils.clone(b), x
         );
         Assert.assertEquals(SystemInfo.Consistent, systemInfo);
         assertCorrect(ss, bandA, b, x);
         Assert.assertTrue(zp.isZero(x[0]));
         Assert.assertTrue(zp.isZero(x[1]));
         systemInfo = bandLinearSolver.fullSolve(
-            Arrays.copyOf(ss, ss.length), nColumns, BigIntegerUtils.clone(bandA), BigIntegerUtils.clone(b), x
+            IntUtils.clone(ss), nColumns, BigIntegerUtils.clone(bandA), BigIntegerUtils.clone(b), x
         );
         Assert.assertEquals(SystemInfo.Consistent, systemInfo);
         assertCorrect(ss, bandA, b, x);
@@ -435,13 +435,13 @@ public class ZpConstantBandLinearSolverTest {
             zp.createNonZeroRandom(SECURE_RANDOM),
         };
         systemInfo = bandLinearSolver.freeSolve(
-            Arrays.copyOf(ss, ss.length), nColumns, BigIntegerUtils.clone(bandA), BigIntegerUtils.clone(b), x
+            IntUtils.clone(ss), nColumns, BigIntegerUtils.clone(bandA), BigIntegerUtils.clone(b), x
         );
         Assert.assertEquals(SystemInfo.Consistent, systemInfo);
         assertCorrect(ss, bandA, b, x);
         Assert.assertTrue(zp.isZero(x[0]));
         systemInfo = bandLinearSolver.fullSolve(
-            Arrays.copyOf(ss, ss.length), nColumns, BigIntegerUtils.clone(bandA), BigIntegerUtils.clone(b), x
+            IntUtils.clone(ss), nColumns, BigIntegerUtils.clone(bandA), BigIntegerUtils.clone(b), x
         );
         Assert.assertEquals(SystemInfo.Consistent, systemInfo);
         assertCorrect(ss, bandA, b, x);
@@ -456,14 +456,14 @@ public class ZpConstantBandLinearSolverTest {
             zp.createZero(),
         };
         systemInfo = bandLinearSolver.freeSolve(
-            Arrays.copyOf(ss, ss.length), nColumns, BigIntegerUtils.clone(bandA), BigIntegerUtils.clone(b), x
+            IntUtils.clone(ss), nColumns, BigIntegerUtils.clone(bandA), BigIntegerUtils.clone(b), x
         );
         Assert.assertEquals(SystemInfo.Consistent, systemInfo);
         assertCorrect(ss, bandA, b, x);
         Assert.assertTrue(zp.isZero(x[0]));
         Assert.assertTrue(zp.isZero(x[1]));
         systemInfo = bandLinearSolver.fullSolve(
-            Arrays.copyOf(ss, ss.length), nColumns, BigIntegerUtils.clone(bandA), BigIntegerUtils.clone(b), x
+            IntUtils.clone(ss), nColumns, BigIntegerUtils.clone(bandA), BigIntegerUtils.clone(b), x
         );
         Assert.assertEquals(SystemInfo.Consistent, systemInfo);
         assertCorrect(ss, bandA, b, x);
@@ -479,13 +479,13 @@ public class ZpConstantBandLinearSolverTest {
             zp.createNonZeroRandom(SECURE_RANDOM),
         };
         systemInfo = bandLinearSolver.freeSolve(
-            Arrays.copyOf(ss, ss.length), nColumns, BigIntegerUtils.clone(bandA), BigIntegerUtils.clone(b), x
+            IntUtils.clone(ss), nColumns, BigIntegerUtils.clone(bandA), BigIntegerUtils.clone(b), x
         );
         Assert.assertEquals(SystemInfo.Consistent, systemInfo);
         assertCorrect(ss, bandA, b, x);
         Assert.assertTrue(zp.isZero(x[1]));
         systemInfo = bandLinearSolver.fullSolve(
-            Arrays.copyOf(ss, ss.length), nColumns, BigIntegerUtils.clone(bandA), BigIntegerUtils.clone(b), x
+            IntUtils.clone(ss), nColumns, BigIntegerUtils.clone(bandA), BigIntegerUtils.clone(b), x
         );
         Assert.assertEquals(SystemInfo.Consistent, systemInfo);
         assertCorrect(ss, bandA, b, x);
@@ -500,14 +500,14 @@ public class ZpConstantBandLinearSolverTest {
             zp.createZero(),
         };
         systemInfo = bandLinearSolver.freeSolve(
-            Arrays.copyOf(ss, ss.length), nColumns, BigIntegerUtils.clone(bandA), BigIntegerUtils.clone(b), x
+            IntUtils.clone(ss), nColumns, BigIntegerUtils.clone(bandA), BigIntegerUtils.clone(b), x
         );
         Assert.assertEquals(SystemInfo.Consistent, systemInfo);
         assertCorrect(ss, bandA, b, x);
         Assert.assertTrue(zp.isZero(x[0]));
         Assert.assertTrue(zp.isZero(x[0]));
         systemInfo = bandLinearSolver.fullSolve(
-            Arrays.copyOf(ss, ss.length), nColumns, BigIntegerUtils.clone(bandA), BigIntegerUtils.clone(b), x
+            IntUtils.clone(ss), nColumns, BigIntegerUtils.clone(bandA), BigIntegerUtils.clone(b), x
         );
         Assert.assertEquals(SystemInfo.Consistent, systemInfo);
         assertCorrect(ss, bandA, b, x);
@@ -523,14 +523,14 @@ public class ZpConstantBandLinearSolverTest {
             zp.createZero(),
         };
         systemInfo = bandLinearSolver.freeSolve(
-            Arrays.copyOf(ss, ss.length), nColumns, BigIntegerUtils.clone(bandA), BigIntegerUtils.clone(b), x
+            IntUtils.clone(ss), nColumns, BigIntegerUtils.clone(bandA), BigIntegerUtils.clone(b), x
         );
         Assert.assertEquals(SystemInfo.Consistent, systemInfo);
         assertCorrect(ss, bandA, b, x);
         Assert.assertTrue(zp.isZero(x[0]));
         Assert.assertTrue(zp.isZero(x[0]));
         systemInfo = bandLinearSolver.fullSolve(
-            Arrays.copyOf(ss, ss.length), nColumns, BigIntegerUtils.clone(bandA), BigIntegerUtils.clone(b), x
+            IntUtils.clone(ss), nColumns, BigIntegerUtils.clone(bandA), BigIntegerUtils.clone(b), x
         );
         Assert.assertEquals(SystemInfo.Consistent, systemInfo);
         assertCorrect(ss, bandA, b, x);
@@ -546,11 +546,11 @@ public class ZpConstantBandLinearSolverTest {
             zp.createNonZeroRandom(SECURE_RANDOM),
         };
         systemInfo = bandLinearSolver.freeSolve(
-            Arrays.copyOf(ss, ss.length), nColumns, BigIntegerUtils.clone(bandA), BigIntegerUtils.clone(b), x
+            IntUtils.clone(ss), nColumns, BigIntegerUtils.clone(bandA), BigIntegerUtils.clone(b), x
         );
         Assert.assertEquals(SystemInfo.Inconsistent, systemInfo);
         systemInfo = bandLinearSolver.fullSolve(
-            Arrays.copyOf(ss, ss.length), nColumns, BigIntegerUtils.clone(bandA), BigIntegerUtils.clone(b), x
+            IntUtils.clone(ss), nColumns, BigIntegerUtils.clone(bandA), BigIntegerUtils.clone(b), x
         );
         Assert.assertEquals(SystemInfo.Inconsistent, systemInfo);
 
@@ -563,11 +563,11 @@ public class ZpConstantBandLinearSolverTest {
             zp.createNonZeroRandom(SECURE_RANDOM),
         };
         systemInfo = bandLinearSolver.freeSolve(
-            Arrays.copyOf(ss, ss.length), nColumns, BigIntegerUtils.clone(bandA), BigIntegerUtils.clone(b), x
+            IntUtils.clone(ss), nColumns, BigIntegerUtils.clone(bandA), BigIntegerUtils.clone(b), x
         );
         Assert.assertEquals(SystemInfo.Inconsistent, systemInfo);
         systemInfo = bandLinearSolver.fullSolve(
-            Arrays.copyOf(ss, ss.length), nColumns, BigIntegerUtils.clone(bandA), BigIntegerUtils.clone(b), x
+            IntUtils.clone(ss), nColumns, BigIntegerUtils.clone(bandA), BigIntegerUtils.clone(b), x
         );
         Assert.assertEquals(SystemInfo.Inconsistent, systemInfo);
     }
@@ -590,14 +590,14 @@ public class ZpConstantBandLinearSolverTest {
             zp.createZero(),
         };
         systemInfo = bandLinearSolver.freeSolve(
-            Arrays.copyOf(ss, ss.length), nColumns, BigIntegerUtils.clone(bandA), BigIntegerUtils.clone(b), x
+            IntUtils.clone(ss), nColumns, BigIntegerUtils.clone(bandA), BigIntegerUtils.clone(b), x
         );
         Assert.assertEquals(SystemInfo.Consistent, systemInfo);
         assertCorrect(ss, bandA, b, x);
         Assert.assertTrue(zp.isZero(x[0]));
         Assert.assertTrue(zp.isZero(x[1]));
         systemInfo = bandLinearSolver.fullSolve(
-            Arrays.copyOf(ss, ss.length), nColumns, BigIntegerUtils.clone(bandA), BigIntegerUtils.clone(b), x
+            IntUtils.clone(ss), nColumns, BigIntegerUtils.clone(bandA), BigIntegerUtils.clone(b), x
         );
         Assert.assertEquals(SystemInfo.Consistent, systemInfo);
         assertCorrect(ss, bandA, b, x);
@@ -612,13 +612,13 @@ public class ZpConstantBandLinearSolverTest {
             zp.createNonZeroRandom(SECURE_RANDOM),
         };
         systemInfo = bandLinearSolver.freeSolve(
-            Arrays.copyOf(ss, ss.length), nColumns, BigIntegerUtils.clone(bandA), BigIntegerUtils.clone(b), x
+            IntUtils.clone(ss), nColumns, BigIntegerUtils.clone(bandA), BigIntegerUtils.clone(b), x
         );
         Assert.assertEquals(SystemInfo.Consistent, systemInfo);
         assertCorrect(ss, bandA, b, x);
         Assert.assertTrue(zp.isZero(x[1]));
         systemInfo = bandLinearSolver.fullSolve(
-            Arrays.copyOf(ss, ss.length), nColumns, BigIntegerUtils.clone(bandA), BigIntegerUtils.clone(b), x
+            IntUtils.clone(ss), nColumns, BigIntegerUtils.clone(bandA), BigIntegerUtils.clone(b), x
         );
         Assert.assertEquals(SystemInfo.Consistent, systemInfo);
         assertCorrect(ss, bandA, b, x);
@@ -644,14 +644,14 @@ public class ZpConstantBandLinearSolverTest {
             zp.createZero(),
         };
         systemInfo = bandLinearSolver.freeSolve(
-            Arrays.copyOf(ss, ss.length), nColumns, BigIntegerUtils.clone(bandA), BigIntegerUtils.clone(b), x
+            IntUtils.clone(ss), nColumns, BigIntegerUtils.clone(bandA), BigIntegerUtils.clone(b), x
         );
         Assert.assertEquals(SystemInfo.Consistent, systemInfo);
         assertCorrect(ss, bandA, b, x);
         Assert.assertTrue(zp.isZero(x[0]));
         Assert.assertTrue(zp.isZero(x[1]));
         systemInfo = bandLinearSolver.fullSolve(
-            Arrays.copyOf(ss, ss.length), nColumns, BigIntegerUtils.clone(bandA), BigIntegerUtils.clone(b), x
+            IntUtils.clone(ss), nColumns, BigIntegerUtils.clone(bandA), BigIntegerUtils.clone(b), x
         );
         Assert.assertEquals(SystemInfo.Consistent, systemInfo);
         assertCorrect(ss, bandA, b, x);
@@ -665,11 +665,11 @@ public class ZpConstantBandLinearSolverTest {
             zp.createZero(),
         };
         systemInfo = bandLinearSolver.freeSolve(
-            Arrays.copyOf(ss, ss.length), nColumns, BigIntegerUtils.clone(bandA), BigIntegerUtils.clone(b), x
+            IntUtils.clone(ss), nColumns, BigIntegerUtils.clone(bandA), BigIntegerUtils.clone(b), x
         );
         Assert.assertEquals(SystemInfo.Inconsistent, systemInfo);
         systemInfo = bandLinearSolver.fullSolve(
-            Arrays.copyOf(ss, ss.length), nColumns, BigIntegerUtils.clone(bandA), BigIntegerUtils.clone(b), x
+            IntUtils.clone(ss), nColumns, BigIntegerUtils.clone(bandA), BigIntegerUtils.clone(b), x
         );
         Assert.assertEquals(SystemInfo.Inconsistent, systemInfo);
 
@@ -680,11 +680,11 @@ public class ZpConstantBandLinearSolverTest {
             zp.createNonZeroRandom(SECURE_RANDOM),
         };
         systemInfo = bandLinearSolver.freeSolve(
-            Arrays.copyOf(ss, ss.length), nColumns, BigIntegerUtils.clone(bandA), BigIntegerUtils.clone(b), x
+            IntUtils.clone(ss), nColumns, BigIntegerUtils.clone(bandA), BigIntegerUtils.clone(b), x
         );
         Assert.assertEquals(SystemInfo.Inconsistent, systemInfo);
         systemInfo = bandLinearSolver.fullSolve(
-            Arrays.copyOf(ss, ss.length), nColumns, BigIntegerUtils.clone(bandA), BigIntegerUtils.clone(b), x
+            IntUtils.clone(ss), nColumns, BigIntegerUtils.clone(bandA), BigIntegerUtils.clone(b), x
         );
         Assert.assertEquals(SystemInfo.Inconsistent, systemInfo);
 
@@ -697,24 +697,24 @@ public class ZpConstantBandLinearSolverTest {
         // r0 != r1
         if (!zp.isEqual(b[0], b[1])) {
             systemInfo = bandLinearSolver.freeSolve(
-                Arrays.copyOf(ss, ss.length), nColumns, BigIntegerUtils.clone(bandA), BigIntegerUtils.clone(b), x
+                IntUtils.clone(ss), nColumns, BigIntegerUtils.clone(bandA), BigIntegerUtils.clone(b), x
             );
             Assert.assertEquals(SystemInfo.Inconsistent, systemInfo);
             systemInfo = bandLinearSolver.fullSolve(
-                Arrays.copyOf(ss, ss.length), nColumns, BigIntegerUtils.clone(bandA), BigIntegerUtils.clone(b), x
+                IntUtils.clone(ss), nColumns, BigIntegerUtils.clone(bandA), BigIntegerUtils.clone(b), x
             );
             Assert.assertEquals(SystemInfo.Inconsistent, systemInfo);
         }
         // r0 = r1
         b[1] = b[0];
         systemInfo = bandLinearSolver.freeSolve(
-            Arrays.copyOf(ss, ss.length), nColumns, BigIntegerUtils.clone(bandA), BigIntegerUtils.clone(b), x
+            IntUtils.clone(ss), nColumns, BigIntegerUtils.clone(bandA), BigIntegerUtils.clone(b), x
         );
         Assert.assertEquals(SystemInfo.Consistent, systemInfo);
         assertCorrect(ss, bandA, b, x);
         Assert.assertTrue(zp.isZero(x[1]));
         systemInfo = bandLinearSolver.fullSolve(
-            Arrays.copyOf(ss, ss.length), nColumns, BigIntegerUtils.clone(bandA), BigIntegerUtils.clone(b), x
+            IntUtils.clone(ss), nColumns, BigIntegerUtils.clone(bandA), BigIntegerUtils.clone(b), x
         );
         Assert.assertEquals(SystemInfo.Consistent, systemInfo);
         assertCorrect(ss, bandA, b, x);
@@ -765,14 +765,14 @@ public class ZpConstantBandLinearSolverTest {
             zp.createZero(),
         };
         systemInfo = bandLinearSolver.freeSolve(
-            Arrays.copyOf(ss, ss.length), nColumns, BigIntegerUtils.clone(bandA), BigIntegerUtils.clone(b), x
+            IntUtils.clone(ss), nColumns, BigIntegerUtils.clone(bandA), BigIntegerUtils.clone(b), x
         );
         Assert.assertEquals(SystemInfo.Consistent, systemInfo);
         assertCorrect(ss, bandA, b, x);
         Assert.assertTrue(zp.isZero(x[0]));
         Assert.assertTrue(zp.isZero(x[1]));
         systemInfo = bandLinearSolver.fullSolve(
-            Arrays.copyOf(ss, ss.length), nColumns, BigIntegerUtils.clone(bandA), BigIntegerUtils.clone(b), x
+            IntUtils.clone(ss), nColumns, BigIntegerUtils.clone(bandA), BigIntegerUtils.clone(b), x
         );
         Assert.assertEquals(SystemInfo.Consistent, systemInfo);
         assertCorrect(ss, bandA, b, x);
@@ -786,11 +786,11 @@ public class ZpConstantBandLinearSolverTest {
             zp.createZero(),
         };
         systemInfo = bandLinearSolver.freeSolve(
-            Arrays.copyOf(ss, ss.length), nColumns, BigIntegerUtils.clone(bandA), BigIntegerUtils.clone(b), x
+            IntUtils.clone(ss), nColumns, BigIntegerUtils.clone(bandA), BigIntegerUtils.clone(b), x
         );
         Assert.assertEquals(SystemInfo.Inconsistent, systemInfo);
         systemInfo = bandLinearSolver.fullSolve(
-            Arrays.copyOf(ss, ss.length), nColumns, BigIntegerUtils.clone(bandA), BigIntegerUtils.clone(b), x
+            IntUtils.clone(ss), nColumns, BigIntegerUtils.clone(bandA), BigIntegerUtils.clone(b), x
         );
         Assert.assertEquals(SystemInfo.Inconsistent, systemInfo);
 
@@ -801,11 +801,11 @@ public class ZpConstantBandLinearSolverTest {
             zp.createNonZeroRandom(SECURE_RANDOM),
         };
         systemInfo = bandLinearSolver.freeSolve(
-            Arrays.copyOf(ss, ss.length), nColumns, BigIntegerUtils.clone(bandA), BigIntegerUtils.clone(b), x
+            IntUtils.clone(ss), nColumns, BigIntegerUtils.clone(bandA), BigIntegerUtils.clone(b), x
         );
         Assert.assertEquals(SystemInfo.Inconsistent, systemInfo);
         systemInfo = bandLinearSolver.fullSolve(
-            Arrays.copyOf(ss, ss.length), nColumns, BigIntegerUtils.clone(bandA), BigIntegerUtils.clone(b), x
+            IntUtils.clone(ss), nColumns, BigIntegerUtils.clone(bandA), BigIntegerUtils.clone(b), x
         );
         Assert.assertEquals(SystemInfo.Inconsistent, systemInfo);
 
@@ -816,11 +816,11 @@ public class ZpConstantBandLinearSolverTest {
             zp.createNonZeroRandom(SECURE_RANDOM),
         };
         systemInfo = bandLinearSolver.freeSolve(
-            Arrays.copyOf(ss, ss.length), nColumns, BigIntegerUtils.clone(bandA), BigIntegerUtils.clone(b), x
+            IntUtils.clone(ss), nColumns, BigIntegerUtils.clone(bandA), BigIntegerUtils.clone(b), x
         );
         Assert.assertEquals(SystemInfo.Inconsistent, systemInfo);
         systemInfo = bandLinearSolver.fullSolve(
-            Arrays.copyOf(ss, ss.length), nColumns, BigIntegerUtils.clone(bandA), BigIntegerUtils.clone(b), x
+            IntUtils.clone(ss), nColumns, BigIntegerUtils.clone(bandA), BigIntegerUtils.clone(b), x
         );
         Assert.assertEquals(SystemInfo.Inconsistent, systemInfo);
     }
@@ -846,24 +846,24 @@ public class ZpConstantBandLinearSolverTest {
         };
         if (!zp.isEqual(b[0], b[1])) {
             systemInfo = bandLinearSolver.freeSolve(
-                Arrays.copyOf(ss, ss.length), nColumns, BigIntegerUtils.clone(bandA), BigIntegerUtils.clone(b), x
+                IntUtils.clone(ss), nColumns, BigIntegerUtils.clone(bandA), BigIntegerUtils.clone(b), x
             );
             Assert.assertEquals(SystemInfo.Consistent, systemInfo);
             assertCorrect(ss, bandA, b, x);
             systemInfo = bandLinearSolver.fullSolve(
-                Arrays.copyOf(ss, ss.length), nColumns, BigIntegerUtils.clone(bandA), BigIntegerUtils.clone(b), x
+                IntUtils.clone(ss), nColumns, BigIntegerUtils.clone(bandA), BigIntegerUtils.clone(b), x
             );
             Assert.assertEquals(SystemInfo.Consistent, systemInfo);
             assertCorrect(ss, bandA, b, x);
         }
         b[1] = b[0];
         systemInfo = bandLinearSolver.freeSolve(
-            Arrays.copyOf(ss, ss.length), nColumns, BigIntegerUtils.clone(bandA), BigIntegerUtils.clone(b), x
+            IntUtils.clone(ss), nColumns, BigIntegerUtils.clone(bandA), BigIntegerUtils.clone(b), x
         );
         Assert.assertEquals(SystemInfo.Consistent, systemInfo);
         assertCorrect(ss, bandA, b, x);
         systemInfo = bandLinearSolver.fullSolve(
-            Arrays.copyOf(ss, ss.length), nColumns, BigIntegerUtils.clone(bandA), BigIntegerUtils.clone(b), x
+            IntUtils.clone(ss), nColumns, BigIntegerUtils.clone(bandA), BigIntegerUtils.clone(b), x
         );
         Assert.assertEquals(SystemInfo.Consistent, systemInfo);
         assertCorrect(ss, bandA, b, x);
@@ -879,11 +879,11 @@ public class ZpConstantBandLinearSolverTest {
             zp.createNonZeroRandom(SECURE_RANDOM),
         };
         systemInfo = bandLinearSolver.freeSolve(
-            Arrays.copyOf(ss, ss.length), nColumns, BigIntegerUtils.clone(bandA), BigIntegerUtils.clone(b), x
+            IntUtils.clone(ss), nColumns, BigIntegerUtils.clone(bandA), BigIntegerUtils.clone(b), x
         );
         Assert.assertEquals(SystemInfo.Inconsistent, systemInfo);
         systemInfo = bandLinearSolver.fullSolve(
-            Arrays.copyOf(ss, ss.length), nColumns, BigIntegerUtils.clone(bandA), BigIntegerUtils.clone(b), x
+            IntUtils.clone(ss), nColumns, BigIntegerUtils.clone(bandA), BigIntegerUtils.clone(b), x
         );
         Assert.assertEquals(SystemInfo.Inconsistent, systemInfo);
 
@@ -898,12 +898,12 @@ public class ZpConstantBandLinearSolverTest {
             zp.createNonZeroRandom(SECURE_RANDOM),
         };
         systemInfo = bandLinearSolver.freeSolve(
-            Arrays.copyOf(ss, ss.length), nColumns, BigIntegerUtils.clone(bandA), BigIntegerUtils.clone(b), x
+            IntUtils.clone(ss), nColumns, BigIntegerUtils.clone(bandA), BigIntegerUtils.clone(b), x
         );
         Assert.assertEquals(SystemInfo.Consistent, systemInfo);
         assertCorrect(ss, bandA, b, x);
         systemInfo = bandLinearSolver.fullSolve(
-            Arrays.copyOf(ss, ss.length), nColumns, BigIntegerUtils.clone(bandA), BigIntegerUtils.clone(b), x
+            IntUtils.clone(ss), nColumns, BigIntegerUtils.clone(bandA), BigIntegerUtils.clone(b), x
         );
         Assert.assertEquals(SystemInfo.Consistent, systemInfo);
         assertCorrect(ss, bandA, b, x);
@@ -931,24 +931,24 @@ public class ZpConstantBandLinearSolverTest {
         };
         if (!zp.isEqual(b[0], b[1])) {
             systemInfo = bandLinearSolver.freeSolve(
-                Arrays.copyOf(ss, ss.length), nColumns, BigIntegerUtils.clone(bandA), BigIntegerUtils.clone(b), x
+                IntUtils.clone(ss), nColumns, BigIntegerUtils.clone(bandA), BigIntegerUtils.clone(b), x
             );
             Assert.assertEquals(SystemInfo.Consistent, systemInfo);
             assertCorrect(ss, bandA, b, x);
             systemInfo = bandLinearSolver.fullSolve(
-                Arrays.copyOf(ss, ss.length), nColumns, BigIntegerUtils.clone(bandA), BigIntegerUtils.clone(b), x
+                IntUtils.clone(ss), nColumns, BigIntegerUtils.clone(bandA), BigIntegerUtils.clone(b), x
             );
             Assert.assertEquals(SystemInfo.Consistent, systemInfo);
             assertCorrect(ss, bandA, b, x);
         }
         b[1] = b[0];
         systemInfo = bandLinearSolver.freeSolve(
-            Arrays.copyOf(ss, ss.length), nColumns, BigIntegerUtils.clone(bandA), BigIntegerUtils.clone(b), x
+            IntUtils.clone(ss), nColumns, BigIntegerUtils.clone(bandA), BigIntegerUtils.clone(b), x
         );
         Assert.assertEquals(SystemInfo.Consistent, systemInfo);
         assertCorrect(ss, bandA, b, x);
         systemInfo = bandLinearSolver.fullSolve(
-            Arrays.copyOf(ss, ss.length), nColumns, BigIntegerUtils.clone(bandA), BigIntegerUtils.clone(b), x
+            IntUtils.clone(ss), nColumns, BigIntegerUtils.clone(bandA), BigIntegerUtils.clone(b), x
         );
         Assert.assertEquals(SystemInfo.Consistent, systemInfo);
         assertCorrect(ss, bandA, b, x);
@@ -965,22 +965,22 @@ public class ZpConstantBandLinearSolverTest {
             zp.createNonZeroRandom(SECURE_RANDOM),
         };
         systemInfo = bandLinearSolver.freeSolve(
-            Arrays.copyOf(ss, ss.length), nColumns, BigIntegerUtils.clone(bandA), BigIntegerUtils.clone(b), x
+            IntUtils.clone(ss), nColumns, BigIntegerUtils.clone(bandA), BigIntegerUtils.clone(b), x
         );
         Assert.assertEquals(SystemInfo.Inconsistent, systemInfo);
         systemInfo = bandLinearSolver.fullSolve(
-            Arrays.copyOf(ss, ss.length), nColumns, BigIntegerUtils.clone(bandA), BigIntegerUtils.clone(b), x
+            IntUtils.clone(ss), nColumns, BigIntegerUtils.clone(bandA), BigIntegerUtils.clone(b), x
         );
         Assert.assertEquals(SystemInfo.Inconsistent, systemInfo);
         // s0 = 1, A = | 0 0 |, b = | r0 |, solve Ax = b.
         //             | 1 0 |      | r1 |
         ss = new int[]{1, 0};
         systemInfo = bandLinearSolver.freeSolve(
-            Arrays.copyOf(ss, ss.length), nColumns, BigIntegerUtils.clone(bandA), BigIntegerUtils.clone(b), x
+            IntUtils.clone(ss), nColumns, BigIntegerUtils.clone(bandA), BigIntegerUtils.clone(b), x
         );
         Assert.assertEquals(SystemInfo.Inconsistent, systemInfo);
         systemInfo = bandLinearSolver.fullSolve(
-            Arrays.copyOf(ss, ss.length), nColumns, BigIntegerUtils.clone(bandA), BigIntegerUtils.clone(b), x
+            IntUtils.clone(ss), nColumns, BigIntegerUtils.clone(bandA), BigIntegerUtils.clone(b), x
         );
         Assert.assertEquals(SystemInfo.Inconsistent, systemInfo);
 
@@ -996,12 +996,12 @@ public class ZpConstantBandLinearSolverTest {
             zp.createNonZeroRandom(SECURE_RANDOM),
         };
         systemInfo = bandLinearSolver.freeSolve(
-            Arrays.copyOf(ss, ss.length), nColumns, BigIntegerUtils.clone(bandA), BigIntegerUtils.clone(b), x
+            IntUtils.clone(ss), nColumns, BigIntegerUtils.clone(bandA), BigIntegerUtils.clone(b), x
         );
         Assert.assertEquals(SystemInfo.Consistent, systemInfo);
         assertCorrect(ss, bandA, b, x);
         systemInfo = bandLinearSolver.fullSolve(
-            Arrays.copyOf(ss, ss.length), nColumns, BigIntegerUtils.clone(bandA), BigIntegerUtils.clone(b), x
+            IntUtils.clone(ss), nColumns, BigIntegerUtils.clone(bandA), BigIntegerUtils.clone(b), x
         );
         Assert.assertEquals(SystemInfo.Consistent, systemInfo);
         assertCorrect(ss, bandA, b, x);
@@ -1027,14 +1027,14 @@ public class ZpConstantBandLinearSolverTest {
             zp.createZero(),
         };
         systemInfo = bandLinearSolver.freeSolve(
-            Arrays.copyOf(ss, ss.length), nColumns, BigIntegerUtils.clone(bandA), BigIntegerUtils.clone(b), x
+            IntUtils.clone(ss), nColumns, BigIntegerUtils.clone(bandA), BigIntegerUtils.clone(b), x
         );
         Assert.assertEquals(SystemInfo.Consistent, systemInfo);
         assertCorrect(ss, bandA, b, x);
         Assert.assertTrue(zp.isZero(x[0]));
         Assert.assertTrue(zp.isZero(x[1]));
         systemInfo = bandLinearSolver.fullSolve(
-            Arrays.copyOf(ss, ss.length), nColumns, BigIntegerUtils.clone(bandA), BigIntegerUtils.clone(b), x
+            IntUtils.clone(ss), nColumns, BigIntegerUtils.clone(bandA), BigIntegerUtils.clone(b), x
         );
         Assert.assertEquals(SystemInfo.Consistent, systemInfo);
         assertCorrect(ss, bandA, b, x);
@@ -1048,11 +1048,11 @@ public class ZpConstantBandLinearSolverTest {
             zp.createZero(),
         };
         systemInfo = bandLinearSolver.freeSolve(
-            Arrays.copyOf(ss, ss.length), nColumns, BigIntegerUtils.clone(bandA), BigIntegerUtils.clone(b), x
+            IntUtils.clone(ss), nColumns, BigIntegerUtils.clone(bandA), BigIntegerUtils.clone(b), x
         );
         Assert.assertEquals(SystemInfo.Inconsistent, systemInfo);
         systemInfo = bandLinearSolver.fullSolve(
-            Arrays.copyOf(ss, ss.length), nColumns, BigIntegerUtils.clone(bandA), BigIntegerUtils.clone(b), x
+            IntUtils.clone(ss), nColumns, BigIntegerUtils.clone(bandA), BigIntegerUtils.clone(b), x
         );
         Assert.assertEquals(SystemInfo.Inconsistent, systemInfo);
 
@@ -1063,11 +1063,11 @@ public class ZpConstantBandLinearSolverTest {
             zp.createNonZeroRandom(SECURE_RANDOM),
         };
         systemInfo = bandLinearSolver.freeSolve(
-            Arrays.copyOf(ss, ss.length), nColumns, BigIntegerUtils.clone(bandA), BigIntegerUtils.clone(b), x
+            IntUtils.clone(ss), nColumns, BigIntegerUtils.clone(bandA), BigIntegerUtils.clone(b), x
         );
         Assert.assertEquals(SystemInfo.Inconsistent, systemInfo);
         systemInfo = bandLinearSolver.fullSolve(
-            Arrays.copyOf(ss, ss.length), nColumns, BigIntegerUtils.clone(bandA), BigIntegerUtils.clone(b), x
+            IntUtils.clone(ss), nColumns, BigIntegerUtils.clone(bandA), BigIntegerUtils.clone(b), x
         );
         Assert.assertEquals(SystemInfo.Inconsistent, systemInfo);
 
@@ -1080,24 +1080,24 @@ public class ZpConstantBandLinearSolverTest {
         // r0 != r1
         if (!zp.isEqual(b[0], b[1])) {
             systemInfo = bandLinearSolver.freeSolve(
-                Arrays.copyOf(ss, ss.length), nColumns, BigIntegerUtils.clone(bandA), BigIntegerUtils.clone(b), x
+                IntUtils.clone(ss), nColumns, BigIntegerUtils.clone(bandA), BigIntegerUtils.clone(b), x
             );
             Assert.assertEquals(SystemInfo.Inconsistent, systemInfo);
             systemInfo = bandLinearSolver.fullSolve(
-                Arrays.copyOf(ss, ss.length), nColumns, BigIntegerUtils.clone(bandA), BigIntegerUtils.clone(b), x
+                IntUtils.clone(ss), nColumns, BigIntegerUtils.clone(bandA), BigIntegerUtils.clone(b), x
             );
             Assert.assertEquals(SystemInfo.Inconsistent, systemInfo);
         }
         // r0 == r1
         b[1] = b[0];
         systemInfo = bandLinearSolver.freeSolve(
-            Arrays.copyOf(ss, ss.length), nColumns, BigIntegerUtils.clone(bandA), BigIntegerUtils.clone(b), x
+            IntUtils.clone(ss), nColumns, BigIntegerUtils.clone(bandA), BigIntegerUtils.clone(b), x
         );
         Assert.assertEquals(SystemInfo.Consistent, systemInfo);
         assertCorrect(ss, bandA, b, x);
         Assert.assertTrue(zp.isZero(x[1]));
         systemInfo = bandLinearSolver.fullSolve(
-            Arrays.copyOf(ss, ss.length), nColumns, BigIntegerUtils.clone(bandA), BigIntegerUtils.clone(b), x
+            IntUtils.clone(ss), nColumns, BigIntegerUtils.clone(bandA), BigIntegerUtils.clone(b), x
         );
         Assert.assertEquals(SystemInfo.Consistent, systemInfo);
         assertCorrect(ss, bandA, b, x);
@@ -1123,7 +1123,7 @@ public class ZpConstantBandLinearSolverTest {
             zp.createZero(),
         };
         systemInfo = bandLinearSolver.freeSolve(
-            Arrays.copyOf(ss, ss.length), nColumns, BigIntegerUtils.clone(bandA), BigIntegerUtils.clone(b), x
+            IntUtils.clone(ss), nColumns, BigIntegerUtils.clone(bandA), BigIntegerUtils.clone(b), x
         );
         Assert.assertEquals(SystemInfo.Consistent, systemInfo);
         assertCorrect(ss, bandA, b, x);
@@ -1131,7 +1131,7 @@ public class ZpConstantBandLinearSolverTest {
         Assert.assertTrue(zp.isZero(x[1]));
         Assert.assertTrue(zp.isZero(x[2]));
         systemInfo = bandLinearSolver.fullSolve(
-            Arrays.copyOf(ss, ss.length), nColumns, BigIntegerUtils.clone(bandA), BigIntegerUtils.clone(b), x
+            IntUtils.clone(ss), nColumns, BigIntegerUtils.clone(bandA), BigIntegerUtils.clone(b), x
         );
         Assert.assertEquals(SystemInfo.Consistent, systemInfo);
         assertCorrect(ss, bandA, b, x);
@@ -1146,11 +1146,11 @@ public class ZpConstantBandLinearSolverTest {
             zp.createZero(),
         };
         systemInfo = bandLinearSolver.freeSolve(
-            Arrays.copyOf(ss, ss.length), nColumns, BigIntegerUtils.clone(bandA), BigIntegerUtils.clone(b), x
+            IntUtils.clone(ss), nColumns, BigIntegerUtils.clone(bandA), BigIntegerUtils.clone(b), x
         );
         Assert.assertEquals(SystemInfo.Inconsistent, systemInfo);
         systemInfo = bandLinearSolver.fullSolve(
-            Arrays.copyOf(ss, ss.length), nColumns, BigIntegerUtils.clone(bandA), BigIntegerUtils.clone(b), x
+            IntUtils.clone(ss), nColumns, BigIntegerUtils.clone(bandA), BigIntegerUtils.clone(b), x
         );
         Assert.assertEquals(SystemInfo.Inconsistent, systemInfo);
 
@@ -1161,11 +1161,11 @@ public class ZpConstantBandLinearSolverTest {
             zp.createNonZeroRandom(SECURE_RANDOM),
         };
         systemInfo = bandLinearSolver.freeSolve(
-            Arrays.copyOf(ss, ss.length), nColumns, BigIntegerUtils.clone(bandA), BigIntegerUtils.clone(b), x
+            IntUtils.clone(ss), nColumns, BigIntegerUtils.clone(bandA), BigIntegerUtils.clone(b), x
         );
         Assert.assertEquals(SystemInfo.Inconsistent, systemInfo);
         systemInfo = bandLinearSolver.fullSolve(
-            Arrays.copyOf(ss, ss.length), nColumns, BigIntegerUtils.clone(bandA), BigIntegerUtils.clone(b), x
+            IntUtils.clone(ss), nColumns, BigIntegerUtils.clone(bandA), BigIntegerUtils.clone(b), x
         );
         Assert.assertEquals(SystemInfo.Inconsistent, systemInfo);
 
@@ -1178,25 +1178,25 @@ public class ZpConstantBandLinearSolverTest {
         // r0 != r1
         if (!zp.isEqual(b[0], b[1])) {
             systemInfo = bandLinearSolver.freeSolve(
-                Arrays.copyOf(ss, ss.length), nColumns, BigIntegerUtils.clone(bandA), BigIntegerUtils.clone(b), x
+                IntUtils.clone(ss), nColumns, BigIntegerUtils.clone(bandA), BigIntegerUtils.clone(b), x
             );
             Assert.assertEquals(SystemInfo.Inconsistent, systemInfo);
             systemInfo = bandLinearSolver.fullSolve(
-                Arrays.copyOf(ss, ss.length), nColumns, BigIntegerUtils.clone(bandA), BigIntegerUtils.clone(b), x
+                IntUtils.clone(ss), nColumns, BigIntegerUtils.clone(bandA), BigIntegerUtils.clone(b), x
             );
             Assert.assertEquals(SystemInfo.Inconsistent, systemInfo);
         }
         // r0 = r1
         b[1] = b[0];
         systemInfo = bandLinearSolver.freeSolve(
-            Arrays.copyOf(ss, ss.length), nColumns, BigIntegerUtils.clone(bandA), BigIntegerUtils.clone(b), x
+            IntUtils.clone(ss), nColumns, BigIntegerUtils.clone(bandA), BigIntegerUtils.clone(b), x
         );
         Assert.assertEquals(SystemInfo.Consistent, systemInfo);
         assertCorrect(ss, bandA, b, x);
         Assert.assertTrue(zp.isZero(x[1]));
         Assert.assertTrue(zp.isZero(x[2]));
         systemInfo = bandLinearSolver.fullSolve(
-            Arrays.copyOf(ss, ss.length), nColumns, BigIntegerUtils.clone(bandA), BigIntegerUtils.clone(b), x
+            IntUtils.clone(ss), nColumns, BigIntegerUtils.clone(bandA), BigIntegerUtils.clone(b), x
         );
         Assert.assertEquals(SystemInfo.Consistent, systemInfo);
         assertCorrect(ss, bandA, b, x);
@@ -1284,7 +1284,7 @@ public class ZpConstantBandLinearSolverTest {
             zp.createZero(),
         };
         systemInfo = bandLinearSolver.freeSolve(
-            Arrays.copyOf(ss, ss.length), nColumns, BigIntegerUtils.clone(bandA), BigIntegerUtils.clone(b), x
+            IntUtils.clone(ss), nColumns, BigIntegerUtils.clone(bandA), BigIntegerUtils.clone(b), x
         );
         Assert.assertEquals(SystemInfo.Consistent, systemInfo);
         assertCorrect(ss, bandA, b, x);
@@ -1292,7 +1292,7 @@ public class ZpConstantBandLinearSolverTest {
         Assert.assertTrue(zp.isZero(x[1]));
         Assert.assertTrue(zp.isZero(x[2]));
         systemInfo = bandLinearSolver.fullSolve(
-            Arrays.copyOf(ss, ss.length), nColumns, BigIntegerUtils.clone(bandA), BigIntegerUtils.clone(b), x
+            IntUtils.clone(ss), nColumns, BigIntegerUtils.clone(bandA), BigIntegerUtils.clone(b), x
         );
         Assert.assertEquals(SystemInfo.Consistent, systemInfo);
         assertCorrect(ss, bandA, b, x);
@@ -1307,11 +1307,11 @@ public class ZpConstantBandLinearSolverTest {
             zp.createZero(),
         };
         systemInfo = bandLinearSolver.freeSolve(
-            Arrays.copyOf(ss, ss.length), nColumns, BigIntegerUtils.clone(bandA), BigIntegerUtils.clone(b), x
+            IntUtils.clone(ss), nColumns, BigIntegerUtils.clone(bandA), BigIntegerUtils.clone(b), x
         );
         Assert.assertEquals(SystemInfo.Inconsistent, systemInfo);
         systemInfo = bandLinearSolver.fullSolve(
-            Arrays.copyOf(ss, ss.length), nColumns, BigIntegerUtils.clone(bandA), BigIntegerUtils.clone(b), x
+            IntUtils.clone(ss), nColumns, BigIntegerUtils.clone(bandA), BigIntegerUtils.clone(b), x
         );
         Assert.assertEquals(SystemInfo.Inconsistent, systemInfo);
 
@@ -1322,11 +1322,11 @@ public class ZpConstantBandLinearSolverTest {
             zp.createNonZeroRandom(SECURE_RANDOM),
         };
         systemInfo = bandLinearSolver.freeSolve(
-            Arrays.copyOf(ss, ss.length), nColumns, BigIntegerUtils.clone(bandA), BigIntegerUtils.clone(b), x
+            IntUtils.clone(ss), nColumns, BigIntegerUtils.clone(bandA), BigIntegerUtils.clone(b), x
         );
         Assert.assertEquals(SystemInfo.Inconsistent, systemInfo);
         systemInfo = bandLinearSolver.fullSolve(
-            Arrays.copyOf(ss, ss.length), nColumns, BigIntegerUtils.clone(bandA), BigIntegerUtils.clone(b), x
+            IntUtils.clone(ss), nColumns, BigIntegerUtils.clone(bandA), BigIntegerUtils.clone(b), x
         );
         Assert.assertEquals(SystemInfo.Inconsistent, systemInfo);
 
@@ -1337,11 +1337,11 @@ public class ZpConstantBandLinearSolverTest {
             zp.createNonZeroRandom(SECURE_RANDOM),
         };
         systemInfo = bandLinearSolver.freeSolve(
-            Arrays.copyOf(ss, ss.length), nColumns, BigIntegerUtils.clone(bandA), BigIntegerUtils.clone(b), x
+            IntUtils.clone(ss), nColumns, BigIntegerUtils.clone(bandA), BigIntegerUtils.clone(b), x
         );
         Assert.assertEquals(SystemInfo.Inconsistent, systemInfo);
         systemInfo = bandLinearSolver.fullSolve(
-            Arrays.copyOf(ss, ss.length), nColumns, BigIntegerUtils.clone(bandA), BigIntegerUtils.clone(b), x
+            IntUtils.clone(ss), nColumns, BigIntegerUtils.clone(bandA), BigIntegerUtils.clone(b), x
         );
         Assert.assertEquals(SystemInfo.Inconsistent, systemInfo);
     }
@@ -1389,7 +1389,7 @@ public class ZpConstantBandLinearSolverTest {
             zp.createZero(),
         };
         systemInfo = bandLinearSolver.freeSolve(
-            Arrays.copyOf(ss, ss.length), nColumns, BigIntegerUtils.clone(bandA), BigIntegerUtils.clone(b), x
+            IntUtils.clone(ss), nColumns, BigIntegerUtils.clone(bandA), BigIntegerUtils.clone(b), x
         );
         Assert.assertEquals(SystemInfo.Consistent, systemInfo);
         assertCorrect(ss, bandA, b, x);
@@ -1397,7 +1397,7 @@ public class ZpConstantBandLinearSolverTest {
         Assert.assertTrue(zp.isZero(x[1]));
         Assert.assertTrue(zp.isZero(x[2]));
         systemInfo = bandLinearSolver.fullSolve(
-            Arrays.copyOf(ss, ss.length), nColumns, BigIntegerUtils.clone(bandA), BigIntegerUtils.clone(b), x
+            IntUtils.clone(ss), nColumns, BigIntegerUtils.clone(bandA), BigIntegerUtils.clone(b), x
         );
         Assert.assertEquals(SystemInfo.Consistent, systemInfo);
         assertCorrect(ss, bandA, b, x);
@@ -1412,13 +1412,13 @@ public class ZpConstantBandLinearSolverTest {
             zp.createRandom(SECURE_RANDOM),
         };
         systemInfo = bandLinearSolver.freeSolve(
-            Arrays.copyOf(ss, ss.length), nColumns, BigIntegerUtils.clone(bandA), BigIntegerUtils.clone(b), x
+            IntUtils.clone(ss), nColumns, BigIntegerUtils.clone(bandA), BigIntegerUtils.clone(b), x
         );
         Assert.assertEquals(SystemInfo.Consistent, systemInfo);
         assertCorrect(ss, bandA, b, x);
         Assert.assertTrue(zp.isZero(x[1]));
         systemInfo = bandLinearSolver.fullSolve(
-            Arrays.copyOf(ss, ss.length), nColumns, BigIntegerUtils.clone(bandA), BigIntegerUtils.clone(b), x
+            IntUtils.clone(ss), nColumns, BigIntegerUtils.clone(bandA), BigIntegerUtils.clone(b), x
         );
         Assert.assertEquals(SystemInfo.Consistent, systemInfo);
         assertCorrect(ss, bandA, b, x);
@@ -1457,13 +1457,13 @@ public class ZpConstantBandLinearSolverTest {
             zp.createRandom(SECURE_RANDOM),
         };
         systemInfo = bandLinearSolver.freeSolve(
-            Arrays.copyOf(ss, ss.length), nColumns, BigIntegerUtils.clone(bandA), BigIntegerUtils.clone(b), x
+            IntUtils.clone(ss), nColumns, BigIntegerUtils.clone(bandA), BigIntegerUtils.clone(b), x
         );
         Assert.assertEquals(SystemInfo.Consistent, systemInfo);
         assertCorrect(ss, bandA, b, x);
         Assert.assertTrue(zp.isZero(x[2]));
         systemInfo = bandLinearSolver.fullSolve(
-            Arrays.copyOf(ss, ss.length), nColumns, BigIntegerUtils.clone(bandA), BigIntegerUtils.clone(b), x
+            IntUtils.clone(ss), nColumns, BigIntegerUtils.clone(bandA), BigIntegerUtils.clone(b), x
         );
         Assert.assertEquals(SystemInfo.Consistent, systemInfo);
         assertCorrect(ss, bandA, b, x);
@@ -1488,13 +1488,13 @@ public class ZpConstantBandLinearSolverTest {
         // A = | 0 1 1 |, b = | r0 |, solve Ax = b.
         //     | 1 1 1 |      | r1 |
         systemInfo = bandLinearSolver.freeSolve(
-            Arrays.copyOf(ss, ss.length), nColumns, BigIntegerUtils.clone(bandA), BigIntegerUtils.clone(b), x
+            IntUtils.clone(ss), nColumns, BigIntegerUtils.clone(bandA), BigIntegerUtils.clone(b), x
         );
         Assert.assertEquals(SystemInfo.Consistent, systemInfo);
         assertCorrect(ss, bandA, b, x);
         Assert.assertTrue(zp.isZero(x[2]));
         systemInfo = bandLinearSolver.fullSolve(
-            Arrays.copyOf(ss, ss.length), nColumns, BigIntegerUtils.clone(bandA), BigIntegerUtils.clone(b), x
+            IntUtils.clone(ss), nColumns, BigIntegerUtils.clone(bandA), BigIntegerUtils.clone(b), x
         );
         Assert.assertEquals(SystemInfo.Consistent, systemInfo);
         assertCorrect(ss, bandA, b, x);
@@ -1523,7 +1523,7 @@ public class ZpConstantBandLinearSolverTest {
         //     | 0 0 1 1 1 0 0 |      | 3 |
         //     | 0 0 1 0 0 1 0 |      | 4 |
         systemInfo = bandLinearSolver.freeSolve(
-            Arrays.copyOf(ss, ss.length), nColumns, BigIntegerUtils.clone(bandA), BigIntegerUtils.clone(b), x
+            IntUtils.clone(ss), nColumns, BigIntegerUtils.clone(bandA), BigIntegerUtils.clone(b), x
         );
         Assert.assertEquals(SystemInfo.Consistent, systemInfo);
         assertCorrect(ss, bandA, b, x);
@@ -1531,7 +1531,7 @@ public class ZpConstantBandLinearSolverTest {
         Assert.assertTrue(zp.isZero(x[5]));
         Assert.assertTrue(zp.isZero(x[6]));
         systemInfo = bandLinearSolver.fullSolve(
-            Arrays.copyOf(ss, ss.length), nColumns, BigIntegerUtils.clone(bandA), BigIntegerUtils.clone(b), x
+            IntUtils.clone(ss), nColumns, BigIntegerUtils.clone(bandA), BigIntegerUtils.clone(b), x
         );
         Assert.assertEquals(SystemInfo.Consistent, systemInfo);
         assertCorrect(ss, bandA, b, x);

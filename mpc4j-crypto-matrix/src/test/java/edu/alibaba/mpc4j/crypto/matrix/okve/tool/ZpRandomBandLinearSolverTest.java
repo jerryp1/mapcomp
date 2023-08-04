@@ -4,6 +4,7 @@ import edu.alibaba.mpc4j.common.tool.EnvType;
 import edu.alibaba.mpc4j.common.tool.galoisfield.zp.Zp;
 import edu.alibaba.mpc4j.common.tool.galoisfield.zp.ZpFactory;
 import edu.alibaba.mpc4j.common.tool.utils.BigIntegerUtils;
+import edu.alibaba.mpc4j.common.tool.utils.IntUtils;
 import org.junit.Assert;
 import org.junit.Test;
 
@@ -90,11 +91,11 @@ public class ZpRandomBandLinearSolverTest {
                 .mapToObj(iRow -> zp.createRandom(secureRandom))
                 .toArray(BigInteger[]::new);
             bandLinearSolver.freeSolve(
-                Arrays.copyOf(ss, ss.length), nColumns, BigIntegerUtils.clone(bandA), BigIntegerUtils.clone(b), x
+                IntUtils.clone(ss), nColumns, BigIntegerUtils.clone(bandA), BigIntegerUtils.clone(b), x
             );
             assertCorrect(ss, bandA, b, x);
             bandLinearSolver.fullSolve(
-                Arrays.copyOf(ss, ss.length), nColumns, BigIntegerUtils.clone(bandA), BigIntegerUtils.clone(b), x
+                IntUtils.clone(ss), nColumns, BigIntegerUtils.clone(bandA), BigIntegerUtils.clone(b), x
             );
             assertCorrect(ss, bandA, b, x);
             Arrays.stream(x).forEach(element -> Assert.assertFalse(zp.isZero(element)));

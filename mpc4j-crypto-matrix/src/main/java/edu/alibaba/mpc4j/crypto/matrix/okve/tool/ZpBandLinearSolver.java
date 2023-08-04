@@ -4,6 +4,8 @@ import cc.redberry.rings.linear.LinearSolver.SystemInfo;
 import cc.redberry.rings.util.ArraysUtil;
 import edu.alibaba.mpc4j.common.tool.MathPreconditions;
 import edu.alibaba.mpc4j.common.tool.galoisfield.zp.Zp;
+import edu.alibaba.mpc4j.common.tool.utils.BigIntegerUtils;
+import edu.alibaba.mpc4j.common.tool.utils.IntUtils;
 import gnu.trove.list.array.TIntArrayList;
 import gnu.trove.map.TIntIntMap;
 import gnu.trove.map.hash.TIntIntHashMap;
@@ -76,9 +78,9 @@ public class ZpBandLinearSolver {
             map.put(index, permuteIndex);
         });
         // permute ss, lhs and rhs based on the map
-        int[] copySs = Arrays.copyOf(ss, nRows);
-        BigInteger[][] copyLhs = Arrays.copyOf(lhs, nRows);
-        BigInteger[] copyRhs = Arrays.copyOf(rhs, nRows);
+        int[] copySs = IntUtils.clone(ss);
+        BigInteger[][] copyLhs = BigIntegerUtils.clone(lhs);
+        BigInteger[] copyRhs = BigIntegerUtils.clone(rhs);
         for (int iRow = 0; iRow < nRows; iRow++) {
             int iPermuteRow = map.get(iRow);
             ss[iPermuteRow] = copySs[iRow];
