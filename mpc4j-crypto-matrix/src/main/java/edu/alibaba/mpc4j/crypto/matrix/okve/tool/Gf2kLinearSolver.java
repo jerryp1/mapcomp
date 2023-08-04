@@ -316,7 +316,6 @@ public class Gf2kLinearSolver {
                 // subtract other free variables
                 for (int nonMaxLisColumn : nonMaxLisColumnArray) {
                     if (!gf2k.isZero(lhs[iNzRow][nonMaxLisColumn])) {
-                        rhs[0] = gf2k.sub(rhs[0], gf2k.mul(lhs[0][i], result[i]));
                         result[iNzColumn] = gf2k.sub(result[iNzColumn], gf2k.mul(lhs[iNzRow][nonMaxLisColumn], result[nonMaxLisColumn]));
                     }
                 }

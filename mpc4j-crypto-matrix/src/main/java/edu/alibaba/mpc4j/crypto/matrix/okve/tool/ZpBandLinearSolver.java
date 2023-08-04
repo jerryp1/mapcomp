@@ -2,23 +2,17 @@ package edu.alibaba.mpc4j.crypto.matrix.okve.tool;
 
 import cc.redberry.rings.linear.LinearSolver.SystemInfo;
 import cc.redberry.rings.util.ArraysUtil;
-import com.google.common.base.Preconditions;
-import edu.alibaba.mpc4j.common.tool.EnvType;
 import edu.alibaba.mpc4j.common.tool.MathPreconditions;
 import edu.alibaba.mpc4j.common.tool.galoisfield.zp.Zp;
-import edu.alibaba.mpc4j.common.tool.galoisfield.zp.ZpFactory;
-import edu.alibaba.mpc4j.common.tool.utils.BigIntegerUtils;
 import gnu.trove.list.array.TIntArrayList;
 import gnu.trove.map.TIntIntMap;
 import gnu.trove.map.hash.TIntIntHashMap;
 import gnu.trove.set.TIntSet;
 import gnu.trove.set.hash.TIntHashSet;
-import org.apache.commons.lang3.time.StopWatch;
 
 import java.math.BigInteger;
 import java.security.SecureRandom;
 import java.util.*;
-import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
@@ -59,10 +53,6 @@ public class ZpBandLinearSolver {
      * the random state
      */
     private final SecureRandom secureRandom;
-    /**
-     * band width w
-     */
-    private int w;
 
     public ZpBandLinearSolver(Zp zp) {
         this(zp, new SecureRandom());
@@ -176,27 +166,30 @@ public class ZpBandLinearSolver {
      * @return system information (inconsistent or consistent).
      */
     public SystemInfo freeSolve(int[] ss, int nColumns, BigInteger[][] lhBands,
-                                             BigInteger[] rhs, BigInteger[] result) {
+                                BigInteger[] rhs, BigInteger[] result) {
         return solve(ss, nColumns, lhBands, rhs, result, false);
     }
 
-//    /**
-//     * Solves linear system {@code lhs.x = rhs} and reduces the lhs to row echelon form. The result is stored in {@code
-//     * result} (which should have enough length). Free variables are set as random. Note that lsh is modified when
-//     * solving the system.
-//     *
-//     * @param lhs    the lhs of the system (will be reduced to row echelon form).
-//     * @param rhs    the rhs of the system.
-//     * @param result where to place the result.
-//     * @return system information (inconsistent or consistent).
-//     */
-//    public LinearSolver.SystemInfo fullSolve(BigInteger[][] lhs, BigInteger[] rhs, BigInteger[] result) {
-//        return solve(lhs, rhs, result, true);
-//    }
+    /**
+     * Solves linear system {@code lhs.x = rhs} and reduces the lhs to row echelon form. The result is stored in {@code
+     * result} (which should have enough length). Free variables are set as random. Note that lsh is modified when
+     * solving the system.
+     *
+     * @param ss       the starting positions for rows.
+     * @param nColumns number of columns.
+     * @param lhBands  the lhs of the system in band form (will be reduced to row echelon form).
+     * @param rhs    the rhs of the system.
+     * @param result where to place the result.
+     * @return system information (inconsistent or consistent).
+     */
+    public SystemInfo fullSolve(int[] ss, int nColumns, BigInteger[][] lhBands,
+                                BigInteger[] rhs, BigInteger[] result) {
+        return solve(ss, nColumns, lhBands, rhs, result, true);
+    }
 
     private SystemInfo solve(int[] ss, int nColumns, BigInteger[][] lhBands, BigInteger[] rhs,
                              BigInteger[] result, boolean isFull) {
-        MathPreconditions.checkPositive("n", rhs.length);
+        MathPreconditions.checkNonNegative("n", rhs.length);
         int nRows = rhs.length;
         // ss.length == rows of rhs
         MathPreconditions.checkEqual("ss.length", "nRows", ss.length, nRows);
@@ -206,13 +199,6 @@ public class ZpBandLinearSolver {
         MathPreconditions.checkGreaterOrEqual("m", nColumns, nRows);
         // result.length == m
         MathPreconditions.checkEqual("result.length", "m", result.length, nColumns);
-        // 0 < w <= m, we allow w = m
-        MathPreconditions.checkPositiveInRangeClosed("w", lhBands[0].length, nColumns);
-        int w = lhBands[0].length;
-        // each bandwidth is w
-        Arrays.stream(lhBands).forEach(row -> MathPreconditions.checkEqual("row.length", "w", row.length, w));
-        // 0 <= s_i <= m - w
-        Arrays.stream(ss).forEach(si -> MathPreconditions.checkNonNegativeInRangeClosed("s[i]", si, nColumns - w));
         if (nRows == 0) {
             // if n = 0, all solutions are good.
             if (isFull) {
@@ -226,6 +212,13 @@ public class ZpBandLinearSolver {
             }
             return Consistent;
         }
+        // 0 < w <= m, we allow w = m
+        MathPreconditions.checkPositiveInRangeClosed("w", lhBands[0].length, nColumns);
+        int w = lhBands[0].length;
+        // each bandwidth is w
+        Arrays.stream(lhBands).forEach(row -> MathPreconditions.checkEqual("row.length", "w", row.length, w));
+        // 0 <= s_i <= m - w
+        Arrays.stream(ss).forEach(si -> MathPreconditions.checkNonNegativeInRangeClosed("s[i]", si, nColumns - w));
         // create A based on the band
         BigInteger[][] lhs = new BigInteger[nRows][nColumns];
         for (int iRow = 0; iRow < nRows; iRow++) {
@@ -374,16 +367,8 @@ public class ZpBandLinearSolver {
             }
         }
         // we need to solve equations using back substitution
-        for (int i = nzColumns.size() - 1; i >= 0; i--) {
-            int iResultColumn = nzColumns.get(i);
-            int iResultRow = nzRows.get(i);
-            BigInteger tempResult = rhs[iResultRow];
-            for (int j = ss[iResultRow]; j < ss[iResultRow] + w; j++) {
-                tempResult = zp.sub(tempResult, zp.mul(lhs[iResultRow][j], result[j]));
-            }
-            result[iResultColumn] = tempResult;
-        }
         if (isFull) {
+            // full non-maxLisColumns first
             TIntSet maxLisColumns = info.getMaxLisColumns();
             TIntSet nonMaxLisColumns = new TIntHashSet(nColumns);
             nonMaxLisColumns.addAll(IntStream.range(0, nColumns).toArray());
@@ -393,53 +378,16 @@ public class ZpBandLinearSolver {
             for (int nonMaxLisColumn : nonMaxLisColumnArray) {
                 result[nonMaxLisColumn] = zp.createNonZeroRandom(secureRandom);
             }
-            for (int i = 0; i < nzColumns.size(); ++i) {
-                int iNzColumn = nzColumns.get(i);
-                int iNzRow = nzRows.get(i);
-                // subtract other free variables
-                for (int nonMaxLisColumn : nonMaxLisColumnArray) {
-                    if (!zp.isZero(lhs[iNzRow][nonMaxLisColumn])) {
-                        rhs[0] = zp.sub(rhs[0], zp.mul(lhs[0][i], result[i]));
-                        result[iNzColumn] = zp.sub(result[iNzColumn], zp.mul(lhs[iNzRow][nonMaxLisColumn], result[nonMaxLisColumn]));
-                    }
-                }
+        }
+        for (int i = nzColumns.size() - 1; i >= 0; i--) {
+            int iResultColumn = nzColumns.get(i);
+            int iResultRow = nzRows.get(i);
+            BigInteger tempResult = rhs[iResultRow];
+            for (int j = ss[iResultRow]; j < ss[iResultRow] + w; j++) {
+                tempResult = zp.sub(tempResult, zp.mul(lhs[iResultRow][j], result[j]));
             }
+            result[iResultColumn] = tempResult;
         }
         return Consistent;
-    }
-
-    public static void main(String[] args) {
-        SecureRandom secureRandom = new SecureRandom();
-        int nRows = 10240;
-        int nColumns = (int) (nRows * 1.13);
-        int w = 120;
-        int[] ss = IntStream.range(0, nRows).map(iRow -> secureRandom.nextInt(nRows)).toArray();
-        int[] expectSs = Arrays.copyOf(ss, nRows);
-        Zp zp = ZpFactory.createInstance(EnvType.STANDARD, 10);
-        BigInteger[][] lhBands = IntStream.range(0, nRows)
-            .mapToObj(iRow ->
-                IntStream.range(0, w).mapToObj(i -> zp.createRandom(secureRandom)).toArray(BigInteger[]::new)
-            ).toArray(BigInteger[][]::new);
-        BigInteger[] rhs = IntStream.range(0, nRows)
-            .mapToObj(i -> zp.createRandom(secureRandom))
-            .toArray(BigInteger[]::new);
-        BigInteger[] expectRhs = BigIntegerUtils.clone(rhs);
-        BigInteger[] result = new BigInteger[nColumns];
-        ZpBandLinearSolver linearSolver = new ZpBandLinearSolver(ZpFactory.createInstance(EnvType.STANDARD, 10));
-        StopWatch stopWatch = new StopWatch();
-        stopWatch.start();
-        SystemInfo systemInfo = linearSolver.freeSolve(ss, nColumns, lhBands, rhs, result);
-        stopWatch.stop();
-        System.out.println(systemInfo + ": " + stopWatch.getTime(TimeUnit.MILLISECONDS) + "ms");
-        stopWatch.reset();
-        if (systemInfo.equals(Consistent)) {
-            for (int iRow = 0; iRow < nRows; iRow++) {
-                BigInteger actual = zp.createZero();
-                for (int iColumn = expectSs[iRow]; iColumn < expectSs[iRow] + w; iColumn++) {
-                    actual = zp.add(actual, zp.mul(result[iColumn], lhBands[iRow][iColumn - expectSs[iRow]]));
-                }
-                Preconditions.checkArgument(expectRhs[iRow].equals(actual));
-            }
-        }
     }
 }

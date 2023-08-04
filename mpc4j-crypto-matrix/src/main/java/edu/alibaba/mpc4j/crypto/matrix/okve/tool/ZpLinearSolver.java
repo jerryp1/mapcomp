@@ -313,7 +313,6 @@ public class ZpLinearSolver {
                 // subtract other free variables
                 for (int nonMaxLisColumn : nonMaxLisColumnArray) {
                     if (!zp.isZero(lhs[iNzRow][nonMaxLisColumn])) {
-                        rhs[0] = zp.sub(rhs[0], zp.mul(lhs[0][i], result[i]));
                         result[iNzColumn] = zp.sub(result[iNzColumn], zp.mul(lhs[iNzRow][nonMaxLisColumn], result[nonMaxLisColumn]));
                     }
                 }
