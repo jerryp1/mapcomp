@@ -52,6 +52,21 @@
             <version>1.0.9-SNAPSHOT</version>
             <scope>compile</scope>
         </dependency>
+        <dependency>
+            <groupId>com.github.haifengl</groupId>
+            <artifactId>smile-data</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.github.haifengl</groupId>
+            <artifactId>smile-io</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>edu.alibaba</groupId>
+            <artifactId>mpc4j-dp-ldp</artifactId>
+            <version>1.0.9-SNAPSHOT</version>
+            <scope>compile</scope>
+        </dependency>
     </dependencies>
+
 
 </project>
