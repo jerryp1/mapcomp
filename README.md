@@ -154,13 +154,14 @@ We recommend using Java 17 (or higher versions) to run or develop `mpc4j` on `aa
 
 We develop `mpc4j` using [Intellij IDEA](https://www.jetbrains.com/idea/) and [CLion](https://www.jetbrains.com/clion/). Here are some guidelines.
 
-### Intellij IDEA Preferencs
+### Intellij IDEA Preferences
 
 Please change the following Preferences before actual development:
 
 1. Editor -> Code Style -> Java: Table size, Indent, Continuation indent are all **4**.
 2. Editor -> Code Style -> Java -> Imports: select "**Insert imports for inner classes**".
-3. Plugins: Install and use "**Git Commit Template**" to write commit. If necessary, install and use "**Alibaba Java Coding Guidelines**" for unified code styles.
+3. Editor -> Inspections: select Java -> JVM languages, and select "**Serializable class without 'serialVersionUID'**". We note that all `PtoId` in `PtoDesc` instances are generated using serialVersionUID. When creatding a new instance of `PtoDesc`, make it `implement Serializable` , follow the warning to generate a `serialVersionUID`, paste that ID to be `PtoId`, and delete `implement Serializable` and corresponding imports.
+4. Plugins: Install and use "**Git Commit Template**" to write commit. If necessary, install and use "**Alibaba Java Coding Guidelines**" for unified code styles.
 
 ### Linking Native Libraries
 
