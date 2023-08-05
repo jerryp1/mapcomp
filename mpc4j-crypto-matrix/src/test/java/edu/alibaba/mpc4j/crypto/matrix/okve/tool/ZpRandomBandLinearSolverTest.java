@@ -70,7 +70,7 @@ public class ZpRandomBandLinearSolverTest {
 
     @Test
     public void testDimension1024() {
-        // d1 = 1024, ε = 0.13 w ∈ [50, 60]
+        // d1 = 1024, ε = 0.13, w ∈ [50, 60]
         int nRows = 1024;
         double epsilon = 0.13;
         testDimension(nRows, epsilon);

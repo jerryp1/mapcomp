@@ -125,9 +125,11 @@ public class Zp64BandLinearSolver {
                     }
                 }
                 // We swap rows in the implementation. We change the starting position to ensure ss is ordered.
-                // This is OK, note that zp[max][iColumn] != 0. From row to max, all ss can change to ss[max].
-                if (ss[row] < ss[max]) {
-                    ss[row] = ss[max];
+                // This is OK, note that A[max][iColumn] != 0. From row to max, all ss can change to ss[max].
+                for (int iRow = row; iRow < max; iRow++) {
+                    if (ss[iRow] < ss[max]) {
+                        ss[iRow] = ss[max];
+                    }
                 }
                 ArraysUtil.swap(ss, row, max);
                 ArraysUtil.swap(lhs, row, max);
@@ -236,9 +238,9 @@ public class Zp64BandLinearSolver {
         Arrays.fill(result, zp64.createZero());
         // for determined system, free and full solution are the same
         if (nUnderDetermined == 0 && nColumns == nRows) {
-            for (int i = nColumns - 1; i >= 0; i--) {
+            for (int i = nRows - 1; i >= 0; i--) {
                 long sum = 0L;
-                for (int j = i + 1; j < nColumns; j++) {
+                for (int j = i + 1; j < ss[i] + w; j++) {
                     sum = zp64.add(sum, zp64.mul(result[j], lhs[i][j]));
                 }
                 result[i] = zp64.div(zp64.sub(rhs[i], sum), lhs[i][i]);
