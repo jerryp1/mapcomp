@@ -123,12 +123,9 @@ public class ZpBandLinearSolver {
                         break;
                     }
                 }
-                // We swap rows in the implementation. We change the starting position to ensure ss is ordered.
-                // This is OK, note that A[max][iColumn] != 0. From row to max, all ss can change to ss[max].
-                for (int iRow = row; iRow < max; iRow++) {
-                    if (ss[iRow] < ss[max]) {
-                        ss[iRow] = ss[max];
-                    }
+                // We swap rows in the implementation. We change the starting position to ensure ss is correct.
+                if (ss[row] < ss[max]) {
+                    ss[row] = ss[max];
                 }
                 ArraysUtil.swap(ss, row, max);
                 ArraysUtil.swap(lhs, row, max);

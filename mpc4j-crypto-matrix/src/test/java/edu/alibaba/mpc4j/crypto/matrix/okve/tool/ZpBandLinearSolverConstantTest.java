@@ -14,12 +14,12 @@ import java.security.SecureRandom;
 import java.util.stream.IntStream;
 
 /**
- * Zp constant band linear solver test.
+ * Zp band linear solver constant test.
  *
  * @author Weiran Liu
  * @date 2023/8/4
  */
-public class ZpConstantBandLinearSolverTest {
+public class ZpBandLinearSolverConstantTest {
     /**
      * random state
      */
@@ -33,7 +33,7 @@ public class ZpConstantBandLinearSolverTest {
      */
     private final ZpBandLinearSolver bandLinearSolver;
 
-    public ZpConstantBandLinearSolverTest() {
+    public ZpBandLinearSolverConstantTest() {
         zp = ZpFactory.createInstance(EnvType.STANDARD, 40);
         bandLinearSolver = new ZpBandLinearSolver(zp);
     }
@@ -224,7 +224,7 @@ public class ZpConstantBandLinearSolverTest {
         // A = | 1 1 |, b = 0, solve Ax = b.
         ss = new int[]{0,};
         bandA = new BigInteger[][]{
-            new BigInteger[]{zp.createOne(), zp.createOne()},
+            new BigInteger[]{zp.createOne(), zp.createOne(),},
         };
         b = new BigInteger[]{
             zp.createZero(),
@@ -246,7 +246,7 @@ public class ZpConstantBandLinearSolverTest {
 
         // A = | 1 1 |, b = r, solve Ax = b.
         bandA = new BigInteger[][]{
-            new BigInteger[]{zp.createOne(), zp.createOne()},
+            new BigInteger[]{zp.createOne(), zp.createOne(),},
         };
         b = new BigInteger[]{
             zp.createNonZeroRandom(SECURE_RANDOM),
@@ -268,7 +268,7 @@ public class ZpConstantBandLinearSolverTest {
         // A = | 0 1 |, b = 0, solve Ax = b.
         ss = new int[]{0,};
         bandA = new BigInteger[][]{
-            new BigInteger[]{zp.createZero(), zp.createOne()},
+            new BigInteger[]{zp.createZero(), zp.createOne(),},
         };
         b = new BigInteger[]{
             zp.createZero(),
@@ -291,7 +291,7 @@ public class ZpConstantBandLinearSolverTest {
         // A = | 0 1 |, b = r, solve Ax = b.
         ss = new int[]{0,};
         bandA = new BigInteger[][]{
-            new BigInteger[]{zp.createZero(), zp.createOne()},
+            new BigInteger[]{zp.createZero(), zp.createOne(),},
         };
         b = new BigInteger[]{
             zp.createNonZeroRandom(SECURE_RANDOM),
@@ -312,7 +312,7 @@ public class ZpConstantBandLinearSolverTest {
         // A = | 1 0 |, b = 0, solve Ax = b.
         ss = new int[]{0,};
         bandA = new BigInteger[][]{
-            new BigInteger[]{zp.createOne(), zp.createZero()},
+            new BigInteger[]{zp.createOne(), zp.createZero(),},
         };
         b = new BigInteger[]{
             zp.createZero(),
@@ -335,7 +335,7 @@ public class ZpConstantBandLinearSolverTest {
         // A = | 1 0 |, b = r, solve Ax = b.
         ss = new int[]{0,};
         bandA = new BigInteger[][]{
-            new BigInteger[]{zp.createOne(), zp.createZero()},
+            new BigInteger[]{zp.createOne(), zp.createZero(),},
         };
         b = new BigInteger[]{
             zp.createNonZeroRandom(SECURE_RANDOM),
@@ -356,7 +356,7 @@ public class ZpConstantBandLinearSolverTest {
         // A = | 0 0 |, b = 0, solve Ax = b.
         ss = new int[]{0,};
         bandA = new BigInteger[][]{
-            new BigInteger[]{zp.createZero(), zp.createZero()},
+            new BigInteger[]{zp.createZero(), zp.createZero(),},
         };
         b = new BigInteger[]{
             zp.createZero(),
@@ -379,7 +379,7 @@ public class ZpConstantBandLinearSolverTest {
         // A = | 0 0 |, b = r, solve Ax = b.
         ss = new int[]{0,};
         bandA = new BigInteger[][]{
-            new BigInteger[]{zp.createZero(), zp.createZero()},
+            new BigInteger[]{zp.createZero(), zp.createZero(),},
         };
         b = new BigInteger[]{
             zp.createNonZeroRandom(SECURE_RANDOM),
@@ -406,7 +406,7 @@ public class ZpConstantBandLinearSolverTest {
         // A = | 0 1 |, b = 0, solve Ax = b.
         ss = new int[]{1,};
         bandA = new BigInteger[][]{
-            new BigInteger[]{zp.createOne()},
+            new BigInteger[]{zp.createOne(),},
         };
         b = new BigInteger[]{
             zp.createZero(),
@@ -429,7 +429,7 @@ public class ZpConstantBandLinearSolverTest {
         // A = | 0 1 |, b = r, solve Ax = b.
         ss = new int[]{1,};
         bandA = new BigInteger[][]{
-            new BigInteger[]{zp.createOne()},
+            new BigInteger[]{zp.createOne(),},
         };
         b = new BigInteger[]{
             zp.createNonZeroRandom(SECURE_RANDOM),
@@ -450,7 +450,7 @@ public class ZpConstantBandLinearSolverTest {
         // A = | 1 0 |, b = 0, solve Ax = b.
         ss = new int[]{0,};
         bandA = new BigInteger[][]{
-            new BigInteger[]{zp.createOne()},
+            new BigInteger[]{zp.createOne(),},
         };
         b = new BigInteger[]{
             zp.createZero(),
@@ -473,7 +473,7 @@ public class ZpConstantBandLinearSolverTest {
         // A = | 1 0 |, b = r, solve Ax = b.
         ss = new int[]{0,};
         bandA = new BigInteger[][]{
-            new BigInteger[]{zp.createOne()},
+            new BigInteger[]{zp.createOne(),},
         };
         b = new BigInteger[]{
             zp.createNonZeroRandom(SECURE_RANDOM),
@@ -494,7 +494,7 @@ public class ZpConstantBandLinearSolverTest {
         // s0 = 0, A = | 0 0 |, b = 0, solve Ax = b.
         ss = new int[]{0,};
         bandA = new BigInteger[][]{
-            new BigInteger[]{zp.createZero()},
+            new BigInteger[]{zp.createZero(),},
         };
         b = new BigInteger[]{
             zp.createZero(),
@@ -517,7 +517,7 @@ public class ZpConstantBandLinearSolverTest {
         // s0 = 1, A = | 0 0 |, b = 0, solve Ax = b.
         ss = new int[]{1,};
         bandA = new BigInteger[][]{
-            new BigInteger[]{zp.createZero()},
+            new BigInteger[]{zp.createZero(),},
         };
         b = new BigInteger[]{
             zp.createZero(),
@@ -540,7 +540,7 @@ public class ZpConstantBandLinearSolverTest {
         // s0 = 0, A = | 0 0 |, b = r, solve Ax = b.
         ss = new int[]{0,};
         bandA = new BigInteger[][]{
-            new BigInteger[]{zp.createZero()},
+            new BigInteger[]{zp.createZero(),},
         };
         b = new BigInteger[]{
             zp.createNonZeroRandom(SECURE_RANDOM),
@@ -557,7 +557,7 @@ public class ZpConstantBandLinearSolverTest {
         // s0 = 1, A = | 0 0 |, b = r, solve Ax = b.
         ss = new int[]{1,};
         bandA = new BigInteger[][]{
-            new BigInteger[]{zp.createZero()},
+            new BigInteger[]{zp.createZero(),},
         };
         b = new BigInteger[]{
             zp.createNonZeroRandom(SECURE_RANDOM),
@@ -584,7 +584,7 @@ public class ZpConstantBandLinearSolverTest {
         // A = | r[0] r[1] |, b = 0, solve Ax = b.
         ss = new int[]{0,};
         bandA = new BigInteger[][]{
-            new BigInteger[]{zp.createNonZeroRandom(SECURE_RANDOM), zp.createNonZeroRandom(SECURE_RANDOM)},
+            new BigInteger[]{zp.createNonZeroRandom(SECURE_RANDOM), zp.createNonZeroRandom(SECURE_RANDOM),},
         };
         b = new BigInteger[]{
             zp.createZero(),
@@ -606,7 +606,7 @@ public class ZpConstantBandLinearSolverTest {
 
         // A = | r[0] r[1] |, b = r, solve Ax = b.
         bandA = new BigInteger[][]{
-            new BigInteger[]{zp.createNonZeroRandom(SECURE_RANDOM), zp.createNonZeroRandom(SECURE_RANDOM)},
+            new BigInteger[]{zp.createNonZeroRandom(SECURE_RANDOM), zp.createNonZeroRandom(SECURE_RANDOM),},
         };
         b = new BigInteger[]{
             zp.createNonZeroRandom(SECURE_RANDOM),
@@ -630,8 +630,8 @@ public class ZpConstantBandLinearSolverTest {
         int nColumns = 2;
         int[] ss = new int[]{0, 0,};
         BigInteger[][] bandA = new BigInteger[][]{
-            new BigInteger[]{zp.createOne(), zp.createOne()},
-            new BigInteger[]{zp.createOne(), zp.createOne()},
+            new BigInteger[]{zp.createOne(), zp.createOne(),},
+            new BigInteger[]{zp.createOne(), zp.createOne(),},
         };
         BigInteger[] b;
         BigInteger[] x = new BigInteger[nColumns];
@@ -725,8 +725,8 @@ public class ZpConstantBandLinearSolverTest {
     public void testAllZero2x2w2() {
         int[] ss = new int[]{0, 0};
         BigInteger[][] bandA = new BigInteger[][]{
-            new BigInteger[]{zp.createZero(), zp.createZero()},
-            new BigInteger[]{zp.createZero(), zp.createZero()},
+            new BigInteger[]{zp.createZero(), zp.createZero(),},
+            new BigInteger[]{zp.createZero(), zp.createZero(),},
         };
         testAllZero2x2(ss, bandA);
     }
@@ -735,8 +735,8 @@ public class ZpConstantBandLinearSolverTest {
     public void testAllZero2x2w1() {
         int[] ss;
         BigInteger[][] bandA = new BigInteger[][]{
-            new BigInteger[]{zp.createZero()},
-            new BigInteger[]{zp.createZero()},
+            new BigInteger[]{zp.createZero(),},
+            new BigInteger[]{zp.createZero(),},
         };
         // s0 = 0, s1 = 0
         ss = new int[]{0, 0};
@@ -837,8 +837,8 @@ public class ZpConstantBandLinearSolverTest {
         // A = | 1 0 |, b = | r0 |, solve Ax = b.
         //     | 0 1 |      | r1 |
         bandA = new BigInteger[][]{
-            new BigInteger[]{zp.createOne(), zp.createZero()},
-            new BigInteger[]{zp.createZero(), zp.createOne()},
+            new BigInteger[]{zp.createOne(), zp.createZero(),},
+            new BigInteger[]{zp.createZero(), zp.createOne(),},
         };
         b = new BigInteger[]{
             zp.createNonZeroRandom(SECURE_RANDOM),
@@ -871,8 +871,8 @@ public class ZpConstantBandLinearSolverTest {
         // A = | 0 0 |, b = | r0 |, solve Ax = b.
         //     | 1 0 |      | r1 |
         bandA = new BigInteger[][]{
-            new BigInteger[]{zp.createZero(), zp.createZero()},
-            new BigInteger[]{zp.createOne(), zp.createZero()},
+            new BigInteger[]{zp.createZero(), zp.createZero(),},
+            new BigInteger[]{zp.createOne(), zp.createZero(),},
         };
         b = new BigInteger[]{
             zp.createNonZeroRandom(SECURE_RANDOM),
@@ -890,8 +890,8 @@ public class ZpConstantBandLinearSolverTest {
         // A = | 0 1 |, b = | r0 |, solve Ax = b.
         //     | 1 0 |      | r1  |
         bandA = new BigInteger[][]{
-            new BigInteger[]{zp.createZero(), zp.createOne()},
-            new BigInteger[]{zp.createOne(), zp.createZero()},
+            new BigInteger[]{zp.createZero(), zp.createOne(),},
+            new BigInteger[]{zp.createOne(), zp.createZero(),},
         };
         b = new BigInteger[]{
             zp.createNonZeroRandom(SECURE_RANDOM),
@@ -923,7 +923,7 @@ public class ZpConstantBandLinearSolverTest {
         ss = new int[]{0, 1,};
         bandA = new BigInteger[][]{
             new BigInteger[]{zp.createOne(),},
-            new BigInteger[]{zp.createOne()},
+            new BigInteger[]{zp.createOne(),},
         };
         b = new BigInteger[]{
             zp.createNonZeroRandom(SECURE_RANDOM),
@@ -957,8 +957,8 @@ public class ZpConstantBandLinearSolverTest {
         //             | 1 0 |      | r1 |
         ss = new int[]{0, 0};
         bandA = new BigInteger[][]{
-            new BigInteger[]{zp.createZero()},
-            new BigInteger[]{zp.createZero()},
+            new BigInteger[]{zp.createZero(),},
+            new BigInteger[]{zp.createZero(),},
         };
         b = new BigInteger[]{
             zp.createNonZeroRandom(SECURE_RANDOM),
@@ -988,8 +988,8 @@ public class ZpConstantBandLinearSolverTest {
         //     | 1 0 |      | r1  |
         ss = new int[]{1, 0};
         bandA = new BigInteger[][]{
-            new BigInteger[]{zp.createOne()},
-            new BigInteger[]{zp.createOne()},
+            new BigInteger[]{zp.createOne(),},
+            new BigInteger[]{zp.createOne(),},
         };
         b = new BigInteger[]{
             zp.createNonZeroRandom(SECURE_RANDOM),
@@ -1012,8 +1012,8 @@ public class ZpConstantBandLinearSolverTest {
         int nColumns = 2;
         int[] ss = new int[]{0, 0};
         BigInteger[][] bandA = new BigInteger[][]{
-            new BigInteger[]{zp.createNonZeroRandom(SECURE_RANDOM), zp.createNonZeroRandom(SECURE_RANDOM)},
-            new BigInteger[]{zp.createNonZeroRandom(SECURE_RANDOM), zp.createNonZeroRandom(SECURE_RANDOM)},
+            new BigInteger[]{zp.createNonZeroRandom(SECURE_RANDOM), zp.createNonZeroRandom(SECURE_RANDOM),},
+            new BigInteger[]{zp.createNonZeroRandom(SECURE_RANDOM), zp.createNonZeroRandom(SECURE_RANDOM),},
         };
         bandA[1] = BigIntegerUtils.clone(bandA[0]);
         BigInteger[] b;
@@ -1109,8 +1109,8 @@ public class ZpConstantBandLinearSolverTest {
         int[] ss = new int[]{0, 0,};
         int nColumns = 3;
         BigInteger[][] bandA = new BigInteger[][]{
-            new BigInteger[]{zp.createOne(), zp.createOne(), zp.createOne()},
-            new BigInteger[]{zp.createOne(), zp.createOne(), zp.createOne()},
+            new BigInteger[]{zp.createOne(), zp.createOne(), zp.createOne(),},
+            new BigInteger[]{zp.createOne(), zp.createOne(), zp.createOne(),},
         };
         BigInteger[] b;
         BigInteger[] x = new BigInteger[nColumns];
@@ -1208,8 +1208,8 @@ public class ZpConstantBandLinearSolverTest {
     public void testAllZero2x3w3() {
         int[] ss = new int[]{0, 0,};
         BigInteger[][] bandA = new BigInteger[][]{
-            new BigInteger[]{zp.createZero(), zp.createZero(), zp.createZero()},
-            new BigInteger[]{zp.createZero(), zp.createZero(), zp.createZero()},
+            new BigInteger[]{zp.createZero(), zp.createZero(), zp.createZero(),},
+            new BigInteger[]{zp.createZero(), zp.createZero(), zp.createZero(),},
         };
         testAllZero2x3(ss, bandA);
     }
@@ -1350,8 +1350,8 @@ public class ZpConstantBandLinearSolverTest {
     public void testSpecial2x3Case1w3() {
         int[] ss = new int[]{0, 0,};
         BigInteger[][] bandA = new BigInteger[][]{
-            new BigInteger[] {zp.createZero(), zp.createZero(), zp.createOne()},
-            new BigInteger[] {zp.createOne(), zp.createZero(), zp.createZero()},
+            new BigInteger[]{zp.createZero(), zp.createZero(), zp.createOne(),},
+            new BigInteger[]{zp.createOne(), zp.createZero(), zp.createZero(),},
         };
         testSpecial2x3Case1(ss, bandA);
     }
@@ -1360,8 +1360,8 @@ public class ZpConstantBandLinearSolverTest {
     public void testSpecial2x3Case1w2() {
         int[] ss = new int[]{1, 0,};
         BigInteger[][] bandA = new BigInteger[][]{
-            new BigInteger[] {zp.createZero(), zp.createOne()},
-            new BigInteger[] {zp.createOne(), zp.createZero()},
+            new BigInteger[]{zp.createZero(), zp.createOne(),},
+            new BigInteger[]{zp.createOne(), zp.createZero(),},
         };
         testSpecial2x3Case1(ss, bandA);
     }
@@ -1370,8 +1370,8 @@ public class ZpConstantBandLinearSolverTest {
     public void testSpecial2x3Case1w1() {
         int[] ss = new int[]{2, 0,};
         BigInteger[][] bandA = new BigInteger[][]{
-            new BigInteger[] {zp.createOne()},
-            new BigInteger[] {zp.createOne()},
+            new BigInteger[]{zp.createOne(),},
+            new BigInteger[]{zp.createOne(),},
         };
         testSpecial2x3Case1(ss, bandA);
     }
@@ -1429,8 +1429,8 @@ public class ZpConstantBandLinearSolverTest {
     public void testSpecial2x3Case2w3() {
         int[] ss = new int[]{0, 0,};
         BigInteger[][] bandA = new BigInteger[][]{
-            new BigInteger[]{zp.createZero(), zp.createOne(), zp.createOne()},
-            new BigInteger[]{zp.createOne(), zp.createOne(), zp.createZero()},
+            new BigInteger[]{zp.createZero(), zp.createOne(), zp.createOne(),},
+            new BigInteger[]{zp.createOne(), zp.createOne(), zp.createZero(),},
         };
         testSpecial2x3Case2(ss, bandA);
     }
@@ -1439,8 +1439,8 @@ public class ZpConstantBandLinearSolverTest {
     public void testSpecial2x3Case2w2() {
         int[] ss = new int[]{1, 0,};
         BigInteger[][] bandA = new BigInteger[][]{
-            new BigInteger[]{zp.createOne(), zp.createOne()},
-            new BigInteger[]{zp.createOne(), zp.createOne()},
+            new BigInteger[]{zp.createOne(), zp.createOne(),},
+            new BigInteger[]{zp.createOne(), zp.createOne(),},
         };
         testSpecial2x3Case2(ss, bandA);
     }
@@ -1475,8 +1475,8 @@ public class ZpConstantBandLinearSolverTest {
         int nColumns = 3;
         int[] ss = new int[]{0, 0,};
         BigInteger[][] bandA = new BigInteger[][]{
-            new BigInteger[]{zp.createZero(), zp.createOne(), zp.createOne()},
-            new BigInteger[]{zp.createOne(), zp.createOne(), zp.createOne()},
+            new BigInteger[]{zp.createZero(), zp.createOne(), zp.createOne(),},
+            new BigInteger[]{zp.createOne(), zp.createOne(), zp.createOne(),},
         };
         BigInteger[] b = new BigInteger[]{
             zp.createRandom(SECURE_RANDOM),
@@ -1505,12 +1505,12 @@ public class ZpConstantBandLinearSolverTest {
     public void testSpecial4x7Case() {
         int nColumns = 7;
         int nRows = 4;
-        int[] ss = new int[] {2, 0, 2, 2};
-        BigInteger[][] bandA = new BigInteger[][] {
-            new BigInteger[] {BigInteger.valueOf(0), BigInteger.valueOf(0), BigInteger.valueOf(1), BigInteger.valueOf(0), BigInteger.valueOf(0)},
-            new BigInteger[] {BigInteger.valueOf(1), BigInteger.valueOf(1), BigInteger.valueOf(1), BigInteger.valueOf(0), BigInteger.valueOf(0)},
-            new BigInteger[] {BigInteger.valueOf(1), BigInteger.valueOf(1), BigInteger.valueOf(1), BigInteger.valueOf(0), BigInteger.valueOf(0)},
-            new BigInteger[] {BigInteger.valueOf(1), BigInteger.valueOf(0), BigInteger.valueOf(0), BigInteger.valueOf(1), BigInteger.valueOf(0)},
+        int[] ss = new int[]{2, 0, 2, 2};
+        BigInteger[][] bandA = new BigInteger[][]{
+            new BigInteger[]{BigInteger.valueOf(0), BigInteger.valueOf(0), BigInteger.valueOf(1), BigInteger.valueOf(0), BigInteger.valueOf(0),},
+            new BigInteger[]{BigInteger.valueOf(1), BigInteger.valueOf(1), BigInteger.valueOf(1), BigInteger.valueOf(0), BigInteger.valueOf(0),},
+            new BigInteger[]{BigInteger.valueOf(1), BigInteger.valueOf(1), BigInteger.valueOf(1), BigInteger.valueOf(0), BigInteger.valueOf(0),},
+            new BigInteger[]{BigInteger.valueOf(1), BigInteger.valueOf(0), BigInteger.valueOf(0), BigInteger.valueOf(1), BigInteger.valueOf(0),},
         };
         BigInteger[] b = IntStream.range(0, nRows)
             .mapToObj(iRow -> BigInteger.valueOf(iRow + 1))

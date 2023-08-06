@@ -13,12 +13,12 @@ import java.security.SecureRandom;
 import java.util.stream.IntStream;
 
 /**
- * Zp64 constant band linear solver test.
+ * Zp64 band linear solver constant test.
  *
  * @author Weiran Liu
  * @date 2023/8/4
  */
-public class Zp64ConstantBandLinearSolverTest {
+public class Zp64BandLinearSolverConstantTest {
     /**
      * random state
      */
@@ -32,7 +32,7 @@ public class Zp64ConstantBandLinearSolverTest {
      */
     private final Zp64BandLinearSolver bandLinearSolver;
 
-    public Zp64ConstantBandLinearSolverTest() {
+    public Zp64BandLinearSolverConstantTest() {
         zp64 = Zp64Factory.createInstance(EnvType.STANDARD, 40);
         bandLinearSolver = new Zp64BandLinearSolver(zp64);
     }
@@ -223,7 +223,7 @@ public class Zp64ConstantBandLinearSolverTest {
         // A = | 1 1 |, b = 0, solve Ax = b.
         ss = new int[]{0,};
         bandA = new long[][]{
-            new long[]{zp64.createOne(), zp64.createOne()},
+            new long[]{zp64.createOne(), zp64.createOne(),},
         };
         b = new long[]{
             zp64.createZero(),
@@ -245,7 +245,7 @@ public class Zp64ConstantBandLinearSolverTest {
 
         // A = | 1 1 |, b = r, solve Ax = b.
         bandA = new long[][]{
-            new long[]{zp64.createOne(), zp64.createOne()},
+            new long[]{zp64.createOne(), zp64.createOne(),},
         };
         b = new long[]{
             zp64.createNonZeroRandom(SECURE_RANDOM),
@@ -267,7 +267,7 @@ public class Zp64ConstantBandLinearSolverTest {
         // A = | 0 1 |, b = 0, solve Ax = b.
         ss = new int[]{0,};
         bandA = new long[][]{
-            new long[]{zp64.createZero(), zp64.createOne()},
+            new long[]{zp64.createZero(), zp64.createOne(),},
         };
         b = new long[]{
             zp64.createZero(),
@@ -290,7 +290,7 @@ public class Zp64ConstantBandLinearSolverTest {
         // A = | 0 1 |, b = r, solve Ax = b.
         ss = new int[]{0,};
         bandA = new long[][]{
-            new long[]{zp64.createZero(), zp64.createOne()},
+            new long[]{zp64.createZero(), zp64.createOne(),},
         };
         b = new long[]{
             zp64.createNonZeroRandom(SECURE_RANDOM),
@@ -311,7 +311,7 @@ public class Zp64ConstantBandLinearSolverTest {
         // A = | 1 0 |, b = 0, solve Ax = b.
         ss = new int[]{0,};
         bandA = new long[][]{
-            new long[]{zp64.createOne(), zp64.createZero()},
+            new long[]{zp64.createOne(), zp64.createZero(),},
         };
         b = new long[]{
             zp64.createZero(),
@@ -334,7 +334,7 @@ public class Zp64ConstantBandLinearSolverTest {
         // A = | 1 0 |, b = r, solve Ax = b.
         ss = new int[]{0,};
         bandA = new long[][]{
-            new long[]{zp64.createOne(), zp64.createZero()},
+            new long[]{zp64.createOne(), zp64.createZero(),},
         };
         b = new long[]{
             zp64.createNonZeroRandom(SECURE_RANDOM),
@@ -355,7 +355,7 @@ public class Zp64ConstantBandLinearSolverTest {
         // A = | 0 0 |, b = 0, solve Ax = b.
         ss = new int[]{0,};
         bandA = new long[][]{
-            new long[]{zp64.createZero(), zp64.createZero()},
+            new long[]{zp64.createZero(), zp64.createZero(),},
         };
         b = new long[]{
             zp64.createZero(),
@@ -378,7 +378,7 @@ public class Zp64ConstantBandLinearSolverTest {
         // A = | 0 0 |, b = r, solve Ax = b.
         ss = new int[]{0,};
         bandA = new long[][]{
-            new long[]{zp64.createZero(), zp64.createZero()},
+            new long[]{zp64.createZero(), zp64.createZero(),},
         };
         b = new long[]{
             zp64.createNonZeroRandom(SECURE_RANDOM),
@@ -405,7 +405,7 @@ public class Zp64ConstantBandLinearSolverTest {
         // A = | 0 1 |, b = 0, solve Ax = b.
         ss = new int[]{1,};
         bandA = new long[][]{
-            new long[]{zp64.createOne()},
+            new long[]{zp64.createOne(),},
         };
         b = new long[]{
             zp64.createZero(),
@@ -428,7 +428,7 @@ public class Zp64ConstantBandLinearSolverTest {
         // A = | 0 1 |, b = r, solve Ax = b.
         ss = new int[]{1,};
         bandA = new long[][]{
-            new long[]{zp64.createOne()},
+            new long[]{zp64.createOne(),},
         };
         b = new long[]{
             zp64.createNonZeroRandom(SECURE_RANDOM),
@@ -449,7 +449,7 @@ public class Zp64ConstantBandLinearSolverTest {
         // A = | 1 0 |, b = 0, solve Ax = b.
         ss = new int[]{0,};
         bandA = new long[][]{
-            new long[]{zp64.createOne()},
+            new long[]{zp64.createOne(),},
         };
         b = new long[]{
             zp64.createZero(),
@@ -472,7 +472,7 @@ public class Zp64ConstantBandLinearSolverTest {
         // A = | 1 0 |, b = r, solve Ax = b.
         ss = new int[]{0,};
         bandA = new long[][]{
-            new long[]{zp64.createOne()},
+            new long[]{zp64.createOne(),},
         };
         b = new long[]{
             zp64.createNonZeroRandom(SECURE_RANDOM),
@@ -493,7 +493,7 @@ public class Zp64ConstantBandLinearSolverTest {
         // s0 = 0, A = | 0 0 |, b = 0, solve Ax = b.
         ss = new int[]{0,};
         bandA = new long[][]{
-            new long[]{zp64.createZero()},
+            new long[]{zp64.createZero(),},
         };
         b = new long[]{
             zp64.createZero(),
@@ -516,7 +516,7 @@ public class Zp64ConstantBandLinearSolverTest {
         // s0 = 1, A = | 0 0 |, b = 0, solve Ax = b.
         ss = new int[]{1,};
         bandA = new long[][]{
-            new long[]{zp64.createZero()},
+            new long[]{zp64.createZero(),},
         };
         b = new long[]{
             zp64.createZero(),
@@ -539,7 +539,7 @@ public class Zp64ConstantBandLinearSolverTest {
         // s0 = 0, A = | 0 0 |, b = r, solve Ax = b.
         ss = new int[]{0,};
         bandA = new long[][]{
-            new long[]{zp64.createZero()},
+            new long[]{zp64.createZero(),},
         };
         b = new long[]{
             zp64.createNonZeroRandom(SECURE_RANDOM),
@@ -556,7 +556,7 @@ public class Zp64ConstantBandLinearSolverTest {
         // s0 = 1, A = | 0 0 |, b = r, solve Ax = b.
         ss = new int[]{1,};
         bandA = new long[][]{
-            new long[]{zp64.createZero()},
+            new long[]{zp64.createZero(),},
         };
         b = new long[]{
             zp64.createNonZeroRandom(SECURE_RANDOM),
@@ -583,7 +583,7 @@ public class Zp64ConstantBandLinearSolverTest {
         // A = | r[0] r[1] |, b = 0, solve Ax = b.
         ss = new int[]{0,};
         bandA = new long[][]{
-            new long[]{zp64.createNonZeroRandom(SECURE_RANDOM), zp64.createNonZeroRandom(SECURE_RANDOM)},
+            new long[]{zp64.createNonZeroRandom(SECURE_RANDOM), zp64.createNonZeroRandom(SECURE_RANDOM),},
         };
         b = new long[]{
             zp64.createZero(),
@@ -605,7 +605,7 @@ public class Zp64ConstantBandLinearSolverTest {
 
         // A = | r[0] r[1] |, b = r, solve Ax = b.
         bandA = new long[][]{
-            new long[]{zp64.createNonZeroRandom(SECURE_RANDOM), zp64.createNonZeroRandom(SECURE_RANDOM)},
+            new long[]{zp64.createNonZeroRandom(SECURE_RANDOM), zp64.createNonZeroRandom(SECURE_RANDOM),},
         };
         b = new long[]{
             zp64.createNonZeroRandom(SECURE_RANDOM),
@@ -629,8 +629,8 @@ public class Zp64ConstantBandLinearSolverTest {
         int nColumns = 2;
         int[] ss = new int[]{0, 0,};
         long[][] bandA = new long[][]{
-            new long[]{zp64.createOne(), zp64.createOne()},
-            new long[]{zp64.createOne(), zp64.createOne()},
+            new long[]{zp64.createOne(), zp64.createOne(),},
+            new long[]{zp64.createOne(), zp64.createOne(),},
         };
         long[] b;
         long[] x = new long[nColumns];
@@ -724,8 +724,8 @@ public class Zp64ConstantBandLinearSolverTest {
     public void testAllZero2x2w2() {
         int[] ss = new int[]{0, 0};
         long[][] bandA = new long[][]{
-            new long[]{zp64.createZero(), zp64.createZero()},
-            new long[]{zp64.createZero(), zp64.createZero()},
+            new long[]{zp64.createZero(), zp64.createZero(),},
+            new long[]{zp64.createZero(), zp64.createZero(),},
         };
         testAllZero2x2(ss, bandA);
     }
@@ -734,8 +734,8 @@ public class Zp64ConstantBandLinearSolverTest {
     public void testAllZero2x2w1() {
         int[] ss;
         long[][] bandA = new long[][]{
-            new long[]{zp64.createZero()},
-            new long[]{zp64.createZero()},
+            new long[]{zp64.createZero(),},
+            new long[]{zp64.createZero(),},
         };
         // s0 = 0, s1 = 0
         ss = new int[]{0, 0};
@@ -836,8 +836,8 @@ public class Zp64ConstantBandLinearSolverTest {
         // A = | 1 0 |, b = | r0 |, solve Ax = b.
         //     | 0 1 |      | r1 |
         bandA = new long[][]{
-            new long[]{zp64.createOne(), zp64.createZero()},
-            new long[]{zp64.createZero(), zp64.createOne()},
+            new long[]{zp64.createOne(), zp64.createZero(),},
+            new long[]{zp64.createZero(), zp64.createOne(),},
         };
         b = new long[]{
             zp64.createNonZeroRandom(SECURE_RANDOM),
@@ -870,8 +870,8 @@ public class Zp64ConstantBandLinearSolverTest {
         // A = | 0 0 |, b = | r0 |, solve Ax = b.
         //     | 1 0 |      | r1 |
         bandA = new long[][]{
-            new long[]{zp64.createZero(), zp64.createZero()},
-            new long[]{zp64.createOne(), zp64.createZero()},
+            new long[]{zp64.createZero(), zp64.createZero(),},
+            new long[]{zp64.createOne(), zp64.createZero(),},
         };
         b = new long[]{
             zp64.createNonZeroRandom(SECURE_RANDOM),
@@ -889,8 +889,8 @@ public class Zp64ConstantBandLinearSolverTest {
         // A = | 0 1 |, b = | r0 |, solve Ax = b.
         //     | 1 0 |      | r1  |
         bandA = new long[][]{
-            new long[]{zp64.createZero(), zp64.createOne()},
-            new long[]{zp64.createOne(), zp64.createZero()},
+            new long[]{zp64.createZero(), zp64.createOne(),},
+            new long[]{zp64.createOne(), zp64.createZero(),},
         };
         b = new long[]{
             zp64.createNonZeroRandom(SECURE_RANDOM),
@@ -922,7 +922,7 @@ public class Zp64ConstantBandLinearSolverTest {
         ss = new int[]{0, 1,};
         bandA = new long[][]{
             new long[]{zp64.createOne(),},
-            new long[]{zp64.createOne()},
+            new long[]{zp64.createOne(),},
         };
         b = new long[]{
             zp64.createNonZeroRandom(SECURE_RANDOM),
@@ -956,8 +956,8 @@ public class Zp64ConstantBandLinearSolverTest {
         //             | 1 0 |      | r1 |
         ss = new int[]{0, 0};
         bandA = new long[][]{
-            new long[]{zp64.createZero()},
-            new long[]{zp64.createZero()},
+            new long[]{zp64.createZero(),},
+            new long[]{zp64.createZero(),},
         };
         b = new long[]{
             zp64.createNonZeroRandom(SECURE_RANDOM),
@@ -987,8 +987,8 @@ public class Zp64ConstantBandLinearSolverTest {
         //     | 1 0 |      | r1  |
         ss = new int[]{1, 0};
         bandA = new long[][]{
-            new long[]{zp64.createOne()},
-            new long[]{zp64.createOne()},
+            new long[]{zp64.createOne(),},
+            new long[]{zp64.createOne(),},
         };
         b = new long[]{
             zp64.createNonZeroRandom(SECURE_RANDOM),
@@ -1011,8 +1011,8 @@ public class Zp64ConstantBandLinearSolverTest {
         int nColumns = 2;
         int[] ss = new int[]{0, 0};
         long[][] bandA = new long[][]{
-            new long[]{zp64.createNonZeroRandom(SECURE_RANDOM), zp64.createNonZeroRandom(SECURE_RANDOM)},
-            new long[]{zp64.createNonZeroRandom(SECURE_RANDOM), zp64.createNonZeroRandom(SECURE_RANDOM)},
+            new long[]{zp64.createNonZeroRandom(SECURE_RANDOM), zp64.createNonZeroRandom(SECURE_RANDOM),},
+            new long[]{zp64.createNonZeroRandom(SECURE_RANDOM), zp64.createNonZeroRandom(SECURE_RANDOM),},
         };
         bandA[1] = LongUtils.clone(bandA[0]);
         long[] b;
@@ -1108,8 +1108,8 @@ public class Zp64ConstantBandLinearSolverTest {
         int[] ss = new int[]{0, 0,};
         int nColumns = 3;
         long[][] bandA = new long[][]{
-            new long[]{zp64.createOne(), zp64.createOne(), zp64.createOne()},
-            new long[]{zp64.createOne(), zp64.createOne(), zp64.createOne()},
+            new long[]{zp64.createOne(), zp64.createOne(), zp64.createOne(),},
+            new long[]{zp64.createOne(), zp64.createOne(), zp64.createOne(),},
         };
         long[] b;
         long[] x = new long[nColumns];
@@ -1207,8 +1207,8 @@ public class Zp64ConstantBandLinearSolverTest {
     public void testAllZero2x3w3() {
         int[] ss = new int[]{0, 0,};
         long[][] bandA = new long[][]{
-            new long[]{zp64.createZero(), zp64.createZero(), zp64.createZero()},
-            new long[]{zp64.createZero(), zp64.createZero(), zp64.createZero()},
+            new long[]{zp64.createZero(), zp64.createZero(), zp64.createZero(),},
+            new long[]{zp64.createZero(), zp64.createZero(), zp64.createZero(),},
         };
         testAllZero2x3(ss, bandA);
     }
@@ -1349,8 +1349,8 @@ public class Zp64ConstantBandLinearSolverTest {
     public void testSpecial2x3Case1w3() {
         int[] ss = new int[]{0, 0,};
         long[][] bandA = new long[][]{
-            new long[] {zp64.createZero(), zp64.createZero(), zp64.createOne()},
-            new long[] {zp64.createOne(), zp64.createZero(), zp64.createZero()},
+            new long[]{zp64.createZero(), zp64.createZero(), zp64.createOne(),},
+            new long[]{zp64.createOne(), zp64.createZero(), zp64.createZero(),},
         };
         testSpecial2x3Case1(ss, bandA);
     }
@@ -1359,8 +1359,8 @@ public class Zp64ConstantBandLinearSolverTest {
     public void testSpecial2x3Case1w2() {
         int[] ss = new int[]{1, 0,};
         long[][] bandA = new long[][]{
-            new long[] {zp64.createZero(), zp64.createOne()},
-            new long[] {zp64.createOne(), zp64.createZero()},
+            new long[]{zp64.createZero(), zp64.createOne(),},
+            new long[]{zp64.createOne(), zp64.createZero(),},
         };
         testSpecial2x3Case1(ss, bandA);
     }
@@ -1369,8 +1369,8 @@ public class Zp64ConstantBandLinearSolverTest {
     public void testSpecial2x3Case1w1() {
         int[] ss = new int[]{2, 0,};
         long[][] bandA = new long[][]{
-            new long[] {zp64.createOne()},
-            new long[] {zp64.createOne()},
+            new long[]{zp64.createOne(),},
+            new long[]{zp64.createOne(),},
         };
         testSpecial2x3Case1(ss, bandA);
     }
@@ -1428,8 +1428,8 @@ public class Zp64ConstantBandLinearSolverTest {
     public void testSpecial2x3Case2w3() {
         int[] ss = new int[]{0, 0,};
         long[][] bandA = new long[][]{
-            new long[]{zp64.createZero(), zp64.createOne(), zp64.createOne()},
-            new long[]{zp64.createOne(), zp64.createOne(), zp64.createZero()},
+            new long[]{zp64.createZero(), zp64.createOne(), zp64.createOne(),},
+            new long[]{zp64.createOne(), zp64.createOne(), zp64.createZero(),},
         };
         testSpecial2x3Case2(ss, bandA);
     }
@@ -1438,8 +1438,8 @@ public class Zp64ConstantBandLinearSolverTest {
     public void testSpecial2x3Case2w2() {
         int[] ss = new int[]{1, 0,};
         long[][] bandA = new long[][]{
-            new long[]{zp64.createOne(), zp64.createOne()},
-            new long[]{zp64.createOne(), zp64.createOne()},
+            new long[]{zp64.createOne(), zp64.createOne(),},
+            new long[]{zp64.createOne(), zp64.createOne(),},
         };
         testSpecial2x3Case2(ss, bandA);
     }
@@ -1474,8 +1474,8 @@ public class Zp64ConstantBandLinearSolverTest {
         int nColumns = 3;
         int[] ss = new int[]{0, 0,};
         long[][] bandA = new long[][]{
-            new long[]{zp64.createZero(), zp64.createOne(), zp64.createOne()},
-            new long[]{zp64.createOne(), zp64.createOne(), zp64.createOne()},
+            new long[]{zp64.createZero(), zp64.createOne(), zp64.createOne(),},
+            new long[]{zp64.createOne(), zp64.createOne(), zp64.createOne(),},
         };
         long[] b = new long[]{
             zp64.createRandom(SECURE_RANDOM),
@@ -1504,12 +1504,12 @@ public class Zp64ConstantBandLinearSolverTest {
     public void testSpecial4x7Case() {
         int nColumns = 7;
         int nRows = 4;
-        int[] ss = new int[] {2, 0, 2, 2};
-        long[][] bandA = new long[][] {
-            new long[] {0L, 0L, 1L, 0L, 0L,},
-            new long[] {1L, 1L, 1L, 0L, 0L,},
-            new long[] {1L, 1L, 1L, 0L, 0L,},
-            new long[] {1L, 0L, 0L, 1L, 0L},
+        int[] ss = new int[]{2, 0, 2, 2};
+        long[][] bandA = new long[][]{
+            new long[]{0L, 0L, 1L, 0L, 0L,},
+            new long[]{1L, 1L, 1L, 0L, 0L,},
+            new long[]{1L, 1L, 1L, 0L, 0L,},
+            new long[]{1L, 0L, 0L, 1L, 0L,},
         };
         long[] b = IntStream.range(0, nRows)
             .mapToLong(iRow -> iRow + 1)

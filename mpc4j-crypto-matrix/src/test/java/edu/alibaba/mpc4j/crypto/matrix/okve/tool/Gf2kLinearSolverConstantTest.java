@@ -11,12 +11,12 @@ import org.junit.Test;
 import java.security.SecureRandom;
 
 /**
- * GF(2^κ) linear solver test with constant inputs.
+ * GF(2^κ) linear solver constant test.
  *
  * @author Weiran Liu
  * @date 2023/7/3
  */
-public class Gf2kConstantLinearSolverTest {
+public class Gf2kLinearSolverConstantTest {
     /**
      * random state
      */
@@ -30,7 +30,7 @@ public class Gf2kConstantLinearSolverTest {
      */
     private final Gf2kLinearSolver linearSolver;
 
-    public Gf2kConstantLinearSolverTest() {
+    public Gf2kLinearSolverConstantTest() {
         gf2k = Gf2kFactory.createInstance(EnvType.STANDARD);
         linearSolver = new Gf2kLinearSolver(gf2k);
     }

@@ -69,9 +69,9 @@ public class CuckooHashBinParamsTest {
         H4_LOG_NUM_BINS_MAP.put(2, new int[]{5, 6, 7, 8, 9, 10,});
         H4_LOG_NUM_BINS_MAP.put(3, new int[]{9, 10, 11, 12, 13, 14,});
         H4_LOG_NUM_BINS_MAP.put(4, new int[]{17, 18, 19, 20, 21, 22, 23,});
-        H4_LOG_NUM_BINS_MAP.put(5, new int[]{34, 35, 36, 37, 38, 39, 40,});
-        H4_LOG_NUM_BINS_MAP.put(6, new int[]{69, 70, 71, 72, 73, 74, 75,});
-        H4_LOG_NUM_BINS_MAP.put(7, new int[]{136, 137, 138, 139, 140, 141, 142,});
+        H4_LOG_NUM_BINS_MAP.put(5, new int[]{33, 34, 35, 36, 37, 38, 39, 40,});
+        H4_LOG_NUM_BINS_MAP.put(6, new int[]{68, 69, 70, 71, 72, 73, 74, 75,});
+        H4_LOG_NUM_BINS_MAP.put(7, new int[]{135, 136, 137, 138, 139, 140, 141, 142,});
     }
 
     /**

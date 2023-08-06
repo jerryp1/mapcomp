@@ -21,17 +21,17 @@ import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
 /**
- * Zp linear solver test.
+ * Zp linear solver random test.
  *
  * @author Weiran Liu
  * @date 2021/05/08
  */
 @RunWith(Parameterized.class)
-public class ZpRandomLinearSolverTest {
+public class ZpLinearSolverRandomTest {
     /**
-     * random round
+     * test round
      */
-    private static final int RANDOM_ROUND = 50;
+    private static final int TEST_ROUND = 50;
     /**
      * random state
      */
@@ -66,7 +66,7 @@ public class ZpRandomLinearSolverTest {
      */
     private final ZpLinearSolver linearSolver;
 
-    public ZpRandomLinearSolverTest(String name, int l, int d) {
+    public ZpLinearSolverRandomTest(String name, int l, int d) {
         Preconditions.checkArgument(StringUtils.isNotBlank(name));
         zp = ZpFactory.createInstance(EnvType.STANDARD, l);
         this.d = d;
@@ -83,7 +83,7 @@ public class ZpRandomLinearSolverTest {
                 return row;
             })
             .collect(Collectors.toList());
-        for (int round = 0; round < RANDOM_ROUND; round++) {
+        for (int round = 0; round < TEST_ROUND; round++) {
             Collections.shuffle(identityRows, SECURE_RANDOM);
             BigInteger[][] matrixA = identityRows.toArray(new BigInteger[0][]);
             BigInteger[] b = new BigInteger[d];
@@ -104,7 +104,7 @@ public class ZpRandomLinearSolverTest {
                 return row;
             })
             .collect(Collectors.toList());
-        for (int round = 0; round < RANDOM_ROUND; round++) {
+        for (int round = 0; round < TEST_ROUND; round++) {
             Collections.shuffle(identityRows, SECURE_RANDOM);
             BigInteger[][] matrixA = BigIntegerUtils.clone(identityRows.toArray(new BigInteger[0][]));
             BigInteger[] b = new BigInteger[d];
@@ -121,7 +121,7 @@ public class ZpRandomLinearSolverTest {
 
     @Test
     public void testRandomSquareFullRank() {
-        for (int round = 0; round < RANDOM_ROUND; round++) {
+        for (int round = 0; round < TEST_ROUND; round++) {
             // we choose a full rank matrix
             BigInteger[][] matrixA = new BigInteger[d][d];
             for (int iRow = 0; iRow < d; iRow++) {
@@ -145,7 +145,7 @@ public class ZpRandomLinearSolverTest {
 
     @Test
     public void testRandomSquareNotFullRank() {
-        for (int round = 0; round < RANDOM_ROUND; round++) {
+        for (int round = 0; round < TEST_ROUND; round++) {
             // we choose a full rank matrix
             BigInteger[][] matrixA = new BigInteger[d][d];
             for (int iRow = 0; iRow < d; iRow++) {
@@ -173,7 +173,7 @@ public class ZpRandomLinearSolverTest {
 
     @Test
     public void testRectangular() {
-        for (int round = 0; round < RANDOM_ROUND; round++) {
+        for (int round = 0; round < TEST_ROUND; round++) {
             BigInteger[][] matrixA = new BigInteger[d][d * 2];
             for (int iRow = 0; iRow < d; iRow++) {
                 Arrays.fill(matrixA[iRow], zp.createZero());

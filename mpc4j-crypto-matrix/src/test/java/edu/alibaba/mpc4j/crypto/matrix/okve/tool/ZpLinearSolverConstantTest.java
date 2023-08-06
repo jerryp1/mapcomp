@@ -12,12 +12,12 @@ import java.math.BigInteger;
 import java.security.SecureRandom;
 
 /**
- * Zp linear solver test with constant inputs.
+ * Zp linear solver constant test.
  *
  * @author Weiran Liu
  * @date 2023/7/2
  */
-public class ZpConstantLinearSolverTest {
+public class ZpLinearSolverConstantTest {
     /**
      * random state
      */
@@ -31,7 +31,7 @@ public class ZpConstantLinearSolverTest {
      */
     private final ZpLinearSolver linearSolver;
 
-    public ZpConstantLinearSolverTest() {
+    public ZpLinearSolverConstantTest() {
         zp = ZpFactory.createInstance(EnvType.STANDARD, 40);
         linearSolver = new ZpLinearSolver(zp);
     }

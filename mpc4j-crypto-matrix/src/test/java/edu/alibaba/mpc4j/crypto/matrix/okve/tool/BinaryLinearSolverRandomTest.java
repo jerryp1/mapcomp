@@ -25,13 +25,13 @@ import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
 /**
- * binary linear solver test.
+ * binary linear solver constant test.
  *
  * @author Weiran Liu
  * @date 2023/6/16
  */
 @RunWith(Parameterized.class)
-public class BinaryRandomLinearSolverTest {
+public class BinaryLinearSolverRandomTest {
     /**
      * random round
      */
@@ -79,7 +79,7 @@ public class BinaryRandomLinearSolverTest {
      */
     private final BinaryLinearSolver linearSolver;
 
-    public BinaryRandomLinearSolverTest(String name, int d) {
+    public BinaryLinearSolverRandomTest(String name, int d) {
         Preconditions.checkArgument(StringUtils.isNotBlank(name));
         this.d = d;
         byteD = CommonUtils.getByteLength(d);
