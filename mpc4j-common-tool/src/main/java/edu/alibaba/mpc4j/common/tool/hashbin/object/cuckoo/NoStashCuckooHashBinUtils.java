@@ -5,9 +5,9 @@ import edu.alibaba.mpc4j.common.tool.MathPreconditions;
 /**
  * no-stash cuckoo hash bin utilities. We use regression method to obtain the parameters. Although the regression results
  * show that h = 4 and h = 5 can have small bin num, i.e.,
- * <p>h = 3: ε = 16.021n^{-0.521} + 5.0 / n </p>
- * <p>h = 4: ε = 11.498n^{-0.609} + 5.0 / n </p>
- * <p>h = 5: ε = 8.4398n^{-0.568} + 5.0 / n </p>
+ * <p>h = 3: ε = 23.584n^{-0.613} + 4.0 / n </p>
+ * <p>h = 4: ε = 8.1856n^{-0.440} + 4.0 / n </p>
+ * <p>h = 5: ε = 4.8187n^{-0.337} + 2.0 / n </p>
  * practical tests show that the estimated bin num is not correct.
  * Therefore, we use the same parameters for all cases.
  *
@@ -30,7 +30,8 @@ public class NoStashCuckooHashBinUtils {
      */
     public static double getH3SmallItemSizeEpsilon(int maxItemSize) {
         MathPreconditions.checkPositive("maxItemSize", maxItemSize);
-        return 16.021 * Math.pow(maxItemSize, -0.521) + 5.0 / maxItemSize;
+        // h = 3: ε = 23.584n^{-0.613} + 4.0 / n
+        return 23.584 * Math.pow(maxItemSize, -0.613) + 4.0 / maxItemSize;
     }
 
     /**
@@ -41,7 +42,8 @@ public class NoStashCuckooHashBinUtils {
      */
     public static double getH4SmallItemSizeEpsilon(int maxItemSize) {
         MathPreconditions.checkPositive("maxItemSize", maxItemSize);
-        return 16.021 * Math.pow(maxItemSize, -0.521) + 5.0 / maxItemSize;
+        // h = 4: ε = 8.1856n^{-0.440} + 4.0 / n. In practice, we use parameters from h = 3
+        return 23.584 * Math.pow(maxItemSize, -0.613) + 4.0 / maxItemSize;
     }
 
     /**
@@ -52,6 +54,7 @@ public class NoStashCuckooHashBinUtils {
      */
     public static double getH5SmallItemSizeEpsilon(int maxItemSize) {
         MathPreconditions.checkPositive("maxItemSize", maxItemSize);
-        return 16.021 * Math.pow(maxItemSize, -0.521) + 5.0 / maxItemSize;
+        // h = 5: ε = 4.8187n^{-0.337} + 2.0 / n. In practice, we use parameters from h = 3
+        return 23.584 * Math.pow(maxItemSize, -0.613) + 4.0 / maxItemSize;
     }
 }

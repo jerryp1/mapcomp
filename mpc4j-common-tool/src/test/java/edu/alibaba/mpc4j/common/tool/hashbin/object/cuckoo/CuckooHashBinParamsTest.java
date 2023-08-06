@@ -50,13 +50,13 @@ public class CuckooHashBinParamsTest {
     private static final TIntObjectMap<int[]> H3_LOG_NUM_BINS_MAP = new TIntObjectHashMap<>(7);
 
     static {
-        H3_LOG_NUM_BINS_MAP.put(1, new int[]{3, 4, 5, 6, 7, 8, 9, 10, 11, 12,});
-        H3_LOG_NUM_BINS_MAP.put(2, new int[]{7, 8, 9, 10, 11, 12, 13, 14, 15, 16,});
-        H3_LOG_NUM_BINS_MAP.put(3, new int[]{12, 13, 14, 15, 16, 17, 18, 19, 20, 21,});
-        H3_LOG_NUM_BINS_MAP.put(4, new int[]{21, 22, 23, 24, 25, 26, 27, 28, 29, 30,});
-        H3_LOG_NUM_BINS_MAP.put(5, new int[]{39, 40, 41, 42, 43, 44, 45, 46, 47, 48,});
-        H3_LOG_NUM_BINS_MAP.put(6, new int[]{75, 77, 79, 81, 83, 85, 87, 89, 90, 92,});
-        H3_LOG_NUM_BINS_MAP.put(7, new int[]{152, 154, 156, 158, 160, 162, 164, 166, 168, 170});
+        H3_LOG_NUM_BINS_MAP.put(1, new int[]{3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14,});
+        H3_LOG_NUM_BINS_MAP.put(2, new int[]{7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18,});
+        H3_LOG_NUM_BINS_MAP.put(3, new int[]{12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23,});
+        H3_LOG_NUM_BINS_MAP.put(4, new int[]{21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32,});
+        H3_LOG_NUM_BINS_MAP.put(5, new int[]{39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 50,});
+        H3_LOG_NUM_BINS_MAP.put(6, new int[]{71, 73, 75, 77, 79, 81, 83, 85, 87, 89, 90, 92,});
+        H3_LOG_NUM_BINS_MAP.put(7, new int[]{155, 156, 157, 158, 159, 160, 161, 162, 163, 164, 165, 166,});
     }
 
     /**
@@ -65,13 +65,13 @@ public class CuckooHashBinParamsTest {
     private static final TIntObjectMap<int[]> H4_LOG_NUM_BINS_MAP = new TIntObjectHashMap<>(7);
 
     static {
-        H4_LOG_NUM_BINS_MAP.put(1, new int[]{3, 4, 5, 6, 7, 8, 9, 10, 11, 12,});
-        H4_LOG_NUM_BINS_MAP.put(2, new int[]{5, 6, 7, 8, 9, 10, 11, 12, 13, 14,});
-        H4_LOG_NUM_BINS_MAP.put(3, new int[]{9, 10, 11, 12, 13, 14, 15, 16, 17, 18,});
-        H4_LOG_NUM_BINS_MAP.put(4, new int[]{17, 18, 19, 20, 21, 22, 23, 24, 25, 26,});
-        H4_LOG_NUM_BINS_MAP.put(5, new int[]{34, 35, 36, 37, 38, 39, 40, 41, 42, 43,});
-        H4_LOG_NUM_BINS_MAP.put(6, new int[]{69, 70, 71, 72, 73, 74, 75, 76, 77, 78,});
-        H4_LOG_NUM_BINS_MAP.put(7, new int[]{136, 137, 138, 139, 140, 141, 142, 143, 144, 145});
+        H4_LOG_NUM_BINS_MAP.put(1, new int[]{3, 4, 5, 6, 7, 8,});
+        H4_LOG_NUM_BINS_MAP.put(2, new int[]{5, 6, 7, 8, 9, 10,});
+        H4_LOG_NUM_BINS_MAP.put(3, new int[]{9, 10, 11, 12, 13, 14,});
+        H4_LOG_NUM_BINS_MAP.put(4, new int[]{17, 18, 19, 20, 21, 22, 23,});
+        H4_LOG_NUM_BINS_MAP.put(5, new int[]{34, 35, 36, 37, 38, 39, 40,});
+        H4_LOG_NUM_BINS_MAP.put(6, new int[]{69, 70, 71, 72, 73, 74, 75,});
+        H4_LOG_NUM_BINS_MAP.put(7, new int[]{136, 137, 138, 139, 140, 141, 142,});
     }
 
     /**
@@ -80,13 +80,13 @@ public class CuckooHashBinParamsTest {
     private static final TIntObjectMap<int[]> H5_LOG_NUM_BINS_MAP = new TIntObjectHashMap<>(7);
 
     static {
-        H5_LOG_NUM_BINS_MAP.put(1, new int[]{3, 4, 5, 6, 7, 8, 9, 10,});
-        H5_LOG_NUM_BINS_MAP.put(2, new int[]{5, 6, 7, 8, 9, 10, 11, 12,});
-        H5_LOG_NUM_BINS_MAP.put(3, new int[]{9, 10, 11, 12, 13, 14, 15, 16,});
-        H5_LOG_NUM_BINS_MAP.put(4, new int[]{17, 18, 19, 20, 21, 22, 23, 24,});
-        H5_LOG_NUM_BINS_MAP.put(5, new int[]{33, 34, 35, 36, 37, 38, 39, 40,});
-        H5_LOG_NUM_BINS_MAP.put(6, new int[]{65, 66, 67, 68, 69, 70, 71, 72,});
-        H5_LOG_NUM_BINS_MAP.put(7, new int[]{133, 134, 135, 136, 137, 138, 139, 140,});
+        H5_LOG_NUM_BINS_MAP.put(1, new int[]{3, 4, 5,});
+        H5_LOG_NUM_BINS_MAP.put(2, new int[]{5, 6, 7,});
+        H5_LOG_NUM_BINS_MAP.put(3, new int[]{9, 10, 11,});
+        H5_LOG_NUM_BINS_MAP.put(4, new int[]{17, 18, 19, 20,});
+        H5_LOG_NUM_BINS_MAP.put(5, new int[]{33, 34, 35, 36,});
+        H5_LOG_NUM_BINS_MAP.put(6, new int[]{65, 66, 67, 68, 69, 70,});
+        H5_LOG_NUM_BINS_MAP.put(7, new int[]{130, 131, 132, 133, 134, 135, 136,});
     }
 
     @Parameterized.Parameters(name = "{0}")
