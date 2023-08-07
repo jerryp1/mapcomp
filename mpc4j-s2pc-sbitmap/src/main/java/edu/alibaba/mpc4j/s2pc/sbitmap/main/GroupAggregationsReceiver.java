@@ -14,12 +14,12 @@ import java.util.List;
 import java.util.concurrent.TimeUnit;
 
 /**
- * Sbitmap set operations protocol.
+ * Sbitmap group aggregations protocol.
  *
  * @author Li Peng
  * @date 2023/08/03
  */
-public class SetOperationsPto extends AbstractMultiPartyPto implements SbitmapPto {
+public class GroupAggregationsReceiver extends AbstractMultiPartyPto implements SbitmapPtoParty {
     /**
      * dataset
      */
@@ -41,7 +41,7 @@ public class SetOperationsPto extends AbstractMultiPartyPto implements SbitmapPt
      */
     private DataFrame slaveLdpDataFrame;
 
-    public SetOperationsPto(Rpc slaveRpc, Party hostParty) {
+    public GroupAggregationsReceiver(Rpc slaveRpc, Party hostParty) {
         super(SbitmapPtoDesc.getInstance(), new SbitmapPtoConfig(), slaveRpc, hostParty);
     }
 
@@ -53,11 +53,11 @@ public class SetOperationsPto extends AbstractMultiPartyPto implements SbitmapPt
     }
 
     /**
-     * TODO 协议真实执行过程
+     * Protocol process.
      *
-     * @param dataFrame
-     * @param config
-     * @throws MpcAbortException
+     * @param dataFrame dataset.
+     * @param config    config.
+     * @throws MpcAbortException the protocol failure aborts.
      */
     @Override
     public void run(DataFrame dataFrame, SbitmapConfig config) throws MpcAbortException {
@@ -121,20 +121,20 @@ public class SetOperationsPto extends AbstractMultiPartyPto implements SbitmapPt
         logPhaseInfo(PtoState.PTO_END);
     }
 
-    private void setPtoInput(DataFrame slaveDataFrame, SbitmapConfig slaveConfig) {
+    private void setPtoInput(DataFrame dataFrame, SbitmapConfig slaveConfig) {
         checkInitialized();
         // 验证DataFrame与配置参数中的schema相同
-        assert slaveDataFrame.schema().equals(slaveConfig.getSchema());
-        this.dataFrame = slaveDataFrame;
-        rows = slaveDataFrame.nrows();
+        assert dataFrame.schema().equals(slaveConfig.getSchema());
+        this.dataFrame = dataFrame;
+        rows = dataFrame.nrows();
         byteRows = CommonUtils.getByteLength(rows);
         rowOffset = byteRows * Byte.SIZE - rows;
         extraInfo++;
     }
-
+//
 //    private List<byte[]> generateSlaveSchemaPayload() {
 //        // 构建数据格式
-//        List<StructField> structFieldList = Arrays.stream(slaveDataFrame.schema().fields())
+//        List<StructField> structFieldList = Arrays.stream(dataFrame.schema().fields())
 //            .map(structField -> {
 //                if (structField.measure instanceof NominalScale) {
 //                    // 枚举类数据，保留measure，数据类型为ByteType
@@ -217,7 +217,7 @@ public class SetOperationsPto extends AbstractMultiPartyPto implements SbitmapPt
 //                            .min().orElse(0);
 //                        int max = slaveColumnTableMap.keySet().stream()
 //                            .mapToInt(value -> value)
-//                            .max().orElse(slaveDataFrame.nrows());
+//                            .max().orElse(dataFrame.nrows());
 //                        slaveColumnSplits[index] = slaveColumnOrderSplits[index] < min ? min : max;
 //                    }
 //                });

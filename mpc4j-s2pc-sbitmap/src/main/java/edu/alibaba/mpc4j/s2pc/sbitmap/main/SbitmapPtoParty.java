@@ -9,7 +9,7 @@ import smile.data.DataFrame;
  * @author Li Peng
  * @date 2023/8/4
  */
-public interface SbitmapPto {
+public interface SbitmapPtoParty {
     /**
      * Run protocol.
      *

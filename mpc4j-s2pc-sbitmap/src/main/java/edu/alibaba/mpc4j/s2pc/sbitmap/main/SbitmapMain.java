@@ -10,7 +10,7 @@ import java.util.Properties;
  * Sbitmap main class.、
  * TODO 协议分以下几个执行参数：
  * 协议类型（set operations..)
- * 安全状态（plain dp)
+ * 安全状态（plain dp secure)
  * 具体参数（epsilons等）
  *
  * @author Li Peng
@@ -26,7 +26,7 @@ public class SbitmapMain {
         Properties properties = PropertiesUtils.loadProperties(args[0]);
         SbitmapStarter fullSecureProtocol = new SbitmapStarter(properties);
         fullSecureProtocol.init();
-        fullSecureProtocol.run();
+        fullSecureProtocol.start();
         System.exit(0);
     }
 }

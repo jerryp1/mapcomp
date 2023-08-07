@@ -83,7 +83,7 @@ public class SbitmapStarter {
         this.properties = properties;
     }
 
-    public void run() throws IOException, MpcAbortException {
+    public void start() throws IOException, MpcAbortException {
         String filePath = taskType
             // dataset name
             + "_" + datasetName
@@ -104,9 +104,9 @@ public class SbitmapStarter {
         // plain mode
         runPlainPto(printWriter);
         // Full secure
-        runFullSecurePto(printWriter, SbitmapSecurityMode.ULDP);
+        runFullSecurePto(printWriter, SbitmapSecurityMode.ULDP, ownRpc.ownParty().getPartyId());
         // dp secure
-        runDpPto(printWriter, SbitmapSecurityMode.ULDP);
+        runDpPto(printWriter, SbitmapSecurityMode.ULDP, ownRpc.ownParty().getPartyId());
         // clean
         printWriter.close();
         fileWriter.close();
@@ -214,17 +214,18 @@ public class SbitmapStarter {
      * Run full secure protocol
      *
      * @param printWriter print writer.
-     * @param ldpType     ldp typer.
+     * @param ldpType     ldp type.
+     * @param partyId party id.
      * @throws MpcAbortException the protocol failure aborts.
      */
-    protected void runFullSecurePto(PrintWriter printWriter, SbitmapSecurityMode ldpType)
+    protected void runFullSecurePto(PrintWriter printWriter, SbitmapSecurityMode ldpType, int partyId)
         throws MpcAbortException {
-        LOGGER.info("-----Slave {} LDP training for {}-----", ldpType.name(), taskType);
+        LOGGER.info("-----Pto {} LDP training for {}-----", ldpType.name(), taskType);
 
-        SetOperationsPto slave = new SetOperationsPto(ownRpc, otherParty);
+        SetOperationsSender slave = new SetOperationsSender(ownRpc, otherParty);
         SbitmapConfig slaveConfig = new SbitmapConfig.Builder(ownSchema)
             .build();
-        SbitmapPtoRunner ptoRunner = createRunner(slaveConfig);
+        SbitmapPtoRunner ptoRunner = createRunner(slaveConfig, partyId);
         slave.init();
         ptoRunner.run();
         slave.destroy();
@@ -237,44 +238,75 @@ public class SbitmapStarter {
 
     /**
      * Run dp protocol
-     * TODO distinct process for different role.
+     *
      *
      * @param printWriter print writer.
      * @param ldpType     ldp type.
+     * @param partyId     party id.
      * @throws MpcAbortException the protocol failure aborts.
      */
-    protected void runDpPto(PrintWriter printWriter, SbitmapSecurityMode ldpType)
+    protected void runDpPto(PrintWriter printWriter, SbitmapSecurityMode ldpType, int partyId)
         throws MpcAbortException {
-        LOGGER.info("-----Slave {} LDP training for {}-----", ldpType.name(), taskType);
+        LOGGER.info("-----Pto {} LDP training for {}-----", ldpType.name(), taskType);
         for (double epsilon : epsilons) {
             Map<String, LdpConfig> ldpConfigs = createLdpConfigs(ldpType, epsilon);
-            SetOperationsPto slave = new SetOperationsPto(ownRpc, otherParty);
+            SetOperationsSender slave = new SetOperationsSender(ownRpc, otherParty);
             SbitmapConfig slaveConfig = new SbitmapConfig.Builder(ownSchema)
                 .addLdpConfig(ldpConfigs)
                 .build();
-            SbitmapPtoRunner slaveRunner = createRunner(slaveConfig);
+            SbitmapPtoRunner ptoRunner = createRunner(slaveConfig, partyId);
             slave.init();
-            slaveRunner.run();
+            ptoRunner.run();
             slave.destroy();
-            writeInfo(printWriter, ldpType.name(), epsilon, slaveRunner.getTime(),
+            writeInfo(printWriter, ldpType.name(), epsilon, ptoRunner.getTime(),
                 null,
-                slaveRunner.getPacketNum(), slaveRunner.getPayloadByteLength(), slaveRunner.getSendByteLength()
+                ptoRunner.getPacketNum(), ptoRunner.getPayloadByteLength(), ptoRunner.getSendByteLength()
             );
         }
     }
 
-    SbitmapPtoRunner createRunner(SbitmapConfig slaveConfig) {
-        SbitmapPto pto;
-        switch (taskType) {
-            case SET_OPERATIONS:
-                pto = new SetOperationsPto(ownRpc, otherParty);
+    SbitmapPtoRunner createRunner(SbitmapConfig slaveConfig, int partyId) {
+        SbitmapPtoParty party;
+        switch (partyId) {
+            case 0:
+                party = createReceiver(slaveConfig);
                 break;
-            case GROUP_AGGREGATIONS:
-                pto = new GroupAggregationsPto(ownRpc, otherParty);
+            case 1:
+                party = createSender(slaveConfig);
                 break;
             default:
                 throw new IllegalArgumentException("Invalid task_type: " + taskType);
         }
-        return new SbitmapPtoRunner(pto, slaveConfig, totalRound, ownDataFrame);
+        return new SbitmapPtoRunner(party, slaveConfig, totalRound, ownDataFrame);
+    }
+
+    SbitmapPtoParty createSender(SbitmapConfig slaveConfig) {
+        SbitmapPtoParty pto;
+        switch (taskType) {
+            case SET_OPERATIONS:
+                pto = new SetOperationsSender(ownRpc, otherParty);
+                break;
+            case GROUP_AGGREGATIONS:
+                pto = new GroupAggregationsSender(ownRpc, otherParty);
+                break;
+            default:
+                throw new IllegalArgumentException("Invalid task_type: " + taskType);
+        }
+        return pto;
+    }
+
+    SbitmapPtoParty createReceiver(SbitmapConfig slaveConfig) {
+        SbitmapPtoParty pto;
+        switch (taskType) {
+            case SET_OPERATIONS:
+                pto = new SetOperationsReceiver(ownRpc, otherParty);
+                break;
+            case GROUP_AGGREGATIONS:
+                pto = new GroupAggregationsReceiver(ownRpc, otherParty);
+                break;
+            default:
+                throw new IllegalArgumentException("Invalid task_type: " + taskType);
+        }
+        return pto;
     }
 }

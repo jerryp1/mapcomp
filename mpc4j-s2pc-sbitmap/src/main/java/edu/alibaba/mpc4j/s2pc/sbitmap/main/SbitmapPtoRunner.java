@@ -24,7 +24,7 @@ public class SbitmapPtoRunner implements SbitmapRunner {
     /**
      * party
      */
-    private final SbitmapPto slave;
+    private final SbitmapPtoParty slave;
     /**
      * rpc
      */
@@ -58,7 +58,7 @@ public class SbitmapPtoRunner implements SbitmapRunner {
      */
     private long totalSendByteLength;
 
-    public SbitmapPtoRunner(SbitmapPto slave, SbitmapConfig slaveConfig, int totalRound,
+    public SbitmapPtoRunner(SbitmapPtoParty slave, SbitmapConfig slaveConfig, int totalRound,
                             DataFrame ownDataFrame) {
         this.slave = slave;
         slaveRpc = slave.getRpc();
