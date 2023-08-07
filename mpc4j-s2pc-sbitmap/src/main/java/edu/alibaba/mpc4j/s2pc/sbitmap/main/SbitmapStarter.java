@@ -215,30 +215,27 @@ public class SbitmapStarter {
      *
      * @param printWriter print writer.
      * @param ldpType     ldp type.
-     * @param partyId party id.
+     * @param partyId     party id.
      * @throws MpcAbortException the protocol failure aborts.
      */
     protected void runFullSecurePto(PrintWriter printWriter, SbitmapSecurityMode ldpType, int partyId)
         throws MpcAbortException {
         LOGGER.info("-----Pto {} LDP training for {}-----", ldpType.name(), taskType);
 
-        SetOperationsSender slave = new SetOperationsSender(ownRpc, otherParty);
-        SbitmapConfig slaveConfig = new SbitmapConfig.Builder(ownSchema)
+        SbitmapConfig sbitmapConfig = new SbitmapConfig.Builder(ownSchema)
             .build();
-        SbitmapPtoRunner ptoRunner = createRunner(slaveConfig, partyId);
-        slave.init();
+        SbitmapPtoRunner ptoRunner = createRunner(sbitmapConfig, partyId);
+        ptoRunner.init();
         ptoRunner.run();
-        slave.destroy();
+        ptoRunner.stop();
         writeInfo(printWriter, ldpType.name(), null, ptoRunner.getTime(),
             null,
             ptoRunner.getPacketNum(), ptoRunner.getPayloadByteLength(), ptoRunner.getSendByteLength()
         );
-
     }
 
     /**
      * Run dp protocol
-     *
      *
      * @param printWriter print writer.
      * @param ldpType     ldp type.
@@ -250,14 +247,13 @@ public class SbitmapStarter {
         LOGGER.info("-----Pto {} LDP training for {}-----", ldpType.name(), taskType);
         for (double epsilon : epsilons) {
             Map<String, LdpConfig> ldpConfigs = createLdpConfigs(ldpType, epsilon);
-            SetOperationsSender slave = new SetOperationsSender(ownRpc, otherParty);
             SbitmapConfig slaveConfig = new SbitmapConfig.Builder(ownSchema)
                 .addLdpConfig(ldpConfigs)
                 .build();
             SbitmapPtoRunner ptoRunner = createRunner(slaveConfig, partyId);
-            slave.init();
+            ptoRunner.init();
             ptoRunner.run();
-            slave.destroy();
+            ptoRunner.stop();
             writeInfo(printWriter, ldpType.name(), epsilon, ptoRunner.getTime(),
                 null,
                 ptoRunner.getPacketNum(), ptoRunner.getPayloadByteLength(), ptoRunner.getSendByteLength()
@@ -265,29 +261,29 @@ public class SbitmapStarter {
         }
     }
 
-    SbitmapPtoRunner createRunner(SbitmapConfig slaveConfig, int partyId) {
+    SbitmapPtoRunner createRunner(SbitmapConfig sbitmapConfig, int partyId) {
         SbitmapPtoParty party;
         switch (partyId) {
             case 0:
-                party = createReceiver(slaveConfig);
+                party = createReceiver(sbitmapConfig);
                 break;
             case 1:
-                party = createSender(slaveConfig);
+                party = createSender(sbitmapConfig);
                 break;
             default:
                 throw new IllegalArgumentException("Invalid task_type: " + taskType);
         }
-        return new SbitmapPtoRunner(party, slaveConfig, totalRound, ownDataFrame);
+        return new SbitmapPtoRunner(party, sbitmapConfig, totalRound, ownDataFrame);
     }
 
-    SbitmapPtoParty createSender(SbitmapConfig slaveConfig) {
+    SbitmapPtoParty createSender(SbitmapConfig sbitmapConfig) {
         SbitmapPtoParty pto;
         switch (taskType) {
             case SET_OPERATIONS:
-                pto = new SetOperationsSender(ownRpc, otherParty);
+                pto = new SetOperationsSender(ownRpc, otherParty, sbitmapConfig);
                 break;
             case GROUP_AGGREGATIONS:
-                pto = new GroupAggregationsSender(ownRpc, otherParty);
+                pto = new GroupAggregationsSender(ownRpc, otherParty, sbitmapConfig);
                 break;
             default:
                 throw new IllegalArgumentException("Invalid task_type: " + taskType);
@@ -299,10 +295,10 @@ public class SbitmapStarter {
         SbitmapPtoParty pto;
         switch (taskType) {
             case SET_OPERATIONS:
-                pto = new SetOperationsReceiver(ownRpc, otherParty);
+                pto = new SetOperationsReceiver(ownRpc, otherParty, slaveConfig);
                 break;
             case GROUP_AGGREGATIONS:
-                pto = new GroupAggregationsReceiver(ownRpc, otherParty);
+                pto = new GroupAggregationsReceiver(ownRpc, otherParty, slaveConfig);
                 break;
             default:
                 throw new IllegalArgumentException("Invalid task_type: " + taskType);

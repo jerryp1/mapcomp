@@ -7,6 +7,8 @@ import edu.alibaba.mpc4j.common.rpc.Rpc;
 import edu.alibaba.mpc4j.common.rpc.pto.AbstractMultiPartyPto;
 import edu.alibaba.mpc4j.common.rpc.utils.DataPacketHeader;
 import edu.alibaba.mpc4j.common.tool.utils.CommonUtils;
+import edu.alibaba.mpc4j.s2pc.pjc.pid.PidFactory;
+import edu.alibaba.mpc4j.s2pc.pjc.pid.PidParty;
 import edu.alibaba.mpc4j.s2pc.sbitmap.main.SbitmapPtoDesc.PtoStep;
 import smile.data.DataFrame;
 
@@ -40,16 +42,29 @@ public class GroupAggregationsSender extends AbstractMultiPartyPto implements Sb
      * ldp dataset
      */
     private DataFrame slaveLdpDataFrame;
+    /**
+     * pid sender.
+     */
+    private PidParty pidSender;
 
-    public GroupAggregationsSender(Rpc slaveRpc, Party hostParty) {
+    public GroupAggregationsSender(Rpc slaveRpc, Party hostParty, SbitmapConfig sbitmapConfig) {
         super(SbitmapPtoDesc.getInstance(), new SbitmapPtoConfig(), slaveRpc, hostParty);
+        pidSender = PidFactory.createServer(slaveRpc, hostParty, sbitmapConfig.getPidConfig());
     }
 
     /**
      * init the protocol.
      */
-    public void init() {
+    @Override
+    public void init() throws MpcAbortException {
         super.initState();
+        pidSender.init(1000000, 1000000);
+    }
+
+    @Override
+    public void stop() {
+        pidSender.destroy();
+        destroy();
     }
 
     /**
@@ -65,12 +80,7 @@ public class GroupAggregationsSender extends AbstractMultiPartyPto implements Sb
         logPhaseInfo(PtoState.PTO_BEGIN);
 
         stopWatch.start();
-//        List<byte[]> slaveSchemaPayload = generateSlaveSchemaPayload();
-        DataPacketHeader slaveSchemaHeader = new DataPacketHeader(
-            encodeTaskId, ptoDesc.getPtoId(), PtoStep.AND.ordinal(), extraInfo,
-            ownParty().getPartyId(), otherParties()[0].getPartyId()
-        );
-//        rpc.send(DataPacket.fromByteArrayList(slaveSchemaHeader, slaveSchemaPayload));
+        pidSender.pid(null, 1000000);
         stopWatch.stop();
         long slaveSchemaTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
         stopWatch.reset();
@@ -131,100 +141,5 @@ public class GroupAggregationsSender extends AbstractMultiPartyPto implements Sb
         rowOffset = byteRows * Byte.SIZE - rows;
         extraInfo++;
     }
-//
-//    private List<byte[]> generateSlaveSchemaPayload() {
-//        // 构建数据格式
-//        List<StructField> structFieldList = Arrays.stream(dataFrame.schema().fields())
-//            .map(structField -> {
-//                if (structField.measure instanceof NominalScale) {
-//                    // 枚举类数据，保留measure，数据类型为ByteType
-//                    return new StructField(structField.name, DataTypes.ByteType, structField.measure);
-//                } else {
-//                    // 非枚举类数据，数据类型为IntegerType
-//                    return new StructField(structField.name, DataTypes.IntegerType);
-//                }
-//            }).collect(Collectors.toList());
-//        StructType slaveSchema = DataTypes.struct(structFieldList);
-//        List<byte[]> slaveSchemaPayload = new LinkedList<>();
-//        slaveSchemaPayload.add(ObjectUtils.objectToByteArray(slaveSchema));
-//
-//        return slaveSchemaPayload;
-//    }
-//
-//    private List<byte[]> generateSlaveDataPayload() {
-//        StructType slaveSchema = slaveLdpDataFrame.schema();
-//        slaveSplitValueMap = new HashMap<>(slaveSchema.length());
-//        List<byte[]> slaveDataPayload = new LinkedList<>();
-//        for (int columnIndex = 0; columnIndex < slaveSchema.length(); columnIndex++) {
-//            StructField structField = slaveSchema.field(columnIndex);
-//            if (structField.measure instanceof NominalScale) {
-//                // 枚举类数据，不用排序，压缩通信
-//                Map<Integer, Double> slaveColumnTableMap = new HashMap<>(0);
-//                slaveSplitValueMap.put(structField.name, slaveColumnTableMap);
-//                int[] intData = slaveLdpDataFrame.column(columnIndex).toIntArray();
-//                byte[] byteData = new byte[byteRows];
-//                IntStream.range(0, rows).forEach(row -> {
-//                    Preconditions.checkArgument(
-//                        intData[row] == 0 || intData[row] == 1,
-//                        "Column %s, row %s: Nominal data must be 0 or 1: %s",
-//                        structField.name, row, intData[row]
-//                    );
-//                    if (intData[row] == 1) {
-//                        BinaryUtils.setBoolean(byteData, rowOffset + row, true);
-//                    }
-//                });
-//                slaveDataPayload.add(byteData);
-//            } else {
-//                // 非枚举类数据，需要排序
-//                double[] doubleData = slaveLdpDataFrame.column(columnIndex).toDoubleArray();
-//                int[] intData = RankUtils.denseRank(doubleData);
-//                Map<Integer, Double> slaveColumnTableMap = new HashMap<>(rows);
-//                IntStream.range(0, rows).forEach(row ->
-//                    slaveColumnTableMap.put(intData[row], doubleData[row])
-//                );
-//                slaveSplitValueMap.put(structField.name, slaveColumnTableMap);
-//                byte[] byteData = IntUtils.intArrayToByteArray(intData);
-//                slaveDataPayload.add(byteData);
-//            }
-//        }
-//        return slaveDataPayload;
-//    }
-//
-//    private List<byte[]> generateSplitsNodes(List<byte[]> slaveOrderSplitsPayload) throws MpcAbortException {
-//        StructType slaveSchema = slaveLdpDataFrame.schema();
-//        // 数据的数量为从机数据格式的数量
-//        MpcAbortPreconditions.checkArgument(slaveOrderSplitsPayload.size() == slaveSchema.length());
-//        List<byte[]> slaveSplitsPayload = new LinkedList<>();
-//        // 按照从机数据列的顺序构建请求
-//        for (int columnIndex = 0; columnIndex < slaveSchema.length(); columnIndex++) {
-//            byte[] slaveOrderSplitsByteArray = slaveOrderSplitsPayload.remove(0);
-//            if (slaveOrderSplitsByteArray.length == 0) {
-//                // 如果此列没有数据，则添加空数据
-//                slaveSplitsPayload.add(new byte[0]);
-//            } else {
-//                StructField structField = slaveSchema.field(columnIndex);
-//                String columnName = structField.name;
-//                int[] slaveColumnOrderSplits = IntUtils.byteArrayToIntArray(slaveOrderSplitsByteArray);
-//                Map<Integer, Double> slaveColumnTableMap = slaveSplitValueMap.get(columnName);
-//                double[] slaveColumnSplits = new double[slaveColumnOrderSplits.length];
-//                IntStream.range(0, slaveColumnOrderSplits.length).forEach(index -> {
-//                    if (slaveColumnTableMap.containsKey(slaveColumnOrderSplits[index])) {
-//                        slaveColumnSplits[index] = slaveColumnTableMap.get(slaveColumnOrderSplits[index]);
-//                    } else {
-//                        // 实验中确实出现切分点超过最大值或者小于最小值的情况
-//                        int min = slaveColumnTableMap.keySet().stream()
-//                            .mapToInt(value -> value)
-//                            .min().orElse(0);
-//                        int max = slaveColumnTableMap.keySet().stream()
-//                            .mapToInt(value -> value)
-//                            .max().orElse(dataFrame.nrows());
-//                        slaveColumnSplits[index] = slaveColumnOrderSplits[index] < min ? min : max;
-//                    }
-//                });
-//                slaveSplitsPayload.add(DoubleUtils.doubleArrayToByteArray(slaveColumnSplits));
-//            }
-//        }
-//        return slaveSplitsPayload;
-//    }
 }
 

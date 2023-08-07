@@ -10,11 +10,21 @@ import edu.alibaba.mpc4j.common.rpc.MpcAbortException;
  */
 public interface SbitmapRunner {
     /**
+     * Init protocol.
+     */
+    void init() throws MpcAbortException;
+
+    /**
      * Run protocol.
      *
      * @throws MpcAbortException the protocol failure aborts.
      */
     void run() throws MpcAbortException;
+
+    /**
+     * Stop protocol.
+     */
+    void stop();
 
     /**
      * Return average running time。

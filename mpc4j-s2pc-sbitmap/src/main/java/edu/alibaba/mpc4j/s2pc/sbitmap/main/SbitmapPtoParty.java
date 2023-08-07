@@ -6,10 +6,16 @@ import smile.data.DataFrame;
 
 /**
  * Sbitmap protocol interface.
+ *
  * @author Li Peng
  * @date 2023/8/4
  */
 public interface SbitmapPtoParty {
+    /**
+     * Init.
+     */
+    void init() throws MpcAbortException;
+
     /**
      * Run protocol.
      *
@@ -24,4 +30,9 @@ public interface SbitmapPtoParty {
      * @return rpc.
      */
     Rpc getRpc();
+
+    /**
+     * Stop.
+     */
+    void stop();
 }

@@ -1,6 +1,7 @@
 package edu.alibaba.mpc4j.s2pc.sbitmap.main;
 
 import edu.alibaba.mpc4j.dp.ldp.LdpConfig;
+import edu.alibaba.mpc4j.s2pc.pjc.pid.PidConfig;
 import smile.data.type.StructType;
 
 import java.util.Map;
@@ -13,17 +14,23 @@ import java.util.Map;
  */
 public class SbitmapConfig {
     /**
-     * data schema
+     * data schema.
      */
     private final StructType schema;
     /**
-     * ldp config
+     * ldp config.
      */
     private final Map<String, LdpConfig> ldpConfigMap;
+
+    /**
+     * pid config.
+     */
+    private final PidConfig pidConfig;
 
     private SbitmapConfig(Builder builder) {
         schema = builder.getSchema();
         ldpConfigMap = builder.getLdpConfigMap();
+        pidConfig = builder.getPidConfig();
     }
 
     public StructType getSchema() {
@@ -32,6 +39,10 @@ public class SbitmapConfig {
 
     public Map<String, LdpConfig> getLdpConfigMap() {
         return ldpConfigMap;
+    }
+
+    public PidConfig getPidConfig() {
+        return pidConfig;
     }
 
     public static class Builder extends AbstractSbitmapConfigBuilder<SbitmapConfig> {

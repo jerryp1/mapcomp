@@ -70,6 +70,11 @@ public class SbitmapPtoRunner implements SbitmapRunner {
 
 
     @Override
+    public void init() throws MpcAbortException {
+        this.slave.init();
+    }
+
+    @Override
     public void run() throws MpcAbortException {
         slaveRpc.synchronize();
         slaveRpc.reset();
@@ -92,6 +97,11 @@ public class SbitmapPtoRunner implements SbitmapRunner {
         totalPayloadByteLength = slaveRpc.getPayloadByteLength();
         totalSendByteLength = slaveRpc.getSendByteLength();
         slaveRpc.reset();
+    }
+
+    @Override
+    public void stop() {
+        this.slave.stop();
     }
 
     @Override
