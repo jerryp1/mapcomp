@@ -38,6 +38,10 @@ public class PsiFactory implements PtoFactory {
          * KKRT16方案
          */
         KKRT16,
+        /**
+         * CM20方案
+         */
+        CM20,
     }
 
     /**

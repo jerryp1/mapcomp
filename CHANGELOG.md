@@ -89,7 +89,7 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
   - We implement related-batch programmable OPRFs introduced in the CGS22 paper.
   - We implement single-query OPRF introduced in the RA17 paper.
 - `mpc4j-s2pc-pso`
-  - We implement two circuit PSI protocols (without associated payload) introduced in the PRTY19 and CGS22 paper.
+  - We implement two circuit PSI protocols (without associated payload) introduced in the PSTY19 and CGS22 paper.
 
 ### Fixed
 
