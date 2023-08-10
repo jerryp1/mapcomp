@@ -10,11 +10,11 @@ import edu.alibaba.mpc4j.s2pc.pso.psi.PsiConfig;
 import edu.alibaba.mpc4j.s2pc.pso.psi.PsiFactory;
 
 /**
+ * CM20-PSI协议配置项。
  * <p>
  * Chase M, Miao P. Private Set Intersection in the Internet Setting from Lightweight Oblivious PRF. CRYPTO 2020.
  * pp. 34-63.
  * <p>
- * CM20-PSI协议配置项。
  *
  * @author Ziyuan Liang, Feng Han
  * @date 2022/03/03
