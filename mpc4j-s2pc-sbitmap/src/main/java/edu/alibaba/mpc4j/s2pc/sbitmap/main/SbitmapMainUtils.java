@@ -12,6 +12,7 @@ import smile.data.measure.NominalScale;
 import smile.data.type.DataTypes;
 import smile.data.type.StructField;
 import smile.data.type.StructType;
+import smile.data.vector.IntVector;
 import smile.io.Read;
 
 import java.io.IOException;
@@ -31,6 +32,8 @@ import java.util.stream.IntStream;
  */
 public class SbitmapMainUtils {
     private static final Logger LOGGER = LoggerFactory.getLogger(SbitmapMainUtils.class);
+
+    private static final String ID = "id";
 
     /**
      * Private constructor.
@@ -185,23 +188,34 @@ public class SbitmapMainUtils {
      * @throws IOException        如果出现IO异常。
      * @throws URISyntaxException 如果文件路径有误。
      */
-    public static DataFrame setTrainDataFrame(Properties properties, StructType schema) throws IOException, URISyntaxException {
+    public static DataFrame setDataFrame(Properties properties, StructType schema) throws IOException, URISyntaxException {
         String trainDatasetPath = PropertiesUtils.readString(properties, "train_dataset_path");
         return Read.csv(trainDatasetPath, DEFAULT_CSV_FORMAT, schema);
     }
 
     /**
-     * 设置测试数据集。
-     *
-     * @param properties 配置项。
-     * @param schema     元数据信息。
-     * @return 训练数据集。
-     * @throws IOException        如果出现IO异常。
-     * @throws URISyntaxException 如果文件路径有误。
+     * Add id column.
+     * @param dataFrame dataframe.
+     * @return updated dataframe.
      */
-    public static DataFrame setTestDataFrame(Properties properties, StructType schema) throws IOException, URISyntaxException {
-        String testDatasetPath = PropertiesUtils.readString(properties, "test_dataset_path");
-        return Read.csv(testDatasetPath, DEFAULT_CSV_FORMAT, schema);
+    public static DataFrame addIdColumn(DataFrame dataFrame) {
+        int size = dataFrame.size();
+        int[] ids = IntStream.range(0, size).toArray();
+        IntVector intVector = IntVector.of(ID, ids);
+        return dataFrame.merge(intVector);
+    }
+
+    /**
+     * Select rows based on the party id.
+     * @param dataFrame dataframe.
+     * @return updated dataframe.
+     */
+    public static DataFrame selectRows(DataFrame dataFrame, int partyId) {
+        assert partyId == 0 || partyId == 1 : "party id must be 0 or 1";
+        int rowNum = dataFrame.nrows();
+        int num = (int)(rowNum * 0.6);
+        int[] indexes = partyId == 0 ? IntStream.range(0, num).toArray() : IntStream.range(rowNum - num, num).toArray();
+        return dataFrame.of(indexes);
     }
 
     /**

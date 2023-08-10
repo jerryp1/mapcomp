@@ -1,5 +1,7 @@
 package edu.alibaba.mpc4j.s2pc.sbitmap.main;
 
+import edu.alibaba.mpc4j.common.tool.utils.BinaryUtils;
+import edu.alibaba.mpc4j.common.tool.utils.CommonUtils;
 import edu.alibaba.mpc4j.dp.ldp.LdpConfig;
 import edu.alibaba.mpc4j.dp.ldp.nominal.encode.EncodeLdp;
 import edu.alibaba.mpc4j.dp.ldp.nominal.encode.EncodeLdpConfig;
@@ -11,13 +13,14 @@ import edu.alibaba.mpc4j.dp.ldp.numeric.real.RealLdp;
 import edu.alibaba.mpc4j.dp.ldp.numeric.real.RealLdpConfig;
 import edu.alibaba.mpc4j.dp.ldp.numeric.real.RealLdpFactory;
 import smile.data.DataFrame;
+import smile.data.Tuple;
 import smile.data.measure.NominalScale;
+import smile.data.type.DataTypes;
 import smile.data.type.StructField;
 import smile.data.type.StructType;
 import smile.data.vector.*;
 
-import java.util.Arrays;
-import java.util.Map;
+import java.util.*;
 import java.util.stream.IntStream;
 
 /**
@@ -164,6 +167,61 @@ public class SbitmapUtils {
             // 浮点类只剩下DoubleVector数据，转换并合并DoubleVector数据
             return DoubleVector.of(structField, doubleArray);
         }
+    }
+
+    public static DataFrame createBitmapForNominals(DataFrame dataFrame) {
+        int n = dataFrame.nrows();
+        StructType schema = dataFrame.schema();
+        StructType bitmapSchema = new StructType(
+            new StructField("key", DataTypes.StringType),
+            new StructField("value", DataTypes.StringType),
+            new StructField("bitmap", DataTypes.StringType));
+        List<Tuple> bitmapTuples = new ArrayList<>();
+        for (int columnIndex = 0; columnIndex < schema.length(); columnIndex++) {
+            StructField structField = schema.field(columnIndex);
+            if (structField.measure instanceof NominalScale) {
+                String[] distinctValues = ((NominalScale)structField.measure).levels();
+                int[] distinctIntValues = Arrays.stream(distinctValues)
+                    .mapToInt(s -> ((NominalScale) structField.measure).valueOf(s).intValue()).toArray();
+                byte[][] bitmap = new byte[distinctValues.length][CommonUtils.getByteLength(n)];
+                for (int rowIndex = 0; rowIndex < n; rowIndex++) {
+                    int value = dataFrame.getInt(rowIndex, columnIndex);
+                    for (int valueIndex = 0; valueIndex < distinctValues.length; valueIndex++) {
+                        if (value == distinctIntValues[valueIndex]) {
+                            BinaryUtils.setBoolean(bitmap[valueIndex], rowIndex, true);
+                            break;
+                        }
+                    }
+                }
+                for (int valueIndex = 0; valueIndex < distinctValues.length; valueIndex++) {
+                    Tuple bitmapTuple = Tuple.of(
+                        new Object[]{structField.name,
+                            distinctValues[valueIndex],
+                            encodeBinaryString(bitmap[valueIndex])},
+                        bitmapSchema);
+                    bitmapTuples.add(bitmapTuple);
+                }
+            }
+        }
+        assert bitmapTuples.size() != 0: "Num of bitmaps should not be 0.";
+        return DataFrame.of(bitmapTuples);
+    }
+
+    protected static byte[] decodeBase64(String base64String) {
+        return Base64.getDecoder().decode(base64String);
+    }
+
+    protected static String encodeBase64(byte[] bytes) {
+        return Base64.getEncoder().encodeToString(bytes);
+    }
+
+    protected static String encodeBinaryString(byte[] bytes) {
+        StringBuilder builder = new StringBuilder();
+        for (byte b : bytes) {
+            builder.append(String.format("%8s", Integer.toBinaryString(b & 0xFF)).replace(' ', '0'));
+            builder.append("#");
+        }
+        return builder.toString();
     }
 }
 

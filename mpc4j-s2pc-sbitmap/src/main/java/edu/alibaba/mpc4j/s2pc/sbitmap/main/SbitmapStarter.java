@@ -140,7 +140,9 @@ public class SbitmapStarter {
     private void setDataSet() throws IOException, URISyntaxException {
         LOGGER.info("-----set whole dataset-----");
         int ncols = schema.length();
-        DataFrame readTrainDataFrame = SbitmapMainUtils.setTrainDataFrame(properties, schema);
+        DataFrame readDataFrame = SbitmapMainUtils.setDataFrame(properties, schema);
+        LOGGER.info("-----add id column-----");
+        readDataFrame = SbitmapMainUtils.addIdColumn(readDataFrame);
         LOGGER.info("-----set own dataframe-----");
         int[] partyColumns = PropertiesUtils.readIntArray(properties, "party_columns");
         Preconditions.checkArgument(partyColumns.length == ncols, "# of party_column must match column_num");
@@ -157,10 +159,12 @@ public class SbitmapStarter {
             "At least one column should belongs to party_id = %s", ownRpc.ownParty().getPartyId()
         );
         LOGGER.info("own_columns = {}", Arrays.toString(ownColumns));
-        ownDataFrame = readTrainDataFrame.select(ownColumns);
+        ownDataFrame = readDataFrame.select(ownColumns);
+        LOGGER.info("-----select rows -----");
+        ownDataFrame = SbitmapMainUtils.selectRows(ownDataFrame, ownRpc.ownParty().getPartyId());
         ownSchema = ownDataFrame.schema();
         // 挑选列后，数据列会发生变化，因此也需要调整输入列
-        wholeDataFrame = readTrainDataFrame.select(ownColumns).merge(readTrainDataFrame.drop(ownColumns));
+//        wholeDataFrame = readDataFrame.select(ownColumns).merge(readDataFrame.drop(ownColumns));
     }
 
     protected void setLdpParameters() {
