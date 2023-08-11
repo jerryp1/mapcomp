@@ -7,7 +7,7 @@ import smile.data.type.StructType;
 import java.util.Map;
 
 /**
- * Sbitmap Xonfig
+ * Sbitmap Config
  *
  * @author Li Peng
  * @date 2023/8/7

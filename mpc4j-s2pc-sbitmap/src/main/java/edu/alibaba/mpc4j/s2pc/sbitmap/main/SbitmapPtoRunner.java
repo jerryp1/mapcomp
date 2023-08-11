@@ -15,7 +15,7 @@ import java.util.concurrent.TimeUnit;
  * @author Li Peng
  * @date 2023/8/3
  */
-public class SbitmapPtoRunner implements SbitmapRunner {
+public class SbitmapPtoRunner {
     private static final Logger LOGGER = LoggerFactory.getLogger(SbitmapPtoRunner.class);
     /**
      * timer
@@ -68,13 +68,10 @@ public class SbitmapPtoRunner implements SbitmapRunner {
         this.ownDataFrame = ownDataFrame;
     }
 
-
-    @Override
     public void init() throws MpcAbortException {
-        this.slave.init();
+
     }
 
-    @Override
     public void run() throws MpcAbortException {
         slaveRpc.synchronize();
         slaveRpc.reset();
@@ -99,27 +96,22 @@ public class SbitmapPtoRunner implements SbitmapRunner {
         slaveRpc.reset();
     }
 
-    @Override
     public void stop() {
         this.slave.stop();
     }
 
-    @Override
     public double getTime() {
         return (double) totalTime / totalRound;
     }
 
-    @Override
     public long getPacketNum() {
         return totalPacketNum / totalRound;
     }
 
-    @Override
     public long getPayloadByteLength() {
         return totalPayloadByteLength / totalRound;
     }
 
-    @Override
     public long getSendByteLength() {
         return totalSendByteLength / totalRound;
     }

@@ -12,7 +12,12 @@ import smile.data.DataFrame;
  */
 public interface SbitmapPtoParty {
     /**
-     * Init.
+     * 初始化协议。
+     * <p>
+     * //     * @param maxOwnElementSetSize   最大自己元素数量。
+     * //     * @param maxOtherElementSetSize 最大对方元素数量。
+     *
+     * @throws MpcAbortException 如果协议异常中止。
      */
     void init() throws MpcAbortException;
 

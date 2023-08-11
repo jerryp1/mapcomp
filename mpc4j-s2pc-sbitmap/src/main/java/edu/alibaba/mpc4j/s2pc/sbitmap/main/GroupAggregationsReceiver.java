@@ -4,14 +4,14 @@ import edu.alibaba.mpc4j.common.rpc.MpcAbortException;
 import edu.alibaba.mpc4j.common.rpc.Party;
 import edu.alibaba.mpc4j.common.rpc.PtoState;
 import edu.alibaba.mpc4j.common.rpc.Rpc;
-import edu.alibaba.mpc4j.common.rpc.pto.AbstractMultiPartyPto;
+import edu.alibaba.mpc4j.common.rpc.utils.DataPacket;
 import edu.alibaba.mpc4j.common.rpc.utils.DataPacketHeader;
-import edu.alibaba.mpc4j.common.tool.utils.CommonUtils;
 import edu.alibaba.mpc4j.s2pc.pjc.pid.PidFactory;
-import edu.alibaba.mpc4j.s2pc.pjc.pid.PidParty;
 import edu.alibaba.mpc4j.s2pc.sbitmap.main.SbitmapPtoDesc.PtoStep;
 import smile.data.DataFrame;
 
+import java.nio.ByteBuffer;
+import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
@@ -21,35 +21,12 @@ import java.util.concurrent.TimeUnit;
  * @author Li Peng
  * @date 2023/08/03
  */
-public class GroupAggregationsReceiver extends AbstractMultiPartyPto implements SbitmapPtoParty {
-    /**
-     * dataset
-     */
-    private DataFrame dataFrame;
-    /**
-     * number of rows.
-     */
-    private int rows;
-    /**
-     * total bytes of rows.
-     */
-    private int byteRows;
-    /**
-     * row offset.
-     */
-    private int rowOffset;
-    /**
-     * ldp dataset
-     */
-    private DataFrame slaveLdpDataFrame;
-    /**
-     * pid receiver.
-     */
-    private PidParty pidReceiver;
+public class GroupAggregationsReceiver extends AbstractSbitmapPtoParty implements SbitmapPtoParty {
 
-    public GroupAggregationsReceiver(Rpc slaveRpc, Party hostParty, SbitmapConfig sbitmapConfig) {
-        super(SbitmapPtoDesc.getInstance(), new SbitmapPtoConfig(), slaveRpc, hostParty);
-        pidReceiver = PidFactory.createServer(slaveRpc, hostParty, sbitmapConfig.getPidConfig());
+
+    public GroupAggregationsReceiver(Rpc ownRpc, Party otherParty, SbitmapConfig sbitmapConfig) {
+        super(ownRpc, otherParty);
+        pidParty = PidFactory.createServer(ownRpc, otherParty, sbitmapConfig.getPidConfig());
     }
 
     /**
@@ -57,18 +34,18 @@ public class GroupAggregationsReceiver extends AbstractMultiPartyPto implements 
      */
     @Override
     public void init() throws MpcAbortException {
+//        super.init(maxOwnElementSetSize, maxOtherElementSetSize);
         super.initState();
-        pidReceiver.init(1000000, 1000000);
     }
 
     @Override
     public void stop() {
-        pidReceiver.destroy();
+        pidParty.destroy();
         destroy();
     }
 
     /**
-     * Protocol process.
+     * Protocol steps.
      *
      * @param dataFrame dataset.
      * @param config    config.
@@ -76,18 +53,35 @@ public class GroupAggregationsReceiver extends AbstractMultiPartyPto implements 
      */
     @Override
     public void run(DataFrame dataFrame, SbitmapConfig config) throws MpcAbortException {
+        // 交换数据长度
+        List<byte[]> receiverDataSizePayload = Collections.singletonList(ByteBuffer.allocate(4).putInt(dataFrame.size()).array());
+        DataPacketHeader receiverDataSizeHeader = new DataPacketHeader(
+            encodeTaskId, ptoDesc.getPtoId(), PtoStep.AND.ordinal(), extraInfo,
+            ownParty().getPartyId(), otherParties()[0].getPartyId()
+        );
+        rpc.send(DataPacket.fromByteArrayList(receiverDataSizeHeader, receiverDataSizePayload));
+
+        DataPacketHeader senderDataSizeHeader = new DataPacketHeader(
+            encodeTaskId, ptoDesc.getPtoId(), PtoStep.AND.ordinal(), extraInfo,
+            otherParties()[0].getPartyId(), ownParty().getPartyId()
+        );
+        List<byte[]> senderDataSizePayload = rpc.receive(senderDataSizeHeader).getPayload();
+        otherDataSize = ByteBuffer.wrap(senderDataSizePayload.get(0)).getInt();
+        // init
+        pidParty.init(dataFrame.size(), otherDataSize);
+
         setPtoInput(dataFrame, config);
         logPhaseInfo(PtoState.PTO_BEGIN);
 
         stopWatch.start();
-        pidReceiver.pid(null, 1000000);
+        join();
         stopWatch.stop();
         long slaveSchemaTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
         stopWatch.reset();
         logStepInfo(PtoState.PTO_STEP, 1, 5, slaveSchemaTime);
 
         stopWatch.start();
-        slaveLdpDataFrame = SbitmapUtils.ldpDataFrame(dataFrame, config.getLdpConfigMap());
+//        slaveLdpDataFrame = SbitmapUtils.ldpDataFrame(dataFrame, config.getLdpConfigMap());
         stopWatch.stop();
         long ldpTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
         stopWatch.reset();
@@ -110,7 +104,7 @@ public class GroupAggregationsReceiver extends AbstractMultiPartyPto implements 
             encodeTaskId, ptoDesc.getPtoId(), PtoStep.AND.ordinal(), extraInfo,
             otherParties()[0].getPartyId(), ownParty().getPartyId()
         );
-        List<byte[]> slaveOrderSplitsPayload = rpc.receive(slaveOrderSplitsHeader).getPayload();
+//        List<byte[]> slaveOrderSplitsPayload = rpc.receive(slaveOrderSplitsHeader).getPayload();
         stopWatch.stop();
         long orderSplitsTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
         stopWatch.reset();
@@ -129,16 +123,5 @@ public class GroupAggregationsReceiver extends AbstractMultiPartyPto implements 
         logStepInfo(PtoState.PTO_STEP, 5, 5, splitNodeTime);
 
         logPhaseInfo(PtoState.PTO_END);
-    }
-
-    private void setPtoInput(DataFrame dataFrame, SbitmapConfig slaveConfig) {
-        checkInitialized();
-        // 验证DataFrame与配置参数中的schema相同
-        assert dataFrame.schema().equals(slaveConfig.getSchema());
-        this.dataFrame = dataFrame;
-        rows = dataFrame.nrows();
-        byteRows = CommonUtils.getByteLength(rows);
-        rowOffset = byteRows * Byte.SIZE - rows;
-        extraInfo++;
     }
 }

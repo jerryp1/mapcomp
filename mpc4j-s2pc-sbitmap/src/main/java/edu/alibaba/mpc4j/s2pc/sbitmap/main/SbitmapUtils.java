@@ -180,7 +180,7 @@ public class SbitmapUtils {
         for (int columnIndex = 0; columnIndex < schema.length(); columnIndex++) {
             StructField structField = schema.field(columnIndex);
             if (structField.measure instanceof NominalScale) {
-                String[] distinctValues = ((NominalScale)structField.measure).levels();
+                String[] distinctValues = ((NominalScale) structField.measure).levels();
                 int[] distinctIntValues = Arrays.stream(distinctValues)
                     .mapToInt(s -> ((NominalScale) structField.measure).valueOf(s).intValue()).toArray();
                 byte[][] bitmap = new byte[distinctValues.length][CommonUtils.getByteLength(n)];
@@ -203,7 +203,7 @@ public class SbitmapUtils {
                 }
             }
         }
-        assert bitmapTuples.size() != 0: "Num of bitmaps should not be 0.";
+        assert bitmapTuples.size() != 0 : "Num of bitmaps should not be 0.";
         return DataFrame.of(bitmapTuples);
     }
 

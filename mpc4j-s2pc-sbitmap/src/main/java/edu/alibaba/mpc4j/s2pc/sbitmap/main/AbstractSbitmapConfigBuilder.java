@@ -5,7 +5,7 @@ import edu.alibaba.mpc4j.dp.ldp.nominal.encode.EncodeLdpConfig;
 import edu.alibaba.mpc4j.dp.ldp.numeric.integral.IntegralLdpConfig;
 import edu.alibaba.mpc4j.dp.ldp.numeric.real.RealLdpConfig;
 import edu.alibaba.mpc4j.s2pc.pjc.pid.PidConfig;
-import edu.alibaba.mpc4j.s2pc.pjc.pid.gmr21.Gmr21SloppyPidConfig;
+import edu.alibaba.mpc4j.s2pc.pjc.pid.bkms20.Bkms20EccPidConfig;
 import smile.data.measure.NominalScale;
 import smile.data.type.StructField;
 import smile.data.type.StructType;
@@ -37,7 +37,7 @@ public abstract class AbstractSbitmapConfigBuilder<T> implements org.apache.comm
     public AbstractSbitmapConfigBuilder(StructType schema) {
         this.schema = schema;
         ldpConfigMap = new HashMap<>(schema.length());
-        pidConfig = new Gmr21SloppyPidConfig.Builder().build();
+        pidConfig = new Bkms20EccPidConfig.Builder().build();
     }
 
     public void addPidConfig(PidConfig pidConfig) {

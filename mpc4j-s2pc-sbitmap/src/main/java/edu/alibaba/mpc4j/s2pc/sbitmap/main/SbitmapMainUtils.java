@@ -1,6 +1,8 @@
 package edu.alibaba.mpc4j.s2pc.sbitmap.main;
 
 import com.google.common.base.Preconditions;
+import edu.alibaba.mpc4j.common.rpc.Party;
+import edu.alibaba.mpc4j.common.rpc.Rpc;
 import edu.alibaba.mpc4j.common.tool.utils.PropertiesUtils;
 import edu.alibaba.mpc4j.dp.ldp.LdpConfig;
 import edu.alibaba.mpc4j.dp.ldp.nominal.encode.DirectEncodeLdpConfig;
@@ -33,7 +35,8 @@ import java.util.stream.IntStream;
 public class SbitmapMainUtils {
     private static final Logger LOGGER = LoggerFactory.getLogger(SbitmapMainUtils.class);
 
-    private static final String ID = "id";
+    public static final String ID = "id";
+    public static final String PID = "pid";
 
     /**
      * Private constructor.
@@ -195,6 +198,7 @@ public class SbitmapMainUtils {
 
     /**
      * Add id column.
+     *
      * @param dataFrame dataframe.
      * @return updated dataframe.
      */
@@ -207,15 +211,18 @@ public class SbitmapMainUtils {
 
     /**
      * Select rows based on the party id.
-     * @param dataFrame dataframe.
+     *
      * @return updated dataframe.
      */
-    public static DataFrame selectRows(DataFrame dataFrame, int partyId) {
+    public static int[] selectRows(int rowNum, int partyId) {
         assert partyId == 0 || partyId == 1 : "party id must be 0 or 1";
-        int rowNum = dataFrame.nrows();
-        int num = (int)(rowNum * 0.6);
-        int[] indexes = partyId == 0 ? IntStream.range(0, num).toArray() : IntStream.range(rowNum - num, num).toArray();
-        return dataFrame.of(indexes);
+        int num = (int) (rowNum * 0.6);
+        return partyId == 0 ? IntStream.range(0, num - 1).toArray() : IntStream.range(rowNum - num + 1, rowNum).toArray();
+    }
+
+    public static DataFrame setDataset(DataFrame dataFrame, int[] columns, int[] rows) {
+        DataFrame temp = SbitmapMainUtils.addIdColumn(dataFrame.select(columns));
+        return DataFrame.of(Arrays.stream(rows).mapToObj(temp::get).collect(Collectors.toList()));
     }
 
     /**
@@ -435,5 +442,50 @@ public class SbitmapMainUtils {
             }
         }
         return ldpConfigMap;
+    }
+
+    public static SbitmapPtoParty createParty(SbitmapTaskType taskType, Rpc ownRpc, Party otherParty, SbitmapConfig sbitmapConfig) {
+        SbitmapPtoParty party;
+        switch (ownRpc.ownParty().getPartyId()) {
+            case 0:
+                party = createReceiver(taskType, ownRpc, otherParty, sbitmapConfig);
+                break;
+            case 1:
+                party = createSender(taskType, ownRpc, otherParty, sbitmapConfig);
+                break;
+            default:
+                throw new IllegalArgumentException("Invalid task_type: " + taskType);
+        }
+        return party;
+    }
+
+    public static SbitmapPtoParty createSender(SbitmapTaskType taskType, Rpc ownRpc, Party otherParty, SbitmapConfig sbitmapConfig) {
+        SbitmapPtoParty pto;
+        switch (taskType) {
+            case SET_OPERATIONS:
+                pto = new SetOperationsSender(ownRpc, otherParty, sbitmapConfig);
+                break;
+            case GROUP_AGGREGATIONS:
+                pto = new GroupAggregationsSender(ownRpc, otherParty, sbitmapConfig);
+                break;
+            default:
+                throw new IllegalArgumentException("Invalid task_type: " + taskType);
+        }
+        return pto;
+    }
+
+    public static SbitmapPtoParty createReceiver(SbitmapTaskType taskType, Rpc ownRpc, Party otherParty, SbitmapConfig slaveConfig) {
+        SbitmapPtoParty pto;
+        switch (taskType) {
+            case SET_OPERATIONS:
+                pto = new SetOperationsReceiver(ownRpc, otherParty, slaveConfig);
+                break;
+            case GROUP_AGGREGATIONS:
+                pto = new GroupAggregationsReceiver(ownRpc, otherParty, slaveConfig);
+                break;
+            default:
+                throw new IllegalArgumentException("Invalid task_type: " + taskType);
+        }
+        return pto;
     }
 }
