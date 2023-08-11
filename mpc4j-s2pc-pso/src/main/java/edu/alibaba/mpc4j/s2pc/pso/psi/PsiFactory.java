@@ -4,6 +4,9 @@ import edu.alibaba.mpc4j.common.rpc.Party;
 import edu.alibaba.mpc4j.common.rpc.Rpc;
 import edu.alibaba.mpc4j.common.rpc.pto.PtoFactory;
 import edu.alibaba.mpc4j.s2pc.pso.psi.cm20.*;
+import edu.alibaba.mpc4j.s2pc.pso.psi.czz22.Czz22PsiClient;
+import edu.alibaba.mpc4j.s2pc.pso.psi.czz22.Czz22PsiConfig;
+import edu.alibaba.mpc4j.s2pc.pso.psi.czz22.Czz22PsiServer;
 import edu.alibaba.mpc4j.s2pc.pso.psi.hfh99.*;
 import edu.alibaba.mpc4j.s2pc.pso.psi.kkrt16.*;
 
@@ -41,6 +44,10 @@ public class PsiFactory implements PtoFactory {
          * CM20方案
          */
         CM20,
+        /**
+         * CZZ22方案
+         */
+        CZZ22,
     }
 
     /**
@@ -62,6 +69,8 @@ public class PsiFactory implements PtoFactory {
                 return new Kkrt16PsiServer<>(serverRpc, clientParty, (Kkrt16PsiConfig) config);
             case CM20:
                 return new Cm20PsiServer<>(serverRpc, clientParty, (Cm20PsiConfig) config);
+            case CZZ22:
+                return new Czz22PsiServer<>(serverRpc, clientParty, (Czz22PsiConfig) config);
             default:
                 throw new IllegalArgumentException("Invalid " + PsiType.class.getSimpleName() + ": " + type.name());
         }
@@ -86,6 +95,8 @@ public class PsiFactory implements PtoFactory {
                 return new Kkrt16PsiClient<>(clientRpc, serverParty, (Kkrt16PsiConfig) config);
             case CM20:
                 return new Cm20PsiClient<>(clientRpc, serverParty, (Cm20PsiConfig) config);
+            case CZZ22:
+                return new Czz22PsiClient<>(clientRpc, serverParty, (Czz22PsiConfig) config);
             default:
                 throw new IllegalArgumentException("Invalid " + PsiType.class.getSimpleName() + ": " + type.name());
         }

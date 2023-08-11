@@ -17,7 +17,7 @@ import edu.alibaba.mpc4j.s2pc.pso.psi.PsiFactory;
  * <p>
  *
  * @author Ziyuan Liang, Feng Han
- * @date 2022/03/03
+ * @date 2023/08/10
  */
 public class Cm20PsiConfig extends AbstractMultiPartyPtoConfig implements PsiConfig {
     /**

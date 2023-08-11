@@ -6,6 +6,7 @@ import edu.alibaba.mpc4j.common.tool.hashbin.object.cuckoo.CuckooHashBinFactory.
 import edu.alibaba.mpc4j.s2pc.pso.PsoUtils;
 import edu.alibaba.mpc4j.s2pc.pso.psi.PsiFactory.PsiType;
 import edu.alibaba.mpc4j.s2pc.pso.psi.cm20.Cm20PsiConfig;
+import edu.alibaba.mpc4j.s2pc.pso.psi.czz22.Czz22PsiConfig;
 import edu.alibaba.mpc4j.s2pc.pso.psi.hfh99.Hfh99ByteEccPsiConfig;
 import edu.alibaba.mpc4j.s2pc.pso.psi.hfh99.Hfh99EccPsiConfig;
 import edu.alibaba.mpc4j.s2pc.pso.psi.kkrt16.Kkrt16PsiConfig;
@@ -50,6 +51,15 @@ public class PsiTest extends AbstractTwoPartyPtoTest {
     public static Collection<Object[]> configurations() {
         Collection<Object[]> configurations = new ArrayList<>();
 
+        // CM20
+        configurations.add(new Object[] {
+            PsiType.CM20.name(), new Cm20PsiConfig.Builder().build(),
+        });
+        // CZZ22
+        configurations.add(new Object[] {
+            PsiType.CZZ22.name(), new Czz22PsiConfig.Builder().build(),
+        });
+
         // KKRT16 (no-stash)
         configurations.add(new Object[] {
             PsiFactory.PsiType.KKRT16.name() + " (no-stash)",
@@ -77,11 +87,6 @@ public class PsiTest extends AbstractTwoPartyPtoTest {
         configurations.add(new Object[] {
             PsiFactory.PsiType.HFH99_ECC.name() + " (uncompress)",
             new Hfh99EccPsiConfig.Builder().setCompressEncode(false).build(),
-        });
-
-        // CM20
-        configurations.add(new Object[] {
-            PsiType.CM20.name(), new Cm20PsiConfig.Builder().build(),
         });
 
         return configurations;
