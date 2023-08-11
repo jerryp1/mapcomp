@@ -1,16 +1,11 @@
 package edu.alibaba.mpc4j.s2pc.sbitmap;
 
 import edu.alibaba.mpc4j.common.data.DatasetManager;
-import edu.alibaba.mpc4j.common.data.classification.BreastCancer;
-import edu.alibaba.mpc4j.common.data.classification.Iris;
-import edu.alibaba.mpc4j.common.data.classification.PenDigits;
 import edu.alibaba.mpc4j.common.data.classification.Weather;
-import edu.alibaba.mpc4j.common.data.regression.Cpu;
-import edu.alibaba.mpc4j.common.rpc.MpcAbortException;
 import edu.alibaba.mpc4j.common.rpc.test.AbstractTwoPartyPtoTest;
 import edu.alibaba.mpc4j.s2pc.sbitmap.main.SbitmapConfig;
-import edu.alibaba.mpc4j.s2pc.sbitmap.main.SbitmapMainUtils;
-import edu.alibaba.mpc4j.s2pc.sbitmap.main.SbitmapPtoParty;
+import edu.alibaba.mpc4j.s2pc.sbitmap.utils.SbitmapMainUtils;
+import edu.alibaba.mpc4j.s2pc.sbitmap.pto.SbitmapPtoParty;
 import edu.alibaba.mpc4j.s2pc.sbitmap.main.SbitmapTaskType;
 import org.junit.After;
 import org.junit.Before;

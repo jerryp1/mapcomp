@@ -1,4 +1,4 @@
-package edu.alibaba.mpc4j.s2pc.sbitmap.main;
+package edu.alibaba.mpc4j.s2pc.sbitmap.pto;
 
 import edu.alibaba.mpc4j.common.rpc.MpcAbortException;
 import edu.alibaba.mpc4j.common.rpc.Party;
@@ -7,7 +7,9 @@ import edu.alibaba.mpc4j.common.rpc.Rpc;
 import edu.alibaba.mpc4j.common.rpc.utils.DataPacket;
 import edu.alibaba.mpc4j.common.rpc.utils.DataPacketHeader;
 import edu.alibaba.mpc4j.s2pc.pjc.pid.PidFactory;
+import edu.alibaba.mpc4j.s2pc.sbitmap.main.SbitmapConfig;
 import edu.alibaba.mpc4j.s2pc.sbitmap.main.SbitmapPtoDesc.PtoStep;
+import edu.alibaba.mpc4j.s2pc.sbitmap.utils.SbitmapUtils;
 import smile.data.DataFrame;
 
 import java.nio.ByteBuffer;
@@ -16,15 +18,14 @@ import java.util.List;
 import java.util.concurrent.TimeUnit;
 
 /**
- * Sbitmap group aggregations protocol.
+ * Sbitmap set operations protocol.
  *
  * @author Li Peng
  * @date 2023/08/03
  */
-public class GroupAggregationsReceiver extends AbstractSbitmapPtoParty implements SbitmapPtoParty {
+public class SetOperationsReceiver extends AbstractSbitmapPtoParty implements SbitmapPtoParty {
 
-
-    public GroupAggregationsReceiver(Rpc ownRpc, Party otherParty, SbitmapConfig sbitmapConfig) {
+    public SetOperationsReceiver(Rpc ownRpc, Party otherParty, SbitmapConfig sbitmapConfig) {
         super(ownRpc, otherParty);
         pidParty = PidFactory.createServer(ownRpc, otherParty, sbitmapConfig.getPidConfig());
     }
@@ -34,7 +35,6 @@ public class GroupAggregationsReceiver extends AbstractSbitmapPtoParty implement
      */
     @Override
     public void init() throws MpcAbortException {
-//        super.init(maxOwnElementSetSize, maxOtherElementSetSize);
         super.initState();
     }
 
@@ -47,9 +47,9 @@ public class GroupAggregationsReceiver extends AbstractSbitmapPtoParty implement
     /**
      * Protocol steps.
      *
-     * @param dataFrame dataset.
-     * @param config    config.
-     * @throws MpcAbortException the protocol failure aborts.
+     * @param dataFrame
+     * @param config
+     * @throws MpcAbortException
      */
     @Override
     public void run(DataFrame dataFrame, SbitmapConfig config) throws MpcAbortException {
@@ -67,21 +67,21 @@ public class GroupAggregationsReceiver extends AbstractSbitmapPtoParty implement
         );
         List<byte[]> senderDataSizePayload = rpc.receive(senderDataSizeHeader).getPayload();
         otherDataSize = ByteBuffer.wrap(senderDataSizePayload.get(0)).getInt();
-        // init
+        // init 
         pidParty.init(dataFrame.size(), otherDataSize);
-
+        // set input
         setPtoInput(dataFrame, config);
         logPhaseInfo(PtoState.PTO_BEGIN);
-
+        // join
         stopWatch.start();
         join();
         stopWatch.stop();
         long slaveSchemaTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
         stopWatch.reset();
         logStepInfo(PtoState.PTO_STEP, 1, 5, slaveSchemaTime);
-
+        // generate bitmap
         stopWatch.start();
-//        slaveLdpDataFrame = SbitmapUtils.ldpDataFrame(dataFrame, config.getLdpConfigMap());
+        bitmapData = SbitmapUtils.createBitmapForNominals(dataFrame);
         stopWatch.stop();
         long ldpTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
         stopWatch.reset();
@@ -124,4 +124,5 @@ public class GroupAggregationsReceiver extends AbstractSbitmapPtoParty implement
 
         logPhaseInfo(PtoState.PTO_END);
     }
+
 }

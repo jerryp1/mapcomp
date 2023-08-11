@@ -1,4 +1,4 @@
-package edu.alibaba.mpc4j.s2pc.sbitmap.main;
+package edu.alibaba.mpc4j.s2pc.sbitmap.pto;
 
 import edu.alibaba.mpc4j.common.rpc.desc.SecurityModel;
 import edu.alibaba.mpc4j.common.rpc.pto.MultiPartyPtoConfig;
@@ -12,7 +12,7 @@ import edu.alibaba.mpc4j.common.tool.EnvType;
  */
 class SbitmapPtoConfig implements MultiPartyPtoConfig {
 
-    SbitmapPtoConfig() {
+    public SbitmapPtoConfig() {
         // empty
     }
 

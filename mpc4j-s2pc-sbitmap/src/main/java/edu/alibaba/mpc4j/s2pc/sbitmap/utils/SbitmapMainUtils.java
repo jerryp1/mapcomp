@@ -1,4 +1,4 @@
-package edu.alibaba.mpc4j.s2pc.sbitmap.main;
+package edu.alibaba.mpc4j.s2pc.sbitmap.utils;
 
 import com.google.common.base.Preconditions;
 import edu.alibaba.mpc4j.common.rpc.Party;
@@ -6,6 +6,10 @@ import edu.alibaba.mpc4j.common.rpc.Rpc;
 import edu.alibaba.mpc4j.common.tool.utils.PropertiesUtils;
 import edu.alibaba.mpc4j.dp.ldp.LdpConfig;
 import edu.alibaba.mpc4j.dp.ldp.nominal.encode.DirectEncodeLdpConfig;
+import edu.alibaba.mpc4j.s2pc.sbitmap.main.SbitmapConfig;
+import edu.alibaba.mpc4j.s2pc.sbitmap.main.SbitmapSecurityMode;
+import edu.alibaba.mpc4j.s2pc.sbitmap.main.SbitmapTaskType;
+import edu.alibaba.mpc4j.s2pc.sbitmap.pto.*;
 import org.apache.commons.csv.CSVFormat;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

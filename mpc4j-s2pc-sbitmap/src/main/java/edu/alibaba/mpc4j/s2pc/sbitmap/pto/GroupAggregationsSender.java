@@ -1,4 +1,4 @@
-package edu.alibaba.mpc4j.s2pc.sbitmap.main;
+package edu.alibaba.mpc4j.s2pc.sbitmap.pto;
 
 import edu.alibaba.mpc4j.common.rpc.MpcAbortException;
 import edu.alibaba.mpc4j.common.rpc.Party;
@@ -7,7 +7,9 @@ import edu.alibaba.mpc4j.common.rpc.Rpc;
 import edu.alibaba.mpc4j.common.rpc.utils.DataPacket;
 import edu.alibaba.mpc4j.common.rpc.utils.DataPacketHeader;
 import edu.alibaba.mpc4j.s2pc.pjc.pid.PidFactory;
+import edu.alibaba.mpc4j.s2pc.sbitmap.main.SbitmapConfig;
 import edu.alibaba.mpc4j.s2pc.sbitmap.main.SbitmapPtoDesc.PtoStep;
+import edu.alibaba.mpc4j.s2pc.sbitmap.utils.SbitmapUtils;
 import smile.data.DataFrame;
 
 import java.nio.ByteBuffer;
@@ -22,30 +24,6 @@ import java.util.concurrent.TimeUnit;
  * @date 2023/08/03
  */
 public class GroupAggregationsSender extends AbstractSbitmapPtoParty implements SbitmapPtoParty {
-//    /**
-//     * dataset
-//     */
-//    private DataFrame dataFrame;
-//    /**
-//     * number of rows.
-//     */
-//    private int rows;
-//    /**
-//     * total bytes of rows.
-//     */
-//    private int byteRows;
-//    /**
-//     * row offset.
-//     */
-//    private int rowOffset;
-//    /**
-//     * ldp dataset
-//     */
-//    private DataFrame slaveLdpDataFrame;
-//    /**
-//     * pid sender.
-//     */
-//    private PidParty pidParty;
 
     public GroupAggregationsSender(Rpc ownRpc, Party otherParty, SbitmapConfig sbitmapConfig) {
         super(ownRpc, otherParty);
@@ -91,10 +69,11 @@ public class GroupAggregationsSender extends AbstractSbitmapPtoParty implements 
         otherDataSize = ByteBuffer.wrap(receiverDataSizePayload.get(0)).getInt();
         // init
         pidParty.init(dataFrame.size(), otherDataSize);
-
+        // set input
         setPtoInput(dataFrame, config);
         logPhaseInfo(PtoState.PTO_BEGIN);
 
+        // join
         stopWatch.start();
         join();
         stopWatch.stop();
@@ -102,8 +81,9 @@ public class GroupAggregationsSender extends AbstractSbitmapPtoParty implements 
         stopWatch.reset();
         logStepInfo(PtoState.PTO_STEP, 1, 5, slaveSchemaTime);
 
+        // generate bitmap
         stopWatch.start();
-//        slaveLdpDataFrame = SbitmapUtils.ldpDataFrame(dataFrame, config.getLdpConfigMap());
+        bitmapData = SbitmapUtils.createBitmapForNominals(dataFrame);
         stopWatch.stop();
         long ldpTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
         stopWatch.reset();

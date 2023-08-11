@@ -1,4 +1,4 @@
-package edu.alibaba.mpc4j.s2pc.sbitmap.main;
+package edu.alibaba.mpc4j.s2pc.sbitmap.pto;
 
 import edu.alibaba.mpc4j.common.rpc.MpcAbortException;
 import edu.alibaba.mpc4j.common.rpc.Party;
@@ -7,13 +7,14 @@ import edu.alibaba.mpc4j.common.rpc.Rpc;
 import edu.alibaba.mpc4j.common.rpc.utils.DataPacket;
 import edu.alibaba.mpc4j.common.rpc.utils.DataPacketHeader;
 import edu.alibaba.mpc4j.s2pc.pjc.pid.PidFactory;
+import edu.alibaba.mpc4j.s2pc.sbitmap.main.SbitmapConfig;
 import edu.alibaba.mpc4j.s2pc.sbitmap.main.SbitmapPtoDesc.PtoStep;
+import edu.alibaba.mpc4j.s2pc.sbitmap.utils.SbitmapUtils;
 import smile.data.DataFrame;
 
 import java.nio.ByteBuffer;
 import java.util.Collections;
 import java.util.List;
-import java.util.Set;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -22,31 +23,11 @@ import java.util.concurrent.TimeUnit;
  * @author Li Peng
  * @date 2023/08/03
  */
-public class SetOperationsReceiver extends AbstractSbitmapPtoParty implements SbitmapPtoParty {
-//    /**
-//     * dataset
-//     */
-//    private DataFrame dataFrame;
-//    /**
-//     * number of rows.
-//     */
-//    private int rows;
-//    /**
-//     * total bytes of rows.
-//     */
-//    private int byteRows;
-//    /**
-//     * row offset.
-//     */
-//    private int rowOffset;
-//    /**
-//     * pid receiver.
-//     */
-//    private PidParty pidParty;
+public class SetOperationsSender extends AbstractSbitmapPtoParty implements SbitmapPtoParty {
 
-    public SetOperationsReceiver(Rpc ownRpc, Party otherParty, SbitmapConfig sbitmapConfig) {
+    public SetOperationsSender(Rpc ownRpc, Party otherParty, SbitmapConfig sbitmapConfig) {
         super(ownRpc, otherParty);
-        pidParty = PidFactory.createServer(ownRpc, otherParty, sbitmapConfig.getPidConfig());
+        pidParty = PidFactory.createClient(ownRpc, otherParty, sbitmapConfig.getPidConfig());
     }
 
     /**
@@ -73,46 +54,47 @@ public class SetOperationsReceiver extends AbstractSbitmapPtoParty implements Sb
     @Override
     public void run(DataFrame dataFrame, SbitmapConfig config) throws MpcAbortException {
         // 交换数据长度
-        List<byte[]> receiverDataSizePayload = Collections.singletonList(ByteBuffer.allocate(4).putInt(dataFrame.size()).array());
-        DataPacketHeader receiverDataSizeHeader = new DataPacketHeader(
+        List<byte[]> senderDataSizePayload = Collections.singletonList(ByteBuffer.allocate(4).putInt(dataFrame.size()).array());
+        DataPacketHeader senderDataSizeHeader = new DataPacketHeader(
             encodeTaskId, ptoDesc.getPtoId(), PtoStep.AND.ordinal(), extraInfo,
             ownParty().getPartyId(), otherParties()[0].getPartyId()
         );
-        rpc.send(DataPacket.fromByteArrayList(receiverDataSizeHeader, receiverDataSizePayload));
+        rpc.send(DataPacket.fromByteArrayList(senderDataSizeHeader, senderDataSizePayload));
 
-        DataPacketHeader senderDataSizeHeader = new DataPacketHeader(
+        DataPacketHeader receiverDataSizeHeader = new DataPacketHeader(
             encodeTaskId, ptoDesc.getPtoId(), PtoStep.AND.ordinal(), extraInfo,
             otherParties()[0].getPartyId(), ownParty().getPartyId()
         );
-        List<byte[]> senderDataSizePayload = rpc.receive(senderDataSizeHeader).getPayload();
-        otherDataSize = ByteBuffer.wrap(senderDataSizePayload.get(0)).getInt();
-        // init 
+        List<byte[]> receiverDataSizePayload = rpc.receive(receiverDataSizeHeader).getPayload();
+        otherDataSize = ByteBuffer.wrap(receiverDataSizePayload.get(0)).getInt();
+        // init
         pidParty.init(dataFrame.size(), otherDataSize);
-
+        // set input
         setPtoInput(dataFrame, config);
         logPhaseInfo(PtoState.PTO_BEGIN);
-
+        // join
         stopWatch.start();
         join();
         stopWatch.stop();
         long slaveSchemaTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
         stopWatch.reset();
         logStepInfo(PtoState.PTO_STEP, 1, 5, slaveSchemaTime);
-
+        // generate bitmap
         stopWatch.start();
-        dataFrame = SbitmapUtils.ldpDataFrame(dataFrame, config.getLdpConfigMap());
+        bitmapData = SbitmapUtils.createBitmapForNominals(dataFrame);
         stopWatch.stop();
         long ldpTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
         stopWatch.reset();
         logStepInfo(PtoState.PTO_STEP, 2, 5, ldpTime);
 
+        // secret shar
         stopWatch.start();
-//        List<byte[]> slaveDataPayload = generateSlaveDataPayload();
+//        List<byte[]> senderDataSizePayload = generateSlaveDataPayload();
         DataPacketHeader slaveDataHeader = new DataPacketHeader(
             encodeTaskId, ptoDesc.getPtoId(), PtoStep.AND.ordinal(), extraInfo,
             ownParty().getPartyId(), otherParties()[0].getPartyId()
         );
-//        rpc.send(DataPacket.fromByteArrayList(slaveDataHeader, slaveDataPayload));
+//        rpc.send(DataPacket.fromByteArrayList(senderDataSizeHeader, senderDataSizePayload));
         stopWatch.stop();
         long slaveDataTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
         stopWatch.reset();
@@ -143,5 +125,4 @@ public class SetOperationsReceiver extends AbstractSbitmapPtoParty implements Sb
 
         logPhaseInfo(PtoState.PTO_END);
     }
-
 }

@@ -7,6 +7,8 @@ import edu.alibaba.mpc4j.common.rpc.Rpc;
 import edu.alibaba.mpc4j.common.rpc.RpcPropertiesUtils;
 import edu.alibaba.mpc4j.common.tool.utils.PropertiesUtils;
 import edu.alibaba.mpc4j.dp.ldp.LdpConfig;
+import edu.alibaba.mpc4j.s2pc.sbitmap.pto.SbitmapPtoParty;
+import edu.alibaba.mpc4j.s2pc.sbitmap.utils.SbitmapMainUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import smile.data.DataFrame;

@@ -1,4 +1,4 @@
-package edu.alibaba.mpc4j.s2pc.sbitmap.main;
+package edu.alibaba.mpc4j.s2pc.sbitmap.utils;
 
 import edu.alibaba.mpc4j.common.tool.utils.BinaryUtils;
 import edu.alibaba.mpc4j.common.tool.utils.CommonUtils;
@@ -168,6 +168,9 @@ public class SbitmapUtils {
             return DoubleVector.of(structField, doubleArray);
         }
     }
+
+    // bitmap：增删元素，交并, 聚合计算，-ss-> sbitmap，
+    // sbitmap ：交并，聚合计算，-恢复->bitmap
 
     public static DataFrame createBitmapForNominals(DataFrame dataFrame) {
         int n = dataFrame.nrows();

@@ -1,7 +1,8 @@
-package edu.alibaba.mpc4j.s2pc.sbitmap.main;
+package edu.alibaba.mpc4j.s2pc.sbitmap.pto;
 
 import edu.alibaba.mpc4j.common.rpc.MpcAbortException;
 import edu.alibaba.mpc4j.common.rpc.Rpc;
+import edu.alibaba.mpc4j.s2pc.sbitmap.main.SbitmapConfig;
 import smile.data.DataFrame;
 
 /**
@@ -13,9 +14,6 @@ import smile.data.DataFrame;
 public interface SbitmapPtoParty {
     /**
      * 初始化协议。
-     * <p>
-     * //     * @param maxOwnElementSetSize   最大自己元素数量。
-     * //     * @param maxOtherElementSetSize 最大对方元素数量。
      *
      * @throws MpcAbortException 如果协议异常中止。
      */

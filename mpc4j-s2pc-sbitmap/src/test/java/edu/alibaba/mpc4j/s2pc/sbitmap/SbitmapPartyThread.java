@@ -2,7 +2,7 @@ package edu.alibaba.mpc4j.s2pc.sbitmap;
 
 import edu.alibaba.mpc4j.common.rpc.MpcAbortException;
 import edu.alibaba.mpc4j.s2pc.sbitmap.main.SbitmapConfig;
-import edu.alibaba.mpc4j.s2pc.sbitmap.main.SbitmapPtoParty;
+import edu.alibaba.mpc4j.s2pc.sbitmap.pto.SbitmapPtoParty;
 import smile.data.DataFrame;
 
 /**

@@ -1,4 +1,4 @@
-package edu.alibaba.mpc4j.s2pc.sbitmap.main;
+package edu.alibaba.mpc4j.s2pc.sbitmap.pto;
 
 import edu.alibaba.mpc4j.common.rpc.MpcAbortException;
 import edu.alibaba.mpc4j.common.rpc.Party;
@@ -7,6 +7,9 @@ import edu.alibaba.mpc4j.common.rpc.pto.AbstractMultiPartyPto;
 import edu.alibaba.mpc4j.common.tool.utils.CommonUtils;
 import edu.alibaba.mpc4j.s2pc.pjc.pid.PidParty;
 import edu.alibaba.mpc4j.s2pc.pjc.pid.PidPartyOutput;
+import edu.alibaba.mpc4j.s2pc.sbitmap.main.SbitmapConfig;
+import edu.alibaba.mpc4j.s2pc.sbitmap.main.SbitmapPtoDesc;
+import edu.alibaba.mpc4j.s2pc.sbitmap.utils.SbitmapMainUtils;
 import smile.data.DataFrame;
 import smile.data.vector.StringVector;
 
@@ -21,6 +24,10 @@ public class AbstractSbitmapPtoParty extends AbstractMultiPartyPto implements Sb
      * dataset
      */
     protected DataFrame dataFrame;
+    /**
+     * bitmap data
+     */
+    protected DataFrame bitmapData;
     /**
      * number of rows.
      */
@@ -83,7 +90,6 @@ public class AbstractSbitmapPtoParty extends AbstractMultiPartyPto implements Sb
     }
 
     protected void pidJoin() throws MpcAbortException {
-        Set<String> set = getIdSet();
         PidPartyOutput<String> pidPartyOutput = pidParty.pid(getIdSet(), otherDataSize);
         String[] pids = Arrays.stream(dataFrame.column(SbitmapMainUtils.ID).toStringArray())
             .map(s -> Base64.getEncoder().encodeToString(pidPartyOutput.getPid(s).array())).toArray(String[]::new);
