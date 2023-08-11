@@ -1,6 +1,7 @@
 package edu.alibaba.mpc4j.s2pc.pjc.pid;
 
 import edu.alibaba.mpc4j.common.tool.CommonConstants;
+import edu.alibaba.mpc4j.common.tool.bitvector.BytesBitVector;
 import edu.alibaba.mpc4j.common.tool.utils.BytesUtils;
 import edu.alibaba.mpc4j.s2pc.pjc.pmid.PmidPartyOutput;
 
@@ -26,9 +27,13 @@ public class PidPartyOutput<T> {
      */
     private final Set<ByteBuffer> pidSet;
     /**
-     * ID映射
+     * PID-ID映射
      */
     private final Map<ByteBuffer, T> pidMap;
+    /**
+     * ID-PID映射
+     */
+    private final Map<T, ByteBuffer> idMap;
 
     /**
      * 构造PID服务端输出。
@@ -52,12 +57,15 @@ public class PidPartyOutput<T> {
             .collect(Collectors.toSet());
         this.pidMap = pidMap.keySet().stream()
             .collect(Collectors.toMap(pid -> ByteBuffer.wrap(BytesUtils.clone(pid.array())), pidMap::get));
+        this.idMap = pidMap.keySet().stream()
+            .collect(Collectors.toMap(pidMap::get, pid -> ByteBuffer.wrap(BytesUtils.clone(pid.array()))));
     }
 
     public PidPartyOutput(PmidPartyOutput<T> pmidPartyOutput) {
         pidByteLength = pmidPartyOutput.getPmidByteLength();
         pidSet = pmidPartyOutput.getPmidSet();
         pidMap = pmidPartyOutput.getPmidMap();
+        idMap = null;
         // 验证k最大为1
         long nonDistinctCount = pidMap.keySet().stream().map(pidMap::get).filter(Objects::nonNull).count();
         long distinctCount = pmidPartyOutput.getIdSet().size();
@@ -90,6 +98,16 @@ public class PidPartyOutput<T> {
      */
     public T getId(ByteBuffer pid) {
         return pidMap.get(pid);
+    }
+
+    /**
+     * 返回ID所对应的PID。
+     *
+     * @param id 输入的ID。
+     * @return 对应的PID，如果没有对应的结果，则返回{@code null}。
+     */
+    public ByteBuffer getPid(T id) {
+        return idMap.get(id);
     }
 
     public int getPidByteLength() {
